@@ -1,0 +1,12 @@
+{
+	"extends": "@jswob/style-guide/typescript/react",
+	"compilerOptions": {
+		"composite": false,
+		"noUnusedLocals": true,
+		"noUnusedParameters": true,
+		"erasableSyntaxOnly": true,
+		"noUncheckedSideEffectImports": true,
+		"types": ["vite/client", "node"]
+	},
+	"include": ["src", "vitest.config.ts"]
+}

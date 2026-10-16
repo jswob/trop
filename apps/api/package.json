@@ -1,0 +1,76 @@
+{
+	"name": "@app/api",
+	"type": "module",
+	"private": true,
+	"main": "./src/index.ts",
+	"types": "./src/index.ts",
+	"exports": {
+		".": {
+			"types": "./src/index.ts",
+			"import": "./src/index.ts"
+		},
+		"./db": {
+			"types": "./src/db/index.ts",
+			"import": "./src/db/index.ts"
+		},
+		"./types": {
+			"types": "./src/db/schema/index.ts",
+			"import": "./src/db/schema/index.ts"
+		}
+	},
+	"scripts": {
+		"dev": "bun --env-file=../../.env --hot src/index.ts",
+		"build": "bun build src/index.ts --outdir dist --target bun",
+		"start": "bun dist/index.js",
+		"test": "bun test:setup && vitest",
+		"test:ui": "bun test:setup && vitest --ui",
+		"test:run": "bun test:setup && vitest run",
+		"test:setup": "bun --env-file=../../.env drizzle-snapshots test-setup",
+		"test:db:push": "bun --bun --env-file=../../.env drizzle-kit push --config=drizzle.config.test.ts",
+		"e2e:setup": "bun --env-file=../../.env drizzle-snapshots e2e-setup",
+		"e2e:restore": "bun --env-file=../../.env drizzle-snapshots e2e-restore",
+		"e2e:teardown": "bun --env-file=../../.env drizzle-snapshots e2e-teardown",
+		"schema:check": "bun --env-file=../../.env drizzle-snapshots schema-check",
+		"typecheck": "tsc --noEmit",
+		"db:push": "bun --bun --env-file=../../.env drizzle-kit push",
+		"db:push:safe": "bun --env-file=../../.env drizzle-snapshots push",
+		"db:generate": "bun --bun --env-file=../../.env drizzle-kit generate",
+		"db:generate:custom": "bun --bun --env-file=../../.env drizzle-kit generate --custom",
+		"db:migrate": "bun --env-file=../../.env src/db/migrate.ts",
+		"db:migrate:status": "bun --bun --env-file=../../.env drizzle-kit check",
+		"db:seed": "bun --env-file=../../.env src/db/seed.ts",
+		"db:base": "bun --env-file=../../.env drizzle-snapshots snapshot base",
+		"db:snapshot": "bun --env-file=../../.env drizzle-snapshots snapshot",
+		"db:snapshot:list": "bun --env-file=../../.env drizzle-snapshots list",
+		"db:restore": "bun --env-file=../../.env drizzle-snapshots restore",
+		"db:reset": "bun --env-file=../../.env drizzle-snapshots restore base",
+		"db:undo": "bun --env-file=../../.env drizzle-snapshots undo",
+		"db:clean": "bun --env-file=../../.env drizzle-snapshots clean",
+		"db:seed:delete": "bun --env-file=../../.env scripts/delete-seed-data.ts",
+		"db:constraints": "bun --env-file=../../.env drizzle-snapshots constraints"
+	},
+	"dependencies": {
+		"@bogeychan/elysia-logger": "^0.1.10",
+		"@elysiajs/cors": "^1.1.1",
+		"@elysiajs/jwt": "^1.4.1",
+		"@jswob/drizzle-utils": "workspace:*",
+		"drizzle-orm": "^0.45.4",
+		"elysia": "^1.1.29",
+		"pino": "^10.0.0",
+		"postgres": "^3.4.7"
+	},
+	"devDependencies": {
+		"@faker-js/faker": "10.6.0",
+		"@jswob/drizzle-snapshots": "workspace:*",
+		"@jswob/style-guide": "workspace:*",
+		"@jswob/drizzle-fixtures": "workspace:*",
+		"@vitest/ui": "5.0.5",
+		"drizzle-kit": "0.31.11",
+		"jose": "6.2.12",
+		"pino-pretty": "13.2.0",
+		"typescript": "7.0.2",
+		"vite": "8.3.4",
+		"vite-tsconfig-paths": "6.1.1",
+		"vitest": "5.0.5"
+	}
+}

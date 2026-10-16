@@ -1,0 +1,41 @@
+{
+	"name": "@app/workbench-app",
+	"private": true,
+	"version": "0.0.0",
+	"type": "module",
+	"description": "The app on the design workbench: its places, candidates, specimens and fixtures, drawn with no API",
+	"scripts": {
+		"workbench": "workbench",
+		"designs": "bun run --silent workbench serve",
+		"designs:host": "bun run --silent workbench serve --host",
+		"designs:probe": "bun run --silent workbench probe",
+		"designs:x": "bun run --silent workbench",
+		"designs:census": "bun run --silent workbench census",
+		"typecheck": "tsc --noEmit",
+		"test": "vitest",
+		"test:run": "vitest run"
+	},
+	"dependencies": {
+		"@app/ui": "workspace:*",
+		"lucide-react": "^1.0.0",
+		"react": "^19.1.1",
+		"react-dom": "^19.1.1"
+	},
+	"devDependencies": {
+		"@jswob/style-guide": "workspace:*",
+		"@jswob/design-workbench": "workspace:*",
+		"@tailwindcss/vite": "4.3.3",
+		"@tanstack/react-router": "1.170.44",
+		"@testing-library/jest-dom": "7.0.1",
+		"@testing-library/react": "16.3.3",
+		"@types/node": "26.6.5",
+		"@types/react": "19.3.0",
+		"@types/react-dom": "19.3.0",
+		"@vitejs/plugin-react": "6.1.2",
+		"jsdom": "30.1.2",
+		"tailwindcss": "4.3.3",
+		"typescript": "7.0.2",
+		"vite": "8.3.4",
+		"vitest": "5.0.5"
+	}
+}

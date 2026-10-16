@@ -1,0 +1,10 @@
+{
+	"extends": "./typescript/base.json",
+	"compilerOptions": {
+		"composite": true,
+		"declaration": true,
+		"outDir": "dist"
+	},
+	"include": ["eslint/**/*", "typescript/**/*", "prettier/**/*"],
+	"exclude": ["node_modules", "dist"]
+}

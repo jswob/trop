@@ -1,0 +1,21 @@
+/*
+ * The document stands on the system's one ground, in its face, before any page draws.
+ */
+@layer base {
+	html,
+	body {
+		margin: 0;
+		padding: 0;
+		box-sizing: border-box;
+		color: var(--color-ui-ink);
+		background-color: var(--color-ui-bg);
+		font-family: var(--font-ui-sans);
+		-webkit-font-smoothing: antialiased;
+	}
+
+	*,
+	*::before,
+	*::after {
+		box-sizing: inherit;
+	}
+}

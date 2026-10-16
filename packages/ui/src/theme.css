@@ -1,0 +1,196 @@
+/*
+ * The system's tokens, in a namespace of their own: every one is `ui-`, so no token of a host's
+ * and no default of Tailwind's answers for one of them. `@theme` blocks merge. The web's and the
+ * workbench's stylesheets both import this file (`@app/ui/theme.css`), so they read one copy.
+ */
+@theme {
+	/* Ground and structure. One ground; depth is an edge, never a fill or a shadow. */
+	--color-ui-bg: #101419;
+	--color-ui-rule: rgba(255, 255, 255, 0.08);
+	--color-ui-beat: rgba(255, 255, 255, 0.14);
+	--color-ui-edge: rgba(255, 255, 255, 0.35);
+	--color-ui-row: rgba(255, 255, 255, 0.04);
+
+	/* The ink ramp. Carries emphasis; 213-220deg at 11-22% saturation. */
+	--color-ui-ink: #e6e9ef;
+	--color-ui-ink-2: #9aa3b2;
+	--color-ui-ink-3: #7c8697;
+
+	/*
+	 * Hue. **Four roles and no fifth** — settled, proposed, connected, wrong. Hues that have
+	 * to be told apart inside one slot top out at three, so `connected` only exists because
+	 * it is a ground rather than a mark.
+	 */
+
+	/*
+	 * settled — agreed and done: a confirmed record, and the written run of a meter.
+	 *
+	 * Gold, oklch H 88. An ochre at H 65 stands 40° from red at nearly red's lightness, and
+	 * the two read as one warm family. Red stays where it is; settled walks toward yellow as
+	 * far as proposed allows: 0.180 from red where that ochre is 0.125.
+	 */
+	--color-ui-accent: #c99f24;
+	/*
+	 * proposed — the machine suggests it and nothing is written yet.
+	 *
+	 * The one pair that has to survive colour-blind vision, because it is two answers to
+	 * one question in one slot: settled against proposed, one mark, one column, adjacent
+	 * rows. Held at 0.272 or more in oklab across normal, deuteranopic and protanopic
+	 * vision; tritanopia, which folds a yellow–violet pair, keeps 0.138. It sits at the
+	 * accent's own lightness and chroma — oklch L 0.722 C 0.138, H 285 against the accent's
+	 * 88 — so **hue alone says which kind of claim a mark carries and loudness says nothing**.
+	 * WCAG 7.2 on the ground.
+	 */
+	--color-ui-machine: #9d97f8;
+	/*
+	 * connected — the band behind a row related to whatever record is open beside it.
+	 *
+	 * **A ground, never a mark**, which is what keeps it off the three-hue budget: a band
+	 * behind a row and a 16px glyph in a column are never alternatives. It is deliberately
+	 * quiet — ink on it still measures 11.2 — so the count always goes beside it in words.
+	 */
+	--color-ui-connected: #1e2f44;
+	/*
+	 * wrong — the app replying, in type and hairlines only.
+	 *
+	 * The gamut's red ridge peaks at oklch L 0.60 and collapses above it — max chroma
+	 * 0.243 at L 0.60, 0.151 at L 0.75 — so a red like #ff8082 buys contrast by walking
+	 * the colour off the ridge and reads as salmon. And no single red can both ground a
+	 * plate and set type here: a dark word on it wants the light end, a light word the
+	 * dark end, and the best chroma sits in the dead zone between them at L 0.63-0.70,
+	 * where #ee5a5f sits.
+	 *
+	 * So red grounds nothing. It is oklch L 0.70 C 0.191 H 25 — 23% more chroma than
+	 * #ff8082 — and it is spent on type and hairlines only, where low chroma costs least.
+	 * As ink on the ground: WCAG 6.34, APCA Lc -46.
+	 */
+	--color-ui-red: #ff635f;
+
+	/*
+	 * Two values that are tokens so the light mode can turn them over: the scrim behind a
+	 * modal, and the tint of the waiting glaze's crest (`glaze.css`). Neither is a hue role —
+	 * one dims the page, the other is a band of the ground's own opposite.
+	 */
+	--color-ui-scrim: rgb(0 0 0 / 0.55);
+	--color-ui-glaze: #ffffff;
+
+	--font-ui-sans: 'Archivo', system-ui, sans-serif;
+	--font-ui-mono: 'Geist Mono', ui-monospace, monospace;
+
+	/* Four sizes. 13 is the body; there is no step between 13 and 15 to be had. */
+	--text-ui-body: 13px;
+	--text-ui-lead: 15px;
+	--text-ui-title: 19px;
+	--text-ui-display: 26px;
+
+	/* Named steps on a 4px grid. Generic gaps use Tailwind's own scale. */
+	--spacing-ui-seat-gap: 6px;
+	--spacing-ui-gutter: 20px;
+	--spacing-ui-row: 28px;
+	--spacing-ui-seat: 32px;
+	--spacing-ui-toolbar: 40px;
+	--spacing-ui-header: 44px;
+
+	/*
+	 * The narrowest column the sheet's widest layout still works in. Below it the sheet
+	 * folds to two lines per row.
+	 *
+	 * It is a **floor, not the sheet's width.** A track that can give is a `minmax`, so it
+	 * gives back down to the figure here rather than overflowing. Pinning the fold to the
+	 * sheet's own width instead would leave it no slack at all, and the first scrollbar that
+	 * took 15px off the column would fold a desktop sheet onto two lines.
+	 *
+	 * **It moves with the sheet's fixed tracks, and by exactly what they gain.** A floor is a
+	 * promise about what the narrowest unfolded sheet still holds, so widening a fixed track
+	 * without moving the floor does not keep that promise — it takes the width straight off
+	 * the only track that can give. The floor is the figure below it, not a round number.
+	 *
+	 * A container size rather than a breakpoint, because with a panel beside it the
+	 * sheet's column is narrow while the window is wide. Container queries measure the
+	 * content box, so a scrollbar and any padding come off the figure the fold is tested
+	 * against — the column the shell gives the sheet has to allow for both.
+	 */
+	--container-ui-sheet: 28rem;
+
+	/*
+	 * Controls are not rows. A 28px row is a line of data the eye scans; a control is a
+	 * thing a hand has to hit, and below `lg` that hand is a finger on glass. The two
+	 * steps are separate tokens so tightening the data never shrinks the targets.
+	 */
+	--spacing-ui-control: 32px;
+	--spacing-ui-touch: 40px;
+}
+
+/*
+ * What depends on which way the ground faces, beside the colours.
+ *
+ * - `--ui-scheme` — the scheme the browser draws its own parts in, scrollbars and native controls.
+ *   Every shell sets `color-scheme` from it.
+ * - `--ui-blend` — how a `ui-machine` layer meets what is under it. On the dark ground `lighten`
+ *   leaves every ink, which is lighter than the layer, untouched and marks only the ground; on the
+ *   light ground the same job is `darken`.
+ * - `--ui-hatch` — how much `ui-machine` a proposed pick's hatch line carries into `ui-bg`: the one
+ *   mix where the line clears 3.0 off the ground and `ui-ink` on a line pixel clears 5.0.
+ * - `--ui-wash` — the crest of a machine run's glaze and breath, `ui-machine` over the ground; the
+ *   shoulder is always 6 / 34 of it.
+ * - `--ui-glaze-crest` — the crest of the waiting glaze, `ui-glaze` over the ground; its shoulder is
+ *   0.15 of it.
+ */
+:root {
+	--ui-scheme: dark;
+	--ui-blend: lighten;
+	--ui-hatch: 55%;
+	--ui-wash: 34%;
+	--ui-glaze-crest: 10%;
+}
+
+/*
+ * **The light mode.** The same tokens with the polarity turned over, and
+ * every contrast figure the dark mode keeps kept: the ink ramp at 15.3 / 7.3 / 5.0, the hairlines
+ * and the control edge at the dark mode's own ratios (1.22, 1.50, 3.23 — the ink family at low
+ * opacity, as the dark mode is white at low opacity), the plate at 15.3.
+ *
+ * The four hue roles keep their angles and move only in lightness and chroma. Settled and
+ * proposed stand at one level again, oklch L 0.615 C 0.124, the settled gold at H 85 rather
+ * than the dark mode's 88. **L 0.615 is where two floors meet**: gold loses chroma as it darkens,
+ * so the pair's separation falls with lightness — 0.243 here, 0.239 at L 0.60 — and the marks
+ * must clear 3:1 on the connected band as well as the ground, which they do here at 3.06 and
+ * 3.50. Red is type at 5.41, oklch L 0.53 C 0.217 — nearer its ridge than the dark mode's red
+ * can stand. The connected band is a pale blue whose quietest ink still owes a rung:
+ * `ui-ink-3` is 4.37 on it and the lift to `ui-ink-2` is 6.38, so `CONNECTED_LIFT` holds unchanged.
+ * It keeps the dark band's hue, H 254.
+ *
+ * What rides on the ground keeps the dark mode's figure too: the hatch line 3.04 off the ground with
+ * `ui-ink` 5.03 on it (89%, against the dark's 55%), a run's crest 1.92 (56%, against 34%), and the
+ * scrim a white veil at 46% — the dark scrim pushes the page away from the panel's light edge, so
+ * the light one pushes it away from the dark edge: 3.34 against the dark's 3.47, the panel 1.04
+ * off the page against 1.08.
+ *
+ * Chosen on the device and kept there: `views/appearance` sets `data-theme` on the root. Absent
+ * is dark, which is every screen that has not chosen.
+ */
+:root[data-theme='light'] {
+	--ui-scheme: light;
+	--ui-blend: darken;
+	--ui-hatch: 89%;
+	--ui-wash: 56%;
+	--ui-glaze-crest: 14%;
+
+	--color-ui-bg: #f5f7f9;
+	--color-ui-rule: rgb(11 18 26 / 0.098);
+	--color-ui-beat: rgb(11 18 26 / 0.186);
+	--color-ui-edge: rgb(11 18 26 / 0.474);
+	--color-ui-row: rgb(11 18 26 / 0.045);
+
+	--color-ui-ink: #182029;
+	--color-ui-ink-2: #465362;
+	--color-ui-ink-3: #5e6c7b;
+
+	--color-ui-accent: #a77d08;
+	--color-ui-machine: #7e78cc;
+	--color-ui-connected: #dbe9fb;
+	--color-ui-red: #cd0021;
+
+	--color-ui-scrim: rgb(255 255 255 / 0.46);
+	--color-ui-glaze: #182029;
+}

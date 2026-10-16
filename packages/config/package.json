@@ -1,0 +1,37 @@
+{
+	"name": "@jswob/style-guide",
+	"version": "0.1.1",
+	"description": "Shared TypeScript and Prettier configs for Bun monorepo apps",
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/jswob/bun-monorepo.git",
+		"directory": "packages/config"
+	},
+	"type": "module",
+	"exports": {
+		"./typescript/base": "./typescript/base.json",
+		"./typescript/react": "./typescript/react.json",
+		"./typescript/node": "./typescript/node.json",
+		"./prettier": "./prettier/index.json"
+	},
+	"files": [
+		"typescript/*.json",
+		"prettier"
+	],
+	"peerDependencies": {
+		"prettier": ">=3.0.0",
+		"typescript": ">=5.5.0"
+	},
+	"peerDependenciesMeta": {
+		"prettier": {
+			"optional": true
+		},
+		"typescript": {
+			"optional": true
+		}
+	},
+	"publishConfig": {
+		"access": "public"
+	}
+}

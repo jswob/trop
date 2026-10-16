@@ -1,0 +1,11 @@
+{
+	"$schema": "https://docs.renovatebot.com/renovate-schema.json",
+	"description": "No updates of the @jswob packages: the app stays on the versions it has, and an open toolkit PR is closed.",
+	"gitIgnoredAuthors": ["jswob-toolkit[bot]@users.noreply.github.com"],
+	"packageRules": [
+		{
+			"matchPackageNames": ["@jswob/**"],
+			"enabled": false
+		}
+	]
+}

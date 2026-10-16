@@ -1,0 +1,12 @@
+{
+	"$schema": "https://docs.renovatebot.com/renovate-schema.json",
+	"extends": ["config:best-practices", "github>jswob/bun-monorepo//renovate/third-party"],
+	"reviewers": ["jswob"],
+	"packageRules": [
+		{
+			"description": "Bun's pin in package.json and its image in the Dockerfile move together",
+			"matchDepNames": ["bun", "oven/bun"],
+			"groupName": "bun"
+		}
+	]
+}

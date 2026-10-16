@@ -1,0 +1,5 @@
+# promptfoo's results database and answer cache, and the files the CLI writes for it to load
+.promptfoo/
+
+# run records, one folder per run
+.runs/

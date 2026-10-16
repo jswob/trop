@@ -1,0 +1,63 @@
+{
+	"version": 1,
+	"packages": {
+		"@jswob/design-workbench": {
+			"version": "0.1.2",
+			"files": [
+				"skills/design/BOARDS.md",
+				"skills/design/BUILD.md",
+				"skills/design/COMPONENT.md",
+				"skills/design/CORRECT.md",
+				"skills/design/FRAME.md",
+				"skills/design/PROBES.md",
+				"skills/design/REVIEW.md",
+				"skills/design/SKILL.md",
+				"skills/design/SYSTEM.md",
+				"skills/design/TRAPS.md",
+				"skills/design/VIEW.md",
+				"skills/design/WORKBENCH.md"
+			]
+		},
+		"@jswob/llm-evals": {
+			"version": "0.1.2",
+			"files": [
+				"skills/llm-evals/SKILL.md",
+				"skills/llm-evals/add-task.md",
+				"skills/llm-evals/review-key.md"
+			]
+		},
+		"@jswob/toolkit": {
+			"version": "0.1.4",
+			"files": [
+				"agents/code-architecture-reviewer.md",
+				"agents/documentation-architect.md",
+				"agents/plan-reviewer.md",
+				"agents/postgres-pro.md",
+				"agents/ui-designer.md",
+				"agents/ux-researcher.md",
+				"commands/dev-docs-update.md",
+				"commands/dev-docs.md",
+				"rules/installed-packages.md",
+				"skills/elysia-drizzle-api-best-practices/DRIZZLE.md",
+				"skills/elysia-drizzle-api-best-practices/ELYSIA.md",
+				"skills/elysia-drizzle-api-best-practices/QUERIES.md",
+				"skills/elysia-drizzle-api-best-practices/SKILL.md",
+				"skills/elysia-drizzle-api-best-practices/TESTING.md",
+				"skills/elysia-drizzle-api-best-practices/VALIDATION.md",
+				"skills/elysia-drizzle-api-best-practices/WORKFLOW.md",
+				"skills/plan-reader/SKILL.md",
+				"skills/react-frontend-best-practices/QUERY_EDEN.md",
+				"skills/react-frontend-best-practices/REACT.md",
+				"skills/react-frontend-best-practices/ROUTING.md",
+				"skills/react-frontend-best-practices/SKILL.md",
+				"skills/react-frontend-best-practices/STATE.md",
+				"skills/react-frontend-best-practices/STYLING.md",
+				"skills/react-frontend-best-practices/TESTING.md",
+				"skills/react-frontend-best-practices/VALIDATION.md",
+				"skills/react-frontend-best-practices/WORKFLOW.md",
+				"skills/smart-commit/SKILL.md",
+				"skills/upstream/SKILL.md"
+			]
+		}
+	}
+}

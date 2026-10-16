@@ -1,0 +1,50 @@
+{
+	"name": "@jswob/toolkit",
+	"version": "0.1.4",
+	"description": "Copies the Claude Code skills, commands and agents that installed packages ship into .claude/",
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/jswob/bun-monorepo.git",
+		"directory": "packages/toolkit"
+	},
+	"type": "module",
+	"main": "./src/index.ts",
+	"exports": {
+		".": "./src/index.ts"
+	},
+	"bin": {
+		"toolkit": "./src/cli.ts"
+	},
+	"files": [
+		"src",
+		"claude",
+		"!src/**/*.test.ts",
+		"!src/**/*.test.tsx"
+	],
+	"claude": {
+		"skills": {
+			"elysia-drizzle-api-best-practices": "claude/skills/elysia-drizzle-api-best-practices",
+			"plan-reader": "claude/skills/plan-reader",
+			"react-frontend-best-practices": "claude/skills/react-frontend-best-practices",
+			"smart-commit": "claude/skills/smart-commit",
+			"upstream": "claude/skills/upstream"
+		},
+		"commands": "claude/commands",
+		"agents": "claude/agents",
+		"rules": "claude/rules"
+	},
+	"scripts": {
+		"test": "vitest",
+		"typecheck": "tsc --noEmit"
+	},
+	"devDependencies": {
+		"@jswob/style-guide": "workspace:*",
+		"@types/node": "26.6.5",
+		"typescript": "7.0.2",
+		"vitest": "5.0.5"
+	},
+	"publishConfig": {
+		"access": "public"
+	}
+}

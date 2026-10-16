@@ -1,0 +1,229 @@
+/*
+ * How a page says it is waiting.
+ *
+ * Drawn by `kit/Waiting`. It lives in its own file for the same reason `scroll.css` does: these
+ * are real stylesheet rules rather than utility classes composed in a component, and the workbench
+ * pins motion through the Web Animations API — its `lib/motion.ts` scrubs `Animation.currentTime`
+ * on every animation the document reports, and an animation declared in a real stylesheet is one
+ * `getAnimations()` returns. That is what makes
+ * `?t=` a coherent moment across a whole frame.
+ *
+ * The glaze is a train of bands passing down the page, top to bottom. A breath — one body changing
+ * value together — says *alive* but says nothing about direction, and direction is the whole of what
+ * makes this read as work in progress rather than a pulse.
+ *
+ * **It is not the shimmer this system refuses by reflex.** The tell is a diagonal highlight sweeping
+ * left-to-right *inside each placeholder*, which turns every footprint into its own little animation
+ * and belongs to nothing. This is one field over the page; the placeholders are only what it falls
+ * on.
+ *
+ * **Brightness is a function of where you are on the page, never of which element you are.**
+ * A per-element animation quantises the band to whole boxes: a 32px slab has no inside, so it
+ * lights flat and its neighbour lights flat at a different value — measured at 0.251 of brightness
+ * across a 1px seam. That reads as elements taking turns, not as light passing over them.
+ *
+ * So there is exactly **one field**, and every placeholder paints the same gradient, tiled at the
+ * wave pitch and offset by its own distance down the page, moving on one clock, so what each one
+ * shows is the slice of one continuous field that happens to cross it.
+ * Two boxes that touch are two parts of one gradient; a tall box has the gradient running through
+ * it. Nothing lights up, and nothing takes a turn.
+ *
+ * **The field never empties.** A single band followed by a gap holds the page dark for 35% of every
+ * loop, which is a loader that stops to think. `repeat-y` is what makes it a train instead: the tile
+ * *is* the pitch between crests, so the bands are evenly spaced by construction, there is no second
+ * timeline to keep in step with the first, and one advance of exactly one tile is a seamless loop
+ * whatever height the page folds to. The trough is still 52% of a tile, so the crests stay
+ * countable — a field with no trough is a wash, which says *lit* rather than *moving*.
+ *
+ * Rest ink is `ui-row` at 4% and a crest composites to 13.6%, which is `ui-beat`. Both ends are inks
+ * the system already has; `ui-edge` stays out of it, because control ink on a footprint says
+ * operable.
+ */
+
+/*
+ * **The field moves on the compositor.** Each placeholder carries one layer (`::before`) one tile
+ * taller than itself, painted with the gradient tiled at the pitch and offset by the placeholder's
+ * own distance down the page, and the layer slides down one tile per loop with `transform` — so
+ * what each placeholder shows is still the slice of one continuous field that crosses it, and every
+ * layer is kept on the one start time (`kit/Waiting`), so the slices move as one.
+ *
+ * One inherited number animated on the body, each placeholder's background position computed from
+ * it, would recompute the style of the whole body and repaint every placeholder on every frame, on
+ * the main thread. A `transform` animation costs the main thread nothing, so the field never
+ * stutters under a page that is busy loading, and never slows it.
+ */
+@keyframes ui-glaze {
+	from {
+		transform: translateY(0);
+	}
+	to {
+		transform: translateY(var(--ui-glaze-tile, 0px));
+	}
+}
+
+/*
+ * 1000ms per tile. The tile is 70% of the body it is measured against, so on the ledger a crest
+ * crosses at 585px/s — and because the pitch is a fraction rather than a fixed number of pixels, the
+ * page carries the same number of waves whatever height it folds to.
+ *
+ * `--ui-glaze-tile` is inherited from the body — the distance from one crest to the next;
+ * `--ui-glaze-top` is this element's own distance from the body's top, written by `kit/Waiting` after
+ * it measures. The gradient occupies 26%–74% of the tile and the rest is the trough, so the tile's two
+ * edges are both transparent and `repeat-y` joins them without a seam.
+ *
+ * The offsets are measured, never derived from the shape: the same content is a different height at
+ * 390 than at 1440, and a field positioned from a fixture would be wrong at one of them.
+ */
+[data-ui-glaze-bar] {
+	overflow: hidden;
+}
+
+[data-ui-glaze-bar]::before {
+	content: '';
+	position: absolute;
+	inset-inline: 0;
+	top: calc(-1 * var(--ui-glaze-tile, 0px));
+	height: calc(100% + var(--ui-glaze-tile, 0px));
+	pointer-events: none;
+	background-image: var(--ui-glaze-ink);
+	background-repeat: repeat-y;
+	background-size: 100% var(--ui-glaze-tile, 0px);
+	background-position-y: calc(-1 * var(--ui-glaze-top, 0px));
+	animation: ui-glaze 1000ms linear infinite;
+}
+
+/* A wait whose read has failed: the field is gone, and the footprints stand still in `ui-row`. */
+[data-ui-glaze-failed] [data-ui-glaze-bar]::before {
+	animation: none;
+	background-image: none;
+}
+
+/* A specimen's pinned field (`Waiting`'s `at`): the layer held that far into its pass. */
+[data-ui-glaze-at] [data-ui-glaze-bar]::before {
+	animation: none;
+	transform: translateY(calc(var(--ui-glaze-at) * var(--ui-glaze-tile, 0px)));
+}
+
+@utility ui-glaze-bar {
+	position: relative;
+	--ui-glaze-ink: linear-gradient(
+		to bottom,
+		transparent 0%,
+		transparent 26%,
+		color-mix(in srgb, var(--color-ui-glaze) calc(var(--ui-glaze-crest) * 0.15), transparent) 36.6%,
+		color-mix(in srgb, var(--color-ui-glaze) var(--ui-glaze-crest), transparent) 50%,
+		color-mix(in srgb, var(--color-ui-glaze) calc(var(--ui-glaze-crest) * 0.15), transparent) 63.4%,
+		transparent 74%,
+		transparent 100%
+	);
+}
+
+/*
+ * A machine run's glaze: the same field, cresting in `ui-machine` rather than `ui-beat`, because a
+ * run is the machine's work and not a page waiting on a load. The geometry is `ui-glaze-bar`'s
+ * exactly; only the ink differs. Rows the run has picked breathe instead (below). The element is
+ * positioned by its caller.
+ */
+@utility ui-glaze-run {
+	--ui-glaze-ink: linear-gradient(
+		to bottom,
+		transparent 0%,
+		transparent 26%,
+		color-mix(in srgb, var(--color-ui-machine) calc(var(--ui-wash) * 6 / 34), transparent) 36.6%,
+		color-mix(in srgb, var(--color-ui-machine) var(--ui-wash), transparent) 50%,
+		color-mix(in srgb, var(--color-ui-machine) calc(var(--ui-wash) * 6 / 34), transparent) 63.4%,
+		transparent 74%,
+		transparent 100%
+	);
+}
+
+/*
+ * A machine run's breath over its pick: a wash over every picked row's whole hatched box, ground
+ * and lines alike, swelling and settling together in `ui-machine`.
+ *
+ * **Never masked to the hatch's lines.** The wash is the row's marking while the run searches. Kept
+ * to the 1px lines it is invisible wherever the sheet is drawn reduced: a thumbnail at 2× density
+ * does not draw the hatch at all, so a lines-only breath leaves neither a marking nor any motion
+ * there.
+ *
+ * The page loader does not breathe, because a breath has no direction in it and the loader's whole
+ * message is direction. The sheet's is not a load: the pick is standing still while the machine
+ * works on it, and the same value on every row at every moment is what says *all of this, at once*.
+ *
+ * So every picked row breathes **in step**: the same value on every row at every moment. Rows are
+ * never staggered and never animated one by one out of phase: a row that mounts halfway through a
+ * breath joins it where it is rather than starting its own (`kit/in-step` keeps every breath on the
+ * one start time).
+ *
+ * The ink swings between the glaze's own stops — its shoulder (`ui-machine` at 6%) and its crest (at
+ * 34%) — so nothing new is invented to animate between. The trough is the shoulder rather than
+ * nothing: at no moment is a searching pick the plain hatch a starting run stands on, and the sheet
+ * is never wholly still while the machine looks.
+ *
+ * **Only `opacity` moves.** The wash is painted at its crest and faded to the shoulder (6 / 34 of
+ * it), which is the same ink at every moment as mixing the percentage. One inherited number
+ * animated on the sheet's body would recompute the style of every node in the sheet on every frame
+ * and repaint every picked row — a third of the main thread while a run searches, enough to stall
+ * other motion and slow the whole app. An `opacity` animation runs on the compositor and costs the
+ * main thread nothing.
+ */
+@keyframes ui-breath {
+	0%,
+	100% {
+		opacity: calc(6 / 34);
+	}
+	50% {
+		opacity: 1;
+	}
+}
+
+/* 2400ms a breath, eased at both turns so it settles rather than bounces. */
+@utility ui-breath-run {
+	background-color: color-mix(in srgb, var(--color-ui-machine) var(--ui-wash), transparent);
+	animation: ui-breath 2400ms ease-in-out infinite;
+}
+
+/*
+ * The elapsed figure, counted in CSS so that it pins.
+ *
+ * A `setInterval` would be a second clock the workbench cannot scrub, and the whole point of the
+ * figure is that it is the one thing on the page that proves time is passing. Registered as an
+ * `<integer>` it interpolates, `steps()` makes it whole, and a counter prints it — so `?t=4000`
+ * shows `4s`, deterministically, in a screenshot.
+ */
+@property --ui-tick {
+	syntax: '<integer>';
+	inherits: false;
+	initial-value: 0;
+}
+
+@keyframes ui-tick {
+	to {
+		--ui-tick: 90;
+	}
+}
+
+@utility ui-elapsed {
+	animation: ui-tick 90s steps(90, end) infinite;
+	counter-reset: ui-elapsed var(--ui-tick);
+
+	&::after {
+		content: counter(ui-elapsed) 's';
+	}
+}
+
+/*
+ * The bands are withdrawn rather than frozen somewhere down the page, which leaves every placeholder
+ * at `ui-row` — the ink the waiting page already sits on, and no dimmer. The word in the note is what
+ * still says the wait is going, which is why the note prints one and is not optional.
+ */
+@media (prefers-reduced-motion: reduce) {
+	[data-ui-glaze-bar]::before {
+		display: none;
+	}
+
+	/* The breath is withdrawn the same way: the pick stands on its plain hatch. */
+	[data-ui-breath] {
+		display: none;
+	}
+}

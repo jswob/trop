@@ -1,0 +1,64 @@
+name: Toolkit sync
+
+# Renovate bumps the @jswob packages and their lockfile entries, and nothing else. On its branches
+# this job does the rest: `toolkit carry` takes the app's patches to the new versions (a patch the
+# new version has the fix of is deleted, one that still applies is made again), `toolkit sync`
+# copies the packages' skills into .claude/, and what changed is committed to the branch. A patch
+# that no longer applies is left for a hand, and `bun lint` in CI names it.
+#
+# It commits as the toolkit's GitHub App: a commit pushed with GITHUB_TOKEN would start no CI. The
+# Renovate presets list the App's commits in gitIgnoredAuthors, so Renovate goes on rebasing and
+# merging the branch. The App's id is in the TOOLKIT_APP_ID variable, its private key in the
+# TOOLKIT_APP_KEY secret (docs/ci-cd.md). Without the variable the job is skipped.
+
+on:
+  push:
+    branches: ['renovate/**']
+
+permissions: {}
+
+concurrency:
+  group: toolkit-sync-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    # Renovate deletes its branch once merged, and a deletion is a push too
+    if: vars.TOOLKIT_APP_ID != '' && !github.event.deleted
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3
+        id: app
+        with:
+          app-id: ${{ vars.TOOLKIT_APP_ID }}
+          private-key: ${{ secrets.TOOLKIT_APP_KEY }}
+      # The App's token stays in the checkout's config, so the push below is the App's
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          token: ${{ steps.app.outputs.token }}
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version-file: package.json
+      # Not frozen: a lockfile Renovate left behind is put right here, and committed
+      - run: bun install
+      - name: Carry the patches, sync the copies, commit
+        env:
+          GIT_AUTHOR_NAME: ${{ steps.app.outputs.app-slug }}[bot]
+          GIT_AUTHOR_EMAIL: ${{ steps.app.outputs.app-slug }}[bot]@users.noreply.github.com
+          GIT_COMMITTER_NAME: ${{ steps.app.outputs.app-slug }}[bot]
+          GIT_COMMITTER_EMAIL: ${{ steps.app.outputs.app-slug }}[bot]@users.noreply.github.com
+        run: |
+          status=0
+          bunx toolkit carry || status=$?
+          bunx toolkit sync
+          git add --all .claude package.json bun.lock
+          if [ -e patches ] || git ls-files --error-unmatch patches >/dev/null 2>&1; then
+            git add --all patches
+          fi
+          if ! git diff --cached --quiet; then
+            git commit -m "chore(toolkit): carry the patches and sync the copies"
+            git push origin "HEAD:$GITHUB_REF"
+          fi
+          exit "$status"

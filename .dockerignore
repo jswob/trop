@@ -1,0 +1,27 @@
+node_modules
+.venv
+__pycache__
+dist
+out
+.git
+.env
+.env.local
+tmp
+coverage
+playwright-report
+test-results
+.playwright
+.idea
+.DS_Store
+.vscode
+*.tsbuildinfo
+.eslintcache
+.cache
+apps/api/snapshots
+apps/api/.last_push_snapshot
+docker-compose.yml
+logs
+*.log
+# llm-evals: local promptfoo results, response cache and run records
+apps/evals/.promptfoo
+apps/evals/.runs

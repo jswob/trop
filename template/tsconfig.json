@@ -1,0 +1,7 @@
+{
+	"extends": "@jswob/style-guide/typescript/node",
+	"compilerOptions": {
+		"noEmit": true
+	},
+	"include": ["*.ts"]
+}

@@ -1,0 +1,22 @@
+/*
+ * `source('.')` pins Tailwind's content detection to `src/`, so the scan reads only
+ * what the app ships and not the rest of `apps/web` (its e2e tests, its reports).
+ * The UI package the app draws is added back by name below, without what sits
+ * beside its components and never ships: their specimens (the workbench's pages)
+ * and their tests.
+ */
+@import 'tailwindcss' source('.');
+
+/*
+ * The UI's system: its tokens and `ui-` utilities, the scroll drawn by the
+ * page-break rule, the glaze a wait passes down, and the document's ground. The
+ * workbench imports the same files from the UI package, so there is one copy.
+ */
+@import '@app/ui/theme.css';
+@import '@app/ui/scroll.css';
+@import '@app/ui/glaze.css';
+@import '@app/ui/document.css';
+
+@source '../../../packages/ui/src';
+@source not '../../../packages/ui/src/**/*.specimen.*';
+@source not '../../../packages/ui/src/**/*.test.*';

@@ -1,0 +1,86 @@
+name: Deploy
+
+on:
+  push:
+    branches: [master]
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  changes:
+    # Nothing deploys until the app's hosting is set up (docs/cloud-deployment.md), which gives it
+    # the FLY_APP_NAME variable; the jobs below skip with this one
+    if: ${{ vars.FLY_APP_NAME != '' }}
+    runs-on: ubuntu-latest
+    outputs:
+      api: ${{ steps.filter.outputs.api }}
+      web: ${{ steps.filter.outputs.web }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: dorny/paths-filter@ce10459c8b92cd8901166c0a222fbb033ef39365
+        id: filter
+        with:
+          filters: |
+            # The design workbench (its engine and apps/workbench), the LLM evals harness (and
+            # apps/evals) and the toolkit are development tools no deployed service imports, so a
+            # change to them alone deploys nothing; in the template the first and the last are
+            # workspaces under packages/. packages/ui is the app's UI, which the web draws and the
+            # API does not.
+            api:
+              - 'apps/api/**'
+              - 'packages/!(workbench|ui|llm-evals|toolkit)/**'
+              - 'docker/api/**'
+              - 'bun.lock'
+              - '.github/workflows/deploy.yml'
+              - 'deploy/fly-api.toml'
+            web:
+              - 'apps/web/**'
+              - 'packages/!(workbench|llm-evals|toolkit)/**'
+              - 'bun.lock'
+              - '.github/workflows/deploy.yml'
+
+  deploy-api:
+    needs: changes
+    if: needs.changes.outputs.api == 'true'
+    runs-on: ubuntu-latest
+    env:
+      FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Install flyctl
+        run: |
+          curl -L https://fly.io/install.sh | sh
+          echo "$HOME/.fly/bin" >> "$GITHUB_PATH"
+      - name: Stage API secrets
+        run: |
+          flyctl secrets set \
+            "DATABASE_URL=${{ secrets.DATABASE_URL }}" \
+            "AUTH_PASSWORD=${{ secrets.AUTH_PASSWORD }}" \
+            "JWT_SECRET=${{ secrets.JWT_SECRET }}" \
+            "WEB_ORIGIN=${{ vars.WEB_ORIGIN }}" \
+            --stage --app ${{ vars.FLY_APP_NAME }}
+      - name: Deploy API (code + staged secrets)
+        run: flyctl deploy . --config deploy/fly-api.toml --remote-only --app ${{ vars.FLY_APP_NAME }}
+
+  deploy-web:
+    needs: [changes, deploy-api]
+    if: always() && needs.changes.outputs.web == 'true' && (needs.deploy-api.result == 'success' || needs.deploy-api.result == 'skipped')
+    runs-on: ubuntu-latest
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+      - name: Install Vercel CLI
+        run: npm install -g vercel@latest
+      - name: Pull Vercel Environment
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+      - name: Build
+        run: vercel build --prod
+        env:
+          VITE_API_URL: https://${{ vars.FLY_APP_NAME }}.fly.dev
+      - name: Deploy
+        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}

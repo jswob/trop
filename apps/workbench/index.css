@@ -1,0 +1,35 @@
+/*
+ * The workbench stylesheet. It imports the same files from the UI package that the web's
+ * stylesheet does, in the same order, so web and workbench cannot drift apart on a token. It adds
+ * no token and no rule of its own, so a frame stands on the ground and in the face the web gives
+ * it. The chrome around a frame is the engine's `bench/bench.css`, which no frame loads.
+ *
+ * The tokens live in their own file rather than inline in an entry. This file is the workbench's
+ * Vite CSS entry (`styles` in `workbench.config.ts`), and the bench reads the tokens as text from
+ * the file `theme.css` names there — reading the entry itself puts the dev server in a reload loop,
+ * because every CSS update then invalidates the module that renders them.
+ *
+ * Content detection is named, not automatic: the UI package, and this folder's own scripts
+ * without the packages installed beside them.
+ */
+@import 'tailwindcss' source(none);
+@import '@app/ui/theme.css';
+@import '@app/ui/scroll.css';
+@import '@app/ui/glaze.css';
+@import '@app/ui/document.css';
+
+@source '../../packages/ui/src';
+@source './**/*.{ts,tsx}';
+@source not './node_modules';
+
+/*
+ * Motion is real here, and durations are declared rather than zeroed.
+ *
+ * A stylesheet that set `transition-duration: 0s !important` on everything would make a hidden
+ * tab's overlays settle, and would hide every duration from the review. The fix belongs in JS,
+ * not CSS: the engine's `lib/motion.ts` gives a hidden tab a frame clock and slows, settles or
+ * pins each animation by hand; `/frame` does it for every frame document, and a frame with
+ * nothing in its URL simply runs. Keeping the real durations is what lets `getAnimations()` report
+ * true timing, which is what makes motion reviewable at all — and what makes `?rate=0` mean *off*
+ * rather than *declared as zero*.
+ */

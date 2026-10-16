@@ -1,0 +1,5 @@
+# promptfoo results database and response cache (PROMPTFOO_CONFIG_DIR)
+.promptfoo/
+
+# run records, one folder per run (see src/core/cli.ts)
+.runs/

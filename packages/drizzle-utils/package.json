@@ -1,0 +1,41 @@
+{
+	"name": "@jswob/drizzle-utils",
+	"version": "0.1.1",
+	"description": "Runtime helpers for Drizzle and PostgreSQL: database targets, SSL, prepared statements, error codes",
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/jswob/bun-monorepo.git",
+		"directory": "packages/drizzle-utils"
+	},
+	"type": "module",
+	"main": "./src/index.ts",
+	"exports": {
+		".": "./src/index.ts"
+	},
+	"files": [
+		"src",
+		"!src/**/*.test.ts",
+		"!src/**/*.test.tsx"
+	],
+	"scripts": {
+		"test": "vitest",
+		"typecheck": "tsc --noEmit"
+	},
+	"peerDependencies": {
+		"drizzle-orm": ">=0.44.4 <1",
+		"postgres": "^3.4.7"
+	},
+	"devDependencies": {
+		"@jswob/style-guide": "workspace:*",
+		"@types/node": "26.6.5",
+		"drizzle-orm": "0.45.4",
+		"postgres": "3.4.9",
+		"typescript": "7.0.2",
+		"vite-tsconfig-paths": "6.1.1",
+		"vitest": "5.0.5"
+	},
+	"publishConfig": {
+		"access": "public"
+	}
+}

@@ -1,0 +1,12 @@
+{
+	"extends": "@jswob/style-guide/typescript/node",
+	"include": [
+		"src/**/*",
+		"*.config.ts",
+		"*.config.test.ts",
+		"*.config.e2e.ts",
+		"*.setup.ts",
+		"scripts/**/*"
+	],
+	"exclude": ["node_modules", "dist"]
+}

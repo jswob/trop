@@ -1,0 +1,35 @@
+/*
+ * How a scrollbar is drawn in this system.
+ *
+ * A scrollbar is the one surface the browser draws for us, and left alone macOS draws it
+ * as a floating overlay in whatever ground it lands on — which puts a pale bar in the open
+ * space between the sheet and the rule dividing it from the panel, where it reads as a
+ * third column. These two utilities take that decision back: a bar is either drawn on the
+ * ink ramp and pinned against a rule, or it is not drawn at all.
+ *
+ * `scrollbar-width` and `scrollbar-color` are the standard properties, supported by
+ * Chrome from 121 and by Firefox throughout. Declaring them also switches Chrome off
+ * overlay scrollbars and onto a classic one that occupies width — which is what pins the
+ * bar to the rule, and which `--container-ui-sheet` already allows for.
+ */
+@utility ui-scroll {
+	scrollbar-width: thin;
+	scrollbar-color: var(--color-ui-beat) transparent;
+
+	&:hover {
+		scrollbar-color: var(--color-ui-edge) transparent;
+	}
+}
+
+/*
+ * No bar, but still scrollable — for a column whose scroll position is drawn by something
+ * else. The `::-webkit-scrollbar` rule is the fallback for engines that predate
+ * `scrollbar-width: none`.
+ */
+@utility ui-scroll-none {
+	scrollbar-width: none;
+
+	&::-webkit-scrollbar {
+		display: none;
+	}
+}

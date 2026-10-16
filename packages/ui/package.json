@@ -1,0 +1,51 @@
+{
+	"name": "@app/ui",
+	"version": "0.0.0",
+	"private": true,
+	"type": "module",
+	"description": "A UI seed: the kit, the views and the theme the web draws and the workbench stages. Each app owns its copy.",
+	"exports": {
+		"./kit": "./src/kit/index.ts",
+		"./theme.css": "./src/theme.css",
+		"./scroll.css": "./src/scroll.css",
+		"./glaze.css": "./src/glaze.css",
+		"./document.css": "./src/document.css",
+		"./test/setup": "./src/test/setup.ts",
+		"./*": {
+			"types": [
+				"./src/*.ts",
+				"./src/*.tsx",
+				"./src/*"
+			],
+			"default": "./src/*"
+		}
+	},
+	"scripts": {
+		"test": "vitest",
+		"typecheck": "tsc --noEmit"
+	},
+	"dependencies": {
+		"@floating-ui/react": "^0.27.17",
+		"@internationalized/date": "^3.12.2",
+		"lucide-react": "^1.0.0"
+	},
+	"peerDependencies": {
+		"react": "^19.1.1",
+		"react-dom": "^19.1.1"
+	},
+	"devDependencies": {
+		"@jswob/style-guide": "workspace:*",
+		"@jswob/design-workbench": "workspace:*",
+		"@testing-library/jest-dom": "7.0.1",
+		"@testing-library/react": "16.3.3",
+		"@types/node": "26.6.5",
+		"@types/react": "19.3.0",
+		"@types/react-dom": "19.3.0",
+		"jsdom": "30.1.2",
+		"react": "19.3.1",
+		"react-dom": "19.3.1",
+		"typescript": "7.0.2",
+		"vite": "8.3.4",
+		"vitest": "5.0.5"
+	}
+}

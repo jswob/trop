@@ -1,0 +1,12 @@
+apps/api/drizzle/
+apps/web/src/routeTree.gen.ts
+# template:start
+packages/workbench/src/routeTree.gen.ts
+# llm-evals: the review page template carries a placeholder prettier would break
+packages/llm-evals/src/core/review/template.html
+# template:end
+# Written by the skills CLI, which owns its format
+skills-lock.json
+.claude/skills/frontend-design/
+.claude/skills/grill-me/
+.claude/skills/skill-creator/

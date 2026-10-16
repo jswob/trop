@@ -1,0 +1,183 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [master]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: ci-${{ github.head_ref }}
+  cancel-in-progress: true
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      api: ${{ steps.filter.outputs.api }}
+      web: ${{ steps.filter.outputs.web }}
+      packages: ${{ steps.filter.outputs.packages }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: dorny/paths-filter@ce10459c8b92cd8901166c0a222fbb033ef39365
+        id: filter
+        with:
+          filters: |
+            api:
+              - 'apps/api/**'
+              - 'packages/**'
+              - 'bun.lock'
+              - '.github/workflows/ci.yml'
+            web:
+              - 'apps/web/**'
+              - 'apps/workbench/**'
+              - 'apps/api/src/**'
+              - 'packages/**'
+              - 'bun.lock'
+              - '.github/workflows/ci.yml'
+            packages:
+              - 'apps/evals/**'
+              # template:start
+              - 'packages/drizzle-fixtures/**'
+              - 'packages/drizzle-snapshots/**'
+              - 'packages/drizzle-utils/**'
+              - 'packages/llm-evals/**'
+              - 'packages/toolkit/**'
+              - 'scripts/**'
+              - 'template/**'
+              # template:end
+              # The packages' Claude Code files, which bun lint holds against their sources
+              - '.claude/**'
+              - 'bun.lock'
+              - '.github/workflows/ci.yml'
+
+  lint-and-typecheck:
+    needs: changes
+    if: needs.changes.outputs.api == 'true' || needs.changes.outputs.web == 'true' || needs.changes.outputs.packages == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version-file: package.json
+      - run: bun install --frozen-lockfile
+      - run: bun lint
+        env:
+          # Type-aware ESLint holds one TypeScript program per tsconfig. The
+          # web, the UI package and the workbench each pull the UI package
+          # (and the API's types through Eden) in again, which peaks near
+          # 2.9 GB, past Node's ~2 GB default heap on the 7 GB runner.
+          NODE_OPTIONS: --max-old-space-size=4096
+
+  test-api:
+    needs: changes
+    if: needs.changes.outputs.api == 'true'
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18@sha256:74935e72241653ca55e0414067e6d8763aceb8a810eb51b452253ec3dcfc4336
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: app_test_db
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version-file: package.json
+      - run: bun install --frozen-lockfile
+      - name: Run tests
+        run: bun api:test
+        env:
+          DB_HOST: localhost
+          TEST_DB_PORT: '5433'
+          DB_USER: postgres
+          DB_PASSWORD: password
+          TEST_DB_NAME: app_test_db
+
+  test-web:
+    needs: changes
+    if: needs.changes.outputs.web == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version-file: package.json
+      - run: bun install --frozen-lockfile
+      - name: Run tests
+        run: bun web:test
+      - name: Run UI tests
+        run: bun ui:test
+      # template:start
+      - name: Run workbench tests
+        run: bun workbench:test
+      # template:end
+      - name: Run the workbench app's tests
+        run: bun designs:test
+
+  test-packages:
+    needs: changes
+    if: needs.changes.outputs.packages == 'true'
+    runs-on: ubuntu-latest
+    # template:start
+    services:
+      postgres:
+        image: postgres:18@sha256:74935e72241653ca55e0414067e6d8763aceb8a810eb51b452253ec3dcfc4336
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: fixtures_test_db
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    # template:end
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version-file: package.json
+      - run: bun install --frozen-lockfile
+      - name: Run the app's LLM eval tasks' tests
+        run: bun evals:test
+      # template:start
+      - name: Run the fixtures package's tests
+        run: bun drizzle-fixtures:test
+        env:
+          DB_HOST: localhost
+          TEST_DB_PORT: '5433'
+          DB_USER: postgres
+          DB_PASSWORD: password
+          TEST_DB_NAME: fixtures_test_db
+      - name: Run the database CLI's tests
+        run: bun drizzle-snapshots:test
+      - name: Run the Drizzle runtime helpers' tests
+        run: bun drizzle-utils:test
+        env:
+          DB_HOST: localhost
+          TEST_DB_PORT: '5433'
+          DB_USER: postgres
+          DB_PASSWORD: password
+          TEST_DB_NAME: fixtures_test_db
+      - name: Run the LLM evals harness tests
+        run: bun llm-evals:test
+      - name: Run the toolkit's tests
+        run: bun toolkit:test
+      - name: Run the release script's tests
+        run: bun scripts:test
+      - name: Run bun setup's tests
+        run: bun template:test
+      # template:end

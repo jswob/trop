@@ -1,0 +1,6 @@
+{
+	"extends": "@jswob/style-guide/typescript/base",
+	"files": [],
+	"include": ["*.config.js", "*.config.ts", "scripts/**/*.ts"],
+	"references": [{ "path": "./apps/web" }, { "path": "./apps/api" }]
+}

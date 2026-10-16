@@ -1,0 +1,18 @@
+{
+	"$schema": "https://docs.renovatebot.com/renovate-schema.json",
+	"description": "The newest version of each @jswob package, `next` snapshots included, ahead of and outside the PR limits, merged by hand. For trying a change before it is released; go back to toolkit-auto or toolkit-manual after. Extend it after config:best-practices.",
+	"gitIgnoredAuthors": ["jswob-toolkit[bot]@users.noreply.github.com"],
+	"packageRules": [
+		{
+			"matchPackageNames": ["@jswob/**"],
+			"groupName": "toolkit",
+			"prPriority": 10,
+			"prHourlyLimit": 0,
+			"prConcurrentLimit": 0,
+			"ignoreUnstable": false,
+			"respectLatest": false,
+			"rangeStrategy": "bump",
+			"minimumReleaseAge": null
+		}
+	]
+}

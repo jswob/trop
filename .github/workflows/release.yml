@@ -1,0 +1,71 @@
+name: Release
+
+# A merge to master with changesets opens or updates the "Release packages" PR. Merging that PR
+# publishes every package whose version is not on npm yet, then tags it and writes its GitHub
+# release. Running the workflow by hand publishes a snapshot of the pending changesets to `next`.
+#
+# npm trusts this workflow by its file name (trusted publishing, no token): each package's
+# trusted publisher on npmjs.com names jswob/bun-monorepo and release.yml, and allows `npm publish`
+# (without it, the publish fails with "OIDC permission denied for this action").
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    # A repo made from the template has this workflow until bun setup deletes it
+    if: github.repository == 'jswob/bun-monorepo' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version-file: package.json
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 24
+      # Trusted publishing needs npm 11.5.1 or later
+      - run: npm install --global npm@^11.5.1
+      - run: bun install --frozen-lockfile
+      - uses: changesets/action@v2
+        with:
+          version-script: bun run release:version
+          publish-script: bun run release:publish
+          commit-message: 'chore: release packages'
+          pr-title: Release packages
+          create-github-releases: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  snapshot:
+    if: github.repository == 'jswob/bun-monorepo' && github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version-file: package.json
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 24
+      - run: npm install --global npm@^11.5.1
+      - run: bun install --frozen-lockfile
+      # <next version>-next-<datetime> for each package a pending changeset bumps; nothing is committed
+      - run: bunx changeset version --snapshot next
+      - run: bun install
+      - run: bun run release:publish --tag next

@@ -1,0 +1,11 @@
+{
+	"$schema": "https://docs.renovatebot.com/renovate-schema.json",
+	"description": "Every update but the @jswob packages, grouped: the minors, patches, pins and digests in one PR, each major in its own. Extend it after config:best-practices.",
+	"packageRules": [
+		{
+			"matchPackageNames": ["!@jswob/**"],
+			"matchUpdateTypes": ["minor", "patch", "pin", "pinDigest", "digest"],
+			"groupName": "non-major"
+		}
+	]
+}

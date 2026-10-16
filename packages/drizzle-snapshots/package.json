@@ -1,0 +1,44 @@
+{
+	"name": "@jswob/drizzle-snapshots",
+	"version": "0.1.2",
+	"description": "Docker volume snapshots, a safe schema push and test database setup for Drizzle and PostgreSQL",
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/jswob/bun-monorepo.git",
+		"directory": "packages/drizzle-snapshots"
+	},
+	"type": "module",
+	"main": "./src/index.ts",
+	"exports": {
+		".": "./src/index.ts"
+	},
+	"bin": {
+		"drizzle-snapshots": "./src/cli.ts"
+	},
+	"files": [
+		"src",
+		"!src/**/*.test.ts",
+		"!src/**/*.test.tsx"
+	],
+	"scripts": {
+		"test": "vitest",
+		"typecheck": "tsc --noEmit"
+	},
+	"dependencies": {
+		"postgres": "^3.4.7"
+	},
+	"peerDependencies": {
+		"drizzle-kit": ">=0.31.4 <1"
+	},
+	"devDependencies": {
+		"@jswob/style-guide": "workspace:*",
+		"@types/node": "26.6.5",
+		"typescript": "7.0.2",
+		"vite-tsconfig-paths": "6.1.1",
+		"vitest": "5.0.5"
+	},
+	"publishConfig": {
+		"access": "public"
+	}
+}

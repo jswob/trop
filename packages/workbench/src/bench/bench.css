@@ -1,0 +1,1271 @@
+/*
+ * The bench: the workbench's own chrome.
+ *
+ * Plain CSS, on purpose. It takes nothing from the host app: no Tailwind, no token of the host's,
+ * and no face of the host's. Every variable and every class is prefixed `wb`, so a host that
+ * already owns `--color-bg-primary` or `.bar` loses nothing by mounting it. It is imported by the
+ * bench's own shell and by nothing a frame loads, so none of it reaches the app it frames.
+ *
+ * Hue has two jobs here and no more: keyboard focus, and the state the stage is standing on. A
+ * chosen option is inverted, never tinted.
+ */
+@font-face {
+	font-family: 'Sofia Sans Semi Condensed';
+	font-style: normal;
+	font-weight: 1 1000;
+	font-display: swap;
+	src: url('./fonts/sofia-sans-semi-condensed-latin-ext.woff2') format('woff2');
+	unicode-range:
+		U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329,
+		U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F,
+		U+A720-A7FF;
+}
+
+@font-face {
+	font-family: 'Sofia Sans Semi Condensed';
+	font-style: normal;
+	font-weight: 1 1000;
+	font-display: swap;
+	src: url('./fonts/sofia-sans-semi-condensed-latin.woff2') format('woff2');
+	unicode-range:
+		U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+		U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+.wb {
+	--wb-font: 'Sofia Sans Semi Condensed', 'Arial Narrow', 'Helvetica Neue', Arial, sans-serif;
+
+	/* The light table. The stage is the brightest surface; the chrome is the table's frame. */
+	--wb-chrome: #dde0e3;
+	--wb-stage: #fbfcfd;
+	--wb-ink: #101315;
+	--wb-ink-2: #3a4147;
+	--wb-ink-3: #50585f;
+	--wb-line: #aeb5bb;
+	--wb-edge: #101315;
+	--wb-invert: #101315;
+	--wb-invert-ink: #fbfcfd;
+	--wb-signal: #c2107a;
+	--wb-veil: rgb(251 252 253 / 0.72);
+
+	--wb-side: 208px;
+	--wb-bar: 36px;
+	--wb-pad: 12px;
+	--wb-gap: 10px;
+
+	position: fixed;
+	inset: 0;
+	display: flex;
+	overflow: hidden;
+	background: var(--wb-chrome);
+	color: var(--wb-ink);
+	font: 12.5px/1.35 var(--wb-font);
+	font-variant-numeric: tabular-nums;
+	text-align: left;
+	-webkit-font-smoothing: antialiased;
+	color-scheme: light;
+}
+
+/* The table switched off: the stage goes black and the frames are what is lit. */
+.wb[data-wb-theme='dark'] {
+	--wb-chrome: #1c1e20;
+	--wb-stage: #000;
+	--wb-ink: #eceef0;
+	--wb-ink-2: #b3b9be;
+	--wb-ink-3: #959ca2;
+	--wb-line: #3b3f43;
+	--wb-edge: #50555a;
+	--wb-invert: #eceef0;
+	--wb-invert-ink: #101315;
+	--wb-signal: #ff62b0;
+	--wb-veil: rgb(0 0 0 / 0.66);
+
+	color-scheme: dark;
+}
+
+/*
+ * The bench's own reset, inside `:where()` so it weighs nothing: every class below wins over it
+ * without having to out-specify it, and it never reaches past `.wb`.
+ */
+:where(.wb) :where(*, *::before, *::after) {
+	box-sizing: border-box;
+}
+
+:where(.wb) :where(h1, h2, p, ul, li, figure) {
+	margin: 0;
+	padding: 0;
+	font: inherit;
+	list-style: none;
+}
+
+:where(.wb) :where(button, a, input) {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	border-radius: 0;
+	background: none;
+	color: inherit;
+	font: inherit;
+	text-align: left;
+	text-decoration: none;
+}
+
+.wb button,
+.wb a {
+	cursor: pointer;
+}
+
+/*
+ * The ring is drawn inside the thing it is on. A row at the sidebar's edge, a button in the corner
+ * and a veil over the whole page all lose a ring drawn outside them to whatever clips them.
+ */
+.wb :focus-visible {
+	outline: 2px solid var(--wb-signal);
+	outline-offset: -2px;
+}
+
+.wb .wb-acts :focus-visible {
+	outline-offset: 1px;
+}
+
+.wb-side-hold {
+	display: contents;
+}
+
+/* ---------- The sidebar ---------- */
+
+.wb-side {
+	flex: none;
+	display: flex;
+	flex-direction: column;
+	width: var(--wb-side);
+	min-height: 0;
+	border-right: 1px solid var(--wb-line);
+	background: var(--wb-chrome);
+}
+
+.wb[data-wb-folded] .wb-side {
+	display: none;
+}
+
+.wb-brand {
+	flex: none;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	height: var(--wb-bar);
+	padding: 0 10px;
+	border-bottom: 1px solid var(--wb-line);
+	font-size: 13.5px;
+	font-weight: 700;
+}
+
+.wb-brand span {
+	color: var(--wb-ink-3);
+	font-weight: 400;
+}
+
+.wb .wb-jump {
+	flex: none;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	height: 26px;
+	margin: 8px;
+	padding: 0 7px;
+	border: 1px solid var(--wb-line);
+	background: var(--wb-stage);
+	color: var(--wb-ink-3);
+}
+
+.wb-nav {
+	flex: 1;
+	min-height: 0;
+	overflow-y: auto;
+	scrollbar-width: thin;
+}
+
+.wb-group {
+	padding: 10px 10px 3px;
+	font-size: 11.5px;
+	font-weight: 700;
+}
+
+.wb .wb-row {
+	display: flex;
+	align-items: center;
+	gap: 5px;
+	width: 100%;
+	height: 24px;
+	padding: 0 10px;
+	white-space: nowrap;
+}
+
+.wb-row > span:first-of-type {
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.wb .wb-row.wb-row-child {
+	padding-left: 24px;
+}
+
+.wb-row:hover {
+	background: color-mix(in srgb, var(--wb-ink) 9%, transparent);
+}
+
+.wb .wb-row[aria-current='page'] {
+	background: var(--wb-invert);
+	color: var(--wb-invert-ink);
+}
+
+.wb-count {
+	margin-left: auto;
+	padding-left: 8px;
+	color: var(--wb-ink-3);
+}
+
+.wb-row[aria-current='page'] .wb-count {
+	color: inherit;
+}
+
+.wb-chevron {
+	flex: none;
+	width: 0;
+	height: 0;
+	margin-right: 2px;
+	border: 4px solid transparent;
+	border-left: 5px solid currentColor;
+	opacity: 0.7;
+}
+
+.wb-row[aria-expanded='true'] .wb-chevron {
+	margin: 3px 3px 0 -2px;
+	border: 4px solid transparent;
+	border-top: 5px solid currentColor;
+}
+
+.wb-none {
+	padding: 4px 10px;
+	color: var(--wb-ink-3);
+}
+
+.wb-foot {
+	flex: none;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	height: var(--wb-bar);
+	padding: 0 10px;
+	border-top: 1px solid var(--wb-line);
+	color: var(--wb-ink-3);
+	font-size: 11.5px;
+}
+
+/* ---------- A switch, and its key ---------- */
+
+.wb-sw {
+	flex: none;
+	display: flex;
+	height: 22px;
+	border: 1px solid var(--wb-line);
+	background: var(--wb-stage);
+	color: var(--wb-ink);
+}
+
+.wb .wb-sw button {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	padding: 0 6px;
+	border-left: 1px solid var(--wb-line);
+	white-space: nowrap;
+}
+
+.wb .wb-sw button:first-child {
+	border-left: 0;
+}
+
+.wb .wb-sw button[aria-pressed='true'] {
+	background: var(--wb-invert);
+	color: var(--wb-invert-ink);
+}
+
+/* On the inverted fill the signal hue falls under 3:1 in dark, so the ring there is the fill's own ink. */
+.wb .wb-sw button[aria-pressed='true']:focus-visible,
+.wb .wb-row[aria-current='page']:focus-visible {
+	outline-color: var(--wb-invert-ink);
+	outline-offset: -3px;
+}
+
+.wb-key {
+	flex: none;
+	display: inline-grid;
+	place-items: center;
+	min-width: 13px;
+	height: 13px;
+	padding: 0 2px;
+	border: 1px solid currentColor;
+	font: 700 9.5px/1 var(--wb-font);
+	opacity: 0.66;
+}
+
+/* Beside a label or on the jump button a key is set in the third ink, which has no contrast to spare. */
+.wb-lb .wb-key,
+.wb-jump .wb-key,
+.wb-op > .wb-key {
+	opacity: 1;
+}
+
+/* ---------- The page: the bar, the words, the stage ---------- */
+
+.wb-main {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+	min-height: 0;
+	container: wb-main / inline-size;
+}
+
+.wb-body {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	min-height: 0;
+}
+
+.wb-bar {
+	flex: none;
+	display: flex;
+	align-items: center;
+	height: var(--wb-bar);
+	border-bottom: 1px solid var(--wb-line);
+	overflow: auto hidden;
+	scrollbar-width: none;
+	white-space: nowrap;
+}
+
+.wb .wb-fold {
+	flex: none;
+	display: grid;
+	place-items: center;
+	width: var(--wb-bar);
+	height: 100%;
+}
+
+.wb-ops {
+	display: flex;
+	align-items: center;
+}
+
+.wb-op {
+	flex: none;
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	height: 100%;
+	padding: 0 8px;
+	border-left: 1px solid var(--wb-line);
+}
+
+.wb-lb {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	color: var(--wb-ink-3);
+	font-size: 11.5px;
+}
+
+.wb-lb.wb-lb-quiet {
+	display: none;
+}
+
+.wb-status {
+	color: var(--wb-ink-2);
+	font-size: 11.5px;
+}
+
+.wb-words {
+	flex: none;
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	min-height: 22px;
+	padding: 0 12px;
+	border-bottom: 1px solid var(--wb-line);
+	color: var(--wb-ink-2);
+	font-size: 11.5px;
+	white-space: nowrap;
+}
+
+.wb .wb-name {
+	color: var(--wb-ink);
+	font-weight: 700;
+}
+
+.wb .wb-desc {
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.wb-readout {
+	margin-left: auto;
+}
+
+.wb-touch {
+	display: none;
+}
+
+.wb-stage {
+	flex: 1;
+	min-height: 0;
+	overflow: auto;
+	padding: var(--wb-pad);
+	background: var(--wb-stage);
+}
+
+.wb-grid {
+	display: grid;
+	gap: var(--wb-gap);
+	justify-content: start;
+	align-content: start;
+}
+
+.wb-panes {
+	display: flex;
+	align-items: flex-start;
+	gap: var(--wb-gap);
+}
+
+.wb-panes-stacked {
+	flex-direction: column;
+}
+
+.wb-cell {
+	display: flex;
+	flex-direction: column;
+	justify-content: flex-end;
+	min-width: 0;
+	margin: 0;
+}
+
+.wb-cap {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 0 7px;
+	min-height: 22px;
+	padding-bottom: 4px;
+	font-size: 11.5px;
+	line-height: 18px;
+}
+
+.wb-ix {
+	color: var(--wb-ink-3);
+	font-weight: 700;
+}
+
+.wb-capname {
+	font-weight: 700;
+}
+
+.wb-note {
+	color: var(--wb-ink-2);
+}
+
+.wb-acts {
+	display: flex;
+	gap: 9px;
+	margin-left: auto;
+}
+
+.wb .wb-acts button,
+.wb .wb-acts a {
+	text-decoration: underline;
+	text-decoration-color: var(--wb-line);
+	text-underline-offset: 2px;
+}
+
+.wb-standing {
+	margin-bottom: 6px;
+}
+
+.wb-frame {
+	position: relative;
+	overflow: hidden;
+	outline: 1px solid var(--wb-edge);
+}
+
+.wb-frame iframe {
+	display: block;
+	border: 0;
+	transform-origin: top left;
+}
+
+/* The state the stage is standing on: a thicker ring, set off from the frame, in the signal hue. */
+.wb-cell.wb-cell-standing .wb-frame {
+	outline: 2px solid var(--wb-signal);
+	outline-offset: 3px;
+}
+
+/* ---------- The jump list ---------- */
+
+.wb .wb-veil {
+	position: absolute;
+	inset: 0;
+	z-index: 10;
+	background: var(--wb-veil);
+	cursor: default;
+}
+
+.wb-pal {
+	position: absolute;
+	top: 132px;
+	left: 50%;
+	z-index: 11;
+	width: min(580px, calc(100% - 24px));
+	transform: translateX(-50%);
+	border: 1px solid var(--wb-ink);
+	background: var(--wb-chrome);
+}
+
+.wb .wb-pal input {
+	display: block;
+	width: 100%;
+	height: var(--wb-bar);
+	padding: 0 12px;
+	border-bottom: 1px solid var(--wb-line);
+	background: var(--wb-stage);
+	font-size: 14px;
+}
+
+.wb .wb-pal input:focus-visible {
+	outline-offset: -2px;
+}
+
+.wb-pal ul {
+	max-height: 312px;
+	overflow-y: auto;
+}
+
+.wb-pal li {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	height: 26px;
+	padding: 0 12px;
+	cursor: pointer;
+	white-space: nowrap;
+}
+
+.wb-pal li span {
+	color: var(--wb-ink-3);
+}
+
+.wb-pal li[aria-selected='true'] {
+	background: var(--wb-invert);
+	color: var(--wb-invert-ink);
+}
+
+.wb-pal li[aria-selected='true'] span {
+	color: inherit;
+	opacity: 0.72;
+}
+
+.wb-pal .wb-none {
+	padding: 6px 12px;
+}
+
+/* ---------- A page that is read rather than staged ---------- */
+
+.wb-list {
+	border-top: 1px solid var(--wb-line);
+}
+
+.wb .wb-list-row {
+	display: grid;
+	grid-template-columns: 260px minmax(0, 1fr) 86px;
+	gap: 14px;
+	align-items: baseline;
+	min-height: 26px;
+	padding: 4px 0;
+	border-bottom: 1px solid var(--wb-line);
+}
+
+.wb .wb-list-row b {
+	min-width: 0;
+	font-weight: 700;
+	overflow-wrap: anywhere;
+}
+
+.wb a.wb-list-row b {
+	text-decoration: underline;
+	text-decoration-color: var(--wb-line);
+	text-underline-offset: 2px;
+}
+
+.wb-list-row > span {
+	color: var(--wb-ink-2);
+}
+
+.wb-list-row > span:last-child {
+	color: var(--wb-ink-3);
+	text-align: right;
+}
+
+.wb-missing {
+	padding: 4px 0;
+	color: var(--wb-ink-2);
+}
+
+/*
+ * A candidate's notes, open under the stage. They take their height from it, so the frames are
+ * fitted to what is left and stay in view beside the words that argue for them.
+ */
+.wb-notes {
+	flex: none;
+	max-height: 40%;
+	overflow: auto;
+	padding: 10px var(--wb-pad) 14px;
+	border-top: 1px solid var(--wb-line);
+}
+
+.wb .wb-prose {
+	max-width: 68ch;
+	color: var(--wb-ink-2);
+}
+
+/* Characters that are typed back: the type a candidate would hand over. */
+.wb .wb-code {
+	overflow-x: auto;
+	color: var(--wb-ink-2);
+	font:
+		11.5px/1.5 ui-monospace,
+		'SF Mono',
+		Menlo,
+		Consolas,
+		monospace;
+	tab-size: 2;
+}
+
+/* A link in a sentence is told from the sentence by its line, not by where it stands. */
+.wb .wb-missing a {
+	text-decoration: underline;
+	text-underline-offset: 2px;
+}
+
+/*
+ * The bar in less room than its six switches need, at a width that still has a bar. The keys go
+ * first, since the bar still works without printing them; then the labels, since the options
+ * name themselves. Measured on `.wb-main`, because a folded sidebar gives the bar its room back.
+ */
+@media (min-width: 1024px) {
+	@container wb-main (max-width: 1160px) {
+		.wb-bar .wb-key {
+			display: none;
+		}
+	}
+
+	@container wb-main (max-width: 990px) {
+		.wb-bar .wb-lb {
+			display: none;
+		}
+
+		.wb-bar .wb-op {
+			padding: 0 6px;
+		}
+
+		.wb .wb-bar .wb-sw button {
+			padding: 0 5px;
+		}
+	}
+
+	.wb .wb-veil-touch {
+		display: none;
+	}
+}
+
+/* ---------- Under a finger: a drawer, a sheet, and rows 40px tall ---------- */
+
+@media (max-width: 1023px) {
+	.wb-touch {
+		flex: none;
+		display: flex;
+		align-items: center;
+		height: 40px;
+		border-bottom: 1px solid var(--wb-line);
+	}
+
+	.wb .wb-touch h1 {
+		flex: 1;
+		min-width: 0;
+		overflow: hidden;
+		font-weight: 700;
+		text-align: center;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.wb .wb-touch button {
+		flex: none;
+		height: 40px;
+		padding: 0 12px;
+	}
+
+	.wb .wb-side,
+	.wb[data-wb-folded] .wb-side {
+		position: absolute;
+		inset: 0 auto 0 0;
+		z-index: 11;
+		display: none;
+		width: min(292px, 86%);
+	}
+
+	.wb[data-wb-drawer] .wb-side {
+		display: flex;
+	}
+
+	.wb .wb-row {
+		height: 40px;
+	}
+
+	.wb .wb-bar {
+		position: absolute;
+		inset: auto 0 0 0;
+		z-index: 11;
+		display: none;
+		height: auto;
+		max-height: 80%;
+		padding: 10px 12px 16px;
+		border-top: 1px solid var(--wb-line);
+		border-bottom: 0;
+		background: var(--wb-chrome);
+		overflow-y: auto;
+		white-space: normal;
+	}
+
+	.wb .wb-bar[data-open] {
+		display: block;
+	}
+
+	/* The readout goes; a value being tried is never unsaid, and keeps its way back. */
+	.wb .wb-fold,
+	.wb .wb-key,
+	.wb .wb-words .wb-name,
+	.wb .wb-readout:not(.wb-try) {
+		display: none;
+	}
+
+	.wb-ops {
+		flex-direction: column;
+		align-items: stretch;
+		gap: 8px;
+	}
+
+	.wb-op {
+		flex-direction: column;
+		align-items: stretch;
+		gap: 3px;
+		height: auto;
+		padding: 0;
+		border: 0;
+	}
+
+	.wb-lb.wb-lb-quiet {
+		display: inline-flex;
+	}
+
+	.wb-sw {
+		height: 40px;
+	}
+
+	.wb .wb-sw button {
+		flex: 1;
+		justify-content: center;
+	}
+
+	.wb-words {
+		padding: 4px 8px;
+		white-space: normal;
+	}
+
+	.wb .wb-desc {
+		overflow: visible;
+	}
+
+	.wb-stage,
+	.wb-notes {
+		--wb-pad: 8px;
+	}
+
+	.wb .wb-acts button,
+	.wb .wb-acts a {
+		padding: 6px 0;
+	}
+
+	.wb .wb-list-row {
+		grid-template-columns: minmax(0, 1fr);
+		gap: 0;
+	}
+
+	.wb-list-row > span:last-child {
+		text-align: left;
+	}
+}
+
+@media (prefers-reduced-motion: no-preference) {
+	.wb-row,
+	.wb .wb-sw button {
+		transition: background-color 80ms linear;
+	}
+}
+
+/* ---------- A component's page and the tokens' page ---------- */
+
+/*
+ * The props of the one state showing: a second line under the bar, and only then. It wraps where a
+ * bar would scroll: eight props do not fit one line, and `Reset` was left out of view. Each
+ * row it wraps to closes on a hairline, drawn by the line itself so a short row is ruled too.
+ */
+.wb .wb-propline {
+	flex-wrap: wrap;
+	height: auto;
+	min-height: var(--wb-bar);
+	border-bottom: 0;
+	background-image: repeating-linear-gradient(
+		to bottom,
+		transparent 0 calc(var(--wb-bar) - 1px),
+		var(--wb-line) calc(var(--wb-bar) - 1px) var(--wb-bar)
+	);
+	overflow: visible;
+}
+
+/* The props wrap one by one, beside the line's name and its way back. */
+.wb-propline .wb-ops {
+	display: contents;
+}
+
+.wb-propline .wb-op,
+.wb-propline > .wb-lb,
+.wb .wb-propline > .wb-reset {
+	height: var(--wb-bar);
+}
+
+/* A prop's name is the only thing saying what its box is, so it stays at every width. */
+.wb .wb-propline .wb-op > .wb-lb {
+	display: inline;
+}
+
+.wb-propline > .wb-lb {
+	flex: none;
+	display: flex;
+	align-items: center;
+	padding: 0 10px 0 12px;
+	color: var(--wb-ink);
+	font-weight: 700;
+}
+
+.wb-propline > .wb-status {
+	padding: 0 10px;
+}
+
+.wb .wb-reset {
+	flex: none;
+	margin-left: 10px;
+	font-size: 11.5px;
+	text-decoration: underline;
+	text-decoration-color: var(--wb-line);
+	text-underline-offset: 2px;
+}
+
+/* A value that is typed: a prop of a state, or a token being tried. */
+.wb .wb-val {
+	width: 100%;
+	min-width: 0;
+	height: 22px;
+	padding: 0 5px;
+	/* The edge is all that says a box is a box, so it clears 3:1 where a hairline does not. */
+	border: 1px solid var(--wb-ink-3);
+	background: var(--wb-stage);
+	color: var(--wb-ink);
+	font-size: 11.5px;
+}
+
+.wb .wb-propline .wb-val {
+	width: 116px;
+}
+
+.wb .wb-val-tried {
+	border-color: var(--wb-ink);
+	font-weight: 700;
+}
+
+/* A tried value the browser cannot read: struck through, since no frame can draw it. */
+.wb .wb-val-bad {
+	text-decoration: line-through;
+}
+
+/* A component's page: the states across the stage at true size, then the words. */
+.wb-flow {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-end;
+	gap: 16px var(--wb-gap);
+}
+
+.wb-flow .wb-cell {
+	min-width: 236px;
+}
+
+.wb-frame-hug iframe {
+	max-width: none;
+}
+
+/*
+ * A part's outline, laid over the frame. It is drawn in difference, so it reads on whatever the
+ * app's ground is, dark or light, without the bench knowing which.
+ */
+.wb-part-box {
+	position: absolute;
+	outline: 1px dashed #fff;
+	mix-blend-mode: difference;
+	pointer-events: none;
+}
+
+.wb-part-box > b {
+	position: absolute;
+	padding: 0 3px;
+	background: #fff;
+	color: #000;
+	font: 700 10px/12px var(--wb-font);
+}
+
+.wb-part-over > b {
+	top: -15px;
+	left: -2px;
+}
+
+.wb-part-under > b {
+	top: calc(100% + 3px);
+	left: 50%;
+	transform: translateX(-50%);
+}
+
+.wb-part-beside > b {
+	top: 50%;
+	left: calc(100% + 3px);
+	transform: translateY(-50%);
+}
+
+.wb-h {
+	padding: 0 0 4px;
+	font-size: 11.5px;
+	font-weight: 700;
+}
+
+.wb-parts {
+	max-width: 940px;
+	margin-top: 20px;
+	font-size: 11.5px;
+}
+
+.wb-part {
+	display: grid;
+	grid-template-columns: 18px 62px minmax(0, 1.3fr) 84px 84px 84px minmax(0, 1.1fr);
+	gap: 10px;
+	align-items: baseline;
+	min-height: 24px;
+	padding: 3px 0;
+	border-top: 1px solid var(--wb-line);
+}
+
+.wb-part > i:first-child {
+	align-self: center;
+	background: var(--wb-invert);
+	color: var(--wb-invert-ink);
+	font-size: 10px;
+	font-style: normal;
+	font-weight: 700;
+	line-height: 13px;
+	text-align: center;
+}
+
+.wb-part > b {
+	font-size: 12.5px;
+	font-weight: 700;
+}
+
+.wb-part > span {
+	color: var(--wb-ink-2);
+}
+
+.wb-part-head {
+	min-height: 0;
+	border-top: 0;
+}
+
+.wb-part-head > span {
+	color: var(--wb-ink-3);
+}
+
+.wb-dot {
+	display: inline-block;
+	width: 9px;
+	height: 9px;
+	margin-right: 3px;
+	outline: 1px solid var(--wb-line);
+	vertical-align: -1px;
+}
+
+.wb-read {
+	display: grid;
+	grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr) minmax(0, 1fr);
+	gap: 0 28px;
+	margin-top: 22px;
+}
+
+.wb-prow {
+	display: grid;
+	grid-template-columns: 86px 150px minmax(0, 1fr);
+	gap: 10px;
+	align-items: baseline;
+	min-height: 24px;
+	padding: 3px 0;
+	border-top: 1px solid var(--wb-line);
+	font-size: 11.5px;
+}
+
+.wb-prow > b {
+	font-size: 12.5px;
+	font-weight: 700;
+}
+
+.wb-prow > span:nth-child(2) {
+	color: var(--wb-ink-3);
+}
+
+.wb-prow > span:last-child {
+	color: var(--wb-ink-2);
+}
+
+.wb .wb-line {
+	display: flex;
+	align-items: center;
+	min-height: 24px;
+	padding: 3px 0;
+	border-top: 1px solid var(--wb-line);
+	color: var(--wb-ink-2);
+}
+
+.wb .wb-callers {
+	padding-top: 8px;
+	color: var(--wb-ink-3);
+	font-size: 11.5px;
+}
+
+/* While a token value is being tried the words line says so, on every page. */
+.wb-try {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	color: var(--wb-ink);
+	font-weight: 700;
+}
+
+.wb-chips {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(176px, 1fr));
+	gap: var(--wb-gap);
+	margin-bottom: 20px;
+}
+
+.wb-chip {
+	display: flex;
+	flex-direction: column;
+	gap: 3px;
+	padding-bottom: 6px;
+	border: 1px solid var(--wb-line);
+	background: var(--wb-chrome);
+}
+
+.wb-chip > * {
+	margin: 0 6px;
+}
+
+.wb .wb-chip > .wb-val {
+	width: auto;
+}
+
+.wb-chip > .wb-sws {
+	display: flex;
+	height: 52px;
+	margin: 0 0 3px;
+}
+
+.wb-sws > i {
+	flex: 1;
+	display: block;
+}
+
+.wb-sws > i > i {
+	display: block;
+	width: 100%;
+	height: 100%;
+}
+
+.wb-meta {
+	display: flex;
+	justify-content: space-between;
+	gap: 8px;
+	color: var(--wb-ink-3);
+	font-size: 11px;
+}
+
+.wb-meta > b {
+	color: var(--wb-ink);
+	font-size: 12.5px;
+	font-weight: 700;
+}
+
+.wb-two {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+	gap: 0 28px;
+}
+
+.wb-type,
+.wb-space {
+	display: grid;
+	grid-template-columns: 110px 80px 56px minmax(0, 1fr);
+	gap: 10px;
+	align-items: center;
+	min-height: 28px;
+	padding: 3px 0;
+	border-top: 1px solid var(--wb-line);
+	font-size: 11.5px;
+}
+
+.wb-type > b,
+.wb-space > b {
+	font-size: 12.5px;
+	font-weight: 700;
+}
+
+.wb-type > span,
+.wb-space > span {
+	color: var(--wb-ink-2);
+}
+
+.wb-type > span:last-child {
+	overflow: hidden;
+	color: var(--wb-ink);
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.wb-type > .wb-wide {
+	grid-column: span 1;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.wb-space > i {
+	display: block;
+	max-width: 100%;
+	height: 8px;
+	background: var(--wb-ink);
+}
+
+@media (max-width: 1023px) {
+	.wb .wb-propline {
+		position: static;
+		display: flex;
+		flex-wrap: wrap;
+		height: auto;
+		max-height: none;
+		padding: 4px 0;
+		border-top: 0;
+		border-bottom: 1px solid var(--wb-line);
+		background-image: none;
+		white-space: nowrap;
+	}
+
+	/* Under a finger the way back is a target, not a word. */
+	.wb .wb-reset {
+		min-height: 32px;
+		padding: 0 6px;
+	}
+
+	.wb-propline .wb-ops {
+		flex-direction: row;
+		flex-wrap: wrap;
+		gap: 0;
+	}
+
+	.wb-propline .wb-op {
+		flex-direction: row;
+		align-items: center;
+		gap: 6px;
+		height: 40px;
+		padding: 0 8px;
+	}
+
+	.wb .wb-propline .wb-sw {
+		height: 32px;
+	}
+
+	.wb .wb-propline .wb-sw button {
+		flex: none;
+		padding: 0 8px;
+	}
+
+	.wb .wb-val {
+		height: 32px;
+	}
+
+	.wb-flow .wb-cell {
+		min-width: 200px;
+	}
+
+	.wb-read,
+	.wb-two {
+		grid-template-columns: minmax(0, 1fr);
+		gap: 16px 0;
+	}
+
+	.wb-prow {
+		grid-template-columns: 86px minmax(0, 1fr);
+	}
+
+	.wb-prow > span:last-child {
+		grid-column: 1 / -1;
+	}
+
+	.wb-part {
+		grid-template-columns: 18px 62px minmax(0, 1fr);
+	}
+
+	.wb-part > span:nth-child(n + 4) {
+		grid-column: 2 / -1;
+	}
+
+	.wb-part-head {
+		display: none;
+	}
+
+	.wb-chips {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+
+	.wb-type,
+	.wb-space {
+		grid-template-columns: 110px minmax(0, 1fr) 56px;
+	}
+
+	.wb-type > span:last-child,
+	.wb-space > i {
+		grid-column: 1 / -1;
+	}
+}

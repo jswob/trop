@@ -1,0 +1,46 @@
+{
+	"name": "@jswob/llm-evals",
+	"version": "0.1.2",
+	"description": "Measure LLM prompts, flows and model settings against reviewed answer keys, on promptfoo",
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/jswob/bun-monorepo.git",
+		"directory": "packages/llm-evals"
+	},
+	"type": "module",
+	"main": "./src/api.ts",
+	"exports": {
+		".": "./src/api.ts",
+		"./testing": "./src/testing.ts"
+	},
+	"bin": {
+		"llm-evals": "./src/cli.ts"
+	},
+	"files": [
+		"CLAUDE.md",
+		"src",
+		"skill",
+		"!src/**/*.test.ts",
+		"!src/**/*.test.tsx"
+	],
+	"claude": {
+		"skills": {
+			"llm-evals": "skill"
+		}
+	},
+	"scripts": {
+		"test": "vitest",
+		"typecheck": "tsc --noEmit"
+	},
+	"devDependencies": {
+		"@jswob/style-guide": "workspace:*",
+		"@types/node": "26.6.5",
+		"typescript": "7.0.2",
+		"vite-tsconfig-paths": "6.1.1",
+		"vitest": "5.0.5"
+	},
+	"publishConfig": {
+		"access": "public"
+	}
+}

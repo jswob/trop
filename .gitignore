@@ -1,0 +1,65 @@
+# dependencies (bun install)
+node_modules
+
+# output
+out
+dist
+*.tgz
+
+# code coverage
+coverage
+*.lcov
+
+# logs
+logs
+_.log
+report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
+
+# dotenv environment variable files
+.env
+.env.development.local
+.env.test.local
+.env.production.local
+.env.local
+.envrc
+.env.production
+.env.cloud
+
+# caches
+.eslintcache
+.cache
+*.tsbuildinfo
+
+# IntelliJ based IDEs
+.idea
+
+# Finder (MacOS) folder config
+.DS_Store
+
+# Database push tracking
+apps/api/.last_push_snapshot
+
+# Seed data snapshots
+apps/api/src/db/seed-data/
+
+# Playwright
+apps/web/playwright-report/
+apps/web/test-results/
+apps/web/.playwright/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.ruff_cache/
+.pytest_cache/
+
+# LLM
+.serena/
+.agents/
+tmp/
+dev/
+.claude/tsc-cache/
+
+.nvmrc

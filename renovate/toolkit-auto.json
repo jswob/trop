@@ -1,0 +1,28 @@
+{
+	"$schema": "https://docs.renovatebot.com/renovate-schema.json",
+	"description": "The @jswob packages in one PR as soon as they are published, ahead of and outside the hourly and concurrent PR limits. A patch merges itself, and so does a minor from 1.0 on; on 0.x a minor is breaking and waits for a review. Extend it after config:best-practices.",
+	"gitIgnoredAuthors": ["jswob-toolkit[bot]@users.noreply.github.com"],
+	"packageRules": [
+		{
+			"matchPackageNames": ["@jswob/**"],
+			"groupName": "toolkit",
+			"prPriority": 10,
+			"prHourlyLimit": 0,
+			"prConcurrentLimit": 0,
+			"rangeStrategy": "bump",
+			"minimumReleaseAge": null,
+			"allowedVersions": "!/-next-/"
+		},
+		{
+			"matchPackageNames": ["@jswob/**"],
+			"matchUpdateTypes": ["patch"],
+			"automerge": true
+		},
+		{
+			"matchPackageNames": ["@jswob/**"],
+			"matchCurrentVersion": ">=1.0.0",
+			"matchUpdateTypes": ["minor"],
+			"automerge": true
+		}
+	]
+}

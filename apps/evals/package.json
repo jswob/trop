@@ -1,0 +1,19 @@
+{
+	"name": "@app/evals",
+	"private": true,
+	"version": "0.0.0",
+	"type": "module",
+	"description": "This app's LLM evals: the tasks the llm-evals harness measures, and their answer keys",
+	"scripts": {
+		"evals": "bun --env-file=../../.env llm-evals",
+		"test": "vitest",
+		"typecheck": "tsc --noEmit"
+	},
+	"devDependencies": {
+		"@jswob/style-guide": "workspace:*",
+		"@jswob/llm-evals": "workspace:*",
+		"@types/node": "26.6.5",
+		"typescript": "7.0.2",
+		"vitest": "5.0.5"
+	}
+}
