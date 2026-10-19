@@ -32,13 +32,14 @@ run(reality, request) → result
 
 request = { asks:     the asks to answer (ids in the reality, or asks given with the request)
             scenario: a scenario id, or none
-            clocks:   S and E (default: the header's start and end); K comes from each ask
+            clocks:   S (default: the header's start; a request may set a later one, §2); E is always the header's end; K comes from each ask
             pins:     extra pins applied to every ask, as `with` }
 
 result  = { timeline: per (cut class, scenario, pin set, axis options the pays reach, path): movements and end-of-day balances
             answers:  per ask, the printed result (LANGUAGE §5.16), its register (§8.2) and warnings
             residuals: the residual ledger for the residual asks (§6)
-            hash:     the hash of (the reality's canonical text, the request, tally version, engine build) }
+            hash:     the hash of (the reality's canonical text, the request, tally version, engine build)
+            version:  the tally version and the engine build that produced it (LANGUAGE §9) }
 ```
 
 This is spec M-20's `run(model, history, clocks[, scenario]) → timeline`. The model and its history are one thing here, the reality: records are rows in versions (LANGUAGE §5.18).
@@ -75,7 +76,7 @@ The four clocks of the spec (T-16, N-1219):
 
 | Clock | Comes from | What it does |
 |---|---|---|
-| **S**, run start | the header's `start`; a request may set a later one | the first day walked. Balances open at S from `opening` rows (LANGUAGE §5.9). Nothing before S is walked, and `flows` over days before S is a hole: `before the run's start` |
+| **S**, run start | the header's `start`; a request may set a later one | the first day walked. Balances open at S from `opening` rows (LANGUAGE §5.9). Nothing before S is walked, and `flows` over days before S is a hole (`HOLE-MISSING`, LANGUAGE §8.1): `before the run's start` |
 | **K**, knowledge date | the ask's `as known D`, else the model's `on` | masks every version known after K: law, facts, records, valuations, index additions. It splits the past (before K) from the plan (from K) |
 | **(K, E]**, evaluation window | E is the header's `end` | the plan runs to E. Records in (K, E] are never read by the run at cut K; only the evaluation layer compares them (§8) |
 | **R**, record time | the store: the reality's files as they stood at R | "what did we think in March?" is the reality at R = March, asked as known in March (N-1222). The language has no R; the store keeps the history of the files (`OPERATIONS.md` §1) |
@@ -94,7 +95,7 @@ The four clocks of the spec (T-16, N-1219):
 | walk day | the day walk; the "now" of state reads | §4 |
 | scenario `from` D | each scenario; visibility by date | LANGUAGE §6.4 |
 
-**Cut classes.** A cut matters only through the set of versions it admits. Two cuts that admit the same versions give the same results. The distinct `known` dates of a reality split time into **cut classes**, and every memo is keyed by the class, not the date.
+**Cut classes.** A cut matters only through the set of versions it admits. Two cuts that admit the same versions give the same values. K's own date still decides what the register prints and which rows are `held` (LANGUAGE §8.2), and what is past and what is plan (`OPERATIONS.md` §7); none of these is memoized. The distinct `known` dates of a reality split time into **cut classes**, and every memo is keyed by the class, not the date.
 
 ---
 
@@ -114,9 +115,9 @@ Loading happens once per reality and is cached under the reality's hash. When it
    - same-key cycles (`LOAD-CYCLE`);
    - guards on recurrence reads, a def's read of itself or of anything that depends on it at k ± n (`LOAD-GUARD`, LANGUAGE §5.10); any other shifted read is checked per key (`RUN-KEY`);
    - `excepts` labels and cycles (`LOAD-EXCEPTS`);
-   - items nothing reads, and sources no version cites (`WARN-UNREAD`, decided here, whatever the asks reach).
-6. **Infer state pays.** Mark every state read (LANGUAGE §5.13.1), propagate the mark to every def and pay that reaches it, and refuse a flow pay that is reached (`LOAD-STATE`). A def no pay reaches may hold only the dated forms (`bal(x, d)`, `worth(x, d)`, `flows`); `bal(x)`, `free(x)` and `plan_low` anywhere but under a state pay are `LOAD-STATE`. A def that reaches a state read is marked **walk-bound**: its cells carry the walk point (§3.2).
-7. **Index the rows.** For each target, rows are grouped by the keys they state and sorted by span. Versions are sorted by `known`, which gives the cut classes. A `moves` line gives the moved version one governs span per cut class: before the moving version's `known`, its own; from it, the moved one. Each version's `enters` is kept for the `wording` pin (LANGUAGE §4.3, §5.3). Band tables are checked per version (`LOAD-BAND`), and ties are found (`LOAD-OVERLAP`).
+   - inputs, defs and places nothing reads, and sources no version cites (`WARN-UNREAD`, LANGUAGE §8.5, decided here, whatever the asks reach).
+6. **Infer state pays.** Mark every state read (LANGUAGE §5.13.1) and propagate the mark to every def that reaches it. A pay whose amount, date or `when` reaches a mark is a state pay (LANGUAGE §5.13.1); a pay that reaches one anywhere else (its `for`, its places' keys, its bindings' `where`) is a flow pay that makes a state read, refused (`LOAD-STATE`). A def no pay reaches may hold only the dated forms (`bal(x, d)`, `worth(x, d)`, `flows`); `bal(x)`, `free(x)` and `plan_low` anywhere but under a state pay are `LOAD-STATE`. A def that reaches a state read is marked **walk-bound**: its cells carry the walk point (§3.2).
+7. **Index the rows.** For each target, rows are grouped by the keys they state and sorted by span. Versions are sorted by `known`, which gives the cut classes. A `moves` line gives the moved version one governs span per cut class: before the moving version's `known`, its own; from it, the moved one. Each version's `enters` is kept for the `wording` pin (LANGUAGE §4.3, §5.3). Band tables are checked per version (`LOAD-BAND`), and ties are found (`LOAD-OVERLAP`), across groups too: rows that state as many keys, but different ones, tie where their keys meet (`x[a, *]` and `x[*, b]` at `(a, b)`, LANGUAGE §4.6).
 8. **Check the asks:** the axes each one reaches, statically (`LOAD-FORKS`); orientation (`LOAD-ORIENT`); bounds (`LOAD-BOUND`); ask-only functions (`LOAD-ASKONLY`).
 
 ### 3.2 Cells and the memo
@@ -157,7 +158,7 @@ The flow pass and the day walk run only if something the asks need reaches a pla
 For each flow pay p:
 1. **Enumerate** its instances over its binding tuples.
 2. **For each instance,** evaluate `on` at the ask's cut K, then `when` and `amount` at its booking cut min(t, K) (§5, LANGUAGE §5.13.3). An instance dated outside [S, E] isn't part of the run. A hole date or `when` makes a hole movement (LANGUAGE §5.13). An instance whose `when` is true exists, whatever its amount; an amount of 0 books nothing.
-   - **An imprecise `on`** (a month or a year) keeps its interval (LANGUAGE §4.4). The movement is booked as an interval movement over its period: it counts in `flows(x, span)` when the period lies inside the span, is a `HOLE-IMPRECISE` when the period crosses an end of the span, and makes `bal(x, d)` a hole for d inside the period. Its law date is the period's first day when the period lies inside one law-date class; otherwise one law date per class, and one value or `HOLE-IMPRECISE` (LANGUAGE §4.3).
+   - **An imprecise `on`** (a month or a year) keeps its interval (LANGUAGE §4.4). The movement is booked as an interval movement over its period: it counts in `flows(x, span)` when the period lies inside the span, is a `HOLE-IMPRECISE` when the period crosses an end of the span, and makes `bal(x, d)` a hole for d inside the period. When its law date falls to `on` (no time key and no `for`, LANGUAGE §4.3), it is the period's first day when the period lies inside one law-date class; otherwise one law date per class, and one value or `HOLE-IMPRECISE`.
 3. **Classify** the instance:
    - on a day before K where either end is covered by records, it is **modelled past**: kept for the ledger, never booked (§6);
    - otherwise it is booked, as `past` before K and `plan` from K, or as `promised`.
@@ -168,16 +169,16 @@ Flow pays may read other flow pays through `flows(p, span)` and `next_on`. The i
 ### 4.2 The day walk
 
 The walk is a fold over days. For each day t from S to E:
-1. **Records.** Book the records of every covered place dated t, if t is before K (§6), except those that explain a state pay instance: each of those is booked at its instance's point in step 3, so the state pays before it see the balance without it, and a modelled-past state pay never sees its own record.
+1. **Records.** Book the records of every covered place dated t, if t is before K (§6), except those that explain a state pay instance dated t or later: each of those is booked at its instance's point in step 3 (one dated after its instance is booked on its own day, here), so the state pays before it see the balance without it, and a modelled-past state pay never sees its own record.
 2. **Flow movements.** Book the flow pass's movements dated t, in pay id order.
 3. **State pays.** Run the state pay instances due on t in order of phase, then pay id, then keys in index order (LANGUAGE §5.13.2). Each one:
    - evaluates its `when`, amount and date with state reads at this point of the day; its date must be precise (`HOLE-IMPRECISE` otherwise), and a walk-bound def it reads is evaluated afresh at this point (§3.2);
    - books its movement at once, so the next state pay sees it;
    - on a covered day before K, is modelled past instead. It is computed against the booked balances, which come from the records ("did we follow the rule?", N-1221), and it isn't booked. Its own record, if it has one, is booked at this point, after it is computed.
-4. **Close the day.** First the day's **anchors** (§6.1): if t is before K and the cut sees a `stated[x]` row governing t, x's end-of-day balance is the stated value, and the difference from the balance booked so far goes to the ledger (§6.3). Then each place's end-of-day balance is stored as a change point. Balances are step functions, so only days with movements or anchors cost anything.
+4. **Close the day.** First the day's **anchors** (§6.1): if t is before K and the cut sees a `stated[x]` row governing t as its last day, x's end-of-day balance is the stated value, and the difference from the balance booked so far goes to the ledger (§6.3). Then each place's end-of-day balance is stored as a change point. Balances are step functions, so only days with movements or anchors cost anything.
 5. **Check the places** (LANGUAGE §5.9):
-   - A movement that takes a debt above 0, a claim below 0 or a holding below 0 units is refused (`RUN-PLACE`). The movement isn't booked, and the place's balance is refused from that day, so everything that reads it later is refused too.
-   - An account that goes below zero prints `WARN-NEGATIVE` on the first day of each stretch.
+   - Each movement is checked as steps 1-3 book it, against the balance at that point of the day. One that takes a debt above 0, a claim below 0, or a holding below 0 units unless the holding is short (`short[x]`, LANGUAGE §5.9), is refused (`RUN-PLACE`). The movement isn't booked, so no later movement or state pay that day sees it, and the place's balance is refused from that point, so everything that reads it later is refused too.
+   - An account or cash place whose end-of-day balance goes below zero prints `WARN-NEGATIVE` on the first day of each stretch. The order of movements within a day is the engine's, so a balance between two of them isn't tested.
    - A free balance below zero on a day whose hold is above 0 prints `WARN-HELD`.
    - Each warning is tested only where the balance is known; a hole balance prints its hole when asked.
 
@@ -208,18 +209,18 @@ The rule is LANGUAGE §5.13.3. Operationally, for an instance under an ask with 
    - scenario versions, if t ≥ the scenario's `from`;
    - with t imprecise, a version is visible when known by the interval's first day and not when known after its last; one known inside the interval leaves the amount `HOLE-IMPRECISE` (LANGUAGE §4.4, §5.13.3).
 
-   The result is the booked amount A₀. An instance whose `when` was false at κ₀ didn't exist then, and counts as A₀ = 0. An A₀ that is a hole stays a hole movement until a version answers it: a `correction` answers it at t, and a change in the world measures δ from 0 under its `arrears` line.
-2. **Find the later versions that can change it.** This step and the next apply to booked **flow pay** instances only. A modelled-past instance (§6.2) is computed at its booking cut for the ledger and never measured. A state pay instance is a decision taken on its day with what was known then, never re-measured by a later version that isn't a `correction`, and no `arrears` line covers it (a `correction` reaches it through the walk at cut K, step 1). The candidates are every instance tuple of the pay in the version's cone, whether or not it existed at its cut. Take the versions V with κ₀ < V.known ≤ K that are neither corrections nor scenario versions, in `known` order; versions with one `known` are one step. Only those that touch the instance's read set can change it:
+   The result is the booked amount A₀. An instance whose `when` was false at κ₀ didn't exist then, and counts as A₀ = 0. An A₀ that is a hole, from its amount or its `when`, stays a hole movement until a version answers it: a `correction` answers it at t, and a change in the world measures δ from 0 under its `arrears` line. A version under which the `when` is false answers it with 0 (δ = 0, nothing booked).
+2. **Find the later versions that can change it.** This step and the next apply to booked **flow pay** instances only. A modelled-past instance (§6.2) is computed at its booking cut for the ledger and never measured. A state pay instance is a decision taken on its day: its law and facts are read at κ₀ (step 1) and its look-ahead as known then (§4.2). It is never re-measured by a later version that isn't a `correction`, and no `arrears` line covers it (a `correction` reaches it through the walk at cut K, step 1). Its balances are the walk's at cut K, so records and anchors that a later cut sees can change it (§9 invariant 5). The candidates are every instance tuple of the pay in the version's cone, whether or not it existed at its cut. Take the versions V with κ₀ < V.known ≤ K that are neither corrections nor scenario versions, in `known` order; versions with one `known` are one step. Only those that touch the instance's read set can change it:
    - V has a candidate row for a read in the read set;
    - V is the `v` of a rule of a def in the cone;
    - V adds a key to an index that the cone aggregates.
 
    The others are skipped without evaluation.
 3. **Measure each change.** For each step, re-evaluate the instance with its versions added, giving Aᵥ, and let δ = Aᵥ − A_previous. Versions with one `known` give one δ; if more than one of them has an `arrears` line covering the pay, the lines must agree (`LOAD-ARREARS`). When V makes an instance exist that didn't, δ = Aᵥ; when V ends one, δ = −A_previous.
-4. **Act on δ ≠ 0** by the `arrears` line that covers this pay for V's change: V's own line, else a line `of V` in a later version W with W.known ≤ K (at most one, `LOAD-ARREARS`):
+4. **Act on δ ≠ 0** by the `arrears` line that covers this pay for V's change: V's own line, else a line `of V` in a later version W with W.known ≤ K. One line at most covers a pay for one version's change, V's own lines and the later `of V` lines together (`LOAD-ARREARS`, LANGUAGE §5.3):
    - **`on D`:** a correction movement of |δ| on D, between the pay's places, reversed when δ < 0;
    - **`none`:** nothing;
-   - **no line:** a hole movement `HOLE-CHANGED` dated V.known. A later version that answers it does so only under cuts from its own `known`.
+   - **no line:** a hole movement `HOLE-CHANGED`, dated on or after V.known, a hole date (LANGUAGE §5.13.3): every `flows` that can count the movement, over a span that reaches V.known or later, is a hole (LANGUAGE §5.13.3), and so are the pay's places' balances from V.known on, past a later anchor too (§4.2, §6.1). A later version that answers it does so only under cuts from its own `known`.
 5. **A booked amount never changes afterwards** (LANGUAGE §5.13.3). Every later read of the instance sees A₀ plus the corrections dated in its span.
 
 An instance dated after K is planned, at cut K. It has no later versions to apply.
@@ -243,15 +244,15 @@ Before K, a place's movements on a day are:
 The balance at S comes from `opening`, and from each anchor on, from its `stated` row (below). So the past is real wherever a statement covers it, and modelled elsewhere, and every movement says which it is (N-1201).
 
 **Booking records.**
-- A record that explains a pay instance is booked as that instance's movement, with the record's date and amount. One that explains a state pay instance is booked at the instance's point in the walk (§4.2 step 3), not at the start of its day.
+- A record that explains a pay instance is booked as that instance's movement, with the record's date and amount. One that explains a state pay instance, dated on or before the instance's day, is booked at the instance's point in the walk (§4.2 step 3), not at the start of its day; one dated after it is booked on its own day, in step 1.
 - If the instance's two ends are both covered, its two records are its legs. It books once, and legs that differ print `WARN-LEGS`.
 - An unexplained record is booked between its place and the outside place of its currency, so conservation holds.
-- An explained record whose instance doesn't touch its place is refused (`RUN-RECORD`).
+- An explained record whose instance doesn't touch its place, or doesn't exist, is refused (`RUN-RECORD`).
 
 **Anchors** (LANGUAGE §5.18). A `stated[x]` row that the cut K sees, governing a day D before K, re-anchors x: at the close of D (§4.2 step 4), x's end-of-day balance is set to the stated value, and later days build on it. So from D, x's balance is the bank's balance at its last anchor plus what is booked since; before x's first anchor, it is the opening plus what is booked since.
 - **It isn't a movement.** Nothing is booked, `flows` doesn't count it, and no other place changes. The difference, stated − booked, where booked is the balance the walk reached at D before the anchor (the last anchor, or the opening, plus the movements since), is never hidden: it is the statement's balance line in the residual ledger (§6.3), one line per `stated` row, and an `anchor:` entry in the register of every figure that reads x's balance from D on (LANGUAGE §8.2).
 - **Holes.** A hole movement of x dated on or before D, and the hole balances it made, stop at D: x's balances before D stay holes with their questions, which the balance line carries (it is a hole too), and from D x's balance is known. A movement that may fall after D (a hole date, or an imprecise date whose period runs past D) still makes x's balances holes from the first day after D on which it may fall, since the statement may or may not hold it. The other place of a hole movement is anchored only by a `stated` row of its own.
-- **Decisions.** The anchor is applied at the close of D, after D's state pays. A state pay dated on or before D is as booked, since a decision is never re-measured (§5); a state pay after D reads the anchored balance through the walk.
+- **Decisions.** The anchor is applied at the close of D, after D's state pays, so it never changes a state pay dated on or before D; a state pay after D reads the anchored balance through the walk, under every cut that sees the row (§9 invariant 5).
 - **Cuts.** A cut before the statement's `known` doesn't see the row (LANGUAGE §4.6), so its walk has no anchor there and its balances are the booked ones.
 - **The modelled past** on covered days up to D is computed against the walk's balances on those days (§6.2), which an anchor at D doesn't change: it changes only the balances after D.
 
@@ -273,15 +274,15 @@ Each line of the ledger is one of:
 
 | Line | When | Shows |
 |---|---|---|
-| **matched** | an instance that one or more records explain | the amount difference (records − model) and the timing difference (record day − instance day) |
+| **matched** | an instance that one or more records explain, unless it is partly fulfilled | the amount difference (records − model) and the timing difference (record day − instance day) |
 | **expected but missing** | a model instance in the span that no record explains | the instance's amount and date |
 | **unexplained** | a record with `explains -` | the record |
-| **partly fulfilled** | a promised instance whose records sum to less than its amount | the remainder and a question: `when does the rest arrive, or is it written off?` (N-1206) |
-| **balance** | a `stated` row of x that differs from the booked balance on its day D, or whose booked balance is a hole. The booked balance is the last anchor before D (the previous `stated` row of x as known on `on`, else the opening) plus x's movements in the timeline at cut K on the days after it, through D; when K = `on`, that is the balance the walk reached at D before the anchor (§6.1) | the difference, stated − booked (a hole when the booked balance is one, with its questions): a gap or a duplicate in the import, or, where uncovered days lie between the last anchor and D, the modelled past of those days against the real one. Each `stated` row gives its own line, so drift points at its period; the anchor then resets x's balance, so the difference isn't carried into later lines |
+| **partly fulfilled** | a promised instance whose records sum to less than its amount | the amount difference (records − model, as a matched line's), the remainder and a question: `when does the rest arrive, or is it written off?` (N-1206) |
+| **balance** | every `stated` row of x, on its day D, whatever its difference (0.00 included; a hole when the booked balance is one). The booked balance is the last anchor before D (the previous `stated` row of x as known on `on`, else the opening) plus x's movements in the timeline at cut K on the days after it, through D; when K = `on`, that is the balance the walk reached at D before the anchor (§6.1) | the difference, stated − booked (a hole when the booked balance is one, with its questions): a gap or a duplicate in the import, or, where uncovered days lie between the last anchor and D, the modelled past of those days against the real one. Each `stated` row gives its own line, so drift points at its period; the anchor then resets x's balance, so the difference isn't carried into later lines |
 
-- **Grouping.** Lines are grouped by month and by pay id, or with `by f` by a field of the movement input (a category, a counterparty). A line's month is its own day's: the instance's date for a matched, expected-but-missing or partly fulfilled line, the record's date for an unexplained one, D for a balance line. Unexplained records, which have no pay id, form one group per month named `unexplained`; with `by f`, they go by the field's value. Balance lines form one group per month named `balance`.
-- **Zero lines.** A matched line prints whatever its difference, 0.00 included. An instance of amount 0 with no record is no movement and prints nothing.
-- **Signs.** Every amount is signed as a flow into x: in +, out −. A matched line's difference is records − model; an expected but missing line's is − model; an unexplained line's is the record; a balance line's is stated − booked. A hole on either side makes the difference a hole.
+- **Grouping.** Lines are grouped by month and by pay id, or with `by f` by a field of the movement input (a category, a counterparty). A line's month is its own day's: the instance's date for a matched, expected-but-missing or partly fulfilled line, the record's date for an unexplained one, D for a balance line. Unexplained records, which have no pay id, form one group per month named `unexplained`; with `by f`, they go by the field's value, and so does a matched line whose records agree on it; a line with no record, or whose records disagree, goes by its pay id, in a group printed `pay <id>`. Balance lines form one group per month named `balance`.
+- **Zero lines.** A matched line and a balance line print whatever their difference, 0.00 included. An instance of amount 0 with no record is no movement and prints nothing.
+- **Signs.** Every amount is signed as a flow into x: in +, out −. A matched or partly fulfilled line's difference is records − model; an expected but missing line's is − model; an unexplained line's is the record; a balance line's is stated − booked. A hole on either side makes the difference a hole.
 - **Totals.** Each group gives the model's total, the records' total and the difference, so the prototype's "pay in December 2025: model 13 611.54, bank 16 611.54" is one group line. A balance group gives the booked balances as its model total and the stated ones as its records total.
 - **Order.** Groups are sorted by the absolute value of their total difference, and lines within a group by their own, biggest first (N-1223). Holes come first, since a hole may be any size, among themselves by their first question (LANGUAGE §8.1). Remaining ties go by month, then group name, then the movement order of §4.1.
 - **Cost.** It is computed from the timeline and the modelled past, with no re-evaluation.
@@ -315,7 +316,7 @@ An ask with `paths N seed s` runs N paths (N ≤ 100 000, `REQ-PATHS`).
 
    **Law per path** is just this: law defs in the draw cone are cells of the path's layer (R-20).
 3. **Keep the terms, drop the path.** Each path's ask terms are kept (N values per term); its timeline is dropped. A path is recomputed alone on demand, because it is a pure function of its key (N-1406).
-4. **Statistics.** `share`, `mean`, `quantile` and their standard errors are computed exactly over the kept terms (LANGUAGE §5.16), and each `share` gets its verdict, sayable or not (§8).
+4. **Statistics.** `share`, `mean` and `quantile`, and the standard errors of `share` and `mean`, are computed over the kept terms as LANGUAGE §5.16 says, and each `share` gets its verdict, sayable or not (§8).
 5. **Workers.** Paths are split into contiguous blocks, one per worker, and merged in path order. The number of workers changes nothing (LANGUAGE §7.5).
 
 **Scenarios and `as if` share paths.** Addresses don't name the scenario or the pins, so a scenario and its base see the same uniforms on every path, and their difference has low variance (common random numbers, N-1302).
@@ -350,7 +351,8 @@ ask crps_sep: crps(bal(konto, 2026-09-30) as if {known 2026-03-31} for p in path
 - actual-to-expected ratios are counts and amounts with their ranges (CHG-10).
 
 **Oracle tests** for Monte Carlo statistics (CHG-13) are `check` asks:
-- the statistic, its standard error, the oracle and the tolerance (4·SE plus the step bias plus the oracle's own error) are each a def or a row;
+- the statistic is an ask term, written inline in the `check` (a path aggregate is ask-only, `LOAD-ASKONLY`): n/N for a `share`, the value for a `mean` or a `quantile`;
+- its standard error, the oracle and the tolerance (4·SE plus the step bias plus the oracle's own error) are each a def or a row, with the standard error taken at the oracle. The **step bias** is a bound, stated by the model, on how far the scheme's time step moves the statistic's mean from the oracle;
 - a parameter draw pinned to its mean is listed in the register as test mode, so a forecast can't carry it unseen.
 
 **What the layer can't do** is a declared bound: the log score of paths (LANGUAGE §5.15, `BOUNDS.md`).
@@ -359,8 +361,8 @@ ask crps_sep: crps(bal(konto, 2026-09-30) as if {known 2026-03-31} for p in path
 1. **Precision.** For n of N, the test's standard error is se_v = √(p̃(1 − p̃)/(N + 4)), with p̃ = (n + 2)/(N + 4) (Agresti–Coull). The printed standard error √(s(1 − s)/N) (LANGUAGE §5.16) is 0 at s = 0 or 1 whatever N is, so it can't be the test: "0 of 10" would pass. The test is 2·se_v ≤ 0.05, two standard errors at most 5 points either side, compared exactly as 1600·p̃(1 − p̃) ≤ N + 4. With N = 1 000 it always passes (se_v ≤ 0.0158, at p̃ = 1/2). With N = 100 it passes only for n ≤ 5 or n ≥ 95 (2·se_v = 0.098 at n = 50). 0 of N first passes at N = 52.
 2. **Carry.** The carry c, in years, is how long, on average, the money the term reads rests on figures carried into the future. Take the plan movements into and out of the places the term reads, dated in (K, d], where d is the last day the term reads, each at its plan value (every draw at its plan value, as the look-ahead counts it, §4.2). Then
    c = Σ |a|·τ / Σ |a|,
-   where a is a movement's amount and τ is its date minus K, in days / 365, when its amount's register holds a `held` or an `assumed` entry (LANGUAGE §8.2), and 0 otherwise. A term that reads no balance and no flow (a def over paths) takes c = the latest law date at which a `held` or `assumed` entry of its register is read, minus K, in years. The test is c ≤ 2 years. The horizon h = (d − K) in days / 365 bounds c (c ≤ h), and is printed beside it.
-3. **No test mode.** A share whose register holds a pin on a draw (the test mode of LANGUAGE §7.4, CHG-13, such as a parameter draw pinned to its mean) is a test, not a forecast.
+   where a is a movement's amount and τ is its date minus K, in days / 365, when its amount's register holds a `held` or an `assumed` entry (LANGUAGE §8.2), and 0 otherwise. A term that reads no balance and no flow (a def over paths) takes c = the latest law date at which a `held` or `assumed` entry of its register is read, minus K, in years. The test is c ≤ 2 years. A movement whose amount reads a draw with no `plan` makes the test fail, with the reason `carry needs a plan value for draw <z>`. The horizon h = (d − K) in days / 365 bounds c (c ≤ h), and is printed beside it. A term that reads no day takes d as the latest law date it reads, so h = c.
+3. **No test mode.** A share whose register holds a pin on a draw (the test mode of LANGUAGE §7.4, CHG-13, such as a parameter draw pinned to its mean) is a test, not a forecast. Its reason is `not sayable: test mode (pinned: <pin>)`.
 
 The share is sayable when all three pass. The reasons name each test that fails, with its figures: `not sayable: carry 14.98 years > 2 (horizon 29.97 years)`, `not sayable: 2·se 0.187044 > 0.05 (0 of 10)`. The figures print rounded half to even, se_v to 1e-6 and c and h to 0.01 years; the tests compare exact values. The thresholds, 0.05 and 2 years, are the engine's for `tally 1`, and a model can't change them. `mean` and `quantile` over paths print c and h beside their standard error, with no verdict: the rule is about frequencies.
 
@@ -369,7 +371,7 @@ The share is sayable when all three pass. The reasons name each test that fails,
 **The spec's two examples, on the household** (by hand, at the rule's level). The household has no draws, so N = 1 000 paths over some draw, and a share s, are supposed; everything else is the household's.
 - **"3 years of mostly known money":** `share(p in path: bal(konto, 2029-09-30) >= 0) paths 1000 seed 7` at K = `on` = 2026-10-19. The horizon is h = 1 077 / 365 = 2.95 years (`365 + 365 + 366 − 19 = 1077`).
   - Precision: se_v ≤ √(1/4 / 1004) = 0.01578, so 2·se_v ≤ 0.0316 ≤ 0.05, whatever n is.
-  - Carry: konto's plan movements are monthly (wages, fees, taxes, spending, investing). Take every one as carried, the worst case: each reads a held tax or contribution row, or an assumed growth row. Equal months give c = h/2. Amounts growing by at most 4 % a year, 1.04³ − 1 = 0.1249 over the three years, give c ≤ h · (1/2 + 0.1249/3) / (1 + 0.1249/2) = 1.50 years, which is ≤ 2.
+  - Carry: konto's plan movements are monthly (wages, fees, taxes, spending, investing). Take every one as carried, the worst case: each reads a held tax or contribution row, or an assumed growth row. Equal months give c = h/2. Amounts growing by at most 4 % a year, 1.04³ − 1 = 0.1249 over the three years, give c ≤ h · (1/2 + 0.1249/3) / (1 + 0.1249/2) = 1.504 years (printed 1.50), which is ≤ 2.
   - **Sayable.**
 - **"A 30-year flat-price bet":** the same share at 2056-09-30, with prices held flat (the price rows read as `held`). The horizon is h = 10 939 / 365 = 29.97 years (`30 · 365 + 8 − 19 = 10939`, eight leap days).
   - Precision passes, as above.
@@ -388,9 +390,9 @@ These hold by construction. The engine checks them anyway, cheaply, on every run
 2. **Net worth moves only at the boundary, with a price, or at an anchor.** For the set of all places that aren't outside, the day's change in total worth equals the movements across the boundary plus the revaluation of holdings and assets that day (spec §3.2), plus that day's anchor differences, stated − booked (§6.1), which the ledger shows as balance lines.
 3. **A scenario changes nothing before its `from`.** Every movement and balance before D equals the base run's (LANGUAGE §6.4).
 4. **Asks move no money.** The timeline's hash is the same before and after the asks are answered. Pays inside `as if` are computed and never booked.
-5. **A booked amount never changes.** Each flow pay instance's A₀ is the same under every K class that books it at the same cut. A state pay reads the walk of its cut K, so records and anchors that a later cut sees can change what it reads (§4.2, §6.1); an anchor never changes a state pay dated on or before its day.
+5. **A booked flow amount never changes.** Each flow pay instance's A₀ is the same under every K class that books it at the same cut. A state pay's amount isn't fixed that way: it reads the walk of its cut K, so records and anchors that a later cut sees can change what it reads and books (§4.2, §6.1), while the law, facts and look-ahead it reads stay those of its day (§5, §4.2); an anchor never changes a state pay dated on or before its day.
 
-The test suite adds **determinism**: every case is run twice, with 1 and with 6 workers, and the result hashes must be equal (N-1201, spec §7).
+The test suite adds **determinism**: every case is run twice, with 1 and with 6 workers, and the result hashes must be equal (R-16, N-1401, spec §7).
 
 ---
 
@@ -426,10 +428,10 @@ The test suite adds **determinism**: every case is run twice, with 1 and with 6 
 
 | Refusal | When | What happens |
 |---|---|---|
-| **Load refusals** (LANGUAGE §8.3) | the reality doesn't load | nothing runs. A broken reality never runs in part. `OPERATIONS.md` refuses an amendment that would break loading, before it is accepted. A load error in a scenario file refuses only that scenario |
+| **Load refusals** (LANGUAGE §8.3) | the reality doesn't load | nothing runs. A broken reality never runs in part. `OPERATIONS.md` refuses an amendment that would break loading, before it is accepted. A load error in a scenario file refuses only that scenario and the scenarios over it |
 | **Per-value refusals** (LANGUAGE §8.4) | a value can't be computed | printed at its key; it propagates and outranks holes |
 | **Holes** (LANGUAGE §8.1) | a fact is missing | printed with their questions; other results stand |
-| `REQ-ASK` | the request names an ask that doesn't exist, or gives an ask that doesn't load | the request is refused |
+| `REQ-ASK` | the request names an ask that doesn't exist (an ask given with the request that doesn't load is refused with its own load code, LANGUAGE §8.3, as `OPERATIONS.md` §8 says) | the request is refused |
 | `REQ-CLOCK` | S outside the header's [start, end], or `as known` after `on` | the request is refused |
 | `REQ-PATHS` | more than 100 000 paths for one ask | the request is refused |
 | `ENGINE-INVARIANT` | §9 fails | the whole result is refused, with the evidence |
@@ -437,6 +439,6 @@ The test suite adds **determinism**: every case is run twice, with 1 and with 6 
 **What the engine never does:**
 - choose an option for the household, or optimise, except a `solve` the law names;
 - read a clock, or anything outside the reality and the request;
-- write to the reality (only `OPERATIONS.md` writes, and only what the household confirms);
+- write to the reality (only `OPERATIONS.md` writes: what the household confirms, statement imports and the store's advances, `OPERATIONS.md` §1);
 - approximate without a stated precision;
 - book a question's pays.

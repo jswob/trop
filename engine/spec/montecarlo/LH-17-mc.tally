@@ -1,0 +1,256 @@
+model lh17mc
+  tally 1
+  on 2026-10-19
+  start 2026-10-19
+  end 2026-10-19
+  note "LH-17 with its randomness drawn (DONE gate 7, part 1). Milevsky and Robinson's setting: wealth w = 20 per $1 a year of real spending, spent as a continuous flow; the log of wealth's growth X_t = (mu - sigma^2/2) t + sigma W_t with mu = 0.05 and sigma = 0.12 (Table 3, the balanced portfolio); the remaining lifetime T exponential with rate lam = 0.05 (p. 93). Ruin is the event that the SPV, the integral of exp(-X_t) from 0 to T, reaches w: wealth is exp(X_t) (w - the integral up to t), so it hits 0 before T exactly then."
+  note "The oracle is the exact law, not Eq. 8. With lam = mu, Yor (1992) gives SPV = 2 U / (sigma^2 G), with U uniform on (0, 1) and G gamma of shape b = 2 mu / sigma^2 and scale 1, independent. So P(SPV >= w) = E[(1 - c G)+] with c = sigma^2 w / 2, which is F_b(z) - mu w F_b+1(z) with z = 2 / (sigma^2 w), F_k the gamma(k, 1) CDF. The key derives it and checks that it solves the ruin equation. Eq. 8 is a moment match for lam > 0: here it gives 0.1057 against the exact 0.1496, and it is asked beside it."
+  note "The scheme. Steps of dt = 1/9 year. Step k draws its log return y ~ N((mu - sigma^2/2) dt, sigma sqrt(dt)) and the step's average log level ybar = y/2 + N(0, sigma sqrt(dt/12)): the exact joint law of the step's end and its average. It adds dt exp(-(X_k + ybar)). By Jensen that term is at most the step's own integral, so the drawn SPV is at most the true one on every path, and the ruin share is biased low only: the key bounds the bias by 0.0019. The last, partial step draws its own average. Paths stop at 300 years (2700 steps), which drops P(T > 300) = e^-15. The model has no parameter draw: the closed form takes mu and sigma as known."
+
+source mc_key "LH-17-mc.md, the answer key written with this model (montecarlo/): the oracle's digits, the step bias, the statistics' own biases and the oracles' rounding errors, each derived there"
+
+source modeller "The model's own choices, each stated with its reason"
+
+source mr2005 "Milevsky and Robinson, A Sustainable Spending Rate without Simulation, Financial Analysts Journal 61(6), 2005, pp. 89-100 (QWeMA reprint, Internet Archive capture 2016-08-03)" at "http://web.archive.org/web/20160803142333/http://www.qwema.ca:80/pdf_research/2007SEPT_SustSpending.pdf"
+
+source yor1992 "M. Yor, Sur certaines fonctionnelles exponentielles du mouvement brownien réel, Journal of Applied Probability 29(1), 1992, pp. 202-208"
+
+index step = 0..2700
+  note "Steps of dt = 1/9 year: 2700 steps are 300 years. Key k is the step that starts at k dt."
+
+input bias_life: num
+
+input bias_median: num
+
+input bias_ruin: num
+
+input bias_spv: num
+
+input bias_surv: num
+
+input err_median: num
+
+input err_ruin: num
+
+input err_spv: num
+
+input err_surv: num
+
+input hand_u: num
+
+input hand_v: num
+
+input lam: num
+
+input mu: num
+
+input npaths: int
+
+input oracle_key: num
+
+input rdt: num
+
+input s25: num
+
+input sigma: num
+
+input spend: num
+
+input wealth: num
+
+def acc[p in path, k in step]: num
+  note "The SPV of the first k full steps of path p."
+  rule base = acc[p, k - 1] + term[p, k - 1]
+  rule first excepts base when k = 0 = 0
+
+def bsd: num = sqrt(pow(sdt, 2) / 12) to 1e-15
+
+def delta[p in path]: num = life[p] - kfull[p] * dt
+
+def dt: num = rdt * rdt
+
+def e_life: num = 1 / lam
+
+def eq8: num
+  note "Eq. 8, as LH-17 reads it (scale_beta): a moment match for lam > 0, asked beside the exact oracle to show the gap."
+  rule base v mr2005_v = cdf(gamma(eq8_alpha, eq8_beta), 1 / wmult) to 1e-12
+
+def eq8_alpha: num = (2 * mu + 4 * lam) / (pow(sigma, 2) + lam) - 1
+
+def eq8_beta: num = (pow(sigma, 2) + lam) / 2
+
+def gdrift: num = mu - pow(sigma, 2) / 2
+
+def gq: num = exp(-((lam + gdrift - pow(sigma, 2) / 2) * dt)) to 1e-15
+
+def hd: num = exp(-(gdrift * dt / 2 - pow(sigma, 2) * dt / 6)) to 1e-15
+
+def kfull[p in path]: int = round(life[p] / dt, 1, floor)
+
+def kmax: int = count(k in step) - 1
+
+def ksum[p in path]: int = min(kfull[p], kmax)
+
+def mdt: num = gdrift * dt
+
+def med_oracle: num = (ln(2) to 1e-12) / lam
+
+def p_oracle: num
+  note "The exact ruin probability, Yor (1992) with lam = mu: F_b(z) - mu w F_b+1(z). Its own error is the two roundings, 1e-12 in all, since mu w = 1 here."
+  rule base v yor1992_v = (cdf(gamma(shape_b, 1), zarg) to 1e-12) - mu * wmult * (cdf(gamma(shape_b + 1, 1), zarg) to 1e-12)
+
+def p_oracle_pdf: num = pdf(gamma(shape_b + 1, 1), zarg) to 1e-12
+
+def pa: num = gdrift / 2 - pow(sigma, 2) / 6 + lam
+
+def pj: num = (1 - (exp(-(pa * dt)) to 1e-15) * (1 + pa * dt)) / pow(pa, 2)
+
+def psd[p in path]: num = sqrt(pow(sigma, 2) * delta[p] / 3) to 1e-15
+
+def qd: num = exp(-(lam * dt)) to 1e-15
+
+def ruined[p in path]: bool = spend * spv[p] >= wealth
+
+def sdt: num = sigma * rdt
+
+def se_life: num = 1 / (lam * (sqrt(npaths) to 1e-9))
+
+def se_ruin: num = sqrt(p_oracle * (1 - p_oracle) / npaths) to 1e-9
+
+def se_spv: num = sqrt((spv_m2 - pow(spv_mean_d, 2)) / npaths) to 1e-9
+
+def se_surv: num = sqrt(surv_oracle * (1 - surv_oracle) / npaths) to 1e-9
+
+def shape_b: num = 2 * mu / pow(sigma, 2)
+
+def spv[p in path]: num = acc[p, ksum[p]] + tailterm[p]
+
+def spv_m2: num = 2 / ((lam + mu - pow(sigma, 2)) * (lam + 2 * mu - 3 * pow(sigma, 2)))
+
+def spv_mean_c: num = 1 / (lam + mu - pow(sigma, 2))
+
+def spv_mean_d: num = (dt * hd * qd + lam * pj) * trunc / (1 - gq)
+
+def surv_oracle: num = exp(-(lam * s25)) to 1e-12
+
+def tailterm[p in path]: num
+  note "The partial last step, of length delta, with its own average log level; none once the path is cut at 300 years."
+  rule base = delta[p] * (exp(-(xs[p, kfull[p]] + ypart[p])) to 1e-12)
+  rule cut excepts base when kfull[p] >= kmax = 0
+
+def term[p in path, k in step]: num = dt * (exp(-(xs[p, k] + ybar[p, k])) to 1e-12)
+
+def tol_life: num = 4 * se_life + bias_life
+
+def tol_median: num = 4 * se_life + bias_median + err_median
+
+def tol_ruin: num = 4 * se_ruin + bias_ruin + err_ruin
+
+def tol_spv: num = 4 * se_spv + bias_spv + err_spv
+
+def tol_surv: num = 4 * se_surv + bias_surv + err_surv
+
+def trunc: num = 1 - (exp(-(kmax * (lam + gdrift - pow(sigma, 2) / 2) * dt)) to 1e-15)
+
+def wmult: num = wealth / spend
+
+def xs[p in path, k in step]: num
+  note "X at the start of step k: the sum of the drawn log returns before it."
+  rule base = xs[p, k - 1] + y[p, k - 1]
+  rule first excepts base when k = 0 = 0
+
+def ybar[p in path, k in step]: num = y[p, k] / 2 + bsd * zeta[p, k]
+
+def ypart[p in path]: num = gdrift * delta[p] / 2 + psd[p] * zp[p]
+
+def zarg: num = 2 / (pow(sigma, 2) * wmult)
+
+draw life[p in path] ~ exponential(lam) to 1e-9
+
+draw y[p in path, k in step] ~ normal(mdt, sdt) to 1e-12
+
+draw zeta[p in path, k in step] ~ normal(0, 1) to 1e-12
+
+draw zp[p in path] ~ normal(0, 1) to 1e-12
+
+ask chk_hand_u: check spv[1] = hand_u with life[1] = 0.25, u(y[1, 0]) = 0.5, u(y[1, 1]) = 0.5, u(zeta[1, 0]) = 0.5, u(zeta[1, 1]) = 0.5, u(zp[1]) = 0.5 paths 1 seed 2026
+
+ask chk_hand_u_seed7: check spv[1] = hand_u with life[1] = 0.25, u(y[1, 0]) = 0.5, u(y[1, 1]) = 0.5, u(zeta[1, 0]) = 0.5, u(zeta[1, 1]) = 0.5, u(zp[1]) = 0.5 paths 1 seed 7
+
+ask chk_hand_v: check spv[1] = hand_v with life[1] = 0.25, y[1, 0] = 0, y[1, 1] = 0, zeta[1, 0] = 0, zeta[1, 1] = 0, zp[1] = 0 paths 1 seed 2026
+
+ask chk_lam_mu: check lam = mu
+
+ask chk_life_mean: check (abs(mean(p in path: life[p]) - e_life) <= tol_life) = true paths 10000 seed 2026
+
+ask chk_median: check (abs(quantile(p in path: life[p], 0.5) - med_oracle) <= tol_median) = true paths 10000 seed 2026
+
+ask chk_mw: check mu * wmult = 1
+
+ask chk_oracle_key: check (abs(p_oracle - oracle_key) <= err_ruin) = true
+
+ask chk_ruin: check (abs(share(p in path: ruined[p]) - p_oracle) <= tol_ruin) = true paths 10000 seed 2026
+
+ask chk_spv_mean: check (abs(mean(p in path: spv[p]) - spv_mean_d) <= tol_spv) = true paths 10000 seed 2026
+
+ask chk_surv: check (abs(share(p in path: life[p] > s25) - surv_oracle) <= tol_surv) = true paths 10000 seed 2026
+
+ask q_distinct: life[1] = life[2], spv[1] = spv[2], y[1, 0] = y[1, 1] paths 2 seed 2026
+
+ask q_life: quantile(p in path: life[p], 0.5), mean(p in path: life[p]), share(p in path: life[p] > s25) paths 10000 seed 2026
+
+ask q_oracle: p_oracle, p_oracle_pdf, eq8, eq8 - p_oracle, spv_mean_c, spv_mean_d, spv_mean_c - spv_mean_d
+
+ask q_path7: life[7], spv[7], ruined[7] paths 7 seed 2026
+
+ask q_path7_wide: life[7], spv[7], ruined[7] paths 100 seed 2026
+
+ask q_ruin: share(p in path: ruined[p]), mean(p in path: spv[p]) paths 10000 seed 2026
+
+ask q_ruin_100: share(p in path: ruined[p]) paths 100 seed 2026
+
+ask q_ruin_head: share(p in path: p <= 100 and ruined[p]) paths 10000 seed 2026
+
+ask q_ruin_pinned: share(p in path: ruined[p]) with u(life[1]) = 0.5 paths 1000 seed 2026
+
+ask q_tol: se_ruin, tol_ruin, se_surv, tol_surv, se_life, tol_median, tol_life, se_spv, tol_spv
+
+version yor1992_v
+  cite yor1992
+  known 1992-03-31
+  note "Dated by its issue, Journal of Applied Probability 29(1), March 1992, so known on the month's last day (LANGUAGE §4.5). It states the law of the integral of exp(2(B_s + nu s)) up to an independent exponential time as a beta variable over twice a gamma one; with lam = mu the beta one is uniform. It holds no rows: p_oracle's rule points at it."
+
+version mr2005_v
+  cite mr2005
+  known 2005-11-01
+  note "The figures LH-17 takes from the article (models/LH-17.tally, version mr2005_v), with the same locators: the Table 3 balanced portfolio, the p. 93 lifetime, the p. 94 wealth."
+  lam = 0.05 "p. 93, after Eq. 4c: lambda = 0.05"
+  mu = 0.05 "Table 3 note: mean arithmetic portfolio return 5 percent"
+  s25 = 25 "p. 93, after Eq. 4c: living at least 25 more years"
+  sigma = 0.12 "Table 3 note: s.d. 12 percent"
+  spend = 1 "p. 94: intends to consume $1 after inflation a year"
+  wealth = 20 "p. 94: w = 20, $20 per $1 of consumption"
+
+version mc_key_v
+  cite mc_key
+  known 2026-10-19
+  note "The statistics' tolerances (ENGINE §8): 4 SE, defs at the oracle, plus these bias and error rows, each derived in the key."
+  bias_life = 0.000000001 "§ The lifetime statistics: the 1e-9 rounding of the lifetime draw moves its mean by at most 5e-10"
+  bias_median = 0.0011 "§ The lifetime statistics: the type-1 median of 10 000 paths is the 5 000th order statistic, whose mean lies 0.001000 below ln 2 / lam"
+  bias_ruin = 0.0019 "§ The step bias: 1.894e-3 from the Jensen gap, 3.1e-7 from the 300-year cut, under 1e-9 from the roundings"
+  bias_spv = 0.0000001 "§ The step bias, the mean of the SPV: the roundings move it by at most 1.7e-8; its oracle is the scheme's own mean"
+  bias_surv = 0.00000000001 "§ The lifetime statistics: the 1e-9 rounding of the lifetime draw moves P(T > 25) by at most 7.2e-12"
+  err_median = 0.00000000001 "§ The oracles: ln(2) rounded to 1e-12, divided by lam"
+  err_ruin = 0.000000000001 "§ The oracle: two gamma CDFs rounded to 1e-12, with mu w = 1"
+  err_spv = 0.00000000001 "§ The oracles: the scheme's mean from six exponentials rounded to 1e-15, at most 2e-12"
+  err_surv = 0.0000000000005 "§ The oracles: exp rounded to 1e-12"
+  hand_u = 8952013715587/36000000000000 "§ What is asserted exactly, path 1 with its uniforms pinned to 1/2 and T = 0.25"
+  hand_v = 8999405732203/36000000000000 "§ What is asserted exactly, path 1 with its normal draws pinned to 0 and T = 0.25"
+  oracle_key = 0.149583385828427231 "§ The oracle, script A: p* to 18 decimals"
+
+version scheme
+  cite modeller
+  known 2026-10-19
+  note "The numerical choices: the step and the paths. Neither changes the closed form; the key bounds what they leave."
+  npaths = 10000 "the paths of every oracle ask, written again in each ask's paths clause: 4 SE = 0.0143 on the ruin share, and the run fits PERFORMANCE §8 (key, § N)"
+  rdt = 1/3 assumed "the root of the step: steps of 1/9 year, whose normal sd sigma / 3 = 0.04 is exact; the key bounds the bias such a step leaves at 0.0019"

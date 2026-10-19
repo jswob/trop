@@ -46,7 +46,7 @@ Each fixture plants one cause on top of the base, plus a null fixture with none.
 
 - **No reads past K:** H8 is a metamorphic test. Changing rows after K must not change the fitted model (T-16, v2 §5.6).
 - **One-offs can't be abused:** a run where the modeller marks every residual a one-off must score worse on H6/H7 (the rare-cost rate rises), per v2 §5.6.
-- **Invalid evaluations are refused:** MAPE on a balance series that crosses zero; a band from too few paths; any read of the answer key before the model hash is frozen.
+- **Invalid evaluations are refused:** MAPE on a balance series that crosses zero, by the judge script; a band from too few paths, by the `share` verdict (`not sayable`, ENGINE §8); any read of the answer key before the model hash is frozen, by the judge script, which holds the key.
 - **The three-way split:** replay − actual is 0 on every fixture except H3; ex-post − replay holds H1, H2, H4, H5; ex-ante − ex-post holds the market noise.
 
 ## 5. What passing means, and what it doesn't

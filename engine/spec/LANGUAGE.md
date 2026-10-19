@@ -12,7 +12,7 @@ Tally comes from candidate B (`candidates/B/sketch.md`), with ideas from A and C
 5. Constructs: what each computes, its refusals, its cost and its cases
 6. Files, versions and amendments
 7. Numbers, rounding, randomness and determinism
-8. Holes, assumptions, refusals and warnings: the catalogue
+8. Holes, the register, refusals and warnings: the catalogue
 9. Versioning of the language
 10. What Tally can't say, and why
 
@@ -71,11 +71,11 @@ A model is plain text in files with the extension `.tally`. It has one canonical
 - **Keys** match `[a-z0-9][a-z0-9_-]*` (`u5`, `ty2014-15`, `t4e-171`), or are integers, years (`2025`), months (`2025-03`) or days (`2025-03-31`). A token that matches the key pattern is one key, `-` included, so binary minus is written with a space on each side (`a - b`), as the canonical form prints it.
 - **Numbers.**
   - Integers: `40000`, `-3`.
-  - Decimals: `1190.05`, `-0.0023`. No exponent, no thousands separators.
+  - Decimals: `1190.05`, `-0.0023`. No exponent, except the step `1e-N` in a unit position (§2.3 `UNIT`, §7.2), and no thousands separators.
   - Fractions: `5/900`, allowed only in rows and only when the value doesn't terminate as a decimal.
 - **Dates** are ISO: `2026-07-14` (a day), `2026-07` (a month), `2026` (a year). As a value of type `date`, a month or a year is an **imprecise date** (§4.4).
 - **Strings** are in double quotes, with `\"` and `\\` as the only escapes. Polish text is allowed in strings, and only there.
-- **No comments.** The only free text is `note "..."`, a row's locator string, and the question or reason of a hole, an assumption or a bound.
+- **No comments.** The only free text is `note "..."`, a row's locator string, a source's title and address, the label of a unit or an axis option, an input's `question`, and the question or reason of a hole, an assumption or a bound.
 
 ### 2.2 Reserved words
 
@@ -89,6 +89,8 @@ tally note if then else and or not in for where with as when excepts true false 
 known governs assumed path check solve explain inputs-of residuals
 ```
 
+Two keywords also name built-ins, and are read as those where the grammar takes an id: `place` is the built-in index of places (`x in place`, `key place`, §5.6) and the built-in record field (`bank[r].place`, §5.18), and `path` is the index of paths (`p in path`, §5.6). A model still may not declare either, or use it as a key, a bound variable or a record field of its own (`LOAD-RESERVED`, not `LOAD-DUP`).
+
 **Built-in names** are read as built-ins only directly before `(`, so any id, key, record field, bound variable or rule label may take one. A band may not, since it is also called with `(` (`LOAD-DUP`). They are the functions, aggregates and distributions:
 
 ```
@@ -101,16 +103,16 @@ cdf pdf pmf crps u
 ```
 
 **Contextual words** are reserved only in their own position, and are free everywhere else:
-- types and their parts, in a type: `money num int bool date dates month year key rate nominal effective simple discount prices movement`;
+- types and their parts, in a type: `money num int bool date dates month year key rate nominal effective simple discount movement`;
 - period words, as an index's period kind and as the period argument of `periodic` and `factor` (`month`, `year`, `day`, `quarter`);
-- mode names, in a mode position (`round`, `prorata`, a conversion, §7.2): `down up floor ceil half-up half-even`;
+- mode names, in a mode position (`round`, `prorata`, a conversion, §7.2): `down up floor ceil half-up half-down half-even`;
 - day counts, as the convention of `dcf`: `act365 act360 actact us30_360 e30_360`;
 - place kinds and their clauses, in a `place`: `account cash holding asset debt claim outside holds priced open`;
-- clause words, at the head of a line of their section or in their clause: `on start end cite enters arrears of none correction moves covers supply demand arc order from to amount phase promised plan over because question v rest largest last paths seed orient lower higher weight`;
+- clause words, at the head of a line of their section or in their clause: `on start end cite enters arrears of none correction moves covers supply demand arc order from to amount phase promised plan over because question prices rule v rest largest last paths seed orient lower higher weight`;
 - pin words, at the head of a pin: `wording`;
-- the built-in record fields, in a record of type `movement`: `on place amount explains`.
+- the built-in record fields, in a record of type `movement`: `on place amount explains` (`place` is also a keyword, read as this field after a `.`, above).
 
-**Built-in ids** are top-level ids of every reality, so they follow the rules of ids: declaring one again is `LOAD-DUP`, and a bound variable with one's name is `LOAD-SHADOW`. They are the built-in inputs `opening stated short account_place party_place match_days match_amount`, the indexes `place bank_account bank_party`, the axis `placekind`, and the outside places `outside_<cur>` and `outside_<unit>` (§5.9).
+**Built-in ids** are top-level ids of every reality, so they follow the rules of ids: declaring one again is `LOAD-DUP`, and a bound variable with one's name is `LOAD-SHADOW`. They are the built-in inputs `opening stated short account_place party_place match_days match_amount`, the indexes `place pay bank_account bank_party`, the axis `placekind`, and the outside places `outside_<cur>` and `outside_<unit>` (§5.9).
 
 **Rule labels** are read only in `excepts`, so a label may be any word of the id pattern, keywords included (`rule first`, `rule none`).
 
@@ -128,14 +130,14 @@ section   = source | version | unitdecl | axis | index | place | input | band | 
           | fill | draw | pay | bound | ask
 
 source    = "source" ID STR ["at" STR] NL
-version   = "version" ID NL IN "cite" ID NL [IN "governs" span NL] [IN "known" DAY NL] [IN "enters" DAY NL]
+version   = "version" ID NL IN "cite" ID NL [IN "governs" lspan NL] [IN "known" DAY NL] [IN "enters" DAY NL]
             {IN "arrears" ("on" lit | "none") ["of" ID {"," ID}] ["for" ID {"," ID}] NL} [IN "correction" NL] [IN "assumed" STR NL]
-            {IN "moves" ID "to" span NL} [IN "covers" ref {"," ref} NL]
+            {IN "moves" ID "to" lspan NL} [IN "covers" ref {"," ref} NL]
             {IN "note" STR NL} {IN vitem NL}                    (known: required outside a scenario file)
                               (arrears on: a day, or a month or year, §5.13.3; enters, moves: §5.3)
 vitem     = ID "+" "[" key {"," key} "]"                                   (adds keys to an index)
           | ID [rowkeys] "=" value rowmeta                                  (a row of an input, or a given of a def)
-          | ID ["[" key "]"] ":" interval "=" (expr | hole) rowmeta         (a band row; the key for a keyed band)
+          | ID ["[" key "]"] ":" interval "=" (expr | hole) [STR]           (a band row, with no governs of its own, §5.8; the key for a keyed band)
 unitdecl  = "unit" ID STR NL
 axis      = "axis" ID NL IN key STR NL IN key STR NL {IN key STR NL}
 index     = "index" ID ( "=" "[" key {"," key} "]"
@@ -147,12 +149,13 @@ pkind     = ("account" | "cash") CUR ["holds" ref] | ("debt" | "claim" | "outsid
           | "holding" ID "priced" ref | "asset" CUR "priced" ref
 input     = "input" ID [binds] ":" type ["prices" lit ["by" ref]] ["question" STR] NL {IN "note" STR NL}
 band      = "band" ID [binds] "(" ID ":" type ")" ":" type NL {IN "note" STR NL}   (binds: one, §5.8)
-def       = "def" ID [binds] ":" type ["at" expr] ( "=" expr NL | NL {IN "note" STR NL} rule {rule} )
-rule      = IN "rule" LABEL ["excepts" LABEL {"," LABEL}] ["v" ID] ["when" cond] "=" (expr | hole) NL
+def       = "def" ID [binds] ":" type ["at" expr] ( "=" (expr | hole) NL | NL {IN "note" STR NL} rule {rule} )
+rule      = IN "rule" LABEL ["excepts" LABEL {"," LABEL}] ["v" ID] ["when" cond] "=" (expr | hole | solvex) NL
+                                                        (solvex: only in a rule with v, §5.16; LOAD-ASKONLY otherwise)
 fill      = "fill" ID [binds] NL [IN "v" ID NL] {IN "note" STR NL}
             IN "supply" expr ["for" bind {"," bind}] NL IN "demand" expr ["for" bind {"," bind}] NL
             IN "arc" expr NL IN "order" expr {"," expr} NL
-draw      = "draw" ID binds "~" dist "to" UNIT ["plan" expr] NL
+draw      = "draw" ID binds "~" (cdist "to" UNIT | ddist) ["plan" expr] NL
 pay       = "pay" ID [binds] NL IN "from" ref NL IN "to" ref NL IN "amount" expr NL IN "on" expr NL
             [IN "for" expr NL] [IN "when" expr NL] [IN "phase" INT NL] [IN "promised" NL]
 bound     = "bound" ID STR "because" STR NL
@@ -160,22 +163,25 @@ ask       = "ask" ID ":" askbody ["for" bind {"," bind}] ["with" pin {"," pin}] 
             ["paths" INT "seed" INT] ["orient" ("lower" | "higher")] NL
 askbody   = expr {"," expr} | "explain" ref | "inputs-of" ref | "check" expr "=" expr
           | "residuals" ref span ["by" ID]
-          | "solve" ref "in" "[" lit "," lit "]" "to" UNIT ":" expr "=" expr
+          | solvex
+solvex    = "solve" ref "in" "[" lit "," lit "]" "to" UNIT ":" expr "=" expr
 
 binds     = "[" bind {"," bind} "]"
 bind      = ID "in" (ID | "[" key {"," key} "]" | "path") ["where" expr]
-rowkeys   = "[" rk {"," rk} "]"            rk = key | "*" | key ".." key
-rowmeta   = ["governs" span] [STR]                             (the STR is the locator)
+rowkeys   = "[" rk {"," rk} "]"            rk = key | "*" | key ".." key   (a key of place may be a keyed place, x[k1, …], §5.6)
+rowmeta   = ["governs" lspan] [STR]                             (the STR is the locator)
 value     = (["-"] lit | "(" field {"," field} ")" | "[" [lit {"," lit}] "]") ["assumed" STR] | hole
           | "-" ["assumed" STR]
-field     = ["-"] lit | hole | "-"
+field     = ["-"] lit | hole | "-" | ID "[" key {"," key} "]"    (the last: a pay instance, in explains, §5.18)
 hole      = "?" STR
 span      = expr ".." [expr] | ".." expr | expr          (each end a date or period, §4.1)
+lspan     = lit ".." [lit] | ".." lit | lit            (a version's spans: literal dates or periods, §4.1)
 interval  = ("[" | "(") (["-"] lit | "-inf") "," (["-"] lit | "inf") ("]" | ")")
-pin       = ref "=" expr | "u" "(" ref ")" "=" lit | "law" expr
+pin       = pref "=" expr | "u" "(" ref ")" "=" lit | "law" expr
           | "wording" expr "for" "[" ID {"," ID} "]"
           | "known" expr | "scenario" ID | ID "=" key                      (the last: an axis option)
                           (law, wording and known take a date; a pin's expr is evaluated unpinned, §5.10)
+pref      = ID ["[" pk {"," pk} "]"] {"." ID}      pk = expr | "*"     (*: every key at that position, §7.4)
 
 type      = "money" CUR | "num" [unit] | "int" | "bool" | "date" | "dates" | "month" | "year"
           | "key" ID | "rate" basis | "(" ID type {"," ID type} ")"
@@ -191,28 +197,32 @@ cmp       = sum [("=" | "!=" | "<" | "<=" | ">" | ">=" | "in") sum]
 sum       = prod {("+" | "-") prod}          prod = unary {("*" | "/") unary}
 unary     = ["-"] post
 post      = atom {"[" expr {"," expr} "]" | "." ID} ["to" UNIT] ["as" "if" "{" pin {"," pin} "}"]
-atom      = lit | key | ref | call | agg | flowsx | crps | distfn | prorata
+atom      = lit | key | ref | call | agg | group | flowsx | crps | distfn | prorata | CUR
           | "(" expr ")" | "[" [key {"," key}] "]" | "-"
 agg       = AGG "(" bind {"," bind} [":" expr] ["," expr] ")"
 AGG       = "sum" | "count" | "min" | "max" | "any" | "all" | "first" | "last" | "argmin" | "argmax"
           | "share" | "mean" | "quantile"
+group     = ("plan_low" | "bal") "(" bind {"," expr} ")"        (a set of places, §5.13.1; CUR: compared with currency(x), §5.9)
 flowsx    = "flows" "(" ref "," span ["," "for" expr] ")" ["in" CUR "at" ref (MODE | ID)]
 crps      = "crps" "(" (dist | expr ["weight" expr] "for" bind) "," expr ")"
 distfn    = ("cdf" | "pdf" | "pmf" | "quantile") "(" dist "," expr ")"
 prorata   = "prorata" "(" expr "," expr "for" bind {"," bind} "," expr "," UNIT ","
             ( (MODE | ID) "," "rest" ("none" | "last") | "rest" "largest" ) ")"
-dist      = DIST "(" expr {"," expr} ")"
+dist      = cdist | ddist
+cdist     = ("normal" | "lognormal" | "exponential" | "gamma" | "uniform") "(" expr {"," expr} ")"
+ddist     = ("poisson" | "binomial" | "negbin") "(" expr {"," expr} ")"
+          | "discrete" "(" expr "for" bind ")"                (the weights w[j] for j in IDX, §5.14)
 call      = (ID ["[" expr "]"] | BUILTIN) "(" [expr {"," expr}] ")"   (a band, keyed or not; BUILTIN: §2.2)
 ref       = ID ["[" expr {"," expr} "]"] {"." ID}
 lit       = a number, a date, a key, or true / false
 CUR       = 3 upper-case letters, or "XXX" for a stated abstract unit (N-203)
 UNIT      = a positive lit (a step: 0.01, 0.05, 1, 100), "1e-" INT, or a ref (§7.2)
-MODE      = "down" | "up" | "floor" | "ceil" | "half-up" | "half-even"
+MODE      = "down" | "up" | "floor" | "ceil" | "half-up" | "half-down" | "half-even"
 LABEL     = a word of the id pattern; keywords allowed (§2.2)
 ```
 
 **Five parse rules.**
-1. **`when … = …`, `at … = …` and `check … = …`.** In a rule's `when`, a short-form def's `at` and a `check`, the left part is the longest prefix, ending just before an ` = ` at bracket depth 0, that parses as a complete expression; what follows that ` = ` is the rule's value, the def's value or the check's right side. So `rule r when q = q164 = a + b` has condition `q = q164` and value `a + b`, `rule died when decedent[c] = 0` has condition `decedent[c]` and value `0`, and `def x[y in ty]: money PLN at law_day[y] = base[y]` has `at law_day[y]` and value `base[y]`. There, a value or a right side with an `=` at bracket depth 0 is written in parentheses, so the split falls at the last such ` = ` (`LOAD-PARSE` otherwise): `rule r when k > 1 = (a2_on[a] = d2_on[d])`. Elsewhere, where nothing stands before the value but the rule's or the def's own `=`, the value parses as written, and the printer parenthesises it all the same (§2.4). (From C §1. It settles the single-`=` doubts of B-LH-17 and B-fresh, and D7's J7 and J42.)
+1. **`when … = …`, `at … = …`, `check … = …` and `solve … = …`.** In a rule's `when`, a short-form def's `at`, a `check` and a `solve`'s equation, the left part is the longest prefix, ending just before an ` = ` at bracket depth 0, that parses as a complete expression; what follows that ` = ` is the rule's value, the def's value, or the right side of the check or the equation. So `rule r when q = q164 = a + b` has condition `q = q164` and value `a + b`, `rule died when decedent[c] = 0` has condition `decedent[c]` and value `0`, and `def x[y in ty]: money PLN at law_day[y] = base[y]` has `at law_day[y]` and value `base[y]`. There, a value or a right side with an `=` at bracket depth 0 is written in parentheses, so the split falls at the last such ` = ` (`LOAD-PARSE` otherwise): `rule r when k > 1 = (a2_on[a] = d2_on[d])`. A `solve` value is never parenthesised: the split falls before the keyword `solve`, and the ` = ` after its `:` divides f from g. Elsewhere, where nothing stands before the value but the rule's or the def's own `=`, the value parses as written, and the printer parenthesises it all the same (§2.4). (From C §1. It settles the single-`=` doubts of B-LH-17 and B-fresh, and D7's J7 and J42.)
 2. **Comparisons don't chain.** `a < b < c` is refused (`LOAD-PARSE`).
 3. **`as if` binds to the reference before it.** `x[t] + y as if {…}` applies the pins to `y` only; write `(x[t] + y) as if {…}` for both.
 4. **`-` alone.** `-` is the atom "not applicable" when the next token can't start an operand: `:`, `,`, `)`, `]`, `}`, `=`, `then`, `else`, `and`, `or`, or the end of the line. Otherwise it is unary minus. So `where x[k] != -:` tests for `-`, `rule r when x[k] != - = v` has the condition `x[k] != -`, and `add_days(d, -1)` subtracts.
@@ -220,7 +230,7 @@ LABEL     = a word of the id pattern; keywords allowed (§2.2)
 
 **Calls.** A call takes a built-in's name (§2.2) or a band's id. `min` and `max` also take two or more plain arguments, `min(a, b)`, besides the aggregate form `min(k in IDX: e)`. A period word is accepted as the period argument of `periodic` and `factor` (`factor(i, 1, year)`).
 
-Expressions nest at most **8** deep (`LOAD-DEPTH`). `as if` nests at most **4** deep (`LOAD-ASIF`).
+Expressions nest at most **8** deep (`LOAD-DEPTH`). The depth at a point is the number of brackets `( )`, `[ ]` and `{ }` open there (calls, keys and `as if` included) plus the `if`s it is inside; a chain of operators at one level (`a + b + … + j`) adds none. `as if` nests at most **4** deep (`LOAD-ASIF`).
 
 ### 2.4 Canonical format
 
@@ -231,20 +241,20 @@ The loader accepts any spacing that the grammar allows. It then reprints the mod
   - Within a kind, sections are sorted by id (ASCII).
   - **Versions come last**, sorted by `known` date, then id. A file's versions therefore read like a log, newest at the bottom, and an amendment usually appends at the end.
 - One blank line between sections, always, one-line sections included.
-- **Inside a section:** notes come first, then rules (sorted by label, then by the `known` date of their `v`, a rule without `v` first) or version items. Version items are sorted by target id, then keys in index order, with a keyless row first. Index additions come before rows.
+- **Inside a section:** notes come first, then rules (sorted by label, then by the `known` date of their `v`, a rule without `v` first) or version items. Version items are sorted by target id, then keys in index order, with a keyless row first, then by the start of their own `governs` span (a row with no span of its own first, then a span with no start); a band's rows stay ascending (§5.8). Index additions come before rows.
 - **Clause order** is the order in the grammar. An `excepts` list is sorted by label, with ", ".
 - **Short form:** a def with one rule labelled `base`, no `v`, no `when`, no notes prints as `def x: T = expr`.
 - **Numbers** print as the shortest exact decimal, with a leading `0` before the point (`0.05`), or as a reduced `a/b` when the value doesn't terminate. Dates print in ISO.
-- **Expressions:** one space around binary operators and after commas, none inside brackets. Parentheses appear only where precedence needs them, except that a `… to u` call used as an operand, a rule's or short-form def's value and a `check`'s left side with an `=` at bracket depth 0 (parse rule 1), and a converted `flows` inside a comparison (parse rule 5) are always parenthesised.
+- **Expressions:** one space around binary operators and after commas, none inside brackets. Parentheses appear only where precedence needs them, except that a `… to u` call used as an operand, a rule's or short-form def's value (other than a `solve`) and either side of a `check` with an `=` at bracket depth 0 (parse rule 1), and a converted `flows` inside a comparison (parse rule 5) are always parenthesised.
 
 ### 2.5 Names and stable ids
 
 - **One namespace** holds every top-level id of a reality, across all its files: sources, versions, units, axes, indexes, places, inputs, bands, defs, fills, draws, pays, bounds and asks. Two top-level items with one id are refused (`LOAD-DUP`). This makes "a new file silently overrides an id" unrepresentable (§4#18 of the spec).
-- **A stable id is the item's id.** A key's stable id is `index:key`; a row's is `version:target[keys]`; a rule's is `def.label`. Ids are never reused for something else. Renaming is a new item plus an end to the old one (§6).
+- **A stable id is the item's id.** A key's stable id is `index:key`; a row's is `version:target[keys]`, followed by the row's own `governs` span, or a band row's interval, when its version holds more than one row of that target at those keys (`forecast_2026:inflation 2028..`); a rule's is `def.label`. Ids are never reused for something else. Renaming is a new item plus an end to the old one (§6).
 - **Bound variables** (`k` in `k in person`) are local to their item. A bound variable with the same name as a top-level id is refused (`LOAD-SHADOW`). This removes the "parameter shadows a law value" doubts of all three smoke rounds.
 - **Rule labels** are local to their def. They are never read in expressions, only in `excepts`, and they may repeat other names, keywords included (§2.2).
 - **Record fields** are local to their record type and are read only after a `.`.
-- **Keys.** A key literal is resolved by its position: in `allowance[u5]` it must be a key of `allowance`'s first index. A bare key used elsewhere (`k = u5`, `a = vpi`) takes the index or axis of the other operand. A key literal in a value position (a rule's value, an `if` branch, a band row that returns a key) takes the index of the declared type of the value it gives (`key IDX` of the def or band); the branches of an `if` take the type of the whole. A key literal that could belong to two indexes or axes in one position is refused (`LOAD-KEY`). A key literal that is also a top-level id is refused (`LOAD-KEY`).
+- **Keys.** A key literal is resolved by its position: in `allowance[u5]` it must be a key of `allowance`'s first index. A bare key used elsewhere (`k = u5`, `a = vpi`) takes the index or axis of the other operand. A key literal in a value position (a rule's value, an `if` branch, a band row that returns a key) takes the index of the declared type of the value it gives (`key IDX` of the def or band); the branches of an `if` take the type of the whole. A key literal that could belong to two indexes or axes in one position is refused (`LOAD-KEY`). A key literal that is also a top-level id is refused (`LOAD-KEY`), except a place id where a key of the built-in index `place` is expected, or a pay id where a key of `pay` is expected, since their keys are those ids (§5.6).
 - **Bare names** resolve in this order: a bound variable in scope, then a top-level id, then a key. A bound variable over a key list (`k in [1, 12, 13]`) takes its index from the key positions it is used in; two different indexes there are `LOAD-KEY`.
 
 ---
@@ -291,7 +301,7 @@ Checked at load (`LOAD-UNIT` on any violation):
 - **A `num` that is an integer** is accepted where an `int` is expected, such as `round(months / 12, 1, ceil)` used as a count of years. Any other num there is refused at that key (`RUN-NOT-INT`).
 - **Back to money.** A `money` def and a pay's money amount must be money. A `num CUR` becomes money only through `round(x, u, mode)` with u a whole number of minor units (§7.2), or through `prorata` on the same terms (§5.12). A fill's supply and demand share one unit, which may be any (§5.11).
 - **Literal adoption.** In `+`, `-`, `min`, `max` and comparisons, a bare literal takes the unit of the other operand (`base - 8000` is money if `base` is). In `*` and `/`, an integer literal is an `int` and a decimal literal a dimensionless `num`. A literal argument takes its parameter's type. **A bare literal that is a whole value** (a rule's value, a band row's value, a row, a pin, an `if` branch) takes the declared type and unit of its target, so `rule none = 0` on a `num PLN` def is `0` PLN. Unary minus on an allowed literal is allowed (`add_days(d, -1)`).
-- **Exchange rates** are `num A/B`: an amount of A per unit of B. `money EUR × num PLN/EUR` is `num PLN`. Converting is explicit, and adding two currencies is refused (N-202).
+- **Exchange rates** are `num A/B`: an amount of A per unit of B. `money EUR × num PLN/EUR` is `num PLN`. Converting is explicit, and adding two currencies is refused (N-202). A rate applies only from B to A (U-05): a `money A` or `num A` times `num A/B`, or a `money B` or `num B` divided by it, is refused (`LOAD-UNIT`), though the unit algebra above would give it a unit.
 
 ### 3.3 Interest rates
 
@@ -310,8 +320,8 @@ A rate is not money and not a bare number (N-206, spec §4#7). Its basis is part
 
 | Built-in | Value |
 |---|---|
-| `periodic(r, P)` | The rate per period P (`day`, `month`, `quarter`, `year`) as a `num`. For `nominal m /year` and a period of 1/m year it is r/m. For `simple /year` it is r × (the period's length in years, months counted as 1/12). For `discount /year` d, the effective annual rate is i = d / (1 − d), then the effective conversion. Otherwise it is the effective conversion (1 + i)^t − 1, which needs `to u` when t isn't an integer. |
-| `factor(r, n, P)` | (1 + periodic(r, P))^n, exact for an integer n. |
+| `periodic(r, P)` | The rate per period P (`day`, `month`, `quarter`, `year`) as a `num`. For `month`, `quarter` and `year`, let t be P's length in years (1/12, 1/4, 1). For `nominal m /year` it is (1 + r/m)^(m·t) − 1, which is r/m for a period of 1/m year. For `effective /year` i it is (1 + i)^t − 1. For `discount /year` d, the effective annual rate is i = d / (1 − d), then that conversion. For `simple /year` it is r × t. For `/month` it is (1 + r)^n − 1, with n = 1, 3 or 12 months. For `/day` with P = `day` it is r. Any other pairing with `day`, or a `/day` rate over a longer period, is refused at load (`LOAD-UNIT`): a day's share of a year or of a month is a day count, which can't be a default (§10), and `dcf` gives it. A power that isn't an integer needs `to u`. |
+| `factor(r, n, P)` | (1 + periodic(r, P))^n, exact for an integer n; a non-integer n needs `to u` (§7.3). |
 | `dcf(a, b, c)` | The year fraction from date a to date b under day count c: `act365`, `act360`, `actact` (ISDA), `us30_360`, `e30_360`. A missing convention can't be written (N-207). |
 
 ### 3.4 Prices and price years
@@ -322,7 +332,7 @@ A money input is nominal: its value is money of the date it governs. A figure st
 input rent_wish: money PLN prices 2026 by cpi
 ```
 
-Reading it at law date d gives `num PLN` = value × `cpi[d]` / `cpi[2026]`, exactly. `cpi` is keyed by one time index, so `cpi[d]` reads the key whose period holds d, and `cpi[2026]` the key that holds the price year (§4.3). The model then rounds where the payer rounds. A money input that names no `prices` is nominal, so "2 500 in 2028" is a nominal row governing 2028. Neither can be read as the other.
+Reading it at law date d gives `num PLN` = value × `cpi[d]` / `cpi[2026]`, exactly. `cpi` is keyed by one time index, so `cpi[d]` reads the key whose period holds d, and `cpi[2026]` the key that is the price year itself: a `prices Y by idx` input needs an index with a key for the year Y (`LOAD-KEY` otherwise). Which month, or which mean of months, stands for a year is the modeller's def over a monthly index (§10). The model then rounds where the payer rounds. A money input that names no `prices` is nominal, so "2 500 in 2028" is a nominal row governing 2028. Neither can be read as the other.
 
 **A price year with no index.** `prices Y` alone states the year of a figure "in 2015 dollars" when the case gives no index. Read at a law date in Y it is the figure itself, in its declared type (`money CUR` for a money input). At any other date it is a hole: `<x> is in Y prices; no index moves it to <d>`. So a figure in old prices is never read as nominal in silence.
 
@@ -365,7 +375,7 @@ Every row carries its version, and the version carries its source, its governs s
 
 ### 4.1 Spans and periods
 
-- **A span** `a..b` over periods names every period from a through b, inclusive. As time it is the half-open interval [start of a, start of the period after b). So `2015-11..2016-10` is [2015-11-01, 2016-11-01), and `2021` alone is [2021-01-01, 2022-01-01). `a..` is open at the end, and `..b` has no start.
+- **A span** `a..b` over periods names every period from a through b, inclusive. As time it is the half-open interval [start of a, start of the period after b). So `2015-11..2016-10` is [2015-11-01, 2016-11-01), and `2021` alone is [2021-01-01, 2022-01-01). `a..` is open at the end, and `..b` has no start: read by `flows`, it reaches before S, where `flows` is a hole (`ENGINE.md` §2).
 - **Span ends are expressions** of a date or period type, so spans built from keys are written directly: `start_of(year_of(m))..day_of(m, 15)` is a year to date, and `flows(konto, m)` reads one month. In a version's `governs`, the ends are literals (§7.1).
 - **Index ranges** of periods: `index m = month 2027-01..2059-12`, `index y = year 2010..2036`, `index d = day 2026-01-01..2026-12-31`.
 - **`by n`.** A key of a range `by n` stands for the n periods from it to the next key: `day 2026-01-05..2026-12-28 by 7` gives weeks, `month 2026-01..2026-12 by 3` quarters. Its law date is its first day. On an integer range, `by n` only steps the keys.
@@ -408,8 +418,8 @@ A def is evaluated at a **law date**: the day whose law applies. The law date of
 Rule 3 is the departure from B, which used the model's `on` date there. It means a def with no time key, such as a child's needs under a maintenance table, read by a monthly pay in July is evaluated with July's law. A snapshot model therefore extends to a year without being restructured (judge's diff b). The value is memoised per (keys, law date), and `explain` prints the law date it ran at. Rule 4 makes a view as known in 2020 read its undated law at 2020: the view's today is its cut.
 
 - **`at`** is any date expression of the def's keys, inputs and defs. It is evaluated at the law date the def would have without it, and its reads follow these same rules. An `at` that gives an imprecise date (§4.4) reads the def once per **law-date class** the period overlaps (the stretches between the governs boundaries of what the def reaches, `ENGINE.md` §3.2), each at its first day inside the period. If all give one value, that is the value; otherwise it is `HOLE-IMPRECISE`. So a period that lies inside one class reads at its first day. An `at` that is a hole makes the def a hole at those keys, carrying the `at`'s questions, and its rules aren't evaluated.
-- **A pay instance's law date** is the start of its first time key; with none, the start of its `for` period; with neither, its `on` date, where `on` itself is read at the ask's cut (§5.13.3), or at the walk's day in a look-ahead (§5.13.1), with that cut's day as its own law date. So a hole in an `on` asks `… no value at <that day>`, once. Where that falls to an imprecise `on`, it follows the `at` rule above: one law date per law-date class the period overlaps, and one value or `HOLE-IMPRECISE`.
-- **Inputs and bands** have no rules of their own: they are read at the law date of their reader, or at their own time key's period (§4.6).
+- **A pay instance's law date** is the start of its first time key; with none, the start of its `for` period; with neither, its `on` date, where `on` itself is read at the ask's cut (§5.13.3), or at cut min(t, K) in a look-ahead on walk day t (§5.13.1), with that cut's day as its own law date. So a hole in an `on` asks `… no value at <that day>`, once. Where that falls to an imprecise `on`, it follows the `at` rule above: one law date per law-date class the period overlaps, and one value or `HOLE-IMPRECISE`.
+- **Inputs and bands** have no rules of their own: they are read at the law date of their reader, or at their own time key's period (§4.6). **A draw** is dated the same way: its time key's start, else its reader's law date.
 - **Pins.** Inside `as if {law D}`, every def and input read with no `at` and no time key is read at D, an input read directly in the ask included. That is the law that governed D, as known at the cut: a version known later that governs D retroactively is read too.
 - **The wording in force on D.** `as if {wording D for [x, y]}` keeps every law date and restricts the named items' candidates (rows, band tables, rules through their `v`) to versions that entered into force by D (`enters`, §5.3; §4.6). So "the current act, with the scale in its wording of 30 June" is `wording 2022-06-30 for [scale]`, and a later act that governs that day but entered into force after it isn't read. `law D` and `wording D for` together give the act in its wording of D, applied at D. `wording` always names its items: no case needed every item's wording at once (`coverage.md` R1). A `for` list may name an item that has no candidate under the pin; it reads as any item with no candidate does (§4.6).
 
@@ -422,10 +432,10 @@ A month or a year used as a `date` means "some day in that period" (N-301).
 
 For example, a lot bought "during 2019" is decidably outside a 30-day window around 2024-12-27, so the comparison has a value.
 
-- **Built-ins** on an imprecise date (`age`, `add_months`, `year_of`, `overlap_days` and the rest) give the interval of their values at the two ends of the period, its first and its last day (2019-01-01 and 2019-12-31 for 2019). When the two are equal it is that value: `year_of(2015-01)` is 2015.
-- **Only a comparison decides an interval.** Wherever one value is needed (a print, a money amount, a key, an aggregate's term), an undecided interval is `HOLE-IMPRECISE`.
+- **Built-ins** on an imprecise date (`age`, `add_months`, `year_of`, `overlap_days` and the rest) give the interval of their values at the two ends of the period, its first and its last day (2019-01-01 and 2019-12-31 for 2019). When the two are equal it is that value: `year_of(2015-01)` is 2015. `weekday`, whose value doesn't follow its date's order, is 1..7 on any month or year, since every weekday falls in one.
+- **Only a comparison decides an interval.** Wherever one value is needed (a print, a money amount, a key, a term of an aggregate other than `min`, `max`, `argmin` and `argmax`, which order their terms by these comparisons, §5.10), an undecided interval is `HOLE-IMPRECISE`.
 - **An imprecise date prints as its period** (`2020-07`).
-- **A pay whose `on` is imprecise** counts in a span only if the whole interval lies inside it. Otherwise `flows` over that span is a hole, and so is `bal(x, d)` for a d inside the period. A state pay's date must be precise (`HOLE-IMPRECISE` otherwise), since it runs at a point of a day.
+- **A pay whose `on` is imprecise** counts in a span when its whole interval lies inside it, and not at all when the interval lies wholly outside. When the interval crosses an end of the span, `flows` over that span is a hole (`HOLE-IMPRECISE`), and so is `bal(x, d)` for a d inside the period. A state pay's date must be precise (`HOLE-IMPRECISE` otherwise), since it runs at a point of a day.
 
 The cost is two endpoint evaluations per operation, with no enumeration of days. An imprecise `at` or `on` costs one evaluation per law-date class it overlaps, usually one.
 
@@ -446,7 +456,7 @@ The cost is two endpoint evaluations per operation, with no enumeration of days.
   - A label naming the period a document serves (a form's tax year, an exam sitting, an edition "for 2025") isn't its date.
   - The version's note says which date it took and why.
 - **A later text read for an earlier period** (a 2022 text standing for an unfetched 2020 one) gives a version marked `assumed` (§5.3), citing the later text and governing the earlier period, with a note naming the text it stands for. Its rows, and the rules that point at it with `v`, are assumed. Where only some rows stand in, those rows are marked instead. Such a version is known, and enters into force, at the dates of the text it stands for where they are found, since that text's contents were public then; else at the later text's.
-- **A hypothetical case's stipulations** (who, when, how much, in a worked example or a composed case) are known from the model's `start`, else its `on`: they are the case's world, given as though known all along. A modeller's assumption that stands for a case's own fact takes the same date.
+- **A hypothetical case's stipulations** (who, when, how much, in a worked example or a composed case) are known from the earlier of the model's `start` and its `on` (its `on` when it has no `start`): they are the case's world, given as though known all along. A modeller's assumption that stands for a case's own fact takes the same date.
 
 Two clocks read it:
 - **The ask's cut K.** An ask sees the versions known on or before K. K is the ask's `as known D`, or the model's `on` date if it states none (N-705, N-1219). A version known after `on` is refused (`LOAD-KNOWN`): the reality can't know its own future, and `on` is its today.
@@ -465,7 +475,7 @@ One rule reads rows of inputs, givens of defs, band rows and dated rules. To rea
 1. **Candidates.** A row is a candidate if:
    - every key it states equals the corresponding key in k (a `*` matches every key; a range `a..b` matches every key from a to b in index order, on any index, and a range whose ends are out of order is refused at load, `LOAD-KEY`);
    - a key it leaves unstated, or covers with `*`, is one its index had on the row's `known` date. A default row stated before a key was added doesn't cover that key (§6.2);
-   - its version's `known` ≤ K;
+   - its version's `known` ≤ K; a scenario version has no `known`, so K doesn't mask it, and it is visible by date instead (§6.4);
    - its governs span contains the period of x's time key, or d when x has no time key. A span contains a period when it contains the period's first day, so `2025-04-06..2026-04-05` governs key 2025 of `year … from 04-06`. The row's own span, when it has one, replaces its version's wholly and may reach past it. A row with no governs span at all governs every date. A version's span is the one in force under K: the latest `moves V to SPAN` known by K replaces V's default span (§5.3). A record row (§5.18) passes this test at every law date: its version's span says what the statement covers, not when the row applies;
    - inside a `wording D` pin that covers x, its version entered into force by D (§4.3).
 2. **Precedence.** Among the candidates, prefer in turn:
@@ -474,9 +484,9 @@ One rule reads rows of inputs, givens of defs, band rows and dated rules. To rea
    3. the row with the later `known`;
    4. a row with a governs span over one without.
 3. **Ties.** Two candidates still tied, with overlapping spans, are refused at load (`LOAD-OVERLAP`).
-4. **No candidate** gives a hole. Its question is the input's `question`, if it has one, otherwise `x at k: no value for <period>`, the period of x's time key; with no time key, `x at k: no value at <law date>`, and with no keys at all, `x: no value at <law date>`. This is the **gap rule**: a value exists only where a row says so (N-702).
+4. **No candidate** for an input or a band gives a hole (for a def, a given that doesn't match goes on to its rules, and a rule label with no candidate version drops out, §5.10). Its question is the input's `question`, if it has one, otherwise `x at k: no value for <period>`, the period of x's time key; with no time key, `x at k: no value at <law date>`, and with no keys at all, `x: no value at <law date>`. This is the **gap rule**: a value exists only where a row says so (N-702).
 
-**Reading at a date.** An item keyed by one time index, read with a date or a period of another granularity in that key position (`cpi[d]` for a day d, a monthly price at a day), reads the key whose period holds it. A date outside the index is `RUN-KEY`.
+**Reading at a date.** An item keyed by one time index, read with a date or a period of another granularity in that key position (`cpi[d]` for a day d, a monthly price at a day), reads the key whose period holds it. A date outside the index is `RUN-KEY`. A period longer than the index's keys holds no key: it is refused (`LOAD-KEY`).
 
 **What follows from the rule:**
 - **A later version overrides an earlier one only on its own span.** A law change, a correction, a new job or a stopped job is written as an addition (N-107).
@@ -500,10 +510,10 @@ model ul05
 ```
 
 - `tally 1` is the language version (§9). It is required.
-- `on` is the model date: the reality's today. It is required. It is the default cut K (§4.5), and the law date at the top of an ask that gives none (§4.3).
+- `on` is the model date: the reality's today. It is required. It is the default cut K (§4.5), and so the law date at the top of an ask that gives no date of its own and no `as known` (§4.3 rule 4: the ask's cut K).
 - `start` and `end` are the run's first and last day, S and E. They are required when the model has places, pays or draws. `start` may stand alone, to date a case's stipulations (§4.5).
 
-**Refusals:** `LOAD-HEADER` if `tally` is missing or `start` > `end`. **Cost:** none. **Cases:** all.
+**Refusals:** `LOAD-HEADER` if `tally` is missing, a model's `on` is missing, `start` > `end`, or a model with places, pays or draws lacks `start` or `end`. The header is checked before the grammar, so a missing header line is `LOAD-HEADER`, not `LOAD-PARSE`. **Cost:** none. **Cases:** all.
 
 ### 5.2 source
 
@@ -545,7 +555,7 @@ Rules point at a version with `v` (§5.10).
 
 **What it computes.** Nothing by itself. It supplies the source, governs span and known date of every item in it. Those feed the read rule (§4.6), and asks as known before the version's date don't see it.
 
-**An index addition is dated.** A key added by version V exists only for asks with K ≥ V's `known`. Earlier asks don't list it, and a read of it is refused (`RUN-KEY`). Keys are never removed. A thing that ends gets rows that make it `-` or 0 from its end (§6).
+**An index addition is dated.** A key added by version V exists only for asks with K ≥ V's `known`. Earlier asks don't list it, and a read of it is refused (`RUN-KEY`). Inside an ask that lists it, a booking cut before V's `known` doesn't see it either (§5.6): an instance at the key counts as A₀ = 0 there (`ENGINE.md` §5 step 1), and the modelled past at that cut doesn't compute it (`ENGINE.md` §6.2). Keys are never removed. A thing that ends gets rows that make it `-` or 0 from its end (§6).
 
 **Refusals:**
 - `LOAD-NAME`: an item names an unknown id.
@@ -553,13 +563,13 @@ Rules point at a version with `v` (§5.10).
 - `LOAD-DUP`: an addition of a key that already exists.
 - `LOAD-ARREARS`: `arrears on D` with D (for a month or year, its last day) before `known`; `arrears` together with `correction`; two `arrears` lines that cover one pay for one version's change, or that disagree for one pay across versions known the same day; `for` naming something that isn't a pay; `of` naming a version not known before this one.
 - `LOAD-MOVES`: `moves` naming an unknown version, one not known before this one, or a scenario version; two `moves` of one version in versions known the same day.
-- `LOAD-OVERLAP`: two rows of one target with the same keys, the same known date and overlapping spans.
+- `LOAD-OVERLAP`: two rows of one target that are still tied after the precedence of §4.6 at some keys, with overlapping spans: the same layer, as many stated keys, the same known date, and both or neither with a governs span. They need not state the same keys: `x[a, *]` and `x[*, b]` tie at `(a, b)`.
 
 **Cost:** rows are grouped at load per (target, keys) and sorted by span, so a read is O(log r). **Cases:** all. Rows with their own `governs`: CB-03, CH-05, CMP-01, LH-05, LH-07, MP-09, MP-11, RC-03, RC-08, UL-05, UL-06, UL-08, UL-13, the household, change 1, change 4, change 5. `enters`: RC-08, UL-04, UL-15. `moves`: RC-01, RC-05. Index additions: change 1, change 4, change 5, change 6. `correction`: CH-04 (`coverage.md` table 1).
 
 ### 5.4 unit
 
-`unit hour "godzina"` declares a quantity unit for `num` types (§3.2). **Refusals:** `LOAD-UNIT` for an undeclared unit. **Cost:** none (units are checked at load). **Cases:** CB-06, CH-02, CH-04, CH-06, LH-01, LH-02, the household.
+`unit hour "godzina"` declares a quantity unit for `num` types (§3.2). **Refusals:** `LOAD-NAME` for an undeclared unit (a unit is a top-level id, §2.5). **Cost:** none (units are checked at load). **Cases:** CB-06, CH-02, CH-04, CH-06, LH-01, LH-02, the household.
 
 ### 5.5 axis
 
@@ -579,7 +589,7 @@ An axis lists the options of a reading or a choice, each with a note (N-109, N-9
 - **A set that isn't a product.** When the combinations that give one result aren't one option set per axis (`(x1, y1)` and `(x2, y2)` give A, the cross pairs B), the set is split by the axes in id order: the first axis's options are grouped by the set of the other axes' combinations they give the result with, each group is a line, and each line is split again on the next axis. Every line then names a product.
 - `with a = opt` fixes an axis for one ask. A pinned axis is listed under `pinned:` only, never `reading:`, since it doesn't fan out.
 
-**Refusals:** `LOAD-FORKS` if one ask reaches more than **64** combinations (after its `with` pins). This is C's cap; B had none. **Cost:** multiplies only the cone of defs that depend on the axis. **Cases:** 62 models (`coverage.md` table 1); an axis option pinned by `with`: LH-15.
+**Refusals:** `LOAD-FORKS` if one ask reaches more than **64** combinations (after its `with` pins), counted at load over the axes its cone reaches on the item graph, whatever its `when`s read (`ENGINE.md` §3.1 step 8). A run may read fewer; the `*` above follows what it read. This is C's cap; B had none. **Cost:** multiplies only the cone of defs that depend on the axis. **Cases:** 62 models (`coverage.md` table 1); an axis option pinned by `with`: LH-15.
 
 ### 5.6 index
 
@@ -600,7 +610,7 @@ An index may carry `v ID` and notes, when its keys or their order are a source's
 
 **Bindings.** A bind is over an index, a key list or `path`, so it is bounded at load. A bound that depends on an earlier key is a `where` over a declared index: `k in inst where k <= lh_terms[l].months` (LH-10). Binds are read left to right: each bind's `where` may read the binds before it, and each `where` filters at its own bind (`c in bracket where pos(c) = pos(b) + 1`). The index `path` (1..N) exists only in an ask with `paths N`.
 
-**Built-in index:** `place` holds every declared place (§5.9). Its keys are the place ids; a keyed place `x[k1, …]` has one key per binding tuple, written `x[k1, …]` wherever a key of `place` is expected (`opening[wcash[ike]]`).
+**Built-in index:** `place` holds every declared place (§5.9). Its keys are the place ids; a keyed place `x[k1, …]` has one key per binding tuple, written `x[k1, …]` wherever a key of `place` is expected (`opening[wcash[ike]]`). `pay` holds every declared pay (§5.13); its keys are the pay ids, and a keyed pay is one key: its instances share its rows.
 
 **Refusals:** `LOAD-KEY` for a key that isn't in its index; `RUN-KEY` for key arithmetic outside the index. **Cost:** O(1) per key. **Cases:** all.
 
@@ -654,7 +664,7 @@ A band is a function of one argument over intervals.
 - The first row may start at `-inf`, and the last may end at `inf`.
 - A deliberate gap is a row whose value is a hole (N-709, N-710). A hole row may carry a locator.
 
-A table that breaks these rules is refused at load (`LOAD-BAND`), and with it the whole reality: nothing prints from an inconsistent law table, asks that never read the band included. In the store the gate refuses the amendment before it lands (`OPERATIONS.md` §3).
+A table that breaks these rules is refused at load (`LOAD-BAND`), and with it the whole reality (a table in a scenario file: that scenario, §8): nothing prints from an inconsistent law table, asks that never read the band included. In the store the gate refuses the amendment before it lands (`OPERATIONS.md` §3).
 
 **Reading `b(x)`** at law date d and cut K:
 1. Choose the table by the read rule (§4.6), treating each version's table as one row: its version's governs span and known date.
@@ -697,7 +707,7 @@ A place is where money or units sit (N-501, spec §3.2). Kinds:
 
 | Kind | Holds | Rule |
 |---|---|---|
-| `account`, `cash` | money | may go below zero, with `WARN-NEGATIVE` on the first such day (N-1607) |
+| `account`, `cash` | money | may go below zero, with `WARN-NEGATIVE` on the first day of each stretch below zero (N-1607) |
 | `holding U priced p` | units U | balance in units. `worth(x, d)` = units at the end of day d × p at d, where p is `num CUR/U`. Balance below zero is refused (`RUN-PLACE`) unless the holding is short (N-511): a row of the built-in input `short[x] = true` allows it |
 | `asset CUR priced v` | nothing that moves | `worth(x, d)` = v at d, from valuation rows (N-502). A pay to or from an asset is refused (`LOAD-KIND`) |
 | `debt` | money owed, as a balance ≤ 0 | a pay that would take it above 0 is refused at that day (`RUN-PLACE`, spec §4#15) |
@@ -712,7 +722,7 @@ A place is where money or units sit (N-501, spec §3.2). Kinds:
 - **Places need dates.** A movement is a dated event, and the ledger's invariants need its date. An illustration that gives no dates writes its money as defs (MP-14, MP-15, CMP-02); where money must move, the model's dates are `assumed`.
 - **Kind and currency** can be read: `kind(x)` (a key of the built-in axis `placekind`) and `currency(x)`. Asks select places by kind or owner, never by a hand-kept list (N-1606).
 
-**Refusals:** `LOAD-KIND`, `LOAD-UNIT` (a pay between places of different units), `LOAD-HOLD`, `RUN-PLACE`. **Cost:** a balance read is O(1) during the day walk, or O(log P) at a past date with per-place prefix sums. **Cases:** CMP-01, the household, change 5. The cases hold their money as defs keyed by their periods; only CMP-01 and the household move it between places.
+**Refusals:** `LOAD-KIND`, `LOAD-UNIT` (a pay between places of different units), `LOAD-HOLD`, `RUN-PLACE`. **Cost:** a balance read is O(1) during the day walk, or O(log Mₓ) at a past date with per-place prefix sums, Mₓ the place's change points (`PERFORMANCE.md` §2.2). **Cases:** CMP-01, the household, change 5. The cases hold their money as defs keyed by their periods; only CMP-01 and the household move it between places.
 
 ### 5.10 def and rule
 
@@ -720,8 +730,8 @@ A place is where money or units sit (N-501, spec §3.2). Kinds:
 def payable[f in family, m in month]: money PLN
   note "kwota wypłacana po obniżeniu, art. 5 ust. 3"
   rule base = max(0, entitled[f, m] - excess[f, m])
+  rule base v rm2016 = max(0, entitled_2016[f, m] - excess[f, m])
   rule small excepts base when entitled[f, m] - excess[f, m] < min_payment = 0
-  rule y2016 v rm2016 = max(0, entitled_2016[f, m] - excess[f, m])
 ```
 
 A def is a keyed value defined by rules. To evaluate def x at keys k, with law date d and cut K:
@@ -812,7 +822,7 @@ Everything inside is recomputed on the changed facts, gates included. Pays insid
 
 **Refusals:** `LOAD-ASIF` (deeper than 4, or a pin on an unknown id). **Cost:** each distinct pin set gets its own memo, and only the pinned items' cone is recomputed.
 
-**Cost of a def.** Per key, O(rules of the def) tests; a def has 1 to 5 rules. Values are memoised per (keys, law date, axis values reached, K class, pin set). A recurrence over n keys is O(n) time and memory.
+**Cost of a def.** Per key, O(rules of the def) tests; a def in the cases has 1 to 6 rules. Values are memoised per cell (`ENGINE.md` §3.2): keys, law date class, axis options reached, cut class, pin set, scenario and path, and the walk point for a walk-bound def (§5.13.1). A recurrence over n keys is O(n) time and memory.
 
 **Cases:** all. `excepts`: 67 models. Recurrences, a read at k − n or k + n: CH-02, CH-06, LH-02, LH-04, LH-05, LH-07, LH-10, LH-13, LH-15, LH-16, LH-18, MP-15, RC-01, the household. Givens: CB-10, CB-11, CB-12, CB-14, LH-13, LH-17, MP-03, MP-04, MP-06, MP-07, MP-08, RC-01, RC-02, UL-13. `as if`: CB-03, CB-09, CH-04, CMP-01, LH-04, LH-12, MP-11, RC-08, UL-14, UL-15; `with` pins on asks: 24 models. `missing()`: the household. An iteration the law names: UL-07 writes its steps as defs and UL-08 uses `solve`; the form above is a recurrence with `first`, both used elsewhere (`coverage.md` table 1).
 
@@ -849,7 +859,7 @@ Supplies are matched to demands in a stated order. This covers carrybacks and ca
 - After a hole take, R_s and Q_d are holes carrying that take's questions, so an unknown later year never spoils an earlier result.
 - **What a take reads:** its own `arc` and `order`, supply(s), demand(d) and, through R_s and Q_d, what the earlier takes on the same s or the same d read. Its register follows that (§8.2), so one example's assumed row doesn't reach another example's takes.
 
-**Refusals:** `RUN-NEG` (a negative supply or demand), `RUN-ORDER`, and `LOAD-UNIT` (supply and demand must share a unit). **Cost:** O(A log A) for A arcs: 30 years with 11-year windows for two spouses is about 1 300 arcs. A keyed fill costs that per key. **Cases:** CB-05, CB-09, LH-01, LH-02, LH-04, LH-06, LH-09, MP-15, UL-13; keyed fills: LH-04, UL-13.
+**Refusals:** `RUN-NEG` (a negative supply or demand), `RUN-ORDER`, and `LOAD-UNIT` (supply and demand must share a unit). **Cost:** O(A log A) for A arcs: 30 years of CB-05's `spouses` (a year back and ten forward, between two spouses each way) is at most 30 × 11 × 4 = 1 320 arcs; the example above has 608. A keyed fill costs that per key. **Cases:** CB-05, CB-09, LH-01, LH-02, LH-04, LH-06, LH-09, MP-15, UL-13; keyed fills: LH-04, UL-13.
 
 ### 5.12 prorata
 
@@ -904,46 +914,46 @@ A pay is a **state pay** if its amount, date or condition makes a state read (th
 
 | Read | Value |
 |---|---|
-| `bal(x)` | x's running balance at this point of the day walk: the start of the day, plus the day's flow pays, plus the state pays already run that day |
-| `bal(x, d)` | x's balance at the end of day d, for d before today |
+| `bal(x)` | x's running balance at this point of the day walk: the start of the day, plus the day's records and flow movements booked so far, plus the state pays already run that day (`ENGINE.md` §4.2) |
+| `bal(x, d)` | x's balance at the end of day d: in a state pay and the defs it reaches, for d before the pay's day (`LOAD-FUTURE`, `RUN-FUTURE`); in an ask or a def no pay reaches, any day of the run (§5.16) |
 | `free(x)` | `bal(x)` minus x's hold (§5.9), less the promised movements booked so far that no record confirms (§5.13) |
-| `plan_low(x, a, b)` | the lowest end-of-day balance x reaches on days a..b, starting from `bal(x)` less the promised movements booked so far that no record confirms (as `free` takes them out) and counting only flow pays and records, each future instance as known on the walk's day: its keys (index additions, and open-index keys, §5.6), its `when`, its date and its amount all at cut min(day, K), with every draw at its plan value (§5.14). A `when` that is false drops the instance, its date unread; then a date known to fall outside (t, b], t the walk's day, drops it, its amount unread, whatever its `when` (such a date can't move the balance on the window). A hole in the `when`, the date or the amount of an instance that is left makes `plan_low` a hole, with the questions of every hole so read (§8.1): a hole date may fall anywhere in the window. State pays and promised pays are left out, so a rule never sees its own result or another rule's (N-1102, spec §4#1). The look-ahead never reads what wasn't known that day (CHG-02's risk). On a place with a hold it is the lowest end-of-day **free** balance (the balance less the unconfirmed promised movements, as above, and less that day's hold, read at the same cut; a hole hold makes it a hole), and the register lists the hold, so the look-ahead never invests money held for someone else |
+| `plan_low(x, a, b)` | the lowest end-of-day balance x reaches on days a..b, starting from `bal(x)` less the promised movements booked so far that no record confirms (as `free` takes them out) and counting only flow pays, each future instance as known on the walk's day (records and anchors after the walk's day are never used, `ENGINE.md` §4.2): its keys (index additions, and open-index keys, §5.6), its `when`, its date and its amount all at cut min(day, K), with every draw at its plan value (§5.14). A `when` that is false drops the instance, its date unread; then a date known to fall outside (t, b], t the walk's day, drops it, its amount unread, whatever its `when` (such a date can't move the balance on the window). A hole in the `when`, the date or the amount of an instance that is left makes `plan_low` a hole, with the questions of every hole so read (§8.1): a hole date may fall anywhere in the window. State pays and promised pays are left out, so a rule never sees its own result or another rule's (N-1102, spec §4#1). The look-ahead never reads what wasn't known that day (CHG-02's risk). On a place with a hold it is the lowest end-of-day **free** balance (the balance less the unconfirmed promised movements, as above, and less that day's hold, read at the same cut; a hole hold makes it a hole), and the register lists the hold, so the look-ahead never invests money held for someone else |
 | `next_on(p[keys], d)` | the date of the first instance of **flow** pay p on or after d. Naming a state pay is refused (`LOAD-STATE`, spec §4#3). With no instance left in the run, it is a hole: `no further <p> after <d>` (spec Q-17), so a rule that waits for the next pay never waits for nothing in silence |
 | `worth(x, d)` | a holding's value at the end of day d, as `bal(x, d)`: its units then, times its price at d (§5.9). An asset's `worth` reads only its valuation rows, so it isn't a state read |
 | `flows(x, span)` | for a place x, or a state pay x: every movement booked there, which the day walk makes |
 
-`flows(p, span)` of a flow pay p is not a state read, so a flow pay may read the history of other flow pays: an annual settlement reads the year's advances. Record rows are inputs (§5.18), so reading them isn't a state read either.
+`flows(p, span)` and `next_on(p, d)` of a flow pay p are not state reads, so a flow pay may read the history and the next date of other flow pays: an annual settlement reads the year's advances. In the flow pass `next_on` is read at the cut of the part that calls it (in `on`, at K; in `when` or the amount, at min(t, K), `ENGINE.md` §5); in the walk, as known on the walk day (`ENGINE.md` §4.2). Record rows are inputs (§5.18), so reading them isn't a state read either.
 
 **Same-day totals.** In a state pay, a `flows` span may end on the pay's own day. It then counts what is booked up to this point of the day, as `bal(x)` does. So a yearly limit is re-checked after each posting, and a second rule on the same day sees the first one's contribution (R-08).
 
 **Groups of places** (R-07). `plan_low` and `bal` also take a set of places, written as a binding: `plan_low(x in place where kind(x) = account and currency(x) = PLN, a, b)` is the lowest end-of-day *sum* of those places on days a..b, which isn't the sum of their lows. So room can be measured on the liquid group and taken from one account. The set's condition reads only `kind`, `currency` and place ids, so it is fixed at load. A set over places of more than one currency is refused (`LOAD-UNIT`).
 
 **Refusals:**
-- `LOAD-STATE`: a flow pay, or a def a flow pay reaches, makes a state read; `bal(x)`, `free(x)` or `plan_low` is read where no state pay reaches it; or `next_on` names a state pay.
+- `LOAD-STATE`: a flow pay, or a def a flow pay reaches, makes a state read (through its `for`, its places' keys or its bindings' `where`, since one in its amount, date or `when` makes it a state pay); `bal(x)`, `free(x)` or `plan_low` is read where no state pay reaches it; or `next_on` names a state pay.
 - `LOAD-FUTURE`: a state pay reads `bal(x, d)` for a day that isn't before its own day, or `flows` over a span that ends after its own day. When the day is computed, this is `RUN-FUTURE` instead.
 
 #### 5.13.2 Order within a day
 
 Each day of the walk:
-1. records and flow pays of the day are booked, in pay id order, except a record that explains a state pay instance, which is booked at that instance's point in step 2 (`ENGINE.md` §4.2);
+1. the day's records are booked, then its flow pays' movements in pay id order, except a record that explains a state pay instance, which is booked at that instance's point in step 2 (`ENGINE.md` §4.2);
 2. state pays run in order of phase, then pay id, then keys in index order.
 
 A rule that invests "at the start of the day" and one that invests "at the end" are therefore different models, with different phases, and the difference is visible (N-318, spec §4#39).
 
 #### 5.13.3 Booking and back pay
 
-**The cut of an instance.** An instance's `on` is evaluated at the ask's cut K. Its `when` and its amount are then evaluated with what was known on its date t: cut min(t, K). So a date learned later moves the instance under later asks only; under an earlier cut the instance is where it was then known, or a hole. When t is imprecise, a version's visibility at that cut is a §4.4 comparison: visible when known by the interval's first day, not visible when known after its last, and otherwise the instance's amount is `HOLE-IMPRECISE`.
+**The cut of an instance.** An instance's `on` is evaluated at the ask's cut K. Its `when` and its amount are then evaluated with what was known on its date t: cut min(t, K). A state pay's state reads are the exception: they read the day walk at cut K (§5.13.1, `ENGINE.md` §4.2). So a date learned later moves the instance under later asks only; under an earlier cut the instance is where it was then known, or a hole. When t is imprecise, a version's visibility at that cut is a §4.4 comparison: visible when known by the interval's first day, not visible when known after its last, and otherwise the instance's amount is `HOLE-IMPRECISE`.
 - **`correction` versions** with known ≤ K count as known on t.
 - **Scenario versions** are visible to the instance if t ≥ the scenario's `from` (§6.4).
 - **Changes in the world.** For each other version V with t < V.known ≤ K, taken in known order (versions with one `known` together, as one step, `ENGINE.md` §5), whose contents change a **flow pay** instance's amount by δ (from 0 when the instance didn't exist at its cut and V makes it exist, `ENGINE.md` §5):
   - **`arrears on D`:** a correction movement of |δ| on D, in the pay's direction if δ > 0 and reversed if δ < 0 (N-921). D is a day, or a month or year (an imprecise date, §4.4): back pay paid over a window that ends by a date is dated by the period that holds the window, or by its last day, with a note.
   - **`arrears none`:** no movement. The law gives no back pay.
   - An `arrears` line with `for p1, p2` covers only those pays. A line without `for` covers every pay that no other line names. So a retroactive tax change can refund through the annual settlement only, with `arrears none for pit_advance` and `arrears on D for pit_settle` (§6.5, change 3).
-  - **A later answer.** A line in a later version W, `arrears on D of V` or `arrears none of V`, answers the changes V made, for the pays it covers, where V's own lines don't cover them: back pay decided or announced after the change. Under a cut before W.known the movement is still `HOLE-CHANGED`; from W.known it follows W's line.
-  - **Neither, in V or in a later version known by K:** a hole movement, `HOLE-CHANGED: "<pay> on t changed after it was paid (version V); is back pay due, and when?"`, dated on or after V.known. Every `flows` over a span that reaches V.known or later is a hole until the version says. A later-known change is never silently paid or silently unpaid. This replaces B's per-pay `correct on` (judging.md §9).
+  - **A later answer.** A line in a later version W, `arrears on D of V` or `arrears none of V`, answers the changes V made, for the pays it covers, where V's own lines don't cover them: back pay decided or announced after the change. V's own lines are read alone for this, so a line of V without `for` covers every pay that V's other lines don't name. A line `of V` that names a pay V's own lines cover is refused (`LOAD-ARREARS`); one without `for` covers only the pays V's lines leave open. Under a cut before W.known the movement is still `HOLE-CHANGED`; from W.known it follows W's line.
+  - **Neither, in V or in a later version known by K:** a hole movement, `HOLE-CHANGED: "<pay> on t changed after it was paid (version V); is back pay due, and when?"`, dated on or after V.known. Every `flows` that can count the movement is a hole until the version says: one of the pay, or of a place it moves money between, over a span that reaches V.known or later. A `flows(p[keys], span)` whose keys don't hold the changed instance can't count it, and stays known. A later-known change is never silently paid or silently unpaid. This replaces B's per-pay `correct on` (judging.md §9).
 
-- **An amount that was a hole** at its cut stays a hole movement until a version answers it: a `correction` answers it at t, and a change in the world measures δ from 0 under its `arrears` line.
-- **State pays are never re-measured.** A state pay instance is a decision taken on its day with what was known then. A later version that isn't a `correction` never re-measures it, and `arrears` lines cover flow pays only. A `correction` reaches it through the walk at cut K, like any fact known on t.
+- **An amount, or a `when`, that was a hole** at its cut stays a hole movement until a version answers it: a `correction` answers it at t, and a change in the world measures δ from 0 under its `arrears` line. A version under which the `when` is false answers it with 0: δ = 0, nothing is booked, and no `arrears` line is needed.
+- **State pays are never re-measured.** A state pay instance is a decision taken on its day: the law and facts it reads, and its look-ahead, are what was known then (cut min(t, K)). A later version that isn't a `correction` never re-measures it, and `arrears` lines cover flow pays only. A `correction` reaches it through the walk at cut K, like any fact known on t. Its balances are the walk's at cut K, so records dated up to its day and anchors before it, seen by a later cut, can change what it computes and books (`ENGINE.md` §9).
 - **Modelled-past instances are never measured either.** On a covered day an instance is computed at its booking cut for the ledger (`ENGINE.md` §6.2) and moves no money, so no version changes it by a δ.
 - **Facts a look-ahead reads.** A state pay's decision rests for good on what was known on its day. A fact its look-ahead reads before that fact is known (a contract signed next month, a tax form chosen later, a loan not yet made) makes the decision a hole that nothing later answers, and every later balance of its places a hole with it, up to the place's next statement (an anchor, §5.18). So such a fact is given a default known from the start, `assumed`, in a forecast version (0, or `-` for a thing that doesn't exist yet), and things that appear later are keyed by an open index (§5.6), which has no keys until a row brings them; the later version replaces the default. The household is written so.
 
@@ -953,7 +963,7 @@ An instance dated after K is planned, and it is evaluated with cut K.
 
 **`flows(x, span)`** is the sum of the movements into place x in the span, minus those out of x, corrections included. **`flows(p[keys], span)`** with a pay p is the sum of that pay's movements in the span, over its instances at the stated keys (all of them when no keys are given), corrections included: the history of transfers by kind (N-926). `, for k` keeps only the instances whose `for` is k (N-305). **`flows(x, span) in CUR at fx mode`** converts each movement separately, reading the rate `fx` (a `num CUR/OTHER` input) at the movement's date (on an imprecise date, at the instance's law date, §4.3), rounding each movement's amount (≥ 0) to CUR's minor unit with `mode`, and only then applying its direction, before summing (N-606, N-932). So a movement in and one out of the same size convert to the same size. A converted total of the whole span is a different number, and the model writes it as one if it needs it.
 
-**Cost:** O(1) per instance. `flows` is O(log P) with per-place prefix sums. One more evaluation per version that reaches a booked instance. **Cases:** CMP-01 (pays, places, conversion); the household, and change 5 adds pays (changes 3, 4, 6 and 7 change what pays read). State reads: the household, change 5. LH-14 states its `arrears` line but books no pay, so it reaches nothing; UL-09 and RC-08 are retroactive law read by defs. The undated illustrations (MP-14, MP-15, CMP-02) are defs (§5.9).
+**Cost:** O(1) per instance. `flows` is O(log Mₓ) with per-place prefix sums (`PERFORMANCE.md` §2.2). One more evaluation per version that reaches a booked instance. **Cases:** CMP-01 (pays, places, conversion); the household, and change 5 adds pays (changes 3, 4, 6 and 7 change what pays read). State reads: the household, change 5. LH-14 states its `arrears` line but books no pay, so it reaches nothing; UL-09 and RC-08 are retroactive law read by defs. The undated illustrations (MP-14, MP-15, CMP-02) are defs (§5.9).
 
 ### 5.14 draw and distributions
 
@@ -963,7 +973,7 @@ draw life[p in path] ~ exponential(lam) to 0.01
 ```
 
 A draw is a reproducible random value at an address (N-1401).
-1. The address A is the canonical text `name[keys]|seed`. The path key is one of the keys, and the seed is the ask's `seed`.
+1. The address A is the canonical text `name[keys]|seed`. The path key is one of the keys, and the seed is the ask's `seed`. An item keyed by `p in path` (a def or a pay over a path-keyed draw) has, on path q, only its instance with p = q; with no `paths`, it has none.
 2. k is the first 8 bytes of SHA-256(A), read big-endian.
 3. The uniform is u = (k + 1/2) / 2^64, which is never 0 or 1.
 4. The value is `quantile(D, u)`, correctly rounded to the stated unit for a continuous D, and exact for a discrete one.
@@ -975,7 +985,7 @@ Draws are inversion samples only, so a pinned uniform gives a plain number and a
 
 **Working by hand.**
 - `with u(r[1, 2027]) = 0.37` pins a uniform, and `with r[1, 2027] = 0.05` pins a value.
-- **The canonical order of draws** is: path; then the draw's time key, ascending; then draw id (ASCII); then its other keys in index order. When an evaluator is handed fixed uniforms u1, u2, …, they are assigned to the draws an ask reaches in this order, and `explain` prints them in the same order. No sketch had an order, and all three LH-17 pairs logged that.
+- **The canonical order of draws** is: path; then the draw's time key, ascending (a draw with no time key first; periods by their first day); then draw id (ASCII); then its other keys in index order. When an evaluator is handed fixed uniforms u1, u2, …, they are assigned to the draws an ask reaches in this order, and `explain` prints them in the same order. No sketch had an order, and all three LH-17 pairs logged that.
 
 **The closed list of distributions.** Each has `cdf`, `pdf` or `pmf`, and `quantile` (type 1: the smallest x with cdf(x) ≥ q):
 
@@ -1004,7 +1014,7 @@ An invalid parameter is refused at that key (`RUN-PARAM`), never NaN (N-221). A 
 | `crps(x[i] weight w[i] for i in I, y)` | Σŵ_i·\|x_i − y\| − ½·Σ_iΣ_j ŵ_i·ŵ_j·\|x_i − x_j\|, with normalised weights ŵ = w/Σw in place of 1/n in both terms |
 
 - Interval scores, the weighted interval score and skill scores are plain expressions over `quantile`, `abs`, `sum` and `if` (N-1502).
-- **A sample has no density.** A log score is written only for a parametric forecast, as `ln(pdf(…)) to u`. The log score of a sample or of paths is a declared bound (N-1504, CH-03 step 14).
+- **A sample has no density.** A log score is written only for a parametric forecast, as `ln(pdf(…) to v) to u`, each transcendental with its own step (§7.3). The log score of a sample or of paths is a declared bound (N-1504, CH-03 step 14).
 - **`orient`.** An ask that reaches `crps` or `pdf` states `orient lower` or `orient higher` (`LOAD-ORIENT`), whatever it prints, a bound or a refusal included. Any other ask may state it, and it is printed. A score written as a plain expression (an interval score) states it by choice. A convention that varies with a reading is two asks.
 
 **Cost:** O(n log n) per sample score. **Cases:** `crps`: CH-03; `orient`: CH-03. CH-01, CH-02 and CH-06 evaluate with exact distributions and arithmetic (backtest zones, actual-to-expected ratios), not these scores.
@@ -1045,9 +1055,9 @@ An ask may make every state read of §5.13.1 at any day of the run: `bal(x, d)`,
 **Bounds in asks.** A bound may appear anywhere in an ask, inside arithmetic too (`ruin[s] - rp2000_exact`). A result that reaches it prints `bound: <id>: <reason>` (§5.17).
 
 **Ask-only functions** (`LOAD-ASKONLY` elsewhere, N-1409). Over `path`, the aggregates below print a standard error; over keys they are ordinary aggregates allowed anywhere (§5.10).
-- `share(p in path: c)` prints "n of N" and the fraction, with its standard error √(s(1 − s)/N) correctly rounded to 1e-6. Under it comes the engine's verdict on whether "n in N futures" may be said (spec Q-03, `ENGINE.md` §8): `sayable`, or `not sayable` with the reasons. The rule reads the standard error, the horizon and the **carry**, the money-weighted years that the term's movements rest on `held` or `assumed` figures (§8.2); it says `sayable` when two standard errors are at most 0.05 (the test's standard error is Agresti–Coull's, taken at (n + 2)/(N + 4) over N + 4 paths, so a share of 0 or 1 at small N doesn't pass), the carry is at most 2 years, and no pin on a draw (the test mode, §7.4) is in the register. `mean` and `quantile` over paths print the carry and the horizon beside their standard error, with no verdict.
-- `mean(p in path: e)` prints the mean with its standard error.
-- `quantile(p in path: e, q)` is type 1 on the paths.
+- `share(p in path: c)` prints "n of N" and the fraction, with its standard error √(s(1 − s)/N) correctly rounded to 1e-6. Under it comes the engine's verdict on whether "n in N futures" may be said (spec Q-03, `ENGINE.md` §8): `sayable`, or `not sayable` with the reasons. The rule reads the standard error, the horizon and the **carry**, the money-weighted years that the term's movements rest on `held` or `assumed` figures (§8.2); it says `sayable` when two standard errors are at most 0.05 (the test's standard error is Agresti–Coull's, taken at (n + 2)/(N + 4) over N + 4 paths, so a share of 0 or 1 at small N doesn't pass), the carry is at most 2 years, and no pin on a draw (the test mode, §7.4) is in the register. `mean` over paths prints the carry and the horizon beside its standard error, and `quantile` beside its value, with no verdict.
+- `mean(p in path: e)` prints the mean with its standard error s/√N, s² the sample variance over N − 1, correctly rounded to 1e-6.
+- `quantile(p in path: e, q)` is type 1 on the paths. It prints no standard error.
 - `real(x, d, base, idx)` is x × idx[base] / idx[d]: the deflator as a lens, applied only when a question is asked (N-718, N-1604).
 - `solve`.
 
@@ -1056,7 +1066,7 @@ An ask may make every state read of §5.13.1 at any day of the run: `bal(x, d)`,
 2. a = lo, b = hi. While b − a > u: m = a + u·⌊(b − a)/(2u)⌋. If F(m) = 0 the answer is m. Otherwise replace whichever of a and b has F of the same sign as F(m) by m.
 3. Now b = a + u. Evaluate F at c = a + u/2. If F(c) = 0, or F(c) has the sign of F(a), the answer is b; otherwise a.
 
-The result is the grid point nearest the root, with a tie going up. A rounding the source states ("to the nearest cent") is then a `round` of that result. That is the question the source asks, not "the largest cent under the level", which is what A's and C's LH-17 models asked by mistake (19 cells one cent low). `solve` may also appear in a def rule that points at a version (`v`) whose source names the method: a gross-up the law solves, N-217.
+The result is the grid point nearest the root, with a tie going up. A rounding the source states ("to the nearest cent") is then a `round` of that result. That is the question the source asks, not "the largest cent under the level", which is what A's and C's LH-17 models asked by mistake (19 cells one cent low). `solve` may also appear in a def rule that points at a version (`v`) whose source names the method: a gross-up the law solves, N-217. It is then the rule's whole value (§2.3 `solvex`), its bracket's literals are allowed (§7.1), and its pin of v holds while the rule's value is evaluated, at the rule's keys and law date.
 
 **Output.**
 - **Lines.** An ask prints one line per binding tuple and per distinct tuple of its expressions' results across the axes reached (§5.5). Lines are ordered by binding tuple in binding order, then by the axes' options in declaration order, the axes taken in id order (§2.4). On each axis a line sorts by the first option it names: a set (`down | half-even`) at its first option's place, and a `*` before every option. A tie goes to the next axis. A line's register is the union of what its expressions read; `explain` gives each expression's own.
@@ -1115,7 +1125,7 @@ A record is a real movement from an import: a bank row, a broker's fill (N-1201)
   - `explains`: the pay instance the record realises, written `pay[keys]`, or `-` when nothing in the model explains it.
 - **The model's own fields** follow, such as a category or a counterparty.
 - **Only confirmed links are written.** A match the importer proposes stays outside the reality until it is confirmed (N-1207, `OPERATIONS.md` §2).
-- **The importer's rules are data too.** Four built-in inputs hold them, each row with its source: `account_place[a]` and `party_place[c]` map the bank's account and counterparty ids (keys of the built-in open indexes `bank_account` and `bank_party`) to places; `match_days[p]` and `match_amount[p]` give each pay's matching window and tolerance. The model never reads them; the importer does (`OPERATIONS.md` §2.2).
+- **The importer's rules are data too.** Four built-in inputs hold them, each row with its source: `account_place[a]` and `party_place[c]` map the bank's account and counterparty ids (keys of the built-in open indexes `bank_account` and `bank_party`) to places; `match_days[p]` and `match_amount[p]`, keyed by the built-in index `pay`, give each pay's matching window and tolerance. The model never reads them; the importer does (`OPERATIONS.md` §2.2).
 
 **Coverage.** `covers x, y` on a version says that its records are complete for those places over its governs span: a statement for March covers the account for March. A version that covers needs a governs span (`LOAD-COVERS`), and each of its records must be dated inside that span (`LOAD-COVERS` otherwise: an October row in a statement that covers September is refused, never booked or dropped in silence). On a covered day before the cut K:
 1. the records of that place and day are booked;
@@ -1128,10 +1138,10 @@ A record is booked as follows:
 
 On days that no version covers, and from K on, the model's pays are booked: the plan.
 
-**Stated balances re-anchor the walk.** Rows of the built-in input `stated[x]` give a place's end-of-day balance, from a statement, on the day D they govern. The model never reads them by name. In a view whose cut sees the row, it is an **anchor**: x's balance at the end of D is the stated one, and later balances build on it (`ENGINE.md` §4.2, §6.1). So **a balance means what the bank states at the last anchor, plus what is booked since**; before a place's first anchor, its opening plus what is booked since.
+**Stated balances re-anchor the walk.** Rows of the built-in input `stated[x]` give a place's end-of-day balance, from a statement, on the day D they govern (a row whose span is longer than a day anchors at its last day). The model never reads them by name. In a view whose cut sees the row, it is an **anchor**: x's balance at the end of D is the stated one, and later balances build on it (`ENGINE.md` §4.2, §6.1). So **a balance means what the bank states at the last anchor, plus what is booked since**; before a place's first anchor, its opening plus what is booked since.
 - **The difference is never hidden.** An anchor isn't a movement: nothing is booked and `flows` doesn't count it. The difference, stated − booked, where booked is the last anchor (or the opening) plus the movements booked since, is the statement's balance line in the residual ledger (`ENGINE.md` §6.3). Each `stated` row gives its own line, so drift points at its period. And every figure that reads x's balance from D on lists the anchor in its register (`anchor:`, §8.2).
 - **Holes.** A hole movement dated on or before D keeps x's balances before D holes, and its questions stay listed, on those balances and on the balance line, which is a hole too. It no longer makes x's balances after D holes. A movement that may fall after D (a hole date, or an imprecise date whose period runs past D) still does, from the first day after D on which it may fall. A hole movement's other place is anchored only by a `stated` row of its own.
-- **Decisions before an anchor stay as booked.** The anchor applies at the close of D, after D's state pays, and a state pay is never re-measured (§5.13.3). A state pay after D reads the anchored balance.
+- **Decisions before an anchor stay as booked.** The anchor applies at the close of D, after D's state pays, so it never changes them. A state pay after D reads the anchored balance, under every cut that sees the row, even one known after the pay's day (§5.13.3).
 - **The read rule decides who sees it.** A view whose cut is before the statement's `known` date doesn't see the row, so it doesn't re-anchor (§4.6). Like a record, an anchor applies only on a day before the cut K.
 - A place with no `opening` has a hole balance (§5.9) until its first anchor, and a known one from it.
 
@@ -1163,8 +1173,8 @@ Until a statement covers the window, the household's budget stands; a rule with 
 ### 6.1 A reality is a set of files
 
 A model is one or more `.tally` files in one directory tree. Each file starts with one of three headers:
-- **`model ID`**, then `tally N` and the clauses of §5.1. Exactly one file has it.
-- **`part ID`**, then `tally N`, and `law` for a **law part**. It holds sections only. A law part holds an act's sources, inputs, bands and defs; the gate of `OPERATIONS.md` §3 applies to it, and to nothing else. A law part whose defs are stubs (a hole rule) passes the gate at once and gives its holes.
+- **`model ID`**, then `tally N` and the clauses of §5.1. Exactly one file has it (`LOAD-HEADER` otherwise).
+- **`part ID`**, then `tally N`, and `law` for a **law part**. It holds sections only. A law part holds an act's sources, inputs, bands, defs and pays, the versions of its figures, and the `check` asks its gate runs (M-07); the gate of `OPERATIONS.md` §3 applies to it, and to nothing else. A law part whose defs are stubs (a hole rule) passes the gate at once and gives its holes.
 - **`scenario ID`**, then `tally N`, `from DAY` and optionally `over ID` (§6.4). Its sections exist only in that scenario.
 
 Every file declares the same `tally N` (`LOAD-VERSION`).
@@ -1174,7 +1184,7 @@ Every file declares the same `tally N` (`LOAD-VERSION`).
 | File | Holds |
 |---|---|
 | `reality.tally` | the header, the indexes of parties, the axes |
-| `law/<country>/<act>.tally` | one act, a law part: its sources, inputs, bands and defs, and the versions of its figures |
+| `law/<country>/<act>.tally` | one act, a law part: its sources, inputs, bands, defs and pays, the versions of its figures, and its `check` asks |
 | `people.tally`, `places.tally`, `pays.tally` | the household's structure |
 | `facts/<year>.tally` | the household's own versions: births, jobs, contracts, choices |
 | `records/<source>/<period>.tally` | imported records (§5.18) |
@@ -1185,7 +1195,7 @@ A law used by several realities is **copied in, never linked**. A reality's hash
 
 ### 6.2 A change adds; it never edits facts or law
 
-Every change to the reality's facts and law is a set of **added lines**: new sections (most often one version), new rules inside an existing def, new notes. A version, once confirmed, is never changed or removed. Because nothing is edited, the old view stays runnable: an ask `as known D`, with D before the change, sees the reality as it was (N-705).
+Every change to the reality's facts and law is a set of **added lines**: new sections (most often one version), new rules inside an existing def, new notes. A version, once confirmed, never changes what it states and is never removed: the only edit that touches it is a `restate` (a locator's typo, a note, its move to another file), which changes no result. Because nothing is edited, the old view stays runnable: an ask `as known D`, with D before the change, sees the reality as it was (N-705).
 
 Four kinds of change exist (`OPERATIONS.md` §4):
 - **add:** added lines only. This is every common change, and every fact and law.
@@ -1196,7 +1206,8 @@ Four kinds of change exist (`OPERATIONS.md` §4):
 | The change | What is added |
 |---|---|
 | a new figure, or a figure that changes | a row in a new version |
-| a new person, job, loan or account | an index addition in a version, and the rows about it |
+| a new person, job or loan | an index addition in a version, and the rows about it |
+| a new account | a `place` section (§5.9) and its `opening` row in a version; a place keyed by an index (`konto[p in person]`) gains one with each key the index gains, and that one needs its `opening` row too |
 | a law that changes from a date | a version governing from that date, holding its rows, its band tables, or both; and rules with `v` pointing at it if a formula changes |
 | a law that changes retroactively | the same, with a `known` after the start of `governs`, and `arrears on D` or `arrears none` (without either, booked pays it changes are holes, §5.13.3) |
 | back pay decided after the change | a version with `arrears on D of V` or `arrears none of V` (§5.13.3) |
@@ -1212,12 +1223,13 @@ Four kinds of change exist (`OPERATIONS.md` §4):
 
 ### 6.3 How amendments compose
 
-1. **Order doesn't matter.** The read rule orders rows by their own dates, not by the order they were added. Two amendments applied in either order give the same reality.
-2. **Conflicts are found at load,** and there are only three kinds:
+1. **Order doesn't matter.** The read rule orders rows by their own dates, not by the order they were added. Two adds applied in either order give the same reality, once `on` has reached both their `known` dates (an add known after `on` waits for its advance, §6.2).
+2. **Conflicts are found at load.** Two amendments that each load alone can still be refused together, by a load check that reads items of both. The common kinds:
    - two additions with one id (`LOAD-DUP`);
    - two rows tied after precedence (`LOAD-OVERLAP`);
-   - two rules with one label and one `v` (`LOAD-DUP`).
-3. **Text merges cleanly.** The canonical sort puts each added version at its own line: versions sort by `known` date, then id. Rules sort by label, then by their version's `known`. Two amendments that touch different items therefore merge without a textual conflict.
+   - two rules with one label and one `v` (`LOAD-DUP`);
+   - two versions known the same day whose `arrears` lines disagree for one pay (`LOAD-ARREARS`), or that both move one version (`LOAD-MOVES`).
+3. **Text merges cleanly.** The canonical sort puts each added version at its own line: versions sort by `known` date, then id. Rules sort by label, then by their version's `known`. Two amendments that touch different items therefore merge without a textual conflict. Two edits (`restate`, `revise`) of one line meet at the store's first step instead (`OP-BASE`, `OPERATIONS.md` §1).
 4. **Outcomes are compared by `plan`.** `plan` loads the reality with and without an amendment and prints which ask results and which movements change (`OPERATIONS.md` §7).
 
 ### 6.4 Scenarios
@@ -1234,7 +1246,7 @@ version ben_stops_salary
 ```
 
 A scenario is a named layer over the reality (N-1301). It changes nothing in the reality.
-- **Its items.** Its file may hold versions, index additions (a hypothetical child), and new sections: places, inputs, defs, pays, asks. It may also be the version that a rule elsewhere points at with `v`: an act that isn't law yet runs only in a scenario (N-931). An item declared in a scenario file can be read only inside that scenario and the scenarios over it (`LOAD-SCENARIO`).
+- **Its items.** Its file may hold versions, index additions (a hypothetical child), and new sections: places, inputs, defs, pays, draws, indexes, asks. A scenario version may also be the version that a rule of the reality points at with `v`: an act that isn't law yet runs only in a scenario (N-931, L-24). Pointing is not a read: outside the scenario such a rule is never a candidate, and inside it the rule is a candidate where its version governs d, with no `known` for K to mask (§5.10 step 2). Any other read of an item declared in a scenario file is allowed only inside that scenario and the scenarios over it (`LOAD-SCENARIO`).
 - **`from D`.** The scenario changes nothing before D.
   - Its versions have no `known`, `arrears` or `correction` line (`LOAD-SCENARIO`). They aren't knowledge, so the cut K doesn't mask them.
   - Their default governs span is `D..`, and a row whose span starts before D is refused (`LOAD-SCENARIO`).
@@ -1245,7 +1257,7 @@ A scenario is a named layer over the reality (N-1301). It changes nothing in the
 - **Reading.** Inside a scenario, the read rule (§4.6) first prefers the row from the higher layer: this scenario over the one it stacks on, and any scenario over the reality. Only then do the usual steps apply. What a scenario states therefore wins on its span, even against reality rows added after it was written.
 - **Asking.** `ask q: … with scenario s` evaluates the whole ask in s. Inside an expression, `x as if {scenario s}` is x in s, so `net[2040] as if {scenario ben_stops} - net[2040]` is the difference. Draw addresses don't name the scenario, so the paths of a scenario and its base are paired (common random numbers, N-1302).
 - **Staleness.** The reality moves on weekly, and a scenario is always read over the current reality, so it rebases by itself (N-1303). A scenario is flagged `WARN-STALE` when a reality version known after the scenario file was last changed writes a target, at a key and span, that the scenario also writes: the scenario now overrides something newer than itself.
-- **Promotion** copies a scenario's versions into the reality with a `known` date of the day of promotion (`OPERATIONS.md` §5).
+- **Promotion** copies a scenario's versions into the reality with a `known` date of the day of promotion, and with `governs D..` for a version that has no span of its own, so every row keeps the span it had in the scenario (`OPERATIONS.md` §5).
 
 **Cost:** a scenario's layer is one more candidate per read of a target it writes. Its run shares every memo outside the cone of what it writes (N-2004). **Cases:** the household's change 7. No case model uses a scenario: their options are readings of the law, so they are axes (§5.5), and their what-ifs are `as if` pins.
 
@@ -1292,27 +1304,28 @@ version home_2026
   works_for[ben_bolt] = ben
 ```
 
-Defs and pays range over `person`, `job` and `loan`, so a new key is picked up wherever it belongs. Each change below is one added block. **No line of the base is edited in any of them.**
+Defs and pays range over `person`, `job` and `loan`, so a new key is picked up wherever it belongs. Each change below is one added block. **No line of the base is edited in any of them.** Each one known after the base's `on` follows an `advance` of `on` to its `known` date (§6.2): a change of its own, not counted in the table below.
 
 **1. A new job.** Ben moves to a new employer from March 2028.
 ```
 source cogs_contract "Umowa o pracę Bena z Cogs sp. z o.o., 2028-02-10"
 
-version ben_cogs
+version ben_cogs_job
   cite cogs_contract
   known 2028-02-10
   job + [ben_cogs]
   salary[ben_bolt] = 0 governs 2028-03.. "wypowiedzenie; ostatnia pensja za luty"
+  salary[ben_cogs] = 0 governs 2027-01..2028-02 "przed zatrudnieniem"
   salary[ben_cogs] = 8200 governs 2028-03.. "§ 3"
   works_for[ben_cogs] = ben
 ```
-The new row for `ben_bolt` is known later than the base row, so it wins from March. The wage pay, the employer's tax advances and anything summed over Ben's jobs pick up `ben_cogs`.
+The new row for `ben_bolt` is known later than the base row, so it wins from March. The wage pay, the employer's tax advances and anything summed over Ben's jobs pick up `ben_cogs`. The zero row gives the new job a salary for the months before it starts, so the wage instances there are 0, not holes (the gap rule, §4.6).
 
 **2. A law change for the coming year.**
 ```
 source pit_2028 "Ustawa z 2027-11-20 o zmianie ustawy o PIT, Dz.U. 2027 poz. ..."
 
-version pit_2028
+version pit_2028_figures
   cite pit_2028
   governs 2028..
   known 2027-11-20
@@ -1325,7 +1338,7 @@ Only the changed figures appear. Every other figure stays in force from its own 
 ```
 source pit_2027_retro "Ustawa z 2028-06-15, art. 2: stosuje się od 2027-01-01"
 
-version pit_2027_retro
+version pit_2027_refund
   cite pit_2027_retro
   governs 2027
   known 2028-06-15
@@ -1350,7 +1363,7 @@ version ola_born
   parent = false "brak innych relacji rodzicielskich"
   parent[ola, ana] = true
   parent[ola, ben] = true
-  residence[ola] = pl governs 2029-05..
+  residence[ola] = pl governs 2029-01.. "rezydencja za cały rok urodzenia"
 ```
 - The base's `parent = false` covers only the keys of 2026, so it is restated for the new world (§6.2). Without that line, `parent[ana, ola]` would be a hole.
 - Benefits and reliefs keyed by person that read `parent` and `born` pick Ola up. One that needs a fact not stated yet, such as the date a benefit was claimed, is a hole with its question.
@@ -1364,17 +1377,22 @@ pay wage_eur[j in job, m in month]
   to konto_eur[works_for[j]]
   amount net_wage_eur[j, m]
   on day_of(m, 25)
+  when salary_eur[j, m] > 0
 
-version ana_berlin
+version ana_berlin_job
   cite household
   known 2030-05-01
   job + [ana_berlin]
+  opening[konto_eur[ana]] = 0 "konto w euro, otwarte przed przeprowadzką"
+  opening[konto_eur[ben]] = 0 "brak konta w euro"
   residence[ana] = de governs 2030-07.. "wymeldowanie; umowa najmu w Berlinie"
   salary[ana_acme] = 0 governs 2030-07.. "wypowiedzenie"
+  salary[ana_berlin] = 0 governs 2027-01.. "pensja w euro, nie w złotych"
+  salary_eur = 0 governs 2027-01.. "brak pensji w euro"
   salary_eur[ana_berlin] = 5200 governs 2030-07.. "Arbeitsvertrag, § 4"
   works_for[ana_berlin] = ana
 ```
-- A job in another currency needs its own place, input and pay, since money in two currencies is never added (N-202). These are three added sections; nothing is edited.
+- A job in another currency needs its own place, input and pay, since money in two currencies is never added (N-202). These are three added sections; nothing is edited. The pay's `when` and the keyless `salary_eur = 0` keep the other jobs and the months before July free of instances; `salary[ana_berlin] = 0` gives the Polish wage pay its figure at the new key; the `opening` rows give the new accounts a balance (§5.9).
 - `net_wage_eur` is a def of the German law part, which isn't written yet. A name no file declares is refused at load (`LOAD-NAME`), so the change adds the law part as a stub, and every result that needs it is a hole with its question:
 ```
 part de_employment
@@ -1384,14 +1402,14 @@ part de_employment
 def net_wage_eur[j in job, m in month]: money EUR
   rule stub = ? "Wynagrodzenie netto z niemieckiej umowy o pracę nie jest opisane."
 ```
-- The Polish `pit` for Ana from 2030 shows "Podatek nierezydenta Polski nie jest opisany". When the German law is written, its rules are added to the part, each excepting `stub`, and pass the gate (`OPERATIONS.md` §3).
+- The Polish `pit` for Ana from 2031 shows "Podatek nierezydenta Polski nie jest opisany": the rule `abroad` reads her residence in the January of each year, and she moves in July 2030. When the German law is written, its rules are added to the part, each excepting `stub`, and pass the gate (`OPERATIONS.md` §3).
 
 **6. A new loan, and an overpayment on the first.**
 ```
 source car_loan "Umowa kredytu samochodowego nr ..., 2028-04-02"
 source stmt_2028_05 "Wyciąg z rachunku kredytu hipotecznego, maj 2028"
 
-version car_loan
+version car_loan_terms
   cite car_loan
   known 2028-04-02
   loan + [car]
@@ -1409,11 +1427,11 @@ The schedule defs are recurrences over the months of each loan. They read `overp
 
 | Change | Lines added | Lines edited | Places touched |
 |---|---|---|---|
-| 1. New job | 8 | 0 | one source, one version |
+| 1. New job | 9 | 0 | one source, one version |
 | 2. Law for next year | 7 | 0 | one source, one version |
 | 3. Retroactive law | 8 | 0 | one source, one version |
 | 4. Child born | 10 | 0 | one source, one version |
-| 5. Move abroad, job there | 20 | 0 | three sections, one version, one stub law part |
+| 5. Move abroad, job there | 25 | 0 | three sections, one version, one stub law part |
 | 6. Loan and overpayment | 12 | 0 | two sources, two versions |
 | 7. Partner stops working | 7 | 0 | one new scenario file |
 
@@ -1435,11 +1453,12 @@ The schedule defs are recurrences over the months of each loan. They read `overp
 **The literal rule.** In defs, rules, pays, fills and draws, the only number literals allowed are:
 - the integers 0–31, 100, 360, 365, 366 and 1000, and their negatives (`add_days(d, -1)`: the rule counts magnitudes);
 - a rounding unit, in the unit position of `round`, `to` or `prorata`;
-- key literals in key positions (`x[2025]`, `k = u5`, `i = 0`).
+- key literals in key positions (`x[2025]`, `k = u5`, `i = 0`);
+- the bracket of a `solve` in a rule with `v` (§5.16): where the method the law names searches, not a figure of the law.
 
-Every other figure is a row in a version, with a source (N-215). **Band row values** are rows of a version, with its source and locator, so they may hold any literal: "10 800 zł plus 32% of the excess over 120 000 zł" is one row, written once (§5.8). **Date literals** (days, and months or years used as dates) appear only in rows, in the clauses `on`, `start`, `end`, `governs`, `known`, `arrears on`, `at` and `as known`, and in pins. A rule can't test `m >= 2028-01` on a time key: a law that starts on a date is a version with `governs` (`LOAD-LITERAL`).
+Every other figure is a row in a version, with a source (N-215). **Band row values** are rows of a version, with its source and locator, so they may hold any literal: "10 800 zł plus 32% of the excess over 120 000 zł" is one row, written once (§5.8). **Date literals** (days, and months or years used as dates) appear only in rows, in the clauses `on`, `start`, `end`, `from`, `governs`, `known`, `enters`, `moves … to`, `arrears on`, `at` and `as known`, in index declarations, in pins, and in asks (below). A rule can't test `m >= 2028-01` on a time key: a law that starts on a date is a version with `governs` (`LOAD-LITERAL`).
 
-**A bare literal that is a whole value** (a rule's value, a band row's value, a row's value or a pin) takes the declared type and unit of its target: `rule none = 0` in a `money PLN` def is 0 zł, and `0` adopts any unit.
+**A bare literal that is a whole value** (a rule's value, a band row's value, a row's value, a pin or an `if` branch) takes the declared type and unit of its target: `rule none = 0` in a `money PLN` def is 0 zł, and `0` adopts any unit.
 
 **An ask** allows every literal a def allows, plus its own: `paths`, `seed`, its pins, a `solve` bracket and unit, the level of a `quantile`, and date and period literals and spans (`flows(konto, 2026-03)`), because those are the question. Other figures in an ask are rows. Pins in a def's `as if` fall under the def's rule.
 
@@ -1448,7 +1467,7 @@ Every other figure is a row in a version, with a source (N-215). **Band row valu
 ### 7.2 Rounding
 
 `round(x, u, mode)` is the multiple of u that the mode chooses.
-- u is a **step**: a positive literal (`0.01`, `0.05`, `1`, `100`, `1e-9`), or an input or axis-keyed input whose every value is positive. Steps that aren't powers of ten exist in law: 5 Rappen, $0.10 (N-208).
+- u is a **step**: a positive literal (`0.01`, `0.05`, `1`, `100`, `1e-9`), or an input or axis-keyed input whose every value is positive. Steps that aren't powers of ten exist in law, such as 5 Rappen (N-208).
 - To give money, u must be a whole number of minor units (`LOAD-UNIT`).
 - **Its type.** `round` of a `num U` gives a `num U`. It gives money when U is a currency and the step is a whole number of minor units, wherever it stands, an operand included; money is a `num CUR` too (§3.2), so a `num CUR` def still accepts it. An integer `num` from `round(x, 1, mode)` is accepted as an `int`.
 
@@ -1459,6 +1478,7 @@ Every other figure is a row in a version, with a source (N-215). **Band row valu
 | `floor` | toward −∞ |
 | `ceil` | toward +∞ |
 | `half-up` | the nearest; a tie goes away from zero |
+| `half-down` | the nearest; a tie goes toward zero |
 | `half-even` | the nearest; a tie goes to the even multiple, k·u with k even |
 
 - **The mode may be an axis** whose options are mode names. That is how a rounding the source doesn't state is written as readings, side by side (N-209). Mode names are contextual words (§2.2), so they may be the axis's options and keys elsewhere. A reading "no rounding" is a rule that tests the axis and has no `round`, not a mode: an axis whose options mix modes with `exact` is tested by rules (§5.5).
@@ -1470,19 +1490,19 @@ Every other figure is a row in a version, with a source (N-215). **Band row valu
 These need `to u`, with u a step:
 - `exp(x)`, `ln(x)`, `sqrt(x)`;
 - `pow(x, q)` with a non-integer q;
-- `cdf`, `pdf` and `quantile` of the continuous distributions, and `pmf` and `cdf` of `poisson`;
+- `cdf`, `pdf` and `quantile` of `normal`, `lognormal`, `exponential` and `gamma`, and `pmf` and `cdf` of `poisson` (the rows of §5.14 that need `to`);
 - `crps` of a normal forecast;
-- `periodic(r, P)` when it needs a non-integer power (§3.3).
+- `periodic(r, P)` when it needs a non-integer power, and `factor(r, n, P)` with a non-integer n (§3.3).
 
 **The value is the exact result, correctly rounded to u, ties half-even.**
 - The engine decides it by interval arithmetic, refining until the interval lies within one rounding cell.
 - Where the exact value is a rational on a cell edge, the engine detects it exactly: perfect powers, `exp(0)`, `ln(1)`, Φ(0) = 1/2, the median of a symmetric distribution.
-- A rounding not decided within 2^16 bits of precision is refused at that key (`RUN-UNDECIDED`: "state a different `to`"). It needs a true value within 2^−65536 of a cell edge, and it is the guarantee that two machines never disagree.
-- `ln(x)` with x ≤ 0 and `sqrt(x)` with x < 0 are refused (`RUN-DOMAIN`).
+- A rounding not decided within 2^16 bits of precision is refused at that key (`RUN-UNDECIDED`, `<function> to <u> not decided within the precision cap`; the writer states another `to`). It needs a true value within 2^−65536 of a cell edge, and it is the guarantee that two machines never disagree.
+- `ln(x)` with x ≤ 0, `sqrt(x)` with x < 0, and `pow(x, q)` (or `factor`) with x < 0 and a non-integer q are refused (`RUN-DOMAIN`); `pow(0, q)` with q < 0 is a division by zero (`RUN-DIV`).
 
 **Composites are exact.** An expression over such values is exact arithmetic on the rounded results. So the model's number is defined to the last digit, and an evaluator gets it by hand from the rounded values.
 
-**The error bound.** A printed result that rests on rounded transcendentals, with no `round` after them, prints `≈` and a bound on its distance from the true real-number value. The bound comes from interval arithmetic with each rounded value r widened to [r − u/2, r + u/2], run over the expression as written, each operation in its own order: a transcendental whose argument is itself an interval takes the hull of its exact values over that interval, then its own ± u/2. The bound prints to two significant digits, rounded up. A first-order estimate is not the bound. Examples are a ruin probability from a closed form, an annuity factor, and a CRPS. Money that has passed a `round` prints plain. It is the model's defined value, and `explain` shows the `to u` steps under it.
+**The error bound.** A printed result that rests on rounded transcendentals, with no `round` after them, prints `≈` and a bound on its distance from the true real-number value. The bound comes from interval arithmetic with each rounded value r widened to [r − u/2, r + u/2] (a draw is one, §5.14 step 4; a value detected exactly on a cell edge isn't), run over the expression as written, each operation in its own order: a transcendental whose argument is itself an interval takes the hull of its exact values over that interval, then its own ± u/2. The bound prints to two significant digits, rounded up. A first-order estimate is not the bound. Examples are a ruin probability from a closed form, an annuity factor, and a CRPS. Money that has passed a `round` prints plain. It is the model's defined value, and `explain` shows the `to u` steps under it.
 
 ### 7.4 Randomness and seeds
 
@@ -1496,7 +1516,7 @@ The only randomness is `draw` (§5.14).
 
 ### 7.5 Determinism
 
-The same reality, the same ask and the same seed give the same output to the last digit, on any machine (N-1201). These hold the guarantee:
+The same reality, the same ask and the same seed give the same output to the last digit, on any machine (R-16, N-1401). These hold the guarantee:
 - Arithmetic is exact, and transcendentals are correctly rounded.
 - Draws are SHA-256 addressed.
 - **Every order is defined:**
@@ -1517,24 +1537,26 @@ The same reality, the same ask and the same seed give the same output to the las
 A result is one of four things:
 - a **value**;
 - a **hole**, which prints its questions;
-- a **refusal**, which prints its code and message;
-- a value with **warnings**.
+- a **bound**, which prints `bound: <id>: <reason>` (§5.17);
+- a **refusal**, which prints its code and message.
 
-A model with holes or per-value refusals still runs, and its other results stand. A load refusal stops the model before anything runs.
+Warnings print beside a result and leave it as it is (§8.5).
+
+A model with holes or per-value refusals still runs, and its other results stand. A load refusal stops the model before anything runs; one in a scenario file refuses only that scenario and the scenarios over it (`ENGINE.md` §11).
 
 ### 8.1 Holes
 
 A hole is a fact that is missing. It is never 0, never a default and never the last known value (N-1001, spec §4#8).
 - **It propagates** through every value that depends on it: arithmetic, comparisons, rules, pays (as a hole movement) and `flows`.
-- **It stops propagating** only where the outcome is decided without it: `and`, `or`, `any` and `all` under Kleene logic; an `if` whose branches are equal; a `sum` term known to be 0 under a hole `where`; a `fill` take that is known to be 0; a rule that is beaten, whose `when` and value aren't evaluated.
+- **It stops propagating** only where the outcome is decided without it: `and`, `or`, `any` and `all` under Kleene logic; an `if` whose branches are equal; a `sum` term known to be 0 under a hole `where`; a `fill` take that is known to be 0; a rule that is beaten, whose `when` and value aren't evaluated; `missing(r)`, which reads a hole as true (§5.10); and a place's balance after an anchor, which a hole movement dated on or before it no longer reaches (§5.18).
 - **It carries** the questions of every operand, `where` and term it evaluated: the union, each once.
 - **It prints** every question it carries, sorted by code point and without duplicates, with the item and keys each came from: a question reached at many keys prints once, with its list of keys.
 
 | Code | Arises when | Question printed | The writer |
 |---|---|---|---|
-| `HOLE-MISSING` | the gap rule: no row gives an input, band or given at those keys and that date (§4.6); a `prices Y` figure read outside Y with no index (§3.4); `bal` of a place with no `opening`, before its first anchor (§5.9, §5.18) | the input's `question`, else `x at k: no value for <period>` (`no value at <law date>` with no time key, §4.6); `<x> is in Y prices; no index moves it to <d>` | adds a row, or a `?` row with a better question |
+| `HOLE-MISSING` | the gap rule: no row gives an input or a band at those keys and that date (§4.6); a `prices Y` figure read outside Y with no index (§3.4); `bal` of a place with no `opening`, before its first anchor (§5.9, §5.18); `next_on` with no instance left in the run (§5.13); `flows` over days before the run's start S (`ENGINE.md` §2) | the input's `question`, else `x at k: no value for <period>` (`no value at <law date>` with no time key, §4.6); `<x> is in Y prices; no index moves it to <d>`; `no further <p> after <d>`; `before the run's start` | adds a row, or a `?` row with a better question; for S, reads from S on, or starts the model earlier |
 | `HOLE-STATED` | a row, field or rule value is `? "…"` | its text | answers it with a row |
-| `HOLE-IMPRECISE` | a comparison on an imprecise date isn't decided; one value is needed from an undecided interval (a print, money, a key, an aggregate's term); a movement's period crosses an end of a `flows` span; a state pay's date is imprecise (§4.4) | `date within <period> not precise enough for <comparison or use>` | states the day |
+| `HOLE-IMPRECISE` | a comparison on an imprecise date isn't decided; one value is needed from an undecided interval (a print, money, a key, a term of an aggregate other than `min`, `max`, `argmin` and `argmax`); an imprecise `at` or `on` whose law-date classes give different values (§4.3); a movement's period crosses an end of a `flows` span, or holds the day of a `bal(x, d)`; a version is known inside an imprecise instance's period (§5.13.3); a state pay's date is imprecise (§4.4) | `date within <period> not precise enough for <comparison or use>` | states the day |
 | `HOLE-CHANGED` | a version changed a booked pay, and neither it nor a later version says anything on back pay (§5.13.3) | `<pay> on <t> changed after it was paid (version V); is back pay due, and when?` | adds a version with `arrears on D of V` or `arrears none of V` (§5.13.3) |
 
 ### 8.2 The register
@@ -1552,29 +1574,29 @@ Every result lists, under it, the things it rests on that aren't plain sourced f
 | `reading: <axis> = <option>` | each axis option that the line's result depends on (§5.5); options that give the line's result together are named together (`down \| half-up`). An axis the line prints as `*` has no `reading:` entry: every option of it gives the line's result |
 | `bound: <id>: <reason>` | a declared bound the ask reached (§5.17) |
 | `anchor: <place> <D>, stated <s>, difference <d>` | a balance of a place read on or after one of its anchors (§5.18), through `bal`, `free`, `plan_low`, `worth` or the walk: the place's last anchor at or before the day read, with its stated value and its difference, stated − booked. It is listed once per anchor and carried like every entry, so a figure built on an anchored balance (a later state pay, a net worth) shows that it rests on a statement whose difference the model doesn't explain. A difference of 0 is listed too. A hole difference prints `difference ?` with its questions (J70's register, the user's answer, 2026-10-19) |
-| `held: <target>[keys] = v (<version>), read for <period>` | a row whose span has a start and no end (its own `governs`, else its version's), band rows included, read at a law date after the cut K: a figure carried into the future unchanged, as known today (spec Q-13). An input read at its own time key (§4.6) is read for that key's period, at the period's first day, as a pay instance's law date is (§4.3), so it is `held` when that day is after K. A row with no span at all is timeless and is never `held`. A figure that is published per period is written with closed spans instead, so its future is a hole until a rule or an `assumed` row gives it |
-| `law date <d>, cut <K>` | always, for the top-level value; a `check` whose sides are read at different law dates lists each |
+| `held: <target>[keys] = v (<version>), read for <period>` | a row whose span has a start and no end (its own `governs`, else its version's), band rows included, read at a law date after the cut K: a figure carried into the future unchanged, as known today (spec Q-13). K is the ask's cut, also for a read made at an earlier cut (an instance's `when` or amount at min(t, K), a look-ahead on walk day t, §5.13.1): the register says what this ask takes as known today, not what the instance knew. An input read at its own time key (§4.6) is read for that key's period, at the period's first day, as a pay instance's law date is (§4.3), so it is `held` when that day is after K. A row with no span at all is timeless and is never `held`. Nor is a scenario's row, which isn't knowledge (§6.4): the `scenario:` entry stands for it. A figure that is published per period is written with closed spans instead, so its future is a hole until a rule or an `assumed` row gives it |
+| `law date <d>, cut <K>` | always, for the top-level value, with K the ask's cut even where the value rests on reads at earlier cuts; a `check` whose sides are read at different law dates lists each |
 
 ### 8.3 Refused at load
 
-The model does not run. Each refusal names its file, line and item.
+The model does not run; a refusal in a scenario file refuses only that scenario and the scenarios over it (`ENGINE.md` §11). Each refusal names its file, line and item.
 
 | Code | Message | What the writer does |
 |---|---|---|
 | `LOAD-PARSE` | `cannot parse: <what was expected>`; also tabs, bad indentation, chained comparisons | fixes the text |
-| `LOAD-HEADER` | `missing tally version`, `start after end`, `start and end are needed for places, pays and draws` | completes the header |
+| `LOAD-HEADER` | `missing tally version`, `missing on date`, `missing from date` (a scenario's header), `start after end`, `start and end are needed for places, pays and draws`; `<n> files have a model header; exactly one does` | completes the header, or keeps one model header |
 | `LOAD-VERSION` | `files declare different tally versions` | migrates the old files (§9) |
 | `LOAD-RESERVED` | `<word> is a keyword` (§2.2: built-in names and contextual words are free outside their positions) | renames |
 | `LOAD-DUP` | `<id> is declared twice`; `a key added twice`; `two rules <label> with version <v>`; `band <b> has a built-in's name` | renames, or removes the copy |
 | `LOAD-NAME` | `unknown id <x>` | declares it, or fixes the spelling |
 | `LOAD-SHADOW` | `bound variable <k> has the name of a top-level id` | renames the variable |
-| `LOAD-KEY` | `<key> is not a key of <index>`; `ambiguous key <key>`; `a key is also an id`; `wrong number of keys` | fixes the key or names its index |
-| `LOAD-KIND` | `<operation> on a <kind>`: an addition to a range index, a pay to an asset | uses the right kind |
-| `LOAD-UNIT` | `<a> and <b> have different units` (money in two currencies, money ± a bare number, a `num CUR` stored as money, rate arithmetic outside §3.3, a step finer than the minor unit for money) | converts explicitly, or rounds |
+| `LOAD-KEY` | `<key> is not a key of <index>`; `ambiguous key <key>`; `a key is also an id`; `wrong number of keys`; `range <a>..<b> is out of order`; `<k> is used as a key of <index> and <index'>` | fixes the key or names its index |
+| `LOAD-KIND` | `<operation> on a <kind>`: an addition to a range or an open index, a pay to or from an asset | uses the right kind |
+| `LOAD-UNIT` | `<a> and <b> have different units` (money in two currencies, money ± a bare number, a `num CUR` stored as money, an exchange rate applied to the wrong currency (§3.2), rate arithmetic outside §3.3, a step finer than the minor unit for money, a value of the wrong type); `axis <a> is used as a mode, but <o> is not a mode name` | converts explicitly, rounds, or tests the axis by rules (§5.5) |
 | `LOAD-PRECISION` | `<literal> is finer than the minor unit`; `<a/b> terminates; write it as a decimal` | fixes the literal |
 | `LOAD-LITERAL` | `figure <n> in a rule; make it a row`; `a date in a rule; make it a version` | moves the figure to a row with a source |
 | `LOAD-OVERLAP` | `rows <a> and <b> of <x> tie at <keys> on <span>` | ends one row's span, or makes one more specific |
-| `LOAD-BAND` | `band <b> in <version>: rows unordered, overlapping or with a gap at <x>` (per key for a keyed band); the whole reality is refused; `marginal(<b>, x)` over a first row from `-inf` | fixes the intervals, or declares the gap with `?` |
+| `LOAD-BAND` | `band <b> in <version>: rows unordered, overlapping or with a gap at <x>` (per key for a keyed band); the whole reality is refused (a table in a scenario file: that scenario); `marginal(<b>, x)` over a first row from `-inf` | fixes the intervals, or declares the gap with `?` |
 | `LOAD-CYCLE` | `<x> depends on itself at the same key: <path>` (over every rule, whatever its `when`); `<x> reads itself both earlier and later on <index>` | breaks the cycle, reads one direction, or splits the def per reading |
 | `LOAD-GUARD` | `<x>[k ± n] is a recurrence read with no condition on k or pos(k) guarding it` (a check that a guard exists, §5.10; whether it suffices is `RUN-KEY`; a shifted read that isn't a recurrence needs none) | adds `when pos(k) > n`, an excepting rule's `when`, or an `if` |
 | `LOAD-EXCEPTS` | `excepts names no rule <label>`; `an excepts cycle` | fixes the label |
@@ -1583,7 +1605,7 @@ The model does not run. Each refusal names its file, line and item.
 | `LOAD-PLAN` | `<look-ahead> reaches draw <z>, which has no plan value` | adds `plan v` to the draw |
 | `LOAD-FUTURE` | `<state pay> reads <balance> on or after its own day, or <flows> past it` | reads an earlier day, or `plan_low` |
 | `LOAD-HOLD` | `<pay> takes money from <place> through bal, but the place holds <def>` | reads `free` |
-| `LOAD-ARREARS` | `arrears on D before known`; `arrears with correction`; `two arrears lines for <pay>` (for one version's change, or disagreeing across versions known the same day); `arrears of <V>: V is not known before this version` | fixes the version |
+| `LOAD-ARREARS` | `arrears on D before known`; `arrears with correction`; `two arrears lines for <pay>` (for one version's change, or disagreeing across versions known the same day); `arrears of <V>: V is not known before this version`; `arrears of <V> for <pay>: V's own line covers it`; `arrears for <x>: not a pay` | fixes the version |
 | `LOAD-MOVES` | `moves <V>: unknown, not known before this version, or a scenario version`; `two moves of <V> known the same day` | fixes the line |
 | `LOAD-COVERS` | `covers without a governs span`; `<x> is not a place`; `record <r> is dated outside the span <version> covers` | adds the span, or moves the record to the version that covers its day |
 | `LOAD-COVERED` | `<def> aggregates <movement input> over a span with no covered() guard` | guards the aggregate with `covered(x, span)` (§5.18) |
@@ -1613,7 +1635,7 @@ Printed as `refused: CODE message` at that key. A refusal propagates like a hole
 | `RUN-EMPTY` | `<min, max, first, last, argmin, argmax, mean, share, quantile> over no keys` | widens the binding, or tests `count` first |
 | `RUN-DIGITS` | `<x> passes 4 096 digits; round where the law rounds` | adds the law's `round` |
 | `RUN-DIV` | `division by zero` | guards it |
-| `RUN-DOMAIN` | `ln or sqrt outside its domain` | guards it |
+| `RUN-DOMAIN` | `ln, sqrt or pow outside its domain` | guards it |
 | `RUN-UNDECIDED` | `<function> to <u> not decided within the precision cap` | states another `to` |
 | `RUN-PARAM` | `<distribution> parameter <p> = <v> is invalid` | fixes the input |
 | `RUN-NEG` | `negative amount <v> for <pay or fill>` | writes two pays, or swaps the ends |
@@ -1632,7 +1654,7 @@ A warning leaves the value as it is and prints beside it.
 
 | Code | Message | Means |
 |---|---|---|
-| `WARN-NEGATIVE` | `<account> is below zero from <d>` | the first day of each stretch below zero (N-1607); tested only where the balance is known |
+| `WARN-NEGATIVE` | `<account> is below zero from <d>` | the first day of each stretch whose end-of-day balance is below zero (N-1607); tested only where the balance is known |
 | `WARN-HELD` | `free(<place>) is below zero on <d>` | on a day whose hold is above 0: money that wasn't ours was spent, such as VAT collected (N-504). A day with no hold prints `WARN-NEGATIVE` only |
 | `WARN-UNREAD` | `<source, input, def or place> is read by nothing` | something was declared and never used, such as an account no total includes (N-1903). Decided on the item graph (`ENGINE.md` §3.1), so it doesn't depend on what the asks reach |
 | `WARN-LEGS` | `the two records of <instance> disagree: <a> and <b>` | the import has a gap or an error (§5.18) |
@@ -1644,8 +1666,8 @@ The operations that change a reality have their own errors (`OP-*`) and warnings
 
 ## 9. Versioning of the language
 
-- **Every file states `tally N`.** This document defines `tally 1`.
-- **A released version never changes.** An engine runs every version it supports, each with its own semantics and its own canonical printer, so an old result can always be reproduced (N-1201).
+- **Every file states `tally N`.** This document defines `tally 1`. Until the engine that runs it is done (`DONE.md`), the frozen text takes patches (`tally 1.0.1`, …, `DONE.md` rule 1): each corrects the definition of `tally 1`, files still state `tally 1`, and it is released with the last of them.
+- **A released version never changes.** An engine runs every version it supports, each with its own semantics and its own canonical printer, so an old result can always be reproduced (C-15).
 - **A new version comes with a migration:** a mechanical rewrite of any `tally N` model into `tally N+1`. Each migration is tested by running both on every model and case. Every ask must print the same result, or the change must be listed with its reason.
 - **A new reserved word** that collides with an id is renamed by the migration.
 - **Every result records** the `tally` version and the engine build that produced it.

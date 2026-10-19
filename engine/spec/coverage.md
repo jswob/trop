@@ -2,6 +2,8 @@
 
 The minimality check (brief §4.4): every construct is used by at least one case, or it goes, or it is justified in writing. Written in D7, 2026-10-19, after the D7 fixes.
 
+**In tally 1.0.1.** The counts below are tally 1.0's. Since then change 7 is written with `with scenario` (K12), `montecarlo/` holds the first models that draw (K13: `LH-17-mc.tally` and `household-bands/`), and `half-down` is kept (R3). No other construct's status changes.
+
 **How it was counted.**
 - Scratchpad scripts, counting only: `d7/coverage_scan2.py` (table 1: constructs by section) and `d7/cov_tokens.py` (table 2: each built-in name, mode, day count, distribution, type word and place kind). `d7/gen_coverage.py` formats this file.
 - Columns: the 79 `models/*.tally`; `household`, the 13 files of `amendments/household/` as one; `chg1`–`chg7`, the added lines of each change in `amendments/changes/`.
@@ -16,8 +18,8 @@ The minimality check (brief §4.4): every construct is used by at least one case
 | Table 2, built-in words | 113 | 88 | 25 |
 
 The zero rows come down to 19 decisions (table 3):
-- **Removed in D7 (4):** the `law D for [x, y]` pin, a binding over a range, the `half-down` mode, and `day` and `quarter` as type words. Each was used by no case, and no spec ID needs it.
-- **Kept, with a reason (15):** each is named by a spec ID, the brief or a hindcast fixture. No case among the 79 exercises it, so it is untested here, and REPORT §7 lists it.
+- **Removed in D7 (3):** the `law D for [x, y]` pin, a binding over a range, and `day` and `quarter` as type words. Each was used by no case, and no spec ID needs it.
+- **Kept, with a reason (16):** each is named by a spec ID, the brief or a hindcast fixture. No case among the 79 exercises it, so it is untested here, and REPORT §7 lists it.
 - **The largest of these is Monte Carlo (K13).** No model draws: the stochastic cases are worked as closed forms (`cdf`, `pdf`, `pmf`, `crps`) or declared bounds. Monte Carlo is in the design because the brief and the spec require it, and only hindcast fixtures H0, H6 and H7 test it (BUILD-ORDER M7).
 
 ## 1. Constructs by section
@@ -324,7 +326,7 @@ The zero rows come down to 19 decisions (table 3):
 |---|---|---|---|---|
 | R1 | `law D for [x, y]` (a law-date pin on named items); with it, `wording D` without `for` | §2.3, §4.3, §5.10 | removed | No case. UL-15, the case that pins named items, needs the wording in force on D, which `wording D for [x, y]` gives (DECISIONS 34), and the 10 models that move the law date move every item (`law D`). `wording D` without `for` had no case either, so `for` is now required with `wording`. |
 | R2 | a binding over a range, `k in a..b [by n]` | §2.3 `bind`, §5.6 | removed | No case. A binding is over an index, a key list or `path`; a computed bound is a `where` over a declared index (`k in inst where k <= lh_terms[l].months`, as LH-10 does), so every binding stays bounded at load. |
-| R3 | the `half-down` rounding mode | §2.3 `MODE`, §7.2 | removed | No case, and no spec ID names it. The cases use `down`, `up`, `floor`, `ceil`, `half-up` and `half-even`. A law that rounds half toward zero would come in a later language version (§9). |
+| R3 | the `half-down` rounding mode | §2.3 `MODE`, §7.2 | kept | DECISIONS U-03 and decision 11 (seven modes). No case uses it: the cases use `down`, `up`, `floor`, `ceil`, `half-up` and `half-even`. |
 | R4 | `day` and `quarter` as type words | §2.2 | removed from the type list | They are not types in the `type` production; they stay period words (an index kind, `periodic`, `factor`). |
 | K1 | `dcf(a, b, c)` and its five day counts | §3.3 | kept | U-15 (a rate carries its convention) and CHG-06 (taken: "dcf with five day counts"). The cases state their interest per period, so none counts days between dates. |
 | K2 | rates `simple /year`, `/month`, `/day` | §3.3 | kept | U-15, CHG-06 (compounding and basis are part of a rate). Statutory late-payment interest, which B2B invoices carry, is simple interest. LH-10, LH-11, CH-05, LH-18 use `nominal`, `effective`, `discount`. |

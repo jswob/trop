@@ -27,7 +27,7 @@ It names no technology. These are design estimates, scaled from the prototypes' 
 **Units of cost.**
 - An **evaluation** is one rule body computed at one key (LANGUAGE §5).
 - A **read** is one lookup of an input row, a band row or a cell.
-- A **walk day** is one day of the day walk with at least one movement or state pay. Days with nothing on them cost nothing.
+- A **walk day** is one day of the day walk with at least one movement, state pay or anchor. Days with nothing on them cost nothing.
 - A **movement** is one booked or modelled-past movement.
 - **P** is the number of places, **I** the number of pay instances, **M** the number of movements, **D** the number of days in [S, E], **R** the number of records, **r** the number of rows of one target.
 
@@ -48,7 +48,7 @@ It names no technology. These are design estimates, scaled from the prototypes' 
 ### 2.1 The flow pass
 
 Each flow pay instance costs:
-- its `when`, `on` and `amount`, at its booking cut: a few evaluations, mostly memo hits, since the law and the facts are shared cells;
+- its `on` at the ask's cut K, then its `when` and `amount` at its booking cut min(t, K) (`ENGINE.md` §5): a few evaluations, mostly memo hits, since the law and the facts are shared cells;
 - one more evaluation per later version that reaches its read set (back pay, `ENGINE.md` §5). Versions that don't reach it are skipped by an index lookup, with no evaluation.
 
 Total: O(I · c), where c is the evaluations per instance, plus the movements sorted once, O(M log M).
@@ -114,7 +114,7 @@ $ python3 -c "import math; print(math.ceil(math.log2(12054)))"
 - Two cuts in the same interval give the cell the same result. So K is trimmed out of the context like the path and the axes are (`ENGINE.md` §3.2).
 - **The case that matters most:** monthly bank statements are versions known every month. They are read only by the movement input's cone: booking on covered days, the residuals and defs over history. A tax def reads none of them, so a monthly cut doesn't split the tax's cells.
 
-**Booking cuts.** Each instance dated t is evaluated at min(t, K). For instances before K, the booking cut of a cell is also a class, and most instances in one year share the law's class. So a 33-year run costs about one evaluation set per law version, not one per day.
+**Booking cuts.** Each instance dated t has its `when` and amount evaluated at min(t, K); its `on` is read at K. For instances before K, the booking cut of a cell is also a class, and most instances in one year share the law's class. So a 33-year run costs about one evaluation set per law version, not one per day.
 
 **Scenarios.**
 - A scenario's layer adds one candidate per read of a target it writes, O(1).
@@ -174,7 +174,7 @@ A cell that reads only the law tier skips verification entirely when an amendmen
 The walk is a fold, so a change on day d* changes balances from d* on. The engine keeps a **checkpoint**: every place's balance and the walk's state (the segment trees of §2.3) at the start of each month.
 - The new walk starts at the last checkpoint before d*, the first day whose flow movements, records or state pay inputs differ.
 - From there it runs to E. Balances usually differ for good once money has moved differently, so early cutoff inside the walk is rare. It is still checked at each month's checkpoint: if every balance and every pending movement is equal, the rest of the old walk stands.
-- **Checkpoints cost** P balances plus the trees' changed nodes per month. For 33 years: 396 checkpoints of 13 places, small.
+- **Checkpoints cost** P balances plus the trees' changed nodes per month. For 33 years: 396 checkpoints of a few dozen balances, small.
 
 ### 4.3 What one turn costs
 
@@ -189,7 +189,7 @@ A conversation turn "validate a patch, run reality and the scenario, compare, an
 | The scenario run | the cone of what the scenario writes, plus a walk from its `from` date (rows can't start before it) |
 | `plan` | a diff of two timelines, O(M), plus the asks' results |
 
-So a change to next year's law re-walks from next year, not from 1993. A change to a household fact dated today re-walks from today.
+So a change to next year's law re-walks from the first day whose inputs differ (§4.2): next year, or earlier where a look-ahead window from a day before next year reaches into it; never from 1993. A change to a household fact dated today re-walks from today.
 
 ### 4.4 The fitting loop
 
@@ -230,7 +230,7 @@ $ python3 -c "from fractions import Fraction as F; print(float(F(45,100)*6/(1000
 - a path's law cells read the shared layer's bands and rates directly;
 - only cells whose inputs depend on a draw are recomputed per path.
 
-The budget (§8) is the prototype's floor plus the law, with bands streamed after the deterministic answer.
+The budget (§8) is the prototype's floor plus the law, with path statistics streamed after the deterministic answer.
 
 **A path on demand** (an explanation, N-1406) is one path: its shared layer is cached, so it costs the draw cone of one path. That is the prototype's ≈ 20 ms floor or less.
 
@@ -264,7 +264,7 @@ Exact arithmetic is the default (LANGUAGE §7), so its cost must be bounded.
 
   So an operation at the cap is tens of µs, and a recurrence of a few hundred keys at the cap stays within a turn's budget (§8). Past it, cost grows with the square of the size. A long product of market data (LH-15's and LH-16's 720 monthly ratios, each with several digits) can reach the cap: the model then rounds where its note says, a reading of the modeller that `explain` shows, never a silent truncation.
 
-**Transcendentals** (`exp`, `ln`, `pow` with a fractional exponent, distribution functions) are computed by interval refinement (LANGUAGE §7.3):
+**Transcendentals** (the `to u` list of LANGUAGE §7.3: `exp`, `ln`, `sqrt`, `pow` with a non-integer exponent, the continuous distributions' functions and `poisson`'s, a normal forecast's `crps`, and `periodic` with a non-integer power) are computed by interval refinement (LANGUAGE §7.3):
 - Start at about 64 bits more than the target unit needs. Double the precision until the interval rounds to one value at the unit, or 2¹⁶ bits are reached (`RUN-UNDECIDED`).
 - The typical cost is one evaluation at the first precision. A second round is needed only when the value lies very near a rounding boundary.
 
@@ -286,9 +286,9 @@ Each construct in LANGUAGE §5 states its cost there. Collected:
 | band | §5.8 | O(log rows) per call; `marginal(b, x)` O(rows below x); `band_lo`, `band_hi` O(log rows) | (table version, key for a keyed band, value) |
 | place, balance | §5.9 | O(1) in the walk; O(log Mₓ) at a past day | change points per place |
 | given | §5.10 | one candidate row more per read of the def | as a row |
-| def | §5.10 | O(rules) tests per key (1–5 rules), only the winner's value evaluated; a recurrence over n keys is O(n), iterative, in either direction; a read at a computed key keeps a stack of the (def, keys) being evaluated, for `RUN-CYCLE` | (keys, law date class, axis values, cut class, pin set; the walk point for a walk-bound def) |
+| def | §5.10 | O(rules) tests per key (1–6 rules in the cases), only the winner's value evaluated; a recurrence over n keys is O(n), iterative, in either direction; a read at a computed key keeps a stack of the (def, keys) being evaluated, for `RUN-CYCLE` | (keys, law date class, axis values, cut class, pin set; the walk point for a walk-bound def) |
 | `as if` | §5.10 | one memo layer per distinct pin set; only the pinned items' cone; a pin's expression evaluated once, outside | pin set, by values |
-| fill | §5.11 | O(A log A) for A arcs (about 1 300 arcs for 30 years of two spouses' 11-year windows); a keyed fill, that per key | (fill key, supplies, demands, order) |
+| fill | §5.11 | O(A log A) for A arcs (at most 1 320 arcs for 30 years of CB-05's `spouses`: a year back and ten forward, between two spouses each way); a keyed fill, that per key | (fill key, supplies, demands, order) |
 | prorata | §5.12 | O(n log n), once per (total, weights) | (total, weights) |
 | flow pay | §5.13 | O(1) per instance; one evaluation more per version reaching a booked instance | instance |
 | state pay | §5.13.1 | its state reads, in the walk | none: it is the walk |
@@ -354,7 +354,7 @@ Every quantity that can grow without bound has a cap, a refusal, or a cost that 
 **The out-of-reach steps** are declared bounds, not slow computations (N-2008, `BOUNDS.md`):
 - the fewest transfers to settle a group;
 - "eventual" ruin over an infinite horizon;
-- exact actuarial values to 4–5 decimals;
+- actuarial values that need a mortality table the case doesn't give (LH-17's step 6; LH-18's annuity values are computed exactly, `to u`, BOUNDS row 49);
 - the log score of path forecasts.
 
 ---

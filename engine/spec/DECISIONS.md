@@ -7,6 +7,7 @@ Every requirement of the spec (`tmp/engine-requirements.md`), every proposed cha
 - **merged**: the need is met by a more general construct than the one the ID names. The row says which.
 - **rejected**: the design doesn't do it, on purpose. The row says why.
 - **out of scope**: it belongs to a layer that isn't the engine: the MCP layer, the app, the import pipeline or the process. The row says which, and what the engine supplies to it.
+- **taken differently**: the need is met, but not in the form the ID asks for. The row says how (CHG-01, CHG-04).
 
 **References:** L = `LANGUAGE.md`, E = `ENGINE.md`, O = `OPERATIONS.md`, P = `PERFORMANCE.md`, B = `BOUNDS.md`. Requirement texts are shortened; the spec has them in full.
 
@@ -49,7 +50,7 @@ Every requirement of the spec (`tmp/engine-requirements.md`), every proposed cha
 | M-06 | Lookup: last entry on or before the date; `before`; `repeat` | taken | The read rule (L §4.6). "Just before" is a read at an earlier key or with `at` |
 | M-07 | A template: versioned, typed parameters, lines, checks, sources, tests, roles and joins | merged | A law part (L §6.1): typed inputs with questions, defs with rules pointing at versions (`v`), `check` asks, sources. Law versions are versions of rows and rules, not of the part. Roles and joins: DR3 |
 | M-08 | An instance: template, arguments, lifetime | merged | A thing is a key of an index with keyed rows. Its lifetime is its rows' spans, or a `when` on membership. There is no instantiation step |
-| M-09 | A line: one formula on a grid, with a gate, a payment {from, to, fx, reverse, match} and a posting day | merged | A def keyed by a time index is the grid; `when` is the gate; a pay is the payment (L §5.13). Conversion is explicit (L §5.13.1); "reverse" is two pays or swapped ends; matching is the importer's data (O §2.2) |
+| M-09 | A line: one formula on a grid, with a gate, a payment {from, to, fx, reverse, match} and a posting day | merged | A def keyed by a time index is the grid; `when` is the gate; a pay is the payment (L §5.13). Conversion is explicit (L §5.13.3); "reverse" is two pays or swapped ends; matching is the importer's data (O §2.2) |
 | M-10 | Attached instances (law) live while what they attach to lives | merged | A law reads its subject's keys. When the subject's rows end, the law's sums see nothing. `end` checks that nothing keyed by it still moves money (`WARN-ENDED`, O §6) |
 | M-11 | A parameter declares what it reads (an interface) | merged | Typed inputs and defs, unit-checked at load. The item graph is the interface (E §3.1) |
 | M-12 | Party: a person with dated facts who owns places and incomes | taken | Parties are keys; their facts are keyed inputs (L §3.5); entities too (L §3.6) |
@@ -62,7 +63,7 @@ Every requirement of the spec (`tmp/engine-requirements.md`), every proposed cha
 | M-19 | Things no bank shows exist as places with a valuation | taken | `asset CUR priced v` (L §5.9) |
 | M-20 | `run(model, history, clocks[, scenario]) → timeline` | taken | `run(reality, request) → result` (E §1) |
 | M-21 | ASCII ids; Polish only in labels | taken | L §2.1, §10 |
-| M-22 | Composite templates: one block per real-world thing expands into its wired pieces, visibly | merged | A new thing is keys and rows (L §6.5 change 1: 8 added lines). The law parts collect it by query, so nothing needs expanding; `describe` shows what reads it (O §9). **The user's answer (D8, 2026-10-19): accepted, rows plus queries, no expansion step.** A new thing no law handles is refused (`RUN-NO-RULE`) or prints a hole with its question, never a silent 0 (L §6.2) |
+| M-22 | Composite templates: one block per real-world thing expands into its wired pieces, visibly | merged | A new thing is keys and rows (L §6.5 change 1: 9 added lines). The law parts collect it by query, so nothing needs expanding; `describe` shows what reads it (O §9). **The user's answer (D8, 2026-10-19): accepted, rows plus queries, no expansion step.** A new thing no law handles is refused (`RUN-NO-RULE`) or prints a hole with its question, never a silent 0 (L §6.2) |
 | M-23 | Collect by query, not by list | taken | Sums over keys with `where` (L §5.10) |
 | M-24 | Law chosen from facts; one version per window; several laws in order; a coverage check refuses gaps and overlaps at load | taken | Rules with `when` and `excepts` (L §5.10); rows by the read rule. Overlaps of rows are refused at load (`LOAD-OVERLAP`); bands with gaps too (`LOAD-BAND`). **Departure:** whether rules cover every key and date can't be decided at load when `when` reads facts, so it is checked per value: `RUN-RULES` (two apply), `RUN-NO-RULE` (none) |
 
@@ -84,7 +85,7 @@ Every requirement of the spec (`tmp/engine-requirements.md`), every proposed cha
 | T-12 | Fixed phases within a day; a declared posting order | merged | Records and flow pays first, then state pays by `phase` 0–9, pay id and keys (L §5.13.2). The spec's eight named phases map onto numbers the model chooses |
 | T-13 | The environment resolves monthly, declared as an assumption | merged | A price's rows govern months, and the read rule reads the month's row. An assumed resolution is an `assumed` row |
 | T-14 | Law periods without built-in periods | taken | Anchored indexes, spans, one-off periods (L §4.1) |
-| T-15 | "What did we think in March?", "what changed since last month?" | taken | The reality at R plus `as known` (E §2, O §1); `plan` between two record times (O §7, O §9 `history`) |
+| T-15 | "What did we think in March?", "what changed since last month?" | taken | The reality at R plus `as known` (E §2, O §1); `history` lists what changed between record times (O §9), and two record times are compared by running the reality at each (E §2). `plan` diffs a draft against the current reality only (O §7), so a diff of two record times in one result is a gap (`CHANGES.md`) |
 | T-16 | Four clocks S, K, (K, E], R; every read masked at K; a plain forecast sets S = K | taken | E §2. **Departure:** S is the header's `start`, not K, so a plain forecast replays the covered past before K. A request may set S = K (E §2) |
 
 ### U. Money, units and inflation
@@ -94,7 +95,7 @@ Every requirement of the spec (`tmp/engine-requirements.md`), every proposed cha
 | U-01 | Unit algebra | taken | L §3.2 |
 | U-02 | Only small integers as literals | taken | Stricter: L §7.1 also bans date literals in rules |
 | U-03 | Round where the law rounds, with its mode and unit at each step; tests tolerate published 1-grosz disagreements with a reason | taken | `round(x, u, mode)`: seven modes, any positive step (L §7.2). A published disagreement is a check with its errata (O §3, L-41) or an axis |
-| U-04 | EUR and USD places; FX as dated values; NBP previous business day; a group balance at a declared FX read | taken | Places per currency; rates `num A/B` (L §3.2); `prev_business` with `at`; `flows … in CUR at fx mode` (L §5.13.1) |
+| U-04 | EUR and USD places; FX as dated values; NBP previous business day; a group balance at a declared FX read | taken | Places per currency; rates `num A/B` (L §3.2); `prev_business` with `at`; `flows … in CUR at fx mode` (L §5.13.3) |
 | U-05 | FX applies only between different currencies | taken | Unrepresentable: `money EUR × num PLN/EUR` is PLN, and the same rate applied to PLN money is `LOAD-UNIT` |
 | U-06 | Holdings in FIFO lots; value = units × price; revaluation by unit flows | merged | Holdings in units, priced (L §5.9); lots by `fill` in FIFO order (CHG-01); revaluation by an ask over `worth` and unit flows |
 | U-07 | A gain split into FX, price and interaction | merged | Ask expressions with `as if` pins of the rate or the price (L §5.10) |
@@ -128,7 +129,7 @@ Every requirement of the spec (`tmp/engine-requirements.md`), every proposed cha
 | R-10 | A fallback (sell to cover) reads realised state only, counts T+2 proceeds, counts its firings | merged | A state pay; its proceeds are a second state pay two business days later reading the sale's history. The rule counts its own unsettled proceeds from `flows` of past days. Firings are an ask: `count(d in day where flows(sell, d) > 0)` |
 | R-11 | Every run reports a rule's breach rate and mean shortfall, and a run with the rule off | merged | Asks (`share`, `mean`); "the rule off" is an axis the rule's `when` reads, pinned with `with` (L §5.5). Not automatic: the model asks for it |
 | R-12 | Reacting to published signals is allowed; to the model's own forecast is not | taken | A rule reads inputs (published series, masked at K) and the past. Asks can't be read by defs or pays, so a forecast can't be a signal. A typed lagged signal was rejected: `plan_low` is the one sanctioned look-ahead |
-| R-13 | "Once, when …" triggers on a state condition; the firing date anchors the template's schedules | merged | A state pay with `when` on state and on its own history (`flows(buy, ..d - 1) = 0`) fires once. Dependents read the firing day from `flows` of past days; they are state pays, inferred |
+| R-13 | "Once, when …" triggers on a state condition; the firing date anchors the template's schedules | merged | A state pay with `when` on state and on its own history (`flows(buy, d0..d - 1) = 0`, with d0 a stated day on or after S) fires once. Dependents read the firing day from `flows` of past days; they are state pays, inferred |
 | R-14 | Goal-seek only at query level, never inside a run | taken | `solve` in asks; in a def only where the law names the method (L §5.16) |
 | R-15 | Back-testing a rule on real history; fits use data up to each decision; "did we follow it?" | taken | Masking at K and rolling origins (E §8); a state pay's modelled past is computed against the real balances (E §4.2, §6.2) |
 | R-16 | Deterministic to the grosz | taken | L §7.5 |
@@ -213,7 +214,7 @@ The law content (L-01 to L-23) is data: law parts the engine runs, written after
 | L-36 | An independent oracle agrees to the grosz | taken | An oracle is a check. D7's evaluators and the build's tests are this process |
 | L-37 | Rounding errors caught | taken | O §3 step 5 plants rounding errors |
 | L-38 | Behaviour between and beyond tested points probed | taken | O §3 step 6, the threshold table |
-| L-39 | Expected answers are themselves checked | merged | Every expected figure has a source and locator (O §3 step 2); a figure two sources disagree on is an errata check (L-41). Collecting it twice is process |
+| L-39 | Expected answers are themselves checked | merged | Every expected figure is a `check` from a published example, a payslip or a real return, collected by someone who isn't the author (O §3 step 3; L-31, L-35); a figure two sources disagree on is an errata check (L-41). Collecting it twice is process |
 | L-40 | Who writes law doesn't matter | taken | O §3 (the user's decision) |
 | L-41 | A published figure that disagrees with its law: match the law, keep both, report the gap | taken | O §3 |
 
@@ -240,7 +241,7 @@ The law content (L-01 to L-23) is data: law parts the engine runs, written after
 |---|---|---|---|
 | Q-01 | Questions read-only; answers are queries over the run | taken | Asks have no pay (L §5.16); aggregates `first`, `last`, `min`, `max`, `argmin` over days |
 | Q-02 | Measures: futures, first passage with censoring, the lowest day, lenses, IRR/TWR, price/FX split, change, sensitivity | merged | `share`; `first` with a test of `any` for censoring; `argmin`; sums by field or week; `solve` for IRR; `as if` for splits and sensitivity; `plan` for change |
-| Q-03 | One rule for when "N in 1 000 futures" may be said | taken | **The user's answer (D8, 2026-10-19): the engine owns the rule.** Every `share` over paths prints `sayable` or `not sayable` with its reasons (E §8, L §5.16): two standard errors ≤ 0.05 (Agresti–Coull, so "0 of 10" isn't sayable; clean-side audit F1, `AUDIT-D8.md`), the carry (the money-weighted years the term's movements rest on `held` or `assumed` figures) ≤ 2 years, and no pin on a draw. On the household, 3 years of mostly known money gives a carry ≤ 1.50 years (sayable); a 30-year flat-price bet about 15 (not sayable). Cost O(movements in the window), no refusals of its own. The MCP layer words the verdict. Build: M7 (BUILD-ORDER) |
+| Q-03 | One rule for when "N in 1 000 futures" may be said | taken | **The user's answer (D8, 2026-10-19): the engine owns the rule.** Every `share` over paths prints `sayable` or `not sayable` with its reasons (E §8, L §5.16): two standard errors ≤ 0.05 (Agresti–Coull, so "0 of 10" isn't sayable; clean-side audit F1, `AUDIT-D8.md`), the carry (the money-weighted years the term's movements rest on `held` or `assumed` figures) ≤ 2 years, and no pin on a draw. On the household, 3 years of mostly known money gives a carry of about 1.50 years (sayable); a 30-year flat-price bet about 15 (not sayable). Cost O(movements in the window), no refusals of its own. The MCP layer words the verdict. Build: M7 (BUILD-ORDER) |
 | Q-04 | Every number from a tool result: small, units, source tag, Polish sentence | merged | Typed results with units and source tags (O §1). The Polish sentence is the MCP layer's |
 | Q-05 | Templates describe themselves | taken | Inputs carry questions; `describe` (O §9); `check` asks as sanity checks |
 | Q-06 | Difference ledger; attribution; representative paths; Shapley | merged | `plan` (O §7); `as if` differences; a path chosen by `quantile` and replayed by `explain`. Shapley is an ask over `as if` with up to 6 causes (2⁶ = 64, the fork cap) |
@@ -322,7 +323,7 @@ The law content (L-01 to L-23) is data: law parts the engine runs, written after
 | CHG-03 Group units and relations with dates | taken | Membership and relation inputs with dated rows; sums over keys (L §3.5). No built-in unit type |
 | CHG-04 Carryback | taken differently | The later year's loss is matched to earlier years by `fill`; the refund is its own pay, dated when claimed. The closed year's booked amount stays fixed (L §5.13.3), so history isn't rewritten |
 | CHG-05 Classifications from facts | taken | Defs, read by other laws like any def; a court's ruling is a given (L §5.10) |
-| CHG-06 Conventions: FX per leg, day count, compounding | taken | `dcf` with five day counts; the rate basis as type (L §3.3); FX per movement with a mode (L §5.13.1); per leg as rows or axes. No default can be written (L §10) |
+| CHG-06 Conventions: FX per leg, day count, compounding | taken | `dcf` with five day counts; the rate basis as type (L §3.3); FX per movement with a mode (L §5.13.3); per leg as rows or axes. No default can be written (L §10) |
 | CHG-07 Entity parties and look-through | taken | Entities are keys with places; `stake`; look-through by a bounded depth recurrence (L §3.6) |
 | CHG-08 Stochastic lifetimes | taken | A draw per party per path, `alive[p, m]`, `when alive` (E §7) |
 | CHG-09 Ranked allocation | taken | `fill` in a stated order; `prorata` with its remainder; an unstated order is a hole (L §5.11, §5.12) |
@@ -350,7 +351,7 @@ The law content (L-01 to L-23) is data: law parts the engine runs, written after
 | 8 | Whether a `with` pin reaches an input read through `at` | It replaces every read of the input at those keys, `at` included (L §5.10) |
 | 9 | A cite per row | Every row's version cites a source; a row may add a locator (L §3.7) |
 | 10 | A law change without restating figures | Open-ended rows and the `version` header (L §5.3) |
-| 11 | Name clashes | One namespace, every reserved word listed, `LOAD-RESERVED`, `LOAD-NAME`, `LOAD-SHADOW` (L §2.2, §2.5) |
+| 11 | Name clashes | One namespace, every reserved word listed, `LOAD-RESERVED`, `LOAD-DUP`, `LOAD-SHADOW` (L §2.2, §2.5) |
 | 12 | The single `=` after `when` and in `solve` | C's parse rule (L §2.3) |
 | 13 | Types: a bare 0, `int × ratio`, `round`'s result, `year_of` on a month, `m + 1` past the end | L §3.1, §3.2, §4.2; `RUN-KEY` past the end |
 | 14 | Whether the precision rule covers a recurrence's start rule | Every rule, the start rule included, is one rule body under the same rules (L §5.10, §7.1) |
@@ -432,7 +433,7 @@ Decisions taken in D5, beyond the candidates and the judge. Each weighs the alte
 
 Each departure is above with its reason. Those that touch a decision the user made, or a requirement where the evidence points another way, went to `REPORT.md` as questions. **All five were answered on 2026-10-19 (D8), each "yes" to the recommendation; the rows above carry the answers** (REPORT §12):
 
-1. **M-22, composite templates.** The user decided that one block per real thing should expand into its wired pieces. In Tally a new thing is rows, and the law parts find it by query, so nothing expands (L §6.5: a new job is 8 added lines, no edits). Is "rows plus derived wiring" the "one block" you meant, or do you want a visible expansion step?
+1. **M-22, composite templates.** The user decided that one block per real thing should expand into its wired pieces. In Tally a new thing is rows, and the law parts find it by query, so nothing expands (L §6.5: a new job is 9 added lines, no edits). Is "rows plus derived wiring" the "one block" you meant, or do you want a visible expansion step?
 2. **R-06, other rules' transfers in the look-ahead.** Tally's look-ahead counts planned flows only. A rule never sees another rule's future result, which is what keeps the walk free of fixed points (spec §4#1). A transfer planned in advance is written as a flow pay, and then it is counted. Is that enough?
 3. **T-11 and A-11, relative dates.** The engine computes every date, through its calendar built-ins. Mapping a Polish phrase to a built-in is the MCP layer's job, and the row keeps the phrase. Is a phrase map outside the engine acceptable?
 4. **C-08, a payment into a debt capped at its balance.** Tally refuses the payment instead (`RUN-PLACE`), since a cap hides an error; a model that wants a cap writes it. Refuse, or cap?
