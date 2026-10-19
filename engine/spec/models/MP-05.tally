@@ -1,0 +1,216 @@
+model mp05
+  tally 1
+  on 2026-10-19
+  note "UK inheritance tax on lifetime gifts when the donor dies within seven years: HMRC's examples Masood, John, Wayne and Joel."
+  note "Tax at death is the tax on the transfer's own slice above the nil-rate band at death, tapered by the years survived, less any lifetime tax."
+
+source fa1986_src "Finance Act 1986 (c. 41), Royal Assent 25 July 1986: s. 101 and Sch. 19 paras. 2 and 23, which give IHTA 1984 s. 7 (1), (4) and s. 131 (1) their seven-year wording, and s. 102 (4). Read in IHTA 1984 s. 7 and s. 131 and in FA 1986 s. 102 at legislation.gov.uk" at "https://www.legislation.gov.uk/ukpga/1984/51/section/7"
+
+source fa2006_src "Finance Act 2006 (c. 25), Royal Assent 19 July 2006: s. 155, which substitutes the IHTA 1984 Sch. 1 Table of Rates for chargeable transfers on or after 6 April 2009. Read in IHTA 1984 Sch. 1 at legislation.gov.uk" at "https://www.legislation.gov.uk/ukpga/1984/51/schedule/1"
+
+source govuk "Work out Inheritance Tax due on gifts (HMRC guidance, published 3 December 2021, last updated 11 February 2026)" at "https://www.gov.uk/guidance/work-out-inheritance-tax-due-on-gifts"
+
+source ihtm "HMRC Inheritance Tax Manual IHTM14611-IHTM14613 (taper relief) and IHTM14621-IHTM14622 (fall in value relief); the manual was published 20 March 2016 and updated 7 April 2026" at "https://www.gov.uk/hmrc-internal-manuals/inheritance-tax-manual/ihtm14612"
+
+axis mp05_period
+  printed "the years and months the guidance prints for each example"
+  dates "completed years and months from the printed dates"
+
+index gift = [m1, m2, m3, m4, m5, m6, john_house, wayne_daughter, wayne_shares, joel_house]
+
+index person = [masood, john, wayne, joel]
+
+input cumulation_years: int
+
+input death_date[p in person]: date
+
+input donor[g in gift]: key person
+
+input fiv_claimed[g in gift]: bool
+
+input full_rate: num
+
+input gift_date[g in gift]: date
+
+input gift_value[g in gift]: money GBP
+  note "The value transferred for inheritance tax, after any exemptions the source deducts."
+
+input lifetime_tax[g in gift]: money GBP
+
+input nil_band: money GBP
+
+input printed_months[g in gift]: int
+
+input printed_years[g in gift]: int
+
+input reservation_end[g in gift]: date
+  note "The day a reservation of benefit ceased, for a gift made with a reservation (FA 1986 s. 102); - for a gift made without one."
+
+input value_at_death[g in gift]: money GBP
+
+band taper(completed: int): num
+  note "The percentage of the full death tax charged, by completed years from the transfer to the death."
+
+def charge_value[g in gift]: money GBP
+  note "s. 131: on a claim, the tax on the transfer is computed as if the value transferred were the market value at death."
+  rule base = gift_value[g]
+  rule fall excepts base v fa1986 when fiv_claimed[g] and value_at_death[g] < gift_value[g] = value_at_death[g]
+
+def chargeable[g in gift]: bool
+  note "A gift made seven years or more before death is not charged at death and not cumulated."
+  rule base v fa1986 = age(pet_date[g], death_date[donor[g]]) < cumulation_years
+
+def charged_total[g in gift]: money GBP = running_before[g] + charge_value[g]
+
+def death_rate[g in gift]: num at death_date[donor[g]] = full_rate * taper(survival_years[g])
+
+def death_tax[g in gift]: num GBP = taxable[g] * death_rate[g]
+
+def due[g in gift]: num GBP
+  note "The tax at death less the tax already paid on the transfer in life, never below nil (s. 7 (5))."
+  rule base v fa1986 = max(0, death_tax[g] - lifetime_tax[g])
+
+def first_over[p in person]: key gift = first(g in gift where donor[g] = p and running[g] > nrb_at_death[p])
+
+def nrb_at_death[p in person]: money GBP at death_date[p] = nil_band
+
+def pet_date[g in gift]: date
+  note "FA 1986 s. 102 (4): when a reservation ceases, the donor is treated as making a potentially exempt transfer at that time."
+  rule base = gift_date[g]
+  rule reserved excepts base v fa1986 when reservation_end[g] != - = reservation_end[g]
+
+def running[g in gift]: money GBP = running_before[g] + gift_value[g]
+
+def running_before[g in gift]: money GBP
+  note "s. 7 (1): the donor's chargeable transfers in the seven years ending with the date of this one. The gift itself drops out by its date: pet_date[g] < pet_date[g] is a value compared with itself, decided false even for a month-dated gift (§4.4)."
+  rule base v fa1986 = sum(h in gift where donor[h] = donor[g] and chargeable[h] and pet_date[h] < pet_date[g] and pet_date[h] > add_years(pet_date[g], -cumulation_years): gift_value[h])
+
+def survival_months[g in gift]: int
+  note "Under dates: the completed months from the transfer to the death, less the completed years' months."
+  rule dated when mp05_period = dates = age_months(pet_date[g], death_date[donor[g]]) - 12 * survival_years[g]
+  rule printed when mp05_period = printed = printed_months[g]
+
+def survival_years[g in gift]: int
+  note "Completed years from the transfer to the death. IHTM14612: the years are calendar years, not tax years. IHTM14613 counts a death on an anniversary in the next year, which completed years give."
+  rule dated v ihtm_method when mp05_period = dates = age(pet_date[g], death_date[donor[g]])
+  rule printed when mp05_period = printed = printed_years[g]
+
+def taxable[g in gift]: money GBP
+  note "The part of this transfer above the nil-rate band at death, after the earlier transfers in the cumulation period have used the band first."
+  rule base v fa1986 = max(0, charged_total[g] - nrb_at_death[donor[g]]) - max(0, running_before[g] - nrb_at_death[donor[g]])
+
+ask joel_period: survival_years[joel_house], survival_months[joel_house]
+
+ask joel_relief: taxable[joel_house], death_tax[joel_house] with fiv_claimed[joel_house] = true
+
+ask joel_without: taxable[joel_house], death_tax[joel_house]
+
+ask john_excess: taxable[john_house]
+
+ask john_period: survival_years[john_house], survival_months[john_house]
+
+ask john_rate: death_rate[john_house]
+
+ask john_start: pet_date[john_house]
+
+ask masood_first_over: first_over[masood]
+
+ask masood_running: running[g] for g in [m1, m2, m3, m4, m5, m6]
+
+ask masood_taxable: taxable[m4]
+
+ask wayne_due: death_tax[wayne_shares], lifetime_tax[wayne_shares], due[wayne_shares]
+
+ask wayne_excess: nrb_at_death[wayne], taxable[wayne_shares]
+
+ask wayne_lifetime: lifetime_tax[wayne_shares]
+
+ask wayne_periods: survival_years[g], survival_months[g] for g in [wayne_daughter, wayne_shares]
+
+ask wayne_value: charge_value[wayne_daughter], charge_value[wayne_shares], charged_total[wayne_shares]
+
+version fa1986
+  cite fa1986_src
+  governs 1986-03-18..
+  known 1986-07-25
+  note "Known 1986-07-25, the Royal Assent printed in the act's heading at legislation.gov.uk (ukpga/1986/41). IHTA 1984 s. 7 and s. 131 take their seven-year wording from its Sch. 19 paras. 2 and 23 with effect from 18 March 1986 (legislation.gov.uk, footnotes F1 and F4-F8 to s. 7, F1 and F3 to s. 131, read 2026-10-19), so it governs from then. IHTA 1984 itself (Royal Assent 31 July 1984) had ten years and other tables."
+  note "The rules charge_value.fall (s. 131), chargeable.base, due.base and taxable.base (s. 7), running_before.base (s. 7 (1)) and pet_date.reserved (s. 102 (4)) point at this version. Later words in s. 7 (1) (FA 2012 Sch. 33, F(No. 2)A 2015 s. 9 (2)), FA 2009 Sch. 51 (the claim time limit in s. 131 (2ZA)) and FA 2026 Sch. 12 (s. 131 (2), (2A)) were not modelled."
+  cumulation_years = 7 "IHTA 1984 s. 7 (1)(a), as amended by FA 1986 Sch. 19 para. 2 (1)(b): the period of seven years ending with the date of the transfer"
+  taper: [0, 3) = 1 "IHTA 1984 s. 7 (4): the percentages apply only to a transfer made more than three years before the death"
+  taper: [3, 4) = 0.8 "IHTA 1984 s. 7 (4)(a): more than three but not more than four years, 80 per cent; by completed years as IHTM14612-14613 count them"
+  taper: [4, 5) = 0.6 "IHTA 1984 s. 7 (4)(b): more than four but not more than five years, 60 per cent"
+  taper: [5, 6) = 0.4 "IHTA 1984 s. 7 (4)(c): more than five but not more than six years, 40 per cent"
+  taper: [6, 7) = 0.2 "IHTA 1984 s. 7 (4)(d): more than six but not more than seven years, 20 per cent"
+  taper: [7, inf) = ? "A transfer made seven years or more before the death is not charged at death." "IHTA 1984 s. 7 (4): within the period of seven years ending with death"
+
+version fa2006
+  cite fa2006_src
+  governs 2009-04-06..
+  known 2006-07-19
+  note "Known 2006-07-19, the Royal Assent printed in the act's heading at legislation.gov.uk (ukpga/2006/25). Its table applies to chargeable transfers on or after 6 April 2009 (IHTA 1984 Sch. 1, footnote F1)."
+  note "Footnote F1 also says the table continues from 6 April 2010 by virtue of FA 2010 s. 8, in place of FA 2007 s. 4. Neither those acts nor the later freezes of the band were fetched, so the rows are left open-ended and are read for the deaths of 2012 and 2021."
+  full_rate = 0.4 "IHTA 1984 Sch. 1, Table of Rates: above 325,000, 40 per cent"
+  nil_band = 325000 "IHTA 1984 Sch. 1, Table of Rates: 0 to 325,000, nil"
+
+version ihtm_method
+  cite ihtm
+  known 2019-05-31
+  note "No items: the rule survival_years.dated points at it, for IHTM14612 (calendar years) and IHTM14613 (a death on an anniversary falls in the next year)."
+  note "Known 2019-05-31. The manual is guidance, known from its first public release (§4.5). That date wasn't found for these pages, so known is the latest it can be. The earliest Wayback captures (IHTM14612 on 2019-07-23, IHTM14613 on 2019-07-24, read 2026-10-19) show the sentences the rule reads, word for word as now, under the manual-wide stamp 'Updated: 31 May 2019', so the text existed by that day. The pages' present stamp, 'Updated: 7 April 2026' (gov.uk, read 2026-10-19), is later, and the rule's text is known to predate it."
+
+version govuk_examples
+  cite govuk
+  known 2026-10-19
+  note "Examples: 'List all gifts' (Masood); 'How to work out tax when the reservation ends', second example (John); 'Work out the value where fall in value relief applies' (Wayne, Joel)."
+  note "Known 2026-10-19: the examples are hypothetical, so their stipulations, and the assumptions that stand for their facts, are known from the model's on date, as the model has no start (§4.5). The guidance was last updated on 11 February 2026."
+  death_date[masood] = 2021-06-01 "List all gifts, Example: Masood died on 1 June 2021"
+  death_date[john] = 2021-02-27 "Example (John): died on 27 February 2021"
+  death_date[wayne] = 2012-11-01 "Example (Wayne): died on 1 November 2012"
+  death_date[joel] = 2012-03-01 "Example (Joel): Joel dies on 1 March 2012"
+  donor[m1] = masood "List all gifts, Example table"
+  donor[m2] = masood "List all gifts, Example table"
+  donor[m3] = masood "List all gifts, Example table"
+  donor[m4] = masood "List all gifts, Example table"
+  donor[m5] = masood "List all gifts, Example table"
+  donor[m6] = masood "List all gifts, Example table"
+  donor[john_house] = john "Example (John)"
+  donor[wayne_daughter] = wayne "Example (Wayne)"
+  donor[wayne_shares] = wayne "Example (Wayne)"
+  donor[joel_house] = joel "Example (Joel)"
+  fiv_claimed = false assumed "no other claim for fall in value relief is mentioned"
+  fiv_claimed[wayne_shares] = true "Example (Wayne): the trustee claims fall in value relief"
+  fiv_claimed[joel_house] = false "Example (Joel): without the relief"
+  gift_date[m1] = 2014-08-23 "List all gifts, Example table: 23 Aug 2014"
+  gift_date[m2] = 2014-12-12 "List all gifts, Example table: 12 Dec 2014"
+  gift_date[m3] = 2015-07-21 "List all gifts, Example table: 21 Jul 2015"
+  gift_date[m4] = 2017-03-15 "List all gifts, Example table: 15 Mar 2017"
+  gift_date[m5] = 2019-06-03 "List all gifts, Example table: 03 Jun 2019"
+  gift_date[m6] = 2021-01-06 "List all gifts, Example table: 06 Jan 2021"
+  gift_date[john_house] = 2014-07-01 "Example (John): house given to his son, who let him live in it rent-free"
+  gift_date[wayne_daughter] = 2009-01 "Example (Wayne): gift to his daughter in January 2009"
+  gift_date[wayne_shares] = 2009-12 "Example (Wayne): 175,000 shares to a relevant property trust in December 2009"
+  gift_date[joel_house] = 2009-11-01 "Example (Joel): house to his son Philip on 1 November 2009"
+  gift_value[m1] = 150000 "List all gifts, Example table; values after deducting all those that were exempt"
+  gift_value[m2] = 100000 "List all gifts, Example table"
+  gift_value[m3] = 50000 "List all gifts, Example table"
+  gift_value[m4] = 30000 "List all gifts, Example table"
+  gift_value[m5] = 17000 "List all gifts, Example table"
+  gift_value[m6] = 10000 "List all gifts, Example table"
+  gift_value[john_house] = 475000 "Example (John): the value of the house on the date the reservation ceased; John's estate cannot deduct any annual exemptions"
+  gift_value[wayne_daughter] = 100000 "Example (Wayne): in excess of the annual exemption"
+  gift_value[wayne_shares] = 350000 "Example (Wayne): shares worth £350,000"
+  gift_value[joel_house] = 400000 "Example (Joel): the value at transfer"
+  lifetime_tax = 0 assumed "no lifetime charge is stated for any other gift"
+  lifetime_tax[wayne_shares] = 5000 "Example (Wayne): an immediate Inheritance Tax charge of £5,000 on the transfer of shares"
+  printed_months[john_house] = 5 "Example (John): made 5 years and 5 months before John died"
+  printed_months[wayne_daughter] = 7 "Example (Wayne): 3 years and 7 months before he died"
+  printed_months[wayne_shares] = 7 "Example (Wayne): 2 years and 7 months before he died"
+  printed_months[joel_house] = 8 "Example (Joel): 2 years and 8 months later"
+  printed_years[john_house] = 5 "Example (John): made 5 years and 5 months before John died"
+  printed_years[wayne_daughter] = 3 "Example (Wayne): 3 years and 7 months before he died"
+  printed_years[wayne_shares] = 2 "Example (Wayne): 2 years and 7 months before he died"
+  printed_years[joel_house] = 2 "Example (Joel): 2 years and 8 months later"
+  reservation_end = - assumed "only John's gift is said to be made with a reservation"
+  reservation_end[john_house] = 2016-07-01 "Example (John): his son let him live in the house rent-free; the 7 year rule starts from 1 July 2016 when it became an outright gift (the text also says 'In July 2016')"
+  value_at_death[wayne_shares] = 262500 "Example (Wayne): value of the shares at death"
+  value_at_death[joel_house] = 375000 "Example (Joel): the date of death value"

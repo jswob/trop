@@ -1,0 +1,112 @@
+model cb04
+  tally 1
+  on 2026-10-19
+  note "HMRC HS263 2026, section 4.1, Example 6 (Neetu): foreign tax credit relief on two foreign items, applied one item at a time in each of the two orders."
+  note "No tax year is stated and the higher rate limit is illustrative, so nothing governs a period. No personal allowance is applied: the example starts from taxable earnings."
+
+source hs263_2026 "HMRC, Relief for Foreign Tax Paid 2026 (HS263), updated 6 April 2026" at "https://www.gov.uk/government/publications/calculating-foreign-tax-credit-relief-on-income-hs263-self-assessment-helpsheet/relief-for-foreign-tax-paid-2026-hs263"
+
+source tiopa_2010 "Taxation (International and Other Provisions) Act 2010 (c. 8), sections 18 and 36" at "https://www.legislation.gov.uk/ukpga/2010/8/section/36"
+
+index item = [item1, item2]
+
+index seq = [item1_first, item2_first]
+  v tiopa
+  note "s.36(3) compares the orders in which the sources can be taken: these are the two orders of the items, the two the example works. Orders can't be generated from the items (LANGUAGE 10, keys made by computation), so they are listed, with the items' places in each order as rows of rank."
+
+input dtr_rate[k in item]: num
+
+input earnings: money GBP
+
+input item_ftax[k in item]: money GBP
+
+input item_income[k in item]: money GBP
+
+input rank[s in seq, k in item]: int
+
+band uk_rate(x: money GBP): num
+  note "the example's rate on each slice of taxable income, with its illustrative higher rate limit"
+
+def best_seq: key seq
+  note "s.36(3): take the sources in the order which will result in the greatest reduction in the person's income tax liability"
+  rule base v tiopa = argmax(s in seq: total_ftcr[s])
+
+def creditable[k in item]: num GBP = min(item_ftax[k], dtr_rate[k] * item_income[k])
+
+def ftcr[s in seq, k in item]: num GBP
+  note "the credit on one item: the lower of the foreign tax and the UK tax on the item"
+  rule base v tiopa = min(creditable[k], uk_on_item[s, k])
+
+def liability_all: num GBP = marginal(uk_rate, earnings)
+
+def liability_excl_items: num GBP = marginal(uk_rate, earnings - sum(k in item: item_income[k]))
+
+def liability_with[s in seq, k in item]: num GBP
+  note "s.36(2)(a): tax on TI - X"
+  rule base v tiopa = marginal(uk_rate, earnings - removed_before[s, k])
+
+def liability_without[s in seq, k in item]: num GBP
+  note "s.36(2)(b): tax on TI - (X + C)"
+  rule base v tiopa = marginal(uk_rate, earnings - removed_before[s, k] - item_income[k])
+
+def max_ftc: num GBP = min(max_ftc_a, max_ftc_b)
+
+def max_ftc_a: num GBP = min(sum(k in item: item_ftax[k]), sum(k in item: dtr_rate[k] * item_income[k]))
+
+def max_ftc_b: num GBP = liability_all - liability_excl_items
+
+def removed_before[s in seq, k in item]: money GBP
+  note "s.36(4): X, the income to which s.36(2) has already been applied in this order"
+  rule base v tiopa = sum(j in item where rank[s, j] < rank[s, k]: item_income[j])
+
+def total_ftcr[s in seq]: num GBP = sum(k in item: ftcr[s, k])
+
+def uk_on_item[s in seq, k in item]: num GBP = liability_with[s, k] - liability_without[s, k]
+
+ask q_best: best_seq, total_ftcr[best_seq]
+
+ask q_ftcr: ftcr[s, k] for s in seq, k in item
+
+ask q_liability_without: liability_without[s, k] for s in seq, k in item
+
+ask q_max_a: max_ftc_a
+
+ask q_max_a_parts: sum(k in item: item_ftax[k]), sum(k in item: dtr_rate[k] * item_income[k])
+
+ask q_max_b: liability_excl_items, max_ftc_b
+
+ask q_max_ftc: max_ftc
+
+ask q_open_basic: marginal(uk_rate, band_lo(uk_rate, earnings))
+
+ask q_open_higher: uk_rate(earnings) * (earnings - band_lo(uk_rate, earnings))
+
+ask q_open_total: liability_all
+
+ask q_total_ftcr: total_ftcr[s] for s in seq
+
+ask q_uk_on_item: uk_on_item[s, k] for s in seq, k in item
+
+version tiopa
+  cite tiopa_2010
+  known 2010-03-18
+  note "s.18(1)-(2) and s.36(1)-(5), read in the revised text on legislation.gov.uk (retrieved 2026-10-18). Known from Royal Assent: the Act's introductory text is dated 18th March 2010 (https://www.legislation.gov.uk/ukpga/2010/8/introduction). Later amendments to these sections are not traced, and no governs span is stated."
+
+version hs263
+  cite hs263_2026
+  known 2026-10-19
+  note "Example 6's facts, its illustrative rates and limit included, are a hypothetical case's stipulations, known from the model's on date (LANGUAGE 4.5; the model has no start). The page is updated 6 April 2026."
+  note "Both items are included in the 55,000 (section 4.1: Included in this are two items of foreign income)."
+  dtr_rate[item1] = 0.3 "section 4.1, Example 6: (1) £10,000, foreign tax £3,000 (DTR 30%)"
+  dtr_rate[item2] = 0.35 "section 4.1, Example 6: (2) £5,000, foreign tax £1,750 (DTR 35%)"
+  earnings = 55000 "section 4.1, Example 6: Neetu receives £55,000 taxable earnings."
+  item_ftax[item1] = 3000 "section 4.1, Example 6: (1) £10,000, foreign tax £3,000"
+  item_ftax[item2] = 1750 "section 4.1, Example 6: (2) £5,000, foreign tax £1,750"
+  item_income[item1] = 10000 "section 4.1, Example 6: (1) £10,000"
+  item_income[item2] = 5000 "section 4.1, Example 6: (2) £5,000"
+  rank[item1_first, item1] = 1 "section 4.1, Example 6: Removing item (1) £10,000 first"
+  rank[item1_first, item2] = 2 "section 4.1, Example 6: Removing item (1) £10,000 first"
+  rank[item2_first, item1] = 2 "section 4.1, Example 6: Removing item (2) £5,000 first"
+  rank[item2_first, item2] = 1 "section 4.1, Example 6: Removing item (2) £5,000 first"
+  uk_rate: [0, 50000] = 0.2 "section 4.1, Example 6: The higher rate limit for this taxpayer is (for example) £50,000; £50,000 x 20%"
+  uk_rate: (50000, inf) = 0.4 "section 4.1, Example 6: £5,000 x 40%"

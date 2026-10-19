@@ -1,0 +1,162 @@
+model cb02
+  tally 1
+  on 2026-10-19
+  note "MF Objaśnienia z 10 sierpnia 2021 r., ulga abolicyjna (art. 27g PIT): Przykład 5 (Ewa, Norwegia, 2021) i odpowiedzi do Przykładów 6 i 7."
+  note "Ewa's figures are her 2021 dochód in złoty, as the example gives them; revenue, costs and the NOK amounts are not modelled."
+  note "The law's rows and rules come from the acts that enacted them. The consolidated texts the case quotes (Dz.U. 2021 poz. 1128, PIT; Dz.U. 2021 poz. 1540, Ordynacja podatkowa) are only their locators (LANGUAGE 5.3)."
+
+source dz2005_1199 "Ustawa z dnia 30 czerwca 2005 r. o zmianie ustawy - Ordynacja podatkowa oraz o zmianie niektórych innych ustaw (Dz. U. Nr 143, poz. 1199)" at "https://api.sejm.gov.pl/eli/acts/DU/2005/1199/text.pdf"
+
+source dz2008_894 "Ustawa z dnia 25 lipca 2008 r. o szczególnych rozwiązaniach dla podatników uzyskujących niektóre przychody poza terytorium Rzeczypospolitej Polskiej (Dz. U. Nr 143, poz. 894)" at "https://api.sejm.gov.pl/eli/acts/DU/2008/894/text.html"
+
+source dz2019_1835 "Ustawa z dnia 30 sierpnia 2019 r. o zmianie ustawy o podatku dochodowym od osób fizycznych oraz ustawy o zmianie ustawy o podatku dochodowym od osób fizycznych oraz niektórych innych ustaw (Dz. U. poz. 1835)" at "https://api.sejm.gov.pl/eli/acts/DU/2019/1835/text.pdf"
+
+source dz2020_2123 "Ustawa z dnia 28 listopada 2020 r. o zmianie ustawy o podatku dochodowym od osób fizycznych ... (Dz. U. z 2020 r. poz. 2123)" at "https://api.sejm.gov.pl/eli/acts/DU/2020/2123/text.pdf"
+
+source mf_objasnienia_2021 "Objaśnienia podatkowe z dnia 10 sierpnia 2021 r. Ulga abolicyjna, o której mowa w art. 27g ustawy o podatku dochodowym od osób fizycznych" at "https://www.gov.pl/attachment/9fd0728b-634a-44b6-ad22-f958dba55f12"
+
+axis rate_reading
+  down "the rate is cut to two decimals of a percent (16,34 %) before it is applied"
+  exact "the rate is applied unrounded; 16,34 % is only how it is shown"
+  half-up "the rate is rounded half up to two decimals of a percent before it is applied"
+
+index person = [ewa, seafarer, platform_worker]
+
+index ty = year 2021..2021
+
+index work_area = [land, high_seas, territorial_sea]
+
+input area_off_land[a in work_area]: bool
+
+input health[p in person, y in ty]: money PLN question "Ile wyniosła składka zdrowotna z art. 27b odliczana od podatku?"
+
+input income_abroad[p in person, y in ty]: money PLN
+
+input income_pl[p in person, y in ty]: money PLN
+
+input kz_full: money PLN
+
+input tax_abroad[p in person, y in ty]: money PLN
+
+input work_area_of[p in person, y in ty]: key work_area
+
+band kz(x: money PLN): num PLN
+  note "kwota zmniejszająca podatek, art. 27 ust. 1a"
+
+band scale(x: money PLN): num PLN
+  note "skala podatkowa, art. 27 ust. 1"
+
+def credit[p in person, y in ty]: num PLN = min(tax_abroad[p, y], credit_limit[p, y])
+
+def credit_limit[p in person, y in ty]: num PLN = tax_scale_total[p, y] * income_abroad[p, y] / income_total[p, y]
+
+def income_total[p in person, y in ty]: money PLN = income_pl[p, y] + income_abroad[p, y]
+
+def method_diff[p in person, y in ty]: num PLN = tax_credit_method[p, y] - tax_prog_method[p, y]
+
+def prog_rate[p in person, y in ty]: num
+  note "art. 27 ust. 8 pkt 2; the example shows the rate as 16,34 % and doesn't say whether it is applied so"
+  rule rounded when rate_reading = half-up = round(rate_raw[p, y], 0.0001, half-up)
+  rule truncated when rate_reading = down = round(rate_raw[p, y], 0.0001, down)
+  rule unrounded when rate_reading = exact = rate_raw[p, y]
+
+def rate_raw[p in person, y in ty]: num = tax_scale_total[p, y] / income_total[p, y]
+
+def relief[p in person, y in ty]: num PLN
+  note "ulga abolicyjna, art. 27g ust. 2 and ust. 5"
+  rule base v abol_2008 = method_diff[p, y]
+  rule cap excepts base v amend_2020 = min(method_diff[p, y], relief_cap[y])
+  rule off_land excepts cap v amend_2020 when uncapped[p, y] = method_diff[p, y]
+
+def relief_cap[y in ty]: money PLN = kz_full
+
+def tax_after_relief[p in person, y in ty]: num PLN = tax_credit_method[p, y] - health[p, y] - relief[p, y]
+
+def tax_credit_method[p in person, y in ty]: num PLN = tax_scale_total[p, y] - credit[p, y]
+
+def tax_due[p in person, y in ty]: money PLN
+  note "Ordynacja podatkowa art. 63 § 1: kwoty podatków zaokrągla się do pełnych złotych"
+  rule base v op_2005 = round(tax_after_relief[p, y], 1, half-up)
+
+def tax_prog_method[p in person, y in ty]: num PLN = prog_rate[p, y] * income_pl[p, y]
+
+def tax_scale_total[p in person, y in ty]: num PLN = scale(income_total[p, y])
+
+def uncapped[p in person, y in ty]: bool = area_off_land[work_area_of[p, y]]
+
+ask q_after_relief: tax_after_relief[ewa, 2021]
+
+ask q_cap: relief_cap[y] for y in ty
+
+ask q_credit_limit: credit_limit[ewa, 2021]
+
+ask q_diff: method_diff[ewa, 2021]
+
+ask q_full_relief: uncapped[p, y] for p in [seafarer, platform_worker], y in ty
+
+ask q_income_total: income_total[ewa, 2021]
+
+ask q_rate: prog_rate[ewa, 2021]
+
+ask q_relief: relief[ewa, 2021]
+
+ask q_tax_credit: tax_credit_method[ewa, 2021]
+
+ask q_tax_due: tax_due[ewa, 2021]
+
+ask q_tax_prog: tax_prog_method[ewa, 2021]
+
+ask q_tax_scale: tax_scale_total[ewa, 2021]
+
+version op_2005
+  cite dz2005_1199
+  governs 2006-01-01..
+  known 2005-08-02
+  note "art. 1 pkt 30 gives art. 63 its wording (§ 1: kwoty podatków zaokrągla się do pełnych złotych, końcówki 50 i więcej groszy podwyższa się); art. 27 pkt 3 puts pkt 30 in force on 1 stycznia 2006 r. Known from promulgation, 2005-08-02 (ELI API, api.sejm.gov.pl/eli/acts/DU/2005/1199, field promulgation). Later amendments to the list of § 1 are not traced; the case quotes the rule as reprinted in Dz.U. 2021 poz. 1540, p. 43."
+
+version abol_2008
+  cite dz2008_894
+  governs 2008-01-01..
+  known 2008-08-06
+  note "art. 14 pkt 1 adds art. 27g to the PIT act, ust. 2: Odliczeniu podlega kwota stanowiąca różnicę między podatkiem obliczonym zgodnie z art. 27 ust. 9 albo 9a a kwotą podatku obliczonego ... przy zastosowaniu do tych dochodów zasad określonych w art. 27 ust. 8 (reprinted in Dz.U. 2021 poz. 1128, pp. 118-119). art. 16 pkt 1 applies it to income from 1 stycznia 2008 r. Known from promulgation, 2008-08-06 (ELI API, api.sejm.gov.pl/eli/acts/DU/2008/894, field promulgation)."
+
+version pit_2019
+  cite dz2019_1835
+  governs 2020-01-01..
+  known 2019-09-26
+  note "art. 1 pkt 3 lit. a gives art. 27 ust. 1 and 1a their wording; art. 7 ust. 2 applies them to income from 1 stycznia 2020 r. (reprinted unchanged in Dz.U. 2021 poz. 1128, p. 115). Known from promulgation: the Dziennik Ustaw is dated Warszawa, dnia 26 września 2019 r. (ELI API, api.sejm.gov.pl/eli/acts/DU/2019/1835, field promulgation)."
+  kz: [0, 8000] = kz_full "art. 27 ust. 1a pkt 1: dla podstawy obliczenia podatku nieprzekraczającej kwoty 8000 zł"
+  kz: (8000, 13000] = kz_full - 834.88 * (x - band_lo(kz, x)) / 5000 "art. 27 ust. 1a pkt 2: 1360 zł pomniejszone o 834 zł 88 gr × (podstawa obliczenia podatku – 8000 zł) ÷ 5000 zł"
+  kz: (13000, 85528] = 525.12 "art. 27 ust. 1a pkt 3: 525 zł 12 gr"
+  kz: (85528, 127000] = 525.12 - 525.12 * (x - band_lo(kz, x)) / 41472 "art. 27 ust. 1a pkt 4: 525 zł 12 gr pomniejszone o 525 zł 12 gr × (podstawa obliczenia podatku – 85 528 zł) ÷ 41 472 zł"
+  kz: (127000, inf) = ? "art. 27 ust. 1a for a base above 127 000 zł is not in the case"
+  kz_full = 1360 "art. 27 ust. 1a pkt 1: 1360 zł"
+  scale: [0, 85528] = 0.17 * x - kz(x) "art. 27 ust. 1, first bracket: do 85 528, 17% minus kwota zmniejszająca podatek"
+  scale: (85528, inf) = 14539.76 + 0.32 * (x - band_lo(scale, x)) - kz(x) "art. 27 ust. 1, second bracket: 14 539 zł 76 gr + 32% nadwyżki ponad 85 528 zł, minus kwota zmniejszająca podatek"
+
+version amend_2020
+  cite dz2020_2123
+  governs 2021-01-01..
+  known 2020-11-30
+  note "art. 1 pkt 15 (p. 4) adds art. 27g ust. 2 zdanie drugie and ust. 5; art. 24 (p. 30): in force from 1 January 2021, not among the exceptions."
+  note "Known from promulgation, 2020-11-30 (ELI API, api.sejm.gov.pl/eli/acts/DU/2020/2123, field promulgation); the act is dated 28 November 2020."
+  area_off_land[land] = false "art. 27g ust. 5: z tytułu pracy lub usług wykonywanych poza terytorium lądowym państw"
+
+version mf_2021
+  cite mf_objasnienia_2021
+  known 2021-08-10
+  note "The guidance is dated 10 sierpnia 2021 r."
+  area_off_land[high_seas] = true "section 4.3, pp. 10-11: terytorium lądowe państw"
+  area_off_land[territorial_sea] = true "section 4.3, pp. 10-11: morskie wody wewnętrzne i morze terytorialne"
+
+version examples
+  cite mf_objasnienia_2021
+  known 2026-10-19
+  note "The stipulations of Przykłady 5, 6 and 7, and the assumptions that stand for Przykład 5's own facts, are known from the model's on date (LANGUAGE 4.5; the model has no start)."
+  health[ewa, 2021] = 0 assumed "Przykład 5 shows no health contribution, though art. 27g ust. 1 deducts the relief from the tax after it" "pp. 9-10, Przykład 5"
+  income_abroad[ewa, 2021] = 40000 "p. 9, Przykład 5: Wynagrodzenie (dochód) pani Ewy za pracę w Norwegii wyniosło 40 000 zł"
+  income_pl[ewa, 2021] = 40000 "p. 9, Przykład 5: Polski dochód pani Ewy z tego tytułu wyniósł w 2021 r. 40 000 zł"
+  tax_abroad[ewa, 2021] = 5000 "p. 9, Przykład 5: a zagraniczny podatek wyniósł 5 000 zł"
+  work_area_of[ewa, 2021] = land assumed "the example applies the cap, so the care work in Norway is taken to be on land" "p. 9, Przykład 5: w Norwegii"
+  work_area_of[seafarer, 2021] = high_seas "p. 11, Przykład 6: statek morski na Oceanie Indyjskim, w transporcie międzynarodowym"
+  work_area_of[platform_worker, 2021] = territorial_sea "p. 12, Przykład 7: platforma wiertnicza na Morzu Północnym, w morzu terytorialnym Norwegii"

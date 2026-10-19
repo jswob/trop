@@ -1,0 +1,446 @@
+model lh14
+  tally 1
+  on 2026-10-18
+  note "US Windfall Elimination Provision: the reduced 90% factor by years of substantial earnings, the maximum reduction by eligibility year (ELY), SSA's ELY 2013 worked example, the 2024 and 2025 regular-formula illustrations, and the retroactive repeal by Public Law 118-273."
+  note "The chart and the ELY 2013 example are pre-repeal computations for benefit months before 2024, so they are not gated by wep_applies, which covers benefit months 2023-01 to 2025-12."
+  note "Known dates (§4.5): a law row from the approval of the act that gave the cited text its present wording, found in the amendment notes to 42 U.S.C. 402 and 415 (govinfo, US Code 2023 edition); a leaflet from its earliest public stamp, the server's Last-Modified for the PDF, which is earlier than its footer month's last day and its retrieval (the PDF's own stamps don't count where a public stamp exists); a web page from its printed 'last reviewed' or 'last updated' stamp, else its dated archive capture; the worked examples' and illustrations' stipulations, and the modeller's stand-ins for them, from on. Each version's note says which."
+
+source pl100_647 "Technical and Miscellaneous Revenue Act of 1988, Pub. L. 100-647, 102 Stat. 3342, approved November 10, 1988" at "https://www.govinfo.gov/content/pkg/STATUTE-102/pdf/STATUTE-102-Pg3342.pdf"
+
+source pl101_508 "Omnibus Budget Reconciliation Act of 1990, Pub. L. 101-508, 104 Stat. 1388, approved November 5, 1990" at "https://www.govinfo.gov/content/pkg/STATUTE-104/pdf/STATUTE-104-Pg1388.pdf"
+
+source pl103_296 "Social Security Independence and Program Improvements Act of 1994, Pub. L. 103-296, 108 Stat. 1464, approved August 15, 1994" at "https://www.govinfo.gov/content/pkg/STATUTE-108/pdf/STATUTE-108-Pg1464.pdf"
+
+source pl118_273 "Public Law 118-273, Social Security Fairness Act of 2023, 138 Stat. 3232" at "https://www.govinfo.gov/content/pkg/PLAW-118publ273/pdf/PLAW-118publ273.pdf"
+
+source pl92_603 "Social Security Amendments of 1972, Pub. L. 92-603, 86 Stat. 1329, approved October 30, 1972" at "https://www.govinfo.gov/content/pkg/STATUTE-86/pdf/STATUTE-86-Pg1329.pdf"
+
+source pl95_216 "Social Security Amendments of 1977, Pub. L. 95-216, 91 Stat. 1509, approved December 20, 1977" at "https://uscode.house.gov/statutes/pl/95/216.pdf"
+
+source pl98_21 "Social Security Amendments of 1983, Pub. L. 98-21, 97 Stat. 65, approved April 20, 1983" at "https://uscode.house.gov/statutes/pl/98/21.pdf"
+
+source ssa_bendpoints "SSA OACT, Benefit Formula Bend Points (Wayback capture 2025-01-02)" at "https://web.archive.org/web/20250102125805/https://www.ssa.gov/oact/cola/bendpoints.html"
+
+source ssa_chart "SSA Retirement Planner, WEP maximum-reduction chart, last reviewed 12/19/2012" at "https://web.archive.org/web/20130215235541/http://ssa.gov/retire2/wep-chart.htm"
+
+source ssa_examples "SSA Retirement Planner, WEP examples, ELY 2013 version (reviewed 2014-01-08)" at "https://web.archive.org/web/20140122055935/http://ssa.gov/retire2/wep-examples.htm"
+
+source ssa_fairness "SSA, Social Security Fairness Act: WEP and GPO update, last updated March 3, 2025" at "https://web.archive.org/web/20250306160823/https://www.ssa.gov/benefits/retirement/social-security-fairness-act.html"
+
+source ssa_pub2013 "SSA Publication No. 05-10045, Windfall Elimination Provision, January 2013 edition (PDF created and last saved 2012-12-21)" at "https://webarchive.library.unt.edu/web/20130214043925id_/http://ssa.gov/pubs/10045.pdf"
+
+source ssa_pub2024 "SSA Publication No. 05-10045, Windfall Elimination Provision, January 2024 edition (PDF created 2023-11-27, last saved 2023-12-04)" at "https://web.archive.org/web/20241205211251/https://www.ssa.gov/pubs/EN-05-10045.pdf"
+
+source ssa_pub2025 "SSA Publication No. 05-10045, Windfall Elimination Provision, January 2025 edition (PDF created and last saved 2024-11-07)" at "https://web.archive.org/web/20250217155239/https://www.ssa.gov/pubs/EN-05-10045.pdf"
+
+axis chart_cut
+  down "chart amounts truncated to $0.1"
+  half-even "chart amounts to the nearest $0.1, ties to even"
+  half-up "chart amounts to the nearest $0.1, ties up"
+  up "chart amounts rounded up to $0.1"
+
+axis ex_round
+  footnote "examples page footnote: every benefit amount rounded down to the dollar, from the $1,000 ELY benefit"
+  statute "PIA and COLA'd PIA down to the dime (§215(a)(1)(A), §215(i)), reduction up to the dime (§202(q)(8)), increase down to the dime, payable benefit down to the dollar (§215(g))"
+
+axis guarantee
+  applied "the cut is at most half the non-covered pension (§215(a)(7)(B)(i); leaflet 'A guarantee'); the example states no pension"
+  ignored "the example's reading: the pension is large enough that the half-pension cap does not bind"
+
+axis illus_cut
+  dime "the illustrated benefit is the PIA rounded down to the dime (§215(a)(1)(A))"
+  dollar "the illustrated benefit is rounded down to the dollar (§215(g))"
+
+index bmonth = month 2023-01..2025-12
+
+index claim_at = [at_fra, at_62, at_70]
+
+index ed = [ed2024, ed2025]
+
+index ely = 1990..2025
+
+index illus = [avg3000, avg8000]
+
+index rr_kind = [low_paid, high_paid]
+  note "the 2013 edition's two replacement rates: a lower-paid worker's, and the average over highly paid workers"
+
+index tier = [t1, t2, t3]
+
+index wepk = [with_wep, no_wep]
+
+index yse = 0..30
+
+input affected_count: int question "How many people did WEP and GPO reduce or eliminate benefits for? SSA's caseload count; the case holds no caseload records (press release of 2025-03-04, paragraph 3)"
+
+input apps_done_share: num question "What share of the new applications since the Act had SSA completed by the week ending 2025-02-28? SSA's workload count; the case holds no workload records (Fairness Act page)"
+
+input apps_taken: int question "How many new applications had SSA taken since the Act by the week ending 2025-02-28? SSA's workload count; the case holds no workload records (Fairness Act page)"
+
+input backpay_due: date question "By what day does SSA deposit the one-time retroactive payment? SSA's administrative schedule; the Act fixes none (Fairness Act page)"
+
+input bp1[e in ely]: money USD question "First bend point for this year of eligibility: not in the case"
+
+input bp2[e in ely]: money USD question "Second bend point for this year of eligibility: not in the case"
+
+input chart_ex_benefit: money USD
+
+input chart_ex_cola: num
+
+input chart_min_years: key yse
+
+input chart_to: key ely
+
+input complex_months: int question "How many months may SSA take to adjust a complex, manually processed case? SSA's processing estimate; the case holds no processing records (Fairness Act page)"
+
+input covered_share: num question "What share of state and local public employees work in Social Security-covered employment? A labour-force statistic; the case holds no employment data (Fairness Act page)"
+
+input drc_pct: num
+
+input early_cut: int
+
+input early_pct_1: num
+
+input early_pct_2: num
+
+input ed_ely[d in ed]: key ely
+
+input enacted: date
+
+input ex_claim[c in claim_at]: (early int, late int)
+
+input ex_cola: num
+
+input ex_ely: key ely
+
+input ex_pension: money USD question "Non-covered pension of the ELY 2013 example worker: the example states none"
+
+input ex_pia_full: money USD
+
+input ex_years: key yse
+
+input first_new_month: key bmonth
+
+input illus_aime[d in ed, i in illus]: money USD
+
+input increase_top: money USD question "What is the largest monthly increase the repeal gives a beneficiary? It needs every affected beneficiary's benefit; the case holds none (Fairness Act page)"
+
+input pay_lag: int
+
+input pay_start: date question "On what day did SSA begin paying retroactive benefits and the higher monthly amounts? SSA's administrative schedule; the Act fixes none (Fairness Act page)"
+
+input pia_pct[t in tier]: num
+
+input retro_count: int question "How many people had SSA paid retroactive benefits through 2025-03-04? SSA's payment records, which the case doesn't hold (press release of 2025-03-04, paragraph 1)"
+
+input retro_total: money USD question "How much had SSA paid in retroactive benefits through 2025-03-04? SSA's payment records, which the case doesn't hold (press release of 2025-03-04, paragraph 1)"
+
+input rr_aime[r in rr_kind]: money USD
+
+input rr_ely: key ely
+
+input wep_applies[m in bmonth]: bool
+
+input wep_pct[n in yse]: num
+
+def chart_cell[e in ely, n in yse]: money USD = round(max_cut[e, n], 0.1, chart_cut)
+
+def chart_ex_inc: money USD = round(chart_ex_benefit * chart_ex_cola, 1, down)
+
+def ex_benefit[k in wepk, c in claim_at]: money USD
+  note "the monthly benefit when claimed at FRA, at 62 or at 70"
+  rule base = round(ex_pia[k] - round(ex_pia[k] * ex_red[c], 0.1, up) + round(ex_pia[k] * ex_inc[c], 0.1, down), 1, down)
+  rule footnote excepts base when ex_round = footnote = round(ex_pia[k] * ex_factor[c], 1, down)
+
+def ex_cola_benefit[k in wepk]: money USD = ex_benefit[k, at_fra] + ex_cola_inc[k]
+
+def ex_cola_inc[k in wepk]: money USD
+  rule base = round(ex_cola_pia[k], 1, down) - ex_benefit[k, at_fra]
+  rule footnote excepts base when ex_round = footnote = round(ex_benefit[k, at_fra] * ex_cola, 1, down)
+
+def ex_cola_pia[k in wepk]: money USD = round(ex_pia[k] * (1 + ex_cola), 0.1, down)
+
+def ex_cut_after[c in claim_at]: money USD = ex_benefit[no_wep, c] - ex_benefit[with_wep, c]
+
+def ex_factor[c in claim_at]: num = 1 - ex_red[c] + ex_inc[c]
+
+def ex_inc[c in claim_at]: num = drc_pct * ex_claim[c].late
+
+def ex_pia[k in wepk]: money USD
+  rule base when k = no_wep = ex_pia_full
+  rule wep when k = with_wep = round(ex_pia_full - ex_wep_cut, 0.1, down)
+  rule wep_footnote excepts wep when k = with_wep and ex_round = footnote = round(ex_pia_full - ex_wep_cut, 1, down)
+
+def ex_red[c in claim_at]: num = early_pct_1 * min(ex_claim[c].early, early_cut) + early_pct_2 * max(0, ex_claim[c].early - early_cut)
+
+def ex_wep_cut: num USD
+  note "the example's AIME is not given; its cut is the full first-band cut, so the AIME is read as at least the first bend point"
+  rule base = max_cut[ex_ely, ex_years]
+  rule capped excepts base when guarantee = applied = min(max_cut[ex_ely, ex_years], ex_pension / 2)
+
+def illus_benefit[d in ed, i in illus]: money USD
+  rule base = round(illus_formula[d, i], 0.1, down)
+  rule dollar excepts base when illus_cut = dollar = round(illus_formula[d, i], 1, down)
+
+def illus_formula[d in ed, i in illus]: num USD = pia_pct[t1] * min(illus_aime[d, i], bp1[ed_ely[d]]) + pia_pct[t2] * max(0, min(illus_aime[d, i], bp2[ed_ely[d]]) - bp1[ed_ely[d]]) + pia_pct[t3] * max(0, illus_aime[d, i] - bp2[ed_ely[d]])
+
+def illus_rate[d in ed, i in illus]: num = illus_benefit[d, i] / illus_aime[d, i]
+
+def max_cut[e in ely, n in yse]: num USD = (pia_pct[t1] - wep_pct[n]) * bp1[e]
+
+def max_cut_m[e in ely, n in yse, m in bmonth]: num USD
+  note "the maximum WEP cut for benefit month m: zero where WEP no longer applies"
+  rule base = max_cut[e, n]
+  rule repealed excepts base when not wep_applies[m] = 0
+
+def paid_month[m in bmonth]: month = m + pay_lag
+
+def retro_avg: num USD
+  note "the average retroactive payment: the total paid over the number of people paid"
+  rule base = retro_total / retro_count
+
+def rr_benefit[r in rr_kind]: num USD
+  note "the regular-formula benefit behind the 2013 edition's replacement rates, under its own 'How it works' formula; no rounding, since the edition gives the rates as 'about'"
+  rule base = pia_pct[t1] * min(rr_aime[r], bp1[rr_ely]) + pia_pct[t2] * max(0, min(rr_aime[r], bp2[rr_ely]) - bp1[rr_ely]) + pia_pct[t3] * max(0, rr_aime[r] - bp2[rr_ely])
+
+def rr_rate[r in rr_kind]: num
+  note "the replacement rate as the 2024 and 2025 editions compute theirs: the benefit over the average monthly earnings"
+  rule base = rr_benefit[r] / rr_aime[r]
+
+ask backpay_by: backpay_due
+
+ask chart_example: chart_ex_inc
+
+ask chart_rows: chart_cell[e, n] for e in ely where e <= chart_to, n in yse where n >= chart_min_years
+
+ask cola_example: ex_cola_inc[with_wep], ex_cola_inc[no_wep], ex_cola_benefit[no_wep], ex_cola_benefit[with_wep]
+
+ask cola_wep_cut: ex_cola_benefit[no_wep] - ex_cola_benefit[with_wep]
+
+ask delayed_benefits: ex_benefit[with_wep, at_70], ex_benefit[no_wep, at_70]
+
+ask delayed_increase: ex_inc[at_70]
+
+ask delayed_wep_cut: ex_cut_after[at_70]
+
+ask early_benefits: ex_benefit[with_wep, at_62], ex_benefit[no_wep, at_62]
+
+ask early_factor: ex_factor[at_62]
+
+ask early_wep_cut: ex_cut_after[at_62]
+
+ask ely2013_benefit: ex_benefit[with_wep, at_fra]
+
+ask ely2013_cut: ex_wep_cut
+
+ask first_free_month: first(m in bmonth where not wep_applies[m])
+
+ask first_new_paid: paid_month[first_new_month]
+
+ask illus_2024: illus_benefit[ed2024, i], illus_rate[ed2024, i] for i in illus
+
+ask illus_2025: illus_benefit[ed2025, i], illus_rate[ed2025, i] for i in illus
+
+ask jan2024_received: paid_month[2024-01]
+
+ask last_wep_month: last(m in bmonth where wep_applies[m])
+
+ask last_wep_month_before: last(m in bmonth where wep_applies[m]) as known 2025-01-04
+
+ask max_2025_leaflet: max_cut_m[2025, 20, 2025-01] as known 2025-01-02
+
+ask max_2025_now: max_cut_m[2025, 20, 2025-01]
+
+ask payments_start: pay_start
+
+ask rr_2013_high: rr_rate[high_paid]
+
+ask rr_2013_low: rr_rate[low_paid]
+
+ask signed_on: enacted
+
+ask stat_affected: affected_count
+
+ask stat_apps: apps_taken, apps_done_share
+
+ask stat_complex: complex_months
+
+ask stat_covered: covered_share
+
+ask stat_increase: increase_top
+
+ask stat_paid: retro_count, retro_total, retro_avg
+
+version pl92_603_v
+  cite pl92_603
+  known 1972-10-30
+  note "known: the Act's approval date (law from approval, §4.5). Which act: its Sec. 102(e)(1) rewrote §202(q)(1)(A), inserting provisions for widow's and widower's benefits, and so gave the cited clause its present wording (US Code notes to 42 U.S.C. 402, 1972 amendments). Pub. L. 103-296 Sec. 321(a)(3) (1994) only struck a dash after 'multiplied by', which keeps the wording. The 5/9-of-1-percent fraction itself dates from the 1956 amendments (women) and Pub. L. 87-64 (men, 1961); round 2 cited the 1961 Act. SSA's compilation of §202 (Wayback capture 2024-12-12) is the locator only (§5.3)"
+  early_pct_1 = 1/180 "§202(q)(1)(A): 5/9 of 1 percent of such amount if such benefit is an old-age insurance benefit (SSA compilation of §202)"
+
+version pl95_216_v
+  cite pl95_216
+  known 1977-12-20
+  note "known: the Act's approval date (law from approval, §4.5). Which act: the US Code notes to 42 U.S.C. 415 show no later change to §215(a)(1)(A)(i)-(iii); Pub. L. 97-35 (1981) reworded only the rounding words after clause (iii). Its Title II rewrote §215(a) with the 90/32/15 percent formula; the leaflets restate it ('How it works'). SSA's pre-repeal compilation of §215 (Wayback capture 2024-12-02) is the locator only (§5.3)"
+  pia_pct[t1] = 0.9 "§215(a)(1)(A)(i), 90 percent; leaflets p. 1 'How it works': × 90%"
+  pia_pct[t2] = 0.32 "§215(a)(1)(A)(ii), 32 percent; leaflets: × 32%"
+  pia_pct[t3] = 0.15 "§215(a)(1)(A)(iii), 15 percent; leaflets: balance × 15%"
+
+version pl98_21_v
+  cite pl98_21
+  known 1983-04-20
+  note "known: the Act's approval date (law from approval, §4.5). It enacted the WEP, §215(a)(7) (Sec. 113, 'Elimination of windfall benefits for individuals receiving pensions from noncovered employment'; SSA POMS RS 00605.360), the 5/12-of-1-percent reduction beyond 36 months (§202(q)(9), Sec. 201(b)(1)) and the 2/3-of-1-percent delayed credit for eligibility after 2004 (§202(w)(6), Sec. 114(b)). Which act: the US Code notes to 42 U.S.C. 402 and 415 show no later change to the wording of §202(q)(9)(A), §202(w)(6)(D) or §215(a)(7)(B)(ii)(V); Pub. L. 103-296 touched only (q)(9)'s opening words and (q)(9)(B), and Pub. L. 98-369 only (a)(7)(B)(ii)(I). The other WEP rows sit with the later acts that reworded their text: (D)'s table with Pub. L. 100-647, its 30-year sentence with Pub. L. 101-508, and (A) with Pub. L. 103-296. As enacted here, (D) eased the cut only from 26 years (97 Stat. 77). SSA's compilations of §202 (Wayback 2024-12-12) and of §215 before the repeal (Wayback 2024-12-02) are the locators only (§5.3); the leaflets' p. 2 second table prints the same percentages"
+  drc_pct = 1/150 "§202(w)(6)(D): 2/3 of 1 percent, first eligible after 2004"
+  early_cut = 36 "§202(q)(9)(A): the first 36 months"
+  early_pct_2 = 1/240 "§202(q)(9)(A): five-twelfths of 1 percent"
+  wep_pct[0..20] = 0.4 "§215(a)(7)(B)(ii)(V): 40.0 percent for eligibility in 1990 or later; leaflets p. 2 second table, 20 or fewer, 40%"
+
+version pl100_647_v
+  cite pl100_647
+  known 1988-11-10
+  note "known: the Act's approval date (law from approval, §4.5). Which act: its Sec. 8003(a) substituted '20 years' for '25 years' in §215(a)(7)(D) and the present table, 21 to 29 years of coverage, for Pub. L. 98-21's four clauses (26 to 29 years: 50 to 80 percent), for benefits payable for months after December 1988 (Sec. 8003(b)); US Code notes to 42 U.S.C. 415, 1988 amendments. Every read here is for a later month, so the version states no span. SSA's compilation of §215 before the repeal (Wayback 2024-12-02) is the locator only (§5.3)"
+  wep_pct[21] = 0.45 "§215(a)(7)(D) table: 21 years of coverage, 45 percent"
+  wep_pct[22] = 0.5 "§215(a)(7)(D): 22, 50 percent"
+  wep_pct[23] = 0.55 "§215(a)(7)(D): 23, 55 percent"
+  wep_pct[24] = 0.6 "§215(a)(7)(D): 24, 60 percent"
+  wep_pct[25] = 0.65 "§215(a)(7)(D): 25, 65 percent"
+  wep_pct[26] = 0.7 "§215(a)(7)(D): 26, 70 percent"
+  wep_pct[27] = 0.75 "§215(a)(7)(D): 27, 75 percent"
+  wep_pct[28] = 0.8 "§215(a)(7)(D): 28, 80 percent"
+  wep_pct[29] = 0.85 "§215(a)(7)(D): 29, 85 percent"
+
+version pl101_508_v
+  cite pl101_508
+  known 1990-11-05
+  note "known: the Act's approval date (law from approval, §4.5). Which act: its Sec. 5122(b) struck '(as defined in paragraph (1)(C)(ii))' from the end of §215(a)(7)(D)'s first sentence, which exempts 30 or more years of coverage, and added the sentence that reads a year of coverage at 25 percent; so it gave the cited sentence its present wording (US Code notes to 42 U.S.C. 415, 1990 amendments). Pub. L. 98-21 enacted the exemption itself. SSA's compilation of §215 before the repeal (Wayback 2024-12-02) is the locator only (§5.3)"
+  wep_pct[30] = 0.9 "§215(a)(7)(D), first sentence: 30 years or more of coverage, the paragraph does not apply, so §215(a)(1)(A)(i)'s 90 percent; leaflets: 30 or more, 90%"
+
+version pl103_296_v
+  cite pl103_296
+  known 1994-08-15
+  note "known: the Act's approval date (law from approval, §4.5). Which act: its Sec. 308(b) rewrote the closing provisions of §215(a)(7)(A), adding the exclusion of a payment based wholly on uniformed service, for benefits payable for months after December 1994; it is the last act to change (A)'s wording before the repeal (US Code notes to 42 U.S.C. 415: Pub. L. 98-21 enacted (A); Pub. L. 100-647 Sec. 8011(a)(1) and Pub. L. 101-508 Sec. 5117(a)(3)(E)(ii) amended it before). SSA's compilation of §215 before the repeal (Wayback 2024-12-02) is the locator only (§5.3)"
+  wep_applies = true "§215(a)(7)(A): individuals eligible after 1985 for a pension from noncovered employment"
+
+version chart_v
+  cite ssa_chart
+  known 2012-12-19
+  note "known: the page's own stamp, 'Last reviewed or modified 12/19/2012' (§4.5); the example's stipulated benefit is in chart_ex_v"
+  chart_ex_cola = 0.058 "'Example': in January, 2009 the 5.8% COLA"
+  chart_min_years = 20 "chart header, column '20 or less'"
+  chart_to = 2013 "chart rows ELY 1990-2013, last row"
+
+version pub2013_v
+  cite ssa_pub2013
+  known 2013-01-09
+  note "known: the server's Last-Modified for the PDF, 2013-01-09, its earliest public stamp: earlier than the footer month's last day, 2013-01-31 ('January 2013'), the capture, 2013-02-15, and the retrieval day (§4.5). The PDF's own stamps (created and last saved 2012-12-21) don't count, since public stamps exist (D8). Round 2 took the month's last day; round 3 the last-saved stamp. The UNT link serves its capture of 2013-02-15, the same PDF"
+  rr_aime[low_paid] = ? "What average monthly earnings stand behind the 2013 edition's lower-paid replacement rate? The edition states the rate with no earnings behind it" "p. 1 'Why a different formula is used'"
+  rr_aime[high_paid] = ? "What average monthly earnings stand behind the 2013 edition's rate for highly paid workers? The edition states an average over a group with no earnings behind it" "p. 1 'Why a different formula is used'"
+
+version examples_v
+  cite ssa_examples
+  known 2014-01-22
+  note "known: the dated archive capture read, 2014-01-22 (Wayback 20140122055935), its earliest public stamp; the page prints no stamp (§4.5). Its own meta tag dc.date.reviewed, 2014-01-08, doesn't count, since a public stamp exists (D8). The example worker's stipulations are in examples_ex_v"
+  ex_cola = 0.015 "COLA Example: the 1.5% January, 2014 COLA"
+
+version pub2024_v
+  cite ssa_pub2024
+  known 2024-01-02
+  note "known: the server's Last-Modified for the PDF, 2024-01-02, its earliest public stamp: earlier than the footer month's last day, 2024-01-31 ('January 2024'), and the retrieval day (§4.5). The PDF's own stamps (created 2023-11-27, last saved 2023-12-04) don't count, since public stamps exist (D8). Round 2 took the month's last day; round 3 the last-saved stamp. The bend points restate the Commissioner's determination for 2024 under §215(a)(1)(B) (88 FR 72803, published 2023-10-23), which the case doesn't hold; the leaflet records no date for it, so it is known at its own (§4.5, Which act; §5.3). The illustration's stipulations are in pub2024_ex_v"
+  bp1[2024] = 1174 "p. 1 'How it works': first $1,174 × 90%"
+  bp2[2024] = 7078 "p. 1 'How it works': between $1,174 and $7,078 × 32%"
+
+version pub2025_v
+  cite ssa_pub2025
+  known 2025-01-02
+  note "known: the server's Last-Modified for the PDF, 2025-01-02, its earliest public stamp: earlier than the footer month's last day, 2025-01-31 ('January 2025'), the capture, 2025-02-17, and the retrieval day (§4.5). The PDF's own stamps (created and last saved 2024-11-07) don't count, since public stamps exist (D8). So the edition is known before the repeal (2025-01-05), and its figures read as SSA published them. Round 2 took the month's last day, after the repeal; round 3 the last-saved stamp. The bend points restate the Commissioner's determination for 2025 under §215(a)(1)(B) (89 FR 85276, published 2024-10-25), which the case doesn't hold; the leaflet records no date for it, so it is known at its own (§4.5, Which act; §5.3). The illustration's stipulations are in pub2025_ex_v"
+  bp1[2025] = 1226 "p. 1 'How it works': first $1,226 × 90%"
+  bp2[2025] = 7391 "p. 1 'How it works': between $1,226 and $7,391 × 32%"
+
+version bendpoints_v
+  cite ssa_bendpoints
+  known 2025-01-02
+  note "known: the dated archive capture read, 2025-01-02 (Wayback 20250102125805), a record of the page's form (§4.5). The page prints no date and the capture keeps no Last-Modified, so the capture is the earliest day by which the form read surely existed; round 2 took the retrieval day, 2026-10-18. The table restates the Commissioner's annual bend-point determinations under §215(a)(1)(B), published each autumn in the Federal Register; the case holds none of them and the table records no dates for them, so it is known at its own (§4.5, Which act; §5.3)"
+  bp1[1990] = 356 "table 'Dollar amounts in PIA formula', row 1990, column First"
+  bp1[1991] = 370 "row 1991"
+  bp1[1992] = 387 "row 1992"
+  bp1[1993] = 401 "row 1993"
+  bp1[1994] = 422 "row 1994"
+  bp1[1995] = 426 "row 1995"
+  bp1[1996] = 437 "row 1996"
+  bp1[1997] = 455 "row 1997"
+  bp1[1998] = 477 "row 1998"
+  bp1[1999] = 505 "row 1999"
+  bp1[2000] = 531 "row 2000"
+  bp1[2001] = 561 "row 2001"
+  bp1[2002] = 592 "row 2002"
+  bp1[2003] = 606 "row 2003"
+  bp1[2004] = 612 "row 2004"
+  bp1[2005] = 627 "row 2005"
+  bp1[2006] = 656 "row 2006"
+  bp1[2007] = 680 "row 2007"
+  bp1[2008] = 711 "row 2008"
+  bp1[2009] = 744 "row 2009"
+  bp1[2010] = 761 "row 2010"
+  bp1[2011] = 749 "row 2011"
+  bp1[2012] = 767 "row 2012"
+  bp1[2013] = 791 "row 2013"
+  bp2[2013] = 4768 "row 2013, column Second (case: Transcription notes, '2013 bend points')"
+
+version pl118_text_v
+  cite pl118_273
+  known 2025-01-05
+  note "known: the Act's approval date (law from approval, §4.5)"
+  enacted = 2025-01-05 "last line of p. 2: 'Approved January 5, 2025.'"
+
+version repeal_v
+  cite pl118_273
+  governs 2024-01..
+  known 2025-01-05
+  note "known: the Act's approval date (law from approval, §4.5). Sec. 3(a) strikes §215(a)(7); Sec. 4 applies it to benefits for months after December 2023. The Act says nothing on back pay, and on 2025-01-05 the reality couldn't know SSA's schedule for it, so this version has no arrears line: SSA's answer is the line of repeal_v in fairness_v (§5.13.3). Round 2 put arrears on 2025-03-31 here."
+  wep_applies = false "Sec. 3(a), Sec. 4: benefits payable for months after December 2023"
+
+version fairness_v
+  cite ssa_fairness
+  known 2025-03-03
+  arrears on 2025-03-31 of repeal_v
+  note "known: the page's printed stamp, 'Last updated March 3, 2025' (§4.5)."
+  note "Back pay: the page announces SSA's answer to the repeal's change: payments start February 25, 2025, with a one-time retroactive payment by the end of March (Q&A 'When will a person see their Social Security benefit increase'). That window, 2025-02-25 to 2025-03-31, lies in no single month, so the line dates it by its last day (§5.13.3). It is a later answer, of repeal_v, known from this page's stamp. The model books no pay, so the line reaches nothing."
+  first_new_month = 2025-03 "Q&A 'When will a person see their Social Security benefit increase': the new monthly amount is for their March 2025 benefit"
+  pay_lag = 1 "Q&A 'When will a person see…': Social Security benefits are paid one month behind"
+
+version chart_ex_v
+  cite ssa_chart
+  known 2026-10-18
+  note "known: the example's stipulated benefit, known from on (§4.5)"
+  chart_ex_benefit = 1000 "text above the chart, 'Example': presume the WEP reduced your $1,356 benefit to $1,000"
+
+version examples_ex_v
+  cite ssa_examples
+  known 2026-10-18
+  note "known: the ELY 2013 example worker is a stipulation, known from on (§4.5)"
+  ex_claim[at_fra] = (0, 0) "Retirement Examples: full retirement age 66, benefit $1,396"
+  ex_claim[at_62] = (48, 0) "If You Choose Early Retirement: 48 additional months"
+  ex_claim[at_70] = (0, 48) "If You Choose Delayed Retirement: the 48 additional months"
+  ex_ely = 2013 "Retirement Examples: if you turn 62 in 2013 (ELY 2013)"
+  ex_pia_full = 1396 "Retirement Examples, 2nd paragraph: if your full retirement benefit is $1,396"
+  ex_years = 20 "Retirement Examples: 20 years of substantial earnings"
+
+version pub2013_ex_v
+  cite ssa_pub2013
+  known 2026-10-18
+  note "known: the modeller's stand-in for a fact of the edition's stylised workers, known from on (§4.5)"
+  rr_ely = 2013 assumed "the edition states no worker behind its rates; read under its own 'How it works' formula, for a worker turning 62 in 2013" "p. 1 'How it works': first $791 × 90%; next $3,977 × 32%"
+
+version pub2024_ex_v
+  cite ssa_pub2024
+  known 2026-10-18
+  note "known: the illustration's worker is a stipulation, known from on (§4.5)"
+  ed_ely[ed2024] = 2024 "p. 1, right column: age 62 in 2024"
+  illus_aime[ed2024, avg3000] = 3000 "p. 1, right column, 2nd paragraph: average earnings of $3,000 per month"
+  illus_aime[ed2024, avg8000] = 8000 "p. 1, right column, 2nd paragraph: average earnings of $8,000 per month"
+
+version pub2025_ex_v
+  cite ssa_pub2025
+  known 2026-10-18
+  note "known: the illustration's worker is a stipulation, known from on (§4.5)"
+  ed_ely[ed2025] = 2025 "p. 1 'How it works': a worker age 62 in 2025"
+  illus_aime[ed2025, avg3000] = 3000 "p. 1 'How it works': average earnings of $3,000 per month"
+  illus_aime[ed2025, avg8000] = 8000 "p. 1 'How it works': average earnings of $8,000 per month"

@@ -1,0 +1,52 @@
+{
+ "id": "13-fire",
+ "says_pl": "Czy jestem na dobrej drodze do FIRE?",
+ "values": [
+  {
+   "id": "assume.fire_swr",
+   "kind": "assumption",
+   "unit": "1",
+   "says_pl": "Bezpieczna stopa wypłat: jaka część majątku rocznie pokrywa wydatki (założenie, nie prawo)",
+   "entries": [{ "from": "2000-01-01", "value": 0.04 }]
+  }
+ ],
+ "templates": [
+  {
+   "id": "fire@1",
+   "kind": "question",
+   "title_pl": "Niezależność finansowa (FIRE)",
+   "status": "confirmed",
+   "says": "Each month: what we spend (everyday spending plus housing) times 12, divided by the withdrawal rate, against what our accounts and holdings are worth. Answers when the second first reaches the first, and how far off it is now and at a target date.",
+   "params": {
+    "spending": { "type": "instance", "needs": { "spend": "PLN" }, "ask_pl": "Które wydatki liczymy?" },
+    "housing": { "type": "instance", "needs": { "rent": "PLN" }, "ask_pl": "Koszt mieszkania?" },
+    "konto": { "type": "place", "ask_pl": "Konto" },
+    "ike": { "type": "place", "ask_pl": "IKE" },
+    "maklerskie": { "type": "place", "ask_pl": "Rachunek maklerski" },
+    "oki": { "type": "place", "ask_pl": "OKI" },
+    "target": { "type": "date", "ask_pl": "Od kiedy chcesz móc nie pracować?" }
+   },
+   "lines": [
+    { "id": "costs", "says_pl": "Wydatki w miesiącu", "every": "month", "unit": "PLN", "value": "total('spend', in.spending) + v('rent', in.housing)" },
+    { "id": "need", "says_pl": "Potrzebny majątek", "every": "month", "unit": "PLN", "value": "v('costs') * 12 / p.assume.fire_swr" },
+    { "id": "have", "says_pl": "Majątek (konta i inwestycje, wartość rynkowa)", "every": "month", "on": "end", "unit": "PLN", "value": "balance(in.konto) + balance(in.ike) + balance(in.maklerskie) + balance(in.oki)" },
+    { "id": "gap", "says_pl": "Brakuje", "every": "month", "on": "end", "unit": "PLN", "value": "max(0, v('need') - v('have'))" },
+    { "id": "on_track", "says_pl": "Majątek pokrywa wydatki", "every": "month", "on": "end", "unit": "bool", "value": "v('have') >= v('need')" }
+   ],
+   "answers": {
+    "kiedy": { "value": "first('on_track')", "unit": "date", "says_pl": "Pierwszy miesiąc, w którym majątek pokrywa wydatki" },
+    "brakuje_teraz": { "value": "at('gap', add_months(today, 1))", "unit": "PLN", "says_pl": "Ile brakuje w pierwszym pełnym miesiącu planu (bieżący miesiąc jest w połowie historią)" },
+    "brakuje_w_celu": { "value": "at('gap', in.target)", "unit": "PLN", "says_pl": "Ile brakuje w dniu celu" },
+    "w_celu": { "value": "at('on_track', in.target)", "unit": "bool", "says_pl": "Czy w dniu celu majątek pokrywa wydatki" }
+   }
+  }
+ ],
+ "instances": [
+  {
+   "id": "fire",
+   "template": "fire@1",
+   "label_pl": "FIRE",
+   "args": { "spending": "spending", "housing": "rent", "konto": "konto", "ike": "ike", "maklerskie": "maklerskie", "oki": "oki", "target": "2046-10-17" }
+  }
+ ]
+}

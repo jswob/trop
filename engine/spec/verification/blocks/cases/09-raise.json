@@ -1,0 +1,13 @@
+{
+ "id": "09-raise",
+ "says_pl": "Podwyżka 5% od marca.",
+ "scenarios": [
+  {
+   "id": "podwyzka",
+   "says_pl": "Moja pensja brutto rośnie o 5% od 1 marca 2027.",
+   "base": "reality",
+   "from": "2027-03-01",
+   "ops": [{ "op": "set_arg", "id": "my_job", "arg": "gross", "entry": { "expr": "before * 1.05" } }]
+  }
+ ]
+}

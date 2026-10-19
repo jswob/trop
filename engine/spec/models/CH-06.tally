@@ -1,0 +1,213 @@
+model ch06
+  tally 1
+  on 2026-10-18
+  note "Compound Poisson aggregate losses: the variance of payments under a per-loss deductible (SOA STAM 164), the expected payment under a deductible of 3 (STAM 165), the probability that aggregate claims are exactly 600 (STAM 289), and the compound Poisson variance of Loss Data Analytics Example 5.3.1."
+  note "The distribution of S is built by enumerating how many losses of each amount occur. A vector of counts (n1, n2, ...) has probability e^-λ λ^n / (n1! n2! ...) × Π p^nk: the Poisson count times the multinomial split. The count index reaches 10, and the check asks show that it reaches every total asked."
+  note "Amounts are in XXX: no question states a currency. An answer key is the choice nearest the computed value."
+  note "Exam FAM sample questions 41 and 42 reprint STAM 164 and 165 word for word, from the same publisher; they add no version, and their keys and results are the STAM asks."
+
+source lda_ch5 "Loss Data Analytics, Chapter 5 Aggregate Loss Models (Version 1.1, August 2020, edited by E. W. Frees and P. Johnson; online, dated 01 September 2022)" at "https://openacttexts.github.io/Loss-Data-Analytics/ChapAggLossModels.html"
+source modeller "The model's own choices, each stated with its reason"
+source stam_questions "Society of Actuaries, Exam STAM Short-Term Actuarial Mathematics Sample Questions (footer STAM-09-18; April 2018 update, December 2018 update)" at "https://www.soa.org/globalassets/assets/Files/Edu/2018/2018-04-exam-stam-questions.pdf"
+source stam_solutions "Society of Actuaries, April 2018 Short-Term Actuarial Mathematics Sample Solutions (footer STAM-09-18)" at "https://www.soa.org/globalassets/assets/Files/Edu/2018/2018-04-exam-stam-solutions.pdf"
+
+unit claimant "a person who makes a claim (Loss Data Analytics Example 5.3.1)"
+
+axis ded_basis
+  aggregate "the deductible of 3 applies to the aggregate loss S (the question: an insurance covers aggregate losses)"
+  per_loss "the deductible of 3 applies to each loss"
+
+axis disp
+  half-up "printed figures are rounded to the nearest, a tie away from zero"
+  down "printed figures are truncated"
+
+index choice = [a, b, c, d, e]
+
+index cnt = 0..10
+
+index lat = 0..10
+
+index sv165 = [x1, x2]
+
+index sv289 = [x100, x500, x1000]
+
+index sv531 = [k1, k2, k3]
+
+input amt165[k in sv165]: num XXX
+
+input amt289[k in sv289]: num XXX
+
+input ch164[ch in choice]: num XXX^2
+
+input ch165[ch in choice]: num XXX
+
+input ch289[ch in choice]: num
+
+input ded164: num XXX
+
+input ded165: num XXX
+
+input ex164: num XXX
+
+input ex2over164: num XXX^2
+
+input exlim164: num XXX
+
+input h165: num XXX
+
+input lam164: num
+
+input lam165: num
+
+input lam289: num
+
+input lam531: num
+
+input p165[k in sv165]: num
+
+input p289[k in sv289]: num
+
+input p531[k in sv531]: num
+
+input pover164: num
+
+input t289: num XXX
+
+input x531[k in sv531]: num claimant
+
+def e165: num = exp(-lam165) to 1e-15
+
+def e289: num = exp(-lam289) to 1e-15
+
+def es165: num XXX
+  rule base v lda_2022 = lam165 * sum(k in sv165: amt165[k] * p165[k])
+
+def fact[n in cnt]: int
+  rule later when n > 0 = n * fact[n - 1]
+  rule zero when n = 0 = 1
+
+def fs165[s in lat]: num = g165[s] * e165
+
+def g165[s in lat]: num = sum(n1 in cnt, n2 in cnt where n1 * amt165[x1] + n2 * amt165[x2] = h165 * s: w165[n1, n2])
+
+def lamstar164: num
+  rule base v stam_s_2018 = pover164 * lam164
+
+def m2pay164: num XXX^2
+  rule base v stam_s_2018 = ex2over164 - 2 * ded164 * (ex164 - exlim164) / pover164 - ded164 * ded164
+
+def p289_total: num = sum(n1 in cnt, n2 in cnt, n3 in cnt where n1 * amt289[x100] + n2 * amt289[x500] + n3 * amt289[x1000] = t289: way289[n1, n2, n3])
+
+def pay165: num XXX
+  rule aggregate v stam_s_2018 when ded_basis = aggregate = es165 - ded165 + sum(s in lat where h165 * s < ded165: (ded165 - h165 * s) * fs165[s])
+  rule per_loss when ded_basis = per_loss = lam165 * sum(k in sv165 where amt165[k] > ded165: (amt165[k] - ded165) * p165[k])
+
+def var164: num XXX^2
+  rule base v lda_2022 = lamstar164 * m2pay164
+
+def var531: num claimant^2
+  rule base v lda_2022 = lam531 * sum(k in sv531: x531[k] * x531[k] * p531[k])
+
+def w165[n1 in cnt, n2 in cnt]: num = pow(lam165, n1 + n2) / (fact[n1] * fact[n2]) * pow(p165[x1], n1) * pow(p165[x2], n2)
+
+def w289[n1 in cnt, n2 in cnt, n3 in cnt]: num = pow(lam289, n1 + n2 + n3) / (fact[n1] * fact[n2] * fact[n3]) * pow(p289[x100], n1) * pow(p289[x500], n2) * pow(p289[x1000], n3)
+
+def way289[n1 in cnt, n2 in cnt, n3 in cnt]: num = w289[n1, n2, n3] * e289
+
+ask chk_165: check (all(k in sv165: round(amt165[k] / h165, 1, down) = amt165[k] / h165) and min(k in sv165: amt165[k]) * (count(n in cnt) - 1) >= ded165 and h165 * (count(s in lat) - 1) >= ded165) = true
+
+ask chk_289: check (min(k in sv289: amt289[k]) * (count(n in cnt) - 1) >= t289) = true
+
+ask q164_key: argmin(ch in choice: abs(ch164[ch] - var164))
+
+ask q164_lamstar: lamstar164
+
+ask q164_m2: m2pay164
+
+ask q164_var: var164
+
+ask q165_es: es165
+
+ask q165_fs: g165[s], fs165[s] for s in lat where h165 * s < ded165
+
+ask q165_key: argmin(ch in choice: abs(ch165[ch] - pay165))
+
+ask q165_pay: pay165, round(pay165, 0.0001, disp)
+
+ask q289_key: argmin(ch in choice: abs(ch289[ch] - p289_total))
+
+ask q289_six: way289[6, 0, 0], round(way289[6, 0, 0], 0.00001, disp)
+
+ask q289_total: p289_total, round(100 * p289_total, 0.01, disp)
+
+ask q289_two: way289[1, 1, 0], round(way289[1, 1, 0], 0.00001, disp)
+
+ask q531_var: var531
+
+version stam_s_2018
+  cite stam_solutions
+  known 2018-09-30
+  note "Dated only by months: titled April 2018, with the footer STAM-09-18 (September 2018). It takes the later month's last day, so no view sees it too early (LANGUAGE §4.5). It gives the methods of questions 164 and 165, which rules cite, and no rows."
+
+version lda_2022
+  cite lda_ch5
+  known 2020-08-31
+  note "Known from publication (LANGUAGE §4.5): the text is Version 1.1, August 2020, dated only by its month, so it is known on the month's last day. The page read is dated 01 September 2022 and calls itself Version 1.1, August 2020 (front page https://openacttexts.github.io/Loss-Data-Analytics/index.html, looked up 2026-10-19), so it is a later build that restates the version and is only its locator (LANGUAGE §5.3)."
+  note "Section 5.3.1 gives E(S_N) = λ E(X) and Var(S_N) = λ E(X²) for Poisson frequency, which rules cite. It holds no rows: Example 5.3.1's figures are in lda_example."
+
+version lda_example
+  cite lda_ch5
+  known 2026-10-18
+  note "Example 5.3.1's Poisson mean and claimant distribution are a worked example's stipulations, known from the model's on, since it has no start (LANGUAGE §4.5)."
+  lam531 = 12 "Section 5.3.1, Example 5.3.1: Poisson mean 12"
+  p531[k1] = 0.5 "Example 5.3.1: 1 claimant with probability 1/2"
+  p531[k2] = 1/3 "Example 5.3.1: 2 claimants with probability 1/3"
+  p531[k3] = 1/6 "Example 5.3.1: 3 claimants with probability 1/6"
+  x531[k1] = 1 "Example 5.3.1: 1 claimant"
+  x531[k2] = 2 "Example 5.3.1: 2 claimants"
+  x531[k3] = 3 "Example 5.3.1: 3 claimants"
+
+version model_lattice
+  cite modeller
+  known 2026-10-18
+  h165 = 1 assumed "the step on which the distribution of S in question 165 is read: both loss amounts and the deductible are whole numbers, and any step that divides them gives the same result"
+
+version stam_q_2018
+  cite stam_questions
+  known 2026-10-18
+  note "Each question's data and answer choices are a composed case's stipulations, known from the model's on, since it has no start (LANGUAGE §4.5). The file read is the December 2018 update (footer STAM-09-18); its corrections touch questions 322, 323 and 325 only."
+  amt165[x1] = 1 "Question 165 (p. 86), (ii): x = 1"
+  amt165[x2] = 2 "Question 165 (p. 86), (ii): x = 2"
+  amt289[x100] = 100 "Question 289 (p. 148): x = 100"
+  amt289[x500] = 500 "Question 289 (p. 148): x = 500"
+  amt289[x1000] = 1000 "Question 289 (p. 148): x = 1000"
+  ch164[a] = 54000 "Question 164 (p. 85): (A) 54,000"
+  ch164[b] = 67500 "Question 164 (p. 85): (B) 67,500"
+  ch164[c] = 81000 "Question 164 (p. 85): (C) 81,000"
+  ch164[d] = 94500 "Question 164 (p. 85): (D) 94,500"
+  ch164[e] = 108000 "Question 164 (p. 85): (E) 108,000"
+  ch165[a] = 0.74 "Question 165 (p. 86): (A) 0.74"
+  ch165[b] = 0.79 "Question 165 (p. 86): (B) 0.79"
+  ch165[c] = 0.84 "Question 165 (p. 86): (C) 0.84"
+  ch165[d] = 0.89 "Question 165 (p. 86): (D) 0.89"
+  ch165[e] = 0.94 "Question 165 (p. 86): (E) 0.94"
+  ch289[a] = 0.022 "Question 289 (p. 148): (A) 0.022"
+  ch289[b] = 0.038 "Question 289 (p. 148): (B) 0.038"
+  ch289[c] = 0.049 "Question 289 (p. 148): (C) 0.049"
+  ch289[d] = 0.06 "Question 289 (p. 148): (D) 0.060"
+  ch289[e] = 0.07 "Question 289 (p. 148): (E) 0.070"
+  ded164 = 30 "Question 164 (p. 85): an ordinary deductible of 30 per loss"
+  ded165 = 3 "Question 165 (p. 86): subject to a deductible of 3"
+  ex164 = 70 "Question 164 (p. 85), (i): E[X] = 70"
+  ex2over164 = 9000 "Question 164 (p. 85), (iv): E[X² | X > 30] = 9000"
+  exlim164 = 25 "Question 164 (p. 85), (ii): E[X ∧ 30] = 25"
+  lam164 = 20 "Question 164 (p. 85): N has a Poisson distribution with λ = 20"
+  lam165 = 2 "Question 165 (p. 86), (i): Poisson distribution with λ = 2"
+  lam289 = 5 "Question 289 (p. 148): a compound Poisson distribution has λ = 5"
+  p165[x1] = 0.6 "Question 165 (p. 86), (ii): f_X(1) = 0.6"
+  p165[x2] = 0.4 "Question 165 (p. 86), (ii): f_X(2) = 0.4"
+  p289[x100] = 0.8 "Question 289 (p. 148): p(100) = 0.80"
+  p289[x500] = 0.16 "Question 289 (p. 148): p(500) = 0.16"
+  p289[x1000] = 0.04 "Question 289 (p. 148): p(1000) = 0.04"
+  pover164 = 0.75 "Question 164 (p. 85), (iii): Pr(X > 30) = 0.75"
+  t289 = 600 "Question 289 (p. 148): the probability that aggregate claims will be exactly 600"

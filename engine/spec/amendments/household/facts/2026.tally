@@ -1,0 +1,87 @@
+part facts_2026
+  tally 1
+  note "Fakty gospodarstwa z 2026 roku: umowy, rejestracje, wybory, założenia prognozy."
+
+source broker "Wyciągi z rachunku maklerskiego i IKE (notowania jednostek ETF)"
+
+version forecast_2026
+  cite modeller
+  known 2025-12-31
+  cost_net = 0 governs 2026-03.. assumed "przed wpisem do CEIDG nie znamy kosztów firmy; wpis je poda"
+  cost_vat = 0 governs 2026-03.. assumed "przed wpisem do CEIDG nie znamy kosztów firmy; wpis je poda"
+  etf_return = 0.06 governs 2027.. assumed "zwrot ETF 6% rocznie (prototyp)"
+  fee_net = 0 governs 2026-03.. assumed "przed umowami B2B nie znamy faktur; umowy je podadzą"
+  inflation = 0 governs 2026..2027 assumed "indeks cen równy 1 do 2027 roku (prototyp)"
+  inflation = 0.03 governs 2028.. assumed "ceny +3% rocznie (prototyp)"
+  oki_from = - assumed "na początek 2026 OKI nie istnieje w prawie"
+
+version home_2026
+  cite household
+  known 2025-12-31
+  cost_net = 0 governs 2026-01..2026-02 "przed założeniem działalności"
+  cost_vat = 0 governs 2026-01..2026-02 "przed założeniem działalności"
+  fee_net = 0 governs 2026-01..2026-02 "przed założeniem działalności"
+  keep_floor = 1000 "reguła 15.: zostawiamy 1 000 zł"
+  oki_holds = foreign "na OKI będzie ETF zagraniczny"
+  rent = 3200 governs 2026-01.. "umowa najmu, § 4"
+  salary[wife_acme] = 7000 governs 2026-01.. "umowa o pracę żony, § 3"
+  spend_budget[groceries] = 2200 assumed "budżet gospodarstwa na 2026, przed pierwszym wyciągiem"
+  spend_budget[health_care] = 300 assumed "budżet gospodarstwa na 2026, przed pierwszym wyciągiem"
+  spend_budget[other] = 1500 assumed "budżet gospodarstwa na 2026, przed pierwszym wyciągiem"
+  spend_budget[transport] = 600 assumed "budżet gospodarstwa na 2026, przed pierwszym wyciągiem"
+  spend_window = - "nie ma jeszcze wyciągu"
+  zus_stage = inactive governs 2026-01..2026-02 "przed założeniem działalności"
+
+version broker_2026_01
+  cite broker
+  governs 2026-01..2026-06
+  known 2026-01-02
+  etf_mark = 121 "notowanie z początku stycznia"
+
+version dg_2026
+  cite household
+  known 2026-02-20
+  note "wpis do CEIDG od 2026-03-01, umowy B2B z klientami A i B, zgłoszenie do ZUS"
+  cost_net = 400 governs 2026-03.. "oprogramowanie i biuro, netto"
+  cost_vat = 92 governs 2026-03.. "VAT naliczony od kosztów"
+  fee_net[client_a] = 14000 governs 2026-03.. "umowa B2B z klientem A, § 5"
+  fee_net[client_b] = 3000 governs 2026-03.. "umowa B2B z klientem B, § 4"
+  sickness_opt = true "ZUS ZUA: dobrowolne ubezpieczenie chorobowe"
+  tax_form = ryczalt governs 2026.. "CEIDG: ryczałt od przychodów ewidencjonowanych"
+  terms[client_a] = 14 "umowa B2B z klientem A, § 6"
+  terms[client_b] = 30 "umowa B2B z klientem B, § 5"
+  zus_stage = relief governs 2026-03..2026-08 "ZUS ZZA: ulga na start, 6 miesięcy"
+  zus_stage = preferential governs 2026-09..2028-08 "ZUS ZUA: 24 miesiące składek preferencyjnych"
+  zus_stage = standard governs 2028-09.. "pełne składki po okresie preferencyjnym"
+
+version marek_lend_2026
+  cite household
+  known 2026-03-12
+  lend_amt[lend1] = 2000 "przelew do Marka"
+  lend_day[lend1] = 2026-03-12
+
+version marek_back_2026_06
+  cite household
+  known 2026-06-30
+  marek_amt[back1] = 700 "zwrot od Marka"
+  marek_day[back1] = 2026-06-30
+
+version broker_2026_07
+  cite broker
+  governs 2026-07..
+  known 2026-07-01
+  etf_mark = 126 "notowanie z początku lipca"
+
+version marek_back_2026_09
+  cite household
+  known 2026-09-15
+  marek_amt[back2] = 500 "zwrot od Marka"
+  marek_day[back2] = 2026-09-15
+  marek_promise = (800, 2026-12-31) "Marek obiecał resztę do końca roku"
+
+version spend_2026_09
+  cite household
+  known 2026-10-02
+  arrears none for spend
+  note "średnia z wyciągu zmienia prognozę, nie przeszłość: zaksięgowane dni wydatków zostają"
+  spend_window = 2026-09 "pierwszy pełny wyciąg konta"

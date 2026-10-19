@@ -1,0 +1,165 @@
+model ul05
+  tally 1
+  on 2026-10-18
+  note "Zasiłek rodzinny z dodatkami, mechanizm złotówka za złotówkę, okres zasiłkowy 2015/2016: przykłady 1, 3 i 5 MRPiPS."
+  note "Income is the average monthly income of the calendar year before the benefit period (art. 3 pkt 2a), given per person by each example."
+
+source dz1630 "Ustawa z dnia 16 listopada 2006 r. o zmianie ustawy o świadczeniach rodzinnych (Dz.U. 2006 nr 222 poz. 1630)" at "https://api.sejm.gov.pl/eli/acts/DU/2006/1630/text.html"
+
+source dz995 "Ustawa z dnia 15 maja 2015 r. o zmianie ustawy o świadczeniach rodzinnych (Dz.U. 2015 poz. 995)" at "https://api.sejm.gov.pl/eli/acts/DU/2015/995/text/O/D20150995.pdf"
+
+source mrpips "MRPiPS, Praktyczne przykłady dotyczące ustalania prawa do zasiłku rodzinnego i dodatków z zastosowaniem mechanizmu złotówka za złotówkę (ostatnia modyfikacja 08.11.2019)" at "https://www.gov.pl/web/rodzina/1pratyczne-przyklady-dotyczace-ustalania-prawa-do-zasilku-rodzinnego-i-dodatkow-z-zastosowaniem-mechanizmu-zlotowka-za-zlotowke"
+
+source rm1238 "Rozporządzenie Rady Ministrów z dnia 7 sierpnia 2015 r. w sprawie wysokości dochodu rodziny ... oraz wysokości świadczeń rodzinnych (Dz.U. 2015 poz. 1238)" at "https://api.sejm.gov.pl/eli/acts/DU/2015/1238/text/O/D20151238.pdf"
+
+axis ul05_avg
+  split "the łączna kwota is computed for each run of months with equal amounts, as the ministry does in Przykład 5"
+  whole "art. 5 ust. 3b pkt 1-2 read literally: the allowances of the whole period divided by the number of months of the right"
+
+axis ul05_school
+  per_item "each 100/12 truncated to the grosz, then summed (the ministry, Przykład 1 footnote [1]: 8,33 zł; Przykład 3: 24,99 zł)"
+  per_total "the supplements summed, divided by 12, then truncated to the grosz"
+  exact "no rounding: the law states none"
+
+index agegroup = [u5, u18, u24]
+
+index bmonth = month 2015-11..2016-10
+
+index ex = [p1, p3, p5]
+
+index kid = [k1, k2, k3]
+
+input allowance[g in agegroup]: money PLN question "Ile wynosi zasiłek rodzinny na dziecko w tej grupie wieku?"
+
+input apply_month[e in ex]: month question "W którym miesiącu wpłynął wniosek z prawidłowo wypełnionymi dokumentami?"
+
+input child[e in ex, k in kid]: bool question "Czy to dziecko jest w rodzinie i ma prawo do zasiłku rodzinnego?"
+
+input criterion: money PLN question "Ile wynosi kryterium dochodowe na osobę?"
+
+input family_size[e in ex]: int question "Ilu członków liczy rodzina?"
+
+input income_pp[e in ex]: money PLN question "Ile wynosi miesięczny dochód na osobę w rodzinie?"
+
+input large_family: money PLN question "Ile wynosi dodatek z tytułu wychowywania dziecka w rodzinie wielodzietnej?"
+
+input min_payable: money PLN
+
+input school_claim[e in ex, k in kid]: bool question "Czy na to dziecko przysługuje dodatek z tytułu rozpoczęcia roku szkolnego?"
+
+input school_start: money PLN
+
+input start_group[e in ex, k in kid]: key agegroup question "W jakiej grupie wieku jest dziecko w miesiącu wniosku?"
+
+input turns_next[e in ex, k in kid]: month question "W którym miesiącu dziecko osiąga wiek następnej grupy?"
+
+def allowance_m[e in ex, m in bmonth]: money PLN = sum(k in kid where child[e, k]: allowance[group[e, k, m]])
+
+def excess[e in ex, m in bmonth]: money PLN = max(0, income[e] - limit[e, m])
+
+def group[e in ex, k in kid, m in bmonth]: key agegroup
+  note "art. 25 ust. 2: the new age group from the month after the month of the change"
+  rule base = start_group[e, k]
+  rule older excepts base when turns_next[e, k] != - and m > turns_next[e, k] = start_group[e, k] + 1
+
+def income[e in ex]: money PLN = family_size[e] * income_pp[e]
+
+def large_m[e in ex, m in bmonth]: money PLN = max(0, count(k in kid where child[e, k]) - 2) * large_family
+
+def limit[e in ex, m in bmonth]: money PLN = family_size[e] * criterion
+
+def n_right[e in ex]: int = count(m in bmonth where right[e, m])
+
+def payable[e in ex, m in bmonth]: num PLN
+  note "art. 5 ust. 3a: the łączna kwota less the excess; ust. 3c: nothing if that is below 20,00 zł; art. 24 ust. 2: from the month of the application"
+  rule base = ? "the rules before 1 January 2016, without the taper, are not modelled (art. 2 of Dz.U. 2015 poz. 995 keeps them for rights that arose earlier)"
+  rule base v dz2015_995 = total[e, m] - excess[e, m]
+  rule none excepts base, small when not right[e, m] = 0
+  rule small excepts base v dz2015_995 when excess[e, m] > 0 and total[e, m] - excess[e, m] < min_payable = 0
+
+def right[e in ex, m in bmonth]: bool = m >= apply_month[e]
+
+def school_m[e in ex]: num PLN
+  note "art. 14 supplement divided by 12 (art. 5 ust. 3b pkt 3); the rounding is the ministry's practice, not the law's"
+  rule base = sum(k in kid where child[e, k] and school_claim[e, k]: round(school_start / 12, 0.01, down))
+  rule exact excepts base when ul05_school = exact = sum(k in kid where child[e, k] and school_claim[e, k]: school_start) / 12
+  rule per_total excepts base when ul05_school = per_total = round(sum(k in kid where child[e, k] and school_claim[e, k]: school_start) / 12, 0.01, down)
+
+def total[e in ex, m in bmonth]: num PLN
+  note "art. 5 ust. 3b: the łączna kwota zasiłków rodzinnych wraz z dodatkami"
+  rule base = allowance_m[e, m] + large_m[e, m] + school_m[e]
+  rule whole excepts base when ul05_avg = whole = sum(n in bmonth where right[e, n]: allowance_m[e, n] + large_m[e, n]) / n_right[e] + school_m[e]
+
+ask ex_p1: total[p1, 2016-01], limit[p1, 2016-01], income[p1], excess[p1, 2016-01], payable[p1, 2016-01]
+
+ask ex_p3: total[p3, 2016-01], limit[p3, 2016-01], income[p3], excess[p3, 2016-01], payable[p3, 2016-01]
+
+ask ex_p5: total[p5, 2016-01], limit[p5, 2016-01], income[p5], excess[p5, 2016-01], payable[p5, 2016-01]
+
+ask p5_periods: total[p5, m], payable[p5, m] for m in [2016-01, 2016-03, 2016-04, 2016-10]
+
+version dz2006_1630
+  cite dz1630
+  governs 2006-09-01..
+  known 2006-12-05
+  note "promulgated 5 grudnia 2006 r. (ELI API field promulgation, https://api.sejm.gov.pl/eli/acts/DU/2006/1630); art. 2: wchodzi w życie po upływie 14 dni od dnia ogłoszenia, z mocą od dnia 1 września 2006 r."
+  note "the consolidated text Dz.U. 2015 poz. 114 (art. 14 ust. 2), the case's source, reprints the amount and is its locator, not its version"
+  school_start = 100 "art. 1 pkt 2 (art. 14 ust. 2): raz w roku ... w wysokości 100,00 zł na dziecko"
+
+version dz2015_995
+  cite dz995
+  governs 2016-01..
+  known 2015-07-17
+  note "promulgated 17 lipca 2015 r. (ELI API field promulgation, https://api.sejm.gov.pl/eli/acts/DU/2015/995)"
+  note "art. 3: wchodzi w życie z dniem 1 stycznia 2016 r."
+  min_payable = 20 "art. 1 pkt 1 (art. 5 ust. 3c): niższa niż 20,00 zł"
+
+version rm2015_1238
+  cite rm1238
+  governs 2015-11..2016-10
+  known 2015-08-27
+  note "promulgated 27 sierpnia 2015 r. (ELI API field promulgation, https://api.sejm.gov.pl/eli/acts/DU/2015/1238)"
+  allowance[u5] = 89 "§ 2 ust. 1 pkt 1 lit. a"
+  allowance[u18] = 118 "§ 2 ust. 1 pkt 1 lit. b"
+  allowance[u24] = 129 "§ 2 ust. 1 pkt 1 lit. c"
+  criterion = 674 governs 2015-11..2017-10 "§ 1 ust. 1 pkt 1"
+  large_family = 90 "§ 2 ust. 1 pkt 3"
+
+version mrpips_examples
+  cite mrpips
+  known 2026-10-18
+  note "the ministry's worked examples (page last modified 08.11.2019): their stipulations are known from the model's on, since it has no start (§4.5)"
+  apply_month[p1] = 2016-01 "Przykład 1: wniosek w styczniu 2016 r."
+  apply_month[p3] = 2016-01 "Przykład 3: styczeń 2016 r."
+  apply_month[p5] = 2016-01 "Przykład 5: styczeń 2016 r."
+  child[p1, k1] = true "Przykład 1: jedno dziecko w wieku 5-18 lat"
+  child[p1, k2] = false "Przykład 1: rodzina 3-osobowa z jednym dzieckiem"
+  child[p1, k3] = false "Przykład 1"
+  child[p3, k1] = true "Przykład 3: troje dzieci w wieku 5-18 lat"
+  child[p3, k2] = true "Przykład 3"
+  child[p3, k3] = true "Przykład 3"
+  child[p5, k1] = true "Przykład 5: dzieci w wieku 2, 3 i 4 lat"
+  child[p5, k2] = true "Przykład 5"
+  child[p5, k3] = true "Przykład 5"
+  family_size[p1] = 3 "Przykład 1: rodzina 3-osobowa"
+  family_size[p3] = 5 "Przykład 3: rodzina 5-osobowa"
+  family_size[p5] = 5 "Przykład 5: rodzina 5-osobowa"
+  income_pp[p1] = 685 "Przykład 1: 685 zł na osobę"
+  income_pp[p3] = 680 "Przykład 3: 680 zł na osobę"
+  income_pp[p5] = 715 "Przykład 5: 715 zł na osobę"
+  school_claim[p1, k1] = true "Przykład 1: dodatek z tytułu rozpoczęcia roku szkolnego"
+  school_claim[p3, k1] = true "Przykład 3: trzy dodatki z tytułu rozpoczęcia roku szkolnego"
+  school_claim[p3, k2] = true "Przykład 3"
+  school_claim[p3, k3] = true "Przykład 3"
+  school_claim[p5, k1] = false "Przykład 5: tylko zasiłki i dodatek z tytułu wielodzietności"
+  school_claim[p5, k2] = false "Przykład 5"
+  school_claim[p5, k3] = false "Przykład 5"
+  start_group[p1, k1] = u18 "Przykład 1: dziecko w wieku 5-18 lat"
+  start_group[p3, k1] = u18 "Przykład 3"
+  start_group[p3, k2] = u18 "Przykład 3"
+  start_group[p3, k3] = u18 "Przykład 3"
+  start_group[p5, k1] = u5 "Przykład 5: najstarsze dziecko, 4 lata"
+  start_group[p5, k2] = u5 "Przykład 5: 3 lata"
+  start_group[p5, k3] = u5 "Przykład 5: 2 lata"
+  turns_next[*, *] = - "no child but the oldest in Przykład 5 changes age group in the period"
+  turns_next[p5, k1] = 2016-03 "Przykład 5: najstarsze dziecko kończy 5 lat w marcu 2016 r."

@@ -1,0 +1,245 @@
+model ul03
+  tally 1
+  on 2026-10-18
+  note "Medicare Part B premiums and IRMAA for 2026, by MAGI bracket and filing status. The Part D IRMAA and the CPI indexing of the edges are holes: the case has neither the Part D formula nor the CPI-U averages."
+  note "MAGI is the one for the taxable year beginning two years before (2024 for 2026; 2023 if 2024 is not available); a major life-changing event (20 CFR 418.1205) is not modelled."
+
+source bba2018 "Bipartisan Budget Act of 2018, Pub. L. 115-123, div. E, title XII, § 53114 (approved February 9, 2018)" at "https://www.congress.gov/115/plaws/publ123/PLAW-115publ123.htm"
+
+source bba2015 "Bipartisan Budget Act of 2015, Pub. L. 114-74, § 601(c) (approved November 2, 2015)" at "https://www.govinfo.gov/content/pkg/PLAW-114publ74/html/PLAW-114publ74.htm"
+
+source cms_fact_sheet "CMS, 2026 Medicare Parts A & B Premiums and Deductibles (fact sheet, November 14, 2025)" at "https://www.cms.gov/newsroom/fact-sheets/2026-medicare-parts-b-premiums-deductibles"
+
+source fr_cms_8091 "CMS-8091-N, Medicare Part B Monthly Actuarial Rates, Premium Rates, and Annual Deductible Beginning January 1, 2026, 90 FR 52063 (November 19, 2025)" at "https://www.govinfo.gov/content/pkg/FR-2025-11-19/html/2025-20251.htm"
+
+source fr_ssa_2018 "SSA, amendment of 20 CFR 418.1115, What are the modified adjusted gross income ranges?, 83 FR 55628 (November 7, 2018)" at "https://www.federalregister.gov/citation/83-FR-55628"
+
+source mma2003 "Medicare Prescription Drug, Improvement, and Modernization Act of 2003, Pub. L. 108-173, § 811(a) (approved December 8, 2003)" at "https://www.congress.gov/108/plaws/publ173/PLAW-108publ173.htm"
+
+axis ul03_mfs
+  statute "each dollar amount reduced by the year's individual threshold ((i)(3)(C)(iii)): the top edge is $500,000 less $109,000, as CMS and POMS print"
+  cfr "the CFR's unindexed top edge of $415,000 (§ 418.1115(d)(3), (e)(2))"
+
+axis ul03_repay
+  respectively "a repayment of $0.30, $0.40, $0.50, $0.60 or $0.70 in place of the $0.20 (FR SUMMARY, p. 52063)"
+  additional "the $0.20 repayment plus an additional $0.30 to $0.70 (FR p. 52066)"
+  statute "the statute's own repayment part, unrounded: the IRMAA is the applicable percentage less 25 points of 200 percent of the aged rate plus 4 times the (a)(6) repayment ((i)(3)(A)(i), (ii)(I)-(II)), and the whole premium is rounded once to 10 cents ((c))"
+
+axis ul03_round_at
+  before "the share of cost is rounded to 10 cents, then the repayment is added"
+  after "the share of cost plus the repayment is rounded to 10 cents"
+
+axis ul03_tie
+  half-up "nearest 10 cents ((c)); a tie away from zero"
+  half-even "nearest 10 cents ((c)); a tie to the even multiple"
+
+axis ul03_tie1000
+  half-up "an indexed edge to the nearest multiple of $1,000 ((i)(5)(B)); a tie away from zero"
+  half-even "an indexed edge to the nearest multiple of $1,000 ((i)(5)(B)); a tie to the even multiple"
+
+index cpi_window = [to_2018_08, to_2025_08]
+
+index filing = [single, joint, mfs]
+
+index tier = [t0, t1, t2, t3, t4, t5]
+
+input aged_rate: money USD
+
+input base_edge[t in tier]: money USD
+  note "the upper MAGI edge of tier t before indexing, for years beginning with 2019; t0's is the threshold"
+
+input cost_factor: num
+
+input cpi_avg[w in cpi_window]: num question "What is the average of the Consumer Price Index for all urban consumers (United States city average) for the 12-month period ending with this August (2018 or 2025)?"
+  note "no row: the CPI-U averages were not fetched (case, Missing facts)"
+
+input immuno_share: num
+
+input magi: money USD question "What was the beneficiary's modified adjusted gross income for 2024 (or 2023 if 2024 is not available)?"
+
+input pct[t in tier]: num
+
+input prior_year_standard: money USD
+
+input repay_high[t in tier]: money USD
+
+input repay_mult: int
+
+input repay_std: money USD
+
+input std_pct: num
+
+input std_share: num
+
+input threshold_single: money USD
+
+input top_edge_single: money USD
+
+band irmaa_joint(magi_joint: money USD): key tier
+  note "the joint-return brackets as CMS prints them for 2026"
+
+band irmaa_mfs[r in ul03_mfs](magi_mfs: money USD): key tier
+  note "married filing separately and living with the spouse: one table per reading of the top edge; tiers 1-3 are empty because their reduced upper edges lie below the threshold"
+
+band irmaa_single(magi_single: money USD): key tier
+  note "the individual-return brackets as CMS prints them for 2026 (single, head of household, qualifying surviving spouse, married filing separately and living apart)"
+
+def cost: num USD = cost_factor * aged_rate
+
+def deductible: money USD
+  note "the 2026 Part B annual deductible, which the CMS fact sheet prints beside the standard premium"
+  rule base = ? "What is the 2026 Part B annual deductible? Its rule (Social Security Act § 1833(b), 42 U.S.C. 1395l(b)) and the figures it is indexed from are not in the case."
+
+def full_irmaa[t in tier]: money USD = full_total[t] - standard
+
+def full_total[t in tier]: money USD
+  note "CMS: a total premium of a share of the total cost of Part B coverage plus a repayment amount (FR SUMMARY); rounding (c)"
+  rule base = standard
+  rule high excepts base when t != t0 = round(pct[t] * cost, 0.1, ul03_tie) + repay_total[t]
+  rule high_after excepts base, high when t != t0 and ul03_round_at = after = round(pct[t] * cost + repay_total[t], 0.1, ul03_tie)
+  rule high_statute excepts base, high, high_after when t != t0 and ul03_repay = statute = round(std_share * aged_rate + repay_std + (pct[t] - std_pct) * (cost + repay_mult * repay_std), 0.1, ul03_tie)
+
+def immuno_irmaa[t in tier]: money USD
+  note "the immunosuppressive enrollees pay the IRMAA (FR p. 52065) but not the repayment amounts; the printed amounts carry none"
+  rule base = 0
+  rule high excepts base when t != t0 = round((pct[t] - std_pct) * cost, 0.1, ul03_tie)
+
+def immuno_standard: money USD = round(immuno_share * cost, 0.1, ul03_tie)
+
+def immuno_total[t in tier]: money USD = immuno_standard + immuno_irmaa[t]
+
+def increase: money USD = standard - prior_year_standard
+
+def indexed_edge[t in tier]: money USD
+  note "(i)(5)(A)-(B): for 2026, each dollar amount is increased by the percentage (if any) by which the CPI-U average for the 12 months ending August 2025 exceeds the one for the 12 months ending August 2018, then rounded to the nearest multiple of $1,000; the $500,000 edge is not indexed ((i)(5)(C)(i)); joint edges are twice these ((i)(3)(C)(ii))"
+  rule base = round(base_edge[t] * max(1, cpi_avg[to_2025_08] / cpi_avg[to_2018_08]), 1000, ul03_tie1000)
+
+def partd_irmaa[t in tier]: money USD
+  note "the Part D income-related monthly adjustment amount, which CMS prints beside the Part B tables; no amount below the threshold"
+  rule base = 0
+  rule high excepts base when t != t0 = ? "What is the 2026 Part D income-related monthly adjustment amount for this tier? The national base beneficiary premium and the Part D formula (Social Security Act § 1860D-13(a)(7)) are not in the case."
+
+def repay_total[t in tier]: money USD
+  rule additional excepts base when ul03_repay = additional = repay_std + repay_high[t]
+  rule base = repay_high[t]
+
+def standard: money USD
+  note "FR SUMMARY: 50 percent of the aged actuarial rate plus the $0.20 repayment amount"
+  rule after excepts base when ul03_round_at = after = round(std_share * aged_rate + repay_std, 0.1, ul03_tie)
+  rule base = round(std_share * aged_rate, 0.1, ul03_tie) + repay_std
+
+def tier_of[f in filing]: key tier
+  rule base = irmaa_single(magi)
+  rule joint excepts base when f = joint = irmaa_joint(magi)
+  rule mfs excepts base when f = mfs = irmaa_mfs[ul03_mfs](magi)
+
+ask deductible_2026: deductible
+
+ask edges_from_cpi: indexed_edge[t] for t in [t0, t1, t2, t3]
+
+ask full_part_b: full_irmaa[t], full_total[t] for t in tier
+
+ask immuno_only: immuno_irmaa[t], immuno_total[t] for t in tier
+
+ask joint_at_750000: tier_of[joint] with magi = 750000
+
+ask joint_below_750000: tier_of[joint] with magi = 749999.99
+
+ask mfs_above_109000: tier_of[mfs] with magi = 109000.01
+
+ask mfs_at_109000: tier_of[mfs] with magi = 109000
+
+ask mfs_at_391000: tier_of[mfs], full_total[tier_of[mfs]], immuno_total[tier_of[mfs]] with magi = 391000
+
+ask mfs_at_415000: tier_of[mfs] with magi = 415000
+
+ask mfs_edge_statute: check band_lo(irmaa_mfs[statute], magi) = top_edge_single - threshold_single with magi = 391000
+
+ask part_d: partd_irmaa[t] for t in tier
+
+ask single_above_109000: tier_of[single] with magi = 109000.01
+
+ask single_at_109000: tier_of[single] with magi = 109000
+
+ask single_at_500000: tier_of[single] with magi = 500000
+
+ask single_below_500000: tier_of[single] with magi = 499999.99
+
+ask standard_premium: standard, immuno_standard, increase
+
+version mma2003_s811
+  cite mma2003
+  known 2003-12-08
+  note "known from the act's approval, December 8, 2003 (the slip law's heading); § 811(a) added 42 U.S.C. 1395r(i)"
+  note "the LII text of 42 U.S.C. 1395r (https://www.law.cornell.edu/uscode/text/42/1395r) is a consolidated text with no date of its own: it is the locator, not a version; its amendment notes say Pub. L. 114-74 § 601(c)(1) (2015) moved the 200 percent into subclause (I) of (i)(3)(A)(ii) unchanged"
+  cost_factor = 2 "§ 811(a): 42 U.S.C. 1395r(i)(3)(A)(ii)(I), 200 percent of the monthly actuarial rate for enrollees age 65 and over"
+  std_pct = 0.25 "§ 811(a): 42 U.S.C. 1395r(i)(3)(A)(i), the applicable percentage minus 25 percentage points"
+
+version bba2015_s601
+  cite bba2015
+  known 2015-11-02
+  note "known from the act's approval, November 2, 2015 (the slip law's last line); § 601(c)(3) added subclause (II) to 42 U.S.C. 1395r(i)(3)(A)(ii), so the unsubsidized Part B premium amount is 200 percent of the aged actuarial rate plus 4 times the (a)(6) increase"
+  repay_mult = 4 "§ 601(c)(3): 42 U.S.C. 1395r(i)(3)(A)(ii)(II), 4 times the amount of the increase in the monthly premium under subsection (a)(6) for a month in the year"
+
+version bba2018_s53114
+  cite bba2018
+  governs 2019..
+  known 2018-02-09
+  note "known from the act's approval, February 9, 2018 (the slip law's heading); § 53114 added the table of 42 U.S.C. 1395r(i)(3)(C)(i)(III), for years beginning with 2019"
+  note "the LII text of 42 U.S.C. 1395r and its amendment notes (https://www.law.cornell.edu/uscode/text/42/1395r) are the locator; LII is a consolidated text with no date of its own"
+  base_edge[t0] = 85000 "§ 53114: 42 U.S.C. 1395r(i)(3)(C)(i)(III), row 1: More than $85,000"
+  base_edge[t1] = 107000 "(i)(3)(C)(i)(III), row 1: but not more than $107,000"
+  base_edge[t2] = 133500 "(i)(3)(C)(i)(III), row 2: but not more than $133,500"
+  base_edge[t3] = 160000 "(i)(3)(C)(i)(III), row 3: but not more than $160,000"
+  pct[t1] = 0.35 "(i)(3)(C)(i)(III), for years beginning with 2019, row 1"
+  pct[t2] = 0.5 "(i)(3)(C)(i)(III), row 2"
+  pct[t3] = 0.65 "(i)(3)(C)(i)(III), row 3"
+  pct[t4] = 0.8 "(i)(3)(C)(i)(III), row 4"
+  pct[t5] = 0.85 "(i)(3)(C)(i)(III), row 5"
+  top_edge_single = 500000 "(i)(3)(C)(i)(III), row 4: less than $500,000; row 5: At least $500,000; (i)(5)(C)(i): not indexed"
+
+version cms_fact_sheet_2026
+  cite cms_fact_sheet
+  governs 2026
+  known 2025-11-14
+  irmaa_joint: (-inf, 218000] = t0 "Full Part B Coverage, row 1: Less than or equal to $218,000"
+  irmaa_joint: (218000, 274000] = t1 "row 2"
+  irmaa_joint: (274000, 342000] = t2 "row 3"
+  irmaa_joint: (342000, 410000] = t3 "row 4"
+  irmaa_joint: (410000, 750000) = t4 "row 5: Greater than $410,000 and less than $750,000"
+  irmaa_joint: [750000, inf) = t5 "row 6: Greater than or equal to $750,000"
+  irmaa_mfs[statute]: (-inf, 109000] = t0 "Full Part B Coverage, married filing separately, row 1: Less than or equal to $109,000"
+  irmaa_mfs[statute]: (109000, 391000) = t4 "married filing separately, row 2: Greater than $109,000 and less than $391,000"
+  irmaa_mfs[statute]: [391000, inf) = t5 "married filing separately, row 3: Greater than or equal to $391,000"
+  irmaa_single: (-inf, 109000] = t0 "Full Part B Coverage, row 1: Less than or equal to $109,000"
+  irmaa_single: (109000, 137000] = t1 "row 2"
+  irmaa_single: (137000, 171000] = t2 "row 3"
+  irmaa_single: (171000, 205000] = t3 "row 4"
+  irmaa_single: (205000, 500000) = t4 "row 5: Greater than $205,000 and less than $500,000"
+  irmaa_single: [500000, inf) = t5 "row 6: Greater than or equal to $500,000"
+  prior_year_standard = 185 "Medicare Part B Premium and Deductible, paragraph 1: from $185.00 in 2025"
+
+version ssa_418_1115_2026
+  cite fr_ssa_2018
+  governs 2026
+  known 2025-11-14
+  note "the CFR reading's 2026 table: $415,000 is the CFR's, from 83 FR 55628 (November 7, 2018; the section's source note, read at https://www.law.cornell.edu/cfr/text/20/418.1115), not adjusted until 2028 ((e)(2)); the lower edge is the CFR's $85,000 as indexed under (e)(1), which CMS published for 2026 as $109,000 on November 14, 2025, so the table is known only from then"
+  note "the eCFR text (up to date as of 2026-10-15) is a consolidated text and the locator, not a version"
+  irmaa_mfs[cfr]: (-inf, 109000] = t0 "§ 418.1115(d)(3)(i): Greater than $85,000, indexed under (e)(1) to $109,000 (CMS fact sheet, married filing separately, row 1)"
+  irmaa_mfs[cfr]: (109000, 415000) = t4 "§ 418.1115(d)(3)(i): but less than $415,000"
+  irmaa_mfs[cfr]: [415000, inf) = t5 "§ 418.1115(d)(3)(ii): Greater than or equal to $415,000; (e)(2): not adjusted until 2028"
+
+version fr_2026
+  cite fr_cms_8091
+  governs 2026
+  known 2025-11-19
+  aged_rate = 405.4 "SUMMARY, p. 52063: $405.40 for aged enrollees"
+  immuno_share = 0.15 "p. 52065: 15 percent of a different aged actuarial rate, equal to 100 percent of the costs"
+  repay_high[t1] = 0.3 "SUMMARY, p. 52063: $0.30, $0.40, $0.50, $0.60, or $0.70, respectively"
+  repay_high[t2] = 0.4 "SUMMARY, p. 52063"
+  repay_high[t3] = 0.5 "SUMMARY, p. 52063"
+  repay_high[t4] = 0.6 "SUMMARY, p. 52063"
+  repay_high[t5] = 0.7 "SUMMARY, p. 52063"
+  repay_std = 0.2 "p. 52066: The 2026 repayment amount is $0.20"
+  std_share = 0.5 "SUMMARY, p. 52063: 50 percent of the monthly actuarial rate for aged enrollees"
+  threshold_single = 109000 "pp. 52064-52065: $109,000 for a beneficiary filing an individual income tax return"

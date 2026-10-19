@@ -1,0 +1,31 @@
+part mbank_2026_09
+  tally 1
+  note "Wyciąg konta wspólnego za wrzesień 2026, syntetyczny. Faktura klienta B za sierpień (płatna 30 września) nie wpłynęła."
+
+source mbank_export "Eksport wyciągu mBank, konto wspólne"
+
+version mbank_2026_09
+  cite mbank_export
+  governs 2026-09
+  known 2026-10-02
+  covers konto
+  bank[r20260901a] = (2026-09-01, konto, -3200.00, rent_pay[2026-09], -) "CZYNSZ WRZESIEN"
+  bank[r20260902a] = (2026-09-02, konto, -412.37, -, groceries) "BIEDRONKA KRAKOW"
+  bank[r20260903a] = (2026-09-03, konto, -250.00, -, transport) "ORLEN STACJA 4021"
+  bank[r20260907a] = (2026-09-07, konto, -492.00, costs_pay[2026-09], -) "DOSTAWCA FV 09/2026"
+  bank[r20260909a] = (2026-09-09, konto, -286.15, -, groceries) "LIDL KRAKOW"
+  bank[r20260910a] = (2026-09-10, konto, 5101.67, wage[wife_acme, 2026-08], -) "ACME SP Z O O WYNAGR 08/2026"
+  bank[r20260911a] = (2026-09-11, konto, -145.00, -, health_care) "APTEKA"
+  bank[r20260914a] = (2026-09-14, konto, 17220.00, client_pay[client_a, 2026-08], -) "KLIENT A FV 08/2026"
+  bank[r20260915a] = (2026-09-15, konto, 500.00, marek_back[back2], -) "MAREK ZWROT"
+  bank[r20260915b] = (2026-09-15, konto, -6000.00, invest[ike, 2026-09], -) "PRZELEW NA IKE"
+  bank[r20260916a] = (2026-09-16, konto, -530.80, -, groceries) "AUCHAN KRAKOW"
+  bank[r20260918a] = (2026-09-18, konto, -180.00, -, transport) "PKP INTERCITY"
+  bank[r20260919a] = (2026-09-19, konto, -899.99, -, other) "MEDIA EXPERT"
+  bank[r20260921a] = (2026-09-21, konto, -830.58, health_pay[2026-08], -) "ZUS SKLADKA ZDROWOTNA 08/2026"
+  bank[r20260921b] = (2026-09-21, konto, -1990.00, ryczalt_pay[2026-08], -) "URZAD SKARBOWY RYCZALT 08/2026"
+  bank[r20260923a] = (2026-09-23, konto, -348.62, -, groceries) "BIEDRONKA KRAKOW"
+  bank[r20260925a] = (2026-09-25, konto, -3818.00, vat_pay[2026-08], -) "URZAD SKARBOWY VAT 08/2026"
+  bank[r20260926a] = (2026-09-26, konto, -120.00, -, other) "RESTAURACJA"
+  bank[r20260929a] = (2026-09-29, konto, -401.09, -, groceries) "BIEDRONKA KRAKOW"
+  stated[konto] = 41386.27 governs 2026-09-30 "saldo końcowe"

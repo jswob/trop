@@ -1,0 +1,133 @@
+part pays
+  tally 1
+  note "Ruchy gospodarstwa poza prawem: czynsz, wydatki, koszty firmy, reguła 15., zakup jednostek, pożyczka Markowi."
+
+input cost_net[m in month]: money PLN question "Ile netto wynoszą koszty firmy w tym miesiącu?"
+
+input cost_vat[m in month]: money PLN question "Ile VAT naliczonego jest w kosztach firmy w tym miesiącu?"
+
+input etf_mark: num PLN/etf_unit question "Jaka jest ostatnia znana cena jednostki ETF?"
+
+input etf_return: num
+
+input fee_net[c in client, m in month]: money PLN question "Ile netto wynosi faktura dla tego klienta za ten miesiąc?"
+
+input inflation: num
+
+input keep_floor: money PLN
+
+input lend_amt[k in marek_loan]: money PLN
+
+input lend_day[k in marek_loan]: date
+
+input marek_amt[k in marek_part]: money PLN
+
+input marek_day[k in marek_part]: date
+
+input marek_promise: (amt money PLN, due date)
+
+input oki_holds: key oki_asset question "Co jest na OKI: fundusze w PLN, lokaty i obligacje czy ETF zagraniczny?"
+
+input rent: money PLN prices 2026 by cpi question "Ile wynosi czynsz najmu?"
+
+input sickness_opt: bool
+
+input spend_budget[c in category]: money PLN
+
+input spend_window: month
+
+input tax_form[y in tax_year]: key form question "Jaką formę opodatkowania wybrano na ten rok?"
+
+input terms[c in client]: int question "Ile dni ma termin płatności tego klienta?"
+
+input zus_stage[m in month]: key stage question "Na jakim etapie składek ZUS jest działalność w tym miesiącu?"
+
+def cpi[y in tax_year]: num
+  rule initial when pos(y) = 1 = 1
+  rule next when pos(y) > 1 = cpi[y - 1] * (1 + inflation)
+
+def etf_growth[y in tax_year]: num
+  rule initial when pos(y) = 1 = 1
+  rule next when pos(y) > 1 = etf_growth[y - 1] * (1 + etf_return)
+
+def etf_price[m in month]: num PLN/etf_unit = etf_mark * etf_growth[year_of(m)]
+
+def invest_amt[w in wrapper, m in month]: money PLN
+  note "reguła 15.: najpierw IKE do limitu roku, reszta na rachunek maklerski, od OKI na OKI"
+  rule ike when w = ike = min(room[m], max(0, ike_limit[year_of(m)] - flows(invest[ike], start_of(year_of(m))..day_of(m, 15))))
+  rule mak when w = mak = if oki_from != - and m >= oki_from then 0 else room[m]
+  rule oki when w = oki = if oki_from != - and m >= oki_from then room[m] else 0
+
+def room[m in month]: money PLN
+  note "wolne środki ponad 1 000 zł do następnego uruchomienia reguły (dzień przed kolejnym 15.); VAT do zapłaty nie jest nasz"
+  rule base = max(0, plan_low(konto, day_of(m, 15), add_days(add_months(day_of(m, 15), 1), -1)) - keep_floor)
+
+def spend_day[d in day]: money PLN = round(sum(c in category: spend_month[c]) * cpi[year_of(d)] / cpi[2026] / days(start_of(month_of(d)), end_of(month_of(d))), 0.01, half-up)
+
+def spend_month[c in category]: money PLN
+  note "wydatki miesiąca w cenach 2026: z wyciągu za miesiąc estymacji, gdy go mamy; wcześniej budżet gospodarstwa"
+  rule budget = spend_budget[c]
+  rule learned excepts budget when spend_window != - and covered(konto, spend_window) = round(sum(r in bank_row where bank[r].explains = - and bank[r].cat = c and month_of(bank[r].on) = spend_window: -bank[r].amount) * cpi[2026] / cpi[year_of(spend_window)], 0.01, half-up)
+
+def units_to_buy[w in wrapper, m in month]: num etf_unit = round(bal(wcash[w]) / etf_price[m], 1, down)
+
+pay buy_cash[w in wrapper, m in month]
+  from wcash[w]
+  to rynek
+  amount round(units_to_buy[w, m] * etf_price[m], 0.01, half-up)
+  on day_of(m, 16)
+  phase 5
+
+pay buy_units[w in wrapper, m in month]
+  from outside_etf_unit
+  to wunits[w]
+  amount units_to_buy[w, m]
+  on day_of(m, 16)
+  phase 4
+
+pay costs_pay[m in month]
+  from konto
+  to dostawcy
+  amount cost_net[m] + cost_vat[m]
+  on next_business(day_of(m, 5), holidays_pl)
+  for m
+  when cost_net[m] > 0
+
+pay invest[w in wrapper, m in month]
+  from konto
+  to wcash[w]
+  amount invest_amt[w, m]
+  on day_of(m, 15)
+  phase 6
+
+pay marek_back[k in marek_part]
+  from marek
+  to konto
+  amount marek_amt[k]
+  on marek_day[k]
+
+pay marek_lend[k in marek_loan]
+  from konto
+  to marek
+  amount lend_amt[k]
+  on lend_day[k]
+
+pay marek_last
+  from marek
+  to konto
+  amount marek_promise.amt
+  on marek_promise.due
+  promised
+
+pay rent_pay[m in month]
+  from konto
+  to wynajmujacy
+  amount round(rent, 0.01, half-up)
+  on day_of(m, 1)
+  for m
+
+pay spend[d in day]
+  from konto
+  to sklepy
+  amount spend_day[d]
+  on d

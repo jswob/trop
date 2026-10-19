@@ -1,0 +1,932 @@
+{
+ "id": "04-employment",
+ "says_pl": "Moja pensja z brutto na netto przez prawo o umowie o pracę przypięte do pracy; roczne zeznanie wspólne z żoną.",
+ "values": [
+  {
+   "id": "wage.minimum",
+   "kind": "law",
+   "unit": "PLN",
+   "says_pl": "Płaca minimalna",
+   "entries": [
+    {
+     "from": "2022-01-01",
+     "value": 3010,
+     "source": "Rozporządzenie RM z 14.09.2021, Dz.U. 2021 poz. 1690"
+    },
+    {
+     "from": "2023-01-01",
+     "value": 3490,
+     "source": "Rozporządzenie RM z 13.09.2022, Dz.U. 2022 poz. 1952"
+    },
+    {
+     "from": "2023-07-01",
+     "value": 3600,
+     "source": "jw."
+    },
+    {
+     "from": "2024-01-01",
+     "value": 4242,
+     "source": "Rozporządzenie RM z 14.09.2023, Dz.U. 2023 poz. 1893"
+    },
+    {
+     "from": "2024-07-01",
+     "value": 4300,
+     "source": "jw."
+    },
+    {
+     "from": "2025-01-01",
+     "value": 4666,
+     "source": "Rozporządzenie RM z 12.09.2024, Dz.U. 2024 poz. 1362"
+    },
+    {
+     "from": "2026-01-01",
+     "value": 4806,
+     "source": "Dz.U. 2025 poz. 1242"
+    }
+   ]
+  },
+  {
+   "id": "wage.projected_average",
+   "kind": "law",
+   "unit": "PLN",
+   "says_pl": "Prognozowane przeciętne wynagrodzenie (ustawa budżetowa)",
+   "entries": [
+    {
+     "from": "2022-01-01",
+     "value": 5922,
+     "source": "obwieszczenie MRiPS na 2022 r."
+    },
+    {
+     "from": "2023-01-01",
+     "value": 6935,
+     "source": "obwieszczenie MRiPS na 2023 r."
+    },
+    {
+     "from": "2024-01-01",
+     "value": 7824,
+     "source": "obwieszczenie MRiPS na 2024 r."
+    },
+    {
+     "from": "2025-01-01",
+     "value": 8673,
+     "source": "ustawa budżetowa 2025"
+    },
+    {
+     "from": "2026-01-01",
+     "value": 9420,
+     "source": "M.P. 2025 poz. 1206"
+    }
+   ]
+  },
+  {
+   "id": "zus.annual_cap",
+   "kind": "law",
+   "unit": "PLN",
+   "says_pl": "Roczny limit podstawy emerytalnej i rentowej",
+   "entries": [
+    {
+     "from": "2005-01-01",
+     "expr": "30 * p.wage.projected_average",
+     "source": "ustawa o sus art. 19 ust. 1: 30-krotność prognozowanego przeciętnego wynagrodzenia"
+    }
+   ]
+  },
+  {
+   "id": "zus.employee.pension",
+   "kind": "law",
+   "unit": "1",
+   "says_pl": "Składka emerytalna pracownika",
+   "entries": [
+    {
+     "from": "1999-01-01",
+     "value": 0.0976,
+     "source": "ustawa o sus art. 22 ust. 1 pkt 1: 19,52% po połowie"
+    }
+   ]
+  },
+  {
+   "id": "zus.employer.pension",
+   "kind": "law",
+   "unit": "1",
+   "says_pl": "Składka emerytalna pracodawcy",
+   "entries": [
+    {
+     "from": "1999-01-01",
+     "value": 0.0976,
+     "source": "ustawa o sus art. 22 ust. 1 pkt 1"
+    }
+   ]
+  },
+  {
+   "id": "zus.employee.disability",
+   "kind": "law",
+   "unit": "1",
+   "says_pl": "Składka rentowa pracownika",
+   "entries": [
+    {
+     "from": "2012-02-01",
+     "value": 0.015,
+     "source": "ustawa o sus art. 22 ust. 1 pkt 2"
+    }
+   ]
+  },
+  {
+   "id": "zus.employee.sickness",
+   "kind": "law",
+   "unit": "1",
+   "says_pl": "Składka chorobowa pracownika",
+   "entries": [
+    {
+     "from": "1999-01-01",
+     "value": 0.0245,
+     "source": "ustawa o sus art. 22 ust. 1 pkt 3"
+    }
+   ]
+  },
+  {
+   "id": "health.rate",
+   "kind": "law",
+   "unit": "1",
+   "says_pl": "Składka zdrowotna (skala)",
+   "entries": [
+    {
+     "from": "2003-01-01",
+     "value": 0.09,
+     "source": "ustawa o świadczeniach art. 79 ust. 1"
+    }
+   ]
+  },
+  {
+   "id": "pit.scale",
+   "kind": "law",
+   "unit": "table:PLN",
+   "says_pl": "Skala podatkowa",
+   "entries": [
+    {
+     "from": "2022-07-01",
+     "value": [
+      [
+       0,
+       0.12
+      ],
+      [
+       120000,
+       0.32
+      ]
+     ],
+     "source": "ustawa o PIT art. 27 ust. 1 (Dz.U. 2022 poz. 1265)"
+    }
+   ]
+  },
+  {
+   "id": "pit.reduction",
+   "kind": "law",
+   "unit": "PLN",
+   "says_pl": "Kwota zmniejszająca podatek (rocznie)",
+   "entries": [
+    {
+     "from": "2022-07-01",
+     "value": 3600,
+     "source": "ustawa o PIT art. 27 ust. 1"
+    }
+   ]
+  },
+  {
+   "id": "pit.reduction_monthly",
+   "kind": "law",
+   "unit": "PLN",
+   "says_pl": "Kwota zmniejszająca zaliczkę (miesięcznie, z PIT-2)",
+   "entries": [
+    {
+     "from": "2022-01-01",
+     "expr": "p.pit.reduction / 12",
+     "source": "ustawa o PIT art. 32 ust. 3: 1/12 kwoty zmniejszającej"
+    }
+   ]
+  },
+  {
+   "id": "pit.kup_employee",
+   "kind": "law",
+   "unit": "PLN",
+   "says_pl": "Koszty uzyskania przychodu z etatu (miesięcznie)",
+   "entries": [
+    {
+     "from": "2019-01-01",
+     "value": 250,
+     "source": "ustawa o PIT art. 22 ust. 2 pkt 1"
+    }
+   ]
+  },
+  {
+   "id": "pit.kup_commuter",
+   "kind": "law",
+   "unit": "PLN",
+   "says_pl": "Podwyższone koszty dla dojeżdżających",
+   "entries": [
+    {
+     "from": "2019-01-01",
+     "value": 300,
+     "source": "ustawa o PIT art. 22 ust. 2 pkt 2"
+    }
+   ]
+  }
+ ],
+ "templates": [
+  {
+   "id": "employment_pl@2022",
+   "kind": "law",
+   "title_pl": "Umowa o pracę: składki, zdrowotna, zaliczka PIT",
+   "status": "tested",
+   "says": "Each month the employer takes social contributions, health and a tax advance out of the gross pay and pays the rest. The structure holds since Polski Ład (2022); every amount is a dated Value.",
+   "sources": [
+    "ustawa o PIT art. 22 ust. 2, art. 27, art. 32",
+    "ustawa o sus art. 19, 22",
+    "ustawa o świadczeniach opieki zdrowotnej art. 79, 81",
+    "Kodeks pracy art. 85"
+   ],
+   "joins": [
+    "pit_return@2022"
+   ],
+   "params": {
+    "job": {
+     "type": "instance",
+     "attach": true,
+     "needs": {
+      "gross": "PLN"
+     },
+     "ask_pl": "Do której pracy?"
+    },
+    "account": {
+     "type": "place",
+     "unit": "PLN",
+     "ask_pl": "Na które konto wpływa pensja?"
+    },
+    "employer": {
+     "type": "place",
+     "default": "pracodawca",
+     "says_pl": "kto płaci"
+    },
+    "pay_on": {
+     "type": "text",
+     "default": "next_month:10",
+     "says_pl": "dzień wypłaty (Kodeks pracy art. 85: do 10. następnego miesiąca)"
+    },
+    "commuter": {
+     "type": "bool",
+     "default": false,
+     "ask_pl": "Czy dojeżdżasz z innej miejscowości (koszty 300 zł)?"
+    },
+    "pit2": {
+     "type": "bool",
+     "default": true,
+     "ask_pl": "Czy złożyłeś PIT-2 u pracodawcy?"
+    },
+    "form": {
+     "type": "enum",
+     "values": [
+      "skala"
+     ],
+     "fixed": "skala",
+     "says_pl": "Pensja z etatu jest zawsze na skali."
+    }
+   },
+   "lines": [
+    {
+     "id": "soc.cap_base",
+     "says_pl": "Podstawa emerytalna i rentowa do rocznego limitu",
+     "every": "month",
+     "unit": "PLN",
+     "value": "max(0, min(v('gross', in.job), p.zus.annual_cap - ytd_before('gross', in.job)))"
+    },
+    {
+     "id": "soc.pension",
+     "says_pl": "Emerytalna",
+     "every": "month",
+     "unit": "PLN",
+     "value": "grosze(v('soc.cap_base') * p.zus.employee.pension)"
+    },
+    {
+     "id": "soc.disability",
+     "says_pl": "Rentowa",
+     "every": "month",
+     "unit": "PLN",
+     "value": "grosze(v('soc.cap_base') * p.zus.employee.disability)"
+    },
+    {
+     "id": "soc.sickness",
+     "says_pl": "Chorobowa",
+     "every": "month",
+     "unit": "PLN",
+     "value": "grosze(v('gross', in.job) * p.zus.employee.sickness)"
+    },
+    {
+     "id": "soc.total",
+     "says_pl": "Składki społeczne razem",
+     "every": "month",
+     "unit": "PLN",
+     "value": "grosze(v('soc.pension') + v('soc.disability') + v('soc.sickness'))"
+    },
+    {
+     "id": "health",
+     "says_pl": "Zdrowotna 9%",
+     "every": "month",
+     "unit": "PLN",
+     "value": "grosze((v('gross', in.job) - v('soc.total')) * p.health.rate)"
+    },
+    {
+     "id": "income",
+     "says_pl": "Dochód",
+     "every": "month",
+     "unit": "PLN",
+     "value": "v('gross', in.job) - if(in.commuter, p.pit.kup_commuter, p.pit.kup_employee) - v('soc.total')"
+    },
+    {
+     "id": "tax.base",
+     "says_pl": "Podstawa do złotego",
+     "every": "month",
+     "unit": "PLN",
+     "value": "zl(max(0, v('income')))"
+    },
+    {
+     "id": "pit.advance",
+     "says_pl": "Zaliczka PIT",
+     "every": "month",
+     "unit": "PLN",
+     "value": "zl(max(0, brackets(p.pit.scale, ytd('tax.base')) - brackets(p.pit.scale, ytd_before('tax.base')) - if(in.pit2, p.pit.reduction_monthly, 0)))",
+     "pay": {
+      "from": "in.employer",
+      "to": "urzad_skarbowy"
+     },
+     "on": "next_month:20",
+     "bd": "next"
+    },
+    {
+     "id": "net",
+     "says_pl": "Na konto",
+     "every": "month",
+     "on": "in.pay_on",
+     "bd": "prev",
+     "unit": "PLN",
+     "value": "grosze(v('gross', in.job) - v('soc.total') - v('health') - v('pit.advance'))",
+     "pay": {
+      "from": "in.employer",
+      "to": "in.account",
+      "match": "wynagrodzenie"
+     }
+    },
+    {
+     "id": "pension.total",
+     "says_pl": "Na emeryturę razem z częścią pracodawcy",
+     "every": "month",
+     "unit": "PLN",
+     "value": "v('soc.pension') + grosze(v('soc.cap_base') * p.zus.employer.pension)"
+    },
+    {
+     "id": "zus.pay",
+     "says_pl": "Pracodawca przekazuje do ZUS",
+     "every": "month",
+     "on": "next_month:15",
+     "unit": "PLN",
+     "value": "v('soc.total') + v('health')",
+     "pay": {
+      "from": "in.employer",
+      "to": "zus"
+     },
+     "bd": "next"
+    }
+   ],
+   "tests": [
+    {
+     "id": "min_wage",
+     "says": "4 806 brutto, styczeń 2026",
+     "source": "Infor Kadry (inFakt zgodny): https://kadry.infor.pl/kadry/wynagrodzenia/wynagrodzenie-minimalne/7563884,4806-zl-brutto-ile-to-netto-na-umowie-o-prace.html",
+     "args": {
+      "job": "t_job",
+      "account": "konto"
+     },
+     "others": [
+      {
+       "id": "t_job",
+       "template": "job_pl@1",
+       "args": {
+        "gross": 4806,
+        "person": "me"
+       }
+      }
+     ],
+     "year": 2026,
+     "expect": [
+      {
+       "line": "net",
+       "period": "2026-01",
+       "value": 3605.85
+      }
+     ],
+     "collected_by": "research agent (tax prototype)"
+    },
+    {
+     "id": "g7000",
+     "says": "7 000 brutto, styczeń 2026",
+     "source": "Rzeczpospolita, kalkulator brutto netto 2026: https://mk.rp.pl/blog/kalkulator-brutto-netto-2026/",
+     "args": {
+      "job": "t_job",
+      "account": "konto"
+     },
+     "others": [
+      {
+       "id": "t_job",
+       "template": "job_pl@1",
+       "args": {
+        "gross": 7000,
+        "person": "me"
+       }
+      }
+     ],
+     "year": 2026,
+     "expect": [
+      {
+       "line": "net",
+       "period": "2026-01",
+       "value": 5101.67
+      }
+     ],
+     "collected_by": "research agent (tax prototype)"
+    },
+    {
+     "id": "g10000",
+     "says": "10 000 brutto, styczeń 2026",
+     "source": "zarabiaj.pl: https://www.zarabiaj.pl/kalkulator-wynagrodzen/10000-brutto/",
+     "args": {
+      "job": "t_job",
+      "account": "konto"
+     },
+     "others": [
+      {
+       "id": "t_job",
+       "template": "job_pl@1",
+       "args": {
+        "gross": 10000,
+        "person": "me"
+       }
+      }
+     ],
+     "year": 2026,
+     "expect": [
+      {
+       "line": "net",
+       "period": "2026-01",
+       "value": 7147.39
+      }
+     ],
+     "collected_by": "research agent (tax prototype)"
+    },
+    {
+     "id": "g15000",
+     "says": "15 000 brutto, styczeń 2026 (portal podaje ok. 10 555)",
+     "source": "Just Join IT, B2B vs UoP 2026: https://justjoin.it/blog/b2b-vs-uop-w-it-co-sie-bardziej-oplaca-programiscie-w-2026-roku",
+     "args": {
+      "job": "t_job",
+      "account": "konto"
+     },
+     "others": [
+      {
+       "id": "t_job",
+       "template": "job_pl@1",
+       "args": {
+        "gross": 15000,
+        "person": "me"
+       }
+      }
+     ],
+     "year": 2026,
+     "expect": [
+      {
+       "line": "net",
+       "period": "2026-01",
+       "value": 10555.58,
+       "tol": 1
+      }
+     ],
+     "collected_by": "research agent (tax prototype)"
+    },
+    {
+     "id": "commuter",
+     "says": "7 000 brutto, koszty dojazdu 300 zł",
+     "source": "reference.ts z prototypu podatkowego (niezależna implementacja pętlami, pisana bez wglądu w szablony)",
+     "collected_by": "oracle",
+     "args": {
+      "job": "t_job",
+      "account": "konto",
+      "commuter": true
+     },
+     "others": [
+      {
+       "id": "t_job",
+       "template": "job_pl@1",
+       "args": {
+        "gross": 7000,
+        "person": "me"
+       }
+      }
+     ],
+     "year": 2026,
+     "expect": [
+      {
+       "line": "net",
+       "period": "2026-01",
+       "value": 5107.67
+      }
+     ]
+    },
+    {
+     "id": "no_pit2",
+     "says": "7 000 brutto bez PIT-2 (bez kwoty zmniejszającej)",
+     "source": "reference.ts z prototypu podatkowego (niezależna implementacja pętlami, pisana bez wglądu w szablony)",
+     "collected_by": "oracle",
+     "args": {
+      "job": "t_job",
+      "account": "konto",
+      "pit2": false
+     },
+     "others": [
+      {
+       "id": "t_job",
+       "template": "job_pl@1",
+       "args": {
+        "gross": 7000,
+        "person": "me"
+       }
+      }
+     ],
+     "year": 2026,
+     "expect": [
+      {
+       "line": "net",
+       "period": "2026-01",
+       "value": 4801.67
+      }
+     ]
+    },
+    {
+     "id": "cap",
+     "says": "30 000 brutto: roczny limit 282 600 przekroczony w październiku",
+     "source": "reference.ts z prototypu podatkowego (niezależna implementacja pętlami, pisana bez wglądu w szablony)",
+     "collected_by": "oracle",
+     "args": {
+      "job": "t_job",
+      "account": "konto"
+     },
+     "others": [
+      {
+       "id": "t_job",
+       "template": "job_pl@1",
+       "args": {
+        "gross": 30000,
+        "person": "me"
+       }
+      }
+     ],
+     "year": 2026,
+     "expect": [
+      {
+       "line": "soc.cap_base",
+       "period": "2026-10",
+       "value": 12600
+      },
+      {
+       "line": "net",
+       "period": "2026-05",
+       "value": 19144.17
+      },
+      {
+       "line": "net",
+       "period": "2026-10",
+       "value": 16809.08
+      },
+      {
+       "line": "net",
+       "period": "2026-11",
+       "value": 17646.15
+      }
+     ]
+    },
+    {
+     "id": "dates",
+     "says": "Terminy: pensja do 10. (dzień wolny: dzień wcześniej), zaliczka PIT do 20., ZUS do 15. następnego miesiąca; do ZUS za luty: społeczne 959,70 + zdrowotna 543,63 (reference.ts)",
+     "source": "Kodeks pracy art. 85 § 2–3; ustawa o PIT art. 38 ust. 1; ustawa o sus art. 47 ust. 1 pkt 3; Ordynacja podatkowa art. 12 § 5: termin w dzień wolny przesuwa się na następny dzień roboczy",
+     "collected_by": "author",
+     "args": {
+      "job": "t_job",
+      "account": "konto",
+      "pay_on": "next_month:10"
+     },
+     "others": [
+      {
+       "id": "t_job",
+       "template": "job_pl@1",
+       "args": {
+        "gross": 7000,
+        "person": "me"
+       }
+      }
+     ],
+     "year": 2026,
+     "expect": [
+      {
+       "line": "net",
+       "period": "2026-01",
+       "date": "2026-02-10"
+      },
+      {
+       "line": "net",
+       "period": "2026-04",
+       "date": "2026-05-08"
+      },
+      {
+       "line": "pit.advance",
+       "period": "2026-01",
+       "date": "2026-02-20"
+      },
+      {
+       "line": "zus.pay",
+       "period": "2026-01",
+       "date": "2026-02-16"
+      },
+      {
+       "line": "zus.pay",
+       "period": "2026-02",
+       "value": 1503.33
+      }
+     ]
+    },
+    {
+     "id": "oracle_7123_45",
+     "says": "7 123,45 brutto: grosze w każdym kroku",
+     "source": "reference.ts z prototypu podatkowego: niezależna implementacja pętlami, pisana bez wglądu w szablony",
+     "collected_by": "oracle",
+     "args": {
+      "job": "t_job",
+      "account": "konto"
+     },
+     "others": [
+      {
+       "id": "t_job",
+       "template": "job_pl@1",
+       "args": {
+        "gross": 7123.45,
+        "person": "me"
+       }
+      }
+     ],
+     "year": 2026,
+     "expect": [
+      {
+       "line": "soc.total",
+       "period": "2026-01",
+       "value": 976.62
+      },
+      {
+       "line": "health",
+       "period": "2026-01",
+       "value": 553.21
+      },
+      {
+       "line": "tax.base",
+       "period": "2026-01",
+       "value": 5897
+      },
+      {
+       "line": "pit.advance",
+       "period": "2026-01",
+       "value": 408
+      },
+      {
+       "line": "net",
+       "period": "2026-01",
+       "value": 5185.62
+      },
+      {
+       "line": "zus.pay",
+       "period": "2026-04",
+       "date": "2026-05-15"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "pit_return@2022",
+   "kind": "law",
+   "title_pl": "Zeznanie roczne na skali (PIT-37), samodzielnie lub wspólnie",
+   "status": "tested",
+   "says": "After the year: the scale on the whole year's income, at the law in force on 31 December, less every advance paid. Married couples may split their income in half and pay twice the tax on one half.",
+   "sources": [
+    "ustawa o PIT art. 6 ust. 2, art. 27 ust. 1, art. 45 ust. 1"
+   ],
+   "params": {
+    "a": {
+     "type": "instances",
+     "needs": {
+      "income": "PLN",
+      "pit.advance": "PLN"
+     },
+     "ask_pl": "Czyje dochody na skali (jedna osoba)?"
+    },
+    "b": {
+     "type": "instances",
+     "default": [],
+     "needs": {
+      "income": "PLN",
+      "pit.advance": "PLN"
+     },
+     "ask_pl": "Rozliczasz się wspólnie z małżonkiem? Jego dochody."
+    },
+    "account": {
+     "type": "place",
+     "unit": "PLN",
+     "ask_pl": "Z którego konta dopłata (i na które zwrot)?"
+    }
+   },
+   "checks": [
+    {
+     "rule": "and(every_param(in.a, 'form', 'skala'), every_param(in.b, 'form', 'skala'))",
+     "says_pl": "W tym zeznaniu tylko dochody na skali; wspólnie można się rozliczać tylko na skali.",
+     "level": "error"
+    }
+   ],
+   "lines": [
+    {
+     "id": "base_a",
+     "says_pl": "Dochód pierwszej osoby",
+     "every": "year",
+     "unit": "PLN",
+     "value": "zl(max(0, year_sum(in.a, 'income')))"
+    },
+    {
+     "id": "base_b",
+     "says_pl": "Dochód małżonka",
+     "every": "year",
+     "unit": "PLN",
+     "value": "zl(max(0, year_sum(in.b, 'income')))"
+    },
+    {
+     "id": "tax",
+     "says_pl": "Podatek za rok",
+     "every": "year",
+     "unit": "PLN",
+     "value": "if(count(in.b) > 0, zl(2 * max(0, brackets(p.pit.scale, (v('base_a') + v('base_b')) / 2) - p.pit.reduction)), zl(max(0, brackets(p.pit.scale, v('base_a')) - p.pit.reduction)))"
+    },
+    {
+     "id": "advances",
+     "says_pl": "Zaliczki zapłacone w roku",
+     "every": "year",
+     "unit": "PLN",
+     "value": "year_sum(in.a, 'pit.advance') + year_sum(in.b, 'pit.advance')"
+    },
+    {
+     "id": "due",
+     "says_pl": "Dopłata (albo zwrot, gdy ujemne)",
+     "every": "year",
+     "on": "next_year:04-30",
+     "unit": "PLN",
+     "value": "v('tax') - v('advances')",
+     "pay": {
+      "from": "in.account",
+      "to": "urzad_skarbowy",
+      "reverse": true,
+      "match": "pit_roczny"
+     },
+     "bd": "next"
+    }
+   ],
+   "tests": [
+    {
+     "id": "alone",
+     "says": "Sam, 15 000 brutto co miesiąc: dochód 12 × 12 693,50 = 152 322; 12% do 120 000, 32% powyżej, minus 3 600 = 21 143",
+     "source": "ustawa o PIT art. 27 ust. 1 (wyliczenie ręczne na dochodzie z reference.ts)",
+     "collected_by": "author",
+     "args": {
+      "a": [
+       "t_emp"
+      ],
+      "account": "konto"
+     },
+     "others": [
+      {
+       "id": "t_job",
+       "template": "job_pl@1",
+       "args": {
+        "gross": 15000,
+        "person": "me"
+       }
+      },
+      {
+       "id": "t_emp",
+       "template": "employment_pl@2022",
+       "args": {
+        "job": "t_job",
+        "account": "konto"
+       }
+      }
+     ],
+     "year": 2026,
+     "expect": [
+      {
+       "line": "base_a",
+       "period": "2026",
+       "value": 152322
+      },
+      {
+       "line": "tax",
+       "period": "2026",
+       "value": 21143
+      },
+      {
+       "line": "due",
+       "period": "2026",
+       "date": "2027-04-30"
+      }
+     ]
+    },
+    {
+     "id": "joint",
+     "says": "Wspólnie z małżonkiem (3 000 brutto, dochód 28 064): 2 × (12% × 90 193 − 3 600) = 14 446",
+     "source": "ustawa o PIT art. 6 ust. 2 (wyliczenie ręczne)",
+     "collected_by": "author",
+     "args": {
+      "a": [
+       "t_emp"
+      ],
+      "b": [
+       "t_emp2"
+      ],
+      "account": "konto"
+     },
+     "others": [
+      {
+       "id": "t_job",
+       "template": "job_pl@1",
+       "args": {
+        "gross": 15000,
+        "person": "me"
+       }
+      },
+      {
+       "id": "t_emp",
+       "template": "employment_pl@2022",
+       "args": {
+        "job": "t_job",
+        "account": "konto"
+       }
+      },
+      {
+       "id": "t_job2",
+       "template": "job_pl@1",
+       "args": {
+        "gross": 3000,
+        "person": "wife"
+       }
+      },
+      {
+       "id": "t_emp2",
+       "template": "employment_pl@2022",
+       "args": {
+        "job": "t_job2",
+        "account": "konto"
+       }
+      }
+     ],
+     "year": 2026,
+     "expect": [
+      {
+       "line": "base_b",
+       "period": "2026",
+       "value": 28064
+      },
+      {
+       "line": "tax",
+       "period": "2026",
+       "value": 14446
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "instances": [
+  {
+   "id": "pit_joint",
+   "template": "pit_return@2022",
+   "label_pl": "PIT-37 wspólnie z żoną",
+   "args": {
+    "a": [
+     "my_tax"
+    ],
+    "b": [
+     "wife_tax"
+    ],
+    "account": "konto"
+   }
+  }
+ ]
+}

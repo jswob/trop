@@ -1,0 +1,41 @@
+part pl_benefits
+  tally 1
+  law
+  note "Świadczenie wychowawcze 800+: na każde dziecko do 18 lat mieszkające w Polsce, od miesiąca wniosku albo od miesiąca urodzenia, gdy wniosek złożono w ciągu 3 miesięcy."
+  note "Wycinek przykładowy; nie przeszedł bramki."
+
+source b800_act "Ustawa o pomocy państwa w wychowywaniu dzieci (tekst jednolity)"
+
+input b800_age: int
+
+input b800_amount: money PLN
+
+input b800_window: int
+
+input claim_800[c in person]: date question "Kiedy złożono wniosek o 800+ dla tego dziecka?"
+
+def b800_due[c in person, m in month]: bool
+  note "wniosek '-': jeszcze nie złożony; wtedy świadczenia nie ma, a wniosek złożony później dopłaca miesiące wstecz przez 'arrears' swojej wersji"
+  rule base v b800_2024 = (is_child[c] and born[c] < end_of(m) and residence[c, m] = pl and claim_800[c] != - and m >= b800_from[c] and age(born[c], add_days(end_of(m), -1)) < b800_age)
+
+def b800_from[c in person]: month
+  rule base v b800_2024 = month_of(claim_800[c])
+  rule early excepts base v b800_2024 when claim_800[c] <= add_months(born[c], b800_window) = month_of(born[c])
+
+def is_child[c in person]: bool = any(p in person: parent[c, p])
+
+pay b800_pay[c in person, m in month]
+  from zus
+  to konto
+  amount b800_amount
+  on next_business(day_of(m, 20), holidays_pl)
+  for m
+  when b800_due[c, m]
+
+version b800_2024
+  cite b800_act
+  governs 2024..
+  known 2023-08-30
+  b800_age = 18 "art. 4 ust. 2"
+  b800_amount = 800 "art. 5 ust. 1"
+  b800_window = 3 "art. 26 ust. 2"

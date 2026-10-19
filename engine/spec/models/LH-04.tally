@@ -1,0 +1,245 @@
+model lh04
+  tally 1
+  on 2026-10-18
+  note "Polish loss carry-forward, art. 9 ust. 3 ustawy o PIT: up to 50% of a loss in each of the next five tax years, or once up to 5 000 000 zł with the rest capped at 50% a year."
+  note "Each loss is a key of lcase, owned by a taxpayer of tp. A year's deduction follows the taxpayer's election for that loss and year (how_el): nothing, a fixed amount, the most under the 50% cap, or the one-off."
+  note "A deduction is limited by the income from the same source. The keyed fill use matches, in each year, what each loss's election allows (want) with its taxpayer's income that year, so several losses of one taxpayer share that income. What a loss has left goes to the next year through avail, which reads use[y - 1] by way of left and ded."
+
+source du2018_2244 "Ustawa z dnia 9 listopada 2018 r. o zmianie niektórych ustaw w celu wprowadzenia uproszczeń dla przedsiębiorców w prawie podatkowym i gospodarczym (Dz. U. 2018 poz. 2244); art. 7 pkt 3 gives art. 9 ust. 3 ustawy o PIT its present wording" at "https://api.sejm.gov.pl/eli/acts/DU/2018/2244/text.pdf"
+
+source du2023_1059 "Ustawa z dnia 26 maja 2023 r. o zmianie ustawy o podatku od towarów i usług oraz niektórych innych ustaw (Dz. U. 2023 poz. 1059); art. 4 pkt 2 gives art. 9 ust. 6 ustawy o PIT its present wording" at "https://api.sejm.gov.pl/eli/acts/DU/2023/1059/text.pdf"
+
+source mf_strata "Ministerstwo Finansów, Odliczenie straty PIT (podatki.gov.pl), data publikacji 15.12.2025, data aktualizacji 16.10.2026" at "https://www.podatki.gov.pl/ulgi-i-odliczenia/odliczenie-straty-pit"
+
+source modeller "The modeller's readings of facts the sources leave open, each stated with its reason"
+
+source podatnik "Podatnik.info, Rozliczenie straty z giełdy w PIT-38 (datePublished 2024-02-01, dateModified 2025-03-17)" at "https://www.podatnik.info/publikacje/rozliczenie-straty-z-gieldy-w-pit-38,30518b"
+
+source taxmachine "taxmachine.pl, Strata podatkowa: jak odliczyć stratę z lat ubiegłych (datePublished 2026-05-25)" at "https://taxmachine.pl/podatki/strata-podatkowa"
+
+axis c25
+  m1 "case C's 60 000 zł in 2025 was deducted under the 50% method, so the one-off is still unused in 2026"
+  m2 "case C's 60 000 zł in 2025 was the one-off, so 2026 is capped at 50% of the loss"
+
+index howk = [nothing, fixed, max50, oneoff]
+
+index lcase = [la, lb24, lb25, lc, ld, le, lf, lg, lh]
+
+index srck = [business, funds, shares]
+
+index tp = [ta, tb, tc, td, te, tf, tg, th]
+
+index tyr = year 2022..2032
+
+input fixed_amt[l in lcase, y in tyr]: money PLN
+
+input half_share: num
+
+input how_alt[l in lcase, y in tyr]: key howk
+
+input how_el[l in lcase, y in tyr]: key howk
+
+input income[t in tp, y in tyr]: money PLN
+
+input loss_amt[l in lcase]: money PLN
+
+input loss_src[l in lcase]: key srck
+
+input loss_yr[l in lcase]: key tyr
+
+input oneoff_cap: money PLN
+
+input payer[l in lcase]: key tp
+
+input src_ok[s in srck]: bool
+
+input window_yrs: int
+
+def avail[l in lcase, y in tyr]: num PLN
+  rule first when pos(y) = 1 = loss_amt[l]
+  rule next when pos(y) > 1 = left[l, y - 1]
+
+def cap50[l in lcase]: num PLN = loss_amt[l] * half_share
+
+def ded[l in lcase, y in tyr]: num PLN = sum(t in tp: use[y].taken[l, t])
+
+def how[l in lcase, y in tyr]: key howk
+  rule alt excepts base when how_alt[l, y] != - and c25 = m2 = how_alt[l, y]
+  rule base = how_el[l, y]
+
+def in_window[l in lcase, y in tyr]: bool = y > loss_yr[l] and y <= loss_yr[l] + window_yrs
+
+def left[l in lcase, y in tyr]: num PLN = avail[l, y] - ded[l, y]
+
+def limit[l in lcase, y in tyr]: num PLN
+  rule base = min(avail[l, y], cap50[l])
+  rule oneoff excepts base when how[l, y] = oneoff and not oneoff_before[l, y] = min(avail[l, y], oneoff_cap)
+
+def oneoff_before[l in lcase, y in tyr]: bool = any(y2 in tyr where y2 < y and in_window[l, y2]: how[l, y2] = oneoff)
+
+def taxable[t in tp, y in tyr]: num PLN = income[t, y] - sum(l in lcase where payer[l] = t: ded[l, y])
+
+def want[l in lcase, y in tyr]: num PLN
+  rule base = 0
+  rule fixed excepts base, most when in_window[l, y] and how[l, y] = fixed = fixed_amt[l, y]
+  rule most excepts base when in_window[l, y] and how[l, y] != nothing = limit[l, y]
+  rule too_much excepts base, fixed, most when in_window[l, y] and how[l, y] = fixed and fixed_amt[l, y] > limit[l, y] = ? "The elected amount is more than art. 9 ust. 3 allows this year."
+
+fill use[y in tyr]
+  note "No law states an order among the losses of one taxpayer in one year, so the order is the losses' key order. No asked figure depends on it: only case B has two losses, and its 2026 income covers both."
+  supply want[l, y] for l in lcase
+  demand income[t, y] for t in tp
+  arc payer[l] = t and in_window[l, y]
+  order l
+
+ask a_cap50: cap50[la]
+
+ask a_oneoff_2023: ded[la, 2023] with income[ta, 2023] = 10000, how_el[la, 2023] = oneoff
+
+ask b_from_lb24: max(limit[lb24, 2026] as if {how_el[lb24, 2026] = oneoff}, limit[lb24, 2026] as if {how_el[lb24, 2026] = max50})
+
+ask b_from_lb25: max(limit[lb25, 2026] as if {how_el[lb25, 2026] = oneoff}, limit[lb25, 2026] as if {how_el[lb25, 2026] = max50})
+
+ask b_total: max((ded[lb24, 2026] + ded[lb25, 2026]) as if {how_el[lb24, 2026] = oneoff, how_el[lb25, 2026] = oneoff}, (ded[lb24, 2026] + ded[lb25, 2026]) as if {how_el[lb24, 2026] = oneoff, how_el[lb25, 2026] = max50}, (ded[lb24, 2026] + ded[lb25, 2026]) as if {how_el[lb24, 2026] = max50, how_el[lb25, 2026] = oneoff}, (ded[lb24, 2026] + ded[lb25, 2026]) as if {how_el[lb24, 2026] = max50, how_el[lb25, 2026] = max50})
+
+ask c_oneoff_2026: limit[lc, 2026]
+
+ask d_deductible: src_ok[loss_src[ld]] and in_window[ld, 2026]
+
+ask d_oneoff_2026: limit[ld, 2026] with how_el[ld, 2026] = oneoff
+
+ask e_ded: ded[le, y] for y in [2025, 2026, 2027, 2028, 2029]
+
+ask e_left: left[le, y] for y in [2025, 2026, 2027, 2028, 2029]
+
+ask e_taxable: taxable[te, y] for y in [2025, 2026, 2027, 2028, 2029]
+
+ask f_ded: ded[lf, y] for y in [2025, 2026, 2027, 2028]
+
+ask f_left: left[lf, y] for y in [2025, 2026, 2027, 2028]
+
+ask f_taxable: taxable[tf, y] for y in [2025, 2026, 2027, 2028]
+
+ask g_ded: ded[lg, y] for y in [2025, 2026, 2027]
+
+ask g_left: left[lg, y] for y in [2025, 2026, 2027]
+
+ask g_taxable: taxable[tg, y] for y in [2025, 2026, 2027]
+
+ask h_ded: ded[lh, y] for y in [2025, 2026]
+
+ask h_left: left[lh, y] for y in [2025, 2026]
+
+ask h_taxable: taxable[th, y] for y in [2025, 2026]
+
+version pit_2018_2244
+  cite du2018_2244
+  governs 2019..
+  known 2018-11-30
+  note "Art. 9 ust. 3 ustawy o PIT in its present wording, given by art. 7 pkt 3 of this act: promulgated 30 November 2018 (ELI DU/2018/2244), in force 1 January 2019. The rows are read in the tekst jednolity Dz. U. z 2025 r. poz. 163, which restates them and isn't a version of them (LANGUAGE §5.3)."
+  note "Art. 38 ust. 1 applies the new wording to losses incurred from 2019 on. The span governs the year of the deduction, not of the loss; every loss here is from 2022 to 2025, so the two agree."
+  half_share = 0.5 "art. 9 ust. 3 pkt 1 i 2: nie może przekroczyć 50 % wysokości tej straty"
+  oneoff_cap = 5000000 "art. 9 ust. 3 pkt 2: o kwotę nieprzekraczającą 5 000 000 zł"
+  src_ok[business] = true "art. 9 ust. 3: strata ze źródła przychodów"
+  window_yrs = 5 "art. 9 ust. 3: w najbliższych kolejno po sobie następujących pięciu latach podatkowych"
+
+version pit_2023_1059
+  cite du2023_1059
+  governs 2024..
+  known 2023-06-05
+  note "Art. 9 ust. 6 ustawy o PIT in its present wording, given by art. 4 pkt 2 of this act: promulgated 5 June 2023 (ELI DU/2023/1059); art. 4 pkt 2 is in force from 1 January 2024 (art. 35 pkt 5). The rows are read in the tekst jednolity Dz. U. z 2025 r. poz. 163."
+  src_ok[funds] = true "art. 9 ust. 6 pkt 5: z umorzenia, odkupienia, wykupienia albo unicestwienia w inny sposób tytułów uczestnictwa w funduszach kapitałowych"
+  src_ok[shares] = true "art. 9 ust. 6 pkt 1: z odpłatnego zbycia udziałów (akcji) w spółce, udziałów w spółdzielni, papierów wartościowych"
+
+version mf_strata_2026
+  cite mf_strata
+  known 2026-10-18
+  note "Questions 1 and 2 are about business income (działalność gospodarcza); the fund-units question is about PIT-38 capital income."
+  note "The questions are hypothetical: their figures are stipulations, known from the model's on (LANGUAGE §4.5). The page's own dates (published 15.12.2025, updated 16.10.2026) aren't used."
+  fixed_amt[lc, 2025] = 60000 "Pytania i odpowiedzi, question 2: odliczyłem od niego stratę poniesioną w 2024 roku w tej samej wysokości"
+  how_el[lb24, 2025] = nothing "question 1: 2025 was a loss year of the same source, so it had no income to deduct from"
+  how_el[lc, 2025] = fixed "question 2: odliczyłem od niego stratę poniesioną w 2024 roku w tej samej wysokości"
+  how_el[lc, 2026] = oneoff "question 2: W zeznaniu za 2026 rok możesz jednorazowo odliczyć pozostałą, nieodliczoną część straty"
+  income[tb, 2025] = 0 "question 1: in 2025 the source made a loss of 6 000 000 zł, so it had no income"
+  income[tb, 2026] = 20000000 "question 1: dochód z działalności gospodarczej w wysokości 20 000 000 zł"
+  income[tc, 2025] = 60000 "question 2: dochód z działalności w wysokości 60 000 zł"
+  loss_amt[lb24] = 8000000 "question 1: w wysokości 8 000 000 zł"
+  loss_amt[lb25] = 6000000 "question 1: w wysokości 6 000 000 zł"
+  loss_amt[lc] = 200000 "question 2: stratę z działalności gospodarczej w wysokości 200 000 zł"
+  loss_amt[ld] = 20000 "fund-units question: ze stratą 20 000 zł"
+  loss_src[lb24] = business "question 1"
+  loss_src[lb25] = business "question 1"
+  loss_src[lc] = business "question 2"
+  loss_src[ld] = funds "fund-units question: jednostki uczestnictwa w funduszu kapitałowym"
+  loss_yr[lb24] = 2024 "question 1"
+  loss_yr[lb25] = 2025 "question 1"
+  loss_yr[lc] = 2024 "question 2"
+  loss_yr[ld] = 2025 "fund-units question"
+  payer[lb24] = tb
+  payer[lb25] = tb
+  payer[lc] = tc
+  payer[ld] = td
+
+version podatnik_2025
+  cite podatnik
+  known 2026-10-18
+  note "Case A: a share loss on the exchange. The source gives no incomes for 2023-2027; its one-off statement is conditional on 2023 income of at least 10 000 zł."
+  note "The example is hypothetical: its figures are stipulations, known from the model's on (LANGUAGE §4.5). The page's own dates (published 2024-02-01, modified 2025-03-17) aren't used."
+  loss_amt[la] = 10000 "worked example: stratę w wysokości 10 000 zł z tytułu transakcji giełdowych"
+  loss_src[la] = shares "worked example: transakcje giełdowe"
+  loss_yr[la] = 2022 "worked example"
+  payer[la] = ta
+
+version readings
+  cite modeller
+  known 2026-10-18
+  note "Readings that stand for the cases' own facts, so they take the stipulations' known date, the model's on (LANGUAGE §4.5)."
+  how_alt = - "an alternative election exists only where a source leaves the method open"
+  how_alt[lc, 2025] = oneoff "reading m2 of question 2 (mf_strata), which doesn't say under which method the 60 000 zł of 2025 was deducted"
+
+version taxmachine_2026
+  cite taxmachine
+  known 2026-10-18
+  note "Cases E to H are business losses (działalność). H is the same Pan Filip as G, with other incomes."
+  note "The examples are hypothetical: their figures are stipulations, known from the model's on (LANGUAGE §4.5), and so are the assumed elections of G. The page's own date (published 2026-05-25) isn't used."
+  fixed_amt[le, 2025..2029] = 1000 "Przykład 1: Odlicza po 1 000 zł rocznie przez pięć lat"
+  how_el[le, 2025..2029] = fixed "Przykład 1: Odlicza po 1 000 zł rocznie przez pięć lat"
+  how_el[lf, 2025] = nothing "Przykład 2: rozlicza w dwóch wybranych latach (2026 i 2028)"
+  how_el[lf, 2026] = max50 "Przykład 2: Rozlicza po 50% (2 500 zł) w dwóch wybranych latach (2026 i 2028)"
+  how_el[lf, 2027] = nothing "Przykład 2: rozlicza w dwóch wybranych latach (2026 i 2028)"
+  how_el[lf, 2028] = max50 "Przykład 2: Rozlicza po 50% (2 500 zł) w dwóch wybranych latach (2026 i 2028)"
+  how_el[lg, 2025] = oneoff "Przykład 3: W 2025 r. wykorzystuje limit jednorazowy 5 mln zł."
+  how_el[lg, 2026] = max50 assumed "Przykład 3 states no election after 2025; its table deducts the most that income and the 50% cap allow" "Przykład 3"
+  how_el[lg, 2027] = max50 assumed "Przykład 3 states no election after 2025; its table deducts the most that income and the 50% cap allow" "Przykład 3"
+  how_el[lh, 2025] = oneoff "Przykład 4, the same Pan Filip: the 2025 one-off of Przykład 3"
+  how_el[lh, 2026] = max50 "Przykład 4: 50% straty to maksymalnie 3 mln zł rocznie, może odliczyć cały pozostały 1 mln"
+  income[te, 2025] = 1000 "Przykład 1, row Dochód roczny"
+  income[te, 2026] = 1100 "Przykład 1, row Dochód roczny"
+  income[te, 2027] = 1000 "Przykład 1, row Dochód roczny"
+  income[te, 2028] = 1300 "Przykład 1, row Dochód roczny"
+  income[te, 2029] = 2100 "Przykład 1, row Dochód roczny"
+  income[tf, 2025] = 0 "Przykład 2, row Dochód roczny"
+  income[tf, 2026] = 4000 "Przykład 2, row Dochód roczny"
+  income[tf, 2027] = 2100 "Przykład 2, row Dochód roczny"
+  income[tf, 2028] = 6700 "Przykład 2, row Dochód roczny"
+  income[tg, 2025] = 10000000 "Przykład 3, row Dochód roczny: 10 mln"
+  income[tg, 2026] = 500000 "Przykład 3, row Dochód roczny: 500 tys."
+  income[tg, 2027] = 3000000 "Przykład 3, row Dochód roczny: 3 mln"
+  income[th, 2025] = 10000000 "Przykład 4, row Dochód roczny: 10 mln"
+  income[th, 2026] = 2000000 "Przykład 4, row Dochód roczny: 2 mln"
+  loss_amt[le] = 5000 "Przykład 1: Pan Marcin poniósł w 2024 r. stratę 5 000 zł z działalności"
+  loss_amt[lf] = 5000 "Przykład 2: strata 5 000 zł w 2024 r."
+  loss_amt[lg] = 6000000 "Przykład 3: strata 6 000 000 zł w 2024 r."
+  loss_amt[lh] = 6000000 "Przykład 4: the same loss as Przykład 3"
+  loss_src[le] = business "Przykład 1: z działalności"
+  loss_src[lf] = business "Przykład 2"
+  loss_src[lg] = business "Przykład 3"
+  loss_src[lh] = business "Przykład 4"
+  loss_yr[le] = 2024 "Przykład 1"
+  loss_yr[lf] = 2024 "Przykład 2"
+  loss_yr[lg] = 2024 "Przykład 3"
+  loss_yr[lh] = 2024 "Przykład 4"
+  payer[le] = te
+  payer[lf] = tf
+  payer[lg] = tg
+  payer[lh] = th

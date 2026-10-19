@@ -1,0 +1,25 @@
+part asks_core
+  tally 1
+  note "Zapisane pytania gospodarstwa. Plan zmiany (OPERATIONS §7) porównuje je przed i po."
+
+ask explain_room: explain room[2026-11]
+
+ask health_settlement: health_settle[y] for y in [2026, 2027, 2028]
+
+ask ike_left: ike_limit[y] - flows(invest[ike], y) for y in [2026, 2027, 2028]
+
+ask konto_balance: bal(konto, d), bal(konto, d) - vat_owed[d] for d in [2026-10-31, 2026-12-31, 2027-06-30, 2027-12-31]
+
+ask net_worth: sum(x in place where (kind(x) = account or kind(x) = cash or kind(x) = claim or kind(x) = debt) and currency(x) = PLN: bal(x, d)) + sum(w in wrapper: worth(wunits[w], d)) for d in [2026-12-31, 2031-12-31, 2041-12-31, 2059-12-31]
+
+ask pit28: pit28_due[y] for y in [2026, 2027, 2028]
+
+ask pit37: pit37_due[p, y] for p in person, y in [2026, 2027, 2028]
+
+ask replay_september: residuals konto 2026-09
+
+ask social_and_health: zus_social[m], health_month[m] for m in [2026-10, 2027-01, 2028-09]
+
+ask taxes_paid: flows(urzad_skarbowy, y) for y in [2026, 2027, 2028]
+
+ask wife_net: emp_net[wife_acme, m] for m in [2026-10, 2027-01]

@@ -1,0 +1,207 @@
+model cb14
+  tally 1
+  on 2026-10-18
+  note "A US person holds shares in a section 1291 fund: a PFIC, such as a foreign mutual fund, with no QEF or mark-to-market election. Examples A and B are Hodgen's. TAM 200733024 gives one beneficiary's share of a fund's excess distribution; its amounts, dates and names are redacted."
+  note "No tax year, shareholder type or currency is given. Amounts are taken as US dollars, as the case does, and all shares are taken to have one holding period (s. 1291(b)(3)(A))."
+  note "The sources work only the 125% threshold, the total excess distribution and its split among the year's distributions. The daily allocation, the deferred tax at the Line 16c rates and the interest are written too, but the acquisition date, the distribution days, the first PFIC year and the s. 6621 interest aren't given, so they are holes."
+  note "No rounding is stated, so amounts and shares are exact."
+
+source hodgen "PFIC Rules Demystified: 3 Steps To Clarity On IRS Form 8621 (Phil Hodgen, HodgenLaw; updated July 14, 2023)" at "https://hodgen.com/pfic-rules"
+
+source i8621 "Instructions for Form 8621 (Rev. December 2025), IRS" at "https://www.irs.gov/instructions/i8621"
+
+source tam200733024 "Technical Advice Memorandum 200733024 (TAM-162267-05), release date 8/17/2007, IRS" at "https://www.irs.gov/pub/irs-wd/0733024.pdf"
+
+source usc1291 "26 U.S. Code § 1291 - Interest on tax deferral (LII)" at "https://www.law.cornell.edu/uscode/text/26/1291"
+
+axis hold_edge
+  from_acquisition "Hodgen ('3 Steps To Clarity', on the holding period): the holding period starts with the date of acquisition and ends with the date of the distribution, so both days count"
+  from_next_day "s. 1291(a)(3)(A) takes the holding period from s. 1223 (not fetched), read as starting on the day after acquisition (Rev. Rul. 66-7, not fetched); the day of the distribution counts"
+
+index dist = [apr, oct]
+
+index ex = [ex_a, ex_b]
+
+index pyear = year 1987..2025
+  v i8621_2025
+  assumed "the case gives no tax year for the shareholder, so its taxable years are taken as calendar years, with no fiscal anchor: the years of Line 16c's table, which is 'based on calendar year taxpayer'"
+  note "The years of Line 16c's table of highest rates, 1987 to 2025."
+
+input acquired_on[e in ex]: date
+
+input distribution[e in ex, d in dist]: money USD
+
+input excess_multiplier: num
+
+input first_pfic_year[e in ex]: key pyear
+
+input first_year_of_holding[e in ex]: bool
+
+input is_individual[e in ex]: bool
+
+input lookback_years: int
+
+input paid_on[e in ex, d in dist]: date
+
+input prior_total[e in ex]: money USD
+
+input prior_years_held[e in ex]: int
+
+input tam_beneficiaries: int
+
+input tam_fund_share: num
+
+input top_rate[y in pyear]: num
+  note "Line 16c: the highest rate of tax under section 1, for individuals, in effect for each year."
+
+def alloc_year[e in ex, d in dist, y in pyear]: num USD
+  note "s. 1291(a)(1)(A): the excess part is allocated ratably to each day of the holding period; this is the part on the days that fall in year y. Days before 1987 fall in no key of pyear, and are pre-PFIC days (s. 1291(a)(1)(B)(ii))."
+  rule base v usc1291_1986 = daily_amount[e, d] * overlap_days(first_day[e], paid_on[e, d], y)
+
+def daily_amount[e in ex, d in dist]: num USD
+  note "Lines 16a-16b: the excess part divided by the number of days in the holding period."
+  rule base v i8621_2025 = excess_part[e, d] / hold_days[e, d]
+
+def deferred_tax[e in ex]: num USD
+  note "s. 1291(c)(1)(A), (c)(2); Line 16c: the increases in tax for the years of the holding period before each distribution's year, leaving out the pre-PFIC years before the first PFIC year (s. 1291(a)(1)(B)). The foreign tax credit of Line 16d isn't modelled."
+  rule base v usc1291_1988 = sum(d in dist, y in pyear where y >= first_pfic_year[e] and y < year_of(paid_on[e, d]): tax_increase[e, d, y])
+
+def dist_share[e in ex, d in dist]: num = distribution[e, d] / total_dist[e]
+
+def excess_part[e in ex, d in dist]: num USD
+  note "s. 1291(b)(1) and Line 15e(1): the total excess distribution is apportioned among the year's actual distributions, each taking its ratable portion. Ratable is read as in proportion to the distribution's amount, as Hodgen's Step 3 works it."
+  rule base v usc1291_1986 = total_excess[e] * dist_share[e, d]
+
+def first_day[e in ex]: date
+  note "s. 1291(a)(3)(A): the first day of the holding period. Hodgen counts the day of acquisition; s. 1223, which (a)(3)(A) points to, wasn't fetched, so the edge is the axis hold_edge."
+  rule from_acquisition when hold_edge = from_acquisition = acquired_on[e]
+  rule from_next_day when hold_edge = from_next_day = add_days(acquired_on[e], 1)
+
+def hold_days[e in ex, d in dist]: int
+  note "s. 1291(a)(3)(A)(i) and Line 16a: the holding period is treated as ending on the date of the distribution. Its first day and the distribution day are both counted, as overlap_days counts them."
+  note "The rule has a version for each wording of (a)(3)(A) that governs a year of pyear: Pub. L. 100-647's for 1987 to 1997, and Pub. L. 105-34's from 1998. Both end the holding period on the date of the distribution, so the two give one formula."
+  rule base v usc1291_1988 = days(first_day[e], paid_on[e, d]) + 1
+  rule base v usc1291_1997 = days(first_day[e], paid_on[e, d]) + 1
+
+def interest_charge[e in ex]: num USD
+  note "s. 1291(c)(1)(B), (c)(3); Line 16f: the interest on each increase in tax that the deferred tax sums."
+  rule base v usc1291_1988 = sum(d in dist, y in pyear where y >= first_pfic_year[e] and y < year_of(paid_on[e, d]): interest_on[e, d, y])
+
+def interest_on[e in ex, d in dist, y in pyear]: num USD
+  note "s. 1291(c)(3): the interest on tax_increase[e, d, y], from the due date of year y's return to the due date for the year of the distribution, at the rates and by the method of s. 6621 for underpayments. The rates (Rev. Rul. 2024-18) weren't fetched, nor were s. 6621 and s. 6622."
+  rule base v usc1291_1986 = ? "What is the interest under s. 6621 on this increase in tax, from the due date of that year's return to the due date for the distribution's year? The underpayment rates, the compounding method and the due dates aren't given."
+
+def nonexcess[e in ex, d in dist]: num USD
+  note "Line 15e(1): each apportioned amount is a separate excess distribution, and the rest of the distribution is nonexcess."
+  rule base v i8621_2025 = distribution[e, d] - excess_part[e, d]
+
+def prior_average[e in ex]: num USD
+  note "Line 15c and s. 1291(b)(2)(A)(ii): the prior years' total over 3, or over the number of tax years of the holding period before the current year if fewer. The flush text (a prior excess distribution counts only as far as it was included in income) isn't applied: the yearly amounts aren't given."
+  rule base v i8621_2025 = prior_total[e] / min(lookback_years, prior_years_held[e])
+
+def rate_for[e in ex, y in pyear]: num
+  note "s. 1291(c)(2): the highest rate of tax in effect for the year under section 1 (individuals) or section 11 (corporations). Line 16c gives the section 1 rates."
+  rule corporation v usc1291_1986 when not is_individual[e] = ? "What was the highest rate of tax under s. 11 in this year? The corporate rates weren't fetched."
+  rule individual v usc1291_1986 when is_individual[e] = top_rate[y]
+
+def tam_beneficiary_share: num
+  note "TAM 200733024: the excess distribution each U.S. beneficiary of Fund B is treated as receiving, as a share of the gain. Fund B's share is divided equally among the beneficiaries treated as owning through it (s. 1298(a)(3), not fetched)."
+  rule base v tam_2007 = tam_fund_share / tam_beneficiaries
+
+def tax_increase[e in ex, d in dist, y in pyear]: num USD
+  note "s. 1291(c)(2); Line 16c: the part of distribution d allocated to year y, times the highest rate in effect for year y. The deferred tax sums it over the prior PFIC years only; the part allocated to the distribution's own year is ordinary income (s. 1291(a)(1)(B)(i))."
+  rule base v usc1291_1986 = alloc_year[e, d, y] * rate_for[e, y]
+
+def threshold[e in ex]: num USD
+  note "s. 1291(b)(2)(A)(ii) and Line 15d: 125 percent of the prior years' average."
+  rule base v usc1291_1986 = prior_average[e] * excess_multiplier
+
+def total_dist[e in ex]: money USD = sum(d in dist: distribution[e, d])
+
+def total_excess[e in ex]: num USD
+  note "s. 1291(b)(2)(A)-(B) and Line 15e(1): the year's distributions over the threshold, if more, and zero in the year the holding period begins."
+  rule base v usc1291_1986 = max(0, total_dist[e] - threshold[e])
+  rule first_year excepts base v usc1291_1986 when first_year_of_holding[e] = 0
+
+ask ex_a_average: prior_average[ex_a]
+
+ask ex_a_threshold: threshold[ex_a]
+
+ask ex_b_apportioned: dist_share[ex_b, d], excess_part[ex_b, d], nonexcess[ex_b, d] for d in dist
+
+ask ex_b_daily: daily_amount[ex_b, d] for d in dist
+
+ask ex_b_deferred_tax: deferred_tax[ex_b]
+
+ask ex_b_interest: interest_charge[ex_b]
+
+ask ex_b_threshold: threshold[ex_b]
+
+ask ex_b_total: total_dist[ex_b]
+
+ask ex_b_total_excess: total_excess[ex_b]
+
+ask tam_share: tam_beneficiary_share
+
+version usc1291_1986
+  cite usc1291
+  governs 1987-01-01..
+  known 1986-10-22
+  note "Pub. L. 99-514 (Tax Reform Act of 1986), § 1235(a), approved October 22, 1986, added s. 1291, for taxable years of foreign corporations beginning after December 31, 1986 (§ 1235(h)). The act wasn't fetched, so LII's text of the Code stands for it, and LII's source credit records its date: the version is known from the approval (LANGUAGE.md 4.5, Which act)."
+  note "It holds the text whose wording is still the 1986 act's, by LII's amendment notes: (a)(1)(A), (b)(1), (b)(2)(A)(i)-(ii), (b)(2)(B), (c)(2) and (c)(3). The text Pub. L. 100-647 and Pub. L. 105-34 reworded is in usc1291_1988 and usc1291_1997. The flush text Pub. L. 100-647 added to (b)(2)(A) isn't applied (prior_average), and the later amendments (1998 to 2018) touch (b)(3)(F), (d), (e) and (g), which no rule reads."
+  excess_multiplier = 1.25 "§ 1291(b)(2)(A)(ii): '125 percent'"
+  lookback_years = 3 "§ 1291(b)(2)(A)(ii): 'the 3 preceding taxable years'"
+
+version usc1291_1988
+  cite usc1291
+  governs 1987-01-01..
+  known 1988-11-10
+  note "Pub. L. 100-647 (Technical and Miscellaneous Revenue Act of 1988), approved November 10, 1988, with effect as if included in the Tax Reform Act of 1986 (§ 1019(a)). § 1012(p)(12) amended (a)(1)(B)(ii) generally, the pre-PFIC period that deferred_tax and interest_charge leave out. § 1012(p)(14) reworded (a)(3)(A), which LII's 1997 note quotes as it then read: 'The taxpayer's holding period shall be determined under section 1223; except that, for purposes of applying this section to an excess distribution, such holding period shall be treated as ending on the date of such distribution.'"
+  note "The act wasn't fetched, so LII's text of the Code and its notes stand for it, and LII's source credit records its date: the version is known from the approval (LANGUAGE.md 4.5, Which act)."
+
+version usc1291_1997
+  cite usc1291
+  governs 1998-01-01..
+  known 1997-08-05
+  note "Pub. L. 105-34 (Taxpayer Relief Act of 1997), § 1122(b)(3), approved August 5, 1997, amended (a)(3)(A) generally: clause (i), 'such holding period shall be treated as ending on the date of such distribution', has its wording from it, and clause (ii), on stock marked to market under s. 1296, doesn't apply here. § 1124: for taxable years of United States persons beginning after December 31, 1997, which under pyear's calendar years start on 1998-01-01."
+  note "The act wasn't fetched, so LII's text of the Code stands for it, and LII's source credit records its date: the version is known from the approval (LANGUAGE.md 4.5, Which act)."
+
+version tam_2007
+  cite tam200733024
+  known 2007-08-17
+  note "The facts-and-circumstances attribution of Fund B's holding to its beneficiaries isn't modelled; only the equal split is."
+  note "Known from the memorandum's release date, 8/17/2007, printed on it."
+  tam_beneficiaries = 3 "p. 29: 'each of the three children of Individual I'"
+  tam_fund_share = 0.5 "p. 6, Issue and conclusion on Fund B's U.S. beneficiaries: the share of the gain from Corp J's liquidating distribution to Fund B"
+
+version i8621_2025
+  cite i8621
+  known 2025-12-31
+  note "'Tax Consequences for Shareholders of a Section 1291 Fund', 'Excess distributions'; Part V, Line 15 (a single currency), Line 15c, Line 15e(1), Lines 16a-16b and the Line 16c table. No worked figures."
+  note "The instructions are dated on their face by a month, 'Rev. December 2025' ('Revised: 12/2025'). The page also prints a later updated stamp, 'Page Last Reviewed or Updated: 30-Apr-2026' (read on the page 2026-10-19), but the rows and rules read are known to predate it: the PDF of the same revision, https://www.irs.gov/pub/irs-pdf/i8621.pdf, has the same Line 16c table and Line 15c, 15e(1) and 16a-16b text, with an XMP create date of 2025-12-08, a modify date of 2026-01-13 and an HTTP Last-Modified of 13 Jan 2026. So the version takes its own date, the last day of December 2025 (LANGUAGE.md 4.5)."
+  top_rate[1987] = 0.385 "Line 16c, table: 1987, 38.5%"
+  top_rate[1988..1990] = 0.28 "Line 16c, table: 1988-1990, 28%"
+  top_rate[1991..1992] = 0.31 "Line 16c, table: 1991-1992, 31%"
+  top_rate[1993..2000] = 0.396 "Line 16c, table: 1993-2000, 39.6%"
+  top_rate[2001] = 0.391 "Line 16c, table: 2001, 39.1%"
+  top_rate[2002] = 0.386 "Line 16c, table: 2002, 38.6%"
+  top_rate[2003..2012] = 0.35 "Line 16c, table: 2003-2012, 35%"
+  top_rate[2013..2017] = 0.396 "Line 16c, table: 2013-2017, 39.6%"
+  top_rate[2018..2025] = 0.37 "Line 16c, table: 2018-2025, 37%"
+
+version hodgen_examples
+  cite hodgen
+  known 2026-10-18
+  note "'The math', Example (Example A) and 'Form 8621: 3 Steps To Clarity', Example, Steps 1-3 (Example B). Months are given, but no days or year."
+  note "These are the examples' stipulations, so they are known from the model's on date, not from the article's update of July 14, 2023 (LANGUAGE.md 4.5). The assumptions standing for the examples' facts take the same date."
+  acquired_on[ex_b] = ? "On what day did the shareholder acquire the shares? The article gives no acquisition date."
+  distribution[ex_b, apr] = 100 "'Form 8621: 3 Steps To Clarity', Example, Step 1: April"
+  distribution[ex_b, oct] = 150 "'Form 8621: 3 Steps To Clarity', Example, Step 1: October"
+  first_pfic_year[ex_b] = ? "Which was the first taxable year of the holding period in which the fund was a PFIC? The years before it are pre-PFIC years (s. 1291(a)(1)(B)(ii)). The article doesn't say."
+  first_year_of_holding[ex_b] = false assumed "the example finds an excess distribution, so the current year is taken not to be the first year of the holding period (s. 1291(b)(2)(B)); the case doesn't say"
+  is_individual[ex_b] = true assumed "the article points to Form 1040, so the shareholder is taken to be an individual; the case doesn't say"
+  paid_on[ex_b, apr] = ? "On what day was the April distribution received? The article gives the month only, and no year." "'Form 8621: 3 Steps To Clarity', Example, Step 1: April"
+  paid_on[ex_b, oct] = ? "On what day was the October distribution received? The article gives the month only, and no year." "'Form 8621: 3 Steps To Clarity', Example, Step 1: October"
+  prior_average[ex_b] = 180 "Example, Step 1: 'Let's assume' the average of the three prior years"
+  prior_total[ex_a] = 540 "'The math', Example: the distributions received in the three prior years"
+  prior_years_held[ex_a] = 3 "'The math', Example: 'in the three prior years'"

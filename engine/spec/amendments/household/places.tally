@@ -1,0 +1,50 @@
+part places
+  tally 1
+  note "Miejsca gospodarstwa i schemat wyciągów. Miejsca na zewnątrz nazywają, skąd i dokąd płyną pieniądze."
+
+index bank_row: open
+
+index category = [groceries, transport, health_care, other]
+
+place dostawcy: outside PLN
+
+place gotowka: cash PLN
+
+place klienci: outside PLN
+
+place konto: account PLN holds vat_owed
+
+place kredytodawcy: outside PLN
+
+place marek: claim PLN
+
+place pracodawcy: outside PLN
+
+place rynek: outside PLN
+
+place sklepy: outside PLN
+
+place urzad_skarbowy: outside PLN
+
+place wcash[w in wrapper]: account PLN
+
+place wunits[w in wrapper]: holding etf_unit priced etf_price
+
+place wynajmujacy: outside PLN
+
+place zus: outside PLN
+
+input bank[r in bank_row]: movement PLN (cat key category)
+
+version openings_2026
+  cite household
+  known 2025-12-31
+  opening[gotowka] = 600 "portfel"
+  opening[konto] = 24000 "wyciąg za grudzień 2025, saldo końcowe"
+  opening[marek] = 0
+  opening[wcash[ike]] = 0 "rachunek IKE, gotówka"
+  opening[wcash[mak]] = 0 "rachunek maklerski, gotówka"
+  opening[wcash[oki]] = 0 "OKI jeszcze nie istnieje"
+  opening[wunits[ike]] = 150 "rachunek IKE, jednostki"
+  opening[wunits[mak]] = 80 "rachunek maklerski, jednostki"
+  opening[wunits[oki]] = 0 "OKI jeszcze nie istnieje"

@@ -1,0 +1,285 @@
+model mp08
+  tally 1
+  on 2026-10-19
+  note "US portability of the deceased spousal unused exclusion (DSUE): the widow of two husbands (26 CFR 20.2010-3(b)(2) and 25.2505-2(c)(2)), the DSUE computation (20.2010-2(c)(5) Examples 1-4) and its redetermination after a QDOT (25.2505-2(d)(3)(iii))."
+  note "A and B share the persons w, h1 and h2; B differs only in H2's date of death. D2 is D1 with the surviving spouse naturalised."
+  note "gift_tentative and exclusion_tentative read the § 2001(c) table at the gift's date (at), and aea_gifts reads its law from the first day of the gifts it is asked for. Every other def runs at the ask's cut, the model's on date (§4.3): the examples apply the final regulations, which govern from 12 June 2015, to deaths and gifts before that day. The exclusion, keyed by year, is read at its year."
+
+source atra "American Taxpayer Relief Act of 2012, Pub. L. 112-240, enacted 2 January 2013: § 101(c)(1), which gives the 26 U.S.C. § 2001(c) table separate brackets over $500,000, among them over $750,000 but not over $1,000,000, and § 101(c)(2), which reads 'applicable exclusion amount' into § 2010(c)(4)(B)(i). Read in 26 U.S.C. § 2001(c) at the Legal Information Institute, with its amendment notes" at "https://www.law.cornell.edu/uscode/text/26/2001"
+
+source cfr_dsue "26 CFR 25.2505-2 Gifts made by a surviving spouse having a DSUE amount available, and 26 CFR 20.2010-2(c) Computation of the DSUE amount (T.D. 9725, 80 FR 34279, published 16 June 2015, as amended by T.D. 9884; eCFR, up to date as of 10/15/2026)" at "https://www.ecfr.gov/current/title-26/section-25.2505-2"
+
+source cfr_portability "26 CFR 20.2010-3 Portability provisions applicable to the surviving spouse's estate (T.D. 9725, 80 FR 34279 at 34288, published 16 June 2015, as amended by T.D. 9884; eCFR, up to date as of 10/15/2026)" at "https://www.ecfr.gov/current/title-26/section-20.2010-3"
+
+source egtrra "Economic Growth and Tax Relief Reconciliation Act of 2001, Pub. L. 107-16, enacted 7 June 2001: the 26 U.S.C. § 2010(c) table of applicable exclusion amounts for estates of decedents dying from 2002 to 2009, as the Legal Information Institute's amendment notes to § 2010 (2001, Subsec. (c)) give it" at "https://www.law.cornell.edu/uscode/text/26/2010"
+
+source rp2011_52_src "Rev. Proc. 2011-52, released 20 October 2011 with news release IR-2011-104 and published in Internal Revenue Bulletin 2011-45 of 7 November 2011, section 3.29 (Unified Credit Against Estate Tax)" at "https://www.irs.gov/pub/irs-drop/rp-11-52.pdf"
+
+source rp2014_61_src "Rev. Proc. 2014-61, released 30 October 2014 with news release IR-2014-104 and published in Internal Revenue Bulletin 2014-47 of 17 November 2014, section 3.33 (Unified Credit Against Estate Tax)" at "https://www.irs.gov/pub/irs-drop/rp-14-61.pdf"
+
+source tra1976_src "Tax Reform Act of 1976, Pub. L. 94-455, approved 4 October 1976: title XX, § 2001(a)(1), 90 Stat. 1846, which restates 26 U.S.C. § 2001 with the rate schedule of § 2001(c) for estates of decedents dying after 31 December 1976. Read in 26 U.S.C. § 2001(c)(1), with its source credits and amendment notes, in the U.S. Code 2009 edition at govinfo" at "https://www.govinfo.gov/content/pkg/USCODE-2009-title26/html/USCODE-2009-title26-subtitleB-chap11-subchapA-partI-sec2001.htm"
+
+source tra2010_src "Tax Relief, Unemployment Insurance Reauthorization, and Job Creation Act of 2010, Pub. L. 111-312, enacted 17 December 2010: §§ 302(a)(1) and 303(a), which give 26 U.S.C. § 2010(c) its paragraphs (1) to (6), the basic exclusion amount and portability. Read in 26 U.S.C. § 2010 at the Legal Information Institute, with its amendment notes; the current text reads $15,000,000 in § 2010(c)(3)(A)" at "https://www.law.cornell.edu/uscode/text/26/2010"
+
+index gift = [w_gift, c1_gift, c2_gift, d_gift, x_gift, y_gift]
+
+index person = [w, h1, h2, hc1, hc2, hd, he, we]
+
+index yr = year 2002..2018
+
+input citizen_later[h in person]: bool
+  note "The surviving spouse becomes a U.S. citizen (and the QDOT trustee files Form 706-QDT), so the deceased spouse's DSUE amount is no longer subject to adjustment."
+
+input death_date[p in person]: date
+
+input deceased_spouse[s in person, h in person]: bool
+  note "h was s's spouse and died before s."
+
+input donor[g in gift]: key person
+
+input elected[h in person]: bool
+  note "§ 2010(c)(5)(A): the deceased spouse's executor elected portability on a timely estate tax return."
+
+input exclusion[y in yr]: money USD
+  note "The basic exclusion amount for estates of decedents dying in the year, and for gifts made in it; for 2002, the applicable exclusion amount the example states."
+
+input gift_amount[g in gift]: money USD
+  note "The taxable gift, as reported on a timely gift tax return."
+
+input gift_date[g in gift]: date
+
+input gift_tax_paid_on[g in gift]: money USD
+  note "The part of the taxable gift on which gift tax was paid."
+
+input gifts_from[s in person, y in yr]: date
+  note "The first day of the part of year y for whose gifts the survivor's applicable exclusion amount is asked."
+
+input has_qdot[h in person]: bool
+  note "Property passes from the deceased spouse to a qualified domestic trust for a surviving spouse who is not a U.S. citizen."
+
+input qdot_assets[h in person]: money USD
+  note "The value of the QDOT assets at the surviving spouse's death, the taxable event of § 2056A that the examples use."
+
+input taxable_estate[h in person]: money USD
+
+band tentative_tax(x: money USD): num USD
+  note "§ 2001(c): the tentative tax on an amount. Only one bracket is in the case; its row states the bracket's lower end once, as the interval's end."
+
+def adjusted_gifts[h in person]: money USD
+  note "§ 20.2010-2(c)(1)(ii)(B) and (c)(2): the deceased spouse's adjusted taxable gifts, reduced by the amount on which gift tax was paid."
+  rule base v cfr_dsue_method = sum(g in gift where donor[g] = h: gift_amount[g] - gift_tax_paid_on[g])
+
+def aea[p in person]: money USD
+  note "§ 2010(c)(2): the applicable exclusion amount at the person's death, the basic exclusion amount plus, for a surviving spouse, the DSUE amount. The DSUE computation reads it for the deceased spouse too (§ 2010(c)(4)(B)(i)), so a deceased spouse's own DSUE amount counts there."
+  rule base v tra2010 = bea_at_death[p] + dsue_included[p]
+
+def aea_gifts[s in person, y in yr]: money USD at gifts_from[s, y]
+  note "§ 25.2505-2(c)(2): the surviving spouse's applicable exclusion amount for gifts made in year y, from the day gifts_from gives. Without at, the key y would give the def the law of 1 January (§4.3), and in 2015 that is before the regulation governs."
+  rule base v cfr_dsue_method = exclusion[y] + dsue_included[s]
+
+def aea_left[g in gift]: money USD
+  note "The donor's applicable exclusion amount remaining after the gift: the deceased spouse's DSUE not applied, plus the donor's own basic exclusion amount for the year less the part of the gift it covers (§ 20.2010-3(b)(2) Example (i))."
+  rule base v cfr_portability_method = dsue[gift_spouse[g]] - gift_dsue_used[g] + max(0, exclusion[year_of(gift_date[g])] - (gift_amount[g] - gift_dsue_used[g]))
+
+def bea_at_death[p in person]: money USD
+  note "§ 20.2010-2(c)(1)(i): the basic exclusion amount in effect in the year of the person's death."
+  rule base v cfr_dsue_method = exclusion[year_of(death_date[p])]
+
+def dsue[h in person]: money USD
+  note "The DSUE amount of the deceased spouse h: the preliminary amount, redetermined under § 20.2010-2(c)(4) when property passed to a QDOT, and nil without the election."
+  rule base v cfr_dsue_method = dsue_prelim[h]
+  rule not_elected excepts base, qdot v tra2010 when not elected[h] = 0
+  rule qdot excepts base v cfr_dsue_method when has_qdot[h] and not citizen_later[h] = min(bea_at_death[h], max(0, aea[h] - (taxable_estate[h] + qdot_assets[h] + adjusted_gifts[h])))
+
+def dsue_applied[s in person, h in person]: money USD
+  note "The part of h's DSUE amount that s applied to s's taxable gifts."
+  rule base v cfr_dsue_method = sum(g in gift where donor[g] = s and has_dsue_spouse[g] and gift_spouse[g] = h: gift_dsue_used[g])
+
+def dsue_included[s in person]: money USD
+  note "§ 20.2010-3(a)(1) and (b)(1): the DSUE amount of the last deceased spouse, plus the DSUE amount of each other deceased spouse to the extent it was applied to the survivor's taxable gifts."
+  rule base v cfr_portability_method = dsue[last_spouse[s]] + sum(h in person where deceased_spouse[s, h] and h != last_spouse[s]: dsue_applied[s, h])
+  rule unmarried excepts base when not any(h in person: deceased_spouse[s, h]) = 0
+
+def dsue_prelim[h in person]: money USD
+  note "§ 20.2010-2(c)(1): the lesser of the basic exclusion amount in the year of death and the excess of the decedent's applicable exclusion amount over the taxable estate plus the adjusted taxable gifts."
+  rule base v cfr_dsue_method = min(bea_at_death[h], max(0, aea[h] - (taxable_estate[h] + adjusted_gifts[h])))
+
+def dsue_remaining[s in person, h in person]: money USD
+  note "h's DSUE amount that s has not applied to gifts."
+  rule base v cfr_dsue_method = dsue[h] - dsue_applied[s, h]
+
+def exclusion_tentative[g in gift]: num USD at gift_date[g] = tentative_tax(exclusion[year_of(gift_date[g])])
+
+def gift_credit[g in gift]: num USD
+  note "The credit allowed against the gift tax: the tentative tax on the gift, limited to the tentative tax on that year's applicable exclusion amount (§ 20.2010-2(c)(5) Example 1; § 2505 is not in the case). Both tentative taxes read the § 2001(c) table in force at the gift; a gift dated by a year reads it at the year's first day (§4.3)."
+  rule base v cfr_dsue_method = min(gift_tentative[g], exclusion_tentative[g])
+
+def gift_dsue_usable[g in gift]: bool
+  note "§ 25.2505-2(d)(3): a DSUE amount still subject to a QDOT redetermination is applied only to gifts made in the year of the surviving spouse's death, in its redetermined amount."
+  rule base v cfr_dsue_method = true
+  rule qdot excepts base v cfr_dsue_method when has_qdot[gift_spouse[g]] = (year_of(gift_date[g]) = year_of(death_date[donor[g]]))
+
+def gift_dsue_used[g in gift]: money USD
+  note "§ 25.2505-2(b): the donor applies the last deceased spouse's DSUE amount to the taxable gift before the donor's own basic exclusion amount, as far as the donor's earlier gifts have not already applied it (a read at computed keys, §5.10). The gift itself drops out of the sum by its date, a value compared with itself (§4.4)."
+  rule base v cfr_dsue_method = 0
+  rule spousal excepts base v cfr_dsue_method when has_dsue_spouse[g] and gift_dsue_usable[g] = min(gift_amount[g], dsue[gift_spouse[g]] - sum(e in gift where donor[e] = donor[g] and gift_date[e] < gift_date[g] and has_dsue_spouse[e] and gift_spouse[e] = gift_spouse[g]: gift_dsue_used[e]))
+
+def gift_excess[g in gift]: money USD
+  note "The part of the taxable gift that neither the DSUE amount nor the donor's own basic exclusion amount for the year covers; gift tax is owed only on it."
+  rule base v cfr_dsue_method = max(0, gift_amount[g] - gift_dsue_used[g] - exclusion[year_of(gift_date[g])])
+
+def gift_spouse[g in gift]: key person
+  note "The donor's last deceased spouse at the date of the gift: of the spouses who died before the gift, the one who died last. argmax orders the deaths, dated by year, by §4.4 (§5.10), and the regulation names the choice (§ 20.2010-3(a)(1); §10)."
+  rule base v cfr_portability_method = argmax(h in person where deceased_spouse[donor[g], h] and death_date[h] < gift_date[g]: death_date[h])
+
+def gift_tentative[g in gift]: num USD at gift_date[g] = tentative_tax(gift_amount[g])
+
+def has_dsue_spouse[g in gift]: bool = any(h in person: deceased_spouse[donor[g], h] and death_date[h] < gift_date[g])
+
+def last_spouse[s in person]: key person
+  note "§ 20.2010-3(a)(1)-(3): the most recently deceased of the survivor's deceased spouses; a later marriage doesn't change it while the new spouse lives. argmax orders the deaths, dated by year, by §4.4 (§5.10), and the regulation names the choice (§10)."
+  rule base v cfr_portability_method = argmax(h in person where deceased_spouse[s, h]: death_date[h])
+
+ask a_after_gifts: gift_dsue_used[w_gift], aea_left[w_gift]
+
+ask a_death: dsue_included[w], aea[w]
+
+ask a_gift_tax: gift_excess[w_gift]
+
+ask b_gifts: dsue_included[w], aea_gifts[w, 2015] with death_date[h2] = 2015-06-30
+
+ask c1_credit: gift_credit[c1_gift]
+
+ask c1_dsue: dsue[hc1]
+
+ask c2_dsue: adjusted_gifts[hc2], dsue[hc2]
+
+ask d1_dsue: dsue_prelim[hd], dsue[hd]
+
+ask d2_dsue: dsue[hd] with citizen_later[hd] = true
+
+ask e_dsue: dsue_prelim[he], dsue[he], dsue_applied[we, he], dsue_remaining[we, he]
+
+ask e_gifts: gift_dsue_used[x_gift], gift_dsue_used[y_gift]
+
+version tra1976
+  cite tra1976_src
+  governs 1977-01-01..2009-12-31
+  known 1976-10-04
+  note "Known 1976-10-04, the day Pub. L. 94-455 was approved (U.S. Code 2009 edition, § 2001 source credits, govinfo, read 2026-10-19). Its schedule applies to estates of decedents dying after 31 December 1976 (effective-date note), so it governs from 1977. The gift tax reads the same schedule (§ 2502, not in the case), and § 20.2010-2(c)(5) Example 1 applies it to a gift of 2002."
+  note "Which act (§4.5): the 1976 act gave § 2001(c) its schedule as a whole. Per the amendment notes, later acts to 2001 (among them Pub. L. 97-34, 103-66 and 107-16) changed only the brackets over $2,500,000, which the hole row covers, and § 2001(c)(2); making the table § 2001(c)(1) in 1981 is a renumbering. Pub. L. 111-312 § 302(a)(2) restated every bracket over $500,000 for estates of decedents dying, and gifts made, after 31 December 2009 (U.S. Code 2010 edition, govinfo, read 2026-10-19). That table is not modelled, so this version ends on 2009-12-31, and a read in 2010 to 2012 has no table."
+  tentative_tax: [0, 750000] = ? "The § 2001(c) brackets up to $750,000 are not in the case." "§ 2001(c)(1) table"
+  tentative_tax: (750000, 1000000] = 248300 + 0.39 * (x - band_lo(tentative_tax, x)) "§ 2001(c)(1) table: Over $750,000 but not over $1,000,000: $248,300, plus 39 percent of the excess of such amount over $750,000"
+  tentative_tax: (1000000, inf) = ? "The § 2001(c) brackets over $1,000,000 are not in the case." "§ 2001(c)(1) table"
+
+version egtrra2001
+  cite egtrra
+  governs 2002-01-01..
+  known 2001-06-07
+  note "Known 2001-06-07, the day Pub. L. 107-16 was enacted (LII, 26 U.S.C. § 2010, source credits). Its table applies to estates of decedents dying after 2001, so it governs from 2002. Pub. L. 111-312 later replaced the table, but the row is keyed by the year it is for, which this version governs."
+  note "The gift tax exclusion for 2002 (§ 2505(a)(1) as Pub. L. 107-16 amended it) was not fetched; § 20.2010-2(c)(5) Example 1 (i) states $1,000,000 for gifts in 2002, the same amount."
+  exclusion[2002] = 1000000 "§ 2010(c) table as amended by Pub. L. 107-16: estates of decedents dying during 2002 and 2003, $1,000,000 (LII amendment notes, 2001, Subsec. (c)); § 20.2010-2(c)(5) Example 1 (i): the applicable exclusion amount for that year ($1,000,000)"
+
+version tra2010
+  cite tra2010_src
+  governs 2011-01-01..
+  known 2010-12-17
+  note "Known 2010-12-17, the day Pub. L. 111-312 was enacted (LII, 26 U.S.C. § 2010, source credits). Portability (§ 2010(c)(2), (4), (5)) applies to estates of decedents dying after 31 December 2010, so it governs from 2011. The rules aea.base (§ 2010(c)(2)) and dsue.not_elected (§ 2010(c)(5)(A)) point at it."
+  note "Later amendments were not modelled: Pub. L. 112-240 (§ 2010(c)(4)(B)(i), which dsue_prelim reads through the regulation), Pub. L. 115-97 and Pub. L. 119-21 (the basic exclusion amount from 2018 and 2026)."
+  exclusion[2011] = 5000000 "§ 2010(c)(3)(A) as enacted by Pub. L. 111-312: the basic exclusion amount is $5,000,000, adjusted for inflation only for decedents dying after 2011 (§ 2010(c)(3)(B)); § 25.2505-2(d)(3)(iii) Example (ii): the $5,000,000 basic exclusion amount for 2011"
+
+version rp2011_52
+  cite rp2011_52_src
+  known 2011-10-20
+  note "Known 2011-10-20, the day the IRS released Rev. Proc. 2011-52 with news release IR-2011-104 (irs.gov newsroom, 'In 2012, Many Tax Benefits Increase Due to Inflation Adjustments', read 2026-10-19): guidance is known from its first public release (§4.5). Internal Revenue Bulletin 2011-45 printed it on 7 November 2011."
+  exclusion[2012] = 5120000 "Rev. Proc. 2011-52 § 3.29: for an estate of any decedent dying during calendar year 2012, the basic exclusion amount is $5,120,000"
+
+version atra2012
+  cite atra
+  governs 2013-01-01..
+  known 2013-01-02
+  note "Known 2013-01-02, the day Pub. L. 112-240 was enacted (LII, 26 U.S.C. § 2001, source credits and amendment notes, 2013, Subsec. (c)). Its table applies to estates of decedents dying, and gifts made, after 31 December 2012, so it governs from 2013."
+  note "No ask reads it: C1's gift of 2002 reads the schedule in force then (tra1976). It stays as the law from 2013."
+  tentative_tax: [0, 750000] = ? "The § 2001(c) brackets up to $750,000 are not in the case." "§ 2001(c) table"
+  tentative_tax: (750000, 1000000] = 248300 + 0.39 * (x - band_lo(tentative_tax, x)) "§ 2001(c) table: Over $750,000 but not over $1,000,000: $248,300, plus 39 percent of the excess of such amount over $750,000"
+  tentative_tax: (1000000, inf) = ? "The § 2001(c) brackets over $1,000,000 are not in the case." "§ 2001(c) table"
+
+version rp2014_61
+  cite rp2014_61_src
+  known 2014-10-30
+  note "Known 2014-10-30, the day the IRS released Rev. Proc. 2014-61 with news release IR-2014-104 (irs.gov newsroom, 'In 2015, Various Tax Benefits Increase Due to Inflation Adjustments', read 2026-10-19): guidance is known from its first public release (§4.5). Internal Revenue Bulletin 2014-47 printed it on 17 November 2014."
+  exclusion[2015] = 5430000 "Rev. Proc. 2014-61 § 3.33: for an estate of any decedent dying during calendar year 2015, the basic exclusion amount is $5,430,000"
+
+version cfr_dsue_method
+  cite cfr_dsue
+  governs 2015-06-12..
+  known 2015-06-16
+  note "No items: the rules of §§ 20.2010-2(c) and 25.2505-2 point at it. Known 2015-06-16, the day T.D. 9725 was published in the Federal Register (80 FR 34279; federalregister.gov, document 2015-14663). The final regulations apply from 12 June 2015, so it governs from then; the temporary regulations of T.D. 9593 that applied before were not fetched."
+  note "Which act (§4.5): T.D. 9884 left § 20.2010-2 as it was, and its correction (85 FR 6803, 6 February 2020, Par. 2) only replaces the cross-reference '§ 20.2010-1(d)(5)' with '§ 20.2010-1(e)(5)' throughout § 25.2505-2, after § 20.2010-1 was renumbered (govinfo, Federal Register, read 2026-10-19). That is a renumbering that keeps the wording, so the rules stay with T.D. 9725."
+
+version cfr_portability_method
+  cite cfr_portability
+  governs 2015-06-12..
+  known 2015-06-16
+  note "No items: the rules of § 20.2010-3 point at it. Known 2015-06-16, the day T.D. 9725 was published in the Federal Register (80 FR 34279). § 20.2010-3(f) applies the section to estates of decedents dying on or after 12 June 2015, so it governs from then. W's day of death in 2015 is not given; the rules run at the ask's cut and are applied to her estate as the example applies them."
+  note "Which act (§4.5): T.D. 9884 (84 FR 64995, 26 November 2019, Par. 4) only replaces the cross-reference '§ 20.2010-1(d)(5)' with '§ 20.2010-1(e)(5)' wherever it appears in § 20.2010-3, after § 20.2010-1 was renumbered (govinfo, Federal Register, read 2026-10-19). That is a renumbering that keeps the wording, so the rules stay with T.D. 9725."
+
+version cfr_dsue_examples
+  cite cfr_dsue
+  known 2026-10-19
+  note "§ 20.2010-2(c)(5) Examples 1 (C1), 2 (C2), 3 (D1), 4 (D2); § 25.2505-2(c)(2) Example (B); § 25.2505-2(d)(3)(iii) Example (E)."
+  note "Known 2026-10-19: the examples are hypothetical, so their stipulations, and the assumptions that stand for their unstated facts, are known from the model's on date, as the model has no start (§4.5)."
+  citizen_later = false "no surviving spouse becomes a citizen except in § 20.2010-2(c)(5) Example 4"
+  death_date[hc1] = 2015 "§ 20.2010-2(c)(5) Example 1 (i): H dies in 2015, survived by W"
+  death_date[hc2] = 2015 "§ 20.2010-2(c)(5) Example 2: as Example 1"
+  death_date[hd] = 2015 "§ 20.2010-2(c)(5) Example 3 (i): H dies in 2015"
+  death_date[he] = 2011 "§ 25.2505-2(d)(3)(iii) Example (i): H dies in 2011"
+  death_date[we] = 2015-09 "§ 25.2505-2(d)(3)(iii) Example (i): W dies in September 2015, not having remarried"
+  deceased_spouse = false assumed "no marriage other than those the examples name; Example 1 states no prior marriage"
+  deceased_spouse[we, he] = true "§ 25.2505-2(d)(3)(iii) Example (i): H is survived by W"
+  donor[c1_gift] = hc1 "§ 20.2010-2(c)(5) Example 1 (i): H's first taxable gift"
+  donor[c2_gift] = hc2 "§ 20.2010-2(c)(5) Example 2 (i): H's first taxable gift"
+  donor[d_gift] = hd "§ 20.2010-2(c)(5) Example 3 (i): H's first taxable gift"
+  donor[x_gift] = we "§ 25.2505-2(d)(3)(iii) Example (i): W's taxable gift to X from her own assets"
+  donor[y_gift] = we "§ 25.2505-2(d)(3)(iii) Example (i): W's taxable gift to Y from her own assets"
+  elected = true assumed "each example computes a DSUE amount on the deceased spouse's return, which needs the election"
+  elected[hc1] = true "§ 20.2010-2(c)(5) Example 1 (i): H's executor elects portability"
+  gift_amount[c1_gift] = 1000000 "§ 20.2010-2(c)(5) Example 1 (i): a taxable gift of $1,000,000, reported on a timely filed gift tax return"
+  gift_amount[c2_gift] = 2000000 "§ 20.2010-2(c)(5) Example 2 (i): a taxable gift of $2,000,000"
+  gift_amount[d_gift] = 1000000 "§ 20.2010-2(c)(5) Example 3 (i): a taxable gift of $1,000,000, no gift tax due"
+  gift_amount[x_gift] = 1000000 "§ 25.2505-2(d)(3)(iii) Example (i): $1,000,000 to X"
+  gift_amount[y_gift] = 1000000 "§ 25.2505-2(d)(3)(iii) Example (i): $1,000,000 to Y"
+  gift_date[c1_gift] = 2002 "§ 20.2010-2(c)(5) Example 1 (i): in 2002"
+  gift_date[c2_gift] = 2002 "§ 20.2010-2(c)(5) Example 2 (i): in 2002"
+  gift_date[d_gift] = 2002 "§ 20.2010-2(c)(5) Example 3 (i): in 2002"
+  gift_date[x_gift] = 2012 "§ 25.2505-2(d)(3)(iii) Example (i): the gift to X in 2012"
+  gift_date[y_gift] = 2015-01 "§ 25.2505-2(d)(3)(iii) Example (i): the gift to Y in January 2015"
+  gift_tax_paid_on[c1_gift] = 0 "§ 20.2010-2(c)(5) Example 1 (i): the credit reduces the gift tax liability to zero"
+  gift_tax_paid_on[c2_gift] = 1000000 "§ 20.2010-2(c)(5) Example 2 (i): H owes gift tax on $1,000,000, the amount of the gift in excess of the applicable exclusion amount for that year, and pays it"
+  gift_tax_paid_on[d_gift] = 0 "§ 20.2010-2(c)(5) Example 3 (i): no gift tax due"
+  gifts_from[w, 2015] = 2015-07-01 "§ 25.2505-2(c)(2) Example (ii): for gifts during the second half of 2015"
+  has_qdot = false "no other example has a QDOT"
+  has_qdot[hd] = true "§ 20.2010-2(c)(5) Example 3 (i): a pecuniary bequest of $1,500,000 to a QDOT for W, a resident who is not a citizen"
+  has_qdot[he] = true "§ 25.2505-2(d)(3)(iii) Example (i): a pecuniary bequest of $2,000,000 to a QDOT for W, who is not a citizen"
+  qdot_assets[hd] = 1800000 "§ 20.2010-2(c)(5) Example 3 (ii): W dies in 2017, the QDOT assets then worth $1,800,000; no section 2056A taxable events"
+  qdot_assets[he] = 2200000 "§ 25.2505-2(d)(3)(iii) Example (i): the QDOT assets at W's death worth $2,200,000; no 2056A taxable events"
+  taxable_estate[hc1] = 1000000 "§ 20.2010-2(c)(5) Example 1 (i): H's taxable estate of $1,000,000"
+  taxable_estate[hc2] = 1000000 "§ 20.2010-2(c)(5) Example 2: as Example 1"
+  taxable_estate[hd] = 500000 "§ 20.2010-2(c)(5) Example 3 (i): gross estate $2,000,000, marital deduction $1,500,000, taxable estate $500,000"
+  taxable_estate[he] = 1000000 "§ 25.2505-2(d)(3)(iii) Example (i): gross estate $3,000,000, marital deduction $2,000,000, taxable estate $1,000,000"
+
+version cfr_portability_examples
+  cite cfr_portability
+  known 2026-10-19
+  note "§ 20.2010-3(b)(2) Example (A): all individuals are U.S. citizens."
+  note "Known 2026-10-19: the example is hypothetical, so its stipulations are known from the model's on date (§4.5)."
+  death_date[w] = 2015 "§ 20.2010-3(b)(2) Example (i): W dies in 2015"
+  death_date[h1] = 2011 "§ 20.2010-3(b)(2) Example (i): H1 dies in 2011, survived by W"
+  death_date[h2] = 2014 "§ 20.2010-3(b)(2) Example (i): H2 dies in 2014"
+  deceased_spouse[w, h1] = true "§ 20.2010-3(b)(2) Example (i): H1, W's first husband"
+  deceased_spouse[w, h2] = true "§ 20.2010-3(b)(2) Example (i): W marries H2 in 2013"
+  donor[w_gift] = w "§ 20.2010-3(b)(2) Example (i): W's taxable gifts to her children"
+  dsue[h1] = 5000000 "§ 20.2010-3(b)(2) Example (i): H1's executor elects portability; H1's DSUE amount as computed on his estate tax return is $5,000,000"
+  dsue[h2] = 2000000 "§ 20.2010-3(b)(2) Example (i): H2's executor elects portability; H2's DSUE amount, properly computed, is $2,000,000"
+  gift_amount[w_gift] = 2000000 "§ 20.2010-3(b)(2) Example (i): taxable gifts of $2,000,000, reported on a timely filed gift tax return"
+  gift_date[w_gift] = 2012 "§ 20.2010-3(b)(2) Example (i): in 2012"

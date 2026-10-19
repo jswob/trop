@@ -1,0 +1,207 @@
+model mp15
+  tally 1
+  on 2026-10-18
+  note "Verhoeff 2004, Settling Multiple Debts Efficiently: examples (1), (4) and (27). owe[e, i, j] is the amount friend i owes friend j (the paper's a i,j)."
+  note "The amounts have no unit, so they are plain num; a fill may share a plain num (LANGUAGE §5.11). The paper gives no dates beyond the end of the year, so the transfers are values, not dated pays between places."
+  note "A transfer may run from any friend who must pay to any friend who must be paid, as in the paper's transfer graphs."
+  note "The fewest transfers in general is a bound. The minimum-weight settlement is the fill settle; checking it against the lower bounds (28) to (30) shows when it also has the fewest arrows."
+
+source verhoeff "Tom Verhoeff, Settling Multiple Debts Efficiently: An Invitation to Computing Science, Informatics in Education, Vol. 3, No. 1 (2004), pp. 105-126, doi:10.15388/infedu.2004.08" at "https://infedu.vu.lt/journal/INFEDU/article/612/file/pdf"
+
+index cycle = [ex4_two, ex4_three, ex27_top, ex27_bottom]
+
+index example = [ex1, ex4, ex27]
+
+index friend = [f0, f1, f2, f3]
+
+index rorder = [ord_a, ord_b, ord_fig5, ord_p107]
+
+index rstep = 0..2
+
+input cycle_at[o in rorder, s in rstep]: key cycle
+  note "the directed cycle that step s of reduction order o reduces"
+
+input ex1_factor: int
+  note "matrix (4) is example (1) disregarding a factor ten"
+
+input example_of[o in rorder]: key example
+
+input from_debts[o in rorder]: bool
+  note "true when order o starts from the debt graph itself, false when it starts from the paired solution"
+
+input member[e in example, i in friend]: bool
+
+input on_cycle[c in cycle, i in friend, j in friend]: bool
+  note "true when the arrow i -> j lies on directed cycle c"
+
+input owe[e in example, i in friend, j in friend]: num
+  note "the paper's a i,j: the amount friend i owes friend j; the diagonal is not defined"
+
+input steps[o in rorder]: int
+
+def arrows_lb[e in example]: int
+  note "(30): the number of arrows is at least the larger of the number of friends who must pay and the number who must be paid"
+  rule base v verhoeff_2004 = max(count(i in friend where member[e, i] and balance[e, i] > 0), count(i in friend where member[e, i] and balance[e, i] < 0))
+
+def balance[e in example, i in friend]: num
+  note "(8): b i = p i - r i; positive means friend i must pay others"
+  rule base v verhoeff_2004 = owes_total[e, i] - owed_total[e, i]
+
+def balance_sum[e in example]: num = sum(i in friend where member[e, i]: balance[e, i])
+
+def graph[o in rorder, s in rstep, i in friend, j in friend]: num
+  note "the amount on arrow i -> j of the transfer graph after s cycle reductions in order o"
+  note "p. 112, the directed-cycle transformation: every arrow of a directed cycle is reduced by the cycle's minimum amount"
+  rule base v verhoeff_2004 when s = 0 = if from_debts[o] then owe[example_of[o], i, j] else pair[example_of[o], i, j]
+  rule reduce v verhoeff_2004 when s > 0 = graph[o, s - 1, i, j] - (if on_cycle[cycle_at[o, s], i, j] then min(x in friend, y in friend where on_cycle[cycle_at[o, s], x, y]: graph[o, s - 1, x, y]) else 0)
+
+def graph_arrows[o in rorder, s in rstep]: int = count(i in friend, j in friend where member[example_of[o], i] and member[example_of[o], j] and i != j and graph[o, s, i, j] > 0)
+
+def graph_weight[o in rorder, s in rstep]: num = sum(i in friend, j in friend where member[example_of[o], i] and member[example_of[o], j] and i != j: graph[o, s, i, j])
+
+def half_abs[e in example]: num
+  note "(29): half the sum of the absolute balances"
+  rule base v verhoeff_2004 = sum(i in friend where member[e, i]: abs(balance[e, i])) / 2
+
+def opt_arrows[e in example]: int = count(i in friend, j in friend where member[e, i] and member[e, j] and i != j and settle.taken[e, i, e, j] > 0)
+
+def opt_weight[e in example]: num = sum(i in friend, j in friend where member[e, i] and member[e, j] and i != j: settle.taken[e, i, e, j])
+
+def owed_total[e in example, j in friend]: num
+  note "(6): r j, the total friend j is owed"
+  rule base v verhoeff_2004 = sum(k in friend where member[e, k] and k != j: owe[e, k, j])
+
+def owes_total[e in example, i in friend]: num
+  note "(5): p i, the total friend i owes"
+  rule base v verhoeff_2004 = sum(k in friend where member[e, k] and k != i: owe[e, i, k])
+
+def pair[e in example, i in friend, j in friend]: num
+  note "p. 107, the paired solution: the mutual debts of i and j are settled by one transfer of |a i,j - a j,i|, from the one who owes more"
+  rule base v verhoeff_2004 = max(0, owe[e, i, j] - owe[e, j, i])
+
+def pair_arrows[e in example]: int = count(i in friend, j in friend where member[e, i] and member[e, j] and i != j and pair[e, i, j] > 0)
+
+def pair_weight[e in example]: num = sum(i in friend, j in friend where member[e, i] and member[e, j] and i != j: pair[e, i, j])
+
+def settled[e in example]: bool = all(i in friend where member[e, i]: balance[e, i] = 0)
+
+def weight_lb[e in example]: num
+  note "(28): the weight of a transfer graph is at least the sum of the positive balances"
+  rule base v verhoeff_2004 = sum(i in friend where member[e, i] and balance[e, i] > 0: balance[e, i])
+
+fill settle
+  note "The minimum-weight settlement: from friends with a positive balance to friends with a negative one. The order is the modeller's (friend order); the paper's § 6.1 greedy order is not in the case. In (27) only friend 0 pays, so any order gives the same graph."
+  supply max(0, balance[se, si]) for se in example, si in friend where member[se, si]
+  demand max(0, -balance[de, dj]) for de in example, dj in friend where member[de, dj]
+  arc se = de and si != dj
+  order si, dj
+
+bound fewest_transfers "a transfer graph with the fewest arrows, for any debt matrix" because "Verhoeff 2004, § 6.2, p. 120: finding a transfer graph with minimum number of arrows is at least as difficult as the subset-sum problem; the abstract calls it NP-hard. Tally has no construct that searches over transfer graphs."
+
+ask q_arrows_check: check opt_arrows[e] = arrows_lb[e] for e in example
+
+ask q_balance: balance[e, i] for e in example, i in friend where member[e, i]
+
+ask q_balance_sum: balance_sum[e] for e in example
+
+ask q_fewest: fewest_transfers
+
+ask q_fig5_check: check graph[ord_fig5, 1, i, j] = pair[ex4, i, j] for i in friend where member[ex4, i], j in friend where member[ex4, j] and i != j
+
+ask q_lower_bounds: weight_lb[e], half_abs[e], arrows_lb[e] for e in example
+
+ask q_opt_arcs: settle.taken[ex27, i, ex27, j] for i in friend, j in friend where i != j
+
+ask q_optimal: opt_arrows[e], opt_weight[e] for e in example
+
+ask q_owed: owed_total[e, j] for e in example, j in friend where member[e, j]
+
+ask q_owes: owes_total[e, i] for e in example, i in friend where member[e, i]
+
+ask q_paired: pair_arrows[e], pair_weight[e] for e in example
+
+ask q_paired_arcs: pair[ex4, i, j] for i in friend where member[ex4, i], j in friend where member[ex4, j] and i != j
+
+ask q_reduced: graph_arrows[o, s], graph_weight[o, s] for o in rorder, s in rstep where s <= steps[o]
+
+ask q_scale_check: check owe[ex1, i, j] = ex1_factor * owe[ex4, i, j] for i in friend where member[ex4, i], j in friend where member[ex4, j] and i != j
+
+ask q_settled: settled[e] for e in example
+
+ask q_weight_check: check opt_weight[e] = weight_lb[e] for e in example
+
+version verhoeff_2004
+  cite verhoeff
+  known 2004-04-15
+  note "Article page: Pub. online: 15 April 2004, the source's own date. The rules (5), (6), (8), (28) to (30), the paired solution (p. 107) and the directed-cycle transformation (p. 112) cite this version."
+
+version verhoeff_examples
+  cite verhoeff
+  known 2026-10-18
+  note "The facts of the worked examples (1), (4) and (27), with the paper's own reductions of them: a worked example's stipulations, known from the model's on, since it has no start (LANGUAGE §4.5). Locators are the journal's page numbers."
+  cycle_at[ord_a, 1] = ex27_bottom "p. 113, Fig. 6 text: Order A, reduce the directed cycle through friends 0, 3 and 2"
+  cycle_at[ord_b, 1] = ex27_top "p. 113, Fig. 6 text: Order B, first the directed cycle through friends 0, 1 and 2"
+  cycle_at[ord_b, 2] = ex27_bottom "p. 113, Fig. 6 text: Order B, then the one through friends 0, 3 and 2"
+  cycle_at[ord_fig5, 1] = ex4_two "p. 112, Fig. 5 text: first the 2-cycle between friends 0 and 2"
+  cycle_at[ord_fig5, 2] = ex4_three "p. 112, Fig. 5 text: then the remaining 3-cycle"
+  cycle_at[ord_p107, 1] = ex4_three "p. 107, text after (4): the cycle of the paired solution"
+  ex1_factor = 10 "p. 107: which corresponds to example (1) above, disregarding a factor ten"
+  example_of[ord_a] = ex27 "p. 113, example (27)"
+  example_of[ord_b] = ex27 "p. 113, example (27)"
+  example_of[ord_fig5] = ex4 "p. 112, Fig. 5 text: consider the problem given by (1), with the amounts of (4)"
+  example_of[ord_p107] = ex4 "p. 107, matrix (4)"
+  from_debts[ord_a] = false "p. 113: in the paired solution's transfer graph"
+  from_debts[ord_b] = false "p. 113: in the paired solution's transfer graph"
+  from_debts[ord_fig5] = true "p. 112, Fig. 5 text: the debt graph of (4), whose 2-cycle reduces to the paired solution"
+  from_debts[ord_p107] = false "p. 107, text after (4): the paired solution"
+  member[ex1, f0] = true "p. 106: consider three friends 0, 1, and 2"
+  member[ex1, f1] = true "p. 106: consider three friends 0, 1, and 2"
+  member[ex1, f2] = true "p. 106: consider three friends 0, 1, and 2"
+  member[ex1, f3] = false "p. 106: consider three friends 0, 1, and 2"
+  member[ex4, f0] = true "p. 107, (4): rows and columns 0, 1, 2"
+  member[ex4, f1] = true "p. 107, (4): rows and columns 0, 1, 2"
+  member[ex4, f2] = true "p. 107, (4): rows and columns 0, 1, 2"
+  member[ex4, f3] = false "p. 107, (4): rows and columns 0, 1, 2"
+  member[ex27, f0] = true "p. 113: N = 4 and debt matrix"
+  member[ex27, f1] = true "p. 113: N = 4 and debt matrix"
+  member[ex27, f2] = true "p. 113: N = 4 and debt matrix"
+  member[ex27, f3] = true "p. 113: N = 4 and debt matrix"
+  on_cycle = false
+  on_cycle[ex4_two, f0, f2] = true "p. 112, Fig. 5 text: the 2-cycle 0 -> 2, 2 -> 0"
+  on_cycle[ex4_two, f2, f0] = true "p. 112, Fig. 5 text: the 2-cycle 0 -> 2, 2 -> 0"
+  on_cycle[ex4_three, f0, f1] = true "p. 107, text after (4): friend 0 pays to friend 1, who pays to friend 2, who pays again to friend 0"
+  on_cycle[ex4_three, f1, f2] = true "p. 107, text after (4): friend 0 pays to friend 1, who pays to friend 2, who pays again to friend 0"
+  on_cycle[ex4_three, f2, f0] = true "p. 107, text after (4): friend 0 pays to friend 1, who pays to friend 2, who pays again to friend 0"
+  on_cycle[ex27_top, f0, f1] = true "p. 113, Fig. 6 text: the top cycle 0 -> 1 -> 2 -> 0"
+  on_cycle[ex27_top, f1, f2] = true "p. 113, Fig. 6 text: the top cycle 0 -> 1 -> 2 -> 0"
+  on_cycle[ex27_top, f2, f0] = true "p. 113, Fig. 6 text: the top cycle 0 -> 1 -> 2 -> 0"
+  on_cycle[ex27_bottom, f0, f3] = true "p. 113, Fig. 6 text: the bottom cycle 0 -> 3 -> 2 -> 0"
+  on_cycle[ex27_bottom, f2, f0] = true "p. 113, Fig. 6 text: the bottom cycle 0 -> 3 -> 2 -> 0"
+  on_cycle[ex27_bottom, f3, f2] = true "p. 113, Fig. 6 text: the bottom cycle 0 -> 3 -> 2 -> 0"
+  owe[ex1, *, *] = 0 "p. 106, after (1): Only non-zero debts are listed."
+  owe[ex1, f0, f1] = 10 "p. 106, (1): 0, 1 10"
+  owe[ex1, f0, f2] = 10 "p. 106, (1): 0, 2 10"
+  owe[ex1, f1, f2] = 10 "p. 106, (1): 1, 2 10"
+  owe[ex1, f2, f0] = 20 "p. 106, (1): 2, 0 20"
+  owe[ex4, f0, f1] = 1 "p. 107, (4): row 0, column 1"
+  owe[ex4, f0, f2] = 1 "p. 107, (4): row 0, column 2"
+  owe[ex4, f1, f0] = 0 "p. 107, (4): row 1, column 0"
+  owe[ex4, f1, f2] = 1 "p. 107, (4): row 1, column 2"
+  owe[ex4, f2, f0] = 2 "p. 107, (4): row 2, column 0"
+  owe[ex4, f2, f1] = 0 "p. 107, (4): row 2, column 1"
+  owe[ex27, f0, f1] = 3 "p. 113, (27): row 0, column 1"
+  owe[ex27, f0, f2] = 0 "p. 113, (27): row 0, column 2"
+  owe[ex27, f0, f3] = 6 "p. 113, (27): row 0, column 3"
+  owe[ex27, f1, f0] = 1 "p. 113, (27): row 1, column 0"
+  owe[ex27, f1, f2] = 5 "p. 113, (27): row 1, column 2"
+  owe[ex27, f1, f3] = 0 "p. 113, (27): row 1, column 3"
+  owe[ex27, f2, f0] = 2 "p. 113, (27): row 2, column 0"
+  owe[ex27, f2, f1] = 4 "p. 113, (27): row 2, column 1"
+  owe[ex27, f2, f3] = 0 "p. 113, (27): row 2, column 3"
+  owe[ex27, f3, f0] = 0 "p. 113, (27): row 3, column 0"
+  owe[ex27, f3, f1] = 0 "p. 113, (27): row 3, column 1"
+  owe[ex27, f3, f2] = 3 "p. 113, (27): row 3, column 2"
+  steps[ord_a] = 1 "p. 113, Fig. 6 text: Order A, one reduction"
+  steps[ord_b] = 2 "p. 113, Fig. 6 text: Order B, two reductions"
+  steps[ord_fig5] = 2 "p. 112, Fig. 5 text: the 2-cycle, then the 3-cycle"
+  steps[ord_p107] = 1 "p. 107, text after (4): the one cycle"

@@ -1,0 +1,34 @@
+model tropek
+  tally 1
+  on 2026-10-19
+  start 2026-01-01
+  end 2059-12-31
+  note "Syntetyczne gospodarstwo z prototypu (spec §12, kwoty przykładowe). To nie są dane gospodarstwa."
+  note "Główna praca: działalność B2B na ryczałcie. Żona: umowa o pracę."
+
+source household "Oświadczenia gospodarstwa: umowy, rejestracje, decyzje i wybory"
+source modeller "Założenia modelu, każde z powodem"
+
+unit etf_unit "jednostka funduszu ETF"
+
+index client = [client_a, client_b]
+
+index country = [pl, de]
+
+index day = day 2026-01-01..2059-12-31
+
+index job = [wife_acme]
+
+index loan: open
+
+index marek_loan: open
+
+index marek_part: open
+
+index month = month 2026-01..2059-12
+
+index person = [me, wife]
+
+index tax_year = year 2026..2059
+
+index wrapper = [ike, oki, mak]

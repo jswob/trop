@@ -1,0 +1,170 @@
+{
+ "id": "12-rent-vs-buy",
+ "says_pl": "Wynajem czy kupno mieszkania za 650 tys.: kredyt, PCC, notariusz, koniec najmu przy zakupie; majątek netto po 10 i 30 latach.",
+ "places": [
+  { "id": "mieszkanie", "kind": "asset", "label_pl": "Mieszkanie", "price": "price.flat", "owner": "joint" },
+  { "id": "kredyt_hipoteczny", "kind": "debt", "label_pl": "Kredyt hipoteczny" },
+  { "id": "bank", "kind": "outside", "label_pl": "Bank (odsetki)" },
+  { "id": "notariusz", "kind": "outside", "label_pl": "Notariusz" },
+  { "id": "sad", "kind": "outside", "label_pl": "Sąd (księga wieczysta)" },
+  { "id": "wspolnota", "kind": "outside", "label_pl": "Wspólnota mieszkaniowa" }
+ ],
+ "values": [
+  { "id": "assume.flat_growth", "kind": "assumption", "unit": "1", "says_pl": "Roczny wzrost cen mieszkań, nominalnie", "entries": [{ "from": "2000-01-01", "value": 0.035 }] },
+  { "id": "price.flat", "kind": "assumption", "unit": "PLN", "says_pl": "Cena tego mieszkania (650 tys. dziś, potem założony wzrost co miesiąc)", "entries": [{ "from": "2000-01-01", "value": 650000 }, { "from": "2026-11-01", "expr": "before * pow(1 + p.assume.flat_growth, 1 / 12)", "repeat": "month" }] },
+  { "id": "pcc.rate", "kind": "law", "unit": "1", "says_pl": "PCC od sprzedaży nieruchomości", "entries": [{ "from": "2001-01-01", "value": 0.02, "source": "ustawa o PCC, Dz.U. 2026 poz. 191, art. 7 ust. 1 pkt 1 lit. a" }] },
+  { "id": "pcc.mortgage_fixed", "kind": "law", "unit": "PLN", "says_pl": "PCC od hipoteki na zabezpieczenie wierzytelności o nieustalonej wysokości", "entries": [{ "from": "2001-01-01", "value": 19, "source": "Dz.U. 2026 poz. 191, art. 7 ust. 1 pkt 7 lit. b" }] },
+  { "id": "notary.taxa", "kind": "law", "unit": "table:PLN", "says_pl": "Taksa notarialna maksymalna ponad 100 zł (progi)", "entries": [{ "from": "2021-07-01", "value": [[0, 0], [3000, 0.03], [10000, 0.02], [30000, 0.01], [60000, 0.004], [1000000, 0.002], [2000000, 0.0025]], "source": "rozp. MS w sprawie maksymalnych stawek taksy notarialnej, Dz.U. 2024 poz. 1566, § 3" }] },
+  { "id": "notary.taxa_base", "kind": "law", "unit": "PLN", "says_pl": "Taksa: kwota stała do 3 000 zł", "entries": [{ "from": "2021-07-01", "value": 100, "source": "Dz.U. 2024 poz. 1566, § 3 pkt 1" }] },
+  { "id": "notary.taxa_max", "kind": "law", "unit": "PLN", "says_pl": "Taksa: najwyżej", "entries": [{ "from": "2021-07-01", "value": 10000, "source": "Dz.U. 2024 poz. 1566, § 3 pkt 7" }] },
+  { "id": "notary.flat_sale_fraction", "kind": "law", "unit": "1", "says_pl": "Taksa przy sprzedaży lokalu mieszkalnego", "entries": [{ "from": "2021-07-01", "value": 0.5, "source": "Dz.U. 2024 poz. 1566, § 6 pkt 19" }] },
+  { "id": "notary.mortgage_fraction", "kind": "law", "unit": "1", "says_pl": "Taksa przy hipotece na zabezpieczenie kredytu mieszkaniowego", "entries": [{ "from": "2021-07-01", "value": 0.25, "source": "Dz.U. 2024 poz. 1566, § 7 ust. 1 pkt 1" }] },
+  { "id": "court.kw_ownership", "kind": "law", "unit": "PLN", "says_pl": "Wpis własności do księgi wieczystej", "entries": [{ "from": "2019-01-01", "value": 200, "source": "ustawa o kosztach sądowych w sprawach cywilnych, Dz.U. 2025 poz. 1228, art. 42 ust. 1" }] },
+  { "id": "court.kw_mortgage", "kind": "law", "unit": "PLN", "says_pl": "Wpis hipoteki", "entries": [{ "from": "2019-01-01", "value": 200, "source": "Dz.U. 2025 poz. 1228, art. 42 ust. 1" }] }
+ ],
+ "templates": [
+  {
+   "id": "zakup_mieszkania@1",
+   "kind": "contract",
+   "title_pl": "Zakup mieszkania",
+   "status": "confirmed",
+   "says": "On the date the price leaves the account and the flat comes in at its price; part of the price is the loan.",
+   "params": {
+    "price": { "type": "money", "unit": "PLN", "ask_pl": "Za ile?" },
+    "own": { "type": "money", "unit": "PLN", "ask_pl": "Ile wkładu własnego (reszta to kredyt)?" },
+    "date": { "type": "date", "ask_pl": "Kiedy akt notarialny?" },
+    "flat": { "type": "place", "unit": "PLN", "ask_pl": "Które mieszkanie?" },
+    "account": { "type": "place", "unit": "PLN", "ask_pl": "Z którego konta?" }
+   },
+   "lines": [
+    { "id": "price", "says_pl": "Cena", "every": "once", "on": "at:date", "unit": "PLN", "value": "in.price", "pay": { "from": "in.account", "to": "in.flat" } },
+    { "id": "loan", "says_pl": "Część ceny z kredytu", "every": "once", "on": "at:date", "unit": "PLN", "value": "max(0, in.price - in.own)" }
+   ]
+  },
+  {
+   "id": "koszty_zakupu_pl@2026",
+   "kind": "law",
+   "title_pl": "PCC, taksa notarialna i opłaty sądowe przy zakupie mieszkania",
+   "status": "tested",
+   "says": "On the deed: PCC 2% of the price (less the part bought by first-home buyers), half the maximum notary fee for a flat sale, a quarter of it on the loan for the mortgage, 23% VAT on each fee, 200 zł for the ownership entry and 200 zł plus 19 zł PCC for the mortgage. All collected by the notary on the day. Copies (wypisy) are not included.",
+   "sources": ["ustawa o PCC, Dz.U. 2026 poz. 191, art. 7 i art. 9 pkt 17", "rozp. MS w sprawie taksy notarialnej, Dz.U. 2024 poz. 1566, § 3, § 6 pkt 19, § 7 ust. 1 pkt 1", "ustawa o kosztach sądowych, Dz.U. 2025 poz. 1228, art. 42", "NSA III FSK 281/25 (zwolnienie proporcjonalne)"],
+   "params": {
+    "purchase": { "type": "instance", "attach": true, "needs": { "price": "PLN", "loan": "PLN" }, "ask_pl": "Który zakup?" },
+    "date": { "type": "date", "ask_pl": "Data aktu (ta sama co zakupu)" },
+    "exempt_share": { "type": "number", "unit": "1", "ask_pl": "Czy to pierwsze mieszkanie? Jaka część kupują osoby, które nigdy nie miały mieszkania ani domu (0, 0,5, 1)?" },
+    "account": { "type": "place", "unit": "PLN", "ask_pl": "Z którego konta?" }
+   },
+   "checks": [
+    { "rule": "param_of(in.purchase, 'date') = in.date", "says_pl": "Koszty płaci się w dniu aktu: data musi być ta sama co zakupu.", "level": "error" },
+    { "rule": "and(in.exempt_share >= 0, in.exempt_share <= 1)", "says_pl": "Część zwolniona to liczba od 0 do 1.", "level": "error" }
+   ],
+   "lines": [
+    { "id": "pcc", "says_pl": "PCC", "every": "once", "on": "at:date", "unit": "PLN", "value": "zl(v('price', in.purchase) * p.pcc.rate * (1 - in.exempt_share))", "pay": { "from": "in.account", "to": "urzad_skarbowy" } },
+    { "id": "notary_sale", "on": "at:date", "says_pl": "Taksa za umowę sprzedaży (netto)", "every": "once", "unit": "PLN", "value": "grosze(min(p.notary.taxa_max, p.notary.taxa_base + brackets(p.notary.taxa, v('price', in.purchase))) * p.notary.flat_sale_fraction)" },
+    { "id": "notary_mortgage", "on": "at:date", "says_pl": "Taksa za hipotekę (netto)", "every": "once", "unit": "PLN", "value": "if(v('loan', in.purchase) > 0, grosze(min(p.notary.taxa_max, p.notary.taxa_base + brackets(p.notary.taxa, v('loan', in.purchase))) * p.notary.mortgage_fraction), 0)" },
+    { "id": "notary", "says_pl": "Notariusz z VAT", "every": "once", "on": "at:date", "unit": "PLN", "value": "v('notary_sale') + grosze(v('notary_sale') * p.vat.rate) + v('notary_mortgage') + grosze(v('notary_mortgage') * p.vat.rate)", "pay": { "from": "in.account", "to": "notariusz" } },
+    { "id": "court", "says_pl": "Wpisy do księgi wieczystej", "every": "once", "on": "at:date", "unit": "PLN", "value": "p.court.kw_ownership + if(v('loan', in.purchase) > 0, p.court.kw_mortgage, 0)", "pay": { "from": "in.account", "to": "sad" } },
+    { "id": "pcc_mortgage", "says_pl": "PCC od hipoteki", "every": "once", "on": "at:date", "unit": "PLN", "value": "if(v('loan', in.purchase) > 0, p.pcc.mortgage_fixed, 0)", "pay": { "from": "in.account", "to": "urzad_skarbowy" } },
+    { "id": "total", "on": "at:date", "says_pl": "Razem koszty", "every": "once", "unit": "PLN", "value": "v('pcc') + v('notary') + v('court') + v('pcc_mortgage')" }
+   ],
+   "tests": [
+    { "id": "flat_650k", "says": "650 000, kredyt 520 000, bez zwolnienia: PCC 13 000, notariusz 1 685 + 387,55 + 712,50 + 163,88, sąd 400, PCC od hipoteki 19; razem 16 367,93", "source": "polish_facts.json flat_650k_costs (wyliczone z Dz.U. 2026 poz. 191, 2024 poz. 1566, 2025 poz. 1228)", "collected_by": "research agent",
+      "args": { "purchase": "t_buy", "date": "2026-06-01", "exempt_share": 0, "account": "konto" },
+      "others": [{ "id": "t_buy", "template": "zakup_mieszkania@1", "args": { "price": 650000, "own": 130000, "date": "2026-06-01", "flat": "mieszkanie", "account": "konto" } }],
+      "year": 2026,
+      "expect": [ { "line": "pcc", "period": "2026-06-01", "value": 13000 }, { "line": "notary_sale", "period": "2026-06-01", "value": 1685 }, { "line": "notary_mortgage", "period": "2026-06-01", "value": 712.5 }, { "line": "notary", "period": "2026-06-01", "value": 2948.93 }, { "line": "court", "period": "2026-06-01", "value": 400 }, { "line": "pcc_mortgage", "period": "2026-06-01", "value": 19 }, { "line": "total", "period": "2026-06-01", "value": 16367.93 }, { "line": "pcc", "period": "2026-06-01", "date": "2026-06-01" } ] },
+    { "id": "first_home", "says": "To samo ze zwolnieniem z PCC: razem 3 367,93", "source": "polish_facts.json flat_650k_costs.total_with_first_home_exemption", "collected_by": "research agent",
+      "args": { "purchase": "t_buy", "date": "2026-06-01", "exempt_share": 1, "account": "konto" },
+      "others": [{ "id": "t_buy", "template": "zakup_mieszkania@1", "args": { "price": 650000, "own": 130000, "date": "2026-06-01", "flat": "mieszkanie", "account": "konto" } }],
+      "year": 2026, "expect": [ { "line": "total", "period": "2026-06-01", "value": 3367.93 } ] },
+    { "id": "no_loan", "says": "Bez kredytu: razem 15 272,55", "source": "polish_facts.json flat_650k_costs.total_without_loan", "collected_by": "research agent",
+      "args": { "purchase": "t_buy", "date": "2026-06-01", "exempt_share": 0, "account": "konto" },
+      "others": [{ "id": "t_buy", "template": "zakup_mieszkania@1", "args": { "price": 650000, "own": 650000, "date": "2026-06-01", "flat": "mieszkanie", "account": "konto" } }],
+      "year": 2026, "expect": [ { "line": "total", "period": "2026-06-01", "value": 15272.55 }, { "line": "notary_mortgage", "period": "2026-06-01", "value": 0 } ] },
+    { "id": "couple_half", "says": "600 000, para po połowie, zwolnienie ma jedna osoba: PCC 6 000 (bez wyroku byłoby 12 000)", "source": "https://www.prawo.pl/podatki/zwolnienie-z-pcc-na-pierwsze-mieszkanie-takze-dla-partnerow,1543476.html (NSA III FSK 281/25)", "collected_by": "research agent",
+      "args": { "purchase": "t_buy", "date": "2026-06-01", "exempt_share": 0.5, "account": "konto" },
+      "others": [{ "id": "t_buy", "template": "zakup_mieszkania@1", "args": { "price": 600000, "own": 600000, "date": "2026-06-01", "flat": "mieszkanie", "account": "konto" } }],
+      "year": 2026, "expect": [ { "line": "pcc", "period": "2026-06-01", "value": 6000 } ] },
+    { "id": "big_price_cap", "says": "Taksa nie przekracza 10 000 zł: przy 5 mln sprzedaż = 5 000 netto", "source": "Dz.U. 2024 poz. 1566, § 3 pkt 7 i § 6 pkt 19 (wyliczenie)", "collected_by": "author",
+      "args": { "purchase": "t_buy", "date": "2026-06-01", "exempt_share": 1, "account": "konto" },
+      "others": [{ "id": "t_buy", "template": "zakup_mieszkania@1", "args": { "price": 5000000, "own": 5000000, "date": "2026-06-01", "flat": "mieszkanie", "account": "konto" } }],
+      "year": 2026, "expect": [ { "line": "notary_sale", "period": "2026-06-01", "value": 5000 } ] }
+   ]
+  },
+  {
+   "id": "kredyt@1",
+   "kind": "contract",
+   "title_pl": "Kredyt w ratach równych",
+   "status": "tested",
+   "says": "Drawn on the start date into the account; from the next month a level instalment of interest at rate/12 and capital, paid on the instalment day; a new rate recomputes the instalment on the balance left; the last instalment closes the balance.",
+   "sources": ["ustawa z 23.03.2017 o kredycie hipotecznym (rata równa według umowy kredytu)"],
+   "params": {
+    "principal": { "type": "money", "unit": "PLN", "ask_pl": "Ile kredytu?" },
+    "rate": { "type": "number", "unit": "1", "ask_pl": "Oprocentowanie roczne (np. WIBOR + marża)?" },
+    "months": { "type": "number", "unit": "1", "ask_pl": "Na ile miesięcy?" },
+    "start": { "type": "date", "ask_pl": "Kiedy wypłata kredytu?" },
+    "account": { "type": "place", "unit": "PLN", "ask_pl": "Z którego konta raty?" },
+    "debt": { "type": "place", "unit": "PLN", "ask_pl": "Który dług?" },
+    "bank": { "type": "place", "default": "bank", "says_pl": "komu odsetki" },
+    "pay_on": { "type": "text", "default": "day:5", "says_pl": "dzień raty" }
+   },
+   "lines": [
+    { "id": "drawdown", "says_pl": "Wypłata kredytu", "every": "once", "on": "at:start", "unit": "PLN", "value": "in.principal", "pay": { "from": "in.debt", "to": "in.account" } },
+    { "id": "k", "says_pl": "Numer raty", "every": "month", "unit": "1", "value": "months_between(in.start, date)" },
+    { "id": "opening", "says_pl": "Do spłaty na początek miesiąca", "every": "month", "unit": "PLN", "gate": "and(v('k') >= 1, v('k') <= in.months)", "value": "if(v('k') = 1, in.principal, prev('closing'))" },
+    { "id": "interest", "says_pl": "Odsetki", "every": "month", "on": "in.pay_on", "bd": "next", "unit": "PLN", "gate": "and(v('k') >= 1, v('k') <= in.months)", "value": "grosze(v('opening') * in.rate / 12)", "pay": { "from": "in.account", "to": "in.bank" } },
+    { "id": "rate_now", "says_pl": "Oprocentowanie w miesiącu", "every": "month", "unit": "1", "value": "in.rate" },
+    { "id": "instalment", "says_pl": "Rata (stała; liczona od nowa przy zmianie oprocentowania)", "every": "month", "unit": "PLN", "gate": "and(v('k') >= 1, v('k') <= in.months)", "value": "if(v('k') = in.months, v('opening') + v('interest'), if(or(v('k') = 1, v('rate_now') != prev('rate_now')), grosze(annuity(v('opening'), in.rate / 12, in.months - v('k') + 1)), prev('instalment')))" },
+    { "id": "capital", "says_pl": "Część kapitałowa", "every": "month", "on": "in.pay_on", "bd": "next", "unit": "PLN", "gate": "and(v('k') >= 1, v('k') <= in.months)", "value": "v('instalment') - v('interest')", "pay": { "from": "in.account", "to": "in.debt" } },
+    { "id": "closing", "says_pl": "Do spłaty na koniec miesiąca", "every": "month", "unit": "PLN", "value": "v('opening') - v('capital')" }
+   ],
+   "tests": [
+    { "id": "pko_405k", "says": "405 000 na 300 miesięcy przy 5,91%: rata 2 587,18", "source": "direct.money.pl, ranking 21.09.2026 (polish_facts.json mortgage_instalment_pko_405k)", "collected_by": "research agent",
+      "args": { "principal": 405000, "rate": 0.0591, "months": 300, "start": "2026-01-15", "account": "konto", "debt": "kredyt_hipoteczny" }, "year": 2026,
+      "expect": [ { "line": "instalment", "period": "2026-02", "value": 2587.18 }, { "line": "instalment", "period": "2026-12", "value": 2587.18 }, { "line": "interest", "period": "2026-02", "value": 1994.63 }, { "line": "opening", "period": "2026-01", "value": 0 }, { "line": "capital", "period": "2026-02", "date": "2026-02-05" }, { "line": "drawdown", "period": "2026-01-15", "value": 405000 }, { "line": "drawdown", "period": "2026-01-15", "date": "2026-01-15" } ] },
+    { "id": "rate_change", "says": "Zmiana oprocentowania z 5,91% na 4,91% od lipca: rata liczona od nowa na pozostały kapitał (402 007,90) i 295 rat, potem stała", "source": "umowa kredytu ze zmiennym oprocentowaniem (wyliczenie)", "collected_by": "author",
+      "args": { "principal": 405000, "rate": { "dated": [ { "from": "1900-01-01", "value": 0.0591 }, { "from": "2026-07-01", "value": 0.0491 } ] }, "months": 300, "start": "2026-01-15", "account": "konto", "debt": "kredyt_hipoteczny" }, "year": 2026,
+      "expect": [ { "line": "instalment", "period": "2026-06", "value": 2587.18 }, { "line": "instalment", "period": "2026-07", "value": 2349.22 }, { "line": "instalment", "period": "2026-12", "value": 2349.22 } ] },
+    { "id": "finwire_750k", "says": "750 000 na 25 lat: 5,82% → 4 750,08; 6,20% → 4 924,37", "source": "finwire 5.10.2026 (polish_facts.json mortgage_instalment_750k_582)", "collected_by": "research agent",
+      "args": { "principal": 750000, "rate": 0.0582, "months": 300, "start": "2026-01-15", "account": "konto", "debt": "kredyt_hipoteczny" }, "year": 2026,
+      "expect": [ { "line": "instalment", "period": "2026-02", "value": 4750.08 } ] },
+    { "id": "short_closes", "says": "Kredyt na 3 miesiące zamyka się do zera w ostatniej racie i potem nic już nie płaci", "source": "definicja kredytu ratalnego (wyliczenie)", "collected_by": "author",
+      "args": { "principal": 3000, "rate": 0.12, "months": 3, "start": "2026-01-15", "account": "konto", "debt": "kredyt_hipoteczny" }, "year": 2026,
+      "expect": [ { "line": "closing", "period": "2026-04", "value": 0 }, { "line": "opening", "period": "2026-05", "value": 0 }, { "line": "capital", "period": "2026-05", "value": 0 }, { "line": "instalment", "period": "2026-05", "value": 0 }, { "line": "instalment", "period": "2026-02", "value": 1020.07 } ] }
+   ]
+  },
+  {
+   "id": "mieszkanie_wlasne@1",
+   "kind": "contract",
+   "title_pl": "Utrzymanie własnego mieszkania",
+   "status": "confirmed",
+   "says": "Monthly fees to the housing community (administration, repair fund, water), growing with prices; this is where we live.",
+   "provides": ["housing"],
+   "params": {
+    "fees": { "type": "money", "unit": "PLN", "ask_pl": "Ile czynszu do wspólnoty miesięcznie?" },
+    "account": { "type": "place", "unit": "PLN", "ask_pl": "Z którego konta?" },
+    "to": { "type": "place", "default": "wspolnota", "says_pl": "komu" }
+   },
+   "lines": [
+    { "id": "fees", "says_pl": "Czynsz do wspólnoty", "every": "month", "on": "day:10", "unit": "PLN", "value": "in.fees * p.index.prices", "pay": { "from": "in.account", "to": "in.to" } }
+   ]
+  }
+ ],
+ "scenarios": [
+  {
+   "id": "kupno",
+   "says_pl": "Kupujemy mieszkanie za 650 000 zł 3 lipca 2028: 130 000 wkładu (ze sprzedaży z rachunku maklerskiego i OKI), 520 000 kredytu na 25 lat przy 5,67% (WIBOR 3M 3,86% + marża 1,81 p.p., stałe); najem kończy się z końcem czerwca; czynsz do wspólnoty 700 zł.",
+   "base": "reality",
+   "from": "2028-06-01",
+   "ops": [
+    { "op": "add", "instance": { "id": "sprzedaz_mak", "template": "przelew@1", "label_pl": "Sprzedaż z rachunku maklerskiego na wkład", "args": { "amount": 121000, "from": "maklerskie", "to": "konto", "date": "2028-06-20" } } },
+    { "op": "add", "instance": { "id": "sprzedaz_oki", "template": "przelew@1", "label_pl": "Wypłata z OKI na wkład", "args": { "amount": 30000, "from": "oki", "to": "konto", "date": "2028-06-20" } } },
+    { "op": "add", "instance": { "id": "zakup", "template": "zakup_mieszkania@1", "label_pl": "Zakup mieszkania", "args": { "price": 650000, "own": 130000, "date": "2028-07-03", "flat": "mieszkanie", "account": "konto" } } },
+    { "op": "add", "instance": { "id": "zakup_koszty", "template": "koszty_zakupu_pl@2026", "args": { "purchase": "zakup", "date": "2028-07-03", "exempt_share": 0, "account": "konto" } } },
+    { "op": "add", "instance": { "id": "hipoteka", "template": "kredyt@1", "label_pl": "Kredyt hipoteczny", "args": { "principal": 520000, "rate": 0.0567, "months": 300, "start": "2028-07-03", "account": "konto", "debt": "kredyt_hipoteczny" } } },
+    { "op": "add", "instance": { "id": "wlasne", "template": "mieszkanie_wlasne@1", "from": "2028-07-01", "args": { "fees": 700, "account": "konto" } } },
+    { "op": "end", "id": "rent", "at": "2028-07-01" }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,199 @@
+model ch03
+  tally 1
+  on 2026-10-18
+  note "Continuous ranked probability score: the normal closed form, the sample and weighted-sample forms, a skill score against a point baseline, and interval scores, the weighted interval score and log scores of two negative binomial forecasts."
+  note "Scores are negatively oriented unless an ask says higher: JSS p. 4, a lower score indicates a better forecast."
+  note "JSS 3.1 is written as its ten normal forecasts scored against the observations; the observations come from R's unseeded random stream and are a bound."
+
+source bracher_2021 "Bracher, Ray, Gneiting, Reich, Evaluating epidemic forecasts in an interval format, PLOS Computational Biology, 12 February 2021" at "https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1008618"
+source jss_scoringrules "Jordan, Krüger, Lerch, Evaluating Probabilistic Forecasts with scoringRules, Journal of Statistical Software 90(12), August 2019" at "https://www.jstatsoft.org/article/view/v090i12"
+source properscoring "properscoring README (The Climate Corporation)" at "https://raw.githubusercontent.com/properscoring/properscoring/master/README.rst"
+
+axis disp
+  half-up "printed figures are rounded to the nearest, a tie away from zero"
+  half-even "printed figures are rounded to the nearest, a tie to even"
+  down "printed figures are truncated"
+
+axis wis_form
+  eq1 "Bracher eq. (1): (w0 |y − m| + Σ wk ISk) / (K + 1/2)"
+  no_median "without the median term: Σ wk ISk / K"
+
+index ak = 1..11
+
+index bmem = [m1]
+
+index grid = 1..1000
+
+index j10 = 1..10
+  note "JSS 3.1: the ten normal forecasts, one per observation of obs <- rnorm(10)."
+
+index jcall = [sd_pos, sd_neg]
+  note "JSS 3.1 calls crps_norm with sd = c(1:10) (p. 7) and again with sd = c(1:9, -5) (p. 8)."
+
+index nbf = [nb_f, nb_g]
+
+index obs5 = [o1, o2, o3, o4, o5]
+
+input alpha[k in ak]: num
+
+input base_fc[j in bmem]: num
+
+input grid_hi: num
+
+input grid_lo: num
+
+input jss_sd10: num
+
+input mu: num
+
+input nb_mean[f in nbf]: num
+
+input nb_size[f in nbf]: int
+
+input sig: num
+
+input w0: num
+
+input y0: num
+
+input y5[o in obs5]: num
+
+input y_nb: int
+
+def base5[o in obs5]: num = crps(base_fc[j] for j in bmem, y5[o])
+
+def base_score: num = sum(o in obs5: base5[o]) / count(o in obs5)
+
+def crps0: num = crps(normal(mu, sig), y0) to 1e-20
+
+def crps5[o in obs5]: num = crps(normal(mu, sig), y5[o]) to 1e-20
+
+def crps_grid: num = crps(gx[i] weight gw[i] for i in grid, y0)
+
+def fc_score: num = sum(o in obs5: crps5[o]) / count(o in obs5)
+
+def gw[i in grid]: num = pdf(normal(mu, sig), gx[i]) to 1e-30
+
+def gx[i in grid]: num = grid_lo + (grid_hi - grid_lo) * (pos(i) - 1) / (count(j in grid) - 1)
+
+def is_score[f in nbf, k in ak]: num = nb_hi[f, k] - nb_lo[f, k] + 2 / alpha[k] * max(0, nb_lo[f, k] - y_nb) + 2 / alpha[k] * max(0, y_nb - nb_hi[f, k])
+
+def is_sum[f in nbf]: num = sum(k in ak: alpha[k] / 2 * is_score[f, k])
+
+def jss_mean[j in j10]: num
+  note "JSS Section 3.1, p. 7: mean = c(1:10)"
+  rule base v jss_2019 = j
+
+def jss_sd[s in jcall, j in j10]: num
+  note "JSS Section 3.1: sd = c(1:10) (p. 7); sd = c(1:9, -5) in the second call (p. 8)"
+  rule base v jss_2019 = j
+  rule neg excepts base v jss_2019 when s = sd_neg and j = 10 = jss_sd10
+
+def ln_pmf[f in nbf]: num = ln(pmf(negbin(nb_mean[f], nb_size[f]), y_nb)) to 1e-9
+
+def nb_hi[f in nbf, k in ak]: int = quantile(negbin(nb_mean[f], nb_size[f]), 1 - alpha[k] / 2)
+
+def nb_lo[f in nbf, k in ak]: int = quantile(negbin(nb_mean[f], nb_size[f]), alpha[k] / 2)
+
+def nb_med[f in nbf]: int = quantile(negbin(nb_mean[f], nb_size[f]), 1 / 2)
+
+def nb_sd[f in nbf]: num = sqrt(nb_var[f]) to 0.0001
+
+def nb_var[f in nbf]: num = nb_mean[f] + nb_mean[f] * nb_mean[f] / nb_size[f]
+
+def skill: num = (base_score - fc_score) / base_score
+
+def wis[f in nbf]: num
+  rule eq1 when wis_form = eq1 = (w0 * abs(y_nb - nb_med[f]) + is_sum[f]) / (count(k in ak) + 1 / 2)
+  rule no_median when wis_form = no_median = is_sum[f] / count(k in ak)
+
+bound jss_obs "JSS 3.1, p. 7: obs <- rnorm(10), the ten observations the forecasts are scored against" because "they are R's unseeded random stream, data a Tally reality can't hold (LANGUAGE §5.17), and the article doesn't print them"
+
+bound jss_unseeded "JSS 3.2 crps_sample: forecasts given as 3e4 rnorm draws (sample_nm)" because "the sample is R's unseeded random stream and is not printed, so the scores can't be recomputed"
+
+bound logs_sample "JSS 3.2 logs_sample: the log score of a forecast given as a sample" because "a sample has no density (LANGUAGE §5.15); its draws are also unseeded and not printed"
+
+bound np_stream "properscoring crps_ensemble and threshold decomposition of np.random.RandomState(0).randn(1000)" because "the ensemble is numpy's generator stream, which is not a Tally draw, and its 1000 values are not printed"
+
+ask bracher_logs: round(ln_pmf[f], 0.01, disp) for f in nbf orient higher
+
+ask bracher_logs_neg: round(-ln_pmf[f], 0.01, disp) for f in nbf orient lower
+
+ask bracher_q95: quantile(negbin(nb_mean[f], nb_size[f]), 0.95) for f in nbf
+
+ask bracher_sd: round(nb_sd[nb_f], 1, disp), round(nb_sd[nb_g], 0.1, disp)
+
+ask bracher_wis: round(wis[f], 0.1, disp) for f in nbf orient lower
+
+ask jss_3_1: crps(normal(jss_mean[j], jss_sd[sd_pos, j]), jss_obs) to 0.001 for j in j10 orient lower
+
+ask jss_3_1_sd: crps(normal(jss_mean[j], jss_sd[sd_neg, j]), jss_obs) to 0.001 for j in j10 orient lower
+
+ask jss_3_2_crps: jss_unseeded orient lower
+
+ask jss_3_2_logs: logs_sample orient lower
+
+ask ps_ensemble: np_stream orient lower
+
+ask ps_gaussian: crps0 orient lower
+
+ask ps_gaussian5: round(crps5[o], 0.00000001, disp) for o in obs5 orient lower
+
+ask ps_quadrature: crps0 orient lower
+
+ask ps_skill: skill orient higher
+
+ask ps_skill_text: round(skill, 0.01, disp) orient higher
+
+ask ps_threshold: np_stream orient lower
+
+ask ps_weighted: crps_grid orient lower
+
+version bracher_2021_v
+  cite bracher_2021
+  known 2021-02-12
+  note "The WIS definition's own parameters (eqs. 1-2, p. 4), known from the article's publication."
+  alpha[1] = 0.02 "p. 4: α1 = 0.02"
+  alpha[2] = 0.05 "p. 4: α2 = 0.05"
+  alpha[3] = 0.1 "p. 4: α3 = 0.1"
+  alpha[4] = 0.2 assumed "p. 4 writes α3 = 0.1, . . ., α11 = 0.9; the levels between are implied, read as steps of 0.1"
+  alpha[5] = 0.3 assumed "p. 4 writes α3 = 0.1, . . ., α11 = 0.9; the levels between are implied, read as steps of 0.1"
+  alpha[6] = 0.4 assumed "p. 4 writes α3 = 0.1, . . ., α11 = 0.9; the levels between are implied, read as steps of 0.1"
+  alpha[7] = 0.5 assumed "p. 4 writes α3 = 0.1, . . ., α11 = 0.9; the levels between are implied, read as steps of 0.1"
+  alpha[8] = 0.6 assumed "p. 4 writes α3 = 0.1, . . ., α11 = 0.9; the levels between are implied, read as steps of 0.1"
+  alpha[9] = 0.7 assumed "p. 4 writes α3 = 0.1, . . ., α11 = 0.9; the levels between are implied, read as steps of 0.1"
+  alpha[10] = 0.8 assumed "p. 4 writes α3 = 0.1, . . ., α11 = 0.9; the levels between are implied, read as steps of 0.1"
+  alpha[11] = 0.9 "p. 4: α11 = 0.9"
+  w0 = 0.5 "p. 4, eq. (2): with w0 = 1/2"
+
+version bracher_example
+  cite bracher_2021
+  known 2026-10-18
+  note "The Section 3.2 example's forecasts F and G and its observation are a worked example's stipulations, known from the model's on, since it has no start (LANGUAGE §4.5)."
+  nb_mean[nb_f] = 60 "Section 3.2, p. 7: F with expectation 60"
+  nb_mean[nb_g] = 80 "Section 3.2, p. 7: G with expectation 80"
+  nb_size[nb_f] = 4 "Section 3.2, p. 7: and size 4"
+  nb_size[nb_g] = 10 "Section 3.2, p. 7: and size 10"
+  y_nb = 190 "Section 3.2, p. 7: y = 190"
+
+version jss_2019
+  cite jss_scoringrules
+  known 2026-10-18
+  note "The article is dated August 2019. This version holds only the Section 3.1 example's forecasts, a worked example's stipulations, known from the model's on, since it has no start (LANGUAGE §4.5). The rules of jss_mean and jss_sd cite it."
+  jss_sd10 = -5 "Section 3.1, p. 8: sd = c(1:9, -5), the tenth forecast"
+
+version properscoring_readme
+  cite properscoring
+  known 2026-10-18
+  note "The README's examples are worked examples: their forecasts and observations are stipulations, known from the model's on, since it has no start (LANGUAGE §4.5). The README also carries no date of its own; its retrieval day is the same day."
+  base_fc = 0 "skill example: suppose that our baseline forecast is to always predict 0"
+  grid_hi = 5 "Weighted by PDF values: x = np.linspace(-5, 5, num=1000)"
+  grid_lo = -5 "Weighted by PDF values: x = np.linspace(-5, 5, num=1000)"
+  mu = 0 "ps.crps_gaussian(0, mu=0, sig=1)"
+  sig = 1 "ps.crps_gaussian(0, mu=0, sig=1)"
+  y0 = 0 "ps.crps_gaussian(0, mu=0, sig=1)"
+  y5[o1] = -2 "ps.crps_gaussian([-2, -1, 0, 1, 2], mu=0, sig=1)"
+  y5[o2] = -1 "ps.crps_gaussian([-2, -1, 0, 1, 2], mu=0, sig=1)"
+  y5[o3] = 0 "ps.crps_gaussian([-2, -1, 0, 1, 2], mu=0, sig=1)"
+  y5[o4] = 1 "ps.crps_gaussian([-2, -1, 0, 1, 2], mu=0, sig=1)"
+  y5[o5] = 2 "ps.crps_gaussian([-2, -1, 0, 1, 2], mu=0, sig=1)"

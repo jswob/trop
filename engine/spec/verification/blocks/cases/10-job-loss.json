@@ -1,0 +1,110 @@
+{
+ "id": "10-job-loss",
+ "says_pl": "Tracę pracę za 5 lat.",
+ "places": [
+  { "id": "urzad_pracy", "kind": "outside", "label_pl": "Powiatowy urząd pracy" }
+ ],
+ "values": [
+  { "id": "zasilek.first", "kind": "law", "unit": "PLN", "says_pl": "Zasiłek dla bezrobotnych, pierwsze 90 dni (brutto miesięcznie)",
+    "entries": [
+     { "from": "2025-06-01", "value": 1721.9, "source": "M.P. 2025 poz. 510" },
+     { "from": "2026-06-01", "value": 1783.9, "source": "M.P. 2026 poz. 268" },
+     { "from": "2027-06-01", "expr": "grosze(before * (1 + p.assume.inflation))", "repeat": "year", "source": "ustawa o rynku pracy (Dz.U. 2025 poz. 620): waloryzacja co 1 czerwca o średnioroczną inflację; dalej założenie" }
+    ] },
+  { "id": "zasilek.after", "kind": "law", "unit": "PLN", "says_pl": "Zasiłek dla bezrobotnych po 90 dniach (brutto miesięcznie)",
+    "entries": [
+     { "from": "2025-06-01", "value": 1352.2, "source": "M.P. 2025 poz. 510" },
+     { "from": "2026-06-01", "value": 1400.9, "source": "M.P. 2026 poz. 268" },
+     { "from": "2027-06-01", "expr": "grosze(before * (1 + p.assume.inflation))", "repeat": "year", "source": "jak wyżej" }
+    ] },
+  { "id": "zasilek.first_months", "kind": "law", "unit": "1", "says_pl": "Ile miesięcy (po 30 dni) w wyższej kwocie", "entries": [{ "from": "2025-06-01", "value": 3, "source": "Dz.U. 2025 poz. 620, art. 218–228 (pierwsze 90 dni)" }] },
+  { "id": "zasilek.months", "kind": "law", "unit": "1", "says_pl": "Okres pobierania (miesiące po 30 dni)", "entries": [{ "from": "2025-06-01", "value": 6, "source": "Dz.U. 2025 poz. 620 (180 dni)" }] },
+  { "id": "zasilek.months_extended", "kind": "law", "unit": "1", "says_pl": "Wydłużony okres pobierania", "entries": [{ "from": "2025-06-01", "value": 12, "source": "Dz.U. 2025 poz. 620 (365 dni: m.in. 50+ z 20 latami stażu, samotny rodzic)" }] },
+  { "id": "zasilek.wait_months", "kind": "law", "unit": "1", "says_pl": "Odroczenie po rozwiązaniu umowy za porozumieniem stron", "entries": [{ "from": "2025-06-01", "value": 3, "source": "Dz.U. 2025 poz. 620 (90 dni, chyba że z przyczyn pracodawcy)" }] },
+  { "id": "zasilek.long_service_multiplier", "kind": "law", "unit": "1", "says_pl": "Zasiłek przy co najmniej 20 latach stażu", "entries": [{ "from": "2025-06-01", "value": 1.2, "source": "Dz.U. 2025 poz. 620 (120% kwoty)" }] }
+ ],
+ "templates": [
+  {
+   "id": "zasilek_pl@2026",
+   "kind": "law",
+   "title_pl": "Zasiłek dla bezrobotnych",
+   "status": "tested",
+   "says": "Monthly benefit from the start month: the higher amount for the first 3 months, the lower one until the 6th (12th if extended); 120% with 20+ years of service; after an agreement to end the job it starts 3 months later; nothing after resigning or a disciplinary dismissal. 9% health comes off; the PIT advance is on the scale with the monthly reduction when PIT-2 is filed. It is income in the annual return.",
+   "sources": ["ustawa o rynku pracy i służbach zatrudnienia, Dz.U. 2025 poz. 620, art. 218–228", "M.P. 2026 poz. 268 (kwoty od 1.06.2026)", "ustawa o PIT art. 20 ust. 1 (inne źródła)"],
+   "joins": ["pit_return@2022"],
+   "params": {
+    "start": { "type": "date", "ask_pl": "Od kiedy przysługuje zasiłek (rejestracja w urzędzie pracy)?" },
+    "reason": { "type": "enum", "values": ["zwolnienie", "porozumienie", "wlasne", "dyscyplinarne"], "ask_pl": "Jak skończyła się praca: zwolnienie przez pracodawcę, porozumienie stron, własne wypowiedzenie czy dyscyplinarka?" },
+    "long_service": { "type": "bool", "default": false, "ask_pl": "Czy masz co najmniej 20 lat stażu pracy?" },
+    "extended": { "type": "bool", "default": false, "ask_pl": "Czy przysługuje wydłużony okres (np. 50+ z 20 latami stażu)?" },
+    "business_active": { "type": "bool", "ask_pl": "Czy w tym czasie prowadzisz działalność gospodarczą?" },
+    "pit2": { "type": "bool", "default": true, "says_pl": "PIT-2 złożony w urzędzie pracy" },
+    "account": { "type": "place", "unit": "PLN", "ask_pl": "Na które konto?" },
+    "pay_on": { "type": "text", "default": "next_month:10", "says_pl": "kiedy urząd wypłaca (założenie)" },
+    "form": { "type": "enum", "values": ["skala"], "fixed": "skala", "says_pl": "Zasiłek jest zawsze na skali." }
+   },
+   "checks": [
+    { "rule": "not(in.business_active)", "says_pl": "Zasiłek przysługuje tylko osobie bezrobotnej; prowadzenie działalności gospodarczej go wyklucza.", "level": "error" }
+   ],
+   "lines": [
+    { "id": "month_no", "says_pl": "Który miesiąc zasiłku (od zera)", "every": "month", "unit": "1", "value": "months_between(in.start, date) - if(in.reason = 'porozumienie', p.zasilek.wait_months, 0)" },
+    { "id": "gross", "says_pl": "Zasiłek brutto", "every": "month", "unit": "PLN",
+      "gate": "and(or(in.reason = 'zwolnienie', in.reason = 'porozumienie'), date >= in.start, v('month_no') >= 0, v('month_no') < if(in.extended, p.zasilek.months_extended, p.zasilek.months))",
+      "value": "grosze(if(v('month_no') < p.zasilek.first_months, p.zasilek.first, p.zasilek.after) * if(in.long_service, p.zasilek.long_service_multiplier, 1))" },
+    { "id": "health", "says_pl": "Składka zdrowotna", "every": "month", "unit": "PLN", "value": "grosze(v('gross') * p.health.rate)" },
+    { "id": "income", "says_pl": "Dochód do zeznania", "every": "month", "unit": "PLN", "value": "v('gross')" },
+    { "id": "tax.base", "says_pl": "Podstawa zaliczki", "every": "month", "unit": "PLN", "value": "zl(v('gross'))" },
+    { "id": "pit.advance", "says_pl": "Zaliczka na PIT", "every": "month", "on": "next_month:20", "bd": "next", "unit": "PLN",
+      "value": "if(v('gross') > 0, zl(max(0, brackets(p.pit.scale, ytd('tax.base')) - brackets(p.pit.scale, ytd_before('tax.base')) - if(in.pit2, p.pit.reduction_monthly, 0))), 0)",
+      "pay": { "from": "urzad_pracy", "to": "urzad_skarbowy" } },
+    { "id": "net", "says_pl": "Zasiłek na konto", "every": "month", "on": "in.pay_on", "bd": "prev", "unit": "PLN",
+      "value": "grosze(v('gross') - v('health') - v('pit.advance'))",
+      "pay": { "from": "urzad_pracy", "to": "in.account", "match": "zasilek" } }
+   ],
+   "tests": [
+    { "id": "net_2026", "says": "Zasiłek od 1.06.2026: 1 783,90 brutto → 1 623,35 netto; po 90 dniach 1 400,90 → 1 274,82; bez zaliczki przy PIT-2", "source": "https://zielonalinia.gov.pl/zasilek-dla-bezrobotnych-wysokosc-swiadczenia-od-czerwca-2026-r/", "collected_by": "research agent (polish_facts.json zasilek_net_2026)",
+      "args": { "start": "2026-07-01", "reason": "zwolnienie", "business_active": false, "account": "konto" }, "year": 2026,
+      "expect": [ { "line": "gross", "period": "2026-07", "value": 1783.9 }, { "line": "net", "period": "2026-07", "value": 1623.35 }, { "line": "net", "period": "2026-09", "value": 1623.35 }, { "line": "net", "period": "2026-10", "value": 1274.82 }, { "line": "net", "period": "2026-12", "value": 1274.82 }, { "line": "pit.advance", "period": "2026-07", "value": 0 }, { "line": "gross", "period": "2027-01", "value": 0 }, { "line": "gross", "period": "2026-06", "value": 0 } ] },
+    { "id": "long_service", "says": "120% przy 20 latach stażu: 2 140,68 i 1 681,08", "source": "pit.pl (polish_facts.json zasilek_120pct_2026: 1,2 × kwoty z M.P. 2026 poz. 268)", "collected_by": "research agent",
+      "args": { "start": "2026-07-01", "reason": "zwolnienie", "business_active": false, "long_service": true, "account": "konto" }, "year": 2026,
+      "expect": [ { "line": "gross", "period": "2026-07", "value": 2140.68 }, { "line": "gross", "period": "2026-10", "value": 1681.08 } ] },
+    { "id": "agreement_waits", "says": "Porozumienie stron: zasiłek dopiero po 90 dniach, potem pełne 6 miesięcy", "source": "Dz.U. 2025 poz. 620 (odroczenie 90 dni)", "collected_by": "author",
+      "args": { "start": "2026-04-01", "reason": "porozumienie", "business_active": false, "account": "konto" }, "year": 2026,
+      "expect": [ { "line": "gross", "period": "2026-06", "value": 0 }, { "line": "gross", "period": "2026-07", "value": 1783.9 }, { "line": "gross", "period": "2026-10", "value": 1400.9 }, { "line": "gross", "period": "2026-12", "value": 1400.9 }, { "line": "gross", "period": "2027-01", "value": 0 } ] },
+    { "id": "resigned", "says": "Własne wypowiedzenie: zasiłek nie przysługuje", "source": "Dz.U. 2025 poz. 620 (polish_facts.json zasilek_rules.no_benefit)", "collected_by": "research agent",
+      "args": { "start": "2026-07-01", "reason": "wlasne", "business_active": false, "account": "konto" }, "year": 2026,
+      "expect": [ { "line": "gross", "period": "2026-07", "value": 0 }, { "line": "net", "period": "2026-08", "value": 0 } ] },
+    { "id": "extended_no_pit2", "says": "Wydłużony okres: wypłata także w 7.–12. miesiącu; bez PIT-2 zaliczka 12% od 1 401 = 168", "source": "Dz.U. 2025 poz. 620 (365 dni); ustawa o PIT art. 27 ust. 1 (wyliczenie)", "collected_by": "author",
+      "args": { "start": "2026-07-01", "reason": "zwolnienie", "business_active": false, "extended": true, "pit2": false, "account": "konto" }, "year": 2026,
+      "expect": [ { "line": "gross", "period": "2027-01", "value": 1400.9 }, { "line": "gross", "period": "2027-05", "value": 1400.9 }, { "line": "gross", "period": "2027-07", "value": 0 }, { "line": "pit.advance", "period": "2026-10", "value": 168 }, { "line": "net", "period": "2026-10", "value": 1106.82 } ] },
+    { "id": "dates", "says": "Zaliczka do 20. następnego miesiąca", "source": "ustawa o PIT art. 38 ust. 1 (płatnik do 20. dnia)", "collected_by": "author",
+      "args": { "start": "2026-07-01", "reason": "zwolnienie", "business_active": false, "pit2": false, "account": "konto" }, "year": 2026,
+      "expect": [ { "line": "pit.advance", "period": "2026-07", "date": "2026-08-20" }, { "line": "net", "period": "2026-07", "date": "2026-08-10" } ] }
+   ]
+  }
+ ],
+ "scenarios": [
+  {
+   "id": "utrata_pracy",
+   "says_pl": "Tracę pracę 17 października 2031; działalność prowadzę dalej, więc ZUS z działalności przestaje być zbiegiem (od listopada pełny), a zasiłek nie przysługuje.",
+   "base": "reality",
+   "from": "2031-10-17",
+   "ops": [
+    { "op": "end", "id": "my_job" },
+    { "op": "set_arg", "id": "business_tax", "arg": "zus_stage", "entry": { "from": "2031-11-01", "value": "full" } },
+    { "op": "set_arg", "id": "invest_15_oki", "arg": "until", "entry": { "value": "wife_tax/net" } }
+   ]
+  },
+  {
+   "id": "utrata_pracy_i_dzialalnosci",
+   "says_pl": "Jak wyżej, ale działalność też się kończy i od listopada biorę zasiłek (zwolnienie przez pracodawcę).",
+   "base": "utrata_pracy",
+   "from": "2031-10-17",
+   "ops": [
+    { "op": "end", "id": "business" },
+    { "op": "add", "instance": { "id": "my_zasilek", "template": "zasilek_pl@2026", "label_pl": "Mój zasiłek", "args": { "start": "2031-11-01", "reason": "zwolnienie", "business_active": false, "account": "konto" } } },
+    { "op": "set_arg", "id": "pit_joint", "arg": "a", "entry": { "value": ["my_tax", "my_zasilek"] } }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,82 @@
+part loans
+  tally 1
+  note "Kredyty gospodarstwa: rata równa (annuitet), odsetki od salda, nadpłata skraca okres. Wypłata trafia do sprzedawcy."
+
+index inst = 1..480
+
+index overpay_mode = [shorten, reduce]
+
+index seller = [electro]
+
+place loan_debt[l in loan]: debt PLN
+
+place sellers[s in seller]: outside PLN
+
+input loan_seller[l in loan]: key seller
+
+input loan_terms[l in loan]: (principal money PLN, n int, apr rate nominal 12 /year, first_month month, due int)
+
+input overpay[l in loan, k in inst]: money PLN
+
+input overpay_choice[l in loan]: key overpay_mode
+
+def annuity[l in loan]: money PLN
+  rule base = round(loan_terms[l].principal * inst_rate[l] * factor(loan_terms[l].apr, loan_terms[l].n, month) / (factor(loan_terms[l].apr, loan_terms[l].n, month) - 1), 0.01, half-up)
+  rule zero excepts base when inst_rate[l] = 0 = round(loan_terms[l].principal / loan_terms[l].n, 0.01, half-up)
+
+def debt_before[l in loan, k in inst]: money PLN
+  rule initial when k = 1 = loan_terms[l].principal
+  rule later when k > 1 = debt_before[l, k - 1] - principal_part[l, k - 1] - overpay_paid[l, k - 1]
+
+def inst_day[l in loan, k in inst]: date = day_of(loan_terms[l].first_month + (k - 1), loan_terms[l].due)
+
+def inst_rate[l in loan]: num = periodic(loan_terms[l].apr, month)
+
+def instalment[l in loan, k in inst]: money PLN
+  rule reduce excepts shorten when overpay_choice[l] = reduce = ? "Nadpłata ze zmniejszeniem raty: bank przelicza ratę; zasada przeliczenia nie jest wpisana."
+  rule shorten = annuity[l]
+
+def interest_part[l in loan, k in inst]: money PLN = round(debt_before[l, k] * inst_rate[l], 0.01, half-up)
+
+def overpay_paid[l in loan, k in inst]: money PLN = min(overpay[l, k], debt_before[l, k] - principal_part[l, k])
+
+def principal_part[l in loan, k in inst]: money PLN
+  note "ostatnia rata umowy spłaca resztę, także grosze z zaokrąglenia raty"
+  rule base = min(debt_before[l, k], instalment[l, k] - interest_part[l, k])
+  rule last excepts base when k >= loan_terms[l].n = debt_before[l, k]
+
+pay loan_instalment[l in loan, k in inst]
+  from konto
+  to loan_debt[l]
+  amount principal_part[l, k]
+  on inst_day[l, k]
+  when debt_before[l, k] > 0
+
+pay loan_interest[l in loan, k in inst]
+  from konto
+  to kredytodawcy
+  amount interest_part[l, k]
+  on inst_day[l, k]
+  when debt_before[l, k] > 0
+
+pay loan_out[l in loan]
+  from loan_debt[l]
+  to sellers[loan_seller[l]]
+  amount loan_terms[l].principal
+  on day_of(loan_terms[l].first_month - 1, loan_terms[l].due)
+
+pay loan_overpay[l in loan, k in inst]
+  from konto
+  to loan_debt[l]
+  amount overpay_paid[l, k]
+  on inst_day[l, k]
+  when debt_before[l, k] > 0 and overpay[l, k] > 0
+
+version laptop_loan
+  cite household
+  known 2026-05-05
+  loan_seller[laptop] = electro "umowa ratalna, sprzedawca"
+  loan_terms[laptop] = (3000, 10, 0, 2026-06, 5) "umowa ratalna 0%, § 2"
+  opening[loan_debt[laptop]] = 0
+  overpay = 0 "brak nadpłat"
+  overpay_choice = shorten "regulamin: nadpłata skraca okres"

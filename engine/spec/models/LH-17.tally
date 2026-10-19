@@ -1,0 +1,327 @@
+model lh17
+  tally 1
+  on 2026-10-18
+  note "Milevsky and Robinson (2005). Ruin is the event that the stochastic present value (SPV) of $1 a year of real spending exceeds the initial wealth w. Returns are lognormal with drift mu and volatility sigma, and the remaining lifetime is exponential with rate lam."
+  note "Eq. 8: prob[SPV > w] = GammaDist(alpha, beta | 1/w), with alpha = (2 mu + 4 lam) / (sigma^2 + lam) - 1 and beta = (sigma^2 + lam) / 2. It is exact for lam = 0 (an endowment, eventual ruin) and a moment-matched approximation for lam > 0."
+  note "Spending is a continuous flow, as in Eq. 8; the paper gives no other timing for its tables. The 'exact' finite-lifetime figures integrate the ruin over the RP-2000 mortality table: a numerical integral the language can't do, so they are a bound (§5.17). The case doesn't carry the table either."
+
+source kalas2014 "Martin Kalaš, Sustainable Retirement Spending (slides, 21 November 2014), Czech Society of Actuaries" at "https://www.actuaria.cz/uploads-old/sustainable_retirement_spending_sav_20141121.pdf"
+
+source mr2005 "Milevsky and Robinson, A Sustainable Spending Rate without Simulation, Financial Analysts Journal 61(6), 2005, pp. 89-100 (QWeMA reprint, Internet Archive capture 2016-08-03)" at "http://web.archive.org/web/20160803142333/http://www.qwema.ca:80/pdf_research/2007SEPT_SustSpending.pdf"
+
+axis gamma_form
+  scale_beta "beta is the gamma scale, so the gamma mean is alpha x beta: Eq. 5, Kalaš slide 16, Excel's GAMMA.DIST"
+  rate_beta "beta is the gamma rate, so the gamma mean is alpha / beta"
+
+axis lam_round
+  exact "lam = ln(2) / median remaining lifetime, unrounded"
+  four_dp "lam rounded to 4 decimals before use, as the text and Tables 2-3 print it"
+
+index life = [endow, a50, a55, a60, a65, a70, a75, a80, m10, m20, m30]
+
+index pf = [eq, balanced, hi, mu10, p300, p400, p500, p600, p700, p800]
+
+index rlvl = [r05, r10]
+
+index spend = [k2, k3, k4, k5, k6, k7, k8, k9, k10, w20, b40k, b50k, b60k, b90k]
+
+input age_at[l in life]: num
+
+input bb_lam: num
+
+input bb_s1: num
+
+input bb_s2: num
+
+input det_r: num
+
+input det_t: int
+
+input det_w: num
+
+input k_solve: num question "the spending per $100 that a solve pins; it has no value of its own"
+
+input med_death[l in life]: num
+
+input mu[p in pf]: num
+
+input rg_alpha: num
+
+input rg_beta: num
+
+input ruin_lvl[r in rlvl]: num
+
+input sigma[p in pf]: num
+
+input spend_amt[s in spend]: num
+
+input wealth[s in spend]: num
+
+def alpha[p in pf, l in life]: num = (2 * mu[p] + 4 * lam[l]) / (pow(sigma[p], 2) + lam[l]) - 1
+
+def avg_spend[p in pf, l in life]: num
+  note "1 / E(SPV): 'The expected value of the SPV is (mu - sigma^2 + lam)^-1' (p. 94); p. 99 calls it the average-sustainability spending"
+  rule base = mu[p] - pow(sigma[p], 2) + lam[l]
+
+def beta[p in pf, l in life]: num = (pow(sigma[p], 2) + lam[l]) / 2
+
+def eventual[p in pf, s in spend]: num
+  note "Eventual ruin (lam = 0), as Kalaš slide 18 prints it after Milevsky (1997): G(k/w; 2 mu / sigma^2 - 1, sigma^2 / 2). Table 2's 'Exact.' row for the endowment"
+  rule base v kalas2014_v = cdf(gamma(2 * mu[p] / pow(sigma[p], 2) - 1, pow(sigma[p], 2) / 2), inv_w[s]) to 1e-9
+  rule rate_form excepts base when gamma_form = rate_beta = cdf(gamma(2 * mu[p] / pow(sigma[p], 2) - 1, 2 / pow(sigma[p], 2)), inv_w[s]) to 1e-9
+
+def inv_w[s in spend]: num = spend_amt[s] / wealth[s]
+
+def lam[l in life]: num
+  note "lam = ln(2) / median remaining lifetime (p. 94, p. 96). The endowment's lam = 0 is a given. The 1e-30 precision of ln(2) is the modeller's"
+  rule base = (ln(2) to 1e-30) / med_rem[l]
+  rule four_dp excepts base when lam_round = four_dp = round((ln(2) to 1e-30) / med_rem[l], 0.0001, half-up)
+
+def med_rem[l in life]: num = med_death[l] - age_at[l]
+
+def ruin[p in pf, l in life, s in spend]: num
+  note "Eq. 8 at 1/w = spending per $1 of wealth. The 1e-9 precision is the modeller's; the source prints at most 4 significant digits"
+  rule base = cdf(gamma(alpha[p, l], beta[p, l]), inv_w[s]) to 1e-9
+  rule rate_form excepts base when gamma_form = rate_beta = cdf(gamma(alpha[p, l], 1 / beta[p, l]), inv_w[s]) to 1e-9
+
+def ruin_k[p in pf, l in life]: num
+  note "Eq. 8 at k_solve per $100, for p. 98's inversion ('inverting Equation 8 to solve for the level of spending')"
+  rule base = cdf(gamma(alpha[p, l], beta[p, l]), k_solve / 100) to 1e-9
+  rule rate_form excepts base when gamma_form = rate_beta = cdf(gamma(alpha[p, l], 1 / beta[p, l]), k_solve / 100) to 1e-9
+
+bound rp2000_exact "the 'exact' ruin probabilities for finite lifetimes" because "they integrate the ruin over the RP-2000 Society of Actuaries mortality table from age 65 (note 8; p. 96): the present value of spending over a lifetime drawn from a table has no closed form, and the language has no numerical integral; the case doesn't carry the table either. Eq. 8 gives only the exponential-lifetime approximation"
+
+ask avg_sust: avg_spend[eq, endow]
+
+ask bal_40k: ruin[balanced, a65, b40k]
+
+ask bal_60k: ruin[balanced, a65, b60k]
+
+ask bal_70_60k: ruin[balanced, a70, b60k]
+
+ask base_erg: ruin[eq, a65, b60k]
+
+ask base_exact: rp2000_exact
+
+ask base_gap: ruin[eq, a65, b60k] - rp2000_exact
+
+ask e_life: 1 / bb_lam
+
+ask endow_high: ruin[eq, endow, k10]
+
+ask endow_low: ruin[eq, endow, k2]
+
+ask endow_range: min(p in [eq, balanced], s in [k4, k5, k6]: ruin[p, endow, s]), max(p in [eq, balanced], s in [k4, k5, k6]: ruin[p, endow, s])
+
+ask erg_40k: ruin[eq, a65, b40k]
+
+ask erg_50k: ruin[eq, a65, b50k]
+
+ask erg_90k: ruin[eq, a65, b90k]
+
+ask exact_40k: rp2000_exact
+
+ask exact_50k: rp2000_exact
+
+ask exact_90k: rp2000_exact
+
+ask extra_10: avg_spend[eq, m10] - avg_spend[eq, endow]
+
+ask extra_20: avg_spend[eq, m20] - avg_spend[eq, endow]
+
+ask extra_30: avg_spend[eq, m30] - avg_spend[eq, endow]
+
+ask hi_4: ruin[hi, endow, k4]
+
+ask hi_5: ruin[hi, endow, k5]
+
+ask hi_6: ruin[hi, endow, k6]
+
+ask lam_50: lam[a50]
+
+ask lam_65: lam[a65]
+
+ask mass_ruin: ruin[eq, a50, w20]
+
+ask mass_sust: 1 - ruin[eq, a50, w20]
+
+ask med_life: (ln(2) to 1e-30) / bb_lam
+
+ask neg_ret_10: cdf(normal(mu[mu10] - pow(sigma[mu10], 2) / 2, sigma[mu10]), 0) to 1e-9
+
+ask neg_ret_7: cdf(normal(mu[eq] - pow(sigma[eq], 2) / 2, sigma[eq]), 0) to 1e-9
+
+ask perp: 1 / det_r
+
+ask pv_25: (1 - 1 / pow(1 + det_r, det_t)) / det_r
+
+ask rg_mean: 1 / (rg_beta * (rg_alpha - 1))
+
+ask ruin_ex: ruin[eq, a50, w20]
+
+ask runout_years: (ln(1 / (1 - det_w * det_r)) to 1e-12) / (ln(1 + det_r) to 1e-12)
+
+ask spv_mean: 1 / avg_spend[eq, a65]
+
+ask ss_10: solve k_solve in [0, 20] to 0.01: ruin_k[balanced, a65] = ruin_lvl[r10]
+
+ask ss_5: solve k_solve in [0, 20] to 0.01: ruin_k[balanced, a65] = ruin_lvl[r05]
+
+ask surv_25: exp(-bb_lam * bb_s1) to 1e-9
+
+ask surv_40: exp(-bb_lam * bb_s2) to 1e-9
+
+ask t2_a50: ruin[eq, a50, s] for s in [k2, k3, k4, k5, k6, k7, k8, k9, k10]
+
+ask t2_a55: ruin[eq, a55, s] for s in [k2, k3, k4, k5, k6, k7, k8, k9, k10]
+
+ask t2_a60: ruin[eq, a60, s] for s in [k2, k3, k4, k5, k6, k7, k8, k9, k10]
+
+ask t2_a65: ruin[eq, a65, s] for s in [k2, k3, k4, k5, k6, k7, k8, k9, k10]
+
+ask t2_a70: ruin[eq, a70, s] for s in [k2, k3, k4, k5, k6, k7, k8, k9, k10]
+
+ask t2_a75: ruin[eq, a75, s] for s in [k2, k3, k4, k5, k6, k7, k8, k9, k10]
+
+ask t2_a80: ruin[eq, a80, s] for s in [k2, k3, k4, k5, k6, k7, k8, k9, k10]
+
+ask t2_endow: ruin[eq, endow, s] for s in [k2, k3, k4, k5, k6, k7, k8, k9, k10]
+
+ask t2_endow_diff: eventual[eq, s] - ruin[eq, endow, s] for s in [k2, k3, k4, k5, k6, k7, k8, k9, k10]
+
+ask t2_endow_exact: eventual[eq, s] for s in [k2, k3, k4, k5, k6, k7, k8, k9, k10]
+
+ask t2_geo: mu[eq] - pow(sigma[eq], 2) / 2
+
+ask t2_lam: lam[l] for l in [a50, a55, a60, a65, a70, a75, a80]
+
+ask t3_a50: ruin[balanced, a50, s] for s in [k2, k3, k4, k5, k6, k7, k8, k9, k10]
+
+ask t3_a55: ruin[balanced, a55, s] for s in [k2, k3, k4, k5, k6, k7, k8, k9, k10]
+
+ask t3_a60: ruin[balanced, a60, s] for s in [k2, k3, k4, k5, k6, k7, k8, k9, k10]
+
+ask t3_a65: ruin[balanced, a65, s] for s in [k2, k3, k4, k5, k6, k7, k8, k9, k10]
+
+ask t3_a70: ruin[balanced, a70, s] for s in [k2, k3, k4, k5, k6, k7, k8, k9, k10]
+
+ask t3_a75: ruin[balanced, a75, s] for s in [k2, k3, k4, k5, k6, k7, k8, k9, k10]
+
+ask t3_a80: ruin[balanced, a80, s] for s in [k2, k3, k4, k5, k6, k7, k8, k9, k10]
+
+ask t3_endow: ruin[balanced, endow, s] for s in [k2, k3, k4, k5, k6, k7, k8, k9, k10]
+
+ask t3_geo: mu[balanced] - pow(sigma[balanced], 2) / 2
+
+ask t5_geo: mu[p] - pow(sigma[p], 2) / 2 for p in [p300, p400, p500, p600, p700, p800]
+
+ask t5a_p300: solve k_solve in [0, 20] to 0.01: ruin_k[p300, endow] = ruin_lvl[r10]
+
+ask t5a_p400: solve k_solve in [0, 20] to 0.01: ruin_k[p400, endow] = ruin_lvl[r10]
+
+ask t5a_p500: solve k_solve in [0, 20] to 0.01: ruin_k[p500, endow] = ruin_lvl[r10]
+
+ask t5a_p600: solve k_solve in [0, 20] to 0.01: ruin_k[p600, endow] = ruin_lvl[r10]
+
+ask t5a_p700: solve k_solve in [0, 20] to 0.01: ruin_k[p700, endow] = ruin_lvl[r10]
+
+ask t5a_p800: solve k_solve in [0, 20] to 0.01: ruin_k[p800, endow] = ruin_lvl[r10]
+
+ask t5b_p300: solve k_solve in [0, 20] to 0.01: ruin_k[p300, endow] = ruin_lvl[r05]
+
+ask t5b_p400: solve k_solve in [0, 20] to 0.01: ruin_k[p400, endow] = ruin_lvl[r05]
+
+ask t5b_p500: solve k_solve in [0, 20] to 0.01: ruin_k[p500, endow] = ruin_lvl[r05]
+
+ask t5b_p600: solve k_solve in [0, 20] to 0.01: ruin_k[p600, endow] = ruin_lvl[r05]
+
+ask t5b_p700: solve k_solve in [0, 20] to 0.01: ruin_k[p700, endow] = ruin_lvl[r05]
+
+ask t5b_p800: solve k_solve in [0, 20] to 0.01: ruin_k[p800, endow] = ruin_lvl[r05]
+
+version mr2005_v
+  cite mr2005
+  known 2005-11-01
+  note "known: the article's own date, 1 November 2005, as the publisher's page gives it for Financial Analysts Journal 61(6), the November/December 2005 issue (https://rpc.cfainstitute.org/research/financial-analysts-journal/2005/a-sustainable-spending-rate-without-simulation). Round 1 used the date the Internet Archive captured the reprint, 2016-08-03, which is the copy's, not the article's (§4.5)"
+  age_at[a50] = 50 "Tables 2 and 3, row 50; p. 94: a 50-year-old"
+  age_at[a55] = 55 "Tables 2 and 3, row 55"
+  age_at[a60] = 60 "Tables 2 and 3, row 60"
+  age_at[a65] = 65 "Tables 2 and 3, row 65; p. 94: base case age 65"
+  age_at[a70] = 70 "Tables 2 and 3, row 70; p. 96: waits until age 70 to retire"
+  age_at[a75] = 75 "Tables 2 and 3, row 75"
+  age_at[a80] = 80 "Tables 2 and 3, row 80"
+  bb_lam = 0.05 "p. 93, after Eq. 4c: lambda = 0.05"
+  bb_s1 = 25 "p. 93, after Eq. 4c: living at least 25 more years"
+  bb_s2 = 40 "p. 93, after Eq. 4c: living for 40 more years"
+  det_r = 0.07 "p. 91, Eq. 1: R = 7 percent"
+  det_t = 25 "p. 91, Eq. 1: T = 25 years"
+  det_w = 10 "p. 91: starting wealth 10 times real consumption"
+  lam[endow] = 0 "p. 94: 'In the infinite horizon case of lambda = 0'; Table 2 row NA, Infinity, 0.00%"
+  med_death[a50] = 78.1 "Tables 2 and 3, row 50, median age at death (RP-2000)"
+  med_death[a55] = 83 "Tables 2 and 3, row 55, median 83.0"
+  med_death[a60] = 83.4 "Tables 2 and 3, row 60, median"
+  med_death[a65] = 83.9 "Tables 2 and 3, row 65, median"
+  med_death[a70] = 84.6 "Tables 2 and 3, row 70, median"
+  med_death[a75] = 85.7 "Tables 2 and 3, row 75, median"
+  med_death[a80] = 87.4 "Tables 2 and 3, row 80, median"
+  med_rem[m10] = 10 "p. 99, left column: a median of 10 more years"
+  med_rem[m20] = 20 "p. 99, left column: 20 more years"
+  med_rem[m30] = 30 "p. 99, left column: 30 more years"
+  mu[eq] = 0.07 "Table 2 notes: mean arithmetic portfolio return 7 percent; p. 94: 7 percent real return"
+  mu[balanced] = 0.05 "Table 3 note: mean arithmetic portfolio return 5 percent"
+  mu[hi] = 0.09 "p. 97, right column: mu = 9 percent"
+  mu[mu10] = 0.1 "p. 93, after Eq. 3d: an expected return of 10 percent"
+  mu[p300] = 0.03 "p. 98, Table 5 column head 3.00% [10.00%]"
+  mu[p400] = 0.04 "Table 5 column head 4.00% [10.00%]"
+  mu[p500] = 0.05 "Table 5 column head 5.00% [12.00%]"
+  mu[p600] = 0.06 "Table 5 column head 6.00% [15.00%]"
+  mu[p700] = 0.07 "Table 5 column head 7.00% [17.00%]"
+  mu[p800] = 0.08 "Table 5 column head 8.00% [20.00%]"
+  rg_alpha = 5 "p. 93, after Eq. 7b: alpha = 5"
+  rg_beta = 0.03 "p. 93, after Eq. 7b: beta = 0.03"
+  ruin_lvl[r05] = 0.05 "p. 98, Table 5, B. Probability of ruin 5%; p. 98 text: 5 percent ruin"
+  ruin_lvl[r10] = 0.1 "p. 98, Table 5, A. Probability of ruin 10%"
+  sigma[eq] = 0.2 "Table 2 notes: s.d. 20 percent; p. 94: volatility of 20 percent"
+  sigma[balanced] = 0.12 "Table 3 note: s.d. 12 percent"
+  sigma[hi] = 0.16 "p. 97, right column: sigma = 16 percent"
+  sigma[mu10] = 0.2 "p. 93, after Eq. 3d: sigma = 20 percent"
+  sigma[p300] = 0.1 "Table 5 column head 3.00% [10.00%]"
+  sigma[p400] = 0.1 "Table 5 column head 4.00% [10.00%]"
+  sigma[p500] = 0.12 "Table 5 column head 5.00% [12.00%]"
+  sigma[p600] = 0.15 "Table 5 column head 6.00% [15.00%]"
+  sigma[p700] = 0.17 "Table 5 column head 7.00% [17.00%]"
+  sigma[p800] = 0.2 "Table 5 column head 8.00% [20.00%]"
+  spend_amt[k2] = 2 "Tables 2 and 3 column heads: $2.0 per $100"
+  spend_amt[k3] = 3 "column head $3.0"
+  spend_amt[k4] = 4 "column head $4.0; p. 97: real $4"
+  spend_amt[k5] = 5 "column head $5.0; p. 97: $5"
+  spend_amt[k6] = 6 "column head $6.0; p. 97: $6"
+  spend_amt[k7] = 7 "column head $7.0"
+  spend_amt[k8] = 8 "column head $8.0"
+  spend_amt[k9] = 9 "column head $9.0"
+  spend_amt[k10] = 10 "column head $10.0"
+  spend_amt[w20] = 1 "p. 94: intends to consume $1 after inflation a year"
+  spend_amt[b40k] = 40000 "p. 95, text below Table 2: $40,000"
+  spend_amt[b50k] = 50000 "p. 95, text below Table 2: $50,000"
+  spend_amt[b60k] = 60000 "p. 94: $60,000 a year"
+  spend_amt[b90k] = 90000 "p. 95, text below Table 2: $90,000"
+  wealth[k2] = 100 "Tables 2 and 3: spending per $100 of initial nest egg"
+  wealth[k3] = 100 "per $100"
+  wealth[k4] = 100 "per $100"
+  wealth[k5] = 100 "per $100"
+  wealth[k6] = 100 "per $100"
+  wealth[k7] = 100 "per $100"
+  wealth[k8] = 100 "per $100"
+  wealth[k9] = 100 "per $100"
+  wealth[k10] = 100 "per $100"
+  wealth[w20] = 20 "p. 94: w = 20, $20 per $1 of consumption"
+  wealth[b40k] = 1000000 "p. 94: a $1,000,000 nest egg"
+  wealth[b50k] = 1000000 "p. 94: a $1,000,000 nest egg"
+  wealth[b60k] = 1000000 "p. 94: a $1,000,000 nest egg"
+  wealth[b90k] = 1000000 "p. 94: a $1,000,000 nest egg"
+
+version kalas2014_v
+  cite kalas2014
+  known 2014-11-21
+  note "No rows: it is the version eventual's base rule points at, so the slides' formula for eventual ruin is cited and the source is read (§5.3)"
+  note "known: the date on the slides, 21 November 2014 (§4.5)"

@@ -1,0 +1,9 @@
+{
+ "id": "15-min-wage-2027",
+ "says_pl": "Minimalne wynagrodzenie od 1 stycznia 2027: 4 950 zł.",
+ "value_entries": {
+  "wage.minimum": [
+   { "from": "2027-01-01", "value": 4950, "source": "Rozp. RM z 14.09.2026, Dz.U. 2026 poz. 1213, § 1" }
+  ]
+ }
+}

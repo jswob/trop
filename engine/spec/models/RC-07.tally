@@ -1,0 +1,476 @@
+model rc07
+  tally 1
+  on 2026-10-18
+  note "United States, a full 2025 Form 1040 from the IRS MeF Assurance Testing System, TY2025 Scenario 12 (Sam Gardenia, Single, no dependents): Form 1040, Schedules 1, 2, C and SE, Forms 7206 and 7217, from the W-2 and the entries the scenario makes."
+  note "The model follows the forms and the 2025 Instructions 1040. Every line that multiplies is rounded to whole dollars, drop under 50 cents and raise from 50 cents (p. 23), as the scenario does; the filer's choice to keep cents is not modelled. Line 12e is the instructions' standard deduction, not the scenario's own entry."
+  note "Lines the scenario leaves blank are rows of entry, one per blank line or group of lines; a blank line enters nothing. Every ask pins the law date 2025-12-31, inside tax year 2025."
+
+source ats12 "Internal Revenue Service, MeF Assurance Testing System, TY2025 Form 1040 Scenario 12 (ATS Test Scenario 12, Taxpayer: Sam Gardenia), 15 pages, HTTP Last-Modified 29 Oct 2025" at "https://www.irs.gov/pub/irs-efile/1040-mef-ats-scenario-12-10292025.pdf"
+
+source f7206_blank "Department of the Treasury, Internal Revenue Service, 2025 Form 7206, Self-Employed Health Insurance Deduction, blank (Created 10/2/25)" at "https://www.irs.gov/pub/irs-pdf/f7206.pdf"
+
+source f7217_blank "Department of the Treasury, Internal Revenue Service, Form 7217 (December 2024), Partner's Report of Property Distributed by a Partnership, blank" at "https://www.irs.gov/pub/irs-pdf/f7217.pdf"
+
+source i1040 "Department of the Treasury, Internal Revenue Service, 2025 Instruction 1040 (Form 1040 and 1040-SR instructions, including Schedules 1 through 3), printed Feb 25, 2026 (p. 1 footer)" at "https://www.irs.gov/pub/irs-pdf/i1040gi.pdf"
+
+source modeller "The model's own assumptions, each stated with its reason"
+
+source sch1_blank "Department of the Treasury, Internal Revenue Service, 2025 Schedule 1 (Form 1040), blank (Created 7/25/25)" at "https://www.irs.gov/pub/irs-pdf/f1040s1.pdf"
+
+source sse_blank "Department of the Treasury, Internal Revenue Service, 2025 Schedule SE (Form 1040), blank (Created 5/7/25)" at "https://www.irs.gov/pub/irs-pdf/f1040sse.pdf"
+
+index dist_item = [item1]
+
+index entry_line = [b1040_1b_1h, b1040_2_7, b1040_13a, b1040_13b, b1040_17, b1040_21, b1040_25b, b1040_25c, b1040_26, b1040_32, bs1_inc, bs1_adj, bs2_other, bsc_02, bsc_04, bsc_06, bsc_exp_other, bsc_30, bse_01a, bse_01b, bse_k1, bse_04b, bse_05b, bse_08b, bse_08c, b7206_02, b7206_09, b7206_12, b7217_05b]
+
+index fs = [single, mfj, mfs, hoh, qss]
+
+index sc_exp = [x15, x17, x18, x20b, x22, x23]
+
+index tcw_br = [r22, r24, r32, r35, r37]
+
+input box_12abcd: bool question "Is any box checked on Form 1040 line 12a, 12b, 12c or 12d?"
+
+input entry[k in entry_line]: money USD question "What does the return enter on this line or group of lines?"
+
+input f7217_basis_in: money USD question "What was the adjusted basis of the partner's interest immediately before the distribution (Form 7217 line 4)?"
+
+input f7217_cash: money USD question "How much cash was received in the distribution (Form 7217 line 5a)?"
+
+input f7217_liquidating: bool question "Was the distribution a complete liquidation of the partner's interest (Form 7217 line 1)?"
+
+input filing_status: key fs question "What is the filing status?"
+
+input hi_paid: money USD question "What was paid in 2025 for health insurance coverage established under the business, less the months excluded (Form 7206 line 1)?"
+
+input itemizes: bool question "Does the taxpayer itemize deductions on Schedule A?"
+
+input p2_basis[d in dist_item]: money USD question "What was the partnership's basis in this distributed property immediately before the distribution (Form 7217 Part II column (b))?"
+
+input sc_expense[x in sc_exp]: money USD question "What is the Schedule C expense on this line?"
+
+input sc_receipts: money USD question "What are the gross receipts or sales (Schedule C line 1)?"
+
+input se_floor: money USD
+
+input se_half: num
+
+input se_med_rate: num
+
+input se_net_share: num
+
+input se_ss_rate: num
+
+input ss_wage_base: money USD
+
+input std_ded[s in fs]: money USD
+
+input tcw_rate[b in tcw_br]: num
+
+input tcw_sub[b in tcw_br]: money USD
+
+input w2_box1: money USD question "What are the wages, tips, other compensation (W-2 box 1)?"
+
+input w2_box2: money USD question "What federal income tax was withheld (W-2 box 2)?"
+
+input w2_box3: money USD question "What are the social security wages (W-2 box 3)?"
+
+input w2_box7: money USD question "What are the social security tips (W-2 box 7)?"
+
+band tcw_single(ti: money USD): key tcw_br
+  note "2025 Tax Computation Worksheet, Section A (Single): the row that applies to the taxable income on line 15"
+
+def f1040_01a: money USD
+  note "line 1a: Total amount from Form(s) W-2, box 1; one W-2"
+  rule base v ats12_forms = w2_box1
+
+def f1040_01z: money USD
+  note "line 1z: Add lines 1a through 1h"
+  rule base v ats12_forms = f1040_01a + entry[b1040_1b_1h]
+
+def f1040_08: money USD
+  note "line 8: Additional income from Schedule 1, line 10"
+  rule base v ats12_forms = s1_10
+
+def f1040_09: money USD
+  note "line 9: Add lines 1z, 2b, 3b, 4b, 5b, 6b, 7a, and 8. This is your total income"
+  rule base v ats12_forms = f1040_01z + entry[b1040_2_7] + f1040_08
+
+def f1040_10: money USD
+  note "line 10: Adjustments to income from Schedule 1, line 26"
+  rule base v ats12_forms = s1_26
+
+def f1040_11a: money USD
+  note "line 11a: Subtract line 10 from line 9. This is your adjusted gross income"
+  rule base v ats12_forms = f1040_09 - f1040_10
+
+def f1040_11b: money USD
+  note "line 11b: Amount from line 11a (adjusted gross income)"
+  rule base v ats12_forms = f1040_11a
+
+def f1040_12e: money USD
+  note "line 12e: Standard deduction or itemized deductions (from Schedule A); p. 34: the standard deduction is listed to the left of line 12e"
+  rule base v i1040_2025 = std_ded[filing_status]
+  rule boxes excepts base v i1040_2025 when box_12abcd = ? "With a box checked on line 12a, 12b, 12c or 12d the instructions give another amount; that part is not transcribed."
+  rule itemized excepts base v i1040_2025 when itemizes = ? "Itemized deductions come from Schedule A, which is not part of the scenario."
+
+def f1040_14: money USD
+  note "line 14: Add lines 12e, 13a, and 13b"
+  rule base v ats12_forms = f1040_12e + entry[b1040_13a] + entry[b1040_13b]
+
+def f1040_15: money USD
+  note "line 15: Subtract line 14 from line 11b. If zero or less, enter -0-. This is your taxable income"
+  rule base v ats12_forms = max(0, f1040_11b - f1040_14)
+
+def f1040_16: money USD
+  note "line 16, p. 36: with taxable income of $100,000 or more, use the Tax Computation Worksheet; Section A: Tax is (a) line 15 multiplied by (b), less (d); entered in whole dollars (p. 23)"
+  rule base v i1040_2025 when filing_status = single = round(f1040_15 * tcw_rate[tcw_single(f1040_15)] - tcw_sub[tcw_single(f1040_15)], 1, half-up)
+  rule other_status v i1040_2025 when filing_status != single = ? "Sections B-D of the Tax Computation Worksheet, for the other filing statuses, are not transcribed."
+
+def f1040_18: money USD
+  note "line 18: Add lines 16 and 17"
+  rule base v ats12_forms = f1040_16 + entry[b1040_17]
+
+def f1040_22: money USD
+  note "line 22: Subtract line 21 from line 18. If zero or less, enter -0-"
+  rule base v ats12_forms = max(0, f1040_18 - entry[b1040_21])
+
+def f1040_23: money USD
+  note "line 23: Other taxes, including self-employment tax, from Schedule 2, line 21"
+  rule base v ats12_forms = s2_21
+
+def f1040_24: money USD
+  note "line 24: Add lines 22 and 23. This is your total tax"
+  rule base v ats12_forms = f1040_22 + f1040_23
+
+def f1040_25a: money USD
+  note "line 25a: Federal income tax withheld from Form(s) W-2"
+  rule base v ats12_forms = w2_box2
+
+def f1040_25d: money USD
+  note "line 25d: Add lines 25a through 25c"
+  rule base v ats12_forms = f1040_25a + entry[b1040_25b] + entry[b1040_25c]
+
+def f1040_33: money USD
+  note "line 33: Add lines 25d, 26, and 32. These are your total payments"
+  rule base v ats12_forms = f1040_25d + entry[b1040_26] + entry[b1040_32]
+
+def f1040_37: money USD
+  note "line 37: Subtract line 33 from line 24. This is the amount you owe; when line 33 is more, the overpayment goes on line 34 instead"
+  rule base v ats12_forms = max(0, f1040_24 - f1040_33)
+
+def f7206_03: money USD
+  note "line 3: Add lines 1 and 2"
+  rule base v f7206_2025 = hi_paid + entry[b7206_02]
+
+def f7206_04: money USD
+  note "line 4: Enter your net profit and any other earned income from the trade or business under which the insurance plan is established; the return has one trade or business, Schedule C"
+  rule base v f7206_2025 = sc_31
+
+def f7206_05: money USD
+  note "line 5: Enter the total of all net profits from Schedule C (Form 1040), line 31"
+  rule base v f7206_2025 = sc_31
+
+def f7206_06: num
+  note "line 6: Divide line 4 by line 5; no rounding is stated, so the ratio is exact"
+  rule base v f7206_2025 = f7206_04 / f7206_05
+
+def f7206_07: money USD
+  note "line 7: Multiply Schedule 1 (Form 1040), line 15, deductible part of self-employment tax, by the percentage on line 6; whole dollars (Instructions 1040 p. 23)"
+  rule base v f7206_2025 = round(s1_15 * f7206_06, 1, half-up)
+
+def f7206_08: money USD
+  note "line 8: Subtract line 7 from line 4"
+  rule base v f7206_2025 = f7206_04 - f7206_07
+
+def f7206_10: money USD
+  note "line 10: Subtract line 9 from line 8"
+  rule base v f7206_2025 = f7206_08 - entry[b7206_09]
+
+def f7206_13: money USD
+  note "line 13: Subtract line 12 from line 10 or 11, whichever applies; line 11 is blank, so line 10"
+  rule base v f7206_2025 = f7206_10 - entry[b7206_12]
+
+def f7206_14: money USD
+  note "line 14: Self-employed health insurance deduction. Enter the smaller of line 3 or line 13 here and on Schedule 1 (Form 1040), line 17"
+  rule base v f7206_2025 = min(f7206_03, f7206_13)
+
+def f7217_03: money USD
+  note "line 3: Partnership's aggregate basis in distributed property immediately before the distribution. This line should equal the total of Part II, line B, column (b)"
+  rule base v f7217_2024 = f7217_bb
+
+def f7217_05c: money USD
+  note "line 5c: Add lines 5a and 5b"
+  rule base v f7217_2024 = f7217_cash + entry[b7217_05b]
+
+def f7217_06: money USD
+  note "line 6: Enter the smaller of line 4 or line 5c"
+  rule base v f7217_2024 = min(f7217_basis_in, f7217_05c)
+
+def f7217_07: money USD
+  note "line 7: Gain recognized. Subtract line 6 from line 5c. If zero, enter -0-"
+  rule base v f7217_2024 = max(0, f7217_05c - f7217_06)
+
+def f7217_09: money USD
+  note "line 9: Partner's basis in partnership interest reduced by cash received in the distribution. Subtract line 5a from line 4. If zero or less, enter -0-"
+  rule base v f7217_2024 = max(0, f7217_basis_in - f7217_cash)
+
+def f7217_10: money USD
+  note "line 10: Aggregate basis to be allocated to the distributed property. For a non-liquidating distribution, enter the smaller of line 3 or line 9. For a liquidating distribution, enter the amount from line 9"
+  rule base v f7217_2024 = min(f7217_03, f7217_09)
+  rule liquidating excepts base v f7217_2024 when f7217_liquidating = f7217_09
+
+def f7217_bb: money USD
+  note "Part II, line B, column (b): Totals for all items, the partnership's basis immediately before the distribution"
+  rule base v f7217_2024 = sum(d in dist_item: p2_basis[d])
+
+def f7217_be: money USD
+  note "Part II, line B, column (e): Totals for all items, the partner's basis in the distributed property after application of section 732; line 10 should equal it"
+  rule base v f7217_2024 = sum(d in dist_item: f7217_col_e[d])
+
+def f7217_col_e[d in dist_item]: money USD
+  note "Part II, column (e): Partner's basis in distributed property after application of section 732"
+  rule base v f7217_2024 = ? "The section 732 allocation of line 10 among the distributed properties is not transcribed in the case, and the one property is described only as CASH."
+
+def s1_03: money USD
+  note "line 3: Business income or (loss). Attach Schedule C; Schedule C line 31: If a profit, enter on both Schedule 1 (Form 1040), line 3, and on Schedule SE, line 2"
+  rule base v sch1_2025 = sc_31
+
+def s1_10: money USD
+  note "line 10: Combine lines 1 through 7 and 9. This is your additional income"
+  rule base v sch1_2025 = s1_03 + entry[bs1_inc]
+
+def s1_15: money USD
+  note "line 15: Deductible part of self-employment tax. Attach Schedule SE"
+  rule base v sch1_2025 = se_13
+
+def s1_17: money USD
+  note "line 17: Self-employed health insurance deduction (Form 7206 line 14)"
+  rule base v sch1_2025 = f7206_14
+
+def s1_26: money USD
+  note "line 26: Add lines 11 through 23 and 25. These are your adjustments to income"
+  rule base v sch1_2025 = s1_15 + s1_17 + entry[bs1_adj]
+
+def s2_04: money USD
+  note "line 4: Self-employment tax. Attach Schedule SE"
+  rule base v ats12_forms = se_12
+
+def s2_21: money USD
+  note "line 21: Add lines 4, 7 through 16, 18, and 19. These are your total other taxes"
+  rule base v ats12_forms = s2_04 + entry[bs2_other]
+
+def sc_03: money USD
+  note "line 3: Subtract line 2 from line 1"
+  rule base v ats12_forms = sc_receipts - entry[bsc_02]
+
+def sc_05: money USD
+  note "line 5: Gross profit. Subtract line 4 from line 3"
+  rule base v ats12_forms = sc_03 - entry[bsc_04]
+
+def sc_07: money USD
+  note "line 7: Gross income. Add lines 5 and 6"
+  rule base v ats12_forms = sc_05 + entry[bsc_06]
+
+def sc_28: money USD
+  note "line 28: Total expenses before expenses for business use of home. Add lines 8 through 27b"
+  rule base v ats12_forms = sum(x in sc_exp: sc_expense[x]) + entry[bsc_exp_other]
+
+def sc_29: money USD
+  note "line 29: Tentative profit or (loss). Subtract line 28 from line 7"
+  rule base v ats12_forms = sc_07 - sc_28
+
+def sc_31: money USD
+  note "line 31: Net profit or (loss). Subtract line 30 from line 29"
+  rule base v ats12_forms = sc_29 - entry[bsc_30]
+
+def se_02: money USD
+  note "line 2: Net profit or (loss) from Schedule C, line 31; and Schedule K-1 (Form 1065), box 14, code A (other than farming)"
+  rule base v sse_2025 = sc_31 + entry[bse_k1]
+
+def se_03: money USD
+  note "line 3: Combine lines 1a, 1b, and 2"
+  rule base v sse_2025 = entry[bse_01a] + entry[bse_01b] + se_02
+
+def se_04a: money USD
+  note "line 4a: If line 3 is more than zero, multiply line 3 by 92.35% (0.9235). Otherwise, enter amount from line 3; whole dollars (Instructions 1040 p. 23)"
+  rule base v sse_2025 = round(se_03 * se_net_share, 1, half-up)
+  rule not_positive excepts base v sse_2025 when se_03 <= 0 = se_03
+
+def se_04c: money USD
+  note "line 4c: Combine lines 4a and 4b"
+  rule base v sse_2025 = se_04a + entry[bse_04b]
+
+def se_06: money USD
+  note "line 6: Add lines 4c and 5b"
+  rule base v sse_2025 = se_04c + entry[bse_05b]
+
+def se_08a: money USD
+  note "line 8a: Total social security wages and tips (total of boxes 3 and 7 on Form(s) W-2)"
+  rule base v sse_2025 = w2_box3 + w2_box7
+
+def se_08d: money USD
+  note "line 8d: Add lines 8a, 8b, and 8c"
+  rule base v sse_2025 = se_08a + entry[bse_08b] + entry[bse_08c]
+
+def se_09: money USD
+  note "line 9: Subtract line 8d from line 7. If zero or less, enter -0- here and on line 10 and go to line 11"
+  rule base v sse_2025 = max(0, ss_wage_base - se_08d)
+
+def se_10: money USD
+  note "line 10: Multiply the smaller of line 6 or line 9 by 12.4% (0.124); whole dollars (Instructions 1040 p. 23)"
+  rule base v sse_2025 = round(min(se_06, se_09) * se_ss_rate, 1, half-up)
+
+def se_11: money USD
+  note "line 11: Multiply line 6 by 2.9% (0.029); whole dollars (Instructions 1040 p. 23)"
+  rule base v sse_2025 = round(se_06 * se_med_rate, 1, half-up)
+
+def se_12: money USD
+  note "line 12: Self-employment tax. Add lines 10 and 11"
+  note "line 4c: If less than $400, stop; you don't owe self-employment tax"
+  rule base v sse_2025 = se_10 + se_11
+  rule stop excepts base v sse_2025 when se_04c < se_floor = 0
+
+def se_13: money USD
+  note "line 13: Deduction for one-half of self-employment tax. Multiply line 12 by 50% (0.50); whole dollars (Instructions 1040 p. 23)"
+  rule base v sse_2025 = round(se_12 * se_half, 1, half-up)
+
+ask q_1040_income: f1040_01a, f1040_01z, f1040_08, f1040_09, f1040_10, f1040_11a, f1040_11b, f1040_12e with law 2025-12-31
+
+ask q_1040_pay: f1040_25a, f1040_25d, f1040_33, f1040_37 with law 2025-12-31
+
+ask q_1040_tax: f1040_14, f1040_15, f1040_16, f1040_18, f1040_22, f1040_23, f1040_24 with law 2025-12-31
+
+ask q_7206: f7206_03, f7206_04, f7206_05, f7206_06, f7206_07, f7206_08, f7206_10, f7206_13, f7206_14 with law 2025-12-31
+
+ask q_7217: f7217_03, f7217_05c, f7217_06, f7217_07, f7217_09, f7217_10, f7217_bb with law 2025-12-31
+
+ask q_7217_e: f7217_col_e[item1], f7217_be with law 2025-12-31
+
+ask q_s1: s1_03, s1_10, s1_15, s1_17, s1_26 with law 2025-12-31
+
+ask q_s2: s2_04, s2_21 with law 2025-12-31
+
+ask q_sc: sc_03, sc_05, sc_07, sc_28, sc_29, sc_31 with law 2025-12-31
+
+ask q_se: se_02, se_03, se_04a, se_04c, se_06, se_08a, se_08d, se_09, se_10, se_11, se_12, se_13 with law 2025-12-31
+
+version f7217_2024
+  cite f7217_blank
+  known 2024-12-31
+  note "Form 7217 (December 2024), Part I lines 1-10 and Part II columns (a)-(e); the revision has no tax year, so it governs every date. It is dated only by its month, so it is known from the month's last day (§4.5)"
+
+version sse_2025
+  cite sse_blank
+  governs 2025
+  known 2025-05-07
+  note "2025 Schedule SE, Part I; the scenario's draft prints the same text"
+  se_floor = 400 "line 4c: If less than $400, stop; you don't owe self-employment tax"
+  se_half = 0.5 "line 13: Multiply line 12 by 50% (0.50)"
+  se_med_rate = 0.029 "line 11: Multiply line 6 by 2.9% (0.029)"
+  se_net_share = 0.9235 "line 4a: multiply line 3 by 92.35% (0.9235)"
+  se_ss_rate = 0.124 "line 10: Multiply the smaller of line 6 or line 9 by 12.4% (0.124)"
+  ss_wage_base = 176100 "line 7: Maximum amount of combined wages and self-employment earnings subject to social security tax ... for 2025 ... $176,100"
+
+version sch1_2025
+  cite sch1_blank
+  governs 2025
+  known 2025-07-25
+  note "2025 Schedule 1, lines 3, 10, 15, 17 and 26"
+
+version f7206_2025
+  cite f7206_blank
+  governs 2025
+  known 2025-10-02
+  note "2025 Form 7206, lines 1-14"
+
+version ats12_forms
+  cite ats12
+  governs 2025
+  known 2025-10-29
+  note "The line texts of Form 1040, Schedule 2 and Schedule C as the scenario's 2025 draft forms print them; the final forms were not fetched for these three"
+
+version i1040_2025
+  cite i1040
+  governs 2025
+  known 2026-02-25
+  note "p. 23 Rounding Off to Whole Dollars: drop amounts under 50 cents and increase amounts from 50 to 99 cents to the next dollar"
+  std_ded[single] = 15750 "p. 6, What's New: $15,750–Single or Married filing separately"
+  std_ded[mfj] = 31500 "p. 6: $31,500–Married filing jointly or Qualifying surviving spouse"
+  std_ded[mfs] = 15750 "p. 6: $15,750–Single or Married filing separately"
+  std_ded[hoh] = 23625 "p. 6: $23,625–Head of household"
+  std_ded[qss] = 31500 "p. 6: $31,500–Married filing jointly or Qualifying surviving spouse"
+  tcw_rate[r22] = 0.22 "p. 80, Section A: × 22% (0.22)"
+  tcw_rate[r24] = 0.24 "p. 80, Section A: × 24% (0.24)"
+  tcw_rate[r32] = 0.32 "p. 80, Section A: × 32% (0.32)"
+  tcw_rate[r35] = 0.35 "p. 80, Section A: × 35% (0.35)"
+  tcw_rate[r37] = 0.37 "p. 80, Section A: × 37% (0.37)"
+  tcw_single: [0, 100000) = ? "Below $100,000 the Tax Table must be used, and the Tax Table is not transcribed." "p. 36, Line 16: If your taxable income is less than $100,000, you must use the Tax Table"
+  tcw_single: [100000, 103350] = r22 "p. 80, Section A: At least $100,000 but not over $103,350"
+  tcw_single: (103350, 197300] = r24 "p. 80, Section A: Over $103,350 but not over $197,300"
+  tcw_single: (197300, 250525] = r32 "p. 80, Section A: Over $197,300 but not over $250,525"
+  tcw_single: (250525, 626350] = r35 "p. 80, Section A: Over $250,525 but not over $626,350"
+  tcw_single: (626350, inf) = r37 "p. 80, Section A: Over $626,350"
+  tcw_sub[r22] = 5086 "p. 80, Section A: $ 5,086.00"
+  tcw_sub[r24] = 7153 "p. 80, Section A: $ 7,153.00"
+  tcw_sub[r32] = 22937 "p. 80, Section A: $ 22,937.00"
+  tcw_sub[r35] = 30452.75 "p. 80, Section A: $ 30,452.75"
+  tcw_sub[r37] = 42979.75 "p. 80, Section A: $ 42,979.75"
+
+version ats12_entries
+  cite ats12
+  known 2026-10-18
+  note "A test scenario is a composed case: its taxpayer, W-2 and entries are stipulations, known from the model's on date since it has no start (§4.5); the scenario PDF is dated Oct 29 2025"
+  note "The entries of Scenario 12: the W-2 (PDF p. 15), the return's own entries and its blank lines"
+  box_12abcd = false "PDF p. 3, lines 12a-12d: no box checked"
+  entry[b1040_1b_1h] = 0 "PDF pp. 2-3, Form 1040 lines 1b-1i: blank"
+  entry[b1040_2_7] = 0 "PDF pp. 2-3, Form 1040 lines 2a-7b: blank"
+  entry[b1040_13a] = 0 "PDF pp. 2-3, Form 1040 line 13a: blank"
+  entry[b1040_13b] = 0 "PDF pp. 2-3, Form 1040 line 13b: blank"
+  entry[b1040_17] = 0 "PDF pp. 2-3, Form 1040 line 17: blank"
+  entry[b1040_21] = 0 "PDF pp. 2-3, Form 1040 lines 19-21: blank"
+  entry[b1040_26] = 0 "PDF pp. 2-3, Form 1040 lines 26-32: blank"
+  entry[b1040_32] = 0 "PDF pp. 2-3, Form 1040 lines 26-32: blank"
+  entry[bs1_inc] = 0 "PDF pp. 4-5, Schedule 1 lines 1-2, 4-7 and 9: blank (lines other than 3, 10, 15, 17, 26)"
+  entry[bs1_adj] = 0 "PDF pp. 4-5, Schedule 1 lines 11-14, 16, 18-23 and 25: blank (lines other than 3, 10, 15, 17, 26)"
+  entry[bs2_other] = 0 "PDF pp. 6-7, Schedule 2 lines other than 4 and 21: blank"
+  entry[bsc_02] = 0 "PDF p. 8, Schedule C line 2: blank"
+  entry[bsc_04] = 0 "PDF p. 8, Schedule C line 4: blank"
+  entry[bsc_06] = 0 "PDF p. 8, Schedule C line 6: blank"
+  entry[bsc_exp_other] = 0 "PDF p. 8, Schedule C other expense lines (8-14, 16, 19, 20a, 21, 24-27b): blank"
+  entry[bsc_30] = 0 "PDF p. 8, Schedule C line 30: blank"
+  entry[bse_01a] = 0 "PDF pp. 10-11, Schedule SE line 1a: blank"
+  entry[bse_01b] = 0 "PDF pp. 10-11, Schedule SE line 1b: blank"
+  entry[bse_k1] = 0 "PDF p. 1: the forms in the scenario include no Schedule K-1"
+  entry[bse_04b] = 0 "PDF pp. 10-11, Schedule SE optional methods (4b, 15-17): blank"
+  entry[b7206_02] = 0 "PDF p. 12, Form 7206 line 2: blank"
+  entry[b7206_09] = 0 "PDF p. 12, Form 7206 line 9: blank"
+  entry[b7206_12] = 0 "PDF p. 12, Form 7206 lines 11 and 12: blank"
+  entry[b7217_05b] = 0 "PDF p. 13, Form 7217 line 5b: blank"
+  f7217_basis_in = 10000 "PDF p. 13, Form 7217 line 4: $ 10,000"
+  f7217_cash = 4000 "PDF p. 13, Form 7217 line 5a: $ 4,000"
+  f7217_liquidating = false "PDF p. 13, Form 7217 line 1, complete liquidation: Yes ✔ No"
+  filing_status = single "PDF p. 2: ✔ Single"
+  hi_paid = 1000 "PDF p. 12, Form 7206 line 1: 1,000"
+  itemizes = false "PDF p. 1: the forms in the scenario are Form 1040, Schedules 1, 2, C and SE, Forms 7206, 7217 and W-2, with no Schedule A"
+  p2_basis[item1] = 32507 "PDF p. 14, Form 7217 Part II row 1 (b): $ 32,507"
+  sc_expense[x15] = 550 "PDF p. 8, Schedule C line 15 Insurance (other than health): 550"
+  sc_expense[x17] = 125 "PDF p. 8, Schedule C line 17 Legal and professional services: 125"
+  sc_expense[x18] = 1000 "PDF p. 8, Schedule C line 18 Office expense: 1,000"
+  sc_expense[x20b] = 2500 "PDF p. 8, Schedule C line 20b Rent or lease, other business property: 2,500"
+  sc_expense[x22] = 6532 "PDF p. 8, Schedule C line 22 Supplies: 6,532"
+  sc_expense[x23] = 200 "PDF p. 8, Schedule C line 23 Taxes and licenses: 200"
+  sc_receipts = 35235 "PDF p. 8, Schedule C line 1 Gross receipts or sales: 35,235"
+  w2_box1 = 100836 "PDF p. 15, W-2 box 1 Wages, tips, other compensation: 100,836"
+  w2_box2 = 14444 "PDF p. 15, W-2 box 2 Federal income tax withheld: 14,444"
+  w2_box3 = 105878 "PDF p. 15, W-2 box 3 Social security wages: 105,878"
+
+version model_assumptions
+  cite modeller
+  known 2026-10-18
+  entry[b1040_25b] = 0 assumed "the case lists no entry for Form 1040 line 25b (Form(s) 1099 withholding), and the scenario has no Form 1099"
+  entry[b1040_25c] = 0 assumed "the case lists no entry for Form 1040 line 25c (other forms), and the scenario has no other withholding form"
+  entry[bse_05b] = 0 assumed "Schedule SE line 5a (church employee income) is blank, and line 5b is figured from line 5a"
+  entry[bse_08b] = 0 assumed "the case lists no entry for Schedule SE line 8b (unreported tips, Form 4137), and the scenario has no Form 4137"
+  entry[bse_08c] = 0 assumed "the case lists no entry for Schedule SE line 8c (wages, Form 8919), and the scenario has no Form 8919"
+  w2_box7 = 0 assumed "the case's W-2 transcription lists no box 7 (social security tips)"

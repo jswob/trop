@@ -1,0 +1,231 @@
+model lh07
+  tally 1
+  on 2026-10-18
+  note "US required minimum distributions from a traditional IRA: divisors, amounts and deadlines, from the worked examples of IRS Publication 590-B (2025)."
+  note "Sub-cases: ex_a and ex_b (owner examples, p. 8), ex_c and ex_d (beneficiary examples, pp. 11-12), justin (p. 12), f_owner and f_you (surviving spouse, p. 10, Examples 1 and 2), hi_owner (5-year and 10-year rules, p. 10)."
+  note "Ages are given for a year, not as dates of birth, except Justin's birthday; a birth date is written as the imprecise year that the stated age in that year implies."
+
+source cfr_3 "26 CFR 1.401(a)(9)-3, Death before required beginning date (T.D. 8987, 67 FR 18994, Apr. 17, 2002, as amended by T.D. 9130, 69 FR 33293, June 15, 2004; T.D. 10001, 89 FR 58907, July 19, 2024)" at "https://www.ecfr.gov/current/title-26/section-1.401(a)(9)-3"
+
+source cfr_5 "26 CFR 1.401(a)(9)-5, Required minimum distributions from defined contribution plans (T.D. 8987, 67 FR 18994, Apr. 17, 2002; amended by, among others, T.D. 9930, 85 FR 72477, Nov. 12, 2020, and T.D. 10001, 89 FR 58907, July 19, 2024)" at "https://www.ecfr.gov/current/title-26/section-1.401(a)(9)-5"
+
+source cfr_9 "26 CFR 1.401(a)(9)-9, Life expectancy and Uniform Lifetime tables (T.D. 9930, 85 FR 72477, Nov. 12, 2020, as amended by T.D. 10001, 89 FR 58938, July 19, 2024)" at "https://www.ecfr.gov/current/title-26/section-1.401(a)(9)-9"
+
+source p590b "IRS Publication 590-B (2025), Distributions from Individual Retirement Arrangements (IRAs)" at "https://www.irs.gov/pub/irs-pdf/p590b.pdf"
+
+axis lh07_age
+  distribution "age as of the birthday in the distribution calendar year (Pub 590-B p. 8; 26 CFR 1.401(a)(9)-5(c)(1))"
+  valuation "age as of the birthday in the year before, the valuation year, as the Justin example's 2026 figure prints it ('age 73 per Table III')"
+
+axis lh07_round
+  ceil "the minimum rounded up to the next whole dollar, so the required amount is met; no rounding rule is stated"
+  half-up "the minimum rounded to the nearest whole dollar; no rounding rule is stated"
+
+index benef = [ex_c, ex_d]
+
+index decedent = [f_owner, f_you, hi_owner]
+
+index lh_table = [table_i, table_ii, table_iii]
+
+index owner = [ex_a, ex_b, justin]
+
+index years_old = 0..120
+
+index yr = year 2020..2036
+
+input bal_end[o in owner, y in yr]: money USD question "What was the IRA account balance at the end of this year?"
+
+input born[o in owner]: date
+
+input death_age[x in decedent]: int
+  note "age as of the birthday in the year of death"
+
+input died_year[x in decedent]: year
+
+input first_age[b in benef]: int
+  note "the beneficiary's age as of the birthday in the first distribution year"
+
+input first_le_year[b in benef]: key yr
+
+input inherited_from[x in decedent]: key decedent
+
+input joint_le[o in years_old, s in years_old]: num
+
+input old_le[b in benef]: num
+  note "the initial life expectancy the beneficiary used before the reset, as stated"
+
+input rbd_age: int
+
+input received[o in owner, y in yr]: money USD
+
+input single_le[a in years_old]: num
+
+input sole_spouse[o in owner]: bool
+
+input sole_spouse_ben[x in decedent]: bool
+
+input spouse_born[o in owner]: date
+
+input treated_owner[x in decedent]: bool
+
+input uniform_le[a in years_old]: num
+
+def ben_den[b in benef, y in yr]: num
+  note "remaining life expectancy: the Single Life Table at the age in the first distribution year, less one for each year after it"
+  rule base v v_cfr5 = single_le[first_age[b]] - (y - first_le_year[b])
+
+def ben_den_old[b in benef, y in yr]: num
+  note "the divisor under the life expectancy the beneficiary started with, before the reset"
+  rule base v v_p590b = old_le[b] - (y - first_le_year[b])
+
+def ben_start[x in decedent]: year
+  note "the year the beneficiary's life-expectancy distributions must start"
+  rule base v v_cfr3 = died_year[x] + 1
+  rule spouse excepts base v v_p590b when sole_spouse_ben[x] and not treated_owner[x] = died_year[x] + (rbd_age - death_age[x])
+
+def ben_start_by[x in decedent]: date = add_days(end_of(ben_start[x]), -1)
+
+def ben_table[b in benef]: key lh_table
+  rule base v v_cfr5 = table_i
+
+def credit[o in owner, y in yr]: money USD
+  note "credit given in year y for an excess distributed in an earlier year"
+  rule base v v_cfr5 = 0
+
+def excess[o in owner, y in yr]: money USD = received[o, y] - rmd[o, y]
+
+def five_year_by[x in decedent]: date
+  rule base v v_cfr3 = add_days(end_of(died_year[x] + 5), -1)
+
+def owner_age[o in owner, y in yr]: int
+  rule base v v_cfr5 = age(born[o], add_days(end_of(y), -1))
+  rule valuation excepts base when lh07_age = valuation = age(born[o], add_days(start_of(y), -1))
+
+def owner_den[o in owner, y in yr]: num
+  rule base = uniform_le[owner_age[o, y]]
+  rule joint excepts base when owner_table[o, y] = table_ii = joint_le[owner_age[o, y], spouse_age[o, y]]
+
+def owner_table[o in owner, y in yr]: key lh_table
+  rule base v v_cfr5 = table_iii
+  rule joint excepts base v v_cfr5 when spouse_rule[o, y] = table_ii
+
+def rmd[o in owner, y in yr]: money USD = round(rmd_exact[o, y], 1, lh07_round)
+
+def rmd_due_death_year[x in decedent]: bool
+  note "whether a minimum is required for the year of death of a surviving spouse treated as the owner"
+  rule base v v_p590b = died_year[x] >= ben_start[inherited_from[x]]
+
+def rmd_exact[o in owner, y in yr]: num USD
+  rule base v v_cfr5 = bal_end[o, y - 1] / owner_den[o, y]
+
+def spouse_age[o in owner, y in yr]: int
+  rule base v v_cfr5 = age(spouse_born[o], add_days(end_of(y), -1))
+  rule valuation excepts base when lh07_age = valuation = age(spouse_born[o], add_days(start_of(y), -1))
+
+def spouse_rule[o in owner, y in yr]: bool = sole_spouse[o] and owner_age[o, y] - spouse_age[o, y] > 10
+
+def ten_year_by[x in decedent]: date
+  rule base v v_cfr3 = add_days(end_of(died_year[x] + 10), -1)
+
+ask a_den: owner_den[ex_a, 2026]
+
+ask a_rmd: rmd[ex_a, 2026]
+
+ask a_table: owner_table[ex_a, 2026]
+
+ask b_den: owner_den[ex_b, 2026]
+
+ask b_rmd: rmd[ex_b, 2026]
+
+ask b_table: owner_table[ex_b, 2026]
+
+ask c_den: ben_den[ex_c, 2026]
+
+ask c_table: ben_table[ex_c]
+
+ask d_le55: single_le[first_age[ex_d]]
+
+ask d_old: ben_den_old[ex_d, 2026]
+
+ask d_reset: ben_den[ex_d, 2026]
+
+ask e_credit: credit[justin, 2026]
+
+ask e_excess: excess[justin, 2025]
+
+ask e_rmd_2025: rmd[justin, 2025]
+
+ask e_rmd_2026: rmd[justin, 2026]
+
+ask f_death_year: rmd_due_death_year[f_you]
+
+ask f_start: ben_start_by[f_owner]
+
+ask g_start: ben_start[f_you]
+
+ask g_ten: ten_year_by[f_you]
+
+ask h_five: five_year_by[hi_owner]
+
+ask i_ten: ten_year_by[hi_owner]
+
+version v_cfr3
+  cite cfr_3
+  known 2024-07-19
+  note "Law, known from its publication (LANGUAGE 4.5): T.D. 10001, 89 FR 58907, July 19, 2024, the latest amendment in the section's source note (LII). Which T.D. last changed each paragraph isn't checked, so the latest one is taken. Rules read: (c)(2) 5-year rule and (c)(3) 10-year rule, by the end of the calendar year that includes the fifth or tenth anniversary of the death; (b)(2) life-expectancy distributions begin in the calendar year following the death."
+
+version v_cfr5
+  cite cfr_5
+  known 2024-07-19
+  note "Law, known from its publication (LANGUAGE 4.5): T.D. 10001, 89 FR 58907, July 19, 2024, the latest amendment in the section's source note (LII). Which T.D. last changed each paragraph isn't checked, so the latest one is taken. Rules read: (a)(1) balance divided by the applicable denominator; (a)(6) no credit for an excess; (b)(1) balance at the end of the preceding year; (c)(1) Uniform Lifetime Table at the age as of the birthday in the distribution year; (c)(2)(i) Joint and Last Survivor Table for a sole spouse beneficiary more than 10 years younger; (d)(3)(i) and (iii) Single Life Table, initial life expectancy less one per elapsed year."
+
+version v_cfr9
+  cite cfr_9
+  governs 2022..
+  known 2024-07-19
+  note "Law, known from its publication (LANGUAGE 4.5): T.D. 10001, 89 FR 58938, July 19, 2024, the latest amendment in the section's source note (LII). The tables were first published by T.D. 9930, 85 FR 72477, Nov. 12, 2020; whether T.D. 10001 changed these rows isn't checked, so the later date is taken. LII prints the same rows; so does Pub 590-B Appendix B (Table I p. 50, Table II p. 60, Table III p. 67). (f)(2) resets a pre-2022 initial life expectancy to these tables."
+  joint_le[75, 64] = 25.3 "(d) Joint and Last Survivor Table, row 75, column 64"
+  single_le[55] = 31.6 "(b) Single Life Table, age 55"
+  single_le[57] = 29.8 "(b) Single Life Table, age 57"
+  uniform_le[72] = 27.4 "(c) Uniform Lifetime Table, age 72; Pub 590-B Appendix B, Table III (Uniform Lifetime), p. 67, age 72"
+  uniform_le[73] = 26.5 "(c) Uniform Lifetime Table, age 73"
+  uniform_le[74] = 25.5 "(c) Uniform Lifetime Table, age 74"
+  uniform_le[75] = 24.6 "(c) Uniform Lifetime Table, age 75"
+
+version v_p590b
+  cite p590b
+  known 2026-01-21
+  note "Known from the Pub's earliest public stamp (LANGUAGE §4.5): 'Jan 21, 2026', printed in the footer of p. 1. Round 2 read it as undated and took the PDF's own created stamp, the same day (D8). PDF page numbers equal printed page numbers. This version holds the Pub's own statement of the law and the rules that cite it; the worked examples' facts are in v_p590b_ex."
+  rbd_age = 73 governs 2023.. "p. 6, Your required beginning date: Age 73 for tax years 2023 and later."
+
+version v_p590b_ex
+  cite p590b
+  known 2026-10-18
+  note "The worked examples' facts are a hypothetical case's stipulations, known from the model's on date, as it has no start (LANGUAGE 4.5). The assumed row stands for an example's own fact and takes the same date."
+  bal_end[ex_a, 2025] = 100000 "p. 8, Example (Table III): Your account balance at the end of 2025 was $100,000."
+  bal_end[ex_b, 2025] = 100000 "p. 8, Example (Table II): Your account balance at the end of 2025 was $100,000."
+  bal_end[justin, 2024] = 38400 "p. 12, Example (Justin): Justin's IRA account balance on December 31, 2024, was $38,400."
+  bal_end[justin, 2025] = 34800 "p. 12, Example (Justin): Justin's reduced IRA account balance on December 31, 2025, was $34,800."
+  born[ex_a] = 1951 "p. 8, Example (Table III): You turn 75 years old in 2026."
+  born[ex_b] = 1951 "p. 8, Example (Table II): You turn 75 in 2026"
+  born[justin] = 1952-12-15 "p. 12, Example (Justin): Justin became 73 on December 15, 2025."
+  death_age[f_owner] = 65 "p. 10, Example 1: Your spouse died in 2022, at age 65."
+  died_year[f_owner] = 2022 "p. 10, Example 1: Your spouse died in 2022"
+  died_year[f_you] = 2025 "p. 10, Example 1: if you die in 2025; Example 2: upon your death in 2025"
+  died_year[hi_owner] = 2025 "p. 10, 5-year rule and 10-year rule: if the owner died in 2025"
+  first_age[ex_c] = 57 "p. 11, Example: You become age 57 in 2026."
+  first_age[ex_d] = 55 "p. 12, Example: in 2022 when you were age 55"
+  first_le_year[ex_c] = 2026 "p. 11, Example: Distributions must begin in 2026."
+  first_le_year[ex_d] = 2022 "p. 12, Example: You started taking required minimum distributions from the inherited IRA in 2022"
+  inherited_from[f_you] = f_owner "p. 10, Example 1: You are the sole designated beneficiary of your spouse's traditional IRA."
+  old_le[ex_d] = 29.6 "p. 12, Example: using a life expectancy of 29.6 and reducing that number by 1 each year"
+  received[justin, 2025] = 3600 "p. 12, Example (Justin): By December 31, 2025, he had actually received distributions totaling $3,600"
+  sole_spouse[ex_a] = true "p. 8, Example (Table III): your spouse, who is the sole beneficiary of your IRA"
+  sole_spouse[ex_b] = true "p. 8, Example (Table II): your spouse, who is the sole beneficiary of your IRA"
+  sole_spouse[justin] = false assumed "the example uses Table III; whether Justin's sole beneficiary is a spouse more than 10 years younger is not stated" "p. 12, Example (Justin)"
+  sole_spouse_ben[f_owner] = true "p. 10, Example 1: You are the sole designated beneficiary of your spouse's traditional IRA."
+  sole_spouse_ben[f_you] = true "p. 10, Example 2: your sole beneficiary upon your death in 2025 is your surviving spouse"
+  spouse_born[ex_a] = 1957 "p. 8, Example (Table III): your spouse ... is 6 years younger than you"
+  spouse_born[ex_b] = 1962 "p. 8, Example (Table II): your spouse turns 64"
+  treated_owner[f_owner] = false "p. 10, Example 1: your spouse is the owner"
+  treated_owner[f_you] = true "p. 10: the surviving spouse will be treated as if they were the owner of the IRA. This rule doesn't apply to the surviving spouse of a surviving spouse."

@@ -1,0 +1,397 @@
+model rc01
+  tally 1
+  on 2026-10-18
+  note "UK Universal Credit, self-employed earnings: losses carried forward (reg 57, 57A), the minimum income floor (reg 62) and surplus earnings (reg 54A), from the worked examples of ADM H4."
+  note "Derek Ex.1, Derek Ex.2 and Rodney are keys of se; Tiana's three periods are keys of tap. No AP dates are given, so every def runs at the model's on date and the parameters the examples state are rows or axis options, not dated law."
+  note "The law comes from the enacting instruments: S.I. 2013/376 as made; S.I. 2015/345 (regs 57(2) and 57A), postponed by S.I. 2016/215, 2017/197 and 2018/65; S.I. 2018/65 (reg 54A as it substituted it before commencement, the reg 57(2) Step 3 and reg 57A(1)(a) amendments, and the temporary de minimis period); the Secretary of State's determinations extending that period; and S.I. 2021/1283 (the 55% taper and the reg 54A(6) formula). The revised text on legislation.gov.uk is only their locator."
+
+source adm_h3 "DWP, Advice for decision making, ADM Chapter H3: Earned income - employed earnings (surplus earnings H3300-H3314)" at "https://assets.publishing.service.gov.uk/media/69d5288485ac94fabd462531/adm-ch-h3.pdf"
+
+source adm_h4 "DWP, Advice for decision making, ADM Chapter H4: Earned income - self-employed earnings" at "https://assets.publishing.service.gov.uk/media/69dfa3a8f5069cdc54868879/admh4.pdf"
+
+source det2019 "Secretary of State's determination under reg 5(2) of S.I. 2015/345 extending the temporary de minimis period to 31 March 2020 (announced in Budget 2018; its text was not found)"
+
+source det2020 "House of Commons written statement HCWS147, Surplus Earnings, 5 March 2020 (Will Quince MP): the determination under reg 5(2) of S.I. 2015/345 extending the temporary de minimis period from 1 April 2020 to 31 March 2021" at "https://questions-statements.parliament.uk/written-statements/detail/2020-03-05/HCWS147"
+
+source det2021_24 "DWP, Ministerial determinations relating to Universal Credit: 2018 to 2024 (the 2021, 2022, 2023 and 2024 determinations under reg 5 of S.I. 2015/345)" at "https://www.gov.uk/government/publications/welfare-reform-act-2012-ministerial-determinations/ministerial-determinations-relating-to-universal-credit"
+
+source det2025 "Secretary of State determination under regulation 5 of S.I. 2015/345 [2025 determination]" at "https://www.gov.uk/government/publications/secretary-of-state-determination-under-regulation-5-of-the-universal-credit-surpluses-and-self-employed-losses-digital-service-amendment-regulatio/secretary-of-state-determination-under-regulation-5-of-the-universal-credit-surpluses-and-self-employed-losses-digital-service-amendment-regulatio"
+
+source det2026 "Secretary of State determination under regulation 5 of S.I. 2015/345 [2026 determination]" at "https://www.gov.uk/government/publications/secretary-of-state-determination-under-regulation-5-of-the-universal-credit-surpluses-and-self-employed-losses-digital-service-amendment-regulatio--2/secretary-of-state-determination-under-regulation-5-of-the-universal-credit-surpluses-and-self-employed-losses-digital-service-amendment-regulatio"
+
+source modeller "The model's own assumptions, each stated with its reason"
+
+source si2013_376 "The Universal Credit Regulations 2013 (S.I. 2013/376), as made" at "https://www.legislation.gov.uk/uksi/2013/376/made"
+
+source si2015_345 "The Universal Credit (Surpluses and Self-employed Losses) (Digital Service) Amendment Regulations 2015 (S.I. 2015/345)" at "https://www.legislation.gov.uk/uksi/2015/345/made"
+
+source si2016_215 "The Universal Credit (Surpluses and Self-employed Losses) (Change of coming into force) Regulations 2016 (S.I. 2016/215)" at "https://www.legislation.gov.uk/uksi/2016/215/made"
+
+source si2017_197 "The Universal Credit (Surpluses and Self-employed Losses) (Change of coming into force) Regulations 2017 (S.I. 2017/197)" at "https://www.legislation.gov.uk/uksi/2017/197/made"
+
+source si2018_65 "The Universal Credit (Miscellaneous Amendments, Saving and Transitional Provision) Regulations 2018 (S.I. 2018/65)" at "https://www.legislation.gov.uk/uksi/2018/65/made"
+
+source si2021_1283 "The Universal Credit (Work Allowance and Taper) (Amendment) Regulations 2021 (S.I. 2021/1283)" at "https://www.legislation.gov.uk/uksi/2021/1283/made"
+
+axis uc_de_minimis
+  dm300 "£300: the figure the Tiana example uses, and reg 54A(6) outside the temporary period"
+  dm2500 "£2,500: claims in the temporary de minimis period, which ADM H3310 says runs from 11.4.18 to 31.03.27"
+
+axis uc_taper
+  ex063 "0.63, the taper the Tiana example uses (and the nil UC threshold divides by 63)"
+  reg22 "55%, the taper of reg 22(1)(b) since S.I. 2021/1283 (and ADM H3308 divides by 55)"
+
+index ap = 1..9
+
+index biz = [b1, b2]
+
+index se = [derek1, derek2, rodney]
+
+index tap = [t_typical, t_ap1, t_ap2]
+
+input dm_standard: money GBP
+
+input dm_temporary: money GBP
+
+input expenses[c in se, b in biz, k in ap]: money GBP question "What permitted expenses (reg 58 or 59) did this trade have in this AP?"
+
+input mif[c in se]: money GBP question "What is the claimant's minimum income floor (individual threshold) for the AP?"
+
+input opening_loss[c in se]: money GBP question "What unused losses did the claimant carry into AP 1?"
+
+input pension[c in se, k in ap]: money GBP question "What relievable pension contributions were paid in this AP (reg 57(2) Step 4)?"
+
+input receipts[c in se, b in biz, k in ap]: money GBP question "What were this trade's actual receipts in this AP?"
+
+input t_first_reclaim[t in tap]: bool
+
+input t_housing: money GBP
+
+input t_mif: money GBP
+
+input t_s13[t in tap]: money GBP question "What was Tiana's result of reg 57(2) steps 1 to 3 in this period?"
+
+input t_std_allowance: money GBP
+
+input t_unearned: money GBP
+
+input t_work_allowance: money GBP
+
+input taper_example: num
+
+input taper_reg22: num
+
+input taxni[c in se, b in biz, k in ap]: money GBP question "What income tax and NI were paid to HMRC in this AP for this trade?"
+
+input trades[c in se, b in biz]: bool
+
+def de_minimis: money GBP
+  note "the amount added to the nil UC threshold to give the relevant threshold"
+  rule std v ucr_2018_65 when uc_de_minimis = dm300 = dm_standard
+  rule temp v ucr_2018_65 when uc_de_minimis = dm2500 = dm_temporary
+
+def earned_used[c in se, k in ap]: money GBP
+  note "earned income after the minimum income floor, reg 62(2)"
+  rule base v ucr_2013 = max(earnings[c, k], mif[c])
+
+def earnings[c in se, k in ap]: money GBP
+  note "self-employed earnings for the AP: the result if above nil, else nil, reg 57(2) Steps 3 and 5"
+  rule base v ucr_2015_345 = max(0, result[c, k])
+
+def max_uc: money GBP
+  note "maximum UC amount: standard allowance plus housing element"
+  rule base v h4_2026 = t_std_allowance + t_housing
+
+def mif_applies[c in se, k in ap]: bool
+  note "reg 62(2): earned income less than the individual threshold"
+  rule base v ucr_2013 = earnings[c, k] < mif[c]
+
+def nil_threshold: money GBP
+  note "(M - U) / taper x 100 + WA, reg 54A(6) as substituted by S.I. 2021/1283 reg 2(2); its formula is an image on legislation.gov.uk and is read from ADM H3308. The example divides by 63 and H3308 by 55, so the divisor is the taper of the reading; a fraction of a penny rounds by reg 6(1)"
+  rule base v ucr_2021_1283 = round((max_uc - t_unearned) / taper_rate + t_work_allowance, 0.01, half-up)
+
+def original_surplus: money GBP
+  note "reg 54A: total earned income in the final AP of the old award (Tiana's AP1) less the relevant threshold, when it exceeds it"
+  rule base v ucr_2018_65 = t_actual[t_ap1] - relevant_threshold
+  rule nil excepts base v ucr_2018_65 when t_actual[t_ap1] <= relevant_threshold = 0
+
+def pool[c in se, k in ap]: money GBP
+  note "unused losses carried out of AP k, reg 57A(1)-(2); one total, since oldest-first order changes which loss is extinguished but not the amount"
+  rule ap1 when k = 1 = max(0, opening_loss[c] + pool_change[c, k])
+  rule later when k > 1 = max(0, pool[c, k - 1] + pool_change[c, k])
+
+def pool_change[c in se, k in ap]: money GBP
+  note "a negative steps 1-3 result is a loss added to the pool, reg 57A(1)(a) as amended by S.I. 2018/65 reg 7(4)(b)(i) (no 11-AP limit); otherwise Step 5 deducts the Step 4 result from the pool"
+  rule base v ucr_2015_345 = -max(0, s4[c, k])
+  rule loss excepts base v ucr_2018_65 when s13[c, k] < 0 = -s13[c, k]
+
+def relevant_threshold: money GBP
+  note "the nil UC threshold plus the de minimis, reg 54A(6) and ADM H3309"
+  rule base v ucr_2018_65 = nil_threshold + de_minimis
+
+def result[c in se, k in ap]: money GBP
+  note "the amount the guide prints for the AP: steps 1-3 when nil or less, otherwise steps 1-4 less the unused losses brought in"
+  rule ap1 when k = 1 = s4[c, k] - opening_loss[c]
+  rule later when k > 1 = s4[c, k] - pool[c, k - 1]
+  rule nil13 excepts ap1, later v ucr_2015_345 when s13[c, k] <= 0 = s13[c, k]
+
+def s13[c in se, k in ap]: money GBP
+  note "reg 57(2) Steps 1-3, as substituted by S.I. 2015/345 reg 3(2), with Step 3's tax and NI words as amended by S.I. 2018/65 reg 7(4)(a): receipts less expenses for each trade, added together, less tax and NI paid"
+  rule base v ucr_2018_65 = sum(b in biz where trades[c, b]: receipts[c, b, k] - expenses[c, b, k] - taxni[c, b, k])
+
+def s4[c in se, k in ap]: money GBP
+  note "reg 57(2) Step 4: less relievable pension contributions"
+  rule base v ucr_2015_345 = s13[c, k] - pension[c, k]
+
+def t_actual[t in tap]: money GBP
+  note "Tiana's self-employed earnings: nil when steps 1-3 give a loss; no unused losses are mentioned before these periods"
+  rule base v ucr_2015_345 = max(0, t_s13[t])
+
+def t_earned_total[t in tap]: money GBP
+  note "earned income before the minimum income floor: actual earnings plus surplus earnings treated as earned income, reg 54A(2)"
+  rule base v ucr_2018_65 = t_actual[t] + t_surplus_in[t]
+
+def t_earned_used[t in tap]: money GBP
+  note "reg 62(2): the minimum income floor when earned income is below it"
+  rule base v ucr_2013 = max(t_earned_total[t], t_mif)
+
+def t_exceeds[t in tap]: bool
+  note "whether the period's total earned income exceeds the relevant threshold"
+  rule base v ucr_2018_65 = t_earned_total[t] > relevant_threshold
+
+def t_loss_cf[t in tap]: money GBP
+  note "a loss of the period carried forward, reg 57A(1)(a) as amended by S.I. 2018/65 reg 7(4)(b)(i)"
+  rule base v ucr_2018_65 = max(0, -t_s13[t])
+
+def t_max_less_taper[t in tap]: money GBP
+  note "maximum UC amount less the taper deduction; the example calls a negative result excess income"
+  rule base v h4_2026 = max_uc - t_taper_ded[t]
+
+def t_mif_applies[t in tap]: bool
+  rule base v ucr_2013 = t_earned_total[t] < t_mif
+
+def t_surplus_in[t in tap]: money GBP
+  note "surplus earnings treated as earned income in the first AP of a new claim, reg 54A(2), (3)(a)"
+  rule base = 0
+  rule reclaim excepts base v ucr_2018_65 when t_first_reclaim[t] = original_surplus
+
+def t_taper_ded[t in tap]: money GBP
+  note "earned income times the taper, reg 22(1)(b), a fraction of a penny rounded by reg 6(1)"
+  rule base v ucr_2013 = round(t_earned_used[t] * taper_rate, 0.01, half-up)
+
+def taper_rate: num
+  rule ex063 when uc_taper = ex063 = taper_example
+  rule reg22 when uc_taper = reg22 = taper_reg22
+
+ask a1_derek1_ap1_result: result[derek1, 1]
+
+ask a2_derek1_ap1_earnings: earnings[derek1, 1], mif_applies[derek1, 1], pool[derek1, 1]
+
+ask a3_derek1_ap2_result: result[derek1, 2]
+
+ask a4_derek1_ap2_earnings: earnings[derek1, 2], mif_applies[derek1, 2], pool[derek1, 2]
+
+ask a5_derek1_ap8_losses: pool[derek1, 8]
+
+ask a5_derek1_steady_nil: earnings[derek1, k], mif_applies[derek1, k] for k in [3, 4, 5, 6, 7, 8]
+
+ask a6_derek1_ap9_result: result[derek1, 9]
+
+ask a7_derek1_ap9_mif: earnings[derek1, 9], mif_applies[derek1, 9]
+
+ask b1_derek2_ap1_result: result[derek2, 1]
+
+ask b2_derek2_ap1_earnings: earnings[derek2, 1], mif_applies[derek2, 1], pool[derek2, 1]
+
+ask b3_derek2_ap2_earnings: result[derek2, 2], earnings[derek2, 2]
+
+ask b4_derek2_ap2_mif: mif_applies[derek2, 2], earned_used[derek2, 2]
+
+ask c1_rodney_results: result[rodney, k], earnings[rodney, k], mif_applies[rodney, k] for k in [1, 2, 3, 4]
+
+ask c2_rodney_carried: pool[rodney, k] for k in [1, 2, 3]
+
+ask d1_tiana_max_uc: max_uc
+
+ask d2_tiana_earned_used: t_earned_used[t], t_mif_applies[t] for t in [t_typical, t_ap2]
+
+ask d3_tiana_taper: t_taper_ded[t] for t in tap
+
+ask d4_tiana_award: t_max_less_taper[t] for t in tap
+
+ask d5_tiana_nil_threshold: nil_threshold
+
+ask d6_tiana_relevant_threshold: relevant_threshold
+
+ask d7_tiana_original_surplus: original_surplus
+
+ask d8_tiana_ap2_exceeds: t_exceeds[t_ap2]
+
+ask d9_tiana_ap2_loss_carried: t_loss_cf[t_ap2]
+
+version ucr_2013
+  cite si2013_376
+  governs 2013-04-29..
+  known 2013-02-25
+  note "made 25 February 2013, in force 29 April 2013; no items: the version the rules of regs 6(1), 22(1)(b) and 62(2) cite"
+
+version ucr_2015_345
+  cite si2015_345
+  governs 2016-04-06..
+  known 2015-02-23
+  note "made 23 February 2015, laid 26 February 2015. Reg 3(2) substitutes reg 57(2), the five steps; reg 3(4) inserts reg 57A (unused losses). Its reg 2 inserted a reg 54A that S.I. 2018/65 reg 7(3) replaced as a whole before it came into force, so the reg 54A rules and the £300 cite ucr_2018_65 (§4.5, Which act)"
+  note "governs its as-made commencement, 6 April 2016 (reg 1). The moves of ucr_2016_215, ucr_2017_197 and ucr_2018_65 carry it to 3 April 2017, 2 April 2018 and 11 April 2018, each under cuts from its instrument's made date (§5.3)"
+
+version ucr_2016_215
+  cite si2016_215
+  known 2016-02-23
+  moves ucr_2015_345 to 2017-04-03..
+  note "made 23 February 2016, laid 1 March 2016, in force 23 March 2016; reg 2: in reg 1 of S.I. 2015/345, for '6th April 2016' substitute '3rd April 2017'"
+
+version ucr_2017_197
+  cite si2017_197
+  known 2017-02-22
+  moves ucr_2015_345 to 2018-04-02..
+  note "made 22 February 2017, laid 27 February 2017, in force 21 days after laying; reg 2: in reg 1 of S.I. 2015/345, for '3rd April 2017' substitute '2nd April 2018'"
+
+version ucr_2018_65
+  cite si2018_65
+  governs 2018-04-11..
+  known 2018-01-22
+  moves ucr_2015_345 to 2018-04-11..
+  note "made and laid 22 January 2018. Reg 7(2): in reg 1 of S.I. 2015/345, for '2nd April 2018' substitute '11th April 2018'. Reg 7(3) substitutes the whole reg 54A that S.I. 2015/345 reg 2(2) inserts; reg 7(4)(a) rewords Step 3 of reg 57(2), and reg 7(4)(b)(i) omits '11' from reg 57A(1)(a)"
+  note "the temporary de minimis row is in ucr_2018_65_dm, a version of its own, so that the determinations can move its end without moving this version's span"
+  dm_standard = 300 "reg 7(3), substituting reg 54A: (6) the relevant threshold is the nil UC threshold plus £300"
+
+version ucr_2018_65_dm
+  cite si2018_65
+  governs 2018-04-11..2019-03-31
+  known 2018-01-22
+  note "reg 7(6), inserting reg 5 of S.I. 2015/345: the temporary de minimis period begins with the coming into force of reg 54A (11 April 2018) and ends on 31st March 2019, but may be extended by the Secretary of State (reg 5(2)). The determinations move this span's end (§5.3)"
+  dm_temporary = 2500 "reg 7(6), inserting reg 5(1) of S.I. 2015/345: £2,500 for £300 in the temporary de minimis period"
+
+version det_2019
+  cite det2019
+  known 2019-03-31
+  moves ucr_2018_65_dm to 2018-04-11..2020-03-31
+  note "the determination's text and date were not found. Budget 2018 (29 October 2018) announced the extension to April 2020 (revenuebenefits.org.uk, 29 March 2021, Wayback capture 2021-04-17), and HCWS147 (5 March 2020) calls £2,500 the current level. Known on the latest day it can be (§4.5): 31 March 2019, the last day of the period it extends"
+
+version det_2020
+  cite det2020
+  known 2020-03-31
+  moves ucr_2018_65_dm to 2018-04-11..2021-03-31
+  note "HCWS147 of 5 March 2020: 'I will sign a Determination to extend the current £2,500 Universal Credit surplus earnings de minimis level from 1 April 2020 to 31 March 2021 and will place a copy in the library'. The determination's text and signature date were not found, so it is known on the latest day it can be (§4.5): 31 March 2020, the last day of the period it extends"
+
+version det_2021
+  cite det2021_24
+  known 2021-03-23
+  moves ucr_2018_65_dm to 2018-04-11..2022-03-31
+  note "[2021 Determination], Will Quince MP, Minister for Welfare Delivery, 23 March 2021: the temporary de minimis period 'will end on 31 March 2022'. Known from its making, the date it is signed (§4.5): the power of reg 5(2) needs no publication"
+
+version ucr_2021_1283
+  cite si2021_1283
+  governs 2021-11-24..
+  known 2021-11-15
+  note "made 15 November 2021, in force 24 November 2021; reg 2(2) substitutes the reg 54A(6) formula, which nil_threshold cites"
+  taper_reg22 = 0.55 "reg 2(1): 55% for 63% in reg 22(1)(b)"
+
+version det_2022
+  cite det2021_24
+  known 2022-03-03
+  moves ucr_2018_65_dm to 2018-04-11..2023-03-31
+  note "[2022 Determination], David Rutley MP, Minister for Welfare Delivery, 3 March 2022: 'will end on 31 March 2023'. Known from its making (§4.5)"
+
+version det_2023
+  cite det2021_24
+  known 2023-03-20
+  moves ucr_2018_65_dm to 2018-04-11..2024-03-31
+  note "[2023 Determination], Guy Opperman MP, Minister for Employment, 20 March 2023: 'will end on 31 March 2024'. Known from its making (§4.5)"
+
+version det_2024
+  cite det2021_24
+  known 2024-02-22
+  moves ucr_2018_65_dm to 2018-04-11..2025-03-31
+  note "[2024 Determination], Jo Churchill MP, Minister for Employment, 22 February 2024: 'will end on 31 March 2025'. Known from its making (§4.5)"
+
+version det_2025
+  cite det2025
+  known 2025-02-26
+  moves ucr_2018_65_dm to 2018-04-11..2026-03-31
+  note "Sir Stephen Timms, Minister for Social Security and Disability, 26 February 2025: 'will end on 31 March 2026'. Known from its making (§4.5); GOV.UK published it on 13 March 2025"
+
+version det_2026
+  cite det2026
+  known 2026-01-20
+  moves ucr_2018_65_dm to 2018-04-11..2027-03-31
+  note "Sir Stephen Timms, Minister for Social Security and Disability, 20 January 2026: 'will end on 31st March 2027'. Known from its making (§4.5); deposited in the Commons Library (DEP2026-0009, letter of 20 January 2026) and published on GOV.UK on 31 March 2026"
+
+version adm_h3_2026
+  cite adm_h3
+  known 2026-04-08
+  note "guidance, known from its first public release (§4.5): the GOV.UK ADM page's change note of 8 April 2026 'Updated ... Chapter H3: Earned income, employed earnings', the edition read (asset 69d52884, uploaded 7 April 2026). Round 2 took the PDF's modify date, 30 March 2026"
+  note "no items: the locator of the reg 54A(6) formula (H3308), which legislation.gov.uk prints as an image, and of the de minimis period as extended to 31.03.27 (H3310). The period's rows are now the determinations' moves"
+
+version h4_2026
+  cite adm_h4
+  known 2026-04-21
+  note "no items: the version the example's award lines cite (max_uc, t_max_less_taper). Guidance, known from its first public release (§4.5): the GOV.UK ADM page's change note of 21 April 2026 updated Chapter H4 with ADM Memo 05/26; the edition read is asset 69dfa3a8, uploaded 15 April 2026"
+
+version h4_examples
+  cite adm_h4
+  known 2026-10-18
+  note "the worked examples' stipulations (H4503 Ex.1 and Ex.2, H4504, Appendix 3 Ex.4), known from the model's on date since it has no start (§4.5); the example amounts are illustrative and older than the chapter"
+  expenses[derek1, b1, 1] = 2300 "H4503 Ex.1, p. 66: AP 1 permitted expenses"
+  expenses[derek1, b1, 2] = 500 "H4503 Ex.1, p. 66: AP 2"
+  expenses[derek1, b1, 9] = 500 "H4503 Ex.1, p. 66: AP9"
+  expenses[derek2, b1, 1] = 1300 "H4503 Ex.2, p. 66: business 1 AP1"
+  expenses[derek2, b1, 2] = 500 "H4503 Ex.2, p. 67: business 1 AP 2"
+  expenses[derek2, b2, 1] = 750 "H4503 Ex.2, p. 66: business 2 AP1"
+  expenses[derek2, b2, 2] = 750 "H4503 Ex.2, p. 67: business 2 AP 2"
+  expenses[rodney, b1, 1..4] = 500 "H4504 Ex., p. 68: £500 (expenses) each AP"
+  mif[derek1] = 987 "H4503 Ex.1, p. 66: the minimum income floor is £987"
+  mif[derek2] = 987 "H4503 Ex.2, pp. 66-67: minimum income floor of £987"
+  mif[rodney] = 1100 "H4504 Ex., p. 68: minimum income floor of £1,100"
+  opening_loss[rodney] = 1800 "H4504 Ex., p. 67: unused loss of £1,800 in the last AP of the old award; the DM treats the old APs as APs of the new claim (reg 57A(3))"
+  receipts[derek1, b1, 1] = 750 "H4503 Ex.1, p. 66: AP 1 actual receipts"
+  receipts[derek1, b1, 2] = 800 "H4503 Ex.1, p. 66: AP 2"
+  receipts[derek1, b1, 9] = 2000 "H4503 Ex.1, p. 66: AP9"
+  receipts[derek2, b1, 1] = 750 "H4503 Ex.2, p. 66: business 1 AP1"
+  receipts[derek2, b1, 2] = 750 "H4503 Ex.2, p. 67: business 1 AP 2"
+  receipts[derek2, b2, 1] = 1500 "H4503 Ex.2, p. 66: business 2 AP1"
+  receipts[derek2, b2, 2] = 2000 "H4503 Ex.2, p. 67: business 2 AP 2"
+  receipts[rodney, b1, 1..4] = 1250 "H4504 Ex., p. 68: £1,250 (receipts) each AP"
+  s13[derek1, 3..8] = 100 "H4503 Ex.1, p. 66: income and expenditure remain steady throughout the following 6 APs, reducing his unused losses by £100 in each AP"
+  t_first_reclaim[t_typical] = false "App. 3 Ex.4, p. 77: typical award"
+  t_first_reclaim[t_ap1] = false "App. 3 Ex.4, p. 77: AP1 ends UC entitlement"
+  t_first_reclaim[t_ap2] = true "App. 3 Ex.4, p. 78: Tiana reclaims UC (first reclaim)"
+  t_housing = 787.8 "App. 3 Ex.4, p. 77: housing element £787.80"
+  t_mif = 1048.17 "App. 3 Ex.4, p. 77: Minimum Income Floor £1,048.17"
+  t_s13[t_typical] = 690 "App. 3 Ex.4, p. 77: regular monthly earnings £690"
+  t_s13[t_ap1] = 2864.67 "App. 3 Ex.4, p. 77: AP1 earnings £2,864.67, completion and payment of a large contract"
+  t_s13[t_ap2] = -350 "App. 3 Ex.4, p. 78: reports a loss of £350, with no other changes in her circumstances"
+  t_std_allowance = 317.82 "App. 3 Ex.4, p. 77: UC amount £317.82"
+  t_unearned = 0 "App. 3 Ex.4, p. 78: £0.00 in the nil UC threshold line"
+  t_work_allowance = 0 "App. 3 Ex.4: no work allowance is applied"
+  taper_example = 0.63 "App. 3 Ex.4, pp. 77-78: x 0.63 (taper)"
+  taxni[derek1, b1, 1] = 200 "H4503 Ex.1, p. 66: AP 1 income tax and NI paid"
+  taxni[derek1, b1, 2] = 200 "H4503 Ex.1, p. 66: AP 2"
+  taxni[derek1, b1, 9] = 200 "H4503 Ex.1, p. 66: AP9"
+  taxni[derek2, b1, 1] = 200 "H4503 Ex.2, p. 66: business 1 AP1"
+  taxni[derek2, b1, 2] = 200 "H4503 Ex.2, p. 67: business 1 AP 2"
+  taxni[derek2, b2, 1] = 150 "H4503 Ex.2, p. 66: business 2 AP1"
+  taxni[derek2, b2, 2] = 150 "H4503 Ex.2, p. 67: business 2 AP 2"
+  taxni[rodney, b1, 1..4] = 200 "H4504 Ex., p. 68: £200 (tax & NI) each AP"
+  trades[derek1, b1] = true "H4503 Ex.1, p. 66: self-employed market trader"
+  trades[derek1, b2] = false "H4503 Ex.1: one trade only"
+  trades[derek2, b1] = true "H4503 Ex.2, p. 66: business 1 (market trader)"
+  trades[derek2, b2] = true "H4503 Ex.2, p. 66: business 2 (antique shop)"
+  trades[rodney, b1] = true "H4504 Ex., p. 67: runs a small printing shop"
+  trades[rodney, b2] = false "H4504 Ex.: one trade only"
+
+version model_assumptions
+  cite modeller
+  known 2026-10-18
+  note "assumptions that stand for the examples' own facts, known from the model's on date (§4.5)"
+  opening_loss[derek1] = 0 assumed "no unused loss before AP 1 is mentioned; the guide carries forward exactly AP 1's loss"
+  opening_loss[derek2] = 0 assumed "no unused loss before AP1 is mentioned; the guide carries forward exactly AP1's loss"
+  pension[*, *] = 0 assumed "no relievable pension contributions are mentioned in any example (reg 57(2) Step 4)"

@@ -1,0 +1,99 @@
+model ul04
+  tally 1
+  on 2026-10-18
+  note "High Income Child Benefit Charge, PAYE14015: the example up to and including 2023-24 and the example from 2024-25 onwards."
+
+source fa2012 "Finance Act 2012 (c. 14), Schedule 1, inserting ITEPA 2003 Part 10 Chapter 8 (ss. 681B-681H), as enacted" at "https://www.legislation.gov.uk/ukpga/2012/14/schedule/1/enacted"
+
+source fa2024_no2 "Finance (No. 2) Act 2024 (c. 12), s. 5, as enacted" at "https://www.legislation.gov.uk/ukpga/2024/12/section/5/enacted"
+
+source paye14015 "HMRC PAYE Manual, PAYE14015, Coding: adjustments to collect tax: high income child benefit charge (updated 2 October 2026)" at "https://www.gov.uk/hmrc-internal-manuals/paye-manual/paye14015"
+
+source si2024_247 "The Tax Credits, Child Benefit and Guardian's Allowance Up-rating Regulations 2024 (S.I. 2024/247), reg. 5" at "https://www.legislation.gov.uk/uksi/2024/247/made"
+
+index cbchild = [eldest, other]
+
+index ex = [ex1, ex2]
+
+index tday = day 2023-04-06..2025-04-05
+
+index ty = year 2023..2024 from 04-06
+
+input ani[e in ex]: money GBP question "What is the individual's adjusted net income for the tax year?"
+
+input cb[e in ex]: money GBP question "How much Child Benefit is received in the tax year for the weeks in which condition A or B is met?"
+
+input cb_weekly[c in cbchild, y in ty]: money GBP
+
+input example_year[e in ex]: key ty
+
+input hicbc_l: money GBP
+
+input hicbc_x: money GBP
+
+input higher_earner[e in ex]: bool question "Does the partner have an adjusted net income for the year that is not higher than the individual's (s. 681B(3)(b), (4)(c))?"
+
+def appropriate_pct[e in ex]: num at start_of(example_year[e])
+  note "s. 681C(2): 100%, or if less (ANI - L) / X %, printed as a number of per cent; s. 681C(3)(b) rounds it down to a whole number"
+  rule base = min(100, round((ani[e] - hicbc_l) / hicbc_x, 1, down))
+
+def cb_total[e in ex]: money GBP
+  note "s. 681C(3)(a): the total of the amounts, rounded down to a whole number of pounds"
+  rule base = round(cb[e], 1, down)
+
+def charge[e in ex]: money GBP at start_of(example_year[e])
+  note "s. 681C(1): the appropriate percentage of the total; s. 681C(3)(a): the charge rounded down to whole pounds"
+  rule base = round(cb_total[e] * appropriate_pct[e] / 100, 1, down)
+  rule not_liable excepts base when not liable[e] = 0
+
+def liable[e in ex]: bool = ani[e] > hicbc_l and higher_earner[e]
+
+def weeks_in_year[y in ty]: int
+  note "s. 681H(3): a week is 7 days beginning with a Monday, and is in a tax year if (and only if) its Monday is, so a tax year has as many weeks as Mondays"
+  rule base = count(d in tday where d >= start_of(y) and d < end_of(y) and weekday(d) = 1)
+
+ask cb_ex2_weeks: check cb[ex2] = cb_weekly[eldest, 2024] * weeks_in_year[2024]
+
+ask q_ex1: appropriate_pct[ex1], charge[ex1]
+
+ask q_ex2: appropriate_pct[ex2], charge[ex2]
+
+version fa2012_sch1
+  cite fa2012
+  known 2012-07-17
+  note "Royal Assent 17 July 2012, the bracketed date on the Act's enacted introduction (https://www.legislation.gov.uk/ukpga/2012/14/introduction/enacted); Sch. 1 para. 1 inserted s. 681C with L = £50,000 and X = £100"
+  note "the revised ITEPA text on legislation.gov.uk (s. 681C as at 05/04/2024, the case's source) still has these figures and is their locator, not their version"
+  hicbc_l = 50000 "Sch. 1 para. 1: ITEPA s. 681C(2)(b) as enacted, L is £50,000; s. 681B(1)(a), exceeds £50,000"
+  hicbc_x = 100 "Sch. 1 para. 1: ITEPA s. 681C(2)(b) as enacted, X is £100"
+
+version si2024_247_reg5
+  cite si2024_247
+  known 2024-02-29
+  enters 2024-04-08
+  note "made 29 February 2024 (legislation.gov.uk, https://www.legislation.gov.uk/uksi/2024/247/made: 'Made 29th February 2024'); an S.I. is known from its made date (§4.5)"
+  note "reg. 5 comes into force on 8 April 2024 (reg. 1(3)), the first Monday of tax year 2024-25, so enters is that day, not the default, the made date; the rows are keyed by that tax year, so the version has no governs"
+  note "HMRC's rates page (Child Benefit, Guardian's Allowance and tax credits: rates and allowances, updated 9 March 2026), the case's source, prints the same rates and is their locator"
+  cb_weekly[eldest, 2024] = 25.6 "reg. 5: Child Benefit (Rates) Regulations 2006 reg. 2(1)(a), enhanced rate, for £24.00 substitute £25.60; HMRC rates table, row Tax year 2024 to 2025, eldest or only child"
+  cb_weekly[other, 2024] = 16.95 "reg. 5: reg. 2(1)(b), other cases, for £15.90 substitute £16.95; HMRC rates table, row Tax year 2024 to 2025, other children"
+
+version fa2024_no2_s5
+  cite fa2024_no2
+  governs 2024-04-06..
+  known 2024-05-24
+  note "Royal Assent 24 May 2024, the bracketed date on the Act's enacted introduction (https://www.legislation.gov.uk/ukpga/2024/12/introduction/enacted); s. 5(3): the amendments have effect for the tax year 2024-25 and subsequent tax years"
+  note "the revised ITEPA text's annotations F3 and F4 on s. 681C point to this section"
+  hicbc_l = 60000 "s. 5(1): s. 681C(2)(b), definition of L, for £50,000 substitute £60,000 (ITEPA s. 681C, F3); also s. 681B(1)(a)"
+  hicbc_x = 200 "s. 5(2): s. 681C(2)(b), definition of X, for £100 substitute £200 (ITEPA s. 681C, F4)"
+
+version paye14015_examples
+  cite paye14015
+  known 2026-10-18
+  note "the worked examples' stipulations: the model has no start, so they are known from its on (§4.5); the page itself was updated 2 October 2026"
+  ani[ex1] = 54000 assumed "the example says income; it is read as adjusted net income (s. 681H(2))" "Example up to and including tax year 2023 to 2024"
+  ani[ex2] = 68000 assumed "the example says income; it is read as adjusted net income (s. 681H(2))" "Example from tax year 2024 to 2025 onwards"
+  cb[ex1] = 1752 "Example up to and including tax year 2023 to 2024: £1,752 for two children for the full year"
+  cb[ex2] = 1331.2 "Example from tax year 2024 to 2025 onwards: £1,331.20 for one child for the full year"
+  example_year[ex1] = 2023 assumed "the example names no year, only up to and including 2023 to 2024; the last such year is taken" "Example up to and including tax year 2023 to 2024"
+  example_year[ex2] = 2024 assumed "the example says from 2024 to 2025 onwards; £1,331.20 is a full year at the 2024-25 eldest-child rate" "Example from tax year 2024 to 2025 onwards"
+  higher_earner[ex1] = true assumed "the example gives no partner's income and treats the individual as the one liable" "Example up to and including tax year 2023 to 2024"
+  higher_earner[ex2] = true assumed "the example gives no partner's income and treats the individual as the one liable" "Example from tax year 2024 to 2025 onwards"

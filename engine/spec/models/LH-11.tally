@@ -1,0 +1,350 @@
+model lh11
+  tally 1
+  on 2026-10-18
+  note "Five loan problems of the SOA Exam FM sample set: Q60 (refinance, solve the new rate), Q87 (deferred annual payments and a drop payment), Q89 (extra payments shorten a mortgage), Q130 (a student loan drawn monthly at two rates), Q133 (refinance with level payments of 500 and a drop payment)."
+  note "No currency is named, so amounts are XXX. Interest is nominal convertible monthly unless a question says otherwise, and payments are at the end of each period. Present values use a_n = (1 - v^n)/i and accumulations s_n = ((1 + i)^n - 1)/i, the solutions' definitions."
+  note "No question states a rounding rule. Axis lh11_step says whether the intermediates the solutions print rounded are carried rounded into the next step; axis lh11_mode gives the unstated mode, also for the figures as printed. Answers are matched to the nearest choice."
+
+source soa_q "Society of Actuaries, Exam FM Financial Mathematics, Exam FM Sample Questions (update history ending 'October 2022: Questions 208-275 were added'), mirror file 2018-10-exam-fm-sample-questions.pdf" at "https://www.math.purdue.edu/~sallyray/From%20SOA%20MA373_files/2018-10-exam-fm-sample-questions.pdf"
+
+source soa_s "Society of Actuaries, Exam FM Financial Mathematics, Exam FM Sample Solutions (same edition), mirror file 2018-10-exam-fm-sample-solutions.pdf" at "https://www.math.purdue.edu/~sallyray/From%20SOA%20MA373_files/2018-10-exam-fm-sample-solutions.pdf"
+
+axis lh11_mode
+  down "a printed or carried figure truncated at its places; no question states a mode"
+  half-up "a printed or carried figure rounded to the nearest at its places; no question states a mode"
+
+axis lh11_step
+  exact "every intermediate is carried exact; only the figures asked are rounded, at their printed places"
+  printed "the solutions' method: each intermediate the solution prints rounded and then reuses (Q60 payment, Q87 rate, Q89 payment and annual rate, Q130 factors, Q133 payment, annuity factor and ratio) is carried rounded at its printed places"
+
+index choice = [opt_a, opt_b, opt_c, opt_d, opt_e]
+
+index q130_part = [first2, next2]
+
+index q89_yr = 1..5
+
+input q130_draw: money XXX
+
+input q130_opt[o in choice]: money XXX
+
+input q130_rate[p in q130_part]: rate nominal 12 /year
+
+input q130_years[p in q130_part]: int
+
+input q133_first: date
+
+input q133_first_new: date
+
+input q133_loan: money XXX
+
+input q133_new_pay: money XXX
+
+input q133_new_rate: rate nominal 12 /year
+
+input q133_opt[o in choice]: date
+
+input q133_rate: rate nominal 12 /year
+
+input q133_refi: date
+  note "the date of the last regular payment before the refinancing"
+
+input q133_years: int
+
+input q60_cut: money XXX
+  note "the amount by which each payment is lower after the refinancing"
+
+input q60_j: rate nominal 12 /year question "What rate j, convertible monthly, makes the lower payments repay the balance over the remaining term?"
+
+input q60_loan: money XXX
+
+input q60_new_years: int
+
+input q60_opt[o in choice]: rate nominal 12 /year
+
+input q60_paid: int
+
+input q60_rate: rate nominal 12 /year
+
+input q60_years: int
+
+input q87_d: rate discount /year
+
+input q87_first: int
+  note "the time in years of the first payment after the loan is taken out"
+
+input q87_loan: money XXX
+
+input q87_opt[o in choice]: money XXX
+
+input q87_pmt: money XXX
+
+input q89_extra[y in q89_yr]: money XXX
+  note "the extra payment at the end of loan year y, on December 31 of year 2002 + y, made with the regular payment"
+
+input q89_first_pay: date
+
+input q89_loan: money XXX
+
+input q89_opt[o in choice]: date
+
+input q89_rate: rate nominal 12 /year
+
+input q89_years: int
+
+def q130_acc[p in q130_part]: num
+  rule base = pow(1 + q130_i[p], 12 * q130_years[p])
+  rule printed excepts base v v_soa_s when lh11_step = printed = round(pow(1 + q130_i[p], 12 * q130_years[p]), 0.0001, lh11_mode)
+
+def q130_bal: num XXX
+  note "the balance at the end of four years: the first two years' draws accumulated at 6% and then carried at 8%, plus the last two years' draws at 8%"
+  rule base v v_soa_s = q130_draw * (q130_s[first2] * q130_acc[next2] + q130_s[next2])
+
+def q130_i[p in q130_part]: num = periodic(q130_rate[p], month)
+
+def q130_s[p in q130_part]: num
+  rule base = (pow(1 + q130_i[p], 12 * q130_years[p]) - 1) / q130_i[p]
+  rule printed excepts base v v_soa_s when lh11_step = printed = round((pow(1 + q130_i[p], 12 * q130_years[p]) - 1) / q130_i[p], 0.0001, lh11_mode)
+
+def q133_a_left: num
+  rule base = (1 - 1 / pow(1 + q133_i, q133_left)) / q133_i
+  rule printed excepts base v v_soa_s when lh11_step = printed = round((1 - 1 / pow(1 + q133_i, q133_left)) / q133_i, 0.0001, lh11_mode)
+
+def q133_a_n: num = (1 - 1 / pow(1 + q133_i, q133_n)) / q133_i
+
+def q133_bal: num XXX = q133_pay * q133_a_left
+
+def q133_i: num = periodic(q133_rate, month)
+
+def q133_j: num = periodic(q133_new_rate, month)
+
+def q133_last: date = add_months(q133_first_new, q133_months - 1)
+
+def q133_left: int = q133_n - q133_made
+
+def q133_made: int = age_months(q133_first, q133_refi) + 1
+
+def q133_months: int = round(q133_nreal, 1, ceil)
+
+def q133_n: int = 12 * q133_years
+
+def q133_nreal: num = -(ln(1 - q133_x) to 1e-12) / (ln(1 + q133_j) to 1e-12)
+
+def q133_pay: num XXX
+  rule base = q133_loan / q133_a_n
+  rule printed excepts base v v_soa_s when lh11_step = printed = round(q133_loan / q133_a_n, 0.01, lh11_mode)
+
+def q133_x: num
+  note "1 - v^n of the new payments: the balance times the new monthly rate over the new payment"
+  rule base = q133_bal * q133_j / q133_new_pay
+  rule printed excepts base v v_soa_s when lh11_step = printed = round(q133_bal * q133_j / q133_new_pay, 0.00001, lh11_mode)
+
+def q60_a_left: num = (1 - 1 / pow(1 + q60_i, q60_n - q60_paid)) / q60_i
+
+def q60_a_n: num = (1 - 1 / pow(1 + q60_i, q60_n)) / q60_i
+
+def q60_b: num XXX = q60_r * q60_a_left
+
+def q60_gap[o in choice]: num XXX = q60_newpay * (1 - 1 / pow(1 + periodic(q60_opt[o], month), 12 * q60_new_years)) / periodic(q60_opt[o], month) - q60_b
+
+def q60_i: num = periodic(q60_rate, month)
+
+def q60_jm: num = periodic(q60_j, month)
+
+def q60_n: int = 12 * q60_years
+
+def q60_newpay: num XXX = q60_r - q60_cut
+
+def q60_newpv: num XXX = q60_newpay * (1 - 1 / pow(1 + q60_jm, 12 * q60_new_years)) / q60_jm
+
+def q60_r: num XXX
+  rule base = q60_loan / q60_a_n
+  rule printed excepts base v v_soa_s when lh11_step = printed = round(q60_loan / q60_a_n, 0.01, lh11_mode)
+
+def q87_acc: num = pow(1 + q87_i, q87_full + 1)
+
+def q87_bal2: num XXX
+  note "the loan accumulated at the effective rate to one year before the first payment"
+  rule base v v_soa_s = q87_loan * pow(1 + q87_i, q87_first - 1)
+
+def q87_drop: num XXX = (q87_bal2 - q87_pv_full) * q87_acc
+
+def q87_full: int = round(q87_nreal, 1, floor)
+
+def q87_i: num
+  rule base = periodic(q87_d, year)
+  rule printed excepts base v v_soa_s when lh11_step = printed = round(periodic(q87_d, year), 0.0001, lh11_mode)
+
+def q87_nreal: num = -(ln(1 - q87_bal2 * q87_i / q87_pmt) to 1e-12) / (ln(1 + q87_i) to 1e-12)
+
+def q87_pv_full: num XXX = q87_pmt * (1 - 1 / pow(1 + q87_i, q87_full)) / q87_i
+
+def q89_a_n: num = (1 - 1 / pow(1 + q89_i, q89_n)) / q89_i
+
+def q89_full: int = round(q89_nreal, 1, floor)
+
+def q89_i: num = periodic(q89_rate, month)
+
+def q89_j: num
+  note "the equivalent annual effective rate"
+  rule base = periodic(q89_rate, year)
+  rule printed excepts base v v_soa_s when lh11_step = printed = round(periodic(q89_rate, year), 0.0001, lh11_mode)
+
+def q89_last: date = add_months(q89_first_pay, q89_months - 1)
+
+def q89_months: int = round(q89_nreal, 1, ceil)
+
+def q89_n: int = 12 * q89_years
+
+def q89_nreal: num = -(ln(1 - q89_reduced * q89_i / q89_pay) to 1e-12) / (ln(1 + q89_i) to 1e-12)
+
+def q89_pay: num XXX
+  rule base = q89_loan / q89_a_n
+  rule printed excepts base v v_soa_s when lh11_step = printed = round(q89_loan / q89_a_n, 0.01, lh11_mode)
+
+def q89_pv_extra: num XXX
+  rule base v v_soa_s = sum(y in q89_yr: q89_extra[y] / pow(1 + q89_j, y))
+
+def q89_reduced: num XXX = q89_loan - q89_pv_extra
+
+ask a130_acc8: round(q130_acc[next2], 0.0001, lh11_mode)
+
+ask a130_bal: round(q130_bal, 1, lh11_mode)
+
+ask a130_choice: argmin(o in choice: abs(q130_opt[o] - q130_bal))
+
+ask a130_s6: round(q130_s[first2], 0.0001, lh11_mode)
+
+ask a130_s8: round(q130_s[next2], 0.0001, lh11_mode)
+
+ask a133_a192: round(q133_a_left, 0.0001, lh11_mode)
+
+ask a133_a240: round(q133_a_n, 0.0001, lh11_mode)
+
+ask a133_bal: round(q133_bal, 0.01, lh11_mode)
+
+ask a133_choice: argmin(o in choice: abs(days(q133_opt[o], q133_last)))
+
+ask a133_last: q133_last
+
+ask a133_left: q133_left
+
+ask a133_months: q133_months
+
+ask a133_n: round(q133_nreal, 0.01, lh11_mode)
+
+ask a133_pay: round(q133_pay, 0.01, lh11_mode)
+
+ask a133_x: round(q133_x, 0.00001, lh11_mode)
+
+ask a60_a144: round(q60_a_left, 0.0001, lh11_mode)
+
+ask a60_aj: round(q60_b / q60_newpay, 0.0001, lh11_mode)
+
+ask a60_b36: round(q60_b, 0.01, lh11_mode)
+
+ask a60_choice: argmin(o in choice: abs(q60_gap[o]))
+
+ask a60_j: solve q60_j in [0.01, 0.2] to 0.0001: q60_newpv = q60_b
+
+ask a60_jm: solve q60_jm in [0.001, 0.02] to 0.00001: q60_newpv = q60_b
+
+ask a60_r: round(q60_r, 0.01, lh11_mode)
+
+ask a60_revised: round(q60_newpay, 0.01, lh11_mode)
+
+ask a87_acc30: round(q87_acc, 0.00001, lh11_mode)
+
+ask a87_bal2: round(q87_bal2, 1, lh11_mode)
+
+ask a87_choice: argmin(o in choice: abs(q87_opt[o] - q87_drop))
+
+ask a87_drop: round(q87_drop, 1, lh11_mode)
+
+ask a87_full: q87_full
+
+ask a87_i: round(q87_i, 0.0001, lh11_mode)
+
+ask a87_n: round(q87_nreal, 0.001, lh11_mode)
+
+ask a87_pv29: round(q87_pv_full, 1, lh11_mode)
+
+ask a89_choice: argmin(o in choice: abs(days(q89_opt[o], q89_last)))
+
+ask a89_drop_month: q89_months
+
+ask a89_full: q89_full
+
+ask a89_j: round(q89_j, 0.0001, lh11_mode)
+
+ask a89_last: q89_last
+
+ask a89_n: round(q89_nreal, 0.01, lh11_mode)
+
+ask a89_pay: round(q89_pay, 0.01, lh11_mode)
+
+ask a89_pv: round(q89_pv_extra, 0.01, lh11_mode)
+
+ask a89_reduced: round(q89_reduced, 0.01, lh11_mode)
+
+version v_soa_s
+  cite soa_s
+  known 2022-10-31
+  note "A source with no date of its own, dated only by a month, takes the month's last day (LANGUAGE 4.5): the edition's update history ends October 2022, and the solutions print no other date. Retrieved 2026-10-18. The method of Solutions 60 (p. 18), 87 (p. 25), 89 (p. 26), 130 (p. 37) and 133 (p. 38): the prospective balance, the loan accumulated to time 2 before the first payment (87), the extra payments valued at the equivalent annual effective rate (89), the first two years' balance carried at 8% (130), and the intermediates the solutions print rounded and reuse."
+
+version v_soa_q
+  cite soa_q
+  known 2026-10-18
+  note "The questions' data are a hypothetical case's stipulations, known from the model's on date, as it has no start (LANGUAGE 4.5). Retrieved 2026-10-18; PDF metadata: created 10 Oct 2022. Page numbers of this mirror."
+  q130_draw = 1000 "p. 67, 130.: borrows 1000 at the end of each month for four years"
+  q130_opt[opt_a] = 54098 "p. 67, 130., choice (A)"
+  q130_opt[opt_b] = 55224 "p. 67, 130., choice (B)"
+  q130_opt[opt_c] = 55762 "p. 67, 130., choice (C)"
+  q130_opt[opt_d] = 56134 "p. 67, 130., choice (D)"
+  q130_opt[opt_e] = 56350 "p. 67, 130., choice (E)"
+  q130_rate[first2] = 0.06 "p. 67, 130.: 6% nominal convertible monthly for the first two years"
+  q130_rate[next2] = 0.08 "p. 67, 130.: 8% nominal convertible monthly for the following two years"
+  q130_years[first2] = 2 "p. 67, 130.: the first two years"
+  q130_years[next2] = 2 "p. 67, 130.: the following two years; balance at the end of four years"
+  q133_first = 2005-07-31 "p. 69, 133.: level monthly payments at the end of each month, the first on July 31, 2005"
+  q133_first_new = 2009-07-31 "p. 69, 133.: new payments monthly from July 31, 2009"
+  q133_loan = 85000 "p. 69, 133.: a 20-year loan of 85,000 taken July 1, 2005"
+  q133_new_pay = 500 "p. 69, 133.: each 500 except a final drop payment"
+  q133_new_rate = 0.054 "p. 69, 133.: 5.40% nominal, compounded monthly"
+  q133_opt[opt_a] = 2022-07-31 "p. 69, 133., choice (A) July 31, 2022"
+  q133_opt[opt_b] = 2030-04-30 "p. 69, 133., choice (B) April 30, 2030"
+  q133_opt[opt_c] = 2030-05-31 "p. 69, 133., choice (C) May 31, 2030"
+  q133_opt[opt_d] = 2031-04-30 "p. 69, 133., choice (D) April 30, 2031"
+  q133_opt[opt_e] = 2031-05-31 "p. 69, 133., choice (E) May 31, 2031"
+  q133_rate = 0.06 "p. 69, 133.: 6% nominal, compounded monthly"
+  q133_refi = 2009-06-30 "p. 69, 133.: refinanced right after the regular payment on June 30, 2009"
+  q133_years = 20 "p. 69, 133.: a 20-year loan"
+  q60_cut = 409.88 "p. 31, 60.: each payment is now 409.88 lower"
+  q60_loan = 400000 "p. 31, 60.: a 15-year loan for 400,000"
+  q60_new_years = 12 "p. 31, 60.: the remaining term kept at twelve years"
+  q60_opt[opt_a] = 0.0472 "p. 31, 60., choice (A) 4.72%"
+  q60_opt[opt_b] = 0.0575 "p. 31, 60., choice (B) 5.75%"
+  q60_opt[opt_c] = 0.0635 "p. 31, 60., choice (C) 6.35 %"
+  q60_opt[opt_d] = 0.069 "p. 31, 60., choice (D) 6.90%"
+  q60_opt[opt_e] = 0.0914 "p. 31, 60., choice (E) 9.14%"
+  q60_paid = 36 "p. 31, 60.: refinanced immediately after the 36th payment"
+  q60_rate = 0.09 "p. 31, 60.: 9% nominal, convertible monthly"
+  q60_years = 15 "p. 31, 60.: a 15-year loan, level payments at the end of each month"
+  q87_d = 0.055 "p. 45, 87.: annual effective discount rate of 5.5%"
+  q87_first = 3 "p. 45, 87. ii): the first payment three years after the loan is taken out"
+  q87_loan = 15000000 "p. 45, 87.: a loan of 15,000,000"
+  q87_opt[opt_a] = 79100 "p. 45, 87., choice (A)"
+  q87_opt[opt_b] = 176000 "p. 45, 87., choice (B)"
+  q87_opt[opt_c] = 321300 "p. 45, 87., choice (C)"
+  q87_opt[opt_d] = 959500 "p. 45, 87., choice (D)"
+  q87_opt[opt_e] = 1180300 "p. 45, 87., choice (E)"
+  q87_pmt = 1200000 "p. 45, 87. i): n annual payments of 1,200,000 and a drop payment one year after the nth payment"
+  q89_extra[1..5] = 10000 "p. 46, 89.: 10,000 in addition to the regular payment on each December 31, 2003 through 2007"
+  q89_first_pay = 2003-01-31 "p. 46, 89.: level end-of-month payments, the first on January 31, 2003"
+  q89_loan = 200000 "p. 46, 89.: a 30-year mortgage of 200,000 on January 1, 2003"
+  q89_opt[opt_a] = 2013-07-31 "p. 46, 89., choice (A) July 31, 2013"
+  q89_opt[opt_b] = 2020-11-30 "p. 46, 89., choice (B) November 30, 2020"
+  q89_opt[opt_c] = 2020-12-31 "p. 46, 89., choice (C) December 31, 2020"
+  q89_opt[opt_d] = 2021-12-31 "p. 46, 89., choice (D) December 31, 2021"
+  q89_opt[opt_e] = 2022-01-31 "p. 46, 89., choice (E) January 31, 2022"
+  q89_rate = 0.06 "p. 46, 89.: 6% nominal, compounded monthly"
+  q89_years = 30 "p. 46, 89.: a 30-year mortgage"

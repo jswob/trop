@@ -1,0 +1,86 @@
+part pl_wrappers
+  tally 1
+  law
+  note "IKE: roczny limit wpłat. OKI: od 2027, podatek od średniej wartości rachunku ponad kwotę wolną, płatny do 31 maja."
+  note "Wycinek przykładowy z kwotami prototypu; nie przeszedł bramki."
+
+source ike_act "Ustawa o indywidualnych kontach emerytalnych oraz indywidualnych kontach zabezpieczenia emerytalnego (tekst jednolity)"
+source oki_act "Ustawa o osobistych kontach inwestycyjnych, Dz.U. 2026 poz. 1098 (z prototypu)"
+source rpp "Komunikaty Rady Polityki Pieniężnej o stopach procentowych NBP"
+
+index oki_asset = [pln_funds, deposits_bonds, foreign]
+
+input nbp_ref: num question "Ile wynosi stopa referencyjna NBP?"
+
+input oki_exempt[a in oki_asset]: money PLN
+
+input oki_from: month
+
+input oki_rate_first: num
+
+input oki_rate_floor: num
+
+input oki_ref_share: num
+
+def ike_limit[y in tax_year]: money PLN
+  rule base v ike_2004 = 3 * proj_wage_y[y]
+
+def nbp_oct[y in tax_year]: num at add_days(add_months(start_of(y), -2), -1) = nbp_ref
+
+def oki_avg[y in tax_year]: num PLN
+  rule base v oki_rules = sum(d in day where year_of(d) = y: worth(wunits[oki], d) + bal(wcash[oki], d)) / days(start_of(y), end_of(y))
+
+def oki_rate[y in tax_year]: num
+  rule base v oki_2027 = oki_rate_first
+  rule base v oki_2028 = max(oki_rate_floor, round(oki_ref_share * nbp_oct[y], 0.0001, floor))
+
+def oki_tax[y in tax_year]: money PLN
+  rule base v oki_rules = round(max(0, oki_avg[y] - oki_exempt[oki_holds]) * oki_rate[y], 1, half-up)
+
+pay oki_tax_pay[y in tax_year]
+  from konto
+  to urzad_skarbowy
+  amount oki_tax[y]
+  on next_business(add_days(add_months(start_of(y), 17), -1), holidays_pl)
+  for y
+  when oki_from != - and start_of(y) >= start_of(oki_from) and oki_tax[y] > 0
+
+version ike_2004
+  cite ike_act
+  governs 2004..
+  known 2004-04-20
+  note "art. 13 ust. 1: limit wpłat to trzykrotność prognozowanego przeciętnego wynagrodzenia"
+
+version nbp_2026_03
+  cite rpp
+  governs 2026-03-05..
+  known 2026-03-04
+  nbp_ref = 0.0375 "decyzja RPP z 4 marca 2026 r., utrzymana w październiku"
+
+version oki_2027
+  cite oki_act
+  governs 2027
+  known 2026-07-15
+  note "art. 43: stawka przejściowa na pierwszy rok"
+  oki_rate_first = 0.0085 "art. 43"
+
+version oki_2028
+  cite oki_act
+  governs 2028..
+  known 2026-07-15
+  note "art. 25: 19% stopy referencyjnej NBP z 31 października roku poprzedniego, w dół do 0,01 pp, nie mniej niż 0,1%"
+
+version oki_rules
+  cite oki_act
+  governs 2027..
+  known 2026-07-15
+  oki_exempt[deposits_bonds] = 25000 "art. 26"
+  oki_exempt[foreign] = 0 "art. 26: brak kwoty wolnej"
+  oki_exempt[pln_funds] = 100000 "art. 26"
+  oki_rate_floor = 0.001 "art. 25 ust. 2"
+  oki_ref_share = 0.19 "art. 25 ust. 1"
+
+version oki_start
+  cite oki_act
+  known 2026-07-15
+  oki_from = 2027-01 "przepis o wejściu w życie"

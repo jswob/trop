@@ -1,0 +1,257 @@
+model rc02
+  tally 1
+  on 2026-10-18
+  note "US Medicaid MAGI household composition and household income, 42 CFR 435.603(d) and (f), on the CMS training scenarios. Each scenario's people are their own keys: sam, susan, sarah (slide 83); i_marty, i_mark (slide 86); s1_, s2_, s3_ (slides 59-61); p_marty, p_mark (the MAGI 2.0 parallel)."
+  note "No application month is given, so every def runs at the model's on date; the filing thresholds are the ones slide 84 shows, which the manual says are used for determinations."
+
+source cms_magi2 "CMS, MAGI 2.0: Building MAGI Knowledge, Part 2: Income Counting (Last Updated: December 11, 2020)" at "https://www.medicaid.gov/sites/default/files/2021-02/part-2-income.pdf"
+
+source cms_manual "CMS, MAGI-Based Household Income Eligibility Training Manual (Last Updated: December 1, 2020)" at "https://www.medicaid.gov/state-resource-center/mac-learning-collaboratives/downloads/household-composition-and-income-training.pdf"
+
+source fr2012_6560 "CMS, Medicaid Program; Eligibility Changes Under the Affordable Care Act of 2010, final rule (CMS-2349-F), 77 FR 17144-17217, March 23, 2012; 42 CFR 435.603 at 77 FR 17206" at "https://www.govinfo.gov/content/pkg/FR-2012-03-23/html/2012-6560.htm"
+
+source modeller "The model's own assumptions, each stated with its reason"
+
+axis magi_age
+  a19 "the State elects age 19, § 435.603(f)(3)(iv)(A)"
+  a19_21 "the State elects age 19, or 21 for full-time students, § 435.603(f)(3)(iv)(B)"
+
+index person = [sam, susan, sarah, i_marty, i_mark, s1_marty, s1_gm, s2_marty, s2_mark, s2_mary, s3_marty, s3_mark, s3_mary, p_marty, p_mark]
+
+input annual_earned[p in person]: money USD question "What earned income does this person expect for the year?"
+
+input annual_unearned[p in person]: money USD question "What unearned income does this person expect for the year?"
+
+input claims[t in person, q in person]: bool question "Does t expect to claim q as a tax dependent?"
+
+input earned_cap: money USD
+
+input earned_thr: money USD
+
+input files_jointly[p in person, q in person]: bool question "Do p and q expect to file a joint tax return?"
+
+input files_return[p in person]: bool question "Does this person expect to file a tax return?"
+
+input fulltime_student[p in person]: bool question "Is this person a full-time student?"
+
+input gross_add: money USD
+
+input gross_floor: money USD
+
+input limit19: int
+
+input limit21: int
+
+input lives_with[p in person, q in person]: bool question "Does p live with q?"
+
+input monthly_income[p in person]: money USD question "What is this person's monthly MAGI-based income?"
+
+input parent[p in person, q in person]: bool question "Is p a parent of q (§ 435.603(b))?"
+
+input sibling[p in person, q in person]: bool question "Is p a sibling of q (§ 435.603(b))?"
+
+input spouse[p in person, q in person]: bool question "Are p and q married to each other?"
+
+input stated_age[p in person]: int question "How old is this person?"
+
+input unearned_thr: money USD
+
+def claimed[i in person]: bool
+  note "the individual expects to be claimed as a tax dependent by another taxpayer"
+  rule base v fr2012_435 = any(t in person: claims[t, i])
+
+def claimer[i in person]: key person
+  note "the taxpayer who claims the individual; with a joint return either spouse gives the same household under (f)(4)"
+  rule base = first(t in person where claims[t, i])
+
+def counts[i in person, q in person]: bool
+  note "q's income counts in i's household income, § 435.603(d)(1)-(2)"
+  rule base v fr2012_435 = member[i, q] and not excluded[q]
+
+def dep_exception[i in person]: bool
+  note "§ 435.603(f)(2)(i)-(iii): the dependent's household is found by the non-filer rules"
+  rule base v fr2012_435 = exc_i[i] or exc_ii[i] or exc_iii[i]
+
+def exc_i[i in person]: bool
+  note "(f)(2)(i): claimed by a taxpayer of whom the individual is neither the spouse nor a child"
+  rule base v fr2012_435 = not (spouse[claimer[i], i] or parent[claimer[i], i])
+
+def exc_ii[i in person]: bool
+  note "(f)(2)(ii): under the age, claimed by one parent, living with both parents, who don't expect to file jointly"
+  rule base v fr2012_435 = under_age[i] and parent[claimer[i], i] and lives_with[i, claimer[i]] and any(r in person where parent[r, i] and r != claimer[i]: lives_with[i, r] and not files_jointly[claimer[i], r])
+
+def exc_iii[i in person]: bool
+  note "(f)(2)(iii): under the age, claimed by a non-custodial parent, read as a parent the individual doesn't live with"
+  rule base v fr2012_435 = under_age[i] and parent[claimer[i], i] and not lives_with[i, claimer[i]]
+
+def excluded[q in person]: bool
+  note "§ 435.603(d)(2)(i): included in the household of a parent and not expected to be required to file"
+  rule base v fr2012_435 = any(r in person where parent[r, q]: member[r, q]) and not req_file[q]
+
+def filer_member[t in person, q in person]: bool
+  note "§ 435.603(f)(1): the taxpayer and everyone the taxpayer expects to claim; (f)(4): a spouse living with the taxpayer"
+  rule base v fr2012_435 = (q = t or claims[t, q] or spouse[t, q] and lives_with[t, q])
+
+def hh_income[i in person]: money USD
+  note "§ 435.603(d)(1): the sum of the MAGI-based income of every member, less what (d)(2) excludes"
+  rule base v fr2012_435 = sum(q in person where member[i, q]: if excluded[q] then 0 else monthly_income[q])
+
+def hh_size[i in person]: int
+  note "family size, § 435.603(b): the number of persons counted as members of the household"
+  rule base v fr2012_435 = count(q in person where member[i, q])
+
+def member[i in person, q in person]: bool
+  note "q is in i's MAGI household, § 435.603(f)"
+  rule dependent v fr2012_435 when claimed[i] = filer_member[claimer[i], q]
+  rule exception excepts dependent v fr2012_435 when claimed[i] and dep_exception[i] = nonfiler_member[i, q]
+  rule filer v fr2012_435 when not claimed[i] and files_return[i] = filer_member[i, q]
+  rule nonfiler v fr2012_435 when not claimed[i] and not files_return[i] = nonfiler_member[i, q]
+
+def nonfiler_member[i in person, q in person]: bool
+  note "§ 435.603(f)(3): the individual and, if living with the individual, the spouse, children under the age, and for an individual under the age the parents and siblings under the age"
+  rule base v fr2012_435 = (q = i or lives_with[i, q] and (spouse[i, q] or parent[i, q] and under_age[q] or under_age[i] and (parent[q, i] or sibling[i, q] and under_age[q])))
+
+def req_file[p in person]: bool
+  note "expected to be required to file: the 2019 dependent filing requirements as slide 84 shows them (under 65, not blind)"
+  rule base v cms_manual_2020 = annual_unearned[p] > unearned_thr or annual_earned[p] > earned_thr or annual_earned[p] + annual_unearned[p] > max(gross_floor, min(annual_earned[p], earned_cap) + gross_add)
+
+def under_age[p in person]: bool
+  note "under the age the State elects, § 435.603(f)(3)(iv)"
+  rule a19 v fr2012_435 when magi_age = a19 = stated_age[p] < limit19
+  rule a19_21 v fr2012_435 when magi_age = a19_21 = stated_age[p] < limit19 or fulltime_student[p] and stated_age[p] < limit21
+
+ask inc_counted: counts[i_marty, q] for q in [i_marty, i_mark]
+
+ask inc_income: hh_income[i_marty]
+
+ask inc_size: hh_size[i_marty]
+
+ask m1_gm_size: hh_size[s1_gm]
+
+ask m1_members: member[s1_marty, q] for q in [s1_marty, s1_gm]
+
+ask m1_size: hh_size[s1_marty]
+
+ask m2_members: member[s2_marty, q] for q in [s2_marty, s2_mark, s2_mary]
+
+ask m2_size: hh_size[s2_marty]
+
+ask m3_members: member[s3_marty, q] for q in [s3_marty, s3_mark, s3_mary]
+
+ask m3_size: hh_size[s3_marty]
+
+ask par_counted: counts[p_marty, q] for q in [p_marty, p_mark]
+
+ask par_excluded: excluded[p_mark]
+
+ask par_income: hh_income[p_marty]
+
+ask par_req_file: req_file[p_mark]
+
+ask par_size: hh_size[p_marty]
+
+ask sam_counted: counts[sam, q] for q in [sam, susan]
+
+ask sam_income: hh_income[sam]
+
+ask sam_size: hh_size[sam]
+
+
+version fr2012_435
+  cite fr2012_6560
+  governs 2014-01-01..
+  known 2012-03-23
+  note "published March 23, 2012, effective January 1, 2014. § 435.603 was amended by 78 FR 42160 (July 15, 2013; § 435.603 at 78 FR 42302, effective October 1, 2013) and 81 FR 86382 (November 30, 2016; at 81 FR 86456). The paragraphs the rules cite are read from the current eCFR text (https://www.ecfr.gov/current/title-42/section-435.603), their locator; which of them the two amendments changed is not established"
+  limit19 = 19 "§ 435.603(f)(3)(iv)(A): Age 19"
+  limit21 = 21 "§ 435.603(f)(3)(iv)(B): in the case of full-time students, age 21"
+
+version cms_manual_2020
+  cite cms_manual
+  known 2020-12-01
+  note "the manual's 'Last Updated: December 1, 2020' stamp (§4.5); the filing thresholds slide 84 shows"
+  earned_cap = 11850 "slide 84: Earned income (up to $ 11,850) plus $350"
+  earned_thr = 12200 "slide 84: Earned income > $12,200"
+  gross_add = 350 "slide 84: plus $350"
+  gross_floor = 1100 "slide 84: Gross income > than the larger of $1,100"
+  unearned_thr = 1100 "slide 84: Unearned income > $1,100"
+
+version cms_magi2_examples
+  cite cms_magi2
+  known 2026-10-18
+  note "the MAGI 2.0 deck's scenario, a hypothetical case's stipulations, known from the model's on date since it has no start (§4.5)"
+  annual_earned[p_mark] = 7200 "slide 15: Mark's Earned Income $7,200/yr"
+  monthly_income[p_marty] = 1500 "slide 15: Marty's $1,500"
+  monthly_income[p_mark] = 600 "slide 15: Mark's $600"
+  parent[p_marty, p_mark] = true "slide 16: the special income counting rule for children"
+
+version cms_manual_examples
+  cite cms_manual
+  known 2026-10-18
+  note "the training scenarios (slides 59-61, 83, 86), a hypothetical case's stipulations, known from the model's on date since it has no start (§4.5)"
+  claims[sam, sarah] = true "slide 83: plan to claim their daughter, Sarah, age 6, as a tax dependent"
+  claims[susan, sarah] = true "slide 83: plan to file taxes jointly, and plan to claim their daughter"
+  claims[i_marty, i_mark] = true "slide 86: Marty plans to claim Mark as a tax dependent"
+  claims[s1_gm, s1_marty] = true "slide 59: lives with his grandmother who expects to claim him as a tax dependent"
+  claims[s2_mary, s2_marty] = true "slide 60: Marty expects to be claimed as a tax dependent by Mary"
+  claims[s3_mark, s3_marty] = true "slide 61: Marty expects to be claimed as a tax dependent by his father, Mark, who lives separately"
+  files_jointly[sam, susan] = true "slide 83: plan to file taxes jointly"
+  files_jointly[susan, sam] = true "slide 83: plan to file taxes jointly"
+  files_jointly[s2_mark, s2_mary] = false "slide 60: Mark plans to file taxes separately from Mary"
+  files_jointly[s2_mary, s2_mark] = false "slide 60: Mark plans to file taxes separately from Mary"
+  files_return[sam] = true "slide 83: plan to file taxes jointly"
+  files_return[susan] = true "slide 83: plan to file taxes jointly"
+  files_return[s2_mark] = true "slide 60: Mark plans to file taxes separately"
+  files_return[s3_mary] = true "slide 61: Mary's taxes: no dependents"
+  lives_with[i_marty, i_mark] = ? "Do Marty and Mark (slide 86) live together? The slide doesn't say."
+  lives_with[i_mark, i_marty] = ? "Do Marty and Mark (slide 86) live together? The slide doesn't say."
+  lives_with[s1_marty, s1_gm] = true "slide 59: lives with his grandmother"
+  lives_with[s1_gm, s1_marty] = true "slide 59: lives with his grandmother"
+  lives_with[s2_marty, s2_mark] = true "slide 60: lives with both of his biological parents, Mary and Mark"
+  lives_with[s2_marty, s2_mary] = true "slide 60: lives with both of his biological parents, Mary and Mark"
+  lives_with[s2_mark, s2_marty] = true "slide 60"
+  lives_with[s2_mary, s2_marty] = true "slide 60"
+  lives_with[s3_marty, s3_mark] = false "slide 61: his father, Mark, who lives separately"
+  lives_with[s3_marty, s3_mary] = true "slide 61: lives with his mother, Mary"
+  lives_with[s3_mark, s3_marty] = false "slide 61: who lives separately"
+  lives_with[s3_mary, s3_marty] = true "slide 61"
+  monthly_income[sam] = 1000 "slide 83: Sam's monthly income is $1,000"
+  monthly_income[susan] = 500 "slide 83: Susan's monthly income is $500"
+  monthly_income[sarah] = 0 "slide 83: Sarah has no income"
+  monthly_income[i_marty] = 2500 "slide 86: Marty makes $2,500 a month"
+  monthly_income[i_mark] = 800 "slide 86: makes $800 a month working as a waiter"
+  parent[sam, sarah] = true "slide 83: their daughter, Sarah"
+  parent[susan, sarah] = true "slide 83: their daughter, Sarah"
+  parent[i_marty, i_mark] = true "slide 86: his adult son, Mark"
+  parent[s2_mark, s2_marty] = true "slide 60: both of his biological parents, Mary and Mark"
+  parent[s2_mary, s2_marty] = true "slide 60: both of his biological parents, Mary and Mark"
+  parent[s3_mark, s3_marty] = true "slide 61: his father, Mark"
+  parent[s3_mary, s3_marty] = true "slide 61: his mother, Mary"
+  req_file[i_mark] = false "slide 86: is not expected to be required to file a tax return"
+  spouse[sam, susan] = true "slide 83: Sam and Susan are married"
+  spouse[susan, sam] = true "slide 83: Sam and Susan are married"
+  spouse[s2_mark, s2_mary] = true "slide 60: Mary and Mark, who are married"
+  spouse[s2_mary, s2_mark] = true "slide 60: Mary and Mark, who are married"
+  stated_age[sarah] = 6 "slide 83: Sarah, age 6"
+  stated_age[i_mark] = 22 "slide 86: a 22-year-old college student"
+  stated_age[s1_marty] = 5 "slide 59: 5 y/o"
+  stated_age[s2_marty] = 8 "slide 60: 8 y/o"
+  stated_age[s3_marty] = 8 "slide 61: 8 y/o"
+
+version model_assumptions
+  cite modeller
+  known 2026-10-18
+  note "assumptions that stand for the scenarios' own facts, known from the model's on date (§4.5)"
+  annual_unearned[p_mark] = 0 assumed "the MAGI 2.0 deck mentions only Mark's earned income"
+  claims[*, *] = false assumed "no one expects to claim anyone except as the slides state; people of different scenarios are unrelated"
+  claims[p_marty, p_mark] = true assumed "the MAGI 2.0 parallel of slide 86, where Marty claims Mark; the deck puts them in each other's households"
+  files_return[i_marty] = true assumed "slide 86: Marty plans to claim Mark, which is done on a return"
+  files_return[s1_gm] = true assumed "slide 59: the grandmother expects to claim Marty, which is done on a return"
+  files_return[p_marty] = true assumed "the MAGI 2.0 parallel of slide 86"
+  lives_with[*, *] = false assumed "people the slides don't place together don't live together; people of different scenarios are unrelated"
+  lives_with[sam, susan] = true assumed "married and filing jointly; living together is implied, not stated"
+  lives_with[susan, sam] = true assumed "married and filing jointly; living together is implied, not stated"
+  lives_with[p_marty, p_mark] = ? "Do Marty and Mark of the MAGI 2.0 deck live together? The deck doesn't say."
+  lives_with[p_mark, p_marty] = ? "Do Marty and Mark of the MAGI 2.0 deck live together? The deck doesn't say."
+  parent[*, *] = false assumed "no parent relation except as the slides state; the grandmother is not a parent"
+  sibling[*, *] = false assumed "no siblings are mentioned in any scenario"
+  spouse[*, *] = false assumed "no marriage except as the slides state"

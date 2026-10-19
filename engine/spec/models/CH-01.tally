@@ -1,0 +1,159 @@
+model ch01
+  tally 1
+  on 2026-10-18
+  note "Basel bank-wide VaR backtesting: binomial probabilities of exceptions in 250 independent days, the zone boundaries they set, and the multipliers by zone (MAR99, MAR32, BCBS 1996)."
+  note "The exception count of a real bank (greater of actual and hypothetical P&L exceptions, missing data counted as an outlier) is not asked by the case and is not modelled."
+
+source bcbs_1996 "BCBS, Supervisory framework for the use of backtesting in conjunction with the internal models approach to market risk capital requirements, January 1996" at "https://www.bis.org/publications/199601-standards-supervisory-framework-use-backtesting-conjunction-internal-models-approach-market-risk-capital.pdf"
+source bis_mar32 "Basel Framework MAR32, Internal models approach: backtesting and P&L attribution test requirements, effective as of 01 Jan 2023, last update 27 Mar 2020" at "https://www.bis.org/committees/bcbs/basel-framework/standard/mar/32/inforce/2023-01-01/published/2020-03-27"
+source bis_mar99 "Basel Framework MAR99, Guidance on use of the internal models approach, version effective as of 01 January 2022 (chapter PDF)" at "https://www.bis.org/committees/bcbs/basel-framework/81307/chapter.pdf"
+
+axis inc_read
+  increment "the stated figure is the increase on the base factor: base × (ratio − 1)"
+  new_factor "the stated figure is the factor needed: base × ratio"
+
+axis print_round
+  half-up "printed figures are rounded to the nearest, a tie away from zero"
+  down "printed figures are truncated"
+
+axis zread
+  exact "normal quantiles to 1e-9"
+  table2 "normal quantiles read from a two-decimal table"
+
+index cnt = 0..15
+
+index cov = [c99, c98, c97, c96, c95]
+
+index text = [t1996, t2022]
+
+index zone = [green, amber, red]
+
+input amber_level: num
+
+input base_factor[t in text]: num
+
+input coverage[c in cov]: num
+
+input inc_amber_1996[k in cnt]: num
+
+input inc_green_1996: num
+
+input inc_red_1996: num
+
+input mult_amber[k in cnt]: num
+
+input mult_green: num
+
+input mult_red: num
+
+input n_obs: int
+
+input red_level: num
+
+def amber_start: key cnt = first(k in cnt where prob_le[c99, k] >= amber_level)
+
+def inc_1996[k in cnt]: num
+  rule amber when zone_of[k] = amber = inc_amber_1996[k]
+  rule green when zone_of[k] = green = inc_green_1996
+  rule red when zone_of[k] = red = inc_red_1996
+
+def mult[k in cnt]: num
+  rule amber when zone_of[k] = amber = mult_amber[k]
+  rule green when zone_of[k] = green = mult_green
+  rule red when zone_of[k] = red = mult_red
+
+def needed[t in text]: num
+  rule increment when inc_read = increment = base_factor[t] * (pct_ratio - 1)
+  rule new_factor when inc_read = new_factor = base_factor[t] * pct_ratio
+
+def p_exc[c in cov]: num = 1 - coverage[c]
+
+def pct_ratio: num = zq[c99] / zq[c98]
+
+def prob_eq[c in cov, k in cnt]: num = pmf(binomial(n_obs, p_exc[c]), k)
+
+def prob_le[c in cov, k in cnt]: num = cdf(binomial(n_obs, p_exc[c]), k)
+
+def red_start: key cnt = first(k in cnt where prob_le[c99, k] >= red_level)
+
+def type1[k in cnt]: num = 1 - prob_le[c99, k] + prob_eq[c99, k]
+
+def type2[c in cov, k in cnt]: num = prob_le[c, k] - prob_eq[c, k]
+
+def zone_of[k in cnt]: key zone
+  rule amber when k >= amber_start and k < red_start = amber
+  rule green when k < amber_start = green
+  rule red when k >= red_start = red
+
+def zq[c in cov]: num
+  rule exact when zread = exact = quantile(normal(0, 1), coverage[c]) to 1e-9
+  rule table2 when zread = table2 = quantile(normal(0, 1), coverage[c]) to 0.01
+
+ask bcbs1996_p8: round(pct_ratio, 0.01, print_round), round(needed[t1996], 0.01, print_round)
+
+ask bcbs1996_t2: zone_of[k], inc_1996[k], round(prob_le[c99, k], 0.0001, print_round) for k in cnt where k <= 10
+
+ask mar99_11: round(prob_eq[c99, 5], 0.001, print_round)
+
+ask mar99_12: round(prob_eq[c97, 5], 0.001, print_round)
+
+ask mar99_13: round(type1[1], 0.001, print_round), round(prob_eq[c99, 0], 0.001, print_round)
+
+ask mar99_14: round(type2[c97, 7], 0.001, print_round)
+
+ask mar99_17: round(prob_le[c99, 5], 0.0001, print_round), amber_start, red_start
+
+ask mar99_19: amber_start, red_start - 1
+
+ask mar99_21: round(pct_ratio, 0.01, print_round), round(needed[t2022], 0.01, print_round)
+
+ask t1_exact: round(prob_eq[c, k], 0.001, print_round) for c in cov, k in cnt
+
+ask t1_notes: round(type1[5], 0.001, print_round), round(type2[c97, 5], 0.001, print_round)
+
+ask t1_type1: round(type1[k], 0.001, print_round) for k in cnt
+
+ask t1_type2: round(type2[c, k], 0.001, print_round) for c in [c98, c97, c96, c95], k in cnt
+
+ask t2_zones: zone_of[k], mult[k], round(prob_le[c99, k], 0.0001, print_round) for k in cnt where k <= 10
+
+version bcbs_jan1996
+  cite bcbs_1996
+  known 1996-01-31
+  note "The source is dated January 1996 with no day; known is the last day of that month."
+  note "The 1996 framework is superseded; its rows carry no governs span, since the case gives none, and they are read only through the 1996 asks."
+  base_factor[t1996] = 3 "printed p. 8: a scaling factor of 3"
+  inc_amber_1996[5] = 0.4 "annex Table 2, Yellow Zone, 5"
+  inc_amber_1996[6] = 0.5 "annex Table 2, Yellow Zone, 6"
+  inc_amber_1996[7] = 0.65 "annex Table 2, Yellow Zone, 7"
+  inc_amber_1996[8] = 0.75 "annex Table 2, Yellow Zone, 8"
+  inc_amber_1996[9] = 0.85 "annex Table 2, Yellow Zone, 9"
+  inc_green_1996 = 0 "annex Table 2, Green Zone"
+  inc_red_1996 = 1 "annex Table 2, Red Zone, 10 or more"
+
+version mar99_2022
+  cite bis_mar99
+  governs 2022-01-01..
+  known 2019-12-15
+  note "Known from publication (LANGUAGE §4.5). The chapter PDF prints no date; the BIS Basel Framework page for this version (https://www.bis.org/basel_framework/chapter/MAR/99.htm?inforce=20220101&published=20191215, looked up 2026-10-19) shows \"Effective as of: 01 Jan 2022\" and \"Last update: 15 Dec 2019\", the day the consolidated Basel Framework was published (BIS press release of 16 December 2019, https://www.bis.org/press/p191216.htm). The same page marks this version \"Removed on 27 Mar 2020\", when the version effective 1 January 2023 replaced it; the case transcribes only this one."
+  amber_level = 0.95 "MAR99.17: equals or exceeds 95%"
+  base_factor[t2022] = 1 "MAR99.21: a multiplier of 1"
+  coverage[c99] = 0.99 "MAR99.11; Notes to Table 1: 100% – 99% = 1%"
+  coverage[c98] = 0.98 "MAR99.12"
+  coverage[c97] = 0.97 "MAR99.12"
+  coverage[c96] = 0.96 "MAR99.12"
+  coverage[c95] = 0.95 "MAR99.12"
+  n_obs = 250 "MAR99.11: a sample of 250 independent observations"
+  red_level = 0.9999 "MAR99.17: equals or exceeds 99.99%"
+
+version mar32_2023
+  cite bis_mar32
+  governs 2023-01-01..
+  known 2020-03-27
+  mult_amber[5] = 1.7 "MAR32.9 Table 1, Amber, 5"
+  mult_amber[6] = 1.76 "MAR32.9 Table 1, Amber, 6"
+  mult_amber[7] = 1.83 "MAR32.9 Table 1, Amber, 7"
+  mult_amber[8] = 1.88 "MAR32.9 Table 1, Amber, 8"
+  mult_amber[9] = 1.92 "MAR32.9 Table 1, Amber, 9"
+  mult_green = 1.5 "MAR32.9 Table 1, Green, 0 to 4"
+  mult_red = 2 "MAR32.9 Table 1, Red, 10 or more"

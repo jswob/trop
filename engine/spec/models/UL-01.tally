@@ -1,0 +1,152 @@
+model ul01
+  tally 1
+  on 2026-10-18
+  note "Składka zdrowotna na ryczałcie 2026: podstawy i składki według progów przychodu, oraz pozostałe grupy ze strony ZUS i broszury."
+  note "The annual settlement (art. 81 ust. 2e, 2j, 2k) is described by the case only, with no figures, so it is not modelled."
+
+source dz2105 "Ustawa z dnia 29 października 2021 r. o zmianie ustawy o podatku dochodowym od osób fizycznych, ustawy o podatku dochodowym od osób prawnych oraz niektórych innych ustaw (Dz.U. 2021 poz. 2105), art. 15" at "https://api.sejm.gov.pl/eli/acts/DU/2021/2105/text.pdf"
+
+source mp117 "Obwieszczenie Prezesa GUS z dnia 22 stycznia 2026 r. w sprawie przeciętnego miesięcznego wynagrodzenia w sektorze przedsiębiorstw, włącznie z wypłatami z zysku, w czwartym kwartale 2025 r. (M.P. 2026 poz. 117)" at "https://api.sejm.gov.pl/eli/acts/MP/2026/117/text/O/M20260117.pdf"
+
+source mp84 "Obwieszczenie Prezesa GUS z dnia 22 stycznia 2025 r. w sprawie przeciętnego miesięcznego wynagrodzenia w sektorze przedsiębiorstw, włącznie z wypłatami z zysku, w czwartym kwartale 2024 r. (M.P. 2025 poz. 84)" at "https://api.sejm.gov.pl/eli/acts/MP/2025/84/text/O/M20250084.pdf"
+
+source rm1242 "Rozporządzenie Rady Ministrów z dnia 11 września 2025 r. w sprawie wysokości minimalnego wynagrodzenia za pracę oraz wysokości minimalnej stawki godzinowej w 2026 r. (Dz.U. 2025 poz. 1242)" at "https://api.sejm.gov.pl/eli/acts/DU/2025/1242/text/O/D20251242.pdf"
+
+source rm1362 "Rozporządzenie Rady Ministrów z dnia 12 września 2024 r. w sprawie wysokości minimalnego wynagrodzenia za pracę oraz wysokości minimalnej stawki godzinowej w 2025 r. (Dz.U. 2024 poz. 1362)" at "https://api.sejm.gov.pl/eli/acts/DU/2024/1362/text/O/D20241362.pdf"
+
+source zus_brochure "ZUS, Składki przedsiębiorców w 2026 roku (Analiza Wydziału Planowania Funduszy, luty 2026 r.)" at "https://www.zus.pl/documents/10182/13364587/Sk%C5%82adki+przedsi%C4%99biorc%C3%B3w+w+2026+roku_DFF.pdf/c8d4e1dc-c80b-91d6-7453-02309976f713?t=1772712579703"
+
+source zus_page "ZUS, Informacja w sprawie podstawy wymiaru składki oraz kwoty składki na ubezpieczenie zdrowotne w 2026 r. (2 lutego 2026)" at "https://www.zus.pl/-/informacja-w-sprawie-podstawy-wymiaru-sk%C5%82adki-oraz-kwoty-sk%C5%82adki-na-ubezpieczenie-zdrowotne-w-2026-r."
+
+axis ul01_base9
+  exact "9% is taken of the unrounded share of the wage"
+  rounded "9% is taken of the base rounded to the grosz, as the brochure writes it (9% od 5 537,18 zł)"
+
+axis ul01_mode
+  down "base and contribution truncated to the grosz"
+  half-even "base and contribution to the nearest grosz, ties to even"
+  half-up "base and contribution to the nearest grosz, ties away from zero"
+
+index grp = [r60, r100, r180, nobiz, collab, karta]
+
+index mwcol = [mw75, mw100]
+
+index yr = year 2025..2026
+
+input avg_wage[y in yr]: money PLN question "Ile wynosiło przeciętne miesięczne wynagrodzenie w sektorze przedsiębiorstw, włącznie z wypłatami z zysku, w czwartym kwartale roku poprzedniego?"
+  note "key y is the contribution year; the wage is the one of the fourth quarter of the year before"
+
+input karta_share[y in yr]: num question "Jaki procent minimalnego wynagrodzenia stanowi podstawę składki dla karty podatkowej w tym roku?"
+
+input min_wage[y in yr]: money PLN question "Ile wynosi minimalne wynagrodzenie od 1 stycznia tego roku?"
+
+input mw_share[c in mwcol]: num
+
+input rate: num
+
+input revenue_ytd: money PLN question "Jakie przychody z działalności gospodarczej osiągnięto od początku roku kalendarzowego?"
+
+input share[g in grp]: num question "Jaki procent przeciętnego wynagrodzenia stanowi podstawę składki w tej grupie?"
+
+input social_not_deducted: money PLN question "Ile opłaconych składek społecznych nie zaliczono do kosztów ani nie odliczono od dochodu?"
+  note "art. 81 ust. 2g reduces revenue by these"
+
+band ryczalt_band(rev: money PLN): key grp
+  note "the revenue band of art. 81 ust. 2f: nie przekroczyły / przekroczyły"
+
+def band_of: key grp = ryczalt_band(counted_revenue)
+
+def contribution[g in grp, y in yr]: money PLN
+  note "art. 79 ust. 1: 9% of the base; the rounding is not stated"
+  rule base = round(rate * monthly_base[g, y], 0.01, ul01_mode)
+  rule exact excepts base when ul01_base9 = exact = round(rate * exact_base[g, y], 0.01, ul01_mode)
+
+def counted_revenue: money PLN = revenue_ytd - social_not_deducted
+
+def exact_base[g in grp, y in yr]: num PLN
+  note "the unrounded base"
+  rule base = share[g] * avg_wage[y]
+  rule karta excepts base when g = karta = karta_share[y] * min_wage[y]
+
+def monthly_base[g in grp, y in yr]: money PLN
+  note "art. 81 ust. 2f; the rounding is not stated"
+  rule base = round(exact_base[g, y], 0.01, ul01_mode)
+
+def mw_column[c in mwcol, y in yr]: money PLN = round(mw_share[c] * min_wage[y], 0.01, ul01_mode)
+
+def yoy_change[g in grp]: num = round(contribution[g, 2026] / contribution[g, 2025] - 1, 0.001, ul01_mode)
+
+ask band_above_300000: band_of with revenue_ytd = 300000.01, social_not_deducted = 0
+
+ask band_above_60000: band_of with revenue_ytd = 60000.01, social_not_deducted = 0
+
+ask band_at_300000: band_of with revenue_ytd = 300000, social_not_deducted = 0
+
+ask band_at_60000: band_of with revenue_ytd = 60000, social_not_deducted = 0
+
+ask base_2025: monthly_base[g, 2025] for g in [r60, r180, collab]
+
+ask base_2026: monthly_base[g, 2026] for g in grp
+
+ask contribution_2025: contribution[g, 2025] for g in grp
+
+ask contribution_2026: contribution[g, 2026] for g in grp
+
+ask mw75_column: mw_column[mw75, y] for y in yr
+
+ask yoy: yoy_change[g] for g in grp
+
+version dz2021_2105
+  cite dz2105
+  governs 2022..
+  known 2021-11-23
+  note "promulgated 23 listopada 2021 r. (the act's Dz.U. heading; ELI API field promulgation, https://api.sejm.gov.pl/eli/acts/DU/2021/2105); in force 1 stycznia 2022 r. (art. 89)"
+  note "art. 15 pkt 4 gave art. 79 its present wording and art. 15 pkt 6 lit. b added art. 81 ust. 2b-2zd; the consolidated text t.j. Dz.U. 2025 poz. 1461 (Kancelaria Sejmu file D20251461Lj.pdf of 2026-08-03) reprints them unchanged and gives the page numbers below"
+  rate = 0.09 "art. 15 pkt 4 (art. 79 ust. 1: 9% podstawy wymiaru składki); t.j. Dz.U. 2025 poz. 1461, s. 206"
+  ryczalt_band: (-inf, 60000] = r60 "art. 15 pkt 6 lit. b (art. 81 ust. 2f pkt 1): nie przekroczyły kwoty 60 000 zł"
+  ryczalt_band: (60000, 300000] = r100 "art. 81 ust. 2f pkt 2: przekroczyły kwotę 60 000 zł i nie przekroczyły kwoty 300 000 zł"
+  ryczalt_band: (300000, inf) = r180 "art. 81 ust. 2f pkt 3: przekroczyły kwotę 300 000 zł"
+  share[r60] = 0.6 "art. 15 pkt 6 lit. b (art. 81 ust. 2f pkt 1: 60% przeciętnego miesięcznego wynagrodzenia); t.j. Dz.U. 2025 poz. 1461, s. 211"
+  share[r100] = 1 "art. 81 ust. 2f pkt 2: kwota przeciętnego miesięcznego wynagrodzenia"
+  share[r180] = 1.8 "art. 81 ust. 2f pkt 3: 180% przeciętnego miesięcznego wynagrodzenia"
+
+version rm2024_1362
+  cite rm1362
+  governs 2025-01..
+  known 2024-09-13
+  note "promulgated 13 września 2024 r. (ELI API field promulgation, https://api.sejm.gov.pl/eli/acts/DU/2024/1362); the brochure's Tabela 4 row 2025 prints the same wage"
+  min_wage[2025] = 4666 "§ 1: od dnia 1 stycznia 2025 r. ... 4666 zł"
+
+version mp2025_84
+  cite mp84
+  known 2025-01-24
+  note "promulgated 24 stycznia 2025 r. (the M.P. heading; ELI API field promulgation, https://api.sejm.gov.pl/eli/acts/MP/2025/84); the brochure's Tabela 4 row 2025 prints the same wage"
+  avg_wage[2025] = 8549.18 "sole operative sentence: w czwartym kwartale w 2024 r. wyniosło 8549,18 zł"
+
+version rm2025_1242
+  cite rm1242
+  governs 2026-01..
+  known 2025-09-15
+  note "promulgated 15 września 2025 r. (ELI API field promulgation, https://api.sejm.gov.pl/eli/acts/DU/2025/1242); the ZUS page's karta podatkowa group prints the same wage"
+  min_wage[2026] = 4806 "§ 1: od dnia 1 stycznia 2026 r. ... 4806 zł"
+
+version mp2026_117
+  cite mp117
+  known 2026-01-26
+  note "promulgated 26 stycznia 2026 r. (ELI API field promulgation, https://api.sejm.gov.pl/eli/acts/MP/2026/117)"
+  avg_wage[2026] = 9228.64 "sole operative sentence: w czwartym kwartale w 2025 r. wyniosło 9228,64 zł"
+
+version zus_page_2026
+  cite zus_page
+  known 2026-02-02
+  note "the page's own date; its shares restate art. 81 ust. 2z, 2za and 2ya, whose amending acts the model doesn't trace, so the page is their source (§4.5 fallback)"
+  karta_share[2026] = 1 "karta podatkowa group: 100% minimalnego wynagrodzenia od 1 stycznia 2026 r."
+  share[nobiz] = 1 "second group, footnote [5]: 100% przeciętnego miesięcznego wynagrodzenia"
+  share[collab] = 0.75 "third group, footnote [6] (art. 81 ust. 2ya): 75% przeciętnego miesięcznego wynagrodzenia"
+
+version zus_brochure_2026
+  cite zus_brochure
+  known 2026-02-28
+  note "the brochure is dated luty 2026 with no day; the last day of February is taken as its known date"
+  mw_share[mw75] = 0.75 "p. 7, Tabela 4, column heading 75% minimalnego wynagrodzenia"
+  mw_share[mw100] = 1 "p. 7, Tabela 4, column heading 100% minimalnego wynagrodzenia"

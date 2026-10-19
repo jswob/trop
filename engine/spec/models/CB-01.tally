@@ -1,0 +1,80 @@
+model cb01
+  tally 1
+  on 2026-10-19
+  note "UN Model 2021, Commentary on Article 23 quoting OECD 2017 paras 18-27: one resident of State R, five relief methods side by side, cases (i) and (ii)."
+  note "No currency is given, so amounts are in the abstract unit XXX. No tax year is given, so nothing governs a period."
+
+source un_model_2021 "United Nations Model Double Taxation Convention between Developed and Developing Countries 2021 (ST/ESA/378), Commentary on Article 23" at "https://financing.desa.un.org/sites/default/files/2023-05/UN%20Model_2021.pdf"
+
+index case = [i, ii]
+
+index method = [no_convention, exempt, progression, full_credit, ordinary_credit]
+
+input income_r: money XXX
+
+input income_s: money XXX
+
+input income_total: money XXX
+
+input rate_s[c in case]: num
+
+input tax_s[c in case]: money XXX
+
+band r_rate(income: money XXX): num
+  note "State R's rate of tax on a total income; the source gives only two points and applies each to the whole base"
+
+def deduction[m in method, c in case]: num XXX
+  note "the deduction State R allows for State S's tax, Article 23 B para 1 and Commentary paras 16 a) and b)"
+  rule full when m = full_credit = tax_s[c]
+  rule ordinary when m = ordinary_credit = min(tax_s[c], tax_r_on_s)
+
+def rate_cut_on_r: num XXX = (r_rate(income_total) - r_rate(income_r)) * income_r
+
+def relief[m in method, c in case]: num XXX = tax_r_gross - tax_r[m, c]
+
+def tax_r[m in method, c in case]: num XXX
+  note "State R's tax under each method"
+  rule credit when m = full_credit or m = ordinary_credit = tax_r_gross - deduction[m, c]
+  rule exempt when m = exempt = r_rate(income_r) * income_r
+  rule no_convention when m = no_convention = tax_r_gross
+  rule progression when m = progression = r_rate(income_total) * income_r
+
+def tax_r_gross: num XXX = r_rate(income_total) * income_total
+
+def tax_r_on_s: num XXX = r_rate(income_total) * income_s
+
+def total_tax[m in method, c in case]: num XXX = tax_r[m, c] + tax_s[c]
+
+ask q_all_in_r: tax_r_gross
+
+ask q_deduction: deduction[m, c] for m in [full_credit, ordinary_credit], c in case
+
+ask q_income_split: check income_total = income_r + income_s
+
+ask q_rate_cut: rate_cut_on_r
+
+ask q_relief: relief[m, c] for m in method, c in case
+
+ask q_s_tax: check tax_s[c] = income_s * rate_s[c] for c in case
+
+ask q_tax_on_s: tax_r_on_s
+
+ask q_tax_r: tax_r[m, c] for m in method, c in case
+
+ask q_total: total_tax[m, c] for m in method, c in case
+
+version un2021
+  cite un_model_2021
+  known 2026-10-19
+  note "Every row is a stipulation of the Commentary's hypothetical example, so the version is known from the model's on date (LANGUAGE 4.5; the model has no start). The document's copyright line reads September 2021."
+  note "The example treats the State S income as exempt under Article 23 A para 1; its kind of income is not stated (Article 23 A para 2)."
+  income_r = 80000 "p. 606, para 18: of which 80,000 is derived from one State (State of residence R)"
+  income_s = 20000 "p. 606, para 18: and 20,000 from the other State (State of source S)"
+  income_total = 100000 "p. 606, para 18: Suppose the total income to be 100,000"
+  r_rate: [80000, 80000] = 0.3 "p. 606, para 18: and on an income of 80,000 is 30 per cent"
+  r_rate: (80000, 100000) = ? "State R's rate for an income between 80,000 and 100,000 is not given"
+  r_rate: [100000, 100000] = 0.35 "p. 606, para 18: the rate of tax on an income of 100,000 is 35 per cent"
+  rate_s[i] = 0.2 "p. 606, para 18: 20 per cent, case (i)"
+  rate_s[ii] = 0.4 "p. 606, para 18: or 40 per cent, case (ii)"
+  tax_s[i] = 4000 "p. 606, para 18: the tax payable therein on 20,000 is 4,000 in case (i)"
+  tax_s[ii] = 8000 "p. 606, para 18: or 8,000 in case (ii)"

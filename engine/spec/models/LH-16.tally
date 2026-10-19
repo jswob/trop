@@ -1,0 +1,398 @@
+model lh16
+  tally 1
+  on 2026-10-18
+  note "Cooley, Hubbard and Walz (1999), the Trinity study update. A portfolio of $1,000 is rebalanced every month to a stock/bond mix (Tables 1-4) or to 60% stock, 30% bonds and 10% Treasury bills (Tables 5-6). It earns each month's return and pays rate/12 of the initial value at the end of the month. The payment is fixed in dollars (Equation 1) or scaled each year by CPI(Y-1) / CPI(1925) (Equation 2). The periods are 15 to 30 years, from January 1926 or January 1946, through December 1997. No taxes, fees or transaction costs are modelled; the article mentions none."
+  note "Cohort c starts with v0 at the start of month c. Iterating Equation (1) or (2) over months k = 1..T gives V_T = G_T x (v0 - v0 x rate/12 x the sum over k of scale_k / G_k), where G_k is the growth through month k. disc is 1 / G, and the terminal value is written in that closed form. The monthly portfolio return is the mix-weighted sum of the asset returns (monthly rebalancing, Methodology, PDF p. 3)."
+  note "The data is Ibbotson SBBI 1998, a commercial product the case does not hold. The return and CPI inputs have no rows, so every success rate and every Table 6 statistic is a hole until a version supplies them."
+
+source trinity99 "Cooley, Hubbard, Walz, Sustainable Withdrawal Rates From Your Retirement Portfolio, Financial Counseling and Planning 10(1), 1999, pp. 41-51 (PDF mirror)" at "https://everywhereonce.com/wp-content/uploads/2011/10/trinity-study1.pdf"
+
+axis cpi_base
+  y1925 "Equation (2) as printed: every cohort's withdrawals are scaled by CPI(Y-1) / CPI(1925)"
+  rebased "the base is the CPI of the year before the cohort's start year, so each cohort's first-year withdrawal is rate/12 of $1,000"
+
+axis cpi_value
+  annual_avg "CPI(Y) is the annual average CPI-U of year Y"
+  december "CPI(Y) is the December CPI-U of year Y"
+
+axis pct_round
+  down "success rates truncated to the whole percent"
+  half-even "success rates to the nearest whole percent, ties to even"
+  half-up "success rates to the nearest whole percent, ties up"
+  up "success rates rounded up to the whole percent"
+
+axis sd_form
+  population "the Table 6 standard deviation divides by the number of periods"
+  sample "the Table 6 standard deviation divides by the number of periods less one"
+
+axis stat_round
+  down "Table 6 statistics truncated to 0.1%"
+  half-even "Table 6 statistics to the nearest 0.1%, ties to even"
+  half-up "Table 6 statistics to the nearest 0.1%, ties up"
+
+axis zero_end
+  fails "a terminal value of exactly $0 fails: abstract 'greater than zero', methodology 'positive'"
+  succeeds "a terminal value of exactly $0 succeeds: introduction 'zero or greater'"
+
+index asset_cls = [stocks, bonds, bills]
+
+index cyr = year 1925..1996
+
+index era = [e1926, e1946]
+
+index hz = [y15, y20, y25, y30]
+
+index mix = [s100, s75, s50, s25, s0, m603010]
+
+index mon = month 1926-01..1997-12
+
+index range_end = [low, high]
+  note "the two ends of the abstract's range of withdrawal rates"
+
+index step = 0..360
+
+index wd = [fixed, indexed]
+
+index wr = [r03, r04, r05, r06, r07, r08, r09, r10, r11, r12]
+
+input abstract_era[b in range_end]: key era question "Which period does this end of the abstract's range read, 1926-1997 or 1946-1997? The abstract names none"
+
+input abstract_hz[b in range_end]: key hz question "Which payout period gives this end of the abstract's range? The abstract names none"
+
+input abstract_level[b in range_end]: num question "Which success rate must every cell reach for this end of the abstract's range? The abstract names none"
+
+input alloc[x in mix, a in asset_cls]: num
+
+input annual_offset: int
+
+input cpi_avg[y in cyr]: num question "Annual average CPI-U for this year (Ibbotson SBBI 1998): the case holds no CPI data"
+
+input cpi_base_year: key cyr
+
+input cpi_dec[y in cyr]: num question "December CPI-U for this year (Ibbotson SBBI 1998): the case holds no CPI data"
+
+input data_end: key mon
+
+input era_from[r in era]: key mon
+
+input hz_years[h in hz]: int
+
+input min_stock_25: num
+
+input min_stock_50: num
+
+input min_stock_75: num
+
+input ret[a in asset_cls, m in mon]: num question "Total return of this asset class for this month, Ibbotson SBBI 1998: S&P 500; the corporate bond return 'calculated from' the Salomon Brothers Long-Term High-Grade Corporate Bond Index and S&P monthly high-grade corporate yields (splice dates and formula not stated); 30-day Treasury bills (compounding not stated). Commercial data, not in the case"
+
+input success_target: num
+
+input v0: num USD
+
+input wrate[w in wr]: num
+
+def abstract_rate[b in range_end]: num
+  note "an end of the abstract's range, read the way Results (PDF p. 4) reads the tables: the highest inflation-adjusted rate at which every stock/bond mix with at least 75% stock reaches the success level, for the abstract's period and payout period, which it doesn't name"
+  rule base = wrate[last(w in wr where all(x in mix where alloc[x, bills] = 0 and alloc[x, stocks] >= min_stock_75: rate_pct[abstract_era[b], x, abstract_hz[b], w, indexed] >= abstract_level[b]))]
+
+def annual_start[r in era, h in hz, c in mon]: bool
+  note "Tables 1-5 use 'annual overlapping periods': one start every 12 months, from era_from[r] moved by annual_offset months. The article does not name the month (case: Missing facts, first bullet); the offset is an assumed row"
+  rule base = (monthly_start[r, h, c] and c >= era_from[r] + annual_offset and (c - era_from[r] - annual_offset) / 12 = round((c - era_from[r] - annual_offset) / 12, 1, down))
+
+def cpi_used[y in cyr]: num
+  rule avg excepts base when cpi_value = annual_avg = cpi_avg[y]
+  rule base = cpi_dec[y]
+
+def dev2[r in era, h in hz, d in wd, c in mon]: num = pow(rate0[c, m603010, h, d] - t6_mean[r, h, d], 2)
+
+def disc[c in mon, x in mix, k in step]: num
+  note "1 / the growth of $1 from the start of month c to the end of month c + k - 1 (1 at k = 0). No source rounds, so nothing is rounded here; at 360 steps of returns with a few decimals the exact value stays under the 4 096-digit cap"
+  rule init when k = 0 = 1
+  rule next when k > 0 = disc[c, x, k - 1] / (1 + port_r[x, c + k - 1])
+
+def monthly_start[r in era, h in hz, c in mon]: bool = c >= era_from[r] and pos(c) + 12 * hz_years[h] - 1 <= pos(data_end)
+
+def n_annual[r in era, h in hz]: int = count(c in mon where annual_start[r, h, c])
+
+def n_monthly[r in era, h in hz]: int = count(c in mon where monthly_start[r, h, c])
+
+def need[c in mon, x in mix, h in hz, d in wd]: num = sum(k in step where k >= 1 and k <= 12 * hz_years[h]: wscale[c, d, c + k - 1] * disc[c, x, k])
+
+def port_r[x in mix, m in mon]: num = sum(a in asset_cls where alloc[x, a] > 0: alloc[x, a] * ret[a, m])
+
+def rate0[c in mon, x in mix, h in hz, d in wd]: num
+  note "Table 6: the annualized withdrawal rate that leaves exactly $0 at the end of the period. From V_T = 0, rate = 12 / need. The 1e-12 rounding is the modeller's, forced by the 4 096-digit cap (§7.1): no source rounds, and the Table 6 sums over hundreds of exact monthly-cohort rates pass the cap"
+  rule base = round(12 / need[c, x, h, d], 1e-12, half-even)
+
+def rate_pct[r in era, x in mix, h in hz, w in wr, d in wd]: num = round(100 * rate_share[r, x, h, w, d], 1, pct_round)
+
+def rate_share[r in era, x in mix, h in hz, w in wr, d in wd]: num = share(c in mon where annual_start[r, h, c]: success[c, x, h, w, d])
+
+def success[c in mon, x in mix, h in hz, w in wr, d in wd]: bool
+  rule base = tv[c, x, h, w, d] > 0
+  rule zero_ok excepts base when zero_end = succeeds = tv[c, x, h, w, d] >= 0
+
+def t6_max[r in era, h in hz, d in wd]: num = max(c in mon where monthly_start[r, h, c]: rate0[c, m603010, h, d])
+
+def t6_mean[r in era, h in hz, d in wd]: num = mean(c in mon where monthly_start[r, h, c]: rate0[c, m603010, h, d])
+
+def t6_median[r in era, h in hz, d in wd]: num
+  note "Table 6 'Median': the type 1 quantile at 1/2 of the monthly cohorts' rate0, which is the middle cohort, since every column has an odd number of monthly starts"
+  rule base = quantile(c in mon where monthly_start[r, h, c]: rate0[c, m603010, h, d], 1 / 2)
+
+def t6_min[r in era, h in hz, d in wd]: num = min(c in mon where monthly_start[r, h, c]: rate0[c, m603010, h, d])
+
+def t6_sd[r in era, h in hz, d in wd]: num
+  note "The 1e-12 precision of the square root is the modeller's; the table prints 0.1%"
+  rule base = sqrt(t6_ss[r, h, d] / n_monthly[r, h]) to 1e-12
+  rule sample excepts base when sd_form = sample = sqrt(t6_ss[r, h, d] / (n_monthly[r, h] - 1)) to 1e-12
+
+def t6_ss[r in era, h in hz, d in wd]: num = sum(c in mon where monthly_start[r, h, c]: dev2[r, h, d, c])
+
+def tv[c in mon, x in mix, h in hz, w in wr, d in wd]: num USD
+  note "The terminal value per v0 of Equation (1) (fixed) or (2) (indexed), in closed form"
+  rule base = v0 * (1 - wrate[w] / 12 * need[c, x, h, d]) / disc[c, x, 12 * hz_years[h]]
+
+def wscale[c in mon, d in wd, m in mon]: num
+  note "Equation (2): Wt x CPI(Y-1) / CPI(1925), where Y is the year of month t ('with a one-year lag'). Fixed withdrawals (Equation 1) are not scaled"
+  rule fixed when d = fixed = 1
+  rule rebased when d = indexed and cpi_base = rebased = cpi_used[year_of(m) - 1] / cpi_used[year_of(c) - 1]
+  rule y1925 when d = indexed and cpi_base = y1925 = cpi_used[year_of(m) - 1] / cpi_used[cpi_base_year]
+
+ask abstract_range: abstract_rate[b] for b in range_end
+
+ask ex_t1_min50: wrate[last(w in wr where all(x in mix where alloc[x, bills] = 0 and alloc[x, stocks] >= min_stock_50: rate_pct[e1926, x, y20, w, fixed] >= success_target))]
+
+ask ex_t2_min50: wrate[last(w in wr where all(x in mix where alloc[x, bills] = 0 and alloc[x, stocks] >= min_stock_50: rate_pct[e1926, x, y20, w, indexed] >= success_target))]
+
+ask ex_t3_min50: wrate[last(w in wr where all(x in mix where alloc[x, bills] = 0 and alloc[x, stocks] >= min_stock_50: rate_pct[e1946, x, y20, w, fixed] >= success_target))]
+
+ask ex_t3_s100: wrate[last(w in wr where rate_pct[e1946, s100, y20, w, fixed] >= success_target)]
+
+ask ex_t4_min25: wrate[last(w in wr where all(x in mix where alloc[x, bills] = 0 and alloc[x, stocks] >= min_stock_25: rate_pct[e1946, x, y20, w, indexed] >= success_target))]
+
+ask ex_t4_s100_r06: rate_pct[e1946, s100, y20, r06, indexed]
+
+ask instances: count(r in era, x in mix, d in wd, w in wr where rate_pct[r, x, y30, w, d] > rate_pct[r, x, y25, w, d])
+
+ask periods_1926: n_annual[e1926, h] for h in hz
+
+ask periods_1946: n_annual[e1946, h] for h in hz
+
+ask t1_s0_y20: rate_pct[e1926, s0, y20, w, fixed] for w in wr
+
+ask t1_s0_y25: rate_pct[e1926, s0, y25, w, fixed] for w in wr
+
+ask t1_s0_y30: rate_pct[e1926, s0, y30, w, fixed] for w in wr
+
+ask t1_s100_y20: rate_pct[e1926, s100, y20, w, fixed] for w in wr
+
+ask t1_s100_y25: rate_pct[e1926, s100, y25, w, fixed] for w in wr
+
+ask t1_s100_y30: rate_pct[e1926, s100, y30, w, fixed] for w in wr
+
+ask t1_s25_y20: rate_pct[e1926, s25, y20, w, fixed] for w in wr
+
+ask t1_s25_y25: rate_pct[e1926, s25, y25, w, fixed] for w in wr
+
+ask t1_s25_y30: rate_pct[e1926, s25, y30, w, fixed] for w in wr
+
+ask t1_s50_y20: rate_pct[e1926, s50, y20, w, fixed] for w in wr
+
+ask t1_s50_y25: rate_pct[e1926, s50, y25, w, fixed] for w in wr
+
+ask t1_s50_y30: rate_pct[e1926, s50, y30, w, fixed] for w in wr
+
+ask t1_s75_y20: rate_pct[e1926, s75, y20, w, fixed] for w in wr
+
+ask t1_s75_y25: rate_pct[e1926, s75, y25, w, fixed] for w in wr
+
+ask t1_s75_y30: rate_pct[e1926, s75, y30, w, fixed] for w in wr
+
+ask t2_s0_y20: rate_pct[e1926, s0, y20, w, indexed] for w in wr
+
+ask t2_s0_y25: rate_pct[e1926, s0, y25, w, indexed] for w in wr
+
+ask t2_s0_y30: rate_pct[e1926, s0, y30, w, indexed] for w in wr
+
+ask t2_s100_y20: rate_pct[e1926, s100, y20, w, indexed] for w in wr
+
+ask t2_s100_y25: rate_pct[e1926, s100, y25, w, indexed] for w in wr
+
+ask t2_s100_y30: rate_pct[e1926, s100, y30, w, indexed] for w in wr
+
+ask t2_s25_y20: rate_pct[e1926, s25, y20, w, indexed] for w in wr
+
+ask t2_s25_y25: rate_pct[e1926, s25, y25, w, indexed] for w in wr
+
+ask t2_s25_y30: rate_pct[e1926, s25, y30, w, indexed] for w in wr
+
+ask t2_s50_y20: rate_pct[e1926, s50, y20, w, indexed] for w in wr
+
+ask t2_s50_y25: rate_pct[e1926, s50, y25, w, indexed] for w in wr
+
+ask t2_s50_y30: rate_pct[e1926, s50, y30, w, indexed] for w in wr
+
+ask t2_s75_y20: rate_pct[e1926, s75, y20, w, indexed] for w in wr
+
+ask t2_s75_y25: rate_pct[e1926, s75, y25, w, indexed] for w in wr
+
+ask t2_s75_y30: rate_pct[e1926, s75, y30, w, indexed] for w in wr
+
+ask t3_s0_y20: rate_pct[e1946, s0, y20, w, fixed] for w in wr
+
+ask t3_s0_y25: rate_pct[e1946, s0, y25, w, fixed] for w in wr
+
+ask t3_s0_y30: rate_pct[e1946, s0, y30, w, fixed] for w in wr
+
+ask t3_s100_y20: rate_pct[e1946, s100, y20, w, fixed] for w in wr
+
+ask t3_s100_y25: rate_pct[e1946, s100, y25, w, fixed] for w in wr
+
+ask t3_s100_y30: rate_pct[e1946, s100, y30, w, fixed] for w in wr
+
+ask t3_s25_y20: rate_pct[e1946, s25, y20, w, fixed] for w in wr
+
+ask t3_s25_y25: rate_pct[e1946, s25, y25, w, fixed] for w in wr
+
+ask t3_s25_y30: rate_pct[e1946, s25, y30, w, fixed] for w in wr
+
+ask t3_s50_y20: rate_pct[e1946, s50, y20, w, fixed] for w in wr
+
+ask t3_s50_y25: rate_pct[e1946, s50, y25, w, fixed] for w in wr
+
+ask t3_s50_y30: rate_pct[e1946, s50, y30, w, fixed] for w in wr
+
+ask t3_s75_y20: rate_pct[e1946, s75, y20, w, fixed] for w in wr
+
+ask t3_s75_y25: rate_pct[e1946, s75, y25, w, fixed] for w in wr
+
+ask t3_s75_y30: rate_pct[e1946, s75, y30, w, fixed] for w in wr
+
+ask t4_s0_y20: rate_pct[e1946, s0, y20, w, indexed] for w in wr
+
+ask t4_s0_y25: rate_pct[e1946, s0, y25, w, indexed] for w in wr
+
+ask t4_s0_y30: rate_pct[e1946, s0, y30, w, indexed] for w in wr
+
+ask t4_s100_y20: rate_pct[e1946, s100, y20, w, indexed] for w in wr
+
+ask t4_s100_y25: rate_pct[e1946, s100, y25, w, indexed] for w in wr
+
+ask t4_s100_y30: rate_pct[e1946, s100, y30, w, indexed] for w in wr
+
+ask t4_s25_y20: rate_pct[e1946, s25, y20, w, indexed] for w in wr
+
+ask t4_s25_y25: rate_pct[e1946, s25, y25, w, indexed] for w in wr
+
+ask t4_s25_y30: rate_pct[e1946, s25, y30, w, indexed] for w in wr
+
+ask t4_s50_y20: rate_pct[e1946, s50, y20, w, indexed] for w in wr
+
+ask t4_s50_y25: rate_pct[e1946, s50, y25, w, indexed] for w in wr
+
+ask t4_s50_y30: rate_pct[e1946, s50, y30, w, indexed] for w in wr
+
+ask t4_s75_y20: rate_pct[e1946, s75, y20, w, indexed] for w in wr
+
+ask t4_s75_y25: rate_pct[e1946, s75, y25, w, indexed] for w in wr
+
+ask t4_s75_y30: rate_pct[e1946, s75, y30, w, indexed] for w in wr
+
+ask t5_e1926_fixed_y20: rate_pct[e1926, m603010, y20, w, fixed] for w in wr
+
+ask t5_e1926_fixed_y25: rate_pct[e1926, m603010, y25, w, fixed] for w in wr
+
+ask t5_e1926_fixed_y30: rate_pct[e1926, m603010, y30, w, fixed] for w in wr
+
+ask t5_e1926_indexed_y20: rate_pct[e1926, m603010, y20, w, indexed] for w in wr
+
+ask t5_e1926_indexed_y25: rate_pct[e1926, m603010, y25, w, indexed] for w in wr
+
+ask t5_e1926_indexed_y30: rate_pct[e1926, m603010, y30, w, indexed] for w in wr
+
+ask t5_e1946_fixed_y20: rate_pct[e1946, m603010, y20, w, fixed] for w in wr
+
+ask t5_e1946_fixed_y25: rate_pct[e1946, m603010, y25, w, fixed] for w in wr
+
+ask t5_e1946_fixed_y30: rate_pct[e1946, m603010, y30, w, fixed] for w in wr
+
+ask t5_e1946_indexed_y20: rate_pct[e1946, m603010, y20, w, indexed] for w in wr
+
+ask t5_e1946_indexed_y25: rate_pct[e1946, m603010, y25, w, indexed] for w in wr
+
+ask t5_e1946_indexed_y30: rate_pct[e1946, m603010, y30, w, indexed] for w in wr
+
+ask t6_text: round(100 * t6_mean[e1946, y20, indexed], 0.1, stat_round), round(100 * t6_median[e1946, y20, indexed], 0.1, stat_round), round(100 * t6_min[e1946, y20, indexed], 0.1, stat_round)
+
+ask t6a_max: round(100 * t6_max[r, h, fixed], 0.1, stat_round) for r in era, h in hz
+
+ask t6a_mean: round(100 * t6_mean[r, h, fixed], 0.1, stat_round) for r in era, h in hz
+
+ask t6a_median: round(100 * t6_median[r, h, fixed], 0.1, stat_round) for r in era, h in hz
+
+ask t6a_min: round(100 * t6_min[r, h, fixed], 0.1, stat_round) for r in era, h in hz
+
+ask t6a_sd: round(100 * t6_sd[r, h, fixed], 0.1, stat_round) for r in era, h in hz
+
+ask t6b_max: round(100 * t6_max[r, h, indexed], 0.1, stat_round) for r in era, h in hz
+
+ask t6b_mean: round(100 * t6_mean[r, h, indexed], 0.1, stat_round) for r in era, h in hz
+
+ask t6b_median: round(100 * t6_median[r, h, indexed], 0.1, stat_round) for r in era, h in hz
+
+ask t6b_min: round(100 * t6_min[r, h, indexed], 0.1, stat_round) for r in era, h in hz
+
+ask t6b_sd: round(100 * t6_sd[r, h, indexed], 0.1, stat_round) for r in era, h in hz
+
+version trinity99_v
+  cite trinity99
+  known 1999-12-31
+  note "known: the article is dated only by its volume and year, Financial Counseling and Planning 10(1), 1999, and every page footer reads '©1999'; web searches found no month or day of issue. Of the precise stamp of the form read (the mirror PDF's creation, 2006-05-01), the year's last day and the retrieval day (2026-10-18), §4.5 takes the earliest, the year's last day. Round 2 took the retrieval day. The assumed annual_offset row stands for a fact the article leaves out, so it is known from the model's on and sits in trinity99_ex_v (§4.5)"
+  alloc[s100, stocks] = 1 "Tables 1-4 rows: 100% Stocks"
+  alloc[s100, bonds] = 0 "Tables 1-4 rows: 100% Stocks"
+  alloc[s100, bills] = 0 "Tables 1-4 rows: 100% Stocks"
+  alloc[s75, stocks] = 0.75 "Tables 1-4 rows: 75% Stocks/25% Bonds"
+  alloc[s75, bonds] = 0.25 "Tables 1-4 rows: 75% Stocks/25% Bonds"
+  alloc[s75, bills] = 0 "Tables 1-4 rows: 75% Stocks/25% Bonds"
+  alloc[s50, stocks] = 0.5 "Tables 1-4 rows: 50% Stocks/50% Bonds"
+  alloc[s50, bonds] = 0.5 "Tables 1-4 rows: 50% Stocks/50% Bonds"
+  alloc[s50, bills] = 0 "Tables 1-4 rows: 50% Stocks/50% Bonds"
+  alloc[s25, stocks] = 0.25 "Tables 1-4 rows: 25% Stocks/75% Bonds"
+  alloc[s25, bonds] = 0.75 "Tables 1-4 rows: 25% Stocks/75% Bonds"
+  alloc[s25, bills] = 0 "Tables 1-4 rows: 25% Stocks/75% Bonds"
+  alloc[s0, stocks] = 0 "Tables 1-4 rows: 100% Bonds"
+  alloc[s0, bonds] = 1 "Tables 1-4 rows: 100% Bonds"
+  alloc[s0, bills] = 0 "Tables 1-4 rows: 100% Bonds"
+  alloc[m603010, stocks] = 0.6 "Tables 5 and 6 titles: 60% Stock, 30% Bonds, and 10% Treasury Bills"
+  alloc[m603010, bonds] = 0.3 "Tables 5 and 6 titles: 60% Stock, 30% Bonds, and 10% Treasury Bills"
+  alloc[m603010, bills] = 0.1 "Tables 5 and 6 titles: 60% Stock, 30% Bonds, and 10% Treasury Bills"
+  cpi_base_year = 1925 "Methodology, PDF p. 3, Equation (2): Vt = Vt-1(1 + Rt) - Wt(CPIY-1/CPI1925)"
+  data_end = 1997-12 "Methodology, PDF p. 3: overlapping periods from January 1926 through December 1997"
+  era_from[e1926] = 1926-01 "Methodology, PDF p. 3: from January 1926; Tables 1, 2 and 5 (upper block): 1926 to 1997"
+  era_from[e1946] = 1946-01 "Tables 3, 4 and 5 (lower block): 1946 to 1997; PDF p. 8: January 1946 through December 1997"
+  hz_years[y15] = 15 "Methodology, PDF p. 3: overlapping 15, 20, 25, and 30-year periods"
+  hz_years[y20] = 20 "Methodology, PDF p. 3; Tables 1-5 rows: 20 years"
+  hz_years[y25] = 25 "Methodology, PDF p. 3; Tables 1-5 rows: 25 years"
+  hz_years[y30] = 30 "Methodology, PDF p. 3; Tables 1-5 rows: 30 years"
+  min_stock_25 = 0.25 "Results, PDF p. 4: 'a portfolio of at least 25% stock'"
+  min_stock_50 = 0.5 "Results, PDF p. 4: 'at least 50% stock'"
+  min_stock_75 = 0.75 "Abstract, PDF p. 1: portfolios of at least 75% stock"
+  success_target = 75 "Results, PDF p. 4: the worked readings of Tables 1-4 at a 75% success rate for a 20-year payout"
+  v0 = 1000 "Methodology, PDF p. 3: 'the value per $1,000'"
+  wrate[r03] = 0.03 "PDF p. 4: '0.25% per month (3% annualized)'; table headers: 3%"
+  wrate[r04] = 0.04 "table headers: 4%"
+  wrate[r05] = 0.05 "table headers: 5%"
+  wrate[r06] = 0.06 "table headers: 6%"
+  wrate[r07] = 0.07 "table headers: 7%"
+  wrate[r08] = 0.08 "table headers: 8%"
+  wrate[r09] = 0.09 "table headers: 9%"
+  wrate[r10] = 0.1 "table headers: 10%"
+  wrate[r11] = 0.11 "table headers: 11%"
+  wrate[r12] = 0.12 "PDF p. 4: '1.0% per month (12% annualized)'; table headers: 12%"
+
+version trinity99_ex_v
+  cite trinity99
+  known 2026-10-18
+  note "known: the model's on. The row is the modeller's stand-in for a fact of the article's own design that it leaves out (case: Missing facts, first bullet), so it takes the date of the case's stipulations (§4.5). Round 2 kept it in trinity99_v, when both were known on the same day"
+  annual_offset = 0 assumed "the article names no start month for its annual periods; read as the month era_from names, January, the reading under which the methodology's period counts hold" "Methodology, PDF p. 3: 'annual overlapping periods'"
