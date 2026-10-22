@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# The engine's checks (R-82): engine/tools/check fast|full|list
+d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)" || exit 1
+exec python3 -I -B "$d/check.py" "$@"

@@ -1,0 +1,40 @@
+# R-27: no silent default: unwrap_or_default is banned; literal and Default defaults are
+# listed for review (ast-grep warnings).
+
+case: unwrap-or-default
+tool: clippy
+expect: clippy::disallowed_methods
+text: R-27
+--- module
+/// Planted.
+pub fn planted(v: Option<u8>) -> u8 {
+    v.unwrap_or_default()
+}
+
+case: result-unwrap-or-default
+tool: clippy
+expect: clippy::disallowed_methods
+text: R-27
+--- module
+/// Planted.
+pub fn planted(v: Result<u8, crate::NotImplemented>) -> u8 {
+    v.unwrap_or_default()
+}
+
+case: literal-default
+tool: ast-grep
+expect: silent-default-literal
+--- module
+/// Planted.
+pub fn planted(v: Option<u8>) -> u8 {
+    v.unwrap_or(0)
+}
+
+case: default-call
+tool: ast-grep
+expect: silent-default-call
+--- module
+/// Planted.
+pub fn planted(v: Option<u8>) -> u8 {
+    v.unwrap_or(Default::default())
+}

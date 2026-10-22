@@ -1,7 +1,7 @@
 id: expect-needs-reason
 language: rust
 severity: error
-message: "R-104: every #[expect] states its reason: #[expect(lint, reason = \"R-n: ...\")]"
+message: 'R-104: every #[expect] states its reason: #[expect(lint, reason = "R-n: ...")]'
 rule:
   all:
     - any:

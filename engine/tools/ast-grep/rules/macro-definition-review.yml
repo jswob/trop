@@ -1,6 +1,6 @@
 id: macro-definition-review
 language: rust
 severity: warning
-message: "R-73 (report): every macro_rules! is listed for review; the kernel avoids macros"
+message: 'R-73 (report): every macro_rules! is listed for review; the kernel avoids macros'
 rule:
   kind: macro_definition

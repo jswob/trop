@@ -1,0 +1,12 @@
+# R-89: no snapshot-testing library.
+
+case: insta
+tool: deny
+expect: banned
+text: insta
+--- fake insta 0.0.1
+--- replace tests/runner/Cargo.toml
+[dependencies]
+--- with
+[dependencies]
+insta = { path = "@FAKES@/insta-0.0.1", version = "0.0.1" }

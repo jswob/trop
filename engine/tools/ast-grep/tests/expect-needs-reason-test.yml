@@ -1,7 +1,7 @@
 id: expect-needs-reason
 valid:
-  - "#[expect(clippy::indexing_slicing, reason = \"R-5: the index is checked one line above\")] fn f() {}"
+  - '#[expect(clippy::indexing_slicing, reason = "R-5: the index is checked one line above")] fn f() {}'
 invalid:
-  - "#[expect(clippy::indexing_slicing)] fn f() {}"
-  - "#[expect(clippy::indexing_slicing, reason = \"the index is fine\")] fn f() {}"
-  - "#[cfg_attr(test, expect(dead_code))] fn f() {}"
+  - '#[expect(clippy::indexing_slicing)] fn f() {}'
+  - '#[expect(clippy::indexing_slicing, reason = "the index is fine")] fn f() {}'
+  - '#[cfg_attr(test, expect(dead_code))] fn f() {}'

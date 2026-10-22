@@ -1,0 +1,23 @@
+# R-64: enum cases are written with their type's name, never glob-imported.
+
+case: enum-glob
+tool: clippy
+expect: clippy::enum_glob_use
+--- module
+/// Planted.
+#[derive(Debug, Clone, Copy)]
+pub enum Planted {
+    /// One.
+    A,
+    /// Two.
+    B,
+}
+
+/// Planted.
+pub fn planted(p: Planted) -> u8 {
+    use Planted::*;
+    match p {
+        A => 1,
+        B => 2,
+    }
+}

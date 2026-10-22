@@ -1,7 +1,7 @@
 id: no-cfg-clippy
 language: rust
 severity: error
-message: "R-70: no code hidden from clippy (cfg(clippy), cfg(not(clippy)), cfg_attr(clippy, ...))"
+message: 'R-70: no code hidden from clippy (cfg(clippy), cfg(not(clippy)), cfg_attr(clippy, ...))'
 rule:
   any:
     - kind: attribute_item

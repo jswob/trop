@@ -1,0 +1,49 @@
+# R-48: nothing taken from the build machine: no build script, env! only for the
+# package name and version.
+
+case: build-rs
+tool: run
+expect: a build script (R-80)
+--- write crates/tally/build.rs
+//! Planted.
+fn main() {}
+--- run
+tools/check-rules
+
+case: package-build
+tool: run
+expect: package.build names a build script
+--- replace crates/tally/Cargo.toml
+publish.workspace = true
+--- with
+publish.workspace = true
+build = "tools/zz_build.rs"
+--- run
+tools/check-rules
+
+case: env-macro
+tool: ast-grep
+expect: env-macro-only-package-version
+--- module
+/// Planted.
+pub fn planted() -> &'static str {
+    env!("HOME")
+}
+
+case: option-env-macro
+tool: ast-grep
+expect: env-macro-only-package-version
+--- module
+/// Planted.
+pub fn planted() -> bool {
+    option_env!("CI").is_some()
+}
+
+case: package-version-allowed
+tool: ast-grep
+expect: pass
+--- module
+/// Planted.
+pub fn planted() -> &'static str {
+    env!("CARGO_PKG_VERSION")
+}

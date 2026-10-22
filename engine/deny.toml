@@ -149,8 +149,10 @@ allow-build-scripts = [
   { crate = "zmij", reason = "R-56: criterion only (dev); probes the compiler" },
 ]
 executables = "deny"
-# zerocopy (criterion only, dev) ships its maintainers' CI shell scripts; nothing runs them
+# A bypass has no reason field, so each entry's reason is the comment line above it, in
+# the counter's form (R-109)
 bypass = [
+  # R-56: zerocopy (criterion only, dev) ships its maintainers' CI shell scripts; nothing runs them
   { crate = "zerocopy", allow-globs = ["ci/*.sh", "cargo.sh"] },
 ]
 interpreted = "deny"

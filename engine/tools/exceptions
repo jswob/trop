@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# The exception counter (R-110, R-111): engine/tools/exceptions [--check|--write]
+d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)" || exit 1
+exec python3 -I -B "$d/exceptions.py" "$@"

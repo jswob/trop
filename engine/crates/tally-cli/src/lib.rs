@@ -63,6 +63,10 @@ mod tests {
     #[test]
     fn anything_else_is_a_usage_error() {
         assert_eq!(run(&[], b"").code, EXIT_USAGE, "no arguments");
-        assert_eq!(run(&[OsString::from("lod")], b"").code, EXIT_USAGE, "unknown command");
+        assert_eq!(
+            run(&[OsString::from("lod")], b"").code,
+            EXIT_USAGE,
+            "unknown command"
+        );
     }
 }

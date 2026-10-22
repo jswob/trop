@@ -1,0 +1,25 @@
+# R-111: each area's budget caps its exceptions.
+
+case: library-over-budget
+tool: run
+expect: area library has 1 exceptions, over its budget of 0 (R-111)
+--- module
+/// Planted.
+#[expect(clippy::needless_return, reason = "R-66: a planted exception with a proper reason")]
+pub fn planted() -> u8 {
+    return 1;
+}
+--- run
+tools/exceptions --check
+
+case: cli-over-budget
+tool: run
+expect: area cli has 4 exceptions, over its budget of 3 (R-111)
+--- module tally-cli
+/// Planted.
+#[expect(clippy::needless_return, reason = "R-66: a planted exception with a proper reason")]
+pub fn planted() -> u8 {
+    return 1;
+}
+--- run
+tools/exceptions --check

@@ -1,0 +1,36 @@
+# R-109: no tool-suppression comments; an ignored test needs a reason.
+
+case: ast-grep-ignore
+tool: run
+expect: an ast-grep-ignore comment; no exception outside #[expect] (R-109)
+--- module
+/// Planted.
+// ast-grep-ignore: no-float
+pub fn planted() -> u8 {
+    1
+}
+--- run
+tools/check-rules
+
+case: ignore-without-reason
+tool: clippy-tests
+expect: clippy::ignore_without_reason
+--- module
+#[cfg(test)]
+mod tests {
+    #[test]
+    #[ignore]
+    fn planted() {
+        assert_eq!(core::hint::black_box(1_u8), 1, "planted");
+    }
+}
+
+case: rustfmt-skip-counted
+tool: run
+expect: not in EXCEPTIONS.lock
+--- append tests/runner/src/lib.rs
+/// Planted.
+#[rustfmt::skip]
+pub fn planted() -> u8 { 1 }
+--- run
+tools/exceptions --check

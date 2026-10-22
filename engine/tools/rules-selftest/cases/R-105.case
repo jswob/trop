@@ -1,0 +1,11 @@
+# R-105: a stale exception fails.
+
+case: unfulfilled-expect
+tool: clippy
+expect: unfulfilled_lint_expectations
+--- module
+/// Planted.
+#[expect(clippy::needless_return, reason = "R-105: a planted exception the code no longer needs")]
+pub fn planted() -> u8 {
+    1
+}

@@ -1,0 +1,11 @@
+# R-49: no lossy text decoding.
+
+case: from-utf8-lossy
+tool: clippy
+expect: clippy::disallowed_methods
+text: R-49
+--- module
+/// Planted.
+pub fn planted(v: &[u8]) -> usize {
+    String::from_utf8_lossy(v).len()
+}

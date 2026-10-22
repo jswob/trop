@@ -1,6 +1,6 @@
 id: no-non-exhaustive
 valid:
-  - "pub enum Kind { A, B }"
+  - 'pub enum Kind { A, B }'
 invalid:
-  - "#[non_exhaustive] pub enum Kind { A, B }"
-  - "#[non_exhaustive] pub struct S { pub a: u8 }"
+  - '#[non_exhaustive] pub enum Kind { A, B }'
+  - '#[non_exhaustive] pub struct S { pub a: u8 }'

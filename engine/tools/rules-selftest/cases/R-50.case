@@ -1,0 +1,20 @@
+# R-50 (report): platform-specific code is listed for review.
+
+case: cfg-windows
+tool: ast-grep
+expect: platform-cfg
+--- module
+#[cfg(windows)]
+/// Planted.
+pub fn planted() -> u8 {
+    1
+}
+
+case: cfg-macro-pointer-width
+tool: ast-grep
+expect: platform-cfg
+--- module
+/// Planted.
+pub fn planted() -> bool {
+    cfg!(target_pointer_width = "32")
+}

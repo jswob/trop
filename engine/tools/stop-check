@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# The Stop hook (R-83): build role only. An internal error refuses the stop (exit 2).
+[ "${TALLY_ROLE:-}" = build ] || exit 0
+d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)" || exit 2
+python3 -I -B "$d/stop_check.py" "$@"
+c=$?
+if [ "$c" -eq 0 ] || [ "$c" -eq 2 ]; then exit "$c"; fi
+echo "engine stop-check: internal error (exit $c); refusing the stop (R-83)" >&2
+exit 2

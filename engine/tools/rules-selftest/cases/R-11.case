@@ -1,0 +1,62 @@
+# R-11: no print macros and no dbg! anywhere: the library, the CLI and tests.
+
+case: println-in-library
+tool: clippy
+expect: clippy::print_stdout
+--- module
+/// Planted.
+pub fn planted() {
+    println!("planted");
+}
+
+case: eprintln-in-library
+tool: clippy
+expect: clippy::print_stderr
+--- module
+/// Planted.
+pub fn planted() {
+    eprintln!("planted");
+}
+
+case: dbg-in-library
+tool: clippy
+expect: clippy::dbg_macro
+--- module
+/// Planted.
+pub fn planted(v: u8) -> u8 {
+    dbg!(v)
+}
+
+case: println-in-cli
+tool: clippy
+expect: clippy::print_stdout
+--- module tally-cli
+/// Planted.
+pub fn planted() {
+    println!("planted");
+}
+
+case: println-in-tests
+tool: clippy-tests
+expect: clippy::print_stdout
+--- module
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn planted() {
+        println!("planted");
+    }
+}
+
+case: dbg-in-tests
+tool: clippy-tests
+expect: clippy::dbg_macro
+--- module
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn planted() {
+        let v = dbg!(core::hint::black_box(1_u8));
+        assert_eq!(v, 1, "planted");
+    }
+}

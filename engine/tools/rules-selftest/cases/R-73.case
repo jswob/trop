@@ -1,0 +1,11 @@
+# R-73 (report): every macro_rules! is listed for review.
+
+case: macro-definition
+tool: ast-grep
+expect: macro-definition-review
+--- module
+macro_rules! planted {
+    () => {
+        1
+    };
+}

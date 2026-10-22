@@ -1,0 +1,29 @@
+# R-82: the one check command clears what changes lints or profiles.
+
+case: cap-lints-cleared
+tool: run
+expect: FAIL clippy-lib
+--- module
+/// Planted.
+pub fn planted(v: Option<u8>) -> u8 {
+    v.unwrap()
+}
+--- run
+RUSTFLAGS=--cap-lints=allow CARGO_ENCODED_RUSTFLAGS=--cap-lints=allow tools/check step clippy-lib
+
+case: release-profile-env-cleared
+tool: run
+expect: attempt to add with overflow
+exit: any
+--- write crates/tally/tests/zz_overflow.rs
+//! Planted.
+
+#[test]
+fn planted() {
+    let v = core::hint::black_box(u8::MAX);
+    let w = v + core::hint::black_box(1);
+    core::hint::black_box(w);
+}
+--- run
+CARGO_PROFILE_RELEASE_TEST_OVERFLOW_CHECKS=false CARGO_PROFILE_RELEASE_OVERFLOW_CHECKS=false tools/check step test-release
+cat target/check-logs/test-release.log

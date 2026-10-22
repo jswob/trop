@@ -1,0 +1,117 @@
+# R-80: the rule files and the spec are checksummed (check-frozen); the files the
+# builder edits are checked against a frozen copy (check-rules).
+
+case: spec-byte
+tool: run
+expect: spec: VERSION changed
+--- append spec/VERSION
+x
+--- run
+tools/check-frozen
+
+case: spec-new-file
+tool: run
+expect: spec: planted.md is not listed
+--- write spec/planted.md
+planted
+--- run
+tools/check-frozen
+
+case: rule-file-byte
+tool: run
+expect: rules: engine/clippy.toml changed
+--- append clippy.toml
+# planted
+--- run
+tools/check-frozen
+
+case: ast-grep-rule-byte
+tool: run
+expect: rules: engine/tools/ast-grep/rules/no-float.yml changed
+--- append tools/ast-grep/rules/no-float.yml
+# planted
+--- run
+tools/check-frozen
+
+case: new-rule-file
+tool: run
+expect: is a rule file but not in RULES.sha256
+--- write tools/planted.py
+# planted
+--- run
+tools/check-frozen
+
+case: lints-table-edited
+tool: run
+expect: differs from the frozen copy (R-80)
+--- replace Cargo.toml
+unwrap_used = "forbid"
+--- with
+unwrap_used = "deny"
+--- run
+tools/check-rules
+
+case: profile-edited
+tool: run
+expect: differs from the frozen copy (R-80)
+--- replace Cargo.toml
+overflow-checks = true
+lto = "fat"
+--- with
+overflow-checks = false
+lto = "fat"
+--- run
+tools/check-rules
+
+case: member-lints-removed
+tool: run
+expect: [lints] must be exactly `workspace = true`
+--- replace crates/tally/Cargo.toml
+[lints]
+workspace = true
+--- with
+[lints.clippy]
+unwrap_used = "allow"
+--- run
+tools/check-rules
+
+case: patch-section
+tool: run
+expect: a [patch] section (R-80)
+--- append Cargo.toml
+[patch.crates-io]
+itoa = { path = "@FAKES@/itoa-0.0.1" }
+--- run
+tools/check-rules
+
+case: cargo-config
+tool: run
+expect: an unexpected config file (R-80)
+--- write .cargo/config.toml
+[build]
+rustflags = ["--cap-lints=allow"]
+--- run
+tools/check-rules
+
+case: crate-outside-the-workspace
+tool: run
+expect: isn't a workspace member, so the workspace lints don't reach it
+--- write crates/zz-planted/Cargo.toml
+[package]
+name = "zz-planted"
+version = "0.1.0"
+edition = "2024"
+--- write crates/zz-planted/src/lib.rs
+//! Planted.
+--- run
+tools/check-rules
+
+case: root-script-edited
+tool: run
+expect: differs from the frozen copy (R-80)
+--- replace ../package.json
+"engine:check": "cd engine && tools/check full",
+--- with
+"engine:check": "cd engine && tools/check fast",
+--- run
+tools/check-rules

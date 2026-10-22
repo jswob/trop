@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# The engine's guard (PreToolUse and ConfigChange hook). It fails closed (R-79): any
+# exit other than 0 (allow) or 2 (refuse) from guard.py becomes a refusal.
+d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)" || { echo "engine guard: can't find itself; refusing (R-79)" >&2; exit 2; }
+python3 -I -B "$d/guard.py" "$@"
+c=$?
+if [ "$c" -eq 0 ] || [ "$c" -eq 2 ]; then exit "$c"; fi
+echo "engine guard: internal error (exit $c); refusing the call (fails closed, R-79)" >&2
+exit 2

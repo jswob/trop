@@ -1,0 +1,53 @@
+# R-3: no panic!, todo! or unimplemented! (no exception); unreachable! is an error.
+
+case: panic
+tool: clippy
+expect: clippy::panic
+--- module
+/// Planted.
+pub fn planted() {
+    panic!("planted");
+}
+
+case: todo
+tool: clippy
+expect: clippy::todo
+--- module
+/// Planted.
+pub fn planted() {
+    todo!();
+}
+
+case: unimplemented
+tool: clippy
+expect: clippy::unimplemented
+--- module
+/// Planted.
+pub fn planted() {
+    unimplemented!();
+}
+
+case: unreachable
+tool: clippy
+expect: clippy::unreachable
+--- module
+/// Planted.
+pub fn planted(v: bool) -> u8 {
+    if v {
+        unreachable!("planted");
+    }
+    1
+}
+
+case: tests-may-panic
+tool: clippy-tests
+expect: pass
+--- module
+#[cfg(test)]
+mod tests {
+    #[test]
+    #[should_panic(expected = "planted")]
+    fn planted() {
+        panic!("planted");
+    }
+}

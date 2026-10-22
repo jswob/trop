@@ -1,10 +1,10 @@
 id: no-wrapping-arith
 language: rust
 severity: error
-message: "R-23: no silent wrapping or clamping; use checked_* and refuse"
+message: 'R-23: no silent wrapping or clamping; use checked_* and refuse'
 rule:
   any:
     - kind: field_identifier
-      regex: "^(wrapping|saturating|overflowing)_"
+      regex: '^(wrapping|saturating|overflowing)_'
     - kind: identifier
-      regex: "^(wrapping|saturating|overflowing)_"
+      regex: '^(wrapping|saturating|overflowing)_'

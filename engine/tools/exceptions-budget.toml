@@ -1,0 +1,54 @@
+# The exception budgets (R-111; RULEBOOK §7.1), approved by the user on 2026-10-22. A
+# rule file: a budget rises only with the user's dated approval, recorded in the
+# rulebook, in a commit by the `rules` role (R-112).
+#
+# An exception's area is the first one below whose globs match its file (paths relative
+# to engine/). Code inside a #[cfg(test)] module is in `tests` wherever it sits. An area
+# without `budget` is counted and listed, not capped.
+
+# the highest rule id an exception's reason may name
+rules = 113
+
+[[area]]
+name = "tests"
+globs = ["tests/**", "crates/*/tests/**"]
+
+[[area]]
+name = "fuzz-benches"
+globs = ["fuzz/**", "crates/*/benches/**"]
+
+# The number kernel: its globs are tools/kernel.toml's `kernel`, set at milestone S.
+# One exception per arithmetic function, at most 20 at S, reviewed after S.
+[[area]]
+name = "kernel"
+budget = 20
+globs = "kernel.toml"
+
+# The lexer and the parser: the lead names their files at S, with the kernel's. Until
+# then they are the rest of the library, whose budget is also 0.
+[[area]]
+name = "lexer-parser"
+budget = 0
+globs = []
+
+# The one sanctioned thread module (R-42), named when the builder writes it
+[[area]]
+name = "thread"
+budget = 1
+globs = []
+
+# arguments, reading the reality, writing output
+[[area]]
+name = "cli"
+budget = 3
+globs = ["crates/tally-cli/**"]
+
+[[area]]
+name = "library"
+budget = 0
+globs = ["crates/**"]
+
+# cargo-deny's ignore, skip, skip-tree, bypass and licence exceptions (R-109)
+[[area]]
+name = "deny"
+globs = ["deny.toml", "deny-tally.toml"]

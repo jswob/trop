@@ -1,0 +1,65 @@
+# R-93: the engine never detects that it is being tested.
+
+case: cfg-not-test
+tool: clippy
+expect: clippy::cfg_not_test
+--- module
+/// Planted.
+#[cfg(not(test))]
+pub fn planted() -> u8 {
+    1
+}
+
+case: test-outside-test-module
+tool: clippy-tests
+expect: clippy::tests_outside_test_module
+--- module
+#[test]
+fn planted() {
+    assert_eq!(core::hint::black_box(1_u8), 1, "planted");
+}
+
+case: cfg-test-macro
+tool: run
+expect: cfg!(test): the engine can't tell it is tested (R-93)
+--- module
+/// Planted.
+pub fn planted() -> bool {
+    cfg!(test)
+}
+--- run
+tools/check-rules
+
+case: debug-assertions
+tool: run
+expect: debug_assertions: no checks on debug assertions (R-93)
+--- module
+/// Planted.
+#[cfg(debug_assertions)]
+pub fn planted() -> u8 {
+    1
+}
+--- run
+tools/check-rules
+
+case: include-str
+tool: run
+expect: include_str!: the library reads no files
+--- module
+/// Planted.
+pub fn planted() -> usize {
+    include_str!("lib.rs").len()
+}
+--- run
+tools/check-rules
+
+case: path-into-the-tests
+tool: run
+expect: a path string into the tests, the answer keys or the spec (R-93)
+--- module
+/// Planted.
+pub fn planted(v: &str) -> bool {
+    v.starts_with("tests/cases/")
+}
+--- run
+tools/check-rules

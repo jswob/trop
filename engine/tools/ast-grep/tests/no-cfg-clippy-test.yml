@@ -1,10 +1,10 @@
 id: no-cfg-clippy
 valid:
-  - "#[cfg(test)] mod tests {}"
-  - "#[cfg_attr(test, expect(clippy::unwrap_used, reason = \"R-2: a test may crash\"))] fn f() {}"
+  - '#[cfg(test)] mod tests {}'
+  - '#[cfg_attr(test, expect(clippy::unwrap_used, reason = "R-2: a test may crash"))] fn f() {}'
 invalid:
-  - "#[cfg(not(clippy))] fn f() {}"
-  - "#[cfg(clippy)] fn f() {}"
-  - "#[cfg_attr(clippy, expect(dead_code))] fn f() {}"
-  - "fn f() -> bool { cfg!(clippy) }"
-  - "#[cfg(any(test, clippy))] fn f() {}"
+  - '#[cfg(not(clippy))] fn f() {}'
+  - '#[cfg(clippy)] fn f() {}'
+  - '#[cfg_attr(clippy, expect(dead_code))] fn f() {}'
+  - 'fn f() -> bool { cfg!(clippy) }'
+  - '#[cfg(any(test, clippy))] fn f() {}'

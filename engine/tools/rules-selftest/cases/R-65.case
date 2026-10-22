@@ -1,0 +1,10 @@
+# R-65: no #[non_exhaustive] on own types.
+
+case: non-exhaustive
+tool: ast-grep
+expect: no-non-exhaustive
+--- module
+/// Planted.
+#[non_exhaustive]
+#[derive(Debug)]
+pub struct Planted;

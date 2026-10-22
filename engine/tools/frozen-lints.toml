@@ -1,0 +1,154 @@
+# The frozen copy check-rules compares the builder-edited files with (R-80). A rule
+# file: the `rules` role rewrites it with `engine/tools/check-rules --write-frozen`, in
+# a rule change's commit (R-112). Generated; don't edit by hand.
+
+[workspace-lints.rust]
+unsafe_code = "forbid"
+unknown_lints = "deny"
+renamed_and_removed_lints = "deny"
+unfulfilled_lint_expectations = "deny"
+unexpected_cfgs = { level = "deny", check-cfg = ["cfg(fuzzing)", "cfg(coverage)", "cfg(coverage_nightly)"] }
+missing_docs = "deny"
+unreachable_pub = "deny"
+non_ascii_idents = "deny"
+ambiguous_negative_literals = "deny"
+elided_lifetimes_in_paths = "deny"
+let_underscore_drop = "deny"
+missing_debug_implementations = "deny"
+redundant_imports = "deny"
+redundant_lifetimes = "deny"
+trivial_casts = "deny"
+trivial_numeric_casts = "deny"
+unit_bindings = "deny"
+unused_lifetimes = "deny"
+unused_qualifications = "deny"
+rust_2018_idioms = { level = "deny", priority = -1 }
+future_incompatible = { level = "deny", priority = -1 }
+nonstandard_style = { level = "deny", priority = -1 }
+
+[workspace-lints.rustdoc]
+broken_intra_doc_links = "deny"
+private_intra_doc_links = "deny"
+invalid_codeblock_attributes = "deny"
+invalid_html_tags = "deny"
+invalid_rust_codeblocks = "deny"
+bare_urls = "deny"
+unescaped_backticks = "deny"
+redundant_explicit_links = "deny"
+
+[workspace-lints.clippy]
+correctness = { level = "deny", priority = -1 }
+suspicious = { level = "deny", priority = -1 }
+perf = { level = "deny", priority = -1 }
+complexity = { level = "deny", priority = -1 }
+style = { level = "deny", priority = -1 }
+pedantic = { level = "deny", priority = -1 }
+cargo = { level = "deny", priority = -1 }
+must_use_candidate = "allow"
+similar_names = "allow"
+missing_errors_doc = "allow"
+too_many_lines = "allow"
+multiple_crate_versions = "allow"
+cargo_common_metadata = "allow"
+unwrap_or_default = "allow"
+manual_unwrap_or_default = "allow"
+float_arithmetic = "forbid"
+allow_attributes = "forbid"
+allow_attributes_without_reason = "forbid"
+unwrap_used = "forbid"
+expect_used = "forbid"
+panic = "forbid"
+todo = "forbid"
+unimplemented = "forbid"
+dbg_macro = "forbid"
+print_stdout = "forbid"
+print_stderr = "forbid"
+exit = "forbid"
+unreachable = "deny"
+indexing_slicing = "deny"
+string_slice = "deny"
+panic_in_result_fn = "deny"
+fallible_impl_from = "deny"
+infinite_loop = "deny"
+arithmetic_side_effects = "deny"
+as_conversions = "deny"
+integer_division = "deny"
+modulo_arithmetic = "deny"
+iter_over_hash_type = "deny"
+use_debug = "deny"
+wildcard_enum_match_arm = "deny"
+match_wildcard_for_single_variants = "deny"
+enum_glob_use = "deny"
+let_underscore_must_use = "deny"
+unused_result_ok = "deny"
+cfg_not_test = "deny"
+tests_outside_test_module = "deny"
+ignore_without_reason = "deny"
+disallowed_types = "deny"
+disallowed_methods = "deny"
+disallowed_macros = "deny"
+shadow_unrelated = "deny"
+missing_assert_message = "deny"
+mem_forget = "deny"
+assertions_on_result_states = "deny"
+clone_on_ref_ptr = "deny"
+empty_drop = "deny"
+empty_enum_variants_with_brackets = "deny"
+empty_structs_with_brackets = "deny"
+error_impl_error = "deny"
+fn_to_numeric_cast_any = "deny"
+get_unwrap = "deny"
+if_then_some_else_none = "deny"
+mod_module_files = "deny"
+redundant_type_annotations = "deny"
+renamed_function_params = "deny"
+rest_pat_in_fully_bound_structs = "deny"
+same_name_method = "deny"
+semicolon_outside_block = "deny"
+unneeded_field_pattern = "deny"
+
+[profile.release]
+panic = "abort"
+overflow-checks = true
+lto = "fat"
+codegen-units = 1
+debug = "line-tables-only"
+
+[profile.bench]
+overflow-checks = true
+
+[profile.release-test]
+inherits = "release"
+debug-assertions = true
+
+[profile.dev]
+package = { "*" = { opt-level = 2 } }
+
+[profile.mutants]
+inherits = "test"
+debug = "none"
+
+[pins.num-bigint]
+version = "=0.4.8"
+default-features = false
+
+[pins.num-integer]
+version = "=0.1.47"
+default-features = false
+
+[pins.num-traits]
+version = "=0.2.19"
+default-features = false
+
+[pins.sha2]
+version = "=0.11.1"
+default-features = false
+
+[root-scripts]
+"engine:bench" = "cd engine && cargo bench --workspace --locked"
+"engine:check" = "cd engine && tools/check full"
+"engine:cov" = "cd engine && cargo llvm-cov nextest --workspace --all-features --locked --html"
+"engine:fuzz" = "cd engine && mkdir -p fuzz/corpus/parse && cargo +nightly-2026-10-21 fuzz run parse fuzz/corpus/parse fuzz/regressions/parse --"
+"engine:mutants" = "cd engine && cargo nextest run --locked -p tally-runner --cargo-profile mutants --profile mutants && { cargo mutants -C=--locked --baseline skip --timeout 300 --build-timeout 600; c=$?; [ $c -eq 0 ] || [ $c -eq 2 ] || [ $c -eq 3 ]; } && tools/mutants-survivors ."
+"engine:spec-check" = "cd engine && python3 -I -B spec/tools/loadcheck.py --selftest && python3 -I -B spec/tools/loadcheck.py && tools/check-frozen"
+"engine:test" = "cd engine && cargo nextest run --workspace --all-features --locked && cargo test --doc --workspace --all-features --locked"

@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# The surviving mutants are the listed ones (R-87): engine/tools/mutants-survivors DIR...
+d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)" || exit 1
+exec python3 -I -B "$d/mutants_survivors.py" "$@"

@@ -1,7 +1,7 @@
 id: platform-cfg
 language: rust
 severity: warning
-message: "R-50 (report): platform-specific code, listed for review"
+message: 'R-50 (report): platform-specific code, listed for review'
 rule:
   any:
     - kind: attribute_item

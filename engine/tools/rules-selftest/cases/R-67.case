@@ -1,0 +1,30 @@
+# R-67: clippy's default groups, pedantic and cargo, all as errors.
+
+case: pedantic-doc-markdown
+tool: clippy
+expect: clippy::doc_markdown
+--- module
+/// Planted: the FooBar type.
+pub fn planted() -> u8 {
+    1
+}
+
+case: style-needless-return
+tool: clippy
+expect: clippy::needless_return
+--- module
+/// Planted.
+pub fn planted() -> u8 {
+    return 1;
+}
+
+case: cargo-negative-feature
+tool: clippy
+expect: clippy::negative_feature_names
+at: *
+solo: yes
+--- replace crates/tally/Cargo.toml
+fault-injection = []
+--- with
+fault-injection = []
+no-planted = []

@@ -1,0 +1,42 @@
+# R-39: the library touches no environment, files, stdin, stdout, processes or network.
+
+case: path-exists
+tool: clippy
+expect: clippy::disallowed_methods
+text: R-39
+--- module
+/// Planted.
+pub fn planted(p: &std::path::Path) -> bool {
+    p.exists()
+}
+
+case: env-var
+tool: clippy
+expect: clippy::disallowed_methods
+text: R-39
+--- module
+/// Planted.
+pub fn planted() -> bool {
+    std::env::var_os("HOME").is_some()
+}
+
+case: stdin
+tool: clippy
+expect: clippy::disallowed_methods
+text: R-39
+--- module
+/// Planted.
+pub fn planted() -> bool {
+    std::io::stdin().lines().next().is_some()
+}
+
+case: std-fs-text
+tool: run
+expect: std::fs: the library reads no files
+--- module
+/// Planted.
+pub fn planted() -> bool {
+    std::fs::metadata("x").is_ok()
+}
+--- run
+tools/check-rules

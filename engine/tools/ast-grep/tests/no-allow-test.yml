@@ -1,8 +1,8 @@
 id: no-allow
 valid:
-  - "#[expect(clippy::indexing_slicing, reason = \"R-5: the index is checked one line above\")] fn f() {}"
+  - '#[expect(clippy::indexing_slicing, reason = "R-5: the index is checked one line above")] fn f() {}'
 invalid:
-  - "#[allow(dead_code)] fn f() {}"
-  - "#![allow(clippy::pedantic)]"
-  - "#[cfg_attr(test, allow(clippy::unwrap_used))] fn f() {}"
-  - "macro_rules! m { () => { #[allow(dead_code)] fn g() {} }; }"
+  - '#[allow(dead_code)] fn f() {}'
+  - '#![allow(clippy::pedantic)]'
+  - '#[cfg_attr(test, allow(clippy::unwrap_used))] fn f() {}'
+  - 'macro_rules! m { () => { #[allow(dead_code)] fn g() {} }; }'

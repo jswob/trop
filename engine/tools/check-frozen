@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# The frozen files (R-80): engine/tools/check-frozen [--write-rules]
+d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)" || exit 1
+exec python3 -I -B "$d/check_frozen.py" "$@"

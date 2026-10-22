@@ -1,7 +1,7 @@
 id: env-macro-only-package-version
 language: rust
 severity: error
-message: "R-48: nothing is taken from the build machine; env! reads only CARGO_PKG_NAME and CARGO_PKG_VERSION"
+message: 'R-48: nothing is taken from the build machine; env! reads only CARGO_PKG_NAME and CARGO_PKG_VERSION'
 rule:
   all:
     - kind: macro_invocation

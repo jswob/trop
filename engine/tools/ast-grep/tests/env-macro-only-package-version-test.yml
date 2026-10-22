@@ -1,8 +1,8 @@
 id: env-macro-only-package-version
 valid:
-  - "const V: &str = env!(\"CARGO_PKG_VERSION\");"
-  - "const N: &str = env!(\"CARGO_PKG_NAME\");"
+  - 'const V: &str = env!("CARGO_PKG_VERSION");'
+  - 'const N: &str = env!("CARGO_PKG_NAME");'
 invalid:
-  - "const H: &str = env!(\"HOME\");"
-  - "const D: Option<&str> = option_env!(\"BUILD_DATE\");"
-  - "const D: &str = std::env!(\"CARGO_MANIFEST_DIR\");"
+  - 'const H: &str = env!("HOME");'
+  - 'const D: Option<&str> = option_env!("BUILD_DATE");'
+  - 'const D: &str = std::env!("CARGO_MANIFEST_DIR");'

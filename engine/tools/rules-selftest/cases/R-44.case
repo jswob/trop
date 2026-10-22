@@ -1,0 +1,21 @@
+# R-44: nothing depends on the CPU's byte order or word size.
+
+case: to-ne-bytes
+tool: clippy
+expect: clippy::disallowed_methods
+text: R-44
+--- module
+/// Planted.
+pub fn planted(v: u32) -> [u8; 4] {
+    v.to_ne_bytes()
+}
+
+case: usize-bytes
+tool: clippy
+expect: clippy::disallowed_methods
+text: R-44
+--- module
+/// Planted.
+pub fn planted(v: usize) -> usize {
+    v.to_le_bytes().len()
+}

@@ -6,4 +6,4 @@ rule:
   any:
     - kind: attribute_item
     - kind: inner_attribute_item
-  regex: "non_exhaustive"
+  regex: 'non_exhaustive'

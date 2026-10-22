@@ -1,0 +1,28 @@
+# R-66: errors are never dropped silently; map_err(|_| ...) stays allowed.
+
+case: let-underscore-result
+tool: clippy
+expect: clippy::let_underscore_must_use
+--- module
+/// Planted.
+pub fn planted(v: &[u8]) {
+    let _ = crate::parse(v);
+}
+
+case: discarded-ok
+tool: clippy
+expect: clippy::unused_result_ok
+--- module
+/// Planted.
+pub fn planted(v: &[u8]) {
+    crate::parse(v).ok();
+}
+
+case: map-err-allowed
+tool: clippy
+expect: pass
+--- module
+/// Planted.
+pub fn planted(v: Result<u8, u16>) -> Result<u8, crate::NotImplemented> {
+    v.map_err(|_| crate::NotImplemented)
+}

@@ -1,0 +1,41 @@
+# R-78: what makes a rule silently do nothing fails: CLIPPY_CONF_DIR set, a ban path
+# whose crate isn't known, allow-invalid, and a path clippy can't resolve.
+
+case: clippy-conf-dir
+tool: run
+expect: CLIPPY_CONF_DIR is set
+--- run
+CLIPPY_CONF_DIR=/nonexistent tools/check-rules
+
+case: unknown-crate-in-a-ban
+tool: run
+expect: which is neither std, a primitive nor a crate in Cargo.lock
+--- replace clippy.toml
+disallowed-methods = [
+--- with
+disallowed-methods = [
+  { path = "nosuchcrate::planted", reason = "R-78: a planted ban on a crate nobody has" },
+--- run
+tools/check-rules
+
+case: allow-invalid
+tool: run
+expect: carries allow-invalid
+--- replace clippy.toml
+disallowed-methods = [
+--- with
+disallowed-methods = [
+  { path = "std::vec::Vec::planted", reason = "R-78: a planted ban that hides its path", allow-invalid = true },
+--- run
+tools/check-rules
+
+case: unresolved-path
+tool: run
+expect: a rule silently does nothing
+--- replace clippy.toml
+disallowed-methods = [
+--- with
+disallowed-methods = [
+  { path = "std::vec::Vec::no_such_method", reason = "R-78: a planted ban on a method that doesn't exist" },
+--- run
+tools/check step clippy-lib

@@ -14,6 +14,15 @@
 						"command": "t=\"$CLAUDE_PROJECT_DIR/node_modules/.bin/toolkit\"; [ -x \"$t\" ] || exit 0; exec \"$t\" guard"
 					}
 				]
+			},
+			{
+				"matcher": "Edit|Write|MultiEdit|NotebookEdit|Bash",
+				"hooks": [
+					{
+						"type": "command",
+						"command": "g=\"$CLAUDE_PROJECT_DIR/engine/tools/guard\"; if [ -x \"$g\" ]; then exec \"$g\"; elif [ -e \"$CLAUDE_PROJECT_DIR/engine\" ]; then echo \"engine guard: engine/tools/guard is missing; refusing the call (fails closed, R-79)\" >&2; exit 2; else exit 0; fi"
+					}
+				]
 			}
 		],
 		"SessionStart": [
@@ -23,6 +32,27 @@
 					{
 						"type": "command",
 						"command": "t=\"$CLAUDE_PROJECT_DIR/node_modules/.bin/toolkit\"; [ -x \"$t\" ] || exit 0; exec \"$t\" notice"
+					}
+				]
+			}
+		],
+		"ConfigChange": [
+			{
+				"hooks": [
+					{
+						"type": "command",
+						"command": "g=\"$CLAUDE_PROJECT_DIR/engine/tools/guard\"; if [ -x \"$g\" ]; then exec \"$g\" --config-change; elif [ -e \"$CLAUDE_PROJECT_DIR/engine\" ]; then echo \"engine guard: engine/tools/guard is missing; refusing the call (fails closed, R-79)\" >&2; exit 2; else exit 0; fi"
+					}
+				]
+			}
+		],
+		"Stop": [
+			{
+				"hooks": [
+					{
+						"type": "command",
+						"timeout": 600,
+						"command": "s=\"$CLAUDE_PROJECT_DIR/engine/tools/stop-check\"; [ -x \"$s\" ] || exit 0; exec \"$s\""
 					}
 				]
 			}

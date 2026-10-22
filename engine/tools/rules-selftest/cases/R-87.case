@@ -1,0 +1,102 @@
+# R-87: every surviving mutant is listed, with its reason; a listed one that is caught
+# or gone fails. (Enforced once the kernel is set, R-85.)
+
+case: unlisted-survivor
+tool: run
+expect: (missed) is not in MUTANTS-SURVIVORS.md (R-87)
+--- replace tools/kernel.toml
+set_at_s = false
+--- with
+set_at_s = true
+--- write zz-mutants/mutants.out/outcomes.json
+{"outcomes": [
+ {"scenario": "Baseline", "summary": "Success"},
+ {"scenario": {"Mutant": {"name": "crates/tally/src/lib.rs:18:5: replace parse -> Result<(), NotImplemented> with Ok(())",
+  "file": "crates/tally/src/lib.rs", "function": {"function_name": "parse"}}}, "summary": "MissedMutant"},
+ {"scenario": {"Mutant": {"name": "crates/tally/src/lib.rs:9:1: replace planted -> u8 with 0",
+  "file": "crates/tally/src/lib.rs", "function": {"function_name": "planted"}}}, "summary": "CaughtMutant"}
+]}
+--- run
+tools/mutants-survivors zz-mutants
+
+case: listed-but-caught
+tool: run
+expect: is listed in MUTANTS-SURVIVORS.md and is now caught
+--- replace tools/kernel.toml
+set_at_s = false
+--- with
+set_at_s = true
+--- append MUTANTS-SURVIVORS.md
+| crates/tally/src/lib.rs | parse | replace parse -> Result<(), NotImplemented> with Ok(()) | R-28: a planted row whose mutant is caught |
+--- write zz-mutants/mutants.out/outcomes.json
+{"outcomes": [
+ {"scenario": {"Mutant": {"name": "crates/tally/src/lib.rs:18:5: replace parse -> Result<(), NotImplemented> with Ok(())",
+  "file": "crates/tally/src/lib.rs", "function": {"function_name": "parse"}}}, "summary": "CaughtMutant"}
+]}
+--- run
+tools/mutants-survivors zz-mutants
+
+case: listed-but-gone
+tool: run
+expect: no run produced it
+--- replace tools/kernel.toml
+set_at_s = false
+--- with
+set_at_s = true
+--- append MUTANTS-SURVIVORS.md
+| crates/tally/src/lib.rs | gone | replace gone -> u8 with 1 | R-28: a planted row whose mutant no longer exists |
+--- write zz-mutants/mutants.out/outcomes.json
+{"outcomes": []}
+--- run
+tools/mutants-survivors zz-mutants
+
+case: row-without-reason
+tool: run
+expect: the reason must start with its rule
+--- replace tools/kernel.toml
+set_at_s = false
+--- with
+set_at_s = true
+--- append MUTANTS-SURVIVORS.md
+| crates/tally/src/lib.rs | parse | replace parse -> Result<(), NotImplemented> with Ok(()) | equivalent |
+--- write zz-mutants/mutants.out/outcomes.json
+{"outcomes": [
+ {"scenario": {"Mutant": {"name": "crates/tally/src/lib.rs:18:5: replace parse -> Result<(), NotImplemented> with Ok(())",
+  "file": "crates/tally/src/lib.rs", "function": {"function_name": "parse"}}}, "summary": "MissedMutant"}
+]}
+--- run
+tools/mutants-survivors zz-mutants
+
+case: timeout-counts-as-survivor
+tool: run
+expect: (timed out) is not in MUTANTS-SURVIVORS.md (R-87)
+--- replace tools/kernel.toml
+set_at_s = false
+--- with
+set_at_s = true
+--- write zz-mutants/mutants.out/outcomes.json
+{"outcomes": [
+ {"scenario": {"Mutant": {"name": "crates/tally/src/lib.rs:18:5: replace parse -> Result<(), NotImplemented> with Ok(())",
+  "file": "crates/tally/src/lib.rs", "function": {"function_name": "parse"}}}, "summary": "Timeout"}
+]}
+--- run
+tools/mutants-survivors zz-mutants
+
+case: score-under-gate-8
+tool: run
+expect: is under DONE gate 8's 90 %
+--- replace tools/kernel.toml
+set_at_s = false
+--- with
+set_at_s = true
+--- append MUTANTS-SURVIVORS.md
+| crates/tally/src/lib.rs | parse | replace parse -> Result<(), NotImplemented> with Ok(()) | R-28: a planted row; one survivor in two is a score of 50 % |
+--- write zz-mutants/mutants.out/outcomes.json
+{"outcomes": [
+ {"scenario": {"Mutant": {"name": "crates/tally/src/lib.rs:18:5: replace parse -> Result<(), NotImplemented> with Ok(())",
+  "file": "crates/tally/src/lib.rs", "function": {"function_name": "parse"}}}, "summary": "MissedMutant"},
+ {"scenario": {"Mutant": {"name": "crates/tally/src/lib.rs:9:1: replace planted -> u8 with 0",
+  "file": "crates/tally/src/lib.rs", "function": {"function_name": "planted"}}}, "summary": "CaughtMutant"}
+]}
+--- run
+tools/mutants-survivors zz-mutants

@@ -1,7 +1,7 @@
 id: silent-default-literal
 language: rust
 severity: warning
-message: "R-27 (report): a missing value turned into a literal default; listed for review"
+message: 'R-27 (report): a missing value turned into a literal default; listed for review'
 rule:
   any:
     - pattern: $X.unwrap_or(0)

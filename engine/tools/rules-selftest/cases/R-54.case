@@ -1,0 +1,23 @@
+# R-54: permissive licences only.
+
+case: gpl
+tool: deny
+expect: rejected
+--- fake zz-gpl 0.0.1
+license = "GPL-3.0-only"
+--- replace crates/tally/Cargo.toml
+[dependencies]
+--- with
+[dependencies]
+zz-gpl = { path = "@FAKES@/zz-gpl-0.0.1", version = "0.0.1" }
+
+case: lgpl
+tool: deny
+expect: rejected
+--- fake zz-lgpl 0.0.1
+license = "LGPL-3.0-only"
+--- replace crates/tally/Cargo.toml
+[dependencies]
+--- with
+[dependencies]
+zz-lgpl = { path = "@FAKES@/zz-lgpl-0.0.1", version = "0.0.1" }

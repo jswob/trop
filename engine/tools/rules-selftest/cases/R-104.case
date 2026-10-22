@@ -1,0 +1,69 @@
+# R-104: every exception states its reason, "R-<n>: ...", 20 characters or more, without
+# the banned phrases.
+
+case: expect-without-reason
+tool: clippy
+expect: clippy::allow_attributes_without_reason
+--- module
+/// Planted.
+#[expect(clippy::needless_return)]
+pub fn planted() -> u8 {
+    return 1;
+}
+
+case: reason-without-rule-id
+tool: ast-grep
+expect: expect-needs-reason
+--- module
+/// Planted.
+#[expect(clippy::needless_return, reason = "a planted reason that names no rule")]
+pub fn planted() -> u8 {
+    return 1;
+}
+
+case: banned-phrase
+tool: run
+expect: its reason says 'for now'
+--- append tests/runner/src/lib.rs
+/// Planted.
+#[expect(clippy::needless_return, reason = "R-66: for now, until the builder writes it")]
+pub fn planted() -> u8 {
+    return 1;
+}
+--- run
+tools/exceptions --check
+
+case: short-reason
+tool: run
+expect: its reason is under 20 characters after the rule id
+--- append tests/runner/src/lib.rs
+/// Planted.
+#[expect(clippy::needless_return, reason = "R-66: planted")]
+pub fn planted() -> u8 {
+    return 1;
+}
+--- run
+tools/exceptions --check
+
+case: no-such-rule
+tool: run
+expect: its reason names R-999, which isn't a rule
+--- append tests/runner/src/lib.rs
+/// Planted.
+#[expect(clippy::needless_return, reason = "R-999: a planted reason naming no real rule")]
+pub fn planted() -> u8 {
+    return 1;
+}
+--- run
+tools/exceptions --check
+
+case: deny-skip-without-reason
+tool: run
+expect: it has no reason
+--- replace deny.toml
+skip = [
+--- with
+skip = [
+  { crate = "itoa@1" },
+--- run
+tools/exceptions --check

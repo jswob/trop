@@ -1,0 +1,12 @@
+# R-15: no loop without a way out.
+
+case: infinite-loop
+tool: clippy
+expect: clippy::infinite_loop
+--- module
+/// Planted.
+pub fn planted() {
+    loop {
+        core::hint::black_box(1_u8);
+    }
+}

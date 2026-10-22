@@ -11,6 +11,10 @@ mod tests {
     #[test]
     fn the_stub_answers_not_implemented() {
         let output = tally_cli::run(&[OsString::from("load")], b"");
-        assert_eq!(output.code, tally_cli::EXIT_NOT_IMPLEMENTED, "stub exit code");
+        assert_eq!(
+            output.code,
+            tally_cli::EXIT_NOT_IMPLEMENTED,
+            "stub exit code"
+        );
     }
 }

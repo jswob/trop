@@ -1,0 +1,8 @@
+# The kernel's files for DONE gate 8 (R-85). A rule file: the lead sets them at milestone
+# S from the builder's plan, then sets `set_at_s = true`. From then on check-rules fails
+# on a library file in neither list, and on .cargo/mutants.toml's examine_globs differing
+# from `kernel`.
+set_at_s = false
+# globs relative to engine/, such as "crates/tally/src/number/**"
+kernel = []
+protected_non_kernel = []

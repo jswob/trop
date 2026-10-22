@@ -9,6 +9,8 @@ publish.workspace = true
 [[bin]]
 name = "tally"
 path = "src/main.rs"
+# The library is also `tally`: one doc page each would collide, and the binary has no API
+doc = false
 
 [dependencies]
 tally = { workspace = true }

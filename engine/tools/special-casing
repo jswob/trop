@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# T's answers searched for in the engine's code (R-94); a report: engine/tools/special-casing
+d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)" || exit 1
+exec python3 -I -B "$d/special_casing.py" "$@"

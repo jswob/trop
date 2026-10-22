@@ -1,0 +1,33 @@
+# R-2: no unwrap or expect outside tests; tests may use them.
+
+case: unwrap
+tool: clippy
+expect: clippy::unwrap_used
+--- module
+/// Planted.
+pub fn planted(v: Option<u8>) -> u8 {
+    v.unwrap()
+}
+
+case: expect
+tool: clippy
+expect: clippy::expect_used
+--- module
+/// Planted.
+pub fn planted(v: Option<u8>) -> u8 {
+    v.expect("planted")
+}
+
+case: tests-may-unwrap
+tool: clippy-tests
+expect: pass
+--- module
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn planted() {
+        let v = core::hint::black_box(Some(1_u8));
+        assert_eq!(v.unwrap(), 1, "planted");
+        assert_eq!(v.expect("planted"), 1, "planted");
+    }
+}

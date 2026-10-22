@@ -1,1 +1,4 @@
 target/
+# cargo-mutants output (engine:mutants)
+mutants.out/
+mutants.out.old/
