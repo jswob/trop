@@ -1,0 +1,14 @@
+id: no-float
+language: rust
+severity: error
+message: "R-18: no floating point anywhere; numbers are exact rationals"
+note: "A float literal (1.5, 1e3), a float suffix (1f64) or a float type (f32, f64), in macros and cfg'd-off code too."
+rule:
+  any:
+    - kind: float_literal
+    - kind: integer_literal
+      regex: "f(32|64)$"
+    - kind: primitive_type
+      regex: "^f(32|64)$"
+    - kind: identifier
+      regex: "^f(32|64)$"

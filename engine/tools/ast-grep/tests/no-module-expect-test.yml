@@ -1,0 +1,8 @@
+id: no-module-expect
+valid:
+  - "#[expect(dead_code, reason = \"R-71: kept for the next milestone's test\")] fn f() {}"
+  - "#[cfg(test)] mod tests {}"
+invalid:
+  - "#![expect(clippy::indexing_slicing, reason = \"R-5: the whole lexer indexes by hand\")]"
+  - "#[expect(clippy::indexing_slicing, reason = \"R-5: the whole lexer indexes by hand\")] mod lexer;"
+  - "#[expect(clippy::indexing_slicing, reason = \"R-5: the whole lexer indexes by hand\")]\n#[cfg(test)]\nmod lexer {}"

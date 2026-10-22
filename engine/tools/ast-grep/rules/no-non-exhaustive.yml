@@ -1,0 +1,9 @@
+id: no-non-exhaustive
+language: rust
+severity: error
+message: "R-65: no #[non_exhaustive] on the engine's own types"
+rule:
+  any:
+    - kind: attribute_item
+    - kind: inner_attribute_item
+  regex: "non_exhaustive"

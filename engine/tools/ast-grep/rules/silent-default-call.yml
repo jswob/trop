@@ -1,0 +1,11 @@
+id: silent-default-call
+language: rust
+severity: warning
+message: "R-27 (report): a missing value turned into a type's default; listed for review"
+rule:
+  any:
+    - pattern: $X.unwrap_or(Default::default())
+    - pattern: $X.unwrap_or_else(Default::default)
+    - pattern: $X.unwrap_or_else($T::default)
+    - pattern: $X.unwrap_or($T::default())
+    - pattern: $X.or_default()

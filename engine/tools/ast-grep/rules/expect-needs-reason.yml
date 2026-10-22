@@ -1,0 +1,12 @@
+id: expect-needs-reason
+language: rust
+severity: error
+message: "R-104: every #[expect] states its reason: #[expect(lint, reason = \"R-n: ...\")]"
+rule:
+  all:
+    - any:
+        - kind: attribute_item
+        - kind: inner_attribute_item
+    - regex: "\\bexpect\\s*\\("
+    - not:
+        regex: "\\breason\\s*=\\s*\"R-[0-9]+: "

@@ -1,0 +1,18 @@
+id: no-module-expect
+language: rust
+severity: error
+message: "R-107: no exception covers a whole module, file or crate: no #![expect], no #[expect] on a mod"
+rule:
+  any:
+    - kind: inner_attribute_item
+      regex: "\\bexpect\\s*\\("
+    - kind: attribute_item
+      regex: "\\bexpect\\s*\\("
+      precedes:
+        kind: mod_item
+        stopBy:
+          not:
+            any:
+              - kind: attribute_item
+              - kind: line_comment
+              - kind: block_comment

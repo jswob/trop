@@ -1,0 +1,11 @@
+id: no-float
+valid:
+  - "fn f() -> i64 { let x: i64 = 15; x }"
+  - "fn f() { let y = 1u8; }"
+invalid:
+  - "fn f() { let x = 1.5; }"
+  - "fn f() { let x = 1e3; }"
+  - "fn f() { let x = 1f64; }"
+  - "fn f(x: f32) {}"
+  - "macro_rules! m { () => { 2.5 }; }"
+  - "#[cfg(windows)] fn f() -> f64 { todo() }"

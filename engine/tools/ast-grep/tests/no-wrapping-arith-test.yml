@@ -1,0 +1,8 @@
+id: no-wrapping-arith
+valid:
+  - "fn f(a: i64) -> Option<i64> { a.checked_add(1) }"
+invalid:
+  - "fn f(a: i64) -> i64 { a.wrapping_add(1) }"
+  - "fn f(a: u8) -> u8 { a.saturating_sub(1) }"
+  - "fn f(a: i64) -> (i64, bool) { a.overflowing_mul(2) }"
+  - "fn f(a: i64) -> i64 { i64::wrapping_neg(a) }"

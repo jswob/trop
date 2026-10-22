@@ -1,0 +1,6 @@
+id: disallowed-exception-outside-sanctioned-file
+valid:
+  - "#[expect(clippy::indexing_slicing, reason = \"R-5: the index is checked one line above\")] fn f() {}"
+invalid:
+  - "#[expect(clippy::disallowed_methods, reason = \"R-39: reads a file for the loader\")] fn f() {}"
+  - "#[expect(clippy::disallowed_types, reason = \"R-29: a big integer outside the kernel\")] fn f() {}"
