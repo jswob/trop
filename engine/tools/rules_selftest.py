@@ -752,8 +752,14 @@ def ci_problems():
     workflow = os.path.join(ROOT, ".github", "workflows", "engine.yml")
     if not os.path.isfile(workflow):
         problems.append("R-77: .github/workflows/engine.yml is missing")
-    elif "engine/tools/check full" not in open(workflow, encoding="utf-8").read():
-        problems.append("R-77: .github/workflows/engine.yml doesn't run `engine/tools/check full`")
+    else:
+        text = open(workflow, encoding="utf-8").read()
+        if "engine/tools/check full" not in text:
+            problems.append("R-77: .github/workflows/engine.yml doesn't run `engine/tools/check full`")
+        if not re.search(r"\n  pull_request:\n    branches: \[master, engine\]\n", text):
+            problems.append(
+                "R-77: .github/workflows/engine.yml doesn't run on pull requests into master and engine"
+            )
     return problems
 
 

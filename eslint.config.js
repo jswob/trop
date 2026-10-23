@@ -19,6 +19,8 @@ export default tseslint.config([
 			'.claude/',
 			'**/routeTree.gen.ts',
 			'apps/workbench/probe/out/',
+			// The engine is Rust; its only JavaScript is rustdoc's, under engine/target/
+			'engine/',
 		],
 	},
 	{

@@ -1,6 +1,6 @@
 # Phase 1: the scaffold report
 
-For the clean-side lead's audit (phase-1 brief §9). The phase-1 lead built the scaffold on 2026-10-22 and 2026-10-23 in the worktree `trop-engine-scaffold`, on branch `engine-scaffold`, off `engine`. Nothing was pushed. `engine/SCAFFOLD.md` describes what is set up; this report gives the evidence.
+For the clean-side lead's audit (phase-1 brief §9). The phase-1 lead built the scaffold on 2026-10-22 and 2026-10-23 in the worktree `trop-engine-scaffold`, on branch `engine-scaffold`, off `engine`. On 2026-10-23, at the user's request, `engine` (with the tags `tally-1.0` and `tally-1.0.1`) and `engine-scaffold` were pushed, and a pull request from `engine-scaffold` into `engine` was opened. `engine/SCAFFOLD.md` describes what is set up; this report gives the evidence.
 
 ## 1. What was built
 
@@ -9,7 +9,7 @@ For the clean-side lead's audit (phase-1 brief §9). The phase-1 lead built the 
 - **The instruments:** a fuzz workspace with the `parse` target and its regressions folder, a criterion stub, the cargo-mutants and nextest configs.
 - **The guard and its hooks:** PreToolUse, ConfigChange and Stop, wired in `.claude/settings.json`, with `guard-test`.
 - **The checks:** `check fast|full|step`, `check-frozen`, `check-rules`, the exception counter with its lock and budgets, `rules-selftest` (219 cases), `mutants-survivors`, and two reports (`advisory`, `special-casing`).
-- **CI:** `.github/workflows/engine.yml`. Every PR runs `check full`. Nightly jobs run mutants in four shards, then the survivors check, plus coverage, benchmarks, the reports, macOS and a 32-bit target. Advisories run daily, clippy on beta weekly, and the long fuzz runs by hand on the self-hosted Mac.
+- **CI:** `.github/workflows/engine.yml`. Every PR into `master` or `engine` runs `check full`. Nightly jobs run mutants in four shards, then the survivors check, plus coverage, benchmarks, the reports, macOS and a 32-bit target. Advisories run daily, clippy on beta weekly, and the long fuzz runs by hand on the self-hosted Mac.
 - **Root scripts:** `engine:check`, `engine:test`, `engine:spec-check`, `engine:fuzz`, `engine:mutants`, `engine:cov`, `engine:bench`. `engine` is added to `toolkit.agnostic.paths`.
 - **The docs:** `engine/SCAFFOLD.md`, this report, `engine/BUILD-LOG.md` with its STOP-REPORT template, and `engine/MUTANTS-SURVIVORS.md`.
 
@@ -217,7 +217,9 @@ $ bun engine:mutants      (2.8)                                           [exit 
 
 Section 2.12 is the final run.
 
-### 2.10 `bun lint` (C §7): fails in a built checkout, for a reason outside C's write list
+### 2.10 `bun lint` (C §7): passes, in a built checkout too, since the ignore lines of section 2.13
+
+Before the user's go, it failed in a built checkout:
 
 ```
 $ bun lint
@@ -225,17 +227,9 @@ $ bun lint
   0:0  error  Parsing error: … was not found by the project service. …
 ✖ 37 problems (37 errors, 0 warnings)
 [exit 1]
-
-$ bunx eslint . --report-unused-disable-directives --max-warnings 0 --ignore-pattern 'engine/target/'
-[exit 0]
-$ bun typecheck
-[exit 0]
-$ bun toolkit:check
-Every copy in .claude/ is its package's file, every patch is in order, nothing is linked, and Bun is pinned.
-[exit 0]
 ```
 
-All 37 errors are in JavaScript that rustdoc wrote under `engine/target/`. The root `eslint.config.js` doesn't ignore that folder, and it isn't on C's write list (SCAFFOLD.md §8, item 2). A clone without a build passes.
+All 37 errors were in JavaScript that rustdoc wrote under `engine/target/`, which the root `eslint.config.js` didn't ignore (SCAFFOLD.md §8, item 2). Section 2.13 has the run after the fix.
 
 **`toolkit.agnostic` with `engine`** (C §6: "check that `bun toolkit check` handles a path that isn't a package"): it does. The word check lists files with `git ls-files -- <paths>`, which works on any folder; built output is gitignored, so it isn't listed. A throwaway repo with `paths: ["engine"]` and `words: ["tropek"]` reported the planted word:
 
@@ -297,7 +291,48 @@ $ actionlint .github/workflows/engine.yml
 [exit 0]
 ```
 
-## 3. The user's answers at both gates
+### 2.13 After the build: the ignore lines and CI on `engine` (2026-10-23)
+
+The user answered open questions 1 and 2 yes (section 3). The change, in one commit on top of the build:
+
+- **`eslint.config.js`:** `'engine/'` in `ignores`.
+- **`.prettierignore`:** `engine/target/`, `engine/fuzz/target/`, `engine/mutants.out/` and `engine/mutants.out.old/`. The question named the first two. The run showed cargo-mutants' two output folders failing Prettier the same way, so they were added too.
+- **`.github/workflows/engine.yml`:** `branches: [master, engine]`. The workflow is a rule file, so this went through R-112: the approval is dated in R-77's rulebook row, the map entry for R-77 in SCAFFOLD.md names both branches, and `RULES.sha256` was rewritten last.
+- **`rules_selftest.py`:** R-77's check also fails when the trigger doesn't name both branches. Proof that the check fires, run against the real workflow and against one with `[master]` planted:
+
+```
+real: []
+planted: ["R-77: .github/workflows/engine.yml doesn't run on pull requests into master and engine"]
+```
+
+The run:
+
+```
+$ (cd engine && tools/check-frozen --write-rules)
+check-frozen: wrote engine/tools/RULES.sha256 (149 files)
+ engine/tools/RULES.sha256 | 4 ++--
+$ bun engine:check
+check full: green, 24 steps (132s)
+[exit 0]
+$ (cd engine && tools/check-frozen)
+check-frozen: spec, tag and rules unchanged
+[exit 0]
+$ actionlint .github/workflows/engine.yml
+[exit 0]
+$ bun lint        (engine/target/doc present)
+Every copy in .claude/ is its package's file, every patch is in order, nothing is linked, and Bun is pinned.
+[exit 0]
+$ bunx prettier --check .
+[warn] .claude/skills/react-frontend-best-practices/STATE.md
+[warn] packages/drizzle-fixtures/docs/index.md
+[warn] packages/drizzle-fixtures/docs/traits.md
+[warn] packages/toolkit/claude/skills/react-frontend-best-practices/STATE.md
+[exit 1]
+```
+
+The four files Prettier still flags are outside `engine/` and fail on `master` too. They were there before this work and are left alone.
+
+## 3. The user's answers at both gates, and after
 
 **Gate 1, the rulebook (2026-10-22).** The user answered group by group. Each of the 113 rows holds its answer, dated, in `tmp/research_notes/engine-rust-strictness/RULEBOOK.md`. Their words:
 
@@ -322,12 +357,14 @@ $ actionlint .github/workflows/engine.yml
 
 The self-hosted runner agent waits until the user fetches a registration token from GitHub.
 
+**After the build (2026-10-23): "#1 -> yes, #2 -> yes"**, to open questions 1 and 2 (section 2.13), then "Also afterwards we should open PR with these changes".
+
 ## 4. Deviations
 
 **From C:** `engine/SCAFFOLD.md` §8 lists all 27, each with its reason. The ones an auditor should weigh first:
 
 - the counter prints 5, not 0 (item 1);
-- `bun lint` fails in a built checkout (item 2);
+- the ignore lines in two files outside C's write list, added with the user's go (item 2);
 - C's cargo-deny command was wrong (item 3);
 - the cargo-mutants baseline workaround and its explicit timeouts (item 4);
 - the four checks added where a tool turned out blind (items 5 to 8).
@@ -336,16 +373,16 @@ The self-hosted runner agent waits until the user fetches a registration token f
 
 1. **§8, "the exception counter prints 0":** it prints 5. The reason is above.
 2. **§7.3, `engine/tools/rules-selftest`:** it is a directory, holding `run` and `cases/`, because one file per rule keeps 219 cases reviewable.
-3. **§8, "everything in C §7":** `bun lint` passes only where the engine hasn't been built (section 2.10).
+3. **§8, "everything in C §7":** `bun lint` passed only where the engine hadn't been built, until the user approved the ignore lines. It passes everywhere now (sections 2.10 and 2.13).
 
 ## 5. Open questions
 
-1. **Two ignore lines outside C's write list.** Add `'engine/'` to `eslint.config.js`'s `ignores` and `engine/target/` and `engine/fuzz/target/` to `.prettierignore`? This is what makes `bun lint` pass in a built checkout. It needs the user's go.
-2. **CI on the `engine` branch.** `engine.yml` runs on pull requests into `master`, as `ci.yml` does. Work merged into the long-lived `engine` branch (this branch included) runs no engine CI until a pull request into `master`. Should pull requests into `engine` run it too? That is a one-line change to the `branches:` list.
+1. **Two ignore lines outside C's write list.** Answered yes (2026-10-23) and done, with cargo-mutants' two output folders added to `.prettierignore` too (section 2.13).
+2. **CI on the `engine` branch.** Answered yes (2026-10-23). `engine.yml` now runs on pull requests into `master` and `engine` (section 2.13).
 3. **The CLI's exception budget, 3, is full at the scaffold.** Any further I/O in the CLI needs a budget raise through R-112.
 4. **A rule change and its checksum are committed together** (R-112), so the checksums can't catch a `rules`-role commit. The wall for those is the user's dated approval, plus the audit reading every such commit. Is that enough?
 5. **The tripwire can't see what an interpreter's script writes.** The checksums catch it at the next `check fast`, which the Stop hook runs on every build turn, and on CI. Is that acceptable, or should the build role refuse interpreters outright? Refusing them would also refuse the builder's own scripts.
-6. **Merging.** The build sits in the worktree C §2 rule 3 asks for, `/Users/jswob/projects/trop-engine-scaffold`, on `engine-scaffold`. The user asked why it isn't in the monorepo: it is, on a branch of its own. After the audit, `engine-scaffold` merges into `engine`. The user's uncommitted files in the main checkout (`apps/workbench/BANS.md`, `apps/workbench/DEFINITION.md`, `playground.md`) were never touched.
+6. **Merging.** The build sits in the worktree C §2 rule 3 asks for, `/Users/jswob/projects/trop-engine-scaffold`, on `engine-scaffold`. The user asked why it isn't in the monorepo: it is, on a branch of its own. After the audit, `engine-scaffold` merges into `engine`, through the pull request opened on 2026-10-23. The user's uncommitted files in the main checkout (`apps/workbench/BANS.md`, `apps/workbench/DEFINITION.md`, `playground.md`) were never touched.
 7. **Gate 8's survivor rule (SO-28 below).** `MUTANTS-SURVIVORS.md` asks every survivor for a reason naming a rule. DONE says the reason must be that the mutant is equivalent. Is a survivor that isn't equivalent allowed within the 10 %?
 
 ## 6. Spec observations (not fixed; brief §2 rule 2)

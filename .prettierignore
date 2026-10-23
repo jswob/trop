@@ -12,3 +12,8 @@ skills-lock.json
 .claude/skills/skill-creator/
 # The frozen engine spec: its bytes are checksummed, never reformatted
 engine/spec/
+# The engine's build and mutation-testing output
+engine/target/
+engine/fuzz/target/
+engine/mutants.out/
+engine/mutants.out.old/

@@ -7,7 +7,7 @@ name: Engine
 
 on:
   pull_request:
-    branches: [master]
+    branches: [master, engine]
     paths:
       - 'engine/**'
       - '.github/workflows/engine.yml'
