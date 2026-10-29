@@ -13,3 +13,5 @@ skills-lock.json
 # The frozen engine spec and its reference interpreter: their bytes are checksummed, never reformatted
 engine/spec/
 engine/tools/refcore/
+# The test suite: keys hashed in MANIFEST.sha256, baselines, texts; exact records, never reformatted
+engine/tests/
