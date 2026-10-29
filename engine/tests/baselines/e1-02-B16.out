@@ -21460,11 +21460,11 @@ tx2_worth: (421 860.35 DUK + -1 × ?"Were this month's contributions, health con
   left out: vat_pay, 1 instances, first 2029-01-25
   held: fx_mid = 4.2307 DUK/FLR (fx_2025_12_31), read for 2025-12-31
   law date 2025-12-31, cut 2026-01-15
-tx2_cis_explain: ?"date within one_of([2027-04-05, 2027-04-12, 2027-04-19, 2027-04-26]) not precise enough for is_business(bdays_due[m], holidays)" (holidays)
+tx2_cis_explain: 786.87 DUK
   balance of cis (DUK) at the end of 2025-12-31
-  from: anchor cis_2025_12:stated[cis] = 786.87 DUK, 2025-12-30 end (version cis_2025_12, source cis_export, locator "cis-5521-3380-0001-2025-12.csv line 41 Balance"), gap role anchor, gap ?"date within one_of([2027-04-05, 2027-04-12, 2027-04-19, 2027-04-26]) not precise enough for is_business(bdays_due[m], holidays)" (holidays)
+  from: anchor cis_2025_12:stated[cis] = 786.87 DUK, 2025-12-30 end (version cis_2025_12, source cis_export, locator "cis-5521-3380-0001-2025-12.csv line 41 Balance"), gap role anchor, gap 0.00 DUK
   no movement
-  anchor: cis 2025-12-30 end, stated 786.87 DUK, difference ?"date within one_of([2027-04-05, 2027-04-12, 2027-04-19, 2027-04-26]) not precise enough for is_business(bdays_due[m], holidays)" (holidays)
+  anchor: cis 2025-12-30 end, stated 786.87 DUK, difference 0.00 DUK
   left out: health_pay, 1 instances, first 2029-01-22
   left out: health_settle_pay, 1 instances, first 2029-04-20
   left out: pit_pay, 1 instances, first 2029-01-22

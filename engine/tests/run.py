@@ -7,7 +7,7 @@ with its stored baseline. Form only: it runs and compares; it never explains a d
                                       [--budget S] [--force] [--list] [--interp refcore|fast|both] [--verify N]
     python3 -I -B engine/tests/run.py --self-test
     python3 -I -B engine/tests/run.py --tables     -> reports/before-after.md, over-budget.md (from results/pypy.tsv)
-    python3 -I -B engine/tests/run.py --adhoc [--cwd DIR] -- run <files> [--ask a ...]   one 60 s PyPy run, logged
+    python3 -I -B engine/tests/run.py --adhoc [--cwd DIR] -- run <files> [--ask a ...]   one 90 s PyPy run, logged
 
 - Paths (4.5f): every path in checks.tsv is relative to the repository root, which run.py finds from its own place,
   so the suite runs from any checkout. A check runs in its `cwd`, and its files are passed relative to that cwd, so
@@ -15,8 +15,10 @@ with its stored baseline. Form only: it runs and compares; it never explains a d
 
 - Selection: id globs (fnmatch) and/or layers; none selects every check. Rows whose note starts `not-run:` (runs on
   load/benchmarks.md) are never run; they are counted as not run with their reason.
-- Budget: 60 s per run (the user's rule). Past it the run is killed and recorded as `over`; an `over` is cached like
-  any result, so it is not rerun (unless --force or a larger --budget).
+- Budget (the user's rule, 4.5f): 90 s per run, hard. Past it the run is killed and recorded as `over`; an `over` is
+  cached like any result, so it is not rerun (unless --force or a larger --budget). 60 s is the soft line: a check
+  that passes it is counted `slow`, and one over 60 s in 3 uncached runs in a row is listed after the table as a
+  candidate to move to load or to cut down (results/<variant>.tsv, column slow_runs).
 - The cache (cache/<key>.json: output, seconds, rc) is keyed by sha256 over: the runtime and its version; the refcore
   tree (its lines of engine/tools/SHA256SUMS, checked against the files at start); each input file's path (repository-
   relative) and bytes in run order; the asks; the options, the mode and the cwd (repository-relative). A hit is reported `cached` and not rerun.
@@ -59,6 +61,9 @@ SUMS = ROOT + 'engine/tools/SHA256SUMS'
 PY = {'pypy': os.path.expanduser('~/.local/share/uv/python/pypy-3.11.13-macos-aarch64-none/bin/pypy3.11'),
       'cpython': ROOT + 'engine/tools/parsecheck/.venv/bin/python'}  # the python the snap16 baselines ran on
 MAX_JOBS = 4
+BUDGET = 90.0  # the hard budget per run (the user's rule, 4.5f; 60 s before)
+SLOW = 60.0  # the soft line: a check past it is slow
+SLOW_RUNS = 3  # slow in this many uncached runs in a row: a candidate for load or reduction
 TESTS_LINE = '950 tests, 950 passed, 0 failed'
 LAYERS = ('interpreter', 'unit', 'integration')
 LEFT_OUT = re.compile(r'^\s+left out: ')
@@ -304,7 +309,15 @@ def input_age(c):
 
 # -- a session -------------------------------------------------------------------------------------------------------
 
-RES_COLS = ['id', 'layer', 'runtime', 'verdict', 'seconds', 'rc', 'cached', 'budget', 'detail', 'when']
+RES_COLS = ['id', 'layer', 'runtime', 'verdict', 'seconds', 'rc', 'cached', 'budget', 'detail', 'when', 'slow_runs']
+
+
+def slow_runs(prev, row):
+    """The uncached runs in a row past SLOW, this one included: a cached result keeps the count, a run under resets it."""
+    n = int(prev.get('slow_runs') or 0) if prev else 0
+    if row['cached']:
+        return n
+    return n + 1 if row['verdict'] not in ('over', 'killed') and float(row['seconds']) > SLOW else 0
 
 
 WATCHDOG = re.compile(r'(^|[\s/])engine/tests/tools/memcap\.py(\s|$)')
@@ -338,6 +351,8 @@ def save_results(rt, rows):
     if os.path.exists(path):
         with open(path, encoding='utf-8', newline='') as f:
             old = {r['id']: r for r in csv.DictReader(f, delimiter='\t', quoting=csv.QUOTE_NONE)}
+    for r in rows:
+        r['slow_runs'] = slow_runs(old.get(r['id']), r)
     old.update({r['id']: r for r in rows})
     os.makedirs(T + 'results', exist_ok=True)
     with open(path + '.tmp', 'w', encoding='utf-8') as f:
@@ -345,6 +360,7 @@ def save_results(rt, rows):
         for r in sorted(old.values(), key=lambda r: r['id']):
             f.write('\t'.join(str(r.get(k, '')).replace('\t', ' ').replace('\n', ' ') for k in RES_COLS) + '\n')
     os.replace(path + '.tmp', path)
+    return old
 
 
 def verdict_of(c, e, checks):
@@ -382,12 +398,13 @@ def session(sel, checks, runtimes, jobs, budget, force, cache_dir=T + 'cache', o
             res = list(ex.map(lambda w: (w[0], w[1], run_one(w[0], own_variant(w[0], w[1]), budget, force, rc_hash,
                                                                cache_dir)), work))
         wall = time.time() - t0
-        counts = {rt: dict.fromkeys(VERDICTS + ('cached', 'both-differ'), 0) for rt in runtimes}
+        counts = {rt: dict.fromkeys(VERDICTS + ('cached', 'both-differ', 'slow'), 0) for rt in runtimes}
         outs = {}
         for c, rt, e in res:
             v, d = verdict_of(c, e, checks)
             counts[rt][v] += 1
             counts[rt]['cached'] += e['cached']
+            counts[rt]['slow'] += v not in ('over', 'killed') and e['seconds'] > SLOW
             outs[(c['id'], rt)] = e
             if v in ('differ', 'error', 'killed', 'fixed', 'ran'):
                 od = os.path.join(out_dir, rt)
@@ -410,19 +427,25 @@ def session(sel, checks, runtimes, jobs, budget, force, cache_dir=T + 'cache', o
                         print('BOTH-DIFFER %s: %s' % (c['id'], first_diff(a['out'], b['out'])))
         for rt in runtimes:
             k = counts[rt]
-            table.append((layer, rt, len(cs), k['same'], k['differ'], k['over'], k['killed'], k['known'], k['fixed'],
+            table.append((layer, rt, len(cs), k['same'], k['differ'], k['over'], k['slow'], k['killed'], k['known'], k['fixed'],
                           k['ran'], k['cached'], len(skipped),
                           wall, k['both-differ'] if len(runtimes) == 2 and rt == runtimes[0] else ''))
+    candidates = []
     if save:
         for rt in runtimes:
-            save_results(rt, rows_by_rt[rt])
-    lines = ['| layer | runtime | checks | same | differ | over | killed | known fault | fixed | ran (J marks) | cached '
-             '| not run | wall s | %s |' % '≠'.join(runtimes if len(runtimes) == 2 else ['pypy', 'cpython']), '|---|---|---|---|---|---|---|---|---|---|---|---|---|---|']
+            allr = save_results(rt, rows_by_rt[rt])
+            candidates += ['%s (%s)' % (i, rt) for i, r in sorted(allr.items()) if int(r.get('slow_runs') or 0) >= SLOW_RUNS]
+    lines = ['| layer | runtime | checks | same | differ | over | slow (> %g s) | killed | known fault | fixed | ran (J marks) '
+             '| cached | not run | wall s | %s |' % (SLOW, '≠'.join(runtimes if len(runtimes) == 2 else ['pypy', 'cpython'])),
+             '|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|']
     for r in table:
-        lines.append('| %s | %s | %d | %d | %d | %d | %d | %d | %d | %d | %d | %d | %.0f | %s |' % r)
+        lines.append('| %s | %s | %d | %d | %d | %d | %d | %d | %d | %d | %d | %d | %d | %.0f | %s |' % r)
     lines.append('')
     lines.append('total wall %.0f s, %s, budget %g s, jobs %d' % (time.time() - t_all, time.strftime('%Y-%m-%d %H:%M'),
                                                                    budget, jobs))
+    if candidates:
+        lines.append('candidates for load or reduction (over %g s in %d uncached runs in a row): %s' % (
+            SLOW, SLOW_RUNS, ' '.join(candidates)))
     if not quiet:
         print('\n'.join(lines))
     return table, rows_by_rt, lines
@@ -454,7 +477,7 @@ def self_test(checks):
         by = {c['id']: c for c in checks}
         fast = dict(by['U:num/NUM-02'])
         cache = os.path.join(tmp, 'cache')
-        kw = dict(runtimes=['pypy'], jobs=1, budget=60, force=False, cache_dir=cache, out_dir=os.path.join(tmp, 'out'),
+        kw = dict(runtimes=['pypy'], jobs=1, budget=BUDGET, force=False, cache_dir=cache, out_dir=os.path.join(tmp, 'out'),
                   quiet=True, save=False)
         # the check itself is same against its true baseline
         _, r, _ = session([fast], checks, **kw)
@@ -522,6 +545,14 @@ def self_test(checks):
         _, r2, _ = session([law], checks, **dict(kw, runtimes=['pypy+fast+v1']))
         say(e['verdict'] == 'differ' and e['rc'] == 70 and r2['pypy+fast+v1'][0]['verdict'] == 'same',
             'a planted key omission is caught by --verify 1 on LAW-03 (exit 70), and LAW-03 passes without it')
+        # 7b. the soft line (4.5f): uncached runs past SLOW count up, a cached result keeps the count, a run under resets
+        rows, n = [], None
+        for cached, sec, v in (('', 70, 'same'), ('', 61, 'differ'), ('cached', 10, 'same'), ('', 65, 'same'),
+                               ('', 95, 'over'), ('', 20, 'same')):
+            n = slow_runs({'slow_runs': n} if n is not None else None, {'cached': cached, 'seconds': sec, 'verdict': v})
+            rows.append(n)
+        say(rows == [1, 2, 2, 3, 0, 0] and BUDGET == 90 and SLOW == 60,
+            'the budget is 90 s; a check over 60 s in 3 uncached runs in a row is a candidate (%s)' % rows)
         # 8. the examples' lint (4.5f, TESTING.md §9)
         p = subprocess.run([sys.executable, '-I', '-B', T + 'map/examples.py'], capture_output=True, text=True)
         say(p.returncode == 0, 'examples.tsv: ' + (p.stdout.strip().split('\n')[-1] if p.stdout.strip() else p.stderr[-200:]))
@@ -687,7 +718,7 @@ def tables(checks):
 # -- main ------------------------------------------------------------------------------------------------------------
 
 def adhoc(argv):
-    """--adhoc [--cwd DIR] -- <refcore args>: one run of the frozen refcore on PyPy, 60 s, for a writer or the judge
+    """--adhoc [--cwd DIR] -- <refcore args>: one run of the frozen refcore on PyPy, 90 s, for a writer or the judge
     (4.5c). Prints the output and a '# ' line with rc and seconds (or 'over 60 s'); appends a line to adhoc.log.
     Nothing is cached or recorded in results/."""
     cwd = os.getcwd()
@@ -705,7 +736,7 @@ def adhoc(argv):
     p = subprocess.Popen([PY['pypy'], '-I', '-B', RC] + args, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                          env=env, start_new_session=True)
     try:
-        out, err = p.communicate(timeout=60.0)
+        out, err = p.communicate(timeout=BUDGET)
         res = 'rc %s, %.1f s' % (p.returncode, time.time() - t0)
         sys.stdout.write(text(out) + text(err))
     except subprocess.TimeoutExpired:
@@ -714,7 +745,7 @@ def adhoc(argv):
         except (ProcessLookupError, PermissionError):  # the group already gone (macOS answers EPERM)
             pass
         p.communicate()
-        res = 'over 60 s (killed, nothing printed)'
+        res = 'over %g s (killed, nothing printed)' % BUDGET
     print('# ' + res)
     with open(T + 'reports/adhoc.log', 'a', encoding='utf-8') as f:
         f.write('%s\t%s\t%s\t%s\n' % (time.strftime('%Y-%m-%d %H:%M:%S'), cwd, ' '.join(args), res))
@@ -742,7 +773,7 @@ def main(argv):
     if '--tables' in argv:
         tables(checks)
         return 0
-    globs, layers, rt, jobs, budget, interp, verify = [], [], 'pypy', MAX_JOBS, 60.0, 'fast', 0
+    globs, layers, rt, jobs, budget, interp, verify = [], [], 'pypy', MAX_JOBS, BUDGET, 'fast', 0
     i = 0
     while i < len(argv):
         a = argv[i]
