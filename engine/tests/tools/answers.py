@@ -4,7 +4,9 @@ It computes nothing. It finds the printed line a map names, takes the value at t
 printed form into compare.py's form:
 - `1 234.56 DUK` -> the number 1234.56 (spaces between digit groups dropped, the unit dropped);
 - an exact rational printed with its decimal, `443566/15 (29 571.0666666667) DUK` -> the decimal shown (4.5f, I-2);
-- `true` / `false` -> the boolean (4.5f, I-1); a check ask's `ok` stays text, a read line for the judge;
+- `true` / `false` -> the boolean (4.5f, I-1);
+- a check ask's line (L §5.18's table, `check e == f`): `ok` -> true, `differs: e = …, f = …` -> false (session 5r);
+  a check with a hole or a refused side prints no verdict and is read as the hole or the refusal, below;
 - `2047-08-05` -> the date string; any other word or text -> the text, verbatim;
 - `X DUK (standard error S; N paths; ...)` -> {"value": X, "se": S}, compare.py's random form;
 - `X DUK (standard error none; 1 paths; ...)`, a one-path mean -> the plain value X (4.5f, I-2); `none` on more than
@@ -142,6 +144,10 @@ def value(s, neg=False):
     sign = Decimal(-1) if neg else Decimal(1)
     if s.startswith('refused: '):
         return {'kind': 'refusal', 'missing': [s]}
+    if s == 'ok' or s.startswith('differs: '):
+        if neg:
+            raise Refuse('"neg" on a check verdict: %r' % s[:120])
+        return s == 'ok'
     t = outer_tuple(s)
     if t is not None:
         return [value(x, neg) for x in t]
@@ -355,7 +361,16 @@ def stored():
           '[px_round = *]", "at": 3}, "lot4": {"from": "a13_b_lots (s = a13b_sale, g = kbank[k20230912_04]) [px_round = *]", '
           '"at": 3}, "within": {"from": "b_fixed_point", "at": 2}, "ok": {"from": "a_closed_form_agrees"}}\n```')
     a = json.loads(re.search(r'answer: (.*)', build(mp, [a4, l1])).group(1))
-    assert a == {'lot3': False, 'lot4': True, 'within': True, 'ok': 'ok'}, a
+    assert a == {'lot3': False, 'lot4': True, 'within': True, 'ok': True}, a
+    # session 5r: a check ask's verdict into a key's true/false slot, from LAW-20's stored output (its key
+    # engine/tests/cases/keys/probes/LAW-20.md: a.closed_form_agrees true), and the failure form of L §5.18's table
+    l1a = json.loads(re.search(r'answer: (.*)', build(
+        '```yaml\nquestion: P-LAW-20\nanswer: {"a": {"closed_form_agrees": {"from": "a_closed_form_agrees"}, '
+        '"deduction_agrees": {"from": "a_closed_form_deduction"}}}\n```', [l1])).group(1))
+    assert l1a == {'a': {'closed_form_agrees': True, 'deduction_agrees': True}}, l1a
+    assert value('differs: credit = 5 040.00 DUK, closed = 5 039.00 DUK, difference 1.00 DUK') is False
+    assert value('differs: why = "a?", because = "b"') is False
+    assert value('credit = 5 040.00 DUK, closed = ?"the rate" (r)') == {'kind': 'refusal', 'missing': ['"the rate" (r)']}
     for bad in ('{"x": {"from": "b_fixed_point", "at": 2, "neg": true}}',):
         try:
             build('```yaml\nquestion: T-05\nanswer: %s\n```' % bad, [l1])
