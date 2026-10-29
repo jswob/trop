@@ -3,8 +3,12 @@
 It computes nothing. It finds the printed line a map names, takes the value at the named place, and turns the
 printed form into compare.py's form:
 - `1 234.56 DUK` -> the number 1234.56 (spaces between digit groups dropped, the unit dropped);
+- an exact rational printed with its decimal, `443566/15 (29 571.0666666667) DUK` -> the decimal shown (4.5f, I-2);
+- `true` / `false` -> the boolean (4.5f, I-1); a check ask's `ok` stays text, a read line for the judge;
 - `2047-08-05` -> the date string; any other word or text -> the text, verbatim;
 - `X DUK (standard error S; N paths; ...)` -> {"value": X, "se": S}, compare.py's random form;
+- `X DUK (standard error none; 1 paths; ...)`, a one-path mean -> the plain value X (4.5f, I-2); `none` on more than
+  one path is refused;
 - a value with holes and one known term (`142 786.33 DUK + -1 x ?"..." (place) + ...`) ->
   {"kind": "partial", "value": the known term, "missing": [...]};
 - a value of holes only (`?"..." (place) ?"..." (place)`) -> {"kind": "refusal", "missing": [...]};
@@ -37,7 +41,7 @@ It refuses (exit 2, nothing written) when a named head isn't printed, a place is
 head differently with no "run" given, a template holds a literal number, or a printed value can't be read.
 
 Usage: python3 -I -B answers.py --map MAP.md --runs OUT ... --out ANSWERS.md
-       python3 -I -B answers.py --self-test
+       python3 -I -B answers.py --self-test     (also the I-1/I-2 forms on stored outputs, answers-tests/)
 """
 import json
 import pathlib
@@ -47,7 +51,8 @@ from decimal import Decimal
 
 NUM = re.compile(r'^(-?(?:\d{1,3}(?: \d{3})+|\d+)(?:\.\d+)?)(?: ([^\s(][^\s]*))?$')
 DATE = re.compile(r'^\d{4}-\d{2}-\d{2}$')
-RANDOM = re.compile(r'^(.*?) \(standard error (-?[\d .]+?); ([^)]*)\)$')
+FRAC = re.compile(r'^-?\d+/\d+ \((-?[\d .]+)\)(?: ([^\s(][^\s]*))?$')
+RANDOM = re.compile(r'^(.*?) \(standard error (-?[\d .]+?|none); ([^)]*)\)$')
 HOLE = re.compile(r'\?(?:"((?:[^"\\]|\\.)*)"|([A-Z][A-Z0-9_]*))(?:\s*\(((?:[^()]|\([^()]*\))*)\))?')
 KINDS = ('by-case', 'partial', 'refusal', 'random')
 
@@ -113,7 +118,8 @@ def outer_tuple(s):
 def number(s):
     m = NUM.match(s.strip())
     if not m:
-        return None
+        f = FRAC.match(s.strip())  # N/D (d) UNIT: the decimal shown
+        return number(f.group(1)) if f else None
     return Decimal(m.group(1).replace(' ', ''))
 
 
@@ -141,6 +147,10 @@ def value(s, neg=False):
         return [value(x, neg) for x in t]
     m = RANDOM.match(s)
     if m and number(m.group(1)) is not None:
+        if m.group(2) == 'none':
+            if not re.match(r'1 paths(;|$)', m.group(3)):
+                raise Refuse('standard error none on more than one path: %r' % s[:120])
+            return sign * number(m.group(1))
         se = number(m.group(2))
         if se is None:
             raise Refuse('unreadable standard error: %r' % s[:120])
@@ -156,6 +166,8 @@ def value(s, neg=False):
     n = number(s)
     if n is not None:
         return sign * n
+    if s in ('true', 'false') and not neg:
+        return s == 'true'
     if neg:
         raise Refuse('"neg" on a value that is not a number: %r' % s[:120])
     return s
@@ -263,7 +275,7 @@ def build(map_text, run_paths):
         except Refuse as e:
             raise Refuse('%s: %s' % (q, e))
         blocks.append('```yaml\n' + '\n'.join(lines) + '\n```')
-    return '# Answers\n\nWritten by `tmp/session5/tools/answers.py` from the runs %s; don\'t edit.\n\n' % (
+    return '# Answers\n\nWritten by `engine/tests/tools/answers.py` from the runs %s; don\'t edit.\n\n' % (
         ', '.join('`%s`' % pathlib.Path(p).name for p in run_paths)) + '\n\n'.join(blocks) + '\n'
 
 
@@ -321,7 +333,40 @@ def self_test():
         except Refuse:
             pass
         assert '2047-08-06' in build('```yaml\nquestion: T-03\nanswer: {"x": {"from": "b05_last", "at": 0, "run": "r2.out"}}\n```', [str(rp), str(rp2)])
-    print('answers.py self-test: pass (12 forms copied, 5 refusals)')
+    stored()
+    print('answers.py self-test: pass (12 forms copied, 5 refusals; the I-1 and I-2 forms on stored outputs)')
+
+
+def stored():
+    """I-1 and I-2 (4.5f) on real stored outputs, copied as they were judged (baselines/4.5c/, 2026-10-29) into
+    answers-tests/ so a later re-recording can't move the test. I-2's oracle is J's hand copy of
+    B-12's two K5 tax lines (answers-tests/B-12-k5.J-copy.md, transcription only): the bridge must write its answer
+    line, byte for byte, from J's own slot map (answers-tests/B-12-k5.md)."""
+    here = pathlib.Path(__file__).resolve().parent
+    base = here / 'answers-tests'
+    j = (here / 'answers-tests' / 'B-12-k5.J-copy.md').read_text(encoding='utf-8')
+    out = build((here / 'answers-tests' / 'B-12-k5.md').read_text(encoding='utf-8'),
+                [str(base / 'I_B_b12_tax@k5.out'), str(base / 'I_B_b12_zero_tax@k5.out')])
+    want = re.search(r'^answer: .*$', j, re.M).group(0)
+    got = re.search(r'^answer: .*$', out, re.M).group(0)
+    assert got == want, (got, want)
+    a4, l1 = str(base / 'I_A_A-13~A4.out'), str(base / 'U_law__LAW-20~L1.out')
+    mp = ('```yaml\nquestion: T-04\nanswer: {"lot3": {"from": "a13_b_lots (s = a13b_sale, g = kbank[k20230912_03]) '
+          '[px_round = *]", "at": 3}, "lot4": {"from": "a13_b_lots (s = a13b_sale, g = kbank[k20230912_04]) [px_round = *]", '
+          '"at": 3}, "within": {"from": "b_fixed_point", "at": 2}, "ok": {"from": "a_closed_form_agrees"}}\n```')
+    a = json.loads(re.search(r'answer: (.*)', build(mp, [a4, l1])).group(1))
+    assert a == {'lot3': False, 'lot4': True, 'within': True, 'ok': 'ok'}, a
+    for bad in ('{"x": {"from": "b_fixed_point", "at": 2, "neg": true}}',):
+        try:
+            build('```yaml\nquestion: T-05\nanswer: %s\n```' % bad, [l1])
+        except Refuse:
+            continue
+        raise AssertionError('not refused: ' + bad)
+    try:
+        value('5 DUK (standard error none; 2 paths; horizon none)')
+        raise AssertionError('se none on 2 paths not refused')
+    except Refuse:
+        pass
 
 
 def main(argv):
