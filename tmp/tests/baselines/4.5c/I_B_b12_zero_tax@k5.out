@@ -1,0 +1,152 @@
+b12_zero_tax: 22 013 DUK (standard error none; 1 paths; horizon none)
+  assumed: the story's forecast for 2026 – 2028, as seen on 2026-01-02 (story.md, The forecast) (fc_arnika_net, fc_from, fc_law_from)
+  assumed: the story's forecast joins the base's defs: its revenue and VAT (F1, F2), F7's law draw (flat_rate.drawn, rev_part.fc)
+  pinned sample: fc_arnika_delay[*] = 25
+  pinned sample: fc_law = 0
+  pinned sample: fc_nproj[*] = 0
+  world: no_overpay
+  held: biz_form = flat (form_notice), read for 2026-02-01
+  held: biz_form = flat (form_notice), read for 2026-03-01
+  held: biz_form = flat (form_notice), read for 2026-04-01
+  held: biz_form = flat (form_notice), read for 2026-05-01
+  held: biz_form = flat (form_notice), read for 2026-06-01
+  held: biz_form = flat (form_notice), read for 2026-07-01
+  held: biz_form = flat (form_notice), read for 2026-08-01
+  held: biz_form = flat (form_notice), read for 2026-09-01
+  held: biz_form = flat (form_notice), read for 2026-10-01
+  held: biz_form = flat (form_notice), read for 2026-11-01
+  held: biz_form = flat (form_notice), read for 2026-12-01
+  held: biz_form = flat (form_notice), read for 2027-01-01
+  held: pit10_adv_dom = 20 (pit10_figures), read for 2026-02-01
+  held: pit10_adv_dom = 20 (pit10_figures), read for 2026-03-01
+  held: pit10_adv_dom = 20 (pit10_figures), read for 2026-04-01
+  held: pit10_adv_dom = 20 (pit10_figures), read for 2026-05-01
+  held: pit10_adv_dom = 20 (pit10_figures), read for 2026-06-01
+  held: pit10_adv_dom = 20 (pit10_figures), read for 2026-07-01
+  held: pit10_adv_dom = 20 (pit10_figures), read for 2026-08-01
+  held: pit10_adv_dom = 20 (pit10_figures), read for 2026-09-01
+  held: pit10_adv_dom = 20 (pit10_figures), read for 2026-10-01
+  held: pit10_adv_dom = 20 (pit10_figures), read for 2026-11-01
+  held: pit10_adv_dom = 20 (pit10_figures), read for 2026-12-01
+  held: pit10_flat_rate[asset_sale] = 0.1 (pit10_v1), read for 2026-02-01
+  held: pit10_flat_rate[asset_sale] = 0.1 (pit10_v1), read for 2026-03-01
+  held: pit10_flat_rate[asset_sale] = 0.1 (pit10_v1), read for 2026-04-01
+  held: pit10_flat_rate[asset_sale] = 0.1 (pit10_v1), read for 2026-05-01
+  held: pit10_flat_rate[asset_sale] = 0.1 (pit10_v1), read for 2026-06-01
+  held: pit10_flat_rate[asset_sale] = 0.1 (pit10_v1), read for 2026-07-01
+  held: pit10_flat_rate[asset_sale] = 0.1 (pit10_v1), read for 2026-08-01
+  held: pit10_flat_rate[asset_sale] = 0.1 (pit10_v1), read for 2026-09-01
+  held: pit10_flat_rate[asset_sale] = 0.1 (pit10_v1), read for 2026-10-01
+  held: pit10_flat_rate[asset_sale] = 0.1 (pit10_v1), read for 2026-11-01
+  held: pit10_flat_rate[asset_sale] = 0.1 (pit10_v1), read for 2026-12-01
+  held: pit10_flat_rate[asset_sale] = 0.1 (pit10_v1), read for 2027-01-01
+  held: pit10_flat_rate[it] = 0.12 (pit10_v1), read for 2026-02-01
+  held: pit10_flat_rate[it] = 0.12 (pit10_v1), read for 2026-03-01
+  held: pit10_flat_rate[it] = 0.12 (pit10_v1), read for 2026-04-01
+  held: pit10_flat_rate[it] = 0.12 (pit10_v1), read for 2026-05-01
+  held: pit10_flat_rate[it] = 0.12 (pit10_v1), read for 2026-06-01
+  held: pit10_flat_rate[it] = 0.12 (pit10_v1), read for 2026-07-01
+  held: pit10_flat_rate[it] = 0.12 (pit10_v1), read for 2026-08-01
+  held: pit10_flat_rate[it] = 0.12 (pit10_v1), read for 2026-09-01
+  held: pit10_flat_rate[it] = 0.12 (pit10_v1), read for 2026-10-01
+  held: pit10_flat_rate[it] = 0.12 (pit10_v1), read for 2026-11-01
+  held: pit10_flat_rate[it] = 0.12 (pit10_v1), read for 2026-12-01
+  held: pit10_flat_rate[it] = 0.12 (pit10_v1), read for 2027-01-01
+  held: pit10_flat_rate[services] = 0.085 (pit10_v1), read for 2026-02-01
+  held: pit10_flat_rate[services] = 0.085 (pit10_v1), read for 2026-03-01
+  held: pit10_flat_rate[services] = 0.085 (pit10_v1), read for 2026-04-01
+  held: pit10_flat_rate[services] = 0.085 (pit10_v1), read for 2026-05-01
+  held: pit10_flat_rate[services] = 0.085 (pit10_v1), read for 2026-06-01
+  held: pit10_flat_rate[services] = 0.085 (pit10_v1), read for 2026-07-01
+  held: pit10_flat_rate[services] = 0.085 (pit10_v1), read for 2026-08-01
+  held: pit10_flat_rate[services] = 0.085 (pit10_v1), read for 2026-09-01
+  held: pit10_flat_rate[services] = 0.085 (pit10_v1), read for 2026-10-01
+  held: pit10_flat_rate[services] = 0.085 (pit10_v1), read for 2026-11-01
+  held: pit10_flat_rate[services] = 0.085 (pit10_v1), read for 2026-12-01
+  held: pit10_flat_rate[services] = 0.085 (pit10_v1), read for 2027-01-01
+  held: soc3_rate[accident] = 0.0167 (soc3_v1), read for 2026-02-01
+  held: soc3_rate[accident] = 0.0167 (soc3_v1), read for 2026-03-01
+  held: soc3_rate[accident] = 0.0167 (soc3_v1), read for 2026-04-01
+  held: soc3_rate[accident] = 0.0167 (soc3_v1), read for 2026-05-01
+  held: soc3_rate[accident] = 0.0167 (soc3_v1), read for 2026-06-01
+  held: soc3_rate[accident] = 0.0167 (soc3_v1), read for 2026-07-01
+  held: soc3_rate[accident] = 0.0167 (soc3_v1), read for 2026-08-01
+  held: soc3_rate[accident] = 0.0167 (soc3_v1), read for 2026-09-01
+  held: soc3_rate[accident] = 0.0167 (soc3_v1), read for 2026-10-01
+  held: soc3_rate[accident] = 0.0167 (soc3_v1), read for 2026-11-01
+  held: soc3_rate[accident] = 0.0167 (soc3_v1), read for 2026-12-01
+  held: soc3_rate[disability] = 0.08 (soc3_v1), read for 2026-02-01
+  held: soc3_rate[disability] = 0.08 (soc3_v1), read for 2026-03-01
+  held: soc3_rate[disability] = 0.08 (soc3_v1), read for 2026-04-01
+  held: soc3_rate[disability] = 0.08 (soc3_v1), read for 2026-05-01
+  held: soc3_rate[disability] = 0.08 (soc3_v1), read for 2026-06-01
+  held: soc3_rate[disability] = 0.08 (soc3_v1), read for 2026-07-01
+  held: soc3_rate[disability] = 0.08 (soc3_v1), read for 2026-08-01
+  held: soc3_rate[disability] = 0.08 (soc3_v1), read for 2026-09-01
+  held: soc3_rate[disability] = 0.08 (soc3_v1), read for 2026-10-01
+  held: soc3_rate[disability] = 0.08 (soc3_v1), read for 2026-11-01
+  held: soc3_rate[disability] = 0.08 (soc3_v1), read for 2026-12-01
+  held: soc3_rate[labour] = 0.0245 (soc3_v1), read for 2026-02-01
+  held: soc3_rate[labour] = 0.0245 (soc3_v1), read for 2026-03-01
+  held: soc3_rate[labour] = 0.0245 (soc3_v1), read for 2026-04-01
+  held: soc3_rate[labour] = 0.0245 (soc3_v1), read for 2026-05-01
+  held: soc3_rate[labour] = 0.0245 (soc3_v1), read for 2026-06-01
+  held: soc3_rate[labour] = 0.0245 (soc3_v1), read for 2026-07-01
+  held: soc3_rate[labour] = 0.0245 (soc3_v1), read for 2026-08-01
+  held: soc3_rate[labour] = 0.0245 (soc3_v1), read for 2026-09-01
+  held: soc3_rate[labour] = 0.0245 (soc3_v1), read for 2026-10-01
+  held: soc3_rate[labour] = 0.0245 (soc3_v1), read for 2026-11-01
+  held: soc3_rate[labour] = 0.0245 (soc3_v1), read for 2026-12-01
+  held: soc3_rate[pension] = 0.195 (soc3_v1), read for 2026-02-01
+  held: soc3_rate[pension] = 0.195 (soc3_v1), read for 2026-03-01
+  held: soc3_rate[pension] = 0.195 (soc3_v1), read for 2026-04-01
+  held: soc3_rate[pension] = 0.195 (soc3_v1), read for 2026-05-01
+  held: soc3_rate[pension] = 0.195 (soc3_v1), read for 2026-06-01
+  held: soc3_rate[pension] = 0.195 (soc3_v1), read for 2026-07-01
+  held: soc3_rate[pension] = 0.195 (soc3_v1), read for 2026-08-01
+  held: soc3_rate[pension] = 0.195 (soc3_v1), read for 2026-09-01
+  held: soc3_rate[pension] = 0.195 (soc3_v1), read for 2026-10-01
+  held: soc3_rate[pension] = 0.195 (soc3_v1), read for 2026-11-01
+  held: soc3_rate[pension] = 0.195 (soc3_v1), read for 2026-12-01
+  held: soc3_rate[sickness] = 0.0245 (soc3_v1), read for 2026-02-01
+  held: soc3_rate[sickness] = 0.0245 (soc3_v1), read for 2026-03-01
+  held: soc3_rate[sickness] = 0.0245 (soc3_v1), read for 2026-04-01
+  held: soc3_rate[sickness] = 0.0245 (soc3_v1), read for 2026-05-01
+  held: soc3_rate[sickness] = 0.0245 (soc3_v1), read for 2026-06-01
+  held: soc3_rate[sickness] = 0.0245 (soc3_v1), read for 2026-07-01
+  held: soc3_rate[sickness] = 0.0245 (soc3_v1), read for 2026-08-01
+  held: soc3_rate[sickness] = 0.0245 (soc3_v1), read for 2026-09-01
+  held: soc3_rate[sickness] = 0.0245 (soc3_v1), read for 2026-10-01
+  held: soc3_rate[sickness] = 0.0245 (soc3_v1), read for 2026-11-01
+  held: soc3_rate[sickness] = 0.0245 (soc3_v1), read for 2026-12-01
+  held: soc3_stage3_share = 0.6 (soc3_v1), read for 2026-02-01
+  held: soc3_stage3_share = 0.6 (soc3_v1), read for 2026-03-01
+  held: soc3_stage3_share = 0.6 (soc3_v1), read for 2026-04-01
+  held: soc3_stage3_share = 0.6 (soc3_v1), read for 2026-05-01
+  held: soc3_stage3_share = 0.6 (soc3_v1), read for 2026-06-01
+  held: soc3_stage3_share = 0.6 (soc3_v1), read for 2026-07-01
+  held: soc3_stage3_share = 0.6 (soc3_v1), read for 2026-08-01
+  held: soc3_stage3_share = 0.6 (soc3_v1), read for 2026-09-01
+  held: soc3_stage3_share = 0.6 (soc3_v1), read for 2026-10-01
+  held: soc3_stage3_share = 0.6 (soc3_v1), read for 2026-11-01
+  held: soc3_stage3_share = 0.6 (soc3_v1), read for 2026-12-01
+  law date 2027-01-31, cut 2026-01-02
+warning: WARN-UNREAD source b_d06 is read by nothing
+warning: WARN-UNREAD source b_d14 is read by nothing
+warning: WARN-UNREAD source b_d17 is read by nothing
+warning: WARN-UNREAD source b_d18 is read by nothing
+warning: WARN-UNREAD source b_d21 is read by nothing
+warning: WARN-UNREAD source b_d23 is read by nothing
+warning: WARN-UNREAD source b_d27 is read by nothing
+warning: WARN-UNREAD source b_d30 is read by nothing
+warning: WARN-UNREAD input born is read by nothing
+warning: WARN-UNREAD input cc1_settle_days is read by nothing
+warning: WARN-UNREAD input pit4_lower_wording is read by nothing
+warning: WARN-UNREAD input pit5_refund_days is read by nothing
+warning: WARN-UNREAD input soc1_er_pension is read by nothing
+warning: WARN-UNREAD input soc_cap is read by nothing
+warning: WARN-UNREAD input soc2_deductible is read by nothing
+warning: WARN-UNREAD input soc4_rate_b is read by nothing
+warning: WARN-UNREAD input tt2_lookback_years is read by nothing
+warning: WARN-UNREAD input vat5_late_months is read by nothing
+warning: WARN-UNREAD input hr3_share is read by nothing

@@ -1,0 +1,51 @@
+scenario b13_fx over household_b
+  tally 2
+  from 2025-07-01
+  note "B-13 (a) · Had the floren been 5 % cheaper (questions.md): from 2025-07-01 every floren rate, the CBL's published mid rates (fx_mid, GEN-4) and Bank Lazur's own rates (lazur_buy, B-D23 §4) alike, is the real one times 0.95, rounded to 4 decimal places, half up, as both publish theirs. Everything else as it was."
+  note "Each rate is a row of this layer computed from the base's own row for the same day (L 6.4, a scenario row as an expression over the base's facts), one row per day the reality holds a rate for from 2025-07-01: the judged text's days and those of b13_rows.tally. A day the reality holds no rate for stays a hole in both worlds."
+  note "The version is known 2025-06-30, the day before the change: a stipulation, as if known then (L 6.4); a replace known the same day as the row it replaces is refused by the reference interpreter (fault F5, scenarios/crash.tally of household A)."
+
+input b13_factor: num question "By what factor is every floren rate from 2025-07-01 multiplied (questions.md B-13)?"
+
+input b13_step: num DUK/FLR question "To what step is a scaled floren rate rounded (questions.md B-13)?"
+
+version b13_rates
+  cite questions
+  governs 2025-07-01..
+  known 2025-06-30
+  note "questions.md B-13: each rate dated from 2025-07-01 is the real one times 0.95, rounded to 4 decimal places, half up"
+  replace fx_mid = round(household_b.fx_mid * b13_factor, b13_step, half-up) governs 2025-07-01 "questions.md B-13: the CBL mid rate of 2025-07-01 (b13_rows) times 0.95, to 4 places, half up"
+  replace fx_mid = round(household_b.fx_mid * b13_factor, b13_step, half-up) governs 2025-07-30 "questions.md B-13: the CBL mid rate of 2025-07-30 (GEN-4) times 0.95, to 4 places, half up"
+  replace fx_mid = round(household_b.fx_mid * b13_factor, b13_step, half-up) governs 2025-08-01 "questions.md B-13: the CBL mid rate of 2025-08-01 (b13_rows) times 0.95, to 4 places, half up"
+  replace fx_mid = round(household_b.fx_mid * b13_factor, b13_step, half-up) governs 2025-08-28 "questions.md B-13: the CBL mid rate of 2025-08-28 (GEN-4) times 0.95, to 4 places, half up"
+  replace fx_mid = round(household_b.fx_mid * b13_factor, b13_step, half-up) governs 2025-09-01 "questions.md B-13: the CBL mid rate of 2025-09-01 (b13_rows) times 0.95, to 4 places, half up"
+  replace fx_mid = round(household_b.fx_mid * b13_factor, b13_step, half-up) governs 2025-09-29 "questions.md B-13: the CBL mid rate of 2025-09-29 (GEN-4) times 0.95, to 4 places, half up"
+  replace fx_mid = round(household_b.fx_mid * b13_factor, b13_step, half-up) governs 2025-10-01 "questions.md B-13: the CBL mid rate of 2025-10-01 (b13_rows) times 0.95, to 4 places, half up"
+  replace fx_mid = round(household_b.fx_mid * b13_factor, b13_step, half-up) governs 2025-10-30 "questions.md B-13: the CBL mid rate of 2025-10-30 (GEN-4) times 0.95, to 4 places, half up"
+  replace fx_mid = round(household_b.fx_mid * b13_factor, b13_step, half-up) governs 2025-11-03 "questions.md B-13: the CBL mid rate of 2025-11-03 (b13_rows) times 0.95, to 4 places, half up"
+  replace fx_mid = round(household_b.fx_mid * b13_factor, b13_step, half-up) governs 2025-11-27 "questions.md B-13: the CBL mid rate of 2025-11-27 (GEN-4) times 0.95, to 4 places, half up"
+  replace fx_mid = round(household_b.fx_mid * b13_factor, b13_step, half-up) governs 2025-11-28 "questions.md B-13: the CBL mid rate of 2025-11-28 (GEN-4) times 0.95, to 4 places, half up"
+  replace fx_mid = round(household_b.fx_mid * b13_factor, b13_step, half-up) governs 2025-12-01 "questions.md B-13: the CBL mid rate of 2025-12-01 (b13_rows) times 0.95, to 4 places, half up"
+  replace fx_mid = round(household_b.fx_mid * b13_factor, b13_step, half-up) governs 2025-12-30 "questions.md B-13: the CBL mid rate of 2025-12-30 (GEN-4) times 0.95, to 4 places, half up"
+  replace fx_mid = round(household_b.fx_mid * b13_factor, b13_step, half-up) governs 2025-12-31 "questions.md B-13: the CBL mid rate of 2025-12-31 (GEN-4) times 0.95, to 4 places, half up"
+  replace lazur_buy[2025-07-01] = round(household_b.lazur_buy[2025-07-01] * b13_factor, b13_step, half-up) "questions.md B-13: Bank Lazur's buy rate of 2025-07-01 (b13_rows) times 0.95, to 4 places, half up"
+  replace lazur_buy[2025-07-28] = round(household_b.lazur_buy[2025-07-28] * b13_factor, b13_step, half-up) "questions.md B-13: Bank Lazur's buy rate of 2025-07-28 (market) times 0.95, to 4 places, half up"
+  replace lazur_buy[2025-07-30] = round(household_b.lazur_buy[2025-07-30] * b13_factor, b13_step, half-up) "questions.md B-13: Bank Lazur's buy rate of 2025-07-30 (market) times 0.95, to 4 places, half up"
+  replace lazur_buy[2025-08-01] = round(household_b.lazur_buy[2025-08-01] * b13_factor, b13_step, half-up) "questions.md B-13: Bank Lazur's buy rate of 2025-08-01 (b13_rows) times 0.95, to 4 places, half up"
+  replace lazur_buy[2025-08-26] = round(household_b.lazur_buy[2025-08-26] * b13_factor, b13_step, half-up) "questions.md B-13: Bank Lazur's buy rate of 2025-08-26 (market) times 0.95, to 4 places, half up"
+  replace lazur_buy[2025-09-01] = round(household_b.lazur_buy[2025-09-01] * b13_factor, b13_step, half-up) "questions.md B-13: Bank Lazur's buy rate of 2025-09-01 (b13_rows) times 0.95, to 4 places, half up"
+  replace lazur_buy[2025-09-26] = round(household_b.lazur_buy[2025-09-26] * b13_factor, b13_step, half-up) "questions.md B-13: Bank Lazur's buy rate of 2025-09-26 (market) times 0.95, to 4 places, half up"
+  replace lazur_buy[2025-10-01] = round(household_b.lazur_buy[2025-10-01] * b13_factor, b13_step, half-up) "questions.md B-13: Bank Lazur's buy rate of 2025-10-01 (b13_rows) times 0.95, to 4 places, half up"
+  replace lazur_buy[2025-10-27] = round(household_b.lazur_buy[2025-10-27] * b13_factor, b13_step, half-up) "questions.md B-13: Bank Lazur's buy rate of 2025-10-27 (market) times 0.95, to 4 places, half up"
+  replace lazur_buy[2025-10-30] = round(household_b.lazur_buy[2025-10-30] * b13_factor, b13_step, half-up) "questions.md B-13: Bank Lazur's buy rate of 2025-10-30 (market) times 0.95, to 4 places, half up"
+  replace lazur_buy[2025-11-03] = round(household_b.lazur_buy[2025-11-03] * b13_factor, b13_step, half-up) "questions.md B-13: Bank Lazur's buy rate of 2025-11-03 (b13_rows) times 0.95, to 4 places, half up"
+  replace lazur_buy[2025-11-26] = round(household_b.lazur_buy[2025-11-26] * b13_factor, b13_step, half-up) "questions.md B-13: Bank Lazur's buy rate of 2025-11-26 (market) times 0.95, to 4 places, half up"
+  replace lazur_buy[2025-12-01] = round(household_b.lazur_buy[2025-12-01] * b13_factor, b13_step, half-up) "questions.md B-13: Bank Lazur's buy rate of 2025-12-01 (market) times 0.95, to 4 places, half up"
+  replace lazur_buy[2025-12-29] = round(household_b.lazur_buy[2025-12-29] * b13_factor, b13_step, half-up) "questions.md B-13: Bank Lazur's buy rate of 2025-12-29 (market) times 0.95, to 4 places, half up"
+
+version b13_terms
+  cite questions
+  governs always
+  known 2025-06-30
+  b13_factor = 0.95 "questions.md B-13: the real one times 0.95"
+  b13_step = 0.0001 "questions.md B-13: rounded to 4 decimal places"

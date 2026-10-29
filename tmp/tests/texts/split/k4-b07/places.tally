@@ -1,0 +1,49 @@
+part places
+  tally 2
+  note "Places of household B (L §5.10). jodla takes the mortgage's instalments and jodla_over its overpayments (Bank Jodła, loan 7710-22: the Cis rows' titles tell them apart). The accounts' balances before their first statement are not known: each opens with a hole (an opening reading of ?), and the exports' readings anchor them (records/). The claims and the floren account open empty."
+
+place authorities: outside lives 2022-03-01..
+
+place bartek: claims DUK lives 2022-03-01..
+
+place cis: accounts DUK lives 2022-03-01..
+
+place employer: outside lives 2022-03-01..
+
+place inv_owed[i in invoices]: owed lives 2022-03-01..
+
+place inv_owed_flr[j in flr_invoices]: claims FLR lives 2022-03-01..
+
+place jodla: outside lives 2022-03-01..
+
+place jodla_over: outside lives 2022-03-01..
+
+place lazur: accounts FLR lives 2025-01-02..
+
+place savings: accounts DUK lives 2022-03-01..
+
+place shops: outside lives 2022-03-01..
+
+place world: outside lives 2022-03-01..
+
+place wrzos: accounts DUK lives 2022-03-01..
+
+input cisr: observed
+  note "rows of the Cis current account's exports (records/cis-2025.tally)"
+
+input lazr: observed
+  note "rows of the Lazur floren account's export (records/lazur-2025.tally)"
+
+input savr: observed
+  note "rows of the Cis savings account's export (records/savings-2025.tally)"
+
+input wrzr: observed
+  note "rows of Ola's Wrzos statements (records/wrzos.tally)"
+
+version openings
+  cite story
+  known 2022-03-01
+  note "The accounts existed before the run; their balances on 2022-03-01 are no fact of the dossier, so each is a hole until its first statement's reading anchors it."
+  opening[cis] = ?"What was on Piotr's Cis current account on 2022-03-01? The first export is January 2025's." at 2022-03-01 start
+  opening[savings] = ?"What was on Piotr's Cis savings account on 2022-03-01? The only export is 2025's." at 2022-03-01 start
+  opening[wrzos] = ?"What was on Ola's Wrzos account on 2022-03-01? Her first statement is October 2024's." at 2022-03-01 start

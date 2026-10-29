@@ -1,0 +1,10 @@
+part asks_d13
+  tally 2
+  note "D-13 · Had the fund been taxed (questions.md): as of 2064-12-31, known as of 2026-09-30, the long view with the fund's gains taxed (longview_taxed.tally), on D-10's paths: seed 20261001, at 200 paths (the 200-path copy of the judged text, D-p200; D-10's own run is 10 000 paths), so the path figures are statistics with their standard errors, judged as such. Python's random.Random stream is no row a text can give (py_stream)."
+  note "share selling units: the paths on which units are sold in a year she lives (p13_sells), read with the question's 'while she lives'; a year she doesn't live counts none of its money (story, point 2)."
+
+ask d13_paths: mean(p13_tax), mean(p13_gains_ort), share(p13_sells) law 2026-09-30 paths 200 seed 20261001
+
+ask d13_zero: zv13_first_sale, round(zv13_exp_gains, 0.01, hh_round), round(zv13_exp_tax, 0.01, hh_round), zv13_exp_gains, zv13_exp_tax law 2026-09-30
+
+ask d13_stream: py_stream law 2026-09-30

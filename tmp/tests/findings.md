@@ -1,0 +1,19 @@
+# Language findings (session 4.5c)
+
+Found while writing and running the 4.5 tests. Not fixed: the spec and refcore are frozen (tally 2.0). The next design round reads this file. Each row is a writer's report (C2's `tmp/tests/texts/new/ASKS.md`, with file and line), not yet judged as a cause. J's verdicts (`tmp/session4_5/c/judge/verdicts.md`) say which ones explain a mark.
+
+| # | Finding | Where met | Kind (writer's view) |
+|---|---|---|---|
+| F-1 | A planned movement on a day a statement covers is modelled as past: it is never booked, and refcore also leaves it out of bindings over its kind (`fund_sales`). Workarounds: shrink the register's coverage with `moves … to` in its own version (`LOAD-MOVES` refuses a `moves` naming a later-known version), or write the rule as defs over the booked balance (then the sale moves nothing downstream) | `new/A-13/a13_jul_sale.tally:28,59`; `new/B-13/b13_rule.tally` | language (what-if on recorded days) |
+| F-2 | A pin doesn't make a value plain: `as if {r_path[*] = fund_mu}` still counts as random at load (`LOAD-RANDOM`), so a zero-volatility chain must copy the whole path chain | `new/D-13/` | language |
+| F-3 | `RUN-DIGITS`: the mean of exact per-path gains passes the 4 096-digit cap; each path's gains had to be rounded with a house rounding no source states | `new/D-13/` | language / interpreter limit |
+| F-4 | A scenario row may govern no day before its `from`, and yearly information is keyed by the tax year, so a mid-year what-if starts from 1 January | `new/A-13/a13_calc.tally:3` | language |
+| F-5 | A `replace rule` may cite only its own version (it can't point `v` at the law's version, e.g. `soc8_v1`) | `new/A-13/a13_calc.tally:19` | language |
+| F-6 | A price can't be keyed by a leg's unit (the gifted lot's cost repeats `gift_cost`'s workaround) | `new/A-13/` | language |
+| F-7 | No user functions: a rule applied to two arguments (rule 2 of LAW-20 to two deductions) is read as keys of one keyed def | `new/probes/law/LAW-20.tally` | language |
+| F-8 | An iteration the law leaves unbounded must be given a bound by the text (LAW-20's rule 4, bounded at 50) | `new/probes/law/LAW-20.tally` | language (explicitness) |
+| F-9 | `cash` is a built-in id and can't name a def; a one-line def can't carry a note (`LOAD-PARSE`) | C2's texts | surface |
+| F-10 | refcore's same-day replace fault (session 4's F5) made B-13's rows be known 2025-06-30 | `new/B-13/b13_rows.tally` | interpreter (known) |
+| F-11 | **A latent fault in household A's judged text**, found by A-13 (c): `tmp/design2/cases/households/A/tax.tally:83-101` floors each spouse's "part less relief" at 0 and sums the floored lines into `together_joint`. PIT-6 .4 floors only the joint tax less both reliefs; PIT-6 .5 gives each spouse's part less own reliefs and advances, with no floor. A-01..A-12 never reach the floor (they pass); A-13 (c) does (J: `judge/verdicts.md`, T-1). PIT-7 .5's "never below 0" is the one sentence a reader could cite for the judged reading: if session 5 finds it ambiguous, it is a case item | A's judged text; C2's A-13 | text (judged household A); for session 5's visible repair |
+
+**For session 5 from J (instrument, not fixed here; `tmp/session5/` is read-only to 4.5c):** `answers.py` has no true/false form (I-1), and it misreads a value printed as a fraction with its decimal, `N/D (d) UNIT`, and a one-path mean whose standard error is `none` (I-2; J copied B-12's two K5 tax lines into its answers file by hand, transcription only, `judge/answers/B-12-k5.J-copy.md`). `compare.py` can't take the probe keys (I-3); J unwrapped them with `judge/probe_keys.py`. Possibly a case item: D-13's zero-volatility gains print both readings of `hh_round`, and the key's figure is the half-up one; half-even differs by 0.02, more than a tie (O:D-3).

@@ -1,0 +1,49 @@
+part b13_rows
+  tally 2
+  note "B-13's market rows: the real figures of the days B-13 rule 1 sells on (the 1st of each month from July 2025, the next business day where the 1st isn't one), which the judged text didn't need: the CBL's mid rate FX-FLR (gazette.csv, GEN-4, B-HR4 .5) and Bank Lazur's buy rate (lazur-fx-flr.csv, B-D23 §4). Each is published on its day, so each row is known on its day. The scenario b13_fx scales them with the rest."
+
+version b13_fx_2025_07_01
+  cite gazette
+  governs 2025-07-01
+  known 2025-07-01
+  fx_mid = 4.2577 "gazette.csv line 1269 FX-FLR"
+
+version b13_fx_2025_08_01
+  cite gazette
+  governs 2025-08-01
+  known 2025-08-01
+  fx_mid = 4.2156 "gazette.csv line 1292 FX-FLR"
+
+version b13_fx_2025_09_01
+  cite gazette
+  governs 2025-09-01
+  known 2025-09-01
+  fx_mid = 4.2633 "gazette.csv line 1312 FX-FLR"
+
+version b13_fx_2025_10_01
+  cite gazette
+  governs 2025-10-01
+  known 2025-10-01
+  fx_mid = 4.2499 "gazette.csv line 1334 FX-FLR"
+
+version b13_fx_2025_11_03
+  cite gazette
+  governs 2025-11-03
+  known 2025-11-03
+  fx_mid = 4.2328 "gazette.csv line 1357 FX-FLR"
+
+version b13_fx_2025_12_01
+  cite gazette
+  governs 2025-12-01
+  known 2025-12-01
+  fx_mid = 4.2405 "gazette.csv line 1376 FX-FLR"
+
+version b13_lazur_buy_rows
+  cite market
+  governs always
+  known 2025-07-01
+  lazur_buy[2025-07-01] = 4.1495 DUK/FLR known 2025-07-01 "lazur-fx-flr.csv line 1140"
+  lazur_buy[2025-08-01] = 4.1111 DUK/FLR known 2025-08-01 "lazur-fx-flr.csv line 1163"
+  lazur_buy[2025-09-01] = 4.1557 DUK/FLR known 2025-09-01 "lazur-fx-flr.csv line 1183"
+  lazur_buy[2025-10-01] = 4.1441 DUK/FLR known 2025-10-01 "lazur-fx-flr.csv line 1205"
+  lazur_buy[2025-11-03] = 4.1287 DUK/FLR known 2025-11-03 "lazur-fx-flr.csv line 1228"

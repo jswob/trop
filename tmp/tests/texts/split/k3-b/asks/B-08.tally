@@ -1,0 +1,18 @@
+part asks_b08
+  tally 2
+  note "B-08 · Piotr's Cis account, 2025 (questions.md): as of 2025-12-31, known as of 2026-01-07. The balance at the end of 2025-11-30 is read at the start of 2025-12-01, the instant of the December export's opening balance."
+  note "The problems, each found from the text. A day whose listed rows don't add up to how far its readings moved the balance: rows listed beyond the movement (a row listed twice, stated `same`, books once) or a movement no row lists, the difference signed as rows less movement (b08_unmatched); a row undoing an earlier one is a reversal; the November gap runs over the days its version names (gap_from .. gap_to), and its amount is how far the balance moves over it; the movement with no row is Bank Cis's card fee, planned on its day by B-D36 and matched by no row (b08_residuals lists it as expected and missing), its amount the gap at the first reading on or after its day."
+
+ask b08_balances: bal(cis, 2025-10-31), bal(cis, 2025-12-01 start), bal(cis, 2025-12-31) law 2025-12-31 as known 2026-01-07
+
+ask b08_residuals: residuals cis 2025 law 2025-12-31 as known 2026-01-07
+
+ask b08_unmatched: d, (sum(o.cash.amount for o in cisr over d .. d where o.cash.to == cis) - sum(o.cash.amount for o in cisr over d .. d where o.cash.from == cis)) - (bal(cis, d) - bal(cis, d start)) for d in days where year_of(d) == 2025 and covered(cis, d .. d) and sum(o.cash.amount for o in cisr over d .. d where o.cash.to == cis) - sum(o.cash.amount for o in cisr over d .. d where o.cash.from == cis) != bal(cis, d) - bal(cis, d start) law 2025-12-31 as known 2026-01-07
+
+ask b08_reversed: o.day, 0 DUK - o.cash.amount for o in reversals over 2025 where o.cash.from == cis law 2025-12-31 as known 2026-01-07
+
+ask b08_gap: gap_from, bal(cis, add_days(gap_to, 1) start) - bal(cis, add_days(gap_from, -1)) law 2025-12-31 as known 2026-01-07
+
+ask b08_no_row: card_fee_day[2025], 0 DUK - card_fee, gap(cis, min(o.day for o in cisr over card_fee_day[2025] .. 2025-12-31)) law 2025-12-31 as known 2026-01-07
+
+ask b08_cards: sum(o.cash.amount for o in card_pays over 2025 where o.cash.from == cis) - sum(o.cash.amount for o in card_refunds over 2025 where o.cash.to == cis) - sum(o.cash.amount for o in friend_backs over 2025 where o.cash.to == cis) law 2025-12-31 as known 2026-01-07 partial

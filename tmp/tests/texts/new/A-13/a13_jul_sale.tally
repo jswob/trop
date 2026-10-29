@@ -1,0 +1,73 @@
+scenario a13_jul_sale over a13_jul
+  tally 2
+  from 2023-01-01
+  note "A-13 (b): as (a), with Ania's 200 gifted units sold at DM Kopia on 15 December 2023, at that day's price and with no fee, instead of when she sold them (questions.md A-13). The units then never move to Rzeka: the DM Kopia transfers out, the Rzeka transfers in, the Rzeka sale of 2024-03-07 and the BRZ-MM-A purchase made with its proceeds are removed (L 6.4: replace … = none). What she does with the sale's money later isn't asked, so it stays in a cash account at DM Kopia, kop_cash."
+  note "The sale is a planned movement of this layer on a day the DM Kopia register covers, so it is modelled past, never booked (L 5.19 Coverage); the lots fill binds it by its instance. A gifted lot's cost and the 5-year test follow invest.tally's gift_cost and gift_exempt for the lots that arrived at DM Kopia by gift (gifts_in), which the base's PIT-8 sums don't reach, since no unit was ever sold there; net_gain gains a rule that adds them, restating the base rule's two sums."
+  note "from 2023-01-01: the rule added to net_gain is read at the start of tax year 2023 (L 6.4)."
+
+place kop_cash: accounts DUK lives 2023-12-15..
+
+input a13b_round: rounding question "How is the sale's money (price times units) rounded to the ort?"
+
+input a13b_sale_day: date question "On which day are the gifted units sold at DM Kopia?"
+
+input a13b_units: num glb question "How many gifted units are sold at DM Kopia?"
+
+def a13b_bought[g in gifts_in]: date at g.day
+  note "the day the giver bought the lot: DM Kopia's register gives its month only (kop-30-118-552-ania.csv), so a day in it, an imprecise date (L 4.4), as giver_bought for the Rzeka lots"
+  rule base = window(start_of(g.bought), end_of(g.bought) - 1 day)
+
+def a13b_exempt[g in gifts_in, s in fund_sales]: bool at s.day
+  note "PIT-8 .6, GEN-3 .1: a gain on units held more than 5 years, counting from the giver's acquisition; a loss on them still counts (as gift_exempt)"
+  rule base = s.day > add_years(a13b_bought[g], pit8_exempt_years) and a13b_gain[g, s] > 0
+
+def a13b_gain[g in gifts_in, s in fund_sales]: num DUK at s.day
+  note "PIT-8 .2: the proceeds of the units lot g gave sale s, less their part of the sale's fee, less their cost: a gifted lot costs its units at the fund's price on the gift day, the gift-day value of the holding it entered in the lot's share of its units (as gift_cost, awkward: a leg of a unit kind has no unit a price can be keyed by)"
+  rule base = lots[s.units.from, year_of(s.day)].taken[g, s] * (s.cash.amount - s.fee.amount) / s.units.amount - lots[s.units.from, year_of(s.day)].taken[g, s] * (value(g.units.to, g.day) in DUK by mk) / bal(g.units.to, g.day)
+
+move a13b_sale: fund_sales
+  on a13b_sale_day
+  at a13b_sale_day
+  leg units from kop_glb to market amount a13b_units
+  leg cash from market to kop_cash amount round(mk[glb] * a13b_units, minor(DUK), a13b_round)
+  leg fee from kop_cash to market amount 0 DUK
+  note "questions.md A-13 (b): the 200 gifted units sold at DM Kopia at that day's price, with no fee"
+
+ask a13_b_sale: s.day, s.units.amount, s.cash.amount, s.fee.amount for s in fund_sales over 2023 where s.units.from == kop_glb in a13_jul_sale law 2025-04-30 as known 2025-04-30
+
+ask a13_b_lots: g.bought, lots[kop_glb, 2023].taken[g, s], a13b_gain[g, s], not a13b_exempt[g, s] for s in fund_sales over 2023, g in gifts_in over .. where s.units.from == kop_glb and lots[kop_glb, 2023].taken[g, s] > 0 in a13_jul_sale law 2025-04-30 as known 2025-04-30
+
+version a13b_stipulation
+  cite questions
+  governs 2023-01-01..
+  known 2023-01-01
+  note "the question's stipulation, as if known then (L 6.4)"
+  replace abank[a20240212_003] = none "questions.md A-13 (b): the units are sold at DM Kopia, so they never move to Rzeka"
+  replace abank[a20240212_004] = none "questions.md A-13 (b): never moved to Rzeka"
+  replace abank[a20240212_005] = none "questions.md A-13 (b): never moved to Rzeka"
+  replace abank[a20240307_006] = none "questions.md A-13 (b): instead of when she sold them"
+  replace abank[a20240307_007] = none "questions.md A-13 (b): the BRZ-MM-A purchase was made with that sale's proceeds"
+  replace kbank[k20240212_06] = none "questions.md A-13 (b): never moved to Rzeka"
+  replace kbank[k20240212_07] = none "questions.md A-13 (b): never moved to Rzeka"
+  replace kbank[k20240212_08] = none "questions.md A-13 (b): never moved to Rzeka"
+  replace rule net_gain.a13b_gifts beats base = sum(buy_gain[b, s] for s in fund_sales over y, b in fund_buys over .. where inv_holder[s.units.from] == p and lots[s.units.from, year_of(s.day)].taken[b, s] > 0 and not buy_exempt[b, s]) + sum(gift_gain[t, s] for s in fund_sales over y, t in lot_transfers over .. where inv_holder[s.units.from] == p and lots[s.units.from, year_of(s.day)].taken[t, s] > 0 and not gift_exempt[t, s]) + sum(a13b_gain[g, s] for s in fund_sales over y, g in gifts_in over .. where inv_holder[s.units.from] == p and lots[s.units.from, year_of(s.day)].taken[g, s] > 0 and not a13b_exempt[g, s])
+
+version a13b_coverage
+  cite questions
+  governs 2023-01-01..
+  known 2023-09-13
+  moves kop_register to 2023-09-12..2023-12-14
+  note "the DM Kopia register's coverage ends the day before the sale: the sale is this layer's planned movement, not a row of the register, and a planned movement on a covered day is modelled past, never booked or bound (L 5.19); the register's rows after it, the transfers out, are removed. A moves line names a version known before its own (LOAD-MOVES), so this version is known the day after the register's first rows, after the gift and before the sale"
+
+version a13b_terms
+  cite questions
+  governs always
+  known 2023-01-01
+  a13b_round = half-up assumed "the question states no rounding of price times units; a price to 2 places times whole units is a whole number of orts, so no mode changes it" "questions.md A-13 (b)"
+  a13b_sale_day = 2023-12-15 "questions.md A-13 (b): sold at DM Kopia on 15 December 2023"
+  a13b_units = 200 "questions.md A-13 (b): Ania's 200 gifted units"
+
+version a13b_price
+  cite market_files
+  known 2023-12-15
+  mk[glb] = 187.73 at 2023-12-15 "brz-glb-a.csv line 1514"

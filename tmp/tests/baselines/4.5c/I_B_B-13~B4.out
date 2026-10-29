@@ -1,0 +1,30 @@
+b13_b_lazur: (2 000.00 FLR, 8 038.40 DUK)
+  assumed: B-HR4 .5 says each amount to the ort and names no mode (hr4_round)
+  world: b13_rule
+  anchor: lazur 2025-06-30 end, stated 0.00 FLR, difference 0.00 FLR
+  anchor: lazur 2025-07-30 end, stated 0.00 FLR, difference 0.00 FLR
+  anchor: lazur 2025-09-01 end, stated 1 952.00 FLR, difference 0.00 FLR
+  anchor: lazur 2025-09-29 end, stated 3 904.00 FLR, difference 0.00 FLR
+  anchor: lazur 2025-10-30 end, stated 3 904.00 FLR, difference 0.00 FLR
+  anchor: lazur 2025-12-01 end, stated 3 904.00 FLR, difference 0.00 FLR
+  open: kessel_pay[fv_026_2025]
+  held: fx_mid = 4.0192 DUK/FLR (b13_rates), read for 2025-12-31
+  law date 2025-12-31, cut 2026-01-07
+warning: WARN-UNREAD source b_d06 is read by nothing
+warning: WARN-UNREAD source b_d14 is read by nothing
+warning: WARN-UNREAD source b_d17 is read by nothing
+warning: WARN-UNREAD source b_d18 is read by nothing
+warning: WARN-UNREAD source b_d21 is read by nothing
+warning: WARN-UNREAD source b_d23 is read by nothing
+warning: WARN-UNREAD source b_d27 is read by nothing
+warning: WARN-UNREAD source b_d30 is read by nothing
+warning: WARN-UNREAD input born is read by nothing
+warning: WARN-UNREAD input cc1_settle_days is read by nothing
+warning: WARN-UNREAD input pit4_lower_wording is read by nothing
+warning: WARN-UNREAD input pit5_refund_days is read by nothing
+warning: WARN-UNREAD input soc1_er_pension is read by nothing
+warning: WARN-UNREAD input soc_cap is read by nothing
+warning: WARN-UNREAD input soc2_deductible is read by nothing
+warning: WARN-UNREAD input soc4_rate_b is read by nothing
+warning: WARN-UNREAD input tt2_lookback_years is read by nothing
+warning: WARN-UNREAD input vat5_late_months is read by nothing

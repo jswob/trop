@@ -1,0 +1,28 @@
+scenario a13_calc over lis
+  tally 2
+  from 2023-01-01
+  note "A-13's common layer (questions.md A-13): the payer years of 2023 that Ania's stopping could change, Kalina's and the SIO's, are computed from the payroll instead of read from their yearly information (A-D13-KALINA-2023, A-D13-SIO-2023), since a payer that paid otherwise would have issued other figures, which no paper states. Nurt's year (Tomek) keeps its yearly information."
+  note "It brings the day Ania stops working for Kalina, a13_stop, and the rules that follow from it: no pay for any time from that day (questions.md A-13), the plan contributions following from the pay (er_paid reads the pay, A-D09 .2, WCP-1 .4), and SOC-8 .1 (parental pay only for a parent insured as an employee on the day of the birth). Here she never stops (a13_stop = never), so this layer is the control: the actual 2023, with Kalina's and the SIO's years computed from the payroll. a13_jul and a13_apr state the day."
+  note "PIT-6 .4, .5 and PIT-7 .5 as the law reads them, replacing the judged res_joint and together_joint (tax.tally), which floor each spouse's part less relief at 0 and sum the floored lines: both reliefs come off the joint tax, never below 0, then both advances (together); each spouse's amount is their part less their own relief and advances, with no floor of its own. In (a) and in the actual 2023 the floor never binds, so the two readings agree there."
+  note "from 2023-01-01, not the day she stops: the yearly information is keyed by the tax year, whose period starts on 1 January, and a scenario row may govern no day before its from (L 6.4)."
+
+input a13_stop: date question "On which day does Ania stop working for Kalina (questions.md A-13)?"
+
+version a13_calc_rules
+  cite questions
+  governs 2023-01-01..
+  known 2023-01-01
+  note "the question's stipulation and what the law makes follow from it; known from the start of the tax year it changes, as if known then (L 6.4)"
+  replace info[kalina, 2023] = none "questions.md A-13: Kalina's 2023 is computed from the payroll, not read from A-D13-KALINA-2023"
+  replace info[sio, 2023] = none "questions.md A-13: the SIO's 2023 is computed from the payroll, not read from A-D13-SIO-2023"
+  replace rule g_due.a13_part beats monthly, set = ?"Ania stops working for Kalina inside this pay period; A-D05 §7 pays a month not worked in full for the days the employment lasted, and the question gives no day count for it" when e == kalina and start_of(p) < a13_stop and a13_stop < end_of(p)
+  replace rule g_due.a13_stopped beats monthly, set = 0 when e == kalina and start_of(p) >= a13_stop
+  replace rule g_paid.a13_uninsured beats parental, work = 0 when e == sio and a13_stop <= born[zosia]
+  replace rule res_joint.a13_law beats health, reliefs = jpart[s, y] - relief_half[s, y] - adv_p[s, y] when joint_may[y]
+  replace rule together_joint.a13_law beats base = max(0, joint_tax[y] - relief[y]) - sum(adv_p[t, y] for t in spouse) when joint_may[y]
+
+version a13_calc_never
+  cite questions
+  governs always
+  known 2023-01-01
+  a13_stop = never "the control layer: Ania doesn't stop working"
