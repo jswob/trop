@@ -1,0 +1,43 @@
+# L §4.3 rule 2: "if it reads nothing law-dated, it needs no law date: an input whose rows all govern `always` ... is
+# read without one, by a def as by a move".  m2 = n + 1 with n = 2 governs always: 3, with no at and no law.  The move
+# pay reads amt and pay_day (governs always) with no at: its leg is amt, 10.00 PLN, on 2026-02-01 (konto from 0 at the opening:
+# 10.00 PLN at the end of the year; L §5.14 legs, E §4.2).  A later version giving n a dated row makes m2's reader
+# state at: see L4_3_timeless_dated.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "a source"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2020-01-01..
+place world: outside lives 1900-01-01..
+
+input n: int
+input amt: money PLN
+input pay_day: date
+
+def m2: int = n + 1
+
+move pay: transfers
+  on pay_day
+  leg cash from world to konto amount amt
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  n = 2
+  amt = 10.00 PLN
+  pay_day = 2026-02-01
+  opening[konto] = 0 PLN at 2026-01-01 start
+
+ask q1: m2
+ask q2: bal(konto, 2026-12-31)
+=== expect
+q1: 3
+  cut 2026-12-31
+q2: 10.00 PLN
+...

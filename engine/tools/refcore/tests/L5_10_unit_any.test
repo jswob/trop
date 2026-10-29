@@ -1,0 +1,17 @@
+# L §5.10 Kind and unit (round 7c): "a place of unit `any` has no one unit, and unit(x) of it is refused (§8.4)":
+# world is a place of the prelude kind outside, `place any signed outside`; the types show it at load: LOAD-UNIT.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+place world: outside lives 1900-01-01..
+
+ask q1: unit(world) == PLN
+=== expect
+refused: LOAD-UNIT ...

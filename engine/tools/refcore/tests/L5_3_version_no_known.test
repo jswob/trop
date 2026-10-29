@@ -1,0 +1,17 @@
+# Round 18, C1-24 (follows). L §2.3: version = … [IN "known" known NL] "(known: required; each missing one is refused by
+# its code, LOAD-GOVERNS or LOAD-KNOWN, not LOAD-PARSE, §5.3)"; L §8.3 LOAD-KNOWN "version <v> has no known date".
+=== m.tally
+model m
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+source s "s"
+input x: int
+version v
+  cite s
+  governs always
+  x = 1
+ask q: x
+=== expect
+refused: LOAD-KNOWN version v has no known date (m.tally:8)

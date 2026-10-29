@@ -1,0 +1,24 @@
+# L §3.1 records: "Fields are named in every literal and read as x.f1". Literal from the table:
+# (share: 60 %, base: 12 000.00 PLN); 60 % is 0.6 (L §2.1 "% after a number is the unit 1/100").
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "a source"
+unit PLN: currency minor 0.01
+
+input r: (share num, base money PLN)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  r = (share: 60 %, base: 12 000.00 PLN)
+
+ask q1: r.share, r.base
+=== expect
+q1: (0.6, 12 000.00 PLN)
+  cut 2026-01-01

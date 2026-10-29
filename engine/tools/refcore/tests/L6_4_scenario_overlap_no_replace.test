@@ -1,0 +1,44 @@
+# L §6.4: a scenario row "that overlaps a base row at the same keys says replace (LOAD-OVERLAP)", whatever the two
+# rows' known dates (round 12b). The scenario's load is refused; the base answers alone (L §8.3).
+=== hh.tally
+model hh
+  tally 2
+  on 2026-11-15
+  start 2026-01-01
+  end 2027-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+input salary: money PLN
+
+version v1
+  cite s
+  governs 2026-01-01..
+  known 2026-01-01
+  salary = 5 000.00 PLN "umowa"
+
+version v2
+  cite s
+  governs 2027-01-01..
+  known 2026-11-01
+  replace salary = 6 000.00 PLN "aneks"
+
+ask b: salary law 2027-06-30
+=== stop.tally
+scenario stop over hh
+  tally 2
+  from 2027-01-01
+
+version stop_salary
+  cite s
+  governs 2027-01-01..
+  known 2026-10-20
+  salary = 0 PLN "założenie"
+
+ask s1: salary in stop law 2027-06-30
+ask s2: salary in stop law 2026-06-30
+=== expect
+scenario stop: refused: LOAD-OVERLAP rows hh.tally:15 and stop.tally:9 of salary overlap at no keys, neither replacing the other (stop.tally:9)
+b: 6 000.00 PLN
+  held: salary = 6 000.00 PLN (v2), read for 2027-06-30
+  law date 2027-06-30, cut 2026-11-15

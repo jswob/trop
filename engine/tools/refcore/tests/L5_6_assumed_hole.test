@@ -1,0 +1,44 @@
+# L §5.6: an index with `assumed STR` — "every figure keyed by it, and every result that reaches one, then lists
+# `assumed: <index>: <reason>` in its register (§8.2)".  interest_on[a, y] is keyed by pyear: q1 reaches its cell for
+# 2026, whose rate row is missing (a hole), and q2 its cell for 2025 (a value, 1.00 PLN = 100.00 PLN x 1 %); both
+# list the line, the hole's included.
+=== m.tally
+model t
+  tally 2
+  on 2026-10-18
+  start 2025-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+index accts = [a1]
+index pyear = year 2025..2026 from 04-06
+  assumed "no source gives the year's start"
+
+input principal[a in accts]: money PLN
+input rate[y in pyear]: num question "what is the rate?"
+
+def interest_on[a in accts, y in pyear]: money PLN = round(principal[a] * rate[y], minor(PLN), half-up) at start_of(y)
+
+version v
+  cite s
+  governs always
+  known 2025-01-01
+  principal[a1] = 100.00 PLN
+
+version r
+  cite s
+  governs 2025-04-06..2026-04-05
+  known 2025-01-01
+  rate[2025] = 1 %
+
+ask q1: interest_on[a1, 2026] law 2026-06-30
+ask q2: interest_on[a1, 2025] law 2026-06-30
+=== expect
+q1: ?"what is the rate?" (rate[2026])
+  assumed: pyear: no source gives the year's start
+  law date 2026-06-30, cut 2026-10-18
+q2: 1.00 PLN
+  assumed: pyear: no source gives the year's start
+  law date 2026-06-30, cut 2026-10-18

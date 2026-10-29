@@ -1,0 +1,96 @@
+# L §6.5 household base excerpt, copied whole, with a header (start 2026-10-01, where its version's rows begin), the
+# source household, the indexes it names and the three items it reads but doesn't show, declared minimally:
+# net_wage (= salary), taxable (= 0 PLN) and the band pit_scale with one row.  konto is keyed by person (one place
+# per person, L §5.10) and opens at the stated readings; the wage move pays on day 10 of each month (pay_dom = 10)
+# from world to konto[works_for[j]].
+# b5: before any wage, the openings stand (E §6.1 readings).
+# b31: home_2026 is known 2026-10-19, after the October wage's day 2026-10-10.  At the instance's booking cut
+# min(t, K) = 2026-10-10 no version is visible, so its keys (ana_acme) aren't known: "An instance whose `when` was
+# false at κ₀ didn't exist then, and counts as A₀ = 0" (E §5 step 1).  home_2026 makes it exist: δ = Aᵥ (step 3),
+# here a hole, since the excerpt states no salary row (L §5.8).  The adjustment is dated V.known = 2026-10-19 (step
+# 4), nothing fulfils it, so konto[ana]'s balance is HOLE-CHANGED from 2026-10-19 on (step 5, L §5.14.3, L §8.1
+# wording) and the register lists the adjustment's remainder (`adjustment:`, L §8.2).
+# wd: the instance's day is day_of(2026-11, 10) (L §5.14, E §5 step 0); the day reads pay_dom only.
+# p27: residence is pl, so the rule abroad doesn't apply; base gives round(pit_scale(0 PLN)) = 0 PLN, read at
+# start_of(2027) = 2027-01-01 (round 7: the base's `pit … at start_of(y)`).  The base's wage binds `j in jobs over m`.
+=== household.tally
+model household
+  tally 2
+  on 2026-10-20
+  start 2026-10-01
+  end 2040-12-31
+
+source household "the household's own records"
+unit PLN: currency minor 0.01
+index instalments = [equal, decreasing]
+index overpay_choices = [shorter, lower]
+index pit_brackets = [low, high]
+index countries = [pl, de]
+index tax_years = year 2026..2040
+
+kind persons
+kind jobs
+kind loans
+kind wages: event certain
+  leg cash: PLN
+
+place konto[p in persons]: accounts PLN lives 2019-05-01..
+place world: outside lives 1900-01-01..
+
+input loan_terms[l in loans]: (principal money PLN, months int, plan key instalments)
+input overpay[l in loans, m in months]: (amount money PLN, choice key overpay_choices)
+input parent[c in persons, k in persons]: bool
+input pay_dom[j in jobs]: int
+input pit_free: money PLN
+input pit_rate[b in pit_brackets]: num
+input residence[p in persons, m in months]: key countries
+input salary[j in jobs, m in months]: money PLN question "Ile wynosi pensja brutto z tej pracy w tym miesiącu?"
+input works_for[j in jobs]: key persons
+
+band pit_scale(x: num PLN): num PLN
+def net_wage[j in jobs, m in months]: money PLN = salary[j, m] at start_of(m)
+def taxable[p in persons, y in tax_years]: money PLN = 0 PLN
+
+def pit[p in persons, y in tax_years]: money PLN at start_of(y)
+  rule base = round(pit_scale(taxable[p, y]), 1 PLN, half-up)
+  rule abroad beats base = ?"Podatek nierezydenta Polski nie jest opisany." when residence[p, month_of(start_of(y))] != pl
+
+move wage[m in months, j in jobs over m]: wages
+  on day_of(m, pay_dom[j])
+  at start_of(m)
+  leg cash from world to konto[works_for[j]] amount net_wage[j, m]
+
+version home_2026
+  cite household
+  governs 2026-10..
+  known 2026-10-19
+  persons + [ana] lives 1990-04-02..
+  persons + [ben] lives 1988-11-30..
+  jobs + [ana_acme] lives 2020-02-01..
+  jobs + [ben_bolt] lives 2021-09-01..
+  parent = false "brak dzieci"
+  pay_dom = 10 "umowy o pracę, § 5"
+  residence = pl "meldunek w Krakowie"
+  works_for[ana_acme] = ana
+  works_for[ben_bolt] = ben
+  opening[konto[ana]] = 12 400.00 PLN at 2026-10-01 start "wyciąg"
+  opening[konto[ben]] = 3 150.00 PLN at 2026-10-01 start "wyciąg"
+  pit_scale: [0, inf) = 12 % * x "art. 27"
+
+ask b5: bal(konto[ana], 2026-10-05), bal(konto[ben], 2026-10-05)
+ask b31: bal(konto[ana], 2026-10-31)
+ask wd: wage[2026-11, ben_bolt].day
+ask p27: pit[ana, 2027]
+=== expect
+b31: ?"wage[2026-10, ana_acme] on 2026-10-10 changed after it was paid (version home_2026); is back pay due, and when?" (wage[2026-10, ana_acme])
+  adjustment: wage[2026-10, ana_acme] by ?"Ile wynosi pensja brutto z tej pracy w tym miesiącu?" (salary[ana_acme, 2026-10]) on 2026-10-19 (version home_2026), remaining ?"Ile wynosi pensja brutto z tej pracy w tym miesiącu?" (salary[ana_acme, 2026-10])
+  cut 2026-10-20
+b5: (12 400.00 PLN, 3 150.00 PLN)
+  cut 2026-10-20
+p27: 0.00 PLN
+  held: pit_scale row [0, inf) (home_2026), read for 2027-01-01
+  held: residence[ana, 2027-01] = pl (home_2026), read for 2027-01
+  cut 2026-10-20
+wd: 2026-11-10
+  held: pay_dom[ben_bolt] = 10 (home_2026), read for 2026-11-01
+  cut 2026-10-20

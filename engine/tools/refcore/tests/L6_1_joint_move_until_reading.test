@@ -1,0 +1,60 @@
+# MC-E1-F3 and round 17b. L §6.1 The joint model's own movements: "A read of that place in the joint model from the
+# movement's day until the member's next reading of the place, a balance included, is a hole naming it ...; from that
+# reading on, the reading states the balance, as after any hole movement (§5.19). Every result that reads the place on
+# or after the movement's day lists it under left out: (§8.2)"; L §8.2 left out: "under a result of a joint model that
+# reads a member's place on or after their day". o[r1] (2026-01-10, 5.00 DUK into m.p) links to nothing; m states
+# m.p's reading 10.00 DUK at 2026-01-15 end. before (01-12) and flows over January: the hole naming o[r1]; after
+# (01-20): the reading's 10.00 DUK; flows over February: 0.00 DUK (nothing moves); each lists o[r1]. early (01-05),
+# before its day: m's own balance (0.00 DUK, as m alone gives it), nothing listed. snap9 printed after with no left out:
+# line.
+=== j/joint.tally
+model j
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  use m = "../m" sha256 "9cf44a7c0544ccb27c94ec23ce13308c96543c4f3656ca973d5da36b4c367ce9"
+source t "the joint model's own record"
+input o: observed
+version w
+  cite t
+  governs 2026-01
+  known 2026-02-01
+  o[r1] = (on: 2026-01-10, kind: transfers, leg cash from m.world to m.p amount 5.00 DUK) "row 1"
+ask before: bal(m.p, 2026-01-12) law 2026-02-15 as known 2026-02-15
+ask after: bal(m.p, 2026-01-20) law 2026-02-15 as known 2026-02-15
+ask early: bal(m.p, 2026-01-05) law 2026-02-15 as known 2026-02-15
+ask feb: flows(m.p, 2026-02) law 2026-02-15 as known 2026-02-15
+ask jan: flows(m.p, 2026-01) law 2026-02-15 as known 2026-02-15
+=== m/model.tally
+model m
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+unit DUK: currency minor 0.01
+source s "member's statement"
+place p: accounts DUK lives 2026-01-01..
+place world: outside lives 2026-01-01..
+version v
+  cite s
+  governs 2026-01
+  known 2026-02-01
+  anchor p
+  stated[p] = 10.00 DUK at 2026-01-15 end "closing balance"
+=== expect
+after: 10.00 DUK
+  anchor: m.p 2026-01-15 end, stated 10.00 DUK, difference ?"o[r1] crosses to m with no link" (o[r1])
+  left out: o[r1], 1 instances, first 2026-01-10
+  law date 2026-02-15, cut 2026-02-15
+before: ?"o[r1] crosses to m with no link" (o[r1])
+  left out: o[r1], 1 instances, first 2026-01-10
+  law date 2026-02-15, cut 2026-02-15
+early: 0.00 DUK
+  law date 2026-02-15, cut 2026-02-15
+feb: 0.00 DUK
+  left out: o[r1], 1 instances, first 2026-01-10
+  law date 2026-02-15, cut 2026-02-15
+jan: ?"o[r1] crosses to m with no link" (o[r1])
+  left out: o[r1], 1 instances, first 2026-01-10
+  law date 2026-02-15, cut 2026-02-15

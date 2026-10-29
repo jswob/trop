@@ -1,0 +1,11 @@
+# L §2.1: "Identifiers ... at most 48 characters." A 49-character id cannot parse (LOAD-PARSE).
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+input abcdefghij_abcdefghij_abcdefghij_abcdefghij_abcde: int
+=== expect
+refused: LOAD-PARSE ...

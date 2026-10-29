@@ -1,12 +1,18 @@
 model ch03
-  tally 1
+  tally 2
   on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
   note "Continuous ranked probability score: the normal closed form, the sample and weighted-sample forms, a skill score against a point baseline, and interval scores, the weighted interval score and log scores of two negative binomial forecasts."
   note "Scores are negatively oriented unless an ask says higher: JSS p. 4, a lower score indicates a better forecast."
   note "JSS 3.1 is written as its ten normal forecasts scored against the observations; the observations come from R's unseeded random stream and are a bound."
 
 source bracher_2021 "Bracher, Ray, Gneiting, Reich, Evaluating epidemic forecasts in an interval format, PLOS Computational Biology, 12 February 2021" at "https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1008618"
+
 source jss_scoringrules "Jordan, Krüger, Lerch, Evaluating Probabilistic Forecasts with scoringRules, Journal of Statistical Software 90(12), August 2019" at "https://www.jstatsoft.org/article/view/v090i12"
+
+source lifted_1_0_1 "Figures tally 1.0.1 allowed inline in rules"
+
 source properscoring "properscoring README (The Climate Corporation)" at "https://raw.githubusercontent.com/properscoring/properscoring/master/README.rst"
 
 axis disp
@@ -18,13 +24,13 @@ axis wis_form
   eq1 "Bracher eq. (1): (w0 |y − m| + Σ wk ISk) / (K + 1/2)"
   no_median "without the median term: Σ wk ISk / K"
 
-index ak = 1..11
+index ak = int 1..11
 
 index bmem = [m1]
 
-index grid = 1..1000
+index grid = int 1..1000
 
-index j10 = 1..10
+index j10 = int 1..10
   note "JSS 3.1: the ten normal forecasts, one per observation of obs <- rnorm(10)."
 
 index jcall = [sd_pos, sd_neg]
@@ -42,11 +48,26 @@ input grid_hi: num
 
 input grid_lo: num
 
+input is_score_2: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input is_sum_2: int
+  note "lifted from an inline figure of tally 1.0.1"
+
 input jss_sd10: num
 
 input mu: num
 
+input nb_hi_2: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input nb_lo_2: int
+  note "lifted from an inline figure of tally 1.0.1"
+
 input nb_mean[f in nbf]: num
+
+input nb_med_2: int
+  note "lifted from an inline figure of tally 1.0.1"
 
 input nb_size[f in nbf]: int
 
@@ -54,103 +75,115 @@ input sig: num
 
 input w0: num
 
+input wis_2: int
+  note "lifted from an inline figure of tally 1.0.1"
+
 input y0: num
 
 input y5[o in obs5]: num
 
 input y_nb: int
 
-def base5[o in obs5]: num = crps(base_fc[j] for j in bmem, y5[o])
+def base5[o in obs5]: num = crps(base_fc[j] for j in bmem, y5[o]) at reader
 
-def base_score: num = sum(o in obs5: base5[o]) / count(o in obs5)
+def base_score: num = sum(base5[o] for o in obs5) / count(o in obs5) at reader
 
-def crps0: num = crps(normal(mu, sig), y0) to 1e-20
+def crps0: num = crps(normal(mu, sig), y0) to 1e-20 at reader
 
-def crps5[o in obs5]: num = crps(normal(mu, sig), y5[o]) to 1e-20
+def crps5[o in obs5]: num = crps(normal(mu, sig), y5[o]) to 1e-20 at reader
 
-def crps_grid: num = crps(gx[i] weight gw[i] for i in grid, y0)
+def crps_grid: num = crps(gx[i] weight gw[i] for i in grid, y0) at reader
 
-def fc_score: num = sum(o in obs5: crps5[o]) / count(o in obs5)
+def fc_score: num = sum(crps5[o] for o in obs5) / count(o in obs5) at reader
 
-def gw[i in grid]: num = pdf(normal(mu, sig), gx[i]) to 1e-30
+def gw[i in grid]: num = pdf(normal(mu, sig), gx[i]) to 1e-30 at reader
 
-def gx[i in grid]: num = grid_lo + (grid_hi - grid_lo) * (pos(i) - 1) / (count(j in grid) - 1)
+def gx[i in grid]: num = grid_lo + (grid_hi - grid_lo) * (pos(i) - 1) / (count(j in grid) - 1) at reader
 
-def is_score[f in nbf, k in ak]: num = nb_hi[f, k] - nb_lo[f, k] + 2 / alpha[k] * max(0, nb_lo[f, k] - y_nb) + 2 / alpha[k] * max(0, y_nb - nb_hi[f, k])
+def is_score[f in nbf, k in ak]: num = nb_hi[f, k] - nb_lo[f, k] + is_score_2 / alpha[k] * max(0, nb_lo[f, k] - y_nb) + is_score_2 / alpha[k] * max(0, y_nb - nb_hi[f, k]) at reader
 
-def is_sum[f in nbf]: num = sum(k in ak: alpha[k] / 2 * is_score[f, k])
+def is_sum[f in nbf]: num = sum(alpha[k] / is_sum_2 * is_score[f, k] for k in ak) at reader
 
-def jss_mean[j in j10]: num
+def jss_mean[j in j10]: num at reader
   note "JSS Section 3.1, p. 7: mean = c(1:10)"
   rule base v jss_2019 = j
 
-def jss_sd[s in jcall, j in j10]: num
+def jss_obs: num
+  note "JSS 3.1, p. 7: obs <- rnorm(10), the ten observations the forecasts are scored against"
+  rule base = ?"they are R's unseeded random stream, data a Tally reality can't hold (LANGUAGE §5.17), and the article doesn't print them"
+
+def jss_sd[s in jcall, j in j10]: num at reader
   note "JSS Section 3.1: sd = c(1:10) (p. 7); sd = c(1:9, -5) in the second call (p. 8)"
   rule base v jss_2019 = j
-  rule neg excepts base v jss_2019 when s = sd_neg and j = 10 = jss_sd10
+  rule neg beats base v jss_2019 = jss_sd10 when s == sd_neg and j == 10
 
-def ln_pmf[f in nbf]: num = ln(pmf(negbin(nb_mean[f], nb_size[f]), y_nb)) to 1e-9
+def jss_unseeded: num
+  note "JSS 3.2 crps_sample: forecasts given as 3e4 rnorm draws (sample_nm)"
+  rule base = ?"the sample is R's unseeded random stream and is not printed, so the scores can't be recomputed"
 
-def nb_hi[f in nbf, k in ak]: int = quantile(negbin(nb_mean[f], nb_size[f]), 1 - alpha[k] / 2)
+def ln_pmf[f in nbf]: num = ln(pmf(negbin(nb_mean[f], nb_size[f]), y_nb)) to 1e-9 at reader
 
-def nb_lo[f in nbf, k in ak]: int = quantile(negbin(nb_mean[f], nb_size[f]), alpha[k] / 2)
+def logs_sample: num
+  note "JSS 3.2 logs_sample: the log score of a forecast given as a sample"
+  rule base = ?"a sample has no density (LANGUAGE §5.15); its draws are also unseeded and not printed"
 
-def nb_med[f in nbf]: int = quantile(negbin(nb_mean[f], nb_size[f]), 1 / 2)
+def nb_hi[f in nbf, k in ak]: int = quantile(negbin(nb_mean[f], nb_size[f]), 1 - alpha[k] / nb_hi_2) at reader
 
-def nb_sd[f in nbf]: num = sqrt(nb_var[f]) to 0.0001
+def nb_lo[f in nbf, k in ak]: int = quantile(negbin(nb_mean[f], nb_size[f]), alpha[k] / nb_lo_2) at reader
 
-def nb_var[f in nbf]: num = nb_mean[f] + nb_mean[f] * nb_mean[f] / nb_size[f]
+def nb_med[f in nbf]: int = quantile(negbin(nb_mean[f], nb_size[f]), 1 / nb_med_2) at reader
 
-def skill: num = (base_score - fc_score) / base_score
+def nb_sd[f in nbf]: num = sqrt(nb_var[f]) to 0.0001 at reader
 
-def wis[f in nbf]: num
-  rule eq1 when wis_form = eq1 = (w0 * abs(y_nb - nb_med[f]) + is_sum[f]) / (count(k in ak) + 1 / 2)
-  rule no_median when wis_form = no_median = is_sum[f] / count(k in ak)
+def nb_var[f in nbf]: num = nb_mean[f] + nb_mean[f] * nb_mean[f] / nb_size[f] at reader
 
-bound jss_obs "JSS 3.1, p. 7: obs <- rnorm(10), the ten observations the forecasts are scored against" because "they are R's unseeded random stream, data a Tally reality can't hold (LANGUAGE §5.17), and the article doesn't print them"
+def np_stream: num
+  note "properscoring crps_ensemble and threshold decomposition of np.random.RandomState(0).randn(1000)"
+  rule base = ?"the ensemble is numpy's generator stream, which is not a Tally draw, and its 1000 values are not printed"
 
-bound jss_unseeded "JSS 3.2 crps_sample: forecasts given as 3e4 rnorm draws (sample_nm)" because "the sample is R's unseeded random stream and is not printed, so the scores can't be recomputed"
+def skill: num = (base_score - fc_score) / base_score at reader
 
-bound logs_sample "JSS 3.2 logs_sample: the log score of a forecast given as a sample" because "a sample has no density (LANGUAGE §5.15); its draws are also unseeded and not printed"
+def wis[f in nbf]: num at reader
+  rule eq1 = (w0 * abs(y_nb - nb_med[f]) + is_sum[f]) / (count(k in ak) + 1 / wis_2) when wis_form == eq1
+  rule no_median = is_sum[f] / count(k in ak) when wis_form == no_median
 
-bound np_stream "properscoring crps_ensemble and threshold decomposition of np.random.RandomState(0).randn(1000)" because "the ensemble is numpy's generator stream, which is not a Tally draw, and its 1000 values are not printed"
+ask bracher_logs: round(ln_pmf[f], 0.01, disp) for f in nbf law 2026-10-18 orient higher
 
-ask bracher_logs: round(ln_pmf[f], 0.01, disp) for f in nbf orient higher
+ask bracher_logs_neg: round(-ln_pmf[f], 0.01, disp) for f in nbf law 2026-10-18 orient lower
 
-ask bracher_logs_neg: round(-ln_pmf[f], 0.01, disp) for f in nbf orient lower
+ask bracher_q95: quantile(negbin(nb_mean[f], nb_size[f]), 0.95) for f in nbf law 2026-10-18
 
-ask bracher_q95: quantile(negbin(nb_mean[f], nb_size[f]), 0.95) for f in nbf
+ask bracher_sd: round(nb_sd[nb_f], 1, disp), round(nb_sd[nb_g], 0.1, disp) law 2026-10-18
 
-ask bracher_sd: round(nb_sd[nb_f], 1, disp), round(nb_sd[nb_g], 0.1, disp)
+ask bracher_wis: round(wis[f], 0.1, disp) for f in nbf law 2026-10-18 orient lower
 
-ask bracher_wis: round(wis[f], 0.1, disp) for f in nbf orient lower
+ask jss_3_1: crps(normal(jss_mean[j], jss_sd[sd_pos, j]), jss_obs) to 0.001 for j in j10 law 2026-10-18 orient lower
 
-ask jss_3_1: crps(normal(jss_mean[j], jss_sd[sd_pos, j]), jss_obs) to 0.001 for j in j10 orient lower
+ask jss_3_1_sd: crps(normal(jss_mean[j], jss_sd[sd_neg, j]), jss_obs) to 0.001 for j in j10 law 2026-10-18 orient lower
 
-ask jss_3_1_sd: crps(normal(jss_mean[j], jss_sd[sd_neg, j]), jss_obs) to 0.001 for j in j10 orient lower
+ask jss_3_2_crps: jss_unseeded law 2026-10-18 orient lower
 
-ask jss_3_2_crps: jss_unseeded orient lower
+ask jss_3_2_logs: logs_sample law 2026-10-18 orient lower
 
-ask jss_3_2_logs: logs_sample orient lower
+ask ps_ensemble: np_stream law 2026-10-18 orient lower
 
-ask ps_ensemble: np_stream orient lower
+ask ps_gaussian: crps0 law 2026-10-18 orient lower
 
-ask ps_gaussian: crps0 orient lower
+ask ps_gaussian5: round(crps5[o], 0.00000001, disp) for o in obs5 law 2026-10-18 orient lower
 
-ask ps_gaussian5: round(crps5[o], 0.00000001, disp) for o in obs5 orient lower
+ask ps_quadrature: crps0 law 2026-10-18 orient lower
 
-ask ps_quadrature: crps0 orient lower
+ask ps_skill: skill law 2026-10-18 orient higher
 
-ask ps_skill: skill orient higher
+ask ps_skill_text: round(skill, 0.01, disp) law 2026-10-18 orient higher
 
-ask ps_skill_text: round(skill, 0.01, disp) orient higher
+ask ps_threshold: np_stream law 2026-10-18 orient lower
 
-ask ps_threshold: np_stream orient lower
-
-ask ps_weighted: crps_grid orient lower
+ask ps_weighted: crps_grid law 2026-10-18 orient lower
 
 version bracher_2021_v
   cite bracher_2021
+  governs always
   known 2021-02-12
   note "The WIS definition's own parameters (eqs. 1-2, p. 4), known from the article's publication."
   alpha[1] = 0.02 "p. 4: α1 = 0.02"
@@ -166,8 +199,20 @@ version bracher_2021_v
   alpha[11] = 0.9 "p. 4: α11 = 0.9"
   w0 = 0.5 "p. 4, eq. (2): with w0 = 1/2"
 
+version lifted_figures
+  cite lifted_1_0_1
+  governs always
+  known 2021-02-12
+  is_score_2 = 2 "inline in tally 1.0.1: is_score line 79, factor"
+  is_sum_2 = 2 "inline in tally 1.0.1: is_sum line 81, factor"
+  nb_hi_2 = 2 "inline in tally 1.0.1: nb_hi line 94, factor"
+  nb_lo_2 = 2 "inline in tally 1.0.1: nb_lo line 96, factor"
+  nb_med_2 = 2 "inline in tally 1.0.1: nb_med line 98, factor"
+  wis_2 = 2 "inline in tally 1.0.1: wis line 107, factor"
+
 version bracher_example
   cite bracher_2021
+  governs always
   known 2026-10-18
   note "The Section 3.2 example's forecasts F and G and its observation are a worked example's stipulations, known from the model's on, since it has no start (LANGUAGE §4.5)."
   nb_mean[nb_f] = 60 "Section 3.2, p. 7: F with expectation 60"
@@ -178,12 +223,14 @@ version bracher_example
 
 version jss_2019
   cite jss_scoringrules
+  governs always
   known 2026-10-18
   note "The article is dated August 2019. This version holds only the Section 3.1 example's forecasts, a worked example's stipulations, known from the model's on, since it has no start (LANGUAGE §4.5). The rules of jss_mean and jss_sd cite it."
   jss_sd10 = -5 "Section 3.1, p. 8: sd = c(1:9, -5), the tenth forecast"
 
 version properscoring_readme
   cite properscoring
+  governs always
   known 2026-10-18
   note "The README's examples are worked examples: their forecasts and observations are stipulations, known from the model's on, since it has no start (LANGUAGE §4.5). The README also carries no date of its own; its retrieval day is the same day."
   base_fc = 0 "skill example: suppose that our baseline forecast is to always predict 0"

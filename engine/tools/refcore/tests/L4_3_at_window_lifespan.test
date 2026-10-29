@@ -1,0 +1,50 @@
+# Round 18, C3-7 (fixed). E §3.2: the law-date class is bounded by "the governs spans of the rows and rules the item
+# reaches and ... the lifespans of the things at the keys it reads (LANGUAGE §4.6 step 5)"; L §4.3: a window at reads
+# the def once per class, "If all give one value, that is the value; otherwise it is HOLE-IMPRECISE". city has no
+# row: c[ola] is HOLE-UNGOVERNED inside ola's life (to 2026-06-15) and none after (L §4.6 step 5), so a window across
+# the end holds two classes with different values: HOLE-IMPRECISE (q3; snap11 let the holes win, a hole of six
+# questions). windows each (q4) splits at the lifespan's end; on the days inside it each day's hole names its own law
+# date (L §4.6 step 5, `no value at <law date>`), so the answer is not constant there (L §4.4), against E §3.2's "Every
+# law date inside one interval gives the same value" (a contradiction in the sixth pass's report; a window inside the
+# stretch is REFCORE-UNSPECIFIED, L4_3_at_window_gap_holes).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+kind persons
+input city[p in persons]: text
+input w: date
+
+def c[p in persons]: text at w
+  rule r = city[p]
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  persons + [ola] lives 1950-01-01..2026-06-15
+  w = window(2026-06-10, 2026-06-20)
+
+ask q3: c[ola]
+ask q4: c[ola] windows each
+=== expect
+q3: ?"date within window(2026-06-10, 2026-06-20) not precise enough for the law date of c" (c[ola])
+  cut 2026-12-31
+q4 [w = 2026-06-10]: ?"city at ola: no value at 2026-06-10" (city[ola])
+  cut 2026-12-31
+q4 [w = 2026-06-11]: ?"city at ola: no value at 2026-06-11" (city[ola])
+  cut 2026-12-31
+q4 [w = 2026-06-12]: ?"city at ola: no value at 2026-06-12" (city[ola])
+  cut 2026-12-31
+q4 [w = 2026-06-13]: ?"city at ola: no value at 2026-06-13" (city[ola])
+  cut 2026-12-31
+q4 [w = 2026-06-14]: ?"city at ola: no value at 2026-06-14" (city[ola])
+  cut 2026-12-31
+q4 [w = 2026-06-15]: ?"city at ola: no value at 2026-06-15" (city[ola])
+  cut 2026-12-31
+q4 [w = 2026-06-16 .. 2026-06-20]: none
+  cut 2026-12-31

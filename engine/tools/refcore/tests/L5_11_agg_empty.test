@@ -1,0 +1,36 @@
+# L §5.11 aggregate table, "Over no keys": sum 0 in the term's type; count 0; any false; all true; min, max,
+# argmin, mean refused (RUN-EMPTY).  The where (k == none-like filter) leaves no keys: f[k] is false at every key.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+index ks = [a, b]
+input f[k in ks]: bool
+input m[k in ks]: money PLN
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  f[*] = false
+  m[*] = 1.00 PLN
+
+ask q1: sum(m[k] for k in ks where f[k]), count(k in ks where f[k]), any(f[k] for k in ks where f[k]), all(f[k] for k in ks where f[k])
+ask q2: min(m[k] for k in ks where f[k])
+ask q3: argmin(m[k] for k in ks where f[k])
+ask q4: mean(m[k] for k in ks where f[k])
+=== expect
+q1: (0.00 PLN, 0, false, true)
+  cut 2026-12-31
+q2: refused: RUN-EMPTY ...
+  cut 2026-12-31
+q3: refused: RUN-EMPTY ...
+  cut 2026-12-31
+q4: refused: RUN-EMPTY ...
+  cut 2026-12-31

@@ -1,0 +1,22 @@
+# Round 18, C1-15 (fixed). L §4.2: day_of "Of a key of an anchored index (§4.1) it is refused, and so is schedule, at
+# load where load sees the index (§8.4), otherwise at the key (RUN-DOMAIN)"; L §8.3 LOAD-DOMAIN "<operation> has no
+# meaning for <values> (§8.4, seen at load)". d's key binds over am, anchored on the 17th: load sees it, and the whole
+# reality is refused. snap11: q RUN-DOMAIN at the key.
+=== m.tally
+model m
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+source s "s"
+index am = month 2026-01..2026-12 from 17
+input dom: int
+def d[k in am]: date = day_of(k, dom)
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  dom = 5
+ask q: d[2026-03]
+=== expect
+refused: LOAD-DOMAIN day_of of a key of the anchored index am has no meaning (m.tally:9)

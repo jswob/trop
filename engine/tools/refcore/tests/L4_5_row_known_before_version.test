@@ -1,0 +1,21 @@
+# L §4.5: "A row may state its own known, later than its version's; one before its version's (a window by its first
+# day) is refused (LOAD-KNOWN)." (Writer 6: was REFCORE-UNSPECIFIED §4.5.)
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+input x: int
+
+version v
+  cite s
+  governs always
+  known 2026-03-01
+  x = 1 known window(2026-02-01, 2026-04-01) "s"
+
+ask q1: x
+=== expect
+refused: LOAD-KNOWN ...

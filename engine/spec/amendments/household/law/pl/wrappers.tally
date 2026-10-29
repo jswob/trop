@@ -1,14 +1,22 @@
 part pl_wrappers
-  tally 1
+  tally 2
   law
   note "IKE: roczny limit wpłat. OKI: od 2027, podatek od średniej wartości rachunku ponad kwotę wolną, płatny do 31 maja."
   note "Wycinek przykładowy z kwotami prototypu; nie przeszedł bramki."
 
 source ike_act "Ustawa o indywidualnych kontach emerytalnych oraz indywidualnych kontach zabezpieczenia emerytalnego (tekst jednolity)"
+
 source oki_act "Ustawa o osobistych kontach inwestycyjnych, Dz.U. 2026 poz. 1098 (z prototypu)"
+
 source rpp "Komunikaty Rady Polityki Pieniężnej o stopach procentowych NBP"
 
 index oki_asset = [pln_funds, deposits_bonds, foreign]
+
+input ike_limit_3: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input nbp_oct_2: int
+  note "lifted from an inline figure of tally 1.0.1"
 
 input nbp_ref: num question "Ile wynosi stopa referencyjna NBP?"
 
@@ -16,34 +24,39 @@ input oki_exempt[a in oki_asset]: money PLN
 
 input oki_from: month
 
+input oki_rate_0_0001: num
+  note "lifted from an inline figure of tally 1.0.1"
+
 input oki_rate_first: num
 
 input oki_rate_floor: num
 
 input oki_ref_share: num
 
-def ike_limit[y in tax_year]: money PLN
-  rule base v ike_2004 = 3 * proj_wage_y[y]
+input oki_tax_pay_17: int
+  note "lifted from an inline figure of tally 1.0.1"
 
-def nbp_oct[y in tax_year]: num at add_days(add_months(start_of(y), -2), -1) = nbp_ref
+def ike_limit[y in tax_year]: money PLN at start_of(y)
+  rule base v ike_2004 = ike_limit_3 * proj_wage_y[y]
 
-def oki_avg[y in tax_year]: num PLN
-  rule base v oki_rules = sum(d in day where year_of(d) = y: worth(wunits[oki], d) + bal(wcash[oki], d)) / days(start_of(y), end_of(y))
+def nbp_oct[y in tax_year]: num = nbp_ref at add_days(add_months(start_of(y), -nbp_oct_2), -1)
 
-def oki_rate[y in tax_year]: num
+def oki_avg[y in tax_year]: num PLN at start_of(y)
+  rule base v oki_rules = sum(value(wunits[oki], d) in PLN by etf_price[month_of(d)] + bal(wcash[oki], d) for d in day where year_of(d) == y) / days_between(start_of(y), end_of(y))
+
+def oki_rate[y in tax_year]: num at start_of(y)
   rule base v oki_2027 = oki_rate_first
-  rule base v oki_2028 = max(oki_rate_floor, round(oki_ref_share * nbp_oct[y], 0.0001, floor))
 
-def oki_tax[y in tax_year]: money PLN
+def oki_tax[y in tax_year]: money PLN at start_of(y)
   rule base v oki_rules = round(max(0, oki_avg[y] - oki_exempt[oki_holds]) * oki_rate[y], 1, half-up)
 
-pay oki_tax_pay[y in tax_year]
-  from konto
-  to urzad_skarbowy
-  amount oki_tax[y]
-  on next_business(add_days(add_months(start_of(y), 17), -1), holidays_pl)
+move oki_tax_pay[y in tax_year]: transfers
+  on if is_business(add_days(add_months(start_of(y), oki_tax_pay_17), -1), holidays_pl) then add_days(add_months(start_of(y), oki_tax_pay_17), -1) else add_business(add_days(add_months(start_of(y), oki_tax_pay_17), -1), 1, holidays_pl)
+  at start_of(y)
   for y
-  when oki_from != - and start_of(y) >= start_of(oki_from) and oki_tax[y] > 0
+  when oki_from != none and start_of(y) >= start_of(oki_from) and oki_tax[y] > 0
+  reads wcash, wunits
+  leg cash from konto to urzad_skarbowy amount oki_tax[y]
 
 version ike_2004
   cite ike_act
@@ -69,6 +82,7 @@ version oki_2028
   governs 2028..
   known 2026-07-15
   note "art. 25: 19% stopy referencyjnej NBP z 31 października roku poprzedniego, w dół do 0,01 pp, nie mniej niż 0,1%"
+  replace rule oki_rate.base v oki_2028 = max(oki_rate_floor, round(oki_ref_share * nbp_oct[y], oki_rate_0_0001, floor))
 
 version oki_rules
   cite oki_act
@@ -82,5 +96,6 @@ version oki_rules
 
 version oki_start
   cite oki_act
+  governs always
   known 2026-07-15
-  oki_from = 2027-01 "przepis o wejściu w życie"
+  replace oki_from = 2027-01 "przepis o wejściu w życie"

@@ -1,0 +1,46 @@
+# L §2.1 (round 12) "A quarter ... is 2026-Q1 to 2026-Q4, SDMX's form of a reporting quarter (calendar quarters,
+# from January, §4.1)"; L §3.1 `quarter` "A period value. 2026-Q1"; L §7.1 quarters used as dates or keys are date
+# literals (rows, governs, asks; LOAD-LITERAL in a def: lit). `governs 2026-Q1..2026-Q2` is [2026-01-01, 2026-07-01)
+# (L §4.1 spans over periods), so law 2026-06-30 reads v and law 2026-07-01 reads v2; start_of(2026-Q3) is its first
+# day; a period moves by an int (L §4.2), 2026-Q1 + 1 is 2026-Q2; an input keyed by one period index is read at its
+# key (L §4.6 step 1). (Writer 8: the built-in index quarters is gone, L §2.2, §4.1 "A quarter ... is a value, never a
+# key"; the reads of an input keyed by it are dropped.)
+=== m.tally
+model t
+  tally 2
+  on 2026-10-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+input r: int
+
+version v
+  cite s
+  governs 2026-Q1..2026-Q2
+  known 2026-01-01
+  r = 1
+
+version v2
+  cite s
+  governs 2026-Q3..
+  known 2026-01-01
+  r = 2
+
+ask a2: start_of(2026-Q3)
+ask a3: quarter_of(2026-05-17) == 2026-Q2
+ask a4: 2026-Q1 + 1
+ask b: r law 2026-07-01
+ask b2: r law 2026-06-30
+=== expect
+a2: 2026-07-01
+  cut 2026-10-01
+a3: true
+  cut 2026-10-01
+a4: 2026-Q2
+  cut 2026-10-01
+b: 2
+  law date 2026-07-01, cut 2026-10-01
+b2: 1
+  law date 2026-06-30, cut 2026-10-01

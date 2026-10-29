@@ -1,0 +1,27 @@
+# L §5.18: "A deflator is written in the ask, x * idx[base] / idx[d]: a lens applied only when a question is asked"
+# (writer 8: real() is gone). 5 000.00 × 100 / 125 = 4 000.00. The run starts in 2020, so 2020 is a key of years
+# (L §4.1). money × num is num CUR (L §3.2), and the division keeps it so: a num PLN, not money.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2020-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+input cpi[y in years]: num
+input wage: money PLN
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  cpi[2020] = 100
+  cpi[2026] = 125
+  wage = 5 000.00 PLN
+
+ask q1: wage * cpi[2020] / cpi[2026]
+=== expect
+q1: 4 000 PLN
+  cut 2026-12-31

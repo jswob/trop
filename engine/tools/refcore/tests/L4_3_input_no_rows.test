@@ -1,0 +1,47 @@
+# L §4.3 rule 1 (writer 6): law-dated is "one with a row or version whose span isn't always"; an input with no row
+# at all has none, so a def reading it needs no `at` (rule 2), and no LOAD-LAWDATE. Reading it, L §4.6 step 5: no
+# candidate is HOLE-UNGOVERNED, its question the input's `question` (q2: k's "Ile?"); without one, read with no law
+# date, "the question ends at no value: ... x: no value" (L §4.6 step 5; q1 through the def f, q3 directly). h's rules
+# point at versions that govern always: more beats base, h = 1.
+=== nr.tally
+model nr
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "synthetic"
+
+input n: int
+input k: int question "Ile?"
+input r: int reading
+
+def f: int = n + 1
+def g: int = k + 1
+def h: int
+  rule base v v1 = 0
+  rule more beats base v v2 = 1
+
+ask q1: f
+ask q2: g
+ask q3: n
+ask q4: h
+
+version v1
+  cite s
+  governs always
+  known 2026-01-01
+
+version v2
+  cite s
+  governs always
+  known 2026-01-02
+=== expect
+q1: ?"n: no value" (n)
+  cut 2026-10-25
+q2: ?"Ile?" (k)
+  cut 2026-10-25
+q3: ?"n: no value" (n)
+  cut 2026-10-25
+q4: 1
+  cut 2026-10-25

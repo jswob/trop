@@ -1,0 +1,34 @@
+# MC-X-F12 (writer 9), the ask path. L §4.3: "An ask line that reads a law-dated input or band directly ... states
+# `law D`". rate's rows all govern always, so it isn't law-dated ("A fact is law-dated when its value can change with the law date: an input, band, def or rule with a row or version whose span isn't `always`"),
+# and q needs no law. snap12: LOAD-LAWDATE ask q reads law-dated rate directly, without law.
+=== m.tally
+model f12c
+  tally 2
+  on 2027-12-31
+  start 2027-01-01
+  end 2027-12-31
+  note "MC-X-F12, the ask path: an ask line reads a band whose every row governs always, with no law (L 4.3: not law-dated)."
+
+unit PLN: currency minor 0.01
+
+source act "the act"
+
+
+input age3: int
+
+band rate(a: int): money PLN
+
+
+
+ask q: rate(age3)
+
+version v_act
+  cite act
+  governs always
+  known 2026-12-01
+  age3 = 3 "the age"
+  rate: [0, 6) = 400.00 PLN "under 6"
+  rate: [6, 18) = 250.00 PLN "6 to 17"
+=== expect
+q: 400.00 PLN
+  cut 2027-12-31

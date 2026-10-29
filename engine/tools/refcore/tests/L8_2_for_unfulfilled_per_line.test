@@ -1,0 +1,43 @@
+# L §8.2 unfulfilled: "a planned instance counted by a sum or a balance before the cut that no observation fulfils";
+# L §5.18: one line per binding tuple, each with its register. An ask's for over transfers binds each wage instance:
+# the lines of wage[2026-01] .. [2026-03] (dated before the cut 2026-03-31, nothing fulfils them) each list their own
+# instance; wage[2026-04] is after the cut. (Writer 6's known gap: no line listed it.)
+=== m.tally
+model t
+  tally 2
+  on 2026-03-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input dom: int
+
+move wage[m in months]: transfers
+  on day_of(m, dom)
+  leg cash from world to konto amount amt
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN
+  dom = 10
+  opening[konto] = 0 PLN at 2026-01-01 start "s"
+
+ask q: x.cash.amount for x in transfers over 2026-01-01 .. 2026-04-30
+=== expect
+q (x = wage[2026-01]): 100.00 PLN
+  unfulfilled: wage[2026-01]
+  cut 2026-03-31
+q (x = wage[2026-02]): 100.00 PLN
+  unfulfilled: wage[2026-02]
+  cut 2026-03-31
+q (x = wage[2026-03]): 100.00 PLN
+  unfulfilled: wage[2026-03]
+  cut 2026-03-31
+q (x = wage[2026-04]): 100.00 PLN
+  cut 2026-03-31

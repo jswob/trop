@@ -1,0 +1,18 @@
+# L §3.1 (round 12): "A leg is a field only of an observed row (§5.19), never of a record (LOAD-FIELD)". (Was
+# REFCORE-UNSPECIFIED §3.1, writer 5's T-6.)
+=== m.tally
+model t
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place shop: outside lives 2026-01-01..
+input d: date
+def r: (on date) = (on: d, leg cash from konto to shop amount 1.00 PLN)
+ask q: r.on
+=== expect
+refused: LOAD-FIELD leg cash: a leg is a field only of an observed row, not of a record (m.tally:12)

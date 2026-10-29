@@ -1,0 +1,37 @@
+# L §5.16 (round 12): a random fact's "rows and rules give samples of one type, quantities of unit U or keys of one
+# index (each a discrete over it); a mix is refused (LOAD-UNIT)". g's rows are discrete over ks in 2026 and over js in
+# 2027. (Was REFCORE-UNSPECIFIED §5.16, writer 5's T-73.)
+=== m.tally
+model t
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+index ks = [ka, kb]
+index js = [ja, jb]
+input w[k in ks]: num
+input u[j in js]: num
+input g: dist
+
+version v1
+  cite s
+  governs 2026
+  known 2026-01-01
+  w[ka] = 1
+  w[kb] = 1
+  u[ja] = 1
+  u[jb] = 1
+  g = discrete(w[k] for k in ks)
+
+version v2
+  cite s
+  governs 2027
+  known 2026-01-01
+  g = discrete(u[j] for j in js)
+
+ask q: share(g == ka) law 2026-06-30 paths 10 seed 1
+=== expect
+refused: LOAD-UNIT random fact g mixes sample types: discrete over js, ks ...

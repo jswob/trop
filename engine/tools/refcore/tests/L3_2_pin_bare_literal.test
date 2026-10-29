@@ -1,0 +1,27 @@
+# L §3.2 Inline figures: "a bare literal in a row or a pin takes its target's declared type and unit (`with
+# net_loss[b] = 2000` on a `money USD` def is 2 000.00 USD, never a year)".  L §8.2: the pin is listed.
+=== m.tally
+model t
+  tally 2
+  on 2027-01-01
+  start 2026-01-01
+  end 2027-12-31
+
+source s "s"
+unit USD: currency minor 0.01
+index bs = [b1, b2]
+input loss[b in bs]: money USD
+def net_loss[b in bs]: money USD = loss[b] at reader
+
+version v1
+  cite s
+  governs always
+  known 2025-12-01
+  loss[b1] = 1.00
+  loss[b2] = 3.00
+
+ask q1: net_loss[b1] + net_loss[b2] with net_loss[b1] = 2000 law 2026-12-31
+=== expect
+q1: 2 003.00 USD
+  pinned: net_loss[b1] = 2 000.00 USD
+  law date 2026-12-31, cut 2027-01-01

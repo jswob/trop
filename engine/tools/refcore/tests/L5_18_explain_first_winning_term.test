@@ -1,0 +1,52 @@
+# A-10, L §5.18 Explanation order: "A min, max, argmin or argmax is explained by its first winning term in binding
+# order" (E §10's table: "explained as that term is"). max(a, b) = 7 is b's row alone (e1); min over c is 2, won by
+# c[q] and c[r], and binding order over an open index is the text order of stable ids (L §2.5), so c[q] (e2); argmax
+# gives p, explained by c[p] (e3).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+index ix: open
+input a: int
+input b: int
+input c[k in ix]: int
+def y: int = max(a, b) at reader
+def z: int = min(c[k] for k in ix) at reader
+def w: key ix = argmax(c[k] for k in ix) at reader
+
+version v
+  cite s
+  governs 2026..
+  known 2026-01-01
+  a = 3 "row a"
+  b = 7 "row b"
+  c[p] = 5 "row cp"
+  c[q] = 2 "row cq"
+  c[r] = 2 "row cr"
+
+ask e1: explain y law 2026-06-30
+ask e2: explain z law 2026-06-30
+ask e3: explain w law 2026-06-30
+=== expect
+e1: 7
+  [1] y = 7, law date 2026-06-30
+      rule base: won
+        [2] row v:b = 7
+            version v, source s, "s", locator "row b", governs 2026-01-01.., known 2026-01-01
+  law date 2026-06-30, cut 2026-12-31
+e2: 2
+  [1] z = 2, law date 2026-06-30
+      rule base: won
+        [2] row v:c[q] = 2
+            version v, source s, "s", locator "row cq", governs 2026-01-01.., known 2026-01-01
+  law date 2026-06-30, cut 2026-12-31
+e3: p
+  [1] w = p, law date 2026-06-30
+      rule base: won
+        [2] row v:c[p] = 5
+            version v, source s, "s", locator "row cp", governs 2026-01-01.., known 2026-01-01
+  law date 2026-06-30, cut 2026-12-31

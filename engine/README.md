@@ -2,22 +2,24 @@
 
 Tally is a language for a household's money and the law that governs it, plus the engine that runs it: a standalone Rust library and binary, input to output. It is built and proven here before the app, the store or an MCP server uses it. Nothing in `apps/` or `packages/` imports it.
 
-## `spec/`: tally 1.0.1
+## `spec/`: tally 2.0
 
-The commit tagged `tally-1.0` froze it, and the one tagged `tally-1.0.1` patched it. `spec/VERSION` names the tag the tree matches, and `spec/SHA256SUMS` lists every file's checksum.
+The commit tagged `tally-2.0` froze it. Tally 2 is a new version of the language, with a migration from tally 1 (`spec/MIGRATION.md`, `LANGUAGE.md` §9). `tally 1.0.1` stays reachable by its tag `tally-1.0.1`. `spec/VERSION` names the tag the tree matches, and `spec/SHA256SUMS` lists every file's checksum.
 
-- **The definition:** `LANGUAGE.md`, `ENGINE.md`, `OPERATIONS.md`, `PERFORMANCE.md`, `BOUNDS.md`, `DECISIONS.md`, `BUILD-ORDER.md`, `coverage.md`.
-- **The contract:** `DONE.md`, the gates the engine must pass.
-- **The gap log:** `CHANGES.md`, what each version changed and why, and the gaps still open.
-- **The answer keys:** `models/` and `expected/` (the 79 cases), and `amendments/` (the synthetic household, its 7 changes and, in `amendments/expected/`, each change's expected outputs). `smoke/HH4-a.md` and `smoke/HH4-b.md` are the household's hand checks. `montecarlo/` holds the Monte Carlo keys: LH-17 with draws against its closed form, and the household's bands.
-- **Inputs for the tests:** `verification/goldens.md` and `verification/hindcast.md`. Under `verification/blocks/` are the prototype's synthetic fixtures that the goldens are checked against.
-- **`tools/loadcheck.py`:** the static load scan. Run it with `python3 -I spec/tools/loadcheck.py` (`--selftest` first).
+- **The definition:** `LANGUAGE.md` (what a construct means) and `ENGINE.md` (how the engine computes it), with `DECISIONS.md` (why: tally 2's records in Part I, tally 1.0.1's decisions carried in Part II) and `coverage.md`.
+- **The migration:** `MIGRATION.md`, each tally 1.0.1 construct and its tally 2 form, automatic, warned or manual.
+- **Stale until rewritten for tally 2:** `OPERATIONS.md`, `PERFORMANCE.md`, `BOUNDS.md`, `BUILD-ORDER.md`, `smoke/` and `verification/` are tally 1.0.1's, carried as they are. `STALE.md` lists the sections that tally 2's decisions reach. A gate that cites one of them waits until it is rewritten.
+- **The contract:** `DONE.md`, the gates the engine must pass, restated for tally 2.0 with the changes the user approved at G2 (logged in its table).
+- **The gap log:** `CHANGES.md`, what tally 2.0 changed from 1.0.1, how its contradictions were found and settled, and the gaps still open.
+- **The answer keys:** `models/` and `expected/` (the 79 cases, carried into tally 2 with their keys kept), and `amendments/` (the synthetic household and its 7 changes as tally 2 texts, with `amendments/expected/`). `montecarlo/` holds the Monte Carlo models and keys.
+- **`tools/loadcheck.py`:** the static load scan for tally 2. Run it with `python3 -I spec/tools/loadcheck.py` (`--selftest` first).
 
-**Changing it.** After the freeze, a change needs three things: a failing test or a logged contradiction, a row in the gap log (`spec/CHANGES.md`), and a patch that names both. Each patch raises the version (`tally 1.0.1`, …) and updates `SHA256SUMS`, and every gate in `DONE.md` is run again.
+**Changing it.** After the freeze, a change needs three things: a failing test or a logged contradiction, a row in the gap log (`spec/CHANGES.md`), and a patch that names both. Each patch raises the version (`tally 2.0.1`, …), updates `SHA256SUMS`, and every gate in `DONE.md` is run again.
 
-**Paths.** The spec was written in `tmp/design/`, and its paths are relative to that folder, so `models/`, `expected/`, `smoke/` and `tools/` resolve here. Two kinds of path don't:
+**Paths.** The spec was written in `tmp/design2/`, and its paths are relative to that folder, so `models/`, `amendments/`, `montecarlo/` and `tools/` resolve here. Provenance references (`REPORT.md`, `trace.md`, `regress.md`, `review/`, `rows/`, `cases/`, `refcore/`, `prior-art/`, `problems.md`, `core.md`) point at the design record. That record stays in the gitignored `tmp/` and isn't part of the spec. Part II of `DECISIONS.md` and the stale documents keep tally 1.0.1's paths (`tmp/design/`).
 
-- `tmp/verification/goldens.md` and `tmp/verification/hindcast.md` are `verification/` here, and `tmp/blocks/cases/` is `verification/blocks/cases/`.
-- Provenance references, such as `REPORT.md`, `gaps/`, `log/`, `candidates/`, `prior-art/`, other `smoke/` files and the rest of `tmp/verification/`, point at the design record. That record stays in the gitignored `tmp/` and isn't part of the spec.
+## `tools/refcore/`: the reference interpreter
+
+The Python reference interpreter of tally 2.0, written from `spec/LANGUAGE.md` and `spec/ENGINE.md` alone by writers who never saw an engine. It is the oracle of `DONE.md`'s gate 10 (differential testing). It uses the standard library only and was built and tested under Python 3.14.3; from `engine/`, `python3 -I -B tools/refcore test` runs its 950 tests, `… run <files of one reality> [--ask id …]` answers a reality's asks, and `… reprint <files>` prints each file's canonical form. Where the spec is silent it refuses `REFCORE-UNSPECIFIED <section>: <question>` (`refcore/UNSPECIFIED.md`); `refcore/HANDOVER.md` describes how it is built. `tools/SHA256SUMS` lists its files' checksums.
 
 **Never here:** the held-out cases, and any real household's data. The household in `amendments/` is synthetic.

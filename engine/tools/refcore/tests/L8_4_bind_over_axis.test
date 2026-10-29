@@ -1,0 +1,21 @@
+# L §5.6 Bindings: "A bind is over an index, a kind, a key list or a stepped range"; a bind over an axis has no
+# meaning: LOAD-DOMAIN at load (L §8.4).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+axis rd
+  a "reading a"
+  b "reading b"
+
+def c: int = count(r in rd) at reader
+
+ask q: c law 2026-06-30
+=== expect
+refused: LOAD-DOMAIN ...

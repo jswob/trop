@@ -1,0 +1,50 @@
+# L §4.4 / §5.18: "windows each prints one line per maximal sub-window, or combination of sub-windows, over which
+# the answer is constant, and one plain line when the answer doesn't depend on the day".  d is any day of 07-01 ..
+# 07-10: d < 07-05 is true on 07-01 .. 07-04 and false on 07-05 .. 07-10; d == d doesn't depend on the day.  Two
+# windows (d1 in 07-01..07-03, d2 in 07-02..07-04), d1 < d2: true where d1 < d2.  Lines: this interpreter's layout
+# `<ask> [<window> = <days>]`, boxes of consecutive days taken in day order (the cover of the second ask is not
+# unique: reported).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+input d: date
+input d1: date
+input d2: date
+input cutoff: date
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  d = window(2020-07-01, 2020-07-10)
+  d1 = window(2020-07-01, 2020-07-03)
+  d2 = window(2020-07-02, 2020-07-04)
+  cutoff = 2020-07-05
+
+ask q1: d < cutoff windows each
+ask q2: d == d windows each
+ask q3: d1 < d2 windows each
+=== expect
+q1 [d = 2020-07-01 .. 2020-07-04]: true
+  cut 2026-12-31
+q1 [d = 2020-07-05 .. 2020-07-10]: false
+  cut 2026-12-31
+q2: true
+  cut 2026-12-31
+q3 [d1 = 2020-07-01, d2 = 2020-07-02 .. 2020-07-04]: true
+  cut 2026-12-31
+q3 [d1 = 2020-07-02 .. 2020-07-03, d2 = 2020-07-02]: false
+  cut 2026-12-31
+q3 [d1 = 2020-07-02, d2 = 2020-07-03 .. 2020-07-04]: true
+  cut 2026-12-31
+q3 [d1 = 2020-07-03, d2 = 2020-07-03]: false
+  cut 2026-12-31
+q3 [d1 = 2020-07-03, d2 = 2020-07-04]: true
+  cut 2026-12-31

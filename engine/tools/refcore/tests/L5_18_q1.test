@@ -1,0 +1,38 @@
+# L §5.18 example ask q1, copied: "values, one line per binding tuple ..., the expressions in the order written";
+# "Lines are ordered by binding tuple in binding order" (here families is an index of two keys and months the
+# built-in index of a two-month run).  payable is the §5.11 def's base rule, max(0 PLN, entitled − excess).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-11-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+index families = [f1, f2]
+
+input entitled[f in families, m in months]: money PLN
+input excess[f in families, m in months]: money PLN
+
+def payable[f in families, m in months]: money PLN at start_of(m)
+  rule base = max(0 PLN, entitled[f, m] - excess[f, m])
+
+version v
+  cite s
+  governs 2026..
+  known 2026-01-01
+  entitled[f1, *] = 500.00 PLN
+  entitled[f2, *] = 50.00 PLN
+  excess[*, *] = 100.00 PLN
+
+ask q1: payable[f, m] for f in families, m in months law 2026-12-31
+=== expect
+q1 (f = f1, m = 2026-11): 400.00 PLN
+  law date 2026-12-31, cut 2026-12-31
+q1 (f = f1, m = 2026-12): 400.00 PLN
+  law date 2026-12-31, cut 2026-12-31
+q1 (f = f2, m = 2026-11): 0.00 PLN
+  law date 2026-12-31, cut 2026-12-31
+q1 (f = f2, m = 2026-12): 0.00 PLN
+  law date 2026-12-31, cut 2026-12-31

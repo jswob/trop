@@ -1,0 +1,54 @@
+# L §3.1 (PL-17): "A position that takes a code takes any expression of the code's type, such as a read of an input
+# that holds one (MODE, in flows … at and prorata, takes a code word or such a read, §2.3)." prorata's mode is the input
+# md: half-up gives 100.00 * 1/3 = 33.33 and 100.00 * 2/3 = 66.67 PLN (q1); pinned to down, 33.33 PLN (q2). round's
+# mode and add_business's calendar from inputs too (r: 10.00 / 3 = 3.333... half-up = 3.33 PLN; nb: the business day after
+# Friday 2026-01-02 under weekends [sat, sun] is Monday 2026-01-05).
+=== m.tally
+model pr
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source s "umowa"
+unit PLN: currency minor 0.01
+index parts = [a, b, c]
+input total: money PLN
+input w[p in parts]: num
+input md: rounding
+input x: money PLN
+input n: int
+input cal: calendar
+input d0: date
+
+def share_list[p in parts]: money PLN = prorata(total, w[j] for j in [a, b], p, minor(PLN), md, rest none)
+def r: money PLN = round(x / n, minor(PLN), md) at reader
+def nb: date = add_business(d0, 1, cal) at reader
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  total = 100.00 PLN
+  w[a] = 1
+  w[b] = 2
+  w[c] = 3
+  md = half-up
+  x = 10.00 PLN
+  n = 3
+  d0 = 2026-01-02
+  cal = calendar(weekends [sat, sun])
+
+ask q1: share_list[p] for p in [a, b]
+ask q2: share_list[a] with md = down
+ask q3: r, nb law 2026-06-30
+=== expect
+q1 (p = a): 33.33 PLN
+  cut 2026-10-20
+q1 (p = b): 66.67 PLN
+  cut 2026-10-20
+q2: 33.33 PLN
+  pinned: md = down
+  cut 2026-10-20
+q3: (3.33 PLN, 2026-01-05)
+  law date 2026-06-30, cut 2026-10-20

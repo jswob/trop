@@ -1,0 +1,43 @@
+# L §4.1 "An open index gets its keys from the rows of inputs keyed by it ... A key exists from the earliest known of
+# the versions whose rows bring it, so an earlier cut doesn't see it"; L §5.10 a place keyed by an index is one place
+# per key.  acct_rank's rows bring a1 (known 2026-01-01) and a2 (known 2026-05-01): sub[a1] opens at 100.00 PLN,
+# sub[a2] at 50.00 PLN.  As known 2026-03-01 the index has one key and one keyed place.
+=== m.tally
+model op
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source s "umowa"
+unit PLN: currency minor 0.01
+index accts: open
+input acct_rank[a in accts]: int
+place sub[a in accts]: accounts PLN lives 2026-01-01..
+
+version v1
+  cite s
+  governs always
+  known 2026-01-01
+  acct_rank[a1] = 1
+  opening[sub[a1]] = 100.00 PLN at 2026-01-01 start
+
+version v2
+  cite s
+  governs always
+  known 2026-05-01
+  acct_rank[a2] = 2
+  opening[sub[a2]] = 50.00 PLN at 2026-01-01 start
+
+ask q1: bal(sub[a], 2026-12-31) for a in accts
+ask q2: count(a in accts) as known 2026-03-01
+ask q3: bal(sub[a], 2026-02-28) for a in accts as known 2026-03-01
+=== expect
+q1 (a = a1): 100.00 PLN
+  cut 2026-10-20
+q1 (a = a2): 50.00 PLN
+  cut 2026-10-20
+q2: 1
+  cut 2026-03-01
+q3 (a = a1): 100.00 PLN
+  cut 2026-03-01

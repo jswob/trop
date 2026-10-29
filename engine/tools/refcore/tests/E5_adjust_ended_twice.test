@@ -1,0 +1,56 @@
+# MC-X-F13 (writer 9). pay[] is booked at 2027-02-01 with v1's amt, 100.00 PLN. v2 (known 2027-03-01) ends it (its
+# when is false): E §5 step 3 "when V ends one, δ = −A_previous", one adjustment, adjustments[pay.cash, v2], change
+# -100.00 PLN. v3 (known 2027-04-01) touches amt but leaves the instance ended: before and after it the instance
+# counts as 0 (E §5 step 1), δ = 0 and no leg's places change, so nothing is recorded (E §5 step 4). snap13: q1-q3
+# REFCORE-NOT-YET (AttributeError: 'NoneType' object has no attribute 'unit'), at the v3 step.
+=== m.tally
+model f13
+  tally 2
+  on 2027-12-31
+  start 2027-01-01
+  end 2027-12-31
+  note "MC-X-F13: a plan instance booked, ended by a later version, and still ended under a version known after that."
+
+unit PLN: currency minor 0.01
+source s "s"
+place konto: accounts PLN lives 2020-01-01..
+place world: outside lives 1900-01-01..
+
+input amt: money PLN
+input pay_day: date
+
+move pay: transfers
+  on pay_day
+  when amt > 0 PLN
+  leg cash from world to konto amount amt
+
+ask q1: count(a in adjustments over ..)
+ask q2: sum(a.change for a in adjustments over ..)
+ask q3: a.change for a in adjustments over ..
+
+version v1
+  cite s
+  governs always
+  known 2026-12-01
+  amt = 100.00 PLN
+  pay_day = 2027-02-01
+  opening[konto] = 0 PLN at 2027-01-01 start
+
+version v2
+  cite s
+  governs always
+  known 2027-03-01
+  replace amt = 0 PLN
+
+version v3
+  cite s
+  governs always
+  known 2027-04-01
+  replace amt = -5.00 PLN
+=== expect
+q1: 1
+  cut 2027-12-31
+q2: -100.00 PLN
+  cut 2027-12-31
+q3 (a = adjustments[pay.cash, v2]): -100.00 PLN
+  cut 2027-12-31

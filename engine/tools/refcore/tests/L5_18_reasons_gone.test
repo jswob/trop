@@ -1,0 +1,16 @@
+# L §2.2 (writer 8): reasons is gone from the built-ins ("explain x" shows which rules won, L §5.18); a call takes a
+# built-in's name or a band's id (L §2.3 Calls), so reasons(...) names no band: LOAD-NAME.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+def relief: int at reader
+  rule base = 0
+
+ask q: reasons(relief) law 2026-06-30
+=== expect
+refused: LOAD-NAME ...

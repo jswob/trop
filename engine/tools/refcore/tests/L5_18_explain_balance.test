@@ -1,0 +1,118 @@
+# L §2.3 askbody `"explain" (ref | balx | lowx)`, L §5.18 "explain bal(x, d) explains a balance, and explain bal(x, d)
+# from t or explain low(...) a projection (ENGINE.md §10)".  E §10: a balance prints "its last reading with its gap
+# role, version, source and gap, or the opening, and every movement since, up to that day, grouped by day, with each
+# movement's status and id"; a projection "its holder and day t, the start balance, the movements it counted with the
+# clauses applied, and the movements it left out".  Layout: this interpreter's.
+# Hand-checked: konto opens at 1 000.00 PLN (2026-01-01 start); rent 100.00 PLN on the 10th of each month; pay
+# 500.00 PLN on 2026-02-02 (observed r1); the statement states 1 220.00 PLN at 2026-02-28 end against a booked
+# 1 000 - 100 + 500 - 100 = 1 300.00 PLN, so the pad's gap is -80.00 PLN (E §6.1: the gap is the reading less the
+# booked balance), and after it the balance is the reading.  e1: 1 220 - 100 (03-10) - 100 (04-10) = 1 020.00 PLN.
+# e2: 1 000 - 100 = 900.00 PLN, from the opening.  e3: start 1 220 - 8 * 100 = 420.00 PLN at the start of 2026-11-01
+# (March..October), then 2 * 100 counted: 220.00 PLN; an ask line leaves out nothing (L §5.14.1).  e4: the lowest
+# end-of-day balance in November is after the rent, 320.00 PLN.  e5: a low without from is of the plain balances
+# (L §5.14.1 table), and L §5.18 (round 8) "explain low(x, span) without from explains the day of its lowest balance
+# as a balance": 320.00 PLN from 2026-11-10 (the rent) through 2026-11-30, explained as bal(konto, 2026-11-10).
+=== m.tally
+model g
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+source bank_export "bank"
+unit PLN: currency minor 0.01
+
+input bank: observed
+input pay_day: date
+input pay_amt: money PLN
+input rent_amt: money PLN
+input rent_dom: int
+
+kind spending: transfers
+
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+place unexplained: outside lives 1900-01-01..
+
+move pay: transfers
+  on pay_day
+  leg cash from world to konto amount pay_amt
+
+move rent[m in month]: transfers
+  on day_of(m, rent_dom)
+  leg cash from konto to world amount rent_amt
+
+index month = month 2026-01..2026-12
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  pay_day = 2026-02-02
+  pay_amt = 500.00 PLN
+  rent_amt = 100.00 PLN
+  rent_dom = 10
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "bilans otwarcia"
+
+version stmt_02
+  cite bank_export
+  governs 2026-02
+  known 2026-03-01
+  covers konto
+  pad konto from unexplained
+  bank[r1] = (on: 2026-02-02, kind: transfers, leg cash from world to konto amount 500.00 PLN, fulfils: pay) "line 1"
+  bank[r2] = (on: 2026-02-10, kind: transfers, leg cash from konto to world amount 100.00 PLN, fulfils: rent[2026-02]) "line 2"
+  stated[konto] = 1 220.00 PLN at 2026-02-28 end "saldo końcowe"
+
+ask e1: explain bal(konto, 2026-04-15)
+ask e2: explain bal(konto, 2026-01-31)
+ask e3: explain bal(konto, 2026-12-31) from 2026-11-01
+ask e4: explain low(konto, 2026-11-01 .. 2026-11-30) from 2026-11-01
+ask e5: explain low(konto, 2026-11-01 .. 2026-11-30)
+=== expect
+e1: 1 020.00 PLN
+  balance of konto (PLN) at the end of 2026-04-15
+  from: pad stmt_02:stated[konto] = 1 220.00 PLN, 2026-02-28 end (version stmt_02, source bank_export, locator "saldo końcowe"), gap role pad from unexplained, gap -80.00 PLN (pads:stmt_02:konto@2026-02-28 end)
+  2026-03-10:
+    rent[2026-03].cash (past): -100.00 PLN
+  2026-04-10:
+    rent[2026-04].cash (past): -100.00 PLN
+  pad: konto 2026-02-28 end, pads:stmt_02:konto@2026-02-28 end of -80.00 PLN
+  unfulfilled: rent[2026-03]
+  unfulfilled: rent[2026-04]
+  cut 2026-10-20
+e2: 900.00 PLN
+  balance of konto (PLN) at the end of 2026-01-31
+  from: opening v:opening[konto] = 1 000.00 PLN, 2026-01-01 start (version v, source s, locator "bilans otwarcia")
+  2026-01-10:
+    rent[2026-01].cash (past): -100.00 PLN
+  unfulfilled: rent[2026-01]
+  cut 2026-10-20
+e3: 220.00 PLN
+  projection of konto (PLN) from 2026-11-01 to the end of 2026-12-31
+  holder: ask e3 (an ask line leaves out nothing, L §5.14.1)
+  clauses: windows none, random none, without uncertain
+  start: 420.00 PLN at the start of 2026-11-01
+  counted:
+    2026-11-10:
+      rent[2026-11].cash (plan): -100.00 PLN
+    2026-12-10:
+      rent[2026-12].cash (plan): -100.00 PLN
+  left out: none
+...
+e4: 320.00 PLN
+  projection of konto (PLN) from 2026-11-01, lowest end-of-day balance on 2026-11-01 .. 2026-11-30
+  holder: ask e4 (an ask line leaves out nothing, L §5.14.1)
+  clauses: windows none, random none, without uncertain
+  start: 420.00 PLN at the start of 2026-11-01
+  counted:
+    2026-11-10:
+      rent[2026-11].cash (plan): -100.00 PLN
+  left out: none
+  lowest: 320.00 PLN at the end of 2026-11-10
+...
+e5: 320.00 PLN
+  lowest end-of-day balance of konto on 2026-11-01 .. 2026-11-30: 320.00 PLN, on 2026-11-10 (through 2026-11-30)
+  balance of konto (PLN) at the end of 2026-11-10
+...

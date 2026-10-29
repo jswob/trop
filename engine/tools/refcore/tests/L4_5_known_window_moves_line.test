@@ -1,0 +1,44 @@
+# L §4.5 (round 12): known in a window holding the cut, "This holds for everything the version or row brings: ...
+# its moves lines (the span in force is undecided)"; HOLE-IMPRECISE unless windows chooses. w (known in
+# window(2016-01-20, 2016-02-10)) moves v1 to 2016-01.. (L §5.3). As known 2016-02-01: the span in force is undecided, a
+# hole (q1); windows earliest takes w as known on 2016-01-20, so v1 governs from 2016-01 and n is 7 (q2); windows latest
+# on 2016-02-10, after the cut, so v1 keeps 2016-06.. and n has no value at 2016-03-01 (q3, as L5_3_moves.test).
+# (Was REFCORE-UNSPECIFIED §5.3, writer 5's T-39.)
+# (Writer 8: windows earliest and latest are gone; windows each splits the line at the day the version becomes
+# known, the window's days up to the cut (seen) and after it (unseen), L §4.4 "That holds for every window ...: a
+# version's known (§4.5)". The earliest line is the first part, the latest the second.)
+=== m.tally
+model t
+  tally 2
+  on 2016-03-01
+  start 2015-11-01
+  end 2016-10-31
+
+source s "s"
+
+input n: int
+
+version v1
+  cite s
+  governs 2016-06..
+  known 2016-01-01
+  n = 7
+
+version w
+  cite s
+  known window(2016-01-20, 2016-02-10)
+  moves v1 to 2016-01..
+
+ask q1: n law 2016-03-01 as known 2016-02-01
+ask q2: n law 2016-03-01 as known 2016-02-01 windows each
+ask q4: n law 2016-03-01
+=== expect
+q1: ? ...
+  law date 2016-03-01, cut 2016-02-01
+q2 [known of w = 2016-01-20 .. 2016-02-01]: 7
+  held: n = 7 (v1), read for 2016-03-01
+  law date 2016-03-01, cut 2016-02-01
+q2 [known of w = 2016-02-02 .. 2016-02-10]: ?"n: no value at 2016-03-01" (n)
+  law date 2016-03-01, cut 2016-02-01
+q4: 7
+  law date 2016-03-01, cut 2016-03-01

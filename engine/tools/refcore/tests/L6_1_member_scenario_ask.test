@@ -1,0 +1,68 @@
+# L §6.1: "A member's asks are asked inside the joint model as a.q; since imports are pinned and never changed, joining
+# changes no member's answer"; E §3.1 step 1: a member is all its files, its scenario files included ("A reality's hash
+# covers every file", L §6.1). The member a of L6_1_member_directory (doubled stating `at reader`, since in s the rate
+# changes with the law date, L §6.4) with asks in its scenario file: a.sq and a.sb are asked by the member alone in its
+# world s (L §6.4 Asking: "An ask names its world"), where s_rate replaces the rate with 0.5 from 2026-06-01: doubled =
+# 0.5 + 0.5 = 1 at law date 2026-12-31 (a.sq), and the base's 0.12 + 0.12 = 0.24 at a law date before the divergence day
+# (a.sb, L §6.4 "nothing before it changes"). (Was REFCORE-NOT-YET: a member's ask in one of its scenario files.)
+=== J/joint.tally
+model family
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+  use a = "../A" sha256 "a3dfeb5088ae8be31aff6ae9e0642855cedf5227e6cb47ac6adad292eab71a1c"
+
+ask r: a.rate
+=== A/reality.tally
+model ana
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+def doubled: num = rate + rate at reader
+=== A/law/pit.tally
+part pit
+  tally 2
+  law
+
+source act "ustawa"
+
+input rate: num
+
+version pit_2026
+  cite act
+  governs always
+  known 2025-01-01
+  rate = 0.12 "art. 1"
+=== A/asks/q.tally
+part asks
+  tally 2
+
+ask q: doubled law 2026-03-31
+=== A/scenarios/s.tally
+scenario s over ana
+  tally 2
+  from 2026-06-01
+
+version s_rate
+  cite act
+  governs 2026-06-01..
+  known 2025-01-01
+  replace rate = 0.5 "scenariusz"
+
+ask sq: doubled in s law 2026-12-31
+ask sb: doubled in s law 2026-03-31
+=== expect r a.q a.sq a.sb
+r: 0.12
+  cut 2026-10-20
+a.q: 0.24
+  law date 2026-03-31, cut 2026-10-20
+a.sq: 1
+  world: s
+  held: rate = 0.5 (s_rate), read for 2026-12-31
+  law date 2026-12-31, cut 2026-10-20
+a.sb: 0.24
+  world: s
+  law date 2026-03-31, cut 2026-10-20

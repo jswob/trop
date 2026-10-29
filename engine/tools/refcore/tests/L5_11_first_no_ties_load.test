@@ -1,0 +1,26 @@
+# Round 18, C1-14 (fixed). L §5.11 Ties are stated: over things, movements or an open index's keys, first and last
+# "without [ties by] are refused, at load where load sees the binding (§8.4), otherwise at the key (RUN-TIE)"; a
+# binding over a kind is seen at load. L §8.4: an order on things is refused "at load where the types show it
+# (LOAD-UNIT, LOAD-DOMAIN)"; this interpreter gives it LOAD-UNIT, as for min over things. The refusal is the whole
+# reality's (q, which needs no order, isn't printed). snap11: q2 RUN-TIE.
+=== m.tally
+model m
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+source s "s"
+kind persons
+input age_of[p in persons]: int
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  persons + [ola] lives 1950-01-01..
+  persons + [jan] lives 1960-01-01..
+  age_of[ola] = 70
+  age_of[jan] = 60
+ask q: count(p in persons on 2026-06-01)
+ask q2: first(p in persons on 2026-06-01 where age_of[p] > 0)
+=== expect
+refused: LOAD-UNIT first over things has no ties by (m.tally:18)

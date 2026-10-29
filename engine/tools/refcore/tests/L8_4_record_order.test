@@ -1,0 +1,25 @@
+# L §8.4 What isn't defined is refused: "an order comparison of two records": LOAD-UNIT at load.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+input a: (x int, y int)
+input b: (x int, y int)
+def c: bool = a < b at reader
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  a = (x: 1, y: 2)
+  b = (x: 1, y: 3)
+
+ask q: c law 2026-06-30
+=== expect
+refused: LOAD-UNIT ...

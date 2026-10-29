@@ -1,0 +1,239 @@
+# TX2-F1 (W-TX2 on snap15; writer 10): W-TX2's minimal text, scratch/tx2/min/holiday2027.tally. L §5.14 on d: "A movement whose day is a hole makes every flows and binding over a span it might fall in a hole
+# (G-MP-2). A day that is a hole and not a window has no bound, so that is every span, earlier ones included, whatever
+# the instance's `when` says: its booking cut min(t, K) is a hole with it"; E §4.2 Holes in the walk: "from the first
+# day it may fall on (every day, for a day that is a hole and not a window)".
+# q_hand_when_2025 and q_konto2_2025 are now the hole (snap15: 0.00 and 0.00); the other lines are as snap15 printed
+# them (scratch/tx2/min/holiday2027.out).
+=== m.tally
+model holiday2027
+  tally 2
+  on 2026-01-15
+  start 2025-01-01
+  end 2027-12-31
+  note "W-TX2's minimal text for E1-02's 2027 holiday: a monthly payment on the 5th, rolled to the next business day, under a calendar whose 2027 Spring Day is one of two April Mondays. by_schedule rolls with schedule (B's ola_order, flat.tally:177-180); by_hand rolls with is_business and add_business (B's mtg_pay, flat.tally:221). Each ask reads 2025's flows only."
+
+source card "W-TX2's made-up card"
+
+unit DUK: currency minor 0.01
+
+place payer: outside lives 2025-01-01..
+
+place konto: accounts DUK lives 2025-01-01..
+
+place konto2: accounts DUK lives 2025-01-01..
+
+place konto3: accounts DUK lives 2025-01-01..
+
+place konto4: accounts DUK lives 2025-01-01..
+
+input amt: money DUK
+
+input cal: calendar
+
+input dom: int
+
+input live: bool
+
+move by_schedule[m in months]: transfers
+  on schedule(m, dom, following, cal)
+  at start_of(m)
+  leg cash from payer to konto amount amt
+
+move by_hand[m in months]: transfers
+  on if is_business(day_of(m, dom), cal) then day_of(m, dom) else add_business(day_of(m, dom), 1, cal)
+  at start_of(m)
+  leg cash from payer to konto amount amt
+
+move by_hand_when[m in months]: transfers
+  on if is_business(day_of(m, dom), cal) then day_of(m, dom) else add_business(day_of(m, dom), 1, cal)
+  at start_of(m)
+  when live
+  leg cash from payer to konto2 amount amt
+
+move by_hand_dec[m in months]: transfers
+  on if is_business(day_of(m, dom), cal) then day_of(m, dom) else add_business(day_of(m, dom), 1, cal)
+  at start_of(m)
+  reads konto
+  leg cash from payer to konto amount min(amt, max(amt, bal(konto)))
+
+ask q_hand_when_2025: flows(by_hand_when, 2025) law 2025-12-31
+
+ask q_hand_dec_2025: flows(by_hand_dec, 2025) law 2025-12-31
+
+ask q_konto_2025: bal(konto, 2025-12-31) law 2025-12-31
+
+ask q_konto2_2025: bal(konto2, 2025-12-31) law 2025-12-31
+
+def due[m in months]: date = day_of(m, dom) at start_of(m)
+
+def on_live[m in months]: bool = not live at start_of(m)
+
+move by_hand_at[m in months]: transfers
+  on if is_business(day_of(m, dom), cal) then day_of(m, dom) else add_business(day_of(m, dom), 1, cal)
+  at due[m]
+  leg cash from payer to konto3 amount amt
+
+move by_hand_def_when[m in months]: transfers
+  on if is_business(day_of(m, dom), cal) then day_of(m, dom) else add_business(day_of(m, dom), 1, cal)
+  at start_of(m)
+  when on_live[m]
+  leg cash from payer to konto4 amount amt
+
+ask q_hand_at_2025: flows(by_hand_at, 2025), bal(konto3, 2025-12-31) law 2025-12-31
+
+ask q_hand_def_when_2025: flows(by_hand_def_when, 2025), bal(konto4, 2025-12-31) law 2025-12-31
+
+ask q_schedule_2025: flows(by_schedule, 2025) law 2025-12-31
+
+ask q_hand_2025: flows(by_hand, 2025) law 2025-12-31
+
+ask q_schedule_day: by_schedule[2027-04].day law 2025-12-31
+
+version card_rows
+  cite card
+  governs 2025..2027
+  known 2025-01-01
+  amt = 100.00 "card"
+  cal = calendar(weekends [sat, sun]) governs 2025..2026 "card"
+  cal = calendar(weekends [sat, sun], added [one_of([2027-04-05, 2027-04-12])]) governs 2027 "card: Spring Day 2027 not yet set"
+  dom = 5 "card"
+  live = false "card: the payment never runs"
+=== expect
+q_hand_2025: ?"date within one_of([2027-04-05, 2027-04-12]) not precise enough for is_business(day_of(m, dom), cal)" (cal)
+  unfulfilled: by_hand[2025-01]
+  unfulfilled: by_hand[2025-02]
+  unfulfilled: by_hand[2025-03]
+  unfulfilled: by_hand[2025-04]
+  unfulfilled: by_hand[2025-05]
+  unfulfilled: by_hand[2025-06]
+  unfulfilled: by_hand[2025-07]
+  unfulfilled: by_hand[2025-08]
+  unfulfilled: by_hand[2025-09]
+  unfulfilled: by_hand[2025-10]
+  unfulfilled: by_hand[2025-11]
+  unfulfilled: by_hand[2025-12]
+  law date 2025-12-31, cut 2026-01-15
+q_hand_at_2025: (?"date within one_of([2027-04-05, 2027-04-12]) not precise enough for is_business(day_of(m, dom), cal)" (cal), ?"date within one_of([2027-04-05, 2027-04-12]) not precise enough for is_business(day_of(m, dom), cal)" (cal))
+  unfulfilled: by_hand_at[2025-01]
+  unfulfilled: by_hand_at[2025-02]
+  unfulfilled: by_hand_at[2025-03]
+  unfulfilled: by_hand_at[2025-04]
+  unfulfilled: by_hand_at[2025-05]
+  unfulfilled: by_hand_at[2025-06]
+  unfulfilled: by_hand_at[2025-07]
+  unfulfilled: by_hand_at[2025-08]
+  unfulfilled: by_hand_at[2025-09]
+  unfulfilled: by_hand_at[2025-10]
+  unfulfilled: by_hand_at[2025-11]
+  unfulfilled: by_hand_at[2025-12]
+  law date 2025-12-31, cut 2026-01-15
+q_hand_dec_2025: ?"date within one_of([2027-04-05, 2027-04-12]) not precise enough for is_business(day_of(m, dom), cal)" (cal)
+  unfulfilled: by_hand[2025-01]
+  unfulfilled: by_hand[2025-02]
+  unfulfilled: by_hand[2025-03]
+  unfulfilled: by_hand[2025-04]
+  unfulfilled: by_hand[2025-05]
+  unfulfilled: by_hand[2025-06]
+  unfulfilled: by_hand[2025-07]
+  unfulfilled: by_hand[2025-08]
+  unfulfilled: by_hand[2025-09]
+  unfulfilled: by_hand[2025-10]
+  unfulfilled: by_hand[2025-11]
+  unfulfilled: by_hand[2025-12]
+  unfulfilled: by_hand_dec[2025-01]
+  unfulfilled: by_hand_dec[2025-02]
+  unfulfilled: by_hand_dec[2025-03]
+  unfulfilled: by_hand_dec[2025-04]
+  unfulfilled: by_hand_dec[2025-05]
+  unfulfilled: by_hand_dec[2025-06]
+  unfulfilled: by_hand_dec[2025-07]
+  unfulfilled: by_hand_dec[2025-08]
+  unfulfilled: by_hand_dec[2025-09]
+  unfulfilled: by_hand_dec[2025-10]
+  unfulfilled: by_hand_dec[2025-11]
+  unfulfilled: by_hand_dec[2025-12]
+  unfulfilled: by_schedule[2025-01]
+  unfulfilled: by_schedule[2025-02]
+  unfulfilled: by_schedule[2025-03]
+  unfulfilled: by_schedule[2025-04]
+  unfulfilled: by_schedule[2025-05]
+  unfulfilled: by_schedule[2025-06]
+  unfulfilled: by_schedule[2025-07]
+  unfulfilled: by_schedule[2025-08]
+  unfulfilled: by_schedule[2025-09]
+  unfulfilled: by_schedule[2025-10]
+  unfulfilled: by_schedule[2025-11]
+  unfulfilled: by_schedule[2025-12]
+  law date 2025-12-31, cut 2026-01-15
+q_hand_def_when_2025: (?"date within one_of([2027-04-05, 2027-04-12]) not precise enough for is_business(day_of(m, dom), cal)" (cal), ?"date within one_of([2027-04-05, 2027-04-12]) not precise enough for is_business(day_of(m, dom), cal)" (cal))
+  unfulfilled: by_hand_def_when[2025-01]
+  unfulfilled: by_hand_def_when[2025-02]
+  unfulfilled: by_hand_def_when[2025-03]
+  unfulfilled: by_hand_def_when[2025-04]
+  unfulfilled: by_hand_def_when[2025-05]
+  unfulfilled: by_hand_def_when[2025-06]
+  unfulfilled: by_hand_def_when[2025-07]
+  unfulfilled: by_hand_def_when[2025-08]
+  unfulfilled: by_hand_def_when[2025-09]
+  unfulfilled: by_hand_def_when[2025-10]
+  unfulfilled: by_hand_def_when[2025-11]
+  unfulfilled: by_hand_def_when[2025-12]
+  law date 2025-12-31, cut 2026-01-15
+q_hand_when_2025: ?"date within one_of([2027-04-05, 2027-04-12]) not precise enough for is_business(day_of(m, dom), cal)" (cal)
+  law date 2025-12-31, cut 2026-01-15
+q_konto2_2025: ?"date within one_of([2027-04-05, 2027-04-12]) not precise enough for is_business(day_of(m, dom), cal)" (cal)
+  law date 2025-12-31, cut 2026-01-15
+q_konto_2025: ?"date within one_of([2027-04-05, 2027-04-12]) not precise enough for is_business(day_of(m, dom), cal)" (cal)
+  unfulfilled: by_hand[2025-01]
+  unfulfilled: by_hand[2025-02]
+  unfulfilled: by_hand[2025-03]
+  unfulfilled: by_hand[2025-04]
+  unfulfilled: by_hand[2025-05]
+  unfulfilled: by_hand[2025-06]
+  unfulfilled: by_hand[2025-07]
+  unfulfilled: by_hand[2025-08]
+  unfulfilled: by_hand[2025-09]
+  unfulfilled: by_hand[2025-10]
+  unfulfilled: by_hand[2025-11]
+  unfulfilled: by_hand[2025-12]
+  unfulfilled: by_hand_dec[2025-01]
+  unfulfilled: by_hand_dec[2025-02]
+  unfulfilled: by_hand_dec[2025-03]
+  unfulfilled: by_hand_dec[2025-04]
+  unfulfilled: by_hand_dec[2025-05]
+  unfulfilled: by_hand_dec[2025-06]
+  unfulfilled: by_hand_dec[2025-07]
+  unfulfilled: by_hand_dec[2025-08]
+  unfulfilled: by_hand_dec[2025-09]
+  unfulfilled: by_hand_dec[2025-10]
+  unfulfilled: by_hand_dec[2025-11]
+  unfulfilled: by_hand_dec[2025-12]
+  unfulfilled: by_schedule[2025-01]
+  unfulfilled: by_schedule[2025-02]
+  unfulfilled: by_schedule[2025-03]
+  unfulfilled: by_schedule[2025-04]
+  unfulfilled: by_schedule[2025-05]
+  unfulfilled: by_schedule[2025-06]
+  unfulfilled: by_schedule[2025-07]
+  unfulfilled: by_schedule[2025-08]
+  unfulfilled: by_schedule[2025-09]
+  unfulfilled: by_schedule[2025-10]
+  unfulfilled: by_schedule[2025-11]
+  unfulfilled: by_schedule[2025-12]
+  law date 2025-12-31, cut 2026-01-15
+q_schedule_2025: 1 200.00 DUK
+  unfulfilled: by_schedule[2025-01]
+  unfulfilled: by_schedule[2025-02]
+  unfulfilled: by_schedule[2025-03]
+  unfulfilled: by_schedule[2025-04]
+  unfulfilled: by_schedule[2025-05]
+  unfulfilled: by_schedule[2025-06]
+  unfulfilled: by_schedule[2025-07]
+  unfulfilled: by_schedule[2025-08]
+  unfulfilled: by_schedule[2025-09]
+  unfulfilled: by_schedule[2025-10]
+  unfulfilled: by_schedule[2025-11]
+  unfulfilled: by_schedule[2025-12]
+  law date 2025-12-31, cut 2026-01-15
+q_schedule_day: window(2027-04-05, 2027-04-06)
+  law date 2025-12-31, cut 2026-01-15

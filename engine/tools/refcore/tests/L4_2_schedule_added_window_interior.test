@@ -1,0 +1,31 @@
+# W-B-Q1, a window(a, b) in added: L4_2_schedule_added_window's rule, over every day the window can take (L §4.2:
+# "every day known but one"). d3: Monday 2026-06-22, rolled following, is 06-23 where the added day is 06-22 and 06-22
+# where it is any other day of window(2026-06-19, 2026-06-23); so its day is window(2026-06-22, 2026-06-23), though
+# at the window's first and last day it is 06-22 both times (L §4.4 "give the interval of their values at its first
+# and last day": HANDOVER contradiction 46). d4: the business day after Thursday 2026-06-18 is Friday 06-19 unless the
+# added day is 06-19, then Monday 06-22.
+=== m.tally
+model m
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+input len: calendar
+input pay_dom: int
+
+ask d3: schedule(2026-06, pay_dom, following, len) law 2026-06-01
+ask d4: add_business(2026-06-18, 1, len)
+
+version v
+  cite s
+  governs 2026
+  known 2025-12-01
+  len = calendar(weekends [sat, sun], added [window(2026-06-19, 2026-06-23)])
+  pay_dom = 22 "own"
+=== expect
+d3: window(2026-06-22, 2026-06-23)
+  law date 2026-06-01, cut 2026-12-31
+d4: window(2026-06-19, 2026-06-22)
+  cut 2026-12-31

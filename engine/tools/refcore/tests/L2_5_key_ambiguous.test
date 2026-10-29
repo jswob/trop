@@ -1,0 +1,19 @@
+# L §2.5: "A key literal that could belong to two indexes, kinds or axes in one position is refused (LOAD-KEY)."
+# k == b: b is a key of both ks and js, and k ranges over a key list whose index no key position fixes.
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "a source"
+
+index ks = [a, b]
+index js = [b, c]
+
+def n: int = count(k in [a, b] where k == b)
+
+ask q1: n
+=== expect
+refused: LOAD-KEY ...

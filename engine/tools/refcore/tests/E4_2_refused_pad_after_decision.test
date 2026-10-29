@@ -1,0 +1,46 @@
+# E §4.2 step 5: in step 3, "each reading that follows one, as they are booked" is tested, and "that reading's pad" is
+# refused (RUN-PLACE); "A refused leg isn't booked". The decision p puts 10.00 PLN into a (110.00 PLN); a reading after
+# it states 140.00 PLN, a pad of 30.00 PLN out of the claim y (at 0): refused. snap11 refused the pad and still counted
+# the reading's end in the conservation check, ENGINE-INVARIANT (writer 8, sixth pass, found beside C2-1).
+=== m.tally
+model t
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+source bk "bank"
+unit PLN: currency minor 0.01
+place a: accounts PLN lives 2026-01-01..
+place y: claims PLN lives 2026-01-01..
+place world: outside lives 2026-01-01..
+input amt: money PLN
+input day: date
+
+move p: transfers
+  on day
+  reads a
+  leg cash from world to a amount amt + 0 * bal(a)
+
+ask q: bal(y, 2026-03-31), bal(a, 2026-03-31)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 10.00 PLN
+  day = 2026-03-10
+  opening[a] = 100.00 PLN at 2026-01-01 start
+  opening[y] = 0 PLN at 2026-01-01 start
+
+version st
+  cite bk
+  governs 2026-03
+  known 2026-04-02
+  pad a from y
+  stated[a] = 140.00 PLN after p
+=== expect
+q: (refused: RUN-PLACE pads:st:a@after p takes y below 0, refused: RUN-PLACE pads:st:a@after p takes y below 0)
+  pad: a after p, pads:st:a@after p of 30.00 PLN
+  cut 2026-06-30

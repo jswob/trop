@@ -1,0 +1,35 @@
+# L §7.1: "the same integer in the guard that protects the read (`pos(k) > 12`, `pos(k) == 12`)" is allowed:
+# the read x[k - 2] and the guard pos(k) > 2 share the integer 2.  ks = 1..4, step = 5: x[1] = x[2] = 5 (base),
+# x[3] = x[1] + 5 = 10, x[4] = x[2] + 5 = 10 (L §5.11 Recurrences).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+index ks = 1..4
+input step: int
+
+def x[k in ks]: int at reader
+  rule base = step
+  rule a beats base = x[k - 2] + step when pos(k) > 2
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  step = 5
+
+ask q: x[k] for k in ks law 2026-06-30
+=== expect
+q (k = 1): 5
+  law date 2026-06-30, cut 2026-12-31
+q (k = 2): 5
+  law date 2026-06-30, cut 2026-12-31
+q (k = 3): 10
+  law date 2026-06-30, cut 2026-12-31
+q (k = 4): 10
+  law date 2026-06-30, cut 2026-12-31

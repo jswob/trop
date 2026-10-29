@@ -1,0 +1,17 @@
+# L §6.1: "Each file starts with one of three headers: model ID ... Exactly one file has it (LOAD-HEADER otherwise)".
+# Two model files, neither a member of the other (no use line names one), make no reality.
+=== a.tally
+model a
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+  same x.p = y.p
+=== b.tally
+model b
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+=== expect
+refused: LOAD-HEADER ...

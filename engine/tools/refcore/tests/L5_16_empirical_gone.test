@@ -1,0 +1,16 @@
+# L §2.2, §5.16 (writer 8): empirical is gone; "one of n known values drawn with equal weight is
+# e[discrete(1 for k in IDX)]". `empirical(vals[k] for k in ks)` is no distribution: a call takes a built-in's name
+# or a band's id with plain arguments (L §2.3 call), and `for` after its argument doesn't parse: LOAD-PARSE.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+index ks = [ka, kb]
+input vals[k in ks]: num
+def emp: dist = empirical(vals[k] for k in ks) at reader
+=== expect
+refused: LOAD-PARSE ...

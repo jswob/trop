@@ -1,0 +1,31 @@
+# L §5.16 A random number of items (PL-22): "a bounded index of slots, read by a range that ends at the draw ... A draw
+# past the last slot ... is refused on that path (RUN-KEY, §4.2), and at load where load sees the draw's support
+# exceed the index (LOAD-RANDOM)"; L §8.3 `the draw <x> can exceed the last slot of <index>`. n is a poisson draw,
+# whose support has no last value, over three slots: refused at load. (The range is written `1 .. n step 1`, as L
+# §5.16's example is since round 17: a draw of a dist with no unit is a num, and L §5.11 refuses a range of quantities
+# without a step.)
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source src "s"
+index slots = int 1..3
+input lam: num
+input cost[k in slots]: num
+input n: dist
+def total: num = sum(cost[k] for k in 1 .. n step 1)
+
+ask q: mean(total) paths 20 seed 1
+
+version v
+  cite src
+  governs always
+  known 2026-01-01
+  lam = 1
+  cost[*] = 2
+  n = poisson(lam)
+=== expect
+refused: LOAD-RANDOM the draw n can exceed the last slot of slots ...

@@ -1,0 +1,26 @@
+# L §5.15: crps(normal(m, s), y) to u is correctly rounded (not a rational on a cell edge: printed with ≈ and
+# the bound u/2 = 0.0000000005, L §7.3).  Its digits are not asserted (a transcendental value).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+input y: num
+def c: num = crps(normal(0, 1), y) to 1e-9 at reader
+
+version v
+  cite s
+  governs 2026..
+  known 2026-01-01
+  y = 0
+
+ask a: c law 2026-06-30 orient lower
+=== expect
+a: ≈ 0.2 ...
+  law date 2026-06-30, cut 2026-12-31
+  orient lower

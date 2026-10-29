@@ -1,0 +1,33 @@
+# L §3.3 with L §7.3: with to, periodic(12 %/year, month, effective) is 1.12^(1/12) - 1 correctly rounded
+# and printed with ≈ (not a rational on a cell edge).  Its digits are not asserted (L §7.3 values are checked by
+# identities here); L §3.3's factor gives the identity: factor(r, 1, year, effective) = 1.12 exactly (round 6: over a
+# year load shows the power t·n is an integer for an int n, so no to is needed).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+input r: rate
+input n1: int
+def p: num = periodic(r, month, effective) to 1e-9 at reader
+def f: num = factor(r, n1, year, effective) at reader
+
+version v
+  cite s
+  governs 2026..
+  known 2026-01-01
+  r = 12 %/year
+  n1 = 1
+
+ask a: p law 2026-06-30
+ask b: f law 2026-06-30
+=== expect
+a: ≈ 0.0094 ...
+  law date 2026-06-30, cut 2026-12-31
+b: 1.12
+  law date 2026-06-30, cut 2026-12-31

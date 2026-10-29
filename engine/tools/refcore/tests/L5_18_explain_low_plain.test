@@ -1,0 +1,63 @@
+# L §5.18 (round 8): "explain low(x, span) without from explains the day of its lowest balance as a balance"; L
+# §5.14.1: without from, low is the lowest of the plain end-of-day balances. konto opens at 100.00 PLN; out 10.00 on
+# 01-05, in 10.00 on 01-10, out 10.00 on 01-15: 100 (01-01..04), 90 (01-05..09), 100 (01-10..14), 90 (01-15..).
+# one: over 01-01 .. 01-12 the lowest, 90.00 PLN, is held 01-05 .. 01-09 with no entry between: explained at
+# 01-05. two: over 01-01 .. 01-31 it is reached on two runs of days with movements between; L §5.18 (as now worded)
+# "explains the first day its lowest balance is reached, as a balance": 01-05 again (writer 5's T-87, stated).
+=== m.tally
+model g
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+
+input d1: date
+input d2: date
+input d3: date
+input amt: money PLN
+
+move out1: transfers
+  on d1
+  leg cash from konto to world amount amt
+
+move in2: transfers
+  on d2
+  leg cash from world to konto amount amt
+
+move out3: transfers
+  on d3
+  leg cash from konto to world amount amt
+
+ask one: explain low(konto, 2026-01-01 .. 2026-01-12)
+ask two: explain low(konto, 2026-01-01 .. 2026-01-31)
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  d1 = 2026-01-05
+  d2 = 2026-01-10
+  d3 = 2026-01-15
+  amt = 10.00 PLN
+  opening[konto] = 100.00 PLN at 2026-01-01 start "bilans"
+=== expect
+one: 90.00 PLN
+  lowest end-of-day balance of konto on 2026-01-01 .. 2026-01-12: 90.00 PLN, on 2026-01-05 (through 2026-01-09)
+  balance of konto (PLN) at the end of 2026-01-05
+  from: opening v:opening[konto] = 100.00 PLN, 2026-01-01 start (version v, source s, locator "bilans")
+  2026-01-05:
+    out1.cash (past): -10.00 PLN
+...
+two: 90.00 PLN
+  lowest end-of-day balance of konto on 2026-01-01 .. 2026-01-31: 90.00 PLN, on 2026-01-05 (through 2026-01-09)
+  balance of konto (PLN) at the end of 2026-01-05
+  from: opening v:opening[konto] = 100.00 PLN, 2026-01-01 start (version v, source s, locator "bilans")
+  2026-01-05:
+    out1.cash (past): -10.00 PLN
+...

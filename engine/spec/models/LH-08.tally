@@ -1,6 +1,8 @@
 model lh08
-  tally 1
+  tally 2
   on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
   note "Canadian RRIF minimum amount: (A x B) + C under ITA s. 146.3(1), with the prescribed factor B from ITR s. 7308; nil in the year the fund was entered into."
   note "Funds: alex (the CRA example) and td_ex (TD's example). The C and D sub-cases ask the prescribed factor alone at ages 55, 70 and 71, as the publishers print it."
   note "No source states a rounding rule for the minimum amount, so amounts are exact num CAD and are never rounded."
@@ -13,6 +15,8 @@ source itr7308 "Income Tax Regulations (C.R.C., c. 945), s. 7308" at "https://la
 
 source td "TD Bank Group, RRIF minimum payment schedule" at "https://www.td.com/ca/en/personal-banking/personal-investing/products/registered-plans/rif/rrif-minimum-payment-schedule"
 
+unit CAD: currency minor 0.01
+
 axis lh08_shown
   down "a printed factor truncated to the printed decimals; the publishers state no rounding mode"
   half-up "a printed factor rounded to the nearest at the printed decimals; the publishers state no rounding mode"
@@ -21,7 +25,7 @@ index fund = [alex, td_ex]
 
 index rrif_kind = [qualifying, other]
 
-index years_old = 0..120
+index years_old = int 0..120
 
 index yr = year 2020..2030
 
@@ -48,53 +52,54 @@ input spouse_age_start[f in fund, y in yr]: int
 
 input table_from[k in rrif_kind]: int
 
-def age_used[f in fund, y in yr]: int
+def age_used[f in fund, y in yr]: int at start_of(y)
   rule base v v_ita = age_start[f, y]
-  rule spouse excepts base v v_ita when elected_spouse[f] = spouse_age_start[f, y]
+  rule spouse beats base v v_ita = spouse_age_start[f, y] when elected_spouse[f]
 
-def factor[f in fund, y in yr]: num = pfactor[age_used[f, y], rrif_class[f]]
+def factor[f in fund, y in yr]: num = pfactor[age_used[f, y], rrif_class[f]] at start_of(y)
 
-def left[f in fund, y in yr]: num CAD = fmv[f, y] - minimum[f, y]
+def left[f in fund, y in yr]: num CAD = fmv[f, y] - minimum[f, y] at start_of(y)
 
-def line3[f in fund, y in yr]: num CAD = fmv[f, y] * factor[f, y]
+def line3[f in fund, y in yr]: num CAD = fmv[f, y] * factor[f, y] at start_of(y)
 
-def minimum[f in fund, y in yr]: num CAD
+def minimum[f in fund, y in yr]: num CAD at start_of(y)
   rule base v v_ita = line3[f, y] + annuity[f, y]
-  rule nil excepts base v v_ita when first_year[f, y] = 0
+  rule nil beats base v v_ita = 0 when first_year[f, y]
 
-def pfactor[a in years_old, k in rrif_kind]: num
+def pfactor[a in years_old, k in rrif_kind]: num at reader
   note "the prescribed factor at age a in whole years at the beginning of the year: the formula below the table's first age, else the table"
   rule base v v_itr = 1 / (itr_base - a)
-  rule table excepts base v v_itr when a >= table_from[k] = itr_tab[a, k]
+  rule table beats base v v_itr = itr_tab[a, k] when a >= table_from[k]
 
-ask a_added: annuity[alex, 2025]
+ask a_added: annuity[alex, 2025] law 2026-10-18
 
-ask a_factor: factor[alex, 2025]
+ask a_factor: factor[alex, 2025] law 2026-10-18
 
-ask a_line3: line3[alex, 2025]
+ask a_line3: line3[alex, 2025] law 2026-10-18
 
-ask a_minimum: minimum[alex, 2025]
+ask a_minimum: minimum[alex, 2025] law 2026-10-18
 
-ask b_factor: factor[td_ex, 2025]
+ask b_factor: factor[td_ex, 2025] law 2026-10-18
 
-ask b_left: left[td_ex, 2025]
+ask b_left: left[td_ex, 2025] law 2026-10-18
 
-ask b_minimum: minimum[td_ex, 2025]
+ask b_minimum: minimum[td_ex, 2025] law 2026-10-18
 
-ask c55_taxtips: round(pfactor[55, other], 0.000001, lh08_shown)
+ask c55_taxtips: round(pfactor[55, other], 0.000001, lh08_shown) law 2026-10-18
 
-ask c55_td: round(100 * pfactor[55, other], 0.01, lh08_shown)
+ask c55_td: round(pfactor[55, other] / 1 %, 0.01, lh08_shown) law 2026-10-18
 
-ask c70_taxtips: round(pfactor[70, other], 0.000001, lh08_shown)
+ask c70_taxtips: round(pfactor[70, other], 0.000001, lh08_shown) law 2026-10-18
 
-ask c70_td: round(100 * pfactor[70, other], 0.01, lh08_shown)
+ask c70_td: round(pfactor[70, other] / 1 %, 0.01, lh08_shown) law 2026-10-18
 
-ask d71_other: pfactor[71, other]
+ask d71_other: pfactor[71, other] law 2026-10-18
 
-ask d71_qual: round(pfactor[71, qualifying], 0.0001, lh08_shown)
+ask d71_qual: round(pfactor[71, qualifying], 0.0001, lh08_shown) law 2026-10-18
 
 version v_itr
   cite itr7308
+  governs always
   known 2015-06-23
   note "Law, known from its promulgation (LANGUAGE 4.5): S.C. 2015, c. 36 (Economic Action Plan 2015 Act, No. 1), assented to 2015-06-23, s. 23, the latest amendment in s. 7308's history (SOR/94-127, s. 1; SOR/2000-63, s. 2; SOR/2005-264, s. 14; 2015, c. 36, s. 23). Text read in the version current to 2026-09-30. 7308(3) for a fund that was a qualifying retirement income fund at the beginning of the year; 7308(4) for any other fund."
   itr_base = 90 "7308(3) Under 72 1/(90 - X); 7308(4) Under 71 1/(90 - Y)"
@@ -109,11 +114,13 @@ version v_itr
 
 version v_ita
   cite ita1463
+  governs always
   known 2024-06-20
   note "Law, known from its promulgation (LANGUAGE 4.5): S.C. 2024, c. 17 (Budget Implementation Act, 2024, No. 1), assented to 2024-06-20, s. 50(F), the latest amendment in s. 146.3's history. Which amendment last changed the minimum amount definition isn't checked, so the latest one is taken. Text read in the version current to 2026-09-30: minimum amount is nil for the year the fund was entered into, else (A x B) + C; B is the factor for the annuitant, or for the spouse or common-law partner if so elected before any payment."
 
 version v_cra_ex
   cite cra_ex
+  governs always
   known 2026-10-18
   note "The worked example's facts (Alex) are a hypothetical case's stipulations, known from the model's on date, as it has no start (LANGUAGE 4.5). The page's own date, Page details 2026-01-07, doesn't date them."
   age_start[alex, 2025] = 73 "Example: is 73 years old at the start of 2025"
@@ -125,6 +132,7 @@ version v_cra_ex
 
 version v_td
   cite td
+  governs always
   known 2026-10-18
   note "The worked example's facts are a hypothetical case's stipulations, known from the model's on date, as it has no start (LANGUAGE 4.5); the assumed rows stand for facts the example leaves out and take the same date. Retrieved 2026-10-18; 'How do I calculate the minimum RRIF payment?' Example. TD bases the factor on the age on January 1."
   age_start[td_ex, 2025] = 73 "Example: You're 73 years old."

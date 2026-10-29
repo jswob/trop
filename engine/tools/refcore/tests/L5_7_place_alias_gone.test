@@ -1,0 +1,17 @@
+# L §5.7 The prelude (writer 8): the root is places; "place is a section keyword only; its use as a second spelling of
+# places goes" (changes.md A-1; L §2.2 lists place among the keywords). A binding over `place` names a keyword:
+# LOAD-RESERVED.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+
+ask q: count(x in place on 2026-06-30)
+=== expect
+refused: LOAD-RESERVED ...

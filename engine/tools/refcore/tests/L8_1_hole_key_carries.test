@@ -1,0 +1,37 @@
+# L §8.1 'It carries' (round 8b): a read whose key is a hole reads no cell, so it carries the key's questions only, as
+# a band read at a hole x does (§5.9). k has no row, so it is HOLE-UNGOVERNED with its question 'which era?'; x[k]
+# reads no cell of x, so v carries 'which era?' and not x's question 'x?' (x[new] has no row either); so does y[k],
+# a def read at the hole key; q3 adds x[new], a cell that is read, with its question 'x?'.
+=== m.tally
+model p16
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+
+source s "synthetic"
+
+index era = [old, new]
+
+input k: key era question "which era?"
+input x[r in era]: num question "x?"
+
+def v: num = x[k] at reader
+def y[r in era]: num = x[r] at reader
+
+ask q: v law 2026-06-30
+ask q2: y[k] law 2026-06-30
+ask q3: x[k] + x[new] law 2026-06-30
+
+version v1
+  cite s
+  governs always
+  known 2026-01-01
+  x[old] = 1
+=== expect
+q: ?"which era?" (k)
+  law date 2026-06-30, cut 2026-10-18
+q2: ?"which era?" (k)
+  law date 2026-06-30, cut 2026-10-18
+q3: ?"which era?" (k) ?"x?" (x[new])
+  law date 2026-06-30, cut 2026-10-18

@@ -1,0 +1,49 @@
+# L §5.16: cdf, pdf, pmf "take a distribution value, a random fact read directly, or an affine form of one";
+# "the transformed function of D (pdf divided by |a|)".  uniform(0, 4): pdf 1/4 (exact, table); pdf(2 × X, 2) =
+# pdf(D, 1)/2 = 0.125; cdf(-X, -1) = P(X >= 1) = 3/4.  cdf of normal(0, 1) at 0 is Φ(0) = 1/2, detected exactly
+# (L §7.3).  binomial(4, 1/2): pmf(0) = 1/16, cdf(1) = 5/16, exact.  "An ask that reaches crps or pdf states orient
+# lower or orient higher", and orient is printed (L §5.15).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+input z: dist
+input u01: dist
+input u4: dist
+input cnt: dist
+input q25: num
+input two: num
+input lvl: num
+def pdf1: num = pdf(u4, 1) at reader
+def pdf2: num = pdf(two * u4, two) at reader
+def cdf1: num = cdf(-u4, -1) at reader
+def cdfz: num = cdf(z, 0) to 1e-9 at reader
+def pm: num = pmf(cnt, 0) at reader
+def cb: num = cdf(cnt, 1) at reader
+
+version v
+  cite s
+  governs 2026..
+  known 2026-01-01
+  z = normal(0, 1) to 1e-9
+  u01 = uniform(0, 1) to 0.001
+  u4 = uniform(0, 4) to 0.001
+  cnt = binomial(4, 0.5)
+  q25 = 0.25
+  two = 2
+  lvl = 0.5
+
+ask d1: pdf1, pdf2 law 2026-06-30 orient higher
+ask d2: cdf1, cdfz, pm, cb law 2026-06-30
+=== expect
+d1: (0.25, 0.125)
+  law date 2026-06-30, cut 2026-12-31
+  orient higher
+d2: (0.75, 0.5, 0.0625, 0.3125)
+  law date 2026-06-30, cut 2026-12-31

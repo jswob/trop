@@ -1,0 +1,50 @@
+# L §4.3: "`at e` is evaluated at the law date the def's own reads need ...; the reads inside e are made at the
+# law date of the read that asks for the def (its reader's, or the ask's `law`), never at e's own value, so
+# `at day_of(m, surprise_dom)` reads `surprise_dom` once, as its reader would."
+# dom is 10 under the 2026 law and 20 from 2027 (a replace).  base is 100.00 PLN until 2027-03-14 and
+# 200.00 PLN from 2027-03-15.  r reads pay[2027-03] at reader.  Under law 2026-12-31 dom reads 10, so pay's law
+# date is 2027-03-10 and base is 100.00 PLN; under law 2027-06-30 dom reads 20, the law date is 2027-03-20 and
+# base is 200.00 PLN.
+# held (L §8.2): the open-ended row of dom (v2) is read for 2027-06-30, after the cut 2027-01-01; the base row
+# from 2027-03-15 (v3) is read for 2027-03-20, after the cut.
+=== m.tally
+model t
+  tally 2
+  on 2027-01-01
+  start 2026-01-01
+  end 2027-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+input dom: int
+input base: money PLN
+def pay[m in months]: money PLN = base at day_of(m, dom)
+def r[m in months]: money PLN = pay[m] at reader
+
+version v1
+  cite s
+  governs 2026-01-01..2026-12-31
+  known 2025-12-01
+  dom = 10
+
+version v2
+  cite s
+  governs 2027-01-01..
+  known 2026-12-01
+  dom = 20
+
+version v3
+  cite s
+  known 2025-12-01
+  base = 100.00 governs 2026-01-01..2027-03-14
+  base = 200.00 governs 2027-03-15..
+
+ask q1: r[2027-03] law 2026-12-31
+ask q2: r[2027-03] law 2027-06-30
+=== expect
+q1: 100.00 PLN
+  law date 2026-12-31, cut 2027-01-01
+q2: 200.00 PLN
+  held: base = 200.00 PLN (v3), read for 2027-03-20
+  held: dom = 20 (v2), read for 2027-06-30
+  law date 2027-06-30, cut 2027-01-01

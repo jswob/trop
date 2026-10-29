@@ -1,0 +1,29 @@
+# L §5.8: "The question is the text of the hole that the gap rule gives" (the first example input).  No row
+# governs allowances[u18], so its read is the question (L §4.6 step 5, HOLE-UNGOVERNED), printed with the item
+# and keys it came from (L §8.1).  The row for u5 is read.
+# held: (L §8.2) "a row whose span has a start and no end ..., band rows included, read at a law date after the
+# cut K": the law date is after the model's on, so every open-ended row read is listed.
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+index age_groups = [u5, u18, u24]
+
+input allowances[g in age_groups]: money PLN question "Jaka jest kwota zasiłku dla tej grupy wieku?"
+
+version v
+  cite s
+  governs 2026..
+  known 2026-01-01
+  allowances[u5] = 95.00 PLN
+
+ask q1: allowances[u5], allowances[u18] law 2026-06-30
+=== expect
+q1: (95.00 PLN, ?"Jaka jest kwota zasiłku dla tej grupy wieku?" (allowances[u18]))
+  held: allowances[u5] = 95.00 PLN (v), read for 2026-06-30
+  law date 2026-06-30, cut 2026-01-01

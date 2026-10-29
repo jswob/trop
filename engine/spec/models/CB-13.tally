@@ -1,6 +1,8 @@
 model cb13
-  tally 1
+  tally 2
   on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
   note "Instructions for Form 8854 (2025), Part IV Section C, column (e), Example: Xavier, a covered expatriate. The same facts appear in Notice 2009-85, section 3.B, Example 1, with the 2009 exclusion."
   note "All property is treated as sold for its fair market value on the day before the expatriation date ('Date 1'). Xavier's year is 2025, from the instructions' year. All three assets were held for more than a year."
   note "The Notice's Assets X, Y and Z are written prop_a, prop_b and prop_c, like Xavier's Assets A, B and C, which have the same values and bases."
@@ -13,6 +15,8 @@ source n2009_85_src "Notice 2009-85, Guidance for Expatriates Under Section 877A
 source rp2024_40 "Rev. Proc. 2024-40, inflation-adjusted items for 2025" at "https://www.irs.gov/pub/irs-drop/rp-24-40.pdf"
 
 source usc877 "26 U.S. Code § 877 - Expatriation to avoid tax (LII)" at "https://www.law.cornell.edu/uscode/text/26/877"
+
+unit USD: currency minor 0.01
 
 index ex = [xavier, notice_ex1]
 
@@ -34,50 +38,50 @@ input liability_threshold[y in tyear]: money USD
 
 input networth_threshold: money USD
 
-def allocated[e in ex, p in prop]: num USD
+def allocated[e in ex, p in prop]: num USD at reader
   note "Column (e) and Notice 2009-85, section 3.B: the exclusion goes to each gain asset in the ratio of its built-in gain to the total built-in gain of all gain assets, and not above that asset's built-in gain. Loss assets get none."
   rule base = 0
-  rule gain_asset excepts base v i8854_2025 when builtin_gain[e, p] > 0 = min(builtin_gain[e, p], exclusion[expat_year[e]] * builtin_gain[e, p] / total_gain[e])
+  rule gain_asset beats base v i8854_2025 = min(builtin_gain[e, p], exclusion[expat_year[e]] * builtin_gain[e, p] / total_gain[e]) when builtin_gain[e, p] > 0
 
-def builtin_gain[e in ex, p in prop]: money USD
+def builtin_gain[e in ex, p in prop]: money USD at reader
   note "s. 877A(a)(1) and column (e), Step 1: the fair market value on the day before the expatriation date, less the adjusted basis."
   rule base v i8854_2025 = fmv[e, p] - basis[e, p]
 
-def deemed_gain[e in ex, p in prop]: num USD
+def deemed_gain[e in ex, p in prop]: num USD at reader
   note "Column (e), Step 3: the built-in gain less the exclusion allocated to it. A loss is taken into account only to the extent otherwise provided (s. 877A(a)(2)(B))."
-  rule gain_asset v i8854_2025 when builtin_gain[e, p] > 0 = builtin_gain[e, p] - allocated[e, p]
-  rule loss_asset v i8854_2025 when builtin_gain[e, p] <= 0 = ? "How much of the loss is allowed? Its character and any limit (such as s. 1211(b)) aren't given."
+  rule gain_asset v i8854_2025 = builtin_gain[e, p] - allocated[e, p] when builtin_gain[e, p] > 0
+  rule loss_asset v i8854_2025 = ?"How much of the loss is allowed? Its character and any limit (such as s. 1211(b)) aren't given." when builtin_gain[e, p] <= 0
 
-def exit_tax[e in ex]: num USD
+def exit_tax[e in ex]: num USD at reader
   note "s. 877A(a): the tax on the deemed gains, computed in the year's return as if the property were sold on the day before the expatriation date. Neither source computes it."
-  rule base = ? "What is the tax on the deemed gains? The other income, deductions and rates, and any election to defer the tax under s. 877A(b), aren't given."
+  rule base = ?"What is the tax on the deemed gains? The other income, deductions and rates, and any election to defer the tax under s. 877A(b), aren't given."
 
-def reported_on[e in ex, p in prop]: key form
+def reported_on[e in ex, p in prop]: key form at reader
   note "Column (e), Example, closing paragraph: where each asset's result is reported (Regulations section 1.6012-1(b)(2)(ii)(b), not fetched)."
-  rule gain_asset v i8854_2025 when builtin_gain[e, p] > 0 = f8854_sec_c
-  rule loss_asset v i8854_2025 when builtin_gain[e, p] < 0 = f1040_part_year
+  rule gain_asset v i8854_2025 = f8854_sec_c when builtin_gain[e, p] > 0
+  rule loss_asset v i8854_2025 = f1040_part_year when builtin_gain[e, p] < 0
 
-def total_gain[e in ex]: money USD = sum(p in prop where builtin_gain[e, p] > 0: builtin_gain[e, p])
+def total_gain[e in ex]: money USD = sum(builtin_gain[e, p] for p in prop where builtin_gain[e, p] > 0) at reader
 
-ask exclusion_amount: exclusion[2025]
+ask exclusion_amount: exclusion[2025] law 2026-10-18
 
-ask notice_allocated: allocated[notice_ex1, p] for p in prop where builtin_gain[notice_ex1, p] > 0
+ask notice_allocated: allocated[notice_ex1, p] for p in prop where builtin_gain[notice_ex1, p] > 0 law 2026-10-18
 
-ask notice_includible: deemed_gain[notice_ex1, p] for p in prop where builtin_gain[notice_ex1, p] > 0
+ask notice_includible: deemed_gain[notice_ex1, p] for p in prop where builtin_gain[notice_ex1, p] > 0 law 2026-10-18
 
-ask tax_on_exit: exit_tax[xavier]
+ask tax_on_exit: exit_tax[xavier] law 2026-10-18
 
-ask thresholds: liability_threshold[2025], networth_threshold
+ask thresholds: liability_threshold[2025], networth_threshold law 2026-10-18
 
-ask xavier_allocated: allocated[xavier, p] for p in prop where builtin_gain[xavier, p] > 0
+ask xavier_allocated: allocated[xavier, p] for p in prop where builtin_gain[xavier, p] > 0 law 2026-10-18
 
-ask xavier_builtin: builtin_gain[xavier, p] for p in prop
+ask xavier_builtin: builtin_gain[xavier, p] for p in prop law 2026-10-18
 
-ask xavier_loss_report: reported_on[xavier, prop_c]
+ask xavier_loss_report: reported_on[xavier, prop_c] law 2026-10-18
 
-ask xavier_recognized: deemed_gain[xavier, p], reported_on[xavier, p] for p in prop where builtin_gain[xavier, p] > 0
+ask xavier_recognized: deemed_gain[xavier, p], reported_on[xavier, p] for p in prop where builtin_gain[xavier, p] > 0 law 2026-10-18
 
-ask xavier_total_gain: total_gain[xavier]
+ask xavier_total_gain: total_gain[xavier] law 2026-10-18
 
 version usc877_text
   cite usc877
@@ -89,6 +93,7 @@ version usc877_text
 
 version n2009_85
   cite n2009_85_src
+  governs always
   known 2009-10-15
   note "Guidance, known from its first public release: Treasury released the notice on 15 October 2009 (Mondaq, https://mondaq.com/unitedstates/tax-authorities/89228/; Tax Notes dates it Oct. 15, 2009). It was printed later, in Internal Revenue Bulletin 2009-45 of 9 November 2009."
   note "It states the 2009 exclusion ('For calendar year 2009, the exclusion amount as adjusted for inflation is $626,000', section 1; '$626,000 for 2009', section 3.B, Example 1) without naming the act that set it (Rev. Proc. 2008-66, not fetched). So the notice is the row's source as a restating text, and since it records no date for that act, the row is known at the notice's own date (LANGUAGE.md 4.5, Which act)."
@@ -96,6 +101,7 @@ version n2009_85
 
 version rp2024_40_s2
   cite rp2024_40
+  governs always
   known 2024-10-22
   note "The 2025 amounts, indexed under s. 877(a)(2) and s. 877A(a)(3)(B). The cost-of-living adjustment behind them isn't given."
   note "Known from the revenue procedure's release with IR-2024-273 on 22 October 2024; it was printed in Internal Revenue Bulletin 2024-45 of 4 November 2024."
@@ -104,12 +110,14 @@ version rp2024_40_s2
 
 version i8854_2025
   cite i8854
+  governs always
   known 2026-04-30
   note "Part IV Section C, column (e), and its Example: the method of the rules. Notice 2009-85 section 3.B states the same allocation."
   note "The '(2025)' of the title names the tax year the instructions serve, a label and not a date, and the page prints no other date of its own. Its one precise stamp is the printed updated stamp, 'Page Last Reviewed or Updated: 30-Apr-2026', which is earlier than the retrieval day, 2026-10-18, so the version takes it (LANGUAGE.md 4.5)."
 
 version n2009_85_ex1
   cite n2009_85_src
+  governs always
   known 2026-10-18
   note "Section 3.B, 'Allocation of the exclusion amount', Example 1: expatriation on November 1, 2009."
   note "The example's facts are stipulations, known from the model's on date (LANGUAGE.md 4.5)."
@@ -123,6 +131,7 @@ version n2009_85_ex1
 
 version xavier_example
   cite i8854
+  governs always
   known 2026-10-18
   note "Part IV Section C, column (e), Example: Xavier's assets. 'Date 1' and 'Date 2' are placeholders."
   note "The example's facts are stipulations, known from the model's on date (LANGUAGE.md 4.5)."

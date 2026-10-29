@@ -1,0 +1,27 @@
+# L §5.16 Closed forms: mean(e), e a sum of known multiples of random facts plus a known constant, is "the same sum of
+# their means (the table below), exact or correctly rounded"; lognormal(m, s) has mean exp(m + s²/2), here exp(0.5) =
+# 1.648721...: with the line's to u, 2 · 1.648721... + 1 = 4.297442... -> 4.30 (refcore prints 4.3) and the mean
+# itself -> 1.6487, each correctly rounded once from the real (≈, L §7.3). (Writer 8: was REFCORE-NOT-YET, to u on a
+# closed-form mean that rests on rounded values.)
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+input ln: dist
+input two: num
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  ln = lognormal(0, 1) to 1e-9
+  two = 2
+
+ask a: mean(two * ln + 1) to 0.01, mean(ln) to 0.0001
+=== expect
+a: (≈ 4.3 ± 0.005 (horizon none), ≈ 1.6487 ± 0.00005 (horizon none))
+  cut 2026-12-31

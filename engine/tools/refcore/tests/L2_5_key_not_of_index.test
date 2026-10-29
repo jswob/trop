@@ -1,0 +1,20 @@
+# L §8.3 LOAD-KEY: "<key> is not a key of <index or kind>" (a key literal resolved by its position, L §2.5).
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "a source"
+
+index ks = [a, b]
+input x[k in ks]: int
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  x[c] = 1
+=== expect
+refused: LOAD-KEY ...

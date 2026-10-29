@@ -1,0 +1,16 @@
+# L §4.3: "A period is not a law date. at m with m a month is refused (LOAD-LAWPERIOD)."
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+input rate[m in months]: int
+
+def y[m in months]: int at m
+  rule base = rate[m]
+=== expect
+refused: LOAD-LAWPERIOD ...

@@ -1,0 +1,39 @@
+# L §5.11 (PL-11): "A def keyed by an index of days is read at any computed day of its range (`f[d]`); a day outside
+# it is `RUN-KEY`." f is keyed by a day index of January, g by the built-in days of the run (2026). At d0 + 3 =
+# 2026-01-13 both give days_between(2026-01-01, 2026-01-13) = 12 (q); at d0 + 30 = 2026-02-09, outside f's index:
+# RUN-KEY (q2); at d0 + 400 = 2027-02-14, outside days: RUN-KEY (q3); L §8.4 `<d> is outside the days of <def>`.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+input d0: date
+input n: int
+input d1: date
+index ds = day 2026-01-01..2026-01-31
+def f[d in ds]: int = days_between(d1, d)
+def g[d in days]: int = days_between(d1, d)
+
+ask q: f[add_days(d0, n)], g[add_days(d0, n)]
+ask q2: f[add_days(d0, n)] with n = 30
+ask q3: g[add_days(d0, n)] with n = 400
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  d0 = 2026-01-10
+  n = 3
+  d1 = 2026-01-01
+=== expect
+q: (12, 12)
+  cut 2026-12-31
+q2: refused: RUN-KEY 2026-02-09 is outside the days of f
+  pinned: n = 30
+  cut 2026-12-31
+q3: refused: RUN-KEY 2027-02-14 is outside the days of g
+  pinned: n = 400
+  cut 2026-12-31

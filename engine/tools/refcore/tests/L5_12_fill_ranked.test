@@ -1,0 +1,36 @@
+# L §5.12 Sort and Take: arcs ascending by the order tuple; jan (rank 1) takes min(60.00, 100.00) = 60.00, then
+# ewa (rank 2) min(60.00, 40.00) = 40.00.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+index payers = [ewa, jan]
+input sup[p in payers]: money PLN
+input cap: money PLN
+input rank[p in payers]: int
+
+fill pool
+  supply sup[p] for p in payers
+  demand cap
+  arc true
+  order rank[p]
+
+version v
+  cite s
+  governs 2026..
+  known 2026-01-01
+  sup[*] = 60.00 PLN
+  cap = 100.00 PLN
+  rank[jan] = 1
+  rank[ewa] = 2
+
+ask b: pool.taken[ewa], pool.taken[jan] law 2026-06-30
+=== expect
+b: (40.00 PLN, 60.00 PLN)
+  law date 2026-06-30, cut 2026-12-31

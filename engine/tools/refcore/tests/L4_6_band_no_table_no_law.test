@@ -1,0 +1,34 @@
+# MC-X-F12 (writer 9): a band with no table has no row or version whose span isn't always (L §4.3), as an input
+# with no row (L4_3_input_no_rows): read with no law date it has no candidate, and "Read with no law date ..., the
+# question ends at no value" (L §4.6 step 5, "For an input or a band"; §8.1): `rate: no value` (q), `krate at lo:
+# no value` (q2, keyed, no time key); with law, `no value at <law date>` (q3).
+=== m.tally
+model p
+  tally 2
+  on 2027-12-31
+  start 2027-01-01
+  end 2027-12-31
+
+unit PLN: currency minor 0.01
+source act "the act"
+
+input age: int
+band rate(a: int): money PLN
+band krate[k in [lo, hi]](a: int): money PLN
+def r[m in months]: money PLN = rate(age)
+ask q: r[2027-05]
+ask q2: krate[lo](age)
+ask q3: rate(age) law 2027-05-01
+
+version v_act
+  cite act
+  governs always
+  known 2026-12-01
+  age = 3 "the age"
+=== expect
+q: ?"rate: no value" (rate)
+  cut 2027-12-31
+q2: ?"krate at lo: no value" (krate[lo])
+  cut 2027-12-31
+q3: ?"rate: no value at 2027-05-01" (rate)
+  law date 2027-05-01, cut 2027-12-31

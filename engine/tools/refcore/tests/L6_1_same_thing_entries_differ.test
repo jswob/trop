@@ -1,0 +1,85 @@
+# L §6.1 What same does: "A thing's entries are such facts: an entry only one side states stands, and on a day on
+# which the two sides' entries into one kind disagree, whatever depends on the thing being alive there is a HOLE-SAME
+# hole (in a binding over that kind, an unknown member, §5.11)"; L §8.1 HOLE-SAME "<p> and <q> are one, but <x>
+# differs on <d>: <a> (<row>) and <b> (<row>)". a enters ola from 2026-01-01, b from 2026-03-01: on 2026-02-01 the
+# joint model's own count over persons meets ola as an unknown member (a hole naming both); on 2026-04-01 both sides
+# agree (1). A member is closed: a's def, read as a.cnt, binds over a's entries only (1 on 2026-02-01).
+=== joint.tally
+model family
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+  use a = "a.tally" sha256 "d87340c7b1f0312deb3488dfae254a77c6aed15d26a7aa84939c231254b2ea13"
+  use b = "b.tally" sha256 "827058fa5c25a40d4131ab455794ecdc24d518a7436a6cb775c73afdbaff646e"
+  same a.persons = b.persons
+  same a.ola = b.ola
+
+source s "ustalenia"
+
+input d1: date
+input d2: date
+
+version v
+  cite s
+  governs always
+  known 2025-01-01
+  d1 = 2026-02-01
+  d2 = 2026-04-01
+
+ask feb: count(p in a.persons on d1)
+ask apr: count(p in a.persons on d2)
+ask own: a.cnt
+=== a.tally
+model a
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source s "umowa"
+
+kind persons
+
+input day: date
+
+def cnt: int = count(p in persons on day)
+
+version v
+  cite s
+  governs always
+  known 2025-01-01
+  persons + [ola] lives 2026-01-01..
+  day = 2026-02-01
+
+ask q: cnt
+=== b.tally
+model b
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source s "umowa"
+
+kind persons
+
+input day: date
+
+def cnt: int = count(p in persons on day)
+
+version v
+  cite s
+  governs always
+  known 2025-01-01
+  persons + [ola] lives 2026-03-01..
+  day = 2026-02-01
+
+ask q: cnt
+=== expect
+apr: 1
+  cut 2026-10-20
+feb: ?"a.ola and b.ola are one, but the entry into a.persons differs on 2026-02-01: 2026-01-01.. (a.v) and 2026-03-01.. (b.v)" (a.ola, b.ola)
+  cut 2026-10-20
+own: 1
+  cut 2026-10-20

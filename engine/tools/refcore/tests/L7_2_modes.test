@@ -1,0 +1,36 @@
+# L §7.2 table of modes: down toward zero; up away from zero; floor toward −∞; ceil toward +∞; half-up the nearest,
+# a tie away from zero; half-down the nearest, a tie toward zero; half-even the nearest, a tie to the even
+# multiple.  Columns in that order, step 1, for 2.5, −2.5, 3.5, 2.4 and −2.6.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+index ks = [a, b, c, d, e]
+input x[k in ks]: num
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  x[a] = 2.5
+  x[b] = -2.5
+  x[c] = 3.5
+  x[d] = 2.4
+  x[e] = -2.6
+
+ask q1: round(x[k], 1, down), round(x[k], 1, up), round(x[k], 1, floor), round(x[k], 1, ceil), round(x[k], 1, half-up), round(x[k], 1, half-down), round(x[k], 1, half-even) for k in ks
+=== expect
+q1 (k = a): (2, 3, 2, 3, 3, 2, 2)
+  cut 2026-12-31
+q1 (k = b): (-2, -3, -3, -2, -3, -2, -2)
+  cut 2026-12-31
+q1 (k = c): (3, 4, 3, 4, 4, 3, 4)
+  cut 2026-12-31
+q1 (k = d): (2, 3, 2, 3, 2, 2, 2)
+  cut 2026-12-31
+q1 (k = e): (-2, -3, -3, -2, -3, -3, -3)
+  cut 2026-12-31

@@ -1,0 +1,46 @@
+# L §6.1 What same does: "a place two of them book (one place, or places stated same) takes it at the point of the
+# last of them in the day's order (§5.14.2), since a decision's amount is known only at its point"; L §5.19, E §4.2:
+# observations are booked in step 1, decisions at their point in step 3. sweep is a decision (it reads konto's running
+# balance); the bank's row r1 is stated same as its March instance, so r1's ends wait for sweep's point: sweep reads
+# konto before r1 (300.00 PLN), both give 300.00 PLN on 2026-03-31, and the movement is booked once there. By L §5.10's
+# bal: konto 300.00 - 300.00 = 0.00 PLN, savings 0.00 + 300.00 = 300.00 PLN.
+=== m.tally
+model m
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source s "umowa"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2019-01-01..
+place savings: accounts PLN lives 2019-01-01..
+input bank: observed
+input sweep_day: date
+
+move sweep: transfers
+  on sweep_day
+  reads konto
+  leg cash from konto to savings amount bal(konto)
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  sweep_day = 2026-03-31 "plan"
+  opening[konto] = 300.00 PLN at 2026-01-01 start "wyciąg"
+  opening[savings] = 0.00 PLN at 2026-01-01 start "wyciąg"
+
+version stmt
+  cite s
+  known 2026-04-02
+  bank[r1] = (on: 2026-03-31, kind: transfers, leg cash from konto to savings amount 300.00 PLN) "linia 1"
+  same bank[r1] = sweep
+
+ask k: bal(konto, 2026-12-31)
+ask sv: bal(savings, 2026-12-31)
+=== expect
+k: 0.00 PLN
+  cut 2026-10-20
+sv: 300.00 PLN
+  cut 2026-10-20

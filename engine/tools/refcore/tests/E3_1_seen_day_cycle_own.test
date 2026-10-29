@@ -1,0 +1,38 @@
+# L §8.3 item 9 (round 19, GD-4): "A move's day and a leg's place are seen where they are written as literals or keys of
+# a declared index, and where they are computed from these alone, folded through built-ins that read no fact (`on
+# end_of(m)` for a key m of a declared index is seen); a day or place computed from a row's value is not seen". L §5.14.1:
+# a decision's plain bal(x, d) on its own day or after it is refused, "LOAD-CYCLE where load sees the day (§8.3),
+# otherwise RUN-CYCLE on the decision's day and RUN-FUTURE after it".
+# on add_days(start_of(m), 1) and bal(konto, add_days(start_of(m), 1)): its own day, LOAD-CYCLE (as snap14, which matched
+# the text of the two days).
+=== m.tally
+model r
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source own "own"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2020-01-01..
+place savings: accounts PLN lives 2020-01-01..
+input floor: money PLN
+input dom: int
+
+move save[m in months]: transfers
+  on add_days(start_of(m), 1)
+  at start_of(m)
+  reads konto
+  leg cash from konto to savings amount max(0 PLN, bal(konto, add_days(start_of(m), 1)) - floor)
+
+version v
+  cite own
+  governs 2026..
+  known 2026-01-01
+  floor = 100.00 PLN "own"
+  dom = 5 "own"
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "statement"
+
+ask s1: bal(savings, 2026-01-31)
+=== expect
+refused: LOAD-CYCLE save reads bal(konto, add_days(start_of(m), 1)), its own day: its own result or its future (write the projection) (m.tally:14)

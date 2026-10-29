@@ -1,0 +1,49 @@
+# L §4.6 Readings: "A plain read of a reading, x[k] at law date d ..., takes the reading at that instant; with none
+# there it is a hole naming the reading and the day (HOLE-NOREADING)" — question "<x>[k] has no reading at
+# <instant>" (L §8.1).  "last(x[k], d) takes the last reading on or before d, and since(x[k], d) is the number of
+# days from that reading to d": 2026-03-10 − 2026-03-02 = 8 days. "A bound on a reading's age is a rule that tests
+# since": L §4.6's quote_now, over px[EUR] with max_age = 5: on 2026-03-10 (8 days) the stale rule wins, its value the
+# stated hole; on 2026-03-06 (4 days) base wins, the carry. (Writer 8: `within` and HOLE-STALE are gone, L §2.3.)
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+
+input px[u in currencies]: num PLN/u reading
+input max_age: int
+def quote_now[d in days]: num PLN/EUR at d
+  rule base = last(px[EUR], d)
+  rule stale beats base = ?"the last quote is older than the bound" when since(px[EUR], d) > max_age
+
+version r
+  cite s
+  known 2026-03-05
+  px[EUR] = 4.3 PLN/EUR at 2026-03-02
+
+version cfg
+  cite s
+  governs always
+  known 2026-01-01
+  max_age = 5
+
+ask q1: px[EUR] law 2026-03-02
+ask q2: px[EUR] law 2026-03-03
+ask q3: last(px[EUR], 2026-03-10), since(px[EUR], 2026-03-10)
+ask q4: quote_now[2026-03-10], quote_now[2026-03-06]
+=== expect
+q1: 4.3 PLN/EUR
+  law date 2026-03-02, cut 2026-12-31
+q2: ?"px[EUR] has no reading at 2026-03-03" (px[EUR])
+  law date 2026-03-03, cut 2026-12-31
+q3: (4.3 PLN/EUR, 8)
+  held: px[EUR] = 4.3 PLN/EUR (r), read for 2026-03-10
+  cut 2026-12-31
+q4: (?"the last quote is older than the bound" (quote_now[2026-03-10]), 4.3 PLN/EUR)
+  held: px[EUR] = 4.3 PLN/EUR (r), read for 2026-03-06
+  cut 2026-12-31

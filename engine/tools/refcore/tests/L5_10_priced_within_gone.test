@@ -1,0 +1,18 @@
+# L §2.3 (writer 8): `price = ref | "last" "(" ref ")"` (a reading's carry, §4.6, §5.10); the `within` clause is gone,
+# so `priced last(val) within age` on a kind line doesn't parse: LOAD-PARSE.
+=== m.tally
+model pr
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "synthetic"
+unit PLN: currency minor 0.01
+
+kind homes: place PLN min 0 priced last(val) within age
+
+input val: money PLN reading
+input age: int
+=== expect
+refused: LOAD-PARSE ...

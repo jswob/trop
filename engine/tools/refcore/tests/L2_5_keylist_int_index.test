@@ -1,0 +1,19 @@
+# L §2.5 Bare names: "A bound variable over a key list (`k in [1, 12, 13]`) takes its index from the key
+# positions it is used in".  Here k is used at x's key position, whose index is ap = int 1..9, so 3 and 4 are
+# keys of ap and x[k] = k gives 3 and 4.  (Found by the lead: the core refused RUN-KEY 3 is outside ap.)
+=== m.tally
+model t
+  tally 2
+  on 2027-01-01
+  start 2026-01-01
+  end 2027-12-31
+
+index ap = int 1..9
+def x[k in ap]: int = k at reader
+
+ask qa: x[k] for k in [3, 4] law 2026-12-31
+=== expect
+qa (k = 3): 3
+  law date 2026-12-31, cut 2027-01-01
+qa (k = 4): 4
+  law date 2026-12-31, cut 2027-01-01

@@ -1,0 +1,38 @@
+# L §5.11 Aggregates over keys are exact: sum 1 + 2 + 4 = 7; min 1; max 4; argmax c (the key, typed key K);
+# mean(t for b) = 7/3, which doesn't terminate, so it prints as a/b with a 15-digit display (L §5.18 Output:
+# 2.33333333333333); share(c for b), the fraction of bindings where c holds, 1/3; quantile type 1 ("the smallest
+# term with at least q·n terms at or below it"): at q = 50 %, the smallest term with at least 1.5 terms at or
+# below it is 2.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+index ks = [a, b, c]
+input n[k in ks]: int
+input big[k in ks]: bool
+input half: num
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  n[a] = 1
+  n[b] = 2
+  n[c] = 4
+  big[a] = false
+  big[b] = false
+  big[c] = true
+  half = 50 %
+
+ask q1: sum(n[k] for k in ks), min(n[k] for k in ks), max(n[k] for k in ks), argmax(n[k] for k in ks)
+ask q2: mean(n[k] for k in ks), share(big[k] for k in ks), quantile(n[k] for k in ks, half)
+=== expect
+q1: (7, 1, 4, c)
+  cut 2026-12-31
+q2: (7/3 (2.33333333333333), 1/3 (0.333333333333333), 2)
+  cut 2026-12-31

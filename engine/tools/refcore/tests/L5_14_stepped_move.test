@@ -1,0 +1,47 @@
+# L §5.14 `move = "move" ID [binds] ...`, L §2.3 `bind = ID "in" (ID | ... | range)`, L §5.11 "A bind is over an
+# index, a kind, a key list or a stepped range": a move keyed by a stepped range `n in 1 .. cnt` (integers, cnt a row).
+# Three instances on first_day + n (2026-03-02, -03, -04), 100.00 PLN each: flows(pay, 2026) = 300.00 PLN (the move's
+# amounts, L §5.14.3), konto 1 000 - 300 = 700.00 PLN; an instance is named by its keys like a def keyed by a range
+# (`pay[k]`, L §2.5).
+=== m.tally
+model st
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "umowa"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2020-01-01..
+place world: outside lives 1900-01-01..
+input cnt: int
+input first_day: date
+input amt: money PLN
+
+move pay[n in 1 .. cnt]: transfers
+  on add_days(first_day, n)
+  leg cash from konto to world amount amt
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  cnt = 3
+  first_day = 2026-03-01
+  amt = 100.00 PLN
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start
+
+ask q1: flows(pay, 2026), bal(konto, 2026-12-31)
+ask q2: pay[k].day for k in 1 .. cnt
+ask q3: flows(pay[k], 2026) for k in 2 .. 2
+=== expect
+q1: (300.00 PLN, 700.00 PLN)
+  cut 2026-01-01
+q2 (k = 1): 2026-03-02
+  cut 2026-01-01
+q2 (k = 2): 2026-03-03
+  cut 2026-01-01
+q2 (k = 3): 2026-03-04
+  cut 2026-01-01
+q3 (k = 2): 100.00 PLN
+  cut 2026-01-01

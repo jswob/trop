@@ -1,0 +1,47 @@
+# L §5.10 Value: "`by p` is required when some position is in another unit (LOAD-PRICE)"; message from the L §8.3
+# table: `value(<x>) in <CUR> holds units in <u> and states no by`.  eurkonto is a place of unit EUR, so its
+# positions are in EUR, seen at load.
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+
+kind brokerages: place any min 0
+kind fx_buys: event certain
+  leg eur: EUR
+  leg cash: PLN
+
+input pxp[u in currencies]: num PLN/u
+input buy_day: date
+input eur_amt: money EUR
+input pln_amt: money PLN
+
+place konto: accounts PLN lives 2026-01-01..
+place eurkonto: accounts EUR lives 2026-01-01..
+place market: outside lives 1900-01-01..
+
+move buy: fx_buys
+  on buy_day
+  leg eur from market to broker amount eur_amt
+  leg cash from konto to market amount pln_amt
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  brokerages + [broker] lives 2026-01-01..
+  pxp[EUR] = none
+  buy_day = 2026-03-02
+  eur_amt = 100.00 EUR
+  pln_amt = 425.00 PLN
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "wyciąg"
+
+ask sp: value(eurkonto, 2026-06-30) in PLN
+=== expect
+refused: LOAD-PRICE value(eurkonto) in PLN holds units in EUR and states no by ...

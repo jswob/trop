@@ -1,0 +1,32 @@
+# L §4.3: "law cut is allowed and is then written, not defaulted"; the cut is the model's on (L §4.5).
+# rate is 1 in 2025 and 2 from 2026-07 (a replace): read at the cut 2026-12-31, 2.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+input rate: int
+
+def y: int at reader
+  rule base = rate
+
+version v1
+  cite s
+  governs 2025..
+  known 2025-01-01
+  rate = 1
+
+version v2
+  cite s
+  governs 2026-07..
+  known 2026-06-01
+  replace rate = 2
+
+ask q1: y law cut
+=== expect
+q1: 2
+  law date 2026-12-31, cut 2026-12-31

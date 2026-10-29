@@ -1,0 +1,13 @@
+# L §5.7 / §8.3 LOAD-PLACEKIND: "place kind <K> has no unit or sign rule".
+=== m.tally
+model hh
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+unit PLN: currency minor 0.01
+
+kind wallets: place PLN
+=== expect
+refused: LOAD-PLACEKIND ...

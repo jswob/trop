@@ -1,6 +1,8 @@
 model lh03
-  tally 1
+  tally 2
   on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
   note "US capital loss limit and carryover, IRC 1211(b) and 1212(b): Publication 550 (2025), Bob and Shelly's joint 2025 return, with the variant loss and the decedent's rule."
   note "Bob and Shelly had no other capital transactions, so their net capital loss is the loss from the securities sales."
   note "The limit's rows are the Code's (version usc1211_b). Pub 550 (p. 101) and the Schedule D instructions (p. 3) restate them, so neither is a version of them (LANGUAGE §5.3)."
@@ -8,6 +10,8 @@ model lh03
 source pub550 "IRS Publication 550 (2025), Investment Income and Expenses, chapter 4, Capital Losses" at "https://www.irs.gov/pub/irs-pdf/p550.pdf"
 
 source usc1211 "26 U.S. Code 1211, Limitation on capital losses (LII), retrieved 2026-10-18" at "https://www.law.cornell.edu/uscode/text/26/1211"
+
+unit USD: currency minor 0.01
 
 axis ti_basis
   after_ded "the stated taxable income is after the capital loss deduction (Form 1040 line 15), so the carryover test adds the deduction back"
@@ -27,30 +31,31 @@ input status[c in fcase]: key fstat
 
 input ti[c in fcase]: money USD
 
-def carryover[c in fcase]: money USD
+def carryover[c in fcase]: money USD at reader
   rule base = net_loss[c] - min(deduction[c], ti_plus[c])
-  rule died excepts base v pub550_2025 when decedent[c] = 0
+  rule died beats base v pub550_2025 = 0 when decedent[c]
 
-def deduction[c in fcase]: money USD = min(loss_cap[status[c]], net_loss[c])
+def deduction[c in fcase]: money USD = min(loss_cap[status[c]], net_loss[c]) at reader
 
-def ti_plus[c in fcase]: money USD
-  rule after_ded when ti_basis = after_ded = ti[c] + deduction[c]
-  rule before_ded when ti_basis = before_ded = ti[c]
+def ti_plus[c in fcase]: money USD at reader
+  rule after_ded = ti[c] + deduction[c] when ti_basis == after_ded
+  rule before_ded = ti[c] when ti_basis == before_ded
 
-ask bs_carryover: carryover[bob_shelly]
+ask bs_carryover: carryover[bob_shelly] law 2026-10-18
 
-ask bs_deduction: deduction[bob_shelly]
+ask bs_deduction: deduction[bob_shelly] law 2026-10-18
 
-ask cap_pub: loss_cap[s] for s in fstat
+ask cap_pub: loss_cap[s] for s in fstat law 2026-10-18
 
-ask dec_carryover: carryover[bob_shelly] with decedent[bob_shelly] = true
+ask dec_carryover: carryover[bob_shelly] with decedent[bob_shelly] = true law 2026-10-18
 
-ask var_carryover: carryover[bob_shelly] with net_loss[bob_shelly] = 2000
+ask var_carryover: carryover[bob_shelly] with net_loss[bob_shelly] = 2000 law 2026-10-18
 
-ask var_deduction: deduction[bob_shelly] with net_loss[bob_shelly] = 2000
+ask var_deduction: deduction[bob_shelly] with net_loss[bob_shelly] = 2000 law 2026-10-18
 
 version usc1211_b
   cite usc1211
+  governs always
   known 1986-10-22
   note "Law is known from the promulgation of the act that enacted the rows (LANGUAGE §4.5). Subsection (b) in its present form is from the Tax Reform Act of 1986, Pub. L. 99-514, approved 22 October 1986: the section's amendment notes on LII say it 'amended subsec. (b) generally, substituting present provisions', and list no later amendment of (b)."
   loss_cap = 3000 "subsection (b)(1): $3,000"
@@ -58,12 +63,14 @@ version usc1211_b
 
 version pub550_2025
   cite pub550
+  governs always
   known 2026-03-05
   note "The decedent's rule (p. 103): the loss can be deducted only on the final return, within the limits; the estate cannot deduct it or carry it over. The rule died cites this version; it has no rows."
   note "The Pub states the rule without a statute, so the version takes the Pub's own date, its earliest public stamp: 'Mar 5, 2026', printed in the footer of p. 1 (LANGUAGE §4.5). The PDF's own CreationDate, 2026-03-06, doesn't count, since a public stamp exists (D8; round 1 took it)."
 
 version bs_example
   cite pub550
+  governs always
   known 2026-10-18
   note "Bob and Shelly are a worked example: their figures are stipulations, known from the model's on (LANGUAGE §4.5), and so is the assumed living-filer row."
   decedent[bob_shelly] = false assumed "the example files a joint return for living filers; it doesn't say either died" "p. 102, Figuring your carryover, Example"

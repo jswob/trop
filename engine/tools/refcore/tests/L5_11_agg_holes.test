@@ -1,0 +1,39 @@
+# L §5.11 "With holes": sum is a hole if any term is; "A key whose where is a hole is an unknown member: count
+# is a hole; sum is a hole unless that key's term is known to be 0"; any is "true if any term is true; otherwise a
+# hole"; all is "false if any term is false; otherwise a hole".  w[b] is a hole; n[b] = 0 so sum over the where
+# is known (1 + 0 + 4 = 5) while count is a hole; t has one hole term.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+index ks = [a, b, c]
+input n[k in ks]: int
+input w[k in ks]: bool
+input t[k in ks]: bool
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  n[a] = 1
+  n[b] = 0
+  n[c] = 4
+  w[a] = true
+  w[b] = ?"is b in?"
+  w[c] = true
+  t[a] = true
+  t[b] = ?"t at b?"
+  t[c] = false
+
+ask q1: sum(n[k] for k in ks where w[k]), count(k in ks where w[k])
+ask q2: any(t[k] for k in ks), all(t[k] for k in ks), any(t[k] for k in ks where k != a), all(t[k] for k in ks where k != c)
+=== expect
+q1: (5, ?"is b in?" (w[b]))
+  cut 2026-12-31
+q2: (true, false, ?"t at b?" (t[b]), ?"t at b?" (t[b]))
+  cut 2026-12-31

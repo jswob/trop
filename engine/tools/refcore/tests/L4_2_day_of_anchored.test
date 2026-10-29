@@ -1,0 +1,29 @@
+# L §4.2: day_of(m, n) is "day n of month m ...". Of a key of an anchored index it is refused, at load where load sees
+# the index (round 18 C1-15: L4_2_day_of_anchored_load), so here only pm, whose months are calendar months: day 3.
+# (Writer 6: was REFCORE-UNSPECIFIED §4.2 for an anchored month. Writer 8, sixth pass: q1 and q2, over cy and am, moved
+# to L4_2_day_of_anchored_load.)
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+input dom: int
+index cy = year 2025..2026 from 02-01
+index am = month 2026-01..2026-02 from 15
+index pm = month 2026-01..2026-02
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  dom = 3 "s"
+
+ask q3: day_of(m, dom) for m in pm
+=== expect
+q3 (m = 2026-01): 2026-01-03
+  cut 2026-12-31
+q3 (m = 2026-02): 2026-02-03
+  cut 2026-12-31

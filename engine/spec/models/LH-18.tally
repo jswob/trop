@@ -1,9 +1,13 @@
 model lh18
-  tally 1
+  tally 2
   on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
   note "SOA Standard Ultimate Life Table (SULT), Exam FAM-L tables, 2022-10: Makeham survival, i = 0.05, a radix of 100,000 lives at age 20."
   note "Formulas follow the workbook that generated the table: l by a running product of one-year survival probabilities from age 20, annuities-due by the workbook's backward recursion from age 130, insurances paid at the end of the year of death through A = 1 - (1 - v) x a-due."
   note "The printed table rounds lx to 1 dp, qx to 6 dp, annuities to 4 dp, and insurances and pure endowments to 5 dp, with no stated mode. The stored_* asks give the unrounded values. No def rounds beyond surv's 1e-15: the exact products and recursions over 111 ages stay under the 4 096-digit cap (§7.1)."
+
+source lifted_1_0_1 "Figures tally 1.0.1 allowed inline in rules"
 
 source soa_tables "Society of Actuaries, Tables for Exam FAM-L (Standard Ultimate Life Table: Basic Functions and Single Net Premiums at i = 0.05), 2022-10" at "https://www.soa.org/globalassets/assets/files/edu/2022/2022-10-exam-fam-l-tables.pdf"
 
@@ -14,13 +18,19 @@ axis print_round
   half-even "the printed digits are the nearest, a tie to even"
   half-up "the printed digits are the nearest, a tie away from zero"
 
-index ages = 20..130
+index ages = int 20..130
   v workbook2022
   note "The workbook's ages: defined name x = Ultimate!A9:A119, 20 to 130, and its annuity recursions start at age 130 from the empty cell D120. The PDF doesn't state its closing age"
 
 index term = [t5, t10, t20]
 
-input i_eff: rate effective /year
+input adue2_2: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input i_eff: rate
+
+input ins2_2: int
+  note "lifted from an inline figure of tally 1.0.1"
 
 input mk_a: num
 
@@ -32,133 +42,141 @@ input radix: num
 
 input term_n[n in term]: int
 
-def adue[x in ages]: num
+def adue[x in ages]: num at reader
   note "Whole life annuity-due, the workbook's backward recursion D9 = 1 + v x B9 x D10. It starts at age 130 from the empty cell D120, so a-due at 130 is the first payment alone"
-  rule last excepts step when x = 130 = 1
+  rule last beats step = 1 when x == 130
   rule step = 1 + vdisc * surv[x] * adue[x + 1]
 
-def adue2[x in ages]: num
+def adue2[x in ages]: num at reader
   note "The annuity-due at v^2, the workbook's backward recursion O9 = 1 + v^2 x B9 x O10, from 1 at age 130 as adue"
-  rule last excepts step when x = 130 = 1
-  rule step = 1 + pow(vdisc, 2) * surv[x] * adue2[x + 1]
+  rule last beats step = 1 when x == 130
+  rule step = 1 + pow(vdisc, adue2_2) * surv[x] * adue2[x + 1]
 
-def adue_t[x in ages, n in term]: num
+def adue_t[x in ages, n in term]: num at reader
   note "Temporary annuity-due, the workbook's E9 = D9 - L9 x D19 (10 years) and F9 = D9 - M9 x D29 (20 years)"
   rule base = adue[x] - pure_e[x, n] * adue[x + term_n[n]]
 
-def endw[x in ages, n in term]: num
+def endw[x in ages, n in term]: num at reader
   note "Endowment insurance, the printed sheet's H4 = Ultimate!J9 - Ultimate!L9 x Ultimate!J19 + L4 (10 years) and J4 (20 years): A[x] - nE[x] x A[x + n] + nE[x]"
   rule base = ins[x] - pure_e[x, n] * ins[x + term_n[n]] + pure_e[x, n]
 
-def ins[x in ages]: num
+def ins[x in ages]: num at reader
   note "Whole life insurance at the end of the year of death, the workbook's J9 = 1 - (1 - v) x D9"
   rule base = 1 - (1 - vdisc) * adue[x]
 
-def ins2[x in ages]: num
+def ins2[x in ages]: num at reader
   note "The second moment of whole life insurance, the workbook's P9 = 1 - (1 - v^2) x O9"
-  rule base = 1 - (1 - pow(vdisc, 2)) * adue2[x]
+  rule base = 1 - (1 - pow(vdisc, ins2_2)) * adue2[x]
 
-def lives[x in ages]: num
+def lives[x in ages]: num at reader
   note "The workbook's l column: C9 = 100000 at age 20, then C10 = C9 x B9 down to age 130"
-  rule init excepts step when x = 20 = radix
+  rule init beats step = radix when x == 20
   rule step = lives[x - 1] * surv[x - 1]
 
-def pure_e[x in ages, n in term]: num
+def pure_e[x in ages, n in term]: num at reader
   note "Pure endowment, the workbook's L9 = v^10 x C19 / C9, M9 = v^20 x C29 / C9 and the printed sheet's K4 = v^5 x Ultimate!C14 / Ultimate!C9"
   rule base = pow(vdisc, term_n[n]) * lives[x + term_n[n]] / lives[x]
 
-def qdeath[x in ages]: num
+def qdeath[x in ages]: num at reader
   note "The printed sheet's C4 = 1 - Ultimate!B9"
   rule base = 1 - surv[x]
 
-def surv[x in ages]: num
+def surv[x in ages]: num at reader
   note "Makeham one-year survival, the workbook's B9 = EXP(-(A+B/LN(cc)*cc^x*(cc-1))), the PDF's tp_x (p. 4, 'Under Makeham's Law') at t = 1. The 1e-15 and 1e-18 precisions are the modeller's; the workbook computes in binary floating point"
   rule base = exp(-(mk_a + mk_b / (ln(mk_c) to 1e-18) * pow(mk_c, x) * (mk_c - 1))) to 1e-15
 
-def vdisc: num
+def vdisc: num at reader
   note "The discount factor v = 1/(1 + i), the workbook's Ultimate!F5"
-  rule base = 1 / factor(i_eff, 1, year)
+  rule base = 1 / factor(i_eff, 1, year, effective)
 
-ask adue10_40: round(adue_t[40, t10], 0.0001, print_round)
+ask adue10_40: round(adue_t[40, t10], 0.0001, print_round) law 2026-10-18
 
-ask adue10_65: round(adue_t[65, t10], 0.0001, print_round)
+ask adue10_65: round(adue_t[65, t10], 0.0001, print_round) law 2026-10-18
 
-ask adue10_80: round(adue_t[80, t10], 0.0001, print_round)
+ask adue10_80: round(adue_t[80, t10], 0.0001, print_round) law 2026-10-18
 
-ask adue20_40: round(adue_t[40, t20], 0.0001, print_round)
+ask adue20_40: round(adue_t[40, t20], 0.0001, print_round) law 2026-10-18
 
-ask adue20_65: round(adue_t[65, t20], 0.0001, print_round)
+ask adue20_65: round(adue_t[65, t20], 0.0001, print_round) law 2026-10-18
 
-ask adue20_80: round(adue_t[80, t20], 0.0001, print_round)
+ask adue20_80: round(adue_t[80, t20], 0.0001, print_round) law 2026-10-18
 
-ask adue_40: round(adue[40], 0.0001, print_round)
+ask adue_40: round(adue[40], 0.0001, print_round) law 2026-10-18
 
-ask adue_65: round(adue[65], 0.0001, print_round)
+ask adue_65: round(adue[65], 0.0001, print_round) law 2026-10-18
 
-ask adue_80: round(adue[80], 0.0001, print_round)
+ask adue_80: round(adue[80], 0.0001, print_round) law 2026-10-18
 
-ask endw10_40: round(endw[40, t10], 0.00001, print_round)
+ask endw10_40: round(endw[40, t10], 0.00001, print_round) law 2026-10-18
 
-ask endw10_65: round(endw[65, t10], 0.00001, print_round)
+ask endw10_65: round(endw[65, t10], 0.00001, print_round) law 2026-10-18
 
-ask endw10_80: round(endw[80, t10], 0.00001, print_round)
+ask endw10_80: round(endw[80, t10], 0.00001, print_round) law 2026-10-18
 
-ask endw20_40: round(endw[40, t20], 0.00001, print_round)
+ask endw20_40: round(endw[40, t20], 0.00001, print_round) law 2026-10-18
 
-ask endw20_65: round(endw[65, t20], 0.00001, print_round)
+ask endw20_65: round(endw[65, t20], 0.00001, print_round) law 2026-10-18
 
-ask endw20_80: round(endw[80, t20], 0.00001, print_round)
+ask endw20_80: round(endw[80, t20], 0.00001, print_round) law 2026-10-18
 
-ask ins2_40: round(ins2[40], 0.00001, print_round)
+ask ins2_40: round(ins2[40], 0.00001, print_round) law 2026-10-18
 
-ask ins2_65: round(ins2[65], 0.00001, print_round)
+ask ins2_65: round(ins2[65], 0.00001, print_round) law 2026-10-18
 
-ask ins2_80: round(ins2[80], 0.00001, print_round)
+ask ins2_80: round(ins2[80], 0.00001, print_round) law 2026-10-18
 
-ask ins_40: round(ins[40], 0.00001, print_round)
+ask ins_40: round(ins[40], 0.00001, print_round) law 2026-10-18
 
-ask ins_65: round(ins[65], 0.00001, print_round)
+ask ins_65: round(ins[65], 0.00001, print_round) law 2026-10-18
 
-ask ins_80: round(ins[80], 0.00001, print_round)
+ask ins_80: round(ins[80], 0.00001, print_round) law 2026-10-18
 
-ask lx_40: round(lives[40], 0.1, print_round)
+ask lx_40: round(lives[40], 0.1, print_round) law 2026-10-18
 
-ask lx_65: round(lives[65], 0.1, print_round)
+ask lx_65: round(lives[65], 0.1, print_round) law 2026-10-18
 
-ask lx_80: round(lives[80], 0.1, print_round)
+ask lx_80: round(lives[80], 0.1, print_round) law 2026-10-18
 
-ask pe10_40: round(pure_e[40, t10], 0.00001, print_round)
+ask pe10_40: round(pure_e[40, t10], 0.00001, print_round) law 2026-10-18
 
-ask pe10_65: round(pure_e[65, t10], 0.00001, print_round)
+ask pe10_65: round(pure_e[65, t10], 0.00001, print_round) law 2026-10-18
 
-ask pe10_80: round(pure_e[80, t10], 0.00001, print_round)
+ask pe10_80: round(pure_e[80, t10], 0.00001, print_round) law 2026-10-18
 
-ask pe20_40: round(pure_e[40, t20], 0.00001, print_round)
+ask pe20_40: round(pure_e[40, t20], 0.00001, print_round) law 2026-10-18
 
-ask pe20_65: round(pure_e[65, t20], 0.00001, print_round)
+ask pe20_65: round(pure_e[65, t20], 0.00001, print_round) law 2026-10-18
 
-ask pe20_80: round(pure_e[80, t20], 0.00001, print_round)
+ask pe20_80: round(pure_e[80, t20], 0.00001, print_round) law 2026-10-18
 
-ask pe5_40: round(pure_e[40, t5], 0.00001, print_round)
+ask pe5_40: round(pure_e[40, t5], 0.00001, print_round) law 2026-10-18
 
-ask pe5_65: round(pure_e[65, t5], 0.00001, print_round)
+ask pe5_65: round(pure_e[65, t5], 0.00001, print_round) law 2026-10-18
 
-ask pe5_80: round(pure_e[80, t5], 0.00001, print_round)
+ask pe5_80: round(pure_e[80, t5], 0.00001, print_round) law 2026-10-18
 
-ask qx_40: round(qdeath[40], 0.000001, print_round)
+ask qx_40: round(qdeath[40], 0.000001, print_round) law 2026-10-18
 
-ask qx_65: round(qdeath[65], 0.000001, print_round)
+ask qx_65: round(qdeath[65], 0.000001, print_round) law 2026-10-18
 
-ask qx_80: round(qdeath[80], 0.000001, print_round)
+ask qx_80: round(qdeath[80], 0.000001, print_round) law 2026-10-18
 
-ask stored_40: lives[40], qdeath[40], adue[40], ins[40], ins2[40], adue_t[40, t10], endw[40, t10], adue_t[40, t20], endw[40, t20], pure_e[40, t5], pure_e[40, t10], pure_e[40, t20]
+ask stored_40: lives[40], qdeath[40], adue[40], ins[40], ins2[40], adue_t[40, t10], endw[40, t10], adue_t[40, t20], endw[40, t20], pure_e[40, t5], pure_e[40, t10], pure_e[40, t20] law 2026-10-18
 
-ask stored_65: lives[65], qdeath[65], adue[65], ins[65], ins2[65], adue_t[65, t10], endw[65, t10], adue_t[65, t20], endw[65, t20], pure_e[65, t5], pure_e[65, t10], pure_e[65, t20]
+ask stored_65: lives[65], qdeath[65], adue[65], ins[65], ins2[65], adue_t[65, t10], endw[65, t10], adue_t[65, t20], endw[65, t20], pure_e[65, t5], pure_e[65, t10], pure_e[65, t20] law 2026-10-18
 
-ask stored_80: lives[80], qdeath[80], adue[80], ins[80], ins2[80], adue_t[80, t10], endw[80, t10], adue_t[80, t20], endw[80, t20], pure_e[80, t5], pure_e[80, t10], pure_e[80, t20]
+ask stored_80: lives[80], qdeath[80], adue[80], ins[80], ins2[80], adue_t[80, t10], endw[80, t10], adue_t[80, t20], endw[80, t20], pure_e[80, t5], pure_e[80, t10], pure_e[80, t20] law 2026-10-18
+
+version lifted_figures
+  cite lifted_1_0_1
+  governs always
+  known 2022-07-26
+  adue2_2 = 2 "inline in tally 1.0.1: adue2 line 43, argument 2 of pow"
+  ins2_2 = 2 "inline in tally 1.0.1: ins2 line 59, argument 2 of pow"
 
 version workbook2022
   cite soa_workbook
+  governs always
   known 2022-07-26
   note "known: the server's Last-Modified for the workbook, 2022-07-26, its earliest public stamp: earlier than the retrieval day, 2026-10-18 (§4.5). Its own record of its last save, docProps/core.xml dcterms:modified 2022-07-21T20:21:50Z, doesn't count, since a public stamp exists (D8; round 3 took it). The workbook prints no date. The 2022-10 in its file name names the exam sitting it serves, a label, not a date (§4.5). dcterms:created, 2014-09-03, is the date of an earlier form. Round 2 took 2022-10-31, the edition month's last day"
   mk_a = 0.00022 "sheet 'Select and Ult', B4 (label A4 'A'; defined name A; stored 2.2000000000000001E-4)"
@@ -167,9 +185,10 @@ version workbook2022
 
 version tables2022
   cite soa_tables
+  governs always
   known 2022-08-25
   note "known: the server's Last-Modified for the PDF, 2022-08-25, its earliest public stamp: earlier than the retrieval day, 2026-10-18 (§4.5). The PDF's own last-saved stamp (Info ModDate and XMP ModifyDate 2022-08-25T13:07:39-05:00) is the same day; it wouldn't count by itself (D8). The document prints no date. The 2022-10 in its title and file name names the exam sitting the tables serve, a label, not a date (§4.5). The PDF was created 2022-07-19, but the form read is the one last saved on 2022-08-25. Round 2 took 2022-10-31, the edition month's last day"
-  i_eff = 0.05 "p. 2, title: 'at i = 0.05'"
+  i_eff = 0.05 1/year "p. 2, title: 'at i = 0.05'"
   radix = 100000 "p. 2, row 20, column lx: 100,000.0"
   term_n[t5] = 5 "p. 2, column head 5Ex"
   term_n[t10] = 10 "p. 2, column heads ä_x:10, A_x:10, 10Ex"

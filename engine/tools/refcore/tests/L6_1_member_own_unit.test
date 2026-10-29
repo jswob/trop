@@ -1,0 +1,58 @@
+# L §6.1 Writes into members: "Currencies are one by their code ... Any other unit a member declares is its own
+# (a.hour)". Members a and b each declare a unit hour (with different labels, which no longer meet): a's hours are
+# a.hour, b's b.hour. The joint model reads a.h as 3 a.hour; a's ask, asked as a.q, answers as a alone does (3 hour).
+=== joint.tally
+model family
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+  use a = "a.tally" sha256 "44caa3b76989672d221a267a273bfc71bbb8aa4d2e1e066a3252ca68ff56ac8e"
+  use b = "b.tally" sha256 "13a6cdb10a29da422534df9445eb455a8adb8b20fb8679806abb92ead03318cd"
+
+ask r: a.h
+=== a.tally
+model a
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source s "umowa"
+
+unit hour "godzina"
+
+input h: num hour
+
+version v
+  cite s
+  governs always
+  known 2025-01-01
+  h = 3 hour "umowa"
+
+ask q: h
+=== b.tally
+model b
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source s "umowa"
+
+unit hour "hour of work"
+
+input h: num hour
+
+version v
+  cite s
+  governs always
+  known 2025-01-01
+  h = 5 hour "umowa"
+
+ask q: h
+=== expect r a.q
+r: 3 a.hour
+  cut 2026-10-20
+a.q: 3 hour
+  cut 2026-10-20

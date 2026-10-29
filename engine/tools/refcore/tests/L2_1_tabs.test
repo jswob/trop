@@ -1,0 +1,9 @@
+# L §2.1: "A body line is indented by exactly two spaces per level. Tabs are refused." (LOAD-PARSE, L §8.3: "also tabs")
+=== m.tally
+model t
+	tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+=== expect
+refused: LOAD-PARSE ...

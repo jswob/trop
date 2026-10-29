@@ -1,0 +1,45 @@
+# L §5.14.1: "a keyed place or a move named without keys stands for all its instances (`reads wcash`)".  sweep reads
+# wcash[k] for each k through `reads wcash`, and moves what exceeds 0 on day_of(m, sweep_dom) into konto: wcash[a]
+# gets 50.00 PLN on day 5 (topup), so the sweep on day 10 moves 50.00 PLN, and konto holds 50.00 PLN at the end of
+# January (L §5.14.1 running reads, E §4.2).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-01-31
+
+source s "s"
+unit PLN: currency minor 0.01
+index w = [a]
+place wcash[k in w]: accounts PLN lives 2020-01-01..
+place konto: accounts PLN lives 2020-01-01..
+place world: outside lives 1900-01-01..
+
+input fill_dom: int
+input sweep_dom: int
+input amt: money PLN
+
+move topup[m in months]: transfers
+  on day_of(m, fill_dom)
+  leg cash from world to wcash[a] amount amt
+
+move sweep[m in months, k in w]: transfers
+  on day_of(m, sweep_dom)
+  reads wcash
+  leg cash from wcash[k] to konto amount max(0 PLN, bal(wcash[k]))
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  fill_dom = 5
+  sweep_dom = 10
+  amt = 50.00 PLN
+  opening[konto] = 0 PLN at 2026-01-01 start
+  opening[wcash[a]] = 0 PLN at 2026-01-01 start
+
+ask q: bal(konto, 2026-01-31)
+=== expect
+q: 50.00 PLN
+...

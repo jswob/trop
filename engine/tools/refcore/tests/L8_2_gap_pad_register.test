@@ -1,0 +1,79 @@
+# Fault gap_register (writer 6): gap(wallet, d) printed no register, and flows of the pad's other end didn't list the
+# plan its size rests on. L §8.2: "The list is transitive: whatever its evaluation read, through any chain (N-713)";
+# L §5.19: "The gap at a stated reading is the reading less the booked balance at its instant"; "pad x from y: each gap
+# is taken up by a movement of the prelude kind pads ... of the gap's size". The booked balance at 2025-01-31 end is
+# 400.00 + 300.00 (atm, a plan before the cut that nothing fulfils: unfulfilled: atm) = 700.00; stated 250.00: the gap
+# is -450.00 DUK and lists `unfulfilled: atm`; the pad of 450.00 runs from wallet to spent, so flows(spent, 2025-01) =
+# 450.00 DUK, listing the pad and `unfulfilled: atm`. q_mid: 700.00 DUK.
+# Writer 7: spent is now `outside DUK`: L §5.14.3 (round 12) refuses flows of a place of unit any (LOAD-UNIT) unless the
+# flows converts, and the fault's text had spent of unit any.
+# (Writer 8: L §5.10 refuses a unit stated on a place whose kind isn't of unit one, so `outside PLN` is gone; the place
+# read by flows is now a thing of its own outside kind of one unit, `kind payees: place DUK signed outside`, since
+# flows of a place of unit any is refused, L §5.14.3.)
+=== flow01.tally
+model flow01
+  tally 2
+  on 2026-10-25
+  start 2025-01-01
+  end 2025-01-31
+  note "FLOW-01: a wallet counted twice; the balancing flow between the counts."
+  note "The first count opens the wallet (opening, LANGUAGE 4.6, 5.19). The second is a stated balance whose gap is padded from an outside place: the pad is the one balancing flow, booked at the reading (5.19), and gap(wallet, d) is its signed size."
+
+source card "Probe card FLOW-01 (made up): story and rules"
+
+unit DUK: currency minor 0.01
+
+place bank: outside lives 2025-01-01..
+
+kind payees: place DUK signed outside
+place spent: payees lives 2025-01-01..
+
+place wallet: cash DUK lives 2025-01-01..
+
+input atm_amount: money DUK
+
+input atm_day: date
+
+move atm: transfers
+  on atm_day
+  leg cash from bank to wallet amount atm_amount
+  note "the cash machine draws on Halina's bank account, which the card doesn't record: an outside place"
+
+ask q_gap: gap(wallet, 2025-01-31)
+
+ask q_spent: flows(spent, 2025-01)
+
+ask q_mid: bal(wallet, 2025-01-20)
+
+ask q_holds: check bal(wallet, 2025-01-01) + flows(atm, 2025-01-02 .. 2025-01-31) + gap(wallet, 2025-01-31) == bal(wallet, 2025-01-31)
+
+ask q_flows: flows(wallet, 2025-01-02 .. 2025-01-31)
+
+version card_facts
+  cite card
+  governs always
+  known 2025-01-01
+  pad wallet from spent
+  atm_amount = 300.00 "story: 300.00 from the cash machine"
+  atm_day = 2025-01-10 "story: on 10 January"
+  opening[wallet] = 400.00 at 2025-01-01 start "story: counted 400.00 on 1 January 2025"
+  stated[wallet] = 250.00 at 2025-01-31 end "story: counted 250.00 on 31 January"
+=== expect
+q_flows: -150.00 DUK
+  pad: wallet 2025-01-31 end, pads:card_facts:wallet@2025-01-31 end of -450.00 DUK
+  unfulfilled: atm
+  cut 2026-10-25
+q_gap: -450.00 DUK
+  unfulfilled: atm
+  cut 2026-10-25
+q_holds: ok
+  pad: wallet 2025-01-31 end, pads:card_facts:wallet@2025-01-31 end of -450.00 DUK
+  unfulfilled: atm
+  cut 2026-10-25
+q_mid: 700.00 DUK
+  unfulfilled: atm
+  cut 2026-10-25
+q_spent: 450.00 DUK
+  pad: wallet 2025-01-31 end, pads:card_facts:wallet@2025-01-31 end of -450.00 DUK
+  unfulfilled: atm
+  cut 2026-10-25

@@ -1,0 +1,34 @@
+# L §6.3 item 2 (round 13): a load conflict is "two rows for one target and day that the read rule doesn't order: at
+# the same keys, the later-known one without replace, or tied after precedence (§4.6 steps 2-4)". v1 and v2 are known
+# the same day, so neither is later-known; L §4.6 step 3.3 "a row with a span over one with always" orders them, so the
+# model loads: before 2026-07-01 only v1's row is a candidate (2), from it v2's span wins (1).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+input x: int
+
+version v1
+  cite s
+  governs always
+  known 2025-12-01
+  x = 2
+
+version v2
+  cite s
+  governs 2026-07-01..
+  known 2025-12-01
+  x = 1
+
+ask q1: x law 2026-03-01
+ask q2: x law 2026-09-01
+=== expect
+q1: 2
+  law date 2026-03-01, cut 2026-12-31
+q2: 1
+  law date 2026-09-01, cut 2026-12-31

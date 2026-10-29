@@ -1,0 +1,48 @@
+# Fault (writer 7's brief): L §8.2 pinned: "A pin given by an expression prints its value, pinned: <pin> = v, and
+# with it the register of what the expression read". old_y reads y as if {law old_last_day}, old_last_day = 2025-06-30:
+# pinned: law old_last_day = 2025-06-30 (refcore printed pinned: law 2025-06-30); a literal pin prints as written (q2).
+# y's 2025 row gives 1 (L5_11_asif_law.test).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+input rate: int
+input old_last_day: date
+
+def y: int at reader
+  rule base = rate
+
+def old_y: int = y as if {law old_last_day}
+
+version v0
+  cite s
+  governs always
+  known 2025-01-01
+  old_last_day = 2025-06-30
+
+version v1
+  cite s
+  governs 2025..
+  known 2025-01-01
+  rate = 1
+
+version v2
+  cite s
+  governs 2026..
+  known 2025-12-01
+  replace rate = 2
+
+ask q1: old_y
+ask q2: y as if {law 2025-06-30}
+=== expect
+q1: 1
+  pinned: law old_last_day = 2025-06-30
+  cut 2026-12-31
+q2: 1
+  pinned: law 2025-06-30
+  cut 2026-12-31

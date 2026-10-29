@@ -1,0 +1,55 @@
+# L §3.2, §8.4: the kind spending keeps transfers' leg cash of unit any, so load can't show the unit of the sum of
+# o.cash.amount; it is checked at the key.  q: 100.00 PLN x 0.5 rounded to minor(PLN) = 50.00 PLN (L §7.2).  q2: the sum
+# there is 30.00 EUR x 0.5, whose unit really differs from the step minor(PLN): RUN-DOMAIN at that key.  (Was refused
+# at load: LOAD-UNIT round: the step money PLN and dyn have different units.)
+=== m.tally
+model p8
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+
+source s "synthetic"
+
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+
+kind spending: transfers
+place konto: accounts PLN lives 2025-01-01..
+place shop: outside lives 1900-01-01..
+place konto_e: accounts EUR lives 2025-01-01..
+place shop_e: outside lives 1900-01-01..
+input bank: observed
+input share: num
+input win: month
+
+def spent: money PLN
+  rule base = round(sum(o.cash.amount for o in bank over win where o in spending and o.cash.from == konto) * share, minor(PLN), half-up) when covered(konto, win)
+
+def spent_e: money PLN
+  rule base = round(sum(o.cash.amount for o in bank over win where o in spending and o.cash.from == konto_e) * share, minor(PLN), half-up) when covered(konto_e, win)
+
+version st
+  cite s
+  governs 2026-01
+  known 2026-02-02
+  covers konto, konto_e
+  bank[r1] = (on: 2026-01-05, kind: spending, leg cash from konto to shop amount 100.00 PLN)
+  bank[r2] = (on: 2026-01-06, kind: spending, leg cash from konto_e to shop_e amount 30.00 EUR)
+
+version facts
+  cite s
+  governs always
+  known 2026-01-01
+  share = 0.5
+  win = 2026-01
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "s"
+  opening[konto_e] = 100.00 EUR at 2026-01-01 start "s"
+
+ask q: spent
+ask q2: spent_e
+=== expect
+q: 50.00 PLN
+  cut 2026-10-18
+q2: refused: RUN-DOMAIN round: the step 0.01 PLN and 15.00 EUR have different units
+  cut 2026-10-18

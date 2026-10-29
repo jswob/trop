@@ -1,16 +1,22 @@
 model ul14
-  tally 1
+  tally 2
   on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
   note "US taxable social security benefits (26 U.S.C. § 86) as IRS Publication 915 (2025) works them: Example 1 (single), Example 3 (the Johnsons, married filing jointly) and the lump-sum election (Terry Jackson, single)."
   note "The worksheet lines are keyed by taxpayer and tax year, so each line reads the law of its year. Worksheet 1 is the regular method for the year. Worksheet 2 is § 86 for the earlier year as if the lump-sum portion attributable to it had been received then (§ 86(e)(1)(A)): the same lines under the pin benefits + lump_for. Worksheet 4 is the year with the earlier years' portions moved out, under the pin benefits − those portions, plus Worksheet 2's line 21 (§ 86(e)(1)(B))."
   note "A line the worksheet leaves blank is '-'. No rounding is stated and every printed line is exact, so no line rounds."
   note "Whether Terry makes the lump-sum election is the taxpayer's choice (§ 86(e)), so it is an axis; the model compares the two methods but never picks one."
+
+source lifted_1_0_1 "Figures tally 1.0.1 allowed inline in rules"
 
 source modeller "The model's own readings and assumptions, each stated with its reason"
 
 source pub915 "IRS, Publication 915 (2025), Social Security and Equivalent Railroad Retirement Benefits (Page Last Reviewed or Updated: 30-Apr-2026)" at "https://www.irs.gov/publications/p915"
 
 source publ103_66 "Omnibus Budget Reconciliation Act of 1993, Pub. L. 103-66, approved August 10, 1993, § 13215: (a) added § 86(a)(2), the 85 percent tier; (b) amended the heading and text of § 86(c) generally, the base amount and the adjusted base amount; (d) for taxable years beginning after December 31, 1993. The wording is read in 26 U.S. Code § 86 at the Legal Information Institute, Cornell Law School, with its Amendments and Effective Date notes" at "https://www.law.cornell.edu/uscode/text/26/86"
+
+unit USD: currency minor 0.01
 
 axis ul14_election
   lump_sum "the taxpayer elects under § 86(e) and reports the Worksheet 4 amount (Form 1040 line 6c checked)"
@@ -38,6 +44,12 @@ input exempt_int[t in tp, y in ty]: money USD question "What tax-exempt interest
 
 input inc[t in tp, y in ty, i in isrc]: money USD question "What income of this kind was there in this year, apart from the benefits?"
 
+input ln02_2: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input ln14_2: int
+  note "lifted from an inline figure of tally 1.0.1"
+
 input lump_for[t in tp, y in ty]: money USD question "Which part of the lump-sum benefit payment received in 2025 is attributable to this year?"
 
 input prior_taxable[t in tp, y in ty]: money USD question "What taxable benefits were reported for this earlier year before the lump sum?"
@@ -46,173 +58,173 @@ input rate85: num
 
 input status[t in tp, y in ty]: key fstat question "What was the filing status in this year?"
 
-def line6b[t in tp, y in ty]: num USD
+def line6b[t in tp, y in ty]: num USD at start_of(y)
   note "Form 1040 line 6b: the taxable benefits reported under the method chosen."
-  rule lump when ul14_election = lump_sum = lump_taxable[t, y]
-  rule regular when ul14_election = regular = ws_taxable[t, y]
+  rule lump = lump_taxable[t, y] when ul14_election == lump_sum
+  rule regular = ws_taxable[t, y] when ul14_election == regular
 
-def ln01[t in tp, y in ty]: num USD
+def ln01[t in tp, y in ty]: num USD at start_of(y)
   note "Line 1: the benefits of the year. Worksheets 2 and 4 read it under a pin on benefits."
   rule base = benefits[t, y]
 
-def ln02[t in tp, y in ty]: num USD
+def ln02[t in tp, y in ty]: num USD at start_of(y)
   note "Line 2: one-half of line 1 (§ 86(a)(1)(A), (b)(1)(A)(ii))."
-  rule base = ln01[t, y] / 2
+  rule base = ln01[t, y] / ln02_2
 
-def ln03[t in tp, y in ty]: num USD
+def ln03[t in tp, y in ty]: num USD at start_of(y)
   note "Line 3: the other income of the year. § 86(b)(2) takes modified adjusted gross income without the § 135 exclusion, so excluded savings-bond interest counts (Example 3: '$40,500 ($38,000 + $2,500)')."
-  rule base = sum(i in isrc: inc[t, y, i])
+  rule base = sum(inc[t, y, i] for i in isrc)
 
-def ln04[t in tp, y in ty]: num USD = exempt_int[t, y]
+def ln04[t in tp, y in ty]: num USD = exempt_int[t, y] at start_of(y)
 
-def ln05[t in tp, y in ty]: num USD = excl[t, y]
+def ln05[t in tp, y in ty]: num USD = excl[t, y] at start_of(y)
 
-def ln06[t in tp, y in ty]: num USD = ln02[t, y] + ln03[t, y] + ln04[t, y] + ln05[t, y]
+def ln06[t in tp, y in ty]: num USD = ln02[t, y] + ln03[t, y] + ln04[t, y] + ln05[t, y] at start_of(y)
 
-def ln07[t in tp, y in ty]: num USD = adj[t, y]
+def ln07[t in tp, y in ty]: num USD = adj[t, y] at start_of(y)
 
-def ln08[t in tp, y in ty]: num USD
+def ln08[t in tp, y in ty]: num USD at start_of(y)
   note "Line 8: line 6 less line 7. The worksheet stops before line 8 if line 7 is not less than line 6; that stop is in stop, and line 8 still prints."
   rule base = ln06[t, y] - ln07[t, y]
 
-def ln09[t in tp, y in ty]: num USD
+def ln09[t in tp, y in ty]: num USD at start_of(y)
   note "Line 9: the base amount for the filing status of the year (§ 86(c)(1)), read at the year's law."
   rule base = base_amt[status[t, y]]
 
-def ln10[t in tp, y in ty]: num USD
+def ln10[t in tp, y in ty]: num USD at start_of(y)
   rule base = ln08[t, y] - ln09[t, y]
-  rule blank excepts base when stop[t, y] = -
+  rule blank beats base = none when stop[t, y]
 
-def ln11[t in tp, y in ty]: num USD
+def ln11[t in tp, y in ty]: num USD at start_of(y)
   note "Line 11: $9,000 or $12,000, the adjusted base amount less the base amount (§ 86(a)(2)(A)(ii), (c)(2))."
   rule base = adj_base_amt[status[t, y]] - base_amt[status[t, y]]
-  rule blank excepts base when stop[t, y] = -
+  rule blank beats base = none when stop[t, y]
 
-def ln12[t in tp, y in ty]: num USD
+def ln12[t in tp, y in ty]: num USD at start_of(y)
   rule base = max(0, ln10[t, y] - ln11[t, y])
-  rule blank excepts base when stop[t, y] = -
+  rule blank beats base = none when stop[t, y]
 
-def ln13[t in tp, y in ty]: num USD
+def ln13[t in tp, y in ty]: num USD at start_of(y)
   rule base = min(ln10[t, y], ln11[t, y])
-  rule blank excepts base when stop[t, y] = -
+  rule blank beats base = none when stop[t, y]
 
-def ln14[t in tp, y in ty]: num USD
-  rule base = ln13[t, y] / 2
-  rule blank excepts base when stop[t, y] = -
+def ln14[t in tp, y in ty]: num USD at start_of(y)
+  rule base = ln13[t, y] / ln14_2
+  rule blank beats base = none when stop[t, y]
 
-def ln15[t in tp, y in ty]: num USD
+def ln15[t in tp, y in ty]: num USD at start_of(y)
   rule base = min(ln02[t, y], ln14[t, y])
-  rule blank excepts base when stop[t, y] = -
+  rule blank beats base = none when stop[t, y]
 
-def ln16[t in tp, y in ty]: num USD
+def ln16[t in tp, y in ty]: num USD at start_of(y)
   rule base = ln12[t, y] * rate85
-  rule blank excepts base when stop[t, y] = -
+  rule blank beats base = none when stop[t, y]
 
-def ln17[t in tp, y in ty]: num USD
+def ln17[t in tp, y in ty]: num USD at start_of(y)
   rule base = ln15[t, y] + ln16[t, y]
-  rule blank excepts base when stop[t, y] = -
+  rule blank beats base = none when stop[t, y]
 
-def ln18[t in tp, y in ty]: num USD
+def ln18[t in tp, y in ty]: num USD at start_of(y)
   rule base = ln01[t, y] * rate85
-  rule blank excepts base when stop[t, y] = -
+  rule blank beats base = none when stop[t, y]
 
-def ln19[t in tp, y in ty]: num USD
+def ln19[t in tp, y in ty]: num USD at start_of(y)
   note "Line 19: the smaller of line 17 and line 18 (§ 86(a)(2))."
   rule base = min(ln17[t, y], ln18[t, y])
-  rule blank excepts base when stop[t, y] = -
+  rule blank beats base = none when stop[t, y]
 
-def lump_taxable[t in tp, y in ty]: num USD
+def lump_taxable[t in tp, y in ty]: num USD at start_of(y)
   note "Worksheet 4 line 21, the taxable benefits under the election (§ 86(e)(1)): the year's sheet with the lump-sum portions for earlier years moved out of its benefits (lines 1-19, 0 when the sheet stops), plus line 20."
-  rule base = ws_taxable[t, y] as if {benefits[t, y] = benefits[t, y] - sum(k in ty where k < y: lump_for[t, k])} + ws4_ln20[t, y]
+  rule base = ws_taxable[t, y] as if {benefits[t, y] = benefits[t, y] - sum(lump_for[t, k] for k in ty where k < y)} + ws4_ln20[t, y]
 
-def over_adj[t in tp, y in ty]: bool
+def over_adj[t in tp, y in ty]: bool at start_of(y)
   note "Example 3: more than 50% of the benefits are taxable because line 8 is more than the adjusted base amount."
   rule base = ln08[t, y] > adj_base_amt[status[t, y]]
 
-def smaller[t in tp, y in ty]: bool
+def smaller[t in tp, y in ty]: bool at start_of(y)
   note "Lump-Sum Election, Example: Terry compares Worksheet 4 line 21 with Worksheet 1 line 19."
   rule base = lump_taxable[t, y] < ws_taxable[t, y]
 
-def stop[t in tp, y in ty]: bool
+def stop[t in tp, y in ty]: bool at start_of(y)
   note "Worksheet lines 7 and 9: none of the benefits are taxable if line 7 is not less than line 6, or if line 8 is not more than line 9 (§ 86(b)(1))."
   rule base = ln07[t, y] >= ln06[t, y] or ln08[t, y] <= ln09[t, y]
 
-def ws2_ln20[t in tp, y in ty]: num USD
+def ws2_ln20[t in tp, y in ty]: num USD at start_of(y)
   note "Worksheet 2 line 20: the taxable benefits previously reported for the earlier year; blank when the sheet stops at line 9."
   rule base = prior_taxable[t, y]
-  rule blank excepts base when ws2_stop[t, y] = -
+  rule blank beats base = none when ws2_stop[t, y]
 
-def ws2_ln21[t in tp, y in ty]: num USD
+def ws2_ln21[t in tp, y in ty]: num USD at start_of(y)
   note "Worksheet 2 line 21: the additional taxable benefits for the earlier year, line 19 refigured with the lump-sum portion for that year (§ 86(e)(1)(A)) less line 20; 0 when the sheet stops at line 9."
   rule base = ln19[t, y] as if {benefits[t, y] = benefits[t, y] + lump_for[t, y]} - ws2_ln20[t, y]
-  rule stopped excepts base when ws2_stop[t, y] = 0
+  rule stopped beats base = 0 when ws2_stop[t, y]
 
-def ws2_stop[t in tp, y in ty]: bool
+def ws2_stop[t in tp, y in ty]: bool at start_of(y)
   note "Whether Worksheet 2 stops at line 7 or line 9: the year's stop with the lump-sum portion for that year added to its benefits."
   rule base = stop[t, y] as if {benefits[t, y] = benefits[t, y] + lump_for[t, y]}
 
-def ws4_ln20[t in tp, y in ty]: num USD
+def ws4_ln20[t in tp, y in ty]: num USD at start_of(y)
   note "Worksheet 4 line 20: the total of line 21 of the Worksheets 2 for the earlier years."
-  rule base = sum(k in ty where k < y: ws2_ln21[t, k])
+  rule base = sum(ws2_ln21[t, k] for k in ty where k < y)
 
-def ws_taxable[t in tp, y in ty]: num USD
+def ws_taxable[t in tp, y in ty]: num USD at start_of(y)
   note "The sheet's taxable benefits: line 19, or 0 when the sheet stops."
   rule base = ln19[t, y]
-  rule stopped excepts base when stop[t, y] = 0
+  rule stopped beats base = 0 when stop[t, y]
 
-ask q01_ln01: ln01[t, y] for t in tp, y in [2025]
+ask q01_ln01: ln01[t, y] for t in tp, y in [2025] law 2026-10-18
 
-ask q02_ln02: ln02[t, y] for t in tp, y in [2025]
+ask q02_ln02: ln02[t, y] for t in tp, y in [2025] law 2026-10-18
 
-ask q03_ln03: ln03[t, y] for t in tp, y in [2025]
+ask q03_ln03: ln03[t, y] for t in tp, y in [2025] law 2026-10-18
 
-ask q04_ln04: ln04[t, y] for t in tp, y in [2025]
+ask q04_ln04: ln04[t, y] for t in tp, y in [2025] law 2026-10-18
 
-ask q05_ln05: ln05[t, y] for t in tp, y in [2025]
+ask q05_ln05: ln05[t, y] for t in tp, y in [2025] law 2026-10-18
 
-ask q06_ln06: ln06[t, y] for t in tp, y in [2025]
+ask q06_ln06: ln06[t, y] for t in tp, y in [2025] law 2026-10-18
 
-ask q07_ln07: ln07[t, y] for t in tp, y in [2025]
+ask q07_ln07: ln07[t, y] for t in tp, y in [2025] law 2026-10-18
 
-ask q08_ln08: ln08[t, y] for t in tp, y in [2025]
+ask q08_ln08: ln08[t, y] for t in tp, y in [2025] law 2026-10-18
 
-ask q09_ln09: ln09[t, y] for t in tp, y in [2025]
+ask q09_ln09: ln09[t, y] for t in tp, y in [2025] law 2026-10-18
 
-ask q10_ln10: ln10[t, y] for t in tp, y in [2025]
+ask q10_ln10: ln10[t, y] for t in tp, y in [2025] law 2026-10-18
 
-ask q11_ln11: ln11[t, y] for t in tp, y in [2025]
+ask q11_ln11: ln11[t, y] for t in tp, y in [2025] law 2026-10-18
 
-ask q12_ln12: ln12[t, y] for t in tp, y in [2025]
+ask q12_ln12: ln12[t, y] for t in tp, y in [2025] law 2026-10-18
 
-ask q13_ln13: ln13[t, y] for t in tp, y in [2025]
+ask q13_ln13: ln13[t, y] for t in tp, y in [2025] law 2026-10-18
 
-ask q14_ln14: ln14[t, y] for t in tp, y in [2025]
+ask q14_ln14: ln14[t, y] for t in tp, y in [2025] law 2026-10-18
 
-ask q15_ln15: ln15[t, y] for t in tp, y in [2025]
+ask q15_ln15: ln15[t, y] for t in tp, y in [2025] law 2026-10-18
 
-ask q16_ln16: ln16[t, y] for t in tp, y in [2025]
+ask q16_ln16: ln16[t, y] for t in tp, y in [2025] law 2026-10-18
 
-ask q17_ln17: ln17[t, y] for t in tp, y in [2025]
+ask q17_ln17: ln17[t, y] for t in tp, y in [2025] law 2026-10-18
 
-ask q18_ln18: ln18[t, y] for t in tp, y in [2025]
+ask q18_ln18: ln18[t, y] for t in tp, y in [2025] law 2026-10-18
 
-ask q19_ln19: ln19[t, y] for t in tp, y in [2025]
+ask q19_ln19: ln19[t, y] for t in tp, y in [2025] law 2026-10-18
 
-ask q20_ln20: ws2_ln20[terry, 2024], ws4_ln20[terry, 2025]
+ask q20_ln20: ws2_ln20[terry, 2024], ws4_ln20[terry, 2025] law 2026-10-18
 
-ask q21_ln21: ws2_ln21[terry, 2024], lump_taxable[terry, 2025]
+ask q21_ln21: ws2_ln21[terry, 2024], lump_taxable[terry, 2025] law 2026-10-18
 
-ask q22_taxable: ws_taxable[t, y] for t in tp, y in [2025]
+ask q22_taxable: ws_taxable[t, y] for t in tp, y in [2025] law 2026-10-18
 
-ask q23_over_adj: over_adj[t, y] for t in [johnsons], y in [2025]
+ask q23_over_adj: over_adj[t, y] for t in [johnsons], y in [2025] law 2026-10-18
 
-ask q24_smaller: smaller[t, y] for t in [terry], y in [2025]
+ask q24_smaller: smaller[t, y] for t in [terry], y in [2025] law 2026-10-18
 
-ask q25_line6b: line6b[t, y] for t in [terry], y in [2025]
+ask q25_line6b: line6b[t, y] for t in [terry], y in [2025] law 2026-10-18
 
-ask q26_ws2: ln01[t, y], ln02[t, y], ln03[t, y], ln04[t, y], ln05[t, y], ln06[t, y], ln07[t, y], ln08[t, y], ln09[t, y], ln10[t, y], ln11[t, y], ln12[t, y], ln13[t, y], ln14[t, y], ln15[t, y], ln16[t, y], ln17[t, y], ln18[t, y], ln19[t, y] for t in [terry], y in [2024] with benefits[terry, 2024] = benefits[terry, 2024] + lump_for[terry, 2024]
+ask q26_ws2: ln01[t, y], ln02[t, y], ln03[t, y], ln04[t, y], ln05[t, y], ln06[t, y], ln07[t, y], ln08[t, y], ln09[t, y], ln10[t, y], ln11[t, y], ln12[t, y], ln13[t, y], ln14[t, y], ln15[t, y], ln16[t, y], ln17[t, y], ln18[t, y], ln19[t, y] for t in [terry], y in [2024] with benefits[terry, 2024] = benefits[terry, 2024] + lump_for[terry, 2024] law 2026-10-18
 
-ask q27_ws4: ln01[t, y], ln02[t, y], ln03[t, y], ln04[t, y], ln05[t, y], ln06[t, y], ln07[t, y], ln08[t, y], ln09[t, y], ln10[t, y], ln11[t, y], ln12[t, y], ln13[t, y], ln14[t, y], ln15[t, y], ln16[t, y], ln17[t, y], ln18[t, y], ln19[t, y] for t in [terry], y in [2025] with benefits[terry, 2025] = benefits[terry, 2025] - lump_for[terry, 2024]
+ask q27_ws4: ln01[t, y], ln02[t, y], ln03[t, y], ln04[t, y], ln05[t, y], ln06[t, y], ln07[t, y], ln08[t, y], ln09[t, y], ln10[t, y], ln11[t, y], ln12[t, y], ln13[t, y], ln14[t, y], ln15[t, y], ln16[t, y], ln17[t, y], ln18[t, y], ln19[t, y] for t in [terry], y in [2025] with benefits[terry, 2025] = benefits[terry, 2025] - lump_for[terry, 2024] law 2026-10-18
 
 version law_86
   cite publ103_66
@@ -227,8 +239,16 @@ version law_86
   base_amt[mfs_together] = 0 "§ 86(c)(1)(C): 'zero'"
   rate85 = 0.85 "§ 86(a)(2)(A)(i) and (B): '85 percent'"
 
+version lifted_figures
+  cite lifted_1_0_1
+  governs always
+  known 1993-08-10
+  ln02_2 = 2 "inline in tally 1.0.1: ln02 line 60, factor"
+  ln14_2 = 2 "inline in tally 1.0.1: ln14 line 100, factor"
+
 version facts_pub915
   cite pub915
+  governs always
   known 2026-10-18
   note "The examples' stipulations are hypothetical cases: known from the model's on (§4.5), not from the page's update stamp (30-Apr-2026)."
   note "Example 1 and Example 3 are under How Much Is Taxable?; Terry Jackson is under Lump-Sum Election, Example. Lines 4, 5 and 7 are taken from the filled-in worksheets, which print -0- there."
@@ -271,6 +291,7 @@ version facts_pub915
 
 version model_assume
   cite modeller
+  governs always
   known 2026-10-18
   note "Assumptions standing for the examples' own facts: known from the model's on, as the examples (§4.5)."
   adj[terry, 2024] = 0 assumed "Worksheet 2 line 7 prints -0-; the example states no 2024 adjustments, so 2024 AGI is the income total of $23,000"

@@ -1,6 +1,8 @@
 model rc06
-  tally 1
+  tally 2
   on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
   note "United States, charitable contribution limits for taxable year 2025: Pub 526 (2025) Worksheet 2, 'Applying the Deduction Limits', lines 1-52, run on the three text examples nearest it (p. 26 Example and its election variant, p. 24 Example). The worksheet is printed blank; the model fills it."
   note "Each example is a key of ex, and its gifts are keys of gift, each with a kind and an organization category. Lines 1-10 are therefore sums the model makes from the gifts, not entries the taxpayer types."
   note "Every ask pins the law date 2025-12-31, inside taxable year 2025, the year the publication is for. The Pub. L. 119-21 amendments to § 170(b)(1) apply to taxable years beginning after December 31, 2025, so they are not modelled."
@@ -9,6 +11,8 @@ model rc06
 source modeller "The model's own assumptions, each stated with its reason"
 
 source p526_2025 "Department of the Treasury, Internal Revenue Service, Publication 526 (2025), Charitable Contributions, For use in preparing 2025 Returns (Cat. No. 15050A, dated Feb 5, 2026)" at "https://www.irs.gov/pub/irs-pdf/p526.pdf"
+
+unit USD: currency minor 0.01
 
 index ex = [ex_a, ex_b, ex_c]
 
@@ -48,250 +52,250 @@ input qcc[g in gift]: bool question "Is the gift a qualified conservation contri
 
 input use_of[g in gift]: bool question "Is the gift made 'for the use of' the organization rather than to it?"
 
-def amount[g in gift]: money USD
+def amount[g in gift]: money USD at reader
   note "p. 26, Instructions for Worksheet 2: for property, enter the FMV unless you elected (or were required) to reduce it, and then the reduced amount; for cash, the cash given"
   rule base v ws2_2025 = gift_value[g]
-  rule reduced excepts base v ws2_2025 when gift_kind[g] = cg_property and gift_org[g] = first_cat and elect[gift_ex[g]] = gift_value[g] - appreciation[g]
+  rule reduced beats base v ws2_2025 = gift_value[g] - appreciation[g] when gift_kind[g] == cg_property and gift_org[g] == first_cat and elect[gift_ex[g]]
 
-def appreciation[g in gift]: money USD
+def appreciation[g in gift]: money USD at reader
   note "p. 26, Capital gain property election: the appreciation in value that would have been long-term capital gain if the property had been sold; capital gain property is held more than 1 year (p. 19), so all of FMV over basis is long-term"
   rule base v ws2_2025 = max(0, gift_value[g] - gift_basis[g])
 
-def plain[g in gift]: bool
+def plain[g in gift]: bool at reader
   note "a gift that is neither a qualified conservation contribution (lines 1-2) nor 'for the use of' an organization (lines 4-5)"
   rule base v ws2_2025 = not qcc[g] and not use_of[g]
 
-def w01[e in ex]: money USD
+def w01[e in ex]: money USD at reader
   note "line 1: If you are a qualified farmer or rancher, enter any QCCs subject to the limit based on 100% of AGI"
-  rule base v ws2_2025 = sum(g in gift where gift_ex[g] = e and qcc[g] and farmer[e]: amount[g])
+  rule base v ws2_2025 = sum(amount[g] for g in gift where gift_ex[g] == e and qcc[g] and farmer[e])
 
-def w02[e in ex]: money USD
+def w02[e in ex]: money USD at reader
   note "line 2: Enter any QCCs not entered on line 1"
-  rule base v ws2_2025 = sum(g in gift where gift_ex[g] = e and qcc[g] and not farmer[e]: amount[g])
+  rule base v ws2_2025 = sum(amount[g] for g in gift where gift_ex[g] == e and qcc[g] and not farmer[e])
 
-def w04[e in ex]: money USD
+def w04[e in ex]: money USD at reader
   note "line 4: Enter your contributions of capital gain property 'for the use of' any qualified organization (line 3 is reserved)"
-  rule base v ws2_2025 = sum(g in gift where gift_ex[g] = e and not qcc[g] and use_of[g] and gift_kind[g] = cg_property: amount[g])
+  rule base v ws2_2025 = sum(amount[g] for g in gift where gift_ex[g] == e and not qcc[g] and use_of[g] and gift_kind[g] == cg_property)
 
-def w05[e in ex]: money USD
+def w05[e in ex]: money USD at reader
   note "line 5: Enter your other contributions 'for the use of' any qualified organization. Don't include any contributions you entered on a previous line"
-  rule base v ws2_2025 = sum(g in gift where gift_ex[g] = e and not qcc[g] and use_of[g] and gift_kind[g] != cg_property: amount[g])
+  rule base v ws2_2025 = sum(amount[g] for g in gift where gift_ex[g] == e and not qcc[g] and use_of[g] and gift_kind[g] != cg_property)
 
-def w06[e in ex]: money USD
+def w06[e in ex]: money USD at reader
   note "line 6: Enter your contributions of capital gain property to qualified organizations that aren't 50% limit organizations"
-  rule base v ws2_2025 = sum(g in gift where gift_ex[g] = e and plain[g] and gift_org[g] = second_cat and gift_kind[g] = cg_property: amount[g])
+  rule base v ws2_2025 = sum(amount[g] for g in gift where gift_ex[g] == e and plain[g] and gift_org[g] == second_cat and gift_kind[g] == cg_property)
 
-def w07[e in ex]: money USD
+def w07[e in ex]: money USD at reader
   note "line 7: Enter your other contributions to qualified organizations that aren't 50% limit organizations"
-  rule base v ws2_2025 = sum(g in gift where gift_ex[g] = e and plain[g] and gift_org[g] = second_cat and gift_kind[g] != cg_property: amount[g])
+  rule base v ws2_2025 = sum(amount[g] for g in gift where gift_ex[g] == e and plain[g] and gift_org[g] == second_cat and gift_kind[g] != cg_property)
 
-def w08[e in ex]: money USD
+def w08[e in ex]: money USD at reader
   note "line 8: Enter your contributions of capital gain property to 50% limit organizations deducted at FMV"
-  rule base v ws2_2025 = sum(g in gift where gift_ex[g] = e and plain[g] and gift_org[g] = first_cat and gift_kind[g] = cg_property and not elect[e]: amount[g])
+  rule base v ws2_2025 = sum(amount[g] for g in gift where gift_ex[g] == e and plain[g] and gift_org[g] == first_cat and gift_kind[g] == cg_property and not elect[e])
 
-def w09[e in ex]: money USD
+def w09[e in ex]: money USD at reader
   note "line 9: Enter your noncash contributions to 50% limit organizations other than capital gain property you deducted at FMV. Be sure to include contributions of capital gain property to 50% limit organizations if you reduced the property's FMV"
-  rule base v ws2_2025 = sum(g in gift where gift_ex[g] = e and plain[g] and gift_org[g] = first_cat and (gift_kind[g] = other_property or gift_kind[g] = cg_property and elect[e]): amount[g])
+  rule base v ws2_2025 = sum(amount[g] for g in gift where gift_ex[g] == e and plain[g] and gift_org[g] == first_cat and (gift_kind[g] == other_property or gift_kind[g] == cg_property and elect[e]))
 
-def w10[e in ex]: money USD
+def w10[e in ex]: money USD at reader
   note "line 10: Enter your cash contributions to 50% limit organizations"
-  rule base v ws2_2025 = sum(g in gift where gift_ex[g] = e and plain[g] and gift_org[g] = first_cat and gift_kind[g] = cash_gift: amount[g])
+  rule base v ws2_2025 = sum(amount[g] for g in gift where gift_ex[g] == e and plain[g] and gift_org[g] == first_cat and gift_kind[g] == cash_gift)
 
-def w11[e in ex]: money USD
+def w11[e in ex]: money USD at reader
   note "line 11: Enter your AGI (Step 3: if any result is zero or less, enter -0-)"
   rule base v ws2_2025 = max(0, agi[e])
 
-def w12[e in ex]: num USD
+def w12[e in ex]: num USD at reader
   note "line 12: Multiply line 11 by 0.6"
   rule base v ws2_2025 = w11[e] * pct60
-  rule blank excepts base v ws2_2025 when w10[e] = 0 = 0
+  rule blank beats base v ws2_2025 = 0 when w10[e] == 0
 
-def w13[e in ex]: num USD
+def w13[e in ex]: num USD at reader
   note "line 13: Deductible amount. Enter the smaller of line 10 or line 12"
   rule base v ws2_2025 = min(w10[e], w12[e])
-  rule blank excepts base v ws2_2025 when w10[e] = 0 = 0
+  rule blank beats base v ws2_2025 = 0 when w10[e] == 0
 
-def w14[e in ex]: num USD
+def w14[e in ex]: num USD at reader
   note "line 14: Carryover. Subtract line 13 from line 10"
   rule base v ws2_2025 = max(0, w10[e] - w13[e])
-  rule blank excepts base v ws2_2025 when w10[e] = 0 = 0
+  rule blank beats base v ws2_2025 = 0 when w10[e] == 0
 
-def w15[e in ex]: num USD
+def w15[e in ex]: num USD at reader
   note "line 15: Multiply line 11 by 0.5"
   rule base v ws2_2025 = w11[e] * pct50
-  rule blank excepts base v ws2_2025 when w09[e] = 0 = 0
+  rule blank beats base v ws2_2025 = 0 when w09[e] == 0
 
-def w16[e in ex]: num USD
+def w16[e in ex]: num USD at reader
   note "line 16: Subtract line 13 from line 15"
   rule base v ws2_2025 = max(0, w15[e] - w13[e])
-  rule blank excepts base v ws2_2025 when w09[e] = 0 = 0
+  rule blank beats base v ws2_2025 = 0 when w09[e] == 0
 
-def w17[e in ex]: num USD
+def w17[e in ex]: num USD at reader
   note "line 17: Deductible amount. Enter the smaller of line 9 or line 16"
   rule base v ws2_2025 = min(w09[e], w16[e])
-  rule blank excepts base v ws2_2025 when w09[e] = 0 = 0
+  rule blank beats base v ws2_2025 = 0 when w09[e] == 0
 
-def w18[e in ex]: num USD
+def w18[e in ex]: num USD at reader
   note "line 18: Carryover. Subtract line 17 from line 9"
   rule base v ws2_2025 = max(0, w09[e] - w17[e])
-  rule blank excepts base v ws2_2025 when w09[e] = 0 = 0
+  rule blank beats base v ws2_2025 = 0 when w09[e] == 0
 
-def w19[e in ex]: num USD
+def w19[e in ex]: num USD at reader
   note "line 19: Multiply line 11 by 0.5"
   rule base v ws2_2025 = w11[e] * pct50
-  rule blank excepts base v ws2_2025 when w05[e] = 0 and w07[e] = 0 = 0
+  rule blank beats base v ws2_2025 = 0 when w05[e] == 0 and w07[e] == 0
 
-def w20[e in ex]: num USD
+def w20[e in ex]: num USD at reader
   note "line 20: Add lines 8, 9, and 10"
   rule base v ws2_2025 = w08[e] + w09[e] + w10[e]
-  rule blank excepts base v ws2_2025 when w05[e] = 0 and w07[e] = 0 = 0
+  rule blank beats base v ws2_2025 = 0 when w05[e] == 0 and w07[e] == 0
 
-def w21[e in ex]: num USD
+def w21[e in ex]: num USD at reader
   note "line 21: Subtract line 20 from line 19"
   rule base v ws2_2025 = max(0, w19[e] - w20[e])
-  rule blank excepts base v ws2_2025 when w05[e] = 0 and w07[e] = 0 = 0
+  rule blank beats base v ws2_2025 = 0 when w05[e] == 0 and w07[e] == 0
 
-def w22[e in ex]: num USD
+def w22[e in ex]: num USD at reader
   note "line 22: Multiply line 11 by 0.3"
   rule base v ws2_2025 = w11[e] * pct30
-  rule blank excepts base v ws2_2025 when w05[e] = 0 and w07[e] = 0 = 0
+  rule blank beats base v ws2_2025 = 0 when w05[e] == 0 and w07[e] == 0
 
-def w23[e in ex]: num USD
+def w23[e in ex]: num USD at reader
   note "line 23: Add lines 5 and 7"
   rule base v ws2_2025 = w05[e] + w07[e]
-  rule blank excepts base v ws2_2025 when w05[e] = 0 and w07[e] = 0 = 0
+  rule blank beats base v ws2_2025 = 0 when w05[e] == 0 and w07[e] == 0
 
-def w24[e in ex]: num USD
+def w24[e in ex]: num USD at reader
   note "line 24: Deductible amount. Enter the smallest of line 21, 22, or 23"
   rule base v ws2_2025 = min(w21[e], min(w22[e], w23[e]))
-  rule blank excepts base v ws2_2025 when w05[e] = 0 and w07[e] = 0 = 0
+  rule blank beats base v ws2_2025 = 0 when w05[e] == 0 and w07[e] == 0
 
-def w25[e in ex]: num USD
+def w25[e in ex]: num USD at reader
   note "line 25: Carryover. Subtract line 24 from line 23"
   rule base v ws2_2025 = max(0, w23[e] - w24[e])
-  rule blank excepts base v ws2_2025 when w05[e] = 0 and w07[e] = 0 = 0
+  rule blank beats base v ws2_2025 = 0 when w05[e] == 0 and w07[e] == 0
 
-def w26[e in ex]: num USD
+def w26[e in ex]: num USD at reader
   note "line 26: Multiply line 11 by 0.5"
   rule base v ws2_2025 = w11[e] * pct50
-  rule blank excepts base v ws2_2025 when w08[e] = 0 = 0
+  rule blank beats base v ws2_2025 = 0 when w08[e] == 0
 
-def w27[e in ex]: num USD
+def w27[e in ex]: num USD at reader
   note "line 27: Add lines 9 and 10"
   rule base v ws2_2025 = w09[e] + w10[e]
-  rule blank excepts base v ws2_2025 when w08[e] = 0 = 0
+  rule blank beats base v ws2_2025 = 0 when w08[e] == 0
 
-def w28[e in ex]: num USD
+def w28[e in ex]: num USD at reader
   note "line 28: Subtract line 27 from line 26"
   rule base v ws2_2025 = max(0, w26[e] - w27[e])
-  rule blank excepts base v ws2_2025 when w08[e] = 0 = 0
+  rule blank beats base v ws2_2025 = 0 when w08[e] == 0
 
-def w29[e in ex]: num USD
+def w29[e in ex]: num USD at reader
   note "line 29: Multiply line 11 by 0.3"
   rule base v ws2_2025 = w11[e] * pct30
-  rule blank excepts base v ws2_2025 when w08[e] = 0 = 0
+  rule blank beats base v ws2_2025 = 0 when w08[e] == 0
 
-def w30[e in ex]: num USD
+def w30[e in ex]: num USD at reader
   note "line 30: Deductible amount. Enter the smallest of line 8, 28, or 29"
   rule base v ws2_2025 = min(w08[e], min(w28[e], w29[e]))
-  rule blank excepts base v ws2_2025 when w08[e] = 0 = 0
+  rule blank beats base v ws2_2025 = 0 when w08[e] == 0
 
-def w31[e in ex]: num USD
+def w31[e in ex]: num USD at reader
   note "line 31: Carryover. Subtract line 30 from line 8"
   rule base v ws2_2025 = max(0, w08[e] - w30[e])
-  rule blank excepts base v ws2_2025 when w08[e] = 0 = 0
+  rule blank beats base v ws2_2025 = 0 when w08[e] == 0
 
-def w32[e in ex]: num USD
+def w32[e in ex]: num USD at reader
   note "line 32: Multiply line 11 by 0.5"
   rule base v ws2_2025 = w11[e] * pct50
-  rule blank excepts base v ws2_2025 when w04[e] = 0 and w06[e] = 0 = 0
+  rule blank beats base v ws2_2025 = 0 when w04[e] == 0 and w06[e] == 0
 
-def w33[e in ex]: num USD
+def w33[e in ex]: num USD at reader
   note "line 33: Add lines 13, 17, 24, and 30"
   rule base v ws2_2025 = w13[e] + w17[e] + w24[e] + w30[e]
-  rule blank excepts base v ws2_2025 when w04[e] = 0 and w06[e] = 0 = 0
+  rule blank beats base v ws2_2025 = 0 when w04[e] == 0 and w06[e] == 0
 
-def w34[e in ex]: num USD
+def w34[e in ex]: num USD at reader
   note "line 34: Subtract line 33 from line 32"
   rule base v ws2_2025 = max(0, w32[e] - w33[e])
-  rule blank excepts base v ws2_2025 when w04[e] = 0 and w06[e] = 0 = 0
+  rule blank beats base v ws2_2025 = 0 when w04[e] == 0 and w06[e] == 0
 
-def w35[e in ex]: num USD
+def w35[e in ex]: num USD at reader
   note "line 35: Multiply line 11 by 0.3"
   rule base v ws2_2025 = w11[e] * pct30
-  rule blank excepts base v ws2_2025 when w04[e] = 0 and w06[e] = 0 = 0
+  rule blank beats base v ws2_2025 = 0 when w04[e] == 0 and w06[e] == 0
 
-def w36[e in ex]: num USD
+def w36[e in ex]: num USD at reader
   note "line 36: Subtract line 24 from line 35"
   rule base v ws2_2025 = max(0, w35[e] - w24[e])
-  rule blank excepts base v ws2_2025 when w04[e] = 0 and w06[e] = 0 = 0
+  rule blank beats base v ws2_2025 = 0 when w04[e] == 0 and w06[e] == 0
 
-def w37[e in ex]: num USD
+def w37[e in ex]: num USD at reader
   note "line 37: Subtract line 30 from line 35"
   rule base v ws2_2025 = max(0, w35[e] - w30[e])
-  rule blank excepts base v ws2_2025 when w04[e] = 0 and w06[e] = 0 = 0
+  rule blank beats base v ws2_2025 = 0 when w04[e] == 0 and w06[e] == 0
 
-def w38[e in ex]: num USD
+def w38[e in ex]: num USD at reader
   note "line 38: Multiply line 11 by 0.2"
   rule base v ws2_2025 = w11[e] * pct20
-  rule blank excepts base v ws2_2025 when w04[e] = 0 and w06[e] = 0 = 0
+  rule blank beats base v ws2_2025 = 0 when w04[e] == 0 and w06[e] == 0
 
-def w39[e in ex]: num USD
+def w39[e in ex]: num USD at reader
   note "line 39: Add lines 4 and 6"
   rule base v ws2_2025 = w04[e] + w06[e]
-  rule blank excepts base v ws2_2025 when w04[e] = 0 and w06[e] = 0 = 0
+  rule blank beats base v ws2_2025 = 0 when w04[e] == 0 and w06[e] == 0
 
-def w40[e in ex]: num USD
+def w40[e in ex]: num USD at reader
   note "line 40: Deductible amount. Enter the smallest of line 34, 36, 37, 38, or 39"
   rule base v ws2_2025 = min(w34[e], min(w36[e], min(w37[e], min(w38[e], w39[e]))))
-  rule blank excepts base v ws2_2025 when w04[e] = 0 and w06[e] = 0 = 0
+  rule blank beats base v ws2_2025 = 0 when w04[e] == 0 and w06[e] == 0
 
-def w41[e in ex]: num USD
+def w41[e in ex]: num USD at reader
   note "line 41: Carryover. Subtract line 40 from line 39"
   rule base v ws2_2025 = max(0, w39[e] - w40[e])
-  rule blank excepts base v ws2_2025 when w04[e] = 0 and w06[e] = 0 = 0
+  rule blank beats base v ws2_2025 = 0 when w04[e] == 0 and w06[e] == 0
 
-def w45[e in ex]: num USD
+def w45[e in ex]: num USD at reader
   note "line 45, the deductible amount of the QCC block at 50% of AGI (lines 42-46)"
-  rule base v ws2_2025 = ? "Lines 42-46 (QCCs subject to the limit based on 50% of AGI) are not transcribed in the case."
-  rule blank excepts base v ws2_2025 when w02[e] = 0 = 0
+  rule base v ws2_2025 = ?"Lines 42-46 (QCCs subject to the limit based on 50% of AGI) are not transcribed in the case."
+  rule blank beats base v ws2_2025 = 0 when w02[e] == 0
 
-def w50[e in ex]: num USD
+def w50[e in ex]: num USD at reader
   note "line 50, the deductible amount of the QCC block at 100% of AGI (lines 47-51)"
-  rule base v ws2_2025 = ? "Lines 47-51 (QCCs of qualified farmers and ranchers, 100% of AGI) are not transcribed in the case."
-  rule blank excepts base v ws2_2025 when w01[e] = 0 = 0
+  rule base v ws2_2025 = ?"Lines 47-51 (QCCs of qualified farmers and ranchers, 100% of AGI) are not transcribed in the case."
+  rule blank beats base v ws2_2025 = 0 when w01[e] == 0
 
-def w52[e in ex]: num USD
+def w52[e in ex]: num USD at reader
   note "line 52: Add lines 13, 17, 24, 30, 40, 45, and 50; the total deductible amount for the year"
   note "p. 26: You can't use this worksheet if you have a carryover of a charitable contribution from an earlier year"
-  rule barred excepts base v ws2_2025 when has_carryover[e] = ? "The taxpayer has a carryover from an earlier year, so Worksheet 2 can't be used; the computation with carryovers (pp. 28-29) is not transcribed."
+  rule barred beats base v ws2_2025 = ?"The taxpayer has a carryover from an earlier year, so Worksheet 2 can't be used; the computation with carryovers (pp. 28-29) is not transcribed." when has_carryover[e]
   rule base v ws2_2025 = w13[e] + w17[e] + w24[e] + w30[e] + w40[e] + w45[e] + w50[e]
 
-ask q_a_cash: w13[ex_a], w14[ex_a] with law 2025-12-31
+ask a_land_co: w31[ex_a] law 2025-12-31
 
-ask q_a_found: w19[ex_a], w20[ex_a], w21[ex_a], w24[ex_a], w25[ex_a] with law 2025-12-31
+ask a_total: w52[ex_a] law 2025-12-31
 
-ask q_a_land: w29[ex_a], w30[ex_a] with law 2025-12-31
+ask b_found_co: w25[ex_b] law 2025-12-31
 
-ask a_land_co: w31[ex_a] with law 2025-12-31
+ask b_total: w13[ex_b], w17[ex_b], w24[ex_b], w52[ex_b] law 2025-12-31
 
-ask a_total: w52[ex_a] with law 2025-12-31
+ask c_lines: w07[ex_c], w08[ex_c] law 2025-12-31
 
-ask q_b_found: w21[ex_b], w24[ex_b] with law 2025-12-31
+ask c_total: w52[ex_c], w19[ex_c] law 2025-12-31
 
-ask b_found_co: w25[ex_b] with law 2025-12-31
+ask q_a_cash: w13[ex_a], w14[ex_a] law 2025-12-31
 
-ask q_b_land: amount[b_land], w08[ex_b], w09[ex_b], w20[ex_b] with law 2025-12-31
+ask q_a_found: w19[ex_a], w20[ex_a], w21[ex_a], w24[ex_a], w25[ex_a] law 2025-12-31
 
-ask b_total: w13[ex_b], w17[ex_b], w24[ex_b], w52[ex_b] with law 2025-12-31
+ask q_a_land: w29[ex_a], w30[ex_a] law 2025-12-31
 
-ask q_c_cash: w21[ex_c], w22[ex_c], w24[ex_c] with law 2025-12-31
+ask q_b_found: w21[ex_b], w24[ex_b] law 2025-12-31
 
-ask q_c_cgp: w28[ex_c], w29[ex_c], w30[ex_c] with law 2025-12-31
+ask q_b_land: amount[b_land], w08[ex_b], w09[ex_b], w20[ex_b] law 2025-12-31
 
-ask c_lines: w07[ex_c], w08[ex_c] with law 2025-12-31
+ask q_c_cash: w21[ex_c], w22[ex_c], w24[ex_c] law 2025-12-31
 
-ask c_total: w52[ex_c], w19[ex_c] with law 2025-12-31
+ask q_c_cgp: w28[ex_c], w29[ex_c], w30[ex_c] law 2025-12-31
 
 version ws2_2025
   cite p526_2025
@@ -305,6 +309,7 @@ version ws2_2025
 
 version examples_2025
   cite p526_2025
+  governs always
   known 2026-10-18
   note "the examples are hypothetical taxpayers' facts, stipulations of the case, known from the model's on date since it has no start (§4.5); the publication is dated Feb 5, 2026"
   note "Example A is p. 26 'Example' after step 8; Example B is p. 26 'Capital gain property election' Example ('In the previous example'), the same gifts with the election; Example C is p. 24 'Example' under 'Limits Based on 30% of AGI'."
@@ -351,6 +356,7 @@ version examples_2025
 
 version model_assumptions
   cite modeller
+  governs always
   known 2026-10-18
   has_carryover[*] = false assumed "the examples don't say; Worksheet 2 is read as the publication runs the examples, with no earlier carryover"
   qcc[*] = false assumed "no gift is said to be a qualified conservation contribution, and none is implied"

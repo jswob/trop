@@ -1,0 +1,52 @@
+# L §5.12 Sides (round 12): "A key whose membership in a side is a hole (its binding's day, span or where a hole,
+# §5.7) takes part with every arc of it a hole condition carrying those questions"; Holes: "A take is 0 wherever its arc
+# is false, or R_s or Q_d is known to be 0, whatever the other side: on a known arc as on an arc whose condition is a
+# hole. Otherwise a hole side, or a hole condition, makes the take a hole." d0 is a stated hole and ana is alive (L §5.7):
+# ana's arc in f is a hole condition, its take the hole; in g the demand is known to be 0, so the take is 0.
+# (Was REFCORE-UNSPECIFIED §5.12, writer 5's T-61.)
+=== m.tally
+model t
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+kind persons
+
+input d0: date
+input cap: money PLN
+input need: money PLN
+input none_needed: money PLN
+
+fill f
+  supply cap for p in persons on d0
+  demand need
+  arc true
+  order cap
+
+fill g
+  supply cap for p in persons on d0
+  demand none_needed
+  arc true
+  order cap
+
+version v1
+  cite s
+  governs always
+  known 2026-01-01
+  d0 = ?"which day?"
+  cap = 100.00 PLN
+  need = 50.00 PLN
+  none_needed = 0.00 PLN
+  persons + [ana] lives 1990-01-01..
+
+ask t1: f.taken[ana] law 2026-06-30
+ask t2: g.taken[ana] law 2026-06-30
+=== expect
+t1: ?"which day?" (d0)
+  law date 2026-06-30, cut 2026-10-18
+t2: 0.00 PLN
+  law date 2026-06-30, cut 2026-10-18

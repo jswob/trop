@@ -1,0 +1,27 @@
+# L §5.10: a keyed `place` section gives each instance the section's unit, so bal(wc[k], d) is `num PLN` (money PLN)
+# like an unkeyed place's; units[a] = round(100 PLN / 10 PLN/u1, 1 u1, down) = 10 u1 (L §7.2).  Was LOAD-UNIT (dyn).
+=== m.tally
+model m
+  tally 2
+  on 2026-01-10
+  start 2026-01-01
+  end 2026-01-31
+unit PLN: currency minor 0.01
+unit u1 "jednostka"
+index w = [a, b]
+index month = month 2026-01..2026-01
+place wc[k in w]: accounts PLN lives 2026-01-01..
+input px: num PLN/u1
+def units[k in w, m in month]: num u1 = round(bal(wc[k], start_of(m)) / px, 1 u1, down) at start_of(m)
+source s "x"
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  px = 10
+  opening[wc[a]] = 100 at 2026-01-01 start
+  opening[wc[b]] = 0 at 2026-01-01 start
+ask q: units[a, 2026-01] law cut
+=== expect
+q: 10 u1
+  law date 2026-01-10, cut 2026-01-10

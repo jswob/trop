@@ -1,0 +1,9 @@
+# L §5.1: LOAD-HEADER if start > end.
+=== m.tally
+model ul05
+  tally 2
+  on 2016-03-01
+  start 2016-11-01
+  end 2016-10-31
+=== expect
+refused: LOAD-HEADER ...

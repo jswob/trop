@@ -1,94 +1,103 @@
 #!/usr/bin/env python3
-"""loadcheck.py: the static load check of engine design D8 (brief W3).
+"""loadcheck.py: the static load check, a line scan of ids and keywords, for Tally 2.
 
-A line scan of ids and keywords over Tally files (LANGUAGE.md §2.1, §2.2, §2.5,
-§8.3). It parses no expression and computes no figure: it reads each line's
-tokens, the bracket groups that hold binds, row keys and key lists, and the
-words at the head of a line. It checks:
+The tally 1 scan (engine/spec/tools/loadcheck.py) re-based on Tally 2's word
+classes (tmp/design2/spec/LANGUAGE.md §2.2: keywords, built-in names,
+contextual words, built-in ids) and §2.3's section kinds. It parses no
+expression and computes no figure: it reads each line's tokens, the bracket
+groups that hold binds, row keys and key lists, and the words at the head of a
+line. It checks:
 
-  LOAD-RESERVED  a keyword (§2.2) used as an id, a key, a record field or a
-                 bound variable; rule labels may be keywords (§2.2, §2.5)
-  LOAD-DUP       one namespace across all of a reality's files (§2.5); a
-                 built-in id declared again (§2.2); a band with a built-in's
-                 name; a key added twice; two rules with one label and version
-  LOAD-SHADOW    a bound variable (a bind, an aggregate's or a `for`'s
-                 variable, a band's argument) with the name of a top-level id,
-                 built-in ids included
-  LOAD-KEY       a declared key (index list, axis option, index addition, row
-                 key) that is also a top-level id, as an ask named for a key
-                 (UL-05); the keys of `place` are the place ids, so they are not
-  LOAD-EXCEPTS   an `excepts` naming no rule of its def, or an excepts cycle
+  LOAD-RESERVED  a keyword (§2.2) used as an id, a key, a record field (a field
+                 of a record type or a record value other than the built-in
+                 fields kind version source known governs assumed at, §2.3
+                 FIELD; a leg's or an attr's name) or a bound variable; rule
+                 labels may be keywords (§2.2)
+  LOAD-DUP       one namespace of top-level ids across a reality's files; a
+                 built-in id declared again
+                 (§2.2); a band with a built-in name (§2.2); a key added twice
+                 to one index or kind (a `replace` entry adds none); two rules
+                 with one label and version
+  LOAD-SHADOW    a bound variable (a bind, an aggregate's, a `for`'s or a
+                 crps's or prorata's variable, a band's argument) with the name
+                 of a top-level id, built-in ids included
+  LOAD-KEY       a declared key (index list, axis option, `+ [..]` entry, row
+                 key) that is also a top-level id; place ids may be row keys
+  LOAD-LABEL     a `beats` naming no rule of its def
+  LOAD-CYCLE     a `beats` cycle among a def's rules
   LOAD-PARSE     what the scan itself needs: tabs, odd indentation, an
                  unterminated string, an id outside [a-z][a-z0-9_]* or longer
-                 than 48, a key outside the key pattern, an unknown section
+                 than 48, a key outside the key pattern, an unknown section, an
+                 indented line outside a section
 
 What it doesn't check: anything that needs an expression parsed or a name
-resolved (LOAD-NAME, which index a key literal in an expression belongs to,
-`ambiguous key`, `not a key of`, units, cycles over defs, bands' intervals).
+resolved (LOAD-NAME, which index or kind a key literal belongs to, units,
+cycles over defs), and the syntax (tmp/design2/tools/parsecheck/ does that).
 
-Usage (from anywhere; paths are taken from tmp/design/):
-  python3 -I tools/loadcheck.py                 the D8 run: every model, the
-                                                household, and each change
-  python3 -I tools/loadcheck.py PATH ...        a .tally file is a reality of
-                                                its own, a directory is one
-                                                reality of all its .tally
-                                                files, a .md under
-                                                amendments/changes/ is that
-                                                change on the household
-  -v                                            one line per reality
-  --selftest                                    a planted reality: every
-                                                refusal found, no look-alike
+Usage:
+  python3 -I loadcheck.py PATH ...    a .tally file is a reality of its own, a
+                                      directory is one reality of all its .tally
+                                      files; a file whose lines are all indented
+                                      is a fragment of a section body, scanned as
+                                      body lines
+  -v                                  one line per reality
+  --selftest                          a planted reality: every refusal found, no
+                                      look-alike
 Exit status: 0 with no refusal, 1 otherwise.
 """
 import os
 import re
 import sys
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-HOUSEHOLD = 'amendments/household'
-
+# §2.2 keywords
 KEYWORDS = set("""
-model part scenario source version unit axis index place input band def fill draw pay bound ask
-tally note if then else and or not in for where with as when excepts true false inf by at law
-known governs assumed path check solve explain inputs-of residuals
+model part scenario source version unit kind axis index place input band def given fill move
+ask tally note if then else and or not in for where with as when true false inf by at
+law known governs assumed none pending never check solve diff explain inputs-of readers-of
+residuals
 """.split())
 
+# §2.2 built-in names
 BUILTIN_NAMES = set("""
-sum count min max any all first last argmin argmax share mean quantile prorata flows bal free
-plan_low next_on worth covered round pow exp ln sqrt abs periodic factor dcf days add_days
-add_months add_years start_of end_of year_of month_of day_of overlap_days pos age age_months
-weekday next_business prev_business add_business band_lo band_hi marginal kind currency
-missing real normal lognormal exponential gamma poisson binomial negbin uniform discrete
-cdf pdf pmf crps u
+sum count min max any all first last argmin argmax share mean quantile prorata flows bal value
+low next covered round pow exp ln sqrt abs periodic factor dcf accrue days_between add_days
+add_months add_years start_of end_of year_of quarter_of month_of day_of overlap_days pos age
+age_months weekday add_business first_business last_business is_business schedule calendar
+window one_of latest earliest since band_lo band_hi marginal unit minor lifespan in_force meta
+reasons gap observed missing real normal lognormal exponential gamma poisson binomial negbin
+uniform discrete empirical cdf pdf pmf crps paths
 """.split())
 
-AGGREGATES = set('sum count min max any all first last argmin argmax share mean quantile'.split())
+# §2.2 / §2.3 FIELD: the keywords a record's field may be (and a built-in field after ".")
+FIELD_KEYWORDS = set('kind version source known governs assumed at'.split())
 
-# §2.2 built-in ids; the outside places outside_<cur> and outside_<unit> are added per reality.
-BUILTIN_IDS = {
-    'opening': 'input', 'stated': 'input', 'short': 'input', 'account_place': 'input',
-    'party_place': 'input', 'match_days': 'input', 'match_amount': 'input',
-    'place': 'index', 'bank_account': 'index', 'bank_party': 'index', 'placekind': 'axis',
-}
-# The index of each key position of the built-in inputs (§3.6, §5.9, §5.18).
-BUILTIN_KEYED = {
-    'opening': ['place'], 'stated': ['place'], 'short': ['place'], 'match_days': ['place'],
-    'match_amount': ['place'], 'account_place': ['bank_account'], 'party_place': ['bank_party'],
-}
-# The options of the built-in axis placekind (§5.9: kind(x)).
-BUILTIN_KEYS = {'placekind': 'account cash holding asset debt claim outside'.split()}
+# §2.2 contextual words: free as ids; the scan uses the clause words at the head of a line
+VERSION_CLAUSES = ('cite', 'governs', 'known', 'enters', 'assumed', 'moves', 'covers', 'pad', 'anchor', 'note')
 
-KINDS = ('source', 'version', 'unit', 'axis', 'index', 'place', 'input', 'band', 'def',
-         'fill', 'draw', 'pay', 'bound', 'ask')
+# §2.2 built-in ids
+BUILTIN_IDS = {}
+for _w in 'opening stated account_place'.split():  # review W-4 removed party_place, match_days, match_amount
+    BUILTIN_IDS[_w] = 'input'
+for _w in 'days months years bank_account'.split():  # review W-4 removed quarters, bank_party
+    BUILTIN_IDS[_w] = 'index'
+BUILTIN_IDS['cut'] = 'value'
+for _w in 'places accounts cash holdings assets debts claims outside currencies events transfers adjustments pads'.split():
+    BUILTIN_IDS[_w] = 'kind'
+# The index or kind of each key position of the built-in inputs.
+BUILTIN_KEYED = {'opening': ['places'], 'stated': ['places'], 'account_place': ['bank_account']}
+
+AGGREGATES = set('sum count min max any all first last argmin argmax'.split())
+
+# §2.3 section kinds
+KINDS = ('source', 'version', 'unit', 'kind', 'axis', 'index', 'place', 'input', 'band', 'def',
+         'fill', 'move', 'ask')
 HEADS = ('model', 'part', 'scenario')
-KEYED_KINDS = ('input', 'def', 'band', 'place', 'fill', 'draw', 'pay')
-VERSION_CLAUSES = ('cite', 'governs', 'known', 'enters', 'arrears', 'correction', 'assumed',
-                   'moves', 'covers', 'note')
+KEYED_KINDS = ('input', 'def', 'band', 'place', 'fill', 'move')
 
 ID_RE = re.compile(r'[a-z][a-z0-9_]*\Z')
 KEY_RE = re.compile(r'(?:[a-z0-9][a-z0-9_-]*|-?[0-9]+(?:\.[0-9]+)?)\Z')
 TOKEN_RE = re.compile(r'[A-Za-z0-9_][A-Za-z0-9_.-]*|\S')
-CUR_RE = re.compile(r'(?<![A-Za-z0-9_])[A-Z]{3}(?![A-Za-z0-9_])')
+CUR_RE = re.compile(r'[A-Z]{3}\Z')
 
 
 class Line:
@@ -108,13 +117,17 @@ class Section:
         self.line = line
         self.body = []
 
+    @property
+    def item(self):
+        return '%s %s' % (self.kind, self.id)
+
 
 class Reality:
     def __init__(self, name):
         self.name = name
         self.files = {}          # display path -> [Line]
         self.refusals = []
-        self.counts = {'ids': 0, 'keys': 0, 'row keys': 0, 'bound variables': 0, 'rule labels': 0}
+        self.counts = {'ids': 0, 'keys': 0, 'row keys': 0, 'bound variables': 0, 'fields': 0, 'rule labels': 0}
 
     def refuse(self, code, line, item, message):
         self.refusals.append((code, line.loc, item, message))
@@ -145,14 +158,14 @@ def tokens(code):
 
 def bracket_group(code, start):
     """The text inside the bracket that opens at code[start], and the index after its close."""
-    pairs = {'[': ']', '(': ')'}
+    pairs = {'[': ']', '(': ')', '{': '}'}
     stack = [pairs[code[start]]]
     i = start + 1
     while i < len(code) and stack:
         c = code[i]
         if c in pairs:
             stack.append(pairs[c])
-        elif c in ')]':
+        elif c in ')]}':
             if c != stack[-1]:
                 return None, i
             stack.pop()
@@ -180,12 +193,15 @@ def split_top(text):
 
 
 def read_sections(reality):
-    """Split every file into its header and sections; the per-line checks of the scan itself."""
-    sections = []
-    heads = []
+    """Split every file into its header and sections; the scan's own line checks."""
+    sections, heads = [], []
     for path, lines in reality.files.items():
-        current = None
-        first = True
+        live = [l for l in lines if l.text.strip() != '']
+        fragment = bool(live) and all(l.text[0] in ' \t' for l in live)
+        current, item, first = None, None, True
+        if fragment:
+            current = Section('fragment', '', live[0])
+            sections.append(current)
         for line in lines:
             text = line.text
             if text.strip() == '':
@@ -203,24 +219,25 @@ def read_sections(reality):
                 continue
             line.code = code.strip()
             line.indent = indent // 2
+            toks = tokens(line.code)
             if indent == 0:
-                toks = tokens(line.code)
                 kind = toks[0]
+                ident = toks[1] if len(toks) > 1 else ''
+                item = None
                 if first and kind in HEADS:
-                    current = Section(kind, toks[1] if len(toks) > 1 else '', line)
+                    current = Section(kind, ident, line)
                     heads.append(current)
                 elif kind in KINDS:
-                    ident = toks[1] if len(toks) > 1 else ''
                     current = Section(kind, ident, line)
                     sections.append(current)
                 else:
                     reality.refuse('LOAD-PARSE', line, path, 'not a section: %s' % kind)
                     current = None
                 first = False
-            elif current is not None:
-                current.body.append(line)
-            else:
+            elif current is None:
                 reality.refuse('LOAD-PARSE', line, path, 'an indented line outside a section')
+            else:
+                current.body.append(line)
     return heads, sections
 
 
@@ -235,7 +252,7 @@ def check_id(reality, line, item, ident, what):
 
 
 def bind_indexes(code, ident):
-    """The index of each key position of a declaration: the binds right after its id."""
+    """The index or kind of each key position of a declaration: the binds right after its id."""
     m = re.match(r'[a-z]+ ' + re.escape(ident) + r'\[', code)
     if not m:
         return []
@@ -245,19 +262,29 @@ def bind_indexes(code, ident):
     out = []
     for bind in split_top(inside):
         t = tokens(bind)
-        if len(t) >= 3 and t[1] == 'in' and ID_RE.match(t[2]):
-            out.append(t[2])
-        else:
-            out.append(None)
+        out.append(t[2] if len(t) >= 3 and t[1] == 'in' and ID_RE.match(t[2]) else None)
     return out
 
 
 def bound_variables(code):
-    """(name, how) for each bound variable on a line: `ID in` after `[`, `,`, `for` or an aggregate's `(`."""
+    """Each bound variable on a line: `ID in` after `[`, `,`, `for` or an aggregate's `(`; not the ref of `solve … for`."""
     t = tokens(code)
+    skip = None
+    if 'solve' in t:   # `solve l == r for ref in [a, b]`: ref is what is solved for, not bound
+        depth, sdepth = 0, None
+        for i, w in enumerate(t):
+            if w == 'solve' and sdepth is None:
+                sdepth = depth
+            elif w in '([{':
+                depth += 1
+            elif w in ')]}':
+                depth -= 1
+            elif w == 'for' and sdepth is not None and depth == sdepth:
+                skip = i + 1
+                break
     out = []
     for i in range(1, len(t)):
-        if t[i] != 'in' or not ID_RE.match(t[i - 1]):
+        if t[i] != 'in' or i - 1 == skip or not ID_RE.match(t[i - 1]):
             continue
         prev = t[i - 2] if i >= 2 else None
         if prev in ('[', ',', 'for'):
@@ -267,8 +294,8 @@ def bound_variables(code):
     return out
 
 
-def record_fields(code, kind, ident):
-    """The field names of a record type, `: (f type, ...)` or `: movement CUR (f type, ...)`, after the binds."""
+def type_fields(code, kind, ident):
+    """The field names of a record type, `: (f type, ...)`, after the binds."""
     pos = len(kind) + 1 + len(ident)
     if code[pos:pos + 1] == '[':
         inside, pos = bracket_group(code, pos)
@@ -277,13 +304,29 @@ def record_fields(code, kind, ident):
     if code[pos:pos + 2] != ': ':
         return []
     pos += 2
-    m = re.match(r'movement [A-Z]{3} ', code[pos:])
-    if m:
-        pos += m.end()
     if code[pos:pos + 1] != '(':
         return []
     inside, _ = bracket_group(code, pos)
     return [tokens(f)[0] for f in split_top(inside or '') if tokens(f)]
+
+
+def value_fields(code):
+    """(name, is a record value's field) for a record value's fields (`(f: …, …)`) and legs (`leg f …`)."""
+    t = tokens(code)
+    out = []
+    stack = []
+    for i, w in enumerate(t):
+        if w in '([{':
+            stack.append(w)
+        elif w in ')]}':
+            if stack:
+                stack.pop()
+        if i + 2 < len(t) and stack and stack[-1] == '(' and w in ('(', ',') and t[i + 2] == ':' \
+                and re.match(r'[a-z]', t[i + 1] or ''):
+            out.append((t[i + 1], True))
+        if w == 'leg' and i + 1 < len(t):
+            out.append((t[i + 1], False))
+    return out
 
 
 def key_list(code, start):
@@ -299,76 +342,80 @@ def check(reality):
     for h in heads:
         check_id(reality, h.line, h.kind, h.id, h.kind + ' id')
 
-    # Top-level ids, one namespace (§2.5).
+    def declared(s):
+        """Is this section's id a name it declares? (`unit CUR:` names a currency; a fragment has none.)"""
+        return s.kind != 'fragment' and not (s.kind == 'unit' and CUR_RE.match(s.id))
+
+    # Top-level ids, one namespace.
     namespace = {}
     for s in sections:
-        item = '%s %s' % (s.kind, s.id)
-        if not check_id(reality, s.line, item, s.id, s.kind + ' id'):
+        if not declared(s):
+            continue
+        if not check_id(reality, s.line, s.item, s.id, s.kind + ' id'):
             continue
         reality.counts['ids'] += 1
         if s.id in namespace:
             first = namespace[s.id]
-            reality.refuse('LOAD-DUP', s.line, item, '%s is declared twice (first: %s %s, %s)'
+            reality.refuse('LOAD-DUP', s.line, s.item, '%s is declared twice (first: %s %s, %s)'
                            % (s.id, first.kind, s.id, first.line.loc))
         else:
             namespace[s.id] = s
 
-    # Built-in ids: the fixed ones, and outside_<cur> for every currency used, outside_<unit> for every unit (§2.2, §5.9).
-    currencies = set()
-    for lines in reality.files.values():
-        for line in lines:
-            if line.code:
-                currencies.update(CUR_RE.findall(line.code))
-    builtin = dict(BUILTIN_IDS)
-    for c in currencies:
-        builtin['outside_' + c.lower()] = 'place'
-    for s in sections:
-        if s.kind == 'unit':
-            builtin['outside_' + s.id] = 'place'
-    for s in sections:
-        if s.id in builtin:
-            reality.refuse('LOAD-DUP', s.line, '%s %s' % (s.kind, s.id),
-                           '%s is declared twice (a built-in %s, §2.2)' % (s.id, builtin[s.id]))
-        if s.kind == 'band' and s.id in BUILTIN_NAMES:
-            reality.refuse('LOAD-DUP', s.line, 'band ' + s.id, "band %s has a built-in's name" % s.id)
+    everything = list(sections)
 
-    top = set(namespace) | set(builtin)
-    places = {s.id for s in sections if s.kind == 'place'}
+    # Built-in ids declared again; bands with a built-in's name (§2.2).
+    for s in everything:
+        if s.id in BUILTIN_IDS and declared(s):
+            reality.refuse('LOAD-DUP', s.line, s.item, '%s is declared twice (a built-in %s, §2.2)' % (s.id, BUILTIN_IDS[s.id]))
+        if s.kind == 'band' and s.id in BUILTIN_NAMES:
+            reality.refuse('LOAD-DUP', s.line, s.item, "band %s has a built-in's name" % s.id)
+
+    top = set(namespace) | set(BUILTIN_IDS)
+    places = {s.id for s in everything if s.kind == 'place'}
 
     keyed = dict(BUILTIN_KEYED)
-    for s in sections:
+    for s in everything:
         if s.kind in KEYED_KINDS:
             keyed[s.id] = bind_indexes(s.line.code, s.id)
 
     # Bound variables, record fields and band arguments.
-    for s in sections:
-        item = '%s %s' % (s.kind, s.id)
+    for s in everything:
+        names = top
         for line in [s.line] + s.body:
             for name in bound_variables(line.code):
                 reality.counts['bound variables'] += 1
                 if name in KEYWORDS:
-                    reality.refuse('LOAD-RESERVED', line, item, '%s is a keyword (bound variable)' % name)
-                elif name in top:
-                    reality.refuse('LOAD-SHADOW', line, item,
-                                   'bound variable %s has the name of a top-level id' % name)
+                    reality.refuse('LOAD-RESERVED', line, s.item, '%s is a keyword (bound variable)' % name)
+                elif name in names:
+                    reality.refuse('LOAD-SHADOW', line, s.item, 'bound variable %s has the name of a top-level id' % name)
+            if not (line is s.line and s.kind == 'band'):
+                for field, in_value in value_fields(line.code):
+                    reality.counts['fields'] += 1
+                    if not (in_value and field in FIELD_KEYWORDS):
+                        check_id(reality, line, s.item, field, 'record field' if in_value else 'leg name')
+            t = tokens(line.code)
+            if line is not s.line and s.kind in ('kind', 'move') and len(t) > 1 and t[0] == 'attr':
+                reality.counts['fields'] += 1
+                check_id(reality, line, s.item, t[1], 'attr name')
         if s.kind == 'band':
-            m = re.match(r'band ' + re.escape(s.id) + r'(\[[^\]]*\])?\(\s*([a-z][a-z0-9_]*)\s*:', s.line.code)
+            m = re.match(r'band ' + re.escape(s.id) + r'(\[[^\]]*\])?\(\s*([a-z][a-z0-9_-]*)\s*:', s.line.code)
             if m:
                 name = m.group(2)
                 reality.counts['bound variables'] += 1
                 if name in KEYWORDS:
-                    reality.refuse('LOAD-RESERVED', s.line, item, '%s is a keyword (band argument)' % name)
-                elif name in top:
-                    reality.refuse('LOAD-SHADOW', s.line, item,
-                                   'band argument %s has the name of a top-level id' % name)
-        if s.kind in ('input', 'def'):
-            for field in record_fields(s.line.code, s.kind, s.id):
-                check_id(reality, s.line, item, field, 'record field')
+                    reality.refuse('LOAD-RESERVED', s.line, s.item, '%s is a keyword (band argument)' % name)
+                elif name in names:
+                    reality.refuse('LOAD-SHADOW', s.line, s.item, 'band argument %s has the name of a top-level id' % name)
+        if s.kind in ('input', 'def', 'band'):
+            for field in type_fields(s.line.code, s.kind, s.id):
+                reality.counts['fields'] += 1
+                if field not in FIELD_KEYWORDS:
+                    check_id(reality, s.line, s.item, field, 'record field')
 
-    # Keys: index lists, axis options, index additions, row keys (§2.5, §5.3, §5.5, §5.6).
-    declared = {}   # index or axis -> [(key, line)]
+    # Keys: index lists, axis options, `+ [..]` entries, row keys.
+    added = {}   # index or kind -> [(key, line)]
 
-    def declare_key(owner, key, line, item, what):
+    def declare_key(owner, key, line, item, what, replace=False):
         reality.counts['keys'] += 1
         if not KEY_RE.match(key):
             reality.refuse('LOAD-PARSE', line, item, '%s %s is not a key' % (what, key))
@@ -378,62 +425,69 @@ def check(reality):
             return
         if key in top:
             reality.refuse('LOAD-KEY', line, item, 'a key is also an id: %s (%s of %s)' % (key, what, owner))
-        seen = declared.setdefault(owner, [])
+        if replace:
+            return
+        seen = added.setdefault(owner, [])
         for k, l in seen:
             if k == key:
                 reality.refuse('LOAD-DUP', line, item, 'a key added twice: %s of %s (first %s)' % (key, owner, l.loc))
                 break
         seen.append((key, line))
 
-    builtin_key_ids = {k: ax for ax, ks in BUILTIN_KEYS.items() for k in ks}
-    for ident, s in namespace.items():
-        if ident in builtin_key_ids:
-            reality.refuse('LOAD-KEY', s.line, '%s %s' % (s.kind, ident),
-                           'a key is also an id: %s (option of the built-in axis %s)' % (ident, builtin_key_ids[ident]))
-
-    for s in sections:
-        item = '%s %s' % (s.kind, s.id)
+    for s in everything:
         if s.kind == 'index':
-            code = s.line.code
-            m = re.match(r'index ' + re.escape(s.id) + r'\s*=\s*\[', code)
+            m = re.match(r'index ' + re.escape(s.id) + r'\s*=\s*\[', s.line.code)
             if m:
-                for key in key_list(code, m.end() - 1):
-                    declare_key(s.id, key, s.line, item, 'key')
+                for key in key_list(s.line.code, m.end() - 1):
+                    declare_key(s.id, key, s.line, s.item, 'key')
         elif s.kind == 'axis':
             for line in s.body:
                 t = tokens(line.code)
                 if t:
-                    declare_key(s.id, t[0], line, item, 'option')
-        elif s.kind == 'version':
-            for line in s.body:
-                code = line.code
-                t = tokens(code)
-                if not t:
-                    continue
-                nxt = t[1] if len(t) > 1 else ''
-                if t[0] in VERSION_CLAUSES and nxt not in ('[', '=', '+', ':'):
-                    continue
-                target = t[0]
-                after = code[len(target):].lstrip()
-                if after.startswith('+'):
-                    k = after.find('[')
-                    if k >= 0:
-                        for key in key_list(after, k):
-                            declare_key(target, key, line, item, 'added key')
-                    continue
-                if after.startswith('['):
-                    positions = keyed.get(target)
-                    for n, rk in enumerate(key_list(after, 0)):
-                        index = positions[n] if positions and n < len(positions) else None
-                        check_row_key(reality, line, item, target, index, rk, top, places)
+                    declare_key(s.id, t[0], line, s.item, 'option')
+        elif s.kind in ('version', 'fragment'):
+            for line in s.body if s.kind == 'version' else [s.line] + s.body:
+                scan_vitem(reality, line, s.item, declare_key, keyed, top, places)
+            if s.kind == 'fragment':
+                check_rules(reality, s, [s.line] + s.body)
         elif s.kind == 'def':
-            check_rules(reality, s)
+            check_rules(reality, s, s.body)
     return reality
+
+
+def scan_vitem(reality, line, item, declare_key, keyed, top, places):
+    code = line.code
+    t = tokens(code)
+    if not t:
+        return
+    replace = False
+    if t[0] in ('replace', 'given'):
+        replace = t[0] == 'replace'
+        code = code[len(t[0]):].lstrip()
+        t = t[1:]
+        if not t:
+            return
+    nxt = t[1] if len(t) > 1 else ''
+    if t[0] in VERSION_CLAUSES + ('same',) and nxt not in ('[', '=', '+', ':'):
+        return
+    target = t[0]
+    after = code[len(target):].lstrip()
+    if after.startswith('+'):
+        k = after.find('[')
+        if k >= 0:
+            for key in key_list(after, k):
+                declare_key(target, key, line, item, 'added key', replace)
+        return
+    if after.startswith('['):
+        positions = keyed.get(target)
+        for n, rk in enumerate(key_list(after, 0)):
+            index = positions[n] if positions and n < len(positions) else None
+            check_row_key(reality, line, item, target, index, rk, top, places)
 
 
 def check_row_key(reality, line, item, target, index, rk, top, places):
     if rk == '*' or '[' in rk:
-        return    # every key, or a keyed place as a key of place (§5.6)
+        return    # every key, or a keyed place (parsecheck refuses that: §2.3 rk has no keyed place)
     for key in (rk.split('..') if '..' in rk else [rk]):
         key = key.strip()
         if key == '':
@@ -443,36 +497,36 @@ def check_row_key(reality, line, item, target, index, rk, top, places):
             reality.refuse('LOAD-PARSE', line, item, 'row key %s of %s is not a key' % (key, target))
         elif key in KEYWORDS:
             reality.refuse('LOAD-RESERVED', line, item, '%s is a keyword (row key of %s)' % (key, target))
-        elif key in top and not (key in places and index in ('place', None)):
-            reality.refuse('LOAD-KEY', line, item, 'a key is also an id: %s (row key of %s, index %s)'
+        elif key in top and key not in places:
+            reality.refuse('LOAD-KEY', line, item, 'a key is also an id: %s (row key of %s, position %s)'
                            % (key, target, index or 'unknown'))
 
 
-def check_rules(reality, s):
-    item = 'def ' + s.id
-    rules = []    # (label, v, excepts, line)
-    for line in s.body:
+def check_rules(reality, s, body):
+    item = s.item
+    rules = []    # (label, v, beats, line)
+    for line in body:
         t = tokens(line.code)
         if not t or t[0] != 'rule':
             continue
         if len(t) < 2 or not ID_RE.match(t[1]) or len(t[1]) > 48:
             reality.refuse('LOAD-PARSE', line, item, 'rule label %s is not a word of the id pattern' % (t[1] if len(t) > 1 else ''))
             continue
-        label, i, excepts, v = t[1], 2, [], None
-        if i < len(t) and t[i] == 'excepts':
+        label, i, beats, v = t[1], 2, [], None
+        if i < len(t) and t[i] == 'beats':
             i += 1
             if i < len(t):
-                excepts.append(t[i])
+                beats.append(t[i])
                 i += 1
             while i + 1 < len(t) and t[i] == ',':
-                excepts.append(t[i + 1])
+                beats.append(t[i + 1])
                 i += 2
         if i + 1 < len(t) and t[i] == 'v':
             v = t[i + 1]
-        rules.append((label, v, excepts, line))
+        rules.append((label, v, beats, line))
         reality.counts['rule labels'] += 1
     labels = {}
-    for label, v, excepts, line in rules:
+    for label, v, beats, line in rules:
         if (label, v) in labels:
             reality.refuse('LOAD-DUP', line, item, 'two rules %s with version %s (first %s)'
                            % (label, v or '(none)', labels[(label, v)].loc))
@@ -480,11 +534,11 @@ def check_rules(reality, s):
             labels[(label, v)] = line
     names = {label for label, _, _, _ in rules}
     graph = {}
-    for label, v, excepts, line in rules:
-        for e in excepts:
-            if e not in names:
-                reality.refuse('LOAD-EXCEPTS', line, item, 'excepts names no rule %s' % e)
-            graph.setdefault(label, set()).add(e)
+    for label, v, beats, line in rules:
+        for b in beats:
+            if b not in names:
+                reality.refuse('LOAD-LABEL', line, item, 'beats names no rule %s of its def' % b)
+            graph.setdefault(label, set()).add(b)
     state = {}
 
     def visit(n):
@@ -496,19 +550,13 @@ def check_rules(reality, s):
         return False
     for n in sorted(graph):
         if n not in state and visit(n):
-            reality.refuse('LOAD-EXCEPTS', s.line, item, 'an excepts cycle through rule %s' % n)
+            reality.refuse('LOAD-CYCLE', s.line, item, 'a beats cycle through rule %s' % n)
             break
 
 
 # ---------------------------------------------------------------- inputs
 
-def rel(path):
-    r = os.path.relpath(path, ROOT)
-    return os.path.abspath(path) if r.startswith('..') else r
-
-
-def file_lines(path, display=None):
-    display = display or rel(path)
+def file_lines(path, display):
     with open(path, encoding='utf-8') as f:
         text = f.read()
     return [Line('%s:%d' % (display, n), t) for n, t in enumerate(text.split('\n'), 1)]
@@ -525,128 +573,30 @@ def tally_files(directory):
 
 
 def reality_of_file(path):
-    r = Reality(rel(path))
-    r.files[rel(path)] = file_lines(path)
+    r = Reality(path)
+    r.files[path] = file_lines(path, path)
     return r
 
 
-def reality_of_dir(directory, name=None):
-    r = Reality(name or rel(directory))
+def reality_of_dir(directory):
+    r = Reality(directory)
     for path in tally_files(directory):
-        r.files[os.path.relpath(path, directory)] = file_lines(path)
+        rel = os.path.relpath(path, directory)
+        r.files[rel] = file_lines(path, os.path.join(directory, rel))
     return r
-
-
-def change_blocks(md_path):
-    """The diff blocks of a change, and any other fenced block that is a whole section (an optional addition)."""
-    with open(md_path, encoding='utf-8') as f:
-        lines = f.read().split('\n')
-    diffs, extras, i = [], [], 0
-    while i < len(lines):
-        m = re.match(r'( *)```(\w*)\s*$', lines[i])
-        if not m:
-            i += 1
-            continue
-        pad, lang = len(m.group(1)), m.group(2)
-        j = i + 1
-        block = []
-        while j < len(lines) and not re.match(r' *```\s*$', lines[j]):
-            block.append((j + 1, lines[j][pad:] if lines[j][:pad].strip() == '' else lines[j]))
-            j += 1
-        if lang == 'diff':
-            diffs.append(block)
-        elif block and all(t.split(' ', 1)[0] in KINDS for _, t in block if t and not t.startswith(' ')):
-            extras.append(block)
-        i = j + 1
-    return diffs, extras
-
-
-def reality_with_change(md_path, extras_too=False):
-    """The household with one change applied: `-` lines removed where they stand, `+` lines that replace them put
-    there, other `+` runs appended to their file (each must start a section, so where it falls doesn't matter)."""
-    name = os.path.splitext(os.path.basename(md_path))[0]
-    r = reality_of_dir(os.path.join(ROOT, HOUSEHOLD), 'change ' + name + (' + its optional addition' if extras_too else ''))
-    md = rel(md_path)
-    diffs, extras = change_blocks(md_path)
-    stats = {'new': [], 'edited': [], 'added': 0, 'removed': 0, 'unplaced': []}
-    for block in diffs:
-        target, lines, pos = None, None, None
-        run_start = True
-        k = 0
-        while k < len(block):
-            n, t = block[k]
-            if t.startswith('--- '):
-                path = t[4:].split('   ')[0].strip()
-                is_new = not (k + 1 < len(block) and block[k + 1][1].startswith('+++ '))
-                if not is_new:
-                    k += 1
-                if path not in r.files:
-                    if not is_new:
-                        stats['unplaced'].append('%s:%d edits %s, which the household lacks' % (md, n, path))
-                    r.files[path] = []
-                    stats['new'].append(path)
-                elif path not in stats['new'] and path not in stats['edited']:
-                    stats['edited'].append(path)
-                target, lines, pos, run_start = path, r.files[path], None, True
-            elif target is None:
-                pass
-            elif t.startswith('-'):
-                body = t[1:]
-                idx = next((x for x, line in enumerate(lines) if line.text == body), None)
-                if idx is None:
-                    stats['unplaced'].append('%s:%d removes a line %s lacks' % (md, n, target))
-                else:
-                    del lines[idx]
-                    pos = idx
-                    stats['removed'] += 1
-            elif t.startswith('+'):
-                body = t[1:]
-                line = Line('%s:%d (+%s)' % (md, n, target), body)
-                stats['added'] += 1
-                if pos is not None:
-                    lines.insert(pos, line)
-                    pos += 1
-                else:
-                    if run_start and body.strip() != '':
-                        if body.startswith(' ') and target not in stats['new']:
-                            stats['unplaced'].append('%s:%d adds an indented line after context' % (md, n))
-                        run_start = False
-                    lines.append(line)
-            else:
-                pos, run_start = None, True     # a context line or a blank between files
-            k += 1
-    if extras_too:
-        for block in extras:
-            lines = r.files.setdefault('asks/core.tally', [])
-            for n, t in block:
-                lines.append(Line('%s:%d (optional, +asks/core.tally)' % (md, n), t))
-                stats['added'] += 1
-    r.change = stats
-    r.change_extras = len(extras)
-    return r
-
-
-def change_ids(r):
-    """The top-level ids the change's own lines declare."""
-    out = set()
-    for lines in r.files.values():
-        for line in lines:
-            if '(+' in line.loc and line.text and not line.text.startswith(' '):
-                t = tokens(strip_strings(line.text) or '')
-                if len(t) > 1 and t[0] in KINDS:
-                    out.add(t[1])
-    return out
 
 
 # ---------------------------------------------------------------- self-test
 
-# A planted reality: every refusal the scan gives, and look-alikes it must let pass (rule labels that are keywords,
-# a built-in name as an input's id, `where k in`, `solve x in`, a place as a key of place, a keyed place, `*`,
-# a band row, a mode name as an axis option, words inside strings).
+# A planted reality: every refusal the scan gives, and look-alikes it must let pass (rule labels that are
+# keywords, a built-in name as an input's id, contextual words as ids, `where k in`, `solve … for r in`, a
+# place as a row key, a keyed place, `*`, a band row, a `replace` entry, words inside strings).
 SELFTEST = {
     'a.tally': '''model t1
-  tally 1
+  tally 2
   on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
 
 source src1 "a source with in, for and [k in x] inside a string"
 
@@ -658,17 +608,15 @@ index person = [ana, ben, ana]
 
 index lot = [if, src1]
 
-index month = month 2026-01..2026-12
+kind wrapped
 
-place konto: account PLN
+kind transfers: event certain
 
-place wallet[p in person]: cash PLN
+place konto: accounts PLN lives 2019-05-01..
 
-input salary[p in person, m in month]: money PLN
+input salary[p in person, m in months]: money PLN
 
-input rec: (amount money PLN, then int)
-
-input bal_in[x in place]: money PLN
+input rec: (amount money PLN, then int, kind int)
 
 input count[p in person]: int
 
@@ -676,49 +624,60 @@ band sum(n: int): money PLN
 
 band zr(salary: int): money PLN
 
-def total[p in person]: money PLN = sum(m in month: salary[p, m])
+def total[p in person]: money PLN = sum(salary[p, m] for m in months)
 
-def shadow[month in person]: int = 1
+def shadow[months in person]: int = 1
 
-def agg2: int = count(salary in person: 1) + sum(k in person where k in [ana], j in month: 1)
+def agg2: int = count(salary in person) + sum(1 for k in person where k in [ana], j in years)
 
 def lab[p in person]: money PLN
   rule first = 1
-  rule none excepts first = 2
+  rule none beats first = 2
   rule first = 3
-  rule x excepts nope = 4
-  rule cyc1 excepts cyc2 = 5
-  rule cyc2 excepts cyc1 = 6
-
-def outside_pln: int = 1
+  rule x beats nope = 4
+  rule cyc1 beats cyc2 = 5
+  rule cyc2 beats cyc1 = 6
 
 def opening: int = 1
 
-def debt: int = 1
+def start: int = 1
 
-ask key5: total[ana] for k in person, konto in [1]
+ask key5: total[ana] for k in person
 
-ask q2: solve rec in [0, 1] to 0.01: lab[ana] = 0
+ask q2: solve lab[ana] == 0 for rec in [0, 1] to 0.01
 
 ask q3: x for for in person
 
 ask src1: total[ana]
+
+input rate: num
+
+input rate: num
+input owner[p in person]: num
+def tax[s in person]: num = sum(rate for rate in person)
+move levy[i in person]: transfers
+  on d
+  leg in from konto to konto amount 1
+  note "the regime block of the tally 2 draft, unboxed at G2 (G2-1)"
 
 version v1
   cite src1
   known 2026-01-01
   person + [cid]
   person + [ben]
+  replace person + [ana] lives 2020-01-01..
   salary[ana, 2026-01..2026-03] = 1 "x"
   salary[q2, 2026-01] = 1 "id as row key"
-  bal_in[konto] = 1 "a place as a key of place"
-  bal_in[wallet[ana]] = 1 "a keyed place"
-  opening[konto] = 0
+  opening[konto] = 1 "a place as a row key"
+  opening[konto[ana]] = 1 "a keyed place"
   salary[*, 2026-04] = 2 "every key"
   zr: [0, 5) = 1 "band row"
+  bank[r1] = (on: 2026-01-01, kind: transfers, leg cash from konto to world amount 1 PLN) "line"
+  bank[r2] = (if: 1) "a keyword no FIELD admits"
+  owner[q2] = x "an input keyed by an ask's id, unboxed from a regime"
 ''',
     'b.tally': '''part second
-  tally 1
+  tally 2
 
 source src1 "declared again in another file"
 
@@ -727,19 +686,37 @@ version cid
   known 2026-01-02
 ''',
 }
-SELFTEST_PARSE = ('model t2\n  tally 1\n  on 2026-10-18\n\nsource s "unterminated\n\n'
+SELFTEST_PARSE = ('model t2\n  tally 2\n  on 2026-10-18\n  start 2026-01-01\n  end 2026-12-31\n\nsource s "unterminated\n\n'
                   'def a_very_long_identifier_that_goes_past_the_limit_of_48: int = 1\n\n'
                   'def b: int = 1\n   note "odd"\n\ndef c: int =\t1\n\nwidget w\n\nindex k = [Ab, 2025-03, t4e-171]\n')
 SELFTEST_EXPECTED = sorted([
-    ('LOAD-DUP', 'a.tally:59'), ('LOAD-DUP', 'b.tally:4'), ('LOAD-DUP', 'a.tally:29'), ('LOAD-DUP', 'a.tally:47'),
-    ('LOAD-DUP', 'a.tally:49'), ('LOAD-RESERVED', 'a.tally:23'), ('LOAD-SHADOW', 'a.tally:31'),
-    ('LOAD-SHADOW', 'a.tally:35'), ('LOAD-SHADOW', 'a.tally:37'), ('LOAD-SHADOW', 'a.tally:53'),
-    ('LOAD-RESERVED', 'a.tally:57'), ('LOAD-KEY', 'a.tally:51'), ('LOAD-KEY', 'a.tally:9'), ('LOAD-DUP', 'a.tally:11'),
-    ('LOAD-RESERVED', 'a.tally:13'), ('LOAD-KEY', 'a.tally:13'), ('LOAD-DUP', 'a.tally:42'),
-    ('LOAD-EXCEPTS', 'a.tally:43'), ('LOAD-EXCEPTS', 'a.tally:39'), ('LOAD-KEY', 'a.tally:64'),
-    ('LOAD-DUP', 'a.tally:65'), ('LOAD-KEY', 'a.tally:67'),
-    ('LOAD-PARSE', 'c.tally:5'), ('LOAD-PARSE', 'c.tally:7'), ('LOAD-PARSE', 'c.tally:10'),
-    ('LOAD-PARSE', 'c.tally:12'), ('LOAD-PARSE', 'c.tally:14'), ('LOAD-PARSE', 'c.tally:16'),
+    ('LOAD-KEY', 'a.tally:11'),        # axis option key5 is an ask's id
+    ('LOAD-DUP', 'a.tally:13'),        # ana added twice to person
+    ('LOAD-RESERVED', 'a.tally:15'),   # if as a key
+    ('LOAD-KEY', 'a.tally:15'),        # src1 as a key
+    ('LOAD-DUP', 'a.tally:19'),        # kind transfers: a built-in kind
+    ('LOAD-RESERVED', 'a.tally:25'),   # record type field then
+    ('LOAD-DUP', 'a.tally:29'),        # band sum: a built-in's name
+    ('LOAD-SHADOW', 'a.tally:31'),     # band argument salary
+    ('LOAD-SHADOW', 'a.tally:35'),     # bound variable months (a built-in index)
+    ('LOAD-SHADOW', 'a.tally:37'),     # bound variable salary
+    ('LOAD-DUP', 'a.tally:42'),        # two rules first
+    ('LOAD-LABEL', 'a.tally:43'),      # beats nope
+    ('LOAD-CYCLE', 'a.tally:39'),      # cyc1 / cyc2
+    ('LOAD-DUP', 'a.tally:47'),        # def opening: a built-in input
+    ('LOAD-RESERVED', 'a.tally:55'),   # bound variable for
+    ('LOAD-DUP', 'a.tally:57'),        # ask src1: src1 is a source
+    ('LOAD-DUP', 'a.tally:61'),        # input rate twice
+    ('LOAD-SHADOW', 'a.tally:63'),     # bound variable rate: a top-level id
+    ('LOAD-RESERVED', 'a.tally:66'),   # leg in
+    ('LOAD-KEY', 'a.tally:72'),        # added key cid is a version's id (b.tally)
+    ('LOAD-DUP', 'a.tally:73'),        # ben added twice to person
+    ('LOAD-KEY', 'a.tally:76'),        # row key q2 is an ask's id
+    ('LOAD-KEY', 'a.tally:83'),        # row key q2 of input owner
+    ('LOAD-RESERVED', 'a.tally:82'),   # record field if (kind, a FIELD keyword, is admitted)
+    ('LOAD-DUP', 'b.tally:4'),         # source src1 in another file
+    ('LOAD-PARSE', 'c.tally:7'), ('LOAD-PARSE', 'c.tally:9'), ('LOAD-PARSE', 'c.tally:12'),
+    ('LOAD-PARSE', 'c.tally:14'), ('LOAD-PARSE', 'c.tally:16'), ('LOAD-PARSE', 'c.tally:18'),
 ])
 
 
@@ -751,10 +728,15 @@ def selftest():
             r.files[name] = [Line('%s:%d' % (name, n), t) for n, t in enumerate(text.split('\n'), 1)]
         found += [(code, loc) for code, loc, _, _ in check(r).refusals]
     found.sort()
-    missed = [x for x in SELFTEST_EXPECTED if x not in found]
-    extra = [x for x in found if x not in SELFTEST_EXPECTED]
+    exp = list(SELFTEST_EXPECTED)
+    missed, extra = [], list(found)
+    for x in exp:
+        if x in extra:
+            extra.remove(x)
+        else:
+            missed.append(x)
     print('selftest: %d planted refusals, %d found, %d missed, %d extra%s' % (
-        len(SELFTEST_EXPECTED), len(found) - len(extra), len(missed), len(extra),
+        len(exp), len(exp) - len(missed), len(missed), len(extra),
         ''.join('\n  missed %s %s' % x for x in missed) + ''.join('\n  extra %s %s' % x for x in extra)))
     return 1 if missed or extra else 0
 
@@ -765,76 +747,24 @@ def fmt_counts(c):
     return ', '.join('%s %d' % (k, v) for k, v in c.items())
 
 
-def run(groups, verbose):
-    total = 0
-    out = []
-    for title, realities, note in groups:
-        refusals = [x for r in realities for x in r.refusals]
-        total += len(refusals)
-        sums = {}
-        for r in realities:
-            for k, v in r.counts.items():
-                sums[k] = sums.get(k, 0) + v
-        files = sum(len(r.files) for r in realities)
-        out.append('%s: %d %s, %d files: %d refusals (%s)%s' % (
-            title, len(realities), 'reality' if len(realities) == 1 else 'realities', files,
-            len(refusals), fmt_counts(sums), note))
-        for r in realities:
-            if verbose:
-                out.append('  %s: %d files, %d refusals (%s)' % (r.name, len(r.files), len(r.refusals), fmt_counts(r.counts)))
-            for code, loc, item, msg in r.refusals:
-                out.append('  %s %s %s: %s' % (code, loc, item, msg))
-    return out, total
-
-
 def main(argv):
     if '--selftest' in argv:
         return selftest()
     verbose = '-v' in argv
-    args = [a for a in argv if a != '-v']
-    out = ['loadcheck (D8 W3): a line scan of ids and keywords; no expression is parsed and no figure computed.']
-    groups = []
+    args = [a for a in argv if not a.startswith('-')]
     if not args:
-        models = [check(reality_of_file(p)) for p in sorted(
-            os.path.join(ROOT, 'models', f) for f in os.listdir(os.path.join(ROOT, 'models')) if f.endswith('.tally'))]
-        groups.append(('models/*.tally', models, ''))
-        groups.append((HOUSEHOLD, [check(reality_of_dir(os.path.join(ROOT, HOUSEHOLD), HOUSEHOLD))], ''))
-        cdir = os.path.join(ROOT, 'amendments', 'changes')
-        added = {}
-        for f in sorted(os.listdir(cdir)):
-            if not f.endswith('.md'):
-                continue
-            r = check(reality_with_change(os.path.join(cdir, f)))
-            st = r.change
-            note = '; +%d -%d lines, new %s, edited %s; %s' % (
-                st['added'], st['removed'], ', '.join(st['new']) or 'none', ', '.join(st['edited']) or 'none',
-                'every line placed' if not st['unplaced'] else 'not placed: ' + '; '.join(st['unplaced']))
-            groups.append(('change ' + f[:-3] + ' on the household', [r], note))
-            for ident in change_ids(r):
-                added.setdefault(ident, []).append(f[:-3])
-            if r.change_extras:
-                rx = check(reality_with_change(os.path.join(cdir, f), extras_too=True))
-                groups.append(('change ' + f[:-3] + ' with its optional addition', [rx],
-                               '; +%d lines (the fenced section outside the diff, put in asks/core.tally)' % rx.change['added']))
-        lines, total = run(groups, verbose)
-        out += lines
-        both = sorted((i, c) for i, c in added.items() if len(c) > 1)
-        out.append('ids declared by two changes: %s' % (', '.join('%s (%s)' % (i, ', '.join(c)) for i, c in both) or 'none'))
-    else:
-        realities = []
-        for a in args:
-            p = a if os.path.isabs(a) else os.path.join(ROOT, a)
-            if not os.path.exists(p):
-                p = os.path.abspath(a)
-            if os.path.isdir(p):
-                realities.append(check(reality_of_dir(p)))
-            elif p.endswith('.md'):
-                realities.append(check(reality_with_change(p)))
-            else:
-                realities.append(check(reality_of_file(p)))
-        lines, total = run([('arguments', realities, '')], verbose)
-        out += lines
-    out.append('total: %d refusals' % total)
+        print(__doc__.strip(), file=sys.stderr)
+        return 2
+    out = ['loadcheck (Tally 2): a line scan of ids and keywords; no expression is parsed and no figure computed.']
+    total = 0
+    for a in args:
+        r = check(reality_of_dir(a) if os.path.isdir(a) else reality_of_file(a))
+        total += len(r.refusals)
+        if verbose or r.refusals:
+            out.append('%s: %d files, %d refusals (%s)' % (r.name, len(r.files), len(r.refusals), fmt_counts(r.counts)))
+        for code, loc, item, msg in r.refusals:
+            out.append('  %s %s %s: %s' % (code, loc, item, msg))
+    out.append('total: %d refusals in %d realities' % (total, len(args)))
     print('\n'.join(out))
     return 1 if total else 0
 

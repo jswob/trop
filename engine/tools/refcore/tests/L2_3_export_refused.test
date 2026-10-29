@@ -1,0 +1,16 @@
+# GD-1 (round 19): `export` is no clause word (L §2.2) and no line of any section (L §2.3): a top-level export line is
+# an unknown section (LOAD-PARSE).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+input rate: num
+export rate
+=== expect
+refused: LOAD-PARSE cannot parse: expected a section, got export (m.tally:11)

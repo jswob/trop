@@ -1,0 +1,22 @@
+# Fault f_next_d (writer 7): L §5.14.1 defines next(K, d) as first(t in K over d ..) ties by t.day; L §5.14: a false
+# when means no instance. pay is a decision (its when reads the running bal(konto)); in January konto holds 0 and
+# pos(m) = 1, so its when is false and January has no instance; February's pos is 2: next and first both give
+# pay[2025-02]. refcore printed (pay[2025-01], pay[2025-02]).
+=== f.tally
+model f
+  tally 2
+  on 2025-01-01
+  start 2025-01-01
+  end 2025-03-31
+unit DUK: currency minor 0.01
+place konto: accounts DUK lives 2025-01-01..
+place world: outside lives 2025-01-01..
+move pay[m in months]: transfers
+  on end_of(m) - 1 day
+  when bal(konto) > 0 or pos(m) > 1
+  reads konto
+  leg cash from world to konto amount 1
+ask q: next(transfers, 2025-01-01), first(t in transfers over 2025-01-01 .. 2025-03-31) ties by t.day
+=== expect
+q: (pay[2025-02], pay[2025-02])
+  cut 2025-01-01

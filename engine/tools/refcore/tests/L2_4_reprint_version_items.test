@@ -1,0 +1,77 @@
+# L §2.4: "Version items are sorted: entries into kinds and indexes first, then by target id, then keys in index order
+# (things and an open index's keys in the text order of their stable ids, §2.5), with a keyless row first, then by the
+# start of their own governs span or their instant (a row with no span of its own first, then a span with no start);
+# a band's rows stay ascending (§5.9)." ks is a list index [zz, aa], so x[zz] comes before x[aa]; persons is a kind
+# (text order: ana before ola); months are in their calendar order; the band b's rows keep their order.
+=== options reprint
+=== m.tally
+model m
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+index ks = [zz, aa]
+kind persons
+input x[k in ks]: int
+input pay[p in persons, mo in months]: money PLN
+input y: int
+band b(n: int): int
+
+version v
+  cite s
+  governs 2026..
+  known 2026-01-01
+  y = 1 governs 2026-06..
+  x[aa] = 1
+  pay[ola, 2026-02] = 3 PLN
+  b: [10, inf) = 2
+  x[zz] = 2
+  y = 3
+  pay[ola, 2026-01] = 2 PLN
+  persons + [ola]
+  b: [0, 10) = 1
+  pay[ana, 2026-03] = 1 PLN
+  persons + [ana]
+  y = 2 governs ..2026-05
+  y = 4 at 2026-07-01
+  z = 5 governs 2026.. "art. 2"
+=== expect
+--- m.tally
+model m
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+kind persons
+
+index ks = [zz, aa]
+
+input pay[p in persons, mo in months]: money PLN
+
+input x[k in ks]: int
+
+input y: int
+
+band b(n: int): int
+
+version v
+  cite s
+  governs 2026..
+  known 2026-01-01
+  persons + [ana]
+  persons + [ola]
+  b: [10, inf) = 2
+  b: [0, 10) = 1
+  pay[ana, 2026-03] = 1 PLN
+  pay[ola, 2026-01] = 2 PLN
+  pay[ola, 2026-02] = 3 PLN
+  x[zz] = 2
+  x[aa] = 1
+  y = 3
+  y = 2 governs ..2026-05
+  y = 1 governs 2026-06..
+  y = 4 at 2026-07-01
+  z = 5 governs 2026.. "art. 2"
+sha256 ...

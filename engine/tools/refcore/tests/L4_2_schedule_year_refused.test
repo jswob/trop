@@ -1,0 +1,28 @@
+# Round 19 (GD-2 beside it): L §4.2 schedule(p, e, roll, cal) "the day of period p given by e (an int day of the
+# month, p a month; a day in every year is `schedule(month_of(start_of(y)) + (pay_month - 1), pay_dom, roll, cal)`)":
+# p is a month. snap14 still took schedule(y, md) of a year with a month-day literal (A-49 had removed it); a year is
+# a value of the wrong type (LOAD-UNIT).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+index yrs = year 2026..2027
+input file_by: monthday
+input other: monthday
+input pd: int
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  file_by = 04-30
+  other = 04-30
+  pd = 5
+ask q: schedule(2026, pd, following, calendar(weekends [sat, sun]))
+=== expect
+refused: LOAD-UNIT schedule takes a month, not year (m.tally:21)

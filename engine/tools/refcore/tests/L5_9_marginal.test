@@ -1,0 +1,33 @@
+# L §5.9 Marginal rates: "marginal(b, x) ... the sum, over b's rows whose lower end lo is below x, of the row's
+# value × (min(x, hi) − lo). Its unit is x's times the rows'."  Rows [0, 1000) = 10 %, [1000, inf) = 20 %; at
+# x = 1 500 PLN: 10 % × (1 000 − 0) + 20 % × (1 500 − 1 000) = 100 + 100 = 200 PLN.
+# held: (L §8.2) "a row whose span has a start and no end ..., band rows included, read at a law date after the
+# cut K": the law date is after the model's on, so every open-ended row read is listed.
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+band tiers(x: num PLN): num
+input w: num PLN
+
+version v
+  cite s
+  governs 2026..
+  known 2025-12-01
+  tiers: [0, 1000) = 10 %
+  tiers: [1000, inf) = 20 %
+  w = 1500 PLN
+
+ask q1: marginal(tiers, w) law 2026-06-30
+=== expect
+q1: 200 PLN
+  held: tiers row [0, 1 000) (v), read for 2026-06-30
+  held: tiers row [1 000, inf) (v), read for 2026-06-30
+  held: w = 1 500 PLN (v), read for 2026-06-30
+  law date 2026-06-30, cut 2026-01-01

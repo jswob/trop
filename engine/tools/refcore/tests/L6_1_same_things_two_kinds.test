@@ -1,0 +1,66 @@
+# L §5.1: same lines state "that two things of one kind, or two rows or movements, from two members are one"; L §6.1
+# refuses only two places of different kinds (LOAD-SAME) and says nothing of two other things of two kinds. a.ola is a
+# key of a.persons and b.ola_k of b.persons, which no same line joins. Round 14 (L §6.1): "The two sides are of one
+# sort: ... two things of one base kind ...; any other pair is refused (LOAD-SAME)"; L §8.3 "places or things of kinds
+# <K> and <K'>". (Writer 7.)
+=== options pin=bytes
+=== joint.tally
+model family
+  tally 2
+  on 2026-01-05
+  start 2026-01-01
+  end 2026-12-31
+  use a = "ana.tally" sha256 "e438b0e9e801813f005290db20ae57dbafcfc06810324f3ba998080e5c2db6c3"
+  use b = "ben.tally" sha256 "62b0623690f8004e28037173884be55e87162cbbd244eb89cae891e9e3867ce4"
+  same a.ola = b.ola_k
+
+ask n: count(p in a.persons on 2026-06-01)
+ask s: sum(a.income[p] for p in a.persons on 2026-06-01)
+ask sp: sum(b.pocket[p] for p in b.persons on 2026-06-01)
+ask o: a.income[a.ola] + b.pocket[a.ola]
+ask w: bal(a.wsp, 2026-06-01)
+ask t: sum(bal(p, 2026-06-01) for p in accounts on 2026-06-01)
+=== ana.tally
+model ana
+  tally 2
+  on 2026-01-05
+  start 2026-01-01
+  end 2026-12-31
+
+source s "umowa"
+unit PLN: currency minor 0.01
+kind persons
+place wsp: accounts PLN lives 2019-01-01..
+input income[p in persons]: money PLN
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  persons + [ana, ola] lives 2000-01-01..
+  income[ana] = 100.00 PLN "umowa"
+  income[ola] = 10.00 PLN "umowa"
+  opening[wsp] = 1 000.00 PLN at 2026-01-01 start "wyciąg"
+=== ben.tally
+model ben
+  tally 2
+  on 2026-01-05
+  start 2026-01-01
+  end 2026-12-31
+
+source s "umowa"
+unit PLN: currency minor 0.01
+kind persons
+place wsp: accounts PLN lives 2019-01-01..
+input pocket[p in persons]: money PLN
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  persons + [ben, ola_k] lives 2000-01-01..
+  pocket[ben] = 50.00 PLN "umowa"
+  pocket[ola_k] = 5.00 PLN "umowa"
+  opening[wsp] = 1 000.00 PLN at 2026-01-01 start "wyciąg"
+=== expect
+refused: LOAD-SAME same a.ola = b.ola_k: things of kinds a.persons and b.persons ...

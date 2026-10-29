@@ -1,0 +1,19 @@
+# L §3.2 table: "bool in arithmetic: refused" (LOAD-UNIT, a value of the wrong type).
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "a source"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+unit hour "godzina"
+
+input f: bool
+input n: int
+
+ask q1: f + n
+=== expect
+refused: LOAD-UNIT ...

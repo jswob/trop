@@ -1,0 +1,56 @@
+# L §5.19 example def, copied whole, with categories, spend_budget, the kind spending (its attribute category),
+# spend_window and two statements completed.  "covered(x, span) is true when versions known by the cut cover place x
+# on every day of the span ... A def that aggregates observations over a span must guard the aggregate with it ...
+# Until a statement covers the window, the household's budget stands."  November is covered: learned = sum of
+# -o.cash.amount over the food observations = -(234.22 + 100.00) = -334.22 PLN (the rent row is of category rent);
+# with the window in December, not covered, the budget 1 000.00 PLN stands.  As written the def states no `at` and
+# reads inputs whose rows all govern always: L §4.3 rule 2, it needs no law date.
+=== m.tally
+model hh
+  tally 2
+  on 2026-10-20
+  start 2025-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+index categories = [food, rent]
+input spend_budget[c in categories]: money PLN
+input spend_window: key months
+kind spending: transfers
+  attr category: key categories
+input bank: observed
+place konto: accounts PLN lives 2019-05-01..
+place shop: outside lives 1900-01-01..
+place landlord: outside lives 1900-01-01..
+
+def spend_month[c in categories]: money PLN
+  rule budget = spend_budget[c]
+  rule learned beats budget = sum(-o.cash.amount for o in spending over spend_window where o.category == c) when covered(konto, spend_window)
+
+version budget
+  cite s
+  governs always
+  known 2025-01-01
+  spend_budget = 1 000.00 PLN
+  spend_window = 2025-11
+
+version statement_11
+  cite s
+  governs 2025-11
+  known 2025-12-01
+  covers konto
+  anchor konto
+  bank[r1] = (on: 2025-11-04, kind: spending, leg cash from konto to shop amount 234.22 PLN, category: food) "BIEDRONKA"
+  bank[r2] = (on: 2025-11-12, kind: spending, leg cash from konto to shop amount 100.00 PLN, category: food) "LIDL"
+  bank[r3] = (on: 2025-11-03, kind: spending, leg cash from konto to landlord amount 2 800.00 PLN, category: rent) "czynsz"
+
+ask nov: spend_month[food] with spend_window = 2025-11
+ask dec: spend_month[food] with spend_window = 2025-12
+=== expect
+dec: 1 000.00 PLN
+  pinned: spend_window = 2025-12
+  cut 2026-10-20
+nov: -334.22 PLN
+  pinned: spend_window = 2025-11
+  cut 2026-10-20

@@ -1,0 +1,34 @@
+# OQ-3 and PL-18 (L §5.19). "An observed row is in the kind its `kind:` names and in that kind's parents; `o in K`
+# tests it" (L §5.19), so r3, of kind groceries under spending under transfers, is in all three (a). Bindings
+# (L §5.19): "A binding over an observed input, `o in X over s`, ranges over X's rows dated in s, each once, whether
+# or not a version states two of them `same`, since an input's keys are its rows. A binding over an event kind ranges
+# over movements ... a pair of rows stated `same` is one movement": over bank_rows three rows, over spending two
+# movements, the same pair once (400.00 + 50.00 PLN).
+=== m.tally
+model hh
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+source bank "bank"
+unit PLN: currency minor 0.01
+kind spending: transfers
+kind groceries: spending
+input bank_rows: observed
+place konto: accounts PLN lives 2019-05-01..
+place world: outside lives 1900-01-01..
+version stmt
+  cite bank
+  governs 2026-02
+  known 2026-03-02
+  bank_rows[r1] = (on: 2026-02-20, kind: groceries, leg cash from konto to world amount 400.00 PLN) "line 1"
+  bank_rows[r2] = (on: 2026-02-20, kind: groceries, leg cash from konto to world amount 400.00 PLN) "line 2"
+  bank_rows[r3] = (on: 2026-02-21, kind: groceries, leg cash from konto to world amount 50.00 PLN) "line 3"
+  same bank_rows[r2] = bank_rows[r1]
+ask a: bank_rows[r3] in spending, bank_rows[r3] in groceries, (bank_rows[r3] in transfers)
+ask b: count(true for o in bank_rows over 2026-02), count(true for t in spending over 2026-02), sum(t.cash.amount for t in spending over 2026-02)
+=== expect
+a: (true, true, true)
+  cut 2026-10-20
+b: (3, 2, 450.00 PLN)
+  cut 2026-10-20

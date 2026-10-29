@@ -1,0 +1,17 @@
+# GD-1 (round 19): `regime` is dropped from 2.0; L §2.3's section rule no longer has `regime`, and L §2.2's reserved
+# words no longer hold it. A text with a regime line is refused as the grammar refuses an unknown section
+# (LOAD-PARSE `cannot parse: <what was expected>`).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+regime gains
+  input rate: num
+=== expect
+refused: LOAD-PARSE cannot parse: expected a section, got regime (m.tally:10)

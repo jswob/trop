@@ -1,0 +1,64 @@
+# Round 19 (writer 10): settled; was REFCORE-UNSPECIFIED §6.1. GD-24: L §6.1 Shared law "Two members that copy different versions of one law part ... are refused
+# (LOAD-SAME)", with no same-line exception. The old comment:
+# L §6.1 Shared law: different versions are refused "unless the joint model states, by a same line, which one both
+# follow"; the section gives no form for that line (a same side names a kind, a thing, a row or a movement) nor what
+# following one copy does to the other member's reads: REFCORE-UNSPECIFIED.
+=== J/joint.tally
+model family
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+  use a = "../A" sha256 "ef1255868d73b8e3d5a759552f9e27aea1289c330c913ceff9e3d289c522459a"
+  use c = "../C" sha256 "eb365491d24abf193947ef44eaccf6c5c4e448676ad35a1cfc66907bca4f0f2a"
+  same a.pit = c.pit
+
+ask r: a.rate
+=== A/reality.tally
+model ma
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+=== A/law/pit.tally
+part pit
+  tally 2
+  law
+
+source act "ustawa"
+
+input rate: num
+
+version pit_2025
+  cite act
+  governs 2025-01-01..
+  known 2024-12-01
+  rate = 0.12 "art. 1"
+
+version pit_2026
+  cite act
+  governs 2026-01-01..
+  known 2025-12-01
+  replace rate = 0.10 "art. 1"
+=== C/reality.tally
+model mc
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+=== C/law/pit.tally
+part pit
+  tally 2
+  law
+
+source act "ustawa"
+
+input rate: num
+
+version pit_2025
+  cite act
+  governs 2025-01-01..
+  known 2024-12-01
+  rate = 0.12 "art. 1"
+=== expect
+refused: LOAD-SAME members a and c copy different versions of law part pit

@@ -1,17 +1,28 @@
 model mp16
-  tally 1
+  tally 2
   on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
   note "Arkansas income-shares child support, the Arkansas Judiciary's Sample Calculation with the July 2020 forms: one child; the payor and the payee each have a monthly gross income, the payor pays the child's health insurance premium and the payee pays childcare."
   note "The defs have no time key. Every ask pins its law date to forms_from, the day the July 2020 forms are required, so the July 2020 chart and worksheet govern."
   note "The rules are quoted from the October 6, 2022 revision of Administrative Order No. 10 in an unofficial copy. The April 2, 2020 revision in force for these forms was not fetched, so the 2022 text is read for it: version ao10_text cites the 2022 copy, governs the 2020 revision's period and is marked assumed (LANGUAGE §4.5, §5.3). The self-support reserve and the minimum order are read from the July 2020 Chart's header, which states both."
   note "Parenting time is not given, so the shared-custody adjustment (Section V.2) is not modelled. The monthly order is a value, not a pay: the order has a start but no end, and the parents' places are not given."
 
 source ao10_cr "Arkansas Administrative Order No. 10, Arkansas Child Support Guidelines (revision of October 6, 2022), courtrules.net (Michigan Legal Publishing Ltd.), unofficial copy" at "https://www.courtrules.net/arkansas/arkansas-administrative-orders/rule-10-2022"
+
 source ar_chart "Family Support Chart of Basic Child Support Obligations (Monthly Family Support Chart, required July 1, 2020), Arkansas Judiciary, Internet Archive copy (snapshot 20250310233130)" at "https://web.archive.org/web/20250310233130if_/https://arcourts.gov/sites/default/files/formatted-files/monthly-family-support-chart-req-july-2020.pdf"
+
 source ar_forms_page "Arkansas Child Support Guidelines (forms and publications page), Arkansas Judiciary, Internet Archive copy (snapshot 20261009213005)" at "https://web.archive.org/web/20261009213005/https://arcourts.gov/forms-and-publications/arkansas-child-support-guidelines"
+
 source ar_sample "Sample Language and Calculation - Child Support (July 2020), Arkansas Judiciary, Internet Archive copy (snapshot 20260302082312)" at "https://web.archive.org/web/20260302082312if_/https://www.arcourts.gov/sites/default/files/formatted-files/child-support-sample-language-and-calculation-july-2020.pdf"
+
 source ar_worksheet "Worksheet - Child Support (required July 1, 2020), Arkansas Judiciary, Internet Archive copy (snapshot 20260601003231)" at "https://web.archive.org/web/20260601003231if_/https://www.arcourts.gov/sites/default/files/formatted-files/Worksheet-required-July-1-2020.pdf"
+
+source lifted_1_0_1 "Figures tally 1.0.1 allowed inline in rules"
+
 source modeller "The modeller's own assumptions, each stated with its reason"
+
+unit USD: currency minor 0.01
 
 axis ar_share
   exact_ratio "each parent's share is the exact ratio of the incomes; the percentages the sample prints are displays"
@@ -22,7 +33,7 @@ index chart_row = [r2950, r3000, r3050]
 
 index expense = [health_premium, extra_medical, childcare]
 
-index kids = 1..6
+index kids = int 1..6
 
 index parent = [payor, payee]
 
@@ -51,108 +62,130 @@ input order_start: date
 
 input paid_by[x in expense]: key parent
 
+input pct_shown_0_01: num
+  note "lifted from an inline figure of tally 1.0.1"
+
+input share_used_0_0001: num
+  note "lifted from an inline figure of tally 1.0.1"
+
 input ssr_income: money USD
 
 band chart_line(x: money USD): key chart_row
   note "the Chart's Combined Gross Monthly Income rows"
 
-def addon_share[p in parent]: money USD
+def addon_share[p in parent]: money USD at reader
   note "Line 10: each parent's line 3 multiplied by combined Line 9; Section VI.3: mathematical rounding, here to the cent"
-  rule base v ao10_text = round(share_used[p] * addon_total, 0.01, half-up)
+  rule base v ao10_text = round(share_used[p] * addon_total, minor(USD), half-up)
 
-def addon_total: money USD
+def addon_total: money USD at reader
   note "Line 9: total additional child-rearing expenses (sum of line 6, 7 & 8)"
-  rule base v ws2020 = sum(x in expense: addon[x])
+  rule base v ws2020 = sum(addon[x] for x in expense)
 
-def available[p in parent]: money USD
+def available[p in parent]: money USD at reader
   note "Line 2: each parent's income available for support"
   rule base v ws2020 = gross[p] - deductions[p]
 
-def basic_obligation: money USD
+def basic_obligation: money USD at reader
   note "Line 4: basic child-support obligation from the monthly chart, for the combined income and the number of children"
   rule base v ws2020 = chart_amount[chart_line(combined), children]
 
-def basic_share[p in parent]: money USD
+def basic_share[p in parent]: money USD at reader
   note "Line 5: each parent's line 3 multiplied by combined Line 4; Section VI.3: rounded to two decimal places"
-  rule base v ao10_text = round(share_used[p] * basic_obligation, 0.01, half-up)
+  rule base v ao10_text = round(share_used[p] * basic_obligation, minor(USD), half-up)
 
-def combined: money USD
+def combined: money USD at reader
   note "Line 2, combined; Section V.1: the gross income of both parents shall first be determined and combined"
-  rule base v ws2020 = sum(p in parent: available[p])
+  rule base v ws2020 = sum(available[p] for p in parent)
 
-def credit: money USD
+def credit: money USD at reader
   note "Line 12: credit for additional child-rearing expenses (obligor's line 9 only)"
-  rule base v ws2020 = sum(x in expense where addon[x] > 0 and paid_by[x] = obligor: addon[x])
+  rule base v ws2020 = sum(addon[x] for x in expense where addon[x] > 0 and paid_by[x] == obligor)
 
-def income_share[p in parent]: num
+def income_share[p in parent]: num at reader
   note "Line 3: each parent's line 2 divided by combined line 2"
   rule base v ws2020 = available[p] / combined
 
-def order_amount: money USD
+def order_amount: money USD at reader
   note "Section VI.3: child-support obligations shall be rounded down to the nearest whole dollar"
   note "Section II.3: when the payor parent's monthly gross income is less than the self-support reserve income, a presumptive minimum award must issue"
   rule base v ao10_text = round(presumed, 1, down)
-  rule minimum excepts base v ao10_text when gross[obligor] < ssr_income = min_order
+  rule minimum beats base v ao10_text = min_order when gross[obligor] < ssr_income
 
-def order_predates_forms: bool = order_start < forms_from
+def order_predates_forms: bool = order_start < forms_from at reader
 
-def pct_language[p in parent]: num
+def pct_language[p in parent]: num at reader
   note "the sample language states each share as a whole percentage, the rest cut off"
-  rule base = round(income_share[p] * 100, 1, down)
+  rule base = round(income_share[p] / 1 %, 1, down)
 
-def pct_shown[p in parent]: num
+def pct_shown[p in parent]: num at reader
   note "Step 1 prints each share as a percentage with two decimals, read as cut off: half up would print the payor's share differently"
-  rule base = round(income_share[p] * 100, 0.01, down)
+  rule base = round(income_share[p] / 1 %, pct_shown_0_01, down)
 
-def premium_reasonable: bool
+def premium_reasonable: bool at reader
   note "Section IV.1: health insurance coverage is reasonable if the cost of dependent coverage does not exceed a share of the gross income of the parent who is to provide coverage"
   rule base v ao10_text = addon[health_premium] <= gross[paid_by[health_premium]] * insurance_cap
 
-def presumed: money USD
+def presumed: money USD at reader
   note "Line 13: presumed child-support order (Line 11 minus line 12 for obligor only)"
   rule base v ws2020 = total_obligation[obligor] - credit
 
-def share_used[p in parent]: num
+def share_used[p in parent]: num at reader
   note "the share Lines 5 and 10 multiply by; the guidelines don't fix its precision (case Missing facts)"
-  rule exact when ar_share = exact_ratio = income_share[p]
-  rule half_up when ar_share = pct_half_up = round(income_share[p], 0.0001, half-up)
-  rule printed when ar_share = pct_printed = round(income_share[p], 0.0001, down)
+  rule exact = income_share[p] when ar_share == exact_ratio
+  rule half_up = round(income_share[p], share_used_0_0001, half-up) when ar_share == pct_half_up
+  rule printed = round(income_share[p], share_used_0_0001, down) when ar_share == pct_printed
 
-def shares_total: money USD = sum(p in parent: total_obligation[p])
+def shares_total: money USD = sum(total_obligation[p] for p in parent) at reader
 
-def total_obligation[p in parent]: money USD
+def total_obligation[p in parent]: money USD at reader
   note "Line 11: total child-support obligation (each parent's line 5 plus line 10)"
   rule base v ws2020 = basic_share[p] + addon_share[p]
 
-ask q_addon_share: addon_share[p] for p in parent with law forms_from
+ask q_addon_share: addon_share[p] for p in parent law forms_from
 
-ask q_addon_total: addon_total with law forms_from
+ask q_addon_total: addon_total law forms_from
 
-ask q_basic_obligation: basic_obligation with law forms_from
+ask q_basic_obligation: basic_obligation law forms_from
 
-ask q_basic_share: basic_share[p] for p in parent with law forms_from
+ask q_basic_share: basic_share[p] for p in parent law forms_from
 
-ask q_combined: combined with law forms_from
+ask q_combined: combined law forms_from
 
-ask q_credit: credit with law forms_from
+ask q_credit: credit law forms_from
 
-ask q_order: order_amount with law forms_from
+ask q_order: order_amount law forms_from
 
-ask q_order_predates_forms: order_predates_forms
+ask q_order_predates_forms: order_predates_forms law 2026-10-18
 
-ask q_pct_language: pct_language[p] for p in parent with law forms_from
+ask q_pct_language: pct_language[p] for p in parent law forms_from
 
-ask q_pct_shown: pct_shown[p] for p in parent with law forms_from
+ask q_pct_shown: pct_shown[p] for p in parent law forms_from
 
-ask q_premium_reasonable: premium_reasonable with law forms_from
+ask q_premium_reasonable: premium_reasonable law forms_from
 
-ask q_presumed: presumed with law forms_from
+ask q_presumed: presumed law forms_from
 
-ask q_share_used: share_used[p] for p in parent with law forms_from
+ask q_share_used: share_used[p] for p in parent law forms_from
 
-ask q_shares_add_up: check shares_total = basic_obligation + addon_total with law forms_from
+ask q_shares_add_up: check shares_total == basic_obligation + addon_total law forms_from
 
-ask q_total_obligation: total_obligation[p] for p in parent with law forms_from
+ask q_total_obligation: total_obligation[p] for p in parent law forms_from
+
+version ao10_text
+  cite ao10_cr
+  governs 2020-07-01..2022-10-06
+  known 2020-04-02
+  assumed "the October 6, 2022 revision's wording, read for the April 2, 2020 revision (2020 Ark. 131), which the case didn't fetch"
+  note "A later text read for an earlier period (LANGUAGE §4.5). The October 6, 2022 revision (In re Amendments to Administrative Order No. 10, 2022 Ark. 185, per curiam, delivered October 6, 2022), in the courtrules.net copy, stands for the April 2, 2020 revision it replaced, which the case didn't fetch: In re Implementation of the Revised Administrative Order No. 10, 2020 Ark. 131, per curiam, delivered April 2, 2020, to be used for all support orders entered after June 30, 2020. The version governs that revision's period, from July 1, 2020 to October 6, 2022 (the 2022 revision is used for orders entered after October 6, 2022), and the version is marked assumed, so its row and the rules that cite it with v carry the assumption (LANGUAGE §5.3, §8.2)."
+  note "Known 2020-04-02, the day the text it stands for, 2020 Ark. 131, was delivered (opinions.arcourts.gov, item 468402): a version that stands in for an earlier text is known, and enters, at that text's dates where they are found (LANGUAGE §4.5). It enters on 2020-07-01, the default (the start of governs). The courtrules.net copy itself records the 2022 revision's date, October 6, 2022, in its Amendment history (2022 Ark. 185, opinions.arcourts.gov item 521402, read 2026-10-19)."
+  insurance_cap = 0.05 "Section IV.1: if the cost of dependent coverage does not exceed 5% of the gross income of the parent who is to provide coverage"
+
+version lifted_figures
+  cite lifted_1_0_1
+  governs always
+  known 2020-04-02
+  pct_shown_0_01 = 0.01 "inline in tally 1.0.1: pct_shown line 105, round step"
+  share_used_0_0001 = 0.0001 "inline in tally 1.0.1: share_used line 118, round step; share_used line 119, round step"
 
 version chart2020
   cite ar_chart
@@ -179,9 +212,9 @@ version chart2020
   chart_amount[r3050, 5] = 1038 "p. 2, row 3050, column for five children"
   chart_amount[r3050, 6] = 1128 "p. 2, row 3050, column Six Children"
   chart_line: [2950, 2950] = r2950 "p. 2, row 2950"
-  chart_line: (2950, 3000) = ? "The Chart has no row for a combined income between 2950 and 3000; how such an income is read was not fetched." "p. 2, between rows 2950 and 3000"
+  chart_line: (2950, 3000) = ?"The Chart has no row for a combined income between 2950 and 3000; how such an income is read was not fetched." "p. 2, between rows 2950 and 3000"
   chart_line: [3000, 3000] = r3000 "p. 2, row 3000"
-  chart_line: (3000, 3050) = ? "The Chart has no row for a combined income between 3000 and 3050; how such an income is read was not fetched." "p. 2, between rows 3000 and 3050"
+  chart_line: (3000, 3050) = ?"The Chart has no row for a combined income between 3000 and 3050; how such an income is read was not fetched." "p. 2, between rows 3000 and 3050"
   chart_line: [3050, 3050] = r3050 "p. 2, row 3050"
   min_order = 125 "p. 1, header: Minimum Order = $125 per month"
   ssr_income = 900 "p. 1, header: Self-Support Reserve = $900/month"
@@ -193,23 +226,16 @@ version ws2020
   note "Worksheet - Child Support (required July 1, 2020), Lines 1-13: the Worksheet of the Forms addendum of the per curiam 2020 Ark. 131, delivered April 2, 2020, which the case didn't fetch, in the Judiciary's own printing, a restating text standing for it, as for chart2020."
   note "Known 2020-05-26. The PDF prints no date and doesn't record the per curiam's, so it is known at its own (LANGUAGE §4.5, Which act): its earliest public stamp, the server's Last-Modified that the Internet Archive recorded at its first capture of the same file (same digest), Tue, 26 May 2020 16:11:13 GMT (capture 20200930023846; the copy read is snapshot 20260601003231, read 2026-10-19). Round 3 took the PDF's own modify stamp, 7 May 2020 (created 24 April 2020); it doesn't count, since a public stamp exists (D8)."
 
-version ao10_text
-  cite ao10_cr
-  governs 2020-07-01..2022-10-06
-  known 2020-04-02
-  assumed "the October 6, 2022 revision's wording, read for the April 2, 2020 revision (2020 Ark. 131), which the case didn't fetch"
-  note "A later text read for an earlier period (LANGUAGE §4.5). The October 6, 2022 revision (In re Amendments to Administrative Order No. 10, 2022 Ark. 185, per curiam, delivered October 6, 2022), in the courtrules.net copy, stands for the April 2, 2020 revision it replaced, which the case didn't fetch: In re Implementation of the Revised Administrative Order No. 10, 2020 Ark. 131, per curiam, delivered April 2, 2020, to be used for all support orders entered after June 30, 2020. The version governs that revision's period, from July 1, 2020 to October 6, 2022 (the 2022 revision is used for orders entered after October 6, 2022), and the version is marked assumed, so its row and the rules that cite it with v carry the assumption (LANGUAGE §5.3, §8.2)."
-  note "Known 2020-04-02, the day the text it stands for, 2020 Ark. 131, was delivered (opinions.arcourts.gov, item 468402): a version that stands in for an earlier text is known, and enters, at that text's dates where they are found (LANGUAGE §4.5). It enters on 2020-07-01, the default (the start of governs). The courtrules.net copy itself records the 2022 revision's date, October 6, 2022, in its Amendment history (2022 Ark. 185, opinions.arcourts.gov item 521402, read 2026-10-19)."
-  insurance_cap = 0.05 "Section IV.1: if the cost of dependent coverage does not exceed 5% of the gross income of the parent who is to provide coverage"
-
 version forms_page
   cite ar_forms_page
+  governs always
   known 2026-10-09
   note "The page has no date of its own. Known from the Internet Archive snapshot's capture, 9 October 2026, taken as its updated stamp; the case retrieved it on 2026-10-18 (LANGUAGE §4.5)."
   forms_from = 2020-07-01 "list: Child Support Guidelines and Forms required as of July 1, 2020"
 
 version mp16_assumed
   cite modeller
+  governs always
   known 2026-10-18
   note "Assumptions that stand for facts of the sample: known with the stipulations, from the model's on (LANGUAGE §4.5)"
   addon[extra_medical] = 0 assumed "the sample mentions no extraordinary medical expenses"
@@ -217,6 +243,7 @@ version mp16_assumed
 
 version sample2020
   cite ar_sample
+  governs always
   known 2026-10-18
   note "One page, created 24 Apr 2020: Sample Calculation, Steps 1-5, and sample language for a court order"
   note "The sample's facts are a worked example's stipulations, known from the model's on, since it has no start (LANGUAGE §4.5)"

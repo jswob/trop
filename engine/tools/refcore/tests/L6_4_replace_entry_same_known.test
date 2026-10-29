@@ -1,0 +1,33 @@
+# MC-X-F2. L §6.4: a scenario row "replaces it on its span whatever the two rows' known dates, since a stipulation
+# isn't news: a base row known on the scenario's own known day is replaced too (§4.6 step 2)"; this is §6.4's own
+# example. The base enters beta_job (lives 2027-08-01.., known 2027-01-01); the scenario leave (from 2028-03-01)
+# replaces the entry, known 2027-01-01 too, ending it 2028-02-29: one job on 2028-06-01 in the base, none in leave.
+# snap10 refused the scenario (LOAD-REPLACE replace jobs + [beta_job]: no earlier row to replace).
+=== m.tally
+model m
+  tally 2
+  on 2027-01-01
+  start 2027-01-01
+  end 2028-12-31
+source s "s"
+kind jobs
+version v1
+  cite s
+  known 2027-01-01
+  jobs + [beta_job] lives 2027-08-01..
+ask n: count(j in jobs on 2028-06-01)
+=== s.tally
+scenario leave over m
+  tally 2
+  from 2028-03-01
+version v2
+  cite s
+  known 2027-01-01
+  replace jobs + [beta_job] lives 2027-08-01..2028-02-29
+ask n2: count(j in jobs on 2028-06-01) in leave
+=== expect
+n: 1
+  cut 2027-01-01
+n2: 0
+  world: leave
+  cut 2027-01-01

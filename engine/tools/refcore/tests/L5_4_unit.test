@@ -1,0 +1,30 @@
+# L §5.4 example units, copied whole.  "unit X: currency minor m declares a currency and its minor unit";
+# money prints with its minor-unit digits (L §5.18): JPY minor 1 has none, 1 500 JPY (grouped, L §2.4).
+# "minor(X) reads its minor unit" (as money, L §7.2: minor(PLN) is the step 0.01 PLN).
+=== m.tally
+model t
+  tally 2
+  on 2016-03-01
+  start 2015-11-01
+  end 2016-10-31
+
+source s "s"
+
+unit hour "godzina"
+unit PLN: currency minor 0.01
+unit JPY: currency minor 1
+
+input y: money JPY
+input h: num hour
+
+version v
+  cite s
+  governs always
+  known 2016-01-01
+  y = 1500 JPY
+  h = 2.5 hour
+
+ask q1: y, h, minor(PLN), minor(JPY)
+=== expect
+q1: (1 500 JPY, 2.5 hour, 0.01 PLN, 1 JPY)
+  cut 2016-03-01

@@ -1,0 +1,59 @@
+# L §5.14 Certainty: "A movement of an uncertain kind (a friend's promised repayment) counts in balances only once an
+# observation fulfils it; a projection or a binding counts it unfulfilled only with `with uncertain`, and so does a
+# plain balance read that states it, bal(x, d) with uncertain: x's balance plus the unfulfilled movements of
+# uncertain kinds dated through d, each at its planned amount"; L §5.18 "with uncertain counts unfulfilled movements
+# of uncertain kinds in every projection and binding the line reaches"; L §8.2 `uncertain: <move>[keys]`.
+# Own reality: konto opens at 1 000.00 PLN; a friend promises 500.00 PLN on 2026-03-01 (an uncertain kind).
+# a1: plain read 1 000.00 PLN; with the read's clause 1 500.00 PLN.  a2: the same for the projection.
+# a3: the line's clause reaches the projection (1 500.00 PLN) and the binding (500.00 PLN), not the plain read
+# (1 000.00 PLN).  a4: without a clause the binding counts nothing (0.00 PLN, a sum over no movements is 0 in the
+# term's type, L §5.11); a read before the promised day counts nothing (1 000.00 PLN).
+# owed is read at the movement's law date 2026-03-01, after the cut: held (L §8.2).
+=== m.tally
+model u
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source own "own"
+unit PLN: currency minor 0.01
+kind promises: event uncertain
+  leg cash: PLN
+place konto: accounts PLN lives 2020-01-01..
+place friend: outside lives 1900-01-01..
+input owed: money PLN
+input repay_day: date
+
+move repay: promises
+  on repay_day
+  at repay_day
+  leg cash from friend to konto amount owed
+
+version v
+  cite own
+  governs 2026..
+  known 2026-01-01
+  owed = 500.00 PLN "note"
+  repay_day = 2026-03-01 governs always "note"
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "statement"
+
+ask a1: bal(konto, 2026-04-01), bal(konto, 2026-04-01) with uncertain
+ask a2: bal(konto, 2026-04-01) from 2026-01-01, bal(konto, 2026-04-01) from 2026-01-01 with uncertain
+ask a3: bal(konto, 2026-04-01) from 2026-01-01, bal(konto, 2026-04-01), sum(x.cash.amount for x in promises over 2026) law 2026-01-01 with uncertain
+ask a4: sum(x.cash.amount for x in promises over 2026), bal(konto, 2026-02-28) with uncertain
+=== expect
+a1: (1 000.00 PLN, 1 500.00 PLN)
+  uncertain: repay
+  held: owed = 500.00 PLN (v), read for 2026-03-01
+  cut 2026-01-01
+a2: (1 000.00 PLN, 1 500.00 PLN)
+  uncertain: repay
+  held: owed = 500.00 PLN (v), read for 2026-03-01
+  cut 2026-01-01
+a3: (1 500.00 PLN, 1 000.00 PLN, 500.00 PLN)
+  uncertain: repay
+  held: owed = 500.00 PLN (v), read for 2026-03-01
+  law date 2026-01-01, cut 2026-01-01
+a4: (0.00 PLN, 1 000.00 PLN)
+  cut 2026-01-01

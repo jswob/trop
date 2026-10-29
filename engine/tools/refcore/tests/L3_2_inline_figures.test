@@ -1,0 +1,37 @@
+# L §3.2 Inline figures: "A bare 0, 1 or -1 takes the unit of the other operand in +, -, min, max and comparisons,
+# is dimensionless in * and /, and takes the declared type of its target where it is a whole value".
+# max(0, a - b) with a = 10.00, b = 30.00 PLN: max(0 PLN, -20.00 PLN) = 0.00 PLN; a * -1 = -10.00 PLN (money × int);
+# a rule value 0 of a money def is 0.00 PLN.
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "a source"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+unit hour "godzina"
+
+input a: money PLN
+input b: money PLN
+
+def d: money PLN at reader
+  rule base = max(0, a - b)
+def e: money PLN at reader
+  rule base = a * -1
+def z: money PLN at reader
+  rule base = 0
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  a = 10.00 PLN
+  b = 30.00 PLN
+
+ask q1: d, e, z law 2026-06-30
+=== expect
+q1: (0.00 PLN, -10.00 PLN, 0.00 PLN)
+  law date 2026-06-30, cut 2026-01-01

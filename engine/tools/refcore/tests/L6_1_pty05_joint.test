@@ -1,0 +1,95 @@
+# TX-F1 (W-TX's fault, writer 10). L §5.19 Booking an observation: "Each end of an observed leg is booked at its place
+# from the observation of the version that covers that place on that day"; L §6.1: "Movements stated same, observed rows
+# among them, are one movement ... booked once at each place. A place one of them books (an observed row books where its
+# statement covers, §5.19) takes that one's legs"; L §5.19 Coverage: the planned movements that touch a covered place on
+# a covered day before K are the modelled past, "never booked", and "its observations stand in for it where they are
+# booked".
+# The whole probe cases/probes/pty/PTY-05 (a joint model over ania and halina, pins over the member files' bytes): each
+# member's balance holds the transfer once, +5 000.00 DUK and -5 000.00 DUK (its rows), the family's total 0.00 DUK. snap14
+# printed (0.00 DUK, 0.00 DUK).
+=== options pin=bytes
+=== joint.tally
+model pty05
+  tally 2
+  on 2026-10-25
+  start 2024-01-01
+  end 2024-12-31
+  use a = "ania.tally" sha256 "8dbe347296d9ea2d6dc064be191d5d15315f7aefac213b30d1ad6a7c8184634f"
+  use d = "halina.tally" sha256 "cd02a45b88b399a845f9bfa800aaa7fab8e6a818405405c891c467a277a79ea1"
+  same a.a_stmt[a_g1] = d.gift
+  same a.halina = d.acc_halina
+  same d.ania = a.acc_ania
+  note "PTY-05: the union of two households' statements of one gift, as a joint model (LANGUAGE 6.1). D derives the gift (move gift); A states it as an outside fact, the observed row a_stmt[a_g1] of its own statement. The joint model states that the two are one movement and that each side's outside counterpart is the other's account (same lines); nothing is matched by day and amount."
+  note "Rule 2 is the language's own: imports are pinned and never changed, so a member's asks, asked here as a.q, give its own answers (6.1)."
+
+ask q_transfer: count(m in transfers over 2024)
+
+ask q_people: flows(a.acc_ania, 2024), flows(d.acc_halina, 2024)
+
+ask q_family: sum(flows(x, 2024) for x in accounts over 2024)
+=== ania.tally
+model ania
+  tally 2
+  on 2026-10-25
+  start 2024-01-01
+  end 2024-12-31
+  note "PTY-05, household A (Ania): the gift stated as an outside fact, a row of A's own statement, received from Halina, whom A doesn't keep (an outside place)."
+
+source a_household "Household A's statement: received 5 000.00 from Halina (made up)"
+
+unit DUK: currency minor 0.01
+
+place acc_ania: accounts DUK lives 2024-01-01..
+
+place halina: outside lives 2024-01-01..
+
+input a_stmt: observed
+
+ask q_ania: flows(acc_ania, 2024)
+
+version a_statement
+  cite a_household
+  governs 2024-05
+  known 2024-05-02
+  covers acc_ania
+  a_stmt[a_g1] = (on: 2024-05-02, kind: transfers, leg cash from halina to acc_ania amount 5000.00 DUK) "A-G1: received from Halina"
+=== halina.tally
+model halina
+  tally 2
+  on 2026-10-25
+  start 2024-01-01
+  end 2024-12-31
+  note "PTY-05, household D (Halina): the gift derived from her own records, a planned movement to Ania, whom D doesn't keep (an outside place)."
+
+source d_household "Household D's records: given 5 000.00 to Ania (made up)"
+
+unit DUK: currency minor 0.01
+
+place acc_halina: accounts DUK lives 2024-01-01..
+
+place ania: outside lives 2024-01-01..
+
+input gift_amount: money DUK
+
+input gift_day: date
+
+move gift: transfers
+  on gift_day
+  leg cash from acc_halina to ania amount gift_amount
+
+ask q_halina: flows(acc_halina, 2024)
+
+version d_records
+  cite d_household
+  governs always
+  known 2024-01-01
+  gift_amount = 5000.00 "D-G1: given to Ania"
+  gift_day = 2024-05-02 "D-G1"
+=== expect
+q_family: 0.00 DUK
+  cut 2026-10-25
+q_people: (5 000.00 DUK, -5 000.00 DUK)
+  cut 2026-10-25
+q_transfer: 1
+  cut 2026-10-25
+warning: WARN-NEGATIVE d.acc_halina is below zero from 2024-05-02

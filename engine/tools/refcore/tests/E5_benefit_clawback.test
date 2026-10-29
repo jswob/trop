@@ -1,0 +1,68 @@
+# E §5 example (synthetic), the clawback: "If the law claws it back in four instalments, the model writes a move keyed
+# by the adjustment and the instalment, whose legs run from the account to the payer, each fulfilling its adjustment;
+# an adjustment's settlements summed against its δ give the remainder still owed."  Twelve adjustments of -500.00 PLN
+# (E5_benefit_example); claw[a, i] pays -a.change / 4 = 125.00 PLN on add_months(a.day, i), from konto to payer: the
+# other way from the adjusted leg, so each counts -125.00 and the remainder is -500 - 4 x (-125) = 0 (step 5): no
+# HOLE-CHANGED, no adjustment: line.  flows(konto, 2028-04) = 12 x -125.00 = -1 500.00 PLN; March holds none; konto ends
+# the year at 6 000 - 6 000 = 0.00 PLN.
+=== m.tally
+model b
+  tally 2
+  on 2028-06-30
+  start 2027-01-01
+  end 2028-12-31
+
+source act "benefit act"
+source cut_act "the act that cuts it"
+unit PLN: currency minor 0.01
+kind benefits: event certain
+  leg cash: PLN
+kind waivers: event certain
+place konto: accounts PLN lives 2019-05-01..
+place payer: outside lives 1900-01-01..
+input benefit: money PLN
+input pay_dom: int
+input n_inst: int
+index instalments = int 1..4
+
+move pay[m in months]: benefits
+  on day_of(m, pay_dom)
+  at start_of(m)
+  leg cash from payer to konto amount benefit
+
+version act_2027
+  cite act
+  governs 2027..
+  known 2026-12-01
+  benefit = 500.00 PLN governs 2027 "art. 1"
+  benefit = 0 PLN governs 2028.. "art. 3: paid through 2027"
+  pay_dom = 15 "art. 2"
+  opening[konto] = 0 PLN at 2027-01-01 start "wyciąg"
+
+move claw[a in adjustments over .. where a.adjusts in benefits, i in instalments]: transfers
+  on add_months(a.day, i)
+  fulfils a
+  leg cash from konto to payer amount -a.change / n_inst
+
+version rules
+  cite act
+  governs always
+  known 2026-12-01
+  n_inst = 4
+
+version cut_2027
+  cite cut_act
+  governs 2027
+  known 2028-03-01
+  replace benefit = 0 PLN "art. 1"
+
+ask r: sum(a.change for a in adjustments over .. where a.adjusts in benefits)
+ask f: flows(konto, 2028-04), flows(konto, 2028-03)
+ask g: bal(konto, 2028-12-31)
+=== expect
+f: (-1 500.00 PLN, 0.00 PLN)
+...
+g: 0.00 PLN
+...
+r: -6 000.00 PLN
+  cut 2028-06-30

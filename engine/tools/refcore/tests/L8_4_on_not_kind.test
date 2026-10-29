@@ -1,0 +1,25 @@
+# L §5.6: "A bind over a kind states on d ... or over s"; `on` on a bind over an index has no meaning: LOAD-DOMAIN
+# at load (L §8.4).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+index ks = [a, b]
+input d0: date
+def c: int = count(k in ks on d0) at reader
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  d0 = 2026-01-01
+
+ask q: c law 2026-06-30
+=== expect
+refused: LOAD-DOMAIN ...

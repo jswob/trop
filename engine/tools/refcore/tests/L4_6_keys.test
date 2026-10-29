@@ -1,0 +1,29 @@
+# L §4.6 step 1: "every key it states equals the corresponding key in k (a * matches every key; a range a..b
+# matches every key from a to b in index order, on any index ...)"; step 3.2: "the row that states more keys (a
+# specific row beats a default row) ... so [t1_15, *] (one) beats a keyless row (none), and [t5_023, 1..60] beats
+# [t5_023, *]".  x[p1, 5] is the range row (2), x[p1, 70] the [p1, *] row (1), x[p2, 5] the keyless row (0).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+index ps = [p1, p2]
+index ns = 1..80
+input x[p in ps, n in ns]: int
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  x = 0
+  x[p1, *] = 1
+  x[p1, 1..60] = 2
+
+ask q1: x[p1, 5], x[p1, 70], x[p2, 5]
+=== expect
+q1: (2, 1, 0)
+  cut 2026-12-31

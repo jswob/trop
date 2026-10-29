@@ -1,0 +1,59 @@
+# L §6.1 (round 14): "The two sides are of one sort: two kinds declared alike (the same clauses, legs and attributes,
+# and the same parent ...; their notes aside), two things of one base kind ..., two rows of one type, or two movements;
+# any other pair is refused (LOAD-SAME)"; L §8.3 LOAD-SAME "same <p> = <q>: <what p is> and <what q is>". a.persons is a
+# kind, b.ben a thing: LOAD-SAME. (Writer 6's U-15/U-20, was REFCORE-UNSPECIFIED §6.1.)
+=== options pin=bytes
+=== joint.tally
+model family
+  tally 2
+  on 2026-01-05
+  start 2026-01-01
+  end 2026-12-31
+  use a = "ana.tally" sha256 "e438b0e9e801813f005290db20ae57dbafcfc06810324f3ba998080e5c2db6c3"
+  use b = "ben.tally" sha256 "62b0623690f8004e28037173884be55e87162cbbd244eb89cae891e9e3867ce4"
+  same a.persons = b.ben
+ask n: count(p in a.persons on 2026-06-01)
+=== ana.tally
+model ana
+  tally 2
+  on 2026-01-05
+  start 2026-01-01
+  end 2026-12-31
+
+source s "umowa"
+unit PLN: currency minor 0.01
+kind persons
+place wsp: accounts PLN lives 2019-01-01..
+input income[p in persons]: money PLN
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  persons + [ana, ola] lives 2000-01-01..
+  income[ana] = 100.00 PLN "umowa"
+  income[ola] = 10.00 PLN "umowa"
+  opening[wsp] = 1 000.00 PLN at 2026-01-01 start "wyciąg"
+=== ben.tally
+model ben
+  tally 2
+  on 2026-01-05
+  start 2026-01-01
+  end 2026-12-31
+
+source s "umowa"
+unit PLN: currency minor 0.01
+kind persons
+place wsp: accounts PLN lives 2019-01-01..
+input pocket[p in persons]: money PLN
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  persons + [ben, ola_k] lives 2000-01-01..
+  pocket[ben] = 50.00 PLN "umowa"
+  pocket[ola_k] = 5.00 PLN "umowa"
+  opening[wsp] = 1 000.00 PLN at 2026-01-01 start "wyciąg"
+=== expect
+refused: LOAD-SAME same a.persons = b.ben: a kind and a thing ...

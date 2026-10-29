@@ -1,0 +1,23 @@
+# L §3.1 (round 12): "A literal states every field of its type (LOAD-FIELD), so a field not known yet is a hole and one
+# that doesn't apply none"; L §8.3 LOAD-FIELD "<row> lacks field <f>". (Was REFCORE-UNSPECIFIED §3.1, writer 5's
+# T-9.)
+=== m.tally
+model t
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+input r: (a int, b int)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  r = (a: 1)
+
+ask q: r.a
+=== expect
+refused: LOAD-FIELD r lacks field b (m.tally:15)

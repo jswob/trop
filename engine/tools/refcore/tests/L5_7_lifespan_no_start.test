@@ -1,0 +1,16 @@
+# L §5.7 (round 12): "a lifespan has a start (lives ..b is refused, LOAD-LIFESPAN), and a thing whose start no source
+# gives states an early assumed day, as world does"; L §8.3 LOAD-LIFESPAN "<k>'s lifespan has no start". (Was
+# REFCORE-UNSPECIFIED §5.7, writer 5's T-44: lifespan(p).from.)
+=== m.tally
+model t
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+place p: accounts PLN lives ..2026-12-31
+ask q: lifespan(p).from
+=== expect
+refused: LOAD-LIFESPAN p's lifespan has no start (m.tally:9)

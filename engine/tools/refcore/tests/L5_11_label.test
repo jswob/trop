@@ -1,0 +1,13 @@
+# L §5.11 step 2: "A rule whose label already exists, written without replace, is refused (LOAD-LABEL)."
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+def x: int
+  rule base = 0
+  rule base = 1
+=== expect
+refused: LOAD-LABEL ...

@@ -1,82 +1,75 @@
 part loans
-  tally 1
+  tally 2
   note "Kredyty gospodarstwa: rata równa (annuitet), odsetki od salda, nadpłata skraca okres. Wypłata trafia do sprzedawcy."
 
-index inst = 1..480
+kind loan_payments: event certain
+  leg principal: PLN
+  leg interest: PLN
+  leg overpay: PLN
+  note "rata kredytu: część kapitałowa, odsetki i nadpłata, jednego dnia"
+
+kind seller
+
+index inst = int 1..480
 
 index overpay_mode = [shorten, reduce]
 
-index seller = [electro]
+place loan_debt[l in loan]: debts PLN lives 2026-01-01..
 
-place loan_debt[l in loan]: debt PLN
-
-place sellers[s in seller]: outside PLN
+place sellers[s in seller]: outside lives 2026-01-01..
 
 input loan_seller[l in loan]: key seller
 
-input loan_terms[l in loan]: (principal money PLN, n int, apr rate nominal 12 /year, first_month month, due int)
+input loan_terms[l in loan]: (principal money PLN, n int, apr rate, first_month month, due int)
 
 input overpay[l in loan, k in inst]: money PLN
 
 input overpay_choice[l in loan]: key overpay_mode
 
-def annuity[l in loan]: money PLN
-  rule base = round(loan_terms[l].principal * inst_rate[l] * factor(loan_terms[l].apr, loan_terms[l].n, month) / (factor(loan_terms[l].apr, loan_terms[l].n, month) - 1), 0.01, half-up)
-  rule zero excepts base when inst_rate[l] = 0 = round(loan_terms[l].principal / loan_terms[l].n, 0.01, half-up)
+def annuity[l in loan]: money PLN at reader
+  rule base = round(loan_terms[l].principal * inst_rate[l] * factor(loan_terms[l].apr, loan_terms[l].n, month, nominal 12) / (factor(loan_terms[l].apr, loan_terms[l].n, month, nominal 12) - 1), minor(PLN), half-up)
+  rule zero beats base = round(loan_terms[l].principal / loan_terms[l].n, minor(PLN), half-up) when inst_rate[l] == 0
 
-def debt_before[l in loan, k in inst]: money PLN
-  rule initial when k = 1 = loan_terms[l].principal
-  rule later when k > 1 = debt_before[l, k - 1] - principal_part[l, k - 1] - overpay_paid[l, k - 1]
+def debt_before[l in loan, k in inst]: money PLN at reader
+  rule initial = loan_terms[l].principal when k == 1
+  rule later = debt_before[l, k - 1] - principal_part[l, k - 1] - overpay_paid[l, k - 1] when k > 1
 
 def inst_day[l in loan, k in inst]: date = day_of(loan_terms[l].first_month + (k - 1), loan_terms[l].due)
 
-def inst_rate[l in loan]: num = periodic(loan_terms[l].apr, month)
+def inst_rate[l in loan]: num = periodic(loan_terms[l].apr, month, nominal 12) at reader
 
-def instalment[l in loan, k in inst]: money PLN
-  rule reduce excepts shorten when overpay_choice[l] = reduce = ? "Nadpłata ze zmniejszeniem raty: bank przelicza ratę; zasada przeliczenia nie jest wpisana."
+def instalment[l in loan, k in inst]: money PLN at reader
+  rule reduce beats shorten = ?"Nadpłata ze zmniejszeniem raty: bank przelicza ratę; zasada przeliczenia nie jest wpisana." when overpay_choice[l] == reduce
   rule shorten = annuity[l]
 
-def interest_part[l in loan, k in inst]: money PLN = round(debt_before[l, k] * inst_rate[l], 0.01, half-up)
+def interest_part[l in loan, k in inst]: money PLN = round(debt_before[l, k] * inst_rate[l], minor(PLN), half-up) at reader
 
-def overpay_paid[l in loan, k in inst]: money PLN = min(overpay[l, k], debt_before[l, k] - principal_part[l, k])
+def overpay_paid[l in loan, k in inst]: money PLN = min(overpay[l, k], debt_before[l, k] - principal_part[l, k]) at reader
 
-def principal_part[l in loan, k in inst]: money PLN
+def principal_part[l in loan, k in inst]: money PLN at reader
   note "ostatnia rata umowy spłaca resztę, także grosze z zaokrąglenia raty"
   rule base = min(debt_before[l, k], instalment[l, k] - interest_part[l, k])
-  rule last excepts base when k >= loan_terms[l].n = debt_before[l, k]
+  rule last beats base = debt_before[l, k] when k >= loan_terms[l].n
 
-pay loan_instalment[l in loan, k in inst]
-  from konto
-  to loan_debt[l]
-  amount principal_part[l, k]
+move loan_instalment[l in loan over .., k in inst]: loan_payments
   on inst_day[l, k]
+  at inst_day[l, k]
   when debt_before[l, k] > 0
+  leg principal from konto to loan_debt[l] amount principal_part[l, k]
+  leg interest from konto to kredytodawcy amount interest_part[l, k]
+  leg overpay from konto to loan_debt[l] amount overpay_paid[l, k]
 
-pay loan_interest[l in loan, k in inst]
-  from konto
-  to kredytodawcy
-  amount interest_part[l, k]
-  on inst_day[l, k]
-  when debt_before[l, k] > 0
-
-pay loan_out[l in loan]
-  from loan_debt[l]
-  to sellers[loan_seller[l]]
-  amount loan_terms[l].principal
+move loan_out[l in loan over ..]: transfers
   on day_of(loan_terms[l].first_month - 1, loan_terms[l].due)
-
-pay loan_overpay[l in loan, k in inst]
-  from konto
-  to loan_debt[l]
-  amount overpay_paid[l, k]
-  on inst_day[l, k]
-  when debt_before[l, k] > 0 and overpay[l, k] > 0
+  at day_of(loan_terms[l].first_month - 1, loan_terms[l].due)
+  leg cash from loan_debt[l] to sellers[loan_seller[l]] amount loan_terms[l].principal
 
 version laptop_loan
   cite household
+  governs always
   known 2026-05-05
+  loan + [laptop] lives 2026-05-05..
   loan_seller[laptop] = electro "umowa ratalna, sprzedawca"
-  loan_terms[laptop] = (3000, 10, 0, 2026-06, 5) "umowa ratalna 0%, § 2"
-  opening[loan_debt[laptop]] = 0
+  loan_terms[laptop] = (principal: 3000, n: 10, apr: 0 1/year, first_month: 2026-06, due: 5) "umowa ratalna 0%, § 2"
   overpay = 0 "brak nadpłat"
   overpay_choice = shorten "regulamin: nadpłata skraca okres"

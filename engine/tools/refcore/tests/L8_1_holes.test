@@ -1,0 +1,29 @@
+# L §8.1 (a row stated ?"…" is HOLE-STATED, L §8 table): a hole "carries the questions of every operand ... the union, each once" and "prints every question it
+# carries, sorted by code point and without duplicates, with the item and keys each came from: a question reached at
+# many keys prints once, with its list of keys."  Code point order: "Zeta" < "alpha" < "łódź" (Z = U+005A,
+# a = U+0061, ł = U+0142).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+index ks = [a, b, c]
+input x[k in ks]: int
+input y: int
+input z: int
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  x[*] = ?"alpha"
+  y = ?"łódź"
+  z = ?"Zeta"
+
+ask q1: sum(x[k] for k in ks) + y + z
+=== expect
+q1: ?"Zeta" (z) ?"alpha" (x[a], x[b], x[c]) ?"łódź" (y)
+  cut 2026-12-31

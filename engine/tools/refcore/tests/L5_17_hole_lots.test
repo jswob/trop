@@ -1,0 +1,50 @@
+# L §5.17 Lots (round 16, the fresh critic: HOLE-LOTS split from HOLE-ANCHOR): "Lots held before the run are observed
+# acquisitions dated before the start (§5.19), each with its value and day, which a fill binds and nothing books; the
+# opening reading at the start anchors their sum (`HOLE-LOTS` when they disagree, §8.1)"; L §8.1 HOLE-LOTS: `<place>:
+# the lots held before <S> sum to <a>, the opening reading states <b>`. p1 (4 glb) and p2 (6 glb) are held before
+# 2026-01-01, 10 glb, against an opening of 12 glb: each lot is that hole, and so is each take of it (t1; L §5.12
+# Holes: a hole side makes the take a hole). The balance stands on the opening reading: 12 - 5 = 7 glb (t2).
+# (What reads the hole, the lots and the takes over them, is this interpreter's reading of "anchors their sum".)
+=== m.tally
+model t
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+kind funds: unit
+kind purchases: event certain
+  leg units: funds
+kind sales: event certain
+  leg units: funds
+place h: holdings glb lives 2020-01-01..
+place mk: outside lives 2000-01-01..
+input bank: observed
+
+fill matched
+  supply b.units.amount for b in purchases over ..
+  demand x.units.amount for x in sales over ..
+  arc b.day <= x.day
+  order b.day
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  funds + [glb] lives 2018-01-01..
+  opening[h] = 12 glb at 2026-01-01 start "o"
+  bank[p1] = (on: 2024-03-01, kind: purchases, leg units from mk to h amount 4 glb) "p1"
+  bank[p2] = (on: 2025-03-01, kind: purchases, leg units from mk to h amount 6 glb) "p2"
+  bank[s1] = (on: 2026-02-01, kind: sales, leg units from h to mk amount 5 glb) "s1"
+
+ask t1: matched.taken[b, x] for b in purchases over .., x in sales over ..
+ask t2: bal(h, 2026-03-01)
+=== expect
+t1 (b = bank[p1], x = bank[s1]): ?"h: the lots held before 2026-01-01 sum to 10 glb, the opening reading states 12 glb" (h)
+  cut 2026-06-30
+t1 (b = bank[p2], x = bank[s1]): ?"h: the lots held before 2026-01-01 sum to 10 glb, the opening reading states 12 glb" (h)
+  cut 2026-06-30
+t2: 7 glb
+  cut 2026-06-30

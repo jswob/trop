@@ -1,0 +1,38 @@
+# MC-E1-F2, the other places a period word stands. L §2.2: period words are "an index's period kind (day, month,
+# year, §4.1), and the period argument of periodic and factor"; L §4.1 durations are "an integer and a period word";
+# L §6.1 a member's items mean what they mean alone. The member declares indexes named month, day and year; joined, its
+# periodic(r, month, …), factor(r, n, year, …), `d0 - 1 day` and its index `day` read as alone: holes of the inputs
+# they read, and g at the key 2026-01-05 of its own `day`.
+=== j/joint.tally
+model j
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+  use m = "../m" sha256 "83ae75170e505b3a947608cbe4853dd993061c5afb42dbc2f409be5154bbbdbe"
+
+ask jq: m.p, m.f, m.e, m.g[2026-01-05] law 2026-06-30
+=== m/model.tally
+model m
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+index month = month 2026-01..2026-12
+index day = day 2026-01-01..2026-01-31
+index year = year 2026..2027
+
+input r: rate question "r?"
+
+def p: num = periodic(r, month, nominal 12)
+input n: int question "n?"
+def f: num = factor(r, n, year, effective)
+input d0: date question "d?"
+def e: date = d0 - 1 day
+def g[k in day]: date = k
+
+ask q: p, e law 2026-06-30
+=== expect jq
+jq: (?"r?" (m.r), ?"n?" (m.n) ?"r?" (m.r), ?"d?" (m.d0), 2026-01-05)
+  law date 2026-06-30, cut 2026-01-01

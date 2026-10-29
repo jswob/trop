@@ -1,0 +1,25 @@
+# L §5.8 example inputs, copied whole (with the indexes and kinds they name).  They load (declaring a dist or
+# an observed input is allowed; reading one is writer 2's and 3's).  Nothing reads them: WARN-UNREAD each
+# (L §8.5), not compared here.
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+unit PLN: currency minor 0.01
+index age_groups = [u5, u18, u24]
+kind persons
+input cpi[y in years]: num
+
+input allowances[g in age_groups]: money PLN question "Jaka jest kwota zasiłku dla tej grupy wieku?"
+input born[p in persons]: date
+input wibor: rate
+input day_basis: daycount
+input fx[u in currencies]: num PLN/u reading
+input growth[y in years]: dist 1/year
+input len: calendar
+input rent_wish: money PLN prices 2026 by cpi
+input bank: observed
+=== expect

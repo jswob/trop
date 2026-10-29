@@ -1,0 +1,35 @@
+# W-B-F4. L §4.4 and §5.18: windows each splits a line by the windows it meets, and a line that meets none prints once;
+# nothing may crash. has_car binds over cars over pm (a span the cut reads); q2 states windows each and meets no window,
+# so it prints as q1 does. snap10 crashed (REFCORE-NOT-YET … TypeError: WCut.__new__() takes 3 positional arguments
+# but 4 were given: the windows-each cut plus one day).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+unit PLN: currency minor 0.01
+
+source s "s"
+
+kind cars
+
+input pm: month
+
+def has_car: bool = any(true for c in cars over pm)
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  cars + [c1] lives 2026-01-01..
+  pm = 2026-03
+
+ask q1: has_car law 2026-06-30 as known 2026-06-30
+ask q2: has_car law 2026-06-30 as known 2026-06-30 windows each
+=== expect
+q1: true
+  law date 2026-06-30, cut 2026-06-30
+q2: true
+  law date 2026-06-30, cut 2026-06-30

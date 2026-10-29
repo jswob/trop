@@ -1,6 +1,8 @@
 model rc04
-  tally 1
+  tally 2
   on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
   note "New Zealand rates rebate, rating year 1 July 2019 to 30 June 2020, Rates Rebate Act 1973 s 3(1) with the Rates Rebate (Specified Amounts) Order 2019: the form's eligibility table for households with no dependants, every cell."
   note "The rating year is an anchored year index, so the law is read at its start, 1 July 2019 (s 3(1): at the commencement of a rating year). Neither the Act nor the Order states how '$1 for each $8' treats a part step or how two-thirds is rounded, so both are axes."
   note "The form prints a dash in most cells where s 3(1)(a) is negative and '$0.00' in one; whether a negative amount is a rebate of nil or no rebate at all is the axis rr_nil."
@@ -16,6 +18,8 @@ source rro1982 "Rates Rebate Order 1982 (SR 1982/100), cl 2 of which amended s 3
 
 source rro2006 "Rates Rebate Order 2006 (SR 2006/60), cl 3 of which amended s 3(1) of the Rates Rebate Act 1973"
 
+unit NZD: currency minor 0.01
+
 axis rr_cents
   c_down "two-thirds of the rates excess rounded down to the cent"
   c_exact "no rounding is stated: two-thirds is kept exact"
@@ -27,7 +31,7 @@ axis rr_eighth
 
 axis rr_nil
   nil "a negative s 3(1)(a) amount is a rebate of nil, the form's $0.00"
-  none "a negative s 3(1)(a) amount means no rebate applies, the form's dash"
+  none_ "a negative s 3(1)(a) amount means no rebate applies, the form's dash"
 
 index inc = [i25000, i26000, i27000, i28000, i29000, i30000, i31000, i32000, i33000, i34000, i35000, i36000, i37000, i38000, i39000, i40000, i41000, i42000, i43000, i44000]
 
@@ -55,32 +59,32 @@ input step_amount: money NZD
 
 input threshold: money NZD
 
-def excess_income[y in ry, i in inc]: money NZD
+def excess_income[y in ry, i in inc]: money NZD at start_of(y)
   note "s 3(1)(a)(ii): the amount by which income exceeded the threshold, raised by $500 for each dependant"
   rule base v act_1978 = max(0, household_income[i] - (threshold + dependants * dep_increase))
 
-def rates_part[y in ry, r in rt]: num NZD
+def rates_part[y in ry, r in rt]: num NZD at start_of(y)
   note "s 3(1)(a)(i): two-thirds of the amount by which the rates exceed $160"
   rule base v act_1978 = max(0, rates_payable[r] - rates_base) * rates_share
 
-def rates_part_c[y in ry, r in rt]: num NZD
+def rates_part_c[y in ry, r in rt]: num NZD at start_of(y)
   note "the two-thirds share as the reading rounds it"
-  rule c_down when rr_cents = c_down = round(rates_part[y, r], 0.01, down)
-  rule c_exact when rr_cents = c_exact = rates_part[y, r]
-  rule c_half_up when rr_cents = c_half_up = round(rates_part[y, r], 0.01, half-up)
+  rule c_down = round(rates_part[y, r], minor(NZD), down) when rr_cents == c_down
+  rule c_exact = rates_part[y, r] when rr_cents == c_exact
+  rule c_half_up = round(rates_part[y, r], minor(NZD), half-up) when rr_cents == c_half_up
 
-def rebate[y in ry, i in inc, r in rt]: num NZD
+def rebate[y in ry, i in inc, r in rt]: num NZD at start_of(y)
   note "s 3(1): the smaller of (a) and (b); a negative (a) is nil or no rebate, as rr_nil reads it"
   rule base v act_1978 = min(max_rebate, rates_part_c[y, r] - reduction[y, i])
-  rule nil excepts base when rr_nil = nil and rates_part_c[y, r] - reduction[y, i] < 0 = 0
-  rule none excepts base when rr_nil = none and rates_part_c[y, r] - reduction[y, i] < 0 = -
+  rule nil beats base = 0 when rr_nil == nil and rates_part_c[y, r] - reduction[y, i] < 0
+  rule none_ beats base = none when rr_nil == none_ and rates_part_c[y, r] - reduction[y, i] < 0
 
-def reduction[y in ry, i in inc]: num NZD
+def reduction[y in ry, i in inc]: num NZD at start_of(y)
   note "s 3(1)(a)(ii): $1 for each $8 of excess income"
-  rule eighth when rr_eighth = eighth = excess_income[y, i] * per_step / step_amount
-  rule whole when rr_eighth = whole = round(excess_income[y, i] / step_amount, 1, floor) * per_step
+  rule eighth = excess_income[y, i] * per_step / step_amount when rr_eighth == eighth
+  rule whole = round(excess_income[y, i] / step_amount, 1, floor) * per_step when rr_eighth == whole
 
-ask table: rebate[2019, i, r] for i in inc, r in rt
+ask table: rebate[2019, i, r] for i in inc, r in rt law 2026-10-18
 
 version act_1978
   cite rra1978
@@ -116,6 +120,7 @@ version order_2019
 
 version form_examples
   cite dia_form
+  governs always
   known 2026-10-18
   note "p. 4: Rates rebate income eligibility table for households with no dependants. Estimate only. The grid's incomes and rates are a composed case's stipulations, known from the model's on date since it has no start (§4.5); the form itself is dated 05/2019"
   dependants = 0 "p. 4 table title: households with no dependants"

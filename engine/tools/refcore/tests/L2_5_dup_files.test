@@ -1,0 +1,19 @@
+# L §2.5: "One namespace holds every top-level id of a reality, across all its files"; L §6.1 a reality
+# is a set of files: the same id in two files is LOAD-DUP.
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "a source"
+
+input x: int
+=== n.tally
+part p
+  tally 2
+
+input x: int
+=== expect
+refused: LOAD-DUP ...

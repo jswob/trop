@@ -1,0 +1,44 @@
+# L §5.12 Outputs: "absorb.taken[supply keys, demand keys], a ref with the supply keys first, then the demand keys"
+# is a fill's one output; read bare, the fill is no value (L §8.3 LOAD-PARSE, as an ask or a version read is). The
+# fill of L5_12_fill_holes. (Writer 8: was REFCORE-NOT-YET.)
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+index payers = [ewa, jan]
+index yrs = year 2020..2023
+input credit[sx in payers, o in yrs]: money PLN
+input room[dx in payers, t in yrs]: money PLN
+input carry_years: int
+
+fill absorb
+  supply credit[sx, o] for sx in payers, o in yrs
+  demand room[dx, t] for dx in payers, t in yrs
+  arc sx == dx and t >= o - 1 and t - o <= carry_years
+  order o, t ties by pos(sx)
+
+version v
+  cite s
+  governs 2020..
+  known 2020-01-01
+  credit[ewa, 2020] = ?"credit 2020?"
+  credit[ewa, 2021] = 50.00 PLN
+  credit[ewa, 2022] = 0.00 PLN
+  credit[ewa, 2023] = 0.00 PLN
+  credit[jan, *] = 0.00 PLN
+  room[ewa, 2020] = 30.00 PLN
+  room[ewa, 2021] = 80.00 PLN
+  room[ewa, 2022] = 80.00 PLN
+  room[ewa, 2023] = 0.00 PLN
+  room[jan, *] = 10.00 PLN
+  carry_years = 1
+
+ask f1: absorb law 2026-06-30
+=== expect
+refused: LOAD-PARSE cannot parse: fill absorb is read as absorb.taken[...] ...

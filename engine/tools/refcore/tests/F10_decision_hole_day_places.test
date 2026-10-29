@@ -1,0 +1,43 @@
+# Fault F10 (W-A): a decision instance with a hole day made every place's balance a hole from the run's start. E §4.1
+# step 2: "A hole day or `when` makes a hole movement (LANGUAGE §5.14)"; E §4.2 Holes in the walk: "A hole movement
+# makes both ends' balances holes from its day on, with its questions ... Results about earlier days, and about other
+# places, stand." The decision p (day d, a hole) moves from x to w: x's balance is the hole d (a); y, which p never
+# touches, stands at its plan's 10.00 DUK, and so do g's flows.
+=== m.tally
+model t10
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+source src "s"
+unit DUK: currency minor 0.01
+place x: accounts DUK lives 2026-01-01..
+place y: accounts DUK lives 2026-01-01..
+place w: outside lives 2000-01-01..
+input d: date question "when?"
+input e: date
+input amt: money DUK
+move p: transfers
+  on d
+  reads x
+  leg cash from x to w amount max(0, bal(x))
+move f: transfers
+  on e
+  leg cash from w to x amount amt
+move g: transfers
+  on e
+  leg cash from w to y amount amt
+ask a: bal(x, 2026-01-31), bal(y, 2026-01-31), flows(g, 2026-01)
+version v
+  cite src
+  governs always
+  known 2026-01-01
+  opening[x] = 0.00 DUK at 2026-01-01 start "o"
+  opening[y] = 0.00 DUK at 2026-01-01 start "o"
+  e = 2026-01-10
+  amt = 10.00 DUK
+=== expect
+a: (?"when?" (d), 10.00 DUK, 10.00 DUK)
+  unfulfilled: f
+  unfulfilled: g
+  cut 2026-03-01

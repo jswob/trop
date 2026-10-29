@@ -1,0 +1,22 @@
+# L §4.1 "An open index gets its keys from the rows of inputs keyed by it": a3 is brought by no row, so a read at a3
+# names no key (LOAD-KEY, L §8.3 table: a key not in its index).
+=== m.tally
+model op
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source s "umowa"
+index accts: open
+input acct_rank[a in accts]: int
+
+version v1
+  cite s
+  governs always
+  known 2026-01-01
+  acct_rank[a1] = 1
+
+ask q: acct_rank[a3]
+=== expect
+refused: LOAD-KEY a3 is not a key of accts ...

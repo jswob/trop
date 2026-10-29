@@ -1,0 +1,43 @@
+# L §8.3 LOAD-REPLACE (round 12b): "replace <x>[keys]: no earlier row to replace (in a scenario, no base row at those
+# keys either)": the scenario replaces bonus, which no row of the base or the scenario states.
+=== hh.tally
+model hh
+  tally 2
+  on 2026-11-15
+  start 2026-01-01
+  end 2027-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+input salary: money PLN
+input bonus: money PLN
+
+version v1
+  cite s
+  governs 2026-01-01..
+  known 2026-01-01
+  salary = 5 000.00 PLN "umowa"
+
+version v2
+  cite s
+  governs 2027-01-01..
+  known 2026-11-01
+  replace salary = 6 000.00 PLN "aneks"
+
+ask b: salary law 2027-06-30
+=== stop.tally
+scenario stop over hh
+  tally 2
+  from 2027-01-01
+
+version stop_salary
+  cite s
+  governs 2027-01-01..
+  known 2026-10-20
+  replace bonus = 0 PLN "założenie"
+
+ask s1: bonus in stop law 2027-06-30
+ask s2: bonus in stop law 2026-06-30
+=== expect
+scenario stop: refused: LOAD-REPLACE replace bonus: no earlier row to replace (stop.tally:9)
+...

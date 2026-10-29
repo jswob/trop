@@ -1,0 +1,53 @@
+# L §5.18 example ask q9, copied, over a minimal reality: konto opens at 1 000.00 PLN on 2026-07-01; rent of 800.00
+# PLN leaves on each month's first day, a pay of 700.00 PLN arrives in the window of the 15th to the 20th.
+# "low(x, a .. b) from t: the lowest end-of-day balance of x on days a..b: min(bal(x, d) from t ...)" (L §5.14.1);
+# the projection "starts from x's balance at the start of day t, and counts every movement dated on t through d";
+# `windows each` on the projection read (L §4.4 "for that read"): wherever in its window each pay lands, it lands
+# after the month's 1st.  Balances after each
+# 1st: 200, 100 (the pay adds 700 back): low = 100.00 PLN on 2026-08-01 whatever the pays' days, so one plain line
+# (writer 8: windows latest is gone; the run is 2026-07-01..2026-08-31, so windows each meets two windows).  Without a windows
+# clause the projection meets a window: HOLE-IMPRECISE (L §5.14.1, §8.1).
+=== m.tally
+model t
+  tally 2
+  on 2026-07-01
+  start 2026-07-01
+  end 2026-08-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+kind accounts_pl: place PLN signed
+place landlord: outside lives 1900-01-01..
+place employer: outside lives 1900-01-01..
+input rent_amt: money PLN
+input pay_amt: money PLN
+input w_lo: int
+input w_hi: int
+
+move rent[m in months]: transfers
+  on start_of(m)
+  leg cash from konto to landlord amount rent_amt
+
+move pay[m in months]: transfers
+  on window(add_days(start_of(m), w_lo), add_days(start_of(m), w_hi))
+  leg cash from employer to konto amount pay_amt
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  accounts_pl + [konto] lives 2019-05-01..
+  rent_amt = 800.00 PLN
+  pay_amt = 700.00 PLN
+  w_lo = 14
+  w_hi = 19
+  opening[konto] = 1 000.00 PLN at 2026-07-01 start
+
+ask q9: low(konto, 2026-07-01 .. 2026-08-31) from 2026-07-01 windows each law 2026-07-01
+ask q9b: low(konto, 2026-07-01 .. 2026-08-31) from 2026-07-01 law 2026-07-01
+=== expect
+q9: 100.00 PLN
+  law date 2026-07-01, cut 2026-07-01
+q9b: ?"date within window(2026-07-15, 2026-07-20) not precise enough for ...
+  law date 2026-07-01, cut 2026-07-01

@@ -1,0 +1,25 @@
+# L §5.11: "missing(r), r a read of an input (LOAD-MISSING otherwise)"; L §8.3's text "missing(<r>): <r> is not a read
+# of an input". p is a def. (Writer 6: was REFCORE-UNSPECIFIED §5.11.)
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+input pnl[d in days]: num
+def p[d in days]: num = pnl[d] at d
+
+def gone[d in days]: bool at d
+  rule base v v1 = false
+  rule no_record beats base v v1 = true when missing(p[d])
+
+version v1
+  cite s
+  governs always
+  known 2026-01-01
+  pnl[2026-03-02] = 1 "s"
+=== expect
+refused: LOAD-MISSING missing(p[d]): p[d] is not a read of an input ...

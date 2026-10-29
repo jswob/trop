@@ -1,0 +1,27 @@
+# L §7.2: the step of a round is positive (an input "whose every value is positive"); L §8.4: a step that isn't
+# positive is refused at the key (RUN-DOMAIN).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+input x: money PLN
+input st: money PLN
+def c: money PLN = round(x, st, half-up) at reader
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  x = 10.00
+  st = 0.00
+
+ask q: c law 2026-06-30
+=== expect
+q: refused: RUN-DOMAIN ...
+  law date 2026-06-30, cut 2026-12-31

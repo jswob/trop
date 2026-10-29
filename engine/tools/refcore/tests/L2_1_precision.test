@@ -1,0 +1,22 @@
+# L §3.1 money: "finer than the minor unit is refused (LOAD-PRECISION)".
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "a source"
+unit PLN: currency minor 0.01
+
+input a: money PLN
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  a = 10.005 PLN
+
+ask q1: a
+=== expect
+refused: LOAD-PRECISION ...

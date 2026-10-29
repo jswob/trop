@@ -1,0 +1,58 @@
+# L §6.1 (round 14): "Currencies are one by their code in the joint model and in every member ...; two
+# declarations of one code with different minor units are refused (LOAD-SAME)"; L §8.3 "currency <C> is declared with
+# different minor units by <a> and <b>". a declares PLN minor 0.01, b minor 1. (Writer 6's U-33.)
+=== options pin=bytes
+=== joint.tally
+model family
+  tally 2
+  on 2026-01-05
+  start 2026-01-01
+  end 2026-12-31
+  use a = "ana.tally" sha256 "e438b0e9e801813f005290db20ae57dbafcfc06810324f3ba998080e5c2db6c3"
+  use b = "ben.tally" sha256 "32f97f3c875307c22a6794a75dc23dca057b147336e8fe2cbe5e858805da7f8a"
+
+ask r: a.income[a.ana]
+=== ana.tally
+model ana
+  tally 2
+  on 2026-01-05
+  start 2026-01-01
+  end 2026-12-31
+
+source s "umowa"
+unit PLN: currency minor 0.01
+kind persons
+place wsp: accounts PLN lives 2019-01-01..
+input income[p in persons]: money PLN
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  persons + [ana, ola] lives 2000-01-01..
+  income[ana] = 100.00 PLN "umowa"
+  income[ola] = 10.00 PLN "umowa"
+  opening[wsp] = 1 000.00 PLN at 2026-01-01 start "wyciąg"
+=== ben.tally
+model ben
+  tally 2
+  on 2026-01-05
+  start 2026-01-01
+  end 2026-12-31
+
+source s "umowa"
+unit PLN: currency minor 1
+kind persons
+place wsp: accounts PLN lives 2019-01-01..
+input pocket[p in persons]: money PLN
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  persons + [ben, ola_k] lives 2000-01-01..
+  pocket[ben] = 50 PLN "umowa"
+  pocket[ola_k] = 5 PLN "umowa"
+  opening[wsp] = 1 000 PLN at 2026-01-01 start "wyciąg"
+=== expect
+refused: LOAD-SAME currency PLN is declared with different minor units by a and b ...

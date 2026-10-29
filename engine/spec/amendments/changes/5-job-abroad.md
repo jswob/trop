@@ -14,104 +14,117 @@
 
 --- abroad.tally   (new file)
 +part abroad
-+  tally 1
++  tally 2
 +  note "Praca żony w Niemczech od lipca 2029: konto w euro, pensja w euro, wymiana na złote 28. dnia miesiąca."
 +
-+place kantor_eur: outside EUR
++unit EUR: currency minor 0.01
 +
-+place kantor_pln: outside PLN
++kind exchanges: event certain
++  leg eur: EUR
++  leg pln: PLN
 +
-+place konto_eur: account EUR
++place kantor_eur: outside lives 2026-01-01..
 +
-+place pracodawcy_de: outside EUR
++place kantor_pln: outside lives 2026-01-01..
++
++place konto_eur: accounts EUR lives 2029-05-01..
++
++place pracodawcy_de: outside lives 2026-01-01..
++
++input fx_dom: int
++  note "lifted from an inline figure of tally 1.0.1"
 +
 +input fx_eur: num PLN/EUR question "Po jakim kursie wymieniamy euro na złote?"
 +
 +input salary_eur[j in job, m in month]: money EUR question "Ile wynosi pensja brutto w euro z tej pracy w tym miesiącu?"
 +
-+pay fx_in[m in month]
-+  from kantor_pln
-+  to konto
-+  amount round(bal(konto_eur) * fx_eur, 0.01, down)
-+  on day_of(m, 28)
-+  phase 4
-+  when bal(konto_eur) > 0
++input wage_eur_25: int
++  note "lifted from an inline figure of tally 1.0.1"
 +
-+pay fx_out[m in month]
-+  from konto_eur
-+  to kantor_eur
-+  amount bal(konto_eur)
-+  on day_of(m, 28)
-+  phase 5
++move fx[m in month]: exchanges
++  on day_of(m, fx_dom)
++  at start_of(m)
 +  when bal(konto_eur) > 0
++  reads konto_eur
++  leg eur from konto_eur to kantor_eur amount bal(konto_eur)
++  leg pln from kantor_pln to konto amount round(bal(konto_eur) * fx_eur, minor(PLN), down)
 +
-+pay wage_eur[j in job, m in month]
-+  from pracodawcy_de
-+  to konto_eur
-+  amount net_wage_eur[j, m]
-+  on day_of(m, 25)
++move wage_eur[j in job over .., m in month]: transfers
++  on day_of(m, wage_eur_25)
++  at start_of(m)
 +  for m
 +  when salary_eur[j, m] > 0
++  leg cash from pracodawcy_de to konto_eur amount net_wage_eur[j, m]
++
++version lifted_figures_5_job_abroad
++  cite lifted_1_0_1
++  governs always
++  known 2029-05-01
++  fx_dom = 28 "inline in tally 1.0.1: fx_in line 21 and fx_out line 29, argument 2 of day_of; one fact, the exchange day"
++  wage_eur_25 = 25 "inline in tally 1.0.1: wage_eur line 37, argument 2 of day_of"
 
 --- law/de/employment.tally   (new file)
 +part de_employment
-+  tally 1
++  tally 2
 +  law
 +  note "Niemiecka umowa o pracę: Lohnsteuer, Solidaritätszuschlag, składki. Zalążek: wynik jest dziurą z pytaniem, dopóki część nie zostanie napisana i nie przejdzie bramki."
 +
-+def net_wage_eur[j in job, m in month]: money EUR
-+  rule stub = ? "Wynagrodzenie netto z niemieckiej umowy o pracę nie jest opisane (Lohnsteuer, składki)."
++def net_wage_eur[j in job, m in month]: money EUR at start_of(m)
++  rule stub = ?"Wynagrodzenie netto z niemieckiej umowy o pracę nie jest opisane (Lohnsteuer, składki)."
 
 --- facts/2029.tally   (new file)
 +part facts_2029
-+  tally 1
++  tally 2
 +
 +source berlin_contract "Arbeitsvertrag żony, Berlin, 2029-04-28"
 +
-+version fx_2029
-+  cite modeller
-+  known 2029-05-01
-+  fx_eur = 4.3 governs 2029-07.. assumed "kurs przykładowy; do zastąpienia kursem z wymiany"
-+
 +version berlin_job
 +  cite berlin_contract
++  governs always
 +  known 2029-05-01
-+  job + [wife_berlin]
-+  opening[konto_eur] = 0 "nowe konto, saldo zerowe"
++  job + [wife_berlin] lives 2029-07-01..
++  opening[konto_eur] = 0 at 2029-05-01 start "nowe konto, saldo zerowe"
 +  salary[wife_berlin] = 0 governs 2026-01.. "pensja w euro, nie w złotych"
 +  salary_eur = 0 governs 2026-01.. "brak pensji w euro"
 +  salary_eur[wife_berlin] = 5200 governs 2029-07.. "§ 4"
 +  works_for[wife_berlin] = wife
 +
++version fx_2029
++  cite modeller
++  governs always
++  known 2029-05-01
++  fx_eur = 4.3 assumed "kurs przykładowy; do zastąpienia kursem z wymiany" governs 2029-07..
++
 +version wife_moves
 +  cite household
++  governs always
 +  known 2029-05-01
 +  residence[wife] = de governs 2029-07.. "wymeldowanie; umowa najmu w Berlinie"
-+  salary[wife_acme] = 0 governs 2029-07.. "wypowiedzenie; ostatnia pensja za czerwiec"
++  replace salary[wife_acme] = 0 governs 2029-07.. "wypowiedzenie; ostatnia pensja za czerwiec"
 ```
 
-**Lines:** 71 added in three new files (57 non-blank), plus the `on` line. Lines edited: the `on` line only.
+**Lines:** 84 added in three new files (66 non-blank), plus the `on` line. Lines edited: the `on` line only.
 
 **Why each part is there:**
 - **Currencies.** Money in two currencies is never added (N-202). The euro side needs its own account, outside places, input and pays.
-- **Exchange.** Like a purchase (L1), it is two pays, each in one currency. `fx_in` (phase 4) reads the euro balance before `fx_out` (phase 5) empties it. So both legs see the same balance, and the rate is applied once, rounded down to the grosz.
+- **Exchange.** Like a purchase, it is one movement with a leg in each currency (LANGUAGE §5.10, §5.14): `fx` reads the euro balance once, at its point of the day walk, so both legs see the same balance, and the rate is applied once, rounded down to the grosz (`minor(PLN)`). Tally 1.0.1 wrote it as two pays, `fx_in` (phase 4) reading the balance before `fx_out` (phase 5) emptied it.
 - **A guard on the euro wage.** `wage_eur` ranges over every job, so the keyless `salary_eur = 0` row and the `when` keep `wage_acme` and the months before July free of instances. Without them, the stub's hole would reach `konto_eur` from 2026. Before 2029-05-01 no `salary_eur` row is visible, so the `when` of the earlier instances was a hole at their booking cuts; `berlin_job` makes it false, which answers them with 0 (LANGUAGE §5.13.3).
 - **No Polish salary for the German job.** `salary[wife_berlin] = 0` is needed because `wage`, `emp_*` and `pit37_base` range over every job. Without it, they would read a missing salary for the new key.
-- **An opening for the euro account.** `opening[konto_eur] = 0`. A place with no `opening` has a hole balance from the run's first day (LANGUAGE §5.9): `fx_in` and `fx_out` read it on every 28th from 2026-01-28, and `konto` would be a hole from then. The row is known only on 2029-05-01, yet it serves the earlier 28th too: a state pay reads its law and facts at its booking cut, but its balances are the walk's at cut K (`ENGINE.md` §5 step 2), and that walk opens from this row.
+- **A lifespan and an opening for the euro account.** The account is new: `place konto_eur: accounts EUR lives 2029-05-01..`, with its reading `opening[konto_eur] = 0 at 2029-05-01 start` (LANGUAGE §5.10, §6.2 "a new account"). Before its lifespan it holds nothing (`ENGINE.md` §9, invariant 6), so `fx` reads 0 on every 28th from 2026-01-28 and has no instance there; tally 1.0.1 needed a zero opening at the run's start for the same reads.
 
 **New keys checked against closed-world rows.** The new key `wife_berlin` (index `job`) is read by:
 - `salary`: stated;
 - `salary_eur`: covered by the keyless row;
 - `works_for`: stated.
 
-There are no new holes from the key itself. The new place `konto_eur` has its `opening` row.
+There are no new holes from the key itself. The new place `konto_eur` has its lifespan and its `opening` reading.
 
 ## What it changes, in words
 
 The expected outputs, cell by cell, are in `amendments/expected/5-job-abroad.md`, with the diff as first written as a variant.
 
 **First day anything differs:** 2029-07-25, when the first German wage reaches `konto_eur` (a hole, below). That is not before the earliest `governs`, 2026-01 (`salary[wife_berlin] = 0` and `salary_eur = 0`), so the sanity check holds.
-- On 2029-07-15 the rule of the 15th measures room up to 2029-08-14, and `room[2029-07]` is unchanged. Its window doesn't reach the hole on `konto` from 2029-07-28: that comes from `fx_in`, a state pay, and `plan_low` leaves state pays out (LANGUAGE §5.13.1).
+- On 2029-07-15 the rule of the 15th measures room up to 2029-08-14, and `room[2029-07]` is unchanged. Its window doesn't reach the hole on `konto` from 2029-07-28: that comes from the exchange, a state pay, and tally 1.0.1's `plan_low` left state pays out. (Under tally 2 the projection counts `fx`, a decision that doesn't read `room` (LANGUAGE §5.14.1), so `room[2029-07]` meets that hole; `amendments/expected/5-job-abroad.md` keeps the 1.0.1 answer, and `regress/maps/m2/cells.md` lists the step.)
 - The missing wage of 2029-08-10 is in that window but doesn't move its minimum, which stays 0 on day t: client A's June pay lands on 2029-07-16 (07-14 is a Saturday), so every later day sits above it.
 - The June wage, paid 2029-07-10, is unchanged.
 
@@ -122,12 +135,12 @@ The expected outputs, cell by cell, are in `amendments/expected/5-job-abroad.md`
 - **The German wage:**
   - `wage_eur[wife_berlin, m]` from 2029-07 is a **hole** on each 25th, from 2029-07-25: "Wynagrodzenie netto z niemieckiej umowy o pracę nie jest opisane".
   - `konto_eur` is a hole from that day.
-  - So are `fx_in` and `fx_out` on the 28th, and `konto` from **2029-07-28**.
+  - So is `fx` on the 28th, both its legs, and `konto` from **2029-07-28**.
 - **Everything that reads `konto` afterwards** is a hole with the same question, joined from 2030-04-30 by the `abroad` question of the wife's PIT-37 (below):
   - the rule of the 15th from walk day 2029-08-15, whose `bal(konto)` at t is a hole;
   - the wrappers `wcash[ike]` and `wcash[oki]` from 2029-08-15 (`invest[mak]` stays 0, and known);
-  - `plan_low`, from walk day 2029-08-15.
-- **After a statement** (D8, J70): a later import whose `stated[konto]` row governs a month-end after 2029-07-28 re-anchors `konto` there. From that day `konto` is known again, up to the next hole: the next 15th, since the IKE cap reads the year's `flows(invest[ike], …)`, which hold its hole instances. Only after a December anchor is it the next 28th. The state pays taken before the anchor stay holes, and so do the wrappers they fill, which have no statement; the questions stay listed on that statement's balance line. Under this change's own `on`, no such statement exists yet, so the outputs below are as stated.
+  - `room`'s projection, from walk day 2029-08-15.
+- **After a statement** (D8, J70): a later import whose `stated[konto]` row governs a month-end after 2029-07-28 re-anchors `konto` there. From that day `konto` is known again, up to the next hole: the next 15th, since the IKE cap reads the year's `flows(invest[ike], …)`, which hold its hole instances. Only after a December anchor is it the next 28th. The decisions taken before the anchor stay holes, and so do the wrappers they fill, which have no statement; the questions stay listed on that statement's balance line. Under this change's own `on`, no such statement exists yet, so the outputs below are as stated.
 - **Unchanged:**
   - my pays: business, ZUS, health, ryczałt, VAT;
   - the rent;

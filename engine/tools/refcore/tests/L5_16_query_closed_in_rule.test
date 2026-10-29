@@ -1,0 +1,42 @@
+# L §5.16 Decisions and projections: a query around a read, "mean(…) or quantile(…, q), computed in closed form";
+# "A query that has no closed form ... stands only in an ask line ... (LOAD-ASKONLY elsewhere)", so one the Closed
+# forms table gives stands in a rule. g = uniform(0, 1): mean (a + b)/2 = 0.5, exact (table); share(g < lo) with
+# lo = 1 is cdf(D, 1) = 1, at the support's upper end exactly 1. quantile of a distribution value (L §5.16
+# The closed list: "Called on a distribution value, ... and quantile(d, q) are these functions, in a def as in an
+# ask"): uniform(1, 3)'s type-1 50 % quantile is the smallest x with cdf(x) >= 0.5, 2. (Its mean, md, ask b, is gone:
+# "mean(d) of a distribution value is refused", round 18 C1-47, L5_16_mean_of_dist_value.)
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+input g: dist
+input lo: num
+input hi: num
+input q: num
+def mq: num = mean(g) at reader
+def qd: num = quantile(uniform(lo, hi) to 0.01, q) at reader
+def sq: num = share(g < lo) at reader
+
+version v
+  cite s
+  governs 2026..
+  known 2026-01-01
+  g = uniform(0, 1) to 0.01
+  lo = 1 "s"
+  hi = 3 "s"
+  q = 0.5 "s"
+
+ask a: mq law 2026-06-30
+ask c: qd law 2026-06-30
+ask d: sq law 2026-06-30
+=== expect
+a: 0.5
+  law date 2026-06-30, cut 2026-12-31
+c: 2
+  law date 2026-06-30, cut 2026-12-31
+d: 1
+  law date 2026-06-30, cut 2026-12-31

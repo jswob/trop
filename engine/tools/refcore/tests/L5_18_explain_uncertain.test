@@ -1,0 +1,56 @@
+# E §10 a projection prints "the movements it counted with the clauses applied"; a balance "every movement since,
+# with each movement's status and id".  L §5.14 Certainty: `with uncertain` on the read counts the unfulfilled
+# movements of uncertain kinds dated through d at their planned amount: 1 000.00 + 500.00 = 1 500.00 PLN, in the
+# projection (x1) and in the plain read that states it (x2); the promise is listed with status uncertain.
+=== m.tally
+model u
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source own "own"
+unit PLN: currency minor 0.01
+kind promises: event uncertain
+  leg cash: PLN
+place konto: accounts PLN lives 2020-01-01..
+place friend: outside lives 1900-01-01..
+input owed: money PLN
+input repay_day: date
+
+move repay: promises
+  on repay_day
+  at repay_day
+  leg cash from friend to konto amount owed
+
+version v
+  cite own
+  governs 2026..
+  known 2026-01-01
+  owed = 500.00 PLN "note"
+  repay_day = 2026-03-01 governs always "note"
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "statement"
+
+ask x1: explain bal(konto, 2026-04-01) from 2026-01-01 with uncertain
+ask x2: explain bal(konto, 2026-04-01) with uncertain
+=== expect
+x1: 1 500.00 PLN
+  projection of konto (PLN) from 2026-01-01 to the end of 2026-04-01
+  holder: ask x1 (an ask line leaves out nothing, L §5.14.1)
+  clauses: windows none, random none, with uncertain
+  start: 1 000.00 PLN at the start of 2026-01-01
+  counted:
+    2026-03-01:
+      repay.cash (uncertain): +500.00 PLN
+  left out: none
+  uncertain: repay
+  held: owed = 500.00 PLN (v), read for 2026-03-01
+  cut 2026-01-01
+x2: 1 500.00 PLN
+  balance of konto (PLN) at the end of 2026-04-01
+  from: opening v:opening[konto] = 1 000.00 PLN, 2026-01-01 start (version v, source own, locator "statement")
+  2026-03-01:
+    repay.cash (uncertain): +500.00 PLN
+  uncertain: repay
+  held: owed = 500.00 PLN (v), read for 2026-03-01
+  cut 2026-01-01

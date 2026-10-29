@@ -1,0 +1,19 @@
+# L §5.11: a bare binding returns the key or the tuple for first and last; `min` over a bare binding of two
+# variables (the least tuple) has no stated meaning: LOAD-DOMAIN at load (L §8.4).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+index ks = [a, b]
+index js = [e, f]
+def c: key ks = min(k in ks, j in js) at reader
+
+ask q: c law 2026-06-30
+=== expect
+refused: LOAD-DOMAIN ...

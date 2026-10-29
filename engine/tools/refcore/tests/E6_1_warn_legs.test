@@ -1,0 +1,62 @@
+# E §6.1: "Two observations of versions covering the two ends that fulfil one instance and disagree print WARN-LEGS;
+# each end is booked as its own statement says" (L §8.5 wording).  Own reality: save[m] moves 1 000.00 PLN from konto
+# to savings on day 5; February's is observed by bank A (covers konto) as 1 000.00 and by bank B (covers savings) as
+# 1 200.00.  konto: 5 000 - 1 000 (January, booked) - 1 000 (A) = 3 000.00; savings: 1 000 + 1 200 (B) = 2 200.00.
+# E §9 invariant 1 (conservation) does not hold on that day, by E §6.1's own rule: the interpreter leaves those
+# ends out of its check (reported as a contradiction).  WARN-NEGATIVE: konto falls below zero on 2026-06-05 (3 000
+# less 1 000 in each of March to June, L §8.5).
+=== m.tally
+model hh
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source plan "plan"
+source bank_a "bank A"
+source bank_b "bank B"
+unit PLN: currency minor 0.01
+input bank: observed
+input save_amt: money PLN
+input save_dom: int
+place konto: accounts PLN lives 2019-05-01..
+place savings: accounts PLN lives 2019-05-01..
+place unexplained: outside lives 1900-01-01..
+
+move save[m in months]: transfers
+  on day_of(m, save_dom)
+  at start_of(m)
+  leg cash from konto to savings amount save_amt
+
+version plan_2026
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  save_amt = 1 000.00 PLN "own"
+  save_dom = 5 "own"
+  opening[konto] = 5 000.00 PLN at 2026-01-01 start "wyciąg"
+  opening[savings] = 0 PLN at 2026-01-01 start "wyciąg"
+
+version stmt_a
+  cite bank_a
+  governs 2026-02
+  known 2026-03-02
+  covers konto
+  pad konto from unexplained
+  bank[a1] = (on: 2026-02-05, kind: transfers, leg cash from konto to savings amount 1 000.00 PLN, fulfils: save[2026-02]) "a1"
+
+version stmt_b
+  cite bank_b
+  governs 2026-02
+  known 2026-03-03
+  covers savings
+  pad savings from unexplained
+  bank[b1] = (on: 2026-02-05, kind: transfers, leg cash from konto to savings amount 1 200.00 PLN, fulfils: save[2026-02]) "b1"
+
+ask k: bal(konto, 2026-02-28), bal(savings, 2026-02-28)
+=== expect
+k: (3 000.00 PLN, 2 200.00 PLN)
+  unfulfilled: save[2026-01]
+  cut 2026-10-20
+warning: WARN-LEGS the two observations of save[2026-02] disagree: bank[a1] (1 000.00 PLN) and bank[b1] (1 200.00 PLN)
+warning: WARN-NEGATIVE konto is below zero from 2026-06-05

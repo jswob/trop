@@ -1,0 +1,28 @@
+# Fault refusal_outranks_hole (writer 6): crps of a distribution printed the observation's hole though the
+# distribution is refused. L §5.11: "Refusals outrank holes: when both reach a result, the result is refused"; L §5.16:
+# "An invalid parameter is refused at that key" (normal with sd = -1: RUN-PARAM); the observation o is a hole rule.
+=== p17.tally
+model p17
+  tally 2
+  on 2026-01-31
+  start 2026-01-01
+  end 2026-01-31
+
+source s "synthetic"
+
+input sd: num
+
+def o: num
+  rule base = ?"the observation isn't printed"
+
+ask q: crps(normal(0, sd), o) to 0.001 law 2026-01-31 orient lower
+
+version v1
+  cite s
+  governs always
+  known 2026-01-01
+  sd = -1 "row"
+=== expect
+q: refused: RUN-PARAM normal parameter s = -1 is invalid
+  law date 2026-01-31, cut 2026-01-31
+  orient lower

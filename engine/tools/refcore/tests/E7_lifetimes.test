@@ -1,0 +1,28 @@
+# E §7 Lifetimes: "an age at death is a random fact per person, input death_age[p in persons]: dist year".
+# With uniform(60 year, 100 year) (step 1 year), share(death_age[ewa] > 80 year) is 1 - cdf(80) = 1 - 1/2 = 0.5,
+# exact (L §5.16 table: uniform exact).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+index persons = [ewa, jan]
+input death_age[p in persons]: dist year
+input lim: num year
+
+version v
+  cite s
+  governs 2026..
+  known 2026-01-01
+  death_age[*] = uniform(60 year, 100 year) to 1 year
+  lim = 80 year
+
+ask a: share(death_age[ewa] > lim) law 2026-06-30
+=== expect
+a: 0.5 (horizon 2026-06-30)
+  law date 2026-06-30, cut 2026-12-31

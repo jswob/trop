@@ -1,0 +1,18 @@
+# L §5.10 Value: "a thing of assets (a subkind included) names its price input on its kind, its place section or its
+# entry (LOAD-PRICE otherwise)"; L §8.3 LOAD-PRICE "asset <x> names no price input". (Was REFCORE-UNSPECIFIED §5.10, the
+# value of an asset with no price input.)
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+unit flat_u "mieszkanie"
+place flat: assets flat_u lives 2020-01-01..
+
+ask q: 1
+=== expect
+refused: LOAD-PRICE asset flat names no price input ...

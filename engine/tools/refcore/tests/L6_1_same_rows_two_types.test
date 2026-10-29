@@ -1,0 +1,70 @@
+# L §6.1 (round 14): "The two sides are of one sort: ... two rows of one type, or two movements; any other pair is
+# refused (LOAD-SAME)"; L §8.3 LOAD-SAME "same <p> = <q>: <what p is> and <what q is>" (a row and a movement, rows of
+# types <T> and <T'>, a def, an index or another item). a.rate is a
+# num, b.share money PLN: LOAD-SAME. (Writer 6's U-22.)
+=== options pin=bytes
+=== joint.tally
+model family
+  tally 2
+  on 2026-01-05
+  start 2026-01-01
+  end 2026-12-31
+  use a = "ana.tally" sha256 "189c67e64082cc127bcde306ff8dec3dc2654a4a1614c037c3ed2747cd411199"
+  use b = "ben.tally" sha256 "f79aee6185a3e673324158e5fc3f586f114b6582220f963505c0ac556b8569af"
+  same a.rate = b.share
+ask r: a.rate
+=== ana.tally
+model ana
+  tally 2
+  on 2026-01-05
+  start 2026-01-01
+  end 2026-12-31
+
+source s "umowa"
+unit PLN: currency minor 0.01
+kind persons
+place wsp: accounts PLN lives 2019-01-01..
+input income[p in persons]: money PLN
+input rate: num
+def twice: money PLN = income[ana] + income[ola] at reader
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  persons + [ana, ola] lives 2000-01-01..
+  income[ana] = 100.00 PLN "umowa"
+  income[ola] = 10.00 PLN "umowa"
+  opening[wsp] = 1 000.00 PLN at 2026-01-01 start "wyciąg"
+  rate = 0.5 "umowa"
+=== ben.tally
+model ben
+  tally 2
+  on 2026-01-05
+  start 2026-01-01
+  end 2026-12-31
+
+source s "umowa"
+unit PLN: currency minor 0.01
+kind persons
+place wsp: accounts PLN lives 2019-01-01..
+input pocket[p in persons]: money PLN
+input share: money PLN
+input gday: date
+move gift: transfers
+  on gday
+  leg cash from world to wsp amount share
+place world: outside lives 1900-01-01..
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  persons + [ben, ola_k] lives 2000-01-01..
+  pocket[ben] = 50.00 PLN "umowa"
+  pocket[ola_k] = 5.00 PLN "umowa"
+  opening[wsp] = 1 000.00 PLN at 2026-01-01 start "wyciąg"
+  share = 5.00 PLN "umowa"
+  gday = 2026-03-01 "umowa"
+=== expect
+refused: LOAD-SAME same a.rate = b.share: rows of types num and money PLN ...

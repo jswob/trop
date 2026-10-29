@@ -1,0 +1,41 @@
+# L §5.11 / §4.3: "Inside as if {law D}, every at reader def is read at D, and an input read directly in the ask
+# too."  rate is 1 until 2025-12-31 and 2 from 2026 (a replace); y reads it at reader.  "A superseded law stays
+# runnable inside as if {law 2021-12-31}" (N-908): y as if {law 2025-06-30} reads the 2025 row.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+input rate: int
+
+def y: int at reader
+  rule base = rate
+
+version v1
+  cite s
+  governs 2025..
+  known 2025-01-01
+  rate = 1
+
+version v2
+  cite s
+  governs 2026..
+  known 2025-12-01
+  replace rate = 2
+
+ask q1: y law 2026-06-30
+ask q2: y as if {law 2025-06-30}
+ask q3: rate as if {law 2025-06-30}
+=== expect
+q1: 2
+  law date 2026-06-30, cut 2026-12-31
+q2: 1
+  pinned: law 2025-06-30
+  cut 2026-12-31
+q3: 1
+  pinned: law 2025-06-30
+  cut 2026-12-31

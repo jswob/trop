@@ -1,0 +1,34 @@
+# MC-X-F12 (writer 9): rate's rows govern always and read base (governs always) and lift (a band whose row
+# governs always): nothing law-dated, so neither r nor q needs a law date. rate(3) = 400 + 10 = 410.00 PLN.
+=== m.tally
+model p
+  tally 2
+  on 2027-12-31
+  start 2027-01-01
+  end 2027-12-31
+
+unit PLN: currency minor 0.01
+source act "the act"
+
+input age3: int
+input base: money PLN
+band lift(a: int): money PLN
+band rate(a: int): money PLN
+def r[m in months]: money PLN = rate(age3)
+ask q: r[2027-05]
+ask q2: rate(age3)
+
+version v_act
+  cite act
+  governs always
+  known 2026-12-01
+  age3 = 3 "the age"
+  base = 400.00 PLN "the base"
+  lift: [0, inf) = 10.00 PLN "lift"
+  rate: [0, 6) = base + lift(a) "under 6"
+  rate: [6, 18) = 250.00 PLN "6 to 17"
+=== expect
+q: 410.00 PLN
+  cut 2027-12-31
+q2: 410.00 PLN
+  cut 2027-12-31

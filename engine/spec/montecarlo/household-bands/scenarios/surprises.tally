@@ -1,8 +1,8 @@
-scenario surprises
-  tally 1
+scenario surprises over tropek
+  tally 2
   from 2027-01-01
   note "Co jeśli w 2027 wydatki miesiąca się wahają, a czasem przychodzi niespodziewana naprawa? Ile razy na 1000 konto zejdzie poniżej zera? (pytanie gospodarstwa z 2026-10-19)"
-  note "Oba losowania mają plan 0 (medianę), więc reguła 15. planuje jak w bazie. Niespodzianka z 25. dnia schodzi z konta i reguła następnego 15. ją wchłania."
+  note "Oba losowania (repair_hit, spend_dev) wchodzą do prognozy swoją medianą, 0: każde pytanie mówi random at quantile(0.5), więc reguła 15. planuje jak w bazie. Niespodzianka z 25. dnia schodzi z konta i reguła następnego 15. ją wchłania."
   note "Klucz odpowiedzi: montecarlo/household-bands.md. Wartości wyroczni i tolerancje: asks/bands_oracle.tally."
 
 index surprise_day = day 2027-01-01..2027-12-31
@@ -18,116 +18,119 @@ input repair_cost: money PLN
 input spend_sd: money PLN
   note "odchylenie standardowe wydatków miesiąca wokół kwoty wyuczonej z wyciągu"
 
-def invested[m in month]: money PLN
+def invested[m in month]: money PLN at start_of(m)
   note "pokój miesiąca: wszystko, co reguła 15. przelała w tym miesiącu na IKE, OKI i rachunek maklerski"
-  rule base = sum(w in wrapper: flows(invest[w, m], m))
+  rule base = sum(flows(invest[w, m], m) for w in wrapper)
 
-def net_worth_on[d in day]: num PLN
+def net_worth_on[d in day]: num PLN at start_of(d)
   note "majątek netto z pytania net_worth (asks/core), jako def, żeby pytania o pasma mogły go czytać"
-  rule base = sum(x in place where (kind(x) = account or kind(x) = cash or kind(x) = claim or kind(x) = debt) and currency(x) = PLN: bal(x, d)) + sum(w in wrapper: worth(wunits[w], d))
+  rule base = sum(bal(x, d) with uncertain for x in places over .. where not x in outside and ((x in accounts or x in cash or x in claims or x in debts) and unit(x) == PLN)) + sum(value(wunits[w], d) in PLN by etf_price[month_of(d)] for w in wrapper)
 
-def year_low[p in path]: money PLN
-  note "najniższe saldo konta na koniec dnia w 2027, na ścieżce p"
-  rule base = min(d in surprise_day: bal(konto, d))
+def repair_hit[m in surprise_month]: dist at day_of(m, surprise_dom)
+  note "czy w miesiącu m przychodzi niespodziewana naprawa (1) czy nie (0)"
+  rule base = binomial(1, repair_chance)
 
-draw repair_hit[p in path, m in surprise_month] ~ binomial(1, repair_chance) plan 0
+def spend_dev[m in surprise_month]: dist PLN at day_of(m, surprise_dom)
+  note "odchylenie wydatków miesiąca m od kwoty wyuczonej"
+  rule base = normal(0 PLN, spend_sd) to minor(PLN)
 
-draw spend_dev[p in path, m in surprise_month] ~ normal(0, spend_sd) to 0.01 plan 0
+def year_low: money PLN at reader
+  note "najniższe saldo konta na koniec dnia w 2027, na danej ścieżce"
+  rule base = min(bal(konto, d) with uncertain for d in surprise_day)
 
-pay repair[p in path, m in surprise_month]
-  from konto
-  to sklepy
-  amount repair_cost
-  on day_of(m, 25)
+move repair[m in surprise_month]: transfers
+  on day_of(m, surprise_dom)
+  at start_of(m)
   for m
-  when repair_hit[p, m] = 1
+  when repair_hit[m] == 1
+  leg cash from konto to sklepy amount repair_cost
 
-pay spend_over[p in path, m in surprise_month]
-  from konto
-  to sklepy
-  amount round(spend_dev[p, m], 0.01, half-up)
-  on day_of(m, 25)
+move spend_over[m in surprise_month]: transfers
+  on day_of(m, surprise_dom)
+  at start_of(m)
   for m
-  when spend_dev[p, m] > 0
+  when spend_dev[m] > 0
+  leg cash from konto to sklepy amount round(spend_dev[m], minor(PLN), half-up)
 
-pay spend_under[p in path, m in surprise_month]
-  from sklepy
-  to konto
-  amount round(-spend_dev[p, m], 0.01, half-up)
-  on day_of(m, 25)
+move spend_under[m in surprise_month]: transfers
+  on day_of(m, surprise_dom)
+  at start_of(m)
   for m
-  when spend_dev[p, m] < 0
+  when spend_dev[m] < 0
+  leg cash from sklepy to konto amount round(-spend_dev[m], minor(PLN), half-up)
 
-ask band_konto: quantile(p in path: bal(konto, d), 0.05), quantile(p in path: bal(konto, d), 0.25), quantile(p in path: bal(konto, d), 0.5), quantile(p in path: bal(konto, d), 0.75), quantile(p in path: bal(konto, d), 0.95) for d in [2027-06-30, 2027-12-31] with scenario surprises paths 1000 seed 7
+ask band_konto: quantile(bal(konto, d) with uncertain, 0.05), quantile(bal(konto, d) with uncertain, 0.25), quantile(bal(konto, d) with uncertain, 0.5), quantile(bal(konto, d) with uncertain, 0.75), quantile(bal(konto, d) with uncertain, 0.95) for d in [2027-06-30, 2027-12-31] in surprises law 2026-10-19 random at quantile(0.5) paths 1000 seed 7
 
-ask band_net_worth: quantile(p in path: net_worth_on[d], 0.05), quantile(p in path: net_worth_on[d], 0.25), quantile(p in path: net_worth_on[d], 0.5), quantile(p in path: net_worth_on[d], 0.75), quantile(p in path: net_worth_on[d], 0.95) for d in [2027-06-30, 2027-12-31] with scenario surprises paths 1000 seed 7
+ask band_net_worth: quantile(net_worth_on[d], 0.05), quantile(net_worth_on[d], 0.25), quantile(net_worth_on[d], 0.5), quantile(net_worth_on[d], 0.75), quantile(net_worth_on[d], 0.95) for d in [2027-06-30, 2027-12-31] in surprises law 2026-10-19 random at quantile(0.5) paths 1000 seed 7
 
-ask band_room: quantile(p in path: invested[m], 0.05), quantile(p in path: invested[m], 0.25), quantile(p in path: invested[m], 0.5), quantile(p in path: invested[m], 0.75), quantile(p in path: invested[m], 0.95) for m in [2027-08, 2027-11] with scenario surprises paths 1000 seed 7
+ask band_room: quantile(invested[m], 0.05), quantile(invested[m], 0.25), quantile(invested[m], 0.5), quantile(invested[m], 0.75), quantile(invested[m], 0.95) for m in [2027-08, 2027-11] in surprises law 2026-10-19 random at quantile(0.5) paths 1000 seed 7
 
-ask base_values: net_worth_on[d], bal(konto, d) for d in [2027-06-30, 2027-12-31] with scenario surprises
+ask base_values: net_worth_on[d], bal(konto, d) with uncertain for d in [2027-06-30, 2027-12-31] in surprises with sample repair_hit[*] = 0, sample spend_dev[*] = 0 PLN law 2026-10-19 random at quantile(0.5) paths 1 seed 7 path 1
 
-ask below_two_rents: share(p in path: bal(konto, 2027-12-31) < 2 * rent) with scenario surprises paths 1000 seed 7
+ask below_two_rents: share(bal(konto, 2027-12-31) with uncertain < threshold_rents * rent) in surprises law 2026-10-19 random at quantile(0.5) paths 1000 seed 7
 
-ask below_zero: share(p in path: year_low[p] < 0) with scenario surprises paths 1000 seed 7
+ask below_zero: share(year_low < 0) in surprises law 2026-10-19 random at quantile(0.5) paths 1000 seed 7
 
-ask check_konto_q05: check abs(quantile(p in path: bal(konto, d), 0.05) - oracle_konto[d, q05]) <= oracle_konto_tol[d, q05] = true for d in [2027-06-30, 2027-12-31] with scenario surprises paths 1000 seed 7
+ask check_konto_q05: check (abs(quantile(bal(konto, d) with uncertain, 0.05) - oracle_konto[d, q05]) <= oracle_konto_tol[d, q05]) == true for d in [2027-06-30, 2027-12-31] in surprises law 2026-10-19 random at quantile(0.5) paths 1000 seed 7
 
-ask check_konto_q25: check abs(quantile(p in path: bal(konto, d), 0.25) - oracle_konto[d, q25]) <= oracle_konto_tol[d, q25] = true for d in [2027-06-30, 2027-12-31] with scenario surprises paths 1000 seed 7
+ask check_konto_q25: check (abs(quantile(bal(konto, d) with uncertain, 0.25) - oracle_konto[d, q25]) <= oracle_konto_tol[d, q25]) == true for d in [2027-06-30, 2027-12-31] in surprises law 2026-10-19 random at quantile(0.5) paths 1000 seed 7
 
-ask check_konto_q50: check abs(quantile(p in path: bal(konto, d), 0.5) - oracle_konto[d, q50]) <= oracle_konto_tol[d, q50] = true for d in [2027-06-30, 2027-12-31] with scenario surprises paths 1000 seed 7
+ask check_konto_q50: check (abs(quantile(bal(konto, d) with uncertain, 0.5) - oracle_konto[d, q50]) <= oracle_konto_tol[d, q50]) == true for d in [2027-06-30, 2027-12-31] in surprises law 2026-10-19 random at quantile(0.5) paths 1000 seed 7
 
-ask check_konto_q75: check abs(quantile(p in path: bal(konto, d), 0.75) - oracle_konto[d, q75]) <= oracle_konto_tol[d, q75] = true for d in [2027-06-30, 2027-12-31] with scenario surprises paths 1000 seed 7
+ask check_konto_q75: check (abs(quantile(bal(konto, d) with uncertain, 0.75) - oracle_konto[d, q75]) <= oracle_konto_tol[d, q75]) == true for d in [2027-06-30, 2027-12-31] in surprises law 2026-10-19 random at quantile(0.5) paths 1000 seed 7
 
-ask check_konto_q95: check abs(quantile(p in path: bal(konto, d), 0.95) - oracle_konto[d, q95]) <= oracle_konto_tol[d, q95] = true for d in [2027-06-30, 2027-12-31] with scenario surprises paths 1000 seed 7
+ask check_konto_q95: check (abs(quantile(bal(konto, d) with uncertain, 0.95) - oracle_konto[d, q95]) <= oracle_konto_tol[d, q95]) == true for d in [2027-06-30, 2027-12-31] in surprises law 2026-10-19 random at quantile(0.5) paths 1000 seed 7
 
-ask check_mean_net_worth: check abs(mean(p in path: net_worth_on[2027-12-31]) - oracle_value[nw_1231_mean]) <= oracle_value_tol[nw_1231_mean] = true with scenario surprises paths 1000 seed 7
+ask check_mean_net_worth: check (abs(mean(net_worth_on[2027-12-31]) - oracle_value[nw_1231_mean]) <= oracle_value_tol[nw_1231_mean]) == true in surprises law 2026-10-19 random at quantile(0.5) paths 1000 seed 7
 
-ask check_net_worth_q05: check abs(quantile(p in path: net_worth_on[d], 0.05) - oracle_net_worth[d, q05]) <= oracle_net_worth_tol[d, q05] = true for d in [2027-06-30, 2027-12-31] with scenario surprises paths 1000 seed 7
+ask check_net_worth_q05: check (abs(quantile(net_worth_on[d], 0.05) - oracle_net_worth[d, q05]) <= oracle_net_worth_tol[d, q05]) == true for d in [2027-06-30, 2027-12-31] in surprises law 2026-10-19 random at quantile(0.5) paths 1000 seed 7
 
-ask check_net_worth_q25: check abs(quantile(p in path: net_worth_on[d], 0.25) - oracle_net_worth[d, q25]) <= oracle_net_worth_tol[d, q25] = true for d in [2027-06-30, 2027-12-31] with scenario surprises paths 1000 seed 7
+ask check_net_worth_q25: check (abs(quantile(net_worth_on[d], 0.25) - oracle_net_worth[d, q25]) <= oracle_net_worth_tol[d, q25]) == true for d in [2027-06-30, 2027-12-31] in surprises law 2026-10-19 random at quantile(0.5) paths 1000 seed 7
 
-ask check_net_worth_q50: check abs(quantile(p in path: net_worth_on[d], 0.5) - oracle_net_worth[d, q50]) <= oracle_net_worth_tol[d, q50] = true for d in [2027-06-30, 2027-12-31] with scenario surprises paths 1000 seed 7
+ask check_net_worth_q50: check (abs(quantile(net_worth_on[d], 0.5) - oracle_net_worth[d, q50]) <= oracle_net_worth_tol[d, q50]) == true for d in [2027-06-30, 2027-12-31] in surprises law 2026-10-19 random at quantile(0.5) paths 1000 seed 7
 
-ask check_net_worth_q75: check abs(quantile(p in path: net_worth_on[d], 0.75) - oracle_net_worth[d, q75]) <= oracle_net_worth_tol[d, q75] = true for d in [2027-06-30, 2027-12-31] with scenario surprises paths 1000 seed 7
+ask check_net_worth_q75: check (abs(quantile(net_worth_on[d], 0.75) - oracle_net_worth[d, q75]) <= oracle_net_worth_tol[d, q75]) == true for d in [2027-06-30, 2027-12-31] in surprises law 2026-10-19 random at quantile(0.5) paths 1000 seed 7
 
-ask check_net_worth_q95: check abs(quantile(p in path: net_worth_on[d], 0.95) - oracle_net_worth[d, q95]) <= oracle_net_worth_tol[d, q95] = true for d in [2027-06-30, 2027-12-31] with scenario surprises paths 1000 seed 7
+ask check_net_worth_q95: check (abs(quantile(net_worth_on[d], 0.95) - oracle_net_worth[d, q95]) <= oracle_net_worth_tol[d, q95]) == true for d in [2027-06-30, 2027-12-31] in surprises law 2026-10-19 random at quantile(0.5) paths 1000 seed 7
 
-ask check_room_q05: check abs(quantile(p in path: invested[m], 0.05) - oracle_room[m, q05]) <= oracle_room_tol[m, q05] = true for m in [2027-08, 2027-11] with scenario surprises paths 1000 seed 7
+ask check_room_q05: check (abs(quantile(invested[m], 0.05) - oracle_room[m, q05]) <= oracle_room_tol[m, q05]) == true for m in [2027-08, 2027-11] in surprises law 2026-10-19 random at quantile(0.5) paths 1000 seed 7
 
-ask check_room_q25: check abs(quantile(p in path: invested[m], 0.25) - oracle_room[m, q25]) <= oracle_room_tol[m, q25] = true for m in [2027-08, 2027-11] with scenario surprises paths 1000 seed 7
+ask check_room_q25: check (abs(quantile(invested[m], 0.25) - oracle_room[m, q25]) <= oracle_room_tol[m, q25]) == true for m in [2027-08, 2027-11] in surprises law 2026-10-19 random at quantile(0.5) paths 1000 seed 7
 
-ask check_room_q50: check abs(quantile(p in path: invested[m], 0.5) - oracle_room[m, q50]) <= oracle_room_tol[m, q50] = true for m in [2027-08, 2027-11] with scenario surprises paths 1000 seed 7
+ask check_room_q50: check (abs(quantile(invested[m], 0.5) - oracle_room[m, q50]) <= oracle_room_tol[m, q50]) == true for m in [2027-08, 2027-11] in surprises law 2026-10-19 random at quantile(0.5) paths 1000 seed 7
 
-ask check_room_q75: check abs(quantile(p in path: invested[m], 0.75) - oracle_room[m, q75]) <= oracle_room_tol[m, q75] = true for m in [2027-08, 2027-11] with scenario surprises paths 1000 seed 7
+ask check_room_q75: check (abs(quantile(invested[m], 0.75) - oracle_room[m, q75]) <= oracle_room_tol[m, q75]) == true for m in [2027-08, 2027-11] in surprises law 2026-10-19 random at quantile(0.5) paths 1000 seed 7
 
-ask check_room_q95: check abs(quantile(p in path: invested[m], 0.95) - oracle_room[m, q95]) <= oracle_room_tol[m, q95] = true for m in [2027-08, 2027-11] with scenario surprises paths 1000 seed 7
+ask check_room_q95: check (abs(quantile(invested[m], 0.95) - oracle_room[m, q95]) <= oracle_room_tol[m, q95]) == true for m in [2027-08, 2027-11] in surprises law 2026-10-19 random at quantile(0.5) paths 1000 seed 7
 
-ask check_tm_konto: check quantile(p in path: bal(konto, 2027-12-31), 0.05) = oracle_value[tm_konto_1231] with scenario surprises, repair_hit[*, *] = 0, spend_dev[*, *] = 0 paths 1000 seed 7
+ask check_tm_konto: check quantile(bal(konto, 2027-12-31) with uncertain, 0.05) == oracle_value[tm_konto_1231] in surprises with sample repair_hit[*] = 0, sample spend_dev[*] = 0 PLN law 2026-10-19 random at quantile(0.5) paths 1000 seed 7
 
-ask check_tm_net_worth: check quantile(p in path: net_worth_on[2027-12-31], 0.05) = oracle_value[tm_net_worth_1231] with scenario surprises, repair_hit[*, *] = 0, spend_dev[*, *] = 0 paths 1000 seed 7
+ask check_tm_net_worth: check quantile(net_worth_on[2027-12-31], 0.05) == oracle_value[tm_net_worth_1231] in surprises with sample repair_hit[*] = 0, sample spend_dev[*] = 0 PLN law 2026-10-19 random at quantile(0.5) paths 1000 seed 7
 
-ask check_tm_room: check quantile(p in path: invested[2027-11], 0.05) = oracle_value[tm_room_11] with scenario surprises, repair_hit[*, *] = 0, spend_dev[*, *] = 0 paths 1000 seed 7
+ask check_tm_room: check quantile(invested[2027-11], 0.05) == oracle_value[tm_room_11] in surprises with sample repair_hit[*] = 0, sample spend_dev[*] = 0 PLN law 2026-10-19 random at quantile(0.5) paths 1000 seed 7
 
-ask check_tm_zero_dip: check share(p in path: year_low[p] < 0) = 0 with scenario surprises, repair_hit[*, *] = 0, spend_dev[*, *] = 0 paths 1000 seed 7
+ask check_tm_zero_dip: check share(year_low < 0) == 0 in surprises with sample repair_hit[*] = 0, sample spend_dev[*] = 0 PLN law 2026-10-19 random at quantile(0.5) paths 1000 seed 7
 
-ask check_two_rents: check abs(share(p in path: bal(konto, 2027-12-31) < 2 * rent) - oracle_share[two_rents]) <= oracle_share_tol[two_rents] = true with scenario surprises paths 1000 seed 7
+ask check_two_rents: check (abs(share(bal(konto, 2027-12-31) with uncertain < threshold_rents * rent) - oracle_share[two_rents]) <= oracle_share_tol[two_rents]) == true in surprises law 2026-10-19 random at quantile(0.5) paths 1000 seed 7
 
-ask check_zero_dip: check abs(share(p in path: year_low[p] < 0) - oracle_share[zero_dip]) <= oracle_share_tol[zero_dip] = true with scenario surprises paths 1000 seed 7
+ask check_zero_dip: check (abs(share(year_low < 0) - oracle_share[zero_dip]) <= oracle_share_tol[zero_dip]) == true in surprises law 2026-10-19 random at quantile(0.5) paths 1000 seed 7
 
-ask mean_net_worth: mean(p in path: net_worth_on[2027-12-31]) with scenario surprises paths 1000 seed 7
+ask mean_net_worth: mean(net_worth_on[2027-12-31]) in surprises law 2026-10-19 random at quantile(0.5) paths 1000 seed 7
 
-ask replay_one: mean(p in path: net_worth_on[2027-12-31]), mean(p in path: year_low[p]) with scenario surprises paths 1 seed 7
+ask replay_one: mean(net_worth_on[2027-12-31]), mean(year_low) in surprises law 2026-10-19 random at quantile(0.5) paths 1 seed 7
 
-ask replay_path: explain year_low[17] with scenario surprises paths 1000 seed 7
+ask replay_path: explain year_low in surprises law 2026-10-19 random at quantile(0.5) paths 1000 seed 7 path 17
 
-ask test_mode: quantile(p in path: bal(konto, 2027-12-31), 0.05), quantile(p in path: net_worth_on[2027-12-31], 0.05), quantile(p in path: invested[2027-11], 0.05), share(p in path: year_low[p] < 0) with scenario surprises, repair_hit[*, *] = 0, spend_dev[*, *] = 0 paths 1000 seed 7
+ask test_mode: quantile(bal(konto, 2027-12-31) with uncertain, 0.05), quantile(net_worth_on[2027-12-31], 0.05), quantile(invested[2027-11], 0.05), share(year_low < 0) in surprises with sample repair_hit[*] = 0, sample spend_dev[*] = 0 PLN law 2026-10-19 random at quantile(0.5) paths 1000 seed 7
 
-ask verdict_51: share(p in path: bal(konto, 2027-12-31) < 0) with scenario surprises paths 51 seed 7
+ask verdict_51: share(bal(konto, 2027-12-31) with uncertain < 0) in surprises law 2026-10-19 random at quantile(0.5) paths 51 seed 7
 
-ask verdict_52: share(p in path: bal(konto, 2027-12-31) < 0) with scenario surprises paths 52 seed 7
+ask verdict_52: share(bal(konto, 2027-12-31) with uncertain < 0) in surprises law 2026-10-19 random at quantile(0.5) paths 52 seed 7
 
 version surprises_rows
   cite modeller
+  governs 2027-01-01..
+  known 2026-10-19
   repair_chance = 0.1 assumed "naprawa (auto, pralka, dentysta) średnio raz na 10 miesięcy; założenie modelu"
   repair_cost = 3000 assumed "typowa niespodziewana naprawa 3 000 zł; założenie modelu"
   spend_sd = 400 assumed "wydatki miesiąca wahają się o około 400 zł wokół kwoty wyuczonej; założenie modelu"

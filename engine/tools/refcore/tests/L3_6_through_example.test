@@ -1,0 +1,42 @@
+# L §3.6 look-through example, copied whole (round 5 text: the aggregate binds `for e in parties over ..`, L §5.7
+# Bindings), with owns, stake and a place kind declared and rows added.  pb owns the house h whole; pa holds half
+# of pb.  through[pa, h, 1] = owns[pa, h] = 0; through[pa, h, 2] = owns[pa, h] + stake[pa, pa] × through[pa, h, 1]
+# + stake[pa, pb] × through[pb, h, 1] = 0 + 0 × 0 + 0.5 × 1 = 0.5; through[pb, h, 2] = 1 + 0 × 0 + 0 × 1 = 1
+# (L §5.11 Recurrences, aggregates in binding order).
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+kind houses: place PLN min 0
+unit PLN: currency minor 0.01
+
+input owns[p in parties, x in places]: num
+input stake[p in parties, e in parties]: num
+
+kind parties
+index depths = 1..4
+
+def through[p in parties, x in places, k in depths]: num at reader
+  rule first = owns[p, x] when k == 1
+  rule deeper = owns[p, x] + sum(stake[p, e] * through[e, x, k - 1] for e in parties over ..) when k > 1
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  parties + [pa] lives 2000-01-01..
+  parties + [pb] lives 2000-01-01..
+  houses + [h] lives 2020-01-01..
+  owns = 0
+  owns[pb, h] = 1
+  stake = 0
+  stake[pa, pb] = 0.5
+
+ask q1: through[pa, h, 1], through[pa, h, 2], through[pb, h, 2] law 2026-06-30
+=== expect
+q1: (0, 0.5, 1)
+  law date 2026-06-30, cut 2026-01-01

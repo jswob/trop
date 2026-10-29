@@ -1,0 +1,41 @@
+# L §5.9 Rows replaced: "a patch there is refused (LOAD-REPLACE) under every cut that sees the version" (L §8.3
+# `replace rows of <b> in <V> patch no table on <span>`). v2's replace rows [0, 10] and (20, inf) match v1's intervals
+# and leave a gap, so they are a patch, not a whole table; v2 governs 2027.. and v1 only 2026..2027, so from 2028 the
+# patch meets no table: refused at load, though no ask reads 2028 (snap11 refused it only at such a read; writer 8,
+# sixth pass, beside C3-16). L5_9_patch_covered: the same patch governing 2027 loads.
+=== m.tally
+model t
+  tally 2
+  on 2027-01-01
+  start 2026-01-01
+  end 2028-12-31
+
+source s "s"
+band b(n: int): int
+input mid: int
+
+version v1
+  cite s
+  governs 2026..2027
+  known 2025-12-01
+  b: [0, 10] = 1
+  b: (10, 20] = 2
+  b: (20, inf) = 3
+
+version facts
+  cite s
+  governs always
+  known 2025-12-01
+  mid = 15
+
+version v2
+  cite s
+  governs 2027..
+  known 2026-12-01
+  replace b: [0, 10] = 5
+  replace b: (20, inf) = 6
+
+ask q1: b(mid) law 2027-06-30
+ask q3: b(mid) law 2026-06-30
+=== expect
+refused: LOAD-REPLACE replace rows of b in v2 patch no table on 2028-01-01.. ...

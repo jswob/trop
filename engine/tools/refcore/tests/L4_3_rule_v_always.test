@@ -1,0 +1,30 @@
+# Fault f_vlaw (writer 6): f's rule `base v v1` was refused LOAD-LAWDATE although v1 governs always. L §4.3 rule 1:
+# law-dated is "an input, band, def or rule whose value can change with the law date: one with a row or version whose
+# span isn't `always`"; rule 2: "if it reads nothing law-dated, it needs no law date". v1 governs always, and n's row
+# governs always, so neither f nor g states `at`: q = (4 + 1, 4 + 1) = (5, 5).
+=== f_vlaw.tally
+model fvlaw
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "synthetic"
+
+input n: int
+
+def f: int
+  rule base v v1 = n + 1
+
+def g: int = n + 1
+
+ask q: f, g
+
+version v1
+  cite s
+  governs always
+  known 2026-01-01
+  n = 4 "row"
+=== expect
+q: (5, 5)
+  cut 2026-10-25

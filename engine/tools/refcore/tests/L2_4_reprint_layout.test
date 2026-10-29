@@ -1,0 +1,91 @@
+# L §2.4 Canonical format: "Header first: model, then tally, on, start, end, use lines (by name), same lines (by left
+# side), notes"; "Sections in this kind order: source, unit, kind, axis, index, place, input, band, def, fill, move,
+# regime, ask, version"; "Within a kind, sections are sorted by id (ASCII); kinds are printed parents before
+# subkinds" (alpha waits for its parent zeta; beta and zeta by id); "Versions come last, sorted by known date (a window
+# by its first day), then id" (v1's window starts 2026-01-01; a3 and v2 share 2026-03-01, so by id); "One blank line
+# between sections, always, one-line sections included". ASCII puts PLN before hour. E §3.1 step 1: the reality's
+# hash is the sha256 of the canonical text (its value is refcore's, so matched by prefix).
+=== options reprint
+=== m.tally
+model m
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+  use b = "b.tally" sha256 "0000000000000000000000000000000000000000000000000000000000000000"
+  use a = "a.tally" sha256 "0000000000000000000000000000000000000000000000000000000000000000"
+  same b.x = a.x
+  same a.y = b.y
+  note "n"
+version v2
+  cite s
+  governs 2026..
+  known 2026-03-01
+  x = 2
+version v1
+  cite s
+  governs 2026..
+  known window(2026-01-01, 2026-06-30)
+  replace x = 3
+
+
+version a3
+  cite s
+  governs 2026..
+  known 2026-03-01
+  replace x = 4
+ask q: x
+kind zeta: assets
+kind beta
+kind alpha: zeta
+input x: int
+source s "src"
+unit hour "h"
+unit PLN: currency minor 0.01
+=== expect
+--- m.tally
+model m
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+  use a = "a.tally" sha256 "0000000000000000000000000000000000000000000000000000000000000000"
+  use b = "b.tally" sha256 "0000000000000000000000000000000000000000000000000000000000000000"
+  same a.y = b.y
+  same b.x = a.x
+  note "n"
+
+source s "src"
+
+unit PLN: currency minor 0.01
+
+unit hour "h"
+
+kind beta
+
+kind zeta: assets
+
+kind alpha: zeta
+
+input x: int
+
+ask q: x
+
+version v1
+  cite s
+  governs 2026..
+  known window(2026-01-01, 2026-06-30)
+  replace x = 3
+
+version a3
+  cite s
+  governs 2026..
+  known 2026-03-01
+  replace x = 4
+
+version v2
+  cite s
+  governs 2026..
+  known 2026-03-01
+  x = 2
+sha256 ...

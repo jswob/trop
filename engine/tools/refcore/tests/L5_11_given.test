@@ -1,0 +1,34 @@
+# L §5.11 step 1: "Givens. If a given of x (a version row given x[…] = …) matches k by the read rule (§4.6), return
+# it. A with or as if pin wins over a given."  L §8.2: "given: <def>[keys] = v (<version>) ... printed once as
+# written, with its key range if it has one".  The rule would give 0; the given at a gives 1; the pin wins: 5.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+index ks = [a, b]
+input five: int
+
+def q[k in ks]: int at reader
+  rule base = 0
+
+version g
+  cite s
+  governs always
+  known 2026-01-01
+  given q[a] = 1
+  five = 5
+
+ask q1: q[a], q[b] law 2026-06-30
+ask q2: q[a] with q[a] = five law 2026-06-30
+=== expect
+q1: (1, 0)
+  given: q[a] = 1 (g)
+  law date 2026-06-30, cut 2026-12-31
+q2: 5
+  pinned: q[a] = 5
+  law date 2026-06-30, cut 2026-12-31

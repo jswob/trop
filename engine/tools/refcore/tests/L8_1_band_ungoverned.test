@@ -1,0 +1,29 @@
+# L §8.1 HOLE-UNGOVERNED: "the gap rule: no row governs an input or a band at those keys on that law date"; the
+# question for no keys is "x: no value at <law date>" (L §4.6 step 5).  The band's table governs from 2026-07.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+band b(n: int): int
+input one: int
+
+version v
+  cite s
+  governs 2026-07..
+  known 2026-01-01
+  b: [0, inf) = 1
+
+version d
+  cite s
+  governs always
+  known 2026-01-01
+  one = 1
+
+ask q1: b(one) law 2026-03-01
+=== expect
+q1: ?"b: no value at 2026-03-01" (b)
+  law date 2026-03-01, cut 2026-12-31

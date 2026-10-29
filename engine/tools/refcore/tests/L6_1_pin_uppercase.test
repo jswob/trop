@@ -1,0 +1,29 @@
+# E §3.1 step 1: "A joint model's use line pins a member by this hash, written as 64 lower-case hexadecimal digits";
+# L §6.1 a member that doesn't match its hash is refused (LOAD-PIN). The hash here is the member's, in upper case.
+=== joint.tally
+model family
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+  use a = "ana.tally" sha256 "DA53B6FF6A096D47B9AF5E16E8276735E72B3C343160D17D841C6BA432DF1720"
+
+ask r: a.rate
+=== ana.tally
+model ana
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source s "umowa"
+
+input rate: num
+
+version v
+  cite s
+  governs always
+  known 2025-01-01
+  rate = 0.12 "umowa"
+=== expect
+refused: LOAD-PIN ana.tally doesn't match its sha256 in use a

@@ -1,0 +1,25 @@
+# L §3.2 (round 12): "A row's value has its type's unit at every key it states, so a row that leaves such a key
+# unstated or * gives one unit for keys of several and is refused (LOAD-UNIT), unless its value is a bare literal, which
+# takes each key's unit (Inline figures, above)". amt is num c per currency c: `amt[*] = 5 PLN` is refused; `amt2[*] =
+# 5`, a bare literal, is 5 PLN at PLN and 5 EUR at EUR. (Was REFCORE-UNSPECIFIED §3.2, writer 5's T-10.)
+=== m.tally
+model t
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+input amt[c in currencies]: num c
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt[*] = 5 PLN
+
+ask q: amt[PLN]
+=== expect
+refused: LOAD-UNIT 5 gives one unit for keys of several units ...

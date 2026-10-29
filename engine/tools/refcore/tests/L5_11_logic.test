@@ -1,0 +1,40 @@
+# L §5.11 Logic: "and and or evaluate left to right and stop early, with Kleene values: false and anything is
+# false, true or anything is true, and otherwise a hole stays a hole. if c then a else b evaluates only the
+# branch c takes; with a hole c it evaluates both, and is a hole unless they are equal. A guarded read such as
+# k > 1 and x[k - 1] > 0 PLN is therefore safe at k = 1."
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+index ks = 1..2
+input h: bool
+input x[k in ks]: int
+
+def g[k in ks]: bool at reader
+  rule base = k > 1 and x[k - 1] > 0
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  h = ?"unknown"
+  x[1] = 1
+  x[2] = 0
+
+ask q1: false and h, true or h, h and true, h or false
+ask q2: if h then x[1] else x[2], if h then x[1] else x[1]
+ask q3: g[k] for k in ks law 2026-06-30
+=== expect
+q1: (false, true, ?"unknown" (h), ?"unknown" (h))
+  cut 2026-12-31
+q2: (?"unknown" (h), 1)
+  cut 2026-12-31
+q3 (k = 1): false
+  law date 2026-06-30, cut 2026-12-31
+q3 (k = 2): true
+  law date 2026-06-30, cut 2026-12-31

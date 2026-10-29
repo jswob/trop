@@ -1,0 +1,32 @@
+# MC-X-F12 (writer 9): v2 moves v_act to 2027.. (L §5.3 moves), so v_act's span isn't always under a cut that
+# sees v2: rate is law-dated (L §4.3), and r, which states no at, is refused (LOAD-LAWDATE).
+=== m.tally
+model p
+  tally 2
+  on 2027-12-31
+  start 2027-01-01
+  end 2027-12-31
+
+unit PLN: currency minor 0.01
+source act "the act"
+
+input age3: int
+band rate(a: int): money PLN
+def r[m in months]: money PLN = rate(age3)
+ask q: r[2027-05]
+
+version v_act
+  cite act
+  governs always
+  known 2026-12-01
+  age3 = 3 "the age"
+  rate: [0, 6) = 400.00 PLN "under 6"
+  rate: [6, 18) = 250.00 PLN "6 to 17"
+
+version v2
+  cite act
+  governs always
+  known 2027-05-01
+  moves v_act to 2027..
+=== expect
+refused: LOAD-LAWDATE r reads law-dated facts and states no at (m.tally:12)

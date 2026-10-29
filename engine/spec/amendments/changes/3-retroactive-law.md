@@ -17,8 +17,21 @@
 --- law/pl/business.tally
 +++ law/pl/business.tally
  source ryczalt_act "…"
+ 
 +source health_2027_cut "Ustawa z 2027-06-15 o zmianie ustawy o świadczeniach opieki zdrowotnej (przykład), art. 1 pkt 2 i art. 3: stosuje się od 2027-01-01"
++
  source vat_act "…"
+ …
+ move health_pay[m in month]: health_pay_pays
+   …
++
++input health_waive_on: date
++
++move health_pay_waive_health_ryczalt_2027[a in adjustments on health_waive_on where a.adjusts in health_pay_pays]: waivers
++  on a.day
++  fulfils a
+ 
+ move health_settle_back[y in tax_year]: transfers
  …
  version vat_2026
    …
@@ -27,14 +40,15 @@
 +  cite health_2027_cut
 +  governs 2027..
 +  known 2027-06-15
-+  arrears none for health_pay
-+  health_share[mid] = 0.9 "art. 1 pkt 2"
++  replace health_share[mid] = 0.9 "art. 1 pkt 2"
++  health_waive_on = 2027-06-15 governs always "tytuł ustawy"
 ```
 
-Lines added: 8, plus the `on` line. Lines edited: the `on` line only.
+Lines added: 15 (11 non-blank, 4 blank), plus the `on` line. Lines edited: the `on` line only. The kind `waivers` (an event kind with no legs) is the household's, in `facts/2026.tally`.
 
-**Why only one `arrears` line:**
-- The settlement pays `health_settle_pay` and `health_settle_back` for 2027 are dated 2028-05-22, after K. They are planned with the new law, not changed after booking, so they need no line.
+**Why only one waiver move** (tally 1.0.1 wrote it as one line, `arrears none for health_pay`):
+- The move waives every adjustment of a `health_pay` instance that a version known 2027-06-15 makes (LANGUAGE §5.14.3); that day is a row, `health_waive_on`, by the literal rule (LANGUAGE §7.1): the law gives no back pay for the monthly payments.
+- The settlement moves `health_settle_pay` and `health_settle_back` for 2027 are dated 2028-05-22, after K. They are planned with the new law, not changed after booking, so they need no settlement.
 - The ryczałt advances read `flows(health_pay, m)`, the booked amounts. So they change only where a `health_pay` they read is planned after K.
 
 ## Back pay listed (OPERATIONS §3, `WARN-BACKPAY`)
@@ -46,7 +60,7 @@ The operation re-evaluates every booked instance whose read set the version touc
 | `health_pay[2027-01]` | low: year-to-date revenue 17 000 | 0 | — |
 | `health_pay[2027-02]` | low: 34 000 | 0 | — |
 | `health_pay[2027-03]` | low: 51 000 | 0 | — |
-| `health_pay[2027-04]` | mid: 68 000 | −86.38 | `arrears none`: no movement; the payment stands |
+| `health_pay[2027-04]` | mid: 68 000 | −86.38 | its adjustment is waived by `health_pay_waive_health_ryczalt_2027`: no movement; the payment stands |
 
 `health_pay[2027-05]` is due 2027-06-21, after K. It is planned at the new share.
 
@@ -91,14 +105,14 @@ The difference is 86.38 a month. The low tier, at 0.6, is 518.28 and doesn't cha
 - **Unchanged:** `pit37`, `wife_net`, `replay_september`, `explain_room`, `ike_left`, `konto_balance` at all four dates, `net_worth` at 2026-12-31, and every other 2026 cell.
 - **The old view:** `ask … as known 2027-06-14` still shows it, since the version is invisible to cuts before its `known`.
 
-**Without the `arrears` line:**
+**Without the waiver move:**
 - `health_pay[2027-04]` would get a hole movement, `HOLE-CHANGED`, dated on or after 2027-06-15.
 - Every `flows` over `konto` or `zus` reaching that day or later would be a hole asking "is back pay due, and when?". That means the room of every month from June 2027, and every later balance. So would every `flows` of `health_pay` that can count the hole movement (LANGUAGE §5.13.3): `health_settlement` 2027, `pit28` 2027 and 2028, and through them `taxes_paid` 2027 and 2028. `health_settlement` 2028 stays known, 808.53: its `flows` are keyed to 2028's instances.
 
-**Register:** one new law version with a back-pay line. Nothing is assumed. The `held` figure for `health_share[mid]`, read after K, becomes the new version's: `held: health_share[mid] = 0.9 (health_ryczalt_2027)`.
+**Register:** one new law version and its waiver move. Nothing is assumed. The `held` figure for `health_share[mid]`, read after K, becomes the new version's: `held: health_share[mid] = 0.9 (health_ryczalt_2027)`.
 
-**Warnings:** `WARN-BACKPAY` lists the one instance above, with the line that covers it, `arrears none for health_pay` (OPERATIONS §10). The line answers the back pay, so no hole arises.
+**Warnings:** `WARN-BACKPAY` lists the one instance above, with the move that waives its adjustment, `health_pay_waive_health_ryczalt_2027` (OPERATIONS §10). The waiver answers the back pay, so no hole arises.
 
 **Depends on:**
-- L17: the settlement and the advances are flow pays, re-measured at their own cut, and the `arrears` line names a flow pay;
+- L17: the settlement and the advances are plans, re-measured at their own cut, and the waiver fulfils adjustments of a plan;
 - L10, for the `on` advance.

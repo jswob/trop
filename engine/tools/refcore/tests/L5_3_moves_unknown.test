@@ -1,0 +1,24 @@
+# L §5.3: "LOAD-MOVES: moves naming an unknown version or one not known before this one".
+=== m.tally
+model t
+  tally 2
+  on 2016-03-01
+  start 2015-11-01
+  end 2016-10-31
+
+source s "s"
+
+input n: int
+
+version v1
+  cite s
+  governs 2016-06..
+  known 2016-02-01
+  n = 7
+
+version w
+  cite s
+  known 2016-01-01
+  moves v1 to 2016-01..
+=== expect
+refused: LOAD-MOVES ...

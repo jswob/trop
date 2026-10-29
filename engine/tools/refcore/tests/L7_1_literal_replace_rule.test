@@ -1,0 +1,30 @@
+# Round 18, C1-25 (follows). L §7.1: in rules the only figures are 0, 1, -1 and the rest of its list; "Every other
+# figure ... is a row" (LOAD-LITERAL "figure <n> in a rule; make it a row"). A rule a version brings is a rule: §5.3's
+# example is now `replace rule relief.disabled = disabled_relief when disabled[p]`.
+=== m.tally
+model m
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+source s "s"
+unit PLN: currency minor 0.01
+input base_relief: money PLN
+input disabled: bool
+def relief: money PLN at reader
+  rule base = base_relief
+  rule disabled beats base = base_relief when disabled
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  base_relief = 1000
+  disabled = true
+version v2
+  cite s
+  governs 2026..
+  known 2026-01-01
+  replace rule relief.disabled = 1 500.00 PLN when disabled
+ask q: relief law 2026-06-01
+=== expect
+refused: LOAD-LITERAL figure 1 500.00 PLN in a rule; make it a row (m.tally:23)

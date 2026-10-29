@@ -1,0 +1,79 @@
+# L §6.1 "A member is closed ... a binding inside a member ranges over that member's things, the prelude's kinds
+# included. The joint model's own bindings over a shared kind range over every member's things"; E §3.1 step 1 "a
+# member that is itself a joint model pins its own members". a is a joint model of b: a's own count over accounts
+# holds ka and b's kb (2), b's holds kb (1), and the outer joint model's own count holds both (2); asked inside the
+# joint model, a.n and a.b.n answer as a and b answer alone, and the joint model's own n_a reads a's def (2).
+=== J/joint.tally
+model family
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+  use a = "../A" sha256 "b3c10393f906bea6e10e5d1cbc00844b20c76786e2f44e675f985312465f38bf"
+
+source s "umowa"
+
+input day: date
+
+def all_n: int = count(x in accounts on day)
+
+version v
+  cite s
+  governs always
+  known 2025-01-01
+  day = 2026-06-01
+
+ask n: all_n
+ask n_a: a.cnt
+=== A/reality.tally
+model ana
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+  use b = "../B" sha256 "b8c6618f1d83400a72031f4896cca25609d34e47e3717e5eb533632484851d9c"
+
+source s "umowa"
+
+input day: date
+
+def cnt: int = count(x in accounts on day)
+
+version v
+  cite s
+  governs always
+  known 2025-01-01
+  accounts + [ka] PLN lives 2026-01-01..
+  day = 2026-06-01
+
+ask n: cnt
+=== B/reality.tally
+model ben
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source s "umowa"
+
+input day: date
+
+def cnt: int = count(x in accounts on day)
+
+version v
+  cite s
+  governs always
+  known 2025-01-01
+  accounts + [kb] PLN lives 2026-01-01..
+  day = 2026-06-01
+
+ask n: cnt
+=== expect n n_a a.n a.b.n
+n: 2
+  cut 2026-10-20
+n_a: 2
+  cut 2026-10-20
+a.n: 2
+  cut 2026-10-20
+a.b.n: 1
+  cut 2026-10-20

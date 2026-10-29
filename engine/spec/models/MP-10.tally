@@ -1,10 +1,14 @@
 model mp10
-  tally 1
+  tally 2
   on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
   note "Stadt Hanau's one-page copy of the Düsseldorfer Tabelle 2026, transcribed as printed and used as a lookup table."
   note "The income bands are whole euros as printed, so the band's argument is an int. The copy prints the lower ends of groups 11 to 15 below the upper end of the group before."
 
 source hanau_dt2026 "Düsseldorfer Tabelle 2026 (Düsseldorfer Tabelle in € Stand 01. Januar 2026 (Kindergeld Stand 01. Januar 2026)), Stadt Hanau" at "https://gude.hanau.de/mam/formulare/merkblaetter/düsseldorfer_tabelle_2026.pdf"
+
+unit EUR: currency minor 0.01
 
 index agegroup = [a0_5, a6_11, a12_17, a18]
 
@@ -21,18 +25,18 @@ input probe: int question "Welches Nettoeinkommen (volle Euro) wird in der Tabel
 band hanau_group(income: int): key incgroup
   note "Nettoeinkommen des Unterhaltspflichtigen, table rows 1-15, bounds as printed"
 
-def zahlbetrag[g in incgroup, a in agegroup]: money EUR
+def zahlbetrag[g in incgroup, a in agegroup]: money EUR at reader
   note "Zahlbetrag = Mindestunterhalt abzüglich Kindergeld, as the copy computes it per row"
-  rule adult excepts base when a = a18 = ? "Die Hanauer Kopie zieht in der Spalte ab 18 kein Kindergeld ab und nennt keinen Zahlbetrag."
+  rule adult beats base = ?"Die Hanauer Kopie zieht in der Spalte ab 18 kein Kindergeld ab und nennt keinen Zahlbetrag." when a == a18
   rule base v hanau2026 = hanau_amount[g, a] - kg_half
 
-ask q_group_in_overlap: hanau_group(probe) with probe = 5501
+ask q_group_in_overlap: hanau_group(probe) with probe = 5501 law 2026-10-18
 
-ask q_group_outside_overlap: hanau_group(probe) with probe = 2100
+ask q_group_outside_overlap: hanau_group(probe) with probe = 2100 law 2026-10-18
 
-ask q_kg_half: kg_half
+ask q_kg_half: kg_half law 2026-10-18
 
-ask q_zahlbetrag: zahlbetrag[g, a] for g in incgroup, a in [a0_5, a6_11, a12_17]
+ask q_zahlbetrag: zahlbetrag[g, a] for g in incgroup, a in [a0_5, a6_11, a12_17] law 2026-10-18
 
 version hanau2026
   cite hanau_dt2026
@@ -114,5 +118,5 @@ version hanau2026
   hanau_group: [7001, 8200] = g13 "table row 13, Nettoeinkommen 7.001 - 8.200"
   hanau_group: [8001, 9700] = g14 "table row 14, Nettoeinkommen 8.001 - 9.700"
   hanau_group: [9501, 11200] = g15 "table row 15, Nettoeinkommen 9.501 - 11.200"
-  hanau_group: (11200, inf) = ? "Das Einkommen liegt über der 15. Einkommensgruppe; die Kopie nennt dafür keinen Betrag." "below table row 15"
+  hanau_group: (11200, inf) = ?"Das Einkommen liegt über der 15. Einkommensgruppe; die Kopie nennt dafür keinen Betrag." "below table row 15"
   kg_half = 129.5 "table, column abzüglich Kindergeld, rows 1-15; footer: Das ausgewiesene Kindergeld ist der hälftige Betrag für ein gemeinsames Kind der Eltern."

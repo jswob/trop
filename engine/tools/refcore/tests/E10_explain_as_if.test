@@ -1,0 +1,70 @@
+# E §10: explain of an as if prints "the pins with their values (a pin given by an expression, with its derivation
+# outside the as if), and the derivation inside them beside the one outside".  An ask's `with` pins set the line's
+# world (L §5.18), an as if over it (e1); a def's `tax as if {income = other_income}` is one inside a derivation (e2),
+# its pin given by an expression whose row is derived outside the as if.  tax = income * rate (0.1): pinned 500.00
+# PLN gives 50 PLN, the base 1 000.00 PLN gives 100 PLN, other_income 2 000.00 PLN gives 200 PLN (a money times a num
+# is a num PLN, L §3.2).  Layout: this interpreter's; each cause prints once (L §5.18).
+=== m.tally
+model a
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source s "ustawa"
+unit PLN: currency minor 0.01
+input income: money PLN
+input other_income: money PLN
+input rate: num
+
+def tax: num PLN = income * rate at reader
+def alt: num PLN = tax as if {income = other_income} at reader
+
+version v
+  cite s
+  governs 2026..
+  known 2026-01-01
+  income = 1 000.00 PLN "pit"
+  other_income = 2 000.00 PLN "pit"
+  rate = 0.1 "art. 27"
+
+ask e1: explain tax with income = 500.00 PLN law 2026-06-30
+ask e2: explain alt law 2026-06-30
+=== expect
+e1: 50 PLN
+  [1] the pins, evaluated outside them
+    [2] pin income = 500.00 PLN
+  [3] inside the pins: 50 PLN
+    [4] tax = 50 PLN, law date 2026-06-30
+        rule base: won
+          [5] row v:rate = 0.1
+              version v, source s, "ustawa", locator "art. 27", governs 2026-01-01.., known 2026-01-01
+  [6] outside the pins: 100 PLN
+    [7] tax = 100 PLN, law date 2026-06-30
+        rule base: won
+          [8] row v:income = 1 000.00 PLN
+              version v, source s, "ustawa", locator "pit", governs 2026-01-01.., known 2026-01-01
+          (v:rate: see [5])
+  pinned: income = 500.00 PLN
+  law date 2026-06-30, cut 2026-10-20
+e2: 200 PLN
+  [1] alt = 200 PLN, law date 2026-06-30
+      rule base: won
+        [2] as if {...}
+          [3] the pins, evaluated outside the as if
+            [4] row v:other_income = 2 000.00 PLN
+                version v, source s, "ustawa", locator "pit", governs 2026-01-01.., known 2026-01-01
+            [5] pin income = 2 000.00 PLN
+          [6] inside the as if: 200 PLN
+            [7] tax = 200 PLN, law date 2026-06-30
+                rule base: won
+                  [8] row v:rate = 0.1
+                      version v, source s, "ustawa", locator "art. 27", governs 2026-01-01.., known 2026-01-01
+          [9] outside the as if: 100 PLN
+            [10] tax = 100 PLN, law date 2026-06-30
+                rule base: won
+                  [11] row v:income = 1 000.00 PLN
+                      version v, source s, "ustawa", locator "pit", governs 2026-01-01.., known 2026-01-01
+                  (v:rate: see [8])
+  pinned: income = 2 000.00 PLN
+  law date 2026-06-30, cut 2026-10-20

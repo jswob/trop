@@ -1,0 +1,25 @@
+# L §8.2: "Every result lists, under it, the things it rests on that aren't plain sourced facts; a hole lists them
+# like a value."  An assumed row read beside a hole.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+input g: int
+input h: int
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  g = 1 assumed "a guess"
+  h = ?"unknown"
+
+ask q1: g + h
+=== expect
+q1: ?"unknown" (h)
+  assumed: a guess (g)
+  cut 2026-12-31

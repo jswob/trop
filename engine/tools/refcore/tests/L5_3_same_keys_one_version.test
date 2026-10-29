@@ -1,0 +1,25 @@
+# Round 18, C1-12 (follows). L §5.3: "rows of one target in one version are ordered by precedence (§4.6 step 3), and
+# two it leaves tied are refused (LOAD-OVERLAP, step 4)". x[a] = 5 (the version's always) and x[a] = 7 governs 2027..
+# in one version: the row with a span beats the one with always (§4.6 step 3.3), so 5 in 2026 and 7 in 2027.
+=== m.tally
+model m
+  tally 2
+  on 2027-12-31
+  start 2026-01-01
+  end 2027-12-31
+source s "s"
+unit PLN: currency minor 0.01
+index ks = [a, b]
+input x[k in ks]: money PLN
+def r[k in ks, d in days]: money PLN = x[k] at d
+version v1
+  cite s
+  governs always
+  known 2025-12-01
+  x[a] = 5
+  x[a] = 7 governs 2027..
+  x[b] = 1
+ask q: r[a, 2026-06-01], r[a, 2027-06-01], r[b, 2027-06-01]
+=== expect
+q: (5.00 PLN, 7.00 PLN, 1.00 PLN)
+  cut 2027-12-31

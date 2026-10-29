@@ -1,6 +1,8 @@
 model ul04
-  tally 1
+  tally 2
   on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
   note "High Income Child Benefit Charge, PAYE14015: the example up to and including 2023-24 and the example from 2024-25 onwards."
 
 source fa2012 "Finance Act 2012 (c. 14), Schedule 1, inserting ITEPA 2003 Part 10 Chapter 8 (ss. 681B-681H), as enacted" at "https://www.legislation.gov.uk/ukpga/2012/14/schedule/1/enacted"
@@ -10,6 +12,8 @@ source fa2024_no2 "Finance (No. 2) Act 2024 (c. 12), s. 5, as enacted" at "https
 source paye14015 "HMRC PAYE Manual, PAYE14015, Coding: adjustments to collect tax: high income child benefit charge (updated 2 October 2026)" at "https://www.gov.uk/hmrc-internal-manuals/paye-manual/paye14015"
 
 source si2024_247 "The Tax Credits, Child Benefit and Guardian's Allowance Up-rating Regulations 2024 (S.I. 2024/247), reg. 5" at "https://www.legislation.gov.uk/uksi/2024/247/made"
+
+unit GBP: currency minor 0.01
 
 index cbchild = [eldest, other]
 
@@ -35,31 +39,32 @@ input higher_earner[e in ex]: bool question "Does the partner have an adjusted n
 
 def appropriate_pct[e in ex]: num at start_of(example_year[e])
   note "s. 681C(2): 100%, or if less (ANI - L) / X %, printed as a number of per cent; s. 681C(3)(b) rounds it down to a whole number"
-  rule base = min(100, round((ani[e] - hicbc_l) / hicbc_x, 1, down))
+  rule base = min(100 % / 1 %, round((ani[e] - hicbc_l) / hicbc_x, 1, down))
 
-def cb_total[e in ex]: money GBP
+def cb_total[e in ex]: money GBP at reader
   note "s. 681C(3)(a): the total of the amounts, rounded down to a whole number of pounds"
   rule base = round(cb[e], 1, down)
 
 def charge[e in ex]: money GBP at start_of(example_year[e])
   note "s. 681C(1): the appropriate percentage of the total; s. 681C(3)(a): the charge rounded down to whole pounds"
-  rule base = round(cb_total[e] * appropriate_pct[e] / 100, 1, down)
-  rule not_liable excepts base when not liable[e] = 0
+  rule base = round(cb_total[e] * appropriate_pct[e] * 1 %, 1, down)
+  rule not_liable beats base = 0 when not liable[e]
 
-def liable[e in ex]: bool = ani[e] > hicbc_l and higher_earner[e]
+def liable[e in ex]: bool = ani[e] > hicbc_l and higher_earner[e] at reader
 
-def weeks_in_year[y in ty]: int
+def weeks_in_year[y in ty]: int at start_of(y)
   note "s. 681H(3): a week is 7 days beginning with a Monday, and is in a tax year if (and only if) its Monday is, so a tax year has as many weeks as Mondays"
-  rule base = count(d in tday where d >= start_of(y) and d < end_of(y) and weekday(d) = 1)
+  rule base = count(d in tday where d >= start_of(y) and d < end_of(y) and weekday(d) == 1)
 
-ask cb_ex2_weeks: check cb[ex2] = cb_weekly[eldest, 2024] * weeks_in_year[2024]
+ask cb_ex2_weeks: check cb[ex2] == cb_weekly[eldest, 2024] * weeks_in_year[2024] law 2026-10-18
 
-ask q_ex1: appropriate_pct[ex1], charge[ex1]
+ask q_ex1: appropriate_pct[ex1], charge[ex1] law 2026-10-18
 
-ask q_ex2: appropriate_pct[ex2], charge[ex2]
+ask q_ex2: appropriate_pct[ex2], charge[ex2] law 2026-10-18
 
 version fa2012_sch1
   cite fa2012
+  governs always
   known 2012-07-17
   note "Royal Assent 17 July 2012, the bracketed date on the Act's enacted introduction (https://www.legislation.gov.uk/ukpga/2012/14/introduction/enacted); Sch. 1 para. 1 inserted s. 681C with L = £50,000 and X = £100"
   note "the revised ITEPA text on legislation.gov.uk (s. 681C as at 05/04/2024, the case's source) still has these figures and is their locator, not their version"
@@ -68,6 +73,7 @@ version fa2012_sch1
 
 version si2024_247_reg5
   cite si2024_247
+  governs always
   known 2024-02-29
   enters 2024-04-08
   note "made 29 February 2024 (legislation.gov.uk, https://www.legislation.gov.uk/uksi/2024/247/made: 'Made 29th February 2024'); an S.I. is known from its made date (§4.5)"
@@ -82,11 +88,12 @@ version fa2024_no2_s5
   known 2024-05-24
   note "Royal Assent 24 May 2024, the bracketed date on the Act's enacted introduction (https://www.legislation.gov.uk/ukpga/2024/12/introduction/enacted); s. 5(3): the amendments have effect for the tax year 2024-25 and subsequent tax years"
   note "the revised ITEPA text's annotations F3 and F4 on s. 681C point to this section"
-  hicbc_l = 60000 "s. 5(1): s. 681C(2)(b), definition of L, for £50,000 substitute £60,000 (ITEPA s. 681C, F3); also s. 681B(1)(a)"
-  hicbc_x = 200 "s. 5(2): s. 681C(2)(b), definition of X, for £100 substitute £200 (ITEPA s. 681C, F4)"
+  replace hicbc_l = 60000 "s. 5(1): s. 681C(2)(b), definition of L, for £50,000 substitute £60,000 (ITEPA s. 681C, F3); also s. 681B(1)(a)"
+  replace hicbc_x = 200 "s. 5(2): s. 681C(2)(b), definition of X, for £100 substitute £200 (ITEPA s. 681C, F4)"
 
 version paye14015_examples
   cite paye14015
+  governs always
   known 2026-10-18
   note "the worked examples' stipulations: the model has no start, so they are known from its on (§4.5); the page itself was updated 2 October 2026"
   ani[ex1] = 54000 assumed "the example says income; it is read as adjusted net income (s. 681H(2))" "Example up to and including tax year 2023 to 2024"

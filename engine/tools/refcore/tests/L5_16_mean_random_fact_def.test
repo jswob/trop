@@ -1,0 +1,33 @@
+# L §5.16: "A random fact is an input or def of type dist U"; Closed forms: "mean(e), e a sum of known multiples of
+# random facts plus a known constant: the same sum of their means"; normal(m, s) has mean m. g (a def) and g2 (an
+# input) are random facts with mean 10 PLN (writer 5's T-74, stated; `mean` of a distribution value written inline,
+# `mean(normal(mu, sd))`, is refused LOAD-RANDOM since round 18, C1-47, L5_16_mean_of_dist_value).
+=== m.tally
+model t
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+input mu: money PLN
+input sd: money PLN
+input g2: dist PLN
+def g: dist PLN = normal(mu, sd) to 0.01 PLN
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  mu = 10.00 PLN
+  sd = 2.00 PLN
+  g2 = normal(10 PLN, 2 PLN) to 0.01 PLN
+
+ask q: mean(g)
+ask q2: mean(g2)
+=== expect
+q: 10 PLN (horizon none)
+  cut 2026-10-18
+q2: 10 PLN (horizon none)
+  cut 2026-10-18

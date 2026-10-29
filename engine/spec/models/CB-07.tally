@@ -1,6 +1,8 @@
 model cb07
-  tally 1
+  tally 2
   on 2026-10-19
+  start 2026-01-01
+  end 2026-12-31
   note "Ministerstwo Finansów, Objaśnienia podatkowe of 29 April 2021 on tax residence, Przykłady 8-13: the 183-day count (8), a change of residence during the year (9, 10), the Poland-UK method change under the MLI (11), and the treaty tie-breakers with Spain (12) and Canada (13)."
   note "The centre of vital interests, a permanent home, closer ties, an habitual abode and residence under a state's own law are the source's findings, entered as rows. Przykłady 9 and 10 state no year, so their dates are assumed to fall in 2020; no result depends on the year."
   note "Julia's Belarusian nationality and her move to Germany (Przykład 8), and Monika's UK work facts (Przykład 11), are read by nothing and not entered. Przykład 11 gives no amounts, so its tax and credit are written as steps over holes."
@@ -22,7 +24,11 @@ source dz2018_2253 "Oświadczenie rządowe z dnia 11 października 2018 r. w spr
 
 source dz2019_1835 "Ustawa z dnia 30 sierpnia 2019 r. o zmianie ustawy o podatku dochodowym od osób fizycznych oraz ustawy o zmianie ustawy o podatku dochodowym od osób fizycznych oraz niektórych innych ustaw (Dz. U. poz. 1835)" at "https://api.sejm.gov.pl/eli/acts/DU/2019/1835/text.pdf"
 
+source lifted_1_0_1 "Figures tally 1.0.1 allowed inline in rules"
+
 source mf_objasnienia "Objaśnienia podatkowe z dnia 29 kwietnia 2021 r. Rezydencja podatkowa oraz zakres obowiązku podatkowego osób fizycznych w Polsce (Minister Finansów, Funduszy i Polityki Regionalnej)" at "https://www.gov.pl/attachment/8f2d0cf1-ee3c-49a4-ae8e-e41c4fb19df7"
+
+unit PLN: currency minor 0.01
 
 axis abolition_use
   used "Monika claims the ulga abolicyjna for 2020, shown in PIT/O"
@@ -71,6 +77,9 @@ input kz_full: money PLN
 input last_present[p in person]: date
   note "the last day in Poland of an unbroken stay"
 
+input mli_from_6: int
+  note "lifted from an inline figure of tally 1.0.1"
+
 input mli_in_force[s in state]: date
   note "the day the MLI entered into force for that state (MLI art. 34)"
 
@@ -93,150 +102,157 @@ band kz(x: money PLN): num PLN
 band scale(x: money PLN): num PLN
   note "skala podatkowa, art. 27 ust. 1"
 
-def abolition_right[y in cy]: bool
+def abolition_right[y in cy]: bool at start_of(y)
   note "MF, Przykład 11: under the proportional credit method she may claim the ulga abolicyjna, shown in PIT/O"
-  rule base v mf2021 = ? "Is the ulga abolicyjna open in a year under the exemption method? The source doesn't say."
-  rule credit excepts base v mf2021 when ukmethod[y] = proportional_credit = true
+  rule base v mf2021 = ?"Is the ulga abolicyjna open in a year under the exemption method? The source doesn't say."
+  rule credit beats base v mf2021 = true when ukmethod[y] == proportional_credit
 
-def centre_moved[p in person]: date
+def centre_moved[p in person]: date at reader
   note "MF, Przykłady 9 and 10: the centre of vital interests moves with the household: Mariusz's one-person household on the day he moved, Dawid's when his wife and children arrived in Sweden to stay"
   rule household v mf2021 = household_moved[p]
 
-def days_pl[p in person, y in cy]: int
+def days_pl[p in person, y in cy]: int at start_of(y)
   note "MF section 2.2: days of physical presence in each calendar year; the day of arrival, the day of departure and any part of a day count"
   rule base v mf2021 = overlap_days(arrived[p], last_present[p], y)
 
-def dual[p in person]: bool = domestic_res[p, pol] and domestic_res[p, other_state[p]]
+def dual[p in person]: bool = domestic_res[p, pol] and domestic_res[p, other_state[p]] at reader
 
-def first_mli_year: key cy = first(y in cy where ukmethod[y] = proportional_credit)
+def first_mli_year: key cy = first(y in cy where ukmethod[y] == proportional_credit) at reader
 
-def income_all[p in person, y in cy]: money PLN = income_other[p, y] + income_uk[p, y]
+def income_all[p in person, y in cy]: money PLN = income_other[p, y] + income_uk[p, y] at start_of(y)
 
-def left_pl[p in person]: bool
+def left_pl[p in person]: bool at reader
   note "art. 3 ust. 1a pkt 1: residence by the centre of vital interests ends when the centre leaves Poland; the 183-day limb (pkt 2) is not counted, as in the source"
-  rule base v pit_2006 = (centre_from[p] = pol and centre_to[p] != pol)
+  rule base v pit_2006 = centre_from[p] == pol and centre_to[p] != pol
 
-def long_stay[p in person, y in cy]: bool
+def long_stay[p in person, y in cy]: bool at start_of(y)
   note "art. 3 ust. 1a pkt 2: more than 183 days in Poland in the tax year"
   rule base v pit_2006 = days_pl[p, y] > stay_limit
 
-def method_change_day: date = start_of(first_mli_year)
+def method_change_day: date = start_of(first_mli_year) at reader
 
-def mli_from: date
+def mli_from: date at reader
   note "MLI art. 35 ust. 1 lit. b): for taxes other than withholding taxes, the MLI applies to taxable periods beginning on or after six calendar months from the latest of the days it entered into force for the two states"
-  rule base v mli = add_months(max(mli_in_force[pol], mli_in_force[gbr]), 6)
+  rule base v mli = add_months(max(mli_in_force[pol], mli_in_force[gbr]), mli_from_6)
 
-def must_file[f in form, y in cy]: bool
+def must_file[f in form, y in cy]: bool at start_of(y)
   note "MF, Przykład 11: under the proportional credit method she must file PIT-36 with PIT/ZG whether or not she has other income taxable in Poland; PIT/O shows the ulga abolicyjna if she claims it"
-  rule base v mf2021 = ? "Which returns does a year under the exemption method need? The source says only that she filed none for 2019, having no other income."
-  rule credit excepts base v mf2021 when ukmethod[y] = proportional_credit and f != pit_o = true
-  rule relief excepts base v mf2021 when ukmethod[y] = proportional_credit and f = pit_o = (abolition_right[y] and abolition_use = used)
+  rule base v mf2021 = ?"Which returns does a year under the exemption method need? The source says only that she filed none for 2019, having no other income."
+  rule credit beats base v mf2021 = true when ukmethod[y] == proportional_credit and f != pit_o
+  rule relief beats base v mf2021 = abolition_right[y] and abolition_use == used when ukmethod[y] == proportional_credit and f == pit_o
 
-def nonres_from[p in person]: date
+def nonres_from[p in person]: date at reader
   note "MF, Przykład 9: the day of the move is the last day of unlimited liability; non-resident status starts the next day"
   rule base v mf2021 = centre_moved[p] + 1
 
-def resident_at_departure[p in person]: bool
+def resident_at_departure[p in person]: bool at reader
   note "art. 3 ust. 1a pkt 1: on the day he left to work abroad, the centre of vital interests was still in Poland"
-  rule base v pit_2006 = (centre_from[p] = pol and work_abroad_from[p] < centre_moved[p])
+  rule base v pit_2006 = centre_from[p] == pol and work_abroad_from[p] < centre_moved[p]
 
-def tax_after_credit[p in person, y in cy]: num PLN
+def tax_after_credit[p in person, y in cy]: num PLN at start_of(y)
   note "the tax after the deduction for UK tax. The health contribution (art. 27b), the ulga abolicyjna (art. 27g) and the rounding to whole złoty come after it; the source asks for no amount, so they are not written."
   rule base v mli_uk = tax_scale_all[p, y] - uk_credit[p, y]
 
-def tax_scale_all[p in person, y in cy]: num PLN
+def tax_scale_all[p in person, y in cy]: num PLN at start_of(y)
   note "MLI art. 5 ust. 6, Opcja C: the tax computed before the deduction, by the scale of the year's law (art. 27 ust. 1 and 1a), on the whole base, the UK income included"
   rule base = scale(tax_base[p, y])
 
-def tb_ca[p in person]: key state
+def tb_ca[p in person]: key state at reader
   note "PL-CA convention art. 4 ust. 2 (a)-(d): a resident of both states is a resident only of the state these steps give, taken in this order; each step excepts the next, and the chain is transitive (LANGUAGE 5.10)"
-  rule abode excepts nationality v upo_ca when abode[p, pol] != abode[p, can] = if abode[p, pol] then pol else can
-  rule agreement v upo_ca = ? "Art. 4 ust. 2 (d): jeśli osoba fizyczna jest obywatelem obu Państw lub nie jest obywatelem żadnego z nich, właściwe organy Umawiających się Państw rozstrzygną sprawę w drodze wzajemnego porozumienia."
-  rule home excepts vital v upo_ca when home[p, pol] != home[p, can] = if home[p, pol] then pol else can
-  rule nationality excepts agreement v upo_ca when national[p, pol] != national[p, can] = if national[p, pol] then pol else can
-  rule vital excepts abode v upo_ca when home[p, pol] and home[p, can] and closer[p, pol] != closer[p, can] = if closer[p, pol] then pol else can
+  rule abode beats agreement, nationality v upo_ca = if abode[p, pol] then pol else can when abode[p, pol] != abode[p, can]
+  rule agreement v upo_ca = ?"Art. 4 ust. 2 (d): jeśli osoba fizyczna jest obywatelem obu Państw lub nie jest obywatelem żadnego z nich, właściwe organy Umawiających się Państw rozstrzygną sprawę w drodze wzajemnego porozumienia."
+  rule home beats abode, agreement, nationality, vital v upo_ca = if home[p, pol] then pol else can when home[p, pol] != home[p, can]
+  rule nationality beats agreement v upo_ca = if national[p, pol] then pol else can when national[p, pol] != national[p, can]
+  rule vital beats abode, agreement, nationality v upo_ca = if closer[p, pol] then pol else can when home[p, pol] and home[p, can] and closer[p, pol] != closer[p, can]
 
-def tb_es[p in person]: key state
+def tb_es[p in person]: key state at reader
   note "PL-ES agreement art. 4 ust. 2 a)-d): a resident of both states is a resident only of the state these steps give, taken in this order; each step excepts the next, and the chain is transitive (LANGUAGE 5.10)"
-  rule abode excepts nationality v upo_es when abode[p, pol] != abode[p, esp] = if abode[p, pol] then pol else esp
-  rule agreement v upo_es = ? "Art. 4 ust. 2 lit. d): jeżeli sytuacji tej osoby nie można określić zgodnie z postanowieniami litery c), właściwe władze Umawiających się Państw rozstrzygną zagadnienie w drodze wzajemnego porozumienia."
-  rule home excepts vital v upo_es when home[p, pol] != home[p, esp] = if home[p, pol] then pol else esp
-  rule nationality excepts agreement v upo_es when national[p, pol] != national[p, esp] = if national[p, pol] then pol else esp
-  rule vital excepts abode v upo_es when home[p, pol] and home[p, esp] and closer[p, pol] != closer[p, esp] = if closer[p, pol] then pol else esp
+  rule abode beats agreement, nationality v upo_es = if abode[p, pol] then pol else esp when abode[p, pol] != abode[p, esp]
+  rule agreement v upo_es = ?"Art. 4 ust. 2 lit. d): jeżeli sytuacji tej osoby nie można określić zgodnie z postanowieniami litery c), właściwe władze Umawiających się Państw rozstrzygną zagadnienie w drodze wzajemnego porozumienia."
+  rule home beats abode, agreement, nationality, vital v upo_es = if home[p, pol] then pol else esp when home[p, pol] != home[p, esp]
+  rule nationality beats agreement v upo_es = if national[p, pol] then pol else esp when national[p, pol] != national[p, esp]
+  rule vital beats abode, agreement, nationality v upo_es = if closer[p, pol] then pol else esp when home[p, pol] and home[p, esp] and closer[p, pol] != closer[p, esp]
 
-def treaty_res[p in person]: key state
+def treaty_res[p in person]: key state at reader
   note "art. 4a: art. 3 applies subject to the treaty with the other state that treats the person as its resident"
-  rule ca when dual[p] and other_state[p] = can = tb_ca[p]
-  rule es when dual[p] and other_state[p] = esp = tb_es[p]
+  rule ca = tb_ca[p] when dual[p] and other_state[p] == can
+  rule es = tb_es[p] when dual[p] and other_state[p] == esp
 
-def uk_credit[p in person, y in cy]: num PLN
+def uk_credit[p in person, y in cy]: num PLN at start_of(y)
   note "MLI art. 5 ust. 6, Opcja C: Poland deducts an amount equal to the UK tax, but no more than the part of the tax computed before the deduction that falls on the income taxable in the UK; the MF: w wysokości proporcjonalnie przypadającej na ten zagraniczny dochód"
-  rule credit v mli_uk when ukmethod[y] = proportional_credit = min(tax_uk[p, y], tax_scale_all[p, y] * income_uk[p, y] / income_all[p, y])
-  rule exemption v upo_uk when ukmethod[y] = exemption_progression = -
+  rule credit v mli_uk = min(tax_uk[p, y], tax_scale_all[p, y] * income_uk[p, y] / income_all[p, y]) when ukmethod[y] == proportional_credit
+  rule exemption v upo_uk = none when ukmethod[y] == exemption_progression
 
-def ukmethod[y in cy]: key method
+def ukmethod[y in cy]: key method at start_of(y)
   note "PL-UK convention art. 22 ust. 2 lit. a): Poland exempts a resident's UK income, with progression. MLI art. 5 ust. 6 (Opcja C) replaces it with the proportional credit for Polish taxes levied for tax periods beginning on or after mli_from. The PIT tax period is the calendar year (MF section 2.2)."
   rule base v upo_uk = exemption_progression
-  rule mli excepts base v mli_uk when start_of(y) >= mli_from = proportional_credit
+  rule mli beats base v mli_uk = proportional_credit when start_of(y) >= mli_from
 
-def unlimited[p in person]: bool
+def unlimited[p in person]: bool at reader
   note "art. 3 ust. 1 with art. 4a: a Polish resident is taxed on all income, subject to the treaties; a resident of both states only if the treaty gives the residence to Poland"
-  rule base v pit_2006 = domestic_res[p, pol] and (not dual[p] or treaty_res[p] = pol)
+  rule base v pit_2006 = domestic_res[p, pol] and (not dual[p] or treaty_res[p] == pol)
 
-def unlimited_from[p in person]: date
+def unlimited_from[p in person]: date at reader
   note "MF section 2.2 and Przykład 9: the calendar year is the tax period, so a resident from before the year is liable without limit from its first day"
   rule base v mf2021 = start_of(year_of(centre_moved[p]))
 
-def unlimited_to[p in person]: date
+def unlimited_to[p in person]: date at reader
   note "MF, Przykład 9: income up to the end of the day of the move is settled under unlimited liability"
   rule base v mf2021 = centre_moved[p]
 
-ask q_p08_days: days_pl[julia, y] for y in cy with arrived[julia] = 2019-11-01
+ask q_p08_days: days_pl[julia, y] for y in cy with arrived[julia] = 2019-11-01 law 2026-10-19
 
-ask q_p08_long_stay: long_stay[julia, y] for y in cy
+ask q_p08_long_stay: long_stay[julia, y] for y in cy law 2026-10-19
 
-ask q_p09_left: left_pl[mariusz]
+ask q_p09_left: left_pl[mariusz] law 2026-10-19
 
-ask q_p09_moved: centre_moved[mariusz]
+ask q_p09_moved: centre_moved[mariusz] law 2026-10-19
 
-ask q_p09_nonres: nonres_from[mariusz]
+ask q_p09_nonres: nonres_from[mariusz] law 2026-10-19
 
-ask q_p09_unlimited: unlimited_from[mariusz], unlimited_to[mariusz]
+ask q_p09_unlimited: unlimited_from[mariusz], unlimited_to[mariusz] law 2026-10-19
 
-ask q_p10_departure: resident_at_departure[dawid]
+ask q_p10_departure: resident_at_departure[dawid] law 2026-10-19
 
-ask q_p10_left: left_pl[dawid]
+ask q_p10_left: left_pl[dawid] law 2026-10-19
 
-ask q_p10_moved: centre_moved[dawid]
+ask q_p10_moved: centre_moved[dawid] law 2026-10-19
 
-ask q_p11_amounts: tax_scale_all[monika, 2020], uk_credit[monika, 2020], tax_after_credit[monika, 2020]
+ask q_p11_amounts: tax_scale_all[monika, 2020], uk_credit[monika, 2020], tax_after_credit[monika, 2020] law 2026-10-19
 
-ask q_p11_change: method_change_day
+ask q_p11_change: method_change_day law 2026-10-19
 
-ask q_p11_forms: must_file[f, 2020] for f in form
+ask q_p11_forms: must_file[f, 2020] for f in form law 2026-10-19
 
-ask q_p11_method: ukmethod[y] for y in cy
+ask q_p11_method: ukmethod[y] for y in cy law 2026-10-19
 
-ask q_p11_relief: abolition_right[2020]
+ask q_p11_relief: abolition_right[2020] law 2026-10-19
 
-ask q_p11_same: ukmethod[2020] = ukmethod[2019]
+ask q_p11_same: ukmethod[2020] == ukmethod[2019] law 2026-10-19
 
-ask q_p12_dual: dual[renata]
+ask q_p12_dual: dual[renata] law 2026-10-19
 
-ask q_p12_state: treaty_res[renata]
+ask q_p12_state: treaty_res[renata] law 2026-10-19
 
-ask q_p12_unlimited: unlimited[renata]
+ask q_p12_unlimited: unlimited[renata] law 2026-10-19
 
-ask q_p12_why: explain tb_es[renata]
+ask q_p12_why: explain tb_es[renata] law 2026-10-19
 
-ask q_p13_dual: dual[jakub]
+ask q_p13_dual: dual[jakub] law 2026-10-19
 
-ask q_p13_state: treaty_res[jakub]
+ask q_p13_state: treaty_res[jakub] law 2026-10-19
 
-ask q_p13_why: explain tb_ca[jakub]
+ask q_p13_why: explain tb_ca[jakub] law 2026-10-19
+
+version lifted_figures
+  cite lifted_1_0_1
+  governs always
+  known 1982-06-18
+  mli_from_6 = 6 "inline in tally 1.0.1: mli_from line 127, argument 2 of add_months"
 
 version upo_es
   cite dz1982_127
+  governs always
   known 1982-06-18
   note "Art. 4 ust. 2 a)-d), read in the MF's synthesised text of the agreement with the MLI (https://www.podatki.gov.pl/media/d0nlkedh/pl-es-konwencja-mli-tekst-syntetyczny-pl-es-kopia.pdf, pp. 7-8; a working document, not a source of law). The MLI doesn't touch art. 4 ust. 2: its art. 4 is on persons other than individuals. Known from promulgation, 1982-06-18 (ELI API, api.sejm.gov.pl/eli/acts/DU/1982/127, field promulgation); later protocols are not traced. Its lit. d) reads differently from the MF's general statement in section 3.1 (p. 11); neither example reaches it."
 
@@ -250,27 +266,32 @@ version pit_2006
 
 version upo_uk
   cite dz2006_1840
+  governs always
   known 2006-12-29
   note "Art. 22 ust. 2 lit. a): Polska zwolni taki dochód z opodatkowania, read in the MF's synthesised text with the MLI (https://www.podatki.gov.pl/media/dmklglvr/upo-pl-uk-mli-tekst-syntetyczny-pl.pdf, pp. 22-23), which says of itself (p. 1): Niniejszy dokument w żadnym przypadku nie stanowi źródła prawa. Known from promulgation, 2006-12-29 (ELI API, api.sejm.gov.pl/eli/acts/DU/2006/1840, field promulgation)."
 
 version upo_ca
   cite dz2013_1371
+  governs always
   known 2013-11-25
   note "Art. 4 ust. 2 (a)-(d), read in the MF's synthesised text with the MLI (https://www.podatki.gov.pl/media/xt0fuutg/upo-pl-kanada-tekst-syntetyczny-mli-pl-tc.pdf, pp. 7-8; a working document, not a source of law). The MLI doesn't touch art. 4 ust. 2. Known from promulgation, 2013-11-25 (ELI API, api.sejm.gov.pl/eli/acts/DU/2013/1371, field promulgation)."
 
 version mli
   cite dz2018_1369
+  governs always
   known 2018-07-17
   note "art. 35 ust. 1 lit. b), and art. 5 ust. 6, Opcja C (synthesised PL-UK text, pp. 22-23). Known from promulgation, 2018-07-17 (ELI API, api.sejm.gov.pl/eli/acts/DU/2018/1369, field promulgation), the day of the Dziennik Ustaw issue that also carries poz. 1370."
 
 version mli_pl
   cite dz2018_1370
+  governs always
   known 2018-07-17
   note "Poland ratified the MLI on 4 stycznia 2018 r.; under its art. 34 ust. 1 it entered into force for Poland on 1 lipca 2018 r. Poland's notification under art. 5 ust. 10 chooses Opcja C. Known from promulgation: the Dziennik Ustaw is dated Warszawa, dnia 17 lipca 2018 r."
   mli_in_force[pol] = 2018-07-01 "Zgodnie z art. 34 ust. 1 Konwencji wchodzi ona w życie dnia 1 lipca 2018 r. w stosunku do Rzeczypospolitej Polskiej"
 
 version mli_uk
   cite dz2018_2253
+  governs always
   known 2018-12-03
   note "The United Kingdom became a party to the MLI on 1 października 2018 r., and from that day the MLI applies to the PL-UK convention, so Opcja C replaces its art. 22 ust. 2 lit. a). Known from promulgation: the Dziennik Ustaw is dated Warszawa, dnia 3 grudnia 2018 r."
   note "The synthesised PL-UK text prints the date that follows from these two days under art. 35 ust. 1 lit. b) (p. 2)."
@@ -285,23 +306,25 @@ version pit_2019
   kz: (8000, 13000] = kz_full - 834.88 * (x - band_lo(kz, x)) / 5000 "art. 27 ust. 1a pkt 2: 1360 zł pomniejszone o 834 zł 88 gr × (podstawa obliczenia podatku – 8000 zł) ÷ 5000 zł"
   kz: (13000, 85528] = 525.12 "art. 27 ust. 1a pkt 3: 525 zł 12 gr"
   kz: (85528, 127000] = 525.12 - 525.12 * (x - band_lo(kz, x)) / 41472 "art. 27 ust. 1a pkt 4: 525 zł 12 gr pomniejszone o 525 zł 12 gr × (podstawa obliczenia podatku – 85 528 zł) ÷ 41 472 zł"
-  kz: (127000, inf) = ? "art. 27 ust. 1a for a base above 127 000 zł is not in the case"
+  kz: (127000, inf) = ?"art. 27 ust. 1a for a base above 127 000 zł is not in the case"
   kz_full = 1360 "art. 27 ust. 1a pkt 1: 1360 zł"
   scale: [0, 85528] = 0.17 * x - kz(x) "art. 27 ust. 1, first bracket: do 85 528, 17% minus kwota zmniejszająca podatek"
   scale: (85528, inf) = 14539.76 + 0.32 * (x - band_lo(scale, x)) - kz(x) "art. 27 ust. 1, second bracket: 14 539 zł 76 gr + 32% nadwyżki ponad 85 528 zł, minus kwota zmniejszająca podatek"
 
 version mf2021
   cite mf_objasnienia
+  governs always
   known 2021-04-29
   note "The guidance is dated 29 April 2021. It cites the PIT act as Dz. U. z 2020 r. poz. 1426, z późn. zm. (footnote 1). Its rules are cited here; its examples' facts are in version mf_examples."
 
 version mf_examples
   cite mf_objasnienia
+  governs always
   known 2026-10-19
   note "The facts and findings of Przykłady 8-13 are a hypothetical case's stipulations, known from the model's on date (LANGUAGE 4.5; the model has no start), as are the assumptions that stand for what the examples leave unsaid."
   abode[jakub, pol] = true assumed "the source says only that his days in each state are not decisive; half a year in each is read as an habitual abode in both (an abode in neither would lead to nationality too)" "p. 12, Przykład 13: ilość dni pobytu pana Jakuba w każdym z państw nie jest rozstrzygająca"
   abode[jakub, can] = true assumed "the source says only that his days in each state are not decisive; half a year in each is read as an habitual abode in both (an abode in neither would lead to nationality too)" "p. 12, Przykład 13: ilość dni pobytu pana Jakuba w każdym z państw nie jest rozstrzygająca"
-  arrived[julia] = 2019-11 "p. 8, Przykład 8: w listopadzie 2019 r. (the day is not stated)"
+  arrived[julia] = window(2019-11-01, 2019-11-30) "p. 8, Przykład 8: w listopadzie 2019 r. (the day is not stated)"
   centre_from[mariusz] = pol "p. 8, Przykład 9: opuścił wynajmowane mieszkanie ostatniego dnia maja tego roku i w tym dniu przeniósł się do Wielkiej Brytanii"
   centre_from[dawid] = pol "p. 9, Przykład 10: wciąż posiadał centrum interesów osobistych w Polsce"
   centre_to[mariusz] = gbr "p. 8, Przykład 9: Od tego czasu ośrodek interesów życiowych pana Mariusza znajduje się w Wielkiej Brytanii."
@@ -319,7 +342,7 @@ version mf_examples
   home[jakub, pol] = true "p. 12, Przykład 13: he owns a flat in each country, furnished for a permanent stay"
   home[jakub, can] = true "p. 12, Przykład 13: he owns a flat in each country, furnished for a permanent stay"
   household_moved[mariusz] = 2020-05-31 assumed "the year is not stated (tego roku podatkowego); 2020 is taken, and no result depends on it" "p. 8, Przykład 9: opuścił wynajmowane mieszkanie ostatniego dnia maja tego roku i w tym dniu przeniósł się do Wielkiej Brytanii; jednoosobowe gospodarstwo domowe"
-  household_moved[dawid] = 2020-07 assumed "the year is not stated; 2020 is taken, and no result depends on it. The day in July is not stated either." "p. 9, Przykład 10: w lipcu żona i dzieci pana Dawida przeprowadziły się do Szwecji"
+  household_moved[dawid] = window(2020-07-01, 2020-07-31) assumed "the year is not stated; 2020 is taken, and no result depends on it. The day in July is not stated either." "p. 9, Przykład 10: w lipcu żona i dzieci pana Dawida przeprowadziły się do Szwecji"
   last_present[julia] = 2020-05-31 assumed "do końca maja is read as presence through 31 May 2020 and none after; the day she left is not stated" "p. 8, Przykład 8: Pracowała nieprzerwanie na terytorium Polski do końca maja 2020 r."
   national[jakub, pol] = true "p. 12, Przykład 13: obywatelem polskim"
   national[jakub, can] = false assumed "only his Polish nationality is stated, and the source decides by it, which needs him not to be a Canadian national as well" "p. 12, Przykład 13: Pan Jakub posiada obywatelstwo polskie"

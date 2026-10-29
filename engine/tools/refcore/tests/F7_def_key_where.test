@@ -1,0 +1,23 @@
+# Fault F7 (W-A): a name in a def key bind's `where` was never checked, so reading the def failed inside the
+# interpreter (`AttributeError '_r'`). L §2.3 `bind`: a key bind may carry `where`; L §5.6: the def is defined where
+# its key bind's where holds. blue is not red and not warm, so v[blue] = 1 in both texts (q, q2); and warm, read by
+# v's key bind, is read (no WARN-UNREAD).
+=== m.tally
+model t7
+  tally 2
+  on 2026-01-15
+  start 2021-01-01
+  end 2026-12-31
+
+index colour = [red, blue, green]
+def warm[c in colour]: bool = c == red
+def v[c in colour where not warm[c]]: int = 1
+def w[c in colour where c != red]: int = 1
+
+ask q: v[blue]
+ask q2: w[blue]
+=== expect
+q: 1
+  cut 2026-01-15
+q2: 1
+  cut 2026-01-15

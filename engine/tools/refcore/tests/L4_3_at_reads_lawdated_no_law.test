@@ -1,0 +1,28 @@
+# Round 18, C1-16 (follows): charged's at reads surprise_dom, law-dated, so an ask line that reaches charged states
+# law (L §4.3, §5.18 law D: "a chain of readers stops at a def with a written at e, except for what e itself reads").
+=== m.tally
+model m
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+source s "s"
+unit PLN: currency minor 0.01
+input surprise_dom: int
+input fee: money PLN
+def charged[m in months]: money PLN = fee at day_of(m, surprise_dom)
+version v1
+  cite s
+  governs 2026-01..2026-06
+  known 2025-12-01
+  surprise_dom = 10
+  fee = 5
+version v2
+  cite s
+  governs 2026-07..
+  known 2025-12-01
+  surprise_dom = 20
+  fee = 7
+ask q: charged[2026-03]
+=== expect
+refused: LOAD-LAWDATE ask q reaches charged, whose at reads law-dated facts at its reader's law date, without law (L §4.3) (m.tally:23)

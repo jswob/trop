@@ -1,0 +1,33 @@
+# MC-E1-F2. L §2.2: period words are "the period argument of periodic and factor (day, month, quarter, year, §3.3)",
+# and contextual words are reserved only in their own position; L §6.1: "A member's items mean what they mean alone".
+# The member declares `index month` and writes periodic(r, month, nominal 12): there `month` is the period word, so the
+# merge leaves it as written (snap9 renamed it m.month: LOAD-UNIT the period argument is a period word ... not m.month).
+# The member alone and the joint model print the hole of the rate r it reads.
+=== j/joint.tally
+model j
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+  use m = "../m" sha256 "2922e2b1cf80136a61ceaab955eca198a6a6772a1cbeeded39c60b3dff306716"
+
+ask jq: m.p law 2026-06-30
+=== m/model.tally
+model m
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+index month = month 2026-01..2026-12
+
+input r: rate question "r?"
+
+def p: num = periodic(r, month, nominal 12)
+
+ask q: p law 2026-06-30
+=== expect jq m.q
+jq: ?"r?" (m.r)
+  law date 2026-06-30, cut 2026-01-01
+m.q: ?"r?" (r)
+  law date 2026-06-30, cut 2026-01-01

@@ -1,0 +1,37 @@
+# GD-13 (round 19, writer 10): E §2 "[K, E], evaluation window ... Observations in [K, E] are never read by the run at
+# cut K": day K is plan. bank[r1] is dated 2026-03-10; at cut 2026-03-10 it isn't read (konto holds its opening,
+# 100.00 PLN, as stated), and at the header's cut 2026-03-20 its 50.00 PLN, as stated, is konto's flows that day.
+=== m.tally
+model t
+  tally 2
+  on 2026-03-20
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+source b "b"
+unit PLN: currency minor 0.01
+input bank: observed
+place konto: accounts PLN lives 2025-01-01..
+place world: outside lives 1900-01-01..
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 100.00 PLN at 2026-01-01 start "s"
+
+version st
+  cite b
+  governs 2026-03
+  known 2026-03-10
+  covers konto
+  bank[r1] = (on: 2026-03-10, kind: transfers, leg cash from world to konto amount 50.00 PLN) "r1"
+
+ask atk: bal(konto, 2026-03-10) as known 2026-03-10
+ask after: flows(konto, 2026-03-10 .. 2026-03-10)
+=== expect
+after: 50.00 PLN
+  cut 2026-03-20
+atk: 100.00 PLN
+  cut 2026-03-10

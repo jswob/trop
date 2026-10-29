@@ -1,0 +1,28 @@
+# Round 18, C1-18 (follows). L §4.6 step 5, Outside a lifespan: "where ... d lies outside its lifespan (for an input
+# keyed by one period index, the first day of its key's period, as in step 1), a read with no candidate is none".
+# bolt ends 2026-02-28 and salary has no March row: salary[bolt, 2026-03] is none at any law date (April, February)
+# and with none (q2); February's row is read at an April law date (step 1: the key is the value's valid time).
+=== m.tally
+model m
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+source s "s"
+unit PLN: currency minor 0.01
+kind jobs
+input salary[j in jobs, m in months]: money PLN
+def sal_at[j in jobs, m in months, d in days]: money PLN = salary[j, m] at d
+version v
+  cite s
+  governs 2026-01..2026-02
+  known 2025-12-01
+  jobs + [bolt] lives 2025-01-01..2026-02-28
+  salary[bolt, *] = 100
+ask q: sal_at[bolt, 2026-03, 2026-04-15], sal_at[bolt, 2026-03, 2026-02-15], sal_at[bolt, 2026-02, 2026-04-15]
+ask q2: salary[bolt, 2026-03]
+=== expect
+q: (none, none, 100.00 PLN)
+  cut 2026-12-31
+q2: none
+  cut 2026-12-31

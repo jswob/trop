@@ -1,0 +1,51 @@
+# L §2.3 (round 10) `enter = qid "+" "[" key ... "]" [CUR | ID] ["priced" price] ["lives" lspan]`, price `last(px)`;
+# L §5.10: holdings, "each thing stating its unit and its price input as it enters (`holdings + [w1] etf_units priced
+# etf_price lives ...`)", "value = units x p"; a price that is a reading is read with its carry. w1 receives 4 etf on
+# 2026-02-01; px is 250 PLN/etf at 2026-03-31 and 260 PLN/etf at 2026-04-30. h1 (2026-03-31): 4 x 250 = 1 000 PLN.
+# h2 (2026-01-15): no units yet, so no position is priced: 0 PLN. h3 (2026-04-30): 4 x 260 = 1 040 PLN.
+=== pr.tally
+model pr
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "synthetic"
+unit PLN: currency minor 0.01
+unit etf "fund unit"
+
+kind fund_buys: event certain
+  leg units: etf
+
+place market: outside lives 2026-01-01..
+
+input px: num PLN/etf reading
+input n: num etf
+input day: date
+
+move buy: fund_buys
+  on day
+  leg units from market to w1 amount n
+
+ask h1: value(w1, 2026-03-31) in PLN law 2026-06-30
+ask h2: value(w1, 2026-01-15) in PLN law 2026-06-30
+ask h3: value(w1, 2026-04-30) in PLN law 2026-06-30
+
+version v1
+  cite s
+  governs always
+  known 2026-01-01
+  holdings + [w1] etf priced last(px) lives 2026-01-01..
+  n = 4 etf "own"
+  day = 2026-02-01 "own"
+  px = 250 PLN/etf at 2026-03-31 "kurs"
+  px = 260 PLN/etf at 2026-04-30 "kurs"
+=== expect
+h1: 1 000 PLN
+  unfulfilled: buy
+  law date 2026-06-30, cut 2026-06-30
+h2: 0 PLN
+  law date 2026-06-30, cut 2026-06-30
+h3: 1 040 PLN
+  unfulfilled: buy
+  law date 2026-06-30, cut 2026-06-30

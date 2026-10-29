@@ -1,0 +1,53 @@
+# E §5 example (synthetic): "If the law waives repayment, the model writes a move of a legless kind that fulfils
+# each adjustment; nothing is booked and the payments stand": flows(konto, 2028-03) = 0.00 PLN, no hole; konto holds
+# the twelve payments, 6 000.00 PLN; the adjustments still sum to -6 000.00 PLN.
+=== m.tally
+model b
+  tally 2
+  on 2028-06-30
+  start 2027-01-01
+  end 2028-12-31
+
+source act "benefit act"
+source cut_act "the act that cuts it"
+unit PLN: currency minor 0.01
+kind benefits: event certain
+  leg cash: PLN
+kind waivers: event certain
+place konto: accounts PLN lives 2019-05-01..
+place payer: outside lives 1900-01-01..
+input benefit: money PLN
+input pay_dom: int
+
+move pay[m in months]: benefits
+  on day_of(m, pay_dom)
+  at start_of(m)
+  leg cash from payer to konto amount benefit
+
+version act_2027
+  cite act
+  governs 2027..
+  known 2026-12-01
+  benefit = 500.00 PLN governs 2027 "art. 1"
+  benefit = 0 PLN governs 2028.. "art. 3: paid through 2027"
+  pay_dom = 15 "art. 2"
+  opening[konto] = 0 PLN at 2027-01-01 start "wyciąg"
+
+version cut_2027
+  cite cut_act
+  governs 2027
+  known 2028-03-01
+  replace benefit = 0 PLN "art. 1"
+
+move keep[a in adjustments over .. where a.adjusts in benefits]: waivers
+  on a.day
+  fulfils a
+
+ask n: sum(a.change for a in adjustments over .. where a.adjusts in benefits)
+ask f: flows(konto, 2028-03), bal(konto, 2028-02-29)
+=== expect
+f: (0.00 PLN, 6 000.00 PLN)
+...
+  cut 2028-06-30
+n: -6 000.00 PLN
+  cut 2028-06-30

@@ -1,0 +1,28 @@
+# L §5.15: "An ask that reaches crps or pdf states orient lower or orient higher (LOAD-ORIENT), whatever it prints".
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+index is2 = [i1, i2]
+input x[i in is2]: num
+input wt[i in is2]: num
+input y: num
+def cs: num = crps(x[i] for i in is2, y) at reader
+
+version v
+  cite s
+  governs 2026..
+  known 2026-01-01
+  x[i1] = 1
+  x[i2] = 3
+  y = 2
+
+ask a: cs law 2026-06-30
+=== expect
+refused: LOAD-ORIENT ...

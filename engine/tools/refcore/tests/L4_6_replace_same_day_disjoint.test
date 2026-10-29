@@ -1,0 +1,32 @@
+# Round 18, C1-11 (follows). Two replace rows of one input known the same day, on disjoint spans: each replaces the
+# earlier row on its own span (L §4.6 step 2); L §8.3's LOAD-REPLACE row no longer has "two replace lines of <x>[keys]
+# known the same day". March to May read v2's 150, July and August v3's 170, the rest v1's 100.
+=== m.tally
+model m
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+source s "s"
+unit PLN: currency minor 0.01
+input rate: money PLN
+def r[d in days]: money PLN = rate at d
+version v1
+  cite s
+  governs 2026..
+  known 2025-12-01
+  rate = 100
+version v2
+  cite s
+  governs 2026..
+  known 2026-02-01
+  replace rate = 150 governs 2026-03..2026-05
+version v3
+  cite s
+  governs 2026..
+  known 2026-02-01
+  replace rate = 170 governs 2026-07..2026-08
+ask q: r[2026-01-15], r[2026-04-15], r[2026-06-15], r[2026-07-15]
+=== expect
+q: (100.00 PLN, 150.00 PLN, 100.00 PLN, 170.00 PLN)
+  cut 2026-12-31

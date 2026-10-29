@@ -1,0 +1,28 @@
+# L §5.19: "A window belongs in an attribute (a giver's acquisition day), never in on, the observation's or a leg's
+# (LOAD-LEG)." Here the observation's on is a window. (Writer 6; L5_19_window_in_leg_on is the leg's.)
+=== m.tally
+model hh
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source bank "bank"
+unit PLN: currency minor 0.01
+input bank_rows: observed
+place konto: accounts PLN lives 2019-05-01..
+place world: outside lives 1900-01-01..
+place unexplained: outside lives 1900-01-01..
+
+version stmt
+  cite bank
+  governs 2026-02
+  known 2026-03-02
+  covers konto
+  pad konto from unexplained
+  opening[konto] = 5 000.00 PLN at 2026-02-01 start "wyciąg"
+  bank_rows[r1] = (on: window(2026-02-03, 2026-02-05), kind: transfers, leg cash from konto to world amount 100.00 PLN) "line 1"
+
+ask q: bal(konto, 2026-02-28)
+=== expect
+refused: LOAD-LEG ...

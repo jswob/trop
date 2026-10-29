@@ -1,0 +1,22 @@
+# L §5.18 example ask q6, copied: readers-of x is "every item that reads x, directly or not: defs, fills, moves,
+# regimes' items and asks, each once, the direct readers first, then by depth, then by id".  rent reads rent_amt;
+# budget reads rent; asks a1 (reads budget) and a2 (reads rent_amt).  Depth 1: a2, rent; depth 2: budget; depth 3: a1.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+unit PLN: currency minor 0.01
+
+input rent_amt[m in months]: money PLN
+
+def rent[m in months]: money PLN = rent_amt[m] at start_of(m)
+def budget[m in months]: money PLN = rent[m] at start_of(m)
+
+ask a1: budget[2026-03]
+ask a2: rent_amt[2026-03]
+ask q6: readers-of rent_amt
+=== expect q6
+q6: a2, rent, budget, a1

@@ -1,0 +1,79 @@
+# GD-10, C4-2 (round 19, writer 10): L §4.6 "A reading `after m` with m an observation or a plan is refused at load,
+# which sees m's class (LOAD-ORDER)"; L §8.3 `<x> after <m>: <m> is a plan or an observation`. bank[r1] is an observed
+# row, so the reading is refused (the residual balance line after a decision's reading has no test now). The old
+# comment:
+# E §6.3 Grouping (round 12): "a reading after m stands on m's day, right after m"; balance lines: "every stated
+# reading of x, at its instant, whatever its gap (0.00 included)". E6_3_residuals.test's model plus a running balance
+# stated after bank[r1] (rent, 2 000.00 PLN out on 2026-02-03): booked 13 000.00 (January, as E6_3_residuals.test
+# hand-checks it) - 2 000.00 = 11 000.00, stated 11 000.00, gap 0.00, in February's balance group. A reading after an
+# observation is applied just after it in the walk (L §4.6 after m). The layout is this interpreter's.
+# (Was REFCORE-UNSPECIFIED E §6.3, writer 5's T-104.)
+=== m.tally
+model hh
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source plan "plan"
+source bank_2026_02 "bank"
+source bank_2026_03 "bank"
+unit PLN: currency minor 0.01
+kind wages: event certain
+  leg cash: PLN
+kind groceries: transfers
+  attr payee: text
+input bank: observed
+input wage_amt: money PLN
+input rent_amt: money PLN
+input wage_dom: int
+input rent_dom: int
+place konto: accounts PLN lives 2019-05-01..
+place landlord: outside lives 1900-01-01..
+place world: outside lives 1900-01-01..
+place unexplained: outside lives 1900-01-01..
+
+move wage[m in months]: wages
+  on day_of(m, wage_dom)
+  at start_of(m)
+  leg cash from world to konto amount wage_amt
+
+move rent[m in months]: transfers
+  on day_of(m, rent_dom)
+  at start_of(m)
+  leg cash from konto to landlord amount rent_amt
+
+version plan_2026
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  wage_amt = 5 000.00 PLN "umowa"
+  rent_amt = 2 000.00 PLN "umowa najmu"
+  wage_dom = 10 "umowa"
+  rent_dom = 3 "umowa najmu"
+  opening[konto] = 10 000.00 PLN at 2026-01-01 start "wyciąg"
+
+version statement_02
+  cite bank_2026_02
+  governs 2026-02
+  known 2026-03-02
+  covers konto
+  pad konto from unexplained
+  bank[r1] = (on: 2026-02-03, kind: transfers, leg cash from konto to landlord amount 2 000.00 PLN, fulfils: rent[2026-02]) "line 1"
+  bank[r2] = (on: 2026-02-12, kind: wages, leg cash from world to konto amount 5 300.00 PLN, fulfils: wage[2026-02]) "line 2"
+  bank[r3] = (on: 2026-02-20, kind: groceries, leg cash from konto to world amount 400.00 PLN, payee: "BIEDRONKA") "line 3"
+  stated[konto] = 15 800.00 PLN at 2026-02-28 end "saldo"
+  stated[konto] = 11 000.00 PLN after bank[r1] "saldo po czynszu"
+
+version statement_03
+  cite bank_2026_03
+  governs 2026-03
+  known 2026-04-02
+  covers konto
+  pad konto from unexplained
+  bank[r4] = (on: 2026-03-03, kind: transfers, leg cash from konto to landlord amount 2 000.00 PLN, fulfils: rent[2026-03]) "line 4"
+  stated[konto] = 13 800.00 PLN at 2026-03-31 end "saldo"
+
+ask led: residuals konto 2026-02
+=== expect
+refused: LOAD-ORDER stated[konto] after bank[r1]: bank[r1] is a plan or an observation (m.tally:55)

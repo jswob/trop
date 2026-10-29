@@ -1,0 +1,14 @@
+# L §5.16 table: normal "cdf and pdf need to"; L §8.3 LOAD-TO.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+def c: num = cdf(normal(0, 1), 0) at reader
+=== expect
+refused: LOAD-TO ...

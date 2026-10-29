@@ -1,0 +1,38 @@
+# MC-X-F11: an answer never depends on the order of its terms (L §5.11; E §3.1 step 5, §3.2). total[2027] reads the
+# legs of contribs, whose refusal rests on the walk up to their day (E §4.2 step 5); refund[y], dated by a window after
+# y, reads back[y], which reads the fill over total[y]. A walk up to a day books nothing after it, and a movement dated
+# by a window falls after that day when the window's first day does (L §4.4), so refund[2027] (window(2028-01-01,
+# 2028-02-01)) isn't evaluated for the legs of 2027. snap11 refused t (RUN-CYCLE total[2027] reads itself through a
+# computed key) and printed t2. The supply total[y] equals the sum of the demands, so every demand is taken whole
+# (L §5.12 Take) and both differences are 0.
+=== m.tally
+model m
+  tally 2
+  on 2025-01-01
+  start 2025-01-01
+  end 2027-12-31
+unit PLN: currency minor 0.01
+kind contribs: event certain
+  leg cash: PLN
+place acct: claims PLN lives 2025-01-01..
+place world: outside lives 2025-01-01..
+def total[y in years]: money PLN = sum(c.cash.amount for c in contribs over y)
+fill f[y in years]
+  supply total[y]
+  demand c.cash.amount for c in contribs over y
+  arc true
+  order c.day
+def back[y in years]: money PLN = sum(f[y].taken[c] for c in contribs over y)
+move pay[m in months]: contribs
+  on start_of(m)
+  leg cash from world to acct amount minor(PLN)
+move refund[y in years]: transfers
+  on window(end_of(y), add_months(end_of(y), 1))
+  leg cash from acct to world amount back[y]
+ask t: total[2027] - back[2027]
+ask t2: back[2027] - total[2027]
+=== expect
+t: 0.00 PLN
+  cut 2025-01-01
+t2: 0.00 PLN
+  cut 2025-01-01

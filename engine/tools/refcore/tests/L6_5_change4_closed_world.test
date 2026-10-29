@@ -1,0 +1,63 @@
+# L §6.5 change 4, the point it makes: "The base's parent = false covers only the persons of 2026, so it is restated
+# for the new world (§6.2). Without that line, parent[ana, ola] would be a hole."  The version without the
+# restating line: parent[ana, ola] is a hole; parent[ola, ana] is the stated true; parent[ana, ben] the base's false.
+=== household.tally
+model household
+  tally 2
+  on 2029-12-31
+  start 2026-01-01
+  end 2040-12-31
+
+source household "the household's own records"
+unit PLN: currency minor 0.01
+index instalments = [equal, decreasing]
+index overpay_choices = [shorter, lower]
+index pit_brackets = [low, high]
+index countries = [pl, de]
+
+kind persons
+kind jobs
+kind loans
+
+input loan_terms[l in loans]: (principal money PLN, months int, plan key instalments)
+input overpay[l in loans, m in months]: (amount money PLN, choice key overpay_choices)
+input parent[c in persons, k in persons]: bool
+input pay_dom[j in jobs]: int
+input pit_free: money PLN
+input pit_rate[b in pit_brackets]: num
+input residence[p in persons, m in months]: key countries
+input salary[j in jobs, m in months]: money PLN question "Ile wynosi pensja brutto z tej pracy w tym miesiącu?"
+input works_for[j in jobs]: key persons
+
+version home_2026
+  cite household
+  governs 2026-10..
+  known 2026-10-19
+  persons + [ana] lives 1990-04-02..
+  persons + [ben] lives 1988-11-30..
+  jobs + [ana_acme] lives 2020-02-01..
+  jobs + [ben_bolt] lives 2021-09-01..
+  parent = false "brak dzieci"
+  pay_dom = 10 "umowy o pracę, § 5"
+  residence = pl "meldunek w Krakowie"
+  works_for[ana_acme] = ana
+  works_for[ben_bolt] = ben
+=== change4.tally
+part change4
+  tally 2
+
+source birth_ola "Akt urodzenia Oli, USC Kraków"
+
+version ola_born
+  cite birth_ola
+  governs 2029-05..
+  known 2029-05-14
+  persons + [ola] lives 2029-05-12..
+  parent[ola, ana] = true
+  parent[ola, ben] = true
+  residence[ola] = pl "rezydencja od urodzenia"
+
+ask q1: parent[ana, ola], parent[ola, ana], parent[ana, ben] law 2029-06-01
+=== expect q1
+q1: (?"parent at ana, ola: no value at 2029-06-01" (parent[ana, ola]), true, false)
+  law date 2029-06-01, cut 2029-12-31

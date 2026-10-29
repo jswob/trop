@@ -1,0 +1,32 @@
+# L §4.6 step 5: "Its question is the input's question, if it has one, otherwise x at k: no value for <period>, the
+# period of x's time key; with no time key, x at k: no value at <law date>, and with no keys at all, x: no value at
+# <law date>."  "before the first row as after the last".
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+index ks = [a, b]
+input r[m in months]: int
+input g[k in ks]: int
+input z: int
+
+version v
+  cite s
+  governs 2026-03..2026-05
+  known 2025-12-01
+  r[*] = 1
+  g[a] = 1
+  z = 1
+
+ask q1: r[2026-01], r[2026-04], r[2026-07]
+ask q2: g[b], z law 2026-08-01
+=== expect
+q1: (?"r at 2026-01: no value for 2026-01" (r[2026-01]), 1, ?"r at 2026-07: no value for 2026-07" (r[2026-07]))
+  cut 2026-12-31
+q2: (?"g at b: no value at 2026-08-01" (g[b]), ?"z: no value at 2026-08-01" (z))
+  law date 2026-08-01, cut 2026-12-31

@@ -1,0 +1,11 @@
+# L §2.2: "Keywords may not be used as an id ... (LOAD-RESERVED)". `given` is a keyword.
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+input given: int
+=== expect
+refused: LOAD-RESERVED ...

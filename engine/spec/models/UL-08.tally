@@ -1,6 +1,8 @@
 model ul08
-  tally 1
+  tally 2
   on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
   note "US income tax withholding on supplemental wages over $1,000,000 in a calendar year, 26 CFR 31.3402(g)-1(a)(8), Examples 1, 3 and 4, at the examples' assumed 2007 rates."
   note "Each payment of Examples 1, 3 and 4 is a key of pmt, withheld at the law of its calendar year of payment. Example 4's closed form, the regulation's own gross-up, is keyed by the calendar year; its gross payment e4_j is what the solve ask finds."
   note "The aggregate procedure of (a)(6) needs the regular wages, the Form W-4 and the payroll period, which the examples don't give: it is a hole."
@@ -8,6 +10,8 @@ model ul08
 source ecfr "26 CFR 31.3402(g)-1, Supplemental wage payments (eCFR, Title 26 up to date as of 2026-10-15)" at "https://www.ecfr.gov/current/title-26/section-31.3402(g)-1"
 
 source td9276 "T.D. 9276, Flat Rate Supplemental Wage Withholding, 71 FR 42049 (July 25, 2006)" at "https://www.federalregister.gov/documents/2006/07/25/E6-11764/flat-rate-supplemental-wage-withholding"
+
+unit USD: currency minor 0.01
 
 axis ul08_agent
   disregard "(a)(4)(iii): an agent paying less than $100,000 in the year withholds without regard to other supplemental wages, and its payments are left out of the employer's cumulative total"
@@ -55,48 +59,48 @@ input target_net: money USD
 
 input threshold: money USD
 
-def ex4_excess[y in cy]: money USD
+def ex4_excess[y in cy]: money USD at start_of(y)
   note "(a)(8) Example 4 (ii): the optional withholding on the first $1,000,000 grossed up at the mandatory rate; the rounding to cents is not stated"
-  rule base = round((target_net - ex4_room[y] * (1 - opt_rate)) / (1 - mand_rate), 0.01, ul08_cents)
-  rule within excepts base when target_net <= ex4_room[y] * (1 - opt_rate) = 0
+  rule base = round((target_net - ex4_room[y] * (1 - opt_rate)) / (1 - mand_rate), minor(USD), ul08_cents)
+  rule within beats base = 0 when target_net <= ex4_room[y] * (1 - opt_rate)
 
-def ex4_first[y in cy]: money USD
+def ex4_first[y in cy]: money USD at start_of(y)
   note "the part of the payment within the threshold"
   rule base = ex4_room[y]
-  rule within excepts base when ex4_excess[y] = 0 = round(target_net / (1 - opt_rate), 0.01, ul08_cents)
+  rule within beats base = round(target_net / (1 - opt_rate), minor(USD), ul08_cents) when ex4_excess[y] == 0
 
-def ex4_gross[y in cy]: money USD = ex4_first[y] + ex4_excess[y]
+def ex4_gross[y in cy]: money USD = ex4_first[y] + ex4_excess[y] at start_of(y)
 
-def ex4_room[y in cy]: money USD = max(0, threshold - ex4_prior)
+def ex4_room[y in cy]: money USD = max(0, threshold - ex4_prior) at start_of(y)
 
-def ex4_wh_excess[y in cy]: num USD = ex4_excess[y] * mand_rate
+def ex4_wh_excess[y in cy]: num USD = ex4_excess[y] * mand_rate at start_of(y)
 
-def ex4_wh_first[y in cy]: num USD = ex4_first[y] * opt_rate
+def ex4_wh_first[y in cy]: num USD = ex4_first[y] * opt_rate at start_of(y)
 
-def ex4_withholding[y in cy]: money USD
+def ex4_withholding[y in cy]: money USD at start_of(y)
   note "the two components added; money in cents, so rounded as the gross-up is"
-  rule base = round(ex4_wh_first[y] + ex4_wh_excess[y], 0.01, ul08_cents)
+  rule base = round(ex4_wh_first[y] + ex4_wh_excess[y], minor(USD), ul08_cents)
 
-def excess[p in pmt]: money USD = amount[p] - nonexcess[p]
+def excess[p in pmt]: money USD = amount[p] - nonexcess[p] at reader
 
-def flat_base[p in pmt]: money USD
+def flat_base[p in pmt]: money USD at reader
   note "(a)(5): the part of the payment that (a)(2) does not reach"
   rule base = amount[p] - mand_base[p]
 
-def mand_base[p in pmt]: money USD
+def mand_base[p in pmt]: money USD at reader
   note "(a)(2), (a)(4)(iv): the part of the payment withheld at the mandatory rate"
   rule base = excess[p]
-  rule entire excepts base when ul08_excess = entire and excess[p] > 0 = amount[p]
+  rule entire beats base = amount[p] when ul08_excess == entire and excess[p] > 0
 
-def nonexcess[p in pmt]: money USD = max(0, min(amount[p], threshold - prior[p]))
+def nonexcess[p in pmt]: money USD = max(0, min(amount[p], threshold - prior[p])) at reader
 
-def prior[p in pmt]: money USD
+def prior[p in pmt]: money USD at reader
   note "(a)(2): the supplemental wages previously paid by one employer to the employee in the calendar year; (a)(3)(i): a section 52 group is one employer"
   note "q != p comes first, so a payment never compares its own date: e4_j is dated only by its year (§4.4)"
-  rule base = sum(q in pmt where q != p and pair_of[q] = pair_of[p] and year_of(pay_on[q]) = year_of(pay_on[p]) and pay_on[q] < pay_on[p]: amount[q])
-  rule disregard excepts base when ul08_agent = disregard = if small_agent[p] then 0 else sum(q in pmt where q != p and pair_of[q] = pair_of[p] and year_of(pay_on[q]) = year_of(pay_on[p]) and pay_on[q] < pay_on[p] and not small_agent[q]: amount[q])
+  rule base = sum(amount[q] for q in pmt where q != p and pair_of[q] == pair_of[p] and year_of(pay_on[q]) == year_of(pay_on[p]) and pay_on[q] < pay_on[p])
+  rule disregard beats base = if small_agent[p] then 0 else sum(amount[q] for q in pmt where q != p and pair_of[q] == pair_of[p] and year_of(pay_on[q]) == year_of(pay_on[p]) and pay_on[q] < pay_on[p] and not small_agent[q]) when ul08_agent == disregard
 
-def small_agent[p in pmt]: bool = if by_agent[p] then agent_total[p] < agent_floor else false
+def small_agent[p in pmt]: bool = if by_agent[p] then agent_total[p] < agent_floor else false at reader
 
 def wh_mand[p in pmt]: num USD at start_of(year_of(pay_on[p]))
   note "(a)(2): the highest rate under section 1 for taxable years beginning in the calendar year of payment, so the law date is the first day of that year"
@@ -104,26 +108,26 @@ def wh_mand[p in pmt]: num USD at start_of(year_of(pay_on[p]))
 
 def wh_rest[p in pmt]: num USD at start_of(year_of(pay_on[p]))
   note "(a)(5): the part below the threshold is withheld under (a)(6) or (a)(7); read at the calendar year of payment, as wh_mand"
-  rule aggregate excepts base when ul08_route = aggregate and flat_base[p] > 0 = ? "What do the employee's regular wages, Form W-4 and payroll period give under the aggregate procedure of (a)(6)?"
+  rule aggregate beats base = ?"What do the employee's regular wages, Form W-4 and payroll period give under the aggregate procedure of (a)(6)?" when ul08_route == aggregate and flat_base[p] > 0
   rule base = flat_base[p] * opt_rate
 
-def wh_total[p in pmt]: num USD = wh_rest[p] + wh_mand[p]
+def wh_total[p in pmt]: num USD = wh_rest[p] + wh_mand[p] at reader
 
-ask ex1_y: nonexcess[e1_y], excess[e1_y], wh_rest[e1_y], wh_mand[e1_y], wh_total[e1_y]
+ask ex1_y: nonexcess[e1_y], excess[e1_y], wh_rest[e1_y], wh_mand[e1_y], wh_total[e1_y] law 2026-10-18
 
-ask ex1_z: prior[e1_z], excess[e1_z], wh_total[e1_z]
+ask ex1_z: prior[e1_z], excess[e1_z], wh_total[e1_z] law 2026-10-18
 
-ask ex3_r: nonexcess[e3_r], wh_rest[e3_r], mand_base[e3_r]
+ask ex3_r: nonexcess[e3_r], wh_rest[e3_r], mand_base[e3_r] law 2026-10-18
 
-ask ex3_t: mand_base[e3_t]
+ask ex3_t: mand_base[e3_t] law 2026-10-18
 
-ask ex3_u: prior[e3_u], wh_total[e3_u]
+ask ex3_u: prior[e3_u], wh_total[e3_u] law 2026-10-18
 
-ask ex4: ex4_wh_first[2007], ex4_excess[2007], ex4_gross[2007], ex4_withholding[2007]
+ask ex4: ex4_wh_first[2007], ex4_excess[2007], ex4_gross[2007], ex4_withholding[2007] law 2026-10-18
 
-ask ex4_net: check ex4_gross[2007] - ex4_withholding[2007] = target_net
+ask ex4_net: check ex4_gross[2007] - ex4_withholding[2007] == target_net law 2026-10-18
 
-ask ex4_solve: solve amount[e4_j] in [1000000, 2000000] to 0.01: amount[e4_j] - wh_total[e4_j] = target_net
+ask ex4_solve: solve amount[e4_j] - wh_total[e4_j] == target_net for amount[e4_j] in [1000000, 2000000] to 0.01 law 2026-10-18
 
 version td9276_reg
   cite td9276
@@ -136,6 +140,7 @@ version td9276_reg
 
 version ecfr_examples
   cite ecfr
+  governs always
   known 2026-10-18
   note "the (a)(8) examples' stipulations, rates included: the model has no start, so they are known from its on (§4.5); the eCFR text is up to date as of 2026-10-15, and T.D. 9276 (71 FR 42056-42057) prints the same examples"
   agent_total[e3_u] = 50000 "(a)(8) Example 3 (i) and (ii)(B): U's only payment to D, $50,000 of sick pay"
@@ -145,7 +150,7 @@ version ecfr_examples
   amount[e3_r] = 3000000 "Example 3 (ii)(A)"
   amount[e3_u] = 50000 "Example 3 (ii)(B)"
   amount[e3_t] = 100000 "Example 3 (ii)(C)"
-  amount[e4_j] = ? "What gross payment to B leaves the $1,000,000 net bonus after withholding? The solve ask finds it" "Example 4 (ii): the total supplemental wage payment"
+  amount[e4_j] = ?"What gross payment to B leaves the $1,000,000 net bonus after withholding? The solve ask finds it" "Example 4 (ii): the total supplemental wage payment"
   by_agent[e1_x] = false "Example 1 (i): a bonus from X"
   by_agent[e1_y] = false "Example 1 (i): a bonus from Y"
   by_agent[e1_z] = false "Example 1 (i): a bonus from Z"
@@ -169,5 +174,5 @@ version ecfr_examples
   pay_on[e3_r] = 2007-06-30 "Example 3 (ii)(A): June 30, 2007"
   pay_on[e3_u] = 2007-10-31 "Example 3 (ii)(B): October 31, 2007"
   pay_on[e3_t] = 2007-12-31 "Example 3 (ii)(C): December 31, 2007"
-  pay_on[e4_j] = 2007 "Example 4 (i): a $1,000,000 net bonus (after withholding) to be paid in 2007; T.D. 9276, 71 FR 42057"
+  pay_on[e4_j] = window(2007-01-01, 2007-12-31) "Example 4 (i): a $1,000,000 net bonus (after withholding) to be paid in 2007; T.D. 9276, 71 FR 42057"
   target_net = 1000000 "Example 4 (i): a $1,000,000 net bonus (after withholding)"

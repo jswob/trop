@@ -1,0 +1,33 @@
+# L §5.9 A row's ends: the pit_scale row, copied whole: "10 800 zł + 32% of the excess over 120 000 zł" states
+# 120 000 once, as the interval's end; band_lo(b, x) is the lower end of the row of b that holds x, in b's
+# argument type, and an infinite end is none.  At x = 150 000 PLN: 10 800 + 32 % × (150 000 − 120 000)
+# = 10 800 + 9 600 = 20 400 PLN.  (The band returns num PLN: 32 % × money is num CUR, L §3.2.)
+# held: (L §8.2) "a row whose span has a start and no end ..., band rows included, read at a law date after the
+# cut K": the law date is after the model's on, so every open-ended row read is listed.
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source pit "PIT act"
+unit PLN: currency minor 0.01
+
+band pit_scale(x: num PLN): num PLN
+input income: num PLN
+
+version pit2026
+  cite pit
+  governs 2026..
+  known 2025-12-01
+  pit_scale: [0, 120000] = 12 % * x "art. 27 ust. 1"
+  pit_scale: (120000, inf) = 10800 PLN + 32 % * (x - band_lo(pit_scale, x)) "art. 27 ust. 1"
+  income = 150000 PLN
+
+ask q1: pit_scale(income), band_lo(pit_scale, income), band_hi(pit_scale, income) law 2026-06-30
+=== expect
+q1: (20 400 PLN, 120 000 PLN, none)
+  held: income = 150 000 PLN (pit2026), read for 2026-06-30
+  held: pit_scale row (120 000, inf) (pit2026), read for 2026-06-30
+  law date 2026-06-30, cut 2026-01-01

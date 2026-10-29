@@ -1,0 +1,37 @@
+# MC-X-F12 (writer 9): as L4_3_band_row_reads_dated, with law on the ask line (q) and at on the def (q2): base
+# is read at the reader's law date, 400.00 PLN.
+=== m.tally
+model p
+  tally 2
+  on 2027-12-31
+  start 2027-01-01
+  end 2027-12-31
+
+unit PLN: currency minor 0.01
+source act "the act"
+
+input age3: int
+input base: money PLN
+band rate(a: int): money PLN
+def r[m in months]: money PLN = rate(age3) at start_of(m)
+ask q: rate(age3) law 2027-03-01
+ask q2: r[2027-05]
+
+version v_law
+  cite act
+  governs 2027..
+  known 2026-12-01
+  base = 400.00 PLN "the base"
+
+version v_act
+  cite act
+  governs always
+  known 2026-12-01
+  age3 = 3 "the age"
+  rate: [0, 6) = base "under 6"
+  rate: [6, 18) = 250.00 PLN "6 to 17"
+=== expect
+q: 400.00 PLN
+  law date 2027-03-01, cut 2027-12-31
+q2: 400.00 PLN
+  cut 2027-12-31

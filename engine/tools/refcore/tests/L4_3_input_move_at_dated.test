@@ -1,0 +1,48 @@
+# Writer 9 (beside MC-X-F12): pay's at reads pd, an input whose row governs 2027..: L §4.3 "The at ends every
+# chain, so it reads nothing law-dated itself", L §8.3 `move <m>'s at reads law-dated <x>`. snap12:
+# REFCORE-NOT-YET (the interpreter guard at the read).
+=== m.tally
+model p
+  tally 2
+  on 2027-12-31
+  start 2027-01-01
+  end 2027-12-31
+
+unit PLN: currency minor 0.01
+source act "the act"
+place konto: accounts PLN lives 2020-01-01..
+place world: outside lives 1900-01-01..
+
+input age3: int
+input amt: money PLN
+input pay_day: date
+input pd: date
+
+move pay: transfers
+  on pay_day
+  at pd
+  leg cash from world to konto amount amt
+
+ask q: bal(konto, 2027-12-31)
+
+version v_act
+  cite act
+  governs 2027..
+  known 2026-12-01
+  pd = 2027-03-01 "pd"
+
+version v_f
+  cite act
+  governs always
+  known 2026-12-01
+  age3 = 3 "the age"
+  pay_day = 2027-02-01
+  opening[konto] = 0 PLN at 2027-01-01 start
+
+version v_amt
+  cite act
+  governs 2027..
+  known 2026-12-01
+  amt = 10.00 PLN "amt"
+=== expect
+refused: LOAD-LAWDATE move pay's at reads law-dated pd (m.tally:17)

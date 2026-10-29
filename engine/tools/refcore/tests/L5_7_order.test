@@ -1,0 +1,32 @@
+# L §5.7 "Things have no order a rule can read ... first and last over things or movements take ties by (§5.11)";
+# L §5.11 "Over things ... the ties by term is also the order first and last run in" (without one they are refused at
+# load where load sees the binding: L5_11_first_no_ties_load; writer 8, sixth pass, round 18 C1-14, moved q1 there).
+# q2: ties by lifespan(p).from: bo entered 2001, al 2005, so first is bo and last is al. q3: an ask's lines go in
+# binding order, the text order of the things' stable ids persons:al < persons:bo (L §2.5), whatever their entry days.
+# (Writer 8: was "ordered by the day they entered", removed by the review.)
+=== m.tally
+model hh
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+kind persons
+
+version a
+  cite s
+  known 2020-01-01
+  persons + [bo] lives 2001-01-01..
+  persons + [al] lives 2005-01-01..
+
+ask q2: first(p in persons on 2026-01-01) ties by lifespan(p).from, last(p in persons on 2026-01-01) ties by lifespan(p).from
+ask q3: lifespan(p).from for p in persons on 2026-01-01
+=== expect
+q2: (bo, al)
+  cut 2026-01-01
+q3 (p = al): 2005-01-01
+  cut 2026-01-01
+q3 (p = bo): 2001-01-01
+  cut 2026-01-01

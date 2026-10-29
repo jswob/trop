@@ -1,0 +1,79 @@
+# L §6.5 change 6 (a new loan, and an overpayment on the first), copied whole (round 5 text), over the base
+# excerpt with the house loan and a base overpay row added (the excerpt names "the base's" row without showing
+# it): overpay = (amount: 0 PLN, choice: none), stating no keys.  "the house's row for May, at more keys than the
+# base's, wins by precedence on its span (§4.6 step 3), so it needs no replace" (L §5.3: rows at different stated
+# keys are ordered by precedence).  overpay[house, 2028-05] is 10 000.00 PLN, shorter; in 2028-06 the base row
+# gives 0.00 PLN.
+=== household.tally
+model household
+  tally 2
+  on 2029-12-31
+  start 2026-01-01
+  end 2040-12-31
+
+source household "the household's own records"
+unit PLN: currency minor 0.01
+index instalments = [equal, decreasing]
+index overpay_choices = [shorter, lower]
+index pit_brackets = [low, high]
+index countries = [pl, de]
+
+kind persons
+kind jobs
+kind loans
+
+input loan_terms[l in loans]: (principal money PLN, months int, plan key instalments)
+input overpay[l in loans, m in months]: (amount money PLN, choice key overpay_choices)
+input parent[c in persons, k in persons]: bool
+input pay_dom[j in jobs]: int
+input pit_free: money PLN
+input pit_rate[b in pit_brackets]: num
+input residence[p in persons, m in months]: key countries
+input salary[j in jobs, m in months]: money PLN question "Ile wynosi pensja brutto z tej pracy w tym miesiącu?"
+input works_for[j in jobs]: key persons
+
+version home_2026
+  cite household
+  governs 2026-10..
+  known 2026-10-19
+  persons + [ana] lives 1990-04-02..
+  persons + [ben] lives 1988-11-30..
+  jobs + [ana_acme] lives 2020-02-01..
+  jobs + [ben_bolt] lives 2021-09-01..
+  parent = false "brak dzieci"
+  pay_dom = 10 "umowy o pracę, § 5"
+  residence = pl "meldunek w Krakowie"
+  works_for[ana_acme] = ana
+  works_for[ben_bolt] = ben
+
+version loans_2026
+  cite household
+  governs 2026-10..
+  known 2026-10-19
+  loans + [house] lives 2020-01-01..2045-01-01
+  overpay = (amount: 0 PLN, choice: none)
+=== change6.tally
+part change6
+  tally 2
+
+source car_loan "Umowa kredytu samochodowego nr ..., 2028-04-02"
+source stmt_2028_05 "Wyciąg z rachunku kredytu hipotecznego, maj 2028"
+
+version car_loan_terms
+  cite car_loan
+  governs 2028-04..
+  known 2028-04-02
+  loans + [car] lives 2028-04-02..2032-04-02
+  loan_terms[car] = (principal: 40 000.00 PLN, months: 48, plan: equal) "§ 2"
+  overpay[car] = (amount: 0 PLN, choice: none) "brak nadpłat, o ile wyciąg ich nie pokazuje"
+
+version house_overpay_2028_05
+  cite stmt_2028_05
+  governs 2028-05
+  known 2028-05-20
+  overpay[house, 2028-05] = (amount: 10 000.00 PLN, choice: shorter) "nadpłata 10 000 zł, skrócenie okresu"
+
+ask q1: overpay[house, 2028-05].amount, overpay[house, 2028-05].choice, overpay[house, 2028-06].amount
+=== expect
+q1: (10 000.00 PLN, shorter, 0.00 PLN)
+  cut 2029-12-31

@@ -1,0 +1,36 @@
+# L §5.18: "solve may also appear in a def rule that points at a version (v) whose source names the method ... its
+# bracket's literals are allowed (§7.1), and its pin of v holds while the rule's value is evaluated".  F(g) = 0.8 g -
+# 800 on [0, 2000], u = 1: m = 0 + floor(2000/2) = 1000, F(1000) = 0: the answer is 1000.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+source glaw "gross-up law"
+input g: num
+input keep: num
+input target: num
+def netx: num = g * keep at reader
+def grossed: num at reader
+  rule r v gu = solve netx == target for g in [0, 2000] to 1
+
+version v
+  cite s
+  governs 2026..
+  known 2026-01-01
+  g = 1
+  keep = 0.8
+  target = 800
+version gu
+  cite glaw
+  governs 2026..
+  known 2026-01-01
+
+ask a: grossed law 2026-06-30
+=== expect
+a: 1 000
+  law date 2026-06-30, cut 2026-12-31

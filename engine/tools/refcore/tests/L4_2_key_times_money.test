@@ -1,0 +1,32 @@
+# Fault key_times_money (writer 6): `sum(k * m for k in ks)`, ks = int 0..3, m money, was refused LOAD-UNIT. L §4.2
+# Keys as values: "In a value position a key of an integer index is an int"; L §3.2: money times an int is money.
+# (0 + 1 + 2 + 3) x 1.00 = 6.00 PLN, in either order.
+=== km.tally
+model km
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+unit PLN: currency minor 0.01
+
+index ks = int 0..3
+
+input m: money PLN
+
+ask q: sum(k * m for k in ks)
+
+ask q2: sum(m * k for k in ks)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  m = 1.00 "m"
+=== expect
+q: 6.00 PLN
+  cut 2026-10-25
+q2: 6.00 PLN
+  cut 2026-10-25

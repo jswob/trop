@@ -1,0 +1,93 @@
+# L §6.1 Identities are written: "each side names a kind, a thing (a keyed place at its keys included), ... with its
+# keys written as literals"; Consolidation: "A binding over places of several members counts each place once"; rows
+# stated same (here the two openings, one thing's facts) are read together and agree. a.sav[kid] and b.sav[kid] are one
+# place; ana's deposit and ben's record of it are one movement (same a.dep = b.dep_seen), booked once. By L §5.10's bal
+# (opening plus legs): 10.00 + 100.00 = 110.00 PLN, read by either name; one account; each member alone (a.q, b.q)
+# also has 110.00 PLN. A key written as a literal after a member's item is that member's thing (a.sav[kid], as L §6.1's
+# a.due[ola, 2025]).
+=== options pin=bytes
+=== joint.tally
+model family
+  tally 2
+  on 2026-01-05
+  start 2026-01-01
+  end 2026-12-31
+  use a = "ana.tally" sha256 "68706e69477e3e58a03c8045cca0809eba9f753f7565facf19ce427acf620205"
+  use b = "ben.tally" sha256 "54159463b5a74aaebc2daa3a80fbc1f9ec515d3158565f215238532203146b34"
+  same a.persons = b.persons
+  same a.kid = b.kid
+  same a.sav[kid] = b.sav[kid]
+  same a.dep = b.dep_seen
+
+ask ka: bal(a.sav[kid], 2026-12-31)
+ask kb: bal(b.sav[a.kid], 2026-12-31)
+ask n: count(p in accounts on 2026-12-31)
+=== ana.tally
+model ana
+  tally 2
+  on 2026-01-05
+  start 2026-01-01
+  end 2026-12-31
+
+source s "umowa"
+unit PLN: currency minor 0.01
+kind persons
+place sav[p in persons]: accounts PLN lives 2019-01-01..
+place world: outside lives 1900-01-01..
+input dep_amt: money PLN
+input dep_day: date
+
+move dep: transfers
+  on dep_day
+  leg cash from world to sav[kid] amount dep_amt
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  persons + [kid] lives 2019-01-01..
+  dep_amt = 100.00 PLN "plan"
+  dep_day = 2026-03-01 "plan"
+  opening[sav[kid]] = 10.00 PLN at 2026-01-01 start "wyciąg"
+
+ask q: bal(sav[kid], 2026-12-31)
+=== ben.tally
+model ben
+  tally 2
+  on 2026-01-05
+  start 2026-01-01
+  end 2026-12-31
+
+source s "umowa"
+unit PLN: currency minor 0.01
+kind persons
+place sav[p in persons]: accounts PLN lives 2019-01-01..
+place from_ana: outside lives 1900-01-01..
+input dep_amt: money PLN
+input dep_day: date
+
+move dep_seen: transfers
+  on dep_day
+  leg cash from from_ana to sav[kid] amount dep_amt
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  persons + [kid] lives 2019-01-01..
+  dep_amt = 100.00 PLN "plan"
+  dep_day = 2026-03-01 "plan"
+  opening[sav[kid]] = 10.00 PLN at 2026-01-01 start "wyciąg"
+
+ask q: bal(sav[kid], 2026-12-31)
+=== expect ka kb n a.q b.q
+ka: 110.00 PLN
+  cut 2026-01-05
+kb: 110.00 PLN
+  cut 2026-01-05
+n: 1
+  cut 2026-01-05
+a.q: 110.00 PLN
+  cut 2026-01-05
+b.q: 110.00 PLN
+  cut 2026-01-05

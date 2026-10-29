@@ -1,6 +1,8 @@
 model cb11
-  tally 1
+  tally 2
   on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
   note "KRUS: a Polish farmer's old-age pension with insurance periods in another EU/EFTA state. Example 1 has 20 years in Poland and 6 in France, Example 2 has 26 in Poland and 4 in Sweden, and the other KRUS page's example (ex3) has 20 in Poland and 10 in Germany."
   note "No claim date is given. The act's rows are known from its promulgation (Dz.U. 1991 nr 7 poz. 24) and read in the tekst jednolity Dz.U. 2025 poz. 1770; Regulation 883/2004 is known from its publication in OJ L 166 of 30.4.2004 and read in the consolidation of 01.01.2014."
   note "Periods are the whole months printed, and no overlap between Polish and foreign periods is stated."
@@ -10,9 +12,13 @@ source krus_eu_page "Emerytury w Unii Europejskiej (KRUS, gov.pl)" at "https://w
 
 source krus_page "Obliczanie wysokości emerytury/renty z uwzględnieniem okresów ubezpieczenia (zamieszkania) w państwach UE/EFTA (KRUS, gov.pl)" at "https://www.gov.pl/web/krus/obliczanie-wysokosci-emeryturyrenty-z-uwzglednieniem-okresow-ubezpieczenia-zamieszkania-w-panstwach-ueefta"
 
+source lifted_1_0_1 "Figures tally 1.0.1 allowed inline in rules"
+
 source reg883 "Regulation (EC) No 883/2004, OJ L 166, 30.4.2004, read in the consolidated text 2004R0883 01.01.2014 (Publications Office of the EU)" at "http://publications.europa.eu/resource/celex/02004R0883-20140101"
 
 source usr "Ustawa z dnia 20 grudnia 1990 r. o ubezpieczeniu społecznym rolników, Dz.U. 1991 nr 7 poz. 24, read in the tekst jednolity Dz.U. 2025 poz. 1770" at "https://eli.gov.pl/eli/DU/2025/1770/ogl/pol/pdf"
+
+unit PLN: currency minor 0.01
 
 axis art26_count
   after_20 "art. 26 ust. 1: the supplementary part falls for each full year beyond 20"
@@ -40,6 +46,9 @@ input pl_months[e in example]: int
 
 input qualifying_years: int
 
+input ratio_0_01: num
+  note "lifted from an inline figure of tally 1.0.1"
+
 input suppl_base_pct: num
 
 input suppl_floor_pct: num
@@ -48,81 +57,92 @@ input suppl_step_pct: num
 
 input suppl_threshold_years: int
 
-def contrib_part[e in example, c in calc]: num PLN = basic_pension[e] * contrib_rate[e, c]
+input years_counted_12: int
+  note "lifted from an inline figure of tally 1.0.1"
 
-def contrib_rate[e in example, c in calc]: num
+def contrib_part[e in example, c in calc]: num PLN = basic_pension[e] * contrib_rate[e, c] at reader
+
+def contrib_rate[e in example, c in calc]: num at reader
   note "art. 25 ust. 1: a percentage of the basic pension for each year of insurance; part years count proportionally."
   rule base v usr_1990 = years_counted[e, c] * contrib_pct_per_year
 
-def entitled_national[e in example]: bool
+def entitled_national[e in example]: bool at reader
   note "art. 19 ust. 1: pension age, and the qualifying period of insurance under Polish law alone."
   rule base v usr_1990 = pension_age_reached[e] and years_counted[e, national] >= qualifying_years
 
-def full_years[e in example, c in calc]: int = round(years_counted[e, c], 1, floor)
+def full_years[e in example, c in calc]: int = round(years_counted[e, c], 1, floor) at reader
 
-def paid[e in example]: num PLN
+def paid[e in example]: num PLN at reader
   note "art. 52(1)(a) and (3): the independent benefit only where national law alone gives entitlement, and then the higher of it and the pro rata benefit."
-  rule higher v reg883_2004 when entitled_national[e] = max(pension_amount[e, national], prorata_amount[e])
-  rule pro_rata_only v reg883_2004 when not entitled_national[e] = prorata_amount[e]
+  rule higher v reg883_2004 = max(pension_amount[e, national], prorata_amount[e]) when entitled_national[e]
+  rule pro_rata_only v reg883_2004 = prorata_amount[e] when not entitled_national[e]
 
-def paid_kind[e in example]: key benefit
+def paid_kind[e in example]: key benefit at reader
   note "art. 52(3): which of the two benefits is paid."
   rule base v reg883_2004 = pro_rata
-  rule independent_higher excepts base v reg883_2004 when entitled_national[e] and pension_amount[e, national] >= prorata_amount[e] = independent
+  rule independent_higher beats base v reg883_2004 = independent when entitled_national[e] and pension_amount[e, national] >= prorata_amount[e]
 
-def pension_amount[e in example, c in calc]: num PLN
+def pension_amount[e in example, c in calc]: num PLN at reader
   note "art. 24 and art. 26 ust. 2: the contributory part plus the supplementary part, together not less than the basic pension. The early-retirement case of art. 26 ust. 3 isn't modelled."
   rule base v usr_1990 = max(basic_pension[e], contrib_part[e, c] + suppl_part[e, c])
 
-def prorata_amount[e in example]: num PLN
+def prorata_amount[e in example]: num PLN at reader
   note "art. 52(1)(b)(ii): the theoretical amount times the ratio of periods."
   rule base v reg883_2004 = pension_amount[e, theoretical] * ratio[e]
 
-def ratio[e in example]: num
+def ratio[e in example]: num at reader
   note "art. 52(1)(b)(ii): the Polish periods over the periods in all the states concerned."
-  rule exact_ratio v reg883_2004 when krus_ratio = exact_ratio = raw_ratio[e]
-  rule ratio_2dp v krus_examples when krus_ratio = ratio_2dp = round(raw_ratio[e], 0.01, half-up)
+  rule exact_ratio v reg883_2004 = raw_ratio[e] when krus_ratio == exact_ratio
+  rule ratio_2dp v krus_examples = round(raw_ratio[e], ratio_0_01, half-up) when krus_ratio == ratio_2dp
 
-def raw_ratio[e in example]: num = pl_months[e] / (pl_months[e] + foreign_months[e])
+def raw_ratio[e in example]: num = pl_months[e] / (pl_months[e] + foreign_months[e]) at reader
 
-def suppl_part[e in example, c in calc]: num PLN = basic_pension[e] * suppl_rate[e, c]
+def suppl_part[e in example, c in calc]: num PLN = basic_pension[e] * suppl_rate[e, c] at reader
 
-def suppl_rate[e in example, c in calc]: num
+def suppl_rate[e in example, c in calc]: num at reader
   note "art. 26 ust. 1-2: a base percentage of the basic pension, less a step for each counted year, and not below a floor."
   rule base v usr_1990 = max(suppl_floor_pct, suppl_base_pct - suppl_step_pct * suppl_steps[e, c])
 
-def suppl_steps[e in example, c in calc]: int
+def suppl_steps[e in example, c in calc]: int at reader
   note "art. 26 ust. 1: the number of full years that reduce the supplementary part."
-  rule after_20 v usr_1990 when art26_count = after_20 = max(0, full_years[e, c] - suppl_threshold_years)
-  rule from_20 v usr_1990 when art26_count = from_20 = max(0, full_years[e, c] - suppl_threshold_years + 1)
+  rule after_20 v usr_1990 = max(0, full_years[e, c] - suppl_threshold_years) when art26_count == after_20
+  rule from_20 v usr_1990 = max(0, full_years[e, c] - suppl_threshold_years + 1) when art26_count == from_20
 
-def years_counted[e in example, c in calc]: num
+def years_counted[e in example, c in calc]: num at reader
   note "Years of insurance from the months printed. The national amount counts Polish periods only. The theoretical amount counts all periods as if they were Polish (art. 52(1)(b)(i)). No maximum period under art. 56(1)(a) is applied: the case gives none."
-  rule national v usr_1990 when c = national = pl_months[e] / 12
-  rule theoretical v reg883_2004 when c = theoretical = (pl_months[e] + foreign_months[e]) / 12
+  rule national v usr_1990 = pl_months[e] / years_counted_12 when c == national
+  rule theoretical v reg883_2004 = (pl_months[e] + foreign_months[e]) / years_counted_12 when c == theoretical
 
-ask ex1_parts: contrib_rate[ex1, theoretical], contrib_part[ex1, theoretical], suppl_rate[ex1, theoretical], suppl_part[ex1, theoretical]
+ask ex1_parts: contrib_rate[ex1, theoretical], contrib_part[ex1, theoretical], suppl_rate[ex1, theoretical], suppl_part[ex1, theoretical] law 2026-10-18
 
-ask ex1_pro_rata: prorata_amount[ex1]
+ask ex1_pro_rata: prorata_amount[ex1] law 2026-10-18
 
-ask ex1_ratio: ratio[ex1]
+ask ex1_ratio: ratio[ex1] law 2026-10-18
 
-ask ex1_theoretical: pension_amount[ex1, theoretical]
+ask ex1_theoretical: pension_amount[ex1, theoretical] law 2026-10-18
 
-ask ex2_national: contrib_rate[ex2, national], contrib_part[ex2, national], suppl_rate[ex2, national], suppl_part[ex2, national], pension_amount[ex2, national]
+ask ex2_national: contrib_rate[ex2, national], contrib_part[ex2, national], suppl_rate[ex2, national], suppl_part[ex2, national], pension_amount[ex2, national] law 2026-10-18
 
-ask ex2_paid: paid_kind[ex2], paid[ex2]
+ask ex2_paid: paid_kind[ex2], paid[ex2] law 2026-10-18
 
-ask ex2_pro_rata: prorata_amount[ex2]
+ask ex2_pro_rata: prorata_amount[ex2] law 2026-10-18
 
-ask ex2_ratio: ratio[ex2]
+ask ex2_ratio: ratio[ex2] law 2026-10-18
 
-ask ex2_theoretical: contrib_rate[ex2, theoretical], contrib_part[ex2, theoretical], suppl_rate[ex2, theoretical], suppl_part[ex2, theoretical], pension_amount[ex2, theoretical]
+ask ex2_theoretical: contrib_rate[ex2, theoretical], contrib_part[ex2, theoretical], suppl_rate[ex2, theoretical], suppl_part[ex2, theoretical], pension_amount[ex2, theoretical] law 2026-10-18
 
-ask ex3_pro_rata: prorata_amount[ex3]
+ask ex3_pro_rata: prorata_amount[ex3] law 2026-10-18
+
+version lifted_figures
+  cite lifted_1_0_1
+  governs always
+  known 1991-01-26
+  ratio_0_01 = 0.01 "inline in tally 1.0.1: ratio line 84, round step"
+  years_counted_12 = 12 "inline in tally 1.0.1: years_counted line 101, factor; years_counted line 102, factor"
 
 version usr_1990
   cite usr
+  governs always
   known 1991-01-26
   note "Known from the act's promulgation in Dz.U. 1991 nr 7 poz. 24 on 26 January 1991 (ELI API, 'promulgation'). Art. 25 ust. 1 (1% a year) and art. 26 ust. 1-2 (95%, less 0.5% for each full year from 20, not below 85%) read the same in the act as published; the tekst jednolity is the locator."
   note "Art. 19 ust. 1 pkt 2 as published asks for 'co najmniej 100 kwartałów', which is 25 years; the tekst jednolity says 25 years. The amendment that restated it in years wasn't identified, and it changes no figure."
@@ -135,23 +155,26 @@ version usr_1990
 
 version reg883_2004
   cite reg883
+  governs always
   known 2004-04-30
   note "Known from the regulation's publication in OJ L 166 of 30.4.2004. Art. 52(1)(a), (1)(b)(i)-(ii) and (3) read the same in the text as adopted, in the corrigendum (OJ L 200, 7.6.2004) and in the 01.01.2014 and 31.07.2019 consolidations; Regulation 988/2009 changed (4) and added (5)."
   note "Art. 52(4) with Annex VIII Part 1 'POLAND', in the 988/2009 numbering, may let the institution waive the pro rata calculation; the page computes it anyway."
 
 version krus_eu_example
   cite krus_eu_page
+  governs always
   known 2026-10-18
   note "Section 'Ustalanie emerytury wg zasady \"pro rata temporis\"', 'Przykład Rolnik (65 lat)': the theoretical amount is taken as given."
   note "The example's facts are stipulations, known from the model's on date; the page carries no date and was retrieved the same day (LANGUAGE.md 4.5)."
-  basic_pension[ex3] = ? "The page doesn't give the basic pension for this example."
+  basic_pension[ex3] = ?"The page doesn't give the basic pension for this example."
   foreign_months[ex3] = 120 "'Przykład Rolnik (65 lat)': 10 years in Germany"
   pension_age_reached[ex3] = true "'Przykład Rolnik (65 lat)'"
-  pension_amount[ex3, theoretical] = 600.63 "'Przykład Rolnik (65 lat)': kwota teoretyczna obliczona z łącznego okresu 360 miesięcy"
+  given pension_amount[ex3, theoretical] = 600.63 "'Przykład Rolnik (65 lat)': kwota teoretyczna obliczona z łącznego okresu 360 miesięcy"
   pl_months[ex3] = 240 "'Przykład Rolnik (65 lat)': 20 years in Poland"
 
 version krus_examples
   cite krus_page
+  governs always
   known 2026-10-18
   note "The page carries no date. It takes the basic pension as 1700 zł 'w celu uproszczenia wyliczenia', and prints the ratio of periods to two decimals."
   note "The examples' facts are stipulations, known from the model's on date. The page's method (the ratio to two decimals) takes its retrieval day, the same day, since the page has no date or updated stamp (LANGUAGE.md 4.5)."

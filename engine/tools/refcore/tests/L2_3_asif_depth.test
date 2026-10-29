@@ -1,0 +1,15 @@
+# L §2.3: "as if nests at most 4 deep (LOAD-ASIF)".  Five nested as if.
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "a source"
+
+input x: int
+
+ask q1: ((((x as if {x = 1}) as if {x = 2}) as if {x = 3}) as if {x = 4}) as if {x = 5}
+=== expect
+refused: LOAD-ASIF ...

@@ -1,0 +1,21 @@
+# L §5.7 (round 12): an entry `K + [k] lives ..b` has no start: LOAD-LIFESPAN `<k>'s lifespan has no start`.
+=== m.tally
+model t
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+kind persons
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  persons + [ana] lives ..2030-12-31
+
+ask q: count(x in persons on 2026-06-01)
+=== expect
+refused: LOAD-LIFESPAN ana's lifespan has no start (m.tally:15)

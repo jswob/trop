@@ -1,0 +1,31 @@
+# L §8.1 HOLE-UNGOVERNED: "no row of the band's table holds its argument (§5.9)", question "<b>: no row holds <x> at
+# <law date>". b's one row is [0, 10); its argument is 20: b, band_lo and marginal are that hole. (Was
+# REFCORE-UNSPECIFIED §5.9, the question of the hole outside every row.)
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+input arg: int
+band b(x: int): int
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  arg = 20 "s"
+  b: [0, 10) = 1 "s"
+
+ask q: b(arg) law 2026-06-30
+ask l: band_lo(b, arg) law 2026-06-30
+ask m: marginal(b, arg) law 2026-06-30
+=== expect
+l: ?"b: no row holds 20 at 2026-06-30" (b)
+  law date 2026-06-30, cut 2026-12-31
+m: ?"b: no row holds 20 at 2026-06-30" (b)
+  law date 2026-06-30, cut 2026-12-31
+q: ?"b: no row holds 20 at 2026-06-30" (b)
+  law date 2026-06-30, cut 2026-12-31

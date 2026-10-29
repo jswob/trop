@@ -17,10 +17,15 @@ K = `on` = 2026-10-19 throughout. Everything the asks read lies in 2026–2027.
 
 **What the forecaster writes.** "What if, in 2027, the month's spending wobbles around the learned amount, and now and then an unexpected repair comes (car, washing machine, dentist)? How low can konto go, how many futures in 1 000 fall below zero, and what is August's room?" That is a scenario: it changes nothing before 2027-01-01, and it can be compared with the base.
 
-**The draws** (`surprises.tally:33–35`):
+**The draws** (`surprises.tally:29–35`):
 ```
-draw repair_hit[p in path, m in surprise_month] ~ binomial(1, repair_chance) plan 0
-draw spend_dev[p in path, m in surprise_month] ~ normal(0, spend_sd) to 0.01 plan 0
+def repair_hit[m in surprise_month]: dist at day_of(m, surprise_dom)
+  note "czy w miesiącu m przychodzi niespodziewana naprawa (1) czy nie (0)"
+  rule base = binomial(1, repair_chance)
+
+def spend_dev[m in surprise_month]: dist PLN at day_of(m, surprise_dom)
+  note "odchylenie wydatków miesiąca m od kwoty wyuczonej"
+  rule base = normal(0 PLN, spend_sd) to minor(PLN)
 ```
 
 In tally 1.0 the binomial draw carried `to 1`, since the grammar asked a `to` of every draw (MC2-10). tally 1.0.1 gives a discrete draw none (V1-P7), so it is written without one. Nothing else in this key changes.
