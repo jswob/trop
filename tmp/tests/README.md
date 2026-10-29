@@ -18,6 +18,7 @@ python3 -I -B tmp/tests/run.py --tables                    # before-after.md, ov
 - `--budget S` (default 60, the user's rule). A run past it is killed and recorded as `over`, and not rerun.
 - `--force` reruns cached checks.
 - Each call prints a table per layer (same, differ, over, killed, known fault, fixed, cached, not run, wall time). Results: `results/<runtime>.tsv`, the latest result per id; a differing output is kept in `out/<runtime>/`.
+- **In git** (4.5d): `tmp/` is ignored, so a new suite file needs `git add -f` until session 4.5f moves the suite out of `tmp/`; `python3 -I -B tmp/tests/tracked_check.py` lists any file `checks.tsv` names that git doesn't track (exit 1).
 
 ## The checks and their ids
 
