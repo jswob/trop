@@ -1,0 +1,18 @@
+DIFFER pypy+fast I:E1:tx2_worth: blocks differ: tx2_worth | INPUT NEWER THAN BASELINE: engine/tests/integration/households/B/flat.tally
+DIFFER pypy+fast I:E1:tx2_cis_explain: blocks differ: tx2_cis_explain | INPUT NEWER THAN BASELINE: engine/tests/integration/households/B/flat.tally
+DIFFER pypy+fast I:E1:tx2_mtg_day: blocks differ: tx2_mtg_day | INPUT NEWER THAN BASELINE: engine/tests/integration/households/B/flat.tally
+DIFFER pypy+fast I:E1:tx2_mtg_live: blocks differ: tx2_mtg_live | INPUT NEWER THAN BASELINE: engine/tests/integration/households/B/flat.tally
+DIFFER pypy+fast I:D:d02_jakub_not_reported: blocks differ: d02_jakub_not_reported [hh_round = *] | INPUT NEWER THAN BASELINE: engine/tests/integration/cuts/D/cut11/ogrodowa.tally
+DIFFER pypy+fast I:D:d05_quarters: blocks differ: d05_quarters (q = 2027-01) [hh_round = *]; d05_quarters (q = 2027-04) [hh_round = *]; d05_quarters (q = 2027-07) [hh_round = *] | INPUT NEWER THAN BASELINE: engine/tests/integration/cuts/D/cut11/ogrodowa.tally
+DIFFER pypy+fast I:D:d07_low_balances: blocks differ: d07_low_balances (d = 2025-06-13) [hh_round = *]; d07_low_balances (d = 2025-06-19) [hh_round = *]; d07_low_balances (d = 2025-07-03) [hh_round = *]; d07_low_balances (d = 2026-03-03) [hh_round = *] | INPUT NEWER THAN BASELINE: engine/tests/integration/cuts/D/cut11/ogrodowa.tally
+DIFFER pypy+fast I:D:d07_lowest: blocks differ: d07_lowest [hh_round = *] | INPUT NEWER THAN BASELINE: engine/tests/integration/cuts/D/cut11/ogrodowa.tally
+DIFFER pypy+fast I:D:d08_net_worth: blocks differ: d08_net_worth [hh_round = *] | INPUT NEWER THAN BASELINE: engine/tests/integration/cuts/D/cut11/ogrodowa.tally
+DIFFER pypy+fast I:D:d08_parts: blocks differ: d08_parts [hh_round = *] | INPUT NEWER THAN BASELINE: engine/tests/integration/cuts/D/cut11/ogrodowa.tally
+DIFFER pypy+fast I:E1:e1_03_not_reported: blocks differ: e1_03_not_reported (h = anna) [a.px_round = *, d.h; e1_03_not_reported (h = jakub) [a.px_round = *, d.; e1_03_not_reported (h = piotr) [a.px_round = *, d. | INPUT NEWER THAN BASELINE: engine/tests/integration/cuts/E1/cdB/households/E1/asks/E1-03.tally engine/tests/integration/cuts/E1/cdB/households/E1/family.tally engine/tests/integration/cuts/E1/cdB/households/E1/scenarios/e1_not_reported.tally
+| layer | runtime | checks | same | differ | over | killed | known fault | fixed | ran (J marks) | cached | not run | wall s | pypy≠cpython |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| interpreter | pypy+fast | 1 | 1 | 0 | 0 | 0 | 0 | 0 | 0 | 1 | 0 | 0 |  |
+| unit | pypy+fast | 116 | 115 | 0 | 0 | 0 | 0 | 0 | 1 | 115 | 0 | 1 |  |
+| integration | pypy+fast | 452 | 349 | 11 | 6 | 0 | 1 | 0 | 0 | 207 | 85 | 679 |  |
+
+total wall 680 s, 2026-10-29 18:23, budget 60 s, jobs 3

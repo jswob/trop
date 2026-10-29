@@ -1,18 +1,18 @@
 # Testing Tally: the rules
 
-Session 4.5c, 2026-10-29. One page of rules for the test set and for everything added to it later. The runner is `run.py` (`README.md`), the checks are `checks.tsv`, the map is `map/`, the load list is `load.tsv`. The prior art behind each rule is in `tmp/active/session4_5-research.md` §3.
+Session 4.5c, 2026-10-29. One page of rules for the test set and for everything added to it later. The runner is `run.py` (`README.md`), the checks are `checks.tsv`, the map is `map/`, the load list is `load/load.tsv`, all under `engine/tests/` since 4.5f. The prior art behind each rule is in `tmp/active/session4_5-research.md` §3.
 
 ## 1. The layers
 
 | Layer | What | Budget | Runs |
 |---|---|---|---|
-| **interpreter** | refcore's own 950 tests (`R:all`) | 60 s | every pass |
-| **unit** | the probes: one card per catalogue edge (and pair cards for two edges that interact), seconds each | 60 s each; the layer about 2 min | every pass |
-| **integration** | the household questions (one check per ask), the 79 old models, the light twins, the blind texts, the amendments household, the key scripts of `keys-extra/` | 60 s each; the layer under 10 min on 4 jobs | every pass |
+| **interpreter** | refcore's own 950 tests (`R:all`) | 90 s | every pass |
+| **unit** | the probes: one card per catalogue edge (and pair cards for two edges that interact), seconds each | 90 s each; the layer about 2 min | every pass |
+| **integration** | the household questions (one check per ask), the 79 old models, the light twins, the blind texts, the amendments household, the key scripts of `keys-extra/` | 90 s each; the layer under 10 min on 4 jobs | every pass |
 | **acceptance** | the holdout: blind, exam only, never split into visible probes | the exam's | session 5 only |
 | **load** | the full-size twins in `load.tsv` | none on refcore | the engine only, never on refcore |
 
-A check past its 60 s budget is a fault to fix (by the halving test and the split below), not a check to move. *(Bazel's test sizes.)*
+Every run gets 90 s, the hard budget; a check past it is `over`, a fault to fix (by the halving test and the split below), not a check to move. 60 s is the soft line: a check past it in 3 uncached runs in a row is listed after the run's table as a **candidate** for a load row or a cut-down copy (`results/<variant>.tsv`, column `slow_runs`), for the user to decide. (4.5f, the user's rule: 60 s was the hard budget until then, and checks at 50–57 s on a quiet machine went over it under load.) *(Bazel's test sizes.)*
 
 ## 2. The one catalogue
 
@@ -23,17 +23,17 @@ The edge list `engine/tests/cases/boundaries.md` is the only list of capabilitie
 Every new feature, law, household or bug is broken down three ways:
 1. **Its capabilities** go into the catalogue: a new edge gets a probe card, keyed by `keys_probes.py`. Two edges that interact and meet nowhere else get a pair card.
 2. **Its combinations** go into integration: a question in a household (a scenario or a pure ask, so no existing key moves), aimed at the axis pairs `coverage.py --unmet` lists.
-3. **Its scale** goes into a load twin: the full size is a row of `load.tsv`, and the capability copy (§4) is the check.
+3. **Its scale** goes into a load twin: the full size is a row of `load/load.tsv`, and the capability copy (§4) is the check.
 
 §9 gives the recipe from an English text, and `examples.tsv` records it per example.
 
 ## 4. The halving test and the split
 
-A number that can shrink without dropping a rule is **scale** (paths, the run end after the question's last date, search steps, asks per run, cohorts, payout periods); anything else is **capability** (the asked dates, the span start that holds the history, a branch per option). A heavy check gets a capability copy that differs from its original **only in its knob lines** (`knobdiff.py` checks this). The copy lives under `texts/split/` and is a row of `texts/split/split.tsv`. It passes in one of two ways:
+A number that can shrink without dropping a rule is **scale** (paths, the run end after the question's last date, search steps, asks per run, cohorts, payout periods); anything else is **capability** (the asked dates, the span start that holds the history, a branch per option). A heavy check gets a capability copy that differs from its original **only in its knob lines** (`knobdiff.py` checks this). The copy lives under `integration/split/` and is a row of `integration/split/split.tsv`. It passes in one of two ways:
 - **byte-equal to a judged twin:** the original's stored output, or a session-judged run. A run-end cut may differ only in its `  left out:` lines (`cmp=no-left-out`), the run end's own list of what falls past it;
 - **marked by the judge** against the key (verdict `ran`), where the outputs can't agree by construction.
 
-If the copy is still over 60 s at every knob, the user decides: a load row with its measured number, or more work. *(TPC-H's one generator with a scale knob and answers per scale; small scope: a program that is wrong is almost always wrong on a small case.)*
+If the copy is still a candidate (over 60 s) at every knob, the user decides: a load row with its measured number, or more work. *(TPC-H's one generator with a scale knob and answers per scale; small scope: a program that is wrong is almost always wrong on a small case.)*
 
 ## 5. Both ways for any interpreter change
 
@@ -52,7 +52,7 @@ A random figure from a run cut in paths passes if it lies within 4 combined stan
 
 ## 8. What a pass costs
 
-The quick set is the interpreter, unit and integration layers run cold on 4 jobs: see `after.md` for the measured time. Only changed checks run after that (the cache). A step that costs more than it finds is cut: no rerun of a settled check, and no run of a load row on refcore.
+The quick set is the interpreter, unit and integration layers run cold: see `reports/after.md` and `reports/after-fast.md` for the measured times. Only changed checks run after that (the cache). A step that costs more than it finds is cut: no rerun of a settled check, and no run of a load row on refcore.
 
 ## 9. From English to tests: the recipe
 

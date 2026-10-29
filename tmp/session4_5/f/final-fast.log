@@ -1,0 +1,7 @@
+| layer | runtime | checks | same | differ | over | slow (> 60 s) | killed | known fault | fixed | ran (J marks) | cached | not run | wall s | pypy≠cpython |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| interpreter | pypy+fast | 1 | 1 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 1 | 0 | 0 |  |
+| unit | pypy+fast | 116 | 115 | 0 | 0 | 0 | 0 | 0 | 0 | 1 | 116 | 0 | 0 |  |
+| integration | pypy+fast | 452 | 366 | 0 | 0 | 6 | 0 | 1 | 0 | 0 | 361 | 85 | 153 |  |
+
+total wall 153 s, 2026-10-29 18:53, budget 90 s, jobs 3
