@@ -492,6 +492,9 @@ def self_test(checks):
         _, r2, _ = session([law], checks, **dict(kw, runtimes=['pypy+fast+v1']))
         say(e['verdict'] == 'differ' and e['rc'] == 70 and r2['pypy+fast+v1'][0]['verdict'] == 'same',
             'a planted key omission is caught by --verify 1 on LAW-03 (exit 70), and LAW-03 passes without it')
+        # 8. the examples' lint (4.5f, TESTING.md §9)
+        p = subprocess.run([sys.executable, '-I', '-B', T + 'map/examples.py'], capture_output=True, text=True)
+        say(p.returncode == 0, 'examples.tsv: ' + (p.stdout.strip().split('\n')[-1] if p.stdout.strip() else p.stderr[-200:]))
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
     print('self-test %s' % ('PASSED' if ok else 'FAILED'))

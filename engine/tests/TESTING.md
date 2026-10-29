@@ -25,6 +25,8 @@ Every new feature, law, household or bug is broken down three ways:
 2. **Its combinations** go into integration: a question in a household (a scenario or a pure ask, so no existing key moves), aimed at the axis pairs `coverage.py --unmet` lists.
 3. **Its scale** goes into a load twin: the full size is a row of `load.tsv`, and the capability copy (§4) is the check.
 
+§9 gives the recipe from an English text, and `examples.tsv` records it per example.
+
 ## 4. The halving test and the split
 
 A number that can shrink without dropping a rule is **scale** (paths, the run end after the question's last date, search steps, asks per run, cohorts, payout periods); anything else is **capability** (the asked dates, the span start that holds the history, a branch per option). A heavy check gets a capability copy that differs from its original **only in its knob lines** (`knobdiff.py` checks this). The copy lives under `texts/split/` and is a row of `texts/split/split.tsv`. It passes in one of two ways:
@@ -51,3 +53,34 @@ A random figure from a run cut in paths passes if it lies within 4 combined stan
 ## 8. What a pass costs
 
 The quick set is the interpreter, unit and integration layers run cold on 4 jobs: see `after.md` for the measured time. Only changed checks run after that (the cache). A step that costs more than it finds is cut: no rerun of a settled check, and no run of a load row on refcore.
+
+## 9. From English to tests: the recipe
+
+Session 4.5f. Any English description (a household's story, a law, a bug report) becomes tests the same way. A story gives **rules**, the rules give **examples**, and what the text leaves open becomes **questions** to its writer, never a guess. *(Example Mapping, Wynne 2015: a story's rules, examples and questions on cards; Specification by Example, Adzic 2011: key examples, refined, kept as the living documentation.)*
+
+| From the English | Goes to |
+|---|---|
+| each rule the text states | a catalogue edge with its probe card: **unit** (§2, §3.1) |
+| each question a reader would ask of the story | an integration check, an ask in its household (§3.2), aimed at `map/coverage.py --unmet` |
+| each size (people, years, paths, rows) | the halving test (§4): the capability copy is a check, the full size a **load** row |
+| what the text leaves open | a stated hole in the answer, or a case item for the case set's writer, never a guess |
+
+**The record:** `examples.tsv` has one row per example (each household, law text, old model, light twin and blind text) with its story and its three entries: the unit edges, the integration checks, the load rows, or `none: <reason>` for any of them. `map/examples.py --build` back-fills it from `map/tags.tsv`, `checks.tsv` and `load/load.tsv`; nobody edits it by hand. `map/examples.py` is its lint, and runs in `run.py --self-test`. It fails on a missing entry, an id, edge or load row that doesn't exist, an edge with no unit check, a retired check whose example has no load row, an integration check in no example, and a unit check whose edges no example meets (the probe-only SURF edges of §2 apart).
+
+**Worked once, on household E1** (the smallest that meets all three levels: `cases/E1/story.md`, 750 words, 3 questions):
+
+| The story says | Rule or question | Level | Where it is |
+|---|---|---|---|
+| "Households A, B and D … are one family. E1 reads their three dossiers together" | rule: one model joins three households' texts | unit | PTY-05 · joins across households (`U:pty/PTY-05/*`) |
+| "Zbigniew … died 2024-05-17, leaving no will"; "the certificate … final: Halina, Piotr, Anna, Marta and, in Adam's place, Kuba" | rule: succession down the tree, a grandchild in a dead parent's place | unit | PTY-03 · succession (`U:pty/PTY-03`) |
+| "Halina pays the whole sum into the notary's deposit … the notary pays out to Piotr, Ania, Marta and Kuba" | rule: money moves and is conserved, one event with several legs | unit | FLOW-01, FLOW-02 |
+| "Ania's and Piotr's payouts reach their savings accounts that day, as their records show" | rule: a stated event matched against a record | unit | REC-04 · matching and certainty |
+| "2025-07-01 · known 2025-06-24" | rule: a fact has its own known date | unit | REC-06 · clocks and knowledge dates |
+| E1-01: "What did Halina pay into the notary's deposit … What was left in the deposit?" | question | integration | `I:E1:e1_01_deposit`, `…_payouts`, `…_in_is_out` and 5 more |
+| E1-02: "what was each of us worth … Who among us owed whom" | question | integration | `I:E1:e1_02_people`, `…_owed`, and the B-side asks `I:E1:tx2_*` (12 checks) |
+| E1-03: "On what day did the inheritance tax … arise, and by what day did an heir have to report" | question | integration | `I:E1:e1_03_dates`, `…_reported`, `…_not_reported` and 6 more (LAW-11, LAW-12, TIME-05) |
+| "a walk of B takes about 3 minutes" (the joint model over B's full span) | size: B's span and walks | load | `L:8`; the capability copy is the `cdB` cut with B stubbed, which the 29 `I:E1:*` checks run on |
+| "Nothing in the family's papers says whether any other heir reported" | open | answered under each reading | E1-03's key gives each other heir's tax by case, reported in time or not (`I:E1:e1_03_reported`, `…_not_reported`) |
+| "nobody in A, B or D keeps a record of Marta's or Kuba's account" | open | a stated hole | E1-01's key refuses Marta's and Jakub's arrival day, naming the missing record |
+
+E1's row of `examples.tsv`: 14 edges (TIME-05, PTY-03, PTY-05, OWN-02..05, FLOW-01, FLOW-02, LAW-11, LAW-12, REC-04, REC-06, ASK-02), the checks `I:E1:*`, the load row `L:8`.

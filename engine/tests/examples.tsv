@@ -1,0 +1,144 @@
+# The examples and their three levels (TESTING.md §4). Written by map/examples.py --build; never edit by hand.
+example	kind	story	unit	integration	load
+household:A	household	engine/tests/cases/A/story.md	NUM-02 NUM-03 NUM-04 NUM-05 NUM-06 NUM-07 TIME-01 TIME-02 TIME-03 TIME-04 TIME-05 TIME-06 TIME-07 PTY-02 PTY-04 OWN-01 OWN-03 OWN-04 OWN-05 OWN-06 OWN-07 OWN-08 FLOW-01 FLOW-02 VAL-02 VAL-03 VAL-04 VAL-05 VAL-06 LAW-01 LAW-02 LAW-03 LAW-04 LAW-05 LAW-06 LAW-07 LAW-08 LAW-09 LAW-11 LAW-12 LAW-13 LIFE-01 LIFE-02 LIFE-03 LIFE-04 RULE-01 RULE-02 RULE-03 RULE-05 RULE-07 RULE-08 REC-03 REC-05 REC-06 SCEN-01 SCEN-02 SCEN-04 ASK-02 ASK-03 ASK-05	I:A:*	L:9 L:15 L:17
+household:B	household	engine/tests/cases/B/story.md	NUM-01 NUM-02 NUM-07 TIME-02 TIME-03 TIME-04 TIME-06 TIME-07 PTY-01 PTY-02 OWN-01 OWN-02 OWN-03 OWN-04 FLOW-01 FLOW-02 FLOW-03 CUR-01 CUR-02 CUR-03 VAL-01 VAL-02 VAL-05 LAW-01 LAW-02 LAW-06 LAW-07 LAW-08 LAW-10 LAW-11 LAW-13 LIFE-02 LIFE-03 LIFE-05 RULE-01 RULE-02 RULE-03 RULE-04 RULE-06 RULE-07 RULE-09 REC-01 REC-02 REC-03 REC-04 REC-05 REC-06 REC-07 SCEN-01 SCEN-02 SCEN-03 RAND-01 RAND-02 RAND-03 RAND-04 ASK-01 ASK-02 ASK-03 SURF-03	I:B:*	L:3 L:4 L:5 L:6 L:16
+household:D	household	engine/tests/cases/D/story.md	NUM-01 NUM-03 NUM-05 NUM-06 TIME-04 TIME-05 PTY-01 PTY-02 PTY-03 PTY-04 OWN-01 OWN-02 OWN-03 OWN-04 OWN-05 OWN-06 OWN-07 OWN-09 FLOW-03 VAL-01 VAL-02 VAL-04 VAL-06 VAL-07 LAW-03 LAW-04 LAW-07 LAW-09 LAW-10 LAW-12 LIFE-01 LIFE-03 LIFE-04 RULE-02 RULE-05 REC-02 REC-07 SCEN-01 SCEN-03 RAND-01 RAND-02 RAND-03 RAND-04 ASK-01 ASK-02 ASK-04 SURF-03	I:D:*	L:1 L:2
+household:E1	household	engine/tests/cases/E1/story.md	TIME-05 PTY-03 PTY-05 OWN-02 OWN-03 OWN-04 OWN-05 FLOW-01 FLOW-02 LAW-11 LAW-12 REC-04 REC-06 ASK-02	I:E1:*	L:8
+household:X	household	engine/spec/amendments/README.md	TIME-02 TIME-03 TIME-05 TIME-06 PTY-01 OWN-01 OWN-02 OWN-03 OWN-08 FLOW-02 CUR-01 CUR-02 VAL-01 VAL-03 VAL-05 VAL-07 LAW-01 LAW-03 LAW-04 LAW-06 LAW-08 LIFE-02 LIFE-03 LIFE-04 LIFE-05 RULE-01 RULE-03 REC-01 REC-02 REC-06 SCEN-01 ASK-01 ASK-03	I:X:*	L:10 L:11 L:13 L:14
+law:CC-1	law text	engine/tests/cases/law/acts.md#CC-1	LAW-01 LAW-02 LAW-03 LAW-04 LAW-05 LAW-06 LAW-07 LAW-08 LAW-09 LAW-10 LAW-11 LAW-12 LAW-13	I:A:* I:B:* I:E1:tx2_owes I:E1:tx2_owes_explain I:E1:tx2_worth I:E1:tx2_cis_explain I:E1:tx2_mtg_day I:E1:tx2_mtg_live	L:3 L:4 L:5 L:6 L:8 L:9 L:16 L:17
+law:CC-2	law text	engine/tests/cases/law/acts.md#CC-2	LAW-01 LAW-02 LAW-03 LAW-04 LAW-05 LAW-06 LAW-07 LAW-08 LAW-09 LAW-10 LAW-11 LAW-12 LAW-13	I:A:* I:B:* I:E1:tx2_owes I:E1:tx2_owes_explain I:E1:tx2_worth I:E1:tx2_cis_explain I:E1:tx2_mtg_day I:E1:tx2_mtg_live	L:3 L:4 L:5 L:6 L:8 L:9 L:16 L:17
+law:CIV-1	law text	engine/tests/cases/law/acts.md#CIV-1	LAW-01 LAW-02 LAW-03 LAW-04 LAW-05 LAW-06 LAW-07 LAW-08 LAW-09 LAW-11 LAW-12 LAW-13	I:A:*	L:9 L:17
+law:FAM-1	law text	engine/tests/cases/law/acts.md#FAM-1	LAW-01 LAW-02 LAW-03 LAW-04 LAW-05 LAW-06 LAW-07 LAW-08 LAW-09 LAW-11 LAW-12 LAW-13	I:A:*	L:9 L:17
+law:GEN-1	law text	engine/tests/cases/law/acts.md#GEN-1	LAW-01 LAW-02 LAW-03 LAW-04 LAW-05 LAW-06 LAW-07 LAW-08 LAW-09 LAW-10 LAW-11 LAW-12 LAW-13	I:A:* I:B:* I:E1:tx2_owes I:E1:tx2_owes_explain I:E1:tx2_worth I:E1:tx2_cis_explain I:E1:tx2_mtg_day I:E1:tx2_mtg_live	L:3 L:4 L:5 L:6 L:8 L:9 L:16 L:17
+law:GEN-2	law text	engine/tests/cases/law/acts.md#GEN-2	LAW-01 LAW-02 LAW-06 LAW-07 LAW-08 LAW-10 LAW-11 LAW-13	I:B:* I:E1:tx2_owes I:E1:tx2_owes_explain I:E1:tx2_worth I:E1:tx2_cis_explain I:E1:tx2_mtg_day I:E1:tx2_mtg_live	L:3 L:4 L:5 L:6 L:8 L:16
+law:GEN-3	law text	engine/tests/cases/law/acts.md#GEN-3	LAW-01 LAW-02 LAW-03 LAW-04 LAW-05 LAW-06 LAW-07 LAW-08 LAW-09 LAW-10 LAW-11 LAW-12 LAW-13	I:A:* I:B:* I:E1:tx2_owes I:E1:tx2_owes_explain I:E1:tx2_worth I:E1:tx2_cis_explain I:E1:tx2_mtg_day I:E1:tx2_mtg_live	L:3 L:4 L:5 L:6 L:8 L:9 L:16 L:17
+law:GEN-4	law text	engine/tests/cases/law/acts.md#GEN-4	LAW-01 LAW-02 LAW-06 LAW-07 LAW-08 LAW-10 LAW-11 LAW-13	I:B:* I:E1:tx2_owes I:E1:tx2_owes_explain I:E1:tx2_worth I:E1:tx2_cis_explain I:E1:tx2_mtg_day I:E1:tx2_mtg_live	L:3 L:4 L:5 L:6 L:8 L:16
+law:GEN-5	law text	engine/tests/cases/law/acts.md#GEN-5	LAW-01 LAW-02 LAW-03 LAW-04 LAW-05 LAW-06 LAW-07 LAW-08 LAW-09 LAW-10 LAW-11 LAW-12 LAW-13	I:A:* I:B:* I:E1:tx2_owes I:E1:tx2_owes_explain I:E1:tx2_worth I:E1:tx2_cis_explain I:E1:tx2_mtg_day I:E1:tx2_mtg_live	L:3 L:4 L:5 L:6 L:8 L:9 L:16 L:17
+law:GEN-6	law text	engine/tests/cases/law/acts.md#GEN-6	LAW-01 LAW-02 LAW-03 LAW-04 LAW-05 LAW-06 LAW-07 LAW-08 LAW-09 LAW-10 LAW-11 LAW-12 LAW-13	I:A:* I:B:* I:E1:tx2_owes I:E1:tx2_owes_explain I:E1:tx2_worth I:E1:tx2_cis_explain I:E1:tx2_mtg_day I:E1:tx2_mtg_live	L:3 L:4 L:5 L:6 L:8 L:9 L:16 L:17
+law:IGT-1	law text	engine/tests/cases/law/acts.md#IGT-1	LAW-01 LAW-02 LAW-03 LAW-04 LAW-05 LAW-06 LAW-07 LAW-08 LAW-09 LAW-11 LAW-12 LAW-13	I:A:*	L:9 L:17
+law:IGT-2	law text	engine/tests/cases/law/acts.md#IGT-2	LAW-01 LAW-02 LAW-03 LAW-04 LAW-05 LAW-06 LAW-07 LAW-08 LAW-09 LAW-11 LAW-12 LAW-13	I:A:*	L:9 L:17
+law:IGT-3	law text	engine/tests/cases/law/acts.md#IGT-3	LAW-01 LAW-02 LAW-03 LAW-04 LAW-05 LAW-06 LAW-07 LAW-08 LAW-09 LAW-11 LAW-12 LAW-13	I:A:*	L:9 L:17
+law:IGT-4	law text	engine/tests/cases/law/acts.md#IGT-4	LAW-01 LAW-02 LAW-03 LAW-04 LAW-05 LAW-06 LAW-07 LAW-08 LAW-09 LAW-11 LAW-12 LAW-13	I:A:*	L:9 L:17
+law:MOT-1	law text	engine/tests/cases/law/acts.md#MOT-1	LAW-01 LAW-02 LAW-03 LAW-04 LAW-05 LAW-06 LAW-07 LAW-08 LAW-09 LAW-10 LAW-11 LAW-12 LAW-13	I:A:* I:B:* I:E1:tx2_owes I:E1:tx2_owes_explain I:E1:tx2_worth I:E1:tx2_cis_explain I:E1:tx2_mtg_day I:E1:tx2_mtg_live	L:3 L:4 L:5 L:6 L:8 L:9 L:16 L:17
+law:MOT-2	law text	engine/tests/cases/law/acts.md#MOT-2	LAW-01 LAW-02 LAW-03 LAW-04 LAW-05 LAW-06 LAW-07 LAW-08 LAW-09 LAW-10 LAW-11 LAW-12 LAW-13	I:A:* I:B:* I:E1:tx2_owes I:E1:tx2_owes_explain I:E1:tx2_worth I:E1:tx2_cis_explain I:E1:tx2_mtg_day I:E1:tx2_mtg_live	L:3 L:4 L:5 L:6 L:8 L:9 L:16 L:17
+law:MTG-1	law text	engine/tests/cases/law/acts.md#MTG-1	LAW-01 LAW-02 LAW-06 LAW-07 LAW-08 LAW-10 LAW-11 LAW-13	I:B:* I:E1:tx2_owes I:E1:tx2_owes_explain I:E1:tx2_worth I:E1:tx2_cis_explain I:E1:tx2_mtg_day I:E1:tx2_mtg_live	L:3 L:4 L:5 L:6 L:8 L:16
+law:MTG-2	law text	engine/tests/cases/law/acts.md#MTG-2	LAW-01 LAW-02 LAW-06 LAW-07 LAW-08 LAW-10 LAW-11 LAW-13	I:B:* I:E1:tx2_owes I:E1:tx2_owes_explain I:E1:tx2_worth I:E1:tx2_cis_explain I:E1:tx2_mtg_day I:E1:tx2_mtg_live	L:3 L:4 L:5 L:6 L:8 L:16
+law:PIT-10	law text	engine/tests/cases/law/acts.md#PIT-10	LAW-01 LAW-02 LAW-06 LAW-07 LAW-08 LAW-10 LAW-11 LAW-13	I:B:* I:E1:tx2_owes I:E1:tx2_owes_explain I:E1:tx2_worth I:E1:tx2_cis_explain I:E1:tx2_mtg_day I:E1:tx2_mtg_live	L:3 L:4 L:5 L:6 L:8 L:16
+law:PIT-11	law text	engine/tests/cases/law/acts.md#PIT-11	LAW-01 LAW-02 LAW-06 LAW-07 LAW-08 LAW-10 LAW-11 LAW-13	I:B:* I:E1:tx2_owes I:E1:tx2_owes_explain I:E1:tx2_worth I:E1:tx2_cis_explain I:E1:tx2_mtg_day I:E1:tx2_mtg_live	L:3 L:4 L:5 L:6 L:8 L:16
+law:PIT-12	law text	engine/tests/cases/law/acts.md#PIT-12	LAW-01 LAW-02 LAW-06 LAW-07 LAW-08 LAW-10 LAW-11 LAW-13	I:B:* I:E1:tx2_owes I:E1:tx2_owes_explain I:E1:tx2_worth I:E1:tx2_cis_explain I:E1:tx2_mtg_day I:E1:tx2_mtg_live	L:3 L:4 L:5 L:6 L:8 L:16
+law:PIT-15	law text	engine/tests/cases/law/acts.md#PIT-15	LAW-01 LAW-02 LAW-06 LAW-07 LAW-08 LAW-10 LAW-11 LAW-13	I:B:* I:E1:tx2_owes I:E1:tx2_owes_explain I:E1:tx2_worth I:E1:tx2_cis_explain I:E1:tx2_mtg_day I:E1:tx2_mtg_live	L:3 L:4 L:5 L:6 L:8 L:16
+law:PIT-2	law text	engine/tests/cases/law/acts.md#PIT-2	LAW-01 LAW-02 LAW-03 LAW-04 LAW-05 LAW-06 LAW-07 LAW-08 LAW-09 LAW-10 LAW-11 LAW-12 LAW-13	I:A:* I:B:* I:E1:tx2_owes I:E1:tx2_owes_explain I:E1:tx2_worth I:E1:tx2_cis_explain I:E1:tx2_mtg_day I:E1:tx2_mtg_live	L:3 L:4 L:5 L:6 L:8 L:9 L:16 L:17
+law:PIT-3	law text	engine/tests/cases/law/acts.md#PIT-3	LAW-01 LAW-02 LAW-03 LAW-04 LAW-05 LAW-06 LAW-07 LAW-08 LAW-09 LAW-10 LAW-11 LAW-12 LAW-13	I:A:* I:B:* I:E1:tx2_owes I:E1:tx2_owes_explain I:E1:tx2_worth I:E1:tx2_cis_explain I:E1:tx2_mtg_day I:E1:tx2_mtg_live	L:3 L:4 L:5 L:6 L:8 L:9 L:16 L:17
+law:PIT-4	law text	engine/tests/cases/law/acts.md#PIT-4	LAW-01 LAW-02 LAW-03 LAW-04 LAW-05 LAW-06 LAW-07 LAW-08 LAW-09 LAW-10 LAW-11 LAW-12 LAW-13	I:A:* I:B:* I:E1:tx2_owes I:E1:tx2_owes_explain I:E1:tx2_worth I:E1:tx2_cis_explain I:E1:tx2_mtg_day I:E1:tx2_mtg_live	L:3 L:4 L:5 L:6 L:8 L:9 L:16 L:17
+law:PIT-5	law text	engine/tests/cases/law/acts.md#PIT-5	LAW-01 LAW-02 LAW-03 LAW-04 LAW-05 LAW-06 LAW-07 LAW-08 LAW-09 LAW-10 LAW-11 LAW-12 LAW-13	I:A:* I:B:* I:E1:tx2_owes I:E1:tx2_owes_explain I:E1:tx2_worth I:E1:tx2_cis_explain I:E1:tx2_mtg_day I:E1:tx2_mtg_live	L:3 L:4 L:5 L:6 L:8 L:9 L:16 L:17
+law:PIT-6	law text	engine/tests/cases/law/acts.md#PIT-6	LAW-01 LAW-02 LAW-03 LAW-04 LAW-05 LAW-06 LAW-07 LAW-08 LAW-09 LAW-10 LAW-11 LAW-12 LAW-13	I:A:* I:B:* I:E1:tx2_owes I:E1:tx2_owes_explain I:E1:tx2_worth I:E1:tx2_cis_explain I:E1:tx2_mtg_day I:E1:tx2_mtg_live	L:3 L:4 L:5 L:6 L:8 L:9 L:16 L:17
+law:PIT-7	law text	engine/tests/cases/law/acts.md#PIT-7	LAW-01 LAW-02 LAW-03 LAW-04 LAW-05 LAW-06 LAW-07 LAW-08 LAW-09 LAW-11 LAW-12 LAW-13	I:A:*	L:9 L:17
+law:PIT-8	law text	engine/tests/cases/law/acts.md#PIT-8	LAW-01 LAW-02 LAW-03 LAW-04 LAW-05 LAW-06 LAW-07 LAW-08 LAW-09 LAW-11 LAW-12 LAW-13	I:A:*	L:9 L:17
+law:PIT-9	law text	engine/tests/cases/law/acts.md#PIT-9	LAW-01 LAW-02 LAW-03 LAW-04 LAW-05 LAW-06 LAW-07 LAW-08 LAW-09 LAW-11 LAW-12 LAW-13	I:A:*	L:9 L:17
+law:SOC-1	law text	engine/tests/cases/law/acts.md#SOC-1	LAW-01 LAW-02 LAW-03 LAW-04 LAW-05 LAW-06 LAW-07 LAW-08 LAW-09 LAW-10 LAW-11 LAW-12 LAW-13	I:A:* I:B:* I:E1:tx2_owes I:E1:tx2_owes_explain I:E1:tx2_worth I:E1:tx2_cis_explain I:E1:tx2_mtg_day I:E1:tx2_mtg_live	L:3 L:4 L:5 L:6 L:8 L:9 L:16 L:17
+law:SOC-2	law text	engine/tests/cases/law/acts.md#SOC-2	LAW-01 LAW-02 LAW-03 LAW-04 LAW-05 LAW-06 LAW-07 LAW-08 LAW-09 LAW-10 LAW-11 LAW-12 LAW-13	I:A:* I:B:* I:E1:tx2_owes I:E1:tx2_owes_explain I:E1:tx2_worth I:E1:tx2_cis_explain I:E1:tx2_mtg_day I:E1:tx2_mtg_live	L:3 L:4 L:5 L:6 L:8 L:9 L:16 L:17
+law:SOC-3	law text	engine/tests/cases/law/acts.md#SOC-3	LAW-01 LAW-02 LAW-06 LAW-07 LAW-08 LAW-10 LAW-11 LAW-13	I:B:* I:E1:tx2_owes I:E1:tx2_owes_explain I:E1:tx2_worth I:E1:tx2_cis_explain I:E1:tx2_mtg_day I:E1:tx2_mtg_live	L:3 L:4 L:5 L:6 L:8 L:16
+law:SOC-4	law text	engine/tests/cases/law/acts.md#SOC-4	LAW-01 LAW-02 LAW-06 LAW-07 LAW-08 LAW-10 LAW-11 LAW-13	I:B:* I:E1:tx2_owes I:E1:tx2_owes_explain I:E1:tx2_worth I:E1:tx2_cis_explain I:E1:tx2_mtg_day I:E1:tx2_mtg_live	L:3 L:4 L:5 L:6 L:8 L:16
+law:SOC-8	law text	engine/tests/cases/law/acts.md#SOC-8	LAW-01 LAW-02 LAW-03 LAW-04 LAW-05 LAW-06 LAW-07 LAW-08 LAW-09 LAW-11 LAW-12 LAW-13	I:A:*	L:9 L:17
+law:TT-1	law text	engine/tests/cases/law/acts.md#TT-1	LAW-01 LAW-02 LAW-06 LAW-07 LAW-08 LAW-10 LAW-11 LAW-13	I:B:* I:E1:tx2_owes I:E1:tx2_owes_explain I:E1:tx2_worth I:E1:tx2_cis_explain I:E1:tx2_mtg_day I:E1:tx2_mtg_live	L:3 L:4 L:5 L:6 L:8 L:16
+law:TT-2	law text	engine/tests/cases/law/acts.md#TT-2	LAW-01 LAW-02 LAW-06 LAW-07 LAW-08 LAW-10 LAW-11 LAW-13	I:B:* I:E1:tx2_owes I:E1:tx2_owes_explain I:E1:tx2_worth I:E1:tx2_cis_explain I:E1:tx2_mtg_day I:E1:tx2_mtg_live	L:3 L:4 L:5 L:6 L:8 L:16
+law:VAT-1	law text	engine/tests/cases/law/acts.md#VAT-1	LAW-01 LAW-02 LAW-06 LAW-07 LAW-08 LAW-10 LAW-11 LAW-13	I:B:* I:E1:tx2_owes I:E1:tx2_owes_explain I:E1:tx2_worth I:E1:tx2_cis_explain I:E1:tx2_mtg_day I:E1:tx2_mtg_live	L:3 L:4 L:5 L:6 L:8 L:16
+law:VAT-2	law text	engine/tests/cases/law/acts.md#VAT-2	LAW-01 LAW-02 LAW-06 LAW-07 LAW-08 LAW-10 LAW-11 LAW-13	I:B:* I:E1:tx2_owes I:E1:tx2_owes_explain I:E1:tx2_worth I:E1:tx2_cis_explain I:E1:tx2_mtg_day I:E1:tx2_mtg_live	L:3 L:4 L:5 L:6 L:8 L:16
+law:VAT-3	law text	engine/tests/cases/law/acts.md#VAT-3	LAW-01 LAW-02 LAW-06 LAW-07 LAW-08 LAW-10 LAW-11 LAW-13	I:B:* I:E1:tx2_owes I:E1:tx2_owes_explain I:E1:tx2_worth I:E1:tx2_cis_explain I:E1:tx2_mtg_day I:E1:tx2_mtg_live	L:3 L:4 L:5 L:6 L:8 L:16
+law:VAT-4	law text	engine/tests/cases/law/acts.md#VAT-4	LAW-01 LAW-02 LAW-06 LAW-07 LAW-08 LAW-10 LAW-11 LAW-13	I:B:* I:E1:tx2_owes I:E1:tx2_owes_explain I:E1:tx2_worth I:E1:tx2_cis_explain I:E1:tx2_mtg_day I:E1:tx2_mtg_live	L:3 L:4 L:5 L:6 L:8 L:16
+law:VAT-5	law text	engine/tests/cases/law/acts.md#VAT-5	LAW-01 LAW-02 LAW-06 LAW-07 LAW-08 LAW-10 LAW-11 LAW-13	I:B:* I:E1:tx2_owes I:E1:tx2_owes_explain I:E1:tx2_worth I:E1:tx2_cis_explain I:E1:tx2_mtg_day I:E1:tx2_mtg_live	L:3 L:4 L:5 L:6 L:8 L:16
+law:VAT-6	law text	engine/tests/cases/law/acts.md#VAT-6	LAW-01 LAW-02 LAW-06 LAW-07 LAW-08 LAW-10 LAW-11 LAW-13	I:B:* I:E1:tx2_owes I:E1:tx2_owes_explain I:E1:tx2_worth I:E1:tx2_cis_explain I:E1:tx2_mtg_day I:E1:tx2_mtg_live	L:3 L:4 L:5 L:6 L:8 L:16
+law:WCP-1	law text	engine/tests/cases/law/acts.md#WCP-1	LAW-01 LAW-02 LAW-03 LAW-04 LAW-05 LAW-06 LAW-07 LAW-08 LAW-09 LAW-11 LAW-12 LAW-13	I:A:*	L:9 L:17
+law:WCP-2	law text	engine/tests/cases/law/acts.md#WCP-2	LAW-01 LAW-02 LAW-03 LAW-04 LAW-05 LAW-06 LAW-07 LAW-08 LAW-09 LAW-11 LAW-12 LAW-13	I:A:*	L:9 L:17
+model:CB-01	old model	engine/spec/models/CB-01.tally	LAW-01 LAW-05	I:M:CB-01	none: no load.tsv row names it; its checks run at full size
+model:CB-02	old model	engine/spec/models/CB-02.tally	NUM-02 NUM-03 LAW-03 LAW-05 LAW-08	I:M:CB-02	none: no load.tsv row names it; its checks run at full size
+model:CB-03	old model	engine/spec/models/CB-03.tally	VAL-04 LAW-05	I:M:CB-03	none: no load.tsv row names it; its checks run at full size
+model:CB-04	old model	engine/spec/models/CB-04.tally	LAW-01 LAW-05	I:M:CB-04	none: no load.tsv row names it; its checks run at full size
+model:CB-05	old model	engine/spec/models/CB-05.tally	PTY-02 LAW-09	I:M:CB-05	none: no load.tsv row names it; its checks run at full size
+model:CB-06	old model	engine/spec/models/CB-06.tally	NUM-02 NUM-03 TIME-04 LAW-07	I:M:CB-06	none: no load.tsv row names it; its checks run at full size
+model:CB-07	old model	engine/spec/models/CB-07.tally	TIME-04 LAW-03 LAW-07	I:M:CB-07	none: no load.tsv row names it; its checks run at full size
+model:CB-08	old model	engine/spec/models/CB-08.tally	CUR-01 CUR-03 LIFE-03	I:M:CB-08	none: no load.tsv row names it; its checks run at full size
+model:CB-09	old model	engine/spec/models/CB-09.tally	OWN-08 CUR-01 CUR-03	I:M:CB-09	none: no load.tsv row names it; its checks run at full size
+model:CB-10	old model	engine/spec/models/CB-10.tally	OWN-04 CUR-01 CUR-03 LIFE-03	I:M:CB-10	none: no load.tsv row names it; its checks run at full size
+model:CB-11	old model	engine/spec/models/CB-11.tally	NUM-02 NUM-03 VAL-06 LAW-05 LAW-07	I:M:CB-11	none: no load.tsv row names it; its checks run at full size
+model:CB-12	old model	engine/spec/models/CB-12.tally	LAW-05 LAW-07	I:M:CB-12	none: no load.tsv row names it; its checks run at full size
+model:CB-13	old model	engine/spec/models/CB-13.tally	NUM-05 OWN-05	I:M:CB-13	none: no load.tsv row names it; its checks run at full size
+model:CB-14	old model	engine/spec/models/CB-14.tally	NUM-02 NUM-03 LAW-11	I:M:CB-14	none: no load.tsv row names it; its checks run at full size
+model:CH-01	old model	engine/spec/models/CH-01.tally	LAW-01 RAND-02	I:M:CH-01	none: no load.tsv row names it; its checks run at full size
+model:CH-02	old model	engine/spec/models/CH-02.tally	none: no edge is tagged on its checks	I:M:CH-02	none: no load.tsv row names it; its checks run at full size
+model:CH-03	old model	engine/spec/models/CH-03.tally	RAND-02	I:M:CH-03	none: no load.tsv row names it; its checks run at full size
+model:CH-04	old model	engine/spec/models/CH-04.tally	VAL-03 REC-06 REC-07	I:M:CH-04	none: no load.tsv row names it; its checks run at full size
+model:CH-05	old model	engine/spec/models/CH-05.tally	NUM-06 VAL-06 RULE-08	I:M:CH-05	none: no load.tsv row names it; its checks run at full size
+model:CH-06	old model	engine/spec/models/CH-06.tally	RULE-08 RAND-01 RAND-02	I:M:CH-06	none: no load.tsv row names it; its checks run at full size
+model:CMP-01	old model	engine/spec/models/CMP-01.tally	PTY-02 PTY-04 FLOW-03 CUR-01 CUR-03 LAW-05	I:M:CMP-01 I:M:CMP-01~key	none: no load.tsv row names it; its checks run at full size
+model:CMP-02	old model	engine/spec/models/CMP-02.tally	FLOW-02 FLOW-03	I:M:CMP-02	none: no load.tsv row names it; its checks run at full size
+model:LH-01	old model	engine/spec/models/LH-01.tally	TIME-05 OWN-06 OWN-07	I:M:LH-01	none: no load.tsv row names it; its checks run at full size
+model:LH-02	old model	engine/spec/models/LH-02.tally	NUM-02 NUM-03 TIME-05 OWN-06 OWN-07	I:M:LH-02	none: no load.tsv row names it; its checks run at full size
+model:LH-03	old model	engine/spec/models/LH-03.tally	PTY-02 LAW-09	I:M:LH-03	none: no load.tsv row names it; its checks run at full size
+model:LH-04	old model	engine/spec/models/LH-04.tally	LAW-06 LAW-09	I:M:LH-04	none: no load.tsv row names it; its checks run at full size
+model:LH-05	old model	engine/spec/models/LH-05.tally	OWN-08 VAL-01	I:M:LH-05	none: no load.tsv row names it; its checks run at full size
+model:LH-06	old model	engine/spec/models/LH-06.tally	TIME-04 OWN-08 LAW-09	I:M:LH-06	none: no load.tsv row names it; its checks run at full size
+model:LH-07	old model	engine/spec/models/LH-07.tally	TIME-05 PTY-01 VAL-04 LAW-01	I:M:LH-07	none: no load.tsv row names it; its checks run at full size
+model:LH-08	old model	engine/spec/models/LH-08.tally	LAW-01 LAW-06	I:M:LH-08	none: no load.tsv row names it; its checks run at full size
+model:LH-09	old model	engine/spec/models/LH-09.tally	TIME-05 OWN-08	I:M:LH-09	none: no load.tsv row names it; its checks run at full size
+model:LH-10	old model	engine/spec/models/LH-10.tally	LIFE-03 SCEN-01	I:M:LH-10	none: no load.tsv row names it; its checks run at full size
+model:LH-11	old model	engine/spec/models/LH-11.tally	LIFE-03	I:M:LH-11 I:M:LH-11~key	none: no load.tsv row names it; its checks run at full size
+model:LH-12	old model	engine/spec/models/LH-12.tally	VAL-01 VAL-06 LAW-03 LAW-05	I:M:LH-12	none: no load.tsv row names it; its checks run at full size
+model:LH-13	old model	engine/spec/models/LH-13.tally	NUM-02 NUM-03 VAL-06 LAW-01	I:M:LH-13	none: no load.tsv row names it; its checks run at full size
+model:LH-14	old model	engine/spec/models/LH-14.tally	NUM-02 NUM-03 VAL-06 LAW-01 LAW-03 LAW-04	I:M:LH-14	none: no load.tsv row names it; its checks run at full size
+model:LH-15	old model	engine/spec/models/LH-15.tally	NUM-06 REC-07	none: no check runs it at full size; its light twin is the check (load only at full size)	L:12
+model:LH-16	old model	engine/spec/models/LH-16.tally	NUM-06 REC-07	none: no check runs it at full size; its light twin is the check (load only at full size)	L:12
+model:LH-17	old model	engine/spec/models/LH-17.tally	REC-07 RAND-01 RAND-02	I:M:LH-17	L:12
+model:LH-18	old model	engine/spec/models/LH-18.tally	REC-07 RAND-02	I:M:LH-18	none: no load.tsv row names it; its checks run at full size
+model:MP-01	old model	engine/spec/models/MP-01.tally	OWN-04 OWN-05	I:M:MP-01	none: no load.tsv row names it; its checks run at full size
+model:MP-02	old model	engine/spec/models/MP-02.tally	OWN-04 OWN-08 LIFE-03	I:M:MP-02	none: no load.tsv row names it; its checks run at full size
+model:MP-03	old model	engine/spec/models/MP-03.tally	NUM-05 PTY-03 OWN-05 LAW-11	I:M:MP-03	none: no load.tsv row names it; its checks run at full size
+model:MP-04	old model	engine/spec/models/MP-04.tally	PTY-03 OWN-04 OWN-05 VAL-06	I:M:MP-04	none: no load.tsv row names it; its checks run at full size
+model:MP-05	old model	engine/spec/models/MP-05.tally	TIME-05 PTY-03 LAW-01 LAW-11	I:M:MP-05	none: no load.tsv row names it; its checks run at full size
+model:MP-06	old model	engine/spec/models/MP-06.tally	TIME-05 LAW-11	I:M:MP-06	none: no load.tsv row names it; its checks run at full size
+model:MP-07	old model	engine/spec/models/MP-07.tally	PTY-04 LAW-02	I:M:MP-07	none: no load.tsv row names it; its checks run at full size
+model:MP-08	old model	engine/spec/models/MP-08.tally	PTY-01 PTY-04 LAW-06	I:M:MP-08	none: no load.tsv row names it; its checks run at full size
+model:MP-09	old model	engine/spec/models/MP-09.tally	NUM-05 FLOW-03 LAW-01	I:M:MP-09	none: no load.tsv row names it; its checks run at full size
+model:MP-10	old model	engine/spec/models/MP-10.tally	VAL-04 LAW-01	I:M:MP-10	none: no load.tsv row names it; its checks run at full size
+model:MP-11	old model	engine/spec/models/MP-11.tally	PTY-02 LAW-01 LAW-05	I:M:MP-11	none: no load.tsv row names it; its checks run at full size
+model:MP-12	old model	engine/spec/models/MP-12.tally	NUM-02 NUM-03 NUM-05 PTY-03	I:M:MP-12	none: no load.tsv row names it; its checks run at full size
+model:MP-13	old model	engine/spec/models/MP-13.tally	TIME-05 PTY-03 LAW-11	I:M:MP-13	none: no load.tsv row names it; its checks run at full size
+model:MP-14	old model	engine/spec/models/MP-14.tally	NUM-05 FLOW-02 FLOW-03	I:M:MP-14	none: no load.tsv row names it; its checks run at full size
+model:MP-15	old model	engine/spec/models/MP-15.tally	NUM-07 FLOW-03	I:M:MP-15	none: no load.tsv row names it; its checks run at full size
+model:MP-16	old model	engine/spec/models/MP-16.tally	NUM-05 PTY-04 FLOW-03 LAW-01	I:M:MP-16	none: no load.tsv row names it; its checks run at full size
+model:RC-01	old model	engine/spec/models/RC-01.tally	NUM-02 NUM-03 TIME-04 TIME-05 VAL-04 LAW-09 LIFE-04 LIFE-05	I:M:RC-01	none: no load.tsv row names it; its checks run at full size
+model:RC-02	old model	engine/spec/models/RC-02.tally	TIME-05 PTY-01 PTY-02 LAW-07	I:M:RC-02	none: no load.tsv row names it; its checks run at full size
+model:RC-03	old model	engine/spec/models/RC-03.tally	PTY-02 PTY-04	I:M:RC-03	none: no load.tsv row names it; its checks run at full size
+model:RC-04	old model	engine/spec/models/RC-04.tally	TIME-04 LAW-01 LAW-02	I:M:RC-04	none: no load.tsv row names it; its checks run at full size
+model:RC-05	old model	engine/spec/models/RC-05.tally	NUM-02 NUM-03 VAL-04 LAW-02 LAW-03 LAW-08	I:M:RC-05	none: no load.tsv row names it; its checks run at full size
+model:RC-06	old model	engine/spec/models/RC-06.tally	LAW-07 LAW-08	I:M:RC-06	none: no load.tsv row names it; its checks run at full size
+model:RC-07	old model	engine/spec/models/RC-07.tally	LAW-01 LAW-08 LIFE-05	I:M:RC-07	none: no load.tsv row names it; its checks run at full size
+model:RC-08	old model	engine/spec/models/RC-08.tally	TIME-06 LAW-01 LAW-03	I:M:RC-08	none: no load.tsv row names it; its checks run at full size
+model:UL-01	old model	engine/spec/models/UL-01.tally	TIME-06 LAW-01 LAW-02 LIFE-05	I:M:UL-01	none: no load.tsv row names it; its checks run at full size
+model:UL-02	old model	engine/spec/models/UL-02.tally	TIME-04 LAW-03 LIFE-05	I:M:UL-02	none: no load.tsv row names it; its checks run at full size
+model:UL-03	old model	engine/spec/models/UL-03.tally	TIME-05 LAW-01 LAW-02 LAW-11	I:M:UL-03	none: no load.tsv row names it; its checks run at full size
+model:UL-04	old model	engine/spec/models/UL-04.tally	PTY-04 VAL-04 LAW-02 LAW-03	I:M:UL-04	none: no load.tsv row names it; its checks run at full size
+model:UL-05	old model	engine/spec/models/UL-05.tally	TIME-04 TIME-06 PTY-02 PTY-04 VAL-04 LAW-02	I:M:UL-05	none: no load.tsv row names it; its checks run at full size
+model:UL-06	old model	engine/spec/models/UL-06.tally	TIME-03 TIME-04 LAW-03 LAW-04	I:M:UL-06	none: no load.tsv row names it; its checks run at full size
+model:UL-07	old model	engine/spec/models/UL-07.tally	TIME-05 PTY-02 PTY-04 LAW-05 LAW-20 RULE-04	I:M:UL-07	none: no load.tsv row names it; its checks run at full size
+model:UL-08	old model	engine/spec/models/UL-08.tally	TIME-06 PTY-04 LAW-02 LAW-03 LAW-06 LAW-20 RULE-04	I:M:UL-08	none: no load.tsv row names it; its checks run at full size
+model:UL-09	old model	engine/spec/models/UL-09.tally	NUM-02 NUM-03 VAL-02 LAW-04 LAW-05	I:M:UL-09	none: no load.tsv row names it; its checks run at full size
+model:UL-10	old model	engine/spec/models/UL-10.tally	PTY-01 PTY-02 LAW-05 LAW-06	I:M:UL-10	none: no load.tsv row names it; its checks run at full size
+model:UL-11	old model	engine/spec/models/UL-11.tally	LAW-02 LAW-08	I:M:UL-11	none: no load.tsv row names it; its checks run at full size
+model:UL-12	old model	engine/spec/models/UL-12.tally	NUM-05 VAL-04 LAW-08	I:M:UL-12	none: no load.tsv row names it; its checks run at full size
+model:UL-13	old model	engine/spec/models/UL-13.tally	OWN-08 LAW-07	I:M:UL-13	none: no load.tsv row names it; its checks run at full size
+model:UL-14	old model	engine/spec/models/UL-14.tally	TIME-05 LAW-01 LAW-02 ASK-03	I:M:UL-14	none: no load.tsv row names it; its checks run at full size
+model:UL-15	old model	engine/spec/models/UL-15.tally	TIME-06 LAW-03 ASK-03	I:M:UL-15	none: no load.tsv row names it; its checks run at full size
+twin:LH-15-light	light twin	engine/spec/models/LH-15.tally	NUM-06 REC-07	I:light/LH-15-light	L:12
+twin:LH-16-light	light twin	engine/spec/models/LH-16.tally	NUM-06 REC-07	I:light/LH-16-light I:light/LH-16-light~abstract_range@k13 I:light/LH-16-light~ex_t1_min50@k13 I:light/LH-16-light~ex_t2_min50@k13 I:light/LH-16-light~ex_t3_min50@k13 I:light/LH-16-light~ex_t3_s100@k13 I:light/LH-16-light~ex_t4_min25@k13 I:light/LH-16-light~ex_t4_s100_r06@k13 I:light/LH-16-light~instances@k13 I:light/LH-16-light~periods_1926@k13 I:light/LH-16-light~periods_1946@k13 I:light/LH-16-light~t1_s100_y20@k13 I:light/LH-16-light~t2_s100_y20@k13 I:light/LH-16-light~t3_s0_y30@k13 I:light/LH-16-light~t4_s50_y25@k13 I:light/LH-16-light~t5_e1926_fixed_y20@k13 I:light/LH-16-light~t5_e1946_indexed_y30@k13 I:light/LH-16-light~t6_text@k13 I:light/LH-16-light~t6a_max@k13 I:light/LH-16-light~t6a_mean@k13 I:light/LH-16-light~t6a_median@k13 I:light/LH-16-light~t6a_min@k13 I:light/LH-16-light~t6a_sd@k13	L:12
+twin:LH-17-mc-light	light twin	engine/spec/models/LH-17.tally	REC-07 RAND-01 RAND-02	I:light/LH-17-mc-light	L:12
+blind:I-6	blind text	engine/tests/integration/blind/invented-b1/I-6-joint-mortgage-resets.md	NUM-03 NUM-05 OWN-04 VAL-06 LAW-06 LIFE-03 SCEN-04	I:hardset/modeller-b1/I-6/model	none: no load.tsv row names it; its checks run at full size
+blind:I-7	blind text	engine/tests/integration/blind/invented-b1/I-7-retirement-two-employers.md	TIME-05 PTY-01 OWN-08 FLOW-02 LAW-06 LIFE-02	I:hardset/modeller-b1/I-7/model	none: no load.tsv row names it; its checks run at full size
+blind:I-8	blind text	engine/tests/integration/blind/invented-b1/I-8-family-support-taper.md	TIME-04 PTY-02 VAL-03 LAW-02 LAW-11 LIFE-04 REC-06	I:hardset/modeller-b1/I-8/model	none: no load.tsv row names it; its checks run at full size
+blind:I-9	blind text	engine/tests/integration/blind/invented-b1/I-9-foreign-income-credit.md	NUM-07 TIME-02 OWN-06 CUR-01 CUR-02 CUR-03 LAW-10	I:hardset/modeller-b1/I-9/model	none: no load.tsv row names it; its checks run at full size
+blind:I-10	blind text	engine/tests/integration/blind/invented-b1/I-10-shared-car-ledger.md	NUM-05 TIME-03 PTY-05 OWN-04 OWN-05 FLOW-03	I:hardset/modeller-b1/I-10/model	none: no load.tsv row names it; its checks run at full size
+blind:I-11	blind text	engine/tests/integration/blind/invented-b2/I-11-envelope-budget-goal.md	OWN-08 FLOW-01 RULE-01 RULE-03 RULE-05	I:hardset/modeller-b2/I-11/budget	none: no load.tsv row names it; its checks run at full size
+blind:I-12	blind text	engine/tests/integration/blind/invented-b2/I-12-divorce-division.md	PTY-01 OWN-04 OWN-05 OWN-06 OWN-08 VAL-02 LIFE-03	I:hardset/modeller-b2/I-12/division I:hardset/b2fix/division	none: no load.tsv row names it; its checks run at full size
+blind:I-13	blind text	engine/tests/integration/blind/invented-b2/I-13-income-protection-claim.md	NUM-02 NUM-03 TIME-05 LAW-03 LAW-07 LIFE-02 ASK-03	I:hardset/modeller-b2/I-13/claim	none: no load.tsv row names it; its checks run at full size
+blind:I-14	blind text	engine/tests/integration/blind/invented-b2/I-14-children-two-homes.md	NUM-05 TIME-05 PTY-04 PTY-05 LAW-11 LIFE-04	I:hardset/modeller-b2/I-14/homes	none: no load.tsv row names it; its checks run at full size
+blind:I-15	blind text	engine/tests/integration/blind/invented-b2/I-15-gold-grams-solars.md	NUM-01 OWN-06 FLOW-02 CUR-01 CUR-02 VAL-05 SCEN-04	I:hardset/modeller-b2/I-15/gold	none: no load.tsv row names it; its checks run at full size
