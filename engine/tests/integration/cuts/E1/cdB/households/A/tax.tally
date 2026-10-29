@@ -81,10 +81,10 @@ def relief_months[c in child, y in tax_year]: int at start_of(y)
   rule base = count(k in month where year_of(k) == y and born[c] < end_of(k) and (born[c] >= start_of(k) or age(born[c], start_of(k)) < pit7_age))
 
 def res_joint[s in spouse, y in tax_year]: num DUK at start_of(y)
-  note "PIT-6 .4, PIT-5 .4: the spouse's part less the half of the child relief, never below 0, less the spouse's advances; reading E of pit6_health also takes the health deductible off under PIT-5 v1, rounded as PIT-5 v1 .3 rounds a tax"
+  note "PIT-6 .5, PIT-5 .4: the spouse's part less the half of the child relief, less the spouse's advances, with no floor (the floor is the joint tax's, PIT-6 .4 and PIT-7 .5: together_joint); reading E of pit6_health also takes the health deductible off under PIT-5 v1, rounded as PIT-5 v1 .3 rounds a tax"
   rule apart = none when not joint_may[y]
-  rule health beats reliefs v pit5_v1 = round(max(0, jpart[s, y] - relief_half[s, y] - hded_p[s, y]), 1, half-up) - adv_p[s, y] when joint_may[y] and pit6_health == health_off
-  rule reliefs = max(0, jpart[s, y] - relief_half[s, y]) - adv_p[s, y] when joint_may[y]
+  rule health beats reliefs v pit5_v1 = round(jpart[s, y] - relief_half[s, y] - hded_p[s, y], 1, half-up) - adv_p[s, y] when joint_may[y] and pit6_health == health_off
+  rule reliefs = jpart[s, y] - relief_half[s, y] - adv_p[s, y] when joint_may[y]
 
 def res_sep[s in spouse, y in tax_year]: money DUK at start_of(y)
   note "PIT-5 .4: a separate return's result, the tax less the advances"
@@ -96,9 +96,9 @@ def sep_tax[s in spouse, y in tax_year]: money DUK at start_of(y)
   rule v2 v pit5_v2 = round(max(0, marginal(pit3_rate, base_p[s, y]) - pit3_reducing - relief_half[s, y]), 1, half-up)
 
 def together_joint[y in tax_year]: num DUK at start_of(y)
-  note "PIT-6: both spouses' results of the joint return; none where PIT-6 .1 doesn't hold"
+  note "PIT-6: both spouses' results of the joint return; none where PIT-6 .1 doesn't hold. PIT-6 .4: both reliefs come off the joint tax (the spouses' parts together), never below 0, then both advances; with no floor reached it is the sum of the spouses' results"
   rule apart = none when not joint_may[y]
-  rule base = sum(res_joint[s, y] for s in spouse) when joint_may[y]
+  rule base = max(0, sum(res_joint[s, y] + adv_p[s, y] for s in spouse)) - sum(adv_p[s, y] for s in spouse) when joint_may[y]
 
 def together_sep[y in tax_year]: money DUK = sum(res_sep[s, y] for s in spouse) at start_of(y)
 
