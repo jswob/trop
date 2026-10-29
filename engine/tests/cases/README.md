@@ -1,4 +1,4 @@
-# The case set, cases 1.1
+# The case set, cases 1.1.1
 
 An exam for Tally: made-up families whose lives push the language to its edges, each question with an exact answer. If Tally handles these, it can handle a real household.
 
@@ -84,4 +84,4 @@ All Python runs as `python3 -I` from the repository root, standard library only.
 
 ## Changes
 
-Frozen as `cases 1.0` (`VERSION`; `MANIFEST.sha256` holds every file's hash). After the freeze a file changes only through `ERRATA.md` and a version bump. Now `cases 1.0.1` (2026-10-25): `ERRATA.md` lists each change, and ends with the rows of `gaps-1.0.1.md` whose case or key changed since session 3 judged them. Then `cases 1.0.2` (2026-10-29): the errata from the tally 2 design round, with the rows for session 5 to rejudge; and `cases 1.0.3` (2026-10-29): an erratum from session 5's exam, with its rows to rejudge. Then `cases 1.1` (2026-10-29): additions only, no existing key moved: three questions (A-13, B-13, D-13), a pair card (CUR-01 × RAND-01), a new edge LAW-20 with its card, a run-end knob for B-12 (`keys-small/`) and `compare.py --small`; `ERRATA.md` lists them.
+Frozen as `cases 1.0` (`VERSION`; `MANIFEST.sha256` holds every file's hash). After the freeze a file changes only through `ERRATA.md` and a version bump. Now `cases 1.0.1` (2026-10-25): `ERRATA.md` lists each change, and ends with the rows of `gaps-1.0.1.md` whose case or key changed since session 3 judged them. Then `cases 1.0.2` (2026-10-29): the errata from the tally 2 design round, with the rows for session 5 to rejudge; and `cases 1.0.3` (2026-10-29): an erratum from session 5's exam, with its rows to rejudge. Then `cases 1.1` (2026-10-29): additions only, no existing key moved: three questions (A-13, B-13, D-13), a pair card (CUR-01 × RAND-01), a new edge LAW-20 with its card, a run-end knob for B-12 (`keys-small/`) and `compare.py --small`; `ERRATA.md` lists them. Then `cases 1.1.1` (2026-10-29): tools only, no key or paper moved: `compare.py` marks the probe keys (house `P`), and the tools find the case set at its new home, `engine/tests/cases/`.

@@ -27,8 +27,12 @@ How each kind is marked (brief §6):
 Prose (holes, reasons, causes' wording) is never marked by machine: it is listed as **read**, and the
 question passes only once those lines are read and agreed (holes are judged both ways).
 
-Run: python3 -I tmp/cases/tools/compare.py <answers.md> [--keys A] [--self-test A] [--keys-root <dir>] [--small]
-(--keys-root: the folder holding the keys' house folders, instead of tmp/cases/keys, e.g. tmp/cases/keys-small;
+The probe keys (keys/probes/, cases 1.1.1) are the house `P`: the key of edge E is question `P-E`, and each of its
+values wrapped as {"kind": "value" | "relation", "value": X} is marked as X (a relation between two runs is
+answered by its value, e.g. true for "the same seed gives the same answer"). The key files stay as they are.
+
+Run: python3 -I engine/tests/cases/tools/compare.py <answers.md> [--keys A] [--self-test A] [--keys-root <dir>] [--small]
+(--keys-root: the folder holding the keys' house folders, instead of keys/, e.g. keys-small;
 --small: random answers without the precision bar, as above)
 """
 import json
@@ -64,10 +68,23 @@ def blocks(text):
     return out
 
 
+def unwrap(x):
+    """A probe key's value: every {"kind": "value" | "relation", "value": X} as X (J's probe_keys.py, 4.5c)."""
+    if isinstance(x, dict):
+        if x.get("kind") in ("value", "relation") and set(x) == {"kind", "value"}:
+            return unwrap(x["value"])
+        return {k: unwrap(v) for k, v in x.items()}
+    if isinstance(x, list):
+        return [unwrap(v) for v in x]
+    return x
+
+
 def keys(house):
     out = {}
-    for p in sorted((KEYS_ROOT / house).glob("*.md")):
+    for p in sorted((KEYS_ROOT / ("probes" if house == "P" else house)).glob("*.md")):
         b = blocks(p.read_text(encoding="utf-8"))[0]
+        if house == "P":  # a probe key: named by its edge, its values wrapped
+            b = {"question": "P-" + b["edge"], **{k: unwrap(v) for k, v in b.items() if k in ("key", "without")}}
         out[b["question"]] = b
     return out
 
@@ -227,6 +244,9 @@ def self_test(house):
     assert not bad, f"keys don't pass as answers: {bad}"
 
     def nudge(x):
+        if isinstance(x, dict) and x.get("kind") in ("refusal", "random"):
+            return None  # not moved: a refusal's numbers are not marked (a probe key's "values" beside it), and a
+            # random figure moved by 0.01 stays within its error (self_test_small covers it); cases 1.1.1
         if isinstance(x, dict):
             for k, v in x.items():
                 r = nudge(v)
@@ -246,7 +266,8 @@ def self_test(house):
     moved = 0
     for q, k in ks.items():
         a = as_answer(blocks("```yaml\nanswer: " + _enc(k["key"]) + "\n```")[0]["answer"])
-        if nudge(a) is None:
+        a = nudge(a)  # a probe key may be a bare number (cases 1.1.1): use what nudge returns
+        if a is None:
             continue
         v = mark(house, {q: {"answer": a}})[q][0]
         assert v == "fail", f"{q}: a moved number still passes"

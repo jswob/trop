@@ -28,7 +28,7 @@ Sections, each printed as ok or FAIL with what it found:
 
 This script holds no name, id or rule number of the holdout: it reads them only from --hidden's root.
 
-Run: python3 -I tmp/cases/tools/check.py [--hidden tmp/cases-holdout] [--regen]
+Run: python3 -I engine/tests/cases/tools/check.py [--hidden tmp/cases-holdout] [--regen]
 Exit 0 when every section passes.
 """
 import csv
@@ -42,7 +42,7 @@ from decimal import Decimal, InvalidOperation
 
 TOOLS = pathlib.Path(__file__).resolve().parent
 VIS = TOOLS.parent
-REPO = VIS.parents[1]
+REPO = VIS.parents[2]  # the case set lives at engine/tests/cases (4.5f)
 MEMORY = pathlib.Path.home() / ".claude" / "projects" / str(REPO).replace("/", "-") / "memory"
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(TOOLS))
@@ -243,12 +243,12 @@ def keys(s):
         del hdir
     report("keys", not bad, f"{n} citations of rules, house rules, documents and record files, all found; {bad[:8] or 'none missing'}")
     fails = []
-    for h in s.houses:
-        args = ["--self-test", h] + (["--keys-root", s.hold / "keys"] if h not in VISIBLE_HOUSES else [])
+    for h in s.houses + ["P"]:  # P: the probe keys (cases 1.1.1)
+        args = ["--self-test", h] + (["--keys-root", s.hold / "keys"] if h not in VISIBLE_HOUSES + ("P",) else [])
         code, out = run(TOOLS / "compare.py", *args)
         if code != 0:
             fails.append(f"{h}: {out[-200:]}")
-    report("keys", not fails, f"compare.py's self-test passes for {', '.join(s.houses)}; {fails or 'no failure'}")
+    report("keys", not fails, f"compare.py's self-test passes for {', '.join(s.houses + ['P'])}; {fails or 'no failure'}")
 
 
 # --------------------------------------------------------------------------- counts

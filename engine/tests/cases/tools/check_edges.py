@@ -11,11 +11,11 @@ import os
 import re
 import sys
 
-ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
+ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..", ".."))  # the case set is at engine/tests/cases (4.5f)
 INVENTORY = os.path.join(ROOT, "tmp/design/inventory.md")
 CONCERNS = os.path.join(ROOT, "tmp/learning/CONCERNS.md")
 HARD_SET = os.path.join(ROOT, "tmp/design/hard-set.md")
-VISIBLE = os.path.join(ROOT, "tmp/cases/boundaries.md")
+VISIBLE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "boundaries.md")
 
 ID = re.compile(r"\b(N-\d{3,4}|LC-\d{1,2}|MX-\d\d)\b")
 EDGE_HEAD = re.compile(r"^### ([A-Z]{3,4}-\d\d) · (.+?)( ★)?$")

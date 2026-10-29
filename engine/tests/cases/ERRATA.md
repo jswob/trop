@@ -522,3 +522,18 @@ Moved in all: no key, no paper of a household, no record. Every file under `keys
 | `P:CUR-01+RAND-01` | the first pair card | ADD-4 |
 | `P:LAW-20` | a new edge's card; no question | ADD-5 |
 | `Q:B-12` (small) | `keys-small/B/B-12.md`, for a run cut to 30 paths and 2027-01-31, marked with `--small` | ADD-6, ADD-7 |
+
+## cases 1.1.1 (2026-10-29)
+
+Session 4.5f: tools only. No key, card, paper or record moved; every key file is byte-identical. The case set moved from `tmp/cases/` to `engine/tests/cases/` by `git mv` (its bytes unchanged); `tally-1.0.1/` stayed in `tmp/cases/`. `VERSION` reads `cases 1.1.1`; `README.md`'s title and freeze paragraph say so; `MANIFEST.sha256` holds the new hashes of the three tools (no file added or removed).
+
+### TOOL-1 · `compare.py` marks the probe keys (J's I-3)
+- **Cause:** `compare.py` read keys by `question:` and knew no kinds `value` / `relation`, so the probe keys (`edge:`, values wrapped) couldn't be marked; J unwrapped copies by hand-run script (`tmp/session4_5/c/judge/probe_keys.py`).
+- **Fix:** `tools/compare.py`: the house `P` reads `keys/probes/`; the key of edge E is question `P-E`, and each `{"kind": "value" | "relation", "value": X}` is marked as X (J's `unwrap`, folded in). Its self-test: the nudge of one number leaves a refusal's numbers and a random figure unmoved (neither is marked by moving 0.01: a refusal's side values aren't marked, a random figure has `self_test_small`), and takes a bare-number key's moved value (it dropped it). The households' self-tests are unchanged: A 12, B 13, D 13, E1 3 moved numbers fail. P: 90 keys pass as answers, 80 moved numbers fail.
+- **`tools/check.py`:** runs `compare.py --self-test P` with the households'.
+- **Moved:** nothing.
+
+### TOOL-2 · The tools find the case set at `engine/tests/cases/`
+- **Cause:** `check.py` took the repository as the case set's grandparent, and `check_edges.py` as its great-grandparent, which held at `tmp/cases/` only.
+- **Fix:** `tools/check.py` (`REPO`), `tools/check_edges.py` (`ROOT`, and `boundaries.md` read beside the tools). The other tools find their files from their own place and need nothing.
+- **Moved:** nothing.
