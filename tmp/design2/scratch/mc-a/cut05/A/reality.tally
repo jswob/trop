@@ -1,0 +1,267 @@
+model lis
+  tally 2
+  on 2026-01-15
+  start 2021-01-01
+  end 2035-12-31
+  note "Household A, the Lis family of Dębowo (tmp/cases/A/story.md): Ania (Anna) and Tomek (Tomasz), married 2016-09-10 without a marriage contract, and Zosia (Zofia), born 2023-04-27. Amounts are in DUK, the dukat of Lenia, of 100 orts."
+  note "The reality is this directory and the law parts of cases/law/ it reads: GEN-1, GEN-3, GEN-5, GEN-6, PIT-2 to PIT-9, SOC-1, SOC-2, SOC-8, FAM-1, WCP-1, WCP-2, CIV-1, IGT-1 to IGT-4, CC-1, CC-2, MOT-1, MOT-2."
+  note "The record files the questions read are observations (statements/statements.tally, L §5.19): the joint account's statements 2024-08 to 2025-12, the wrapped account's register and both Rzeka registers, each row citing its file and line; the Wektor registers, the Lazur export and Ania's savings export are read only by their balances (records.tally). The importer's dialect isn't part of tally 2 (O:A-1)."
+
+source a_d01 "A-D01 Nurt Software, employment contract (tmp/cases/A/docs/A-D01.md)"
+
+source a_d02_2021 "A-D02-2021 Nurt Software, pay from January 2021 (tmp/cases/A/docs/A-D02-2021.md)"
+
+source a_d02_2022 "A-D02-2022 Nurt Software, pay from January 2022 (tmp/cases/A/docs/A-D02-2022.md)"
+
+source a_d02_2023 "A-D02-2023 Nurt Software, pay from January 2023 (tmp/cases/A/docs/A-D02-2023.md)"
+
+source a_d02_2024 "A-D02-2024 Nurt Software, pay from January 2024 (tmp/cases/A/docs/A-D02-2024.md)"
+
+source a_d02_2025 "A-D02-2025 Nurt Software, pay from January 2025 (tmp/cases/A/docs/A-D02-2025.md)"
+
+source a_d03 "A-D03 Nurt Software, the acquisition and your options (tmp/cases/A/docs/A-D03.md)"
+
+source a_d04 "A-D04 Nurt Software, annex: payday (tmp/cases/A/docs/A-D04.md)"
+
+source a_d05 "A-D05 Kalina Logistyka, employment contract (tmp/cases/A/docs/A-D05.md)"
+
+source a_d06_2021 "A-D06-2021 Kalina Logistyka, pay from January 2021 (tmp/cases/A/docs/A-D06-2021.md)"
+
+source a_d06_2022 "A-D06-2022 Kalina Logistyka, pay from January 2022 (tmp/cases/A/docs/A-D06-2022.md)"
+
+source a_d06_2023 "A-D06-2023 Kalina Logistyka, pay from January 2023 (tmp/cases/A/docs/A-D06-2023.md)"
+
+source a_d06_2023b "A-D06-2023b Kalina Logistyka, April 2023 pay (tmp/cases/A/docs/A-D06-2023b.md)"
+
+source a_d06_2024 "A-D06-2024 Kalina Logistyka, pay from January 2024 (tmp/cases/A/docs/A-D06-2024.md)"
+
+source a_d06_2024b "A-D06-2024b Kalina Logistyka, return to work (tmp/cases/A/docs/A-D06-2024b.md)"
+
+source a_d06_2025 "A-D06-2025 Kalina Logistyka, pay from January 2025 (tmp/cases/A/docs/A-D06-2025.md)"
+
+source a_d08 "A-D08 Wektor, workplace plan of Nurt Software, terms (tmp/cases/A/docs/A-D08.md)"
+
+source a_d09 "A-D09 Wektor, workplace plan of Kalina Logistyka, terms (tmp/cases/A/docs/A-D09.md)"
+
+source a_d11 "A-D11 Brzask, wrapped account, terms and instruction (tmp/cases/A/docs/A-D11.md)"
+
+source a_d12 "A-D12 Rzeka Securities, terms for fund accounts (tmp/cases/A/docs/A-D12.md)"
+
+source a_d13_kalina_2021 "A-D13-KALINA-2021 yearly information 2021 (tmp/cases/A/docs/A-D13-KALINA-2021.md)"
+
+source a_d13_kalina_2022 "A-D13-KALINA-2022 yearly information 2022 (tmp/cases/A/docs/A-D13-KALINA-2022.md)"
+
+source a_d13_kalina_2023 "A-D13-KALINA-2023 yearly information 2023 (tmp/cases/A/docs/A-D13-KALINA-2023.md)"
+
+source a_d13_nurt_2021 "A-D13-NURT-2021 yearly information 2021 (tmp/cases/A/docs/A-D13-NURT-2021.md)"
+
+source a_d13_nurt_2022 "A-D13-NURT-2022 yearly information 2022 (tmp/cases/A/docs/A-D13-NURT-2022.md)"
+
+source a_d13_nurt_2023 "A-D13-NURT-2023 yearly information 2023 (tmp/cases/A/docs/A-D13-NURT-2023.md)"
+
+source a_d13_sio_2023 "A-D13-SIO-2023 yearly information 2023 (tmp/cases/A/docs/A-D13-SIO-2023.md)"
+
+source a_d15 "A-D15 SIO, decision on parental pay (tmp/cases/A/docs/A-D15.md)"
+
+source a_d16 "A-D16 child benefit claims with the post office's receipt (tmp/cases/A/docs/A-D16.md)"
+
+source a_d17 "A-D17 FBO, decision on the child benefit (tmp/cases/A/docs/A-D17.md)"
+
+source a_d18 "A-D18 gift contract: fund units (tmp/cases/A/docs/A-D18.md)"
+
+source a_d19 "A-D19 a note kept with the family papers (tmp/cases/A/docs/A-D19.md)"
+
+source a_d20 "A-D20 report of an acquisition to the Revenue Office (tmp/cases/A/docs/A-D20.md)"
+
+source a_d21 "A-D21 Rzeka, transfer-in confirmation, client 4471-07 (tmp/cases/A/docs/A-D21.md)"
+
+source a_d22 "A-D22 Rzeka, yearly tax statement 2024, client 4471-07 (tmp/cases/A/docs/A-D22.md)"
+
+source a_d23 "A-D23 invoice: a car (tmp/cases/A/docs/A-D23.md)"
+
+source a_d24 "A-D24 consumer credit agreement 77-0412 (tmp/cases/A/docs/A-D24.md)"
+
+source a_d25 "A-D25 Orlik, compulsory liability policy OC/2023/55102 (tmp/cases/A/docs/A-D25.md)"
+
+source a_d26 "A-D26 Orlik, renewal offer (tmp/cases/A/docs/A-D26.md)"
+
+source a_d27 "A-D27 car sale contract (tmp/cases/A/docs/A-D27.md)"
+
+source a_d28 "A-D28 Bank Wrzos, early repayment statement, credit 77-0412 (tmp/cases/A/docs/A-D28.md)"
+
+source a_d29 "A-D29 garage space contract (tmp/cases/A/docs/A-D29.md)"
+
+source a_d30 "A-D30 lease of the flat, ul. Klonowa 8/3 (tmp/cases/A/docs/A-D30.md)"
+
+source a_d31 "A-D31 Bank Lazur, savings account LN88 1020 0044 7310 (tmp/cases/A/docs/A-D31.md)"
+
+source a_d32 "A-D32 Bank Lazur, rate notice (tmp/cases/A/docs/A-D32.md)"
+
+source a_d33 "A-D33 Bank Wrzos, standing orders on LN27 … 0412 (tmp/cases/A/docs/A-D33.md)"
+
+source a_d34 "A-D34 instalment purchase (tmp/cases/A/docs/A-D34.md)"
+
+source a_d35 "A-D35 Brzask, withdrawal from the wrapped account (tmp/cases/A/docs/A-D35.md)"
+
+source a_d36 "A-D36 notary, payout under the division of an estate (tmp/cases/A/docs/A-D36.md)"
+
+source a_d37 "A-D37 Bank Wrzos, savings account LN61 … 5503 (tmp/cases/A/docs/A-D37.md)"
+
+source a_d38 "A-D38 Revenue Office, decision on gift tax IGT/2024/0611 (tmp/cases/A/docs/A-D38.md)"
+
+source brz_wrap "Brzask register, wrapped account BRZ-WRAP-0091-A (tmp/cases/A/records/brz-wrapped-ania.csv)"
+
+source house_rules "Household A, our house rules (tmp/cases/A/house-rules.md)"
+
+source kop_a "DM Kopia register, account 30-118-552, Anna Lis (tmp/cases/A/records/kop-30-118-552-ania.csv)"
+
+source laz_sav "Bank Lazur export, savings LN88 1020 0044 7310 (tmp/cases/A/records/laz-savings-1020-0044-7310.csv)"
+
+source lifted_1_0_1 "Figures tally 1.0.1 allowed inline in rules"
+
+source market_files "Fund price files (tmp/cases/market/<fund>.csv)"
+
+source modeller "The modeller's readings of facts the dossier leaves open, each with its reason"
+
+source questions "Household A, questions (tmp/cases/A/questions.md)"
+
+source rzk_a "Rzeka register, client 4471-07, Anna Lis (tmp/cases/A/records/rzk-4471-07-anna.csv)"
+
+source rzk_t "Rzeka register, client 4471-02, Tomasz Lis (tmp/cases/A/records/rzk-4471-02-tomasz.csv)"
+
+source story "Household A, story (tmp/cases/A/story.md)"
+
+source wek_a "Wektor participant register, Anna Lis, Kalina's plan (tmp/cases/A/records/wek-wcp-lis-anna.csv)"
+
+source wek_t "Wektor participant register, Tomasz Lis, Nurt's plan (tmp/cases/A/records/wek-wcp-lis-tomasz.csv)"
+
+source wrz_ania "Bank Wrzos export, Ania's savings LN61 … 5503, 2025 (tmp/cases/A/records/wrz-ania-savings-2025.csv)"
+
+source wrz_joint "Bank Wrzos exports, joint account LN27 … 0412, 2024-08 to 2025-12 (tmp/cases/A/records/wrz-joint-*.csv)"
+
+kind funds: unit
+  note "each fund a unit of its own (L §3.2, §5.7): glb BRZ-GLB-A, bnd BRZ-BND-A, div BRZ-DIV-D, mm BRZ-MM-A, idx WEK-IDX-D, em WEK-EM-A, wcp WEK-WCP-2055"
+
+kind wrapped: place one min 0
+  note "the holdings of Ania's wrapped account (A-D11, PIT-9), declared as holdings are (L §5.10) but a kind of their own: what is sold from them is taxed when withdrawn, not under PIT-8, so they hold no PIT-8 lots"
+
+kind card_pays: transfers
+  note "a card payment from the joint account (statement type CARD TRANSACTION)"
+
+kind card_refunds: transfers
+  note "a card refund into the joint account (CARD REFUND)"
+
+kind paybacks: transfers
+  note "a friend paying back a shared bill (an incoming transfer from a friend)"
+
+kind standing_pays: transfers
+  note "a standing order or instalment paid from the joint account (STANDING ORDER)"
+
+kind wages_in: transfers
+
+kind benefits_in: transfers
+
+kind bills: transfers
+
+kind tax_refunds: transfers
+
+kind car_settlements: transfers
+  note "what came in or went out because of the car's sale: the price, the early repayment and the three refunds (A-D27, A-D28, CC-1, MOT-1, MOT-2)"
+
+kind cg_tax_pays: transfers
+  attr payer: key spouse
+  note "a payment of the tax on fund sales, with the spouse whose tax it is (the statement's title names A. Lis or T. Lis)"
+
+kind invests: transfers
+  note "money moved to the wrapped account or to a Rzeka account (A-HR1)"
+
+kind own_moves: transfers
+  note "money moved between our own accounts, not investing: to the Lazur reserve, a Rzeka payout"
+
+kind distributions: transfers
+
+kind taxes_withheld: transfers
+
+kind wrap_withdrawals: transfers
+
+kind lots_in: event certain
+  leg units: funds
+  note "units entering a holding as a lot of their own, the lots first in first out takes (PIT-8 .3)"
+
+kind fund_buys: lots_in
+  leg cash: DUK
+  leg fee: DUK
+  note "a purchase of fund units under PIT-8: units into a holding, the money placed and the fee out of the account's cash"
+
+kind gifts_in: lots_in
+  attr bought: month
+  note "units received as a gift, with the month the giver bought them in (PIT-8 .2, .6; kop-30-118-552-ania.csv)"
+
+kind lot_transfers: lots_in
+  attr reported: money DUK
+  attr bought: month
+  attr gifted_on: date
+  note "units moved in from another broker, keeping their lot (PIT-8 .3): the cost basis the other broker reported (A-D12 .4), the month the giver bought them in (PIT-8 .6) and the day of the gift that brought them (PIT-8 .2)"
+
+kind lot_outs: event certain
+  leg units: funds
+  note "units moved out to another broker, seen from the account they leave"
+
+kind fund_sales: event certain
+  leg units: funds
+  leg cash: DUK
+  leg fee: DUK
+
+kind wrap_buys: event certain
+  leg units: funds
+  leg cash: DUK
+  note "a purchase inside the wrapped account (PIT-9, not PIT-8)"
+
+kind wrap_redemptions: event certain
+  leg units: funds
+  leg cash: DUK
+
+index child: open
+  note "Zosia's key comes with the row of her birth, known 2023-04-27 (people.tally)"
+
+index day = day 2021-01-01..2035-12-31
+
+index month = month 2021-01..2035-12
+
+index payer = [nurt, kalina, sio]
+  note "Tomek's employer Nurt Software, Ania's employer Kalina Logistyka, and the Social Insurance Office paying Ania's parental pay"
+
+index spouse = [ania, tomek]
+
+index tax_year = year 2021..2035
+
+version fund_units
+  cite market_files
+  known 2021-01-01
+  assumed "the funds' launch days aren't in the dossier; each is taken as alive from 2018-01-01, before every price the files hold"
+  funds + [bnd] lives 2018-01-01..
+  funds + [div] lives 2018-01-01..
+  funds + [em] lives 2018-01-01..
+  funds + [glb] lives 2018-01-01..
+  funds + [idx] lives 2018-01-01..
+  funds + [mm] lives 2018-01-01..
+  funds + [wcp] lives 2018-01-01..
+
+version lifted_figures
+  cite lifted_1_0_1
+  governs always
+  known 2018-06-01
+  card_avg_3 = 3 "A-HR1 v2 .3: divided by three (inline in tally 1.0.1: card_avg line 108)"
+  hr3_units_0_0001 = 0.0001 "A-HR3: units to 4 places (inline in tally 1.0.1: hr3_units line 245, round step)"
+  joint_tax_2 = 2 "PIT-6 .3: twice the tax on half the combined base (inline in tally 1.0.1: joint_tax line 107)"
+  loss_want_2 = 2 "PIT-8 .5: at most half of it (inline in tally 1.0.1: loss_want line 246)"
+  nw_community_0_5 = 0.5 "A-HR5 .1: half of the common property (inline in tally 1.0.1: nw_community line 39)"
+  nw_half_2 = 2 "A-HR5 .1: half each (inline in tally 1.0.1: nw_half lines 47, 48)"
+  r_units_0_0001 = 0.0001 "units to 4 places (inline in tally 1.0.1: r_units line 216, round step)"
+  red12_12 = 12 "PIT-4 .2: 1/12 of the yearly reducing amount (inline in tally 1.0.1: red12 line 218)"
+  relief_half_2 = 2 "PIT-7 .4: in halves (inline in tally 1.0.1: relief_half line 90)"
+  road_refund_12 = 12 "MOT-2: a year's tax in twelfths (inline in tally 1.0.1: road_refund line 150)"
+  rule_day_15 = 15 "A-HR1: on the 15th (inline in tally 1.0.1: rule_day lines 58, 60)"
+  w_bnd_money_2 = 2 "A-D11 .1: half in each fund (inline in tally 1.0.1: w_bnd_money line 164)"
+  w_bnd_units_0_0001 = 0.0001 "units to 4 places (inline in tally 1.0.1: w_bnd_units line 174, round step)"
+  w_glb_units_0_0001 = 0.0001 "units to 4 places (inline in tally 1.0.1: w_glb_units line 170, round step)"

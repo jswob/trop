@@ -1,0 +1,18 @@
+scenario refund_early over i9
+  tally 2
+  from 2028-01-15
+  note "Outcome: the refund is received on 20 March 2028."
+
+source outcome_early "Card I-9, question: the refund is received on 20 March 2028"
+
+ask credits_early: credit_item[r] for r in foreign_income over 2027 in refund_early
+
+ask tax_2027_early: tax_year[marek, 2027], gains_tax[marek, 2027], tax_year[marek, 2027] + gains_tax[marek, 2027], due_day[2027] in refund_early
+
+ask added_2028_early: added[marek, 2028], due_day[2028] in refund_early
+
+version refund_on_early
+  cite outcome_early
+  governs 2028-01-15..
+  known 2027-01-01
+  replace refund_day = 2028-03-20 "the refund is received on 20 March 2028"

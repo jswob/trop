@@ -1,0 +1,11 @@
+grosses (g = 6 500.00 DUK): 6 500.00 DUK
+  law date 2025-05-31, cut 2026-10-25
+payslip: ?"Ola's payslip for May 2025 is missing: what was her gross pay?" (gross_in)
+  law date 2025-05-31, cut 2026-10-25
+q: 6 500.00 DUK
+  assumed: the card names no range to search: every cent within 50.00 of 6 500.00, the gross its worked line estimates (net = 0.792 x gross) (gross_hi, gross_lo)
+  missing record counted by card_rules
+  law date 2025-05-31, cut 2026-10-25
+unique: 1
+  assumed: the card names no range to search: every cent within 50.00 of 6 500.00, the gross its worked line estimates (net = 0.792 x gross) (gross_hi, gross_lo)
+  law date 2025-05-31, cut 2026-10-25

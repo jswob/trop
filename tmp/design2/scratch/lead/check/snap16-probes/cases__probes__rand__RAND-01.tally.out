@@ -1,0 +1,4 @@
+q_mean: 12227/7500 (1.63026666666667) (standard error 0.00446; 60000 paths; horizon 2025-10-24)
+  law date 2025-10-24, cut 2025-10-24
+q_mean_again: 12227/7500 (1.63026666666667) (standard error 0.00446; 60000 paths; horizon 2025-10-24)
+  law date 2025-10-24, cut 2025-10-24

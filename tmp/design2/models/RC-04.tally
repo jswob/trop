@@ -1,0 +1,158 @@
+model rc04
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+  note "New Zealand rates rebate, rating year 1 July 2019 to 30 June 2020, Rates Rebate Act 1973 s 3(1) with the Rates Rebate (Specified Amounts) Order 2019: the form's eligibility table for households with no dependants, every cell."
+  note "The rating year is an anchored year index, so the law is read at its start, 1 July 2019 (s 3(1): at the commencement of a rating year). Neither the Act nor the Order states how '$1 for each $8' treats a part step or how two-thirds is rounded, so both are axes."
+  note "The form prints a dash in most cells where s 3(1)(a) is negative and '$0.00' in one; whether a negative amount is a rebate of nil or no rebate at all is the axis rr_nil."
+  note "The figures come from the instruments that enacted them; the reprint of the Act as at 26 November 2018 (legislation.govt.nz, 1973 No 5) and its October 2019 text are only their locators."
+
+source dia_form "Department of Internal Affairs, Rates Rebate Application Form, rating year 1 July 2019 to 30 June 2020 (RR103/104 05/2019)" at "https://www.govt.nz/assets/Documents/Housing-and-property/Rates-rebate-application-form-2019-2020.pdf"
+
+source order2019 "Rates Rebate (Specified Amounts) Order 2019 (LI 2019/130)" at "https://www.legislation.govt.nz/regulation/public/2019/0130/latest/whole.html"
+
+source rra1978 "Rates Rebate Amendment Act 1978 (1978 No 35), s 3(1) of which replaced s 3(1) of the Rates Rebate Act 1973 from 1 April 1979"
+
+source rro1982 "Rates Rebate Order 1982 (SR 1982/100), cl 2 of which amended s 3(1)(a)(i) of the Rates Rebate Act 1973"
+
+source rro2006 "Rates Rebate Order 2006 (SR 2006/60), cl 3 of which amended s 3(1) of the Rates Rebate Act 1973"
+
+unit NZD: currency minor 0.01
+
+axis rr_cents
+  c_down "two-thirds of the rates excess rounded down to the cent"
+  c_exact "no rounding is stated: two-thirds is kept exact"
+  c_half_up "two-thirds of the rates excess rounded to the nearest cent, a half cent up"
+
+axis rr_eighth
+  eighth "one-eighth of the excess income, in dollars and cents"
+  whole "$1 for each complete $8 of excess income"
+
+axis rr_nil
+  nil "a negative s 3(1)(a) amount is a rebate of nil, the form's $0.00"
+  none_ "a negative s 3(1)(a) amount means no rebate applies, the form's dash"
+
+index inc = [i25000, i26000, i27000, i28000, i29000, i30000, i31000, i32000, i33000, i34000, i35000, i36000, i37000, i38000, i39000, i40000, i41000, i42000, i43000, i44000]
+
+index rt = [r1200, r1400, r1600, r1800, r2000, r2200, r2400, r2600, r2800, r3000, r3200, r3500]
+
+index ry = year 2019..2019 from 07-01
+
+input dep_increase: money NZD
+
+input dependants: int question "How many dependants did the ratepayer have at the commencement of the rating year?"
+
+input household_income[i in inc]: money NZD question "What was the household's income for the preceding tax year?"
+
+input max_rebate: money NZD
+
+input per_step: money NZD
+
+input rates_base: money NZD
+
+input rates_payable[r in rt]: money NZD question "What rates are payable for the rating year?"
+
+input rates_share: num
+
+input step_amount: money NZD
+
+input threshold: money NZD
+
+def excess_income[y in ry, i in inc]: money NZD at start_of(y)
+  note "s 3(1)(a)(ii): the amount by which income exceeded the threshold, raised by $500 for each dependant"
+  rule base v act_1978 = max(0, household_income[i] - (threshold + dependants * dep_increase))
+
+def rates_part[y in ry, r in rt]: num NZD at start_of(y)
+  note "s 3(1)(a)(i): two-thirds of the amount by which the rates exceed $160"
+  rule base v act_1978 = max(0, rates_payable[r] - rates_base) * rates_share
+
+def rates_part_c[y in ry, r in rt]: num NZD at start_of(y)
+  note "the two-thirds share as the reading rounds it"
+  rule c_down = round(rates_part[y, r], minor(NZD), down) when rr_cents == c_down
+  rule c_exact = rates_part[y, r] when rr_cents == c_exact
+  rule c_half_up = round(rates_part[y, r], minor(NZD), half-up) when rr_cents == c_half_up
+
+def rebate[y in ry, i in inc, r in rt]: num NZD at start_of(y)
+  note "s 3(1): the smaller of (a) and (b); a negative (a) is nil or no rebate, as rr_nil reads it"
+  rule base v act_1978 = min(max_rebate, rates_part_c[y, r] - reduction[y, i])
+  rule nil beats base = 0 when rr_nil == nil and rates_part_c[y, r] - reduction[y, i] < 0
+  rule none_ beats base = none when rr_nil == none_ and rates_part_c[y, r] - reduction[y, i] < 0
+
+def reduction[y in ry, i in inc]: num NZD at start_of(y)
+  note "s 3(1)(a)(ii): $1 for each $8 of excess income"
+  rule eighth = excess_income[y, i] * per_step / step_amount when rr_eighth == eighth
+  rule whole = round(excess_income[y, i] / step_amount, 1, floor) * per_step when rr_eighth == whole
+
+ask table: rebate[2019, i, r] for i in inc, r in rt law 2026-10-18
+
+version act_1978
+  cite rra1978
+  governs 1979-04-01..
+  known 1978-10-12
+  note "assented 12 October 1978 (from a search snippet; the Act's text is not online), in force for s 3(1) on 1 April 1979. The rules transcribe s 3(1) as it read on 1 July 2019; later amendments of s 3(1) by the Rates Rebate Amendment Act 1994 s 3 (1 July 1994, (a)(ii)), the Local Government (Rating) Act 2002 s 137(1) (1 July 2003) and the Income Tax Act 2004 s YA 2 (1 April 2005) are not shown to change the computation"
+  note "the 1994 Act s 3 amended s 3(1)(a)(ii) and its text was not found, so '$1 for each $8' may be its wording rather than the 1978 Act's"
+  per_step = 1 "s 3(1)(a)(ii) as replaced: $1 for each $8"
+  rates_share = 2/3 "s 3(1)(a)(i) as replaced: two-thirds"
+  step_amount = 8 "s 3(1)(a)(ii) as replaced: $1 for each $8"
+
+version order_1982
+  cite rro1982
+  governs 1982-05-06..
+  known 1982-04-22
+  note "made 19 April 1982, notified in the Gazette 22 April 1982, in force on the 14th day after notification; the Order itself was revoked in 2011, which leaves the Act as amended"
+  rates_base = 160 "cl 2: from $120 to $160, s 3(1)(a)(i)"
+
+version order_2006
+  cite rro2006
+  governs 2006-07-01..
+  known 2006-03-23
+  note "made 20 March 2006, notified in the Gazette 23 March 2006, in force 1 July 2006; explanatory note: 'to $500 the amount by which the abatement threshold is increased for each dependant'. Cl 3 was revoked on 1 July 2008 by SR 2008/155 cl 4, which leaves the Act as amended; the $500 still reads in the 2018 reprint"
+  dep_increase = 500 "cl 3, s 3(1)(a)(ii): increased by $500 in respect of each person who was a dependant"
+
+version order_2019
+  cite order2019
+  governs 2019-07-01..
+  known 2019-06-20
+  note "made 17 June 2019, notified in the Gazette 20 June 2019; cl. 2: in force 1 July 2019; cl. 5: rating years ending before 1 July 2019 are unaffected"
+  max_rebate = 640 "cl. 3(2): replace $630 with $640"
+  threshold = 25660 "cl. 3(1): replace $25,180 with $25,660"
+
+version form_examples
+  cite dia_form
+  governs always
+  known 2026-10-18
+  note "p. 4: Rates rebate income eligibility table for households with no dependants. Estimate only. The grid's incomes and rates are a composed case's stipulations, known from the model's on date since it has no start (§4.5); the form itself is dated 05/2019"
+  dependants = 0 "p. 4 table title: households with no dependants"
+  household_income[i25000] = 25000 "p. 4 table, row $25,000"
+  household_income[i26000] = 26000 "p. 4 table, row $26,000"
+  household_income[i27000] = 27000 "p. 4 table, row $27,000"
+  household_income[i28000] = 28000 "p. 4 table, row $28,000"
+  household_income[i29000] = 29000 "p. 4 table, row $29,000"
+  household_income[i30000] = 30000 "p. 4 table, row $30,000"
+  household_income[i31000] = 31000 "p. 4 table, row $31,000"
+  household_income[i32000] = 32000 "p. 4 table, row $32,000"
+  household_income[i33000] = 33000 "p. 4 table, row $33,000"
+  household_income[i34000] = 34000 "p. 4 table, row $34,000"
+  household_income[i35000] = 35000 "p. 4 table, row $35,000"
+  household_income[i36000] = 36000 "p. 4 table, row $36,000"
+  household_income[i37000] = 37000 "p. 4 table, row $37,000"
+  household_income[i38000] = 38000 "p. 4 table, row $38,000"
+  household_income[i39000] = 39000 "p. 4 table, row $39,000"
+  household_income[i40000] = 40000 "p. 4 table, row $40,000"
+  household_income[i41000] = 41000 "p. 4 table, row $41,000"
+  household_income[i42000] = 42000 "p. 4 table, row $42,000"
+  household_income[i43000] = 43000 "p. 4 table, row $43,000"
+  household_income[i44000] = 44000 "p. 4 table, row $44,000"
+  rates_payable[r1200] = 1200 "p. 4 table, column $1,200 (level of rates payable for the 2019/2020 rating year)"
+  rates_payable[r1400] = 1400 "p. 4 table, column $1,400"
+  rates_payable[r1600] = 1600 "p. 4 table, column $1,600"
+  rates_payable[r1800] = 1800 "p. 4 table, column $1,800"
+  rates_payable[r2000] = 2000 "p. 4 table, column $2,000"
+  rates_payable[r2200] = 2200 "p. 4 table, column $2,200"
+  rates_payable[r2400] = 2400 "p. 4 table, column $2,400"
+  rates_payable[r2600] = 2600 "p. 4 table, column $2,600"
+  rates_payable[r2800] = 2800 "p. 4 table, column $2,800"
+  rates_payable[r3000] = 3000 "p. 4 table, column $3,000"
+  rates_payable[r3200] = 3200 "p. 4 table, column $3,200"
+  rates_payable[r3500] = 3500 "p. 4 table, column $3,500"

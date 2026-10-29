@@ -1,0 +1,44 @@
+model cur02
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+  note "CUR-02: ten conversions against their total converted once. The payments give no dates, so the money is written as defs (LANGUAGE 5.10); the frame is one year (5.1)."
+
+source card "Probe card CUR-02 (made up): story and rules"
+
+unit DUK: currency minor 0.01
+
+unit FLR: currency minor 0.01
+
+index payments = int 1..10
+
+input amount[i in payments]: money FLR
+
+input fx: num DUK/FLR
+
+def booked: money DUK = sum(converted[i] for i in payments) at reader
+
+def converted[i in payments]: money DUK at reader
+  note "rule 1: each converted transfer a whole number of minor units, half up"
+  rule base v card_rules = round(amount[i] * fx, minor(DUK), half-up)
+
+def difference: money DUK = view - booked at reader
+
+def view: money DUK at reader
+  note "rule 2: the total converted at once, a view"
+  rule base v card_rules = round(sum(amount[i] for i in payments) * fx, minor(DUK), half-up)
+
+ask q_totals: booked, view, difference law 2026-01-01
+
+version card_facts
+  cite card
+  governs always
+  known 2026-01-01
+  amount = 33.33 "story: ten payments of 33.33 FLR each"
+  fx = 4.2857 "story: converted at 4.2857"
+
+version card_rules
+  cite card
+  governs always
+  known 2026-01-01

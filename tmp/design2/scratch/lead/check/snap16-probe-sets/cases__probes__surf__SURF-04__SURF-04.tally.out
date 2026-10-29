@@ -1,0 +1,126 @@
+scenario redefine: refused: LOAD-DUP contrib is declared twice (/Users/jswob/projects/trop/tmp/design2/cases/probes/surf/SURF-04/redefine.tally:6)
+payroll (m = 2025-01): 1 171.20 DUK
+  assumed: illustration: the card gives no gross (salary)
+  assumed: illustration: the card names a cap but gives no figure (contrib_cap)
+  law date 2025-01-01, cut 2025-01-01
+payroll (m = 2025-02): 1 171.20 DUK
+  assumed: illustration: the card gives no gross (salary)
+  assumed: illustration: the card names a cap but gives no figure (contrib_cap)
+  held: contrib_cap = 100 000.00 DUK (contrib_2025), read for 2025-02-01
+  held: contrib_rate = 0.0976 (contrib_2025), read for 2025-02-01
+  law date 2025-01-01, cut 2025-01-01
+payroll (m = 2025-03): 1 171.20 DUK
+  assumed: illustration: the card gives no gross (salary)
+  assumed: illustration: the card names a cap but gives no figure (contrib_cap)
+  held: contrib_cap = 100 000.00 DUK (contrib_2025), read for 2025-03-01
+  held: contrib_rate = 0.0976 (contrib_2025), read for 2025-03-01
+  law date 2025-01-01, cut 2025-01-01
+payroll (m = 2025-04): 1 171.20 DUK
+  assumed: illustration: the card gives no gross (salary)
+  assumed: illustration: the card names a cap but gives no figure (contrib_cap)
+  held: contrib_cap = 100 000.00 DUK (contrib_2025), read for 2025-04-01
+  held: contrib_rate = 0.0976 (contrib_2025), read for 2025-04-01
+  law date 2025-01-01, cut 2025-01-01
+payroll (m = 2025-05): 1 171.20 DUK
+  assumed: illustration: the card gives no gross (salary)
+  assumed: illustration: the card names a cap but gives no figure (contrib_cap)
+  held: contrib_cap = 100 000.00 DUK (contrib_2025), read for 2025-05-01
+  held: contrib_rate = 0.0976 (contrib_2025), read for 2025-05-01
+  law date 2025-01-01, cut 2025-01-01
+payroll (m = 2025-06): 1 171.20 DUK
+  assumed: illustration: the card gives no gross (salary)
+  assumed: illustration: the card names a cap but gives no figure (contrib_cap)
+  held: contrib_cap = 100 000.00 DUK (contrib_2025), read for 2025-06-01
+  held: contrib_rate = 0.0976 (contrib_2025), read for 2025-06-01
+  law date 2025-01-01, cut 2025-01-01
+payroll (m = 2025-07): 1 171.20 DUK
+  assumed: illustration: the card gives no gross (salary)
+  assumed: illustration: the card names a cap but gives no figure (contrib_cap)
+  held: contrib_cap = 100 000.00 DUK (contrib_2025), read for 2025-07-01
+  held: contrib_rate = 0.0976 (contrib_2025), read for 2025-07-01
+  law date 2025-01-01, cut 2025-01-01
+payroll (m = 2025-08): 1 171.20 DUK
+  assumed: illustration: the card gives no gross (salary)
+  assumed: illustration: the card names a cap but gives no figure (contrib_cap)
+  held: contrib_cap = 100 000.00 DUK (contrib_2025), read for 2025-08-01
+  held: contrib_rate = 0.0976 (contrib_2025), read for 2025-08-01
+  law date 2025-01-01, cut 2025-01-01
+payroll (m = 2025-09): 390.40 DUK
+  assumed: illustration: the card gives no gross (salary)
+  assumed: illustration: the card names a cap but gives no figure (contrib_cap)
+  held: contrib_cap = 100 000.00 DUK (contrib_2025), read for 2025-09-01
+  held: contrib_rate = 0.0976 (contrib_2025), read for 2025-09-01
+  law date 2025-01-01, cut 2025-01-01
+payroll (m = 2025-10): 0.00 DUK
+  assumed: illustration: the card gives no gross (salary)
+  assumed: illustration: the card names a cap but gives no figure (contrib_cap)
+  held: contrib_cap = 100 000.00 DUK (contrib_2025), read for 2025-10-01
+  held: contrib_rate = 0.0976 (contrib_2025), read for 2025-10-01
+  law date 2025-01-01, cut 2025-01-01
+payroll (m = 2025-11): 0.00 DUK
+  assumed: illustration: the card gives no gross (salary)
+  assumed: illustration: the card names a cap but gives no figure (contrib_cap)
+  held: contrib_cap = 100 000.00 DUK (contrib_2025), read for 2025-11-01
+  held: contrib_rate = 0.0976 (contrib_2025), read for 2025-11-01
+  law date 2025-01-01, cut 2025-01-01
+payroll (m = 2025-12): 0.00 DUK
+  assumed: illustration: the card gives no gross (salary)
+  assumed: illustration: the card names a cap but gives no figure (contrib_cap)
+  held: contrib_cap = 100 000.00 DUK (contrib_2025), read for 2025-12-01
+  held: contrib_rate = 0.0976 (contrib_2025), read for 2025-12-01
+  law date 2025-01-01, cut 2025-01-01
+raise: 9 760.00 DUK
+  assumed: illustration: the card gives no raise (raised_salary)
+  assumed: illustration: the card names a cap but gives no figure (contrib_cap)
+  pinned: salary = 13 000.00 DUK
+  held: contrib_cap = 100 000.00 DUK (contrib_2025), read for 2025-02-01
+  held: contrib_cap = 100 000.00 DUK (contrib_2025), read for 2025-03-01
+  held: contrib_cap = 100 000.00 DUK (contrib_2025), read for 2025-04-01
+  held: contrib_cap = 100 000.00 DUK (contrib_2025), read for 2025-05-01
+  held: contrib_cap = 100 000.00 DUK (contrib_2025), read for 2025-06-01
+  held: contrib_cap = 100 000.00 DUK (contrib_2025), read for 2025-07-01
+  held: contrib_cap = 100 000.00 DUK (contrib_2025), read for 2025-08-01
+  held: contrib_cap = 100 000.00 DUK (contrib_2025), read for 2025-09-01
+  held: contrib_cap = 100 000.00 DUK (contrib_2025), read for 2025-10-01
+  held: contrib_cap = 100 000.00 DUK (contrib_2025), read for 2025-11-01
+  held: contrib_cap = 100 000.00 DUK (contrib_2025), read for 2025-12-01
+  held: contrib_rate = 0.0976 (contrib_2025), read for 2025-02-01
+  held: contrib_rate = 0.0976 (contrib_2025), read for 2025-03-01
+  held: contrib_rate = 0.0976 (contrib_2025), read for 2025-04-01
+  held: contrib_rate = 0.0976 (contrib_2025), read for 2025-05-01
+  held: contrib_rate = 0.0976 (contrib_2025), read for 2025-06-01
+  held: contrib_rate = 0.0976 (contrib_2025), read for 2025-07-01
+  held: contrib_rate = 0.0976 (contrib_2025), read for 2025-08-01
+  held: contrib_rate = 0.0976 (contrib_2025), read for 2025-09-01
+  held: contrib_rate = 0.0976 (contrib_2025), read for 2025-10-01
+  held: contrib_rate = 0.0976 (contrib_2025), read for 2025-11-01
+  held: contrib_rate = 0.0976 (contrib_2025), read for 2025-12-01
+  law date 2025-01-01, cut 2025-01-01
+return_check: ok
+  assumed: illustration: the card gives no gross (salary)
+  assumed: illustration: the card names a cap but gives no figure (contrib_cap)
+  assumed: the card gives no payday (pay_dom)
+  held: contrib_cap = 100 000.00 DUK (contrib_2025), read for 2025-02-01
+  held: contrib_cap = 100 000.00 DUK (contrib_2025), read for 2025-03-01
+  held: contrib_cap = 100 000.00 DUK (contrib_2025), read for 2025-04-01
+  held: contrib_cap = 100 000.00 DUK (contrib_2025), read for 2025-05-01
+  held: contrib_cap = 100 000.00 DUK (contrib_2025), read for 2025-06-01
+  held: contrib_cap = 100 000.00 DUK (contrib_2025), read for 2025-07-01
+  held: contrib_cap = 100 000.00 DUK (contrib_2025), read for 2025-08-01
+  held: contrib_cap = 100 000.00 DUK (contrib_2025), read for 2025-09-01
+  held: contrib_cap = 100 000.00 DUK (contrib_2025), read for 2025-10-01
+  held: contrib_cap = 100 000.00 DUK (contrib_2025), read for 2025-11-01
+  held: contrib_cap = 100 000.00 DUK (contrib_2025), read for 2025-12-01
+  held: contrib_rate = 0.0976 (contrib_2025), read for 2025-02-01
+  held: contrib_rate = 0.0976 (contrib_2025), read for 2025-03-01
+  held: contrib_rate = 0.0976 (contrib_2025), read for 2025-04-01
+  held: contrib_rate = 0.0976 (contrib_2025), read for 2025-05-01
+  held: contrib_rate = 0.0976 (contrib_2025), read for 2025-06-01
+  held: contrib_rate = 0.0976 (contrib_2025), read for 2025-07-01
+  held: contrib_rate = 0.0976 (contrib_2025), read for 2025-08-01
+  held: contrib_rate = 0.0976 (contrib_2025), read for 2025-09-01
+  held: contrib_rate = 0.0976 (contrib_2025), read for 2025-10-01
+  held: contrib_rate = 0.0976 (contrib_2025), read for 2025-11-01
+  held: contrib_rate = 0.0976 (contrib_2025), read for 2025-12-01
+  law date 2025-01-01, cut 2025-01-01
+warning: WARN-NEGATIVE konto is below zero from 2025-01-10

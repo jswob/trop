@@ -1,0 +1,60 @@
+contribution_year_2026 (m = 2026-02) [ul02_mode = *, ul02_mw_day = *]: (4 806.00 PLN, 432.54 PLN)
+  law date 2026-10-18, cut 2026-10-18
+contribution_year_2026 (m = 2026-03) [ul02_mode = *, ul02_mw_day = *]: (4 806.00 PLN, 432.54 PLN)
+  law date 2026-10-18, cut 2026-10-18
+contribution_year_2026 (m = 2026-04) [ul02_mode = *, ul02_mw_day = *]: (4 806.00 PLN, 432.54 PLN)
+  law date 2026-10-18, cut 2026-10-18
+contribution_year_2026 (m = 2026-05) [ul02_mode = *, ul02_mw_day = *]: (4 806.00 PLN, 432.54 PLN)
+  law date 2026-10-18, cut 2026-10-18
+contribution_year_2026 (m = 2026-06) [ul02_mode = *, ul02_mw_day = *]: (4 806.00 PLN, 432.54 PLN)
+  law date 2026-10-18, cut 2026-10-18
+contribution_year_2026 (m = 2026-07) [ul02_mode = *, ul02_mw_day = *]: (4 806.00 PLN, 432.54 PLN)
+  law date 2026-10-18, cut 2026-10-18
+contribution_year_2026 (m = 2026-08) [ul02_mode = *, ul02_mw_day = *]: (4 806.00 PLN, 432.54 PLN)
+  law date 2026-10-18, cut 2026-10-18
+contribution_year_2026 (m = 2026-09) [ul02_mode = *, ul02_mw_day = *]: (4 806.00 PLN, 432.54 PLN)
+  law date 2026-10-18, cut 2026-10-18
+contribution_year_2026 (m = 2026-10) [ul02_mode = *, ul02_mw_day = *]: (4 806.00 PLN, 432.54 PLN)
+  law date 2026-10-18, cut 2026-10-18
+contribution_year_2026 (m = 2026-11) [ul02_mode = *, ul02_mw_day = *]: (4 806.00 PLN, 432.54 PLN)
+  held: min_wage = 4 806.00 PLN (rm2025_1242), read for 2026-11-01
+  held: rate = 0.09 (dz2021_2105), read for 2026-11-01
+  law date 2026-10-18, cut 2026-10-18
+contribution_year_2026 (m = 2026-12) [ul02_mode = *, ul02_mw_day = *]: (4 806.00 PLN, 432.54 PLN)
+  held: min_wage = 4 806.00 PLN (rm2025_1242), read for 2026-12-01
+  held: rate = 0.09 (dz2021_2105), read for 2026-12-01
+  law date 2026-10-18, cut 2026-10-18
+contribution_year_2026 (m = 2027-01) [ul02_mode = *, ul02_mw_day = *]: (4 806.00 PLN, 432.54 PLN)
+  held: min_wage = 4 806.00 PLN (rm2025_1242), read for 2027-01-01
+  held: rate = 0.09 (dz2021_2105), read for 2027-01-01
+  law date 2026-10-18, cut 2026-10-18
+jan_2026 [ul02_mode = down, ul02_mw_day = cy_start]: (3 499.50 PLN, 314.95 PLN)
+  reading: ul02_mode = down
+  reading: ul02_mw_day = cy_start
+  law date 2026-10-18, cut 2026-10-18
+jan_2026 [ul02_mode = down | half-even, ul02_mw_day = in_month]: (3 604.50 PLN, 324.40 PLN)
+  reading: ul02_mode = down | half-even
+  reading: ul02_mw_day = in_month
+  law date 2026-10-18, cut 2026-10-18
+jan_2026 [ul02_mode = half-even | half-up, ul02_mw_day = cy_start]: (3 499.50 PLN, 314.96 PLN)
+  reading: ul02_mode = half-even | half-up
+  reading: ul02_mw_day = cy_start
+  law date 2026-10-18, cut 2026-10-18
+jan_2026 [ul02_mode = half-up, ul02_mw_day = in_month]: (3 604.50 PLN, 324.41 PLN)
+  reading: ul02_mode = half-up
+  reading: ul02_mw_day = in_month
+  law date 2026-10-18, cut 2026-10-18
+tabela4 (c = mw75, y = 2025) [ul02_mode = *]: 3 499.50 PLN
+  law date 2026-10-18, cut 2026-10-18
+tabela4 (c = mw75, y = 2026) [ul02_mode = *]: 3 604.50 PLN
+  law date 2026-10-18, cut 2026-10-18
+tabela4 (c = mw100, y = 2025) [ul02_mode = *]: 4 666.00 PLN
+  law date 2026-10-18, cut 2026-10-18
+tabela4 (c = mw100, y = 2026) [ul02_mode = *]: 4 806.00 PLN
+  law date 2026-10-18, cut 2026-10-18
+yoy [ul02_mode = *, ul02_mw_day = cy_start]: 0.373
+  reading: ul02_mw_day = cy_start
+  law date 2026-10-18, cut 2026-10-18
+yoy [ul02_mode = *, ul02_mw_day = in_month]: 0.333
+  reading: ul02_mw_day = in_month
+  law date 2026-10-18, cut 2026-10-18

@@ -1,0 +1,7 @@
+part asks_mca05
+  tally 2
+  note "MC-A diagnostic on the cut-down copy: A-05 Ania's line with the axis px_round pinned to each option."
+
+ask mca05_down: cg_tax[ania, 2024], net_gain[ania, 2024], cg_too_much[ania, 2024] with px_round = down law 2025-04-30 as known 2025-04-30 windows each
+
+ask mca05_up: cg_tax[ania, 2024], net_gain[ania, 2024], cg_too_much[ania, 2024] with px_round = half-up law 2025-04-30 as known 2025-04-30 windows each

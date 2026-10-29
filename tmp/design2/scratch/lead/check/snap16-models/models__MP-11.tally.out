@@ -1,0 +1,53 @@
+q_benefit (f = ex40) [fr_comp_order = *]: 10 842.00 EUR
+  law date 2026-10-18, cut 2026-10-18
+q_benefit (f = ex185) [fr_comp_order = example]: 14 450.00 EUR
+  reading: fr_comp_order = example
+  law date 2026-10-18, cut 2026-10-18
+q_benefit (f = ex185) [fr_comp_order = bofip_text]: 12 649.00 EUR
+  reading: fr_comp_order = bofip_text
+  law date 2026-10-18, cut 2026-10-18
+q_capped (f = ex40) [fr_comp_order = *]: true
+  pinned: parts[f] = base_parts for f in foyer
+  law date 2026-10-18, cut 2026-10-18
+q_capped (f = ex185) [fr_comp_order = *]: true
+  pinned: parts[f] = base_parts for f in foyer
+  law date 2026-10-18, cut 2026-10-18
+q_extra_halves (f = ex40): 6
+  law date 2026-10-18, cut 2026-10-18
+q_extra_halves (f = ex185): 7
+  law date 2026-10-18, cut 2026-10-18
+q_qf (f = ex40): (26 000 EUR, 65 000 EUR)
+  pinned: parts[f] = base_parts for f in foyer
+  law date 2026-10-18, cut 2026-10-18
+q_qf (f = ex185): (260000/11 (23 636.3636363636) EUR, 65 000 EUR)
+  pinned: parts[f] = base_parts for f in foyer
+  law date 2026-10-18, cut 2026-10-18
+q_second_term (f = ex40) [fr_comp_order = *]: 14 366.00 EUR
+  pinned: parts[f] = base_parts for f in foyer
+  law date 2026-10-18, cut 2026-10-18
+q_second_term (f = ex185) [fr_comp_order = example]: 10 758.00 EUR
+  pinned: parts[f] = base_parts for f in foyer
+  reading: fr_comp_order = example
+  law date 2026-10-18, cut 2026-10-18
+q_second_term (f = ex185) [fr_comp_order = bofip_text]: 12 559.00 EUR
+  pinned: parts[f] = base_parts for f in foyer
+  reading: fr_comp_order = bofip_text
+  law date 2026-10-18, cut 2026-10-18
+q_tax (f = ex40): (7 920.00 EUR, 25 208.00 EUR)
+  pinned: parts[f] = base_parts for f in foyer
+  law date 2026-10-18, cut 2026-10-18
+q_tax (f = ex185): (7 282.00 EUR, 25 208.00 EUR)
+  pinned: parts[f] = base_parts for f in foyer
+  law date 2026-10-18, cut 2026-10-18
+q_tax_due (f = ex40) [fr_comp_order = *]: 14 366.00 EUR
+  pinned: parts[f] = base_parts for f in foyer
+  law date 2026-10-18, cut 2026-10-18
+q_tax_due (f = ex185) [fr_comp_order = *]: 10 758.00 EUR
+  pinned: parts[f] = base_parts for f in foyer
+  law date 2026-10-18, cut 2026-10-18
+q_tax_raw (f = ex40): (7 920 EUR, 25 207.98 EUR)
+  pinned: parts[f] = base_parts for f in foyer
+  law date 2026-10-18, cut 2026-10-18
+q_tax_raw (f = ex185): (7 282 EUR, 25 207.98 EUR)
+  pinned: parts[f] = base_parts for f in foyer
+  law date 2026-10-18, cut 2026-10-18

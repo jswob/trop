@@ -1,0 +1,181 @@
+bracher_logs (f = nb_f) [disp = *]: -9.37
+  law date 2026-10-18, cut 2026-10-18
+  orient higher
+bracher_logs (f = nb_g) [disp = half-up | half-even]: -9.7
+  reading: disp = half-up | half-even
+  law date 2026-10-18, cut 2026-10-18
+  orient higher
+bracher_logs (f = nb_g) [disp = down]: -9.69
+  reading: disp = down
+  law date 2026-10-18, cut 2026-10-18
+  orient higher
+bracher_logs_neg (f = nb_f) [disp = *]: 9.37
+  law date 2026-10-18, cut 2026-10-18
+  orient lower
+bracher_logs_neg (f = nb_g) [disp = half-up | half-even]: 9.7
+  reading: disp = half-up | half-even
+  law date 2026-10-18, cut 2026-10-18
+  orient lower
+bracher_logs_neg (f = nb_g) [disp = down]: 9.69
+  reading: disp = down
+  law date 2026-10-18, cut 2026-10-18
+  orient lower
+bracher_q95 (f = nb_f): 118
+  law date 2026-10-18, cut 2026-10-18
+bracher_q95 (f = nb_g): 128
+  law date 2026-10-18, cut 2026-10-18
+bracher_sd [disp = half-up | half-even]: (31, 26.8)
+  reading: disp = half-up | half-even
+  law date 2026-10-18, cut 2026-10-18
+bracher_sd [disp = down]: (30, 26.8)
+  reading: disp = down
+  law date 2026-10-18, cut 2026-10-18
+bracher_wis (f = nb_f) [disp = *, wis_form = no_median]: 103.9
+  assumed: p. 4 writes α3 = 0.1, . . ., α11 = 0.9; the levels between are implied, read as steps of 0.1 (alpha[10], alpha[4], alpha[5], alpha[6], alpha[7], alpha[8], alpha[9])
+  reading: wis_form = no_median
+  law date 2026-10-18, cut 2026-10-18
+  orient lower
+bracher_wis (f = nb_f) [disp = half-up | half-even, wis_form = eq1]: 105.3
+  assumed: p. 4 writes α3 = 0.1, . . ., α11 = 0.9; the levels between are implied, read as steps of 0.1 (alpha[10], alpha[4], alpha[5], alpha[6], alpha[7], alpha[8], alpha[9])
+  reading: disp = half-up | half-even
+  reading: wis_form = eq1
+  law date 2026-10-18, cut 2026-10-18
+  orient lower
+bracher_wis (f = nb_f) [disp = down, wis_form = eq1]: 105.2
+  assumed: p. 4 writes α3 = 0.1, . . ., α11 = 0.9; the levels between are implied, read as steps of 0.1 (alpha[10], alpha[4], alpha[5], alpha[6], alpha[7], alpha[8], alpha[9])
+  reading: disp = down
+  reading: wis_form = eq1
+  law date 2026-10-18, cut 2026-10-18
+  orient lower
+bracher_wis (f = nb_g) [disp = *, wis_form = eq1]: 88.9
+  assumed: p. 4 writes α3 = 0.1, . . ., α11 = 0.9; the levels between are implied, read as steps of 0.1 (alpha[10], alpha[4], alpha[5], alpha[6], alpha[7], alpha[8], alpha[9])
+  reading: wis_form = eq1
+  law date 2026-10-18, cut 2026-10-18
+  orient lower
+bracher_wis (f = nb_g) [disp = *, wis_form = no_median]: 87.8
+  assumed: p. 4 writes α3 = 0.1, . . ., α11 = 0.9; the levels between are implied, read as steps of 0.1 (alpha[10], alpha[4], alpha[5], alpha[6], alpha[7], alpha[8], alpha[9])
+  reading: wis_form = no_median
+  law date 2026-10-18, cut 2026-10-18
+  orient lower
+jss_3_1 (j = 1): ?"they are R's unseeded random stream, data a Tally reality can't hold (LANGUAGE §5.17), and the article doesn't print them" (jss_obs)
+  law date 2026-10-18, cut 2026-10-18
+  orient lower
+jss_3_1 (j = 2): ?"they are R's unseeded random stream, data a Tally reality can't hold (LANGUAGE §5.17), and the article doesn't print them" (jss_obs)
+  law date 2026-10-18, cut 2026-10-18
+  orient lower
+jss_3_1 (j = 3): ?"they are R's unseeded random stream, data a Tally reality can't hold (LANGUAGE §5.17), and the article doesn't print them" (jss_obs)
+  law date 2026-10-18, cut 2026-10-18
+  orient lower
+jss_3_1 (j = 4): ?"they are R's unseeded random stream, data a Tally reality can't hold (LANGUAGE §5.17), and the article doesn't print them" (jss_obs)
+  law date 2026-10-18, cut 2026-10-18
+  orient lower
+jss_3_1 (j = 5): ?"they are R's unseeded random stream, data a Tally reality can't hold (LANGUAGE §5.17), and the article doesn't print them" (jss_obs)
+  law date 2026-10-18, cut 2026-10-18
+  orient lower
+jss_3_1 (j = 6): ?"they are R's unseeded random stream, data a Tally reality can't hold (LANGUAGE §5.17), and the article doesn't print them" (jss_obs)
+  law date 2026-10-18, cut 2026-10-18
+  orient lower
+jss_3_1 (j = 7): ?"they are R's unseeded random stream, data a Tally reality can't hold (LANGUAGE §5.17), and the article doesn't print them" (jss_obs)
+  law date 2026-10-18, cut 2026-10-18
+  orient lower
+jss_3_1 (j = 8): ?"they are R's unseeded random stream, data a Tally reality can't hold (LANGUAGE §5.17), and the article doesn't print them" (jss_obs)
+  law date 2026-10-18, cut 2026-10-18
+  orient lower
+jss_3_1 (j = 9): ?"they are R's unseeded random stream, data a Tally reality can't hold (LANGUAGE §5.17), and the article doesn't print them" (jss_obs)
+  law date 2026-10-18, cut 2026-10-18
+  orient lower
+jss_3_1 (j = 10): ?"they are R's unseeded random stream, data a Tally reality can't hold (LANGUAGE §5.17), and the article doesn't print them" (jss_obs)
+  law date 2026-10-18, cut 2026-10-18
+  orient lower
+jss_3_1_sd (j = 1): ?"they are R's unseeded random stream, data a Tally reality can't hold (LANGUAGE §5.17), and the article doesn't print them" (jss_obs)
+  law date 2026-10-18, cut 2026-10-18
+  orient lower
+jss_3_1_sd (j = 2): ?"they are R's unseeded random stream, data a Tally reality can't hold (LANGUAGE §5.17), and the article doesn't print them" (jss_obs)
+  law date 2026-10-18, cut 2026-10-18
+  orient lower
+jss_3_1_sd (j = 3): ?"they are R's unseeded random stream, data a Tally reality can't hold (LANGUAGE §5.17), and the article doesn't print them" (jss_obs)
+  law date 2026-10-18, cut 2026-10-18
+  orient lower
+jss_3_1_sd (j = 4): ?"they are R's unseeded random stream, data a Tally reality can't hold (LANGUAGE §5.17), and the article doesn't print them" (jss_obs)
+  law date 2026-10-18, cut 2026-10-18
+  orient lower
+jss_3_1_sd (j = 5): ?"they are R's unseeded random stream, data a Tally reality can't hold (LANGUAGE §5.17), and the article doesn't print them" (jss_obs)
+  law date 2026-10-18, cut 2026-10-18
+  orient lower
+jss_3_1_sd (j = 6): ?"they are R's unseeded random stream, data a Tally reality can't hold (LANGUAGE §5.17), and the article doesn't print them" (jss_obs)
+  law date 2026-10-18, cut 2026-10-18
+  orient lower
+jss_3_1_sd (j = 7): ?"they are R's unseeded random stream, data a Tally reality can't hold (LANGUAGE §5.17), and the article doesn't print them" (jss_obs)
+  law date 2026-10-18, cut 2026-10-18
+  orient lower
+jss_3_1_sd (j = 8): ?"they are R's unseeded random stream, data a Tally reality can't hold (LANGUAGE §5.17), and the article doesn't print them" (jss_obs)
+  law date 2026-10-18, cut 2026-10-18
+  orient lower
+jss_3_1_sd (j = 9): ?"they are R's unseeded random stream, data a Tally reality can't hold (LANGUAGE §5.17), and the article doesn't print them" (jss_obs)
+  law date 2026-10-18, cut 2026-10-18
+  orient lower
+jss_3_1_sd (j = 10): refused: RUN-PARAM normal parameter s = -5 is invalid
+  law date 2026-10-18, cut 2026-10-18
+  orient lower
+jss_3_2_crps: ?"the sample is R's unseeded random stream and is not printed, so the scores can't be recomputed" (jss_unseeded)
+  law date 2026-10-18, cut 2026-10-18
+  orient lower
+jss_3_2_logs: ?"a sample has no density (LANGUAGE §5.15); its draws are also unseeded and not printed" (logs_sample)
+  law date 2026-10-18, cut 2026-10-18
+  orient lower
+ps_ensemble: ?"the ensemble is numpy's generator stream, which is not a Tally draw, and its 1000 values are not printed" (np_stream)
+  law date 2026-10-18, cut 2026-10-18
+  orient lower
+ps_gaussian: ≈ 0.23369497725510906893 (0.233694977255109) ± 0.000000000000000000005
+  law date 2026-10-18, cut 2026-10-18
+  orient lower
+ps_gaussian5 (o = o1) [disp = *]: 1.45279182
+  law date 2026-10-18, cut 2026-10-18
+  orient lower
+ps_gaussian5 (o = o2) [disp = half-up | half-even]: 0.60244136
+  reading: disp = half-up | half-even
+  law date 2026-10-18, cut 2026-10-18
+  orient lower
+ps_gaussian5 (o = o2) [disp = down]: 0.60244135
+  reading: disp = down
+  law date 2026-10-18, cut 2026-10-18
+  orient lower
+ps_gaussian5 (o = o3) [disp = half-up | half-even]: 0.23369498
+  reading: disp = half-up | half-even
+  law date 2026-10-18, cut 2026-10-18
+  orient lower
+ps_gaussian5 (o = o3) [disp = down]: 0.23369497
+  reading: disp = down
+  law date 2026-10-18, cut 2026-10-18
+  orient lower
+ps_gaussian5 (o = o4) [disp = half-up | half-even]: 0.60244136
+  reading: disp = half-up | half-even
+  law date 2026-10-18, cut 2026-10-18
+  orient lower
+ps_gaussian5 (o = o4) [disp = down]: 0.60244135
+  reading: disp = down
+  law date 2026-10-18, cut 2026-10-18
+  orient lower
+ps_gaussian5 (o = o5) [disp = *]: 1.45279182
+  law date 2026-10-18, cut 2026-10-18
+  orient lower
+ps_quadrature: ≈ 0.23369497725510906893 (0.233694977255109) ± 0.000000000000000000005
+  law date 2026-10-18, cut 2026-10-18
+  orient lower
+ps_skill: ≈ 165583866411785233513/600000000000000000000 (0.275973110686309) ± 0.0000000000000000000042
+  law date 2026-10-18, cut 2026-10-18
+  orient higher
+ps_skill_text [disp = half-up | half-even]: 0.28
+  reading: disp = half-up | half-even
+  law date 2026-10-18, cut 2026-10-18
+  orient higher
+ps_skill_text [disp = down]: 0.27
+  reading: disp = down
+  law date 2026-10-18, cut 2026-10-18
+  orient higher
+ps_threshold: ?"the ensemble is numpy's generator stream, which is not a Tally draw, and its 1000 values are not printed" (np_stream)
+  law date 2026-10-18, cut 2026-10-18
+  orient lower
+ps_weighted: ≈ 770502045380978251460193862757823773695495014359641021935556345/3296963906275877165283745902267001362235996276996412925679682224 (0.233700479375677) ± 0.000000000000000000000000000036
+  law date 2026-10-18, cut 2026-10-18
+  orient lower

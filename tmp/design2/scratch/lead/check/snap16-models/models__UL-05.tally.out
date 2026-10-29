@@ -1,0 +1,42 @@
+ex_p1 [ul05_avg = *, ul05_school = per_item | per_total]: (126.33 PLN, 2 022.00 PLN, 2 055.00 PLN, 33.00 PLN, 93.33 PLN)
+  reading: ul05_school = per_item | per_total
+  law date 2026-10-18, cut 2026-10-18
+ex_p1 [ul05_avg = *, ul05_school = exact]: (379/3 (126.333333333333) PLN, 2 022.00 PLN, 2 055.00 PLN, 33.00 PLN, 280/3 (93.3333333333333) PLN)
+  reading: ul05_school = exact
+  law date 2026-10-18, cut 2026-10-18
+ex_p3 [ul05_avg = *, ul05_school = per_item]: (468.99 PLN, 3 370.00 PLN, 3 400.00 PLN, 30.00 PLN, 438.99 PLN)
+  reading: ul05_school = per_item
+  law date 2026-10-18, cut 2026-10-18
+ex_p3 [ul05_avg = *, ul05_school = per_total | exact]: (469 PLN, 3 370.00 PLN, 3 400.00 PLN, 30.00 PLN, 439 PLN)
+  reading: ul05_school = per_total | exact
+  law date 2026-10-18, cut 2026-10-18
+ex_p5 [ul05_avg = split, ul05_school = *]: (357 PLN, 3 370.00 PLN, 3 575.00 PLN, 205.00 PLN, 152 PLN)
+  reading: ul05_avg = split
+  law date 2026-10-18, cut 2026-10-18
+ex_p5 [ul05_avg = whole, ul05_school = *]: (377.3 PLN, 3 370.00 PLN, 3 575.00 PLN, 205.00 PLN, 172.3 PLN)
+  reading: ul05_avg = whole
+  law date 2026-10-18, cut 2026-10-18
+p5_periods (m = 2016-01) [ul05_avg = split, ul05_school = *]: (357 PLN, 152 PLN)
+  reading: ul05_avg = split
+  law date 2026-10-18, cut 2026-10-18
+p5_periods (m = 2016-01) [ul05_avg = whole, ul05_school = *]: (377.3 PLN, 172.3 PLN)
+  reading: ul05_avg = whole
+  law date 2026-10-18, cut 2026-10-18
+p5_periods (m = 2016-03) [ul05_avg = split, ul05_school = *]: (357 PLN, 152 PLN)
+  reading: ul05_avg = split
+  law date 2026-10-18, cut 2026-10-18
+p5_periods (m = 2016-03) [ul05_avg = whole, ul05_school = *]: (377.3 PLN, 172.3 PLN)
+  reading: ul05_avg = whole
+  law date 2026-10-18, cut 2026-10-18
+p5_periods (m = 2016-04) [ul05_avg = split, ul05_school = *]: (386 PLN, 181 PLN)
+  reading: ul05_avg = split
+  law date 2026-10-18, cut 2026-10-18
+p5_periods (m = 2016-04) [ul05_avg = whole, ul05_school = *]: (377.3 PLN, 172.3 PLN)
+  reading: ul05_avg = whole
+  law date 2026-10-18, cut 2026-10-18
+p5_periods (m = 2016-10) [ul05_avg = split, ul05_school = *]: (386 PLN, 181 PLN)
+  reading: ul05_avg = split
+  law date 2026-10-18, cut 2026-10-18
+p5_periods (m = 2016-10) [ul05_avg = whole, ul05_school = *]: (377.3 PLN, 172.3 PLN)
+  reading: ul05_avg = whole
+  law date 2026-10-18, cut 2026-10-18

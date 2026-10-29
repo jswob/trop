@@ -1,0 +1,10 @@
+q_put_in (c = c_dec): 400.00 DUK
+  law date 2025-12-31, cut 2026-10-25
+q_put_in (c = c_jan): 1 000.00 DUK
+  law date 2025-12-31, cut 2026-10-25
+q_withdrawal (k = contributed): 10 000.00 DUK
+  law date 2025-12-31, cut 2026-10-25
+q_withdrawal (k = earned): 500.00 DUK
+  law date 2025-12-31, cut 2026-10-25
+q_withdrawal_tax: 95.00 DUK
+  law date 2025-12-31, cut 2026-10-25

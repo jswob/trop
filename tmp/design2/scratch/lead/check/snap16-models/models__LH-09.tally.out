@@ -1,0 +1,67 @@
+a_first: 5 000.00 USD
+  assumed: no prior qualified first-time homebuyer distribution is stated; Ishmael took no early Roth IRA distribution before 2025 (prior_home[amelia])
+  assumed: the example names no first-home purpose for the distribution (home_expense[amelia])
+  assumed: the example names no other Roth IRA contributions (regular_prior[amelia])
+  law date 2026-10-18, cut 2026-10-18
+a_included: 60 000.00 USD
+  law date 2026-10-18, cut 2026-10-18
+a_includible: 0.00 USD
+  assumed: no prior qualified first-time homebuyer distribution is stated; Ishmael took no early Roth IRA distribution before 2025 (prior_home[amelia])
+  assumed: the example names no first-home purpose for the distribution (home_expense[amelia])
+  assumed: the example names no other Roth IRA contributions (regular_prior[amelia])
+  law date 2026-10-18, cut 2026-10-18
+a_next: 2 000.00 USD
+  assumed: no prior qualified first-time homebuyer distribution is stated; Ishmael took no early Roth IRA distribution before 2025 (prior_home[amelia])
+  assumed: the example names no first-home purpose for the distribution (home_expense[amelia])
+  assumed: the example names no other Roth IRA contributions (regular_prior[amelia])
+  law date 2026-10-18, cut 2026-10-18
+b_2005_l17: 0.00 USD
+  assumed: no prior qualified first-time homebuyer distribution is stated; Ishmael took no early Roth IRA distribution before 2025 (prior_home[ishmael])
+  law date 2026-10-18, cut 2026-10-18
+b_2005_l18: 10 000.00 USD
+  assumed: no prior qualified first-time homebuyer distribution is stated; Ishmael took no early Roth IRA distribution before 2025 (prior_home[ishmael])
+  law date 2026-10-18, cut 2026-10-18
+b_2016_alloc: 10 000.00 USD
+  assumed: no prior qualified first-time homebuyer distribution is stated; Ishmael took no early Roth IRA distribution before 2025 (prior_home[ishmael])
+  law date 2026-10-18, cut 2026-10-18
+b_2016_l16a: 20 000.00 USD
+  law date 2026-10-18, cut 2026-10-18
+b_2016_l16b: 20 000.00 USD
+  law date 2026-10-18, cut 2026-10-18
+b_5329_l1 [lh09_line1 = i5329]: 10 000.00 USD
+  assumed: no prior qualified first-time homebuyer distribution is stated; Ishmael took no early Roth IRA distribution before 2025 (prior_home[ishmael])
+  reading: lh09_line1 = i5329
+  law date 2026-10-18, cut 2026-10-18
+b_5329_l1 [lh09_line1 = pub]: 20 000.00 USD
+  assumed: no prior qualified first-time homebuyer distribution is stated; Ishmael took no early Roth IRA distribution before 2025 (prior_home[ishmael])
+  reading: lh09_line1 = pub
+  law date 2026-10-18, cut 2026-10-18
+b_5329_l2: (10 000.00 USD, 9)
+  assumed: no prior qualified first-time homebuyer distribution is stated; Ishmael took no early Roth IRA distribution before 2025 (prior_home[ishmael])
+  law date 2026-10-18, cut 2026-10-18
+b_l19: 85 500.00 USD
+  law date 2026-10-18, cut 2026-10-18
+b_l20: 10 000.00 USD
+  assumed: no prior qualified first-time homebuyer distribution is stated; Ishmael took no early Roth IRA distribution before 2025 (prior_home[ishmael])
+  law date 2026-10-18, cut 2026-10-18
+b_l22: 55 500.00 USD
+  assumed: no prior qualified first-time homebuyer distribution is stated; Ishmael took no early Roth IRA distribution before 2025 (prior_home[ishmael])
+  law date 2026-10-18, cut 2026-10-18
+c_basis_after: 5 000.00 USD
+  assumed: the example doesn't say whether Amy deducted traditional IRA contributions after age 70 1/2 (post70_ded[amy])
+  law date 2026-10-18, cut 2026-10-18
+c_deductible: 5 000.00 USD
+  assumed: the example doesn't say whether Amy deducted traditional IRA contributions after age 70 1/2 (post70_ded[amy])
+  law date 2026-10-18, cut 2026-10-18
+c_l4a: 25 000.00 USD
+  law date 2026-10-18, cut 2026-10-18
+c_l4b: 0.00 USD
+  assumed: the example doesn't say whether Amy deducted traditional IRA contributions after age 70 1/2 (post70_ded[amy])
+  law date 2026-10-18, cut 2026-10-18
+c_limit: 108 000.00 USD
+  law date 2026-10-18, cut 2026-10-18
+c_qcd: 20 000.00 USD
+  assumed: the example doesn't say whether Amy deducted traditional IRA contributions after age 70 1/2 (post70_ded[amy])
+  law date 2026-10-18, cut 2026-10-18
+c_split: 54 000.00 USD
+  law date 2026-10-18, cut 2026-10-18

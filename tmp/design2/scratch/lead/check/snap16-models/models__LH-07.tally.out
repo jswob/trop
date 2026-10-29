@@ -1,0 +1,111 @@
+a_den [lh07_age = distribution]: 24.6
+  reading: lh07_age = distribution
+  law date 2026-10-18, cut 2026-10-18
+a_den [lh07_age = valuation]: 25.5
+  reading: lh07_age = valuation
+  law date 2026-10-18, cut 2026-10-18
+a_rmd [lh07_age = distribution, lh07_round = ceil]: 4 066.00 USD
+  reading: lh07_age = distribution
+  reading: lh07_round = ceil
+  law date 2026-10-18, cut 2026-10-18
+a_rmd [lh07_age = distribution, lh07_round = half-up]: 4 065.00 USD
+  reading: lh07_age = distribution
+  reading: lh07_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+a_rmd [lh07_age = valuation, lh07_round = *]: 3 922.00 USD
+  reading: lh07_age = valuation
+  law date 2026-10-18, cut 2026-10-18
+a_table [lh07_age = *]: table_iii
+  law date 2026-10-18, cut 2026-10-18
+b_den [lh07_age = distribution]: 25.3
+  reading: lh07_age = distribution
+  law date 2026-10-18, cut 2026-10-18
+b_den [lh07_age = valuation]: ?"joint_le at 74, 63: no value at 2026-01-01" (joint_le[74, 63])
+  reading: lh07_age = valuation
+  law date 2026-10-18, cut 2026-10-18
+b_rmd [lh07_age = distribution, lh07_round = *]: 3 953.00 USD
+  reading: lh07_age = distribution
+  law date 2026-10-18, cut 2026-10-18
+b_rmd [lh07_age = valuation, lh07_round = *]: ?"joint_le at 74, 63: no value at 2026-01-01" (joint_le[74, 63])
+  reading: lh07_age = valuation
+  law date 2026-10-18, cut 2026-10-18
+b_table [lh07_age = *]: table_ii
+  law date 2026-10-18, cut 2026-10-18
+c_den: 29.8
+  law date 2026-10-18, cut 2026-10-18
+c_table: table_i
+  law date 2026-10-18, cut 2026-10-18
+d_le55: 31.6
+  law date 2026-10-18, cut 2026-10-18
+d_old: 25.6
+  law date 2026-10-18, cut 2026-10-18
+d_reset: 27.6
+  law date 2026-10-18, cut 2026-10-18
+e_credit: 0.00 USD
+  law date 2026-10-18, cut 2026-10-18
+e_excess [lh07_age = distribution, lh07_round = ceil]: 2 150.00 USD
+  assumed: the example uses Table III; whether Justin's sole beneficiary is a spouse more than 10 years younger is not stated (sole_spouse[justin])
+  reading: lh07_age = distribution
+  reading: lh07_round = ceil
+  law date 2026-10-18, cut 2026-10-18
+e_excess [lh07_age = distribution, lh07_round = half-up]: 2 151.00 USD
+  assumed: the example uses Table III; whether Justin's sole beneficiary is a spouse more than 10 years younger is not stated (sole_spouse[justin])
+  reading: lh07_age = distribution
+  reading: lh07_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+e_excess [lh07_age = valuation, lh07_round = ceil]: 2 198.00 USD
+  assumed: the example uses Table III; whether Justin's sole beneficiary is a spouse more than 10 years younger is not stated (sole_spouse[justin])
+  reading: lh07_age = valuation
+  reading: lh07_round = ceil
+  law date 2026-10-18, cut 2026-10-18
+e_excess [lh07_age = valuation, lh07_round = half-up]: 2 199.00 USD
+  assumed: the example uses Table III; whether Justin's sole beneficiary is a spouse more than 10 years younger is not stated (sole_spouse[justin])
+  reading: lh07_age = valuation
+  reading: lh07_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+e_rmd_2025 [lh07_age = distribution, lh07_round = ceil]: 1 450.00 USD
+  assumed: the example uses Table III; whether Justin's sole beneficiary is a spouse more than 10 years younger is not stated (sole_spouse[justin])
+  reading: lh07_age = distribution
+  reading: lh07_round = ceil
+  law date 2026-10-18, cut 2026-10-18
+e_rmd_2025 [lh07_age = distribution, lh07_round = half-up]: 1 449.00 USD
+  assumed: the example uses Table III; whether Justin's sole beneficiary is a spouse more than 10 years younger is not stated (sole_spouse[justin])
+  reading: lh07_age = distribution
+  reading: lh07_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+e_rmd_2025 [lh07_age = valuation, lh07_round = ceil]: 1 402.00 USD
+  assumed: the example uses Table III; whether Justin's sole beneficiary is a spouse more than 10 years younger is not stated (sole_spouse[justin])
+  reading: lh07_age = valuation
+  reading: lh07_round = ceil
+  law date 2026-10-18, cut 2026-10-18
+e_rmd_2025 [lh07_age = valuation, lh07_round = half-up]: 1 401.00 USD
+  assumed: the example uses Table III; whether Justin's sole beneficiary is a spouse more than 10 years younger is not stated (sole_spouse[justin])
+  reading: lh07_age = valuation
+  reading: lh07_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+e_rmd_2026 [lh07_age = distribution, lh07_round = *]: 1 365.00 USD
+  assumed: the example uses Table III; whether Justin's sole beneficiary is a spouse more than 10 years younger is not stated (sole_spouse[justin])
+  reading: lh07_age = distribution
+  law date 2026-10-18, cut 2026-10-18
+e_rmd_2026 [lh07_age = valuation, lh07_round = ceil]: 1 314.00 USD
+  assumed: the example uses Table III; whether Justin's sole beneficiary is a spouse more than 10 years younger is not stated (sole_spouse[justin])
+  reading: lh07_age = valuation
+  reading: lh07_round = ceil
+  law date 2026-10-18, cut 2026-10-18
+e_rmd_2026 [lh07_age = valuation, lh07_round = half-up]: 1 313.00 USD
+  assumed: the example uses Table III; whether Justin's sole beneficiary is a spouse more than 10 years younger is not stated (sole_spouse[justin])
+  reading: lh07_age = valuation
+  reading: lh07_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+f_death_year: false
+  law date 2026-10-18, cut 2026-10-18
+f_start: 2030-12-31
+  law date 2026-10-18, cut 2026-10-18
+g_start: 2026
+  law date 2026-10-18, cut 2026-10-18
+g_ten: 2035-12-31
+  law date 2026-10-18, cut 2026-10-18
+h_five: 2030-12-31
+  law date 2026-10-18, cut 2026-10-18
+i_ten: 2035-12-31
+  law date 2026-10-18, cut 2026-10-18

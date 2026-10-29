@@ -1,0 +1,56 @@
+model rule05
+  tally 2
+  on 2025-01-31
+  start 2025-01-31
+  end 2025-12-31
+  note "RULE-05: house rule A-3 fires once the savings reach 40 000.00; the car credit's instalments fall on the 10th from the next month; the 15th rule sees what is paid that month up to the 15th."
+  note "The card gives no instalment amount, so it is a hole. The dates are read through the instalments' movements (next, and a count over their kind), which don't read the amount."
+
+source card "Probe card RULE-05: Ania and Tomek's car savings and house rule A-3"
+
+unit DUK: currency minor 0.01
+
+kind instalments: transfers
+
+index grow_months = month 2025-02..2025-12
+
+place konto: accounts DUK lives 2025-01-31..
+
+place savings: accounts DUK lives 2025-01-31..
+
+place world: outside lives 2025-01-31..
+
+input instal_amt: money DUK
+
+input instal_dom: int
+
+input monthly_add: money DUK
+
+input rule_dom: int
+
+input threshold: money DUK
+
+def seen_by_15th[m in grow_months]: int = count(i in instalments over start_of(m) .. day_of(m, rule_dom))
+
+move grow[m in grow_months]: transfers
+  on end_of(m) - 1 day
+  leg cash from world to savings amount monthly_add
+
+move instal[m in grow_months]: instalments
+  on day_of(m, instal_dom)
+  when any(bal(savings, d) >= threshold for d in days where d < start_of(m))
+  reads savings
+  leg cash from konto to world amount instal_amt
+
+ask q: first(d in days where bal(savings, d) >= threshold), next(instalments, 2025-01-31).day, day_of(first(m in grow_months where seen_by_15th[m] > 0), rule_dom)
+
+version card_2025
+  cite card
+  governs always
+  known 2025-01-31
+  instal_amt = ?"How much is the car credit's instalment? The card doesn't say."
+  instal_dom = 10 "A-3: the credit's instalments fall on the 10th, from the next month"
+  monthly_add = 2500 "story: the savings grow by 2 500.00 at each month's end"
+  opening[savings] = 30000 at 2025-01-31 start "story: the savings on 31 January 2025"
+  rule_dom = 15 "rule 2: the 15th rule"
+  threshold = 40000 "A-3: once the savings reach 40 000.00"

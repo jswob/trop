@@ -1,0 +1,820 @@
+b03_lazur: (3 904.00 FLR, 16 516.65 DUK)
+  assumed: B-HR4 .5 says each amount to the ort and names no mode (hr4_round)
+  anchor: lazur 2025-12-01 end, stated 3 904.00 FLR, difference 0.00 FLR
+  open: kessel_pay[fv_026_2025]
+  held: fx_mid = 4.2307 DUK/FLR (fx_2025_12_31), read for 2025-12-31
+  law date 2025-12-31, cut 2026-01-07
+b03_november (d = 2025-11-30): (1 952.00 FLR, 8 263.21 DUK)
+  assumed: B-HR4 .5 says each amount to the ort and names no mode (hr4_round)
+  unfulfilled: invoiced_flr[fv_026_2025]
+  held: fx_mid = 4.2332 DUK/FLR (fx_2025_11_28), read for 2025-11-30
+  law date 2025-12-31, cut 2026-01-07
+b03_november (d = 2025-12-31): (1 952.00 FLR, 8 258.33 DUK)
+  assumed: B-HR4 .5 says each amount to the ort and names no mode (hr4_round)
+  unfulfilled: invoiced_flr[fv_026_2025]
+  open: kessel_pay[fv_026_2025]
+  held: fx_mid = 4.2307 DUK/FLR (fx_2025_12_31), read for 2025-12-31
+  law date 2025-12-31, cut 2026-01-07
+b08_balances: (8 492.03 DUK, 398.70 DUK, 786.87 DUK)
+  anchor: cis 2025-10-31 end, stated 8 492.03 DUK, difference 0.00 DUK
+  anchor: cis 2025-12-01 start, stated 398.70 DUK, difference ?"Did Kawiarnia Ziarno pay its invoice on the days the November Cis export lacks?" (gap_ziarno) ?"What did Piotr pay by card on the days the November Cis export lacks?" (gap_cards) ?"date within window(2025-11-14, 2025-11-30) not precise enough for a balance" (gap_card_pays)
+  anchor: cis 2025-12-30 end, stated 786.87 DUK, difference 0.00 DUK
+  left out: health_pay, 1 instances, first 2027-01-20
+  left out: health_settle_pay, 1 instances, first 2027-04-20
+  left out: pit_pay, 1 instances, first 2027-01-20
+  left out: social_pay, 1 instances, first 2027-01-20
+  left out: vat_pay, 1 instances, first 2027-01-25
+  law date 2025-12-31, cut 2026-01-07
+b08_residuals: residuals cis 2025
+  2025-12 balance: model ?"Did Kawiarnia Ziarno pay its invoice on the days the November Cis export lacks?" (gap_ziarno) ?"What did Piotr pay by card on the days the November Cis export lacks?" (gap_cards) ?"date within window(2025-11-14, 2025-11-30) not precise enough for a balance" (gap_card_pays), observed 172 731.15 DUK, difference ?"Did Kawiarnia Ziarno pay its invoice on the days the November Cis export lacks?" (gap_ziarno) ?"What did Piotr pay by card on the days the November Cis export lacks?" (gap_cards) ?"date within window(2025-11-14, 2025-11-30) not precise enough for a balance" (gap_card_pays)
+    balance cis 2025-12-01 start (anchored): booked ?"Did Kawiarnia Ziarno pay its invoice on the days the November Cis export lacks?" (gap_ziarno) ?"What did Piotr pay by card on the days the November Cis export lacks?" (gap_cards) ?"date within window(2025-11-14, 2025-11-30) not precise enough for a balance" (gap_card_pays), stated 398.70 DUK, gap ?"Did Kawiarnia Ziarno pay its invoice on the days the November Cis export lacks?" (gap_ziarno) ?"What did Piotr pay by card on the days the November Cis export lacks?" (gap_cards) ?"date within window(2025-11-14, 2025-11-30) not precise enough for a balance" (gap_card_pays)
+    balance cis 2025-12-10 end (anchored): booked 5 766.83 DUK, stated 5 517.83 DUK, gap -249.00 DUK
+    balance cis 2025-12-01 end (anchored): booked 334.51 DUK, stated 334.51 DUK, gap 0.00 DUK
+    balance cis 2025-12-02 end (anchored): booked 8 176.36 DUK, stated 8 176.36 DUK, gap 0.00 DUK
+    balance cis 2025-12-04 end (anchored): booked 8 127.72 DUK, stated 8 127.72 DUK, gap 0.00 DUK
+    balance cis 2025-12-05 end (anchored): booked 6 874.00 DUK, stated 6 874.00 DUK, gap 0.00 DUK
+    balance cis 2025-12-08 end (anchored): booked 6 608.84 DUK, stated 6 608.84 DUK, gap 0.00 DUK
+    balance cis 2025-12-12 end (anchored): booked 24 756.71 DUK, stated 24 756.71 DUK, gap 0.00 DUK
+    balance cis 2025-12-15 end (anchored): booked 24 611.83 DUK, stated 24 611.83 DUK, gap 0.00 DUK
+    balance cis 2025-12-17 end (anchored): booked 24 471.18 DUK, stated 24 471.18 DUK, gap 0.00 DUK
+    balance cis 2025-12-18 end (anchored): booked 24 378.12 DUK, stated 24 378.12 DUK, gap 0.00 DUK
+    balance cis 2025-12-22 end (anchored): booked 18 460.11 DUK, stated 18 460.11 DUK, gap 0.00 DUK
+    balance cis 2025-12-24 end (anchored): booked 18 228.37 DUK, stated 18 228.37 DUK, gap 0.00 DUK
+    balance cis 2025-12-29 end (anchored): booked 1 000.00 DUK, stated 1 000.00 DUK, gap 0.00 DUK
+    balance cis 2025-12-30 end (anchored): booked 786.87 DUK, stated 786.87 DUK, gap 0.00 DUK
+  2025-12 move mtg_pay: model ?"Did Kawiarnia Ziarno pay its invoice on the days the November Cis export lacks?" (gap_ziarno) ?"What did Piotr pay by card on the days the November Cis export lacks?" (gap_cards) ?"date within window(2025-11-14, 2025-11-30) not precise enough for a balance" (gap_card_pays), observed -2 855.21 DUK, difference ?"Did Kawiarnia Ziarno pay its invoice on the days the November Cis export lacks?" (gap_ziarno) ?"What did Piotr pay by card on the days the November Cis export lacks?" (gap_cards) ?"date within window(2025-11-14, 2025-11-30) not precise enough for a balance" (gap_card_pays)
+    matched mtg_pay[2025-12] on 2025-12-05: model ?"Did Kawiarnia Ziarno pay its invoice on the days the November Cis export lacks?" (gap_ziarno) ?"What did Piotr pay by card on the days the November Cis export lacks?" (gap_cards) ?"date within window(2025-11-14, 2025-11-30) not precise enough for a balance" (gap_card_pays), observed -2 855.21 DUK, difference ?"Did Kawiarnia Ziarno pay its invoice on the days the November Cis export lacks?" (gap_ziarno) ?"What did Piotr pay by card on the days the November Cis export lacks?" (gap_cards) ?"date within window(2025-11-14, 2025-11-30) not precise enough for a balance" (gap_card_pays), timing +0 days
+  2025-01 balance: model ?"From when does B-D36's fee apply?" (card_fee_from) ?"How many monthly instalments (B-D07 .1)?" (mtg_terms) ?"In which month is the first instalment (B-D07 .1)?" (mtg_first) ?"On which day was the deed signed (B-D04)?" (deed_day) ?"Was Ola's standing order of this month rejected (her Wrzos statement)?" (order_rejected[2022-03]) ?"Was this month's instalment suspended under MTG-1 (B-D08)?" (held[2022-03]) ?"What does Ola send Piotr each month for the flat (B-HR1 .2)?" (ord_amount) ?"What is the yearly card fee (B-D36)?" (card_fee) ?"What was on Piotr's Cis current account on 2022-03-01? The first export is January 2025's." (opening[cis]) ?"Which form of tax on his business income has Piotr elected (PIT-10 .1, .2)?" (biz_form), observed 483 943.40 DUK, difference ?"From when does B-D36's fee apply?" (card_fee_from) ?"How many monthly instalments (B-D07 .1)?" (mtg_terms) ?"In which month is the first instalment (B-D07 .1)?" (mtg_first) ?"On which day was the deed signed (B-D04)?" (deed_day) ?"Was Ola's standing order of this month rejected (her Wrzos statement)?" (order_rejected[2022-03]) ?"Was this month's instalment suspended under MTG-1 (B-D08)?" (held[2022-03]) ?"What does Ola send Piotr each month for the flat (B-HR1 .2)?" (ord_amount) ?"What is the yearly card fee (B-D36)?" (card_fee) ?"What was on Piotr's Cis current account on 2022-03-01? The first export is January 2025's." (opening[cis]) ?"Which form of tax on his business income has Piotr elected (PIT-10 .1, .2)?" (biz_form)
+    balance cis 2025-01-01 start (anchored): booked ?"From when does B-D36's fee apply?" (card_fee_from) ?"How many monthly instalments (B-D07 .1)?" (mtg_terms) ?"In which month is the first instalment (B-D07 .1)?" (mtg_first) ?"On which day was the deed signed (B-D04)?" (deed_day) ?"Was Ola's standing order of this month rejected (her Wrzos statement)?" (order_rejected[2022-03]) ?"Was this month's instalment suspended under MTG-1 (B-D08)?" (held[2022-03]) ?"What does Ola send Piotr each month for the flat (B-HR1 .2)?" (ord_amount) ?"What is the yearly card fee (B-D36)?" (card_fee) ?"What was on Piotr's Cis current account on 2022-03-01? The first export is January 2025's." (opening[cis]) ?"Which form of tax on his business income has Piotr elected (PIT-10 .1, .2)?" (biz_form), stated 18 412.37 DUK, gap ?"From when does B-D36's fee apply?" (card_fee_from) ?"How many monthly instalments (B-D07 .1)?" (mtg_terms) ?"In which month is the first instalment (B-D07 .1)?" (mtg_first) ?"On which day was the deed signed (B-D04)?" (deed_day) ?"Was Ola's standing order of this month rejected (her Wrzos statement)?" (order_rejected[2022-03]) ?"Was this month's instalment suspended under MTG-1 (B-D08)?" (held[2022-03]) ?"What does Ola send Piotr each month for the flat (B-HR1 .2)?" (ord_amount) ?"What is the yearly card fee (B-D36)?" (card_fee) ?"What was on Piotr's Cis current account on 2022-03-01? The first export is January 2025's." (opening[cis]) ?"Which form of tax on his business income has Piotr elected (PIT-10 .1, .2)?" (biz_form)
+    balance cis 2025-01-02 end (anchored): booked 18 358.30 DUK, stated 18 358.30 DUK, gap 0.00 DUK
+    balance cis 2025-01-03 end (anchored): booked 18 280.30 DUK, stated 18 280.30 DUK, gap 0.00 DUK
+    balance cis 2025-01-07 end (anchored): booked 16 350.42 DUK, stated 16 350.42 DUK, gap 0.00 DUK
+    balance cis 2025-01-08 end (anchored): booked 16 174.46 DUK, stated 16 174.46 DUK, gap 0.00 DUK
+    balance cis 2025-01-09 end (anchored): booked 23 470.41 DUK, stated 23 470.41 DUK, gap 0.00 DUK
+    balance cis 2025-01-10 end (anchored): booked 21 693.90 DUK, stated 21 693.90 DUK, gap 0.00 DUK
+    balance cis 2025-01-13 end (anchored): booked 21 225.57 DUK, stated 21 225.57 DUK, gap 0.00 DUK
+    balance cis 2025-01-14 end (anchored): booked 47 678.53 DUK, stated 47 678.53 DUK, gap 0.00 DUK
+    balance cis 2025-01-15 end (anchored): booked 45 756.55 DUK, stated 45 756.55 DUK, gap 0.00 DUK
+    balance cis 2025-01-17 end (anchored): booked 45 507.29 DUK, stated 45 507.29 DUK, gap 0.00 DUK
+    balance cis 2025-01-20 end (anchored): booked 39 111.25 DUK, stated 39 111.25 DUK, gap 0.00 DUK
+    balance cis 2025-01-21 end (anchored): booked 39 058.91 DUK, stated 39 058.91 DUK, gap 0.00 DUK
+    balance cis 2025-01-23 end (anchored): booked 38 950.66 DUK, stated 38 950.66 DUK, gap 0.00 DUK
+    balance cis 2025-01-24 end (anchored): booked 38 763.68 DUK, stated 38 763.68 DUK, gap 0.00 DUK
+    balance cis 2025-01-27 end (anchored): booked 9 000.00 DUK, stated 9 000.00 DUK, gap 0.00 DUK
+    balance cis 2025-01-28 end (anchored): booked 8 821.88 DUK, stated 8 821.88 DUK, gap 0.00 DUK
+    balance cis 2025-01-29 end (anchored): booked 8 801.19 DUK, stated 8 801.19 DUK, gap 0.00 DUK
+    balance cis 2025-01-31 end (anchored): booked 8 527.73 DUK, stated 8 527.73 DUK, gap 0.00 DUK
+  2025-09 unexplained: model 0.00 DUK, observed -65 475.30 DUK, difference -65 475.30 DUK
+    unexplained savr[s20250926a] on 2025-09-26: observed -48 026.07 DUK
+    unexplained cisr[c20250916b] on 2025-09-16: observed -11 277.87 DUK
+    unexplained cisr[c20250915c] on 2025-09-15: observed -1 921.98 DUK
+    unexplained cisr[c20250929a] on 2025-09-29: observed 1 083.00 DUK
+    unexplained cisr[c20250910b] on 2025-09-10: observed -777.16 DUK
+    unexplained cisr[c20250910a] on 2025-09-10: observed -690.00 DUK
+    unexplained cisr[c20250912c] on 2025-09-12: observed -258.85 DUK
+    unexplained cisr[c20250908b] on 2025-09-08: observed -257.17 DUK
+    unexplained cisr[c20250922c] on 2025-09-22: observed -249.91 DUK
+    unexplained cisr[c20250924a] on 2025-09-24: observed -240.26 DUK
+    unexplained cisr[c20250908c] on 2025-09-08: observed -229.00 DUK
+    unexplained cisr[c20250904a] on 2025-09-04: observed -226.68 DUK
+    unexplained cisr[c20250901a] on 2025-09-01: observed -223.35 DUK
+    unexplained cisr[c20250916a] on 2025-09-16: observed -211.38 DUK
+    unexplained cisr[c20250919a] on 2025-09-19: observed -177.71 DUK
+    unexplained cisr[c20250929b] on 2025-09-29: observed -176.14 DUK
+    unexplained cisr[c20250929e] on 2025-09-29: observed -175.24 DUK
+    unexplained cisr[c20250912d] on 2025-09-12: observed -175.00 DUK
+    unexplained cisr[c20250915a] on 2025-09-15: observed -162.69 DUK
+    unexplained cisr[c20250922b] on 2025-09-22: observed -160.83 DUK
+    unexplained cisr[c20250904b] on 2025-09-04: observed -150.58 DUK
+    unexplained cisr[c20250915b] on 2025-09-15: observed -148.81 DUK
+    unexplained cisr[c20250929c] on 2025-09-29: observed -139.21 DUK
+    unexplained cisr[c20250926a] on 2025-09-26: observed -124.95 DUK
+    unexplained cisr[c20250908a] on 2025-09-08: observed -100.87 DUK
+    unexplained cisr[c20250922a] on 2025-09-22: observed -85.59 DUK
+    unexplained cisr[c20250905b] on 2025-09-05: observed -81.66 DUK
+    unexplained cisr[c20250929d] on 2025-09-29: observed -44.88 DUK
+    unexplained cisr[c20250909a] on 2025-09-09: observed -37.50 DUK
+    unexplained cisr[c20250911a] on 2025-09-11: observed -26.96 DUK
+  2025-01 unexplained: model 0.00 DUK, observed -27 411.69 DUK, difference -27 411.69 DUK
+    unexplained savr[s20250127a] on 2025-01-27: observed -20 231.12 DUK
+    unexplained cisr[c20250115a] on 2025-01-15: observed -1 921.98 DUK
+    unexplained cisr[c20250110d] on 2025-01-10: observed -904.04 DUK
+    unexplained cisr[c20250110c] on 2025-01-10: observed -690.00 DUK
+    unexplained cisr[c20250117a] on 2025-01-17: observed -249.26 DUK
+    unexplained cisr[c20250127b] on 2025-01-27: observed -235.55 DUK
+    unexplained cisr[c20250131a] on 2025-01-31: observed -221.91 DUK
+    unexplained cisr[c20250114b] on 2025-01-14: observed -219.61 DUK
+    unexplained cisr[c20250127a] on 2025-01-27: observed -208.01 DUK
+    unexplained cisr[c20250124a] on 2025-01-24: observed -186.98 DUK
+    unexplained cisr[c20250113a] on 2025-01-13: observed -181.47 DUK
+    unexplained cisr[c20250128a] on 2025-01-28: observed -178.12 DUK
+    unexplained cisr[c20250108a] on 2025-01-08: observed -175.96 DUK
+    unexplained cisr[c20250113c] on 2025-01-13: observed -175.00 DUK
+    unexplained cisr[c20250107b] on 2025-01-07: observed -170.57 DUK
+    unexplained cisr[c20250114c] on 2025-01-14: observed -167.43 DUK
+    unexplained cisr[c20250120c] on 2025-01-20: observed -154.34 DUK
+    unexplained cisr[c20250110a] on 2025-01-10: observed -136.54 DUK
+    unexplained cisr[c20250107c] on 2025-01-07: observed -135.12 DUK
+    unexplained cisr[c20250113b] on 2025-01-13: observed -111.86 DUK
+    unexplained cisr[c20250120a] on 2025-01-20: observed -109.03 DUK
+    unexplained cisr[c20250107d] on 2025-01-07: observed -109.00 DUK
+    unexplained cisr[c20250123a] on 2025-01-23: observed -108.25 DUK
+    unexplained cisr[c20250120b] on 2025-01-20: observed -103.91 DUK
+    unexplained cisr[c20250103a] on 2025-01-03: observed -78.00 DUK
+    unexplained cisr[c20250102a] on 2025-01-02: observed -54.07 DUK
+    unexplained cisr[c20250121a] on 2025-01-21: observed -52.34 DUK
+    unexplained cisr[c20250131b] on 2025-01-31: observed -51.55 DUK
+    unexplained cisr[c20250110b] on 2025-01-10: observed -45.93 DUK
+    unexplained cisr[c20250109b] on 2025-01-09: observed -24.05 DUK
+    unexplained cisr[c20250129a] on 2025-01-29: observed -20.69 DUK
+  2025-11 unexplained: model 0.00 DUK, observed -12 835.68 DUK, difference -12 835.68 DUK
+    unexplained cisr[c20251113a] on 2025-11-13: observed -19 520.00 DUK
+    unexplained savr[s20251125a] on 2025-11-25: observed 6 100.00 DUK
+    unexplained savr[s20251120a] on 2025-11-20: observed 2 300.00 DUK
+    unexplained cisr[c20251110b] on 2025-11-10: observed -690.00 DUK
+    unexplained cisr[c20251112b] on 2025-11-12: observed -240.54 DUK
+    unexplained cisr[c20251107a] on 2025-11-07: observed -220.76 DUK
+    unexplained cisr[c20251103a] on 2025-11-03: observed -203.69 DUK
+    unexplained cisr[c20251112e] on 2025-11-12: observed -175.00 DUK
+    unexplained cisr[c20251105b] on 2025-11-05: observed -110.83 DUK
+    unexplained cisr[c20251112d] on 2025-11-12: observed -27.00 DUK
+    unexplained cisr[c20251110a] on 2025-11-10: observed -26.93 DUK
+    unexplained cisr[c20251112c] on 2025-11-12: observed -20.93 DUK
+  2025-06 unexplained: model 0.00 DUK, observed -10 075.99 DUK, difference -10 075.99 DUK
+    unexplained savr[s20250626a] on 2025-06-26: observed -3 029.37 DUK
+    unexplained cisr[c20250616b] on 2025-06-16: observed -1 921.98 DUK
+    unexplained cisr[c20250610d] on 2025-06-10: observed -705.17 DUK
+    unexplained cisr[c20250610c] on 2025-06-10: observed -690.00 DUK
+    unexplained cisr[c20250609b] on 2025-06-09: observed -412.00 DUK
+    unexplained cisr[c20250612b] on 2025-06-12: observed -258.42 DUK
+    unexplained cisr[c20250616a] on 2025-06-16: observed -251.15 DUK
+    unexplained cisr[c20250602b] on 2025-06-02: observed -251.11 DUK
+    unexplained cisr[c20250619a] on 2025-06-19: observed -239.63 DUK
+    unexplained cisr[c20250605b] on 2025-06-05: observed -235.87 DUK
+    unexplained cisr[c20250611a] on 2025-06-11: observed -233.41 DUK
+    unexplained cisr[c20250624b] on 2025-06-24: observed -224.31 DUK
+    unexplained cisr[c20250618a] on 2025-06-18: observed -221.77 DUK
+    unexplained cisr[c20250610a] on 2025-06-10: observed -217.93 DUK
+    unexplained cisr[c20250609a] on 2025-06-09: observed 206.00 DUK
+    unexplained cisr[c20250624a] on 2025-06-24: observed -184.81 DUK
+    unexplained cisr[c20250612c] on 2025-06-12: observed -175.00 DUK
+    unexplained cisr[c20250609e] on 2025-06-09: observed -159.17 DUK
+    unexplained cisr[c20250625a] on 2025-06-25: observed -137.01 DUK
+    unexplained cisr[c20250625b] on 2025-06-25: observed -120.86 DUK
+    unexplained cisr[c20250609d] on 2025-06-09: observed -104.91 DUK
+    unexplained cisr[c20250610b] on 2025-06-10: observed -101.83 DUK
+    unexplained cisr[c20250609c] on 2025-06-09: observed -92.56 DUK
+    unexplained cisr[c20250602a] on 2025-06-02: observed -86.09 DUK
+    unexplained cisr[c20250617a] on 2025-06-17: observed -73.27 DUK
+    unexplained cisr[c20250612a] on 2025-06-12: observed -68.27 DUK
+    unexplained cisr[c20250630a] on 2025-06-30: observed -67.04 DUK
+    unexplained cisr[c20250620a] on 2025-06-20: observed -19.05 DUK
+  2025-04 unexplained: model 0.00 DUK, observed -7 060.70 DUK, difference -7 060.70 DUK
+    unexplained cisr[c20250415a] on 2025-04-15: observed -1 921.98 DUK
+    unexplained cisr[c20250410c] on 2025-04-10: observed -748.75 DUK
+    unexplained cisr[c20250410b] on 2025-04-10: observed -690.00 DUK
+    unexplained cisr[c20250403a] on 2025-04-03: observed -349.99 DUK
+    unexplained cisr[c20250411a] on 2025-04-11: observed 349.99 DUK
+    unexplained cisr[c20250403b] on 2025-04-03: observed -238.89 DUK
+    unexplained cisr[c20250407b] on 2025-04-07: observed -228.28 DUK
+    unexplained cisr[c20250430a] on 2025-04-30: observed -218.81 DUK
+    unexplained cisr[c20250401b] on 2025-04-01: observed -217.08 DUK
+    unexplained cisr[c20250422d] on 2025-04-22: observed -211.37 DUK
+    unexplained cisr[c20250418a] on 2025-04-18: observed -201.95 DUK
+    unexplained cisr[c20250416a] on 2025-04-16: observed -195.77 DUK
+    unexplained cisr[c20250401a] on 2025-04-01: observed -181.03 DUK
+    unexplained cisr[c20250410a] on 2025-04-10: observed -179.22 DUK
+    unexplained cisr[c20250414d] on 2025-04-14: observed -175.00 DUK
+    unexplained cisr[c20250404a] on 2025-04-04: observed -163.64 DUK
+    unexplained cisr[c20250402a] on 2025-04-02: observed -162.18 DUK
+    unexplained cisr[c20250429a] on 2025-04-29: observed -154.58 DUK
+    unexplained cisr[c20250408a] on 2025-04-08: observed -146.52 DUK
+    unexplained cisr[c20250411b] on 2025-04-11: observed -145.44 DUK
+    unexplained cisr[c20250422e] on 2025-04-22: observed -137.77 DUK
+    unexplained cisr[c20250402b] on 2025-04-02: observed -117.62 DUK
+    unexplained cisr[c20250422a] on 2025-04-22: observed -114.60 DUK
+    unexplained cisr[c20250429b] on 2025-04-29: observed -108.74 DUK
+    unexplained cisr[c20250422c] on 2025-04-22: observed -76.88 DUK
+    unexplained cisr[c20250414c] on 2025-04-14: observed -73.64 DUK
+    unexplained cisr[c20250428a] on 2025-04-28: observed -67.86 DUK
+    unexplained cisr[c20250409a] on 2025-04-09: observed -49.39 DUK
+    unexplained cisr[c20250417a] on 2025-04-17: observed -45.19 DUK
+    unexplained cisr[c20250414b] on 2025-04-14: observed -35.93 DUK
+    unexplained cisr[c20250404b] on 2025-04-04: observed -26.98 DUK
+    unexplained cisr[c20250422b] on 2025-04-22: observed -25.61 DUK
+  2025-08 unexplained: model 0.00 DUK, observed -6 626.53 DUK, difference -6 626.53 DUK
+    unexplained cisr[c20250818e] on 2025-08-18: observed -1 921.98 DUK
+    unexplained cisr[c20250811b] on 2025-08-11: observed -690.00 DUK
+    unexplained cisr[c20250811c] on 2025-08-11: observed -604.64 DUK
+    unexplained cisr[c20250820b] on 2025-08-20: observed -253.20 DUK
+    unexplained cisr[c20250825b] on 2025-08-25: observed -250.66 DUK
+    unexplained cisr[c20250807a] on 2025-08-07: observed -245.89 DUK
+    unexplained cisr[c20250825a] on 2025-08-25: observed -240.16 DUK
+    unexplained cisr[c20250805b] on 2025-08-05: observed -225.25 DUK
+    unexplained cisr[c20250818c] on 2025-08-18: observed -207.43 DUK
+    unexplained cisr[c20250826a] on 2025-08-26: observed -203.08 DUK
+    unexplained cisr[c20250812a] on 2025-08-12: observed -175.00 DUK
+    unexplained cisr[c20250827a] on 2025-08-27: observed -171.69 DUK
+    unexplained cisr[c20250820a] on 2025-08-20: observed -164.41 DUK
+    unexplained cisr[c20250825c] on 2025-08-25: observed -164.22 DUK
+    unexplained cisr[c20250828b] on 2025-08-28: observed -154.80 DUK
+    unexplained cisr[c20250818b] on 2025-08-18: observed -134.59 DUK
+    unexplained cisr[c20250819b] on 2025-08-19: observed -130.31 DUK
+    unexplained cisr[c20250811a] on 2025-08-11: observed -130.05 DUK
+    unexplained cisr[c20250801b] on 2025-08-01: observed -109.18 DUK
+    unexplained cisr[c20250801a] on 2025-08-01: observed -106.78 DUK
+    unexplained cisr[c20250804a] on 2025-08-04: observed -88.18 DUK
+    unexplained cisr[c20250819a] on 2025-08-19: observed -64.87 DUK
+    unexplained cisr[c20250818d] on 2025-08-18: observed -63.17 DUK
+    unexplained cisr[c20250804b] on 2025-08-04: observed -62.55 DUK
+    unexplained cisr[c20250818a] on 2025-08-18: observed -44.03 DUK
+    unexplained cisr[c20250826b] on 2025-08-26: observed -20.41 DUK
+  2025-07 unexplained: model 0.00 DUK, observed -5 954.35 DUK, difference -5 954.35 DUK
+    unexplained savr[s20250728a] on 2025-07-28: observed -15 938.57 DUK
+    unexplained cisr[c20250701a] on 2025-07-01: observed 8 086.94 DUK
+    unexplained cisr[c20250731a] on 2025-07-31: observed 8 018.23 DUK
+    unexplained cisr[c20250715b] on 2025-07-15: observed -1 921.98 DUK
+    unexplained cisr[c20250710c] on 2025-07-10: observed -819.41 DUK
+    unexplained cisr[c20250710b] on 2025-07-10: observed -690.00 DUK
+    unexplained cisr[c20250728b] on 2025-07-28: observed -252.79 DUK
+    unexplained cisr[c20250717a] on 2025-07-17: observed -233.98 DUK
+    unexplained cisr[c20250701d] on 2025-07-01: observed -205.08 DUK
+    unexplained cisr[c20250729a] on 2025-07-29: observed -178.50 DUK
+    unexplained cisr[c20250714c] on 2025-07-14: observed -175.00 DUK
+    unexplained cisr[c20250728a] on 2025-07-28: observed -166.14 DUK
+    unexplained cisr[c20250728c] on 2025-07-28: observed -152.37 DUK
+    unexplained cisr[c20250707b] on 2025-07-07: observed -145.23 DUK
+    unexplained cisr[c20250721b] on 2025-07-21: observed -139.70 DUK
+    unexplained cisr[c20250710a] on 2025-07-10: observed -137.78 DUK
+    unexplained cisr[c20250715a] on 2025-07-15: observed -137.48 DUK
+    unexplained cisr[c20250709a] on 2025-07-09: observed -134.49 DUK
+    unexplained cisr[c20250704a] on 2025-07-04: observed -120.21 DUK
+    unexplained cisr[c20250701c] on 2025-07-01: observed -115.22 DUK
+    unexplained cisr[c20250721c] on 2025-07-21: observed -113.15 DUK
+    unexplained cisr[c20250711a] on 2025-07-11: observed -108.83 DUK
+    unexplained cisr[c20250714b] on 2025-07-14: observed -66.83 DUK
+    unexplained cisr[c20250729b] on 2025-07-29: observed -63.92 DUK
+    unexplained cisr[c20250708a] on 2025-07-08: observed -42.86 DUK
+  2025-10 unexplained: model 0.00 DUK, observed -5 280.51 DUK, difference -5 280.51 DUK
+    unexplained savr[s20251027a] on 2025-10-27: observed -9 540.78 DUK
+    unexplained cisr[c20251031a] on 2025-10-31: observed 8 048.68 DUK
+    unexplained cisr[c20251010b] on 2025-10-10: observed -690.00 DUK
+    unexplained cisr[c20251010c] on 2025-10-10: observed -261.81 DUK
+    unexplained cisr[c20251016a] on 2025-10-16: observed -243.84 DUK
+    unexplained cisr[c20251013a] on 2025-10-13: observed -230.78 DUK
+    unexplained cisr[c20251020a] on 2025-10-20: observed -217.68 DUK
+    unexplained cisr[c20251002a] on 2025-10-02: observed -202.84 DUK
+    unexplained cisr[c20251028a] on 2025-10-28: observed -192.32 DUK
+    unexplained cisr[c20251007a] on 2025-10-07: observed -187.02 DUK
+    unexplained cisr[c20251015a] on 2025-10-15: observed 180.00 DUK
+    unexplained cisr[c20251003a] on 2025-10-03: observed -179.76 DUK
+    unexplained cisr[c20251013c] on 2025-10-13: observed -175.00 DUK
+    unexplained cisr[c20251017a] on 2025-10-17: observed -172.09 DUK
+    unexplained cisr[c20251006c] on 2025-10-06: observed -156.96 DUK
+    unexplained cisr[c20251029a] on 2025-10-29: observed -152.22 DUK
+    unexplained cisr[c20251006b] on 2025-10-06: observed -140.60 DUK
+    unexplained cisr[c20251031b] on 2025-10-31: observed -134.79 DUK
+    unexplained cisr[c20251015b], cisr[c20251015c] on 2025-10-15: observed -111.27 DUK
+    unexplained cisr[c20251022a] on 2025-10-22: observed -105.49 DUK
+    unexplained cisr[c20251028b] on 2025-10-28: observed -77.32 DUK
+    unexplained cisr[c20251014b] on 2025-10-14: observed -49.92 DUK
+    unexplained cisr[c20251010a] on 2025-10-10: observed -45.23 DUK
+    unexplained cisr[c20251020b] on 2025-10-20: observed -45.17 DUK
+    unexplained cisr[c20251009a] on 2025-10-09: observed -44.65 DUK
+    unexplained cisr[c20251013b] on 2025-10-13: observed -42.88 DUK
+    unexplained cisr[c20251008a] on 2025-10-08: observed -42.29 DUK
+    unexplained cisr[c20251006d] on 2025-10-06: observed -33.57 DUK
+    unexplained cisr[c20251003b] on 2025-10-03: observed -32.91 DUK
+  2025-06 move client_pay: model 29 280.00 DUK, observed 24 520.00 DUK, difference -4 760.00 DUK
+    matched client_pay[fv_011_2025] on 2025-06-27: model 9 760.00 DUK, observed 5 000.00 DUK, difference -4 760.00 DUK, timing +24 days
+    matched client_pay[fv_009_2025] on 2025-06-13: model 19 520.00 DUK, observed 19 520.00 DUK, difference 0.00 DUK, timing +0 days
+  2025-02 unexplained: model 0.00 DUK, observed -4 590.26 DUK, difference -4 590.26 DUK
+    unexplained cisr[c20250217d] on 2025-02-17: observed -1 921.98 DUK
+    unexplained wrzr[w20250205a] on 2025-02-05: observed 1 700.00 DUK
+    unexplained cisr[c20250210e] on 2025-02-10: observed -735.38 DUK
+    unexplained cisr[c20250210d] on 2025-02-10: observed -690.00 DUK
+    unexplained cisr[c20250228a] on 2025-02-28: observed -249.25 DUK
+    unexplained cisr[c20250206a] on 2025-02-06: observed -224.23 DUK
+    unexplained cisr[c20250218a] on 2025-02-18: observed -214.64 DUK
+    unexplained cisr[c20250224a] on 2025-02-24: observed -211.32 DUK
+    unexplained cisr[c20250203a] on 2025-02-03: observed -194.52 DUK
+    unexplained cisr[c20250219a] on 2025-02-19: observed -193.48 DUK
+    unexplained cisr[c20250217a] on 2025-02-17: observed -188.50 DUK
+    unexplained cisr[c20250221a] on 2025-02-21: observed -186.57 DUK
+    unexplained cisr[c20250212b] on 2025-02-12: observed -175.00 DUK
+    unexplained cisr[c20250210a] on 2025-02-10: observed -169.87 DUK
+    unexplained cisr[c20250211a] on 2025-02-11: observed -166.19 DUK
+    unexplained cisr[c20250207a] on 2025-02-07: observed -129.76 DUK
+    unexplained cisr[c20250212a] on 2025-02-12: observed -114.35 DUK
+    unexplained cisr[c20250217b] on 2025-02-17: observed -114.15 DUK
+    unexplained cisr[c20250227a] on 2025-02-27: observed -109.49 DUK
+    unexplained cisr[c20250210c] on 2025-02-10: observed -93.78 DUK
+    unexplained cisr[c20250218b] on 2025-02-18: observed -75.75 DUK
+    unexplained cisr[c20250217c] on 2025-02-17: observed -51.02 DUK
+    unexplained cisr[c20250220a] on 2025-02-20: observed -42.88 DUK
+    unexplained cisr[c20250210b] on 2025-02-10: observed -38.15 DUK
+  2025-03 unexplained: model 0.00 DUK, observed 4 275.00 DUK, difference 4 275.00 DUK
+    unexplained cisr[c20250304a] on 2025-03-04: observed 8 039.70 DUK
+    unexplained cisr[c20250331a] on 2025-03-31: observed 7 982.70 DUK
+    unexplained savr[s20250326a] on 2025-03-26: observed -2 430.29 DUK
+    unexplained cisr[c20250314d] on 2025-03-14: observed -2 190.00 DUK
+    unexplained cisr[c20250317d] on 2025-03-17: observed -1 921.98 DUK
+    unexplained cisr[c20250320a] on 2025-03-20: observed -720.00 DUK
+    unexplained cisr[c20250310c] on 2025-03-10: observed -690.00 DUK
+    unexplained cisr[c20250310d] on 2025-03-10: observed -634.90 DUK
+    unexplained cisr[c20250311b] on 2025-03-11: observed -256.46 DUK
+    unexplained cisr[c20250310b] on 2025-03-10: observed -254.56 DUK
+    unexplained cisr[c20250310a] on 2025-03-10: observed -238.04 DUK
+    unexplained cisr[c20250327a] on 2025-03-27: observed -226.10 DUK
+    unexplained cisr[c20250318b] on 2025-03-18: observed -223.92 DUK
+    unexplained cisr[c20250311a] on 2025-03-11: observed -188.02 DUK
+    unexplained cisr[c20250312a] on 2025-03-12: observed -175.00 DUK
+    unexplained cisr[c20250317b] on 2025-03-17: observed -172.43 DUK
+    unexplained cisr[c20250331b] on 2025-03-31: observed -171.31 DUK
+    unexplained cisr[c20250314b] on 2025-03-14: observed -164.23 DUK
+    unexplained cisr[c20250317a] on 2025-03-17: observed -160.65 DUK
+    unexplained cisr[c20250317c] on 2025-03-17: observed -143.39 DUK
+    unexplained cisr[c20250318a] on 2025-03-18: observed -131.71 DUK
+    unexplained cisr[c20250321a] on 2025-03-21: observed -120.19 DUK
+    unexplained cisr[c20250304c] on 2025-03-04: observed -93.62 DUK
+    unexplained cisr[c20250304b] on 2025-03-04: observed -92.87 DUK
+    unexplained cisr[c20250324b] on 2025-03-24: observed -89.36 DUK
+    unexplained cisr[c20250307a] on 2025-03-07: observed -79.94 DUK
+    unexplained cisr[c20250324c] on 2025-03-24: observed -59.31 DUK
+    unexplained cisr[c20250313a] on 2025-03-13: observed -43.79 DUK
+    unexplained cisr[c20250314c] on 2025-03-14: observed -39.52 DUK
+    unexplained cisr[c20250324a] on 2025-03-24: observed -35.81 DUK
+  2025-08 move client_pay: model 23 790.00 DUK, observed 19 520.00 DUK, difference -4 270.00 DUK
+    expected but missing client_pay[fv_016_2025] on 2025-08-28: model 4 270.00 DUK
+    matched client_pay[fv_014_2025] on 2025-08-14: model 19 520.00 DUK, observed 19 520.00 DUK, difference 0.00 DUK, timing +14 days
+  2025-12 unexplained: model 0.00 DUK, observed -4 059.73 DUK, difference -4 059.73 DUK
+    unexplained savr[s20251229a] on 2025-12-29: observed -8 847.11 DUK
+    unexplained cisr[c20251202a] on 2025-12-02: observed 8 074.84 DUK
+    unexplained cisr[c20251210b] on 2025-12-10: observed -690.00 DUK
+    unexplained cisr[c20251202b] on 2025-12-02: observed -232.99 DUK
+    unexplained cisr[c20251224a] on 2025-12-24: observed -231.74 DUK
+    unexplained cisr[c20251222a] on 2025-12-22: observed -184.07 DUK
+    unexplained cisr[c20251230b] on 2025-12-30: observed -179.72 DUK
+    unexplained cisr[c20251212c] on 2025-12-12: observed -175.00 DUK
+    unexplained cisr[c20251229d] on 2025-12-29: observed -166.07 DUK
+    unexplained cisr[c20251210a] on 2025-12-10: observed -152.01 DUK
+    unexplained cisr[c20251217a] on 2025-12-17: observed -140.65 DUK
+    unexplained cisr[c20251208c] on 2025-12-08: observed -121.97 DUK
+    unexplained cisr[c20251229a] on 2025-12-29: observed -112.64 DUK
+    unexplained cisr[c20251212b] on 2025-12-12: observed -106.12 DUK
+    unexplained cisr[c20251205b] on 2025-12-05: observed -98.51 DUK
+    unexplained cisr[c20251215a] on 2025-12-15: observed -87.75 DUK
+    unexplained cisr[c20251222b] on 2025-12-22: observed -74.05 DUK
+    unexplained cisr[c20251218a] on 2025-12-18: observed -73.43 DUK
+    unexplained cisr[c20251208b] on 2025-12-08: observed -71.84 DUK
+    unexplained cisr[c20251208a] on 2025-12-08: observed -71.35 DUK
+    unexplained cisr[c20251201a] on 2025-12-01: observed -64.19 DUK
+    unexplained cisr[c20251229c] on 2025-12-29: observed -59.43 DUK
+    unexplained cisr[c20251215b] on 2025-12-15: observed -57.13 DUK
+    unexplained cisr[c20251204a] on 2025-12-04: observed -48.64 DUK
+    unexplained cisr[c20251229b] on 2025-12-29: observed -35.12 DUK
+    unexplained cisr[c20251230a] on 2025-12-30: observed -33.41 DUK
+    unexplained cisr[c20251218b] on 2025-12-18: observed -19.63 DUK
+  2025-05 unexplained: model 0.00 DUK, observed 3 560.42 DUK, difference 3 560.42 DUK
+    unexplained cisr[c20250502a] on 2025-05-02: observed 8 045.17 DUK
+    unexplained cisr[c20250530a] on 2025-05-30: observed 7 991.29 DUK
+    unexplained savr[s20250526a] on 2025-05-26: observed -5 472.60 DUK
+    unexplained cisr[c20250515b] on 2025-05-15: observed -1 921.98 DUK
+    unexplained cisr[c20250512e] on 2025-05-12: observed -724.22 DUK
+    unexplained cisr[c20250512c] on 2025-05-12: observed -690.00 DUK
+    unexplained cisr[c20250530b] on 2025-05-30: observed -254.74 DUK
+    unexplained cisr[c20250519a] on 2025-05-19: observed -249.97 DUK
+    unexplained cisr[c20250526c] on 2025-05-26: observed -244.51 DUK
+    unexplained cisr[c20250512b] on 2025-05-12: observed -240.64 DUK
+    unexplained cisr[c20250502d] on 2025-05-02: observed -224.35 DUK
+    unexplained cisr[c20250521a] on 2025-05-21: observed -219.81 DUK
+    unexplained cisr[c20250509a] on 2025-05-09: observed -177.86 DUK
+    unexplained cisr[c20250519b] on 2025-05-19: observed -177.14 DUK
+    unexplained cisr[c20250512d] on 2025-05-12: observed -175.00 DUK
+    unexplained cisr[c20250516a] on 2025-05-16: observed -171.48 DUK
+    unexplained cisr[c20250512a] on 2025-05-12: observed -170.32 DUK
+    unexplained cisr[c20250526b] on 2025-05-26: observed -138.55 DUK
+    unexplained cisr[c20250505b] on 2025-05-05: observed -135.47 DUK
+    unexplained cisr[c20250527a] on 2025-05-27: observed -129.72 DUK
+    unexplained cisr[c20250526a] on 2025-05-26: observed -114.88 DUK
+    unexplained cisr[c20250519d] on 2025-05-19: observed -107.68 DUK
+    unexplained cisr[c20250520a] on 2025-05-20: observed -107.53 DUK
+    unexplained cisr[c20250519c] on 2025-05-19: observed -104.26 DUK
+    unexplained cisr[c20250509b] on 2025-05-09: observed -100.55 DUK
+    unexplained cisr[c20250505d] on 2025-05-05: observed -96.59 DUK
+    unexplained cisr[c20250514b] on 2025-05-14: observed -77.48 DUK
+    unexplained cisr[c20250502c] on 2025-05-02: observed -56.23 DUK
+    unexplained cisr[c20250515a] on 2025-05-15: observed -54.21 DUK
+    unexplained cisr[c20250508a] on 2025-05-08: observed -51.97 DUK
+    unexplained cisr[c20250521b] on 2025-05-21: observed -40.08 DUK
+    unexplained cisr[c20250505c] on 2025-05-05: observed -25.03 DUK
+    unexplained cisr[c20250502b] on 2025-05-02: observed -21.19 DUK
+  2025-12 move card_fee_pay: model -249.00 DUK, observed 0.00 DUK, difference 249.00 DUK
+    expected but missing card_fee_pay[2025] on 2025-12-09: model -249.00 DUK
+  2025-10 move client_pay: model 22 448.00 DUK, observed 22 447.60 DUK, difference -0.40 DUK
+    matched client_pay[fv_022_2025] on 2025-10-24: model 2 928.00 DUK, observed 2 927.60 DUK, difference -0.40 DUK, timing +0 days
+    matched client_pay[fv_020_2025] on 2025-10-14: model 19 520.00 DUK, observed 19 520.00 DUK, difference 0.00 DUK, timing +0 days
+  2025-01 move client_pay: model 34 160.00 DUK, observed 34 160.00 DUK, difference 0.00 DUK
+    matched client_pay[fv_015_2024] on 2025-01-09: model 7 320.00 DUK, observed 7 320.00 DUK, difference 0.00 DUK, timing +0 days
+    matched client_pay[fv_016_2024] on 2025-01-14: model 26 840.00 DUK, observed 26 840.00 DUK, difference 0.00 DUK, timing +0 days
+  2025-01 move health_pay: model -1 265.28 DUK, observed -1 265.28 DUK, difference 0.00 DUK
+    matched health_pay[2024-12] on 2025-01-20: model -1 265.28 DUK, observed -1 265.28 DUK, difference 0.00 DUK, timing +0 days
+  2025-01 move hr2_overpay: model -3 000.00 DUK, observed -3 000.00 DUK, difference 0.00 DUK
+    matched hr2_overpay[2025-01-27] on 2025-01-27: model -3 000.00 DUK, observed -3 000.00 DUK, difference 0.00 DUK, timing +0 days
+  2025-01 move hr2_save: model -20 231.12 DUK, observed -20 231.12 DUK, difference 0.00 DUK
+    matched hr2_save[2025-01-27] on 2025-01-27: model -20 231.12 DUK, observed -20 231.12 DUK, difference 0.00 DUK, timing +0 days
+  2025-01 move mtg_pay: model -3 215.19 DUK, observed -3 215.19 DUK, difference 0.00 DUK
+    matched mtg_pay[2025-01] on 2025-01-07: model -3 215.19 DUK, observed -3 215.19 DUK, difference 0.00 DUK, timing +0 days
+  2025-01 move ola_order: model 1 700.00 DUK, observed 1 700.00 DUK, difference 0.00 DUK
+    matched ola_order[2025-01] on 2025-01-07: model 1 700.00 DUK, observed 1 700.00 DUK, difference 0.00 DUK, timing +0 days
+  2025-01 move pit_pay: model -3 169.00 DUK, observed -3 169.00 DUK, difference 0.00 DUK
+    matched pit_pay[2024-12] on 2025-01-20: model -3 169.00 DUK, observed -3 169.00 DUK, difference 0.00 DUK, timing +0 days
+  2025-01 move social_pay: model -1 594.48 DUK, observed -1 594.48 DUK, difference 0.00 DUK
+    matched social_pay[2024-12] on 2025-01-20: model -1 594.48 DUK, observed -1 594.48 DUK, difference 0.00 DUK, timing +0 days
+  2025-01 move vat_pay: model -6 089.00 DUK, observed -6 089.00 DUK, difference 0.00 DUK
+    matched vat_pay[2024-12] on 2025-01-27: model -6 089.00 DUK, observed -6 089.00 DUK, difference 0.00 DUK, timing +0 days
+  2025-02 balance: model 224 018.79 DUK, observed 224 018.79 DUK, difference 0.00 DUK
+    balance cis 2025-02-01 start (anchored): booked 8 527.73 DUK, stated 8 527.73 DUK, gap 0.00 DUK
+    balance cis 2025-02-03 end (anchored): booked 8 333.21 DUK, stated 8 333.21 DUK, gap 0.00 DUK
+    balance cis 2025-02-05 end (anchored): booked 6 840.89 DUK, stated 6 840.89 DUK, gap 0.00 DUK
+    balance cis 2025-02-06 end (anchored): booked 6 616.66 DUK, stated 6 616.66 DUK, gap 0.00 DUK
+    balance cis 2025-02-07 end (anchored): booked 6 486.90 DUK, stated 6 486.90 DUK, gap 0.00 DUK
+    balance cis 2025-02-10 end (anchored): booked 4 759.72 DUK, stated 4 759.72 DUK, gap 0.00 DUK
+    balance cis 2025-02-11 end (anchored): booked 4 593.53 DUK, stated 4 593.53 DUK, gap 0.00 DUK
+    balance cis 2025-02-12 end (anchored): booked 4 304.18 DUK, stated 4 304.18 DUK, gap 0.00 DUK
+    balance cis 2025-02-14 end (anchored): booked 23 824.18 DUK, stated 23 824.18 DUK, gap 0.00 DUK
+    balance cis 2025-02-17 end (anchored): booked 21 548.53 DUK, stated 21 548.53 DUK, gap 0.00 DUK
+    balance cis 2025-02-18 end (anchored): booked 21 258.14 DUK, stated 21 258.14 DUK, gap 0.00 DUK
+    balance cis 2025-02-19 end (anchored): booked 21 064.66 DUK, stated 21 064.66 DUK, gap 0.00 DUK
+    balance cis 2025-02-20 end (anchored): booked 16 307.01 DUK, stated 16 307.01 DUK, gap 0.00 DUK
+    balance cis 2025-02-21 end (anchored): booked 16 120.44 DUK, stated 16 120.44 DUK, gap 0.00 DUK
+    balance cis 2025-02-24 end (anchored): booked 15 909.12 DUK, stated 15 909.12 DUK, gap 0.00 DUK
+    balance cis 2025-02-25 end (anchored): booked 10 992.12 DUK, stated 10 992.12 DUK, gap 0.00 DUK
+    balance cis 2025-02-26 end (anchored): booked 9 000.00 DUK, stated 9 000.00 DUK, gap 0.00 DUK
+    balance cis 2025-02-27 end (anchored): booked 8 890.51 DUK, stated 8 890.51 DUK, gap 0.00 DUK
+    balance cis 2025-02-28 end (anchored): booked 8 641.26 DUK, stated 8 641.26 DUK, gap 0.00 DUK
+  2025-02 move client_pay: model 19 520.00 DUK, observed 19 520.00 DUK, difference 0.00 DUK
+    matched client_pay[fv_001_2025] on 2025-02-14: model 19 520.00 DUK, observed 19 520.00 DUK, difference 0.00 DUK, timing +0 days
+  2025-02 move health_pay: model -421.76 DUK, observed -421.76 DUK, difference 0.00 DUK
+    matched health_pay[2025-01] on 2025-02-20: model -421.76 DUK, observed -421.76 DUK, difference 0.00 DUK, timing +0 days
+  2025-02 move hr2_overpay: model -1 992.12 DUK, observed -1 992.12 DUK, difference 0.00 DUK
+    matched hr2_overpay[2025-02-26] on 2025-02-26: model -1 992.12 DUK, observed -1 992.12 DUK, difference 0.00 DUK, timing +0 days
+  2025-02 move mtg_pay: model -3 192.32 DUK, observed -3 192.32 DUK, difference 0.00 DUK
+    matched mtg_pay[2025-02] on 2025-02-05: model -3 192.32 DUK, observed -3 192.32 DUK, difference 0.00 DUK, timing +0 days
+  2025-02 move ola_order: model 1 700.00 DUK, observed 1 700.00 DUK, difference 0.00 DUK
+    matched ola_order[2025-02] on 2025-02-05: model 1 700.00 DUK, observed 1 700.00 DUK, difference 0.00 DUK, timing +0 days
+  2025-02 move pit_pay: model -2 535.00 DUK, observed -2 535.00 DUK, difference 0.00 DUK
+    matched pit_pay[2025-01] on 2025-02-20: model -2 535.00 DUK, observed -2 535.00 DUK, difference 0.00 DUK, timing +0 days
+  2025-02 move social_pay: model -1 758.01 DUK, observed -1 758.01 DUK, difference 0.00 DUK
+    matched social_pay[2025-01] on 2025-02-20: model -1 758.01 DUK, observed -1 758.01 DUK, difference 0.00 DUK, timing +0 days
+  2025-02 move vat_pay: model -4 917.00 DUK, observed -4 917.00 DUK, difference 0.00 DUK
+    matched vat_pay[2025-01] on 2025-02-25: model -4 917.00 DUK, observed -4 917.00 DUK, difference 0.00 DUK, timing +0 days
+  2025-03 balance: model 281 517.65 DUK, observed 281 517.65 DUK, difference 0.00 DUK
+    balance cis 2025-03-01 start (anchored): booked 8 641.26 DUK, stated 8 641.26 DUK, gap 0.00 DUK
+    balance cis 2025-03-04 end (anchored): booked 16 494.47 DUK, stated 16 494.47 DUK, gap 0.00 DUK
+    balance cis 2025-03-05 end (anchored): booked 13 317.14 DUK, stated 13 317.14 DUK, gap 0.00 DUK
+    balance cis 2025-03-07 end (anchored): booked 13 237.20 DUK, stated 13 237.20 DUK, gap 0.00 DUK
+    balance cis 2025-03-10 end (anchored): booked 11 419.70 DUK, stated 11 419.70 DUK, gap 0.00 DUK
+    balance cis 2025-03-11 end (anchored): booked 10 975.22 DUK, stated 10 975.22 DUK, gap 0.00 DUK
+    balance cis 2025-03-12 end (anchored): booked 10 800.22 DUK, stated 10 800.22 DUK, gap 0.00 DUK
+    balance cis 2025-03-13 end (anchored): booked 10 756.43 DUK, stated 10 756.43 DUK, gap 0.00 DUK
+    balance cis 2025-03-14 end (anchored): booked 27 882.68 DUK, stated 27 882.68 DUK, gap 0.00 DUK
+    balance cis 2025-03-17 end (anchored): booked 25 484.23 DUK, stated 25 484.23 DUK, gap 0.00 DUK
+    balance cis 2025-03-18 end (anchored): booked 25 128.60 DUK, stated 25 128.60 DUK, gap 0.00 DUK
+    balance cis 2025-03-20 end (anchored): booked 19 671.96 DUK, stated 19 671.96 DUK, gap 0.00 DUK
+    balance cis 2025-03-21 end (anchored): booked 19 551.77 DUK, stated 19 551.77 DUK, gap 0.00 DUK
+    balance cis 2025-03-24 end (anchored): booked 19 367.29 DUK, stated 19 367.29 DUK, gap 0.00 DUK
+    balance cis 2025-03-25 end (anchored): booked 14 430.29 DUK, stated 14 430.29 DUK, gap 0.00 DUK
+    balance cis 2025-03-26 end (anchored): booked 9 000.00 DUK, stated 9 000.00 DUK, gap 0.00 DUK
+    balance cis 2025-03-27 end (anchored): booked 8 773.90 DUK, stated 8 773.90 DUK, gap 0.00 DUK
+    balance cis 2025-03-31 end (anchored): booked 16 585.29 DUK, stated 16 585.29 DUK, gap 0.00 DUK
+  2025-03 move client_pay: model 19 520.00 DUK, observed 19 520.00 DUK, difference 0.00 DUK
+    matched client_pay[fv_003_2025] on 2025-03-14: model 19 520.00 DUK, observed 19 520.00 DUK, difference 0.00 DUK, timing +0 days
+  2025-03 move health_pay: model -460.63 DUK, observed -460.63 DUK, difference 0.00 DUK
+    matched health_pay[2025-02] on 2025-03-20: model -460.63 DUK, observed -460.63 DUK, difference 0.00 DUK, timing +0 days
+  2025-03 move hr2_overpay: model -3 000.00 DUK, observed -3 000.00 DUK, difference 0.00 DUK
+    matched hr2_overpay[2025-03-26] on 2025-03-26: model -3 000.00 DUK, observed -3 000.00 DUK, difference 0.00 DUK, timing +0 days
+  2025-03 move hr2_save: model -2 430.29 DUK, observed -2 430.29 DUK, difference 0.00 DUK
+    matched hr2_save[2025-03-26] on 2025-03-26: model -2 430.29 DUK, observed -2 430.29 DUK, difference 0.00 DUK, timing +0 days
+  2025-03 move mtg_pay: model -3 177.33 DUK, observed -3 177.33 DUK, difference 0.00 DUK
+    matched mtg_pay[2025-03] on 2025-03-05: model -3 177.33 DUK, observed -3 177.33 DUK, difference 0.00 DUK, timing +0 days
+  2025-03 move pit_pay: model -2 518.00 DUK, observed -2 518.00 DUK, difference 0.00 DUK
+    matched pit_pay[2025-02] on 2025-03-20: model -2 518.00 DUK, observed -2 518.00 DUK, difference 0.00 DUK, timing +0 days
+  2025-03 move social_pay: model -1 758.01 DUK, observed -1 758.01 DUK, difference 0.00 DUK
+    matched social_pay[2025-02] on 2025-03-20: model -1 758.01 DUK, observed -1 758.01 DUK, difference 0.00 DUK, timing +0 days
+  2025-03 move vat_pay: model -4 937.00 DUK, observed -4 937.00 DUK, difference 0.00 DUK
+    matched vat_pay[2025-02] on 2025-03-25: model -4 937.00 DUK, observed -4 937.00 DUK, difference 0.00 DUK, timing +0 days
+  2025-04 balance: model 350 954.80 DUK, observed 350 954.80 DUK, difference 0.00 DUK
+    balance cis 2025-04-01 end (anchored): booked 16 187.18 DUK, stated 16 187.18 DUK, gap 0.00 DUK
+    balance cis 2025-04-01 start (anchored): booked 16 585.29 DUK, stated 16 585.29 DUK, gap 0.00 DUK
+    balance cis 2025-04-02 end (anchored): booked 15 907.38 DUK, stated 15 907.38 DUK, gap 0.00 DUK
+    balance cis 2025-04-03 end (anchored): booked 15 318.50 DUK, stated 15 318.50 DUK, gap 0.00 DUK
+    balance cis 2025-04-04 end (anchored): booked 15 127.88 DUK, stated 15 127.88 DUK, gap 0.00 DUK
+    balance cis 2025-04-07 end (anchored): booked 13 447.74 DUK, stated 13 447.74 DUK, gap 0.00 DUK
+    balance cis 2025-04-08 end (anchored): booked 13 301.22 DUK, stated 13 301.22 DUK, gap 0.00 DUK
+    balance cis 2025-04-09 end (anchored): booked 13 251.83 DUK, stated 13 251.83 DUK, gap 0.00 DUK
+    balance cis 2025-04-10 end (anchored): booked 11 633.86 DUK, stated 11 633.86 DUK, gap 0.00 DUK
+    balance cis 2025-04-11 end (anchored): booked 11 838.41 DUK, stated 11 838.41 DUK, gap 0.00 DUK
+    balance cis 2025-04-14 end (anchored): booked 31 073.84 DUK, stated 31 073.84 DUK, gap 0.00 DUK
+    balance cis 2025-04-15 end (anchored): booked 29 151.86 DUK, stated 29 151.86 DUK, gap 0.00 DUK
+    balance cis 2025-04-16 end (anchored): booked 28 956.09 DUK, stated 28 956.09 DUK, gap 0.00 DUK
+    balance cis 2025-04-17 end (anchored): booked 28 910.90 DUK, stated 28 910.90 DUK, gap 0.00 DUK
+    balance cis 2025-04-18 end (anchored): booked 28 708.95 DUK, stated 28 708.95 DUK, gap 0.00 DUK
+    balance cis 2025-04-22 end (anchored): booked 16 450.98 DUK, stated 16 450.98 DUK, gap 0.00 DUK
+    balance cis 2025-04-25 end (anchored): booked 11 512.98 DUK, stated 11 512.98 DUK, gap 0.00 DUK
+    balance cis 2025-04-28 end (anchored): booked 11 445.12 DUK, stated 11 445.12 DUK, gap 0.00 DUK
+    balance cis 2025-04-29 end (anchored): booked 11 181.80 DUK, stated 11 181.80 DUK, gap 0.00 DUK
+    balance cis 2025-04-30 end (anchored): booked 10 962.99 DUK, stated 10 962.99 DUK, gap 0.00 DUK
+  2025-04 move client_pay: model 19 520.00 DUK, observed 19 520.00 DUK, difference 0.00 DUK
+    matched client_pay[fv_005_2025] on 2025-04-14: model 19 520.00 DUK, observed 19 520.00 DUK, difference 0.00 DUK, timing +0 days
+  2025-04 move health_pay: model -767.71 DUK, observed -767.71 DUK, difference 0.00 DUK
+    matched health_pay[2025-03] on 2025-04-22: model -767.71 DUK, observed -767.71 DUK, difference 0.00 DUK, timing +0 days
+  2025-04 move health_settle_pay: model -6 652.02 DUK, observed -6 652.02 DUK, difference 0.00 DUK
+    matched health_settle_pay[2024] on 2025-04-22: model -6 652.02 DUK, observed -6 652.02 DUK, difference 0.00 DUK, timing +0 days
+  2025-04 move mtg_pay: model -3 151.86 DUK, observed -3 151.86 DUK, difference 0.00 DUK
+    matched mtg_pay[2025-04] on 2025-04-07: model -3 151.86 DUK, observed -3 151.86 DUK, difference 0.00 DUK, timing +0 days
+  2025-04 move ola_order: model 1 700.00 DUK, observed 1 700.00 DUK, difference 0.00 DUK
+    matched ola_order[2025-04] on 2025-04-07: model 1 700.00 DUK, observed 1 700.00 DUK, difference 0.00 DUK, timing +0 days
+  2025-04 move pit_pay: model -2 514.00 DUK, observed -2 514.00 DUK, difference 0.00 DUK
+    matched pit_pay[2025-03] on 2025-04-22: model -2 514.00 DUK, observed -2 514.00 DUK, difference 0.00 DUK, timing +0 days
+  2025-04 move social_pay: model -1 758.01 DUK, observed -1 758.01 DUK, difference 0.00 DUK
+    matched social_pay[2025-03] on 2025-04-22: model -1 758.01 DUK, observed -1 758.01 DUK, difference 0.00 DUK, timing +0 days
+  2025-04 move vat_pay: model -4 938.00 DUK, observed -4 938.00 DUK, difference 0.00 DUK
+    matched vat_pay[2025-03] on 2025-04-25: model -4 938.00 DUK, observed -4 938.00 DUK, difference 0.00 DUK, timing +0 days
+  2025-05 balance: model 320 029.33 DUK, observed 320 029.33 DUK, difference 0.00 DUK
+    balance cis 2025-05-01 start (anchored): booked 10 962.99 DUK, stated 10 962.99 DUK, gap 0.00 DUK
+    balance cis 2025-05-02 end (anchored): booked 18 706.39 DUK, stated 18 706.39 DUK, gap 0.00 DUK
+    balance cis 2025-05-05 end (anchored): booked 16 997.44 DUK, stated 16 997.44 DUK, gap 0.00 DUK
+    balance cis 2025-05-08 end (anchored): booked 16 945.47 DUK, stated 16 945.47 DUK, gap 0.00 DUK
+    balance cis 2025-05-09 end (anchored): booked 16 667.06 DUK, stated 16 667.06 DUK, gap 0.00 DUK
+    balance cis 2025-05-12 end (anchored): booked 14 666.88 DUK, stated 14 666.88 DUK, gap 0.00 DUK
+    balance cis 2025-05-14 end (anchored): booked 34 109.40 DUK, stated 34 109.40 DUK, gap 0.00 DUK
+    balance cis 2025-05-15 end (anchored): booked 32 133.21 DUK, stated 32 133.21 DUK, gap 0.00 DUK
+    balance cis 2025-05-16 end (anchored): booked 31 961.73 DUK, stated 31 961.73 DUK, gap 0.00 DUK
+    balance cis 2025-05-19 end (anchored): booked 31 322.68 DUK, stated 31 322.68 DUK, gap 0.00 DUK
+    balance cis 2025-05-20 end (anchored): booked 26 169.43 DUK, stated 26 169.43 DUK, gap 0.00 DUK
+    balance cis 2025-05-21 end (anchored): booked 25 909.54 DUK, stated 25 909.54 DUK, gap 0.00 DUK
+    balance cis 2025-05-26 end (anchored): booked 12 000.00 DUK, stated 12 000.00 DUK, gap 0.00 DUK
+    balance cis 2025-05-27 end (anchored): booked 11 870.28 DUK, stated 11 870.28 DUK, gap 0.00 DUK
+    balance cis 2025-05-30 end (anchored): booked 19 606.83 DUK, stated 19 606.83 DUK, gap 0.00 DUK
+  2025-05 move client_pay: model 19 520.00 DUK, observed 19 520.00 DUK, difference 0.00 DUK
+    matched client_pay[fv_007_2025] on 2025-05-14: model 19 520.00 DUK, observed 19 520.00 DUK, difference 0.00 DUK, timing +0 days
+  2025-05 move health_pay: model -767.71 DUK, observed -767.71 DUK, difference 0.00 DUK
+    matched health_pay[2025-04] on 2025-05-20: model -767.71 DUK, observed -767.71 DUK, difference 0.00 DUK, timing +0 days
+  2025-05 move hr2_overpay: model -3 000.00 DUK, observed -3 000.00 DUK, difference 0.00 DUK
+    matched hr2_overpay[2025-05-26] on 2025-05-26: model -3 000.00 DUK, observed -3 000.00 DUK, difference 0.00 DUK, timing +0 days
+  2025-05 move hr2_save: model -5 472.60 DUK, observed -5 472.60 DUK, difference 0.00 DUK
+    matched hr2_save[2025-05-26] on 2025-05-26: model -5 472.60 DUK, observed -5 472.60 DUK, difference 0.00 DUK, timing +0 days
+  2025-05 move mtg_pay: model -3 151.86 DUK, observed -3 151.86 DUK, difference 0.00 DUK
+    matched mtg_pay[2025-05] on 2025-05-05: model -3 151.86 DUK, observed -3 151.86 DUK, difference 0.00 DUK, timing +0 days
+  2025-05 move ola_order: model 1 700.00 DUK, observed 1 700.00 DUK, difference 0.00 DUK
+    matched ola_order[2025-05] on 2025-05-05: model 1 700.00 DUK, observed 1 700.00 DUK, difference 0.00 DUK, timing +0 days
+  2025-05 move pit_pay: model -2 520.00 DUK, observed -2 520.00 DUK, difference 0.00 DUK
+    matched pit_pay[2025-04] on 2025-05-20: model -2 520.00 DUK, observed -2 520.00 DUK, difference 0.00 DUK, timing +0 days
+  2025-05 move social_pay: model -1 758.01 DUK, observed -1 758.01 DUK, difference 0.00 DUK
+    matched social_pay[2025-04] on 2025-05-20: model -1 758.01 DUK, observed -1 758.01 DUK, difference 0.00 DUK, timing +0 days
+  2025-05 move vat_pay: model -4 939.00 DUK, observed -4 939.00 DUK, difference 0.00 DUK
+    matched vat_pay[2025-04] on 2025-05-26: model -4 939.00 DUK, observed -4 939.00 DUK, difference 0.00 DUK, timing +0 days
+  2025-06 balance: model 381 915.68 DUK, observed 381 915.68 DUK, difference 0.00 DUK
+    balance cis 2025-06-01 start (anchored): booked 19 606.83 DUK, stated 19 606.83 DUK, gap 0.00 DUK
+    balance cis 2025-06-02 end (anchored): booked 19 269.63 DUK, stated 19 269.63 DUK, gap 0.00 DUK
+    balance cis 2025-06-05 end (anchored): booked 17 605.60 DUK, stated 17 605.60 DUK, gap 0.00 DUK
+    balance cis 2025-06-09 end (anchored): booked 17 042.96 DUK, stated 17 042.96 DUK, gap 0.00 DUK
+    balance cis 2025-06-10 end (anchored): booked 15 328.03 DUK, stated 15 328.03 DUK, gap 0.00 DUK
+    balance cis 2025-06-11 end (anchored): booked 15 094.62 DUK, stated 15 094.62 DUK, gap 0.00 DUK
+    balance cis 2025-06-12 end (anchored): booked 14 592.93 DUK, stated 14 592.93 DUK, gap 0.00 DUK
+    balance cis 2025-06-13 end (anchored): booked 34 112.93 DUK, stated 34 112.93 DUK, gap 0.00 DUK
+    balance cis 2025-06-16 end (anchored): booked 31 939.80 DUK, stated 31 939.80 DUK, gap 0.00 DUK
+    balance cis 2025-06-17 end (anchored): booked 31 866.53 DUK, stated 31 866.53 DUK, gap 0.00 DUK
+    balance cis 2025-06-18 end (anchored): booked 31 644.76 DUK, stated 31 644.76 DUK, gap 0.00 DUK
+    balance cis 2025-06-19 end (anchored): booked 31 405.13 DUK, stated 31 405.13 DUK, gap 0.00 DUK
+    balance cis 2025-06-20 end (anchored): booked 26 346.36 DUK, stated 26 346.36 DUK, gap 0.00 DUK
+    balance cis 2025-06-24 end (anchored): booked 25 937.24 DUK, stated 25 937.24 DUK, gap 0.00 DUK
+    balance cis 2025-06-25 end (anchored): booked 20 749.37 DUK, stated 20 749.37 DUK, gap 0.00 DUK
+    balance cis 2025-06-26 end (anchored): booked 14 720.00 DUK, stated 14 720.00 DUK, gap 0.00 DUK
+    balance cis 2025-06-30 end (anchored): booked 14 652.96 DUK, stated 14 652.96 DUK, gap 0.00 DUK
+  2025-06 move health_pay: model -767.71 DUK, observed -767.71 DUK, difference 0.00 DUK
+    matched health_pay[2025-05] on 2025-06-20: model -767.71 DUK, observed -767.71 DUK, difference 0.00 DUK, timing +0 days
+  2025-06 move hr2_overpay: model -3 000.00 DUK, observed -3 000.00 DUK, difference 0.00 DUK
+    matched hr2_overpay[2025-06-26] on 2025-06-26: model -3 000.00 DUK, observed -3 000.00 DUK, difference 0.00 DUK, timing +0 days
+  2025-06 move hr2_save: model -3 029.37 DUK, observed -3 029.37 DUK, difference 0.00 DUK
+    matched hr2_save[2025-06-26] on 2025-06-26: model -3 029.37 DUK, observed -3 029.37 DUK, difference 0.00 DUK, timing +0 days
+  2025-06 move mtg_pay: model -3 128.16 DUK, observed -3 128.16 DUK, difference 0.00 DUK
+    matched mtg_pay[2025-06] on 2025-06-05: model -3 128.16 DUK, observed -3 128.16 DUK, difference 0.00 DUK, timing +0 days
+  2025-06 move ola_order: model 1 700.00 DUK, observed 1 700.00 DUK, difference 0.00 DUK
+    matched ola_order[2025-06] on 2025-06-05: model 1 700.00 DUK, observed 1 700.00 DUK, difference 0.00 DUK, timing +0 days
+  2025-06 move pit_pay: model -2 514.00 DUK, observed -2 514.00 DUK, difference 0.00 DUK
+    matched pit_pay[2025-05] on 2025-06-20: model -2 514.00 DUK, observed -2 514.00 DUK, difference 0.00 DUK, timing +0 days
+  2025-06 move social_pay: model -1 758.01 DUK, observed -1 758.01 DUK, difference 0.00 DUK
+    matched social_pay[2025-05] on 2025-06-20: model -1 758.01 DUK, observed -1 758.01 DUK, difference 0.00 DUK, timing +0 days
+  2025-06 move vat_pay: model -4 930.00 DUK, observed -4 930.00 DUK, difference 0.00 DUK
+    matched vat_pay[2025-05] on 2025-06-25: model -4 930.00 DUK, observed -4 930.00 DUK, difference 0.00 DUK, timing +0 days
+  2025-07 balance: model 418 804.10 DUK, observed 418 804.10 DUK, difference 0.00 DUK
+    balance cis 2025-07-01 end (anchored): booked 25 919.60 DUK, stated 25 919.60 DUK, gap 0.00 DUK
+    balance cis 2025-07-01 start (anchored): booked 14 652.96 DUK, stated 14 652.96 DUK, gap 0.00 DUK
+    balance cis 2025-07-04 end (anchored): booked 25 799.39 DUK, stated 25 799.39 DUK, gap 0.00 DUK
+    balance cis 2025-07-07 end (anchored): booked 24 433.08 DUK, stated 24 433.08 DUK, gap 0.00 DUK
+    balance cis 2025-07-08 end (anchored): booked 24 390.22 DUK, stated 24 390.22 DUK, gap 0.00 DUK
+    balance cis 2025-07-09 end (anchored): booked 24 255.73 DUK, stated 24 255.73 DUK, gap 0.00 DUK
+    balance cis 2025-07-10 end (anchored): booked 22 608.54 DUK, stated 22 608.54 DUK, gap 0.00 DUK
+    balance cis 2025-07-11 end (anchored): booked 22 499.71 DUK, stated 22 499.71 DUK, gap 0.00 DUK
+    balance cis 2025-07-14 end (anchored): booked 41 777.88 DUK, stated 41 777.88 DUK, gap 0.00 DUK
+    balance cis 2025-07-15 end (anchored): booked 39 718.42 DUK, stated 39 718.42 DUK, gap 0.00 DUK
+    balance cis 2025-07-17 end (anchored): booked 39 484.44 DUK, stated 39 484.44 DUK, gap 0.00 DUK
+    balance cis 2025-07-21 end (anchored): booked 38 220.87 DUK, stated 38 220.87 DUK, gap 0.00 DUK
+    balance cis 2025-07-25 end (anchored): booked 31 509.87 DUK, stated 31 509.87 DUK, gap 0.00 DUK
+    balance cis 2025-07-28 end (anchored): booked 12 000.00 DUK, stated 12 000.00 DUK, gap 0.00 DUK
+    balance cis 2025-07-29 end (anchored): booked 11 757.58 DUK, stated 11 757.58 DUK, gap 0.00 DUK
+    balance cis 2025-07-31 end (anchored): booked 19 775.81 DUK, stated 19 775.81 DUK, gap 0.00 DUK
+  2025-07 move bartek_back: model 3 500.00 DUK, observed 3 500.00 DUK, difference 0.00 DUK
+    matched bartek_back[part1] on 2025-07-01: model 3 500.00 DUK, observed 3 500.00 DUK, difference 0.00 DUK, timing +0 days
+  2025-07 move client_pay: model 19 520.00 DUK, observed 19 520.00 DUK, difference 0.00 DUK
+    matched client_pay[fv_012_2025] on 2025-07-14: model 19 520.00 DUK, observed 19 520.00 DUK, difference 0.00 DUK, timing +0 days
+  2025-07 move health_pay: model -767.71 DUK, observed -767.71 DUK, difference 0.00 DUK
+    matched health_pay[2025-06] on 2025-07-21: model -767.71 DUK, observed -767.71 DUK, difference 0.00 DUK, timing +0 days
+  2025-07 move hr2_overpay: model -3 000.00 DUK, observed -3 000.00 DUK, difference 0.00 DUK
+    matched hr2_overpay[2025-07-28] on 2025-07-28: model -3 000.00 DUK, observed -3 000.00 DUK, difference 0.00 DUK, timing +0 days
+  2025-07 move hr2_save: model -15 938.57 DUK, observed -15 938.57 DUK, difference 0.00 DUK
+    matched hr2_save[2025-07-28] on 2025-07-28: model -15 938.57 DUK, observed -15 938.57 DUK, difference 0.00 DUK, timing +0 days
+  2025-07 move mtg_pay: model -2 921.08 DUK, observed -2 921.08 DUK, difference 0.00 DUK
+    matched mtg_pay[2025-07] on 2025-07-07: model -2 921.08 DUK, observed -2 921.08 DUK, difference 0.00 DUK, timing +0 days
+  2025-07 move ola_order: model 1 700.00 DUK, observed 1 700.00 DUK, difference 0.00 DUK
+    matched ola_order[2025-07] on 2025-07-07: model 1 700.00 DUK, observed 1 700.00 DUK, difference 0.00 DUK, timing +0 days
+  2025-07 move pit_pay: model -3 485.00 DUK, observed -3 485.00 DUK, difference 0.00 DUK
+    matched pit_pay[2025-06] on 2025-07-21: model -3 485.00 DUK, observed -3 485.00 DUK, difference 0.00 DUK, timing +0 days
+  2025-07 move social_pay: model -1 758.01 DUK, observed -1 758.01 DUK, difference 0.00 DUK
+    matched social_pay[2025-06] on 2025-07-21: model -1 758.01 DUK, observed -1 758.01 DUK, difference 0.00 DUK, timing +0 days
+  2025-07 move vat_pay: model -6 711.00 DUK, observed -6 711.00 DUK, difference 0.00 DUK
+    matched vat_pay[2025-06] on 2025-07-25: model -6 711.00 DUK, observed -6 711.00 DUK, difference 0.00 DUK, timing +0 days
+  2025-08 balance: model 190 813.18 DUK, observed 190 813.18 DUK, difference 0.00 DUK
+    balance cis 2025-08-01 end (anchored): booked 19 559.85 DUK, stated 19 559.85 DUK, gap 0.00 DUK
+    balance cis 2025-08-01 start (anchored): booked 19 775.81 DUK, stated 19 775.81 DUK, gap 0.00 DUK
+    balance cis 2025-08-04 end (anchored): booked 19 409.12 DUK, stated 19 409.12 DUK, gap 0.00 DUK
+    balance cis 2025-08-05 end (anchored): booked 17 983.95 DUK, stated 17 983.95 DUK, gap 0.00 DUK
+    balance cis 2025-08-07 end (anchored): booked 17 738.06 DUK, stated 17 738.06 DUK, gap 0.00 DUK
+    balance cis 2025-08-11 end (anchored): booked 16 313.37 DUK, stated 16 313.37 DUK, gap 0.00 DUK
+    balance cis 2025-08-12 end (anchored): booked 16 138.37 DUK, stated 16 138.37 DUK, gap 0.00 DUK
+    balance cis 2025-08-18 end (anchored): booked 13 767.17 DUK, stated 13 767.17 DUK, gap 0.00 DUK
+    balance cis 2025-08-19 end (anchored): booked 13 571.99 DUK, stated 13 571.99 DUK, gap 0.00 DUK
+    balance cis 2025-08-20 end (anchored): booked 8 109.66 DUK, stated 8 109.66 DUK, gap 0.00 DUK
+    balance cis 2025-08-25 end (anchored): booked 2 523.62 DUK, stated 2 523.62 DUK, gap 0.00 DUK
+    balance cis 2025-08-26 end (anchored): booked 2 300.13 DUK, stated 2 300.13 DUK, gap 0.00 DUK
+    balance cis 2025-08-27 end (anchored): booked 2 128.44 DUK, stated 2 128.44 DUK, gap 0.00 DUK
+    balance cis 2025-08-28 end (anchored): booked 21 493.64 DUK, stated 21 493.64 DUK, gap 0.00 DUK
+  2025-08 move health_pay: model -767.71 DUK, observed -767.71 DUK, difference 0.00 DUK
+    matched health_pay[2025-07] on 2025-08-20: model -767.71 DUK, observed -767.71 DUK, difference 0.00 DUK, timing +0 days
+  2025-08 move mtg_pay: model -2 899.92 DUK, observed -2 899.92 DUK, difference 0.00 DUK
+    matched mtg_pay[2025-08] on 2025-08-05: model -2 899.92 DUK, observed -2 899.92 DUK, difference 0.00 DUK, timing +0 days
+  2025-08 move ola_order: model 1 700.00 DUK, observed 1 700.00 DUK, difference 0.00 DUK
+    matched ola_order[2025-08] on 2025-08-05: model 1 700.00 DUK, observed 1 700.00 DUK, difference 0.00 DUK, timing +0 days
+  2025-08 move pit_pay: model -2 519.00 DUK, observed -2 519.00 DUK, difference 0.00 DUK
+    matched pit_pay[2025-07] on 2025-08-20: model -2 519.00 DUK, observed -2 519.00 DUK, difference 0.00 DUK, timing +0 days
+  2025-08 move social_pay: model -1 758.01 DUK, observed -1 758.01 DUK, difference 0.00 DUK
+    matched social_pay[2025-07] on 2025-08-20: model -1 758.01 DUK, observed -1 758.01 DUK, difference 0.00 DUK, timing +0 days
+  2025-08 move vat_pay: model -4 931.00 DUK, observed -4 931.00 DUK, difference 0.00 DUK
+    matched vat_pay[2025-07] on 2025-08-25: model -4 931.00 DUK, observed -4 931.00 DUK, difference 0.00 DUK, timing +0 days
+  2025-09 balance: model 789 792.08 DUK, observed 789 792.08 DUK, difference 0.00 DUK
+    balance cis 2025-09-01 end (anchored): booked 21 270.29 DUK, stated 21 270.29 DUK, gap 0.00 DUK
+    balance cis 2025-09-01 start (anchored): booked 21 493.64 DUK, stated 21 493.64 DUK, gap 0.00 DUK
+    balance cis 2025-09-04 end (anchored): booked 20 893.03 DUK, stated 20 893.03 DUK, gap 0.00 DUK
+    balance cis 2025-09-05 end (anchored): booked 19 611.45 DUK, stated 19 611.45 DUK, gap 0.00 DUK
+    balance cis 2025-09-08 end (anchored): booked 19 024.41 DUK, stated 19 024.41 DUK, gap 0.00 DUK
+    balance cis 2025-09-09 end (anchored): booked 18 986.91 DUK, stated 18 986.91 DUK, gap 0.00 DUK
+    balance cis 2025-09-10 end (anchored): booked 17 519.75 DUK, stated 17 519.75 DUK, gap 0.00 DUK
+    balance cis 2025-09-11 end (anchored): booked 17 492.79 DUK, stated 17 492.79 DUK, gap 0.00 DUK
+    balance cis 2025-09-12 end (anchored): booked 98 066.94 DUK, stated 98 066.94 DUK, gap 0.00 DUK
+    balance cis 2025-09-15 end (anchored): booked 95 833.46 DUK, stated 95 833.46 DUK, gap 0.00 DUK
+    balance cis 2025-09-16 end (anchored): booked 84 344.21 DUK, stated 84 344.21 DUK, gap 0.00 DUK
+    balance cis 2025-09-19 end (anchored): booked 84 166.50 DUK, stated 84 166.50 DUK, gap 0.00 DUK
+    balance cis 2025-09-22 end (anchored): booked 78 199.45 DUK, stated 78 199.45 DUK, gap 0.00 DUK
+    balance cis 2025-09-24 end (anchored): booked 77 959.19 DUK, stated 77 959.19 DUK, gap 0.00 DUK
+    balance cis 2025-09-25 end (anchored): booked 72 228.19 DUK, stated 72 228.19 DUK, gap 0.00 DUK
+    balance cis 2025-09-26 end (anchored): booked 21 077.17 DUK, stated 21 077.17 DUK, gap 0.00 DUK
+    balance cis 2025-09-29 end (anchored): booked 21 624.70 DUK, stated 21 624.70 DUK, gap 0.00 DUK
+  2025-09 move client_pay: model 81 008.00 DUK, observed 81 008.00 DUK, difference 0.00 DUK
+    matched client_pay[fv_017_2025] on 2025-09-12: model 19 520.00 DUK, observed 19 520.00 DUK, difference 0.00 DUK, timing +0 days
+    matched client_pay[fv_019_2025] on 2025-09-12: model 61 488.00 DUK, observed 61 488.00 DUK, difference 0.00 DUK, timing +0 days
+  2025-09 move health_pay: model -767.71 DUK, observed -767.71 DUK, difference 0.00 DUK
+    matched health_pay[2025-08] on 2025-09-22: model -767.71 DUK, observed -767.71 DUK, difference 0.00 DUK, timing +0 days
+  2025-09 move hr2_overpay: model -3 000.00 DUK, observed -3 000.00 DUK, difference 0.00 DUK
+    matched hr2_overpay[2025-09-26] on 2025-09-26: model -3 000.00 DUK, observed -3 000.00 DUK, difference 0.00 DUK, timing +0 days
+  2025-09 move hr2_save: model -48 026.07 DUK, observed -48 026.07 DUK, difference 0.00 DUK
+    matched hr2_save[2025-09-26] on 2025-09-26: model -48 026.07 DUK, observed -48 026.07 DUK, difference 0.00 DUK, timing +0 days
+  2025-09 move mtg_pay: model -2 899.92 DUK, observed -2 899.92 DUK, difference 0.00 DUK
+    matched mtg_pay[2025-09] on 2025-09-05: model -2 899.92 DUK, observed -2 899.92 DUK, difference 0.00 DUK, timing +0 days
+  2025-09 move ola_order: model 1 700.00 DUK, observed 1 700.00 DUK, difference 0.00 DUK
+    matched ola_order[2025-09] on 2025-09-05: model 1 700.00 DUK, observed 1 700.00 DUK, difference 0.00 DUK, timing +0 days
+  2025-09 move pit_pay: model -2 945.00 DUK, observed -2 945.00 DUK, difference 0.00 DUK
+    matched pit_pay[2025-08] on 2025-09-22: model -2 945.00 DUK, observed -2 945.00 DUK, difference 0.00 DUK, timing +0 days
+  2025-09 move social_pay: model -1 758.01 DUK, observed -1 758.01 DUK, difference 0.00 DUK
+    matched social_pay[2025-08] on 2025-09-22: model -1 758.01 DUK, observed -1 758.01 DUK, difference 0.00 DUK, timing +0 days
+  2025-09 move vat_pay: model -5 731.00 DUK, observed -5 731.00 DUK, difference 0.00 DUK
+    matched vat_pay[2025-08] on 2025-09-25: model -5 731.00 DUK, observed -5 731.00 DUK, difference 0.00 DUK, timing +0 days
+  2025-10 balance: model 421 892.26 DUK, observed 421 892.26 DUK, difference 0.00 DUK
+    balance cis 2025-10-01 start (anchored): booked 21 624.70 DUK, stated 21 624.70 DUK, gap 0.00 DUK
+    balance cis 2025-10-02 end (anchored): booked 21 421.86 DUK, stated 21 421.86 DUK, gap 0.00 DUK
+    balance cis 2025-10-03 end (anchored): booked 21 209.19 DUK, stated 21 209.19 DUK, gap 0.00 DUK
+    balance cis 2025-10-06 end (anchored): booked 19 700.02 DUK, stated 19 700.02 DUK, gap 0.00 DUK
+    balance cis 2025-10-07 end (anchored): booked 19 513.00 DUK, stated 19 513.00 DUK, gap 0.00 DUK
+    balance cis 2025-10-08 end (anchored): booked 19 470.71 DUK, stated 19 470.71 DUK, gap 0.00 DUK
+    balance cis 2025-10-09 end (anchored): booked 19 426.06 DUK, stated 19 426.06 DUK, gap 0.00 DUK
+    balance cis 2025-10-10 end (anchored): booked 18 429.02 DUK, stated 18 429.02 DUK, gap 0.00 DUK
+    balance cis 2025-10-13 end (anchored): booked 17 980.36 DUK, stated 17 980.36 DUK, gap 0.00 DUK
+    balance cis 2025-10-14 end (anchored): booked 37 450.44 DUK, stated 37 450.44 DUK, gap 0.00 DUK
+    balance cis 2025-10-15 end (anchored): booked 37 519.17 DUK, stated 37 519.17 DUK, gap 0.00 DUK
+    balance cis 2025-10-16 end (anchored): booked 37 275.33 DUK, stated 37 275.33 DUK, gap 0.00 DUK
+    balance cis 2025-10-17 end (anchored): booked 37 103.24 DUK, stated 37 103.24 DUK, gap 0.00 DUK
+    balance cis 2025-10-20 end (anchored): booked 26 750.67 DUK, stated 26 750.67 DUK, gap 0.00 DUK
+    balance cis 2025-10-22 end (anchored): booked 26 645.18 DUK, stated 26 645.18 DUK, gap 0.00 DUK
+    balance cis 2025-10-24 end (anchored): booked 29 572.78 DUK, stated 29 572.78 DUK, gap 0.00 DUK
+    balance cis 2025-10-27 end (anchored): booked 1 000.00 DUK, stated 1 000.00 DUK, gap 0.00 DUK
+    balance cis 2025-10-28 end (anchored): booked 730.36 DUK, stated 730.36 DUK, gap 0.00 DUK
+    balance cis 2025-10-29 end (anchored): booked 578.14 DUK, stated 578.14 DUK, gap 0.00 DUK
+    balance cis 2025-10-31 end (anchored): booked 8 492.03 DUK, stated 8 492.03 DUK, gap 0.00 DUK
+  2025-10 move health_pay: model -767.71 DUK, observed -767.71 DUK, difference 0.00 DUK
+    matched health_pay[2025-09] on 2025-10-20: model -767.71 DUK, observed -767.71 DUK, difference 0.00 DUK, timing +0 days
+  2025-10 move hr2_overpay: model -3 000.00 DUK, observed -3 000.00 DUK, difference 0.00 DUK
+    matched hr2_overpay[2025-10-27] on 2025-10-27: model -3 000.00 DUK, observed -3 000.00 DUK, difference 0.00 DUK, timing +0 days
+  2025-10 move hr2_save: model -9 540.78 DUK, observed -9 540.78 DUK, difference 0.00 DUK
+    matched hr2_save[2025-10-27] on 2025-10-27: model -9 540.78 DUK, observed -9 540.78 DUK, difference 0.00 DUK, timing +0 days
+  2025-10 move mtg_pay: model -2 878.04 DUK, observed -2 878.04 DUK, difference 0.00 DUK
+    matched mtg_pay[2025-10] on 2025-10-06: model -2 878.04 DUK, observed -2 878.04 DUK, difference 0.00 DUK, timing +0 days
+  2025-10 move ola_order: model 1 700.00 DUK, observed 1 700.00 DUK, difference 0.00 DUK
+    matched ola_order[2025-10] on 2025-10-06: model 1 700.00 DUK, observed 1 700.00 DUK, difference 0.00 DUK, timing +0 days
+  2025-10 move pit_pay: model -7 564.00 DUK, observed -7 564.00 DUK, difference 0.00 DUK
+    matched pit_pay[2025-09] on 2025-10-20: model -7 564.00 DUK, observed -7 564.00 DUK, difference 0.00 DUK, timing +0 days
+  2025-10 move social_pay: model -1 758.01 DUK, observed -1 758.01 DUK, difference 0.00 DUK
+    matched social_pay[2025-09] on 2025-10-20: model -1 758.01 DUK, observed -1 758.01 DUK, difference 0.00 DUK, timing +0 days
+  2025-10 move vat_pay: model -16 032.00 DUK, observed -16 032.00 DUK, difference 0.00 DUK
+    matched vat_pay[2025-09] on 2025-10-27: model -16 032.00 DUK, observed -16 032.00 DUK, difference 0.00 DUK, timing +0 days
+  2025-11 balance: model 67 451.10 DUK, observed 67 451.10 DUK, difference 0.00 DUK
+    balance cis 2025-11-01 start (anchored): booked 8 492.03 DUK, stated 8 492.03 DUK, gap 0.00 DUK
+    balance cis 2025-11-03 end (anchored): booked 8 288.34 DUK, stated 8 288.34 DUK, gap 0.00 DUK
+    balance cis 2025-11-05 end (anchored): booked 7 022.30 DUK, stated 7 022.30 DUK, gap 0.00 DUK
+    balance cis 2025-11-07 end (anchored): booked 6 801.54 DUK, stated 6 801.54 DUK, gap 0.00 DUK
+    balance cis 2025-11-10 end (anchored): booked 6 084.61 DUK, stated 6 084.61 DUK, gap 0.00 DUK
+    balance cis 2025-11-12 end (anchored): booked 25 141.14 DUK, stated 25 141.14 DUK, gap 0.00 DUK
+    balance cis 2025-11-13 end (anchored): booked 5 621.14 DUK, stated 5 621.14 DUK, gap 0.00 DUK
+  2025-11 move client_pay: model 19 520.00 DUK, observed 19 520.00 DUK, difference 0.00 DUK
+    matched client_pay[fv_023_2025] on 2025-11-12: model 19 520.00 DUK, observed 19 520.00 DUK, difference 0.00 DUK, timing +0 days
+  2025-11 move mtg_pay: model -2 855.21 DUK, observed -2 855.21 DUK, difference 0.00 DUK
+    matched mtg_pay[2025-11] on 2025-11-05: model -2 855.21 DUK, observed -2 855.21 DUK, difference 0.00 DUK, timing +0 days
+  2025-11 move ola_order: model 1 700.00 DUK, observed 1 700.00 DUK, difference 0.00 DUK
+    matched ola_order[2025-11] on 2025-11-05: model 1 700.00 DUK, observed 1 700.00 DUK, difference 0.00 DUK, timing +0 days
+  2025-12 move client_pay: model 19 520.00 DUK, observed 19 520.00 DUK, difference 0.00 DUK
+    matched client_pay[fv_025_2025] on 2025-12-12: model 19 520.00 DUK, observed 19 520.00 DUK, difference 0.00 DUK, timing +0 days
+  2025-12 move health_pay: model -1 381.88 DUK, observed -1 381.88 DUK, difference 0.00 DUK
+    matched health_pay[2025-11] on 2025-12-22: model -1 381.88 DUK, observed -1 381.88 DUK, difference 0.00 DUK, timing +0 days
+  2025-12 move hr2_overpay: model -3 000.00 DUK, observed -3 000.00 DUK, difference 0.00 DUK
+    matched hr2_overpay[2025-12-29] on 2025-12-29: model -3 000.00 DUK, observed -3 000.00 DUK, difference 0.00 DUK, timing +0 days
+  2025-12 move hr2_save: model -8 847.11 DUK, observed -8 847.11 DUK, difference 0.00 DUK
+    matched hr2_save[2025-12-29] on 2025-12-29: model -8 847.11 DUK, observed -8 847.11 DUK, difference 0.00 DUK, timing +0 days
+  2025-12 move ola_order: model 1 700.00 DUK, observed 1 700.00 DUK, difference 0.00 DUK
+    matched ola_order[2025-12] on 2025-12-05: model 1 700.00 DUK, observed 1 700.00 DUK, difference 0.00 DUK, timing +0 days
+  2025-12 move pit_pay: model -2 520.00 DUK, observed -2 520.00 DUK, difference 0.00 DUK
+    matched pit_pay[2025-11] on 2025-12-22: model -2 520.00 DUK, observed -2 520.00 DUK, difference 0.00 DUK, timing +0 days
+  2025-12 move social_pay: model -1 758.01 DUK, observed -1 758.01 DUK, difference 0.00 DUK
+    matched social_pay[2025-11] on 2025-12-22: model -1 758.01 DUK, observed -1 758.01 DUK, difference 0.00 DUK, timing +0 days
+  2025-12 move vat_pay: model -5 008.00 DUK, observed -5 008.00 DUK, difference 0.00 DUK
+    matched vat_pay[2025-11] on 2025-12-29: model -5 008.00 DUK, observed -5 008.00 DUK, difference 0.00 DUK, timing +0 days
+  law date 2025-12-31, cut 2026-01-07
+b08_unmatched (d = 2025-10-15): (2025-10-15, -111.27 DUK)
+  anchor: cis 2025-10-14 end, stated 37 450.44 DUK, difference 0.00 DUK
+  anchor: cis 2025-10-15 end, stated 37 519.17 DUK, difference 0.00 DUK
+  left out: health_pay, 1 instances, first 2027-01-20
+  left out: health_settle_pay, 1 instances, first 2027-04-20
+  left out: pit_pay, 1 instances, first 2027-01-20
+  left out: social_pay, 1 instances, first 2027-01-20
+  left out: vat_pay, 1 instances, first 2027-01-25
+  law date 2025-12-31, cut 2026-01-07
+b08_unmatched (d = 2025-12-10): (2025-12-10, 249.00 DUK)
+  anchor: cis 2025-12-08 end, stated 6 608.84 DUK, difference 0.00 DUK
+  anchor: cis 2025-12-10 end, stated 5 517.83 DUK, difference -249.00 DUK
+  open: card_fee_pay[2025]
+  left out: health_pay, 1 instances, first 2027-01-20
+  left out: health_settle_pay, 1 instances, first 2027-04-20
+  left out: pit_pay, 1 instances, first 2027-01-20
+  left out: social_pay, 1 instances, first 2027-01-20
+  left out: vat_pay, 1 instances, first 2027-01-25
+  law date 2025-12-31, cut 2026-01-07
+b08_reversed (o = cisr[c20251113a]): (2025-11-13, -19 520.00 DUK)
+  law date 2025-12-31, cut 2026-01-07
+b08_gap: (2025-11-14, -5 222.44 DUK)
+  assumed: the November export's day is not stated: the 2nd of the next month (story) (gap_from, gap_to)
+  anchor: cis 2025-11-13 end, stated 5 621.14 DUK, difference 0.00 DUK
+  anchor: cis 2025-12-01 start, stated 398.70 DUK, difference ?"Did Kawiarnia Ziarno pay its invoice on the days the November Cis export lacks?" (gap_ziarno) ?"What did Piotr pay by card on the days the November Cis export lacks?" (gap_cards) ?"date within window(2025-11-14, 2025-11-30) not precise enough for a balance" (gap_card_pays)
+  left out: health_pay, 1 instances, first 2027-01-20
+  left out: health_settle_pay, 1 instances, first 2027-04-20
+  left out: pit_pay, 1 instances, first 2027-01-20
+  left out: social_pay, 1 instances, first 2027-01-20
+  left out: vat_pay, 1 instances, first 2027-01-25
+  law date 2025-12-31, cut 2026-01-07
+b08_no_row: (2025-12-09, -249.00 DUK, -249.00 DUK)
+  anchor: cis 2025-12-08 end, stated 6 608.84 DUK, difference 0.00 DUK
+  open: card_fee_pay[2025]
+  law date 2025-12-31, cut 2026-01-07
+b08_cards: 35 368.79 DUK + 1 × ?"What did Piotr pay by card on the days the November Cis export lacks?" (gap_cards)
+  assumed: the November export's day is not stated: the 2nd of the next month (story) (gap_from, gap_to)
+  unfulfilled: gap_card_pays
+  law date 2025-12-31, cut 2026-01-07
+

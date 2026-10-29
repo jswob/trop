@@ -1,0 +1,62 @@
+a1_gains [mp04_gain = *, mp04_round = *]: (40 000.00 EUR, 15 000.00 EUR)
+  assumed: no inheritance or gift during the marriage is mentioned (acquired[husband], acquired[wife])
+  assumed: no liabilities at the end are mentioned (final_debts[husband], final_debts[wife])
+  law date 2026-10-19, cut 2026-10-19
+a2_difference [mp04_gain = *, mp04_round = *]: 25 000.00 EUR
+  assumed: no inheritance or gift during the marriage is mentioned (acquired[husband], acquired[wife])
+  assumed: no liabilities at the end are mentioned (final_debts[husband], final_debts[wife])
+  law date 2026-10-19, cut 2026-10-19
+a3_equalisation [mp04_gain = *, mp04_round = *]: 12 500 EUR
+  assumed: no inheritance or gift during the marriage is mentioned (acquired[husband], acquired[wife])
+  assumed: no liabilities at the end are mentioned (final_debts[husband], final_debts[wife])
+  law date 2026-10-19, cut 2026-10-19
+a4_who_pays [mp04_gain = *, mp04_round = *]: (husband, wife)
+  assumed: no inheritance or gift during the marriage is mentioned (acquired[husband], acquired[wife])
+  assumed: no liabilities at the end are mentioned (final_debts[husband], final_debts[wife])
+  law date 2026-10-19, cut 2026-10-19
+b1_arndt_betty [mp04_gain = *, mp04_round = *]: (15 000.00 EUR, 1 000.00 EUR, 14 000.00 EUR, 7 000 EUR)
+  assumed: no inheritance or gift during the marriage is mentioned (acquired[arndt], acquired[betty])
+  assumed: no liabilities at the end are mentioned (final_debts[arndt], final_debts[betty])
+  law date 2026-10-19, cut 2026-10-19
+b2_carolin: 180 000.00 EUR
+  law date 2026-10-19, cut 2026-10-19
+b3_daniel_eva [mp04_gain = *, mp04_round = *]: (140 000.00 EUR, 40 000.00 EUR, 10 000.00 EUR, 30 000.00 EUR, 15 000 EUR)
+  assumed: no inheritance or gift during the marriage is mentioned (acquired[eva])
+  assumed: no liabilities at the end are mentioned (final_debts[eva])
+  law date 2026-10-19, cut 2026-10-19
+b4_franka [mp04_gain = *, mp04_round = half-up]: (200 000.00 EUR, 32 725.00 EUR, 187 275.00 EUR)
+  assumed: no inheritance or gift during the marriage is mentioned (acquired[franka])
+  assumed: no liabilities at the end are mentioned (final_debts[franka])
+  reading: mp04_round = half-up
+  law date 2026-10-19, cut 2026-10-19
+b4_franka [mp04_gain = *, mp04_round = down]: (200 000.00 EUR, 32 724.00 EUR, 187 276.00 EUR)
+  assumed: no inheritance or gift during the marriage is mentioned (acquired[franka])
+  assumed: no liabilities at the end are mentioned (final_debts[franka])
+  reading: mp04_round = down
+  law date 2026-10-19, cut 2026-10-19
+b5_gero_heike [mp04_gain = *, mp04_round = *]: (120 000.00 EUR, 60 000 EUR, 20 000 EUR)
+  assumed: no inheritance or gift during the marriage is mentioned (acquired[gero])
+  assumed: no liabilities at the end are mentioned (final_debts[gero])
+  given: gain[heike] = 0.00 EUR (finanztip_examples)
+  law date 2026-10-19, cut 2026-10-19
+c1_children: (0.5, 0.25)
+  law date 2026-10-19, cut 2026-10-19
+c2_parents: (0.75, 0.125)
+  law date 2026-10-19, cut 2026-10-19
+c3_compare [mp04_round = half-up]: (0.5, 500 000.00 EUR, 1/6 (0.166666666666667), 166 667.00 EUR)
+  pinned: regime_[c3] = zugewinn
+  reading: mp04_round = half-up
+  law date 2026-10-19, cut 2026-10-19
+c3_compare [mp04_round = down]: (0.5, 500 000.00 EUR, 1/6 (0.166666666666667), 166 666.00 EUR)
+  pinned: regime_[c3] = zugewinn
+  reading: mp04_round = down
+  law date 2026-10-19, cut 2026-10-19
+c3_separation [mp04_round = *]: (0.25, 250 000.00 EUR, 0.25, 250 000.00 EUR)
+  law date 2026-10-19, cut 2026-10-19
+c4_accepts [mp04_round = *]: (0.5, 100 000 EUR)
+  assumed: the estate value is not stated; the example implies it from the spouse's half (estate_value[c4])
+  law date 2026-10-19, cut 2026-10-19
+c4_disclaims [mp04_round = *]: (100 000 EUR, 12 500 EUR, 112 500 EUR)
+  assumed: the estate value is not stated; the example implies it from the spouse's half (estate_value[c4])
+  pinned: disclaims[c4] = true
+  law date 2026-10-19, cut 2026-10-19

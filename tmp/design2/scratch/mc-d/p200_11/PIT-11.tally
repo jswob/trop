@@ -1,0 +1,19 @@
+part pit_11
+  tally 2
+  law
+  note "PIT-11 · Cars in a business. Under (a) and (b), a car used privately too counts 75 % of its running costs (.1); depreciation 20 % a year of the initial value (net price plus the VAT not deducted), 1/12 a month from the month after its entry in the asset register to the month of its sale, each month rounded to the ort half up (.2); its sale under (a) or (b) (.3); under (c) the net price is revenue at the asset-sale rate (.4)."
+
+source pit_11 "Personal Income Tax Act, PIT-11 Cars in a business (tmp/cases/law/acts.md)"
+
+input pit11_depreciation: num question "What is a car's yearly depreciation rate (PIT-11 .2)?"
+
+input pit11_running_share: num question "What share of a mixed-use car's running costs counts as costs (PIT-11 .1)?"
+
+version pit11_v1
+  cite pit_11
+  governs 2018-01-01..
+  known 2017-09-01
+  enters 2018-01-01
+  note "PIT-11 v1, in force 2018-01-01 until replaced, published 2017-09-01; governs tax years from 2018."
+  pit11_depreciation = 0.20 "PIT-11 v1 .2"
+  pit11_running_share = 0.75 "PIT-11 v1 .1"

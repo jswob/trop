@@ -1,0 +1,255 @@
+chk_t1_rows (g = g0_2): ok
+  law date 2015-12-31, cut 2026-10-18
+chk_t1_rows (g = g3_5): ok
+  law date 2015-12-31, cut 2026-10-18
+chk_t1_rows (g = g6_8): ok
+  law date 2015-12-31, cut 2026-10-18
+chk_t1_rows (g = g9_11): ok
+  law date 2015-12-31, cut 2026-10-18
+chk_t1_rows (g = g12_14): ok
+  law date 2015-12-31, cut 2026-10-18
+chk_t1_rows (g = g15_17): ok
+  law date 2015-12-31, cut 2026-10-18
+cpag_row1 (f = couple) [disp = *]: ?"CPAG adds up the cost of each year of childhood by birth order (p. 2) but prints no yearly costs" (cpag_cost[basic, couple, child1, 0], cpag_cost[basic, couple, child1, 10], cpag_cost[basic, couple, child1, 11], cpag_cost[basic, couple, child1, 12], cpag_cost[basic, couple, child1, 13], cpag_cost[basic, couple, child1, 14], cpag_cost[basic, couple, child1, 15], cpag_cost[basic, couple, child1, 16], cpag_cost[basic, couple, child1, 17], cpag_cost[basic, couple, child1, 1], cpag_cost[basic, couple, child1, 2], cpag_cost[basic, couple, child1, 3], cpag_cost[basic, couple, child1, 4], cpag_cost[basic, couple, child1, 5], cpag_cost[basic, couple, child1, 6], cpag_cost[basic, couple, child1, 7], cpag_cost[basic, couple, child1, 8], cpag_cost[basic, couple, child1, 9], cpag_cost[basic, couple, child2, 0], cpag_cost[basic, couple, child2, 10], cpag_cost[basic, couple, child2, 11], cpag_cost[basic, couple, child2, 12], cpag_cost[basic, couple, child2, 13], cpag_cost[basic, couple, child2, 14], cpag_cost[basic, couple, child2, 15], cpag_cost[basic, couple, child2, 16], cpag_cost[basic, couple, child2, 17], cpag_cost[basic, couple, child2, 1], cpag_cost[basic, couple, child2, 2], cpag_cost[basic, couple, child2, 3], cpag_cost[basic, couple, child2, 4], cpag_cost[basic, couple, child2, 5], cpag_cost[basic, couple, child2, 6], cpag_cost[basic, couple, child2, 7], cpag_cost[basic, couple, child2, 8], cpag_cost[basic, couple, child2, 9])
+  law date 2025-12-31, cut 2026-10-18
+cpag_row1 (f = lone) [disp = *]: ?"CPAG adds up the cost of each year of childhood by birth order (p. 2) but prints no yearly costs" (cpag_cost[basic, lone, child1, 0], cpag_cost[basic, lone, child1, 10], cpag_cost[basic, lone, child1, 11], cpag_cost[basic, lone, child1, 12], cpag_cost[basic, lone, child1, 13], cpag_cost[basic, lone, child1, 14], cpag_cost[basic, lone, child1, 15], cpag_cost[basic, lone, child1, 16], cpag_cost[basic, lone, child1, 17], cpag_cost[basic, lone, child1, 1], cpag_cost[basic, lone, child1, 2], cpag_cost[basic, lone, child1, 3], cpag_cost[basic, lone, child1, 4], cpag_cost[basic, lone, child1, 5], cpag_cost[basic, lone, child1, 6], cpag_cost[basic, lone, child1, 7], cpag_cost[basic, lone, child1, 8], cpag_cost[basic, lone, child1, 9], cpag_cost[basic, lone, child2, 0], cpag_cost[basic, lone, child2, 10], cpag_cost[basic, lone, child2, 11], cpag_cost[basic, lone, child2, 12], cpag_cost[basic, lone, child2, 13], cpag_cost[basic, lone, child2, 14], cpag_cost[basic, lone, child2, 15], cpag_cost[basic, lone, child2, 16], cpag_cost[basic, lone, child2, 17], cpag_cost[basic, lone, child2, 1], cpag_cost[basic, lone, child2, 2], cpag_cost[basic, lone, child2, 3], cpag_cost[basic, lone, child2, 4], cpag_cost[basic, lone, child2, 5], cpag_cost[basic, lone, child2, 6], cpag_cost[basic, lone, child2, 7], cpag_cost[basic, lone, child2, 8], cpag_cost[basic, lone, child2, 9])
+  law date 2025-12-31, cut 2026-10-18
+cpag_row2 (f = couple) [disp = *]: ?"CPAG adds up the cost of each year of childhood by birth order (p. 2) but prints no yearly costs" (cpag_cost[full, couple, child1, 0], cpag_cost[full, couple, child1, 10], cpag_cost[full, couple, child1, 11], cpag_cost[full, couple, child1, 12], cpag_cost[full, couple, child1, 13], cpag_cost[full, couple, child1, 14], cpag_cost[full, couple, child1, 15], cpag_cost[full, couple, child1, 16], cpag_cost[full, couple, child1, 17], cpag_cost[full, couple, child1, 1], cpag_cost[full, couple, child1, 2], cpag_cost[full, couple, child1, 3], cpag_cost[full, couple, child1, 4], cpag_cost[full, couple, child1, 5], cpag_cost[full, couple, child1, 6], cpag_cost[full, couple, child1, 7], cpag_cost[full, couple, child1, 8], cpag_cost[full, couple, child1, 9], cpag_cost[full, couple, child2, 0], cpag_cost[full, couple, child2, 10], cpag_cost[full, couple, child2, 11], cpag_cost[full, couple, child2, 12], cpag_cost[full, couple, child2, 13], cpag_cost[full, couple, child2, 14], cpag_cost[full, couple, child2, 15], cpag_cost[full, couple, child2, 16], cpag_cost[full, couple, child2, 17], cpag_cost[full, couple, child2, 1], cpag_cost[full, couple, child2, 2], cpag_cost[full, couple, child2, 3], cpag_cost[full, couple, child2, 4], cpag_cost[full, couple, child2, 5], cpag_cost[full, couple, child2, 6], cpag_cost[full, couple, child2, 7], cpag_cost[full, couple, child2, 8], cpag_cost[full, couple, child2, 9])
+  law date 2025-12-31, cut 2026-10-18
+cpag_row2 (f = lone) [disp = *]: ?"CPAG adds up the cost of each year of childhood by birth order (p. 2) but prints no yearly costs" (cpag_cost[full, lone, child1, 0], cpag_cost[full, lone, child1, 10], cpag_cost[full, lone, child1, 11], cpag_cost[full, lone, child1, 12], cpag_cost[full, lone, child1, 13], cpag_cost[full, lone, child1, 14], cpag_cost[full, lone, child1, 15], cpag_cost[full, lone, child1, 16], cpag_cost[full, lone, child1, 17], cpag_cost[full, lone, child1, 1], cpag_cost[full, lone, child1, 2], cpag_cost[full, lone, child1, 3], cpag_cost[full, lone, child1, 4], cpag_cost[full, lone, child1, 5], cpag_cost[full, lone, child1, 6], cpag_cost[full, lone, child1, 7], cpag_cost[full, lone, child1, 8], cpag_cost[full, lone, child1, 9], cpag_cost[full, lone, child2, 0], cpag_cost[full, lone, child2, 10], cpag_cost[full, lone, child2, 11], cpag_cost[full, lone, child2, 12], cpag_cost[full, lone, child2, 13], cpag_cost[full, lone, child2, 14], cpag_cost[full, lone, child2, 15], cpag_cost[full, lone, child2, 16], cpag_cost[full, lone, child2, 17], cpag_cost[full, lone, child2, 1], cpag_cost[full, lone, child2, 2], cpag_cost[full, lone, child2, 3], cpag_cost[full, lone, child2, 4], cpag_cost[full, lone, child2, 5], cpag_cost[full, lone, child2, 6], cpag_cost[full, lone, child2, 7], cpag_cost[full, lone, child2, 8], cpag_cost[full, lone, child2, 9])
+  law date 2025-12-31, cut 2026-10-18
+cpag_rows3_5 (w = not_working, f = couple) [disp = *]: ?"CPAG doesn't print the minimum family costs behind its percentages" (cpag_min[couple]) ?"CPAG doesn't print the net incomes behind its percentages" (cpag_net[couple, not_working])
+  law date 2025-12-31, cut 2026-10-18
+cpag_rows3_5 (w = not_working, f = lone) [disp = *]: ?"CPAG doesn't print the minimum family costs behind its percentages" (cpag_min[lone]) ?"CPAG doesn't print the net incomes behind its percentages" (cpag_net[lone, not_working])
+  law date 2025-12-31, cut 2026-10-18
+cpag_rows3_5 (w = min_wage, f = couple) [disp = *]: ?"CPAG doesn't print the minimum family costs behind its percentages" (cpag_min[couple]) ?"CPAG doesn't print the net incomes behind its percentages" (cpag_net[couple, min_wage])
+  law date 2025-12-31, cut 2026-10-18
+cpag_rows3_5 (w = min_wage, f = lone) [disp = *]: ?"CPAG doesn't print the minimum family costs behind its percentages" (cpag_min[lone]) ?"CPAG doesn't print the net incomes behind its percentages" (cpag_net[lone, min_wage])
+  law date 2025-12-31, cut 2026-10-18
+cpag_rows3_5 (w = median_wage, f = couple) [disp = *]: ?"CPAG doesn't print the minimum family costs behind its percentages" (cpag_min[couple]) ?"CPAG doesn't print the net incomes behind its percentages" (cpag_net[couple, median_wage])
+  law date 2025-12-31, cut 2026-10-18
+cpag_rows3_5 (w = median_wage, f = lone) [disp = *]: ?"CPAG doesn't print the minimum family costs behind its percentages" (cpag_min[lone]) ?"CPAG doesn't print the net incomes behind its percentages" (cpag_net[lone, median_wage])
+  law date 2025-12-31, cut 2026-10-18
+es_ranges (i = low): (?"Table 1, lowest income block: its age-group rows are not transcribed" (spend_total[low, g0_2], spend_total[low, g12_14], spend_total[low, g15_17], spend_total[low, g3_5], spend_total[low, g6_8], spend_total[low, g9_11]), ?"Table 1, lowest income block: its age-group rows are not transcribed" (spend_total[low, g0_2], spend_total[low, g12_14], spend_total[low, g15_17], spend_total[low, g3_5], spend_total[low, g6_8], spend_total[low, g9_11]))
+  law date 2015-12-31, cut 2026-10-18
+es_ranges (i = mid): (12 350.00 USD, 13 900.00 USD)
+  law date 2015-12-31, cut 2026-10-18
+es_ranges (i = high): (?"Table 1, highest income block: its age-group rows are not transcribed" (spend_total[high, g0_2], spend_total[high, g12_14], spend_total[high, g15_17], spend_total[high, g3_5], spend_total[high, g6_8], spend_total[high, g9_11]), ?"Table 1, highest income block: its age-group rows are not transcribed" (spend_total[high, g0_2], spend_total[high, g12_14], spend_total[high, g15_17], spend_total[high, g3_5], spend_total[high, g6_8], spend_total[high, g9_11]))
+  law date 2015-12-31, cut 2026-10-18
+fig2_shares (c = housing) [disp = *, share_fit = plain]: 28
+  reading: share_fit = plain
+  law date 2015-12-31, cut 2026-10-18
+fig2_shares (c = housing) [disp = half-up, share_fit = to_100]: 29
+  reading: disp = half-up
+  reading: share_fit = to_100
+  law date 2015-12-31, cut 2026-10-18
+fig2_shares (c = housing) [disp = down, share_fit = to_100]: 31
+  reading: disp = down
+  reading: share_fit = to_100
+  law date 2015-12-31, cut 2026-10-18
+fig2_shares (c = food) [disp = half-up, share_fit = *]: 18
+  reading: disp = half-up
+  law date 2015-12-31, cut 2026-10-18
+fig2_shares (c = food) [disp = down, share_fit = *]: 17
+  reading: disp = down
+  law date 2015-12-31, cut 2026-10-18
+fig2_shares (c = transport) [disp = *, share_fit = *]: 15
+  law date 2015-12-31, cut 2026-10-18
+fig2_shares (c = clothing) [disp = half-up, share_fit = *]: 6
+  reading: disp = half-up
+  law date 2015-12-31, cut 2026-10-18
+fig2_shares (c = clothing) [disp = down, share_fit = *]: 5
+  reading: disp = down
+  law date 2015-12-31, cut 2026-10-18
+fig2_shares (c = health) [disp = *, share_fit = *]: 9
+  law date 2015-12-31, cut 2026-10-18
+fig2_shares (c = childcare) [disp = *, share_fit = *]: 16
+  law date 2015-12-31, cut 2026-10-18
+fig2_shares (c = misc) [disp = *, share_fit = *]: 7
+  law date 2015-12-31, cut 2026-10-18
+t10_mid (a = 0) [cp_basis = group, disp = *]: 12 680.00 USD
+  reading: cp_basis = group
+  law date 2015-12-31, cut 2026-10-18
+t10_mid (a = 0) [cp_basis = single, disp = *]: ?"Table 10 applies Cp, the 2015 expense on a child of a particular age; the report prints only the age-group averages of Table 1" (cp_single[mid, 0])
+  reading: cp_basis = single
+  law date 2015-12-31, cut 2026-10-18
+t10_mid (a = 1) [cp_basis = group, disp = half-up]: 12 960.00 USD
+  reading: cp_basis = group
+  reading: disp = half-up
+  law date 2015-12-31, cut 2026-10-18
+t10_mid (a = 1) [cp_basis = group, disp = down]: 12 950.00 USD
+  reading: cp_basis = group
+  reading: disp = down
+  law date 2015-12-31, cut 2026-10-18
+t10_mid (a = 1) [cp_basis = single, disp = *]: ?"Table 10 applies Cp, the 2015 expense on a child of a particular age; the report prints only the age-group averages of Table 1" (cp_single[mid, 1])
+  reading: cp_basis = single
+  law date 2015-12-31, cut 2026-10-18
+t10_mid (a = 2) [cp_basis = group, disp = *]: 13 240.00 USD
+  reading: cp_basis = group
+  law date 2015-12-31, cut 2026-10-18
+t10_mid (a = 2) [cp_basis = single, disp = *]: ?"Table 10 applies Cp, the 2015 expense on a child of a particular age; the report prints only the age-group averages of Table 1" (cp_single[mid, 2])
+  reading: cp_basis = single
+  law date 2015-12-31, cut 2026-10-18
+t10_mid (a = 3) [cp_basis = group, disp = half-up]: 13 590.00 USD
+  reading: cp_basis = group
+  reading: disp = half-up
+  law date 2015-12-31, cut 2026-10-18
+t10_mid (a = 3) [cp_basis = group, disp = down]: 13 580.00 USD
+  reading: cp_basis = group
+  reading: disp = down
+  law date 2015-12-31, cut 2026-10-18
+t10_mid (a = 3) [cp_basis = single, disp = *]: ?"Table 10 applies Cp, the 2015 expense on a child of a particular age; the report prints only the age-group averages of Table 1" (cp_single[mid, 3])
+  reading: cp_basis = single
+  law date 2015-12-31, cut 2026-10-18
+t10_mid (a = 4) [cp_basis = group, disp = half-up]: 13 890.00 USD
+  reading: cp_basis = group
+  reading: disp = half-up
+  law date 2015-12-31, cut 2026-10-18
+t10_mid (a = 4) [cp_basis = group, disp = down]: 13 880.00 USD
+  reading: cp_basis = group
+  reading: disp = down
+  law date 2015-12-31, cut 2026-10-18
+t10_mid (a = 4) [cp_basis = single, disp = *]: ?"Table 10 applies Cp, the 2015 expense on a child of a particular age; the report prints only the age-group averages of Table 1" (cp_single[mid, 4])
+  reading: cp_basis = single
+  law date 2015-12-31, cut 2026-10-18
+t10_mid (a = 5) [cp_basis = group, disp = *]: 14 190.00 USD
+  reading: cp_basis = group
+  law date 2015-12-31, cut 2026-10-18
+t10_mid (a = 5) [cp_basis = single, disp = *]: ?"Table 10 applies Cp, the 2015 expense on a child of a particular age; the report prints only the age-group averages of Table 1" (cp_single[mid, 5])
+  reading: cp_basis = single
+  law date 2015-12-31, cut 2026-10-18
+t10_mid (a = 6) [cp_basis = group, disp = *]: 14 070.00 USD
+  reading: cp_basis = group
+  law date 2015-12-31, cut 2026-10-18
+t10_mid (a = 6) [cp_basis = single, disp = *]: ?"Table 10 applies Cp, the 2015 expense on a child of a particular age; the report prints only the age-group averages of Table 1" (cp_single[mid, 6])
+  reading: cp_basis = single
+  law date 2015-12-31, cut 2026-10-18
+t10_mid (a = 7) [cp_basis = group, disp = *]: 14 380.00 USD
+  reading: cp_basis = group
+  law date 2015-12-31, cut 2026-10-18
+t10_mid (a = 7) [cp_basis = single, disp = *]: ?"Table 10 applies Cp, the 2015 expense on a child of a particular age; the report prints only the age-group averages of Table 1" (cp_single[mid, 7])
+  reading: cp_basis = single
+  law date 2015-12-31, cut 2026-10-18
+t10_mid (a = 8) [cp_basis = group, disp = half-up]: 14 700.00 USD
+  reading: cp_basis = group
+  reading: disp = half-up
+  law date 2015-12-31, cut 2026-10-18
+t10_mid (a = 8) [cp_basis = group, disp = down]: 14 690.00 USD
+  reading: cp_basis = group
+  reading: disp = down
+  law date 2015-12-31, cut 2026-10-18
+t10_mid (a = 8) [cp_basis = single, disp = *]: ?"Table 10 applies Cp, the 2015 expense on a child of a particular age; the report prints only the age-group averages of Table 1" (cp_single[mid, 8])
+  reading: cp_basis = single
+  law date 2015-12-31, cut 2026-10-18
+t10_mid (a = 9) [cp_basis = group, disp = *]: 16 030.00 USD
+  reading: cp_basis = group
+  law date 2015-12-31, cut 2026-10-18
+t10_mid (a = 9) [cp_basis = single, disp = *]: ?"Table 10 applies Cp, the 2015 expense on a child of a particular age; the report prints only the age-group averages of Table 1" (cp_single[mid, 9])
+  reading: cp_basis = single
+  law date 2015-12-31, cut 2026-10-18
+t10_mid (a = 10) [cp_basis = group, disp = *]: 16 380.00 USD
+  reading: cp_basis = group
+  law date 2015-12-31, cut 2026-10-18
+t10_mid (a = 10) [cp_basis = single, disp = *]: ?"Table 10 applies Cp, the 2015 expense on a child of a particular age; the report prints only the age-group averages of Table 1" (cp_single[mid, 10])
+  reading: cp_basis = single
+  law date 2015-12-31, cut 2026-10-18
+t10_mid (a = 11) [cp_basis = group, disp = *]: 16 740.00 USD
+  reading: cp_basis = group
+  law date 2015-12-31, cut 2026-10-18
+t10_mid (a = 11) [cp_basis = single, disp = *]: ?"Table 10 applies Cp, the 2015 expense on a child of a particular age; the report prints only the age-group averages of Table 1" (cp_single[mid, 11])
+  reading: cp_basis = single
+  law date 2015-12-31, cut 2026-10-18
+t10_mid (a = 12) [cp_basis = group, disp = half-up]: 16 920.00 USD
+  reading: cp_basis = group
+  reading: disp = half-up
+  law date 2015-12-31, cut 2026-10-18
+t10_mid (a = 12) [cp_basis = group, disp = down]: 16 910.00 USD
+  reading: cp_basis = group
+  reading: disp = down
+  law date 2015-12-31, cut 2026-10-18
+t10_mid (a = 12) [cp_basis = single, disp = *]: ?"Table 10 applies Cp, the 2015 expense on a child of a particular age; the report prints only the age-group averages of Table 1" (cp_single[mid, 12])
+  reading: cp_basis = single
+  law date 2015-12-31, cut 2026-10-18
+t10_mid (a = 13) [cp_basis = group, disp = *]: 17 290.00 USD
+  reading: cp_basis = group
+  law date 2015-12-31, cut 2026-10-18
+t10_mid (a = 13) [cp_basis = single, disp = *]: ?"Table 10 applies Cp, the 2015 expense on a child of a particular age; the report prints only the age-group averages of Table 1" (cp_single[mid, 13])
+  reading: cp_basis = single
+  law date 2015-12-31, cut 2026-10-18
+t10_mid (a = 14) [cp_basis = group, disp = *]: 17 670.00 USD
+  reading: cp_basis = group
+  law date 2015-12-31, cut 2026-10-18
+t10_mid (a = 14) [cp_basis = single, disp = *]: ?"Table 10 applies Cp, the 2015 expense on a child of a particular age; the report prints only the age-group averages of Table 1" (cp_single[mid, 14])
+  reading: cp_basis = single
+  law date 2015-12-31, cut 2026-10-18
+t10_mid (a = 15) [cp_basis = group, disp = half-up]: 19 270.00 USD
+  reading: cp_basis = group
+  reading: disp = half-up
+  law date 2015-12-31, cut 2026-10-18
+t10_mid (a = 15) [cp_basis = group, disp = down]: 19 260.00 USD
+  reading: cp_basis = group
+  reading: disp = down
+  law date 2015-12-31, cut 2026-10-18
+t10_mid (a = 15) [cp_basis = single, disp = *]: ?"Table 10 applies Cp, the 2015 expense on a child of a particular age; the report prints only the age-group averages of Table 1" (cp_single[mid, 15])
+  reading: cp_basis = single
+  law date 2015-12-31, cut 2026-10-18
+t10_mid (a = 16) [cp_basis = group, disp = half-up]: 19 690.00 USD
+  reading: cp_basis = group
+  reading: disp = half-up
+  law date 2015-12-31, cut 2026-10-18
+t10_mid (a = 16) [cp_basis = group, disp = down]: 19 680.00 USD
+  reading: cp_basis = group
+  reading: disp = down
+  law date 2015-12-31, cut 2026-10-18
+t10_mid (a = 16) [cp_basis = single, disp = *]: ?"Table 10 applies Cp, the 2015 expense on a child of a particular age; the report prints only the age-group averages of Table 1" (cp_single[mid, 16])
+  reading: cp_basis = single
+  law date 2015-12-31, cut 2026-10-18
+t10_mid (a = 17) [cp_basis = group, disp = *]: 20 120.00 USD
+  reading: cp_basis = group
+  law date 2015-12-31, cut 2026-10-18
+t10_mid (a = 17) [cp_basis = single, disp = *]: ?"Table 10 applies Cp, the 2015 expense on a child of a particular age; the report prints only the age-group averages of Table 1" (cp_single[mid, 17])
+  reading: cp_basis = single
+  law date 2015-12-31, cut 2026-10-18
+t10_totals (i = low) [cp_basis = group, disp = *]: ?"Table 1, lowest income block: its age-group rows are not transcribed" (spend_total[low, g0_2], spend_total[low, g12_14], spend_total[low, g15_17], spend_total[low, g3_5], spend_total[low, g6_8], spend_total[low, g9_11])
+  reading: cp_basis = group
+  law date 2015-12-31, cut 2026-10-18
+t10_totals (i = low) [cp_basis = single, disp = *]: ?"Table 10 applies Cp, the 2015 expense on a child of a particular age; the report prints only the age-group averages of Table 1" (cp_single[low, 0], cp_single[low, 10], cp_single[low, 11], cp_single[low, 12], cp_single[low, 13], cp_single[low, 14], cp_single[low, 15], cp_single[low, 16], cp_single[low, 17], cp_single[low, 1], cp_single[low, 2], cp_single[low, 3], cp_single[low, 4], cp_single[low, 5], cp_single[low, 6], cp_single[low, 7], cp_single[low, 8], cp_single[low, 9])
+  reading: cp_basis = single
+  law date 2015-12-31, cut 2026-10-18
+t10_totals (i = mid) [cp_basis = group, disp = half-up]: 283 810.00 USD
+  reading: cp_basis = group
+  reading: disp = half-up
+  law date 2015-12-31, cut 2026-10-18
+t10_totals (i = mid) [cp_basis = group, disp = down]: 283 740.00 USD
+  reading: cp_basis = group
+  reading: disp = down
+  law date 2015-12-31, cut 2026-10-18
+t10_totals (i = mid) [cp_basis = single, disp = *]: ?"Table 10 applies Cp, the 2015 expense on a child of a particular age; the report prints only the age-group averages of Table 1" (cp_single[mid, 0], cp_single[mid, 10], cp_single[mid, 11], cp_single[mid, 12], cp_single[mid, 13], cp_single[mid, 14], cp_single[mid, 15], cp_single[mid, 16], cp_single[mid, 17], cp_single[mid, 1], cp_single[mid, 2], cp_single[mid, 3], cp_single[mid, 4], cp_single[mid, 5], cp_single[mid, 6], cp_single[mid, 7], cp_single[mid, 8], cp_single[mid, 9])
+  reading: cp_basis = single
+  law date 2015-12-31, cut 2026-10-18
+t10_totals (i = high) [cp_basis = group, disp = *]: ?"Table 1, highest income block: its age-group rows are not transcribed" (spend_total[high, g0_2], spend_total[high, g12_14], spend_total[high, g15_17], spend_total[high, g3_5], spend_total[high, g6_8], spend_total[high, g9_11])
+  reading: cp_basis = group
+  law date 2015-12-31, cut 2026-10-18
+t10_totals (i = high) [cp_basis = single, disp = *]: ?"Table 10 applies Cp, the 2015 expense on a child of a particular age; the report prints only the age-group averages of Table 1" (cp_single[high, 0], cp_single[high, 10], cp_single[high, 11], cp_single[high, 12], cp_single[high, 13], cp_single[high, 14], cp_single[high, 15], cp_single[high, 16], cp_single[high, 17], cp_single[high, 1], cp_single[high, 2], cp_single[high, 3], cp_single[high, 4], cp_single[high, 5], cp_single[high, 6], cp_single[high, 7], cp_single[high, 8], cp_single[high, 9])
+  reading: cp_basis = single
+  law date 2015-12-31, cut 2026-10-18
+t1_cats_mid (c = housing): 66 240.00 USD
+  law date 2015-12-31, cut 2026-10-18
+t1_cats_mid (c = food): 41 400.00 USD
+  law date 2015-12-31, cut 2026-10-18
+t1_cats_mid (c = transport): 35 490.00 USD
+  law date 2015-12-31, cut 2026-10-18
+t1_cats_mid (c = clothing): 13 260.00 USD
+  law date 2015-12-31, cut 2026-10-18
+t1_cats_mid (c = health): 21 720.00 USD
+  law date 2015-12-31, cut 2026-10-18
+t1_cats_mid (c = childcare): 38 040.00 USD
+  law date 2015-12-31, cut 2026-10-18
+t1_cats_mid (c = misc): 17 460.00 USD
+  law date 2015-12-31, cut 2026-10-18
+t1_totals (i = low): ?"Table 1, lowest income block: its age-group rows are not transcribed" (spend_total[low, g0_2], spend_total[low, g12_14], spend_total[low, g15_17], spend_total[low, g3_5], spend_total[low, g6_8], spend_total[low, g9_11])
+  law date 2015-12-31, cut 2026-10-18
+t1_totals (i = mid): 233 610.00 USD
+  law date 2015-12-31, cut 2026-10-18
+t1_totals (i = high): ?"Table 1, highest income block: its age-group rows are not transcribed" (spend_total[high, g0_2], spend_total[high, g12_14], spend_total[high, g15_17], spend_total[high, g3_5], spend_total[high, g6_8], spend_total[high, g9_11])
+  law date 2015-12-31, cut 2026-10-18

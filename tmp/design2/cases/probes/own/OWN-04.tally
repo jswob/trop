@@ -1,0 +1,74 @@
+model own04
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+  note "OWN-04: one flat under each of four regimes; each person's part."
+  note "The card gives no dates and moves no money, so its money is written as defs (LANGUAGE 5.10, Places need dates): the flats are keys of an index, each with its value, and ownership is owns[p, f] with stakes in an entity looked through once (3.6). The regime is a key of an index (3.6, N-506)."
+
+source card "Probe card OWN-04 (made up): story and rules"
+
+unit DUK: currency minor 0.01
+
+index flats = [flat_co, flat_comm, flat_est, flat_sep]
+
+index parties = [ania, tomek, piotr, ola, halina, marta, kuba, zb_estate]
+
+index regimes = [community, separate, co_owned, in_estate]
+
+input community_part: num
+
+input flat_value[f in flats]: money DUK
+
+input owns[p in parties, f in flats]: num
+
+input regime_of[f in flats]: key regimes
+
+input spouse_in[p in parties, f in flats]: bool
+
+input stake[p in parties, e in parties]: num
+
+def part_value[p in parties, f in flats]: num DUK = flat_value[f] * share_of[p, f] at reader
+
+def share_of[p in parties, f in flats]: num at reader
+  note "rule 1: community half to each spouse; separate, co-owned and the estate by their shares"
+  rule base v card_rules = owns[p, f] + sum(stake[p, e] * owns[e, f] for e in parties)
+  rule comm beats base v card_rules = if spouse_in[p, f] then community_part else 0 when regime_of[f] == community
+
+ask q_co_owned: part_value[p, flat_co] for p in [piotr, ola] law 2026-01-01
+
+ask q_community: part_value[p, flat_comm] for p in [ania, tomek] law 2026-01-01
+
+ask q_estate: part_value[p, flat_est] for p in [halina, ania, piotr, marta, kuba] law 2026-01-01
+
+ask q_separate: part_value[p, flat_sep] for p in [ania] law 2026-01-01
+
+version card_facts
+  cite card
+  governs always
+  known 2026-01-01
+  flat_value = 300000.00 "story: each worth 300 000.00"
+  owns = 0 "story: no other owner"
+  owns[ania, flat_sep] = 1 "story: Ania's separate property"
+  owns[piotr, flat_co] = 0.6 "story: Piotr and Ola 60/40"
+  owns[ola, flat_co] = 0.4 "story: Piotr and Ola 60/40"
+  owns[zb_estate, flat_est] = 1 "story: in Zbigniew's estate"
+  regime_of[flat_co] = co_owned "story"
+  regime_of[flat_comm] = community "story"
+  regime_of[flat_est] = in_estate "story"
+  regime_of[flat_sep] = separate "story"
+  spouse_in = false "story"
+  spouse_in[ania, flat_comm] = true "story: Ania and Tomek's community property"
+  spouse_in[tomek, flat_comm] = true "story: Ania and Tomek's community property"
+  stake = 0 "story: no other stake"
+  stake[halina, zb_estate] = 0.25 "story: Halina 1/4"
+  stake[ania, zb_estate] = 0.1875 "story: 3/16"
+  stake[piotr, zb_estate] = 0.1875 "story: 3/16"
+  stake[marta, zb_estate] = 0.1875 "story: 3/16"
+  stake[kuba, zb_estate] = 0.1875 "story: 3/16"
+
+version card_rules
+  cite card
+  governs always
+  known 2026-01-01
+  community_part = 0.5 "rule 1: half to each spouse"

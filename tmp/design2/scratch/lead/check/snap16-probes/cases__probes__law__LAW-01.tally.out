@@ -1,0 +1,12 @@
+benefit_at_edges (t = p1): (49 999.99 DUK, 200.00 DUK)
+  law date 2026-10-25, cut 2026-10-25
+benefit_at_edges (t = p2): (50 000.00 DUK, 200.00 DUK)
+  law date 2026-10-25, cut 2026-10-25
+benefit_at_edges (t = p3): (50 000.01 DUK, 100.00 DUK)
+  law date 2026-10-25, cut 2026-10-25
+benefit_at_edges (t = p4): (79 999.99 DUK, 100.00 DUK)
+  law date 2026-10-25, cut 2026-10-25
+benefit_at_edges (t = p5): (80 000.00 DUK, 0.00 DUK)
+  law date 2026-10-25, cut 2026-10-25
+benefit_at_edges (t = p6): (80 000.01 DUK, 0.00 DUK)
+  law date 2026-10-25, cut 2026-10-25

@@ -1,0 +1,125 @@
+part ola
+  tally 2
+  note "Ola's employment at Mewa Logistyka (B-D25, B-D25b, B-D26): gross pay, the employee's contributions (SOC-1), health (SOC-2), the advances (PIT-4, on the day pay is paid), the net that reaches her Wrzos account, and her yearly return filed alone (PIT-5, PIT-3)."
+
+input gross_hi: money DUK question "Up to which gross is a month's lost pay searched?"
+
+input gross_lo: money DUK question "From which gross is a month's lost pay searched?"
+
+input ola_gross[m in months]: money DUK question "What is Ola's gross pay for this month?"
+
+input ola_late[m in months]: date question "Is this month's pay paid on a day other than B-D25's rule?"
+
+input ola_pay_dom: int question "On which day of the month is Ola's pay paid (B-D25)?"
+
+input ola_pay_from: date question "From which month does the dossier state Ola's pay (B-D25)?"
+
+input ola_spends[m in months]: bool question "Is a spending of Ola's from Wrzos counted in this month (one her statements don't cover, from her first statement on)?"
+
+input ola_spend[m in months]: money DUK question "What did Ola spend from her Wrzos account in this month?"
+
+def jointly[y in years]: money DUK
+  note "PIT-6 .1: spouses may file jointly when married for the whole year, with community property, both residents, and neither taxed under PIT-10 (b) or (c)"
+  rule joint = ?"What is the joint return? PIT-6 .3's computation is not written: no case of this household needs it"
+  rule not_spouses beats joint = ?"What would a joint return be for Piotr and Ola? PIT-6 .1 allows it only to spouses, and they aren't married (B-D04); Piotr's business is taxed under PIT-10 form (c) too (B-D02)" when not spouses
+
+def ola_adv[m in months]: money DUK
+  note "what is withheld from pay m: its payment month's advance (PIT-4 .1: one advance for each month in which pay is paid), withheld from the month's first pay; a second pay paid in the same month (February 2025's, paid 2025-03-07, then March's) has none withheld. The act doesn't split a month's advance between two pays; the totals don't depend on it"
+  rule only = if pos(m) > 1 and start_of(m) > ola_pay_from and month_of(ola_pay_on[m - 1]) == month_of(ola_pay_on[m]) then 0 DUK else ola_padv[month_of(ola_pay_on[m])]
+
+def ola_advances[y in years]: money DUK = sum(ola_padv[p] for p in months where year_of(p) == y)
+
+def ola_base[y in years]: money DUK = max(0 DUK, round(sum(ola_gross[k] - ola_social[k] for k in months where start_of(k) >= ola_pay_from and year_of(ola_pay_on[k]) == y) - sum(ola_pcost[p] for p in months where year_of(p) == y), 1 DUK, half-up))
+
+def ola_in_month[p in months]: bool = any(month_of(ola_pay_on[k]) == p for k in months where k <= p and start_of(k) >= ola_pay_from)
+
+def ola_padv[p in months]: money DUK = if ola_in_month[p] then max(0 DUK, round(marginal(pit3_rate, ola_pytd[p] + ola_pbase[p]) - marginal(pit3_rate, ola_pytd[p]) - pit3_reducing / pit4_months, 1 DUK, half-up)) else 0 DUK at start_of(p)
+
+def ola_pbase[p in months]: money DUK
+  note "PIT-4 .1: the month's base is the month's PIT-2 base, the pay paid in that month (two pays in March 2025, none in February), less the costs once for the month (PIT-2 v1 .2)"
+  rule only = if ola_in_month[p] then max(0 DUK, round(sum(ola_gross[k] - ola_social[k] for k in months where k <= p and start_of(k) >= ola_pay_from and month_of(ola_pay_on[k]) == p) - ola_pcost[p], 1 DUK, half-up)) else 0 DUK
+
+def ola_pcost[p in months]: money DUK = if ola_in_month[p] then pit2_costs_month else 0 DUK at start_of(p)
+
+def ola_pytd[p in months]: money DUK = sum(ola_pbase[q] for q in months where q < p and year_of(q) == year_of(p))
+
+def ola_health[m in months]: money DUK = round(soc2_rate * (ola_gross[m] - ola_social[m]), minor(DUK), half-up) at ola_pay_on[m]
+
+def ola_income[y in years]: money DUK = sum(ola_gross[k] for k in months where start_of(k) >= ola_pay_from and year_of(ola_pay_on[k]) == y)
+
+def ola_net[m in months]: money DUK = ola_gross[m] - ola_social[m] - ola_health[m] - ola_adv[m]
+
+def ola_pay_on[m in months]: date at start_of(m)
+  note "B-D25: pay is paid on the 28th of the month it is for, or the last business day before it. Where no row of the calendar governs the month yet (2026's, at a cut before the gazette's hol_2026, known 2025-10-16), B-D25 still bounds the day: a day of that month, not after the 28th"
+  rule rule28 = schedule(m, ola_pay_dom, preceding, holidays)
+  rule no_calendar beats rule28 v mewa_2024 = window(start_of(m), day_of(m, ola_pay_dom)) when missing(holidays)
+  rule moved beats rule28, no_calendar = ola_late[m] when ola_late[m] != none
+
+def ola_result[y in years]: money DUK = ola_advances[y] - ola_tax[y]
+
+def ola_social[m in months]: money DUK = sum(round(ola_gross[m] * soc1_rate[c], minor(DUK), half-up) for c in soc1_part) at ola_pay_on[m]
+
+def ola_tax[y in years]: money DUK = max(0 DUK, round(marginal(pit3_rate, ola_base[y]) - pit3_reducing, 1 DUK, half-up)) at start_of(y)
+
+def gross_found[m in months]: money DUK
+  note "the least gross whose net, with the earlier months' pay as stated, reaches the net Wrzos received for the month (B-07: October 2024, records/wrz-ola-2024-10.csv line 18)"
+  rule search = min(g for g in gross_lo .. gross_hi step minor(DUK) where ola_net[m] as if {ola_gross[m] = g} >= observed(mewa_pay[m]).cash.amount)
+
+move mewa_pay[m in months]: transfers
+  on ola_pay_on[m]
+  at start_of(m)
+  when start_of(m) >= ola_pay_from
+  leg cash from employer to wrzos amount ola_net[m]
+
+move ola_spent[m in months]: transfers
+  on end_of(m) - 1
+  when ola_spends[m]
+  leg cash from wrzos to shops amount ola_spend[m]
+  note "the month's spending exists where ola_spends says so, a fact never a hole; the amount is the hole. Testing the amount against none made the instance's existence a hole too, and so every later balance a plain hole (L §5.18, §5.14 when)"
+
+version mewa_2024
+  cite b_d25
+  governs always
+  known 2023-12-16
+  ola_gross[2024-01..2024-12] = 7200.00 DUK "B-D25: from January 2024, 7 200.00 DUK"
+  ola_late[*] = none "B-D25: pay is paid on the 28th, or the last business day before it"
+  ola_pay_dom = 28 "B-D25: on the 28th of the month it is for"
+  ola_pay_from = 2024-01-01 "B-D25: pay from January 2024 (the dossier's first statement of it)"
+
+version mewa_october
+  cite story
+  governs always
+  known 2024-10-28
+  note "The story: Ola's October pay came with a bonus; the payslip is lost, so October's gross is not B-D25's."
+  ola_gross[2024-10] = ?"What was Ola's gross pay for October 2024? Her payslip is lost; Wrzos shows a net of 7 351.59 (wrz-ola-2024-10.csv line 18), not B-D25's" "story: 2024-10-28"
+
+version mewa_2025
+  cite b_d25b
+  governs always
+  known 2024-12-16
+  ola_gross[2025-01..2025-12] = 7600.00 DUK "B-D25b: from January 2025, 7 600.00 DUK"
+
+version mewa_late
+  cite b_d26
+  governs always
+  known 2025-03-03
+  ola_late[2025-02] = 2025-03-07 "B-D26: February's pay on 7 March 2025 (Ola read it on 3 March)"
+
+version oct_search
+  cite questions
+  governs always
+  known 2025-04-30
+  gross_hi = 20000.00 DUK assumed "a bonus month's gross searched up to 20 000.00 DUK" "B-07"
+  gross_lo = 7200.00 DUK assumed "October's gross is B-D25's 7 200.00 or more (the net is above B-D25's)" "B-07"
+
+version wrzos_spending
+  cite story
+  governs always
+  known 2024-10-01
+  note "Ola kept only three statements (October 2024, February and March 2025); what she spent in the other months is not known."
+  ola_spend[*] = none "story: the months her statements cover need no estimate"
+  ola_spend[2024-11..2025-01] = ?"What did Ola spend from Wrzos from November 2024 to January 2025? She kept no statement" "story, the table"
+  ola_spend[2025-04..2026-12] = ?"What did Ola spend from Wrzos from April 2025 on? She kept no statement after March 2025" "story, the table"
+  ola_spends[*] = false "story: no estimate for the months her statements cover, nor before her first"
+  ola_spends[2024-11..2025-01] = true "story: no statement from November 2024 to January 2025"
+  ola_spends[2025-04..2026-12] = true "story: no statement after March 2025"

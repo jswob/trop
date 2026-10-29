@@ -1,0 +1,18 @@
+q_floor: 3 000.00 DUK
+  law date 2025-04-15, cut 2025-04-15
+q_gap (m = 2025-01): 1 000.00 DUK
+  anchor: konto 2025-01-15 end, stated 2 000.00 DUK, difference ?"konto has no balance before 2025-01-15" (konto)
+  law date 2025-04-15, cut 2025-04-15
+q_gap (m = 2025-02): 1 000.00 DUK
+  anchor: konto 2025-02-15 end, stated 2 000.00 DUK, difference 0.00 DUK
+  law date 2025-04-15, cut 2025-04-15
+q_gap (m = 2025-03): 1 000.00 DUK
+  anchor: konto 2025-03-15 end, stated 2 000.00 DUK, difference 0.00 DUK
+  law date 2025-04-15, cut 2025-04-15
+q_not_rebooked: ok
+  law date 2025-04-15, cut 2025-04-15
+q_total: 3 000.00 DUK
+  anchor: konto 2025-01-15 end, stated 2 000.00 DUK, difference ?"konto has no balance before 2025-01-15" (konto)
+  anchor: konto 2025-02-15 end, stated 2 000.00 DUK, difference 0.00 DUK
+  anchor: konto 2025-03-15 end, stated 2 000.00 DUK, difference 0.00 DUK
+  law date 2025-04-15, cut 2025-04-15

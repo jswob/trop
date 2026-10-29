@@ -1,0 +1,6 @@
+q_crn: (≈ 1 000 DUK ± 0.0003 DUK (standard error 0; 1000 paths; horizon 2026-01-01), 1000 of 1000, 1 (standard error 0; 1000 paths; horizon 2026-01-01))
+  world: plan_b
+  law date 2026-01-01, cut 2026-01-02
+q_independent: ≈ 966.92845 DUK ± 0.00013 DUK (standard error 381.392226; 1000 paths; horizon 2026-01-01)
+  world: plan_b
+  law date 2026-01-01, cut 2026-01-02

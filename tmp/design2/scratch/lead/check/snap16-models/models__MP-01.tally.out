@@ -1,0 +1,46 @@
+p41_badger_net: 243 545.00 GBP
+  law date 2026-10-19, cut 2026-10-19
+p41_endowment_split: (?"Para 41 splits the endowment policy on the basis that the parties contributed jointly for eight years and five months and Ms Jones alone for fourteen and a half years, but states no method, and neither time-proportion of those periods reproduces the split: how was Mr Kernott's part computed?" (endow_kernott), ?"Para 41 splits the endowment policy on the basis that the parties contributed jointly for eight years and five months and Ms Jones alone for fourteen and a half years, but states no method, and neither time-proportion of those periods reproduces the split: how was Mr Kernott's part computed?" (endow_kernott))
+  law date 2026-10-19, cut 2026-10-19
+p41_stanley_net: 167 032.00 GBP
+  law date 2026-10-19, cut 2026-10-19
+p43_court_shares (p = jones): 0.9
+  law date 2026-10-19, cut 2026-10-19
+p43_court_shares (p = kernott): 0.1
+  law date 2026-10-19, cut 2026-10-19
+p43_kernott_total [mp01_pound = down]: 191 387.00 GBP
+  reading: mp01_pound = down
+  law date 2026-10-19, cut 2026-10-19
+p43_kernott_total [mp01_pound = half-up]: 191 386.00 GBP
+  reading: mp01_pound = half-up
+  law date 2026-10-19, cut 2026-10-19
+p43_sale_exact (p = jones): 219 190.5 GBP
+  law date 2026-10-19, cut 2026-10-19
+p43_sale_exact (p = kernott): 24 354.5 GBP
+  law date 2026-10-19, cut 2026-10-19
+p43_sale_pounds (p = jones) [mp01_pound = down]: 219 190.00 GBP
+  reading: mp01_pound = down
+  law date 2026-10-19, cut 2026-10-19
+p43_sale_pounds (p = jones) [mp01_pound = half-up]: 219 191.00 GBP
+  reading: mp01_pound = half-up
+  law date 2026-10-19, cut 2026-10-19
+p43_sale_pounds (p = kernott) [mp01_pound = down]: 24 355.00 GBP
+  reading: mp01_pound = down
+  law date 2026-10-19, cut 2026-10-19
+p43_sale_pounds (p = kernott) [mp01_pound = half-up]: 24 354.00 GBP
+  reading: mp01_pound = half-up
+  law date 2026-10-19, cut 2026-10-19
+p44_contribution_ratio: ?"Para 44 reports the High Court's ratio of the parties' direct contributions, but no court states the contributions themselves: what did each party contribute directly?" (direct_contribution[jones], direct_contribution[kernott])
+  law date 2026-10-19, cut 2026-10-19
+p45_appeal_shares (p = jones): 0.5
+  law date 2026-10-19, cut 2026-10-19
+p45_appeal_shares (p = kernott): 0.5
+  law date 2026-10-19, cut 2026-10-19
+p49_rough (m = late1993): (30 000 GBP, 215 000 GBP, 6/49 (0.122448979591837), 43/49 (0.877551020408163))
+  law date 2026-10-19, cut 2026-10-19
+p49_rough (m = late1995): (35 000 GBP, 210 000 GBP, 1/7 (0.142857142857143), 6/7 (0.857142857142857))
+  law date 2026-10-19, cut 2026-10-19
+p54_supreme_shares (p = jones): 0.9
+  law date 2026-10-19, cut 2026-10-19
+p54_supreme_shares (p = kernott): 0.1
+  law date 2026-10-19, cut 2026-10-19

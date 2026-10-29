@@ -1,0 +1,333 @@
+model mp07
+  tally 2
+  on 2026-10-19
+  start 2026-01-01
+  end 2026-12-31
+  note "UK transfer of unused nil-rate bands between spouses and civil partners: the residence nil-rate band carried forward with tapering (IHTM46044 Examples 1, 3, 4), two predeceased spouses (IHTM46041 Examples 4, 5), a single tapered estate (IHTM46023), and the ordinary nil-rate band across one or two marriages (IHTM43020, IHTM43030, IHTM43031)."
+  note "Percentages are kept as fractions: 0.75 is 75%."
+
+source fa2008_src "Finance Act 2008 (c. 9), Royal Assent 21 July 2008: s. 10 and Sch. 4 para. 2, inserting IHTA 1984 ss. 8A-8C with effect as Sch. 4 para. 9 (1) says. Read in IHTA 1984 s. 8A at legislation.gov.uk (up to date with all changes known to be in force on or before 18 October 2026)" at "https://www.legislation.gov.uk/ukpga/1984/51/section/8A"
+
+source fno2a2015_src "Finance (No. 2) Act 2015 (c. 33), Royal Assent 18 November 2015: s. 9 (4), inserting IHTA 1984 ss. 8D-8M. Read in IHTA 1984 ss. 8D and 8G at legislation.gov.uk (up to date to 17 October 2026 for s. 8D and 18 October 2026 for s. 8G)" at "https://www.legislation.gov.uk/ukpga/1984/51/section/8D"
+
+source ihtm "HMRC Inheritance Tax Manual IHTM46023, IHTM46022, IHTM46041, IHTM43020, IHTM43030, IHTM43031 (the pages have no date of their own; the manual was published 20 March 2016 and updated 7 April 2026)" at "https://www.gov.uk/hmrc-internal-manuals/inheritance-tax-manual/ihtm43020"
+
+source ihtm46044 "HMRC Inheritance Tax Manual IHTM46044, Transfer of unused RNRB: effect of tapering (the page has no date of its own; the manual was published 20 March 2016 and updated 7 April 2026)" at "https://www.gov.uk/hmrc-internal-manuals/inheritance-tax-manual/ihtm46044"
+
+source lifted_1_0_1 "Figures tally 1.0.1 allowed inline in rules"
+
+unit GBP: currency minor 0.01
+
+axis mp07_pct
+  exact "each percentage is kept exact"
+  four_places "each percentage is taken to four decimal places, as IHTM43020 directs"
+
+axis mp07_pound
+  down "the brought-forward allowance is rounded down to the pound"
+  half-up "the brought-forward allowance is rounded to the nearest pound"
+
+index person = [monique, maria, zac, yasuo, joelle, clyde, john_g, allen, joyce, jack_h, david, jill, brian, john_d, linda, cheng, jack_e, mei]
+
+index tax_year = year 2017..2020 from 04-06
+
+input cf_pct_0_000001: num
+  note "lifted from an inline figure of tally 1.0.1"
+
+input chargeable_on_death[p in person]: money GBP
+  note "VT in s. 8A(2): the value actually transferred by the chargeable transfer on death, that is the legacies that are not exempt."
+
+input claims_made[p in person]: bool
+  note "The claims under s. 8A (nil-rate band) and s. 8L (brought-forward allowance) for the person's estate."
+
+input death_date[p in person]: date
+
+input descendant_share[p in person]: num
+  note "The part of the residence that passes to the person's direct descendants."
+
+input early_available: money GBP
+
+input early_enhancement: money GBP
+
+input estate_value[p in person]: money GBP
+  note "The estate as the example values it, read as E, the value after liabilities and before reliefs (IHTM46023)."
+
+input lifetime_chargeable[p in person]: money GBP
+
+input nil_band_at[p in person]: money GBP
+  note "The nil-rate band maximum at the person's death, as the manual example states it; the historical Sch. 1 tables were not fetched."
+
+input nrb_pct_0_000001: num
+  note "lifted from an inline figure of tally 1.0.1"
+
+input related[p in person, r in person]: bool
+  note "r was p's spouse or civil partner and died before p."
+
+input res_enh[t in tax_year]: money GBP
+
+input residence_value[p in person]: money GBP
+
+input rnrb_start: date
+
+input taper_divisor: int
+
+input taper_threshold: money GBP
+
+input within_threshold[p in person]: bool
+  note "The example gives no estate value and applies no taper to the estate."
+
+def adjusted[p in person]: num GBP at reader
+  note "s. 8D(5)(g): the default allowance less the taper amount, but nil if that amount is greater than the default allowance."
+  rule base v fno2a2015 = default_allowance[p] - taper_cut[p]
+  rule nil beats base v fno2a2015 = 0 when taper_cut[p] > default_allowance[p]
+
+def bf_pct_total[p in person]: num at reader
+  note "s. 8G(3)(c): the total of the percentages from every related person."
+  rule base v fno2a2015 = sum(cf_pct[r] for r in person where related[p, r])
+
+def brought_forward[p in person]: money GBP at reader
+  note "s. 8G(3)(d): the total percentage of the residential enhancement at the person's death, or the whole enhancement if the total is greater than 100%, and nil if no claim is made under s. 8L. IHTM46041 Example 5 prints the result to the pound; the mode is not stated."
+  rule base v fno2a2015 = round(bf_pct_total[p] * enhancement_at[p], 1, mp07_pound)
+  rule capped beats base v fno2a2015 = enhancement_at[p] when bf_pct_total[p] > 1
+  rule unclaimed beats base, capped v fno2a2015 = 0 when not claims_made[p]
+
+def carry_forward[p in person]: num GBP at reader
+  note "The amount available for carry-forward from the person's death: the adjusted allowance less the residence nil-rate amount used (IHTM46041); for a death before 6 April 2017, £100,000 reduced under s. 8G(5), but not below nil."
+  rule base v ihtm_method = adjusted[p] - rnrb[p]
+  rule early beats base v fno2a2015 = max(0, early_available - taper_cut[p]) when death_date[p] < rnrb_start
+
+def cf_pct[p in person]: num at reader
+  note "s. 8G(3)(b): the amount available for carry-forward as a percentage of the residential enhancement at that person's death."
+  rule exact v fno2a2015 = carry_forward[p] / enhancement_at[p] when mp07_pct == exact
+  rule four v ihtm_method = round(carry_forward[p] / enhancement_at[p], cf_pct_0_000001, half-up) when mp07_pct == four_places
+
+def death_ty[p in person]: key tax_year = first(t in tax_year where death_date[p] < end_of(t)) at reader
+
+def default_allowance[p in person]: money GBP at reader
+  note "s. 8D(5)(f): the residential enhancement at the person's death plus the brought-forward allowance."
+  rule base v fno2a2015 = enhancement_at[p] + brought_forward[p]
+
+def enhancement_at[p in person]: money GBP at reader
+  note "s. 8D(5)(a): the residential enhancement for the tax year of the death; s. 8G(4): treated as £100,000 for a related person who died before 6 April 2017."
+  rule base v fno2a2015 = res_enh[death_ty[p]]
+  rule early beats base v fno2a2015 = early_enhancement when death_date[p] < rnrb_start
+
+def has_unused_nrb[p in person]: bool at reader
+  note "s. 8A(2): the person had unused nil-rate band on death if M is greater than VT."
+  rule base v fa2008 = m_value[p] > chargeable_on_death[p]
+
+def m_value[p in person]: money GBP at reader
+  note "M in s. 8A(2): the most that could be transferred on death at the rate of nil per cent, that is the nil-rate band maximum less the chargeable transfers already made."
+  rule base v fa2008 = nil_band_at[p] - lifetime_chargeable[p]
+
+def nrb_increase[p in person]: num GBP at reader
+  note "s. 8A(3), (4), (6)(b): the survivor's nil-rate band maximum is increased by the total of the percentages; s. 8A(5): the increase is limited to that maximum."
+  rule base v fa2008 = min(nil_band_at[p], nil_band_at[p] * nrb_pct_total[p])
+  rule unclaimed beats base v fa2008 = 0 when not claims_made[p]
+
+def nrb_pct[p in person]: num at reader
+  note "s. 8A(4): E, the amount by which M is greater than VT, as a percentage of the nil-rate band maximum at the deceased person's death."
+  rule exact v fa2008 = unused_nrb[p] / nil_band_at[p] when mp07_pct == exact
+  rule four v ihtm_method = round(unused_nrb[p] / nil_band_at[p], nrb_pct_0_000001, half-up) when mp07_pct == four_places
+
+def nrb_pct_total[p in person]: num at reader
+  note "s. 8A(6)(b): the percentages from every deceased spouse or civil partner who had unused nil-rate band are added."
+  rule base v fa2008 = sum(nrb_pct[r] for r in person where related[p, r])
+
+def nrb_total[p in person]: num GBP at reader
+  note "The survivor's nil-rate band maximum with the increase."
+  rule base v fa2008 = nil_band_at[p] + nrb_increase[p]
+
+def nrb_uncapped[p in person]: num GBP at reader
+  note "The total before the s. 8A(5) limit, as IHTM43031 prints it."
+  rule base v ihtm_method = nil_band_at[p] + nil_band_at[p] * nrb_pct_total[p]
+
+def residence_inherited[p in person]: num GBP at reader
+  note "The value of the residence, or of the share of it, that the person's direct descendants inherit."
+  rule base v ihtm46044_method = residence_value[p] * descendant_share[p]
+
+def rnrb[p in person]: num GBP at reader
+  note "The residence nil-rate amount: the lesser of the adjusted allowance and the residence closely inherited, as IHTM46044 Example 4 applies it; s. 8E is not in the case."
+  rule base v ihtm46044_method = min(adjusted[p], residence_inherited[p])
+
+def taper_cut[p in person]: num GBP at reader
+  note "s. 8D(5)(g) and s. 8G(5): £1 for every £2 by which the estate exceeds the taper threshold (IHTM46023)."
+  rule base v fno2a2015 = max(0, estate_value[p] - taper_threshold) / taper_divisor
+  rule unstated beats base = 0 when within_threshold[p]
+
+def unused_nrb[p in person]: money GBP at reader
+  note "s. 8A(2): the amount by which M is greater than VT; nil when it is not."
+  rule base v fa2008 = max(0, m_value[p] - chargeable_on_death[p])
+
+ask a_brought_forward: cf_pct[monique], brought_forward[maria] law 2026-10-19
+
+ask a_default: default_allowance[maria], taper_cut[maria] law 2026-10-19
+
+ask a_reduction: taper_cut[monique], carry_forward[monique] law 2026-10-19
+
+ask a_rnrb: rnrb[maria] law 2026-10-19
+
+ask b_brought_forward: cf_pct[zac], brought_forward[yasuo] law 2026-10-19
+
+ask b_default: default_allowance[yasuo] law 2026-10-19
+
+ask b_nil_point: solve taper_cut[yasuo] == default_allowance[yasuo] for estate_value[yasuo] in [2000000, 3000000] to 1 law 2026-10-19
+
+ask b_rnrb: rnrb[yasuo] law 2026-10-19
+
+ask b_taper: taper_cut[yasuo], adjusted[yasuo] law 2026-10-19
+
+ask b_unused: carry_forward[zac], taper_cut[zac] law 2026-10-19
+
+ask c_brought_forward: cf_pct[joelle], brought_forward[clyde] law 2026-10-19
+
+ask c_default: default_allowance[clyde] law 2026-10-19
+
+ask c_reduction: taper_cut[joelle], carry_forward[joelle] law 2026-10-19
+
+ask c_rnrb: residence_inherited[clyde], rnrb[clyde] law 2026-10-19
+
+ask c_taper: taper_cut[clyde], adjusted[clyde] law 2026-10-19
+
+ask d_band: m_value[john_d], chargeable_on_death[john_d], unused_nrb[john_d], nrb_pct[john_d], nrb_total[linda] law 2026-10-19
+
+ask d_variant: has_unused_nrb[john_d], unused_nrb[john_d], nrb_increase[linda] with chargeable_on_death[john_d] = 300000 law 2026-10-19
+
+ask e_band: unused_nrb[cheng], nrb_pct[cheng], unused_nrb[jack_e], nrb_pct[jack_e], nrb_total[mei] law 2026-10-19
+
+ask f_band: unused_nrb[jack_e], nrb_pct[jack_e], nrb_uncapped[mei], nrb_total[mei] with chargeable_on_death[jack_e] = 55000 law 2026-10-19
+
+ask g_brought_forward: cf_pct[john_g], carry_forward[allen], cf_pct[allen], bf_pct_total[joyce], brought_forward[joyce] law 2026-10-19
+
+ask h_brought_forward: carry_forward[jack_h], cf_pct[jack_h], carry_forward[david], cf_pct[david], bf_pct_total[jill], brought_forward[jill] law 2026-10-19
+
+ask i_taper: default_allowance[brian], taper_cut[brian], adjusted[brian] law 2026-10-19
+
+ask i_variant: taper_cut[brian], adjusted[brian] with estate_value[brian] = 2250000 law 2026-10-19
+
+version fa2008
+  cite fa2008_src
+  governs 2007-10-09..
+  known 2008-07-21
+  note "No items: the rules has_unused_nrb.base, m_value.base, nrb_increase.base and .unclaimed, nrb_pct.exact, nrb_pct_total.base, nrb_total.base and unused_nrb.base (ss. 8A(2)-(6)) point at it."
+  note "Known 2008-07-21, the Royal Assent printed in the act's heading at legislation.gov.uk (ukpga/2008/9). Ss. 8A-8C were inserted by Sch. 4 para. 2 with effect, under para. 9 (1), where the survivor dies on or after 9 October 2007, so it governs from then (IHTA 1984 s. 8A, footnote F1). Words inserted in s. 8A(2) by F(No. 2)A 2015 s. 9 (3) were not modelled. The formulas in ss. 8A(2) and 8A(4) are images on legislation.gov.uk; the manual restates them in words."
+
+version lifted_figures
+  cite lifted_1_0_1
+  governs always
+  known 2008-07-21
+  cf_pct_0_000001 = 0.000001 "inline in tally 1.0.1: cf_pct line 89, round step"
+  nrb_pct_0_000001 = 0.000001 "inline in tally 1.0.1: nrb_pct line 118, round step"
+
+version fno2a2015
+  cite fno2a2015_src
+  governs 2017-04-06..
+  known 2015-11-18
+  note "Known 2015-11-18, the Royal Assent, which legislation.gov.uk gives as the date ss. 8D-8M were inserted (IHTA 1984 ss. 8D and 8G, footnote F1). The residence nil-rate amount applies to deaths on or after 6 April 2017, the first tax year s. 8D(5)(a) names, so it governs from then."
+  note "The rules adjusted, bf_pct_total, brought_forward, carry_forward.early, cf_pct.exact, default_allowance, enhancement_at and taper_cut.base (ss. 8D(5)(a), (f), (g) and 8G(3)-(5)) point at this version. FA 2016 Sch. 15 (words in ss. 8D(4), (9) and 8G(3)(a), the downsizing rules), FA 2021 s. 86 (s. 8D(7)) and FA 2025 Sch. 13 were not modelled. The formulas in ss. 8D(5)(g) and 8G(5) are images on legislation.gov.uk; the manual restates them in words."
+  early_available = 100000 "s. 8G(4)(a): for a related person's death before 6 April 2017, £100,000 is treated as available for carry-forward"
+  early_enhancement = 100000 "s. 8G(4): the residential enhancement at a death before 6 April 2017 is treated as £100,000"
+  res_enh[2017] = 100000 "s. 8D(5)(a)(i): £100,000 for the tax year 2017-18"
+  res_enh[2018] = 125000 "s. 8D(5)(a)(ii): £125,000 for the tax year 2018-19"
+  res_enh[2019] = 150000 "s. 8D(5)(a)(iii): £150,000 for the tax year 2019-20"
+  res_enh[2020] = 175000 "s. 8D(5)(a)(iv): £175,000 for the tax year 2020-21 and subsequent tax years"
+  rnrb_start = 2017-04-06 "s. 8G(4): a related person's death before 6 April 2017"
+  taper_divisor = 2 "s. 8D(5)(g) and s. 8G(5): the taper amount, half the excess of the estate over the taper threshold; the formula is an image, which IHTM46023 restates as £1 for every £2"
+  taper_threshold = 2000000 "s. 8D(5)(b): £2,000,000 for the tax year 2017-18 and subsequent tax years; s. 8G(5): the same £2,000,000 for a related person's estate"
+
+version ihtm46044_method
+  cite ihtm46044
+  governs always
+  known 2026-04-07
+  note "No items: the rules residence_inherited.base and rnrb.base point at it, for IHTM46044 Example 4's lesser-of reading."
+  note "Known 2026-04-07: the page has no date of its own, so known is the 'Updated: 7 April 2026' stamp it shows for the manual (gov.uk, IHTM46044, read 2026-10-19)."
+
+version ihtm_method
+  cite ihtm
+  governs always
+  known 2026-04-07
+  note "No items: the rules carry_forward.base (IHTM46041), cf_pct.four and nrb_pct.four (IHTM43020: where necessary, always take the percentage to four decimal places) and nrb_uncapped.base (IHTM43031) point at it."
+  note "Known 2026-04-07: the pages have no date of their own, so known is the 'Updated: 7 April 2026' stamp each shows for the manual (gov.uk, IHTM43020, IHTM46023 and IHTM46041, read 2026-10-19). IHTM46023: E is the value of the estate after liabilities, but before any exemptions or reliefs."
+
+version ihtm46044_examples
+  cite ihtm46044
+  governs always
+  known 2026-10-19
+  note "Example 1: tapering in the first estate (Monique, Maria). Example 3: tapering in the second estate (Zac, Yasuo). Example 4: tapering in both (Joelle, Clyde)."
+  note "Known 2026-10-19: the examples are hypothetical, so their stipulations are known from the model's on date, as the model has no start (§4.5)."
+  death_date[monique] = window(2010-03-01, 2010-03-31) "Example 1: Monique dies in March 2010"
+  death_date[maria] = window(2019-09-01, 2019-09-30) "Example 1: Maria dies in September 2019"
+  death_date[zac] = window(2019-02-01, 2019-02-28) "Example 3: Zac dies in February 2019"
+  death_date[yasuo] = window(2021-03-01, 2021-03-31) "Example 3: Yasuo dies in March 2021"
+  death_date[joelle] = window(2014-11-01, 2014-11-30) "Example 4: Joelle dies in November 2014"
+  death_date[clyde] = window(2020-07-01, 2020-07-31) "Example 4: Clyde dies in July 2020"
+  descendant_share[maria] = 1 "Example 1: Maria leaves the whole estate to her son"
+  descendant_share[zac] = 0 "Example 3: all of Zac's estate passes to Yasuo"
+  descendant_share[yasuo] = 1 "Example 3: Yasuo leaves the whole estate to the three children"
+  descendant_share[clyde] = 0.5 "Example 4: Clyde leaves half his estate to his son, so his son is treated as receiving half of the house"
+  estate_value[monique] = 2050000 "Example 1: Monique's estate valued at £2,050,000, left half to Maria and half to her sister"
+  estate_value[maria] = 1450000 "Example 1: Maria's estate valued at £1,450,000"
+  estate_value[zac] = 1200000 "Example 3: Zac's estate of £1.2 million, including his half share of the house"
+  estate_value[yasuo] = 2200000 "Example 3: Yasuo's estate of £2.2 million"
+  estate_value[joelle] = 2075000 "Example 4: Joelle's estate valued at £2,075,000, left one third each to her niece, her nephew and Clyde"
+  estate_value[clyde] = 2100000 "Example 4: Clyde's estate valued at £2,100,000"
+  related[maria, monique] = true "Example 1: Monique was Maria's civil partner"
+  related[yasuo, zac] = true "Example 3: Zac and Yasuo were civil partners"
+  related[clyde, joelle] = true "Example 4: Joelle was Clyde's wife"
+  residence_value[maria] = 375000 "Example 1: Maria's house, worth £375,000"
+  residence_value[zac] = 700000 "Example 3: Zac's half share of the £1.4 million house"
+  residence_value[yasuo] = 1600000 "Example 3: the house, then worth £1.6 million"
+  residence_value[clyde] = 750000 "Example 4: Clyde's house, worth £750,000"
+
+version ihtm_examples
+  cite ihtm
+  governs always
+  known 2026-10-19
+  note "IHTM46041 Examples 4 and 5, IHTM46023, IHTM43020, IHTM43030 and IHTM43031."
+  note "Known 2026-10-19: the examples are hypothetical, so their stipulations, and the assumptions that stand for their unstated facts, are known from the model's on date, as the model has no start (§4.5)."
+  chargeable_on_death[john_d] = 100000 "IHTM43020 Example: John's legacies to his children of £100,000; the residue of £300,000 to Linda"
+  chargeable_on_death[cheng] = 100000 "IHTM43030 Example: Cheng's legacies to his children of £100,000; the residue of £300,000 to Mei"
+  chargeable_on_death[jack_e] = 220000 "IHTM43030 Example: Jack leaves £220,000 to a niece and the residue of £80,000 to Mei"
+  claims_made = true assumed "the examples assume the claims under s. 8A and s. 8L are made; none is stated"
+  death_date[john_g] = window(2014-01-01, 2014-12-31) "IHTM46041 Example 4: Joyce's first husband John dies in 2014, before 6 April 2017"
+  death_date[allen] = window(2019-05-01, 2019-05-31) "IHTM46041 Example 4: Joyce's second husband Allen dies in May 2019"
+  death_date[joyce] = window(2020-01-01, 2020-12-31) "IHTM46041 Example 4: Joyce dies in 2020"
+  death_date[jack_h] = window(2017-06-01, 2017-06-30) "IHTM46041 Example 5: Jill's first husband Jack dies in June 2017"
+  death_date[david] = window(2019-05-01, 2019-05-31) "IHTM46041 Example 5: Jill's second husband David dies in May 2019"
+  death_date[jill] = window(2020-01-01, 2020-12-31) "IHTM46041 Example 5: Jill dies in 2020"
+  death_date[brian] = window(2017-05-01, 2017-05-31) "IHTM46023 Example: Brian dies in May 2017"
+  death_date[john_d] = 2002-10-22 "IHTM43020 Example: John dies on 22 October 2002"
+  death_date[linda] = 2008-03-10 "IHTM43020 Example: Linda dies on 10 March 2008"
+  death_date[cheng] = 2002-05-07 "IHTM43030 Example: Cheng dies on 7 May 2002"
+  death_date[jack_e] = 2005-09-07 "IHTM43030 Example: Mei's second husband Jack dies on 7 September 2005"
+  death_date[mei] = window(2008-01-01, 2008-01-31) "IHTM43030 Example: Mei dies in January 2008"
+  descendant_share[allen] = 1 "IHTM46041 Example 4: Allen leaves his flat to his daughter"
+  descendant_share[jack_h] = 1 "IHTM46041 Example 5: Jack leaves his flat, his residence, to his daughter"
+  descendant_share[david] = 1 "IHTM46041 Example 5: David leaves his flat, his residence, to his grandson"
+  given enhancement_at[joyce] = 175000 "IHTM46041 Example 4: the residential enhancement at Joyce's death, £175,000, as the example states it"
+  given enhancement_at[jill] = 175000 "IHTM46041 Example 5: the residential enhancement at Jill's death, £175,000, as the example states it"
+  estate_value[brian] = 2150000 "IHTM46023 Example: Brian's estate of £2,150,000, including a qualifying interest in possession of £50,000 and agricultural property of £1,000,000 with 100% relief; the gifts of £200,000 in the 7 years before death are not part of it"
+  estate_value[john_d] = 400000 "IHTM43020 Example: John's estate of £400,000"
+  lifetime_chargeable[john_d] = 0 "IHTM43020 Example: John made no chargeable lifetime transfers"
+  given m_value[cheng] = 250000 "IHTM43030 Example: Cheng, M is £250,000"
+  given m_value[jack_e] = 275000 "IHTM43030 Example: Jack, M is £275,000"
+  nil_band_at[john_d] = 250000 "IHTM43020 Example: the nil rate band at John's death was £250,000"
+  nil_band_at[linda] = 300000 "IHTM43020 Example: the nil rate band at Linda's death was £300,000"
+  nil_band_at[cheng] = 250000 "IHTM43030 Example: (150,000 ÷ 250,000) × 100"
+  nil_band_at[jack_e] = 275000 "IHTM43030 Example: (55,000 ÷ 275,000) × 100"
+  nil_band_at[mei] = 300000 "IHTM43030 Example: £300,000 + (300,000 x 60%) + (300,000 x 20%)"
+  related = false assumed "no spouse or civil partner is related to a person except those the examples name"
+  related[joyce, john_g] = true "IHTM46041 Example 4: John was Joyce's first husband"
+  related[joyce, allen] = true "IHTM46041 Example 4: Allen was Joyce's second husband"
+  related[jill, jack_h] = true "IHTM46041 Example 5: Jack was Jill's first husband"
+  related[jill, david] = true "IHTM46041 Example 5: David was Jill's second husband"
+  related[linda, john_d] = true "IHTM43020 Example: John and Linda married in 1965"
+  related[mei, cheng] = true "IHTM43030 Example: Mei married Cheng in 1970"
+  related[mei, jack_e] = true "IHTM43030 Example: Jack was Mei's second husband"
+  residence_value[allen] = 50000 "IHTM46041 Example 4: Allen's flat, worth £50,000"
+  residence_value[jack_h] = 80000 "IHTM46041 Example 5: Jack's flat, worth £80,000"
+  residence_value[david] = 125000 "IHTM46041 Example 5: David's flat, worth £125,000"
+  within_threshold = false "the examples that give an estate value taper it from that value"
+  within_threshold[john_g] = true assumed "IHTM46041 Example 4 gives no estate for John and treats 100% as available"
+  within_threshold[allen] = true assumed "IHTM46041 Example 4 gives no estate for Allen and applies no taper"
+  within_threshold[jack_h] = true assumed "IHTM46041 Example 5 gives no estate for Jack and applies no taper"
+  within_threshold[david] = true assumed "IHTM46041 Example 5 gives no estate for David and applies no taper"

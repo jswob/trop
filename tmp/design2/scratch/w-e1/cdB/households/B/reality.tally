@@ -1,0 +1,31 @@
+model household_b
+  tally 2
+  on 2026-01-07
+  start 2022-03-01
+  end 2028-12-31
+  note "W-E1 copy of MC-E1's cut-down stub of household B (not B): only the items E1 reads, so that E1's cells that read A and D only run within the time limit. The one savings row E1 reads is copied from B/records/savings-2025.tally:16; B's worths and Ola's debt are holes here, so E1's cells that read them are not checked on this copy."
+
+unit DUK: currency minor 0.01
+
+source cis_savings_export "Bank Cis export, savings account LN45 2090 0017 5521 3380 0002 (copied from B/reality.tally:85)"
+
+place savings: accounts DUK lives 2022-03-01..
+
+place world: outside lives 2022-03-01..
+
+input savr: observed
+
+def worth_ola[d in days]: money DUK
+  rule stub = ?"MC-E1 stub: B's worth of Ola is not on this copy"
+
+def worth_piotr[d in days]: money DUK
+  rule stub = ?"MC-E1 stub: B's worth of Piotr is not on this copy"
+
+def ola_owes_piotr[y in years]: money DUK
+  rule stub = ?"MC-E1 stub: B's Ola-to-Piotr debt is not on this copy"
+
+version savings_2025
+  cite cis_savings_export
+  governs 2025
+  known 2026-01-02
+  savr[s20250616a] = (on: 2025-06-16, kind: transfers, leg cash from world to savings amount 38750.00 DUK) "cis-5521-3380-0002-2025.csv line 11 TRANSFER IN KANCELARIA NOTARIALNA BRZOZA estate of Zbigniew Sowa: payout"

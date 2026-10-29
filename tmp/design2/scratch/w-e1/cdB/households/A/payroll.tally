@@ -1,0 +1,255 @@
+part payroll
+  tally 2
+  note "Pay, by payer e and payment month m: what is paid in m, the employer's plan contributions paid with it, the SOC-1 and SOC-2 contributions, the PIT-2 base, the PIT-4 advance and the net. Pay is income on the day paid (PIT-2 .1); the employer's plan contributions are income on the day the employer pays them to the plan (WCP-2 .1)."
+  note "Nurt pays the pay for a month on the 10th of the next month (A-D01 §4), the 15th from the pay for December 2024 (A-D04), on the last business day before where that day isn't one, with both plan contributions for a pay on the next payday (A-D08 .3). Kalina pays on the last business day of the month (A-D05 §3), the plan contributions for a month's pay on the 15th of the next month (A-D09 .2), so with the next pay's payroll. The SIO pays a month's parental pay by the 10th of the next month (A-D15)."
+  note "Rounding: each contribution to the ort half up (GEN-5 .3, SOC-1 .3, WCP-1 .4: the basic and the additional or top-up contributions each on its own); the month's base and the advance to whole dukats, under 50 orts down, 50 and over up (GEN-5 .1, PIT-4 .1–.2)."
+
+input due_override[e in payer, p in month]: money DUK question "What gross pay is due for this pay period, where it isn't the monthly pay?"
+
+input extra[e in payer, p in month]: money DUK question "What one-off gross pay is paid with this pay period's pay?"
+
+input gross[e in payer, p in month]: money DUK question "What is the monthly gross pay for this pay period?"
+
+input in_plan[e in payer]: bool question "Does this payer pay workplace-plan contributions?"
+
+input lag[e in payer]: int question "How many months after its pay period is a pay paid?"
+
+input last_bd[e in payer]: bool question "Is the pay paid on the last business day of the month?"
+
+input leave_from: date question "When does Ania's parental pay start?"
+
+input leave_to: date question "When does Ania's parental pay end?"
+
+input payday_dom[e in payer, m in month]: int question "On which day of the payment month is the pay due?"
+
+input plan_extra_ee[e in payer]: num question "What additional contribution has the employee declared (WCP-1 .2)?"
+
+input plan_topup_er[e in payer]: num question "What top-up does the employer's plan add (WCP-1 .3)?"
+
+input red12_12: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input sio_day_pay: money DUK question "What is a day's parental pay (SOC-8 .4)?"
+
+def adv[e in payer, m in month]: money DUK at start_of(m)
+  note "PIT-4 .2: never below 0, rounded to whole dukats; v1 also less the month's health contribution up to 7.75 % of its base; v2 .4: in July–December 2022 the lower of the advance under PIT-3 v2 and under PIT-3 v3"
+  rule lower beats v2 v pit4_v2_p4 = min(round(max(0, adv_w[e, m]), 1, half-up), round(max(0, adv_scale[e, m] as if {wording pit4_lower_wording for [pit3_rate, pit3_reducing]}), 1, half-up))
+  rule v1 v pit4_v1 = round(max(0, adv_w[e, m] - min(health[e, m], soc2_deductible * (g_paid[e, m] - soc[e, m]))), 1, half-up)
+  rule v2 v pit4_v2 = round(max(0, adv_w[e, m]), 1, half-up)
+
+def adv_scale[e in payer, m in month]: num DUK at start_of(m)
+  note "PIT-4 .2 before the health deduction and the rounding: the scale on this payer's bases to date less the scale on the earlier ones, less 1/12 of the reducing amount"
+  rule base = marginal(pit3_rate, cum[e, m]) - marginal(pit3_rate, cum[e, m] - mbase[e, m]) - red12[e]
+
+def adv_w[e in payer, m in month]: num DUK at start_of(m)
+  note "the PIT-3 version in force on the payment day (PIT-4 .2): the wording pin reads the scale entered by that day (L §4.3)"
+  rule base = adv_scale[e, m] as if {wording pay_on[e, m] for [pit3_rate, pit3_reducing]}
+
+def capped[e in payer, m in month]: money DUK at start_of(m)
+  note "the part of the month's gross pay up to SOC-CAP on the year's gross from this employer (SOC-1 .2)"
+  rule base = max(0, min(g_paid[e, m], soc_cap - ytd_gross[e, m]))
+
+def costs[e in payer, m in month]: money DUK at start_of(m)
+  note "PIT-2 .2: the monthly costs for each month in which pay from an employment is paid; parental pay has none (A-D13-SIO-2023: costs 0.00)"
+  rule none = 0
+  rule paid beats none = pit2_costs_month when e != sio and g_paid[e, m] > 0
+
+def cum[e in payer, m in month]: money DUK = sum(mbase[e, k] for k in month where year_of(k) == year_of(m) and k <= m) at start_of(m)
+
+def ee_paid[e in payer, m in month]: money DUK at start_of(m)
+  note "the employee's plan contribution, deducted from the pay after tax and contributions (WCP-2 .2)"
+  rule none = 0
+  rule plan beats none = round(g_paid[e, m] * wcp1_ee_basic, minor(DUK), half-up) + round(g_paid[e, m] * plan_extra_ee[e], minor(DUK), half-up) when in_plan[e]
+
+def er_paid[e in payer, m in month]: money DUK at start_of(m)
+  note "the employer's plan contributions paid in month m, on the pay paid in the month before (A-D08 .3, A-D09 .2): income of month m (WCP-2 .1), outside the SOC bases"
+  rule none = 0
+  rule plan beats none = round(g_paid[e, m - 1] * wcp1_er_basic, minor(DUK), half-up) + round(g_paid[e, m - 1] * plan_topup_er[e], minor(DUK), half-up) when in_plan[e]
+
+def g_due[e in payer, p in month]: money DUK at start_of(p)
+  note "the gross pay due for pay period p"
+  rule monthly = gross[e, p] + extra[e, p]
+  rule set beats monthly = due_override[e, p] when due_override[e, p] != none
+
+def g_paid[e in payer, m in month]: money DUK at start_of(m)
+  note "gross pay paid in payment month m (PIT-2 .1); parental pay is the days of the period in the month before × a day's pay (SOC-8 .4)"
+  rule parental beats work = round(overlap_days(leave_from, leave_to, m - 1) * sio_day_pay, minor(DUK), half-up) when e == sio
+  rule work = g_due[e, m - lag[e]]
+
+def health[e in payer, m in month]: money DUK at start_of(m)
+  note "SOC-2 .1: 9 % of gross pay less the SOC-1 contributions, to the ort half up; parental pay bears none"
+  rule parental beats pay = 0 when e == sio
+  rule pay = round((g_paid[e, m] - soc[e, m]) * soc2_rate, minor(DUK), half-up)
+
+def inc[e in payer, m in month]: money DUK = g_paid[e, m] + er_paid[e, m] at start_of(m)
+
+def mbase[e in payer, m in month]: money DUK at start_of(m)
+  note "PIT-4 .1: the month's PIT-2 base from this payer (PIT-2 .3, never below 0), rounded to whole dukats (GEN-5 .1)"
+  rule base = round(max(0, inc[e, m] - soc[e, m] - costs[e, m]), 1, half-up)
+
+def net[e in payer, m in month]: money DUK at start_of(m)
+  note "what reaches the account: gross pay less contributions, health, the employee's plan contribution and the advance"
+  rule base = g_paid[e, m] - soc[e, m] - health[e, m] - ee_paid[e, m] - adv[e, m]
+
+def pay_on[e in payer, m in month]: date
+  note "the payment day of month m; each business-day test reads the holiday list governing the day it tests (L §4.2, D-4), so no law date is needed for it (O:A-5)"
+  rule dom = if is_business(day_of(m, payday_dom[e, m]), holidays) then day_of(m, payday_dom[e, m]) else add_business(day_of(m, payday_dom[e, m]), -1, holidays)
+  rule last beats dom = if is_business(end_of(m) - 1 day, holidays) then end_of(m) - 1 day else add_business(end_of(m) - 1 day, -1, holidays) when last_bd[e]
+
+def red12[e in payer]: num DUK at reader
+  note "1/12 of the yearly reducing amount where the statement is on file with this payer (PIT-4 .2)"
+  rule filed beats none = pit3_reducing / red12_12 when statement[e]
+  rule none = 0
+
+def soc[e in payer, m in month]: money DUK = sum(soc_part[e, m, c] for c in soc1_part) at start_of(m)
+
+def soc_part[e in payer, m in month, c in soc1_part]: money DUK at start_of(m)
+  note "SOC-1 .1–.3: pension and disability on the capped part, sickness on all of it, each rounded to the ort half up; parental pay bears none"
+  rule capped_part = round(capped[e, m] * soc1_rate[c], minor(DUK), half-up)
+  rule parental beats capped_part, sick = 0 when e == sio
+  rule sick beats capped_part = round(g_paid[e, m] * soc1_rate[c], minor(DUK), half-up) when c == sickness
+
+def ytd_gross[e in payer, m in month]: money DUK = sum(g_paid[e, k] for k in month where year_of(k) == year_of(m) and k < m) at start_of(m)
+
+version kalina_terms
+  cite a_d05
+  governs always
+  known 2018-06-01
+  lag[kalina] = 0 "A-D05 §3: paid in the month it is for"
+  last_bd[kalina] = true "A-D05 §3: on the last business day of the month it is for"
+
+version nurt_terms
+  cite a_d01
+  governs always
+  known 2019-03-01
+  extra[nurt, *] = 0 governs 2021-01.. "A-D01 §5: the pay is the monthly gross pay set in writing each year"
+  lag[nurt] = 1 "A-D01 §4: the pay for a month is paid in the next month"
+  last_bd[nurt] = false "A-D01 §4"
+  payday_dom[nurt, *] = 10 governs 2021-01.. "A-D01 §4: on the 10th of the next month; where the 10th is not a business day, on the last business day before it"
+
+version nurt_plan
+  cite a_d08
+  governs always
+  known 2019-06-20
+  in_plan[nurt] = true "A-D08: workplace plan of Nurt Software"
+  plan_extra_ee[nurt] = 0.01 "A-D08 .2: Tomasz Lis has declared an additional contribution of 1 %"
+  plan_topup_er[nurt] = 0.01 "A-D08 .1: the plan's top-up of 1.0 %"
+
+version kalina_plan
+  cite a_d09
+  governs always
+  known 2019-06-24
+  in_plan[kalina] = true "A-D09: workplace plan of Kalina Logistyka"
+  plan_extra_ee[kalina] = 0 "A-D09 .1: no additional contribution declared"
+  plan_topup_er[kalina] = 0 "A-D09 .1: no top-up"
+
+version nurt_pay_2021
+  cite a_d02_2021
+  governs always
+  known 2020-12-15
+  gross[nurt, *] = 6300.00 governs 2021-01.. "A-D02-2021: from the pay for January 2021, 6 300.00 DUK"
+
+version kalina_pay_2021
+  cite a_d06_2021
+  governs always
+  known 2020-12-18
+  gross[kalina, *] = 5000.00 governs 2021-01.. "A-D06-2021: from January 2021, 5 000.00 DUK"
+
+version payroll_defaults
+  cite modeller
+  governs always
+  known 2021-01-01
+  note "a month's pay is the monthly gross pay unless a document sets the month's pay otherwise; the SIO pays nothing until a decision"
+  due_override[nurt, *] = none governs 2021-01.. "A-D01 §5: the monthly gross pay, as set each year"
+  due_override[kalina, *] = none governs 2021-01.. "A-D05 §3: the monthly pay; §7 only for months not worked in full"
+  due_override[sio, *] = none governs 2021-01.. "the SIO pays parental pay only"
+  extra[kalina, *] = 0 governs 2021-01.. "A-D05: no pay but the monthly pay"
+  extra[sio, *] = 0 governs 2021-01.. "the SIO pays parental pay only"
+  gross[sio, *] = 0 governs 2021-01.. "the SIO pays parental pay only (SOC-8), which g_paid computes from the decision"
+
+version nurt_pay_2022
+  cite a_d02_2022
+  governs always
+  known 2021-12-15
+  replace gross[nurt, *] = 6500.00 governs 2022-01.. "A-D02-2022: from the pay for January 2022, 6 500.00 DUK"
+
+version kalina_pay_2022
+  cite a_d06_2022
+  governs always
+  known 2021-12-18
+  replace gross[kalina, *] = 5200.00 governs 2022-01.. "A-D06-2022: from January 2022, 5 200.00 DUK"
+
+version nurt_cashout
+  cite a_d03
+  governs always
+  known 2022-10-03
+  replace extra[nurt, *] = 110000.00 governs 2022-10 "A-D03: cashed out with the pay for October 2022, paid 10 November 2022; payroll treats it as pay"
+
+version nurt_pay_2023
+  cite a_d02_2023
+  governs always
+  known 2022-12-15
+  replace gross[nurt, *] = 6680.00 governs 2023-01.. "A-D02-2023: from the pay for January 2023, 6 680.00 DUK"
+
+version kalina_pay_2023
+  cite a_d06_2023
+  governs always
+  known 2022-12-18
+  replace gross[kalina, *] = 5400.00 governs 2023-01.. "A-D06-2023: from January 2023, 5 400.00 DUK"
+
+version kalina_leave
+  cite a_d06_2023b
+  governs always
+  known 2023-04-28
+  replace due_override[kalina, *] = 4680.00 governs 2023-04 "A-D06-2023b: the pay for April 2023 covers 1–26 April (26 days, §7)"
+  replace due_override[kalina, *] = 0 governs 2023-05..2024-04 "A-D06-2023b: no pay is due from us while the leave lasts (52 weeks, SOC-8 .1)"
+
+version sio_terms
+  cite a_d15
+  governs always
+  known 2023-05-11
+  in_plan[sio] = false "WCP-1: parental pay bears no plan contributions"
+  lag[sio] = 1 "A-D15: each month's pay is paid by the 10th of the next month"
+  last_bd[sio] = false "A-D15"
+  leave_from = 2023-04-27 "A-D15: 27 April 2023 – 24 April 2024"
+  leave_to = 2024-04-24 "A-D15: 27 April 2023 – 24 April 2024"
+  payday_dom[sio, *] = 10 assumed "A-D15 says by the 10th, not the day; the 10th is taken, on the last business day before it where it isn't one" governs 2021-01.. "A-D15"
+  plan_extra_ee[sio] = 0 "WCP-1: none on parental pay"
+  plan_topup_er[sio] = 0 "WCP-1: none on parental pay"
+  sio_day_pay = 123.44 "A-D15: a day's pay"
+
+version nurt_pay_2024
+  cite a_d02_2024
+  governs always
+  known 2023-12-15
+  replace gross[nurt, *] = 7400.00 governs 2024-01.. "A-D02-2024: from the pay for January 2024, 7 400.00 DUK"
+
+version kalina_pay_2024
+  cite a_d06_2024
+  governs always
+  known 2023-12-18
+  replace gross[kalina, *] = 5700.00 governs 2024-01.. "A-D06-2024: from January 2024, 5 700.00 DUK"
+
+version kalina_return
+  cite a_d06_2024b
+  governs always
+  known 2024-04-25
+  replace due_override[kalina, *] = 1140.00 governs 2024-04 "A-D06-2024b: the pay for April 2024 covers 25–30 April (6 days, §7)"
+
+version nurt_payday_2025
+  cite a_d04
+  governs always
+  known 2024-11-20
+  replace payday_dom[nurt, *] = 15 governs 2025-01.. "A-D04: from the pay for December 2024, paid in January 2025, on the 15th of the next month, or the last business day before it"
+
+version nurt_pay_2025
+  cite a_d02_2025
+  governs always
+  known 2024-12-15
+  replace gross[nurt, *] = 7900.00 governs 2025-01.. "A-D02-2025: from the pay for January 2025, 7 900.00 DUK"
+
+version kalina_pay_2025
+  cite a_d06_2025
+  governs always
+  known 2024-12-18
+  replace gross[kalina, *] = 6000.00 governs 2025-01.. "A-D06-2025: from January 2025, 6 000.00 DUK"

@@ -1,0 +1,44 @@
+q_best: (item1_first, 4 000 GBP)
+  law date 2026-10-19, cut 2026-10-19
+q_ftcr (s = item1_first, k = item1): 3 000 GBP
+  law date 2026-10-19, cut 2026-10-19
+q_ftcr (s = item1_first, k = item2): 1 000 GBP
+  law date 2026-10-19, cut 2026-10-19
+q_ftcr (s = item2_first, k = item1): 2 000 GBP
+  law date 2026-10-19, cut 2026-10-19
+q_ftcr (s = item2_first, k = item2): 1 750 GBP
+  law date 2026-10-19, cut 2026-10-19
+q_liability_without (s = item1_first, k = item1): 9 000 GBP
+  law date 2026-10-19, cut 2026-10-19
+q_liability_without (s = item1_first, k = item2): 8 000 GBP
+  law date 2026-10-19, cut 2026-10-19
+q_liability_without (s = item2_first, k = item1): 8 000 GBP
+  law date 2026-10-19, cut 2026-10-19
+q_liability_without (s = item2_first, k = item2): 10 000 GBP
+  law date 2026-10-19, cut 2026-10-19
+q_max_a: 4 750 GBP
+  law date 2026-10-19, cut 2026-10-19
+q_max_a_parts: (4 750.00 GBP, 4 750 GBP)
+  law date 2026-10-19, cut 2026-10-19
+q_max_b: (8 000 GBP, 4 000 GBP)
+  law date 2026-10-19, cut 2026-10-19
+q_max_ftc: 4 000 GBP
+  law date 2026-10-19, cut 2026-10-19
+q_open_basic: 10 000 GBP
+  law date 2026-10-19, cut 2026-10-19
+q_open_higher: 2 000 GBP
+  law date 2026-10-19, cut 2026-10-19
+q_open_total: 12 000 GBP
+  law date 2026-10-19, cut 2026-10-19
+q_total_ftcr (s = item1_first): 4 000 GBP
+  law date 2026-10-19, cut 2026-10-19
+q_total_ftcr (s = item2_first): 3 750 GBP
+  law date 2026-10-19, cut 2026-10-19
+q_uk_on_item (s = item1_first, k = item1): 3 000 GBP
+  law date 2026-10-19, cut 2026-10-19
+q_uk_on_item (s = item1_first, k = item2): 1 000 GBP
+  law date 2026-10-19, cut 2026-10-19
+q_uk_on_item (s = item2_first, k = item1): 2 000 GBP
+  law date 2026-10-19, cut 2026-10-19
+q_uk_on_item (s = item2_first, k = item2): 2 000 GBP
+  law date 2026-10-19, cut 2026-10-19

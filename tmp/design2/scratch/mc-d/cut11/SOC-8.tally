@@ -1,0 +1,36 @@
+part soc_8
+  tally 2
+  law
+  note "SOC-8 · Parental pay: 52 weeks from the birth (birth day is day 1, .1); 100 % of the base for 20 weeks and 70 % for 32, or 81.5 % for all 52 when elected within 21 days (.2); base the average monthly gross of the 12 months before the birth month less 13.45 %, rounded (.3); a day's pay is base × rate / 30, rounded; a month's pay is the period's days in the month × a day's pay (.4); paid by the 10th of the next month, taxed under PIT-4 with the SIO as payer, no contributions (.5)."
+
+source soc_8 "Social Insurance Act, SOC-8 Parental pay (tmp/cases/law/acts.md)"
+
+input soc8_base_cut: num question "What share is taken off the average gross for the base (SOC-8 .3)?"
+
+input soc8_elect_days: int question "Within how many days of the birth is the election made (SOC-8 .2)?"
+
+input soc8_pay_by: int question "By which day of the next month is a month's pay paid (SOC-8 .5)?"
+
+input soc8_rate_elected: num question "What rate applies throughout when elected (SOC-8 .2)?"
+
+input soc8_rate_first: num question "What rate applies in the first weeks (SOC-8 .2)?"
+
+input soc8_rate_rest: num question "What rate applies in the later weeks (SOC-8 .2)?"
+
+input soc8_weeks: int question "For how many weeks is parental pay due (SOC-8 .1)?"
+
+input soc8_weeks_first: int question "How many weeks does the first rate last (SOC-8 .2)?"
+
+version soc8_v1
+  cite soc_8
+  governs 2018-01-01..
+  known 2017-09-01
+  note "SOC-8 v1, in force 2018-01-01 until replaced, published 2017-09-01; governs births from 2018-01-01."
+  soc8_base_cut = 0.1345 "SOC-8 v1 .3"
+  soc8_elect_days = 21 "SOC-8 v1 .2"
+  soc8_pay_by = 10 "SOC-8 v1 .5"
+  soc8_rate_elected = 0.815 "SOC-8 v1 .2: 81.5 %"
+  soc8_rate_first = 1.00 "SOC-8 v1 .2: 100 %"
+  soc8_rate_rest = 0.70 "SOC-8 v1 .2: 70 %"
+  soc8_weeks = 52 "SOC-8 v1 .1"
+  soc8_weeks_first = 20 "SOC-8 v1 .2"

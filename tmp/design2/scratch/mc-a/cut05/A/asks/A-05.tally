@@ -1,0 +1,14 @@
+part asks_a05
+  tally 2
+  note "A-05 · Tax on our fund sales (questions.md): as of 2024-12-31, known as of 2025-04-30. The lots and sales are the Rzeka and DM Kopia registers' movements (statements/statements.tally), matched by invest.tally's fill. Ania's March 2019 lot has a month for its day (2019-03, rzk-4471-07-anna.csv line 4), which decides the 5-year test of PIT-8 .6 for the sale of 2024-03-07: windows each prints one line per part of the month over which the answer is constant."
+  note "paid too much by: what the joint account paid the Revenue Office in 2025 for each spouse's tax (cg_tax_pays rows of wrz-joint-2025-04.csv) less the tax owed. why Ania's payment differs: the tax each of A-D22's two departures from PIT-8 adds."
+
+ask a05_tomek: y, cg_tax[tomek, y], loss_used[tomek, y], cg_loss[tomek, y] for y in tax_year where y >= 2022 and y <= 2024 law 2025-04-30 as known 2025-04-30
+
+ask a05_tomek_2024: cg_too_much[tomek, 2024], loss_left_after[tomek, 2024] law 2025-04-30 as known 2025-04-30
+
+ask a05_ania: cg_tax[ania, 2024], net_gain[ania, 2024], cg_too_much[ania, 2024] law 2025-04-30 as known 2025-04-30 windows each
+
+ask a05_wrapped: w, wd_tax[w] for w in wrap_withdrawals over 2024 law 2025-04-30 as known 2025-04-30
+
+ask a05_ania_why: c, why_differs[c, ania, 2024] for c in why5 law 2025-04-30 as known 2025-04-30 windows each

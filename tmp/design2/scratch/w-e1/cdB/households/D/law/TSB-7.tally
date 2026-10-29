@@ -1,0 +1,13 @@
+part tsb_7
+  tally 2
+  law
+  note "TSB-7 · Bonds of spouses: bonds registered to one spouse but held in community are, at that spouse's death, half the survivor's and half in the estate (.1); the heir who takes them in the division holds all of them as an heir, TSB-6.2 applying to each, the survivor's half included (.2)."
+
+source tsb_7 "Treasury Savings Bonds, terms of issue, TSB-7 Bonds of spouses (tmp/cases/law/acts.md)"
+
+version tsb7_v1
+  cite tsb_7
+  governs 2018-01-01..
+  known 2017-11-20
+  enters 2018-01-01
+  note "TSB-7 v1, in force 2018-01-01 until replaced, published 2017-11-20; governs deaths from 2018-01-01."

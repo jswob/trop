@@ -1,0 +1,339 @@
+model rc05
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+  note "France, allocation de logement locative, metropolitan example of the brochure 'Les aides personnelles au logement, Éléments de calcul' (septembre 2021), p. 24: a household with two children in zone II, rent 425 €, resources 11 500 €, calculated between 1 January and 30 September 2021."
+  note "Every ask pins the law date 1 January 2021, the first day of the example's window; each version the asks read governs the whole window. The parameter rows are for zone II only."
+  note "Readings: al_inter (p. 50 forbids intermediate rounding, the example prints cents), al_tl (art. 14 rounds TL to the third decimal in percent, the example prints the second), al_pct_mode (art. 14 states the decimal but not the mode; its options are mode names, passed to round)."
+  note "The law comes from the texts that enact it: Ordonnance n° 96-50 art. 19 (CRDS), décret n° 2019-772 (CCH D. 823-16), décret n° 2019-1574 (D. 823-17 as it amended it, in force from 1 January 2021), the arrêté du 27 septembre 2019 as published (arts. 10 to 14), the arrêté du 3 janvier 2020 (R0, art. 15) and the arrêté du 25 septembre 2020 (the revalued barème, and the tables of arts. 7, 9 and 14 it replaced). The brochure is the source only of its rounding rules for the CRDS and the paid aid."
+
+source arrete2019 "Arrêté du 27 septembre 2019 relatif au calcul des aides personnelles au logement et de la prime de déménagement, NOR LOGL1925404A, JORF n° 0228 du 1er octobre 2019, texte n° 21 (Légifrance, version consolidée au 16 novembre 2019, before its first amendment)" at "https://web.archive.org/web/20191116224919/https://www.legifrance.gouv.fr/affichTexte.do?cidTexte=JORFTEXT000039160329"
+
+source arrete2020 "Arrêté du 25 septembre 2020 relatif au calcul des aides personnelles au logement et de l'aide à l'accession sociale et à la sortie de l'insalubrité spécifique à l'outre-mer, NOR LOGL2020835A, JORF du 30 septembre 2020, texte 61" at "https://www.compagnonsbatisseurs.eu/medias/ARRTDU1.pdf"
+
+source brochure "Ministère de la Transition écologique, Les aides personnelles au logement, Éléments de calcul, à compter du 1er janvier 2021, édition septembre 2021" at "https://www.ecologie.gouv.fr/sites/default/files/les_aides_personnelles_au_logement_element_de_calcul_septembre_2021.pdf"
+
+source catala_archives "catala-examples, aides_logement/archives.catala_fr: Catala's transcription of the arrêté du 27 septembre 2019 as amended, section 'Articles en vigueur à partir du 1er janvier 2020 - Arrêté du 3 janvier 2020 relatif au calcul des aides personnelles au logement pour l'année 2020 NOR : LOGL1934006A'" at "https://github.com/CatalaLang/catala-examples/blob/master/aides_logement/archives.catala_fr"
+
+source d823_17 "Code de la construction et de l'habitation, art. D. 823-17, version en vigueur depuis le 01 janvier 2021 (LEGIARTI000041419255), 'Modifié par Décret n°2019-1574 du 30 décembre 2019 - art. 12' (Légifrance)" at "https://web.archive.org/web/20220122180515/https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000041419255/2022-01-11"
+
+source decret1816 "Décret n° 2020-1816 du 29 décembre 2020, JORF du 31 décembre 2020, fixing the entry into force of the décret n° 2019-1574 at 1 January 2021 (not read; reported by LegalNews, 4 janvier 2021)" at "https://www.lemondedudroit.fr/droit-civil/280-immobilier-construction/73129-entree-en-vigueur-de-la-reforme-des-apl.html"
+
+source decret772 "Décret n° 2019-772 du 24 juillet 2019 relatif à la partie réglementaire du livre VIII du code de la construction et de l'habitation, JORF du 25 juillet 2019"
+
+source lifted_1_0_1 "Figures tally 1.0.1 allowed inline in rules"
+
+source modeller "The model's own assumptions, each stated with its reason"
+
+source ord9650 "Ordonnance n° 96-50 du 24 janvier 1996 relative au remboursement de la dette sociale, art. 19, version en vigueur depuis le 01 janvier 2020 (LEGIARTI000041466982), 'Modifié par LOI n° 2019-1479 du 28 décembre 2019 - art. 28 (V)' and 'LOI n°2019-486 du 22 mai 2019 - art. 138 (V)' (Légifrance)" at "https://web.archive.org/web/20210516201741/https://www.legifrance.gouv.fr/loda/article_lc/LEGIARTI000041466982/"
+
+unit EUR: currency minor 0.01
+
+axis al_inter
+  cent_round "P0 and P1 rounded to the nearest cent, as the example prints them (p. 50: the parameters of the barème round to the nearest cent)"
+  no_round "no intermediate rounding (p. 50: Aucun arrondi intermédiaire ne doit être réalisé par ailleurs)"
+
+axis al_pct_mode
+  down "RL and TL rounded down at their decimal"
+  half-up "RL and TL rounded to the nearest at their decimal, a half up"
+
+axis al_tl
+  tl2 "TL rounded to the second decimal in percent, as the example prints 0,31 %"
+  tl3 "TL rounded to the third decimal in percent, arrêté art. 14 and brochure p. 21"
+
+input aah: bool question "Le demandeur ou son conjoint perçoit-il l'AAH ou l'AEEH ?"
+
+input baisse: money EUR
+
+input c_base: money EUR
+
+input c_extra: money EUR
+
+input cd: num
+
+input crds_rate: num
+
+input cs: num
+
+input lp_base: money EUR
+
+input lp_extra: money EUR
+
+input lr_base: money EUR
+
+input lr_extra: money EUR
+
+input n_dep: int question "Combien de personnes à charge compte le ménage ?"
+
+input p0_min: money EUR
+
+input p0_rate: num
+
+input r0: money EUR
+
+input r_round_100: money EUR
+  note "lifted from an inline figure of tally 1.0.1"
+
+input rent: money EUR question "Quel est le loyer principal mensuel ?"
+
+input resources: money EUR question "Quelles sont les ressources annuelles prises en compte ?"
+
+input rl_0_0001: num
+  note "lifted from an inline figure of tally 1.0.1"
+
+input rls: money EUR question "Quel est le montant de la réduction de loyer de solidarité ?"
+
+input rls_share: num
+
+input seuil: money EUR
+
+input tf: num
+
+input tl_0_00001: num
+  note "lifted from an inline figure of tally 1.0.1"
+
+input tl_0_0001: num
+  note "lifted from an inline figure of tally 1.0.1"
+
+input tl_a: num
+
+input tl_b: num
+
+input tl_t1: num
+
+input tl_t2: num
+
+def af: num EUR at reader
+  note "Af = L + C - Pp, CCH D. 823-16"
+  rule base v decret_2019_772 = l_rent + charges - pp
+
+def af_d: num EUR at reader
+  note "the high-rent taper, D. 823-16 and brochure p. 22, not for an AAH or AEEH household"
+  rule base = af
+  rule degr beats base v decret_2019_772 = max(0, af * (cs - rent / ceiling) / (cs - cd)) when degr_applies and not aah
+
+def after_rls: num EUR at reader
+  note "less 98 % of any réduction de loyer de solidarité, D. 823-16 (brochure p. 22)"
+  rule base v decret_2019_772 = af_d - rls * rls_share
+
+def aide_d823: num EUR at reader
+  note "D. 823-16: diminué d'un montant représentatif des contributions sociales, arrondi à l'euro inférieur, puis majoré de ce montant représentatif (the quantity Catala's traitement_aide_finale returns)"
+  rule base v decret_2019_772 = round(aide_nette - crds, 1, floor) + crds
+  rule below beats base v arrete_2019 = 0 when not paid_ok
+
+def aide_nette: num EUR at reader
+  note "the aid before CRDS once the payment threshold is checked"
+  rule base = before_crds
+  rule below beats base v arrete_2019 = 0 when not paid_ok
+
+def aide_versee: money EUR at reader
+  note "brochure p. 23 and p. 50: the aid net of the CRDS, rounded down to the euro"
+  rule base v brochure_2021 = round(aide_nette - crds, 1, floor)
+  rule below beats base v arrete_2019 = 0 when not paid_ok
+
+def before_crds: num EUR at reader
+  note "less the baisse forfaitaire: D. 823-16 ('minoré d'un montant fixé forfaitairement par arrêté'), 5 € by arrêté art. 11"
+  rule base v decret_2019_772 = after_rls - baisse
+
+def ceiling: money EUR at reader
+  note "loyer plafond, zone II, arrêté art. 7, its table as the arrêté du 25 septembre 2020 replaced it (art. 1er 1°): the amount for one dependant plus one step per further dependant, brochure p. 18"
+  rule base v arrete_2020 = lp_base + (n_dep - 1) * lp_extra
+
+def charges: money EUR at reader
+  note "forfait charges C, arrêté art. 9, its table as the arrêté du 25 septembre 2020 replaced it (art. 1er 3°): the amount for a person alone or a couple without dependants, plus one step per dependant (brochure p. 19 prints the sum for one dependant, 66,23 €)"
+  rule base v arrete_2020 = c_base + n_dep * c_extra
+
+def crds: money EUR at reader
+  note "CRDS 0,5 % on the aid, rounded down to the cent (brochure p. 50; Ordonnance 96-50 art. 19)"
+  rule base v brochure_2021 = round(before_crds * crds_rate, minor(EUR), down)
+
+def degr_applies: bool at reader
+  note "the rent exceeds the plafond de dégressivité, cd times the ceiling: D. 823-16 and arrêté art. 10 (brochure p. 22)"
+  rule base v decret_2019_772 = rent > cd * ceiling
+
+def l_rent: money EUR at reader
+  note "loyer éligible L, D. 823-16 2°: the rent, capped at the ceiling"
+  rule base v decret_2019_772 = min(rent, ceiling)
+
+def lr: money EUR at reader
+  note "loyer de référence LR, arrêté art. 14, its table as the arrêté du 25 septembre 2020 replaced it (art. 1er 5°)"
+  rule base v arrete_2020 = lr_base + (n_dep - 1) * lr_extra
+
+def p0: num EUR at reader
+  rule cent_round = round(p0_raw, minor(EUR), half-up) when al_inter == cent_round
+  rule no_round = p0_raw when al_inter == no_round
+
+def p0_raw: num EUR at reader
+  note "P0, the larger of 8,5 % of L + C and 35,24 €, arrêté art. 13 (brochure p. 20)"
+  rule base v arrete_2019 = max(p0_rate * (l_rent + charges), p0_min)
+
+def p1: num EUR at reader
+  note "P1 = Tp x (R - R0), D. 823-17"
+  rule cent_round = round(tp * rp, minor(EUR), half-up) when al_inter == cent_round
+  rule no_round = tp * rp when al_inter == no_round
+
+def paid_ok: bool at reader
+  note "the payment threshold of 10 € for the allocations de logement, before the CRDS, arrêté art. 12"
+  rule base v arrete_2019 = before_crds >= seuil
+
+def pp: num EUR at reader
+  note "Pp = P0 + P1, D. 823-17"
+  rule base v decret_2019_1574 = p0 + p1
+
+def r_round: money EUR at reader
+  note "R rounded up to the hundred euros, D. 823-17 4°"
+  rule base v decret_2019_1574 = round(resources, r_round_100, ceil)
+
+def rl: num at reader
+  note "RL = L / LR, in percent rounded to the second decimal, arrêté art. 14"
+  rule base = round(l_rent / lr, rl_0_0001, al_pct_mode)
+
+def rp: money EUR at reader
+  note "Rp = R - R0, D. 823-17"
+  rule base v decret_2019_1574 = r_round - r0
+
+def tl: num at reader
+  note "TL in percent rounded at the decimal the reading takes"
+  rule tl2 = round(tl_raw, tl_0_0001, al_pct_mode) when al_tl == tl2
+  rule tl3 v arrete_2019 = round(tl_raw, tl_0_00001, al_pct_mode) when al_tl == tl3
+
+def tl_raw: num at reader
+  note "TL before rounding, arrêté art. 14 2° (brochure p. 21); its table leaves RL = 45 % and RL = 75 % unassigned, and both formulas agree at 75 %"
+  rule high v arrete_2019 = tl_a * (tl_t2 - tl_t1) + tl_b * (rl - tl_t2) when rl >= tl_t2
+  rule low v arrete_2019 = 0 when rl < tl_t1
+  rule mid v arrete_2019 = tl_a * (rl - tl_t1) when rl >= tl_t1 and rl < tl_t2
+
+def tp: num at reader
+  note "Tp = TF + TL, arrêté art. 14"
+  rule base v arrete_2019 = tf + tl
+
+ask q01_l: l_rent law 2021-01-01
+
+ask q02_c: charges law 2021-01-01
+
+ask q03_p0: p0 law 2021-01-01
+
+ask q04_r0: r0 law 2021-01-01
+
+ask q05_rp: rp law 2021-01-01
+
+ask q06_tf: tf law 2021-01-01
+
+ask q07_tl: tl law 2021-01-01
+
+ask q08_tp: tp law 2021-01-01
+
+ask q09_p1: p1 law 2021-01-01
+
+ask q10_pp: pp law 2021-01-01
+
+ask q11_af: af law 2021-01-01
+
+ask q12_brute: before_crds law 2021-01-01
+
+ask q12_degr: degr_applies law 2021-01-01
+
+ask q13_nette: aide_nette law 2021-01-01
+
+ask q14_versee: aide_versee law 2021-01-01
+
+ask q15_catala: aide_d823 law 2021-01-01
+
+version decret_2019_772
+  cite decret772
+  governs 2019-09-01..
+  known 2019-07-25
+  note "published in the JORF of 25 July 2019, applicable from 1 September 2019. D. 823-16 is read in Catala's copy of its version LEGIARTI000038878905, the one this decree created and still in force on 1 January 2021"
+  rls_share = 0.98 "D. 823-16: ce résultat est réduit d'un montant égal à 98 % de la réduction de loyer de solidarité"
+
+version lifted_figures
+  cite lifted_1_0_1
+  governs always
+  known 2019-07-25
+  r_round_100 = 100 "inline in tally 1.0.1: r_round line 168, round step"
+  rl_0_0001 = 0.0001 "inline in tally 1.0.1: rl line 172, round step"
+  tl_0_00001 = 0.00001 "inline in tally 1.0.1: tl line 181, round step"
+  tl_0_0001 = 0.0001 "inline in tally 1.0.1: tl line 180, round step"
+
+version arrete_2019
+  cite arrete2019
+  governs 2019-10-01..
+  known 2019-10-01
+  note "JORF n° 0228 du 1er octobre 2019, texte n° 21 (Légifrance's JORF page, Wayback capture of 21 January 2022); art. 49: applicable aux prestations dues à compter du 1er octobre 2019. Round 2 had no publication date and took 2 October 2019, the latest it could be"
+  note "the text is Légifrance's consolidated version of 16 November 2019, before the first amendment (the arrêté du 3 janvier 2020), so it is the text as published. Arts. 10, 11 and 12 are unamended up to the example; the arrêté du 25 septembre 2020 replaced only the amount of art. 13 and the LR table of art. 14, so the 8,5 %, the TF table and the TL brackets keep their 2019 wording (§4.5, Which act). Arts. 12, 13 and 14 give the formulas the rules cite; the rules on the tables of arts. 7, 9 and 14 cite arrete_2020, which replaced them"
+  baisse = 5 "art. 11: Le montant de minoration forfaitaire prévu au 9e alinéa de l'article D. 823-16 du même code est fixé à 5 euros"
+  cd = 2.5 "art. 10, zone II: premier plafond de loyer 2,5"
+  cs = 3.1 "art. 10, zone II: second plafond de loyer 3,1"
+  p0_rate = 0.085 "art. 13: 8,5 % de la somme du loyer éligible défini au 2° de l'article D. 823-16 du même code et du forfait charge"
+  seuil = 10 "art. 12: avant application de la CRDS, fixé à 10 euros pour les allocations de logement"
+  tf = 0.0238 "art. 14 1°, VALEURS DE TF: 2 enfants ou 2 personnes 2,38%"
+  tl_a = 0.0045 "art. 14 2°: 0,45 % pour la tranche de RL entre 45 % et 75 %"
+  tl_b = 0.0068 "art. 14 2°: 0,68 % pour la tranche de RL supérieure à 75 %"
+  tl_t1 = 0.45 "art. 14 2°: 0 % pour la tranche de RL inférieure à 45 %"
+  tl_t2 = 0.75 "art. 14 2°: la tranche de RL supérieure à 75 %"
+
+version ord_96_50
+  cite ord9650
+  governs 2020-01-01..
+  known 2019-12-29
+  note "a restating text (Légifrance's consolidated art. 19) standing for Ordonnance n° 96-50 as amended by the loi n° 2019-486 du 22 mai 2019 (art. 138) and the loi n° 2019-1479 du 28 décembre 2019 de finances pour 2020 (art. 28), both in force from 1 January 2020. Which of them gave the 0,5 % sentence its wording isn't established, so the version takes the later, the loi de finances pour 2020, and is known at its publication, JORF n° 0302 du 29 décembre 2019 (§4.5). Round 2 dated it by the ordonnance, 25 January 1996"
+  crds_rate = 0.005 "art. 19: Le taux des contributions instituées par les articles 14 à 17 est fixé à 0,5 %"
+
+version decret_2019_1574
+  cite d823_17
+  governs 2020-04-01..
+  known 2019-12-31
+  note "a restating text (Légifrance's consolidated D. 823-17) standing for the décret n° 2019-1574 du 30 décembre 2019, art. 12, the only amendment it records, published in the JORF n° 0303 du 31 décembre 2019 (LegalNews, 2 janvier 2020), so known at that date (§4.5). The text is also Catala's copy (case)"
+  note "as made, the decree applied to the aid due from April 2020 at the latest (LegalNews, 2 janvier 2020). The décret n° 2020-451 du 20 avril 2020 (JORF 21 avril 2020) put it off to a date fixed by arrêté, 1 January 2021 at the latest, which isn't a span (gaps file). The décret n° 2020-1816 moves it to 1 January 2021 (decret_2020_1816), the date Légifrance gives this version"
+
+version arrete_2020_jan
+  cite catala_archives
+  governs 2020-01-01..
+  known 2020-01-04
+  note "a restating text (Catala's copy of art. 15, LEGIARTI000041489192) standing for the arrêté du 3 janvier 2020 relatif au calcul des aides personnelles au logement pour l'année 2020 (NOR LOGL1934006A), which it names; applicable aux prestations dues à compter du 1er janvier 2020. Known at that arrêté's publication, JORF n° 0003 du 4 janvier 2020 (LegalNews, 6 janvier 2020; §4.5)"
+  note "the brochure labels the same R0 table 'À compter du 01/01/21'. Catala's archive has no 2021 change to art. 15: the arrêté du 31 décembre 2020 for 2021 changes arts. 6 and 47 only, so this table is the one in force for the example"
+  r0 = 8015 "art. 15: Personne seule ou couple ayant deux personnes à charge 8015"
+
+version arrete_2020
+  cite arrete2020
+  governs 2020-10-01..
+  known 2020-09-30
+  note "JORF of 30 September 2020, texte 61; applies to the aid due from 1 October 2020 (art. 3, I). Art. 1er replaces the tables of arts. 7 and 9, the LR table of art. 14 and the amount of art. 13 of the arrêté du 27 septembre 2019"
+  c_base = 53.99 "art. 1er 3°, art. 9 table: Bénéficiaire isolé ou couple sans personne à charge 53,99"
+  c_extra = 12.24 "art. 1er 3°, art. 9 table: Par personne supplémentaire à charge 12,24"
+  lp_base = 356.3 "art. 1er 1°, art. 7 table, zone II: Personne seule ou couple ayant une personne à charge 356,30"
+  lp_extra = 51.86 "art. 1er 1°, art. 7 table, zone II: Par personne à charge supplémentaire 51,86"
+  lr_base = 356.3 "art. 1er 5°, art. 14 table: Personne seule ou couple ayant une personne à charge 356,3"
+  lr_extra = 51.86 "art. 1er 5°, art. 14 table: Majoration par personne à charge 51,86"
+  p0_min = 35.24 "art. 1er 4°, art. 13: « 35,13 euros » est remplacé par « 35,24 euros »"
+
+version decret_2020_1816
+  cite decret1816
+  governs always
+  known 2020-12-31
+  moves decret_2019_1574 to 2021-01-01..
+  note "published in the JORF of 31 December 2020 (LegalNews, 4 janvier 2021): it fixes the entry into force of the décret n° 2019-1574 at 1 January 2021 for the aids other than the APL accession"
+
+version brochure_2021
+  cite brochure
+  governs always
+  known 2021-09-27
+  note "no items: the version the CRDS and paid-aid roundings cite (pp. 23 and 50), which no enacting text in the case gives. Every parameter it restates now comes from the act that enacts it (arrete_2019, arrete_2020, arrete_2020_jan, decret_2019_772, ord_96_50)"
+  note "guidance, known from its first public release (§4.5). No release notice was found. The PDF at its public URL carries HTTP Last-Modified 27 September 2021 (Wayback capture of 10 October 2021, the earliest), taken as its release; its PDF was created on 30 August 2021. Round 2 took 30 September 2021, the last day of its month"
+
+version brochure_example
+  cite brochure
+  governs always
+  known 2026-10-18
+  note "p. 24, the metropolitan example: a hypothetical case's stipulations, known from the model's on date since it has no start (§4.5)"
+  n_dep = 2 "p. 24: un ménage avec deux enfants"
+  rent = 425 "p. 24: payant un loyer mensuel de 425 €"
+  resources = 11500 "p. 24: ressources annuelles prises en compte pour le calcul de 11 500 €"
+
+version model_assumptions
+  cite modeller
+  governs always
+  known 2026-10-18
+  note "an assumption that stands for the example's own fact, known from the model's on date (§4.5)"
+  rls = 0 assumed "no réduction de loyer de solidarité is stated and the example applies none; Catala's test sets 0 €"

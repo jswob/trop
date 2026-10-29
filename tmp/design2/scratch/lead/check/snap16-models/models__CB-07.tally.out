@@ -1,0 +1,119 @@
+q_p08_days (y = 2019): 61
+  assumed: do końca maja is read as presence through 31 May 2020 and none after; the day she left is not stated (last_present[julia])
+  pinned: arrived[julia] = 2019-11-01
+  law date 2026-10-19, cut 2026-10-19
+q_p08_days (y = 2020): 152
+  assumed: do końca maja is read as presence through 31 May 2020 and none after; the day she left is not stated (last_present[julia])
+  pinned: arrived[julia] = 2019-11-01
+  law date 2026-10-19, cut 2026-10-19
+q_p08_long_stay (y = 2019): false
+  assumed: do końca maja is read as presence through 31 May 2020 and none after; the day she left is not stated (last_present[julia])
+  law date 2026-10-19, cut 2026-10-19
+q_p08_long_stay (y = 2020): false
+  assumed: do końca maja is read as presence through 31 May 2020 and none after; the day she left is not stated (last_present[julia])
+  law date 2026-10-19, cut 2026-10-19
+q_p09_left: true
+  law date 2026-10-19, cut 2026-10-19
+q_p09_moved: 2020-05-31
+  assumed: the year is not stated (tego roku podatkowego); 2020 is taken, and no result depends on it (household_moved[mariusz])
+  law date 2026-10-19, cut 2026-10-19
+q_p09_nonres: 2020-06-01
+  assumed: the year is not stated (tego roku podatkowego); 2020 is taken, and no result depends on it (household_moved[mariusz])
+  law date 2026-10-19, cut 2026-10-19
+q_p09_unlimited: (2020-01-01, 2020-05-31)
+  assumed: the year is not stated (tego roku podatkowego); 2020 is taken, and no result depends on it (household_moved[mariusz])
+  law date 2026-10-19, cut 2026-10-19
+q_p10_departure: true
+  assumed: the year is not stated; 2020 is taken, and no result depends on it (work_abroad_from[dawid])
+  assumed: the year is not stated; 2020 is taken, and no result depends on it. The day in July is not stated either. (household_moved[dawid])
+  law date 2026-10-19, cut 2026-10-19
+q_p10_left: true
+  law date 2026-10-19, cut 2026-10-19
+q_p10_moved: window(2020-07-01, 2020-07-31)
+  assumed: the year is not stated; 2020 is taken, and no result depends on it. The day in July is not stated either. (household_moved[dawid])
+  law date 2026-10-19, cut 2026-10-19
+q_p11_amounts: (?"What is this person's tax base for the year (podstawa obliczenia podatku), the UK income included? Przykład 11 gives no amounts." (tax_base[monika, 2020]), ?"What UK tax was paid on the year's UK income, in złoty? Przykład 11 gives no amounts, nor which part of the UK tax year falls in the calendar year." (tax_uk[monika, 2020]) ?"What income did this person earn in the UK in the year, in złoty at the rates of art. 11a? Przykład 11 gives no amounts or exchange rates." (income_uk[monika, 2020]) ?"What income other than from the UK did this person have in the year? Przykład 11 gives no amounts for 2020." (income_other[monika, 2020]) ?"What is this person's tax base for the year (podstawa obliczenia podatku), the UK income included? Przykład 11 gives no amounts." (tax_base[monika, 2020]), ?"What UK tax was paid on the year's UK income, in złoty? Przykład 11 gives no amounts, nor which part of the UK tax year falls in the calendar year." (tax_uk[monika, 2020]) ?"What income did this person earn in the UK in the year, in złoty at the rates of art. 11a? Przykład 11 gives no amounts or exchange rates." (income_uk[monika, 2020]) ?"What income other than from the UK did this person have in the year? Przykład 11 gives no amounts for 2020." (income_other[monika, 2020]) ?"What is this person's tax base for the year (podstawa obliczenia podatku), the UK income included? Przykład 11 gives no amounts." (tax_base[monika, 2020]))
+  law date 2026-10-19, cut 2026-10-19
+q_p11_change: 2020-01-01
+  law date 2026-10-19, cut 2026-10-19
+q_p11_forms (f = pit36) [abolition_use = *]: true
+  law date 2026-10-19, cut 2026-10-19
+q_p11_forms (f = pit_zg) [abolition_use = *]: true
+  law date 2026-10-19, cut 2026-10-19
+q_p11_forms (f = pit_o) [abolition_use = used]: true
+  reading: abolition_use = used
+  law date 2026-10-19, cut 2026-10-19
+q_p11_forms (f = pit_o) [abolition_use = unused]: false
+  reading: abolition_use = unused
+  law date 2026-10-19, cut 2026-10-19
+q_p11_method (y = 2019): exemption_progression
+  law date 2026-10-19, cut 2026-10-19
+q_p11_method (y = 2020): proportional_credit
+  law date 2026-10-19, cut 2026-10-19
+q_p11_relief: true
+  law date 2026-10-19, cut 2026-10-19
+q_p11_same: false
+  law date 2026-10-19, cut 2026-10-19
+q_p12_dual: true
+  law date 2026-10-19, cut 2026-10-19
+q_p12_state: pol
+  assumed: the source says only that the first criterion (a permanent home) could not decide; with her home in Poland, that needs a permanent home in Spain as well (home[renata, esp])
+  law date 2026-10-19, cut 2026-10-19
+q_p12_unlimited: true
+  assumed: the source says only that the first criterion (a permanent home) could not decide; with her home in Poland, that needs a permanent home in Spain as well (home[renata, esp])
+  law date 2026-10-19, cut 2026-10-19
+q_p12_why: pol
+  [1] tb_es[renata] = pol, law date 2026-10-19
+      rule abode: beaten by vital
+      rule agreement: beaten by vital
+      rule home: not applicable
+        [2] row mf_examples:home[renata, pol] = true
+            version mf_examples, source mf_objasnienia, "Objaśnienia podatkowe z dnia 29 kwietnia 2021 r. Rezydencja podatkowa oraz zakres obowiązku podatkowego osób fizycznych w Polsce (Minister Finansów, Funduszy i Polityki Regionalnej)", locator "p. 11, Przykład 12: her husband and children lived in their joint home in Poland", governs always, known 2026-10-19
+        [3] row mf_examples:home[renata, esp] = true
+            version mf_examples, source mf_objasnienia, "Objaśnienia podatkowe z dnia 29 kwietnia 2021 r. Rezydencja podatkowa oraz zakres obowiązku podatkowego osób fizycznych w Polsce (Minister Finansów, Funduszy i Polityki Regionalnej)", locator "p. 12, Przykład 12: ustalenie państwa rezydencji podatkowej zgodnie z kryterium pierwszym nie było możliwe", governs always, known 2026-10-19
+      rule nationality: beaten by vital
+      rule vital: won (version upo_es, source dz1982_127)
+        (mf_examples:home[renata, pol]: see [2])
+        (mf_examples:home[renata, esp]: see [3])
+        [4] row mf_examples:closer[renata, pol] = true
+            version mf_examples, source mf_objasnienia, "Objaśnienia podatkowe z dnia 29 kwietnia 2021 r. Rezydencja podatkowa oraz zakres obowiązku podatkowego osób fizycznych w Polsce (Minister Finansów, Funduszy i Polityki Regionalnej)", locator "p. 12, Przykład 12: w Polsce pani Renata posiada dom, męża oraz dzieci", governs always, known 2026-10-19
+        [5] row mf_examples:closer[renata, esp] = false
+            version mf_examples, source mf_objasnienia, "Objaśnienia podatkowe z dnia 29 kwietnia 2021 r. Rezydencja podatkowa oraz zakres obowiązku podatkowego osób fizycznych w Polsce (Minister Finansów, Funduszy i Polityki Regionalnej)", locator "p. 12, Przykład 12: To kryterium pozwala rozstrzygnąć konflikt rezydencji, gdyż w Polsce pani Renata posiada dom, męża oraz dzieci.", governs always, known 2026-10-19
+        (mf_examples:closer[renata, pol]: see [4])
+  assumed: the source says only that the first criterion (a permanent home) could not decide; with her home in Poland, that needs a permanent home in Spain as well (home[renata, esp])
+  law date 2026-10-19, cut 2026-10-19
+q_p13_dual: true
+  law date 2026-10-19, cut 2026-10-19
+q_p13_state: pol
+  assumed: only his Polish nationality is stated, and the source decides by it, which needs him not to be a Canadian national as well (national[jakub, can])
+  assumed: the source says only that his days in each state are not decisive; half a year in each is read as an habitual abode in both (an abode in neither would lead to nationality too) (abode[jakub, can], abode[jakub, pol])
+  law date 2026-10-19, cut 2026-10-19
+q_p13_why: pol
+  [1] tb_ca[jakub] = pol, law date 2026-10-19
+      rule abode: not applicable
+        [2] row mf_examples:abode[jakub, pol] = true
+            version mf_examples, source mf_objasnienia, "Objaśnienia podatkowe z dnia 29 kwietnia 2021 r. Rezydencja podatkowa oraz zakres obowiązku podatkowego osób fizycznych w Polsce (Minister Finansów, Funduszy i Polityki Regionalnej)", locator "p. 12, Przykład 13: ilość dni pobytu pana Jakuba w każdym z państw nie jest rozstrzygająca", governs always, known 2026-10-19
+        [3] row mf_examples:abode[jakub, can] = true
+            version mf_examples, source mf_objasnienia, "Objaśnienia podatkowe z dnia 29 kwietnia 2021 r. Rezydencja podatkowa oraz zakres obowiązku podatkowego osób fizycznych w Polsce (Minister Finansów, Funduszy i Polityki Regionalnej)", locator "p. 12, Przykład 13: ilość dni pobytu pana Jakuba w każdym z państw nie jest rozstrzygająca", governs always, known 2026-10-19
+      rule agreement: beaten by nationality
+      rule home: not applicable
+        [4] row mf_examples:home[jakub, pol] = true
+            version mf_examples, source mf_objasnienia, "Objaśnienia podatkowe z dnia 29 kwietnia 2021 r. Rezydencja podatkowa oraz zakres obowiązku podatkowego osób fizycznych w Polsce (Minister Finansów, Funduszy i Polityki Regionalnej)", locator "p. 12, Przykład 13: he owns a flat in each country, furnished for a permanent stay", governs always, known 2026-10-19
+        [5] row mf_examples:home[jakub, can] = true
+            version mf_examples, source mf_objasnienia, "Objaśnienia podatkowe z dnia 29 kwietnia 2021 r. Rezydencja podatkowa oraz zakres obowiązku podatkowego osób fizycznych w Polsce (Minister Finansów, Funduszy i Polityki Regionalnej)", locator "p. 12, Przykład 13: he owns a flat in each country, furnished for a permanent stay", governs always, known 2026-10-19
+      rule nationality: won (version upo_ca, source dz2013_1371)
+        [6] row mf_examples:national[jakub, pol] = true
+            version mf_examples, source mf_objasnienia, "Objaśnienia podatkowe z dnia 29 kwietnia 2021 r. Rezydencja podatkowa oraz zakres obowiązku podatkowego osób fizycznych w Polsce (Minister Finansów, Funduszy i Polityki Regionalnej)", locator "p. 12, Przykład 13: obywatelem polskim", governs always, known 2026-10-19
+        [7] row mf_examples:national[jakub, can] = false
+            version mf_examples, source mf_objasnienia, "Objaśnienia podatkowe z dnia 29 kwietnia 2021 r. Rezydencja podatkowa oraz zakres obowiązku podatkowego osób fizycznych w Polsce (Minister Finansów, Funduszy i Polityki Regionalnej)", locator "p. 12, Przykład 13: Pan Jakub posiada obywatelstwo polskie", governs always, known 2026-10-19
+        (mf_examples:national[jakub, pol]: see [6])
+      rule vital: not applicable
+        (mf_examples:home[jakub, pol]: see [4])
+        (mf_examples:home[jakub, can]: see [5])
+        [8] row mf_examples:closer[jakub, pol] = false
+            version mf_examples, source mf_objasnienia, "Objaśnienia podatkowe z dnia 29 kwietnia 2021 r. Rezydencja podatkowa oraz zakres obowiązku podatkowego osób fizycznych w Polsce (Minister Finansów, Funduszy i Polityki Regionalnej)", locator "p. 12, Przykład 13: jednakowe powiązania osobiste i gospodarcze", governs always, known 2026-10-19
+        [9] row mf_examples:closer[jakub, can] = false
+            version mf_examples, source mf_objasnienia, "Objaśnienia podatkowe z dnia 29 kwietnia 2021 r. Rezydencja podatkowa oraz zakres obowiązku podatkowego osób fizycznych w Polsce (Minister Finansów, Funduszy i Polityki Regionalnej)", locator "p. 12, Przykład 13: jednakowe powiązania osobiste i gospodarcze", governs always, known 2026-10-19
+  assumed: only his Polish nationality is stated, and the source decides by it, which needs him not to be a Canadian national as well (national[jakub, can])
+  assumed: the source says only that his days in each state are not decisive; half a year in each is read as an habitual abode in both (an abode in neither would lead to nationality too) (abode[jakub, can], abode[jakub, pol])
+  law date 2026-10-19, cut 2026-10-19

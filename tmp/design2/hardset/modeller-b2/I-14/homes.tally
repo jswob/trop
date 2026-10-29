@@ -1,0 +1,262 @@
+model i14_two_homes
+  tally 2
+  on 2026-10-01
+  start 2026-10-01
+  end 2028-03-31
+  note "I-14: one fact, each child's share of nights, read by a benefit act per quarter, a maintenance act through frozen assessments, and an income act per month."
+  note "The run starts in October 2026 so that rule 2 decides the first quarter of 2027 from the nights of the quarter before it."
+
+source card "Card I-14: story, table, rules 1-8 and question"
+
+source benefit_act "Child Benefit Act (card I-14, rules 1-4)"
+
+source maintenance_act "Maintenance Act (card I-14, rules 5-7)"
+
+source income_act "Income Act (card I-14, rule 8)"
+
+source modeller "The modeller's assumptions, each with its reason"
+
+unit XXX: currency minor 0.01
+
+kind persons
+
+kind assessments
+  note "a court's assessment of one child's maintenance: stated with its basis, or made on an application (rule 6)"
+
+kind purses: place XXX signed
+  note "a household's money at large; only the case's movements touch it"
+
+kind benefit_pays: event certain
+  leg benefit: XXX
+  leg allowance: XXX
+
+kind maint_pays: event certain
+  leg cash: XXX
+
+index quarter_keys = month 2026-10..2028-01 by 3
+  note "calendar quarters, each key the first month of its quarter (rule 2)"
+
+place benefit_office: outside lives 1900-01-01..
+
+place purse[p in persons]: purses lives 2026-10-01..
+
+input allowance_age: int
+
+input allowance_amt: money XXX
+
+input applied_on[a in assessments]: date
+
+input assess_child[a in assessments]: key persons
+
+input benefit_age: int
+
+input benefit_age_dom: int
+
+input benefit_amt: money XXX
+
+input benefit_dom: int
+
+input born[c in persons]: date
+
+input carer_before[c in persons]: key persons
+
+input claim_day[c in persons, p in persons]: date
+
+input co_parent[p in persons]: key persons
+
+input maint_dom: int
+
+input maint_rate: num
+
+input maint_round: rounding
+
+input net_income[p in persons]: money XXX
+
+input night_share[c in persons]: num
+
+input parent[c in persons, k in persons]: bool
+
+input relief_amt: money XXX
+
+input relief_split: num
+
+input relief_threshold: num
+
+input share_multiplier: num
+
+input share_parent[c in persons]: key persons
+
+input stated_basis[a in assessments]: num
+
+input stated_from[a in assessments]: month
+
+def allowance_due[c in persons, m in months]: money XXX
+  note "rule 4: under the age on the first day of the month, paid with the benefit"
+  rule base = 0
+  rule young beats base = allowance_amt when benefit_due[c, m] > 0 XXX and age(born[c], start_of(m)) < allowance_age
+
+def basis_share[a in assessments, p in persons]: num
+  note "rule 6: an assessment's shares, stated by the court or read on the day of the application"
+  rule applied = share[assess_child[a], p, applied_on[a]] when applied_on[a] != none
+  rule stated = if p == share_parent[assess_child[a]] then stated_basis[a] else 100 % - stated_basis[a] when applied_on[a] == none
+
+def benefit_due[c in persons, m in months]: money XXX
+  rule base = 0
+  rule child beats base = benefit_amt when is_child[c] and age(born[c], day_of(m, benefit_age_dom)) < benefit_age
+
+def carer[c in persons, q in quarter_keys]: key persons
+  note "rule 2: the parent with more nights in the previous quarter; on a tie the previous main carer stays"
+  rule first = carer_before[c] when pos(q) == 1
+  rule by_nights = argmax(nights_q[c, p, q - 1] for p in persons over .. where parent[c, p]) ties by (if p == carer[c, q - 1] then 0 else 1) when pos(q) > 1
+
+def from_month[a in assessments]: month
+  rule applied = month_of(applied_on[a]) + 1 when applied_on[a] != none
+  rule stated = stated_from[a] when applied_on[a] == none
+
+def in_force[c in persons, m in months]: key assessments = last(a in assessments over .. where assess_child[a] == c and from_month[a] <= m) ties by (from_month[a])
+
+def is_child[c in persons]: bool = any(parent[c, k] for k in persons over ..)
+
+def month_share[c in persons, p in persons, m in months]: num = sum(share[c, p, d] for d in days where month_of(d) == m) / days_between(start_of(m), end_of(m))
+
+def net_due[p in persons, m in months]: money XXX = sum(owes[c, p, m] for c in persons on start_of(m) where parent[c, p]) - sum(owes[c, co_parent[p], m] for c in persons on start_of(m) where parent[c, co_parent[p]])
+
+def nights_q[c in persons, p in persons, q in quarter_keys]: num = sum(share[c, p, d] for d in days where quarter_of(d) == quarter_of(start_of(q)))
+
+def owes[c in persons, p in persons, m in months]: money XXX
+  note "rule 5 on the assessment in force (rule 6): the parent with the smaller share pays; equal shares, nothing"
+  rule none_due = 0
+  rule pays beats none_due = round(maint_rate * net_income[p] * (1 - share_multiplier * basis_share[in_force[c, m], p]), minor(XXX), maint_round) when parent[c, p] and basis_share[in_force[c, m], p] < basis_share[in_force[c, m], co_parent[p]]
+
+def payee[c in persons, m in months]: key persons
+  note "rule 3: a new main carer is paid from the later of their quarter's first month and the month after their claim; until then the one paid before"
+  rule first = carer_before[c] when pos(m) == 1
+  rule stay = payee[c, m - 1] when pos(m) > 1
+  rule switch beats stay = carer[c, start_of(m)] when pos(m) > 1 and carer[c, start_of(m)] != payee[c, m - 1] and claim_day[c, carer[c, start_of(m)]] != none and m > month_of(claim_day[c, carer[c, start_of(m)]])
+
+def relief[p in persons, y in years]: num XXX
+  note "rule 8: per child and month at or above the threshold of nights; halved when both parents qualify"
+  rule base = sum((if qualifies[c, co_parent[p], m] then relief_amt * relief_split else relief_amt) for c in persons over y, m in months where year_of(m) == y and qualifies[c, p, m])
+
+def qualifies[c in persons, p in persons, m in months]: bool = parent[c, p] and month_share[c, p, m] >= relief_threshold
+
+def share[c in persons, p in persons, d in days]: num at d
+  note "the table states one parent's share; the rest of the nights are the other parent's"
+  rule none_held = 0 when not parent[c, p]
+  rule rest = 100 % - night_share[c] when parent[c, p] and p != share_parent[c]
+  rule stated = night_share[c] when parent[c, p] and p == share_parent[c]
+
+move benefit[m in months, c in persons on start_of(m)]: benefit_pays
+  on day_of(m, benefit_dom)
+  when benefit_due[c, m] > 0 XXX
+  leg benefit from benefit_office to purse[payee[c, m]] amount benefit_due[c, m]
+  leg allowance from benefit_office to purse[payee[c, m]] amount allowance_due[c, m]
+
+move maint_pay[m in months, p in persons on start_of(m) where co_parent[p] != none]: maint_pays
+  on day_of(m, maint_dom)
+  when net_due[p, m] > 0 XXX
+  leg cash from purse[p] to purse[co_parent[p]] amount net_due[p, m]
+
+ask benefits: payee[c, m], benefit_due[c, m], allowance_due[c, m] for m in months where m >= 2027-01, c in persons on start_of(m) where is_child[c]
+
+ask maintenance: owes[c, p, m] for m in months where m >= 2027-01, c in persons on start_of(m) where is_child[c], p in persons on start_of(m) where parent[c, p] and owes[c, p, m] > 0 XXX
+
+ask relief_2027: relief[p, 2027] for p in persons on 2027-12-31 where co_parent[p] != none
+
+ask transfer: co_parent[p], net_due[p, m] for m in months where m >= 2027-01, p in persons on start_of(m) where co_parent[p] != none and net_due[p, m] > 0 XXX
+
+version people
+  cite card
+  known 2026-10-01
+  persons + [tymon] lives 2017-06-22..
+  persons + [ula] lives 2021-11-03..
+
+version parents
+  cite modeller
+  known 2026-10-01
+  assumed "the card gives no birth dates of the parents; each lifespan starts on an early day"
+  persons + [wiktor] lives 1950-01-01..
+  persons + [zofia] lives 1950-01-01..
+
+version court
+  cite card
+  known 2026-10-01
+  assessments + [court_2025_tymon] lives 2025-12-01..
+  assessments + [court_2025_ula] lives 2025-12-01..
+  assessments + [reassess_2027_tymon] lives 2027-09-20..
+
+version facts
+  cite card
+  governs always
+  known 2026-10-01
+  applied_on[court_2025_tymon] = none "assessed by the court in December 2025"
+  applied_on[court_2025_ula] = none "assessed by the court in December 2025"
+  applied_on[reassess_2027_tymon] = 2027-09-20 "story: Wiktor applies for Tymon's maintenance to be reassessed"
+  assess_child[court_2025_tymon] = tymon
+  assess_child[court_2025_ula] = ula
+  assess_child[reassess_2027_tymon] = tymon
+  born[tymon] = 2017-06-22 "story"
+  born[ula] = 2021-11-03 "story"
+  carer_before[tymon] = zofia "story: Zofia has been paid both children's benefit since 2025"
+  carer_before[ula] = zofia "story: Zofia has been paid both children's benefit since 2025"
+  claim_day = none "no claim"
+  claim_day[tymon, wiktor] = 2027-11-10 "story: Wiktor claims Tymon's benefit on 10 November 2027"
+  claim_day[tymon, zofia] = ?"on what day did Zofia claim Tymon's benefit? (paid since 2025)"
+  claim_day[ula, zofia] = ?"on what day did Zofia claim Ula's benefit? (paid since 2025)"
+  co_parent = none "not a parent"
+  co_parent[wiktor] = zofia "story"
+  co_parent[zofia] = wiktor "story"
+  net_income[wiktor] = 9000 "story: unchanged throughout"
+  net_income[zofia] = 6000 "story: unchanged throughout"
+  night_share[tymon] = 15 % governs 2027-01-01..2027-04-30 "table"
+  night_share[tymon] = 50 % governs 2027-05-01..2027-08-31 "table"
+  night_share[tymon] = 70 % governs 2027-09-01.. "table"
+  night_share[ula] = 15 % governs 2027-01-01.. "table"
+  parent = false "no other parent relation"
+  parent[tymon, wiktor] = true "story"
+  parent[tymon, zofia] = true "story"
+  parent[ula, wiktor] = true "story"
+  parent[ula, zofia] = true "story"
+  share_parent[tymon] = wiktor "table: the share of nights at Wiktor's"
+  share_parent[ula] = wiktor "table: the share of nights at Wiktor's"
+  stated_basis[court_2025_tymon] = 15 % "story: assessed on Wiktor having 15 % of each child's nights"
+  stated_basis[court_2025_ula] = 15 % "story: assessed on Wiktor having 15 % of each child's nights"
+  stated_basis[reassess_2027_tymon] = none "made on the shares of the day of the application"
+  stated_from[reassess_2027_tymon] = none "applies from the month after the application"
+
+version assumed_facts
+  cite modeller
+  governs always
+  known 2026-10-01
+  night_share[tymon] = 15 % assumed "the table starts in 2027; the nights of late 2026 are taken at the 15 % the court assessed on" governs 2026-10-01..2026-12-31
+  night_share[ula] = 15 % assumed "the table starts in 2027; the nights of late 2026 are taken at the 15 % the court assessed on" governs 2026-10-01..2026-12-31
+  stated_from[court_2025_tymon] = 2026-01 assumed "assessed in December 2025; taken to apply from January 2026, before the run"
+  stated_from[court_2025_ula] = 2026-01 assumed "assessed in December 2025; taken to apply from January 2026, before the run"
+  benefit_age_dom = 1 assumed "rule 1 names no day on which the age is read; the first of the month, as rule 4 reads it; no child nears the age in the run"
+
+version benefit_rules
+  cite benefit_act
+  governs always
+  known 2026-10-01
+  allowance_age = 6 "rule 4: under 6 on the first day of a month"
+  allowance_amt = 120 "rule 4"
+  benefit_age = 18 "rule 1"
+  benefit_amt = 300 "rule 1"
+  benefit_dom = 15 "rule 1: paid on the 15th"
+
+version maintenance_rules
+  cite maintenance_act
+  governs always
+  known 2026-10-01
+  maint_dom = 1 "rule 7: due on its 1st"
+  maint_rate = 18 % "rule 5"
+  maint_round = half-up "rule 5: rounded half up to whole minor units"
+  share_multiplier = 2 "rule 5: 1 − 2 × the payer's share"
+
+version income_rules
+  cite income_act
+  governs always
+  known 2026-10-01
+  relief_amt = 95 "rule 8"
+  relief_split = 50 % "rule 8: each takes half"
+  relief_threshold = 40 % "rule 8: at least 40 % of its nights"

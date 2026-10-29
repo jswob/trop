@@ -1,0 +1,49 @@
+model rule07
+  tally 2
+  on 2025-07-01
+  start 2025-01-01
+  end 2025-06-30
+  note "RULE-07: a standing order of 500.00 on the 1st, January to June 2025; the bank rows lack March. The records win: a covered day books its observations, and the order is the modelled past (L 5.19); bal ... modelled is the rule's own account of those days."
+
+source bank_export "Savings account export, January to June 2025 (card RULE-07)"
+
+source card "Probe card RULE-07: the standing order and the savings"
+
+unit DUK: currency minor 0.01
+
+place konto: accounts DUK lives 2024-01-01..
+
+place savings: accounts DUK lives 2025-01-01..
+
+input bank: observed
+
+input order_amt: money DUK
+
+move standing[m in months]: transfers
+  on start_of(m)
+  leg cash from konto to savings amount order_amt
+
+ask by_records: bal(savings, 2025-06-30)
+
+ask by_rule: bal(savings, 2025-06-30) modelled
+
+ask gap: residuals savings 2025-01..2025-06
+
+version card_facts
+  cite card
+  governs always
+  known 2025-01-01
+  opening[savings] = 1000 at 2025-01-01 start "story: the savings on 31 December 2024"
+  order_amt = 500 "the standing order: 500.00 on the 1st of each month, January to June 2025"
+
+version bank_2025_h1
+  cite bank_export
+  governs 2025-01..2025-06
+  known 2025-07-01
+  assumed "the card gives no export date; taken as the day after the last month it covers"
+  covers savings
+  bank[r2501] = (on: 2025-01-01, kind: transfers, leg cash from konto to savings amount 500.00 DUK, fulfils: standing[2025-01]) "STANDING ORDER 01/2025"
+  bank[r2502] = (on: 2025-02-01, kind: transfers, leg cash from konto to savings amount 500.00 DUK, fulfils: standing[2025-02]) "STANDING ORDER 02/2025"
+  bank[r2504] = (on: 2025-04-01, kind: transfers, leg cash from konto to savings amount 500.00 DUK, fulfils: standing[2025-04]) "STANDING ORDER 04/2025"
+  bank[r2505] = (on: 2025-05-01, kind: transfers, leg cash from konto to savings amount 500.00 DUK, fulfils: standing[2025-05]) "STANDING ORDER 05/2025"
+  bank[r2506] = (on: 2025-06-01, kind: transfers, leg cash from konto to savings amount 500.00 DUK, fulfils: standing[2025-06]) "STANDING ORDER 06/2025"

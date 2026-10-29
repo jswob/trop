@@ -1,0 +1,50 @@
+part records
+  tally 2
+  note "The balances read from the record files whose rows no question reads one by one: the Wektor registers (units after each purchase), the Lazur export and Ania's savings export (balance after each row). Each is a reading of the place's balance (L §5.19) with the version anchoring it; the rows before it are not imported, so these places' balances before a reading are what is booked on them, and the readings restart them. The joint account's statements, the Brzask register and the Rzeka and DM Kopia registers are observations (statements/statements.tally)."
+
+input abank: observed
+  note "Rzeka Securities, client 4471-07, Anna Lis: the register's rows (rzk-4471-07-anna.csv)"
+
+input jbank: observed
+  note "Bank Wrzos, the joint account LN27 … 0412: the statements' rows, 2024-08 to 2025-12 (wrz-joint-*.csv)"
+
+input kbank: observed
+  note "DM Kopia, account 30-118-552, Anna Lis: the register's rows (kop-30-118-552-ania.csv)"
+
+input tbank: observed
+  note "Rzeka Securities, client 4471-02, Tomasz Lis: the register's rows (rzk-4471-02-tomasz.csv)"
+
+input wbank: observed
+  note "Brzask, the wrapped account BRZ-WRAP-0091-A: the register's rows (brz-wrapped-ania.csv)"
+
+version laz_stmt_2025h1
+  cite laz_sav
+  governs 2021-03..2025-06
+  known 2025-07-01
+  anchor lazur
+  note "the last Lazur statement downloaded (story 2025-06-30, known 2025-07-01)"
+  stated[lazur] = 24223.47 DUK at 2025-06-30 end "laz-savings-1020-0044-7310.csv line 41, balance after"
+
+version wek_t_register
+  cite wek_t
+  governs 2021-01..2025-12
+  known 2026-01-15
+  anchor wcp_t
+  note "the Wektor register of Tomek's plan, read at its last row (story: the records end on 2025-12-31, known 2026-01-15)"
+  stated[wcp_t] = 336.6349 wcp at 2025-12-31 end "wek-wcp-lis-tomasz.csv line 128, units after the purchase of 15.12.2025"
+
+version wek_a_register
+  cite wek_a
+  governs 2021-01..2025-12
+  known 2026-01-15
+  anchor wcp_a
+  note "the Wektor register of Ania's plan, read at its last row"
+  stated[wcp_a] = 124.6286 wcp at 2025-12-31 end "wek-wcp-lis-anna.csv line 106, units after the purchase of 15.12.2025"
+
+version wrz_ania_2025
+  cite wrz_ania
+  governs 2025-06..2025-12
+  known 2026-01-15
+  anchor ania_sav
+  note "Ania's savings export for 2025, read at its last row"
+  stated[ania_sav] = 39162.33 DUK at 2025-12-31 end "wrz-ania-savings-2025.csv line 21, balance after"

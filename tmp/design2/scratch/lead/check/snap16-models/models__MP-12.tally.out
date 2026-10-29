@@ -1,0 +1,38 @@
+q_inclusion (b = ben_a) [us_round = *]: 13 571 USD
+  law date 2026-10-18, cut 2026-10-18
+q_inclusion (b = ben_b) [us_round = *]: 2 143 USD
+  law date 2026-10-18, cut 2026-10-18
+q_inclusion (b = ben_c) [us_round = *]: 2 143 USD
+  law date 2026-10-18, cut 2026-10-18
+q_inclusion (b = ben_d) [us_round = *]: 2 143 USD
+  law date 2026-10-18, cut 2026-10-18
+q_other_total: 14 000.00 USD
+  law date 2026-10-18, cut 2026-10-18
+q_tier1 (b = ben_a): 10 000 USD
+  law date 2026-10-18, cut 2026-10-18
+q_tier1 (b = ben_b): 0 USD
+  law date 2026-10-18, cut 2026-10-18
+q_tier1 (b = ben_c): 0 USD
+  law date 2026-10-18, cut 2026-10-18
+q_tier1 (b = ben_d): 0 USD
+  law date 2026-10-18, cut 2026-10-18
+q_tier2_check [us_round = *]: ok
+  law date 2026-10-18, cut 2026-10-18
+q_tier2_dollars (b = ben_a) [us_round = *]: 3 571.00 USD
+  law date 2026-10-18, cut 2026-10-18
+q_tier2_dollars (b = ben_b) [us_round = *]: 2 143.00 USD
+  law date 2026-10-18, cut 2026-10-18
+q_tier2_dollars (b = ben_c) [us_round = *]: 2 143.00 USD
+  law date 2026-10-18, cut 2026-10-18
+q_tier2_dollars (b = ben_d) [us_round = *]: 2 143.00 USD
+  law date 2026-10-18, cut 2026-10-18
+q_tier2_exact (b = ben_a): 25000/7 (3 571.42857142857) USD
+  law date 2026-10-18, cut 2026-10-18
+q_tier2_exact (b = ben_b): 15000/7 (2 142.85714285714) USD
+  law date 2026-10-18, cut 2026-10-18
+q_tier2_exact (b = ben_c): 15000/7 (2 142.85714285714) USD
+  law date 2026-10-18, cut 2026-10-18
+q_tier2_exact (b = ben_d): 15000/7 (2 142.85714285714) USD
+  law date 2026-10-18, cut 2026-10-18
+q_tier2_includible: 10 000 USD
+  law date 2026-10-18, cut 2026-10-18

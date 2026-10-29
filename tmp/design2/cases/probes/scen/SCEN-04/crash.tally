@@ -1,0 +1,10 @@
+scenario crash over scen04
+  tally 2
+  from 2026-01-01
+  note "The named path 'crash': -50 % in year 2, the base 5 % in every other year."
+
+version crash_rows
+  cite paths
+  governs 2026-01-01..
+  known 2026-01-01
+  ret[2] = -0.5 "-50 % in year 2"

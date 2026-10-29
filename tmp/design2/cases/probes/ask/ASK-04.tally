@@ -1,0 +1,40 @@
+model ask04
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+  note "Probe ASK-04: which loan is better? Both costs and the breakeven rate, no choice."
+
+source probe_card "Probe card ASK-04 (made-up story and rules)"
+
+unit DUK: currency minor 0.01
+
+index loan = [loan_a, loan_b]
+
+input fee[l in loan]: money DUK
+
+input loan_basis: compounding
+
+input loan_rate[l in loan]: rate
+
+input principal[l in loan]: money DUK
+
+def cost[l in loan]: num DUK at reader
+  note "a loan's cost: its fee plus a year's interest"
+  rule base v card = fee[l] + principal[l] * periodic(loan_rate[l], year, loan_basis)
+
+ask q_asked: cost[loan_a], cost[loan_b] law 2026-10-25
+
+ask q_breakeven: solve cost[loan_b] == cost[loan_a] for loan_rate[loan_b] in [0 %/year, 20 %/year] to 0.01 %/year law 2026-10-25
+
+version card
+  cite probe_card
+  governs always
+  known 2026-10-25
+  note "The card states the interest only as 6 % and 8 % for a year, with no basis: loan_basis is assumed (L §3.3, §10: a convention is a code in a row)."
+  fee[loan_a] = 500.00 "story: loan A's fee"
+  fee[loan_b] = 0.00 "story: loan B, no fee"
+  loan_basis = simple assumed "the card states 6 % and 8 % for a year with no basis; over one year simple and effective give the same interest" "story: 6 % and 8 % interest, for a year"
+  loan_rate[loan_a] = 6 %/year "story: loan A, 6 % interest"
+  loan_rate[loan_b] = 8 %/year "story: loan B, 8 % interest"
+  principal = 20000.00 "story: both 20 000.00 DUK for a year"

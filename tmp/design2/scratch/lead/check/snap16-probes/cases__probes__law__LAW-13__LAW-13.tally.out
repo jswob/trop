@@ -1,0 +1,5 @@
+base_total: 19 000 DUK
+  law date 2026-10-25, cut 2026-10-25
+before_unchanged: refused: LOAD-SCENARIO ask before_unchanged names rate25, neither the model nor a loaded scenario (/Users/jswob/projects/trop/tmp/design2/cases/probes/law/LAW-13/LAW-13.tally:26)
+whatif_2030: refused: LOAD-SCENARIO ask whatif_2030 names rate25, neither the model nor a loaded scenario (/Users/jswob/projects/trop/tmp/design2/cases/probes/law/LAW-13/LAW-13.tally:28)
+whatif_total: refused: LOAD-SCENARIO ask whatif_total names rate25, neither the model nor a loaded scenario (/Users/jswob/projects/trop/tmp/design2/cases/probes/law/LAW-13/LAW-13.tally:30)

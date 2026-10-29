@@ -1,0 +1,10 @@
+scenario flat over forecast
+  tally 2
+  from 2026-01-01
+  note "Path flat: no price moves (story § The forecast, item 3)."
+
+version path_flat
+  cite story
+  governs 2026-01-01..
+  known 2026-01-15
+  path_rate[*] = 0 governs 2026-01.. "story § The forecast, item 3: flat 0"

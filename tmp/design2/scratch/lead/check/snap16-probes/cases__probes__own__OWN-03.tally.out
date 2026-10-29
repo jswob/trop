@@ -1,0 +1,8 @@
+q_net_worth_dec31: 8 160.00 DUK
+  unfulfilled: tax_accrue[2024]
+  left out: tax_payment, 1 instances, first 2025-04-30
+  cut 2026-10-25
+q_owed_at_end: (1 840.00 DUK, 2025-04-30)
+  unfulfilled: tax_accrue[2024]
+  left out: tax_payment, 1 instances, first 2025-04-30
+  cut 2026-10-25

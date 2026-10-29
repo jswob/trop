@@ -1,0 +1,254 @@
+class1a_1b (d = 2022-11-05): (0.1453, 0.1453, 0.1505)
+  law date 2026-10-18, cut 2026-10-18
+class1a_1b (d = 2022-11-06): (0.1453, 0.1453, 0.138)
+  law date 2026-10-18, cut 2026-10-18
+directors (q = a, n = lel_pt): (0, 0.1453)
+  law date 2026-10-18, cut 2026-10-18
+directors (q = a, n = pt_uel): (0.1273, 0.1453)
+  law date 2026-10-18, cut 2026-10-18
+directors (q = a, n = above_uel): (0.0273, 0.1453)
+  law date 2026-10-18, cut 2026-10-18
+directors (q = b, n = lel_pt): (0, 0.1453)
+  law date 2026-10-18, cut 2026-10-18
+directors (q = b, n = pt_uel): (0.0658, 0.1453)
+  law date 2026-10-18, cut 2026-10-18
+directors (q = b, n = above_uel): (0.0273, 0.1453)
+  law date 2026-10-18, cut 2026-10-18
+directors (q = j, n = lel_pt): (0, 0.1453)
+  law date 2026-10-18, cut 2026-10-18
+directors (q = j, n = pt_uel): (0.0273, 0.1453)
+  law date 2026-10-18, cut 2026-10-18
+directors (q = j, n = above_uel): (0.0273, 0.1453)
+  law date 2026-10-18, cut 2026-10-18
+directors (q = c, n = lel_pt): (none, 0.1453)
+  law date 2026-10-18, cut 2026-10-18
+directors (q = c, n = pt_uel): (none, 0.1453)
+  law date 2026-10-18, cut 2026-10-18
+directors (q = c, n = above_uel): (none, 0.1453)
+  law date 2026-10-18, cut 2026-10-18
+directors (q = f, n = lel_pt): (0, 0.1453)
+  law date 2026-10-18, cut 2026-10-18
+directors (q = f, n = pt_uel): (0.1273, 0.1453)
+  law date 2026-10-18, cut 2026-10-18
+directors (q = f, n = above_uel): (0.0273, 0.1453)
+  law date 2026-10-18, cut 2026-10-18
+directors (q = h, n = lel_pt): (0, 0.1453)
+  law date 2026-10-18, cut 2026-10-18
+directors (q = h, n = pt_uel): (0.1273, 0.1453)
+  law date 2026-10-18, cut 2026-10-18
+directors (q = h, n = above_uel): (0.0273, 0.1453)
+  law date 2026-10-18, cut 2026-10-18
+directors (q = i, n = lel_pt): (0, 0.1453)
+  law date 2026-10-18, cut 2026-10-18
+directors (q = i, n = pt_uel): (0.0658, 0.1453)
+  law date 2026-10-18, cut 2026-10-18
+directors (q = i, n = above_uel): (0.0273, 0.1453)
+  law date 2026-10-18, cut 2026-10-18
+directors (q = l, n = lel_pt): (0, 0.1453)
+  law date 2026-10-18, cut 2026-10-18
+directors (q = l, n = pt_uel): (0.0273, 0.1453)
+  law date 2026-10-18, cut 2026-10-18
+directors (q = l, n = above_uel): (0.0273, 0.1453)
+  law date 2026-10-18, cut 2026-10-18
+directors (q = m, n = lel_pt): (0, 0.1453)
+  law date 2026-10-18, cut 2026-10-18
+directors (q = m, n = pt_uel): (0.1273, 0.1453)
+  law date 2026-10-18, cut 2026-10-18
+directors (q = m, n = above_uel): (0.0273, 0.1453)
+  law date 2026-10-18, cut 2026-10-18
+directors (q = s, n = lel_pt): (none, 0.1453)
+  law date 2026-10-18, cut 2026-10-18
+directors (q = s, n = pt_uel): (none, 0.1453)
+  law date 2026-10-18, cut 2026-10-18
+directors (q = s, n = above_uel): (none, 0.1453)
+  law date 2026-10-18, cut 2026-10-18
+directors (q = v, n = lel_pt): (0, 0.1453)
+  law date 2026-10-18, cut 2026-10-18
+directors (q = v, n = pt_uel): (0.1273, 0.1453)
+  law date 2026-10-18, cut 2026-10-18
+directors (q = v, n = above_uel): (0.0273, 0.1453)
+  law date 2026-10-18, cut 2026-10-18
+directors (q = z, n = lel_pt): (0, 0.1453)
+  law date 2026-10-18, cut 2026-10-18
+directors (q = z, n = pt_uel): (0.0273, 0.1453)
+  law date 2026-10-18, cut 2026-10-18
+directors (q = z, n = above_uel): (0.0273, 0.1453)
+  law date 2026-10-18, cut 2026-10-18
+employee_from_6_nov (q = a, n = lel_pt): 0
+  law date 2026-10-18, cut 2026-10-18
+employee_from_6_nov (q = a, n = pt_uel): 0.12
+  law date 2026-10-18, cut 2026-10-18
+employee_from_6_nov (q = a, n = above_uel): 0.02
+  law date 2026-10-18, cut 2026-10-18
+employee_from_6_nov (q = b, n = lel_pt): 0
+  law date 2026-10-18, cut 2026-10-18
+employee_from_6_nov (q = b, n = pt_uel): 0.0585
+  law date 2026-10-18, cut 2026-10-18
+employee_from_6_nov (q = b, n = above_uel): 0.02
+  law date 2026-10-18, cut 2026-10-18
+employee_from_6_nov (q = j, n = lel_pt): 0
+  law date 2026-10-18, cut 2026-10-18
+employee_from_6_nov (q = j, n = pt_uel): 0.02
+  law date 2026-10-18, cut 2026-10-18
+employee_from_6_nov (q = j, n = above_uel): 0.02
+  law date 2026-10-18, cut 2026-10-18
+employee_from_6_nov (q = c, n = lel_pt): none
+  law date 2026-10-18, cut 2026-10-18
+employee_from_6_nov (q = c, n = pt_uel): none
+  law date 2026-10-18, cut 2026-10-18
+employee_from_6_nov (q = c, n = above_uel): none
+  law date 2026-10-18, cut 2026-10-18
+employee_from_6_nov (q = f, n = lel_pt): 0
+  law date 2026-10-18, cut 2026-10-18
+employee_from_6_nov (q = f, n = pt_uel): 0.12
+  law date 2026-10-18, cut 2026-10-18
+employee_from_6_nov (q = f, n = above_uel): 0.02
+  law date 2026-10-18, cut 2026-10-18
+employee_from_6_nov (q = h, n = lel_pt): 0
+  law date 2026-10-18, cut 2026-10-18
+employee_from_6_nov (q = h, n = pt_uel): 0.12
+  law date 2026-10-18, cut 2026-10-18
+employee_from_6_nov (q = h, n = above_uel): 0.02
+  law date 2026-10-18, cut 2026-10-18
+employee_from_6_nov (q = i, n = lel_pt): 0
+  law date 2026-10-18, cut 2026-10-18
+employee_from_6_nov (q = i, n = pt_uel): 0.0585
+  law date 2026-10-18, cut 2026-10-18
+employee_from_6_nov (q = i, n = above_uel): 0.02
+  law date 2026-10-18, cut 2026-10-18
+employee_from_6_nov (q = l, n = lel_pt): 0
+  law date 2026-10-18, cut 2026-10-18
+employee_from_6_nov (q = l, n = pt_uel): 0.02
+  law date 2026-10-18, cut 2026-10-18
+employee_from_6_nov (q = l, n = above_uel): 0.02
+  law date 2026-10-18, cut 2026-10-18
+employee_from_6_nov (q = m, n = lel_pt): 0
+  law date 2026-10-18, cut 2026-10-18
+employee_from_6_nov (q = m, n = pt_uel): 0.12
+  law date 2026-10-18, cut 2026-10-18
+employee_from_6_nov (q = m, n = above_uel): 0.02
+  law date 2026-10-18, cut 2026-10-18
+employee_from_6_nov (q = s, n = lel_pt): none
+  law date 2026-10-18, cut 2026-10-18
+employee_from_6_nov (q = s, n = pt_uel): none
+  law date 2026-10-18, cut 2026-10-18
+employee_from_6_nov (q = s, n = above_uel): none
+  law date 2026-10-18, cut 2026-10-18
+employee_from_6_nov (q = v, n = lel_pt): 0
+  law date 2026-10-18, cut 2026-10-18
+employee_from_6_nov (q = v, n = pt_uel): 0.12
+  law date 2026-10-18, cut 2026-10-18
+employee_from_6_nov (q = v, n = above_uel): 0.02
+  law date 2026-10-18, cut 2026-10-18
+employee_from_6_nov (q = z, n = lel_pt): 0
+  law date 2026-10-18, cut 2026-10-18
+employee_from_6_nov (q = z, n = pt_uel): 0.02
+  law date 2026-10-18, cut 2026-10-18
+employee_from_6_nov (q = z, n = above_uel): 0.02
+  law date 2026-10-18, cut 2026-10-18
+employee_to_5_nov (q = a, n = lel_pt): 0
+  law date 2026-10-18, cut 2026-10-18
+employee_to_5_nov (q = a, n = pt_uel): 0.1325
+  law date 2026-10-18, cut 2026-10-18
+employee_to_5_nov (q = a, n = above_uel): 0.0325
+  law date 2026-10-18, cut 2026-10-18
+employee_to_5_nov (q = b, n = lel_pt): 0
+  law date 2026-10-18, cut 2026-10-18
+employee_to_5_nov (q = b, n = pt_uel): 0.071
+  law date 2026-10-18, cut 2026-10-18
+employee_to_5_nov (q = b, n = above_uel): 0.0325
+  law date 2026-10-18, cut 2026-10-18
+employee_to_5_nov (q = j, n = lel_pt): 0
+  law date 2026-10-18, cut 2026-10-18
+employee_to_5_nov (q = j, n = pt_uel): 0.0325
+  law date 2026-10-18, cut 2026-10-18
+employee_to_5_nov (q = j, n = above_uel): 0.0325
+  law date 2026-10-18, cut 2026-10-18
+employee_to_5_nov (q = c, n = lel_pt): none
+  law date 2026-10-18, cut 2026-10-18
+employee_to_5_nov (q = c, n = pt_uel): none
+  law date 2026-10-18, cut 2026-10-18
+employee_to_5_nov (q = c, n = above_uel): none
+  law date 2026-10-18, cut 2026-10-18
+employee_to_5_nov (q = f, n = lel_pt): 0
+  law date 2026-10-18, cut 2026-10-18
+employee_to_5_nov (q = f, n = pt_uel): 0.1325
+  law date 2026-10-18, cut 2026-10-18
+employee_to_5_nov (q = f, n = above_uel): 0.0325
+  law date 2026-10-18, cut 2026-10-18
+employee_to_5_nov (q = h, n = lel_pt): 0
+  law date 2026-10-18, cut 2026-10-18
+employee_to_5_nov (q = h, n = pt_uel): 0.1325
+  law date 2026-10-18, cut 2026-10-18
+employee_to_5_nov (q = h, n = above_uel): 0.0325
+  law date 2026-10-18, cut 2026-10-18
+employee_to_5_nov (q = i, n = lel_pt): 0
+  law date 2026-10-18, cut 2026-10-18
+employee_to_5_nov (q = i, n = pt_uel): 0.071
+  law date 2026-10-18, cut 2026-10-18
+employee_to_5_nov (q = i, n = above_uel): 0.0325
+  law date 2026-10-18, cut 2026-10-18
+employee_to_5_nov (q = l, n = lel_pt): 0
+  law date 2026-10-18, cut 2026-10-18
+employee_to_5_nov (q = l, n = pt_uel): 0.0325
+  law date 2026-10-18, cut 2026-10-18
+employee_to_5_nov (q = l, n = above_uel): 0.0325
+  law date 2026-10-18, cut 2026-10-18
+employee_to_5_nov (q = m, n = lel_pt): 0
+  law date 2026-10-18, cut 2026-10-18
+employee_to_5_nov (q = m, n = pt_uel): 0.1325
+  law date 2026-10-18, cut 2026-10-18
+employee_to_5_nov (q = m, n = above_uel): 0.0325
+  law date 2026-10-18, cut 2026-10-18
+employee_to_5_nov (q = s, n = lel_pt): none
+  law date 2026-10-18, cut 2026-10-18
+employee_to_5_nov (q = s, n = pt_uel): none
+  law date 2026-10-18, cut 2026-10-18
+employee_to_5_nov (q = s, n = above_uel): none
+  law date 2026-10-18, cut 2026-10-18
+employee_to_5_nov (q = v, n = lel_pt): 0
+  law date 2026-10-18, cut 2026-10-18
+employee_to_5_nov (q = v, n = pt_uel): 0.1325
+  law date 2026-10-18, cut 2026-10-18
+employee_to_5_nov (q = v, n = above_uel): 0.0325
+  law date 2026-10-18, cut 2026-10-18
+employee_to_5_nov (q = z, n = lel_pt): 0
+  law date 2026-10-18, cut 2026-10-18
+employee_to_5_nov (q = z, n = pt_uel): 0.0325
+  law date 2026-10-18, cut 2026-10-18
+employee_to_5_nov (q = z, n = above_uel): 0.0325
+  law date 2026-10-18, cut 2026-10-18
+employer (d = 2022-11-05): 0.1505
+  law date 2026-10-18, cut 2026-10-18
+employer (d = 2022-11-06): 0.138
+  law date 2026-10-18, cut 2026-10-18
+pt_by_tax_month (t = 2022-06): 823.00 GBP
+  law date 2026-10-18, cut 2026-10-18
+pt_by_tax_month (t = 2022-07): 1 048.00 GBP
+  law date 2026-10-18, cut 2026-10-18
+pt_by_tax_week (w = 2022-06-29): 190.00 GBP
+  law date 2026-10-18, cut 2026-10-18
+pt_by_tax_week (w = 2022-07-06): 242.00 GBP
+  law date 2026-10-18, cut 2026-10-18
+pt_yearly_by_day (d = 2022-07-05): 9 880.00 GBP
+  law date 2026-10-18, cut 2026-10-18
+pt_yearly_by_day (d = 2022-07-06): 12 570.00 GBP
+  law date 2026-10-18, cut 2026-10-18
+thresholds (k = lel): (123.00 GBP, ?"What is this limit or threshold, for this earnings period, under the law in force?" (threshold[lel, mo]), ?"What is this limit or threshold, for this earnings period, under the law in force?" (threshold[lel, yr]))
+  law date 2026-10-18, cut 2026-10-18
+thresholds (k = pt): (190.00 GBP, 823.00 GBP, 9 880.00 GBP)
+  law date 2026-10-18, cut 2026-10-18
+thresholds (k = st): (175.00 GBP, 758.00 GBP, 9 100.00 GBP)
+  law date 2026-10-18, cut 2026-10-18
+thresholds (k = fust): (?"What is this limit or threshold, for this earnings period, under the law in force?" (threshold[fust, wk]), ?"What is this limit or threshold, for this earnings period, under the law in force?" (threshold[fust, mo]), ?"What is this limit or threshold, for this earnings period, under the law in force?" (threshold[fust, yr]))
+  law date 2026-10-18, cut 2026-10-18
+thresholds (k = ust): (?"What is this limit or threshold, for this earnings period, under the law in force?" (threshold[ust, wk]), ?"What is this limit or threshold, for this earnings period, under the law in force?" (threshold[ust, mo]), ?"What is this limit or threshold, for this earnings period, under the law in force?" (threshold[ust, yr]))
+  law date 2026-10-18, cut 2026-10-18
+thresholds (k = aust): (?"What is this limit or threshold, for this earnings period, under the law in force?" (threshold[aust, wk]), ?"What is this limit or threshold, for this earnings period, under the law in force?" (threshold[aust, mo]), ?"What is this limit or threshold, for this earnings period, under the law in force?" (threshold[aust, yr]))
+  law date 2026-10-18, cut 2026-10-18
+thresholds (k = vust): (?"What is this limit or threshold, for this earnings period, under the law in force?" (threshold[vust, wk]), ?"What is this limit or threshold, for this earnings period, under the law in force?" (threshold[vust, mo]), ?"What is this limit or threshold, for this earnings period, under the law in force?" (threshold[vust, yr]))
+  law date 2026-10-18, cut 2026-10-18
+thresholds (k = uel): (967.00 GBP, 4 189.00 GBP, 50 270.00 GBP)
+  law date 2026-10-18, cut 2026-10-18
+thresholds (k = dir_pt): (229.00 GBP, ?"What is this limit or threshold, for this earnings period, under the law in force?" (threshold[dir_pt, mo]), 11 908.00 GBP)
+  law date 2026-10-18, cut 2026-10-18

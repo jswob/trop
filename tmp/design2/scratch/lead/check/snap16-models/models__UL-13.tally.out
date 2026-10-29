@@ -1,0 +1,97 @@
+q01_limit: 85 528.00 PLN
+  law date 2022-12-31, cut 2026-10-18
+q02_child_counts (c = ch1): true
+  law date 2022-12-31, cut 2026-10-18
+q02_child_counts (c = ch2): true
+  law date 2022-12-31, cut 2026-10-18
+q02_child_counts (c = ch3): true
+  law date 2022-12-31, cut 2026-10-18
+q02_child_counts (c = ch4): true
+  law date 2022-12-31, cut 2026-10-18
+q02_child_counts (c = ch5): false
+  assumed: the 4+ guide p. 6 gives the fifth child 21 000 zł of revenue exempt under the youth relief; with no costs given, the model counts it as the child's income against the limit (child_income[ch5])
+  law date 2022-12-31, cut 2026-10-18
+q03_n_children (p = wife5): 4
+  assumed: the 4+ guide p. 6 gives the fifth child 21 000 zł of revenue exempt under the youth relief; with no costs given, the model counts it as the child's income against the limit (child_income[ch5])
+  law date 2022-12-31, cut 2026-10-18
+q03_n_children (p = husband5): 4
+  assumed: the 4+ guide p. 6 gives the fifth child 21 000 zł of revenue exempt under the youth relief; with no costs given, the model counts it as the child's income against the limit (child_income[ch5])
+  law date 2022-12-31, cut 2026-10-18
+q04_child_limit: 16 061.28 PLN
+  law date 2022-12-31, cut 2026-10-18
+q05_exempt (p = wife5): 65 000.00 PLN
+  assumed: the 4+ guide p. 6 gives the fifth child 21 000 zł of revenue exempt under the youth relief; with no costs given, the model counts it as the child's income against the limit (child_income[ch5])
+  law date 2022-12-31, cut 2026-10-18
+q05_exempt (p = husband5): 85 528.00 PLN
+  assumed: the 4+ guide p. 6 gives the fifth child 21 000 zł of revenue exempt under the youth relief; with no costs given, the model counts it as the child's income against the limit (child_income[ch5])
+  law date 2022-12-31, cut 2026-10-18
+q05_exempt (p = parent_a): 85 528.00 PLN
+  given: qualifies[parent_a, youth] = true (facts_4plus)
+  law date 2022-12-31, cut 2026-10-18
+q05_exempt (p = parent_b): 85 528.00 PLN
+  given: qualifies[parent_b, youth] = true (facts_4plus)
+  law date 2022-12-31, cut 2026-10-18
+q06_taxed (p = wife5): 0.00 PLN
+  assumed: the 4+ guide p. 6 gives the fifth child 21 000 zł of revenue exempt under the youth relief; with no costs given, the model counts it as the child's income against the limit (child_income[ch5])
+  law date 2022-12-31, cut 2026-10-18
+q06_taxed (p = husband5): 29 472.00 PLN
+  assumed: the 4+ guide p. 6 gives the fifth child 21 000 zł of revenue exempt under the youth relief; with no costs given, the model counts it as the child's income against the limit (child_income[ch5])
+  law date 2022-12-31, cut 2026-10-18
+q06_taxed (p = parent_a): 24 472.00 PLN
+  given: qualifies[parent_a, youth] = true (facts_4plus)
+  law date 2022-12-31, cut 2026-10-18
+q06_taxed (p = parent_b): 24 472.00 PLN
+  given: qualifies[parent_b, youth] = true (facts_4plus)
+  law date 2022-12-31, cut 2026-10-18
+q07_wife_whole: ok
+  assumed: the 4+ guide p. 6 gives the fifth child 21 000 zł of revenue exempt under the youth relief; with no costs given, the model counts it as the child's income against the limit (child_income[ch5])
+  law date 2022-12-31, cut 2026-10-18
+q08_both_reliefs (p = parent_a, f = youth): true
+  given: qualifies[parent_a, youth] = true (facts_4plus)
+  law date 2022-12-31, cut 2026-10-18
+q08_both_reliefs (p = parent_a, f = family4): true
+  given: qualifies[parent_a, family4] = true (facts_4plus)
+  law date 2022-12-31, cut 2026-10-18
+q08_both_reliefs (p = parent_b, f = youth): true
+  given: qualifies[parent_b, youth] = true (facts_4plus)
+  law date 2022-12-31, cut 2026-10-18
+q08_both_reliefs (p = parent_b, f = family4): true
+  given: qualifies[parent_b, family4] = true (facts_4plus)
+  law date 2022-12-31, cut 2026-10-18
+q09_free_amount: 30 000 PLN
+  law date 2022-12-31, cut 2026-10-18
+q10_free_check: ok
+  law date 2022-12-31, cut 2026-10-18
+q11_ppk_er (p = ppk1, m = 2022-08): 60 PLN
+  law date 2026-10-18, cut 2026-10-18
+q11_ppk_er (p = ppk2, m = 2022-08): 60 PLN
+  law date 2026-10-18, cut 2026-10-18
+q12_ppk_tax1 (p = ppk1, m = 2022-08): 7.2 PLN
+  law date 2026-10-18, cut 2026-10-18
+q13_ppk_ee (p = ppk1, m = 2022-08): 80 PLN
+  law date 2026-10-18, cut 2026-10-18
+q14_ppk_tax2 (p = ppk2, m = 2022-08): 0 PLN
+  assumed: Przykład 2 has the payer apply the 4+ relief from August, so the employee's statement is taken as given (statement[ppk2])
+  assumed: the PPK example starts the salary in August 2022 and names no earlier covered revenue (prior_rev[ppk2])
+  given: qualifies[ppk2, family4] = true (facts_ppk)
+  law date 2026-10-18, cut 2026-10-18
+q14_ppk_tax2 (p = ppk2, m = 2022-09): 0 PLN
+  assumed: Przykład 2 has the payer apply the 4+ relief from August, so the employee's statement is taken as given (statement[ppk2])
+  assumed: the PPK example starts the salary in August 2022 and names no earlier covered revenue (prior_rev[ppk2])
+  given: qualifies[ppk2, family4] = true (facts_ppk)
+  law date 2026-10-18, cut 2026-10-18
+q14_ppk_tax2 (p = ppk2, m = 2022-10): 0 PLN
+  assumed: Przykład 2 has the payer apply the 4+ relief from August, so the employee's statement is taken as given (statement[ppk2])
+  assumed: the PPK example starts the salary in August 2022 and names no earlier covered revenue (prior_rev[ppk2])
+  given: qualifies[ppk2, family4] = true (facts_ppk)
+  law date 2026-10-18, cut 2026-10-18
+q14_ppk_tax2 (p = ppk2, m = 2022-11): 0 PLN
+  assumed: Przykład 2 has the payer apply the 4+ relief from August, so the employee's statement is taken as given (statement[ppk2])
+  assumed: the PPK example starts the salary in August 2022 and names no earlier covered revenue (prior_rev[ppk2])
+  given: qualifies[ppk2, family4] = true (facts_ppk)
+  law date 2026-10-18, cut 2026-10-18
+q14_ppk_tax2 (p = ppk2, m = 2022-12): 0 PLN
+  assumed: Przykład 2 has the payer apply the 4+ relief from August, so the employee's statement is taken as given (statement[ppk2])
+  assumed: the PPK example starts the salary in August 2022 and names no earlier covered revenue (prior_rev[ppk2])
+  given: qualifies[ppk2, family4] = true (facts_ppk)
+  law date 2026-10-18, cut 2026-10-18

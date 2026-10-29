@@ -1,0 +1,44 @@
+model rec01
+  tally 2
+  on 2026-10-25
+  start 2025-03-01
+  end 2025-03-31
+
+source model_facts "REC-01 card: Piotr's model, its two accounts and its own past"
+
+source pkb_stmt "REC-01 card: the bank's March 2025 statement, listing PKB-1201, PKB-1202 and PKB-7731"
+
+unit DUK: currency minor 0.01
+
+place pkb_1201: accounts DUK lives 2025-03-01..
+
+place pkb_1202: accounts DUK lives 2025-03-01..
+
+ask flagged: account_place[a] for a in bank_account
+
+ask residual: gap(pkb_1201, 2025-03-31)
+
+ask ledger: residuals pkb_1201 2025-03
+
+ask stands: bal(pkb_1201, 2025-03-31), flows(pkb_1201, 2025-03)
+
+version model_open
+  cite model_facts
+  known 2025-03-01
+  opening[pkb_1201] = 3200.00 at 2025-03-01 start "the model's own past: no movement in March, so 3 200.00 on 31 March"
+
+version import_map
+  cite pkb_stmt
+  governs always
+  known 2025-03-01
+  account_place[pkb-1201] = pkb_1201 "PKB-1201"
+  account_place[pkb-1202] = pkb_1202 "PKB-1202"
+  account_place[pkb-7731] = ?"PKB-7731 is in the bank's statement; the model names no place for it"
+
+version stmt_2025_03
+  cite pkb_stmt
+  governs 2025-03
+  known 2025-03-01
+  covers pkb_1201, pkb_1202
+  anchor pkb_1201
+  stated[pkb_1201] = 3150.00 at 2025-03-31 end "PKB-1201, closing balance 31 March 2025"

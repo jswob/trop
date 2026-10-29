@@ -1,0 +1,46 @@
+part pl_benefits
+  tally 2
+  law
+  note "Świadczenie wychowawcze 800+: na każde dziecko do 18 lat mieszkające w Polsce, od miesiąca wniosku albo od miesiąca urodzenia, gdy wniosek złożono w ciągu 3 miesięcy."
+  note "Wycinek przykładowy; nie przeszedł bramki."
+
+source b800_act "Ustawa o pomocy państwa w wychowywaniu dzieci (tekst jednolity)"
+
+kind b800_pay_pays: event certain
+  leg cash: any
+
+input b800_age: int
+
+input b800_amount: money PLN
+
+input b800_pay_20: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input b800_window: int
+
+input claim_800[c in person]: date question "Kiedy złożono wniosek o 800+ dla tego dziecka?"
+
+def b800_due[c in person, m in month]: bool at start_of(m)
+  note "wniosek '-': jeszcze nie złożony; wtedy świadczenia nie ma, a wniosek złożony później dopłaca miesiące wstecz przez 'arrears' swojej wersji"
+  rule base v b800_2024 = is_child[c] and born[c] < end_of(m) and residence[c, m] == pl and claim_800[c] != none and m >= b800_from[c] and age(born[c], add_days(end_of(m), -1)) < b800_age
+
+def b800_from[c in person]: month at reader
+  rule base v b800_2024 = month_of(claim_800[c])
+  rule early beats base v b800_2024 = month_of(born[c]) when claim_800[c] <= add_months(born[c], b800_window)
+
+def is_child[c in person]: bool = any(parent[c, p] for p in person over ..) at reader
+
+move b800_pay[c in person over .., m in month]: b800_pay_pays
+  on if is_business(day_of(m, b800_pay_20), holidays_pl) then day_of(m, b800_pay_20) else add_business(day_of(m, b800_pay_20), 1, holidays_pl)
+  at start_of(m)
+  for m
+  when b800_due[c, m]
+  leg cash from zus to konto amount b800_amount
+
+version b800_2024
+  cite b800_act
+  governs 2024..
+  known 2023-08-30
+  b800_age = 18 "art. 4 ust. 2"
+  b800_amount = 800 "art. 5 ust. 1"
+  b800_window = 3 "art. 26 ust. 2"

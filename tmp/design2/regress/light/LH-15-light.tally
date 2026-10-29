@@ -1,0 +1,240 @@
+model lh15light
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+  note "Early Retirement Now, SWR Part 1: success rates of fixed real withdrawal rates for monthly US cohorts, February 1871 on, at 30-60 year horizons and five stock shares, over monthly S&P 500 and 10-year Treasury real returns, monthly rebalancing and a 0.05% fee drag, with assumed constant real returns after September 2016."
+  note "Cohort c starts at the close of month c - 1. It withdraws rate/12 of the initial value then and at the end of each month, T = 12 x years withdrawals in all. Its final value at T has the sign of 1 - rate/12 x the sum over k < T of 1 / growth to k, so success needs no final month's return."
+  note "Part 1 names no data file. The return and CPI inputs have no rows, so every success rate is a hole until a version supplies them."
+  note "Light cut of models/LH-15.tally (regress/light). Only sizes change: the horizons are 1 to 4 years instead of 30 to 60 (version light_sizes), so step runs 0..47; the success-rate asks keep three of the twenty table rows; every ask that reaches the six axes pins one combination. Every section, rule, built-in and axis of LH-15 stays."
+
+source ern_p1 "Early Retirement Now, The Ultimate Guide to Safe Withdrawal Rates - Part 1: Introduction (posted 2016-12-07, updated 2024-09-13)" at "https://www.earlyretirementnow.com/2016/12/07/the-ultimate-guide-to-safe-withdrawal-rates-part-1-intro"
+
+source ern_p7 "Early Retirement Now, The Ultimate Guide to Safe Withdrawal Rates - Part 7: Toolbox! (posted 2017-01-25, updated 2019-12-17)" at "https://earlyretirementnow.com/2017/01/25/the-ultimate-guide-to-safe-withdrawal-rates-part-7-toolbox/"
+
+source lifted_1_0_1 "Figures tally 1.0.1 allowed inline in rules"
+
+source light_cut "The light cut-down's own sizes (regress/light/LH-15-light.md): not a source's figures"
+
+axis cohort_end
+  dec2015 "last cohort December 2015: Part 7 and the table caption (1871-2015)"
+  dec2016 "last cohort December 2016: Part 1 text, 'between February 1, 1871, and December 1, 2016'"
+
+axis fee_period
+  per_month "the 0.05% drag is taken every month"
+  per_year "the 0.05% drag is a yearly rate, taken as one-twelfth each month"
+
+axis pct_round
+  down "success rates truncated to whole percent"
+  half-up "success rates to the nearest whole percent"
+
+axis post_conv
+  geometric "assumed annual real returns converted to monthly as (1 + R)^(1/12) - 1"
+  linear "assumed annual real returns converted to monthly as R / 12"
+
+axis real_form
+  difference "monthly real return = nominal return - CPI inflation of the month"
+  ratio "monthly real return = (1 + nominal return) x CPI of the month before / CPI of the month - 1"
+
+axis zero_ok
+  counts "a final value of exactly zero meets the target (Final Asset Value Target = 0)"
+  fails "only a final value above zero is a success"
+
+index asset_cls = [stocks, bonds]
+
+index eq = [s100, s80, s75, s50, s25, s0]
+
+index eqgrid = int 0..100 by 5
+
+index hz = [y30, y40, y50, y60]
+
+index mon = month 1871-01..2076-12
+
+index pattern = int 1..9
+
+index post = [eq_rate, bond_flat, bond_late]
+
+index step = int 0..47
+
+index target = [fv0, fv25, fv50, fv75, fv100]
+
+index wr = [r300, r325, r350, r375, r400, r425, r450, r475, r500]
+
+input annuity_12: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input asset_r_12: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input bond_flat_years: int
+
+input cohort_from: key mon
+
+input cohort_to_p1: key mon
+
+input cohort_to_p7: key mon
+
+input cpi[m in mon]: num question "Monthly US CPI for this month: ERN Part 1 names no series or file"
+
+input data_end: key mon
+
+input disc_0_000000000001: num
+  note "lifted from an inline figure of tally 1.0.1"
+
+input eq_share[e in eq]: num
+
+input fee: num
+
+input fee_m_12: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input fv_ratio_12: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input hz_years[h in hz]: int
+
+input low_swr_cut: num question "Below which 30-year SWR does Part 1's 'region where SWRs are low' begin? Part 1 doesn't define it, and its scatter chart prints no numbers"
+
+input nominal_tr[a in asset_cls, m in mon]: num question "Monthly total return (dividends or interest included) of the S&P 500 or the 10-year Treasury for this month: ERN Part 1 names no data file"
+
+input post_m_12: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input post_rate[p in post]: num
+
+input swr_12: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input wrate[w in wr]: num
+
+def annuity[c in mon, e in eq, h in hz]: num = sum(disc[c, e, k] for k in step where k < annuity_12 * hz_years[h]) at start_of(c)
+
+def asset_r[a in asset_cls, m in mon]: num at start_of(m)
+  note "monthly real return; after the data end, the assumed constant returns with no volatility (Part 1, list item 4)"
+  rule data = real_r[a, m] when m <= data_end
+  rule post_bond_flat = post_m[bond_flat] when a == bonds and m > data_end and m <= data_end + asset_r_12 * bond_flat_years
+  rule post_bond_late = post_m[bond_late] when a == bonds and m > data_end + asset_r_12 * bond_flat_years
+  rule post_eq = post_m[eq_rate] when a == stocks and m > data_end
+
+def cohort_last: key mon at reader
+  rule dec2015 = cohort_to_p7 when cohort_end == dec2015
+  rule dec2016 = cohort_to_p1 when cohort_end == dec2016
+
+def disc[c in mon, e in eq, k in step]: num at start_of(c)
+  note "1 / the cohort's real growth from the close of month c - 1 to time k. The 1e-12 rounding is the modeller's, forced by the 4 096-digit cap (§7.1): no source rounds, and the exact 720-step product of monthly ratios passes the cap"
+  rule init = 1 when k == 0
+  rule next = round(disc[c, e, k - 1] / (1 + port_r[e, c + k - 1]), disc_0_000000000001, half-even) when k > 0
+
+def fee_m: num at reader
+  rule base = fee / fee_m_12
+  rule per_month beats base = fee when fee_period == per_month
+
+def fv_ratio[c in mon, e in eq, h in hz, w in wr]: num = 1 - wrate[w] / fv_ratio_12 * annuity[c, e, h] at start_of(c)
+
+def headline_swr: num at reader
+  note "the author's headline safe withdrawal rate for early retirees ('Base Case Results'), which Part 1 reads off the 30- vs 60-year time-series chart"
+  rule base = ?"Which rule turns the cohort SWRs into the author's headline rate? Part 1 reads it off the 30- vs 60-year time-series chart and states none"
+
+def in_cohort[c in mon]: bool = c >= cohort_from and c <= cohort_last at start_of(c)
+
+def n_cohorts: int = count(c in mon where in_cohort[c]) at reader
+
+def port_r[e in eq, m in mon]: num = eq_share[e] * asset_r[stocks, m] + (1 - eq_share[e]) * asset_r[bonds, m] - fee_m at start_of(m)
+
+def post_m[p in post]: num at reader
+  rule base = post_rate[p] / post_m_12
+  rule geometric beats base = (pow(1 + post_rate[p], 1 / post_m_12) to 1e-15) - 1 when post_conv == geometric
+
+def rate_pct[e in eq, h in hz, w in wr]: num = round(rate_share[e, h, w] / 1 %, 1, pct_round) at reader
+
+def rate_share[e in eq, h in hz, w in wr]: num = share(success[c, e, h, w] for c in mon where in_cohort[c]) at reader
+
+def real_r[a in asset_cls, m in mon]: num at start_of(m)
+  rule base = (1 + nominal_tr[a, m]) * cpi[m - 1] / cpi[m] - 1
+  rule difference beats base = nominal_tr[a, m] - (cpi[m] / cpi[m - 1] - 1) when real_form == difference
+
+def success[c in mon, e in eq, h in hz, w in wr]: bool at start_of(c)
+  rule base = fv_ratio[c, e, h, w] >= 0
+  rule strict beats base = fv_ratio[c, e, h, w] > 0 when zero_ok == fails
+
+def swr[c in mon, e in eq, h in hz]: num = swr_12 / annuity[c, e, h] at start_of(c)
+
+ask cohorts_p7: n_cohorts with cohort_end = dec2015 law 2026-10-18
+
+ask failure_ratio: (100 % / 1 % - rate_pct[s50, y60, r400]) / (100 % / 1 % - rate_pct[s50, y30, r400]) with cohort_end = dec2015, fee_period = per_month, pct_round = half-up, post_conv = geometric, real_form = ratio, zero_ok = counts law 2026-10-18
+
+ask gap_8020: mean(swr[c, s80, y30] - swr[c, s80, y60] for c in mon where in_cohort[c]) with cohort_end = dec2015, fee_period = per_month, post_conv = geometric, real_form = ratio law 2026-10-18
+
+ask gap_low: mean(swr[c, s80, y30] - swr[c, s80, y60] for c in mon where in_cohort[c] and swr[c, s80, y30] < low_swr_cut) with cohort_end = dec2015, fee_period = per_month, post_conv = geometric, real_form = ratio law 2026-10-18
+
+ask grid_count: n_cohorts * count(h in hz) * count(g in eqgrid) * count(t in target) * count(p in pattern) law 2026-10-18
+
+ask headline: headline_swr law 2026-10-18
+
+ask start_dates: n_cohorts law 2026-10-18
+
+ask t_s0_y40: rate_pct[s0, y40, w] for w in wr with cohort_end = dec2015, fee_period = per_month, pct_round = half-up, post_conv = geometric, real_form = ratio, zero_ok = counts law 2026-10-18
+
+ask t_s100_y30: rate_pct[s100, y30, w] for w in wr with cohort_end = dec2015, fee_period = per_month, pct_round = half-up, post_conv = geometric, real_form = ratio, zero_ok = counts law 2026-10-18
+
+ask t_s50_y60: rate_pct[s50, y60, w] for w in wr with cohort_end = dec2015, fee_period = per_month, pct_round = half-up, post_conv = geometric, real_form = ratio, zero_ok = counts law 2026-10-18
+
+ask text_4pct: rate_pct[s50, y30, r400], rate_pct[s50, y60, r400] with cohort_end = dec2015, fee_period = per_month, pct_round = half-up, post_conv = geometric, real_form = ratio, zero_ok = counts law 2026-10-18
+
+version ern_p1_v
+  cite ern_p1
+  governs always
+  known 2016-12-07
+  note "known: the post's own date, 2016-12-07. The page also prints an updated stamp, 2024-09-13, and the case read the updated page, but every row read is known to predate the update, so the post keeps its own date (§4.5). The Wayback capture of 2016-12-24 (20161224002114) has list item 4, 'Methodology in detail', 'Why 6.5 Million Safe Withdrawal rates?' and the 80/20 chart captions as read. Its table image, swr-part1-table1.png from the 2016/11 uploads, shows the same rows, columns and figures as today's copy. Round 2 kept the own date without that check"
+  bond_flat_years = 10 "list item 4: only 0% real p.a. for the next 10 years"
+  cohort_from = 1871-02 "'Why 6.5 Million Safe Withdrawal rates?': start dates between February 1, 1871, and December 1, 2016"
+  cohort_to_p1 = 2016-12 "'Why 6.5 Million Safe Withdrawal rates?': … and December 1, 2016"
+  data_end = 2016-09 "'Methodology in detail': monthly total return data … from January 1871 to September 2016"
+  eq_share[s100] = 1 "table rows: 100% Stocks; bond weight = 100% - equity weight"
+  eq_share[s80] = 0.8 "scatter chart: 80% stocks / 20% bonds"
+  eq_share[s75] = 0.75 "table rows: 75% Stocks"
+  eq_share[s50] = 0.5 "table rows: 50% Stocks"
+  eq_share[s25] = 0.25 "table rows: 25% Stocks"
+  eq_share[s0] = 0 "table rows: 0% Stocks"
+  fee = 0.0005 "'Methodology in detail': a 0.05% drag from fees for low-cost mutual funds"
+  post_rate[eq_rate] = 0.066 "list item 4: equities about 6.6% real p.a."
+  post_rate[bond_flat] = 0 "list item 4: bonds only 0% real p.a. for the next 10 years"
+  post_rate[bond_late] = 0.026 "list item 4: then 2.6% real per year"
+  wrate[r300] = 0.03 "table header: 3.00%"
+  wrate[r325] = 0.0325 "table header: 3.25%"
+  wrate[r350] = 0.035 "table header: 3.50%"
+  wrate[r375] = 0.0375 "table header: 3.75%"
+  wrate[r400] = 0.04 "table header: 4.00%"
+  wrate[r425] = 0.0425 "table header: 4.25%"
+  wrate[r450] = 0.045 "table header: 4.50%"
+  wrate[r475] = 0.0475 "table header: 4.75%"
+  wrate[r500] = 0.05 "table header: 5.00%"
+
+version lifted_figures
+  cite lifted_1_0_1
+  governs always
+  known 2016-12-07
+  annuity_12 = 12 "inline in tally 1.0.1: annuity line 82, factor"
+  asset_r_12 = 12 "inline in tally 1.0.1: asset_r line 87, factor; asset_r line 88, factor"
+  disc_0_000000000001 = 0.000000000001 "inline in tally 1.0.1: disc line 98, round step"
+  fee_m_12 = 12 "inline in tally 1.0.1: fee_m line 101, factor"
+  fv_ratio_12 = 12 "inline in tally 1.0.1: fv_ratio line 104, factor"
+  post_m_12 = 12 "inline in tally 1.0.1: post_m line 117, factor; post_m line 118, factor"
+  swr_12 = 12 "inline in tally 1.0.1: swr line 132, factor"
+
+version ern_p7_v
+  cite ern_p7
+  governs always
+  known 2017-01-25
+  note "known: the post's own date, 2017-01-25. The page prints a later updated stamp, 2019-12-17 ('Posted on January 25, 2017 December 17, 2019'; meta dateModified 2019-12-18), but the row read is known to predate it: the Wayback capture of 2017-06-30 (20170630225707) has the 'How our tool is different from cFIREsim' bullet word for word. So the post keeps its own date (§4.5)"
+  cohort_to_p7 = 2015-12 "'How our tool is different from cFIREsim', 3rd bullet: every retirement cohort between February 1871 and December 2015"
+
+version light_sizes
+  cite light_cut
+  governs always
+  known 2026-10-18
+  note "known: the model's on. The horizons are the cut-down's size, chosen so that the reference interpreter runs it in minutes; LH-15's own rows (ern_p1_v, table rows: 30, 40, 50, 60 Years) are not in this file. No ask's expected print depends on them: every ask that reaches them prints a hole (LH-15-light.md)"
+  hz_years[y30] = 1 "light cut: stands for table rows: 30 Years"
+  hz_years[y40] = 2 "light cut: stands for table rows: 40 Years"
+  hz_years[y50] = 3 "light cut: stands for table rows: 50 Years"
+  hz_years[y60] = 4 "light cut: stands for table rows: 60 Years"

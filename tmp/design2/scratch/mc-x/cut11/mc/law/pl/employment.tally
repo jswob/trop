@@ -1,0 +1,111 @@
+part pl_employment
+  tally 2
+  law
+  note "Umowa o pracę: składki pracownika, zdrowotna, zaliczka PIT, zeznanie PIT-37 z ulgą na dziecko."
+  note "Wycinek przykładowy z kwotami prototypu; nie przeszedł bramki."
+
+input ee_rate[z in zus_part]: num
+
+input kup_month: money PLN
+
+input pit_reduction_month: money PLN
+
+input relief_limit: money PLN
+
+input relief_month: money PLN
+
+input relief_months_18: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input relief_parent[c in person]: key person question "Który z rodziców odlicza ulgę na to dziecko?"
+
+input salary[j in job, m in month]: money PLN question "Ile wynosi pensja brutto z tej pracy w tym miesiącu?"
+
+input wage_10: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input zus_cap_30: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+band pit_scale(x: num PLN): num PLN
+  note "skala podatkowa, art. 27 ust. 1: podatek przed ulgami, po kwocie zmniejszającej"
+
+def child_relief[p in person, y in tax_year]: money PLN at start_of(y)
+  rule base v pit_2022 = sum(relief_months[c, y] for c in person over .. where parent[c, p] and relief_parent[c] == p) * relief_month
+  rule over_limit beats base v pit_2022 = 0 when pit37_base[p, y] > relief_limit
+
+def emp_base_capped[j in job, m in month]: money PLN = max(0, min(salary[j, m], zus_cap[year_of(m)] - emp_ytd[j, m])) at start_of(m)
+
+def emp_cum[j in job, m in month]: money PLN = sum(emp_pit_base[j, k] for k in month where year_of(k) == year_of(m) and k <= m) at start_of(m)
+
+def emp_health[j in job, m in month]: money PLN at start_of(m)
+  rule base v health_2022 = round((salary[j, m] - emp_zus[j, m]) * health_rate, minor(PLN), half-up)
+
+def emp_net[j in job, m in month]: money PLN = salary[j, m] - emp_zus[j, m] - emp_health[j, m] - emp_pit_adv[j, m] at start_of(m)
+
+def emp_pit_adv[j in job, m in month]: money PLN at start_of(m)
+  note "art. 32: zaliczka od narastającej podstawy, minus 1/12 kwoty zmniejszającej, do pełnych złotych"
+  rule base v pit_2022 = max(0, round(pit_scale(emp_cum[j, m]) - pit_scale(emp_cum[j, m] - emp_pit_base[j, m]) - pit_reduction_month, 1, half-up))
+
+def emp_pit_base[j in job, m in month]: money PLN at start_of(m)
+  rule base v pit_2022 = round(max(0, salary[j, m] - emp_zus[j, m] - kup_month), 1, half-up)
+
+def emp_ytd[j in job, m in month]: money PLN = sum(salary[j, k] for k in month where year_of(k) == year_of(m) and k < m) at start_of(m)
+
+def emp_zus[j in job, m in month]: money PLN at start_of(m)
+  note "emerytalna i rentowa do rocznej granicy 30-krotności, chorobowa bez granicy"
+  rule base v sus_2026 = round(emp_base_capped[j, m] * ee_rate[pension], minor(PLN), half-up) + round(emp_base_capped[j, m] * ee_rate[disability], minor(PLN), half-up) + round(salary[j, m] * ee_rate[sickness], minor(PLN), half-up)
+
+def pit37_base[p in person, y in tax_year]: money PLN at start_of(y)
+  rule base v pit_2022 = round(max(0, sum(salary[j, m] - emp_zus[j, m] - (if salary[j, m] > 0 then kup_month else 0) for j in job over .., m in month where works_for[j] == p and year_of(m) == y)), 1, half-up)
+
+def pit37_due[p in person, y in tax_year]: money PLN = pit37_tax[p, y] - sum(emp_pit_adv[j, m] for j in job over .., m in month where works_for[j] == p and year_of(m) == y) at start_of(y)
+
+def pit37_tax[p in person, y in tax_year]: money PLN at start_of(y)
+  rule abroad beats base, unused v pit_2022 = ?"Zmiana rezydencji podatkowej w roku nie jest opisana (art. 3, umowa o unikaniu podwójnego opodatkowania)." when any(residence[p, m] != pl for m in month where year_of(m) == y)
+  rule base v pit_2022 = round(max(0, pit_scale(pit37_base[p, y]) - child_relief[p, y]), 1, half-up)
+  rule unused beats base v pit_2022 = ?"Niewykorzystana ulga na dziecko (art. 27f ust. 8): zwrot nie jest opisany." when child_relief[p, y] > max(0, pit_scale(pit37_base[p, y]))
+
+def relief_months[c in person, y in tax_year]: int = count(m in month where year_of(m) == y and born[c] < end_of(m) and age(born[c], add_days(end_of(m), -1)) < relief_months_18) at start_of(y)
+
+def zus_cap[y in tax_year]: money PLN at start_of(y)
+  rule base v sus_2026 = zus_cap_30 * proj_wage_y[y]
+
+move pit37_pay[p in person over .., y in tax_year]: transfers
+  on return_day[y]
+  at start_of(y)
+  for y
+  when pit37_due[p, y] > 0
+  leg cash from konto to urzad_skarbowy amount pit37_due[p, y]
+
+move pit37_refund[p in person over .., y in tax_year]: transfers
+  on add_days(return_day[y], refund_days)
+  at start_of(y)
+  for y
+  when pit37_due[p, y] < 0
+  leg cash from urzad_skarbowy to konto amount -pit37_due[p, y]
+
+move wage[j in job over .., m in month]: transfers
+  on if is_business(add_months(day_of(m, wage_10), 1), holidays_pl) then add_months(day_of(m, wage_10), 1) else add_business(add_months(day_of(m, wage_10), 1), 1, holidays_pl)
+  at start_of(m)
+  for m
+  leg cash from pracodawcy to konto amount emp_net[j, m]
+
+version pit_2022
+  cite pit_act
+  governs 2022..
+  known 2022-06-24
+  kup_month = 250 "art. 22 ust. 2 pkt 1"
+  pit_reduction_month = 300 "art. 32 ust. 3"
+  pit_scale: [0, 120000] = x * 0.12 - 3600 "art. 27 ust. 1, pierwszy próg"
+  pit_scale: (120000, inf) = 10800 + (x - 120000) * 0.32 "art. 27 ust. 1, drugi próg"
+  relief_limit = 112000 "art. 27f ust. 1 pkt 1 lit. a"
+  relief_month = 92.67 "art. 27f ust. 1 pkt 1: 1/6 z 556,02 zł za miesiąc"
+
+version sus_2026
+  cite sus_act
+  governs 2026..
+  known 2025-12-31
+  ee_rate[disability] = 0.015 "art. 22 ust. 1 pkt b, część pracownika"
+  ee_rate[pension] = 0.0976 "art. 22 ust. 1 pkt a, część pracownika"
+  ee_rate[sickness] = 0.0245 "art. 22 ust. 1 pkt c"

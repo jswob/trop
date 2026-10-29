@@ -1,0 +1,10 @@
+scenario plan_b over rand04
+  tally 2
+  from 2026-01-01
+  note "Plan B: the same fund, and 1 000.00 kept in cash at 0 %"
+
+version plan_b_cash
+  cite card
+  governs 2026-01-01..
+  known 2026-01-02
+  replace cash_kept = 1000 "plan B keeps 1 000.00 in cash at 0 %"

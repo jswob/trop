@@ -1,0 +1,83 @@
+fee_paid (o = overpay[op1]) [fee_mode = *]: 0.00 PLN
+  cut 2027-01-01
+fee_paid (o = overpay[op2]) [fee_mode = *]: 140.00 PLN
+  cut 2027-01-01
+instalments_2027 (d = 2027-04-15): 3 547.16 PLN
+  assumed: the card names no holidays; business days are Monday to Friday (cal)
+  cut 2027-01-01
+instalments_2027 (d = 2027-10-15): 3 702.74 PLN
+  assumed: the card names no holidays; business days are Monday to Friday (cal)
+  cut 2027-01-01
+instalments_2027 (d = 2028-01-15): 3 468.92 PLN
+  assumed: the card names no holidays; business days are Monday to Friday (cal)
+  cut 2027-01-01
+instalments_2028_high (d = 2028-04-15): 3 625.52 PLN
+  assumed: the card names no holidays; business days are Monday to Friday (cal)
+  world: ref6_high
+  cut 2027-01-01
+instalments_2028_high (d = 2028-10-15): 3 625.52 PLN
+  assumed: the card names no holidays; business days are Monday to Friday (cal)
+  world: ref6_high
+  cut 2027-01-01
+instalments_2028_low (d = 2028-04-15): 3 108.54 PLN
+  assumed: the card names no holidays; business days are Monday to Friday (cal)
+  world: ref6_low
+  cut 2027-01-01
+instalments_2028_low (d = 2028-10-15): 3 108.54 PLN
+  assumed: the card names no holidays; business days are Monday to Friday (cal)
+  world: ref6_low
+  cut 2027-01-01
+interest_2027: 27 471.07 PLN
+  assumed: the card names no holidays; business days are Monday to Friday (cal)
+  cut 2027-01-01
+interest_2028_high: 35 724.77 PLN
+  assumed: the card names no holidays; business days are Monday to Friday (cal)
+  world: ref6_high
+  cut 2027-01-01
+interest_2028_low: 29 448.75 PLN
+  assumed: the card names no holidays; business days are Monday to Friday (cal)
+  world: ref6_low
+  cut 2027-01-01
+left_high: 246
+  assumed: the card names no holidays; business days are Monday to Friday (cal)
+  world: ref6_high
+  cut 2027-01-01
+left_low: 246
+  assumed: the card names no holidays; business days are Monday to Friday (cal)
+  world: ref6_low
+  cut 2027-01-01
+pub_aug: ok
+  assumed: the card names no holidays; business days are Monday to Friday (cal)
+  cut 2027-01-01
+pub_feb: ok
+  assumed: the card names no holidays; business days are Monday to Friday (cal)
+  cut 2027-01-01
+relief_2027 (p = hania) [relief_order = *]: (1 500 PLN, 0 PLN)
+  assumed: the card names no holidays; business days are Monday to Friday (cal)
+  assumed: the loan starts in 2027; no relief is carried into 2027 (carry_before[hania])
+  cut 2027-01-01
+relief_2027 (p = igor) [relief_order = *]: (600 PLN, 900 PLN)
+  assumed: the card names no holidays; business days are Monday to Friday (cal)
+  assumed: the loan starts in 2027; no relief is carried into 2027 (carry_before[igor])
+  cut 2027-01-01
+relief_2028_high (p = hania) [relief_order = *]: (1 500 PLN, 0 PLN)
+  assumed: the card names no holidays; business days are Monday to Friday (cal)
+  assumed: the loan starts in 2027; no relief is carried into 2027 (carry_before[hania])
+  world: ref6_high
+  cut 2027-01-01
+relief_2028_high (p = igor) [relief_order = *]: (1 100 PLN, 400 PLN)
+  assumed: the card names no holidays; business days are Monday to Friday (cal)
+  assumed: the loan starts in 2027; no relief is carried into 2027 (carry_before[igor])
+  world: ref6_high
+  cut 2027-01-01
+relief_2028_low (p = hania) [relief_order = *]: (1 500 PLN, 0 PLN)
+  assumed: the card names no holidays; business days are Monday to Friday (cal)
+  assumed: the loan starts in 2027; no relief is carried into 2027 (carry_before[hania])
+  world: ref6_low
+  cut 2027-01-01
+relief_2028_low (p = igor) [relief_order = *]: (1 100 PLN, 400 PLN)
+  assumed: the card names no holidays; business days are Monday to Friday (cal)
+  assumed: the loan starts in 2027; no relief is carried into 2027 (carry_before[igor])
+  world: ref6_low
+  cut 2027-01-01
+warning: WARN-NEGATIVE joint is below zero from 2027-04-15

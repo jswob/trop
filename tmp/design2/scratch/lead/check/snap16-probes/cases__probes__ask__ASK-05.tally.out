@@ -1,0 +1,25 @@
+q_causes: 5 703.47 DUK
+  [1] net_pay = 5 703.47 DUK, law date 2026-10-25
+      rule base: won
+        [2] row contract_may:gross = 8 000.00 DUK
+            version contract_may, source contract, "Ania's contract (made-up): gross pay for May 2025", locator "gross pay for May 2025", governs always, known 2026-10-25
+        [3] pension = 780.80 DUK, law date 2026-10-25
+            rule base: won (version rule_1, source probe_card)
+              [4] row rule_1:pension_rate = 0.0976
+                  version rule_1, source probe_card, "Probe card ASK-05 (made-up story and rules)", locator "rule 1", governs always, known 2026-10-25
+              (contract_may:gross: see [2])
+        [5] health = 649.73 DUK, law date 2026-10-25
+            rule base: won (version rule_2, source probe_card)
+              [6] row rule_2:health_rate = 0.09
+                  version rule_2, source probe_card, "Probe card ASK-05 (made-up story and rules)", locator "rule 2", governs always, known 2026-10-25
+              (contract_may:gross: see [2])
+              (pension: see [3])
+        [7] tax_advance = 866.00 DUK, law date 2026-10-25
+            rule base: won (version rule_3, source probe_card)
+              [8] row rule_3:tax_rate = 0.12
+                  version rule_3, source probe_card, "Probe card ASK-05 (made-up story and rules)", locator "rule 3", governs always, known 2026-10-25
+              (contract_may:gross: see [2])
+              (pension: see [3])
+  law date 2026-10-25, cut 2026-10-25
+q_net: 5 703.47 DUK
+  law date 2026-10-25, cut 2026-10-25

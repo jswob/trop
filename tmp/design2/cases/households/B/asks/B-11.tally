@@ -1,0 +1,7 @@
+part asks_b11
+  tally 2
+  note "B-11 · The flat's costs and what we're worth, 2025 (questions.md): as of 2025-12-31, known as of 2026-01-07."
+
+ask b11_costs: flat_costs[2025], flat_costs[2025] - ola_flat_paid[2025], ola_flat_paid[2025], flat_costs[2025] - ola_share_flat[2025], ola_share_flat[2025], ola_owes_piotr[2025] law 2025-12-31 as known 2026-01-07
+
+ask b11_worth: worth_piotr[2025-12-31], worth_ola[2025-12-31], worth_piotr[2025-12-31] + worth_ola[2025-12-31] law 2025-12-31 as known 2026-01-07 partial

@@ -1,0 +1,299 @@
+model mp13
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+  note "HMRC IHTM42087, Example 3: ten-year anniversary (principal) charge on trust D, with the related trust C and Joseph's earlier transfers."
+  note "Every def of the charge is keyed by the settlement charged and evaluated at its ten-year anniversary (at tya_date[s])."
+  note "Part of trust D (£100,000) has been a qualifying interest in possession from the beginning; it is not relevant property and, for an anniversary on or after 18 November 2015, it is not part of the notional transfer, so the model has no input for it."
+
+source act_f2a2015 "Finance (No. 2) Act 2015 (c. 33), Sch. 1 (Royal Assent 18 November 2015)" at "https://www.legislation.gov.uk/ukpga/2015/33/schedule/1"
+
+source act_fa1986 "Finance Act 1986 (c. 41), Sch. 19 paras 2 and 16 (Royal Assent 25 July 1986)" at "https://www.legislation.gov.uk/ukpga/1986/41/schedule/19"
+
+source act_fa2006 "Finance Act 2006 (c. 25), s. 155 (Royal Assent 19 July 2006)" at "https://www.legislation.gov.uk/ukpga/2006/25/section/155"
+
+source act_fa2010 "Finance Act 2010 (c. 13), s. 8 (Royal Assent 8 April 2010)" at "https://www.legislation.gov.uk/ukpga/2010/13/section/8"
+
+source hmrc_ihtm42087 "HMRC Inheritance Tax Manual IHTM42087, Ten year anniversary: the rate of tax: step 3 (published 20 March 2016, updated 7 April 2026)" at "https://www.gov.uk/hmrc-internal-manuals/inheritance-tax-manual/ihtm42087"
+
+source hmrc_ihtm4208x "HMRC Inheritance Tax Manual IHTM42081, IHTM42085, IHTM42086 (ten year anniversary: introduction; step 1; step 2)" at "https://www.gov.uk/hmrc-internal-manuals/inheritance-tax-manual/ihtm42086"
+
+source legislation_ihta "Inheritance Tax Act 1984 (c. 51), ss. 7, 62, 62A, 64, 66 and Schedule 1 (legislation.gov.uk, revised text; Royal Assent 31 July 1984)" at "https://www.legislation.gov.uk/ukpga/1984/51/section/66"
+
+source lifted_1_0_1 "Figures tally 1.0.1 allowed inline in rules"
+
+source modeller "The modeller's own assumptions, each stated with its reason"
+
+unit GBP: currency minor 0.01
+
+axis iht_pct_round
+  ceil "each percentage rounded up (toward +inf) to 3 decimal places, as the method sentence says"
+  down "each percentage cut to 3 decimal places"
+  half-up "each percentage rounded to the nearest at 3 decimal places, a tie up"
+
+index exit_event = [cp2011]
+
+index person = [joseph]
+
+index settlement = [trust_a, trust_b, trust_c, trust_d]
+
+index transfer = [x_pilot_a, x_pilot_b, x_add_a, x_add_b, x_settle_c, x_settle_d]
+
+input commenced[s in settlement]: date
+
+input cum_stated[s in settlement]: money GBP
+  note "the settlor's cumulative total of chargeable transfers as the example states it; only a check reads it"
+
+input e_cap_pct: num
+
+input e_pct_0_001: num
+  note "lifted from an inline figure of tally 1.0.1"
+
+input exit_amount[e in exit_event]: money GBP
+
+input exit_of[e in exit_event]: key settlement
+
+input exit_on[e in exit_event]: date
+
+input exit_years: int
+
+input f_cap_pct: num
+
+input f_pct_0_001: num
+  note "lifted from an inline figure of tally 1.0.1"
+
+input fortieths: int
+
+input lifetime_share: num
+
+input lookback_years: int
+
+input nrb: money GBP
+
+input quarters_[s in settlement]: int question "For how many complete quarters of the ten years was the property not relevant property in the settlement (s. 66(2))?"
+
+input rate_above_nrb: num
+
+input rp_initial[s in settlement]: money GBP question "What was the value of the relevant property immediately after the settlement commenced?"
+
+input rp_value_tya[s in settlement]: money GBP question "What is the value of the relevant property immediately before the ten-year anniversary, after reliefs?"
+
+input sda_from: date
+
+input settlor[s in settlement]: key person
+
+input tya_date[s in settlement]: date
+
+input tya_share: num
+
+input xfer_by[x in transfer]: key person
+
+input xfer_on[x in transfer]: date
+
+input xfer_to[x in transfer]: key settlement
+
+input xfer_value[x in transfer]: money GBP
+  note "the value transferred by each chargeable transfer"
+
+def cum_prior[s in settlement]: money GBP at tya_date[s]
+  note "s. 66(5)(a): chargeable transfers by the settlor in the seven years ending with the day the settlement commenced, disregarding transfers made on that day"
+  rule base v ihta1984 = sum(xfer_value[x] for x in transfer where xfer_by[x] == settlor[s] and xfer_on[x] > add_years(commenced[s], -lookback_years) and xfer_on[x] < commenced[s])
+
+def diff_[s in settlement]: money GBP at tya_date[s]
+  note "IHTM42087 Step 3: C = A - B; if A is less than B then rate is nil"
+  rule base v ihtm42087 = step1_total[s] - nrba[s]
+  rule nil beats base v ihtm42087 = 0 when step1_total[s] < nrba[s]
+
+def e_pct[s in settlement]: num at tya_date[s]
+  note "IHTM42087 Step 3: E = D / A (%), cannot exceed 20%; percentages to 3 decimal places"
+  rule base v ihtm42087 = min(e_cap_pct, round(e_raw[s], e_pct_0_001, iht_pct_round))
+
+def e_raw[s in settlement]: num at tya_date[s]
+  note "s. 66(1): the effective rate, the tax chargeable as a percentage of the amount on which it is charged"
+  rule base v ihta1984 = notional_iht[s] / step1_total[s] / 1 %
+  rule nil beats base v ihtm42087 = 0 when step1_total[s] <= nrba[s]
+
+def exits_prior[s in settlement]: money GBP at tya_date[s]
+  note "s. 66(5)(b): amounts on which charges were imposed under s. 65 in respect of the settlement in the ten years before the anniversary"
+  rule base v ihta1984 = sum(exit_amount[e] for e in exit_event where exit_of[e] == s and exit_on[e] >= add_years(tya_date[s], -exit_years) and exit_on[e] < tya_date[s])
+
+def f_pct[s in settlement]: num at tya_date[s]
+  note "IHTM42087 Step 3: F = E x 3/10 (%), cannot exceed 6%; s. 66(1) three tenths of the effective rate"
+  rule base v ihtm42087 = min(f_cap_pct, round(e_pct[s] * tya_share, f_pct_0_001, iht_pct_round))
+
+def notional_iht[s in settlement]: num GBP at tya_date[s]
+  note "IHTM42087 Step 3: D = C x 20%; Sch. 1 rate above the nil rate band, halved under s. 7(2)"
+  rule base v ihta1984 = diff_[s] * rate_above_nrb * lifetime_share
+
+def nrba[s in settlement]: money GBP at tya_date[s]
+  note "IHTM42086: NRBA = A - (B) - (C), sum cannot be a negative value"
+  rule base v ihtm4208x = max(0, nrb - cum_prior[s] - exits_prior[s])
+
+def rate_after[s in settlement]: num at tya_date[s]
+  note "s. 66(2): the rate is reduced by one-fortieth for each quarter that expired before the property became relevant property"
+  rule base v ihta1984 = f_pct[s] * (fortieths - quarters_[s]) / fortieths
+
+def related[s in settlement, t in settlement]: bool at reader
+  note "s. 62(1): two settlements are related if and only if the settlor is the same in each case and they commenced on the same day"
+  rule base v ihta1984 = s != t and settlor[s] == settlor[t] and commenced[s] == commenced[t]
+
+def sda[s in settlement, x in transfer]: bool at reader
+  note "s. 62A, read for the settlement charged: a transfer by the same settlor, on the day the settlement commenced, to another settlement that is not related; only after 10 December 2014"
+  rule base v fa2015 = xfer_on[x] > sda_from and xfer_on[x] == commenced[s] and xfer_to[x] != s and xfer_by[x] == settlor[s] and not related[s, xfer_to[x]]
+
+def step1_a[s in settlement]: money GBP at tya_date[s]
+  note "IHTM42085 A: relevant property, current value, net assets after reliefs; s. 66(4)(a)"
+  rule base v ihtm4208x = rp_value_tya[s]
+
+def step1_b[s in settlement]: money GBP at tya_date[s]
+  note "IHTM42085 B: related (relevant) property, historic value; s. 66(4)(c)"
+  rule base v ihtm4208x = sum(rp_initial[t] for t in settlement where related[s, t])
+
+def step1_c[s in settlement]: money GBP at tya_date[s]
+  note "IHTM42085 C: same day additions, historic value; s. 66(4)(d)"
+  rule base v fa2015 = sum(xfer_value[x] for x in transfer where sda[s, x])
+
+def step1_d[s in settlement]: money GBP at tya_date[s]
+  note "IHTM42085 D: initial value in SDA trust, historic value"
+  rule base v fa2015 = sum(rp_initial[t] for t in settlement where any(sda[s, x] and xfer_to[x] == t for x in transfer))
+
+def step1_total[s in settlement]: money GBP at tya_date[s]
+  note "IHTM42085: notional lifetime transfer on or after 18 November 2015"
+  rule base = ?"Ten-year anniversary before 18 November 2015: the former s. 66(4)(b) counted non-relevant property; this model does not describe it."
+  rule from2015 beats base v fa2015 = step1_a[s] + step1_b[s] + step1_c[s] + step1_d[s]
+
+def tax[s in settlement]: money GBP at tya_date[s]
+  note "s. 64(1): tax charged at the rate under s. 66 on the value of the relevant property"
+  rule base v ihta1984 = round(step1_a[s] * rate_after[s] * 1 %, minor(GBP), half-up)
+
+ask q_cum_check: check cum_prior[trust_d] == cum_stated[trust_d] law 2026-10-18
+
+ask q_exits: exits_prior[trust_d] law 2026-10-18
+
+ask q_nrba: nrba[trust_d] law 2026-10-18
+
+ask q_s1_a: step1_a[trust_d] law 2026-10-18
+
+ask q_s1_b: step1_b[trust_d] law 2026-10-18
+
+ask q_s1_c: step1_c[trust_d] law 2026-10-18
+
+ask q_s1_d: step1_d[trust_d] law 2026-10-18
+
+ask q_s1_total: step1_total[trust_d] law 2026-10-18
+
+ask q_s3_c: diff_[trust_d] law 2026-10-18
+
+ask q_s3_d: notional_iht[trust_d] law 2026-10-18
+
+ask q_s3_e: e_pct[trust_d] law 2026-10-18
+
+ask q_s3_f: f_pct[trust_d] law 2026-10-18
+
+ask q_tax: tax[trust_d] law 2026-10-18
+
+version ihta1984
+  cite legislation_ihta
+  governs always
+  known 1984-07-31
+  note "Law, known from its Royal Assent, 31 July 1984 (legislation.gov.uk introduction, [31st July 1984]); in force 1 January 1985. Its rules (s. 62(1), s. 64(1), s. 66(1), (2), (5)) are cited by the rules that point here; the later wording of s. 7(2), s. 66(4) and s. 66(5)(a) has its own versions. The rows are as enacted; the revised text is their locator (LANGUAGE §5.3)."
+  exit_years = 10 "s. 66(5)(b): in the ten years before the anniversary concerned"
+  fortieths = 40 "s. 66(2): reduced by one-fortieth for each of the successive quarters in that period"
+  tya_share = 0.3 "s. 66(1): three tenths of the effective rate"
+
+version lifted_figures
+  cite lifted_1_0_1
+  governs always
+  known 1984-07-31
+  e_pct_0_001 = 0.001 "inline in tally 1.0.1: e_pct line 91, round step"
+  f_pct_0_001 = 0.001 "inline in tally 1.0.1: f_pct line 104, round step"
+
+version fa1986
+  cite act_fa1986
+  governs 1986-03-18..
+  known 1986-07-25
+  note "Law, known from the Royal Assent of the Finance Act 1986, 25 July 1986 (legislation.gov.uk, [25th July 1986]); the two amendments have effect from 18 March 1986, the governs. The revised text of the IHTA is the rows' locator."
+  lifetime_share = 0.5 "IHTA 1984 s. 7(2), substituted by FA 1986 Sch. 19 para. 2(2): charged at one-half of the rate or rates referred to in subsection (1) above"
+  lookback_years = 7 "IHTA 1984 s. 66(5)(a), seven substituted for ten by FA 1986 Sch. 19 para. 16(3): in the period of seven years ending with the day on which the settlement commenced"
+
+version fa2006
+  cite act_fa2006
+  governs 2009-04-06..2010-04-05
+  known 2006-07-19
+  note "Law, known from the Royal Assent of the Finance Act 2006, 19 July 2006. Sch. 1 table substituted by s. 155(1)(b)(2)(4) for chargeable transfers on or after 6.4.2009 (legislation.gov.uk annotation to IHTA 1984 Sch. 1)."
+  nrb = 325000 "IHTA 1984 Sch. 1, Table of Rates of Tax: 0 to 325,000 Nil"
+  rate_above_nrb = 0.4 "IHTA 1984 Sch. 1, Table of Rates of Tax: 325,000 and above, 40"
+
+version fa2010
+  cite act_fa2010
+  governs 2010-04-06..
+  known 2010-04-08
+  note "Law, known from the Royal Assent of the Finance Act 2010, 8 April 2010: by s. 8 the FA 2006 table continues for chargeable transfers on or after 6.4.2010 (legislation.gov.uk annotation to IHTA 1984 Sch. 1). The table text is unchanged since; no indexation order under IHTA s. 8 is modelled."
+  nrb = 325000 "IHTA 1984 Sch. 1, Table of Rates of Tax: 0 to 325,000 Nil"
+  rate_above_nrb = 0.4 "IHTA 1984 Sch. 1, Table of Rates of Tax: 325,000 and above, 40"
+
+version fa2015
+  cite act_f2a2015
+  governs 2015-11-18..
+  known 2015-11-18
+  note "Law, known from the Royal Assent of the Finance (No. 2) Act 2015, 18 November 2015. Sch. 1: s. 66(4)(b) omitted, s. 66(4)(d)(e) and s. 62A inserted. The start date is IHTM42087's: For TYAs on and after 18 November 2015."
+
+version ihtm42087
+  cite hmrc_ihtm42087
+  governs always
+  known 2026-04-07
+  note "Method table and the rules of Step 3. Known from the page's own updated stamp, 7 April 2026 (published 20 March 2016)."
+  e_cap_pct = 20 "method table, E = D / A (%): Cannot exceed 20%"
+  f_cap_pct = 6 "method table, F = E x 3/10 (%): Cannot exceed 6%"
+  sda_from = 2014-12-10 "Example 3, Given the facts above: SDAs can only arise for transfers of value after 10 December 2014"
+
+version ihtm4208x
+  cite hmrc_ihtm4208x
+  governs always
+  known 2026-04-07
+  note "IHTM42085 table (notional lifetime transfer on or after 18 November 2015) and IHTM42086 table (nil rate band available); the rules of step1_a, step1_b and nrba cite this version. Known from the pages' own updated stamp: IHTM42081, IHTM42085 and IHTM42086 each read Published 20 March 2016, Updated 7 April 2026 (gov.uk, read 2026-10-19)."
+
+version example3
+  cite hmrc_ihtm42087
+  governs always
+  known 2026-10-18
+  note "The facts of Example 3, TYA charge on trust D: a worked example's stipulations, known from the model's on, since it has no start (LANGUAGE §4.5)"
+  commenced[trust_a] = 2007-01-01 "Example 3: settling £10 in each on 1 January 2007 and 2 January 2007"
+  commenced[trust_b] = 2007-01-02 "Example 3: settling £10 in each on 1 January 2007 and 2 January 2007"
+  commenced[trust_c] = 2009-01-03 "Example 3: Joseph created a further trust (C), on 3 January 2009"
+  commenced[trust_d] = 2009-01-03 "Example 3: Joseph created a further trust (D), on 3 January 2009"
+  cum_stated[trust_d] = 20 "Example 3: At the date of settlement, Joseph's personal cumulative total of chargeable transfers was £20"
+  exit_amount[cp2011] = 50000 "Example 3: Capital payments to members of the appointed class in 2011 total £50,000"
+  exit_of[cp2011] = trust_d "Example 3: Capital payments made out of the trust (Step 2)"
+  exit_on[cp2011] = window(2011-01-01, 2011-12-31) "Example 3: in 2011"
+  rp_initial[trust_c] = 150000 "Example 3: Initial value of relevant property was £150,000"
+  rp_value_tya[trust_d] = 350000 "Example 3: the value of relevant property in trust D was £350,000"
+  settlor = joseph "Example 3: Joseph created pilot trusts (A and B) ... a further trust (C) ... a further trust (D)"
+  tya_date[trust_d] = 2019-01-03 "Example 3: At the ten year anniversary on 3 January 2019"
+  xfer_by = joseph "Example 3: Joseph created ... He also added ..."
+  xfer_on[x_pilot_a] = 2007-01-01 "Example 3: on 1 January 2007"
+  xfer_on[x_pilot_b] = 2007-01-02 "Example 3: and 2 January 2007"
+  xfer_on[x_add_a] = 2009-01-03 "Example 3: He also added a further £75,000 to each of the earlier trusts on the same day"
+  xfer_on[x_add_b] = 2009-01-03 "Example 3: He also added a further £75,000 to each of the earlier trusts on the same day"
+  xfer_on[x_settle_c] = 2009-01-03 "Example 3: a further trust (C), on 3 January 2009"
+  xfer_on[x_settle_d] = 2009-01-03 "Example 3: a further trust (D), on 3 January 2009, settling £250,000"
+  xfer_to[x_pilot_a] = trust_a "Example 3: pilot trusts (A and B)"
+  xfer_to[x_pilot_b] = trust_b "Example 3: pilot trusts (A and B)"
+  xfer_to[x_add_a] = trust_a "Example 3: to each of the earlier trusts"
+  xfer_to[x_add_b] = trust_b "Example 3: to each of the earlier trusts"
+  xfer_to[x_settle_c] = trust_c "Example 3: a further trust (C)"
+  xfer_to[x_settle_d] = trust_d "Example 3: a further trust (D)"
+  xfer_value[x_pilot_a] = 10 "Example 3: settling £10 in each (annual exemptions have been used previously)"
+  xfer_value[x_pilot_b] = 10 "Example 3: settling £10 in each (annual exemptions have been used previously)"
+  xfer_value[x_add_a] = 75000 "Example 3: a further £75,000 to each of the earlier trusts"
+  xfer_value[x_add_b] = 75000 "Example 3: a further £75,000 to each of the earlier trusts"
+  xfer_value[x_settle_c] = 150000 "Example 3: Initial value of relevant property was £150,000"
+  xfer_value[x_settle_d] = 250000 "Example 3: settling £250,000"
+
+version mp13_assumed
+  cite modeller
+  governs always
+  known 2026-10-18
+  note "An assumption that stands for a fact of the example: known with the stipulations, from the model's on (LANGUAGE §4.5)"
+  quarters_[trust_d] = 0 assumed "Example 3 applies no reduction under s. 66(2) and does not discuss one; the property is read as relevant property for the full ten years" "Example 3, Step 3"

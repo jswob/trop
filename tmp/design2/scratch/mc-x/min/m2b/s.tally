@@ -1,0 +1,8 @@
+scenario leave over m
+  tally 2
+  from 2028-03-01
+version v2
+  cite s
+  known 2027-01-01
+  replace jobs + [beta_job] lives 2027-08-01..2028-02-29
+ask n2: count(j in jobs on 2028-06-01) in leave

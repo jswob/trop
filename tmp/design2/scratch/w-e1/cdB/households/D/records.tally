@@ -1,0 +1,164 @@
+part records
+  tally 2
+  note "Bank Olcha's exports of the joint account. tally 2 names no import for this dialect (a |-separated file with yyyymmdd dates, decimal commas, space thousands, header lines and a balance-after column; observation O:D-1), so only the rows a question reads are written here, by hand, each citing its file and line: the rent, the building fees and the boiler (D-HR1), Kuba's transfers, the notary's deposit, the redemptions' credits and two tax payments. Every other row is left out, so no version says covers; the balances the questions read are the exports' balance-after figures, written as stated readings that anchor the account."
+  note "A row is known on its own day, as the story dates what the exports show (story.md: 'known 2025-12-30 · records/olcha-2025-12.csv'); a version is known on its first row's day."
+
+input bank: observed
+  note "rows of Bank Olcha's exports of LN73 4400 2011 0000 8817 2264 0001"
+
+version olcha_start
+  cite story
+  known 2024-01-01
+  opening[konto] = 29147.27 at 2024-01-01 start "story.md, what we had on 1 January 2024"
+
+version olcha_2024_05
+  cite olcha
+  known 2024-05-17
+  anchor konto
+  stated[konto] = 46761.80 at 2024-05-17 end "olcha-2024-05.csv line 21, the balance after the day's last row"
+
+version olcha_2025_06
+  cite olcha
+  governs 2025-06
+  known 2025-06-12
+  anchor konto
+  bank[r20250612a] = (on: 2025-06-12, kind: transfers, leg cash from konto to world amount 124062.00 DUK) "olcha-2025-06.csv line 13: notary's deposit, payments to the heirs"
+  stated[konto] = 2209.24 known 2025-06-13 at 2025-06-13 end "olcha-2025-06.csv line 13: no row on 2025-06-13, so the balance after line 13"
+  stated[konto] = 1324.24 known 2025-06-17 at 2025-06-17 end "olcha-2025-06.csv line 15"
+  stated[konto] = 4334.00 known 2025-06-19 at 2025-06-19 end "olcha-2025-06.csv line 16"
+  bank[r20250619a] = (on: 2025-06-19, kind: redemptions, leg cash from world to konto amount 3009.76 DUK, fulfils: redeem_pay[red_20250616]) known 2025-06-19 "olcha-2025-06.csv line 16"
+  bank[r20250626a] = (on: 2025-06-26, kind: redemptions, leg cash from world to konto amount 3104.94 DUK, fulfils: redeem_pay[red_20250620]) known 2025-06-26 "olcha-2025-06.csv line 23"
+
+version olcha_2025_07
+  cite olcha
+  governs 2025-07
+  known 2025-07-03
+  anchor konto
+  stated[konto] = 4691.12 at 2025-07-03 end "olcha-2025-07.csv line 10"
+  bank[r20250707a] = (on: 2025-07-07, kind: flat_costs, leg cash from konto to world amount 445.00 DUK) known 2025-07-07 "olcha-2025-07.csv line 13"
+  bank[r20250708a] = (on: 2025-07-08, kind: rent_payments, leg cash from world to konto amount 1900.00 DUK, fulfils: rent_in[2025-07]) known 2025-07-08 "olcha-2025-07.csv line 15"
+  bank[r20250709a] = (on: 2025-07-09, kind: redemptions, leg cash from world to konto amount 3077.48 DUK, fulfils: redeem_pay[red_20250704]) known 2025-07-09 "olcha-2025-07.csv line 17"
+
+version olcha_2025_08
+  cite olcha
+  governs 2025-08
+  known 2025-08-05
+  bank[r20250805a] = (on: 2025-08-05, kind: flat_costs, leg cash from konto to world amount 445.00 DUK) "olcha-2025-08.csv line 10"
+  bank[r20250811a] = (on: 2025-08-11, kind: rent_payments, leg cash from world to konto amount 1900.00 DUK, fulfils: rent_in[2025-08]) known 2025-08-11 "olcha-2025-08.csv line 13"
+
+version olcha_2025_09
+  cite olcha
+  governs 2025-09
+  known 2025-09-05
+  bank[r20250905a] = (on: 2025-09-05, kind: flat_costs, leg cash from konto to world amount 445.00 DUK) "olcha-2025-09.csv line 11"
+  bank[r20250908a] = (on: 2025-09-08, kind: rent_payments, leg cash from world to konto amount 1900.00 DUK, fulfils: rent_in[2025-09]) known 2025-09-08 "olcha-2025-09.csv line 12"
+
+version olcha_2025_10
+  cite olcha
+  governs 2025-10
+  known 2025-10-06
+  bank[r20251006a] = (on: 2025-10-06, kind: flat_costs, leg cash from konto to world amount 445.00 DUK) "olcha-2025-10.csv line 10"
+  bank[r20251008a] = (on: 2025-10-08, kind: rent_payments, leg cash from world to konto amount 1900.00 DUK, fulfils: rent_in[2025-10]) known 2025-10-08 "olcha-2025-10.csv line 12"
+  bank[r20251010a] = (on: 2025-10-10, kind: kuba_payments, leg cash from konto to jakub_acct amount 818.44 DUK, fulfils: kuba_send[2025-07]) known 2025-10-10 "olcha-2025-10.csv line 15: Ogrodowa 2025-Q3 3/16"
+
+version olcha_2025_11
+  cite olcha
+  governs 2025-11
+  known 2025-11-05
+  bank[r20251105a] = (on: 2025-11-05, kind: flat_costs, leg cash from konto to world amount 445.00 DUK) "olcha-2025-11.csv line 10"
+  bank[r20251110a] = (on: 2025-11-10, kind: rent_payments, leg cash from world to konto amount 1900.00 DUK, fulfils: rent_in[2025-11]) known 2025-11-10 "olcha-2025-11.csv line 13"
+
+version olcha_2025_12
+  cite olcha
+  governs 2025-12
+  known 2025-12-05
+  anchor konto
+  bank[r20251205a] = (on: 2025-12-05, kind: flat_costs, leg cash from konto to world amount 445.00 DUK) "olcha-2025-12.csv line 11"
+  bank[r20251208a] = (on: 2025-12-08, kind: rent_payments, leg cash from world to konto amount 1900.00 DUK, fulfils: rent_in[2025-12]) known 2025-12-08 "olcha-2025-12.csv line 14"
+  bank[r20251230a] = (on: 2025-12-30, kind: rent_payments, leg cash from world to konto amount 1900.00 DUK, fulfils: rent_in[2026-01]) known 2025-12-30 "olcha-2025-12.csv line 22: rent 01/2026, paid early"
+  stated[konto] = 14080.75 known 2025-12-31 at 2025-12-31 end "olcha-2025-12.csv line 26, closing balance"
+
+version fee_links
+  cite olcha
+  governs 2025-07..2025-12
+  known 2025-12-11
+  note "The fee rows of July to December 2025 fulfil fee_out, which exists only once D-D27 (known 2025-12-11) states the fee plan; the links are added here by replace, so cuts before it read the rows unlinked (L §5.19)."
+  replace bank[r20250707a] = (on: 2025-07-07, kind: flat_costs, leg cash from konto to world amount 445.00 DUK, fulfils: fee_out[2025-07]) "olcha-2025-07.csv line 13, linked once D-D27 states the fee plan"
+  replace bank[r20250805a] = (on: 2025-08-05, kind: flat_costs, leg cash from konto to world amount 445.00 DUK, fulfils: fee_out[2025-08]) "olcha-2025-08.csv line 10, linked once D-D27 states the fee plan"
+  replace bank[r20250905a] = (on: 2025-09-05, kind: flat_costs, leg cash from konto to world amount 445.00 DUK, fulfils: fee_out[2025-09]) "olcha-2025-09.csv line 11, linked once D-D27 states the fee plan"
+  replace bank[r20251006a] = (on: 2025-10-06, kind: flat_costs, leg cash from konto to world amount 445.00 DUK, fulfils: fee_out[2025-10]) "olcha-2025-10.csv line 10, linked once D-D27 states the fee plan"
+  replace bank[r20251105a] = (on: 2025-11-05, kind: flat_costs, leg cash from konto to world amount 445.00 DUK, fulfils: fee_out[2025-11]) "olcha-2025-11.csv line 10, linked once D-D27 states the fee plan"
+  replace bank[r20251205a] = (on: 2025-12-05, kind: flat_costs, leg cash from konto to world amount 445.00 DUK, fulfils: fee_out[2025-12]) "olcha-2025-12.csv line 11, linked once D-D27 states the fee plan"
+
+version olcha_2026_01
+  cite olcha
+  governs 2026-01
+  known 2026-01-05
+  bank[r20260105a] = (on: 2026-01-05, kind: flat_costs, leg cash from konto to world amount 468.00 DUK, fulfils: fee_out[2026-01]) "olcha-2026-01.csv line 9"
+  bank[r20260112a] = (on: 2026-01-12, kind: transfers, leg cash from konto to jakub_acct amount 1174.69 DUK) known 2026-01-12 "olcha-2026-01.csv line 14: Ogrodowa 2025-Q4 3/16 to Kuba's old account, which is closed"
+  bank[r20260114a] = (on: 2026-01-14, kind: transfers, leg cash from jakub_acct to konto amount 1174.69 DUK) known 2026-01-14 "olcha-2026-01.csv line 15: returned, account closed (D-D32)"
+  bank[r20260115a] = (on: 2026-01-15, kind: kuba_payments, leg cash from konto to jakub_acct amount 1174.69 DUK, fulfils: kuba_send[2025-10]) known 2026-01-15 "olcha-2026-01.csv line 18: to Kuba's new account (D-D32)"
+  bank[r20260120a] = (on: 2026-01-20, kind: transfers, leg cash from konto to world amount 263.00 DUK) known 2026-01-20 "olcha-2026-01.csv line 24: PIT-13 advance 12/2025"
+
+version olcha_2026_02
+  cite olcha
+  governs 2026-02
+  known 2026-02-05
+  bank[r20260205a] = (on: 2026-02-05, kind: flat_costs, leg cash from konto to world amount 468.00 DUK, fulfils: fee_out[2026-02]) "olcha-2026-02.csv line 9"
+  bank[r20260209a] = (on: 2026-02-09, kind: rent_payments, leg cash from world to konto amount 1900.00 DUK, fulfils: rent_in[2026-02]) known 2026-02-09 "olcha-2026-02.csv line 10"
+  bank[r20260209b] = (on: 2026-02-09, kind: rent_payments, leg cash from world to konto amount 1900.00 DUK, fulfils: rent_in[2026-02]) known 2026-02-09 "olcha-2026-02.csv line 11: line 10 again, with the same balance after (16 977,43)"
+  same bank[r20260209b] = bank[r20260209a]
+  bank[r20260218a] = (on: 2026-02-18, kind: flat_costs, leg cash from konto to world amount 6840.00 DUK, fulfils: boiler_out) known 2026-02-18 "olcha-2026-02.csv line 20: invoice FV/2026/0216, the boiler"
+
+version olcha_2026_03
+  cite olcha
+  governs 2026-03
+  known 2026-03-03
+  anchor konto
+  stated[konto] = 4842.46 at 2026-03-03 end "olcha-2026-03.csv line 9"
+  bank[r20260309a] = (on: 2026-03-09, kind: rent_payments, leg cash from world to konto amount 1976.00 DUK, fulfils: rent_in[2026-03]) known 2026-03-09 "olcha-2026-03.csv line 14"
+  bank[r20260309b] = (on: 2026-03-09, kind: redemptions, leg cash from world to konto amount 2954.82 DUK, fulfils: redeem_pay[red_20260304]) known 2026-03-09 "olcha-2026-03.csv line 15"
+
+version olcha_2026_04
+  cite olcha
+  governs 2026-04
+  known 2026-04-07
+  bank[r20260407a] = (on: 2026-04-07, kind: flat_costs, leg cash from konto to world amount 468.00 DUK, fulfils: fee_out[2026-04]) "olcha-2026-04.csv line 11"
+  bank[r20260408a] = (on: 2026-04-08, kind: rent_payments, leg cash from world to konto amount 1976.00 DUK, fulfils: rent_in[2026-04]) known 2026-04-08 "olcha-2026-04.csv line 12"
+  bank[r20260430a] = (on: 2026-04-30, kind: transfers, leg cash from konto to world amount 3.00 DUK) known 2026-04-30 "olcha-2026-04.csv line 28: PIT 2025"
+
+version olcha_2026_05
+  cite olcha
+  governs 2026-05
+  known 2026-05-05
+  bank[r20260505a] = (on: 2026-05-05, kind: flat_costs, leg cash from konto to world amount 468.00 DUK, fulfils: fee_out[2026-05]) "olcha-2026-05.csv line 9"
+  bank[r20260511a] = (on: 2026-05-11, kind: rent_payments, leg cash from world to konto amount 1976.00 DUK, fulfils: rent_in[2026-05]) known 2026-05-11 "olcha-2026-05.csv line 12"
+
+version olcha_2026_06
+  cite olcha
+  governs 2026-06
+  known 2026-06-05
+  bank[r20260605a] = (on: 2026-06-05, kind: flat_costs, leg cash from konto to world amount 468.00 DUK, fulfils: fee_out[2026-06]) "olcha-2026-06.csv line 10"
+  bank[r20260608a] = (on: 2026-06-08, kind: rent_payments, leg cash from world to konto amount 1976.00 DUK, fulfils: rent_in[2026-06]) known 2026-06-08 "olcha-2026-06.csv line 11"
+
+version olcha_2026_07
+  cite olcha
+  governs 2026-07
+  known 2026-07-06
+  bank[r20260706a] = (on: 2026-07-06, kind: flat_costs, leg cash from konto to world amount 468.00 DUK, fulfils: fee_out[2026-07]) "olcha-2026-07.csv line 11"
+  bank[r20260708a] = (on: 2026-07-08, kind: rent_payments, leg cash from world to konto amount 1976.00 DUK, fulfils: rent_in[2026-07]) known 2026-07-08 "olcha-2026-07.csv line 12"
+  bank[r20260710a] = (on: 2026-07-10, kind: kuba_payments, leg cash from konto to jakub_acct amount 29.25 DUK, fulfils: kuba_send[2026-04]) known 2026-07-10 "olcha-2026-07.csv line 14: Ogrodowa 2026-Q2 3/16"
+
+version olcha_2026_08
+  cite olcha
+  governs 2026-08
+  known 2026-08-05
+  bank[r20260805a] = (on: 2026-08-05, kind: flat_costs, leg cash from konto to world amount 468.00 DUK, fulfils: fee_out[2026-08]) "olcha-2026-08.csv line 11"
+  bank[r20260810a] = (on: 2026-08-10, kind: rent_payments, leg cash from world to konto amount 1976.00 DUK, fulfils: rent_in[2026-08]) known 2026-08-10 "olcha-2026-08.csv line 12"
+
+version olcha_2026_09
+  cite olcha
+  governs 2026-09
+  known 2026-09-07
+  bank[r20260907a] = (on: 2026-09-07, kind: flat_costs, leg cash from konto to world amount 468.00 DUK, fulfils: fee_out[2026-09]) "olcha-2026-09.csv line 12"
+  bank[r20260907b] = (on: 2026-09-07, kind: rent_payments, leg cash from world to konto amount 1976.00 DUK, fulfils: rent_in[2026-09]) "olcha-2026-09.csv line 13"

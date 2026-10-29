@@ -1,0 +1,11 @@
+ike_2026: 28 260 PLN
+  law date 2026-10-18, cut 2026-10-18
+ike_2026_notice: ?"What forecast average monthly wage for 2026 does the draft budget (druk nr 1749) state? The case didn't fetch it." (wage[2026])
+  law date 2025-11-24, cut 2025-11-24
+ikze_2026: 11 304 PLN
+  law date 2026-10-18, cut 2026-10-18
+ikze_2026_notice: (?"What forecast average monthly wage for 2026 does the draft budget (druk nr 1749) state? The case didn't fetch it." (wage[2026]), ?"What forecast average monthly wage for 2026 does the draft budget (druk nr 1749) state? The case didn't fetch it." (wage[2026]))
+  held: mult[ikze_biz] = 1.8 (ikeact_2018_2215), read for 2026-01-01
+  law date 2025-11-18, cut 2025-11-18
+ikze_biz_2026: 16 956 PLN
+  law date 2026-10-18, cut 2026-10-18

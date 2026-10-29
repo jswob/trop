@@ -1,0 +1,45 @@
+a_after_gifts: (2 000 000.00 USD, 8 120 000.00 USD)
+  assumed: no marriage other than those the examples name; Example 1 states no prior marriage (deceased_spouse[w, hc1], deceased_spouse[w, hc2], deceased_spouse[w, hd], deceased_spouse[w, he], deceased_spouse[w, w], deceased_spouse[w, we])
+  given: dsue[h1] = 5 000 000.00 USD (cfr_portability_examples)
+  law date 2026-10-19, cut 2026-10-19
+a_death: (4 000 000.00 USD, 9 430 000.00 USD)
+  assumed: no marriage other than those the examples name; Example 1 states no prior marriage (deceased_spouse[w, hc1], deceased_spouse[w, hc2], deceased_spouse[w, hd], deceased_spouse[w, he], deceased_spouse[w, w], deceased_spouse[w, we])
+  given: dsue[h1] = 5 000 000.00 USD (cfr_portability_examples)
+  given: dsue[h2] = 2 000 000.00 USD (cfr_portability_examples)
+  law date 2026-10-19, cut 2026-10-19
+a_gift_tax: 0.00 USD
+  assumed: no marriage other than those the examples name; Example 1 states no prior marriage (deceased_spouse[w, hc1], deceased_spouse[w, hc2], deceased_spouse[w, hd], deceased_spouse[w, he], deceased_spouse[w, w], deceased_spouse[w, we])
+  given: dsue[h1] = 5 000 000.00 USD (cfr_portability_examples)
+  law date 2026-10-19, cut 2026-10-19
+b_gifts: (4 000 000.00 USD, 9 430 000.00 USD)
+  assumed: no marriage other than those the examples name; Example 1 states no prior marriage (deceased_spouse[w, hc1], deceased_spouse[w, hc2], deceased_spouse[w, hd], deceased_spouse[w, he], deceased_spouse[w, w], deceased_spouse[w, we])
+  given: dsue[h1] = 5 000 000.00 USD (cfr_portability_examples)
+  given: dsue[h2] = 2 000 000.00 USD (cfr_portability_examples)
+  pinned: death_date[h2] = 2015-06-30
+  law date 2026-10-19, cut 2026-10-19
+c1_credit: 345 800 USD
+  law date 2026-10-19, cut 2026-10-19
+c1_dsue: 3 430 000.00 USD
+  assumed: no marriage other than those the examples name; Example 1 states no prior marriage (deceased_spouse[hc1, h1], deceased_spouse[hc1, h2], deceased_spouse[hc1, hc1], deceased_spouse[hc1, hc2], deceased_spouse[hc1, hd], deceased_spouse[hc1, he], deceased_spouse[hc1, w], deceased_spouse[hc1, we])
+  law date 2026-10-19, cut 2026-10-19
+c2_dsue: (1 000 000.00 USD, 3 430 000.00 USD)
+  assumed: each example computes a DSUE amount on the deceased spouse's return, which needs the election (elected[hc2])
+  assumed: no marriage other than those the examples name; Example 1 states no prior marriage (deceased_spouse[hc2, h1], deceased_spouse[hc2, h2], deceased_spouse[hc2, hc1], deceased_spouse[hc2, hc2], deceased_spouse[hc2, hd], deceased_spouse[hc2, he], deceased_spouse[hc2, w], deceased_spouse[hc2, we])
+  law date 2026-10-19, cut 2026-10-19
+d1_dsue: (3 930 000.00 USD, 2 130 000.00 USD)
+  assumed: each example computes a DSUE amount on the deceased spouse's return, which needs the election (elected[hd])
+  assumed: no marriage other than those the examples name; Example 1 states no prior marriage (deceased_spouse[hd, h1], deceased_spouse[hd, h2], deceased_spouse[hd, hc1], deceased_spouse[hd, hc2], deceased_spouse[hd, hd], deceased_spouse[hd, he], deceased_spouse[hd, w], deceased_spouse[hd, we])
+  law date 2026-10-19, cut 2026-10-19
+d2_dsue: 3 930 000.00 USD
+  assumed: each example computes a DSUE amount on the deceased spouse's return, which needs the election (elected[hd])
+  assumed: no marriage other than those the examples name; Example 1 states no prior marriage (deceased_spouse[hd, h1], deceased_spouse[hd, h2], deceased_spouse[hd, hc1], deceased_spouse[hd, hc2], deceased_spouse[hd, hd], deceased_spouse[hd, he], deceased_spouse[hd, w], deceased_spouse[hd, we])
+  pinned: citizen_later[hd] = true
+  law date 2026-10-19, cut 2026-10-19
+e_dsue: (4 000 000.00 USD, 1 800 000.00 USD, 1 000 000.00 USD, 800 000.00 USD)
+  assumed: each example computes a DSUE amount on the deceased spouse's return, which needs the election (elected[he])
+  assumed: no marriage other than those the examples name; Example 1 states no prior marriage (deceased_spouse[he, h1], deceased_spouse[he, h2], deceased_spouse[he, hc1], deceased_spouse[he, hc2], deceased_spouse[he, hd], deceased_spouse[he, he], deceased_spouse[he, w], deceased_spouse[he, we], deceased_spouse[we, h1], deceased_spouse[we, h2], deceased_spouse[we, hc1], deceased_spouse[we, hc2], deceased_spouse[we, hd], deceased_spouse[we, w], deceased_spouse[we, we])
+  law date 2026-10-19, cut 2026-10-19
+e_gifts: (0.00 USD, 1 000 000.00 USD)
+  assumed: each example computes a DSUE amount on the deceased spouse's return, which needs the election (elected[he])
+  assumed: no marriage other than those the examples name; Example 1 states no prior marriage (deceased_spouse[he, h1], deceased_spouse[he, h2], deceased_spouse[he, hc1], deceased_spouse[he, hc2], deceased_spouse[he, hd], deceased_spouse[he, he], deceased_spouse[he, w], deceased_spouse[he, we], deceased_spouse[we, h1], deceased_spouse[we, h2], deceased_spouse[we, hc1], deceased_spouse[we, hc2], deceased_spouse[we, hd], deceased_spouse[we, w], deceased_spouse[we, we])
+  law date 2026-10-19, cut 2026-10-19

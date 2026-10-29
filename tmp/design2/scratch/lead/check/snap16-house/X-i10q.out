@@ -1,0 +1,33 @@
+q1 (h = pola_hh) [settle_balance = month_end]: (-100.00 PLN, -950.00 PLN, -1 050.00 PLN)
+  assumed: the agreement states no rounding of a household's part (split_mode)
+  assumed: the insurer's rounding isn't stated (premium_mode)
+  pinned: claimed[*] = false
+  reading: settle_balance = month_end
+  held: owns[pola_hh, car1] = 0.5 (card_shares), read for 2028-01-01
+  held: owns[rena_hh, car1] = 0.5 (card_shares), read for 2027-11-25
+  cut 2027-01-01
+q1 (h = pola_hh) [settle_balance = pay_day]: (-100.00 PLN, -950.00 PLN, refused: RUN-NEG negative amount -950.00 PLN for leg clear of settle[2027-12, rena_hh])
+  assumed: the agreement states no rounding of a household's part (split_mode)
+  assumed: the insurer's rounding isn't stated (premium_mode)
+  pinned: claimed[*] = false
+  reading: settle_balance = pay_day
+  held: owns[pola_hh, car1] = 0.5 (card_shares), read for 2028-01-01
+  held: owns[rena_hh, car1] = 0.5 (card_shares), read for 2027-11-25
+  cut 2027-01-01
+q1 (h = rena_hh) [settle_balance = month_end]: (100.00 PLN, 950.00 PLN, 1 050.00 PLN)
+  assumed: the agreement states no rounding of a household's part (split_mode)
+  assumed: the insurer's rounding isn't stated (premium_mode)
+  pinned: claimed[*] = false
+  reading: settle_balance = month_end
+  held: owns[pola_hh, car1] = 0.5 (card_shares), read for 2028-01-01
+  held: owns[rena_hh, car1] = 0.5 (card_shares), read for 2027-11-25
+  cut 2027-01-01
+q1 (h = rena_hh) [settle_balance = pay_day]: (100.00 PLN, 950.00 PLN, refused: RUN-NEG negative amount -950.00 PLN for leg clear of settle[2027-12, rena_hh])
+  assumed: the agreement states no rounding of a household's part (split_mode)
+  assumed: the insurer's rounding isn't stated (premium_mode)
+  pinned: claimed[*] = false
+  reading: settle_balance = pay_day
+  held: owns[pola_hh, car1] = 0.5 (card_shares), read for 2028-01-01
+  held: owns[rena_hh, car1] = 0.5 (card_shares), read for 2027-11-25
+  cut 2027-01-01
+

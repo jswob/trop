@@ -1,0 +1,351 @@
+d12_extremes [hh_round = *]: (2022-03, 55 231.21 DUK, 2020-05, 100 020.84 DUK)
+  assumed: D-12's what-if: 100 000.00 DUK (fund_capital)
+  assumed: D-12's what-if: 900.00 DUK a month (fund_draw)
+  assumed: D-12's what-if: the next 36 months (fund_months)
+  law date 2026-09-30, cut 2026-09-30
+d12_starts (s = 2018-01) [hh_round = *]: (1 118 fund_unit, 70 441.97 DUK)
+  assumed: D-12's what-if: 100 000.00 DUK (fund_capital)
+  assumed: D-12's what-if: 900.00 DUK a month (fund_draw)
+  assumed: D-12's what-if: the next 36 months (fund_months)
+  law date 2026-09-30, cut 2026-09-30
+d12_starts (s = 2018-02) [hh_round = *]: (1 161 fund_unit, 75 389.41 DUK)
+  assumed: D-12's what-if: 100 000.00 DUK (fund_capital)
+  assumed: D-12's what-if: 900.00 DUK a month (fund_draw)
+  assumed: D-12's what-if: the next 36 months (fund_months)
+  law date 2026-09-30, cut 2026-09-30
+d12_starts (s = 2018-03) [hh_round = *]: (1 113 fund_unit, 70 138.17 DUK)
+  assumed: D-12's what-if: 100 000.00 DUK (fund_capital)
+  assumed: D-12's what-if: 900.00 DUK a month (fund_draw)
+  assumed: D-12's what-if: the next 36 months (fund_months)
+  law date 2026-09-30, cut 2026-09-30
+d12_starts (s = 2018-04) [hh_round = *]: (1 095 fund_unit, 72 370.17 DUK)
+  assumed: D-12's what-if: 100 000.00 DUK (fund_capital)
+  assumed: D-12's what-if: 900.00 DUK a month (fund_draw)
+  assumed: D-12's what-if: the next 36 months (fund_months)
+  law date 2026-09-30, cut 2026-09-30
+d12_starts (s = 2018-05) [hh_round = *]: (1 106 fund_unit, 70 571.36 DUK)
+  assumed: D-12's what-if: 100 000.00 DUK (fund_capital)
+  assumed: D-12's what-if: 900.00 DUK a month (fund_draw)
+  assumed: D-12's what-if: the next 36 months (fund_months)
+  law date 2026-09-30, cut 2026-09-30
+d12_starts (s = 2018-06) [hh_round = *]: (1 141 fund_unit, 68 063.52 DUK)
+  assumed: D-12's what-if: 100 000.00 DUK (fund_capital)
+  assumed: D-12's what-if: 900.00 DUK a month (fund_draw)
+  assumed: D-12's what-if: the next 36 months (fund_months)
+  law date 2026-09-30, cut 2026-09-30
+d12_starts (s = 2018-07) [hh_round = *]: (1 165 fund_unit, 69 668.49 DUK)
+  assumed: D-12's what-if: 100 000.00 DUK (fund_capital)
+  assumed: D-12's what-if: 900.00 DUK a month (fund_draw)
+  assumed: D-12's what-if: the next 36 months (fund_months)
+  law date 2026-09-30, cut 2026-09-30
+d12_starts (s = 2018-08) [hh_round = *]: (1 210 fund_unit, 77 958.02 DUK)
+  assumed: D-12's what-if: 100 000.00 DUK (fund_capital)
+  assumed: D-12's what-if: 900.00 DUK a month (fund_draw)
+  assumed: D-12's what-if: the next 36 months (fund_months)
+  law date 2026-09-30, cut 2026-09-30
+d12_starts (s = 2018-09) [hh_round = *]: (1 257 fund_unit, 85 008.29 DUK)
+  assumed: D-12's what-if: 100 000.00 DUK (fund_capital)
+  assumed: D-12's what-if: 900.00 DUK a month (fund_draw)
+  assumed: D-12's what-if: the next 36 months (fund_months)
+  law date 2026-09-30, cut 2026-09-30
+d12_starts (s = 2018-10) [hh_round = *]: (1 273 fund_unit, 88 837.23 DUK)
+  assumed: D-12's what-if: 100 000.00 DUK (fund_capital)
+  assumed: D-12's what-if: 900.00 DUK a month (fund_draw)
+  assumed: D-12's what-if: the next 36 months (fund_months)
+  law date 2026-09-30, cut 2026-09-30
+d12_starts (s = 2018-11) [hh_round = *]: (1 316 fund_unit, 95 483.07 DUK)
+  assumed: D-12's what-if: 100 000.00 DUK (fund_capital)
+  assumed: D-12's what-if: 900.00 DUK a month (fund_draw)
+  assumed: D-12's what-if: the next 36 months (fund_months)
+  law date 2026-09-30, cut 2026-09-30
+d12_starts (s = 2018-12) [hh_round = *]: (1 260 fund_unit, 86 522.98 DUK)
+  assumed: D-12's what-if: 100 000.00 DUK (fund_capital)
+  assumed: D-12's what-if: 900.00 DUK a month (fund_draw)
+  assumed: D-12's what-if: the next 36 months (fund_months)
+  law date 2026-09-30, cut 2026-09-30
+d12_starts (s = 2019-01) [hh_round = *]: (1 229 fund_unit, 88 069.35 DUK)
+  assumed: D-12's what-if: 100 000.00 DUK (fund_capital)
+  assumed: D-12's what-if: 900.00 DUK a month (fund_draw)
+  assumed: D-12's what-if: the next 36 months (fund_months)
+  law date 2026-09-30, cut 2026-09-30
+d12_starts (s = 2019-02) [hh_round = *]: (1 256 fund_unit, 90 976.17 DUK)
+  assumed: D-12's what-if: 100 000.00 DUK (fund_capital)
+  assumed: D-12's what-if: 900.00 DUK a month (fund_draw)
+  assumed: D-12's what-if: the next 36 months (fund_months)
+  law date 2026-09-30, cut 2026-09-30
+d12_starts (s = 2019-03) [hh_round = *]: (1 230 fund_unit, 91 801.67 DUK)
+  assumed: D-12's what-if: 100 000.00 DUK (fund_capital)
+  assumed: D-12's what-if: 900.00 DUK a month (fund_draw)
+  assumed: D-12's what-if: the next 36 months (fund_months)
+  law date 2026-09-30, cut 2026-09-30
+d12_starts (s = 2019-04) [hh_round = *]: (1 261 fund_unit, 81 185.46 DUK)
+  assumed: D-12's what-if: 100 000.00 DUK (fund_capital)
+  assumed: D-12's what-if: 900.00 DUK a month (fund_draw)
+  assumed: D-12's what-if: the next 36 months (fund_months)
+  law date 2026-09-30, cut 2026-09-30
+d12_starts (s = 2019-05) [hh_round = *]: (1 258 fund_unit, 80 343.79 DUK)
+  assumed: D-12's what-if: 100 000.00 DUK (fund_capital)
+  assumed: D-12's what-if: 900.00 DUK a month (fund_draw)
+  assumed: D-12's what-if: the next 36 months (fund_months)
+  law date 2026-09-30, cut 2026-09-30
+d12_starts (s = 2019-06) [hh_round = *]: (1 130 fund_unit, 68 374.74 DUK)
+  assumed: D-12's what-if: 100 000.00 DUK (fund_capital)
+  assumed: D-12's what-if: 900.00 DUK a month (fund_draw)
+  assumed: D-12's what-if: the next 36 months (fund_months)
+  law date 2026-09-30, cut 2026-09-30
+d12_starts (s = 2019-07) [hh_round = *]: (1 171 fund_unit, 65 312.44 DUK)
+  assumed: D-12's what-if: 100 000.00 DUK (fund_capital)
+  assumed: D-12's what-if: 900.00 DUK a month (fund_draw)
+  assumed: D-12's what-if: the next 36 months (fund_months)
+  law date 2026-09-30, cut 2026-09-30
+d12_starts (s = 2019-08) [hh_round = *]: (1 216 fund_unit, 66 299.74 DUK)
+  assumed: D-12's what-if: 100 000.00 DUK (fund_capital)
+  assumed: D-12's what-if: 900.00 DUK a month (fund_draw)
+  assumed: D-12's what-if: the next 36 months (fund_months)
+  law date 2026-09-30, cut 2026-09-30
+d12_starts (s = 2019-09) [hh_round = *]: (1 142 fund_unit, 60 376.69 DUK)
+  assumed: D-12's what-if: 100 000.00 DUK (fund_capital)
+  assumed: D-12's what-if: 900.00 DUK a month (fund_draw)
+  assumed: D-12's what-if: the next 36 months (fund_months)
+  law date 2026-09-30, cut 2026-09-30
+d12_starts (s = 2019-10) [hh_round = *]: (1 093 fund_unit, 59 810.65 DUK)
+  assumed: D-12's what-if: 100 000.00 DUK (fund_capital)
+  assumed: D-12's what-if: 900.00 DUK a month (fund_draw)
+  assumed: D-12's what-if: the next 36 months (fund_months)
+  law date 2026-09-30, cut 2026-09-30
+d12_starts (s = 2019-11) [hh_round = *]: (1 061 fund_unit, 57 420.97 DUK)
+  assumed: D-12's what-if: 100 000.00 DUK (fund_capital)
+  assumed: D-12's what-if: 900.00 DUK a month (fund_draw)
+  assumed: D-12's what-if: the next 36 months (fund_months)
+  law date 2026-09-30, cut 2026-09-30
+d12_starts (s = 2019-12) [hh_round = *]: (1 060 fund_unit, 58 881.51 DUK)
+  assumed: D-12's what-if: 100 000.00 DUK (fund_capital)
+  assumed: D-12's what-if: 900.00 DUK a month (fund_draw)
+  assumed: D-12's what-if: the next 36 months (fund_months)
+  law date 2026-09-30, cut 2026-09-30
+d12_starts (s = 2020-01) [hh_round = *]: (1 069 fund_unit, 59 987.57 DUK)
+  assumed: D-12's what-if: 100 000.00 DUK (fund_capital)
+  assumed: D-12's what-if: 900.00 DUK a month (fund_draw)
+  assumed: D-12's what-if: the next 36 months (fund_months)
+  law date 2026-09-30, cut 2026-09-30
+d12_starts (s = 2020-02) [hh_round = *]: (1 115 fund_unit, 64 495.95 DUK)
+  assumed: D-12's what-if: 100 000.00 DUK (fund_capital)
+  assumed: D-12's what-if: 900.00 DUK a month (fund_draw)
+  assumed: D-12's what-if: the next 36 months (fund_months)
+  law date 2026-09-30, cut 2026-09-30
+d12_starts (s = 2020-03) [hh_round = *]: (1 114 fund_unit, 65 189.92 DUK)
+  assumed: D-12's what-if: 100 000.00 DUK (fund_capital)
+  assumed: D-12's what-if: 900.00 DUK a month (fund_draw)
+  assumed: D-12's what-if: the next 36 months (fund_months)
+  law date 2026-09-30, cut 2026-09-30
+d12_starts (s = 2020-04) [hh_round = *]: (1 574 fund_unit, 97 031.88 DUK)
+  assumed: D-12's what-if: 100 000.00 DUK (fund_capital)
+  assumed: D-12's what-if: 900.00 DUK a month (fund_draw)
+  assumed: D-12's what-if: the next 36 months (fund_months)
+  law date 2026-09-30, cut 2026-09-30
+d12_starts (s = 2020-05) [hh_round = *]: (1 570 fund_unit, 100 020.84 DUK)
+  assumed: D-12's what-if: 100 000.00 DUK (fund_capital)
+  assumed: D-12's what-if: 900.00 DUK a month (fund_draw)
+  assumed: D-12's what-if: the next 36 months (fund_months)
+  law date 2026-09-30, cut 2026-09-30
+d12_starts (s = 2020-06) [hh_round = *]: (1 482 fund_unit, 93 127.79 DUK)
+  assumed: D-12's what-if: 100 000.00 DUK (fund_capital)
+  assumed: D-12's what-if: 900.00 DUK a month (fund_draw)
+  assumed: D-12's what-if: the next 36 months (fund_months)
+  law date 2026-09-30, cut 2026-09-30
+d12_starts (s = 2020-07) [hh_round = *]: (1 379 fund_unit, 87 334.68 DUK)
+  assumed: D-12's what-if: 100 000.00 DUK (fund_capital)
+  assumed: D-12's what-if: 900.00 DUK a month (fund_draw)
+  assumed: D-12's what-if: the next 36 months (fund_months)
+  law date 2026-09-30, cut 2026-09-30
+d12_starts (s = 2020-08) [hh_round = *]: (1 284 fund_unit, 78 273.73 DUK)
+  assumed: D-12's what-if: 100 000.00 DUK (fund_capital)
+  assumed: D-12's what-if: 900.00 DUK a month (fund_draw)
+  assumed: D-12's what-if: the next 36 months (fund_months)
+  law date 2026-09-30, cut 2026-09-30
+d12_starts (s = 2020-09) [hh_round = *]: (1 246 fund_unit, 75 502.49 DUK)
+  assumed: D-12's what-if: 100 000.00 DUK (fund_capital)
+  assumed: D-12's what-if: 900.00 DUK a month (fund_draw)
+  assumed: D-12's what-if: the next 36 months (fund_months)
+  law date 2026-09-30, cut 2026-09-30
+d12_starts (s = 2020-10) [hh_round = *]: (1 254 fund_unit, 77 174.97 DUK)
+  assumed: D-12's what-if: 100 000.00 DUK (fund_capital)
+  assumed: D-12's what-if: 900.00 DUK a month (fund_draw)
+  assumed: D-12's what-if: the next 36 months (fund_months)
+  law date 2026-09-30, cut 2026-09-30
+d12_starts (s = 2020-11) [hh_round = *]: (1 188 fund_unit, 75 717.67 DUK)
+  assumed: D-12's what-if: 100 000.00 DUK (fund_capital)
+  assumed: D-12's what-if: 900.00 DUK a month (fund_draw)
+  assumed: D-12's what-if: the next 36 months (fund_months)
+  law date 2026-09-30, cut 2026-09-30
+d12_starts (s = 2020-12) [hh_round = *]: (1 181 fund_unit, 75 965.56 DUK)
+  assumed: D-12's what-if: 100 000.00 DUK (fund_capital)
+  assumed: D-12's what-if: 900.00 DUK a month (fund_draw)
+  assumed: D-12's what-if: the next 36 months (fund_months)
+  law date 2026-09-30, cut 2026-09-30
+d12_starts (s = 2021-01) [hh_round = *]: (1 173 fund_unit, 71 337.43 DUK)
+  assumed: D-12's what-if: 100 000.00 DUK (fund_capital)
+  assumed: D-12's what-if: 900.00 DUK a month (fund_draw)
+  assumed: D-12's what-if: the next 36 months (fund_months)
+  law date 2026-09-30, cut 2026-09-30
+d12_starts (s = 2021-02) [hh_round = *]: (1 123 fund_unit, 70 246.21 DUK)
+  assumed: D-12's what-if: 100 000.00 DUK (fund_capital)
+  assumed: D-12's what-if: 900.00 DUK a month (fund_draw)
+  assumed: D-12's what-if: the next 36 months (fund_months)
+  law date 2026-09-30, cut 2026-09-30
+d12_starts (s = 2021-03) [hh_round = *]: (1 174 fund_unit, 72 127.52 DUK)
+  assumed: D-12's what-if: 100 000.00 DUK (fund_capital)
+  assumed: D-12's what-if: 900.00 DUK a month (fund_draw)
+  assumed: D-12's what-if: the next 36 months (fund_months)
+  law date 2026-09-30, cut 2026-09-30
+d12_starts (s = 2021-04) [hh_round = *]: (1 094 fund_unit, 68 532.65 DUK)
+  assumed: D-12's what-if: 100 000.00 DUK (fund_capital)
+  assumed: D-12's what-if: 900.00 DUK a month (fund_draw)
+  assumed: D-12's what-if: the next 36 months (fund_months)
+  law date 2026-09-30, cut 2026-09-30
+d12_starts (s = 2021-05) [hh_round = *]: (1 153 fund_unit, 71 498.70 DUK)
+  assumed: D-12's what-if: 100 000.00 DUK (fund_capital)
+  assumed: D-12's what-if: 900.00 DUK a month (fund_draw)
+  assumed: D-12's what-if: the next 36 months (fund_months)
+  law date 2026-09-30, cut 2026-09-30
+d12_starts (s = 2021-06) [hh_round = *]: (1 266 fund_unit, 78 092.55 DUK)
+  assumed: D-12's what-if: 100 000.00 DUK (fund_capital)
+  assumed: D-12's what-if: 900.00 DUK a month (fund_draw)
+  assumed: D-12's what-if: the next 36 months (fund_months)
+  law date 2026-09-30, cut 2026-09-30
+d12_starts (s = 2021-07) [hh_round = *]: (1 255 fund_unit, 77 084.70 DUK)
+  assumed: D-12's what-if: 100 000.00 DUK (fund_capital)
+  assumed: D-12's what-if: 900.00 DUK a month (fund_draw)
+  assumed: D-12's what-if: the next 36 months (fund_months)
+  law date 2026-09-30, cut 2026-09-30
+d12_starts (s = 2021-08) [hh_round = *]: (1 129 fund_unit, 72 372.14 DUK)
+  assumed: D-12's what-if: 100 000.00 DUK (fund_capital)
+  assumed: D-12's what-if: 900.00 DUK a month (fund_draw)
+  assumed: D-12's what-if: the next 36 months (fund_months)
+  law date 2026-09-30, cut 2026-09-30
+d12_starts (s = 2021-09) [hh_round = *]: (1 051 fund_unit, 70 046.20 DUK)
+  assumed: D-12's what-if: 100 000.00 DUK (fund_capital)
+  assumed: D-12's what-if: 900.00 DUK a month (fund_draw)
+  assumed: D-12's what-if: the next 36 months (fund_months)
+  law date 2026-09-30, cut 2026-09-30
+d12_starts (s = 2021-10) [hh_round = *]: (1 001 fund_unit, 66 539.42 DUK)
+  assumed: D-12's what-if: 100 000.00 DUK (fund_capital)
+  assumed: D-12's what-if: 900.00 DUK a month (fund_draw)
+  assumed: D-12's what-if: the next 36 months (fund_months)
+  law date 2026-09-30, cut 2026-09-30
+d12_starts (s = 2021-11) [hh_round = *]: (941 fund_unit, 59 047.36 DUK)
+  assumed: D-12's what-if: 100 000.00 DUK (fund_capital)
+  assumed: D-12's what-if: 900.00 DUK a month (fund_draw)
+  assumed: D-12's what-if: the next 36 months (fund_months)
+  law date 2026-09-30, cut 2026-09-30
+d12_starts (s = 2021-12) [hh_round = *]: (1 027 fund_unit, 68 575.92 DUK)
+  assumed: D-12's what-if: 100 000.00 DUK (fund_capital)
+  assumed: D-12's what-if: 900.00 DUK a month (fund_draw)
+  assumed: D-12's what-if: the next 36 months (fund_months)
+  law date 2026-09-30, cut 2026-09-30
+d12_starts (s = 2022-01) [hh_round = *]: (961 fund_unit, 65 186.97 DUK)
+  assumed: D-12's what-if: 100 000.00 DUK (fund_capital)
+  assumed: D-12's what-if: 900.00 DUK a month (fund_draw)
+  assumed: D-12's what-if: the next 36 months (fund_months)
+  law date 2026-09-30, cut 2026-09-30
+d12_starts (s = 2022-02) [hh_round = *]: (944 fund_unit, 60 098.30 DUK)
+  assumed: D-12's what-if: 100 000.00 DUK (fund_capital)
+  assumed: D-12's what-if: 900.00 DUK a month (fund_draw)
+  assumed: D-12's what-if: the next 36 months (fund_months)
+  law date 2026-09-30, cut 2026-09-30
+d12_starts (s = 2022-03) [hh_round = *]: (899 fund_unit, 55 231.21 DUK)
+  assumed: D-12's what-if: 100 000.00 DUK (fund_capital)
+  assumed: D-12's what-if: 900.00 DUK a month (fund_draw)
+  assumed: D-12's what-if: the next 36 months (fund_months)
+  law date 2026-09-30, cut 2026-09-30
+d12_starts (s = 2022-04) [hh_round = *]: (1 130 fund_unit, 67 930.31 DUK)
+  assumed: D-12's what-if: 100 000.00 DUK (fund_capital)
+  assumed: D-12's what-if: 900.00 DUK a month (fund_draw)
+  assumed: D-12's what-if: the next 36 months (fund_months)
+  law date 2026-09-30, cut 2026-09-30
+d12_starts (s = 2022-05) [hh_round = *]: (1 145 fund_unit, 72 287.44 DUK)
+  assumed: D-12's what-if: 100 000.00 DUK (fund_capital)
+  assumed: D-12's what-if: 900.00 DUK a month (fund_draw)
+  assumed: D-12's what-if: the next 36 months (fund_months)
+  law date 2026-09-30, cut 2026-09-30
+d12_starts (s = 2022-06) [hh_round = *]: (1 228 fund_unit, 78 379.48 DUK)
+  assumed: D-12's what-if: 100 000.00 DUK (fund_capital)
+  assumed: D-12's what-if: 900.00 DUK a month (fund_draw)
+  assumed: D-12's what-if: the next 36 months (fund_months)
+  law date 2026-09-30, cut 2026-09-30
+d12_starts (s = 2022-07) [hh_round = *]: (1 370 fund_unit, 82 651.13 DUK)
+  assumed: D-12's what-if: 100 000.00 DUK (fund_capital)
+  assumed: D-12's what-if: 900.00 DUK a month (fund_draw)
+  assumed: D-12's what-if: the next 36 months (fund_months)
+  law date 2026-09-30, cut 2026-09-30
+d12_starts (s = 2022-08) [hh_round = *]: (1 424 fund_unit, 92 429.64 DUK)
+  assumed: D-12's what-if: 100 000.00 DUK (fund_capital)
+  assumed: D-12's what-if: 900.00 DUK a month (fund_draw)
+  assumed: D-12's what-if: the next 36 months (fund_months)
+  law date 2026-09-30, cut 2026-09-30
+d12_starts (s = 2022-09) [hh_round = *]: (1 491 fund_unit, 90 957.83 DUK)
+  assumed: D-12's what-if: 100 000.00 DUK (fund_capital)
+  assumed: D-12's what-if: 900.00 DUK a month (fund_draw)
+  assumed: D-12's what-if: the next 36 months (fund_months)
+  law date 2026-09-30, cut 2026-09-30
+d12_starts (s = 2022-10) [hh_round = *]: (1 424 fund_unit, 88 785.16 DUK)
+  assumed: D-12's what-if: 100 000.00 DUK (fund_capital)
+  assumed: D-12's what-if: 900.00 DUK a month (fund_draw)
+  assumed: D-12's what-if: the next 36 months (fund_months)
+  law date 2026-09-30, cut 2026-09-30
+d12_starts (s = 2022-11) [hh_round = *]: (1 450 fund_unit, 95 721.76 DUK)
+  assumed: D-12's what-if: 100 000.00 DUK (fund_capital)
+  assumed: D-12's what-if: 900.00 DUK a month (fund_draw)
+  assumed: D-12's what-if: the next 36 months (fund_months)
+  law date 2026-09-30, cut 2026-09-30
+d12_starts (s = 2022-12) [hh_round = *]: (1 403 fund_unit, 96 157.69 DUK)
+  assumed: D-12's what-if: 100 000.00 DUK (fund_capital)
+  assumed: D-12's what-if: 900.00 DUK a month (fund_draw)
+  assumed: D-12's what-if: the next 36 months (fund_months)
+  law date 2026-09-30, cut 2026-09-30
+d12_starts (s = 2023-01) [hh_round = *]: (1 388 fund_unit, 98 777.55 DUK)
+  assumed: D-12's what-if: 100 000.00 DUK (fund_capital)
+  assumed: D-12's what-if: 900.00 DUK a month (fund_draw)
+  assumed: D-12's what-if: the next 36 months (fund_months)
+  law date 2026-09-30, cut 2026-09-30
+d12_starts (s = 2023-02) [hh_round = *]: (1 336 fund_unit, 94 154.78 DUK)
+  assumed: D-12's what-if: 100 000.00 DUK (fund_capital)
+  assumed: D-12's what-if: 900.00 DUK a month (fund_draw)
+  assumed: D-12's what-if: the next 36 months (fund_months)
+  law date 2026-09-30, cut 2026-09-30
+d12_starts (s = 2023-03) [hh_round = *]: (1 318 fund_unit, 95 460.03 DUK)
+  assumed: D-12's what-if: 100 000.00 DUK (fund_capital)
+  assumed: D-12's what-if: 900.00 DUK a month (fund_draw)
+  assumed: D-12's what-if: the next 36 months (fund_months)
+  law date 2026-09-30, cut 2026-09-30
+d12_starts (s = 2023-04) [hh_round = *]: (1 229 fund_unit, 90 643.58 DUK)
+  assumed: D-12's what-if: 100 000.00 DUK (fund_capital)
+  assumed: D-12's what-if: 900.00 DUK a month (fund_draw)
+  assumed: D-12's what-if: the next 36 months (fund_months)
+  law date 2026-09-30, cut 2026-09-30
+d12_starts (s = 2023-05) [hh_round = *]: (1 175 fund_unit, 85 558.34 DUK)
+  assumed: D-12's what-if: 100 000.00 DUK (fund_capital)
+  assumed: D-12's what-if: 900.00 DUK a month (fund_draw)
+  assumed: D-12's what-if: the next 36 months (fund_months)
+  law date 2026-09-30, cut 2026-09-30
+d12_starts (s = 2023-06) [hh_round = *]: (1 197 fund_unit, 83 641.12 DUK)
+  assumed: D-12's what-if: 100 000.00 DUK (fund_capital)
+  assumed: D-12's what-if: 900.00 DUK a month (fund_draw)
+  assumed: D-12's what-if: the next 36 months (fund_months)
+  law date 2026-09-30, cut 2026-09-30
+d12_starts (s = 2023-07) [hh_round = *]: (1 180 fund_unit, 85 314.36 DUK)
+  assumed: D-12's what-if: 100 000.00 DUK (fund_capital)
+  assumed: D-12's what-if: 900.00 DUK a month (fund_draw)
+  assumed: D-12's what-if: the next 36 months (fund_months)
+  law date 2026-09-30, cut 2026-09-30
+d12_starts (s = 2023-08) [hh_round = *]: (1 244 fund_unit, 82 353.49 DUK)
+  assumed: D-12's what-if: 100 000.00 DUK (fund_capital)
+  assumed: D-12's what-if: 900.00 DUK a month (fund_draw)
+  assumed: D-12's what-if: the next 36 months (fund_months)
+  law date 2026-09-30, cut 2026-09-30
+d12_starts (s = 2023-09) [hh_round = *]: (1 259 fund_unit, 86 862.94 DUK)
+  assumed: D-12's what-if: 100 000.00 DUK (fund_capital)
+  assumed: D-12's what-if: 900.00 DUK a month (fund_draw)
+  assumed: D-12's what-if: the next 36 months (fund_months)
+  law date 2026-09-30, cut 2026-09-30
+

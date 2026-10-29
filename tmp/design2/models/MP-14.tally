@@ -1,0 +1,196 @@
+model mp14
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+  note "ICAI EAC Query 38 (Vol 43), Illustration of chit scheme: 40 tickets of Rs. 2500 a month for 40 months; one ticket is the foreman's; A, B and C bid the Company's 30% cap and B wins the lot."
+  note "The illustration gives no dates and no instalment number, so the month's money is written as defs, not as dated pays between places."
+  note "The tie is settled by lot (s. 6(4)); the illustration assumes B wins, so the winner is a row, not a draw."
+
+source chit_act_py "The Chit Funds Act, 1982 (Act No. 40 of 1982), with supplementary amendments including the Chit Funds (Amendment) Act, 2001; Government of Puducherry copy" at "https://revenue.py.gov.in/downloads/actsandrules/Chit%20Fund%20Act%201982.pdf"
+
+source chit_amend_2019 "The Chit Funds (Amendment) Act, 2019 (No. 41 of 2019), Gazette of India Extraordinary, 5 December 2019" at "https://nlcbharat.org/wp-content/uploads/2024/02/35-Chit-Funds-Amendment-Act-2019.pdf"
+
+source icai_eac_43_38 "ICAI Expert Advisory Committee, Query No. 38, Compendium of Opinions Vol 43: Point of recognition of forfeited veethapalisa income under Ind AS" at "https://eacopinion.icai.org/html/43/38.pdf"
+
+source modeller "The modeller's own assumptions, each stated with its reason"
+
+unit INR: currency minor 0.01
+
+axis chit_act
+  text1982 "the Chit Funds Act, 1982 as enacted: discount cap 30% (s. 6(3)), commission cap 5% (s. 21(1)(b))"
+  amend2001 "with the 2001 amendment notified: discount cap 40%; commission cap 5%"
+  amend2019 "with the 2001 and 2019 amendments notified: discount cap 40%; commission cap 7%"
+
+index ticket = [foreman, sub_a, sub_b, sub_c, sub_d, t06, t07, t08, t09, t10, t11, t12, t13, t14, t15, t16, t17, t18, t19, t20, t21, t22, t23, t24, t25, t26, t27, t28, t29, t30, t31, t32, t33, t34, t35, t36, t37, t38, t39, t40]
+
+input bid[t in ticket]: num
+  note "the discount each ticket bids at the auction, as a share of the chit amount; - where the ticket did not bid"
+
+input charges: money INR
+
+input commission_cap[a in chit_act]: num
+
+input commission_rate: num
+
+input company_cap: num
+
+input discount_cap[a in chit_act]: num
+
+input duration: int
+
+input gst: money INR
+
+input instalment: money INR
+
+input members_stated: int
+
+input pays_late[t in ticket]: bool question "Does this ticket pay its next instalment after the due date?"
+
+input prized_before[t in ticket]: bool question "Has this ticket won the chit at an earlier auction?"
+
+input winner: key ticket
+
+def bid_ok: bool at reader
+  note "the winning bid is within the Company's cap and the Act's cap (s. 6(3))"
+  rule base = max_bid <= company_cap and max_bid <= discount_cap[chit_act]
+
+def chit_amount: money INR at reader
+  note "s. 2(d): the sum-total of the subscriptions payable by all the subscribers for any instalment, without any deduction of discount"
+  rule base v act1982 = sum(instalment for t in ticket)
+
+def commission: money INR at reader
+  note "s. 21(1)(b): commission not exceeding the cap, of the chit amount"
+  rule base v act1982 = round(chit_amount * commission_rate, minor(INR), half-up)
+
+def commission_ok: bool = commission_rate <= commission_cap[chit_act] at reader
+
+def discount_amt: money INR at reader
+  note "s. 2(g): the sum which the prized subscriber is required to forego"
+  rule base v act1982 = round(chit_amount * bid[winner], minor(INR), half-up)
+
+def distributable: money INR at reader
+  note "Illustration: the discount less the foreman's commission is divided equally among all 40 subscribers, the foreman and B included"
+  rule base v icai_opinion = discount_amt - commission
+
+def dividend: money INR at reader
+  note "s. 2(h): the share of the subscriber in the discount available for rateable distribution"
+  rule base v icai_opinion = round(distributable / count(t in ticket), minor(INR), half-up)
+
+def dividend_kept[t in ticket]: money INR at reader
+  note "Illustration: a prized subscriber who does not remit his instalment within the due date forfeits his dividend"
+  rule base v icai_opinion = dividend
+  rule forfeit beats base v icai_opinion = 0 when prized_before[t] and pays_late[t]
+
+def foreman_upfront: money INR at reader
+  note "Illustration: the foreman brings in his total contribution upfront, adjusted over the next 39 months"
+  rule base v icai_opinion = instalment * duration
+
+def forfeited[t in ticket]: money INR = dividend - dividend_kept[t] at reader
+
+def late_interest[t in ticket]: money INR at reader
+  note "s. 21(1)(c): interest and penalty payable on any default"
+  rule base = 0
+  rule late beats base = ?"The interest and penalty on a late instalment are not given in the illustration or the chit agreement." when pays_late[t]
+
+def max_bid: num = max(bid[t] for t in ticket where bid[t] != none) at reader
+
+def next_instalment[t in ticket]: money INR at reader
+  note "Illustration: the dividend is adjusted in the next instalment"
+  rule base v icai_opinion = instalment - dividend_kept[t]
+
+def prize: money INR at reader
+  note "s. 2(m): the prize amount is the chit amount less the discount"
+  rule base v act1982 = chit_amount - discount_amt
+
+def prize_net: money INR at reader
+  note "Illustration: B is entitled to the prize less applicable GST on foreman commission and other incidental charges"
+  rule base v icai_opinion = prize - gst - charges
+
+ask q_bid_ok: bid_ok law 2026-10-18
+
+ask q_chit_amount: chit_amount law 2026-10-18
+
+ask q_commission: commission law 2026-10-18
+
+ask q_commission_ok: commission_ok law 2026-10-18
+
+ask q_discount: discount_amt law 2026-10-18
+
+ask q_distributable: distributable law 2026-10-18
+
+ask q_dividend: dividend law 2026-10-18
+
+ask q_due_d: next_instalment[sub_d] + late_interest[sub_d] law 2026-10-18
+
+ask q_foreman_upfront: foreman_upfront law 2026-10-18
+
+ask q_forfeited_d: forfeited[sub_d] law 2026-10-18
+
+ask q_members_check: check count(t in ticket) == members_stated law 2026-10-18
+
+ask q_next_instalment: next_instalment[t] for t in ticket law 2026-10-18
+
+ask q_prize: prize law 2026-10-18
+
+ask q_prize_net: prize_net law 2026-10-18
+
+ask q_winner_tied: check bid[winner] == max_bid law 2026-10-18
+
+version act1982
+  cite chit_act_py
+  governs always
+  known 1982-08-20
+  note "Law, known from its publication: page 1, footnote 1: Received the assent of the President on 19th August, 1982, published in the Gazette of India, Extraordinary, Pt.II.Sec.1 dated 20th August, 1982. The body text of the 1982 Act as printed in the Puducherry copy."
+  commission_cap[text1982] = 0.05 "s. 21(1)(b): not exceeding five per cent, of the chit amount"
+  commission_cap[amend2001] = 0.05 "s. 21(1)(b): not exceeding five per cent, of the chit amount (unchanged in 2001)"
+  discount_cap[text1982] = 0.3 "s. 6(3): shall not exceed thirty per cent, of the chit amount"
+
+version act2001
+  cite chit_act_py
+  governs always
+  known 2001-05-09
+  note "Law, known from its publication: Supplementary amendment, Chit Funds (Amendment) Act, 2001 (Act No. 10 of 2001), page 31, footnote 1: Received the assent of the President on the 9th May, 2001 and Published in Gazette of India, Extraordinary, Pt.II, Sec.1, dated 9th May, 2001. s. 1(2): in force on notified dates, different for different States (page 32: 1st October, 2001 for the States listed there)."
+  discount_cap[amend2001] = 0.4 "Act No. 10 of 2001, s. 2: for the words thirty per cent, the words forty per cent. shall be substituted"
+  discount_cap[amend2019] = 0.4 "Act No. 10 of 2001, s. 2 (the 2019 amendment leaves s. 6(3) as amended in 2001)"
+
+version act2019
+  cite chit_amend_2019
+  governs always
+  known 2019-12-05
+  note "Law, known from its publication in the Gazette of India Extraordinary, Part II Section 1, No. 65, 5 December 2019. s. 1(2): in force on a date the Central Government notifies; the notification was not fetched"
+  commission_cap[amend2019] = 0.07 "s. 8: in clause (b), for the words five per cent., the words seven per cent. shall be substituted"
+
+version icai_opinion
+  cite icai_eac_43_38
+  governs always
+  known 2023-11-09
+  note "Footnote 1: Opinion finalised by the Committee on 9.11.2023, the source's own date. The opinion's rules (the dividend shared by all 40, the forfeiture, the foreman's upfront contribution, the net prize) cite this version."
+
+version icai_illustration
+  cite icai_eac_43_38
+  governs always
+  known 2026-10-18
+  note "The facts of the Illustration of chit scheme: a worked example's stipulations (assume a chit fund scheme with 40 members), known from the model's on, since it has no start (LANGUAGE §4.5). Locators are PDF pages of the illustration."
+  bid = none "p. 3: let us assume 3 subscribers A, B and C bid @ 30%"
+  bid[sub_a] = 0.3 "p. 3: let us assume 3 subscribers A, B and C bid @ 30%"
+  bid[sub_b] = 0.3 "p. 3: let us assume 3 subscribers A, B and C bid @ 30%"
+  bid[sub_c] = 0.3 "p. 3: let us assume 3 subscribers A, B and C bid @ 30%"
+  charges = ?"The other incidental charges deducted from B's prize are not given." "p. 3: less applicable GST on foreman commission and other incidental charges"
+  commission_rate = 0.05 "p. 3: Rs. 5,000 (5%) will be taken by the Company as foreman commission"
+  company_cap = 0.3 "p. 3: the Company has internally set a cap of 30% for bidding"
+  duration = 40 "p. 3: Duration of the chit will be 40 months (as there are 40 subscribers including foreman)"
+  gst = ?"The GST on the foreman's commission deducted from B's prize is not given." "p. 3: less applicable GST on foreman commission"
+  instalment = 2500 "p. 2: each paying a monthly instalment of Rs. 2500"
+  members_stated = 40 "p. 2: Assume a chit fund scheme with 40 members"
+  pays_late[sub_d] = true "p. 3: If subscriber D does not remit his chit instalment within the due date"
+  prized_before[sub_d] = true "p. 3, Illustration: the prized subscriber D"
+  winner = sub_b "p. 3: draw would be held from among A, B and C and let's assume B becomes the winner"
+
+version mp14_assumed
+  cite modeller
+  governs always
+  known 2026-10-18
+  note "Assumptions that stand for facts of the illustration: known with the stipulations, from the model's on (LANGUAGE §4.5)"
+  pays_late = false assumed "the illustration names only D as paying late"
+  prized_before = false assumed "the illustration names only D as a prized subscriber before this auction"

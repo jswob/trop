@@ -1,0 +1,389 @@
+model i12_division
+  tally 2
+  on 2027-01-01
+  start 2027-01-01
+  end 2030-12-31
+  note "I-12: a division of former shared property, fixed on the regime's end, valued on the expert's day, handed over later; two payment days of the equalisation; the Gains Act on the halves received."
+
+source card "Card I-12: story, table, rules 1-9 and question"
+
+source family_code_src "Family Code of Lenia (card I-12, rules 1-7)"
+
+source gains_act_src "Gains Act of Lenia (card I-12, rules 8-9)"
+
+source modeller "The modeller's assumptions, each with its reason"
+
+unit XXX: currency minor 0.01
+
+unit ceres "a Ceres unit"
+
+kind persons
+
+kind estate_items
+  note "every acquisition the division reads: an item, or one lot of units bought on one day"
+
+kind dwellings: estate_items
+
+kind movables: estate_items
+
+kind shared_accounts: estate_items
+
+kind unit_lots: estate_items
+
+kind outlays
+  note "money spent on one spouse's separate property (rule 5)"
+
+kind purses: place XXX signed
+  note "each spouse's money at large; only the case's movements touch it"
+
+kind unit_accts: place ceres min 0
+
+kind disposals: event certain
+  leg cash: XXX
+  attr item: key estate_items
+  attr seller: key persons
+
+kind unit_sales: disposals
+  leg units: ceres
+
+kind equalisations: event certain
+  leg principal: XXX
+  leg interest: XXX
+
+kind handovers: event certain
+  leg units: ceres
+
+kind tax_pays: event certain
+  leg cash: XXX
+
+axis paid_when
+  on_time "the equalisation is paid on 31 March 2028"
+  late "the equalisation is paid on 15 August 2028"
+
+index funding = [shared_money, own_money]
+
+index flat_sale_ix = [p_flat]
+
+index parts = [whole, kept, received]
+  v gains_rules
+  note "rule 8: a received item is two halves; an item not received in a division is one part"
+
+index unit_sale_ix = [r_ceres]
+
+place broker[p in persons]: unit_accts lives 2027-01-01..
+
+place market: outside lives 1900-01-01..
+
+place purse[p in persons]: purses lives 2027-01-01..
+
+place treasury: outside lives 1900-01-01..
+
+input acquired_on[a in estate_items]: date
+
+input due_day: date
+
+input finality_days: int
+
+input fs_day[k in flat_sale_ix]: date
+
+input fs_item[k in flat_sale_ix]: key estate_items
+
+input fs_price[k in flat_sale_ix]: money XXX
+
+input fs_seller[k in flat_sale_ix]: key persons
+
+input given_to[a in estate_items]: key persons
+
+input handover_day: date
+
+input held_by[a in estate_items]: key persons
+
+input lot_cost[a in estate_items]: money XXX
+
+input lot_units[a in estate_items]: num ceres
+
+input married_on: date
+
+input money_from[a in estate_items]: key funding
+
+input outlay_amount[o in outlays]: money XXX
+
+input outlay_from[o in outlays]: key funding
+
+input outlay_item[o in outlays]: key estate_items
+
+input outlay_on[o in outlays]: date
+
+input pay_day[w in paid_when]: date
+
+input proceeds_round: rounding
+
+input regime_end: date
+
+input ruling_day: date
+
+input secured_owed[a in estate_items]: money XXX reading
+
+input separate_owner[a in estate_items]: key persons
+
+input shared_debt_paid[p in persons]: (principal money XXX, interest money XXX)
+
+input spouse[p in persons]: key persons
+
+input unit_price: num XXX/ceres reading
+
+input us_day[k in unit_sale_ix]: date
+
+input us_item[k in unit_sale_ix]: key estate_items
+
+input us_price[k in unit_sale_ix]: num XXX/ceres
+
+input us_seller[k in unit_sale_ix]: key persons
+
+input us_units[k in unit_sale_ix]: num ceres
+
+input valuation_day: date
+
+input withdrawn[p in persons]: money XXX
+
+input worth[a in estate_items]: money XXX reading
+
+def final_day: date = add_days(ruling_day, finality_days)
+
+move flat_sale[k in flat_sale_ix]: disposals
+  on fs_day[k]
+  attr item = fs_item[k]
+  attr seller = fs_seller[k]
+  leg cash from market to purse[fs_seller[k]] amount fs_price[k]
+  note "a flat is no position that moves: its sale is the cash leg, the item an attribute"
+
+move hand_over[a in unit_lots over ..]: handovers
+  on handover_day
+  when given_to[a] != none and given_to[a] != held_by[a]
+  leg units from broker[held_by[a]] to broker[given_to[a]] amount lot_units[a]
+
+move pay_equalisation[p in persons on due_day]: equalisations
+  on pay_day[paid_when]
+  when eq_money[p] > 0 XXX
+  leg principal from purse[p] to purse[spouse[p]] amount eq_money[p]
+  leg interest from purse[p] to purse[spouse[p]] amount late_interest[p]
+
+move pay_tax[y in years, p in persons on end_of(y)]: tax_pays
+  on tax_due[y]
+  when gains_tax[p, y] > 0 XXX
+  leg cash from purse[p] to treasury amount gains_tax[p, y]
+
+move unit_sale[k in unit_sale_ix]: unit_sales
+  on us_day[k]
+  attr item = us_item[k]
+  attr seller = us_seller[k]
+  leg cash from market to purse[us_seller[k]] amount round(us_units[k] * us_price[k], minor(XXX), proceeds_round)
+  leg units from broker[us_seller[k]] to market amount us_units[k]
+
+input eq_round: rounding
+input half: num
+input late_comp: compounding
+input late_daycount: daycount
+input late_rate: rate
+input late_round: rounding
+def counted_value[a in estate_items]: num XXX
+  note "rules 2 and 3: an item at its net value on the valuation day, money in a shared account at its balance on the day the regime ends"
+  rule base = net_value[a]
+  rule account beats base = regime_end_value[a] when a in shared_accounts
+def debt_claim[p in persons]: num XXX = (shared_debt_paid[p].principal + shared_debt_paid[p].interest) * half
+def entitlement[p in persons]: num XXX = shared_total * half
+def eq_money[p in persons]: money XXX = round(max(0 XXX, family_code_equalisation[p]), minor(XXX), eq_round)
+def family_code_equalisation[p in persons]: num XXX = position[p] - entitlement[p]
+def given_value[p in persons]: num XXX = sum(net_value[a] for a in estate_items on regime_end where is_shared[a] and given_to[a] != none and given_to[a] == p)
+def gross_value[a in estate_items]: num XXX at valuation_day
+  rule appraised = worth[a]
+  rule units beats appraised = lot_units[a] * unit_price when a in unit_lots
+def is_shared[a in estate_items]: bool
+  note "rule 1: acquired while the regime held, with money of the regime; rule 3: money in a shared account"
+  rule base = married_on <= acquired_on[a] and acquired_on[a] < regime_end and money_from[a] == shared_money
+  rule account beats base = true when a in shared_accounts
+def late_interest[p in persons]: money XXX
+  note "rule 7: from the day after it falls due up to and including the day it is paid"
+  rule base = 0
+  rule late beats base = round(accrue(eq_money[p], late_rate, add_days(due_day, 1), add_days(pay_day[paid_when], 1), late_daycount, late_comp), minor(XXX), late_round) when pay_day[paid_when] > due_day
+def net_value[a in estate_items]: num XXX = gross_value[a] - secured_owed[a] at valuation_day
+def outlay_claim[o in outlays]: num XXX
+  rule base = 0
+  rule spent beats base = outlay_amount[o] when outlay_from[o] == shared_money and married_on <= outlay_on[o] and outlay_on[o] < regime_end and separate_owner[outlay_item[o]] != none
+def outlays_received[p in persons]: num XXX = sum(outlay_claim[o] for o in outlays on regime_end where separate_owner[outlay_item[o]] == p)
+def position[p in persons]: num XXX = given_value[p] + withdrawn[p] + outlays_received[p] + debt_claim[p] - debt_claim[spouse[p]]
+def regime_end_value[a in estate_items]: num XXX = worth[a] at regime_end
+def shared_total: num XXX = sum(counted_value[a] for a in estate_items on regime_end where is_shared[a]) + sum(outlay_claim[o] for o in outlays on regime_end)
+
+input exempt_years: int
+input gains_rate: num
+input half_part: num
+input tax_due_dom: int
+input tax_due_month: int
+input tax_round: rounding
+def gains_tax[p in persons, y in years]: money XXX = round(max(0 XXX, net_gain[p, y]) * gains_rate, minor(XXX), tax_round)
+def in_division[s in disposals]: bool = is_shared[s.item] and given_to[s.item] != none and given_to[s.item] == s.seller
+def net_gain[p in persons, y in years]: num XXX = sum(part_gain[s, h] for s in disposals over y, h in parts where s.seller == p and part_share[s, h] > 0 and not part_exempt[s, h])
+def part_acquired[s in disposals, h in parts]: date
+  rule original = acquired_on[s.item] when h != received
+  rule received = final_day when h == received
+def part_cost[s in disposals, h in parts]: num XXX
+  note "rule 8: the kept half at its original cost, the received half at half the item's value on the valuation day before any debt"
+  rule original = lot_cost[s.item] * part_share[s, h] when h != received
+  rule received = gross_value[s.item] * part_share[s, h] when h == received
+def part_exempt[s in disposals, h in parts]: bool = s.item in dwellings and year_of(s.day) - year_of(part_acquired[s, h]) - 1 >= exempt_years
+def part_gain[s in disposals, h in parts]: num XXX = part_proceeds[s, h] - part_cost[s, h]
+def part_proceeds[s in disposals, h in parts]: num XXX = s.cash.amount * part_share[s, h]
+def part_share[s in disposals, h in parts]: num
+  note "rule 9: proceeds split between the parts by size; a sale here is of the whole item, as both of the card's are"
+  rule kept = if in_division[s] then half_part else 0 when h == kept
+  rule received = if in_division[s] then 100 % - half_part else 0 when h == received
+  rule whole = if in_division[s] then 0 else 100 % when h == whole
+def tax_due[y in years]: date = day_of(month_of(end_of(y)) + (tax_due_month - 1), tax_due_dom)
+
+ask outlay_claims: outlay_claim[o] for o in outlays over ..
+
+ask debt_claims: debt_claim[p] for p in persons over ..
+
+ask entitlements: entitlement[p] for p in persons over ..
+
+ask equalisation: family_code_equalisation[p], eq_money[p], spouse[p], late_interest[p] for p in persons over ..
+
+ask sale_parts: s.day, h, part_acquired[s, h], part_cost[s, h], part_gain[s, h], part_exempt[s, h] for s in disposals over .., h in parts where part_share[s, h] > 0
+
+ask taxes: gains_tax[p, y], tax_due[y] for p in persons over .., y in years
+
+ask total: shared_total
+
+version people
+  cite modeller
+  known 2027-01-01
+  assumed "the card gives no birth dates; each lifespan is written from an early day"
+  persons + [pawel] lives 1950-01-01..
+  persons + [roksana] lives 1950-01-01..
+
+version items
+  cite card
+  known 2027-01-01
+  dwellings + [flat] lives 2019-07-02..
+  outlays + [engine_2021] lives 2021-04-04..
+  unit_lots + [ceres_2020] lives 2020-02-06..
+  unit_lots + [ceres_2024] lives 2024-09-09..
+
+version items_assumed
+  cite modeller
+  known 2027-01-01
+  assumed "the card gives no opening day of the joint account and no day in 2016 for the car; each lifespan starts at the earliest day the story allows"
+  movables + [car] lives 2016-01-01..
+  shared_accounts + [joint_money] lives 2018-05-12..
+
+version facts
+  cite card
+  governs always
+  known 2027-01-01
+  acquired_on[car] = window(2016-01-01, 2016-12-31) "table: bought in 2016"
+  acquired_on[ceres_2020] = 2020-02-06 "table"
+  acquired_on[ceres_2024] = 2024-09-09 "table"
+  acquired_on[flat] = 2019-07-02 "table"
+  acquired_on[joint_money] = none "money in a shared account is read by rule 3"
+  due_day = 2028-03-31 "story: the equalisation falls due on 31 March 2028"
+  finality_days = 21 "story: final 21 days later; no appeal is lodged"
+  fs_day[p_flat] = 2029-06-01 "story"
+  fs_item[p_flat] = flat "story"
+  fs_price[p_flat] = 700000 "story"
+  fs_seller[p_flat] = pawel "story"
+  given_to = none "the ruling divides only the former shared property"
+  given_to[ceres_2020] = roksana "story: the ruling gives Roksana the 500 shared Ceres units"
+  given_to[flat] = pawel "story: the ruling gives Paweł the flat with its mortgage"
+  given_to[joint_money] = roksana "story: and the joint account's balance"
+  handover_day = 2027-11-20 "story: the units move in kind on 20 November 2027"
+  held_by = none "not a lot of units"
+  held_by[ceres_2020] = pawel "table: in Paweł's broker account"
+  held_by[ceres_2024] = pawel "table: in Paweł's broker account"
+  lot_cost[car] = ?"what did the car cost in 2016?"
+  lot_cost[ceres_2020] = 25000 "table"
+  lot_cost[ceres_2024] = 21000 "table"
+  lot_cost[flat] = 500000 "table"
+  lot_cost[joint_money] = none "money in an account"
+  lot_units = none "not a lot of units"
+  lot_units[ceres_2020] = 500 "table"
+  lot_units[ceres_2024] = 300 "table"
+  married_on = 2018-05-12 "story"
+  money_from[car] = ?"with whose money was the car bought in 2016?"
+  money_from[ceres_2020] = shared_money "table: with shared money"
+  money_from[ceres_2024] = own_money "table: with Paweł's own money"
+  money_from[flat] = shared_money "table: with shared money and a joint mortgage"
+  money_from[joint_money] = none "money in a shared account is read by rule 3"
+  outlay_amount[engine_2021] = 6000 "table"
+  outlay_from[engine_2021] = shared_money "table: shared money paid"
+  outlay_item[engine_2021] = car "table: Roksana's car"
+  outlay_on[engine_2021] = 2021-04-04 "table"
+  pay_day[late] = 2028-08-15 "story: the second outcome"
+  pay_day[on_time] = 2028-03-31 "story: the first outcome"
+  regime_end = 2023-03-01 "story: separate property from 1 March 2023"
+  ruling_day = 2027-10-14 "story"
+  secured_owed = 0 at 2027-09-30 "no debt is secured on it"
+  secured_owed[flat] = 300000 at 2019-07-02 "table: a joint mortgage of 300 000.00"
+  secured_owed[flat] = 240000 at 2023-03-01 "table: mortgage owed on 1 Mar 2023"
+  secured_owed[flat] = 190000 at 2027-09-30 "table: mortgage owed on 30 Sep 2027"
+  separate_owner = none "not separate property"
+  separate_owner[car] = roksana "table: Roksana's car, bought before the marriage"
+  separate_owner[ceres_2024] = pawel "table: bought with Paweł's own money"
+  shared_debt_paid[pawel] = (principal: 50000, interest: 41000) "story: every instalment from 1 March 2023 to 30 September 2027"
+  shared_debt_paid[roksana] = (principal: 0, interest: 0) "story: Paweł paid every instalment"
+  spouse[pawel] = roksana
+  spouse[roksana] = pawel
+  unit_price = 72 at 2027-09-30 "table: 72.00 each"
+  us_day[r_ceres] = 2028-01-17 "story"
+  us_item[r_ceres] = ceres_2020 "story: her 500 units"
+  us_price[r_ceres] = 75 "story: at 75.00"
+  us_seller[r_ceres] = roksana "story"
+  us_units[r_ceres] = 500 "story"
+  valuation_day = 2027-09-30 "story: the court's expert values everything on 30 September 2027"
+  withdrawn[pawel] = 5000 "story: from 1 March 2023 to 30 September 2027"
+  withdrawn[roksana] = 9000 "story: from 1 March 2023 to 30 September 2027"
+  worth[car] = 21000 at 2027-09-30 "table"
+  worth[ceres_2020] = none at 2027-09-30 "valued by units and price"
+  worth[ceres_2024] = none at 2027-09-30 "valued by units and price"
+  worth[flat] = 640000 at 2027-09-30 "table"
+  worth[joint_money] = 18000 at 2023-03-01 "table: balance on 1 Mar 2023"
+  worth[joint_money] = 4000 at 2027-09-30 "table: balance on 30 Sep 2027"
+
+version accounts_open
+  cite card
+  known 2027-01-01
+  opening[broker[pawel]] = 800 at 2027-01-01 start "table: 500 + 300 Ceres units in Paweł's broker account"
+  opening[broker[roksana]] = 0 assumed "the card names no units in Roksana's account before the hand-over" at 2027-01-01 start
+
+version family_rules
+  cite family_code_src
+  governs always
+  known 2027-01-01
+  half = 50 % "rules 4 and 6: half"
+  late_comp = simple "rule 7: interest by days on the amount due"
+  late_daycount = act365 "rule 7: actual days over 365"
+  late_rate = 8 %/year "rule 7"
+  late_round = half-up "rule 7: rounded half up to whole minor units"
+
+version family_assumed
+  cite modeller
+  governs always
+  known 2027-01-01
+  eq_round = half-up assumed "rule 7 states no rounding of the equalisation itself"
+
+version gains_rules
+  cite gains_act_src
+  governs always
+  known 2027-01-01
+  exempt_years = 5 "rule 9: at least 5 full calendar years after the year acquired"
+  gains_rate = 19 % "rule 9"
+  half_part = 50 % "rule 8: the half"
+  tax_due_dom = 30 "rule 9: due 30 April of the next year"
+  tax_due_month = 4 "rule 9: due 30 April of the next year"
+
+version gains_assumed
+  cite modeller
+  governs always
+  known 2027-01-01
+  tax_round = half-up assumed "rule 9 states no rounding of the tax; whole minor units, half up"
+  proceeds_round = half-up assumed "the card states no rounding of units times price"

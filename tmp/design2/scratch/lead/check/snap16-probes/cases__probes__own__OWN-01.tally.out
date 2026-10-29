@@ -1,0 +1,9 @@
+q_a_fees: 5.00 DUK
+  unfulfilled: fee[2025-03, savings]
+  cut 2026-10-25
+q_b_lines (x = current): 1 000.00 DUK
+  anchor: current 2025-02-15 end, stated 1 000.00 DUK, difference ?"current has no balance before 2025-02-15" (current)
+  cut 2026-10-25
+q_b_net_worth: 1 000.00 DUK
+  anchor: current 2025-02-15 end, stated 1 000.00 DUK, difference ?"current has no balance before 2025-02-15" (current)
+  cut 2026-10-25

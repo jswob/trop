@@ -1,0 +1,2 @@
+scenario hr2_v3: refused: LOAD-CYCLE v3_op depends on itself at the same key: v3_op -> v3_reserve -> v3_op
+

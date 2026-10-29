@@ -1,0 +1,1 @@
+refused: LOAD-CYCLE invest_x depends on itself at the same key: invest_x -> reserve_y -> invest_x

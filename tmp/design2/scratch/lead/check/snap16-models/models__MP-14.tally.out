@@ -1,0 +1,147 @@
+q_bid_ok [chit_act = *]: true
+  law date 2026-10-18, cut 2026-10-18
+q_chit_amount: 100 000.00 INR
+  law date 2026-10-18, cut 2026-10-18
+q_commission: 5 000.00 INR
+  law date 2026-10-18, cut 2026-10-18
+q_commission_ok [chit_act = *]: true
+  law date 2026-10-18, cut 2026-10-18
+q_discount: 30 000.00 INR
+  law date 2026-10-18, cut 2026-10-18
+q_distributable: 25 000.00 INR
+  law date 2026-10-18, cut 2026-10-18
+q_dividend: 625.00 INR
+  law date 2026-10-18, cut 2026-10-18
+q_due_d: ?"The interest and penalty on a late instalment are not given in the illustration or the chit agreement." (late_interest[sub_d])
+  law date 2026-10-18, cut 2026-10-18
+q_foreman_upfront: 100 000.00 INR
+  law date 2026-10-18, cut 2026-10-18
+q_forfeited_d: 625.00 INR
+  law date 2026-10-18, cut 2026-10-18
+q_members_check: ok
+  law date 2026-10-18, cut 2026-10-18
+q_next_instalment (t = foreman): 1 875.00 INR
+  assumed: the illustration names only D as a prized subscriber before this auction (prized_before[foreman])
+  law date 2026-10-18, cut 2026-10-18
+q_next_instalment (t = sub_a): 1 875.00 INR
+  assumed: the illustration names only D as a prized subscriber before this auction (prized_before[sub_a])
+  law date 2026-10-18, cut 2026-10-18
+q_next_instalment (t = sub_b): 1 875.00 INR
+  assumed: the illustration names only D as a prized subscriber before this auction (prized_before[sub_b])
+  law date 2026-10-18, cut 2026-10-18
+q_next_instalment (t = sub_c): 1 875.00 INR
+  assumed: the illustration names only D as a prized subscriber before this auction (prized_before[sub_c])
+  law date 2026-10-18, cut 2026-10-18
+q_next_instalment (t = sub_d): 2 500.00 INR
+  law date 2026-10-18, cut 2026-10-18
+q_next_instalment (t = t06): 1 875.00 INR
+  assumed: the illustration names only D as a prized subscriber before this auction (prized_before[t06])
+  law date 2026-10-18, cut 2026-10-18
+q_next_instalment (t = t07): 1 875.00 INR
+  assumed: the illustration names only D as a prized subscriber before this auction (prized_before[t07])
+  law date 2026-10-18, cut 2026-10-18
+q_next_instalment (t = t08): 1 875.00 INR
+  assumed: the illustration names only D as a prized subscriber before this auction (prized_before[t08])
+  law date 2026-10-18, cut 2026-10-18
+q_next_instalment (t = t09): 1 875.00 INR
+  assumed: the illustration names only D as a prized subscriber before this auction (prized_before[t09])
+  law date 2026-10-18, cut 2026-10-18
+q_next_instalment (t = t10): 1 875.00 INR
+  assumed: the illustration names only D as a prized subscriber before this auction (prized_before[t10])
+  law date 2026-10-18, cut 2026-10-18
+q_next_instalment (t = t11): 1 875.00 INR
+  assumed: the illustration names only D as a prized subscriber before this auction (prized_before[t11])
+  law date 2026-10-18, cut 2026-10-18
+q_next_instalment (t = t12): 1 875.00 INR
+  assumed: the illustration names only D as a prized subscriber before this auction (prized_before[t12])
+  law date 2026-10-18, cut 2026-10-18
+q_next_instalment (t = t13): 1 875.00 INR
+  assumed: the illustration names only D as a prized subscriber before this auction (prized_before[t13])
+  law date 2026-10-18, cut 2026-10-18
+q_next_instalment (t = t14): 1 875.00 INR
+  assumed: the illustration names only D as a prized subscriber before this auction (prized_before[t14])
+  law date 2026-10-18, cut 2026-10-18
+q_next_instalment (t = t15): 1 875.00 INR
+  assumed: the illustration names only D as a prized subscriber before this auction (prized_before[t15])
+  law date 2026-10-18, cut 2026-10-18
+q_next_instalment (t = t16): 1 875.00 INR
+  assumed: the illustration names only D as a prized subscriber before this auction (prized_before[t16])
+  law date 2026-10-18, cut 2026-10-18
+q_next_instalment (t = t17): 1 875.00 INR
+  assumed: the illustration names only D as a prized subscriber before this auction (prized_before[t17])
+  law date 2026-10-18, cut 2026-10-18
+q_next_instalment (t = t18): 1 875.00 INR
+  assumed: the illustration names only D as a prized subscriber before this auction (prized_before[t18])
+  law date 2026-10-18, cut 2026-10-18
+q_next_instalment (t = t19): 1 875.00 INR
+  assumed: the illustration names only D as a prized subscriber before this auction (prized_before[t19])
+  law date 2026-10-18, cut 2026-10-18
+q_next_instalment (t = t20): 1 875.00 INR
+  assumed: the illustration names only D as a prized subscriber before this auction (prized_before[t20])
+  law date 2026-10-18, cut 2026-10-18
+q_next_instalment (t = t21): 1 875.00 INR
+  assumed: the illustration names only D as a prized subscriber before this auction (prized_before[t21])
+  law date 2026-10-18, cut 2026-10-18
+q_next_instalment (t = t22): 1 875.00 INR
+  assumed: the illustration names only D as a prized subscriber before this auction (prized_before[t22])
+  law date 2026-10-18, cut 2026-10-18
+q_next_instalment (t = t23): 1 875.00 INR
+  assumed: the illustration names only D as a prized subscriber before this auction (prized_before[t23])
+  law date 2026-10-18, cut 2026-10-18
+q_next_instalment (t = t24): 1 875.00 INR
+  assumed: the illustration names only D as a prized subscriber before this auction (prized_before[t24])
+  law date 2026-10-18, cut 2026-10-18
+q_next_instalment (t = t25): 1 875.00 INR
+  assumed: the illustration names only D as a prized subscriber before this auction (prized_before[t25])
+  law date 2026-10-18, cut 2026-10-18
+q_next_instalment (t = t26): 1 875.00 INR
+  assumed: the illustration names only D as a prized subscriber before this auction (prized_before[t26])
+  law date 2026-10-18, cut 2026-10-18
+q_next_instalment (t = t27): 1 875.00 INR
+  assumed: the illustration names only D as a prized subscriber before this auction (prized_before[t27])
+  law date 2026-10-18, cut 2026-10-18
+q_next_instalment (t = t28): 1 875.00 INR
+  assumed: the illustration names only D as a prized subscriber before this auction (prized_before[t28])
+  law date 2026-10-18, cut 2026-10-18
+q_next_instalment (t = t29): 1 875.00 INR
+  assumed: the illustration names only D as a prized subscriber before this auction (prized_before[t29])
+  law date 2026-10-18, cut 2026-10-18
+q_next_instalment (t = t30): 1 875.00 INR
+  assumed: the illustration names only D as a prized subscriber before this auction (prized_before[t30])
+  law date 2026-10-18, cut 2026-10-18
+q_next_instalment (t = t31): 1 875.00 INR
+  assumed: the illustration names only D as a prized subscriber before this auction (prized_before[t31])
+  law date 2026-10-18, cut 2026-10-18
+q_next_instalment (t = t32): 1 875.00 INR
+  assumed: the illustration names only D as a prized subscriber before this auction (prized_before[t32])
+  law date 2026-10-18, cut 2026-10-18
+q_next_instalment (t = t33): 1 875.00 INR
+  assumed: the illustration names only D as a prized subscriber before this auction (prized_before[t33])
+  law date 2026-10-18, cut 2026-10-18
+q_next_instalment (t = t34): 1 875.00 INR
+  assumed: the illustration names only D as a prized subscriber before this auction (prized_before[t34])
+  law date 2026-10-18, cut 2026-10-18
+q_next_instalment (t = t35): 1 875.00 INR
+  assumed: the illustration names only D as a prized subscriber before this auction (prized_before[t35])
+  law date 2026-10-18, cut 2026-10-18
+q_next_instalment (t = t36): 1 875.00 INR
+  assumed: the illustration names only D as a prized subscriber before this auction (prized_before[t36])
+  law date 2026-10-18, cut 2026-10-18
+q_next_instalment (t = t37): 1 875.00 INR
+  assumed: the illustration names only D as a prized subscriber before this auction (prized_before[t37])
+  law date 2026-10-18, cut 2026-10-18
+q_next_instalment (t = t38): 1 875.00 INR
+  assumed: the illustration names only D as a prized subscriber before this auction (prized_before[t38])
+  law date 2026-10-18, cut 2026-10-18
+q_next_instalment (t = t39): 1 875.00 INR
+  assumed: the illustration names only D as a prized subscriber before this auction (prized_before[t39])
+  law date 2026-10-18, cut 2026-10-18
+q_next_instalment (t = t40): 1 875.00 INR
+  assumed: the illustration names only D as a prized subscriber before this auction (prized_before[t40])
+  law date 2026-10-18, cut 2026-10-18
+q_prize: 70 000.00 INR
+  law date 2026-10-18, cut 2026-10-18
+q_prize_net: ?"The GST on the foreman's commission deducted from B's prize is not given." (gst) ?"The other incidental charges deducted from B's prize are not given." (charges)
+  law date 2026-10-18, cut 2026-10-18
+q_winner_tied: ok
+  law date 2026-10-18, cut 2026-10-18

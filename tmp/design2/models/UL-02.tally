@@ -1,0 +1,131 @@
+model ul02
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+  note "Minimalna składka zdrowotna (skala, liniowy): styczeń 2026 (rok składkowy 2025/26) wobec lutego 2026 i dalej (rok składkowy 2026/27)."
+  note "The floor is the same for skala (art. 81 ust. 2d) and liniowy (art. 79a ust. 1 pkt 1, 9% of the minimum wage); no trader's income is given, so only the minimum is modelled."
+
+source dz1915 "Ustawa z dnia 6 grudnia 2024 r. o zmianie ustawy o świadczeniach opieki zdrowotnej finansowanych ze środków publicznych (Dz.U. 2024 poz. 1915)" at "https://api.sejm.gov.pl/eli/acts/DU/2024/1915/text/O/D20241915.pdf"
+
+source dz2105 "Ustawa z dnia 29 października 2021 r. o zmianie ustawy o podatku dochodowym od osób fizycznych, ustawy o podatku dochodowym od osób prawnych oraz niektórych innych ustaw (Dz.U. 2021 poz. 2105), art. 15" at "https://api.sejm.gov.pl/eli/acts/DU/2021/2105/text.pdf"
+
+source lifted_1_0_1 "Figures tally 1.0.1 allowed inline in rules"
+
+source rm1242 "Rozporządzenie Rady Ministrów z dnia 11 września 2025 r. w sprawie wysokości minimalnego wynagrodzenia za pracę oraz wysokości minimalnej stawki godzinowej w 2026 r. (Dz.U. 2025 poz. 1242)" at "https://api.sejm.gov.pl/eli/acts/DU/2025/1242/text/O/D20251242.pdf"
+
+source rm1362 "Rozporządzenie Rady Ministrów z dnia 12 września 2024 r. w sprawie wysokości minimalnego wynagrodzenia za pracę oraz wysokości minimalnej stawki godzinowej w 2025 r. (Dz.U. 2024 poz. 1362)" at "https://api.sejm.gov.pl/eli/acts/DU/2024/1362/text/O/D20241362.pdf"
+
+source zus_brochure "ZUS, Składki przedsiębiorców w 2026 roku (Analiza Wydziału Planowania Funduszy, luty 2026 r.)" at "https://www.zus.pl/documents/10182/13364587/Sk%C5%82adki+przedsi%C4%99biorc%C3%B3w+w+2026+roku_DFF.pdf/c8d4e1dc-c80b-91d6-7453-02309976f713?t=1772712579703"
+
+unit PLN: currency minor 0.01
+
+axis ul02_mode
+  down "the contribution truncated to the grosz"
+  half-even "to the nearest grosz, ties to even"
+  half-up "to the nearest grosz, ties away from zero"
+
+axis ul02_mw_day
+  cy_start "the minimum wage in force on the first day of the contribution year (art. 81 ust. 2d, art. 79a ust. 1 pkt 1)"
+  in_month "the minimum wage in force in the month the contribution is for: the reading the case calls the trap"
+
+index cy = year 2025..2026 from 02-01
+
+index mth = month 2026-01..2027-01
+
+index mwcol = [mw75, mw100]
+
+index yr = year 2025..2026
+
+input min_change_0_001: num
+  note "lifted from an inline figure of tally 1.0.1"
+
+input min_change_2026_01: month
+  note "lifted from an inline figure of tally 1.0.1"
+
+input min_change_2026_02: month
+  note "lifted from an inline figure of tally 1.0.1"
+
+input min_wage: money PLN question "Ile wynosi minimalne wynagrodzenie za pracę w tym dniu?"
+
+input mw_share[c in mwcol]: num
+
+input rate: num
+
+input reduced_floor_share: num question "Jaki procent minimalnego wynagrodzenia stanowi podstawę minimalną w tym roku składkowym?"
+
+def cy_of[m in mth]: key cy = first(c in cy where start_of(c) <= start_of(m) and start_of(m) < end_of(c)) at start_of(m)
+
+def floor_base[m in mth]: money PLN at start_of(m)
+  note "the minimum monthly base: art. 81 ust. 2d (skala); for 2025/26 Dz.U. 2024 poz. 1915 art. 4 pkt 2 lit. a and pkt 1 lit. a lower it to 75%"
+  rule base = floor_wage[m]
+
+def floor_wage[m in mth]: money PLN at start_of(m)
+  note "the minimum wage the floor is taken from"
+  rule base = mw_on_cy_start[cy_of[m]]
+  rule trap beats base = mw_in_month[m] when ul02_mw_day == in_month
+
+def min_change: num = round(min_contribution[min_change_2026_02] / min_contribution[min_change_2026_01] - 1, min_change_0_001, ul02_mode) at reader
+
+def min_contribution[m in mth]: money PLN = round(rate * floor_base[m], minor(PLN), ul02_mode) at start_of(m)
+
+def mw_column[c in mwcol, y in yr]: money PLN = round(mw_share[c] * min_wage, minor(PLN), ul02_mode) at start_of(y)
+
+def mw_in_month[m in mth]: money PLN = min_wage at start_of(m)
+
+def mw_on_cy_start[c in cy]: money PLN = min_wage at start_of(c)
+
+ask contribution_year_2026: floor_base[m], min_contribution[m] for m in mth where cy_of[m] == 2026 law 2026-10-18
+
+ask jan_2026: floor_base[2026-01], min_contribution[2026-01] law 2026-10-18
+
+ask tabela4: mw_column[c, y] for c in mwcol, y in yr law 2026-10-18
+
+ask yoy: min_change law 2026-10-18
+
+version dz2021_2105
+  cite dz2105
+  governs 2022..
+  known 2021-11-23
+  note "promulgated 23 listopada 2021 r. (the act's Dz.U. heading; ELI API field promulgation, https://api.sejm.gov.pl/eli/acts/DU/2021/2105); in force 1 stycznia 2022 r. (art. 89)"
+  note "art. 15 pkt 4 gave art. 79 its present wording and pkt 5 added art. 79a; the consolidated text t.j. Dz.U. 2025 poz. 1461 (Kancelaria Sejmu file of 2026-08-03) reprints them unchanged and gives the page number below"
+  rate = 0.09 "art. 15 pkt 4 (art. 79 ust. 1: 9% podstawy wymiaru składki; t.j. Dz.U. 2025 poz. 1461, s. 206) and pkt 5 (art. 79a ust. 1: nie mniej niż kwota odpowiadająca 9%)"
+
+version lifted_figures
+  cite lifted_1_0_1
+  governs always
+  known 2021-11-23
+  min_change_0_001 = 0.001 "inline in tally 1.0.1: min_change line 54, round step"
+  min_change_2026_01 = 2026-01 "inline in tally 1.0.1: min_change line 54, key"
+  min_change_2026_02 = 2026-02 "inline in tally 1.0.1: min_change line 54, key"
+
+version rm2024_1362
+  cite rm1362
+  governs 2025-01..
+  known 2024-09-13
+  note "promulgated 13 września 2024 r. (ELI API field promulgation, https://api.sejm.gov.pl/eli/acts/DU/2024/1362); made 12 września 2024 r."
+  min_wage = 4666 "§ 1: od dnia 1 stycznia 2025 r. ... 4666 zł"
+
+version dz2024_1915
+  cite dz1915
+  governs 2025-02..2026-01
+  known 2024-12-23
+  note "promulgated 23 grudnia 2024 r. (ELI API field promulgation, https://api.sejm.gov.pl/eli/acts/DU/2024/1915)"
+  note "art. 4 applies to the contribution year 1 February 2025 to 31 January 2026; art. 6: in force from 1 January 2025"
+  replace rule floor_base.base v dz2024_1915 = round(reduced_floor_share * floor_wage[m], minor(PLN), ul02_mode)
+  reduced_floor_share = 0.75 "art. 4 pkt 2 lit. a (art. 81 ust. 2d) and pkt 1 lit. a (art. 79a ust. 1 pkt 1)"
+
+version rm2025_1242
+  cite rm1242
+  governs 2026-01..
+  known 2025-09-15
+  note "promulgated 15 września 2025 r. (ELI API field promulgation, https://api.sejm.gov.pl/eli/acts/DU/2025/1242); made 11 września 2025 r."
+  replace min_wage = 4806 "§ 1: od dnia 1 stycznia 2026 r. ... 4806 zł"
+
+version zus_brochure_2026
+  cite zus_brochure
+  governs always
+  known 2026-02-28
+  note "the brochure is dated luty 2026 with no day; the last day of February is taken as its known date"
+  mw_share[mw75] = 0.75 "p. 7, Tabela 4, column heading Minimalne wynagrodzenie 75%"
+  mw_share[mw100] = 1 "p. 7, Tabela 4, column heading Minimalne wynagrodzenie 100%"

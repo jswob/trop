@@ -1,0 +1,86 @@
+bea_adv [disp = half-up]: (19 121.1 bn, 19 219.8 bn, 98.7 bn, 2.1)
+  reading: disp = half-up
+  law date 2020-01-30, cut 2020-01-30
+bea_adv [disp = down]: (19 121.1 bn, 19 219.8 bn, 98.7 bn, 2)
+  reading: disp = down
+  law date 2020-01-30, cut 2020-01-30
+bea_second [disp = half-up]: (19 121.1 bn, 19 220.5 bn, 99.4 bn, 2.1)
+  reading: disp = half-up
+  law date 2020-02-27, cut 2020-02-27
+bea_second [disp = down]: (19 121.1 bn, 19 220.5 bn, 99.4 bn, 2)
+  reading: disp = down
+  law date 2020-02-27, cut 2020-02-27
+bea_third [disp = *]: (19 121.1 bn, 19 222 bn, 100.9 bn, 2.1)
+  law date 2020-03-26, cut 2020-03-26
+chk_adv_20m2: ok
+  pinned: known 2020-01-30
+  pinned: known 2020-02-29
+  law date 2026-10-18, cut 2026-10-18
+chk_second_20m3: ok
+  pinned: known 2020-02-27
+  pinned: known 2020-03-31
+  law date 2026-10-18, cut 2026-10-18
+chk_third_20m4: ok
+  pinned: known 2020-03-26
+  pinned: known 2020-04-30
+  law date 2026-10-18, cut 2026-10-18
+growth_first [disp = half-up]: 2.0808
+  reading: disp = half-up
+  law date 2020-02-29, cut 2020-02-29
+growth_first [disp = down]: 2.0807
+  reading: disp = down
+  law date 2020-02-29, cut 2020-02-29
+growth_recent [disp = *]: 2.755
+  law date 2026-09-30, cut 2026-09-30
+growth_second [disp = *]: 2.0956
+  law date 2020-03-31, cut 2020-03-31
+growth_third [disp = *]: 2.1275
+  law date 2020-04-30, cut 2020-04-30
+v20m1 (q = y2019q3): 19 121.1 bn
+  law date 2020-01-31, cut 2020-01-31
+v20m1 (q = y2019q4): ?"row 2019:Q4, column ROUTPUT20M1 is #N/A: not yet published" (routput[y2019q4])
+  law date 2020-01-31, cut 2020-01-31
+v20m1 (q = y2020q1): ?"What was real GDP for this quarter in the vintage as known on this day?" (routput[y2020q1])
+  law date 2020-01-31, cut 2020-01-31
+v20m2 (q = y2019q3): 19 121.1 bn
+  law date 2020-02-29, cut 2020-02-29
+v20m2 (q = y2019q4): 19 219.8 bn
+  law date 2020-02-29, cut 2020-02-29
+v20m2 (q = y2020q1): ?"row 2020:Q1, column ROUTPUT20M2 is #N/A: not yet published" (routput[y2020q1])
+  law date 2020-02-29, cut 2020-02-29
+v20m3 (q = y2019q3): 19 121.1 bn
+  law date 2020-03-31, cut 2020-03-31
+v20m3 (q = y2019q4): 19 220.5 bn
+  law date 2020-03-31, cut 2020-03-31
+v20m3 (q = y2020q1): ?"row 2020:Q1, column ROUTPUT20M3 is #N/A: not yet published" (routput[y2020q1])
+  law date 2020-03-31, cut 2020-03-31
+v20m4 (q = y2019q3): 19 121.1 bn
+  law date 2020-04-30, cut 2020-04-30
+v20m4 (q = y2019q4): 19 222 bn
+  law date 2020-04-30, cut 2020-04-30
+v20m4 (q = y2020q1): ?"row 2020:Q1, column ROUTPUT20M4 is #N/A: not yet published" (routput[y2020q1])
+  law date 2020-04-30, cut 2020-04-30
+v20m5 (q = y2019q3): 19 121.1 bn
+  law date 2020-05-31, cut 2020-05-31
+v20m5 (q = y2019q4): 19 222 bn
+  law date 2020-05-31, cut 2020-05-31
+v20m5 (q = y2020q1): 18 987.9 bn
+  law date 2020-05-31, cut 2020-05-31
+v20m8 (q = y2019q3): 19 141.7 bn
+  law date 2020-08-31, cut 2020-08-31
+v20m8 (q = y2019q4): 19 254 bn
+  law date 2020-08-31, cut 2020-08-31
+v20m8 (q = y2020q1): ?"the case does not transcribe 2020:Q1 in ROUTPUT20M8" (routput[y2020q1])
+  law date 2020-08-31, cut 2020-08-31
+v23m10 (q = y2019q3): 20 817.6 bn
+  law date 2023-10-31, cut 2023-10-31
+v23m10 (q = y2019q4): 20 951.1 bn
+  law date 2023-10-31, cut 2023-10-31
+v23m10 (q = y2020q1): ?"the case does not transcribe 2020:Q1 in ROUTPUT23M10" (routput[y2020q1])
+  law date 2023-10-31, cut 2023-10-31
+v26m10 (q = y2019q3): 20 843.3 bn
+  law date 2026-09-30, cut 2026-09-30
+v26m10 (q = y2019q4): 20 985.4 bn
+  law date 2026-09-30, cut 2026-09-30
+v26m10 (q = y2020q1): ?"the case does not transcribe 2020:Q1 in ROUTPUT26M10" (routput[y2020q1])
+  law date 2026-09-30, cut 2026-09-30

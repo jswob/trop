@@ -1,0 +1,60 @@
+part prices
+  tally 2
+  note "Fund prices, one reading input over the unit kind funds (L §3.2): the market files' rows that a question reads, each citing its file and line (the files are not imported whole; the Wektor files' decimal comma and day-first dates are a dialect, O:A-1)."
+  note "Forecast (A-12): each fund's price moves on each month's last day by the path's rate and is then rounded to the places its fund quotes in (story § The forecast, item 3). The forecast's rules test fc_on, which only the scenario forecast sets (scenarios/forecast.tally): a rule pointing at the scenario's version with v, as L §6.4 allows, is refused by the reference interpreter (fault F3)."
+  note "px_round: the story doesn't say how a moved price is rounded to its places (an unstated mode is an axis)."
+
+axis px_round
+  half-up "a moved price is rounded to its fund's places, half up"
+  down "a moved price is cut to its fund's places"
+
+input fc_base: month question "From which month's last price does the forecast move prices?"
+
+input mk[u in funds]: num DUK/u reading question "What is this fund's price on this valuation day (tmp/cases/market/<fund>.csv)?"
+
+input path_rate[m in month]: num question "By what rate does every fund's price move on this month's last day (story § The forecast, item 3)?"
+
+input px_step[u in funds]: num DUK/u question "To what step does this fund quote its price?"
+
+def pm[u in funds, m in month]: num DUK/u at end_of(m) - 1 day
+  note "the fund's price at the end of month m: the market's reading that day; in the forecast, the month before's moved by the path's rate, rounded to the fund's step"
+  rule market_end = mk[u]
+  rule moved beats market_end = round(pm[u, m - 1] * (1 + path_rate[m]), px_step[u], px_round) when fc_on and pos(m) > 1 and m > fc_base
+
+def px[u in funds, d in day]: num DUK/u at d
+  note "the fund's price on day d: the market's reading; in the forecast, the last month-end price on or before d (the workplace plans' fund stays outside the forecast, story § The forecast, item 4)"
+  rule market = mk[u]
+  rule forecast beats market = if d == end_of(month_of(d)) - 1 day then pm[u, month_of(d)] else pm[u, month_of(d) - 1] when fc_on and month_of(d) > fc_base and u != wcp
+
+version fund_steps
+  cite market_files
+  governs always
+  known 2021-01-01
+  px_step[bnd] = 0.01 "brz-bnd-a.csv: prices to 2 places"
+  px_step[div] = 0.01 "brz-div-d.csv: prices to 2 places"
+  px_step[em] = 0.0001 "wek-em-a.csv: prices to 4 places"
+  px_step[glb] = 0.01 "brz-glb-a.csv: prices to 2 places"
+  px_step[idx] = 0.0001 "wek-idx-d.csv: prices to 4 places"
+  px_step[mm] = 0.01 "brz-mm-a.csv: prices to 2 places"
+  px_step[wcp] = 0.0001 "wek-wcp-2055.csv: prices to 4 places"
+
+version mk_20230912
+  cite market_files
+  known 2023-09-12
+  mk[glb] = 176.40 at 2023-09-12 "brz-glb-a.csv line 1447"
+
+version mk_20240307
+  cite market_files
+  known 2024-03-07
+  mk[glb] = 187.59 at 2024-03-07 "brz-glb-a.csv line 1570"
+
+version mk_20251231
+  cite market_files
+  known 2025-12-31
+  mk[bnd] = 138.99 at 2025-12-31 "brz-bnd-a.csv line 2027"
+  mk[div] = 71.02 at 2025-12-31 "brz-div-d.csv line 2027"
+  mk[em] = 68.6192 at 2025-12-31 "wek-em-a.csv line 2028"
+  mk[glb] = 230.56 at 2025-12-31 "brz-glb-a.csv line 2027"
+  mk[idx] = 254.7653 at 2025-12-31 "wek-idx-d.csv line 2028"
+  mk[mm] = 129.18 at 2025-12-31 "brz-mm-a.csv line 2027"
+  mk[wcp] = 134.2798 at 2025-12-31 "wek-wcp-2055.csv line 1650"

@@ -1,0 +1,8 @@
+each_year (y = 2021): (3 000 DUK, 0 DUK)
+  cut 2026-10-25
+each_year (y = 2022): (5 000 DUK, 3 000 DUK)
+  cut 2026-10-25
+each_year (y = 2023): (2 000 DUK, 7 000 DUK)
+  cut 2026-10-25
+left_after: 0 DUK
+  cut 2026-10-25

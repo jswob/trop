@@ -1,0 +1,24 @@
+model m
+  tally 2
+  on 2025-01-01
+  start 2025-01-01
+  end 2027-12-31
+unit PLN: currency minor 0.01
+kind contribs: event certain
+  leg cash: PLN
+place acct: claims PLN lives 2025-01-01..
+place world: outside lives 2025-01-01..
+def total[y in years]: money PLN = sum(c.cash.amount for c in contribs over y)
+fill f[y in years]
+  supply total[y]
+  demand c.cash.amount for c in contribs over y
+  arc true
+  order c.day
+def back[y in years]: money PLN = sum(f[y].taken[c] for c in contribs over y)
+move pay[m in months]: contribs
+  on start_of(m)
+  leg cash from world to acct amount minor(PLN)
+move refund[y in years]: transfers
+  on end_of(y)
+  leg cash from acct to world amount back[y]
+ask t: total[2027] - back[2027]

@@ -1,0 +1,252 @@
+a130_acc8 [lh11_mode = down, lh11_step = *]: 1.1728
+  reading: lh11_mode = down
+  law date 2026-10-18, cut 2026-10-18
+a130_acc8 [lh11_mode = half-up, lh11_step = *]: 1.1729
+  reading: lh11_mode = half-up
+  law date 2026-10-18, cut 2026-10-18
+a130_bal [lh11_mode = down, lh11_step = exact]: 55 762.00 XXX
+  reading: lh11_mode = down
+  reading: lh11_step = exact
+  law date 2026-10-18, cut 2026-10-18
+a130_bal [lh11_mode = down, lh11_step = printed]: 55 759.00 XXX
+  reading: lh11_mode = down
+  reading: lh11_step = printed
+  law date 2026-10-18, cut 2026-10-18
+a130_bal [lh11_mode = half-up, lh11_step = *]: 55 762.00 XXX
+  reading: lh11_mode = half-up
+  law date 2026-10-18, cut 2026-10-18
+a130_choice [lh11_mode = *, lh11_step = *]: opt_c
+  law date 2026-10-18, cut 2026-10-18
+a130_s6 [lh11_mode = down, lh11_step = *]: 25.4319
+  reading: lh11_mode = down
+  law date 2026-10-18, cut 2026-10-18
+a130_s6 [lh11_mode = half-up, lh11_step = *]: 25.432
+  reading: lh11_mode = half-up
+  law date 2026-10-18, cut 2026-10-18
+a130_s8 [lh11_mode = down, lh11_step = *]: 25.9331
+  reading: lh11_mode = down
+  law date 2026-10-18, cut 2026-10-18
+a130_s8 [lh11_mode = half-up, lh11_step = *]: 25.9332
+  reading: lh11_mode = half-up
+  law date 2026-10-18, cut 2026-10-18
+a133_a192 [lh11_mode = *, lh11_step = *]: 123.238
+  law date 2026-10-18, cut 2026-10-18
+a133_a240 [lh11_mode = down]: 139.5807
+  reading: lh11_mode = down
+  law date 2026-10-18, cut 2026-10-18
+a133_a240 [lh11_mode = half-up]: 139.5808
+  reading: lh11_mode = half-up
+  law date 2026-10-18, cut 2026-10-18
+a133_bal [lh11_mode = down, lh11_step = exact]: 75 047.81 XXX
+  reading: lh11_mode = down
+  reading: lh11_step = exact
+  law date 2026-10-18, cut 2026-10-18
+a133_bal [lh11_mode = down, lh11_step = printed]: 75 047.01 XXX
+  reading: lh11_mode = down
+  reading: lh11_step = printed
+  law date 2026-10-18, cut 2026-10-18
+a133_bal [lh11_mode = half-up, lh11_step = exact]: 75 047.82 XXX
+  reading: lh11_mode = half-up
+  reading: lh11_step = exact
+  law date 2026-10-18, cut 2026-10-18
+a133_bal [lh11_mode = half-up, lh11_step = printed]: 75 048.24 XXX
+  reading: lh11_mode = half-up
+  reading: lh11_step = printed
+  law date 2026-10-18, cut 2026-10-18
+a133_choice [lh11_mode = *, lh11_step = *]: opt_c
+  law date 2026-10-18, cut 2026-10-18
+a133_last [lh11_mode = *, lh11_step = *]: 2030-05-31
+  law date 2026-10-18, cut 2026-10-18
+a133_left: 192
+  law date 2026-10-18, cut 2026-10-18
+a133_months [lh11_mode = *, lh11_step = *]: 251
+  law date 2026-10-18, cut 2026-10-18
+a133_n [lh11_mode = down, lh11_step = *]: 250.61
+  reading: lh11_mode = down
+  law date 2026-10-18, cut 2026-10-18
+a133_n [lh11_mode = half-up, lh11_step = *]: 250.62
+  reading: lh11_mode = half-up
+  law date 2026-10-18, cut 2026-10-18
+a133_pay [lh11_mode = down, lh11_step = *]: 608.96 XXX
+  reading: lh11_mode = down
+  law date 2026-10-18, cut 2026-10-18
+a133_pay [lh11_mode = half-up, lh11_step = *]: 608.97 XXX
+  reading: lh11_mode = half-up
+  law date 2026-10-18, cut 2026-10-18
+a133_x [lh11_mode = down, lh11_step = exact]: 0.67543
+  reading: lh11_mode = down
+  reading: lh11_step = exact
+  law date 2026-10-18, cut 2026-10-18
+a133_x [lh11_mode = down, lh11_step = printed]: 0.67542
+  reading: lh11_mode = down
+  reading: lh11_step = printed
+  law date 2026-10-18, cut 2026-10-18
+a133_x [lh11_mode = half-up, lh11_step = *]: 0.67543
+  reading: lh11_mode = half-up
+  law date 2026-10-18, cut 2026-10-18
+a60_a144 [lh11_mode = down]: 87.871
+  reading: lh11_mode = down
+  law date 2026-10-18, cut 2026-10-18
+a60_a144 [lh11_mode = half-up]: 87.8711
+  reading: lh11_mode = half-up
+  law date 2026-10-18, cut 2026-10-18
+a60_aj [lh11_mode = down, lh11_step = *]: 97.7462
+  reading: lh11_mode = down
+  law date 2026-10-18, cut 2026-10-18
+a60_aj [lh11_mode = half-up, lh11_step = *]: 97.7463
+  reading: lh11_mode = half-up
+  law date 2026-10-18, cut 2026-10-18
+a60_b36 [lh11_mode = down, lh11_step = exact]: 356 498.84 XXX
+  reading: lh11_mode = down
+  reading: lh11_step = exact
+  law date 2026-10-18, cut 2026-10-18
+a60_b36 [lh11_mode = down, lh11_step = printed]: 356 498.29 XXX
+  reading: lh11_mode = down
+  reading: lh11_step = printed
+  law date 2026-10-18, cut 2026-10-18
+a60_b36 [lh11_mode = half-up, lh11_step = exact]: 356 498.85 XXX
+  reading: lh11_mode = half-up
+  reading: lh11_step = exact
+  law date 2026-10-18, cut 2026-10-18
+a60_b36 [lh11_mode = half-up, lh11_step = printed]: 356 499.17 XXX
+  reading: lh11_mode = half-up
+  reading: lh11_step = printed
+  law date 2026-10-18, cut 2026-10-18
+a60_choice [lh11_mode = *, lh11_step = *]: opt_d
+  law date 2026-10-18, cut 2026-10-18
+a60_j [lh11_mode = *, lh11_step = *]: 0.069 /year
+  law date 2026-10-18, cut 2026-10-18
+a60_jm [lh11_mode = *, lh11_step = *]: 0.00575
+  law date 2026-10-18, cut 2026-10-18
+a60_r [lh11_mode = down, lh11_step = *]: 4 057.06 XXX
+  reading: lh11_mode = down
+  law date 2026-10-18, cut 2026-10-18
+a60_r [lh11_mode = half-up, lh11_step = *]: 4 057.07 XXX
+  reading: lh11_mode = half-up
+  law date 2026-10-18, cut 2026-10-18
+a60_revised [lh11_mode = down, lh11_step = *]: 3 647.18 XXX
+  reading: lh11_mode = down
+  law date 2026-10-18, cut 2026-10-18
+a60_revised [lh11_mode = half-up, lh11_step = *]: 3 647.19 XXX
+  reading: lh11_mode = half-up
+  law date 2026-10-18, cut 2026-10-18
+a87_acc30 [lh11_mode = *, lh11_step = exact]: 5.45815
+  reading: lh11_step = exact
+  law date 2026-10-18, cut 2026-10-18
+a87_acc30 [lh11_mode = down, lh11_step = printed]: 5.45798
+  reading: lh11_mode = down
+  reading: lh11_step = printed
+  law date 2026-10-18, cut 2026-10-18
+a87_acc30 [lh11_mode = half-up, lh11_step = printed]: 5.45799
+  reading: lh11_mode = half-up
+  reading: lh11_step = printed
+  law date 2026-10-18, cut 2026-10-18
+a87_bal2 [lh11_mode = *, lh11_step = exact]: 16 796 842.00 XXX
+  reading: lh11_step = exact
+  law date 2026-10-18, cut 2026-10-18
+a87_bal2 [lh11_mode = down, lh11_step = printed]: 16 796 808.00 XXX
+  reading: lh11_mode = down
+  reading: lh11_step = printed
+  law date 2026-10-18, cut 2026-10-18
+a87_bal2 [lh11_mode = half-up, lh11_step = printed]: 16 796 809.00 XXX
+  reading: lh11_mode = half-up
+  reading: lh11_step = printed
+  law date 2026-10-18, cut 2026-10-18
+a87_choice [lh11_mode = *, lh11_step = *]: opt_d
+  law date 2026-10-18, cut 2026-10-18
+a87_drop [lh11_mode = down, lh11_step = exact]: 960 723.00 XXX
+  reading: lh11_mode = down
+  reading: lh11_step = exact
+  law date 2026-10-18, cut 2026-10-18
+a87_drop [lh11_mode = down, lh11_step = printed]: 959 494.00 XXX
+  reading: lh11_mode = down
+  reading: lh11_step = printed
+  law date 2026-10-18, cut 2026-10-18
+a87_drop [lh11_mode = half-up, lh11_step = exact]: 960 724.00 XXX
+  reading: lh11_mode = half-up
+  reading: lh11_step = exact
+  law date 2026-10-18, cut 2026-10-18
+a87_drop [lh11_mode = half-up, lh11_step = printed]: 959 495.00 XXX
+  reading: lh11_mode = half-up
+  reading: lh11_step = printed
+  law date 2026-10-18, cut 2026-10-18
+a87_full [lh11_mode = *, lh11_step = *]: 29
+  law date 2026-10-18, cut 2026-10-18
+a87_i [lh11_mode = *, lh11_step = *]: 0.0582
+  law date 2026-10-18, cut 2026-10-18
+a87_n [lh11_mode = *, lh11_step = exact]: 29.796
+  reading: lh11_step = exact
+  law date 2026-10-18, cut 2026-10-18
+a87_n [lh11_mode = down, lh11_step = printed]: 29.794
+  reading: lh11_mode = down
+  reading: lh11_step = printed
+  law date 2026-10-18, cut 2026-10-18
+a87_n [lh11_mode = half-up, lh11_step = printed]: 29.795
+  reading: lh11_mode = half-up
+  reading: lh11_step = printed
+  law date 2026-10-18, cut 2026-10-18
+a87_pv29 [lh11_mode = *, lh11_step = printed]: 16 621 012.00 XXX
+  reading: lh11_step = printed
+  law date 2026-10-18, cut 2026-10-18
+a87_pv29 [lh11_mode = down, lh11_step = exact]: 16 620 825.00 XXX
+  reading: lh11_mode = down
+  reading: lh11_step = exact
+  law date 2026-10-18, cut 2026-10-18
+a87_pv29 [lh11_mode = half-up, lh11_step = exact]: 16 620 826.00 XXX
+  reading: lh11_mode = half-up
+  reading: lh11_step = exact
+  law date 2026-10-18, cut 2026-10-18
+a89_choice [lh11_mode = *, lh11_step = *]: opt_c
+  law date 2026-10-18, cut 2026-10-18
+a89_drop_month [lh11_mode = *, lh11_step = *]: 216
+  law date 2026-10-18, cut 2026-10-18
+a89_full [lh11_mode = *, lh11_step = *]: 215
+  law date 2026-10-18, cut 2026-10-18
+a89_j [lh11_mode = down, lh11_step = *]: 0.0616
+  reading: lh11_mode = down
+  law date 2026-10-18, cut 2026-10-18
+a89_j [lh11_mode = half-up, lh11_step = *]: 0.0617
+  reading: lh11_mode = half-up
+  law date 2026-10-18, cut 2026-10-18
+a89_last [lh11_mode = *, lh11_step = *]: 2020-12-31
+  law date 2026-10-18, cut 2026-10-18
+a89_n [lh11_mode = down, lh11_step = exact]: 215.77
+  reading: lh11_mode = down
+  reading: lh11_step = exact
+  law date 2026-10-18, cut 2026-10-18
+a89_n [lh11_mode = down, lh11_step = printed]: 215.75
+  reading: lh11_mode = down
+  reading: lh11_step = printed
+  law date 2026-10-18, cut 2026-10-18
+a89_n [lh11_mode = half-up, lh11_step = *]: 215.78
+  reading: lh11_mode = half-up
+  law date 2026-10-18, cut 2026-10-18
+a89_pay [lh11_mode = *, lh11_step = *]: 1 199.10 XXX
+  law date 2026-10-18, cut 2026-10-18
+a89_pv [lh11_mode = down, lh11_step = exact]: 41 932.06 XXX
+  reading: lh11_mode = down
+  reading: lh11_step = exact
+  law date 2026-10-18, cut 2026-10-18
+a89_pv [lh11_mode = down, lh11_step = printed]: 41 940.91 XXX
+  reading: lh11_mode = down
+  reading: lh11_step = printed
+  law date 2026-10-18, cut 2026-10-18
+a89_pv [lh11_mode = half-up, lh11_step = exact]: 41 932.07 XXX
+  reading: lh11_mode = half-up
+  reading: lh11_step = exact
+  law date 2026-10-18, cut 2026-10-18
+a89_pv [lh11_mode = half-up, lh11_step = printed]: 41 929.54 XXX
+  reading: lh11_mode = half-up
+  reading: lh11_step = printed
+  law date 2026-10-18, cut 2026-10-18
+a89_reduced [lh11_mode = *, lh11_step = exact]: 158 067.93 XXX
+  reading: lh11_step = exact
+  law date 2026-10-18, cut 2026-10-18
+a89_reduced [lh11_mode = down, lh11_step = printed]: 158 059.08 XXX
+  reading: lh11_mode = down
+  reading: lh11_step = printed
+  law date 2026-10-18, cut 2026-10-18
+a89_reduced [lh11_mode = half-up, lh11_step = printed]: 158 070.46 XXX
+  reading: lh11_mode = half-up
+  reading: lh11_step = printed
+  law date 2026-10-18, cut 2026-10-18

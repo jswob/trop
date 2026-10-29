@@ -1,0 +1,25 @@
+model rule09
+  tally 2
+  on 2025-01-01
+  start 2025-01-01
+  end 2025-12-31
+  note "RULE-09 part a: house rule D-3 decided on 1 January 2025 over that date's five paths. The card states which paths run dry, and a run's samples can't be stated path by path (L 5.16), so the five outcomes are rows over an index of runs and the share is an aggregate over its keys (L 5.11)."
+
+source card "Probe card RULE-09: Halina's forecast of 1 January 2025 and house rule D-3"
+
+index runs = int 1..5
+
+input limit: num
+
+input runs_dry[k in runs]: bool
+
+ask q_a: share(runs_dry[k] for k in runs), share(runs_dry[k] for k in runs) > limit law 2025-01-01
+
+version card_forecast
+  cite card
+  governs always
+  known 2025-01-01
+  limit = 20 % "D-3: more than 20 % of the paths"
+  runs_dry = false "the forecast of 1 January 2025: the money lasts to 85"
+  runs_dry[2] = true "path 2 runs dry before 85"
+  runs_dry[4] = true "path 4 runs dry before 85"

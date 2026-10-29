@@ -1,0 +1,21 @@
+scenario ref6_low over i6
+  tally 2
+  from 2028-02-01
+  note "Named path: both 2028 REF6 values at 4.50 %."
+
+source outlook_low "Card I-6, question: the named path with both 2028 REF6 values at 4.50 %"
+
+ask instalments_2028_low: inst_amt[orla_loan, first(k in steps where k > 0 and step_day[orla_loan, k] == d)] for d in [2028-04-15, 2028-10-15] in ref6_low
+
+ask interest_2028_low: flows(pay.interest, 2028) in ref6_low
+
+ask left_low: n_after[orla_loan, first(k in steps where k > 0 and step_day[orla_loan, k] == 2028-03-15)] in ref6_low
+
+ask relief_2028_low: credited[p, 2028], carry_out[p, 2028] for p in persons over .. in ref6_low
+
+version ref6_path_low
+  cite outlook_low
+  governs 2028-02..2028-08
+  known 2027-01-01
+  ref6[2028-02] = 4.50 %/year "published on the last business day of February 2028, on this path"
+  ref6[2028-08] = 4.50 %/year "published on the last business day of August 2028, on this path"

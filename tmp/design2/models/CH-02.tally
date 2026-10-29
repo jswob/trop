@@ -1,0 +1,308 @@
+model ch02
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+  note "SOA Experience Study Calculations: grouped exposure, mortality rates and the actual-to-expected ratio by count and by amount, healthy female pensioners born 1944, study 2010-01-01 to 2014-01-01."
+  note "No rounding is stated; the model rounds only in the asks, where the source prints, with the mode as an axis."
+  note "12.3 splits the amount-weighted study by calendar year and prints only the results. The split of an age's exposure and deaths between the two calendar years its year of age spans is a stub (a hole rule); the steps around it are written, so the cells that hold a whole age compute and the others print the stub's question."
+
+source lifted_1_0_1 "Figures tally 1.0.1 allowed inline in rules"
+
+source merf_report "Minneapolis Employees Retirement Fund, Actuarial Experience Study as of June 30, 2009 (September 30, 2009)" at "https://www.leg.mn.gov/docs/2009/mandated/090936.pdf"
+
+source soa_esc "SOA, Experience Study Calculations (October 2016, revised March 2024), Atkinson and McGarry" at "https://www.soa.org/globalassets/assets/files/research/experience-study-calculations.pdf"
+
+source soa_rp2000 "SOA, The RP-2000 Mortality Tables (report dated July 2000)" at "https://www.soa.org/globalassets/assets/Files/Research/Exp-Study/rp00_mortalitytables.pdf"
+
+unit USD: currency minor 0.01
+
+unit kusd "thousand dollars of benefit: amount-weighted lives, deaths and withdrawals are per thousand"
+
+axis bd_avg
+  plain "the Total row of Bd_x is the plain mean of the five ages"
+  by_deaths "the Total row of Bd_x is the mean weighted by deaths"
+
+axis bex69
+  printed "amount-weighted exposure at age 69 by the printed 4.4.2 formula, B E = T B l − ½ T B w"
+  deaths "amount-weighted exposure at age 69 by the 4.3.2 end-of-study form, with half the deaths"
+
+axis disp
+  half-up "printed figures are rounded to the nearest, a tie away from zero"
+  half-even "printed figures are rounded to the nearest, a tie to even"
+  down "printed figures are truncated"
+
+axis qe_basis
+  printed5 "expected rates are the five-decimal q^e_x printed in 12.1"
+  rp2000 "expected rates are the six-decimal RP-2000 rates"
+
+index cell = [c2010_655, c2010_660, c2011_665, c2011_670, c2012_675, c2012_680, c2013_685, c2013_690]
+  note "The rows of the 12.3 split table (p. 63), by calendar year and half-age: 2010 65.5, 2010 66.0, 2011 66.5, 2011 67.0, 2012 67.5, 2012 68.0, 2013 68.5, 2013 69.0."
+
+index cyear = int 2010..2013
+
+index segment = [study_start, whole, study_end]
+
+index sex = [male, female]
+
+index xage = int 65..69
+
+input ben_death[x in xage]: money USD
+
+input ben_start: money USD
+
+input ben_wd[x in xage]: money USD
+
+input bexpo_2: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input bexpo_4: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input cell_age[c in cell]: key xage
+
+input cell_year[c in cell]: key cyear
+
+input deaths_n[x in xage]: int
+
+input expo_2: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input expo_4: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input lives[x in xage]: int
+
+input merf_actual[s in sex]: num question "How many retiree deaths did the MERF 2009 study observe?"
+
+input merf_expected[s in sex]: num
+
+input part_of[x in xage]: key segment
+
+input per_k: num USD/kusd
+
+input qe5[x in xage]: num
+
+input qrp[x in xage]: num
+
+input tx[x in xage]: num
+
+input wd_n[x in xage]: int
+
+def ae[x in xage]: num = deaths_n[x] / de[x] at reader
+
+def ae_tot: num = d_tot / de_tot at reader
+
+def bae[x in xage]: num = bdeaths[x] / bde[x] at reader
+
+def bae_tot: num = bd_tot / bde_tot at reader
+
+def bd_mean: num USD at reader
+  rule by_deaths = sum(ben_death[x] * deaths_n[x] for x in xage) / d_tot when bd_avg == by_deaths
+  rule plain = sum(ben_death[x] for x in xage) / count(x in xage) when bd_avg == plain
+
+def bd_tot: num kusd = sum(bdeaths[x] for x in xage) at reader
+
+def bde[x in xage]: num kusd = bexpo[x] * qe[x] at reader
+
+def bde_tot: num kusd = sum(bde[x] for x in xage) at reader
+
+def bdeaths[x in xage]: num kusd = ben_death[x] * deaths_n[x] / per_k at reader
+
+def bexpo[x in xage]: num kusd at reader
+  note "4.4.2 (p. 25): B Ex = Tx B lx − ½ Tx B wx"
+  rule base = tx[x] * blives[x] - tx[x] * bwd[x] / bexpo_2
+  rule study_end beats base = blives[x] / bexpo_2 + bdeaths[x] / bexpo_2 - bwd[x] / bexpo_4 when bex69 == deaths and part_of[x] == study_end
+
+def bexpo_tot: num kusd = sum(bexpo[x] for x in xage) at reader
+
+def blives[x in xage]: num kusd at reader
+  note "4.4.2 (p. 24): B l65 = Bl65 l65; B lx+1 = B lx − B dx − B wx"
+  rule later = blives[x - 1] - bdeaths[x - 1] - bwd[x - 1] when x > 65
+  rule x65 = ben_start * lives[x] / per_k when x == 65
+
+def bq[x in xage]: num = bdeaths[x] / bexpo[x] at reader
+
+def bq_tot: num = bd_tot / bexpo_tot at reader
+
+def bqe_tot: num = bde_tot / bexpo_tot at reader
+
+def bw_tot: num kusd = sum(bwd[x] for x in xage) at reader
+
+def bwd[x in xage]: num kusd = ben_wd[x] * wd_n[x] / per_k at reader
+
+def cy_bae[c in cell]: num = cy_bdeaths[c] / cy_bde[c] at reader
+
+def cy_bde[c in cell]: num kusd = cy_bexpo[c] * qe[cell_age[c]] at reader
+
+def cy_bdeaths[c in cell]: num kusd at reader
+  note "12.3 (p. 63): the amount-weighted deaths of a calendar-year cell. Ages 65 and 69 are half a year in the study (4.3.2), each inside one calendar year, so their cells hold the whole age; the other ages are split between two calendar years by a method the source doesn't give."
+  rule split = ?"12.3 (p. 63): how are the amount-weighted deaths of an age split between the two calendar years its year of age spans? The source prints only the results."
+  rule whole beats split = bdeaths[cell_age[c]] when part_of[cell_age[c]] != whole
+
+def cy_bexpo[c in cell]: num kusd at reader
+  note "12.3 (p. 63): the amount-weighted exposure of a calendar-year cell. Ages 65 and 69 are half a year in the study (4.3.2), each inside one calendar year, so their cells hold the whole age; the other ages are split between two calendar years by a method the source doesn't give."
+  rule split = ?"12.3 (p. 63): how is the amount-weighted exposure of an age split between the two calendar years its year of age spans? The source prints only the results."
+  rule whole beats split = bexpo[cell_age[c]] when part_of[cell_age[c]] != whole
+
+def cy_bq[c in cell]: num = cy_bdeaths[c] / cy_bexpo[c] at reader
+
+def d_tot: int = sum(deaths_n[x] for x in xage) at reader
+
+def de[x in xage]: num = expo[x] * qe[x] at reader
+
+def de_tot: num = sum(de[x] for x in xage) at reader
+
+def expo[x in xage]: num at reader
+  note "4.2.2 (p. 18): Ex = lx − ½wx for a full year; 4.3.2 (p. 22): half a year at 65 and 69"
+  rule base = tx[x] * lives[x] - tx[x] * wd_n[x] / expo_2
+  rule study_end beats base = lives[x] / expo_2 + deaths_n[x] / expo_2 - wd_n[x] / expo_4 when part_of[x] == study_end
+
+def expo_tot: num = sum(expo[x] for x in xage) at reader
+
+def q_act[x in xage]: num = deaths_n[x] / expo[x] at reader
+
+def q_tot: num = d_tot / expo_tot at reader
+
+def qe[x in xage]: num at reader
+  rule printed5 = qe5[x] when qe_basis == printed5
+  rule rp2000 = qrp[x] when qe_basis == rp2000
+
+def qe_tot: num = de_tot / expo_tot at reader
+
+def yr_bae[y in cyear]: num = yr_bdeaths[y] / yr_bde[y] at reader
+
+def yr_bde[y in cyear]: num kusd = sum(cy_bde[c] for c in cell where cell_year[c] == y) at reader
+
+def yr_bdeaths[y in cyear]: num kusd = sum(cy_bdeaths[c] for c in cell where cell_year[c] == y) at reader
+
+def yr_bexpo[y in cyear]: num kusd = sum(cy_bexpo[c] for c in cell where cell_year[c] == y) at reader
+
+def yr_bq[y in cyear]: num = yr_bdeaths[y] / yr_bexpo[y] at reader
+
+def yr_bqe[y in cyear]: num = yr_bde[y] / yr_bexpo[y] at reader
+
+ask ae_12_1: round(qe[x], 0.00001, disp), round(expo[x], 0.1, disp), round(de[x], 0.1, disp), deaths_n[x], round(q_act[x], 0.00001, disp), round(ae[x], 0.001, disp) for x in xage law 2026-10-18
+
+ask ae_12_1_text: round(ae_tot, 0.01, disp) law 2026-10-18
+
+ask ae_12_1_tot: round(qe_tot, 0.00001, disp), round(expo_tot, 0.1, disp), round(de_tot, 0.1, disp), d_tot, round(q_tot, 0.00001, disp), round(ae_tot, 0.001, disp) law 2026-10-18
+
+ask ae_12_2: round(qe[x], 0.00001, disp), round(bexpo[x], 0.1, disp), round(bde[x], 0.1, disp), round(bdeaths[x], 0.1, disp), round(bq[x], 0.00001, disp), round(bae[x], 0.001, disp) for x in xage law 2026-10-18
+
+ask ae_12_2_text: round(ae_tot - bae_tot, 0.01, disp), round(1 - bae_tot / ae_tot, 0.01, disp) law 2026-10-18
+
+ask ae_12_2_tot: round(bqe_tot, 0.00001, disp), round(bexpo_tot, 0.1, disp), round(bde_tot, 0.1, disp), round(bd_tot, 0.1, disp), round(bq_tot, 0.00001, disp), round(bae_tot, 0.001, disp) law 2026-10-18
+
+ask ae_12_3: cell_year[c], cell_age[c], round(qe[cell_age[c]], 0.00001, disp), round(cy_bexpo[c], 0.1, disp), round(cy_bde[c], 0.1, disp), round(cy_bdeaths[c], 0.1, disp), round(cy_bq[c], 0.00001, disp), round(cy_bae[c], 0.001, disp) for c in cell law 2026-10-18
+
+ask ae_12_3_blend: round(yr_bqe[y], 0.00001, disp), round(yr_bexpo[y], 0.1, disp), round(yr_bde[y], 0.1, disp), round(yr_bdeaths[y], 0.1, disp), round(yr_bq[y], 0.00001, disp), round(yr_bae[y], 0.001, disp) for y in cyear law 2026-10-18
+
+ask amt_4_4_2a: ben_death[x], ben_wd[x], round(blives[x], 0.1, disp), round(bdeaths[x], 0.1, disp), round(bwd[x], 0.1, disp) for x in xage law 2026-10-18
+
+ask amt_4_4_2a_tot: bd_mean, round(bd_tot, 0.1, disp), round(bw_tot, 0.1, disp) law 2026-10-18
+
+ask amt_4_4_2b: round(bexpo[x], 0.1, disp), round(bq[x], 0.00001, disp), round(1 - bq[x], 0.00001, disp) for x in xage law 2026-10-18
+
+ask amt_4_4_2b_tot: round(bexpo_tot, 0.1, disp), round(bq_tot, 0.00001, disp) law 2026-10-18
+
+ask exp_4_3_2: round(expo[x], 0.1, disp), round(q_act[x], 0.00001, disp), round(1 - q_act[x], 0.00001, disp) for x in xage law 2026-10-18
+
+ask exp_4_3_2_tot: round(expo_tot, 0.1, disp), round(q_tot, 0.00001, disp) law 2026-10-18
+
+ask merf_ae: round(merf_actual[s] / merf_expected[s], 0.01, disp) for s in sex law 2026-10-18
+
+ask rp2000_check: check round(qrp[x], 0.00001, disp) == qe5[x] for x in xage law 2026-10-18
+
+ask rp2000_rates: qrp[x] for x in xage law 2026-10-18
+
+version lifted_figures
+  cite lifted_1_0_1
+  governs always
+  known 2000-07-31
+  bexpo_2 = 2 "inline in tally 1.0.1: bexpo line 94, factor; bexpo line 95, factor"
+  bexpo_4 = 4 "inline in tally 1.0.1: bexpo line 95, factor"
+  expo_2 = 2 "inline in tally 1.0.1: expo line 138, factor; expo line 139, factor"
+  expo_4 = 4 "inline in tally 1.0.1: expo line 139, factor"
+
+version rp2000_tables
+  cite soa_rp2000
+  governs always
+  known 2000-07-31
+  note "The report has no day of its own: the SOA page for it (https://www.soa.org/resources/experience-studies/2000-2004/research-rp-2000-mortality-tables/, looked up 2026-10-19) calls it \"the RP–2000 Mortality Tables Report dated July 2000\". Known is the last day of that month (LANGUAGE §4.5)."
+  qrp[65] = 0.010364 "Table 4-6 Female RP-2000 Rates, Healthy Annuitant, age 65 (PDF p. 47)"
+  qrp[66] = 0.011413 "Table 4-6 Female RP-2000 Rates, Healthy Annuitant, age 66 (PDF p. 47)"
+  qrp[67] = 0.01254 "Table 4-6 Female RP-2000 Rates, Healthy Annuitant, age 67 (PDF p. 47)"
+  qrp[68] = 0.013771 "Table 4-6 Female RP-2000 Rates, Healthy Annuitant, age 68 (PDF p. 47)"
+  qrp[69] = 0.015153 "Table 4-6 Female RP-2000 Rates, Healthy Annuitant, age 69 (PDF p. 47)"
+
+version merf_2009
+  cite merf_report
+  governs always
+  known 2009-09-30
+  merf_actual = ?"MERF 2009 gives only the A/E ratios (108% males, 75% females), not the actual deaths; how many deaths were observed?"
+  merf_expected[male] = 401 "PDF p. 10: we expected 401 and 481 deaths respectively"
+  merf_expected[female] = 481 "PDF p. 10: we expected 401 and 481 deaths respectively"
+
+version esc_2024
+  cite soa_esc
+  governs always
+  known 2024-03-31
+  note "The source is revised March 2024 with no day; known is the last day of that month (LANGUAGE §4.5). This version holds the document's own figures: its unit convention and the expected rates it prints. The worked example's pensioners are in esc_example."
+  per_k = 1000 "4.4.2 (p. 24): Amount-weighted lives, deaths, and withdrawals are per thousand"
+  qe5[65] = 0.01036 "12.1 table (p. 62), x = 65, q^e_x"
+  qe5[66] = 0.01141 "12.1 table (p. 62), x = 66, q^e_x"
+  qe5[67] = 0.01254 "12.1 table (p. 62), x = 67, q^e_x"
+  qe5[68] = 0.01377 "12.1 table (p. 62), x = 68, q^e_x"
+  qe5[69] = 0.01515 "12.1 table (p. 62), x = 69, q^e_x"
+
+version esc_example
+  cite soa_esc
+  governs always
+  known 2026-10-18
+  note "The worked example's stipulations: its pensioners, deaths, withdrawals, benefit amounts, time in the study and the calendar-year cells of 12.3. They are a hypothetical case's world, known from the model's on, since it has no start (LANGUAGE §4.5)."
+  note "The currency is printed only as $; the case reads it as USD."
+  ben_death[65] = 1400 "4.4.2 first table (p. 25), x = 65, Bd_x"
+  ben_death[66] = 1450 "4.4.2 first table (p. 25), x = 66, Bd_x"
+  ben_death[67] = 1375 "4.4.2 first table (p. 25), x = 67, Bd_x"
+  ben_death[68] = 1425 "4.4.2 first table (p. 25), x = 68, Bd_x"
+  ben_death[69] = 1350 "4.4.2 first table (p. 25), x = 69, Bd_x"
+  ben_start = 1500 "4.4.2 (p. 24): average benefit in force at start, Bl65 = $1,500"
+  ben_wd = 1500 "4.4.2 (p. 24): Bw_x is $1,500 for all ages"
+  cell_age[c2010_655] = 65 "12.3 first table (p. 63), row 2010 65.5: B q^e_x 0.01036, the rate of age 65"
+  cell_age[c2010_660] = 66 "12.3 first table (p. 63), row 2010 66.0: B q^e_x 0.01141, the rate of age 66"
+  cell_age[c2011_665] = 66 "12.3 first table (p. 63), row 2011 66.5: B q^e_x 0.01141, the rate of age 66"
+  cell_age[c2011_670] = 67 "12.3 first table (p. 63), row 2011 67.0: B q^e_x 0.01254, the rate of age 67"
+  cell_age[c2012_675] = 67 "12.3 first table (p. 63), row 2012 67.5: B q^e_x 0.01254, the rate of age 67"
+  cell_age[c2012_680] = 68 "12.3 first table (p. 63), row 2012 68.0: B q^e_x 0.01377, the rate of age 68"
+  cell_age[c2013_685] = 68 "12.3 first table (p. 63), row 2013 68.5: B q^e_x 0.01377, the rate of age 68"
+  cell_age[c2013_690] = 69 "12.3 first table (p. 63), row 2013 69.0: B q^e_x 0.01515, the rate of age 69"
+  cell_year[c2010_655] = 2010 "12.3 first table (p. 63), row 2010 65.5"
+  cell_year[c2010_660] = 2010 "12.3 first table (p. 63), row 2010 66.0"
+  cell_year[c2011_665] = 2011 "12.3 first table (p. 63), row 2011 66.5"
+  cell_year[c2011_670] = 2011 "12.3 first table (p. 63), row 2011 67.0"
+  cell_year[c2012_675] = 2012 "12.3 first table (p. 63), row 2012 67.5"
+  cell_year[c2012_680] = 2012 "12.3 first table (p. 63), row 2012 68.0"
+  cell_year[c2013_685] = 2013 "12.3 first table (p. 63), row 2013 68.5"
+  cell_year[c2013_690] = 2013 "12.3 first table (p. 63), row 2013 69.0"
+  deaths_n[65] = 4 "4.3.2 table (p. 22), x = 65, d_x"
+  deaths_n[66] = 8 "4.3.2 table (p. 22), x = 66, d_x"
+  deaths_n[67] = 9 "4.3.2 table (p. 22), x = 67, d_x"
+  deaths_n[68] = 10 "4.3.2 table (p. 22), x = 68, d_x"
+  deaths_n[69] = 5 "4.3.2 table (p. 22), x = 69, d_x"
+  lives[65] = 994 "4.3.2 (p. 21): There were 994 lives at the start of the study"
+  lives[66] = 988 "4.3.2 table (p. 22), x = 66, l_x"
+  lives[67] = 976 "4.3.2 table (p. 22), x = 67, l_x"
+  lives[68] = 961 "4.3.2 table (p. 22), x = 68, l_x"
+  lives[69] = 947 "4.3.2 table (p. 22), x = 69, l_x"
+  part_of = whole "4.3.2 (p. 22): All other ages will have a full year of exposure"
+  part_of[65] = study_start "4.3.2 (p. 22): ½E65½ = ½ l65½ − ¼ ½w65½"
+  part_of[69] = study_end "4.3.2 (p. 22): ½E69 = ½ l69 + ½ ½d69 − ¼ ½w69"
+  tx = 1 "4.3.2 (p. 22): All other ages will have a full year of exposure, with Tx equal to 1.0"
+  tx[65] = 0.5 "4.3.2 (p. 22): the study will use T65 and T69 equal to 0.5"
+  tx[69] = 0.5 "4.3.2 (p. 22): the study will use T65 and T69 equal to 0.5"
+  wd_n[65] = 2 "4.3.2 table (p. 22), x = 65, w_x"
+  wd_n[66] = 4 "4.3.2 table (p. 22), x = 66, w_x"
+  wd_n[67] = 6 "4.3.2 table (p. 22), x = 67, w_x"
+  wd_n[68] = 4 "4.3.2 table (p. 22), x = 68, w_x"
+  wd_n[69] = 2 "4.3.2 table (p. 22), x = 69, w_x"
