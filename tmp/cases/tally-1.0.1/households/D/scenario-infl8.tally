@@ -1,0 +1,10 @@
+scenario infl8
+  tally 1
+  from 2027-01-01
+  over cpi103
+  note "D-11: prices rise 8 % a year in 2027, 2028 and 2029, and 3 % again after; the CPI-YY of the months of 2027-2029 taken as 108."
+
+version infl8_rows
+  cite modeller
+  lv_infl = 0.08 assumed "D-11: 8 % a year in 2027, 2028 and 2029" governs 2027..2029
+  cpi_yy = 108 assumed "D-11: CPI-YY 108 for the months of 2027-2029" governs 2027-01..2029-12

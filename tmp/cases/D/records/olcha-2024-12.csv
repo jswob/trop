@@ -1,0 +1,24 @@
+Bank Olcha S.A.|account statement
+Account|LN73 4400 2011 0000 8817 2264 0001
+Holder|HALINA SOWA
+Period|20241201|20241231
+Opening balance|124 591,31
+Date|Type|Counterparty|Title|Amount|Balance after
+20241202|CARD|Apteka Rumianek|card ...2264|-235,39|124 355,92
+20241203|CASH|ATM Olcha Brzezie|cash withdrawal|-500,00|123 855,92
+20241205|CREDIT|Social Insurance Office|survivor pension 12/2024|4 022,53|127 878,45
+20241205|STANDING ORDER|WM Ogrodowa 2|fee Ogrodowa 2/11 12/2024|-420,00|127 458,45
+20241208|CARD|Warzywniak u Janka|card ...2264|-102,33|127 356,12
+20241210|CARD|Market Brzezie|card ...2264|-197,28|127 158,84
+20241212|CARD|Piekarnia Złoty Kłos|card ...2264|-117,73|127 041,11
+20241216|STANDING ORDER|Volta Energia|Leśna 4 energy 12/2024|-385,00|126 656,11
+20241217|CASH|ATM Olcha Brzezie|cash withdrawal|-500,00|126 156,11
+20241218|CARD|Piekarnia Złoty Kłos|card ...2264|-33,03|126 123,08
+20241220|STANDING ORDER|Telekom Lenia|phone 12/2024|-59,00|126 064,08
+20241224|CARD|Piekarnia Złoty Kłos|card ...2264|-40,56|126 023,52
+20241226|CARD|Apteka Rumianek|card ...2264|-111,22|125 912,30
+20241227|TRANSFER|Opieka Dom sp.|home help 12/2024|-1 100,00|124 812,30
+20241228|CARD|Drogeria Konwalia|card ...2264|-219,65|124 592,65
+20241229|CARD|Market Brzezie|card ...2264|-156,62|124 436,03
+20241231|CARD|Warzywniak u Janka|card ...2264|-81,11|124 354,92
+Closing balance|124 354,92

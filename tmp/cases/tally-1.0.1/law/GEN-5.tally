@@ -1,0 +1,14 @@
+part gen_5
+  tally 1
+  law
+  note "GEN-5 · Rounding. PIT, IGT and TT bases, taxes and advances to whole dukats, under 50 orts down, from 50 up (.1: round(x, 1, half-up)); VAT on an invoice to the ort half up, VAT due or carried in a return to whole dukats as .1 (.2); contributions, benefits, refunds and fees to the ort half up (.3); a rule's own rounding replaces these (.4); nothing else is rounded (.5)."
+  note "No figure: the rounding units 1 and 0.01 are literals the literal rule allows (L §7.1); the households' defs call round at the step .5 names."
+
+source gen_5 "General Provisions Act, GEN-5 Rounding (tmp/cases/law/acts.md)"
+
+version gen5_v1
+  cite gen_5
+  governs 2018-01-01..
+  known 2017-06-01
+  enters 2018-01-01
+  note "GEN-5 v1, in force 2018-01-01 until replaced, published 2017-06-01; governs every amount this law computes."

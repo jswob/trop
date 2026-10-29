@@ -1,0 +1,36 @@
+model rec06
+  tally 1
+  on 2026-10-25
+  start 2022-01-01
+
+source gazette "REC-06 card: the gazette's 2022 tax rate, published 20 November 2021"
+source act_2022 "REC-06 card: the act published 15 July 2022, 12 % for the whole of 2022"
+source facts "REC-06 card: Ania's 2022 income"
+
+input income: money DUK
+
+input pit_rate: num
+
+def tax: num DUK = pit_rate * income
+
+ask known_may: tax with law 2022-12-31 as known 2022-05-31
+
+ask known_aug: tax with law 2022-12-31 as known 2022-08-01
+
+version gazette_2022
+  cite gazette
+  governs 2022
+  known 2021-11-20
+  pit_rate = 0.17 "the 2022 tax rate"
+
+version income_v
+  cite facts
+  governs 2022
+  known 2022-01-01
+  income = 96000.00 "Ania earns 96 000.00 in 2022"
+
+version act_v
+  cite act_2022
+  governs 2022
+  known 2022-07-15
+  pit_rate = 0.12 "12 % for the whole of 2022"

@@ -1,0 +1,11 @@
+part asks_b10
+  tally 1
+  note "Question B-10 (tmp/cases/B/questions.md)."
+
+ask b10_2025: hr2_op[d] as if {known d, hr2_have[d] = hr2_seen[d], hr2_cis_now[d] = bal(cis, d) + flows(hr2_overpay[d], d) + flows(hr2_save[d], d)}, hr2_sv[d] as if {known d, hr2_have[d] = hr2_seen[d], hr2_cis_now[d] = bal(cis, d) + flows(hr2_overpay[d], d) + flows(hr2_save[d], d)} for d in b_day where year_of(d) = 2025 and hr2_runs[d] with law 2026-01-26 as known 2026-01-07
+
+ask b10_2025_known: hr2_op[d] as if {known d, hr2_have[d] = hr2_seen[d], hr2_cis_now[d] = bal(cis, d) + flows(hr2_overpay[d], d) + flows(hr2_save[d], d)}, hr2_sv[d] as if {known d, hr2_have[d] = hr2_seen[d], hr2_cis_now[d] = bal(cis, d) + flows(hr2_overpay[d], d) + flows(hr2_save[d], d)} for d in b_day where year_of(d) = 2025 and hr2_runs[d] and month_of(d) != 2025-11 with law 2026-01-26 as known 2026-01-07
+
+ask b10_v2_jan: hr2_v2_op[d], hr2_v2_sv[d] for d in [2025-01-27, 2025-02-26, 2025-03-26] with law 2026-01-26 as known 2026-01-07
+
+ask b10_short: hr2_v2_shift[2025-03-27] with law 2026-01-26 as known 2026-01-07

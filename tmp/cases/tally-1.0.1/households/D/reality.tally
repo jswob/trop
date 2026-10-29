@@ -1,0 +1,91 @@
+model halina
+  tally 1
+  on 2026-09-30
+  start 2024-01-01
+  end 2064-12-31
+  note "Household D of the case set (Halina Sowa, widowed 2024-05-17), in tally 1.0.1. Facts from the dossier tmp/cases/D: story.md, house-rules.md and docs/D-Dnn.md, each version citing its document and known on the day the document reached Halina (the received date in its header)."
+  note "Bank Olcha's exports (records/olcha-*.csv) are not read in full: tally 1.0.1 names no import for their dialect (observation O:D-1, the gap of household A's O:A-1). records.tally writes only the rows a question reads, each citing its file and line, and says so."
+
+source story "Household D's story, tmp/cases/D/story.md"
+source house_rules "Household D's house rules, tmp/cases/D/house-rules.md"
+source olcha "Bank Olcha exports of the joint account LN73 ... 0001, tmp/cases/D/records/olcha-*.csv"
+source market "BRZ-DIV-D prices and distributions, tmp/cases/market/brz-div-d.csv and brz-distributions.csv"
+source modeller "Assumptions of this model, each with its reason"
+source d_d01 "D-D01 · Death certificate: Zbigniew Sowa (extract) (tmp/cases/D/docs/D-D01.md)"
+source d_d02 "D-D02 · Marriage certificate (extract) (tmp/cases/D/docs/D-D02.md)"
+source d_d03 "D-D03 · Extracts: Adam Sowa and Jakub Sowa (tmp/cases/D/docs/D-D03.md)"
+source d_d04 "D-D04 · Certificate of inheritance (extract) (tmp/cases/D/docs/D-D04.md)"
+source d_d05 "D-D05 · Inventory of the estate of Zbigniew Sowa (extract) (tmp/cases/D/docs/D-D05.md)"
+source d_d06 "D-D06 · Land register extract: ul. Ogrodowa 2/11, Kłodzin (tmp/cases/D/docs/D-D06.md)"
+source d_d07 "D-D07 · Agreement dividing the estate of Zbigniew Sowa (extract) (tmp/cases/D/docs/D-D07.md)"
+source d_d08 "D-D08 · Report of an acquisition by inheritance to the Revenue Office (copy) (tmp/cases/D/docs/D-D08.md)"
+source d_d09 "D-D09 · SIO decision: old-age pension, Zbigniew Sowa (tmp/cases/D/docs/D-D09.md)"
+source d_d10 "D-D10 · SIO statement of earnings: Halina Sowa, 1981–2018 (tmp/cases/D/docs/D-D10.md)"
+source d_d11 "D-D11 · SIO decision: old-age pension, Halina Sowa (tmp/cases/D/docs/D-D11.md)"
+source d_d12 "D-D12 · Claim for a survivor pension (copy) (tmp/cases/D/docs/D-D12.md)"
+source d_d13 "D-D13 · SIO decision: survivor pension, Halina Sowa (tmp/cases/D/docs/D-D13.md)"
+source d_d14 "D-D14 · Claim under SOC-7 v2 (copy) (tmp/cases/D/docs/D-D14.md)"
+source d_d15 "D-D15 · SIO decision: the survivor pension with a part of the old-age pension (tmp/cases/D/docs/D-D15.md)"
+source d_d16 "D-D16 · SIO yearly statement for 2024 (PIT): Halina Sowa (tmp/cases/D/docs/D-D16.md)"
+source d_d17 "D-D17 · SIO yearly statement for 2025 (PIT): Halina Sowa (tmp/cases/D/docs/D-D17.md)"
+source d_d18 "D-D18 · Bank Buk · mortgage loan agreement 3310-20 (extract) (tmp/cases/D/docs/D-D18.md)"
+source d_d19 "D-D19 · TU Opoka · borrower life insurance KR-3310-20 (extract) (tmp/cases/D/docs/D-D19.md)"
+source d_d20 "D-D20 · Bank Buk · loan 3310-20 repaid (tmp/cases/D/docs/D-D20.md)"
+source d_d21 "D-D21 · TU Opoka · group life policy GZ-7741: benefit (tmp/cases/D/docs/D-D21.md)"
+source d_d22 "D-D22 · Register 55-1904-2271 (Zbigniew Sowa): bonds held on 17 May 2024 (tmp/cases/D/docs/D-D22.md)"
+source d_d23 "D-D23 · Bonds moved to register 55-2506-0815 (Halina Sowa) (tmp/cases/D/docs/D-D23.md)"
+source d_d24a "D-D24a · Early redemption, register 55-2506-0815 (request of 2025-06-16) (tmp/cases/D/docs/D-D24a.md)"
+source d_d24b "D-D24b · Early redemption, register 55-2506-0815 (request of 2025-06-20) (tmp/cases/D/docs/D-D24b.md)"
+source d_d24c "D-D24c · Early redemption, register 55-2506-0815 (request of 2025-07-04) (tmp/cases/D/docs/D-D24c.md)"
+source d_d24d "D-D24d · Early redemption, register 55-2506-0815 (request of 2026-03-04) (tmp/cases/D/docs/D-D24d.md)"
+source d_d25 "D-D25 · Lease of the flat ul. Ogrodowa 2/11 (extract) (tmp/cases/D/docs/D-D25.md)"
+source d_d26 "D-D26 · Tenant's notice: ul. Ogrodowa 2/11 (tmp/cases/D/docs/D-D26.md)"
+source d_d27 "D-D27 · WM Ogrodowa 2 · the building fee for flat 11 (tmp/cases/D/docs/D-D27.md)"
+source d_d28 "D-D28 · Invoice FV/2026/0216: ul. Ogrodowa 2/11 (tmp/cases/D/docs/D-D28.md)"
+source d_d29 "D-D29 · Valuation: ul. Ogrodowa 2/11, Kłodzin (tmp/cases/D/docs/D-D29.md)"
+source d_d30 "D-D30 · Offer for a share in ul. Ogrodowa 2/11 (tmp/cases/D/docs/D-D30.md)"
+source d_d31 "D-D31 · The 2024 return of Zbigniew Sowa (died 17.05.2024), filed for the estate (tmp/cases/D/docs/D-D31.md)"
+source d_d32 "D-D32 · Kuba's new account (tmp/cases/D/docs/D-D32.md)"
+source d_d33 "D-D33 · Bank Olcha · the account after the death of a holder (tmp/cases/D/docs/D-D33.md)"
+
+unit bond "one savings bond"
+
+unit fund_unit "one unit of the fund BRZ-DIV-D"
+
+axis hh_round
+  half-up "the source says to the ort, or to n decimal places, and names no mode: ties away from zero"
+  half-even "the same, ties to the even multiple"
+
+index day = day 2018-01-01..2064-12-31
+
+index month = month 2018-01..2064-12
+
+index year = year 1981..2064
+
+index lyear = year 2026..2064
+
+index quarter = month 2025-07..2026-09 by 3
+
+index iyear = 1..11
+
+index heir = [halina, piotr, anna, marta, jakub]
+
+index stock = [s_piotr, s_anna, s_marta, s_adam]
+
+index pkind = [own, zb]
+
+index redemption = [red_20250616, red_20250620, red_20250704, red_20260304]
+
+index life_age = 68..105
+
+index draw5 = 1..5
+
+index wstep = 0..36
+
+index start_month = month 2018-01..2023-09
+
+index dist: open
+
+index choice = [sell, keep]
+
+place konto: account DUK

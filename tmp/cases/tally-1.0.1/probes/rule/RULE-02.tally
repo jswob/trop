@@ -1,0 +1,71 @@
+model rule02
+  tally 1
+  on 2025-05-15
+  start 2025-05-15
+  end 2025-06-30
+  note "RULE-02: the lowest balance to 30 June over planned items only, and with the friend's promise counted."
+  note "bal counts a promised pay (L 5.13), and plan_low, which leaves it out, is walk-only and gives no date (L 5.13.1); so the planned-only view subtracts the promise's flows by hand."
+
+source card "Probe card RULE-02: Ania's account, the planned items and the friend's promise"
+
+index day = day 2025-05-15..2025-06-30
+
+place konto: account DUK
+
+input loan_amt: money DUK
+
+input loan_day: date
+
+input promise_amt: money DUK
+
+input promise_day: date
+
+input rent_amt: money DUK
+
+input rent_day: date
+
+input wage_amt: money DUK
+
+input wage_day: date
+
+pay friend_back
+  from outside_duk
+  to konto
+  amount promise_amt
+  on promise_day
+  promised
+
+pay loan
+  from konto
+  to outside_duk
+  amount loan_amt
+  on loan_day
+
+pay rent
+  from konto
+  to outside_duk
+  amount rent_amt
+  on rent_day
+
+pay wage
+  from outside_duk
+  to konto
+  amount wage_amt
+  on wage_day
+
+ask lowest_planned: min(d in day: bal(konto, d) - flows(friend_back, 2025-05-15..d)), argmin(d in day: bal(konto, d) - flows(friend_back, 2025-05-15..d))
+
+ask lowest_counted: min(d in day: bal(konto, d)), argmin(d in day: bal(konto, d))
+
+version card_2025
+  cite card
+  known 2025-05-15
+  loan_amt = 1200 "planned: the loan instalment"
+  loan_day = 2025-06-05 "planned"
+  opening[konto] = 4000 "story: the account on 15 May 2025"
+  promise_amt = 800 "promised, not planned"
+  promise_day = 2025-06-03 assumed "the friend said around 3 June; the card's worked answer takes 3 June" "story"
+  rent_amt = 2500 "planned: rent"
+  rent_day = 2025-06-01 "planned"
+  wage_amt = 6000 "planned: pay"
+  wage_day = 2025-06-10 "planned"

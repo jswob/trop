@@ -1,0 +1,25 @@
+model scen01
+  tally 1
+  on 2026-10-25
+  start 2025-01-01
+  end 2025-12-31
+
+source base_plan "SCEN-01 card: Piotr's base plan, with no loan"
+source loan_offer "SCEN-01 card: the amendment, a 10 000.00 loan at 0 % and an overpayment"
+
+index mon = month 2025-01..2025-12
+
+place konto: account DUK
+
+place loan: debt DUK
+
+ask cash_diff: flows(konto, 2025-01-01..2025-06-30) as if {scenario amend} - flows(konto, 2025-01-01..2025-06-30)
+
+ask debt_left: -bal(loan, 2025-06-30) as if {scenario amend}
+
+ask net_worth_diff: (flows(konto, 2025-01-01..2025-06-30) + flows(loan, 2025-01-01..2025-06-30)) as if {scenario amend} - (flows(konto, 2025-01-01..2025-06-30) + flows(loan, 2025-01-01..2025-06-30))
+
+version base_v
+  cite base_plan
+  known 2025-01-01
+  opening[loan] = 0 "the base plan has no loan"

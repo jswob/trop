@@ -1,0 +1,136 @@
+part records
+  tally 1
+  note "Bank Olcha's exports of the joint account. tally 1.0.1 can't read them as they stand (no import for a |-separated file with yyyymmdd dates, decimal commas, space thousands, header lines and a balance-after column: observation O:D-1, household A's O:A-1). Only the rows a question reads are written here, each citing its file and line; every other row is left out, so no version says covers and nothing here sums an export."
+  note "Each export's version is known on the first day after its month: the files name no export day (assumed)."
+
+index olcha_row: open
+
+input bank[r in olcha_row]: movement DUK
+
+version olcha_2024_05
+  cite olcha
+  governs 2024-05
+  known 2024-06-01
+  stated[konto] = 46761.80 governs 2024-05-17 "olcha-2024-05.csv line 21, balance after the day's last row"
+
+version bank_letter
+  cite d_d33
+  known 2024-06-24
+  stated[konto] = 46761.80 governs 2024-05-17 "D-D33: balance at the end of 17 May 2024"
+
+version olcha_2025_06
+  cite olcha
+  governs 2025-06
+  known 2025-07-01
+  bank[r20250612a] = (2025-06-12, konto, -124062.00, -) "olcha-2025-06.csv line 13: notary's deposit, payments to the heirs"
+  stated[konto] = 2209.24 governs 2025-06-13 "olcha-2025-06.csv line 13: no row on 2025-06-13, so the balance after line 13"
+  stated[konto] = 1324.24 governs 2025-06-17 "olcha-2025-06.csv line 15"
+  stated[konto] = 4334.00 governs 2025-06-19 "olcha-2025-06.csv line 16"
+
+version olcha_2025_07
+  cite olcha
+  governs 2025-07
+  known 2025-08-01
+  stated[konto] = 4691.12 governs 2025-07-03 "olcha-2025-07.csv line 10"
+  rent_day[2025-07] = 2025-07-08 "olcha-2025-07.csv line 15"
+
+version olcha_2025_08
+  cite olcha
+  governs 2025-08
+  known 2025-09-01
+  rent_day[2025-08] = 2025-08-11 "olcha-2025-08.csv line 13"
+
+version olcha_2025_09
+  cite olcha
+  governs 2025-09
+  known 2025-10-01
+  rent_day[2025-09] = 2025-09-08 "olcha-2025-09.csv line 12"
+
+version olcha_2025_10
+  cite olcha
+  governs 2025-10
+  known 2025-11-01
+  rent_day[2025-10] = 2025-10-08 "olcha-2025-10.csv line 12"
+  kuba_reached[2025-07] = 2025-10-10 "olcha-2025-10.csv line 15: Ogrodowa 2025-Q3 3/16, 818.44"
+  bank[r20251010a] = (2025-10-10, konto, -818.44, -) "olcha-2025-10.csv line 15"
+
+version olcha_2025_11
+  cite olcha
+  governs 2025-11
+  known 2025-12-01
+  rent_day[2025-11] = 2025-11-10 "olcha-2025-11.csv line 13"
+
+version olcha_2025_12
+  cite olcha
+  governs 2025-12
+  known 2026-01-01
+  rent_day[2025-12] = 2025-12-08 "olcha-2025-12.csv line 14"
+  rent_day[2026-01] = 2025-12-30 "olcha-2025-12.csv line 22: rent 01/2026 paid early"
+  bank[r20251230a] = (2025-12-30, konto, 1900.00, rent_in[2026-01]) "olcha-2025-12.csv line 22"
+  stated[konto] = 14080.75 governs 2025-12-31 "olcha-2025-12.csv line 26, closing balance"
+
+version olcha_2026_01
+  cite olcha
+  governs 2026-01
+  known 2026-02-01
+  bank[r20260112a] = (2026-01-12, konto, -1174.69, -) "olcha-2026-01.csv line 14: to Kuba's closed account"
+  bank[r20260114a] = (2026-01-14, konto, 1174.69, -) "olcha-2026-01.csv line 15: returned, account closed"
+  bank[r20260115a] = (2026-01-15, konto, -1174.69, -) "olcha-2026-01.csv line 18: to Kuba's new account (D-D32)"
+  kuba_reached[2025-10] = 2026-01-15 "olcha-2026-01.csv line 18 (the transfer of line 14 came back, line 15)"
+  bank[r20260120a] = (2026-01-20, konto, -263.00, -) "olcha-2026-01.csv line 24: PIT-13 advance 12/2025"
+
+version olcha_2026_02
+  cite olcha
+  governs 2026-02
+  known 2026-03-01
+  rent_day[2026-02] = 2026-02-09 "olcha-2026-02.csv line 10 (line 11 repeats it)"
+  bank[r20260209a] = (2026-02-09, konto, 1900.00, rent_in[2026-02]) "olcha-2026-02.csv line 10"
+  bank[r20260209b] = (2026-02-09, konto, 1900.00, -) "olcha-2026-02.csv line 11: the same row again, the same balance after (16 977,43): a duplicate"
+  boiler_day = 2026-02-18 "olcha-2026-02.csv line 20"
+
+version olcha_2026_03
+  cite olcha
+  governs 2026-03
+  known 2026-04-01
+  stated[konto] = 4842.46 governs 2026-03-03 "olcha-2026-03.csv line 9"
+  rent_day[2026-03] = 2026-03-09 "olcha-2026-03.csv line 14"
+  kuba_reached[2026-01] = - "D-HR1: the quarter's part is negative, nothing to send"
+
+version olcha_2026_04
+  cite olcha
+  governs 2026-04
+  known 2026-05-01
+  rent_day[2026-04] = 2026-04-08 "olcha-2026-04.csv line 12"
+  bank[r20260430a] = (2026-04-30, konto, -3.00, -) "olcha-2026-04.csv line 28: PIT 2025"
+
+version olcha_2026_05
+  cite olcha
+  governs 2026-05
+  known 2026-06-01
+  rent_day[2026-05] = 2026-05-11 "olcha-2026-05.csv line 12"
+
+version olcha_2026_06
+  cite olcha
+  governs 2026-06
+  known 2026-07-01
+  rent_day[2026-06] = 2026-06-08 "olcha-2026-06.csv line 11"
+
+version olcha_2026_07
+  cite olcha
+  governs 2026-07
+  known 2026-08-01
+  rent_day[2026-07] = 2026-07-08 "olcha-2026-07.csv line 12"
+  kuba_reached[2026-04] = 2026-07-10 "olcha-2026-07.csv line 14: Ogrodowa 2026-Q2 3/16, 29.25"
+
+version olcha_2026_08
+  cite olcha
+  governs 2026-08
+  known 2026-09-01
+  rent_day[2026-08] = 2026-08-10 "olcha-2026-08.csv line 12"
+
+version olcha_2026_09
+  cite olcha
+  governs 2026-09
+  known 2026-09-30
+  rent_day[2026-09] = 2026-09-07 "olcha-2026-09.csv line 13"
+  kuba_reached[2026-07] = - "olcha-2026-09.csv: no transfer to Kuba by the export's last row (line 29, closing)"

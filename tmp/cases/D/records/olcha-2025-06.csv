@@ -1,0 +1,26 @@
+Bank Olcha S.A.|account statement
+Account|LN73 4400 2011 0000 8817 2264 0001
+Holder|HALINA SOWA
+Period|20250601|20250630
+Opening balance|123 525,12
+Date|Type|Counterparty|Title|Amount|Balance after
+20250603|CASH|ATM Olcha Brzezie|cash withdrawal|-500,00|123 025,12
+20250603|CARD|Apteka Rumianek|card ...2264|-210,02|122 815,10
+20250603|CARD|Market Brzezie|card ...2264|-85,88|122 729,22
+20250605|CREDIT|Social Insurance Office|survivor pension 06/2025|4 227,07|126 956,29
+20250605|STANDING ORDER|WM Ogrodowa 2|fee Ogrodowa 2/11 06/2025|-445,00|126 511,29
+20250610|CARD|Sklep Pod Lipą|card ...2264|-240,05|126 271,24
+20250612|TRANSFER|Notary Ewa Brzoza (deposit)|estate of Z. Sowa: payments to the heirs, agreement 12.06.2025|-124 062,00|2 209,24
+20250616|STANDING ORDER|Volta Energia|Leśna 4 energy 06/2025|-385,00|1 824,24
+20250617|CASH|ATM Olcha Brzezie|cash withdrawal|-500,00|1 324,24
+20250619|CREDIT|Treasury ISB|redemption request 2025-06-16|3 009,76|4 334,00
+20250620|STANDING ORDER|Telekom Lenia|phone 06/2025|-59,00|4 275,00
+20250620|CARD|Market Brzezie|card ...2264|-213,03|4 061,97
+20250622|CARD|Stacja Olcha-Paliwa|card ...2264|-25,35|4 036,62
+20250622|CARD|Market Brzezie|card ...2264|-140,48|3 896,14
+20250624|CARD|Drogeria Konwalia|card ...2264|-135,65|3 760,49
+20250625|TRANSFER|Opieka Dom sp.|home help 06/2025|-1 100,00|2 660,49
+20250626|CREDIT|Treasury ISB|redemption request 2025-06-20|3 104,94|5 765,43
+20250629|CARD|Stacja Olcha-Paliwa|card ...2264|-115,46|5 649,97
+20250630|CARD|Warzywniak u Janka|card ...2264|-77,02|5 572,95
+Closing balance|5 572,95

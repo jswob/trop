@@ -1,0 +1,5 @@
+part asks_a10
+  tally 1
+  note "A-10 · 15 January 2026 (questions.md), as known 2026-01-15: what the walk books on 2026-01-15 to investing (A-HR1 v2) and to Zosia's savings (A-HR4). A-HR4's transfer is a flow pay, booked before the rule's state pay, and A-HR1 v2 .1 counts everything booked that day but the rule's own transfers, so the order is the rules' own (case suspect)."
+
+ask a10: flows(invest_take[2026-01], 2026-01-15..2026-01-15), flows(zosia_save[2026-01], 2026-01-15..2026-01-15) as known 2026-01-15

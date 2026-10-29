@@ -1,0 +1,23 @@
+Bank Olcha S.A.|account statement
+Account|LN73 4400 2011 0000 8817 2264 0001
+Holder|HALINA SOWA
+Period|20241001|20241031
+Opening balance|125 510,64
+Date|Type|Counterparty|Title|Amount|Balance after
+20241003|CASH|ATM Olcha Brzezie|cash withdrawal|-500,00|125 010,64
+20241004|CREDIT|Social Insurance Office|survivor pension 10/2024|4 022,53|129 033,17
+20241005|CARD|Warzywniak u Janka|card ...2264|-58,61|128 974,56
+20241007|STANDING ORDER|WM Ogrodowa 2|fee Ogrodowa 2/11 10/2024|-420,00|128 554,56
+20241007|CARD|Apteka Rumianek|card ...2264|-192,51|128 362,05
+20241008|CARD|Apteka Rumianek|card ...2264|-192,56|128 169,49
+20241010|CARD|Market Brzezie|card ...2264|-213,98|127 955,51
+20241014|CARD|Piekarnia Złoty Kłos|card ...2264|-256,40|127 699,11
+20241014|CARD|Piekarnia Złoty Kłos|card ...2264|-231,57|127 467,54
+20241015|STANDING ORDER|Volta Energia|Leśna 4 energy 10/2024|-385,00|127 082,54
+20241017|CASH|ATM Olcha Brzezie|cash withdrawal|-500,00|126 582,54
+20241021|STANDING ORDER|Telekom Lenia|phone 10/2024|-59,00|126 523,54
+20241024|CARD|Market Brzezie|card ...2264|-142,34|126 381,20
+20241025|TRANSFER|Opieka Dom sp.|home help 10/2024|-1 100,00|125 281,20
+20241028|CARD|Apteka Rumianek|card ...2264|-249,29|125 031,91
+20241031|CARD|Warzywniak u Janka|card ...2264|-147,38|124 884,53
+Closing balance|124 884,53

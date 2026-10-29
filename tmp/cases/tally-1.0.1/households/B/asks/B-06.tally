@@ -1,0 +1,11 @@
+part asks_b06
+  tally 1
+  note "Question B-06 (tmp/cases/B/questions.md)."
+
+ask b06_legs: sum(i in inv_duk where sale[i].sup = asset_sale: sale[i].net + sale[i].vat), 0 - car_vat, 0 - car_tax, 0 - (car_loan_left + car_loan_interest + car_loan_fee_due), 0 - car_loan_fee_due, car_policy_refund, road_tax_refund with law 2025-12-31 as known 2025-12-31
+
+ask b06_left: sum(i in inv_duk where sale[i].sup = asset_sale: sale[i].net + sale[i].vat) - car_vat - car_tax - (car_loan_left + car_loan_interest + car_loan_fee_due) + car_policy_refund + road_tax_refund with law 2025-12-31 as known 2025-12-31
+
+ask b06_purchase_vat: vat5_car_share, car_vat_deducted with law 2025-12-31 as known 2025-12-31
+
+ask b06_health: health_year[2025], health_year[2025] as if {sale[fv_019_2025].net = 0 * sale[fv_019_2025].net}, health_year[2025] - health_year[2025] as if {sale[fv_019_2025].net = 0 * sale[fv_019_2025].net} with law 2025-12-31 as known 2025-12-31

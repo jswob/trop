@@ -1,0 +1,11 @@
+model family
+  tally 1
+  on 2026-09-30
+  start 2021-01-01
+  end 2064-12-31
+  note "Household E1 of the case set (tmp/cases/E1/story.md): households A (Ania and Tomek Lis), B (Piotr Sowa and Ola Wilk) and D (Halina Sowa) as one family reality, in tally 1.0.1. Amounts are in DUK, the dukat of Lenia, of 100 orts; B's florens are FLR."
+  note "The reality is the households' own files as they are (households/A, B and D), the law files copied in (L §6.1), and this directory. A file copied under a/, b/ or d/ here stands in for the household's file of the same path, which the family leaves out (O:E1-1, O:E1-2, O:E1-3)."
+  note "One reality has one model header (L §6.1), so A's, B's and D's headers are part headers in the copies, and on, start and end are the family's: on is the latest of the three (D's 2026-09-30), start the earliest (A's 2021-01-01), end the latest (D's 2064-12-31). An ask with no as known now reads at 2026-09-30 (O:E1-1)."
+  note "Each household keys its people its own way: Ania is A's ania and D's anna, Jakub is D's jakub and the Kuba of D's names (owed_kuba). The family counts its six in e1_person (worth.tally) and reads each household by its own keys (O:E1-7)."
+
+source e1_story "The family's own account: who is in which household, where the households meet, what happened (tmp/cases/E1/story.md)"

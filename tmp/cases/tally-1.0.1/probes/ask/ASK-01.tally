@@ -1,0 +1,42 @@
+model ask01
+  tally 1
+  on 2025-04-01
+  start 2025-03-01
+  end 2025-03-31
+  note "Probe ASK-01: the first date a balance is below a floor; the month's minimum and its date."
+
+source probe_card "Probe card ASK-01 (made-up story and rules)"
+
+index bank_row: open
+index mday = day 2025-03-01..2025-03-31
+
+place konto: account DUK
+
+input bank[r in bank_row]: movement DUK
+input low_mark: money DUK
+
+def day_balance[d in mday]: money DUK
+  note "rule 1: the balance after each day's rows is the day's balance"
+  rule base v card = bal(konto, d)
+
+ask q_primitives: first(d in mday where day_balance[d] < low_mark), min(d in mday: day_balance[d]), argmin(d in mday: day_balance[d])
+
+version card
+  cite probe_card
+  known 2025-03-01
+  note "Stipulations, known from the model's start (L §4.5)."
+  low_mark = 2000.00 "question: below 2 000.00"
+  opening[konto] = 5000.00 "story: 5 000.00 on 1 March 2025"
+
+version march_rows
+  cite probe_card
+  governs 2025-03
+  known 2025-03-01
+  covers konto
+  note "The story's March rows, complete for the account over March."
+  bank[r0305] = (2025-03-05, konto, -1500.00, -) "story: 5th"
+  bank[r0310] = (2025-03-10, konto, 4000.00, -) "story: 10th"
+  bank[r0312] = (2025-03-12, konto, -3000.00, -) "story: 12th"
+  bank[r0320] = (2025-03-20, konto, -2600.00, -) "story: 20th"
+  bank[r0325] = (2025-03-25, konto, -500.00, -) "story: 25th"
+  bank[r0328] = (2025-03-28, konto, 6000.00, -) "story: 28th"

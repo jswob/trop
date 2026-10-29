@@ -1,0 +1,40 @@
+model time03
+  tally 1
+  on 2026-10-25
+  note "Probe TIME-03: pay for June paid in July, across a rate change keyed on the day of payment."
+
+source probe_card "Probe card TIME-03 (made-up story and rules)"
+
+index pmonth = month 2022-01..2022-12
+
+input gross[m in pmonth]: money DUK
+input paid_on[m in pmonth]: date
+input pay_rate: num
+
+def tax_by_payment[m in pmonth]: money DUK at paid_on[m]
+  note "rules 1 and 2: the act keys on the day of payment; rounded half up to 0.01"
+  rule base v card = round(pay_rate * gross[m], 0.01, half-up)
+
+def tax_by_period[m in pmonth]: money DUK
+  note "the contrast the question asks: a law keyed on the period, read at the month's first day (L §4.3 rule 2)"
+  rule base = round(pay_rate * gross[m], 0.01, half-up)
+
+ask q_june: tax_by_payment[2022-06], tax_by_period[2022-06]
+
+version act_h1
+  cite probe_card
+  governs 2022-01-01..2022-06-30
+  known 2026-10-25
+  pay_rate = 0.17 "rule 1: pay paid up to 30 June 2022"
+
+version act_h2
+  cite probe_card
+  governs 2022-07-01..2022-12-31
+  known 2026-10-25
+  pay_rate = 0.12 "rule 1: pay paid from 1 July 2022"
+
+version card
+  cite probe_card
+  known 2026-10-25
+  gross[2022-06] = 8000.00 "story: pay for June 2022, gross"
+  paid_on[2022-06] = 2022-07-10 "story: paid on 10 July 2022"

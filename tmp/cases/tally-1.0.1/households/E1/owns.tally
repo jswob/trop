@@ -1,0 +1,297 @@
+part e1_owns
+  tally 1
+  note "A counts what Ania and Tomek are worth over every place of the reality, by owns (A/worth.tally:39–45; L §5.9: by kind or owner, never by a hand-kept list). In the family the built-in index place also holds B's and D's places, and a sum whose where is a hole is a hole (L §5.10, aggregates), so each spouse's share of them is stated: none (O:E1-2). Outside places need no row: kind(x) != outside stops the and (L §5.10, logic)."
+
+version e1_owns_b
+  cite e1_story
+  known 2021-01-01
+  note "B's places with no key that are not outside (B/places.tally): Piotr's, Ola's, or theirs together"
+  owns[*, cis] = 0 "story.md, The family (lines 7–20): Ania and Tomek are household A; cis is household B's (B/places.tally)"
+  owns[*, savings] = 0 "story.md, The family (lines 7–20): Ania and Tomek are household A; savings is household B's (B/places.tally)"
+  owns[*, b_lazur] = 0 "story.md, The family (lines 7–20): Ania and Tomek are household A; b_lazur is household B's (B/places.tally)"
+  owns[*, wrzos] = 0 "story.md, The family (lines 7–20): Ania and Tomek are household A; wrzos is household B's (B/places.tally)"
+  owns[*, mortgage] = 0 "story.md, The family (lines 7–20): Ania and Tomek are household A; mortgage is household B's (B/places.tally)"
+  owns[*, clients_owe] = 0 "story.md, The family (lines 7–20): Ania and Tomek are household A; clients_owe is household B's (B/places.tally)"
+  owns[*, kessel_owes] = 0 "story.md, The family (lines 7–20): Ania and Tomek are household A; kessel_owes is household B's (B/places.tally)"
+  owns[*, bartek] = 0 "story.md, The family (lines 7–20): Ania and Tomek are household A; bartek is household B's (B/places.tally)"
+
+version e1_owns_d
+  cite e1_story
+  known 2021-01-01
+  owns[*, konto] = 0 "story.md, The family (lines 7–20): Ania and Tomek are household A; konto is household D's, Halina's account at Bank Olcha (D/reality.tally:91)"
+
+version e1_owns_inv_20220429
+  cite e1_story
+  known 2022-04-29
+  note "the invoice claims of Piotr's business (B/business.tally:33–35) whose keys B adds in a version known 2022-04-29"
+  owns[*, inv_owed[fv_001_2022]] = 0 "story.md, The family (lines 7–20): Ania and Tomek are household A; invoice fv_001_2022 is a claim of Piotr's business, household B's"
+
+version e1_owns_inv_20220531
+  cite e1_story
+  known 2022-05-31
+  note "the invoice claims of Piotr's business (B/business.tally:33–35) whose keys B adds in a version known 2022-05-31"
+  owns[*, inv_owed[fv_002_2022]] = 0 "story.md, The family (lines 7–20): Ania and Tomek are household A; invoice fv_002_2022 is a claim of Piotr's business, household B's"
+
+version e1_owns_inv_20220630
+  cite e1_story
+  known 2022-06-30
+  note "the invoice claims of Piotr's business (B/business.tally:33–35) whose keys B adds in a version known 2022-06-30"
+  owns[*, inv_owed[fv_003_2022]] = 0 "story.md, The family (lines 7–20): Ania and Tomek are household A; invoice fv_003_2022 is a claim of Piotr's business, household B's"
+
+version e1_owns_inv_20220715
+  cite e1_story
+  known 2022-07-15
+  note "the invoice claims of Piotr's business (B/business.tally:33–35) whose keys B adds in a version known 2022-07-15"
+  owns[*, inv_owed[fv_004_2022]] = 0 "story.md, The family (lines 7–20): Ania and Tomek are household A; invoice fv_004_2022 is a claim of Piotr's business, household B's"
+
+version e1_owns_inv_20220729
+  cite e1_story
+  known 2022-07-29
+  note "the invoice claims of Piotr's business (B/business.tally:33–35) whose keys B adds in a version known 2022-07-29"
+  owns[*, inv_owed[fv_005_2022]] = 0 "story.md, The family (lines 7–20): Ania and Tomek are household A; invoice fv_005_2022 is a claim of Piotr's business, household B's"
+
+version e1_owns_inv_20220831
+  cite e1_story
+  known 2022-08-31
+  note "the invoice claims of Piotr's business (B/business.tally:33–35) whose keys B adds in a version known 2022-08-31"
+  owns[*, inv_owed[fv_006_2022]] = 0 "story.md, The family (lines 7–20): Ania and Tomek are household A; invoice fv_006_2022 is a claim of Piotr's business, household B's"
+
+version e1_owns_inv_20220909
+  cite e1_story
+  known 2022-09-09
+  note "the invoice claims of Piotr's business (B/business.tally:33–35) whose keys B adds in a version known 2022-09-09"
+  owns[*, inv_owed[fv_007_2022]] = 0 "story.md, The family (lines 7–20): Ania and Tomek are household A; invoice fv_007_2022 is a claim of Piotr's business, household B's"
+
+version e1_owns_inv_20220930
+  cite e1_story
+  known 2022-09-30
+  note "the invoice claims of Piotr's business (B/business.tally:33–35) whose keys B adds in a version known 2022-09-30"
+  owns[*, inv_owed[fv_008_2022]] = 0 "story.md, The family (lines 7–20): Ania and Tomek are household A; invoice fv_008_2022 is a claim of Piotr's business, household B's"
+
+version e1_owns_inv_20221014
+  cite e1_story
+  known 2022-10-14
+  note "the invoice claims of Piotr's business (B/business.tally:33–35) whose keys B adds in a version known 2022-10-14"
+  owns[*, inv_owed[fv_009_2022]] = 0 "story.md, The family (lines 7–20): Ania and Tomek are household A; invoice fv_009_2022 is a claim of Piotr's business, household B's"
+
+version e1_owns_inv_20221031
+  cite e1_story
+  known 2022-10-31
+  note "the invoice claims of Piotr's business (B/business.tally:33–35) whose keys B adds in a version known 2022-10-31"
+  owns[*, inv_owed[fv_010_2022]] = 0 "story.md, The family (lines 7–20): Ania and Tomek are household A; invoice fv_010_2022 is a claim of Piotr's business, household B's"
+
+version e1_owns_inv_20221130
+  cite e1_story
+  known 2022-11-30
+  note "the invoice claims of Piotr's business (B/business.tally:33–35) whose keys B adds in a version known 2022-11-30"
+  owns[*, inv_owed[fv_011_2022]] = 0 "story.md, The family (lines 7–20): Ania and Tomek are household A; invoice fv_011_2022 is a claim of Piotr's business, household B's"
+
+version e1_owns_inv_20221230
+  cite e1_story
+  known 2022-12-30
+  note "the invoice claims of Piotr's business (B/business.tally:33–35) whose keys B adds in a version known 2022-12-30"
+  owns[*, inv_owed[fv_012_2022]] = 0 "story.md, The family (lines 7–20): Ania and Tomek are household A; invoice fv_012_2022 is a claim of Piotr's business, household B's"
+
+version e1_owns_inv_20240131
+  cite e1_story
+  known 2024-01-31
+  note "the invoice claims of Piotr's business (B/business.tally:33–35) whose keys B adds in a version known 2024-01-31"
+  owns[*, inv_owed[fv_001_2024]] = 0 "story.md, The family (lines 7–20): Ania and Tomek are household A; invoice fv_001_2024 is a claim of Piotr's business, household B's"
+
+version e1_owns_inv_20240229
+  cite e1_story
+  known 2024-02-29
+  note "the invoice claims of Piotr's business (B/business.tally:33–35) whose keys B adds in a version known 2024-02-29"
+  owns[*, inv_owed[fv_002_2024]] = 0 "story.md, The family (lines 7–20): Ania and Tomek are household A; invoice fv_002_2024 is a claim of Piotr's business, household B's"
+
+version e1_owns_inv_20240315
+  cite e1_story
+  known 2024-03-15
+  note "the invoice claims of Piotr's business (B/business.tally:33–35) whose keys B adds in a version known 2024-03-15"
+  owns[*, inv_owed[fv_003_2024]] = 0 "story.md, The family (lines 7–20): Ania and Tomek are household A; invoice fv_003_2024 is a claim of Piotr's business, household B's"
+
+version e1_owns_inv_20240329
+  cite e1_story
+  known 2024-03-29
+  note "the invoice claims of Piotr's business (B/business.tally:33–35) whose keys B adds in a version known 2024-03-29"
+  owns[*, inv_owed[fv_004_2024]] = 0 "story.md, The family (lines 7–20): Ania and Tomek are household A; invoice fv_004_2024 is a claim of Piotr's business, household B's"
+
+version e1_owns_inv_20240430
+  cite e1_story
+  known 2024-04-30
+  note "the invoice claims of Piotr's business (B/business.tally:33–35) whose keys B adds in a version known 2024-04-30"
+  owns[*, inv_owed[fv_005_2024]] = 0 "story.md, The family (lines 7–20): Ania and Tomek are household A; invoice fv_005_2024 is a claim of Piotr's business, household B's"
+
+version e1_owns_inv_20240531
+  cite e1_story
+  known 2024-05-31
+  note "the invoice claims of Piotr's business (B/business.tally:33–35) whose keys B adds in a version known 2024-05-31"
+  owns[*, inv_owed[fv_006_2024]] = 0 "story.md, The family (lines 7–20): Ania and Tomek are household A; invoice fv_006_2024 is a claim of Piotr's business, household B's"
+
+version e1_owns_inv_20240614
+  cite e1_story
+  known 2024-06-14
+  note "the invoice claims of Piotr's business (B/business.tally:33–35) whose keys B adds in a version known 2024-06-14"
+  owns[*, inv_owed[fv_007_2024]] = 0 "story.md, The family (lines 7–20): Ania and Tomek are household A; invoice fv_007_2024 is a claim of Piotr's business, household B's"
+
+version e1_owns_inv_20240628
+  cite e1_story
+  known 2024-06-28
+  note "the invoice claims of Piotr's business (B/business.tally:33–35) whose keys B adds in a version known 2024-06-28"
+  owns[*, inv_owed[fv_008_2024]] = 0 "story.md, The family (lines 7–20): Ania and Tomek are household A; invoice fv_008_2024 is a claim of Piotr's business, household B's"
+
+version e1_owns_inv_20240731
+  cite e1_story
+  known 2024-07-31
+  note "the invoice claims of Piotr's business (B/business.tally:33–35) whose keys B adds in a version known 2024-07-31"
+  owns[*, inv_owed[fv_009_2024]] = 0 "story.md, The family (lines 7–20): Ania and Tomek are household A; invoice fv_009_2024 is a claim of Piotr's business, household B's"
+
+version e1_owns_inv_20240830
+  cite e1_story
+  known 2024-08-30
+  note "the invoice claims of Piotr's business (B/business.tally:33–35) whose keys B adds in a version known 2024-08-30"
+  owns[*, inv_owed[fv_010_2024]] = 0 "story.md, The family (lines 7–20): Ania and Tomek are household A; invoice fv_010_2024 is a claim of Piotr's business, household B's"
+
+version e1_owns_inv_20240913
+  cite e1_story
+  known 2024-09-13
+  note "the invoice claims of Piotr's business (B/business.tally:33–35) whose keys B adds in a version known 2024-09-13"
+  owns[*, inv_owed[fv_011_2024]] = 0 "story.md, The family (lines 7–20): Ania and Tomek are household A; invoice fv_011_2024 is a claim of Piotr's business, household B's"
+
+version e1_owns_inv_20240930
+  cite e1_story
+  known 2024-09-30
+  note "the invoice claims of Piotr's business (B/business.tally:33–35) whose keys B adds in a version known 2024-09-30"
+  owns[*, inv_owed[fv_012_2024]] = 0 "story.md, The family (lines 7–20): Ania and Tomek are household A; invoice fv_012_2024 is a claim of Piotr's business, household B's"
+
+version e1_owns_inv_20241031
+  cite e1_story
+  known 2024-10-31
+  note "the invoice claims of Piotr's business (B/business.tally:33–35) whose keys B adds in a version known 2024-10-31"
+  owns[*, inv_owed[fv_013_2024]] = 0 "story.md, The family (lines 7–20): Ania and Tomek are household A; invoice fv_013_2024 is a claim of Piotr's business, household B's"
+
+version e1_owns_inv_20241129
+  cite e1_story
+  known 2024-11-29
+  note "the invoice claims of Piotr's business (B/business.tally:33–35) whose keys B adds in a version known 2024-11-29"
+  owns[*, inv_owed[fv_014_2024]] = 0 "story.md, The family (lines 7–20): Ania and Tomek are household A; invoice fv_014_2024 is a claim of Piotr's business, household B's"
+
+version e1_owns_inv_20241206
+  cite e1_story
+  known 2024-12-06
+  note "the invoice claims of Piotr's business (B/business.tally:33–35) whose keys B adds in a version known 2024-12-06"
+  owns[*, inv_owed[fv_015_2024]] = 0 "story.md, The family (lines 7–20): Ania and Tomek are household A; invoice fv_015_2024 is a claim of Piotr's business, household B's"
+
+version e1_owns_inv_20241231
+  cite e1_story
+  known 2024-12-31
+  note "the invoice claims of Piotr's business (B/business.tally:33–35) whose keys B adds in a version known 2024-12-31"
+  owns[*, inv_owed[fv_016_2024]] = 0 "story.md, The family (lines 7–20): Ania and Tomek are household A; invoice fv_016_2024 is a claim of Piotr's business, household B's"
+
+version e1_owns_inv_20250131
+  cite e1_story
+  known 2025-01-31
+  note "the invoice claims of Piotr's business (B/business.tally:33–35) whose keys B adds in a version known 2025-01-31"
+  owns[*, inv_owed[fv_001_2025]] = 0 "story.md, The family (lines 7–20): Ania and Tomek are household A; invoice fv_001_2025 is a claim of Piotr's business, household B's"
+  owns[*, inv_owed_flr[fv_002_2025]] = 0 "story.md, The family (lines 7–20): Ania and Tomek are household A; invoice fv_002_2025 is a claim of Piotr's business, household B's"
+
+version e1_owns_inv_20250228
+  cite e1_story
+  known 2025-02-28
+  note "the invoice claims of Piotr's business (B/business.tally:33–35) whose keys B adds in a version known 2025-02-28"
+  owns[*, inv_owed[fv_003_2025]] = 0 "story.md, The family (lines 7–20): Ania and Tomek are household A; invoice fv_003_2025 is a claim of Piotr's business, household B's"
+  owns[*, inv_owed_flr[fv_004_2025]] = 0 "story.md, The family (lines 7–20): Ania and Tomek are household A; invoice fv_004_2025 is a claim of Piotr's business, household B's"
+
+version e1_owns_inv_20250331
+  cite e1_story
+  known 2025-03-31
+  note "the invoice claims of Piotr's business (B/business.tally:33–35) whose keys B adds in a version known 2025-03-31"
+  owns[*, inv_owed[fv_005_2025]] = 0 "story.md, The family (lines 7–20): Ania and Tomek are household A; invoice fv_005_2025 is a claim of Piotr's business, household B's"
+  owns[*, inv_owed_flr[fv_006_2025]] = 0 "story.md, The family (lines 7–20): Ania and Tomek are household A; invoice fv_006_2025 is a claim of Piotr's business, household B's"
+
+version e1_owns_inv_20250430
+  cite e1_story
+  known 2025-04-30
+  note "the invoice claims of Piotr's business (B/business.tally:33–35) whose keys B adds in a version known 2025-04-30"
+  owns[*, inv_owed[fv_007_2025]] = 0 "story.md, The family (lines 7–20): Ania and Tomek are household A; invoice fv_007_2025 is a claim of Piotr's business, household B's"
+  owns[*, inv_owed_flr[fv_008_2025]] = 0 "story.md, The family (lines 7–20): Ania and Tomek are household A; invoice fv_008_2025 is a claim of Piotr's business, household B's"
+
+version e1_owns_inv_20250530
+  cite e1_story
+  known 2025-05-30
+  note "the invoice claims of Piotr's business (B/business.tally:33–35) whose keys B adds in a version known 2025-05-30"
+  owns[*, inv_owed[fv_009_2025]] = 0 "story.md, The family (lines 7–20): Ania and Tomek are household A; invoice fv_009_2025 is a claim of Piotr's business, household B's"
+  owns[*, inv_owed_flr[fv_010_2025]] = 0 "story.md, The family (lines 7–20): Ania and Tomek are household A; invoice fv_010_2025 is a claim of Piotr's business, household B's"
+
+version e1_owns_inv_20250613
+  cite e1_story
+  known 2025-06-13
+  note "the invoice claims of Piotr's business (B/business.tally:33–35) whose keys B adds in a version known 2025-06-13"
+  owns[*, inv_owed[fv_011_2025]] = 0 "story.md, The family (lines 7–20): Ania and Tomek are household A; invoice fv_011_2025 is a claim of Piotr's business, household B's"
+
+version e1_owns_inv_20250630
+  cite e1_story
+  known 2025-06-30
+  note "the invoice claims of Piotr's business (B/business.tally:33–35) whose keys B adds in a version known 2025-06-30"
+  owns[*, inv_owed[fv_012_2025]] = 0 "story.md, The family (lines 7–20): Ania and Tomek are household A; invoice fv_012_2025 is a claim of Piotr's business, household B's"
+  owns[*, inv_owed_flr[fv_013_2025]] = 0 "story.md, The family (lines 7–20): Ania and Tomek are household A; invoice fv_013_2025 is a claim of Piotr's business, household B's"
+
+version e1_owns_inv_20250731
+  cite e1_story
+  known 2025-07-31
+  note "the invoice claims of Piotr's business (B/business.tally:33–35) whose keys B adds in a version known 2025-07-31"
+  owns[*, inv_owed[fv_014_2025]] = 0 "story.md, The family (lines 7–20): Ania and Tomek are household A; invoice fv_014_2025 is a claim of Piotr's business, household B's"
+  owns[*, inv_owed_flr[fv_015_2025]] = 0 "story.md, The family (lines 7–20): Ania and Tomek are household A; invoice fv_015_2025 is a claim of Piotr's business, household B's"
+
+version e1_owns_inv_20250814
+  cite e1_story
+  known 2025-08-14
+  note "the invoice claims of Piotr's business (B/business.tally:33–35) whose keys B adds in a version known 2025-08-14"
+  owns[*, inv_owed[fv_016_2025]] = 0 "story.md, The family (lines 7–20): Ania and Tomek are household A; invoice fv_016_2025 is a claim of Piotr's business, household B's"
+
+version e1_owns_inv_20250829
+  cite e1_story
+  known 2025-08-29
+  note "the invoice claims of Piotr's business (B/business.tally:33–35) whose keys B adds in a version known 2025-08-29"
+  owns[*, inv_owed[fv_017_2025]] = 0 "story.md, The family (lines 7–20): Ania and Tomek are household A; invoice fv_017_2025 is a claim of Piotr's business, household B's"
+  owns[*, inv_owed_flr[fv_018_2025]] = 0 "story.md, The family (lines 7–20): Ania and Tomek are household A; invoice fv_018_2025 is a claim of Piotr's business, household B's"
+
+version e1_owns_inv_20250912
+  cite e1_story
+  known 2025-09-12
+  note "the invoice claims of Piotr's business (B/business.tally:33–35) whose keys B adds in a version known 2025-09-12"
+  owns[*, inv_owed[fv_019_2025]] = 0 "story.md, The family (lines 7–20): Ania and Tomek are household A; invoice fv_019_2025 is a claim of Piotr's business, household B's"
+
+version e1_owns_inv_20250930
+  cite e1_story
+  known 2025-09-30
+  note "the invoice claims of Piotr's business (B/business.tally:33–35) whose keys B adds in a version known 2025-09-30"
+  owns[*, inv_owed[fv_020_2025]] = 0 "story.md, The family (lines 7–20): Ania and Tomek are household A; invoice fv_020_2025 is a claim of Piotr's business, household B's"
+  owns[*, inv_owed_flr[fv_021_2025]] = 0 "story.md, The family (lines 7–20): Ania and Tomek are household A; invoice fv_021_2025 is a claim of Piotr's business, household B's"
+
+version e1_owns_inv_20251010
+  cite e1_story
+  known 2025-10-10
+  note "the invoice claims of Piotr's business (B/business.tally:33–35) whose keys B adds in a version known 2025-10-10"
+  owns[*, inv_owed[fv_022_2025]] = 0 "story.md, The family (lines 7–20): Ania and Tomek are household A; invoice fv_022_2025 is a claim of Piotr's business, household B's"
+
+version e1_owns_inv_20251031
+  cite e1_story
+  known 2025-10-31
+  note "the invoice claims of Piotr's business (B/business.tally:33–35) whose keys B adds in a version known 2025-10-31"
+  owns[*, inv_owed[fv_023_2025]] = 0 "story.md, The family (lines 7–20): Ania and Tomek are household A; invoice fv_023_2025 is a claim of Piotr's business, household B's"
+  owns[*, inv_owed_flr[fv_024_2025]] = 0 "story.md, The family (lines 7–20): Ania and Tomek are household A; invoice fv_024_2025 is a claim of Piotr's business, household B's"
+
+version e1_owns_inv_20251128
+  cite e1_story
+  known 2025-11-28
+  note "the invoice claims of Piotr's business (B/business.tally:33–35) whose keys B adds in a version known 2025-11-28"
+  owns[*, inv_owed[fv_025_2025]] = 0 "story.md, The family (lines 7–20): Ania and Tomek are household A; invoice fv_025_2025 is a claim of Piotr's business, household B's"
+  owns[*, inv_owed_flr[fv_026_2025]] = 0 "story.md, The family (lines 7–20): Ania and Tomek are household A; invoice fv_026_2025 is a claim of Piotr's business, household B's"
+
+version e1_owns_inv_20251231
+  cite e1_story
+  known 2025-12-31
+  note "the invoice claims of Piotr's business (B/business.tally:33–35) whose keys B adds in a version known 2025-12-31"
+  owns[*, inv_owed[fv_027_2025]] = 0 "story.md, The family (lines 7–20): Ania and Tomek are household A; invoice fv_027_2025 is a claim of Piotr's business, household B's"
+  owns[*, inv_owed_flr[fv_028_2025]] = 0 "story.md, The family (lines 7–20): Ania and Tomek are household A; invoice fv_028_2025 is a claim of Piotr's business, household B's"

@@ -1,0 +1,52 @@
+model cur01
+  tally 1
+  on 2026-10-25
+  note "CUR-01: one invoice in florens: revenue at the law's rate, cash at the bank's, the difference."
+
+source card "Probe card CUR-01 (made up): story and rules"
+
+index day = day 2024-03-01..2024-04-30
+
+input bank_rate[d in day]: num DUK/FLR
+
+input holidays: dates
+
+input invoice_amount: money FLR
+
+input invoice_day: date
+
+input mid[d in day]: num DUK/FLR
+
+input pay_day: date
+
+def cash_received: money DUK
+  note "rule 3: half up to 0.01 DUK"
+  rule base v card_rules = round(invoice_amount * bank_rate[pay_day], 0.01, half-up)
+
+def fx_loss: money DUK = revenue - cash_received
+
+def rate_day: date
+  note "rule 1: the last business day before the invoice date"
+  rule base v card_rules = prev_business(add_days(invoice_day, -1), holidays)
+
+def revenue: money DUK
+  note "rules 1 and 3"
+  rule base v card_rules = round(invoice_amount * mid[rate_day], 0.01, half-up)
+
+ask q_invoice: rate_day, revenue, cash_received, fx_loss
+
+version card_facts
+  cite card
+  known 2026-10-25
+  bank_rate[2024-04-15] = 4.2510 "story: his bank's own rate"
+  holidays = [] assumed "the card names no holiday" "rule 1"
+  invoice_amount = 1000.00 "story: 1 000.00 FLR"
+  invoice_day = 2024-03-15 "story: Friday 15 March 2024"
+  pay_day = 2024-04-15 "story: the client pays on 15 April"
+
+version card_rules
+  cite card
+  known 2026-10-25
+  mid[2024-03-13] = 4.3050 "rule 2"
+  mid[2024-03-14] = 4.3125 "rule 2"
+  mid[2024-03-15] = 4.3200 "rule 2"

@@ -1,0 +1,47 @@
+model val01
+  tally 1
+  on 2026-10-25
+
+source gazette "VAL-01 card: the gazette's entries for the reference wage RW"
+source card "VAL-01 card: its rules"
+
+index dy = day 2022-01-01..2026-12-31
+
+input rw: money DUK
+
+input rw_end: date
+
+def rw_on[d in dy]: money DUK
+  rule base = rw
+  rule held excepts base v card_rules when missing(rw) and d > rw_end = rw as if {law rw_end}
+
+ask a: rw_on[2022-06-01]
+
+ask b: rw_on[2026-03-01]
+
+version rw_2023
+  cite gazette
+  governs 2023-01-01..2023-12-31
+  known 2022-11-15
+  rw = 3490.00 "entry in force 1 January - 31 December 2023"
+
+version rw_2024a
+  cite gazette
+  governs 2024-01-01..2024-06-30
+  known 2023-11-15
+  rw = 4242.00 "entry in force 1 January - 30 June 2024"
+
+version rw_2024b
+  cite gazette
+  governs 2024-07-01..2024-12-31
+  known 2024-05-20
+  rw = 4300.00 "entry in force 1 July - 31 December 2024"
+
+version rw_last
+  cite gazette
+  known 2024-05-20
+  rw_end = 2024-12-31 "the last entry's end: the entry published 20 May 2024 is in force to 31 December 2024; nothing later is published"
+
+version card_rules
+  cite card
+  known 2026-10-25

@@ -1,0 +1,19 @@
+part vat_5
+  tally 1
+  law
+  note "VAT-5 · Input VAT. Deducted in the month its invoice is received, or in either of the two months after (.1). A car used privately too: 50 % of the VAT on its purchase, fuel, repairs and leasing; 100 % only with business use alone and a mileage log (.2)."
+
+source vat_5 "Value Added Tax Act, VAT-5 Input VAT (tmp/cases/law/acts.md)"
+
+input vat5_car_share: num question "What share of a mixed-use car's VAT is deducted (VAT-5 .2)?"
+
+input vat5_late_months: int question "In how many months after receipt may input VAT still be deducted (VAT-5 .1)?"
+
+version vat5_v1
+  cite vat_5
+  governs 2018-01-01..
+  known 2017-09-01
+  enters 2018-01-01
+  note "VAT-5 v1, in force 2018-01-01 until replaced, published 2017-09-01; governs purchase invoices received from 2018-01-01."
+  vat5_car_share = 0.50 "VAT-5 v1 .2"
+  vat5_late_months = 2 "VAT-5 v1 .1"

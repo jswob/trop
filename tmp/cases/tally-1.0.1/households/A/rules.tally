@@ -1,0 +1,145 @@
+part rules
+  tally 1
+  note "Our house rules (tmp/cases/A/house-rules.md): A-HR1 the 15th (v1 a fixed 2 500.00 DUK, v2 everything above the floor), A-HR2 which day is the 15th, A-HR3 the next car, A-HR4 Zosia's savings. A-HR5, how we count, is worth.tally. Each version governs from the day the rule gives; it is known on the day the story gives, else from the model's start (L §4.5)."
+  note "A-09 reads A-HR1 v2 over 2025 from the joint account's records: no version covers the account (records.tally), so the balance, the card average and what was moved are holes."
+
+input hr1_fixed: money DUK question "How much do we invest on the 15th (A-HR1 v1 .1)?"
+
+input hr1_floor: money DUK question "What is the floor's fixed part (A-HR1 v2 .2)?"
+
+input hr3_threshold: money DUK question "From what worth of Tomek's Rzeka account do we buy the next car (A-HR3)?"
+
+input hr3_amount: money DUK question "How much BRZ-GLB-A do we sell for the next car (A-HR3)?"
+
+input hr4_amount: money DUK question "How much goes to Zosia's savings on the 15th (A-HR4)?"
+
+input rzk_fee_rate: num question "What fee does Rzeka take on the money placed (A-D12 .1)?"
+
+input rzk_fee_min: money DUK question "What is Rzeka's least fee on a purchase (A-D12 .1)?"
+
+version hr1_v1
+  cite house_rules
+  governs 2021-01-15..2024-01-14
+  known 2021-01-15
+  hr1_fixed = 2500.00 "A-HR1 v1 .1"
+
+version hr1_v2
+  cite house_rules
+  governs 2024-01-15..
+  known 2024-01-15
+  hr1_floor = 1000.00 "A-HR1 v2 .2"
+
+version hr3_v1
+  cite house_rules
+  governs 2026-01-15..
+  known 2021-01-01
+  note "house-rules.md gives A-HR3 its start, 2026-01-15, and the story no day it was made, so it is known from the model's start (L §4.5)"
+  hr3_threshold = 60000.00 "A-HR3: worth 60 000.00 DUK or more"
+  hr3_amount = 45000.00 "A-HR3: we sell 45 000.00 DUK of BRZ-GLB-A"
+
+version hr4_none
+  cite house_rules
+  governs 2021-01-01..2026-01-14
+  known 2021-01-01
+  hr4_amount = 0 "A-HR4 starts on 2026-01-15"
+
+version hr4_v1
+  cite house_rules
+  governs 2026-01-15..
+  known 2026-01-15
+  hr4_amount = 500.00 "A-HR4: 500.00 DUK from the joint account to Zosia's savings (story 2026-01-15: A-HR4 starts)"
+
+version rzeka_terms
+  cite a_d12
+  known 2020-12-01
+  rzk_fee_rate = 0.0025 "A-D12 .1: 0.25 % of the money placed"
+  rzk_fee_min = 5.00 "A-D12 .1: at least 5.00 DUK, rounded to the ort"
+
+def rule_day[m in month]: date at day_of(m, 15)
+  note "A-HR2: the 15th, or the next business day when it isn't one; read on the 15th, so the holiday list read is that year's (O:A-5)"
+  rule base = next_business(day_of(m, 15), holidays)
+
+index so: open
+  note "the standing orders and instalments on the joint account (A-D33)"
+
+input so_amount[o in so]: money DUK question "How much does this standing order pay?"
+
+input so_dom[o in so]: int question "On which day of the month is it due?"
+
+input so_from[o in so]: date question "From which day does it run?"
+
+input so_until[o in so]: date question "Until which day does it run?"
+
+version standing_2025
+  cite a_d33
+  known 2025-01-02
+  so_amount[rent] = 3350.00 "A-D33: Jerzy Grab, rent"
+  so_dom[rent] = 1 "A-D33: 1st"
+  so_from[rent] = 2025-01-01 "A-D33"
+  so_until[rent] = - "A-D33: —"
+  so_amount[nursery] = 1250.00 "A-D33: Żłobek Pszczółka, nursery"
+  so_dom[nursery] = 5 "A-D33: 5th"
+  so_from[nursery] = 2024-09-05 "A-D33"
+  so_until[nursery] = - "A-D33: —"
+  so_amount[phone] = 139.99 "A-D33: Fala Telekom, internet and phone"
+  so_dom[phone] = 20 "A-D33: 20th"
+  so_from[phone] = 2020-01-20 "A-D33"
+  so_until[phone] = - "A-D33: —"
+  so_amount[instalments] = 380.00 "A-D33: Elektro Bór Raty, instalments (A-D34)"
+  so_dom[instalments] = 25 "A-D33: 25th"
+  so_from[instalments] = 2024-10-25 "A-D33"
+  so_until[instalments] = 2025-09-25 "A-D33"
+
+def so_runs[o in so, k in month]: bool
+  note "A-D33: the order is due in month k"
+  rule base = day_of(k, so_dom[o]) >= so_from[o] and (so_until[o] = - or day_of(k, so_dom[o]) <= so_until[o])
+
+def so_day[o in so, k in month]: date at day_of(k, 1)
+  note "A-D33: executed on the next business day when the due day isn't one"
+  rule base = next_business(day_of(k, so_dom[o]), holidays)
+
+def due[m in month]: money DUK
+  note "A-HR1 v2 .2: every payment we know will leave the joint account after the rule's day and before the next rule's day"
+  rule base = sum(o in so, k in month where so_runs[o, k] and so_day[o, k] > rule_day[m] and so_day[o, k] < rule_day[m + 1]: so_amount[o])
+
+def card_avg[m in month]: money DUK
+  note "A-HR1 v2 .3: card payments, less card refunds, less friends' paybacks, over the three full calendar months before the rule's day, divided by three; the rule doesn't say how the average is rounded, so to the ort (questions.md: amounts to the ort)"
+  rule unknown = ? "the joint account's card payments, card refunds and paybacks in the three months before the 15th: its statements are not imported (O:A-1)"
+  rule rows excepts unknown when covered(joint, m - 3) and covered(joint, m - 2) and covered(joint, m - 1) = round(sum(r in jrow where (jbank[r].kind = card_pay or jbank[r].kind = card_refund or jbank[r].kind = payback) and month_of(jbank[r].on) >= m - 3 and month_of(jbank[r].on) < m: -jbank[r].amount) / 3, 0.01, half-up)
+
+def floor_at[m in month]: money DUK at rule_day[m]
+  note "A-HR1 v2 .2"
+  rule base = hr1_floor + due[m] + card_avg[m]
+
+def jbal_rule[m in month]: money DUK
+  note "A-HR1 v2 .1: the joint account's balance at the end of the rule's day, everything booked that day counted except the rule's own transfers"
+  rule unknown = ? "the joint account's balance at the end of the 15th: its statements are not imported (O:A-1)"
+  rule rows excepts unknown when covered(joint, rule_day[m]) = bal(joint, rule_day[m]) - sum(r in jrow where jbank[r].kind = invest_move and jbank[r].on = rule_day[m]: jbank[r].amount)
+
+def rule_amt[m in month]: money DUK at rule_day[m]
+  note "A-HR1: v1 a fixed sum; v2 everything above the floor"
+  rule v1 v hr1_v1 = hr1_fixed
+  rule v2 v hr1_v2 = max(0, jbal_rule[m] - floor_at[m])
+
+index wrow: open
+  note "rows of the wrapped account's register (brz-wrapped-ania.csv)"
+
+index wkind = [contribution, buy, redemption, withdrawal]
+
+input wbank[r in wrow]: movement DUK (kind key wkind) question "What does this row of the wrapped account's register say?"
+
+def wrap_room[m in month]: money DUK at rule_day[m]
+  note "PIT-9 .2, A-HR1 .2: the year's WRAP-LIMIT less the contributions the wrapped account took this year before the rule's day"
+  rule unknown = ? "the contributions to the wrapped account this year before the 15th: its register is not imported (O:A-1)"
+  rule rows excepts unknown when all(d in day where year_of(d) = year_of(m) and d < rule_day[m]: covered(wrap_cash, d)) = max(0, wrap_limit - sum(r in wrow where wbank[r].kind = contribution and year_of(wbank[r].on) = year_of(m) and wbank[r].on < rule_day[m]: wbank[r].amount))
+
+def to_wrapped[m in month]: money DUK = min(rule_amt[m], wrap_room[m])
+
+def to_rzeka[m in month]: money DUK = rule_amt[m] - to_wrapped[m]
+
+def moved[m in month]: money DUK
+  note "what the joint account sent to the wrapped account and to Rzeka on the rule's day"
+  rule unknown = ? "the joint account's transfers on the 15th: its statements are not imported (O:A-1)"
+  rule rows excepts unknown when covered(joint, rule_day[m]) = sum(r in jrow where jbank[r].kind = invest_move and jbank[r].on = rule_day[m]: -jbank[r].amount)
+
+def gap[m in month]: money DUK = moved[m] - rule_amt[m]

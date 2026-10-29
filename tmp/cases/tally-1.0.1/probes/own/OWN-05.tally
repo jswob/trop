@@ -1,0 +1,72 @@
+model own05
+  tally 1
+  on 2026-10-25
+  start 2024-01-01
+  end 2025-12-31
+  note "OWN-05: community property dissolved by a death, then a buyout at a later valuation."
+
+source card "Probe card OWN-05 (made up): story and rules"
+
+index party = [halina, zbigniew, ania, piotr, marta, kuba]
+
+place flat: asset DUK priced flat_value
+
+input community_member[p in party, x in place]: bool
+
+input death_day: date
+
+input decedent: key party
+
+input division_day: date
+
+input estate_share[p in party]: num
+
+input flat_value: money DUK
+
+input half: num
+
+input keeper: key party
+
+def keeper_pays: num DUK = sum(p in party where p != keeper: payout[p])
+
+def payout[p in party]: num DUK
+  note "rule 3: each heir's share at the division's valuation"
+  rule base v card_rules = share_after[p] * worth(flat, division_day)
+
+def payout_at_death[p in party]: num DUK = share_after[p] * worth(flat, death_day)
+
+def share_after[p in party]: num
+  note "rules 1-2: the survivor's half, plus the estate's half passed in shares"
+  rule base v card_rules = (if community_member[p, flat] and p != decedent then half else 0) + half * estate_share[p]
+
+ask q_keeper_pays: keeper_pays
+
+ask q_payout_at_death: payout_at_death[p] for p in [ania, piotr, marta, kuba]
+
+ask q_payouts: payout[p] for p in [ania, piotr, marta, kuba]
+
+ask q_shares: share_after[p] for p in [halina, ania, piotr, marta, kuba]
+
+version card_facts
+  cite card
+  known 2024-01-01
+  community_member = false "story"
+  community_member[halina, flat] = true "story: community property"
+  community_member[zbigniew, flat] = true "story: community property"
+  death_day = 2024-03-10 "story: he dies on 10 March 2024"
+  decedent = zbigniew "story"
+  division_day = 2025-06-01 "story: the division on 1 June 2025"
+  flat_value = 400000.00 governs 2024-03-10..2025-05-31 "story: worth 400 000.00 when he dies"
+  flat_value = 480000.00 governs 2025-06-01.. "story: valued at 480 000.00 at the division"
+  keeper = halina "story: Halina keeps the flat"
+
+version card_rules
+  cite card
+  known 2024-01-01
+  estate_share = 0 "rule 2: no other heir"
+  estate_share[halina] = 0.25 "rule 2"
+  estate_share[ania] = 0.1875 "rule 2"
+  estate_share[piotr] = 0.1875 "rule 2"
+  estate_share[marta] = 0.1875 "rule 2"
+  estate_share[kuba] = 0.1875 "rule 2"
+  half = 0.5 "rule 1: community splits in halves"

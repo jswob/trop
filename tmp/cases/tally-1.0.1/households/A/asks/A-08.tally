@@ -1,0 +1,5 @@
+part asks_a08
+  tally 1
+  note "A-08 · Had we kept the car (questions.md), as known 2025-05-14. The model books no pays before walk_from (plan.tally), so a scenario from the sale would have nothing to book; the car kept is a set of defs (car.tally: kept_cost, sold_in) read beside the sale's record rows (awkward)."
+
+ask a08: kept_less as known 2025-05-14

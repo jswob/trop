@@ -1,0 +1,14 @@
+part vat_6
+  tally 1
+  law
+  note "VAT-6 · Selling a business asset: VAT at 22 % of the price, whatever share of the purchase VAT was deducted (.1)."
+  note "No figure: the rate is vat_rate (VAT-1)."
+
+source vat_6 "Value Added Tax Act, VAT-6 Selling a business asset (tmp/cases/law/acts.md)"
+
+version vat6_v1
+  cite vat_6
+  governs 2018-01-01..
+  known 2017-09-01
+  enters 2018-01-01
+  note "VAT-6 v1, in force 2018-01-01 until replaced, published 2017-09-01; governs sales from 2018-01-01."

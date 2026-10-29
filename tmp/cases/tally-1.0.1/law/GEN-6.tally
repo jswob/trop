@@ -1,0 +1,14 @@
+part gen_6
+  tally 1
+  law
+  note "GEN-6 · Figures set by notice. Holds the Official Gazette as a source: every gazette figure is a row in its own version, known on the notice's publication day and governing the notice's in-force span (GEN-6 .1); a day no notice covers has no row, so what the law computes from it is a hole (GEN-6 .2, gap rule L §4.6)."
+  note "Figures and tables only: the households' own defs apply them and point at these versions with v."
+
+source gen_6 "General Provisions Act, GEN-6 Figures set by notice (tmp/cases/law/acts.md)"
+source gazette "Official Gazette of Lenia, notices of figures (tmp/cases/law/gazette.csv)"
+
+version gen6_v1
+  cite gen_6
+  governs 2018-01-01..
+  known 2017-06-01
+  note "GEN-6 v1, in force 2018-01-01 until replaced, published 2017-06-01; governs every figure the law leaves to a notice."

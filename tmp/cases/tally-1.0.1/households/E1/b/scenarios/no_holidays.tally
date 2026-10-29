@@ -1,0 +1,9 @@
+scenario no_holidays
+  tally 1
+  from 2022-08-01
+  note "B-05: no payment holidays taken; the same overpayments on the same days (B-D28)."
+
+version all_paid
+  cite b_modeller
+  known 2023-01-24
+  b_held[2022-08..2023-02] = false "B-05's hypothesis: every instalment from 2022-04-05 on"

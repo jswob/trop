@@ -1,0 +1,7 @@
+part asks_b02
+  tally 1
+  note "Question B-02 (tmp/cases/B/questions.md)."
+
+ask b02_limit: vat_limit, vat_cross, supplies_to[vat_cross] with law 2023-02-28 as known 2023-02-28
+
+ask b02_returns: out_vat[m], in_vat[m], vat_carry[m], vat_payable[m], vat_carried_out[m], vat_due[m] for m in [2022-10, 2022-11, 2022-12] with law 2023-02-28 as known 2023-02-28

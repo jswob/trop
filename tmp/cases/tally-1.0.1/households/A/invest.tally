@@ -1,0 +1,307 @@
+part invest
+  tally 1
+  note "Fund units and their tax. Lots are matched to sales first in, first out within their account (PIT-8 .3); a sale's gain is its proceeds less its fee and the cost of the units it took (.2); a gain on units held more than 5 years is left out (.6), a gifted lot counting from the giver's acquisition; a person's year adds up (.4); a year's loss is carried 5 years, at most half of it in a year, older first (.5). The wrapped account's withdrawal (PIT-9 .4, .5). The 15th (A-HR1, A-HR2) read from the joint account's records (A-09)."
+  note "One lot input holds lots of several funds, so every fund's units are one unit, fund_u (observation O:A-4)."
+
+input inv_holder[x in place]: key spouse question "In whose name is this fund account (PIT-8, PIT-9)?"
+
+version holders
+  cite story
+  known 2021-01-01
+  inv_holder[wrap_cash] = ania "A-D11: account BRZ-WRAP-0091-A, holder Anna Lis"
+  inv_holder[wrap_glb] = ania "A-D11: holder Anna Lis"
+  inv_holder[wrap_bnd] = ania "A-D11: holder Anna Lis"
+  inv_holder[rzt_cash] = tomek "story § What we had: Rzeka 4471-02 in Tomek's name"
+  inv_holder[rzt_em] = tomek "story § What we had: Rzeka 4471-02 in Tomek's name"
+  inv_holder[rzt_idx] = tomek "story § What we had: Rzeka 4471-02 in Tomek's name"
+  inv_holder[rzt_div] = tomek "story § What we had: Rzeka 4471-02 in Tomek's name"
+  inv_holder[rzt_glb] = tomek "story § What we had: Rzeka 4471-02 in Tomek's name"
+  inv_holder[joint] = - "not a fund account"
+  inv_holder[lazur] = - "not a fund account"
+  inv_holder[ania_sav] = - "not a fund account"
+  inv_holder[zosia_sav] = - "not a fund account"
+  inv_holder[wcp_t] = - "a workplace plan, not under PIT-8 (PIT-8 .1)"
+  inv_holder[wcp_a] = - "a workplace plan, not under PIT-8 (PIT-8 .1)"
+  inv_holder[deposit] = - "not a fund account"
+
+version holders_kop
+  cite a_d18
+  known 2023-09-12
+  inv_holder[kop_glb] = ania "story 2023-09-12: a securities account at DM Kopia opened for the gifted units"
+
+version holders_rza
+  cite a_d21
+  known 2024-02-13
+  inv_holder[rza_cash] = ania "A-D21: client 4471-07 (Anna Lis)"
+  inv_holder[rza_glb] = ania "A-D21: client 4471-07 (Anna Lis)"
+  inv_holder[rza_mm] = ania "A-D21: client 4471-07 (Anna Lis)"
+
+index lot: open
+  note "lots of fund units under PIT-8; a key's text sorts in acquisition order within its account, the order first in first out takes (PIT-8 .3)"
+
+index sale: open
+  note "sales of fund units under PIT-8; a key's text sorts in the order of the sales within each account"
+
+input lot_place[l in lot]: key place question "In which holding is this lot?"
+
+input lot_on[l in lot]: date question "On which day was this lot acquired (PIT-8 .2: a gifted lot on the day of the gift)?"
+
+input lot_held_from[l in lot]: date question "From which day does this lot's holding count (PIT-8 .6: a gifted lot from the day the giver acquired it)?"
+
+input lot_units[l in lot]: num fund_u question "How many units does this lot hold?"
+
+input lot_paid[l in lot]: money DUK question "What was paid for this lot, with the purchase fee (PIT-8 .2)?"
+
+input lot_gifted[l in lot]: bool question "Was this lot acquired by gift or inheritance (PIT-8 .2)?"
+
+input lot_reported[l in lot]: money DUK question "What cost basis did the transferring broker report for this lot (A-D21)?"
+
+input sale_place[s in sale]: key place question "From which holding were the units sold?"
+
+input sale_on[s in sale]: date question "On which day were the units sold?"
+
+input sale_units[s in sale]: num fund_u question "How many units were sold?"
+
+input sale_px[s in sale]: num DUK/fund_u question "At what price per unit were they sold?"
+
+input sale_fee[s in sale]: money DUK question "What fee was taken on the sale?"
+
+version gift_lots
+  cite a_d21
+  known 2024-02-13
+  note "the 200 units Halina gave Ania on 2023-09-12 (A-D18), moved to Rzeka 4471-07 on 2024-02-12, which keeps their cost and acquisition day (PIT-8 .3); the transfer form gives the months Halina bought them in, and no days"
+  lot_place[a20230912_1] = rza_glb "A-D21: received into client 4471-07"
+  lot_place[a20230912_2] = rza_glb "A-D21: received into client 4471-07"
+  lot_place[a20230912_3] = rza_glb "A-D21: received into client 4471-07"
+  lot_on[a20230912_1] = 2023-09-12 "A-D18: the gift's day (PIT-8 .2)"
+  lot_on[a20230912_2] = 2023-09-12 "A-D18: the gift's day (PIT-8 .2)"
+  lot_on[a20230912_3] = 2023-09-12 "A-D18: the gift's day (PIT-8 .2)"
+  lot_held_from[a20230912_1] = 2018-11 "A-D21: acquired 2018-11"
+  lot_held_from[a20230912_2] = 2019-03 "A-D21: acquired 2019-03; the day isn't given"
+  lot_held_from[a20230912_3] = 2019-08 "A-D21: acquired 2019-08"
+  lot_units[a20230912_1] = 90 "A-D21: 90 units"
+  lot_units[a20230912_2] = 60 "A-D21: 60 units"
+  lot_units[a20230912_3] = 50 "A-D21: 50 units"
+  lot_paid[a20230912_1] = - "a gift: nothing was paid (PIT-8 .2)"
+  lot_paid[a20230912_2] = - "a gift: nothing was paid (PIT-8 .2)"
+  lot_paid[a20230912_3] = - "a gift: nothing was paid (PIT-8 .2)"
+  lot_gifted[a20230912_1] = true "A-D18: a gift"
+  lot_gifted[a20230912_2] = true "A-D18: a gift"
+  lot_gifted[a20230912_3] = true "A-D18: a gift"
+  lot_reported[a20230912_1] = 13071.60 "A-D21: cost basis as DM Kopia reported"
+  lot_reported[a20230912_2] = 8697.60 "A-D21: cost basis as DM Kopia reported"
+  lot_reported[a20230912_3] = 7626.50 "A-D21: cost basis as DM Kopia reported"
+
+version ania_sale_2024
+  cite rzk_a
+  known 2024-03-07
+  sale_place[s20240307_glb] = rza_glb "rzk-4471-07-anna.csv line 6: SELL BRZ-GLB-A"
+  sale_on[s20240307_glb] = 2024-03-07 "rzk-4471-07-anna.csv line 6"
+  sale_units[s20240307_glb] = 200 "rzk-4471-07-anna.csv line 6: 200,0000 units"
+  sale_px[s20240307_glb] = 187.59 "rzk-4471-07-anna.csv line 6: price 187,59"
+  sale_fee[s20240307_glb] = 0 "rzk-4471-07-anna.csv line 6: fee 0,00"
+
+version ania_mm_lot
+  cite rzk_a
+  known 2024-03-07
+  lot_place[a20240307_mm] = rza_mm "rzk-4471-07-anna.csv line 7: BUY BRZ-MM-A"
+  lot_on[a20240307_mm] = 2024-03-07 "rzk-4471-07-anna.csv line 7"
+  lot_held_from[a20240307_mm] = 2024-03-07 "rzk-4471-07-anna.csv line 7"
+  lot_units[a20240307_mm] = 314.9654 "rzk-4471-07-anna.csv line 7"
+  lot_paid[a20240307_mm] = 37517.99 "rzk-4471-07-anna.csv line 7: value 37 424,19 and fee 93,80"
+  lot_gifted[a20240307_mm] = false "bought"
+  lot_reported[a20240307_mm] = - "bought at Rzeka, not transferred in"
+
+version tomek_lots
+  cite rzk_t
+  known 2021-08-16
+  note "Tomek's lots are the BUY rows of rzk-4471-02-tomasz.csv (lines 4–109), which the importer can't read (O:A-1): the first rows show the model, written by hand; each fund's other lots stand as one key with its facts missing (version tomek_lots_rest), so every sum that reaches them is a hole"
+  lot_place[t20210715_em] = rzt_em "rzk-4471-02-tomasz.csv line 4: BUY WEK-EM-A"
+  lot_on[t20210715_em] = 2021-07-15 "rzk-4471-02-tomasz.csv line 4"
+  lot_held_from[t20210715_em] = 2021-07-15 "rzk-4471-02-tomasz.csv line 4"
+  lot_units[t20210715_em] = 14.9942 "rzk-4471-02-tomasz.csv line 4"
+  lot_paid[t20210715_em] = 733.34 "rzk-4471-02-tomasz.csv line 4: value 728,34 and fee 5,00"
+  lot_gifted[t20210715_em] = false "bought"
+  lot_place[t20210816_em] = rzt_em "rzk-4471-02-tomasz.csv line 8: BUY WEK-EM-A"
+  lot_on[t20210816_em] = 2021-08-16 "rzk-4471-02-tomasz.csv line 8"
+  lot_held_from[t20210816_em] = 2021-08-16 "rzk-4471-02-tomasz.csv line 8"
+  lot_units[t20210816_em] = 15.8104 "rzk-4471-02-tomasz.csv line 8"
+  lot_paid[t20210816_em] = 833.34 "rzk-4471-02-tomasz.csv line 8: value 828,34 and fee 5,00"
+  lot_gifted[t20210816_em] = false "bought"
+  lot_place[t20210715_idx] = rzt_idx "rzk-4471-02-tomasz.csv line 5: BUY WEK-IDX-D"
+  lot_on[t20210715_idx] = 2021-07-15 "rzk-4471-02-tomasz.csv line 5"
+  lot_held_from[t20210715_idx] = 2021-07-15 "rzk-4471-02-tomasz.csv line 5"
+  lot_units[t20210715_idx] = 3.3728 "rzk-4471-02-tomasz.csv line 5"
+  lot_paid[t20210715_idx] = 733.32 "rzk-4471-02-tomasz.csv line 5: value 728,32 and fee 5,00"
+  lot_gifted[t20210715_idx] = false "bought"
+  lot_reported[t20210715_em] = - "bought at Rzeka, not transferred in"
+  lot_reported[t20210816_em] = - "bought at Rzeka, not transferred in"
+  lot_reported[t20210715_idx] = - "bought at Rzeka, not transferred in"
+
+version tomek_lots_rest
+  cite rzk_t
+  known 2024-11-15
+  note "the BUY rows of rzk-4471-02-tomasz.csv other than lines 4, 5 and 8, up to the last sale (line 99), known at the latest on its day"
+  lot_place[t_em_rest1] = rzt_em "rzk-4471-02-tomasz.csv: the WEK-EM-A lots bought from 2021-09 to the sale of 2022-10-14"
+  lot_on[t_em_rest1] = ? "the days of the WEK-EM-A lots in rzk-4471-02-tomasz.csv before line 47 (O:A-1)"
+  lot_held_from[t_em_rest1] = ? "the days of the WEK-EM-A lots in rzk-4471-02-tomasz.csv before line 47 (O:A-1)"
+  lot_units[t_em_rest1] = ? "the units of the WEK-EM-A lots in rzk-4471-02-tomasz.csv before line 47 (O:A-1)"
+  lot_paid[t_em_rest1] = ? "the cost of the WEK-EM-A lots in rzk-4471-02-tomasz.csv before line 47 (O:A-1)"
+  lot_gifted[t_em_rest1] = false "bought"
+  lot_place[t_em_rest2] = rzt_em "rzk-4471-02-tomasz.csv: the WEK-EM-A lots bought after the sale of 2022-10-14"
+  lot_on[t_em_rest2] = ? "the days of the WEK-EM-A lots in rzk-4471-02-tomasz.csv after line 47 (O:A-1)"
+  lot_held_from[t_em_rest2] = ? "the days of the WEK-EM-A lots in rzk-4471-02-tomasz.csv after line 47 (O:A-1)"
+  lot_units[t_em_rest2] = ? "the units of the WEK-EM-A lots in rzk-4471-02-tomasz.csv after line 47 (O:A-1)"
+  lot_paid[t_em_rest2] = ? "the cost of the WEK-EM-A lots in rzk-4471-02-tomasz.csv after line 47 (O:A-1)"
+  lot_gifted[t_em_rest2] = false "bought"
+  lot_place[t_idx_rest] = rzt_idx "rzk-4471-02-tomasz.csv: the other WEK-IDX-D lots"
+  lot_on[t_idx_rest] = ? "the days of the other WEK-IDX-D lots in rzk-4471-02-tomasz.csv (O:A-1)"
+  lot_held_from[t_idx_rest] = ? "the days of the other WEK-IDX-D lots in rzk-4471-02-tomasz.csv (O:A-1)"
+  lot_units[t_idx_rest] = ? "the units of the other WEK-IDX-D lots in rzk-4471-02-tomasz.csv (O:A-1)"
+  lot_paid[t_idx_rest] = ? "the cost of the other WEK-IDX-D lots in rzk-4471-02-tomasz.csv (O:A-1)"
+  lot_gifted[t_idx_rest] = false "bought"
+  lot_reported[t_em_rest1] = - "bought at Rzeka, not transferred in"
+  lot_reported[t_em_rest2] = - "bought at Rzeka, not transferred in"
+  lot_reported[t_idx_rest] = - "bought at Rzeka, not transferred in"
+
+version tomek_sale_2022
+  cite rzk_t
+  known 2022-10-14
+  sale_place[s20221014_em] = rzt_em "rzk-4471-02-tomasz.csv line 47: SELL WEK-EM-A"
+  sale_on[s20221014_em] = 2022-10-14 "rzk-4471-02-tomasz.csv line 47"
+  sale_units[s20221014_em] = 137.3202 "rzk-4471-02-tomasz.csv line 47"
+  sale_px[s20221014_em] = 42.55 "rzk-4471-02-tomasz.csv line 47"
+  sale_fee[s20221014_em] = 0 "rzk-4471-02-tomasz.csv line 47: fee 0,00"
+
+version tomek_sale_2023
+  cite rzk_t
+  known 2023-11-15
+  sale_place[s20231115_idx] = rzt_idx "rzk-4471-02-tomasz.csv line 79: SELL WEK-IDX-D"
+  sale_on[s20231115_idx] = 2023-11-15 "rzk-4471-02-tomasz.csv line 79"
+  sale_units[s20231115_idx] = 52.9497 "rzk-4471-02-tomasz.csv line 79"
+  sale_px[s20231115_idx] = 217.64 "rzk-4471-02-tomasz.csv line 79"
+  sale_fee[s20231115_idx] = 0 "rzk-4471-02-tomasz.csv line 79: fee 0,00"
+
+version tomek_sale_2024
+  cite rzk_t
+  known 2024-11-15
+  sale_place[s20241115_em] = rzt_em "rzk-4471-02-tomasz.csv line 99: SELL WEK-EM-A"
+  sale_on[s20241115_em] = 2024-11-15 "rzk-4471-02-tomasz.csv line 99"
+  sale_units[s20241115_em] = 122.9831 "rzk-4471-02-tomasz.csv line 99"
+  sale_px[s20241115_em] = 58.48 "rzk-4471-02-tomasz.csv line 99"
+  sale_fee[s20241115_em] = 0 "rzk-4471-02-tomasz.csv line 99: fee 0,00"
+
+def lot_start[l in lot]: num fund_u
+  note "the units of the same account's earlier lots"
+  rule base = sum(k in lot where lot_place[k] = lot_place[l] and pos(k) < pos(l): lot_units[k])
+
+def sale_start[s in sale]: num fund_u
+  note "the units the same account's earlier sales took"
+  rule base = sum(t in sale where sale_place[t] = sale_place[s] and pos(t) < pos(s): sale_units[t])
+
+def took[l in lot, s in sale]: num fund_u
+  note "PIT-8 .3: the units of lot l that sale s took, first in first out, never across accounts"
+  rule none = 0
+  rule fifo excepts none when lot_place[l] = sale_place[s] = max(0, min(lot_start[l] + lot_units[l], sale_start[s] + sale_units[s]) - max(lot_start[l], sale_start[s]))
+
+def px_at[x in place, d in day]: num DUK/fund_u
+  note "the price of the fund a holding holds"
+  rule glb when x = wrap_glb or x = rzt_glb or x = rza_glb or x = kop_glb = px_glb[d]
+  rule bnd when x = wrap_bnd = px_bnd[d]
+  rule div when x = rzt_div = px_div[d]
+  rule mm when x = rza_mm = px_mm[d]
+  rule idx when x = rzt_idx = px_idx[d]
+  rule em when x = rzt_em = px_em[d]
+  rule wcp when x = wcp_t or x = wcp_a = px_wcp[d]
+
+def lot_cost[l in lot]: num DUK at lot_on[l]
+  note "PIT-8 .2: the price paid with the purchase fee; a gifted lot costs its units times the fund's price of the last valuation day on or before the gift"
+  rule paid = lot_paid[l]
+  rule gift excepts paid when lot_gifted[l] = lot_units[l] * px_at[lot_place[l], prev_business(lot_on[l], holidays)]
+
+def gain_part[l in lot, s in sale]: num DUK
+  note "PIT-8 .2: the proceeds of the units lot l gave sale s (price times units, less their part of the sale fee) less their part of the lot's cost"
+  rule base = took[l, s] * sale_px[s] - sale_fee[s] * took[l, s] / sale_units[s] - lot_cost[l] * took[l, s] / lot_units[l]
+
+def exempt_part[l in lot, s in sale]: bool at sale_on[s]
+  note "PIT-8 .6, GEN-3 .1: held more than 5 years, counting from the giver's acquisition for a gifted lot"
+  rule base = sale_on[s] > add_years(lot_held_from[l], pit8_exempt_years)
+
+def net_gain[p in spouse, y in tax_year]: num DUK
+  note "PIT-8 .4: all of the person's gains and losses of the year added; an exempt part is left out (.6)"
+  rule base = sum(l in lot, s in sale where inv_holder[sale_place[s]] = p and year_of(sale_on[s]) = y and took[l, s] > 0 and not exempt_part[l, s]: gain_part[l, s])
+
+def cg_loss[p in spouse, o in tax_year]: num DUK = max(0, -net_gain[p, o])
+
+def cg_gain[p in spouse, y in tax_year]: num DUK = max(0, net_gain[p, y])
+
+def loss_avail[p in spouse, o in tax_year, y in tax_year]: num DUK
+  note "what is left of the loss of year o at the start of year y"
+  rule start = cg_loss[p, o]
+  rule next excepts start when pos(y) > pos(o) + 1 = loss_left[p, o, y - 1]
+
+def loss_want[p in spouse, o in tax_year, y in tax_year]: num DUK
+  note "PIT-8 .5: in the 5 years after the loss, at most half of it in any one year"
+  rule none = 0
+  rule window excepts none when pos(y) > pos(o) and pos(y) <= pos(o) + pit8_carry_years = min(loss_avail[p, o, y], cg_loss[p, o] / 2)
+
+fill carry[y in tax_year]
+  note "PIT-8 .5: losses are used only against a net gain, the older first"
+  supply loss_want[p, o, y] for p in spouse, o in tax_year
+  demand cg_gain[q, y] for q in spouse
+  arc p = q
+  order o
+
+def loss_used_from[p in spouse, o in tax_year, y in tax_year]: num DUK = carry[y].taken[p, o, p]
+
+def loss_left[p in spouse, o in tax_year, y in tax_year]: num DUK = loss_avail[p, o, y] - loss_used_from[p, o, y]
+
+def loss_used[p in spouse, y in tax_year]: num DUK = sum(o in tax_year: loss_used_from[p, o, y])
+
+def loss_left_after[p in spouse, y in tax_year]: num DUK
+  note "the losses still inside their 5 years after year y, and what is left of them"
+  rule base = sum(o in tax_year where pos(o) <= pos(y) and pos(y) < pos(o) + pit8_carry_years: loss_left[p, o, y])
+
+def cg_base[p in spouse, y in tax_year]: money DUK
+  note "PIT-8 .4: the net gain less the losses carried in, rounded (GEN-5 .1)"
+  rule base = round(cg_gain[p, y] - loss_used[p, y], 1, half-up)
+
+def cg_tax[p in spouse, y in tax_year]: money DUK
+  note "PIT-8 .4: 19 % of the base, rounded (GEN-5 .1)"
+  rule base = round(cg_base[p, y] * pit8_rate, 1, half-up)
+
+def broker_tax[p in spouse, y in tax_year]: money DUK
+  note "A-D22's way, for comparison: every lot at the cost the transferring broker reported (A-D21), and no holding test"
+  rule base = round(round(sum(l in lot, s in sale where inv_holder[sale_place[s]] = p and year_of(sale_on[s]) = y and took[l, s] > 0: took[l, s] * sale_px[s] - lot_reported[l] * took[l, s] / lot_units[l]), 1, half-up) * pit8_rate, 1, half-up)
+
+index wd: open
+  note "withdrawals from the wrapped account"
+
+input wd_on[w in wd]: date question "On which day were the units redeemed for this withdrawal?"
+
+input wd_amount[w in wd]: money DUK question "How much was withdrawn?"
+
+input wd_contrib_left[w in wd]: money DUK question "What contributions not yet withdrawn did the account hold before this withdrawal (PIT-9 .4)?"
+
+input wd_within[w in wd]: bool question "Does the provider state that the withdrawal is within the contributions not yet withdrawn?"
+
+input wd_years[w in wd]: int question "In how many calendar years had the holder contributed by the withdrawal (PIT-9 .5)?"
+
+version withdrawal_2024
+  cite a_d35
+  known 2024-03-08
+  wd_on[w20240305] = 2024-03-05 "A-D35: redeemed on 5 March 2024"
+  wd_amount[w20240305] = 19999.99 "A-D35: units of BRZ-BND-A worth 19 999.99 DUK"
+  wd_contrib_left[w20240305] = ? "the contributions to the wrapped account up to 2024-03-05, the contribution rows of brz-wrapped-ania.csv, which the importer can't read (O:A-1)"
+  wd_within[w20240305] = true "A-D35: the amount withdrawn is within the contributions not yet withdrawn; no tax is withheld"
+  wd_years[w20240305] = ? "the years with a contribution row in brz-wrapped-ania.csv (O:A-1)"
+
+def wd_earnings[w in wd]: money DUK
+  note "PIT-9 .4: a withdrawal takes the contributions not yet withdrawn first, then the earnings"
+  rule base = max(0, wd_amount[w] - wd_contrib_left[w])
+  rule stated excepts base when wd_within[w] = 0
+
+def wd_tax[w in wd]: money DUK at wd_on[w]
+  note "PIT-9 .5: 19 % of the earnings withdrawn, rounded, unless the holder is 60 or older and has contributed in 5 calendar years"
+  rule base = round(wd_earnings[w] * pit9_rate, 1, half-up)
+  rule free excepts base when age(birth_day[inv_holder[wrap_cash]], wd_on[w]) >= pit9_age and wd_years[w] >= pit9_years = 0

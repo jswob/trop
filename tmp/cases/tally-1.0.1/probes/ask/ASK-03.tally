@@ -1,0 +1,61 @@
+model ask03
+  tally 1
+  on 2024-12-31
+  start 2023-01-01
+  end 2024-12-31
+  note "Probe ASK-03: (a) a blank form field the law needs; (b) a sale of more units than are held."
+
+source probe_card "Probe card ASK-03 (made-up story and rules)"
+
+unit g_unit "a unit of fund G"
+
+index lot = [g1]
+index tax_year = year 2024..2024
+
+place fund_g: holding g_unit priced g_price
+
+input abroad_limit: int
+input days_abroad[y in tax_year]: int
+input g_price: num DUK/g_unit question "At what price per unit are the units of fund G sold? The card states none."
+input lot_cost[l in lot]: money DUK
+input lot_on[l in lot]: date
+input lot_units[l in lot]: num g_unit
+input sell_day: date
+input sell_units: num g_unit
+
+def relief_applies[y in tax_year]: bool
+  note "(a): the relief applies only above 183 days abroad; rule 1: a blank field the law needs is a hole, never 0"
+  rule base v card = days_abroad[y] > abroad_limit
+
+def sale_gain: num DUK
+  note "(b): the sale's proceeds less the cost of the units sold, at the lots' average cost (the card states no method; nothing is computed past rule 2's refusal)"
+  rule base = flows(sell, sell_day) * g_price - sum(l in lot: lot_cost[l]) * flows(sell, sell_day) / sum(l in lot: lot_units[l])
+
+pay buy[l in lot]
+  from outside_g_unit
+  to fund_g
+  amount lot_units[l]
+  on lot_on[l]
+
+pay sell
+  from fund_g
+  to outside_g_unit
+  amount sell_units
+  on sell_day
+
+ask q_a_relief: relief_applies[2024]
+
+ask q_b_gain: sale_gain
+
+version card
+  cite probe_card
+  known 2023-01-01
+  note "Stipulations, known from the model's start (L §4.5). Rule 2, selling more than is held is refused, is the holding's own rule (L §5.9)."
+  abroad_limit = 183 "(a): above 183 days abroad"
+  days_abroad[2024] = ? "How many days was Marek abroad in 2024? The field is blank on form F-12." "form F-12 for 2024, field days abroad"
+  lot_cost[g1] = 5000.00 "(b): lot G1, account X"
+  lot_on[g1] = 2023-01-10 "(b): lot G1"
+  lot_units[g1] = 100 "(b): lot G1, 100 units"
+  opening[fund_g] = 0 "(b): no units before lot G1"
+  sell_day = 2024-06-28 assumed "the card gives no day for the planned sale; any day after lot G1 gives the same refusal" "(b): his plan sells 120"
+  sell_units = 120 "(b): his plan sells 120"

@@ -1,0 +1,19 @@
+# Bank Cis S.A. - account history export
+# Account: LN45 2090 0017 5521 3380 0001
+# Holder: PIOTR SOWA
+# Period: 01-11-2025 - 30-11-2025
+# Opening balance: 8492.03
+"Booking date","Value date","Type","Counterparty","Description","Debit","Credit","Balance"
+"03-11-2025","31-10-2025","CARD PAYMENT","Restauracja Dąb","card ...3380","203.69","","8288.34"
+"05-11-2025","05-11-2025","TRANSFER IN","ALEKSANDRA WILK","flat share","","1700.00","9988.34"
+"05-11-2025","04-11-2025","CARD PAYMENT","Stacja Paliw Iskra","card ...3380","110.83","","9877.51"
+"05-11-2025","05-11-2025","TRANSFER OUT","Bank Jodła S.A.","loan 7710-22 instalment 11/2025","2855.21","","7022.30"
+"07-11-2025","06-11-2025","CARD PAYMENT","Apteka Mięta","card ...3380","220.76","","6801.54"
+"10-11-2025","08-11-2025","CARD PAYMENT","Market Groszek Kłodzin","card ...3380","26.93","","6774.61"
+"10-11-2025","10-11-2025","STANDING ORDER","WM Wrzosowa 12","building fee","690.00","","6084.61"
+"12-11-2025","12-11-2025","TRANSFER IN","ARNIKA-DELTA GROUP SP.","FV 023/2025","","19520.00","25604.61"
+"12-11-2025","10-11-2025","CARD PAYMENT","Piekarnia Kłos","card ...3380","240.54","","25364.07"
+"12-11-2025","10-11-2025","CARD PAYMENT","Kino Zorza","card ...3380","20.93","","25343.14"
+"12-11-2025","11-11-2025","CARD PAYMENT","Apteka Mięta","card ...3380","27.00","","25316.14"
+"12-11-2025","12-11-2025","STANDING ORDER","Energa Lenia","electricity","175.00","","25141.14"
+"13-11-2025","13-11-2025","REVERSAL","ARNIKA-DELTA GROUP SP.","recall by the payer's bank: FV 023/2025","19520.00","","5621.14"

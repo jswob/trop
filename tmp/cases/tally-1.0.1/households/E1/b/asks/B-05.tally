@@ -1,0 +1,11 @@
+part asks_b05
+  tally 1
+  note "Question B-05 (tmp/cases/B/questions.md)."
+
+ask b05_as_was: mtg_interest_year[y], mtg_bal[2025-12-31], mtg_inst[2026-01], mtg_last for y in [2022, 2023, 2024, 2025] with law 2026-01-05 as known 2026-01-05
+
+ask b05_without: mtg_interest_year[y] as if {scenario no_holidays}, mtg_bal[2025-12-31] as if {scenario no_holidays}, mtg_inst[2026-01] as if {scenario no_holidays}, mtg_last as if {scenario no_holidays} for y in [2022, 2023, 2024, 2025] with law 2026-01-05 as known 2026-01-05
+
+ask b05_difference: mtg_interest_year[y] as if {scenario no_holidays} - mtg_interest_year[y], mtg_bal[2025-12-31] as if {scenario no_holidays} - mtg_bal[2025-12-31], mtg_inst[2026-01] as if {scenario no_holidays} - mtg_inst[2026-01], 0 - count(k in b_month where start_of(k) > mtg_last as if {scenario no_holidays} and start_of(k) <= mtg_last) for y in [2022, 2023, 2024, 2025] with law 2026-01-05 as known 2026-01-05
+
+ask b05_replay: check sum(r in jodla_row where jodla_paid[r].jk = instalment: jodla_paid[r].amt) = sum(k in b_month where year_of(k) = 2025: if mtg_live[k] then mtg_inst[k] else 0) with law 2026-01-05 as known 2026-01-05

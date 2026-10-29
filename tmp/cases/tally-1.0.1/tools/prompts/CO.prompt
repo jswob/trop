@@ -1,0 +1,66 @@
+You are agent CO (close-out) of session 3 of the case-set plan, in the repository /Users/jswob/projects/trop. Session 3 checked whether the Tally language (spec tally 1.0.1, in `engine/spec/`) can express a frozen set of made-up finance cases: 92 probe cards and 39 household questions. Writers wrote Tally texts and step maps, judges tried to break every row marked "expressed", and the supervisor settled every disagreement. All rows are settled. Your job: merge them into the gap log with a script, write the folder's README, run the final checks, and report their output.
+
+## Hard rules (break none)
+1. Never open `tmp/cases-holdout/` or `tmp/holdout/`: no read, no listing, no search that walks into them. Search only under the paths named below, never `tmp/`, `tmp/cases/` as a whole tree, or the repository root. (`tmp/cases/tools/check.py` is run, not read.)
+2. `engine/spec/` is frozen: read it only if needed; run its tool as `python3 -I -B engine/spec/tools/loadcheck.py …`.
+3. The case set is frozen: never change a file that exists under `tmp/cases/` (the settled rows, texts, maps and INDEX.md included; INDEX.md's status column stays empty). You only add new files, in the paths you may write.
+4. No commits, no pushes, no git command that changes the tree.
+5. No sub-agents, forks, workflows, skills, and no web access. Work alone. A write that is refused is never routed around: put the content in your final message.
+6. Python only as `python3 -I -B`, standard library only (parsecheck uses its own venv, below). Leave no `__pycache__`.
+7. Keep calls few (aim at about 40): read the inputs in a few calls, write the script whole, run it, check, fix.
+
+## May read
+- `tmp/cases/tally-1.0.1/` (the rows in `rows/`, the texts, `maps/`, `tools/`); not `scratch/` (judges' scratch) and not any `PROGRESS.md`
+- `tmp/cases/INDEX.md` (edge order, each edge's probe and questions) and `tmp/cases/README.md`
+- `engine/tools/parsecheck/README.md`
+
+## May write
+- `tmp/cases/gaps-1.0.1.md` (the gap log, written by your script)
+- `tmp/cases/tally-1.0.1/README.md`
+- new files in `tmp/cases/tally-1.0.1/tools/` (your merge script, e.g. `tools/merge_gaps.py`, and a check script if you want one)
+- scratch copies for loadcheck in `tmp/cases/tally-1.0.1/scratch/CO/`
+
+## Inputs
+- **Settled rows,** one file per chunk in `tally-1.0.1/rows/`: `P0.settled.md`, `G1.settled.md` … `G5.settled.md` (probes; `P:` rows, plus `O:` observations and `S:` spec findings), `A.settled.md`, `B.settled.md`, `D.settled.md`, `E1.settled.md` (households; `Q:` rows plus `O:` and `S:`). Each has the table `| Row | Status | Reason | Spec | Gap | Text | Settlement |`. Status is one of breaks, can't express, awkward, expressed (worst first), or case suspect (outside the scale). The Settlement column says the judge's verdict and the supervisor's settlement with its cause (writer misread, judge misread, spec unclear, case suspect, supervisor), or "confirmed by judge", or "not judged (writer's status)". Text paths are relative to `tally-1.0.1/` (some household rows list several paths separated by `;`, some relative to the household folder: resolve them, and list any that don't exist).
+- **Agents:** `tally-1.0.1/rows/agents.tsv` (slot, agent, id, role, chunk, effort, start, end, usage line from `usage.py`, audit summary). The supervisor's own line is the last row.
+- **Writers' and judges' raw messages:** `rows/<chunk>.writer.md`, `rows/<chunk>.judge.md`, `rows/<chunk>.decisions.tsv` (for the settlements part, if you need more than the Settlement column).
+
+## The supervisor's decisions and notes (put them in part 1 or the part they belong to)
+- D1. Final messages are saved from each agent's transcript by `tools/save_final.py` (never retyped).
+- D2. Spec findings (`S:` rows) have no judge; the supervisor checks and settles them. S ids are renumbered at settlement into one sequence (S:1 …).
+- D3. Made-up currencies DUK and FLR have no minor unit in the spec (S:4): rows are judged reading a minor unit of 0.01, and not downgraded for that alone.
+- D4. Prompts: a short prompt restating the hard rules plus a filled brief file; all prompts and templates are kept in `tally-1.0.1/tools/prompts/`.
+- D5. A row a writer's message left out is recovered from its step map (`rows/G5.recovered.md`: P:RULE-08), then judged like any other.
+- D6. Household B's writer converted every record row with a script (one movement row per CSV row, citing file and line), standing in for the import pipeline of OPERATIONS §2.2; the brief allowed "at most a few rows". The work was kept and the deviation logged; households D and E1 followed the brief. So B's record questions are judged on full record rows, while A's (A-09) and D's (D-07) are can't express for want of them: the gap is the same (O:A-1, O:B-1, O:D-1: the import names no file format), only the writers' handling differs. Say this in part 1.
+- D7. A load refusal in one item of a writer's own file stops the whole reality (L §8): household D's `fund.tally` LOAD-UNIT (row Q:D-12) is charged to that row only; D's other rows and E1's are judged as if that one fault were fixed.
+- D8. A candidate spec finding (HOLE-IMPRECISE for a pay `on m` when a version becomes known inside m) was dropped: L:420-421 settle it.
+- S:13 and S:14 keep their ids but are not spec findings (writer misread, status awkward): list them under observations or mark them "withdrawn as a finding" in part 4, and leave them out of the spec-findings count.
+- Escalations: W-A ran at xhigh by plan; J-A overturned 3 of 6 expressed rows, so W-B ran at xhigh; J-B overturned 4 of 5, so W-E1 ran at max; W-D (already running) stayed at xhigh; J-D overturned 3 of 3. Judges of probe chunks overturned 0, 1, 0, 1, 1 rows.
+- Tools: parsecheck checks syntax; loadcheck is a line scan of ids and keywords: neither checks units (LOAD-UNIT), names (LOAD-NAME), scenario rules (LOAD-SCENARIO) or run-time refusals (RUN-NA, RUN-EMPTY), which is how several rows that pass both tools were still downgraded. Say so in part 1.
+- Dossier oddity, no row: D-D04 (received 2024-10-21) says the certificate "became final on 3 November 2024"; D's story says "becomes final".
+- The scope audit found no access to the holdout folders by any agent; other flags were false positives or harmless listings, as in `agents.tsv`.
+
+## The gap log, `tmp/cases/gaps-1.0.1.md`: seven parts (brief §8)
+1. **What it is and how it was made:** the agents (probe writers, judges, household writers, close-out), the step map, the judges, and what "expressed" means here: judged against the spec, line by line, not run (nothing runs Tally yet). The escalations (W-A xhigh; W-B xhigh after J-A overturned 3 of 6; W-E1 max after J-B overturned 4 of 5). The cost cap (14 % of the week) did not stop the session: everything ran.
+2. **Counts:** rows by kind (probe P, question Q, observation O, spec finding S) and status; also per chunk.
+3. **By edge,** in `INDEX.md` order: the edge, its probe's status (the `P:<edge>` row), its questions' worst status (the `Q:` rows of the questions INDEX.md lists for it), and the worst of all. Case suspect is outside the scale: show it beside the worst status (e.g. "awkward (+ suspect)"), never as the worst. Session 4 reads this beside INDEX.md.
+4. **The rows:** probes by axis (the id prefix: NUM, CUR, …), questions by household, then observations, then spec findings, each with status, reason, spec, gap and text.
+5. **Settlements:** every row where the final status differs from the writer's or where the supervisor ruled: row, writer's status, final status, cause; then counts by cause.
+6. **Suspects:** each case suspect with its reason. The exam side settles them (ERRATA, version bump) before session 4 starts.
+7. **Cost and time** per agent from `agents.tsv`, totals, against the brief's estimate: 7–11 % of the week, about 10–12 hours.
+
+Write the merge as a script (`tally-1.0.1/tools/merge_gaps.py`) that reads the files above and writes the gap log; never hand-type a row.
+
+## README
+`tally-1.0.1/README.md`: what the folder holds (probes/ by axis, households/A, B, D, E1, law/ one file per home-law rule, maps/, rows/, tools/ with each tool in one line, scratch/), how to rerun the checks, and a pointer to the gap log. Short.
+
+## Checks before you finish (run each, keep the output)
+1. 92 probe rows (`P:`) and 39 question rows (`Q:`: A 12, B 12, D 12, E1 3), with unique ids across all settled files; observation and spec-finding ids unique too.
+2. parsecheck over all of `tally-1.0.1/` except `scratch/`: `engine/tools/parsecheck/.venv/bin/python -I -B engine/tools/parsecheck/parsecheck.py tmp/cases/tally-1.0.1/probes tmp/cases/tally-1.0.1/households tmp/cases/tally-1.0.1/law`.
+3. loadcheck over all of `tally-1.0.1/`: each probe card is one reality (a `.tally` file, or a directory for a multi-file card): run it on each; each household is one reality with the law: copy `households/<H>` and `law/` into one directory under `scratch/CO/<H>/` (without any `PROGRESS.md`) and run loadcheck on that directory, for A, B, D and E1. Each failure must be named in a row (e.g. SURF-04's LOAD-DUP is the refusal its card asks for): list each failure with the row that names it, or say that none names it.
+4. `python3 -I -B tmp/cases/tools/check.py` still passes (run it from the repository root; report its last lines).
+5. No `__pycache__` under `tmp/cases/` or `engine/` (`find tmp/cases engine -name __pycache__`).
+6. The audit summary of every agent: from `agents.tsv`, one line each, in the gap log's part 7.
+
+## Final message
+Deliver it as your final report (SubagentHandback): the gap log's path, the counts table (part 2), the ten worst rows (breaks first, then can't express; prefer questions and spec findings with a clear reason), the settlements by cause, the suspects, the cost total, and the output of the six checks. At most 60 lines.

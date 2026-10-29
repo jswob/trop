@@ -1,0 +1,42 @@
+model rand04
+  tally 1
+  on 2026-01-01
+  start 2026-01-01
+  end 2035-12-31
+  note "RAND-04: plan A is the reality, plan B the scenario plan_b. Draw addresses don't name the scenario, so both plans run on the same paths (L 6.4, 5.14). The contrast draws plan B's fund on its own draw r_ind."
+
+source card "Probe card RAND-04: two plans over 10 years"
+
+index yr = 1..10
+
+input cash_kept: money DUK
+
+input fund_in: money DUK
+
+input mu: num
+
+input sigma: num
+
+draw r[p in path, y in yr] ~ normal(mu, sigma) to 1e-9
+
+draw r_ind[p in path, y in yr] ~ normal(mu, sigma) to 1e-9
+
+def end_worth[p in path]: num DUK = fund_in * growth[p] + cash_kept
+
+def end_worth_ind[p in path]: num DUK = fund_in * growth_ind[p] + cash_kept
+
+def growth[p in path]: num = exp(sum(y in yr: r[p, y])) to 1e-9
+
+def growth_ind[p in path]: num = exp(sum(y in yr: r_ind[p, y])) to 1e-9
+
+ask q_crn: quantile(p in path: end_worth[p] as if {scenario plan_b} - end_worth[p], 0.5), share(p in path: end_worth[p] as if {scenario plan_b} > end_worth[p]) paths 1000 seed 11
+
+ask q_independent: quantile(p in path: end_worth_ind[p] as if {scenario plan_b} - end_worth[p], 0.5) paths 1000 seed 11
+
+version card_plans
+  cite card
+  known 2026-01-01
+  cash_kept = 0 "plan A: no cash"
+  fund_in = 10000 "both plans put 10 000.00 into the fund"
+  mu = 0.05 "the fund's yearly log-return: mean"
+  sigma = 0.15 "the fund's yearly log-return: deviation"

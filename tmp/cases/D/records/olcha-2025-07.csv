@@ -1,0 +1,27 @@
+Bank Olcha S.A.|account statement
+Account|LN73 4400 2011 0000 8817 2264 0001
+Holder|HALINA SOWA
+Period|20250701|20250731
+Opening balance|5 572,95
+Date|Type|Counterparty|Title|Amount|Balance after
+20250702|CARD|Sklep Pod Lipą|card ...2264|-117,87|5 455,08
+20250702|CARD|Warzywniak u Janka|card ...2264|-73,09|5 381,99
+20250703|CASH|ATM Olcha Brzezie|cash withdrawal|-500,00|4 881,99
+20250703|CARD|Drogeria Konwalia|card ...2264|-190,87|4 691,12
+20250704|CREDIT|Social Insurance Office|survivor pension 07/2025|4 227,07|8 918,19
+20250704|CARD|Market Brzezie|card ...2264|-108,69|8 809,50
+20250707|STANDING ORDER|WM Ogrodowa 2|fee Ogrodowa 2/11 07/2025|-445,00|8 364,50
+20250707|CARD|Drogeria Konwalia|card ...2264|-120,01|8 244,49
+20250708|CREDIT|Oskar Wilczek|rent 07/2025 Ogrodowa 2/11|1 900,00|10 144,49
+20250709|CARD|Drogeria Konwalia|card ...2264|-156,82|9 987,67
+20250709|CREDIT|Treasury ISB|redemption request 2025-07-04|3 077,48|13 065,15
+20250711|CARD|Sklep Pod Lipą|card ...2264|-123,97|12 941,18
+20250714|CARD|Stacja Olcha-Paliwa|card ...2264|-247,85|12 693,33
+20250715|STANDING ORDER|Volta Energia|Leśna 4 energy 07/2025|-385,00|12 308,33
+20250717|CASH|ATM Olcha Brzezie|cash withdrawal|-500,00|11 808,33
+20250717|CARD|Market Brzezie|card ...2264|-234,37|11 573,96
+20250718|CARD|Apteka Rumianek|card ...2264|-103,82|11 470,14
+20250719|CARD|Market Brzezie|card ...2264|-44,12|11 426,02
+20250721|STANDING ORDER|Telekom Lenia|phone 07/2025|-59,00|11 367,02
+20250725|TRANSFER|Opieka Dom sp.|home help 07/2025|-2 150,00|9 217,02
+Closing balance|9 217,02

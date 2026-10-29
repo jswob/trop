@@ -1,0 +1,13 @@
+part asks_b07
+  tally 1
+  note "Question B-07 (tmp/cases/B/questions.md)."
+
+ask b07_october: argmin(c in ola_cent: max(ola_net[2024-10] as if {ola_gross[2024-10] = c * ola_ort} - wrz[w20241028a].amount, wrz[w20241028a].amount - ola_net[2024-10] as if {ola_gross[2024-10] = c * ola_ort})) with law 2025-04-30 as known 2025-04-30
+
+ask b07_return: ola_income[2024], ola_base[2024], ola_tax[2024], ola_advances[2024], ola_result[2024] with law 2025-04-30, ola_gross[2024-10] = 10360.00 as known 2025-04-30
+
+ask b07_jointly: joint_result[2024] with law 2025-04-30 as known 2025-04-30
+
+ask b07_wrzos_seen: bal(wrzos, 2025-02-28) with law 2025-02-28 as known 2025-02-27
+
+ask b07_wrzos_was: bal(wrzos, 2025-02-28) with law 2025-04-30 as known 2025-04-30

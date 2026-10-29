@@ -1,0 +1,5 @@
+part asks_a09
+  tally 1
+  note "A-09 · The 15th in 2025 (questions.md): as of 2025-12-31, known as of 2026-01-15. The joint account's and the wrapped account's statements aren't imported (O:A-1): the balance on the 15th, the card average and what was moved are holes with their questions."
+
+ask a09: rule_day[m], rule_amt[m], to_wrapped[m], to_rzeka[m], moved[m], gap[m] for m in month where year_of(m) = 2025 as known 2026-01-15

@@ -1,0 +1,22 @@
+part pit_13
+  tally 1
+  law
+  note "PIT-13 · Rent let outside a business: a flat rate on the rent received in the tax year, 8.5 % up to 100 000.00 DUK and 12.5 % above, per person (.1); each co-owner on the rent times their share (.2); an advance by the 20th of the next month, the tax on the year's rent to date less the advances paid, rounded, no costs deducted (.3); settled in the return by 30 April (.4)."
+  note "pit13_rate holds the rates by the person's rent of the year, read by marginal(pit13_rate, rent) (L §5.8)."
+
+source pit_13 "Personal Income Tax Act, PIT-13 Rent (tmp/cases/law/acts.md)"
+
+band pit13_rate(x: num DUK): num
+  note "the flat rates on rent received (PIT-13 .1), by the year's rent to date"
+
+input pit13_adv_day: int question "By what day of the next month is a rent advance paid (PIT-13 .3)?"
+
+version pit13_v1
+  cite pit_13
+  governs 2018-01-01..
+  known 2017-09-01
+  enters 2018-01-01
+  note "PIT-13 v1, in force 2018-01-01 until replaced, published 2017-09-01; governs rent received from 2018-01-01."
+  pit13_rate: [0, 100000] = 0.085 "PIT-13 v1 .1: 8.5 % up to 100 000.00 DUK"
+  pit13_rate: (100000, inf) = 0.125 "PIT-13 v1 .1: 12.5 % of the part above it"
+  pit13_adv_day = 20 "PIT-13 v1 .3"

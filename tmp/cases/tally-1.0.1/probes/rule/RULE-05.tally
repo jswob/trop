@@ -1,0 +1,50 @@
+model rule05
+  tally 1
+  on 2025-01-31
+  start 2025-01-31
+  end 2025-12-31
+  note "RULE-05: house rule A-3 fires once the savings reach 40 000.00; the car credit's instalments fall on the 10th from the next month; the 15th rule sees what is paid that month up to the 15th."
+  note "The car's price and the instalment are not on the card. The instalment takes an assumed amount, since a state pay's dates are read only through its movements (next_on refuses a state pay, L 5.13.1)."
+
+source card "Probe card RULE-05: Ania and Tomek's car savings and house rule A-3"
+
+index day = day 2025-01-31..2025-12-31
+
+index month = month 2025-02..2025-12
+
+place konto: account DUK
+
+place savings: account DUK
+
+input instal_amt: money DUK
+
+input monthly_add: money DUK
+
+input threshold: money DUK
+
+def paid_by_15th[m in month]: money DUK
+  note "what the 15th rule of month m sees: the instalments booked that month up to its own day"
+  rule base = flows(instal, start_of(m)..day_of(m, 15))
+
+pay grow[m in month]
+  from outside_duk
+  to savings
+  amount monthly_add
+  on day_of(m, 31)
+
+pay instal[m in month]
+  from konto
+  to outside_duk
+  amount instal_amt
+  on day_of(m, 10)
+  when any(d in day where d < start_of(m): bal(savings, d) >= threshold)
+
+ask q: first(d in day where bal(savings, d) >= threshold), first(d in day where flows(instal, d) > 0), day_of(first(m in month where paid_by_15th[m] > 0), 15)
+
+version card_2025
+  cite card
+  known 2025-01-31
+  instal_amt = 1000 assumed "the card gives no instalment; any amount above 0 gives the same dates" "A-3: the car credit"
+  monthly_add = 2500 "story: the savings grow by 2 500.00 at each month's end"
+  opening[savings] = 30000 "story: the savings on 31 January 2025"
+  threshold = 40000 "A-3: once the savings reach 40 000.00"

@@ -1,0 +1,59 @@
+model pty03
+  tally 1
+  on 2026-10-25
+  note "PTY-03: an estate with four branches, one predeceased and represented; each heir's share, exact."
+
+source card "Probe card PTY-03 (made up): story and rules"
+
+index person = [zbigniew, halina, ania, piotr, marta, adam, kuba]
+
+input child[c in person, p in person]: bool
+
+input decedent: key person
+
+input spouse_floor: num
+
+input spouse_of[p in person]: key person
+
+input survives[p in person]: bool
+
+def branch_count: int = count(c in person where child[c, decedent])
+
+def branch_share: num
+  rule base v card_rules = (1 - spouse_share) / branch_count
+
+def parent_branch[h in person]: key person = first(c in person where child[c, decedent] and child[h, c])
+
+def share_of[h in person]: num
+  rule child_share excepts other v card_rules when child[h, decedent] and survives[h] = branch_share
+  rule other = 0
+  rule represent excepts other v card_rules when not child[h, decedent] and any(c in person: child[c, decedent] and not survives[c] and child[h, c]) = branch_share / count(g in person where child[g, parent_branch[h]] and survives[g])
+  rule spouse excepts other v card_rules when h = spouse_of[decedent] = spouse_share
+
+def spouse_share: num
+  note "rule 1: equal heads, the spouse never below the floor"
+  rule base v card_rules = max(spouse_floor, 1 / (branch_count + 1))
+
+ask q_shares: share_of[h] for h in [halina, ania, piotr, marta, kuba]
+
+ask q_shares_sum: check sum(h in person: share_of[h]) = 1
+
+version card_facts
+  cite card
+  known 2026-10-25
+  child = false "story: no other child relations"
+  child[ania, zbigniew] = true "story"
+  child[piotr, zbigniew] = true "story"
+  child[marta, zbigniew] = true "story"
+  child[adam, zbigniew] = true "story"
+  child[kuba, adam] = true "story: Adam's son"
+  decedent = zbigniew "story: Zbigniew dies"
+  spouse_of[zbigniew] = halina "story: his wife Halina"
+  survives = true "story"
+  survives[zbigniew] = false "story: the decedent"
+  survives[adam] = false "story: Adam died before him"
+
+version card_rules
+  cite card
+  known 2026-10-25
+  spouse_floor = 0.25 "rule 1: never below 1/4"

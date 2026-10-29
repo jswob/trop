@@ -1,0 +1,12 @@
+part wcp_2
+  tally 1
+  law
+  note "WCP-2 · Tax on contributions: the employer's contributions are the employee's employment income on the day the employer pays them to the plan, outside the SOC-1 and SOC-2 bases (.1); the employee's are deducted from pay after tax and contributions (.2); nothing is taxed while units stay in the plan (.3)."
+
+source wcp_2 "Workplace Capital Plans Act, WCP-2 Tax on contributions (tmp/cases/law/acts.md)"
+
+version wcp2_v1
+  cite wcp_2
+  governs 2019-07-01..
+  known 2019-01-15
+  note "WCP-2 v1, in force 2019-07-01 until replaced, published 2019-01-15; governs pay paid from 2019-07-01."
