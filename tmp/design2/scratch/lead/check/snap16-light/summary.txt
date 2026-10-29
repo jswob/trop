@@ -1,0 +1,3 @@
+regress/light/LH-15-light.tally rc=0 sec=121 lines=261 notyet=0 unspec=0 refused=0
+regress/light/LH-16-light.tally rc=0 sec=347 lines=718 notyet=0 unspec=0 refused=0
+regress/light/LH-17-mc-light.tally rc=0 sec=144 lines=2160 notyet=0 unspec=0 refused=0

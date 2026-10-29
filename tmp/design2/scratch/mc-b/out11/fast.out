@@ -1,0 +1,112 @@
+# dir /Users/jswob/projects/trop/tmp/design2/cases/households/B; scenarios: scenarios/nothing_more.tally scenarios/kitchen.tally; asks: b01_months b01_settlement b01_form_b b01_form_c b02_limit b02_returns b04_deed b04_studio b04_end_nothing b04_end_kitchen b04_not_seller b04_rent b04_deposit b06_legs b06_left b06_purchase_vat b06_health b03_invoices b03_sold
+b01_months (m = 2024-01): (22 000.00 DUK, 22 000.00 DUK, 396.51 DUK, 373.72 DUK, 2 601.00 DUK, 2024-02-20)
+  law date 2025-04-30, cut 2025-04-30
+b01_months (m = 2024-02): (22 000.00 DUK, 44 000.00 DUK, 396.51 DUK, 421.76 DUK, 2 592.00 DUK, 2024-03-20)
+  law date 2025-04-30, cut 2025-04-30
+b01_months (m = 2024-03): (34 000.00 DUK, 78 000.00 DUK, 396.51 DUK, 702.94 DUK, 4 032.00 DUK, 2024-04-22)
+  law date 2025-04-30, cut 2025-04-30
+b01_months (m = 2024-04): (22 000.00 DUK, 100 000.00 DUK, 396.51 DUK, 702.94 DUK, 2 592.00 DUK, 2024-05-20)
+  law date 2025-04-30, cut 2025-04-30
+b01_months (m = 2024-05): (22 000.00 DUK, 122 000.00 DUK, 396.51 DUK, 702.94 DUK, 2 592.00 DUK, 2024-06-20)
+  law date 2025-04-30, cut 2025-04-30
+b01_months (m = 2024-06): (31 800.00 DUK, 153 800.00 DUK, 396.51 DUK, 702.94 DUK, 3 768.00 DUK, 2024-07-22)
+  law date 2025-04-30, cut 2025-04-30
+b01_months (m = 2024-07): (22 000.00 DUK, 175 800.00 DUK, 396.51 DUK, 702.94 DUK, 2 592.00 DUK, 2024-08-20)
+  law date 2025-04-30, cut 2025-04-30
+b01_months (m = 2024-08): (22 000.00 DUK, 197 800.00 DUK, 396.51 DUK, 702.94 DUK, 2 592.00 DUK, 2024-09-20)
+  law date 2025-04-30, cut 2025-04-30
+b01_months (m = 2024-09): (30 650.00 DUK, 228 450.00 DUK, 396.51 DUK, 702.94 DUK, 3 630.00 DUK, 2024-10-21)
+  law date 2025-04-30, cut 2025-04-30
+b01_months (m = 2024-10): (22 000.00 DUK, 250 450.00 DUK, 396.51 DUK, 702.94 DUK, 2 592.00 DUK, 2024-11-20)
+  law date 2025-04-30, cut 2025-04-30
+b01_months (m = 2024-11): (22 000.00 DUK, 272 450.00 DUK, 1 594.48 DUK, 702.94 DUK, 2 592.00 DUK, 2024-12-20)
+  law date 2025-04-30, cut 2025-04-30
+b01_months (m = 2024-12): (28 000.00 DUK, 300 450.00 DUK, 1 594.48 DUK, 1 265.28 DUK, 3 169.00 DUK, 2025-01-20)
+  law date 2025-04-30, cut 2025-04-30
+b01_settlement: (300 450.00 DUK, 15 039.24 DUK, 8 387.22 DUK, 6 652.02 DUK, 2025-04-22)
+  law date 2025-04-30, cut 2025-04-30
+b01_form_b: (5 886.85 DUK, 51 059.00 DUK, 8 070.85875 DUK, 17 760.00 DUK)
+  law date 2025-04-30, cut 2025-04-30
+b01_form_c: 35 344.00 DUK
+  law date 2025-04-30, cut 2025-04-30
+b02_limit: (145 205.48 DUK, fv_010_2022, 145 300.00 DUK)
+  law date 2023-02-28, cut 2023-02-28
+b02_returns (m = 2022-10): (3 960.00 DUK, 0 DUK, 0.00 DUK, 3 960.00 DUK, 0.00 DUK, 2022-11-25)
+  law date 2023-02-28, cut 2023-02-28
+b02_returns (m = 2022-11): (3 960.00 DUK, 1 540 DUK, 0.00 DUK, 2 420.00 DUK, 0.00 DUK, 2022-12-27)
+  law date 2023-02-28, cut 2023-02-28
+b02_returns (m = 2022-12): (3 960.00 DUK, 0 DUK, 0.00 DUK, 3 960.00 DUK, 0.00 DUK, 2023-01-25)
+  law date 2023-02-28, cut 2023-02-28
+b04_deed (p = ola): (72 000.00 DUK, 4 800.00 DUK, 1 968.00 DUK)
+  law date 2022-07-31, cut 2022-07-31
+b04_deed (p = piotr): (108 000.00 DUK, 7 200.00 DUK, 2 952.00 DUK)
+  law date 2022-07-31, cut 2022-07-31
+b04_studio: (47 100.00 DUK, 6 690.00 DUK, ?"Will we order the fitted kitchen of B-D35 (not ordered yet), and will Ola pay her 40 % of it by 2024-12-31 (PIT-12 .4)?" (kitchen_ordered))
+  law date 2022-07-31, cut 2022-07-31
+b04_end_nothing: 6 690.00 DUK
+  world: nothing_more
+  held: kitchen_ordered = false (nothing_more_v), read for 2024-12-31
+  law date 2022-07-31, cut 2022-07-31
+b04_end_kitchen: 6 173.00 DUK
+  world: kitchen
+  held: kitchen_ordered = true (kitchen_ordered_v), read for 2024-12-31
+  law date 2022-07-31, cut 2022-07-31
+b04_not_seller: (none, none)
+  law date 2022-07-31, cut 2022-07-31
+b04_rent: 11 045.16 DUK
+  assumed: questions.md: amounts to the ort, no mode named; half up (answer_round)
+  law date 2022-07-31, cut 2022-07-31
+b04_deposit: (6 050.00 DUK, 2022-07-15, 350.00 DUK)
+  law date 2022-07-31, cut 2022-07-31
+b06_legs: (61 488.00 DUK, -11 088.00 DUK, -5 040 DUK, -11 277.87 DUK, -56.09 DUK, 1 083.00 DUK, 180.00 DUK)
+  assumed: B-D12 .2, .4: rounded to the ort, no mode named; half up, the mode that gives B-D16's 2.92 DUK of interest for 1 day (car_loan_round)
+  law date 2025-12-31, cut 2025-12-31
+b06_left: 35 345.13 DUK
+  assumed: B-D12 .2, .4: rounded to the ort, no mode named; half up, the mode that gives B-D16's 2.92 DUK of interest for 1 day (car_loan_round)
+  law date 2025-12-31, cut 2025-12-31
+b06_purchase_vat: (0.5, 8 800 DUK)
+  law date 2025-12-31, cut 2025-12-31
+b06_health: (16 465.96 DUK, 9 147.75 DUK, 7 318.21 DUK)
+  pinned: sale[fv_019_2025].net = 0.00 DUK
+  law date 2025-12-31, cut 2025-12-31
+b03_invoices (j = fv_002_2025): (6 718.56 DUK, 1 478.08 DUK, sold)
+  law date 2025-12-31, cut 2026-01-07
+b03_invoices (j = fv_004_2025): (6 742.56 DUK, 1 483.36 DUK, sold)
+  law date 2025-12-31, cut 2026-01-07
+b03_invoices (j = fv_006_2025): (6 705.60 DUK, 1 475.23 DUK, sold)
+  law date 2025-12-31, cut 2026-01-07
+b03_invoices (j = fv_008_2025): (6 755.84 DUK, 1 486.28 DUK, sold)
+  law date 2025-12-31, cut 2026-01-07
+b03_invoices (j = fv_010_2025): (6 705.92 DUK, 1 475.30 DUK, sold)
+  law date 2025-12-31, cut 2026-01-07
+b03_invoices (j = fv_013_2025): (6 795.52 DUK, 1 495.01 DUK, sold)
+  law date 2025-12-31, cut 2026-01-07
+b03_invoices (j = fv_015_2025): (6 750.40 DUK, 1 485.09 DUK, kept)
+  law date 2025-12-31, cut 2026-01-07
+b03_invoices (j = fv_018_2025): (6 797.28 DUK, 1 495.40 DUK, kept)
+  law date 2025-12-31, cut 2026-01-07
+b03_invoices (j = fv_021_2025): (6 791.04 DUK, 1 494.03 DUK, sold)
+  law date 2025-12-31, cut 2026-01-07
+b03_invoices (j = fv_024_2025): (6 774.72 DUK, 1 490.44 DUK, sold)
+  law date 2025-12-31, cut 2026-01-07
+b03_invoices (j = fv_026_2025): (6 761.44 DUK, 1 487.52 DUK, unpaid)
+  law date 2025-12-31, cut 2026-01-07
+b03_invoices (j = fv_028_2025): (6 758.72 DUK, 1 486.92 DUK, unpaid)
+  law date 2025-12-31, cut 2026-01-07
+b03_sold (j = fv_002_2025): (8 039.70 DUK, 2025-03-04)
+  law date 2025-12-31, cut 2026-01-07
+b03_sold (j = fv_004_2025): (7 982.70 DUK, 2025-03-31)
+  law date 2025-12-31, cut 2026-01-07
+b03_sold (j = fv_006_2025): (8 045.17 DUK, 2025-05-02)
+  law date 2025-12-31, cut 2026-01-07
+b03_sold (j = fv_008_2025): (7 991.29 DUK, 2025-05-30)
+  law date 2025-12-31, cut 2026-01-07
+b03_sold (j = fv_010_2025): (8 086.94 DUK, 2025-07-01)
+  law date 2025-12-31, cut 2026-01-07
+b03_sold (j = fv_013_2025): (8 018.23 DUK, 2025-07-31)
+  law date 2025-12-31, cut 2026-01-07
+b03_sold (j = fv_021_2025): (8 048.68 DUK, 2025-10-31)
+  law date 2025-12-31, cut 2026-01-07
+b03_sold (j = fv_024_2025): (8 074.84 DUK, 2025-12-02)
+  law date 2025-12-31, cut 2026-01-07
+# seconds: 193

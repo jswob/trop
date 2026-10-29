@@ -1,0 +1,116 @@
+# dir /Users/jswob/projects/trop/tmp/design2/scratch/mc-b/cs11; scenarios: scenarios/nothing_more.tally scenarios/kitchen.tally; asks: b05_as_was b05_balance b05_instalment b05_last b05_as_was_k07 b05_balance_k07 b05_instalment_k07
+b05_as_was (y = 2022): (11 499.62 DUK, 24 251.56 DUK, 12 751.94 DUK)
+  assumed: B-D07 .3 rounds the interest to the ort and names no mode; the instalment's rounding isn't stated: half up for both (mtg_round)
+  assumed: B-D07 .4 says equal instalments (annuity) but names no periodic rate: the yearly rate over 12 months, nominal 12 (O:B-5) (mtg_inst.reset)
+  assumed: the dossier names no overpayment before the 26th rule starts (story, B-HR2 v1; B-D28 lists 2025 only) (overpay_from)
+  pinned: held[*] = false
+  law date 2026-01-05, cut 2026-01-05
+b05_as_was (y = 2023): (34 763.53 DUK, 37 890.83 DUK, 3 127.30 DUK)
+  assumed: B-D07 .3 rounds the interest to the ort and names no mode; the instalment's rounding isn't stated: half up for both (mtg_round)
+  assumed: B-D07 .4 says equal instalments (annuity) but names no periodic rate: the yearly rate over 12 months, nominal 12 (O:B-5) (mtg_inst.reset)
+  assumed: the dossier names no overpayment before the 26th rule starts (story, B-HR2 v1; B-D28 lists 2025 only) (overpay_from)
+  pinned: held[*] = false
+  law date 2026-01-05, cut 2026-01-05
+b05_as_was (y = 2024): (32 949.75 DUK, 32 788.34 DUK, -161.41 DUK)
+  assumed: B-D07 .3 rounds the interest to the ort and names no mode; the instalment's rounding isn't stated: half up for both (mtg_round)
+  assumed: B-D07 .4 says equal instalments (annuity) but names no periodic rate: the yearly rate over 12 months, nominal 12 (O:B-5) (mtg_inst.reset)
+  assumed: the dossier names no overpayment before the 26th rule starts (story, B-HR2 v1; B-D28 lists 2025 only) (overpay_from)
+  pinned: held[*] = false
+  law date 2026-01-05, cut 2026-01-05
+b05_as_was (y = 2025): (?"Did Kawiarnia Ziarno pay its invoice on the days the November Cis export lacks?" (gap_ziarno) ?"What did Piotr pay by card on the days the November Cis export lacks?" (gap_cards) ?"date within window(2025-11-14, 2025-11-30) not precise enough for a balance" (gap_card_pays), ?"Did Kawiarnia Ziarno pay its invoice on the days the November Cis export lacks?" (gap_ziarno) ?"What did Piotr pay by card on the days the November Cis export lacks?" (gap_cards) ?"date within window(2025-11-14, 2025-11-30) not precise enough for a balance" (gap_card_pays), ?"Did Kawiarnia Ziarno pay its invoice on the days the November Cis export lacks?" (gap_ziarno) ?"What did Piotr pay by card on the days the November Cis export lacks?" (gap_cards) ?"date within window(2025-11-14, 2025-11-30) not precise enough for a balance" (gap_card_pays))
+  assumed: B-D07 .3 rounds the interest to the ort and names no mode; the instalment's rounding isn't stated: half up for both (mtg_round)
+  assumed: B-D07 .4 says equal instalments (annuity) but names no periodic rate: the yearly rate over 12 months, nominal 12 (O:B-5) (mtg_inst.reset)
+  assumed: B-HR2 .2 says 12 % of the net to the ort and names no mode (hr2_tax_round)
+  assumed: the November export's day is not stated: the 2nd of the next month (story) (gap_from, gap_to)
+  assumed: the dossier names no overpayment before the 26th rule starts (story, B-HR2 v1; B-D28 lists 2025 only) (overpay_from)
+  pinned: held[*] = false
+  anchor: cis 2025-11-13 end, stated 5 621.14 DUK, difference 0.00 DUK
+  anchor: lazur 2025-10-30 end, stated 3 904.00 FLR, difference 0.00 FLR
+  unfulfilled: health_pay[2025-10]
+  unfulfilled: pit_pay[2025-10]
+  unfulfilled: social_pay[2025-10]
+  unfulfilled: vat_pay[2025-10]
+  left out: health_pay, 1 instances, first 2027-01-20
+  left out: health_settle_pay, 1 instances, first 2027-04-20
+  left out: pit_pay, 1 instances, first 2027-01-20
+  left out: social_pay, 1 instances, first 2027-01-20
+  left out: vat_pay, 1 instances, first 2027-01-25
+  law date 2026-01-05, cut 2026-01-05
+b05_balance: (?"Did Kawiarnia Ziarno pay its invoice on the days the November Cis export lacks?" (gap_ziarno) ?"What did Piotr pay by card on the days the November Cis export lacks?" (gap_cards) ?"date within window(2025-11-14, 2025-11-30) not precise enough for a balance" (gap_card_pays), ?"Did Kawiarnia Ziarno pay its invoice on the days the November Cis export lacks?" (gap_ziarno) ?"What did Piotr pay by card on the days the November Cis export lacks?" (gap_cards) ?"date within window(2025-11-14, 2025-11-30) not precise enough for a balance" (gap_card_pays), ?"Did Kawiarnia Ziarno pay its invoice on the days the November Cis export lacks?" (gap_ziarno) ?"What did Piotr pay by card on the days the November Cis export lacks?" (gap_cards) ?"date within window(2025-11-14, 2025-11-30) not precise enough for a balance" (gap_card_pays))
+  assumed: B-D07 .3 rounds the interest to the ort and names no mode; the instalment's rounding isn't stated: half up for both (mtg_round)
+  assumed: B-D07 .4 says equal instalments (annuity) but names no periodic rate: the yearly rate over 12 months, nominal 12 (O:B-5) (mtg_inst.reset)
+  assumed: B-HR2 .2 says 12 % of the net to the ort and names no mode (hr2_tax_round)
+  assumed: the November export's day is not stated: the 2nd of the next month (story) (gap_from, gap_to)
+  assumed: the dossier names no overpayment before the 26th rule starts (story, B-HR2 v1; B-D28 lists 2025 only) (overpay_from)
+  pinned: held[*] = false
+  anchor: cis 2025-11-13 end, stated 5 621.14 DUK, difference 0.00 DUK
+  anchor: lazur 2025-10-30 end, stated 3 904.00 FLR, difference 0.00 FLR
+  unfulfilled: health_pay[2025-10]
+  unfulfilled: pit_pay[2025-10]
+  unfulfilled: social_pay[2025-10]
+  unfulfilled: vat_pay[2025-10]
+  left out: health_pay, 1 instances, first 2027-01-20
+  left out: health_settle_pay, 1 instances, first 2027-04-20
+  left out: pit_pay, 1 instances, first 2027-01-20
+  left out: social_pay, 1 instances, first 2027-01-20
+  left out: vat_pay, 1 instances, first 2027-01-25
+  law date 2026-01-05, cut 2026-01-05
+b05_instalment: (?"Did Kawiarnia Ziarno pay its invoice on the days the November Cis export lacks?" (gap_ziarno) ?"What did Piotr pay by card on the days the November Cis export lacks?" (gap_cards) ?"date within window(2025-11-14, 2025-11-30) not precise enough for a balance" (gap_card_pays), ?"Did Kawiarnia Ziarno pay its invoice on the days the November Cis export lacks?" (gap_ziarno) ?"What did Piotr pay by card on the days the November Cis export lacks?" (gap_cards) ?"date within window(2025-11-14, 2025-11-30) not precise enough for a balance" (gap_card_pays), ?"Did Kawiarnia Ziarno pay its invoice on the days the November Cis export lacks?" (gap_ziarno) ?"What did Piotr pay by card on the days the November Cis export lacks?" (gap_cards) ?"date within window(2025-11-14, 2025-11-30) not precise enough for a balance" (gap_card_pays))
+  assumed: B-D07 .3 rounds the interest to the ort and names no mode; the instalment's rounding isn't stated: half up for both (mtg_round)
+  assumed: B-D07 .4 says equal instalments (annuity) but names no periodic rate: the yearly rate over 12 months, nominal 12 (O:B-5) (mtg_inst.reset)
+  assumed: B-HR2 .2 says 12 % of the net to the ort and names no mode (hr2_tax_round)
+  assumed: the November export's day is not stated: the 2nd of the next month (story) (gap_from, gap_to)
+  assumed: the dossier names no overpayment before the 26th rule starts (story, B-HR2 v1; B-D28 lists 2025 only) (overpay_from)
+  pinned: held[*] = false
+  anchor: cis 2025-11-13 end, stated 5 621.14 DUK, difference 0.00 DUK
+  anchor: lazur 2025-10-30 end, stated 3 904.00 FLR, difference 0.00 FLR
+  unfulfilled: health_pay[2025-10]
+  unfulfilled: pit_pay[2025-10]
+  unfulfilled: social_pay[2025-10]
+  unfulfilled: vat_pay[2025-10]
+  left out: health_pay, 1 instances, first 2027-01-20
+  left out: health_settle_pay, 1 instances, first 2027-04-20
+  left out: pit_pay, 1 instances, first 2027-01-20
+  left out: social_pay, 1 instances, first 2027-01-20
+  left out: vat_pay, 1 instances, first 2027-01-25
+  law date 2026-01-05, cut 2026-01-05
+b05_last: (2047-08-05, 2047-03-05, -5)
+  pinned: held[*] = false
+  law date 2026-01-05, cut 2026-01-05
+b05_as_was_k07 (y = 2022): (11 499.62 DUK, 24 251.56 DUK, 12 751.94 DUK)
+  assumed: B-D07 .3 rounds the interest to the ort and names no mode; the instalment's rounding isn't stated: half up for both (mtg_round)
+  assumed: B-D07 .4 says equal instalments (annuity) but names no periodic rate: the yearly rate over 12 months, nominal 12 (O:B-5) (mtg_inst.reset)
+  assumed: the dossier names no overpayment before the 26th rule starts (story, B-HR2 v1; B-D28 lists 2025 only) (overpay_from)
+  pinned: held[*] = false
+  law date 2026-01-05, cut 2026-01-07
+b05_as_was_k07 (y = 2023): (34 763.53 DUK, 37 890.83 DUK, 3 127.30 DUK)
+  assumed: B-D07 .3 rounds the interest to the ort and names no mode; the instalment's rounding isn't stated: half up for both (mtg_round)
+  assumed: B-D07 .4 says equal instalments (annuity) but names no periodic rate: the yearly rate over 12 months, nominal 12 (O:B-5) (mtg_inst.reset)
+  assumed: the dossier names no overpayment before the 26th rule starts (story, B-HR2 v1; B-D28 lists 2025 only) (overpay_from)
+  pinned: held[*] = false
+  law date 2026-01-05, cut 2026-01-07
+b05_as_was_k07 (y = 2024): (32 949.75 DUK, 32 788.34 DUK, -161.41 DUK)
+  assumed: B-D07 .3 rounds the interest to the ort and names no mode; the instalment's rounding isn't stated: half up for both (mtg_round)
+  assumed: B-D07 .4 says equal instalments (annuity) but names no periodic rate: the yearly rate over 12 months, nominal 12 (O:B-5) (mtg_inst.reset)
+  assumed: the dossier names no overpayment before the 26th rule starts (story, B-HR2 v1; B-D28 lists 2025 only) (overpay_from)
+  pinned: held[*] = false
+  law date 2026-01-05, cut 2026-01-07
+b05_as_was_k07 (y = 2025): (29 806.08 DUK, 29 637.00 DUK, -169.08 DUK)
+  assumed: B-D07 .3 rounds the interest to the ort and names no mode; the instalment's rounding isn't stated: half up for both (mtg_round)
+  assumed: B-D07 .4 says equal instalments (annuity) but names no periodic rate: the yearly rate over 12 months, nominal 12 (O:B-5) (mtg_inst.reset)
+  assumed: the dossier names no overpayment before the 26th rule starts (story, B-HR2 v1; B-D28 lists 2025 only) (overpay_from)
+  pinned: held[*] = false
+  law date 2026-01-05, cut 2026-01-07
+b05_balance_k07: (373 346.69 DUK, 370 993.16 DUK, -2 353.53 DUK)
+  assumed: B-D07 .3 rounds the interest to the ort and names no mode; the instalment's rounding isn't stated: half up for both (mtg_round)
+  assumed: B-D07 .4 says equal instalments (annuity) but names no periodic rate: the yearly rate over 12 months, nominal 12 (O:B-5) (mtg_inst.reset)
+  assumed: the dossier names no overpayment before the 26th rule starts (story, B-HR2 v1; B-D28 lists 2025 only) (overpay_from)
+  pinned: held[*] = false
+  law date 2026-01-05, cut 2026-01-07
+b05_instalment_k07: (2 653.38 DUK, 2 660.73 DUK, 7.35 DUK)
+  assumed: B-D07 .3 rounds the interest to the ort and names no mode; the instalment's rounding isn't stated: half up for both (mtg_round)
+  assumed: B-D07 .4 says equal instalments (annuity) but names no periodic rate: the yearly rate over 12 months, nominal 12 (O:B-5) (mtg_inst.reset)
+  assumed: the dossier names no overpayment before the 26th rule starts (story, B-HR2 v1; B-D28 lists 2025 only) (overpay_from)
+  pinned: held[*] = false
+  law date 2026-01-05, cut 2026-01-07
+# seconds: 1076

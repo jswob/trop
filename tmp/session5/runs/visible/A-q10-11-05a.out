@@ -1,0 +1,83 @@
+# cwd /Users/jswob/projects/trop/tmp/session5/visible/mc-a
+# argv refcore run /Users/jswob/projects/trop/tmp/session5/visible/cases/law/GEN-1.tally /Users/jswob/projects/trop/tmp/session5/visible/cases/law/GEN-3.tally /Users/jswob/projects/trop/tmp/session5/visible/cases/law/GEN-5.tally /Users/jswob/projects/trop/tmp/session5/visible/cases/law/GEN-6.tally /Users/jswob/projects/trop/tmp/session5/visible/cases/law/PIT-2.tally /Users/jswob/projects/trop/tmp/session5/visible/cases/law/PIT-3.tally /Users/jswob/projects/trop/tmp/session5/visible/cases/law/PIT-4.tally /Users/jswob/projects/trop/tmp/session5/visible/cases/law/PIT-5.tally /Users/jswob/projects/trop/tmp/session5/visible/cases/law/PIT-6.tally /Users/jswob/projects/trop/tmp/session5/visible/cases/law/PIT-7.tally /Users/jswob/projects/trop/tmp/session5/visible/cases/law/PIT-8.tally /Users/jswob/projects/trop/tmp/session5/visible/cases/law/PIT-9.tally /Users/jswob/projects/trop/tmp/session5/visible/cases/law/SOC-1.tally /Users/jswob/projects/trop/tmp/session5/visible/cases/law/SOC-2.tally /Users/jswob/projects/trop/tmp/session5/visible/cases/law/SOC-8.tally /Users/jswob/projects/trop/tmp/session5/visible/cases/law/FAM-1.tally /Users/jswob/projects/trop/tmp/session5/visible/cases/law/WCP-1.tally /Users/jswob/projects/trop/tmp/session5/visible/cases/law/WCP-2.tally /Users/jswob/projects/trop/tmp/session5/visible/cases/law/CIV-1.tally /Users/jswob/projects/trop/tmp/session5/visible/cases/law/IGT-1.tally /Users/jswob/projects/trop/tmp/session5/visible/cases/law/IGT-2.tally /Users/jswob/projects/trop/tmp/session5/visible/cases/law/IGT-3.tally /Users/jswob/projects/trop/tmp/session5/visible/cases/law/IGT-4.tally /Users/jswob/projects/trop/tmp/session5/visible/cases/law/CC-1.tally /Users/jswob/projects/trop/tmp/session5/visible/cases/law/CC-2.tally /Users/jswob/projects/trop/tmp/session5/visible/cases/law/MOT-1.tally /Users/jswob/projects/trop/tmp/session5/visible/cases/law/MOT-2.tally /Users/jswob/projects/trop/tmp/session5/visible/cases/households/A/reality.tally /Users/jswob/projects/trop/tmp/session5/visible/cases/households/A/people.tally /Users/jswob/projects/trop/tmp/session5/visible/cases/households/A/places.tally /Users/jswob/projects/trop/tmp/session5/visible/cases/households/A/records.tally /Users/jswob/projects/trop/tmp/session5/visible/cases/households/A/prices.tally /Users/jswob/projects/trop/tmp/session5/visible/cases/households/A/payroll.tally /Users/jswob/projects/trop/tmp/session5/visible/cases/households/A/tax.tally /Users/jswob/projects/trop/tmp/session5/visible/cases/households/A/invest.tally /Users/jswob/projects/trop/tmp/session5/visible/cases/households/A/benefit.tally /Users/jswob/projects/trop/tmp/session5/visible/cases/households/A/gift.tally /Users/jswob/projects/trop/tmp/session5/visible/cases/households/A/car.tally /Users/jswob/projects/trop/tmp/session5/visible/cases/households/A/rules.tally /Users/jswob/projects/trop/tmp/session5/visible/cases/households/A/plan.tally /Users/jswob/projects/trop/tmp/session5/visible/cases/households/A/forecast.tally /Users/jswob/projects/trop/tmp/session5/visible/cases/households/A/worth.tally /Users/jswob/projects/trop/tmp/session5/visible/cases/households/A/statements/statements.tally /Users/jswob/projects/trop/tmp/session5/visible/cases/households/A/scenarios/forecast.tally /Users/jswob/projects/trop/tmp/session5/visible/cases/households/A/scenarios/base.tally /Users/jswob/projects/trop/tmp/session5/visible/cases/households/A/scenarios/crash.tally /Users/jswob/projects/trop/tmp/session5/visible/cases/households/A/scenarios/flat.tally /Users/jswob/projects/trop/tmp/session5/visible/cases/households/A/scenarios/switch.tally /Users/jswob/projects/trop/tmp/session5/visible/cases/households/A/scenarios/no_cut.tally /Users/jswob/projects/trop/tmp/session5/visible/cases/households/A/scenarios/t25_base.tally /Users/jswob/projects/trop/tmp/session5/visible/cases/households/A/scenarios/t25_crash.tally /Users/jswob/projects/trop/tmp/session5/visible/cases/households/A/scenarios/t25_flat.tally /Users/jswob/projects/trop/tmp/session5/visible/cases/households/A/scenarios/t25_switch.tally /Users/jswob/projects/trop/tmp/session5/visible/cases/households/A/asks/A-01.tally /Users/jswob/projects/trop/tmp/session5/visible/cases/households/A/asks/A-02.tally /Users/jswob/projects/trop/tmp/session5/visible/cases/households/A/asks/A-03.tally /Users/jswob/projects/trop/tmp/session5/visible/cases/households/A/asks/A-04.tally /Users/jswob/projects/trop/tmp/session5/visible/cases/households/A/asks/A-05.tally /Users/jswob/projects/trop/tmp/session5/visible/cases/households/A/asks/A-06.tally /Users/jswob/projects/trop/tmp/session5/visible/cases/households/A/asks/A-07.tally /Users/jswob/projects/trop/tmp/session5/visible/cases/households/A/asks/A-08.tally /Users/jswob/projects/trop/tmp/session5/visible/cases/households/A/asks/A-09.tally /Users/jswob/projects/trop/tmp/session5/visible/cases/households/A/asks/A-10.tally /Users/jswob/projects/trop/tmp/session5/visible/cases/households/A/asks/A-11.tally /Users/jswob/projects/trop/tmp/session5/visible/cases/households/A/asks/A-12.tally --ask a10 --ask a11 --ask a11_known_part --ask a05_tomek --ask a05_tomek_2024 --ask a05_wrapped
+a10 [px_round = *]: (refused: RUN-ORDER decisions hr1_take and zosia_save read each other on 2026-01-15, refused: RUN-ORDER decisions hr1_take and zosia_save read each other on 2026-01-15)
+  law date 2026-01-15, cut 2026-01-15
+a11 [pit6_health = *, px_round = *]: (?"the Bank Lazur savings rate from 2025-07-01: no statement after 2025-06-30 was downloaded" (laz_rate), ?"the Bank Lazur savings rate from 2025-07-01: no statement after 2025-06-30 was downloaded" (laz_rate), ?"the Bank Lazur savings rate from 2025-07-01: no statement after 2025-06-30 was downloaded" (laz_rate))
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-01-15
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-01-31
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-02-14
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-02-28
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-03-14
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-03-31
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-04-15
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-04-30
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-05-15
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-05-30
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-06-13
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-06-30
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-07-15
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-07-31
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-08-14
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-08-29
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-09-15
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-09-30
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-10-15
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-10-31
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-11-14
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-11-28
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-12-15
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-12-31
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2026-01-15
+  anchor: ania_sav 2025-12-31 end, stated 39 162.33 DUK, difference 39 162.33 DUK
+  anchor: joint 2025-12-31 end, stated 11 579.98 DUK, difference 0.00 DUK
+  anchor: lazur 2025-06-30 end, stated 24 223.47 DUK, difference 22 223.47 DUK
+  anchor: wcp_a 2025-12-31 end, stated 124.6286 wcp, difference 93.5829 wcp
+  anchor: wcp_t 2025-12-31 end, stated 336.6349 wcp, difference 279.8037 wcp
+  unfulfilled: laz_interest[2025-07]
+  unfulfilled: laz_interest[2025-10]
+  law date 2026-01-15, cut 2026-01-15
+a11_known_part [pit6_health = *, px_round = *]: (209 642.97 DUK, 130 205.73 DUK, 339 848.70 DUK)
+  pinned: laz_rate = 0 /year
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-01-15
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-01-31
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-02-14
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-02-28
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-03-14
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-03-31
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-04-15
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-04-30
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-05-15
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-05-30
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-06-13
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-06-30
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-07-15
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-07-31
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-08-14
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-08-29
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-09-15
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-09-30
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-10-15
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-10-31
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-11-14
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-11-28
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-12-15
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-12-31
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2026-01-15
+  anchor: ania_sav 2025-12-31 end, stated 39 162.33 DUK, difference 39 162.33 DUK
+  anchor: joint 2025-12-31 end, stated 11 579.98 DUK, difference 0.00 DUK
+  anchor: lazur 2025-06-30 end, stated 24 223.47 DUK, difference 22 223.47 DUK
+  anchor: wcp_a 2025-12-31 end, stated 124.6286 wcp, difference 93.5829 wcp
+  anchor: wcp_t 2025-12-31 end, stated 336.6349 wcp, difference 279.8037 wcp
+  law date 2026-01-15, cut 2026-01-15
+a05_tomek (y = 2022) [px_round = *]: (2022, 0.00 DUK, 0 DUK, 1 056.42 DUK)
+  law date 2025-04-30, cut 2025-04-30
+a05_tomek (y = 2023) [px_round = *]: (2023, 0.00 DUK, 390.73 DUK, 0 DUK)
+  law date 2025-04-30, cut 2025-04-30
+a05_tomek (y = 2024) [px_round = *]: (2024, 145.00 DUK, 528.21 DUK, 0 DUK)
+  law date 2025-04-30, cut 2025-04-30
+a05_tomek_2024 [px_round = *]: (0.00 DUK, 137.48 DUK)
+  law date 2025-04-30, cut 2025-04-30
+a05_wrapped (w = wbank[w20240307_075]): (wbank[w20240307_075], 0.00 DUK)
+  law date 2025-04-30, cut 2025-04-30
+
+# rc 0, 20 s, finished 09:05:25
