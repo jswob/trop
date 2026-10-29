@@ -14,8 +14,9 @@ python3 -I -B engine/tests/run.py --tables                    # before-after.md,
 ```
 
 - `--runtime pypy` (default), `cpython` or `both`. `both` runs each check on the two and also requires their outputs to be equal: the rule for any change to how the interpreter runs.
-- `--interp refcore` (default), `fast` or `both` (4.5e): `fast` runs `engine/tools/refcore_fast`, the memory layer in front of the same refcore; `both` requires equal outputs. `--verify N` (fast only) recomputes one in N remembered answers and stops on a difference (exit 70). Results go to `results/<runtime>+fast[+v<N>].tsv`. Use refcore for new baselines and the exam (`TESTING.md` §5). Session 5's watchdog doesn't see `refcore_fast` runs: start `tmp/session4_5/e/tools/memcap_fast.py 8 5` (check with `pgrep -fl memcap_fast`) before a fast run.
-- `--jobs N`, at most 4 (32 GB; the watchdog `engine/tests/tools/memcap.py` stops any `refcore run` past 8 GB, recorded as `killed`).
+- `--interp fast` (the default since 4.5f), `refcore` or `both` (4.5e): `fast` runs `engine/tools/refcore_fast`, the memory layer in front of the same refcore; `both` requires equal outputs. Under `fast`, a check with no stored baseline runs on refcore by itself (a new output comes from refcore only, `TESTING.md` §5). `--verify N` (fast only) recomputes one in N remembered answers and stops on a difference (exit 70). Results go to `results/<runtime>+fast[+v<N>].tsv`. Use `--interp refcore` for new baselines and the exam.
+- **The watchdog:** `engine/tests/tools/memcap.py` stops any `refcore` or `refcore_fast` run past 8 GB (recorded as `killed`, logged in `out/memcap.log`). A run, `--self-test` and `--adhoc` refuse to start without it: `nohup python3 -I -B engine/tests/tools/memcap.py 8 5 > /dev/null 2>&1 &` (check with `pgrep -fl tests/tools/memcap`). It replaces session 5's `memcap.py` and 4.5e's `memcap_fast.py`.
+- `--jobs N`, at most 4 (32 GB).
 - `--budget S` (default 60, the user's rule). A run past it is killed and recorded as `over`, and not rerun.
 - `--force` reruns cached checks.
 - Each call prints a table per layer (same, differ, over, killed, known fault, fixed, cached, not run, wall time). Results: `results/<runtime>.tsv`, the latest result per id; a differing output is kept in `out/<runtime>/`.
