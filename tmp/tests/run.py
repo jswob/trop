@@ -4,7 +4,7 @@ Runs the checks of tmp/tests/checks.tsv on the frozen engine/tools/refcore, unch
 its stored baseline. Form only: it runs and compares; it never explains a difference.
 
     python3 -I -B tmp/tests/run.py [ID_GLOB ...] [--layer L[,L]] [--runtime pypy|cpython|both] [--jobs N<=4]
-                                    [--budget S] [--force] [--list]
+                                    [--budget S] [--force] [--list] [--interp refcore|fast|both] [--verify N]
     python3 -I -B tmp/tests/run.py --self-test
     python3 -I -B tmp/tests/run.py --tables        -> before-after.md, over-budget.md (from results/pypy.tsv)
     python3 -I -B tmp/tests/run.py --adhoc [--cwd DIR] -- run <files> [--ask a ...]   one 60 s PyPy run, logged
@@ -23,6 +23,10 @@ its stored baseline. Form only: it runs and compares; it never explains a differ
 - Known faults (known-faults.md): a check whose note starts `xfail:` is expected to differ; it reports `known` while
   it does and `fixed` once it matches its baseline. Its guarded twin (note `known-fault:`) runs as usual.
 - `both` runs each check on PyPy and on CPython and also requires the two outputs to be equal.
+- --interp (4.5e): `refcore` (default), `fast` (engine/tools/refcore_fast, the memory layer in front of the same
+  refcore) or `both`, which runs each check on the two and requires equal outputs, as --runtime both does. A run is a
+  variant `<runtime>[+fast[+v<N>]]`: --verify N runs the fast side with `--verify N`. The fast variants' cache keys add
+  the variant and the hash of refcore_fast's files; the plain runtimes' keys are unchanged.
 - Results: results/<runtime>.tsv (the latest result per id); a differing output is kept in out/<runtime>/.
 """
 import csv
@@ -42,6 +46,7 @@ from concurrent.futures import ThreadPoolExecutor
 ROOT = '/Users/jswob/projects/trop/'
 T = ROOT + 'tmp/tests/'
 RC = ROOT + 'engine/tools/refcore'
+FAST = ROOT + 'engine/tools/refcore_fast'
 SUMS = ROOT + 'engine/tools/SHA256SUMS'
 PY = {'pypy': os.path.expanduser('~/.local/share/uv/python/pypy-3.11.13-macos-aarch64-none/bin/pypy3.11'),
       'cpython': ROOT + 'engine/tools/parsecheck/.venv/bin/python'}  # the python the snap16 baselines ran on
@@ -67,6 +72,17 @@ def script(c):
     """A key script check (4.5c, keys-extra/): `files` is the script then the inputs it reads (hashed for the cache),
     `asks` its arguments; it passes when it exits 0 and its last line ends ': 0 failed'."""
     return c['options'] == 'script'
+
+
+def variant(v):
+    """'pypy', 'cpython+fast', 'pypy+fast+v50', 'pypy+fast+v1+plant' (the self-test's) -> (runtime, interp argv)."""
+    parts = v.split('+')
+    if 'fast' not in parts:
+        return parts[0], [RC]
+    a = [FAST]
+    for p in parts[2:]:
+        a += ['--verify', p[1:]] if p.startswith('v') else ['--plant']
+    return parts[0], a
 
 
 def argv_of(c):
@@ -109,8 +125,21 @@ def refcore_hash():
     return hashlib.sha256(''.join(lines).encode()).hexdigest()
 
 
-def cache_key(c, rt, rc_hash):
+def fast_hash(d=FAST):
+    """sha256 over refcore_fast's files, path and bytes."""
     h = hashlib.sha256()
+    for dd, dirs, fs in sorted(os.walk(d)):
+        dirs[:] = sorted(x for x in dirs if x != '__pycache__')
+        for f in sorted(fs):
+            if not f.endswith('.pyc') and f != '.DS_Store':
+                p = os.path.join(dd, f)
+                h.update(os.path.relpath(p, d).encode() + b'\0' + open(p, 'rb').read() + b'\0')
+    return h.hexdigest()
+
+
+def cache_key(c, v, rc_hash):
+    h = hashlib.sha256()
+    rt, interp = variant(v)
 
     def part(b):
         b = b if isinstance(b, bytes) else b.encode('utf-8')
@@ -119,6 +148,10 @@ def cache_key(c, rt, rc_hash):
     part(rt)
     part(version(rt))
     part(rc_hash)
+    if interp != [RC]:
+        part(v)
+        part(fast_hash())
+        part(' '.join(interp))
     for f in c['files'].split():
         part(f)
         part(open(f if f.startswith('/') else os.path.join(c['cwd'], f), 'rb').read())
@@ -136,10 +169,11 @@ def text(b):
     return b.decode('utf-8', 'surrogateescape').replace('\r\n', '\n').replace('\r', '\n')
 
 
-def execute(c, rt, budget):
-    env = {k: v for k, v in os.environ.items() if k != 'REFCORE_DEBUG'}
+def execute(c, v, budget):
+    env = {k: x for k, x in os.environ.items() if k != 'REFCORE_DEBUG'}
+    rt, interp = variant(v)
     t0 = time.time()
-    p = subprocess.Popen([PY[rt], '-I', '-B'] + ([] if script(c) else [RC]) + argv_of(c), cwd=c['cwd'], stdout=subprocess.PIPE,
+    p = subprocess.Popen([PY[rt], '-I', '-B'] + ([] if script(c) else interp) + argv_of(c), cwd=c['cwd'], stdout=subprocess.PIPE,
                          stderr=subprocess.PIPE, env=env, start_new_session=True)
     try:
         out, err = p.communicate(timeout=budget)
@@ -162,7 +196,7 @@ def run_one(c, rt, budget, force, rc_hash, cache_dir):
             e['cached'] = True
             return e
     e = execute(c, rt, budget)
-    e.update(id=c['id'], runtime=rt, version=version(rt), key=key, budget=budget, when=time.strftime('%Y-%m-%d %H:%M:%S'))
+    e.update(id=c['id'], runtime=rt, version=version(variant(rt)[0]), key=key, budget=budget, when=time.strftime('%Y-%m-%d %H:%M:%S'))
     os.makedirs(os.path.dirname(path), exist_ok=True)
     tmp = path + '.tmp%d' % os.getpid()
     with open(tmp, 'w', encoding='utf-8') as f:
@@ -344,7 +378,7 @@ def session(sel, checks, runtimes, jobs, budget, force, cache_dir=T + 'cache', o
         for rt in runtimes:
             save_results(rt, rows_by_rt[rt])
     lines = ['| layer | runtime | checks | same | differ | over | killed | known fault | fixed | ran (J marks) | cached '
-             '| not run | wall s | pypy≠cpython |', '|---|---|---|---|---|---|---|---|---|---|---|---|---|---|']
+             '| not run | wall s | %s |' % '≠'.join(runtimes if len(runtimes) == 2 else ['pypy', 'cpython']), '|---|---|---|---|---|---|---|---|---|---|---|---|---|---|']
     for r in table:
         lines.append('| %s | %s | %d | %d | %d | %d | %d | %d | %d | %d | %d | %d | %.0f | %s |' % r)
     lines.append('')
@@ -430,6 +464,24 @@ def self_test(checks):
             'a run past a 2 s test budget is marked over (%s, %.1f s)' % (slow['id'], r['pypy'][0]['seconds']))
         _, r, _ = session([slow], checks, **dict(kw, budget=2))
         say(r['pypy'][0]['verdict'] == 'over' and r['pypy'][0]['cached'] == 'cached', 'an over is cached, not rerun')
+        # 5. --interp both (4.5e): the fast side runs (no hit on refcore's entry), is same, and equals refcore's output
+        tb, r, _ = session([fast, hh], checks, **dict(kw, runtimes=['pypy', 'pypy+fast']))
+        f = r['pypy+fast']
+        say(all(x['verdict'] == 'same' and not x['cached'] for x in f) and tb[0][-1] == 0 and tb[2][-1] == 0,
+            '--interp both: NUM-02 and d01_flat run on refcore_fast, same, and equal to refcore')
+        # 6. a changed refcore_fast byte changes its hash (so the fast variants' cache keys)
+        cf = os.path.join(tmp, 'refcore_fast')
+        shutil.copytree(FAST, cf, ignore=shutil.ignore_patterns('__pycache__'))
+        lp = os.path.join(cf, 'layer.py')
+        open(lp, 'ab').write(b'\n')
+        say(fast_hash(cf) != fast_hash(), 'a changed refcore_fast byte changes its hash')
+        # 7. the planted cache-key omission (the read's day left out) is caught by --verify 1, and only with the plant
+        law = by['U:law/LAW-03']
+        _, r, _ = session([law], checks, **dict(kw, runtimes=['pypy+fast+v1+plant']))
+        e = r['pypy+fast+v1+plant'][0]
+        _, r2, _ = session([law], checks, **dict(kw, runtimes=['pypy+fast+v1']))
+        say(e['verdict'] == 'differ' and e['rc'] == 70 and r2['pypy+fast+v1'][0]['verdict'] == 'same',
+            'a planted key omission is caught by --verify 1 on LAW-03 (exit 70), and LAW-03 passes without it')
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
     print('self-test %s' % ('PASSED' if ok else 'FAILED'))
@@ -621,7 +673,7 @@ def main(argv):
     if '--tables' in argv:
         tables(checks)
         return 0
-    globs, layers, rt, jobs, budget = [], [], 'pypy', MAX_JOBS, 60.0
+    globs, layers, rt, jobs, budget, interp, verify = [], [], 'pypy', MAX_JOBS, 60.0, 'refcore', 0
     i = 0
     while i < len(argv):
         a = argv[i]
@@ -630,6 +682,12 @@ def main(argv):
             i += 1
         elif a == '--runtime':
             rt = argv[i + 1]
+            i += 1
+        elif a == '--interp':
+            interp = argv[i + 1]
+            i += 1
+        elif a == '--verify':
+            verify = int(argv[i + 1])
             i += 1
         elif a == '--jobs':
             jobs = int(argv[i + 1])
@@ -648,6 +706,10 @@ def main(argv):
         sys.exit('--jobs is 1..%d' % MAX_JOBS)
     if rt not in ('pypy', 'cpython', 'both'):
         sys.exit('--runtime is pypy, cpython or both')
+    if interp not in ('refcore', 'fast', 'both') or (rt == 'both' and interp == 'both'):
+        sys.exit('--interp is refcore, fast or both (not with --runtime both)')
+    if verify and interp == 'refcore':
+        sys.exit('--verify N is for --interp fast or both')
     sel = select(checks, globs, layers)
     if '--list' in argv:
         for c in sel:
@@ -656,7 +718,10 @@ def main(argv):
         return 0
     if not sel:
         sys.exit('no check selected')
-    session(sel, checks, ['pypy', 'cpython'] if rt == 'both' else [rt], jobs, budget, '--force' in argv)
+    rts = ['pypy', 'cpython'] if rt == 'both' else [rt]
+    fast = lambda r: r + '+fast' + ('+v%d' % verify if verify else '')
+    variants = rts if interp == 'refcore' else [fast(r) for r in rts] if interp == 'fast' else [rts[0], fast(rts[0])]
+    session(sel, checks, variants, jobs, budget, '--force' in argv)
     return 0
 
 
