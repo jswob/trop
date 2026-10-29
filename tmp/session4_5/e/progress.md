@@ -53,3 +53,11 @@ All 12 are `same`. The median is 1.65×, under the 2× bar, so this is a stop un
 - On B, `read_input` is down to 13.5 % inclusive (it was 46 %).
 - The rest is spread across refcore's own def cells: `read_def` 90 %, `walk.prepare` 73 %, `members` 36 %. The self time is spread too: a list comprehension 8.7 %, `key_values` 6 %, `datetime` 4 %.
 - On LH-10, 92 % is in `read_def`. Most of that is refcore's own def memo (`_read_def` 14 % self, `key_values` 13 %): the cost of building the key on each of 1.45 M calls, not repeated work.
+
+## The user kept the layer: the proof (16:25–16:55)
+
+- `--interp both --jobs 3` on the whole quick set: 0 pair differences. The integration wall was 711 s with 12 of 367 cached.
+- `--verify 50` on the 43 checks over 20 s: 42 same in the run, and 1 over (`I:X:konto_balance@b_r1`, 60.2 s), which was same alone at 50.8 s.
+  - The first attempt crashed in `run.py`: `os.killpg` raised EPERM (macOS, the group already gone). Fixed at both kill sites.
+- Write-up: `tmp/tests/after-fast.md`; `TESTING.md` §5 and `README.md` gain `--interp`.
+- Step 6 (the load rows) was not done; it is left for the user.

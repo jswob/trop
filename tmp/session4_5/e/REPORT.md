@@ -46,3 +46,13 @@ The profile (`plan.md`, `progress.md`):
 ## Cost
 
 About 0.15 % of the week at the stop (estimate 1.1–2.2 %).
+
+## After the user's call (2026-10-29 16:25–16:55): kept, proof finished
+
+The user chose option 1: keep round 1 and finish the proof.
+
+- **`--interp both` on the whole quick set:** 0 pair differences (1 + 115 + 367 checks).
+- **The 43 heavy checks under `--verify 50`:** all same, no mismatch. One went over 60 s at 3 jobs and passed alone in 50.8 s.
+- **Cold integration on fast:** about 860 s at 3 jobs (refcore about 1 110 s; 1.29× overall). That misses the 10-minute target by about 4 minutes, and 36 checks are still over 30 s. The figures are in `tmp/tests/after-fast.md`.
+- **The runner:** `run.py`'s kill now accepts EPERM, a latent crash met on an over.
+- **Not done:** step 6, the load rows on fast (B-05's asks at 85–91 s might fit). It was left for the user.

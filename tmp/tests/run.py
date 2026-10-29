@@ -181,7 +181,7 @@ def execute(c, v, budget):
     except subprocess.TimeoutExpired:
         try:
             os.killpg(p.pid, signal.SIGKILL)
-        except ProcessLookupError:
+        except (ProcessLookupError, PermissionError):  # the group already gone (macOS answers EPERM)
             pass
         p.communicate()
         return {'out': '', 'seconds': round(time.time() - t0, 2), 'rc': None, 'over': True}
@@ -654,7 +654,7 @@ def adhoc(argv):
     except subprocess.TimeoutExpired:
         try:
             os.killpg(p.pid, signal.SIGKILL)
-        except ProcessLookupError:
+        except (ProcessLookupError, PermissionError):  # the group already gone (macOS answers EPERM)
             pass
         p.communicate()
         res = 'over 60 s (killed, nothing printed)'

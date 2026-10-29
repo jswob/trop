@@ -14,6 +14,7 @@ python3 -I -B tmp/tests/run.py --tables                    # before-after.md, ov
 ```
 
 - `--runtime pypy` (default), `cpython` or `both`. `both` runs each check on the two and also requires their outputs to be equal: the rule for any change to how the interpreter runs.
+- `--interp refcore` (default), `fast` or `both` (4.5e): `fast` runs `engine/tools/refcore_fast`, the memory layer in front of the same refcore; `both` requires equal outputs. `--verify N` (fast only) recomputes one in N remembered answers and stops on a difference (exit 70). Results go to `results/<runtime>+fast[+v<N>].tsv`. Use refcore for new baselines and the exam (`TESTING.md` §5).
 - `--jobs N`, at most 4 (32 GB; the watchdog `tmp/session5/tools/memcap.py` stops any `refcore run` past 8 GB, recorded as `killed`).
 - `--budget S` (default 60, the user's rule). A run past it is killed and recorded as `over`, and not rerun.
 - `--force` reruns cached checks.

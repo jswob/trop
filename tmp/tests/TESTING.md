@@ -35,7 +35,7 @@ If the copy is still over 60 s at every knob, the user decides: a load row with 
 
 ## 5. Both ways for any interpreter change
 
-refcore stays frozen and is the judge. A faster way to run it (PyPy today; any later layer behind a switch) is accepted only if the 950 tests and every stored output match the frozen interpreter byte for byte: `run.py --runtime both`. *(Cedar and ShardStore: an obviously right reference model, fast enough on small inputs to judge many of them.)*
+refcore stays frozen and is the judge. A faster way to run it (PyPy today; any later layer behind a switch) is accepted only if the 950 tests and every stored output match the frozen interpreter byte for byte: `run.py --runtime both` for a runtime, `run.py --interp both` for the memory layer `engine/tools/refcore_fast` (4.5e), and `--verify 50` on the heavy checks after any change to the layer. The fast side serves routine passes over checks with a stored baseline; a new baseline, a `ran` check J marks, and the exam run on refcore. *(Cedar and ShardStore: an obviously right reference model, fast enough on small inputs to judge many of them.)*
 
 ## 6. The cache, the known faults and the labels
 
