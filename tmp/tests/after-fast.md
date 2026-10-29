@@ -64,3 +64,21 @@ The median is **1.65×**, under the brief's 2× bar (rule 5). The user chose to 
   - 3 new self-test items, 13 in all.
   - The process-group kill accepts EPERM (macOS, the group already gone), which crashed a run.
 - **`TESTING.md` §5** and **`README.md`:** the `--interp both` rule, and which side serves what.
+
+## The load rows on fast (step 6, 2026-10-29 17:03–17:17)
+
+The 50 checks retired for time ran once on fast, at 60 s and `--jobs 3`, with the watchdog on. The `not-run:` prefix was lifted for this one run only; `checks.tsv` is unchanged.
+
+| Rows | Checks | On fast |
+|---|---|---|
+| B-05's 3 asks (L:16) | 3 | over 60 s |
+| B-12's walk asks `@k5` (L:5) | 7 | over 60 s |
+| K10 (L:10), K11 (L:11) | 6, 5 | over 60 s |
+| A-13 (b) `I:A:A-13~A5` (L:17) | 1 | over 60 s |
+| LH-16-light whole (L:12) | 1 | over 60 s |
+| K3 `I:B:*@k3` | 27 | 24 same (4–45 s), and B-05's 3 over |
+
+- **Nothing that was retired for being over 60 s fits.** Every load row stays load, and `load.tsv` is unchanged.
+- **K3's 24** fit on refcore too: K3 was retired because its cut buys no time (44 s against 45 s), not for being over. They stay retired unless the user wants them back. They would add about 16 minutes of check time with no new capability.
+- **B-12's walks stopped for memory on snap14 (L:14) were not run.** The memo grows memory: `I:B:b03_sold` peaks at 2.1 GB on refcore and 3.2 GB on fast (`/usr/bin/time -l`).
+- **The watchdog gap:** session 5's `memcap.py` matches `refcore run`, so it doesn't see `refcore_fast … run`. Every fast run before 17:02 ran without the 8 GB cap. No fast run took more than 60 s, so the exposure was a few GB at most, but it went unchecked. `tmp/session4_5/e/tools/memcap_fast.py` is a copy that matches `refcore_fast` (only the match and the log differ). It has run since 17:02 and logged no stop. **Fast runs need it on** (`pgrep -fl memcap_fast`).

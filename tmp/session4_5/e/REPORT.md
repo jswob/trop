@@ -56,3 +56,10 @@ The user chose option 1: keep round 1 and finish the proof.
 - **Cold integration on fast:** about 860 s at 3 jobs (refcore about 1 110 s; 1.29× overall). That misses the 10-minute target by about 4 minutes, and 36 checks are still over 30 s. The figures are in `tmp/tests/after-fast.md`.
 - **The runner:** `run.py`'s kill now accepts EPERM, a latent crash met on an over.
 - **Not done:** step 6, the load rows on fast (B-05's asks at 85–91 s might fit). It was left for the user.
+
+## Step 6, the load rows on fast (the user's go, 17:03–17:17)
+
+- **Nothing that was retired for time now fits:** B-05's 3, B-12's 7 walk asks, K10, K11, A-13 (b) and LH-16-light are all still over 60 s.
+- **K3's 24** fit as they did before; they were retired for buying no time, not for being over.
+- **Memory:** the memo raises a B ask's peak from 2.1 to 3.2 GB, so B-12's memory-stopped walks were not run.
+- **The watchdog gap:** session 5's watchdog missed fast runs. They now have their own copy, `tools/memcap_fast.py`, running since 17:02.

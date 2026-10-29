@@ -61,3 +61,9 @@ All 12 are `same`. The median is 1.65×, under the 2× bar, so this is a stop un
   - The first attempt crashed in `run.py`: `os.killpg` raised EPERM (macOS, the group already gone). Fixed at both kill sites.
 - Write-up: `tmp/tests/after-fast.md`; `TESTING.md` §5 and `README.md` gain `--interp`.
 - Step 6 (the load rows) was not done; it is left for the user.
+
+## Step 6 (17:00–17:17)
+
+- **The watchdog gap:** `memcap.py` matches `refcore run`, so it never saw `refcore_fast` runs. I started `tools/memcap_fast.py 8 5` (pid 87837) at 17:02.
+- **Memory:** `I:B:b03_sold` peaks at 2.1 GB on refcore and 3.2 GB on fast.
+- **The run:** the 50 checks retired for time, on fast. 24 same (K3); 26 over: B-05 ×3 alone, B-05 ×3 at k3, K10 ×6, K11 ×5, B-12 k5 ×7, A-13~A5, LH-16-light. The watchdog stopped nothing.
