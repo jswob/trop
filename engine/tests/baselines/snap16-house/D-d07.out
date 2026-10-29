@@ -50,26 +50,31 @@ d07_left: 247
   law date 2026-09-30, cut 2026-09-30
 d07_low_balances (d = 2025-06-13) [hh_round = *]: 2 209.24 DUK
   anchor: konto 2025-06-13 end, stated 2 209.24 DUK, difference 79 509.44 DUK
+  left out: fee_out, 9 instances, first 2027-01-05
   left out: kuba_send, 4 instances, first 2027-01-11
   left out: rent_in, 456 instances, first 2027-01-10
   law date 2026-09-30, cut 2026-09-30
 d07_low_balances (d = 2025-06-19) [hh_round = *]: 4 334.00 DUK
   anchor: konto 2025-06-19 end, stated 4 334.00 DUK, difference 0.00 DUK
+  left out: fee_out, 9 instances, first 2027-01-05
   left out: kuba_send, 4 instances, first 2027-01-11
   left out: rent_in, 456 instances, first 2027-01-10
   law date 2026-09-30, cut 2026-09-30
 d07_low_balances (d = 2025-07-03) [hh_round = *]: 4 691.12 DUK
   anchor: konto 2025-07-03 end, stated 4 691.12 DUK, difference -2 747.82 DUK
+  left out: fee_out, 9 instances, first 2027-01-05
   left out: kuba_send, 4 instances, first 2027-01-11
   left out: rent_in, 456 instances, first 2027-01-10
   law date 2026-09-30, cut 2026-09-30
 d07_low_balances (d = 2026-03-03) [hh_round = *]: 4 842.46 DUK
   anchor: konto 2026-03-03 end, stated 4 842.46 DUK, difference -1 924.60 DUK
+  left out: fee_out, 9 instances, first 2027-01-05
   left out: kuba_send, 4 instances, first 2027-01-11
   left out: rent_in, 456 instances, first 2027-01-10
   law date 2026-09-30, cut 2026-09-30
 d07_lowest [hh_round = *]: 1 324.24 DUK
   anchor: konto 2025-06-17 end, stated 1 324.24 DUK, difference -885.00 DUK
+  left out: fee_out, 9 instances, first 2027-01-05
   left out: kuba_send, 4 instances, first 2027-01-11
   left out: rent_in, 456 instances, first 2027-01-10
   law date 2026-09-30, cut 2026-09-30

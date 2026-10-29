@@ -218,7 +218,7 @@ def tt_due[p in persons]: money DUK at deed_day
   rule tt1 beats none_r = round(tt1_rate * max(flat_price, flat_market) * own_share[p], 1 DUK, half-up) when not seller_vat_payer
 
 move mtg_pay[m in months]: transfers
-  on if is_business(bdays_due[m], holidays) then bdays_due[m] else add_business(bdays_due[m], 1, holidays)
+  on schedule(m, mtg_dom, following, holidays)
   at bdays_due[m]
   when mtg_live[m]
   reads hr2_overpay

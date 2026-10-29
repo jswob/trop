@@ -1,6 +1,6 @@
 part e1_asks_03
   tally 2
-  note "E1-03 · Gifts and inheritances (tmp/cases/E1/questions.md): as of and known 2025-12-31. The tax on Zbigniew's estate for Anna, Piotr and Jakub turns on whether each reported by d.report_by, which no paper states: here it is a hole naming that, and each case pins D's rows reported_on for the three (L §5.18: in a joint model a value pin may name a member's row; e1_03_reported: each reported on d.report_by, e1_03_not_reported: none reported). Halina's gifts to Ania are A's acquisitions from Halina to Ania, a binding over A's index acq (e1_03_givers shows every acquisition's giver and acquirer)."
+  note "E1-03 · Gifts and inheritances (tmp/cases/E1/questions.md): as of and known 2025-12-31. The tax on Zbigniew's estate for Anna, Piotr and Jakub turns on whether each reported by d.report_by, which no paper states: here it is a hole naming that, and each case states D's rows reported_on for the three: e1_03_reported pins them (L §5.18: in a joint model a value pin may name a member's row), each reported on d.report_by; e1_03_not_reported reads the scenario e1_not_reported (scenarios/e1_not_reported.tally), none reported. Halina's gifts to Ania are A's acquisitions from Halina to Ania, a binding over A's index acq (e1_03_givers shows every acquisition's giver and acquirer)."
 
 ask e1_03_anna_from_halina: a.gift_tax[g] for g in a.acq where a.acq_from[g] == halina and a.acq_to[g] == ania law 2025-12-31 as known 2025-12-31
 
@@ -16,6 +16,6 @@ ask e1_03_halina: d.reported_on[halina], d.igt_tax[halina] law 2025-12-31 as kno
 
 ask e1_03_heirs: d.igt_tax[h] for h in [anna, piotr, jakub] law 2025-12-31 as known 2025-12-31
 
-ask e1_03_not_reported: d.igt_tax[h] for h in [anna, piotr, jakub] with d.reported_on[anna] = none, d.reported_on[piotr] = none, d.reported_on[jakub] = none law 2025-12-31 as known 2025-12-31
+ask e1_03_not_reported: d.igt_tax[h] for h in [anna, piotr, jakub] in e1_not_reported law 2025-12-31 as known 2025-12-31
 
 ask e1_03_reported: d.igt_tax[h] for h in [anna, piotr, jakub] with d.reported_on[anna] = d.report_by, d.reported_on[piotr] = d.report_by, d.reported_on[jakub] = d.report_by law 2025-12-31 as known 2025-12-31

@@ -328,6 +328,11 @@ for mid, ins in (('LH-11', ['engine/spec/expected/LH-11.md']),
         note='key-script: independent Decimal key of the rows the freeze re-keyed from prints (freeze/KEYS.md rows %s)'
              % ('1-3' if mid == 'LH-11' else '4-5'))
 
+# --- probes added after snap16 (4.5f): no snap16 baseline, so no baseline until a judge passes a run (verdict `ran`)
+for path in ('time/TIME-08-before.tally',):  # TC-5 (tmp/session5/text-changes.md), session 5's text list
+    add(id='U:' + path[:-len('.tally')], layer='unit', cwd=T, files=T + 'unit/probes/' + path,
+        note='added 4.5f: TC-5, the probe ordering one rule before another (L §5.14.2); no card')
+
 # --- retired from the quick set (4.5c, the user's calls of 2026-10-29): the rows stay, ids are for life; a `not-run:`
 # note keeps run.py from running them, and load/load.tsv lists each with its load twin
 RETIRE = [
@@ -361,6 +366,8 @@ def key_label(r):
         return 'no key by design (SURF: a writing rule; the baseline catches changes, not errors)'
     if i.startswith('I:hardset/'):
         return 'no key: a blind text; the baseline is snap16\'s print (catches changes only)'
+    if i == 'U:time/TIME-08-before':
+        return 'no key by design (TC-5): judged against L §5.14.2 by its run, not scored'
     if i.endswith('~key'):
         return 'independent key script (gap item 6)'
     if i in ('I:M:LH-11', 'I:M:CMP-01'):

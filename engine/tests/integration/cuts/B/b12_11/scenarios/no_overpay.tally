@@ -10,15 +10,15 @@ version hr3_stop
   known 2026-01-02
   replace hr2_cap = 0.00 DUK governs 2026-01-26.. "B-HR3: we stop overpaying from 2026-01-26 to the end of 2028"
 
-ask b12_share: share(liquid_low < hr3_line) in forecast law 2028-12-31 as known 2026-01-02 with uncertain paths 3 seed 20260102
+ask b12_share: share(liquid_low < hr3_line) in forecast law 2028-12-31 as known 2026-01-02 windows each with uncertain paths 3 seed 20260102
 
-ask b12_share_without: share(liquid_low < hr3_line) in no_overpay law 2028-12-31 as known 2026-01-02 with uncertain paths 3 seed 20260102
+ask b12_share_without: share(liquid_low < hr3_line) in no_overpay law 2028-12-31 as known 2026-01-02 windows each with uncertain paths 3 seed 20260102
 
-ask b12_shortfall: mean(max(0 DUK, hr3_line - liquid_low)) in forecast law 2028-12-31 as known 2026-01-02 with uncertain paths 3 seed 20260102
+ask b12_shortfall: mean(max(0 DUK, hr3_line - liquid_low)) in forecast law 2028-12-31 as known 2026-01-02 windows each with uncertain paths 3 seed 20260102
 
-ask b12_shortfall_without: mean(max(0 DUK, hr3_line - liquid_low)) in no_overpay law 2028-12-31 as known 2026-01-02 with uncertain paths 3 seed 20260102
+ask b12_shortfall_without: mean(max(0 DUK, hr3_line - liquid_low)) in no_overpay law 2028-12-31 as known 2026-01-02 windows each with uncertain paths 3 seed 20260102
 
-ask b12_mortgage: mean(mtg_bal[2028-12-31]) in no_overpay law 2028-12-31 as known 2026-01-02 paths 3 seed 20260102
+ask b12_mortgage: mean(mtg_bal[2028-12-31]) in no_overpay law 2028-12-31 as known 2026-01-02 windows each paths 3 seed 20260102
 
 ask b12_tax: mean(sum(tax_flat[m] for m in months where year_of(m) >= 2026)) in no_overpay law 2028-12-31 as known 2026-01-02 with uncertain paths 3 seed 20260102
 

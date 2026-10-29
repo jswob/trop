@@ -1,0 +1,72 @@
+part soc_6
+  tally 2
+  law
+  note "SOC-6 · Indexation: on 1 March each year every pension that started before 1 March of the year before is multiplied by PEN-IDX-<yyyy>; one that started later from the first 1 March after a full year of payment (.1); rounded, a top-up recomputed and not indexed (.2)."
+  note "PEN-IDX-<yyyy> rows govern the year of the indexation they are for (GEN-6)."
+
+source soc_6 "Social Insurance Act, SOC-6 Indexation of pensions (tmp/cases/law/acts.md)"
+
+index soc6_year = year 2018..2064
+
+input pen_idx[y in soc6_year]: num question "By what factor are pensions multiplied on 1 March of this year (PEN-IDX, SOC-6 .1)?"
+
+version soc6_v1
+  cite soc_6
+  governs 2018-03-01..
+  known 2017-09-01
+  enters 2018-01-01
+  note "SOC-6 v1, in force 2018-01-01 until replaced, published 2017-09-01; governs indexations from 1 March 2018."
+
+version penidx_2018
+  cite gazette
+  governs 2018
+  known 2018-02-16
+  pen_idx[2018] = 1.0298 "gazette.csv line 1922 PEN-IDX-2018"
+
+version penidx_2019
+  cite gazette
+  governs 2019
+  known 2019-02-14
+  pen_idx[2019] = 1.0331 "gazette.csv line 1923 PEN-IDX-2019"
+
+version penidx_2020
+  cite gazette
+  governs 2020
+  known 2020-02-15
+  pen_idx[2020] = 1.0352 "gazette.csv line 1924 PEN-IDX-2020"
+
+version penidx_2021
+  cite gazette
+  governs 2021
+  known 2021-02-16
+  pen_idx[2021] = 1.0419 "gazette.csv line 1925 PEN-IDX-2021"
+
+version penidx_2022
+  cite gazette
+  governs 2022
+  known 2022-02-14
+  pen_idx[2022] = 1.0712 "gazette.csv line 1926 PEN-IDX-2022"
+
+version penidx_2023
+  cite gazette
+  governs 2023
+  known 2023-02-15
+  pen_idx[2023] = 1.1476 "gazette.csv line 1927 PEN-IDX-2023"
+
+version penidx_2024
+  cite gazette
+  governs 2024
+  known 2024-02-16
+  pen_idx[2024] = 1.1208 "gazette.csv line 1928 PEN-IDX-2024"
+
+version penidx_2025
+  cite gazette
+  governs 2025
+  known 2025-02-14
+  pen_idx[2025] = 1.0553 "gazette.csv line 1929 PEN-IDX-2025"
+
+version penidx_2026
+  cite gazette
+  governs 2026
+  known 2026-02-15
+  pen_idx[2026] = 1.0491 "gazette.csv line 1930 PEN-IDX-2026"

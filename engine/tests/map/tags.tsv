@@ -256,3 +256,4 @@ I:B:B-13	integration	CUR-01 CUR-02 CUR-03 SCEN-01 SCEN-03 RULE-01 TIME-02 TIME-0
 I:D:D-13	integration	OWN-06 OWN-07 RAND-01 RAND-02 RAND-03 RAND-04 SCEN-01 VAL-07 TIME-05 LAW-09	OWN-06=key edges:; OWN-07=key edges:; RAND-01=key edges:; RAND-02=key edges:; RAND-03=key edges:; RAND-04=key edges:; SCEN-01=key edges:; VAL-07=key edges:; TIME-05=key edges:; LAW-09=key edges:	cases 1.1 (4.5c); runs: C2's text, marked by J
 U:pairs/CUR-01+RAND-01	unit	CUR-01 RAND-01	CUR-01=card edge:; RAND-01=card edge:	cases 1.1 pair card (4.5c)
 U:law/LAW-20	unit	LAW-20	LAW-20=card edge:	cases 1.1 (4.5c)
+U:time/TIME-08-before	unit	TIME-07	TIME-07=TC-5 (a written order within one day, L §5.14.2)	4.5f: no card; the edge is the probe's own subject

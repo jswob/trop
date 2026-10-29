@@ -1,7 +1,7 @@
 scenario e1_not_reported over family
   tally 2
   from 2024-11-03
-  note "The case 'not reported', which no ask reads now (E1-03 asks it with pins, asks/E1-03.tally): Anna, Piotr and Jakub never reported the inheritance to the Revenue Office. Nothing in the family's papers says whether any heir but Halina reported (story.md 2025-05-05), so it is a hypothetical fact (L §5.5, §6.4), and the scenario states D's rows under D's prefix (L §6.1). It diverges on the day the tax arose (d.igt_arises), the law date of d.igt_tax."
+  note "The case 'not reported', which E1-03 asks (asks/E1-03.tally, e1_03_not_reported): Anna, Piotr and Jakub never reported the inheritance to the Revenue Office. Nothing in the family's papers says whether any heir but Halina reported (story.md 2025-05-05), so it is a hypothetical fact (L §5.5, §6.4), and the scenario states D's rows under D's prefix (L §6.1). It diverges on the day the tax arose (d.igt_arises), the law date of d.igt_tax."
 
 source e1_case_not_reported "The family's question E1-03, its case 'not reported' (tmp/cases/E1/questions.md; story.md 2025-05-05: nothing says whether any other heir reported)"
 

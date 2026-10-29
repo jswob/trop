@@ -11,8 +11,9 @@ kind kuba_payments: transfers
 kind rent_payments: transfers
   note "the tenant's rent into Halina's account (D-HR1 .1)"
 
-index fee_month = month 2025-07..2026-12
-  note "the months of D-D27's fee plan whose export rows records.tally writes; the fees paid before July 2025 are inside the balances the exports state (anchor readings), as the no_repair version's note says"
+index fee_month = month 2025-07..2027-09
+  note "the months of D-D27's fee plan from July 2025, whose export rows records.tally writes up to the cut; the fees paid before July 2025 are inside the balances the exports state (anchor readings), as the no_repair version's note says"
+  note "to 2027-09, the last month of the last key of the index quarter (reality.tally), so every quarter D-05 asks counts its fees; D-D27 states no fee for 2027, so its months' amounts are a hole (version fees)"
 
 input boiler_amt: money DUK question "What did the boiler cost (D-D28)?"
 
@@ -114,6 +115,7 @@ version fees
   fee_amt[2024] = 420.00 "D-D27"
   fee_amt[2025] = 445.00 "D-D27"
   fee_amt[2026] = 468.00 "D-D27"
+  fee_amt[2027] = ?"What is the monthly building fee in 2027? D-D27 states the fees of 2024 to 2026 only"
   replace fee_dom = 5 "D-D27: collected on the 5th, or the next business day"
 
 version cpi_avg_2025

@@ -1,0 +1,19 @@
+part asks_d04
+  tally 2
+  note "D-04 · Her 2025 return, as of 2026-04-30, as known 2026-04-13."
+
+ask d04_check_advances: check pen_adv_year[2025] == sio_adv_stated[2025] law 2026-04-30 as known 2026-04-13
+
+ask d04_check_paid: check pen_income[2025] == sio_paid_stated[2025] law 2026-04-30 as known 2026-04-13
+
+ask d04_check_payment: check pen_due[2025] + rent_due[2025] == sum(o.cash.amount for o in bank over 2026-04-30) law 2026-04-30 as known 2026-04-30
+
+ask d04_check_rent_advance: check rent_adv[2025-12] == sum(o.cash.amount for o in bank over 2026-01-20) law 2026-04-30 as known 2026-04-13
+
+ask d04_pensions: pen_income[2025], pen_base[2025], pen_tax[2025], pen_adv_year[2025], pen_due[2025] law 2026-04-30 as known 2026-04-13
+
+ask d04_rent: rent_rcv[2025], rent_share[2025], rent_tax[2025], rent_adv_year[2025], rent_due[2025] law 2026-04-30 as known 2026-04-13
+
+ask d04_total: bond_interest_stated, pen_due[2025] + rent_due[2025], return_due[2025] law 2026-04-30 as known 2026-04-13
+
+ask d04_without: pen_income[2025], pen_base[2025], pen_tax[2025], pen_adv_year[2025], pen_due[2025], rent_rcv[2025], rent_share[2025], rent_tax[2025], rent_adv_year[2025], rent_due[2025], pen_due[2025] + rent_due[2025] with surv_claim = none, v2_claim = none, rent_rcv[2025] = 0, flat_after[halina] = 0 law 2026-04-30 as known 2026-04-13
