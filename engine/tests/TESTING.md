@@ -16,7 +16,7 @@ A check past its 60 s budget is a fault to fix (by the halving test and the spli
 
 ## 2. The one catalogue
 
-The edge list `tmp/cases/boundaries.md` is the only list of capabilities. Every check names the edges it uses in `map/tags.tsv`: from a card's `edge:`, a key's `edges:` (a question's aim), a model's story header, or a `reach` tag that cites the derivation step passing the edge. Coverage is measured by machine (`map/coverage.py`): every edge has a unit check, every edge but the SURF writing rules meets integration, every ★ edge meets two integration checks, and the goal is that every pair of axes that can interact meets in some integration check. *(test262's feature tags; NIST pairwise coverage: most failures need one or two interacting parameters.)*
+The edge list `engine/tests/cases/boundaries.md` is the only list of capabilities. Every check names the edges it uses in `map/tags.tsv`: from a card's `edge:`, a key's `edges:` (a question's aim), a model's story header, or a `reach` tag that cites the derivation step passing the edge. Coverage is measured by machine (`map/coverage.py`): every edge has a unit check, every edge but the SURF writing rules meets integration, every ★ edge meets two integration checks, and the goal is that every pair of axes that can interact meets in some integration check. *(test262's feature tags; NIST pairwise coverage: most failures need one or two interacting parameters.)*
 
 ## 3. The breakdown rule for anything new
 

@@ -2,13 +2,13 @@
 
 Session 4.5b, 2026-10-29, on paper.
 - **Files:** `tags.tsv` (the tags), `gaps.md` (the gaps and their actions), `knobs.md` (the halving test), `findings.md` (one line each, outside the task).
-- **The ids** are 4.5a's (`tmp/tests/checks.tsv`), except per household question (`I:<H>:<qid>`) and per amendment (`I:X:base`, `I:X:1`..`7`).
+- **The ids** are 4.5a's (`engine/tests/checks.tsv`), except per household question (`I:<H>:<qid>`) and per amendment (`I:X:base`, `I:X:1`..`7`).
 
 ## Counts
 
 | | Count |
 |---|---|
-| **Edges** (the catalogue: `tmp/cases/boundaries.md`) | 92 on 15 axes, 14 ★ |
+| **Edges** (the catalogue: `engine/tests/cases/boundaries.md`) | 92 on 15 axes, 14 ★ |
 | **Unit checks** | 112: 103 probe texts and 9 sets, from 92 cards; 88 cards keyed |
 | **Integration checks, tagged** | 79 old models, 39 household questions, 8 amendments (base + 7 changes), 3 light twins, 11 blind texts |
 | **Integration checks, in 4.5a's per-ask runner** | 206 household asks and 60 X asks |

@@ -1,10 +1,10 @@
 # K	original checks (id glob)	original dir	copy dir	twin|J
-K3	I:B:*	tmp/design2/scratch/mc-b/cs11	tmp/tests/texts/split/k3-b	twin-cut
+K3	I:B:*	engine/tests/integration/cuts/B/cs11	engine/tests/integration/split/k3-b	twin-cut
 K13	I:light/LH-16-light	-	-	per-ask	abstract_range ex_t1_min50 ex_t2_min50 ex_t3_min50 ex_t3_s100 ex_t4_min25 ex_t4_s100_r06 instances periods_1926 periods_1946 t1_s100_y20 t2_s100_y20 t3_s0_y30 t4_s50_y25 t5_e1926_fixed_y20 t5_e1946_indexed_y30 t6_text t6a_max t6a_mean t6a_median t6a_min t6a_sd
-K4	I:B:*@cd7full_b07	tmp/design2/scratch/mc-b/cd7f11	tmp/tests/texts/split/k4-b07	J
-K4	I:B:b07_wrzos_seen	tmp/design2/scratch/mc-b/cd7f11	tmp/tests/texts/split/k4-b07	J
-K10	run=X-c1_r2	-	-	twin=tmp/design2/scratch/mc-x/out11/c1_r2.out
-K11	run=X-mc	-	-	twin=tmp/design2/scratch/mc-x/out11/mc.out
-K5	run=B-b12_det	tmp/design2/scratch/mc-b/b12_11	tmp/tests/texts/split/k5-b12	J
-K5	run=B-b12_p3	tmp/design2/scratch/mc-b/b12_11	tmp/tests/texts/split/k5-b12	J
-K5	run=B-b12_liquid	tmp/design2/scratch/mc-b/b12_11	tmp/tests/texts/split/k5-b12	J
+K4	I:B:*@cd7full_b07	engine/tests/integration/cuts/B/cd7f11	engine/tests/integration/split/k4-b07	J
+K4	I:B:b07_wrzos_seen	engine/tests/integration/cuts/B/cd7f11	engine/tests/integration/split/k4-b07	J
+K10	run=X-c1_r2	-	-	twin=engine/tests/integration/amendments/out11/c1_r2.out
+K11	run=X-mc	-	-	twin=engine/tests/integration/amendments/out11/mc.out
+K5	run=B-b12_det	engine/tests/integration/cuts/B/b12_11	engine/tests/integration/split/k5-b12	J
+K5	run=B-b12_p3	engine/tests/integration/cuts/B/b12_11	engine/tests/integration/split/k5-b12	J
+K5	run=B-b12_liquid	engine/tests/integration/cuts/B/b12_11	engine/tests/integration/split/k5-b12	J

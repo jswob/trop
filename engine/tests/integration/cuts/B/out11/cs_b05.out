@@ -1,4 +1,4 @@
-# dir /Users/jswob/projects/trop/tmp/design2/scratch/mc-b/cs11; scenarios: scenarios/nothing_more.tally scenarios/kitchen.tally; asks: b05_as_was b05_balance b05_instalment b05_last b05_as_was_k07 b05_balance_k07 b05_instalment_k07
+# dir engine/tests/integration/cuts/B/cs11; scenarios: scenarios/nothing_more.tally scenarios/kitchen.tally; asks: b05_as_was b05_balance b05_instalment b05_last b05_as_was_k07 b05_balance_k07 b05_instalment_k07
 b05_as_was (y = 2022): (11 499.62 DUK, 24 251.56 DUK, 12 751.94 DUK)
   assumed: B-D07 .3 rounds the interest to the ort and names no mode; the instalment's rounding isn't stated: half up for both (mtg_round)
   assumed: B-D07 .4 says equal instalments (annuity) but names no periodic rate: the yearly rate over 12 months, nominal 12 (O:B-5) (mtg_inst.reset)

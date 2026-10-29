@@ -1,4 +1,4 @@
-q_crn: refused: LOAD-SCENARIO ask q_crn names plan_b, neither the model nor a loaded scenario (/Users/jswob/projects/trop/tmp/design2/cases/probes/rand/RAND-04/RAND-04.tally:34)
-q_independent: refused: LOAD-SCENARIO ask q_independent names plan_b, neither the model nor a loaded scenario (/Users/jswob/projects/trop/tmp/design2/cases/probes/rand/RAND-04/RAND-04.tally:36)
+q_crn: refused: LOAD-SCENARIO ask q_crn names plan_b, neither the model nor a loaded scenario (unit/probes/rand/RAND-04/RAND-04.tally:34)
+q_independent: refused: LOAD-SCENARIO ask q_independent names plan_b, neither the model nor a loaded scenario (unit/probes/rand/RAND-04/RAND-04.tally:36)
 warning: WARN-UNREAD def end_worth is read by nothing
 warning: WARN-UNREAD def end_worth_ind is read by nothing

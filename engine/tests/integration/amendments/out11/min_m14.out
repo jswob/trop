@@ -1,2 +1,2 @@
-refused: LOAD-UNIT fill wh: supply (money PLN) and demand (dyn) must share a unit (L §5.12) (/Users/jswob/projects/trop/tmp/design2/scratch/mc-x/min/m14/m.tally:14)
+refused: LOAD-UNIT fill wh: supply (money PLN) and demand (dyn) must share a unit (L §5.12) (engine/tests/integration/amendments/min/m14/m.tally:14)
 exit 1 in 0s

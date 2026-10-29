@@ -1,4 +1,4 @@
-# dir /Users/jswob/projects/trop/tmp/design2/cases/households/B; scenarios: scenarios/nothing_more.tally scenarios/kitchen.tally; asks: b01_months b01_settlement b01_form_b b01_form_c b02_limit b02_returns b04_deed b04_studio b04_end_nothing b04_end_kitchen b04_not_seller b04_rent b04_deposit b06_legs b06_left b06_purchase_vat b06_health b03_invoices b03_sold
+# dir engine/tests/integration/households/B; scenarios: scenarios/nothing_more.tally scenarios/kitchen.tally; asks: b01_months b01_settlement b01_form_b b01_form_c b02_limit b02_returns b04_deed b04_studio b04_end_nothing b04_end_kitchen b04_not_seller b04_rent b04_deposit b06_legs b06_left b06_purchase_vat b06_health b03_invoices b03_sold
 b01_months (m = 2024-01): (22 000.00 DUK, 22 000.00 DUK, 396.51 DUK, 373.72 DUK, 2 601.00 DUK, 2024-02-20)
   law date 2025-04-30, cut 2025-04-30
 b01_months (m = 2024-02): (22 000.00 DUK, 44 000.00 DUK, 396.51 DUK, 421.76 DUK, 2 592.00 DUK, 2024-03-20)

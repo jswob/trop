@@ -1,4 +1,4 @@
-# dir /Users/jswob/projects/trop/tmp/design2/scratch/mc-b/cs11; scenarios: scenarios/nothing_more.tally scenarios/kitchen.tally; asks: b03_lazur b03_november b08_balances b08_residuals b08_unmatched b08_reversed b08_gap b08_no_row b08_cards
+# dir engine/tests/integration/cuts/B/cs11; scenarios: scenarios/nothing_more.tally scenarios/kitchen.tally; asks: b03_lazur b03_november b08_balances b08_residuals b08_unmatched b08_reversed b08_gap b08_no_row b08_cards
 b03_lazur: (3 904.00 FLR, 16 516.65 DUK)
   assumed: B-HR4 .5 says each amount to the ort and names no mode (hr4_round)
   anchor: lazur 2025-12-01 end, stated 3 904.00 FLR, difference 0.00 FLR

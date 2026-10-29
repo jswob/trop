@@ -11,6 +11,6 @@ I:B:B-13~B4	integration	B	-	B-13/b13_rows B-13/b13_fx B-13/b13_rule B-13/B-13	b1
 I:B:B-13~B5	integration	B	-	B-13/b13_rows B-13/b13_fx B-13/b13_rule B-13/B-13	b13_b_gain	
 I:D:D-13~D1	integration	D-p200	-	D-13/longview_taxed D-13/D-13	d13_paths	
 I:D:D-13~D2	integration	D-p200	-	D-13/longview_taxed D-13/D-13	d13_zero d13_stream	
-U:pairs/CUR-01+RAND-01~P1	unit	-	tmp/tests/texts/new/probes/pairs	probes/pairs/CUR-01+RAND-01	q_days q_python_stream q_means	
-U:pairs/CUR-01+RAND-01~P2	unit	-	tmp/tests/texts/new/probes/pairs	probes/pairs/CUR-01+RAND-01	q_means_again	
-U:law/LAW-20~L1	unit	-	tmp/tests/texts/new/probes/law	probes/law/LAW-20	a_rule3 a_closed_form_agrees a_closed_form_deduction b_rule4 b_rounds b_fixed_point	
+U:pairs/CUR-01+RAND-01~P1	unit	-	engine/tests/integration/new/probes/pairs	probes/pairs/CUR-01+RAND-01	q_days q_python_stream q_means	
+U:pairs/CUR-01+RAND-01~P2	unit	-	engine/tests/integration/new/probes/pairs	probes/pairs/CUR-01+RAND-01	q_means_again	
+U:law/LAW-20~L1	unit	-	engine/tests/integration/new/probes/law	probes/law/LAW-20	a_rule3 a_closed_form_agrees a_closed_form_deduction b_rule4 b_rounds b_fixed_point	

@@ -1,25 +1,25 @@
-# tmp/tests: the runner
+# engine/tests: the runner
 
 One runner for the interpreter, unit and integration layers (session 4.5a, 2026-10-29). It runs each check on the frozen `engine/tools/refcore`, unchanged, and compares its output with the stored CPython baseline. Standard library only.
 
 ## How to run
 
 ```sh
-python3 -I -B tmp/tests/run.py --self-test                 # must pass before a real run
-python3 -I -B tmp/tests/run.py                             # every check, PyPy, 4 jobs, 60 s each
-python3 -I -B tmp/tests/run.py 'U:*' 'I:M:CB-0*'           # by id glob
-python3 -I -B tmp/tests/run.py --layer unit,interpreter --runtime both
-python3 -I -B tmp/tests/run.py --list 'I:B:*'              # what a selection holds
-python3 -I -B tmp/tests/run.py --tables                    # before-after.md, over-budget.md
+python3 -I -B engine/tests/run.py --self-test                 # must pass before a real run
+python3 -I -B engine/tests/run.py                             # every check, PyPy, 4 jobs, 60 s each
+python3 -I -B engine/tests/run.py 'U:*' 'I:M:CB-0*'           # by id glob
+python3 -I -B engine/tests/run.py --layer unit,interpreter --runtime both
+python3 -I -B engine/tests/run.py --list 'I:B:*'              # what a selection holds
+python3 -I -B engine/tests/run.py --tables                    # before-after.md, over-budget.md
 ```
 
 - `--runtime pypy` (default), `cpython` or `both`. `both` runs each check on the two and also requires their outputs to be equal: the rule for any change to how the interpreter runs.
 - `--interp refcore` (default), `fast` or `both` (4.5e): `fast` runs `engine/tools/refcore_fast`, the memory layer in front of the same refcore; `both` requires equal outputs. `--verify N` (fast only) recomputes one in N remembered answers and stops on a difference (exit 70). Results go to `results/<runtime>+fast[+v<N>].tsv`. Use refcore for new baselines and the exam (`TESTING.md` §5). Session 5's watchdog doesn't see `refcore_fast` runs: start `tmp/session4_5/e/tools/memcap_fast.py 8 5` (check with `pgrep -fl memcap_fast`) before a fast run.
-- `--jobs N`, at most 4 (32 GB; the watchdog `tmp/session5/tools/memcap.py` stops any `refcore run` past 8 GB, recorded as `killed`).
+- `--jobs N`, at most 4 (32 GB; the watchdog `engine/tests/tools/memcap.py` stops any `refcore run` past 8 GB, recorded as `killed`).
 - `--budget S` (default 60, the user's rule). A run past it is killed and recorded as `over`, and not rerun.
 - `--force` reruns cached checks.
 - Each call prints a table per layer (same, differ, over, killed, known fault, fixed, cached, not run, wall time). Results: `results/<runtime>.tsv`, the latest result per id; a differing output is kept in `out/<runtime>/`.
-- **In git** (4.5d): `tmp/` is ignored, so a new suite file needs `git add -f` until session 4.5f moves the suite out of `tmp/`; `python3 -I -B tmp/tests/tracked_check.py` lists any file `checks.tsv` names that git doesn't track (exit 1).
+- **In git** (4.5d): `tmp/` is ignored, so a new suite file needs `git add -f` until session 4.5f moves the suite out of `tmp/`; `python3 -I -B engine/tests/tools/tracked_check.py` lists any file `checks.tsv` names that git doesn't track (exit 1).
 
 ## The checks and their ids
 
@@ -35,7 +35,7 @@ python3 -I -B tmp/tests/run.py --tables                    # before-after.md, ov
 | integration | `I:<H>:<ask>`, H in A, B, D, E1, X; `@<run>` added when an ask is in several runs of a household | `house13.py` (A, B, D, X), `e1_rerun.sh` (E1) and `run5.py`'s E1-02-B run; **one check per ask** | that ask's blocks in `snap16-house/`, `snap16-e1/`, `e1-02-B16.out` |
 
 - Household checks run on the inputs snap16 ran on (`tmp/design2/scratch/`, `tmp/design2/cases/`). Session 5's copies under `tmp/session5/visible/` carry later edits (cases 1.0.2) and are not the baselines' inputs.
-- A row whose note starts `not-run:` is a run on `tmp/design2/benchmarks.md`. It is listed, so the ids exist, and never run.
+- A row whose note starts `not-run:` is a run on `engine/tests/load/benchmarks.md`. It is listed, so the ids exist, and never run.
 - `question`: the question whose ask file declares the ask (`asks/B-01.tally`, `asks-D-01.tally`), empty where no file names one. `note`: `run=` the run the ask was cut from, `run_asks=` its number of asks, `run_cpython_s=` that whole run's CPython seconds where stored.
 
 ## Compare

@@ -1,21 +1,22 @@
 #!/usr/bin/env python3
 """The map's coverage from tags.tsv (session 4.5c; 4.5b counted the same by hand-run scripts).
 
-    python3 -I -B tmp/tests/map/coverage.py            # the table
-    python3 -I -B tmp/tests/map/coverage.py --unmet    # also the unmet axis pairs
+    python3 -I -B engine/tests/map/coverage.py            # the table
+    python3 -I -B engine/tests/map/coverage.py --unmet    # also the unmet axis pairs
 
-The catalogue is tmp/cases/boundaries.md (`### <EDGE> · <name>`, ★ for an axis's hardest edge). Integration means
+The catalogue is engine/tests/cases/boundaries.md (`### <EDGE> · <name>`, ★ for an axis's hardest edge). Integration means
 the household questions (`I:<H>:<qid>`, H in A, B, D, E1) plus the old models (`I:M:*`, not the `~key` scripts);
 the amendments household (`I:X:*`) and the blind texts (`I:hardset/*`) are counted in their own rows only.
 A pair is two distinct edges tagged on one check; an axis pair counts same-axis pairs too (15 axes: 120).
 """
 import itertools
+import os
 import re
 import sys
 
-ROOT = '/Users/jswob/projects/trop/'
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))) + '/'
 edges, star = [], set()
-for l in open(ROOT + 'tmp/cases/boundaries.md', encoding='utf-8'):
+for l in open(ROOT + 'engine/tests/cases/boundaries.md', encoding='utf-8'):
     m = re.match(r'^### ([A-Z]+-\d+) · .*?(★)?\s*$', l)
     if m:
         edges.append(m.group(1))
@@ -24,7 +25,7 @@ for l in open(ROOT + 'tmp/cases/boundaries.md', encoding='utf-8'):
 axis = lambda e: e.split('-')[0]
 axes = sorted({axis(e) for e in edges})
 tags = {}
-for l in list(open(ROOT + 'tmp/tests/map/tags.tsv', encoding='utf-8'))[1:]:
+for l in list(open(ROOT + 'engine/tests/map/tags.tsv', encoding='utf-8'))[1:]:
     p = l.rstrip('\n').split('\t')
     tags[p[0]] = [e for e in p[2].split() if e in edges or re.match(r'^[A-Z]+-\d+$', e)]
 

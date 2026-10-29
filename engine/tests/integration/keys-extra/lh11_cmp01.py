@@ -4,8 +4,8 @@ gap item 6; `tmp/design2/freeze/KEYS.md` rows 1-5). Standard library only; reads
 read-only; never runs the interpreter. Every figure is computed here with Decimal, then asserted against the row's
 expected text in `engine/spec/expected/`.
 
-    python3 -I -B tmp/tests/keys-extra/lh11_cmp01.py LH-11     # rows 1-3: a60_a144, a89_n, a133_x
-    python3 -I -B tmp/tests/keys-extra/lh11_cmp01.py CMP-01    # rows 4-5: q_c6_k1..k3, q_c6_tax (the lifted rows)
+    python3 -I -B engine/tests/integration/keys-extra/lh11_cmp01.py LH-11     # rows 1-3: a60_a144, a89_n, a133_x
+    python3 -I -B engine/tests/integration/keys-extra/lh11_cmp01.py CMP-01    # rows 4-5: q_c6_k1..k3, q_c6_tax (the lifted rows)
 
 LH-11: the case's own inputs (`expected/LH-11.md`, Calculations 1, 3, 4). Under `lh11_step = printed` every printed
 intermediate is carried at its printed places and rounded by `lh11_mode` (half-up or down, i.e. truncation).
@@ -13,12 +13,13 @@ CMP-01: the rows list facts, not figures. MIGRATION.md's rule (row 20) lifts eve
 into an input row named from its use; so the four inline figures of the defs the asks reach in the 1.0.1 text
 must be the four `lifted_figures` rows of the 2.0 text, with the same values, and the expected rows must name them.
 """
+import os
 import re
 import sys
 from decimal import Decimal as D, ROUND_DOWN, ROUND_HALF_UP, getcontext
 
 getcontext().prec = 40
-ROOT = '/Users/jswob/projects/trop/'
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))) + '/'
 MODES = {'half-up': ROUND_HALF_UP, 'down': ROUND_DOWN}
 fails = []
 
@@ -95,10 +96,10 @@ def lh11():
 
 
 def cmp01():
-    old = open(ROOT + 'tmp/design/models/CMP-01.tally', encoding='utf-8').read().splitlines()
+    old = open(ROOT + 'engine/tests/integration/models-1.0/CMP-01.tally', encoding='utf-8').read().splitlines()
     new = open(ROOT + 'engine/spec/models/CMP-01.tally', encoding='utf-8').read()
     mig = open(ROOT + 'engine/spec/MIGRATION.md', encoding='utf-8').read()
-    check(old[1].strip() == 'tally 1', 'CMP-01 1.0.1 text is tally 1 (tmp/design/models/CMP-01.tally)')
+    check(old[1].strip() == 'tally 1', 'CMP-01 1.0.1 text is tally 1 (engine/tests/integration/models-1.0/CMP-01.tally)')
     check(re.search(r'any inline figure but 0, 1, −1 .*lifts each distinct figure into one input row', mig) is not None,
           'MIGRATION.md: every inline figure but 0, 1, -1 is lifted into an input row')
     # (1.0.1 line, the def, the inline figures there, the lifted row(s) its figure becomes)

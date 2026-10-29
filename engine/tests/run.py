@@ -1,21 +1,25 @@
 """The test runner for the interpreter, unit and integration layers (session 4.5a). Standard library only.
 
-Runs the checks of tmp/tests/checks.tsv on the frozen engine/tools/refcore, unchanged, and compares each output with
-its stored baseline. Form only: it runs and compares; it never explains a difference.
+Runs the checks of engine/tests/checks.tsv on the frozen engine/tools/refcore, unchanged, and compares each output
+with its stored baseline. Form only: it runs and compares; it never explains a difference.
 
-    python3 -I -B tmp/tests/run.py [ID_GLOB ...] [--layer L[,L]] [--runtime pypy|cpython|both] [--jobs N<=4]
-                                    [--budget S] [--force] [--list] [--interp refcore|fast|both] [--verify N]
-    python3 -I -B tmp/tests/run.py --self-test
-    python3 -I -B tmp/tests/run.py --tables        -> before-after.md, over-budget.md (from results/pypy.tsv)
-    python3 -I -B tmp/tests/run.py --adhoc [--cwd DIR] -- run <files> [--ask a ...]   one 60 s PyPy run, logged
+    python3 -I -B engine/tests/run.py [ID_GLOB ...] [--layer L[,L]] [--runtime pypy|cpython|both] [--jobs N<=4]
+                                      [--budget S] [--force] [--list] [--interp refcore|fast|both] [--verify N]
+    python3 -I -B engine/tests/run.py --self-test
+    python3 -I -B engine/tests/run.py --tables     -> reports/before-after.md, over-budget.md (from results/pypy.tsv)
+    python3 -I -B engine/tests/run.py --adhoc [--cwd DIR] -- run <files> [--ask a ...]   one 60 s PyPy run, logged
+
+- Paths (4.5f): every path in checks.tsv is relative to the repository root, which run.py finds from its own place,
+  so the suite runs from any checkout. A check runs in its `cwd`, and its files are passed relative to that cwd, so
+  a diagnostic that prints a source path prints the same bytes in every checkout.
 
 - Selection: id globs (fnmatch) and/or layers; none selects every check. Rows whose note starts `not-run:` (runs on
-  tmp/design2/benchmarks.md) are never run; they are counted as not run with their reason.
+  load/benchmarks.md) are never run; they are counted as not run with their reason.
 - Budget: 60 s per run (the user's rule). Past it the run is killed and recorded as `over`; an `over` is cached like
   any result, so it is not rerun (unless --force or a larger --budget).
 - The cache (cache/<key>.json: output, seconds, rc) is keyed by sha256 over: the runtime and its version; the refcore
-  tree (its lines of engine/tools/SHA256SUMS, checked against the files at start); each input file's path and bytes in
-  run order; the asks; the options, the mode and the cwd. A hit is reported `cached` and not rerun.
+  tree (its lines of engine/tools/SHA256SUMS, checked against the files at start); each input file's path (repository-
+  relative) and bytes in run order; the asks; the options, the mode and the cwd (repository-relative). A hit is reported `cached` and not rerun.
 - Compare: a unit, model, light or hardset check's whole output (stdout then stderr, as run_set.py stored it) equals
   its baseline file; a household check (I:<H>:<ask>) is compared in run5.py's form: the ask's blocks (WARN-UNREAD
   and warning lines, '#' lines and blank lines dropped, lines right-stripped) plus the baseline's blocks no ask owns.
@@ -43,8 +47,8 @@ import tempfile
 import time
 from concurrent.futures import ThreadPoolExecutor
 
-ROOT = '/Users/jswob/projects/trop/'
-T = ROOT + 'tmp/tests/'
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))) + '/'
+T = ROOT + 'engine/tests/'
 RC = ROOT + 'engine/tools/refcore'
 FAST = ROOT + 'engine/tools/refcore_fast'
 SUMS = ROOT + 'engine/tools/SHA256SUMS'
@@ -85,12 +89,17 @@ def variant(v):
     return parts[0], a
 
 
+def here(c, f):
+    """A repository-relative path as the check's cwd sees it."""
+    return os.path.relpath(ROOT + f, ROOT + c['cwd'])
+
+
 def argv_of(c):
     if script(c):
-        return c['files'].split()[:1] + c['asks'].split()
+        return [here(c, f) for f in c['files'].split()[:1]] + c['asks'].split()
     if c['layer'] == 'interpreter':
         return c['options'].split()
-    a = ['run'] + c['files'].split() + c['options'].split()
+    a = ['run'] + [here(c, f) for f in c['files'].split()] + c['options'].split()
     return a + (['--ask'] + c['asks'].split() if c['asks'] else [])
 
 
@@ -154,7 +163,7 @@ def cache_key(c, v, rc_hash):
         part(' '.join(interp))
     for f in c['files'].split():
         part(f)
-        part(open(f if f.startswith('/') else os.path.join(c['cwd'], f), 'rb').read())
+        part(open(ROOT + f, 'rb').read())
     part(c['asks'])
     part(c['options'])
     part(' '.join(argv_of(c)))
@@ -173,7 +182,7 @@ def execute(c, v, budget):
     env = {k: x for k, x in os.environ.items() if k != 'REFCORE_DEBUG'}
     rt, interp = variant(v)
     t0 = time.time()
-    p = subprocess.Popen([PY[rt], '-I', '-B'] + ([] if script(c) else interp) + argv_of(c), cwd=c['cwd'], stdout=subprocess.PIPE,
+    p = subprocess.Popen([PY[rt], '-I', '-B'] + ([] if script(c) else interp) + argv_of(c), cwd=ROOT + c['cwd'], stdout=subprocess.PIPE,
                          stderr=subprocess.PIPE, env=env, start_new_session=True)
     try:
         out, err = p.communicate(timeout=budget)
@@ -285,7 +294,7 @@ def input_age(c):
     if not c['files'] or not os.path.exists(ROOT + c['baseline']):
         return ''
     b = os.path.getmtime(ROOT + c['baseline'])
-    newer = [f for f in c['files'].split() if os.path.getmtime(f if f.startswith('/') else os.path.join(c['cwd'], f)) > b]
+    newer = [f for f in c['files'].split() if os.path.getmtime(ROOT + f) > b]
     return ('INPUT NEWER THAN BASELINE: ' + ' '.join(newer[:3])) if newer else 'inputs older than the baseline'
 
 
@@ -403,7 +412,8 @@ def select(checks, globs, layers):
 # -- the self-test ---------------------------------------------------------------------------------------------------
 
 def self_test(checks):
-    tmp = tempfile.mkdtemp(prefix='run-selftest-', dir=ROOT + 'tmp/session4_5/a')
+    os.makedirs(T + 'out', exist_ok=True)
+    tmp = tempfile.mkdtemp(prefix='run-selftest-', dir=T + 'out')
     ok = True
 
     def say(cond, what):
@@ -448,8 +458,8 @@ def self_test(checks):
         # 3. a changed input byte misses the cache (same path, one byte changed)
         src = fast['files'].split()[0]
         cp = os.path.join(tmp, os.path.basename(src))
-        shutil.copyfile(src, cp)
-        c3 = dict(fast, files=cp)
+        shutil.copyfile(ROOT + src, cp)
+        c3 = dict(fast, files=os.path.relpath(cp, ROOT))
         _, r, _ = session([c3], checks, **kw)
         _, r2, _ = session([c3], checks, **kw)
         say(r2['pypy'][0]['cached'] == 'cached', 'the copy at a new path runs once, then hits')
@@ -523,7 +533,7 @@ def tables(checks):
     for c in checks:
         groups.setdefault(group(c), []).append(c)
     L = ['# Before and after: the checks on CPython (stored) and on PyPy (session 4.5a)', '',
-         'Made by `python3 -I -B tmp/tests/run.py --tables` from `results/pypy.tsv` (and `results/cpython.tsv` where the '
+         'Made by `python3 -I -B engine/tests/run.py --tables` from `results/pypy.tsv` (and `results/cpython.tsv` where the '
          '`both` mode ran) and `checks.tsv`. **Before:** the CPython seconds stored with the baselines (snap16\'s '
          '`summary.txt`, whole seconds; for household asks only the whole run\'s seconds are stored, from session 5\'s '
          'runs this morning, `run_cpython_s` in the note). **After:** PyPy seconds per check, budget 60 s, 4 jobs. '
@@ -595,13 +605,13 @@ def tables(checks):
                 ', '.join('%d %s' % (n, v) for v, n in sorted(vs.items()))))
         L += ['', 'E1-02-B\'s stored run asked 3 of the 6 asks its baseline printed and this table checks '
                   '(`tx2_owes`, `tx2_worth`, `tx2_mtg_day`), so its CPython seconds cover only those.']
-    open(T + 'before-after.md', 'w', encoding='utf-8').write('\n'.join(L + detail) + '\n')
+    open(T + 'reports/before-after.md', 'w', encoding='utf-8').write('\n'.join(L + detail) + '\n')
 
     # over-budget.md: every over (or killed) check, grouped by household
     O = ['# Checks over the 60 s budget on PyPy (session 4.5a)', '',
          'Made by `run.py --tables` from `results/pypy.tsv`. Every check whose PyPy run passed 60 s (`over`) or was '
          'stopped by the memory watchdog (`killed`), with its files, asks and the stored CPython seconds. Input for 4.5b '
-         '(the halving test) and 4.5c (the split). The runs on `tmp/design2/benchmarks.md` are not here: they are never run.',
+         '(the halving test) and 4.5c (the split). The runs on `load/benchmarks.md` are not here: they are never run.',
          '']
     og = {}
     for c in checks:
@@ -623,7 +633,7 @@ def tables(checks):
             O.append('  - cwd `%s`; options `%s`; files (%d, in run order): %s' % (
                 c['cwd'].replace(ROOT, ''), c['options'], len(c['files'].split()),
                 ' '.join('`%s`' % f.replace(ROOT, '') for f in c['files'].split())))
-    open(T + 'over-budget.md', 'w', encoding='utf-8').write('\n'.join(O) + '\n')
+    open(T + 'reports/over-budget.md', 'w', encoding='utf-8').write('\n'.join(O) + '\n')
     print('wrote before-after.md and over-budget.md')
 
 
@@ -659,7 +669,7 @@ def adhoc(argv):
         p.communicate()
         res = 'over 60 s (killed, nothing printed)'
     print('# ' + res)
-    with open(T + 'adhoc.log', 'a', encoding='utf-8') as f:
+    with open(T + 'reports/adhoc.log', 'a', encoding='utf-8') as f:
         f.write('%s\t%s\t%s\t%s\n' % (time.strftime('%Y-%m-%d %H:%M:%S'), cwd, ' '.join(args), res))
     return 0
 

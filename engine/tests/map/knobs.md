@@ -1,13 +1,13 @@
 # The halving test: knobs of the heavy checks
 
-Session 4.5b, 2026-10-29. Paper only: no `refcore` run. The one run made: `keys_b.py 30` and `keys_d.py 200` on a scratch copy of `tmp/cases` (5.7 s and 1.8 s). Both take the path count as their only setting. Both write 12 keys and pass their relations, and only B-12 and D-10 move. No key script takes a run end, a span start or any other size.
+Session 4.5b, 2026-10-29. Paper only: no `refcore` run. The one run made: `keys_b.py 30` and `keys_d.py 200` on a scratch copy of `engine/tests/cases` (5.7 s and 1.8 s). Both take the path count as their only setting. Both write 12 keys and pass their relations, and only B-12 and D-10 move. No key script takes a run end, a span start or any other size.
 
 ## Which checks are heavy
 
-- **Every row of `tmp/design2/benchmarks.md`.** Row 7 doesn't exist.
+- **Every row of `engine/tests/load/benchmarks.md`.** Row 7 doesn't exist.
 - **Every stored CPython time over 240 s:**
   - `snap16-light`: LH-16-light 347 s. LH-17-mc-light (144 s) and LH-15-light (121 s) are under 240 s.
-  - `tmp/session5/runs/visible`:
+  - `engine/tests/baselines/session5-visible`:
     - B-b12_det 906 s and B-b12_p3 852 s, both stopped (rc −15);
     - B-cs_b09_b11 1 301 s;
     - E1-02-B 597 s.

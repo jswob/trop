@@ -1,4 +1,4 @@
-# dir /Users/jswob/projects/trop/tmp/design2/scratch/mc-b/cs11; scenarios: scenarios/nothing_more.tally scenarios/kitchen.tally; asks: b10_2025 b10_v2 b10_short b11x_wrzos b11x_ola_rest
+# dir engine/tests/integration/cuts/B/cs11; scenarios: scenarios/nothing_more.tally scenarios/kitchen.tally; asks: b10_2025 b10_v2 b10_short b11x_wrzos b11x_ola_rest
 b10_2025 (d = 2025-01-27): (3 000.00 DUK, 20 231.12 DUK)
   assumed: B-HR2 .2 says 12 % of the net to the ort and names no mode (hr2_tax_round)
   anchor: cis 2025-01-24 end, stated 38 763.68 DUK, difference 0.00 DUK

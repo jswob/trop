@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Confirm a capability copy differs from its original only in the knob lines knobs.md names (session 4.5c).
 
-    python3 -I -B tmp/tests/knobdiff.py <original dir> <copy dir> <KNOBS file>
-    python3 -I -B tmp/tests/knobdiff.py --self-test
+    python3 -I -B engine/tests/tools/knobdiff.py <original dir> <copy dir> <KNOBS file>
+    python3 -I -B engine/tests/tools/knobdiff.py --self-test
 
 The KNOBS file (tab-separated, '#' lines are comments) lists the original lines the copy may change or drop:
 

@@ -1,4 +1,4 @@
-scenario redefine: refused: LOAD-DUP contrib is declared twice (/Users/jswob/projects/trop/tmp/design2/cases/probes/surf/SURF-04/redefine.tally:6)
+scenario redefine: refused: LOAD-DUP contrib is declared twice (unit/probes/surf/SURF-04/redefine.tally:6)
 payroll (m = 2025-01): 1 171.20 DUK
   assumed: illustration: the card gives no gross (salary)
   assumed: illustration: the card names a cap but gives no figure (contrib_cap)

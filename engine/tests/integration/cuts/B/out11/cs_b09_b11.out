@@ -1,4 +1,4 @@
-# dir /Users/jswob/projects/trop/tmp/design2/scratch/mc-b/cs11; scenarios: scenarios/nothing_more.tally scenarios/kitchen.tally; asks: b09_invoices b09_florens b09_bartek b09_total b11_costs b11_worth
+# dir engine/tests/integration/cuts/B/cs11; scenarios: scenarios/nothing_more.tally scenarios/kitchen.tally; asks: b09_invoices b09_florens b09_bartek b09_total b11_costs b11_worth
 b09_invoices (i = fv_011_2025): (studio_bez, 4 760.00 DUK, expected)
   unfulfilled: invoiced[fv_011_2025]
   law date 2025-12-31, cut 2026-01-07

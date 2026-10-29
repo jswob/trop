@@ -3,21 +3,21 @@
 Every run goes through the runner, one at a time:
 
 ```
-python3 -I -B tmp/tests/run.py --adhoc --cwd <cwd> -- run <recipe files…> <my files…> --ask <id> [--ask <id> …]
+python3 -I -B engine/tests/run.py --adhoc --cwd <cwd> -- run <recipe files…> <my files…> --ask <id> [--ask <id> …]
 ```
 
-`<recipe files…>` are the files of `tmp/tests/texts/recipes/<name>.txt` in that file's order (its `cwd` line is the cwd). My files go after them, in the order given. All paths below are under `/Users/jswob/projects/trop/`. Seconds and rc are the runner's `# rc` line (frozen interpreter, PyPy, 60 s limit). Ask ids not listed in a run must not be added to it: the B runs sit at about 45 s with one ask.
+`<recipe files…>` are the files of `engine/tests/integration/recipes/<name>.txt` in that file's order (its `cwd` line is the cwd). My files go after them, in the order given. All paths below are under `.`. Seconds and rc are the runner's `# rc` line (frozen interpreter, PyPy, 60 s limit). Ask ids not listed in a run must not be added to it: the B runs sit at about 45 s with one ask.
 
 ---
 
 ## A-13 · Had Ania stopped working
 
-- **cwd** `tmp/design2/scratch/mc-a`; recipe `A.txt`, then:
-  1. `tmp/tests/texts/new/A-13/a13_calc.tally`
-  2. `tmp/tests/texts/new/A-13/a13_jul.tally`
-  3. `tmp/tests/texts/new/A-13/a13_apr.tally`
-  4. `tmp/tests/texts/new/A-13/a13_jul_sale.tally`
-  5. `tmp/tests/texts/new/A-13/A-13.tally`
+- **cwd** `engine/tests/integration/cuts/A`; recipe `A.txt`, then:
+  1. `engine/tests/integration/new/A-13/a13_calc.tally`
+  2. `engine/tests/integration/new/A-13/a13_jul.tally`
+  3. `engine/tests/integration/new/A-13/a13_apr.tally`
+  4. `engine/tests/integration/new/A-13/a13_jul_sale.tally`
+  5. `engine/tests/integration/new/A-13/A-13.tally`
 - **Worlds.** `a13_calc` (over `lis`) is the control layer: Kalina's and the SIO's 2023 are computed from the payroll in place of their yearly information, and it holds the rules that follow from the stop day `a13_stop` (no pay from that day, so no plan contributions; SOC-8 .1, no parental pay unless insured as an employee on the birth day). There she never stops. `a13_jul` (a), `a13_apr` (c) state the day. `a13_jul_sale` (b) sits over `a13_jul`. "differs by" is the scenario's figure less the base world `lis`'s (a payment is plus, a refund minus).
 
 | run | asks | s | rc |
@@ -63,11 +63,11 @@ python3 -I -B tmp/tests/run.py --adhoc --cwd <cwd> -- run <recipe files…> <my 
 
 ## B-13 · Had the floren been 5 % cheaper
 
-- **cwd** `tmp/design2/scratch/mc-b/cs11`; recipe `B.txt`, then:
-  1. `tmp/tests/texts/new/B-13/b13_rows.tally`
-  2. `tmp/tests/texts/new/B-13/b13_fx.tally`
-  3. `tmp/tests/texts/new/B-13/b13_rule.tally`
-  4. `tmp/tests/texts/new/B-13/B-13.tally`
+- **cwd** `engine/tests/integration/cuts/B/cs11`; recipe `B.txt`, then:
+  1. `engine/tests/integration/new/B-13/b13_rows.tally`
+  2. `engine/tests/integration/new/B-13/b13_fx.tally`
+  3. `engine/tests/integration/new/B-13/b13_rule.tally`
+  4. `engine/tests/integration/new/B-13/B-13.tally`
 - **Worlds.** `b13_rows.tally` is a base part adding the real rates of the rule's days (gazette FX-FLR and Lazur buy rates the judged text didn't hold). `b13_fx` (a) replaces every floren rate the reality holds from 2025-07-01 by an expression row: the base's own row times 0.95, rounded to 4 places half up. `b13_rule` (b) is over `b13_fx` and holds B-13 rule 1 only.
 
 | run | asks | s | rc |
@@ -100,9 +100,9 @@ python3 -I -B tmp/tests/run.py --adhoc --cwd <cwd> -- run <recipe files…> <my 
 
 ## D-13 · Had the fund been taxed
 
-- **cwd** `tmp/design2/scratch/mc-d/p200_11`; recipe `D-p200.txt`, then:
-  1. `tmp/tests/texts/new/D-13/longview_taxed.tally`
-  2. `tmp/tests/texts/new/D-13/D-13.tally`
+- **cwd** `engine/tests/integration/cuts/D/p200_11`; recipe `D-p200.txt`, then:
+  1. `engine/tests/integration/new/D-13/longview_taxed.tally`
+  2. `engine/tests/integration/new/D-13/D-13.tally`
 - **Paths: 200**, seed 20261001: the 200-path copy. The question names D-10's number of paths, and D-10's own judged run is 10 000 paths; the text is written at 200, to be judged statistically. Same random facts as D-10 (`life_u`, `zr`), so the same samples.
 
 | run | asks | s | rc |
@@ -130,7 +130,7 @@ python3 -I -B tmp/tests/run.py --adhoc --cwd <cwd> -- run <recipe files…> <my 
 
 ## CUR-01 × RAND-01 · A drawn rate on the law's leg
 
-- **cwd** `tmp/tests/texts/new/probes/pairs`; files: `tmp/tests/texts/new/probes/pairs/CUR-01+RAND-01.tally` (standalone).
+- **cwd** `engine/tests/integration/new/probes/pairs`; files: `engine/tests/integration/new/probes/pairs/CUR-01+RAND-01.tally` (standalone).
 
 | run | asks | s | rc |
 |---|---|---|---|
@@ -155,7 +155,7 @@ python3 -I -B tmp/tests/run.py --adhoc --cwd <cwd> -- run <recipe files…> <my 
 
 ## LAW-20 · A circular rule the law solves by its own named method
 
-- **cwd** `tmp/tests/texts/new/probes/law`; files: `tmp/tests/texts/new/probes/law/LAW-20.tally` (standalone).
+- **cwd** `engine/tests/integration/new/probes/law`; files: `engine/tests/integration/new/probes/law/LAW-20.tally` (standalone).
 
 | run | asks | s | rc |
 |---|---|---|---|

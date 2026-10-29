@@ -1,11 +1,12 @@
 """The tracked-files guard (session 4.5d). Standard library only.
 
-    python3 -I -B tmp/tests/tracked_check.py
+    python3 -I -B engine/tests/tools/tracked_check.py
 
 Lists every file checks.tsv names that git doesn't track: the `files` column (resolved against `cwd`), the files a
 listed .tally input reaches by `use a = "path"` (relative to that file, transitively), and the `baseline` column. A
 `not-run:` row marked `no-baseline` names a baseline that was never made; it is skipped while that file doesn't exist.
-Exits 1 if there is one. The suite lives under tmp/, which .gitignore excludes, so a new file needs `git add -f`.
+Exits 1 if there is one. Paths in checks.tsv are relative to the repository root (4.5f); a few inputs still live
+under tmp/, which .gitignore excludes, so a new file there needs `git add -f`.
 """
 import csv
 import os
@@ -36,12 +37,12 @@ def uses(p, seen):
             uses(rel(f), seen)
 
 
-rows = list(csv.DictReader(open(ROOT + 'tmp/tests/checks.tsv', encoding='utf-8', newline=''), delimiter='\t'))
+rows = list(csv.DictReader(open(ROOT + 'engine/tests/checks.tsv', encoding='utf-8', newline=''), delimiter='\t'))
 named = set()
 seen_files = set()
 for c in rows:
     for f in c['files'].split():
-        named.add(rel(f if f.startswith('/') else os.path.join(c['cwd'], f)))
+        named.add(rel(ROOT + f))
 for p in sorted(named):
     uses(p, set())
 named |= seen_files

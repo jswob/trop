@@ -1,4 +1,4 @@
-# dir /Users/jswob/projects/trop/tmp/design2/scratch/mc-b/b12_11; scenarios: scenarios/nothing_more.tally scenarios/kitchen.tally scenarios/forecast.tally scenarios/no_overpay.tally; asks: o3_jan o3_feb b12_zero_tax b12_mortgage b12_mortgage_q07
+# dir engine/tests/integration/cuts/B/b12_11; scenarios: scenarios/nothing_more.tally scenarios/kitchen.tally scenarios/forecast.tally scenarios/no_overpay.tally; asks: o3_jan o3_feb b12_zero_tax b12_mortgage b12_mortgage_q07
 o3_jan: 8 530.10 DUK
   world: forecast
   law date 2026-01-15, cut 2026-01-02

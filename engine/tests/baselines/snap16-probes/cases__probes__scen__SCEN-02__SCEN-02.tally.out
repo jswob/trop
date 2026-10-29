@@ -1,4 +1,4 @@
-facts: refused: LOAD-SCENARIO ask facts names kept, neither the model nor a loaded scenario (/Users/jswob/projects/trop/tmp/design2/cases/probes/scen/SCEN-02/SCEN-02.tally:75)
+facts: refused: LOAD-SCENARIO ask facts names kept, neither the model nor a loaded scenario (unit/probes/scen/SCEN-02/SCEN-02.tally:75)
 flows_base (x = sale): 23 050.00 DUK
   unfulfilled: sale
   cut 2026-10-25
@@ -8,6 +8,6 @@ flows_base (x = refund): 350.82 DUK
 flows_base (x = parking[2024-10]): 150.00 DUK
   unfulfilled: parking[2024-10]
   cut 2026-10-25
-flows_kept: refused: LOAD-SCENARIO ask flows_kept names kept, neither the model nor a loaded scenario (/Users/jswob/projects/trop/tmp/design2/cases/probes/scen/SCEN-02/SCEN-02.tally:73)
+flows_kept: refused: LOAD-SCENARIO ask flows_kept names kept, neither the model nor a loaded scenario (unit/probes/scen/SCEN-02/SCEN-02.tally:73)
 warning: WARN-UNREAD source what_if is read by nothing
 warning: WARN-NEGATIVE konto is below zero from 2024-09-01

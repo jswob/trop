@@ -1,32 +1,51 @@
-"""Build tmp/tests/checks.tsv: one row per check of session 4.5a's brief §4, with its run (cwd, files, asks, options)
+"""Build engine/tests/checks.tsv: one row per check of session 4.5a's brief §4, with its run (cwd, files, asks, options)
 and its baseline. Read-only on every source; writes only checks.tsv. Run from anywhere:
-    python3 -I -B tmp/tests/build_checks.py [--counts]
+    python3 -I -B engine/tests/tools/build_checks.py [--counts]
 
-Sources (the run definitions, unchanged):
-  unit        scratch/lead/check/probes.list, probe-sets.list (+ PTY-05 as rerun.sh runs it)   -> snap16-probes/, -probe-sets/
-  integration models.list, light.list, b1.list, b2.list (+ b2fix as rerun.sh runs it)            -> snap16-models/, -light/, -b1/, -b2/, -b2fix/
+Every path it writes is relative to the repository root, which it finds from its own place (4.5f).
+Sources (the run definitions, unchanged but for their paths, 4.5f):
+  unit        defs/probes.list, probe-sets.list (+ PTY-05 as rerun.sh runs it)                   -> baselines/snap16-probes/, -probe-sets/
+  integration defs/models.list, light.list, b1.list, b2.list (+ b2fix as rerun.sh runs it)         -> baselines/snap16-models/, -light/, -b1/, -b2/, -b2fix/
               households A, B, D, X as house13.py defines them and E1 as e1_rerun.sh does, with run5.py's benchmark
               exclusions and its E1-02-B run; one check per ask, each against that ask's block in snap16-house/,
-              snap16-e1/ or e1-02-B16.out. The inputs are the ones snap16 ran on (scratch/, tmp/design2/cases/), not
-              session 5's copies under tmp/session5/visible/, which carry later edits (cases 1.0.2).
-Runs on tmp/design2/benchmarks.md are listed with a `not-run:` note and never run.
+              snap16-e1/ or e1-02-B16.out. The inputs are the ones snap16 ran on (integration/cuts/, integration/
+              households/), not session 5's copies, which carried later edits (cases 1.0.2).
+Runs on load/benchmarks.md are listed with a `not-run:` note and never run.
+The lists name their texts as session 4 did, relative to tmp/design2/ (LIST below says where each part went).
 """
 import glob
 import os
 import re
 import sys
 
-ROOT = '/Users/jswob/projects/trop/'
-D = ROOT + 'tmp/design2/'
-S = D + 'scratch/'
-CHK = S + 'lead/check/'
-OUT = ROOT + 'tmp/tests/checks.tsv'
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))) + '/'
+T = 'engine/tests/'  # every path below is relative to ROOT
+I = T + 'integration/'
+CHK = T + 'defs/'
+SNAP = T + 'baselines/'
+OUT = ROOT + T + 'checks.tsv'
+# session 4's tmp/design2/ parts, as the lists name them -> their place in the suite
+LIST = [('cases/probes/', T + 'unit/probes/'), ('models/', I + 'models/'), ('regress/light/', I + 'light/'),
+        ('hardset/', I + 'blind/')]
 COLS = ['id', 'layer', 'cwd', 'files', 'asks', 'options', 'baseline', 'block', 'baseline_s', 'question', 'note', 'key']
 rows = []
 
 
 def rel(p):
     return p[len(ROOT):] if p.startswith(ROOT) else p
+
+
+def at(p):
+    """A list's path (relative to session 4's tmp/design2/) -> its place in the suite."""
+    for old, new in LIST:
+        if p.startswith(old):
+            return new + p[len(old):]
+    raise ValueError(p)
+
+
+def rglob(pat, **kw):
+    """glob, repository-relative."""
+    return [rel(p) for p in glob.glob(ROOT + pat, **kw)]
 
 
 def add(**kw):
@@ -37,7 +56,7 @@ def add(**kw):
 
 def summary(snap):
     secs = {}
-    f = CHK + snap + '/summary.txt'
+    f = ROOT + SNAP + snap + '/summary.txt'
     if os.path.exists(f):
         for l in open(f):
             m = re.match(r'(\S+) rc=-?\d+ sec=(\d+)', l)
@@ -47,19 +66,19 @@ def summary(snap):
 
 
 # --- the interpreter's own tests
-add(id='R:all', layer='interpreter', cwd=ROOT, files='', options='test', baseline='950 passed',
+add(id='R:all', layer='interpreter', cwd='.', files='', options='test', baseline='950 passed',
     note='refcore test; same = its last line reports 950 passed and nothing failed')
 
 
 # --- the run_set.py lists: one check per line, the whole output its baseline
 def from_list(lst, snap, layer, idf, note=''):
     secs = summary(snap)
-    for l in open(CHK + lst):
+    for l in open(ROOT + CHK + lst):
         if not l.strip() or l.startswith('#'):
             continue
         paths = l.split()
-        add(id=idf(paths[0]), layer=layer, cwd=D, files=' '.join(D + p for p in paths),
-            baseline=rel(CHK + '%s/%s.out' % (snap, paths[0].replace('/', '__'))), baseline_s=secs.get(paths[0], ''),
+        add(id=idf(paths[0]), layer=layer, cwd=T, files=' '.join(at(p) for p in paths),
+            baseline=SNAP + '%s/%s.out' % (snap, paths[0].replace('/', '__')), baseline_s=secs.get(paths[0], ''),
             note=note)
 
 
@@ -70,64 +89,64 @@ def strip(p, pre):
 
 from_list('probes.list', 'snap16-probes', 'unit', lambda p: 'U:' + strip(p, 'cases/probes/'))
 from_list('probe-sets.list', 'snap16-probe-sets', 'unit', lambda p: 'U:set/' + strip(p, 'cases/probes/'))
-pty = sorted(glob.glob(D + 'cases/probes/pty/PTY-05/**/*.tally', recursive=True))  # rerun.sh: $(find ... | sort)
-add(id='U:set/' + strip(rel(pty[0])[len('tmp/design2/'):], 'cases/probes/'), layer='unit', cwd=D, files=' '.join(pty),
-    baseline=rel(CHK + 'snap16-probe-sets/PTY-05-pin-bytes.out'), note='rerun.sh PTY-05 line (find | sort)')
+pty = sorted(rglob(T + 'unit/probes/pty/PTY-05/**/*.tally', recursive=True))  # rerun.sh: $(find ... | sort)
+add(id='U:set/' + strip(pty[0], T + 'unit/probes/'), layer='unit', cwd=T, files=' '.join(pty),
+    baseline=SNAP + 'snap16-probe-sets/PTY-05-pin-bytes.out', note='rerun.sh PTY-05 line (find | sort)')
 from_list('models.list', 'snap16-models', 'integration', lambda p: 'I:M:' + strip(p, 'models/'))
 from_list('light.list', 'snap16-light', 'integration', lambda p: 'I:light/' + strip(p, 'regress/light/'))
 from_list('b1.list', 'snap16-b1', 'integration', lambda p: 'I:hardset/' + strip(p, 'hardset/'))
 from_list('b2.list', 'snap16-b2', 'integration', lambda p: 'I:hardset/' + strip(p, 'hardset/'))
-add(id='I:hardset/b2fix/division', layer='integration', cwd=D, files=CHK + 'b2fix/division.tally',
-    baseline=rel(CHK + 'snap16-b2fix/division.out'), note='rerun.sh b2fix line: I-12 with its ask renamed')
+add(id='I:hardset/b2fix/division', layer='integration', cwd=T, files=I + 'blind/b2fix/division.tally',
+    baseline=SNAP + 'snap16-b2fix/division.out', note='rerun.sh b2fix line: I-12 with its ask renamed')
 
 
 # --- the households, as run5.py (A, B, D, E1) and house13.py (X) define their runs
 def ids_of(path):
     out = []
-    for l in open(path, encoding='utf-8', errors='replace'):
+    for l in open(ROOT + path, encoding='utf-8', errors='replace'):
         m = re.match(r'^([a-z][a-z0-9_]*)[ (:\[]', l)
         if m and m.group(1) not in ('warning', 'refused', 'time', 'exit', 'rc', 'real', 'user', 'sys') and m.group(1) not in out:
             out.append(m.group(1))
     return out
 
 
-OLD = CHK + 'snap16-house/'
-LAWB = open(S + 'w-b/lawfiles.txt').read().split()
+OLD = SNAP + 'snap16-house/'
+LAWB = open(ROOT + I + 'cuts/B-law/lawfiles.txt').read().split()
 runs = []  # (H, run name, baseline, cwd, files, asks, options, not-run reason)
-for l in open(S + 'mc-a/drive11.sh'):
+for l in open(ROOT + I + 'cuts/A/drive11.sh'):
     for m in re.finditer(r'\$R \$D/(\S+) (\S+) ([^&]+)', l):
         lst, name, asks = m.group(1), m.group(2), m.group(3).split(';')[0].split()
         nr = 'benchmarks.md row 9' if name in ('q05-ania', 'q05-why') else ''
-        files = open(S + 'mc-a/' + lst).read().split()
-        runs.append(('A', 'A-' + name, OLD + 'A-%s.out' % name, S + 'mc-a', files, asks, [], nr))
-for f in sorted(glob.glob(S + 'mc-b/out11/*.out')):
+        files = open(ROOT + I + 'cuts/A/' + lst).read().split()
+        runs.append(('A', 'A-' + name, OLD + 'A-%s.out' % name, I + 'cuts/A', files, asks, [], nr))
+for f in sorted(rglob(I + 'cuts/B/out11/*.out')):
     name = os.path.basename(f)[:-4]
-    m = re.match(r'# dir (\S+); scenarios: (.*); asks: (.*)$', open(f, encoding='utf-8').readline().strip())
+    m = re.match(r'# dir (\S+); scenarios: (.*); asks: (.*)$', open(ROOT + f, encoding='utf-8').readline().strip())
     if not m:
         continue
     nr = ('benchmarks.md row 4' if name.startswith('cd7full') else 'benchmarks.md row 5' if name == 'b12_liquid'
           else 'benchmarks.md rows 5, 14' if name in ('b12_det', 'b12_p3') else '')
     d, sc, asks = m.group(1), m.group(2).split(), m.group(3).split()
-    files = sorted(glob.glob(d + '/*.tally')) + sorted(glob.glob(d + '/records/*.tally')) + sorted(glob.glob(d + '/asks/*.tally'))
-    runs.append(('B', 'B-' + name, OLD + 'B-%s.out' % name, d, files + sc + LAWB, asks, [], nr))
-for f in sorted(glob.glob(S + 'mc-d/out11/*.txt')):
+    files = sorted(rglob(d + '/*.tally')) + sorted(rglob(d + '/records/*.tally')) + sorted(rglob(d + '/asks/*.tally'))
+    runs.append(('B', 'B-' + name, OLD + 'B-%s.out' % name, d, files + [d + '/' + s for s in sc] + LAWB, asks, [], nr))
+for f in sorted(rglob(I + 'cuts/D/out11/*.txt')):
     name = os.path.basename(f)[:-4]
-    d = S + 'mc-d/' + ('p200_11' if name in ('d10b200', 'd10p200') else 'cut11')
+    d = I + 'cuts/D/' + ('p200_11' if name in ('d10b200', 'd10p200') else 'cut11')
     asks = ids_of(f)
     if asks:
-        runs.append(('D', 'D-' + name, OLD + 'D-%s.out' % name, d, sorted(glob.glob(d + '/*.tally')), asks, [], ''))
-E = S + 'w-e1/cdB/households/E1'
+        runs.append(('D', 'D-' + name, OLD + 'D-%s.out' % name, d, sorted(rglob(d + '/*.tally')), asks, [], ''))
+E = I + 'cuts/E1/cdB/households/E1'
 for f in ('s10-cdB-0103', 's10-cdB-02'):
-    asks = [a for a in ids_of(S + 'w-e1/runs/%s.out' % f) if a not in ('exit',)]
-    runs.append(('E1', 'E1-' + f, CHK + 'snap16-e1/%s.out' % f, E, sorted(glob.glob(E + '/**/*.tally', recursive=True)),
+    asks = [a for a in ids_of(I + 'cuts/E1/runs/%s.out' % f) if a not in ('exit',)]
+    runs.append(('E1', 'E1-' + f, SNAP + 'snap16-e1/%s.out' % f, E, sorted(rglob(E + '/**/*.tally', recursive=True)),
                  asks, [], ''))
-txf = open(S + 'tx2/B/files.txt').read().split()
+txf = open(ROOT + I + 'cuts/E1-02-B/B/files.txt').read().split()
 # run5.py asks three of the six asks the baseline printed; every printed ask is a check
-runs.append(('E1', 'E1-02-B', CHK + 'e1-02-B16.out', D + 'cases/households/B', txf, ids_of(CHK + 'e1-02-B16.out'), [], ''))
+runs.append(('E1', 'E1-02-B', SNAP + 'e1-02-B16.out', I + 'households/B', txf, ids_of(SNAP + 'e1-02-B16.out'), [], ''))
 seen = set()
-for q in sorted(glob.glob(S + 'mc-x/out11/queue*.log')):
-    for l in open(q):
-        m = re.match(r'^\S+ started (\S+) (/\S+)(.*)$', l.strip())
+for q in sorted(rglob(I + 'amendments/out11/queue*.log')):
+    for l in open(ROOT + q):
+        m = re.match(r'^\S+ started (\S+) (engine/\S+)(.*)$', l.strip())
         if not m:
             continue
         name, d, rest = m.group(1), m.group(2), m.group(3).split()
@@ -135,10 +154,10 @@ for q in sorted(glob.glob(S + 'mc-x/out11/queue*.log')):
             if 'job11.sh' not in d:
                 continue
             name, d, rest = rest[0], rest[1], rest[2:]
-        if name in seen or not os.path.isdir(d):
+        if name in seen or not os.path.isdir(ROOT + d):
             continue
         seen.add(name)
-        files = sorted(glob.glob(d + '/**/*.tally', recursive=True))
+        files = sorted(rglob(d + '/**/*.tally', recursive=True))
         asks, opts = [], []
         if '--ask' in rest:
             i = rest.index('--ask')
@@ -149,15 +168,15 @@ for q in sorted(glob.glob(S + 'mc-x/out11/queue*.log')):
         nr = 'benchmarks.md row 14' if name in ('mc', 'c1_r2') else ''
         old = OLD + 'X-%s.out' % name
         if not asks:  # a run of all its asks: the asks are those its baseline printed (snap11's when snap16 printed none)
-            asks = ids_of(old) if os.path.exists(old) else []
+            asks = ids_of(old) if os.path.exists(ROOT + old) else []
             if not asks:
-                asks = ids_of(S + 'mc-x/out11/%s.out' % name)
-        runs.append(('X', 'X-' + name, old, S + 'mc-x', files, asks, opts, nr))
+                asks = ids_of(I + 'amendments/out11/%s.out' % name)
+        runs.append(('X', 'X-' + name, old, I + 'amendments', files, asks, opts, nr))
 
 
 def question(files, cwd, ask):
     for f in files:
-        p = f if f.startswith('/') else os.path.join(cwd, f)
+        p = ROOT + f
         stem = os.path.basename(p)[:-len('.tally')] if p.endswith('.tally') else ''
         m = re.match(r'^(?:asks-)?([A-Z][A-Z0-9]*-\d+[a-z]?)$', stem)
         if not m:
@@ -190,7 +209,7 @@ for H, name, old, cwd, files, asks, opts, nr in runs:
     for a in asks:
         count[(H, a)] = count.get((H, a), 0) + 1
 vis_s = {}  # a run's seconds on CPython 3.14 this morning (session 5, its copies of the inputs), where stored
-for f in glob.glob(ROOT + 'tmp/session5/runs/visible/*.out'):
+for f in glob.glob(ROOT + SNAP + 'session5-visible/*.out'):
     t = [l for l in open(f, encoding='utf-8') if l.startswith('# rc ')]
     m = re.search(r', (\d+) s,', t[-1]) if t else None
     if m:
@@ -203,26 +222,26 @@ for H, name, old, cwd, files, asks, opts, nr in runs:
             note.append('run_cpython_s=%s' % vis_s[name])
         if nr:
             note.insert(0, 'not-run: ' + nr)
-        if not os.path.exists(old) or os.path.getsize(old) < 2:
+        if not os.path.exists(ROOT + old) or os.path.getsize(ROOT + old) < 2:
             note.append('no-baseline')
         q = question(files, cwd, a) or fill(H, a)
         kf = KNOWN.get((H, a))
         if not kf:
             add(id=cid, layer='integration', cwd=cwd, files=' '.join(files), asks=a, options=' '.join(opts),
-                baseline=rel(old), block=a, question=q, note=' '.join(note))
+                baseline=old, block=a, question=q, note=' '.join(note))
             continue
         add(id=cid, layer='integration', cwd=cwd, files=' '.join(files), asks=' '.join(asks), options=' '.join(opts),
-            baseline=rel(old), block=a, question=q,
+            baseline=old, block=a, question=q,
             note=' '.join(['known-fault: %s, run with its run\'s asks; alone it is %s~alone' % (kf, cid)] + note))
         add(id=cid + '~alone', layer='integration', cwd=cwd, files=' '.join(files), asks=a, options=' '.join(opts),
-            baseline=rel(old), block=a, question=q,
+            baseline=old, block=a, question=q,
             note=' '.join(['xfail: %s, the ask alone; `fixed` when it matches the baseline' % kf] + note))
 
-# --- the split (4.5c): capability copies under tmp/tests/texts/split/, each differing from its original only in the
+# --- the split (4.5c): capability copies under integration/split/, each differing from its original only in the
 # knob lines knobs.md names (knobdiff.py). split.tsv: K, the original checks (an id glob), the original dir, the copy,
 # 'twin' (the original's baseline is kept: a byte-equal judged twin) or 'J' (no twin: run.py records `ran`, J marks)
 import fnmatch
-SPLIT = ROOT + 'tmp/tests/texts/split/split.tsv'
+SPLIT = ROOT + I + 'split/split.tsv'
 if os.path.exists(SPLIT):
     by_id = {r['id']: r for r in rows}
     for l in open(SPLIT, encoding='utf-8'):
@@ -233,7 +252,7 @@ if os.path.exists(SPLIT):
             # against its own blocks of the same baseline; only the asks in column 6 run, the rest are listed as load
             r = by_id[pat]
             runs = l.rstrip('\n').split('\t')[5].split()
-            every = ids_of(ROOT + r['baseline'])
+            every = ids_of(r['baseline'])
             assert set(runs) <= set(every), (k, set(runs) - set(every))
             for a in every:
                 n = dict(r, id='%s~%s@%s' % (pat, a, k.lower()), asks=a, block=a, baseline_s='')
@@ -255,7 +274,7 @@ if os.path.exists(SPLIT):
                 by_id[n['id']] = n
                 rows.append(n)
             continue
-        old, new = ROOT + old.rstrip('/') + '/', ROOT + new.rstrip('/') + '/'
+        old, new = old.rstrip('/') + '/', new.rstrip('/') + '/'
         for r in [r for r in list(by_id.values()) if not r['note'].startswith(('split:', 'xfail: split')) and
                   (pat in r['note'].split() if pat.startswith('run=') else fnmatch.fnmatchcase(r['id'], pat)) and
                   ((r['cwd'].rstrip('/') + '/').startswith(old) or old in r['files'])]:
@@ -269,9 +288,9 @@ if os.path.exists(SPLIT):
             n['files'] = ' '.join(f.replace(old, new) for f in r['files'].split())
             assert n['files'] != r['files'] or n['cwd'] != r['cwd'], (k, r['id'])
             n['baseline'] = r['baseline'] if judge.startswith('twin') else ''
-            jb = ROOT + 'tmp/tests/baselines/4.5c/' + n['id'].replace('/', '__').replace(':', '_') + '.out'
-            if judge == 'J' and os.path.exists(jb):  # J passed it (tmp/session4_5/c/judge/verdicts.md): its output guards it
-                n['baseline'] = rel(jb)
+            jb = SNAP + '4.5c/' + n['id'].replace('/', '__').replace(':', '_') + '.out'
+            if judge == 'J' and os.path.exists(ROOT + jb):  # J passed it (tmp/session4_5/c/judge/verdicts.md): its output guards it
+                n['baseline'] = jb
             n['baseline_s'] = ''
             keep = ' '.join(w for w in r['note'].split() if w.startswith(('run=', 'xfail:', 'known-fault:')))
             n['note'] = ('xfail: ' if r['note'].startswith('xfail:') else '') + \
@@ -281,37 +300,36 @@ if os.path.exists(SPLIT):
             by_id[n['id']] = n
             rows.append(n)
 
-# --- the fill (4.5c): C2's blind texts for cases 1.1, one check per run of tmp/tests/texts/new/ASKS.md; no baseline
-# until J passes a run (then its judged output under tmp/tests/baselines/ is the baseline)
-NEW = ROOT + 'tmp/tests/texts/new/'
-for l in open(NEW + 'runs.tsv', encoding='utf-8') if os.path.exists(NEW + 'runs.tsv') else []:
+# --- the fill (4.5c): C2's blind texts for cases 1.1, one check per run of integration/new/ASKS.md; no baseline
+# until J passes a run (then its judged output under baselines/4.5c/ is the baseline)
+NEW = I + 'new/'
+for l in open(ROOT + NEW + 'runs.tsv', encoding='utf-8') if os.path.exists(ROOT + NEW + 'runs.tsv') else []:
     if not l.strip() or l.startswith('#'):
         continue
     cid, layer, recipe, cwd, extra, asks, note = l.rstrip('\n').split('\t')
     files = []
     if recipe != '-':
-        rl = [x.strip() for x in open(ROOT + 'tmp/tests/texts/recipes/%s.txt' % recipe, encoding='utf-8') if x.strip()]
+        rl = [x.strip() for x in open(ROOT + I + 'recipes/%s.txt' % recipe, encoding='utf-8') if x.strip()]
         cwd = [x[4:] for x in rl if x.startswith('cwd ')][0]
-        files = [x for x in rl if not x.startswith(('#', 'cwd ', 'options '))]
-    else:
-        cwd = ROOT + cwd
+        files = [x if x.startswith(('engine/', 'tmp/')) else cwd + '/' + x  # a recipe line relative to its cwd
+                 for x in rl if not x.startswith(('#', 'cwd ', 'options '))]
     files += [NEW + f + '.tally' for f in extra.split()]
-    base = ROOT + 'tmp/tests/baselines/4.5c/' + cid.replace('/', '__').replace(':', '_') + '.out'
-    add(id=cid, layer=layer, cwd=cwd, files=' '.join(files), asks=asks, baseline=rel(base) if os.path.exists(base) else '',
+    base = SNAP + '4.5c/' + cid.replace('/', '__').replace(':', '_') + '.out'
+    add(id=cid, layer=layer, cwd=cwd, files=' '.join(files), asks=asks, baseline=base if os.path.exists(ROOT + base) else '',
         question=cid.split(':')[-1].split('~')[0], note=(note + ' | ' if note else '') + 'fill: C2\'s blind text (4.5c), cases 1.1')
 
-# --- independent keys (4.5c, gap item 6): key scripts under tmp/tests/keys-extra/, run by run.py as `script` checks
-KX = ROOT + 'tmp/tests/keys-extra/lh11_cmp01.py'
+# --- independent keys (4.5c, gap item 6): key scripts under integration/keys-extra/, run by run.py as `script` checks
+KX = I + 'keys-extra/lh11_cmp01.py'
 for mid, ins in (('LH-11', ['engine/spec/expected/LH-11.md']),
                  ('CMP-01', ['engine/spec/expected/CMP-01.md', 'engine/spec/models/CMP-01.tally',
-                             'engine/spec/MIGRATION.md', 'tmp/design/models/CMP-01.tally'])):
-    add(id='I:M:%s~key' % mid, layer='integration', cwd=ROOT.rstrip('/'), files=' '.join([KX] + [ROOT + f for f in ins]),
-        asks=mid, options='script', baseline=rel(KX), question=mid,
+                             'engine/spec/MIGRATION.md', I + 'models-1.0/CMP-01.tally'])):
+    add(id='I:M:%s~key' % mid, layer='integration', cwd='.', files=' '.join([KX] + ins),
+        asks=mid, options='script', baseline=KX, question=mid,
         note='key-script: independent Decimal key of the rows the freeze re-keyed from prints (freeze/KEYS.md rows %s)'
              % ('1-3' if mid == 'LH-11' else '4-5'))
 
 # --- retired from the quick set (4.5c, the user's calls of 2026-10-29): the rows stay, ids are for life; a `not-run:`
-# note keeps run.py from running them, and tmp/tests/load.tsv lists each with its load twin
+# note keeps run.py from running them, and load/load.tsv lists each with its load twin
 RETIRE = [
     ('I:B:*@k3', 'retired 4.5c: K3 cut proved the run end is scale (24 of 27 same bar `left out:` lines, B-05\'s 3 over) '
                  'but buys no time (44 s against 45 s); the record is tmp/session4_5/c/progress.md'),
@@ -347,7 +365,7 @@ def key_label(r):
         return 'independent key script (gap item 6)'
     if i in ('I:M:LH-11', 'I:M:CMP-01'):
         return 'keyed; the rows the freeze re-keyed from prints are also keyed independently by %s~key' % i
-    if r['baseline'].startswith('tmp/tests/baselines/4.5c/'):
+    if r['baseline'].startswith(SNAP + '4.5c/'):
         return ('no key (O:B-3, a gap-log observation): J read it against the papers; the output is the baseline'
                 if '@k5' in i and ':o3_' in i else
                 'marked by J against the key (4.5c, judge/verdicts.md); the passed output is the baseline')

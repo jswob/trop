@@ -1,26 +1,26 @@
-10:22:44 started c1_fast /Users/jswob/projects/trop/tmp/design2/scratch/mc-x/real11/c1 --ask wife_net social_and_health pit37
-10:22:49 started c2_fast /Users/jswob/projects/trop/tmp/design2/scratch/mc-x/real11/c2 --ask wife_net social_and_health pit37
-10:22:54 started c3_fast /Users/jswob/projects/trop/tmp/design2/scratch/mc-x/real11/c3 --ask wife_net social_and_health pit37
-10:22:59 started c4_fast /Users/jswob/projects/trop/tmp/design2/scratch/mc-x/real11/c4 --ask wife_net social_and_health pit37
-10:23:04 started c5_fast /Users/jswob/projects/trop/tmp/design2/scratch/mc-x/real11/c5 --ask wife_net social_and_health pit37
-10:23:09 started c6_fast /Users/jswob/projects/trop/tmp/design2/scratch/mc-x/real11/c6 --ask wife_net social_and_health pit37
-10:23:14 started c7_fast /Users/jswob/projects/trop/tmp/design2/scratch/mc-x/real11/c7 --ask wife_net social_and_health pit37
-10:23:19 started v3_fast /Users/jswob/projects/trop/tmp/design2/scratch/mc-x/real11/v3 --ask wife_net social_and_health pit37
-10:23:24 started v4_fast /Users/jswob/projects/trop/tmp/design2/scratch/mc-x/real11/v4 --ask wife_net social_and_health pit37
-10:23:29 started v5_fast /Users/jswob/projects/trop/tmp/design2/scratch/mc-x/real11/v5 --ask wife_net social_and_health pit37
-10:23:34 started min_m13 /Users/jswob/projects/trop/tmp/design2/scratch/mc-x/min/m13
-10:23:39 started min_m13b /Users/jswob/projects/trop/tmp/design2/scratch/mc-x/min/m13b
-10:23:44 started min_m14 /Users/jswob/projects/trop/tmp/design2/scratch/mc-x/min/m14
-10:23:49 started min_m14b /Users/jswob/projects/trop/tmp/design2/scratch/mc-x/min/m14b
-10:23:54 started min_F3w /Users/jswob/projects/trop/tmp/design2/scratch/mc-x/min/F3w
-10:23:59 started min_F3w3 /Users/jswob/projects/trop/tmp/design2/scratch/mc-x/min/F3w3
-10:24:04 started min_F4g /Users/jswob/projects/trop/tmp/design2/scratch/mc-x/min/F4g
-10:24:09 started min_F4h /Users/jswob/projects/trop/tmp/design2/scratch/mc-x/min/F4h
-10:24:14 started min_F7a /Users/jswob/projects/trop/tmp/design2/scratch/mc-x/min/F7a
-10:24:19 started min_F3k /Users/jswob/projects/trop/tmp/design2/scratch/mc-x/min/F3k
-10:24:24 started min_m10l /Users/jswob/projects/trop/tmp/design2/scratch/mc-x/min/m10l
-10:24:29 started min_m12d /Users/jswob/projects/trop/tmp/design2/scratch/mc-x/min/m12d
-10:24:34 started min_m12e /Users/jswob/projects/trop/tmp/design2/scratch/mc-x/min/m12e
-10:24:40 started min_m2 /Users/jswob/projects/trop/tmp/design2/scratch/mc-x/min/m2
-10:24:45 started min_m2b /Users/jswob/projects/trop/tmp/design2/scratch/mc-x/min/m2b
-10:24:50 started c1_r2 /Users/jswob/projects/trop/tmp/design2/scratch/mc-x/cut11/c1_r2
+10:22:44 started c1_fast engine/tests/integration/amendments/real11/c1 --ask wife_net social_and_health pit37
+10:22:49 started c2_fast engine/tests/integration/amendments/real11/c2 --ask wife_net social_and_health pit37
+10:22:54 started c3_fast engine/tests/integration/amendments/real11/c3 --ask wife_net social_and_health pit37
+10:22:59 started c4_fast engine/tests/integration/amendments/real11/c4 --ask wife_net social_and_health pit37
+10:23:04 started c5_fast engine/tests/integration/amendments/real11/c5 --ask wife_net social_and_health pit37
+10:23:09 started c6_fast engine/tests/integration/amendments/real11/c6 --ask wife_net social_and_health pit37
+10:23:14 started c7_fast engine/tests/integration/amendments/real11/c7 --ask wife_net social_and_health pit37
+10:23:19 started v3_fast engine/tests/integration/amendments/real11/v3 --ask wife_net social_and_health pit37
+10:23:24 started v4_fast engine/tests/integration/amendments/real11/v4 --ask wife_net social_and_health pit37
+10:23:29 started v5_fast engine/tests/integration/amendments/real11/v5 --ask wife_net social_and_health pit37
+10:23:34 started min_m13 engine/tests/integration/amendments/min/m13
+10:23:39 started min_m13b engine/tests/integration/amendments/min/m13b
+10:23:44 started min_m14 engine/tests/integration/amendments/min/m14
+10:23:49 started min_m14b engine/tests/integration/amendments/min/m14b
+10:23:54 started min_F3w engine/tests/integration/amendments/min/F3w
+10:23:59 started min_F3w3 engine/tests/integration/amendments/min/F3w3
+10:24:04 started min_F4g engine/tests/integration/amendments/min/F4g
+10:24:09 started min_F4h engine/tests/integration/amendments/min/F4h
+10:24:14 started min_F7a engine/tests/integration/amendments/min/F7a
+10:24:19 started min_F3k engine/tests/integration/amendments/min/F3k
+10:24:24 started min_m10l engine/tests/integration/amendments/min/m10l
+10:24:29 started min_m12d engine/tests/integration/amendments/min/m12d
+10:24:34 started min_m12e engine/tests/integration/amendments/min/m12e
+10:24:40 started min_m2 engine/tests/integration/amendments/min/m2
+10:24:45 started min_m2b engine/tests/integration/amendments/min/m2b
+10:24:50 started c1_r2 engine/tests/integration/amendments/cut11/c1_r2
