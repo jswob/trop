@@ -56,6 +56,15 @@ pass** (writer 11's 1105, unchanged, and 10 new, F-1's included). `engine/tools/
   value is the attribute). This makes A3's lookup in `w_pbatch_val` redundant for the kind test (with that lookup
   disabled, every `L5_14_parts_*` test still passes); it is kept. A key-typed input can't name a movement in a row
   (`chosen = kb[k04]` is LOAD-SCENARIO, an expression row), so that form isn't tested.
+- **Open, for a later round (the lead, G3 Q-3; pressure list PR-15 to PR-17, `tmp/session7/pressure.md`).**
+  - A4's exact rule: the writer's interval-bounds proposal (about 100 lines; decides `t_if` and `t_minmax`, not
+    `t_cmp`) in `tmp/session7c/agents/writer/notes.md` (PR-15).
+  - F-2: the lifespan check (`parts_close`, RUN-LIFESPAN) reads the known parts even where a hole-day movement (a plan,
+    or since A2 a decision, under `global_hole`) could have taken them before the party's end; the parts read itself
+    is the hole. Texts `tmp/session7c/scratch/a2/g2.tally` (plan), `g3.tally` (decision), `g4.tally` (no hole): all
+    three RUN-LIFESPAN. Unjudged against L §5.7 / §8.1 (PR-16).
+  - F-3: an input row naming a movement (`chosen = kb[k04]`, a `key events` input) is LOAD-SCENARIO "an expression
+    row outside a scenario". Unjudged against L §4.5 / §7.1 (PR-17).
 
 ## Writer 11
 
