@@ -380,6 +380,8 @@ The loader accepts any spacing that the grammar allows. It then reprints the mod
 
 A position that takes a code takes any expression of the code's type, such as a read of an input that holds one (`MODE`, in `flows … at` and `prorata`, takes a code word, such a read or an axis of rounding codes, §2.3, §5.5). A code load can't see (§8.3) is checked where it is read, and one of another family is refused there (`RUN-DOMAIN`).
 
+**A day key where a date is expected** (tally 2.1, R-14). Where a `date` is expected (an operand of a comparison, `min` or `max` with a date, an `if` branch whose other branch is a date, a date argument), a key of a day index may stand, and means `start_of(k)`: a day has one date. A day index is `days` or a range of `day` periods without `by n` (§4.1). A key of a month or a year index, or of a day range `by n`, doesn't convert, since `start_of` or `end_of` is then a choice: it is written, and the mixed form stays refused (`LOAD-UNIT`).
+
 **The absences are three** (P-9). Every value of any type may also be:
 - a **hole** `?"question"`: a fact that is missing, which a row could give; only a hole spreads (§8.1);
 - **`none`**, not applicable: there is nothing here, as for a key outside its thing's lifespan (§4.6). It can only be tested, with `x == none` or `x != none`; any other comparison, arithmetic, ordering or aggregation of it is refused (`RUN-NONE`). A row, a field or a rule may give `none`: producing it is not reading it. A def whose winning rule gives `none` is not applicable at that key, and prints `none`.
@@ -1518,7 +1520,7 @@ So no key can be forgotten: the address is the fact's own, and anything that rea
 
 **Asking about a random value.** A random value is read by a **query**, a question about its distribution written where it is asked, or by its sample on one path; an ask line whose value is random does one or the other, or it is refused (`LOAD-RANDOM`).
 - **`paths N seed S`** runs N paths (N ≥ 1, an int literal; S an int literal). The line states N, and an expression on it that needs N writes the same literal (§7.1). `path p` (1 ≤ p ≤ N) replays path p of that run: the line prints its value on that path, as plain values with every sample it reached in the register, and holds no query over paths (`LOAD-RANDOM`).
-- **`mean(e)`** over the paths prints the mean with its standard error s/√N, s² the sample variance over N − 1, correctly rounded to 1e-6; with N = 1 the standard error is `none`.
+- **`mean(e)`** over the paths prints the mean with its standard error s/√N, s² the sample variance over N − 1, correctly rounded to 1e-6; with N = 1 the standard error is `none`. The sums under them aren't values at a key, so the 4 096-digit cap doesn't reach them (§7.1).
 - **`quantile(e, q)`** is type 1 on the N samples: the smallest value v with at least q·N samples ≤ v, for q above 0 and at most 1 (another q has no such v and is refused, §8.4). It prints the value with its standard error by the Maritz–Jarrett method: with the N samples sorted x(1) ≤ … ≤ x(N) and m = ⌈q·N⌉, the rank of the type-1 value, the weights are W_i = I(i/N) − I((i − 1)/N), where I is the distribution function of Beta(m, N − m + 1), equivalently the chance that a binomial of N trials with success chance x has at least m successes (exact for whole N); with C_k = Σ W_i·x(i)^k, the standard error is √(C₂ − C₁²), correctly rounded to 1e-6, as `mean`'s; with N = 1 it is `none`, as `mean`'s.
 - **`share(c)`**, c a random bool, prints "n of N" and the fraction, with its standard error √(s(1 − s)/N) correctly rounded to 1e-6.
 - **`where c`** inside a query's argument restricts it to the paths where c holds (`quantile(x where c, q)`, `mean(x where c)`, `share(d where c)`), and the line prints how many paths that leaves; none is refused (`RUN-EMPTY`) (SF-21).
@@ -2098,6 +2100,7 @@ Change 3 is longer than in tally 1, whose `arrears` lines stated back pay in two
 - `pow(x, n)` with an integer n is exact; where x has a unit, n is a literal, so the result's unit is known at load (`LOAD-UNIT` otherwise).
 - Division by zero is refused at that key (`RUN-DIV`).
 - A value whose numerator or denominator passes 4 096 decimal digits is refused at that key (`RUN-DIGITS`). The digits are counted on the reduced fraction. The cap is there for cost, not precision: unbounded growth would make one key cost more than the run (`PERFORMANCE.md` §6). A long product of market data, such as 720 monthly ratios, can reach it. A rounding no source states, forced by the cap, is the modeller's reading: it is written in the def's note, and `explain` shows the `round`.
+- **What the cap covers** (tally 2.1, R-13). The cap applies to a value at a key. A path statistic's own accumulation (the sum under a mean, a variance) is the engine's, unbounded or exact by any method, and must give the printed rounding exactly (§5.16). No value a rule can read changes.
 - There is no floating point anywhere in a result (N-219).
 
 **The literal rule** (P-16; LC-1's option (b), D-14). A figure of the world carries its source, so it is a row. In defs, rules, moves and fills, the only literals allowed, beside `true` and `false`, are:
