@@ -537,3 +537,32 @@ Session 4.5f: tools only. No key, card, paper or record moved; every key file is
 - **Cause:** `check.py` took the repository as the case set's grandparent, and `check_edges.py` as its great-grandparent, which held at `tmp/cases/` only.
 - **Fix:** `tools/check.py` (`REPO`), `tools/check_edges.py` (`ROOT`, and `boundaries.md` read beside the tools). The other tools find their files from their own place and need nothing.
 - **Moved:** nothing.
+
+## cases 1.2.0 (2026-10-30)
+
+Session 5r's close, from the user's calls at gate G5 (`tmp/session5/g5/items.json`: K-1, K-2, M-1; brief `tmp/active/session5r-close-brief.md`). The holdout is unsealed: households C and E2 join this set as regression cases, copied (not moved) from `tmp/cases-holdout/`, which stays as the exam's record. Each figure below comes from a key script's run. The rules of the change are those of cases 1.0.1, above.
+
+`VERSION` reads `cases 1.2.0`; `README.md`'s title, its opening, its format tree and its freeze paragraph say so; `MANIFEST.sha256` holds every file's hash, with the files added below.
+
+Moved in all: 2 key files with figures moved (C-07, B-05), 1 paper (B-D28's dates) and 1 story line (B's). Added: households C and E2 (ADD-8). `check.py --regen` regenerates every household of the merged set, the other keys byte-identical.
+
+### ERR-39 · C-07: the bike is owed back too (key wrong; G5 K-1)
+- **Cause and what it settles:** the exam's one case fault (`tmp/session5/REPORT.md` §5). C-07's "owed on 2025-12-31" counted only C-HR3's settle-ups. C-HR4 .4 makes a purchase made without the partner's yes payable back at the next settle-up, and whether the bike needed a yes turns on which rate converts its price, the three readings C-08's key already holds (CBL mid as GEN-4 converts, Bank Lazur's buy, Bank Lazur's sell).
+- **Fix:** `tools/keys_c.py` `q07`: "owed on 2025-12-31" is a by-case over the three readings; in each, the settle-ups, plus the bike where the reading puts it above C-HR4's limit. The relation "owed = the settle-ups' sum" says so.
+- **Moved:** `keys/C/C-07.md`, "owed on 2025-12-31": one value 672.37 → by-case: CBL mid 3 194.65, Lazur buy 672.37, Lazur sell 3 259.99. E2's keys read C-11's cases, not C-07's: unmoved.
+
+### ERR-40 · B-12: Bank Jodła's list known by its date (papers; G5 K-2)
+- **Cause and what it settles:** `Q:B-12`, `O:B-6`'s B-12 half, left open by ERR-38. B-12 is known as of 2026-01-02, and its key read B-D28, received 2026-01-07: by the rules, 7 of its 9 figures rest on it.
+- **Fix (papers):** B-D28 is issued and received on 2026-01-02 (`tools/gen_b.py`); B's story line for it moves to 2026-01-02. `tools/keys_b.py` `q05` reads B-D28 when it is received by the known-as-of date (`q05_listed`, cases 1.0.2's key), else ERR-38's path, which stays.
+- **Moved:** `keys/B/B-05.md` back to cases 1.0.2's figures (as it was, without the holidays, difference): interest 2025 29 806.08, 29 637.00, −169.08; balance 2025-12-31 373 346.69, 370 993.16, −2 353.53; instalment 2026-01-05 2 653.38, 2 660.73, 7.35. A fact known by 2026-01-02 is known by B-05's 2026-01-05, so ERR-38's holes close. `keys/B/B-12.md`: unmoved (it read B-D28 already).
+- **Open (text, not the case):** the visible B text stamps B-D28's rows `known 2026-01-07` (`engine/tests/integration/households/B/flat.tally:375`, and its cut copies). The user's choice (2026-10-30): papers and keys only; that line is a text item for a later session. B-05's and B-12's checks are load rows, not run at 90 s, so no baseline moved.
+
+### TOOL-3 · The holdout's tools after the move (G5 M-1)
+- **Cause:** session 5r's step 2.7. The holdout's tools still pointed at the visible set's old home, its union script keyed its regeneration under a folder that no longer reached it, and its index lacked one line since cases 1.1.
+- **Fix (accepted at G5):** 3 path lines (`c_law.py`, `gen_c_gazette.py`, `union_e2.py`), a regeneration function in `union_e2.py`, and `INDEX-hidden.md` rewritten by `index.py --hidden`. In this tree the copies find the merged set beside them (`tools/c_law.py`, `gen_c_gazette.py`, `union_e2.py`, `keys_c.py`, `keys_e2.py`: the holdout is this folder); `check.py` runs the hidden checks over it when `keys/C/` is here (`seal()` and `reader()` stay with the sealed tree); `index.py --hidden` lists the hidden households only.
+- **Moved:** nothing.
+
+### ADD-8 · Households C and E2, unsealed
+- **What:** from `tmp/cases-holdout/` at cases 1.2.0: `C/`, `E2/`, `keys/C/`, `keys/E2/`, `law/` (`home-supplement.md` and `rosvald.md` with their gazettes, `treaty.md`), `READER.md`, `boundaries-hidden.md` (edges HID-1..5), `INDEX-hidden.md`, `ERRATA-hidden.md` (the hidden tree's HERR entries), and the tools `c_facts.py`, `c_law.py`, `c_sim.py`, `c_tax.py`, `gen_c.py`, `gen_c_gazette.py`, `keys_c.py`, `keys_e2.py`, `union_e2.py`, `planted-breaks.txt`. Not copied: `reader/`, `plan/`, `notes/`, the seal terms and the exam's record `tally-2.0/`.
+- **The texts:** session 5r's after-fix texts, in `engine/tests/integration/households/C/` and `E2/` (E2's members `use` A and D at their pins). E2 is answered as at the exam: a joint model of A and D, with C answered by a run of C's own files plus `E2/cside/e2c.tally`, linked by C-D30's amount; B is no member (E2 writes the one row of B's export it needs).
+- **The checks:** 18 (`engine/tests/defs/holdout.tsv`), baselines from refcore, marked by `compare.py` against these keys: all 15 questions pass (`engine/tests/baselines/5r/marks/`).

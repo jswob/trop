@@ -28,7 +28,10 @@ Sections, each printed as ok or FAIL with what it found:
 
 This script holds no name, id or rule number of the holdout: it reads them only from --hidden's root.
 
-Run: python3 -I engine/tests/cases/tools/check.py [--hidden tmp/cases-holdout] [--regen]
+Run: python3 -I engine/tests/cases/tools/check.py [--regen]
+cases 1.2.0: the holdout's households C and E2 are folded into this tree (keys/C, keys/E2, the tools beside the visible
+ones, boundaries-hidden.md and INDEX-hidden.md here), so this tree is its own hold and every check covers them; the seal
+and the reader's record stay with the exam record in tmp/cases-holdout/ (--hidden only applies to a tree without C).
 Exit 0 when every section passes.
 """
 import csv
@@ -88,7 +91,9 @@ def keys_root(h, hold):
 class Scope:
     def __init__(self, hold):
         self.hold = hold
-        self.houses = list(VISIBLE_HOUSES) + (sorted(p.name for p in (hold / "keys").iterdir() if p.is_dir()) if hold else [])
+        self.houses = list(VISIBLE_HOUSES) + (sorted(p.name for p in (hold / "keys").iterdir() if p.is_dir()
+                                                     and p.name not in VISIBLE_HOUSES and (hold / p.name / "questions.md").exists())
+                                              if hold else [])
         self.vis_edges = IX.edges(VIS / "boundaries.md")
         self.hid_edges = IX.edges(hold / "boundaries-hidden.md") if hold else []
         self.edge_ids = {e[2] for e in self.vis_edges + self.hid_edges}
@@ -101,7 +106,7 @@ class Scope:
         for q, (h, _, b) in self.keys.items():
             for e in b.get("edges") or []:
                 self.use.setdefault(e, []).append((h, q))
-        laws = [VIS / "law" / "acts.md"] + (sorted((hold / "law").glob("*.md")) if hold else [])
+        laws = list(dict.fromkeys([VIS / "law" / "acts.md"] + (sorted((hold / "law").glob("*.md")) if hold else [])))
         self.rules = {}
         for p in laws:
             for ln in p.read_text(encoding="utf-8").splitlines():
@@ -111,7 +116,7 @@ class Scope:
         self.prefixes = sorted({r.split("-")[0] for r in self.rules}, key=len, reverse=True)
         self.rule_re = re.compile(r"\b(" + "|".join(self.prefixes) + r")-(\d+)\b")
         self.files = set()
-        for root in [VIS] + ([hold] if hold else []):
+        for root in [VIS] + ([hold] if hold and hold != VIS else []):
             for p in root.rglob("*"):
                 if p.is_file() and "__pycache__" not in p.parts:
                     self.files.add(p.name)
@@ -503,21 +508,24 @@ def papers(s):
         hi = s.hold / "INDEX-hidden.md"
         ok = hi.exists() and hi.read_text(encoding="utf-8") == IX.hidden_index(s.hold)
         report("papers", ok, "INDEX-hidden.md is what index.py --hidden writes" if ok else "INDEX-hidden.md missing or stale")
-        rp = s.hold / "REPORT.md"
-        report("papers", rp.exists(), "REPORT.md there" if rp.exists() else "REPORT.md missing")
+        if s.hold != VIS:
+            rp = s.hold / "REPORT.md"
+            report("papers", rp.exists(), "REPORT.md there" if rp.exists() else "REPORT.md missing")
 
 
 def main(argv):
     hold = pathlib.Path(argv[argv.index("--hidden") + 1]).resolve() if "--hidden" in argv else None
+    if (VIS / "keys" / "C").is_dir():  # cases 1.2.0: the holdout's households live in this tree; it is its own hold
+        hold = VIS
     s = Scope(hold)
-    print(f"# check.py: {'the visible set and the holdout' if hold else 'the visible set'}")
+    print(f"# check.py: {'the case set with the unsealed households (cases 1.2.0)' if hold == VIS else 'the visible set and the holdout' if hold else 'the visible set'}")
     coverage(s)
     keys(s)
     counts(s)
     records(s)
     if "--regen" in argv:
         regen(s)
-    if hold:
+    if hold and hold != VIS:  # the seal and the reader's record belong to the sealed exam (tmp/cases-holdout/)
         seal(s)
         reader(s)
     papers(s)

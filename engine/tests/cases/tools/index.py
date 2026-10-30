@@ -79,7 +79,9 @@ def visible_index():
 def hidden_index(hold):
     hidden = edges(hold / "boundaries-hidden.md")
     vis = {e[2]: e for e in edges(VIS / "boundaries.md")}
-    houses = sorted(p.name for p in (hold / "keys").iterdir() if p.is_dir())
+    # cases 1.2.0: the holdout's households only (in the merged tree keys/ also holds the visible ones and the probes)
+    houses = sorted(p.name for p in (hold / "keys").iterdir() if p.is_dir() and p.name not in ("A", "B", "D", "E1", "probes")
+                    and (hold / p.name / "questions.md").exists())
     use = key_edges(hold / "keys", houses)
     out = ["# Holdout index", "",
            "The holdout's own edges (`boundaries-hidden.md`), then every visible edge the holdout's questions use, "

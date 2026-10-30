@@ -294,7 +294,8 @@ From the estate of Zbigniew Sowa (died 2024), held on the notary's deposit accou
             pays.append((o["date"], "overpayment", o["paid"], o["fee"]))
     pays.sort(key=lambda x: x[0])
     lines = "\n".join(f"| {dmy(d)} | {what} | {sp(a)} | {'' if f is None else sp(f)} |" for d, what, a, f in pays)
-    doc("B-D28", "Bank Jodła S.A.", "2026-01-07", "2026-01-07", "Bank Jodła · loan 7710-22: payments received in 2025", f"""
+    doc("B-D28", "Bank Jodła S.A.", "2026-01-02", "2026-01-02",  # ERR-40: by B-12's known-as-of date
+        "Bank Jodła · loan 7710-22: payments received in 2025", f"""
 Borrowers: Piotr Sowa and Aleksandra Wilk. All payments came from account {b.PIOTR_CIS}.
 
 | booked | what | amount, DUK | of it, the fee |

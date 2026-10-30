@@ -1,8 +1,8 @@
-# The case set, cases 1.1.1
+# The case set, cases 1.2.0
 
 An exam for Tally: made-up families whose lives push the language to its edges, each question with an exact answer. If Tally handles these, it can handle a real household.
 
-This README covers the visible set only. A holdout is kept apart and sealed; nothing here depends on it, and nothing of it is described here.
+This README describes the visible set. Since cases 1.2.0 the holdout's households C and E2 are here too, unsealed after session 5r's exam: `READER.md`, `boundaries-hidden.md` (edges HID-1..5), `INDEX-hidden.md` and `ERRATA-hidden.md` describe them, and `tmp/cases-holdout/` keeps the exam's record. A second holdout, `tmp/holdout/`, stays sealed; nothing here depends on it.
 
 ## The principles
 
@@ -27,6 +27,7 @@ tmp/cases/
   probes/pairs/<edge>+<edge>.md a pair card: two edges where they meet (probes/README.md)
   A/ B/ D/                      story.md, docs/, house-rules.md, records/, questions.md
   E1/                           story.md (the joins only), questions.md
+  C/ E2/                        the unsealed holdout (cases 1.2.0): C as A, B, D; E2 joins A, C and D
   keys/<H>/<qid>.md             written by the key scripts; keys/probes/<edge>.md by keys_probes.py
   keys-small/<H>/<qid>.md       keys for runs cut short, by a key script's knob (keys-small/README.md)
   tools/                        lib/, fam/, gen_*.py, keys_*.py, compare.py, check.py, index.py, usage.py
@@ -84,4 +85,4 @@ All Python runs as `python3 -I` from the repository root, standard library only.
 
 ## Changes
 
-Frozen as `cases 1.0` (`VERSION`; `MANIFEST.sha256` holds every file's hash). After the freeze a file changes only through `ERRATA.md` and a version bump. Now `cases 1.0.1` (2026-10-25): `ERRATA.md` lists each change, and ends with the rows of `gaps-1.0.1.md` whose case or key changed since session 3 judged them. Then `cases 1.0.2` (2026-10-29): the errata from the tally 2 design round, with the rows for session 5 to rejudge; and `cases 1.0.3` (2026-10-29): an erratum from session 5's exam, with its rows to rejudge. Then `cases 1.1` (2026-10-29): additions only, no existing key moved: three questions (A-13, B-13, D-13), a pair card (CUR-01 × RAND-01), a new edge LAW-20 with its card, a run-end knob for B-12 (`keys-small/`) and `compare.py --small`; `ERRATA.md` lists them. Then `cases 1.1.1` (2026-10-29): tools only, no key or paper moved: `compare.py` marks the probe keys (house `P`), and the tools find the case set at its new home, `engine/tests/cases/`.
+Frozen as `cases 1.0` (`VERSION`; `MANIFEST.sha256` holds every file's hash). After the freeze a file changes only through `ERRATA.md` and a version bump. Now `cases 1.0.1` (2026-10-25): `ERRATA.md` lists each change, and ends with the rows of `gaps-1.0.1.md` whose case or key changed since session 3 judged them. Then `cases 1.0.2` (2026-10-29): the errata from the tally 2 design round, with the rows for session 5 to rejudge; and `cases 1.0.3` (2026-10-29): an erratum from session 5's exam, with its rows to rejudge. Then `cases 1.1` (2026-10-29): additions only, no existing key moved: three questions (A-13, B-13, D-13), a pair card (CUR-01 × RAND-01), a new edge LAW-20 with its card, a run-end knob for B-12 (`keys-small/`) and `compare.py --small`; `ERRATA.md` lists them. Then `cases 1.1.1` (2026-10-29): tools only, no key or paper moved: `compare.py` marks the probe keys (house `P`), and the tools find the case set at its new home, `engine/tests/cases/`. Then `cases 1.2.0` (2026-10-30): the holdout unsealed, households C and E2 added with their keys and tools, and two errata from gate G5 (C-07's key, B-D28's date with B-05's key); `ERRATA.md` lists them.

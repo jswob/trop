@@ -75,8 +75,8 @@ Piotr's business is IT services for companies. He keeps its books in Faktura+ (r
 - 2025-12-29 · known 2025-12-29 · B-D20 — Studio Bez writes about the rest of its June invoice.
 - 2025-12-30 · known 2025-12-30 · B-D22 — Kessel writes about the November invoice.
 - 2025-12-31 · known 2026-01-07 — the records end: every file in records/ up to 2025-12-31. Piotr exported each Cis month himself in the first days of the next month, and the savings account's year on 2026-01-02. We have heard nothing from Kawiarnia Ziarno about its August invoice.
+- 2026-01-02 · known 2026-01-02 · B-D28 — Bank Jodła's list of our 2025 payments.
 - 2026-01-02 · known 2026-01-02 · house rule B-HR3 — the forecast rule, decided today. Ola also proposes a new version of the 26th rule (B-HR2 v3); we haven't decided on it.
-- 2026-01-07 · known 2026-01-07 · B-D28 — Bank Jodła's list of our 2025 payments.
 
 ## The forecast (as we see it on 2026-01-02)
 

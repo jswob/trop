@@ -348,17 +348,42 @@ def received(doc):
     return iso(re.search(r"^- received: (\d{4}-\d\d-\d\d)$", text, re.M).group(1))
 
 
+def q05_listed(known, t, sim, got):
+    """ERR-40: B-D28 is received on 2026-01-02, by B-05's known-as-of date, so the overpayments are its list's (the key
+    of cases 1.0.2, before ERR-38)."""
+    ovs = [(o["date"], o["paid"]) for o in sim["mtg"].overpays]
+    jod = (ROOT / "B" / "docs" / "B-D28.md").read_text(encoding="utf-8")
+    check(all(f"| {o['date']:%d.%m.%Y} | overpayment |" in jod for o in sim["mtg"].overpays), "B-05 the overpayments are Bank Jodła's list's")
+    t("overpayments (B-D28)", ovs, f"B-D28 is received {got}, by the known-as-of date {known}")
+    was, m1 = mortgage(b.HOLIDAYS, ovs, known=known)
+    check(was["balance 2025-12-31"] == sim["mtg"].bal, "B-05 the replay equals the simulation")
+    t("as it was", was, "B-D07 on market/dukor.csv: resets 1 Jan and 1 Jul; interest by days / 365; holidays carry none (MTG-1 .3); each overpayment's fee B-D07's 2 % until 36 months from disbursement, none after (MTG-2 .2)")
+    wo, m2 = mortgage((), ovs, known=known)
+    t("without the holidays", wo, "the same, every instalment from 2022-04-05 on, the same overpayments")
+    diff = {"interest": {y: wo["interest"][y] - was["interest"][y] for y in was["interest"]},
+            "balance 2025-12-31": wo["balance 2025-12-31"] - was["balance 2025-12-31"],
+            "instalment 2026-01-05": wo["instalment 2026-01-05"] - was["instalment 2026-01-05"],
+            "last instalment": (iso(wo["last instalment"]).year - iso(was["last instalment"]).year) * 12 + iso(wo["last instalment"]).month - iso(was["last instalment"]).month}
+    t("difference", diff, "without less as it was; months")
+    check(diff["last instalment"] == -len(b.HOLIDAYS), "B-05 each holiday moved the end by a month")
+    key = {"as it was": was, "without the holidays": wo, "difference": diff}
+    put("B-05", ["LIFE-03", "VAL-05", "NUM-02", "SCEN-01", "SCEN-02"], "2026-01-05", "2026-01-05", key, t,
+        relations=["the difference is the two runs' exact difference", "the replay equals the simulation"])
+
+
 def q05():
-    """ERR-38: on 2026-01-05 the overpayments are the Cis exports' rows; Bank Jodła's list (B-D28) comes on 2026-01-07.
-    The exports lack 14 .. 30 November, so what was overpaid then is a hole, and so is every figure it reaches."""
+    """ERR-38: a key reads B-D28 only when it is received by the known-as-of date (ERR-40: it is, on 2026-01-02;
+    q05_listed). Else the overpayments are the Cis exports' rows; the exports lack 14 .. 30 November, so what was
+    overpaid then is a hole, and so is every figure it reaches."""
     known = "2026-01-05"   # R1: B-05's known-as-of date
     t = Trace()
     sim = b.simulate(True, known=ALL_KNOWN)  # R1: the world's replay, whose rows are the records' (checked against them); the key's own lookups pass its known
+    got = received("B-D28")
+    if got <= iso(known):
+        return q05_listed(known, t, sim, got)
     rc = read_cis()
     rows = [r for r in rc["rows"] if r["cp"] == "Bank Jodła S.A." and r["title"].endswith("overpayment")]
     ovs = [(r["booked"], -r["amount"]) for r in rows]
-    got = received("B-D28")
-    check(got > iso(known), "B-05 B-D28 is received after the known-as-of date, so the key reads the exports")
     world = {(o["date"], o["paid"]) for o in sim["mtg"].overpays}
     check(set(ovs) <= world and all(in_gap(d, rc["gaps"]) for d, _ in world - set(ovs)), "B-05 the exports show every overpayment but those on days they lack")
     check(len(rc["gaps"]) == 1, "B-05 one stretch of days no export shows")

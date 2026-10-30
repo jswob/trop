@@ -1,20 +1,21 @@
-# check.py: the visible set
+# check.py: the case set with the unsealed households (cases 1.2.0)
 ok   coverage: check_edges.py: pass
 ok   coverage: 93 visible edges, each with its probe card; keyed probes without a key: none; without a card: none; pair cards CUR-01+RAND-01, each naming two visible edges, with its key: no problem
 ok   coverage: keys_probes.py: 90 probes agree, 0 disagree
-ok   coverage: every edge but a SURF passage used by a question (89 edges used); unused: none; carried in integration by the 79 cases' models instead: LAW-20 (UL-07, UL-08)
-ok   coverage: 14 ★ edges; used by two visible households: 13; by one so far: ['CUR-01 (B)'] (a ★ edge may take its second household from the holdout, so only the full run fails on it)
-ok   keys: one key per question in A, B, D, E1 (42 keys); no mismatch
+ok   coverage: every edge but a SURF passage used by a question (94 edges used); unused: none; carried in integration by the 79 cases' models instead: LAW-20 (UL-07, UL-08)
+ok   coverage: 14 ★ edges, each used by questions of two households (under their different rules); short: none
+ok   keys: one key per question in A, B, D, E1, C, E2 (57 keys); no mismatch
 ok   keys: every key well formed, with known edges and a numbered derivation; none wrong
-ok   keys: 646 citations of rules, house rules, documents and record files, all found; none missing
-ok   keys: compare.py's self-test passes for A, B, D, E1; no failure
-ok   counts: 24 count rows, each used by its households' questions; none short
-ok   counts: per household: A: 5 house rules, 2 holes or refusals, 3 forecast, net-worth hole in ['A-11'], 3 moved by the twist, 12/13 fused, one-step none; B: 6 house rules, 6 holes or refusals, 3 forecast, net-worth hole in ['B-11'], 4 moved by the twist, 10/13 fused, one-step none; D: 4 house rules, 4 holes or refusals, 3 forecast, net-worth hole in ['D-06', 'D-08', 'D-09'], 3 moved by the twist, 10/13 fused, one-step none
-ok   counts: a loop refused: ['B-10']
-ok   counts: 65 rules of the law (1 files), each read by a key or a probe; unread: none
-ok   records: 78 files, 2463 rows, each parsed in its own dialect; no error
-ok   records: running balances chain within each export and from each month's export to the next, except 5 breaks; the full run (--hidden) matches them against the planted ones
-ok   regeneration: union_e1.py: regenerated from the union: 253 files of A, B, D and E1, 0 changed
+ok   keys: 837 citations of rules, house rules, documents and record files, all found; none missing
+ok   keys: compare.py's self-test passes for A, B, D, E1, C, E2, P; no failure
+ok   counts: 26 count rows, each used by its households' questions; none short
+ok   counts: per household: A: 5 house rules, 2 holes or refusals, 3 forecast, net-worth hole in ['A-11'], 3 moved by the twist, 12/13 fused, one-step none; B: 6 house rules, 5 holes or refusals, 3 forecast, net-worth hole in ['B-11'], 4 moved by the twist, 10/13 fused, one-step none; D: 4 house rules, 4 holes or refusals, 3 forecast, net-worth hole in ['D-06', 'D-08', 'D-09'], 3 moved by the twist, 10/13 fused, one-step none; C: 9 house rules, 2 holes or refusals, 1 forecast, net-worth hole in ['C-10'], 4 moved by the twist, 12/12 fused, one-step none
+ok   counts: a loop refused: ['B-10', 'C-12']
+ok   counts: 91 rules of the law (4 files), each read by a key or a probe; unread: none
+ok   records: 87 files, 5215 rows, each parsed in its own dialect; no error
+ok   records: running balances chain except the 5 planted breaks; unplanted: none; planted but not found: none
+ok   regeneration: union_e2.py: regenerated from the union: 316 files of A, B, D, C, E1 and E2, 0 changed
 ok   papers: INDEX.md is what index.py writes
 ok   papers: README.md there
-# 18 of 18 checks pass: PASS
+ok   papers: INDEX-hidden.md is what index.py --hidden writes
+# 19 of 19 checks pass: PASS
