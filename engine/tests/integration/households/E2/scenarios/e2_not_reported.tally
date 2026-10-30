@@ -1,0 +1,15 @@
+scenario e2_not_reported over e2
+  tally 2
+  from 2024-11-03
+  note "The case 'not reported', which E2-02 asks (asks/E2-02.tally, e2_02_not_reported): Piotr, Anna, Marta and Jakub never reported the inheritance to the Revenue Office. Nothing in the family's papers says whether any heir but Halina reported (story.md 2025-05-05), so it is a hypothetical fact (L §5.5, §6.4), and the scenario states D's rows under D's prefix (L §6.1). It diverges on the day the tax arose (d.igt_arises), the law date of d.igt_tax."
+
+source e2_case_not_reported "The family's question E2-02, its case 'not reported' (tmp/cases-holdout/E2/questions.md; story.md 2025-05-05: nothing in the family's papers says whether any other heir reported)"
+
+version e2_heirs_not_reported
+  cite e2_case_not_reported
+  governs 2024-11-03..
+  known 2025-05-05
+  d.reported_on[piotr] = none "the case: Piotr did not report"
+  d.reported_on[anna] = none "the case: Anna did not report"
+  d.reported_on[marta] = none "the case: Marta did not report"
+  d.reported_on[jakub] = none "the case: Jakub did not report"

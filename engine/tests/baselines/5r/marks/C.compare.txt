@@ -1,0 +1,35 @@
+# C
+C-01: read
+  ? C-01/last VAT return/month: key says "2024-06"; answer says "2024-06"
+C-02: pass
+C-03: pass
+C-04: pass
+C-05: pass
+C-06: pass
+C-07: read
+  ? C-07/owed on 2025-12-31/payable/case label: key says "at the CBL's mid rate, as GEN-4 converts"; answer says "at_cbl_mid"
+  ? C-07/owed on 2025-12-31/payable/case label: key says "at Bank Lazur's buy rate"; answer says "at_lazur_buy"
+  ? C-07/owed on 2025-12-31/payable/case label: key says "at Bank Lazur's sell rate"; answer says "at_lazur_sell"
+C-08: read
+  ? C-08/bike/needed yes/case label: key says "at the CBL's mid rate, as GEN-4 converts"; answer says "flr_count = at_cbl_mid"
+  ? C-08/bike/needed yes/case label: key says "at Bank Lazur's buy rate"; answer says "flr_count = at_lazur_buy"
+  ? C-08/bike/needed yes/case label: key says "at Bank Lazur's sell rate"; answer says "flr_count = at_lazur_sell"
+  ? C-08/bike/owed back/case label: key says "at the CBL's mid rate, as GEN-4 converts"; answer says "flr_count = at_cbl_mid"
+  ? C-08/bike/owed back/case label: key says "at Bank Lazur's buy rate"; answer says "flr_count = at_lazur_buy"
+  ? C-08/bike/owed back/case label: key says "at Bank Lazur's sell rate"; answer says "flr_count = at_lazur_sell"
+  ? C-08/bike/due/case label: key says "at the CBL's mid rate, as GEN-4 converts"; answer says "flr_count = at_cbl_mid"
+  ? C-08/bike/due/case label: key says "at Bank Lazur's buy rate"; answer says "flr_count = at_lazur_buy"
+  ? C-08/bike/due/case label: key says "at Bank Lazur's sell rate"; answer says "flr_count = at_lazur_sell"
+C-09: pass
+C-10: read
+  ? C-10/together/missing: key says ["the house ul. Graniczna 12, Zabór: community, never valued (C-HR9 .4)", "the car Jan bought on 2024-07-02 with Marta's gift: his own, never valued (C-HR9 .4)"]; answer says ["\"the car has never been valued (C-HR9 .4; story: nobody has valued the car since it was bought)\" (car_value)", "\"the house has never been valued (C-HR9 .4; story: nobody has valued the house since it was bought)\" (house_value)"]
+  ? C-10/Marta/missing: key says ["the house ul. Graniczna 12, Zabór: community, never valued (C-HR9 .4)"]; answer says ["\"the house has never been valued (C-HR9 .4; story: nobody has valued the house since it was bought)\" (house_value)"]
+  ? C-10/Jan/missing: key says ["the house ul. Graniczna 12, Zabór: community, never valued (C-HR9 .4)", "the car Jan bought on 2024-07-02 with Marta's gift: his own, never valued (C-HR9 .4)"]; answer says ["\"the car has never been valued (C-HR9 .4; story: nobody has valued the car since it was bought)\" (car_value)", "\"the house has never been valued (C-HR9 .4; story: nobody has valued the house since it was bought)\" (house_value)"]
+C-11: read
+  ? C-11/gift tax/case label: key says "the release is not a gift of money, reported by 2027-03-17"; answer says "release_money = not_money, jan_reported = true"
+  ? C-11/gift tax/case label: key says "the release is not a gift of money, not reported by 2027-03-17"; answer says "release_money = not_money, jan_reported = false"
+  ? C-11/gift tax/case label: key says "the release is a gift of money, never credited"; answer says "release_money = money"
+  ? C-11/gift tax/settled by: key says ["whether IGT-4 .4 reaches a released debt", "whether Jan reports the release to the RO by 2027-03-17"]; answer says [{"kind": "refusal", "missing": ["\"does Jan report Marta's release of the loan to the RO within 6 months of 2026-09-17 (IGT-4 .2)? no paper says\" (jan_reported)"]}]
+C-12: read
+  ? C-12/October 2026 extra/missing: key says ["what picks one plan among those C-HR8 .2–.3 allow: no rule says which, and none names a way to solve the loop"]; answer says ["\"in which order does our plan decide October 2026's 800.00 and the later months' (C-HR8 .2 – .3 don't say)? the two orders decide October differently\" (oct_extra_paid)"]
+pass 6  read 6

@@ -1,0 +1,176 @@
+c07_months (m = 2025-01): (2025-01, hr3_v1, 2 962.54 DUK, 2 962.54 DUK)
+  law date 2025-12-31, cut 2025-12-31
+c07_months (m = 2025-02): (2025-02, hr3_v2, 2 404.53 DUK, 2 221.16 DUK)
+  law date 2025-12-31, cut 2025-12-31
+c07_months (m = 2025-03): (2025-03, hr3_v2, 3 178.54 DUK, 2 934.04 DUK)
+  law date 2025-12-31, cut 2025-12-31
+c07_months (m = 2025-04): (2025-04, hr3_v2, 3 043.04 DUK, 2 798.54 DUK)
+  law date 2025-12-31, cut 2025-12-31
+c07_months (m = 2025-05): (2025-05, hr3_v2, 3 046.04 DUK, 3 046.04 DUK)
+  law date 2025-12-31, cut 2025-12-31
+c07_months (m = 2025-06): (2025-06, hr3_v2, 3 063.54 DUK, 3 063.54 DUK)
+  law date 2025-12-31, cut 2025-12-31
+c07_months (m = 2025-07): (2025-07, hr3_v2, 3 050.54 DUK, 3 050.54 DUK)
+  law date 2025-12-31, cut 2025-12-31
+c07_months (m = 2025-08): (2025-08, hr3_v2, 1 674.52 DUK, 1 674.52 DUK)
+  law date 2025-12-31, cut 2025-12-31
+c07_months (m = 2025-09): (2025-09, hr3_v2, 1 637.89 DUK, 1 637.89 DUK)
+  law date 2025-12-31, cut 2025-12-31
+c07_months (m = 2025-10): (2025-10, hr3_v2, 1 774.18 DUK, 1 774.18 DUK)
+  law date 2025-12-31, cut 2025-12-31
+c07_months (m = 2025-11): (2025-11, hr3_v2, 1 491.25 DUK, 1 491.25 DUK)
+  law date 2025-12-31, cut 2025-12-31
+c07_settle (m = 2025-02): (2025-02, 2025-02-28, 0.00 DUK, 0.00 DUK)
+  law date 2025-12-31, cut 2025-12-31
+c07_settle (m = 2025-08): (2025-08, 2025-08-31, 672.37 DUK, 0.00 DUK)
+  law date 2025-12-31, cut 2025-12-31
+c07_owed: (672.37 DUK, 3 198.54 DUK, 2025-02)
+  law date 2025-12-31, cut 2025-12-31
+c07_hr4 (p = p_washer) [flr_count = *]: (p_washer, none, 0.00 DUK, none)
+  law date 2025-12-31, cut 2025-12-31
+c07_hr4 (p = p_bike) [flr_count = at_lazur_buy]: (p_bike, none, 0.00 DUK, none)
+  reading: flr_count = at_lazur_buy
+  law date 2025-12-31, cut 2025-12-31
+c07_hr4 (p = p_bike) [flr_count = at_cbl_mid]: (p_bike, jan, 2 522.28 DUK, 2025-08-31)
+  reading: flr_count = at_cbl_mid
+  law date 2025-12-31, cut 2025-12-31
+c07_hr4 (p = p_bike) [flr_count = at_lazur_sell]: (p_bike, jan, 2 587.62 DUK, 2025-08-31)
+  reading: flr_count = at_lazur_sell
+  law date 2025-12-31, cut 2025-12-31
+c07_hr4 (p = p_sofa) [flr_count = *]: (p_sofa, marta, 3 400.00 DUK, 2026-02-28)
+  law date 2025-12-31, cut 2025-12-31
+c07_hr4 (p = p_laptop) [flr_count = *]: (p_laptop, jan, 4 199.00 DUK, 2026-02-28)
+  law date 2025-12-31, cut 2025-12-31
+c07_owed_total [flr_count = at_lazur_buy]: (672.37 DUK, 7 397.54 DUK)
+  reading: flr_count = at_lazur_buy
+  law date 2025-12-31, cut 2025-12-31
+c07_owed_total [flr_count = at_cbl_mid]: (3 194.65 DUK, 7 397.54 DUK)
+  reading: flr_count = at_cbl_mid
+  law date 2025-12-31, cut 2025-12-31
+c07_owed_total [flr_count = at_lazur_sell]: (3 259.99 DUK, 7 397.54 DUK)
+  reading: flr_count = at_lazur_sell
+  law date 2025-12-31, cut 2025-12-31
+c07_detail (m = 2024-07): (2024-07, 5 654.08 DUK, 31, 31, 2 827.04 DUK, 2 827.04 DUK)
+  law date 2025-12-31, cut 2025-12-31
+c07_detail (m = 2024-08): (2024-08, 5 599.08 DUK, 31, 31, 2 799.54 DUK, 2 799.54 DUK)
+  law date 2025-12-31, cut 2025-12-31
+c07_detail (m = 2024-09): (2024-09, 5 634.08 DUK, 30, 30, 2 817.04 DUK, 2 817.04 DUK)
+  law date 2025-12-31, cut 2025-12-31
+c07_detail (m = 2024-10): (2024-10, 5 603.08 DUK, 31, 31, 2 801.54 DUK, 2 801.54 DUK)
+  law date 2025-12-31, cut 2025-12-31
+c07_detail (m = 2024-11): (2024-11, 5 883.08 DUK, 30, 30, 2 941.54 DUK, 2 941.54 DUK)
+  law date 2025-12-31, cut 2025-12-31
+c07_detail (m = 2024-12): (2024-12, 5 918.08 DUK, 31, 31, 2 959.04 DUK, 2 959.04 DUK)
+  law date 2025-12-31, cut 2025-12-31
+c07_detail (m = 2025-01): (2025-01, 5 925.08 DUK, 31, 31, 2 962.54 DUK, 2 962.54 DUK)
+  law date 2025-12-31, cut 2025-12-31
+c07_detail (m = 2025-02): (2025-02, 6 412.08 DUK, 21, 28, 2 404.53 DUK, 2 221.16 DUK)
+  law date 2025-12-31, cut 2025-12-31
+c07_detail (m = 2025-03): (2025-03, 6 357.08 DUK, 31, 31, 3 178.54 DUK, 2 934.04 DUK)
+  law date 2025-12-31, cut 2025-12-31
+c07_detail (m = 2025-04): (2025-04, 6 086.08 DUK, 30, 30, 3 043.04 DUK, 2 798.54 DUK)
+  law date 2025-12-31, cut 2025-12-31
+c07_detail (m = 2025-05): (2025-05, 6 092.08 DUK, 31, 31, 3 046.04 DUK, 3 046.04 DUK)
+  law date 2025-12-31, cut 2025-12-31
+c07_detail (m = 2025-06): (2025-06, 6 127.08 DUK, 30, 30, 3 063.54 DUK, 3 063.54 DUK)
+  law date 2025-12-31, cut 2025-12-31
+c07_detail (m = 2025-07): (2025-07, 6 101.08 DUK, 31, 31, 3 050.54 DUK, 3 050.54 DUK)
+  law date 2025-12-31, cut 2025-12-31
+c07_detail (m = 2025-08): (2025-08, 6 107.08 DUK, 17, 31, 1 674.52 DUK, 1 674.52 DUK)
+  law date 2025-12-31, cut 2025-12-31
+c07_detail (m = 2025-09): (2025-09, 6 142.08 DUK, 16, 30, 1 637.89 DUK, 1 637.89 DUK)
+  law date 2025-12-31, cut 2025-12-31
+c07_detail (m = 2025-10): (2025-10, 6 111.08 DUK, 18, 31, 1 774.18 DUK, 1 774.18 DUK)
+  law date 2025-12-31, cut 2025-12-31
+c07_detail (m = 2025-11): (2025-11, 6 391.08 DUK, 14, 30, 1 491.25 DUK, 1 491.25 DUK)
+  law date 2025-12-31, cut 2025-12-31
+c07_detail (m = 2025-12): (2025-12, 6 397.08 DUK, 31, 31, 3 198.54 DUK, 0.00 DUK)
+  law date 2025-12-31, cut 2025-12-31
+warning: WARN-UNREAD source c_d01 is read by nothing
+warning: WARN-UNREAD source c_d02 is read by nothing
+warning: WARN-UNREAD source c_d04 is read by nothing
+warning: WARN-UNREAD source c_d05 is read by nothing
+warning: WARN-UNREAD source c_d07 is read by nothing
+warning: WARN-UNREAD source c_d08 is read by nothing
+warning: WARN-UNREAD source c_d09 is read by nothing
+warning: WARN-UNREAD source c_d12 is read by nothing
+warning: WARN-UNREAD source c_d14 is read by nothing
+warning: WARN-UNREAD source c_d15 is read by nothing
+warning: WARN-UNREAD source c_d16 is read by nothing
+warning: WARN-UNREAD source c_d17 is read by nothing
+warning: WARN-UNREAD source c_d18 is read by nothing
+warning: WARN-UNREAD source c_d19 is read by nothing
+warning: WARN-UNREAD source c_d20 is read by nothing
+warning: WARN-UNREAD source c_d21 is read by nothing
+warning: WARN-UNREAD source c_d22 is read by nothing
+warning: WARN-UNREAD source c_d23 is read by nothing
+warning: WARN-UNREAD source c_d24 is read by nothing
+warning: WARN-UNREAD source c_d25 is read by nothing
+warning: WARN-UNREAD source c_d26 is read by nothing
+warning: WARN-UNREAD source c_d27 is read by nothing
+warning: WARN-UNREAD source c_d28 is read by nothing
+warning: WARN-UNREAD source c_d31 is read by nothing
+warning: WARN-UNREAD source c_d32 is read by nothing
+warning: WARN-UNREAD source c_d33 is read by nothing
+warning: WARN-UNREAD source c_d34 is read by nothing
+warning: WARN-UNREAD source c_d35 is read by nothing
+warning: WARN-UNREAD source c_d36 is read by nothing
+warning: WARN-UNREAD input sk is read by nothing
+warning: WARN-UNREAD input mo is read by nothing
+warning: WARN-UNREAD input wb is read by nothing
+warning: WARN-UNREAD input lf is read by nothing
+warning: WARN-UNREAD input ld is read by nothing
+warning: WARN-UNREAD input open_bal is read by nothing
+warning: WARN-UNREAD input stas_open is read by nothing
+warning: WARN-UNREAD input wedding is read by nothing
+warning: WARN-UNREAD input born_stas is read by nothing
+warning: WARN-UNREAD input cbl_ref is read by nothing
+warning: WARN-UNREAD input pit17_cap is read by nothing
+warning: WARN-UNREAD input pay_dom_20 is read by nothing
+warning: WARN-UNREAD input vat4_dom is read by nothing
+warning: WARN-UNREAD input vat4_refund_days is read by nothing
+warning: WARN-UNREAD input pit5_file_dom is read by nothing
+warning: WARN-UNREAD input pit5_file_month is read by nothing
+warning: WARN-UNREAD input fam1_amount is read by nothing
+warning: WARN-UNREAD input igt3_years is read by nothing
+warning: WARN-UNREAD input igt_free is read by nothing
+warning: WARN-UNREAD input igt4_report_months is read by nothing
+warning: WARN-UNREAD input igt5_pay_days is read by nothing
+warning: WARN-UNREAD input igt5_return_months is read by nothing
+warning: WARN-UNREAD input pit10_flat_rate is read by nothing
+warning: WARN-UNREAD input pit10_profit_rate is read by nothing
+warning: WARN-UNREAD input pit2_costs_month is read by nothing
+warning: WARN-UNREAD input pit3_reducing is read by nothing
+warning: WARN-UNREAD input pit5_refund_days is read by nothing
+warning: WARN-UNREAD input pit7_age is read by nothing
+warning: WARN-UNREAD input pit7_income_limit is read by nothing
+warning: WARN-UNREAD input pit7_relief_month is read by nothing
+warning: WARN-UNREAD input rv_holidays is read by nothing
+warning: WARN-UNREAD input rwt_allow is read by nothing
+warning: WARN-UNREAD input rwt_edge1 is read by nothing
+warning: WARN-UNREAD input rwt_edge2 is read by nothing
+warning: WARN-UNREAD input rwt_r1 is read by nothing
+warning: WARN-UNREAD input rwt_r2 is read by nothing
+warning: WARN-UNREAD input rwt_r3 is read by nothing
+warning: WARN-UNREAD input rwt_presence_min is read by nothing
+warning: WARN-UNREAD input rwt_refund_days is read by nothing
+warning: WARN-UNREAD input rwt_step is read by nothing
+warning: WARN-UNREAD input rsi_rate is read by nothing
+warning: WARN-UNREAD input rsi_ceil is read by nothing
+warning: WARN-UNREAD input rff_child is read by nothing
+warning: WARN-UNREAD input avg_wage_proj is read by nothing
+warning: WARN-UNREAD input min_wage is read by nothing
+warning: WARN-UNREAD input soc3_rate is read by nothing
+warning: WARN-UNREAD input soc3_stage2_share is read by nothing
+warning: WARN-UNREAD input soc3_stage3_share is read by nothing
+warning: WARN-UNREAD input avg_wage_q4 is read by nothing
+warning: WARN-UNREAD input soc4_rate is read by nothing
+warning: WARN-UNREAD input soc4_rate_b is read by nothing
+warning: WARN-UNREAD input vat_rate is read by nothing
+warning: WARN-UNREAD input sale is read by nothing
+warning: WARN-UNREAD input cost is read by nothing
+warning: WARN-UNREAD input rnb_duk100 is read by nothing
+warning: WARN-UNREAD def part1_from is read by nothing
+warning: WARN-UNREAD def part2_from is read by nothing
+warning: WARN-UNREAD def settle_due is read by nothing
+warning: WARN-UNREAD def owed_hr4 is read by nothing

@@ -1,0 +1,132 @@
+part purchases
+  tally 2
+  note "Big purchases (C-HR4, C-HR1): from its start, a purchase of more than 2 500.00 dukats from our money needs the other's yes; one purchase is one thing, however paid; asked by message, 'Tak' yes, 'nie' no, no answer within 7 days of the ask a yes, but silence is never a yes in December; a purchase in florens counts in dukats; one made against the rule is the buyer's own, paid back into the joint account at the next settle-up (C-HR3 .5). Facts: the messages (records/zgody.txt) and the rows that paid each purchase."
+  note "The rate at which florens count in dukats is read three ways (C-HR4 .3 names none: the axis flr_count). Silence is never a yes in December (C-HR4 .2): no yes arises from 7 days of silence that end in December."
+
+axis flr_count
+  at_lazur_buy "florens count at Bank Lazur's buy rate of the purchase day, as C-HR9 .1 counts them, to the ort, half up"
+  at_cbl_mid "florens count as the law converts them (GEN-4): the CBL mid rate of the last business day before, to the ort, half up"
+  at_lazur_sell "florens count at Bank Lazur's sell rate of the purchase day, the dukats that buy them back, to the ort, half up"
+
+index purchase = [p_washer, p_bike, p_sofa, p_laptop, p_shed, p_tiles]
+
+index answer = [a_tak, a_nie]
+
+input p_buyer[p in purchase]: key spouse question "Who bought it?"
+
+input p_kind[p in purchase]: key jkind question "Which kind of the joint account's rows paid it?"
+
+input p_flr_day[p in purchase]: date question "On which day was it paid in florens (the Lazur row)?"
+
+input p_flr[p in purchase]: money FLR question "How many florens were paid for it?"
+
+input p_ask[p in purchase]: date question "When was the other asked (the messages)?"
+
+input p_answer[p in purchase]: (said key answer, on date) question "What did the other answer, and when (the messages)?"
+
+input hr4_signed: date question "On which day did the second of us sign C-HR4?"
+
+input hr4_limit: money DUK question "Above what amount does a purchase need the other's yes (C-HR4 .1)?"
+
+input lazur_sell[d in day]: num DUK/FLR question "What is Bank Lazur's sell rate for the floren on this day?"
+
+input december: int question "Which month of the year, counted from January as 0, is December?"
+
+version hr4_text
+  cite house_rules
+  governs always
+  known 2025-01-03
+  hr4_signed = 2025-01-03 "C-HR4: signed by Marta on 2024-12-30, by Jan on 2025-01-03"
+  hr4_limit = 2500.00 "C-HR4 .1: a purchase of more than 2 500.00 dukats"
+  december = 11 "C-HR4 .2: in December"
+
+version messages
+  cite zgody
+  governs always
+  known 2025-02-03
+  note "records/zgody.txt, each message known on its day"
+  p_buyer[p_washer] = marta "zgody.txt line 2: Marta: Pralka z Elektro-Domu, 2 899 DUK. Bierzemy?"
+  p_kind[p_washer] = j_washer "jodla-wspolny.csv line 396: KARTA; Elektro-Dom Zabór; pralka"
+  p_ask[p_washer] = 2025-02-03 "zgody.txt line 2: [2025-02-03 18:12] Marta asks"
+  p_answer[p_washer] = (said: a_tak, on: 2025-02-04) known 2025-02-04 "zgody.txt line 3: [2025-02-04 07:40] Jan: Tak."
+  p_buyer[p_bike] = jan known 2025-04-10 "zgody.txt line 4: Jan: Kupiłem rower w Ostrel, 600 FLR, z karty florenowej."
+  p_kind[p_bike] = none known 2025-04-10 "lazur-jan.csv: paid from the floren side, not from the joint account"
+  p_flr_day[p_bike] = 2025-04-10 known 2025-04-10 "lazur-jan.csv: 2025-04-10 FLR; KARTA; Velohaus Brandt Ostrel; Fahrrad"
+  p_flr[p_bike] = 600.00 known 2025-04-10 "lazur-jan.csv: 2025-04-10, -600.00 FLR"
+  p_ask[p_bike] = none known 2025-04-10 "zgody.txt line 4: Jan tells Marta he bought it; no ask"
+  p_answer[p_bike] = none known 2025-04-10 "zgody.txt: no ask, no answer"
+  p_buyer[p_sofa] = marta known 2025-11-27 "zgody.txt line 5: Marta: Sofa z Kaliny, 3 400. Zgoda?"
+  p_kind[p_sofa] = j_sofa known 2025-12-05 "jodla-wspolny.csv line 687: KARTA; Meble Kalina; sofa"
+  p_ask[p_sofa] = 2025-11-27 known 2025-11-27 "zgody.txt line 5: [2025-11-27 20:05] Marta asks"
+  p_answer[p_sofa] = none known 2025-12-05 "zgody.txt line 6: [2025-12-05] Marta: Kupiłam sofę; no answer from Jan in the messages"
+  p_buyer[p_laptop] = jan known 2025-12-10 "zgody.txt line 7: Jan: Laptop do pracy, 4 199. OK?"
+  p_kind[p_laptop] = j_laptop known 2025-12-20 "jodla-wspolny.csv line 703: KARTA; Komputery Bit; laptop"
+  p_ask[p_laptop] = 2025-12-10 known 2025-12-10 "zgody.txt line 7: [2025-12-10 21:30] Jan asks"
+  p_answer[p_laptop] = (said: a_nie, on: 2025-12-11) known 2025-12-11 "zgody.txt line 8: [2025-12-11 06:55] Marta: Nie. Poczekaj do stycznia."
+  p_buyer[p_shed] = jan known 2026-03-02 "zgody.txt line 10: Jan: Domek na narzędzia z Ogrodu i Domu, 2 650?"
+  p_kind[p_shed] = j_shed known 2026-03-14 "jodla-wspolny.csv line 783: KARTA; Ogród i Dom Zabór; domek narzędziowy"
+  p_ask[p_shed] = 2026-03-02 known 2026-03-02 "zgody.txt line 10: [2026-03-02 19:44] Jan asks"
+  p_answer[p_shed] = (said: a_tak, on: 2026-03-12) known 2026-03-12 "zgody.txt line 11: [2026-03-12 22:10] Marta: Tak, bierz."
+  p_buyer[p_tiles] = marta known 2026-06-06 "C-D33: buyer Marta Wrona; zgody.txt line 12: Marta: Płytki do łazienki kupione, zapłaciłam dwa razy kartą"
+  p_kind[p_tiles] = j_tiles known 2026-06-06 "jodla-wspolny.csv lines 862, 863: KARTA; Płytki Zabór; płytki, two payments"
+  p_ask[p_tiles] = none known 2026-06-06 "zgody.txt: no ask before the tiles"
+  p_answer[p_tiles] = none known 2026-06-06 "zgody.txt: no answer"
+
+version lazur_sell_rows
+  cite lazur_table
+  governs always
+  known 2025-04-10
+  lazur_sell[2025-04-10] = 4.3127 "lazur-fx-flr.csv line 1085: 10.04.2025; buy 4,0993; sell 4,3127"
+
+def hr4_from: date
+  note "C-HR1 .1: a rule starts on the first day of the month after the month in which the second of us signs it"
+  rule base = start_of(month_of(hr4_signed) + 1)
+
+def p_rows_dr[p in purchase]: money DUK
+  note "what the joint account paid for it: its rows of the purchase's kind (C-HR4 .1: one purchase however paid)"
+  rule base = sum(jw[d, s].dr for d in day, s in seq where d <= cut and jw[d, s] != none and jw[d, s].k == p_kind[p])
+
+def p_day[p in purchase]: date
+  note "the day it was bought: its first paying row"
+  rule duk = first(d in day where d <= cut and any(jw[d, s] != none and jw[d, s].k == p_kind[p] for s in seq))
+  rule flr beats duk = p_flr_day[p] when p_kind[p] == none
+
+def p_duk[p in purchase]: money DUK
+  note "the purchase in dukats (C-HR4 .3): what the joint account paid, or the florens counted in dukats on the reading flr_count"
+  rule duk = p_rows_dr[p]
+  rule buy beats duk = round(p_flr[p] * lazur_buy[p_flr_day[p]], minor(DUK), half-up) when p_kind[p] == none and flr_count == at_lazur_buy
+  rule mid beats duk = round(p_flr[p] * fx_mid[add_business(p_flr_day[p], -1, holidays)], minor(DUK), half-up) when p_kind[p] == none and flr_count == at_cbl_mid
+  rule sell beats duk = round(p_flr[p] * lazur_sell[p_flr_day[p]], minor(DUK), half-up) when p_kind[p] == none and flr_count == at_lazur_sell
+
+def p_needed[p in purchase]: bool
+  note "C-HR4 .1: more than 2 500.00 dukats, from our money (the joint account's money and Jan's florens are community: CIV-1 .2), bought from the rule's start"
+  rule base = p_day[p] >= hr4_from and p_duk[p] > hr4_limit
+
+def silence_yes_on[p in purchase]: date
+  note "C-HR4 .2: no answer within 7 days of the ask is a yes, on the 7th day after the ask; silence is never a yes in December: no yes when that day is in December"
+  rule base = add_days(p_ask[p], lifted[seven_days])
+  rule ends_dec beats base = never when month_of(add_days(p_ask[p], lifted[seven_days])) - month_of(start_of(year_of(add_days(p_ask[p], lifted[seven_days])))) == december
+
+def p_had_yes[p in purchase]: bool
+  note "C-HR4 .2: a 'Tak' before the purchase, or 7 days of silence that ended before it"
+  rule no_ask = false when p_ask[p] == none
+  rule answered = p_answer[p].said == a_tak and p_answer[p].on <= p_day[p] when p_ask[p] != none and p_answer[p] != none and p_answer[p].on <= add_days(p_ask[p], lifted[seven_days])
+  rule silent = silence_yes_on[p] <= p_day[p] when p_ask[p] != none and (p_answer[p] == none or p_answer[p].on > add_days(p_ask[p], lifted[seven_days]))
+
+def p_owed[p in purchase]: money DUK
+  note "C-HR4 .4: a purchase that needed a yes it didn't have is the buyer's own, paid back into the joint account"
+  rule ok = 0 DUK
+  rule against beats ok = p_duk[p] when p_needed[p] and not p_had_yes[p]
+
+def p_owed_by[p in purchase]: key spouse
+  rule nobody = none
+  rule buyer beats nobody = p_buyer[p] when p_owed[p] > 0 DUK
+
+def p_due[p in purchase]: date
+  note "C-HR4 .4: at the next settle-up after the purchase (C-HR3 .5)"
+  rule nothing = none
+  rule settle beats nothing = next_settle[p_day[p]] when p_owed[p] > 0 DUK
+
+def owed_hr4[s in spouse, d in day]: money DUK
+  note "what one of us owed the joint account under C-HR4 at the end of day d: the purchases whose settle-up had come and that nobody paid back (story: nobody has paid anything back under C-HR4)"
+  rule base = sum(p_owed[p] for p in purchase where p_owed_by[p] != none and p_owed_by[p] == s and p_due[p] <= d)

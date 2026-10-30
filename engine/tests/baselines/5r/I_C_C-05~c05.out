@@ -1,0 +1,161 @@
+c05_months (m = 2024-07): (2024-07, 650.00 DUK, 210.00 FLR, true)
+  law date 2026-09-30, cut 2026-09-30
+c05_months (m = 2024-08): (2024-08, 650.00 DUK, 210.00 FLR, true)
+  law date 2026-09-30, cut 2026-09-30
+c05_months (m = 2024-09): (2024-09, 650.00 DUK, 210.00 FLR, true)
+  law date 2026-09-30, cut 2026-09-30
+c05_months (m = 2024-10): (2024-10, 650.00 DUK, 210.00 FLR, true)
+  law date 2026-09-30, cut 2026-09-30
+c05_months (m = 2024-11): (2024-11, 650.00 DUK, 210.00 FLR, true)
+  law date 2026-09-30, cut 2026-09-30
+c05_months (m = 2024-12): (2024-12, 650.00 DUK, 56.18 FLR, true)
+  law date 2026-09-30, cut 2026-09-30
+c05_months (m = 2025-01): (2025-01, 650.00 DUK, 65.89 FLR, true)
+  law date 2026-09-30, cut 2026-09-30
+c05_months (m = 2025-02): (2025-02, 650.00 DUK, 65.30 FLR, true)
+  law date 2026-09-30, cut 2026-09-30
+c05_months (m = 2025-03): (2025-03, 650.00 DUK, 65.62 FLR, true)
+  law date 2026-09-30, cut 2026-09-30
+c05_months (m = 2025-04): (2025-04, 650.00 DUK, 64.95 FLR, true)
+  law date 2026-09-30, cut 2026-09-30
+c05_months (m = 2025-05): (2025-05, 650.00 DUK, 65.95 FLR, true)
+  law date 2026-09-30, cut 2026-09-30
+c05_months (m = 2025-06): (2025-06, 650.00 DUK, 65.04 FLR, true)
+  law date 2026-09-30, cut 2026-09-30
+c05_months (m = 2025-07): (2025-07, 650.00 DUK, 66.90 FLR, true)
+  law date 2026-09-30, cut 2026-09-30
+c05_months (m = 2025-08): (2025-08, 650.00 DUK, 66.03 FLR, true)
+  law date 2026-09-30, cut 2026-09-30
+c05_months (m = 2025-09): (2025-09, 0.00 DUK, 220.00 FLR, false)
+  law date 2026-09-30, cut 2026-09-30
+c05_months (m = 2025-10): (2025-10, 0.00 DUK, 220.00 FLR, false)
+  law date 2026-09-30, cut 2026-09-30
+c05_months (m = 2025-11): (2025-11, 0.00 DUK, 220.00 FLR, false)
+  law date 2026-09-30, cut 2026-09-30
+c05_months (m = 2025-12): (2025-12, 0.00 DUK, 220.00 FLR, false)
+  law date 2026-09-30, cut 2026-09-30
+c05_months (m = 2026-01): (2026-01, 0.00 DUK, 230.00 FLR, false)
+  law date 2026-09-30, cut 2026-09-30
+c05_months (m = 2026-02): (2026-02, 0.00 DUK, 230.00 FLR, false)
+  law date 2026-09-30, cut 2026-09-30
+c05_months (m = 2026-03): (2026-03, 0.00 DUK, 230.00 FLR, false)
+  law date 2026-09-30, cut 2026-09-30
+c05_months (m = 2026-04): (2026-04, 0.00 DUK, 230.00 FLR, false)
+  law date 2026-09-30, cut 2026-09-30
+c05_months (m = 2026-05): (2026-05, 0.00 DUK, 230.00 FLR, false)
+  law date 2026-09-30, cut 2026-09-30
+c05_months (m = 2026-06): (2026-06, 0.00 DUK, 230.00 FLR, false)
+  law date 2026-09-30, cut 2026-09-30
+c05_months (m = 2026-07): (2026-07, 0.00 DUK, 230.00 FLR, false)
+  law date 2026-09-30, cut 2026-09-30
+c05_months (m = 2026-08): (2026-08, 0.00 DUK, 230.00 FLR, false)
+  law date 2026-09-30, cut 2026-09-30
+c05_months (m = 2026-09): (2026-09, 650.00 DUK, 76.52 FLR, true)
+  law date 2026-09-30, cut 2026-09-30
+c05_overpaid: (1 950.00 DUK, 1 950.00 DUK, 2026-06-15)
+  law date 2026-09-30, cut 2026-09-30
+c05_rosvald_owed (q = 2024-07): (2024-07, 630.00 FLR, 630.00 FLR, 0.00 FLR, 2024-10-31)
+  law date 2026-09-30, cut 2026-09-30
+c05_rosvald_owed (q = 2024-10): (2024-10, 476.18 FLR, 476.18 FLR, 0.00 FLR, 2025-01-31)
+  law date 2026-09-30, cut 2026-09-30
+c05_rosvald_owed (q = 2025-01): (2025-01, 196.81 FLR, 196.81 FLR, 0.00 FLR, 2025-04-30)
+  law date 2026-09-30, cut 2026-09-30
+c05_rosvald_owed (q = 2025-04): (2025-04, 195.94 FLR, 195.94 FLR, 0.00 FLR, 2025-07-31)
+  law date 2026-09-30, cut 2026-09-30
+c05_rosvald_owed (q = 2025-07): (2025-07, 352.93 FLR, 352.93 FLR, 0.00 FLR, 2025-10-31)
+  law date 2026-09-30, cut 2026-09-30
+c05_rosvald_owed (q = 2025-10): (2025-10, 660.00 FLR, 660.00 FLR, 0.00 FLR, 2026-01-30)
+  law date 2026-09-30, cut 2026-09-30
+c05_rosvald_owed (q = 2026-01): (2026-01, 690.00 FLR, 690.00 FLR, 0.00 FLR, 2026-04-30)
+  law date 2026-09-30, cut 2026-09-30
+c05_rosvald_owed (q = 2026-04): (2026-04, 690.00 FLR, 690.00 FLR, 0.00 FLR, 2026-07-31)
+  law date 2026-09-30, cut 2026-09-30
+c05_rosvald_owed (q = 2026-07): (2026-07, 536.52 FLR, 0.00 FLR, 536.52 FLR, 2026-10-30)
+  held: rv_holidays = calendar(weekends [sat, sun], yearly [01-01, 05-01, 06-14, 10-03, 12-24, 12-25, 12-26, 12-31]) (rgp1_v1), read for 2026-10-30
+  held: rv_holidays = calendar(weekends [sat, sun], yearly [01-01, 05-01, 06-14, 10-03, 12-24, 12-25, 12-26, 12-31]) (rgp1_v1), read for 2026-10-31
+  law date 2026-09-30, cut 2026-09-30
+c05_lenia_owed: 0.00 DUK
+  law date 2026-09-30, cut 2026-09-30
+warning: WARN-UNREAD source house_rules is read by nothing
+warning: WARN-UNREAD source zgody is read by nothing
+warning: WARN-UNREAD source c_d01 is read by nothing
+warning: WARN-UNREAD source c_d02 is read by nothing
+warning: WARN-UNREAD source c_d04 is read by nothing
+warning: WARN-UNREAD source c_d05 is read by nothing
+warning: WARN-UNREAD source c_d08 is read by nothing
+warning: WARN-UNREAD source c_d09 is read by nothing
+warning: WARN-UNREAD source c_d12 is read by nothing
+warning: WARN-UNREAD source c_d15 is read by nothing
+warning: WARN-UNREAD source c_d16 is read by nothing
+warning: WARN-UNREAD source c_d17 is read by nothing
+warning: WARN-UNREAD source c_d18 is read by nothing
+warning: WARN-UNREAD source c_d19 is read by nothing
+warning: WARN-UNREAD source c_d20 is read by nothing
+warning: WARN-UNREAD source c_d21 is read by nothing
+warning: WARN-UNREAD source c_d22 is read by nothing
+warning: WARN-UNREAD source c_d23 is read by nothing
+warning: WARN-UNREAD source c_d24 is read by nothing
+warning: WARN-UNREAD source c_d25 is read by nothing
+warning: WARN-UNREAD source c_d26 is read by nothing
+warning: WARN-UNREAD source c_d27 is read by nothing
+warning: WARN-UNREAD source c_d28 is read by nothing
+warning: WARN-UNREAD source c_d31 is read by nothing
+warning: WARN-UNREAD source c_d32 is read by nothing
+warning: WARN-UNREAD source c_d33 is read by nothing
+warning: WARN-UNREAD source c_d34 is read by nothing
+warning: WARN-UNREAD source c_d35 is read by nothing
+warning: WARN-UNREAD input sk is read by nothing
+warning: WARN-UNREAD input mo is read by nothing
+warning: WARN-UNREAD input wb is read by nothing
+warning: WARN-UNREAD input ld is read by nothing
+warning: WARN-UNREAD input night is read by nothing
+warning: WARN-UNREAD input wedding is read by nothing
+warning: WARN-UNREAD input born_stas is read by nothing
+warning: WARN-UNREAD input cbl_ref is read by nothing
+warning: WARN-UNREAD input pit17_cap is read by nothing
+warning: WARN-UNREAD input pay_dom_20 is read by nothing
+warning: WARN-UNREAD input vat4_dom is read by nothing
+warning: WARN-UNREAD input vat4_refund_days is read by nothing
+warning: WARN-UNREAD input pit5_file_dom is read by nothing
+warning: WARN-UNREAD input pit5_file_month is read by nothing
+warning: WARN-UNREAD input igt4_report_months is read by nothing
+warning: WARN-UNREAD input igt5_pay_days is read by nothing
+warning: WARN-UNREAD input pit10_flat_rate is read by nothing
+warning: WARN-UNREAD input pit10_profit_rate is read by nothing
+warning: WARN-UNREAD input pit2_costs_month is read by nothing
+warning: WARN-UNREAD input pit3_reducing is read by nothing
+warning: WARN-UNREAD input pit5_refund_days is read by nothing
+warning: WARN-UNREAD input pit7_age is read by nothing
+warning: WARN-UNREAD input pit7_income_limit is read by nothing
+warning: WARN-UNREAD input pit7_relief_month is read by nothing
+warning: WARN-UNREAD input rwt_allow is read by nothing
+warning: WARN-UNREAD input rwt_edge1 is read by nothing
+warning: WARN-UNREAD input rwt_edge2 is read by nothing
+warning: WARN-UNREAD input rwt_r1 is read by nothing
+warning: WARN-UNREAD input rwt_r2 is read by nothing
+warning: WARN-UNREAD input rwt_r3 is read by nothing
+warning: WARN-UNREAD input rwt_presence_min is read by nothing
+warning: WARN-UNREAD input rwt_refund_days is read by nothing
+warning: WARN-UNREAD input rwt_step is read by nothing
+warning: WARN-UNREAD input rsi_rate is read by nothing
+warning: WARN-UNREAD input rsi_ceil is read by nothing
+warning: WARN-UNREAD input avg_wage_proj is read by nothing
+warning: WARN-UNREAD input min_wage is read by nothing
+warning: WARN-UNREAD input soc3_rate is read by nothing
+warning: WARN-UNREAD input soc3_stage2_share is read by nothing
+warning: WARN-UNREAD input soc3_stage3_share is read by nothing
+warning: WARN-UNREAD input avg_wage_q4 is read by nothing
+warning: WARN-UNREAD input soc4_rate is read by nothing
+warning: WARN-UNREAD input soc4_rate_b is read by nothing
+warning: WARN-UNREAD input vat_rate is read by nothing
+warning: WARN-UNREAD input sale is read by nothing
+warning: WARN-UNREAD input cost is read by nothing
+warning: WARN-UNREAD input lazur_buy is read by nothing
+warning: WARN-UNREAD input stas_in_lenia is read by nothing
+warning: WARN-UNREAD def part1_from is read by nothing
+warning: WARN-UNREAD def stas_held is read by nothing
+warning: WARN-UNREAD def days_short is read by nothing
+warning: WARN-UNREAD def short_max_on is read by nothing
+warning: WARN-UNREAD def returns_overdue is read by nothing
+warning: WARN-UNREAD def next_return is read by nothing
+warning: WARN-UNREAD def gift_tax is read by nothing

@@ -1,0 +1,13 @@
+part asks_c02
+  tally 2
+  note "C-02 · Jan's pay in Rosvald (questions.md), as of and known as of 2026-03-31. months: one line per month of work 2024-07 .. 2026-02, (month, paid, gross, contribution, tax, net) in FLR, from the payslips (C-D20); October 2025's slip is lost, so its line is computed: its gross is the one whose net by RSI-2 and RWT-3 is the net the Lazur row shows, its hours whole. presence: the days of presence per tax year (RWT-5, the log). assessment: what RWT-6 gives, the tax withheld less the yearly tax (positive: a refund to Jan); for 2024/25 the RTB's decision (C-D19) is printed beside it."
+
+ask c02_months: m, pay_day[m], pay_gross[m], pay_rsi[m], pay_tax[m], pay_net[m] for m in month where m >= 2024-07 and m <= 2026-02 law 2026-03-31 as known 2026-03-31
+
+ask c02_oct_gross: pay_gross[2025-10], lost_hours[2025-10], pay_class[2025-10] law 2026-03-31 as known 2026-03-31
+
+ask c02_presence: y, presence[y] for y in rv_year where y <= 2025 law 2026-03-31 as known 2026-03-31
+
+ask c02_assessment: y, yr_gross[y], yr_rsi[y], yr_class[y], yr_taxable[y], yr_tax[y], yr_withheld[y], yr_refund[y] for y in rv_year where y <= 2025 law 2026-03-31 as known 2026-03-31
+
+ask c02_decision_2024: rtb_decision[2024].refund, rtb_decision[2024].tax, rtb_decision[2024].taxable law 2026-03-31 as known 2026-03-31

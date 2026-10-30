@@ -1,0 +1,15 @@
+part asks_c07
+  tally 2
+  note "C-07 · Jan's part of the house (questions.md), as of and known as of 2025-12-31. months: for each month 2025-01 .. 2025-11, (month, the version of C-HR3 that governs it, part, paid) in DUK. settle-ups: what each settle-up of 2025 came to, Jan's part owed for the six months before less what he paid for them (positive: Jan pays the joint account), and what was transferred at it (story: nothing). owed on 2025-12-31: what Jan owed under C-HR3 at the end of that day (both settle-ups unpaid, and August – November 2025's parts less what he paid for them); December's part, not yet due (by 2026-01-12), is printed apart. hr4: what Jan owed the joint account under C-HR4 .4 for the purchases made by 2025-12-31 (washer, bike, sofa, laptop: buyer who owes, amount, the settle-up it is due at), one line per reading of the axis flr_count (purchases.tally). owed total: what Jan owed the joint account on 2025-12-31 under C-HR3 and C-HR4 that had fallen due and was unpaid (first place), and what he owed under them that was not yet due (second place: December's part, a purchase whose settle-up is later)."
+
+ask c07_months: m, hr3_v[m], jan_part[m], jan_paid[m] for m in month where m >= 2025-01 and m <= 2025-11 law 2025-12-31 as known 2025-12-31
+
+ask c07_settle: m, settle_day[m], settle_diff[m], settle_paid[m] for m in month where is_settle[m] and m >= 2025-01 and m <= 2025-12 law 2025-12-31 as known 2025-12-31
+
+ask c07_owed: owed_hr3[2025-12-31], part_not_due[2025-12-31], v2_from law 2025-12-31 as known 2025-12-31
+
+ask c07_detail: m, house_costs[m], nights_home[m], nights_in[m], jan_part[m], jan_paid[m] for m in month where m >= 2024-07 and m <= 2025-12 law 2025-12-31 as known 2025-12-31
+
+ask c07_hr4: p, p_owed_by[p], p_owed[p], p_due[p] for p in [p_washer, p_bike, p_sofa, p_laptop] law 2025-12-31 as known 2025-12-31
+
+ask c07_owed_total: owed_hr3[2025-12-31] + sum(p_owed[p] for p in [p_washer, p_bike, p_sofa, p_laptop] where p_owed_by[p] != none and p_owed_by[p] == jan and p_due[p] <= 2025-12-31), part_not_due[2025-12-31] + sum(p_owed[p] for p in [p_washer, p_bike, p_sofa, p_laptop] where p_owed_by[p] != none and p_owed_by[p] == jan and p_due[p] > 2025-12-31) law 2025-12-31 as known 2025-12-31

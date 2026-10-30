@@ -1,0 +1,11 @@
+part asks_c05
+  tally 2
+  note "C-05 · Staś's child benefit (questions.md), as of and known as of 2026-09-30. months: for each month 2024-07 .. 2026-09, (month, Lenia's benefit due in DUK, Rosvald's due in FLR, which state pays first: true where Lenia does, T-12 .1 (a)). overpaid: what Lenia paid for months it wasn't due (FAM-2 .2), what we repaid (the joint account's six instalments) and the last instalment's day. owed on 2026-09-30: Rosvald: for each quarter, what is due less what the RFF paid by then, and the day it is due by (RFF-2 .2); Lenia: what was due to the cut less what it paid, plus what we repaid."
+
+ask c05_months: m, lenia_due[m], rosvald_due[m], lenia_first[m] for m in month where m >= 2024-07 and m <= 2026-09 law 2026-09-30
+
+ask c05_overpaid: lenia_overpaid, lenia_repaid, lenia_last_rep law 2026-09-30
+
+ask c05_rosvald_owed: q, rff_due_q[q], rff_paid_q[q], rff_owed_q[q], rff_q_by[q] for q in month where q >= 2024-07 and q <= 2026-09 and is_q_start[q] law 2026-09-30
+
+ask c05_lenia_owed: lenia_owed law 2026-09-30

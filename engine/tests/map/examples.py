@@ -27,7 +27,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.a
 T = 'engine/tests/'
 OUT = ROOT + T + 'examples.tsv'
 COLS = ['example', 'kind', 'story', 'unit', 'integration', 'load']
-HOUSES = ('A', 'B', 'D', 'E1')
+HOUSES = ('A', 'B', 'D', 'E1', 'C', 'E2')  # C, E2: the unsealed holdout (cases 1.2.0)
 EDGE = re.compile(r'\b[A-Z]+-\d+\b')
 # TESTING.md §2: the SURF writing rules met by a probe card only (map/gaps.md, accepted c)
 PROBE_ONLY = {'SURF-01', 'SURF-02', 'SURF-04'}
@@ -65,7 +65,7 @@ for c in checks:
 def tag_id(c):
     """The tags.tsv row a check's edges come from."""
     i = c['id']
-    m = re.match(r'^I:(A|B|D|E1):', i)
+    m = re.match(r'^I:(A|B|D|E1|C|E2):', i)
     if m:
         q = re.sub(r'[a-z]+$', '', c['question'])
         return 'I:%s:%s' % (m.group(1), q) if re.match(r'^[A-Z]\d?-\d+$', q) else None

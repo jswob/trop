@@ -1,0 +1,127 @@
+c02_months (m = 2024-07): (2024-07, 2024-08-05, 5 025.00 FLR, 678.38 FLR, 465.00 FLR, 3 881.62 FLR)
+  law date 2026-03-31, cut 2026-03-31
+c02_months (m = 2024-08): (2024-08, 2024-09-05, 4 800.00 FLR, 648.00 FLR, 420.00 FLR, 3 732.00 FLR)
+  law date 2026-03-31, cut 2026-03-31
+c02_months (m = 2024-09): (2024-09, 2024-10-04, 5 325.00 FLR, 718.88 FLR, 528.00 FLR, 4 078.12 FLR)
+  law date 2026-03-31, cut 2026-03-31
+c02_months (m = 2024-10): (2024-10, 2024-11-05, 5 137.50 FLR, 693.56 FLR, 489.00 FLR, 3 954.94 FLR)
+  law date 2026-03-31, cut 2026-03-31
+c02_months (m = 2024-11): (2024-11, 2024-12-05, 5 250.00 FLR, 708.75 FLR, 513.00 FLR, 4 028.25 FLR)
+  law date 2026-03-31, cut 2026-03-31
+c02_months (m = 2024-12): (2024-12, 2025-01-03, 4 950.00 FLR, 668.25 FLR, 451.00 FLR, 3 830.75 FLR)
+  law date 2026-03-31, cut 2026-03-31
+c02_months (m = 2025-01): (2025-01, 2025-02-05, 5 175.00 FLR, 698.62 FLR, 496.00 FLR, 3 980.38 FLR)
+  law date 2026-03-31, cut 2026-03-31
+c02_months (m = 2025-02): (2025-02, 2025-03-05, 4 800.00 FLR, 648.00 FLR, 420.00 FLR, 3 732.00 FLR)
+  law date 2026-03-31, cut 2026-03-31
+c02_months (m = 2025-03): (2025-03, 2025-04-04, 5 062.50 FLR, 683.44 FLR, 638.00 FLR, 3 741.06 FLR)
+  law date 2026-03-31, cut 2026-03-31
+c02_months (m = 2025-04): (2025-04, 2025-05-05, 5 429.00 FLR, 732.92 FLR, 715.00 FLR, 3 981.08 FLR)
+  law date 2026-03-31, cut 2026-03-31
+c02_months (m = 2025-05): (2025-05, 2025-06-05, 5 117.00 FLR, 690.80 FLR, 465.00 FLR, 3 961.20 FLR)
+  law date 2026-03-31, cut 2026-03-31
+c02_months (m = 2025-06): (2025-06, 2025-07-04, 5 312.00 FLR, 717.12 FLR, 506.00 FLR, 4 088.88 FLR)
+  law date 2026-03-31, cut 2026-03-31
+c02_months (m = 2025-07): (2025-07, 2025-08-05, 5 195.00 FLR, 701.32 FLR, 482.00 FLR, 4 011.68 FLR)
+  law date 2026-03-31, cut 2026-03-31
+c02_months (m = 2025-08): (2025-08, 2025-09-05, 5 000.00 FLR, 675.00 FLR, 441.00 FLR, 3 884.00 FLR)
+  law date 2026-03-31, cut 2026-03-31
+c02_months (m = 2025-09): (2025-09, 2025-10-02, 5 624.00 FLR, 759.24 FLR, 571.00 FLR, 4 293.76 FLR)
+  law date 2026-03-31, cut 2026-03-31
+c02_months (m = 2025-10): (2025-10, 2025-11-05, 5 507.00 FLR, 743.44 FLR, 547.00 FLR, 4 216.56 FLR)
+  law date 2026-03-31, cut 2026-03-31
+c02_months (m = 2025-11): (2025-11, 2025-12-05, 5 468.00 FLR, 738.18 FLR, 537.00 FLR, 4 192.82 FLR)
+  law date 2026-03-31, cut 2026-03-31
+c02_months (m = 2025-12): (2025-12, 2026-01-05, 5 078.00 FLR, 685.53 FLR, 458.00 FLR, 3 934.47 FLR)
+  law date 2026-03-31, cut 2026-03-31
+c02_months (m = 2026-01): (2026-01, 2026-02-05, 5 351.00 FLR, 722.38 FLR, 513.00 FLR, 4 115.62 FLR)
+  law date 2026-03-31, cut 2026-03-31
+c02_months (m = 2026-02): (2026-02, 2026-03-05, 5 234.00 FLR, 706.59 FLR, 489.00 FLR, 4 038.41 FLR)
+  law date 2026-03-31, cut 2026-03-31
+c02_oct_gross: (5 507.00 FLR, 13, class2)
+  law date 2026-03-31, cut 2026-03-31
+c02_presence (y = 2024): (2024, 186)
+  law date 2026-03-31, cut 2026-03-31
+c02_presence (y = 2025): (2025, 236)
+  law date 2026-03-31, cut 2026-03-31
+c02_assessment (y = 2024): (2024, 40 462.50 FLR, 5 462.44 FLR, class2, 14 600.00 FLR, 1 488.00 FLR, 3 782.00 FLR, 2 294.00 FLR)
+  law date 2026-03-31, cut 2026-03-31
+c02_assessment (y = 2025): (2025, 63 377.50 FLR, 8 555.96 FLR, class2, 33 820.00 FLR, 6 016.00 FLR, 6 362.00 FLR, 346.00 FLR)
+  law date 2026-03-31, cut 2026-03-31
+c02_decision_2024: (2 294.00 FLR, 1 488.00 FLR, 14 600.00 FLR)
+  law date 2026-03-31, cut 2026-03-31
+warning: WARN-UNREAD source house_rules is read by nothing
+warning: WARN-UNREAD source zgody is read by nothing
+warning: WARN-UNREAD source c_d01 is read by nothing
+warning: WARN-UNREAD source c_d02 is read by nothing
+warning: WARN-UNREAD source c_d04 is read by nothing
+warning: WARN-UNREAD source c_d05 is read by nothing
+warning: WARN-UNREAD source c_d07 is read by nothing
+warning: WARN-UNREAD source c_d08 is read by nothing
+warning: WARN-UNREAD source c_d09 is read by nothing
+warning: WARN-UNREAD source c_d12 is read by nothing
+warning: WARN-UNREAD source c_d21 is read by nothing
+warning: WARN-UNREAD source c_d22 is read by nothing
+warning: WARN-UNREAD source c_d23 is read by nothing
+warning: WARN-UNREAD source c_d24 is read by nothing
+warning: WARN-UNREAD source c_d25 is read by nothing
+warning: WARN-UNREAD source c_d26 is read by nothing
+warning: WARN-UNREAD source c_d27 is read by nothing
+warning: WARN-UNREAD source c_d28 is read by nothing
+warning: WARN-UNREAD source c_d31 is read by nothing
+warning: WARN-UNREAD source c_d32 is read by nothing
+warning: WARN-UNREAD source c_d33 is read by nothing
+warning: WARN-UNREAD source c_d34 is read by nothing
+warning: WARN-UNREAD source c_d35 is read by nothing
+warning: WARN-UNREAD source c_d36 is read by nothing
+warning: WARN-UNREAD input jw is read by nothing
+warning: WARN-UNREAD input sk is read by nothing
+warning: WARN-UNREAD input mo is read by nothing
+warning: WARN-UNREAD input wb is read by nothing
+warning: WARN-UNREAD input ld is read by nothing
+warning: WARN-UNREAD input open_bal is read by nothing
+warning: WARN-UNREAD input stas_open is read by nothing
+warning: WARN-UNREAD input wedding is read by nothing
+warning: WARN-UNREAD input born_stas is read by nothing
+warning: WARN-UNREAD input holidays is read by nothing
+warning: WARN-UNREAD input cbl_ref is read by nothing
+warning: WARN-UNREAD input pit17_cap is read by nothing
+warning: WARN-UNREAD input pay_dom_20 is read by nothing
+warning: WARN-UNREAD input vat4_dom is read by nothing
+warning: WARN-UNREAD input vat4_refund_days is read by nothing
+warning: WARN-UNREAD input pit5_file_dom is read by nothing
+warning: WARN-UNREAD input pit5_file_month is read by nothing
+warning: WARN-UNREAD input fam1_amount is read by nothing
+warning: WARN-UNREAD input igt3_years is read by nothing
+warning: WARN-UNREAD input igt_free is read by nothing
+warning: WARN-UNREAD input igt4_report_months is read by nothing
+warning: WARN-UNREAD input igt5_pay_days is read by nothing
+warning: WARN-UNREAD input igt5_return_months is read by nothing
+warning: WARN-UNREAD input pit10_flat_rate is read by nothing
+warning: WARN-UNREAD input pit10_profit_rate is read by nothing
+warning: WARN-UNREAD input pit2_costs_month is read by nothing
+warning: WARN-UNREAD input pit3_reducing is read by nothing
+warning: WARN-UNREAD input pit5_refund_days is read by nothing
+warning: WARN-UNREAD input pit7_age is read by nothing
+warning: WARN-UNREAD input pit7_income_limit is read by nothing
+warning: WARN-UNREAD input pit7_relief_month is read by nothing
+warning: WARN-UNREAD input rv_holidays is read by nothing
+warning: WARN-UNREAD input rwt_refund_days is read by nothing
+warning: WARN-UNREAD input rff_child is read by nothing
+warning: WARN-UNREAD input avg_wage_proj is read by nothing
+warning: WARN-UNREAD input min_wage is read by nothing
+warning: WARN-UNREAD input soc3_rate is read by nothing
+warning: WARN-UNREAD input soc3_stage2_share is read by nothing
+warning: WARN-UNREAD input soc3_stage3_share is read by nothing
+warning: WARN-UNREAD input avg_wage_q4 is read by nothing
+warning: WARN-UNREAD input soc4_rate is read by nothing
+warning: WARN-UNREAD input soc4_rate_b is read by nothing
+warning: WARN-UNREAD input vat_rate is read by nothing
+warning: WARN-UNREAD input sale is read by nothing
+warning: WARN-UNREAD input cost is read by nothing
+warning: WARN-UNREAD input fx_mid is read by nothing
+warning: WARN-UNREAD input lazur_buy is read by nothing
+warning: WARN-UNREAD input rnb_duk100 is read by nothing
+warning: WARN-UNREAD def part1_from is read by nothing
+warning: WARN-UNREAD def part2_from is read by nothing
+warning: WARN-UNREAD def refund_seen is read by nothing

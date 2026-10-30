@@ -1,0 +1,174 @@
+part forecast
+  tally 2
+  note "The mortgage HIP/2019/04471 (C-D27, C-D28) and the pot, from the cut on (C-12; C-10 reads the principal at a day of the records). The principal: C-D28's at the end of 2025-12-31, then less each instalment's principal part (the instalment less 1/12 of 6.20 % of the principal owed at the end of the day before, to the ort, half up; C-D27 .2) and each overpayment on its day (C-D27 .3). To the cut the instalments and overpayments are the joint account's and the pot's rows; after it each month's instalment is due on the 15th, or the next business day (C-D27 .1), while principal is owed, the last one what is then owed."
+  note "The forecast from October 2026 (story 2026-09-30): nothing goes into the pot until 2027-09-30, nothing comes out of it but the extras, no other money of ours goes to the mortgage. Two plans, the question's suppositions: with_x, the 800.00 goes on each month's extra day (the 16th, or the next business day, C-HR8 .1) while the pot holds it; without_x, it doesn't go at all. The extra is at most what is then owed."
+  note "C-HR8 .2, .3 for a forecast month k: the plan has k's 800.00 paid and each later month's as this rule pays it; the rules don't say whether k is decided before the later months or after them, so October 2026 is decided both ways (oct_paid_before, oct_paid_after) and the answer is a hole where they differ. The rule is a recursion over the months, keyed by how many of the forecast's extras the plan has paid before k (hr8_pays, hr8_count). The plan is our forecast, which runs to 2027-09-30: it shows the pot on the days to then, and nothing after (what goes into the pot after 2027-09-30 is a hole). The plan's pot moves only by its extras and its inflows (none, by month), so its end-of-day balances in the window are those at the ends of the extra days in it."
+  note "The pot's lowest balance in each plan is read over the forecast: from 2026-10-01 to the payoff or to 2027-09-30, whichever is first."
+
+index plan = [with_x, without_x]
+
+index xn = int 0..40
+
+input mtg_stmt_day: date question "On which day's end does the yearly statement give the principal owed (C-D28)?"
+
+input mtg_p_stmt: money DUK question "What principal did the mortgage owe at the end of that day (C-D28)?"
+
+input mtg_rate: num question "What is the mortgage's fixed yearly rate (C-D27)?"
+
+input mtg_inst: money DUK question "What is the monthly instalment (C-D27 .1)?"
+
+input x_amt: money DUK question "How much goes from the pot to the mortgage each month (C-HR8 .1)?"
+
+input x_floor: money DUK question "Below what does the plan's pot make a month's extra skipped (C-HR8 .2)?"
+
+input pot_in_m[m in month]: money DUK question "What goes into the pot in this month, in our forecast from October 2026?"
+
+input fc_until: date question "To which day does our forecast of the pot from October 2026 run (story 2026-09-30)?"
+
+version mtg_contract
+  cite c_d27
+  governs always
+  known 2019-05-15
+  mtg_rate = 0.062 "C-D27: fixed rate 6.20 % a year for the whole term"
+  mtg_inst = 2626.33 "C-D27 .1: 300 monthly instalments of 2 626.33 DUK"
+
+version mtg_statement
+  cite c_d28
+  governs always
+  known 2026-01-09
+  mtg_stmt_day = 2025-12-31 "C-D28: principal owed on 2025-12-31"
+  mtg_p_stmt = 309766.05 "C-D28: principal owed on 2025-12-31: 309 766.05 DUK"
+
+version hr8_text
+  cite house_rules
+  governs always
+  known 2025-06-20
+  x_amt = 800.00 "C-HR8 .1: 800.00 goes from the pot to the mortgage"
+  x_floor = 5000.00 "C-HR8 .2: the pot below 5 000.00"
+
+version pot_forecast
+  cite story
+  governs always
+  known 2026-09-30
+  pot_in_m[2026-10..2027-09] = 0 "story 2026-09-30: our forecast from October 2026: until 2027-09-30 nothing goes into the pot (C-HR2 v2)"
+  pot_in_m[2027-10..2029-12] = ?"what goes into the pot after 2027-09-30? our forecast stops there (C-HR2 v2 ends)" "story 2026-09-30"
+  fc_until = 2027-09-30 "story 2026-09-30: our forecast from October 2026: until 2027-09-30 nothing goes into the pot"
+
+def mtg_inst_day[m in month]: date = schedule(m, lifted[mtg_dom], following, holidays)
+
+def x_day[m in month]: date = schedule(m, lifted[hr8_dom], following, holidays)
+
+def x_16th[m in month]: date = add_days(start_of(m), lifted[hr8_dom] - 1)
+
+def x_end[m in month]: date
+  note "C-HR8 .2: the last day of the 12 months after the month's 16th"
+  rule base = add_months(x_16th[m], lifted[twelve])
+
+def fc_month: month = month_of(cut) + 1
+
+def inst_rec[d in day]: money DUK = sum(jw[d, s].dr for s in seq where jw[d, s] != none and jw[d, s].k == j_instal)
+
+def over_rec[d in day]: money DUK
+  note "the overpayments of day d: the joint account's and the pot's rows"
+  rule base = sum(jw[d, s].dr for s in seq where jw[d, s] != none and jw[d, s].k == j_overpay) + sum(sk[d, s].dr for s in seq where sk[d, s] != none and sk[d, s].k == s_extra)
+
+def mort[c in plan, d in day]: money DUK
+  note "the principal owed at the end of day d"
+  rule run = mort[c, d - 1] - inst_princ[c, d] - over[c, d] when d > mtg_stmt_day
+  rule stmt beats run = mtg_p_stmt when d == mtg_stmt_day
+
+def inst_int[c in plan, d in day]: money DUK
+  note "C-D27 .2: an instalment's interest, 1/12 of 6.20 % of the principal owed at the end of the day before, to the ort, half up"
+  rule base = round(mort[c, d - 1] * mtg_rate / lifted[twelve], minor(DUK), half-up) when d > mtg_stmt_day
+
+def inst_paid[c in plan, d in day]: money DUK
+  note "the instalment of day d: the joint account's row to the cut; after it, on each month's instalment day while principal is owed, 2 626.33, or what is then owed where that is less (C-D27 .1, .2)"
+  rule nothing = 0 DUK
+  rule seen beats nothing = inst_rec[d] when d <= cut
+  rule due beats nothing = min(mtg_inst, mort[c, d - 1] + inst_int[c, d]) when d > cut and d == mtg_inst_day[month_of(d)] and mort[c, d - 1] > 0 DUK
+
+def inst_princ[c in plan, d in day]: money DUK
+  rule nothing = 0 DUK
+  rule paid beats nothing = inst_paid[c, d] - inst_int[c, d] when inst_paid[c, d] > 0 DUK
+
+def x_fc[c in plan, d in day]: money DUK
+  note "the question's supposition with_x: on each month's extra day after the cut, while the pot holds the 800.00 and principal is owed after the day's instalment, it goes to the mortgage (at most what is owed)"
+  rule nothing = 0 DUK
+  rule paid beats nothing = min(x_amt, mort[c, d - 1] - inst_princ[c, d]) when c == with_x and d > cut and d == x_day[month_of(d)] and pot_f[c, d - 1] + pot_in_day[d] >= x_amt and mort[c, d - 1] - inst_princ[c, d] > 0 DUK
+
+def over[c in plan, d in day]: money DUK
+  rule fc = x_fc[c, d]
+  rule seen beats fc = over_rec[d] when d <= cut
+
+def pot_rows[d in day]: int = count(s in seq where sk[d, s] != none)
+
+def pot_end[d in day]: money DUK
+  note "the pot's balance at the end of day d, from its rows"
+  rule carry = pot_end[d - 1] when pos(d) > 1
+  rule opening beats carry = open_bal[pot] when pos(d) == 1 and pot_rows[d] == 0
+  rule seen beats carry, opening = sk[d, last(s in seq where sk[d, s] != none)].bal when pot_rows[d] > 0
+
+def pot_in_day[d in day]: money DUK
+  note "the forecast's inflow of a month, taken on its first day"
+  rule nothing = 0 DUK
+  rule first_day beats nothing = pot_in_m[month_of(d)] when d > cut and d == start_of(month_of(d))
+
+def pot_f[c in plan, d in day]: money DUK
+  note "the pot at the end of day d: its rows to the cut, then the forecast"
+  rule run = pot_f[c, d - 1] + pot_in_day[d] - x_fc[c, d] when d > cut
+  rule seen beats run = pot_end[d] when d <= cut
+
+def paid_off[c in plan]: date = first(d in day where d > cut and mort[c, d] <= 0 DUK)
+
+def last_inst_day[c in plan]: date = last(d in day where d > cut and d <= paid_off[c] and inst_paid[c, d] > 0 DUK)
+
+def last_inst[c in plan]: money DUK = inst_paid[c, last_inst_day[c]]
+
+def extras_paid[c in plan]: int = count(d in day where d > cut and x_fc[c, d] > 0 DUK)
+
+def last_extra[c in plan]: money DUK
+  note "the last extra the plan pays, where it pays one"
+  rule nothing = 0 DUK
+  rule paid beats nothing = x_fc[c, last(e in day where e > cut and x_fc[c, e] > 0 DUK)] when extras_paid[c] > 0
+
+def pot_low[c in plan]: money DUK
+  note "the pot's lowest end-of-day balance over the forecast: from the cut to the day the mortgage is paid off or the forecast's last day, whichever is first"
+  rule base = min(pot_f[c, d] for d in day where d > cut and d <= paid_off[c] and d <= fc_until)
+
+def pot_low_on[c in plan]: date = first(d in day where d > cut and d <= paid_off[c] and d <= fc_until and pot_f[c, d] == pot_low[c])
+
+def pot_cut: money DUK = pot_end[cut]
+
+def inflow_to[m in month]: money DUK = sum(pot_in_m[k] for k in month where k >= fc_month and k <= m)
+
+def hr8_count[k in month, n in xn, j in month]: int
+  note "C-HR8 .3: how many of the extras of months k .. j the rule pays, with n of the forecast's extras paid before month k"
+  rule none_ = 0 when j < k
+  rule step = (if hr8_pays[k, n] then 1 + hr8_count[k + 1, n + 1, j] else hr8_count[k + 1, n, j]) when j >= k
+
+def hr8_pays[k in month, n in xn]: bool
+  note "C-HR8 .2: month k's 800.00 is paid unless the plan, with it paid (after n earlier ones) and each later month's as the rule pays it, shows the pot below 5 000.00 at the end of an extra's day in the 12 months after k's 16th that the plan shows (to the forecast's last day); the first test is k's own day"
+  rule base = pot_cut + inflow_to[k] - x_amt * (n + 1) >= x_floor and all(pot_cut + inflow_to[j] - x_amt * (n + 1 + hr8_count[k + 1, n + 1, j]) >= x_floor for j in month where j > k and x_day[j] <= x_end[k] and x_day[j] <= fc_until)
+
+def oct_paid_before: bool
+  note "C-HR8 .2 – .3 with October 2026 decided before the later months: they are decided with October's 800.00 paid"
+  rule base = hr8_pays[fc_month, 0]
+
+def oct_paid_after: bool
+  note "C-HR8 .2 – .3 with the later months decided before October 2026: they are decided without October's 800.00 in the plan, then October is tested with them"
+  rule base = all(pot_cut + inflow_to[j] - x_amt * (1 + hr8_count[fc_month + 1, 0, j]) >= x_floor for j in month where j >= fc_month and x_day[j] <= x_end[fc_month] and x_day[j] <= fc_until)
+
+def oct_extra_paid: bool
+  note "C-HR8 .2 – .3 decide each month by a plan in which the later months are decided by the same rule, and say in no order which comes first; where the two orders agree that is the answer, otherwise the dossier doesn't settle it"
+  rule agree = oct_paid_before when oct_paid_before == oct_paid_after
+  rule differ beats agree = ?"in which order does our plan decide October 2026's 800.00 and the later months' (C-HR8 .2 – .3 don't say)? the two orders decide October differently" when oct_paid_before != oct_paid_after
+
+def oct_plan_low: money DUK
+  note "the plan's pot at the end of the last extra's day in October 2026's window that the plan shows, with October paid, the later months decided after it"
+  rule base = pot_cut + inflow_to[oct_last_j] - x_amt * (1 + hr8_count[fc_month + 1, 1, oct_last_j])
+
+def oct_plan_low_after: money DUK
+  note "the same, the later months decided before October, without its 800.00, then October's added"
+  rule base = pot_cut + inflow_to[oct_last_j] - x_amt * (1 + hr8_count[fc_month + 1, 0, oct_last_j])
+
+def oct_last_j: month = last(j in month where x_day[j] <= x_end[fc_month] and x_day[j] <= fc_until)

@@ -333,6 +333,17 @@ for path in ('time/TIME-08-before.tally',):  # TC-5 (tmp/session5/text-changes.m
     add(id='U:' + path[:-len('.tally')], layer='unit', cwd=T, files=T + 'unit/probes/' + path,
         note='added 4.5f: TC-5, the probe ordering one rule before another (L §5.14.2); no card')
 
+# --- the unsealed holdout (session 5r's close, cases 1.2.0): households C and E2, one check per after-fix recipe of the
+# exam (defs/holdout.tsv); the baseline is refcore's output, marked by compare.py against keys/C and keys/E2 (5r REPORT.md)
+for l in open(ROOT + CHK + 'holdout.tsv', encoding='utf-8') if os.path.exists(ROOT + CHK + 'holdout.tsv') else []:
+    if not l.strip() or l.startswith('#'):
+        continue
+    cid, layer, cwd, files, asks, note = l.rstrip('\n').split('\t')
+    base = SNAP + '5r/' + cid.replace('/', '__').replace(':', '_') + '.out'
+    add(id=cid, layer=layer, cwd=cwd, files=' '.join(cwd + '/' + f for f in files.split()), asks=asks,
+        baseline=base if os.path.exists(ROOT + base) else '', question=cid.split(':')[-1].split('~')[0],
+        note=note + ' | unsealed holdout (session 5r), cases 1.2.0')
+
 # --- retired from the quick set (4.5c, the user's calls of 2026-10-29): the rows stay, ids are for life; a `not-run:`
 # note keeps run.py from running them, and load/load.tsv lists each with its load twin
 RETIRE = [
@@ -372,6 +383,8 @@ def key_label(r):
         return 'independent key script (gap item 6)'
     if i in ('I:M:LH-11', 'I:M:CMP-01'):
         return 'keyed; the rows the freeze re-keyed from prints are also keyed independently by %s~key' % i
+    if r['baseline'].startswith(SNAP + '5r/'):
+        return 'marked by compare.py against keys/C, keys/E2 (cases 1.2.0; session 5r, after its text fixes); the passed output is the baseline'
     if r['baseline'].startswith(SNAP + '4.5c/'):
         return ('no key (O:B-3, a gap-log observation): J read it against the papers; the output is the baseline'
                 if '@k5' in i and ':o3_' in i else

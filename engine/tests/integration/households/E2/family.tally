@@ -1,0 +1,25 @@
+model e2
+  tally 2
+  on 2026-09-30
+  start 2021-01-01
+  end 2064-12-31
+  use a = "../A" sha256 "7a320fb0e931500de3d03e9e22ed56df61854d13f4ae51f2625cc861b76a13ed"
+  use d = "../D" sha256 "2738c6dbbe7039e21e4f92c713f0835a9aa134365f6af9ea2e34caa5b0e47b11"
+  note "Household E2 of the hidden case set (tmp/cases-holdout/E2/story.md): Halina's family, households A (Ania and Tomek Lis), B (Piotr Sowa and Ola Wilk), C (Marta and Jan Wrona) and D (Halina Sowa) read together, in tally 2. It is a joint model (L §6.1), as E1 is: households A and D are members, imported closed and unchanged under their prefixes a and d (engine/tests/integration/households/A, D, pinned by the hashes E1 pins them by); this directory holds only the family's own items and asks."
+  note "Household C (tmp/cases-holdout/tally-2.0/C/full, written by H1) is no member here. Its canonical pin is 9ecdd4d759ae69964b0cc877ac395880b75b3e20164485f6a1ee0f28c5c996ce (hrun --reprint), and as a member it loads and answers its own cells in 10 s on refcore_fast; but with C a member every cell that reaches D's day walk runs past the 90 s limit (D's payouts alone: 67.7 s on refcore_fast, against 17 s without C; W-E2-4). So what E2 reads of C is asked in a second run, ../cside: C's own files, unchanged, with E2's part e2c added beside them; that part only reads C's items and states rows of its own (ids e2c_…)."
+  note "Household B (engine/tests/integration/households/B) is no member: with B a member, every cell that reaches a day walk runs past the 90 s limit, even the read of B's one observed row that E2-01 asks (Piotr's payout reaching his Cis savings account, B's savr[s20250616a]: 73 s on refcore_fast with B as the only member, W-E2-2). So E2 writes that row of B's Cis export itself (e2_cis), as E1 writes Ania's Wrzos row, and says where B holds it. Every answer says which run prints it (asks.md)."
+  note "On, start and end are the family's own: on is the latest member's (D's 2026-09-30, C's too), the run spans the members' (A's start 2021-01-01, D's end 2064-12-31). Every ask states its own law date and cut."
+  note "No same line, as in E1: the households state no kind, thing, row or movement in common. Zbigniew's estate, its shares and payouts are D's derivation (d.payout, d.deposit, d.share); Piotr's payout is B-D27 and the row of his Cis savings export that B holds (B's savr[s20250616a]) and E2 writes again (e2_cis, W-E2-2); Ania's is A's A-D36 (a.estate_paid) and the row of her Wrzos export E2 writes as an observation (e2_wrz), as E1 does; Marta's is C's: C-D30 and the row of her Bank Jodła export that C holds (C's mo[2025-06-16, 1]), read in the second run. Halina's gifts to Ania are A's alone (a.acq)."
+  note "The people. Each household keys its own: A's spouse index (ania, tomek), B's kind persons (piotr, ola), C's spouse index (marta, jan), D's heir index (halina, piotr, anna, marta, jakub). A key of an index is no thing, so no same line joins them (L §6.1); each ask reads the member's own key and asks.md names whose."
+
+source e2_story "The family's own account: who is in which household, where the households meet, what happened (tmp/cases-holdout/E2/story.md)"
+
+source e2_d_d07 "D-D07 · Agreement dividing the estate of Zbigniew Sowa (extract) (engine/tests/cases/D/docs/D-D07.md)"
+
+source e2_b_d27 "B-D27 · Notary · estate of Zbigniew Sowa: payout to Piotr Sowa (engine/tests/cases/B/docs/B-D27.md)"
+
+source e2_c_d30 "C-D30 · Notary's notice of payment from the deposit (tmp/cases-holdout/C/docs/C-D30.md)"
+
+source e2_cis_piotr "Bank Cis, account history of Piotr Sowa's savings account LN45 2090 0017 5521 3380 0002, 01-01-2025 .. 31-12-2025 (engine/tests/cases/B/records/cis-5521-3380-0002-2025.csv)"
+
+source e2_wrz_ania "Bank Wrzos, account history of Anna Lis's savings account LN61 1140 2004 0000 3402 9921 5503, 2025-06-02 .. 2025-12-31 (engine/tests/cases/A/records/wrz-ania-savings-2025.csv)"
