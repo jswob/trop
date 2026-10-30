@@ -1,3 +1,42 @@
+# Changes: tally 2.0 → tally 2.1
+
+tally 2.1 adds owners and batches as labels on amounts, from session 6's decided items, designed in session 7 and written in session 7b (2026-10-30). It is **opt-in**: a text with no `owned` or `batched` kind, and none of the small items' forms (notes after a one-line def or a place, a negative record field, a day key where a date is expected), means and prints what it did on 2.0, except where it declares the new built-in id `parties` (`MIGRATION.md`, 2.0 → 2.1). The reasons are `DECISIONS.md`'s "tally 2.1 records" (R-1 to R-17, G1, the four picks); the round's files are `tmp/session7/` and `tmp/session7b/`. One row per change:
+
+| # | Where | Change | Record |
+|---|---|---|---|
+| 2.1-1 | L §2.2 | kind clause words `owned`, `batched`, `takes`, and `prorata` as the clause word ending a `takes` clause; `of` as a construct word; a part's built-in fields `owner`, `batch`; `parties` among the built-in ids | R-1, R-2, R-4 |
+| 2.1-2 | L §2.3 | the parts clauses as kind lines (`owned by D [ties by e]`, `batched`, `step u`, `takes k for w [v V] order … [prorata [ties by e]]` or `… prorata [ties by e]`); `of q` on `bal`, `value`, a leg's amount and a reading row; `note` lines after a one-line def and a place section | R-1, R-4, R-6, R-11; picks 2, 3 |
+| 2.1-3 | L §2.3 rule 7 | an `of` belongs to the read its production gives it | R-1, C-14; pick 3 |
+| 2.1-4 | L §2.4 | a one-line def with notes means the long form and prints as it; no canonical form changes | R-11, C-12 |
+| 2.1-5 | L §3.1 | a key of a day index stands where a date is expected, meaning `start_of(k)` | R-14, G1 Q-6 |
+| 2.1-6 | L §3.5 | parties are things under the prelude kind `parties`, the subkinds the model's own; only a party owns parts; the holder is a model's own input | R-2, G1 Q-1; pick 1 |
+| 2.1-7 | L §3.6 | rewritten: a place owned by shares or by parts, never both; parts, the arrival rule, the leaving rule, relabelling, net worth over `of` reads; the examples use the prelude's `parties` | R-1, R-3, R-4, R-5, R-9, R-10 |
+| 2.1-8 | L §5.7 | the parts clauses on place kinds and `LOAD-PARTS`; a kind test narrows; parts and lifespans; `parties` in the prelude | R-1, R-2, R-17, C-10, RC-9 |
+| 2.1-9 | L §5.10 | parts as a place's state; `bal … of q`, `value … of q`; `min 0`; a gain follows the units; the parts' cost | R-1, R-7, R-8, G1 Q-3 |
+| 2.1-10 | L §5.12, §5.13 | pointers: a place's takes reuse the fill and the largest-remainder split within one outflow | R-4, RC-2, RC-3 |
+| 2.1-11 | L §5.14 | legs at a place that keeps parts: the take as a fill over arcs, ties, two outflows never sharing, the batch's arrivals as supplies, undecided takes; whose parts a leg takes is the order's; the relabel; the leg read | R-3, R-4, R-5, R-10, C-1, C-4, RC-3, RC-7 |
+| 2.1-12 | L §5.14.1 | the arrival rule as a reader of start-of-day parts beside decisions; the leg read's class | R-3, R-10, M-15, RC-6 |
+| 2.1-13 | L §5.14.2 | takes in the first batch, in the order of their reads; a cycle broken where no take changes, else `RUN-CYCLE` with a plan in it, or a hole among observed rows | R-4, C-11, RC-6 |
+| 2.1-14 | L §5.14.3 | labels are walk state at cut K; the one exception to decision 22 for a past decision that reads parts | R-3, RC-1, G1 Q-4; pick 4 |
+| 2.1-15 | L §5.16, §7.1 | the 4 096-digit cap covers a value at a key, not a path statistic's own accumulation | R-13 |
+| 2.1-16 | L §5.19 | readings at a place that keeps parts: stated and opening parts, pads, zero-gap anchors, gaps, a stated part's own gap | R-6, RC-4, RC-5, G1 Q-5; pick 2 |
+| 2.1-17 | L §6.1 | `parties` shared by every member; two parties one only by `same`; `same` refused on a place that keeps parts; `of` across a `same` | R-2, C-9 |
+| 2.1-18 | L §8.1 | `HOLE-PART`; the hole part and its possible labels; a total stays known | R-8, RC-5 |
+| 2.1-19 | L §8.2, §8.5 | `WARN-LABELS`, listed in the register | R-3, M-9, RC-8 |
+| 2.1-20 | L §8.3 | `LOAD-PARTS` | R-1, R-6 |
+| 2.1-21 | L §8.4 | `RUN-LABEL`; `RUN-NO-RULE`, `RUN-TIE`, `RUN-CYCLE`, `RUN-DOMAIN`, `RUN-PRORATA`, `RUN-LIFESPAN` and `RUN-RECORD` widened for parts | R-1, R-3, R-4, R-6, RC-2, RC-3, RC-9 |
+| 2.1-22 | L §10 | what 2.1 can't say: signed parts, `same` on a place that keeps parts, and the rest of the round's pressure list; lots may be a `batched` place | R-1, `pressure.md` |
+| 2.1-23 | E §4.2 | parts in the day walk: the first batch's takes, a decision's take at its point, the arrival rule run at booking, lifespans after the day's whole order | R-3, R-4, RC-6, RC-9 |
+| 2.1-24 | `DECISIONS.md` | the tally 2.1 records | all |
+| 2.1-25 | `MIGRATION.md` | 2.0 → 2.1 | all |
+| 2.1-26 | `VERSION`, `SHA256SUMS` | `tally-2.1` | — |
+| 2.1-27 | (none) | a negative record field (item 7.2) needs no spec text: the grammar allows it, and the interpreter's refusal is a fault | R-12 |
+| 2.1-28 | (none) | a joined household's cost (decision 6) is an engine requirement, `engine/BUILD-NOTES.md` § J | R-15 |
+
+**Fixes after the spec round** (faults and contradictions only, each with a line in the round's `progress.md`): none yet.
+
+---
+
 # Changes: tally 1.0.1 → tally 2.0
 
 tally 2.0 is a new version of the language, not a patch. `LANGUAGE.md` §9 allows a new version only with a migration, a mechanical rewrite of every `tally 1` model, tested by running both versions on every model and case. The migration is `MIGRATION.md`, and its runs are recorded in `regress.md`. Files of the new version state `tally 2`. `tally 1` (1.0.1, tag `tally-1.0.1`) stays as released.

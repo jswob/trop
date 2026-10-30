@@ -66,3 +66,21 @@ Started in phase 3 of the design round (2026-10-25); this file is the one home o
 | `at k`, k a key of a range `by n` with n above 1 | refused, `LOAD-LAWPERIOD`: such a key is the n periods it stands for, not a day (L §4.2, §4.3); write `at start_of(k)` or another day | manual: **a change of meaning** | to count | GD-20 |
 
 Every ask either prints the same or its change is listed in `regress.md` (phase 5).
+
+## 2.0 → 2.1
+
+tally 2.1 is opt-in (`CHANGES.md`, 2.0 → 2.1). A 2.0 text declares `tally 2`, as a 2.1 text does, and loads and means the same on 2.1, except as the rows below say.
+
+| 2.0 construct | 2.1 form | Class | Reaches | Record |
+|---|---|---|---|---|
+| a text that declares an item named `parties` | renamed: `parties` is a prelude kind, a built-in id (`LOAD-DUP` otherwise) | manual | probes OWN-04 and OWN-05, and L §3.6's own example (a grep over every `.tally` under `engine/`) | R-2, G1 Q-1 |
+| a kind named `owned`, `batched` or `takes` | renamed: kind clause words (`LOAD-RESERVED`'s positions, L §2.2) | manual | none found | R-1 |
+| a subkind's field read where only a kind test says the variable is of that subkind, refused before (`LOAD-LEG`) | loads, and reads the field (L §5.7) | none (a refusal becomes a value) | probes whose stored output is that refusal | R-17 |
+| a day key where a date is expected, refused before (`LOAD-UNIT`) | loads, meaning `start_of(k)`; `start_of(k)` stays valid (L §3.1) | none | the visible cases write `start_of(k)` | R-14 |
+| a one-line def followed by `note` lines, a parse failure before | loads, and prints as the long form (L §2.4) | none | none (the long form stays) | R-11 |
+| a record row with a negative field, refused by the interpreter | loads, as the grammar always allowed | none (an interpreter fault) | none visible | R-12 |
+| a house rounding written only to keep a path statistic under 4 096 digits | may be dropped (L §7.1) | manual, optional | D-13 | R-13 |
+| a split by owner or by lot written by hand (`owns` rows per place, a fill per holding, a def that subtracts one party's money) | an `owned` or `batched` place kind with its arrival rule and `takes` clause; its `owns` rows go (L §3.6) | manual, optional, per text | households A and E1, in session 7b | R-1 to R-10 |
+
+Every 2.0 text that uses none of these prints byte for byte as on 2.0 (the round's hard rule 5, checked by the suite).
+

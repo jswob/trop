@@ -1,4 +1,4 @@
-# Tally: decisions (tally 2.0)
+# Tally: decisions (tally 2.1)
 
 Why tally 2 is as it is. This file has two parts.
 
@@ -6,7 +6,9 @@ Why tally 2 is as it is. This file has two parts.
   - the fifteen records D-1 to D-15, one per problem (`problems.md` in the round's files, PR-1 to PR-15);
   - the settlements of the sketches, the critic's findings and the modeller's findings (phase 3);
   - the decisions after G1, A-1 to A-51 (phases 4 to 6);
-  - the redesign review's verdicts.
+  - the redesign review's verdicts;
+  - the G2 decisions, GD-1 to GD-28 (session 4b);
+  - the tally 2.1 records, R-1 to R-17, with G1's decisions and the spec round's picks (sessions 7 and 7b).
 
   **Which text each part cites.** D-1 to D-15 and the phase 3 settlements were written before tally 2's text existed: in them, L, E and D are **tally 1.0.1's** `LANGUAGE.md`, `ENGINE.md` and `DECISIONS.md`. From "Decisions after G1" on, L and E are **tally 2's**. Spec rounds after the review cite tally 2's sections. Each record's "Change" section sketches a grammar that `LANGUAGE.md` §2.3 settled. Where they differ, `LANGUAGE.md` holds the form and the record holds the reason.
 - **Part II, tally 1.0.1's decisions**, carried as they are. They are the reasons for everything tally 2 kept: `source`, `axis`, `index`, `band`, the rule form, `given`, `fill`, `round`, exact numbers, units, ownership, `as if` and the rest of `core.md`'s "Kept unchanged". Where a tally 2 record changes a decision of Part II, the record holds. `MIGRATION.md` names each changed construct with its record, and the round's trace names each closed item with its record. Part II is carried whole, not cut row by row, so that no reason is lost. Its references are to tally 1.0.1's texts (`engine/spec/` at the tag `tally-1.0.1`).
@@ -1306,6 +1308,60 @@ The user's answers at G2 (`G2-list.md`), written into L and E by spec round 19 (
 - **GD-26. SF-34 and SF-35 are deferred to tally 3.0:** one merged dated list, and a per-arc cap in `fill`.
 - **GD-27. A period read across two keys is refused at load where load sees it** (C4-9, the round's short contradiction read, `review/contra/verified-4.md`; the user, 2026-10-28): a literal period and declared keys are refused at load (`LOAD-KEY`), as a period that holds no key is; a period computed from a row is refused at that value (`RUN-DOMAIN`). R-load, against GD-24's "per value" read alone.
 - **GD-28. The canonical order's last key** (the user, 2026-10-29): two rules or items that every key of L §2.4 leaves tied sort by their own canonical line, compared as ASCII. It closes the five §2.4 ties refcore refused (`REFCORE-UNSPECIFIED`), among them a `same` item beside a row of its target and keys, which blocked E1's canonical pins for households B and D. B's hand-written roll (`cases/households/B/flat.tally:221`, the 2027 Spring Day in Piotr's 2025 worth) goes to session 5's text changes, as the user chose.
+
+---
+
+## The tally 2.1 records (sessions 7 and 7b, 2026-10-30)
+
+Session 7 designed tally 2.1 from session 6's decided items (ownership, batches, people as things, the joint cost, ranges as research, and four small items), and closed at gate G1, which the user answered whole. Session 7b wrote it into L and E. The records are `records.md` R-1 to R-17 in the round's files (`tmp/session7/`), with three tables of settled findings (the critic's C-1 to C-15, the modeller's M-1 to M-19, the critic's re-check RC-1 to RC-10); G1 is `gate.md` there, and the spec round's four picks are `tmp/session7b/picks.md`. Here each record is rendered short: what it decides, its solved form, and where it is written. In this part, L and E are tally 2.1's.
+
+**The design in one paragraph.** A place kind may opt in to keeping its balance as **parts**, a map from a label to an amount: `owned` keys them by owner, a thing of the prelude kind `parties`; `batched` keys them by batch, the movement that brought the units in. Three rules move them: the **arrival rule**, a def the kind names, labels every arrival by its kind of event; the **leaving rule**, an `order` over parts optionally ending in `prorata`, says which parts an outflow takes; a **relabel** is a leg from a place to itself. Reads add `of q`. Unknowns stay holes, and places that don't opt in book as in 2.0.
+
+### The records
+
+- **R-1. Parts** (P-1). An opted-in place keeps its balance as label → amount per unit, the free semimodule over labels (Amsterdamer, Deutch and Tannen, PODS 2011), pooled cash, a lot inventory. Clauses `owned by D`, `batched`, `step u` and `takes`; every split is L §5.13's `rest largest` to u (C-2), each split with its own `ties by` (RC-2); a non-whole amount is `RUN-PRORATA`. Owned and batched kinds are `min 0` (G1 Q-3); `owns` on such a place, `same` on it (C-9), and a missing clause are `LOAD-PARTS`. A part labelled to a party outside its lifespan is `RUN-LIFESPAN`, a party's parts gone by its end, checked after the last day's whole order (C-10, RC-9). Rejected: the share table with a written fill (no reach, tracing re-done by every writer), sub-places per origin, taint labels. L §3.6, §5.7, §5.10.
+- **R-2. Owners are things of the prelude kind `parties`** (P-9, item 5). Fowler's party; REA's economic agent. Decided at G1 Q-1 ("yes, built in"), as `accounts` is built in: the prelude is one in every member, so owners share one kind across a joint; two people are one only by `same` on the things. Subkinds (`persons`, couples, estates) are the model's own (pick 1). The record's pick, no prelude kind, was withdrawn at G1. L §3.5, §5.7, §6.1.
+- **R-3. The arrival rule** (P-4). A def `D[m in events, p in parties]: num at m.day`, applied by the booking to every arrival at a thing of the kind: trust principal-and-income accounting's classification of receipts, provenance through an exchange, posting rules by event kind. Known shares sum to 1 (`RUN-LABEL`); hole shares leave one hole part of the remainder (C-6); a reachless arrival is `RUN-NO-RULE`, never a hole or a default. "Keep the labels" and "as paid" are one rule over `m.leg.amount of q`. It may read the start of the arrival's day, as a reader beside decisions (M-15, RC-6). Labels are read at the ask's cut K (G1 Q-4, below). Labels dropped at a place that keeps none are `WARN-LABELS` in the register (M-9, RC-8). Rejected: a single owner per arrival plus an "as paid" form; built-in keeping for transfers; an exchange inferred from leg directions. L §3.6, §5.14.1, §8.2, §8.5.
+- **R-4. The leaving rule** (P-6). `takes k for w [v V] order … [prorata [ties by e]]`: the tracing rules and lot booking methods (priority, FIFO, pro rata, specific identification) as one ordered greedy allocation. A take is a fill over (part, outflow) arcs (C-1); ties between arcs that change a take are `RUN-TIE`, except arcs of one outflow under `prorata`; two outflows never share a part (RC-3). The order reads the outflow's fields after a kind test, so whose parts a leg takes is the order's, and a shortfall goes on down the order (RC-7). A hole term makes an undecided take that merges only what it could reach (C-4). In one batch, takes go in the order of the reads among them; a cycle breaks where it changes no take, else plans are `RUN-CYCLE` and observed rows hold a hole (C-11, RC-6). Rejected: a leaving def per outflow; method words (`fifo`, `hifo`, …); the leg restriction `from x of q`, added after the modeller and dropped after the re-check (RC-7). L §3.6, §5.12, §5.14, §5.14.2.
+- **R-5. Relabelling** (P-8). A leg whose two ends are one place that keeps parts takes by the leaving rule and returns by the arrival rule, batches kept; it books nothing net. A homomorphism on labels; release from restriction. A division is per asset, by a share from the agreement (M-8); a relabel keeps the thing in its place (M-12); a drawn death in a forecast is a move keyed on the draw (RC-9). Rejected: `of p` on both leg ends; a round trip through a holding place; a `relabel` clause. L §5.14.
+- **R-6. Readings** (P-3). `stated[x] of q` and `opening[x] of q` state a reading's parts, in the reading's own version (pick 2), at most its total; a pad is labelled by the arrival rule or refused (RC-4); a zero-gap anchor keeps the parts (C-5, M-4); a gap with no stated parts is a hole part or an undecided take; a stated part's difference is its own gap, listed (RC-5). Opening and balance-only reading parts are stated once, citing their document (G1 Q-5; bar B4 amended). Rejected: keeping proportions across an anchor; refusing anchors at owned places. L §5.19.
+- **R-7. A gain follows the units** (P-5). Unitization: parts are kept in the place's unit, so a price rise is no event and nothing is labelled; a law that gives a gain elsewhere writes a relabel or a def. `owned` on an asset kind is `LOAD-PARTS`. L §5.10.
+- **R-8. The unknown split is a hole part** (P-10). Symbolic provenance tokens: a hole part keeps its amount, its questions and its possible labels (RC-5); `of q` is a hole only for a q it may be (`HOLE-PART`); the total stays known; the only merge is an undecided take's. Its kept amount is the seam for ranges (item 4). L §8.1.
+- **R-9. Net worth per party** (P-2). A def per model over `value … of p` and `owns`, each place counted by one of them; no built-in, since the rounding, price, places and depth are the law's or the house's. L §3.6.
+- **R-10. Batches** (P-7, item 2). A batch is the movement that brought the units in; a transfer and a relabel keep it; the gain is written once over batches through `s.units.amount of b`. The leg read `m.leg.amount of q` is booking state: after the walk in a def or an ask, for its own movement in the arrival rule, else only in a decision that declares the place (M-15). "The day it arrived here" (o13) isn't writable and is on the pressure list. `fill` stays. L §3.6, §5.14, §5.14.1.
+- **R-11. Notes after a one-line def and a place section** (item 7.1). A docstring; the canonical form stays 2.0's long form (C-12). L §2.3, §2.4.
+- **R-12. A negative record field** (item 7.2). An interpreter fault: the grammar already allows it. No spec text.
+- **R-13. What the 4 096-digit cap covers** (item 7.3). A value at a key; a path statistic's own accumulation is the engine's. L §7.1, §5.16.
+- **R-14. A day key where a date is expected** (item 7.8a). Means `start_of(k)`; month and year keys still convert in writing. It fails test (a) on the letter and is kept by its spirit, as the user decided (G1 Q-6). L §3.1.
+- **R-15. A joined household's cost** (decision 6). No language change: an engine requirement (`engine/BUILD-NOTES.md` § J), a load row and a probe card.
+- **R-16. Unknowns with a range** (item 4). Research only (`research-ranges.md` in the round's files), presented at G2; R-8 keeps the slot.
+- **R-17. A kind test narrows** (found by the modeller, M-3). Occurrence typing (Tobin-Hochstadt and Felleisen, POPL 2008): after `v in K` in a rule's `when` or an `if`'s condition, v's fields of K are readable; only a written test narrows, and `or` narrows to neither side. L §5.7.
+
+### G1, the user's words (2026-10-30)
+
+| Q | Decided | The user's words |
+|---|---|---|
+| Q-1 | owners are things of the prelude kind `parties` | "How is that different than requiring every single tally document for defining a word for account?" … "yes, built in" |
+| Q-2 | both: A's withdrawal keyed by case, and a variant whose house rule is "in proportion" | "I'm mainly interested in examples of properly calculating some rule and not only about finding the unspecified one." … "in proportion" |
+| Q-3 | owned and batched places are `min 0` in 2.1 | "You can have debt, but this is a separate account." … "yes, agree, and log it for later" |
+| Q-4 | labels at the ask's cut, with one stated exception to decision 22 | "yes, A" |
+| Q-5 | B4 applies to events; opening and balance-only reading parts stated once, cited | "yes, agree" |
+| Q-6 | R-14 kept | "I agree, next" |
+
+### The exception to decision 22 (RC-1, G1 Q-4)
+
+2.0's decision 22 says a later version never re-measures a decision. Labels are walk state at cut K, as balances are, so a past decision that no observation fulfils and whose amount or `when` reads parts follows a later version that changes whose past money was, as it already follows a bank row learned late. Its law and other facts stay those known on its day; booked plans' and rows' amounts never change. The sentence is L §5.14.3's, "The one exception: parts" (pick 4).
+
+### The spec round's picks (session 7b)
+
+1. `persons`, couples and estates are the model's own subkinds of `parties` (R-2's pick).
+2. A reading's parts stand in the version that states its total, at the same instant (M-17).
+3. The parts clauses are kind lines; `of` binds by its read's production; `prorata` ends a `takes` clause as a clause word; a member's thing is `a.ania` (M-18).
+4. Decision 22's exception is one nested bullet in L §5.14.3 (RC-1).
+
+### Left out of 2.1
+
+Signed parts (whose an overdraft is), `same` on a place that keeps parts, sharing among a batch's owners while refusing same-day lots (M-10), "the day it arrived here" (o13), lifespans ending on a drawn day, and the rest of the round's pressure list (`pressure.md`, PR-1 on). L §10 lists them.
 
 ---
 
