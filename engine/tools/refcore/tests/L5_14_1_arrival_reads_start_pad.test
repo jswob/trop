@@ -1,8 +1,8 @@
-# L §5.14.1 (2.1-C7b-20, open for G2): where a start pad takes with the day's first batch (E §4.2 steps 0-2), an
+# L §5.14.1 (2.1-C7b-20, G2 Q-4): where a start pad takes with the day's first batch (E §4.2 steps 0-2), an
 # arrival rule's read of bal(x, d start) of q at that place has no single point: before the pad, or after it, which
 # takes with the batch the arrival is in.  As L5_14_1_arrival_reads_start, with a reading of dep at 2026-03-01 start
-# that pads (450.00 against 400.00 booked; the model's on moved to 2026-10-01 so the cut sees it): REFCORE-UNSPECIFIED, the arrival refused, so konto's parts are refused from
-# there.  The user chooses at G2.
+# that pads (450.00 against 400.00 booked; the model's on moved to 2026-10-01 so the cut sees it): refused RUN-CYCLE, the arrival refused, so konto's parts are refused from
+# there (the user's option (c) at G2).
 === m.tally
 model t
   tally 2
@@ -70,5 +70,5 @@ version stmt
   pad dep from world
   stated[dep] = 450.00 PLN at 2026-03-01 start
 === expect
-q: (refused: REFCORE-UNSPECIFIED §5.14.1: a start-of-day read of parts at dep, whose start pad takes with the day's first batch, refused: REFCORE-UNSPECIFIED §5.14.1: a start-of-day read of parts at dep, whose start pad takes with the day's first batch, 0)
+q: (refused: RUN-CYCLE bal(dep, 2026-03-01 start) of ania has no one point: its start pad takes with the day's first batch, refused: RUN-CYCLE bal(dep, 2026-03-01 start) of ania has no one point: its start pad takes with the day's first batch, 0)
 ...

@@ -59,9 +59,10 @@ tally 2.1 adds owners and batches as labels on amounts, from session 6's decided
 | 2.1-C7b-13 | L §5.19 | a zero-gap anchor leaves the parts but for its stated parts' gaps | the contradiction read (verifier) |
 | 2.1-C7b-18 | L §3.6 example | `inherited` beats `moved`, as the prose says | the contradiction read (verifier) |
 | 2.1-C7b-19 | L §3.1 | a day range `by 1` is a day index | the contradiction read (verifier) |
+| 2.1-C7b-20 | L §5.14.1, §8.4 `RUN-CYCLE` row | an arrival rule's `bal(y, d start) of q`, where a reading of y at d start pads (its pad takes with the day's first batch), has no one point and is refused `RUN-CYCLE`, as F2's reading is (the user's option (c); a later round may give start pads their own point) | the contradiction read (verifier), G2 Q-4 |
 | 2.1-C7b-21 | L §8.1 HOLE-PART row | the row lists every source of a hole part | the contradiction read (verifier) |
 | 2.1-C7b-22 | L §5.14 | a take's demands include the start pads, and a later reading's pad at its point | the contradiction read (verifier) |
-| 2.1-C7b-23 | L §4.5 | seeing a row known on or before K isn't applying it: an observation or reading dated on day K or later books nothing (as §5.19 and E §4.2 step 4 say); wording only, no behaviour change | the blind judge (S4-04), G2 Q-2 |
+| 2.1-G2-2 | L §4.5 | seeing a row known on or before K isn't applying it: an observation or reading dated on day K or later books nothing (as §5.19 and E §4.2 step 4 say); wording only, no behaviour change | the blind judge (S4-04), G2 Q-2 |
 
 ---
 
