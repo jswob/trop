@@ -1,0 +1,43 @@
+argv: run E2/family.tally E2/estate.tally E2/gifts.tally E2/asks/E2-01.tally E2/asks/E2-02.tally E2/asks/E2-03.tally E2/scenarios/e2_not_reported.tally --ask e2_01_in_is_out e2_01_piotr_shown e2_01_piotr_stated
+cwd: /Users/jswob/projects/trop/engine/tests/integration/households
+seconds: 88.0 PARTIAL (limit hit)
+fast layer: False
+
+act:decday                           1210
+act:imp_on                            132
+act:leg                              6182
+act:obs                             13068
+act:read                              649
+acts                                21241
+arith:*                             45879
+arith:+                             76041
+arith:-                             35384
+arith:/                              9429
+decision_instances                    946
+def_cell                           547193
+def_hit                            308136
+def_miss                           239057
+engines                                 7
+ev                               33129778
+legs_booked                         19536
+log_entries                         39677
+money_made                         300724
+num_den1                           912537
+num_den_decimal6                   177732
+num_made                          1095525
+parts_entries                       39677
+parts_flush                        531289
+parts_groups_run                     9977
+read_def                           547193
+read_input                        5673093
+walk_days                          176781
+walk_days_nonempty                  11902
+walks                                  12
+read_input_distinct                156175
+def_items_evaluated                    68
+
+def misses by item (top 8): [('d·rent_amt', 77262), ('a·soc_part', 22059), ('a·leave_rank', 15528), ('a·civ1_arrive', 14454), ('a·g_paid', 8514), ('a·soc', 7353), ('d·iy_start', 6861), ('a·g_due', 5916)]
+memo entries at end, all engines: 225177 by kind {'def': 225177}
+walk spans (days): n 12, min 16070, median 16070, max 16070, sum 192840
+decision strata per day with decisions: {1: 22, 6: 132}
+Num results by max bit length: {'<=63': 1095525}; max 34 bits

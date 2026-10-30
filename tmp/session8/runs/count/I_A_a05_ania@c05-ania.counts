@@ -1,0 +1,41 @@
+argv: run ../../law/GEN-1.tally ../../law/GEN-3.tally ../../law/GEN-5.tally ../../law/GEN-6.tally ../../law/PIT-2.tally ../../law/PIT-3.tally ../../law/PIT-4.tally ../../law/PIT-5.tally ../../law/PIT-6.tally ../../law/PIT-7.tally ../../law/PIT-8.tally ../../law/PIT-9.tally ../../law/SOC-1.tally ../../law/SOC-2.tally ../../law/SOC-8.tally ../../law/FAM-1.tally ../../law/WCP-1.tally ../../law/WCP-2.tally 
+cwd: /Users/jswob/projects/trop/engine/tests/integration/cuts/A
+seconds: 45.6
+fast layer: False
+
+act:decday                            128
+act:obs                             49792
+act:read                             1984
+acts                                51904
+arith:*                              4608
+arith:+                             12658
+arith:-                              5056
+arith:/                             40320
+decision_instances                    128
+def_cell                           366656
+def_hit                            216832
+def_miss                           149824
+engines                                12
+ev                               12693078
+legs_booked                         49664
+log_entries                         99328
+money_made                         180630
+num_den1                          2066079
+num_den_decimal6                   161502
+num_made                          2233597
+parts_entries                       99328
+parts_flush                       1051904
+parts_groups_run                    33344
+read_def                           366656
+read_input                         249632
+walk_days                          350592
+walk_days_nonempty                  19072
+walks                                  64
+read_input_distinct                  5824
+def_items_evaluated                    23
+
+def misses by item (top 8): [('leave_rank', 65024), ('civ1_arrive', 62848), ('loss_want', 5760), ('plan_to', 3872), ('lot_exempt', 2240), ('lot_gain', 2240), ('lot_cost', 2240), ('loss_used_from', 1344)]
+memo entries at end, all engines: 95136 by kind {'def': 93984, 'fill': 1152}
+walk spans (days): n 64, min 5477, median 5477, max 5477, sum 350528
+decision strata per day with decisions: {1: 128}
+Num results by max bit length: {'<=63': 2233597}; max 38 bits
