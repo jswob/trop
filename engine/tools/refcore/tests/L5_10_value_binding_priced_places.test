@@ -1,0 +1,72 @@
+# Writer 12 (session 7c, A1). L §5.10 Value: "`by p` is required when some position of a place that isn't priced
+# (below) is in another unit (`LOAD-PRICE`)"; A priced place: "A place's price input has one home: its kind, or the
+# place itself (its `place` section or its entry), never two of them". flat and cot, of the unpriced kind props, are
+# each `priced last(...)` on their own place sections, and kp[k] (kind props2) is priced per key, `priced
+# last(kval[k])`: every place a binding over props, props2 or kp[k] can give is priced, so no position of a place that
+# isn't priced exists and no `by` is required. Each position (1 property) counts at its own place's price, read through
+# its carry on 2026-06-30: flat 100, cot 30, kp[k1] 7, kp[k2] 5; q2 = 130, q4 = q5 = 12 (writer 12's
+# scratch/exp_a1.py). refcore had refused the reality at load, LOAD-PRICE value(x) in PLN holds units in property and
+# states no by (triage scratch a1/a1.tally).
+=== m.tally
+model t
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+unit property "one property"
+
+kind props: place property min 0
+kind props2: place property min 0
+kind buys: event certain
+  leg units: property
+
+input flat_val: num PLN/property reading
+input cot_val: num PLN/property reading
+index ks = [k1, k2]
+input kval[k in ks]: num PLN/property reading
+input day: date
+
+place flat: props priced last(flat_val) lives 2026-01-01..
+place cot: props priced last(cot_val) lives 2026-01-01..
+place kp[k in ks]: props2 priced last(kval[k]) lives 2026-01-01..
+place market: outside lives 1900-01-01..
+
+move b1: buys
+  on day
+  leg units from market to flat amount 1 property
+move b2: buys
+  on day
+  leg units from market to cot amount 1 property
+move b3[k in ks]: buys
+  on day
+  leg units from market to kp[k] amount 1 property
+
+ask q1: value(flat, 2026-06-30) in PLN
+ask q2: sum(value(x, 2026-06-30) in PLN for x in props on 2026-06-30)
+ask q3: value(kp[k1], 2026-06-30) in PLN
+ask q4: sum(value(kp[k], 2026-06-30) in PLN for k in ks)
+ask q5: sum(value(x, 2026-06-30) in PLN for x in props2 on 2026-06-30)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  day = 2026-02-02
+  flat_val = 100 PLN/property at 2026-03-01 "v"
+  cot_val = 30 PLN/property at 2026-03-01 "v"
+  kval[k1] = 7 PLN/property at 2026-03-01 "v"
+  kval[k2] = 5 PLN/property at 2026-03-01 "v"
+=== expect
+q1: 100 PLN
+...
+q2: 130 PLN
+...
+q3: 7 PLN
+...
+q4: 12 PLN
+...
+q5: 12 PLN
+...

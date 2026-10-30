@@ -824,6 +824,12 @@ def m_t_value(self, n, sc, expect):
         elif t.k == 'key':
             pu = m.kind_unit(t.ix)
             priced = m.kind_priced(t.ix)
+            if pu not in (None, 'any', 'one', n.cur) and not priced and _all_priced(m, n.ref, cands, n.cur):
+                # writer 12 (A1): L §5.10 Value, "`by p` is required when some position of a place that isn't priced
+                # (below) is in another unit"; A priced place: "A place's price input has one home: its kind, or the
+                # place itself (its place section or its entry)". Every place the binding can give is priced in one
+                # of its homes (or holds CUR), so no such position exists
+                priced = True
         if pu not in (None, 'any', 'one', n.cur) and not priced:
             raise LoadError('LOAD-PRICE', 'value(%s) in %s holds units in %s and states no by' % (_txt(n.ref), n.cur, pu),
                             n.loc)
@@ -869,6 +875,19 @@ def m_t_value(self, n, sc, expect):
             self.edge(sc, (hit[0], inf.id), 'explicit')
         elif by.k == 'name' and hit is None and n.bylast:
             raise LoadError('LOAD-NAME', 'unknown price input %s' % by.id, n.loc)
+        elif n.bylast and by.k == 'index' and by.obj.k == 'name' and by.obj.id not in sc.vars and \
+                m.lookup(by.obj.id, sc.regime) is not None and m.lookup(by.obj.id, sc.regime)[0] == 'input':
+            # writer 12 (A1): L §2.3 valuex `"by" ("last" "(" ref ")")`, a ref with its keys (as `price = ref | "last"
+            # "(" ref ")"`, which resolve_price reads with keys); L §5.10: "a price that is a reading is read through
+            # its carry, `by last(px)` (§4.6)". It is last(ref, d) at the value's day d, typed as a price written as an
+            # expression with its keys (num CUR/u), and read so at run (mreads.m_e_value)
+            ln = Node('lastx', ref=by, d=n.d)
+            ln.loc = n.loc
+            pt = self.tc(ln, sc)
+            if pt.k != 'num' or not any(b == n.cur and e == 1 for b, e in (pt.u or ())) or len(pt.u) != 2:
+                raise uerr('value by last(%s): the price is %s, not num %s/u' % (_txt(by), T.show(pt), n.cur), n.loc)
+            n._price_expr = True
+            n._by_expr = ln
         elif n.bylast:
             raise uerr('value by last(%s): last reads an input (L §4.6)' % _txt(by), n.loc)
         else:
@@ -884,6 +903,29 @@ def m_t_value(self, n, sc, expect):
         # tally 2.1 (L §5.10): value(x, d) in C [by p] of q
         self.check_of(n.of, sc, n.ref, t)
     return T.num(((n.cur, 1),))
+
+
+def _all_priced(m, ref, cands, cur):
+    """Writer 12 (A1): whether every place a value's reference can give is priced in one of its homes (L §5.10 A priced
+    place: its kind, its place section or its entry) or holds cur: a keyed place's own things (`kp[k]`), else every
+    thing of the reference's kind. A place valued whole in another currency needs `by` as a literal one does (above);
+    no candidate keeps the kind's test."""
+    r = getattr(ref, '_r', None)
+    if r is not None and r[0] == 'place' and r[1] in m.places:
+        cands = list(m.places[r[1]].things.values())
+    if not cands:
+        return False
+    for th in cands:
+        try:
+            p = m.price_of(th)
+        except Unspecified:
+            p = True
+        if p is None:
+            if m.place_unit(th) != cur:
+                return False
+        elif p is not True and getattr(p, '_mode', None) == 'whole' and p._cur != cur:
+            return False
+    return True
 
 
 def m_check_priced(self):

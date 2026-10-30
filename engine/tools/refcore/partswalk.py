@@ -1179,6 +1179,23 @@ def w_batch_mv(self):
     return self.__dict__.setdefault('_batch_mv', {})
 
 
+def w_pbatch_val(self, b):
+    """A batch label as the takes clause's k.batch: the movement it names. An arrival's batch is that arrival's
+    movement (batch_mv); a batch no arrival of this walk made (an opening's batch, a movement before S, L §5.19) is the
+    movement of that id as an ask finds it, at the walk's cut (mreads.mv_by_id), so a kind test and its fields read it
+    (writer 12, A3: it had been a bare id, of no kind, so `k.batch in rows` was false inside the take only)."""
+    if b is None:
+        return NONE
+    bm = self.batch_mv()
+    mv = bm.get(b)
+    if mv is None:
+        src = self.eng.mv_by_id(b, self.tctx)
+        if src is None:
+            return Mv(b)
+        mv = bm[b] = src.mv()
+    return mv
+
+
 def w_pshares(self, place, pk, mv, day, coll):
     """The arrival rule's shares for movement mv: [(party, share)] known, the parties whose shares are holes, and their
     questions. A refusal of the rule (RUN-NO-RULE among them) refuses the arrival (L §3.6: "No rule is a refusal")."""
@@ -1399,14 +1416,8 @@ def w_ppart_recs(self, s):
     party, any batch) the hole."""
     if s.hole is None or not s.hole.poss:
         return None
-    bm = self.batch_mv()
     h = Hole(s.hole.qs) if s.hole.qs else Hole([('the label of a hole part', '?')])
-
-    def bval(b):
-        if b is None:
-            return NONE
-        mv = bm.get(b)
-        return mv if mv is not None else Mv(b)
+    bval = self.pbatch_val
     out = []
     for o, b in sorted(s.hole.poss, key=lambda x: (str(x[0]), str(x[1]))):
         ov = h if o == ANY else (Thing(o) if o is not None else NONE)
@@ -1419,13 +1430,7 @@ def w_ppart_rec(self, s):
     """A supply as the takes clause's k: a record of its built-in fields owner and batch (L §3.6); a field of a hole
     part is known where every possible label gives it one value, a hole otherwise (L §8.1); its terms are then judged
     per label (ppart_recs, pterms_readings)."""
-    bm = self.batch_mv()
-
-    def bval(b):
-        if b is None:
-            return NONE
-        mv = bm.get(b)
-        return mv if mv is not None else Mv(b)
+    bval = self.pbatch_val
     if s.hole is None:
         o, b = s.lab
         return Rec([('owner', Thing(o) if o is not None else NONE), ('batch', bval(b))])
@@ -2247,7 +2252,9 @@ def eng_e_legof(self, n, env, ctx):
     unit = amt.u[0][0] if isinstance(amt, Num) and amt.u else None
     check_sort(m, pk, frm.name, q)
     w = ctx.walk if ctx.walk is not None else self.main_walk(ctx)
-    src = mvv.src if mvv.src is not None else self.mv_record(mvv, ctx)
+    # writer 12 (T-1): a decision's instance holds no legs until the walk runs it; its run does (mreads.mv_record),
+    # as for the leg's record above
+    src = self.mv_record(mvv, ctx)
     lg = _leg_of(src, leg) if src is not None else None
     if lg is None:
         raise refuse('RUN-RECORD', '%s has no leg %s' % (mvv.id, leg))

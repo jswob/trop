@@ -546,6 +546,12 @@ class Walk:
         from .evaluate import HoleSignal
         eng = self.eng
         places = set()
+        if any(b.node.var not in i.env for b in i.move.binds):
+            # writer 12 (A2): a binding tuple left unknown by a hole (its `on`, or the move's `at`, moves.move_tuples'
+            # 'domainhole') binds none of its later keys, so its places can't be read: every place is a hole, as for
+            # the plan twin (walk.sched_hole); refcore had crashed with a KeyError on the unbound key
+            self.at(key, 'global_hole', h)
+            return
         try:
             for ln, _d in i.move.legs:
                 for e in (ln.frm, ln.to):

@@ -1,0 +1,79 @@
+# Writer 12 (session 7c, T-1). L §5.14.1 The leg read's class (R-10): "`m.leg.amount of q` reads booking state, as a
+# balance does: in a def no movement reaches, or an ask, after the walk". L §5.14 The leg read: "what leg `leg` of
+# movement m took at its `from` place from the parts labelled q"; A relabel: "It takes parts by the leaving rule and
+# returns them labelled by the arrival rule". A keyed relabel decision g[k1] takes tomek's 100.00 and returns it as
+# ania's (the gift rule); h, a decision after it, takes bal(k1) of ania. g[k1].cash.amount of tomek and h.cash.amount
+# of ania are 100.00 PLN each (writer 12's scratch/exp_t1.py). refcore had refused RUN-RECORD g[k1] has no leg cash and
+# h has no leg cash (triage scratch a2/v10).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+kind persons: parties
+kind savings: place PLN min 0
+  owned by arrive
+  step minor(PLN)
+  takes k for w order if w in gifts and k.owner == w.giver then 0 else 1, if k.owner == ania then 0 else 1
+kind gifts: transfers
+  attr giver: key persons
+  attr receiver: key persons
+place k1: savings lives 2026-01-01..
+place k2: savings lives 2026-01-01..
+index ks = [a, b]
+place acct[j in ks]: savings lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input wage_day: date
+input g_day: date
+input wage_amt: money PLN
+def arrive[m in events, p in parties]: num at m.day
+  rule base = if p == tomek then 1 else 0
+  rule gift beats base = if p == m.receiver then 1 else 0 when m in gifts
+move w1[x in savings on wage_day]: transfers
+  on wage_day
+  leg cash from world to x amount wage_amt
+move g[x in savings on g_day]: gifts
+  on g_day
+  reads x
+  attr giver = tomek
+  attr receiver = ania
+  leg cash from x to x amount bal(x) of tomek
+move h: gifts
+  on g_day
+  reads k1
+  after g
+  attr giver = tomek
+  attr receiver = ania
+  leg cash from k1 to world amount bal(k1) of ania
+ask q1: g[k1].cash.amount of tomek
+ask q2: h.cash.amount of ania
+ask q3: g[k1].cash.amount
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  persons + [ania] lives 1980-01-01..
+  persons + [tomek] lives 1981-01-01..
+  opening[k1] = 0 PLN at 2026-01-01 start
+  opening[k2] = 0 PLN at 2026-01-01 start
+  opening[acct[a]] = 0 PLN at 2026-01-01 start
+  opening[acct[b]] = 0 PLN at 2026-01-01 start
+  wage_day = 2026-02-01
+  wage_amt = 100.00 PLN
+  g_day = 2026-03-01
+=== expect
+q1: 100.00 PLN
+  unfulfilled: w1[k1]
+  cut 2026-12-31
+q2: 100.00 PLN
+  unfulfilled: g[k1]
+  unfulfilled: w1[k1]
+  cut 2026-12-31
+q3: 100.00 PLN
+  unfulfilled: w1[k1]
+  cut 2026-12-31

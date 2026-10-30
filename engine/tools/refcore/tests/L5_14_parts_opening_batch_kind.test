@@ -1,0 +1,86 @@
+# Writer 12 (session 7c, A3). L §5.14: "The `takes` clause's order is evaluated per arc (part k, outflow w)"; L §5.19
+# Readings at a place that keeps parts: "A batched place's opening is 0, or its batches named by the movements that
+# brought them in (observed rows before S, which bindings reach)". So an opening part's batch bank[r0] is that
+# movement, of its kind openings (a subkind of rows, §5.7), as an ask finds it: line_of[bank[r0]] reads its line 0
+# inside the take as in q1. konto's order k.batch.day, line_of[k.batch] ranks r0 (2025-12-31) before r1 (2026-02-01):
+# spend's 30.00 leaves r0 70.00, r1 50.00. konto2 reads the batch's fields under a kind test in the take itself, `if
+# k.batch in rows then 0 - k.batch.line else 1, k.batch.day`: r2 (an opening, line 5) ranks before r3 (line 1), so
+# r2 70.00, r3 50.00 (writer 12's scratch/exp_a3.py). refcore had refused the take, RUN-NO-RULE no rule applies to
+# line_of[bank[r0]] (triage scratch a3/a3.tally).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+kind persons: parties
+kind rows: event certain
+  leg cash: PLN
+  attr line: int
+kind openings: rows
+kind savings: place PLN min 0
+  owned by arrive
+  batched
+  step minor(PLN)
+  takes k for w order k.batch.day, line_of[k.batch]
+kind savings2: place PLN min 0
+  owned by arrive
+  batched
+  step minor(PLN)
+  takes k for w order if k.batch in rows then 0 - k.batch.line else 1, k.batch.day
+place konto: savings lives 2026-01-01..
+place konto2: savings2 lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input bank: observed
+input out_day: date
+input out_amt: money PLN
+def arrive[m in events, p in parties]: num at m.day
+  rule base = if p == ania then 1 else 0
+def line_of[b in events]: int
+  rule r = b.line when b in rows
+move spend: transfers
+  on out_day
+  leg cash from konto to world amount out_amt
+move spend2: transfers
+  on out_day
+  leg cash from konto2 to world amount out_amt
+def isrow[b in events]: bool
+  rule r = b in rows
+ask q1: line_of[bank[r0]], isrow[bank[r0]], line_of[bank[r1]]
+ask q2: bal(konto, 2026-03-31) of bank[r0], bal(konto, 2026-03-31) of bank[r1]
+ask q3: bal(konto2, 2026-03-31) of bank[r2], bal(konto2, 2026-03-31) of bank[r3]
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  persons + [ania] lives 1980-01-01..
+  opening[konto] = 100.00 PLN at 2026-01-01 start
+  opening[konto] of (ania, bank[r0]) = 100.00 PLN at 2026-01-01 start
+  opening[konto2] = 100.00 PLN at 2026-01-01 start
+  opening[konto2] of (ania, bank[r2]) = 100.00 PLN at 2026-01-01 start
+  out_day = 2026-03-01
+  out_amt = 30.00 PLN
+
+version opening_money
+  cite s
+  known 2025-12-31
+  bank[r0] = (on: 2025-12-31, kind: openings, leg cash from world to konto amount 100.00 PLN, line: 0) assumed "before the run"
+  bank[r2] = (on: 2025-12-31, kind: openings, leg cash from world to konto2 amount 100.00 PLN, line: 5) assumed "before the run"
+
+version stmt
+  cite s
+  governs 2026
+  known 2026-01-01
+  bank[r1] = (on: 2026-02-01, kind: rows, leg cash from world to konto amount 50.00 PLN, line: 1)
+  bank[r3] = (on: 2026-02-01, kind: rows, leg cash from world to konto2 amount 50.00 PLN, line: 1)
+=== expect
+q1: (0, true, 1)
+...
+q2: (70.00 PLN, 50.00 PLN)
+...
+q3: (70.00 PLN, 50.00 PLN)
+...

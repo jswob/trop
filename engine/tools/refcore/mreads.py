@@ -1670,8 +1670,9 @@ def m_e_value(self, n, env, ctx):
         if q.q == 0:
             continue
         if getattr(n, '_price_expr', False):
-            # a price written as an expression with its keys, read at the value's day (L §5.10)
-            pr = self.ev(n.by, env, ctx.but(law=d))
+            # a price written as an expression with its keys, read at the value's day (L §5.10); `by last(ref)` with
+            # keys is last(ref, d) (writer 12, A1: check3.m_t_value's _by_expr)
+            pr = self.ev(getattr(n, '_by_expr', None) or n.by, env, ctx.but(law=d))
             if isinstance(pr, Hole):
                 holes.append(pr)
                 continue
