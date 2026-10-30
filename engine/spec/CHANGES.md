@@ -33,7 +33,11 @@ tally 2.1 adds owners and batches as labels on amounts, from session 6's decided
 | 2.1-27 | (none) | a negative record field (item 7.2) needs no spec text: the grammar allows it, and the interpreter's refusal is a fault | R-12 |
 | 2.1-28 | (none) | a joined household's cost (decision 6) is an engine requirement, `engine/BUILD-NOTES.md` § J | R-15 |
 
-**Fixes after the spec round** (faults and contradictions only, each with a line in the round's `progress.md`): none yet.
+**Fixes after the spec round** (faults and contradictions only, each with a line in the round's `progress.md`):
+
+| Row | Where | What | Found by |
+|---|---|---|---|
+| 2.1-F1 | L §5.7, `MIGRATION.md` | a field of a subkind read where no kind test narrows the variable stays refused as in 2.0, `LOAD-FIELD`; the spec round had named `LOAD-LEG`, which would change a 2.0 text's output against the opt-in rule | writer 11's F-1 |
 
 ---
 

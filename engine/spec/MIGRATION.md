@@ -75,7 +75,7 @@ tally 2.1 is opt-in (`CHANGES.md`, 2.0 → 2.1). A 2.0 text declares `tally 2`, 
 |---|---|---|---|---|
 | a text that declares an item named `parties` | renamed: `parties` is a prelude kind, a built-in id (`LOAD-DUP` otherwise) | manual | probes OWN-04 and OWN-05, and L §3.6's own example (a grep over every `.tally` under `engine/`) | R-2, G1 Q-1 |
 | a kind named `owned`, `batched` or `takes` | renamed: kind clause words (`LOAD-RESERVED`'s positions, L §2.2) | manual | none found | R-1 |
-| a subkind's field read where only a kind test says the variable is of that subkind, refused before (`LOAD-LEG`) | loads, and reads the field (L §5.7) | none (a refusal becomes a value) | probes whose stored output is that refusal | R-17 |
+| a subkind's field read where only a kind test says the variable is of that subkind, refused before (`LOAD-FIELD`) | loads, and reads the field (L §5.7) | none (a refusal becomes a value) | probes whose stored output is that refusal | R-17 |
 | a day key where a date is expected, refused before (`LOAD-UNIT`) | loads, meaning `start_of(k)`; `start_of(k)` stays valid (L §3.1) | none | the visible cases write `start_of(k)` | R-14 |
 | a one-line def followed by `note` lines, a parse failure before | loads, and prints as the long form (L §2.4) | none | none (the long form stays) | R-11 |
 | a record row with a negative field, refused by the interpreter | loads, as the grammar always allowed | none (an interpreter fault) | none visible | R-12 |
