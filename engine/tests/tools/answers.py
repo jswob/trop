@@ -8,6 +8,8 @@ printed form into compare.py's form:
 - a check ask's line (L §5.18's table, `check e == f`): `ok` -> true, `differs: e = …, f = …` -> false (session 5r);
   a check with a hole or a refused side prints no verdict and is read as the hole or the refusal, below;
 - `2047-08-05` -> the date string; any other word or text -> the text, verbatim;
+- `none` ("not applicable", L §3.1) -> null, as a key's null; a text value printed in quotes, `"LN45 2090 …"`, -> the
+  bare text (session 5r's I-1, found on the holdout: a printed `none` had been copied as the word);
 - `X DUK (standard error S; N paths; ...)` -> {"value": X, "se": S}, compare.py's random form;
 - `X DUK (standard error none; 1 paths; ...)`, a one-path mean -> the plain value X (4.5f, I-2); `none` on more than
   one path is refused;
@@ -144,6 +146,11 @@ def value(s, neg=False):
     sign = Decimal(-1) if neg else Decimal(1)
     if s.startswith('refused: '):
         return {'kind': 'refusal', 'missing': [s]}
+    if s == 'none' and not neg:
+        return None
+    q = re.match(r'^"((?:[^"\\]|\\.)*)"$', s)
+    if q and not neg:
+        return q.group(1).replace('\\"', '"').replace('\\\\', '\\')
     if s == 'ok' or s.startswith('differs: '):
         if neg:
             raise Refuse('"neg" on a check verdict: %r' % s[:120])
@@ -371,6 +378,12 @@ def stored():
     assert value('differs: credit = 5 040.00 DUK, closed = 5 039.00 DUK, difference 1.00 DUK') is False
     assert value('differs: why = "a?", because = "b"') is False
     assert value('credit = 5 040.00 DUK, closed = ?"the rate" (r)') == {'kind': 'refusal', 'missing': ['"the rate" (r)']}
+    # session 5r, I-1: `none` -> null, a quoted text -> the bare text (a hole's quotes stay a hole)
+    assert value('none') is None and value('"LN45 2090 0017"') == 'LN45 2090 0017' and value('"a \\"b\\""') == 'a "b"'
+    assert value('?"x" (p)') == {'kind': 'refusal', 'missing': ['"x" (p)']}
+    nm = json.loads(re.search(r'answer: (.*)', build('```yaml\nquestion: T-06\nanswer: {"due": {"from": "n"}}\n```',
+                                                         [str(base / 'none-form.out')])).group(1))
+    assert nm == {'due': None}, nm
     for bad in ('{"x": {"from": "b_fixed_point", "at": 2, "neg": true}}',):
         try:
             build('```yaml\nquestion: T-05\nanswer: %s\n```' % bad, [l1])
