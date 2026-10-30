@@ -1,0 +1,12 @@
+q_parts_10 (p = ania_tomek): 0.00 DUK
+  cut 2026-10-30
+q_parts_10 (p = ania): 3 000.00 DUK
+  cut 2026-10-30
+q_parts_10 (p = tomek): 0.00 DUK
+  cut 2026-10-30
+q_parts_31 (p = ania_tomek): refused: RUN-NO-RULE no rule applies to arrive[bank_rows[r2], ania] on 2026-01-20
+  cut 2026-10-30
+q_parts_31 (p = ania): refused: RUN-NO-RULE no rule applies to arrive[bank_rows[r2], ania] on 2026-01-20
+  cut 2026-10-30
+q_parts_31 (p = tomek): refused: RUN-NO-RULE no rule applies to arrive[bank_rows[r2], ania] on 2026-01-20
+  cut 2026-10-30

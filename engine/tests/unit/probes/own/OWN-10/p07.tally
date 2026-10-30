@@ -1,0 +1,88 @@
+model own10_p07
+  tally 2
+  on 2026-10-30
+  start 2026-01-01
+  end 2026-03-31
+  note "OWN-10 P-07: a gift inside the model: a relabel, a leg from the fund account to itself, takes the giver's parts first, oldest batch first, and returns them labelled the receiver's, each keeping its batch (LANGUAGE 3.6, 5.14)."
+  note "The gift tax per giver reads what the gift's leg took of each party (g.what.amount of p, a read after the walk)."
+
+source card "Probe card OWN-10 (made up): story and rules"
+
+source broker "The fund register: purchases and the gift deed (made up)"
+
+unit DUK: currency minor 0.01
+
+unit fz_units "a unit of fund Z"
+
+kind persons: parties
+
+kind fund_accounts: place fz_units min 0
+  owned by arrive
+  batched
+  step 1 fz_units
+  takes k for w order (if w in gifts and k.owner == w.giver then 0 else 1), k.batch.day
+
+kind fund_buys: event certain
+  leg units: fz_units
+  leg cash: DUK
+  attr buyer: key persons
+
+kind gifts: event certain
+  leg what: fz_units
+  attr giver: key persons
+  attr receiver: key persons
+  attr unit_value: num DUK/fz_units
+
+place cash_acc: accounts DUK lives 2020-01-01..
+
+place fund: fund_accounts lives 2026-01-01..
+
+place market: outside lives 1900-01-01..
+
+input fund_rows: observed
+
+input gift_allowance: money DUK
+
+input gift_rate: num
+
+def arrive[m in events, p in parties]: num at m.day
+  note "rule 3: a purchase is its buyer's; rule 1: a gift's units arrive as the receiver's"
+  rule bought v card_rules = (if p == m.buyer then 1 else 0) when m in fund_buys
+  rule gifted v card_rules = (if p == m.receiver then 1 else 0) when m in gifts
+
+def gift_tax[g in gifts, p in parties]: money DUK at g.day
+  note "rule 4: 7 % of what the giver's parts gave, at the deed's value, above the allowance, half up to 0.01"
+  rule base v card_rules = round(max(0, g.what.amount of p * g.unit_value - gift_allowance) * gift_rate, minor(DUK), half-up)
+
+ask q_parts: bal(fund, 2026-03-31) of (p, b) for p in persons on 2026-03-31, b in fund_buys over 2026
+
+ask q_tax: gift_tax[g, p] for g in gifts over 2026, p in persons on 2026-03-31
+
+ask q_total: bal(fund, 2026-03-31)
+
+version card_cast
+  cite card
+  known 2026-01-01
+  persons + [ania] lives 1988-04-12..
+  persons + [tomek] lives 1986-09-03..
+
+version cash_open
+  cite card
+  known 2026-01-01
+  opening[cash_acc] = 10000.00 at 2026-01-01 start "the cash account at the run's start"
+
+version card_rules
+  cite card
+  governs always
+  known 2026-01-01
+  gift_allowance = 1000.00 "rule 4: the allowance per giver"
+  gift_rate = 0.07 "rule 4: 7 %"
+
+version register_2026_q1
+  cite broker
+  governs 2026-01..2026-03
+  known 2026-03-06
+  fund_rows[r1] = (on: 2026-01-10, kind: fund_buys, leg units from market to fund amount 20 fz_units, leg cash from cash_acc to market amount 1000.00 DUK, buyer: tomek) "line 1"
+  fund_rows[r2] = (on: 2026-02-10, kind: fund_buys, leg units from market to fund amount 25 fz_units, leg cash from cash_acc to market amount 1300.00 DUK, buyer: tomek) "line 2"
+  fund_rows[r3] = (on: 2026-02-20, kind: fund_buys, leg units from market to fund amount 15 fz_units, leg cash from cash_acc to market amount 780.00 DUK, buyer: ania) "line 3"
+  fund_rows[r4] = (on: 2026-03-05, kind: gifts, leg what from fund to fund amount 30 fz_units, giver: tomek, receiver: ania, unit_value: 52.40 DUK/fz_units) "line 4"

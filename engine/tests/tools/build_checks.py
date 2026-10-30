@@ -66,8 +66,8 @@ def summary(snap):
 
 
 # --- the interpreter's own tests
-add(id='R:all', layer='interpreter', cwd='.', files='', options='test', baseline='950 passed',
-    note='refcore test; same = its last line reports 950 passed and nothing failed')
+add(id='R:all', layer='interpreter', cwd='.', files='', options='test', baseline='1105 passed',
+    note='refcore test; same = its last line reports 1105 passed and nothing failed (tally 2.1, session 7b; 950 on 2.0)')
 
 
 # --- the run_set.py lists: one check per line, the whole output its baseline
@@ -313,7 +313,7 @@ for l in open(ROOT + NEW + 'runs.tsv', encoding='utf-8') if os.path.exists(ROOT 
         cwd = [x[4:] for x in rl if x.startswith('cwd ')][0]
         files = [x if x.startswith(('engine/', 'tmp/')) else cwd + '/' + x  # a recipe line relative to its cwd
                  for x in rl if not x.startswith(('#', 'cwd ', 'options '))]
-    files += [NEW + f + '.tally' for f in extra.split()]
+    files += [os.path.normpath(NEW + f) + '.tally' for f in extra.split()]  # 7b: an extra may sit outside new/
     base = SNAP + '4.5c/' + cid.replace('/', '__').replace(':', '_') + '.out'
     add(id=cid, layer=layer, cwd=cwd, files=' '.join(files), asks=asks, baseline=base if os.path.exists(ROOT + base) else '',
         question=cid.split(':')[-1].split('~')[0], note=(note + ' | ' if note else '') + 'fill: C2\'s blind text (4.5c), cases 1.1')
@@ -365,6 +365,19 @@ for r in rows:
         if fnmatch.fnmatchcase(r['id'], pat) and not r['note'].startswith('not-run'):
             r['note'] = 'not-run: ' + why + ' | ' + r['note']
 
+# --- session 7b (tally 2.1, cases 1.3.0): refcore's judged outputs under baselines/7b/ are the baseline of each check
+# 7b adds and replace the baseline of a check whose output 2.1 or an interpreter fault fix changes (each judged by
+# compare.py or keys_probes.py, tmp/session7b/diff.md); a probe-list row with no stored output has none
+B7 = SNAP + '7b/'
+for r in rows:
+    f = B7 + r['id'].replace('/', '__').replace(':', '_') + '.out'
+    if os.path.exists(ROOT + f):
+        r['baseline'], r['block'] = f, ''
+    elif r['block'] and r['baseline'].startswith(SNAP) and os.path.exists(ROOT + B7 + r['baseline'][len(SNAP):]):
+        r['baseline'] = B7 + r['baseline'][len(SNAP):]  # a household run's file, its changed asks' blocks from 7b
+    elif r['baseline'].startswith((SNAP + 'snap16-probes/', SNAP + 'snap16-probe-sets/')) and not os.path.exists(ROOT + r['baseline']):
+        r['baseline'] = ''
+
 # --- the key column (4.5c, the weaker-key labels): empty = keyed (the case set's key scripts, the old models'
 # expected files, the probe cards' keys_probes.py); otherwise what stands behind the baseline
 def key_label(r):
@@ -383,6 +396,9 @@ def key_label(r):
         return 'independent key script (gap item 6)'
     if i in ('I:M:LH-11', 'I:M:CMP-01'):
         return 'keyed; the rows the freeze re-keyed from prints are also keyed independently by %s~key' % i
+    if r['baseline'].startswith(B7) and not r['block']:  # a household run's 7b file keeps its asks' key labels
+        return ('keyed by keys_probes.py (cases 1.3.0, session 7b); the agreeing output is the baseline' if i.startswith('U:')
+                else 'marked by compare.py against the key (cases 1.3.0, session 7b); the passed output is the baseline')
     if r['baseline'].startswith(SNAP + '5r/'):
         return 'marked by compare.py against keys/C, keys/E2 (cases 1.2.0; session 5r, after its text fixes); the passed output is the baseline'
     if r['baseline'].startswith(SNAP + '4.5c/'):

@@ -7,7 +7,7 @@ part plan
 index lazq = month 2025-07..2025-10 by 3
   note "the quarters after the last Lazur statement to the end of 2025; the savings accounts stay outside the forecast (story § The forecast, item 4)"
 
-place inv_transit: accounts DUK lives 2021-01-01..
+place inv_transit: money_accounts DUK lives 2021-01-01..
 
 input card_spend[m in month]: money DUK question "How much do we spend by card from the joint account in this month?"
 
@@ -223,8 +223,6 @@ version walk_start
   known 2021-01-01
   inv_holder[inv_transit] = none "not a fund account"
   opening[inv_transit] = 0 at 2021-01-01 start "a place of the model's own, empty"
-  owns[ania, inv_transit] = 0.5 governs 2021-01-01.. "the joint account's money on its way to investing (CIV-1 .2)"
-  owns[tomek, inv_transit] = 0.5 governs 2021-01-01.. "the joint account's money on its way to investing (CIV-1 .2)"
   fc_on = false "outside the forecast; the scenario forecast sets it from 2026-01-01"
   plan_until = 2026-12 "GEN-1: the last year whose holidays a row gives (the 2026 row, known 2025-10-16); a 15th or a payday of a later year has a hole for its day, which would make every balance and binding over its kind a hole (G-MP-2, S:306). The scenario forecast assumes the holidays to 2035 and moves it there."
   walk_from = 2026-01-01 assumed "the records end on 2025-12-31 (story); the walk books the model's own movements from the next day" "story 2025-12-31"

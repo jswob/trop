@@ -567,6 +567,81 @@ def q11_put():
         without=without["value"], relations=["the people's net worths add up to the household's"])
 
 
+# --------------------------------------------------------------------------- A-14, A-15 Ania's withdrawal
+
+A14_AMOUNT = D("10000.00")  # questions.md A-14 and A-15: Ania withdraws 10 000.00 from her savings account in March 2026
+A14_WITNESS = {"the couple's money first": (D("29162.33"), D("0.00")), "Ania's money first": (D("28750.00"), D("412.33")),
+               "in proportion": (D("28855.29"), D("307.04"))}  # the lead's second witness: what is left of (Ania's, the couple's)
+
+
+def sav_parts(t):
+    """Ania's savings at the end of 2025 by owner, as A-11 reads them: the estate payout hers (CIV-1 .3, A-D36), the rest
+    of the export's last balance the interest net of its tax, the couple's (CIV-1 .2). Nothing moves the account after
+    the export's last row before the withdrawal."""
+    sav = (REC / "wrz-ania-savings-2025.csv").read_text(encoding="utf-8").splitlines()
+    bal = dc(sav[-1].split(";")[5])
+    parts = {"Ania": a.ESTATE_PAYOUT[1], "the couple": bal - a.ESTATE_PAYOUT[1]}
+    t("Ania's savings, 2025-12-31", bal, "wrz-ania-savings-2025.csv line 21, balance after")
+    t("Ania's own: the estate payout (CIV-1 .3)", parts["Ania"], "A-D36; wrz-ania-savings-2025.csv line 7")
+    t("the couple's: the interest net of its tax (CIV-1 .2), the rest of the balance", parts["the couple"], "wrz-ania-savings-2025.csv lines 8-21")
+    return parts
+
+
+def withdraw(parts, amount, rule):
+    """What a withdrawal takes from each part under one reading: one owner's money first and then the other's, or in
+    proportion to what each has, to the ort, the orts left over going to the largest remainders (L §5.13, rest largest)."""
+    if rule == "in proportion":
+        total = sum(parts.values(), ZERO)
+        exact = {k: Fraction(amount) * Fraction(v) / Fraction(total) for k, v in parts.items()}
+        cents = {k: (x * 100).numerator // (x * 100).denominator for k, x in exact.items()}
+        left = int(amount * 100) - sum(cents.values())
+        rem = {k: exact[k] * 100 - cents[k] for k in exact}
+        rest = sorted(rem, key=lambda k: rem[k], reverse=True)
+        check(left == 0 or left == len(rest) or rem[rest[left - 1]] != rem[rest[left]],
+              "A-14 in proportion: an ort left over between tied remainders (no paper says how to break the tie)")
+        for k in rest[:left]:
+            cents[k] += 1
+        return {k: D(c) / 100 for k, c in cents.items()}
+    order = ["the couple", "Ania"] if rule == "the couple's money first" else ["Ania", "the couple"]
+    out, need = {}, amount
+    for k in order:
+        out[k] = min(parts[k], need)
+        need -= out[k]
+    check(need == 0, f"A-14 {rule}: the withdrawal is more than the account holds")
+    return {k: out[k] for k in parts}
+
+
+def q14_15():
+    K = "2026-01-15"  # A's records end 2025-12-31, known 2026-01-15 (story)
+    t = Trace()
+    parts = sav_parts(t)
+    t("the withdrawal, March 2026", A14_AMOUNT, "questions.md A-14")
+    t("which money a withdrawal takes: none of A's papers states a rule (house-rules.md, CIV-1), so each reading the question names is a case", "by case")
+    cases = {}
+    for rule in ("the couple's money first", "Ania's money first", "in proportion"):
+        took = withdraw(parts, A14_AMOUNT, rule)
+        left = {k: parts[k] - took[k] for k in parts}
+        t(f"{rule}: took", took)
+        t(f"{rule}: left", left)
+        check(sum(took.values(), ZERO) == A14_AMOUNT, f"A-14 {rule}: the parts taken add up to the withdrawal")
+        check((left["Ania"], left["the couple"]) == A14_WITNESS[rule], f"A-14 {rule}: the lead's witness gives {A14_WITNESS[rule]}, the key {left}")
+        cases[rule] = {"took": took, "left": left}
+    edges = ["OWN-10", "OWN-11", "OWN-12", "OWN-04", "NUM-04", "SCEN-01"]
+    put("A-14", edges, "2026-03-31", K, {"kind": "by-case", "cases": cases}, t,
+        relations=["in each case the parts taken add up to the withdrawal, and what is left to the balance less it"])
+    t15 = Trace()
+    parts = sav_parts(t15)
+    t15("the withdrawal, March 2026", A14_AMOUNT, "questions.md A-15")
+    t15("the house rule: a withdrawal takes Ania's and the couple's money in proportion", "questions.md A-15")
+    took = withdraw(parts, A14_AMOUNT, "in proportion")
+    left = {k: parts[k] - took[k] for k in parts}
+    t15("took", took)
+    t15("left", left)
+    check(cases["in proportion"]["left"] == left, "A-15 is A-14's in proportion case")
+    put("A-15", ["OWN-10", "OWN-11", "OWN-12", "OWN-04", "SCEN-01"], "2026-03-31", K, {"took": took, "left": left}, t15,
+        relations=["A-14's in proportion case"])
+
+
 # --------------------------------------------------------------------------- A-12 the forecast
 
 PATHS = {"base": lambda ym: D("0.004"),
@@ -896,12 +971,12 @@ def q13():
 
 
 def main():
-    for q in (q01, q02, q03, q04, q05, q06, q07, q08, q09, q10, q11_put, q12, q13):
+    for q in (q01, q02, q03, q04, q05, q06, q07, q08, q09, q10, q11_put, q12, q13, q14_15):
         q()
     if FAILS:
         print("relations failed:", *FAILS, sep="\n  ")
         sys.exit(1)
-    print(f"A: 13 keys written, relations pass")
+    print(f"A: 15 keys written, relations pass")
 
 
 if __name__ == "__main__":

@@ -1,0 +1,36 @@
+q_before (x = acc_ania, p = ania_tomek): 0.00 DUK
+  unfulfilled: sweep
+  cut 2026-04-01
+q_before (x = acc_ania, p = ania): 500.00 DUK
+  unfulfilled: sweep
+  cut 2026-04-01
+q_before (x = acc_ania, p = tomek): 0.00 DUK
+  unfulfilled: sweep
+  cut 2026-04-01
+q_before (x = sav, p = ania_tomek): 3 000.00 DUK
+  unfulfilled: sweep
+  cut 2026-04-01
+q_before (x = sav, p = ania): 0.00 DUK
+  unfulfilled: sweep
+  cut 2026-04-01
+q_before (x = sav, p = tomek): 0.00 DUK
+  unfulfilled: sweep
+  cut 2026-04-01
+q_now (x = acc_ania, p = ania_tomek): 0.00 DUK
+  unfulfilled: sweep
+  cut 2026-10-30
+q_now (x = acc_ania, p = ania): 2 500.00 DUK
+  unfulfilled: sweep
+  cut 2026-10-30
+q_now (x = acc_ania, p = tomek): 0.00 DUK
+  unfulfilled: sweep
+  cut 2026-10-30
+q_now (x = sav, p = ania_tomek): 1 000.00 DUK
+  unfulfilled: sweep
+  cut 2026-10-30
+q_now (x = sav, p = ania): 0.00 DUK
+  unfulfilled: sweep
+  cut 2026-10-30
+q_now (x = sav, p = tomek): 0.00 DUK
+  unfulfilled: sweep
+  cut 2026-10-30

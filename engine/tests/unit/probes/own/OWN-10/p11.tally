@@ -1,0 +1,76 @@
+model own10_p11
+  tally 2
+  on 2026-10-30
+  start 2026-01-01
+  end 2026-04-30
+  note "OWN-10 P-11: a price rise splits by units: parts are kept in units, so each owner's value moves by their units at the new price, and nothing is booked (LANGUAGE 5.10)."
+  note "value(x, d) in DUK by last(px) of p prices an owner's parts as value prices the place's positions."
+
+source card "Probe card OWN-10 (made up): story and rules"
+
+source broker "The fund register and its price file (made up)"
+
+unit DUK: currency minor 0.01
+
+unit fz_units "a unit of fund Z"
+
+kind persons: parties
+
+kind fund_accounts: place fz_units min 0
+  owned by arrive
+  step 1 fz_units
+  takes k for w prorata
+
+kind fund_buys: event certain
+  leg units: fz_units
+  leg cash: DUK
+  attr buyer: key persons
+
+place cash_acc: accounts DUK lives 2020-01-01..
+
+place fund: fund_accounts lives 2026-01-01..
+
+place market: outside lives 1900-01-01..
+
+input fund_rows: observed
+
+input px: num DUK/fz_units reading
+
+def arrive[m in events, p in parties]: num at m.day
+  note "rule 1: a purchase is its buyer's"
+  rule bought v card_rules = (if p == m.buyer then 1 else 0) when m in fund_buys
+
+ask q_gain: (value(fund, 2026-04-30) in DUK by last(px) of p) - (value(fund, 2026-03-31) in DUK by last(px) of p) for p in persons on 2026-04-30
+
+ask q_units: bal(fund, 2026-03-31) of p, bal(fund, 2026-04-30) of p for p in persons on 2026-04-30
+
+ask q_value: value(fund, 2026-03-31) in DUK by last(px) of p, value(fund, 2026-04-30) in DUK by last(px) of p for p in persons on 2026-04-30
+
+version card_cast
+  cite card
+  known 2026-01-01
+  persons + [ania] lives 1988-04-12..
+  persons + [tomek] lives 1986-09-03..
+
+version cash_open
+  cite card
+  known 2026-01-01
+  opening[cash_acc] = 10000.00 at 2026-01-01 start "the cash account at the run's start"
+
+version card_rules
+  cite card
+  governs always
+  known 2026-01-01
+
+version prices
+  cite broker
+  known 2026-04-01
+  px = 25.00 at 2026-01-15 "fund Z's price"
+  px = 27.50 at 2026-04-01 "fund Z's price"
+
+version register_2026_01
+  cite broker
+  governs 2026-01
+  known 2026-02-03
+  fund_rows[r1] = (on: 2026-01-15, kind: fund_buys, leg units from market to fund amount 40 fz_units, leg cash from cash_acc to market amount 1000.00 DUK, buyer: ania) "line 1"
+  fund_rows[r2] = (on: 2026-01-16, kind: fund_buys, leg units from market to fund amount 60 fz_units, leg cash from cash_acc to market amount 1500.00 DUK, buyer: tomek) "line 2"

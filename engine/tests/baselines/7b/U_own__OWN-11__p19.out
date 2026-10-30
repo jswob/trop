@@ -1,0 +1,7 @@
+q_parts (p = ania_tomek): refused: RUN-TIE bank_rows[r3], bank_rows[r4] tie for a part of sav that can't cover both
+  cut 2026-10-30
+q_parts (p = ania): refused: RUN-TIE bank_rows[r3], bank_rows[r4] tie for a part of sav that can't cover both
+  cut 2026-10-30
+q_parts (p = tomek): refused: RUN-TIE bank_rows[r3], bank_rows[r4] tie for a part of sav that can't cover both
+  cut 2026-10-30
+q_took: refused: RUN-TIE bank_rows[r3], bank_rows[r4] tie for a part of sav that can't cover both

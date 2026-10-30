@@ -1,0 +1,44 @@
+q_fund_03_09 (p = tomek_estate): 0 fz_units
+  cut 2026-10-30
+q_fund_03_09 (p = ania): 10 fz_units
+  cut 2026-10-30
+q_fund_03_09 (p = kuba): 0 fz_units
+  cut 2026-10-30
+q_fund_03_09 (p = tomek): 45 fz_units
+  cut 2026-10-30
+q_fund_03_31 (p = tomek_estate): 45 fz_units
+  unfulfilled: death_fund
+  cut 2026-10-30
+q_fund_03_31 (p = ania): 10 fz_units
+  unfulfilled: death_fund
+  cut 2026-10-30
+q_fund_03_31 (p = kuba): 0 fz_units
+  unfulfilled: death_fund
+  cut 2026-10-30
+q_fund_03_31 (p = tomek): 0 fz_units
+  unfulfilled: death_fund
+  cut 2026-10-30
+q_sav_03_09 (p = tomek_estate): 0.00 DUK
+  cut 2026-10-30
+q_sav_03_09 (p = ania): 1 500.00 DUK
+  cut 2026-10-30
+q_sav_03_09 (p = kuba): 0.00 DUK
+  cut 2026-10-30
+q_sav_03_09 (p = tomek): 7 000.00 DUK
+  cut 2026-10-30
+q_sav_03_31 (p = tomek_estate): refused: RUN-LIFESPAN tomek ends on 2026-03-10 holding parts of sav
+  unfulfilled: death_sav
+  unfulfilled: final_pay
+  cut 2026-10-30
+q_sav_03_31 (p = ania): refused: RUN-LIFESPAN tomek ends on 2026-03-10 holding parts of sav
+  unfulfilled: death_sav
+  unfulfilled: final_pay
+  cut 2026-10-30
+q_sav_03_31 (p = kuba): refused: RUN-LIFESPAN tomek ends on 2026-03-10 holding parts of sav
+  unfulfilled: death_sav
+  unfulfilled: final_pay
+  cut 2026-10-30
+q_sav_03_31 (p = tomek): refused: RUN-LIFESPAN tomek ends on 2026-03-10 holding parts of sav
+  unfulfilled: death_sav
+  unfulfilled: final_pay
+  cut 2026-10-30

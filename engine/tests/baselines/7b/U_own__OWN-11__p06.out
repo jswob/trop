@@ -1,0 +1,14 @@
+q_gain (s = fund_rows[s1], b = fund_rows[b1]): 204 DUK
+  cut 2026-10-30
+q_gain (s = fund_rows[s1], b = fund_rows[b2]): 21 DUK
+  cut 2026-10-30
+q_gain (s = fund_rows[s1], b = fund_rows[b3]): 0 DUK
+  cut 2026-10-30
+q_left (b = fund_rows[b1]): 0 fz_units
+  cut 2026-10-30
+q_left (b = fund_rows[b2]): 5 fz_units
+  cut 2026-10-30
+q_left (b = fund_rows[b3]): 10 fz_units
+  cut 2026-10-30
+q_total_gain: 225 DUK
+  cut 2026-10-30

@@ -1,12 +1,15 @@
 part people
   tally 2
   note "The cast (story § The cast) and who works for whom. Zosia's parents are the two spouses, so each child relief is split between them (PIT-7 .4)."
+  note "The parties (L §3.5): Ania and Tomek are things of persons, their community property a thing of couples that each holds half of by stake (CIV-1 .2, A-HR5 .1), Zosia a thing of children. A place's owners are its parts (places.tally); who holds an account in their name is a fact of its own (inv_holder, invest.tally)."
 
-input birth_day[s in spouse]: date question "When was this spouse born?"
+input birth_day[s in persons]: date question "When was this spouse born?"
 
 input born[c in child]: date question "When was the child born?"
 
-input earner[e in payer, y in tax_year]: key spouse question "Whose income does this payer pay in this tax year?"
+input earner[e in payer, y in tax_year]: key persons question "Whose income does this payer pay in this tax year?"
+
+input stake[p in persons, e in couples]: num question "What share of this entity does this person hold?"
 
 input statement[e in payer]: bool question "Is the reducing statement (PIT-4) on file with this payer?"
 
@@ -29,6 +32,11 @@ version cast
   governs always
   known 2021-01-01
   note "the cast table of the story, stated with no date of its own, so known from the model's start (L §4.5)"
+  persons + [ania] lives 1991-03-14..
+  persons + [tomek] lives 1989-07-02..
+  couples + [ania_tomek] lives 2016-09-10..
+  stake[ania, ania_tomek] = 0.5 "A-HR5 .1: what we own together counts half each (CIV-1 .2: community property)"
+  stake[tomek, ania_tomek] = 0.5 "A-HR5 .1: what we own together counts half each (CIV-1 .2: community property)"
   birth_day[ania] = 1991-03-14 "story § The cast: Anna (Ania) Lis, born 1991-03-14"
   birth_day[tomek] = 1989-07-02 "story § The cast: Tomasz (Tomek) Lis, born 1989-07-02"
   earner[sio, *] = none governs 2021.. "story: the SIO pays us nothing but Ania's parental pay (A-D15)"
@@ -37,6 +45,7 @@ version zosia_born
   cite story
   governs always
   known 2023-04-27
+  children + [zosia] lives 2023-04-27..
   born[zosia] = 2023-04-27 "story: 2023-04-27 · known 2023-04-27 — Zosia is born"
 
 version sio_decision

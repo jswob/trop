@@ -1,0 +1,50 @@
+model own12_p17_d
+  tally 2
+  on 2026-10-30
+  start 2026-01-01
+  end 2026-06-30
+  note "OWN-12 P-17, member d: household D (Halina), alone. Her family deposit holds her own inheritance and Ania's."
+
+source papers "own12_p17_d: the household's own papers (made up)"
+
+unit DUK: currency minor 0.01
+
+kind persons: parties
+
+kind inheritances: transfers
+  attr heir: key parties
+
+kind deposits: place DUK min 0
+  owned by arrive
+  step minor(DUK)
+  takes k for w prorata ties by (if k.owner == halina then 0 else 1)
+
+place deposit: deposits lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input rows: observed
+
+def arrive[m in events, p in parties]: num at m.day
+  note "rule 1: an inheritance is the heir's"
+  rule inherited v card_rules = (if p == m.heir then 1 else 0) when m in inheritances
+
+ask q_parts: bal(deposit, 2026-06-30) of p for p in parties on 2026-06-30
+
+version cast
+  cite papers
+  known 2026-01-01
+  persons + [ania] lives 1988-04-12..
+  persons + [halina] lives 1961-11-30..
+
+version card_rules
+  cite papers
+  governs always
+  known 2026-01-01
+
+version records_2026_01
+  cite papers
+  governs 2026-01
+  known 2026-02-03
+  rows[r1] = (on: 2026-01-05, kind: inheritances, leg cash from world to deposit amount 10000.00 DUK, heir: halina) "line 1"
+  rows[r2] = (on: 2026-01-07, kind: inheritances, leg cash from world to deposit amount 4000.00 DUK, heir: ania) "line 2"

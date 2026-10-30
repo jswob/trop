@@ -27,7 +27,7 @@ Every kind of tricky thing the case set must hit, one **edge** per hard part, gr
 | NUM | money, units, rounding | 7 |
 | TIME | dates, calendars, periods, windows | 7 |
 | PTY | people, relations, groups | 5 |
-| OWN | places, ownership, holdings | 9 |
+| OWN | places, ownership, holdings | 12 |
 | FLOW | transfers and conservation | 3 |
 | CUR | two currencies | 3 |
 | VAL | figures, sources, versions, prices | 7 |
@@ -38,8 +38,8 @@ Every kind of tricky thing the case set must hit, one **edge** per hard part, gr
 | SCEN | scenarios and amendments | 4 |
 | RAND | uncertainty over paths | 4 |
 | ASK | questions, holes, refusals | 5 |
-| SURF | how a model is written (shown by writing, not by a key) | 4 |
-| | **Total** | **93** |
+| SURF | how a model is written (shown by writing, not by a key) | 7 |
+| | **Total** | **99** |
 
 **The user's emphases** are marked `emphasis` in their edges: future law (LAW-13, SCEN-03, RAND-03), prices and figures from records (VAL-01, VAL-05, REC-05), house rules (RULE-01..09).
 
@@ -257,6 +257,27 @@ Every kind of tricky thing the case set must hit, one **edge** per hard part, gr
 - probe: one series redeemed in its third year: interest per bond, the fee, the tax
 - ids: N-2105
 - counts: M1
+
+### OWN-10 · Parts that arrive: labelled by a law written once
+- hard: a place keeps its balance as parts by owner (and by batch), each arrival labelled by one arrival rule written once: by the kind of event, a transfer between owned places keeping its labels, a purchase's units split by what paid it, income following its asset's owners at the start of its day; a price rise follows the units, nothing booked; opening and stated parts at a reading, a zero-gap anchor keeping them, a stated part's own gap; labels read at the ask's cut, so a ruling known later relabels the past; relabels by gift, death, division and divorce, each a leg from a place to itself; an arrival no rule reaches refused, never defaulted; a part labelled to the dead after the death's posting refused (tally 2.1, CHANGES.md 2.1-6, 2.1-7, 2.1-8, 2.1-9, 2.1-11, 2.1-12, 2.1-14, 2.1-16, 2.1-21)
+- where: A (by its migration to tally 2.1, and its two new questions A-14 and A-15, which the migrator writes and whose keys name this edge)
+- key: value, refusal
+- probe: a month of bank rows labelled by kind; a transfer that keeps its labels; a purchase paid by two; a gift of fund units with its tax per giver; a death, the estate and its division per asset; a divorce with an odd cent; a price rise; stated parts at a reading; a ruling known later; income by its fund's owners; an arrival no rule reaches (twin of the month), a last wage after the death's posting (twin of the death)
+- ids: none
+
+### OWN-11 · Parts that leave: the order an outflow takes them in
+- hard: an outflow takes parts in the order its law states, a fill over (part, outflow) arcs: priority between owners and between the outflows of one batch, the row's own word (whose money paid), first in first out over batches with the gain per batch written once, pro rata within one outflow with its odd step, a shortfall going on down the order; two outflows tied for a part that can't cover both refused; an order term reading a hole field a hole part, its total known; a cycle of observed rows in one batch a hole, its twin with a decision computed exactly; an owned kind not `min 0`, and outflows past the balance, refused (tally 2.1, CHANGES.md 2.1-7, 2.1-8, 2.1-10, 2.1-11, 2.1-13, 2.1-18, 2.1-20, 2.1-21)
+- where: A (by its migration to tally 2.1, and its two new questions A-14 and A-15, which the migrator writes and whose keys name this edge)
+- key: value, partial, refusal
+- probe: a tax and a withdrawal of one batch, the couple's part first; a withdrawal shared pro rata with an odd cent; three batches sold first in first out with the gain per batch; a withdrawal whose row names its payer, and its twin with the payer blank; the tax and the withdrawal tied; a signed owned kind, and a withdrawal past the balance; two transfers on one day that read each other's take
+- ids: none
+
+### OWN-12 · Reading parts: each party's figure
+- hard: each party's figure read from parts: `bal … of q`, `value … of q` at a price, a leg's take of a party; net worth per party, a place counted by its parts or by shares, never both, with look-through to an entity by stake; across a joint model a party stated one with another member's reads both members' parts; money that moves into a place that keeps no parts and isn't outside drops its labels, and every figure that reads that place says so (tally 2.1, CHANGES.md 2.1-7, 2.1-9, 2.1-17, 2.1-19)
+- where: A (by its migration to tally 2.1, and its two new questions A-14 and A-15, which the migrator writes and whose keys name this edge)
+- key: value
+- probe: net worth per party over a savings account's parts, fund units at a price, a current account and a mortgage by shares, with look-through to the couple; the same after a transfer to the current account, with the warning; Ania's parts across a joint model of A and Halina's household
+- ids: none
 
 ## FLOW: transfers and conservation
 
@@ -762,6 +783,27 @@ These edges show in the writing (session 3's gap log, session 5's reading test),
 - key: none (shown by writing)
 - probe: a long law formula used in three places, written once
 - ids: N-104 N-1309 N-1611 N-1801 N-1903 N-1904
+
+### SURF-05 · Notes on a one-line def and a place
+- hard: a `note` line after a one-line def, which then means the long form (its one rule labelled `base`, with the notes) and prints as it, and a `note` line after a place section; no canonical form changes (tally 2.1, CHANGES.md 2.1-2, 2.1-4)
+- where: all
+- key: none (shown by writing)
+- probe: a one-line def and a place, each with a note, loaded, asked and printed
+- ids: none
+
+### SURF-06 · A record row with a negative field
+- hard: a field of a record row that holds a negative literal (the grammar's signed literal in a field), read back as written (tally 2.1, CHANGES.md 2.1-27)
+- where: all
+- key: none (shown by writing)
+- probe: a correction stated as a record whose amount is negative; an ask reads the field back
+- ids: none
+
+### SURF-07 · A day key where a date is expected
+- hard: a key of a day index where a date is expected means `start_of(k)`, a day having one date; a key of a month or a year index doesn't convert, since its start or end is a choice that is written (tally 2.1, CHANGES.md 2.1-5)
+- where: all
+- key: none (shown by writing)
+- probe: one figure asked both ways over a range of days, `max(d, k)` and `max(d, start_of(k))`
+- ids: none
 
 ---
 

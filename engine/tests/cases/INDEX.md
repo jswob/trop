@@ -11,7 +11,7 @@ Written by `tools/index.py`; don't edit by hand.
 | NUM-01 | Amounts, quantities and rates carry their units | `probes/num/NUM-01.md` | B-02, B-03, D-01, D-06, D-12 | |
 | NUM-02 | Day counts and pro-rating by days | `probes/num/NUM-02.md` | A-04, A-07, B-04, B-05 | |
 | NUM-03 ★ | Rounding where and as the law rounds | `probes/num/NUM-03.md` | A-01, A-03, D-06 | |
-| NUM-04 | An unclear convention, keyed under each reading | `probes/num/NUM-04.md` | A-07 | |
+| NUM-04 | An unclear convention, keyed under each reading | `probes/num/NUM-04.md` | A-07, A-14 | |
 | NUM-05 | Parts and wholes | `probes/num/NUM-05.md` | A-11, D-01, D-04, D-05, D-08, D-09 | |
 | NUM-06 | Which year's money | `probes/num/NUM-06.md` | A-12, D-10, D-11 | |
 | NUM-07 | Gross, net, sign and zero | `probes/num/NUM-07.md` | A-05, B-07 | |
@@ -36,7 +36,7 @@ Written by `tools/index.py`; don't edit by hand.
 | PTY-02 | Groups the law computes on | `probes/pty/PTY-02.md` | A-01, A-13, B-07, D-01 | |
 | PTY-03 | Succession down the family tree | `probes/pty/PTY-03.md` | D-01, D-02, E1-03 | |
 | PTY-04 ★ | A law reads another party | `probes/pty/PTY-04.md` | A-01, A-13, D-03 | |
-| PTY-05 | Joins across households | `probes/pty/PTY-05.md` | E1-01, E1-02, E1-03 | |
+| PTY-05 | Joins across households | `probes/pty/PTY-05.md`; pair `probes/pairs/PTY-05+OWN-12.md` | E1-01, E1-02, E1-03 | |
 
 ## OWN: places, ownership, holdings
 
@@ -45,12 +45,15 @@ Written by `tools/index.py`; don't edit by hand.
 | OWN-01 | Places, their kinds and lifetimes | `probes/own/OWN-01.md` | A-11, B-04, D-08, D-09 | |
 | OWN-02 | Claims and money that isn't ours | `probes/own/OWN-02.md` | B-09, B-11, D-05, D-08, E1-02 | |
 | OWN-03 | Owed but not yet paid | `probes/own/OWN-03.md` | A-11, B-11, D-06, D-08, E1-02 | |
-| OWN-04 | Four ownership regimes | `probes/own/OWN-04.md` | A-05, A-11, B-04, B-11, D-01, E1-02 | |
+| OWN-04 | Four ownership regimes | `probes/own/OWN-04.md` | A-05, A-11, A-14, A-15, B-04, B-11, D-01, E1-02 | |
 | OWN-05 ★ | Events that move ownership | `probes/own/OWN-05.md` | A-06, D-01, E1-03 | |
 | OWN-06 | Lots | `probes/own/OWN-06.md` | A-05, A-13, D-01, D-06, D-13 | |
 | OWN-07 | Matching sales to lots | `probes/own/OWN-07.md` | A-05, A-13, D-07, D-13 | |
 | OWN-08 | Kept-apart parts and their limits | `probes/own/OWN-08.md` | A-05, A-09 | |
 | OWN-09 | Indexed bonds in monthly series | `probes/own/OWN-09.md` | D-07 | |
+| OWN-10 | Parts that arrive: labelled by a law written once | `probes/own/OWN-10.md` | A-14, A-15 | |
+| OWN-11 | Parts that leave: the order an outflow takes them in | `probes/own/OWN-11.md` | A-14, A-15 | |
+| OWN-12 | Reading parts: each party's figure | `probes/own/OWN-12.md`; pair `probes/pairs/PTY-05+OWN-12.md` | A-14, A-15 | |
 
 ## FLOW: transfers and conservation
 
@@ -139,7 +142,7 @@ Written by `tools/index.py`; don't edit by hand.
 
 | Edge | Name | Probe | Questions | Status |
 |---|---|---|---|---|
-| SCEN-01 | Scenarios and amendments | `probes/scen/SCEN-01.md` | A-13, B-05, B-13, D-13 | |
+| SCEN-01 | Scenarios and amendments | `probes/scen/SCEN-01.md` | A-13, A-14, A-15, B-05, B-13, D-13 | |
 | SCEN-02 ★ | A counterfactual past | `probes/scen/SCEN-02.md` | A-08, A-13, B-05 | |
 | SCEN-03 | Linked overrides | `probes/scen/SCEN-03.md` | B-13, D-11 | |
 | SCEN-04 | Named extreme paths | `probes/scen/SCEN-04.md` | A-12 | |
@@ -171,3 +174,6 @@ Written by `tools/index.py`; don't edit by hand.
 | SURF-02 | Surface words | `probes/surf/SURF-02.md` (a passage, no key) | — | |
 | SURF-03 | Draws written | `probes/surf/SURF-03.md` (a passage, no key) | B-12, D-10 | |
 | SURF-04 | Stated once, checked before it runs | `probes/surf/SURF-04.md` (a passage, no key) | — | |
+| SURF-05 | Notes on a one-line def and a place | `probes/surf/SURF-05.md` (a passage, no key) | — | |
+| SURF-06 | A record row with a negative field | `probes/surf/SURF-06.md` (a passage, no key) | — | |
+| SURF-07 | A day key where a date is expected | `probes/surf/SURF-07.md` (a passage, no key) | — | |

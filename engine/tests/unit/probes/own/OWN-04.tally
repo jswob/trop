@@ -4,6 +4,7 @@ model own04
   start 2026-01-01
   end 2026-12-31
   note "OWN-04: one flat under each of four regimes; each person's part."
+  note "The index of the card's people is named people: in tally 2.1, parties is a prelude kind, a built-in id (MIGRATION.md, 2.0 → 2.1; LOAD-DUP otherwise)."
   note "The card gives no dates and moves no money, so its money is written as defs (LANGUAGE 5.10, Places need dates): the flats are keys of an index, each with its value, and ownership is owns[p, f] with stakes in an entity looked through once (3.6). The regime is a key of an index (3.6, N-506)."
 
 source card "Probe card OWN-04 (made up): story and rules"
@@ -12,7 +13,7 @@ unit DUK: currency minor 0.01
 
 index flats = [flat_co, flat_comm, flat_est, flat_sep]
 
-index parties = [ania, tomek, piotr, ola, halina, marta, kuba, zb_estate]
+index people = [ania, tomek, piotr, ola, halina, marta, kuba, zb_estate]
 
 index regimes = [community, separate, co_owned, in_estate]
 
@@ -20,19 +21,19 @@ input community_part: num
 
 input flat_value[f in flats]: money DUK
 
-input owns[p in parties, f in flats]: num
+input owns[p in people, f in flats]: num
 
 input regime_of[f in flats]: key regimes
 
-input spouse_in[p in parties, f in flats]: bool
+input spouse_in[p in people, f in flats]: bool
 
-input stake[p in parties, e in parties]: num
+input stake[p in people, e in people]: num
 
-def part_value[p in parties, f in flats]: num DUK = flat_value[f] * share_of[p, f] at reader
+def part_value[p in people, f in flats]: num DUK = flat_value[f] * share_of[p, f] at reader
 
-def share_of[p in parties, f in flats]: num at reader
+def share_of[p in people, f in flats]: num at reader
   note "rule 1: community half to each spouse; separate, co-owned and the estate by their shares"
-  rule base v card_rules = owns[p, f] + sum(stake[p, e] * owns[e, f] for e in parties)
+  rule base v card_rules = owns[p, f] + sum(stake[p, e] * owns[e, f] for e in people)
   rule comm beats base v card_rules = if spouse_in[p, f] then community_part else 0 when regime_of[f] == community
 
 ask q_co_owned: part_value[p, flat_co] for p in [piotr, ola] law 2026-01-01

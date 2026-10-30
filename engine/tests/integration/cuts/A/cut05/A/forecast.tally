@@ -26,7 +26,7 @@ def fc_day: date at start_of(month_of(walk_from))
 
 def fc_gains_tax: money DUK at fc_sell_day
   note "PIT-8 .4: the year's gains and losses of each spouse, the tax of the tax year of the sale (the what-if's 25 % from 2030)"
-  rule base = sum(cg_tax[p, year_of(fc_sell_day)] for p in spouse)
+  rule base = sum(cg_tax[p, year_of(fc_sell_day)] for p in persons on fc_sell_day)
 
 def fc_real: money DUK at fc_sell_day
   note "story § The forecast, item 6: what is left after both taxes, divided by 1.0025 for each of the 119 months, to the ort"

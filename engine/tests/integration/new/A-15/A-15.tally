@@ -1,0 +1,32 @@
+scenario a15_house_rule over lis
+  tally 2
+  from 2026-03-01
+  note "A-15 · Ania's withdrawal under a house rule (questions.md): as A-14, Ania withdraws 10 000.00 DUK from her savings account in March 2026, now under a house rule the question states: a withdrawal takes Ania's and the couple's money in proportion. The rule ranks every owner's money alike (leave_rank, places.tally), so the withdrawal shares what each has in proportion, to the ort (the money accounts' takes clause, reality.tally: prorata, rest largest, L §5.13)."
+  note "The question gives the month, not the day, so the withdrawal's day is a window over March 2026 (L §4.4), and what is left is read at the end of 2026-04-01, after it."
+
+input a15_month: month question "In which month does Ania withdraw from her savings account (questions.md A-15)?"
+
+input a15_amount: money DUK question "How much does Ania withdraw from her savings account (questions.md A-15)?"
+
+move a15_withdraw[m in month where m == a15_month]: transfers
+  on window(start_of(m), end_of(m) - 1 day)
+  at start_of(m)
+  leg cash from ania_sav to world amount a15_amount
+  note "questions.md A-15: Ania withdraws from her savings account in March 2026"
+
+ask a15: a15_withdraw[2026-03].cash.amount of ania, a15_withdraw[2026-03].cash.amount of ania_tomek, bal(ania_sav, 2026-03-31) of ania, bal(ania_sav, 2026-03-31) of ania_tomek in a15_house_rule law 2026-03-31 as known 2026-01-15
+
+version a15_withdrawal
+  cite questions
+  governs always
+  known 2026-01-15
+  note "the question's withdrawal: its month and amount, inputs of this scenario alone (L §6.4: only a base item's rows govern from the scenario's from), stated as known when the question is asked"
+  a15_month = 2026-03 "questions.md A-15: in March 2026"
+  a15_amount = 10000.00 "questions.md A-15: the same withdrawal as A-14, 10 000.00 from her savings account"
+
+version a15_question
+  cite questions
+  governs 2026-03-01..
+  known 2026-01-15
+  note "the question's withdrawal and its house rule (questions.md A-15: a withdrawal takes Ania's and the couple's money in proportion), stated as known when the question is asked"
+  replace rule leave_rank.house_rule beats base = 0

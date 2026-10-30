@@ -1,6 +1,6 @@
 part e1_estate
   tally 2
-  note "E1-01: Zbigniew's estate, paid out. D derives the shares and the payouts (d.payout, D/estate.tally:74-82) and what the notary paid out of the deposit (d.deposit, D/estate.tally:41), and holds Halina's payment into the deposit (d.bank[r20250612a], D/records.tally:25). D-D07 .5 names the accounts. B states Piotr's payout (B-D27) and its Cis savings export shows it arriving (b.savr[s20250616a], B/records/savings-2025.tally:16); A states Ania's (a.estate_paid, A-D36, A/worth.tally:57-61) and her Wrzos export shows it arriving, in the one row of that export E1 writes (e1_wrz, O:E1-5)."
+  note "E1-01: Zbigniew's estate, paid out. D derives the shares and the payouts (d.payout, D/estate.tally:74-82) and what the notary paid out of the deposit (d.deposit, D/estate.tally:41), and holds Halina's payment into the deposit (d.bank[r20250612a], D/records.tally:25). D-D07 .5 names the accounts. B states Piotr's payout (B-D27) and its Cis savings export shows it arriving (b.savr[s20250616a], B/records/savings-2025.tally:16); A states Ania's (a.estate_paid, A-D36: the payout A's copy of her Wrzos export books, A/worth.tally, A/records.tally) and her Wrzos export shows it arriving, in the one row of that export E1 writes as its own (e1_wrz, O:E1-5)."
 
 index e1_payee = [piotr, anna, marta, jakub]
   note "the heirs the notary paid out of the deposit (D-D07 .5), by D's keys of heir; Halina, who paid in, takes no payout"
@@ -10,7 +10,7 @@ input e1_paid_to[h in e1_payee]: text question "To which account did the notary 
 input e1_piotr_notice: money DUK question "How much does the notary's notice B-D27 say was paid to Piotr?"
 
 input e1_wrz: observed
-  note "the rows of Ania's Wrzos savings export (tmp/cases/A/records/wrz-ania-savings-2025.csv) that a question of the family reads; A reads that export only by its last balance (A/records.tally:44-50), so the row is the family's to write"
+  note "the rows of Ania's Wrzos savings export (tmp/cases/A/records/wrz-ania-savings-2025.csv) that a question of the family reads; A books that export row by row (A/records.tally, sbank), and the family writes the one row it reads as its own observation, stated same as A's row of it (L §6.1)"
 
 def e1_arrived[h in e1_payee]: date
   note "the day the payout reached the heir's account, as that account's own record shows it: Piotr's in B's Cis savings export, Ania's in her Wrzos export. No record of Marta's or Jakub's account is among the family's papers (story.md 2025-06-16), so their days are holes."
@@ -46,5 +46,7 @@ version e1_wrz_2025
   cite e1_wrz_ania
   governs 2025-06..2025-12
   known 2026-01-15
-  note "One row of the export, the one E1-01 reads: the payout reaching Ania's savings account. The version covers nothing: the export's other rows are no question's, and A anchors the account at the export's last balance (A/records.tally:44-50). The export is known with A's other records, on 2026-01-15 (story.md) (O:E1-5)."
-  e1_wrz[w20250616a] = (on: 2025-06-16, kind: transfers, leg cash from a.world to a.ania_sav amount 38750.00 DUK) "wrz-ania-savings-2025.csv line 7: 16.06.2025;INCOMING TRANSFER;Kancelaria Notarialna Brzoza – escrow;payout, division of the estate of Zbigniew Sowa, A. Lis;38750,00;38750,00"
+  note "One row of the export, the one E1-01 reads: the payout reaching Ania's savings account. The version covers nothing: A's own version covers the account and books every row of the export (A/records.tally). The export is known with A's other records, on 2026-01-15 (story.md) (O:E1-5)."
+  note "e1_wrz[w20250616a] is the row A books as a.sbank[s20250616_07] (A/records.tally, wrz_ania_2025): both are line 7 of wrz-ania-savings-2025.csv, the one transfer of 16 June 2025 of 38 750.00 DUK from the notary's escrow into LN61 … 5503, so they are stated same, with A's kind (inheritances, heir Ania: A-D36) (L §5.19, §6.1)"
+  same e1_wrz[w20250616a] = a.sbank[s20250616_07]
+  e1_wrz[w20250616a] = (on: 2025-06-16, kind: a.inheritances, leg cash from a.world to a.ania_sav amount 38750.00 DUK, heir: a.ania) "wrz-ania-savings-2025.csv line 7: 16.06.2025;INCOMING TRANSFER;Kancelaria Notarialna Brzoza – escrow;payout, division of the estate of Zbigniew Sowa, A. Lis;38750,00;38750,00"

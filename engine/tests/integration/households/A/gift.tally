@@ -19,13 +19,13 @@ input acq_paid[a in acq]: money DUK question "How much gift tax has been paid on
 
 input acq_reported[a in acq]: date question "When was the acquisition reported to the RO?"
 
-input acq_to[a in acq]: key spouse question "Who acquired it?"
+input acq_to[a in acq]: key persons question "Who acquired it?"
 
 input acq_units[a in acq]: num glb question "How many BRZ-GLB-A units were given?"
 
-input close_family[s in spouse, g in giver]: bool question "Is the giver close family of the acquirer under IGT-4 .1?"
+input close_family[s in persons, g in giver]: bool question "Is the giver close family of the acquirer under IGT-4 .1?"
 
-input igt_grp[s in spouse, g in giver]: key igt_group question "In which group of IGT-1 .2 is the acquirer to this giver?"
+input igt_grp[s in persons, g in giver]: key igt_group question "In which group of IGT-1 .2 is the acquirer to this giver?"
 
 def added_up[a in acq]: num DUK = sum(value[b] for b in acq where window[a, b]) at reader
 

@@ -2,9 +2,9 @@ part e2_asks_02
   tally 2
   note "E2-02 · Gifts and inheritances (tmp/cases-holdout/E2/questions.md): as of and known as of 2026-09-30. inheritance tax arises, report by: e2_02_dates (D's). Halina's gifts in Zbigniew's estate: e2_02_gifts_in_estate. Acquisitions: 'Anna from Halina' is A's acquisitions from Halina to Ania, a binding over A's index acq (e2_02_anna_from_halina per gift, e2_02_anna_from_halina_sum the tax; e2_02_givers shows every acquisition A holds, its giver and acquirer); '<heir> from Zbigniew' is D's: e2_02_zbigniew gives each heir's share and tax as the papers stand (Halina reported, D-D08; for the others the tax is a hole naming whether they reported), e2_02_reported the case 'reported by d.report_by' (D's rows reported_on pinned, L §5.18), e2_02_not_reported the case 'not reported' (scenario e2_not_reported). 'Jan from Marta' and 'Staś from Irena' are C's, asked in the C-side run (e2c_02_jan_from_marta, e2c_02_stas_from_irena)."
 
-ask e2_02_anna_from_halina: a.value[g], a.gift_tax[g] for g in a.acq where a.acq_from[g] == halina and a.acq_to[g] == ania law 2026-09-30 as known 2026-09-30
+ask e2_02_anna_from_halina: a.value[g], a.gift_tax[g] for g in a.acq where a.acq_from[g] == halina and a.acq_to[g] == a.ania law 2026-09-30 as known 2026-09-30
 
-ask e2_02_anna_from_halina_sum: sum(a.gift_tax[g] for g in a.acq where a.acq_from[g] == halina and a.acq_to[g] == ania) law 2026-09-30 as known 2026-09-30
+ask e2_02_anna_from_halina_sum: sum(a.gift_tax[g] for g in a.acq where a.acq_from[g] == halina and a.acq_to[g] == a.ania) law 2026-09-30 as known 2026-09-30
 
 ask e2_02_dates: d.igt_arises, d.report_by law 2026-09-30 as known 2026-09-30
 

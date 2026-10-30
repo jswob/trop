@@ -1,0 +1,17 @@
+q_booked (p = ania_tomek): 5 300.00 DUK
+  cut 2026-10-30
+q_booked (p = ania): 3 000.00 DUK
+  cut 2026-10-30
+q_booked (p = tomek): 0.00 DUK
+  cut 2026-10-30
+q_gap: 0.00 DUK
+  cut 2026-10-30
+q_parts (p = ania_tomek): 5 300.00 DUK
+  anchor: sav 2026-01-31 end, stated 8 300.00 DUK, difference 0.00 DUK
+  cut 2026-10-30
+q_parts (p = ania): 3 000.00 DUK
+  anchor: sav 2026-01-31 end, stated 8 300.00 DUK, difference 0.00 DUK
+  cut 2026-10-30
+q_parts (p = tomek): 0.00 DUK
+  anchor: sav 2026-01-31 end, stated 8 300.00 DUK, difference 0.00 DUK
+  cut 2026-10-30

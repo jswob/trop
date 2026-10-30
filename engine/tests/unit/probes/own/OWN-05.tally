@@ -4,39 +4,40 @@ model own05
   start 2024-01-01
   end 2025-12-31
   note "OWN-05: community property dissolved by a death, then a buyout at a later valuation."
+  note "The index of the card's people is named people: in tally 2.1, parties is a prelude kind, a built-in id (MIGRATION.md, 2.0 → 2.1; LOAD-DUP otherwise)."
   note "The two valuations are readings (LANGUAGE 4.6, 5.8); a payout reads the valuation at its own law date, the division day or the death day. No money moves, so the flat's value is read as a fact, not through a place."
 
 source card "Probe card OWN-05 (made up): story and rules"
 
 unit DUK: currency minor 0.01
 
-index parties = [halina, zbigniew, ania, piotr, marta, kuba]
+index people = [halina, zbigniew, ania, piotr, marta, kuba]
 
-input community_member[p in parties]: bool
+input community_member[p in people]: bool
 
 input death_day: date
 
-input decedent: key parties
+input decedent: key people
 
 input division_day: date
 
-input estate_share[p in parties]: num
+input estate_share[p in people]: num
 
 input flat_value: money DUK reading
 
 input half: num
 
-input keeper: key parties
+input keeper: key people
 
-def keeper_pays: num DUK = sum(payout[p] for p in parties where p != keeper) at reader
+def keeper_pays: num DUK = sum(payout[p] for p in people where p != keeper) at reader
 
-def payout[p in parties]: num DUK at division_day
+def payout[p in people]: num DUK at division_day
   note "rule 3: each heir's share at the division's valuation"
   rule base v card_rules = share_after[p] * flat_value
 
-def payout_at_death[p in parties]: num DUK = share_after[p] * flat_value at death_day
+def payout_at_death[p in people]: num DUK = share_after[p] * flat_value at death_day
 
-def share_after[p in parties]: num at reader
+def share_after[p in people]: num at reader
   note "rules 1-2: the survivor's half, plus the estate's half passed in shares"
   rule base v card_rules = (if community_member[p] and p != decedent then half else 0) + half * estate_share[p]
 

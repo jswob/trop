@@ -57,3 +57,25 @@ def CUR_01__RAND_01(i, t):
     same = run() == (rev, cash)
     t("same seed, same answer", same, "run twice")
     return {"kind": "value", "value": {**out, "same_seed_same_answer": same}}
+
+
+def PTY_05__OWN_12(i, t):
+    """A nested joint model (PTY-05 × OWN-12): an outer joint model whose member is itself a joint model reads one
+    party's parts across every member, the party stated `same` at each level (L §6.1, §3.6; E §3.1 step 1)."""
+    from decimal import Decimal
+    from probefns.own import _Book, _community, CENT
+    parts = {}
+    for m, mi in i["members"].items():
+        book = _Book({mi["place"]: CENT}, [mi["place"]], [], lambda x, lab, row: (0,), _community(mi))
+        book.walk(mi["rows"])
+        parts[m] = {p: book.bal(mi["place"], i["asked"], p) for p in mi["parties"]}
+        t(f"member {m}: parts of {mi['place']} at the end of {i['asked']}", parts[m], "the member alone (its own rules 1-2)")
+    inner = i["inner"]
+    in_sum = t(f"the inner joint model {inner['name']}: {inner['party']}'s parts across its members",
+               sum((parts[m].get(q, Decimal(0)) for m, q in inner["same"].items()), Decimal(0)),
+               " + ".join(f"{m}: {q}" for m, q in inner["same"].items()) + " (stated same in the inner header, L §6.1)")
+    outer = i["outer"]
+    b = t(f"the outer joint model: {outer['party']}'s parts at member {outer['member']}",
+          parts[outer["member"]].get(outer["same"], Decimal(0)), f"{outer['party']} = {outer['member']}.{outer['same']} (stated same in the outer header)")
+    total = t("the party's parts across the whole family", in_sum + b, "inner + outer member (rule 3)")
+    return {"kind": "value", "value": {"members": parts, "inner": in_sum, "outer_member": b, "total": total}}

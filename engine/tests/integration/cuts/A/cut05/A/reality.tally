@@ -5,7 +5,7 @@ model lis
   end 2035-12-31
   note "Household A, the Lis family of Dębowo (tmp/cases/A/story.md): Ania (Anna) and Tomek (Tomasz), married 2016-09-10 without a marriage contract, and Zosia (Zofia), born 2023-04-27. Amounts are in DUK, the dukat of Lenia, of 100 orts."
   note "The reality is this directory and the law parts of cases/law/ it reads: GEN-1, GEN-3, GEN-5, GEN-6, PIT-2 to PIT-9, SOC-1, SOC-2, SOC-8, FAM-1, WCP-1, WCP-2, CIV-1, IGT-1 to IGT-4, CC-1, CC-2, MOT-1, MOT-2."
-  note "The record files the questions read are observations (statements/statements.tally, L §5.19): the joint account's statements 2024-08 to 2025-12, the wrapped account's register and both Rzeka registers, each row citing its file and line; the Wektor registers, the Lazur export and Ania's savings export are read only by their balances (records.tally). The importer's dialect isn't part of tally 2 (O:A-1)."
+  note "The record files the questions read are observations (statements/statements.tally, L §5.19): the joint account's statements 2024-08 to 2025-12, the wrapped account's register and both Rzeka registers, each row citing its file and line; the Wektor registers and the Lazur export are read only by their balances, Ania's savings export row by row (records.tally). The importer's dialect isn't part of tally 2 (O:A-1)."
 
 source a_d01 "A-D01 Nurt Software, employment contract (tmp/cases/A/docs/A-D01.md)"
 
@@ -139,11 +139,48 @@ source wrz_ania "Bank Wrzos export, Ania's savings LN61 … 5503, 2025 (tmp/case
 
 source wrz_joint "Bank Wrzos exports, joint account LN27 … 0412, 2024-08 to 2025-12 (tmp/cases/A/records/wrz-joint-*.csv)"
 
+kind persons: parties
+  note "Ania and Tomek, things of the prelude's parties (L §3.5), each from their birth (people.tally): they own parts"
+
+kind couples: parties
+  note "Ania and Tomek's community property (CIV-1 .1, .2), an entity the two hold by stake (L §3.6, people.tally), from the day they married"
+
+kind children: parties
+  note "Zosia, a party from her birth, owning what is in her savings account (A-HR4)"
+
 kind funds: unit
   note "each fund a unit of its own (L §3.2, §5.7): glb BRZ-GLB-A, bnd BRZ-BND-A, div BRZ-DIV-D, mm BRZ-MM-A, idx WEK-IDX-D, em WEK-EM-A, wcp WEK-WCP-2055"
 
 kind wrapped: place one min 0
-  note "the holdings of Ania's wrapped account (A-D11, PIT-9), declared as holdings are (L §5.10) but a kind of their own: what is sold from them is taxed when withdrawn, not under PIT-8, so they hold no PIT-8 lots"
+  owned by civ1_arrive
+  step 0.0001
+  takes k for w order leave_rank[k.owner]
+  note "the holdings of Ania's wrapped account (A-D11, PIT-9), declared as holdings are (L §5.10) but a kind of their own: what is sold from them is taxed when withdrawn, not under PIT-8, so they hold no PIT-8 lots, and their parts are kept by owner only (L §3.6; CIV-1, places.tally). Whose units leave first no paper of ours says (leave_rank)"
+
+kind money_accounts: place one min 0
+  owned by civ1_arrive
+  step minor(DUK)
+  takes k for w order (if w in taxes_withheld and k.owner == ania_tomek then 0 else 1), leave_rank[k.owner] prorata
+  note "our accounts that hold money, their balances kept as parts by owner (L §3.6; CIV-1, places.tally): the joint account, the Lazur reserve, Ania's savings, the cash of the wrapped and Rzeka accounts, Zosia's savings, the money on its way to investing. A tax withheld on interest or a distribution takes the couple's part first: the income it is withheld from is community (CIV-1 .2), and the tax is withheld from that income itself (PIT-8 .7), as A-11's key reads it (keys/A/A-11.md, step 15). Whose money any other outflow takes no paper of ours says (leave_rank, a hole); where those ranks tie, as only a scenario's stated rule makes them, the outflow shares in proportion"
+
+kind deposits: claims
+  owned by civ1_arrive
+  step minor(DUK)
+  takes k for w order leave_rank[k.owner]
+  note "money owed to us, kept as parts by owner (L §3.6): the rent deposit (A-D30)"
+
+kind lot_holdings: holdings
+  owned by civ1_arrive
+  batched
+  step 0.0001
+  takes k for w v pit8_v1 order (if w in lot_transfers and k.batch == w.lot then 0 else 1), k.batch.day, leave_rank[k.owner]
+  note "a fund holding under PIT-8, its units kept as parts by owner and by lot (batch, L §3.6): a lot is the movement that brought its units in, a purchase or a gift (lots_in), and keeps its cost and acquisition day when it moves to another account of the same holder (PIT-8 .3). A sale takes the lots first in, first out by acquisition day (.3), the acquisition day of a gifted lot being the gift's (.2); a transfer out names the lot it moves (lot_transfers' lot). Whose units of one lot leave first no paper says (leave_rank)"
+
+kind plan_holdings: holdings
+  owned by civ1_arrive
+  step 0.0001
+  takes k for w order leave_rank[k.owner]
+  note "a workplace plan's units, kept as parts by owner (L §3.6), with no lots: the plan isn't under PIT-8 (.1)"
 
 kind card_pays: transfers
   note "a card payment from the joint account (statement type CARD TRANSACTION)"
@@ -169,7 +206,7 @@ kind car_settlements: transfers
   note "what came in or went out because of the car's sale: the price, the early repayment and the three refunds (A-D27, A-D28, CC-1, MOT-1, MOT-2)"
 
 kind cg_tax_pays: transfers
-  attr payer: key spouse
+  attr payer: key persons
   note "a payment of the tax on fund sales, with the spouse whose tax it is (the statement's title names A. Lis or T. Lis)"
 
 kind invests: transfers
@@ -179,6 +216,13 @@ kind own_moves: transfers
   note "money moved between our own accounts, not investing: to the Lazur reserve, a Rzeka payout"
 
 kind distributions: transfers
+
+kind inheritances: transfers
+  attr heir: key parties
+  note "money received from an estate, with the heir it is paid to (CIV-1 .3)"
+
+kind interests: transfers
+  note "interest credited to a savings account (wrz-ania-savings-2025.csv: INTEREST)"
 
 kind taxes_withheld: transfers
 
@@ -195,17 +239,14 @@ kind fund_buys: lots_in
 
 kind gifts_in: lots_in
   attr bought: month
-  note "units received as a gift, with the month the giver bought them in (PIT-8 .2, .6; kop-30-118-552-ania.csv)"
+  attr donee: key parties
+  note "units received as a gift, with the month the giver bought them in (PIT-8 .2, .6; kop-30-118-552-ania.csv) and whom the gift is for (CIV-1 .3: the donee alone, unless the giver states it is for both)"
 
-kind lot_transfers: lots_in
-  attr reported: money DUK
-  attr bought: month
-  attr gifted_on: date
-  note "units moved in from another broker, keeping their lot (PIT-8 .3): the cost basis the other broker reported (A-D12 .4), the month the giver bought them in (PIT-8 .6) and the day of the gift that brought them (PIT-8 .2)"
-
-kind lot_outs: event certain
+kind lot_transfers: event certain
   leg units: funds
-  note "units moved out to another broker, seen from the account they leave"
+  attr lot: key lots_in
+  attr reported: money DUK
+  note "units moved to another broker, one lot per row, keeping their lot (PIT-8 .3): the transfer out of one broker's register and the transfer in of the other's are one movement, their rows stated same (L §5.19), each stating the lot it moves (lot) and the cost basis the transferring broker reported (reported, A-D12 .4)"
 
 kind fund_sales: event certain
   leg units: funds
@@ -231,8 +272,6 @@ index month = month 2021-01..2035-12
 index payer = [nurt, kalina, sio]
   note "Tomek's employer Nurt Software, Ania's employer Kalina Logistyka, and the Social Insurance Office paying Ania's parental pay"
 
-index spouse = [ania, tomek]
-
 index tax_year = year 2021..2035
 
 version fund_units
@@ -255,8 +294,6 @@ version lifted_figures
   hr3_units_0_0001 = 0.0001 "A-HR3: units to 4 places (inline in tally 1.0.1: hr3_units line 245, round step)"
   joint_tax_2 = 2 "PIT-6 .3: twice the tax on half the combined base (inline in tally 1.0.1: joint_tax line 107)"
   loss_want_2 = 2 "PIT-8 .5: at most half of it (inline in tally 1.0.1: loss_want line 246)"
-  nw_community_0_5 = 0.5 "A-HR5 .1: half of the common property (inline in tally 1.0.1: nw_community line 39)"
-  nw_half_2 = 2 "A-HR5 .1: half each (inline in tally 1.0.1: nw_half lines 47, 48)"
   r_units_0_0001 = 0.0001 "units to 4 places (inline in tally 1.0.1: r_units line 216, round step)"
   red12_12 = 12 "PIT-4 .2: 1/12 of the yearly reducing amount (inline in tally 1.0.1: red12 line 218)"
   relief_half_2 = 2 "PIT-7 .4: in halves (inline in tally 1.0.1: relief_half line 90)"

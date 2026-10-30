@@ -1,0 +1,24 @@
+q_parts_20 (x = acc2, p = ania): ?"acc2: 400.00 DUK may be ania's: which of bank_rows[r3], bank_rows[r4] went first on 2026-01-15?" (acc2)
+  cut 2026-10-30
+q_parts_20 (x = acc2, p = tomek): ?"acc2: 400.00 DUK may be tomek's: which of bank_rows[r3], bank_rows[r4] went first on 2026-01-15?" (acc2)
+  cut 2026-10-30
+q_parts_20 (x = sav, p = ania): ?"sav: 184.62 DUK may be ania's: which of bank_rows[r3], bank_rows[r4] went first on 2026-01-15?" (sav)
+  cut 2026-10-30
+q_parts_20 (x = sav, p = tomek): ?"sav: 184.62 DUK may be tomek's: which of bank_rows[r3], bank_rows[r4] went first on 2026-01-15?" (sav)
+  cut 2026-10-30
+q_parts_31 (x = acc2, p = ania): 400.00 DUK
+  anchor: acc2 2026-01-31 end, stated 1 200.00 DUK, difference 0.00 DUK
+  cut 2026-10-30
+q_parts_31 (x = acc2, p = tomek): 800.00 DUK
+  anchor: acc2 2026-01-31 end, stated 1 200.00 DUK, difference 0.00 DUK
+  cut 2026-10-30
+q_parts_31 (x = sav, p = ania): 600.00 DUK
+  anchor: sav 2026-01-31 end, stated 800.00 DUK, difference 0.00 DUK
+  cut 2026-10-30
+q_parts_31 (x = sav, p = tomek): 200.00 DUK
+  anchor: sav 2026-01-31 end, stated 800.00 DUK, difference 0.00 DUK
+  cut 2026-10-30
+q_totals_20 (x = acc2): 1 200.00 DUK
+  cut 2026-10-30
+q_totals_20 (x = sav): 800.00 DUK
+  cut 2026-10-30

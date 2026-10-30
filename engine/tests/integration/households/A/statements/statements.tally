@@ -1,6 +1,6 @@
 part statements
   tally 2
-  note "The record files of tmp/cases/A/records/ that the questions read, as observations (L §5.19). The importer's dialect for these files is not part of tally 2 (O:A-1): a scratch script stood in for it, copying each row as it stands (scratch/w-a/conv.py), each row citing its file and line, its kind the row's type and counterparty (the importer's classification, data). The Wektor registers, the Lazur export and Ania's savings export are read only by their balances (records.tally)."
+  note "The record files of tmp/cases/A/records/ that the questions read, as observations (L §5.19). The importer's dialect for these files is not part of tally 2 (O:A-1): a scratch script stood in for it, copying each row as it stands (scratch/w-a/conv.py), each row citing its file and line, its kind the row's type and counterparty (the importer's classification, data). The Wektor registers and the Lazur export are read only by their balances, and Ania's savings export is booked in records.tally."
 
 version wrz_joint_2024_08
   cite wrz_joint
@@ -9,6 +9,8 @@ version wrz_joint_2024_08
   covers joint
   anchor joint
   note "wrz-joint-2024-08.csv: the statement for 2024-08, every row; its opening balance and the balance after its last row are readings"
+  note "a transfer between the joint account and the wrapped or a Rzeka account is on both statements: each pair of rows is one movement, stated same (L §5.19), each end booked from the statement that covers it"
+  same jbank[j202408_27] = wbank[w20240816_091]
   jbank[j202408_07] = (on: 2024-08-01, kind: standing_pays, leg cash from joint to world amount 3200.00 DUK) known 2024-08-01 "wrz-joint-2024-08.csv line 7: STANDING ORDER; Jerzy Grab; rent"
   jbank[j202408_08] = (on: 2024-08-01, kind: card_pays, leg cash from joint to world amount 99.44 DUK) known 2024-08-01 "wrz-joint-2024-08.csv line 8: CARD TRANSACTION; Restauracja Rydz; card ...4471"
   jbank[j202408_09] = (on: 2024-08-02, kind: card_pays, leg cash from joint to world amount 245.84 DUK) known 2024-08-02 "wrz-joint-2024-08.csv line 9: CARD TRANSACTION; Stacja Paliw Tor; card ...4471"
@@ -50,6 +52,7 @@ version wrz_joint_2024_08
   jbank[j202408_45] = (on: 2024-08-31, kind: card_pays, leg cash from joint to world amount 139.31 DUK) known 2024-08-31 "wrz-joint-2024-08.csv line 45: CARD TRANSACTION; Sklep Pod Lipą; card ...4471"
   jbank[j202408_46] = (on: 2024-08-31, kind: card_pays, leg cash from joint to world amount 43.58 DUK) known 2024-08-31 "wrz-joint-2024-08.csv line 46: CARD TRANSACTION; Drogeria Mak; card ...4471"
   stated[joint] = 11972.67 DUK known 2024-08-01 at 2024-08-01 start "wrz-joint-2024-08.csv line 5: opening balance"
+  stated[joint] of ania_tomek = 11972.67 DUK known 2024-08-01 at 2024-08-01 start "story § What we had: the joint account, in both our names, community (CIV-1 .2); the first balance we kept, so its parts are stated once (L §5.19)"
   stated[joint] = 44765.48 DUK known 2024-08-31 at 2024-08-31 end "wrz-joint-2024-08.csv line 46: balance after"
 
 version wrz_joint_2024_09
@@ -59,6 +62,9 @@ version wrz_joint_2024_09
   covers joint
   anchor joint
   note "wrz-joint-2024-09.csv: the statement for 2024-09, every row; its opening balance and the balance after its last row are readings"
+  note "a transfer between the joint account and the wrapped or a Rzeka account is on both statements: each pair of rows is one movement, stated same (L §5.19), each end booked from the statement that covers it"
+  same jbank[j202409_29] = wbank[w20240916_094]
+  same jbank[j202409_30] = tbank[t20240916_093]
   jbank[j202409_07] = (on: 2024-09-01, kind: card_pays, leg cash from joint to world amount 32.61 DUK) known 2024-09-01 "wrz-joint-2024-09.csv line 7: CARD TRANSACTION; Warzywniak Burak; card ...4471"
   jbank[j202409_08] = (on: 2024-09-02, kind: standing_pays, leg cash from joint to world amount 3200.00 DUK) known 2024-09-02 "wrz-joint-2024-09.csv line 8: STANDING ORDER; Jerzy Grab; rent"
   jbank[j202409_09] = (on: 2024-09-02, kind: card_pays, leg cash from joint to world amount 20.45 DUK) known 2024-09-02 "wrz-joint-2024-09.csv line 9: CARD TRANSACTION; Sklep Sport Kret; card ...4471"
@@ -110,6 +116,8 @@ version wrz_joint_2024_10
   covers joint
   anchor joint
   note "wrz-joint-2024-10.csv: the statement for 2024-10, every row; its opening balance and the balance after its last row are readings"
+  note "a transfer between the joint account and the wrapped or a Rzeka account is on both statements: each pair of rows is one movement, stated same (L §5.19), each end booked from the statement that covers it"
+  same jbank[j202410_28] = tbank[t20241015_097]
   jbank[j202410_07] = (on: 2024-10-01, kind: standing_pays, leg cash from joint to world amount 3200.00 DUK) known 2024-10-01 "wrz-joint-2024-10.csv line 7: STANDING ORDER; Jerzy Grab; rent"
   jbank[j202410_08] = (on: 2024-10-01, kind: card_pays, leg cash from joint to world amount 68.75 DUK) known 2024-10-01 "wrz-joint-2024-10.csv line 8: CARD TRANSACTION; Market Kłos; card ...4471"
   jbank[j202410_09] = (on: 2024-10-01, kind: card_pays, leg cash from joint to world amount 18.01 DUK) known 2024-10-01 "wrz-joint-2024-10.csv line 9: CARD TRANSACTION; Księgarnia Pióro; card ...4471"
@@ -163,6 +171,9 @@ version wrz_joint_2024_11
   covers joint
   anchor joint
   note "wrz-joint-2024-11.csv: the statement for 2024-11, every row; its opening balance and the balance after its last row are readings"
+  note "a transfer between the joint account and the wrapped or a Rzeka account is on both statements: each pair of rows is one movement, stated same (L §5.19), each end booked from the statement that covers it"
+  same jbank[j202411_25] = tbank[t20241115_100]
+  same jbank[j202411_29] = tbank[t20241119_102]
   jbank[j202411_07] = (on: 2024-11-01, kind: card_pays, leg cash from joint to world amount 158.29 DUK) known 2024-11-01 "wrz-joint-2024-11.csv line 7: CARD TRANSACTION; Market Kłos; card ...4471"
   jbank[j202411_08] = (on: 2024-11-03, kind: card_pays, leg cash from joint to world amount 157.85 DUK) known 2024-11-03 "wrz-joint-2024-11.csv line 8: CARD TRANSACTION; Księgarnia Pióro; card ...4471"
   jbank[j202411_09] = (on: 2024-11-04, kind: standing_pays, leg cash from joint to world amount 3200.00 DUK) known 2024-11-04 "wrz-joint-2024-11.csv line 9: STANDING ORDER; Jerzy Grab; rent"
@@ -212,6 +223,8 @@ version wrz_joint_2024_12
   covers joint
   anchor joint
   note "wrz-joint-2024-12.csv: the statement for 2024-12, every row; its opening balance and the balance after its last row are readings"
+  note "a transfer between the joint account and the wrapped or a Rzeka account is on both statements: each pair of rows is one movement, stated same (L §5.19), each end booked from the statement that covers it"
+  same jbank[j202412_26] = tbank[t20241216_103]
   jbank[j202412_07] = (on: 2024-12-02, kind: standing_pays, leg cash from joint to world amount 3200.00 DUK) known 2024-12-02 "wrz-joint-2024-12.csv line 7: STANDING ORDER; Jerzy Grab; rent"
   jbank[j202412_08] = (on: 2024-12-02, kind: card_pays, leg cash from joint to world amount 229.90 DUK) known 2024-12-02 "wrz-joint-2024-12.csv line 8: CARD TRANSACTION; Księgarnia Pióro; card ...4471"
   jbank[j202412_09] = (on: 2024-12-02, kind: card_pays, leg cash from joint to world amount 150.48 DUK) known 2024-12-02 "wrz-joint-2024-12.csv line 9: CARD TRANSACTION; Drogeria Mak; card ...4471"
@@ -314,6 +327,8 @@ version wrz_joint_2025_02
   covers joint
   anchor joint
   note "wrz-joint-2025-02.csv: the statement for 2025-02, every row; its opening balance and the balance after its last row are readings"
+  note "a transfer between the joint account and the wrapped or a Rzeka account is on both statements: each pair of rows is one movement, stated same (L §5.19), each end booked from the statement that covers it"
+  same jbank[j202502_33] = wbank[w20250217_097]
   jbank[j202502_07] = (on: 2025-02-01, kind: card_pays, leg cash from joint to world amount 170.45 DUK) known 2025-02-01 "wrz-joint-2025-02.csv line 7: CARD TRANSACTION; Piekarnia Kłosek; card ...4471"
   jbank[j202502_08] = (on: 2025-02-01, kind: card_pays, leg cash from joint to world amount 43.14 DUK) known 2025-02-01 "wrz-joint-2025-02.csv line 8: CARD TRANSACTION; Warzywniak Burak; card ...4471"
   jbank[j202502_09] = (on: 2025-02-02, kind: card_pays, leg cash from joint to world amount 47.38 DUK) known 2025-02-02 "wrz-joint-2025-02.csv line 9: CARD TRANSACTION; Piekarnia Kłosek; card ...4471"
@@ -362,6 +377,8 @@ version wrz_joint_2025_03
   covers joint
   anchor joint
   note "wrz-joint-2025-03.csv: the statement for 2025-03, every row; its opening balance and the balance after its last row are readings"
+  note "a transfer between the joint account and the wrapped or a Rzeka account is on both statements: each pair of rows is one movement, stated same (L §5.19), each end booked from the statement that covers it"
+  same jbank[j202503_28] = wbank[w20250317_100]
   jbank[j202503_07] = (on: 2025-03-01, kind: card_pays, leg cash from joint to world amount 146.76 DUK) known 2025-03-01 "wrz-joint-2025-03.csv line 7: CARD TRANSACTION; Kino Iskra; card ...4471"
   jbank[j202503_08] = (on: 2025-03-03, kind: standing_pays, leg cash from joint to world amount 3350.00 DUK) known 2025-03-03 "wrz-joint-2025-03.csv line 8: STANDING ORDER; Jerzy Grab; rent"
   jbank[j202503_09] = (on: 2025-03-03, kind: paybacks, leg cash from world to joint amount 38.00 DUK) known 2025-03-03 "wrz-joint-2025-03.csv line 9: INCOMING TRANSFER; Bartłomiej Wilk; cinema"
@@ -412,6 +429,8 @@ version wrz_joint_2025_04
   covers joint
   anchor joint
   note "wrz-joint-2025-04.csv: the statement for 2025-04, every row; its opening balance and the balance after its last row are readings"
+  note "a transfer between the joint account and the wrapped or a Rzeka account is on both statements: each pair of rows is one movement, stated same (L §5.19), each end booked from the statement that covers it"
+  same jbank[j202504_29] = wbank[w20250415_103]
   jbank[j202504_07] = (on: 2025-04-01, kind: standing_pays, leg cash from joint to world amount 3350.00 DUK) known 2025-04-01 "wrz-joint-2025-04.csv line 7: STANDING ORDER; Jerzy Grab; rent"
   jbank[j202504_08] = (on: 2025-04-02, kind: card_pays, leg cash from joint to world amount 86.02 DUK) known 2025-04-02 "wrz-joint-2025-04.csv line 8: CARD TRANSACTION; Warzywniak Burak; card ...4471"
   jbank[j202504_09] = (on: 2025-04-03, kind: card_pays, leg cash from joint to world amount 103.35 DUK) known 2025-04-03 "wrz-joint-2025-04.csv line 9: CARD TRANSACTION; Apteka Rumianek; card ...4471"
@@ -518,6 +537,8 @@ version wrz_joint_2025_06
   covers joint
   anchor joint
   note "wrz-joint-2025-06.csv: the statement for 2025-06, every row; its opening balance and the balance after its last row are readings"
+  note "a transfer between the joint account and the wrapped or a Rzeka account is on both statements: each pair of rows is one movement, stated same (L §5.19), each end booked from the statement that covers it"
+  same jbank[j202506_28] = wbank[w20250616_106]
   jbank[j202506_07] = (on: 2025-06-01, kind: card_pays, leg cash from joint to world amount 48.10 DUK) known 2025-06-01 "wrz-joint-2025-06.csv line 7: CARD TRANSACTION; Drogeria Mak; card ...4471"
   jbank[j202506_08] = (on: 2025-06-02, kind: standing_pays, leg cash from joint to world amount 3350.00 DUK) known 2025-06-02 "wrz-joint-2025-06.csv line 8: STANDING ORDER; Jerzy Grab; rent"
   jbank[j202506_09] = (on: 2025-06-02, kind: card_pays, leg cash from joint to world amount 85.49 DUK) known 2025-06-02 "wrz-joint-2025-06.csv line 9: CARD TRANSACTION; Apteka Rumianek; card ...4471"
@@ -620,6 +641,8 @@ version wrz_joint_2025_08
   covers joint
   anchor joint
   note "wrz-joint-2025-08.csv: the statement for 2025-08, every row; its opening balance and the balance after its last row are readings"
+  note "a transfer between the joint account and the wrapped or a Rzeka account is on both statements: each pair of rows is one movement, stated same (L §5.19), each end booked from the statement that covers it"
+  same jbank[j202508_28] = wbank[w20250818_109]
   jbank[j202508_07] = (on: 2025-08-01, kind: standing_pays, leg cash from joint to world amount 3350.00 DUK) known 2025-08-01 "wrz-joint-2025-08.csv line 7: STANDING ORDER; Jerzy Grab; rent"
   jbank[j202508_08] = (on: 2025-08-01, kind: card_pays, leg cash from joint to world amount 57.75 DUK) known 2025-08-01 "wrz-joint-2025-08.csv line 8: CARD TRANSACTION; Drogeria Mak; card ...4471"
   jbank[j202508_09] = (on: 2025-08-02, kind: card_pays, leg cash from joint to world amount 142.50 DUK) known 2025-08-02 "wrz-joint-2025-08.csv line 9: CARD TRANSACTION; Kino Iskra; card ...4471"
@@ -667,6 +690,8 @@ version wrz_joint_2025_09
   covers joint
   anchor joint
   note "wrz-joint-2025-09.csv: the statement for 2025-09, every row; its opening balance and the balance after its last row are readings"
+  note "a transfer between the joint account and the wrapped or a Rzeka account is on both statements: each pair of rows is one movement, stated same (L §5.19), each end booked from the statement that covers it"
+  same jbank[j202509_31] = wbank[w20250915_112]
   jbank[j202509_07] = (on: 2025-09-01, kind: standing_pays, leg cash from joint to world amount 3350.00 DUK) known 2025-09-01 "wrz-joint-2025-09.csv line 7: STANDING ORDER; Jerzy Grab; rent"
   jbank[j202509_08] = (on: 2025-09-01, kind: card_pays, leg cash from joint to world amount 48.54 DUK) known 2025-09-01 "wrz-joint-2025-09.csv line 8: CARD TRANSACTION; Kino Iskra; card ...4471"
   jbank[j202509_09] = (on: 2025-09-01, kind: card_pays, leg cash from joint to world amount 74.32 DUK) known 2025-09-01 "wrz-joint-2025-09.csv line 9: CARD TRANSACTION; Sklep Sport Kret; card ...4471"
@@ -723,6 +748,8 @@ version wrz_joint_2025_10
   covers joint
   anchor joint
   note "wrz-joint-2025-10.csv: the statement for 2025-10, every row; its opening balance and the balance after its last row are readings"
+  note "a transfer between the joint account and the wrapped or a Rzeka account is on both statements: each pair of rows is one movement, stated same (L §5.19), each end booked from the statement that covers it"
+  same jbank[j202510_24] = wbank[w20251015_115]
   jbank[j202510_07] = (on: 2025-10-01, kind: standing_pays, leg cash from joint to world amount 3350.00 DUK) known 2025-10-01 "wrz-joint-2025-10.csv line 7: STANDING ORDER; Jerzy Grab; rent"
   jbank[j202510_08] = (on: 2025-10-01, kind: card_pays, leg cash from joint to world amount 17.90 DUK) known 2025-10-01 "wrz-joint-2025-10.csv line 8: CARD TRANSACTION; Księgarnia Pióro; card ...4471"
   jbank[j202510_09] = (on: 2025-10-01, kind: card_pays, leg cash from joint to world amount 157.81 DUK) known 2025-10-01 "wrz-joint-2025-10.csv line 9: CARD TRANSACTION; Sklep Pod Lipą; card ...4471"
@@ -771,6 +798,8 @@ version wrz_joint_2025_11
   covers joint
   anchor joint
   note "wrz-joint-2025-11.csv: the statement for 2025-11, every row; its opening balance and the balance after its last row are readings"
+  note "a transfer between the joint account and the wrapped or a Rzeka account is on both statements: each pair of rows is one movement, stated same (L §5.19), each end booked from the statement that covers it"
+  same jbank[j202511_24] = wbank[w20251117_118]
   jbank[j202511_07] = (on: 2025-11-01, kind: card_pays, leg cash from joint to world amount 141.46 DUK) known 2025-11-01 "wrz-joint-2025-11.csv line 7: CARD TRANSACTION; Piekarnia Kłosek; card ...4471"
   jbank[j202511_08] = (on: 2025-11-02, kind: card_pays, leg cash from joint to world amount 55.54 DUK) known 2025-11-02 "wrz-joint-2025-11.csv line 8: CARD TRANSACTION; Piekarnia Kłosek; card ...4471"
   jbank[j202511_09] = (on: 2025-11-02, kind: card_pays, leg cash from joint to world amount 48.96 DUK) known 2025-11-02 "wrz-joint-2025-11.csv line 9: CARD TRANSACTION; Apteka Rumianek; card ...4471"
@@ -816,6 +845,8 @@ version wrz_joint_2025_12
   covers joint
   anchor joint
   note "wrz-joint-2025-12.csv: the statement for 2025-12, every row; its opening balance and the balance after its last row are readings"
+  note "a transfer between the joint account and the wrapped or a Rzeka account is on both statements: each pair of rows is one movement, stated same (L §5.19), each end booked from the statement that covers it"
+  same jbank[j202512_25] = wbank[w20251215_121]
   jbank[j202512_07] = (on: 2025-12-01, kind: standing_pays, leg cash from joint to world amount 3350.00 DUK) known 2025-12-01 "wrz-joint-2025-12.csv line 7: STANDING ORDER; Jerzy Grab; rent"
   jbank[j202512_08] = (on: 2025-12-01, kind: card_pays, leg cash from joint to world amount 132.56 DUK) known 2025-12-01 "wrz-joint-2025-12.csv line 8: CARD TRANSACTION; Apteka Rumianek; card ...4471"
   jbank[j202512_09] = (on: 2025-12-02, kind: card_pays, leg cash from joint to world amount 195.85 DUK) known 2025-12-02 "wrz-joint-2025-12.csv line 9: CARD TRANSACTION; Sklep Pod Lipą; card ...4471"
@@ -1108,12 +1139,12 @@ version kop_register
   known 2023-09-12
   covers kop_glb
   note "kop-30-118-552-ania.csv: every row of the DM Kopia register, opened 12.09.2023, closed 29.02.2024"
-  kbank[k20230912_03] = (on: 2023-09-12, kind: gifts_in, leg units from world to kop_glb amount 90 glb, bought: 2018-11) known 2023-09-12 "kop-30-118-552-ania.csv line 3: TRANSFER IN (gift) BRZ-GLB-A; from H. Sowa, bought 2018-11"
-  kbank[k20230912_04] = (on: 2023-09-12, kind: gifts_in, leg units from world to kop_glb amount 60 glb, bought: 2019-03) known 2023-09-12 "kop-30-118-552-ania.csv line 4: TRANSFER IN (gift) BRZ-GLB-A; from H. Sowa, bought 2019-03"
-  kbank[k20230912_05] = (on: 2023-09-12, kind: gifts_in, leg units from world to kop_glb amount 50 glb, bought: 2019-08) known 2023-09-12 "kop-30-118-552-ania.csv line 5: TRANSFER IN (gift) BRZ-GLB-A; from H. Sowa, bought 2019-08"
-  kbank[k20240212_06] = (on: 2024-02-12, kind: lot_outs, leg units from kop_glb to rza_glb amount 90 glb) known 2024-02-12 "kop-30-118-552-ania.csv line 6: TRANSFER OUT BRZ-GLB-A; to Rzeka Securities 4471-07"
-  kbank[k20240212_07] = (on: 2024-02-12, kind: lot_outs, leg units from kop_glb to rza_glb amount 60 glb) known 2024-02-12 "kop-30-118-552-ania.csv line 7: TRANSFER OUT BRZ-GLB-A; to Rzeka Securities 4471-07"
-  kbank[k20240212_08] = (on: 2024-02-12, kind: lot_outs, leg units from kop_glb to rza_glb amount 50 glb) known 2024-02-12 "kop-30-118-552-ania.csv line 8: TRANSFER OUT BRZ-GLB-A; to Rzeka Securities 4471-07"
+  kbank[k20230912_03] = (on: 2023-09-12, kind: gifts_in, leg units from world to kop_glb amount 90 glb, bought: 2018-11, donee: ania) known 2023-09-12 "kop-30-118-552-ania.csv line 3: TRANSFER IN (gift) BRZ-GLB-A; from H. Sowa, bought 2018-11; donee: A-D18, for Anna alone"
+  kbank[k20230912_04] = (on: 2023-09-12, kind: gifts_in, leg units from world to kop_glb amount 60 glb, bought: 2019-03, donee: ania) known 2023-09-12 "kop-30-118-552-ania.csv line 4: TRANSFER IN (gift) BRZ-GLB-A; from H. Sowa, bought 2019-03; donee: A-D18, for Anna alone"
+  kbank[k20230912_05] = (on: 2023-09-12, kind: gifts_in, leg units from world to kop_glb amount 50 glb, bought: 2019-08, donee: ania) known 2023-09-12 "kop-30-118-552-ania.csv line 5: TRANSFER IN (gift) BRZ-GLB-A; from H. Sowa, bought 2019-08; donee: A-D18, for Anna alone"
+  kbank[k20240212_06] = (on: 2024-02-12, kind: lot_transfers, leg units from kop_glb to rza_glb amount 90 glb, lot: kbank[k20230912_03], reported: 13071.60 DUK) known 2024-02-12 "kop-30-118-552-ania.csv line 6: TRANSFER OUT BRZ-GLB-A; to Rzeka Securities 4471-07; lot: the 90 units of line 3 (bought 2018-11), as rzk-4471-07-anna.csv line 3 receives them; reported: rzk-4471-07-anna.csv line 3, the same movement (same, rzk_a_register)"
+  kbank[k20240212_07] = (on: 2024-02-12, kind: lot_transfers, leg units from kop_glb to rza_glb amount 60 glb, lot: kbank[k20230912_04], reported: 8697.60 DUK) known 2024-02-12 "kop-30-118-552-ania.csv line 7: TRANSFER OUT BRZ-GLB-A; to Rzeka Securities 4471-07; lot: the 60 units of line 4 (bought 2019-03), as rzk-4471-07-anna.csv line 4 receives them; reported: rzk-4471-07-anna.csv line 4, the same movement (same, rzk_a_register)"
+  kbank[k20240212_08] = (on: 2024-02-12, kind: lot_transfers, leg units from kop_glb to rza_glb amount 50 glb, lot: kbank[k20230912_05], reported: 7626.50 DUK) known 2024-02-12 "kop-30-118-552-ania.csv line 8: TRANSFER OUT BRZ-GLB-A; to Rzeka Securities 4471-07; lot: the 50 units of line 5 (bought 2019-08), as rzk-4471-07-anna.csv line 5 receives them; reported: rzk-4471-07-anna.csv line 5, the same movement (same, rzk_a_register)"
 
 version rzk_a_register
   cite rzk_a
@@ -1121,8 +1152,12 @@ version rzk_a_register
   known 2024-02-12
   covers rza_cash, rza_glb, rza_mm
   note "rzk-4471-07-anna.csv: every row of the register"
-  abank[a20240212_003] = (on: 2024-02-12, kind: lot_transfers, leg units from kop_glb to rza_glb amount 90.0000 glb, reported: 13071.60 DUK, bought: 2018-11, gifted_on: 2023-09-12) known 2024-02-13 "rzk-4471-07-anna.csv line 3: TRANSFER IN BRZ-GLB-A, cost basis as reported by the transferring broker; acquired 2018-11; gifted_on: A-D18, the gift that brought the units to DM Kopia"
-  abank[a20240212_004] = (on: 2024-02-12, kind: lot_transfers, leg units from kop_glb to rza_glb amount 60.0000 glb, reported: 8697.60 DUK, bought: 2019-03, gifted_on: 2023-09-12) known 2024-02-13 "rzk-4471-07-anna.csv line 4: TRANSFER IN BRZ-GLB-A, cost basis as reported by the transferring broker; acquired 2019-03; gifted_on: A-D18, the gift that brought the units to DM Kopia"
-  abank[a20240212_005] = (on: 2024-02-12, kind: lot_transfers, leg units from kop_glb to rza_glb amount 50.0000 glb, reported: 7626.50 DUK, bought: 2019-08, gifted_on: 2023-09-12) known 2024-02-13 "rzk-4471-07-anna.csv line 5: TRANSFER IN BRZ-GLB-A, cost basis as reported by the transferring broker; acquired 2019-08; gifted_on: A-D18, the gift that brought the units to DM Kopia"
+  note "Each of the three transfers in of 2024-02-12 is DM Kopia's transfer out of that day, the same lot (kop-30-118-552-ania.csv lines 6-8): one movement on two statements, stated same (L §5.19), DM Kopia's row booking the end at kop_glb and Rzeka's the end at rza_glb"
+  same kbank[k20240212_06] = abank[a20240212_003]
+  same kbank[k20240212_07] = abank[a20240212_004]
+  same kbank[k20240212_08] = abank[a20240212_005]
+  abank[a20240212_003] = (on: 2024-02-12, kind: lot_transfers, leg units from kop_glb to rza_glb amount 90.0000 glb, lot: kbank[k20230912_03], reported: 13071.60 DUK) known 2024-02-13 "rzk-4471-07-anna.csv line 3: TRANSFER IN BRZ-GLB-A, cost basis as reported by the transferring broker; acquired 2018-11: the lot of kop-30-118-552-ania.csv line 3, gifted 2023-09-12 (A-D18)"
+  abank[a20240212_004] = (on: 2024-02-12, kind: lot_transfers, leg units from kop_glb to rza_glb amount 60.0000 glb, lot: kbank[k20230912_04], reported: 8697.60 DUK) known 2024-02-13 "rzk-4471-07-anna.csv line 4: TRANSFER IN BRZ-GLB-A, cost basis as reported by the transferring broker; acquired 2019-03: the lot of kop-30-118-552-ania.csv line 4, gifted 2023-09-12 (A-D18)"
+  abank[a20240212_005] = (on: 2024-02-12, kind: lot_transfers, leg units from kop_glb to rza_glb amount 50.0000 glb, lot: kbank[k20230912_05], reported: 7626.50 DUK) known 2024-02-13 "rzk-4471-07-anna.csv line 5: TRANSFER IN BRZ-GLB-A, cost basis as reported by the transferring broker; acquired 2019-08: the lot of kop-30-118-552-ania.csv line 5, gifted 2023-09-12 (A-D18)"
   abank[a20240307_006] = (on: 2024-03-07, kind: fund_sales, leg units from rza_glb to market amount 200.0000 glb, leg cash from market to rza_cash amount 37518.00 DUK, leg fee from rza_cash to market amount 0.00 DUK) known 2024-03-07 "rzk-4471-07-anna.csv line 6: SELL BRZ-GLB-A"
   abank[a20240307_007] = (on: 2024-03-07, kind: fund_buys, leg units from market to rza_mm amount 314.9654 mm, leg cash from rza_cash to market amount 37424.19 DUK, leg fee from rza_cash to market amount 93.80 DUK) known 2024-03-07 "rzk-4471-07-anna.csv line 7: BUY BRZ-MM-A"

@@ -47,7 +47,7 @@ Written by `tmp/cases/tools/index.py --hidden`; don't edit by hand.
 | OWN-05 ★ | Events that move ownership | `probes/own/OWN-05.md` | C-10, C-11, E2-02, E2-03 | |
 | PTY-03 | Succession down the family tree | `probes/pty/PTY-03.md` | E2-02 | |
 | PTY-04 ★ | A law reads another party | `probes/pty/PTY-04.md` | C-03, C-05, C-09, C-11, E2-02 | |
-| PTY-05 | Joins across households | `probes/pty/PTY-05.md` | E2-01, E2-02, E2-03 | |
+| PTY-05 | Joins across households | `probes/pty/PTY-05.md`; pair `probes/pairs/PTY-05+OWN-12.md` | E2-01, E2-02, E2-03 | |
 | REC-01 | Records are the past; the model is the rest | `probes/rec/REC-01.md` | C-12 | |
 | REC-04 | Matching and certainty | `probes/rec/REC-04.md` | C-08, E2-01 | |
 | REC-05 | Records as the law's inputs | `probes/rec/REC-05.md` | C-02 | |

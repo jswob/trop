@@ -19,7 +19,7 @@ version a13_calc_rules
   replace rule g_due.a13_stopped beats monthly, set = 0 when e == kalina and start_of(p) >= a13_stop
   replace rule g_paid.a13_uninsured beats parental, work = 0 when e == sio and a13_stop <= born[zosia]
   replace rule res_joint.a13_law beats health, reliefs = jpart[s, y] - relief_half[s, y] - adv_p[s, y] when joint_may[y]
-  replace rule together_joint.a13_law beats base = max(0, joint_tax[y] - relief[y]) - sum(adv_p[t, y] for t in spouse) when joint_may[y]
+  replace rule together_joint.a13_law beats base = max(0, joint_tax[y] - relief[y]) - sum(adv_p[t, y] for t in persons over y) when joint_may[y]
 
 version a13_calc_never
   cite questions

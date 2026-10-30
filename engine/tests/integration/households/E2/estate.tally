@@ -71,5 +71,7 @@ version e2_wrz_2025
   cite e2_wrz_ania
   governs 2025-06..2025-12
   known 2025-12-31
-  note "One row of the export, the one E2-01 reads: the payout reaching Ania's savings account. The version covers nothing: the export's other rows are no question's, and A anchors the account at the export's last balance. The export runs to 31.12.2025 (its Period line), so it is known no earlier than that day, its period's last."
-  e2_wrz[w20250616a] = (on: 2025-06-16, kind: transfers, leg cash from a.world to a.ania_sav amount 38750.00 DUK) "wrz-ania-savings-2025.csv line 7: 16.06.2025;INCOMING TRANSFER;Kancelaria Notarialna Brzoza – escrow;payout, division of the estate of Zbigniew Sowa, A. Lis;38750,00;38750,00"
+  note "One row of the export, the one E2-01 reads: the payout reaching Ania's savings account. The version covers nothing: A's own version covers the account and books every row of the export (A/records.tally). The export runs to 31.12.2025 (its Period line), so it is known no earlier than that day, its period's last."
+  note "e2_wrz[w20250616a] is the row A books as a.sbank[s20250616_07] (A/records.tally, wrz_ania_2025): both are line 7 of wrz-ania-savings-2025.csv, the one transfer of 16 June 2025 of 38 750.00 DUK from the notary's escrow into LN61 … 5503, so they are stated same, with A's kind (inheritances, heir Ania: A-D36) (L §5.19, §6.1)"
+  same e2_wrz[w20250616a] = a.sbank[s20250616_07]
+  e2_wrz[w20250616a] = (on: 2025-06-16, kind: a.inheritances, leg cash from a.world to a.ania_sav amount 38750.00 DUK, heir: a.ania) "wrz-ania-savings-2025.csv line 7: 16.06.2025;INCOMING TRANSFER;Kancelaria Notarialna Brzoza – escrow;payout, division of the estate of Zbigniew Sowa, A. Lis;38750,00;38750,00"

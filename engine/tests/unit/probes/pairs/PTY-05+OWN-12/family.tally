@@ -1,0 +1,16 @@
+model family
+  tally 2
+  on 2026-10-30
+  start 2026-01-01
+  end 2026-06-30
+  use b = "piotr.tally" sha256 "6b55047ce2292f601628f908f201bc21d100b548764718ba696b26f0246e45b7"
+  use f = "fam.tally" sha256 "4616e6e595cf3a97bbae520d00b7398f7427ad891697c093ed2986c58265ee27"
+  same f.ania = b.ania
+  note "PTY-05 x OWN-12: a nested joint model: its member f is itself a joint model (of A and D), pinned through its own use lines (ENGINE 3.1 step 1), and its member b is household B."
+  note "f's ania and B's Ania are one party by the same line, so of f.ania reads B's parts labelled Ania; f.ania_parts is f's own figure, as f alone gives it."
+
+ask q_inner: f.ania_parts[2026-06-30]
+
+ask q_outer: bal(b.pot, 2026-06-30) of f.ania
+
+ask q_total: f.ania_parts[2026-06-30] + bal(b.pot, 2026-06-30) of f.ania

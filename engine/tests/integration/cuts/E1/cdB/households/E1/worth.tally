@@ -3,7 +3,7 @@ part e1_worth_part
   note "E1-02: what each of the six was worth at the end of 2025, each counted by their own household's rules (A-HR5, B-HR4, D-HR4; story.md), and Jakub, who has no household in the set, the way D-HR4 counts what Halina has; the family is the six added up. Each person's rule is the household's own reading (A-11, B-11, D-08), so the family counts no one twice: Ola's debt to Piotr is in both of B's figures (B-HR4 .3), Halina's debt to Jakub is taken off hers and added to his."
 
 index e1_person = [ania, tomek, piotr, ola, halina, jakub]
-  note "the six whose worth the family counts: ania and tomek by A's keys of spouse, piotr and ola by B's things of persons, halina and jakub by D's keys of heir (story.md, The family). Jakub has no household of his own in the set and is counted from D's papers."
+  note "the six whose worth the family counts: ania and tomek for A's things of persons (a.ania, a.tomek), piotr and ola by B's things of persons, halina and jakub by D's keys of heir (story.md, The family). Jakub has no household of his own in the set and is counted from D's papers."
 
 input e1_day: date question "On which day does the family count what each of us is worth?"
 
@@ -21,12 +21,12 @@ def e1_jakub_flat: money DUK at reader
 
 def e1_worth[p in e1_person]: money DUK at reader
   note "Ania and Tomek as A-11 reads them (a.nw_person, A-HR5; A counts on its own day a.nw_day, which E1-02 checks is e1_day); Piotr and Ola as B-11 does (b.worth_piotr, b.worth_ola, B-HR4), and Piotr's inheritance tax on Zbigniew's estate besides, a tax he owes in full under B-HR4 .2 if he owes it (d.igt_tax, E1-03); Halina as D-08 does (D-HR4; D holds the sum only in its ask, asks-D-08.tally:5, so the rule restates it); Jakub as D-HR4 counts: his 3/16 of Ogrodowa, what Halina owed him (D-HR4 .3), and what no paper states"
-  rule w_ania = a.nw_person[ania] when p == ania
+  rule w_ania = a.nw_person[a.ania] when p == ania
   rule w_halina = bal(d.konto, e1_day) + d.bonds_net[e1_day] + d.keep_value[e1_day] + d.sio_owes[e1_day] - d.owed_kuba[e1_day] - d.rent_adv[month_of(e1_day)] - d.pen_due[year_of(e1_day)] + d.house_at[e1_day] when p == halina
   rule w_jakub = e1_jakub_flat + d.owed_kuba[e1_day] + e1_jakub_rest - e1_jakub_tax_unpaid when p == jakub
   rule w_ola = b.worth_ola[e1_day] when p == ola
   rule w_piotr = b.worth_piotr[e1_day] - d.igt_tax[piotr] when p == piotr
-  rule w_tomek = a.nw_person[tomek] when p == tomek
+  rule w_tomek = a.nw_person[a.tomek] when p == tomek
 
 version e1_count_day
   cite e1_questions

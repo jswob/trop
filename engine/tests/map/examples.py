@@ -30,7 +30,8 @@ COLS = ['example', 'kind', 'story', 'unit', 'integration', 'load']
 HOUSES = ('A', 'B', 'D', 'E1', 'C', 'E2')  # C, E2: the unsealed holdout (cases 1.2.0)
 EDGE = re.compile(r'\b[A-Z]+-\d+\b')
 # TESTING.md §2: the SURF writing rules met by a probe card only (map/gaps.md, accepted c)
-PROBE_ONLY = {'SURF-01', 'SURF-02', 'SURF-04'}
+PROBE_ONLY = {'SURF-01', 'SURF-02', 'SURF-04',
+              'SURF-05', 'SURF-06', 'SURF-07'}  # (session 7b: tally 2.1's writing forms, TESTING.md §2)
 
 
 def tsv(p, skip_hash=False):

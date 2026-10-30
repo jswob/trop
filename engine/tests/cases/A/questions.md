@@ -113,3 +113,19 @@ Suppose Ania had stopped working for Kalina from 1 July 2023: no pay for any tim
 (c) As (a), had she stopped working from 1 April 2023 instead.
 
 - unit: "(a)" and "(c)", each with "joint tax", "Ania", "Tomek", "together", "child relief"; "differs by", with those five labels and "Ania's income", "Ania's base", "parents' income", "Ania's advances", each this figure less the actual one (what we pay counts plus, a refund minus); and "why", a list. "(b)" with "lots", a list, each with "bought" (the month Ania's mother bought it), "units", "gain", "taxed" (true or false); then "2023" and "2024", each with "tax" and "differs by".
+
+## A-14 · Ania's withdrawal
+
+- as of: 2026-03-31 · known as of: 2026-01-15
+
+Ania withdraws 10 000.00 from her savings account in March 2026: whose money left, and what is left of each? Our papers say nothing of which money a withdrawal takes, so answer for each of these readings: the couple's money first; Ania's own money first; the two in proportion to what each has.
+
+- unit: per reading ("the couple's money first", "Ania's money first", "in proportion"): "took" and "left", each with "Ania" and "the couple".
+
+## A-15 · The same withdrawal under a house rule
+
+- as of: 2026-03-31 · known as of: 2026-01-15
+
+Suppose we had a house rule: a withdrawal takes Ania's and the couple's money in proportion. Ania withdraws 10 000.00 from her savings account in March 2026: whose money left, and what is left of each?
+
+- unit: "took" and "left", each with "Ania" and "the couple".
