@@ -8,7 +8,7 @@ The commit tagged `tally-2.1` freezes it, as `tally-2.0` froze tally 2.0. Tally 
 
 - **The definition:** `LANGUAGE.md` (what a construct means) and `ENGINE.md` (how the engine computes it), with `DECISIONS.md` (why: tally 2's records in Part I, tally 1.0.1's decisions carried in Part II) and `coverage.md`.
 - **The migration:** `MIGRATION.md`, each tally 1.0.1 construct and its tally 2 form, automatic, warned or manual.
-- **Stale until rewritten for tally 2:** `OPERATIONS.md`, `PERFORMANCE.md`, `BOUNDS.md`, `BUILD-ORDER.md`, `smoke/` and `verification/` are tally 1.0.1's, carried as they are. `STALE.md` lists the sections that tally 2's decisions reach. A gate that cites one of them waits until it is rewritten.
+- **Stale until rewritten for tally 2:** `OPERATIONS.md`, `smoke/` and `verification/` are tally 1.0.1's, carried as they are. `PERFORMANCE.md`, `BOUNDS.md` and `BUILD-ORDER.md` were rewritten for tally 2.1 by session 8b and approved at its gate G2a (2026-10-30). `STALE.md` lists the sections that tally 2's decisions reach. A gate that cites one of them waits until it is rewritten.
 - **The contract:** `DONE.md`, the gates the engine must pass, restated for tally 2.0 with the changes the user approved at G2 (logged in its table).
 - **The gap log:** `CHANGES.md`, what tally 2.0 changed from 1.0.1, how its contradictions were found and settled, and the gaps still open.
 - **The answer keys:** `models/` and `expected/` (the 79 cases, carried into tally 2 with their keys kept), and `amendments/` (the synthetic household and its 7 changes as tally 2 texts, with `amendments/expected/`). `montecarlo/` holds the Monte Carlo models and keys.

@@ -2,7 +2,7 @@
 
 These documents are carried into the package as they are. They plan or check the engine's build for tally 1.0.1, and nothing in session 4's design round checked them against tally 2 (brief §8). Each is rewritten for tally 2 before a gate that cites it is judged (`DONE-proposals.md`). Below, per document, the sections that name a construct tally 2 removed, merged or changed, and what reaches it. The list comes from a word scan (`scratch/lead/stale_map.py`), so it says where to reread, not what the new text is. A section not listed may still be reached through a word the scan doesn't know.
 
-**Tally 2.1** (session 7b, 2026-10-30) reaches them once more: a place whose kind keeps parts (`owned`, `batched`) carries a part map, an arrival rule and takes, so `PERFORMANCE.md`'s costs and `BOUNDS.md`'s bounds don't cover the labels' cost (`engine/BUILD-NOTES.md`, the labels' cost; load row L:18). They stay stale as they are, rewritten for tally 2 with the rest.
+**Tally 2.1** (session 7b, 2026-10-30) reaches them once more: a place whose kind keeps parts (`owned`, `batched`) carries a part map, an arrival rule and takes, so `PERFORMANCE.md`'s costs and `BOUNDS.md`'s bounds don't cover the labels' cost (`engine/BUILD-NOTES.md`, the labels' cost; load row L:18). `PERFORMANCE.md`, `BOUNDS.md` and `BUILD-ORDER.md` were rewritten for tally 2.1 on 2026-10-30 (session 8b, below); `OPERATIONS.md`, `smoke/` and `verification/` stay stale.
 
 
 ## `OPERATIONS.md`
@@ -23,54 +23,9 @@ These documents are carried into the package as they are. They plan or check the
 | 10. Errors and warnings of the operations | `correction` (1), `pay` (2), `pays` (1), `scenario` (2) | D-10 (overlay of ordinary versions); D-2, D-8 (`move`, `observed`); D-6 |
 
 
-## `PERFORMANCE.md`
+## `PERFORMANCE.md`, `BOUNDS.md`, `BUILD-ORDER.md`: no longer stale
 
-| Section | Words (count) | Reached by |
-|---|---|---|
-| 1. Units, and the evaluation strategy | `bounds` (1), `known` (1), `path` (1), `pay` (3), `records` (2), `state pay` (1) | D-11 (`path p`, no path key); D-15; D-2, D-8 (`move`, `observed`); D-3 (per row); D-5 (declared reads); D-8 (`observed` inputs) |
-| 2.1 The flow pass | `flow pay` (1), `pay` (2) | D-2, D-8 (`move`, `observed`); D-5, D-6 |
-| 2.2 The day walk | `pay` (1), `pays` (1), `records` (1), `state pay` (1), `state pays` (1) | D-2, D-8 (`move`, `observed`); D-5; D-5 (declared reads); D-8 (`observed` inputs) |
-| 2.3 `plan_low`, the look-ahead | `draw` (1), `holds` (1), `known` (3), `look-ahead` (1), `path` (1), `plan_low` (1), `promised` (1), `record` (1) | D-11 (`path p`, no path key); D-11 (a distribution is a fact's value); D-2, D-6 (certainty on event kinds); D-2, D-6 (obligations are places); D-3 (per row); D-6; D-6 (the written projection, `low`); D-8 (`observed` inputs) |
-| 2.4 `next_on` and `worth` | `known` (1), `next_on` (1), `worth` (1) | D-1 (`value`); D-3 (per row); D-6 (`next`) |
-| 3. Cut classes, scenarios, pins and rolling origins | `known` (5), `path` (1), `pay` (1), `pays` (5), `records` (1), `scenario` (2), `state pay` (1) | D-10 (overlay of ordinary versions); D-11 (`path p`, no path key); D-2, D-8 (`move`, `observed`); D-3 (per row); D-5 (declared reads); D-8 (`observed` inputs) |
-| 4.1 Invalidation | `draws` (1), `holds` (1), `known` (1), `path` (1), `records` (1), `scenario` (1) | D-10 (overlay of ordinary versions); D-11; D-11 (`path p`, no path key); D-2, D-6 (obligations are places); D-3 (per row); D-8 (`observed` inputs) |
-| 4.2 The walk restart | `pay` (1), `records` (1), `state pay` (1) | D-2, D-8 (`move`, `observed`); D-5 (declared reads); D-8 (`observed` inputs) |
-| 4.3 What one turn costs | `look-ahead` (1), `scenario` (3) | D-10 (overlay of ordinary versions); D-6 |
-| 4.4 The fitting loop | `ledger` (1), `records` (2) | D-8 (`observed` inputs); E §6.3 (the residual ledger) |
-| 5. Monte Carlo | `draw` (5), `draws` (1), `path` (13) | D-11; D-11 (`path p`, no path key); D-11 (a distribution is a fact's value) |
-| 6. Numbers | `bound` (2) | D-15 (an ordinary hole with its reason) |
-| 7. Cost per construct | `bound` (1), `draw` (2), `flow pay` (1), `known` (1), `law date` (1), `path` (2), `pay` (2), `plan_low` (1), `records` (1), `scenario` (2), `state pay` (1) | D-10 (overlay of ordinary versions); D-11 (`path p`, no path key); D-11 (a distribution is a fact's value); D-15 (an ordinary hole with its reason); D-2, D-8 (`move`, `observed`); D-3 (per row); D-4 (written, never inherited); D-5 (declared reads); D-5, D-6; D-6 (the written projection, `low`); D-8 (`observed` inputs) |
-| 8. Budgets | `draw` (2), `look-ahead` (1), `path` (4), `scenario` (1) | D-10 (overlay of ordinary versions); D-11 (`path p`, no path key); D-11 (a distribution is a fact's value); D-6 |
-| 9. What can grow, and what caps it | `bound` (1), `bounds` (3), `path` (1), `records` (1), `scenario` (1) | D-10 (overlay of ordinary versions); D-11 (`path p`, no path key); D-15; D-15 (an ordinary hole with its reason); D-8 (`observed` inputs) |
-| 10. What this document doesn't settle | `draw` (1), `path` (1), `worth` (1) | D-1 (`value`); D-11 (`path p`, no path key); D-11 (a distribution is a fact's value) |
-
-
-## `BOUNDS.md`
-
-| Section | Words (count) | Reached by |
-|---|---|---|
-| (before the first section) | `arrears` (1), `bound` (7), `bounds` (3), `canonical` (1), `correction` (1), `draw` (5), `draws` (4), `excepts` (1), `flow pay` (1), `governs` (3), `holds` (1), `known` (5), `law date` (1), `ledger` (1), `look-ahead` (1), `path` (4), `pay` (5), `pays` (6), `plan_low` (1), `record` (6), `records` (2), `scenario` (4), `state pays` (1), `worth` (3) | D-1 (`value`); D-10 (overlay of ordinary versions); D-11; D-11 (`path p`, no path key); D-11 (a distribution is a fact's value); D-12 (`beats`); D-15; D-15 (an ordinary hole with its reason); D-2, D-6 (obligations are places); D-2, D-8 (`move`, `observed`); D-3 (per row); D-3 (required); D-4 (written, never inherited); D-5; D-5, D-6; D-6; D-6 (adjustments as ordinary movements); D-6 (the written projection, `low`); D-8 (`observed` inputs); E §6.3 (the residual ledger); L §2.4 (tally 2's canonical form) |
-| Changed by the design | `bounds` (1), `draws` (1) | D-11; D-15 |
-
-
-## `BUILD-ORDER.md`
-
-| Section | Words (count) | Reached by |
-|---|---|---|
-| (before the first section) | `canonical` (2), `ledger` (1), `path` (1) | D-11 (`path p`, no path key); E §6.3 (the residual ledger); L §2.4 (tally 2's canonical form) |
-| Summary | `bound` (2), `bounds` (2), `canonical` (1), `draws` (2), `excepts` (1), `known` (2), `ledger` (1), `path` (2), `pay` (1), `pays` (1), `plan_low` (1), `records` (1), `scenario` (1) | D-10 (overlay of ordinary versions); D-11; D-11 (`path p`, no path key); D-12 (`beats`); D-15; D-15 (an ordinary hole with its reason); D-2, D-8 (`move`, `observed`); D-3 (per row); D-6 (the written projection, `low`); D-8 (`observed` inputs); E §6.3 (the residual ledger); L §2.4 (tally 2's canonical form) |
-| S. The tracer slice (before M0) | `holds` (1), `known` (1), `ledger` (1), `path` (1), `pay` (1), `pays` (1), `plan_low` (1), `promised` (1), `records` (1) | D-11 (`path p`, no path key); D-2, D-6 (certainty on event kinds); D-2, D-6 (obligations are places); D-2, D-8 (`move`, `observed`); D-3 (per row); D-6 (the written projection, `low`); D-8 (`observed` inputs); E §6.3 (the residual ledger) |
-| M0. Load and format | `canonical` (1) | L §2.4 (tally 2's canonical form) |
-| M1. The household forecast | `canonical` (1), `draw` (1), `excepts` (1), `free` (1), `holds` (1), `known` (1), `law date` (1), `look-ahead` (2), `next_on` (1), `pay` (2), `pays` (2), `plan_low` (1), `records` (2), `state pay` (2), `state pays` (1), `worth` (1) | D-1 (`value`); D-11 (a distribution is a fact's value); D-12 (`beats`); D-2, D-6 (obligations are places); D-2, D-8 (`move`, `observed`); D-3 (per row); D-4 (written, never inherited); D-5; D-5 (declared reads); D-6; D-6 (`next`); D-6 (the written projection, `low`); D-8 (`observed` inputs); L §2.4 (tally 2's canonical form) |
-| M2. Replay against reality | `arrears` (1), `correction` (2), `holds` (1), `known` (2), `ledger` (3), `pay` (1), `pays` (1), `record` (2), `records` (3), `state pay` (1) | D-2, D-6 (obligations are places); D-2, D-8 (`move`, `observed`); D-3 (per row); D-5 (declared reads); D-6; D-6 (adjustments as ordinary movements); D-8 (`observed` inputs); E §6.3 (the residual ledger) |
-| M3. The operations | `record` (2), `records` (1), `scenario` (1) | D-10 (overlay of ordinary versions); D-8 (`observed` inputs) |
-| M4. Law breadth | `draw` (1), `excepts` (1), `pays` (1) | D-11 (a distribution is a fact's value); D-12 (`beats`); D-2, D-8 (`move`, `observed`) |
-| M5. Allocation, holdings and many parties | `bound` (1) | D-15 (an ordinary hole with its reason) |
-| M6. Exact functions and iteration | `bound` (2), `draw` (1) | D-11 (a distribution is a fact's value); D-15 (an ordinary hole with its reason) |
-| M7. Monte Carlo | `canonical` (1), `draw` (3), `draws` (5), `holds` (1), `look-ahead` (2), `path` (5), `scenario` (1) | D-10 (overlay of ordinary versions); D-11; D-11 (`path p`, no path key); D-11 (a distribution is a fact's value); D-2, D-6 (obligations are places); D-6; L §2.4 (tally 2's canonical form) |
-| M8. The evaluation layer | `draw` (1), `holds` (1), `known` (1), `records` (1) | D-11 (a distribution is a fact's value); D-2, D-6 (obligations are places); D-3 (per row); D-8 (`observed` inputs) |
-| M9. Performance (step F) | `canonical` (1), `look-ahead` (1), `path` (2) | D-11 (`path p`, no path key); D-6; L §2.4 (tally 2's canonical form) |
-| What every milestone keeps | `bounds` (2) | D-15 |
+Rewritten for tally 2.1 by session 8b from session 8's gate G1 (`tmp/session8/decisions.md`), and approved by the user at session 8b's gate G2a on 2026-10-30 (`tmp/session8b/g2a.md`): each now names 2.1's constructs and sections, and the labels' cost is a row of `PERFORMANCE.md` §7 and a row of its own in `BOUNDS.md` (row 54). They carry no language meaning, so `VERSION` stays `tally-2.1` (G1 item 9). Their tally 1.0.1 texts stay reachable at the tag `tally-2.1`.
 
 
 ## `smoke/HH4-a.md`
