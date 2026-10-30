@@ -202,6 +202,12 @@ The walk is a fold over days. It starts at S from the opening readings (LANGUAGE
    - An account or cash place whose end-of-day balance goes below zero prints `WARN-NEGATIVE` on the first day of each stretch.
    - Each warning is tested only where the balance is known; a hole balance prints its hole when asked.
 
+**Parts in the walk** (tally 2.1, LANGUAGE §3.6, §5.14). A place whose kind keeps parts carries them in the walk's state, per (place, unit), beside its balance; a place whose kind keeps none carries nothing more.
+- **Steps 0–2 are one batch** at each such place: its pads at the start, observations and plans take from its parts together, one take per place over every outflow of the batch there (LANGUAGE §5.14), the batch's arrivals among its supplies; the takes are computed in the order of the reads among them, a cycle broken or refused as LANGUAGE §5.14.2 says. Each arrival is labelled when it is booked: the walk runs the place kind's arrival rule there, its law at the arrival's day and its cut K, its parts read at the start of the day or earlier (LANGUAGE §5.14.1).
+- **In step 3** a decision's legs take and arrive at its point, against the parts as they stand then, and so do the observations booked at its point; a reading after it states or leaves parts as LANGUAGE §5.19 says.
+- **In step 5** a part labelled to a party on a day outside its lifespan refuses the leg that brought it (`RUN-LIFESPAN`), and a party whose lifespan ends on t and that holds a part at the close of t refuses that part's place from t on (`RUN-LIFESPAN`), after the day's whole order.
+- **Holes.** An undecided take merges what it could reach into one hole part, its total known (LANGUAGE §8.1); a read of parts that a hole part may hold is a hole, and the total is not.
+
 **Holes in the walk.** A hole movement makes both ends' balances holes from the first day it may fall on (every day, for a day that is a hole and not a window, LANGUAGE §5.14), with its questions, up to the place's next reading as §6.1 says. A leg whose place is a hole books its known side, and every read of the unknown side is a hole naming it (LANGUAGE §5.14). Decisions that read a hole balance are holes in turn. Results about earlier days, and about other places, stand.
 
 **Running reads in the walk** (LANGUAGE §5.14.1):
