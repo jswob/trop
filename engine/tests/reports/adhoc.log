@@ -371,3 +371,73 @@
 2026-10-30 18:35:59	/Users/jswob/projects/trop/tmp/session7b/blind-run/judge/S4check	run s4_pinned.tally	rc 0, 1.3 s
 2026-10-30 18:36:45	/Users/jswob/projects/trop/tmp/session7b/blind-run/judge/S4check	run s4_pinned.tally	rc 0, 1.5 s
 2026-10-30 19:01:56	/private/tmp/claude-501/-Users-jswob-projects-trop/a3036526-da33-4bf2-b441-25c845ce206d/scratchpad/c7b20	run m.tally	rc 0, 0.6 s
+2026-10-30 19:22:42	/Users/jswob/projects/trop/tmp/session7c/scratch/a1	run a1.tally	rc 1, 0.6 s
+2026-10-30 19:22:51	/Users/jswob/projects/trop/tmp/session7c/scratch/a1	run a1.tally --ask q1	rc 1, 0.4 s
+2026-10-30 19:22:51	/Users/jswob/projects/trop/tmp/session7c/scratch/a1	run a1.tally --ask q2	rc 1, 0.4 s
+2026-10-30 19:22:52	/Users/jswob/projects/trop/tmp/session7c/scratch/a1	run a1.tally --ask q3	rc 1, 0.4 s
+2026-10-30 19:22:52	/Users/jswob/projects/trop/tmp/session7c/scratch/a1	run a1.tally --ask q4	rc 1, 0.4 s
+2026-10-30 19:22:53	/Users/jswob/projects/trop/tmp/session7c/scratch/a1	run a1.tally --ask q5	rc 1, 0.4 s
+2026-10-30 19:22:58	/Users/jswob/projects/trop/tmp/session7c/scratch/a1	run a1_q1.tally	rc 0, 0.5 s
+2026-10-30 19:22:59	/Users/jswob/projects/trop/tmp/session7c/scratch/a1	run a1_q2.tally	rc 1, 0.4 s
+2026-10-30 19:22:59	/Users/jswob/projects/trop/tmp/session7c/scratch/a1	run a1_q3.tally	rc 0, 0.4 s
+2026-10-30 19:23:00	/Users/jswob/projects/trop/tmp/session7c/scratch/a1	run a1_q4.tally	rc 1, 0.4 s
+2026-10-30 19:23:00	/Users/jswob/projects/trop/tmp/session7c/scratch/a1	run a1_q5.tally	rc 1, 0.4 s
+2026-10-30 19:23:10	/Users/jswob/projects/trop/tmp/session7c/scratch/a1	run a1_q6.tally	rc 1, 0.4 s
+2026-10-30 19:23:10	/Users/jswob/projects/trop/tmp/session7c/scratch/a1	run a1_q7.tally	rc 1, 0.4 s
+2026-10-30 19:23:49	/Users/jswob/projects/trop/tmp/session7c/scratch/a2	run v1.tally	rc 1, 0.6 s
+2026-10-30 19:23:49	/Users/jswob/projects/trop/tmp/session7c/scratch/a2	run v2.tally	rc 1, 0.4 s
+2026-10-30 19:23:50	/Users/jswob/projects/trop/tmp/session7c/scratch/a2	run v3.tally	rc 1, 0.4 s
+2026-10-30 19:23:55	/Users/jswob/projects/trop/tmp/session7c/scratch/a2	run v1.tally	rc 1, 0.5 s
+2026-10-30 19:23:56	/Users/jswob/projects/trop/tmp/session7c/scratch/a2	run v2.tally	rc 1, 0.4 s
+2026-10-30 19:23:56	/Users/jswob/projects/trop/tmp/session7c/scratch/a2	run v3.tally	rc 1, 0.4 s
+2026-10-30 19:24:03	/Users/jswob/projects/trop/tmp/session7c/scratch/a2	run v1.tally	rc 0, 0.5 s
+2026-10-30 19:24:04	/Users/jswob/projects/trop/tmp/session7c/scratch/a2	run v2.tally	rc 0, 0.5 s
+2026-10-30 19:24:05	/Users/jswob/projects/trop/tmp/session7c/scratch/a2	run v3.tally	rc 0, 0.5 s
+2026-10-30 19:24:16	/Users/jswob/projects/trop/tmp/session7c/scratch/s4	run kind.tally	rc 1, 0.6 s
+2026-10-30 19:24:21	/Users/jswob/projects/trop/tmp/session7c/scratch/s4	run kind.tally	rc 0, 0.7 s
+2026-10-30 19:24:28	/Users/jswob/projects/trop/tmp/session7c/scratch/s4	run kind.tally	rc 0, 0.8 s
+2026-10-30 19:24:29	/Users/jswob/projects/trop/tmp/session7c/scratch/s4	run orig.tally	rc 0, 0.8 s
+2026-10-30 19:24:39	/Users/jswob/projects/trop/tmp/session7c/scratch/s4	run kind2.tally	rc 0, 0.8 s
+2026-10-30 19:25:02	/Users/jswob/projects/trop/tmp/session7c/scratch/a2	run v4.tally	rc 0, 0.6 s
+2026-10-30 19:25:03	/Users/jswob/projects/trop/tmp/session7c/scratch/a2	run v5.tally	rc 0, 0.5 s
+2026-10-30 19:25:03	/Users/jswob/projects/trop/tmp/session7c/scratch/a2	run v6.tally	rc 0, 0.5 s
+2026-10-30 19:25:04	/Users/jswob/projects/trop/tmp/session7c/scratch/a2	run v7.tally	rc 0, 0.5 s
+2026-10-30 19:25:04	/Users/jswob/projects/trop/tmp/session7c/scratch/a2	run v8.tally	rc 0, 0.5 s
+2026-10-30 19:25:05	/Users/jswob/projects/trop/tmp/session7c/scratch/a2	run v9.tally	rc 0, 0.5 s
+2026-10-30 19:25:14	/Users/jswob/projects/trop/tmp/session7c/scratch/a2	run v10.tally	rc 0, 0.6 s
+2026-10-30 19:25:18	/Users/jswob/projects/trop/tmp/session7c/scratch/a2	run v10.tally	rc 0, 0.5 s
+2026-10-30 19:25:38	/Users/jswob/projects/trop/tmp/session7c/scratch/a2	run v11.tally	rc 0, 0.5 s
+2026-10-30 19:25:58	/Users/jswob/projects/trop/tmp/session7c/scratch/s4	run ord.tally	rc 1, 0.6 s
+2026-10-30 19:26:41	/Users/jswob/projects/trop/tmp/session7c/scratch/s4k	run s4_keyed.tally	rc 0, 0.8 s
+2026-10-30 19:27:15	/Users/jswob/projects/trop/tmp/session7c/scratch/s4k	run b1.tally --ask s4_01	rc 0, 0.7 s
+2026-10-30 19:27:15	/Users/jswob/projects/trop/tmp/session7c/scratch/s4k	run b2.tally --ask s4_01	rc 0, 0.5 s
+2026-10-30 19:27:16	/Users/jswob/projects/trop/tmp/session7c/scratch/s4k	run b3.tally --ask s4_01	rc 0, 0.5 s
+2026-10-30 19:27:30	/Users/jswob/projects/trop/tmp/session7c/scratch/a2	run v12.tally	rc 0, 0.5 s
+2026-10-30 19:27:31	/Users/jswob/projects/trop/tmp/session7c/scratch/a2	run v13.tally	rc 1, 0.4 s
+2026-10-30 19:27:32	/Users/jswob/projects/trop/tmp/session7c/scratch/a2	run v14.tally	rc 1, 0.4 s
+2026-10-30 19:27:48	/Users/jswob/projects/trop/tmp/session7c/scratch/a2	run v15.tally	rc 0, 0.6 s
+2026-10-30 19:27:49	/Users/jswob/projects/trop/tmp/session7c/scratch/a2	run v16.tally	rc 0, 0.4 s
+2026-10-30 19:27:49	/Users/jswob/projects/trop/tmp/session7c/scratch/a2	run v17.tally	rc 0, 0.5 s
+2026-10-30 19:27:50	/Users/jswob/projects/trop/tmp/session7c/scratch/a2	run v18.tally	rc 0, 0.5 s
+2026-10-30 19:27:58	/Users/jswob/projects/trop/tmp/session7c/scratch/a2	run v19.tally	rc 0, 0.4 s
+2026-10-30 19:27:58	/Users/jswob/projects/trop/tmp/session7c/scratch/a2	run v20.tally	rc 0, 0.5 s
+2026-10-30 19:28:08	/Users/jswob/projects/trop/tmp/session7c/scratch/a2	run v21.tally	rc 0, 0.5 s
+2026-10-30 19:28:08	/Users/jswob/projects/trop/tmp/session7c/scratch/a2	run v22.tally	rc 0, 0.5 s
+2026-10-30 19:28:09	/Users/jswob/projects/trop/tmp/session7c/scratch/a2	run v23.tally	rc 0, 0.4 s
+2026-10-30 19:28:49	/Users/jswob/projects/trop/tmp/session7c/scratch/a3	run a3.tally	rc 0, 0.6 s
+2026-10-30 19:28:55	/Users/jswob/projects/trop/tmp/session7c/scratch/a3	run a3.tally	rc 0, 0.5 s
+2026-10-30 19:29:10	/Users/jswob/projects/trop/tmp/session7c/scratch/a4	run lin.tally --ask q2	rc 0, 0.6 s
+2026-10-30 19:29:11	/Users/jswob/projects/trop/tmp/session7c/scratch/a4	run ifterm.tally --ask q2	rc 0, 0.5 s
+2026-10-30 19:29:11	/Users/jswob/projects/trop/tmp/session7c/scratch/a4	run roundterm.tally --ask q2	rc 1, 0.4 s
+2026-10-30 19:29:31	/Users/jswob/projects/trop/tmp/session7c/scratch/a4	run t_lin.tally	rc 0, 0.6 s
+2026-10-30 19:29:31	/Users/jswob/projects/trop/tmp/session7c/scratch/a4	run t_if.tally	rc 0, 0.4 s
+2026-10-30 19:29:32	/Users/jswob/projects/trop/tmp/session7c/scratch/a4	run t_cmp.tally	rc 0, 0.4 s
+2026-10-30 19:29:32	/Users/jswob/projects/trop/tmp/session7c/scratch/a4	run t_minmax.tally	rc 0, 0.5 s
+2026-10-30 19:29:33	/Users/jswob/projects/trop/tmp/session7c/scratch/a4	run t_open.tally	rc 0, 0.4 s
+2026-10-30 19:30:36	/Users/jswob/projects/trop/tmp/session7c/scratch/a2	run t1.tally	rc 0, 0.6 s
+2026-10-30 19:30:44	/Users/jswob/projects/trop/tmp/session7b/blind-run/S1	run s1.tally	rc 0, 0.6 s
+2026-10-30 19:30:45	/Users/jswob/projects/trop/tmp/session7b/blind-run/S2	run s2.tally	rc 0, 0.8 s
+2026-10-30 19:30:46	/Users/jswob/projects/trop/tmp/session7b/blind-run/S3	run s3.tally	rc 0, 0.6 s
+2026-10-30 19:30:47	/Users/jswob/projects/trop/tmp/session7b/blind-run/S4	run s4.tally	rc 0, 0.8 s
+2026-10-30 19:30:47	/Users/jswob/projects/trop/tmp/session7b/blind-run/S5	run s5.tally	rc 0, 0.7 s
+2026-10-30 19:30:48	/Users/jswob/projects/trop/tmp/session7b/blind-run/S6	run s6.tally	rc 0, 0.7 s
