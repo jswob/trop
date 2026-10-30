@@ -447,6 +447,50 @@ def _is_pad(e):
     return e.mv is not None and e.mv.__class__.__name__ == 'PadMv'
 
 
+class _HoleLeg:
+    """A leg whose amount is a hole at its place (a hole amount, a hole movement, a HOLE-SAME end, a joint model's own
+    movement into a member's place), a delta of its point's take: its direction at the place, sgn (-1 out, +1 in).
+    The balance is a hole from it on, and "the sign rule is not checked against a hole balance, as in 2.0" (L §5.10
+    Parts, 2.1-F10): an outflow's take reaches every part it could take, and an arrival adds one hole part of the
+    hole balance (the migrator's F-h)."""
+    __slots__ = ('kind', 'key', 'mv', 'note', 'flow', 'sgn')
+
+    def __init__(self, e, lg, sgn):
+        self.kind = 'hole'
+        self.key = e.key
+        self.mv = e.mv
+        self.note = lg.name
+        self.flow = e.flow
+        self.sgn = sgn
+
+
+def _hole_leg(e, place):
+    """The _HoleLeg of a hole entry at place, or None where its leg or its direction isn't known there (a hole
+    movement's relabel, or one of several legs at the place)."""
+    mv = e.mv
+    lg = _leg_of(mv, e.note) if e.note is not None else None
+    if lg is None:
+        cand = [g for g in (getattr(mv, 'legs', None) or ()) if
+                any(isinstance(x, Thing) and x.name == place for x in (g.frm, g.to))]
+        if len(cand) != 1:
+            return None
+        lg = cand[0]
+    sg = e.sgn
+    if sg is None:
+        fr = isinstance(lg.frm, Thing) and lg.frm.name == place
+        to = isinstance(lg.to, Thing) and lg.to.name == place
+        if fr == to:
+            return None
+        sg = -1 if fr else 1
+    if not isinstance(e.flow, Hole):
+        return None
+    return _HoleLeg(e, lg, sg)
+
+
+def _is_out(e):
+    return e.sgn < 0 if isinstance(e, _HoleLeg) else e.flow.q < 0
+
+
 def w_pgroup_run(self, place, unit, grp, prev, refused):
     """The group's state from prev: resets in order, the deltas between them one take each (L §5.14: "at one point of
     the day's order ... the supplies are x's parts there and the demands are the outflows taking at x there"). A pad's
@@ -461,6 +505,10 @@ def w_pgroup_run(self, place, unit, grp, prev, refused):
             if (e.mv.id, e.note) in refused or (e.mv.id, e.note) in self.bad_legs:
                 continue
             batch.append(e)
+        elif e.kind == 'hole' and e.mv is not None and getattr(e.mv, 'id', None) is not None:
+            hl = _hole_leg(e, place)
+            if hl is not None and (e.mv.id, hl.note) not in refused and (e.mv.id, hl.note) not in self.bad_legs:
+                batch.append(hl)
         elif e.kind == 'reset' and _is_pad(e):
             lg = e.mv.legs[0]
             if (e.mv.id, lg.name) not in refused and (e.mv.id, lg.name) not in self.bad_legs and \
@@ -472,7 +520,7 @@ def w_pgroup_run(self, place, unit, grp, prev, refused):
                 st = self.ptake_batch(place, unit, st, batch, e.key, bad)
                 batch = []
             st = self.preset(place, unit, st, e)
-    others = [e for e in batch if not isinstance(e, _PadLeg)]
+    others = [e for e in batch if not isinstance(e, (_PadLeg, _HoleLeg))]
     if batch:
         st = self.ptake_batch(place, unit, st, batch, grp[-1].key, bad)
     for e in pads:
@@ -831,7 +879,7 @@ def w_ptake_batch(self, place, unit, st, batch, key, bad):
     if st.bad is not None:
         # parts refused from a reading on: what an outflow takes is refused with them
         for e in batch:
-            if e.flow.q < 0:
+            if _is_out(e):
                 tk = Take(place)
                 tk.bad = st.bad
                 self.__dict__.setdefault('ptake', {})[(e.mv.id, e.note)] = tk
@@ -847,9 +895,13 @@ def w_ptake_batch(self, place, unit, st, batch, key, bad):
     arrivals = []
     relabels = []
     outflows = []
+    hole_ins = []
     for e in batch:
         lg = _leg_of(e.mv, e.note)
         if lg is None:
+            continue
+        if isinstance(e, _HoleLeg):
+            (outflows if e.sgn < 0 else hole_ins).append((e, lg))
             continue
         if e.flow.q > 0:
             if isinstance(lg.frm, Thing) and lg.frm.name == place:
@@ -880,6 +932,15 @@ def w_ptake_batch(self, place, unit, st, batch, key, bad):
             continue
         for lab, a, hp in parts:
             supplies.append(Supply(lab, a, src=e.mv.id, hole=hp))
+    for e, lg in hole_ins:
+        try:
+            hp = self.parrive_hole(place, pk, labs, e, lg, key, coll)
+        except TallyError as err:
+            if load_now(err):
+                raise
+            bad[(e.mv.id, lg.name)] = err
+            continue
+        supplies.append(Supply(None, UNK, src=e.mv.id, hole=hp))
     # a relabel's arrival is an arrival of its point too, a supply of the point's other outflows; where it reads its
     # own take (its batches kept, a leg read in the rule), the place's take reads itself: a cycle among the point's
     # takes, settled as L §5.14.2 says (prelabel_cycle)
@@ -1083,6 +1144,35 @@ def w_parrive(self, place, unit, pk, step, labs, mv, lg, amt, key, coll):
                 raise refuse('RUN-LIFESPAN', '%s labels a part of %s to %s outside its lifespan' % (mv.id, place,
                                                                                                     lab[0]))
     return out
+
+
+def w_parrive_hole(self, place, pk, labs, e, lg, key, coll):
+    """An arrival whose amount is a hole (_HoleLeg): one hole part of the hole balance, of unknown amount, its possible
+    labels the arrival rule's owners (L §3.6) and its batch (a kept batch's, or this movement's), its questions the
+    amount's (L §5.10 Parts, 2.1-F10; the migrator's F-h)."""
+    from .walk import kday
+    qs = set(e.flow.qs)
+    bs = {None}
+    if 'batch' in labs:
+        frm = lg.frm
+        fpk = self.pk(frm.name) if isinstance(frm, Thing) else None
+        if fpk is not None and 'batch' in labels_of(fpk):
+            tk = self.ptake_of(e.mv, lg, key)
+            if tk.bad is not None:
+                raise tk.bad
+            bs = set(lab[1] for lab in tk.known) | set(pb for h in tk.holes for (po, pb) in h.poss)
+            for h in tk.holes:
+                qs |= set(h.qs)
+        else:
+            self.batch_mv()[e.mv.id] = e.mv.mv()
+            bs = {e.mv.id}
+    os_ = {None}
+    if 'owner' in labs:
+        shares, hparts, hqs = self.pshares(place, pk, e.mv, kday(key), coll)
+        os_ = set(p for p, sh in shares if sh != 0) | set(hparts)
+        qs |= set(hqs)
+    poss = [(o, b) for o in sorted(os_, key=str) for b in sorted(bs, key=str)]
+    return HolePart(UNK, qs, poss)
 
 
 def w_batch_mv(self):
@@ -1366,7 +1456,44 @@ def w_pterms(self, pk, s, w_mv, day, key, coll):
         krecs = self.ppart_recs(s)
         if krecs is not None or isinstance(w_mv, Mv):
             vals = self.pterms_readings(tk, env, ctx, w_mv if isinstance(w_mv, Mv) else None, vals, krecs)
+    if any(isinstance(v, Hole) for v in vals):
+        if s.hole is None:
+            vals = self.pterms_lin(tk, env, ctx, vals)
+        else:
+            # a hole part's label is no cell: two parts' holes are never one value (lex3 compares no plain hole)
+            vals = tuple(Hole(v.qs, False) if isinstance(v, Hole) else v for v in vals)
     return vals
+
+
+def w_pterms_lin(self, tk, env, ctx, vals):
+    """The hole terms of a part of known label evaluated again under partial (L §5.18 Partial answers), so that each is
+    a linear form over the cells it reads, or a plain hole: lex3 compares two arcs' terms under every reading by them.
+    Evaluated apart, as pterms_readings is: what it caches is dropped, and it leaves no register or trace."""
+    import collections
+    eng = self.eng
+    ctx2 = ctx.but(partial=True)
+    old_memo, old_tr, old_wb = eng.memo, eng.tracing, getattr(eng, '_explaining_wb', False)
+    eng.memo = collections.ChainMap({}, old_memo)
+    eng.tracing = False
+    eng._explaining_wb = True
+    out = []
+    try:
+        for e, v in zip(tk.order, vals):
+            if isinstance(v, Hole):
+                eng.stack.append(_coll())
+                try:
+                    v2 = eng.ev(e, env, ctx2)
+                except TallyError as err:
+                    if load_now(err):
+                        raise
+                    v2 = None
+                finally:
+                    eng.stack.pop()
+                v = v2 if isinstance(v2, Hole) and v2.qs == v.qs else Hole(v.qs, False)
+            out.append(v)
+    finally:
+        eng.memo, eng.tracing, eng._explaining_wb = old_memo, old_tr, old_wb
+    return tuple(out)
 
 
 def w_pterms_readings(self, tk, env, ctx, w_mv, vals, krecs=None):
@@ -1446,6 +1573,82 @@ def w_pterms_readings(self, tk, env, ctx, w_mv, vals, krecs=None):
     return tuple(out)
 
 
+def _tlin(v):
+    """A term's value as a linear form over its holes (L §5.18 Partial answers, evaluate.lin_of), or None: a known
+    number, a hole evaluated under partial (pterms_lin), never a plain hole."""
+    from .evaluate import lin_of
+    if isinstance(v, Hole):
+        return lin_of(v)
+    if isinstance(v, Num):
+        return (v, ())
+    return None
+
+
+def tcmp(eng, x, y):
+    """-1, 0 or 1 where two order terms compare the same way under every reading of their holes, else None (L §5.14 A
+    hole in a term): known values by value; holes where their difference is known, as two reads of one cell are equal
+    (the migrator's F-i)."""
+    if not isinstance(x, Hole) and not isinstance(y, Hole):
+        return eng.cmp3(x, y, None)
+    from .evaluate import lin_add
+    lx, ly = _tlin(x), _tlin(y)
+    if lx is None or ly is None:
+        return None
+    try:
+        k, ts = lin_add(lx, ly, -1)
+    except TallyError:
+        return None
+    if any(c.q != 0 for a, c in ts):
+        return None
+    if k is None:
+        return 0
+    return (k.q > 0) - (k.q < 0)
+
+
+def _pgroup_of(supplies, si):
+    s = supplies[si]
+    return ('lab', s.lab) if s.hole is None else ('hole', si)
+
+
+def _topo_classes(eng, arcs):
+    """The certain arcs of a take as classes tied under every reading (lex3 0), in an order every reading keeps: a
+    class goes once every class certainly before it has gone, the first written first. Two classes neither before
+    the other hold independent arcs (pfill), so their order changes no take."""
+    cls = []
+    for a in arcs:
+        for c in cls:
+            if lex3(eng, c[0][2], a[2]) == 0:
+                c.append(a)
+                break
+        else:
+            cls.append([a])
+    n = len(cls)
+    pred = [set(j for j in range(n) if j != i and lex3(eng, cls[j][0][2], cls[i][0][2]) == -1) for i in range(n)]
+    out = []
+    done = set()
+    while len(out) < n:
+        for i in range(n):
+            if i not in done and pred[i] <= done:
+                out.append(cls[i])
+                done.add(i)
+                break
+        else:
+            raise NotYet('parts: an order whose certain arcs form no sequence')
+    return out
+
+
+def lex3(eng, t1, t2):
+    """The order's terms compared lexicographically (§5.12) under every reading of their holes: -1, 0, 1, or None
+    where some reading decides it one way and another the other."""
+    for x, y in zip(t1, t2):
+        r = tcmp(eng, x, y)
+        if r is None:
+            return None
+        if r:
+            return r
+    return 0
+
+
 def w_pfill(self, place, unit, pk, step, supplies, outflows, key, coll, bad):
     """The take: §5.12's steps 2-4 over (part, outflow) arcs, sorted by the order's terms; ties as L §5.14 says. "A
     hole in a term ... makes the arcs it ranks undecided. Only the parts the take could reach under some reading of the
@@ -1461,9 +1664,10 @@ def w_pfill(self, place, unit, pk, step, supplies, outflows, key, coll, bad):
     for e, lg in outflows:
         if (e.mv.id, lg.name) in bad:
             continue
-        outs.append([e, lg, -e.flow.q])
+        # an outflow of a hole amount (_HoleLeg) takes an unknown amount: UNK, never covered (2.1-F10, F-h)
+        outs.append([e, lg, UNK if isinstance(e, _HoleLeg) else -e.flow.q])
     for o in outs:
-        if (o[2] / step).denominator != 1:
+        if o[2] is not UNK and (o[2] / step).denominator != 1:
             bad[(o[0].mv.id, o[1].name)] = refuse('RUN-PRORATA', '%s taken from %s isn\'t a whole number of its step '
                                                                  '%s' % (fmt(qty(o[2], unit)), place,
                                                                          fmt(qty(step, unit))))
@@ -1484,36 +1688,48 @@ def w_pfill(self, place, unit, pk, step, supplies, outflows, key, coll, bad):
                     raise
                 bad[(o[0].mv.id, o[1].name)] = err
                 continue
-            (unsure if any(isinstance(v, Hole) for v in t) or s.amt is UNK else certain).append((si, oi, t))
+            (unsure if s.amt is UNK or o[2] is UNK else certain).append((si, oi, t))
     if any((o[0].mv.id, o[1].name) in bad for o in outs):
         return
+    # L §5.14 A hole in a term "makes the arcs it ranks undecided", and a take is undecided only where some reading of
+    # the holes changes it (the migrator's F-i). The order is lexicographic, and two arcs whose hole terms read one
+    # cell the same way tie on it (lex3), so a hole ranks two arcs only where no earlier term tells them apart and
+    # their hole terms may differ; and their order changes a take only where they share an outflow or draw on parts of
+    # one label (dependent): two arcs of neither commute, so every order of them takes the same. An arc with a hole
+    # in a term is certain where every other arc compares with it under every reading, or is independent of it.
+    def dependent(a, b):
+        return a[1] == b[1] or _pgroup_of(supplies, a[0]) == _pgroup_of(supplies, b[0])
+    holed = [a for a in certain if any(isinstance(v, Hole) for v in a[2])]
+    if holed:
+        loose = set()
+        for a in holed:
+            for b in certain:
+                if b is not a and lex3(eng, a[2], b[2]) is None and dependent(a, b):
+                    loose.add(id(a))
+                    break
+        unsure += [a for a in certain if id(a) in loose]
+        certain = [a for a in certain if id(a) not in loose]
     takes = self.__dict__.setdefault('ptake', {})
     for o in outs:
         takes[(o[0].mv.id, o[1].name)] = Take(place)
 
     def cmp(a, b):
-        for x, y in zip(a[2], b[2]):
-            r = eng.cmp3(x, y, None)
-            if r:
-                return r
-        return 0
+        return lex3(eng, a[2], b[2])
 
     def after(u, t):
         """Whether undecided arc u is ranked after terms t under every reading of its holes."""
-        for x, y in zip(u[2], t):
-            if isinstance(x, Hole) or isinstance(y, Hole):
-                return False
-            r = eng.cmp3(x, y, None)
-            if r:
-                return r > 0
-        return False
-    certain.sort(key=functools.cmp_to_key(cmp))
-    classes = []
-    for a in certain:
-        if classes and cmp(classes[-1][0], a) == 0:
-            classes[-1].append(a)
-        else:
-            classes.append([a])
+        r = lex3(eng, u[2], t)
+        return r is not None and r > 0
+    if any(any(isinstance(v, Hole) for v in a[2]) for a in certain):
+        classes = _topo_classes(eng, certain)
+    else:
+        certain.sort(key=functools.cmp_to_key(cmp))
+        classes = []
+        for a in certain:
+            if classes and cmp(classes[-1][0], a) == 0:
+                classes[-1].append(a)
+            else:
+                classes.append([a])
     S = [s.amt for s in supplies]
     D = [o[2] for o in outs]
 
@@ -1537,19 +1753,17 @@ def w_pfill(self, place, unit, pk, step, supplies, outflows, key, coll, bad):
         return ('lab', s.lab) if s.hole is None else ('hole', si)
     def before(t1, t2):
         """Whether terms t1 rank before t2 under every reading of their holes: the order is lexicographic (§5.12), so
-        a known first difference decides whatever the later terms are (writer 11, the migrator's item 8)."""
-        for x, y in zip(t1, t2):
-            if isinstance(x, Hole) or isinstance(y, Hole):
-                return False
-            r = eng.cmp3(x, y, None)
-            if r:
-                return r < 0
-        return False
+        a known first difference decides whatever the later terms are (writer 11, the migrator's item 8), and two
+        reads of one cell tie (F-i)."""
+        r = lex3(eng, t1, t2)
+        return r is not None and r < 0
     def invariant(arcs):
         sup = set(a[0] for a in arcs)
         if any(supplies[si].amt is UNK for si in sup):
             return None
         outs_ = set(a[1] for a in arcs)
+        if any(D[oi] is UNK for oi in outs_):
+            return None
         have = sum((S[si] for si in sup), Fraction(0))
         need = sum((D[oi] for oi in outs_), Fraction(0))
         if len(set(group(si) for si in sup)) == 1 and have >= need:
@@ -1573,7 +1787,7 @@ def w_pfill(self, place, unit, pk, step, supplies, outflows, key, coll, bad):
             # unknown).
             pick = None
             for u in lu:
-                if supplies[u[0]].amt is UNK:
+                if supplies[u[0]].amt is UNK or D[u[1]] is UNK:
                     continue
                 mates = [b for b in lu if b[1] == u[1] and group(b[0]) == group(u[0])]
                 ids = set(id(b) for b in mates)
@@ -1661,7 +1875,7 @@ def w_pfill(self, place, unit, pk, step, supplies, outflows, key, coll, bad):
                     t_ = min(S[si], a)
                     take(si, oi, t_)
                     a -= t_
-    if not undecided and any(live(u) for u in unsure):
+    if not undecided and (any(live(u) for u in unsure) or any(d is UNK for d in D)):
         undecided = True
     if undecided:
         for si, s in enumerate(supplies):
@@ -1699,20 +1913,20 @@ def w_pundecided(self, place, unit, supplies, outs, arcs, coll):
     eng = self.eng
     total = sum(o[2] for o in outs)
     qs = set()
+    for o in outs:
+        if o[2] is UNK:
+            # an outflow of a hole amount: its take reaches every part it could take (2.1-F10, the migrator's F-h)
+            qs |= set(o[0].flow.qs)
     for si, oi, t in arcs:
         for v in t:
             if isinstance(v, Hole):
                 qs |= set(v.qs)
 
     def before(t1, t2):
-        # lexicographic under every reading of the holes: a known first difference decides (§5.12)
-        for x, y in zip(t1, t2):
-            if isinstance(x, Hole) or isinstance(y, Hole):
-                return False
-            r = eng.cmp3(x, y, None)
-            if r:
-                return r < 0
-        return False
+        # lexicographic under every reading of the holes: a known first difference decides (§5.12), two reads of one
+        # cell tie (lex3)
+        r = lex3(eng, t1, t2)
+        return r is not None and r < 0
     reach = set()
     for si, s in enumerate(supplies):
         if s.amt is UNK:
@@ -1734,7 +1948,7 @@ def w_pundecided(self, place, unit, supplies, outs, arcs, coll):
         if not safe:
             reach.add(si)
     amt = sum(supplies[si].amt for si in reach)
-    if amt < total:
+    if total is not UNK and amt < total:
         hold = self.m.things[place].base in self.m.kinds['holdings'].subtree(self.m)
         raise refuse('RUN-PLACE', '%s takes %s below 0%s' % (', '.join(sorted(set(o[0].mv.id for o in outs))),
                                                             place, ' units' if hold else ''))

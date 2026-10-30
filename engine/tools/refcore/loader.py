@@ -1620,6 +1620,7 @@ class Loader:
         from .joint import owner_of, shown
         m = self.m
         m.same_moves = []
+        m.same_owners = []      # the member whose version states each same_moves line ('' the joint's own)
         m.same_rows = {}
         m.same_settle = {}
         pairs = [(l, r, m.header.loc, None) for l, r in m.header.sames] + [(it.l, it.r, it.loc, v) for v, it in m.sames]
@@ -1657,6 +1658,7 @@ class Loader:
                 m.same_rows[kkb] = (ia, ka, tb, ta)
                 continue
             m.same_moves.append((a[1], b[1], loc))
+            m.same_owners.append(owner_of(v.id) if v is not None else '')
         # a row of the joint model on a member's item states the value of two rows stated same ("the joint model
         # settles it with a version row of its own"); on any other member's item it would change an imported one
         if getattr(m, 'joint', None) is not None:

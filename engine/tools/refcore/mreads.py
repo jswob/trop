@@ -9,7 +9,7 @@ from fractions import Fraction
 from . import units as U
 from .dates import Period, ONE_DAY
 from .errors import TallyError, Refusal, LoadError, Unspecified, NotYet, load_now
-from .evaluate import member_owns, member_moves
+from .evaluate import member_owns, member_moves, move_owner
 from .model import Span, _kv, key_text, WindowUndecided
 from .values import (Num, Money, Int, Hole, Thing, Mv, Iv, Rec, Text, Code, Key, NONE, CURRENCIES, fmt,
                      fmt_hole, vkey)
@@ -423,9 +423,11 @@ def m_alive_test(self, b, env, ctx, t, kind):
     return m.alive_over(t, kind, sp, ctx.cut, getattr(b, '_owner', None))
 
 
-def m_movements_of(self, dom, ctx):
+def m_movements_of(self, dom, ctx, owner=None):
     """Every movement a binding over an event kind (or an observed input) ranges over at the timeline, in movement
-    order: plans (left-out ones too, not the modelled past), observations, adjustments, pads, decisions."""
+    order: plans (left-out ones too, not the modelled past), observations, adjustments, pads, decisions. Inside a
+    member (owner), that member's movements only, and the same lines it states (L §6.1: "A member is closed. A
+    member's items mean what they mean alone"; the migrator's F-k)."""
     m = self.m
     restrict = getattr(self, '_adj_restrict', None)
     if restrict is not None and dom[0] == 'event' and 'adjustments' in m.kinds[dom[1]].subtree(m):
@@ -433,7 +435,7 @@ def m_movements_of(self, dom, ctx):
         out = [a for a in restrict if a.kind in m.kinds[dom[1]].subtree(m)]
         out.sort(key=lambda x: (day_lo(x.day) or datetime.date.max, str(x.order)))
         return out
-    key = ('mvs', dom, self.wkey(ctx), ctx.unc, id(ctx.walk) if ctx.walk is not None else None, ctx.wp)
+    key = ('mvs', dom, self.wkey(ctx), ctx.unc, id(ctx.walk) if ctx.walk is not None else None, ctx.wp, owner)
     hit = self.run_cache.get(key)
     if hit is not None:
         return hit
@@ -499,16 +501,24 @@ def m_movements_of(self, dom, ctx):
                 if getattr(r, 'status', None) == 'uncertain' and not ctx.unc:
                     continue
                 out.append(r)
-    out = once_by_same(m, out)
+    if owner is not None:
+        from .joint import owns
+        out = [x for x in out if owns(owner, move_owner(x))]
+    out = once_by_same(m, out, owner)
     out.sort(key=lambda x: (day_lo(x.day) or datetime.date.max, str(x.order)))
     self.run_cache[key] = out
     return out
 
 
-def once_by_same(m, out):
+def once_by_same(m, out, owner=None):
     """Two movements stated same are one: "a movement listed twice counts once" (L §6.1), so a binding over them
-    binds the left one of the same line."""
+    binds the left one of the same line. Inside a member (owner), only the same lines of its own versions: a member
+    is closed, so the joint model's lines change none of its answers (L §6.1)."""
     sm = getattr(m, 'same_moves', None)
+    if sm and owner is not None:
+        from .joint import owns
+        ows = getattr(m, 'same_owners', None) or [''] * len(sm)
+        sm = [x for x, o in zip(sm, ows) if owns(owner, o)]
     if not sm:
         return out
     ids = set(getattr(x, 'id', None) for x in out)
@@ -635,7 +645,7 @@ def m_movement_members(self, b, env, ctx, defer=False):
             return []
         if isinstance(sp, Hole):
             return sp
-    res, colls = self.span_members(b._dom, sp, ctx)
+    res, colls = self.span_members(b._dom, sp, ctx, getattr(b, '_owner', None))
     if getattr(b, '_owner', None) is not None:
         res = [(v, s, x) for v, s, x in res if member_moves(self.m, b, x)]
     if defer:
@@ -646,7 +656,7 @@ def m_movement_members(self, b, env, ctx, defer=False):
     return [(v, s) for v, s, x in res]
 
 
-def m_span_members(self, dom, sp, ctx):
+def m_span_members(self, dom, sp, ctx, owner=None):
     """The movements of an event kind or an observed input dated in span sp, in movement order, each with its status
     (True, or a Hole for an unknown member) and the movement itself: ([(Mv, status, movement)], {id: Coll}), the
     Coll holding what the member brings to a reader (L §5.14, §4.4, §5.19)."""
@@ -671,7 +681,7 @@ def m_span_members(self, dom, sp, ctx):
                 t, b._dom[1], (sp.end - ONE_DAY) if sp.end is not None else 'the end'))
     out = []
     fulfilled = set()
-    for x in self.movements_of(b._dom, ctx):
+    for x in self.movements_of(b._dom, ctx, owner):
         d = x.day
         st = True
         if d is None and x.err is not None:

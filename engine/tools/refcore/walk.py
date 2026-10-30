@@ -1013,9 +1013,7 @@ class Walk:
                             if isinstance(q, Thing) and q.name == p.name and (g.unit or '*') == (lg.unit or '*'):
                                 if isinstance(o, ObsMv):
                                     gd = g.day if isinstance(g.day, datetime.date) else o.day
-                                    cov = self.eng.covering(q.name, gd, self.tctx) if isinstance(gd, datetime.date) \
-                                        else None
-                                    if cov and o.row.version not in cov:
+                                    if isinstance(gd, datetime.date) and not self.obs_end_on(o, q, gd):
                                         continue
                                 touch.append((o, g, sj))
                 if len(set(id(x[0]) for x in touch)) < 2:
@@ -1271,11 +1269,21 @@ class Walk:
             return
         # every observation is booked on its own day (L §5.19, E §4.2 step 1): each end of each leg from the
         # observation of the version that covers its place that day, an end no version covers from this one (E §6.1)
-        ends = []
-        for p in (lg.frm, lg.to):
-            cov = eng.covering(p.name, d, self.tctx)
-            ends.append(o.row.version in cov if cov else True)
-        self.book_leg(o, lg, key, coll=o.coll, ends=tuple(ends))
+        ends = tuple(self.obs_end_on(o, p, d) for p in (lg.frm, lg.to))
+        self.book_leg(o, lg, key, coll=o.coll, ends=ends)
+
+    def obs_end_on(self, o, p, d):
+        """Whether observation o books its end at place p on day d (L §5.19 Booking an observation): "from the
+        observation of the version that covers that place on that day; an end at a place no version covers ... from
+        the observation itself". The joint model's own row into a member's place that only members' versions cover
+        is the joint's own movement there, booked only where same or fulfils links it, else a hole naming it until the
+        member's next reading, listed under left out: (L §6.1 SF-32, consol; the migrator's F-j)."""
+        from .joint import owner_of
+        cov = self.eng.covering(p.name, d, self.tctx)
+        if not cov or o.row.version in cov:
+            return True
+        return getattr(self.m, 'joint', None) is not None and isinstance(p, Thing) and \
+            owner_of(o.row.version.id) == '' and owner_of(p.name) != '' and all(owner_of(v.id) != '' for v in cov)
 
     # -- readings (E §6.1) -----------------------------------------------------------------------------------------
     def apply_reading(self, key, iid, place, unit, r):

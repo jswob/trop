@@ -3055,6 +3055,13 @@ class Checker:
                 # place's flows reaches the moves that book into it and what their amounts read)
                 for qid in self.m.moves:
                     stack.append(('move', qid))
+                # tally 2.1: the walk reads every place's parts clauses, the arrival rule, the owned clause's ties by,
+                # the takes order and prorata's ties by, so what they read is in the cone of an ask that reaches a
+                # balance (L §5.5; the migrator's F-l)
+                for t in sorted(getattr(self, 'parts_reads', ())):
+                    stack.append(t)
+                for kid in sorted(getattr(self.m, 'parts_kinds', None) or {}):
+                    stack.append(('parts', kid))
             if x[0] == 'input':
                 inf = self.m.inputs.get(x[1])
                 if inf is not None:

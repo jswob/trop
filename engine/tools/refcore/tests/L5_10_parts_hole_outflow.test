@@ -1,0 +1,108 @@
+# L §5.10 Parts (2.1-F10): "the sign rule is not checked against a hole balance, as in 2.0" (E §4.2 step 5); L §5.14
+# A hole in a term: "Only the parts the take could reach under some reading of the holes merge"; L §8.1 (2.1-F12) "a
+# part whose every possible label is q's is read as q's".  The migrator's F-h (fh_hole_outflow): acc, owned and min 0,
+# gets 100.00 (ania_tomek's by the community rule), then sp takes the hole amount spend, then fix takes a fixed 150.00.
+# The balance after sp is a hole, as at pla, the plain twin; sp could take any part, so the parts it reaches are one
+# hole part of the hole balance, possibly ania_tomek's only, and fix's take reaches it: no RUN-PLACE.  q1: the three
+# reads are the balance's hole (spend), as pla's is.  q2: fix took 150.00 (a_fix carried through) from parts whose
+# every possible label is ania_tomek's.  Before: `fix takes acc below 0` (the hole outflow left the parts as they were).
+=== m.tally
+model t10
+  tally 2
+  on 2026-01-15
+  start 2025-01-01
+  end 2026-12-31
+
+source src "test"
+
+unit DUK: currency minor 0.01
+
+kind couples: parties
+
+kind persons: parties
+
+kind cash_accounts: place one min 0
+  owned by arrive
+  step minor(DUK)
+  takes k for w order rank[k.owner]
+
+kind plain_accounts: place one min 0
+
+place acc: cash_accounts DUK lives 2025-01-01..
+
+place pla: plain_accounts DUK lives 2025-01-01..
+
+place world: outside lives 2000-01-01..
+
+input spend: money DUK question "how much do we spend?"
+
+input d_dep: date
+
+input d_sp: date
+
+input d_fix: date
+
+input a_dep: money DUK
+
+input a_fix: money DUK
+
+def rank[p in parties]: int = ?"which money leaves first?" at reader
+
+def arrive[m in events, p in parties]: num at m.day
+  rule community = (if p == ania_tomek then 1 else 0)
+
+move dep: transfers
+  on d_dep
+  at d_dep
+  leg cash from world to acc amount a_dep
+
+move dep2: transfers
+  on d_dep
+  at d_dep
+  leg cash from world to pla amount a_dep
+
+move sp: transfers
+  on d_sp
+  at d_sp
+  leg cash from acc to world amount spend
+
+move sp2: transfers
+  on d_sp
+  at d_sp
+  leg cash from pla to world amount spend
+
+move fix: transfers
+  on d_fix
+  at d_fix
+  leg cash from acc to world amount a_fix
+
+move fix2: transfers
+  on d_fix
+  at d_fix
+  leg cash from pla to world amount a_fix
+
+ask q1: bal(acc, 2025-04-30), bal(pla, 2025-04-30), bal(acc, 2025-03-31) of ania_tomek
+
+ask q2: fix.cash.amount of ania_tomek
+
+version cast
+  cite src
+  known 2021-01-01
+  persons + [ania] lives 1991-03-14..
+  persons + [tomek] lives 1989-07-02..
+  couples + [ania_tomek] lives 2016-09-10..
+
+version facts
+  cite src
+  governs always
+  known 2021-01-01
+  d_dep = 2025-02-01
+  d_sp = 2025-03-01
+  d_fix = 2025-04-01
+  a_dep = 100.00
+  a_fix = 150.00
+=== expect
+q1: (?"how much do we spend?" (spend), ?"how much do we spend?" (spend), ?"how much do we spend?" (spend))
+...
+q2: 150.00 DUK
+...

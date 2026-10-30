@@ -2691,7 +2691,7 @@ class Engine:
         m = self.m
         dom = b._dom
         if dom[0] in ('event', 'obs'):
-            cands = [x.mv() for x in self.movements_of(dom, ctx) if member_moves(m, b, x)]
+            cands = [x.mv() for x in self.movements_of(dom, ctx, getattr(b, '_owner', None)) if member_moves(m, b, x)]
         elif dom[0] == 'kind':
             cands = [Thing(t.name) for t in m.things.values() if m.thing_seen(t, ctx.cut) and m.thing_in(t.name, dom[1])
                      and member_owns(m, b, t)]
@@ -2943,7 +2943,7 @@ class Engine:
             things.sort(key=lambda t: m.kind_order_key(t, dom[1], ctx.cut))
             return [Thing(t.name) for t in things]
         if dom[0] in ('event', 'obs'):
-            return [x.mv() for x in self.movements_of(dom, ctx) if member_moves(m, b, x)]
+            return [x.mv() for x in self.movements_of(dom, ctx, getattr(b, '_owner', None)) if member_moves(m, b, x)]
         return None
 
     def zero_of(self, t):
