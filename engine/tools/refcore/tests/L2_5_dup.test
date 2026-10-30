@@ -1,0 +1,14 @@
+# L §2.5: "Two top-level items with one id are refused (LOAD-DUP)."  An input and a def share an id.
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "a source"
+
+input x: int
+def x: int = 1
+=== expect
+refused: LOAD-DUP ...

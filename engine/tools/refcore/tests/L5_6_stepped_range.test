@@ -1,0 +1,31 @@
+# L §5.6 A stepped range: "a .. b step s of quantities, dates or durations (g in 0 PLN .. gross_cap step
+# minor(PLN))"; L §5.18: "The least value that meets a condition ... is min(v for v in lo .. hi step u where c)
+# over a stepped range".  With cap 10.00 PLN and target 3.01 PLN, the least g on the 0.01 PLN grid with
+# g + g >= 3.01 PLN is 1.51 PLN (1.50 + 1.50 = 3.00 < 3.01).
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+input cap: money PLN
+input target: money PLN
+
+def least: money PLN at reader
+  rule base = min(g for g in 0 PLN .. cap step minor(PLN) where g + g >= target)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  cap = 10.00 PLN
+  target = 3.01 PLN
+
+ask q1: least law 2026-06-30
+=== expect
+q1: 1.51 PLN
+  law date 2026-06-30, cut 2026-01-01

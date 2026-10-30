@@ -1,0 +1,63 @@
+# Fault F11 (W-A, no text; household A): RUN-ORDER for any two members of a static cycle due that day, even with `when`
+# false or no mutual read. E §4.2 step 3: "inside a stratum, the instances due on t are ordered by the places their
+# legs give on t ...: one that reads a place another changes runs after it, and two that read what each other changes
+# run in the before/after order or the move's ties by (RUN-ORDER, RUN-TIE otherwise); the others are independent, and
+# an instance whose when is false orders nothing"; L §5.14.2 Cycles: "otherwise at run, only between instances due on
+# one day that read what each other changes there (RUN-ORDER)". p reads a and changes b; q reads b and changes dest.
+# off: q's when is false, so p runs alone: 100.00 - 60.00 = 40.00 DUK from b, which keeps 10.00 DUK.
+# both: q runs into a, so each reads what the other changes: RUN-ORDER.
+# apart: q runs into c, which p doesn't read; q reads b, which p changes, so q runs after p: p moves 100.00 - 5.00 =
+# 95.00 DUK out of b (-45.00 DUK), then q moves max(0, -45.00 - 5.00) = 0 into c.
+=== m.tally
+model t11
+  tally 2
+  on 2026-01-15
+  start 2026-01-01
+  end 2026-12-31
+source src "s"
+unit DUK: currency minor 0.01
+place a: accounts DUK lives 2026-01-01..
+place b: accounts DUK lives 2026-01-01..
+place c: accounts DUK lives 2026-01-01..
+place w: outside lives 2000-01-01..
+input d: date
+input keep: money DUK
+input flag: bool
+input dest: key accounts
+move p: transfers
+  on d
+  reads a
+  leg cash from b to w amount max(0, bal(a) - keep)
+move q: transfers
+  on d
+  reads b
+  when flag
+  leg cash from w to dest amount max(0, bal(b) - keep)
+ask off: bal(a, d), bal(b, d), flows(p, d..d)
+ask both: bal(a, d), bal(b, d) with flag = true
+ask apart: bal(b, d), bal(c, d), flows(q, d..d) with flag = true, dest = c, keep = 5.00 DUK
+version v
+  cite src
+  governs always
+  known 2026-01-01
+  d = 2026-01-10
+  keep = 60.00 DUK
+  flag = false
+  dest = a
+  opening[a] = 100.00 DUK at 2026-01-01 start
+  opening[b] = 50.00 DUK at 2026-01-01 start
+  opening[c] = 0.00 DUK at 2026-01-01 start
+=== expect
+apart: (-45.00 DUK, 0.00 DUK, 0.00 DUK)
+  pinned: dest = c
+  pinned: flag = true
+  pinned: keep = 5.00 DUK
+  unfulfilled: p
+  unfulfilled: q
+  cut 2026-01-15
+both: (refused: RUN-ORDER decisions p and q read each other on 2026-01-10, refused: RUN-ORDER decisions p and q read each other on 2026-01-10)
+  pinned: flag = true
+  cut 2026-01-15
+off: (100.00 DUK, 10.00 DUK, 40.00 DUK)
+  unfulfilled: p
+  cut 2026-01-15

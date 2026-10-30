@@ -1,0 +1,7 @@
+part asks_d12
+  tally 1
+  note "D-12 · A fund in place of the bonds, as of and as known 2026-09-30."
+
+ask d12_starts: f_units[s, fund_months], f_end[s] for s in start_month
+
+ask d12_extremes: f_worst, f_end[f_worst], f_best, f_end[f_best]

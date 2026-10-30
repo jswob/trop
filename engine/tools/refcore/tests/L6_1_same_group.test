@@ -1,0 +1,41 @@
+# L §6.1 (round 14): "same is an equivalence: lines that share a side make one group"; "A group of movements is one
+# movement. At a place that two of them touch ... it is booked once"; "a movement listed twice counts once". The
+# statement lists one 100.00 PLN payment three times, joined by two same lines that share bank[r32]: konto 1 000.00 -
+# 100.00 = 900.00 PLN, and a binding over transfers counts it once. (Was REFCORE-NOT-YET: a movement in two same lines.)
+=== m.tally
+model hh
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source bank_export "wyciąg"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2019-01-01..
+place world: outside lives 1900-01-01..
+input bank: observed
+
+version opening_2026
+  cite bank_export
+  governs always
+  known 2026-01-01
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "saldo"
+
+version statement_01
+  cite bank_export
+  governs 2026-01
+  known 2026-02-01
+  covers konto
+  bank[r31] = (on: 2026-01-12, kind: transfers, leg cash from konto to world amount 100.00 PLN) "line 31"
+  bank[r32] = (on: 2026-01-12, kind: transfers, leg cash from konto to world amount 100.00 PLN) "line 32"
+  bank[r33] = (on: 2026-01-12, kind: transfers, leg cash from konto to world amount 100.00 PLN) "line 33"
+  same bank[r32] = bank[r31]
+  same bank[r33] = bank[r32]
+
+ask b: bal(konto, 2026-01-31)
+ask n: count(x in transfers over 2026-01)
+=== expect
+b: 900.00 PLN
+  cut 2026-03-01
+n: 1
+  cut 2026-03-01

@@ -1,0 +1,41 @@
+# Fault asif_scenario (writer 6): `ask q: r as if {scenario sc}` in the base was refused REFCORE-NOT-YET though sc is
+# loaded. L §6.4 Asking: "Inside an expression, x as if {scenario s} is x in s"; L §8.2 `world:` lists "any as if
+# {scenario s} it reached". In sc, r is replaced by 2 from 2026-06-01; the law date 2026-10-25 falls in it: q = 2, as
+# q2 (a `with scenario sc` pin) is.
+=== m.tally
+model m
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "synthetic"
+
+input r: int
+
+ask q: r as if {scenario sc} law 2026-10-25
+
+ask q2: r with scenario sc law 2026-10-25
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  r = 1
+=== sc.tally
+scenario sc over m
+  tally 2
+  from 2026-06-01
+
+version w
+  cite s
+  governs 2026-06-01..
+  known 2026-10-25
+  replace r = 2
+=== expect
+q: 2
+  world: sc
+  law date 2026-10-25, cut 2026-10-25
+q2: 2
+  world: sc
+  law date 2026-10-25, cut 2026-10-25

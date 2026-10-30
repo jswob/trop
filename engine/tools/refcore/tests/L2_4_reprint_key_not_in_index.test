@@ -1,0 +1,24 @@
+# GD-24 (round 19, writer 10): settled; was REFCORE-UNSPECIFIED §2.4. L §2.4: "a key its index doesn't hold is refused, LOAD-KEY, §5.6" (L §8.3 `<key> is not a key of <index or kind>`).
+# The old comment:
+# L §2.4 sorts version items "then keys in index order"; x[b] names a key the list index ks doesn't hold (such a model
+# doesn't load, LOAD-KEY, but its text is reprinted before load, E §3.1 step 1), which has no place in that order:
+# REFCORE-UNSPECIFIED.
+=== options reprint
+=== m.tally
+model m
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+index ks = [a]
+input x[k in ks]: int
+
+version v
+  cite s
+  governs 2026..
+  known 2026-01-01
+  x[b] = 2
+  x[a] = 1
+=== expect
+refused: LOAD-KEY b is not a key of ks (m.tally:14)

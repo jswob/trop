@@ -1,0 +1,42 @@
+model rule03
+  tally 2
+  on 2025-06-30
+  start 2025-01-01
+  end 2025-12-31
+  note "RULE-03: two rules want one surplus. Part a states the priority R-A before R-B; part b states none, so the fill's order is a hole and the fill is refused (RUN-ORDER)."
+
+source card "Probe card RULE-03: the month's surplus, rules R-A and R-B"
+
+unit DUK: currency minor 0.01
+
+index claim_rule = [r_a, r_b]
+
+index side = [a, b]
+
+input prio[p in side, r in claim_rule]: int
+
+input surplus: money DUK
+
+input want[r in claim_rule]: money DUK
+
+fill split[p in side]
+  note "each rule takes in turn from what is left, by the stated priority; a tie goes by the rule's place in claim_rule"
+  supply surplus
+  demand want[r] for r in claim_rule
+  arc true
+  order prio[p, r]
+
+ask q_a: split[a].taken[r_a], split[a].taken[r_b], surplus - sum(split[a].taken[r] for r in claim_rule) law 2025-06-30
+
+ask q_b: split[b].taken[r_a], split[b].taken[r_b], surplus - sum(split[b].taken[r] for r in claim_rule) law 2025-06-30
+
+version card_rules
+  cite card
+  governs always
+  known 2025-01-01
+  prio[a, r_a] = 1 "part a: R-A first"
+  prio[a, r_b] = 2 "part a: R-B second"
+  prio[b] = ?"Which of R-A and R-B takes from the surplus first? No priority is stated."
+  surplus = 5000 "the month's surplus"
+  want[r_a] = 3000 "R-A: put 3 000.00 into the tax reserve"
+  want[r_b] = 4000 "R-B: overpay the mortgage with up to 4 000.00"

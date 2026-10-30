@@ -1,0 +1,61 @@
+model life03
+  tally 1
+  on 2026-10-25
+  note "Probe LIFE-03: an annuity loan re-levelled after a rate reset and after an overpayment that keeps the end date."
+
+source card "Probe card LIFE-03 (tmp/cases/probes/life/LIFE-03.md): story, rules 1-2 and question"
+
+index kk = 1..12
+
+input loan_amount: money DUK question "How much does Piotr borrow?"
+
+input mrate[k in kk]: rate /month question "What monthly rate applies in this month?"
+
+input n_months: int question "Over how many monthly instalments is the loan repaid?"
+
+input overpay[k in kk]: money DUK question "How much does Piotr overpay after paying this month?"
+
+def g[k in kk]: num = pow(1 + pm[k], n_months - k + 1)
+
+def inst[k in kk]: money DUK
+  note "rule 2: the level instalment, re-levelled at the start, after a reset and after an overpayment, over the months left"
+  rule base v card_law = (if k = 1 then level[k] else if relevel[k] then level[k] else inst[k - 1])
+
+def interest[k in kk]: money DUK
+  note "rule 1: the balance times the monthly rate, rounded half up to 0.01"
+  rule base v card_law = round(owed_start[k] * pm[k], 0.01, half-up)
+
+def level[k in kk]: money DUK
+  note "rule 1: the instalment level over the months left, rounded half up to 0.01"
+  rule base v card_law = round(owed_start[k] * pm[k] * g[k] / (g[k] - 1), 0.01, half-up)
+
+def owed_end[k in kk]: money DUK = owed_start[k] - repaid[k] - overpay[k]
+
+def owed_start[k in kk]: money DUK = (if k = 1 then loan_amount else owed_end[k - 1])
+
+def pm[k in kk]: num = periodic(mrate[k], month)
+
+def relevel[k in kk]: bool
+  note "rule 2: a reset re-levels the instalment; an overpayment lowers it, keeping the end date"
+  rule base v card_law = (mrate[k] != mrate[k - 1] or overpay[k - 1] > 0)
+
+def repaid[k in kk]: money DUK = inst[k] - interest[k]
+
+ask instalments: inst[1], inst[7], inst[10]
+
+ask schedule: interest[k], repaid[k], owed_end[k] for k in [1, 2, 3, 4, 5, 6, 7, 8, 9]
+
+version card_law
+  cite card
+  known 2026-10-25
+  note "the card's own rules, stipulations known from on (L 4.5); no items, the rules point at it"
+
+version card_facts
+  cite card
+  known 2026-10-25
+  loan_amount = 6000 "story: Piotr borrows 6 000.00 DUK"
+  mrate[1..6] = 0.01 "story: at 1 % a month"
+  mrate[7..12] = 0.02 "story: from month 7 the rate is reset to 2 % a month"
+  n_months = 12 "story: repaid in 12 monthly annuity instalments"
+  overpay = 0 "story: the one overpayment is the one after month 9"
+  overpay[9] = 1000 "story: after paying month 9 he overpays 1 000.00"

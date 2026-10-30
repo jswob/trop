@@ -1,0 +1,70 @@
+model own08
+  tally 1
+  on 2026-10-25
+  note "OWN-08: a wrapped account filled across a year change against its yearly limit; a withdrawal's taxed part."
+
+source card "Probe card OWN-08 (made up): story and rules"
+
+index contrib = [c_dec, c_jan]
+
+index pocket = [contributed, earned]
+
+index tyear = year 2024..2025
+
+input contrib_day[c in contrib]: date
+
+input earnings_tax_rate: num
+
+input limit[y in tyear]: money DUK
+
+input pocket_amount[k in pocket]: money DUK
+
+input used[y in tyear]: money DUK
+
+input want[c in contrib]: money DUK
+
+input withdraw_amount: money DUK
+
+def from_earnings: money DUK = withdraw_order.taken[earned]
+
+def put_in[c in contrib]: money DUK
+  note "rule 1: taken only up to the year's limit left"
+  rule base v card_rules = min(want[c], limit[year_of(contrib_day[c])] - used[year_of(contrib_day[c])])
+
+def withdrawal_tax: money DUK
+  note "rule 2: earnings withdrawn taxed, half up to 0.01"
+  rule base v card_rules = round(from_earnings * earnings_tax_rate, 0.01, half-up)
+
+fill withdraw_order
+  v card_rules
+  note "rule 2: contributions first, earnings last"
+  supply pocket_amount[k] for k in pocket
+  demand withdraw_amount
+  arc true
+  order k
+
+ask q_put_in: put_in[c] for c in contrib
+
+ask q_withdrawal: withdraw_order.taken[k] for k in pocket
+
+ask q_withdrawal_tax: withdrawal_tax
+
+version card_facts
+  cite card
+  known 2026-10-25
+  contrib_day[c_dec] = 2024-12-15 "story: 15 December 2024"
+  contrib_day[c_jan] = 2025-01-15 "story: 15 January 2025"
+  pocket_amount[contributed] = 10000.00 "story: 10 000.00 of contributions"
+  pocket_amount[earned] = 1500.00 "story: 1 500.00 of earnings"
+  used[2024] = 9600.00 "story: put in by 14 December 2024"
+  used[2025] = 0.00 "story: nothing yet in 2025"
+  want[c_dec] = 1000.00 "story: her rule wants 1 000.00"
+  want[c_jan] = 1000.00 "story: her rule wants 1 000.00"
+  withdraw_amount = 10500.00 "story: she withdraws 10 500.00"
+
+version card_rules
+  cite card
+  known 2026-10-25
+  earnings_tax_rate = 0.19 "rule 2: 19 %"
+  limit[2024] = 10000.00 "story: the yearly limit"
+  limit[2025] = 10500.00 "story: the yearly limit"

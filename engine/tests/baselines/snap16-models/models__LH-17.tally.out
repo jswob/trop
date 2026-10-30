@@ -1,0 +1,2016 @@
+avg_sust [lam_round = *]: 0.03
+  given: lam[endow] = 0 (mr2005_v)
+  law date 2026-10-18, cut 2026-10-18
+bal_40k [gamma_form = scale_beta, lam_round = exact]: ≈ 0.08972033 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+bal_40k [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.08964162 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+bal_40k [gamma_form = rate_beta, lam_round = *]: ≈ 0 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+bal_60k [gamma_form = scale_beta, lam_round = exact]: ≈ 0.239728673 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+bal_60k [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.239544251 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+bal_60k [gamma_form = rate_beta, lam_round = *]: ≈ 0 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+bal_70_60k [gamma_form = scale_beta, lam_round = exact]: ≈ 0.17590322 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+bal_70_60k [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.175787382 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+bal_70_60k [gamma_form = rate_beta, lam_round = *]: ≈ 0 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+base_erg [gamma_form = scale_beta, lam_round = exact]: ≈ 0.262165733 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+base_erg [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.261997097 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+base_erg [gamma_form = rate_beta, lam_round = *]: ≈ 0.000000014 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+base_exact: ?"they integrate the ruin over the RP-2000 Society of Actuaries mortality table from age 65 (note 8; p. 96): the present value of spending over a lifetime drawn from a table has no closed form, and the language has no numerical integral; the case doesn't carry the table either. Eq. 8 gives only the exponential-lifetime approximation" (rp2000_exact)
+  law date 2026-10-18, cut 2026-10-18
+base_gap [gamma_form = *, lam_round = *]: ?"they integrate the ruin over the RP-2000 Society of Actuaries mortality table from age 65 (note 8; p. 96): the present value of spending over a lifetime drawn from a table has no closed form, and the language has no numerical integral; the case doesn't carry the table either. Eq. 8 gives only the exponential-lifetime approximation" (rp2000_exact)
+  law date 2026-10-18, cut 2026-10-18
+e_life: 20
+  law date 2026-10-18, cut 2026-10-18
+endow_high [gamma_form = scale_beta, lam_round = *]: ≈ 0.924764754 ± 0.0000000005
+  given: lam[endow] = 0 (mr2005_v)
+  reading: gamma_form = scale_beta
+  law date 2026-10-18, cut 2026-10-18
+endow_high [gamma_form = rate_beta, lam_round = *]: ≈ 0.000000054 ± 0.0000000005
+  given: lam[endow] = 0 (mr2005_v)
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+endow_low [gamma_form = scale_beta, lam_round = *]: ≈ 0.150854964 ± 0.0000000005
+  given: lam[endow] = 0 (mr2005_v)
+  reading: gamma_form = scale_beta
+  law date 2026-10-18, cut 2026-10-18
+endow_low [gamma_form = rate_beta, lam_round = *]: ≈ 0.000000001 ± 0.0000000005
+  given: lam[endow] = 0 (mr2005_v)
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+endow_range [gamma_form = scale_beta, lam_round = *]: (≈ 0.450584049 ± 0.0000000005, ≈ 0.842772766 ± 0.0000000005)
+  given: lam[endow] = 0 (mr2005_v)
+  reading: gamma_form = scale_beta
+  law date 2026-10-18, cut 2026-10-18
+endow_range [gamma_form = rate_beta, lam_round = *]: (≈ 0 ± 0.0000000005, ≈ 0.000000015 ± 0.0000000005)
+  given: lam[endow] = 0 (mr2005_v)
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+erg_40k [gamma_form = scale_beta, lam_round = exact]: ≈ 0.122665891 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+erg_40k [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.12257023 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+erg_40k [gamma_form = rate_beta, lam_round = *]: ≈ 0.000000004 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+erg_50k [gamma_form = scale_beta, lam_round = exact]: ≈ 0.189320726 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+erg_50k [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.189186588 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+erg_50k [gamma_form = rate_beta, lam_round = *]: ≈ 0.000000008 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+erg_90k [gamma_form = scale_beta, lam_round = exact]: ≈ 0.482584537 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+erg_90k [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.482355095 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+erg_90k [gamma_form = rate_beta, lam_round = *]: ≈ 0.000000041 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+exact_40k: ?"they integrate the ruin over the RP-2000 Society of Actuaries mortality table from age 65 (note 8; p. 96): the present value of spending over a lifetime drawn from a table has no closed form, and the language has no numerical integral; the case doesn't carry the table either. Eq. 8 gives only the exponential-lifetime approximation" (rp2000_exact)
+  law date 2026-10-18, cut 2026-10-18
+exact_50k: ?"they integrate the ruin over the RP-2000 Society of Actuaries mortality table from age 65 (note 8; p. 96): the present value of spending over a lifetime drawn from a table has no closed form, and the language has no numerical integral; the case doesn't carry the table either. Eq. 8 gives only the exponential-lifetime approximation" (rp2000_exact)
+  law date 2026-10-18, cut 2026-10-18
+exact_90k: ?"they integrate the ruin over the RP-2000 Society of Actuaries mortality table from age 65 (note 8; p. 96): the present value of spending over a lifetime drawn from a table has no closed form, and the language has no numerical integral; the case doesn't carry the table either. Eq. 8 gives only the exponential-lifetime approximation" (rp2000_exact)
+  law date 2026-10-18, cut 2026-10-18
+extra_10 [lam_round = exact]: ≈ 0.0693147180559945309417232121458 (0.0693147180559945) ± 0.00000000000000000000000000000005
+  given: lam[endow] = 0 (mr2005_v)
+  given: med_rem[m10] = 10 (mr2005_v)
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+extra_10 [lam_round = four_dp]: 0.0693
+  given: lam[endow] = 0 (mr2005_v)
+  given: med_rem[m10] = 10 (mr2005_v)
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+extra_20 [lam_round = exact]: ≈ 0.0346573590279972654708616060729 (0.0346573590279973) ± 0.000000000000000000000000000000025
+  given: lam[endow] = 0 (mr2005_v)
+  given: med_rem[m20] = 20 (mr2005_v)
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+extra_20 [lam_round = four_dp]: 0.0347
+  given: lam[endow] = 0 (mr2005_v)
+  given: med_rem[m20] = 20 (mr2005_v)
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+extra_30 [lam_round = exact]: ≈ 346573590279972654708616060729/15000000000000000000000000000000 (0.0231049060186648) ± 0.000000000000000000000000000000017
+  given: lam[endow] = 0 (mr2005_v)
+  given: med_rem[m30] = 30 (mr2005_v)
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+extra_30 [lam_round = four_dp]: 0.0231
+  given: lam[endow] = 0 (mr2005_v)
+  given: med_rem[m30] = 30 (mr2005_v)
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+hi_4 [gamma_form = scale_beta, lam_round = *]: ≈ 0.094582326 ± 0.0000000005
+  given: lam[endow] = 0 (mr2005_v)
+  reading: gamma_form = scale_beta
+  law date 2026-10-18, cut 2026-10-18
+hi_4 [gamma_form = rate_beta, lam_round = *]: ≈ 0 ± 0.0000000005
+  given: lam[endow] = 0 (mr2005_v)
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+hi_5 [gamma_form = scale_beta, lam_round = *]: ≈ 0.196499564 ± 0.0000000005
+  given: lam[endow] = 0 (mr2005_v)
+  reading: gamma_form = scale_beta
+  law date 2026-10-18, cut 2026-10-18
+hi_5 [gamma_form = rate_beta, lam_round = *]: ≈ 0 ± 0.0000000005
+  given: lam[endow] = 0 (mr2005_v)
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+hi_6 [gamma_form = scale_beta, lam_round = *]: ≈ 0.324489346 ± 0.0000000005
+  given: lam[endow] = 0 (mr2005_v)
+  reading: gamma_form = scale_beta
+  law date 2026-10-18, cut 2026-10-18
+hi_6 [gamma_form = rate_beta, lam_round = *]: ≈ 0 ± 0.0000000005
+  given: lam[endow] = 0 (mr2005_v)
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+lam_50 [lam_round = exact]: ≈ 346573590279972654708616060729/14050000000000000000000000000000 (0.0246671594505319) ± 0.000000000000000000000000000000018
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+lam_50 [lam_round = four_dp]: 0.0247
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+lam_65 [lam_round = exact]: ≈ 49510512897138950672659437247/1350000000000000000000000000000 (0.0366744539978807) ± 0.000000000000000000000000000000027
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+lam_65 [lam_round = four_dp]: 0.0367
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+mass_ruin [gamma_form = scale_beta, lam_round = exact]: ≈ 0.267855035 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+mass_ruin [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.267590954 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+mass_ruin [gamma_form = rate_beta, lam_round = *]: ≈ 0.000000007 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+mass_sust [gamma_form = scale_beta, lam_round = exact]: ≈ 0.732144965 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+mass_sust [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.732409046 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+mass_sust [gamma_form = rate_beta, lam_round = *]: ≈ 0.999999993 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+med_life: ≈ 13.86294361119890618834464242916 (13.8629436111989) ± 0.00000000000000000000000000001
+  law date 2026-10-18, cut 2026-10-18
+neg_ret_10: ≈ 0.344578258 ± 0.0000000005
+  law date 2026-10-18, cut 2026-10-18
+neg_ret_7: ≈ 0.401293674 ± 0.0000000005
+  law date 2026-10-18, cut 2026-10-18
+perp: 100/7 (14.2857142857143)
+  law date 2026-10-18, cut 2026-10-18
+pv_25: 6324903771604128140033641392384097484092810427190100/542743264012288969802354897466886823886496729903307 (11.6535831782537)
+  law date 2026-10-18, cut 2026-10-18
+rg_mean: 25/3 (8.33333333333333)
+  law date 2026-10-18, cut 2026-10-18
+ruin_ex [gamma_form = scale_beta, lam_round = exact]: ≈ 0.267855035 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+ruin_ex [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.267590954 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+ruin_ex [gamma_form = rate_beta, lam_round = *]: ≈ 0.000000007 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+runout_years: ≈ 601986402163/33829324237 (17.7948101459441) ± 0.00000000014
+  law date 2026-10-18, cut 2026-10-18
+spv_mean [lam_round = exact]: ≈ 1350000000000000000000000000000/90010512897138950672659437247 (14.9982480551215) ± 0.000000000000000000000000000006
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+spv_mean [lam_round = four_dp]: 10000/667 (14.9925037481259)
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+ss_10 [gamma_form = scale_beta, lam_round = *]: 4.17
+  reading: gamma_form = scale_beta
+  law date 2026-10-18, cut 2026-10-18
+ss_10 [gamma_form = rate_beta, lam_round = *]: refused: RUN-SOLVE no sign change on [0, 20]
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+ss_5 [gamma_form = scale_beta, lam_round = *]: 3.24
+  reading: gamma_form = scale_beta
+  law date 2026-10-18, cut 2026-10-18
+ss_5 [gamma_form = rate_beta, lam_round = *]: refused: RUN-SOLVE no sign change on [0, 20]
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+surv_25: ≈ 0.286504797 ± 0.0000000005
+  law date 2026-10-18, cut 2026-10-18
+surv_40: ≈ 0.135335283 ± 0.0000000005
+  law date 2026-10-18, cut 2026-10-18
+t2_a50 (s = k2) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.042747393 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t2_a50 (s = k2) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.04268709 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t2_a50 (s = k2) [gamma_form = rate_beta, lam_round = *]: ≈ 0.000000001 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_a50 (s = k3) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.102670067 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t2_a50 (s = k3) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.10254192 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t2_a50 (s = k3) [gamma_form = rate_beta, lam_round = *]: ≈ 0.000000002 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_a50 (s = k4) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.18044377 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t2_a50 (s = k4) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.180243612 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t2_a50 (s = k4) [gamma_form = rate_beta, lam_round = *]: ≈ 0.000000004 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_a50 (s = k5) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.267855035 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t2_a50 (s = k5) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.267590954 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t2_a50 (s = k5) [gamma_form = rate_beta, lam_round = *]: ≈ 0.000000007 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_a50 (s = k6) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.35801567 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t2_a50 (s = k6) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.357702549 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t2_a50 (s = k6) [gamma_form = rate_beta, lam_round = *]: ≈ 0.000000012 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_a50 (s = k7) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.445856085 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t2_a50 (s = k7) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.445511216 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t2_a50 (s = k7) [gamma_form = rate_beta, lam_round = *]: ≈ 0.000000018 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_a50 (s = k8) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.528026674 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t2_a50 (s = k8) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.527666808 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t2_a50 (s = k8) [gamma_form = rate_beta, lam_round = *]: ≈ 0.000000026 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_a50 (s = k9) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.602588611 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t2_a50 (s = k9) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.60222828 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t2_a50 (s = k9) [gamma_form = rate_beta, lam_round = *]: ≈ 0.000000036 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_a50 (s = k10) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.668665009 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t2_a50 (s = k10) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.668315775 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t2_a50 (s = k10) [gamma_form = rate_beta, lam_round = *]: ≈ 0.000000048 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_a55 (s = k2) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.042585875 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t2_a55 (s = k2) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.042504144 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t2_a55 (s = k2) [gamma_form = rate_beta, lam_round = *]: ≈ 0.000000001 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_a55 (s = k3) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.102326764 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t2_a55 (s = k3) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.102152966 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t2_a55 (s = k3) [gamma_form = rate_beta, lam_round = *]: ≈ 0.000000002 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_a55 (s = k4) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.179907457 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t2_a55 (s = k4) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.179635832 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t2_a55 (s = k4) [gamma_form = rate_beta, lam_round = *]: ≈ 0.000000004 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_a55 (s = k5) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.267147327 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t2_a55 (s = k5) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.266788752 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t2_a55 (s = k5) [gamma_form = rate_beta, lam_round = *]: ≈ 0.000000007 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_a55 (s = k6) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.357176408 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t2_a55 (s = k6) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.356751015 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t2_a55 (s = k6) [gamma_form = rate_beta, lam_round = *]: ≈ 0.000000012 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_a55 (s = k7) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.444931582 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t2_a55 (s = k7) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.44446281 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t2_a55 (s = k7) [gamma_form = rate_beta, lam_round = *]: ≈ 0.000000018 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_a55 (s = k8) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.527061823 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t2_a55 (s = k8) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.526572413 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t2_a55 (s = k8) [gamma_form = rate_beta, lam_round = *]: ≈ 0.000000026 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_a55 (s = k9) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.601622368 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t2_a55 (s = k9) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.601132077 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t2_a55 (s = k9) [gamma_form = rate_beta, lam_round = *]: ≈ 0.000000036 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_a55 (s = k10) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.667728387 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t2_a55 (s = k10) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.667252957 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t2_a55 (s = k10) [gamma_form = rate_beta, lam_round = *]: ≈ 0.000000048 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_a60 (s = k2) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.034769002 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t2_a60 (s = k2) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.034799497 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t2_a60 (s = k2) [gamma_form = rate_beta, lam_round = *]: ≈ 0.000000001 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_a60 (s = k3) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.085444439 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t2_a60 (s = k3) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.085511373 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t2_a60 (s = k3) [gamma_form = rate_beta, lam_round = *]: ≈ 0.000000002 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_a60 (s = k4) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.153147828 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t2_a60 (s = k4) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.153255476 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t2_a60 (s = k4) [gamma_form = rate_beta, lam_round = *]: ≈ 0.000000004 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_a60 (s = k5) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.231347222 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t2_a60 (s = k5) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.231493213 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t2_a60 (s = k5) [gamma_form = rate_beta, lam_round = *]: ≈ 0.000000008 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_a60 (s = k6) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.314154489 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t2_a60 (s = k6) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.314332233 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t2_a60 (s = k6) [gamma_form = rate_beta, lam_round = *]: ≈ 0.000000013 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_a60 (s = k7) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.396922155 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t2_a60 (s = k7) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.397123023 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t2_a60 (s = k7) [gamma_form = rate_beta, lam_round = *]: ≈ 0.000000019 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_a60 (s = k8) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.476314812 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t2_a60 (s = k8) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.476529763 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t2_a60 (s = k8) [gamma_form = rate_beta, lam_round = *]: ≈ 0.000000028 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_a60 (s = k9) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.550158704 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t2_a60 (s = k9) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.550379334 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t2_a60 (s = k9) [gamma_form = rate_beta, lam_round = *]: ≈ 0.000000038 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_a60 (s = k10) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.617216431 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t2_a60 (s = k10) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.617435564 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t2_a60 (s = k10) [gamma_form = rate_beta, lam_round = *]: ≈ 0.000000051 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_a65 (s = k2) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.026443789 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t2_a65 (s = k2) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.026418639 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t2_a65 (s = k2) [gamma_form = rate_beta, lam_round = *]: ≈ 0.000000001 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_a65 (s = k3) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.066818191 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t2_a65 (s = k3) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.066760781 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t2_a65 (s = k3) [gamma_form = rate_beta, lam_round = *]: ≈ 0.000000002 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_a65 (s = k4) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.122665891 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t2_a65 (s = k4) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.12257023 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t2_a65 (s = k4) [gamma_form = rate_beta, lam_round = *]: ≈ 0.000000004 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_a65 (s = k5) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.189320726 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t2_a65 (s = k5) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.189186588 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t2_a65 (s = k5) [gamma_form = rate_beta, lam_round = *]: ≈ 0.000000008 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_a65 (s = k6) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.262165733 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t2_a65 (s = k6) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.261997097 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t2_a65 (s = k6) [gamma_form = rate_beta, lam_round = *]: ≈ 0.000000014 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_a65 (s = k7) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.337247557 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t2_a65 (s = k7) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.337050945 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t2_a65 (s = k7) [gamma_form = rate_beta, lam_round = *]: ≈ 0.000000021 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_a65 (s = k8) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.411470277 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t2_a65 (s = k8) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.411253357 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t2_a65 (s = k8) [gamma_form = rate_beta, lam_round = *]: ≈ 0.00000003 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_a65 (s = k9) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.482584537 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t2_a65 (s = k9) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.482355095 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t2_a65 (s = k9) [gamma_form = rate_beta, lam_round = *]: ≈ 0.000000041 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_a65 (s = k10) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.549084681 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t2_a65 (s = k10) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.548849938 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t2_a65 (s = k10) [gamma_form = rate_beta, lam_round = *]: ≈ 0.000000055 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_a70 (s = k2) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.018090946 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t2_a70 (s = k2) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.018076446 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t2_a70 (s = k2) [gamma_form = rate_beta, lam_round = *]: ≈ 0.000000001 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_a70 (s = k3) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.047308001 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t2_a70 (s = k3) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.047273286 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t2_a70 (s = k3) [gamma_form = rate_beta, lam_round = *]: ≈ 0.000000002 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_a70 (s = k4) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.08946939 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t2_a70 (s = k4) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.089408997 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t2_a70 (s = k4) [gamma_form = rate_beta, lam_round = *]: ≈ 0.000000005 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_a70 (s = k5) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.141839733 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t2_a70 (s = k5) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.141751542 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t2_a70 (s = k5) [gamma_form = rate_beta, lam_round = *]: ≈ 0.000000009 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_a70 (s = k6) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.201317307 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t2_a70 (s = k6) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.201202027 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t2_a70 (s = k6) [gamma_form = rate_beta, lam_round = *]: ≈ 0.000000015 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_a70 (s = k7) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.264960191 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t2_a70 (s = k7) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.264820595 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t2_a70 (s = k7) [gamma_form = rate_beta, lam_round = *]: ≈ 0.000000024 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_a70 (s = k8) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.330227655 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t2_a70 (s = k8) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.330067816 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t2_a70 (s = k8) [gamma_form = rate_beta, lam_round = *]: ≈ 0.000000034 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_a70 (s = k9) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.3950645 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t2_a70 (s = k9) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.394889148 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t2_a70 (s = k9) [gamma_form = rate_beta, lam_round = *]: ≈ 0.000000048 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_a70 (s = k10) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.457900086 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t2_a70 (s = k10) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.457714101 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t2_a70 (s = k10) [gamma_form = rate_beta, lam_round = *]: ≈ 0.000000064 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_a75 (s = k2) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.010663351 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t2_a75 (s = k2) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.010657378 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t2_a75 (s = k2) [gamma_form = rate_beta, lam_round = *]: ≈ 0.000000001 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_a75 (s = k3) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.029045399 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t2_a75 (s = k3) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.029030274 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t2_a75 (s = k3) [gamma_form = rate_beta, lam_round = *]: ≈ 0.000000003 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_a75 (s = k4) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.056919785 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t2_a75 (s = k4) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.056892107 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t2_a75 (s = k4) [gamma_form = rate_beta, lam_round = *]: ≈ 0.000000006 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_a75 (s = k5) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.093202639 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t2_a75 (s = k5) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.093160248 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t2_a75 (s = k5) [gamma_form = rate_beta, lam_round = *]: ≈ 0.000000012 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_a75 (s = k6) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.136309079 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t2_a75 (s = k6) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.136251072 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t2_a75 (s = k6) [gamma_form = rate_beta, lam_round = *]: ≈ 0.00000002 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_a75 (s = k7) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.1845038 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t2_a75 (s = k7) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.184430362 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t2_a75 (s = k7) [gamma_form = rate_beta, lam_round = *]: ≈ 0.00000003 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_a75 (s = k8) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.236102239 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t2_a75 (s = k8) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.23601441 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t2_a75 (s = k8) [gamma_form = rate_beta, lam_round = *]: ≈ 0.000000044 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_a75 (s = k9) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.28957981 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t2_a75 (s = k9) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.28947924 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t2_a75 (s = k9) [gamma_form = rate_beta, lam_round = *]: ≈ 0.000000061 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_a75 (s = k10) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.343623638 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t2_a75 (s = k10) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.343512363 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t2_a75 (s = k10) [gamma_form = rate_beta, lam_round = *]: ≈ 0.000000082 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_a80 (s = k2) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.005165807 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t2_a80 (s = k2) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.005162163 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t2_a80 (s = k2) [gamma_form = rate_beta, lam_round = *]: ≈ 0.000000001 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_a80 (s = k3) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.014721551 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t2_a80 (s = k3) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.014711741 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t2_a80 (s = k3) [gamma_form = rate_beta, lam_round = *]: ≈ 0.000000004 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_a80 (s = k4) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.030017794 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t2_a80 (s = k4) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.029998817 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t2_a80 (s = k4) [gamma_form = rate_beta, lam_round = *]: ≈ 0.000000009 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_a80 (s = k5) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.050972335 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t2_a80 (s = k5) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.050941715 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t2_a80 (s = k5) [gamma_form = rate_beta, lam_round = *]: ≈ 0.000000018 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_a80 (s = k6) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.077123866 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t2_a80 (s = k6) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.077079813 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t2_a80 (s = k6) [gamma_form = rate_beta, lam_round = *]: ≈ 0.000000029 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_a80 (s = k7) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.107798181 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t2_a80 (s = k7) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.107739627 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t2_a80 (s = k7) [gamma_form = rate_beta, lam_round = *]: ≈ 0.000000046 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_a80 (s = k8) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.142219594 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t2_a80 (s = k8) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.142146146 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t2_a80 (s = k8) [gamma_form = rate_beta, lam_round = *]: ≈ 0.000000067 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_a80 (s = k9) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.179585454 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t2_a80 (s = k9) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.179497317 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t2_a80 (s = k9) [gamma_form = rate_beta, lam_round = *]: ≈ 0.000000093 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_a80 (s = k10) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.219114966 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t2_a80 (s = k10) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.21901283 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t2_a80 (s = k10) [gamma_form = rate_beta, lam_round = *]: ≈ 0.000000126 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_endow (s = k2) [gamma_form = scale_beta, lam_round = *]: ≈ 0.150854964 ± 0.0000000005
+  given: lam[endow] = 0 (mr2005_v)
+  reading: gamma_form = scale_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_endow (s = k2) [gamma_form = rate_beta, lam_round = *]: ≈ 0.000000001 ± 0.0000000005
+  given: lam[endow] = 0 (mr2005_v)
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_endow (s = k3) [gamma_form = scale_beta, lam_round = *]: ≈ 0.300014164 ± 0.0000000005
+  given: lam[endow] = 0 (mr2005_v)
+  reading: gamma_form = scale_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_endow (s = k3) [gamma_form = rate_beta, lam_round = *]: ≈ 0.000000003 ± 0.0000000005
+  given: lam[endow] = 0 (mr2005_v)
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_endow (s = k4) [gamma_form = scale_beta, lam_round = *]: ≈ 0.450584049 ± 0.0000000005
+  given: lam[endow] = 0 (mr2005_v)
+  reading: gamma_form = scale_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_endow (s = k4) [gamma_form = rate_beta, lam_round = *]: ≈ 0.000000005 ± 0.0000000005
+  given: lam[endow] = 0 (mr2005_v)
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_endow (s = k5) [gamma_form = scale_beta, lam_round = *]: ≈ 0.584119813 ± 0.0000000005
+  given: lam[endow] = 0 (mr2005_v)
+  reading: gamma_form = scale_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_endow (s = k5) [gamma_form = rate_beta, lam_round = *]: ≈ 0.00000001 ± 0.0000000005
+  given: lam[endow] = 0 (mr2005_v)
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_endow (s = k6) [gamma_form = scale_beta, lam_round = *]: ≈ 0.693781082 ± 0.0000000005
+  given: lam[endow] = 0 (mr2005_v)
+  reading: gamma_form = scale_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_endow (s = k6) [gamma_form = rate_beta, lam_round = *]: ≈ 0.000000015 ± 0.0000000005
+  given: lam[endow] = 0 (mr2005_v)
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_endow (s = k7) [gamma_form = scale_beta, lam_round = *]: ≈ 0.779359692 ± 0.0000000005
+  given: lam[endow] = 0 (mr2005_v)
+  reading: gamma_form = scale_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_endow (s = k7) [gamma_form = rate_beta, lam_round = *]: ≈ 0.000000022 ± 0.0000000005
+  given: lam[endow] = 0 (mr2005_v)
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_endow (s = k8) [gamma_form = scale_beta, lam_round = *]: ≈ 0.843764372 ± 0.0000000005
+  given: lam[endow] = 0 (mr2005_v)
+  reading: gamma_form = scale_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_endow (s = k8) [gamma_form = rate_beta, lam_round = *]: ≈ 0.000000031 ± 0.0000000005
+  given: lam[endow] = 0 (mr2005_v)
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_endow (s = k9) [gamma_form = scale_beta, lam_round = *]: ≈ 0.890935842 ± 0.0000000005
+  given: lam[endow] = 0 (mr2005_v)
+  reading: gamma_form = scale_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_endow (s = k9) [gamma_form = rate_beta, lam_round = *]: ≈ 0.000000041 ± 0.0000000005
+  given: lam[endow] = 0 (mr2005_v)
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_endow (s = k10) [gamma_form = scale_beta, lam_round = *]: ≈ 0.924764754 ± 0.0000000005
+  given: lam[endow] = 0 (mr2005_v)
+  reading: gamma_form = scale_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_endow (s = k10) [gamma_form = rate_beta, lam_round = *]: ≈ 0.000000054 ± 0.0000000005
+  given: lam[endow] = 0 (mr2005_v)
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_endow_diff (s = k2) [gamma_form = *, lam_round = *]: ≈ 0 ± 0.000000001
+  given: lam[endow] = 0 (mr2005_v)
+  law date 2026-10-18, cut 2026-10-18
+t2_endow_diff (s = k3) [gamma_form = *, lam_round = *]: ≈ 0 ± 0.000000001
+  given: lam[endow] = 0 (mr2005_v)
+  law date 2026-10-18, cut 2026-10-18
+t2_endow_diff (s = k4) [gamma_form = *, lam_round = *]: ≈ 0 ± 0.000000001
+  given: lam[endow] = 0 (mr2005_v)
+  law date 2026-10-18, cut 2026-10-18
+t2_endow_diff (s = k5) [gamma_form = *, lam_round = *]: ≈ 0 ± 0.000000001
+  given: lam[endow] = 0 (mr2005_v)
+  law date 2026-10-18, cut 2026-10-18
+t2_endow_diff (s = k6) [gamma_form = *, lam_round = *]: ≈ 0 ± 0.000000001
+  given: lam[endow] = 0 (mr2005_v)
+  law date 2026-10-18, cut 2026-10-18
+t2_endow_diff (s = k7) [gamma_form = *, lam_round = *]: ≈ 0 ± 0.000000001
+  given: lam[endow] = 0 (mr2005_v)
+  law date 2026-10-18, cut 2026-10-18
+t2_endow_diff (s = k8) [gamma_form = *, lam_round = *]: ≈ 0 ± 0.000000001
+  given: lam[endow] = 0 (mr2005_v)
+  law date 2026-10-18, cut 2026-10-18
+t2_endow_diff (s = k9) [gamma_form = *, lam_round = *]: ≈ 0 ± 0.000000001
+  given: lam[endow] = 0 (mr2005_v)
+  law date 2026-10-18, cut 2026-10-18
+t2_endow_diff (s = k10) [gamma_form = *, lam_round = *]: ≈ 0 ± 0.000000001
+  given: lam[endow] = 0 (mr2005_v)
+  law date 2026-10-18, cut 2026-10-18
+t2_endow_exact (s = k2) [gamma_form = scale_beta]: ≈ 0.150854964 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_endow_exact (s = k2) [gamma_form = rate_beta]: ≈ 0.000000001 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_endow_exact (s = k3) [gamma_form = scale_beta]: ≈ 0.300014164 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_endow_exact (s = k3) [gamma_form = rate_beta]: ≈ 0.000000003 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_endow_exact (s = k4) [gamma_form = scale_beta]: ≈ 0.450584049 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_endow_exact (s = k4) [gamma_form = rate_beta]: ≈ 0.000000005 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_endow_exact (s = k5) [gamma_form = scale_beta]: ≈ 0.584119813 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_endow_exact (s = k5) [gamma_form = rate_beta]: ≈ 0.00000001 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_endow_exact (s = k6) [gamma_form = scale_beta]: ≈ 0.693781082 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_endow_exact (s = k6) [gamma_form = rate_beta]: ≈ 0.000000015 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_endow_exact (s = k7) [gamma_form = scale_beta]: ≈ 0.779359692 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_endow_exact (s = k7) [gamma_form = rate_beta]: ≈ 0.000000022 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_endow_exact (s = k8) [gamma_form = scale_beta]: ≈ 0.843764372 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_endow_exact (s = k8) [gamma_form = rate_beta]: ≈ 0.000000031 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_endow_exact (s = k9) [gamma_form = scale_beta]: ≈ 0.890935842 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_endow_exact (s = k9) [gamma_form = rate_beta]: ≈ 0.000000041 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_endow_exact (s = k10) [gamma_form = scale_beta]: ≈ 0.924764754 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_endow_exact (s = k10) [gamma_form = rate_beta]: ≈ 0.000000054 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t2_geo: 0.05
+  law date 2026-10-18, cut 2026-10-18
+t2_lam (l = a50) [lam_round = exact]: ≈ 346573590279972654708616060729/14050000000000000000000000000000 (0.0246671594505319) ± 0.000000000000000000000000000000018
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t2_lam (l = a50) [lam_round = four_dp]: 0.0247
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t2_lam (l = a55) [lam_round = exact]: ≈ 0.0247552564485694753363297186235 (0.0247552564485695) ± 0.000000000000000000000000000000018
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t2_lam (l = a55) [lam_round = four_dp]: 0.0248
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t2_lam (l = a60) [lam_round = exact]: ≈ 346573590279972654708616060729/11700000000000000000000000000000 (0.0296216743829036) ± 0.000000000000000000000000000000022
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t2_lam (l = a60) [lam_round = four_dp]: 0.0296
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t2_lam (l = a65) [lam_round = exact]: ≈ 49510512897138950672659437247/1350000000000000000000000000000 (0.0366744539978807) ± 0.000000000000000000000000000000027
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t2_lam (l = a65) [lam_round = four_dp]: 0.0367
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t2_lam (l = a70) [lam_round = exact]: ≈ 346573590279972654708616060729/7300000000000000000000000000000 (0.0474758342849278) ± 0.000000000000000000000000000000035
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t2_lam (l = a70) [lam_round = four_dp]: 0.0475
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t2_lam (l = a75) [lam_round = exact]: ≈ 346573590279972654708616060729/5350000000000000000000000000000 (0.0647801103327052) ± 0.000000000000000000000000000000047
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t2_lam (l = a75) [lam_round = four_dp]: 0.0648
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t2_lam (l = a80) [lam_round = exact]: ≈ 346573590279972654708616060729/3700000000000000000000000000000 (0.0936685379135061) ± 0.000000000000000000000000000000068
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t2_lam (l = a80) [lam_round = four_dp]: 0.0937
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t3_a50 (s = k2) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.017969963 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t3_a50 (s = k2) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.017945585 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t3_a50 (s = k2) [gamma_form = rate_beta, lam_round = *]: ≈ 0 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t3_a50 (s = k3) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.063615779 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t3_a50 (s = k3) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.063527298 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t3_a50 (s = k3) [gamma_form = rate_beta, lam_round = *]: ≈ 0 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t3_a50 (s = k4) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.140407863 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t3_a50 (s = k4) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.140220872 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t3_a50 (s = k4) [gamma_form = rate_beta, lam_round = *]: ≈ 0 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t3_a50 (s = k5) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.240314031 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t3_a50 (s = k5) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.240018613 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t3_a50 (s = k5) [gamma_form = rate_beta, lam_round = *]: ≈ 0 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t3_a50 (s = k6) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.351628073 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t3_a50 (s = k6) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.351239009 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t3_a50 (s = k6) [gamma_form = rate_beta, lam_round = *]: ≈ 0 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t3_a50 (s = k7) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.463459346 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t3_a50 (s = k7) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.463006974 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t3_a50 (s = k7) [gamma_form = rate_beta, lam_round = *]: ≈ 0 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t3_a50 (s = k8) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.567802225 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t3_a50 (s = k8) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.567321825 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t3_a50 (s = k8) [gamma_form = rate_beta, lam_round = *]: ≈ 0 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t3_a50 (s = k9) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.659906332 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t3_a50 (s = k9) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.65943014 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t3_a50 (s = k9) [gamma_form = rate_beta, lam_round = *]: ≈ 0 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t3_a50 (s = k10) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.737775972 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t3_a50 (s = k10) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.737328828 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t3_a50 (s = k10) [gamma_form = rate_beta, lam_round = *]: ≈ 0 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t3_a55 (s = k2) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.017904672 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t3_a55 (s = k2) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.017871637 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t3_a55 (s = k2) [gamma_form = rate_beta, lam_round = *]: ≈ 0 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t3_a55 (s = k3) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.063378811 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t3_a55 (s = k3) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.063258928 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t3_a55 (s = k3) [gamma_form = rate_beta, lam_round = *]: ≈ 0 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t3_a55 (s = k4) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.139907018 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t3_a55 (s = k4) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.139653583 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t3_a55 (s = k4) [gamma_form = rate_beta, lam_round = *]: ≈ 0 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t3_a55 (s = k5) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.239522645 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t3_a55 (s = k5) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.239122039 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t3_a55 (s = k5) [gamma_form = rate_beta, lam_round = *]: ≈ 0 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t3_a55 (s = k6) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.350585611 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t3_a55 (s = k6) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.350057655 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t3_a55 (s = k6) [gamma_form = rate_beta, lam_round = *]: ≈ 0 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t3_a55 (s = k7) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.462246979 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t3_a55 (s = k7) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.461632638 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t3_a55 (s = k7) [gamma_form = rate_beta, lam_round = *]: ≈ 0 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t3_a55 (s = k8) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.566514427 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t3_a55 (s = k8) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.565861476 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t3_a55 (s = k8) [gamma_form = rate_beta, lam_round = *]: ≈ 0 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t3_a55 (s = k9) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.65862948 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t3_a55 (s = k9) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.65798167 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t3_a55 (s = k9) [gamma_form = rate_beta, lam_round = *]: ≈ 0 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t3_a55 (s = k10) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.736576681 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t3_a55 (s = k10) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.735967824 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t3_a55 (s = k10) [gamma_form = rate_beta, lam_round = *]: ≈ 0 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t3_a60 (s = k2) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.014754016 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t3_a60 (s = k2) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.014766282 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t3_a60 (s = k2) [gamma_form = rate_beta, lam_round = *]: ≈ 0 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t3_a60 (s = k3) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.051987381 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t3_a60 (s = k3) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.05203156 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t3_a60 (s = k3) [gamma_form = rate_beta, lam_round = *]: ≈ 0 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t3_a60 (s = k4) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.115657721 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t3_a60 (s = k4) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.115752428 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t3_a60 (s = k4) [gamma_form = rate_beta, lam_round = *]: ≈ 0 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t3_a60 (s = k5) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.20071863 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t3_a60 (s = k5) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.200872066 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t3_a60 (s = k5) [gamma_form = rate_beta, lam_round = *]: ≈ 0 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t3_a60 (s = k6) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.29864663 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t3_a60 (s = k6) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.298855212 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t3_a60 (s = k6) [gamma_form = rate_beta, lam_round = *]: ≈ 0 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t3_a60 (s = k7) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.400728781 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t3_a60 (s = k7) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.400980203 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t3_a60 (s = k7) [gamma_form = rate_beta, lam_round = *]: ≈ 0 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t3_a60 (s = k8) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.499851565 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t3_a60 (s = k8) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.500129218 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t3_a60 (s = k8) [gamma_form = rate_beta, lam_round = *]: ≈ 0 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t3_a60 (s = k9) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.591112373 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t3_a60 (s = k9) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.591399239 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t3_a60 (s = k9) [gamma_form = rate_beta, lam_round = *]: ≈ 0 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t3_a60 (s = k10) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.671728559 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t3_a60 (s = k10) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.672009826 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t3_a60 (s = k10) [gamma_form = rate_beta, lam_round = *]: ≈ 0 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t3_a65 (s = k2) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.0114062 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t3_a65 (s = k2) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.011396075 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t3_a65 (s = k2) [gamma_form = rate_beta, lam_round = *]: ≈ 0 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t3_a65 (s = k3) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.039979953 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t3_a65 (s = k3) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.039943795 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t3_a65 (s = k3) [gamma_form = rate_beta, lam_round = *]: ≈ 0 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t3_a65 (s = k4) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.08972033 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t3_a65 (s = k4) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.08964162 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t3_a65 (s = k4) [gamma_form = rate_beta, lam_round = *]: ≈ 0 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t3_a65 (s = k5) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.15812081 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t3_a65 (s = k5) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.157989756 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t3_a65 (s = k5) [gamma_form = rate_beta, lam_round = *]: ≈ 0 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t3_a65 (s = k6) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.239728673 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t3_a65 (s = k6) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.239544251 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t3_a65 (s = k6) [gamma_form = rate_beta, lam_round = *]: ≈ 0 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t3_a65 (s = k7) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.328289005 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t3_a65 (s = k7) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.328057778 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t3_a65 (s = k7) [gamma_form = rate_beta, lam_round = *]: ≈ 0 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t3_a65 (s = k8) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.41810104 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t3_a65 (s = k8) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.417834521 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t3_a65 (s = k8) [gamma_form = rate_beta, lam_round = *]: ≈ 0 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t3_a65 (s = k9) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.504671973 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t3_a65 (s = k9) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.504383828 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t3_a65 (s = k9) [gamma_form = rate_beta, lam_round = *]: ≈ 0 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t3_a65 (s = k10) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.58488718 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t3_a65 (s = k10) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.584590954 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t3_a65 (s = k10) [gamma_form = rate_beta, lam_round = *]: ≈ 0 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t3_a70 (s = k2) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.008026671 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t3_a70 (s = k2) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.00802076 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t3_a70 (s = k2) [gamma_form = rate_beta, lam_round = *]: ≈ 0 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t3_a70 (s = k3) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.027967232 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t3_a70 (s = k3) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.027946322 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t3_a70 (s = k3) [gamma_form = rate_beta, lam_round = *]: ≈ 0 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t3_a70 (s = k4) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.06336127 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t3_a70 (s = k4) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.063315008 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t3_a70 (s = k4) [gamma_form = rate_beta, lam_round = *]: ≈ 0 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t3_a70 (s = k5) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.113593513 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t3_a70 (s = k5) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.113514199 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t3_a70 (s = k5) [gamma_form = rate_beta, lam_round = *]: ≈ 0 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t3_a70 (s = k6) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.17590322 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t3_a70 (s = k6) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.175787382 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t3_a70 (s = k6) [gamma_form = rate_beta, lam_round = *]: ≈ 0 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t3_a70 (s = k7) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.246551952 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t3_a70 (s = k7) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.246400419 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t3_a70 (s = k7) [gamma_form = rate_beta, lam_round = *]: ≈ 0 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t3_a70 (s = k8) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.321674778 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t3_a70 (s = k8) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.321491856 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t3_a70 (s = k8) [gamma_form = rate_beta, lam_round = *]: ≈ 0 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t3_a70 (s = k9) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.397800153 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t3_a70 (s = k9) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.397592451 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t3_a70 (s = k9) [gamma_form = rate_beta, lam_round = *]: ≈ 0 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t3_a70 (s = k10) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.472106514 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t3_a70 (s = k10) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.471881765 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t3_a70 (s = k10) [gamma_form = rate_beta, lam_round = *]: ≈ 0 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t3_a75 (s = k2) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.004956325 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t3_a75 (s = k2) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.004953808 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t3_a75 (s = k2) [gamma_form = rate_beta, lam_round = *]: ≈ 0 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t3_a75 (s = k3) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.01715881 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t3_a75 (s = k3) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.017149997 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t3_a75 (s = k3) [gamma_form = rate_beta, lam_round = *]: ≈ 0 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t3_a75 (s = k4) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.039259051 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t3_a75 (s = k4) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.039239235 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t3_a75 (s = k4) [gamma_form = rate_beta, lam_round = *]: ≈ 0 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t3_a75 (s = k5) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.071665493 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t3_a75 (s = k5) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.071630492 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t3_a75 (s = k5) [gamma_form = rate_beta, lam_round = *]: ≈ 0 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t3_a75 (s = k6) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.113514624 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t3_a75 (s = k6) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.113461527 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t3_a75 (s = k6) [gamma_form = rate_beta, lam_round = *]: ≈ 0 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t3_a75 (s = k7) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.163165381 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t3_a75 (s = k7) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.163092836 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t3_a75 (s = k7) [gamma_form = rate_beta, lam_round = *]: ≈ 0 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t3_a75 (s = k8) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.218610491 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t3_a75 (s = k8) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.218518667 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t3_a75 (s = k8) [gamma_form = rate_beta, lam_round = *]: ≈ 0 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t3_a75 (s = k9) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.277776811 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t3_a75 (s = k9) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.27766716 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t3_a75 (s = k9) [gamma_form = rate_beta, lam_round = *]: ≈ 0 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t3_a75 (s = k10) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.338722791 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t3_a75 (s = k10) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.338597721 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t3_a75 (s = k10) [gamma_form = rate_beta, lam_round = *]: ≈ 0 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t3_a80 (s = k2) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.002577695 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t3_a80 (s = k2) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.00257606 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t3_a80 (s = k2) [gamma_form = rate_beta, lam_round = *]: ≈ 0 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t3_a80 (s = k3) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.008867062 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t3_a80 (s = k3) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.008861394 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t3_a80 (s = k3) [gamma_form = rate_beta, lam_round = *]: ≈ 0 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t3_a80 (s = k4) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.020480128 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t3_a80 (s = k4) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.020467189 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t3_a80 (s = k4) [gamma_form = rate_beta, lam_round = *]: ≈ 0 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t3_a80 (s = k5) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.038049569 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t3_a80 (s = k5) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.038026069 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t3_a80 (s = k5) [gamma_form = rate_beta, lam_round = *]: ≈ 0 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t3_a80 (s = k6) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.061629356 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t3_a80 (s = k6) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.061592407 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t3_a80 (s = k6) [gamma_form = rate_beta, lam_round = *]: ≈ 0 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t3_a80 (s = k7) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.09084489 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t3_a80 (s = k7) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.090792288 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t3_a80 (s = k7) [gamma_form = rate_beta, lam_round = *]: ≈ 0.000000001 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t3_a80 (s = k8) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.125034359 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t3_a80 (s = k8) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.124964715 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t3_a80 (s = k8) [gamma_form = rate_beta, lam_round = *]: ≈ 0.000000001 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t3_a80 (s = k9) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.163367509 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t3_a80 (s = k9) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.16328027 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t3_a80 (s = k9) [gamma_form = rate_beta, lam_round = *]: ≈ 0.000000001 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t3_a80 (s = k10) [gamma_form = scale_beta, lam_round = exact]: ≈ 0.20493884 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = exact
+  law date 2026-10-18, cut 2026-10-18
+t3_a80 (s = k10) [gamma_form = scale_beta, lam_round = four_dp]: ≈ 0.204834226 ± 0.0000000005
+  reading: gamma_form = scale_beta
+  reading: lam_round = four_dp
+  law date 2026-10-18, cut 2026-10-18
+t3_a80 (s = k10) [gamma_form = rate_beta, lam_round = *]: ≈ 0.000000002 ± 0.0000000005
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t3_endow (s = k2) [gamma_form = scale_beta, lam_round = *]: ≈ 0.06650777 ± 0.0000000005
+  given: lam[endow] = 0 (mr2005_v)
+  reading: gamma_form = scale_beta
+  law date 2026-10-18, cut 2026-10-18
+t3_endow (s = k2) [gamma_form = rate_beta, lam_round = *]: ≈ 0 ± 0.0000000005
+  given: lam[endow] = 0 (mr2005_v)
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t3_endow (s = k3) [gamma_form = scale_beta, lam_round = *]: ≈ 0.24918945 ± 0.0000000005
+  given: lam[endow] = 0 (mr2005_v)
+  reading: gamma_form = scale_beta
+  law date 2026-10-18, cut 2026-10-18
+t3_endow (s = k3) [gamma_form = rate_beta, lam_round = *]: ≈ 0 ± 0.0000000005
+  given: lam[endow] = 0 (mr2005_v)
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t3_endow (s = k4) [gamma_form = scale_beta, lam_round = *]: ≈ 0.489967673 ± 0.0000000005
+  given: lam[endow] = 0 (mr2005_v)
+  reading: gamma_form = scale_beta
+  law date 2026-10-18, cut 2026-10-18
+t3_endow (s = k4) [gamma_form = rate_beta, lam_round = *]: ≈ 0 ± 0.0000000005
+  given: lam[endow] = 0 (mr2005_v)
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t3_endow (s = k5) [gamma_form = scale_beta, lam_round = *]: ≈ 0.700073195 ± 0.0000000005
+  given: lam[endow] = 0 (mr2005_v)
+  reading: gamma_form = scale_beta
+  law date 2026-10-18, cut 2026-10-18
+t3_endow (s = k5) [gamma_form = rate_beta, lam_round = *]: ≈ 0 ± 0.0000000005
+  given: lam[endow] = 0 (mr2005_v)
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t3_endow (s = k6) [gamma_form = scale_beta, lam_round = *]: ≈ 0.842772766 ± 0.0000000005
+  given: lam[endow] = 0 (mr2005_v)
+  reading: gamma_form = scale_beta
+  law date 2026-10-18, cut 2026-10-18
+t3_endow (s = k6) [gamma_form = rate_beta, lam_round = *]: ≈ 0 ± 0.0000000005
+  given: lam[endow] = 0 (mr2005_v)
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t3_endow (s = k7) [gamma_form = scale_beta, lam_round = *]: ≈ 0.924729328 ± 0.0000000005
+  given: lam[endow] = 0 (mr2005_v)
+  reading: gamma_form = scale_beta
+  law date 2026-10-18, cut 2026-10-18
+t3_endow (s = k7) [gamma_form = rate_beta, lam_round = *]: ≈ 0 ± 0.0000000005
+  given: lam[endow] = 0 (mr2005_v)
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t3_endow (s = k8) [gamma_form = scale_beta, lam_round = *]: ≈ 0.966482402 ± 0.0000000005
+  given: lam[endow] = 0 (mr2005_v)
+  reading: gamma_form = scale_beta
+  law date 2026-10-18, cut 2026-10-18
+t3_endow (s = k8) [gamma_form = rate_beta, lam_round = *]: ≈ 0 ± 0.0000000005
+  given: lam[endow] = 0 (mr2005_v)
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t3_endow (s = k9) [gamma_form = scale_beta, lam_round = *]: ≈ 0.985925404 ± 0.0000000005
+  given: lam[endow] = 0 (mr2005_v)
+  reading: gamma_form = scale_beta
+  law date 2026-10-18, cut 2026-10-18
+t3_endow (s = k9) [gamma_form = rate_beta, lam_round = *]: ≈ 0 ± 0.0000000005
+  given: lam[endow] = 0 (mr2005_v)
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t3_endow (s = k10) [gamma_form = scale_beta, lam_round = *]: ≈ 0.994368528 ± 0.0000000005
+  given: lam[endow] = 0 (mr2005_v)
+  reading: gamma_form = scale_beta
+  law date 2026-10-18, cut 2026-10-18
+t3_endow (s = k10) [gamma_form = rate_beta, lam_round = *]: ≈ 0 ± 0.0000000005
+  given: lam[endow] = 0 (mr2005_v)
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t3_geo: 0.0428
+  law date 2026-10-18, cut 2026-10-18
+t5_geo (p = p300): 0.025
+  law date 2026-10-18, cut 2026-10-18
+t5_geo (p = p400): 0.035
+  law date 2026-10-18, cut 2026-10-18
+t5_geo (p = p500): 0.0428
+  law date 2026-10-18, cut 2026-10-18
+t5_geo (p = p600): 0.04875
+  law date 2026-10-18, cut 2026-10-18
+t5_geo (p = p700): 0.05555
+  law date 2026-10-18, cut 2026-10-18
+t5_geo (p = p800): 0.06
+  law date 2026-10-18, cut 2026-10-18
+t5a_p300 [gamma_form = scale_beta, lam_round = *]: 1.22
+  given: lam[endow] = 0 (mr2005_v)
+  reading: gamma_form = scale_beta
+  law date 2026-10-18, cut 2026-10-18
+t5a_p300 [gamma_form = rate_beta, lam_round = *]: refused: RUN-SOLVE no sign change on [0, 20]
+  given: lam[endow] = 0 (mr2005_v)
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t5a_p400 [gamma_form = scale_beta, lam_round = *]: 1.95
+  given: lam[endow] = 0 (mr2005_v)
+  reading: gamma_form = scale_beta
+  law date 2026-10-18, cut 2026-10-18
+t5a_p400 [gamma_form = rate_beta, lam_round = *]: refused: RUN-SOLVE no sign change on [0, 20]
+  given: lam[endow] = 0 (mr2005_v)
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t5a_p500 [gamma_form = scale_beta, lam_round = *]: 2.24
+  given: lam[endow] = 0 (mr2005_v)
+  reading: gamma_form = scale_beta
+  law date 2026-10-18, cut 2026-10-18
+t5a_p500 [gamma_form = rate_beta, lam_round = *]: refused: RUN-SOLVE no sign change on [0, 20]
+  given: lam[endow] = 0 (mr2005_v)
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t5a_p600 [gamma_form = scale_beta, lam_round = *]: 2.22
+  given: lam[endow] = 0 (mr2005_v)
+  reading: gamma_form = scale_beta
+  law date 2026-10-18, cut 2026-10-18
+t5a_p600 [gamma_form = rate_beta, lam_round = *]: refused: RUN-SOLVE no sign change on [0, 20]
+  given: lam[endow] = 0 (mr2005_v)
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t5a_p700 [gamma_form = scale_beta, lam_round = *]: 2.37
+  given: lam[endow] = 0 (mr2005_v)
+  reading: gamma_form = scale_beta
+  law date 2026-10-18, cut 2026-10-18
+t5a_p700 [gamma_form = rate_beta, lam_round = *]: refused: RUN-SOLVE no sign change on [0, 20]
+  given: lam[endow] = 0 (mr2005_v)
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t5a_p800 [gamma_form = scale_beta, lam_round = *]: 2.2
+  given: lam[endow] = 0 (mr2005_v)
+  reading: gamma_form = scale_beta
+  law date 2026-10-18, cut 2026-10-18
+t5a_p800 [gamma_form = rate_beta, lam_round = *]: refused: RUN-SOLVE no sign change on [0, 20]
+  given: lam[endow] = 0 (mr2005_v)
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t5b_p300 [gamma_form = scale_beta, lam_round = *]: 0.99
+  given: lam[endow] = 0 (mr2005_v)
+  reading: gamma_form = scale_beta
+  law date 2026-10-18, cut 2026-10-18
+t5b_p300 [gamma_form = rate_beta, lam_round = *]: refused: RUN-SOLVE no sign change on [0, 20]
+  given: lam[endow] = 0 (mr2005_v)
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t5b_p400 [gamma_form = scale_beta, lam_round = *]: 1.64
+  given: lam[endow] = 0 (mr2005_v)
+  reading: gamma_form = scale_beta
+  law date 2026-10-18, cut 2026-10-18
+t5b_p400 [gamma_form = rate_beta, lam_round = *]: refused: RUN-SOLVE no sign change on [0, 20]
+  given: lam[endow] = 0 (mr2005_v)
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t5b_p500 [gamma_form = scale_beta, lam_round = *]: 1.86
+  given: lam[endow] = 0 (mr2005_v)
+  reading: gamma_form = scale_beta
+  law date 2026-10-18, cut 2026-10-18
+t5b_p500 [gamma_form = rate_beta, lam_round = *]: refused: RUN-SOLVE no sign change on [0, 20]
+  given: lam[endow] = 0 (mr2005_v)
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t5b_p600 [gamma_form = scale_beta, lam_round = *]: 1.76
+  given: lam[endow] = 0 (mr2005_v)
+  reading: gamma_form = scale_beta
+  law date 2026-10-18, cut 2026-10-18
+t5b_p600 [gamma_form = rate_beta, lam_round = *]: refused: RUN-SOLVE no sign change on [0, 20]
+  given: lam[endow] = 0 (mr2005_v)
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t5b_p700 [gamma_form = scale_beta, lam_round = *]: 1.84
+  given: lam[endow] = 0 (mr2005_v)
+  reading: gamma_form = scale_beta
+  law date 2026-10-18, cut 2026-10-18
+t5b_p700 [gamma_form = rate_beta, lam_round = *]: refused: RUN-SOLVE no sign change on [0, 20]
+  given: lam[endow] = 0 (mr2005_v)
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18
+t5b_p800 [gamma_form = scale_beta, lam_round = *]: 1.64
+  given: lam[endow] = 0 (mr2005_v)
+  reading: gamma_form = scale_beta
+  law date 2026-10-18, cut 2026-10-18
+t5b_p800 [gamma_form = rate_beta, lam_round = *]: refused: RUN-SOLVE no sign change on [0, 20]
+  given: lam[endow] = 0 (mr2005_v)
+  reading: gamma_form = rate_beta
+  law date 2026-10-18, cut 2026-10-18

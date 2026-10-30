@@ -1,0 +1,15 @@
+# L §5.15 / §7.3: "crps of a normal forecast" needs to u (LOAD-TO).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+input y: num
+def c: num = crps(normal(0, 1), y) at reader
+=== expect
+refused: LOAD-TO ...

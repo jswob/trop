@@ -1,0 +1,26 @@
+# L §7.1: the cap counts the digits of the reduced fraction's numerator and denominator, not of its decimal
+# expansion, and L §2.4 prints an exact value as its shortest exact decimal.  0.5^5000 = 1/2^5000: a 1 506-digit
+# denominator (under the cap), printed with 5 000 decimals.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+input h: num
+input n: int
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  h = 0.5
+  n = 5000
+
+ask q: pow(h, n)
+=== expect
+q: 0.000 ...
+  cut 2026-12-31

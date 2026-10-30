@@ -1,0 +1,6 @@
+q_a_relief: ?"How many days was Marek abroad in 2024? The field is blank on form F-12." (days_abroad[2024])
+  law date 2024-12-31, cut 2024-12-31
+q_b_gain: refused: RUN-PLACE fund_g is -20 g_unit after the day's observations and plans of 2024-06-28
+  assumed: the card gives no day for the planned sale; any day after lot G1 gives the same refusal (sell_day)
+  unfulfilled: sell
+  law date 2024-12-31, cut 2024-12-31

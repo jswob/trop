@@ -1,0 +1,51 @@
+# L §5.19 (round 12): "A fulfils naming an instance that doesn't exist, or one whose legs don't touch the
+# observation's places or that has a leg the observation lacks, is refused (RUN-RECORD)"; L §8.4 RUN-RECORD
+# "observation <r> fulfils <instance> and lacks its leg <l>". pay has legs fee and main; the bank row (a transfer, one
+# leg cash) fulfils it: konto's balance (which books the refused observation) and observed(pay) are refused. (Was
+# REFCORE-UNSPECIFIED §5.19, writer 5's T-93: observed() with no observation holding the leg.)
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+kind splits: event certain
+  leg fee: PLN
+  leg main: PLN
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input bank: observed
+input amt: money PLN
+input pday: date
+
+move pay: splits
+  on pday
+  leg fee from konto to world amount amt
+  leg main from konto to world amount amt
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 5.00 PLN
+  pday = 2026-03-02
+  opening[konto] = 100.00 PLN at 2026-01-01 start "s"
+
+version st
+  cite s
+  governs 2026-03
+  known 2026-04-01
+  covers konto
+  bank[r1] = (on: 2026-03-02, kind: transfers, leg cash from konto to world amount 10.00 PLN, fulfils: pay) "l1"
+
+ask q: bal(konto, 2026-03-31)
+ask r: observed(pay)
+=== expect
+q: refused: RUN-RECORD observation bank[r1] fulfils pay and lacks its leg fee
+  open: pay
+  cut 2026-12-31
+r: refused: RUN-RECORD observation bank[r1] fulfils pay and lacks its leg fee
+  cut 2026-12-31

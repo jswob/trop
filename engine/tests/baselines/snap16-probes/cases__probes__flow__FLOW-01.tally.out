@@ -1,0 +1,12 @@
+q_balancing: (-450.00 DUK, 450.00 DUK)
+  pad: wallet 2025-01-31 end, pads:card_facts:wallet@2025-01-31 end of -450.00 DUK
+  unfulfilled: atm
+  cut 2026-10-25
+q_flows: -150.00 DUK
+  pad: wallet 2025-01-31 end, pads:card_facts:wallet@2025-01-31 end of -450.00 DUK
+  unfulfilled: atm
+  cut 2026-10-25
+q_holds: ok
+  pad: wallet 2025-01-31 end, pads:card_facts:wallet@2025-01-31 end of -450.00 DUK
+  unfulfilled: atm
+  cut 2026-10-25

@@ -1,0 +1,22 @@
+part gen1_ahead
+  tally 2
+  law
+  note "GEN-1 v2 for the years the forecast reaches past the published notices (2027 – 2029): every day is settled by GEN-1 v2 .1 – .2 but Spring Day, a Monday of April set by a notice not yet published (GEN-1 .3), so it is a window over that April's Mondays (L §4.2, §4.4)."
+
+version hol_2027
+  cite gen_1
+  governs 2027
+  known 2024-06-18
+  holidays = calendar(weekends [sat, sun], added [2027-01-01, 2027-01-06, one_of([2027-04-05, 2027-04-12, 2027-04-19, 2027-04-26]), 2027-05-01, 2027-05-03, 2027-06-23, 2027-08-15, 2027-11-01, 2027-11-11, 2027-12-25, 2027-12-26]) governs 2027 "GEN-1 v2 .2; Spring Day not yet set (GEN-1 .3): one of April's Mondays"
+
+version hol_2028
+  cite gen_1
+  governs 2028
+  known 2024-06-18
+  holidays = calendar(weekends [sat, sun], added [2028-01-01, 2028-01-06, one_of([2028-04-03, 2028-04-10, 2028-04-17, 2028-04-24]), 2028-05-01, 2028-05-03, 2028-06-23, 2028-08-15, 2028-11-01, 2028-11-11, 2028-12-25, 2028-12-26]) governs 2028 "GEN-1 v2 .2; Spring Day not yet set (GEN-1 .3): one of April's Mondays"
+
+version hol_2029
+  cite gen_1
+  governs 2029
+  known 2024-06-18
+  holidays = calendar(weekends [sat, sun], added [2029-01-01, 2029-01-06, one_of([2029-04-02, 2029-04-09, 2029-04-16, 2029-04-23, 2029-04-30]), 2029-05-01, 2029-05-03, 2029-06-23, 2029-08-15, 2029-11-01, 2029-11-11, 2029-12-25, 2029-12-26]) governs 2029 "GEN-1 v2 .2; Spring Day not yet set (GEN-1 .3): one of April's Mondays"

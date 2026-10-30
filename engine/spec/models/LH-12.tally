@@ -1,6 +1,8 @@
 model lh12
-  tally 1
+  tally 2
   on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
   note "Polish FUS old-age pension for insured persons born after 1948: the calculation base divided by the average further life expectancy, in months, for the age at retirement in completed years and months (art. 26 ust. 1-3), from the GUS table that applies to the application date (ust. 5), or the table in force on the day of reaching 60 or 65 if that is more favourable (ust. 6)."
   note "Each GUS table is a version whose rows govern the applications of 1 April to 31 March after its publication. The examples are those of the ZUS press release of 1 April 2026: a woman of 60 and a man of 65, with capital of 500 and 700 thousand zloty."
   note "Neither the act nor the release states a rounding rule. Axis lh12_mode gives the mode of rounding the monthly pension to the grosz; axis lh12_ok gives how the release's 'ok.' reductions are taken to whole zloty."
@@ -17,6 +19,8 @@ source modeller "The model's own assumptions, each stated with its reason"
 
 source zus "ZUS, Informacja prasowa, Bydgoszcz, 1 kwietnia 2026 r.: Emerytury są niższe, bo żyjemy dłużej. Od 1 kwietnia obowiązuje nowa tablica dalszego trwania życia" at "https://osieciny.pl/wp-content/uploads/2026/04/Emerytury-sa-nizsze-bo-zyjemy-dluzej.-Od-1-kwietnia-obowiazuje-nowa-tablica-dalszego-trwania-zycia.pdf"
 
+unit PLN: currency minor 0.01
+
 axis lh12_mode
   down "the monthly pension truncated to the grosz; no rounding rule is stated"
   half-even "the monthly pension rounded to the nearest grosz, a tie to the even grosz; no rounding rule is stated"
@@ -28,9 +32,9 @@ axis lh12_ok
 
 index example = [w60_500, m65_500, w60_700, m65_700]
 
-index months_done = 0..11
+index months_done = int 0..11
 
-index years_old = 30..90
+index years_old = int 30..90
 
 input age_months[e in example]: key months_done
 
@@ -47,40 +51,41 @@ input le[a in years_old, mo in months_done]: num
 input reached_on[e in example]: date
   note "the day the insured reached 60 (a woman) or 65 (a man), art. 26 ust. 6"
 
-def divisor[e in example]: num
+def divisor[e in example]: num at reader
   note "a count of months the law divides by, so a plain num (LANGUAGE 3.2)"
   rule base v v_fus = le_apply[e]
-  rule reached excepts base v v_fus when le_reached[e] < le_apply[e] = le_reached[e]
+  rule reached beats base v v_fus = le_reached[e] when le_reached[e] < le_apply[e]
 
-def le_apply[e in example]: num at apply_on[e] = le[age_years[e], age_months[e]]
+def le_apply[e in example]: num = le[age_years[e], age_months[e]] at apply_on[e]
 
-def le_reached[e in example]: num at reached_on[e] = le[age_years[e], age_months[e]]
+def le_reached[e in example]: num = le[age_years[e], age_months[e]] at reached_on[e]
 
-def pension[e in example]: money PLN
-  rule base v v_fus = round(capital[e] / divisor[e], 0.01, lh12_mode)
+def pension[e in example]: money PLN at reader
+  rule base v v_fus = round(capital[e] / divisor[e], minor(PLN), lh12_mode)
 
-ask cut_ok: round(pension[e] as if {apply_on[e] = 2026-03-31, reached_on[e] = 2026-03-31} - pension[e], 1, lh12_ok) for e in example
+ask cut_ok: round(pension[e] as if {apply_on[e] = 2026-03-31, reached_on[e] = 2026-03-31} - pension[e], 1, lh12_ok) for e in example law 2026-10-18
 
-ask div_new: divisor[e] for e in example
+ask div_new: divisor[e] for e in example law 2026-10-18
 
-ask div_old: divisor[e] as if {apply_on[e] = 2026-03-31, reached_on[e] = 2026-03-31} for e in example
+ask div_old: divisor[e] as if {apply_on[e] = 2026-03-31, reached_on[e] = 2026-03-31} for e in example law 2026-10-18
 
-ask inc_2022_2025: le[a, 0] as if {law 2025-04-01} - le[a, 0] as if {law 2022-04-01} for a in [60, 65]
+ask inc_2022_2025: le[a, 0] as if {law 2025-04-01} - le[a, 0] as if {law 2022-04-01} for a in [60, 65] law 2026-10-18
 
-ask inc_2025_2026: le[a, 0] as if {law 2026-04-01} - le[a, 0] as if {law 2025-04-01} for a in [60, 65]
+ask inc_2025_2026: le[a, 0] as if {law 2026-04-01} - le[a, 0] as if {law 2025-04-01} for a in [60, 65] law 2026-10-18
 
-ask le_2022: le[a, 0] for a in [60, 65] with law 2022-04-01
+ask le_2022: le[a, 0] for a in [60, 65] law 2022-04-01
 
-ask le_2025: le[a, 0] for a in [60, 65] with law 2025-04-01
+ask le_2025: le[a, 0] for a in [60, 65] law 2025-04-01
 
-ask le_2026: le[a, 0] for a in [60, 65] with law 2026-04-01
+ask le_2026: le[a, 0] for a in [60, 65] law 2026-04-01
 
-ask pension_new: pension[e] for e in example
+ask pension_new: pension[e] for e in example law 2026-10-18
 
-ask pension_old: pension[e] as if {apply_on[e] = 2026-03-31, reached_on[e] = 2026-03-31} for e in example
+ask pension_old: pension[e] as if {apply_on[e] = 2026-03-31, reached_on[e] = 2026-03-31} for e in example law 2026-10-18
 
 version v_fus
   cite fus
+  governs always
   known 2017-01-05
   note "Law, known from its promulgation (LANGUAGE 4.5): the ustawa z dnia 16 listopada 2016 r., Dz. U. 2017 poz. 38 (published 2017-01-05, in force 2017-10-01), art. 1 pkt 8, gave art. 26 ust. 6 its wording of 60 and 65 years; ust. 6 was added by Dz. U. 2015 poz. 552 (published 2015-04-21). Whether an act between 2018 and 2025 changed art. 24-26 isn't checked. The tekst jednolity Dz. U. 2025 poz. 1749 is the locator (LANGUAGE 5.3): art. 24 ust. 1, art. 25 ust. 1, art. 26 ust. 1-6 (pp. 12-15). The amendments Dz. U. 2026 poz. 26 and poz. 425 don't touch art. 24-26. Art. 26 states no rounding of the pension."
 
@@ -176,6 +181,7 @@ version v_gus2026
 
 version v_modeller
   cite modeller
+  governs always
   known 2026-10-18
   note "A modeller's assumption standing for the case's own fact takes the date of the stipulations, the model's on (LANGUAGE 4.5)."
   age_months = 0 assumed "the release names only '60-latka' and '65-latek' and divides by the column-0 values" "p. 1, 'Przykładowe wyliczenia'"
@@ -184,6 +190,7 @@ version v_modeller
 
 version v_zus
   cite zus
+  governs always
   known 2026-10-18
   note "The release's examples are a hypothetical case's stipulations, known from the model's on date, as it has no start (LANGUAGE 4.5). The release itself is dated 1 April 2026; regional press office, Bydgoszcz; the 2-page PDF on ZUS letterhead, created 2026-04-02 per its metadata."
   age_years[w60_500] = 60 "p. 1, 'Przykładowe wyliczenia', bullet 1: 60-latka"

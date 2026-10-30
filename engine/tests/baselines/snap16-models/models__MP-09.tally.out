@@ -1,0 +1,73 @@
+q_eigenbedarf [dt_u_work = employed]: 1 450.00 EUR
+  reading: dt_u_work = employed
+  law date 2026-10-18, cut 2026-10-18
+q_eigenbedarf [dt_u_work = not_employed]: 1 200.00 EUR
+  reading: dt_u_work = not_employed
+  law date 2026-10-18, cut 2026-10-18
+q_einsatz (c = k1): 439.00 EUR
+  law date 2026-10-18, cut 2026-10-18
+q_einsatz (c = k2): 428.50 EUR
+  law date 2026-10-18, cut 2026-10-18
+q_einsatz (c = k3): 356.50 EUR
+  law date 2026-10-18, cut 2026-10-18
+q_einsatz_sum: 1 224.00 EUR
+  assumed: the example treats K1 as a first-rank child; § 1603 Abs. 2 Satz 2 BGB requires unverheiratet, which the example does not state (unmarried[k1])
+  law date 2026-10-18, cut 2026-10-18
+q_masse [dt_u_work = employed]: 300.00 EUR
+  reading: dt_u_work = employed
+  law date 2026-10-18, cut 2026-10-18
+q_masse [dt_u_work = not_employed]: 550.00 EUR
+  reading: dt_u_work = not_employed
+  law date 2026-10-18, cut 2026-10-18
+q_split_check [dt_cut_round = nearest, dt_u_work = employed]: ok
+  assumed: the example treats K1 as a first-rank child; § 1603 Abs. 2 Satz 2 BGB requires unverheiratet, which the example does not state (unmarried[k1])
+  reading: dt_cut_round = nearest
+  reading: dt_u_work = employed
+  law date 2026-10-18, cut 2026-10-18
+q_split_check [dt_cut_round = nearest, dt_u_work = not_employed]: differs: sum(...) = 549.99 EUR, masse = 550.00 EUR, difference -0.01 EUR
+  assumed: the example treats K1 as a first-rank child; § 1603 Abs. 2 Satz 2 BGB requires unverheiratet, which the example does not state (unmarried[k1])
+  reading: dt_cut_round = nearest
+  reading: dt_u_work = not_employed
+  law date 2026-10-18, cut 2026-10-18
+q_split_check [dt_cut_round = largest_rem, dt_u_work = *]: ok
+  assumed: the example treats K1 as a first-rank child; § 1603 Abs. 2 Satz 2 BGB requires unverheiratet, which the example does not state (unmarried[k1])
+  reading: dt_cut_round = largest_rem
+  law date 2026-10-18, cut 2026-10-18
+q_unterhalt (c = k1) [dt_cut_round = *, dt_u_work = employed]: 107.60 EUR
+  assumed: the example treats K1 as a first-rank child; § 1603 Abs. 2 Satz 2 BGB requires unverheiratet, which the example does not state (unmarried[k1])
+  reading: dt_u_work = employed
+  law date 2026-10-18, cut 2026-10-18
+q_unterhalt (c = k1) [dt_cut_round = *, dt_u_work = not_employed]: 197.26 EUR
+  assumed: the example treats K1 as a first-rank child; § 1603 Abs. 2 Satz 2 BGB requires unverheiratet, which the example does not state (unmarried[k1])
+  reading: dt_u_work = not_employed
+  law date 2026-10-18, cut 2026-10-18
+q_unterhalt (c = k2) [dt_cut_round = *, dt_u_work = employed]: 105.02 EUR
+  assumed: the example treats K1 as a first-rank child; § 1603 Abs. 2 Satz 2 BGB requires unverheiratet, which the example does not state (unmarried[k1])
+  reading: dt_u_work = employed
+  law date 2026-10-18, cut 2026-10-18
+q_unterhalt (c = k2) [dt_cut_round = nearest, dt_u_work = not_employed]: 192.54 EUR
+  assumed: the example treats K1 as a first-rank child; § 1603 Abs. 2 Satz 2 BGB requires unverheiratet, which the example does not state (unmarried[k1])
+  reading: dt_cut_round = nearest
+  reading: dt_u_work = not_employed
+  law date 2026-10-18, cut 2026-10-18
+q_unterhalt (c = k2) [dt_cut_round = largest_rem, dt_u_work = not_employed]: 192.55 EUR
+  assumed: the example treats K1 as a first-rank child; § 1603 Abs. 2 Satz 2 BGB requires unverheiratet, which the example does not state (unmarried[k1])
+  reading: dt_cut_round = largest_rem
+  reading: dt_u_work = not_employed
+  law date 2026-10-18, cut 2026-10-18
+q_unterhalt (c = k3) [dt_cut_round = *, dt_u_work = employed]: 87.38 EUR
+  assumed: the example treats K1 as a first-rank child; § 1603 Abs. 2 Satz 2 BGB requires unverheiratet, which the example does not state (unmarried[k1])
+  reading: dt_u_work = employed
+  law date 2026-10-18, cut 2026-10-18
+q_unterhalt (c = k3) [dt_cut_round = *, dt_u_work = not_employed]: 160.19 EUR
+  assumed: the example treats K1 as a first-rank child; § 1603 Abs. 2 Satz 2 BGB requires unverheiratet, which the example does not state (unmarried[k1])
+  reading: dt_u_work = not_employed
+  law date 2026-10-18, cut 2026-10-18
+q_zahlbetrag (a = a0_5): 356.50 EUR
+  law date 2026-10-18, cut 2026-10-18
+q_zahlbetrag (a = a6_11): 428.50 EUR
+  law date 2026-10-18, cut 2026-10-18
+q_zahlbetrag (a = a12_17): 523.50 EUR
+  law date 2026-10-18, cut 2026-10-18
+q_zahlbetrag (a = a18): 439.00 EUR
+  law date 2026-10-18, cut 2026-10-18

@@ -1,0 +1,25 @@
+Bank Olcha S.A.|account statement
+Account|LN73 4400 2011 0000 8817 2264 0001
+Holder|HALINA SOWA
+Period|20260601|20260630
+Opening balance|10 177,99
+Date|Type|Counterparty|Title|Amount|Balance after
+20260603|CASH|ATM Olcha Brzezie|cash withdrawal|-500,00|9 677,99
+20260604|CARD|Market Brzezie|card ...2264|-250,76|9 427,23
+20260605|CREDIT|Social Insurance Office|survivor pension 06/2026|4 492,02|13 919,25
+20260605|STANDING ORDER|WM Ogrodowa 2|fee Ogrodowa 2/11 06/2026|-468,00|13 451,25
+20260608|CREDIT|Oskar Wilczek|rent 06/2026 Ogrodowa 2/11|1 976,00|15 427,25
+20260609|CARD|Sklep Pod Lipą|card ...2264|-178,19|15 249,06
+20260610|CARD|Sklep Pod Lipą|card ...2264|-197,88|15 051,18
+20260615|STANDING ORDER|Volta Energia|Leśna 4 energy 06/2026|-385,00|14 666,18
+20260615|CARD|Apteka Rumianek|card ...2264|-245,08|14 421,10
+20260616|CARD|Sklep Pod Lipą|card ...2264|-217,35|14 203,75
+20260617|CASH|ATM Olcha Brzezie|cash withdrawal|-500,00|13 703,75
+20260620|CARD|Stacja Olcha-Paliwa|card ...2264|-166,87|13 536,88
+20260621|CARD|Apteka Rumianek|card ...2264|-113,41|13 423,47
+20260622|TRANSFER|Revenue Office Kłodzin|PIT-13 advance 05/2026 H. SOWA|-137,00|13 286,47
+20260622|STANDING ORDER|Telekom Lenia|phone 06/2026|-59,00|13 227,47
+20260624|CARD|Sklep Pod Lipą|card ...2264|-82,05|13 145,42
+20260625|TRANSFER|Opieka Dom sp.|home help 06/2026|-2 150,00|10 995,42
+20260628|CARD|Apteka Rumianek|card ...2264|-184,94|10 810,48
+Closing balance|10 810,48

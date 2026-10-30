@@ -1,0 +1,43 @@
+# L §7.3: "ln(x) with x <= 0, sqrt(x) with x < 0, and pow(x, q) ... with x < 0 and a non-integer q are refused
+# (RUN-DOMAIN); pow(0, q) with q < 0 is a division by zero (RUN-DIV)".
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+input zero: num
+input neg: num
+input half: num
+input mhalf: num
+def a1: num = ln(zero) to 1e-6 at reader
+def a2: num = sqrt(neg) to 1e-6 at reader
+def a3: num = pow(zero, mhalf) to 1e-6 at reader
+def a4: num = pow(neg, half) to 1e-6 at reader
+
+version v
+  cite s
+  governs 2026..
+  known 2026-01-01
+  zero = 0
+  neg = -1
+  half = 0.5
+  mhalf = -0.5
+
+ask q1: a1 law 2026-06-30
+ask q2: a2 law 2026-06-30
+ask q3: a3 law 2026-06-30
+ask q4: a4 law 2026-06-30
+=== expect
+q1: refused: RUN-DOMAIN ...
+  law date 2026-06-30, cut 2026-12-31
+q2: refused: RUN-DOMAIN ...
+  law date 2026-06-30, cut 2026-12-31
+q3: refused: RUN-DIV ...
+  law date 2026-06-30, cut 2026-12-31
+q4: refused: RUN-DOMAIN ...
+  law date 2026-06-30, cut 2026-12-31

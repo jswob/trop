@@ -1,0 +1,34 @@
+# L §5.11: "Over a binding that is empty at the cut and whose span reaches past it, first and last give a hole naming
+# the binding (HOLE-NOTYET), since a member may still come (§3.1, P-9); any other empty first or last is refused
+# (RUN-EMPTY)"; L §8.1 HOLE-NOTYET "<x>: no <event> yet, and its span reaches past the cut" (writer 8: x is the
+# binding's variable, event its domain); "Over things ... without [ties by] they are refused", empty or not, at load
+# (round 18 C1-14; writer 8 moved q1 to L5_11_first_no_ties_load). Nobody in persons is retired: over 2026 (past the cut 2026-06-30) q3 is HOLE-NOTYET; over 2026-Q1 (before the
+# cut) q2 is RUN-EMPTY; L §8.1's fix "tests count(...) > 0 first" gives false (q4). (Was pending, removed.)
+=== m.tally
+model t
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+kind persons
+input retired[p in persons]: bool
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  persons + [ana] lives 1990-01-01..
+  retired[ana] = false
+
+ask q2: first(p in persons over 2026-01-01 .. 2026-03-31 where retired[p]) ties by lifespan(p).from
+ask q3: last(p in persons over 2026-01-01 .. 2026-12-31 where retired[p]) ties by lifespan(p).from
+ask q4: count(p in persons over 2026-01-01 .. 2026-12-31 where retired[p]) > 0
+=== expect
+q2: refused: RUN-EMPTY ...
+  cut 2026-06-30
+q3: ?"p: no persons yet, and its span reaches past the cut" (persons)
+  cut 2026-06-30
+q4: false
+  cut 2026-06-30

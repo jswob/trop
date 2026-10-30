@@ -1,0 +1,23 @@
+# L §2.2 (writer 8): meta is gone from the built-ins, with its fields; a call takes a built-in's name or a band's id
+# (L §2.3 Calls), so meta(...) names no band: LOAD-NAME.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source tab "tab"
+input x: int
+
+version v1
+  cite tab
+  governs 2026..
+  known 2026-01-01
+  x = 1 "s"
+
+ask q1: meta(x, 2026-06-30).version, meta(x, 2026-06-30).source
+ask q2: meta(x, 2026-06-30).governs.from
+ask q3: meta(x, 2026-06-30).version == "v1" law 2026-06-30
+=== expect
+refused: LOAD-NAME ...

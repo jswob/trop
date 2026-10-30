@@ -1,12 +1,18 @@
 model cb08
-  tally 1
+  tally 2
   on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
   note "26 CFR 1.988-2: a US individual's pound loan, (b)(9) Example 1 (cash method) and Example 2 (accrual method), and listed stock bought and sold for pounds by a cash basis individual, the (a)(2)(iv)(C) Example."
   note "X's functional currency is the dollar. The examples assume that any transaction involving an individual is a section 988 transaction ((b)(9) lead-in)."
   note "Each calendar year is one accrual period, as the Example 2 table treats it. Examples 1 and 2 don't say that X is a calendar year taxpayer."
   note "The regulation states no rounding, so nothing is rounded."
 
 source ecfr_988_2 "26 CFR 1.988-2 Recognition and computation of exchange gain or loss (eCFR, Title 26 up to date as of 2026-10-15)" at "https://www.ecfr.gov/current/title-26/section-1.988-2"
+
+unit GBP: currency minor 0.01
+
+unit USD: currency minor 0.01
 
 index acctmethod = [cash_basis, accrual_basis]
 
@@ -40,78 +46,78 @@ input usd_converted: money USD
 
 input usd_value[s in side, k in datekind]: money USD
 
-def amount_realized: money USD = usd_value[sell, translation_basis[sell]]
+def amount_realized: money USD = usd_value[sell, translation_basis[sell]] at reader
 
-def disposal_on: date
+def disposal_on: date at reader
   note "Section 453(k), as the (a)(2)(iv)(C) Example applies it: listed stock that is sold is treated as disposed of on the trade date. The text of 453(k) was not fetched, so the rule cites the regulation's example."
   rule base v law988 = trade_on[sell]
 
-def fx_gain_interest[e in example, y in yr]: num USD
+def fx_gain_interest[e in example, y in yr]: num USD at start_of(y)
   note "(b)(2)(ii)(B) and (b)(3): no exchange gain or loss on interest that isn't required to be accrued before receipt. For accrued interest: the pounds received, translated at the spot rate on the date received, less the same pounds translated at the average rate for the accrual period."
-  rule accrual_method v law988 when method[e] = accrual_basis = interest_spot_value[y] - interest_avg_value[y]
-  rule cash_method v law988 when method[e] = cash_basis = 0
+  rule accrual_method v law988 = interest_spot_value[y] - interest_avg_value[y] when method[e] == accrual_basis
+  rule cash_method v law988 = 0 when method[e] == cash_basis
 
-def fx_gain_interest_total[e in example]: num USD = sum(y in yr: fx_gain_interest[e, y])
+def fx_gain_interest_total[e in example]: num USD = sum(fx_gain_interest[e, y] for y in yr) at reader
 
 def fx_gain_principal: num USD at start_of(repaid_in)
   note "(b)(5): the principal translated at the spot rate on the date the payment is received, less the principal translated at the spot rate on the date the holder acquired the instrument. The principal is the holder's purchase price in pounds."
   rule base v law988 = principal_at_receipt - principal_at_loan
 
-def gbp_basis: money USD
+def gbp_basis: money USD at reader
   note "The basis in the pounds received from the sale is their dollar value at the date used for the amount realized, as the (a)(2)(iv)(C) Example states."
   rule base v law988 = amount_realized
 
-def interest_avg_value[y in yr]: num USD = interest_gbp * avg_rate[y]
+def interest_avg_value[y in yr]: num USD = interest_gbp * avg_rate[y] at start_of(y)
 
-def interest_income[e in example, y in yr]: num USD
+def interest_income[e in example, y in yr]: num USD at start_of(y)
   note "(b)(2)(ii): interest that isn't required to be accrued before receipt is translated at the spot rate on the date received. Interest that is required to be accrued is translated at the average rate for the accrual period."
-  rule accrual_method v law988 when method[e] = accrual_basis = interest_avg_value[y]
-  rule cash_method v law988 when method[e] = cash_basis = interest_spot_value[y]
+  rule accrual_method v law988 = interest_avg_value[y] when method[e] == accrual_basis
+  rule cash_method v law988 = interest_spot_value[y] when method[e] == cash_basis
 
-def interest_spot_value[y in yr]: num USD = interest_gbp * spot_paid[y]
+def interest_spot_value[y in yr]: num USD = interest_gbp * spot_paid[y] at start_of(y)
 
-def principal_at_loan: num USD = principal_gbp * spot_loan
+def principal_at_loan: num USD = principal_gbp * spot_loan at reader
 
-def principal_at_receipt: num USD = principal_gbp * spot_paid[repaid_in]
+def principal_at_receipt: num USD = principal_gbp * spot_paid[repaid_in] at reader
 
-def stock_basis: money USD = usd_value[buy, translation_basis[buy]]
+def stock_basis: money USD = usd_value[buy, translation_basis[buy]] at reader
 
-def stock_gain: money USD = amount_realized - stock_basis
+def stock_gain: money USD = amount_realized - stock_basis at reader
 
 def translation_basis[s in side]: key datekind at trade_on[s]
   note "(a)(2)(iv)(A)-(B): a cash basis taxpayer translates the currency paid for listed stock, or received for it, at the spot rate on the settlement date."
-  rule accrual_method v law988 when method_trade = accrual_basis = ? "Which date does an accrual basis taxpayer translate at? The example covers only a cash basis taxpayer."
-  rule cash_method v law988 when method_trade = cash_basis = settle
+  rule accrual_method v law988 = ?"Which date does an accrual basis taxpayer translate at? The example covers only a cash basis taxpayer." when method_trade == accrual_basis
+  rule cash_method v law988 = settle when method_trade == cash_basis
 
-ask ex1_fx_on_interest: fx_gain_interest[ex1, y] for y in yr
+ask ex1_fx_on_interest: fx_gain_interest[ex1, y] for y in yr law 2026-10-18
 
-ask ex1_interest: interest_income[ex1, y] for y in yr
+ask ex1_interest: interest_income[ex1, y] for y in yr law 2026-10-18
 
-ask ex2_fx_on_interest: fx_gain_interest[ex2, y] for y in yr
+ask ex2_fx_on_interest: fx_gain_interest[ex2, y] for y in yr law 2026-10-18
 
-ask ex2_fx_on_interest_total: fx_gain_interest_total[ex2]
+ask ex2_fx_on_interest_total: fx_gain_interest_total[ex2] law 2026-10-18
 
-ask ex2_interest: interest_income[ex2, y] for y in yr
+ask ex2_interest: interest_income[ex2, y] for y in yr law 2026-10-18
 
-ask ex2_spot_value: interest_spot_value[y] for y in yr
+ask ex2_spot_value: interest_spot_value[y] for y in yr law 2026-10-18
 
-ask loan_dollars: check usd_converted = principal_at_loan
+ask loan_dollars: check usd_converted == principal_at_loan law 2026-10-18
 
-ask principal_gain: fx_gain_principal
+ask principal_gain: fx_gain_principal law 2026-10-18
 
-ask principal_lent: principal_at_loan
+ask principal_lent: principal_at_loan law 2026-10-18
 
-ask principal_received: principal_at_receipt
+ask principal_received: principal_at_receipt law 2026-10-18
 
-ask trade_amount_realized: amount_realized
+ask trade_amount_realized: amount_realized law 2026-10-18
 
-ask trade_basis: stock_basis
+ask trade_basis: stock_basis law 2026-10-18
 
-ask trade_disposal: disposal_on
+ask trade_disposal: disposal_on law 2026-10-18
 
-ask trade_gain: stock_gain
+ask trade_gain: stock_gain law 2026-10-18
 
-ask trade_gbp_basis: gbp_basis
+ask trade_gbp_basis: gbp_basis law 2026-10-18
 
 version law988
   cite ecfr_988_2
@@ -123,6 +129,7 @@ version law988
 
 version ex988
   cite ecfr_988_2
+  governs always
   known 2026-10-18
   note "The facts of (b)(9) Examples 1 and 2 and of the (a)(2)(iv)(C) Example, as the regulation states them."
   note "These are the examples' stipulations, so they are known from the model's on date, as the case's world (LANGUAGE.md 4.5)."

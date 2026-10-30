@@ -1,0 +1,24 @@
+# L §2.3 (writer 8): paths() is gone; L §2.2 lists no built-in paths, and a call takes a built-in's name or a band's
+# id (L §2.3 Calls), so `paths()` names no band: LOAD-NAME. (Was: "paths() reads N", removed by the review.)
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+index ks = [ka, kb]
+input w[k in ks]: num
+def draw: dist = discrete(w[k] for k in ks) at reader
+
+version v
+  cite s
+  governs 2026..
+  known 2026-01-01
+  w[ka] = 1
+  w[kb] = 1
+
+ask a: share(draw == ka) + paths() law 2026-06-30 paths 4 seed 1
+=== expect
+refused: LOAD-NAME ...

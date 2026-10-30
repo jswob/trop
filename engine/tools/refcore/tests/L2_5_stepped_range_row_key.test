@@ -1,0 +1,29 @@
+# L §2.5 (round 12): "At a position keyed by a stepped range (§5.6), a key is a value of the range's type, written or
+# computed, and must be one of the range's values, a + i·s <= b for a whole number i >= 0 (LOAD-KEY for a literal,
+# RUN-KEY at run)". r is keyed by the days 2026-01-01 + 7·i: its row at 2026-01-08 is one of them (q: 1 there, the `*`
+# row's 0 at 2026-01-15; q2 sums 2026-01-01, -08, -15, -22, -29: 1). (Was REFCORE-UNSPECIFIED §2.5, writer 5's T-5.)
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+input r[d in 2026-01-01 .. 2026-12-31 step 7 days]: int
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  r[2026-01-08] = 1 "s"
+  r[*] = 0 "s"
+
+ask q: r[2026-01-08], r[2026-01-15]
+ask q2: sum(r[d] for d in 2026-01-01 .. 2026-01-31 step 7 days)
+=== expect
+q: (1, 0)
+  cut 2026-12-31
+q2: 1
+  cut 2026-12-31

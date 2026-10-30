@@ -1,0 +1,53 @@
+# Round 18, C1-7 (follows). L §2.3: "MODE = a rounding code, a ref to an input of type rounding, or an axis whose
+# options are rounding codes (§5.5)"; L §7.2: "The mode may be an axis whose options are mode names". prorata and a
+# converted flows fan out by the axis: 100.00 PLN in three equal shares is 33.33 down and 33.34 up (rest none); 1.00
+# EUR at 4.3333 is 4.33 down and 4.34 up.
+=== m.tally
+model m
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+source s "s"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+axis cut_mode
+  down "rounded down"
+  up "rounded up"
+index parts = [a1, a2, a3]
+input tot: money PLN
+input w[j in parts]: num
+input fx: num PLN/EUR
+place konto: accounts EUR lives 2026-01-01..
+place world: outside lives 2026-01-01..
+input eamt: money EUR
+move pay[m in months]: transfers
+  on start_of(m)
+  at start_of(m)
+  leg cash from world to konto amount eamt
+def sh[j in parts]: money PLN = prorata(tot, w[i] for i in parts, j, minor(PLN), cut_mode, rest none) at reader
+version v
+  cite s
+  governs 2026..
+  known 2025-12-01
+  tot = 100.00 PLN
+  w[*] = 1
+  fx = 4.3333
+  eamt = 1.00 EUR
+ask a: sh[a1] law 2026-06-30
+ask b: flows(konto, 2026-01) in PLN at fx cut_mode law 2026-01-01
+=== expect
+a [cut_mode = down]: 33.33 PLN
+  reading: cut_mode = down
+  law date 2026-06-30, cut 2026-12-31
+a [cut_mode = up]: 33.34 PLN
+  reading: cut_mode = up
+  law date 2026-06-30, cut 2026-12-31
+b [cut_mode = down]: 4.33 PLN
+  reading: cut_mode = down
+  unfulfilled: pay[2026-01]
+  law date 2026-01-01, cut 2026-12-31
+b [cut_mode = up]: 4.34 PLN
+  reading: cut_mode = up
+  unfulfilled: pay[2026-01]
+  law date 2026-01-01, cut 2026-12-31

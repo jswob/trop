@@ -1,0 +1,8 @@
+scenario rate25
+  tally 1
+  from 2030-01-01
+  note "rule 1: future law is a stated what-if from a date; the run applies it from that date on and changes nothing before it"
+
+version rate25_law
+  cite card
+  rate = 0.25 "story: the what-if, the gains tax is 25 % from 1 January 2030"

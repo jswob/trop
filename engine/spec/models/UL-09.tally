@@ -1,6 +1,8 @@
 model ul09
-  tally 1
+  tally 2
   on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
   note "Box 3 (NL): the Belastingdienst's worked examples for 2022 (Wet rechtsherstel box 3) and 2025, the split of the joint base between fiscal partners, and the 2022 comparison with the old method."
   note "Each example is a key of ex; every def keyed by an example is evaluated at that example's peildatum, 1 January of its year."
   note "The Hoge Raad ruling of 24 December 2021 (ECLI:NL:HR:2021:1963) is the background of the 2022 method; it holds no figure."
@@ -8,6 +10,8 @@ model ul09
 source bd2022 "Belastingdienst, Hoe wordt mijn box 3-inkomen over 2022 berekend? (Datum 23-02-2023, DCTERMS.modified 2025-11-20)" at "https://www.belastingdienst.nl/wps/wcm/connect/nl/box-3/content/berekening-box-3-inkomen-2022"
 
 source bd2025 "Belastingdienst, Hoe wordt het box 3-inkomen over 2025 berekend? (Datum 30-10-2024, DCTERMS.modified 2026-03-09)" at "https://www.belastingdienst.nl/wps/wcm/connect/nl/box-3/content/berekening-box-3-inkomen-2025"
+
+source lifted_1_0_1 "Figures tally 1.0.1 allowed inline in rules"
 
 source modeller "The model's own readings and assumptions, each stated with its reason"
 
@@ -33,6 +37,8 @@ source stcrt_2025_8295 "Regeling van de Staatssecretaris van Financiën van 7 ma
 
 source stcrt_2026_3708 "Regeling van de Staatssecretaris van Financiën van 12 februari 2026 tot vaststelling van forfaitaire rendementspercentages voor 2025 in box 3, Stcrt. 2026, 3708, gepubliceerd 20-02-2026" at "https://zoek.officielebekendmakingen.nl/stcrt-2026-3708.html"
 
+unit EUR: currency minor 0.01
+
 axis ul09_debt
   down "the return on the deductible debt cut down to whole euros, like the other amounts"
   half-up "the return on the deductible debt to the nearest whole euro (the page prints 2494,80 as 2.495 and 2597,40 as 2.597)"
@@ -53,11 +59,14 @@ index acat = [c_bank, c_other, c_green]
 
 index ex = [ex22_1, ex22_2, ex22_3, ex25_1, ex25_2, ex25_3, ex25_4, ex25_5]
 
-index heads = 1..2
+index heads = int 1..2
 
 index item = [savings, shares, investments, home_nl, home_abroad, green_inv]
 
 index person = [taxpayer, fpartner]
+
+input aandeel_pct_0_01: num
+  note "lifted from an inline figure of tally 1.0.1"
 
 input alloc[e in ex, p in person]: num question "Which part of the joint grondslag sparen en beleggen does this person declare (art. 2.17)?"
 
@@ -76,6 +85,9 @@ input has_partner[e in ex]: bool
 
 input hvv: money EUR
   note "Heffingvrij vermogen per person (art. 5.5)."
+
+input npers_2: int
+  note "lifted from an inline figure of tally 1.0.1"
 
 input oret_k1: num
   note "Old method 2022: the deemed return of rendementsklasse I (art. 5.2 lid 1 (2022))."
@@ -109,60 +121,60 @@ band old_rate(x: num EUR): num
 
 def aandeel_pct[e in ex, p in person]: num at peil[e]
   note "Stap 4: the person's grondslag sparen en beleggen ÷ the (joint) rendementsgrondslag × 100, 'Rond af op 2 decimalen achter de komma'."
-  rule base = round(grondslag_p[e, p] / rg[e] * 100, 0.01, ul09_share)
-  rule nobase excepts base when grondslag_p[e, p] = 0 = 0
+  rule base = round(grondslag_p[e, p] / rg[e] / 1 %, aandeel_pct_0_01, ul09_share)
+  rule nobase beats base = 0 when grondslag_p[e, p] == 0
 
-def bank_v[e in ex]: money EUR at peil[e] = sum(i in item where cat[i] = c_bank: wealth[e, i])
+def bank_v[e in ex]: money EUR = sum(wealth[e, i] for i in item where cat[i] == c_bank) at peil[e]
 
 def bezit[e in ex]: money EUR at peil[e]
   note "Stap 2: bezittingen, with the exempt part of green investments left out."
   rule base = bank_v[e] + other_v[e] + green_taxable[e]
 
-def drempel_e[e in ex]: money EUR at peil[e] = drempel[npers[e]]
+def drempel_e[e in ex]: money EUR = drempel[npers[e]] at peil[e]
 
-def green_ex_e[e in ex]: money EUR at peil[e] = green_exempt[npers[e]]
+def green_ex_e[e in ex]: money EUR = green_exempt[npers[e]] at peil[e]
 
 def green_taxable[e in ex]: money EUR at peil[e]
   note "Green investments count only above the exemption (art. 5.13 lid 1)."
   rule base = green_v[e] - min(green_v[e], green_ex_e[e])
-  rule nogreen excepts base when green_v[e] = 0 = 0
-  rule notqual excepts base when green_v[e] > 0 and not green_ok[e] = green_v[e]
+  rule nogreen beats base = 0 when green_v[e] == 0
+  rule notqual beats base = green_v[e] when green_v[e] > 0 and not green_ok[e]
 
-def green_v[e in ex]: money EUR at peil[e] = sum(i in item where cat[i] = c_green: wealth[e, i])
+def green_v[e in ex]: money EUR = sum(wealth[e, i] for i in item where cat[i] == c_green) at peil[e]
 
 def grondslag[e in ex]: money EUR at peil[e]
   note "Stap 3: grondslag sparen en beleggen = rendementsgrondslag minus the (joint) heffingvrij vermogen, at least nil."
   rule base = max(0, rg[e] - hvv_total[e])
-  rule partyear excepts base when not resident_all_year[e] = ? "Resident for only part of the year: art. 5.2 lid 6 (2025) / lid 3 (2022) prorates; that is not modelled."
+  rule partyear beats base = ?"Resident for only part of the year: art. 5.2 lid 6 (2025) / lid 3 (2022) prorates; that is not modelled." when not resident_all_year[e]
 
 def grondslag_p[e in ex, p in person]: num EUR at peil[e]
   note "Stap 3: the part of the joint grondslag the person declares (art. 2.17; Wet rechtsherstel art. 3 lid 4; art. 5.2 lid 5 (2025))."
   rule base = grondslag[e] * alloc[e, p]
 
-def hvv_total[e in ex]: money EUR at peil[e] = hvv * npers[e]
+def hvv_total[e in ex]: money EUR = hvv * npers[e] at peil[e]
 
 def npers[e in ex]: int at peil[e]
   note "Fiscal partners for the whole year pool their wealth and double the heffingvrij vermogen (art. 5.2 lid 5 (2025), lid 2 (2022))."
-  rule alone when not has_partner[e] = 1
-  rule duo when has_partner[e] = 2
-  rule partyear excepts duo when has_partner[e] and not partner_all_year[e] = ? "Fiscal partners for only part of the year: the joint amounts need the whole year; that is not modelled."
+  rule alone = 1 when not has_partner[e]
+  rule duo = npers_2 when has_partner[e]
+  rule partyear beats duo = ?"Fiscal partners for only part of the year: the joint amounts need the whole year; that is not modelled." when has_partner[e] and not partner_all_year[e]
 
-def other_v[e in ex]: money EUR at peil[e] = sum(i in item where cat[i] = c_other: wealth[e, i])
+def other_v[e in ex]: money EUR = sum(wealth[e, i] for i in item where cat[i] == c_other) at peil[e]
 
 def r_bank[e in ex]: num EUR at peil[e]
   note "Stap 1: banktegoeden × the deemed return on banktegoeden."
-  rule rounded when ul09_method = page = round(bank_v[e] * ret_bank, 1, ul09_euro)
-  rule unrounded when ul09_method = statute = bank_v[e] * ret_bank
+  rule rounded = round(bank_v[e] * ret_bank, 1, ul09_euro) when ul09_method == page
+  rule unrounded = bank_v[e] * ret_bank when ul09_method == statute
 
 def r_debt[e in ex]: num EUR at peil[e]
   note "Stap 1, Schulden: the deductible debt × the deemed return on schulden."
-  rule rounded when ul09_method = page = round(schuld_aftr[e] * ret_debt, 1, ul09_debt)
-  rule unrounded when ul09_method = statute = schuld_aftr[e] * ret_debt
+  rule rounded = round(schuld_aftr[e] * ret_debt, 1, ul09_debt) when ul09_method == page
+  rule unrounded = schuld_aftr[e] * ret_debt when ul09_method == statute
 
 def r_other[e in ex]: num EUR at peil[e]
   note "Stap 1: beleggingen en andere bezittingen (taxable green part included) × the deemed return on overige bezittingen."
-  rule rounded when ul09_method = page = round((other_v[e] + green_taxable[e]) * ret_other, 1, ul09_euro)
-  rule unrounded when ul09_method = statute = (other_v[e] + green_taxable[e]) * ret_other
+  rule rounded = round((other_v[e] + green_taxable[e]) * ret_other, 1, ul09_euro) when ul09_method == page
+  rule unrounded = (other_v[e] + green_taxable[e]) * ret_other when ul09_method == statute
 
 def rendement[e in ex]: num EUR at peil[e]
   note "Stap 1: belastbaar rendement = the returns on bezittingen minus the return on the deductible debt."
@@ -178,70 +190,70 @@ def schuld_aftr[e in ex]: money EUR at peil[e]
 
 def tax3[e in ex, p in person]: num EUR at peil[e]
   note "Box 3 tax on the voordeel after the 2022 comparison, less persoonsgebonden aftrek; before any relief for double taxation, which no source computes."
-  rule rounded when ul09_method = page = round(rate3 * (voordeel[e, p] - pga[e, p]), 1, ul09_euro)
-  rule unrounded when ul09_method = statute = rate3 * (voordeel[e, p] - pga[e, p])
+  rule rounded = round(rate3 * (voordeel[e, p] - pga[e, p]), 1, ul09_euro) when ul09_method == page
+  rule unrounded = rate3 * (voordeel[e, p] - pga[e, p]) when ul09_method == statute
 
 def tax_new[e in ex, p in person]: num EUR at peil[e]
   note "Stap 5 / Stap 6: the tax the page prints, on the new-method voordeel less persoonsgebonden aftrek; before any relief for double taxation."
-  rule rounded when ul09_method = page = round(rate3 * (voordeel_new[e, p] - pga[e, p]), 1, ul09_euro)
-  rule unrounded when ul09_method = statute = rate3 * (voordeel_new[e, p] - pga[e, p])
+  rule rounded = round(rate3 * (voordeel_new[e, p] - pga[e, p]), 1, ul09_euro) when ul09_method == page
+  rule unrounded = rate3 * (voordeel_new[e, p] - pga[e, p]) when ul09_method == statute
 
 def voordeel[e in ex, p in person]: num EUR at peil[e]
   note "The voordeel uit sparen en beleggen that is taxed. For 2021 and 2022 the Wet rechtsherstel box 3 applies the new method only where it gives a lower voordeel than the old one (art. 1 lid 4)."
   rule base = voordeel_new[e, p]
-  rule herstel excepts base v law_wrh2022 = min(voordeel_new[e, p], voordeel_old_r[e, p])
+  rule herstel beats base v law_wrh2022 = min(voordeel_new[e, p], voordeel_old_r[e, p])
 
 def voordeel_new[e in ex, p in person]: num EUR at peil[e]
   note "Stap 5: voordeel uit sparen en beleggen (box 3-inkomen) by the method of the examples, at least nil (Wet rechtsherstel art. 2 lid 2; art. 5.2 lid 1 (2025))."
-  rule nobase excepts rounded, unrounded when grondslag_p[e, p] = 0 = 0
-  rule rounded when ul09_method = page = max(0, round(rendement[e] * aandeel_pct[e, p] / 100, 1, ul09_euro))
-  rule unrounded when ul09_method = statute = max(0, rendement[e] / rg[e] * grondslag_p[e, p])
+  rule nobase beats rounded, unrounded = 0 when grondslag_p[e, p] == 0
+  rule rounded = max(0, round(rendement[e] * aandeel_pct[e, p] * 1 %, 1, ul09_euro)) when ul09_method == page
+  rule unrounded = max(0, rendement[e] / rg[e] * grondslag_p[e, p]) when ul09_method == statute
 
 def voordeel_old[e in ex, p in person]: num EUR at peil[e]
   note "Old method 2022 (fictieve verdeling, Wet IB 2001 (2022) art. 5.2 lid 1-2) on the person's allocated grondslag; no page prints it, and no rounding is stated."
   rule base = marginal(old_rate, grondslag_p[e, p])
 
 def voordeel_old_r[e in ex, p in person]: num EUR at peil[e]
-  rule rounded when ul09_method = page = round(voordeel_old[e, p], 1, ul09_euro)
-  rule unrounded when ul09_method = statute = voordeel_old[e, p]
+  rule rounded = round(voordeel_old[e, p], 1, ul09_euro) when ul09_method == page
+  rule unrounded = voordeel_old[e, p] when ul09_method == statute
 
-ask q01_r_bank: r_bank[e] for e in ex
+ask q01_r_bank: r_bank[e] for e in ex law 2026-10-18
 
-ask q02_r_other: r_other[e] for e in ex
+ask q02_r_other: r_other[e] for e in ex law 2026-10-18
 
-ask q03_drempel: drempel_e[e] for e in ex
+ask q03_drempel: drempel_e[e] for e in ex law 2026-10-18
 
-ask q04_schuld_aftr: schuld_aftr[e] for e in ex
+ask q04_schuld_aftr: schuld_aftr[e] for e in ex law 2026-10-18
 
-ask q05_r_debt: r_debt[e] for e in ex
+ask q05_r_debt: r_debt[e] for e in ex law 2026-10-18
 
-ask q06_green_ex: green_ex_e[e] for e in [ex25_5]
+ask q06_green_ex: green_ex_e[e] for e in [ex25_5] law 2026-10-18
 
-ask q07_green_taxable: green_taxable[e] for e in [ex25_5]
+ask q07_green_taxable: green_taxable[e] for e in [ex25_5] law 2026-10-18
 
-ask q08_rendement: rendement[e] for e in ex
+ask q08_rendement: rendement[e] for e in ex law 2026-10-18
 
-ask q09_bezit: bezit[e] for e in ex
+ask q09_bezit: bezit[e] for e in ex law 2026-10-18
 
-ask q10_rg: rg[e] for e in ex
+ask q10_rg: rg[e] for e in ex law 2026-10-18
 
-ask q11_hvv_total: hvv_total[e] for e in ex
+ask q11_hvv_total: hvv_total[e] for e in ex law 2026-10-18
 
-ask q12_grondslag: grondslag[e] for e in ex
+ask q12_grondslag: grondslag[e] for e in ex law 2026-10-18
 
-ask q13_grondslag_p: grondslag_p[e, p] for e in ex, p in person where has_partner[e] or p = taxpayer
+ask q13_grondslag_p: grondslag_p[e, p] for e in ex, p in person where has_partner[e] or p == taxpayer law 2026-10-18
 
-ask q14_aandeel: aandeel_pct[e, p] for e in ex, p in person where has_partner[e] or p = taxpayer
+ask q14_aandeel: aandeel_pct[e, p] for e in ex, p in person where has_partner[e] or p == taxpayer law 2026-10-18
 
-ask q15_voordeel_new: voordeel_new[e, p] for e in ex, p in person where has_partner[e] or p = taxpayer
+ask q15_voordeel_new: voordeel_new[e, p] for e in ex, p in person where has_partner[e] or p == taxpayer law 2026-10-18
 
-ask q16_tax_new: tax_new[e, p] for e in ex, p in person where has_partner[e] or p = taxpayer
+ask q16_tax_new: tax_new[e, p] for e in ex, p in person where has_partner[e] or p == taxpayer law 2026-10-18
 
-ask q17_voordeel_old: voordeel_old[e, p] for e in [ex22_1, ex22_2, ex22_3], p in person where has_partner[e] or p = taxpayer
+ask q17_voordeel_old: voordeel_old[e, p] for e in [ex22_1, ex22_2, ex22_3], p in person where has_partner[e] or p == taxpayer law 2026-10-18
 
-ask q18_voordeel: voordeel[e, p] for e in ex, p in person where has_partner[e] or p = taxpayer
+ask q18_voordeel: voordeel[e, p] for e in ex, p in person where has_partner[e] or p == taxpayer law 2026-10-18
 
-ask q19_tax3: tax3[e, p] for e in ex, p in person where has_partner[e] or p = taxpayer
+ask q19_tax3: tax3[e, p] for e in ex, p in person where has_partner[e] or p == taxpayer law 2026-10-18
 
 version law_aanp_box3
   cite stb_2020_546
@@ -249,6 +261,13 @@ version law_aanp_box3
   known 2020-12-23
   note "Known from the Staatsblad, uitgegeven 23-12-2020 (https://zoek.officielebekendmakingen.nl/stb-2020-546.html). A later act set 32% from 2023; it isn't modelled, so the span ends with 2022."
   rate3 = 0.31 "art. I onderdeel A: art. 2.13 'bedraagt 31%' (Wet IB 2001, geldig op 01-01-2022)"
+
+version lifted_figures
+  cite lifted_1_0_1
+  governs always
+  known 2020-12-23
+  aandeel_pct_0_01 = 0.01 "inline in tally 1.0.1: aandeel_pct line 112, round step"
+  npers_2 = 2 "inline in tally 1.0.1: npers line 147, value"
 
 version law_bijst2021
   cite stcrt_2020_64406
@@ -294,8 +313,8 @@ version law_wrh_reg2023
   governs 2022
   known 2023-03-15
   note "Known from the Staatscourant, 15-03-2023 (https://zoek.officielebekendmakingen.nl/stcrt-2023-7968.html): art. II replaces kolom I and III of the 2022 row of art. 3 lid 3 Wet rechtsherstel box 3, terugwerkend tot en met 1 januari 2022. The text on wetten.overheid.nl (versie vanaf 19-07-2025) prints the same row."
-  ret_bank = 0 "art. II: art. 3 lid 3, tabel, rij 2022, kolom I '0,01%' vervangen door '0,00%'"
-  ret_debt = 0.0228 "art. II: art. 3 lid 3, tabel, rij 2022, kolom III '2,46%' vervangen door '2,28%'"
+  replace ret_bank = 0 "art. II: art. 3 lid 3, tabel, rij 2022, kolom I '0,01%' vervangen door '0,00%'"
+  replace ret_debt = 0.0228 "art. II: art. 3 lid 3, tabel, rij 2022, kolom III '2,46%' vervangen door '2,28%'"
 
 version law_bp2024
   cite stb_2023_499
@@ -329,8 +348,8 @@ version law_stcrt2025
   known 2025-03-14
   note "Known from its publication in the Staatscourant, 14-03-2025."
   note "Also printed as the note 'Terugwerkende kracht' (Stcrt. 2025, 8295) under art. 5.2 of the Wet IB 2001 text geldig op 01-01-2025."
-  ret_bank = 0.0144 "Artikel I: '0,92%' vervangen door '1,44%'; Artikel II: werkt terug tot en met 1 januari 2024"
-  ret_debt = 0.0261 "Artikel I: '2,46%' vervangen door '2,61%'; Artikel II: werkt terug tot en met 1 januari 2024"
+  replace ret_bank = 0.0144 "Artikel I: '0,92%' vervangen door '1,44%'; Artikel II: werkt terug tot en met 1 januari 2024"
+  replace ret_debt = 0.0261 "Artikel I: '2,46%' vervangen door '2,61%'; Artikel II: werkt terug tot en met 1 januari 2024"
 
 version law_stcrt2026
   cite stcrt_2026_3708
@@ -338,16 +357,17 @@ version law_stcrt2026
   known 2026-02-20
   note "Known from its publication in the Staatscourant, 20-02-2026."
   note "Also printed as the note 'Terugwerkende kracht' (Stcrt. 2026, 3708) under art. 5.2 of the Wet IB 2001 text geldig op 01-01-2025."
-  ret_bank = 0.0137 "Artikel I: '1,44%' vervangen door '1,37%'; Artikel V onder a: terugwerkt tot en met 1 januari 2025"
-  ret_debt = 0.027 "Artikel I: '2,61%' vervangen door '2,70%'; Artikel V onder a: terugwerkt tot en met 1 januari 2025"
+  replace ret_bank = 0.0137 "Artikel I: '1,44%' vervangen door '1,37%'; Artikel V onder a: terugwerkt tot en met 1 januari 2025"
+  replace ret_debt = 0.027 "Artikel I: '2,61%' vervangen door '2,70%'; Artikel V onder a: terugwerkt tot en met 1 januari 2025"
 
 version facts_2022
   cite bd2022
+  governs always
   known 2026-10-18
   note "The Rekenvoorbeelden are hypothetical cases: their stipulations are known from the model's on (§4.5), not from the page's DCTERMS.modified (2025-11-20)."
   note "The three Rekenvoorbeelden 2022; every value at the peildatum, 1 januari 2022. An item an example doesn't list is nil in it."
   alloc[ex22_1, taxpayer] = 1 "Rekenvoorbeeld 2022 zonder fiscale partner: 'U hebt geen fiscale partner.'"
-  alloc[ex22_1, fpartner] = - "Rekenvoorbeeld 2022 zonder fiscale partner: no fiscal partner"
+  alloc[ex22_1, fpartner] = none "Rekenvoorbeeld 2022 zonder fiscale partner: no fiscal partner"
   alloc[ex22_2, taxpayer] = 0.5 "Rekenvoorbeeld 2022 met fiscale partner, Stap 3: 'ieder de helft van de grondslag sparen en beleggen'"
   alloc[ex22_2, fpartner] = 0.5 "Rekenvoorbeeld 2022 met fiscale partner, Stap 3: 'ieder de helft van de grondslag sparen en beleggen'"
   alloc[ex22_3, taxpayer] = 1 "Rekenvoorbeeld 2022 met fiscale partner en verschillende soorten vermogen, Stap 3: 'U geeft de gehele grondslag sparen en beleggen op.'"
@@ -372,15 +392,16 @@ version facts_2022
 
 version facts_2025
   cite bd2025
+  governs always
   known 2026-10-18
   note "The Rekenvoorbeelden are hypothetical cases: their stipulations are known from the model's on (§4.5), not from the page's DCTERMS.modified (2026-03-09)."
   note "The five Rekenvoorbeelden 2025, called ex25_1 to ex25_5 in page order (two share the heading 'met fiscale partner en verschillende soorten vermogen'); every value at 1 januari 2025. An item an example doesn't list is nil in it."
   alloc[ex25_1, taxpayer] = 1 "Rekenvoorbeeld 2025 met spaargeld, zonder fiscale partner: 'U hebt geen fiscale partner.'"
-  alloc[ex25_1, fpartner] = - "Rekenvoorbeeld 2025 met spaargeld, zonder fiscale partner: no fiscal partner"
+  alloc[ex25_1, fpartner] = none "Rekenvoorbeeld 2025 met spaargeld, zonder fiscale partner: no fiscal partner"
   alloc[ex25_2, taxpayer] = 0.5 "Rekenvoorbeeld 2025 met spaargeld, met fiscale partner, Stap 3: 'ieder de helft van de grondslag sparen en beleggen'"
   alloc[ex25_2, fpartner] = 0.5 "Rekenvoorbeeld 2025 met spaargeld, met fiscale partner, Stap 3: 'ieder de helft van de grondslag sparen en beleggen'"
   alloc[ex25_3, taxpayer] = 1 "Rekenvoorbeeld 2025 met verschillende soorten vermogen, zonder fiscale partner"
-  alloc[ex25_3, fpartner] = - "Rekenvoorbeeld 2025 met verschillende soorten vermogen, zonder fiscale partner: no fiscal partner"
+  alloc[ex25_3, fpartner] = none "Rekenvoorbeeld 2025 met verschillende soorten vermogen, zonder fiscale partner: no fiscal partner"
   alloc[ex25_4, taxpayer] = 0.5 "first Rekenvoorbeeld 2025 met fiscale partner en verschillende soorten vermogen, Stap 3: 'ieder de helft'"
   alloc[ex25_4, fpartner] = 0.5 "first Rekenvoorbeeld 2025 met fiscale partner en verschillende soorten vermogen, Stap 3: 'ieder de helft'"
   alloc[ex25_5, taxpayer] = 1 "second Rekenvoorbeeld 2025 met fiscale partner en verschillende soorten vermogen, Stap 3: 'geeft u zelf de volledige grondslag sparen en beleggen op'"
@@ -419,6 +440,7 @@ version facts_2025
 
 version facts_model
   cite modeller
+  governs always
   known 2026-10-18
   note "The modeller's classification and the assumptions that stand for the examples' own facts: known from the model's on, as the examples (§4.5)."
   cat[savings] = c_bank "spaargeld is a banktegoed: Wet IB 2001 art. 5.2 lid 2 (2025); Wet rechtsherstel art. 3 lid 3 kolom I"

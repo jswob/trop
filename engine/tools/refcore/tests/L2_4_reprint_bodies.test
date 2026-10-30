@@ -1,0 +1,92 @@
+# L §2.4 (round 17): "Inside a section: its clause lines and notes first, in the grammar's order (§2.2)"; "Clause
+# order is the order in the grammar" (a move's on, at, for, when, reads, before/after, ties, attr, leg, fulfils, note;
+# a fill's v, note, supply, demand, arc, order; an index's v, assumed, note); round 17's "A regime prints its items in the same kind
+# order, ..." (gone in round 19, GD-1: the regime is unboxed, its items top-level sections in kind order). Lines of
+# one clause keep their order (the legs and attributes of a kind, a move's legs); a kind's leg, attr and note lines
+# are one repeated choice in the grammar (kline), so they keep the file's order too. A blank line separates sections.
+=== options reprint
+=== m.tally
+model m
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+kind trades: event certain
+  leg units: notes
+  note "a trade"
+  leg cash: PLN
+  attr seq: int
+
+index ys = 2020..2030
+  assumed "a range"
+  note "years"
+  v v1
+
+move pay[mo in months]: trades
+  leg cash from konto to shop amount 2 PLN
+  leg units from shop to konto amount n
+  note "monthly"
+  attr seq = 1
+  when c
+  on end_of(mo)
+  fulfils plan[mo]
+
+fill f
+  order b.day
+  arc true
+  demand d[s] for s in sales
+  supply u[b] for b in buys
+  note "lots"
+  v v1
+
+def tax[p in persons]: money PLN = 0 PLN
+place fisc: outside lives 1900-01-01..
+input rate: num
+kind assessments: event certain
+  leg tax: PLN
+=== expect
+--- m.tally
+model m
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+kind assessments: event certain
+  leg tax: PLN
+
+kind trades: event certain
+  leg units: notes
+  note "a trade"
+  leg cash: PLN
+  attr seq: int
+
+index ys = 2020..2030
+  v v1
+  assumed "a range"
+  note "years"
+
+place fisc: outside lives 1900-01-01..
+
+input rate: num
+
+def tax[p in persons]: money PLN = 0 PLN
+
+fill f
+  v v1
+  note "lots"
+  supply u[b] for b in buys
+  demand d[s] for s in sales
+  arc true
+  order b.day
+
+move pay[mo in months]: trades
+  on end_of(mo)
+  when c
+  attr seq = 1
+  leg cash from konto to shop amount 2 PLN
+  leg units from shop to konto amount n
+  fulfils plan[mo]
+  note "monthly"
+sha256 ...

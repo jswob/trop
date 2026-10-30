@@ -1,0 +1,19 @@
+# L §5.18: solve is ask-only "except in a rule that points at a version whose source names the method"
+# (LOAD-ASKONLY).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+input xv: num
+input target: num
+def sq: num = xv * xv at reader
+def g: num at reader
+  rule r = solve sq == target for xv in [0, 4] to 1
+=== expect
+refused: LOAD-ASKONLY ...

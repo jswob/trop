@@ -1,0 +1,14 @@
+# L §5.16 step 4: a continuous distribution without to in a rule (LOAD-TO).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+def z: dist = normal(0, 1) at reader
+=== expect
+refused: LOAD-TO ...

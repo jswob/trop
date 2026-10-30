@@ -1,0 +1,40 @@
+# L §3.6 look-through, with the binding given `on d` (L §5.7) so it loads.  At depth 1 rule first applies
+# (k == 1) and gives owns[p, x]; at depth 2 rule deeper applies and, every stake being 0, each sum term is
+# 0 × through[...] = 0 (L §3.2), so through = owns[p, x] again.  owns[a, konto] = 0.5.
+# Writer 11 (tally 2.1, R-2, MIGRATION.md 2.0 -> 2.1 row 1): `kind parties` dropped: parties is a prelude kind, a
+# built-in id (declaring it again is LOAD-DUP); things enter it directly (L §3.5).
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+index depths = 1..4
+
+input owns[p in parties, x in places]: num
+input stake[p in parties, e in parties]: num
+input d: date
+
+def through[p in parties, x in places, k in depths]: num at reader
+  rule first = owns[p, x] when k == 1
+  rule deeper = owns[p, x] + sum(stake[p, e] * through[e, x, k - 1] for e in parties on d) when k > 1
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  parties + [a, b] lives 2000-01-01..
+  accounts + [konto] PLN lives 2019-05-01..
+  owns[a, konto] = 0.5
+  owns[b, konto] = 0.5
+  stake[*, *] = 0
+  d = 2026-01-01
+
+ask q1: through[a, konto, 1], through[a, konto, 2] law 2026-06-30
+=== expect
+q1: (0.5, 0.5)
+  law date 2026-06-30, cut 2026-01-01

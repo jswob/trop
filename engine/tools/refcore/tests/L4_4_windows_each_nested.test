@@ -1,0 +1,43 @@
+# L §4.4: "windows each prints one line per maximal sub-window, or combination of sub-windows, over which the answer is
+# constant ... Where the windows a line meets depend on the day an earlier window takes (b[a] with a a window), the
+# combinations nest: under each sub-window of the earlier window, the windows met there are split in turn." a is
+# 03-01..03-03; under a = 03-01 the line meets b[2026-03-01] (03-10..03-12), under 03-02 b[2026-03-02] (its own row,
+# another window), under 03-03 the day 03-20. b[a] > lim (03-10) is false on 03-10 and true after.
+# Layout: this interpreter's (each window labelled by its read). (Writer 6: was REFCORE-UNSPECIFIED §4.4.)
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+input a: date
+input b[d in days]: date
+input lim: date
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  a = window(2026-03-01, 2026-03-03) "s"
+  b[2026-03-01] = window(2026-03-10, 2026-03-12) "s"
+  b[2026-03-02] = window(2026-03-10, 2026-03-12) "s"
+  b[2026-03-03] = 2026-03-20 "s"
+  lim = 2026-03-10 "s"
+
+ask q: b[a] > lim windows each
+ask q0: a > lim windows each
+=== expect
+q [a = 2026-03-01, b[2026-03-01] = 2026-03-10]: false
+  cut 2026-12-31
+q [a = 2026-03-01, b[2026-03-01] = 2026-03-11 .. 2026-03-12]: true
+  cut 2026-12-31
+q [a = 2026-03-02, b[2026-03-02] = 2026-03-10]: false
+  cut 2026-12-31
+q [a = 2026-03-02, b[2026-03-02] = 2026-03-11 .. 2026-03-12]: true
+  cut 2026-12-31
+q [a = 2026-03-03]: true
+  cut 2026-12-31
+q0: false
+  cut 2026-12-31

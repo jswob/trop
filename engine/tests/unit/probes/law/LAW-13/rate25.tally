@@ -1,0 +1,11 @@
+scenario rate25 over law13
+  tally 2
+  from 2030-01-01
+  note "rule 1: future law is a stated what-if from a date; the run applies it from that date on and changes nothing before it"
+
+version rate25_law
+  cite card
+  governs 2030-01-01..
+  known 2026-10-25
+  note "the what-if is stated today (the model's on); its row overlaps the base's rate from 2030, so it says replace (L 6.4)"
+  replace rate = 0.25 "story: the what-if, the gains tax is 25 % from 1 January 2030"

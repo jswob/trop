@@ -1,0 +1,11 @@
+# L §5.4: "LOAD-NAME for an undeclared unit (a unit is a top-level id, §2.5)".
+=== m.tally
+model t
+  tally 2
+  on 2016-03-01
+  start 2015-11-01
+  end 2016-10-31
+
+input h: num minutes
+=== expect
+refused: LOAD-NAME ...

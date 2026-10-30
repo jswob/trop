@@ -1,0 +1,205 @@
+part flat
+  tally 1
+  note "The flat ul. Wrzosowa 12/5 (B-D04), its mortgage 7710-22 at Bank Jodła (B-D07, B-D08, B-D28), the lease it replaced (B-D31, B-D32), Ola's studio (B-D33, B-D34) and the flat's costs (B-HR1, B-D09, B-D10)."
+
+input flat_price: money DUK question "What was the flat's price (B-D04 .1)?"
+input deed_day: date question "On which day was the deed signed (B-D04)?"
+input own_share[p in person]: num question "What share of the flat does this person own (B-D04)?"
+input own_paid[p in person]: money DUK question "What did this person pay of the price from their own money (B-D04 .2)?"
+input notary_fee: money DUK question "What was the notary's fee (B-D04 .4)?"
+input flat_value: money DUK question "What is the flat's latest valuation (B-D29)?"
+input rent: money DUK question "What was the monthly rent of ul. Lipowa 4/7 (B-D31 .1)?"
+input lease_end: date question "On which day did the lease end (B-D32)?"
+input deposit: money DUK question "What deposit was paid on the lease (B-D31 .2)?"
+input deposit_kept: money DUK question "What did the landlady keep of the deposit (B-D32)?"
+input deposit_back_on: date question "On which day was the deposit returned (B-D32)?"
+input studio_price: money DUK question "What did the studio sell for (B-D34)?"
+input studio_sale_cost: money DUK question "What did selling the studio cost (B-D34: the agent's invoice)?"
+input studio_cost: money DUK question "What did the studio cost to buy, with its tax and fees (B-D33)?"
+input studio_sold: date question "When was the studio sold (B-D34)?"
+input kitchen_price: money DUK question "What does the fitted kitchen cost (B-D35)?"
+input ola_housing_spent: money DUK question "What has Ola spent on her own housing by the end of the third year after the sale, beyond the deed (PIT-12 .4)?"
+input mtg_amount: money DUK question "What was the mortgage's amount (B-D07 .1)?"
+input mtg_terms: int question "How many monthly instalments (B-D07 .1)?"
+input mtg_first: date question "When is the first instalment (B-D07 .1)?"
+input mtg_margin: num question "What is the margin over DUKOR 6M, in percentage points (B-D07 .2)?"
+input mtg_fee: num question "What fee is charged on an overpayment within the free-fee months (B-D07 .5)?"
+input held[m in month]: bool question "Was this month's instalment suspended under MTG-1 (B-D08)?"
+input jodla_paid[r in jodla_row]: (booked date, jk key jodla_kind, amt money DUK, fee money DUK) question "What does this row of Bank Jodła's 2025 statement say (B-D28)?"
+input assoc_fee: money DUK question "What is the building's monthly fee (B-D09)?"
+input flat_insurance: money DUK question "What was the flat insurance's premium, and who paid it (B-D10)?"
+input hr1_order: money DUK question "What does Ola send Piotr each month for the flat (B-HR1 .2)?"
+input order_rejected[m in month]: bool question "Was Ola's standing order of this month rejected?"
+
+place mortgage_cash: outside DUK
+
+version deed
+  cite b_d04
+  known 2022-03-18
+  flat_price = 600000.00 "B-D04 .1"
+  deed_day = 2022-03-18 "B-D04"
+  own_share[piotr] = 0.60 "B-D04: a 60 % share"
+  own_share[ola] = 0.40 "B-D04: a 40 % share"
+  own_paid[piotr] = 108000.00 "B-D04 .2"
+  own_paid[ola] = 72000.00 "B-D04 .2"
+  notary_fee = 4920.00 "B-D04 .4"
+
+version valuation
+  cite story
+  known 2024-11-05
+  flat_value = 640000.00 "story.md, the table: valued by the bank at 640 000.00 DUK on 2024-11-05 (B-D29)"
+
+version lease
+  cite b_d31
+  known 2019-08-26
+  rent = 3200.00 "B-D31 .1"
+  deposit = 6400.00 "B-D31 .2"
+
+version lease_settled
+  cite b_d32
+  known 2022-07-15
+  lease_end = 2022-06-30 "B-D32: the lease ended on 30.06.2022"
+  deposit_kept = 350.00 "B-D32"
+  deposit_back_on = 2022-07-15 "B-D32"
+
+version studio_bought
+  cite b_d33
+  known 2019-06-14
+  studio_cost = 257100.00 "B-D33: price 250 000.00 + transfer tax 5 000.00 + notary 2 100.00"
+
+version studio_sold_v
+  cite b_d34
+  known 2021-11-22
+  studio_price = 312000.00 "B-D34"
+  studio_sale_cost = 7800.00 "B-D34: the agent's invoice"
+  studio_sold = 2021-11-22 "B-D34"
+
+version kitchen_quote
+  cite b_d35
+  known 2022-04-20
+  kitchen_price = 45000.00 "B-D35: 45 000.00 DUK gross"
+
+version housing_open
+  cite story
+  known 2022-04-29
+  ola_housing_spent = ? "What will Ola spend on her own housing by 2024-12-31 beyond the deed (her 40 % of the kitchen if it is ordered: B-D35, not ordered)? PIT-12 .4"
+
+version mortgage_terms
+  cite b_d07
+  known 2022-03-10
+  mtg_amount = 420000.00 "B-D07 .1"
+  mtg_terms = 300 "B-D07 .1"
+  mtg_first = 2022-04-05 "B-D07 .1"
+  mtg_margin = 2.10 "B-D07 .2"
+  mtg_fee = 0.02 "B-D07 .5"
+  held[*] = false assumed "an instalment is paid unless a notice suspends it (B-D07 .6)" "B-D07 .6"
+
+version holidays_granted
+  cite b_d08
+  known 2023-01-24
+  held[2022-08] = true "B-D08: notice of 01.08.2022"
+  held[2022-09] = true "B-D08: notice of 22.08.2022"
+  held[2022-11] = true "B-D08: notice of 24.10.2022"
+  held[2022-12] = true "B-D08: notice of 21.11.2022"
+  held[2023-02] = true "B-D08: notice of 23.01.2023"
+
+version flat_fee_2025
+  cite b_d09
+  known 2024-12-12
+  assoc_fee = 690.00 governs 2025-01..2025-12 "B-D09"
+
+version flat_policy
+  cite b_d10
+  known 2025-03-10
+  flat_insurance = 520.00 "B-D10: paid on 10.03.2025 by Aleksandra Wilk"
+
+version hr1
+  cite house_rules
+  known 2022-03-18
+  hr1_order = 1700.00 "B-HR1 .2"
+  order_rejected[*] = false assumed "a standing order goes through unless a statement shows it rejected" "B-HR1 .2"
+
+version wrzos_march
+  cite wrzos_export
+  known 2025-04-02
+  assumed "the statement's day is not stated: the 2nd of the next month"
+  order_rejected[2025-03] = true "wrz-ola-2025-03.csv line 8 STANDING ORDER REJECTED flat share - insufficient funds"
+
+def tt1_tax[p in person]: money DUK = round(tt1_rate * flat_price * own_share[p], 1, half-up)
+
+def notary_part[p in person]: money DUK = round(notary_fee * own_share[p], 0.01, half-up)
+
+def studio_income: money DUK = studio_price - studio_sale_cost - studio_cost
+
+def studio_spent_deed: money DUK = own_paid[ola] + tt1_tax[ola] + notary_part[ola]
+
+def studio_tax[s in [deed_only, in_end]]: money DUK
+  rule deed_only_r when s = deed_only = round(round(studio_income - studio_income * studio_spent_deed / studio_price, 1, half-up) * pit12_rate, 1, half-up)
+  rule end_r excepts deed_only_r when s = in_end = round(round(studio_income - studio_income * min(studio_price, studio_spent_deed + ola_housing_spent) / studio_price, 1, half-up) * pit12_rate, 1, half-up)
+
+def rent_owned: money DUK = sum(k in month where start_of(k) <= lease_end and end_of(k) > deed_day: round(rent * overlap_days(deed_day, lease_end, k) / days(start_of(k), end_of(k)), 0.01, half-up))
+
+def deposit_back: money DUK = deposit - deposit_kept
+
+def mtg_due[m in month]: date at day_of(m, 5) = next_business(day_of(m, 5), holidays)
+
+def mtg_live[m in month]: bool = start_of(m) >= start_of(month_of(mtg_first)) and not held[m] and mtg_n_before[m] < mtg_terms
+
+def mtg_n_before[m in month]: int
+  rule first when pos(m) = 1 = 0
+  rule later excepts first = mtg_n_before[m - 1] + (if mtg_live[m - 1] then 1 else 0)
+
+def mtg_reset_day[d in day]: date = max(deed_day, if d >= add_months(start_of(year_of(d)), 6) then add_months(start_of(year_of(d)), 6) else start_of(year_of(d)))
+
+def mtg_rate[d in day]: num at prev_business(add_days(mtg_reset_day[d], -1), holidays) = (dukor_6m + mtg_margin) / 100
+
+def mtg_rate_n[d in day]: rate nominal 12 /year = mtg_rate[d]
+
+def mtg_prev_due[m in month]: date
+  rule first when start_of(m) <= start_of(month_of(mtg_first)) = deed_day
+  rule later excepts first = mtg_due[m - 1]
+
+def mtg_period[d in day]: month = first(k in month where mtg_due[k] >= d: k)
+
+def mtg_day_int[d in day]: num DUK = if held[mtg_period[d]] then 0 else mtg_bal[d] * mtg_rate[d] / 365
+
+def mtg_interest[m in month]: money DUK = if mtg_live[m] then round(sum(d in day where d > mtg_prev_live_due[m] and d <= mtg_due[m]: mtg_day_int[d]), 0.01, half-up) else 0
+
+def mtg_prev_live_due[m in month]: date
+  rule first when mtg_n_before[m] = 0 = deed_day
+  rule later excepts first = last(k in month where k < m and mtg_live[k]: mtg_due[k])
+
+def mtg_reset_or_over[m in month]: bool = any(d in day where d > mtg_prev_live_due[m] and d <= mtg_due[m]: mtg_reset_day[d] = d or mtg_over_on[d] > 0)
+
+def mtg_inst[m in month]: money DUK
+  rule first when mtg_n_before[m] = 0 = round(mtg_bal[add_days(mtg_due[m], -1)] * periodic(mtg_rate_n[mtg_due[m]], month) / (1 - 1 / factor(mtg_rate_n[mtg_due[m]], mtg_terms - mtg_n_before[m], month)), 0.01, half-up)
+  rule reset excepts first when mtg_reset_or_over[m] = round(mtg_bal[add_days(mtg_due[m], -1)] * periodic(mtg_rate_n[mtg_due[m]], month) / (1 - 1 / factor(mtg_rate_n[mtg_due[m]], mtg_terms - mtg_n_before[m], month)), 0.01, half-up)
+  rule same excepts first, reset = mtg_inst[m - 1]
+  rule last excepts first, reset, same when mtg_n_before[m] = mtg_terms - 1 = mtg_bal[add_days(mtg_due[m], -1)] + mtg_interest[m]
+
+def mtg_principal_on[d in day]: money DUK = if mtg_live[month_of(d)] and d = mtg_due[month_of(d)] then mtg_inst[month_of(d)] - mtg_interest[month_of(d)] else 0
+
+def mtg_fee_on[d in day]: money DUK = if d < add_months(deed_day, mtg2_free_months) then round(mtg_over_paid[d] * min(mtg_fee, mtg2_fee_cap), 0.01, half-up) else 0
+
+def mtg_over_paid[d in day]: money DUK = sum(r in jodla_row where jodla_paid[r].booked = d and jodla_paid[r].jk = overpayment: jodla_paid[r].amt)
+
+def mtg_over_on[d in day]: money DUK = mtg_over_paid[d] - mtg_fee_on[d]
+
+def mtg_bal[d in day]: money DUK
+  rule before when d < deed_day = 0
+  rule paid_out excepts before when d = deed_day = mtg_amount
+  rule later excepts before, paid_out = mtg_bal[d - 1] - mtg_principal_on[d] - mtg_over_on[d]
+
+def mtg_interest_year[y in tax_year]: money DUK = sum(k in month where year_of(mtg_due[k]) = y: mtg_interest[k])
+
+def mtg_last: date = last(k in month where mtg_live[k]: mtg_due[k])
+
+def mtg_after_last[d in day]: money DUK = mtg_bal[last(k in month where mtg_live[k] and mtg_due[k] <= d: mtg_due[k])]
+
+def flat_costs[y in tax_year]: money DUK = sum(r in jodla_row where year_of(jodla_paid[r].booked) = y: jodla_paid[r].amt) + sum(k in month where year_of(k) = y: assoc_fee) + flat_insurance
+
+def ola_paid_flat[y in tax_year]: money DUK = sum(k in month where year_of(k) = y and not order_rejected[k]: hr1_order) + flat_insurance
+
+def ola_share_flat[y in tax_year]: money DUK = round(flat_costs[y] * own_share[ola], 0.01, half-up)
+
+def ola_owes_piotr[y in tax_year]: money DUK = ola_share_flat[y] - ola_paid_flat[y]

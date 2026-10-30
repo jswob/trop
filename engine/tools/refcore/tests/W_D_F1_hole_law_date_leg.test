@@ -1,0 +1,23 @@
+# Fault W-D-F1: a move whose `at` is a hole, inside a binding, was refused `LOAD-FIELD cash is not a field of pay`.
+# L §5.14: "A hole day or `when` makes a hole movement"; E §4.1 step 2. pay's law date d has no value, so its day is the
+# hole d: the binding's member is unknown and the sum is the hole d (q). (The fault's text stated `outside PLN`; an
+# outside place states no unit now (L §5.10), so it is dropped here.)
+=== m.tally
+model m
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+source own "own"
+unit PLN: currency minor 0.01
+input d: date
+place konto: accounts PLN lives 2019-05-01..
+place world: outside lives 1900-01-01..
+move pay: transfers
+  on d
+  at d
+  leg cash from konto to world amount 1
+ask q: sum(t.cash.amount for t in transfers over 2026-02)
+=== expect
+q: ?"d: no value" (d)
+  cut 2026-10-20

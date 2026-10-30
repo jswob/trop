@@ -1,0 +1,76 @@
+# L §5.16 (round 19, GD-3; E §7 step 4): "`quantile(e, q)` ... prints the value with its standard error by the
+# Maritz-Jarrett method: with the N samples sorted x(1) <= ... <= x(N) and m = ceil(q·N), the rank of the type-1 value,
+# the weights are W_i = I(i/N) - I((i - 1)/N), where I is the distribution function of Beta(m, N - m + 1), equivalently
+# the chance that a binomial of N trials with success chance x has at least m successes (exact for whole N); with C_k =
+# sum W_i·x(i)^k, the standard error is sqrt(C2 - C1^2), correctly rounded to 1e-6, as mean's; with N = 1 it is none".
+# Run with `=== options mj=check` (writer 10, not language): refcore computes each line's weights twice, as the binomial
+# tail sum_{j>=m} C(N, j) x^j (1 - x)^(N - j) and as the Beta distribution function's polynomial
+# sum_{k=m..N} (-1)^(k-m) C(N, k) C(k-1, m-1) x^k, at x = i/N in exact rationals, refuses unless both give the same
+# weights and they sum to 1 exactly, and prints them after the line. a1: N = 1, none; a2: five equal samples (3), 0;
+# a3 (N 5, m 3), a4 (q = 100 %, m = N = 6), a5 (a where keeps 5 of 8, m 2) and s3 (a second draw, over two keys: N 2, m 1):
+# the figures are refcore's exact computation, the same with the option as without (L5_16_quantile_se). a8: mean's,
+# for the layout.
+=== options mj=check
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+index ks = [ka, kb, kc]
+index ks2 = [kx, ky]
+input w[k in ks]: num
+input vals[k in ks]: num
+input vals2[k in ks2]: num
+input w2[k in ks2]: num
+input flat[k in ks]: num
+def draw: dist = discrete(w[k] for k in ks) at reader
+def ev: num = vals[draw] at reader
+def ev2: num = vals2[draw2] at reader
+def draw2: dist = discrete(w2[j] for j in ks2) at reader
+def eq3: num = flat[draw] at reader
+
+version v
+  cite s
+  governs 2026..
+  known 2026-01-01
+  w[ka] = 1
+  w[kb] = 1
+  w[kc] = 1
+  vals[ka] = 0
+  vals[kb] = 2
+  vals[kc] = 5
+  vals2[kx] = 0
+  vals2[ky] = 2
+  w2[kx] = 1
+  w2[ky] = 1
+  flat[ka] = 3
+  flat[kb] = 3
+  flat[kc] = 3
+
+ask a1: quantile(ev, 50 %) law 2026-06-30 paths 1 seed 3
+ask a2: quantile(eq3, 50 %) law 2026-06-30 paths 5 seed 3
+ask a3: quantile(ev, 50 %) law 2026-06-30 paths 5 seed 3
+ask a4: quantile(ev, 100 %) law 2026-06-30 paths 6 seed 2
+ask a5: quantile(ev where draw != ka, 25 %) law 2026-06-30 paths 8 seed 1
+ask a8: mean(ev) law 2026-06-30 paths 5 seed 3
+
+ask s3: quantile(ev2, 50 %) law 2026-06-30 paths 2 seed 3
+=== expect
+a1: 5 (standard error none; 1 paths; horizon 2026-06-30)
+  law date 2026-06-30, cut 2026-12-31
+a2: 3 (standard error 0; 5 paths; horizon 2026-06-30; maritz-jarrett N 5, m 3, weights [0.05792, 0.25952, 0.36512, 0.25952, 0.05792] (binomial tail = Beta polynomial), sum 1)
+  law date 2026-06-30, cut 2026-12-31
+a3: 5 (standard error 0.700776; 5 paths; horizon 2026-06-30; maritz-jarrett N 5, m 3, weights [0.05792, 0.25952, 0.36512, 0.25952, 0.05792] (binomial tail = Beta polynomial), sum 1)
+  law date 2026-06-30, cut 2026-12-31
+a4: 5 (standard error 0.976381; 6 paths; horizon 2026-06-30; maritz-jarrett N 6, m 6, weights [1/46656 (0.0000214334705075446), 7/5184 (0.00135030864197531), 665/46656 (0.0142532578875171), 3367/46656 (0.0721664951989026), 427/1728 (0.247106481481481), 31031/46656 (0.665102023319616)] (binomial tail = Beta polynomial), sum 1)
+  law date 2026-06-30, cut 2026-12-31
+a5: 2 (standard error 1.418013; 5 of 8 paths; horizon 2026-06-30; maritz-jarrett N 5, m 2, weights [0.26272, 0.40032, 0.24992, 0.08032, 0.00672] (binomial tail = Beta polynomial), sum 1)
+  law date 2026-06-30, cut 2026-12-31
+a8: 4.4 (standard error 0.6; 5 paths; horizon 2026-06-30)
+  law date 2026-06-30, cut 2026-12-31
+s3: 2 (standard error 0; 2 paths; horizon 2026-06-30; maritz-jarrett N 2, m 1, weights [0.75, 0.25] (binomial tail = Beta polynomial), sum 1)
+  law date 2026-06-30, cut 2026-12-31

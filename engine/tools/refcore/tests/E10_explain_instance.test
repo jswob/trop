@@ -1,0 +1,95 @@
+# E §10 explain of a movement instance: "its class (plan or decision), its day, booking cut and leg derivations; for
+# a decision, its stratum and what it read at its walk point; each later version with its δ, the adjustment it made
+# and what settles or waives it".  Own reality: a wage of net[m] = wage_amt (5 000.00 PLN) on day 10; a raise to
+# 5 500.00 PLN governs 2026-03.. but is known 2026-05-01, so wage[2026-03] (booked at 2026-03-10 with 5 000.00) gets
+# an adjustment of +500.00 PLN dated 2026-05-01 (E §5 steps 1-4), waived by keep (a legless kind, step 5);
+# wage[2026-06] is booked after the raise is known: 5 500.00 PLN, no adjustment.  sweep, a decision reading konto,
+# moves what exceeds 1 000.00 PLN on day 20: in February konto holds 1 000 (left after January's sweep) + 5 000, so
+# 5 000.00 PLN (L §5.14.1 running reads).  The layout is this interpreter's.
+=== m.tally
+model hh
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source plan "plan"
+source act "act"
+unit PLN: currency minor 0.01
+kind wages: event certain
+  leg cash: PLN
+kind waivers: event certain
+place konto: accounts PLN lives 2019-05-01..
+place world: outside lives 1900-01-01..
+place savings: accounts PLN lives 2019-05-01..
+input sweep_dom: int
+input keep_amt: money PLN
+input wage_amt: money PLN
+input wage_dom: int
+def net[m in months]: money PLN = wage_amt at start_of(m)
+
+move wage[m in months]: wages
+  on day_of(m, wage_dom)
+  at start_of(m)
+  leg cash from world to konto amount net[m]
+
+move keep[a in adjustments over .. where a.adjusts in wages]: waivers
+  on a.day
+  fulfils a
+
+move sweep[m in months]: transfers
+  on day_of(m, sweep_dom)
+  at start_of(m)
+  reads konto
+  leg cash from konto to savings amount max(0 PLN, bal(konto) - keep_amt)
+
+version plan_2026
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  wage_amt = 5 000.00 PLN "umowa"
+  wage_dom = 10 "umowa"
+  sweep_dom = 20 "own rule"
+  keep_amt = 1 000.00 PLN "own rule"
+  opening[savings] = 0 PLN at 2026-01-01 start "wyciąg"
+  opening[konto] = 0 PLN at 2026-01-01 start "wyciąg"
+
+version raise_2026
+  cite act
+  governs 2026-03..
+  known 2026-05-01
+  replace wage_amt = 5 500.00 PLN "aneks"
+
+ask e1: explain wage[2026-03]
+ask e2: explain wage[2026-06]
+ask e3: explain sweep[2026-02]
+=== expect
+e1: wage[2026-03]
+  plan, day 2026-03-10, booking cut 2026-03-10, status past
+  leg cash from world to konto amount 5 000.00 PLN
+  derivation at 2026-03-10:
+    [1] row plan_2026:wage_dom = 10
+        version plan_2026, source plan, "plan", locator "umowa", governs 2026-01-01.., known 2026-01-01
+    [2] net[2026-03] = 5 000.00 PLN, law date 2026-03-01
+        rule base: won
+          [3] row plan_2026:wage_amt = 5 000.00 PLN
+              version plan_2026, source plan, "plan", locator "umowa", governs 2026-01-01.., known 2026-01-01
+  adjustment adjustments[wage[2026-03].cash, raise_2026]: change 500.00 PLN on 2026-05-01 (version raise_2026), waived; remaining none
+  cut 2026-10-20
+e2: wage[2026-06]
+  plan, day 2026-06-10, booking cut 2026-06-10, status past
+  leg cash from world to konto amount 5 500.00 PLN
+  derivation at 2026-06-10:
+    [1] row plan_2026:wage_dom = 10
+        version plan_2026, source plan, "plan", locator "umowa", governs 2026-01-01.., known 2026-01-01
+    [2] net[2026-06] = 5 500.00 PLN, law date 2026-06-01
+        rule base: won
+          [3] row raise_2026:wage_amt = 5 500.00 PLN
+              version raise_2026, source act, "act", locator "aneks", governs 2026-03-01.., known 2026-05-01
+  cut 2026-10-20
+e3: sweep[2026-02]
+  decision, day 2026-02-20, status past
+  stratum 1, walk point (2026-02-20, stratum 1, sweep|000000)
+  read at its walk point: konto
+  leg cash from konto to savings amount 5 000.00 PLN
+  cut 2026-10-20

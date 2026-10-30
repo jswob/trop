@@ -1,0 +1,37 @@
+# Round 19 (writer 10): settled; was REFCORE-UNSPECIFIED §5.9. GD-24: L §5.9 and §8.1 "`<b>: no row holds <x>` read with no law date". The old comment:
+# MC-X-F12 (writer 9): rate isn't law-dated, so r reads it with no law date (L §4.3 rule 2), and no row holds 30.
+# L §5.9 and §8.1 give the question `<b>: no row holds <x> at <law date>` and no form without a law date (the
+# gap rule's `no value` form, L §4.6 step 5, is for a read with no candidate): REFCORE-UNSPECIFIED (q). Read
+# at a law date, by a def with its own at (q2) or an ask line with law (q3), it is that hole.
+=== m.tally
+model p
+  tally 2
+  on 2027-12-31
+  start 2027-01-01
+  end 2027-12-31
+
+unit PLN: currency minor 0.01
+source act "the act"
+
+input age: int
+band rate(a: int): money PLN
+def r[m in months]: money PLN = rate(age)
+def r2[m in months]: money PLN = rate(age) at start_of(m)
+ask q: r[2027-05]
+ask q2: r2[2027-05]
+ask q3: rate(age) law 2027-05-01
+
+version v_act
+  cite act
+  governs always
+  known 2026-12-01
+  age = 30 "the age"
+  rate: [0, 6) = 400.00 PLN "under 6"
+  rate: [6, 18) = 250.00 PLN "6 to 17"
+=== expect
+q: ?"rate: no row holds 30" (rate)
+  cut 2027-12-31
+q2: ?"rate: no row holds 30 at 2027-05-01" (rate)
+  cut 2027-12-31
+q3: ?"rate: no row holds 30 at 2027-05-01" (rate)
+  law date 2027-05-01, cut 2027-12-31

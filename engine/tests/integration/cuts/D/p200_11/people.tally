@@ -1,0 +1,59 @@
+part people
+  tally 2
+  note "The family and the line of descent CIV-3 reads: the marriage, the death, Zbigniew's children and who inherits through each."
+
+input born_halina: date question "When was Halina born?"
+
+input death_day: date question "On what day did Zbigniew die?"
+
+input close_family[h in heir]: bool question "Is this heir a spouse, descendant, ascendant, stepchild, sibling or step-parent of Zbigniew (IGT-4 .1)?"
+
+input heir_stock[h in heir]: key stock question "Through which child of Zbigniew does this heir inherit (- for the spouse)?"
+
+input married: bool question "Were Halina and Zbigniew married on the day of his death?"
+
+input stock_died[k in stock]: date question "On what day did this child of Zbigniew die (- while alive)?"
+
+input stock_issue[k in stock]: int question "How many of this child's own children inherit in its place (CIV-3 .2)?"
+
+version family_story
+  cite story
+  governs always
+  known 2024-01-01
+  note "story.md, cast: who the family are; the children alive at the start."
+  born_halina = 1959-03-08 "story.md, cast"
+  close_family[anna] = true "story.md, cast: their daughter"
+  close_family[marta] = true "story.md, cast: their daughter"
+  close_family[piotr] = true "story.md, cast: their son"
+  heir_stock[halina] = none "the spouse inherits in her own right"
+  heir_stock[piotr] = s_piotr "story.md, cast"
+  heir_stock[anna] = s_anna "story.md, cast"
+  heir_stock[marta] = s_marta "story.md, cast"
+  stock_died[s_piotr] = none "story.md, cast"
+  stock_died[s_anna] = none "story.md, cast"
+  stock_died[s_marta] = none "story.md, cast"
+  stock_issue[s_piotr] = 0 "alive: no one inherits in his place"
+  stock_issue[s_anna] = 0 "alive: no one inherits in her place"
+  stock_issue[s_marta] = 0 "alive: no one inherits in her place"
+
+version death_cert
+  cite d_d01
+  governs always
+  known 2024-05-20
+  death_day = 2024-05-17 "D-D01"
+  close_family[halina] = true "D-D01: married to Halina Sowa, his spouse"
+
+version marriage_cert
+  cite d_d02
+  governs always
+  known 2024-05-20
+  married = true "D-D02: married 1980, no marital contract"
+
+version adam_extracts
+  cite d_d03
+  governs always
+  known 2024-06-03
+  close_family[jakub] = true "D-D03: son of Adam Sowa, Zbigniew's son: a descendant"
+  heir_stock[jakub] = s_adam "D-D03"
+  stock_died[s_adam] = 2016-09-30 "D-D03: Adam Sowa died 2016-09-30"
+  stock_issue[s_adam] = 1 "D-D03: Jakub is Adam's only child"

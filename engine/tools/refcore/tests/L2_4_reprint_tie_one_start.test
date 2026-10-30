@@ -1,0 +1,48 @@
+# GD-28 (the user, 2026-10-29; writer 10): L §2.4 "Two rules, or two items, that every key above leaves tied (two
+# rows with no start, two rows read `after m`, two rows with one start, a `same` item and a row of its target and
+# keys) sort by their own canonical line, compared as ASCII". Was REFCORE-UNSPECIFIED §2.4. The old comment:
+# GD-24 (round 19, writer 10): "Ties L §2.4 still leaves (two rows with no start, two `after m` rows, two rows with one
+# start) stay REFCORE-UNSPECIFIED where met" (faults5 item 9). L §2.4 sorts version items "... then by the start of their
+# own governs span or their instant (a row with no span of its own first, then a span with no start, a row governing
+# always among them, then by start; a row read after m after the dated ones of its target and keys)".
+# Two rows of y whose spans both start on 2026-01-01.
+=== options reprint
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+input y: int
+
+version v
+  cite s
+  governs 2026..
+  known 2026-01-01
+  y = 1 governs 2026..2026-06
+  replace y = 2 governs 2026..
+=== expect
+--- m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+unit PLN: currency minor 0.01
+
+input y: int
+
+version v
+  cite s
+  governs 2026..
+  known 2026-01-01
+  replace y = 2 governs 2026..
+  y = 1 governs 2026..2026-06
+sha256 b748b8b753b8f0a4a84e5495c24dcd36abbdc73d549dba5548e88b6cf67f3c95

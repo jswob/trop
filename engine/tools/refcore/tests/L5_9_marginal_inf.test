@@ -1,0 +1,24 @@
+# L §5.9: "a band whose first row starts at -inf can't be read this way (LOAD-BAND)".
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+band tiers(x: num PLN): num
+input w: num PLN
+
+version v
+  cite s
+  governs 2026..
+  known 2025-12-01
+  tiers: (-inf, 1000) = 10 %
+  tiers: [1000, inf) = 20 %
+
+ask q1: marginal(tiers, w) law 2026-06-30
+=== expect
+refused: LOAD-BAND ...

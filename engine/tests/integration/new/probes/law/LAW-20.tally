@@ -1,0 +1,95 @@
+model law20
+  tally 2
+  on 2026-10-29
+  start 2025-01-01
+  end 2025-12-31
+  note "Probe LAW-20: a circular rule (the deduction reads the credit, the credit reads the deduction) solved by the law's own named method, rule 3's four steps, and by rule 4's repeated rounds. The card names no year; the model's frame is one year, which no rule reads."
+
+source card "Probe card LAW-20 (tmp/cases/probes/law/LAW-20.md): story, rules 1-4 and question"
+
+unit DUK: currency minor 0.01
+
+index rounds = int 0..50
+  note "key 0 is rule 3's step (i), the interim deduction; key n above 0 is the n-th time steps (iii) and (iv) are taken. The card bounds no repetition; 50 is the text's bound, and first() refuses (RUN-EMPTY) if no key stops it."
+
+input income: money DUK
+
+input premium: money DUK
+
+input rate: num
+
+input threshold: money DUK
+
+input tolerance: money DUK
+
+def closed_credit: num DUK at reader
+  note "the worked check's closed form of rule 3's credit, r(I - P - T)(1 + r); it holds while no bound of rules 1 and 2 is reached"
+  rule base = rate * (income - premium - threshold) * (1 + rate)
+
+def closed_deduction: num DUK at reader
+  note "the worked check's closed form of rule 3's deduction, P - r(I - P - T)"
+  rule base = premium - rate * (income - premium - threshold)
+
+def credit[k in rounds]: money DUK at reader
+  note "rule 2, from the deduction at key k: 20 % of the income less that deduction less the threshold, never below 0 and never more than the premium, rounded half up to 0.01 DUK"
+  rule base v card_rules = round(min(premium, max(0 DUK, rate * (income - deduction[k] - threshold))), minor(DUK), half-up)
+
+def deduction[k in rounds]: money DUK at reader
+  note "key 0: rule 3 step (i), the interim deduction, the premium. Key k above 0: rule 1 from the credit of key k - 1, the premium less that credit, never below 0 (rule 3 step (iii) at key 1; rule 4's repeated step (iii) after it)"
+  rule interim beats step v card_rules = premium when k == 0
+  rule step v card_rules = max(0 DUK, premium - credit[k - 1])
+
+def fixed_credit: num DUK at reader
+  note "the point where rules 1 and 2 hold at once, r(I - P - T)/(1 - r), unrounded, from the card's worked check; no bound is reached there"
+  rule base = rate * (income - premium - threshold) / (1 - rate)
+
+def fixed_deduction: num DUK at reader
+  note "rule 1 at that point"
+  rule base = premium - fixed_credit
+
+def r3_credit: money DUK at reader
+  note "rule 3 step (iv): the final credit, by rule 2 from the final deduction"
+  rule base = credit[1]
+
+def r3_deduction: money DUK at reader
+  note "rule 3 step (iii): the final deduction, by rule 1 from the interim credit (step (ii), credit at key 0)"
+  rule base = deduction[1]
+
+def r4_credit: money DUK at reader
+  note "rule 4: the credit by rule 2 from the deduction it ends at"
+  rule base = credit[r4_stop]
+
+def r4_deduction: money DUK = deduction[r4_stop] at reader
+
+def r4_stop: key rounds at reader
+  note "rule 4: steps (iii) and (iv) repeated from the interim deduction until a deduction differs from the one before it by less than the tolerance; the key is the number of rounds taken"
+  rule base = first(k in rounds where k > 0 and abs(deduction[k] - deduction[k - 1]) < tolerance)
+
+ask a_rule3: r3_deduction, r3_credit law 2025-12-31
+
+ask a_closed_form_agrees: check r3_credit == closed_credit law 2025-12-31
+
+ask a_closed_form_deduction: check r3_deduction == closed_deduction law 2025-12-31
+
+ask b_rule4: r4_stop, r4_deduction, r4_credit law 2025-12-31
+
+ask b_rounds: deduction[k], credit[k] for k in rounds where k <= r4_stop law 2025-12-31
+
+ask b_fixed_point: fixed_deduction, fixed_credit, abs(r4_deduction - fixed_deduction) < tolerance law 2025-12-31
+
+version card_facts
+  cite card
+  governs always
+  known 2025-01-01
+  note "the card's story, a stipulation known from the model's start (L 4.5)"
+  income = 60000 "story: business income for the year 60 000.00 DUK"
+  premium = 9000 "story: health premium paid 9 000.00 DUK"
+
+version card_rules
+  cite card
+  governs always
+  known 2025-01-01
+  note "the card's own law"
+  rate = 20 % "rule 2: 20 %"
+  threshold = 30000 "rule 2: less 30 000.00 DUK"
+  tolerance = 1 "rule 4: by less than 1.00 DUK"

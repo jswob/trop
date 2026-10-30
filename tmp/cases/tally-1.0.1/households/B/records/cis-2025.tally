@@ -1,0 +1,605 @@
+part cis_2025
+  tally 1
+  note "Bank Cis current account LN45 2090 0017 5521 3380 0001, 2025: every row of the twelve exports. Each export is a CSV with # header lines and dd-mm-yyyy dates, which no Tally text loads (OPERATIONS §2.2 names no format: O:B-1), so the rows are written out, each citing its file and line."
+  note "One covering version per month (L §5.18), known the 2nd of the next month (the export day is not stated: assumed). November covers only to 2025-11-13, where its export stops; 2025-11-14..30 is covered by a hole row. Anchors: each month-end balance the next export opens with, the last balance of December, and the balance after the last row on each B-HR2 rule day and on 2025-10-15 (the repeated row)."
+
+version cis_2025_01
+  cite cis_export
+  governs 2025-01-01..2025-01-31
+  known 2025-02-02
+  assumed "export day not stated: the 2nd of the next month"
+  covers cis
+  cisr[c20250102a] = (2025-01-02, cis, -54.07, -, card) "cis-5521-3380-0001-2025-01.csv line 7 CARD PAYMENT Sklep Jagoda Kłodzin card ...3380"
+  cisr[c20250103a] = (2025-01-03, cis, -78.00, -, card) "cis-5521-3380-0001-2025-01.csv line 8 CARD PAYMENT Kino Zorza card ...3380"
+  cisr[c20250107a] = (2025-01-07, cis, 1700.00, -, transfer) "cis-5521-3380-0001-2025-01.csv line 9 TRANSFER IN ALEKSANDRA WILK flat share"
+  cisr[c20250107b] = (2025-01-07, cis, -170.57, -, card) "cis-5521-3380-0001-2025-01.csv line 10 CARD PAYMENT Stacja Paliw Iskra card ...3380"
+  cisr[c20250107c] = (2025-01-07, cis, -135.12, -, card) "cis-5521-3380-0001-2025-01.csv line 11 CARD PAYMENT Piekarnia Kłos card ...3380"
+  cisr[c20250107d] = (2025-01-07, cis, -109.00, -, card) "cis-5521-3380-0001-2025-01.csv line 12 CARD PAYMENT Kino Zorza card ...3380"
+  cisr[c20250107e] = (2025-01-07, cis, -3215.19, -, transfer) "cis-5521-3380-0001-2025-01.csv line 13 TRANSFER OUT Bank Jodła S.A. loan 7710-22 instalment 01/2025"
+  cisr[c20250108a] = (2025-01-08, cis, -175.96, -, card) "cis-5521-3380-0001-2025-01.csv line 14 CARD PAYMENT Sklep internetowy Kram card ...3380"
+  cisr[c20250109a] = (2025-01-09, cis, 7320.00, client_pay[fv_015_2024], transfer) "cis-5521-3380-0001-2025-01.csv line 15 TRANSFER IN KAWIARNIA ZIARNO FV 015/2024"
+  cisr[c20250109b] = (2025-01-09, cis, -24.05, -, card) "cis-5521-3380-0001-2025-01.csv line 16 CARD PAYMENT Drogeria Malwa card ...3380"
+  cisr[c20250110a] = (2025-01-10, cis, -136.54, -, card) "cis-5521-3380-0001-2025-01.csv line 17 CARD PAYMENT Drogeria Malwa card ...3380"
+  cisr[c20250110b] = (2025-01-10, cis, -45.93, -, card) "cis-5521-3380-0001-2025-01.csv line 18 CARD PAYMENT Market Groszek Kłodzin card ...3380"
+  cisr[c20250110c] = (2025-01-10, cis, -690.00, -, transfer) "cis-5521-3380-0001-2025-01.csv line 19 STANDING ORDER WM Wrzosowa 12 building fee"
+  cisr[c20250110d] = (2025-01-10, cis, -904.04, -, transfer) "cis-5521-3380-0001-2025-01.csv line 20 TRANSFER OUT Stacja Paliw Tor sp. fleet invoice fuel 2024-12"
+  cisr[c20250113a] = (2025-01-13, cis, -181.47, -, card) "cis-5521-3380-0001-2025-01.csv line 21 CARD PAYMENT Drogeria Malwa card ...3380"
+  cisr[c20250113b] = (2025-01-13, cis, -111.86, -, card) "cis-5521-3380-0001-2025-01.csv line 22 CARD PAYMENT Sklep Jagoda Kłodzin card ...3380"
+  cisr[c20250113c] = (2025-01-13, cis, -175.00, -, transfer) "cis-5521-3380-0001-2025-01.csv line 23 STANDING ORDER Energa Lenia electricity"
+  cisr[c20250114a] = (2025-01-14, cis, 26840.00, client_pay[fv_016_2024], transfer) "cis-5521-3380-0001-2025-01.csv line 24 TRANSFER IN ARNIKA SOFT SP. FV 016/2024"
+  cisr[c20250114b] = (2025-01-14, cis, -219.61, -, card) "cis-5521-3380-0001-2025-01.csv line 25 CARD PAYMENT Drogeria Malwa card ...3380"
+  cisr[c20250114c] = (2025-01-14, cis, -167.43, -, card) "cis-5521-3380-0001-2025-01.csv line 26 CARD PAYMENT Apteka Mięta card ...3380"
+  cisr[c20250115a] = (2025-01-15, cis, -1921.98, -, transfer) "cis-5521-3380-0001-2025-01.csv line 27 LOAN REPAYMENT Bank Cis S.A. loan 5521-K instalment"
+  cisr[c20250117a] = (2025-01-17, cis, -249.26, -, card) "cis-5521-3380-0001-2025-01.csv line 28 CARD PAYMENT Stacja Paliw Iskra card ...3380"
+  cisr[c20250120a] = (2025-01-20, cis, -109.03, -, card) "cis-5521-3380-0001-2025-01.csv line 29 CARD PAYMENT Sklep internetowy Kram card ...3380"
+  cisr[c20250120b] = (2025-01-20, cis, -103.91, -, card) "cis-5521-3380-0001-2025-01.csv line 30 CARD PAYMENT Drogeria Malwa card ...3380"
+  cisr[c20250120c] = (2025-01-20, cis, -154.34, -, card) "cis-5521-3380-0001-2025-01.csv line 31 CARD PAYMENT Restauracja Dąb card ...3380"
+  cisr[c20250120d] = (2025-01-20, cis, -1594.48, -, transfer) "cis-5521-3380-0001-2025-01.csv line 32 TRANSFER OUT SIO social contributions 2024-12"
+  cisr[c20250120e] = (2025-01-20, cis, -1265.28, -, transfer) "cis-5521-3380-0001-2025-01.csv line 33 TRANSFER OUT SIO health contribution 2024-12"
+  cisr[c20250120f] = (2025-01-20, cis, -3169.00, -, transfer) "cis-5521-3380-0001-2025-01.csv line 34 TRANSFER OUT Revenue Office PIT advance 2024-12"
+  cisr[c20250121a] = (2025-01-21, cis, -52.34, -, card) "cis-5521-3380-0001-2025-01.csv line 35 CARD PAYMENT Kino Zorza card ...3380"
+  cisr[c20250123a] = (2025-01-23, cis, -108.25, -, card) "cis-5521-3380-0001-2025-01.csv line 36 CARD PAYMENT Market Groszek Kłodzin card ...3380"
+  cisr[c20250124a] = (2025-01-24, cis, -186.98, -, card) "cis-5521-3380-0001-2025-01.csv line 37 CARD PAYMENT Drogeria Malwa card ...3380"
+  cisr[c20250127a] = (2025-01-27, cis, -208.01, -, card) "cis-5521-3380-0001-2025-01.csv line 38 CARD PAYMENT Sklep internetowy Kram card ...3380"
+  cisr[c20250127b] = (2025-01-27, cis, -235.55, -, card) "cis-5521-3380-0001-2025-01.csv line 39 CARD PAYMENT Restauracja Dąb card ...3380"
+  cisr[c20250127c] = (2025-01-27, cis, -6089.00, -, transfer) "cis-5521-3380-0001-2025-01.csv line 40 TRANSFER OUT Revenue Office VAT 2024-12"
+  cisr[c20250127d] = (2025-01-27, cis, -3000.00, hr2_overpay[2025-01-27], transfer) "cis-5521-3380-0001-2025-01.csv line 41 TRANSFER OUT Bank Jodła S.A. loan 7710-22 overpayment"
+  cisr[c20250127e] = (2025-01-27, cis, -20231.12, hr2_save[2025-01-27], transfer) "cis-5521-3380-0001-2025-01.csv line 42 OWN TRANSFER PIOTR SOWA to savings 0002"
+  cisr[c20250128a] = (2025-01-28, cis, -178.12, -, card) "cis-5521-3380-0001-2025-01.csv line 43 CARD PAYMENT Sklep internetowy Kram card ...3380"
+  cisr[c20250129a] = (2025-01-29, cis, -20.69, -, card) "cis-5521-3380-0001-2025-01.csv line 44 CARD PAYMENT Sklep internetowy Kram card ...3380"
+  cisr[c20250131a] = (2025-01-31, cis, -221.91, -, card) "cis-5521-3380-0001-2025-01.csv line 45 CARD PAYMENT Sklep Jagoda Kłodzin card ...3380"
+  cisr[c20250131b] = (2025-01-31, cis, -51.55, -, card) "cis-5521-3380-0001-2025-01.csv line 46 CARD PAYMENT Sklep Jagoda Kłodzin card ...3380"
+  stated[cis] = 9000.00 governs 2025-01-27 "cis-5521-3380-0001-2025-01.csv line 42 Balance after"
+
+version cis_2025_02
+  cite cis_export
+  governs 2025-02-01..2025-02-28
+  known 2025-03-02
+  assumed "export day not stated: the 2nd of the next month"
+  covers cis
+  cisr[c20250203a] = (2025-02-03, cis, -194.52, -, card) "cis-5521-3380-0001-2025-02.csv line 7 CARD PAYMENT Sklep Jagoda Kłodzin card ...3380"
+  cisr[c20250205a] = (2025-02-05, cis, 1700.00, -, transfer) "cis-5521-3380-0001-2025-02.csv line 8 TRANSFER IN ALEKSANDRA WILK flat share"
+  cisr[c20250205b] = (2025-02-05, cis, -3192.32, -, transfer) "cis-5521-3380-0001-2025-02.csv line 9 TRANSFER OUT Bank Jodła S.A. loan 7710-22 instalment 02/2025"
+  cisr[c20250206a] = (2025-02-06, cis, -224.23, -, card) "cis-5521-3380-0001-2025-02.csv line 10 CARD PAYMENT Sklep internetowy Kram card ...3380"
+  cisr[c20250207a] = (2025-02-07, cis, -129.76, -, card) "cis-5521-3380-0001-2025-02.csv line 11 CARD PAYMENT Apteka Mięta card ...3380"
+  cisr[c20250210a] = (2025-02-10, cis, -169.87, -, card) "cis-5521-3380-0001-2025-02.csv line 12 CARD PAYMENT Sklep internetowy Kram card ...3380"
+  cisr[c20250210b] = (2025-02-10, cis, -38.15, -, card) "cis-5521-3380-0001-2025-02.csv line 13 CARD PAYMENT Sklep internetowy Kram card ...3380"
+  cisr[c20250210c] = (2025-02-10, cis, -93.78, -, card) "cis-5521-3380-0001-2025-02.csv line 14 CARD PAYMENT Drogeria Malwa card ...3380"
+  cisr[c20250210d] = (2025-02-10, cis, -690.00, -, transfer) "cis-5521-3380-0001-2025-02.csv line 15 STANDING ORDER WM Wrzosowa 12 building fee"
+  cisr[c20250210e] = (2025-02-10, cis, -735.38, -, transfer) "cis-5521-3380-0001-2025-02.csv line 16 TRANSFER OUT Stacja Paliw Tor sp. fleet invoice fuel 2025-01"
+  cisr[c20250211a] = (2025-02-11, cis, -166.19, -, card) "cis-5521-3380-0001-2025-02.csv line 17 CARD PAYMENT Sklep Jagoda Kłodzin card ...3380"
+  cisr[c20250212a] = (2025-02-12, cis, -114.35, -, card) "cis-5521-3380-0001-2025-02.csv line 18 CARD PAYMENT Sklep Jagoda Kłodzin card ...3380"
+  cisr[c20250212b] = (2025-02-12, cis, -175.00, -, transfer) "cis-5521-3380-0001-2025-02.csv line 19 STANDING ORDER Energa Lenia electricity"
+  cisr[c20250214a] = (2025-02-14, cis, 19520.00, client_pay[fv_001_2025], transfer) "cis-5521-3380-0001-2025-02.csv line 20 TRANSFER IN ARNIKA SOFT SP. FV 001/2025"
+  cisr[c20250217a] = (2025-02-17, cis, -188.50, -, card) "cis-5521-3380-0001-2025-02.csv line 21 CARD PAYMENT Stacja Paliw Iskra card ...3380"
+  cisr[c20250217b] = (2025-02-17, cis, -114.15, -, card) "cis-5521-3380-0001-2025-02.csv line 22 CARD PAYMENT Sklep internetowy Kram card ...3380"
+  cisr[c20250217c] = (2025-02-17, cis, -51.02, -, card) "cis-5521-3380-0001-2025-02.csv line 23 CARD PAYMENT Stacja Paliw Iskra card ...3380"
+  cisr[c20250217d] = (2025-02-17, cis, -1921.98, -, transfer) "cis-5521-3380-0001-2025-02.csv line 24 LOAN REPAYMENT Bank Cis S.A. loan 5521-K instalment"
+  cisr[c20250218a] = (2025-02-18, cis, -214.64, -, card) "cis-5521-3380-0001-2025-02.csv line 25 CARD PAYMENT Stacja Paliw Iskra card ...3380"
+  cisr[c20250218b] = (2025-02-18, cis, -75.75, -, card) "cis-5521-3380-0001-2025-02.csv line 26 CARD PAYMENT Drogeria Malwa card ...3380"
+  cisr[c20250219a] = (2025-02-19, cis, -193.48, -, card) "cis-5521-3380-0001-2025-02.csv line 27 CARD PAYMENT Sklep internetowy Kram card ...3380"
+  cisr[c20250220a] = (2025-02-20, cis, -42.88, -, card) "cis-5521-3380-0001-2025-02.csv line 28 CARD PAYMENT Sklep Sport Kret card ...3380"
+  cisr[c20250220b] = (2025-02-20, cis, -1758.01, -, transfer) "cis-5521-3380-0001-2025-02.csv line 29 TRANSFER OUT SIO social contributions 2025-01"
+  cisr[c20250220c] = (2025-02-20, cis, -421.76, -, transfer) "cis-5521-3380-0001-2025-02.csv line 30 TRANSFER OUT SIO health contribution 2025-01"
+  cisr[c20250220d] = (2025-02-20, cis, -2535.00, -, transfer) "cis-5521-3380-0001-2025-02.csv line 31 TRANSFER OUT Revenue Office PIT advance 2025-01"
+  cisr[c20250221a] = (2025-02-21, cis, -186.57, -, card) "cis-5521-3380-0001-2025-02.csv line 32 CARD PAYMENT Piekarnia Kłos card ...3380"
+  cisr[c20250224a] = (2025-02-24, cis, -211.32, -, card) "cis-5521-3380-0001-2025-02.csv line 33 CARD PAYMENT Sklep Jagoda Kłodzin card ...3380"
+  cisr[c20250225a] = (2025-02-25, cis, -4917.00, -, transfer) "cis-5521-3380-0001-2025-02.csv line 34 TRANSFER OUT Revenue Office VAT 2025-01"
+  cisr[c20250226a] = (2025-02-26, cis, -1992.12, hr2_overpay[2025-02-26], transfer) "cis-5521-3380-0001-2025-02.csv line 35 TRANSFER OUT Bank Jodła S.A. loan 7710-22 overpayment"
+  cisr[c20250227a] = (2025-02-27, cis, -109.49, -, card) "cis-5521-3380-0001-2025-02.csv line 36 CARD PAYMENT Sklep internetowy Kram card ...3380"
+  cisr[c20250228a] = (2025-02-28, cis, -249.25, -, card) "cis-5521-3380-0001-2025-02.csv line 37 CARD PAYMENT Piekarnia Kłos card ...3380"
+  stated[cis] = 9000.00 governs 2025-02-26 "cis-5521-3380-0001-2025-02.csv line 35 Balance after"
+
+version cis_2025_03
+  cite cis_export
+  governs 2025-03-01..2025-03-31
+  known 2025-04-02
+  assumed "export day not stated: the 2nd of the next month"
+  covers cis
+  cisr[c20250304a] = (2025-03-04, cis, 8039.70, -, transfer) "cis-5521-3380-0001-2025-03.csv line 7 TRANSFER IN PIOTR SOWA (BANK LAZUR) FX 1952.00 FLR at 4.1187"
+  cisr[c20250304b] = (2025-03-04, cis, -92.87, -, card) "cis-5521-3380-0001-2025-03.csv line 8 CARD PAYMENT Market Groszek Kłodzin card ...3380"
+  cisr[c20250304c] = (2025-03-04, cis, -93.62, -, card) "cis-5521-3380-0001-2025-03.csv line 9 CARD PAYMENT Market Groszek Kłodzin card ...3380"
+  cisr[c20250305a] = (2025-03-05, cis, -3177.33, -, transfer) "cis-5521-3380-0001-2025-03.csv line 10 TRANSFER OUT Bank Jodła S.A. loan 7710-22 instalment 03/2025"
+  cisr[c20250307a] = (2025-03-07, cis, -79.94, -, card) "cis-5521-3380-0001-2025-03.csv line 11 CARD PAYMENT Apteka Mięta card ...3380"
+  cisr[c20250310a] = (2025-03-10, cis, -238.04, -, card) "cis-5521-3380-0001-2025-03.csv line 12 CARD PAYMENT Stacja Paliw Iskra card ...3380"
+  cisr[c20250310b] = (2025-03-10, cis, -254.56, -, card) "cis-5521-3380-0001-2025-03.csv line 13 CARD PAYMENT Kino Zorza card ...3380"
+  cisr[c20250310c] = (2025-03-10, cis, -690.00, -, transfer) "cis-5521-3380-0001-2025-03.csv line 14 STANDING ORDER WM Wrzosowa 12 building fee"
+  cisr[c20250310d] = (2025-03-10, cis, -634.90, -, transfer) "cis-5521-3380-0001-2025-03.csv line 15 TRANSFER OUT Stacja Paliw Tor sp. fleet invoice fuel 2025-02"
+  cisr[c20250311a] = (2025-03-11, cis, -188.02, -, card) "cis-5521-3380-0001-2025-03.csv line 16 CARD PAYMENT Stacja Paliw Iskra card ...3380"
+  cisr[c20250311b] = (2025-03-11, cis, -256.46, -, card) "cis-5521-3380-0001-2025-03.csv line 17 CARD PAYMENT Sklep Sport Kret card ...3380"
+  cisr[c20250312a] = (2025-03-12, cis, -175.00, -, transfer) "cis-5521-3380-0001-2025-03.csv line 18 STANDING ORDER Energa Lenia electricity"
+  cisr[c20250313a] = (2025-03-13, cis, -43.79, -, card) "cis-5521-3380-0001-2025-03.csv line 19 CARD PAYMENT Apteka Mięta card ...3380"
+  cisr[c20250314a] = (2025-03-14, cis, 19520.00, client_pay[fv_003_2025], transfer) "cis-5521-3380-0001-2025-03.csv line 20 TRANSFER IN ARNIKA SOFT SP. FV 003/2025"
+  cisr[c20250314b] = (2025-03-14, cis, -164.23, -, card) "cis-5521-3380-0001-2025-03.csv line 21 CARD PAYMENT Sklep Jagoda Kłodzin card ...3380"
+  cisr[c20250314c] = (2025-03-14, cis, -39.52, -, card) "cis-5521-3380-0001-2025-03.csv line 22 CARD PAYMENT Kino Zorza card ...3380"
+  cisr[c20250314d] = (2025-03-14, cis, -2190.00, -, transfer) "cis-5521-3380-0001-2025-03.csv line 23 TRANSFER OUT TU Bocian S.A. policy MTPL 88-4471 2025/26"
+  cisr[c20250317a] = (2025-03-17, cis, -160.65, -, card) "cis-5521-3380-0001-2025-03.csv line 24 CARD PAYMENT Restauracja Dąb card ...3380"
+  cisr[c20250317b] = (2025-03-17, cis, -172.43, -, card) "cis-5521-3380-0001-2025-03.csv line 25 CARD PAYMENT Market Groszek Kłodzin card ...3380"
+  cisr[c20250317c] = (2025-03-17, cis, -143.39, -, card) "cis-5521-3380-0001-2025-03.csv line 26 CARD PAYMENT Piekarnia Kłos card ...3380"
+  cisr[c20250317d] = (2025-03-17, cis, -1921.98, -, transfer) "cis-5521-3380-0001-2025-03.csv line 27 LOAN REPAYMENT Bank Cis S.A. loan 5521-K instalment"
+  cisr[c20250318a] = (2025-03-18, cis, -131.71, -, card) "cis-5521-3380-0001-2025-03.csv line 28 CARD PAYMENT Piekarnia Kłos card ...3380"
+  cisr[c20250318b] = (2025-03-18, cis, -223.92, -, card) "cis-5521-3380-0001-2025-03.csv line 29 CARD PAYMENT Sklep Sport Kret card ...3380"
+  cisr[c20250320a] = (2025-03-20, cis, -720.00, -, transfer) "cis-5521-3380-0001-2025-03.csv line 30 TRANSFER OUT Gmina Kłodzin road tax 2025 LN 4471K"
+  cisr[c20250320b] = (2025-03-20, cis, -1758.01, -, transfer) "cis-5521-3380-0001-2025-03.csv line 31 TRANSFER OUT SIO social contributions 2025-02"
+  cisr[c20250320c] = (2025-03-20, cis, -460.63, -, transfer) "cis-5521-3380-0001-2025-03.csv line 32 TRANSFER OUT SIO health contribution 2025-02"
+  cisr[c20250320d] = (2025-03-20, cis, -2518.00, -, transfer) "cis-5521-3380-0001-2025-03.csv line 33 TRANSFER OUT Revenue Office PIT advance 2025-02"
+  cisr[c20250321a] = (2025-03-21, cis, -120.19, -, card) "cis-5521-3380-0001-2025-03.csv line 34 CARD PAYMENT Market Groszek Kłodzin card ...3380"
+  cisr[c20250324a] = (2025-03-24, cis, -35.81, -, card) "cis-5521-3380-0001-2025-03.csv line 35 CARD PAYMENT Restauracja Dąb card ...3380"
+  cisr[c20250324b] = (2025-03-24, cis, -89.36, -, card) "cis-5521-3380-0001-2025-03.csv line 36 CARD PAYMENT Kino Zorza card ...3380"
+  cisr[c20250324c] = (2025-03-24, cis, -59.31, -, card) "cis-5521-3380-0001-2025-03.csv line 37 CARD PAYMENT Stacja Paliw Iskra card ...3380"
+  cisr[c20250325a] = (2025-03-25, cis, -4937.00, -, transfer) "cis-5521-3380-0001-2025-03.csv line 38 TRANSFER OUT Revenue Office VAT 2025-02"
+  cisr[c20250326a] = (2025-03-26, cis, -3000.00, hr2_overpay[2025-03-26], transfer) "cis-5521-3380-0001-2025-03.csv line 39 TRANSFER OUT Bank Jodła S.A. loan 7710-22 overpayment"
+  cisr[c20250326b] = (2025-03-26, cis, -2430.29, hr2_save[2025-03-26], transfer) "cis-5521-3380-0001-2025-03.csv line 40 OWN TRANSFER PIOTR SOWA to savings 0002"
+  cisr[c20250327a] = (2025-03-27, cis, -226.10, -, card) "cis-5521-3380-0001-2025-03.csv line 41 CARD PAYMENT Market Groszek Kłodzin card ...3380"
+  cisr[c20250331a] = (2025-03-31, cis, 7982.70, -, transfer) "cis-5521-3380-0001-2025-03.csv line 42 TRANSFER IN PIOTR SOWA (BANK LAZUR) FX 1952.00 FLR at 4.0895"
+  cisr[c20250331b] = (2025-03-31, cis, -171.31, -, card) "cis-5521-3380-0001-2025-03.csv line 43 CARD PAYMENT Restauracja Dąb card ...3380"
+  stated[cis] = 9000.00 governs 2025-03-26 "cis-5521-3380-0001-2025-03.csv line 40 Balance after"
+
+version cis_2025_04
+  cite cis_export
+  governs 2025-04-01..2025-04-30
+  known 2025-05-02
+  assumed "export day not stated: the 2nd of the next month"
+  covers cis
+  cisr[c20250401a] = (2025-04-01, cis, -181.03, -, card) "cis-5521-3380-0001-2025-04.csv line 7 CARD PAYMENT Sklep Jagoda Kłodzin card ...3380"
+  cisr[c20250401b] = (2025-04-01, cis, -217.08, -, card) "cis-5521-3380-0001-2025-04.csv line 8 CARD PAYMENT Drogeria Malwa card ...3380"
+  cisr[c20250402a] = (2025-04-02, cis, -162.18, -, card) "cis-5521-3380-0001-2025-04.csv line 9 CARD PAYMENT Apteka Mięta card ...3380"
+  cisr[c20250402b] = (2025-04-02, cis, -117.62, -, card) "cis-5521-3380-0001-2025-04.csv line 10 CARD PAYMENT Apteka Mięta card ...3380"
+  cisr[c20250403a] = (2025-04-03, cis, -349.99, -, card) "cis-5521-3380-0001-2025-04.csv line 11 CARD PAYMENT Sklep Elektro Kos card ...3380"
+  cisr[c20250403b] = (2025-04-03, cis, -238.89, -, card) "cis-5521-3380-0001-2025-04.csv line 12 CARD PAYMENT Restauracja Dąb card ...3380"
+  cisr[c20250404a] = (2025-04-04, cis, -163.64, -, card) "cis-5521-3380-0001-2025-04.csv line 13 CARD PAYMENT Drogeria Malwa card ...3380"
+  cisr[c20250404b] = (2025-04-04, cis, -26.98, -, card) "cis-5521-3380-0001-2025-04.csv line 14 CARD PAYMENT Sklep Sport Kret card ...3380"
+  cisr[c20250407a] = (2025-04-07, cis, 1700.00, -, transfer) "cis-5521-3380-0001-2025-04.csv line 15 TRANSFER IN ALEKSANDRA WILK flat share"
+  cisr[c20250407b] = (2025-04-07, cis, -228.28, -, card) "cis-5521-3380-0001-2025-04.csv line 16 CARD PAYMENT Sklep Jagoda Kłodzin card ...3380"
+  cisr[c20250407c] = (2025-04-07, cis, -3151.86, -, transfer) "cis-5521-3380-0001-2025-04.csv line 17 TRANSFER OUT Bank Jodła S.A. loan 7710-22 instalment 04/2025"
+  cisr[c20250408a] = (2025-04-08, cis, -146.52, -, card) "cis-5521-3380-0001-2025-04.csv line 18 CARD PAYMENT Restauracja Dąb card ...3380"
+  cisr[c20250409a] = (2025-04-09, cis, -49.39, -, card) "cis-5521-3380-0001-2025-04.csv line 19 CARD PAYMENT Market Groszek Kłodzin card ...3380"
+  cisr[c20250410a] = (2025-04-10, cis, -179.22, -, card) "cis-5521-3380-0001-2025-04.csv line 20 CARD PAYMENT Apteka Mięta card ...3380"
+  cisr[c20250410b] = (2025-04-10, cis, -690.00, -, transfer) "cis-5521-3380-0001-2025-04.csv line 21 STANDING ORDER WM Wrzosowa 12 building fee"
+  cisr[c20250410c] = (2025-04-10, cis, -748.75, -, transfer) "cis-5521-3380-0001-2025-04.csv line 22 TRANSFER OUT Stacja Paliw Tor sp. fleet invoice fuel 2025-03"
+  cisr[c20250411a] = (2025-04-11, cis, 349.99, -, card_refund) "cis-5521-3380-0001-2025-04.csv line 23 CARD REFUND Sklep Elektro Kos card ...3380 refund"
+  cisr[c20250411b] = (2025-04-11, cis, -145.44, -, card) "cis-5521-3380-0001-2025-04.csv line 24 CARD PAYMENT Sklep internetowy Kram card ...3380"
+  cisr[c20250414a] = (2025-04-14, cis, 19520.00, client_pay[fv_005_2025], transfer) "cis-5521-3380-0001-2025-04.csv line 25 TRANSFER IN ARNIKA SOFT SP. FV 005/2025"
+  cisr[c20250414b] = (2025-04-14, cis, -35.93, -, card) "cis-5521-3380-0001-2025-04.csv line 26 CARD PAYMENT Stacja Paliw Iskra card ...3380"
+  cisr[c20250414c] = (2025-04-14, cis, -73.64, -, card) "cis-5521-3380-0001-2025-04.csv line 27 CARD PAYMENT Kino Zorza card ...3380"
+  cisr[c20250414d] = (2025-04-14, cis, -175.00, -, transfer) "cis-5521-3380-0001-2025-04.csv line 28 STANDING ORDER Energa Lenia electricity"
+  cisr[c20250415a] = (2025-04-15, cis, -1921.98, -, transfer) "cis-5521-3380-0001-2025-04.csv line 29 LOAN REPAYMENT Bank Cis S.A. loan 5521-K instalment"
+  cisr[c20250416a] = (2025-04-16, cis, -195.77, -, card) "cis-5521-3380-0001-2025-04.csv line 30 CARD PAYMENT Piekarnia Kłos card ...3380"
+  cisr[c20250417a] = (2025-04-17, cis, -45.19, -, card) "cis-5521-3380-0001-2025-04.csv line 31 CARD PAYMENT Stacja Paliw Iskra card ...3380"
+  cisr[c20250418a] = (2025-04-18, cis, -201.95, -, card) "cis-5521-3380-0001-2025-04.csv line 32 CARD PAYMENT Market Groszek Kłodzin card ...3380"
+  cisr[c20250422a] = (2025-04-22, cis, -114.60, -, card) "cis-5521-3380-0001-2025-04.csv line 33 CARD PAYMENT Apteka Mięta card ...3380"
+  cisr[c20250422b] = (2025-04-22, cis, -25.61, -, card) "cis-5521-3380-0001-2025-04.csv line 34 CARD PAYMENT Sklep Sport Kret card ...3380"
+  cisr[c20250422c] = (2025-04-22, cis, -76.88, -, card) "cis-5521-3380-0001-2025-04.csv line 35 CARD PAYMENT Market Groszek Kłodzin card ...3380"
+  cisr[c20250422d] = (2025-04-22, cis, -211.37, -, card) "cis-5521-3380-0001-2025-04.csv line 36 CARD PAYMENT Restauracja Dąb card ...3380"
+  cisr[c20250422e] = (2025-04-22, cis, -137.77, -, card) "cis-5521-3380-0001-2025-04.csv line 37 CARD PAYMENT Drogeria Malwa card ...3380"
+  cisr[c20250422f] = (2025-04-22, cis, -1758.01, -, transfer) "cis-5521-3380-0001-2025-04.csv line 38 TRANSFER OUT SIO social contributions 2025-03"
+  cisr[c20250422g] = (2025-04-22, cis, -767.71, -, transfer) "cis-5521-3380-0001-2025-04.csv line 39 TRANSFER OUT SIO health contribution 2025-03"
+  cisr[c20250422h] = (2025-04-22, cis, -2514.00, -, transfer) "cis-5521-3380-0001-2025-04.csv line 40 TRANSFER OUT Revenue Office PIT advance 2025-03"
+  cisr[c20250422i] = (2025-04-22, cis, -6652.02, -, transfer) "cis-5521-3380-0001-2025-04.csv line 41 TRANSFER OUT SIO health contribution settlement 2024"
+  cisr[c20250425a] = (2025-04-25, cis, -4938.00, -, transfer) "cis-5521-3380-0001-2025-04.csv line 42 TRANSFER OUT Revenue Office VAT 2025-03"
+  cisr[c20250428a] = (2025-04-28, cis, -67.86, -, card) "cis-5521-3380-0001-2025-04.csv line 43 CARD PAYMENT Stacja Paliw Iskra card ...3380"
+  cisr[c20250429a] = (2025-04-29, cis, -154.58, -, card) "cis-5521-3380-0001-2025-04.csv line 44 CARD PAYMENT Kino Zorza card ...3380"
+  cisr[c20250429b] = (2025-04-29, cis, -108.74, -, card) "cis-5521-3380-0001-2025-04.csv line 45 CARD PAYMENT Stacja Paliw Iskra card ...3380"
+  cisr[c20250430a] = (2025-04-30, cis, -218.81, -, card) "cis-5521-3380-0001-2025-04.csv line 46 CARD PAYMENT Kino Zorza card ...3380"
+  stated[cis] = 11445.12 governs 2025-04-28 "cis-5521-3380-0001-2025-04.csv line 43 Balance after"
+
+version cis_2025_05
+  cite cis_export
+  governs 2025-05-01..2025-05-31
+  known 2025-06-02
+  assumed "export day not stated: the 2nd of the next month"
+  covers cis
+  cisr[c20250502a] = (2025-05-02, cis, 8045.17, -, transfer) "cis-5521-3380-0001-2025-05.csv line 7 TRANSFER IN PIOTR SOWA (BANK LAZUR) FX 1952.00 FLR at 4.1215"
+  cisr[c20250502b] = (2025-05-02, cis, -21.19, -, card) "cis-5521-3380-0001-2025-05.csv line 8 CARD PAYMENT Drogeria Malwa card ...3380"
+  cisr[c20250502c] = (2025-05-02, cis, -56.23, -, card) "cis-5521-3380-0001-2025-05.csv line 9 CARD PAYMENT Market Groszek Kłodzin card ...3380"
+  cisr[c20250502d] = (2025-05-02, cis, -224.35, -, card) "cis-5521-3380-0001-2025-05.csv line 10 CARD PAYMENT Drogeria Malwa card ...3380"
+  cisr[c20250505a] = (2025-05-05, cis, 1700.00, -, transfer) "cis-5521-3380-0001-2025-05.csv line 11 TRANSFER IN ALEKSANDRA WILK flat share"
+  cisr[c20250505b] = (2025-05-05, cis, -135.47, -, card) "cis-5521-3380-0001-2025-05.csv line 12 CARD PAYMENT Kino Zorza card ...3380"
+  cisr[c20250505c] = (2025-05-05, cis, -25.03, -, card) "cis-5521-3380-0001-2025-05.csv line 13 CARD PAYMENT Market Groszek Kłodzin card ...3380"
+  cisr[c20250505d] = (2025-05-05, cis, -96.59, -, card) "cis-5521-3380-0001-2025-05.csv line 14 CARD PAYMENT Sklep Jagoda Kłodzin card ...3380"
+  cisr[c20250505e] = (2025-05-05, cis, -3151.86, -, transfer) "cis-5521-3380-0001-2025-05.csv line 15 TRANSFER OUT Bank Jodła S.A. loan 7710-22 instalment 05/2025"
+  cisr[c20250508a] = (2025-05-08, cis, -51.97, -, card) "cis-5521-3380-0001-2025-05.csv line 16 CARD PAYMENT Sklep internetowy Kram card ...3380"
+  cisr[c20250509a] = (2025-05-09, cis, -177.86, -, card) "cis-5521-3380-0001-2025-05.csv line 17 CARD PAYMENT Restauracja Dąb card ...3380"
+  cisr[c20250509b] = (2025-05-09, cis, -100.55, -, card) "cis-5521-3380-0001-2025-05.csv line 18 CARD PAYMENT Drogeria Malwa card ...3380"
+  cisr[c20250512a] = (2025-05-12, cis, -170.32, -, card) "cis-5521-3380-0001-2025-05.csv line 19 CARD PAYMENT Restauracja Dąb card ...3380"
+  cisr[c20250512b] = (2025-05-12, cis, -240.64, -, card) "cis-5521-3380-0001-2025-05.csv line 20 CARD PAYMENT Stacja Paliw Iskra card ...3380"
+  cisr[c20250512c] = (2025-05-12, cis, -690.00, -, transfer) "cis-5521-3380-0001-2025-05.csv line 21 STANDING ORDER WM Wrzosowa 12 building fee"
+  cisr[c20250512d] = (2025-05-12, cis, -175.00, -, transfer) "cis-5521-3380-0001-2025-05.csv line 22 STANDING ORDER Energa Lenia electricity"
+  cisr[c20250512e] = (2025-05-12, cis, -724.22, -, transfer) "cis-5521-3380-0001-2025-05.csv line 23 TRANSFER OUT Stacja Paliw Tor sp. fleet invoice fuel 2025-04"
+  cisr[c20250514a] = (2025-05-14, cis, 19520.00, client_pay[fv_007_2025], transfer) "cis-5521-3380-0001-2025-05.csv line 24 TRANSFER IN ARNIKA-DELTA GROUP SP. FV 007/2025"
+  cisr[c20250514b] = (2025-05-14, cis, -77.48, -, card) "cis-5521-3380-0001-2025-05.csv line 25 CARD PAYMENT Stacja Paliw Iskra card ...3380"
+  cisr[c20250515a] = (2025-05-15, cis, -54.21, -, card) "cis-5521-3380-0001-2025-05.csv line 26 CARD PAYMENT Drogeria Malwa card ...3380"
+  cisr[c20250515b] = (2025-05-15, cis, -1921.98, -, transfer) "cis-5521-3380-0001-2025-05.csv line 27 LOAN REPAYMENT Bank Cis S.A. loan 5521-K instalment"
+  cisr[c20250516a] = (2025-05-16, cis, -171.48, -, card) "cis-5521-3380-0001-2025-05.csv line 28 CARD PAYMENT Stacja Paliw Iskra card ...3380"
+  cisr[c20250519a] = (2025-05-19, cis, -249.97, -, card) "cis-5521-3380-0001-2025-05.csv line 29 CARD PAYMENT Apteka Mięta card ...3380"
+  cisr[c20250519b] = (2025-05-19, cis, -177.14, -, card) "cis-5521-3380-0001-2025-05.csv line 30 CARD PAYMENT Piekarnia Kłos card ...3380"
+  cisr[c20250519c] = (2025-05-19, cis, -104.26, -, card) "cis-5521-3380-0001-2025-05.csv line 31 CARD PAYMENT Market Groszek Kłodzin card ...3380"
+  cisr[c20250519d] = (2025-05-19, cis, -107.68, -, card) "cis-5521-3380-0001-2025-05.csv line 32 CARD PAYMENT Kino Zorza card ...3380"
+  cisr[c20250520a] = (2025-05-20, cis, -107.53, -, card) "cis-5521-3380-0001-2025-05.csv line 33 CARD PAYMENT Stacja Paliw Iskra card ...3380"
+  cisr[c20250520b] = (2025-05-20, cis, -1758.01, -, transfer) "cis-5521-3380-0001-2025-05.csv line 34 TRANSFER OUT SIO social contributions 2025-04"
+  cisr[c20250520c] = (2025-05-20, cis, -767.71, -, transfer) "cis-5521-3380-0001-2025-05.csv line 35 TRANSFER OUT SIO health contribution 2025-04"
+  cisr[c20250520d] = (2025-05-20, cis, -2520.00, -, transfer) "cis-5521-3380-0001-2025-05.csv line 36 TRANSFER OUT Revenue Office PIT advance 2025-04"
+  cisr[c20250521a] = (2025-05-21, cis, -219.81, -, card) "cis-5521-3380-0001-2025-05.csv line 37 CARD PAYMENT Market Groszek Kłodzin card ...3380"
+  cisr[c20250521b] = (2025-05-21, cis, -40.08, -, card) "cis-5521-3380-0001-2025-05.csv line 38 CARD PAYMENT Sklep Sport Kret card ...3380"
+  cisr[c20250526a] = (2025-05-26, cis, -114.88, -, card) "cis-5521-3380-0001-2025-05.csv line 39 CARD PAYMENT Market Groszek Kłodzin card ...3380"
+  cisr[c20250526b] = (2025-05-26, cis, -138.55, -, card) "cis-5521-3380-0001-2025-05.csv line 40 CARD PAYMENT Market Groszek Kłodzin card ...3380"
+  cisr[c20250526c] = (2025-05-26, cis, -244.51, -, card) "cis-5521-3380-0001-2025-05.csv line 41 CARD PAYMENT Sklep Jagoda Kłodzin card ...3380"
+  cisr[c20250526d] = (2025-05-26, cis, -4939.00, -, transfer) "cis-5521-3380-0001-2025-05.csv line 42 TRANSFER OUT Revenue Office VAT 2025-04"
+  cisr[c20250526e] = (2025-05-26, cis, -3000.00, hr2_overpay[2025-05-26], transfer) "cis-5521-3380-0001-2025-05.csv line 43 TRANSFER OUT Bank Jodła S.A. loan 7710-22 overpayment"
+  cisr[c20250526f] = (2025-05-26, cis, -5472.60, hr2_save[2025-05-26], transfer) "cis-5521-3380-0001-2025-05.csv line 44 OWN TRANSFER PIOTR SOWA to savings 0002"
+  cisr[c20250527a] = (2025-05-27, cis, -129.72, -, card) "cis-5521-3380-0001-2025-05.csv line 45 CARD PAYMENT Sklep Sport Kret card ...3380"
+  cisr[c20250530a] = (2025-05-30, cis, 7991.29, -, transfer) "cis-5521-3380-0001-2025-05.csv line 46 TRANSFER IN PIOTR SOWA (BANK LAZUR) FX 1952.00 FLR at 4.0939"
+  cisr[c20250530b] = (2025-05-30, cis, -254.74, -, card) "cis-5521-3380-0001-2025-05.csv line 47 CARD PAYMENT Market Groszek Kłodzin card ...3380"
+  stated[cis] = 12000.00 governs 2025-05-26 "cis-5521-3380-0001-2025-05.csv line 44 Balance after"
+
+version cis_2025_06
+  cite cis_export
+  governs 2025-06-01..2025-06-30
+  known 2025-07-02
+  assumed "export day not stated: the 2nd of the next month"
+  covers cis
+  cisr[c20250602a] = (2025-06-02, cis, -86.09, -, card) "cis-5521-3380-0001-2025-06.csv line 7 CARD PAYMENT Sklep Jagoda Kłodzin card ...3380"
+  cisr[c20250602b] = (2025-06-02, cis, -251.11, -, card) "cis-5521-3380-0001-2025-06.csv line 8 CARD PAYMENT Sklep Sport Kret card ...3380"
+  cisr[c20250605a] = (2025-06-05, cis, 1700.00, -, transfer) "cis-5521-3380-0001-2025-06.csv line 9 TRANSFER IN ALEKSANDRA WILK flat share"
+  cisr[c20250605b] = (2025-06-05, cis, -235.87, -, card) "cis-5521-3380-0001-2025-06.csv line 10 CARD PAYMENT Piekarnia Kłos card ...3380"
+  cisr[c20250605c] = (2025-06-05, cis, -3128.16, -, transfer) "cis-5521-3380-0001-2025-06.csv line 11 TRANSFER OUT Bank Jodła S.A. loan 7710-22 instalment 06/2025"
+  cisr[c20250609a] = (2025-06-09, cis, 206.00, -, friend_back) "cis-5521-3380-0001-2025-06.csv line 12 TRANSFER IN MAREK ŻUK dinner, my half"
+  cisr[c20250609b] = (2025-06-09, cis, -412.00, -, card) "cis-5521-3380-0001-2025-06.csv line 13 CARD PAYMENT Restauracja Pod Dębem card ...3380"
+  cisr[c20250609c] = (2025-06-09, cis, -92.56, -, card) "cis-5521-3380-0001-2025-06.csv line 14 CARD PAYMENT Drogeria Malwa card ...3380"
+  cisr[c20250609d] = (2025-06-09, cis, -104.91, -, card) "cis-5521-3380-0001-2025-06.csv line 15 CARD PAYMENT Drogeria Malwa card ...3380"
+  cisr[c20250609e] = (2025-06-09, cis, -159.17, -, card) "cis-5521-3380-0001-2025-06.csv line 16 CARD PAYMENT Restauracja Dąb card ...3380"
+  cisr[c20250610a] = (2025-06-10, cis, -217.93, -, card) "cis-5521-3380-0001-2025-06.csv line 17 CARD PAYMENT Sklep internetowy Kram card ...3380"
+  cisr[c20250610b] = (2025-06-10, cis, -101.83, -, card) "cis-5521-3380-0001-2025-06.csv line 18 CARD PAYMENT Drogeria Malwa card ...3380"
+  cisr[c20250610c] = (2025-06-10, cis, -690.00, -, transfer) "cis-5521-3380-0001-2025-06.csv line 19 STANDING ORDER WM Wrzosowa 12 building fee"
+  cisr[c20250610d] = (2025-06-10, cis, -705.17, -, transfer) "cis-5521-3380-0001-2025-06.csv line 20 TRANSFER OUT Stacja Paliw Tor sp. fleet invoice fuel 2025-05"
+  cisr[c20250611a] = (2025-06-11, cis, -233.41, -, card) "cis-5521-3380-0001-2025-06.csv line 21 CARD PAYMENT Piekarnia Kłos card ...3380"
+  cisr[c20250612a] = (2025-06-12, cis, -68.27, -, card) "cis-5521-3380-0001-2025-06.csv line 22 CARD PAYMENT Sklep Jagoda Kłodzin card ...3380"
+  cisr[c20250612b] = (2025-06-12, cis, -258.42, -, card) "cis-5521-3380-0001-2025-06.csv line 23 CARD PAYMENT Sklep Jagoda Kłodzin card ...3380"
+  cisr[c20250612c] = (2025-06-12, cis, -175.00, -, transfer) "cis-5521-3380-0001-2025-06.csv line 24 STANDING ORDER Energa Lenia electricity"
+  cisr[c20250613a] = (2025-06-13, cis, 19520.00, client_pay[fv_009_2025], transfer) "cis-5521-3380-0001-2025-06.csv line 25 TRANSFER IN ARNIKA-DELTA GROUP SP. FV 009/2025"
+  cisr[c20250616a] = (2025-06-16, cis, -251.15, -, card) "cis-5521-3380-0001-2025-06.csv line 26 CARD PAYMENT Sklep Sport Kret card ...3380"
+  cisr[c20250616b] = (2025-06-16, cis, -1921.98, -, transfer) "cis-5521-3380-0001-2025-06.csv line 27 LOAN REPAYMENT Bank Cis S.A. loan 5521-K instalment"
+  cisr[c20250617a] = (2025-06-17, cis, -73.27, -, card) "cis-5521-3380-0001-2025-06.csv line 28 CARD PAYMENT Stacja Paliw Iskra card ...3380"
+  cisr[c20250618a] = (2025-06-18, cis, -221.77, -, card) "cis-5521-3380-0001-2025-06.csv line 29 CARD PAYMENT Sklep Jagoda Kłodzin card ...3380"
+  cisr[c20250619a] = (2025-06-19, cis, -239.63, -, card) "cis-5521-3380-0001-2025-06.csv line 30 CARD PAYMENT Piekarnia Kłos card ...3380"
+  cisr[c20250620a] = (2025-06-20, cis, -19.05, -, card) "cis-5521-3380-0001-2025-06.csv line 31 CARD PAYMENT Kino Zorza card ...3380"
+  cisr[c20250620b] = (2025-06-20, cis, -1758.01, -, transfer) "cis-5521-3380-0001-2025-06.csv line 32 TRANSFER OUT SIO social contributions 2025-05"
+  cisr[c20250620c] = (2025-06-20, cis, -767.71, -, transfer) "cis-5521-3380-0001-2025-06.csv line 33 TRANSFER OUT SIO health contribution 2025-05"
+  cisr[c20250620d] = (2025-06-20, cis, -2514.00, -, transfer) "cis-5521-3380-0001-2025-06.csv line 34 TRANSFER OUT Revenue Office PIT advance 2025-05"
+  cisr[c20250624a] = (2025-06-24, cis, -184.81, -, card) "cis-5521-3380-0001-2025-06.csv line 35 CARD PAYMENT Piekarnia Kłos card ...3380"
+  cisr[c20250624b] = (2025-06-24, cis, -224.31, -, card) "cis-5521-3380-0001-2025-06.csv line 36 CARD PAYMENT Drogeria Malwa card ...3380"
+  cisr[c20250625a] = (2025-06-25, cis, -137.01, -, card) "cis-5521-3380-0001-2025-06.csv line 37 CARD PAYMENT Drogeria Malwa card ...3380"
+  cisr[c20250625b] = (2025-06-25, cis, -120.86, -, card) "cis-5521-3380-0001-2025-06.csv line 38 CARD PAYMENT Sklep Sport Kret card ...3380"
+  cisr[c20250625c] = (2025-06-25, cis, -4930.00, -, transfer) "cis-5521-3380-0001-2025-06.csv line 39 TRANSFER OUT Revenue Office VAT 2025-05"
+  cisr[c20250626a] = (2025-06-26, cis, -3000.00, hr2_overpay[2025-06-26], transfer) "cis-5521-3380-0001-2025-06.csv line 40 TRANSFER OUT Bank Jodła S.A. loan 7710-22 overpayment"
+  cisr[c20250626b] = (2025-06-26, cis, -3029.37, hr2_save[2025-06-26], transfer) "cis-5521-3380-0001-2025-06.csv line 41 OWN TRANSFER PIOTR SOWA to savings 0002"
+  cisr[c20250630a] = (2025-06-30, cis, -67.04, -, card) "cis-5521-3380-0001-2025-06.csv line 42 CARD PAYMENT Piekarnia Kłos card ...3380"
+  stated[cis] = 14720.00 governs 2025-06-26 "cis-5521-3380-0001-2025-06.csv line 41 Balance after"
+
+version cis_2025_07
+  cite cis_export
+  governs 2025-07-01..2025-07-31
+  known 2025-08-02
+  assumed "export day not stated: the 2nd of the next month"
+  covers cis
+  cisr[c20250701a] = (2025-07-01, cis, 8086.94, -, transfer) "cis-5521-3380-0001-2025-07.csv line 7 TRANSFER IN PIOTR SOWA (BANK LAZUR) FX 1952.00 FLR at 4.1429"
+  cisr[c20250701b] = (2025-07-01, cis, 3500.00, bartek_back[part1], transfer) "cis-5521-3380-0001-2025-07.csv line 8 TRANSFER IN BARTŁOMIEJ KOS part of the loan back"
+  cisr[c20250701c] = (2025-07-01, cis, -115.22, -, card) "cis-5521-3380-0001-2025-07.csv line 9 CARD PAYMENT Market Groszek Kłodzin card ...3380"
+  cisr[c20250701d] = (2025-07-01, cis, -205.08, -, card) "cis-5521-3380-0001-2025-07.csv line 10 CARD PAYMENT Restauracja Dąb card ...3380"
+  cisr[c20250704a] = (2025-07-04, cis, -120.21, -, card) "cis-5521-3380-0001-2025-07.csv line 11 CARD PAYMENT Sklep Sport Kret card ...3380"
+  cisr[c20250707a] = (2025-07-07, cis, 1700.00, -, transfer) "cis-5521-3380-0001-2025-07.csv line 12 TRANSFER IN ALEKSANDRA WILK flat share"
+  cisr[c20250707b] = (2025-07-07, cis, -145.23, -, card) "cis-5521-3380-0001-2025-07.csv line 13 CARD PAYMENT Stacja Paliw Iskra card ...3380"
+  cisr[c20250707c] = (2025-07-07, cis, -2921.08, -, transfer) "cis-5521-3380-0001-2025-07.csv line 14 TRANSFER OUT Bank Jodła S.A. loan 7710-22 instalment 07/2025"
+  cisr[c20250708a] = (2025-07-08, cis, -42.86, -, card) "cis-5521-3380-0001-2025-07.csv line 15 CARD PAYMENT Apteka Mięta card ...3380"
+  cisr[c20250709a] = (2025-07-09, cis, -134.49, -, card) "cis-5521-3380-0001-2025-07.csv line 16 CARD PAYMENT Market Groszek Kłodzin card ...3380"
+  cisr[c20250710a] = (2025-07-10, cis, -137.78, -, card) "cis-5521-3380-0001-2025-07.csv line 17 CARD PAYMENT Sklep Sport Kret card ...3380"
+  cisr[c20250710b] = (2025-07-10, cis, -690.00, -, transfer) "cis-5521-3380-0001-2025-07.csv line 18 STANDING ORDER WM Wrzosowa 12 building fee"
+  cisr[c20250710c] = (2025-07-10, cis, -819.41, -, transfer) "cis-5521-3380-0001-2025-07.csv line 19 TRANSFER OUT Stacja Paliw Tor sp. fleet invoice fuel 2025-06"
+  cisr[c20250711a] = (2025-07-11, cis, -108.83, -, card) "cis-5521-3380-0001-2025-07.csv line 20 CARD PAYMENT Restauracja Dąb card ...3380"
+  cisr[c20250714a] = (2025-07-14, cis, 19520.00, client_pay[fv_012_2025], transfer) "cis-5521-3380-0001-2025-07.csv line 21 TRANSFER IN ARNIKA-DELTA GROUP SP. FV 012/2025"
+  cisr[c20250714b] = (2025-07-14, cis, -66.83, -, card) "cis-5521-3380-0001-2025-07.csv line 22 CARD PAYMENT Stacja Paliw Iskra card ...3380"
+  cisr[c20250714c] = (2025-07-14, cis, -175.00, -, transfer) "cis-5521-3380-0001-2025-07.csv line 23 STANDING ORDER Energa Lenia electricity"
+  cisr[c20250715a] = (2025-07-15, cis, -137.48, -, card) "cis-5521-3380-0001-2025-07.csv line 24 CARD PAYMENT Apteka Mięta card ...3380"
+  cisr[c20250715b] = (2025-07-15, cis, -1921.98, -, transfer) "cis-5521-3380-0001-2025-07.csv line 25 LOAN REPAYMENT Bank Cis S.A. loan 5521-K instalment"
+  cisr[c20250717a] = (2025-07-17, cis, -233.98, -, card) "cis-5521-3380-0001-2025-07.csv line 26 CARD PAYMENT Kino Zorza card ...3380"
+  cisr[c20250721a] = (2025-07-21, cis, 5000.00, client_pay[fv_011_2025], transfer) "cis-5521-3380-0001-2025-07.csv line 27 TRANSFER IN STUDIO BEZ FV 011/2025"
+  cisr[c20250721b] = (2025-07-21, cis, -139.70, -, card) "cis-5521-3380-0001-2025-07.csv line 28 CARD PAYMENT Sklep Jagoda Kłodzin card ...3380"
+  cisr[c20250721c] = (2025-07-21, cis, -113.15, -, card) "cis-5521-3380-0001-2025-07.csv line 29 CARD PAYMENT Stacja Paliw Iskra card ...3380"
+  cisr[c20250721d] = (2025-07-21, cis, -1758.01, -, transfer) "cis-5521-3380-0001-2025-07.csv line 30 TRANSFER OUT SIO social contributions 2025-06"
+  cisr[c20250721e] = (2025-07-21, cis, -767.71, -, transfer) "cis-5521-3380-0001-2025-07.csv line 31 TRANSFER OUT SIO health contribution 2025-06"
+  cisr[c20250721f] = (2025-07-21, cis, -3485.00, -, transfer) "cis-5521-3380-0001-2025-07.csv line 32 TRANSFER OUT Revenue Office PIT advance 2025-06"
+  cisr[c20250725a] = (2025-07-25, cis, -6711.00, -, transfer) "cis-5521-3380-0001-2025-07.csv line 33 TRANSFER OUT Revenue Office VAT 2025-06"
+  cisr[c20250728a] = (2025-07-28, cis, -166.14, -, card) "cis-5521-3380-0001-2025-07.csv line 34 CARD PAYMENT Sklep internetowy Kram card ...3380"
+  cisr[c20250728b] = (2025-07-28, cis, -252.79, -, card) "cis-5521-3380-0001-2025-07.csv line 35 CARD PAYMENT Drogeria Malwa card ...3380"
+  cisr[c20250728c] = (2025-07-28, cis, -152.37, -, card) "cis-5521-3380-0001-2025-07.csv line 36 CARD PAYMENT Sklep Sport Kret card ...3380"
+  cisr[c20250728d] = (2025-07-28, cis, -3000.00, hr2_overpay[2025-07-28], transfer) "cis-5521-3380-0001-2025-07.csv line 37 TRANSFER OUT Bank Jodła S.A. loan 7710-22 overpayment"
+  cisr[c20250728e] = (2025-07-28, cis, -15938.57, hr2_save[2025-07-28], transfer) "cis-5521-3380-0001-2025-07.csv line 38 OWN TRANSFER PIOTR SOWA to savings 0002"
+  cisr[c20250729a] = (2025-07-29, cis, -178.50, -, card) "cis-5521-3380-0001-2025-07.csv line 39 CARD PAYMENT Restauracja Dąb card ...3380"
+  cisr[c20250729b] = (2025-07-29, cis, -63.92, -, card) "cis-5521-3380-0001-2025-07.csv line 40 CARD PAYMENT Stacja Paliw Iskra card ...3380"
+  cisr[c20250731a] = (2025-07-31, cis, 8018.23, -, transfer) "cis-5521-3380-0001-2025-07.csv line 41 TRANSFER IN PIOTR SOWA (BANK LAZUR) FX 1952.00 FLR at 4.1077"
+  stated[cis] = 12000.00 governs 2025-07-28 "cis-5521-3380-0001-2025-07.csv line 38 Balance after"
+
+version cis_2025_08
+  cite cis_export
+  governs 2025-08-01..2025-08-31
+  known 2025-09-02
+  assumed "export day not stated: the 2nd of the next month"
+  covers cis
+  cisr[c20250801a] = (2025-08-01, cis, -106.78, -, card) "cis-5521-3380-0001-2025-08.csv line 7 CARD PAYMENT Stacja Paliw Iskra card ...3380"
+  cisr[c20250801b] = (2025-08-01, cis, -109.18, -, card) "cis-5521-3380-0001-2025-08.csv line 8 CARD PAYMENT Kino Zorza card ...3380"
+  cisr[c20250804a] = (2025-08-04, cis, -88.18, -, card) "cis-5521-3380-0001-2025-08.csv line 9 CARD PAYMENT Apteka Mięta card ...3380"
+  cisr[c20250804b] = (2025-08-04, cis, -62.55, -, card) "cis-5521-3380-0001-2025-08.csv line 10 CARD PAYMENT Drogeria Malwa card ...3380"
+  cisr[c20250805a] = (2025-08-05, cis, 1700.00, -, transfer) "cis-5521-3380-0001-2025-08.csv line 11 TRANSFER IN ALEKSANDRA WILK flat share"
+  cisr[c20250805b] = (2025-08-05, cis, -225.25, -, card) "cis-5521-3380-0001-2025-08.csv line 12 CARD PAYMENT Sklep Jagoda Kłodzin card ...3380"
+  cisr[c20250805c] = (2025-08-05, cis, -2899.92, -, transfer) "cis-5521-3380-0001-2025-08.csv line 13 TRANSFER OUT Bank Jodła S.A. loan 7710-22 instalment 08/2025"
+  cisr[c20250807a] = (2025-08-07, cis, -245.89, -, card) "cis-5521-3380-0001-2025-08.csv line 14 CARD PAYMENT Apteka Mięta card ...3380"
+  cisr[c20250811a] = (2025-08-11, cis, -130.05, -, card) "cis-5521-3380-0001-2025-08.csv line 15 CARD PAYMENT Sklep Jagoda Kłodzin card ...3380"
+  cisr[c20250811b] = (2025-08-11, cis, -690.00, -, transfer) "cis-5521-3380-0001-2025-08.csv line 16 STANDING ORDER WM Wrzosowa 12 building fee"
+  cisr[c20250811c] = (2025-08-11, cis, -604.64, -, transfer) "cis-5521-3380-0001-2025-08.csv line 17 TRANSFER OUT Stacja Paliw Tor sp. fleet invoice fuel 2025-07"
+  cisr[c20250812a] = (2025-08-12, cis, -175.00, -, transfer) "cis-5521-3380-0001-2025-08.csv line 18 STANDING ORDER Energa Lenia electricity"
+  cisr[c20250818a] = (2025-08-18, cis, -44.03, -, card) "cis-5521-3380-0001-2025-08.csv line 19 CARD PAYMENT Restauracja Dąb card ...3380"
+  cisr[c20250818b] = (2025-08-18, cis, -134.59, -, card) "cis-5521-3380-0001-2025-08.csv line 20 CARD PAYMENT Piekarnia Kłos card ...3380"
+  cisr[c20250818c] = (2025-08-18, cis, -207.43, -, card) "cis-5521-3380-0001-2025-08.csv line 21 CARD PAYMENT Stacja Paliw Iskra card ...3380"
+  cisr[c20250818d] = (2025-08-18, cis, -63.17, -, card) "cis-5521-3380-0001-2025-08.csv line 22 CARD PAYMENT Sklep internetowy Kram card ...3380"
+  cisr[c20250818e] = (2025-08-18, cis, -1921.98, -, transfer) "cis-5521-3380-0001-2025-08.csv line 23 LOAN REPAYMENT Bank Cis S.A. loan 5521-K instalment"
+  cisr[c20250819a] = (2025-08-19, cis, -64.87, -, card) "cis-5521-3380-0001-2025-08.csv line 24 CARD PAYMENT Stacja Paliw Iskra card ...3380"
+  cisr[c20250819b] = (2025-08-19, cis, -130.31, -, card) "cis-5521-3380-0001-2025-08.csv line 25 CARD PAYMENT Sklep Sport Kret card ...3380"
+  cisr[c20250820a] = (2025-08-20, cis, -164.41, -, card) "cis-5521-3380-0001-2025-08.csv line 26 CARD PAYMENT Piekarnia Kłos card ...3380"
+  cisr[c20250820b] = (2025-08-20, cis, -253.20, -, card) "cis-5521-3380-0001-2025-08.csv line 27 CARD PAYMENT Sklep Jagoda Kłodzin card ...3380"
+  cisr[c20250820c] = (2025-08-20, cis, -1758.01, -, transfer) "cis-5521-3380-0001-2025-08.csv line 28 TRANSFER OUT SIO social contributions 2025-07"
+  cisr[c20250820d] = (2025-08-20, cis, -767.71, -, transfer) "cis-5521-3380-0001-2025-08.csv line 29 TRANSFER OUT SIO health contribution 2025-07"
+  cisr[c20250820e] = (2025-08-20, cis, -2519.00, -, transfer) "cis-5521-3380-0001-2025-08.csv line 30 TRANSFER OUT Revenue Office PIT advance 2025-07"
+  cisr[c20250825a] = (2025-08-25, cis, -240.16, -, card) "cis-5521-3380-0001-2025-08.csv line 31 CARD PAYMENT Kino Zorza card ...3380"
+  cisr[c20250825b] = (2025-08-25, cis, -250.66, -, card) "cis-5521-3380-0001-2025-08.csv line 32 CARD PAYMENT Stacja Paliw Iskra card ...3380"
+  cisr[c20250825c] = (2025-08-25, cis, -164.22, -, card) "cis-5521-3380-0001-2025-08.csv line 33 CARD PAYMENT Sklep Sport Kret card ...3380"
+  cisr[c20250825d] = (2025-08-25, cis, -4931.00, -, transfer) "cis-5521-3380-0001-2025-08.csv line 34 TRANSFER OUT Revenue Office VAT 2025-07"
+  cisr[c20250826a] = (2025-08-26, cis, -203.08, -, card) "cis-5521-3380-0001-2025-08.csv line 35 CARD PAYMENT Stacja Paliw Iskra card ...3380"
+  cisr[c20250826b] = (2025-08-26, cis, -20.41, -, card) "cis-5521-3380-0001-2025-08.csv line 36 CARD PAYMENT Drogeria Malwa card ...3380"
+  cisr[c20250827a] = (2025-08-27, cis, -171.69, -, card) "cis-5521-3380-0001-2025-08.csv line 37 CARD PAYMENT Kino Zorza card ...3380"
+  cisr[c20250828a] = (2025-08-28, cis, 19520.00, client_pay[fv_014_2025], transfer) "cis-5521-3380-0001-2025-08.csv line 38 TRANSFER IN ARNIKA-DELTA GROUP SP. FV 014/2025"
+  cisr[c20250828b] = (2025-08-28, cis, -154.80, -, card) "cis-5521-3380-0001-2025-08.csv line 39 CARD PAYMENT Drogeria Malwa card ...3380"
+  stated[cis] = 2300.13 governs 2025-08-26 "cis-5521-3380-0001-2025-08.csv line 36 Balance after"
+
+version cis_2025_09
+  cite cis_export
+  governs 2025-09-01..2025-09-30
+  known 2025-10-02
+  assumed "export day not stated: the 2nd of the next month"
+  covers cis
+  cisr[c20250901a] = (2025-09-01, cis, -223.35, -, card) "cis-5521-3380-0001-2025-09.csv line 7 CARD PAYMENT Sklep Sport Kret card ...3380"
+  cisr[c20250904a] = (2025-09-04, cis, -226.68, -, card) "cis-5521-3380-0001-2025-09.csv line 8 CARD PAYMENT Sklep internetowy Kram card ...3380"
+  cisr[c20250904b] = (2025-09-04, cis, -150.58, -, card) "cis-5521-3380-0001-2025-09.csv line 9 CARD PAYMENT Kino Zorza card ...3380"
+  cisr[c20250905a] = (2025-09-05, cis, 1700.00, -, transfer) "cis-5521-3380-0001-2025-09.csv line 10 TRANSFER IN ALEKSANDRA WILK flat share"
+  cisr[c20250905b] = (2025-09-05, cis, -81.66, -, card) "cis-5521-3380-0001-2025-09.csv line 11 CARD PAYMENT Restauracja Dąb card ...3380"
+  cisr[c20250905c] = (2025-09-05, cis, -2899.92, -, transfer) "cis-5521-3380-0001-2025-09.csv line 12 TRANSFER OUT Bank Jodła S.A. loan 7710-22 instalment 09/2025"
+  cisr[c20250908a] = (2025-09-08, cis, -100.87, -, card) "cis-5521-3380-0001-2025-09.csv line 13 CARD PAYMENT Sklep Sport Kret card ...3380"
+  cisr[c20250908b] = (2025-09-08, cis, -257.17, -, card) "cis-5521-3380-0001-2025-09.csv line 14 CARD PAYMENT Sklep Jagoda Kłodzin card ...3380"
+  cisr[c20250908c] = (2025-09-08, cis, -229.00, -, card) "cis-5521-3380-0001-2025-09.csv line 15 CARD PAYMENT Sklep Jagoda Kłodzin card ...3380"
+  cisr[c20250909a] = (2025-09-09, cis, -37.50, -, card) "cis-5521-3380-0001-2025-09.csv line 16 CARD PAYMENT Kino Zorza card ...3380"
+  cisr[c20250910a] = (2025-09-10, cis, -690.00, -, transfer) "cis-5521-3380-0001-2025-09.csv line 17 STANDING ORDER WM Wrzosowa 12 building fee"
+  cisr[c20250910b] = (2025-09-10, cis, -777.16, -, transfer) "cis-5521-3380-0001-2025-09.csv line 18 TRANSFER OUT Stacja Paliw Tor sp. fleet invoice fuel 2025-08"
+  cisr[c20250911a] = (2025-09-11, cis, -26.96, -, card) "cis-5521-3380-0001-2025-09.csv line 19 CARD PAYMENT Kino Zorza card ...3380"
+  cisr[c20250912a] = (2025-09-12, cis, 19520.00, client_pay[fv_017_2025], transfer) "cis-5521-3380-0001-2025-09.csv line 20 TRANSFER IN ARNIKA-DELTA GROUP SP. FV 017/2025"
+  cisr[c20250912b] = (2025-09-12, cis, 61488.00, client_pay[fv_019_2025], transfer) "cis-5521-3380-0001-2025-09.csv line 21 TRANSFER IN AUTO MLECZ SP. FV 019/2025"
+  cisr[c20250912c] = (2025-09-12, cis, -258.85, -, card) "cis-5521-3380-0001-2025-09.csv line 22 CARD PAYMENT Market Groszek Kłodzin card ...3380"
+  cisr[c20250912d] = (2025-09-12, cis, -175.00, -, transfer) "cis-5521-3380-0001-2025-09.csv line 23 STANDING ORDER Energa Lenia electricity"
+  cisr[c20250915a] = (2025-09-15, cis, -162.69, -, card) "cis-5521-3380-0001-2025-09.csv line 24 CARD PAYMENT Market Groszek Kłodzin card ...3380"
+  cisr[c20250915b] = (2025-09-15, cis, -148.81, -, card) "cis-5521-3380-0001-2025-09.csv line 25 CARD PAYMENT Sklep Sport Kret card ...3380"
+  cisr[c20250915c] = (2025-09-15, cis, -1921.98, -, transfer) "cis-5521-3380-0001-2025-09.csv line 26 LOAN REPAYMENT Bank Cis S.A. loan 5521-K instalment"
+  cisr[c20250916a] = (2025-09-16, cis, -211.38, -, card) "cis-5521-3380-0001-2025-09.csv line 27 CARD PAYMENT Sklep Jagoda Kłodzin card ...3380"
+  cisr[c20250916b] = (2025-09-16, cis, -11277.87, -, transfer) "cis-5521-3380-0001-2025-09.csv line 28 LOAN REPAYMENT Bank Cis S.A. loan 5521-K early repayment"
+  cisr[c20250919a] = (2025-09-19, cis, -177.71, -, card) "cis-5521-3380-0001-2025-09.csv line 29 CARD PAYMENT Market Groszek Kłodzin card ...3380"
+  cisr[c20250922a] = (2025-09-22, cis, -85.59, -, card) "cis-5521-3380-0001-2025-09.csv line 30 CARD PAYMENT Market Groszek Kłodzin card ...3380"
+  cisr[c20250922b] = (2025-09-22, cis, -160.83, -, card) "cis-5521-3380-0001-2025-09.csv line 31 CARD PAYMENT Drogeria Malwa card ...3380"
+  cisr[c20250922c] = (2025-09-22, cis, -249.91, -, card) "cis-5521-3380-0001-2025-09.csv line 32 CARD PAYMENT Sklep internetowy Kram card ...3380"
+  cisr[c20250922d] = (2025-09-22, cis, -1758.01, -, transfer) "cis-5521-3380-0001-2025-09.csv line 33 TRANSFER OUT SIO social contributions 2025-08"
+  cisr[c20250922e] = (2025-09-22, cis, -767.71, -, transfer) "cis-5521-3380-0001-2025-09.csv line 34 TRANSFER OUT SIO health contribution 2025-08"
+  cisr[c20250922f] = (2025-09-22, cis, -2945.00, -, transfer) "cis-5521-3380-0001-2025-09.csv line 35 TRANSFER OUT Revenue Office PIT advance 2025-08"
+  cisr[c20250924a] = (2025-09-24, cis, -240.26, -, card) "cis-5521-3380-0001-2025-09.csv line 36 CARD PAYMENT Drogeria Malwa card ...3380"
+  cisr[c20250925a] = (2025-09-25, cis, -5731.00, -, transfer) "cis-5521-3380-0001-2025-09.csv line 37 TRANSFER OUT Revenue Office VAT 2025-08"
+  cisr[c20250926a] = (2025-09-26, cis, -124.95, -, card) "cis-5521-3380-0001-2025-09.csv line 38 CARD PAYMENT Stacja Paliw Iskra card ...3380"
+  cisr[c20250926b] = (2025-09-26, cis, -3000.00, hr2_overpay[2025-09-26], transfer) "cis-5521-3380-0001-2025-09.csv line 39 TRANSFER OUT Bank Jodła S.A. loan 7710-22 overpayment"
+  cisr[c20250926c] = (2025-09-26, cis, -48026.07, hr2_save[2025-09-26], transfer) "cis-5521-3380-0001-2025-09.csv line 40 OWN TRANSFER PIOTR SOWA to savings 0002"
+  cisr[c20250929a] = (2025-09-29, cis, 1083.00, -, transfer) "cis-5521-3380-0001-2025-09.csv line 41 TRANSFER IN TU BOCIAN S.A. refund policy MTPL 88-4471"
+  cisr[c20250929b] = (2025-09-29, cis, -176.14, -, card) "cis-5521-3380-0001-2025-09.csv line 42 CARD PAYMENT Sklep internetowy Kram card ...3380"
+  cisr[c20250929c] = (2025-09-29, cis, -139.21, -, card) "cis-5521-3380-0001-2025-09.csv line 43 CARD PAYMENT Stacja Paliw Iskra card ...3380"
+  cisr[c20250929d] = (2025-09-29, cis, -44.88, -, card) "cis-5521-3380-0001-2025-09.csv line 44 CARD PAYMENT Drogeria Malwa card ...3380"
+  cisr[c20250929e] = (2025-09-29, cis, -175.24, -, card) "cis-5521-3380-0001-2025-09.csv line 45 CARD PAYMENT Piekarnia Kłos card ...3380"
+  stated[cis] = 21077.17 governs 2025-09-26 "cis-5521-3380-0001-2025-09.csv line 40 Balance after"
+
+version cis_2025_10
+  cite cis_export
+  governs 2025-10-01..2025-10-31
+  known 2025-11-02
+  assumed "export day not stated: the 2nd of the next month"
+  covers cis
+  cisr[c20251002a] = (2025-10-02, cis, -202.84, -, card) "cis-5521-3380-0001-2025-10.csv line 7 CARD PAYMENT Stacja Paliw Iskra card ...3380"
+  cisr[c20251003a] = (2025-10-03, cis, -179.76, -, card) "cis-5521-3380-0001-2025-10.csv line 8 CARD PAYMENT Restauracja Dąb card ...3380"
+  cisr[c20251003b] = (2025-10-03, cis, -32.91, -, card) "cis-5521-3380-0001-2025-10.csv line 9 CARD PAYMENT Piekarnia Kłos card ...3380"
+  cisr[c20251006a] = (2025-10-06, cis, 1700.00, -, transfer) "cis-5521-3380-0001-2025-10.csv line 10 TRANSFER IN ALEKSANDRA WILK flat share"
+  cisr[c20251006b] = (2025-10-06, cis, -140.60, -, card) "cis-5521-3380-0001-2025-10.csv line 11 CARD PAYMENT Drogeria Malwa card ...3380"
+  cisr[c20251006c] = (2025-10-06, cis, -156.96, -, card) "cis-5521-3380-0001-2025-10.csv line 12 CARD PAYMENT Sklep internetowy Kram card ...3380"
+  cisr[c20251006d] = (2025-10-06, cis, -33.57, -, card) "cis-5521-3380-0001-2025-10.csv line 13 CARD PAYMENT Kino Zorza card ...3380"
+  cisr[c20251006e] = (2025-10-06, cis, -2878.04, -, transfer) "cis-5521-3380-0001-2025-10.csv line 14 TRANSFER OUT Bank Jodła S.A. loan 7710-22 instalment 10/2025"
+  cisr[c20251007a] = (2025-10-07, cis, -187.02, -, card) "cis-5521-3380-0001-2025-10.csv line 15 CARD PAYMENT Restauracja Dąb card ...3380"
+  cisr[c20251008a] = (2025-10-08, cis, -42.29, -, card) "cis-5521-3380-0001-2025-10.csv line 16 CARD PAYMENT Sklep Jagoda Kłodzin card ...3380"
+  cisr[c20251009a] = (2025-10-09, cis, -44.65, -, card) "cis-5521-3380-0001-2025-10.csv line 17 CARD PAYMENT Sklep internetowy Kram card ...3380"
+  cisr[c20251010a] = (2025-10-10, cis, -45.23, -, card) "cis-5521-3380-0001-2025-10.csv line 18 CARD PAYMENT Sklep Sport Kret card ...3380"
+  cisr[c20251010b] = (2025-10-10, cis, -690.00, -, transfer) "cis-5521-3380-0001-2025-10.csv line 19 STANDING ORDER WM Wrzosowa 12 building fee"
+  cisr[c20251010c] = (2025-10-10, cis, -261.81, -, transfer) "cis-5521-3380-0001-2025-10.csv line 20 TRANSFER OUT Stacja Paliw Tor sp. fleet invoice fuel 2025-09"
+  cisr[c20251013a] = (2025-10-13, cis, -230.78, -, card) "cis-5521-3380-0001-2025-10.csv line 21 CARD PAYMENT Sklep Jagoda Kłodzin card ...3380"
+  cisr[c20251013b] = (2025-10-13, cis, -42.88, -, card) "cis-5521-3380-0001-2025-10.csv line 22 CARD PAYMENT Apteka Mięta card ...3380"
+  cisr[c20251013c] = (2025-10-13, cis, -175.00, -, transfer) "cis-5521-3380-0001-2025-10.csv line 23 STANDING ORDER Energa Lenia electricity"
+  cisr[c20251014a] = (2025-10-14, cis, 19520.00, client_pay[fv_020_2025], transfer) "cis-5521-3380-0001-2025-10.csv line 24 TRANSFER IN ARNIKA-DELTA GROUP SP. FV 020/2025"
+  cisr[c20251014b] = (2025-10-14, cis, -49.92, -, card) "cis-5521-3380-0001-2025-10.csv line 25 CARD PAYMENT Kino Zorza card ...3380"
+  cisr[c20251015a] = (2025-10-15, cis, 180.00, -, transfer) "cis-5521-3380-0001-2025-10.csv line 26 TRANSFER IN GMINA KŁODZIN road tax refund LN 4471K"
+  cisr[c20251015b] = (2025-10-15, cis, -111.27, -, card) "cis-5521-3380-0001-2025-10.csv line 27 CARD PAYMENT Piekarnia Kłos card ...3380"
+  cisr[c20251015c] = (2025-10-15, cis, -111.27, -, card) "cis-5521-3380-0001-2025-10.csv line 28 CARD PAYMENT Piekarnia Kłos card ...3380"
+  cisr[c20251016a] = (2025-10-16, cis, -243.84, -, card) "cis-5521-3380-0001-2025-10.csv line 29 CARD PAYMENT Drogeria Malwa card ...3380"
+  cisr[c20251017a] = (2025-10-17, cis, -172.09, -, card) "cis-5521-3380-0001-2025-10.csv line 30 CARD PAYMENT Market Groszek Kłodzin card ...3380"
+  cisr[c20251020a] = (2025-10-20, cis, -217.68, -, card) "cis-5521-3380-0001-2025-10.csv line 31 CARD PAYMENT Stacja Paliw Iskra card ...3380"
+  cisr[c20251020b] = (2025-10-20, cis, -45.17, -, card) "cis-5521-3380-0001-2025-10.csv line 32 CARD PAYMENT Stacja Paliw Iskra card ...3380"
+  cisr[c20251020c] = (2025-10-20, cis, -1758.01, -, transfer) "cis-5521-3380-0001-2025-10.csv line 33 TRANSFER OUT SIO social contributions 2025-09"
+  cisr[c20251020d] = (2025-10-20, cis, -767.71, -, transfer) "cis-5521-3380-0001-2025-10.csv line 34 TRANSFER OUT SIO health contribution 2025-09"
+  cisr[c20251020e] = (2025-10-20, cis, -7564.00, -, transfer) "cis-5521-3380-0001-2025-10.csv line 35 TRANSFER OUT Revenue Office PIT advance 2025-09"
+  cisr[c20251022a] = (2025-10-22, cis, -105.49, -, card) "cis-5521-3380-0001-2025-10.csv line 36 CARD PAYMENT Apteka Mięta card ...3380"
+  cisr[c20251024a] = (2025-10-24, cis, 2927.60, client_pay[fv_022_2025], transfer) "cis-5521-3380-0001-2025-10.csv line 37 TRANSFER IN PRACOWNIA UL FV 022/2025"
+  cisr[c20251027a] = (2025-10-27, cis, -16032.00, -, transfer) "cis-5521-3380-0001-2025-10.csv line 38 TRANSFER OUT Revenue Office VAT 2025-09"
+  cisr[c20251027b] = (2025-10-27, cis, -3000.00, hr2_overpay[2025-10-27], transfer) "cis-5521-3380-0001-2025-10.csv line 39 TRANSFER OUT Bank Jodła S.A. loan 7710-22 overpayment"
+  cisr[c20251027c] = (2025-10-27, cis, -9540.78, hr2_save[2025-10-27], transfer) "cis-5521-3380-0001-2025-10.csv line 40 OWN TRANSFER PIOTR SOWA to savings 0002"
+  cisr[c20251028a] = (2025-10-28, cis, -192.32, -, card) "cis-5521-3380-0001-2025-10.csv line 41 CARD PAYMENT Piekarnia Kłos card ...3380"
+  cisr[c20251028b] = (2025-10-28, cis, -77.32, -, card) "cis-5521-3380-0001-2025-10.csv line 42 CARD PAYMENT Sklep internetowy Kram card ...3380"
+  cisr[c20251029a] = (2025-10-29, cis, -152.22, -, card) "cis-5521-3380-0001-2025-10.csv line 43 CARD PAYMENT Sklep Sport Kret card ...3380"
+  cisr[c20251031a] = (2025-10-31, cis, 8048.68, -, transfer) "cis-5521-3380-0001-2025-10.csv line 44 TRANSFER IN PIOTR SOWA (BANK LAZUR) FX 1952.00 FLR at 4.1233"
+  cisr[c20251031b] = (2025-10-31, cis, -134.79, -, card) "cis-5521-3380-0001-2025-10.csv line 45 CARD PAYMENT Kino Zorza card ...3380"
+  stated[cis] = 37519.17 governs 2025-10-15 "cis-5521-3380-0001-2025-10.csv line 28 Balance after"
+  stated[cis] = 1000.00 governs 2025-10-27 "cis-5521-3380-0001-2025-10.csv line 40 Balance after"
+
+version cis_2025_11
+  cite cis_export
+  governs 2025-11-01..2025-11-13
+  known 2025-12-02
+  assumed "export day not stated: the 2nd of the next month"
+  covers cis
+  cisr[c20251103a] = (2025-11-03, cis, -203.69, -, card) "cis-5521-3380-0001-2025-11.csv line 7 CARD PAYMENT Restauracja Dąb card ...3380"
+  cisr[c20251105a] = (2025-11-05, cis, 1700.00, -, transfer) "cis-5521-3380-0001-2025-11.csv line 8 TRANSFER IN ALEKSANDRA WILK flat share"
+  cisr[c20251105b] = (2025-11-05, cis, -110.83, -, card) "cis-5521-3380-0001-2025-11.csv line 9 CARD PAYMENT Stacja Paliw Iskra card ...3380"
+  cisr[c20251105c] = (2025-11-05, cis, -2855.21, -, transfer) "cis-5521-3380-0001-2025-11.csv line 10 TRANSFER OUT Bank Jodła S.A. loan 7710-22 instalment 11/2025"
+  cisr[c20251107a] = (2025-11-07, cis, -220.76, -, card) "cis-5521-3380-0001-2025-11.csv line 11 CARD PAYMENT Apteka Mięta card ...3380"
+  cisr[c20251110a] = (2025-11-10, cis, -26.93, -, card) "cis-5521-3380-0001-2025-11.csv line 12 CARD PAYMENT Market Groszek Kłodzin card ...3380"
+  cisr[c20251110b] = (2025-11-10, cis, -690.00, -, transfer) "cis-5521-3380-0001-2025-11.csv line 13 STANDING ORDER WM Wrzosowa 12 building fee"
+  cisr[c20251112a] = (2025-11-12, cis, 19520.00, client_pay[fv_023_2025], transfer) "cis-5521-3380-0001-2025-11.csv line 14 TRANSFER IN ARNIKA-DELTA GROUP SP. FV 023/2025"
+  cisr[c20251112b] = (2025-11-12, cis, -240.54, -, card) "cis-5521-3380-0001-2025-11.csv line 15 CARD PAYMENT Piekarnia Kłos card ...3380"
+  cisr[c20251112c] = (2025-11-12, cis, -20.93, -, card) "cis-5521-3380-0001-2025-11.csv line 16 CARD PAYMENT Kino Zorza card ...3380"
+  cisr[c20251112d] = (2025-11-12, cis, -27.00, -, card) "cis-5521-3380-0001-2025-11.csv line 17 CARD PAYMENT Apteka Mięta card ...3380"
+  cisr[c20251112e] = (2025-11-12, cis, -175.00, -, transfer) "cis-5521-3380-0001-2025-11.csv line 18 STANDING ORDER Energa Lenia electricity"
+  cisr[c20251113a] = (2025-11-13, cis, -19520.00, client_pay[fv_023_2025], transfer) "cis-5521-3380-0001-2025-11.csv line 19 REVERSAL ARNIKA-DELTA GROUP SP. recall by the payer's bank: FV 023/2025"
+
+version cis_2025_11_gap
+  cite cis_export
+  governs 2025-11-14..2025-11-30
+  known 2025-12-02
+  assumed "export day not stated: the 2nd of the next month"
+  covers cis
+  cisr[c20251114gap] = ? "the rows of 2025-11-14..30: the November export stops at 2025-11-13 (cis-5521-3380-0001-2025-11.csv line 19), and no other export has them" "cis-5521-3380-0001-2025-11.csv"
+
+version cis_2025_12
+  cite cis_export
+  governs 2025-12-01..2025-12-31
+  known 2026-01-02
+  assumed "export day not stated: the 2nd of the next month"
+  covers cis
+  cisr[c20251201a] = (2025-12-01, cis, -64.19, -, card) "cis-5521-3380-0001-2025-12.csv line 7 CARD PAYMENT Kino Zorza card ...3380"
+  cisr[c20251202a] = (2025-12-02, cis, 8074.84, -, transfer) "cis-5521-3380-0001-2025-12.csv line 8 TRANSFER IN PIOTR SOWA (BANK LAZUR) FX 1952.00 FLR at 4.1367"
+  cisr[c20251202b] = (2025-12-02, cis, -232.99, -, card) "cis-5521-3380-0001-2025-12.csv line 9 CARD PAYMENT Restauracja Dąb card ...3380"
+  cisr[c20251204a] = (2025-12-04, cis, -48.64, -, card) "cis-5521-3380-0001-2025-12.csv line 10 CARD PAYMENT Piekarnia Kłos card ...3380"
+  cisr[c20251205a] = (2025-12-05, cis, 1700.00, -, transfer) "cis-5521-3380-0001-2025-12.csv line 11 TRANSFER IN ALEKSANDRA WILK flat share"
+  cisr[c20251205b] = (2025-12-05, cis, -98.51, -, card) "cis-5521-3380-0001-2025-12.csv line 12 CARD PAYMENT Sklep internetowy Kram card ...3380"
+  cisr[c20251205c] = (2025-12-05, cis, -2855.21, -, transfer) "cis-5521-3380-0001-2025-12.csv line 13 TRANSFER OUT Bank Jodła S.A. loan 7710-22 instalment 12/2025"
+  cisr[c20251208a] = (2025-12-08, cis, -71.35, -, card) "cis-5521-3380-0001-2025-12.csv line 14 CARD PAYMENT Drogeria Malwa card ...3380"
+  cisr[c20251208b] = (2025-12-08, cis, -71.84, -, card) "cis-5521-3380-0001-2025-12.csv line 15 CARD PAYMENT Drogeria Malwa card ...3380"
+  cisr[c20251208c] = (2025-12-08, cis, -121.97, -, card) "cis-5521-3380-0001-2025-12.csv line 16 CARD PAYMENT Sklep Jagoda Kłodzin card ...3380"
+  cisr[c20251210a] = (2025-12-10, cis, -152.01, -, card) "cis-5521-3380-0001-2025-12.csv line 17 CARD PAYMENT Sklep internetowy Kram card ...3380"
+  cisr[c20251210b] = (2025-12-10, cis, -690.00, -, transfer) "cis-5521-3380-0001-2025-12.csv line 18 STANDING ORDER WM Wrzosowa 12 building fee"
+  cisr[c20251212a] = (2025-12-12, cis, 19520.00, client_pay[fv_025_2025], transfer) "cis-5521-3380-0001-2025-12.csv line 19 TRANSFER IN ARNIKA-DELTA GROUP SP. FV 025/2025"
+  cisr[c20251212b] = (2025-12-12, cis, -106.12, -, card) "cis-5521-3380-0001-2025-12.csv line 20 CARD PAYMENT Restauracja Dąb card ...3380"
+  cisr[c20251212c] = (2025-12-12, cis, -175.00, -, transfer) "cis-5521-3380-0001-2025-12.csv line 21 STANDING ORDER Energa Lenia electricity"
+  cisr[c20251215a] = (2025-12-15, cis, -87.75, -, card) "cis-5521-3380-0001-2025-12.csv line 22 CARD PAYMENT Sklep internetowy Kram card ...3380"
+  cisr[c20251215b] = (2025-12-15, cis, -57.13, -, card) "cis-5521-3380-0001-2025-12.csv line 23 CARD PAYMENT Apteka Mięta card ...3380"
+  cisr[c20251217a] = (2025-12-17, cis, -140.65, -, card) "cis-5521-3380-0001-2025-12.csv line 24 CARD PAYMENT Stacja Paliw Iskra card ...3380"
+  cisr[c20251218a] = (2025-12-18, cis, -73.43, -, card) "cis-5521-3380-0001-2025-12.csv line 25 CARD PAYMENT Piekarnia Kłos card ...3380"
+  cisr[c20251218b] = (2025-12-18, cis, -19.63, -, card) "cis-5521-3380-0001-2025-12.csv line 26 CARD PAYMENT Sklep internetowy Kram card ...3380"
+  cisr[c20251222a] = (2025-12-22, cis, -184.07, -, card) "cis-5521-3380-0001-2025-12.csv line 27 CARD PAYMENT Piekarnia Kłos card ...3380"
+  cisr[c20251222b] = (2025-12-22, cis, -74.05, -, card) "cis-5521-3380-0001-2025-12.csv line 28 CARD PAYMENT Stacja Paliw Iskra card ...3380"
+  cisr[c20251222c] = (2025-12-22, cis, -1758.01, -, transfer) "cis-5521-3380-0001-2025-12.csv line 29 TRANSFER OUT SIO social contributions 2025-11"
+  cisr[c20251222d] = (2025-12-22, cis, -1381.88, -, transfer) "cis-5521-3380-0001-2025-12.csv line 30 TRANSFER OUT SIO health contribution 2025-11"
+  cisr[c20251222e] = (2025-12-22, cis, -2520.00, -, transfer) "cis-5521-3380-0001-2025-12.csv line 31 TRANSFER OUT Revenue Office PIT advance 2025-11"
+  cisr[c20251224a] = (2025-12-24, cis, -231.74, -, card) "cis-5521-3380-0001-2025-12.csv line 32 CARD PAYMENT Piekarnia Kłos card ...3380"
+  cisr[c20251229a] = (2025-12-29, cis, -112.64, -, card) "cis-5521-3380-0001-2025-12.csv line 33 CARD PAYMENT Sklep Jagoda Kłodzin card ...3380"
+  cisr[c20251229b] = (2025-12-29, cis, -35.12, -, card) "cis-5521-3380-0001-2025-12.csv line 34 CARD PAYMENT Stacja Paliw Iskra card ...3380"
+  cisr[c20251229c] = (2025-12-29, cis, -59.43, -, card) "cis-5521-3380-0001-2025-12.csv line 35 CARD PAYMENT Sklep Sport Kret card ...3380"
+  cisr[c20251229d] = (2025-12-29, cis, -166.07, -, card) "cis-5521-3380-0001-2025-12.csv line 36 CARD PAYMENT Market Groszek Kłodzin card ...3380"
+  cisr[c20251229e] = (2025-12-29, cis, -5008.00, -, transfer) "cis-5521-3380-0001-2025-12.csv line 37 TRANSFER OUT Revenue Office VAT 2025-11"
+  cisr[c20251229f] = (2025-12-29, cis, -3000.00, hr2_overpay[2025-12-29], transfer) "cis-5521-3380-0001-2025-12.csv line 38 TRANSFER OUT Bank Jodła S.A. loan 7710-22 overpayment"
+  cisr[c20251229g] = (2025-12-29, cis, -8847.11, hr2_save[2025-12-29], transfer) "cis-5521-3380-0001-2025-12.csv line 39 OWN TRANSFER PIOTR SOWA to savings 0002"
+  cisr[c20251230a] = (2025-12-30, cis, -33.41, -, card) "cis-5521-3380-0001-2025-12.csv line 40 CARD PAYMENT Sklep internetowy Kram card ...3380"
+  cisr[c20251230b] = (2025-12-30, cis, -179.72, -, card) "cis-5521-3380-0001-2025-12.csv line 41 CARD PAYMENT Market Groszek Kłodzin card ...3380"
+  stated[cis] = 1000.00 governs 2025-12-29 "cis-5521-3380-0001-2025-12.csv line 39 Balance after"
+
+version cis_close_2024_12_31
+  cite cis_export
+  known 2025-02-02
+  assumed "export day not stated: the 2nd of the next month"
+  stated[cis] = 18412.37 governs 2024-12-31 "cis-5521-3380-0001-2025-01.csv line 5 Opening balance"
+
+version cis_close_2025_01_31
+  cite cis_export
+  known 2025-03-02
+  assumed "export day not stated: the 2nd of the next month"
+  stated[cis] = 8527.73 governs 2025-01-31 "cis-5521-3380-0001-2025-02.csv line 5 Opening balance"
+
+version cis_close_2025_02_28
+  cite cis_export
+  known 2025-04-02
+  assumed "export day not stated: the 2nd of the next month"
+  stated[cis] = 8641.26 governs 2025-02-28 "cis-5521-3380-0001-2025-03.csv line 5 Opening balance"
+
+version cis_close_2025_03_31
+  cite cis_export
+  known 2025-05-02
+  assumed "export day not stated: the 2nd of the next month"
+  stated[cis] = 16585.29 governs 2025-03-31 "cis-5521-3380-0001-2025-04.csv line 5 Opening balance"
+
+version cis_close_2025_04_30
+  cite cis_export
+  known 2025-06-02
+  assumed "export day not stated: the 2nd of the next month"
+  stated[cis] = 10962.99 governs 2025-04-30 "cis-5521-3380-0001-2025-05.csv line 5 Opening balance"
+
+version cis_close_2025_05_31
+  cite cis_export
+  known 2025-07-02
+  assumed "export day not stated: the 2nd of the next month"
+  stated[cis] = 19606.83 governs 2025-05-31 "cis-5521-3380-0001-2025-06.csv line 5 Opening balance"
+
+version cis_close_2025_06_30
+  cite cis_export
+  known 2025-08-02
+  assumed "export day not stated: the 2nd of the next month"
+  stated[cis] = 14652.96 governs 2025-06-30 "cis-5521-3380-0001-2025-07.csv line 5 Opening balance"
+
+version cis_close_2025_07_31
+  cite cis_export
+  known 2025-09-02
+  assumed "export day not stated: the 2nd of the next month"
+  stated[cis] = 19775.81 governs 2025-07-31 "cis-5521-3380-0001-2025-08.csv line 5 Opening balance"
+
+version cis_close_2025_08_31
+  cite cis_export
+  known 2025-10-02
+  assumed "export day not stated: the 2nd of the next month"
+  stated[cis] = 21493.64 governs 2025-08-31 "cis-5521-3380-0001-2025-09.csv line 5 Opening balance"
+
+version cis_close_2025_09_30
+  cite cis_export
+  known 2025-11-02
+  assumed "export day not stated: the 2nd of the next month"
+  stated[cis] = 21624.70 governs 2025-09-30 "cis-5521-3380-0001-2025-10.csv line 5 Opening balance"
+
+version cis_close_2025_10_31
+  cite cis_export
+  known 2025-12-02
+  assumed "export day not stated: the 2nd of the next month"
+  stated[cis] = 8492.03 governs 2025-10-31 "cis-5521-3380-0001-2025-11.csv line 5 Opening balance"
+
+version cis_close_2025_11_30
+  cite cis_export
+  known 2026-01-02
+  assumed "export day not stated: the 2nd of the next month"
+  stated[cis] = 398.70 governs 2025-11-30 "cis-5521-3380-0001-2025-12.csv line 5 Opening balance"
+
+version cis_close_2025_12_31
+  cite cis_export
+  known 2026-01-02
+  assumed "export day not stated: the 2nd of the next month"
+  stated[cis] = 786.87 governs 2025-12-31 "cis-5521-3380-0001-2025-12.csv line 41 Balance after"

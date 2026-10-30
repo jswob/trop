@@ -1,0 +1,262 @@
+model i13_income_protection
+  tally 2
+  on 2025-01-01
+  start 2025-01-01
+  end 2028-12-31
+  note "I-13: one spell of incapacity read by an employer, the social insurance and an insurer on day counts; a policy whose kind changes by the insurer's act; a running ratio that taxes part of each benefit; three return dates."
+
+source card "Card I-13: story, rules 1-9 and question"
+
+source si_act "Social Insurance Act (card I-13, rules 1-2)"
+
+source policy_act "Policy Act (card I-13, rule 3)"
+
+source income_act "Income Act (card I-13, rules 4-5)"
+
+source tarcza_terms "Tarcza's terms and its notice of the savings part (card I-13, story and rules 6-9)"
+
+source modeller "The modeller's assumptions, each with its reason"
+
+unit XXX: currency minor 0.01
+
+kind persons
+
+kind insurers
+
+kind policies
+
+kind purses: place XXX signed
+  note "a person's money at large; only the case's movements touch it"
+
+kind income_pays: event certain
+  leg cash: XXX
+  note "taxable income of the month paid (rule 5)"
+
+kind benefit_pays: income_pays
+
+kind salary_pays: income_pays
+
+kind sick_pays: income_pays
+
+kind policy_pays: event certain
+  leg cash: XXX
+  attr policy: key policies
+
+kind premium_pays: event certain
+  leg cash: XXX
+  attr policy: key policies
+
+axis return_case
+  ret_dec27 "she returns to work on 15 December 2027"
+  ret_may28 "she returns to work on 22 May 2028"
+  not_back "she has not returned by 31 December 2028"
+
+place employer: outside lives 1900-01-01..
+
+place insurer_side: outside lives 1900-01-01..
+
+place purse[p in persons]: purses lives 2025-01-01..
+
+place social_insurance: outside lives 1900-01-01..
+
+input benefit_rate: num
+
+input cover_share: num
+
+input deduction_cap: money XXX
+
+input emp_last_day: int
+
+input holder[x in policies]: key persons
+
+input ill_from[p in persons]: date
+
+input insured_income[x in policies]: money XXX
+
+input insurer[x in policies]: key insurers
+
+input insurer_savings[i in insurers]: bool
+
+input max_benefit_days: int
+
+input pay_round: rounding
+
+input premium[x in policies]: money XXX
+
+input premium_dom: int
+
+input return_day[p in persons, r in return_case]: date
+
+input rise_rate: num
+
+input rise_round: rounding
+
+input salary[p in persons]: money XXX
+
+input si_last_day: int
+
+input taxable_round: rounding
+
+input waiting_days: int
+
+def benefit_day[p in persons, d in days]: num XXX
+  note "rule 1: days 31 to 182 of an incapacity, a share of salary; rule 2: a monthly amount over the month's days"
+  rule base = 0
+  rule paid beats base = benefit_rate * salary[p] / month_len[month_of(d)] when incapacitated[p, d] and day_no[p, d] > emp_last_day and day_no[p, d] <= si_last_day
+
+def benefit_month[p in persons, m in months]: money XXX = round(sum(benefit_day[p, d] for d in days where month_of(d) == m), minor(XXX), pay_round)
+
+def day_no[p in persons, d in days]: int = days_between(ill_from[p], d) + 1
+
+def deducted_to[x in policies, d in days]: money XXX = sum(deducted[year_of(pp.day)].taken[pp, holder[x]] for pp in premium_pays over lifespan(x).from .. d where pp.policy == x)
+
+def deduction[p in persons, y in years]: money XXX = sum(deducted[y].taken[pp, p] for pp in premium_pays over y)
+
+def emp_day[p in persons, d in days]: num XXX
+  note "rule 1: days 1 to 30 of an incapacity, full salary from the employer"
+  rule base = 0
+  rule paid beats base = salary[p] / month_len[month_of(d)] when incapacitated[p, d] and day_no[p, d] <= emp_last_day
+
+def emp_month[p in persons, m in months]: money XXX = round(sum(emp_day[p, d] for d in days where month_of(d) == m), minor(XXX), pay_round)
+
+def incapacitated[p in persons, d in days]: bool = ill_from[p] <= d and d < return_day[p, return_case]
+
+def insured_y[x in policies, y in years]: money XXX
+  note "rule 7: on each 1 January inside the spell of incapacity the insured income rises; a claim is read as the spell"
+  rule first = insured_income[x] when pos(y) == 1
+  rule rise = round(insured_y[x, y - 1] * (100 % + rise_rate), minor(XXX), rise_round) when pos(y) > 1 and incapacitated[holder[x], start_of(y)]
+  rule same = insured_y[x, y - 1] when pos(y) > 1 and not incapacitated[holder[x], start_of(y)]
+
+def is_protection[x in policies, d in days]: bool = not insurer_savings[insurer[x]] at d
+
+def month_len[m in months]: int = days_between(start_of(m), end_of(m))
+
+def paid_to[x in policies, d in days]: money XXX = sum(pp.cash.amount for pp in premium_pays over lifespan(x).from .. d where pp.policy == x)
+
+def premium_month[x in policies, m in months]: money XXX = premium[x] at start_of(m)
+
+def salary_day[p in persons, d in days]: num XXX
+  note "rule 1: salary only for days without incapacity; rule 2: over the month's days"
+  rule base = salary[p] / month_len[month_of(d)]
+  rule off beats base = 0 when incapacitated[p, d]
+
+def salary_month[p in persons, m in months]: money XXX = round(sum(salary_day[p, d] for d in days where month_of(d) == m), minor(XXX), pay_round)
+
+def tarcza_day[x in policies, d in days]: num XXX
+  note "rules 6 and 9: after the waiting period, a share of the insured income less what the other two pay for that day, never below zero, until the day before the return and for at most the stated days"
+  rule base = 0
+  rule pays beats base = max(0 XXX, cover_share * insured_y[x, year_of(d)] / month_len[month_of(d)] - emp_day[holder[x], d] - benefit_day[holder[x], d]) when incapacitated[holder[x], d] and day_no[holder[x], d] > waiting_days and day_no[holder[x], d] - waiting_days <= max_benefit_days
+
+def tarcza_month[x in policies, m in months]: money XXX = round(sum(tarcza_day[x, d] for d in days where month_of(d) == m), minor(XXX), pay_round)
+
+def tarcza_taxable[t in policy_pays]: money XXX = round(t.cash.amount * deducted_to[t.policy, t.day] / paid_to[t.policy, t.day], minor(XXX), taxable_round)
+
+def taxable_income[p in persons, y in years]: money XXX = sum(w.cash.amount for w in income_pays over y where w.cash.to == purse[p]) + sum(tarcza_taxable[t] for t in policy_pays over y where holder[t.policy] == p)
+
+def waived[x in policies, m in months]: bool = ill_from[holder[x]] <= start_of(m) and day_no[holder[x], start_of(m)] > waiting_days and start_of(m) < return_day[holder[x], return_case]
+
+fill deducted[y in years]
+  v deduction_order
+  note "rule 4: premiums of the protection kind paid in the year, against the yearly cap, earliest first"
+  supply pp.cash.amount for pp in premium_pays over y where is_protection[pp.policy, pp.day]
+  demand deduction_cap for p in persons on start_of(y)
+  arc holder[pp.policy] == p
+  order pp.day
+
+move benefit_pay[m in months, p in persons over m]: benefit_pays
+  on end_of(m) - 1 day
+  leg cash from social_insurance to purse[p] amount benefit_month[p, m]
+
+move premium_pay[m in months, x in policies over m]: premium_pays
+  on day_of(m, premium_dom)
+  when not waived[x, m]
+  attr policy = x
+  leg cash from purse[holder[x]] to insurer_side amount premium_month[x, m]
+
+move salary_pay[m in months, p in persons over m]: salary_pays
+  on end_of(m) - 1 day
+  leg cash from employer to purse[p] amount salary_month[p, m]
+
+move sick_pay[m in months, p in persons over m]: sick_pays
+  on end_of(m) - 1 day
+  leg cash from employer to purse[p] amount emp_month[p, m]
+
+move tarcza_pay[m in months, x in policies over m]: policy_pays
+  on end_of(m) - 1 day
+  when tarcza_month[x, m] > 0 XXX
+  attr policy = x
+  leg cash from insurer_side to purse[holder[x]] amount tarcza_month[x, m]
+
+ask deductions: deduction[p, y] for p in persons over .., y in years
+
+ask monthly: salary_month[p, m], emp_month[p, m], benefit_month[p, m], sum(tarcza_month[x, m] for x in policies over m where holder[x] == p) for p in persons over .., m in months where m >= month_of(ill_from[p]) and start_of(m) <= return_day[p, return_case]
+
+ask premiums: premium_month[x, m], waived[x, m] for x in policies over .., m in months
+
+ask premiums_by_year: sum(pp.cash.amount for pp in premium_pays over y), sum(premium_month[x, m] for x in policies over y, m in months where year_of(m) == y and waived[x, m]) for y in years
+
+ask tarcza_taxed: t.day, t.cash.amount, tarcza_taxable[t] for t in policy_pays over ..
+
+ask taxable: taxable_income[p, y], taxable_income[p, y] - deduction[p, y] for p in persons over .., y in [2027, 2028]
+
+version things
+  cite card
+  known 2025-01-01
+  policies + [tarcza_pol] lives 2025-01-01..
+
+version things_assumed
+  cite modeller
+  known 2025-01-01
+  assumed "the card gives no birth date of Sylwia and no founding day of Tarcza; each lifespan starts on an early day"
+  insurers + [tarcza] lives 1950-01-01..
+  persons + [sylwia] lives 1950-01-01..
+
+version facts
+  cite card
+  governs always
+  known 2025-01-01
+  holder[tarcza_pol] = sylwia "story: she takes out a policy"
+  ill_from[sylwia] = 2027-09-10 "story: day 1 of her incapacity"
+  insured_income[tarcza_pol] = 8000 "story: insured income 8 000.00 a month"
+  insurer[tarcza_pol] = tarcza "story: with the insurer Tarcza"
+  return_day[sylwia, not_back] = never "story: she has not returned by 31 December 2028"
+  return_day[sylwia, ret_dec27] = 2027-12-15 "story: the first outcome"
+  return_day[sylwia, ret_may28] = 2028-05-22 "story: the second outcome"
+  salary[sylwia] = 7500 "story: paid on the last day of each month"
+
+version si_rules
+  cite si_act
+  governs always
+  known 2025-01-01
+  benefit_rate = 70 % "rule 1"
+  emp_last_day = 30 "rule 1: days 1 to 30"
+  pay_round = half-up "rule 2: rounded half up to whole minor units"
+  si_last_day = 182 "rule 1: days 31 to 182; from day 183 neither pays"
+
+version income_rules
+  cite income_act
+  governs always
+  known 2025-01-01
+  deduction_cap = 1200 "rule 4: up to 1 200.00 a year"
+  taxable_round = half-up "rule 5: rounded half up to whole minor units"
+
+version tarcza_rules
+  cite tarcza_terms
+  governs always
+  known 2025-01-01
+  cover_share = 60 % "rule 6"
+  insurer_savings[tarcza] = false governs 2025-01-01..2026-12-31 "story: until 2027 the policy covers only loss of income"
+  insurer_savings[tarcza] = true governs 2027-01-01.. "story: from 1 January 2027 Tarcza adds a savings part to every policy it holds"
+  max_benefit_days = 730 "rule 9"
+  premium[tarcza_pol] = 150 governs 2025-01..2026-12 "story: premium 150.00"
+  premium[tarcza_pol] = 170 governs 2027-01.. "story: her premium becomes 170.00"
+  premium_dom = 1 "story: due on the 1st of each month"
+  rise_rate = 3 % "rule 7"
+  rise_round = half-up "rule 7: rounded half up to whole minor units"
+  waiting_days = 91 "rule 6: the first 91 days"
+
+version deduction_order
+  cite modeller
+  governs always
+  known 2025-01-01
+  assumed "rule 4 caps the year's deduction but names no premium it falls on; the earliest premiums of the year are taken as deducted first"

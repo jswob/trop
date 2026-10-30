@@ -87,6 +87,8 @@ New `held` entries: `residence[ola] = pl (ola_home)` and the three `b800_2024` r
 
 ## The variant as first written
 
+*At the tally 2.0 freeze (G2, keys), cells 42–44 below carry tally 2's question; see `KEYS.md` beside the package.*
+
 The 1.0 diff states `residence[ola] = pl governs 2028-05..`. `pit37_tax`'s `abroad` rule (`employment.tally`:56) reads `residence[p, m]` for every month of the year, for every person, and the base's keyless residence row doesn't cover a key added later. So `pit37_due[ola, 2026..2028]` are holes, and they reach konto, room and the wrappers through her pay and refund instances.
 
 | # | Ask | Key | Before | After | Status |
@@ -132,9 +134,9 @@ The 1.0 diff states `residence[ola] = pl governs 2028-05..`. `pit37_tax`'s `abro
 | 39 | taxes_paid | 2026 | 52272.00 | 52272.00 | exact |
 | 40 | taxes_paid | 2027 | 69059.00 | 69059.00 | exact |
 | 41 | taxes_paid | 2028 | 68997.00 | **hole: `W jakim kraju ta osoba mieszka w tym miesiącu?` (residence[ola, …])** | hole |
-| 42 | pit37 | ola, 2026 (new line) | — | **hole: `W jakim kraju ta osoba mieszka w tym miesiącu?` (residence[ola, …])** | hole, new |
-| 43 | pit37 | ola, 2027 (new line) | — | **hole: `W jakim kraju ta osoba mieszka w tym miesiącu?` (residence[ola, …])** | hole, new |
-| 44 | pit37 | ola, 2028 (new line) | — | **hole: `W jakim kraju ta osoba mieszka w tym miesiącu?` (residence[ola, …])** | hole, new |
+| 42 | pit37 | ola, 2026 (new line) | — | **hole: `Zmiana rezydencji podatkowej w roku nie jest opisana (art. 3, umowa o unikaniu podwójnego opodatkowania).` (pit37_tax[ola, 2026])** (tally 2; the 1.0.1 key's question `W jakim kraju ta osoba mieszka w tym miesiącu?` (residence[ola, …]) can't arise in tally 2) | hole, new |
+| 43 | pit37 | ola, 2027 (new line) | — | **hole: `Zmiana rezydencji podatkowej w roku nie jest opisana (art. 3, umowa o unikaniu podwójnego opodatkowania).` (pit37_tax[ola, 2027])** (tally 2; the 1.0.1 key's question `W jakim kraju ta osoba mieszka w tym miesiącu?` (residence[ola, …]) can't arise in tally 2) | hole, new |
+| 44 | pit37 | ola, 2028 (new line) | — | **hole: `Zmiana rezydencji podatkowej w roku nie jest opisana (art. 3, umowa o unikaniu podwójnego opodatkowania).` (pit37_tax[ola, 2028])** (tally 2; the 1.0.1 key's question `W jakim kraju ta osoba mieszka w tym miesiącu?` (residence[ola, …]) can't arise in tally 2) | hole, new |
 | 45 | ola_800_paid (the optional addition) | 2028 | refused in the base (`LOAD-KEY`) | **6400.00** | exact, new |
 | 46 | ola_800_paid (the optional addition) | 2029 | refused in the base (`LOAD-KEY`) | **9600.00** | exact, new |
 

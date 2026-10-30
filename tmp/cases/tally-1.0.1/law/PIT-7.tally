@@ -1,0 +1,21 @@
+part pit_7
+  tally 1
+  law
+  note "PIT-7 · The child relief: 125.00 DUK for each month of the tax year in which the child was alive and under 18 on at least one day (.1), reduced by the parents' income above 112 000.00 DUK, never below 0 (.3), split in halves (.4)."
+
+source pit_7 "Personal Income Tax Act, PIT-7 The child relief (tmp/cases/law/acts.md)"
+
+input pit7_relief_month: money DUK question "What is the child relief for a month (PIT-7 .1)?"
+
+input pit7_income_limit: money DUK question "Above what parents' income is the relief reduced (PIT-7 .3)?"
+
+input pit7_age: int question "Under what age does a child give the relief (PIT-7 .1)?"
+
+version pit7_v1
+  cite pit_7
+  governs 2018..
+  known 2017-09-01
+  note "PIT-7 v1, in force 2018-01-01 until replaced, published 2017-09-01; governs returns for tax years from 2018."
+  pit7_relief_month = 125.00 "PIT-7 v1 .1"
+  pit7_income_limit = 112000.00 "PIT-7 v1 .3"
+  pit7_age = 18 "PIT-7 v1 .1: under 18"

@@ -1,0 +1,15 @@
+# L §7.3 "These need to u: exp(x), ln(x), sqrt(x) ..."; L §8.3 LOAD-TO "<function> needs to u".
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+input x: num
+def e: num = exp(x) at reader
+=== expect
+refused: LOAD-TO ...

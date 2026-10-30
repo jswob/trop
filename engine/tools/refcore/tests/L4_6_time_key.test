@@ -1,0 +1,25 @@
+# L §4.6 step 1: "its governs span contains the period of x's time key when x is keyed by a period ... A span
+# contains a period when it contains the period's first day, so 2025-04-06..2026-04-05 governs key 2025 of
+# year … from 04-06."  An input keyed by the period read in an ask with no law: the key decides.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+index tys = year 2024..2026 from 04-06
+input allowance[t in tys]: int
+
+version v1
+  cite s
+  governs 2025-04-06..2026-04-05
+  known 2025-01-01
+  allowance[*] = 7
+
+ask q1: allowance[2025], allowance[2024]
+=== expect
+q1: (7, ?"allowance at 2024: no value for 2024" (allowance[2024]))
+  cut 2026-12-31

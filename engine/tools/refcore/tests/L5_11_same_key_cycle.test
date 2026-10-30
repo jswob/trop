@@ -1,0 +1,20 @@
+# L §5.11: "Same-key dependencies form an acyclic graph (LOAD-CYCLE). The check covers every rule, whatever its
+# when".
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+input f: bool
+
+def a: int at reader
+  rule base = 0
+  rule r beats base = b when f
+def b: int at reader
+  rule base = a
+=== expect
+refused: LOAD-CYCLE ...

@@ -1,0 +1,22 @@
+# L §5.12: "Supply and demand share one unit" (LOAD-UNIT).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+index payers = [ewa, jan]
+input sup[p in payers]: money PLN
+input cap: num
+
+fill pool
+  supply sup[p] for p in payers
+  demand cap
+  arc true
+  order 0
+=== expect
+refused: LOAD-UNIT ...

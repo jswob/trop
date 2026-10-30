@@ -1,0 +1,819 @@
+catchup_check: ok
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-04-01
+  cut 2027-01-01
+envelopes_end (e = home) [food_path = *]: -600.00 XXX
+  assumed: the card gives no envelope balances on 1 January 2027; each starts empty
+  assumed: the card names no debt to Natalia on 1 January 2027
+  assumed: the card states no rounding of a quarter of the bill; each path divides into whole minor units (food_round)
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-05-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-06-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-07-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-08-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-09-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-10-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-11-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-05-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-06-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-05-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-06-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-05-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-06-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-07-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-08-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-09-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-10-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-11-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-12-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-05-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-06-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-07-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-08-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-09-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-10-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-11-01
+  cut 2027-01-01
+envelopes_end (e = food) [food_path = f1800]: 400.00 XXX
+  assumed: the card gives no envelope balances on 1 January 2027; each starts empty
+  assumed: the card names no debt to Natalia on 1 January 2027
+  assumed: the card states no rounding of a quarter of the bill; each path divides into whole minor units (food_round)
+  reading: food_path = f1800
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-05-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-06-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-07-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-08-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-09-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-10-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-11-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-12-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-05-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-06-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-05-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-06-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-05-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-06-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-07-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-08-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-09-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-10-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-11-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-12-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-05-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-06-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-07-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-08-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-09-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-10-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-11-01
+  cut 2027-01-01
+envelopes_end (e = food) [food_path = f2100]: -3 200.00 XXX
+  assumed: the card gives no envelope balances on 1 January 2027; each starts empty
+  assumed: the card names no debt to Natalia on 1 January 2027
+  assumed: the card states no rounding of a quarter of the bill; each path divides into whole minor units (food_round)
+  reading: food_path = f2100
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-05-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-06-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-07-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-08-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-09-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-10-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-11-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-12-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-05-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-06-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-05-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-06-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-05-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-06-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-07-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-08-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-09-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-10-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-11-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-12-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-05-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-06-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-07-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-08-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-09-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-10-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-11-01
+  cut 2027-01-01
+envelopes_end (e = food) [food_path = f2400]: -6 800.00 XXX
+  assumed: the card gives no envelope balances on 1 January 2027; each starts empty
+  assumed: the card names no debt to Natalia on 1 January 2027
+  assumed: the card states no rounding of a quarter of the bill; each path divides into whole minor units (food_round)
+  reading: food_path = f2400
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-05-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-06-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-07-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-08-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-09-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-10-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-11-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-12-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-05-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-06-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-05-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-06-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-05-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-06-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-07-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-08-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-09-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-10-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-11-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-12-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-05-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-06-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-07-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-08-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-09-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-10-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-11-01
+  cut 2027-01-01
+envelopes_end (e = transport) [food_path = *]: -540.00 XXX
+  assumed: the card gives no envelope balances on 1 January 2027; each starts empty
+  assumed: the card names no debt to Natalia on 1 January 2027
+  assumed: the card states no rounding of a quarter of the bill; each path divides into whole minor units (food_round)
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-05-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-06-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-07-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-08-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-09-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-10-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-11-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-12-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-05-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-06-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-05-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-06-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-05-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-06-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-07-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-08-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-09-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-10-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-11-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-12-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-05-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-06-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-07-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-08-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-09-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-10-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-11-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-12-01
+  cut 2027-01-01
+envelopes_end (e = fun_n) [food_path = *]: -400.00 XXX
+  assumed: the card gives no envelope balances on 1 January 2027; each starts empty
+  assumed: the card names no debt to Natalia on 1 January 2027
+  assumed: the card states no rounding of a quarter of the bill; each path divides into whole minor units (food_round)
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-05-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-06-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-07-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-08-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-09-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-10-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-11-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-12-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-05-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-06-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-05-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-06-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-05-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-06-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-07-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-08-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-09-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-10-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-11-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-12-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-05-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-06-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-07-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-08-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-09-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-10-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-11-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-12-01
+  cut 2027-01-01
+envelopes_end (e = fun_o) [food_path = *]: 300.00 XXX
+  assumed: the card gives no envelope balances on 1 January 2027; each starts empty
+  assumed: the card names no debt to Natalia on 1 January 2027
+  assumed: the card states no rounding of a quarter of the bill; each path divides into whole minor units (food_round)
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-05-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-06-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-07-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-08-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-09-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-10-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-11-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-12-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-05-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-06-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-05-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-06-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-05-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-06-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-07-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-08-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-09-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-10-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-11-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-12-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-05-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-06-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-07-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-08-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-09-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-10-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-11-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-12-01
+  cut 2027-01-01
+goal_reached [food_path = *]: 2027-06-27
+  assumed: the card gives no envelope balances on 1 January 2027; each starts empty
+  assumed: the card names no debt to Natalia on 1 January 2027
+  assumed: the card states no rounding of a quarter of the bill; each path divides into whole minor units (food_round)
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-05-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-06-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-05-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-06-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-05-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-06-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-05-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-06-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-05-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-06-01
+  cut 2027-01-01
+money_end [food_path = f1800]: (46 960.00 XXX, 47 800.00 XXX)
+  assumed: the card gives no envelope balances on 1 January 2027; each starts empty
+  assumed: the card names no debt to Natalia on 1 January 2027
+  assumed: the card states no rounding of a quarter of the bill; each path divides into whole minor units (food_round)
+  reading: food_path = f1800
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-05-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-06-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-07-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-08-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-09-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-10-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-11-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-12-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-05-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-06-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-05-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-06-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-05-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-06-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-07-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-08-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-09-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-10-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-11-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-12-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-05-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-06-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-07-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-08-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-09-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-10-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-11-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-12-01
+  cut 2027-01-01
+money_end [food_path = f2100]: (43 360.00 XXX, 47 800.00 XXX)
+  assumed: the card gives no envelope balances on 1 January 2027; each starts empty
+  assumed: the card names no debt to Natalia on 1 January 2027
+  assumed: the card states no rounding of a quarter of the bill; each path divides into whole minor units (food_round)
+  reading: food_path = f2100
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-05-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-06-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-07-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-08-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-09-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-10-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-11-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-12-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-05-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-06-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-05-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-06-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-05-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-06-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-07-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-08-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-09-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-10-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-11-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-12-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-05-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-06-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-07-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-08-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-09-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-10-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-11-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-12-01
+  cut 2027-01-01
+money_end [food_path = f2400]: (39 760.00 XXX, 47 800.00 XXX)
+  assumed: the card gives no envelope balances on 1 January 2027; each starts empty
+  assumed: the card names no debt to Natalia on 1 January 2027
+  assumed: the card states no rounding of a quarter of the bill; each path divides into whole minor units (food_round)
+  reading: food_path = f2400
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-05-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-06-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-07-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-08-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-09-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-10-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-11-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-12-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-05-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-06-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-05-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-06-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-05-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-06-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-07-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-08-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-09-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-10-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-11-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-12-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-05-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-06-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-07-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-08-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-09-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-10-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-11-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-12-01
+  cut 2027-01-01
+natalia_paid (b = pay[rent, 2027-01]) [food_path = *]: (2027-01-03, 3 100.00 XXX)
+  cut 2027-01-01
+natalia_paid (b = pay[food_5, 2027-03]) [food_path = f2400]: (2027-03-05, 600.00 XXX)
+  assumed: the card gives no envelope balances on 1 January 2027; each starts empty
+  assumed: the card names no debt to Natalia on 1 January 2027
+  assumed: the card states no rounding of a quarter of the bill; each path divides into whole minor units (food_round)
+  reading: food_path = f2400
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-02-01
+  cut 2027-01-01
+natalia_paid (b = pay[rent, 2027-04]) [food_path = f2100 | f2400]: (2027-04-03, 3 100.00 XXX)
+  assumed: the card gives no envelope balances on 1 January 2027; each starts empty
+  assumed: the card names no debt to Natalia on 1 January 2027
+  assumed: the card states no rounding of a quarter of the bill; each path divides into whole minor units (food_round)
+  reading: food_path = f2100 | f2400
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-03-01
+  cut 2027-01-01
+natalia_paid (b = pay[rent, 2027-05]) [food_path = f2400]: (2027-05-03, 3 100.00 XXX)
+  assumed: the card gives no envelope balances on 1 January 2027; each starts empty
+  assumed: the card names no debt to Natalia on 1 January 2027
+  assumed: the card states no rounding of a quarter of the bill; each path divides into whole minor units (food_round)
+  reading: food_path = f2400
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-04-01
+  cut 2027-01-01
+natalia_paid (b = pay[rent, 2027-06]) [food_path = f2400]: (2027-06-03, 3 100.00 XXX)
+  assumed: the card gives no envelope balances on 1 January 2027; each starts empty
+  assumed: the card names no debt to Natalia on 1 January 2027
+  assumed: the card states no rounding of a quarter of the bill; each path divides into whole minor units (food_round)
+  reading: food_path = f2400
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-05-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-05-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-05-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-05-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-05-01
+  cut 2027-01-01
+natalia_paid (b = pay[food_5, 2027-05]) [food_path = f2100]: (2027-05-05, 525.00 XXX)
+  assumed: the card gives no envelope balances on 1 January 2027; each starts empty
+  assumed: the card names no debt to Natalia on 1 January 2027
+  assumed: the card states no rounding of a quarter of the bill; each path divides into whole minor units (food_round)
+  reading: food_path = f2100
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-04-01
+  cut 2027-01-01
+natalia_paid (b = pay[food_5, 2027-06]) [food_path = f2100]: (2027-06-05, 525.00 XXX)
+  assumed: the card gives no envelope balances on 1 January 2027; each starts empty
+  assumed: the card names no debt to Natalia on 1 January 2027
+  assumed: the card states no rounding of a quarter of the bill; each path divides into whole minor units (food_round)
+  reading: food_path = f2100
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-05-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-05-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-05-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-05-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-05-01
+  cut 2027-01-01
+natalia_repaid (b = pay[rent, 2027-01], r = repay[2027-01, oskar]) [food_path = *]: (2027-01-03, 3 100.00 XXX, 2027-01-10, 3 100.00 XXX)
+  assumed: the card names no debt to Natalia on 1 January 2027
+  cut 2027-01-01
+natalia_repaid (b = pay[food_5, 2027-03], r = repay[2027-03, oskar]) [food_path = f2400]: (2027-03-05, 600.00 XXX, 2027-03-10, 600.00 XXX)
+  assumed: the card gives no envelope balances on 1 January 2027; each starts empty
+  assumed: the card names no debt to Natalia on 1 January 2027
+  assumed: the card states no rounding of a quarter of the bill; each path divides into whole minor units (food_round)
+  reading: food_path = f2400
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-02-01
+  cut 2027-01-01
+natalia_repaid (b = pay[rent, 2027-04], r = repay[2027-04, oskar]) [food_path = f2100 | f2400]: (2027-04-03, 3 100.00 XXX, 2027-04-10, 3 100.00 XXX)
+  assumed: the card gives no envelope balances on 1 January 2027; each starts empty
+  assumed: the card names no debt to Natalia on 1 January 2027
+  assumed: the card states no rounding of a quarter of the bill; each path divides into whole minor units (food_round)
+  reading: food_path = f2100 | f2400
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-03-01
+  cut 2027-01-01
+natalia_repaid (b = pay[rent, 2027-05], r = repay[2027-05, oskar]) [food_path = f2400]: (2027-05-03, 3 100.00 XXX, 2027-05-10, 3 100.00 XXX)
+  assumed: the card gives no envelope balances on 1 January 2027; each starts empty
+  assumed: the card names no debt to Natalia on 1 January 2027
+  assumed: the card states no rounding of a quarter of the bill; each path divides into whole minor units (food_round)
+  reading: food_path = f2400
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-04-01
+  cut 2027-01-01
+natalia_repaid (b = pay[rent, 2027-06], r = repay[2027-06, oskar]) [food_path = f2400]: (2027-06-03, 3 100.00 XXX, 2027-06-10, 3 100.00 XXX)
+  assumed: the card gives no envelope balances on 1 January 2027; each starts empty
+  assumed: the card names no debt to Natalia on 1 January 2027
+  assumed: the card states no rounding of a quarter of the bill; each path divides into whole minor units (food_round)
+  reading: food_path = f2400
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-05-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-05-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-05-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-05-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-05-01
+  cut 2027-01-01
+natalia_repaid (b = pay[food_5, 2027-05], r = repay[2027-05, oskar]) [food_path = f2100]: (2027-05-05, 525.00 XXX, 2027-05-10, 525.00 XXX)
+  assumed: the card gives no envelope balances on 1 January 2027; each starts empty
+  assumed: the card names no debt to Natalia on 1 January 2027
+  assumed: the card states no rounding of a quarter of the bill; each path divides into whole minor units (food_round)
+  reading: food_path = f2100
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-04-01
+  cut 2027-01-01
+natalia_repaid (b = pay[food_5, 2027-06], r = repay[2027-06, oskar]) [food_path = f2100]: (2027-06-05, 525.00 XXX, 2027-06-10, 525.00 XXX)
+  assumed: the card gives no envelope balances on 1 January 2027; each starts empty
+  assumed: the card names no debt to Natalia on 1 January 2027
+  assumed: the card states no rounding of a quarter of the bill; each path divides into whole minor units (food_round)
+  reading: food_path = f2100
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-05-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-05-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-05-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-05-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-05-01
+  cut 2027-01-01
+sweeps (m = 2027-01) [food_path = *]: (4 400.00 XXX, 4 400.00 XXX)
+  assumed: the card gives no envelope balances on 1 January 2027; each starts empty
+  assumed: the card names no debt to Natalia on 1 January 2027
+  assumed: the card states no rounding of a quarter of the bill; each path divides into whole minor units (food_round)
+  cut 2027-01-01
+sweeps (m = 2027-02) [food_path = *]: (6 100.00 XXX, 10 500.00 XXX)
+  assumed: the card gives no envelope balances on 1 January 2027; each starts empty
+  assumed: the card names no debt to Natalia on 1 January 2027
+  assumed: the card states no rounding of a quarter of the bill; each path divides into whole minor units (food_round)
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-02-01
+  cut 2027-01-01
+sweeps (m = 2027-03) [food_path = *]: (6 100.00 XXX, 16 600.00 XXX)
+  assumed: the card gives no envelope balances on 1 January 2027; each starts empty
+  assumed: the card names no debt to Natalia on 1 January 2027
+  assumed: the card states no rounding of a quarter of the bill; each path divides into whole minor units (food_round)
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-03-01
+  cut 2027-01-01
+sweeps (m = 2027-04) [food_path = *]: (5 500.00 XXX, 22 100.00 XXX)
+  assumed: the card gives no envelope balances on 1 January 2027; each starts empty
+  assumed: the card names no debt to Natalia on 1 January 2027
+  assumed: the card states no rounding of a quarter of the bill; each path divides into whole minor units (food_round)
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-04-01
+  cut 2027-01-01
+sweeps (m = 2027-05) [food_path = *]: (5 950.00 XXX, 28 050.00 XXX)
+  assumed: the card gives no envelope balances on 1 January 2027; each starts empty
+  assumed: the card names no debt to Natalia on 1 January 2027
+  assumed: the card states no rounding of a quarter of the bill; each path divides into whole minor units (food_round)
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-05-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-05-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-05-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-05-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-05-01
+  cut 2027-01-01
+sweeps (m = 2027-06) [food_path = *]: (1 950.00 XXX, 30 000.00 XXX)
+  assumed: the card gives no envelope balances on 1 January 2027; each starts empty
+  assumed: the card names no debt to Natalia on 1 January 2027
+  assumed: the card states no rounding of a quarter of the bill; each path divides into whole minor units (food_round)
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-05-01
+  held: env_amount[food] = 2 000.00 XXX (budget_rules), read for 2027-06-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-05-01
+  held: env_amount[fun_n] = 400.00 XXX (budget_rules), read for 2027-06-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-05-01
+  held: env_amount[fun_o] = 400.00 XXX (budget_rules), read for 2027-06-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-02-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-03-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-05-01
+  held: env_amount[home] = 3 100.00 XXX (budget_rules), read for 2027-06-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-04-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-05-01
+  held: env_amount[transport] = 750.00 XXX (budget_rules), read for 2027-06-01
+  cut 2027-01-01
+warning: WARN-NEGATIVE j is below zero from 2027-01-27
+warning: WARN-NEGATIVE j is below zero from 2027-02-27
+warning: WARN-NEGATIVE j is below zero from 2027-03-27
+warning: WARN-NEGATIVE j is below zero from 2027-04-27
+warning: WARN-NEGATIVE j is below zero from 2027-05-27
+warning: WARN-NEGATIVE j is below zero from 2027-06-27

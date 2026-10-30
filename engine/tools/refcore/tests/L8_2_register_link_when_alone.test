@@ -1,0 +1,62 @@
+# MC-X-F1, the register, q alone: L8_2_register_link_when's text with no other ask. The balance that counts r1 lists
+# what judging r1's link read, probe[2026-03]'s `when` counting adv_pay[2026-03] unfulfilled (L §8.2, L §5.19).
+=== m.tally
+model m
+  tally 2
+  on 2026-10-19
+  start 2026-01-01
+  end 2026-12-31
+
+source plan "plan"
+source bank "bank"
+unit PLN: currency minor 0.01
+input bank_rows: observed
+input adv: money PLN
+input fee: money PLN
+input adv_dom: int
+input probe_dom: int
+place konto: accounts PLN lives 2019-05-01..
+place other: accounts PLN lives 2019-05-01..
+place us: outside lives 1900-01-01..
+place unexplained: outside lives 1900-01-01..
+
+move adv_pay[m in months]: transfers
+  on day_of(m, adv_dom)
+  at start_of(m)
+  leg cash from other to us amount adv
+
+move probe[m in months]: transfers
+  on day_of(m, probe_dom)
+  at start_of(m)
+  when flows(adv_pay[m], m) > fee
+  leg cash from konto to us amount fee
+
+ask f: flows(probe[2026-03], 2026-03)
+ask q: bal(konto, 2026-03-31)
+
+version plan_2026
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  adv = 100.00 PLN "own"
+  fee = 10.00 PLN "own"
+  adv_dom = 20 "own"
+  probe_dom = 25 "own"
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "wyciąg"
+  opening[other] = 1 000.00 PLN at 2026-01-01 start "wyciąg"
+
+version stmt
+  cite bank
+  governs 2026-03
+  known 2026-04-02
+  covers konto
+  pad konto from unexplained
+  bank_rows[r1] = (on: 2026-03-25, kind: transfers, leg cash from konto to us amount 12.00 PLN, fulfils: probe[2026-03]) "line 1"
+=== expect q
+q: 968.00 PLN
+  unfulfilled: adv_pay[2026-01]
+  unfulfilled: adv_pay[2026-02]
+  unfulfilled: adv_pay[2026-03]
+  unfulfilled: probe[2026-01]
+  unfulfilled: probe[2026-02]
+  cut 2026-10-19

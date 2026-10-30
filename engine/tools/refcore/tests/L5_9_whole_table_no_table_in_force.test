@@ -1,0 +1,48 @@
+# L §5.9 Rows replaced: "On a day of its span where no table is in force, only a whole table stands, as an input's
+# replace row is its value where no earlier row governs". v1's table governs 2026..2027; v2's whole replacing table
+# governs 2027..: in 2027 it replaces v1's wholly, b(15) = 5 (q1); in 2028 no table is in force and it stands, b(15) =
+# 5 (q2); in 2026 v1's, 2 (q3). The row is held past the cut (L §8.2 held:). (Writer 8, sixth pass, beside C3-16: snap11
+# refused q2 LOAD-REPLACE at the read, which refused the whole model.)
+=== m.tally
+model t
+  tally 2
+  on 2027-01-01
+  start 2026-01-01
+  end 2028-12-31
+
+source s "s"
+band b(n: int): int
+input mid: int
+
+version v1
+  cite s
+  governs 2026..2027
+  known 2025-12-01
+  b: [0, 10] = 1
+  b: (10, inf) = 2
+
+version facts
+  cite s
+  governs always
+  known 2025-12-01
+  mid = 15
+
+version v2
+  cite s
+  governs 2027..
+  known 2026-12-01
+  replace b: [0, 20] = 5
+  replace b: (20, inf) = 6
+
+ask q1: b(mid) law 2027-06-30
+ask q2: b(mid) law 2028-06-30
+ask q3: b(mid) law 2026-06-30
+=== expect
+q1: 5
+  held: b row [0, 20] (v2), read for 2027-06-30
+  law date 2027-06-30, cut 2027-01-01
+q2: 5
+  held: b row [0, 20] (v2), read for 2028-06-30
+  law date 2028-06-30, cut 2027-01-01
+q3: 2
+  law date 2026-06-30, cut 2027-01-01

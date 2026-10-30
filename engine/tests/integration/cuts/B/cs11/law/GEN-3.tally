@@ -1,0 +1,14 @@
+part gen_3
+  tally 2
+  law
+  note "GEN-3 · Periods and ages. A period of n months or years from a day ends on the same day number n months (years) on, or on that month's last day (.1): add_months and add_years (L §4.2) say the same. From a month's end, on the last day of the n-th month after it (.2). Within a period is on or before its last day (.3). Age n on the n-th anniversary of birth, 28 February for a birth on 29 February (.4; age() of L §4.2 takes 1 March, a difference household D doesn't reach). A month is a calendar month (.5)."
+  note "No figure: the households' defs apply it through add_months, add_years and age."
+
+source gen_3 "General Provisions Act, GEN-3 Periods and ages (tmp/cases/law/acts.md)"
+
+version gen3_v1
+  cite gen_3
+  governs 2018-01-01..
+  known 2017-06-01
+  enters 2018-01-01
+  note "GEN-3 v1, in force 2018-01-01 until replaced, published 2017-06-01; governs every period and age in this law."

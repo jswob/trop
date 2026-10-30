@@ -1,0 +1,37 @@
+# MC-X-F12 (writer 9): charged's `at e` reads day_band, whose rows govern always: not law-dated, so the ask line
+# reaching charged needs no law (L §4.3, an ask line: "unless that at itself reads something law-dated").
+# day_band(3) = 10: at 2027-03-10, fee = 5.00 PLN.
+=== m.tally
+model p
+  tally 2
+  on 2027-12-31
+  start 2027-01-01
+  end 2027-12-31
+
+unit PLN: currency minor 0.01
+source act "the act"
+place konto: accounts PLN lives 2020-01-01..
+place world: outside lives 1900-01-01..
+
+input dom: int
+input fee: money PLN
+band day_band(a: int): int
+def charged[m in months]: money PLN = fee at day_of(m, day_band(dom))
+ask q: charged[2027-03]
+
+version v_act
+  cite act
+  governs always
+  known 2026-12-01
+  day_band: [0, 15) = 10 "early"
+  day_band: [15, 32) = 20 "late"
+
+version v_f
+  cite act
+  governs 2027-01..2027-06
+  known 2026-12-01
+  dom = 3 governs always "dom"
+  fee = 5.00 PLN "fee"
+=== expect
+q: 5.00 PLN
+  cut 2027-12-31

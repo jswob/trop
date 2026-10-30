@@ -1,0 +1,18 @@
+q_fund (p = ania_tomek): 0 fz_units
+  cut 2026-10-30
+q_fund (p = ania): 30 fz_units
+  cut 2026-10-30
+q_fund (p = tomek): 30 fz_units
+  cut 2026-10-30
+q_fund_start (p = ania_tomek): 0 fz_units
+  cut 2026-10-30
+q_fund_start (p = ania): 30 fz_units
+  cut 2026-10-30
+q_fund_start (p = tomek): 10 fz_units
+  cut 2026-10-30
+q_sav (p = ania_tomek): 0.00 DUK
+  cut 2026-10-30
+q_sav (p = ania): 75.01 DUK
+  cut 2026-10-30
+q_sav (p = tomek): 25.00 DUK
+  cut 2026-10-30

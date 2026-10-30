@@ -1,0 +1,36 @@
+# Fault F9 (W-A): `flows` of decisions refused `RUN-ORDER` printed 0.00. E §4.2 step 5: a refused leg "isn't booked
+# ... and so is every read of the refused leg itself (`flows` of its move over a span that holds it)" refused; L §5.14.2
+# Cycles: an unordered cycle whose days aren't known at load is refused at run (`RUN-ORDER`). p and q each read x, which
+# the other changes, on the day d: flows of each and the balance are refused (a, and a2 with d pinned).
+=== m.tally
+model t8
+  tally 2
+  on 2026-01-15
+  start 2026-01-01
+  end 2026-12-31
+source src "s"
+unit DUK: currency minor 0.01
+place x: accounts DUK lives 2026-01-01..
+place w: outside lives 2000-01-01..
+input d: date
+move p: transfers
+  on d
+  reads x
+  leg cash from x to w amount max(0, bal(x))
+move q: transfers
+  on d
+  reads x
+  leg cash from x to w amount max(0, bal(x))
+ask a: flows(p, d..d), flows(q, d..d), bal(x, d)
+ask a2: flows(p, 2026-01-15..2026-01-15), bal(x, 2026-01-15) with d = 2026-01-15
+version v
+  cite src
+  governs always
+  known 2026-01-01
+  d = 2026-01-15
+=== expect
+a: (refused: RUN-ORDER decisions p and q read each other on 2026-01-15, refused: RUN-ORDER decisions p and q read each other on 2026-01-15, refused: RUN-ORDER decisions p and q read each other on 2026-01-15)
+  cut 2026-01-15
+a2: (refused: RUN-ORDER decisions p and q read each other on 2026-01-15, refused: RUN-ORDER decisions p and q read each other on 2026-01-15)
+  pinned: d = 2026-01-15
+  cut 2026-01-15

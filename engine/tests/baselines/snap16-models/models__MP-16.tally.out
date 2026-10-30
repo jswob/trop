@@ -1,0 +1,169 @@
+q_addon_share (p = payor) [ar_share = exact_ratio]: 200.00 USD
+  assumed: the October 6, 2022 revision's wording, read for the April 2, 2020 revision (2020 Ark. 131), which the case didn't fetch (addon_share.base)
+  assumed: the sample mentions no extraordinary medical expenses (addon[extra_medical])
+  assumed: the sample works from gross income; it says no permissible deductions (Worksheet Lines 1a and 1b) apply (deductions[payee], deductions[payor])
+  reading: ar_share = exact_ratio
+  law date 2020-07-01, cut 2026-10-18
+q_addon_share (p = payor) [ar_share = pct_half_up]: 200.01 USD
+  assumed: the October 6, 2022 revision's wording, read for the April 2, 2020 revision (2020 Ark. 131), which the case didn't fetch (addon_share.base)
+  assumed: the sample mentions no extraordinary medical expenses (addon[extra_medical])
+  assumed: the sample works from gross income; it says no permissible deductions (Worksheet Lines 1a and 1b) apply (deductions[payee], deductions[payor])
+  reading: ar_share = pct_half_up
+  law date 2020-07-01, cut 2026-10-18
+q_addon_share (p = payor) [ar_share = pct_printed]: 199.98 USD
+  assumed: the October 6, 2022 revision's wording, read for the April 2, 2020 revision (2020 Ark. 131), which the case didn't fetch (addon_share.base)
+  assumed: the sample mentions no extraordinary medical expenses (addon[extra_medical])
+  assumed: the sample works from gross income; it says no permissible deductions (Worksheet Lines 1a and 1b) apply (deductions[payee], deductions[payor])
+  reading: ar_share = pct_printed
+  law date 2020-07-01, cut 2026-10-18
+q_addon_share (p = payee) [ar_share = exact_ratio]: 100.00 USD
+  assumed: the October 6, 2022 revision's wording, read for the April 2, 2020 revision (2020 Ark. 131), which the case didn't fetch (addon_share.base)
+  assumed: the sample mentions no extraordinary medical expenses (addon[extra_medical])
+  assumed: the sample works from gross income; it says no permissible deductions (Worksheet Lines 1a and 1b) apply (deductions[payee], deductions[payor])
+  reading: ar_share = exact_ratio
+  law date 2020-07-01, cut 2026-10-18
+q_addon_share (p = payee) [ar_share = pct_half_up | pct_printed]: 99.99 USD
+  assumed: the October 6, 2022 revision's wording, read for the April 2, 2020 revision (2020 Ark. 131), which the case didn't fetch (addon_share.base)
+  assumed: the sample mentions no extraordinary medical expenses (addon[extra_medical])
+  assumed: the sample works from gross income; it says no permissible deductions (Worksheet Lines 1a and 1b) apply (deductions[payee], deductions[payor])
+  reading: ar_share = pct_half_up | pct_printed
+  law date 2020-07-01, cut 2026-10-18
+q_addon_total: 300.00 USD
+  assumed: the sample mentions no extraordinary medical expenses (addon[extra_medical])
+  law date 2020-07-01, cut 2026-10-18
+q_basic_obligation: 469.00 USD
+  assumed: the sample works from gross income; it says no permissible deductions (Worksheet Lines 1a and 1b) apply (deductions[payee], deductions[payor])
+  law date 2020-07-01, cut 2026-10-18
+q_basic_share (p = payor) [ar_share = exact_ratio]: 312.67 USD
+  assumed: the October 6, 2022 revision's wording, read for the April 2, 2020 revision (2020 Ark. 131), which the case didn't fetch (basic_share.base)
+  assumed: the sample works from gross income; it says no permissible deductions (Worksheet Lines 1a and 1b) apply (deductions[payee], deductions[payor])
+  reading: ar_share = exact_ratio
+  law date 2020-07-01, cut 2026-10-18
+q_basic_share (p = payor) [ar_share = pct_half_up]: 312.68 USD
+  assumed: the October 6, 2022 revision's wording, read for the April 2, 2020 revision (2020 Ark. 131), which the case didn't fetch (basic_share.base)
+  assumed: the sample works from gross income; it says no permissible deductions (Worksheet Lines 1a and 1b) apply (deductions[payee], deductions[payor])
+  reading: ar_share = pct_half_up
+  law date 2020-07-01, cut 2026-10-18
+q_basic_share (p = payor) [ar_share = pct_printed]: 312.64 USD
+  assumed: the October 6, 2022 revision's wording, read for the April 2, 2020 revision (2020 Ark. 131), which the case didn't fetch (basic_share.base)
+  assumed: the sample works from gross income; it says no permissible deductions (Worksheet Lines 1a and 1b) apply (deductions[payee], deductions[payor])
+  reading: ar_share = pct_printed
+  law date 2020-07-01, cut 2026-10-18
+q_basic_share (p = payee) [ar_share = exact_ratio]: 156.33 USD
+  assumed: the October 6, 2022 revision's wording, read for the April 2, 2020 revision (2020 Ark. 131), which the case didn't fetch (basic_share.base)
+  assumed: the sample works from gross income; it says no permissible deductions (Worksheet Lines 1a and 1b) apply (deductions[payee], deductions[payor])
+  reading: ar_share = exact_ratio
+  law date 2020-07-01, cut 2026-10-18
+q_basic_share (p = payee) [ar_share = pct_half_up | pct_printed]: 156.32 USD
+  assumed: the October 6, 2022 revision's wording, read for the April 2, 2020 revision (2020 Ark. 131), which the case didn't fetch (basic_share.base)
+  assumed: the sample works from gross income; it says no permissible deductions (Worksheet Lines 1a and 1b) apply (deductions[payee], deductions[payor])
+  reading: ar_share = pct_half_up | pct_printed
+  law date 2020-07-01, cut 2026-10-18
+q_combined: 3 000.00 USD
+  assumed: the sample works from gross income; it says no permissible deductions (Worksheet Lines 1a and 1b) apply (deductions[payee], deductions[payor])
+  law date 2020-07-01, cut 2026-10-18
+q_credit: 100.00 USD
+  assumed: the sample mentions no extraordinary medical expenses (addon[extra_medical])
+  law date 2020-07-01, cut 2026-10-18
+q_order [ar_share = *]: 412.00 USD
+  assumed: the October 6, 2022 revision's wording, read for the April 2, 2020 revision (2020 Ark. 131), which the case didn't fetch (addon_share.base, basic_share.base, order_amount.base)
+  assumed: the sample mentions no extraordinary medical expenses (addon[extra_medical])
+  assumed: the sample works from gross income; it says no permissible deductions (Worksheet Lines 1a and 1b) apply (deductions[payee], deductions[payor])
+  law date 2020-07-01, cut 2026-10-18
+q_order_predates_forms: true
+  law date 2026-10-18, cut 2026-10-18
+q_pct_language (p = payor): 66
+  assumed: the sample works from gross income; it says no permissible deductions (Worksheet Lines 1a and 1b) apply (deductions[payee], deductions[payor])
+  law date 2020-07-01, cut 2026-10-18
+q_pct_language (p = payee): 33
+  assumed: the sample works from gross income; it says no permissible deductions (Worksheet Lines 1a and 1b) apply (deductions[payee], deductions[payor])
+  law date 2020-07-01, cut 2026-10-18
+q_pct_shown (p = payor): 66.66
+  assumed: the sample works from gross income; it says no permissible deductions (Worksheet Lines 1a and 1b) apply (deductions[payee], deductions[payor])
+  law date 2020-07-01, cut 2026-10-18
+q_pct_shown (p = payee): 33.33
+  assumed: the sample works from gross income; it says no permissible deductions (Worksheet Lines 1a and 1b) apply (deductions[payee], deductions[payor])
+  law date 2020-07-01, cut 2026-10-18
+q_premium_reasonable: true
+  assumed: the October 6, 2022 revision's wording, read for the April 2, 2020 revision (2020 Ark. 131), which the case didn't fetch (insurance_cap, premium_reasonable.base)
+  law date 2020-07-01, cut 2026-10-18
+q_presumed [ar_share = exact_ratio]: 412.67 USD
+  assumed: the October 6, 2022 revision's wording, read for the April 2, 2020 revision (2020 Ark. 131), which the case didn't fetch (addon_share.base, basic_share.base)
+  assumed: the sample mentions no extraordinary medical expenses (addon[extra_medical])
+  assumed: the sample works from gross income; it says no permissible deductions (Worksheet Lines 1a and 1b) apply (deductions[payee], deductions[payor])
+  reading: ar_share = exact_ratio
+  law date 2020-07-01, cut 2026-10-18
+q_presumed [ar_share = pct_half_up]: 412.69 USD
+  assumed: the October 6, 2022 revision's wording, read for the April 2, 2020 revision (2020 Ark. 131), which the case didn't fetch (addon_share.base, basic_share.base)
+  assumed: the sample mentions no extraordinary medical expenses (addon[extra_medical])
+  assumed: the sample works from gross income; it says no permissible deductions (Worksheet Lines 1a and 1b) apply (deductions[payee], deductions[payor])
+  reading: ar_share = pct_half_up
+  law date 2020-07-01, cut 2026-10-18
+q_presumed [ar_share = pct_printed]: 412.62 USD
+  assumed: the October 6, 2022 revision's wording, read for the April 2, 2020 revision (2020 Ark. 131), which the case didn't fetch (addon_share.base, basic_share.base)
+  assumed: the sample mentions no extraordinary medical expenses (addon[extra_medical])
+  assumed: the sample works from gross income; it says no permissible deductions (Worksheet Lines 1a and 1b) apply (deductions[payee], deductions[payor])
+  reading: ar_share = pct_printed
+  law date 2020-07-01, cut 2026-10-18
+q_share_used (p = payor) [ar_share = exact_ratio]: 2/3 (0.666666666666667)
+  assumed: the sample works from gross income; it says no permissible deductions (Worksheet Lines 1a and 1b) apply (deductions[payee], deductions[payor])
+  reading: ar_share = exact_ratio
+  law date 2020-07-01, cut 2026-10-18
+q_share_used (p = payor) [ar_share = pct_half_up]: 0.6667
+  assumed: the sample works from gross income; it says no permissible deductions (Worksheet Lines 1a and 1b) apply (deductions[payee], deductions[payor])
+  reading: ar_share = pct_half_up
+  law date 2020-07-01, cut 2026-10-18
+q_share_used (p = payor) [ar_share = pct_printed]: 0.6666
+  assumed: the sample works from gross income; it says no permissible deductions (Worksheet Lines 1a and 1b) apply (deductions[payee], deductions[payor])
+  reading: ar_share = pct_printed
+  law date 2020-07-01, cut 2026-10-18
+q_share_used (p = payee) [ar_share = exact_ratio]: 1/3 (0.333333333333333)
+  assumed: the sample works from gross income; it says no permissible deductions (Worksheet Lines 1a and 1b) apply (deductions[payee], deductions[payor])
+  reading: ar_share = exact_ratio
+  law date 2020-07-01, cut 2026-10-18
+q_share_used (p = payee) [ar_share = pct_half_up | pct_printed]: 0.3333
+  assumed: the sample works from gross income; it says no permissible deductions (Worksheet Lines 1a and 1b) apply (deductions[payee], deductions[payor])
+  reading: ar_share = pct_half_up | pct_printed
+  law date 2020-07-01, cut 2026-10-18
+q_shares_add_up [ar_share = exact_ratio | pct_half_up]: ok
+  assumed: the October 6, 2022 revision's wording, read for the April 2, 2020 revision (2020 Ark. 131), which the case didn't fetch (addon_share.base, basic_share.base)
+  assumed: the sample mentions no extraordinary medical expenses (addon[extra_medical])
+  assumed: the sample works from gross income; it says no permissible deductions (Worksheet Lines 1a and 1b) apply (deductions[payee], deductions[payor])
+  reading: ar_share = exact_ratio | pct_half_up
+  law date 2020-07-01, cut 2026-10-18
+q_shares_add_up [ar_share = pct_printed]: differs: shares_total = 768.93 USD, basic_obligation + addon_total = 769.00 USD, difference -0.07 USD
+  assumed: the October 6, 2022 revision's wording, read for the April 2, 2020 revision (2020 Ark. 131), which the case didn't fetch (addon_share.base, basic_share.base)
+  assumed: the sample mentions no extraordinary medical expenses (addon[extra_medical])
+  assumed: the sample works from gross income; it says no permissible deductions (Worksheet Lines 1a and 1b) apply (deductions[payee], deductions[payor])
+  reading: ar_share = pct_printed
+  law date 2020-07-01, cut 2026-10-18
+q_total_obligation (p = payor) [ar_share = exact_ratio]: 512.67 USD
+  assumed: the October 6, 2022 revision's wording, read for the April 2, 2020 revision (2020 Ark. 131), which the case didn't fetch (addon_share.base, basic_share.base)
+  assumed: the sample mentions no extraordinary medical expenses (addon[extra_medical])
+  assumed: the sample works from gross income; it says no permissible deductions (Worksheet Lines 1a and 1b) apply (deductions[payee], deductions[payor])
+  reading: ar_share = exact_ratio
+  law date 2020-07-01, cut 2026-10-18
+q_total_obligation (p = payor) [ar_share = pct_half_up]: 512.69 USD
+  assumed: the October 6, 2022 revision's wording, read for the April 2, 2020 revision (2020 Ark. 131), which the case didn't fetch (addon_share.base, basic_share.base)
+  assumed: the sample mentions no extraordinary medical expenses (addon[extra_medical])
+  assumed: the sample works from gross income; it says no permissible deductions (Worksheet Lines 1a and 1b) apply (deductions[payee], deductions[payor])
+  reading: ar_share = pct_half_up
+  law date 2020-07-01, cut 2026-10-18
+q_total_obligation (p = payor) [ar_share = pct_printed]: 512.62 USD
+  assumed: the October 6, 2022 revision's wording, read for the April 2, 2020 revision (2020 Ark. 131), which the case didn't fetch (addon_share.base, basic_share.base)
+  assumed: the sample mentions no extraordinary medical expenses (addon[extra_medical])
+  assumed: the sample works from gross income; it says no permissible deductions (Worksheet Lines 1a and 1b) apply (deductions[payee], deductions[payor])
+  reading: ar_share = pct_printed
+  law date 2020-07-01, cut 2026-10-18
+q_total_obligation (p = payee) [ar_share = exact_ratio]: 256.33 USD
+  assumed: the October 6, 2022 revision's wording, read for the April 2, 2020 revision (2020 Ark. 131), which the case didn't fetch (addon_share.base, basic_share.base)
+  assumed: the sample mentions no extraordinary medical expenses (addon[extra_medical])
+  assumed: the sample works from gross income; it says no permissible deductions (Worksheet Lines 1a and 1b) apply (deductions[payee], deductions[payor])
+  reading: ar_share = exact_ratio
+  law date 2020-07-01, cut 2026-10-18
+q_total_obligation (p = payee) [ar_share = pct_half_up | pct_printed]: 256.31 USD
+  assumed: the October 6, 2022 revision's wording, read for the April 2, 2020 revision (2020 Ark. 131), which the case didn't fetch (addon_share.base, basic_share.base)
+  assumed: the sample mentions no extraordinary medical expenses (addon[extra_medical])
+  assumed: the sample works from gross income; it says no permissible deductions (Worksheet Lines 1a and 1b) apply (deductions[payee], deductions[payor])
+  reading: ar_share = pct_half_up | pct_printed
+  law date 2020-07-01, cut 2026-10-18

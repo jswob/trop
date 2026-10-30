@@ -1,0 +1,29 @@
+# L §3.1: text: "Nothing computes with it but == and !="; codes are values an input can hold (half-up).
+# round(2.5, 1, m) with m = half-up gives 3 (L §7.2 half-up: a tie goes away from zero).
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "a source"
+
+input name: text
+input m: rounding
+input x: num
+input step: num
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  name = "Bank Pocztowy"
+  m = half-up
+  x = 2.5
+  step = 1
+
+ask q1: name == "Bank Pocztowy", name != "Bank Pocztowy", m, round(x, step, m)
+=== expect
+q1: (true, false, half-up, 3)
+  cut 2026-01-01

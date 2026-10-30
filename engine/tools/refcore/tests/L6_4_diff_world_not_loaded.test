@@ -1,0 +1,28 @@
+# GD-18 (round 19, writer 10): L §6.4, §8, §8.3 "an ask's LOAD-SCENARIO for a scenario whose file isn't loaded refuses only
+# that ask" (E §11): q alone is refused, and the base answers r (x's row, 1). snap14 refused the whole reality. The
+# old comment:
+# MC-B-F1, a diff. L §6.4: an ask that names a scenario in "a diff" loads only with that scenario's file (LOAD-SCENARIO
+# without it); L §8.3 (round 17) `ask <q> names <w>, neither the model nor a loaded scenario`.
+=== m.tally
+model m
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "a source"
+
+input x: num question "x?"
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  x = 1 "a row"
+
+ask q: diff(x) in other against m law 2026-06-30
+ask r: x law 2026-06-30
+=== expect
+q: refused: LOAD-SCENARIO ask q names other, neither the model nor a loaded scenario (m.tally:17)
+r: 1
+  law date 2026-06-30, cut 2026-01-01

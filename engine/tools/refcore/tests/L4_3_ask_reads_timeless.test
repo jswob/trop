@@ -1,0 +1,30 @@
+# L §4.3 rule 2: "an input whose rows all govern always ... is read without [a law date], by a def as by a move"; and an
+# ask line that reads one directly needs no law either (only "a law-dated input or band" needs one, L §4.3). x's row
+# governs always: q1 = 1, q2 = y + 1 = 3. (Writer 6.)
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+input x: int
+input y: int
+
+def z: int = y + 1
+
+version v
+  cite s
+  governs 2026..
+  known 2025-12-01
+  x = 1 governs always "s"
+  y = 2 governs always "s"
+
+ask q1: x
+ask q2: z
+=== expect
+q1: 1
+  cut 2026-12-31
+q2: 3
+  cut 2026-12-31

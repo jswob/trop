@@ -1,0 +1,14 @@
+part vat_3
+  tally 1
+  law
+  note "VAT-3 · The tax point and the invoice. VAT is due on the invoice's issue day; the invoice is issued by the 15th of the month after the supply (.1); the VAT is the net times the rate, rounded (.2, GEN-5 .2); on an invoice in florens the VAT is also stated in dukats, converted under GEN-4 with the issue day as the event (.3)."
+  note "No figure: the households' invoice defs apply it."
+
+source vat_3 "Value Added Tax Act, VAT-3 The tax point and the invoice (tmp/cases/law/acts.md)"
+
+version vat3_v1
+  cite vat_3
+  governs 2018-01-01..
+  known 2017-09-01
+  enters 2018-01-01
+  note "VAT-3 v1, in force 2018-01-01 until replaced, published 2017-09-01; governs supplies from 2018-01-01."

@@ -1,0 +1,35 @@
+# L §5.5 Naming the options: "Otherwise it prints the options that give it, joined by ` | ` (rate_reading =
+# down | half-up), and the line's reading: entry names the same options (§8.2)."  Three options, two of which
+# give one value: v[o1] = v[o3] = 1, v[o2] = 2.  The line of a set sorts at its first option's place.
+=== m.tally
+model t
+  tally 2
+  on 2016-03-01
+  start 2015-11-01
+  end 2016-10-31
+
+source s "s"
+
+axis rr
+  o1 "one"
+  o2 "two"
+  o3 "three"
+
+input v[a in rr]: int
+
+version x
+  cite s
+  governs always
+  known 2016-01-01
+  v[o1] = 1
+  v[o2] = 2
+  v[o3] = 1
+
+ask q1: v[rr]
+=== expect
+q1 [rr = o1 | o3]: 1
+  reading: rr = o1 | o3
+  cut 2016-03-01
+q1 [rr = o2]: 2
+  reading: rr = o2
+  cut 2016-03-01

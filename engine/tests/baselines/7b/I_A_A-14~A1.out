@@ -1,0 +1,40 @@
+a14 [a14_rule = couple_first, px_round = *]: (9 587.67 DUK, 412.33 DUK, 29 162.33 DUK, 0.00 DUK)
+  world: a14_withdrawal
+  reading: a14_rule = couple_first
+  anchor: ania_sav 2025-12-31 end, stated 39 162.33 DUK, difference 0.00 DUK
+  law date 2026-03-31, cut 2026-01-15
+a14 [a14_rule = ania_first, px_round = *]: (10 000.00 DUK, 0.00 DUK, 28 750.00 DUK, 412.33 DUK)
+  world: a14_withdrawal
+  reading: a14_rule = ania_first
+  anchor: ania_sav 2025-12-31 end, stated 39 162.33 DUK, difference 0.00 DUK
+  law date 2026-03-31, cut 2026-01-15
+a14 [a14_rule = in_proportion, px_round = *]: (9 894.71 DUK, 105.29 DUK, 28 855.29 DUK, 307.04 DUK)
+  world: a14_withdrawal
+  reading: a14_rule = in_proportion
+  anchor: ania_sav 2025-12-31 end, stated 39 162.33 DUK, difference 0.00 DUK
+  law date 2026-03-31, cut 2026-01-15
+warning: WARN-UNREAD source a_d11 is read by nothing
+warning: WARN-UNREAD source a_d13_kalina_2021 is read by nothing
+warning: WARN-UNREAD source a_d13_kalina_2022 is read by nothing
+warning: WARN-UNREAD source a_d13_kalina_2023 is read by nothing
+warning: WARN-UNREAD source a_d17 is read by nothing
+warning: WARN-UNREAD source a_d22 is read by nothing
+warning: WARN-UNREAD source a_d30 is read by nothing
+warning: WARN-UNREAD source a_d34 is read by nothing
+warning: WARN-UNREAD source a_d35 is read by nothing
+warning: WARN-UNREAD source a_d37 is read by nothing
+warning: WARN-UNREAD source a_d38 is read by nothing
+warning: WARN-UNREAD input pit5_refund_days is read by nothing
+warning: WARN-UNREAD input soc1_er_pension is read by nothing
+warning: WARN-UNREAD input soc8_base_cut is read by nothing
+warning: WARN-UNREAD input soc8_elect_days is read by nothing
+warning: WARN-UNREAD input soc8_pay_by is read by nothing
+warning: WARN-UNREAD input soc8_rate_elected is read by nothing
+warning: WARN-UNREAD input soc8_rate_first is read by nothing
+warning: WARN-UNREAD input soc8_rate_rest is read by nothing
+warning: WARN-UNREAD input soc8_weeks is read by nothing
+warning: WARN-UNREAD input soc8_weeks_first is read by nothing
+warning: WARN-UNREAD input wcp1_ee_extra_max is read by nothing
+warning: WARN-UNREAD input wcp1_er_topup_max is read by nothing
+warning: WARN-UNREAD input cc1_settle_days is read by nothing
+warning: WARN-UNREAD def estate_paid is read by nothing

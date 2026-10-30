@@ -1,0 +1,30 @@
+# L §7.1: allowed in rules: "integer offsets in key arithmetic: m - 1, y + 1, m - 12 on a key of a period index";
+# "key literals that aren't dates or periods, in key positions (allowance[u5], k == pl)".  prev[m] reads rent at
+# m - 12 (the same month a year before); the rows give 100 in 2025-03 and 200 for u5.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2025-01-01
+  end 2026-12-31
+
+source s "s"
+index groups = [u5, u18]
+input rent[m in months]: int
+input allowance[g in groups]: int
+
+def prev[m in months]: int at start_of(m)
+  rule base = rent[m - 12] + allowance[u5]
+
+version v
+  cite s
+  governs always
+  known 2025-01-01
+  rent[2025-03] = 100
+  allowance[u5] = 200
+  allowance[u18] = 300
+
+ask q1: prev[2026-03]
+=== expect
+q1: 300
+  cut 2026-12-31

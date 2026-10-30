@@ -1,6 +1,8 @@
 model ul13
-  tally 1
+  tally 2
   on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
   note "Polish PIT-0 2022: the youth, return, 4+ family and working-senior reliefs exempt revenue within one annual limit per taxpayer (art. 21 ust. 1 pkt 148 and 152-154, ust. 44). The 4+ guide's two Q&A couples, and the PFR PPK guide's monthly examples."
   note "The shared limit is a keyed fill, one per taxpayer: the taxpayer's covered revenue items are the supplies and the limit is the one demand. A taxpayer who qualifies for two reliefs still has one limit. The law states no order in which the reliefs use the limit, so the model doesn't split the exempt revenue by relief."
   note "Not modelled: the tax on revenue above the limit (the husband's ryczałt rate, the quadruplets parents' costs and contributions are not given), the welcome payment and annual top-up (exempt under art. 21 ust. 1 pkt 47f), and how two payers share the limit."
@@ -8,6 +10,8 @@ model ul13
 source guide_4plus "Ministerstwo Finansów, Przewodnik dla podatnika. PIT-0. Ulga dla rodzin 4+ (zasady obowiązujące w 2022 roku), stan na 1.07.2022 r. (copy hosted by e-pity.pl; no publication date printed; PDF created and modified 2022-11-18)" at "https://www.e-pity.pl/cms/att/broszury2023/przewodnik_pit-0_ulga_dla_rodzin_4.pdf"
 
 source guide_powrot "Ministerstwo Finansów, Przewodnik dla podatnika. Ulga na powrót (zasady obowiązujące od 2022 roku), stan na 1.07.2022 r. (ver. 3.5; no publication date printed; PDF metadata 2024-02-19)" at "https://podatki-arch.mf.gov.pl/media/9792/przewodnik_ulga_na_powrot_ver_3_5.pdf"
+
+source lifted_1_0_1 "Figures tally 1.0.1 allowed inline in rules"
 
 source modeller "The model's own readings and assumptions, each stated with its reason"
 
@@ -18,6 +22,8 @@ source ustawa_1265 "Ustawa z dnia 9 czerwca 2022 r. o zmianie ustawy o podatku d
 source ustawa_2105 "Ustawa z dnia 29 października 2021 r. o zmianie ustawy o podatku dochodowym od osób fizycznych, ustawy o podatku dochodowym od osób prawnych oraz niektórych innych ustaw (Polski Ład), Dz.U. 2021 poz. 2105, ogłoszona 23 listopada 2021 r., w życie 1 stycznia 2022 r.: art. 1 pkt 13, adding art. 21 ust. 1 pkt 152-154 and ust. 41-48; the wording is read in the tekst jednolity, Dz.U. 2022 poz. 2647" at "https://api.sejm.gov.pl/eli/acts/DU/2021/2105"
 
 source ustawa_2123 "Ustawa z dnia 28 listopada 2020 r. o zmianie ustawy o podatku dochodowym od osób fizycznych, ustawy o podatku dochodowym od osób prawnych oraz niektórych innych ustaw, Dz.U. 2020 poz. 2123, ogłoszona 30 listopada 2020 r., w życie 1 stycznia 2021 r.: art. 1 pkt 4 lit. a, new wording of art. 21 ust. 1 pkt 148; read in the tekst jednolity, Dz.U. 2022 poz. 2647" at "https://api.sejm.gov.pl/eli/acts/DU/2020/2123"
+
+unit PLN: currency minor 0.01
 
 index child = [ch1, ch2, ch3, ch4, ch5]
 
@@ -32,6 +38,9 @@ index rev = [wife5_emp, husband5_bus, pa_emp, pb_emp]
 index rkind = [employment, mandate, business, maternity]
 
 input child_income[c in child]: money PLN question "What income did this child have in 2022, counted against the 4+ relief's limit for an adult child in education?"
+
+input child_limit_12: int
+  note "lifted from an inline figure of tally 1.0.1"
 
 input kwota_wolna: money PLN
 
@@ -52,6 +61,9 @@ input ppk_ee_rate: num
 input ppk_er_rate: num
 
 input prior_rev[p in person]: money PLN question "What revenue covered by a PIT-0 relief did this employee receive in 2022 before August?"
+
+input qualifies_4: int
+  note "lifted from an inline figure of tally 1.0.1"
 
 input relief_kind[f in relief, k in rkind]: bool
   note "Whether the relief exempts revenue of this kind (art. 21 ust. 1 pkt 148, 152-154)."
@@ -80,97 +92,97 @@ input student_u25[c in child]: bool question "Was this child under 25 and in edu
 
 input youth_ok[p in person]: bool question "Was all of this taxpayer's revenue received before the taxpayer turned 26 (art. 21 ust. 1 pkt 148)?"
 
-def child_counts[c in child]: bool
+def child_counts[c in child]: bool at reader
   note "4+ guide p. 2-3 and p. 5: a minor child; an adult child receiving a renta socjalna or zasiłek pielęgnacyjny; or a child under 25 in education whose income in the year doesn't exceed the limit."
   rule base = minor[c] or social_pension[c] or student_u25[c] and child_income[c] <= child_limit
 
-def child_limit: money PLN
+def child_limit: money PLN at reader
   note "4+ guide p. 5, footnote [1]: '12 × 1338,44 zł'."
-  rule base = 12 * renta_amt
+  rule base = child_limit_12 * renta_amt
 
-def covered[r in rev]: bool
+def covered[r in rev]: bool at reader
   note "The revenue item is covered if its owner qualifies for some relief that exempts its kind. A relief whose conditions are unknown doesn't stop another relief that is known to apply."
-  rule base = any(f in relief: qualifies[rev_owner[r], f] and relief_kind[f, rev_kind[r]])
+  rule base = any(qualifies[rev_owner[r], f] and relief_kind[f, rev_kind[r]] for f in relief)
 
-def cum_rev[p in person, m in mon]: num PLN
+def cum_rev[p in person, m in mon]: num PLN at start_of(m)
   note "Covered revenue in 2022 up to and including month m: earlier revenue, then the salary and the employer's PPK contribution, which is employment revenue (art. 12 ust. 1)."
-  rule base = prior_rev[p] + sum(k in mon where k <= m: salary_m[p] + ppk_er[p, k])
+  rule base = prior_rev[p] + sum(salary_m[p] + ppk_er[p, k] for k in mon where k <= m)
 
-def eligible_rev[r in rev]: money PLN = if covered[r] then rev_amount[r] else 0
+def eligible_rev[r in rev]: money PLN = if covered[r] then rev_amount[r] else 0 at reader
 
-def exempt[p in person]: money PLN
+def exempt[p in person]: money PLN at reader
   note "Art. 21 ust. 44: the revenue exempt under pkt 148 and 152-154 together may not exceed the limit in the tax year."
-  rule base = sum(r in rev where rev_owner[r] = p: pit0[p].taken[r])
+  rule base = sum(pit0[p].taken[r] for r in rev where rev_owner[r] == p)
 
-def free_amount: num PLN
+def free_amount: num PLN at reader
   note "The scale's tax-free amount: the income at which the first-bracket tax equals the kwota zmniejszająca podatek (art. 27 ust. 1). The return guide p. 3 says it still applies to income taxed on the scale above the PIT-0 limit."
   rule base = pit_kz / pit_r1
 
-def n_children[p in person]: int = count(c in child where parent_of[p, c] and child_counts[c])
+def n_children[p in person]: int = count(c in child where parent_of[p, c] and child_counts[c]) at reader
 
-def payroll_ok[p in person]: bool
+def payroll_ok[p in person]: bool at reader
   note "The payer applies a relief in the monthly advance: the youth relief without a statement (art. 32 ust. 1f), the others once the employee has given the statement (art. 32 ust. 1g)."
-  rule base = any(f in relief: qualifies[p, f] and relief_kind[f, employment] and (f = youth or statement[p]))
+  rule base = any(qualifies[p, f] and relief_kind[f, employment] and (f == youth or statement[p]) for f in relief)
 
-def ppk_ee[p in person, m in mon]: num PLN
+def ppk_ee[p in person, m in mon]: num PLN at start_of(m)
   note "The employee's basic PPK contribution, paid from the taxed salary."
   rule base = ppk_ee_rate * salary_m[p]
 
-def ppk_er[p in person, m in mon]: num PLN
+def ppk_er[p in person, m in mon]: num PLN at start_of(m)
   note "The employer's basic PPK contribution, employee revenue (art. 12 ust. 1)."
   rule base = ppk_er_rate * salary_m[p]
 
-def ppk_tax[p in person, m in mon]: num PLN
+def ppk_tax[p in person, m in mon]: num PLN at start_of(m)
   note "PFR guide Strona 11: the employer's contribution is taxed in the month at the first-bracket rate, unless a PIT-0 relief exempts it within the limit."
   rule base = pit_r1 * ppk_er[p, m]
-  rule crossing excepts base when payroll_ok[p] and cum_rev[p, m] > pit0_limit and cum_rev[p, m] - salary_m[p] - ppk_er[p, m] < pit0_limit = ? "In the month the PIT-0 limit is crossed, which part of the month's revenue is exempt? No source shows it."
-  rule exempt excepts base when payroll_ok[p] and cum_rev[p, m] <= pit0_limit = 0
+  rule crossing beats base = ?"In the month the PIT-0 limit is crossed, which part of the month's revenue is exempt? No source shows it." when payroll_ok[p] and cum_rev[p, m] > pit0_limit and cum_rev[p, m] - salary_m[p] - ppk_er[p, m] < pit0_limit
+  rule exempt beats base = 0 when payroll_ok[p] and cum_rev[p, m] <= pit0_limit
 
-def qualifies[p in person, f in relief]: bool
+def qualifies[p in person, f in relief]: bool at reader
   note "Art. 21 ust. 1 pkt 148 and 152-154: whether the taxpayer meets the relief's own conditions in 2022."
-  rule family when f = family4 = parental_ok[p] and n_children[p] >= 4
-  rule returnee when f = returnee = returnee_ok[p]
-  rule senior when f = senior = senior_ok[p]
-  rule youth when f = youth = youth_ok[p]
+  rule family = parental_ok[p] and n_children[p] >= qualifies_4 when f == family4
+  rule returnee = returnee_ok[p] when f == returnee
+  rule senior = senior_ok[p] when f == senior
+  rule youth = youth_ok[p] when f == youth
 
-def revenue[p in person]: money PLN = sum(r in rev where rev_owner[r] = p: rev_amount[r])
+def revenue[p in person]: money PLN = sum(rev_amount[r] for r in rev where rev_owner[r] == p) at reader
 
-def taxed_rev[p in person]: money PLN = revenue[p] - exempt[p]
+def taxed_rev[p in person]: money PLN = revenue[p] - exempt[p] at reader
 
 fill pit0[p in person]
   note "Art. 21 ust. 44: one limit per taxpayer, shared by every relief the taxpayer uses. The law states no order between the reliefs and the model asks for no split by relief, so the supplies are the taxpayer's revenue items, taken in index order; with one item per taxpayer in every example, the order changes no result."
-  supply eligible_rev[r] for r in rev where rev_owner[r] = p
+  supply eligible_rev[r] for r in rev where rev_owner[r] == p
   demand pit0_limit
   arc true
-  order r
+  order r ties by pos(r)
 
-ask q01_limit: pit0_limit with law 2022-12-31
+ask q01_limit: pit0_limit law 2022-12-31
 
-ask q02_child_counts: child_counts[c] for c in child with law 2022-12-31
+ask q02_child_counts: child_counts[c] for c in child law 2022-12-31
 
-ask q03_n_children: n_children[p] for p in [wife5, husband5] with law 2022-12-31
+ask q03_n_children: n_children[p] for p in [wife5, husband5] law 2022-12-31
 
-ask q04_child_limit: child_limit with law 2022-12-31
+ask q04_child_limit: child_limit law 2022-12-31
 
-ask q05_exempt: exempt[p] for p in [wife5, husband5, parent_a, parent_b] with law 2022-12-31
+ask q05_exempt: exempt[p] for p in [wife5, husband5, parent_a, parent_b] law 2022-12-31
 
-ask q06_taxed: taxed_rev[p] for p in [wife5, husband5, parent_a, parent_b] with law 2022-12-31
+ask q06_taxed: taxed_rev[p] for p in [wife5, husband5, parent_a, parent_b] law 2022-12-31
 
-ask q07_wife_whole: check exempt[wife5] = revenue[wife5] with law 2022-12-31
+ask q07_wife_whole: check exempt[wife5] == revenue[wife5] law 2022-12-31
 
-ask q08_both_reliefs: qualifies[p, f] for p in [parent_a, parent_b], f in [youth, family4] with law 2022-12-31
+ask q08_both_reliefs: qualifies[p, f] for p in [parent_a, parent_b], f in [youth, family4] law 2022-12-31
 
-ask q09_free_amount: free_amount with law 2022-12-31
+ask q09_free_amount: free_amount law 2022-12-31
 
-ask q10_free_check: check free_amount = kwota_wolna with law 2022-12-31
+ask q10_free_check: check free_amount == kwota_wolna law 2022-12-31
 
-ask q11_ppk_er: ppk_er[p, m] for p in [ppk1, ppk2], m in [2022-08]
+ask q11_ppk_er: ppk_er[p, m] for p in [ppk1, ppk2], m in [2022-08] law 2026-10-18
 
-ask q12_ppk_tax1: ppk_tax[p, m] for p in [ppk1], m in [2022-08]
+ask q12_ppk_tax1: ppk_tax[p, m] for p in [ppk1], m in [2022-08] law 2026-10-18
 
-ask q13_ppk_ee: ppk_ee[p, m] for p in [ppk1], m in [2022-08]
+ask q13_ppk_ee: ppk_ee[p, m] for p in [ppk1], m in [2022-08] law 2026-10-18
 
-ask q14_ppk_tax2: ppk_tax[p, m] for p in [ppk2], m in mon
+ask q14_ppk_tax2: ppk_tax[p, m] for p in [ppk2], m in mon law 2026-10-18
 
 version law_2123
   cite ustawa_2123
@@ -180,6 +192,13 @@ version law_2123
   relief_kind[youth, employment] = true "art. 21 ust. 1 pkt 148 lit. a (t.j. Dz.U. 2022 poz. 2647, pp. 64-65): 'ze stosunku służbowego, stosunku pracy, pracy nakładczej, spółdzielczego stosunku pracy'"
   relief_kind[youth, mandate] = true "art. 21 ust. 1 pkt 148 lit. b: 'z umów zlecenia, o których mowa w art. 13 pkt 8'"
   relief_kind[youth, business] = false "art. 21 ust. 1 pkt 148: business revenue is not listed"
+
+version lifted_figures
+  cite lifted_1_0_1
+  governs always
+  known 2020-11-30
+  child_limit_12 = 12 "inline in tally 1.0.1: child_limit line 89, factor"
+  qualifies_4 = 4 "inline in tally 1.0.1: qualifies line 131, operand"
 
 version law_2105
   cite ustawa_2105
@@ -206,12 +225,14 @@ version law_1265
 
 version mf_4plus
   cite guide_4plus
+  governs always
   known 2022-06-27
   note "The guide prints no publication date; 'stan na 1.07.2022' is the state of the law it describes. The copy read (e-pity.pl) has no public stamp before 2023-01-31 (server Last-Modified), but it is byte for byte the ministry's file podatki-arch.mf.gov.pl/media/8739 (Last-Modified 2022-11-21), and the ministry's earlier file of the same edition, media/8306, holds the same text (2,562 words in the same order): Last-Modified Mon, 27 Jun 2022 11:05:23 GMT, first archive capture 2022-07-05. The form read is the text read, so it is known from that file's earliest public stamp (§4.5). Round 2 took the copy's own PDF stamps, created and modified 2022-11-18 (D8)."
   renta_amt = 1338.44 governs 2022-03.. "p. 5, footnote [1]: 'Od marca 2022 r. renta socjalna wynosi 1338,44 zł'"
 
 version pfr_rates
   cite pfr_ppk
+  governs always
   known 2022-08-02
   note "Known from the guide's own date, 'Warszawa, 2.08.2022'. The PPK contribution rates as the guide states them; the PPK act itself is not in the sources."
   ppk_ee_rate = 0.02 "Strona 11, Przykład 1: 'w wysokości 2%'"
@@ -219,12 +240,14 @@ version pfr_rates
 
 version mf_powrot
   cite guide_powrot
+  governs always
   known 2024-02-20
   note "The guide prints no publication date ('stan na 1.07.2022' is the state of the law; 'ver. 3.5' is only in the file name). Known from its earliest public stamp, the server's Last-Modified, Tue, 20 Feb 2024 08:46:31 GMT (§4.5). Round 2 took its PDF's own stamp, 2024-02-19; it doesn't count, since a public stamp exists (D8)."
   kwota_wolna = 30000 "p. 3, 'Ważne!': 'zastosujesz kwotę wolną od podatku w wysokości 30 000 zł'"
 
 version facts_4plus
   cite guide_4plus
+  governs always
   known 2026-10-18
   note "The guide's two Q&A couples are hypothetical cases: their stipulations, and the guide's conclusions about them (the givens of qualifies), are known from the model's on (§4.5)."
   note "Five-children Q&A (p. 6): the wife employed, the husband with a business on ryczałt od przychodów ewidencjonowanych, five children. Quadruplets Q&A (p. 7-8): both parents aged 25, employed."
@@ -237,10 +260,10 @@ version facts_4plus
   parent_of[husband5] = true "p. 6: 'Waszych dzieci'"
   parental_ok[wife5] = true "p. 6: 'każde z Was będzie mogło skorzystać z ulgi dla rodzin 4+'"
   parental_ok[husband5] = true "p. 6: 'każde z Was będzie mogło skorzystać z ulgi dla rodzin 4+'"
-  qualifies[parent_a, youth] = true "p. 8: 'każde z Was może skorzystać z obu ulg (z ulgi dla młodych i ulgi dla rodzin 4+)'"
-  qualifies[parent_a, family4] = true "p. 8: 'każde z Was może skorzystać z obu ulg (z ulgi dla młodych i ulgi dla rodzin 4+)'"
-  qualifies[parent_b, youth] = true "p. 8: 'każde z Was może skorzystać z obu ulg (z ulgi dla młodych i ulgi dla rodzin 4+)'"
-  qualifies[parent_b, family4] = true "p. 8: 'każde z Was może skorzystać z obu ulg (z ulgi dla młodych i ulgi dla rodzin 4+)'"
+  given qualifies[parent_a, youth] = true "p. 8: 'każde z Was może skorzystać z obu ulg (z ulgi dla młodych i ulgi dla rodzin 4+)'"
+  given qualifies[parent_a, family4] = true "p. 8: 'każde z Was może skorzystać z obu ulg (z ulgi dla młodych i ulgi dla rodzin 4+)'"
+  given qualifies[parent_b, youth] = true "p. 8: 'każde z Was może skorzystać z obu ulg (z ulgi dla młodych i ulgi dla rodzin 4+)'"
+  given qualifies[parent_b, family4] = true "p. 8: 'każde z Was może skorzystać z obu ulg (z ulgi dla młodych i ulgi dla rodzin 4+)'"
   rev_amount[wife5_emp] = 65000 "p. 6: 'przychód z pracy wyniósł 65 000 zł'"
   rev_amount[husband5_bus] = 115000 "p. 6: the husband's business revenue, 115 000 zł"
   rev_amount[pa_emp] = 110000 "p. 7-8: each parent's revenue, 110 000 zł"
@@ -259,11 +282,12 @@ version facts_4plus
 
 version facts_ppk
   cite pfr_ppk
+  governs always
   known 2026-10-18
   note "The guide's two employees are hypothetical cases: their stipulations are known from the model's on (§4.5), not from the guide's date."
   note "Przykład 1 (Strona 11): an employee without a PIT-0 relief. Przykład 2 (Strona 12): an employee with the 4+ relief. Both earn 4000 zł gross a month from August 2022."
   parental_ok[ppk1] = false "Strona 11, Przykład 1: no PIT-0 relief"
-  qualifies[ppk2, family4] = true "Strona 12, Przykład 2: the employee uses the relief for families 4+"
+  given qualifies[ppk2, family4] = true "Strona 12, Przykład 2: the employee uses the relief for families 4+"
   returnee_ok[ppk1] = false "Strona 11, Przykład 1: no PIT-0 relief"
   salary_m[ppk1] = 4000 governs 2022-08.. "Strona 11, Przykład 1: 4000 zł brutto from August 2022"
   salary_m[ppk2] = 4000 governs 2022-08.. "Strona 12, Przykład 2: 4000 zł brutto from August 2022"
@@ -272,6 +296,7 @@ version facts_ppk
 
 version model_assume
   cite modeller
+  governs always
   known 2026-10-18
   note "Assumptions standing for the examples' own facts: known from the model's on, as the examples (§4.5)."
   child_income[ch5] = 21000 assumed "the 4+ guide p. 6 gives the fifth child 21 000 zł of revenue exempt under the youth relief; with no costs given, the model counts it as the child's income against the limit"

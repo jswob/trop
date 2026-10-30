@@ -1,0 +1,48 @@
+# L §3.2 table: money CUR with money CUR gives money; money × int → money; money / money (one currency) → num;
+# int / int gives num; units multiply (8 PLN/hour × 3 hour = 24 PLN, "PLN/hour*hour is PLN");
+# money EUR × num PLN/EUR is num PLN (exchange rates, U-05).  Values: 10.00 + 20.00 = 30.00 PLN;
+# 10.00 × 3 = 30.00 PLN; 30.00 / 10.00 = 3; 7 / 2 = 3.5; 8 × 3 = 24 PLN; 10.00 EUR × 4.5 PLN/EUR = 45 PLN.
+# A num prints as the shortest terminating decimal followed by its unit (L §5.18 Output).
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "a source"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+unit hour "godzina"
+
+input a: money PLN
+input b: money PLN
+input n: int
+input k: int
+input two: int
+input w: num PLN/hour
+input h: num hour
+input e: money EUR
+input fx: num PLN/EUR
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  a = 10.00 PLN
+  b = 20.00 PLN
+  n = 3
+  k = 7
+  two = 2
+  w = 8 PLN/hour
+  h = 3 hour
+  e = 10.00 EUR
+  fx = 4.5 PLN/EUR
+
+ask q1: a + b, a * n, (a * n) / a, k / two
+ask q2: w * h, e * fx
+=== expect
+q1: (30.00 PLN, 30.00 PLN, 3, 3.5)
+  cut 2026-01-01
+q2: (24 PLN, 45 PLN)
+  cut 2026-01-01

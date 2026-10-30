@@ -1,0 +1,25 @@
+# L §4.2 key arithmetic and §7.1 integer offsets: on an integer index, `x - 1` in a key position is the previous key,
+# never the literal 1 read as a key.  b[60] = 0 (rule first); b[x] = a[x - 1] = x - 1 for x > 60.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+index ages = int 60..63
+def a[x in ages]: int = x at reader
+def b[x in ages]: int at reader
+  rule first = 0
+  rule next beats first = a[x - 1] when x > 60
+
+ask q: b[x] for x in ages law 2026-01-01
+=== expect
+q (x = 60): 0
+  law date 2026-01-01, cut 2026-12-31
+q (x = 61): 60
+  law date 2026-01-01, cut 2026-12-31
+q (x = 62): 61
+  law date 2026-01-01, cut 2026-12-31
+q (x = 63): 62
+  law date 2026-01-01, cut 2026-12-31

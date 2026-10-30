@@ -1,0 +1,10 @@
+scenario nothing_more over household_b
+  tally 2
+  from 2022-07-31
+  note "B-04's first case: nothing more is spent on Ola's own housing by 2024-12-31 beyond what she paid at the deed. A hypothetical fact, so a scenario (L §5.5, §6.4), known on the question's day."
+
+version nothing_more_v
+  cite questions
+  governs 2022-07-31..
+  known 2022-07-31
+  replace kitchen_ordered = false governs 2022-07-31.. "B-04: count only what she paid at the deed"

@@ -1,0 +1,32 @@
+# L §2.5 (a variable over a key list takes its index from its key positions: here ks = int 1..30, from p[k]) and
+# L §4.2 Keys as values ("A key of an integer index is also an int"): k <= n_max compares an int; with n_max = 12
+# the lines are k = 1 and k = 12, p[k] = k.  Was LOAD-UNIT keylist and int compared.
+=== m.tally
+model p8
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+
+source s "synthetic"
+
+unit PLN: currency minor 0.01
+
+index ks = int 1..30
+
+input n_max: int
+
+def p[k in ks]: int = k
+
+ask q: p[k] for k in [1, 12, 24] where k <= n_max
+
+version v1
+  cite s
+  governs always
+  known 2026-01-01
+  n_max = 12
+=== expect
+q (k = 1): 1
+  cut 2026-10-18
+q (k = 12): 12
+  cut 2026-10-18

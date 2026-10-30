@@ -1,0 +1,139 @@
+# GD-1 (round 19, writer 10): was L5_17_regime_example; L §5.12 Lots (round 19) holds this example unboxed.
+# Its regime gains is unboxed (the items at top level, gains.x written x); the
+# figures are unchanged. The comment below is the old test's.
+# L §5.17 example regime, copied whole (with persons, notes, brokerages and ordinary declared), completed minimally:
+# a header 2024-01-01..2025-12-31; konto (opens at 10 000.00 PLN) and an outside place market; three trades written
+# as plan moves from rows (buy1: 10 units of fund_x for 1 000.00 PLN on 2024-03-01, buy2: 10 for 1 500.00 PLN on
+# 2024-06-01, sell1: 15 for 3 000.00 PLN with a fee of 15.00 PLN on 2024-09-02), all into or out of the brokerage
+# mbank, owned by ewa (`owner[mbank] = ewa`, a row of the regime's input, L §5.17 What may name).
+# Hand-checked from the stated rules: matched takes the purchases in order of b.day (first in, first out, L §5.12):
+# 10 units of buy1 and 5 of buy2 to sell1, so cost = 10 * 100 + 5 * 150 = 1 750.00 PLN; gain = 3 000 - 15 - 1 750 =
+# 1 235.00 PLN; tax[ewa, 2024] = round(1 235 * 19 %, minor, half-up) = 234.65 PLN; assess moves it from owed[ewa] to
+# fisc on end_of(2024) = 2025-01-01 (L §4.2): owed[ewa] is -234.65 PLN that day; 2025's instance falls on 2026-01-01,
+# after the run's end (left out, L §5.14.3).  konto: 10 000 - 1 000 - 1 500 + 3 000 - 15 = 10 485.00 PLN.
+# The trades are planned instances before the cut that no observation fulfils: unfulfilled (L §8.2).
+# (Writer 8, sixth pass: the fill's arc and order lines and tax's where follow the example as round 18 left it,
+# C3-13's `order b.day ties by (b.seq, s.day, s.seq)`; one sale, so the values stand. L5_17_lots_two_sales has one lot
+# feeding two sales.)
+=== m.tally
+model t
+  tally 2
+  on 2025-12-31
+  start 2024-01-01
+  end 2025-12-31
+
+source pit_act "PIT act"
+unit PLN: currency minor 0.01
+
+kind persons
+kind notes: unit
+kind brokerages: place any min 0
+kind ordinary: brokerages
+
+kind trades: event certain
+  leg units: notes
+  leg cash: PLN
+  attr seq: int
+kind purchases: trades
+kind sales: trades
+  leg fee: PLN
+
+kind assessments: event certain
+  leg tax: PLN
+input rate: num
+input owner[x in brokerages]: key persons
+place owed[p in persons]: debts PLN lives 2024-01-01..
+place fisc: outside lives 1900-01-01..
+fill matched[x in ordinary over ..]
+  supply b.units.amount for b in purchases over .. where b.units.to == x
+  demand s.units.amount for s in sales over .. where s.units.from == x
+  arc b.day <= s.day and unit(b.units.amount) == unit(s.units.amount)
+  order b.day ties by (b.seq, s.day, s.seq)
+def cost[s in sales]: money PLN = round(sum(matched[s.units.from].taken[b, s] * b.cash.amount / b.units.amount for b in purchases over ..), minor(PLN), half-even) at s.day
+def gain[s in sales]: money PLN = s.cash.amount - s.fee.amount - cost[s] at s.day
+def tax[p in persons, y in years]: money PLN = round(sum(gain[s] for s in sales over y where s.units.from in ordinary and owner[s.units.from] == p) * rate, minor(PLN), half-up) at end_of(y)
+move assess[y in years, p in persons on end_of(y)]: assessments
+  on end_of(y)
+  at end_of(y)
+  leg tax from owed[p] to fisc amount tax[p, y]
+
+version act_2024
+  cite pit_act
+  governs 2024..
+  known 2023-12-01
+  rate = 19 % "art. 30b"
+
+source trades_log "own records"
+place konto: accounts PLN lives 2019-01-01..
+place market: outside lives 1900-01-01..
+input t_day[k in trade_ids]: date
+input t_units[k in trade_ids]: num
+input t_cash[k in trade_ids]: money PLN
+input t_fee[k in trade_ids]: money PLN
+input t_seq[k in trade_ids]: int
+index trade_ids = [b1, b2, s1]
+
+move buy1: purchases
+  on t_day[b1]
+  at t_day[b1]
+  attr seq = t_seq[b1]
+  leg units from market to mbank amount t_units[b1] * 1 fund_x
+  leg cash from konto to market amount t_cash[b1]
+
+move buy2: purchases
+  on t_day[b2]
+  at t_day[b2]
+  attr seq = t_seq[b2]
+  leg units from market to mbank amount t_units[b2] * 1 fund_x
+  leg cash from konto to market amount t_cash[b2]
+
+move sell1: sales
+  on t_day[s1]
+  at t_day[s1]
+  attr seq = t_seq[s1]
+  leg units from mbank to market amount t_units[s1] * 1 fund_x
+  leg cash from market to konto amount t_cash[s1]
+  leg fee from konto to market amount t_fee[s1]
+
+version own
+  cite trades_log
+  governs always
+  known 2024-01-01
+  persons + [ewa] lives 1980-01-01..
+  notes + [fund_x] lives 2000-01-01..
+  ordinary + [mbank] lives 2010-01-01..
+  t_day[b1] = 2024-03-01
+  t_day[b2] = 2024-06-01
+  t_day[s1] = 2024-09-02
+  t_units[b1] = 10
+  t_units[b2] = 10
+  t_units[s1] = 15
+  t_cash[b1] = 1 000.00 PLN
+  t_cash[b2] = 1 500.00 PLN
+  t_cash[s1] = 3 000.00 PLN
+  t_fee = 0 PLN
+  t_fee[s1] = 15.00 PLN
+  t_seq = 1
+  owner[mbank] = ewa
+  opening[konto] = 10 000.00 PLN at 2024-01-01 start "wyciąg"
+
+ask c: cost[sell1], gain[sell1]
+ask t: tax[ewa, 2024]
+ask o: bal(owed[ewa], 2025-01-01), bal(konto, 2024-12-31)
+=== expect
+c: (1 750.00 PLN, 1 235.00 PLN)
+  unfulfilled: buy1
+  unfulfilled: buy2
+  cut 2025-12-31
+o: (-234.65 PLN, 10 485.00 PLN)
+  unfulfilled: assess[2024, ewa]
+  unfulfilled: buy1
+  unfulfilled: buy2
+  unfulfilled: sell1
+  left out: assess, 1 instances, first 2026-01-01
+  cut 2025-12-31
+t: 234.65 PLN
+  unfulfilled: buy1
+  unfulfilled: buy2
+  unfulfilled: sell1
+  cut 2025-12-31

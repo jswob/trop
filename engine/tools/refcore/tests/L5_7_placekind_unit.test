@@ -1,0 +1,18 @@
+# L §5.7 / §8.3 LOAD-PLACEKIND: "<k> enters a kind of unit one without its unit".  accounts is a prelude place
+# kind whose things state their unit as they enter (accounts + [konto] PLN lives …, L §5.3).
+=== m.tally
+model hh
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+version v
+  cite s
+  known 2019-05-01
+  accounts + [konto] lives 2019-05-01..
+=== expect
+refused: LOAD-PLACEKIND ...

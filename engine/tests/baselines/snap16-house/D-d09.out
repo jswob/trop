@@ -1,0 +1,21 @@
+d09_advice: ?"Sell or keep: a choice the dossier leaves to Halina; no house rule or law decides it, and both sides are shown" (advice)
+  law date 2026-09-30, cut 2026-09-30
+d09_all_spent [hh_round = *]: (0.00 DUK, 197 470.00 DUK, 15.11)
+  pinned: sale_spent = 201 500.00 DUK
+  held: pit12_rate = 0.19 (pit12_v1), read for 2026-11-30
+  held: pit12_taxed_years = 5 (pit12_v1), read for 2026-11-30
+  law date 2026-09-30, cut 2026-09-30
+d09_keep [hh_round = *]: (195 000.00 DUK, 13 065.00 DUK)
+  held: valuation = 240 000.00 DUK (valuation_2025), read for 2026-09-30
+  law date 2026-09-30, cut 2026-09-30
+d09_nothing_spent [hh_round = *]: (8 107.00 DUK, 189 363.00 DUK, 14.49)
+  pinned: sale_spent = 0.00 DUK
+  held: pit12_rate = 0.19 (pit12_v1), read for 2026-11-30
+  held: pit12_taxed_years = 5 (pit12_v1), read for 2026-11-30
+  law date 2026-09-30, cut 2026-09-30
+d09_sell [hh_round = *]: (201 500.00 DUK, 62 000 DUK, 139 500 DUK, 4 030.00 DUK, false, true, 42 667.5 DUK)
+  held: pit12_taxed_years = 5 (pit12_v1), read for 2026-11-30
+  law date 2026-09-30, cut 2026-09-30
+d09_parts: ok
+  law date 2026-09-30, cut 2026-09-30
+

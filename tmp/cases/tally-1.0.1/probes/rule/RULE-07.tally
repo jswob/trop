@@ -1,0 +1,52 @@
+model rule07
+  tally 1
+  on 2025-07-01
+  start 2025-01-01
+  end 2025-06-30
+  note "RULE-07: a standing order of 500.00 on the 1st, January to June 2025; the bank rows lack March. The records win: a covered day books its records and keeps the pay as modelled past (L 5.18)."
+
+source bank_export "Savings account export, January to June 2025 (card RULE-07)"
+
+source card "Probe card RULE-07: the standing order and the savings"
+
+index bank_row: open
+
+index month = month 2025-01..2025-06
+
+place konto: account DUK
+
+place savings: account DUK
+
+input bank[r in bank_row]: movement DUK
+
+input order_amt: money DUK
+
+pay standing[m in month]
+  from konto
+  to savings
+  amount order_amt
+  on day_of(m, 1)
+
+ask by_records: bal(savings, 2025-06-30)
+
+ask by_rule: bal(savings, 2025-06-30) as known 2025-06-30
+
+ask gap: residuals savings 2025-01..2025-06
+
+version card_facts
+  cite card
+  known 2025-01-01
+  opening[savings] = 1000 "story: the savings on 31 December 2024"
+  order_amt = 500 "the standing order: 500.00 on the 1st of each month, January to June 2025"
+
+version bank_2025_h1
+  cite bank_export
+  governs 2025-01..2025-06
+  known 2025-07-01
+  assumed "the card gives no export date; taken as the day after the last month it covers"
+  covers savings
+  bank[r2501] = (2025-01-01, savings, 500.00, standing[2025-01]) "STANDING ORDER 01/2025"
+  bank[r2502] = (2025-02-01, savings, 500.00, standing[2025-02]) "STANDING ORDER 02/2025"
+  bank[r2504] = (2025-04-01, savings, 500.00, standing[2025-04]) "STANDING ORDER 04/2025"
+  bank[r2505] = (2025-05-01, savings, 500.00, standing[2025-05]) "STANDING ORDER 05/2025"
+  bank[r2506] = (2025-06-01, savings, 500.00, standing[2025-06]) "STANDING ORDER 06/2025"

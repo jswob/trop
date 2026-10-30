@@ -1,0 +1,56 @@
+# L §6.5 change 5's stub law part, copied whole, with the EUR currency declared over the base excerpt: "the change
+# adds the law part as a stub, and every result that needs it is a hole with its question" (L §5.11: "A def whose
+# only rule is a hole is a stub ... which prints its question").
+=== household.tally
+model household
+  tally 2
+  on 2029-12-31
+  start 2026-01-01
+  end 2040-12-31
+
+source household "the household's own records"
+unit PLN: currency minor 0.01
+index instalments = [equal, decreasing]
+index overpay_choices = [shorter, lower]
+index pit_brackets = [low, high]
+index countries = [pl, de]
+
+kind persons
+kind jobs
+kind loans
+
+input loan_terms[l in loans]: (principal money PLN, months int, plan key instalments)
+input overpay[l in loans, m in months]: (amount money PLN, choice key overpay_choices)
+input parent[c in persons, k in persons]: bool
+input pay_dom[j in jobs]: int
+input pit_free: money PLN
+input pit_rate[b in pit_brackets]: num
+input residence[p in persons, m in months]: key countries
+input salary[j in jobs, m in months]: money PLN question "Ile wynosi pensja brutto z tej pracy w tym miesiącu?"
+input works_for[j in jobs]: key persons
+
+version home_2026
+  cite household
+  governs 2026-10..
+  known 2026-10-19
+  persons + [ana] lives 1990-04-02..
+  persons + [ben] lives 1988-11-30..
+  jobs + [ana_acme] lives 2020-02-01..
+  jobs + [ben_bolt] lives 2021-09-01..
+  parent = false "brak dzieci"
+  pay_dom = 10 "umowy o pracę, § 5"
+  residence = pl "meldunek w Krakowie"
+  works_for[ana_acme] = ana
+  works_for[ben_bolt] = ben
+unit EUR: currency minor 0.01
+=== de_employment.tally
+part de_employment
+  tally 2
+  law
+
+def net_wage_eur[j in jobs, m in months]: money EUR = ?"Wynagrodzenie netto z niemieckiej umowy o pracę nie jest opisane." at start_of(m)
+
+ask q1: net_wage_eur[ana_acme, 2030-08]
+=== expect q1
+q1: ?"Wynagrodzenie netto z niemieckiej umowy o pracę nie jest opisane." (net_wage_eur[ana_acme, 2030-08])
+  cut 2029-12-31

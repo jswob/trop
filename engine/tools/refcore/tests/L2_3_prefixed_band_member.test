@@ -1,0 +1,60 @@
+# L §2.3 Calls (round 14): a band's id "with the prefixes that name the band outside ... its member ...: a.b(x) for
+# a member's (§6.1)". The joint model calls a.fee on ana's income: fee's one row gives 2.00 PLN.
+=== options pin=bytes
+=== joint.tally
+model family
+  tally 2
+  on 2026-01-05
+  start 2026-01-01
+  end 2026-12-31
+  use a = "ana.tally" sha256 "0be31b307ddcd6ba412fafbc28878f79fe7de5497920df56399f1ee7c56265b0"
+  use b = "ben.tally" sha256 "62b0623690f8004e28037173884be55e87162cbbd244eb89cae891e9e3867ce4"
+
+ask f: a.fee(a.income[a.ana]) law 2026-06-30
+=== ana.tally
+model ana
+  tally 2
+  on 2026-01-05
+  start 2026-01-01
+  end 2026-12-31
+
+source s "umowa"
+unit PLN: currency minor 0.01
+kind persons
+place wsp: accounts PLN lives 2019-01-01..
+input income[p in persons]: money PLN
+band fee(x: money PLN): money PLN
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  persons + [ana, ola] lives 2000-01-01..
+  income[ana] = 100.00 PLN "umowa"
+  income[ola] = 10.00 PLN "umowa"
+  opening[wsp] = 1 000.00 PLN at 2026-01-01 start "wyciąg"
+  fee: [0 PLN, inf) = 2.00 PLN "cennik"
+=== ben.tally
+model ben
+  tally 2
+  on 2026-01-05
+  start 2026-01-01
+  end 2026-12-31
+
+source s "umowa"
+unit PLN: currency minor 0.01
+kind persons
+place wsp: accounts PLN lives 2019-01-01..
+input pocket[p in persons]: money PLN
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  persons + [ben, ola_k] lives 2000-01-01..
+  pocket[ben] = 50.00 PLN "umowa"
+  pocket[ola_k] = 5.00 PLN "umowa"
+  opening[wsp] = 1 000.00 PLN at 2026-01-01 start "wyciąg"
+=== expect
+f: 2.00 PLN
+...

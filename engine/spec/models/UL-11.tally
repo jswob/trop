@@ -1,6 +1,8 @@
 model ul11
-  tally 1
+  tally 2
   on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
   note "Spanish wealth tax (IP) 2025 capped by income tax (IRPF): art. 31 Ley 19/1991, the 60 per cent limit and the 80 per cent maximum reduction, for Don J.B.A., single and resident in Toledo (AEAT Manual práctico de Patrimonio 2025, Ejemplo)."
   note "Every ask is evaluated at the devengo of the 2025 tax, 31 December 2025."
   note "The example also gives the base liquidable general (48.000) and the mínimo personal y familiar (5.550); the cap doesn't use them, so they are not inputs."
@@ -13,6 +15,8 @@ source aeat_reglas "AEAT, Manual práctico de Patrimonio 2025, Capítulo 5, Lím
 source ley35_2006 "Ley 35/2006, de 28 de noviembre, del IRPF, disposición final cuarta, apartado Tres: new wording of the whole of art. 31 of Ley 19/1991, de 6 de junio, del Impuesto sobre el Patrimonio (BOE núm. 285, 29/11/2006); the wording is read in the BOE texto consolidado of Ley 19/1991, https://www.boe.es/buscar/act.php?id=BOE-A-1991-14392 ('Última actualización, publicada el 29/11/2006, en vigor a partir del 01/01/2007')" at "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
 
 source modeller "The model's own readings and assumptions, each stated with its reason"
+
+unit EUR: currency minor 0.01
 
 axis ul11_cent
   down "amounts computed to the cent are cut down to the cent"
@@ -46,88 +50,88 @@ input min_share: num
 
 input offsets: money EUR question "What are the loss and negative-yield offsets in casillas [0436], [0439]-[0445] and [0447]?"
 
-def cuota_improd: money EUR
+def cuota_improd: money EUR at reader
   note "Solución line 1; Regla 3ª: CIBI = EPN × cuota íntegra ÷ base imponible (art. 31.Uno b))."
-  rule base v reglas2025 = round(epn * cuota_ip / bi_ip, 0.01, ul11_cent)
+  rule base v reglas2025 = round(epn * cuota_ip / bi_ip, minor(EUR), ul11_cent)
 
-def cuota_ingresar: num EUR
+def cuota_ingresar: num EUR at reader
   note "Solución last line: the cuota íntegra less the reduction."
   rule base v law_ip31 = cuota_ip - reduction
 
-def cuota_min: money EUR
+def cuota_min: money EUR at reader
   note "Nota (3); Regla 3ª: the cuota mínima no reducible, 20 per cent of the cuota íntegra."
-  rule base v reglas2025 = round(min_share * cuota_ip, 0.01, ul11_cent)
+  rule base v reglas2025 = round(min_share * cuota_ip, minor(EUR), ul11_cent)
 
-def cuota_susc: money EUR
+def cuota_susc: money EUR at reader
   note "Solución line 2: the IP cuota subject to the limit."
   rule base v law_ip31 = cuota_ip - cuota_improd
 
-def excess: num EUR
+def excess: num EUR at reader
   note "Nota (3): the exceso no reducible, the theoretical reduction above the maximum."
   rule base = max(0, red_theory - red_max)
 
-def excl_base: num EUR
+def excl_base: num EUR at reader
   note "Regla 1ª: the part of the savings base left out, (gains over one year ÷ [0424]) × ([0424] − offsets), when the balance is below [0424]."
   rule base v reglas2025 = gains_gt1 / c0424 * (c0424 - offsets)
-  rule notbelow excepts base when gains_gt1 >= c0424 = ? "Regla 1ª as given covers a balance of gains over one year below casilla [0424]; the other case is not in the sources."
+  rule notbelow beats base = ?"Regla 1ª as given covers a balance of gains over one year below casilla [0424]; the other case is not in the sources." when gains_gt1 >= c0424
 
-def irpf_sum: num EUR
+def irpf_sum: num EUR at reader
   note "Solución line 5: the IRPF cuotas counted for the limit."
   rule base v law_ip31 = cuota_general + kept_cuota_ahorro
 
-def kept_base: num EUR
+def kept_base: num EUR at reader
   note "Solución, 'Base imponible del ahorro IRPF: 1.000 (2)': the savings base counted for the limit (art. 31.Uno a))."
   rule base v law_ip31 = bi_ahorro - excl_base
 
-def kept_cuota_ahorro: num EUR
+def kept_cuota_ahorro: num EUR at reader
   note "Solución line 4 and Nota (1); Regla 2ª: (cuotas del ahorro ÷ base imponible del ahorro) × the savings base counted."
   rule base v reglas2025 = cuota_ahorro / bi_ahorro * kept_base
 
-def limit60: num EUR
+def limit60: num EUR at reader
   note "Solución line 7: 60 per cent of the IRPF bases counted (art. 31.Uno)."
   rule base v law_ip31 = cap_rate * (bi_general + kept_base)
 
-def red_max: money EUR
+def red_max: money EUR at reader
   note "Solución line 9: the reduction may not exceed 80 per cent of the IP cuota (art. 31.Uno c))."
-  rule base v law_ip31 = round(max_red * cuota_ip, 0.01, ul11_cent)
+  rule base v law_ip31 = round(max_red * cuota_ip, minor(EUR), ul11_cent)
 
-def red_theory: num EUR
+def red_theory: num EUR at reader
   note "Solución line 8: the reduction that would bring the cuotas down to the limit."
   rule base v law_ip31 = max(0, total_cuotas - limit60)
 
-def reduction: num EUR
+def reduction: num EUR at reader
   note "Art. 31.Uno c): reduced to the limit, by no more than the maximum."
   rule base v law_ip31 = min(red_theory, red_max)
 
-def total_cuotas: num EUR
+def total_cuotas: num EUR at reader
   note "Solución line 6: IRPF cuotas plus the IP cuota subject to the limit."
   rule base v law_ip31 = irpf_sum + cuota_susc
 
-ask q01_improd: cuota_improd with law 2025-12-31
+ask q01_improd: cuota_improd law 2025-12-31
 
-ask q02_susc: cuota_susc with law 2025-12-31
+ask q02_susc: cuota_susc law 2025-12-31
 
-ask q03_ahorro: kept_cuota_ahorro with law 2025-12-31
+ask q03_ahorro: kept_cuota_ahorro law 2025-12-31
 
-ask q04_irpf_sum: irpf_sum with law 2025-12-31
+ask q04_irpf_sum: irpf_sum law 2025-12-31
 
-ask q05_total: total_cuotas with law 2025-12-31
+ask q05_total: total_cuotas law 2025-12-31
 
-ask q06_kept_base: kept_base with law 2025-12-31
+ask q06_kept_base: kept_base law 2025-12-31
 
-ask q07_limit: limit60 with law 2025-12-31
+ask q07_limit: limit60 law 2025-12-31
 
-ask q08_red_theory: red_theory with law 2025-12-31
+ask q08_red_theory: red_theory law 2025-12-31
 
-ask q09_red_max: red_max with law 2025-12-31
+ask q09_red_max: red_max law 2025-12-31
 
-ask q10_ingresar: cuota_ingresar with law 2025-12-31
+ask q10_ingresar: cuota_ingresar law 2025-12-31
 
-ask q11_min: cuota_min with law 2025-12-31
+ask q11_min: cuota_min law 2025-12-31
 
-ask q12_excess: excess with law 2025-12-31
+ask q12_excess: excess law 2025-12-31
 
-ask q13_coincide: check cuota_ingresar = cuota_min with law 2025-12-31
+ask q13_coincide: check cuota_ingresar == cuota_min law 2025-12-31
 
 version law_ip31
   cite ley35_2006
@@ -148,6 +152,7 @@ version reglas2025
 
 version facts_ejemplo
   cite aeat_ejemplo
+  governs always
   known 2026-10-18
   note "The example's stipulations are a hypothetical case: known from the model's on (§4.5), not from the page's updated stamp (17/marzo/2026)."
   note "Ejercicio 2025. The 2024 edition of the Manual prints the same example with the same figures."
@@ -162,6 +167,7 @@ version facts_ejemplo
 
 version model_assume
   cite modeller
+  governs always
   known 2026-10-18
   note "Assumptions standing for the example's own facts: known from the model's on, as the example (§4.5)."
   c0424 = 2000 assumed "the example applies Regla 1ª with 2.000, the whole savings base, in place of casilla [0424], as if the savings base were all gains"

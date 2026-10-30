@@ -1,0 +1,17 @@
+part asks_d07
+  tally 1
+  note "D-07 · The floor, as of and as known 2026-09-30. The balances come from the export rows records.tally writes (anchors); the low days themselves can't be found without every row (O:D-1)."
+
+ask d07_redemptions: red_day[r], red_paid_on[r], red_n[r, s], red_tax[r], red_net[r] for r in redemption, s in isb_series where red_n[r, s] > 0
+
+ask d07_low_balances: bal(konto, d) for d in [2025-06-13, 2025-06-19, 2025-07-03, 2026-03-03]
+
+ask d07_check_hr2: check hr2_n[r, s] = red_n[r, s] for r in redemption, s in isb_series
+
+ask d07_check_tax: check red_tax[r] = red_tax_stated[r] for r in redemption
+
+ask d07_check_net: check red_net[r] = red_net_stated[r] for r in redemption
+
+ask d07_left: sum(s in isb_series: held[s, 2026-09-30])
+
+ask d07_lowest: bal(konto, 2025-06-17)

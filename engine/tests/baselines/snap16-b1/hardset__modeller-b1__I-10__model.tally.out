@@ -1,0 +1,13 @@
+costs_2027 (h = pola_hh): 8 340.00 PLN
+  assumed: the agreement states no rounding of a household's part (split_mode)
+  held: owns[rena_hh, car1] = 0.5 (card_shares), read for 2027-11-25
+  cut 2027-01-01
+costs_2027 (h = rena_hh): 8 560.00 PLN
+  assumed: the agreement states no rounding of a household's part (split_mode)
+  held: owns[rena_hh, car1] = 0.5 (card_shares), read for 2027-11-25
+  cut 2027-01-01
+payments: refused: RUN-NEG negative amount -950.00 PLN for leg clear of settle[2027-12, rena_hh]
+premium_2028: (2 700.00 PLN, 600.00 PLN, rena_hh)
+  assumed: the insurer's rounding isn't stated (premium_mode)
+  pinned: claimed[*] = false
+  cut 2027-01-01

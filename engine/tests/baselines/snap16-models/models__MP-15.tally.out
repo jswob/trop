@@ -1,0 +1,184 @@
+q_arrows_check (e = ex1): ok
+  law date 2026-10-18, cut 2026-10-18
+q_arrows_check (e = ex4): ok
+  law date 2026-10-18, cut 2026-10-18
+q_arrows_check (e = ex27): ok
+  law date 2026-10-18, cut 2026-10-18
+q_balance (e = ex1, i = f0): 0
+  law date 2026-10-18, cut 2026-10-18
+q_balance (e = ex1, i = f1): 0
+  law date 2026-10-18, cut 2026-10-18
+q_balance (e = ex1, i = f2): 0
+  law date 2026-10-18, cut 2026-10-18
+q_balance (e = ex4, i = f0): 0
+  law date 2026-10-18, cut 2026-10-18
+q_balance (e = ex4, i = f1): 0
+  law date 2026-10-18, cut 2026-10-18
+q_balance (e = ex4, i = f2): 0
+  law date 2026-10-18, cut 2026-10-18
+q_balance (e = ex27, i = f0): 6
+  law date 2026-10-18, cut 2026-10-18
+q_balance (e = ex27, i = f1): -1
+  law date 2026-10-18, cut 2026-10-18
+q_balance (e = ex27, i = f2): -2
+  law date 2026-10-18, cut 2026-10-18
+q_balance (e = ex27, i = f3): -3
+  law date 2026-10-18, cut 2026-10-18
+q_balance_sum (e = ex1): 0
+  law date 2026-10-18, cut 2026-10-18
+q_balance_sum (e = ex4): 0
+  law date 2026-10-18, cut 2026-10-18
+q_balance_sum (e = ex27): 0
+  law date 2026-10-18, cut 2026-10-18
+q_fewest: ?"Verhoeff 2004, § 6.2, p. 120: finding a transfer graph with minimum number of arrows is at least as difficult as the subset-sum problem; the abstract calls it NP-hard. Tally has no construct that searches over transfer graphs." (fewest_transfers)
+  law date 2026-10-18, cut 2026-10-18
+q_fig5_check (i = f0, j = f1): ok
+  law date 2026-10-18, cut 2026-10-18
+q_fig5_check (i = f0, j = f2): ok
+  law date 2026-10-18, cut 2026-10-18
+q_fig5_check (i = f1, j = f0): ok
+  law date 2026-10-18, cut 2026-10-18
+q_fig5_check (i = f1, j = f2): ok
+  law date 2026-10-18, cut 2026-10-18
+q_fig5_check (i = f2, j = f0): ok
+  law date 2026-10-18, cut 2026-10-18
+q_fig5_check (i = f2, j = f1): ok
+  law date 2026-10-18, cut 2026-10-18
+q_lower_bounds (e = ex1): (0, 0, 0)
+  law date 2026-10-18, cut 2026-10-18
+q_lower_bounds (e = ex4): (0, 0, 0)
+  law date 2026-10-18, cut 2026-10-18
+q_lower_bounds (e = ex27): (6, 6, 3)
+  law date 2026-10-18, cut 2026-10-18
+q_opt_arcs (i = f0, j = f1): 1
+  law date 2026-10-18, cut 2026-10-18
+q_opt_arcs (i = f0, j = f2): 2
+  law date 2026-10-18, cut 2026-10-18
+q_opt_arcs (i = f0, j = f3): 3
+  law date 2026-10-18, cut 2026-10-18
+q_opt_arcs (i = f1, j = f0): 0
+  law date 2026-10-18, cut 2026-10-18
+q_opt_arcs (i = f1, j = f2): 0
+  law date 2026-10-18, cut 2026-10-18
+q_opt_arcs (i = f1, j = f3): 0
+  law date 2026-10-18, cut 2026-10-18
+q_opt_arcs (i = f2, j = f0): 0
+  law date 2026-10-18, cut 2026-10-18
+q_opt_arcs (i = f2, j = f1): 0
+  law date 2026-10-18, cut 2026-10-18
+q_opt_arcs (i = f2, j = f3): 0
+  law date 2026-10-18, cut 2026-10-18
+q_opt_arcs (i = f3, j = f0): 0
+  law date 2026-10-18, cut 2026-10-18
+q_opt_arcs (i = f3, j = f1): 0
+  law date 2026-10-18, cut 2026-10-18
+q_opt_arcs (i = f3, j = f2): 0
+  law date 2026-10-18, cut 2026-10-18
+q_optimal (e = ex1): (0, 0)
+  law date 2026-10-18, cut 2026-10-18
+q_optimal (e = ex4): (0, 0)
+  law date 2026-10-18, cut 2026-10-18
+q_optimal (e = ex27): (3, 6)
+  law date 2026-10-18, cut 2026-10-18
+q_owed (e = ex1, j = f0): 20
+  law date 2026-10-18, cut 2026-10-18
+q_owed (e = ex1, j = f1): 10
+  law date 2026-10-18, cut 2026-10-18
+q_owed (e = ex1, j = f2): 20
+  law date 2026-10-18, cut 2026-10-18
+q_owed (e = ex4, j = f0): 2
+  law date 2026-10-18, cut 2026-10-18
+q_owed (e = ex4, j = f1): 1
+  law date 2026-10-18, cut 2026-10-18
+q_owed (e = ex4, j = f2): 2
+  law date 2026-10-18, cut 2026-10-18
+q_owed (e = ex27, j = f0): 3
+  law date 2026-10-18, cut 2026-10-18
+q_owed (e = ex27, j = f1): 7
+  law date 2026-10-18, cut 2026-10-18
+q_owed (e = ex27, j = f2): 8
+  law date 2026-10-18, cut 2026-10-18
+q_owed (e = ex27, j = f3): 6
+  law date 2026-10-18, cut 2026-10-18
+q_owes (e = ex1, i = f0): 20
+  law date 2026-10-18, cut 2026-10-18
+q_owes (e = ex1, i = f1): 10
+  law date 2026-10-18, cut 2026-10-18
+q_owes (e = ex1, i = f2): 20
+  law date 2026-10-18, cut 2026-10-18
+q_owes (e = ex4, i = f0): 2
+  law date 2026-10-18, cut 2026-10-18
+q_owes (e = ex4, i = f1): 1
+  law date 2026-10-18, cut 2026-10-18
+q_owes (e = ex4, i = f2): 2
+  law date 2026-10-18, cut 2026-10-18
+q_owes (e = ex27, i = f0): 9
+  law date 2026-10-18, cut 2026-10-18
+q_owes (e = ex27, i = f1): 6
+  law date 2026-10-18, cut 2026-10-18
+q_owes (e = ex27, i = f2): 6
+  law date 2026-10-18, cut 2026-10-18
+q_owes (e = ex27, i = f3): 3
+  law date 2026-10-18, cut 2026-10-18
+q_paired (e = ex1): (3, 30)
+  law date 2026-10-18, cut 2026-10-18
+q_paired (e = ex4): (3, 3)
+  law date 2026-10-18, cut 2026-10-18
+q_paired (e = ex27): (5, 14)
+  law date 2026-10-18, cut 2026-10-18
+q_paired_arcs (i = f0, j = f1): 1
+  law date 2026-10-18, cut 2026-10-18
+q_paired_arcs (i = f0, j = f2): 0
+  law date 2026-10-18, cut 2026-10-18
+q_paired_arcs (i = f1, j = f0): 0
+  law date 2026-10-18, cut 2026-10-18
+q_paired_arcs (i = f1, j = f2): 1
+  law date 2026-10-18, cut 2026-10-18
+q_paired_arcs (i = f2, j = f0): 1
+  law date 2026-10-18, cut 2026-10-18
+q_paired_arcs (i = f2, j = f1): 0
+  law date 2026-10-18, cut 2026-10-18
+q_reduced (o = ord_a, s = 0): (5, 14)
+  law date 2026-10-18, cut 2026-10-18
+q_reduced (o = ord_a, s = 1): (4, 8)
+  law date 2026-10-18, cut 2026-10-18
+q_reduced (o = ord_b, s = 0): (5, 14)
+  law date 2026-10-18, cut 2026-10-18
+q_reduced (o = ord_b, s = 1): (4, 11)
+  law date 2026-10-18, cut 2026-10-18
+q_reduced (o = ord_b, s = 2): (3, 8)
+  law date 2026-10-18, cut 2026-10-18
+q_reduced (o = ord_fig5, s = 0): (4, 5)
+  law date 2026-10-18, cut 2026-10-18
+q_reduced (o = ord_fig5, s = 1): (3, 3)
+  law date 2026-10-18, cut 2026-10-18
+q_reduced (o = ord_fig5, s = 2): (0, 0)
+  law date 2026-10-18, cut 2026-10-18
+q_reduced (o = ord_p107, s = 0): (3, 3)
+  law date 2026-10-18, cut 2026-10-18
+q_reduced (o = ord_p107, s = 1): (0, 0)
+  law date 2026-10-18, cut 2026-10-18
+q_scale_check (i = f0, j = f1): ok
+  law date 2026-10-18, cut 2026-10-18
+q_scale_check (i = f0, j = f2): ok
+  law date 2026-10-18, cut 2026-10-18
+q_scale_check (i = f1, j = f0): ok
+  law date 2026-10-18, cut 2026-10-18
+q_scale_check (i = f1, j = f2): ok
+  law date 2026-10-18, cut 2026-10-18
+q_scale_check (i = f2, j = f0): ok
+  law date 2026-10-18, cut 2026-10-18
+q_scale_check (i = f2, j = f1): ok
+  law date 2026-10-18, cut 2026-10-18
+q_settled (e = ex1): true
+  law date 2026-10-18, cut 2026-10-18
+q_settled (e = ex4): true
+  law date 2026-10-18, cut 2026-10-18
+q_settled (e = ex27): false
+  law date 2026-10-18, cut 2026-10-18
+q_weight_check (e = ex1): ok
+  law date 2026-10-18, cut 2026-10-18
+q_weight_check (e = ex4): ok
+  law date 2026-10-18, cut 2026-10-18
+q_weight_check (e = ex27): ok
+  law date 2026-10-18, cut 2026-10-18

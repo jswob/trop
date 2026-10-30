@@ -1,0 +1,93 @@
+# PL-16, L §6.4. Its items: "Two scenarios over one base never meet, so each may declare an id the other declares":
+# t1 and t2 each declare the input bonus and the ask c (10.00 and 20.00 PLN). from D: "a scenario row over a base fact
+# that governs always governs only from D, and in that world the fact changes with the law date: its readers there
+# state their law date (§4.3, P-6)": k governs always in the base, read without a law date there (q); in u1 it is 2
+# from 2027-01-01 and 1 before (r, r0); u2's ask reads it without one (LOAD-LAWDATE), refusing u2 alone (L §8.3).
+=== b.tally
+model base
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2030-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+input k: int
+
+version v1
+  cite s
+  governs always
+  known 2026-01-01
+  k = 1 "s"
+
+ask q: k
+=== tb1.tally
+scenario t1 over base
+  tally 2
+  from 2027-01-01
+
+input bonus: money PLN
+
+version b1
+  cite s
+  governs always
+  known 2026-10-15
+  bonus = 10.00 PLN "own"
+
+ask c: bonus in t1
+=== tb2.tally
+scenario t2 over base
+  tally 2
+  from 2027-01-01
+
+input bonus: money PLN
+
+version b2
+  cite s
+  governs always
+  known 2026-10-15
+  bonus = 20.00 PLN "own"
+
+ask c: bonus in t2
+=== u1.tally
+scenario u1 over base
+  tally 2
+  from 2027-01-01
+
+version w1
+  cite s
+  governs 2027-01-01..
+  known 2026-10-15
+  replace k = 2 "s"
+
+ask r: k in u1 law 2027-06-01
+ask r0: k in u1 law 2026-06-01
+=== u2.tally
+scenario u2 over base
+  tally 2
+  from 2027-01-01
+
+version w2
+  cite s
+  governs 2027-01-01..
+  known 2026-10-15
+  replace k = 3 "s"
+
+ask r2: k in u2
+=== expect
+scenario u2: refused: LOAD-LAWDATE ask r2 reads law-dated k directly, without law (u2.tally:11)
+c: 10.00 PLN
+  world: t1
+  cut 2026-10-20
+c: 20.00 PLN
+  world: t2
+  cut 2026-10-20
+q: 1
+  cut 2026-10-20
+r: 2
+  world: u1
+  held: k = 2 (w1), read for 2027-06-01
+  law date 2027-06-01, cut 2026-10-20
+r0: 1
+  world: u1
+  law date 2026-06-01, cut 2026-10-20

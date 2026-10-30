@@ -1,0 +1,197 @@
+part tax
+  tally 2
+  note "The yearly returns (PIT-5, PIT-6, PIT-7). A payer's year comes from its yearly information (A-D13) once it has arrived, and is computed from the payroll before (A-02 as known 2022-05-31). A result is the tax less the advances: positive is payable, negative is a refund."
+  note "The scenario no_cut (scenarios/no_cut.tally) restates PIT-3 v2 for 2022 on and sets no_cut_on, so the advances are computed again under it, as the key's without figures do (PIT-3 v2 throughout, advances too). A rule pointing at the scenario's version with v (L §6.4) is refused by the reference interpreter (fault F3)."
+
+index cause = [joint_filing, rate_cut]
+  note "the two things A-01 names that made the 2022 refund larger"
+
+index cause_rank = 1..2
+  note "the places of the causes, largest first (A-01 asks them so)"
+
+input biz_bc[s in persons]: bool question "Has this spouse business income taxed under PIT-10 form (b) or (c) on this day (PIT-6 .1)?"
+
+input couple_community: bool question "Do the spouses have community property on this day (CIV-1, PIT-6 .1)?"
+
+input couple_married: bool question "Are the spouses married to each other on this day (PIT-6 .1)?"
+
+input cut_before: date question "On which day was the PIT-3 wording before the July 2022 cut last in force?"
+
+input resident[s in persons]: bool question "Is this spouse a resident on this day (PIT-6 .1)?"
+
+input info[e in payer, y in tax_year]: (income money DUK, costs money DUK, soc money DUK, health_ded money DUK, advances money DUK) question "What does this payer's yearly information state for this tax year?"
+
+input no_cut_on: bool question "Are the advances computed again under the PIT-3 the scenario keeps in force?"
+
+input joint_tax_2: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input relief_half_2: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+def adv_p[s in persons, y in tax_year]: money DUK = sum(y_adv[e, y] for e in payer where earner[e, y] != none and earner[e, y] == s) at start_of(y)
+
+def base_p[s in persons, y in tax_year]: money DUK at start_of(y)
+  note "PIT-5 .2: the sum of the person's PIT-2 bases from every payer (PIT-2 .3, never below 0), rounded (GEN-5 .1)"
+  rule base = round(sum(max(0, y_inc[e, y] - y_soc[e, y] - y_costs[e, y]) for e in payer where earner[e, y] != none and earner[e, y] == s), 1, half-up)
+
+def cause_at[r in cause_rank, y in tax_year]: key cause at start_of(y)
+  note "A-01 asks the causes largest first: at place r, the cause with r - 1 causes larger than it; of two equal causes, the one listed first in cause comes first. A cause whose gain is none (joint filing where the spouses may not file jointly) takes no place, and a place no cause takes is none"
+  rule base = first(c in cause where gain[c, y] != none and count(d in cause where gain[d, y] != none and (gain[d, y] > gain[c, y] or (gain[d, y] == gain[c, y] and pos(d) < pos(c)))) == r - 1) when count(c in cause where gain[c, y] != none) >= r
+  rule empty = none when count(c in cause where gain[c, y] != none) < r
+
+def cause_gain[r in cause_rank, y in tax_year]: num DUK at start_of(y)
+  note "the gain of the cause at place r; none where no cause takes the place"
+  rule base = gain[cause_at[r, y], y] when cause_at[r, y] != none
+  rule empty = none when cause_at[r, y] == none
+
+def couple_day[d in day]: bool at d
+  note "PIT-6 .1 on day d: married, with community property, both residents, and neither with business income under PIT-10 form (b) or (c)"
+  rule base = couple_married and couple_community and all(resident[s] and not biz_bc[s] for s in persons on d)
+
+def gain[c in cause, y in tax_year]: num DUK at start_of(y)
+  note "how much larger each cause made the year's refund: joint filing, the separate returns less the joint one (PIT-6); the rate cut, the joint return with the PIT-3 wording before the cut, the advances as withheld, less the actual one (PIT-3 v3 governs the whole tax year 2022); where the spouses may not file jointly (PIT-6 .1), joint filing made nothing larger (none) and the rate cut's part is that of the separate returns"
+  rule cut_ = together_joint[y] as if {wording cut_before for [pit3_rate, pit3_reducing]} - together_joint[y] when c == rate_cut and joint_may[y]
+  rule cut_sep = together_sep[y] as if {wording cut_before for [pit3_rate, pit3_reducing]} - together_sep[y] when c == rate_cut and not joint_may[y]
+  rule filing = together_sep[y] - together_joint[y] when c == joint_filing and joint_may[y]
+  rule no_filing = none when c == joint_filing and not joint_may[y]
+
+def hded_p[s in persons, y in tax_year]: num DUK = sum(y_hded[e, y] for e in payer where earner[e, y] != none and earner[e, y] == s) at start_of(y)
+
+def joint_base[y in tax_year]: money DUK at start_of(y)
+  note "PIT-6 .3: the combined base, rounded"
+  rule base = round(base_p[ania, y] + base_p[tomek, y], 1, half-up)
+
+def joint_may[y in tax_year]: bool at start_of(y)
+  note "PIT-6 .1: the spouses may file jointly for tax year y when the conditions hold for the whole of it, 1 January to 31 December"
+  rule base = all(couple_day[d] for d in day where year_of(d) == y)
+
+def joint_tax[y in tax_year]: money DUK at start_of(y)
+  note "PIT-6 .3: twice the PIT-3 tax on half the combined base (the half exact), rounded; no joint return where PIT-6 .1 doesn't hold"
+  rule base = round(joint_tax_2 * max(0, marginal(pit3_rate, joint_base[y] / joint_tax_2) - pit3_reducing), 1, half-up) when joint_may[y]
+  rule apart = none when not joint_may[y]
+
+def jpart[s in persons, y in tax_year]: money DUK at start_of(y)
+  note "PIT-6 .5: each spouse's part in proportion to their base, in whole dukats; a dukat left over goes to the larger base"
+  rule apart = none when not joint_may[y]
+  rule floor_part = part_floor[s, y] when joint_may[y]
+  rule larger beats floor_part = part_floor[s, y] + joint_tax[y] - sum(part_floor[t, y] for t in persons over y) when joint_may[y] and s == argmax(base_p[t, y] for t in persons over y) ties by (if t == ania then 0 else 1)
+
+def parents_income[y in tax_year]: money DUK = sum(base_p[s, y] for s in persons over y) at start_of(y)
+
+def part_floor[s in persons, y in tax_year]: money DUK = round(joint_tax[y] * base_p[s, y] / joint_base[y], 1, floor) at start_of(y)
+
+def relief[y in tax_year]: money DUK at start_of(y)
+  note "PIT-7 .1, .3: 125.00 DUK a month for each child, less the parents' income above 112 000.00 DUK, never below 0"
+  rule base = max(0, sum(pit7_relief_month * relief_months[c, y] for c in child) - max(0, parents_income[y] - pit7_income_limit))
+
+def relief_half[s in persons, y in tax_year]: num DUK at start_of(y)
+  note "PIT-7 .4: the relief in halves, carried exactly (GEN-5 .5)"
+  rule base = relief[y] / relief_half_2
+
+def relief_months[c in child, y in tax_year]: int at start_of(y)
+  note "PIT-7 .1: the months of the year in which the child was alive and under 18 on at least one day"
+  rule base = count(k in month where year_of(k) == y and born[c] < end_of(k) and (born[c] >= start_of(k) or age(born[c], start_of(k)) < pit7_age))
+
+def res_joint[s in persons, y in tax_year]: num DUK at start_of(y)
+  note "PIT-6 .5, PIT-5 .4: the spouse's part less the half of the child relief, less the spouse's advances, with no floor (the floor is the joint tax's, PIT-6 .4 and PIT-7 .5: together_joint); reading E of pit6_health also takes the health deductible off under PIT-5 v1, rounded as PIT-5 v1 .3 rounds a tax"
+  rule apart = none when not joint_may[y]
+  rule health beats reliefs v pit5_v1 = round(jpart[s, y] - relief_half[s, y] - hded_p[s, y], 1, half-up) - adv_p[s, y] when joint_may[y] and pit6_health == health_off
+  rule reliefs = jpart[s, y] - relief_half[s, y] - adv_p[s, y] when joint_may[y]
+
+def res_sep[s in persons, y in tax_year]: money DUK at start_of(y)
+  note "PIT-5 .4: a separate return's result, the tax less the advances"
+  rule base = sep_tax[s, y] - adv_p[s, y]
+
+def sep_tax[s in persons, y in tax_year]: money DUK at start_of(y)
+  note "PIT-5 .3: the PIT-3 tax of the version governing the year, less the child relief (v1: less the health deductible), never below 0, rounded"
+  rule v1 v pit5_v1 = round(max(0, marginal(pit3_rate, base_p[s, y]) - pit3_reducing - relief_half[s, y] - hded_p[s, y]), 1, half-up)
+  rule v2 v pit5_v2 = round(max(0, marginal(pit3_rate, base_p[s, y]) - pit3_reducing - relief_half[s, y]), 1, half-up)
+
+def together_joint[y in tax_year]: num DUK at start_of(y)
+  note "PIT-6: both spouses' results of the joint return; none where PIT-6 .1 doesn't hold. PIT-6 .4: both reliefs come off the joint tax (the spouses' parts together), never below 0, then both advances; with no floor reached it is the sum of the spouses' results"
+  rule apart = none when not joint_may[y]
+  rule base = max(0, sum(res_joint[s, y] + adv_p[s, y] for s in persons over y)) - sum(adv_p[s, y] for s in persons over y) when joint_may[y]
+
+def together_sep[y in tax_year]: money DUK = sum(res_sep[s, y] for s in persons over y) at start_of(y)
+
+def y_adv[e in payer, y in tax_year]: money DUK at start_of(y)
+  rule calc = sum(adv[e, m] for m in month where year_of(m) == y)
+  rule doc beats calc = info[e, y].advances when info[e, y] != none
+  rule nocut beats calc, doc = sum(adv[e, m] for m in month where year_of(m) == y) when no_cut_on
+
+def y_costs[e in payer, y in tax_year]: money DUK at start_of(y)
+  rule calc = sum(costs[e, m] for m in month where year_of(m) == y)
+  rule doc beats calc = info[e, y].costs when info[e, y] != none
+
+def y_hded[e in payer, y in tax_year]: num DUK at start_of(y)
+  note "SOC-2 v1 .2: the health contributions up to 7.75 % of their bases, read only by the PIT-5 v1 rules"
+  rule calc = sum(min(health[e, m], soc2_deductible * (g_paid[e, m] - soc[e, m])) for m in month where year_of(m) == y)
+  rule doc beats calc = info[e, y].health_ded when info[e, y] != none
+
+def y_inc[e in payer, y in tax_year]: money DUK at start_of(y)
+  rule calc = sum(inc[e, m] for m in month where year_of(m) == y)
+  rule doc beats calc = info[e, y].income when info[e, y] != none
+
+def y_soc[e in payer, y in tax_year]: money DUK at start_of(y)
+  rule calc = sum(soc[e, m] for m in month where year_of(m) == y)
+  rule doc beats calc = info[e, y].soc when info[e, y] != none
+
+version cast_marriage
+  cite story
+  governs always
+  known 2016-09-10
+  note "PIT-6 .1's conditions as the dossier states them; a day before the marriage has no row, so it is a hole"
+  couple_community = true governs 2016-09-10.. "story § The cast: married on 2016-09-10, no marriage contract, so their property is community property (CIV-1 .1)"
+  couple_married = true governs 2016-09-10.. "story § The cast: Ania and Tomek married on 2016-09-10"
+
+version cast_status
+  cite story
+  governs always
+  known 2021-01-01
+  note "the cast table and its note, as the story states them from its first entry"
+  biz_bc[ania] = false "story § The cast: neither has ever run a business"
+  biz_bc[tomek] = false "story § The cast: neither has ever run a business"
+  resident[ania] = true "story § The cast: Anna (Ania) Lis, resident of Lenia"
+  resident[tomek] = true "story § The cast: Tomasz (Tomek) Lis, resident of Lenia"
+
+version no_info
+  cite modeller
+  governs always
+  known 2021-01-01
+  note "a payer's yearly information arrives in February after the year; until it has, there is none, and the year is computed from the payroll"
+  info[*, *] = none "no yearly information has arrived"
+  no_cut_on = false "the advances are as the payers withheld them; the scenario no_cut sets it from 2022"
+
+version info_2021
+  cite a_d13_nurt_2021
+  governs always
+  known 2022-02-24
+  info[nurt, 2021] = (income: 77280.00, costs: 3000.00, soc: 10141.30, health_ded: 5057.55, advances: 4960.00) "A-D13-NURT-2021: income, costs, social contributions, health deductible (7.75 %), advances"
+  info[kalina, 2021] = (income: 60897.00, costs: 3000.00, soc: 8070.00, health_ded: 4024.58, advances: 3419.00) "A-D13-KALINA-2021: income, costs, social contributions, health deductible (7.75 %), advances"
+
+version pit3_cut_day
+  cite pit_3
+  governs 2022-01-01..2022-12-31
+  known 2022-06-14
+  cut_before = 2022-06-30 "PIT-3 v2 in force 2022-01-01 – 2022-06-30; v3 in force 2022-07-01, published 2022-06-14"
+
+version info_2022
+  cite a_d13_nurt_2022
+  governs always
+  known 2023-02-24
+  info[nurt, 2022] = (income: 192490.00, costs: 3000.00, soc: 24236.10, health_ded: none, advances: 27411.00) "A-D13-NURT-2022: income, costs, social contributions, advances; no health deduction under SOC-2 v2"
+  info[kalina, 2022] = (income: 63333.00, costs: 3000.00, soc: 8392.80, health_ded: none, advances: 3402.00) "A-D13-KALINA-2022: income, costs, social contributions, advances"
+
+version info_2023
+  cite a_d13_nurt_2023
+  governs always
+  known 2024-02-24
+  info[nurt, 2023] = (income: 81975.00, costs: 3000.00, soc: 10757.31, health_ded: none, advances: 4970.00) "A-D13-NURT-2023: income, costs, social contributions, advances"
+  info[kalina, 2023] = (income: 21271.20, costs: 1000.00, soc: 2808.36, health_ded: none, advances: 962.00) "A-D13-KALINA-2023: income, costs, social contributions, advances"
+
+version info_sio_2023
+  cite a_d13_sio_2023
+  governs always
+  known 2024-03-01
+  info[sio, 2023] = (income: 26909.92, costs: 0.00, soc: 0.00, health_ded: none, advances: 3499.00) "A-D13-SIO-2023: parental pay, no costs or contributions, advances"

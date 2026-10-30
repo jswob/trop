@@ -1,0 +1,22 @@
+model fam
+  tally 2
+  on 2026-10-30
+  start 2026-01-01
+  end 2026-06-30
+  use a = "ania.tally" sha256 "1c7ffd5ef84e5a7213eb84987a63042768f90fe42bd77adcc1f7826b466bd0f2"
+  use d = "halina.tally" sha256 "0227ee1544aa0761f104d77065ab2803f3d4de2abeea273fcce1ac48887a8653"
+  same a.ania = ania
+  same d.ania = ania
+  note "PTY-05 x OWN-12, the inner joint model: households A and D as one family. Its own party ania is A's Ania and D's Ania, by the same lines (LANGUAGE 6.1)."
+  note "ania_parts reads her parts across both members; the outer model reads it as f.ania_parts."
+
+source fam_papers "The family's own record of who is who (made up)"
+
+def ania_parts[t in days]: money DUK = bal(a.sav, t) of ania + bal(d.deposit, t) of ania
+
+ask q_fam: ania_parts[2026-06-30]
+
+version fam_cast
+  cite fam_papers
+  known 2026-01-01
+  parties + [ania] lives 1988-04-12..

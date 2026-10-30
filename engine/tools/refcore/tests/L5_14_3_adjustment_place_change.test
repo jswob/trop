@@ -1,0 +1,67 @@
+# L §5.14.3 (round 12b): a version that changes "the places of one of its legs (then even with δ = 0: the booked
+# movement stays where it was booked, and the change is never silent)" creates an adjustment; E §5 step 4 "Record
+# δ ≠ 0, or a leg whose places V changes (δ may be 0)". move_acct (known 2026-05-01) sends March's wage to konto2; the
+# instance was booked on 2026-03-10 into konto and stays there (a: four wages in konto by April, none in konto2). Its
+# adjustment has change 0.00 PLN (c) and nothing settles it, so konto's balance from 2026-05-01 is HOLE-CHANGED (b,
+# L §8.1); no adjustment: line, since its remainder is 0 (E §5 step 5: "A remainder ≠ 0 at the cut is listed").
+=== m.tally
+model hh
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source plan "plan"
+source act "act"
+unit PLN: currency minor 0.01
+kind wages: event certain
+  leg cash: PLN
+place konto: accounts PLN lives 2019-05-01..
+place konto2: accounts PLN lives 2019-05-01..
+place world: outside lives 1900-01-01..
+input wage_amt: money PLN
+input wage_dom: int
+input pay_to: key accounts
+def net[m in months]: money PLN = wage_amt at start_of(m)
+def dest[m in months]: key accounts = pay_to at start_of(m)
+
+move wage[m in months]: wages
+  on day_of(m, wage_dom)
+  at start_of(m)
+  leg cash from world to dest[m] amount net[m]
+
+version plan_2026
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  wage_amt = 5 000.00 PLN "umowa"
+  wage_dom = 10 "umowa"
+  pay_to = konto "umowa"
+  opening[konto] = 0 PLN at 2026-01-01 start "wyciąg"
+  opening[konto2] = 0 PLN at 2026-01-01 start "wyciąg"
+
+version move_acct
+  cite act
+  governs 2026-03
+  known 2026-05-01
+  replace pay_to = konto2 "aneks"
+
+ask a: bal(konto, 2026-04-30), bal(konto2, 2026-04-30)
+ask b: bal(konto, 2026-05-31)
+ask c: count(x in adjustments over 2026), sum(x.change for x in adjustments over 2026)
+=== expect
+a: (20 000.00 PLN, 0.00 PLN)
+  unfulfilled: wage[2026-01]
+  unfulfilled: wage[2026-02]
+  unfulfilled: wage[2026-03]
+  unfulfilled: wage[2026-04]
+  cut 2026-10-20
+b: ?"wage[2026-03] on 2026-03-10 changed after it was paid (version move_acct); is back pay due, and when?" (wage[2026-03])
+  unfulfilled: wage[2026-01]
+  unfulfilled: wage[2026-02]
+  unfulfilled: wage[2026-03]
+  unfulfilled: wage[2026-04]
+  unfulfilled: wage[2026-05]
+  cut 2026-10-20
+c: (1, 0.00 PLN)
+  cut 2026-10-20

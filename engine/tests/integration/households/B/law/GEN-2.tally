@@ -1,0 +1,14 @@
+part gen_2
+  tally 2
+  law
+  note "GEN-2 · Deadlines. What is due by a day may be done on it or before (.1); a deadline on a day that is not a business day moves to the next business day (.2); a payment is made on the day the payer's account is debited (.3)."
+  note "No figure: the households' defs apply .2 as next_business(d, holidays) (L §4.2), read at the deadline's own day through the def's at, so the holiday list is the deadline's year's."
+
+source gen_2 "General Provisions Act, GEN-2 Deadlines (tmp/cases/law/acts.md)"
+
+version gen2_v1
+  cite gen_2
+  governs 2018-01-01..
+  known 2017-06-01
+  enters 2018-01-01
+  note "GEN-2 v1, in force 2018-01-01 until replaced, published 2017-06-01; governs every deadline in this law."

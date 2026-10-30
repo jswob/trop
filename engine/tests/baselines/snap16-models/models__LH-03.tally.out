@@ -1,0 +1,21 @@
+bs_carryover [ti_basis = *]: 4 000.00 USD
+  assumed: the example files a joint return for living filers; it doesn't say either died (decedent[bob_shelly])
+  law date 2026-10-18, cut 2026-10-18
+bs_deduction: 3 000.00 USD
+  law date 2026-10-18, cut 2026-10-18
+cap_pub (s = joint): 3 000.00 USD
+  law date 2026-10-18, cut 2026-10-18
+cap_pub (s = mfs): 1 500.00 USD
+  law date 2026-10-18, cut 2026-10-18
+cap_pub (s = other): 3 000.00 USD
+  law date 2026-10-18, cut 2026-10-18
+dec_carryover [ti_basis = *]: 0.00 USD
+  pinned: decedent[bob_shelly] = true
+  law date 2026-10-18, cut 2026-10-18
+var_carryover [ti_basis = *]: 0.00 USD
+  assumed: the example files a joint return for living filers; it doesn't say either died (decedent[bob_shelly])
+  pinned: net_loss[bob_shelly] = 2 000.00 USD
+  law date 2026-10-18, cut 2026-10-18
+var_deduction: 2 000.00 USD
+  pinned: net_loss[bob_shelly] = 2 000.00 USD
+  law date 2026-10-18, cut 2026-10-18

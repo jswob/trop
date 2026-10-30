@@ -1,0 +1,25 @@
+# L §4.6 Readings: "a row of a reading without an instant ... is refused, LOAD-INSTANT". (Writer 6: was
+# REFCORE-UNSPECIFIED §4.6.)
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+
+input px[u in currencies]: num PLN/u reading
+input max_age: int
+
+version r
+  cite s
+  governs 2026..
+  known 2026-03-05
+  px[EUR] = 4.3 PLN/EUR
+
+ask q1: px[EUR] law 2026-03-02
+=== expect
+refused: LOAD-INSTANT ...

@@ -1,0 +1,58 @@
+# L §6.1 same: each side may name a row, "same a.rent[2026-03] = b.rent_in[2026-03]"; "Facts about them from both sides
+# are read together, and a fact on which they disagree for a day is a hole naming both rows (HOLE-SAME), never a silent
+# pick". ana states 2 000.00 PLN, ben 2 100.00 PLN: a hole read from either side. b.rent_in[2026-04] is no side of a
+# same line: ben's row (2 100.00 PLN).
+=== options pin=bytes
+=== joint.tally
+model family
+  tally 2
+  on 2026-01-05
+  start 2026-01-01
+  end 2026-12-31
+  use a = "ana.tally" sha256 "e42519b086605a071d9ecc73cede5a0d6c7a969e069b921d3607f5353dd04a6c"
+  use b = "ben.tally" sha256 "0100e9a6e9d46e4f564190c5f45cf81d6966cbd6c5a95b32effabbaea4534b0d"
+  same a.rent[2026-03] = b.rent_in[2026-03]
+
+ask ra: a.rent[2026-03]
+ask rb: b.rent_in[2026-03]
+ask r4: b.rent_in[2026-04]
+=== ana.tally
+model ana
+  tally 2
+  on 2026-01-05
+  start 2026-01-01
+  end 2026-12-31
+
+source s "umowa"
+unit PLN: currency minor 0.01
+input rent[m in months]: money PLN
+
+version v
+  cite s
+  governs 2026..
+  known 2025-12-01
+  rent[2026-03] = 2 000.00 PLN "umowa najmu"
+=== ben.tally
+model ben
+  tally 2
+  on 2026-01-05
+  start 2026-01-01
+  end 2026-12-31
+
+source s "umowa"
+unit PLN: currency minor 0.01
+input rent_in[m in months]: money PLN
+
+version v
+  cite s
+  governs 2026..
+  known 2025-12-01
+  rent_in[2026-03] = 2 100.00 PLN "umowa najmu"
+  rent_in[2026-04] = 2 100.00 PLN "umowa najmu"
+=== expect ra rb r4
+ra: ?"a.rent[2026-03] and b.rent_in[2026-03] are one, but the value differs on 2026-03-01: 2 000.00 PLN (a.v:a.rent[2026-03]) and 2 100.00 PLN (b.v:b.rent_in[2026-03])" (a.rent[2026-03], b.rent_in[2026-03])
+...
+rb: ?"b.rent_in[2026-03] and a.rent[2026-03] are one, but the value differs ...
+...
+r4: 2 100.00 PLN
+...

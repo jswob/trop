@@ -1,0 +1,31 @@
+# Writer 11 (tally 2.1, 2.1-5, R-14). L §3.1 A day key where a date is expected: "Where a date is expected (an operand of a
+# comparison, min or max with a date, an if branch whose other branch is a date, a date argument), a key of a day index
+# may stand, and means start_of(k): a day has one date. A day index is days or a range of day periods without by n
+# (§4.1). A key of a month or a year index, or of a day range by n, doesn't convert ...: it is written, and the mixed form
+# stays refused (LOAD-UNIT)".
+# min and max of a day key and a date (the keys and cutoff carried).
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+input cutoff: date
+input flag: bool
+def lo[d in days]: date = min(d, cutoff) at cutoff
+def hi[d in days]: date = max(cutoff, d) at cutoff
+ask q: lo[2026-03-09], lo[2026-03-12], hi[2026-03-12]
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  cutoff = 2026-03-10
+  flag = true
+=== expect
+q: (2026-03-09, 2026-03-10, 2026-03-12)
+  cut 2026-01-01
+warning: WARN-UNREAD input flag is read by nothing

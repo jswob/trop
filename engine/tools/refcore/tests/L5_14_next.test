@@ -1,0 +1,51 @@
+# L §5.14.1 next(K, d): "the first movement of event kind K whose day is on or after d (first(m in K over d ..) ties
+# by m.day) ... When none is planned yet, its binding is empty at the cut and its span reaches past it, so it is a hole
+# naming the binding (HOLE-NOTYET, §3.1)"; L §8.1 HOLE-NOTYET "<x>: no <event> yet, and its span reaches past the cut"
+# (writer 8: x is the binding's variable, m in the stated equivalence; was pending, removed by the review).  wage[m] for m in pay_months (2026-01..2026-06) falls on day_of(m, 10) (L §4.2): on or after
+# 2026-03-10 the first is wage[2026-03], on or after 2026-03-11 wage[2026-04] on 2026-04-10; after the last
+# (2026-06-10) none is planned: HOLE-NOTYET.  L §5.10 "Kind and unit are read by x in K and unit(x)": konto is a place
+# of unit PLN.
+=== m.tally
+model n
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+index pay_months = month 2026-01..2026-06
+
+kind wages: event certain
+  leg cash: PLN
+
+input pay_dom: int
+input pay_amt: money PLN
+
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+
+move wage[m in pay_months]: wages
+  on day_of(m, pay_dom)
+  leg cash from world to konto amount pay_amt
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  pay_dom = 10
+  pay_amt = 4 000.00 PLN
+
+ask n1: next(wages, 2026-03-10), next(wages, 2026-03-11)
+ask n2: next(wages, 2026-03-11).day
+ask n3: next(wages, 2026-06-11)
+ask u1: unit(konto)
+=== expect
+n1: (wage[2026-03], wage[2026-04])
+  cut 2026-01-01
+n2: 2026-04-10
+  cut 2026-01-01
+n3: ?"m: no wages yet, and its span reaches past the cut" (wages)
+  cut 2026-01-01
+u1: PLN
+  cut 2026-01-01

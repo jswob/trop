@@ -1,0 +1,9 @@
+# L §5.1: "LOAD-HEADER if tally, on, start or end is missing ... The header is checked before the grammar,
+# so a missing header line is LOAD-HEADER, not LOAD-PARSE."
+=== m.tally
+model ul05
+  on 2016-03-01
+  start 2015-11-01
+  end 2016-10-31
+=== expect
+refused: LOAD-HEADER ...

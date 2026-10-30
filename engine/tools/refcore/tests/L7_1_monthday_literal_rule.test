@@ -1,0 +1,26 @@
+# GD-2 (round 19): L §7.1 "Month-day literals (`04-30`, §3.1) are date literals here: they appear only in rows (a
+# calendar's `yearly` list included), an anchored index's `from`, pins and asks, and a rule can't hold one
+# (`LOAD-LITERAL`)": day_of(y, 04-30) in a def.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+index yrs = year 2026..2027
+input file_by: monthday
+input other: monthday
+def d[y in yrs]: date = day_of(y, 04-30)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  file_by = 04-30
+  other = 04-30
+ask q: d[2026]
+=== expect
+refused: LOAD-LITERAL a date in a rule; make it a version (m.tally:12)

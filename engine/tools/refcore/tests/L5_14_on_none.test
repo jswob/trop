@@ -1,0 +1,43 @@
+# L §5.14 (round 8): "on d is the movement's day, s.day: a date, a window (§4.4), a hole, or none, which gives no
+# instance at that key". gift[ana]'s day is a none row, so it has no instance: flows of the move count gift[ben]
+# only, 10.00 PLN, and a count of the move's movements in 2026 is 1. (Settles writer 4's gap 5, L §4.2 vs L §5.14.)
+=== m.tally
+model g
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+index people = [ana, ben]
+kind gifts: event certain
+  leg cash: PLN
+
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+
+input gday[p in people]: date
+input amt: money PLN
+
+move gift[p in people]: gifts
+  on gday[p]
+  leg cash from world to konto amount amt
+
+ask f: flows(gift, 2026)
+ask n: count(g in gifts over 2026)
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  gday[ana] = none
+  gday[ben] = 2026-03-01
+  amt = 10.00 PLN
+  opening[konto] = 0.00 PLN at 2026-01-01 start "bilans"
+=== expect
+f: 10.00 PLN
+...
+n: 1
+...

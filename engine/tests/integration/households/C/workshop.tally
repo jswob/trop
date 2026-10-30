@@ -1,0 +1,117 @@
+part workshop
+  tally 2
+  note "Jan's workshop (C-D09, C-D10, C-D11, C-D12; the registers and the business account): PIT-10 form (a), VAT monthly, sickness insurance elected; started 2021-02-01, ended 2024-06-14; the business account closed on 2024-06-28 into the joint account. Social contributions SOC-3 (stage 3 from September 2023; pro rata in the month the business closes, SOC-3 .5 as the supplement reads it), the health contribution SOC-4 (a), the monthly VAT returns VAT-4 (the June 2024 one the last, VAT-4 .4), the advances and the year's profit PIT-10 .3, .5, .7."
+  note "Input VAT is deducted in the month of its invoice's date (VAT-5 .1 allows that month or the two after; the business account's VAT payments for January – May 2024 are checked against it in asks/C-01)."
+
+input biz_start: date question "On which day did the workshop start (C-D09)?"
+
+input biz_end: date question "On which day did the workshop's activity end (C-D09)?"
+
+input biz_sick: bool question "Did Jan elect sickness insurance for the workshop (C-D09)?"
+
+input biz_closed_acct: date question "On which day was the business account closed (C-D11)?"
+
+input vat_filed[m in month]: date question "On which day was the VAT return for this month filed (C-D12)?"
+
+input stage1_months: int question "How many months after the starting month does stage 1 run (SOC-3 .1)?"
+
+input stage2_months: int question "How many months does stage 2 run (SOC-3 .2)?"
+
+version register
+  cite c_d09
+  governs always
+  known 2024-06-17
+  biz_start = 2021-02-01 "C-D09: started 2021-02-01"
+  biz_end = 2024-06-14 "C-D09 entry of 2024-06-17: activity ended on 2024-06-14"
+  biz_sick = true "C-D09: SIO: sickness insurance elected from the start"
+
+version closing
+  cite story
+  governs always
+  known 2024-06-28
+  biz_closed_acct = 2024-06-28 "C-D11: the account is closed on 2024-06-28; its balance transferred the same day to the joint account"
+  vat_filed[2024-06] = 2024-07-15 known 2024-07-15 "C-D12: received on 2024-07-15, the VAT return for June 2024, marked as the last, with a request to refund the excess"
+
+version soc3_stages
+  cite soc_3
+  governs always
+  known 2017-09-01
+  stage1_months = 6 "SOC-3 v1 .1: to the end of the 6th month after the month it starts"
+  stage2_months = 24 "SOC-3 v1 .2: the next 24 months"
+
+def stage3_from: date = add_months(start_of(month_of(biz_start)), stage1_months + 1 + stage2_months)
+
+def month_days[m in month]: int = count(d in day where month_of(d) == m)
+
+def active_days[m in month]: int = count(d in day where month_of(d) == m and d >= biz_start and d <= biz_end)
+
+def soc_base[m in month]: num DUK at start_of(m)
+  note "SOC-3 .3: in stage 3 the base is 60 % of the year's AVG-WAGE-PROJ; SOC-3 .5 (supplement): in the month the business closes, times the days of activity in the month over the month's days"
+  rule s3 = soc3_stage3_share * avg_wage_proj * active_days[m] / month_days[m] when start_of(m) >= stage3_from
+
+def soc_part_due[c in soc3_part, m in month]: bool
+  rule all_ = true
+  rule sick beats all_ = biz_sick when c == sickness
+  rule labour beats all_ = start_of(m) >= stage3_from when c == labour
+
+def soc_part[c in soc3_part, m in month]: money DUK at start_of(m)
+  note "SOC-3 .4: each contribution rounded to the ort, half up (GEN-5 .3)"
+  rule due = round(soc_base[m] * soc3_rate[c], minor(DUK), half-up) when soc_part_due[c, m]
+  rule not_due = 0 DUK when not soc_part_due[c, m]
+
+def social[m in month]: money DUK = sum(soc_part[c, m] for c in soc3_part)
+
+def rev_m[m in month]: money DUK = sum(sale[i].net for i in sale_inv where month_of(sale[i].issued) == m and sale[i].issued <= biz_end)
+
+def cost_m[m in month]: money DUK = sum(cost[i].net for i in cost_inv where month_of(cost[i].dated) == m and cost[i].dated <= biz_end)
+
+def health[m in month]: money DUK at start_of(m)
+  note "SOC-4 .1, form (a): 9 % of the month's income (revenue less costs), never below 9 % of the MIN-WAGE in force on 1 January of the year; rounded to the ort (.4)"
+  rule base = round(max(soc4_rate * (rev_m[m] - cost_m[m]), soc4_rate * min_wage_jan[year_of(start_of(m))]), minor(DUK), half-up)
+
+def min_wage_jan[y in year]: money DUK = min_wage at start_of(y)
+
+def contrib_due_day[m in month]: date
+  note "SOC-3 .6, SOC-4 .4: by the 20th of the next month; a deadline on a day that is no business day moves to the next (GEN-2 .2)"
+  rule base = schedule(m + 1, pay_dom_20, following, holidays)
+
+def vat_out[m in month]: money DUK = sum(sale[i].vat for i in sale_inv where month_of(sale[i].issued) == m and sale[i].issued <= biz_end)
+
+def vat_in[m in month]: money DUK = sum(cost[i].vat for i in cost_inv where month_of(cost[i].dated) == m and cost[i].dated <= biz_end)
+
+def vat_result[m in month]: money DUK
+  note "VAT-4 .1, .3: the VAT on the month's invoices less the input VAT deducted in the month less the excess carried from the month before, rounded to whole dukats (GEN-5 .2); the month before January 2024 left none (its VAT was paid: the business account's row of 2024-01-25)"
+  rule first = round(vat_out[m] - vat_in[m], 1, half-up) when m == month_of(start_of(year_of(biz_end)))
+  rule carry = round(vat_out[m] - vat_in[m] - max(0 DUK, 0 DUK - vat_result[m - 1]), 1, half-up) when pos(m) > 1 and m > month_of(start_of(year_of(biz_end)))
+
+def vat_paid[m in month]: money DUK = sum(wb[d, s].dr for d in day, s in seq where d <= biz_closed_acct and wb[d, s] != none and wb[d, s].k == b_vat and wb[d, s].m == m)
+
+def last_vat_month: month = month_of(biz_end)
+
+def vat_refund_by: date = vat_filed[last_vat_month] + vat4_refund_days
+
+def vat_refunded_on: date = first(d in day where any(jw[d, s] != none and jw[d, s].k == j_vat_ref for s in seq))
+
+def soc_paid_in[a in day, b in day]: money DUK = sum(wb[d, s].dr for d in day, s in seq where d >= a and d <= b and wb[d, s] != none and wb[d, s].k == b_soc)
+
+def profit_to[m in month]: money DUK
+  note "PIT-10 .3, .7: revenue (invoices dated to the closing day) less costs (cost invoices dated to it) less the social contributions paid in the period, the year to the end of month m (to the closing day at the latest)"
+  rule base = sum(rev_m[k] - cost_m[k] for k in month where year_of(start_of(k)) == year_of(biz_end) and k <= m) - soc_paid_in[start_of(year_of(biz_end)), min(end_of(m) - 1 day, biz_end)]
+
+def profit_2024: money DUK = profit_to[month_of(biz_end)]
+
+def adv_paid[m in month]: money DUK = sum(wb[d, s].dr for d in day, s in seq where d <= biz_closed_acct and wb[d, s] != none and wb[d, s].k == b_pit_adv and wb[d, s].m == m)
+
+def adv_paid_year[y in year]: money DUK = sum(adv_paid[m] for m in month where year_of(start_of(m)) == y)
+
+def adv_due[m in month]: money DUK at end_of(m) - 1 day
+  note "PIT-10 .5 (a): the PIT-3 tax (in force on the month's last day) on the year's profit to date, less the advances already paid for the year, never below 0, rounded"
+  rule base = round(max(0 DUK, max(0 DUK, marginal(pit3_rate, profit_to[m]) - pit3_reducing) - sum(adv_paid[k] for k in month where year_of(start_of(k)) == year_of(start_of(m)) and k < m)), 1, half-up)
+
+def out_after_close[y in year]: money DUK
+  note "what our money (the joint account) paid for the workshop after the business account closed: the SIO's contributions, the RO's VAT and advances"
+  rule base = sum(jw[d, s].dr for d in day, s in seq where year_of(d) == y and d > biz_closed_acct and jw[d, s] != none and (jw[d, s].k == j_soc_pay or jw[d, s].k == j_health_pay))
+
+def in_after_close[y in year]: money DUK
+  note "what came into our money for the workshop after the business account closed: the VAT refund (and in 2025 the health refund)"
+  rule base = sum(jw[d, s].cr for d in day, s in seq where year_of(d) == y and d > biz_closed_acct and jw[d, s] != none and (jw[d, s].k == j_vat_ref or jw[d, s].k == j_health_ref))

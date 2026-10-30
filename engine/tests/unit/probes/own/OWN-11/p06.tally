@@ -1,0 +1,64 @@
+model own11_p06
+  tally 2
+  on 2026-10-30
+  start 2026-01-01
+  end 2026-04-30
+  note "OWN-11 P-06: first in, first out: a place kept by batch only, whose takes clause orders the batches by their day (LANGUAGE 3.6); the gain per batch is one def over (sale, batch), written once, reading what the sale took of each batch (s.units.amount of b)."
+
+source card "Probe card OWN-11 (made up): story and rules"
+
+source broker "The broker's register (made up)"
+
+unit DUK: currency minor 0.01
+
+unit fz_units "a unit of fund Z"
+
+kind fund_buys: event certain
+  leg units: fz_units
+  leg cash: DUK
+
+kind fund_sales: event certain
+  leg units: fz_units
+  leg cash: DUK
+
+kind lot_accounts: place fz_units min 0
+  batched
+  step 1 fz_units
+  takes k for w order k.batch.day
+
+place cash_acc: accounts DUK lives 2020-01-01..
+
+place lots: lot_accounts lives 2026-01-01..
+
+place market: outside lives 1900-01-01..
+
+input fund_rows: observed
+
+def gain[s in fund_sales, b in fund_buys]: num DUK at s.day
+  note "rules 2-3: the units the sale took of the batch times the sale's price a unit less the batch's cost a unit"
+  rule base v card_rules = (s.units.amount of b) * (s.cash.amount / s.units.amount - b.cash.amount / b.units.amount)
+
+ask q_gain: gain[s, b] for s in fund_sales over 2026, b in fund_buys over 2026
+
+ask q_left: bal(lots, 2026-04-30) of b for b in fund_buys over 2026
+
+ask q_total_gain: sum(gain[s, b] for s in fund_sales over 2026, b in fund_buys over 2026)
+
+version cash_open
+  cite card
+  known 2026-01-01
+  opening[cash_acc] = 10000.00 at 2026-01-01 start "the cash account at the run's start"
+
+version card_rules
+  cite card
+  governs always
+  known 2026-01-01
+
+version register_2026
+  cite broker
+  governs 2026-01..2026-04
+  known 2026-05-04
+  fund_rows[b1] = (on: 2026-01-10, kind: fund_buys, leg units from market to lots amount 12 fz_units, leg cash from cash_acc to market amount 1260.00 DUK) "line b1"
+  fund_rows[b2] = (on: 2026-02-10, kind: fund_buys, leg units from market to lots amount 8 fz_units, leg cash from cash_acc to market amount 920.00 DUK) "line b2"
+  fund_rows[b3] = (on: 2026-03-10, kind: fund_buys, leg units from market to lots amount 10 fz_units, leg cash from cash_acc to market amount 1080.00 DUK) "line b3"
+  fund_rows[s1] = (on: 2026-04-15, kind: fund_sales, leg units from lots to market amount 15 fz_units, leg cash from market to cash_acc amount 1830.00 DUK) "line s1"

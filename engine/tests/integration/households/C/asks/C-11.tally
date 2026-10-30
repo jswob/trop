@@ -1,0 +1,13 @@
+part asks_c11
+  tally 2
+  note "C-11 · Marta's loan (questions.md), as of and known as of 2026-09-30. owed at the forgiveness: what we owed at the end of the loan's last day 2026-09-16, the start of 2026-09-17 (C-HR7 .4). interest: all interest added (C-HR7 .2). repaid: the joint account's repayments. gift: what the release gave each spouse (IGT-2 .4). gift tax: whether Jan must report it (IGT-4 .3: added up with Marta's gift of 2024-07-01 under IGT-3 .1), by when (IGT-4 .2), whether a return is due and by when (IGT-5 .1), and the tax: one line per reading of the axis release_money. On reading not_money the exemption turns on whether Jan reports the release within 6 months (IGT-4 .2), which no paper says: c11_gift_tax prints the hole, c11_gift_tax_reported and c11_gift_tax_unreported each case. On reading money no report can make it exempt (IGT-4 .4), so none is needed for it. Places: added up, report needed, report by, exempt, return by, tax."
+
+ask c11_loan: owed_forgiven, loan_interest, loan_repaid law 2026-09-30
+
+ask c11_gift: s, release_gift[s] for s in spouse law 2026-09-30
+
+ask c11_gift_tax: jan_added_up, jan_report_needed, jan_report_by, jan_exempt, jan_return_by, jan_gift_tax law 2026-09-30
+
+ask c11_gift_tax_reported: jan_added_up, jan_report_needed, jan_report_by, jan_exempt, jan_return_by, jan_gift_tax with jan_reported = true law 2026-09-30
+
+ask c11_gift_tax_unreported: jan_added_up, jan_report_needed, jan_report_by, jan_exempt, jan_return_by, jan_gift_tax with jan_reported = false law 2026-09-30

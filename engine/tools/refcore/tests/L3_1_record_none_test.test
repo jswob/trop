@@ -1,0 +1,27 @@
+# L §3.1 (round 12): records are never compared, but "a test against none stays": r == none is false for a record
+# row, and the fields compare (r.x == s.x).
+=== m.tally
+model t
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+input r: (x int, y int)
+input s2: (x int, y int)
+def t: bool = r == none
+def u: bool = r.x == s2.x
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  r = (x: 1, y: 2)
+  s2 = (x: 1, y: 3)
+
+ask q: t, u
+=== expect
+q: (false, true)
+  cut 2026-10-18

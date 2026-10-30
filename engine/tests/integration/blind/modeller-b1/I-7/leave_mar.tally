@@ -1,0 +1,15 @@
+scenario leave_mar over i7
+  tally 2
+  from 2028-04-01
+  note "Question (c): she leaves Beta on 2028-03-31 and joins no other plan."
+
+source leave_mar "Card I-7, question (c): she leaves Beta on 2028-03-31"
+
+ask c_forfeit_mar: f.day, f.cash.amount for f in forfeits over 2028 in leave_mar
+
+ask c_income_mar: forfeit_effect[jola, 2028] in leave_mar
+
+version leave_beta_mar
+  cite leave_mar
+  known 2025-01-01
+  replace jobs + [beta_job] lives 2027-08-01..2028-03-31

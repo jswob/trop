@@ -1,0 +1,12 @@
+q_parts (x = sav_a, p = ania_tomek): 0.00 DUK
+  cut 2026-10-30
+q_parts (x = sav_a, p = ania): 1 200.00 DUK
+  cut 2026-10-30
+q_parts (x = sav_a, p = tomek): 0.00 DUK
+  cut 2026-10-30
+q_parts (x = sav_b, p = ania_tomek): 1 000.00 DUK
+  cut 2026-10-30
+q_parts (x = sav_b, p = ania): 800.00 DUK
+  cut 2026-10-30
+q_parts (x = sav_b, p = tomek): 0.00 DUK
+  cut 2026-10-30

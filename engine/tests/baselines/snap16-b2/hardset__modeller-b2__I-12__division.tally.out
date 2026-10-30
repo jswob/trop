@@ -1,0 +1,59 @@
+debt_claims (p = pawel): 45 500 XXX
+  cut 2027-01-01
+debt_claims (p = roksana): 0 XXX
+  cut 2027-01-01
+entitlements (p = pawel): 255 000 XXX
+  cut 2027-01-01
+entitlements (p = roksana): 255 000 XXX
+  cut 2027-01-01
+equalisation (p = pawel) [paid_when = on_time]: (245 500 XXX, 245 500.00 XXX, roksana, 0.00 XXX)
+  assumed: rule 7 states no rounding of the equalisation itself (eq_round)
+  reading: paid_when = on_time
+  cut 2027-01-01
+equalisation (p = pawel) [paid_when = late]: (245 500 XXX, 245 500.00 XXX, roksana, 7 371.73 XXX)
+  assumed: rule 7 states no rounding of the equalisation itself (eq_round)
+  reading: paid_when = late
+  cut 2027-01-01
+equalisation (p = roksana) [paid_when = *]: (-245 500 XXX, 0.00 XXX, pawel, 0.00 XXX)
+  assumed: rule 7 states no rounding of the equalisation itself (eq_round)
+  cut 2027-01-01
+outlay_claims (o = engine_2021): 6 000 XXX
+  cut 2027-01-01
+sale_parts (s = unit_sale[r_ceres], h = kept): (2028-01-17, kept, 2020-02-06, 12 500 XXX, 6 250 XXX, false)
+  assumed: the card states no rounding of units times price (proceeds_round)
+  cut 2027-01-01
+sale_parts (s = unit_sale[r_ceres], h = received): (2028-01-17, received, 2027-11-04, 18 000 XXX, 750 XXX, false)
+  assumed: the card states no rounding of units times price (proceeds_round)
+  cut 2027-01-01
+sale_parts (s = flat_sale[p_flat], h = kept): (2029-06-01, kept, 2019-07-02, 250 000 XXX, 100 000 XXX, true)
+  cut 2027-01-01
+sale_parts (s = flat_sale[p_flat], h = received): (2029-06-01, received, 2027-11-04, 320 000 XXX, 30 000 XXX, false)
+  cut 2027-01-01
+taxes (p = pawel, y = 2027): (0.00 XXX, 2028-04-30)
+  assumed: rule 9 states no rounding of the tax; whole minor units, half up (tax_round)
+  cut 2027-01-01
+taxes (p = pawel, y = 2028): (0.00 XXX, 2029-04-30)
+  assumed: rule 9 states no rounding of the tax; whole minor units, half up (tax_round)
+  assumed: the card states no rounding of units times price (proceeds_round)
+  cut 2027-01-01
+taxes (p = pawel, y = 2029): (5 700.00 XXX, 2030-04-30)
+  assumed: rule 9 states no rounding of the tax; whole minor units, half up (tax_round)
+  cut 2027-01-01
+taxes (p = pawel, y = 2030): (0.00 XXX, 2031-04-30)
+  assumed: rule 9 states no rounding of the tax; whole minor units, half up (tax_round)
+  cut 2027-01-01
+taxes (p = roksana, y = 2027): (0.00 XXX, 2028-04-30)
+  assumed: rule 9 states no rounding of the tax; whole minor units, half up (tax_round)
+  cut 2027-01-01
+taxes (p = roksana, y = 2028): (1 330.00 XXX, 2029-04-30)
+  assumed: rule 9 states no rounding of the tax; whole minor units, half up (tax_round)
+  assumed: the card states no rounding of units times price (proceeds_round)
+  cut 2027-01-01
+taxes (p = roksana, y = 2029): (0.00 XXX, 2030-04-30)
+  assumed: rule 9 states no rounding of the tax; whole minor units, half up (tax_round)
+  cut 2027-01-01
+taxes (p = roksana, y = 2030): (0.00 XXX, 2031-04-30)
+  assumed: rule 9 states no rounding of the tax; whole minor units, half up (tax_round)
+  cut 2027-01-01
+total: 510 000 XXX
+  cut 2027-01-01

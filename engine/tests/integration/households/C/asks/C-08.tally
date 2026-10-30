@@ -1,0 +1,5 @@
+part asks_c08
+  tally 2
+  note "C-08 · Big purchases (questions.md), as of and known as of 2026-09-30. One line per purchase and reading: (purchase, the purchase in DUK, needed yes, had yes, who owes it back (none: nobody, so 0), owed back, due). p_washer the washing machine, p_bike Jan's bike, p_sofa the sofa, p_laptop the laptop, p_shed the shed, p_tiles the bathroom tiles. The bike was paid in florens: its dukats on each reading of flr_count (Bank Lazur's buy rate, the CBL mid rate, Bank Lazur's sell rate); the sofa's silence ended in December, so it is no yes (C-HR4 .2)."
+
+ask c08_purchases: p, p_duk[p], p_needed[p], p_had_yes[p], p_owed_by[p], p_owed[p], p_due[p] for p in purchase law 2026-09-30

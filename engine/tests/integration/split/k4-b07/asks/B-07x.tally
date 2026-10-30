@@ -1,0 +1,5 @@
+part asks_b07x
+  tally 2
+  note "MC-B's added ask (cut-down copy only): how many candidates in the searched range give exactly the observed net."
+
+ask b07_unique: count(g in gross_lo .. gross_hi step minor(DUK) where ola_net[2024-10] as if {ola_gross[2024-10] = g} == observed(mewa_pay[2024-10]).cash.amount) law 2025-04-30 as known 2025-04-30

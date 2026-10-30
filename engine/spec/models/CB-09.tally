@@ -1,6 +1,8 @@
 model cb09
-  tally 1
+  tally 2
   on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
   note "HMRC CG25431, Example 3: a UK resident, non-domiciled individual's foreign bank account in currency F, with a transfer to the UK in February 2009."
   note "F is the manual's own hypothetical currency, written as XXX. Rates are in F per pound."
   note "Dates are months only, as the page gives them. The transfer falls in tax year 2008-09."
@@ -14,6 +16,10 @@ source cg25391 "CG25391 Remittance basis: gains to be computed in Sterling (HMRC
 source cg25431 "CG25431 Disposal of assets situated abroad: example 3 (HMRC Capital Gains Manual)" at "https://www.gov.uk/hmrc-internal-manuals/capital-gains-manual/cg25431"
 
 source ita2007_s809q "Income Tax Act 2007 s. 809Q, point in time 28/02/2009 (legislation.gov.uk)" at "https://www.legislation.gov.uk/ukpga/2007/3/section/809Q/2009-02-28"
+
+unit GBP: currency minor 0.01
+
+unit XXX: currency minor 0.01
 
 index mon = month 1998-12..2009-02
 
@@ -47,46 +53,46 @@ input remitted_in: key mon
 
 input rfi_taxed_abroad: bool
 
-def analysis_f[n in nature]: num XXX at start_of(remitted_in) = sum(p in para where para_nature[p] = n: cat_f[p])
+def analysis_f[n in nature]: num XXX = sum(cat_f[p] for p in para where para_nature[p] == n) at start_of(remitted_in)
 
-def analysis_subtotal_f: num XXX at start_of(remitted_in) = sum(p in para where p != i: cat_f[p])
+def analysis_subtotal_f: num XXX = sum(cat_f[p] for p in para where p != i) at start_of(remitted_in)
 
 def cat_f[p in para]: num XXX at start_of(remitted_in)
   note "s. 809Q(3) step 1: the amount in each paragraph of (4) in the fund immediately before the transfer. The page puts the rest of the fund in (i) as a balancing figure of capital."
-  rule balance v cg25431_page when p = i = fund_f - sum(q in para where q != i: listed_f[q])
-  rule listed when p != i = listed_f[p]
+  rule balance v cg25431_page = fund_f - sum(listed_f[q] for q in para where q != i) when p == i
+  rule listed = listed_f[p] when p != i
 
-def cost_gbp: num GBP
+def cost_gbp: num GBP at reader
   note "CG25391: each entry of the computation is converted into sterling at the spot rate on the date that part of the transaction occurred."
   rule base v sterling_rule = cost_f / fx[acquired_in]
 
-def fund_f: money XXX = opening_f + income_f + proceeds_f
+def fund_f: money XXX = opening_f + income_f + proceeds_f at reader
 
-def gain_f: num XXX
+def gain_f: num XXX at reader
   note "CG25431: the sterling gain is re-expressed in F at the rate on the date of the transfer."
   rule base v cg25431_page = gain_gbp * fx[remitted_in]
 
-def gain_gbp: num GBP = proceeds_gbp - cost_gbp
+def gain_gbp: num GBP = proceeds_gbp - cost_gbp at reader
 
 def listed_f[p in para]: num XXX at start_of(remitted_in)
   note "s. 809Q(4): the paragraph that each part of the fund falls in. The fund holds no employment income, so paragraphs (a), (b), (c) and (f) are nil; (i) is left to cat_f."
   rule base = 0
-  rule gains_taxed excepts base v s809q_2009 when p = h and gain_taxed_abroad = gain_f
-  rule gains_untaxed excepts base v s809q_2009 when p = e and not gain_taxed_abroad = gain_f
-  rule rfi_taxed excepts base v s809q_2009 when p = g and rfi_taxed_abroad = income_f
-  rule rfi_untaxed excepts base v s809q_2009 when p = d and not rfi_taxed_abroad = income_f
+  rule gains_taxed beats base v s809q_2009 = gain_f when p == h and gain_taxed_abroad
+  rule gains_untaxed beats base v s809q_2009 = gain_f when p == e and not gain_taxed_abroad
+  rule rfi_taxed beats base v s809q_2009 = income_f when p == g and rfi_taxed_abroad
+  rule rfi_untaxed beats base v s809q_2009 = income_f when p == d and not rfi_taxed_abroad
 
-def matched_f[n in nature]: num XXX at start_of(remitted_in) = sum(p in para where para_nature[p] = n: remit_match.taken[p])
+def matched_f[n in nature]: num XXX = sum(remit_match.taken[p] for p in para where para_nature[p] == n) at start_of(remitted_in)
 
-def matched_gbp[n in nature]: num GBP
+def matched_gbp[n in nature]: num GBP at reader
   note "CG25431 values each matched part in sterling at the rate on the date of the transfer. For the income part, the page cites no provision for this."
   rule base v cg25431_page = matched_f[n] / fx[remitted_in]
 
-def proceeds_gbp: num GBP
+def proceeds_gbp: num GBP at reader
   note "CG25391: each entry of the computation is converted into sterling at the spot rate on the date that part of the transaction occurred."
   rule base v sterling_rule = proceeds_f / fx[disposed_in]
 
-def taxable_part[n in nature]: bool
+def taxable_part[n in nature]: bool at reader
   note "CG25385: a transfer is matched first to the categories that give rise to taxable remittances, and to capital only when those are fully matched."
   rule base v order_summary = n != capital
 
@@ -96,27 +102,27 @@ fill remit_match
   supply remit_f
   demand cat_f[p] for p in para
   arc true
-  order p
+  order p ties by pos(p)
 
-ask analysis: analysis_f[n] for n in nature
+ask analysis: analysis_f[n] for n in nature law 2026-10-18
 
-ask analysis_subtotal: analysis_subtotal_f
+ask analysis_subtotal: analysis_subtotal_f law 2026-10-18
 
-ask analysis_total: sum(n in nature: analysis_f[n])
+ask analysis_total: sum(analysis_f[n] for n in nature) law 2026-10-18
 
-ask cost_in_gbp: cost_gbp
+ask cost_in_gbp: cost_gbp law 2026-10-18
 
-ask gain_in_f: gain_f
+ask gain_in_f: gain_f law 2026-10-18
 
-ask gain_in_gbp: gain_gbp
+ask gain_in_gbp: gain_gbp law 2026-10-18
 
-ask gain_tax_either_way: check matched_f[n] = matched_f[n] as if {gain_taxed_abroad = true} for n in nature
+ask gain_tax_either_way: check matched_f[n] == matched_f[n] as if {gain_taxed_abroad = true} for n in nature law 2026-10-18
 
-ask proceeds_in_gbp: proceeds_gbp
+ask proceeds_in_gbp: proceeds_gbp law 2026-10-18
 
-ask remit_split: matched_f[n], matched_gbp[n] for n in nature
+ask remit_split: matched_f[n], matched_gbp[n] for n in nature law 2026-10-18
 
-ask taxable_remitted: taxable_part[n], matched_f[n] for n in nature
+ask taxable_remitted: taxable_part[n], matched_f[n] for n in nature law 2026-10-18
 
 version s809q_2009
   cite ita2007_s809q
@@ -136,18 +142,21 @@ version s809q_2009
 
 version order_summary
   cite cg25385
+  governs always
   known 2016-01-25
   note "Second and third paragraphs. The page carries a 'Changes from 6 April 2025' banner."
   note "The page has no date of its own, so it takes its updated stamp, 25 January 2016 (GOV.UK content API, public_updated_at). The 2025 banner is later than that stamp; the paragraphs read are not."
 
 version sterling_rule
   cite cg25391
+  governs always
   known 2016-01-25
   note "Sterling is the currency of capital gains computations (Bentley v Pike, 53 TC 590; Capcount Trading v Evans, 65 TC 545)."
   note "The page has no date of its own, so it takes its updated stamp, 25 January 2016 (GOV.UK content API, public_updated_at). It carries the same 'Changes from 6 April 2025' banner as CG25385."
 
 version cg25431_page
   cite cg25431
+  governs always
   known 2025-06-25
   note "The page's method: the balancing figure of capital, the gain re-expressed in F and the matched parts valued in sterling, all at the rate on the date of the transfer."
   note "The page has no date of its own, so it takes its updated stamp, 25 June 2025 (GOV.UK content API, public_updated_at)."
@@ -155,6 +164,7 @@ version cg25431_page
 
 version example3
   cite cg25431
+  governs always
   known 2026-10-18
   note "The account entries and the rates of exchange of CG25431, Example 3. Dates are months only."
   note "These are the example's stipulations, so they are known from the model's on date (LANGUAGE.md 4.5)."

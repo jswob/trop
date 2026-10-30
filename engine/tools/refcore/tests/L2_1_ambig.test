@@ -1,0 +1,11 @@
+# L §2.1/§4.1: "A four-digit range with no period word is refused where an integer range would also fit (LOAD-AMBIG)".
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+index ys = 2020..2025
+=== expect
+refused: LOAD-AMBIG ...

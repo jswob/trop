@@ -1,0 +1,70 @@
+# L §6.4 Its items (round 11b): "A read is by name: a base item evaluated in the scenario reaches the scenario's things
+# through its bindings over their kind (`x in places on d` holds a place the scenario's file declares, as it holds a
+# thing a scenario version enters), which names none of them." total binds over accounts and n_gifts over gifts; sc
+# declares the account lokata and the move bonus of kind gifts. Not LOAD-SCENARIO: in the base, total sees konto alone
+# (its opening, 100.00) and no gift; in sc it sees lokata too, zero at its lifespan's start plus bonus (20.00 into
+# lokata on 2027-03-10), by L §5.10's bal (the anchor plus the legs since): 120.00. (Writer 8, sixth pass: lokata had an
+# opening of 50.00 at 2027-01-01 start, after K 2026-12-31, which "a reading applies only before the cut K", L §5.19,
+# and E §4.2 step 0, round 18 C2-2, leave unapplied; the bonus now goes into lokata so total still shows it.)
+=== base.tally
+model base
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2028-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+kind gifts: event certain
+  leg cash: PLN
+place konto: accounts PLN lives 2019-05-01..
+place world: outside lives 1900-01-01..
+
+def total[d in days]: money PLN
+  rule r = sum(bal(a, d) for a in accounts on d)
+
+def n_gifts[m in months]: int
+  rule r = count(g in gifts over m)
+
+version v1
+  cite s
+  governs 2026..
+  known 2025-12-01
+  opening[konto] = 100 PLN at 2026-01-01 start "wyciąg"
+
+ask qb: total[2027-06-01]
+ask nb: n_gifts[2027-03]
+=== sc.tally
+scenario sc over base
+  tally 2
+  from 2027-01-01
+
+place lokata: accounts PLN lives 2027-01-01..
+
+input bonus_day: date
+input bonus_amt: money PLN
+
+move bonus: gifts
+  on bonus_day
+  leg cash from world to lokata amount bonus_amt
+
+version bonus_plan
+  cite s
+  governs always
+  known 2026-06-01
+  bonus_day = 2027-03-10 "plan"
+  bonus_amt = 20 PLN "plan"
+
+ask qs: total[2027-06-01] in sc
+ask ns: n_gifts[2027-03] in sc
+=== expect
+nb: 0
+  cut 2026-12-31
+ns: 1
+  world: sc
+  cut 2026-12-31
+qb: 100.00 PLN
+  cut 2026-12-31
+qs: 120.00 PLN
+  world: sc
+  cut 2026-12-31

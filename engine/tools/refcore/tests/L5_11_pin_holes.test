@@ -1,0 +1,42 @@
+# L §5.11 as if: "A pin whose key is a hole, a law, known or wording pin whose date is a hole, and an ask's law or as
+# known that is a hole make the value inside the as if, or the ask line, a hole carrying their questions, and nothing
+# inside is evaluated". lawd, kd and kh have no rows (HOLE-UNGOVERNED, L §4.6 step 5: read with no law date, "x: no
+# value"). (Was REFCORE-UNSPECIFIED §5.11 and §5.18: pins and an ask law that are holes.)
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+index ks = [ka, kb]
+input lawd: date
+input kd: date
+input kh: key ks
+input r[k in ks]: int
+input x: int
+def f: int = x + 1 at reader
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  r[ka] = 1 "s"
+  r[kb] = 2 "s"
+  x = 1 "s"
+
+ask q1: f with law lawd
+ask q2: f with known kd law 2026-06-30
+ask q3: r[ka] with r[kh] = 5 law 2026-06-30
+ask q4: (f as if {law lawd}) + 1 law 2026-06-30
+ask q5: x law lawd
+ask q6: x as known kd
+=== expect
+q1: ?"lawd: no value" (lawd)
+q2: ?"kd: no value at 2026-06-30" (kd)
+q3: ?"kh: no value at 2026-06-30" (kh)
+q4: ?"lawd: no value at 2026-06-30" (lawd)
+  law date 2026-06-30, cut 2026-12-31
+q5: ?"lawd: no value" (lawd)
+q6: ?"kd: no value" (kd)

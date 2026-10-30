@@ -1,0 +1,35 @@
+# L §4.2 calendar example, copied (with its sources; len_ahead left out).  2026's row adds 2026-06-22:
+# is_business(2026-06-22) is false; 2027 is read under len_rules, where 2027-06-22 (a Tuesday) is a business day.
+# add_business(d, n, cal): "n business days after d ..., counting from the day after": after 2026-12-24 come the holiday
+# 12-25, a weekend, then Monday 2026-12-28. "The n-th business day of a period p is add_business(start_of(p) - 1 day,
+# n, cal)": 01-01 is a holiday, 01-02 (Friday) the first business day of 2026-01. last_business(2026-12, 1):
+# 2026-12-31 is a Thursday, no holiday. (Writer 8: first_business and a month-day in added are gone.)
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2027-12-31
+
+source synthetic_calendar "a calendar"
+source gazette "a gazette"
+
+input len: calendar
+version len_rules
+  cite synthetic_calendar
+  governs 2020..2035
+  known 2020-01-01
+  len = calendar(weekends [sat, sun], yearly [01-01, 01-06, 05-01, 05-03, 08-15, 11-01, 11-11, 12-25, 12-26])
+version len_2026
+  cite gazette
+  governs 2026
+  known 2025-12-01
+  replace len = calendar(weekends [sat, sun], yearly [01-01, 01-06, 05-01, 05-03, 08-15, 11-01, 11-11, 12-25, 12-26], added [2026-06-22])
+
+ask q1: is_business(2026-06-22, len), is_business(2027-06-22, len), add_business(2026-12-24, 1, len)
+ask q2: add_business(start_of(2026-01) - 1 day, 1, len), last_business(2026-12, 1, len)
+=== expect
+q1: (false, true, 2026-12-28)
+  cut 2026-12-31
+q2: (2026-01-02, 2026-12-31)
+  cut 2026-12-31

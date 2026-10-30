@@ -1,0 +1,105 @@
+part soc_3
+  tally 1
+  law
+  note "SOC-3 · A sole trader's social contributions. Stage 1, from the start to the end of the 6th month after the starting month: none (.1). Stage 2, the next 24 months: base 30 % of the MIN-WAGE in force on 1 January (.2). Stage 3 after: base 60 % of the year's AVG-WAGE-PROJ (.3). Rates on the base: pension 19.50 %, disability 8.00 %, accident 1.67 %, sickness 2.45 % only if elected, labour fund 2.45 % only in stage 3; each rounded (.4, GEN-5 .3). The starting month pro rata (.5). Paid by the 20th of the next month (.6)."
+  note "min_wage and avg_wage_proj are gazette figures (GEN-6), each row in the version of its notice."
+
+source soc_3 "Social Insurance Act, SOC-3 A sole trader's social contributions (tmp/cases/law/acts.md)"
+
+index soc3_part = [pension, disability, accident, sickness, labour]
+
+input soc3_rate[c in soc3_part]: num question "What is the rate of this contribution on the base (SOC-3 .4)?"
+
+input soc3_stage2_share: num question "What share of MIN-WAGE is the stage-2 base (SOC-3 .2)?"
+
+input soc3_stage3_share: num question "What share of AVG-WAGE-PROJ is the stage-3 base (SOC-3 .3)?"
+
+input min_wage: money DUK question "What is the MIN-WAGE in force on this day (gazette MIN-WAGE)?"
+
+input avg_wage_proj: money DUK question "What is this year's AVG-WAGE-PROJ (gazette AVG-WAGE-PROJ)?"
+
+version soc3_v1
+  cite soc_3
+  governs 2018-01-01..
+  known 2017-09-01
+  enters 2018-01-01
+  note "SOC-3 v1, in force 2018-01-01 until replaced, published 2017-09-01; governs months of activity from January 2018. Stage lengths 6 and 24 months are literals the literal rule allows (L §7.1)."
+  soc3_rate[pension] = 0.195 "SOC-3 v1 .4"
+  soc3_rate[disability] = 0.08 "SOC-3 v1 .4"
+  soc3_rate[accident] = 0.0167 "SOC-3 v1 .4"
+  soc3_rate[sickness] = 0.0245 "SOC-3 v1 .4: only where sickness insurance is elected"
+  soc3_rate[labour] = 0.0245 "SOC-3 v1 .4: only in stage 3"
+  soc3_stage2_share = 0.30 "SOC-3 v1 .2"
+  soc3_stage3_share = 0.60 "SOC-3 v1 .3"
+
+version min_wage_2022
+  cite gazette
+  governs 2022-01-01..2022-12-31
+  known 2021-09-14
+  min_wage = 3020.00 "gazette.csv line 1915 MIN-WAGE"
+
+version min_wage_2023a
+  cite gazette
+  governs 2023-01-01..2023-06-30
+  known 2022-09-13
+  min_wage = 3450.00 "gazette.csv line 1916 MIN-WAGE"
+
+version min_wage_2023b
+  cite gazette
+  governs 2023-07-01..2023-12-31
+  known 2022-09-13
+  min_wage = 3580.00 "gazette.csv line 1917 MIN-WAGE"
+
+version min_wage_2024a
+  cite gazette
+  governs 2024-01-01..2024-06-30
+  known 2023-09-12
+  min_wage = 4180.00 "gazette.csv line 1918 MIN-WAGE"
+
+version min_wage_2024b
+  cite gazette
+  governs 2024-07-01..2024-12-31
+  known 2023-09-12
+  min_wage = 4260.00 "gazette.csv line 1919 MIN-WAGE"
+
+version min_wage_2025
+  cite gazette
+  governs 2025-01-01..2025-12-31
+  known 2024-09-10
+  min_wage = 4620.00 "gazette.csv line 1920 MIN-WAGE"
+
+version min_wage_2026
+  cite gazette
+  governs 2026-01-01..2026-12-31
+  known 2025-09-16
+  min_wage = 4780.00 "gazette.csv line 1921 MIN-WAGE"
+
+version awp_2022
+  cite gazette
+  governs 2022-01-01..2022-12-31
+  known 2021-12-19
+  avg_wage_proj = 5950.00 "gazette.csv line 6 AVG-WAGE-PROJ"
+
+version awp_2023
+  cite gazette
+  governs 2023-01-01..2023-12-31
+  known 2022-12-18
+  avg_wage_proj = 6900.00 "gazette.csv line 7 AVG-WAGE-PROJ"
+
+version awp_2024
+  cite gazette
+  governs 2024-01-01..2024-12-31
+  known 2023-12-19
+  avg_wage_proj = 7800.00 "gazette.csv line 8 AVG-WAGE-PROJ"
+
+version awp_2025
+  cite gazette
+  governs 2025-01-01..2025-12-31
+  known 2024-12-18
+  avg_wage_proj = 8600.00 "gazette.csv line 9 AVG-WAGE-PROJ"
+
+version awp_2026
+  cite gazette
+  governs 2026-01-01..2026-12-31
+  known 2025-12-19
+  avg_wage_proj = 9300.00 "gazette.csv line 10 AVG-WAGE-PROJ"

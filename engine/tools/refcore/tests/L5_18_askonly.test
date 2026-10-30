@@ -1,0 +1,29 @@
+# L §2.2 (writer 8): real is gone from the built-ins (a deflator is written in the ask, L §5.18); a call takes a
+# built-in's name or a band's id (L §2.3 Calls), so real(...) names no band: LOAD-NAME.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2020-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+input cpi[y in years]: num
+input wage: money PLN
+input base_year: key years
+input this_year: key years
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  cpi[2020] = 100
+  cpi[2026] = 125
+  wage = 5 000.00 PLN
+  base_year = 2020
+  this_year = 2026
+
+def wage_2020: money PLN = real(wage, this_year, base_year, cpi)
+=== expect
+refused: LOAD-NAME ...

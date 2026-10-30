@@ -1,6 +1,8 @@
 model lh07
-  tally 1
+  tally 2
   on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
   note "US required minimum distributions from a traditional IRA: divisors, amounts and deadlines, from the worked examples of IRS Publication 590-B (2025)."
   note "Sub-cases: ex_a and ex_b (owner examples, p. 8), ex_c and ex_d (beneficiary examples, pp. 11-12), justin (p. 12), f_owner and f_you (surviving spouse, p. 10, Examples 1 and 2), hi_owner (5-year and 10-year rules, p. 10)."
   note "Ages are given for a year, not as dates of birth, except Justin's birthday; a birth date is written as the imprecise year that the stated age in that year implies."
@@ -11,7 +13,11 @@ source cfr_5 "26 CFR 1.401(a)(9)-5, Required minimum distributions from defined 
 
 source cfr_9 "26 CFR 1.401(a)(9)-9, Life expectancy and Uniform Lifetime tables (T.D. 9930, 85 FR 72477, Nov. 12, 2020, as amended by T.D. 10001, 89 FR 58938, July 19, 2024)" at "https://www.ecfr.gov/current/title-26/section-1.401(a)(9)-9"
 
+source lifted_1_0_1 "Figures tally 1.0.1 allowed inline in rules"
+
 source p590b "IRS Publication 590-B (2025), Distributions from Individual Retirement Arrangements (IRAs)" at "https://www.irs.gov/pub/irs-pdf/p590b.pdf"
+
+unit USD: currency minor 0.01
 
 axis lh07_age
   distribution "age as of the birthday in the distribution calendar year (Pub 590-B p. 8; 26 CFR 1.401(a)(9)-5(c)(1))"
@@ -29,7 +35,7 @@ index lh_table = [table_i, table_ii, table_iii]
 
 index owner = [ex_a, ex_b, justin]
 
-index years_old = 0..120
+index years_old = int 0..120
 
 index yr = year 2020..2036
 
@@ -46,6 +52,9 @@ input first_age[b in benef]: int
   note "the beneficiary's age as of the birthday in the first distribution year"
 
 input first_le_year[b in benef]: key yr
+
+input five_year_by_5: int
+  note "lifted from an inline figure of tally 1.0.1"
 
 input inherited_from[x in decedent]: key decedent
 
@@ -66,116 +75,132 @@ input sole_spouse_ben[x in decedent]: bool
 
 input spouse_born[o in owner]: date
 
+input spouse_rule_10: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input ten_year_by_10: int
+  note "lifted from an inline figure of tally 1.0.1"
+
 input treated_owner[x in decedent]: bool
 
 input uniform_le[a in years_old]: num
 
-def ben_den[b in benef, y in yr]: num
+def ben_den[b in benef, y in yr]: num at start_of(y)
   note "remaining life expectancy: the Single Life Table at the age in the first distribution year, less one for each year after it"
   rule base v v_cfr5 = single_le[first_age[b]] - (y - first_le_year[b])
 
-def ben_den_old[b in benef, y in yr]: num
+def ben_den_old[b in benef, y in yr]: num at start_of(y)
   note "the divisor under the life expectancy the beneficiary started with, before the reset"
   rule base v v_p590b = old_le[b] - (y - first_le_year[b])
 
-def ben_start[x in decedent]: year
+def ben_start[x in decedent]: year at reader
   note "the year the beneficiary's life-expectancy distributions must start"
   rule base v v_cfr3 = died_year[x] + 1
-  rule spouse excepts base v v_p590b when sole_spouse_ben[x] and not treated_owner[x] = died_year[x] + (rbd_age - death_age[x])
+  rule spouse beats base v v_p590b = died_year[x] + (rbd_age - death_age[x]) when sole_spouse_ben[x] and not treated_owner[x]
 
-def ben_start_by[x in decedent]: date = add_days(end_of(ben_start[x]), -1)
+def ben_start_by[x in decedent]: date = add_days(end_of(ben_start[x]), -1) at reader
 
-def ben_table[b in benef]: key lh_table
+def ben_table[b in benef]: key lh_table at reader
   rule base v v_cfr5 = table_i
 
-def credit[o in owner, y in yr]: money USD
+def credit[o in owner, y in yr]: money USD at start_of(y)
   note "credit given in year y for an excess distributed in an earlier year"
   rule base v v_cfr5 = 0
 
-def excess[o in owner, y in yr]: money USD = received[o, y] - rmd[o, y]
+def excess[o in owner, y in yr]: money USD = received[o, y] - rmd[o, y] at start_of(y)
 
-def five_year_by[x in decedent]: date
-  rule base v v_cfr3 = add_days(end_of(died_year[x] + 5), -1)
+def five_year_by[x in decedent]: date at reader
+  rule base v v_cfr3 = add_days(end_of(died_year[x] + five_year_by_5), -1)
 
-def owner_age[o in owner, y in yr]: int
+def owner_age[o in owner, y in yr]: int at start_of(y)
   rule base v v_cfr5 = age(born[o], add_days(end_of(y), -1))
-  rule valuation excepts base when lh07_age = valuation = age(born[o], add_days(start_of(y), -1))
+  rule valuation beats base = age(born[o], add_days(start_of(y), -1)) when lh07_age == valuation
 
-def owner_den[o in owner, y in yr]: num
+def owner_den[o in owner, y in yr]: num at start_of(y)
   rule base = uniform_le[owner_age[o, y]]
-  rule joint excepts base when owner_table[o, y] = table_ii = joint_le[owner_age[o, y], spouse_age[o, y]]
+  rule joint beats base = joint_le[owner_age[o, y], spouse_age[o, y]] when owner_table[o, y] == table_ii
 
-def owner_table[o in owner, y in yr]: key lh_table
+def owner_table[o in owner, y in yr]: key lh_table at start_of(y)
   rule base v v_cfr5 = table_iii
-  rule joint excepts base v v_cfr5 when spouse_rule[o, y] = table_ii
+  rule joint beats base v v_cfr5 = table_ii when spouse_rule[o, y]
 
-def rmd[o in owner, y in yr]: money USD = round(rmd_exact[o, y], 1, lh07_round)
+def rmd[o in owner, y in yr]: money USD = round(rmd_exact[o, y], 1, lh07_round) at start_of(y)
 
-def rmd_due_death_year[x in decedent]: bool
+def rmd_due_death_year[x in decedent]: bool at reader
   note "whether a minimum is required for the year of death of a surviving spouse treated as the owner"
   rule base v v_p590b = died_year[x] >= ben_start[inherited_from[x]]
 
-def rmd_exact[o in owner, y in yr]: num USD
+def rmd_exact[o in owner, y in yr]: num USD at start_of(y)
   rule base v v_cfr5 = bal_end[o, y - 1] / owner_den[o, y]
 
-def spouse_age[o in owner, y in yr]: int
+def spouse_age[o in owner, y in yr]: int at start_of(y)
   rule base v v_cfr5 = age(spouse_born[o], add_days(end_of(y), -1))
-  rule valuation excepts base when lh07_age = valuation = age(spouse_born[o], add_days(start_of(y), -1))
+  rule valuation beats base = age(spouse_born[o], add_days(start_of(y), -1)) when lh07_age == valuation
 
-def spouse_rule[o in owner, y in yr]: bool = sole_spouse[o] and owner_age[o, y] - spouse_age[o, y] > 10
+def spouse_rule[o in owner, y in yr]: bool = sole_spouse[o] and owner_age[o, y] - spouse_age[o, y] > spouse_rule_10 at start_of(y)
 
-def ten_year_by[x in decedent]: date
-  rule base v v_cfr3 = add_days(end_of(died_year[x] + 10), -1)
+def ten_year_by[x in decedent]: date at reader
+  rule base v v_cfr3 = add_days(end_of(died_year[x] + ten_year_by_10), -1)
 
-ask a_den: owner_den[ex_a, 2026]
+ask a_den: owner_den[ex_a, 2026] law 2026-10-18
 
-ask a_rmd: rmd[ex_a, 2026]
+ask a_rmd: rmd[ex_a, 2026] law 2026-10-18
 
-ask a_table: owner_table[ex_a, 2026]
+ask a_table: owner_table[ex_a, 2026] law 2026-10-18
 
-ask b_den: owner_den[ex_b, 2026]
+ask b_den: owner_den[ex_b, 2026] law 2026-10-18
 
-ask b_rmd: rmd[ex_b, 2026]
+ask b_rmd: rmd[ex_b, 2026] law 2026-10-18
 
-ask b_table: owner_table[ex_b, 2026]
+ask b_table: owner_table[ex_b, 2026] law 2026-10-18
 
-ask c_den: ben_den[ex_c, 2026]
+ask c_den: ben_den[ex_c, 2026] law 2026-10-18
 
-ask c_table: ben_table[ex_c]
+ask c_table: ben_table[ex_c] law 2026-10-18
 
-ask d_le55: single_le[first_age[ex_d]]
+ask d_le55: single_le[first_age[ex_d]] law 2026-10-18
 
-ask d_old: ben_den_old[ex_d, 2026]
+ask d_old: ben_den_old[ex_d, 2026] law 2026-10-18
 
-ask d_reset: ben_den[ex_d, 2026]
+ask d_reset: ben_den[ex_d, 2026] law 2026-10-18
 
-ask e_credit: credit[justin, 2026]
+ask e_credit: credit[justin, 2026] law 2026-10-18
 
-ask e_excess: excess[justin, 2025]
+ask e_excess: excess[justin, 2025] law 2026-10-18
 
-ask e_rmd_2025: rmd[justin, 2025]
+ask e_rmd_2025: rmd[justin, 2025] law 2026-10-18
 
-ask e_rmd_2026: rmd[justin, 2026]
+ask e_rmd_2026: rmd[justin, 2026] law 2026-10-18
 
-ask f_death_year: rmd_due_death_year[f_you]
+ask f_death_year: rmd_due_death_year[f_you] law 2026-10-18
 
-ask f_start: ben_start_by[f_owner]
+ask f_start: ben_start_by[f_owner] law 2026-10-18
 
-ask g_start: ben_start[f_you]
+ask g_start: ben_start[f_you] law 2026-10-18
 
-ask g_ten: ten_year_by[f_you]
+ask g_ten: ten_year_by[f_you] law 2026-10-18
 
-ask h_five: five_year_by[hi_owner]
+ask h_five: five_year_by[hi_owner] law 2026-10-18
 
-ask i_ten: ten_year_by[hi_owner]
+ask i_ten: ten_year_by[hi_owner] law 2026-10-18
+
+version lifted_figures
+  cite lifted_1_0_1
+  governs always
+  known 2024-07-19
+  five_year_by_5 = 5 "inline in tally 1.0.1: five_year_by line 98, operand"
+  spouse_rule_10 = 10 "inline in tally 1.0.1: spouse_rule line 125, operand"
+  ten_year_by_10 = 10 "inline in tally 1.0.1: ten_year_by line 128, operand"
 
 version v_cfr3
   cite cfr_3
+  governs always
   known 2024-07-19
   note "Law, known from its publication (LANGUAGE 4.5): T.D. 10001, 89 FR 58907, July 19, 2024, the latest amendment in the section's source note (LII). Which T.D. last changed each paragraph isn't checked, so the latest one is taken. Rules read: (c)(2) 5-year rule and (c)(3) 10-year rule, by the end of the calendar year that includes the fifth or tenth anniversary of the death; (b)(2) life-expectancy distributions begin in the calendar year following the death."
 
 version v_cfr5
   cite cfr_5
+  governs always
   known 2024-07-19
   note "Law, known from its publication (LANGUAGE 4.5): T.D. 10001, 89 FR 58907, July 19, 2024, the latest amendment in the section's source note (LII). Which T.D. last changed each paragraph isn't checked, so the latest one is taken. Rules read: (a)(1) balance divided by the applicable denominator; (a)(6) no credit for an excess; (b)(1) balance at the end of the preceding year; (c)(1) Uniform Lifetime Table at the age as of the birthday in the distribution year; (c)(2)(i) Joint and Last Survivor Table for a sole spouse beneficiary more than 10 years younger; (d)(3)(i) and (iii) Single Life Table, initial life expectancy less one per elapsed year."
 
@@ -194,20 +219,22 @@ version v_cfr9
 
 version v_p590b
   cite p590b
+  governs always
   known 2026-01-21
   note "Known from the Pub's earliest public stamp (LANGUAGE §4.5): 'Jan 21, 2026', printed in the footer of p. 1. Round 2 read it as undated and took the PDF's own created stamp, the same day (D8). PDF page numbers equal printed page numbers. This version holds the Pub's own statement of the law and the rules that cite it; the worked examples' facts are in v_p590b_ex."
   rbd_age = 73 governs 2023.. "p. 6, Your required beginning date: Age 73 for tax years 2023 and later."
 
 version v_p590b_ex
   cite p590b
+  governs always
   known 2026-10-18
   note "The worked examples' facts are a hypothetical case's stipulations, known from the model's on date, as it has no start (LANGUAGE 4.5). The assumed row stands for an example's own fact and takes the same date."
   bal_end[ex_a, 2025] = 100000 "p. 8, Example (Table III): Your account balance at the end of 2025 was $100,000."
   bal_end[ex_b, 2025] = 100000 "p. 8, Example (Table II): Your account balance at the end of 2025 was $100,000."
   bal_end[justin, 2024] = 38400 "p. 12, Example (Justin): Justin's IRA account balance on December 31, 2024, was $38,400."
   bal_end[justin, 2025] = 34800 "p. 12, Example (Justin): Justin's reduced IRA account balance on December 31, 2025, was $34,800."
-  born[ex_a] = 1951 "p. 8, Example (Table III): You turn 75 years old in 2026."
-  born[ex_b] = 1951 "p. 8, Example (Table II): You turn 75 in 2026"
+  born[ex_a] = window(1951-01-01, 1951-12-31) "p. 8, Example (Table III): You turn 75 years old in 2026."
+  born[ex_b] = window(1951-01-01, 1951-12-31) "p. 8, Example (Table II): You turn 75 in 2026"
   born[justin] = 1952-12-15 "p. 12, Example (Justin): Justin became 73 on December 15, 2025."
   death_age[f_owner] = 65 "p. 10, Example 1: Your spouse died in 2022, at age 65."
   died_year[f_owner] = 2022 "p. 10, Example 1: Your spouse died in 2022"
@@ -225,7 +252,7 @@ version v_p590b_ex
   sole_spouse[justin] = false assumed "the example uses Table III; whether Justin's sole beneficiary is a spouse more than 10 years younger is not stated" "p. 12, Example (Justin)"
   sole_spouse_ben[f_owner] = true "p. 10, Example 1: You are the sole designated beneficiary of your spouse's traditional IRA."
   sole_spouse_ben[f_you] = true "p. 10, Example 2: your sole beneficiary upon your death in 2025 is your surviving spouse"
-  spouse_born[ex_a] = 1957 "p. 8, Example (Table III): your spouse ... is 6 years younger than you"
-  spouse_born[ex_b] = 1962 "p. 8, Example (Table II): your spouse turns 64"
+  spouse_born[ex_a] = window(1957-01-01, 1957-12-31) "p. 8, Example (Table III): your spouse ... is 6 years younger than you"
+  spouse_born[ex_b] = window(1962-01-01, 1962-12-31) "p. 8, Example (Table II): your spouse turns 64"
   treated_owner[f_owner] = false "p. 10, Example 1: your spouse is the owner"
   treated_owner[f_you] = true "p. 10: the surviving spouse will be treated as if they were the owner of the IRA. This rule doesn't apply to the surviving spouse of a surviving spouse."

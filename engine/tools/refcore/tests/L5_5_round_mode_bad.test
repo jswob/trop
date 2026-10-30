@@ -1,0 +1,18 @@
+# L §5.5: an axis may be the mode of round "when every option is a rounding code (§2.2); otherwise LOAD-UNIT".
+=== m.tally
+model t
+  tally 2
+  on 2016-03-01
+  start 2015-11-01
+  end 2016-10-31
+
+axis ul05_cut
+  floor "the cut rounds down to whole złoty"
+  exact "no rounding is stated"
+
+input x: num
+input one: num
+
+ask q1: round(x, one, ul05_cut)
+=== expect
+refused: LOAD-UNIT ...

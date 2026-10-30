@@ -1,0 +1,240 @@
+model s5
+  tally 2
+  on 2027-07-10
+  start 2026-01-01
+  end 2027-06-30
+  note "Card S5: Sanna Ilvo and Ivo Rask, unmarried, the house account and the building plot, PRP and their agreement; all made up."
+
+source card_s5 "Card S5, Cast and Entries: the stipulations of the case"
+source prp_law "Card S5, Law: PRP-1 Things bought together"
+source agreement_d1 "Card S5, S5-D1: our written agreement of 2025-11-01 (H-1 to H-3) and its annex of 2026-03-20 (H-2 v2)"
+source prelim_d2 "Card S5, S5-D2: preliminary sale contract, plot 118/4 at Vesk, 2026-02-16"
+source deed_d3 "Card S5, S5-D3: Notary Ewa Hall, Vesk, deed of sale 655/2026, 2026-04-28"
+source banka_mira "Card S5, S5-R1: Banka Mira statement export, account 3301 8806, all rows from 2026-01-01 to 2027-06-30"
+source appraisals "Card S5, S5-R2: appraisals of plot 118/4, Vesk"
+source own_balances "Card S5, S5-R3: own accounts, closing balances kept"
+
+unit DUK: currency minor 0.01
+
+kind persons: parties
+
+kind house_accounts: place DUK min 0
+  owned by h1_arrive ties by split_rank[p]
+  step minor(DUK)
+  takes k for w order take_rank[w, k.owner], take_rest[w, k.owner] prorata ties by split_rank[k.owner]
+  note "an account holding money of several people, kept as parts by owner (H-1, PRP-1 point 1)"
+
+kind interests: event certain
+  leg cash: DUK
+
+kind pay_ins: event certain
+  leg cash: DUK
+  attr payer: key persons
+  note "money one of us pays into the house account, pay included (H-1 point 1)"
+
+kind plot_pays: event certain
+  leg cash: DUK
+  note "a payment toward the plot's price or the costs of buying it"
+
+kind half_pays: plot_pays
+  attr paid_by: key persons
+  note "the half of a payment toward something bought together that H-2 v2 takes from one of us"
+
+kind spends: event certain
+  leg cash: DUK
+  note "any other payment (the household order)"
+
+place house: house_accounts lives 1900-01-01..
+  note "Banka Mira 3301 8806, held by both; the day it was opened isn't given, so an early day stands for it (L 5.7)"
+
+place own_i: accounts DUK lives 1900-01-01..
+  note "Ivo's own account, holding only his money"
+
+place own_s: accounts DUK lives 1900-01-01..
+  note "Sanna's own account, holding only her money"
+
+place world: outside lives 1900-01-01..
+
+input bank: observed
+
+input bought_on: date
+
+input first_split: key persons
+  note "H-3 point 3: whose part of a split sum is rounded to whole orts, half up"
+
+input owns[p in persons, x in accounts]: num
+
+input plot_val: money DUK reading
+  note "H-3 point 2: the plot counts at its price until first appraised, then at its latest appraisal on or before the day"
+
+input second_split: key persons
+  note "H-3 point 3: whose part of a split sum is the rest"
+
+def h1_arrive[m in events, p in parties]: num at m.day
+  note "H-1 point 1: whose each arrival at the house account is"
+  rule interest v h1_v1 = int_part[m, p] / m.cash.amount when m in interests
+  rule paid_in v h1_v1 = (if p == m.payer then 1 else 0) when m in pay_ins
+
+def int_part[m in interests, p in parties]: money DUK at m.day
+  note "H-1 point 1 and H-3 point 3: interest in proportion to what each owns just before it is credited (each interest row is the only row of its day, so the start of its day), the first's part rounded to whole orts, half up, the other's the rest"
+  rule first v h3_v1 = round(m.cash.amount * (bal(m.cash.to, m.day start) of p) / bal(m.cash.to, m.day start), minor(DUK), half-up) when p == first_split
+  rule others v h3_v1 = 0 when p != first_split and p != second_split
+  rule second v h3_v1 = m.cash.amount - int_part[m, first_split] when p == second_split
+
+def paid_toward[p in persons, d in days]: money DUK
+  note "PRP-1 point 2: what p paid toward the plot's price and the costs of buying it, up to the end of day d: what each payment took of p's money"
+  rule base = sum(o.cash.amount of p for o in plot_pays over .. d)
+
+def plot_part[p in persons, d in days]: money DUK at d
+  note "PRP-1 point 2 and H-3 points 2-3: p's share of the plot's value, the first's part rounded to whole orts, half up, the other's the rest"
+  rule first v h3_v1 = round(last(plot_val, d) * plot_share[p], minor(DUK), half-up) when p == first_split
+  rule others v h3_v1 = 0 when p != first_split and p != second_split
+  rule second v h3_v1 = last(plot_val, d) - plot_part[first_split, d] when p == second_split
+
+def plot_share[p in persons]: num at bought_on
+  note "PRP-1 point 2: a thing bought with several people's money belongs to them in shares of what each paid toward its price and the costs of buying it (no other shares were agreed in writing)"
+  rule prp1_2 v prp1_v1 = paid_toward[p, bought_on] / sum(paid_toward[q, bought_on] for q in persons on bought_on)
+
+def plot_stake[p in persons, d in days]: num DUK at d
+  note "H-3 point 2: until the purchase the deposit counts at what each of us paid of it; from it, our share of the plot's value"
+  rule bought v h3_v1 = plot_part[p, d] when d >= bought_on
+  rule deposit v h3_v1 = paid_toward[p, d] when d < bought_on
+
+def split_rank[p in parties]: int
+  note "H-3 point 3: where a split leaves an odd ort, it goes to the first's part, which is rounded half up"
+  rule h3_3 v h3_split = (if p == first_split then 0 else 1)
+
+def take_rank[w in events, p in parties]: int at w.day
+  note "H-2: a payment takes from each of us in proportion to what each owns just before it (v1, and v2 for payments not toward something bought together); under v2 a payment toward something bought together takes half from each, written as one piece per payer"
+  rule half v h2_v2 = (if p == w.paid_by then 0 else 1) when w in half_pays
+  rule prop_v1 v h2_v1 = 0
+  rule prop_v2 v h2_v2 = 0 when not w in half_pays
+
+def take_rest[w in events, p in parties]: int
+  note "H-2 v2 names no money a half takes once its payer's money is used up"
+  rule named = 0 when take_rank[w, p] == 0
+  rule unnamed = ?"H-2 v2 doesn't say what a half takes once its payer's money in the house account is used up" when take_rank[w, p] == 1
+
+def worth[p in persons, d in days]: num DUK at d
+  note "H-3 point 1: own money in our own account and in the house account, plus our share of what we own together"
+  rule h3 v h3_v1 = sum(bal(x, d) * owns[p, x] for x in accounts on d) + sum(bal(x, d) of p for x in house_accounts on d) + plot_stake[p, d]
+
+ask s5_01: paid_toward[p, 2026-04-28] for p in persons over .. as known 2026-05-05
+
+ask s5_02: plot_part[p, d] for p in persons over .., d in [2026-12-31, 2027-06-30] as known 2027-07-10
+
+ask s5_03: worth[p, d] for p in persons over .., d in [2026-03-31, 2026-12-31, 2027-06-30] as known 2027-07-10
+
+version prp1_v1
+  cite prp_law
+  governs 2010-01-01..
+  known 2009-08-14
+  note "PRP-1 v1: things acquired from 2010-01-01"
+
+version h1_v1
+  cite agreement_d1
+  governs 2025-11-01..
+  known 2025-11-01
+  note "H-1 v1 and H-3 v1, from 2025-11-01"
+
+version h2_v1
+  cite agreement_d1
+  governs 2025-11-01..2026-03-31
+  known 2025-11-01
+  note "H-2 v1, from 2025-11-01 to 2026-03-31"
+
+version h3_v1
+  cite agreement_d1
+  governs 2025-11-01..
+  known 2025-11-01
+  note "H-3 v1, from 2025-11-01"
+
+version h3_split
+  cite agreement_d1
+  governs always
+  known 2025-11-01
+  note "H-3 point 3 holds from 2025-11-01; its rows govern always so that the parts clauses' ties, which have no law date, can read them (the run starts after 2025-11-01)"
+  first_split = sanna "H-3 point 3: Sanna's part is rounded to whole orts, half up"
+  second_split = ivo "H-3 point 3: Ivo's is the rest"
+
+version cast
+  cite card_s5
+  governs always
+  known 2026-01-01
+  persons + [ivo] lives 1989-01-21..
+  persons + [sanna] lives 1990-10-03..
+  owns = 0 "Cast: each own account holds only its holder's money"
+  owns[ivo, own_i] = 1 "Cast: Ivo's own account"
+  owns[sanna, own_s] = 1 "Cast: Sanna's own account"
+  opening[house] = 15500.00 DUK at 2026-01-01 start "Entries, S5-D1: the house account holds 15 500,00"
+  opening[house] of ivo = 9100.00 DUK at 2026-01-01 start "Entries, S5-D1: 9 100,00 Ivo's"
+  opening[house] of sanna = 6400.00 DUK at 2026-01-01 start "Entries, S5-D1: 6 400,00 Sanna's"
+
+version stmt
+  cite banka_mira
+  governs 2026-01-01..2027-06-30
+  known 2026-01-01
+  covers house
+  note "each row is known on its own date (Entries). Rows 17 and 18 are each written as two pieces, one per payer: H-2 v2 takes half of each from each of us, which no take of the house account's parts can say (L 3.6: an order, or prorata by the parts' amounts)"
+  bank[r1] = (on: 2026-01-10, kind: pay_ins, leg cash from world to house amount 3900.00 DUK, payer: sanna) known 2026-01-10 "S5-R1 row 1: PAY S.ILVO HALDA DESIGN"
+  bank[r2] = (on: 2026-01-10, kind: pay_ins, leg cash from world to house amount 5200.00 DUK, payer: ivo) known 2026-01-10 "S5-R1 row 2: PAY I.RASK VESK WATERWORKS"
+  bank[r3] = (on: 2026-01-20, kind: spends, leg cash from house to world amount 3100.00 DUK) known 2026-01-20 "S5-R1 row 3: HOUSEHOLD ORDER"
+  bank[r4] = (on: 2026-02-10, kind: pay_ins, leg cash from world to house amount 3900.00 DUK, payer: sanna) known 2026-02-10 "S5-R1 row 4: PAY S.ILVO HALDA DESIGN"
+  bank[r5] = (on: 2026-02-10, kind: pay_ins, leg cash from world to house amount 5200.00 DUK, payer: ivo) known 2026-02-10 "S5-R1 row 5: PAY I.RASK VESK WATERWORKS"
+  bank[r6] = (on: 2026-02-16, kind: plot_pays, leg cash from house to world amount 20000.00 DUK) known 2026-02-16 "S5-R1 row 6: DEPOSIT PLOT 118/4 VESK PRELIM. CONTRACT 2026-02-16"
+  bank[r7] = (on: 2026-02-20, kind: spends, leg cash from house to world amount 3100.00 DUK) known 2026-02-20 "S5-R1 row 7: HOUSEHOLD ORDER"
+  bank[r8] = (on: 2026-03-10, kind: pay_ins, leg cash from world to house amount 3900.00 DUK, payer: sanna) known 2026-03-10 "S5-R1 row 8: PAY S.ILVO HALDA DESIGN"
+  bank[r9] = (on: 2026-03-10, kind: pay_ins, leg cash from world to house amount 5200.00 DUK, payer: ivo) known 2026-03-10 "S5-R1 row 9: PAY I.RASK VESK WATERWORKS"
+  bank[r10] = (on: 2026-03-20, kind: spends, leg cash from house to world amount 3100.00 DUK) known 2026-03-20 "S5-R1 row 10: HOUSEHOLD ORDER"
+  bank[r11] = (on: 2026-03-31, kind: interests, leg cash from world to house amount 31.40 DUK) known 2026-03-31 "S5-R1 row 11: INTEREST"
+  bank[r12] = (on: 2026-04-10, kind: pay_ins, leg cash from world to house amount 3900.00 DUK, payer: sanna) known 2026-04-10 "S5-R1 row 12: PAY S.ILVO HALDA DESIGN"
+  bank[r13] = (on: 2026-04-10, kind: pay_ins, leg cash from world to house amount 5200.00 DUK, payer: ivo) known 2026-04-10 "S5-R1 row 13: PAY I.RASK VESK WATERWORKS"
+  bank[r14] = (on: 2026-04-20, kind: spends, leg cash from house to world amount 3100.00 DUK) known 2026-04-20 "S5-R1 row 14: HOUSEHOLD ORDER"
+  bank[r15] = (on: 2026-04-27, kind: pay_ins, leg cash from own_s to house amount 32000.00 DUK, payer: sanna) known 2026-04-27 "S5-R1 row 15: FROM S.ILVO OWN ACCOUNT"
+  bank[r16] = (on: 2026-04-27, kind: pay_ins, leg cash from own_i to house amount 34000.00 DUK, payer: ivo) known 2026-04-27 "S5-R1 row 16: FROM I.RASK OWN ACCOUNT"
+  bank[r17a] = (on: 2026-04-28, kind: half_pays, leg cash from house to world amount 38000.00 DUK, paid_by: sanna) known 2026-04-28 "S5-R1 row 17: NOTARY E.HALL DEED 655/2026 PRICE REST PLOT 118/4 (H-2 v2: half from each; Sanna's half, rounded half up by H-3 point 3, of 76000.00)"
+  bank[r17b] = (on: 2026-04-28, kind: half_pays, leg cash from house to world amount 38000.00 DUK, paid_by: ivo) known 2026-04-28 "S5-R1 row 17: NOTARY E.HALL DEED 655/2026 PRICE REST PLOT 118/4 (H-2 v2: half from each; Ivo's, the rest of 76000.00)"
+  bank[r18a] = (on: 2026-04-28, kind: half_pays, leg cash from house to world amount 1575.00 DUK, paid_by: sanna) known 2026-04-28 "S5-R1 row 18: NOTARY E.HALL DEED 655/2026 FEE AND TRANSFER TAX (H-2 v2: half from each; Sanna's half, rounded half up by H-3 point 3, of 3150.00)"
+  bank[r18b] = (on: 2026-04-28, kind: half_pays, leg cash from house to world amount 1575.00 DUK, paid_by: ivo) known 2026-04-28 "S5-R1 row 18: NOTARY E.HALL DEED 655/2026 FEE AND TRANSFER TAX (H-2 v2: half from each; Ivo's, the rest of 3150.00)"
+  bank[r19] = (on: 2026-06-30, kind: interests, leg cash from world to house amount 9.12 DUK) known 2026-06-30 "S5-R1 row 19: INTEREST"
+  bank[r20] = (on: 2026-09-30, kind: interests, leg cash from world to house amount 9.31 DUK) known 2026-09-30 "S5-R1 row 20: INTEREST"
+  bank[r21] = (on: 2026-12-31, kind: interests, leg cash from world to house amount 9.40 DUK) known 2026-12-31 "S5-R1 row 21: INTEREST"
+  bank[r22] = (on: 2027-03-31, kind: interests, leg cash from world to house amount 9.18 DUK) known 2027-03-31 "S5-R1 row 22: INTEREST"
+  bank[r23] = (on: 2027-06-30, kind: interests, leg cash from world to house amount 9.27 DUK) known 2027-06-30 "S5-R1 row 23: INTEREST"
+
+version own_r3
+  cite own_balances
+  known 2026-03-31
+  anchor own_i
+  anchor own_s
+  stated[own_i] = 47300.00 DUK known 2026-03-31 at 2026-03-31 end "S5-R3: Ivo's own"
+  stated[own_i] = 21760.25 DUK known 2026-12-31 at 2026-12-31 end "S5-R3: Ivo's own"
+  stated[own_i] = 33118.40 DUK known 2027-06-30 at 2027-06-30 end "S5-R3: Ivo's own"
+  stated[own_s] = 41850.00 DUK known 2026-03-31 at 2026-03-31 end "S5-R3: Sanna's own"
+  stated[own_s] = 17420.60 DUK known 2026-12-31 at 2026-12-31 end "S5-R3: Sanna's own"
+  stated[own_s] = 26905.10 DUK known 2027-06-30 at 2027-06-30 end "S5-R3: Sanna's own"
+
+version prelim
+  cite prelim_d2
+  governs always
+  known 2026-02-16
+  note "S5-D2: the deposit of 20 000,00 paid on 2026-02-16 (row 6) is counted toward the price, so it is a payment toward the plot (plot_pays)"
+
+version h2_v2
+  cite agreement_d1
+  governs 2026-04-01..
+  known 2026-03-20
+  note "H-2 v2, the annex of 2026-03-20, from 2026-04-01"
+
+version plot_deed
+  cite deed_d3
+  governs always
+  known 2026-04-28
+  bought_on = 2026-04-28 "S5-D3: Bruno Kask sells plot 118/4 to Sanna Ilvo and Ivo Rask"
+  plot_val = 96000.00 DUK at 2026-04-28 "S5-D3: price 96 000,00; H-3 point 2: the plot counts at its price until first appraised"
+
+version plot_appraisals
+  cite appraisals
+  known 2026-12-05
+  plot_val = 118500.00 DUK known 2026-12-05 at 2026-12-05 "S5-R2: Vesk Land Valuers"
+  plot_val = 142000.00 DUK known 2027-06-10 at 2027-06-10 "S5-R2: Vesk Land Valuers"

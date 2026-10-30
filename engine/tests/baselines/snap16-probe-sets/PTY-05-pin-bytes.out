@@ -1,0 +1,7 @@
+q_family: 0.00 DUK
+  cut 2026-10-25
+q_people: (5 000.00 DUK, -5 000.00 DUK)
+  cut 2026-10-25
+q_transfer: 1
+  cut 2026-10-25
+warning: WARN-NEGATIVE d.acc_halina is below zero from 2024-05-02

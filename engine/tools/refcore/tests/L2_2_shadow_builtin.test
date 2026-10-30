@@ -1,0 +1,13 @@
+# L §2.2: "a bound variable with one's name is LOAD-SHADOW" (cut is a built-in id).
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+index ks = [a, b]
+
+def n: int = count(cut in ks)
+=== expect
+refused: LOAD-SHADOW ...

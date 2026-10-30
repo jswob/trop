@@ -1,0 +1,170 @@
+model mp11
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+  note "BOFiP BOI-IR-LIQ-20-20-20, plafonnement des effets du quotient familial: § 40 Exemple (couple marié, quatre enfants, 5 parts) and § 185 Exemple (the same couple, one child invalid, 5,5 parts), revenus 2025."
+  note "Each example is a key of foyer. The second liquidation of § 20 (sur deux parts) is the same tax as if the household had base_parts parts: an as if pin in second_term."
+  note "Every def of the liquidation is evaluated at the start of the income year (at start_of(income_year[f])), so the barème for revenus 2025 applies."
+
+source boi_liq_20_10 "BOI-IR-LIQ-20-10, IR - Liquidation - Détermination de l'impôt brut, version du 07/04/2026" at "https://bofip.impots.gouv.fr/bofip/2491-PGP.html/identifiant=BOI-IR-LIQ-20-10-20260407"
+
+source boi_liq_20_20_20 "BOI-IR-LIQ-20-20-20, IR - Liquidation - Plafonnement des effets du quotient familial, version en vigueur du 07/04/2026" at "https://bofip.impots.gouv.fr/bofip/2494-PGP.html/identifiant=BOI-IR-LIQ-20-20-20-20260407"
+
+source boi_liq_20_20_40 "BOI-IR-LIQ-20-20-40, IR - Liquidation - Autres corrections, IV. Règles d'arrondissement, version du 04/07/2018" at "https://bofip.impots.gouv.fr/bofip/2496-PGP.html/identifiant=BOI-IR-LIQ-20-20-40-20180704"
+
+source lifted_1_0_1 "Figures tally 1.0.1 allowed inline in rules"
+
+source loi_2026_103 "Loi n° 2026-103 du 19 février 2026 de finances pour 2026, art. 4, I-A et B (CGI art. 197, I), published in the Journal officiel of 20 February 2026; the text was not fetched (Légifrance HTTP 403), its figures are read where the BOFiP reprints them"
+
+unit EUR: currency minor 0.01
+
+axis fr_comp_order
+  example "the complementary reduction cap is added to the capped benefit in the second term, then the terms are compared (§ 185 Exemple)"
+  bofip_text "the terms are compared with the general cap only; the complementary reduction is the excess of the capped tax over the first term, capped, and comes off the tax after capping (§ 140, § 150, § 170)"
+
+index foyer = [ex40, ex185]
+
+input base_parts: num
+
+input cap_comp: money EUR
+
+input cap_half: money EUR
+
+input comp_halves[f in foyer]: int
+  note "the half-parts that open the réduction d'impôt complémentaire (CGI art. 197, I-2 al. 4)"
+
+input extra_halves_2: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input income[f in foyer]: money EUR question "Quel est le revenu net imposable du foyer?"
+
+input income_year[f in foyer]: year
+
+input parts[f in foyer]: num question "Combien de parts de quotient familial compte le foyer?"
+
+band bareme(x: num EUR): num
+  note "the barème of CGI art. 197, I-1: the marginal rate of each tranche of the quotient, per part; read with marginal()"
+
+def benefit[f in foyer]: money EUR at start_of(income_year[f])
+  note "§ 20: la somme des plafonds en impôt résultant des demi-parts additionnelles"
+  rule base v qf2026 = gen_benefit[f]
+  rule with_comp beats base v qf2026 = gen_benefit[f] + comp_cap[f] when fr_comp_order == example
+
+def capped[f in foyer]: bool at start_of(income_year[f])
+  note "§ 20: si le premier terme est inférieur au second, le plafonnement est applicable"
+  rule base v qf2026 = first_term[f] < second_term[f]
+
+def comp_cap[f in foyer]: money EUR at start_of(income_year[f])
+  note "§ 150: la réduction complémentaire ne peut excéder le montant du quatrième alinéa du 2 du I de l'article 197 du CGI"
+  rule base v qf2026 = cap_comp * comp_halves[f]
+
+def comp_reduction[f in foyer]: money EUR at start_of(income_year[f])
+  note "§ 140: la différence entre l'impôt avant plafonnement et l'impôt après plafonnement, nulle sans plafonnement; § 150 cap"
+  rule base v qf2026 = min(comp_cap[f], max(0, second_term[f] - first_term[f]))
+  rule in_benefit beats base = 0 when fr_comp_order == example
+
+def extra_halves[f in foyer]: num at start_of(income_year[f])
+  note "§ 40: les demi-parts supplémentaires soumises au plafonnement, au-delà des parts de base"
+  rule base v qf2026 = (parts[f] - base_parts) * extra_halves_2
+
+def first_term[f in foyer]: money EUR at start_of(income_year[f])
+  note "§ 20: premier terme, l'impôt calculé dans les conditions de droit commun, avec les parts du foyer"
+  rule base v qf2026 = tax[f]
+
+def gen_benefit[f in foyer]: money EUR at start_of(income_year[f])
+  note "§ 40: plafond par demi-part supplémentaire"
+  rule base v qf2026 = round(cap_half * extra_halves[f], 1, half-up)
+
+def part_tax[f in foyer]: num EUR at start_of(income_year[f])
+  note "BOI-IR-LIQ-20-10 § 1 (CGI art. 193): le barème s'applique au quotient, tranche par tranche"
+  rule base v bareme2025 = marginal(bareme, qf[f])
+
+def qf[f in foyer]: num EUR at start_of(income_year[f])
+  note "BOI-IR-LIQ-20-10 § 1: le revenu net imposable est divisé par le nombre de parts"
+  rule base v bareme2025 = income[f] / parts[f]
+
+def second_term[f in foyer]: money EUR at start_of(income_year[f])
+  note "§ 20: l'impôt calculé sur deux parts pour un couple marié soumis à imposition commune, diminué de la somme des plafonds"
+  rule base v qf2026 = tax[f] as if {parts[f] = base_parts} - benefit[f]
+
+def tax[f in foyer]: money EUR at start_of(income_year[f])
+  note "BOI-IR-LIQ-20-10 § 10 and BOI-IR-LIQ-20-20-40 § 50: à l'euro le plus proche, 0,50 compté pour 1"
+  rule base v arrondi2018 = round(tax_raw[f], 1, half-up)
+
+def tax_due[f in foyer]: money EUR at start_of(income_year[f])
+  note "§ 20: l'impôt à retenir; § 170: la réduction complémentaire vient en diminution de la cotisation après plafonnement"
+  rule base v qf2026 = (if capped[f] then second_term[f] else first_term[f]) - comp_reduction[f]
+
+def tax_raw[f in foyer]: num EUR at start_of(income_year[f])
+  note "BOI-IR-LIQ-20-10 § 1: le chiffre obtenu est multiplié par le nombre de parts"
+  rule base v bareme2025 = part_tax[f] * parts[f]
+
+ask q_benefit: benefit[f] for f in foyer law 2026-10-18
+
+ask q_capped: capped[f] for f in foyer law 2026-10-18
+
+ask q_extra_halves: extra_halves[f] for f in foyer law 2026-10-18
+
+ask q_qf: qf[f], qf[f] as if {parts[f] = base_parts} for f in foyer law 2026-10-18
+
+ask q_second_term: second_term[f] for f in foyer law 2026-10-18
+
+ask q_tax: tax[f], tax[f] as if {parts[f] = base_parts} for f in foyer law 2026-10-18
+
+ask q_tax_due: tax_due[f] for f in foyer law 2026-10-18
+
+ask q_tax_raw: tax_raw[f], tax_raw[f] as if {parts[f] = base_parts} for f in foyer law 2026-10-18
+
+version arrondi2018
+  cite boi_liq_20_20_40
+  governs always
+  known 2018-07-04
+  note "IV. Règles d'arrondissement, § 50; the rounding rule of tax cites this version. Known from the BOI's own date, version du 04/07/2018."
+
+version lifted_figures
+  cite lifted_1_0_1
+  governs always
+  known 2018-07-04
+  extra_halves_2 = 2 "inline in tally 1.0.1: extra_halves line 57, factor"
+
+version lf2026_art4
+  cite loi_2026_103
+  governs 2025
+  known 2026-02-20
+  note "Law, known from its publication in the Journal officiel of Friday 20 February 2026 (moneyvox.fr, 20 February 2026: promulguée puis publiée au Journal officiel, en ce vendredi 20 février); promulgated 19 February 2026. The BOFiP names the article: BOI-IR-LIQ-20-10 § 40, Remarque, and the BOFiP news item of 07/04/2026 (loi n° 2026-103 du 19 février 2026 de finances pour 2026, art. 4, I-A et B)."
+  note "The rows are those the BOFiP reprints, with its locators; the BOFiP is not their version (LANGUAGE §5.3)."
+  bareme: [0, 11600] = 0 "BOI-IR-LIQ-20-10 § 40, Barème pour l'imposition sur les revenus 2025: N'excédant pas 11 600 €, 0 %"
+  bareme: (11600, 29579] = 0.11 "BOI-IR-LIQ-20-10 § 40: Supérieure à 11 600 € et inférieure ou égale à 29 579 €, 11 %"
+  bareme: (29579, 84577] = 0.3 "BOI-IR-LIQ-20-10 § 40: Supérieure à 29 579 € et inférieure ou égale à 84 577 €, 30 %"
+  bareme: (84577, 181917] = 0.41 "BOI-IR-LIQ-20-10 § 40: Supérieure à 84 577 € et inférieure ou égale à 181 917 €, 41 %"
+  bareme: (181917, inf) = 0.45 "BOI-IR-LIQ-20-10 § 40: Supérieure à 181 917 €, 45 %"
+  cap_comp = 1801 governs 2025.. "BOI-IR-LIQ-20-20-20 § 150: fixé à 1 801 € à compter de l'imposition des revenus de l'année 2025"
+  cap_half = 1807 governs 2025.. "BOI-IR-LIQ-20-20-20 § 40: fixé à 1 807 € par demi-part supplémentaire à compter de l'imposition des revenus de l'année 2025"
+
+version bareme2025
+  cite boi_liq_20_10
+  governs 2025
+  known 2026-04-07
+  note "§ 1 (CGI art. 193), the method of the liquidation; the rules of qf, part_tax and tax_raw cite this version. Known from the BOI's own date, version du 07/04/2026. Its § 40 reprints the barème, whose rows are in lf2026_art4."
+
+version qf2026
+  cite boi_liq_20_20_20
+  governs always
+  known 2026-04-07
+  note "Version en vigueur du 07/04/2026 (Date de début de publication du BOI : 07/04/2026), the known date"
+  base_parts = 2 "§ 20: second terme ... sur deux parts s'il est marié ... et soumis à imposition commune"
+
+version examples2026
+  cite boi_liq_20_20_20
+  governs always
+  known 2026-10-18
+  note "The facts of the § 40 and § 185 Exemples: a worked example's stipulations, known from the model's on, since it has no start (LANGUAGE §4.5)"
+  comp_halves[ex40] = 0 "§ 40, Exemple: quatre enfants à charge, none invalid"
+  comp_halves[ex185] = 1 "§ 185, Exemple: dont l'une correspond à l'invalidité de l'un des enfants et ouvre droit à une réduction d'impôt complémentaire"
+  income[ex40] = 130000 "§ 40, Exemple: a, pour 2025, un revenu imposable de 130 000 €"
+  income[ex185] = 130000 "§ 185, Exemple: a, pour 2025, un revenu imposable de 130 000 €"
+  income_year[ex40] = 2025 "§ 40, Exemple: pour 2025"
+  income_year[ex185] = 2025 "§ 185, Exemple: pour 2025"
+  parts[ex40] = 5 "§ 40, Exemple: ayant quatre enfants à charge (5 parts)"
+  parts[ex185] = 5.5 "§ 185, Exemple: ayant quatre enfants à charge dont l'un est invalide (5,5 parts)"

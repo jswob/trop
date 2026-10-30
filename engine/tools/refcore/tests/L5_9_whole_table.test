@@ -1,0 +1,44 @@
+# L §5.9: "Choose the table by the read rule (§4.6), treating each version's table as one row ... a new version
+# replaces a whole table on its span and never mixes brackets of two years."  v2 (governs 2027..) replaces the
+# table: in 2027 its one row [0, inf) gives 9 for every x; in 2026 v1's rows give 1 and 2.
+# held (L §8.2): v2's open span read at a law date after the cut 2027-01-01.
+=== m.tally
+model t
+  tally 2
+  on 2027-01-01
+  start 2026-01-01
+  end 2027-12-31
+
+source s "s"
+band b(n: int): int
+input lo: int
+input hi: int
+
+version v1
+  cite s
+  governs 2026..2026
+  known 2025-12-01
+  b: [0, 10] = 1
+  b: (10, inf) = 2
+
+version facts
+  cite s
+  governs always
+  known 2025-12-01
+  lo = 5
+  hi = 50
+
+version v2
+  cite s
+  governs 2027..
+  known 2026-12-01
+  b: [0, inf) = 9
+
+ask q1: b(lo), b(hi) law 2026-06-30
+ask q2: b(lo), b(hi) law 2027-06-30
+=== expect
+q1: (1, 2)
+  law date 2026-06-30, cut 2027-01-01
+q2: (9, 9)
+  held: b row [0, inf) (v2), read for 2027-06-30
+  law date 2027-06-30, cut 2027-01-01

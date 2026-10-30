@@ -1,0 +1,256 @@
+a_members (m = 2027-10): 3
+  assumed: the card doesn't say when the office learns of the birth; on the day of birth (adult[kl_family, mira])
+  cut 2028-11-30
+a_members (m = 2027-11): 3
+  assumed: the card doesn't say when the office learns of the birth; on the day of birth (adult[kl_family, mira])
+  cut 2028-11-30
+a_members (m = 2027-12): 3
+  assumed: the card doesn't say when the office learns of the birth; on the day of birth (adult[kl_family, mira])
+  cut 2028-11-30
+a_members (m = 2028-01): 3
+  assumed: the card doesn't say when the office learns of the birth; on the day of birth (adult[kl_family, mira])
+  cut 2028-11-30
+a_members (m = 2028-02): 3
+  assumed: the card doesn't say when the office learns of the birth; on the day of birth (adult[kl_family, mira])
+  cut 2028-11-30
+a_members (m = 2028-03): 4
+  assumed: the card doesn't say when the office learns of the birth; on the day of birth (adult[kl_family, mira], adult[kl_family, nel], born[nel], lives_with[kl_family, nel], parent[nel, kasia])
+  cut 2028-11-30
+a_members (m = 2028-04): 4
+  assumed: the card doesn't say when the office learns of the birth; on the day of birth (adult[kl_family, mira], adult[kl_family, nel], born[nel], lives_with[kl_family, nel], parent[nel, kasia])
+  cut 2028-11-30
+a_members (m = 2028-05): 4
+  assumed: the card doesn't say when the office learns of the birth; on the day of birth (adult[kl_family, mira], adult[kl_family, nel], born[nel], lives_with[kl_family, nel], parent[nel, kasia])
+  cut 2028-11-30
+a_members (m = 2028-06): 4
+  assumed: the card doesn't say when the office learns of the birth; on the day of birth (adult[kl_family, mira], adult[kl_family, nel], born[nel], lives_with[kl_family, nel], parent[nel, kasia])
+  cut 2028-11-30
+a_members (m = 2028-07): 4
+  assumed: the card doesn't say when the office learns of the birth; on the day of birth (adult[kl_family, mira], adult[kl_family, nel], born[nel], lives_with[kl_family, nel], parent[nel, kasia])
+  cut 2028-11-30
+a_members (m = 2028-08): 4
+  assumed: the card doesn't say when the office learns of the birth; on the day of birth (adult[kl_family, mira], adult[kl_family, nel], born[nel], lives_with[kl_family, nel], parent[nel, kasia])
+  cut 2028-11-30
+a_members (m = 2028-09): 4
+  assumed: the card doesn't say when the office learns of the birth; on the day of birth (adult[kl_family, mira], adult[kl_family, nel], born[nel], lives_with[kl_family, nel], parent[nel, kasia])
+  cut 2028-11-30
+a_who (m = 2027-10, p = kasia): true
+  cut 2028-11-30
+a_who (m = 2027-10, p = leon): true
+  cut 2028-11-30
+a_who (m = 2027-10, p = mira): true
+  assumed: the card doesn't say when the office learns of the birth; on the day of birth (adult[kl_family, mira])
+  cut 2028-11-30
+a_who (m = 2027-11, p = kasia): true
+  cut 2028-11-30
+a_who (m = 2027-11, p = leon): true
+  cut 2028-11-30
+a_who (m = 2027-11, p = mira): true
+  assumed: the card doesn't say when the office learns of the birth; on the day of birth (adult[kl_family, mira])
+  cut 2028-11-30
+a_who (m = 2027-12, p = kasia): true
+  cut 2028-11-30
+a_who (m = 2027-12, p = leon): true
+  cut 2028-11-30
+a_who (m = 2027-12, p = mira): true
+  assumed: the card doesn't say when the office learns of the birth; on the day of birth (adult[kl_family, mira])
+  cut 2028-11-30
+a_who (m = 2028-01, p = kasia): true
+  cut 2028-11-30
+a_who (m = 2028-01, p = leon): true
+  cut 2028-11-30
+a_who (m = 2028-01, p = mira): true
+  assumed: the card doesn't say when the office learns of the birth; on the day of birth (adult[kl_family, mira])
+  cut 2028-11-30
+a_who (m = 2028-02, p = kasia): true
+  cut 2028-11-30
+a_who (m = 2028-02, p = leon): true
+  cut 2028-11-30
+a_who (m = 2028-02, p = mira): true
+  assumed: the card doesn't say when the office learns of the birth; on the day of birth (adult[kl_family, mira])
+  cut 2028-11-30
+a_who (m = 2028-03, p = kasia): true
+  cut 2028-11-30
+a_who (m = 2028-03, p = leon): true
+  cut 2028-11-30
+a_who (m = 2028-03, p = mira): true
+  assumed: the card doesn't say when the office learns of the birth; on the day of birth (adult[kl_family, mira])
+  cut 2028-11-30
+a_who (m = 2028-03, p = nel): true
+  assumed: the card doesn't say when the office learns of the birth; on the day of birth (adult[kl_family, nel], born[nel], lives_with[kl_family, nel], parent[nel, kasia])
+  cut 2028-11-30
+a_who (m = 2028-04, p = kasia): true
+  cut 2028-11-30
+a_who (m = 2028-04, p = leon): true
+  cut 2028-11-30
+a_who (m = 2028-04, p = mira): true
+  assumed: the card doesn't say when the office learns of the birth; on the day of birth (adult[kl_family, mira])
+  cut 2028-11-30
+a_who (m = 2028-04, p = nel): true
+  assumed: the card doesn't say when the office learns of the birth; on the day of birth (adult[kl_family, nel], born[nel], lives_with[kl_family, nel], parent[nel, kasia])
+  cut 2028-11-30
+a_who (m = 2028-05, p = kasia): true
+  cut 2028-11-30
+a_who (m = 2028-05, p = leon): true
+  cut 2028-11-30
+a_who (m = 2028-05, p = mira): true
+  assumed: the card doesn't say when the office learns of the birth; on the day of birth (adult[kl_family, mira])
+  cut 2028-11-30
+a_who (m = 2028-05, p = nel): true
+  assumed: the card doesn't say when the office learns of the birth; on the day of birth (adult[kl_family, nel], born[nel], lives_with[kl_family, nel], parent[nel, kasia])
+  cut 2028-11-30
+a_who (m = 2028-06, p = kasia): true
+  cut 2028-11-30
+a_who (m = 2028-06, p = leon): true
+  cut 2028-11-30
+a_who (m = 2028-06, p = mira): true
+  assumed: the card doesn't say when the office learns of the birth; on the day of birth (adult[kl_family, mira])
+  cut 2028-11-30
+a_who (m = 2028-06, p = nel): true
+  assumed: the card doesn't say when the office learns of the birth; on the day of birth (adult[kl_family, nel], born[nel], lives_with[kl_family, nel], parent[nel, kasia])
+  cut 2028-11-30
+a_who (m = 2028-07, p = kasia): true
+  cut 2028-11-30
+a_who (m = 2028-07, p = leon): true
+  cut 2028-11-30
+a_who (m = 2028-07, p = mira): true
+  assumed: the card doesn't say when the office learns of the birth; on the day of birth (adult[kl_family, mira])
+  cut 2028-11-30
+a_who (m = 2028-07, p = nel): true
+  assumed: the card doesn't say when the office learns of the birth; on the day of birth (adult[kl_family, nel], born[nel], lives_with[kl_family, nel], parent[nel, kasia])
+  cut 2028-11-30
+a_who (m = 2028-08, p = kasia): true
+  cut 2028-11-30
+a_who (m = 2028-08, p = leon): true
+  cut 2028-11-30
+a_who (m = 2028-08, p = mira): true
+  assumed: the card doesn't say when the office learns of the birth; on the day of birth (adult[kl_family, mira])
+  cut 2028-11-30
+a_who (m = 2028-08, p = nel): true
+  assumed: the card doesn't say when the office learns of the birth; on the day of birth (adult[kl_family, nel], born[nel], lives_with[kl_family, nel], parent[nel, kasia])
+  cut 2028-11-30
+a_who (m = 2028-09, p = kasia): true
+  cut 2028-11-30
+a_who (m = 2028-09, p = leon): true
+  cut 2028-11-30
+a_who (m = 2028-09, p = mira): true
+  assumed: the card doesn't say when the office learns of the birth; on the day of birth (adult[kl_family, mira])
+  cut 2028-11-30
+a_who (m = 2028-09, p = nel): true
+  assumed: the card doesn't say when the office learns of the birth; on the day of birth (adult[kl_family, nel], born[nel], lives_with[kl_family, nel], parent[nel, kasia])
+  cut 2028-11-30
+a_without_correction (m = 2027-10): (7 500.00 PLN, 0.00 PLN)
+  assumed: the card doesn't say when the office learns of the birth; on the day of birth (adult[kl_family, mira])
+  pinned: known 2028-07-11
+  pinned: year_income[kasia_inc, 2026] = 60 000.00 PLN
+  cut 2028-11-30
+a_without_correction (m = 2027-11): (7 500.00 PLN, 0.00 PLN)
+  assumed: the card doesn't say when the office learns of the birth; on the day of birth (adult[kl_family, mira])
+  pinned: known 2028-07-11
+  pinned: year_income[kasia_inc, 2026] = 60 000.00 PLN
+  cut 2028-11-30
+a_without_correction (m = 2027-12): (7 500.00 PLN, 0.00 PLN)
+  assumed: the card doesn't say when the office learns of the birth; on the day of birth (adult[kl_family, mira])
+  pinned: known 2028-07-11
+  pinned: year_income[kasia_inc, 2026] = 60 000.00 PLN
+  cut 2028-11-30
+a_without_correction (m = 2028-01): (7 500.00 PLN, 0.00 PLN)
+  assumed: the card doesn't say when the office learns of the birth; on the day of birth (adult[kl_family, mira])
+  pinned: known 2028-07-11
+  pinned: year_income[kasia_inc, 2026] = 60 000.00 PLN
+  cut 2028-11-30
+a_without_correction (m = 2028-02): (7 500.00 PLN, 0.00 PLN)
+  assumed: the card doesn't say when the office learns of the birth; on the day of birth (adult[kl_family, mira])
+  pinned: known 2028-07-11
+  pinned: year_income[kasia_inc, 2026] = 60 000.00 PLN
+  cut 2028-11-30
+a_without_correction (m = 2028-03): (7 500.00 PLN, 350.00 PLN)
+  assumed: the card doesn't say when the office learns of the birth; on the day of birth (adult[kl_family, mira], adult[kl_family, nel], born[nel], lives_with[kl_family, nel], parent[nel, kasia])
+  pinned: known 2028-07-11
+  pinned: year_income[kasia_inc, 2026] = 60 000.00 PLN
+  cut 2028-11-30
+a_without_correction (m = 2028-04): (5 000.00 PLN, 650.00 PLN)
+  assumed: the card doesn't say when the office learns of the birth; on the day of birth (adult[kl_family, mira], adult[kl_family, nel], born[nel], lives_with[kl_family, nel], parent[nel, kasia])
+  pinned: known 2028-07-11
+  pinned: year_income[kasia_inc, 2026] = 60 000.00 PLN
+  cut 2028-11-30
+a_without_correction (m = 2028-05): (5 000.00 PLN, 650.00 PLN)
+  assumed: the card doesn't say when the office learns of the birth; on the day of birth (adult[kl_family, mira], adult[kl_family, nel], born[nel], lives_with[kl_family, nel], parent[nel, kasia])
+  pinned: known 2028-07-11
+  pinned: year_income[kasia_inc, 2026] = 60 000.00 PLN
+  cut 2028-11-30
+a_without_correction (m = 2028-06): (5 000.00 PLN, 650.00 PLN)
+  assumed: the card doesn't say when the office learns of the birth; on the day of birth (adult[kl_family, mira], adult[kl_family, nel], born[nel], lives_with[kl_family, nel], parent[nel, kasia])
+  pinned: known 2028-07-11
+  pinned: year_income[kasia_inc, 2026] = 60 000.00 PLN
+  cut 2028-11-30
+a_without_correction (m = 2028-07): (5 000.00 PLN, 650.00 PLN)
+  assumed: the card doesn't say when the office learns of the birth; on the day of birth (adult[kl_family, mira], adult[kl_family, nel], born[nel], lives_with[kl_family, nel], parent[nel, kasia])
+  pinned: known 2028-07-11
+  pinned: year_income[kasia_inc, 2026] = 60 000.00 PLN
+  cut 2028-11-30
+a_without_correction (m = 2028-08): (8 000.00 PLN, 0.00 PLN)
+  assumed: the card doesn't say when the office learns of the birth; on the day of birth (adult[kl_family, mira], adult[kl_family, nel], born[nel], lives_with[kl_family, nel], parent[nel, kasia])
+  pinned: known 2028-07-11
+  pinned: year_income[kasia_inc, 2026] = 60 000.00 PLN
+  cut 2028-11-30
+a_without_correction (m = 2028-09): (8 000.00 PLN, 0.00 PLN)
+  assumed: the card doesn't say when the office learns of the birth; on the day of birth (adult[kl_family, mira], adult[kl_family, nel], born[nel], lives_with[kl_family, nel], parent[nel, kasia])
+  pinned: known 2028-07-11
+  pinned: year_income[kasia_inc, 2026] = 60 000.00 PLN
+  cut 2028-11-30
+b_after_correction (m = 2027-10): (7 900.00 PLN, 0.00 PLN)
+  assumed: the card doesn't say when the office learns of the birth; on the day of birth (adult[kl_family, mira])
+  cut 2028-11-30
+b_after_correction (m = 2027-11): (7 900.00 PLN, 0.00 PLN)
+  assumed: the card doesn't say when the office learns of the birth; on the day of birth (adult[kl_family, mira])
+  cut 2028-11-30
+b_after_correction (m = 2027-12): (7 900.00 PLN, 0.00 PLN)
+  assumed: the card doesn't say when the office learns of the birth; on the day of birth (adult[kl_family, mira])
+  cut 2028-11-30
+b_after_correction (m = 2028-01): (7 900.00 PLN, 0.00 PLN)
+  assumed: the card doesn't say when the office learns of the birth; on the day of birth (adult[kl_family, mira])
+  cut 2028-11-30
+b_after_correction (m = 2028-02): (7 900.00 PLN, 0.00 PLN)
+  assumed: the card doesn't say when the office learns of the birth; on the day of birth (adult[kl_family, mira])
+  cut 2028-11-30
+b_after_correction (m = 2028-03): (7 900.00 PLN, 0.00 PLN)
+  assumed: the card doesn't say when the office learns of the birth; on the day of birth (adult[kl_family, mira], adult[kl_family, nel], born[nel], lives_with[kl_family, nel], parent[nel, kasia])
+  cut 2028-11-30
+b_after_correction (m = 2028-04): (5 400.00 PLN, 650.00 PLN)
+  assumed: the card doesn't say when the office learns of the birth; on the day of birth (adult[kl_family, mira], adult[kl_family, nel], born[nel], lives_with[kl_family, nel], parent[nel, kasia])
+  cut 2028-11-30
+b_after_correction (m = 2028-05): (5 400.00 PLN, 650.00 PLN)
+  assumed: the card doesn't say when the office learns of the birth; on the day of birth (adult[kl_family, mira], adult[kl_family, nel], born[nel], lives_with[kl_family, nel], parent[nel, kasia])
+  cut 2028-11-30
+b_after_correction (m = 2028-06): (5 400.00 PLN, 650.00 PLN)
+  assumed: the card doesn't say when the office learns of the birth; on the day of birth (adult[kl_family, mira], adult[kl_family, nel], born[nel], lives_with[kl_family, nel], parent[nel, kasia])
+  cut 2028-11-30
+b_after_correction (m = 2028-07): (5 400.00 PLN, 650.00 PLN)
+  assumed: the card doesn't say when the office learns of the birth; on the day of birth (adult[kl_family, mira], adult[kl_family, nel], born[nel], lives_with[kl_family, nel], parent[nel, kasia])
+  cut 2028-11-30
+b_after_correction (m = 2028-08): (8 400.00 PLN, 0.00 PLN)
+  assumed: the card doesn't say when the office learns of the birth; on the day of birth (adult[kl_family, mira], adult[kl_family, nel], born[nel], lives_with[kl_family, nel], parent[nel, kasia])
+  cut 2028-11-30
+b_after_correction (m = 2028-09): (8 400.00 PLN, 0.00 PLN)
+  assumed: the card doesn't say when the office learns of the birth; on the day of birth (adult[kl_family, mira], adult[kl_family, nel], born[nel], lives_with[kl_family, nel], parent[nel, kasia])
+  cut 2028-11-30
+c_overpayment: 350.00 PLN
+  assumed: the card doesn't say when the office learns of the birth; on the day of birth (adult[kl_family, mira], adult[kl_family, nel], born[nel], lives_with[kl_family, nel], parent[nel, kasia])
+  cut 2028-11-30
+c_owed_after (d = debt_after[adjustments[support_pay[kl_family, 2028-03].cash, kasia_corrected]]): (25.00 PLN, 2028-10-30)
+  assumed: the card doesn't say when the office learns of the birth; on the day of birth (adult[kl_family, mira], adult[kl_family, nel], born[nel], lives_with[kl_family, nel], parent[nel, kasia])
+  unfulfilled: debt_after[adjustments[support_pay[kl_family, 2028-03].cash, kasia_corrected]]
+  cut 2028-11-30
+c_paydays (m = 2028-07): (650.00 PLN, 325.00 PLN, 325.00 PLN)
+  assumed: the card doesn't say when the office learns of the birth; on the day of birth (adult[kl_family, mira], adult[kl_family, nel], born[nel], lives_with[kl_family, nel], parent[nel, kasia])
+  cut 2028-11-30
+c_paydays (m = 2028-08): (0.00 PLN, 0.00 PLN, 0.00 PLN)
+  assumed: the card doesn't say when the office learns of the birth; on the day of birth (adult[kl_family, mira], adult[kl_family, nel], born[nel], lives_with[kl_family, nel], parent[nel, kasia])
+  cut 2028-11-30
+c_paydays (m = 2028-09): (0.00 PLN, 0.00 PLN, 0.00 PLN)
+  assumed: the card doesn't say when the office learns of the birth; on the day of birth (adult[kl_family, mira], adult[kl_family, nel], born[nel], lives_with[kl_family, nel], parent[nel, kasia])
+  cut 2028-11-30
+report_in_time: ok
+  cut 2028-11-30
+warning: WARN-UNREAD source modeller is read by nothing

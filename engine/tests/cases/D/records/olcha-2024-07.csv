@@ -1,0 +1,27 @@
+Bank Olcha S.A.|account statement
+Account|LN73 4400 2011 0000 8817 2264 0001
+Holder|HALINA SOWA
+Period|20240701|20240731
+Opening balance|134 111,74
+Date|Type|Counterparty|Title|Amount|Balance after
+20240703|CASH|ATM Olcha Brzezie|cash withdrawal|-500,00|133 611,74
+20240704|CARD|Warzywniak u Janka|card ...2264|-239,55|133 372,19
+20240705|CREDIT|Social Insurance Office|survivor pension 07/2024|4 022,53|137 394,72
+20240705|STANDING ORDER|WM Ogrodowa 2|fee Ogrodowa 2/11 07/2024|-420,00|136 974,72
+20240707|CARD|Drogeria Konwalia|card ...2264|-78,98|136 895,74
+20240707|CARD|Sklep Pod Lipą|card ...2264|-49,63|136 846,11
+20240707|CARD|Stacja Olcha-Paliwa|card ...2264|-131,25|136 714,86
+20240712|CARD|Warzywniak u Janka|card ...2264|-241,36|136 473,50
+20240713|CARD|Drogeria Konwalia|card ...2264|-235,70|136 237,80
+20240715|STANDING ORDER|Volta Energia|Leśna 4 energy 07/2024|-385,00|135 852,80
+20240716|CREDIT|Bank Buk|loan 3310-20 repaid by TU Opoka; instalment 45 returned|972,28|136 825,08
+20240717|CASH|ATM Olcha Brzezie|cash withdrawal|-500,00|136 325,08
+20240718|CARD|Warzywniak u Janka|card ...2264|-117,73|136 207,35
+20240718|CARD|Apteka Rumianek|card ...2264|-58,04|136 149,31
+20240722|STANDING ORDER|Telekom Lenia|phone 07/2024|-59,00|136 090,31
+20240723|CARD|Drogeria Konwalia|card ...2264|-186,41|135 903,90
+20240723|CARD|Drogeria Konwalia|card ...2264|-52,11|135 851,79
+20240725|TRANSFER|Opieka Dom sp.|home help 07/2024|-1 100,00|134 751,79
+20240726|CARD|Sklep Pod Lipą|card ...2264|-110,45|134 641,34
+20240731|CARD|Drogeria Konwalia|card ...2264|-50,12|134 591,22
+Closing balance|134 591,22

@@ -1,0 +1,34 @@
+# W8-SEEN for a decision. E §7 step 1 as in E7_1_shared_line_random_day: top, a decision, books w on a random day; fee
+# books v 100.00 DUK on the first of each month (opening 0.00 DUK), so bal(v, 2026-03-31) reaches no random fact:
+# 300.00 DUK. snap9 refused it (top's refused day held for the whole walk).
+=== m.tally
+model m
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+unit DUK: currency minor 0.01
+source s "s"
+index delays = 1..10
+place w: accounts DUK lives 2026-01-01..
+place v: accounts DUK lives 2026-01-01..
+place world: outside lives 2026-01-01..
+input amt: money DUK question "amount?"
+version o
+  cite s
+  known 2026-01-01
+  opening[w] = 0.00 DUK at 2026-01-01 start
+  opening[v] = 0.00 DUK at 2026-01-01 start
+  amt = 100.00 DUK governs always "a"
+def delay[m in months]: dist = discrete(1 for k in delays)
+move top[m in months]: transfers
+  on add_days(start_of(m), delay[m])
+  reads w
+  leg cash from world to w amount max(0.00 DUK, amt - bal(w, start_of(m)))
+move fee[m in months]: transfers
+  on start_of(m)
+  leg cash from world to v amount amt
+ask q6: bal(v, 2026-03-31) law 2026-12-31
+=== expect
+q6: 300.00 DUK
+  law date 2026-12-31, cut 2026-01-01

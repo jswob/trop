@@ -1,0 +1,37 @@
+# MC-A-F1 (the old queue's F12). L §4.4 / §5.18 windows each: the line splits by the sub-windows of each window it
+# meets; L §5.5 Fan-out: "On a line, an axis prints * when, with the line's other options held, every option of it gives
+# the line's result ... An axis printed * has no reading: entry." bought = 2019-03-01..2019-03-31: add_years(bought, 5)
+# < 2024-03-07 on 03-01..03-06 (ex, val = r = 10) and not from 03-07 (val = r + k = 20); round(10, 1, ax) is 10 under
+# both options, so two lines, each [ax = *]. The fault: ex (which reads no axis) was memoised under the first option,
+# and the second option's line, reusing the cell, met no window and printed one unsplit line.
+=== m.tally
+model mca_f1
+  tally 2
+  on 2024-12-31
+  start 2019-01-01
+  end 2024-12-31
+source s "MC-A minimal text"
+axis ax
+  half-up "first reading"
+  down "second reading"
+input bought: date question "the day bought"
+input sold: date question "the day sold"
+input yrs: int question "the years"
+input k: num question "a whole number"
+def r: num = round(k, 1, ax)
+def ex: bool = add_years(bought, yrs) < sold
+def val: num = r + (if ex then 0 else k)
+version v1
+  cite s
+  governs always
+  known 2019-01-01
+  bought = window(2019-03-01, 2019-03-31) "a month for its day"
+  sold = 2024-03-07 "the sale"
+  yrs = 5 "five years"
+  k = 10 "a whole number: both roundings give it"
+ask q: val windows each
+=== expect
+q [bought = 2019-03-01 .. 2019-03-06] [ax = *]: 10
+  cut 2024-12-31
+q [bought = 2019-03-07 .. 2019-03-31] [ax = *]: 20
+  cut 2024-12-31

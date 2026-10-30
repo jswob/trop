@@ -1,0 +1,53 @@
+# L §4.4 windows each on a line that reaches an axis (L §5.5: every combination of the axes the line reads is
+# evaluated; one line per distinct result).  Under mode a the cutoff is 07-05: d < cutoff is true on 07-01 .. 07-04;
+# under b it is 07-08: true on 07-01 .. 07-07.  The combinations' sub-window lines differ, so each is printed with
+# its option (layout: the window part, then the axis part; `reading:` per L §8.2).  q2 reaches no axis.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+axis mode
+  a "first reading"
+  b "second reading"
+
+input d: date
+input cut_a: date
+input cut_b: date
+
+def cutoff: date at reader
+  rule base = cut_a
+  rule alt beats base = cut_b when mode == b
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  d = window(2020-07-01, 2020-07-10)
+  cut_a = 2020-07-05
+  cut_b = 2020-07-08
+
+ask q1: d < cutoff law 2026-06-30 windows each
+ask q2: d < cut_a law 2026-06-30 windows each
+=== expect
+q1 [d = 2020-07-01 .. 2020-07-04] [mode = a]: true
+  reading: mode = a
+  law date 2026-06-30, cut 2026-12-31
+q1 [d = 2020-07-05 .. 2020-07-10] [mode = a]: false
+  reading: mode = a
+  law date 2026-06-30, cut 2026-12-31
+q1 [d = 2020-07-01 .. 2020-07-07] [mode = b]: true
+  reading: mode = b
+  law date 2026-06-30, cut 2026-12-31
+q1 [d = 2020-07-08 .. 2020-07-10] [mode = b]: false
+  reading: mode = b
+  law date 2026-06-30, cut 2026-12-31
+q2 [d = 2020-07-01 .. 2020-07-04]: true
+  law date 2026-06-30, cut 2026-12-31
+q2 [d = 2020-07-05 .. 2020-07-10]: false
+  law date 2026-06-30, cut 2026-12-31

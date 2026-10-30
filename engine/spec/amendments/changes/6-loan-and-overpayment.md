@@ -2,7 +2,7 @@
 
 **Statement (household):** "Bierzemy kredyt na samochód: 40 000 zł, 48 rat równych, 8,99% rocznie, pierwsza rata 10 maja 2027. Bank wypłaca pieniądze salonowi. Umowa z 2 kwietnia." Later: "Przy racie w styczniu 2028 nadpłacimy 5 000 zł; umowa mówi, że nadpłata skraca okres."
 
-**Operation:** add a fact (OPERATIONS §2.1), twice. The loan adds `car_dealer` to `seller` with `add_keys`, and its rows bring `car` into the open index `loan`; the overpayment adds no key. **Kind:** four amendments: an `advance` of `on` to 2027-04-02 (OPERATIONS §4), the `add` of the loan, an `advance` to 2028-01-08, then the `add` of the overpayment. Each `add` alone would be refused (`OP-EDIT`), since it would edit the `on` line. **Known:** 2027-04-02, then 2028-01-08.
+**Operation:** add a fact (OPERATIONS §2.1), twice. The loan adds `car_dealer` to `seller` with `add_keys`, and enters the loan `car` in the kind `loan`; the overpayment adds no key. **Kind:** four amendments: an `advance` of `on` to 2027-04-02 (OPERATIONS §4), the `add` of the loan, an `advance` to 2028-01-08, then the `add` of the overpayment. Each `add` alone would be refused (`OP-EDIT`), since it would edit the `on` line. **Known:** 2027-04-02, then 2028-01-08.
 
 ## Diff
 
@@ -14,17 +14,18 @@
 
 --- facts/2027.tally   (new file, or added to change 1's)
 +part facts_2027
-+  tally 1
++  tally 2
 +
 +source car_contract "Umowa kredytu samochodowego, 2027-04-02"
 +
 +version car_loan
 +  cite car_contract
++  governs always
 +  known 2027-04-02
-+  seller + [car_dealer]
++  loan + [car] lives 2027-04-02..
++  seller + [car_dealer] lives 2027-04-02..
 +  loan_seller[car] = car_dealer "§ 1: wypłata na rachunek sprzedawcy"
-+  loan_terms[car] = (40000, 48, 0.0899, 2027-05, 10) "§ 2"
-+  opening[loan_debt[car]] = 0
++  loan_terms[car] = (principal: 40000, n: 48, apr: 0.0899 1/year, first_month: 2027-05, due: 10) "§ 2"
 +  overpay[car] = 0 "brak nadpłat"
 +  overpay_choice[car] = shorten "§ 9: nadpłata skraca okres kredytowania"
 ```
@@ -37,14 +38,15 @@ Then, at the overpayment (the `on` line moves to 2028-01-08):
 +
 +version car_overpay_2028_01
 +  cite household
++  governs always
 +  known 2028-01-08
 +  overpay[car, 9] = 5000 "nadpłata przy 9. racie, styczeń 2028"
 ```
 
-**Lines:** 14 added for the loan and 5 for the overpayment, plus the `on` line each time. Lines edited: the `on` line only.
+**Lines:** 15 added for the loan and 6 for the overpayment (13 and 5 non-blank), plus the `on` line each time. Lines edited: the `on` line only.
 
 **New keys checked against closed-world rows.** Two keys are added:
-- **`car`**, in the open index `loan`: its rows below bring it from the version's `known`, as `laptop_loan`'s rows bring `laptop` (an open index takes no `loan + [car]` line, `LOAD-KIND`). It is read by `loan_seller`, `loan_terms`, `overpay`, `overpay_choice` and the place `loan_debt[car]`'s opening. The base rows are keyed to `laptop`, or keyless in `laptop_loan`'s version (`overpay = 0`), so none covers `car`. All five are stated.
+- **`car`**, in the kind `loan`: `loan + [car] lives 2027-04-02..`, from the contract's date, as `laptop_loan` enters `laptop`. The place `loan_debt[car]` lives from then too (a keyed place lives on its key thing's lifespan, LANGUAGE §5.10), so it needs no opening: its balance is zero at its lifespan's start. It is read by `loan_seller`, `loan_terms`, `overpay` and `overpay_choice`. The base rows are keyed to `laptop`, or keyless in `laptop_loan`'s version (`overpay = 0`), so none covers `car`. All four are stated.
 - **`car_dealer`**, in `seller`, for the place `sellers[car_dealer]`. It is an outside place, which needs no opening.
 
 There are no new holes.
@@ -61,9 +63,9 @@ The loan's defs are recurrences over `inst` (1..480), so `car` gets its own sche
 - **The first instalment** (2027-05-10, a Monday) is 299.67 interest and 695.54 principal.
 - **Movements:**
   - `loan_out[car]` on 2027-04-10 moves 40 000 from `loan_debt[car]` to `sellers[car_dealer]`.
-  - `loan_instalment[car, k]` (principal, to `loan_debt[car]`) and `loan_interest[car, k]` (to `kredytodawcy`) run on the 10th of each month, from 2027-05-10 to 2031-04-10.
+  - `loan_instalment[car, k]`, one movement with its `principal` leg to `loan_debt[car]`, its `interest` leg to `kredytodawcy` and its `overpay` leg (0 here), runs on the 10th of each month, from 2027-05-10 to 2031-04-10.
   - The `last` rule makes the 48th instalment repay the remainder exactly, rounding grosze included.
-- **First day anything differs:** 2027-04-10, the disbursement. The version has no `governs`, so it governs every date and the sanity bound holds trivially (OPERATIONS §7). The payout date is the model's convention, one month before the first instalment, on its day; the statement dates only the contract.
+- **First day anything differs:** 2027-04-10, the disbursement. The version `governs always`, so it governs every date and the sanity bound holds trivially (OPERATIONS §7). The payout date is the model's convention, one month before the first instalment, on its day; the statement dates only the contract.
   - `room[2027-04]`, measured on 2027-04-15, is unchanged: its window's minimum is 2027-05-09, the day before the wage, and instalment 1 falls on the wage's day.
   - Later rooms fall by the instalment A = 995.21 on average, but by 0, A or 2A month by month, as instalments that fall on a weekend, before a delayed wage, move a window's minimum: May −A, June −2A, July 0, August −A, September −2A, October 0, November and December −A.
   - The rule of the 15th puts that much less into the wrappers: 7 961.68 less into OKI in 2027.
@@ -78,7 +80,7 @@ The loan's defs are recurrences over `inst` (1..480), so `car` gets its own sche
 **At the overpayment** (`on` = 2028-01-08):
 - **Instalment 9** is due 2028-01-10, after K. It is planned with the overpayment known.
   - `overpay_paid[car, 9]` = min(5 000, debt before 9 less its principal) = 5 000.
-  - So `loan_overpay[car, 9]` moves 5 000 from `konto` to `loan_debt[car]` on 2028-01-10.
+  - So the `overpay` leg of `loan_instalment[car, 9]` moves 5 000 from `konto` to `loan_debt[car]` on 2028-01-10.
 - **Shorten:** `instalment` stays 995.21 and the debt falls faster. The loan ends at instalment 42, on 2030-10-10, a part instalment of about 416.65: six instalment dates early, since 43 to 48 book nothing. The interest saved, about 1 550, adds more than one instalment to the 5 000's five.
   - The last instalment is the remainder, by `min(debt_before, …)`.
   - Instances after it have no movement, since `when debt_before > 0` is false.

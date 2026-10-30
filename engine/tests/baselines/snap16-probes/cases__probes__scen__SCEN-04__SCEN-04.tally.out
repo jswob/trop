@@ -1,0 +1,4 @@
+base_path: 321 370.92 DUK
+  law date 2026-10-25, cut 2026-10-25
+crash_path: refused: LOAD-SCENARIO ask crash_path names crash, neither the model nor a loaded scenario (unit/probes/scen/SCEN-04/SCEN-04.tally:31)
+warning: WARN-UNREAD input floor_amt is read by nothing

@@ -1,0 +1,7 @@
+mca05_up [window(2019-03-01, 2019-03-31) = 2019-03-01 .. 2019-03-06]: (106.00 DUK, 559.5 DUK, 1 437.00 DUK)
+  pinned: px_round = half-up
+  law date 2025-04-30, cut 2025-04-30
+mca05_up [window(2019-03-01, 2019-03-31) = 2019-03-07 .. 2019-03-31]: (234.00 DUK, 1 230.9 DUK, 1 309.00 DUK)
+  pinned: px_round = half-up
+  law date 2025-04-30, cut 2025-04-30
+

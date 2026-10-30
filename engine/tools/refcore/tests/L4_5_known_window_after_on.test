@@ -1,0 +1,23 @@
+# L §4.5 (round 12): "A version or row known after on, or whose known window ends after it, is refused (LOAD-KNOWN):
+# the reality can't know its own future, and on is its today"; L §8.3 LOAD-KNOWN `version <v> is known after the
+# model's on date`. A version known in window(2026-01-01, 2026-12-31) in a model on 2026-10-18. (Was
+# REFCORE-UNSPECIFIED §4.5, writer 5's T-29.)
+=== m.tally
+model t
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+input x: int
+
+version v
+  cite s
+  governs always
+  known window(2026-01-01, 2026-12-31)
+  x = 1
+
+ask q: x
+=== expect
+refused: LOAD-KNOWN version v is known after the model's on date (m.tally:10)

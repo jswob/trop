@@ -1,0 +1,23 @@
+part treaty
+  tally 2
+  law
+  note "The Lenia–Rosvald Agreement on Taxes and Social Security (tmp/cases-holdout/law/treaty.md). Part I (T-2 – T-8) applies in Lenia's tax through PIT-16 .2; Part II (T-10 – T-13) in the child benefits through FAM-1 .6 and RFF-1 .2. T-20: in force on the thirtieth day after the later note (notes exchanged 2024-10-29: in force 2024-11-28); Part I has effect for income derived on or after 1 January of the year after; Part II from the first day of the month after. The protocol: Rosvald's wage tax on exempt pay is not deducted from Lenia's tax (1); until Part I has effect each state taxes under its own law (2); a benefit paid before Part II had effect stays paid (3)."
+
+source treaty "The Lenia–Rosvald Agreement, signed at Ostrel 2024-05-14 (tmp/cases-holdout/law/treaty.md)"
+
+input treaty_in_force: date question "On which day did the agreement enter into force (T-20 .1)?"
+
+def part1_from: date
+  note "T-20 .2: Part I has effect for income derived on or after 1 January of the calendar year after the year of entry into force"
+  rule base = start_of(year_of(treaty_in_force) + 1)
+
+def part2_from: date
+  note "T-20 .2: Part II has effect from the first day of the month after entry into force"
+  rule base = start_of(month_of(treaty_in_force) + 1)
+
+version treaty_t20
+  cite treaty
+  governs always
+  known 2024-10-29
+  note "the notes were exchanged on 2024-10-29, which fixed the day of entry into force (T-20 .1)"
+  treaty_in_force = 2024-11-28 "T-20 .1: notes exchanged on 2024-10-29; it entered into force on 2024-11-28"

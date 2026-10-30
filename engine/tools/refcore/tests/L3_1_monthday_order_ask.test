@@ -1,0 +1,26 @@
+# GD-2 (round 19): L §3.1 `monthday`: "A day of the year without its year (13 April). `02-29` is no month-day ...
+# (refused, `LOAD-PARSE`). Month-days compare with `==` and `!=` only; any order or arithmetic on them is refused (§8.4)."
+# An order in an ask line (`file_by <= 05-01`, the literal allowed there, L §7.1): LOAD-UNIT (L §8.4).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+index yrs = year 2026..2027
+input file_by: monthday
+input other: monthday
+
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  file_by = 04-30
+  other = 04-30
+ask q: file_by <= 05-01
+=== expect
+refused: LOAD-UNIT an order orders month-days: they compare with == and != only (m.tally:20)

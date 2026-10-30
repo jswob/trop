@@ -1,0 +1,21 @@
+slot	agent	id	role	chunk	effort	start	end	usage	audit
+1	P0	ac8fc1b8b45dedba6	probe writer (pilot)	P0	high	05:13	06:02	47 calls, 2.01 M weighted, about 0.23 % of the week	no holdout; false positives only
+2	W-G1	add4bb1350a7d87a6	probe writer	G1	high	06:06	06:22	24 calls, 1.30 M weighted, about 0.15 % of the week	no holdout; heredoc false positives, scratchpad writes
+3	J-G1	a29f96c9c1ac59937	judge	G1	high	06:24	06:29	10 calls, 0.41 M weighted, about 0.05 % of the week	no holdout; loop-variable false positives
+3	W-G2	ae76ad2c938fe8558	probe writer	G2	high	06:24	06:41	24 calls, 1.40 M weighted, about 0.16 % of the week	clean
+4	J-G2	a28ae94391ec8016e	judge	G2	high	06:44	06:47	11 calls, 0.46 M weighted, about 0.05 % of the week	no holdout; loop-variable false positives
+4	W-G3	aac5435c47d2b1a89	probe writer	G3	high	06:44	07:02	19 calls, 1.29 M weighted, about 0.15 % of the week	clean
+5	J-G3	a06640d232eb7e153	judge	G3	high	07:05	07:10	9 calls, 0.38 M weighted, about 0.04 % of the week	no holdout; loop-variable false positives
+5	W-G4	ab605c898a7746eb9	probe writer	G4	high	07:05	07:23	26 calls, 1.41 M weighted, about 0.16 % of the week	no holdout; one harmless listing of maps/
+6	J-G4	a204433c6da069e8d	judge	G4	high	07:27	07:33	10 calls, 0.46 M weighted, about 0.05 % of the week	clean
+6	W-G5	ab5a8f19c8c389812	probe writer	G5	high	07:27	07:46	33 calls, 1.26 M weighted, about 0.15 % of the week	no holdout; one attempted whole-tree grep of tmp/cases aborted by zsh (nothing ran); listing of maps/
+7	J-G5	aa8709eb30b377ffa	judge	G5	high	07:52	07:59	9 calls, 0.45 M weighted, about 0.05 % of the week	clean
+8	W-A	a83f515a187855cbe	household writer	A	xhigh	08:03	10:05	275 calls, 9.30 M weighted, about 1.08 % of the week	no holdout; relative-path false positives, scratchpad merged copy
+9	J-A	ae89949ddb53023b9	judge	A	high	10:15	10:25	24 calls, 0.94 M weighted, about 0.11 % of the week	clean
+10	W-B	aaf6ee9585bed0ee6	household writer	B	xhigh (escalated)	10:35	11:25	87 calls, 3.34 M weighted, about 0.39 % of the week	no holdout; listings of tally-1.0.1/households/maps (names only); scratchpad scripts; whole-file record conversion by script (D6, deviation)
+11	J-B	a72c53ba9a4d71e6a	judge	B	high	11:35	11:50	21 calls, 1.09 M weighted, about 0.13 % of the week	no holdout; one harmless listing
+11	W-D	a50a00a1e5c1c0523	household writer	D	xhigh	11:35	12:30	113 calls, 3.63 M weighted, about 0.42 % of the week	no holdout; harmless listings
+12	J-D	aee659cfa1206c05e	judge	D	high	12:35	12:45	19 calls, 0.69 M weighted, about 0.08 % of the week	no holdout; a script written to the supervisor's scratchpad (outside its list, outside the repo)
+12	W-E1	ae0688d5a26581de5	household writer (family)	E1	max (escalated)	12:35	13:35	66 calls, 3.36 M weighted, about 0.39 % of the week	no holdout; listings of tally-1.0.1/households/maps (names); scripts in the supervisor's scratchpad
+13	J-E1	a05d8f9f5db9be55c	judge	E1	high	13:40	13:50	24 calls, 0.72 M weighted, about 0.08 % of the week	no holdout; loop-path false positives
+all	supervisor	2b7f7638-5a75-4bdf-aa64-86242ca7cb30	supervisor (this session, to the close-out's launch)	—	—	05:00	13:55	236 calls, 5.95 M weighted, about 0.69 % of the week	audits every agent; no holdout access

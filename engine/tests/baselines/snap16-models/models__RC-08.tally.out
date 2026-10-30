@@ -1,0 +1,879 @@
+ask_annual_now (j = q2, s = sp1, b = individual): false
+  law date 2026-10-18, cut 2026-10-18
+ask_annual_now (j = q2, s = sp1, b = joint): false
+  law date 2026-10-18, cut 2026-10-18
+ask_annual_now (j = q2, s = sp2, b = individual): false
+  law date 2026-10-18, cut 2026-10-18
+ask_annual_now (j = q2, s = sp2, b = joint): false
+  law date 2026-10-18, cut 2026-10-18
+ask_annual_now (j = q3, s = sp1, b = individual): false
+  law date 2026-10-18, cut 2026-10-18
+ask_annual_now (j = q3, s = sp1, b = joint): false
+  law date 2026-10-18, cut 2026-10-18
+ask_annual_now (j = q3, s = sp2, b = individual): false
+  law date 2026-10-18, cut 2026-10-18
+ask_annual_now (j = q3, s = sp2, b = joint): false
+  law date 2026-10-18, cut 2026-10-18
+ask_annual_now (j = q4, s = sp1, b = individual): false
+  law date 2026-10-18, cut 2026-10-18
+ask_annual_now (j = q4, s = sp1, b = joint): false
+  law date 2026-10-18, cut 2026-10-18
+ask_annual_now (j = q4, s = sp2, b = individual): false
+  law date 2026-10-18, cut 2026-10-18
+ask_annual_now (j = q4, s = sp2, b = joint): false
+  law date 2026-10-18, cut 2026-10-18
+ask_annual_now (j = q5, s = sp1, b = individual): false
+  law date 2026-10-18, cut 2026-10-18
+ask_annual_now (j = q5, s = sp1, b = joint): false
+  law date 2026-10-18, cut 2026-10-18
+ask_annual_now (j = q5, s = sp2, b = individual): false
+  law date 2026-10-18, cut 2026-10-18
+ask_annual_now (j = q5, s = sp2, b = joint): false
+  law date 2026-10-18, cut 2026-10-18
+ask_annual_now (j = q6, s = sp1, b = individual): false
+  law date 2026-10-18, cut 2026-10-18
+ask_annual_now (j = q6, s = sp1, b = joint): false
+  law date 2026-10-18, cut 2026-10-18
+ask_annual_now (j = q6, s = sp2, b = individual): false
+  law date 2026-10-18, cut 2026-10-18
+ask_annual_now (j = q6, s = sp2, b = joint): false
+  law date 2026-10-18, cut 2026-10-18
+ask_annual_now (j = q7, s = sp1, b = individual): false
+  law date 2026-10-18, cut 2026-10-18
+ask_annual_now (j = q7, s = sp1, b = joint): false
+  law date 2026-10-18, cut 2026-10-18
+ask_annual_now (j = q7, s = sp2, b = individual): false
+  law date 2026-10-18, cut 2026-10-18
+ask_annual_now (j = q7, s = sp2, b = joint): false
+  law date 2026-10-18, cut 2026-10-18
+ask_annual_now (j = s2a, s = sp1, b = individual): false
+  law date 2026-10-18, cut 2026-10-18
+ask_annual_now (j = s2a, s = sp1, b = joint): false
+  law date 2026-10-18, cut 2026-10-18
+ask_annual_now (j = s2a, s = sp2, b = individual): false
+  law date 2026-10-18, cut 2026-10-18
+ask_annual_now (j = s2a, s = sp2, b = joint): false
+  law date 2026-10-18, cut 2026-10-18
+ask_annual_now (j = s2b, s = sp1, b = individual): false
+  law date 2026-10-18, cut 2026-10-18
+ask_annual_now (j = s2b, s = sp1, b = joint): false
+  law date 2026-10-18, cut 2026-10-18
+ask_annual_now (j = s2b, s = sp2, b = individual): false
+  law date 2026-10-18, cut 2026-10-18
+ask_annual_now (j = s2b, s = sp2, b = joint): false
+  law date 2026-10-18, cut 2026-10-18
+ask_annual_now (j = s3, s = sp1, b = individual): false
+  law date 2026-10-18, cut 2026-10-18
+ask_annual_now (j = s3, s = sp1, b = joint): false
+  law date 2026-10-18, cut 2026-10-18
+ask_annual_now (j = s3, s = sp2, b = individual): false
+  law date 2026-10-18, cut 2026-10-18
+ask_annual_now (j = s3, s = sp2, b = joint): false
+  law date 2026-10-18, cut 2026-10-18
+ask_july (c = m1) [mc_round = *]: (0 PLN, false)
+  law date 2026-10-18, cut 2026-10-18
+ask_july (c = m2) [mc_round = *]: (0 PLN, false)
+  law date 2026-10-18, cut 2026-10-18
+ask_m1 [mc_round = gr_down | gr_half_up]: 119.41 PLN
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[m1])
+  reading: mc_round = gr_down | gr_half_up
+  law date 2026-10-18, cut 2026-10-18
+ask_m1 [mc_round = gr_exact]: 2030/17 (119.411764705882) PLN
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[m1])
+  reading: mc_round = gr_exact
+  law date 2026-10-18, cut 2026-10-18
+ask_m2 [mc_round = gr_down]: 494.58 PLN
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[m2])
+  reading: mc_round = gr_down
+  law date 2026-10-18, cut 2026-10-18
+ask_m2 [mc_round = gr_exact]: 8408/17 (494.588235294118) PLN
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[m2])
+  reading: mc_round = gr_exact
+  law date 2026-10-18, cut 2026-10-18
+ask_m2 [mc_round = gr_half_up]: 494.59 PLN
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[m2])
+  reading: mc_round = gr_half_up
+  law date 2026-10-18, cut 2026-10-18
+ask_m3 (m = 2022-01) [mc_round = gr_down | gr_half_up]: (7 000.00 PLN, 512.35 PLN)
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[m3])
+  reading: mc_round = gr_down | gr_half_up
+  law date 2026-10-18, cut 2026-10-18
+ask_m3 (m = 2022-01) [mc_round = gr_exact]: (7 000.00 PLN, 8710/17 (512.352941176471) PLN)
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[m3])
+  reading: mc_round = gr_exact
+  law date 2026-10-18, cut 2026-10-18
+ask_m3 (m = 2022-02) [mc_round = gr_down | gr_half_up]: (7 000.00 PLN, 512.35 PLN)
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[m3])
+  reading: mc_round = gr_down | gr_half_up
+  law date 2026-10-18, cut 2026-10-18
+ask_m3 (m = 2022-02) [mc_round = gr_exact]: (7 000.00 PLN, 8710/17 (512.352941176471) PLN)
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[m3])
+  reading: mc_round = gr_exact
+  law date 2026-10-18, cut 2026-10-18
+ask_m3 (m = 2022-03) [mc_round = gr_down | gr_half_up]: (7 000.00 PLN, 512.35 PLN)
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[m3])
+  reading: mc_round = gr_down | gr_half_up
+  law date 2026-10-18, cut 2026-10-18
+ask_m3 (m = 2022-03) [mc_round = gr_exact]: (7 000.00 PLN, 8710/17 (512.352941176471) PLN)
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[m3])
+  reading: mc_round = gr_exact
+  law date 2026-10-18, cut 2026-10-18
+ask_m3 (m = 2022-04) [mc_round = gr_down | gr_half_up]: (7 000.00 PLN, 512.35 PLN)
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[m3])
+  reading: mc_round = gr_down | gr_half_up
+  law date 2026-10-18, cut 2026-10-18
+ask_m3 (m = 2022-04) [mc_round = gr_exact]: (7 000.00 PLN, 8710/17 (512.352941176471) PLN)
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[m3])
+  reading: mc_round = gr_exact
+  law date 2026-10-18, cut 2026-10-18
+ask_m3 (m = 2022-05) [mc_round = gr_down | gr_half_up]: (7 000.00 PLN, 512.35 PLN)
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[m3])
+  reading: mc_round = gr_down | gr_half_up
+  law date 2026-10-18, cut 2026-10-18
+ask_m3 (m = 2022-05) [mc_round = gr_exact]: (7 000.00 PLN, 8710/17 (512.352941176471) PLN)
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[m3])
+  reading: mc_round = gr_exact
+  law date 2026-10-18, cut 2026-10-18
+ask_m3 (m = 2022-06) [mc_round = gr_down | gr_half_up]: (7 000.00 PLN, 512.35 PLN)
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[m3])
+  reading: mc_round = gr_down | gr_half_up
+  law date 2026-10-18, cut 2026-10-18
+ask_m3 (m = 2022-06) [mc_round = gr_exact]: (7 000.00 PLN, 8710/17 (512.352941176471) PLN)
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[m3])
+  reading: mc_round = gr_exact
+  law date 2026-10-18, cut 2026-10-18
+ask_m4 (m = 2022-01) [mc_round = *]: (14 000.00 PLN, false, 512.35 PLN)
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[m4])
+  law date 2026-10-18, cut 2026-10-18
+ask_m4 (m = 2022-02) [mc_round = *]: (14 000.00 PLN, false, 512.35 PLN)
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[m4])
+  law date 2026-10-18, cut 2026-10-18
+ask_m4 (m = 2022-03) [mc_round = *]: (14 000.00 PLN, false, 512.35 PLN)
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[m4])
+  law date 2026-10-18, cut 2026-10-18
+ask_m4 (m = 2022-04) [mc_round = *]: (14 000.00 PLN, false, 512.35 PLN)
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[m4])
+  law date 2026-10-18, cut 2026-10-18
+ask_m4 (m = 2022-05) [mc_round = *]: (14 000.00 PLN, false, 512.35 PLN)
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[m4])
+  law date 2026-10-18, cut 2026-10-18
+ask_m4 (m = 2022-06) [mc_round = *]: (14 000.00 PLN, false, 512.35 PLN)
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[m4])
+  law date 2026-10-18, cut 2026-10-18
+ask_q1 (m = 2022-01): (8 000.00 PLN, true)
+  law date 2026-10-18, cut 2026-10-18
+ask_q1 (m = 2022-02): (8 000.00 PLN, true)
+  law date 2026-10-18, cut 2026-10-18
+ask_q1 (m = 2022-03): (8 000.00 PLN, true)
+  law date 2026-10-18, cut 2026-10-18
+ask_q1 (m = 2022-04): (8 000.00 PLN, true)
+  law date 2026-10-18, cut 2026-10-18
+ask_q1 (m = 2022-05): (8 000.00 PLN, true)
+  law date 2026-10-18, cut 2026-10-18
+ask_q1 (m = 2022-06): (8 000.00 PLN, true)
+  law date 2026-10-18, cut 2026-10-18
+ask_q2 (s = sp1, b = individual): false
+  assumed: the guide lists every revenue a spouse had; one it doesn't list as business revenue is none (biz_net[q2, sp1])
+  law date 2022-04-06, cut 2022-04-06
+ask_q2 (s = sp1, b = joint): false
+  assumed: p. 10 states the business revenue, 65 000 zł, and no costs; costs could only lower A, so revenue is taken for A (biz_net[q2, sp2])
+  assumed: the guide lists every revenue a spouse had; one it doesn't list as business revenue is none (biz_net[q2, sp1])
+  law date 2022-04-06, cut 2022-04-06
+ask_q2 (s = sp2, b = individual): false
+  assumed: p. 10 states the business revenue, 65 000 zł, and no costs; costs could only lower A, so revenue is taken for A (biz_net[q2, sp2])
+  law date 2022-04-06, cut 2022-04-06
+ask_q2 (s = sp2, b = joint): false
+  assumed: p. 10 states the business revenue, 65 000 zł, and no costs; costs could only lower A, so revenue is taken for A (biz_net[q2, sp2])
+  assumed: the guide lists every revenue a spouse had; one it doesn't list as business revenue is none (biz_net[q2, sp1])
+  law date 2022-04-06, cut 2022-04-06
+ask_q3 (s = sp1, b = individual): true
+  assumed: the guide lists every revenue a spouse had; one it doesn't list as business revenue is none (biz_net[q3, sp1])
+  law date 2022-04-06, cut 2022-04-06
+ask_q3 (s = sp1, b = joint): true
+  assumed: the guide lists every revenue a spouse had; one it doesn't list as business revenue is none (biz_net[q3, sp1], biz_net[q3, sp2])
+  law date 2022-04-06, cut 2022-04-06
+ask_q3 (s = sp2, b = individual): false
+  assumed: the guide lists every revenue a spouse had; one it doesn't list as business revenue is none (biz_net[q3, sp2])
+  law date 2022-04-06, cut 2022-04-06
+ask_q3 (s = sp2, b = joint): true
+  assumed: the guide lists every revenue a spouse had; one it doesn't list as business revenue is none (biz_net[q3, sp1], biz_net[q3, sp2])
+  law date 2022-04-06, cut 2022-04-06
+ask_q4 (s = sp1, b = individual): (67 500 PLN, false)
+  assumed: the guide lists every revenue a spouse had; a pension (Q4), a renta (Q7) and an umowa zlecenia (Q5) are not employment revenue (emp_rev[q4, sp1], emp_rev[q4, sp2])
+  assumed: the guide lists every revenue a spouse had; one it doesn't list as business revenue is none (biz_net[q4, sp2])
+  law date 2022-04-06, cut 2022-04-06
+ask_q4 (s = sp1, b = joint): (67 500 PLN, false)
+  assumed: the guide lists every revenue a spouse had; a pension (Q4), a renta (Q7) and an umowa zlecenia (Q5) are not employment revenue (emp_rev[q4, sp1], emp_rev[q4, sp2])
+  assumed: the guide lists every revenue a spouse had; one it doesn't list as business revenue is none (biz_net[q4, sp2])
+  law date 2022-04-06, cut 2022-04-06
+ask_q4 (s = sp2, b = individual): (67 500 PLN, false)
+  assumed: the guide lists every revenue a spouse had; a pension (Q4), a renta (Q7) and an umowa zlecenia (Q5) are not employment revenue (emp_rev[q4, sp1], emp_rev[q4, sp2])
+  assumed: the guide lists every revenue a spouse had; one it doesn't list as business revenue is none (biz_net[q4, sp2])
+  law date 2022-04-06, cut 2022-04-06
+ask_q4 (s = sp2, b = joint): (67 500 PLN, false)
+  assumed: the guide lists every revenue a spouse had; a pension (Q4), a renta (Q7) and an umowa zlecenia (Q5) are not employment revenue (emp_rev[q4, sp1], emp_rev[q4, sp2])
+  assumed: the guide lists every revenue a spouse had; one it doesn't list as business revenue is none (biz_net[q4, sp2])
+  law date 2022-04-06, cut 2022-04-06
+ask_q5 (s = sp1, b = individual): (66 000 PLN, true)
+  assumed: the guide lists every revenue a spouse had; a pension (Q4), a renta (Q7) and an umowa zlecenia (Q5) are not employment revenue (emp_rev[q5, sp2])
+  assumed: the guide lists every revenue a spouse had; one it doesn't list as business revenue is none (biz_net[q5, sp1], biz_net[q5, sp2])
+  law date 2022-04-06, cut 2022-04-06
+ask_q5 (s = sp1, b = joint): (66 000 PLN, false)
+  assumed: the guide lists every revenue a spouse had; a pension (Q4), a renta (Q7) and an umowa zlecenia (Q5) are not employment revenue (emp_rev[q5, sp2])
+  assumed: the guide lists every revenue a spouse had; one it doesn't list as business revenue is none (biz_net[q5, sp1], biz_net[q5, sp2])
+  law date 2022-04-06, cut 2022-04-06
+ask_q5 (s = sp2, b = individual): (66 000 PLN, false)
+  assumed: the guide lists every revenue a spouse had; a pension (Q4), a renta (Q7) and an umowa zlecenia (Q5) are not employment revenue (emp_rev[q5, sp2])
+  assumed: the guide lists every revenue a spouse had; one it doesn't list as business revenue is none (biz_net[q5, sp1], biz_net[q5, sp2])
+  law date 2022-04-06, cut 2022-04-06
+ask_q5 (s = sp2, b = joint): (66 000 PLN, false)
+  assumed: the guide lists every revenue a spouse had; a pension (Q4), a renta (Q7) and an umowa zlecenia (Q5) are not employment revenue (emp_rev[q5, sp2])
+  assumed: the guide lists every revenue a spouse had; one it doesn't list as business revenue is none (biz_net[q5, sp1], biz_net[q5, sp2])
+  law date 2022-04-06, cut 2022-04-06
+ask_q6 (s = sp1, b = individual): false
+  assumed: the guide lists every revenue a spouse had; one it doesn't list as business revenue is none (biz_net[q6, sp1])
+  law date 2022-04-06, cut 2022-04-06
+ask_q6 (s = sp1, b = joint): true
+  assumed: the guide lists every revenue a spouse had; one it doesn't list as business revenue is none (biz_net[q6, sp1])
+  law date 2022-04-06, cut 2022-04-06
+ask_q6 (s = sp2, b = individual): false
+  law date 2022-04-06, cut 2022-04-06
+ask_q6 (s = sp2, b = joint): true
+  assumed: the guide lists every revenue a spouse had; one it doesn't list as business revenue is none (biz_net[q6, sp1])
+  law date 2022-04-06, cut 2022-04-06
+ask_q7 (s = sp1, b = individual): false
+  assumed: the guide lists every revenue a spouse had; a pension (Q4), a renta (Q7) and an umowa zlecenia (Q5) are not employment revenue (emp_rev[q7, sp1])
+  law date 2022-04-06, cut 2022-04-06
+ask_q7 (s = sp1, b = joint): true
+  assumed: the guide lists every revenue a spouse had; a pension (Q4), a renta (Q7) and an umowa zlecenia (Q5) are not employment revenue (emp_rev[q7, sp1], emp_rev[q7, sp2])
+  assumed: the guide lists every revenue a spouse had; one it doesn't list as business revenue is none (biz_net[q7, sp2])
+  law date 2022-04-06, cut 2022-04-06
+ask_q7 (s = sp2, b = individual): false
+  assumed: the guide lists every revenue a spouse had; a pension (Q4), a renta (Q7) and an umowa zlecenia (Q5) are not employment revenue (emp_rev[q7, sp2])
+  assumed: the guide lists every revenue a spouse had; one it doesn't list as business revenue is none (biz_net[q7, sp2])
+  law date 2022-04-06, cut 2022-04-06
+ask_q7 (s = sp2, b = joint): true
+  assumed: the guide lists every revenue a spouse had; a pension (Q4), a renta (Q7) and an umowa zlecenia (Q5) are not employment revenue (emp_rev[q7, sp1], emp_rev[q7, sp2])
+  assumed: the guide lists every revenue a spouse had; one it doesn't list as business revenue is none (biz_net[q7, sp2])
+  law date 2022-04-06, cut 2022-04-06
+ask_s1 (c = s1a, m = 2022-01) [mc_round = gr_down | gr_half_up]: (119.41 PLN, ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1a]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1a]), ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1a]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1a]), ?"The 2021 law behind the MF simulation's '2021 rules' columns is not among the case's sources." (adv_2021[s1a, 2022-01]))
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[s1a])
+  pinned: mon_relief[c, m] = 0 for c in [s1a, s1b], m in mo
+  reading: mc_round = gr_down | gr_half_up
+  law date 2022-04-06, cut 2022-04-06
+ask_s1 (c = s1a, m = 2022-01) [mc_round = gr_exact]: (2030/17 (119.411764705882) PLN, ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1a]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1a]), ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1a]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1a]), ?"The 2021 law behind the MF simulation's '2021 rules' columns is not among the case's sources." (adv_2021[s1a, 2022-01]))
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[s1a])
+  pinned: mon_relief[c, m] = 0 for c in [s1a, s1b], m in mo
+  reading: mc_round = gr_exact
+  law date 2022-04-06, cut 2022-04-06
+ask_s1 (c = s1a, m = 2022-02) [mc_round = gr_down | gr_half_up]: (119.41 PLN, ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1a]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1a]), ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1a]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1a]), ?"The 2021 law behind the MF simulation's '2021 rules' columns is not among the case's sources." (adv_2021[s1a, 2022-02]))
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[s1a])
+  pinned: mon_relief[c, m] = 0 for c in [s1a, s1b], m in mo
+  reading: mc_round = gr_down | gr_half_up
+  law date 2022-04-06, cut 2022-04-06
+ask_s1 (c = s1a, m = 2022-02) [mc_round = gr_exact]: (2030/17 (119.411764705882) PLN, ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1a]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1a]), ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1a]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1a]), ?"The 2021 law behind the MF simulation's '2021 rules' columns is not among the case's sources." (adv_2021[s1a, 2022-02]))
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[s1a])
+  pinned: mon_relief[c, m] = 0 for c in [s1a, s1b], m in mo
+  reading: mc_round = gr_exact
+  law date 2022-04-06, cut 2022-04-06
+ask_s1 (c = s1a, m = 2022-03) [mc_round = gr_down | gr_half_up]: (119.41 PLN, ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1a]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1a]), ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1a]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1a]), ?"The 2021 law behind the MF simulation's '2021 rules' columns is not among the case's sources." (adv_2021[s1a, 2022-03]))
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[s1a])
+  pinned: mon_relief[c, m] = 0 for c in [s1a, s1b], m in mo
+  reading: mc_round = gr_down | gr_half_up
+  law date 2022-04-06, cut 2022-04-06
+ask_s1 (c = s1a, m = 2022-03) [mc_round = gr_exact]: (2030/17 (119.411764705882) PLN, ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1a]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1a]), ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1a]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1a]), ?"The 2021 law behind the MF simulation's '2021 rules' columns is not among the case's sources." (adv_2021[s1a, 2022-03]))
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[s1a])
+  pinned: mon_relief[c, m] = 0 for c in [s1a, s1b], m in mo
+  reading: mc_round = gr_exact
+  law date 2022-04-06, cut 2022-04-06
+ask_s1 (c = s1a, m = 2022-04) [mc_round = gr_down | gr_half_up]: (119.41 PLN, ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1a]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1a]), ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1a]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1a]), ?"The 2021 law behind the MF simulation's '2021 rules' columns is not among the case's sources." (adv_2021[s1a, 2022-04]))
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[s1a])
+  pinned: mon_relief[c, m] = 0 for c in [s1a, s1b], m in mo
+  reading: mc_round = gr_down | gr_half_up
+  law date 2022-04-06, cut 2022-04-06
+ask_s1 (c = s1a, m = 2022-04) [mc_round = gr_exact]: (2030/17 (119.411764705882) PLN, ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1a]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1a]), ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1a]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1a]), ?"The 2021 law behind the MF simulation's '2021 rules' columns is not among the case's sources." (adv_2021[s1a, 2022-04]))
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[s1a])
+  pinned: mon_relief[c, m] = 0 for c in [s1a, s1b], m in mo
+  reading: mc_round = gr_exact
+  law date 2022-04-06, cut 2022-04-06
+ask_s1 (c = s1a, m = 2022-05) [mc_round = gr_down | gr_half_up]: (119.41 PLN, ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1a]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1a]), ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1a]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1a]), ?"The 2021 law behind the MF simulation's '2021 rules' columns is not among the case's sources." (adv_2021[s1a, 2022-05]))
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[s1a])
+  pinned: mon_relief[c, m] = 0 for c in [s1a, s1b], m in mo
+  reading: mc_round = gr_down | gr_half_up
+  held: adv_rate = 0.17 (dz2019_1835), read for 2022-05-01
+  held: formula_div = 0.17 (dz2021_2105), read for 2022-05-01
+  held: mon_band row [5 701, 8 549] (dz2021_2105), read for 2022-05-01
+  held: mon_c1 = 380.50 PLN (dz2021_2105), read for 2022-05-01
+  held: mon_r1 = 0.0668 (dz2021_2105), read for 2022-05-01
+  law date 2022-04-06, cut 2022-04-06
+ask_s1 (c = s1a, m = 2022-05) [mc_round = gr_exact]: (2030/17 (119.411764705882) PLN, ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1a]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1a]), ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1a]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1a]), ?"The 2021 law behind the MF simulation's '2021 rules' columns is not among the case's sources." (adv_2021[s1a, 2022-05]))
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[s1a])
+  pinned: mon_relief[c, m] = 0 for c in [s1a, s1b], m in mo
+  reading: mc_round = gr_exact
+  held: adv_rate = 0.17 (dz2019_1835), read for 2022-05-01
+  held: formula_div = 0.17 (dz2021_2105), read for 2022-05-01
+  held: mon_band row [5 701, 8 549] (dz2021_2105), read for 2022-05-01
+  held: mon_c1 = 380.50 PLN (dz2021_2105), read for 2022-05-01
+  held: mon_r1 = 0.0668 (dz2021_2105), read for 2022-05-01
+  law date 2022-04-06, cut 2022-04-06
+ask_s1 (c = s1a, m = 2022-06) [mc_round = gr_down | gr_half_up]: (119.41 PLN, ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1a]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1a]), ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1a]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1a]), ?"The 2021 law behind the MF simulation's '2021 rules' columns is not among the case's sources." (adv_2021[s1a, 2022-06]))
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[s1a])
+  pinned: mon_relief[c, m] = 0 for c in [s1a, s1b], m in mo
+  reading: mc_round = gr_down | gr_half_up
+  held: adv_rate = 0.17 (dz2019_1835), read for 2022-06-01
+  held: formula_div = 0.17 (dz2021_2105), read for 2022-06-01
+  held: mon_band row [5 701, 8 549] (dz2021_2105), read for 2022-06-01
+  held: mon_c1 = 380.50 PLN (dz2021_2105), read for 2022-06-01
+  held: mon_r1 = 0.0668 (dz2021_2105), read for 2022-06-01
+  law date 2022-04-06, cut 2022-04-06
+ask_s1 (c = s1a, m = 2022-06) [mc_round = gr_exact]: (2030/17 (119.411764705882) PLN, ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1a]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1a]), ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1a]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1a]), ?"The 2021 law behind the MF simulation's '2021 rules' columns is not among the case's sources." (adv_2021[s1a, 2022-06]))
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[s1a])
+  pinned: mon_relief[c, m] = 0 for c in [s1a, s1b], m in mo
+  reading: mc_round = gr_exact
+  held: adv_rate = 0.17 (dz2019_1835), read for 2022-06-01
+  held: formula_div = 0.17 (dz2021_2105), read for 2022-06-01
+  held: mon_band row [5 701, 8 549] (dz2021_2105), read for 2022-06-01
+  held: mon_c1 = 380.50 PLN (dz2021_2105), read for 2022-06-01
+  held: mon_r1 = 0.0668 (dz2021_2105), read for 2022-06-01
+  law date 2022-04-06, cut 2022-04-06
+ask_s1 (c = s1a, m = 2022-07) [mc_round = gr_down | gr_half_up]: (119.41 PLN, ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1a]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1a]), ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1a]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1a]), ?"The 2021 law behind the MF simulation's '2021 rules' columns is not among the case's sources." (adv_2021[s1a, 2022-07]))
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[s1a])
+  pinned: mon_relief[c, m] = 0 for c in [s1a, s1b], m in mo
+  reading: mc_round = gr_down | gr_half_up
+  held: adv_rate = 0.17 (dz2019_1835), read for 2022-07-01
+  held: formula_div = 0.17 (dz2021_2105), read for 2022-07-01
+  held: mon_band row [5 701, 8 549] (dz2021_2105), read for 2022-07-01
+  held: mon_c1 = 380.50 PLN (dz2021_2105), read for 2022-07-01
+  held: mon_r1 = 0.0668 (dz2021_2105), read for 2022-07-01
+  law date 2022-04-06, cut 2022-04-06
+ask_s1 (c = s1a, m = 2022-07) [mc_round = gr_exact]: (2030/17 (119.411764705882) PLN, ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1a]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1a]), ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1a]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1a]), ?"The 2021 law behind the MF simulation's '2021 rules' columns is not among the case's sources." (adv_2021[s1a, 2022-07]))
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[s1a])
+  pinned: mon_relief[c, m] = 0 for c in [s1a, s1b], m in mo
+  reading: mc_round = gr_exact
+  held: adv_rate = 0.17 (dz2019_1835), read for 2022-07-01
+  held: formula_div = 0.17 (dz2021_2105), read for 2022-07-01
+  held: mon_band row [5 701, 8 549] (dz2021_2105), read for 2022-07-01
+  held: mon_c1 = 380.50 PLN (dz2021_2105), read for 2022-07-01
+  held: mon_r1 = 0.0668 (dz2021_2105), read for 2022-07-01
+  law date 2022-04-06, cut 2022-04-06
+ask_s1 (c = s1a, m = 2022-08) [mc_round = gr_down | gr_half_up]: (119.41 PLN, ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1a]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1a]), ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1a]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1a]), ?"The 2021 law behind the MF simulation's '2021 rules' columns is not among the case's sources." (adv_2021[s1a, 2022-08]))
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[s1a])
+  pinned: mon_relief[c, m] = 0 for c in [s1a, s1b], m in mo
+  reading: mc_round = gr_down | gr_half_up
+  held: adv_rate = 0.17 (dz2019_1835), read for 2022-08-01
+  held: formula_div = 0.17 (dz2021_2105), read for 2022-08-01
+  held: mon_band row [5 701, 8 549] (dz2021_2105), read for 2022-08-01
+  held: mon_c1 = 380.50 PLN (dz2021_2105), read for 2022-08-01
+  held: mon_r1 = 0.0668 (dz2021_2105), read for 2022-08-01
+  law date 2022-04-06, cut 2022-04-06
+ask_s1 (c = s1a, m = 2022-08) [mc_round = gr_exact]: (2030/17 (119.411764705882) PLN, ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1a]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1a]), ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1a]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1a]), ?"The 2021 law behind the MF simulation's '2021 rules' columns is not among the case's sources." (adv_2021[s1a, 2022-08]))
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[s1a])
+  pinned: mon_relief[c, m] = 0 for c in [s1a, s1b], m in mo
+  reading: mc_round = gr_exact
+  held: adv_rate = 0.17 (dz2019_1835), read for 2022-08-01
+  held: formula_div = 0.17 (dz2021_2105), read for 2022-08-01
+  held: mon_band row [5 701, 8 549] (dz2021_2105), read for 2022-08-01
+  held: mon_c1 = 380.50 PLN (dz2021_2105), read for 2022-08-01
+  held: mon_r1 = 0.0668 (dz2021_2105), read for 2022-08-01
+  law date 2022-04-06, cut 2022-04-06
+ask_s1 (c = s1a, m = 2022-09) [mc_round = gr_down | gr_half_up]: (119.41 PLN, ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1a]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1a]), ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1a]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1a]), ?"The 2021 law behind the MF simulation's '2021 rules' columns is not among the case's sources." (adv_2021[s1a, 2022-09]))
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[s1a])
+  pinned: mon_relief[c, m] = 0 for c in [s1a, s1b], m in mo
+  reading: mc_round = gr_down | gr_half_up
+  held: adv_rate = 0.17 (dz2019_1835), read for 2022-09-01
+  held: formula_div = 0.17 (dz2021_2105), read for 2022-09-01
+  held: mon_band row [5 701, 8 549] (dz2021_2105), read for 2022-09-01
+  held: mon_c1 = 380.50 PLN (dz2021_2105), read for 2022-09-01
+  held: mon_r1 = 0.0668 (dz2021_2105), read for 2022-09-01
+  law date 2022-04-06, cut 2022-04-06
+ask_s1 (c = s1a, m = 2022-09) [mc_round = gr_exact]: (2030/17 (119.411764705882) PLN, ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1a]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1a]), ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1a]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1a]), ?"The 2021 law behind the MF simulation's '2021 rules' columns is not among the case's sources." (adv_2021[s1a, 2022-09]))
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[s1a])
+  pinned: mon_relief[c, m] = 0 for c in [s1a, s1b], m in mo
+  reading: mc_round = gr_exact
+  held: adv_rate = 0.17 (dz2019_1835), read for 2022-09-01
+  held: formula_div = 0.17 (dz2021_2105), read for 2022-09-01
+  held: mon_band row [5 701, 8 549] (dz2021_2105), read for 2022-09-01
+  held: mon_c1 = 380.50 PLN (dz2021_2105), read for 2022-09-01
+  held: mon_r1 = 0.0668 (dz2021_2105), read for 2022-09-01
+  law date 2022-04-06, cut 2022-04-06
+ask_s1 (c = s1a, m = 2022-10) [mc_round = gr_down | gr_half_up]: (119.41 PLN, ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1a]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1a]), ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1a]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1a]), ?"The 2021 law behind the MF simulation's '2021 rules' columns is not among the case's sources." (adv_2021[s1a, 2022-10]))
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[s1a])
+  pinned: mon_relief[c, m] = 0 for c in [s1a, s1b], m in mo
+  reading: mc_round = gr_down | gr_half_up
+  held: adv_rate = 0.17 (dz2019_1835), read for 2022-10-01
+  held: formula_div = 0.17 (dz2021_2105), read for 2022-10-01
+  held: mon_band row [5 701, 8 549] (dz2021_2105), read for 2022-10-01
+  held: mon_c1 = 380.50 PLN (dz2021_2105), read for 2022-10-01
+  held: mon_r1 = 0.0668 (dz2021_2105), read for 2022-10-01
+  law date 2022-04-06, cut 2022-04-06
+ask_s1 (c = s1a, m = 2022-10) [mc_round = gr_exact]: (2030/17 (119.411764705882) PLN, ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1a]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1a]), ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1a]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1a]), ?"The 2021 law behind the MF simulation's '2021 rules' columns is not among the case's sources." (adv_2021[s1a, 2022-10]))
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[s1a])
+  pinned: mon_relief[c, m] = 0 for c in [s1a, s1b], m in mo
+  reading: mc_round = gr_exact
+  held: adv_rate = 0.17 (dz2019_1835), read for 2022-10-01
+  held: formula_div = 0.17 (dz2021_2105), read for 2022-10-01
+  held: mon_band row [5 701, 8 549] (dz2021_2105), read for 2022-10-01
+  held: mon_c1 = 380.50 PLN (dz2021_2105), read for 2022-10-01
+  held: mon_r1 = 0.0668 (dz2021_2105), read for 2022-10-01
+  law date 2022-04-06, cut 2022-04-06
+ask_s1 (c = s1a, m = 2022-11) [mc_round = gr_down | gr_half_up]: (119.41 PLN, ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1a]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1a]), ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1a]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1a]), ?"The 2021 law behind the MF simulation's '2021 rules' columns is not among the case's sources." (adv_2021[s1a, 2022-11]))
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[s1a])
+  pinned: mon_relief[c, m] = 0 for c in [s1a, s1b], m in mo
+  reading: mc_round = gr_down | gr_half_up
+  held: adv_rate = 0.17 (dz2019_1835), read for 2022-11-01
+  held: formula_div = 0.17 (dz2021_2105), read for 2022-11-01
+  held: mon_band row [5 701, 8 549] (dz2021_2105), read for 2022-11-01
+  held: mon_c1 = 380.50 PLN (dz2021_2105), read for 2022-11-01
+  held: mon_r1 = 0.0668 (dz2021_2105), read for 2022-11-01
+  law date 2022-04-06, cut 2022-04-06
+ask_s1 (c = s1a, m = 2022-11) [mc_round = gr_exact]: (2030/17 (119.411764705882) PLN, ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1a]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1a]), ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1a]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1a]), ?"The 2021 law behind the MF simulation's '2021 rules' columns is not among the case's sources." (adv_2021[s1a, 2022-11]))
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[s1a])
+  pinned: mon_relief[c, m] = 0 for c in [s1a, s1b], m in mo
+  reading: mc_round = gr_exact
+  held: adv_rate = 0.17 (dz2019_1835), read for 2022-11-01
+  held: formula_div = 0.17 (dz2021_2105), read for 2022-11-01
+  held: mon_band row [5 701, 8 549] (dz2021_2105), read for 2022-11-01
+  held: mon_c1 = 380.50 PLN (dz2021_2105), read for 2022-11-01
+  held: mon_r1 = 0.0668 (dz2021_2105), read for 2022-11-01
+  law date 2022-04-06, cut 2022-04-06
+ask_s1 (c = s1a, m = 2022-12) [mc_round = gr_down | gr_half_up]: (119.41 PLN, ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1a]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1a]), ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1a]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1a]), ?"The 2021 law behind the MF simulation's '2021 rules' columns is not among the case's sources." (adv_2021[s1a, 2022-12]))
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[s1a])
+  pinned: mon_relief[c, m] = 0 for c in [s1a, s1b], m in mo
+  reading: mc_round = gr_down | gr_half_up
+  held: adv_rate = 0.17 (dz2019_1835), read for 2022-12-01
+  held: formula_div = 0.17 (dz2021_2105), read for 2022-12-01
+  held: mon_band row [5 701, 8 549] (dz2021_2105), read for 2022-12-01
+  held: mon_c1 = 380.50 PLN (dz2021_2105), read for 2022-12-01
+  held: mon_r1 = 0.0668 (dz2021_2105), read for 2022-12-01
+  law date 2022-04-06, cut 2022-04-06
+ask_s1 (c = s1a, m = 2022-12) [mc_round = gr_exact]: (2030/17 (119.411764705882) PLN, ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1a]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1a]), ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1a]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1a]), ?"The 2021 law behind the MF simulation's '2021 rules' columns is not among the case's sources." (adv_2021[s1a, 2022-12]))
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[s1a])
+  pinned: mon_relief[c, m] = 0 for c in [s1a, s1b], m in mo
+  reading: mc_round = gr_exact
+  held: adv_rate = 0.17 (dz2019_1835), read for 2022-12-01
+  held: formula_div = 0.17 (dz2021_2105), read for 2022-12-01
+  held: mon_band row [5 701, 8 549] (dz2021_2105), read for 2022-12-01
+  held: mon_c1 = 380.50 PLN (dz2021_2105), read for 2022-12-01
+  held: mon_r1 = 0.0668 (dz2021_2105), read for 2022-12-01
+  law date 2022-04-06, cut 2022-04-06
+ask_s1 (c = s1b, m = 2022-01) [mc_round = gr_down]: (494.58 PLN, ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1b]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1b]), ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1b]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1b]), ?"The 2021 law behind the MF simulation's '2021 rules' columns is not among the case's sources." (adv_2021[s1b, 2022-01]))
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[s1b])
+  pinned: mon_relief[c, m] = 0 for c in [s1a, s1b], m in mo
+  reading: mc_round = gr_down
+  law date 2022-04-06, cut 2022-04-06
+ask_s1 (c = s1b, m = 2022-01) [mc_round = gr_exact]: (8408/17 (494.588235294118) PLN, ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1b]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1b]), ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1b]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1b]), ?"The 2021 law behind the MF simulation's '2021 rules' columns is not among the case's sources." (adv_2021[s1b, 2022-01]))
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[s1b])
+  pinned: mon_relief[c, m] = 0 for c in [s1a, s1b], m in mo
+  reading: mc_round = gr_exact
+  law date 2022-04-06, cut 2022-04-06
+ask_s1 (c = s1b, m = 2022-01) [mc_round = gr_half_up]: (494.59 PLN, ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1b]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1b]), ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1b]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1b]), ?"The 2021 law behind the MF simulation's '2021 rules' columns is not among the case's sources." (adv_2021[s1b, 2022-01]))
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[s1b])
+  pinned: mon_relief[c, m] = 0 for c in [s1a, s1b], m in mo
+  reading: mc_round = gr_half_up
+  law date 2022-04-06, cut 2022-04-06
+ask_s1 (c = s1b, m = 2022-02) [mc_round = gr_down]: (494.58 PLN, ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1b]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1b]), ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1b]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1b]), ?"The 2021 law behind the MF simulation's '2021 rules' columns is not among the case's sources." (adv_2021[s1b, 2022-02]))
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[s1b])
+  pinned: mon_relief[c, m] = 0 for c in [s1a, s1b], m in mo
+  reading: mc_round = gr_down
+  law date 2022-04-06, cut 2022-04-06
+ask_s1 (c = s1b, m = 2022-02) [mc_round = gr_exact]: (8408/17 (494.588235294118) PLN, ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1b]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1b]), ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1b]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1b]), ?"The 2021 law behind the MF simulation's '2021 rules' columns is not among the case's sources." (adv_2021[s1b, 2022-02]))
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[s1b])
+  pinned: mon_relief[c, m] = 0 for c in [s1a, s1b], m in mo
+  reading: mc_round = gr_exact
+  law date 2022-04-06, cut 2022-04-06
+ask_s1 (c = s1b, m = 2022-02) [mc_round = gr_half_up]: (494.59 PLN, ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1b]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1b]), ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1b]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1b]), ?"The 2021 law behind the MF simulation's '2021 rules' columns is not among the case's sources." (adv_2021[s1b, 2022-02]))
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[s1b])
+  pinned: mon_relief[c, m] = 0 for c in [s1a, s1b], m in mo
+  reading: mc_round = gr_half_up
+  law date 2022-04-06, cut 2022-04-06
+ask_s1 (c = s1b, m = 2022-03) [mc_round = gr_down]: (494.58 PLN, ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1b]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1b]), ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1b]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1b]), ?"The 2021 law behind the MF simulation's '2021 rules' columns is not among the case's sources." (adv_2021[s1b, 2022-03]))
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[s1b])
+  pinned: mon_relief[c, m] = 0 for c in [s1a, s1b], m in mo
+  reading: mc_round = gr_down
+  law date 2022-04-06, cut 2022-04-06
+ask_s1 (c = s1b, m = 2022-03) [mc_round = gr_exact]: (8408/17 (494.588235294118) PLN, ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1b]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1b]), ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1b]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1b]), ?"The 2021 law behind the MF simulation's '2021 rules' columns is not among the case's sources." (adv_2021[s1b, 2022-03]))
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[s1b])
+  pinned: mon_relief[c, m] = 0 for c in [s1a, s1b], m in mo
+  reading: mc_round = gr_exact
+  law date 2022-04-06, cut 2022-04-06
+ask_s1 (c = s1b, m = 2022-03) [mc_round = gr_half_up]: (494.59 PLN, ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1b]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1b]), ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1b]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1b]), ?"The 2021 law behind the MF simulation's '2021 rules' columns is not among the case's sources." (adv_2021[s1b, 2022-03]))
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[s1b])
+  pinned: mon_relief[c, m] = 0 for c in [s1a, s1b], m in mo
+  reading: mc_round = gr_half_up
+  law date 2022-04-06, cut 2022-04-06
+ask_s1 (c = s1b, m = 2022-04) [mc_round = gr_down]: (494.58 PLN, ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1b]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1b]), ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1b]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1b]), ?"The 2021 law behind the MF simulation's '2021 rules' columns is not among the case's sources." (adv_2021[s1b, 2022-04]))
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[s1b])
+  pinned: mon_relief[c, m] = 0 for c in [s1a, s1b], m in mo
+  reading: mc_round = gr_down
+  law date 2022-04-06, cut 2022-04-06
+ask_s1 (c = s1b, m = 2022-04) [mc_round = gr_exact]: (8408/17 (494.588235294118) PLN, ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1b]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1b]), ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1b]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1b]), ?"The 2021 law behind the MF simulation's '2021 rules' columns is not among the case's sources." (adv_2021[s1b, 2022-04]))
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[s1b])
+  pinned: mon_relief[c, m] = 0 for c in [s1a, s1b], m in mo
+  reading: mc_round = gr_exact
+  law date 2022-04-06, cut 2022-04-06
+ask_s1 (c = s1b, m = 2022-04) [mc_round = gr_half_up]: (494.59 PLN, ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1b]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1b]), ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1b]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1b]), ?"The 2021 law behind the MF simulation's '2021 rules' columns is not among the case's sources." (adv_2021[s1b, 2022-04]))
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[s1b])
+  pinned: mon_relief[c, m] = 0 for c in [s1a, s1b], m in mo
+  reading: mc_round = gr_half_up
+  law date 2022-04-06, cut 2022-04-06
+ask_s1 (c = s1b, m = 2022-05) [mc_round = gr_down]: (494.58 PLN, ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1b]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1b]), ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1b]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1b]), ?"The 2021 law behind the MF simulation's '2021 rules' columns is not among the case's sources." (adv_2021[s1b, 2022-05]))
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[s1b])
+  pinned: mon_relief[c, m] = 0 for c in [s1a, s1b], m in mo
+  reading: mc_round = gr_down
+  held: adv_rate = 0.17 (dz2019_1835), read for 2022-05-01
+  held: formula_div = 0.17 (dz2021_2105), read for 2022-05-01
+  held: mon_band row (8 549, 11 141] (dz2021_2105), read for 2022-05-01
+  held: mon_c2 = 819.08 PLN (dz2021_2105), read for 2022-05-01
+  held: mon_r2 = -0.0735 (dz2021_2105), read for 2022-05-01
+  law date 2022-04-06, cut 2022-04-06
+ask_s1 (c = s1b, m = 2022-05) [mc_round = gr_exact]: (8408/17 (494.588235294118) PLN, ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1b]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1b]), ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1b]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1b]), ?"The 2021 law behind the MF simulation's '2021 rules' columns is not among the case's sources." (adv_2021[s1b, 2022-05]))
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[s1b])
+  pinned: mon_relief[c, m] = 0 for c in [s1a, s1b], m in mo
+  reading: mc_round = gr_exact
+  held: adv_rate = 0.17 (dz2019_1835), read for 2022-05-01
+  held: formula_div = 0.17 (dz2021_2105), read for 2022-05-01
+  held: mon_band row (8 549, 11 141] (dz2021_2105), read for 2022-05-01
+  held: mon_c2 = 819.08 PLN (dz2021_2105), read for 2022-05-01
+  held: mon_r2 = -0.0735 (dz2021_2105), read for 2022-05-01
+  law date 2022-04-06, cut 2022-04-06
+ask_s1 (c = s1b, m = 2022-05) [mc_round = gr_half_up]: (494.59 PLN, ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1b]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1b]), ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1b]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1b]), ?"The 2021 law behind the MF simulation's '2021 rules' columns is not among the case's sources." (adv_2021[s1b, 2022-05]))
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[s1b])
+  pinned: mon_relief[c, m] = 0 for c in [s1a, s1b], m in mo
+  reading: mc_round = gr_half_up
+  held: adv_rate = 0.17 (dz2019_1835), read for 2022-05-01
+  held: formula_div = 0.17 (dz2021_2105), read for 2022-05-01
+  held: mon_band row (8 549, 11 141] (dz2021_2105), read for 2022-05-01
+  held: mon_c2 = 819.08 PLN (dz2021_2105), read for 2022-05-01
+  held: mon_r2 = -0.0735 (dz2021_2105), read for 2022-05-01
+  law date 2022-04-06, cut 2022-04-06
+ask_s1 (c = s1b, m = 2022-06) [mc_round = gr_down]: (494.58 PLN, ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1b]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1b]), ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1b]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1b]), ?"The 2021 law behind the MF simulation's '2021 rules' columns is not among the case's sources." (adv_2021[s1b, 2022-06]))
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[s1b])
+  pinned: mon_relief[c, m] = 0 for c in [s1a, s1b], m in mo
+  reading: mc_round = gr_down
+  held: adv_rate = 0.17 (dz2019_1835), read for 2022-06-01
+  held: formula_div = 0.17 (dz2021_2105), read for 2022-06-01
+  held: mon_band row (8 549, 11 141] (dz2021_2105), read for 2022-06-01
+  held: mon_c2 = 819.08 PLN (dz2021_2105), read for 2022-06-01
+  held: mon_r2 = -0.0735 (dz2021_2105), read for 2022-06-01
+  law date 2022-04-06, cut 2022-04-06
+ask_s1 (c = s1b, m = 2022-06) [mc_round = gr_exact]: (8408/17 (494.588235294118) PLN, ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1b]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1b]), ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1b]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1b]), ?"The 2021 law behind the MF simulation's '2021 rules' columns is not among the case's sources." (adv_2021[s1b, 2022-06]))
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[s1b])
+  pinned: mon_relief[c, m] = 0 for c in [s1a, s1b], m in mo
+  reading: mc_round = gr_exact
+  held: adv_rate = 0.17 (dz2019_1835), read for 2022-06-01
+  held: formula_div = 0.17 (dz2021_2105), read for 2022-06-01
+  held: mon_band row (8 549, 11 141] (dz2021_2105), read for 2022-06-01
+  held: mon_c2 = 819.08 PLN (dz2021_2105), read for 2022-06-01
+  held: mon_r2 = -0.0735 (dz2021_2105), read for 2022-06-01
+  law date 2022-04-06, cut 2022-04-06
+ask_s1 (c = s1b, m = 2022-06) [mc_round = gr_half_up]: (494.59 PLN, ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1b]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1b]), ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1b]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1b]), ?"The 2021 law behind the MF simulation's '2021 rules' columns is not among the case's sources." (adv_2021[s1b, 2022-06]))
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[s1b])
+  pinned: mon_relief[c, m] = 0 for c in [s1a, s1b], m in mo
+  reading: mc_round = gr_half_up
+  held: adv_rate = 0.17 (dz2019_1835), read for 2022-06-01
+  held: formula_div = 0.17 (dz2021_2105), read for 2022-06-01
+  held: mon_band row (8 549, 11 141] (dz2021_2105), read for 2022-06-01
+  held: mon_c2 = 819.08 PLN (dz2021_2105), read for 2022-06-01
+  held: mon_r2 = -0.0735 (dz2021_2105), read for 2022-06-01
+  law date 2022-04-06, cut 2022-04-06
+ask_s1 (c = s1b, m = 2022-07) [mc_round = gr_down]: (494.58 PLN, ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1b]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1b]), ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1b]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1b]), ?"The 2021 law behind the MF simulation's '2021 rules' columns is not among the case's sources." (adv_2021[s1b, 2022-07]))
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[s1b])
+  pinned: mon_relief[c, m] = 0 for c in [s1a, s1b], m in mo
+  reading: mc_round = gr_down
+  held: adv_rate = 0.17 (dz2019_1835), read for 2022-07-01
+  held: formula_div = 0.17 (dz2021_2105), read for 2022-07-01
+  held: mon_band row (8 549, 11 141] (dz2021_2105), read for 2022-07-01
+  held: mon_c2 = 819.08 PLN (dz2021_2105), read for 2022-07-01
+  held: mon_r2 = -0.0735 (dz2021_2105), read for 2022-07-01
+  law date 2022-04-06, cut 2022-04-06
+ask_s1 (c = s1b, m = 2022-07) [mc_round = gr_exact]: (8408/17 (494.588235294118) PLN, ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1b]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1b]), ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1b]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1b]), ?"The 2021 law behind the MF simulation's '2021 rules' columns is not among the case's sources." (adv_2021[s1b, 2022-07]))
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[s1b])
+  pinned: mon_relief[c, m] = 0 for c in [s1a, s1b], m in mo
+  reading: mc_round = gr_exact
+  held: adv_rate = 0.17 (dz2019_1835), read for 2022-07-01
+  held: formula_div = 0.17 (dz2021_2105), read for 2022-07-01
+  held: mon_band row (8 549, 11 141] (dz2021_2105), read for 2022-07-01
+  held: mon_c2 = 819.08 PLN (dz2021_2105), read for 2022-07-01
+  held: mon_r2 = -0.0735 (dz2021_2105), read for 2022-07-01
+  law date 2022-04-06, cut 2022-04-06
+ask_s1 (c = s1b, m = 2022-07) [mc_round = gr_half_up]: (494.59 PLN, ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1b]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1b]), ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1b]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1b]), ?"The 2021 law behind the MF simulation's '2021 rules' columns is not among the case's sources." (adv_2021[s1b, 2022-07]))
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[s1b])
+  pinned: mon_relief[c, m] = 0 for c in [s1a, s1b], m in mo
+  reading: mc_round = gr_half_up
+  held: adv_rate = 0.17 (dz2019_1835), read for 2022-07-01
+  held: formula_div = 0.17 (dz2021_2105), read for 2022-07-01
+  held: mon_band row (8 549, 11 141] (dz2021_2105), read for 2022-07-01
+  held: mon_c2 = 819.08 PLN (dz2021_2105), read for 2022-07-01
+  held: mon_r2 = -0.0735 (dz2021_2105), read for 2022-07-01
+  law date 2022-04-06, cut 2022-04-06
+ask_s1 (c = s1b, m = 2022-08) [mc_round = gr_down]: (494.58 PLN, ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1b]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1b]), ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1b]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1b]), ?"The 2021 law behind the MF simulation's '2021 rules' columns is not among the case's sources." (adv_2021[s1b, 2022-08]))
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[s1b])
+  pinned: mon_relief[c, m] = 0 for c in [s1a, s1b], m in mo
+  reading: mc_round = gr_down
+  held: adv_rate = 0.17 (dz2019_1835), read for 2022-08-01
+  held: formula_div = 0.17 (dz2021_2105), read for 2022-08-01
+  held: mon_band row (8 549, 11 141] (dz2021_2105), read for 2022-08-01
+  held: mon_c2 = 819.08 PLN (dz2021_2105), read for 2022-08-01
+  held: mon_r2 = -0.0735 (dz2021_2105), read for 2022-08-01
+  law date 2022-04-06, cut 2022-04-06
+ask_s1 (c = s1b, m = 2022-08) [mc_round = gr_exact]: (8408/17 (494.588235294118) PLN, ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1b]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1b]), ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1b]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1b]), ?"The 2021 law behind the MF simulation's '2021 rules' columns is not among the case's sources." (adv_2021[s1b, 2022-08]))
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[s1b])
+  pinned: mon_relief[c, m] = 0 for c in [s1a, s1b], m in mo
+  reading: mc_round = gr_exact
+  held: adv_rate = 0.17 (dz2019_1835), read for 2022-08-01
+  held: formula_div = 0.17 (dz2021_2105), read for 2022-08-01
+  held: mon_band row (8 549, 11 141] (dz2021_2105), read for 2022-08-01
+  held: mon_c2 = 819.08 PLN (dz2021_2105), read for 2022-08-01
+  held: mon_r2 = -0.0735 (dz2021_2105), read for 2022-08-01
+  law date 2022-04-06, cut 2022-04-06
+ask_s1 (c = s1b, m = 2022-08) [mc_round = gr_half_up]: (494.59 PLN, ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1b]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1b]), ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1b]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1b]), ?"The 2021 law behind the MF simulation's '2021 rules' columns is not among the case's sources." (adv_2021[s1b, 2022-08]))
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[s1b])
+  pinned: mon_relief[c, m] = 0 for c in [s1a, s1b], m in mo
+  reading: mc_round = gr_half_up
+  held: adv_rate = 0.17 (dz2019_1835), read for 2022-08-01
+  held: formula_div = 0.17 (dz2021_2105), read for 2022-08-01
+  held: mon_band row (8 549, 11 141] (dz2021_2105), read for 2022-08-01
+  held: mon_c2 = 819.08 PLN (dz2021_2105), read for 2022-08-01
+  held: mon_r2 = -0.0735 (dz2021_2105), read for 2022-08-01
+  law date 2022-04-06, cut 2022-04-06
+ask_s1 (c = s1b, m = 2022-09) [mc_round = gr_down]: (494.58 PLN, ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1b]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1b]), ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1b]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1b]), ?"The 2021 law behind the MF simulation's '2021 rules' columns is not among the case's sources." (adv_2021[s1b, 2022-09]))
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[s1b])
+  pinned: mon_relief[c, m] = 0 for c in [s1a, s1b], m in mo
+  reading: mc_round = gr_down
+  held: adv_rate = 0.17 (dz2019_1835), read for 2022-09-01
+  held: formula_div = 0.17 (dz2021_2105), read for 2022-09-01
+  held: mon_band row (8 549, 11 141] (dz2021_2105), read for 2022-09-01
+  held: mon_c2 = 819.08 PLN (dz2021_2105), read for 2022-09-01
+  held: mon_r2 = -0.0735 (dz2021_2105), read for 2022-09-01
+  law date 2022-04-06, cut 2022-04-06
+ask_s1 (c = s1b, m = 2022-09) [mc_round = gr_exact]: (8408/17 (494.588235294118) PLN, ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1b]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1b]), ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1b]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1b]), ?"The 2021 law behind the MF simulation's '2021 rules' columns is not among the case's sources." (adv_2021[s1b, 2022-09]))
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[s1b])
+  pinned: mon_relief[c, m] = 0 for c in [s1a, s1b], m in mo
+  reading: mc_round = gr_exact
+  held: adv_rate = 0.17 (dz2019_1835), read for 2022-09-01
+  held: formula_div = 0.17 (dz2021_2105), read for 2022-09-01
+  held: mon_band row (8 549, 11 141] (dz2021_2105), read for 2022-09-01
+  held: mon_c2 = 819.08 PLN (dz2021_2105), read for 2022-09-01
+  held: mon_r2 = -0.0735 (dz2021_2105), read for 2022-09-01
+  law date 2022-04-06, cut 2022-04-06
+ask_s1 (c = s1b, m = 2022-09) [mc_round = gr_half_up]: (494.59 PLN, ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1b]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1b]), ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1b]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1b]), ?"The 2021 law behind the MF simulation's '2021 rules' columns is not among the case's sources." (adv_2021[s1b, 2022-09]))
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[s1b])
+  pinned: mon_relief[c, m] = 0 for c in [s1a, s1b], m in mo
+  reading: mc_round = gr_half_up
+  held: adv_rate = 0.17 (dz2019_1835), read for 2022-09-01
+  held: formula_div = 0.17 (dz2021_2105), read for 2022-09-01
+  held: mon_band row (8 549, 11 141] (dz2021_2105), read for 2022-09-01
+  held: mon_c2 = 819.08 PLN (dz2021_2105), read for 2022-09-01
+  held: mon_r2 = -0.0735 (dz2021_2105), read for 2022-09-01
+  law date 2022-04-06, cut 2022-04-06
+ask_s1 (c = s1b, m = 2022-10) [mc_round = gr_down]: (494.58 PLN, ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1b]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1b]), ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1b]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1b]), ?"The 2021 law behind the MF simulation's '2021 rules' columns is not among the case's sources." (adv_2021[s1b, 2022-10]))
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[s1b])
+  pinned: mon_relief[c, m] = 0 for c in [s1a, s1b], m in mo
+  reading: mc_round = gr_down
+  held: adv_rate = 0.17 (dz2019_1835), read for 2022-10-01
+  held: formula_div = 0.17 (dz2021_2105), read for 2022-10-01
+  held: mon_band row (8 549, 11 141] (dz2021_2105), read for 2022-10-01
+  held: mon_c2 = 819.08 PLN (dz2021_2105), read for 2022-10-01
+  held: mon_r2 = -0.0735 (dz2021_2105), read for 2022-10-01
+  law date 2022-04-06, cut 2022-04-06
+ask_s1 (c = s1b, m = 2022-10) [mc_round = gr_exact]: (8408/17 (494.588235294118) PLN, ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1b]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1b]), ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1b]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1b]), ?"The 2021 law behind the MF simulation's '2021 rules' columns is not among the case's sources." (adv_2021[s1b, 2022-10]))
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[s1b])
+  pinned: mon_relief[c, m] = 0 for c in [s1a, s1b], m in mo
+  reading: mc_round = gr_exact
+  held: adv_rate = 0.17 (dz2019_1835), read for 2022-10-01
+  held: formula_div = 0.17 (dz2021_2105), read for 2022-10-01
+  held: mon_band row (8 549, 11 141] (dz2021_2105), read for 2022-10-01
+  held: mon_c2 = 819.08 PLN (dz2021_2105), read for 2022-10-01
+  held: mon_r2 = -0.0735 (dz2021_2105), read for 2022-10-01
+  law date 2022-04-06, cut 2022-04-06
+ask_s1 (c = s1b, m = 2022-10) [mc_round = gr_half_up]: (494.59 PLN, ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1b]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1b]), ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1b]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1b]), ?"The 2021 law behind the MF simulation's '2021 rules' columns is not among the case's sources." (adv_2021[s1b, 2022-10]))
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[s1b])
+  pinned: mon_relief[c, m] = 0 for c in [s1a, s1b], m in mo
+  reading: mc_round = gr_half_up
+  held: adv_rate = 0.17 (dz2019_1835), read for 2022-10-01
+  held: formula_div = 0.17 (dz2021_2105), read for 2022-10-01
+  held: mon_band row (8 549, 11 141] (dz2021_2105), read for 2022-10-01
+  held: mon_c2 = 819.08 PLN (dz2021_2105), read for 2022-10-01
+  held: mon_r2 = -0.0735 (dz2021_2105), read for 2022-10-01
+  law date 2022-04-06, cut 2022-04-06
+ask_s1 (c = s1b, m = 2022-11) [mc_round = gr_down]: (494.58 PLN, ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1b]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1b]), ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1b]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1b]), ?"The 2021 law behind the MF simulation's '2021 rules' columns is not among the case's sources." (adv_2021[s1b, 2022-11]))
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[s1b])
+  pinned: mon_relief[c, m] = 0 for c in [s1a, s1b], m in mo
+  reading: mc_round = gr_down
+  held: adv_rate = 0.17 (dz2019_1835), read for 2022-11-01
+  held: formula_div = 0.17 (dz2021_2105), read for 2022-11-01
+  held: mon_band row (8 549, 11 141] (dz2021_2105), read for 2022-11-01
+  held: mon_c2 = 819.08 PLN (dz2021_2105), read for 2022-11-01
+  held: mon_r2 = -0.0735 (dz2021_2105), read for 2022-11-01
+  law date 2022-04-06, cut 2022-04-06
+ask_s1 (c = s1b, m = 2022-11) [mc_round = gr_exact]: (8408/17 (494.588235294118) PLN, ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1b]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1b]), ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1b]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1b]), ?"The 2021 law behind the MF simulation's '2021 rules' columns is not among the case's sources." (adv_2021[s1b, 2022-11]))
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[s1b])
+  pinned: mon_relief[c, m] = 0 for c in [s1a, s1b], m in mo
+  reading: mc_round = gr_exact
+  held: adv_rate = 0.17 (dz2019_1835), read for 2022-11-01
+  held: formula_div = 0.17 (dz2021_2105), read for 2022-11-01
+  held: mon_band row (8 549, 11 141] (dz2021_2105), read for 2022-11-01
+  held: mon_c2 = 819.08 PLN (dz2021_2105), read for 2022-11-01
+  held: mon_r2 = -0.0735 (dz2021_2105), read for 2022-11-01
+  law date 2022-04-06, cut 2022-04-06
+ask_s1 (c = s1b, m = 2022-11) [mc_round = gr_half_up]: (494.59 PLN, ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1b]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1b]), ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1b]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1b]), ?"The 2021 law behind the MF simulation's '2021 rules' columns is not among the case's sources." (adv_2021[s1b, 2022-11]))
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[s1b])
+  pinned: mon_relief[c, m] = 0 for c in [s1a, s1b], m in mo
+  reading: mc_round = gr_half_up
+  held: adv_rate = 0.17 (dz2019_1835), read for 2022-11-01
+  held: formula_div = 0.17 (dz2021_2105), read for 2022-11-01
+  held: mon_band row (8 549, 11 141] (dz2021_2105), read for 2022-11-01
+  held: mon_c2 = 819.08 PLN (dz2021_2105), read for 2022-11-01
+  held: mon_r2 = -0.0735 (dz2021_2105), read for 2022-11-01
+  law date 2022-04-06, cut 2022-04-06
+ask_s1 (c = s1b, m = 2022-12) [mc_round = gr_down]: (494.58 PLN, ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1b]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1b]), ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1b]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1b]), ?"The 2021 law behind the MF simulation's '2021 rules' columns is not among the case's sources." (adv_2021[s1b, 2022-12]))
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[s1b])
+  pinned: mon_relief[c, m] = 0 for c in [s1a, s1b], m in mo
+  reading: mc_round = gr_down
+  held: adv_rate = 0.17 (dz2019_1835), read for 2022-12-01
+  held: formula_div = 0.17 (dz2021_2105), read for 2022-12-01
+  held: mon_band row (8 549, 11 141] (dz2021_2105), read for 2022-12-01
+  held: mon_c2 = 819.08 PLN (dz2021_2105), read for 2022-12-01
+  held: mon_r2 = -0.0735 (dz2021_2105), read for 2022-12-01
+  law date 2022-04-06, cut 2022-04-06
+ask_s1 (c = s1b, m = 2022-12) [mc_round = gr_exact]: (8408/17 (494.588235294118) PLN, ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1b]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1b]), ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1b]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1b]), ?"The 2021 law behind the MF simulation's '2021 rules' columns is not among the case's sources." (adv_2021[s1b, 2022-12]))
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[s1b])
+  pinned: mon_relief[c, m] = 0 for c in [s1a, s1b], m in mo
+  reading: mc_round = gr_exact
+  held: adv_rate = 0.17 (dz2019_1835), read for 2022-12-01
+  held: formula_div = 0.17 (dz2021_2105), read for 2022-12-01
+  held: mon_band row (8 549, 11 141] (dz2021_2105), read for 2022-12-01
+  held: mon_c2 = 819.08 PLN (dz2021_2105), read for 2022-12-01
+  held: mon_r2 = -0.0735 (dz2021_2105), read for 2022-12-01
+  law date 2022-04-06, cut 2022-04-06
+ask_s1 (c = s1b, m = 2022-12) [mc_round = gr_half_up]: (494.59 PLN, ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1b]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1b]), ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1b]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1b]), ?"The 2021 law behind the MF simulation's '2021 rules' columns is not among the case's sources." (adv_2021[s1b, 2022-12]))
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[s1b])
+  pinned: mon_relief[c, m] = 0 for c in [s1a, s1b], m in mo
+  reading: mc_round = gr_half_up
+  held: adv_rate = 0.17 (dz2019_1835), read for 2022-12-01
+  held: formula_div = 0.17 (dz2021_2105), read for 2022-12-01
+  held: mon_band row (8 549, 11 141] (dz2021_2105), read for 2022-12-01
+  held: mon_c2 = 819.08 PLN (dz2021_2105), read for 2022-12-01
+  held: mon_r2 = -0.0735 (dz2021_2105), read for 2022-12-01
+  law date 2022-04-06, cut 2022-04-06
+ask_s1_total (c = s1a) [mc_round = *]: (?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1a]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1a]), ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1a]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1a]), ?"The 2021 law behind the MF simulation's '2021 rules' columns is not among the case's sources." (adv_2021[s1a, 2022-01], adv_2021[s1a, 2022-02], adv_2021[s1a, 2022-03], adv_2021[s1a, 2022-04], adv_2021[s1a, 2022-05], adv_2021[s1a, 2022-06], adv_2021[s1a, 2022-07], adv_2021[s1a, 2022-08], adv_2021[s1a, 2022-09], adv_2021[s1a, 2022-10], adv_2021[s1a, 2022-11], adv_2021[s1a, 2022-12]))
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[s1a])
+  pinned: mon_relief[c, m] = 0 for c in [s1a, s1b], m in mo
+  held: adv_rate = 0.17 (dz2019_1835), read for 2022-05-01
+  held: adv_rate = 0.17 (dz2019_1835), read for 2022-06-01
+  held: adv_rate = 0.17 (dz2019_1835), read for 2022-07-01
+  held: adv_rate = 0.17 (dz2019_1835), read for 2022-08-01
+  held: adv_rate = 0.17 (dz2019_1835), read for 2022-09-01
+  held: adv_rate = 0.17 (dz2019_1835), read for 2022-10-01
+  held: adv_rate = 0.17 (dz2019_1835), read for 2022-11-01
+  held: adv_rate = 0.17 (dz2019_1835), read for 2022-12-01
+  held: formula_div = 0.17 (dz2021_2105), read for 2022-05-01
+  held: formula_div = 0.17 (dz2021_2105), read for 2022-06-01
+  held: formula_div = 0.17 (dz2021_2105), read for 2022-07-01
+  held: formula_div = 0.17 (dz2021_2105), read for 2022-08-01
+  held: formula_div = 0.17 (dz2021_2105), read for 2022-09-01
+  held: formula_div = 0.17 (dz2021_2105), read for 2022-10-01
+  held: formula_div = 0.17 (dz2021_2105), read for 2022-11-01
+  held: formula_div = 0.17 (dz2021_2105), read for 2022-12-01
+  held: mon_band row [5 701, 8 549] (dz2021_2105), read for 2022-05-01
+  held: mon_band row [5 701, 8 549] (dz2021_2105), read for 2022-06-01
+  held: mon_band row [5 701, 8 549] (dz2021_2105), read for 2022-07-01
+  held: mon_band row [5 701, 8 549] (dz2021_2105), read for 2022-08-01
+  held: mon_band row [5 701, 8 549] (dz2021_2105), read for 2022-09-01
+  held: mon_band row [5 701, 8 549] (dz2021_2105), read for 2022-10-01
+  held: mon_band row [5 701, 8 549] (dz2021_2105), read for 2022-11-01
+  held: mon_band row [5 701, 8 549] (dz2021_2105), read for 2022-12-01
+  held: mon_c1 = 380.50 PLN (dz2021_2105), read for 2022-05-01
+  held: mon_c1 = 380.50 PLN (dz2021_2105), read for 2022-06-01
+  held: mon_c1 = 380.50 PLN (dz2021_2105), read for 2022-07-01
+  held: mon_c1 = 380.50 PLN (dz2021_2105), read for 2022-08-01
+  held: mon_c1 = 380.50 PLN (dz2021_2105), read for 2022-09-01
+  held: mon_c1 = 380.50 PLN (dz2021_2105), read for 2022-10-01
+  held: mon_c1 = 380.50 PLN (dz2021_2105), read for 2022-11-01
+  held: mon_c1 = 380.50 PLN (dz2021_2105), read for 2022-12-01
+  held: mon_r1 = 0.0668 (dz2021_2105), read for 2022-05-01
+  held: mon_r1 = 0.0668 (dz2021_2105), read for 2022-06-01
+  held: mon_r1 = 0.0668 (dz2021_2105), read for 2022-07-01
+  held: mon_r1 = 0.0668 (dz2021_2105), read for 2022-08-01
+  held: mon_r1 = 0.0668 (dz2021_2105), read for 2022-09-01
+  held: mon_r1 = 0.0668 (dz2021_2105), read for 2022-10-01
+  held: mon_r1 = 0.0668 (dz2021_2105), read for 2022-11-01
+  held: mon_r1 = 0.0668 (dz2021_2105), read for 2022-12-01
+  law date 2022-04-06, cut 2022-04-06
+ask_s1_total (c = s1b) [mc_round = *]: (?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1b]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1b]), ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." (pit2_filed[s1b]) ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (month_income[s1b]), ?"The 2021 law behind the MF simulation's '2021 rules' columns is not among the case's sources." (adv_2021[s1b, 2022-01], adv_2021[s1b, 2022-02], adv_2021[s1b, 2022-03], adv_2021[s1b, 2022-04], adv_2021[s1b, 2022-05], adv_2021[s1b, 2022-06], adv_2021[s1b, 2022-07], adv_2021[s1b, 2022-08], adv_2021[s1b, 2022-09], adv_2021[s1b, 2022-10], adv_2021[s1b, 2022-11], adv_2021[s1b, 2022-12]))
+  assumed: no example mentions a request under art. 32 ust. 2b (waiver[s1b])
+  pinned: mon_relief[c, m] = 0 for c in [s1a, s1b], m in mo
+  held: adv_rate = 0.17 (dz2019_1835), read for 2022-05-01
+  held: adv_rate = 0.17 (dz2019_1835), read for 2022-06-01
+  held: adv_rate = 0.17 (dz2019_1835), read for 2022-07-01
+  held: adv_rate = 0.17 (dz2019_1835), read for 2022-08-01
+  held: adv_rate = 0.17 (dz2019_1835), read for 2022-09-01
+  held: adv_rate = 0.17 (dz2019_1835), read for 2022-10-01
+  held: adv_rate = 0.17 (dz2019_1835), read for 2022-11-01
+  held: adv_rate = 0.17 (dz2019_1835), read for 2022-12-01
+  held: formula_div = 0.17 (dz2021_2105), read for 2022-05-01
+  held: formula_div = 0.17 (dz2021_2105), read for 2022-06-01
+  held: formula_div = 0.17 (dz2021_2105), read for 2022-07-01
+  held: formula_div = 0.17 (dz2021_2105), read for 2022-08-01
+  held: formula_div = 0.17 (dz2021_2105), read for 2022-09-01
+  held: formula_div = 0.17 (dz2021_2105), read for 2022-10-01
+  held: formula_div = 0.17 (dz2021_2105), read for 2022-11-01
+  held: formula_div = 0.17 (dz2021_2105), read for 2022-12-01
+  held: mon_band row (8 549, 11 141] (dz2021_2105), read for 2022-05-01
+  held: mon_band row (8 549, 11 141] (dz2021_2105), read for 2022-06-01
+  held: mon_band row (8 549, 11 141] (dz2021_2105), read for 2022-07-01
+  held: mon_band row (8 549, 11 141] (dz2021_2105), read for 2022-08-01
+  held: mon_band row (8 549, 11 141] (dz2021_2105), read for 2022-09-01
+  held: mon_band row (8 549, 11 141] (dz2021_2105), read for 2022-10-01
+  held: mon_band row (8 549, 11 141] (dz2021_2105), read for 2022-11-01
+  held: mon_band row (8 549, 11 141] (dz2021_2105), read for 2022-12-01
+  held: mon_c2 = 819.08 PLN (dz2021_2105), read for 2022-05-01
+  held: mon_c2 = 819.08 PLN (dz2021_2105), read for 2022-06-01
+  held: mon_c2 = 819.08 PLN (dz2021_2105), read for 2022-07-01
+  held: mon_c2 = 819.08 PLN (dz2021_2105), read for 2022-08-01
+  held: mon_c2 = 819.08 PLN (dz2021_2105), read for 2022-09-01
+  held: mon_c2 = 819.08 PLN (dz2021_2105), read for 2022-10-01
+  held: mon_c2 = 819.08 PLN (dz2021_2105), read for 2022-11-01
+  held: mon_c2 = 819.08 PLN (dz2021_2105), read for 2022-12-01
+  held: mon_r2 = -0.0735 (dz2021_2105), read for 2022-05-01
+  held: mon_r2 = -0.0735 (dz2021_2105), read for 2022-06-01
+  held: mon_r2 = -0.0735 (dz2021_2105), read for 2022-07-01
+  held: mon_r2 = -0.0735 (dz2021_2105), read for 2022-08-01
+  held: mon_r2 = -0.0735 (dz2021_2105), read for 2022-09-01
+  held: mon_r2 = -0.0735 (dz2021_2105), read for 2022-10-01
+  held: mon_r2 = -0.0735 (dz2021_2105), read for 2022-11-01
+  held: mon_r2 = -0.0735 (dz2021_2105), read for 2022-12-01
+  law date 2022-04-06, cut 2022-04-06
+ask_s2 (j = s2a): (72 000.00 PLN, 24360/17 (1 432.94117647059) PLN, ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (emp_income[s2a, sp1]), ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (emp_income[s2a, sp1]), ?"The 2021 law behind the MF tables' '2021 rules' figures is not among the case's sources." (tax_2021_ind[s2a, sp1]))
+  assumed: the guide lists every revenue a spouse had; one it doesn't list as business revenue is none (biz_net[s2a, sp1])
+  pinned: ann_relief[2022, j, sp1, individual] = 0 for j in [s2a, s2b]
+  law date 2022-04-06, cut 2022-04-06
+ask_s2 (j = s2b): (120 000.00 PLN, 100900/17 (5 935.29411764706) PLN, ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (emp_income[s2b, sp1]), ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (emp_income[s2b, sp1]), ?"The 2021 law behind the MF tables' '2021 rules' figures is not among the case's sources." (tax_2021_ind[s2b, sp1]))
+  assumed: the guide lists every revenue a spouse had; one it doesn't list as business revenue is none (biz_net[s2b, sp1])
+  pinned: ann_relief[2022, j, sp1, individual] = 0 for j in [s2a, s2b]
+  law date 2022-04-06, cut 2022-04-06
+ask_s3 (s = sp1): (?"The spouses simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (emp_income[s3, sp1]), ?"The spouses simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (emp_income[s3, sp1]), ?"The 2021 law behind the MF tables' '2021 rules' figures is not among the case's sources." (tax_2021_ind[s3, sp1]))
+  assumed: the guide lists every revenue a spouse had; one it doesn't list as business revenue is none (biz_net[s3, sp1])
+  pinned: ann_relief[2022, s3, s, individual] = 0 for s in spouse
+  law date 2022-04-06, cut 2022-04-06
+ask_s3 (s = sp2): (?"The spouses simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (emp_income[s3, sp2]), ?"The spouses simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (emp_income[s3, sp2]), ?"The 2021 law behind the MF tables' '2021 rules' figures is not among the case's sources." (tax_2021_ind[s3, sp2]))
+  assumed: the guide lists every revenue a spouse had; one it doesn't list as business revenue is none (biz_net[s3, sp2])
+  pinned: ann_relief[2022, s3, s, individual] = 0 for s in spouse
+  law date 2022-04-06, cut 2022-04-06
+ask_s3_basis (s = sp1, b = individual): (100 000 PLN, false)
+  assumed: the guide lists every revenue a spouse had; one it doesn't list as business revenue is none (biz_net[s3, sp1], biz_net[s3, sp2])
+  law date 2022-04-06, cut 2022-04-06
+ask_s3_basis (s = sp1, b = joint): (100 000 PLN, true)
+  assumed: the guide lists every revenue a spouse had; one it doesn't list as business revenue is none (biz_net[s3, sp1], biz_net[s3, sp2])
+  law date 2022-04-06, cut 2022-04-06
+ask_s3_basis (s = sp2, b = individual): (100 000 PLN, false)
+  assumed: the guide lists every revenue a spouse had; one it doesn't list as business revenue is none (biz_net[s3, sp1], biz_net[s3, sp2])
+  law date 2022-04-06, cut 2022-04-06
+ask_s3_basis (s = sp2, b = joint): (100 000 PLN, true)
+  assumed: the guide lists every revenue a spouse had; one it doesn't list as business revenue is none (biz_net[s3, sp1], biz_net[s3, sp2])
+  law date 2022-04-06, cut 2022-04-06
+ask_s3_joint: (211400/17 (12 435.2941176471) PLN, 211400/17 (12 435.2941176471) PLN, ?"The spouses simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (emp_income[s3, sp1], emp_income[s3, sp2]), ?"The spouses simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." (emp_income[s3, sp1], emp_income[s3, sp2]), ?"The joint taxation method of art. 6 ust. 2 is not transcribed in the case." (tax_joint[2022, s3]), ?"The 2021 law behind the MF tables' '2021 rules' figures is not among the case's sources." (tax_2021_joint[s3]))
+  assumed: the guide lists every revenue a spouse had; one it doesn't list as business revenue is none (biz_net[s3, sp1], biz_net[s3, sp2])
+  pinned: ann_relief[2022, s3, sp1, joint] = 0 PLN
+  pinned: ann_relief[2022, s3, sp2, joint] = 0 PLN
+  law date 2022-04-06, cut 2022-04-06

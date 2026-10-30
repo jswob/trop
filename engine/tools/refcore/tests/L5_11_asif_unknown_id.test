@@ -1,0 +1,15 @@
+# L §5.11: "Refusals: LOAD-ASIF (deeper than 4, or a pin on an unknown id)."
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+input n: int
+
+ask q1: n as if {nothing = 1}
+=== expect
+refused: LOAD-ASIF ...

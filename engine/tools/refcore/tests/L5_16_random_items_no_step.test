@@ -1,0 +1,29 @@
+# Round 17, L §5.16 A random number of items: "read by a range that ends at the draw (sum(x[m, s] for s in 1 .. n[m]
+# step 1) ...; a draw of a dist with no unit is a num, so the range states its step, §5.11)"; L §5.11 "a range of
+# quantities without step is refused (LOAD-DOMAIN)"; L §8.3 LOAD-DOMAIN `range of quantities <a> .. <b> has no step`.
+# L5_16_random_items_run is this model with `step 1`.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source src "s"
+index slots = int 1..3
+input trials: int
+input cost[k in slots]: num
+input n: dist
+def total: num = sum(cost[k] for k in 1 .. n)
+
+ask q: mean(total) paths 20 seed 1
+
+version v
+  cite src
+  governs always
+  known 2026-01-01
+  trials = 5
+  cost[*] = 2
+  n = binomial(trials, 0.99)
+=== expect
+refused: LOAD-DOMAIN range of quantities 1 .. n has no step ...

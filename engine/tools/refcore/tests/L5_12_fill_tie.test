@@ -1,0 +1,36 @@
+# L §5.12 Sort: "Arcs still tied after it, or tied with no ties by, are refused (RUN-TIE) when their order changes a
+# take": two supplies of 60.00 with equal rank on one demand of 100.00; whichever goes first takes 60.00.  Demand
+# side without for: one value, no keys in taken.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+index payers = [ewa, jan]
+input sup[p in payers]: money PLN
+input cap: money PLN
+input rank[p in payers]: int
+
+fill pool
+  supply sup[p] for p in payers
+  demand cap
+  arc true
+  order rank[p]
+
+version v
+  cite s
+  governs 2026..
+  known 2026-01-01
+  sup[*] = 60.00 PLN
+  cap = 100.00 PLN
+  rank[*] = 1
+
+ask a: pool.taken[ewa] law 2026-06-30
+=== expect
+a: refused: RUN-TIE ...
+  law date 2026-06-30, cut 2026-12-31

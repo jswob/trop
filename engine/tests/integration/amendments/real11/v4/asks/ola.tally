@@ -1,0 +1,4 @@
+part asks_ola
+  tally 2
+
+ask ola_800_paid: flows(b800_pay[ola], y) for y in [2028, 2029] law cut

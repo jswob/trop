@@ -1,0 +1,7 @@
+Rzeka Securities - transaction history - client 4471-07 (Anna Lis)
+Date;Operation;Fund;Units;Price;Value;Fee;Cash after;Note
+12/02/2024;TRANSFER IN;BRZ-GLB-A;90,0000;;13071,60;0,00;0,00;cost basis as reported by the transferring broker; acquired 2018-11
+12/02/2024;TRANSFER IN;BRZ-GLB-A;60,0000;;8697,60;0,00;0,00;cost basis as reported by the transferring broker; acquired 2019-03
+12/02/2024;TRANSFER IN;BRZ-GLB-A;50,0000;;7626,50;0,00;0,00;cost basis as reported by the transferring broker; acquired 2019-08
+07/03/2024;SELL;BRZ-GLB-A;200,0000;187,59;37518,00;0,00;37518,00;
+07/03/2024;BUY;BRZ-MM-A;314,9654;118,82;37424,19;93,80;0,01;

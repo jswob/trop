@@ -1,0 +1,260 @@
+part bonds
+  tally 1
+  note "D-01, D-06, D-07, D-08: the 325 bonds (D-D22), their value under TSB-2 and TSB-3, the heirs' basis (TSB-6, TSB-7), the redemptions (D-D24a–d) and D-HR2's floor."
+
+input bought[s in isb_series]: date question "On what day were this series' bonds bought (D-D22)?"
+
+input lot[s in isb_series]: int question "How many bonds of this series were held on 17 May 2024 (D-D22)?"
+
+input red_day[r in redemption]: date question "On what day was this redemption asked for?"
+
+input red_n[r in redemption, s in isb_series]: int question "How many bonds of this series did this request redeem?"
+
+input red_tax_stated[r in redemption]: money DUK question "What tax does the Treasury's statement show for this request?"
+
+input red_net_stated[r in redemption]: money DUK question "What does the Treasury's statement show paid for this request?"
+
+input hr2_floor: money DUK question "Below what end-of-day balance is a redemption asked for (D-HR2)?"
+
+input hr2_least: money DUK question "At least how much must the bonds asked for come to, value less fee (D-HR2)?"
+
+def iy_start[s in isb_series, k in iyear]: date = add_years(bought[s], k - 1)
+
+def iy_rate[s in isb_series, k in iyear]: num at bought[s]
+  note "TSB-2: R1 in the first interest year; later the CPI-YY two months before the year's first month, as published on its first day, less 100, plus the margin, never below 0"
+  rule first when k = 1 = isb_r1[s] / 100
+  rule later when k > 1 = max(0, (cpi_yy[month_of(iy_start[s, k]) - tsb2_lag] as if {known iy_start[s, k]}) - 100 + isb_margin[s]) / 100
+
+def iy_value[s in isb_series, k in iyear]: money DUK
+  rule first when k = 1 = tsb1_price
+  rule later when k > 1 = round(iy_value[s, k - 1] * (1 + iy_rate[s, k - 1]), 0.01, half-up)
+
+def iy_of[s in isb_series, d in day]: int = age(bought[s], d) + 1
+
+def bond_value[s in isb_series, d in day]: money DUK = round(iy_value[s, iy_of[s, d]] * (1 + iy_rate[s, iy_of[s, d]] * days(iy_start[s, iy_of[s, d]], d) / days(iy_start[s, iy_of[s, d]], iy_start[s, iy_of[s, d] + 1])), 0.01, half-up)
+
+def basis[s in isb_series]: money DUK = bond_value[s, death_day]
+
+def fee_per[s in isb_series, d in day]: money DUK = min(tsb4_fee, bond_value[s, d] - basis[s])
+
+def paid_per[s in isb_series, d in day]: money DUK = bond_value[s, d] - fee_per[s, d]
+
+def held[s in isb_series, d in day]: int = lot[s] - sum(r in redemption where red_day[r] <= d: red_n[r, s])
+
+def bonds_value[d in day]: money DUK = sum(s in isb_series: held[s, d] * bond_value[s, d])
+
+def bonds_accrued[d in day]: money DUK = sum(s in isb_series: held[s, d] * (bond_value[s, d] - iy_value[s, iy_of[s, d]]))
+
+def all_fees[d in day]: money DUK = sum(s in isb_series: held[s, d] * fee_per[s, d])
+
+def series_tax[s in isb_series, d in day, n in wstep]: money DUK = round((paid_per[s, d] - basis[s]) * n * tsb5_rate, 1, half-up)
+
+def all_tax[d in day]: money DUK = sum(s in isb_series: series_tax[s, d, held[s, d]])
+
+def bonds_net[d in day]: money DUK = bonds_value[d] - all_fees[d] - all_tax[d]
+
+def red_paid_on[r in redemption]: date at red_day[r] = add_business(red_day[r], tsb4_days, holidays)
+
+def red_tax[r in redemption]: money DUK = sum(s in isb_series: series_tax[s, red_day[r], red_n[r, s]])
+
+def red_net[r in redemption]: money DUK = sum(s in isb_series: red_n[r, s] * paid_per[s, red_day[r]]) - red_tax[r]
+
+def before[r in redemption, s in isb_series]: int = lot[s] - sum(t in redemption where red_day[t] < red_day[r]: red_n[t, s])
+
+def cum_net[r in redemption, s in isb_series]: money DUK = sum(t in isb_series where pos(t) <= pos(s): before[r, t] * (bond_value[t, red_day[r]] - fee_per[t, red_day[r]]))
+
+def hr2_last[r in redemption]: key isb_series = first(s in isb_series where cum_net[r, s] >= hr2_least)
+
+def hr2_n[r in redemption, s in isb_series]: int
+  note "D-HR2: the earliest series first, the fewest whole bonds whose value less fee comes to the least amount"
+  rule none = 0
+  rule all excepts none when pos(s) < pos(hr2_last[r]) = before[r, s]
+  rule last excepts none when s = hr2_last[r] = round((hr2_least - (cum_net[r, s] - before[r, s] * (bond_value[s, red_day[r]] - fee_per[s, red_day[r]]))) / (bond_value[s, red_day[r]] - fee_per[s, red_day[r]]), 1, ceil)
+
+version bond_register
+  cite d_d22
+  known 2024-07-01
+  red_n = 0 "D-D22: nothing redeemed by 17 May 2024"
+  bought[isb1901] = 2019-01-10 "D-D22 table row 1"
+  lot[isb1901] = 5 "D-D22 table row 1"
+  bought[isb1902] = 2019-02-11 "D-D22 table row 2"
+  lot[isb1902] = 5 "D-D22 table row 2"
+  bought[isb1903] = 2019-03-11 "D-D22 table row 3"
+  lot[isb1903] = 5 "D-D22 table row 3"
+  bought[isb1904] = 2019-04-10 "D-D22 table row 4"
+  lot[isb1904] = 5 "D-D22 table row 4"
+  bought[isb1905] = 2019-05-10 "D-D22 table row 5"
+  lot[isb1905] = 5 "D-D22 table row 5"
+  bought[isb1906] = 2019-06-10 "D-D22 table row 6"
+  lot[isb1906] = 5 "D-D22 table row 6"
+  bought[isb1907] = 2019-07-10 "D-D22 table row 7"
+  lot[isb1907] = 5 "D-D22 table row 7"
+  bought[isb1908] = 2019-08-12 "D-D22 table row 8"
+  lot[isb1908] = 5 "D-D22 table row 8"
+  bought[isb1909] = 2019-09-10 "D-D22 table row 9"
+  lot[isb1909] = 5 "D-D22 table row 9"
+  bought[isb1910] = 2019-10-10 "D-D22 table row 10"
+  lot[isb1910] = 5 "D-D22 table row 10"
+  bought[isb1911] = 2019-11-12 "D-D22 table row 11"
+  lot[isb1911] = 5 "D-D22 table row 11"
+  bought[isb1912] = 2019-12-10 "D-D22 table row 12"
+  lot[isb1912] = 5 "D-D22 table row 12"
+  bought[isb2001] = 2020-01-10 "D-D22 table row 13"
+  lot[isb2001] = 5 "D-D22 table row 13"
+  bought[isb2002] = 2020-02-10 "D-D22 table row 14"
+  lot[isb2002] = 5 "D-D22 table row 14"
+  bought[isb2003] = 2020-03-10 "D-D22 table row 15"
+  lot[isb2003] = 5 "D-D22 table row 15"
+  bought[isb2004] = 2020-04-10 "D-D22 table row 16"
+  lot[isb2004] = 5 "D-D22 table row 16"
+  bought[isb2005] = 2020-05-11 "D-D22 table row 17"
+  lot[isb2005] = 5 "D-D22 table row 17"
+  bought[isb2006] = 2020-06-10 "D-D22 table row 18"
+  lot[isb2006] = 5 "D-D22 table row 18"
+  bought[isb2007] = 2020-07-10 "D-D22 table row 19"
+  lot[isb2007] = 5 "D-D22 table row 19"
+  bought[isb2008] = 2020-08-10 "D-D22 table row 20"
+  lot[isb2008] = 5 "D-D22 table row 20"
+  bought[isb2009] = 2020-09-10 "D-D22 table row 21"
+  lot[isb2009] = 5 "D-D22 table row 21"
+  bought[isb2010] = 2020-10-12 "D-D22 table row 22"
+  lot[isb2010] = 5 "D-D22 table row 22"
+  bought[isb2011] = 2020-11-10 "D-D22 table row 23"
+  lot[isb2011] = 5 "D-D22 table row 23"
+  bought[isb2012] = 2020-12-10 "D-D22 table row 24"
+  lot[isb2012] = 5 "D-D22 table row 24"
+  bought[isb2101] = 2021-01-11 "D-D22 table row 25"
+  lot[isb2101] = 5 "D-D22 table row 25"
+  bought[isb2102] = 2021-02-10 "D-D22 table row 26"
+  lot[isb2102] = 5 "D-D22 table row 26"
+  bought[isb2103] = 2021-03-10 "D-D22 table row 27"
+  lot[isb2103] = 5 "D-D22 table row 27"
+  bought[isb2104] = 2021-04-12 "D-D22 table row 28"
+  lot[isb2104] = 5 "D-D22 table row 28"
+  bought[isb2105] = 2021-05-10 "D-D22 table row 29"
+  lot[isb2105] = 5 "D-D22 table row 29"
+  bought[isb2106] = 2021-06-10 "D-D22 table row 30"
+  lot[isb2106] = 5 "D-D22 table row 30"
+  bought[isb2107] = 2021-07-12 "D-D22 table row 31"
+  lot[isb2107] = 5 "D-D22 table row 31"
+  bought[isb2108] = 2021-08-10 "D-D22 table row 32"
+  lot[isb2108] = 5 "D-D22 table row 32"
+  bought[isb2109] = 2021-09-10 "D-D22 table row 33"
+  lot[isb2109] = 5 "D-D22 table row 33"
+  bought[isb2110] = 2021-10-11 "D-D22 table row 34"
+  lot[isb2110] = 5 "D-D22 table row 34"
+  bought[isb2111] = 2021-11-10 "D-D22 table row 35"
+  lot[isb2111] = 5 "D-D22 table row 35"
+  bought[isb2112] = 2021-12-10 "D-D22 table row 36"
+  lot[isb2112] = 5 "D-D22 table row 36"
+  bought[isb2201] = 2022-01-10 "D-D22 table row 37"
+  lot[isb2201] = 5 "D-D22 table row 37"
+  bought[isb2202] = 2022-02-10 "D-D22 table row 38"
+  lot[isb2202] = 5 "D-D22 table row 38"
+  bought[isb2203] = 2022-03-10 "D-D22 table row 39"
+  lot[isb2203] = 5 "D-D22 table row 39"
+  bought[isb2204] = 2022-04-11 "D-D22 table row 40"
+  lot[isb2204] = 5 "D-D22 table row 40"
+  bought[isb2205] = 2022-05-10 "D-D22 table row 41"
+  lot[isb2205] = 5 "D-D22 table row 41"
+  bought[isb2206] = 2022-06-10 "D-D22 table row 42"
+  lot[isb2206] = 5 "D-D22 table row 42"
+  bought[isb2207] = 2022-07-11 "D-D22 table row 43"
+  lot[isb2207] = 5 "D-D22 table row 43"
+  bought[isb2208] = 2022-08-10 "D-D22 table row 44"
+  lot[isb2208] = 5 "D-D22 table row 44"
+  bought[isb2209] = 2022-09-12 "D-D22 table row 45"
+  lot[isb2209] = 5 "D-D22 table row 45"
+  bought[isb2210] = 2022-10-10 "D-D22 table row 46"
+  lot[isb2210] = 5 "D-D22 table row 46"
+  bought[isb2211] = 2022-11-10 "D-D22 table row 47"
+  lot[isb2211] = 5 "D-D22 table row 47"
+  bought[isb2212] = 2022-12-12 "D-D22 table row 48"
+  lot[isb2212] = 5 "D-D22 table row 48"
+  bought[isb2301] = 2023-01-10 "D-D22 table row 49"
+  lot[isb2301] = 5 "D-D22 table row 49"
+  bought[isb2302] = 2023-02-10 "D-D22 table row 50"
+  lot[isb2302] = 5 "D-D22 table row 50"
+  bought[isb2303] = 2023-03-10 "D-D22 table row 51"
+  lot[isb2303] = 5 "D-D22 table row 51"
+  bought[isb2304] = 2023-04-11 "D-D22 table row 52"
+  lot[isb2304] = 5 "D-D22 table row 52"
+  bought[isb2305] = 2023-05-10 "D-D22 table row 53"
+  lot[isb2305] = 5 "D-D22 table row 53"
+  bought[isb2306] = 2023-06-12 "D-D22 table row 54"
+  lot[isb2306] = 5 "D-D22 table row 54"
+  bought[isb2307] = 2023-07-10 "D-D22 table row 55"
+  lot[isb2307] = 5 "D-D22 table row 55"
+  bought[isb2308] = 2023-08-10 "D-D22 table row 56"
+  lot[isb2308] = 5 "D-D22 table row 56"
+  bought[isb2309] = 2023-09-11 "D-D22 table row 57"
+  lot[isb2309] = 5 "D-D22 table row 57"
+  bought[isb2310] = 2023-10-10 "D-D22 table row 58"
+  lot[isb2310] = 5 "D-D22 table row 58"
+  bought[isb2311] = 2023-11-10 "D-D22 table row 59"
+  lot[isb2311] = 5 "D-D22 table row 59"
+  bought[isb2312] = 2023-12-11 "D-D22 table row 60"
+  lot[isb2312] = 5 "D-D22 table row 60"
+  bought[isb2401] = 2024-01-10 "D-D22 table row 61"
+  lot[isb2401] = 5 "D-D22 table row 61"
+  bought[isb2402] = 2024-02-12 "D-D22 table row 62"
+  lot[isb2402] = 5 "D-D22 table row 62"
+  bought[isb2403] = 2024-03-11 "D-D22 table row 63"
+  lot[isb2403] = 5 "D-D22 table row 63"
+  bought[isb2404] = 2024-04-10 "D-D22 table row 64"
+  lot[isb2404] = 5 "D-D22 table row 64"
+  bought[isb2405] = 2024-05-10 "D-D22 table row 65"
+  lot[isb2405] = 5 "D-D22 table row 65"
+
+version floor_rule
+  cite house_rules
+  known 2025-06-12
+  hr2_floor = 5000.00 "D-HR2: below 5 000.00 at a day's end"
+  hr2_least = 3000.00 "D-HR2: value less fee at least 3 000.00"
+
+version redemption_a
+  cite d_d24a
+  known 2025-06-19
+  red_day[red_20250616] = 2025-06-16 "D-D24a"
+  red_n[red_20250616, isb1901] = 5 "D-D24a"
+  red_n[red_20250616, isb1902] = 5 "D-D24a"
+  red_n[red_20250616, isb1903] = 5 "D-D24a"
+  red_n[red_20250616, isb1904] = 4 "D-D24a"
+  red_tax_stated[red_20250616] = 32 "D-D24a"
+  red_net_stated[red_20250616] = 3009.76 "D-D24a"
+
+version redemption_b
+  cite d_d24b
+  known 2025-06-26
+  red_day[red_20250620] = 2025-06-20 "D-D24b"
+  red_n[red_20250620, isb1904] = 1 "D-D24b"
+  red_n[red_20250620, isb1905] = 5 "D-D24b"
+  red_n[red_20250620, isb1906] = 5 "D-D24b"
+  red_n[red_20250620, isb1907] = 5 "D-D24b"
+  red_n[red_20250620, isb1908] = 4 "D-D24b"
+  red_tax_stated[red_20250620] = 24 "D-D24b"
+  red_net_stated[red_20250620] = 3104.94 "D-D24b"
+
+version redemption_c
+  cite d_d24c
+  known 2025-07-09
+  red_day[red_20250704] = 2025-07-04 "D-D24c"
+  red_n[red_20250704, isb1908] = 1 "D-D24c"
+  red_n[red_20250704, isb1909] = 5 "D-D24c"
+  red_n[red_20250704, isb1910] = 5 "D-D24c"
+  red_n[red_20250704, isb1911] = 5 "D-D24c"
+  red_n[red_20250704, isb1912] = 4 "D-D24c"
+  red_tax_stated[red_20250704] = 41 "D-D24c"
+  red_net_stated[red_20250704] = 3077.48 "D-D24c"
+
+version redemption_d
+  cite d_d24d
+  known 2026-03-09
+  red_day[red_20260304] = 2026-03-04 "D-D24d"
+  red_n[red_20260304, isb1912] = 1 "D-D24d"
+  red_n[red_20260304, isb2001] = 5 "D-D24d"
+  red_n[red_20260304, isb2002] = 5 "D-D24d"
+  red_n[red_20260304, isb2003] = 5 "D-D24d"
+  red_n[red_20260304, isb2004] = 3 "D-D24d"
+  red_tax_stated[red_20260304] = 54 "D-D24d"
+  red_net_stated[red_20260304] = 2954.82 "D-D24d"

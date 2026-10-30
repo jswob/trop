@@ -1,0 +1,224 @@
+part longview_taxed
+  tally 2
+  note "D-13 · Had the fund been taxed (questions.md): the story's long view as D-HR3 runs it (longview.tally), on the same paths as D-10 (the same random facts, life_u and zr, so the same samples; seed 20261001), but with the fund's gains taxed as PIT-8 taxes fund units, in place of point 7's 'its gains are not taxed'. Everything else is longview.tally's: the year's money (lv_money), the fund's return (r_path), the sweep, her life (alive, surv_prob)."
+  note "The fund is held in units, carried exactly: 45 000 units bought on 31 December 2026 for the fund's 45 000.00 DUK of 1 January 2027 (lv_fund0). At each year's end, after the year's return (the fund's value to the ort, as in longview.tally), a unit is worth the fund's value over the units held; what goes into the fund buys units at that worth on 31 December, and units sold to bring the account back to 0 are sold at it, with no fees. The tax on a year's sales is paid with the next year's money."
+  note "With zero volatility the chain is written again with every R 5 % (the z_ defs, as longview.tally writes zv_ beside p_): a pin of r_path inside an as if leaves the value random to load (LOAD-RANDOM), so a closed form can't read it."
+  note "PIT-8 as the law states it: each year's purchase is a lot, acquired on 31 December of its year at that day's worth (.2); units sold go first in, first out (.3), written as the overlap of each lot's run of units with the year's run of units sold, counted from the first unit bought; a gain on units held more than 5 years is exempt, a loss on them still counts (.6, as invest.tally of household A reads it); a person's gains and losses of a year are added (.4); a year's net loss is carried into the 5 following years, at most half of it in any one year, only against a net gain, older first (.5); the base and the tax are rounded to whole dukats, half up (GEN-5 .1), at 19 % (.4)."
+
+source d13_question "Household D, questions, D-13 (tmp/cases/D/questions.md)"
+
+unit lvu "a unit of the long view's fund (questions.md D-13)"
+
+index t_lags = int 1..5
+  note "how many years back a carried loss was made: PIT-8 .5's 5 following tax years (pit8_carry_years), read with that row"
+
+input t_loss_parts: int question "Into how many parts is a carried loss split, at most one used in any one year (PIT-8 .5: at most half)?"
+
+input t_units0: num lvu question "How many fund units are held on 1 January 2027 (questions.md D-13)?"
+
+def t_acct[y in lyear]: money DUK at start_of(y)
+  note "point 8: above the sweep into the fund; below 0, units sold to bring it back to 0 as far as the fund goes"
+  rule first = lv_acct0 when pos(y) == 1
+  rule later = if t_pre[y] > sweep then sweep else if t_pre[y] < 0 then t_pre[y] + t_sell_value[y] else t_pre[y] when pos(y) > 1
+
+def t_cum_lot[y in lyear]: num lvu at start_of(y)
+  note "the units bought from the first lot to the lot of year y"
+  rule first = t_lot_units[y] when pos(y) == 1
+  rule later = t_cum_lot[y - 1] + t_lot_units[y] when pos(y) > 1
+
+def t_cum_sold[y in lyear]: num lvu at start_of(y)
+  note "the units sold from the start to year y"
+  rule first = t_sold_units[y] when pos(y) == 1
+  rule later = t_cum_sold[y - 1] + t_sold_units[y] when pos(y) > 1
+
+def t_exempt[k in lyear, y in lyear]: bool at start_of(y)
+  note "PIT-8 .6: a gain on units held more than 5 years since their acquisition (31 December of the lot's year) is exempt; a loss on them still counts"
+  rule base = end_of(y) - 1 day > add_years(end_of(k) - 1 day, pit8_exempt_years) and t_pair_gain[k, y] > 0
+
+def t_fpre[y in lyear]: money DUK = if pos(y) > 1 then round(t_fund[y - 1] * (1 + r_path[y]), minor(DUK), hh_round) else 0 at start_of(y)
+
+def t_fund[y in lyear]: money DUK at start_of(y)
+  note "the fund's value at the year's end: after the return, plus what goes in, less what is sold"
+  rule first = lv_fund0 when pos(y) == 1
+  rule later = if t_pre[y] > sweep then t_fpre[y] + t_pre[y] - sweep else if t_pre[y] < 0 then t_fpre[y] - t_sell_value[y] else t_fpre[y] when pos(y) > 1
+
+def t_gain[y in lyear]: num DUK at start_of(y)
+  note "what the units sold in year y brought less what they cost, taxed or not (PIT-8 .2)"
+  rule base = if t_sold_units[y] > 0 then sum(t_pair_gain[k, y] for k in lyear where pos(k) < pos(y)) else 0
+
+def t_gpos[y in lyear]: num DUK = max(0, t_net[y]) at start_of(y)
+
+def t_loss[y in lyear]: num DUK = max(0, -t_net[y]) at start_of(y)
+
+def t_lot_price[k in lyear]: num DUK/lvu at start_of(k)
+  note "PIT-8 .2: what a unit of lot k cost, the worth of the day it was bought"
+  rule first = lv_fund0 / t_units0 when pos(k) == 1
+  rule later = t_worth[k] when pos(k) > 1
+
+def t_lot_units[y in lyear]: num lvu at start_of(y)
+  note "the units bought on 31 December of year y: the first lot, 31 December 2026; later, what goes into the fund over the year's worth"
+  rule first = t_units0 when pos(y) == 1
+  rule later = if t_pre[y] > sweep then (t_pre[y] - sweep) / t_worth[y] else 0 when pos(y) > 1
+
+def t_net[y in lyear]: num DUK at start_of(y)
+  note "PIT-8 .4: the year's gains and losses added, an exempt gain left out (.6)"
+  rule base = if t_sold_units[y] > 0 then sum(t_pair_gain[k, y] for k in lyear where pos(k) < pos(y) and not t_exempt[k, y]) else 0
+
+def t_pair_gain[k in lyear, y in lyear]: num DUK = t_taken[k, y] * (t_worth[y] - t_lot_price[k]) at start_of(y)
+
+def t_pre[y in lyear]: money DUK = if pos(y) > 1 then t_acct[y - 1] + lv_money[y] - t_tax_paid[y] else 0 at start_of(y)
+
+def t_rem[y in lyear, l in t_lags]: num DUK at start_of(y)
+  note "PIT-8 .5: what is left of the loss of year y - l before year y uses it"
+  rule none_back = 0 when pos(y) <= l
+  rule newest beats none_back = t_loss[y - 1] when l == 1 and pos(y) > 1
+  rule older beats none_back = t_rem[y - 1, l - 1] - t_used[y - 1, l - 1] when l > 1 and pos(y) > 1 and pos(y) > l
+
+def t_sell_value[y in lyear]: money DUK = if pos(y) > 1 and t_pre[y] < 0 then min(t_fpre[y], -t_pre[y]) else 0 at start_of(y)
+
+def t_sold_units[y in lyear]: num lvu = if t_sell_value[y] > 0 then t_sell_value[y] / t_worth[y] else 0 at start_of(y)
+
+def t_taken[k in lyear, y in lyear]: num lvu at start_of(y)
+  note "PIT-8 .3, first in, first out: the units of lot k among those sold in year y, the overlap of the lot's run of units (counted from the first unit bought) with the year's run of units sold"
+  rule base = max(0, min(t_cum_lot[k], t_cum_sold[y]) - max(t_cum_lot[k] - t_lot_units[k], t_cum_sold[y] - t_sold_units[y]))
+
+def t_tax[y in lyear]: money DUK at start_of(y)
+  note "PIT-8 .4: 19 % of the year's net gain less the losses carried in (.5), base and tax rounded to whole dukats, half up (GEN-5 .1)"
+  rule base = round(round(t_gpos[y] - sum(t_used[y, l] for l in t_lags), 1, half-up) * pit8_rate, 1, half-up)
+
+def t_tax_paid[y in lyear]: money DUK = if pos(y) > 1 then t_tax[y - 1] else 0 at start_of(y)
+
+def t_units[y in lyear]: num lvu at start_of(y)
+  rule first = t_units0 when pos(y) == 1
+  rule later = t_units[y - 1] + t_lot_units[y] - t_sold_units[y] when pos(y) > 1
+
+def t_used[y in lyear, l in t_lags]: num DUK at start_of(y)
+  note "PIT-8 .5: the loss of year y - l used in year y: what is left of it, at most half of it, only against the year's net gain, older losses (larger l) first"
+  rule none_back = 0 when pos(y) <= l or l > pit8_carry_years
+  rule use beats none_back = min(t_rem[y, l], t_loss[y - l] / t_loss_parts, t_gpos[y] - sum(t_used[y, j] for j in t_lags where j > l)) when pos(y) > l and l <= pit8_carry_years
+
+def t_worth[y in lyear]: num DUK/lvu at start_of(y)
+  note "a unit's worth at the end of year y, after the return: the fund's value over the units held; with no unit held a unit has no worth"
+  rule first = lv_fund0 / t_units0 when pos(y) == 1
+  rule later = t_fpre[y] / t_units[y - 1] when pos(y) > 1 and t_units[y - 1] > 0
+  rule none_held = ?"no fund unit is held, so a unit has no worth (questions.md D-13: the fund's value over the units held)" when pos(y) > 1 and t_units[y - 1] == 0
+
+def p13_gains: num DUK = sum(t_gain[y] for y in lyear where pos(y) > 1 and alive[y]) at reader
+
+def p13_gains_ort: money DUK at reader
+  note "a path's gains to the ort, for the mean over the paths: the exact gains of the paths have denominators whose mean passes the 4 096-digit cap (RUN-DIGITS); no source rounds them, so the mode is the household's axis hh_round, the modeller's reading forced by the cap (L 7.1)"
+  rule base = round(p13_gains, minor(DUK), hh_round)
+
+def p13_sells: bool = count(y in lyear where pos(y) > 1 and alive[y] and t_sold_units[y] > 0) > 0 at reader
+
+def p13_tax: money DUK = sum(t_tax[y] for y in lyear where pos(y) > 1 and alive[y]) at reader
+
+def zv13_first_sale: key lyear at reader
+  note "zero volatility (point 10, every R 5 %): the first year units are sold; none if none are by 2064"
+  rule base = if count(y in lyear where pos(y) > 1 and zv13_sold[y] > 0) > 0 then first(y in lyear where pos(y) > 1 and zv13_sold[y] > 0) else none
+
+def zv13_exp_gains: num DUK = sum(surv_prob[y] * zv13_gain[y] for y in lyear where pos(y) > 1) at reader
+
+def zv13_exp_tax: num DUK = sum(surv_prob[y] * zv13_tax[y] for y in lyear where pos(y) > 1) at reader
+
+def zv13_gain[y in lyear]: num DUK = z_gain[y] at start_of(y)
+
+def zv13_sold[y in lyear]: num lvu = z_sold_units[y] at start_of(y)
+
+def zv13_tax[y in lyear]: money DUK = z_tax[y] at start_of(y)
+
+def z_acct[y in lyear]: money DUK at start_of(y)
+  note "zero volatility (point 10): as t_acct, every R 5 %; point 8: above the sweep into the fund; below 0, units sold to bring it back to 0 as far as the fund goes"
+  rule first = lv_acct0 when pos(y) == 1
+  rule later = if z_pre[y] > sweep then sweep else if z_pre[y] < 0 then z_pre[y] + z_sell_value[y] else z_pre[y] when pos(y) > 1
+
+def z_cum_lot[y in lyear]: num lvu at start_of(y)
+  note "zero volatility (point 10): as t_cum_lot, every R 5 %; the units bought from the first lot to the lot of year y"
+  rule first = z_lot_units[y] when pos(y) == 1
+  rule later = z_cum_lot[y - 1] + z_lot_units[y] when pos(y) > 1
+
+def z_cum_sold[y in lyear]: num lvu at start_of(y)
+  note "zero volatility (point 10): as t_cum_sold, every R 5 %; the units sold from the start to year y"
+  rule first = z_sold_units[y] when pos(y) == 1
+  rule later = z_cum_sold[y - 1] + z_sold_units[y] when pos(y) > 1
+
+def z_exempt[k in lyear, y in lyear]: bool at start_of(y)
+  note "zero volatility (point 10): as t_exempt, every R 5 %; PIT-8 .6: a gain on units held more than 5 years since their acquisition (31 December of the lot's year) is exempt; a loss on them still counts"
+  rule base = end_of(y) - 1 day > add_years(end_of(k) - 1 day, pit8_exempt_years) and z_pair_gain[k, y] > 0
+
+def z_fpre[y in lyear]: money DUK = if pos(y) > 1 then round(z_fund[y - 1] * (1 + fund_mu), minor(DUK), hh_round) else 0 at start_of(y)
+
+def z_fund[y in lyear]: money DUK at start_of(y)
+  note "zero volatility (point 10): as t_fund, every R 5 %; the fund's value at the year's end: after the return, plus what goes in, less what is sold"
+  rule first = lv_fund0 when pos(y) == 1
+  rule later = if z_pre[y] > sweep then z_fpre[y] + z_pre[y] - sweep else if z_pre[y] < 0 then z_fpre[y] - z_sell_value[y] else z_fpre[y] when pos(y) > 1
+
+def z_gain[y in lyear]: num DUK at start_of(y)
+  note "zero volatility (point 10): as t_gain, every R 5 %; what the units sold in year y brought less what they cost, taxed or not (PIT-8 .2)"
+  rule base = if z_sold_units[y] > 0 then sum(z_pair_gain[k, y] for k in lyear where pos(k) < pos(y)) else 0
+
+def z_gpos[y in lyear]: num DUK = max(0, z_net[y]) at start_of(y)
+
+def z_loss[y in lyear]: num DUK = max(0, -z_net[y]) at start_of(y)
+
+def z_lot_price[k in lyear]: num DUK/lvu at start_of(k)
+  note "zero volatility (point 10): as t_lot_price, every R 5 %; PIT-8 .2: what a unit of lot k cost, the worth of the day it was bought"
+  rule first = lv_fund0 / t_units0 when pos(k) == 1
+  rule later = z_worth[k] when pos(k) > 1
+
+def z_lot_units[y in lyear]: num lvu at start_of(y)
+  note "zero volatility (point 10): as t_lot_units, every R 5 %; the units bought on 31 December of year y: the first lot, 31 December 2026; later, what goes into the fund over the year's worth"
+  rule first = t_units0 when pos(y) == 1
+  rule later = if z_pre[y] > sweep then (z_pre[y] - sweep) / z_worth[y] else 0 when pos(y) > 1
+
+def z_net[y in lyear]: num DUK at start_of(y)
+  note "zero volatility (point 10): as t_net, every R 5 %; PIT-8 .4: the year's gains and losses added, an exempt gain left out (.6)"
+  rule base = if z_sold_units[y] > 0 then sum(z_pair_gain[k, y] for k in lyear where pos(k) < pos(y) and not z_exempt[k, y]) else 0
+
+def z_pair_gain[k in lyear, y in lyear]: num DUK = z_taken[k, y] * (z_worth[y] - z_lot_price[k]) at start_of(y)
+
+def z_pre[y in lyear]: money DUK = if pos(y) > 1 then z_acct[y - 1] + lv_money[y] - z_tax_paid[y] else 0 at start_of(y)
+
+def z_rem[y in lyear, l in t_lags]: num DUK at start_of(y)
+  note "zero volatility (point 10): as t_rem, every R 5 %; PIT-8 .5: what is left of the loss of year y - l before year y uses it"
+  rule none_back = 0 when pos(y) <= l
+  rule newest beats none_back = z_loss[y - 1] when l == 1 and pos(y) > 1
+  rule older beats none_back = z_rem[y - 1, l - 1] - z_used[y - 1, l - 1] when l > 1 and pos(y) > 1 and pos(y) > l
+
+def z_sell_value[y in lyear]: money DUK = if pos(y) > 1 and z_pre[y] < 0 then min(z_fpre[y], -z_pre[y]) else 0 at start_of(y)
+
+def z_sold_units[y in lyear]: num lvu = if z_sell_value[y] > 0 then z_sell_value[y] / z_worth[y] else 0 at start_of(y)
+
+def z_taken[k in lyear, y in lyear]: num lvu at start_of(y)
+  note "zero volatility (point 10): as t_taken, every R 5 %; PIT-8 .3, first in, first out: the units of lot k among those sold in year y, the overlap of the lot's run of units (counted from the first unit bought) with the year's run of units sold"
+  rule base = max(0, min(z_cum_lot[k], z_cum_sold[y]) - max(z_cum_lot[k] - z_lot_units[k], z_cum_sold[y] - z_sold_units[y]))
+
+def z_tax[y in lyear]: money DUK at start_of(y)
+  note "zero volatility (point 10): as t_tax, every R 5 %; PIT-8 .4: 19 % of the year's net gain less the losses carried in (.5), base and tax rounded to whole dukats, half up (GEN-5 .1)"
+  rule base = round(round(z_gpos[y] - sum(z_used[y, l] for l in t_lags), 1, half-up) * pit8_rate, 1, half-up)
+
+def z_tax_paid[y in lyear]: money DUK = if pos(y) > 1 then z_tax[y - 1] else 0 at start_of(y)
+
+def z_units[y in lyear]: num lvu at start_of(y)
+  note "zero volatility (point 10): as t_units, every R 5 %"
+  rule first = t_units0 when pos(y) == 1
+  rule later = z_units[y - 1] + z_lot_units[y] - z_sold_units[y] when pos(y) > 1
+
+def z_used[y in lyear, l in t_lags]: num DUK at start_of(y)
+  note "zero volatility (point 10): as t_used, every R 5 %; PIT-8 .5: the loss of year y - l used in year y: what is left of it, at most half of it, only against the year's net gain, older losses (larger l) first"
+  rule none_back = 0 when pos(y) <= l or l > pit8_carry_years
+  rule use beats none_back = min(z_rem[y, l], z_loss[y - l] / t_loss_parts, z_gpos[y] - sum(z_used[y, j] for j in t_lags where j > l)) when pos(y) > l and l <= pit8_carry_years
+
+def z_worth[y in lyear]: num DUK/lvu at start_of(y)
+  note "zero volatility (point 10): as t_worth, every R 5 %; a unit's worth at the end of year y, after the return: the fund's value over the units held; with no unit held a unit has no worth"
+  rule first = lv_fund0 / t_units0 when pos(y) == 1
+  rule later = z_fpre[y] / z_units[y - 1] when pos(y) > 1 and z_units[y - 1] > 0
+  rule none_held = ?"no fund unit is held, so a unit has no worth (questions.md D-13: the fund's value over the units held)" when pos(y) > 1 and z_units[y - 1] == 0
+
+version d13_terms
+  cite d13_question
+  governs always
+  known 2026-09-30
+  note "questions.md D-13, the question's own terms of the long view, known with D-HR3's long view"
+  t_loss_parts = 2 "PIT-8 .5: at most half of that loss is used in any one year"
+  t_units0 = 45000 assumed "questions.md D-13: the 45 000.00 DUK of 1 January 2027 bought on 31 December 2026 as 45 000 units"

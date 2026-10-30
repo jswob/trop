@@ -1,0 +1,65 @@
+# L §5.14.3 How a settlement leg counts: "moving the booked amount to where V puts it (konto to konto2) settles a change
+# of places alone": a settlement leg between two of the leg's `to` places runs both ways and counts 0, so the
+# remainder is δ - 0 = 0 and nothing is listed. L5_14_3_settle_place_change.test's model with bank[r1] moving
+# 5 000.00 PLN from konto to konto2: konto2 holds 5 000.00 PLN; konto took the five wages of January to May (pay_to is
+# konto but in March, whose wage was booked to konto before move_acct was known) and gave 5 000.00: 20 000.00 PLN (b).
+=== m.tally
+model hh
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source plan "plan"
+source act "act"
+source bank_export "bank"
+unit PLN: currency minor 0.01
+kind wages: event certain
+  leg cash: PLN
+place konto: accounts PLN lives 2019-05-01..
+place konto2: accounts PLN lives 2019-05-01..
+place world: outside lives 1900-01-01..
+input wage_amt: money PLN
+input wage_dom: int
+input pay_to: key accounts
+input bank: observed
+def net[m in months]: money PLN = wage_amt at start_of(m)
+def dest[m in months]: key accounts = pay_to at start_of(m)
+
+move wage[m in months]: wages
+  on day_of(m, wage_dom)
+  at start_of(m)
+  leg cash from world to dest[m] amount net[m]
+
+version plan_2026
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  wage_amt = 5 000.00 PLN "umowa"
+  wage_dom = 10 "umowa"
+  pay_to = konto "umowa"
+  opening[konto] = 0 PLN at 2026-01-01 start "wyciąg"
+  opening[konto2] = 0 PLN at 2026-01-01 start "wyciąg"
+
+version move_acct
+  cite act
+  governs 2026-03
+  known 2026-05-01
+  replace pay_to = konto2 "aneks"
+
+version transfer_back
+  cite bank_export
+  governs 2026-05
+  known 2026-05-20
+  covers konto2 2026-05-15..2026-05-15
+  bank[r1] = (on: 2026-05-15, kind: wages, leg cash from konto to konto2 amount 5 000.00 PLN, fulfils: adjustments[wage[2026-03].cash, move_acct]) "line 1"
+
+ask b: bal(konto2, 2026-05-31), bal(konto, 2026-05-31)
+=== expect
+b: (5 000.00 PLN, 20 000.00 PLN)
+  unfulfilled: wage[2026-01]
+  unfulfilled: wage[2026-02]
+  unfulfilled: wage[2026-03]
+  unfulfilled: wage[2026-04]
+  unfulfilled: wage[2026-05]
+  cut 2026-10-20

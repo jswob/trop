@@ -1,0 +1,23 @@
+d04_check_advances: ok
+  law date 2026-04-30, cut 2026-04-13
+d04_check_paid: ok
+  law date 2026-04-30, cut 2026-04-13
+d04_check_payment [hh_round = *]: ok
+  law date 2026-04-30, cut 2026-04-30
+d04_check_rent_advance [hh_round = *]: ok
+  law date 2026-04-30, cut 2026-04-13
+d04_pensions: (61 546.64 DUK, 61 547.00 DUK, 4 101.00 DUK, 4 098.00 DUK, 3.00 DUK)
+  law date 2026-04-30, cut 2026-04-13
+d04_rent [hh_round = *]: (13 300.00 DUK, 10 806.25 DUK, 919.00 DUK, 919.00 DUK, 0.00 DUK)
+  law date 2026-04-30, cut 2026-04-13
+d04_total [hh_round = *]: (false, 3.00 DUK, 2026-04-30)
+  held: tsb8_final = true (tsb8_v1), read for 2026-04-30
+  law date 2026-04-30, cut 2026-04-13
+d04_without [hh_round = *]: (34 568.74 DUK, 34 569.00 DUK, 594.00 DUK, 596.00 DUK, -2.00 DUK, 0.00 DUK, 0 DUK, 0.00 DUK, 0.00 DUK, 0.00 DUK, -2.00 DUK)
+  pinned: flat_after[halina] = 0
+  pinned: rent_rcv[2025] = 0.00 DUK
+  pinned: surv_claim = none
+  pinned: v2_claim = none
+  law date 2026-04-30, cut 2026-04-13
+warning: WARN-NEGATIVE konto is below zero from 2025-06-12
+

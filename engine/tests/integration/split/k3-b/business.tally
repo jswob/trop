@@ -1,0 +1,358 @@
+part business
+  tally 2
+  note "Piotr's sole trade (B-D01, B-D02, B-D06, B-D21): revenue, social and health contributions, the flat-rate tax (form (c), B-D02) with its advances, VAT, the florens and the car. The law is in law/ and lawrows.tally; this part holds the facts and the defs that apply the law to them."
+
+input biz_start: date question "On which day did Piotr's business start (B-D01)?"
+
+input biz_form: key pit10_form question "Which form of tax on his business income has Piotr elected (PIT-10 .1, .2)?"
+
+input buy[p in buys]: (received date, bk key buy_kinds, net money DUK, vat money DUK) question "What does this purchase invoice say (Faktura+ purchase register)?"
+
+input car_cc[c in cars]: int question "What is the car's engine size in cm3 (B-D11, B-D14)?"
+
+input car_entered[c in cars]: date question "When was the car entered in the business's asset register (B-D11)?"
+
+input car_loan_round: rounding question "How are the car loan's interest and early repayment fee rounded to the ort (B-D12 .2, .4)?"
+
+input car_log[c in cars]: bool question "Is a mileage log kept for the car (B-D11)?"
+
+input car_purchase[c in cars]: key buys question "Which purchase invoice bought the car (B-D11)?"
+
+input car_sale_inv: key invoices question "Which sales invoice sold the business's car (B-D15, the sales register)?"
+
+input sold_car: key cars question "Which car did the car sale's invoice sell (B-D15)?"
+
+input car_use[c in cars]: key car_uses question "Is the car used only in the business, or privately too (B-D11)?"
+
+input fuel_month[p in buys]: month question "For which month is this fuel invoice (the purchase register's item)?"
+
+input loan_end: date question "When was the car loan agreed to end (B-D16)?"
+
+input loan_fee: num question "What fee does the car loan's agreement set on early repayment (B-D12 .5)?"
+
+input loan_fixed: bool question "Is the car loan's rate fixed (B-D12 .2)?"
+
+input loan_last_inst: date question "On which instalment day was the car loan's balance last reduced before the repayment (B-D16)?"
+
+input client_paid_seen[i in invoices]: date question "On which day did the client pay this invoice, where an export shows the payment and the planned due day lies where no export covers?"
+
+input loan_left: money DUK question "What was left on the car loan after its last instalment (B-D16)?"
+
+input loan_rate: rate question "What is the car loan's yearly interest rate (B-D12 .2)?"
+
+input loan_repaid: date question "On which day was the car loan repaid (B-D16)?"
+
+input policy_end: date question "When does the car's liability cover end (B-D13)?"
+
+input policy_fee: money DUK question "What handling fee does the insurer keep on an early end (B-D13 §9)?"
+
+input policy_premium: money DUK question "What was the car policy's premium (B-D13)?"
+
+input policy_start: date question "When does the car's liability cover start (B-D13)?"
+
+input sale[i in invoices]: (issued date, due date, cl key clients, sup key pit10_supply, net money DUK, vat money DUK) question "What does this sales invoice say (Faktura+ sales register)?"
+
+input sale_flr[j in flr_invoices]: (issued date, due date, cl key clients, sup key pit10_supply, net money FLR, vat money FLR) question "What does this floren sales invoice say (Faktura+ sales register)?"
+
+input vat_given_up: date question "From which day has Piotr given up the small-business VAT exemption (VAT-2 .4)?"
+
+input sickness_from: date question "From which day does Piotr pay the voluntary sickness contribution (B-D03)?"
+
+def awp_jan[y in years]: money DUK = avg_wage_proj at start_of(y)
+
+def awq4_at[m in months]: money DUK = avg_wage_q4 at start_of(m)
+
+def stage2_from: date = add_months(start_of(month_of(biz_start)), soc3_stage1_months + 1) at biz_start
+
+def stage3_from: date = add_months(stage2_from, soc3_stage2_months) at biz_start
+
+def car_basis[c in cars]: num DUK = buy[car_purchase[c]].net + buy[car_purchase[c]].vat - deductible[car_purchase[c]]
+
+def car_mixed[c in cars]: bool = not (car_use[c] == business_only and car_log[c])
+
+def contrib_paid[m in months]: money DUK = sum(social[k] for k in months where k < m and month_of(paid_on[k]) == m)
+
+def contrib_paid_in[y in years]: money DUK = sum(social[k] for k in months where year_of(k) <= y and year_of(paid_on[k]) == y)
+
+def cost_b[p in buys]: num DUK at buy[p].received
+  note "PIT-10 .3 costs under form (b): the invoice at its net plus the VAT not deducted; a car's running costs at PIT-11 .1's share; the car itself only through its depreciation (PIT-11 .2)"
+  rule all = buy[p].net + buy[p].vat - deductible[p]
+  rule asset beats all = 0 DUK when buy[p].bk == car
+  rule running beats all = (buy[p].net + buy[p].vat - deductible[p]) * pit11_running_share when buy[p].bk == fuel and any(car_mixed[c] for c in cars over fuel_month[p])
+
+def costs_b[y in years]: num DUK = sum(cost_b[p] for p in buys where year_of(buy[p].received) == y)
+
+def client_pay_day[i in invoices]: date at sale[i].due
+  note "the day a client pays: the due day, moved to the next business day; where the Cis export shows the payment of an invoice whose due day no export covers (FV 015/2024, due before the exports start; FV 023/2025, due in November's gap), the day it shows: else the plan books the payment on the uncovered due day and the observation books it again (S:322)"
+  rule due = if is_business(sale[i].due, holidays) then sale[i].due else add_business(sale[i].due, 1, holidays)
+  rule seen beats due = client_paid_seen[i] when i == fv_015_2024 or i == fv_023_2025
+
+def credited[j in flr_invoices]: date = add_business(fx_sale_day[j], 1, holidays) at fx_sale_day[j]
+
+def kessel_day[j in flr_invoices]: date at sale_flr[j].due
+  note "the day Kessel pays an invoice into the Lazur account: its due day, moved to the next business day (the scenario forecast adds F5's earlier day)"
+  rule due = if is_business(sale_flr[j].due, holidays) then sale_flr[j].due else add_business(sale_flr[j].due, 1, holidays)
+
+def ded_avail[m in months]: money DUK
+  note "PIT-10 .4: the contributions paid in the month, with those not used in earlier months of the same year"
+  rule fresh = contrib_paid[m]
+  rule carry beats fresh = contrib_paid[m] + ded_left[m - 1] when pos(m) > 1 and year_of(m - 1) == year_of(m)
+
+def ded_left[m in months]: money DUK = ded_avail[m] - sum(pit_ded[m].taken[s] for s in pit10_supply)
+
+def deductible[p in buys]: num DUK at buy[p].received
+  note "VAT-5 .2: a car used privately too, or with no mileage log, deducts 50 % of the VAT on its purchase and fuel; carried exactly (GEN-5 .5); the purchase of a car tests that car; a fuel invoice names no car but its month (the register's item, fuel_month), so it tests the car the business holds in that month"
+  rule all = buy[p].vat
+  rule car beats all = buy[p].vat * vat5_car_share when buy[p].bk == car and any(car_mixed[c] for c in cars over .. where car_purchase[c] == p)
+  rule fuel beats all = buy[p].vat * vat5_car_share when buy[p].bk == fuel and any(car_mixed[c] for c in cars over fuel_month[p])
+
+def dep_month[c in cars]: money DUK = round(car_basis[c] * pit11_depreciation / pit11_months, minor(DUK), half-up) at car_entered[c]
+
+def depreciation[y in years]: money DUK = sum(dep_month[c] for c in cars over y, k in months where year_of(k) == y and k > month_of(car_entered[c]) and c in cars on start_of(k))
+
+def duk_got[j in flr_invoices]: money DUK = round(fx_sold[j] * lazur_buy[fx_sale_day[j]], minor(DUK), half-up)
+
+def flat_rate[m in months, s in pit10_supply]: num at start_of(m)
+  note "PIT-10 .1, .2, .4: the flat rate on revenue of this kind, under form (c) only; the form is the one Piotr elected by notice (B-D02), holding until a new one"
+  rule elected = pit10_rate_at[m, s] when biz_form == flat
+
+def pit10_rate_at[m in months, s in pit10_supply]: num = pit10_flat_rate[s] at start_of(m)
+
+def flr_fate[j in flr_invoices]: key flr_fates
+  rule unpaid = unpaid
+  rule kept beats unpaid = kept when observed(kessel_pay[j]) != none
+  rule sold beats kept, unpaid = sold when count(o in fx_sales over .. where o.inv == j) > 0
+
+def fx_on[d in days]: num DUK/FLR = fx_mid at d
+
+def fx_sale_day[j in flr_invoices]: date = min(o.day for o in fx_sales over .. where o.inv == j)
+
+def fx_sold[j in flr_invoices]: money FLR = sum(o.cash.amount for o in fx_sales over .. where o.inv == j)
+
+def health[m in months]: money DUK at start_of(m)
+  rule tier = round(soc4_rate * soc4_tier(rev_ytd[m]) * avg_wage_q4, minor(DUK), half-up)
+  rule inactive beats tier = 0 DUK when end_of(m) <= biz_start
+
+def health_owed_year[y in years]: money DUK = sum(round(soc4_rate * soc4_tier(rev_year[y]) * awq4_at[k], minor(DUK), half-up) for k in months where year_of(k) == y and end_of(k) > biz_start) at start_of(y)
+
+def health_paid_year[y in years]: money DUK = sum(health[k] for k in months where year_of(k) == y)
+
+def health_settle[y in years]: money DUK = health_owed_year[y] - health_paid_year[y]
+
+def in_vat[m in months]: num DUK = sum(deductible[p] for p in buys where month_of(buy[p].received) == m and vat_on[buy[p].received])
+
+def min_wage_jan[y in years]: money DUK = min_wage at start_of(y)
+
+def out_vat[m in months]: money DUK at start_of(m)
+  rule booked = sum(round(sale[i].net * vat_rate, minor(DUK), half-up) for i in invoices where month_of(sale[i].issued) == m and vat_on[sale[i].issued]) + sum(vat_flr[j] for j in flr_invoices where month_of(sale_flr[j].issued) == m and vat_on[sale_flr[j].issued])
+
+def paid_on[m in months]: date = schedule(month_of(end_of(m)), pit10_adv_dom, following, holidays) at start_of(m)
+
+def prev_bd[d in days]: date = add_business(d, -1, holidays) at d
+
+def rev[m in months]: money DUK = sum(rev_part[m, s] for s in pit10_supply)
+
+def rev_flr[j in flr_invoices]: money DUK = round(sale_flr[j].net * fx_on[prev_bd[sale_flr[j].issued]], minor(DUK), half-up)
+
+def rev_part[m in months, s in pit10_supply]: money DUK at start_of(m)
+  rule booked = sum(sale[i].net for i in invoices where month_of(sale[i].issued) == m and sale[i].sup == s) + sum(rev_flr[j] for j in flr_invoices where month_of(sale_flr[j].issued) == m and sale_flr[j].sup == s)
+
+def rev_year[y in years]: money DUK = sum(rev[k] for k in months where year_of(k) == y)
+
+def rev_ytd[m in months]: money DUK = sum(rev[k] for k in months where year_of(k) == year_of(m) and k <= m)
+
+def road_refund: money DUK = round(mot2_tax(car_cc[sold_car]) * count(k in months where year_of(k) == year_of(sale[car_sale_inv].issued) and k > month_of(sale[car_sale_inv].issued)) / mot2_months, minor(DUK), half-up) at sale[car_sale_inv].issued
+
+def settle_due[y in years]: date = schedule(month_of(add_months(start_of(y + 1), soc4_settle_month - 1)), soc4_settle_dom, following, holidays) at start_of(y)
+
+def soc_base[m in months]: num DUK at start_of(m)
+  note "SOC-3 .1-.3: stage 1 to the end of the 6th month after the starting month, stage 2 the next 24 months, stage 3 after"
+  rule s3 = soc3_stage3_share * awp_jan[year_of(m)]
+  rule s2 beats s3 = soc3_stage2_share * min_wage_jan[year_of(m)] when start_of(m) < stage3_from
+  rule s1 beats s2, s3 = 0 DUK when start_of(m) < stage2_from
+
+def soc_part_due[c in soc3_part, m in months]: bool at start_of(m)
+  rule all = true
+  rule sick beats all = start_of(m) >= sickness_from when c == sickness
+  rule labour beats all = start_of(m) >= stage3_from when c == labour
+
+def social[m in months]: money DUK = sum(round(soc_base[m] * soc3_rate[c], minor(DUK), half-up) for c in soc3_part where soc_part_due[c, m]) at start_of(m)
+
+def supplies_to[i in invoices]: money DUK = sum(sale[k].net for k in invoices where year_of(sale[k].issued) == year_of(sale[i].issued) and sale[k].issued <= sale[i].issued and sale[k].sup != asset_sale)
+
+def tax_b[y in years]: money DUK = round(round(rev_year[y] - costs_b[y] - depreciation[y] - contrib_paid_in[y], 1 DUK, half-up) * pit10_profit_rate, 1 DUK, half-up) at start_of(y)
+
+def tax_flat[m in months]: money DUK = round(sum(tax_part_base[m, s] * flat_rate[m, s] for s in pit10_supply), 1 DUK, half-up)
+
+def tax_flat_year[y in years]: money DUK = sum(tax_flat[k] for k in months where year_of(k) == y)
+
+def tax_part_base[m in months, s in pit10_supply]: money DUK = round(rev_part[m, s] - pit_ded[m].taken[s], 1 DUK, half-up)
+
+def vat_carry_in[m in months]: money DUK
+  rule fresh = 0 DUK
+  rule carry beats fresh = vat_carry_out[m - 1] when pos(m) > 1
+
+def vat_carry_out[m in months]: money DUK = max(0 DUK, 0 DUK - round(vat_raw[m], 1 DUK, half-up))
+
+def vat_cross[y in years]: key invoices = argmin(sale[i].issued for i in invoices where year_of(sale[i].issued) == y and supplies_to[i] > vat_limit[y]) ties by (sale[i].net)
+
+def vat_due[m in months]: date = schedule(month_of(end_of(m)), vat4_dom, following, holidays) at start_of(m)
+
+def vat_flr[j in flr_invoices]: money DUK = round(sale_flr[j].vat * fx_on[prev_bd[sale_flr[j].issued]], minor(DUK), half-up)
+
+def vat_on[d in days]: bool at d
+  note "VAT-2: a supply is taxed from the one with which the year's supplies first go above the year's limit, that one included (.1; the first year's limit by its days, .2); in every year after one whose supplies went above the limit (.1); and from the day the exemption is given up (.4), which Piotr did from 2023-01-01 (B-D05). The given_up rule exists only at cuts that know B-D05's version vat_notice (L §5.11 step 2): before it, no notice was given (a notice works only forward, from a month's first day)"
+  rule exempt = false
+  rule given_up beats exempt v vat_notice = true when d >= vat_given_up
+  rule crossed beats exempt, given_up = true when any(supplies_to[i] > vat_limit[year_of(d)] and sale[i].issued <= d for i in invoices where year_of(sale[i].issued) == year_of(d))
+  rule last_year beats exempt, given_up, crossed = true when year_of(d) > year_of(biz_start) and any(supplies_to[i] > vat2_limit for i in invoices where year_of(sale[i].issued) == year_of(d) - 1)
+
+def vat_limit[y in years]: money DUK = round(vat2_limit * days_between(max(biz_start, start_of(y)), end_of(y)) / days_between(start_of(y), end_of(y)), minor(DUK), half-up) at start_of(y)
+
+def vat_payable[m in months]: money DUK = max(0 DUK, round(vat_raw[m], 1 DUK, half-up))
+
+def vat_raw[m in months]: num DUK = out_vat[m] - in_vat[m] - vat_carry_in[m]
+
+def car_loan_fee: money DUK at loan_repaid
+  note "B-D12 .5 sets 1 %; CC-2 .1 allows a fee only where the agreement sets one and the rate was fixed; CC-2 .2 caps it at 1 % (0.5 % with a year or less left) and at the interest to the agreed end"
+  rule none_r = 0 DUK
+  rule capped beats none_r = round(min(loan_left * min(loan_fee, if add_years(loan_repaid, 1) < loan_end then cc2_fee_long else cc2_fee_short), accrue(loan_left, loan_rate, loan_repaid, loan_end, act365, simple)), minor(DUK), car_loan_round) when loan_fixed and loan_fee > 0
+
+def car_loan_interest: money DUK = round(accrue(loan_left, loan_rate, loan_last_inst, loan_repaid, act365, simple), minor(DUK), car_loan_round)
+
+def car_vat_due: money DUK = round(sale[car_sale_inv].net * vat_rate, minor(DUK), half-up) at sale[car_sale_inv].issued
+
+def insurance_refund: money DUK = round(policy_premium * days_between(sale[car_sale_inv].issued, policy_end) / days_between(policy_start, add_days(policy_end, 1)), minor(DUK), down) - policy_fee
+
+fill pit_ded[m in months]
+  note "PIT-15 .4: the contributions come off the part of the month's revenue at the highest rate first, then the next"
+  supply ded_avail[m]
+  demand rev_part[m, s] for s in pit10_supply
+  arc true
+  order 0 - pit10_rate_at[m, s]
+
+move client_pay[i in invoices]: transfers
+  on client_pay_day[i]
+  at sale[i].due
+  leg cash from inv_owed[i] to cis amount sale[i].net + sale[i].vat
+
+move health_pay[m in months]: transfers
+  on schedule(month_of(end_of(m)), soc4_pay_dom, following, holidays)
+  at start_of(m)
+  leg cash from cis to authorities amount health[m]
+
+move health_settle_pay[y in years]: transfers
+  on settle_due[y]
+  at start_of(y)
+  when health_settle[y] >= 0 DUK
+  leg cash from cis to authorities amount health_settle[y]
+
+move invoiced[i in invoices]: transfers
+  on sale[i].issued
+  leg cash from world to inv_owed[i] amount sale[i].net + sale[i].vat
+
+move invoiced_flr[j in flr_invoices]: transfers
+  on sale_flr[j].issued
+  leg cash from world to inv_owed_flr[j] amount sale_flr[j].net + sale_flr[j].vat
+
+move kessel_pay[j in flr_invoices]: transfers
+  on kessel_day[j]
+  at sale_flr[j].due
+  leg cash from inv_owed_flr[j] to lazur amount sale_flr[j].net + sale_flr[j].vat
+
+move pit_pay[m in months]: transfers
+  on paid_on[m]
+  at start_of(m)
+  leg cash from cis to authorities amount tax_flat[m]
+
+move social_pay[m in months]: transfers
+  on schedule(month_of(end_of(m)), soc3_pay_dom, following, holidays)
+  at start_of(m)
+  leg cash from cis to authorities amount social[m]
+
+move vat_pay[m in months]: transfers
+  on vat_due[m]
+  at start_of(m)
+  leg cash from cis to authorities amount vat_payable[m]
+
+version business_start
+  cite b_d01
+  governs always
+  known 2022-04-11
+  biz_start = 2022-04-11 "B-D01: start of activity 11 April 2022"
+
+version form_notice
+  cite b_d02
+  governs 2022-01-01..
+  known 2022-05-12
+  biz_form = flat "B-D02: I elect the flat rate on revenue (PIT-10 form (c)) for my business income from the tax year 2022"
+
+version vat_notice
+  cite b_d05
+  governs always
+  known 2022-12-12
+  vat_given_up = 2023-01-01 "B-D05: I give up the small-business VAT exemption from 1 January 2023 (VAT-2 .4)"
+
+version sickness_notice
+  cite b_d03
+  governs always
+  known 2022-10-18
+  sickness_from = 2022-11-01 "B-D03: voluntary sickness insurance from 1 November 2022"
+
+version car_loan_terms
+  cite b_d12
+  governs always
+  known 2023-03-14
+  loan_fee = 0.01 "B-D12 .5: 1 % of the amount repaid early"
+  loan_fixed = true "B-D12 .2: fixed"
+  loan_rate = 9.5 %/year "B-D12 .2: fixed, 9.5 % a year"
+  car_loan_round = half-up assumed "B-D12 .2, .4: rounded to the ort, no mode named; half up, the mode that gives B-D16's 2.92 DUK of interest for 1 day" "B-D12 .4"
+
+version car_invoice
+  cite b_d11
+  governs always
+  known 2023-03-15
+  car_cc[ln4471k] = 1998 "B-D11: engine 1 998 cm3"
+  car_entered[ln4471k] = 2023-03-15 "B-D11, Piotr's note: entered in the asset register on 15 March 2023"
+  car_log[ln4471k] = false "B-D11, Piotr's note: no mileage log"
+  car_purchase[ln4471k] = p002 "B-D11: invoice FA/2023/0311 (purchase register line 4, P002)"
+  car_use[ln4471k] = mixed "B-D11, Piotr's note: used in the business and privately"
+
+version car_sale
+  cite b_d15
+  governs always
+  known 2025-09-12
+  car_sale_inv = fv_019_2025 "B-D15: the invoice of the car sale, its number in the sales register: faktura-sales-2022-2025.csv line 63, FV 019/2025"
+  sold_car = ln4471k "B-D15: The car LN 4471K, sold and handed over on 12.09.2025"
+
+version car_policy
+  cite b_d13
+  governs always
+  known 2025-03-14
+  policy_end = 2026-03-14 "B-D13: cover 15.03.2025 .. 14.03.2026"
+  policy_fee = 15.00 DUK "B-D13 §9: a handling fee of 15.00 DUK"
+  policy_premium = 2190.00 DUK "B-D13: premium 2 190.00 DUK"
+  policy_start = 2025-03-15 "B-D13: cover 15.03.2025 .. 14.03.2026"
+
+version early_payment
+  cite cis_export
+  governs always
+  known 2025-12-02
+  client_paid_seen[fv_023_2025] = 2025-11-12 "cis-5521-3380-0001-2025-11.csv: Arnika-Delta paid FV 023/2025 (due 2025-11-14) on 2025-11-12"
+
+version late_payment
+  cite cis_export
+  governs always
+  known 2025-02-02
+  client_paid_seen[fv_015_2024] = 2025-01-09 "cis-5521-3380-0001-2025-01.csv line 15: Kawiarnia Ziarno paid FV 015/2024 (due 2024-12-20) on 2025-01-09"
+
+version car_loan_closed
+  cite b_d16
+  governs always
+  known 2025-09-16
+  loan_end = 2026-03-15 "B-D16: the agreed end, 15.03.2026"
+  loan_last_inst = 2025-09-15 "B-D16: balance after the instalment of 15 September 2025"
+  loan_left = 11218.86 DUK "B-D16: balance after the instalment of 15 September 2025"
+  loan_repaid = 2025-09-16 "B-D16: repaid in full on 16.09.2025"
+
+def car_sale_tax: num DUK = tax_part_base[month_of(sale[car_sale_inv].issued), asset_sale] * flat_rate[month_of(sale[car_sale_inv].issued), asset_sale]

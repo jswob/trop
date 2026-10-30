@@ -1,50 +1,59 @@
 part places
-  tally 1
+  tally 2
   note "Miejsca gospodarstwa i schemat wyciągów. Miejsca na zewnątrz nazywają, skąd i dokąd płyną pieniądze."
 
-index bank_row: open
+kind spending: transfers
+  attr cat: key category
+  note "wiersz wyciągu, którego nie wyjaśnia żaden zaplanowany ruch, z kategorią wydatku"
 
 index category = [groceries, transport, health_care, other]
 
-place dostawcy: outside PLN
+place dostawcy: outside lives 2026-01-01..
 
-place gotowka: cash PLN
+kind tax_offices: place PLN signed outside
+  note "urzad_skarbowy beyond the model (tally 1 outside PLN); every leg into or out of it is PLN"
 
-place klienci: outside PLN
+place gotowka: cash PLN lives 2026-01-01..
 
-place konto: account PLN holds vat_owed
+place klienci: outside lives 2026-01-01..
 
-place kredytodawcy: outside PLN
+place konto: accounts PLN lives 2026-01-01..
 
-place marek: claim PLN
+place kredytodawcy: outside lives 2026-01-01..
 
-place pracodawcy: outside PLN
+place marek: claims PLN lives 2026-01-01..
 
-place rynek: outside PLN
+place niewyjasnione: outside lives 2026-01-01..
 
-place sklepy: outside PLN
+place pracodawcy: outside lives 2026-01-01..
 
-place urzad_skarbowy: outside PLN
+place rynek: outside lives 2026-01-01..
 
-place wcash[w in wrapper]: account PLN
+place sklepy: outside lives 2026-01-01..
 
-place wunits[w in wrapper]: holding etf_unit priced etf_price
+place urzad_skarbowy: tax_offices lives 2026-01-01..
 
-place wynajmujacy: outside PLN
+place wcash[w in wrapper]: accounts PLN lives 2026-01-01..
 
-place zus: outside PLN
+place wunits[w in wrapper]: holdings etf_unit priced etf_price lives 2026-01-01..
 
-input bank[r in bank_row]: movement PLN (cat key category)
+place wynajmujacy: outside lives 2026-01-01..
+
+place zus: outside lives 2026-01-01..
+
+input bank: observed
+  note "wiersze wyciągów; wiersz bez powiązania z zaplanowanym ruchem idzie z konta do miejsca niewyjasnione"
 
 version openings_2026
   cite household
+  governs always
   known 2025-12-31
-  opening[gotowka] = 600 "portfel"
-  opening[konto] = 24000 "wyciąg za grudzień 2025, saldo końcowe"
-  opening[marek] = 0
-  opening[wcash[ike]] = 0 "rachunek IKE, gotówka"
-  opening[wcash[mak]] = 0 "rachunek maklerski, gotówka"
-  opening[wcash[oki]] = 0 "OKI jeszcze nie istnieje"
-  opening[wunits[ike]] = 150 "rachunek IKE, jednostki"
-  opening[wunits[mak]] = 80 "rachunek maklerski, jednostki"
-  opening[wunits[oki]] = 0 "OKI jeszcze nie istnieje"
+  opening[gotowka] = 600 at 2026-01-01 start "portfel"
+  opening[konto] = 24000 at 2026-01-01 start "wyciąg za grudzień 2025, saldo końcowe"
+  opening[marek] = 0 at 2026-01-01 start
+  opening[wcash[ike]] = 0 at 2026-01-01 start "rachunek IKE, gotówka"
+  opening[wcash[mak]] = 0 at 2026-01-01 start "rachunek maklerski, gotówka"
+  opening[wcash[oki]] = 0 at 2026-01-01 start "OKI jeszcze nie istnieje"
+  opening[wunits[ike]] = 150 at 2026-01-01 start "rachunek IKE, jednostki"
+  opening[wunits[mak]] = 80 at 2026-01-01 start "rachunek maklerski, jednostki"
+  opening[wunits[oki]] = 0 at 2026-01-01 start "OKI jeszcze nie istnieje"

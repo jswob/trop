@@ -1,0 +1,1715 @@
+explain_room: walk-bound, read at 2 walk points
+  room[2026-11] at (2026-11-15, stratum 1, invest[ike, 2026-11]): 4 386.89 PLN
+      [1] room[2026-11] = 4 386.89 PLN, law date 2026-11-01
+          rule base: won
+            [2] row lifted_figures:invest_dom = 15
+                version lifted_figures, source lifted_1_0_1, "Figures tally 1.0.1 allowed inline in rules", locator "inline in tally 1.0.1: invest_amt line 57, room line 63 (twice), invest line 100, argument 2 of day_of; one fact, the day of the rule of the 15th", governs always, known 2004-04-20
+            (lifted_figures:invest_dom: see [2])
+            (lifted_figures:invest_dom: see [2])
+            [3] vat_owed[2026-11-15] = 0.00 PLN, law date 2026-11-15
+                rule base: won
+                  [4] row home_2026:fee_net = 0.00 PLN
+                      version home_2026, source household, "Oświadczenia gospodarstwa: umowy, rejestracje, decyzje i wybory", locator "przed założeniem działalności", governs 2026-01-01..2026-02-28, known 2025-12-31
+                  (home_2026:fee_net: see [4])
+                  [5] row dg_2026:fee_net[client_a] = 14 000.00 PLN
+                      version dg_2026, source household, "Oświadczenia gospodarstwa: umowy, rejestracje, decyzje i wybory", locator "umowa B2B z klientem A, § 5", governs 2026-03-01.., known 2026-02-20
+                  [6] pay_day[client_a, 2026-03] = 2026-04-14, law date 2026-03-01
+                      rule base: won
+                        [7] issue_day[2026-03] = 2026-03-31, law date 2026-03-01
+                            rule base: won
+                        [8] row dg_2026:terms[client_a] = 14
+                            version dg_2026, source household, "Oświadczenia gospodarstwa: umowy, rejestracje, decyzje i wybory", locator "umowa B2B z klientem A, § 6", governs always, known 2026-02-20
+                        [9] row holidays_2026_2030:holidays_pl = calendar(weekends [sat, sun])
+                            version holidays_2026_2030, source holidays_act, "Ustawa z 18 stycznia 1951 r. o dniach wolnych od pracy (tekst jednolity)", locator "art. 1 pkt 1; święta w dni robocze", governs 2026-01-01..2030-12-31, known 2025-12-31
+                        (issue_day[2026-03]: see [7])
+                        (dg_2026:terms[client_a]: see [8])
+                  [10] vat_day[2026-03] = 2026-04-27, law date 2026-03-01
+                      rule base: won (version vat_2026, source vat_act)
+                        [11] row lifted_figures:vat_day_25 = 25
+                            version lifted_figures, source lifted_1_0_1, "Figures tally 1.0.1 allowed inline in rules", locator "inline in tally 1.0.1: vat_day line 76, argument 2 of day_of", governs always, known 2004-04-20
+                        (holidays_2026_2030:holidays_pl: see [9])
+                        (lifted_figures:vat_day_25: see [11])
+                        (holidays_2026_2030:holidays_pl: see [9])
+                        (holidays_2026_2030:holidays_pl: see [9])
+                  (dg_2026:fee_net[client_a]: see [5])
+                  [12] pay_day[client_a, 2026-04] = 2026-05-14, law date 2026-04-01
+                      rule base: won
+                        [13] issue_day[2026-04] = 2026-04-30, law date 2026-04-01
+                            rule base: won
+                        (dg_2026:terms[client_a]: see [8])
+                        (holidays_2026_2030:holidays_pl: see [9])
+                        (issue_day[2026-04]: see [13])
+                        (dg_2026:terms[client_a]: see [8])
+                  [14] vat_day[2026-04] = 2026-05-25, law date 2026-04-01
+                      rule base: won (version vat_2026, source vat_act)
+                        (lifted_figures:vat_day_25: see [11])
+                        (holidays_2026_2030:holidays_pl: see [9])
+                        (lifted_figures:vat_day_25: see [11])
+                  (dg_2026:fee_net[client_a]: see [5])
+                  [15] pay_day[client_a, 2026-05] = 2026-06-15, law date 2026-05-01
+                      rule base: won
+                        [16] issue_day[2026-05] = 2026-05-31, law date 2026-05-01
+                            rule base: won
+                        (dg_2026:terms[client_a]: see [8])
+                        (holidays_2026_2030:holidays_pl: see [9])
+                        (issue_day[2026-05]: see [16])
+                        (dg_2026:terms[client_a]: see [8])
+                        (holidays_2026_2030:holidays_pl: see [9])
+                  [17] vat_day[2026-05] = 2026-06-25, law date 2026-05-01
+                      rule base: won (version vat_2026, source vat_act)
+                        (lifted_figures:vat_day_25: see [11])
+                        (holidays_2026_2030:holidays_pl: see [9])
+                        (lifted_figures:vat_day_25: see [11])
+                  (dg_2026:fee_net[client_a]: see [5])
+                  [18] pay_day[client_a, 2026-06] = 2026-07-14, law date 2026-06-01
+                      rule base: won
+                        [19] issue_day[2026-06] = 2026-06-30, law date 2026-06-01
+                            rule base: won
+                        (dg_2026:terms[client_a]: see [8])
+                        (holidays_2026_2030:holidays_pl: see [9])
+                        (issue_day[2026-06]: see [19])
+                        (dg_2026:terms[client_a]: see [8])
+                  [20] vat_day[2026-06] = 2026-07-27, law date 2026-06-01
+                      rule base: won (version vat_2026, source vat_act)
+                        (lifted_figures:vat_day_25: see [11])
+                        (holidays_2026_2030:holidays_pl: see [9])
+                        (lifted_figures:vat_day_25: see [11])
+                        (holidays_2026_2030:holidays_pl: see [9])
+                        (holidays_2026_2030:holidays_pl: see [9])
+                  (dg_2026:fee_net[client_a]: see [5])
+                  [21] pay_day[client_a, 2026-07] = 2026-08-14, law date 2026-07-01
+                      rule base: won
+                        [22] issue_day[2026-07] = 2026-07-31, law date 2026-07-01
+                            rule base: won
+                        (dg_2026:terms[client_a]: see [8])
+                        (holidays_2026_2030:holidays_pl: see [9])
+                        (issue_day[2026-07]: see [22])
+                        (dg_2026:terms[client_a]: see [8])
+                  [23] vat_day[2026-07] = 2026-08-25, law date 2026-07-01
+                      rule base: won (version vat_2026, source vat_act)
+                        (lifted_figures:vat_day_25: see [11])
+                        (holidays_2026_2030:holidays_pl: see [9])
+                        (lifted_figures:vat_day_25: see [11])
+                  (dg_2026:fee_net[client_a]: see [5])
+                  [24] pay_day[client_a, 2026-08] = 2026-09-14, law date 2026-08-01
+                      rule base: won
+                        [25] issue_day[2026-08] = 2026-08-31, law date 2026-08-01
+                            rule base: won
+                        (dg_2026:terms[client_a]: see [8])
+                        (holidays_2026_2030:holidays_pl: see [9])
+                        (issue_day[2026-08]: see [25])
+                        (dg_2026:terms[client_a]: see [8])
+                  [26] vat_day[2026-08] = 2026-09-25, law date 2026-08-01
+                      rule base: won (version vat_2026, source vat_act)
+                        (lifted_figures:vat_day_25: see [11])
+                        (holidays_2026_2030:holidays_pl: see [9])
+                        (lifted_figures:vat_day_25: see [11])
+                  (dg_2026:fee_net[client_a]: see [5])
+                  [27] pay_day[client_a, 2026-09] = 2026-10-14, law date 2026-09-01
+                      rule base: won
+                        [28] issue_day[2026-09] = 2026-09-30, law date 2026-09-01
+                            rule base: won
+                        (dg_2026:terms[client_a]: see [8])
+                        (holidays_2026_2030:holidays_pl: see [9])
+                        (issue_day[2026-09]: see [28])
+                        (dg_2026:terms[client_a]: see [8])
+                  [29] vat_day[2026-09] = 2026-10-26, law date 2026-09-01
+                      rule base: won (version vat_2026, source vat_act)
+                        (lifted_figures:vat_day_25: see [11])
+                        (holidays_2026_2030:holidays_pl: see [9])
+                        (lifted_figures:vat_day_25: see [11])
+                        (holidays_2026_2030:holidays_pl: see [9])
+                  (dg_2026:fee_net[client_a]: see [5])
+                  [30] pay_day[client_a, 2026-10] = 2026-11-16, law date 2026-10-01
+                      rule base: won
+                        [31] issue_day[2026-10] = 2026-10-31, law date 2026-10-01
+                            rule base: won
+                        (dg_2026:terms[client_a]: see [8])
+                        (holidays_2026_2030:holidays_pl: see [9])
+                        (issue_day[2026-10]: see [31])
+                        (dg_2026:terms[client_a]: see [8])
+                        (holidays_2026_2030:holidays_pl: see [9])
+                        (holidays_2026_2030:holidays_pl: see [9])
+                  (dg_2026:fee_net[client_a]: see [5])
+                  [32] pay_day[client_a, 2026-11] = 2026-12-14, law date 2026-11-01
+                      rule base: won
+                        [33] issue_day[2026-11] = 2026-11-30, law date 2026-11-01
+                            rule base: won
+                        (dg_2026:terms[client_a]: see [8])
+                        (holidays_2026_2030:holidays_pl: see [9])
+                        (issue_day[2026-11]: see [33])
+                        (dg_2026:terms[client_a]: see [8])
+                  (dg_2026:fee_net[client_a]: see [5])
+                  [34] pay_day[client_a, 2026-12] = 2027-01-14, law date 2026-12-01
+                      rule base: won
+                        [35] issue_day[2026-12] = 2026-12-31, law date 2026-12-01
+                            rule base: won
+                        (dg_2026:terms[client_a]: see [8])
+                        (holidays_2026_2030:holidays_pl: see [9])
+                        (issue_day[2026-12]: see [35])
+                        (dg_2026:terms[client_a]: see [8])
+                  (dg_2026:fee_net[client_a]: see [5])
+                  [36] pay_day[client_a, 2027-01] = 2027-02-15, law date 2027-01-01
+                      rule base: won
+                        [37] issue_day[2027-01] = 2027-01-31, law date 2027-01-01
+                            rule base: won
+                        (dg_2026:terms[client_a]: see [8])
+                        (holidays_2026_2030:holidays_pl: see [9])
+                        (issue_day[2027-01]: see [37])
+                        (dg_2026:terms[client_a]: see [8])
+                        (holidays_2026_2030:holidays_pl: see [9])
+                  (home_2026:fee_net: see [4])
+                  (home_2026:fee_net: see [4])
+                  [38] row dg_2026:fee_net[client_b] = 3 000.00 PLN
+                      version dg_2026, source household, "Oświadczenia gospodarstwa: umowy, rejestracje, decyzje i wybory", locator "umowa B2B z klientem B, § 4", governs 2026-03-01.., known 2026-02-20
+                  [39] pay_day[client_b, 2026-03] = 2026-04-30, law date 2026-03-01
+                      rule base: won
+                        (issue_day[2026-03]: see [7])
+                        [40] row dg_2026:terms[client_b] = 30
+                            version dg_2026, source household, "Oświadczenia gospodarstwa: umowy, rejestracje, decyzje i wybory", locator "umowa B2B z klientem B, § 5", governs always, known 2026-02-20
+                        (holidays_2026_2030:holidays_pl: see [9])
+                        (issue_day[2026-03]: see [7])
+                        (dg_2026:terms[client_b]: see [40])
+                  (vat_day[2026-03]: see [10])
+                  (dg_2026:fee_net[client_b]: see [38])
+                  [41] pay_day[client_b, 2026-04] = 2026-06-01, law date 2026-04-01
+                      rule base: won
+                        (issue_day[2026-04]: see [13])
+                        (dg_2026:terms[client_b]: see [40])
+                        (holidays_2026_2030:holidays_pl: see [9])
+                        (issue_day[2026-04]: see [13])
+                        (dg_2026:terms[client_b]: see [40])
+                        (holidays_2026_2030:holidays_pl: see [9])
+                        (holidays_2026_2030:holidays_pl: see [9])
+                  (vat_day[2026-04]: see [14])
+                  (dg_2026:fee_net[client_b]: see [38])
+                  [42] pay_day[client_b, 2026-05] = 2026-06-30, law date 2026-05-01
+                      rule base: won
+                        (issue_day[2026-05]: see [16])
+                        (dg_2026:terms[client_b]: see [40])
+                        (holidays_2026_2030:holidays_pl: see [9])
+                        (issue_day[2026-05]: see [16])
+                        (dg_2026:terms[client_b]: see [40])
+                  (vat_day[2026-05]: see [17])
+                  (dg_2026:fee_net[client_b]: see [38])
+                  [43] pay_day[client_b, 2026-06] = 2026-07-30, law date 2026-06-01
+                      rule base: won
+                        (issue_day[2026-06]: see [19])
+                        (dg_2026:terms[client_b]: see [40])
+                        (holidays_2026_2030:holidays_pl: see [9])
+                        (issue_day[2026-06]: see [19])
+                        (dg_2026:terms[client_b]: see [40])
+                  (vat_day[2026-06]: see [20])
+                  (dg_2026:fee_net[client_b]: see [38])
+                  [44] pay_day[client_b, 2026-07] = 2026-08-31, law date 2026-07-01
+                      rule base: won
+                        (issue_day[2026-07]: see [22])
+                        (dg_2026:terms[client_b]: see [40])
+                        (holidays_2026_2030:holidays_pl: see [9])
+                        (issue_day[2026-07]: see [22])
+                        (dg_2026:terms[client_b]: see [40])
+                        (holidays_2026_2030:holidays_pl: see [9])
+                  (vat_day[2026-07]: see [23])
+                  (dg_2026:fee_net[client_b]: see [38])
+                  [45] pay_day[client_b, 2026-08] = 2026-09-30, law date 2026-08-01
+                      rule base: won
+                        (issue_day[2026-08]: see [25])
+                        (dg_2026:terms[client_b]: see [40])
+                        (holidays_2026_2030:holidays_pl: see [9])
+                        (issue_day[2026-08]: see [25])
+                        (dg_2026:terms[client_b]: see [40])
+                  (vat_day[2026-08]: see [26])
+                  (dg_2026:fee_net[client_b]: see [38])
+                  [46] pay_day[client_b, 2026-09] = 2026-10-30, law date 2026-09-01
+                      rule base: won
+                        (issue_day[2026-09]: see [28])
+                        (dg_2026:terms[client_b]: see [40])
+                        (holidays_2026_2030:holidays_pl: see [9])
+                        (issue_day[2026-09]: see [28])
+                        (dg_2026:terms[client_b]: see [40])
+                  (vat_day[2026-09]: see [29])
+                  (dg_2026:fee_net[client_b]: see [38])
+                  [47] pay_day[client_b, 2026-10] = 2026-11-30, law date 2026-10-01
+                      rule base: won
+                        (issue_day[2026-10]: see [31])
+                        (dg_2026:terms[client_b]: see [40])
+                        (holidays_2026_2030:holidays_pl: see [9])
+                        (issue_day[2026-10]: see [31])
+                        (dg_2026:terms[client_b]: see [40])
+                  (dg_2026:fee_net[client_b]: see [38])
+                  [48] pay_day[client_b, 2026-11] = 2026-12-30, law date 2026-11-01
+                      rule base: won
+                        (issue_day[2026-11]: see [33])
+                        (dg_2026:terms[client_b]: see [40])
+                        (holidays_2026_2030:holidays_pl: see [9])
+                        (issue_day[2026-11]: see [33])
+                        (dg_2026:terms[client_b]: see [40])
+                  (dg_2026:fee_net[client_b]: see [38])
+                  [49] pay_day[client_b, 2026-12] = 2027-02-01, law date 2026-12-01
+                      rule base: won
+                        (issue_day[2026-12]: see [35])
+                        (dg_2026:terms[client_b]: see [40])
+                        (holidays_2026_2030:holidays_pl: see [9])
+                        (issue_day[2026-12]: see [35])
+                        (dg_2026:terms[client_b]: see [40])
+                        (holidays_2026_2030:holidays_pl: see [9])
+                        (holidays_2026_2030:holidays_pl: see [9])
+                  (dg_2026:fee_net[client_b]: see [38])
+                  [50] pay_day[client_b, 2027-01] = 2027-03-02, law date 2027-01-01
+                      rule base: won
+                        (issue_day[2027-01]: see [37])
+                        (dg_2026:terms[client_b]: see [40])
+                        (holidays_2026_2030:holidays_pl: see [9])
+                        (issue_day[2027-01]: see [37])
+                        (dg_2026:terms[client_b]: see [40])
+            [51] row home_2026:keep_floor = 1 000.00 PLN
+                version home_2026, source household, "Oświadczenia gospodarstwa: umowy, rejestracje, decyzje i wybory", locator "reguła 15.: zostawiamy 1 000 zł", governs always, known 2025-12-31
+  room[2026-11] at (2026-11-15, stratum 1, invest[mak, 2026-11]): 4 386.89 PLN
+      [1] room[2026-11] = 4 386.89 PLN, law date 2026-11-01
+          rule base: won
+            [2] row lifted_figures:invest_dom = 15
+                version lifted_figures, source lifted_1_0_1, "Figures tally 1.0.1 allowed inline in rules", locator "inline in tally 1.0.1: invest_amt line 57, room line 63 (twice), invest line 100, argument 2 of day_of; one fact, the day of the rule of the 15th", governs always, known 2004-04-20
+            (lifted_figures:invest_dom: see [2])
+            (lifted_figures:invest_dom: see [2])
+            [3] vat_owed[2026-11-15] = 0.00 PLN, law date 2026-11-15
+                rule base: won
+                  [4] row home_2026:fee_net = 0.00 PLN
+                      version home_2026, source household, "Oświadczenia gospodarstwa: umowy, rejestracje, decyzje i wybory", locator "przed założeniem działalności", governs 2026-01-01..2026-02-28, known 2025-12-31
+                  (home_2026:fee_net: see [4])
+                  [5] row dg_2026:fee_net[client_a] = 14 000.00 PLN
+                      version dg_2026, source household, "Oświadczenia gospodarstwa: umowy, rejestracje, decyzje i wybory", locator "umowa B2B z klientem A, § 5", governs 2026-03-01.., known 2026-02-20
+                  [6] pay_day[client_a, 2026-03] = 2026-04-14, law date 2026-03-01
+                      rule base: won
+                        [7] issue_day[2026-03] = 2026-03-31, law date 2026-03-01
+                            rule base: won
+                        [8] row dg_2026:terms[client_a] = 14
+                            version dg_2026, source household, "Oświadczenia gospodarstwa: umowy, rejestracje, decyzje i wybory", locator "umowa B2B z klientem A, § 6", governs always, known 2026-02-20
+                        [9] row holidays_2026_2030:holidays_pl = calendar(weekends [sat, sun])
+                            version holidays_2026_2030, source holidays_act, "Ustawa z 18 stycznia 1951 r. o dniach wolnych od pracy (tekst jednolity)", locator "art. 1 pkt 1; święta w dni robocze", governs 2026-01-01..2030-12-31, known 2025-12-31
+                        (issue_day[2026-03]: see [7])
+                        (dg_2026:terms[client_a]: see [8])
+                  [10] vat_day[2026-03] = 2026-04-27, law date 2026-03-01
+                      rule base: won (version vat_2026, source vat_act)
+                        [11] row lifted_figures:vat_day_25 = 25
+                            version lifted_figures, source lifted_1_0_1, "Figures tally 1.0.1 allowed inline in rules", locator "inline in tally 1.0.1: vat_day line 76, argument 2 of day_of", governs always, known 2004-04-20
+                        (holidays_2026_2030:holidays_pl: see [9])
+                        (lifted_figures:vat_day_25: see [11])
+                        (holidays_2026_2030:holidays_pl: see [9])
+                        (holidays_2026_2030:holidays_pl: see [9])
+                  (dg_2026:fee_net[client_a]: see [5])
+                  [12] pay_day[client_a, 2026-04] = 2026-05-14, law date 2026-04-01
+                      rule base: won
+                        [13] issue_day[2026-04] = 2026-04-30, law date 2026-04-01
+                            rule base: won
+                        (dg_2026:terms[client_a]: see [8])
+                        (holidays_2026_2030:holidays_pl: see [9])
+                        (issue_day[2026-04]: see [13])
+                        (dg_2026:terms[client_a]: see [8])
+                  [14] vat_day[2026-04] = 2026-05-25, law date 2026-04-01
+                      rule base: won (version vat_2026, source vat_act)
+                        (lifted_figures:vat_day_25: see [11])
+                        (holidays_2026_2030:holidays_pl: see [9])
+                        (lifted_figures:vat_day_25: see [11])
+                  (dg_2026:fee_net[client_a]: see [5])
+                  [15] pay_day[client_a, 2026-05] = 2026-06-15, law date 2026-05-01
+                      rule base: won
+                        [16] issue_day[2026-05] = 2026-05-31, law date 2026-05-01
+                            rule base: won
+                        (dg_2026:terms[client_a]: see [8])
+                        (holidays_2026_2030:holidays_pl: see [9])
+                        (issue_day[2026-05]: see [16])
+                        (dg_2026:terms[client_a]: see [8])
+                        (holidays_2026_2030:holidays_pl: see [9])
+                  [17] vat_day[2026-05] = 2026-06-25, law date 2026-05-01
+                      rule base: won (version vat_2026, source vat_act)
+                        (lifted_figures:vat_day_25: see [11])
+                        (holidays_2026_2030:holidays_pl: see [9])
+                        (lifted_figures:vat_day_25: see [11])
+                  (dg_2026:fee_net[client_a]: see [5])
+                  [18] pay_day[client_a, 2026-06] = 2026-07-14, law date 2026-06-01
+                      rule base: won
+                        [19] issue_day[2026-06] = 2026-06-30, law date 2026-06-01
+                            rule base: won
+                        (dg_2026:terms[client_a]: see [8])
+                        (holidays_2026_2030:holidays_pl: see [9])
+                        (issue_day[2026-06]: see [19])
+                        (dg_2026:terms[client_a]: see [8])
+                  [20] vat_day[2026-06] = 2026-07-27, law date 2026-06-01
+                      rule base: won (version vat_2026, source vat_act)
+                        (lifted_figures:vat_day_25: see [11])
+                        (holidays_2026_2030:holidays_pl: see [9])
+                        (lifted_figures:vat_day_25: see [11])
+                        (holidays_2026_2030:holidays_pl: see [9])
+                        (holidays_2026_2030:holidays_pl: see [9])
+                  (dg_2026:fee_net[client_a]: see [5])
+                  [21] pay_day[client_a, 2026-07] = 2026-08-14, law date 2026-07-01
+                      rule base: won
+                        [22] issue_day[2026-07] = 2026-07-31, law date 2026-07-01
+                            rule base: won
+                        (dg_2026:terms[client_a]: see [8])
+                        (holidays_2026_2030:holidays_pl: see [9])
+                        (issue_day[2026-07]: see [22])
+                        (dg_2026:terms[client_a]: see [8])
+                  [23] vat_day[2026-07] = 2026-08-25, law date 2026-07-01
+                      rule base: won (version vat_2026, source vat_act)
+                        (lifted_figures:vat_day_25: see [11])
+                        (holidays_2026_2030:holidays_pl: see [9])
+                        (lifted_figures:vat_day_25: see [11])
+                  (dg_2026:fee_net[client_a]: see [5])
+                  [24] pay_day[client_a, 2026-08] = 2026-09-14, law date 2026-08-01
+                      rule base: won
+                        [25] issue_day[2026-08] = 2026-08-31, law date 2026-08-01
+                            rule base: won
+                        (dg_2026:terms[client_a]: see [8])
+                        (holidays_2026_2030:holidays_pl: see [9])
+                        (issue_day[2026-08]: see [25])
+                        (dg_2026:terms[client_a]: see [8])
+                  [26] vat_day[2026-08] = 2026-09-25, law date 2026-08-01
+                      rule base: won (version vat_2026, source vat_act)
+                        (lifted_figures:vat_day_25: see [11])
+                        (holidays_2026_2030:holidays_pl: see [9])
+                        (lifted_figures:vat_day_25: see [11])
+                  (dg_2026:fee_net[client_a]: see [5])
+                  [27] pay_day[client_a, 2026-09] = 2026-10-14, law date 2026-09-01
+                      rule base: won
+                        [28] issue_day[2026-09] = 2026-09-30, law date 2026-09-01
+                            rule base: won
+                        (dg_2026:terms[client_a]: see [8])
+                        (holidays_2026_2030:holidays_pl: see [9])
+                        (issue_day[2026-09]: see [28])
+                        (dg_2026:terms[client_a]: see [8])
+                  [29] vat_day[2026-09] = 2026-10-26, law date 2026-09-01
+                      rule base: won (version vat_2026, source vat_act)
+                        (lifted_figures:vat_day_25: see [11])
+                        (holidays_2026_2030:holidays_pl: see [9])
+                        (lifted_figures:vat_day_25: see [11])
+                        (holidays_2026_2030:holidays_pl: see [9])
+                  (dg_2026:fee_net[client_a]: see [5])
+                  [30] pay_day[client_a, 2026-10] = 2026-11-16, law date 2026-10-01
+                      rule base: won
+                        [31] issue_day[2026-10] = 2026-10-31, law date 2026-10-01
+                            rule base: won
+                        (dg_2026:terms[client_a]: see [8])
+                        (holidays_2026_2030:holidays_pl: see [9])
+                        (issue_day[2026-10]: see [31])
+                        (dg_2026:terms[client_a]: see [8])
+                        (holidays_2026_2030:holidays_pl: see [9])
+                        (holidays_2026_2030:holidays_pl: see [9])
+                  (dg_2026:fee_net[client_a]: see [5])
+                  [32] pay_day[client_a, 2026-11] = 2026-12-14, law date 2026-11-01
+                      rule base: won
+                        [33] issue_day[2026-11] = 2026-11-30, law date 2026-11-01
+                            rule base: won
+                        (dg_2026:terms[client_a]: see [8])
+                        (holidays_2026_2030:holidays_pl: see [9])
+                        (issue_day[2026-11]: see [33])
+                        (dg_2026:terms[client_a]: see [8])
+                  (dg_2026:fee_net[client_a]: see [5])
+                  [34] pay_day[client_a, 2026-12] = 2027-01-14, law date 2026-12-01
+                      rule base: won
+                        [35] issue_day[2026-12] = 2026-12-31, law date 2026-12-01
+                            rule base: won
+                        (dg_2026:terms[client_a]: see [8])
+                        (holidays_2026_2030:holidays_pl: see [9])
+                        (issue_day[2026-12]: see [35])
+                        (dg_2026:terms[client_a]: see [8])
+                  (dg_2026:fee_net[client_a]: see [5])
+                  [36] pay_day[client_a, 2027-01] = 2027-02-15, law date 2027-01-01
+                      rule base: won
+                        [37] issue_day[2027-01] = 2027-01-31, law date 2027-01-01
+                            rule base: won
+                        (dg_2026:terms[client_a]: see [8])
+                        (holidays_2026_2030:holidays_pl: see [9])
+                        (issue_day[2027-01]: see [37])
+                        (dg_2026:terms[client_a]: see [8])
+                        (holidays_2026_2030:holidays_pl: see [9])
+                  (home_2026:fee_net: see [4])
+                  (home_2026:fee_net: see [4])
+                  [38] row dg_2026:fee_net[client_b] = 3 000.00 PLN
+                      version dg_2026, source household, "Oświadczenia gospodarstwa: umowy, rejestracje, decyzje i wybory", locator "umowa B2B z klientem B, § 4", governs 2026-03-01.., known 2026-02-20
+                  [39] pay_day[client_b, 2026-03] = 2026-04-30, law date 2026-03-01
+                      rule base: won
+                        (issue_day[2026-03]: see [7])
+                        [40] row dg_2026:terms[client_b] = 30
+                            version dg_2026, source household, "Oświadczenia gospodarstwa: umowy, rejestracje, decyzje i wybory", locator "umowa B2B z klientem B, § 5", governs always, known 2026-02-20
+                        (holidays_2026_2030:holidays_pl: see [9])
+                        (issue_day[2026-03]: see [7])
+                        (dg_2026:terms[client_b]: see [40])
+                  (vat_day[2026-03]: see [10])
+                  (dg_2026:fee_net[client_b]: see [38])
+                  [41] pay_day[client_b, 2026-04] = 2026-06-01, law date 2026-04-01
+                      rule base: won
+                        (issue_day[2026-04]: see [13])
+                        (dg_2026:terms[client_b]: see [40])
+                        (holidays_2026_2030:holidays_pl: see [9])
+                        (issue_day[2026-04]: see [13])
+                        (dg_2026:terms[client_b]: see [40])
+                        (holidays_2026_2030:holidays_pl: see [9])
+                        (holidays_2026_2030:holidays_pl: see [9])
+                  (vat_day[2026-04]: see [14])
+                  (dg_2026:fee_net[client_b]: see [38])
+                  [42] pay_day[client_b, 2026-05] = 2026-06-30, law date 2026-05-01
+                      rule base: won
+                        (issue_day[2026-05]: see [16])
+                        (dg_2026:terms[client_b]: see [40])
+                        (holidays_2026_2030:holidays_pl: see [9])
+                        (issue_day[2026-05]: see [16])
+                        (dg_2026:terms[client_b]: see [40])
+                  (vat_day[2026-05]: see [17])
+                  (dg_2026:fee_net[client_b]: see [38])
+                  [43] pay_day[client_b, 2026-06] = 2026-07-30, law date 2026-06-01
+                      rule base: won
+                        (issue_day[2026-06]: see [19])
+                        (dg_2026:terms[client_b]: see [40])
+                        (holidays_2026_2030:holidays_pl: see [9])
+                        (issue_day[2026-06]: see [19])
+                        (dg_2026:terms[client_b]: see [40])
+                  (vat_day[2026-06]: see [20])
+                  (dg_2026:fee_net[client_b]: see [38])
+                  [44] pay_day[client_b, 2026-07] = 2026-08-31, law date 2026-07-01
+                      rule base: won
+                        (issue_day[2026-07]: see [22])
+                        (dg_2026:terms[client_b]: see [40])
+                        (holidays_2026_2030:holidays_pl: see [9])
+                        (issue_day[2026-07]: see [22])
+                        (dg_2026:terms[client_b]: see [40])
+                        (holidays_2026_2030:holidays_pl: see [9])
+                  (vat_day[2026-07]: see [23])
+                  (dg_2026:fee_net[client_b]: see [38])
+                  [45] pay_day[client_b, 2026-08] = 2026-09-30, law date 2026-08-01
+                      rule base: won
+                        (issue_day[2026-08]: see [25])
+                        (dg_2026:terms[client_b]: see [40])
+                        (holidays_2026_2030:holidays_pl: see [9])
+                        (issue_day[2026-08]: see [25])
+                        (dg_2026:terms[client_b]: see [40])
+                  (vat_day[2026-08]: see [26])
+                  (dg_2026:fee_net[client_b]: see [38])
+                  [46] pay_day[client_b, 2026-09] = 2026-10-30, law date 2026-09-01
+                      rule base: won
+                        (issue_day[2026-09]: see [28])
+                        (dg_2026:terms[client_b]: see [40])
+                        (holidays_2026_2030:holidays_pl: see [9])
+                        (issue_day[2026-09]: see [28])
+                        (dg_2026:terms[client_b]: see [40])
+                  (vat_day[2026-09]: see [29])
+                  (dg_2026:fee_net[client_b]: see [38])
+                  [47] pay_day[client_b, 2026-10] = 2026-11-30, law date 2026-10-01
+                      rule base: won
+                        (issue_day[2026-10]: see [31])
+                        (dg_2026:terms[client_b]: see [40])
+                        (holidays_2026_2030:holidays_pl: see [9])
+                        (issue_day[2026-10]: see [31])
+                        (dg_2026:terms[client_b]: see [40])
+                  (dg_2026:fee_net[client_b]: see [38])
+                  [48] pay_day[client_b, 2026-11] = 2026-12-30, law date 2026-11-01
+                      rule base: won
+                        (issue_day[2026-11]: see [33])
+                        (dg_2026:terms[client_b]: see [40])
+                        (holidays_2026_2030:holidays_pl: see [9])
+                        (issue_day[2026-11]: see [33])
+                        (dg_2026:terms[client_b]: see [40])
+                  (dg_2026:fee_net[client_b]: see [38])
+                  [49] pay_day[client_b, 2026-12] = 2027-02-01, law date 2026-12-01
+                      rule base: won
+                        (issue_day[2026-12]: see [35])
+                        (dg_2026:terms[client_b]: see [40])
+                        (holidays_2026_2030:holidays_pl: see [9])
+                        (issue_day[2026-12]: see [35])
+                        (dg_2026:terms[client_b]: see [40])
+                        (holidays_2026_2030:holidays_pl: see [9])
+                        (holidays_2026_2030:holidays_pl: see [9])
+                  (dg_2026:fee_net[client_b]: see [38])
+                  [50] pay_day[client_b, 2027-01] = 2027-03-02, law date 2027-01-01
+                      rule base: won
+                        (issue_day[2027-01]: see [37])
+                        (dg_2026:terms[client_b]: see [40])
+                        (holidays_2026_2030:holidays_pl: see [9])
+                        (issue_day[2027-01]: see [37])
+                        (dg_2026:terms[client_b]: see [40])
+            [51] row home_2026:keep_floor = 1 000.00 PLN
+                version home_2026, source household, "Oświadczenia gospodarstwa: umowy, rejestracje, decyzje i wybory", locator "reguła 15.: zostawiamy 1 000 zł", governs always, known 2025-12-31
+  law date 2027-01-20, cut 2027-01-20
+ike_left (y = 2026): -6 000.00 PLN
+  assumed: budżet gospodarstwa na 2026, przed pierwszym wyciągiem (spend_budget[groceries], spend_budget[health_care], spend_budget[other], spend_budget[transport])
+  assumed: indeks cen równy 1 do 2027 roku (prototyp) (inflation)
+  assumed: na początek 2026 OKI nie istnieje w prawie (oki_from)
+  assumed: przed umowami B2B nie znamy faktur; umowy je podadzą (fee_net[client_a, 2026-03], fee_net[client_a, 2026-04], fee_net[client_a, 2026-05], fee_net[client_a, 2026-06], fee_net[client_a, 2026-07], fee_net[client_a, 2026-08], fee_net[client_a, 2026-09], fee_net[client_a, 2026-10], fee_net[client_a, 2026-11], fee_net[client_a, 2026-12], fee_net[client_a, 2027-01], fee_net[client_b, 2026-03], fee_net[client_b, 2026-04], fee_net[client_b, 2026-05], fee_net[client_b, 2026-06], fee_net[client_b, 2026-07], fee_net[client_b, 2026-08], fee_net[client_b, 2026-09], fee_net[client_b, 2026-10], fee_net[client_b, 2026-11], fee_net[client_b, 2026-12], fee_net[client_b, 2027-01])
+  anchor: konto 2026-09-30 end, stated 41 386.27 PLN, difference 32 097.23 PLN
+  unfulfilled: client_pay[client_a, 2026-03]
+  unfulfilled: client_pay[client_a, 2026-04]
+  unfulfilled: client_pay[client_a, 2026-05]
+  unfulfilled: client_pay[client_a, 2026-06]
+  unfulfilled: client_pay[client_a, 2026-07]
+  unfulfilled: client_pay[client_a, 2026-09]
+  unfulfilled: client_pay[client_a, 2026-10]
+  unfulfilled: client_pay[client_a, 2026-11]
+  unfulfilled: client_pay[client_b, 2026-03]
+  unfulfilled: client_pay[client_b, 2026-04]
+  unfulfilled: client_pay[client_b, 2026-05]
+  unfulfilled: client_pay[client_b, 2026-06]
+  unfulfilled: client_pay[client_b, 2026-09]
+  unfulfilled: client_pay[client_b, 2026-10]
+  unfulfilled: costs_pay[2026-03]
+  unfulfilled: costs_pay[2026-04]
+  unfulfilled: costs_pay[2026-05]
+  unfulfilled: costs_pay[2026-06]
+  unfulfilled: costs_pay[2026-07]
+  unfulfilled: costs_pay[2026-08]
+  unfulfilled: costs_pay[2026-10]
+  unfulfilled: costs_pay[2026-11]
+  unfulfilled: costs_pay[2026-12]
+  unfulfilled: health_pay[2026-03]
+  unfulfilled: health_pay[2026-04]
+  unfulfilled: health_pay[2026-05]
+  unfulfilled: health_pay[2026-06]
+  unfulfilled: health_pay[2026-07]
+  unfulfilled: health_pay[2026-09]
+  unfulfilled: health_pay[2026-10]
+  unfulfilled: invest[ike, 2026-01]
+  unfulfilled: invest[ike, 2026-02]
+  unfulfilled: invest[ike, 2026-03]
+  unfulfilled: invest[ike, 2026-04]
+  unfulfilled: invest[ike, 2026-05]
+  unfulfilled: invest[ike, 2026-06]
+  unfulfilled: invest[ike, 2026-07]
+  unfulfilled: invest[ike, 2026-08]
+  unfulfilled: invest[ike, 2026-10]
+  unfulfilled: invest[ike, 2026-11]
+  unfulfilled: invest[ike, 2026-12]
+  unfulfilled: invest[mak, 2026-06]
+  unfulfilled: invest[mak, 2026-07]
+  unfulfilled: invest[mak, 2026-10]
+  unfulfilled: invest[mak, 2026-11]
+  unfulfilled: loan_instalment[laptop, 1]
+  unfulfilled: loan_instalment[laptop, 2]
+  unfulfilled: loan_instalment[laptop, 3]
+  unfulfilled: loan_instalment[laptop, 5]
+  unfulfilled: loan_instalment[laptop, 6]
+  unfulfilled: loan_instalment[laptop, 7]
+  unfulfilled: marek_back[back1]
+  unfulfilled: marek_lend[lend1]
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: rent_pay[2026-02]
+  unfulfilled: rent_pay[2026-03]
+  unfulfilled: rent_pay[2026-04]
+  unfulfilled: rent_pay[2026-05]
+  unfulfilled: rent_pay[2026-06]
+  unfulfilled: rent_pay[2026-07]
+  unfulfilled: rent_pay[2026-08]
+  unfulfilled: rent_pay[2026-10]
+  unfulfilled: rent_pay[2026-11]
+  unfulfilled: rent_pay[2026-12]
+  unfulfilled: ryczalt_pay[2026-03]
+  unfulfilled: ryczalt_pay[2026-04]
+  unfulfilled: ryczalt_pay[2026-05]
+  unfulfilled: ryczalt_pay[2026-06]
+  unfulfilled: ryczalt_pay[2026-09]
+  unfulfilled: ryczalt_pay[2026-10]
+  unfulfilled: spend[2026-01-01]
+  unfulfilled: spend[2026-01-02]
+  unfulfilled: spend[2026-01-03]
+  unfulfilled: spend[2026-01-04]
+  unfulfilled: spend[2026-01-05]
+  unfulfilled: spend[2026-01-06]
+  unfulfilled: spend[2026-01-07]
+  unfulfilled: spend[2026-01-08]
+  unfulfilled: spend[2026-01-09]
+  unfulfilled: spend[2026-01-10]
+  unfulfilled: spend[2026-01-11]
+  unfulfilled: spend[2026-01-12]
+  unfulfilled: spend[2026-01-13]
+  unfulfilled: spend[2026-01-14]
+  unfulfilled: spend[2026-01-15]
+  unfulfilled: spend[2026-01-16]
+  unfulfilled: spend[2026-01-17]
+  unfulfilled: spend[2026-01-18]
+  unfulfilled: spend[2026-01-19]
+  unfulfilled: spend[2026-01-20]
+  unfulfilled: spend[2026-01-21]
+  unfulfilled: spend[2026-01-22]
+  unfulfilled: spend[2026-01-23]
+  unfulfilled: spend[2026-01-24]
+  unfulfilled: spend[2026-01-25]
+  unfulfilled: spend[2026-01-26]
+  unfulfilled: spend[2026-01-27]
+  unfulfilled: spend[2026-01-28]
+  unfulfilled: spend[2026-01-29]
+  unfulfilled: spend[2026-01-30]
+  unfulfilled: spend[2026-01-31]
+  unfulfilled: spend[2026-02-01]
+  unfulfilled: spend[2026-02-02]
+  unfulfilled: spend[2026-02-03]
+  unfulfilled: spend[2026-02-04]
+  unfulfilled: spend[2026-02-05]
+  unfulfilled: spend[2026-02-06]
+  unfulfilled: spend[2026-02-07]
+  unfulfilled: spend[2026-02-08]
+  unfulfilled: spend[2026-02-09]
+  unfulfilled: spend[2026-02-10]
+  unfulfilled: spend[2026-02-11]
+  unfulfilled: spend[2026-02-12]
+  unfulfilled: spend[2026-02-13]
+  unfulfilled: spend[2026-02-14]
+  unfulfilled: spend[2026-02-15]
+  unfulfilled: spend[2026-02-16]
+  unfulfilled: spend[2026-02-17]
+  unfulfilled: spend[2026-02-18]
+  unfulfilled: spend[2026-02-19]
+  unfulfilled: spend[2026-02-20]
+  unfulfilled: spend[2026-02-21]
+  unfulfilled: spend[2026-02-22]
+  unfulfilled: spend[2026-02-23]
+  unfulfilled: spend[2026-02-24]
+  unfulfilled: spend[2026-02-25]
+  unfulfilled: spend[2026-02-26]
+  unfulfilled: spend[2026-02-27]
+  unfulfilled: spend[2026-02-28]
+  unfulfilled: spend[2026-03-01]
+  unfulfilled: spend[2026-03-02]
+  unfulfilled: spend[2026-03-03]
+  unfulfilled: spend[2026-03-04]
+  unfulfilled: spend[2026-03-05]
+  unfulfilled: spend[2026-03-06]
+  unfulfilled: spend[2026-03-07]
+  unfulfilled: spend[2026-03-08]
+  unfulfilled: spend[2026-03-09]
+  unfulfilled: spend[2026-03-10]
+  unfulfilled: spend[2026-03-11]
+  unfulfilled: spend[2026-03-12]
+  unfulfilled: spend[2026-03-13]
+  unfulfilled: spend[2026-03-14]
+  unfulfilled: spend[2026-03-15]
+  unfulfilled: spend[2026-03-16]
+  unfulfilled: spend[2026-03-17]
+  unfulfilled: spend[2026-03-18]
+  unfulfilled: spend[2026-03-19]
+  unfulfilled: spend[2026-03-20]
+  unfulfilled: spend[2026-03-21]
+  unfulfilled: spend[2026-03-22]
+  unfulfilled: spend[2026-03-23]
+  unfulfilled: spend[2026-03-24]
+  unfulfilled: spend[2026-03-25]
+  unfulfilled: spend[2026-03-26]
+  unfulfilled: spend[2026-03-27]
+  unfulfilled: spend[2026-03-28]
+  unfulfilled: spend[2026-03-29]
+  unfulfilled: spend[2026-03-30]
+  unfulfilled: spend[2026-03-31]
+  unfulfilled: spend[2026-04-01]
+  unfulfilled: spend[2026-04-02]
+  unfulfilled: spend[2026-04-03]
+  unfulfilled: spend[2026-04-04]
+  unfulfilled: spend[2026-04-05]
+  unfulfilled: spend[2026-04-06]
+  unfulfilled: spend[2026-04-07]
+  unfulfilled: spend[2026-04-08]
+  unfulfilled: spend[2026-04-09]
+  unfulfilled: spend[2026-04-10]
+  unfulfilled: spend[2026-04-11]
+  unfulfilled: spend[2026-04-12]
+  unfulfilled: spend[2026-04-13]
+  unfulfilled: spend[2026-04-14]
+  unfulfilled: spend[2026-04-15]
+  unfulfilled: spend[2026-04-16]
+  unfulfilled: spend[2026-04-17]
+  unfulfilled: spend[2026-04-18]
+  unfulfilled: spend[2026-04-19]
+  unfulfilled: spend[2026-04-20]
+  unfulfilled: spend[2026-04-21]
+  unfulfilled: spend[2026-04-22]
+  unfulfilled: spend[2026-04-23]
+  unfulfilled: spend[2026-04-24]
+  unfulfilled: spend[2026-04-25]
+  unfulfilled: spend[2026-04-26]
+  unfulfilled: spend[2026-04-27]
+  unfulfilled: spend[2026-04-28]
+  unfulfilled: spend[2026-04-29]
+  unfulfilled: spend[2026-04-30]
+  unfulfilled: spend[2026-05-01]
+  unfulfilled: spend[2026-05-02]
+  unfulfilled: spend[2026-05-03]
+  unfulfilled: spend[2026-05-04]
+  unfulfilled: spend[2026-05-05]
+  unfulfilled: spend[2026-05-06]
+  unfulfilled: spend[2026-05-07]
+  unfulfilled: spend[2026-05-08]
+  unfulfilled: spend[2026-05-09]
+  unfulfilled: spend[2026-05-10]
+  unfulfilled: spend[2026-05-11]
+  unfulfilled: spend[2026-05-12]
+  unfulfilled: spend[2026-05-13]
+  unfulfilled: spend[2026-05-14]
+  unfulfilled: spend[2026-05-15]
+  unfulfilled: spend[2026-05-16]
+  unfulfilled: spend[2026-05-17]
+  unfulfilled: spend[2026-05-18]
+  unfulfilled: spend[2026-05-19]
+  unfulfilled: spend[2026-05-20]
+  unfulfilled: spend[2026-05-21]
+  unfulfilled: spend[2026-05-22]
+  unfulfilled: spend[2026-05-23]
+  unfulfilled: spend[2026-05-24]
+  unfulfilled: spend[2026-05-25]
+  unfulfilled: spend[2026-05-26]
+  unfulfilled: spend[2026-05-27]
+  unfulfilled: spend[2026-05-28]
+  unfulfilled: spend[2026-05-29]
+  unfulfilled: spend[2026-05-30]
+  unfulfilled: spend[2026-05-31]
+  unfulfilled: spend[2026-06-01]
+  unfulfilled: spend[2026-06-02]
+  unfulfilled: spend[2026-06-03]
+  unfulfilled: spend[2026-06-04]
+  unfulfilled: spend[2026-06-05]
+  unfulfilled: spend[2026-06-06]
+  unfulfilled: spend[2026-06-07]
+  unfulfilled: spend[2026-06-08]
+  unfulfilled: spend[2026-06-09]
+  unfulfilled: spend[2026-06-10]
+  unfulfilled: spend[2026-06-11]
+  unfulfilled: spend[2026-06-12]
+  unfulfilled: spend[2026-06-13]
+  unfulfilled: spend[2026-06-14]
+  unfulfilled: spend[2026-06-15]
+  unfulfilled: spend[2026-06-16]
+  unfulfilled: spend[2026-06-17]
+  unfulfilled: spend[2026-06-18]
+  unfulfilled: spend[2026-06-19]
+  unfulfilled: spend[2026-06-20]
+  unfulfilled: spend[2026-06-21]
+  unfulfilled: spend[2026-06-22]
+  unfulfilled: spend[2026-06-23]
+  unfulfilled: spend[2026-06-24]
+  unfulfilled: spend[2026-06-25]
+  unfulfilled: spend[2026-06-26]
+  unfulfilled: spend[2026-06-27]
+  unfulfilled: spend[2026-06-28]
+  unfulfilled: spend[2026-06-29]
+  unfulfilled: spend[2026-06-30]
+  unfulfilled: spend[2026-07-01]
+  unfulfilled: spend[2026-07-02]
+  unfulfilled: spend[2026-07-03]
+  unfulfilled: spend[2026-07-04]
+  unfulfilled: spend[2026-07-05]
+  unfulfilled: spend[2026-07-06]
+  unfulfilled: spend[2026-07-07]
+  unfulfilled: spend[2026-07-08]
+  unfulfilled: spend[2026-07-09]
+  unfulfilled: spend[2026-07-10]
+  unfulfilled: spend[2026-07-11]
+  unfulfilled: spend[2026-07-12]
+  unfulfilled: spend[2026-07-13]
+  unfulfilled: spend[2026-07-14]
+  unfulfilled: spend[2026-07-15]
+  unfulfilled: spend[2026-07-16]
+  unfulfilled: spend[2026-07-17]
+  unfulfilled: spend[2026-07-18]
+  unfulfilled: spend[2026-07-19]
+  unfulfilled: spend[2026-07-20]
+  unfulfilled: spend[2026-07-21]
+  unfulfilled: spend[2026-07-22]
+  unfulfilled: spend[2026-07-23]
+  unfulfilled: spend[2026-07-24]
+  unfulfilled: spend[2026-07-25]
+  unfulfilled: spend[2026-07-26]
+  unfulfilled: spend[2026-07-27]
+  unfulfilled: spend[2026-07-28]
+  unfulfilled: spend[2026-07-29]
+  unfulfilled: spend[2026-07-30]
+  unfulfilled: spend[2026-07-31]
+  unfulfilled: spend[2026-08-01]
+  unfulfilled: spend[2026-08-02]
+  unfulfilled: spend[2026-08-03]
+  unfulfilled: spend[2026-08-04]
+  unfulfilled: spend[2026-08-05]
+  unfulfilled: spend[2026-08-06]
+  unfulfilled: spend[2026-08-07]
+  unfulfilled: spend[2026-08-08]
+  unfulfilled: spend[2026-08-09]
+  unfulfilled: spend[2026-08-10]
+  unfulfilled: spend[2026-08-11]
+  unfulfilled: spend[2026-08-12]
+  unfulfilled: spend[2026-08-13]
+  unfulfilled: spend[2026-08-14]
+  unfulfilled: spend[2026-08-15]
+  unfulfilled: spend[2026-10-01]
+  unfulfilled: spend[2026-10-02]
+  unfulfilled: spend[2026-10-03]
+  unfulfilled: spend[2026-10-04]
+  unfulfilled: spend[2026-10-05]
+  unfulfilled: spend[2026-10-06]
+  unfulfilled: spend[2026-10-07]
+  unfulfilled: spend[2026-10-08]
+  unfulfilled: spend[2026-10-09]
+  unfulfilled: spend[2026-10-10]
+  unfulfilled: spend[2026-10-11]
+  unfulfilled: spend[2026-10-12]
+  unfulfilled: spend[2026-10-13]
+  unfulfilled: spend[2026-10-14]
+  unfulfilled: spend[2026-10-15]
+  unfulfilled: spend[2026-10-16]
+  unfulfilled: spend[2026-10-17]
+  unfulfilled: spend[2026-10-18]
+  unfulfilled: spend[2026-10-19]
+  unfulfilled: spend[2026-10-20]
+  unfulfilled: spend[2026-10-21]
+  unfulfilled: spend[2026-10-22]
+  unfulfilled: spend[2026-10-23]
+  unfulfilled: spend[2026-10-24]
+  unfulfilled: spend[2026-10-25]
+  unfulfilled: spend[2026-10-26]
+  unfulfilled: spend[2026-10-27]
+  unfulfilled: spend[2026-10-28]
+  unfulfilled: spend[2026-10-29]
+  unfulfilled: spend[2026-10-30]
+  unfulfilled: spend[2026-10-31]
+  unfulfilled: spend[2026-11-01]
+  unfulfilled: spend[2026-11-02]
+  unfulfilled: spend[2026-11-03]
+  unfulfilled: spend[2026-11-04]
+  unfulfilled: spend[2026-11-05]
+  unfulfilled: spend[2026-11-06]
+  unfulfilled: spend[2026-11-07]
+  unfulfilled: spend[2026-11-08]
+  unfulfilled: spend[2026-11-09]
+  unfulfilled: spend[2026-11-10]
+  unfulfilled: spend[2026-11-11]
+  unfulfilled: spend[2026-11-12]
+  unfulfilled: spend[2026-11-13]
+  unfulfilled: spend[2026-11-14]
+  unfulfilled: spend[2026-11-15]
+  unfulfilled: spend[2026-11-16]
+  unfulfilled: spend[2026-11-17]
+  unfulfilled: spend[2026-11-18]
+  unfulfilled: spend[2026-11-19]
+  unfulfilled: spend[2026-11-20]
+  unfulfilled: spend[2026-11-21]
+  unfulfilled: spend[2026-11-22]
+  unfulfilled: spend[2026-11-23]
+  unfulfilled: spend[2026-11-24]
+  unfulfilled: spend[2026-11-25]
+  unfulfilled: spend[2026-11-26]
+  unfulfilled: spend[2026-11-27]
+  unfulfilled: spend[2026-11-28]
+  unfulfilled: spend[2026-11-29]
+  unfulfilled: spend[2026-11-30]
+  unfulfilled: spend[2026-12-01]
+  unfulfilled: spend[2026-12-02]
+  unfulfilled: spend[2026-12-03]
+  unfulfilled: spend[2026-12-04]
+  unfulfilled: spend[2026-12-05]
+  unfulfilled: spend[2026-12-06]
+  unfulfilled: spend[2026-12-07]
+  unfulfilled: spend[2026-12-08]
+  unfulfilled: spend[2026-12-09]
+  unfulfilled: spend[2026-12-10]
+  unfulfilled: spend[2026-12-11]
+  unfulfilled: spend[2026-12-12]
+  unfulfilled: spend[2026-12-13]
+  unfulfilled: spend[2026-12-14]
+  unfulfilled: spend[2026-12-15]
+  unfulfilled: vat_pay[2026-03]
+  unfulfilled: vat_pay[2026-04]
+  unfulfilled: vat_pay[2026-05]
+  unfulfilled: vat_pay[2026-06]
+  unfulfilled: vat_pay[2026-09]
+  unfulfilled: vat_pay[2026-10]
+  unfulfilled: wage[wife_acme, 2026-01]
+  unfulfilled: wage[wife_acme, 2026-02]
+  unfulfilled: wage[wife_acme, 2026-03]
+  unfulfilled: wage[wife_acme, 2026-04]
+  unfulfilled: wage[wife_acme, 2026-05]
+  unfulfilled: wage[wife_acme, 2026-06]
+  unfulfilled: wage[wife_acme, 2026-07]
+  unfulfilled: wage[wife_acme, 2026-09]
+  unfulfilled: wage[wife_acme, 2026-10]
+  unfulfilled: wage[wife_acme, 2026-11]
+  unfulfilled: zus_social_pay[2026-09]
+  unfulfilled: zus_social_pay[2026-10]
+  left out: client_pay, 3 instances, first 2027-02-01
+  left out: health_pay, 2 instances, first 2027-01-20
+  left out: health_settle_back, 2 instances, first 2027-05-20
+  left out: health_settle_pay, 1 instances, first 2027-05-20
+  left out: health_settle_pay, 2 instances, first 2027-05-20
+  left out: invest, 3 instances, first 2026-01-15
+  left out: invest, 3 instances, first 2026-02-15
+  left out: invest, 3 instances, first 2026-03-15
+  left out: invest, 3 instances, first 2026-04-15
+  left out: invest, 3 instances, first 2026-05-15
+  left out: invest, 3 instances, first 2026-06-15
+  left out: invest, 3 instances, first 2026-07-15
+  left out: invest, 3 instances, first 2026-08-15
+  left out: invest, 3 instances, first 2026-10-15
+  left out: invest, 3 instances, first 2026-11-15
+  left out: invest, 3 instances, first 2026-12-15
+  left out: loan_instalment, 2 instances, first 2027-02-05
+  left out: pit28_pay, 1 instances, first 2027-04-30
+  left out: pit28_pay, 2 instances, first 2027-04-30
+  left out: pit28_refund, 1 instances, first 2028-06-16
+  left out: pit28_refund, 2 instances, first 2027-06-14
+  left out: pit37_refund, 2 instances, first 2027-06-14
+  left out: ryczalt_pay, 2 instances, first 2027-01-20
+  left out: vat_pay, 2 instances, first 2027-01-25
+  left out: wage, 1 instances, first 2027-02-10
+  left out: zus_social_pay, 2 instances, first 2027-01-20
+  law date 2027-01-20, cut 2027-01-20
+konto_balance (d = 2026-10-31): (6 064.17 PLN, 6 064.17 PLN)
+  assumed: budżet gospodarstwa na 2026, przed pierwszym wyciągiem (spend_budget[groceries], spend_budget[health_care], spend_budget[other], spend_budget[transport])
+  anchor: konto 2026-09-30 end, stated 41 386.27 PLN, difference 32 097.23 PLN
+  unfulfilled: client_pay[client_a, 2026-09]
+  unfulfilled: client_pay[client_b, 2026-09]
+  unfulfilled: costs_pay[2026-10]
+  unfulfilled: health_pay[2026-07]
+  unfulfilled: health_pay[2026-09]
+  unfulfilled: invest[mak, 2026-10]
+  unfulfilled: loan_instalment[laptop, 5]
+  unfulfilled: rent_pay[2026-10]
+  unfulfilled: ryczalt_pay[2026-09]
+  unfulfilled: spend[2026-10-01]
+  unfulfilled: spend[2026-10-02]
+  unfulfilled: spend[2026-10-03]
+  unfulfilled: spend[2026-10-04]
+  unfulfilled: spend[2026-10-05]
+  unfulfilled: spend[2026-10-06]
+  unfulfilled: spend[2026-10-07]
+  unfulfilled: spend[2026-10-08]
+  unfulfilled: spend[2026-10-09]
+  unfulfilled: spend[2026-10-10]
+  unfulfilled: spend[2026-10-11]
+  unfulfilled: spend[2026-10-12]
+  unfulfilled: spend[2026-10-13]
+  unfulfilled: spend[2026-10-14]
+  unfulfilled: spend[2026-10-15]
+  unfulfilled: spend[2026-10-16]
+  unfulfilled: spend[2026-10-17]
+  unfulfilled: spend[2026-10-18]
+  unfulfilled: spend[2026-10-19]
+  unfulfilled: spend[2026-10-20]
+  unfulfilled: spend[2026-10-21]
+  unfulfilled: spend[2026-10-22]
+  unfulfilled: spend[2026-10-23]
+  unfulfilled: spend[2026-10-24]
+  unfulfilled: spend[2026-10-25]
+  unfulfilled: spend[2026-10-26]
+  unfulfilled: spend[2026-10-27]
+  unfulfilled: spend[2026-10-28]
+  unfulfilled: spend[2026-10-29]
+  unfulfilled: spend[2026-10-30]
+  unfulfilled: spend[2026-10-31]
+  unfulfilled: vat_pay[2026-09]
+  unfulfilled: wage[wife_acme, 2026-09]
+  unfulfilled: zus_social_pay[2026-09]
+  left out: client_pay, 3 instances, first 2027-02-01
+  left out: health_pay, 2 instances, first 2027-01-20
+  left out: health_settle_pay, 1 instances, first 2027-05-20
+  left out: invest, 3 instances, first 2026-10-15
+  left out: loan_instalment, 2 instances, first 2027-02-05
+  left out: pit28_pay, 1 instances, first 2027-04-30
+  left out: pit28_refund, 1 instances, first 2028-06-16
+  left out: pit37_refund, 2 instances, first 2027-06-14
+  left out: ryczalt_pay, 2 instances, first 2027-01-20
+  left out: vat_pay, 2 instances, first 2027-01-25
+  left out: wage, 1 instances, first 2027-02-10
+  left out: zus_social_pay, 2 instances, first 2027-01-20
+  law date 2027-01-20, cut 2027-01-20
+konto_balance (d = 2026-12-31): (6 944.90 PLN, 6 944.90 PLN)
+  assumed: budżet gospodarstwa na 2026, przed pierwszym wyciągiem (spend_budget[groceries], spend_budget[health_care], spend_budget[other], spend_budget[transport])
+  assumed: indeks cen równy 1 do 2027 roku (prototyp) (inflation)
+  anchor: konto 2026-09-30 end, stated 41 386.27 PLN, difference 32 097.23 PLN
+  unfulfilled: client_pay[client_a, 2026-09]
+  unfulfilled: client_pay[client_a, 2026-10]
+  unfulfilled: client_pay[client_a, 2026-11]
+  unfulfilled: client_pay[client_b, 2026-09]
+  unfulfilled: client_pay[client_b, 2026-10]
+  unfulfilled: client_pay[client_b, 2026-11]
+  unfulfilled: costs_pay[2026-10]
+  unfulfilled: costs_pay[2026-11]
+  unfulfilled: costs_pay[2026-12]
+  unfulfilled: health_pay[2026-07]
+  unfulfilled: health_pay[2026-09]
+  unfulfilled: health_pay[2026-10]
+  unfulfilled: health_pay[2026-11]
+  unfulfilled: invest[mak, 2026-10]
+  unfulfilled: invest[mak, 2026-11]
+  unfulfilled: invest[mak, 2026-12]
+  unfulfilled: loan_instalment[laptop, 5]
+  unfulfilled: loan_instalment[laptop, 6]
+  unfulfilled: loan_instalment[laptop, 7]
+  unfulfilled: rent_pay[2026-10]
+  unfulfilled: rent_pay[2026-11]
+  unfulfilled: rent_pay[2026-12]
+  unfulfilled: ryczalt_pay[2026-09]
+  unfulfilled: ryczalt_pay[2026-10]
+  unfulfilled: ryczalt_pay[2026-11]
+  unfulfilled: spend[2026-10-01]
+  unfulfilled: spend[2026-10-02]
+  unfulfilled: spend[2026-10-03]
+  unfulfilled: spend[2026-10-04]
+  unfulfilled: spend[2026-10-05]
+  unfulfilled: spend[2026-10-06]
+  unfulfilled: spend[2026-10-07]
+  unfulfilled: spend[2026-10-08]
+  unfulfilled: spend[2026-10-09]
+  unfulfilled: spend[2026-10-10]
+  unfulfilled: spend[2026-10-11]
+  unfulfilled: spend[2026-10-12]
+  unfulfilled: spend[2026-10-13]
+  unfulfilled: spend[2026-10-14]
+  unfulfilled: spend[2026-10-15]
+  unfulfilled: spend[2026-10-16]
+  unfulfilled: spend[2026-10-17]
+  unfulfilled: spend[2026-10-18]
+  unfulfilled: spend[2026-10-19]
+  unfulfilled: spend[2026-10-20]
+  unfulfilled: spend[2026-10-21]
+  unfulfilled: spend[2026-10-22]
+  unfulfilled: spend[2026-10-23]
+  unfulfilled: spend[2026-10-24]
+  unfulfilled: spend[2026-10-25]
+  unfulfilled: spend[2026-10-26]
+  unfulfilled: spend[2026-10-27]
+  unfulfilled: spend[2026-10-28]
+  unfulfilled: spend[2026-10-29]
+  unfulfilled: spend[2026-10-30]
+  unfulfilled: spend[2026-10-31]
+  unfulfilled: spend[2026-11-01]
+  unfulfilled: spend[2026-11-02]
+  unfulfilled: spend[2026-11-03]
+  unfulfilled: spend[2026-11-04]
+  unfulfilled: spend[2026-11-05]
+  unfulfilled: spend[2026-11-06]
+  unfulfilled: spend[2026-11-07]
+  unfulfilled: spend[2026-11-08]
+  unfulfilled: spend[2026-11-09]
+  unfulfilled: spend[2026-11-10]
+  unfulfilled: spend[2026-11-11]
+  unfulfilled: spend[2026-11-12]
+  unfulfilled: spend[2026-11-13]
+  unfulfilled: spend[2026-11-14]
+  unfulfilled: spend[2026-11-15]
+  unfulfilled: spend[2026-11-16]
+  unfulfilled: spend[2026-11-17]
+  unfulfilled: spend[2026-11-18]
+  unfulfilled: spend[2026-11-19]
+  unfulfilled: spend[2026-11-20]
+  unfulfilled: spend[2026-11-21]
+  unfulfilled: spend[2026-11-22]
+  unfulfilled: spend[2026-11-23]
+  unfulfilled: spend[2026-11-24]
+  unfulfilled: spend[2026-11-25]
+  unfulfilled: spend[2026-11-26]
+  unfulfilled: spend[2026-11-27]
+  unfulfilled: spend[2026-11-28]
+  unfulfilled: spend[2026-11-29]
+  unfulfilled: spend[2026-11-30]
+  unfulfilled: spend[2026-12-01]
+  unfulfilled: spend[2026-12-02]
+  unfulfilled: spend[2026-12-03]
+  unfulfilled: spend[2026-12-04]
+  unfulfilled: spend[2026-12-05]
+  unfulfilled: spend[2026-12-06]
+  unfulfilled: spend[2026-12-07]
+  unfulfilled: spend[2026-12-08]
+  unfulfilled: spend[2026-12-09]
+  unfulfilled: spend[2026-12-10]
+  unfulfilled: spend[2026-12-11]
+  unfulfilled: spend[2026-12-12]
+  unfulfilled: spend[2026-12-13]
+  unfulfilled: spend[2026-12-14]
+  unfulfilled: spend[2026-12-15]
+  unfulfilled: spend[2026-12-16]
+  unfulfilled: spend[2026-12-17]
+  unfulfilled: spend[2026-12-18]
+  unfulfilled: spend[2026-12-19]
+  unfulfilled: spend[2026-12-20]
+  unfulfilled: spend[2026-12-21]
+  unfulfilled: spend[2026-12-22]
+  unfulfilled: spend[2026-12-23]
+  unfulfilled: spend[2026-12-24]
+  unfulfilled: spend[2026-12-25]
+  unfulfilled: spend[2026-12-26]
+  unfulfilled: spend[2026-12-27]
+  unfulfilled: spend[2026-12-28]
+  unfulfilled: spend[2026-12-29]
+  unfulfilled: spend[2026-12-30]
+  unfulfilled: spend[2026-12-31]
+  unfulfilled: vat_pay[2026-09]
+  unfulfilled: vat_pay[2026-10]
+  unfulfilled: vat_pay[2026-11]
+  unfulfilled: wage[wife_acme, 2026-09]
+  unfulfilled: wage[wife_acme, 2026-10]
+  unfulfilled: wage[wife_acme, 2026-11]
+  unfulfilled: zus_social_pay[2026-09]
+  unfulfilled: zus_social_pay[2026-10]
+  unfulfilled: zus_social_pay[2026-11]
+  left out: client_pay, 3 instances, first 2027-02-01
+  left out: health_pay, 2 instances, first 2027-01-20
+  left out: health_settle_pay, 1 instances, first 2027-05-20
+  left out: invest, 3 instances, first 2026-10-15
+  left out: invest, 3 instances, first 2026-11-15
+  left out: invest, 3 instances, first 2026-12-15
+  left out: loan_instalment, 2 instances, first 2027-02-05
+  left out: pit28_pay, 1 instances, first 2027-04-30
+  left out: pit28_refund, 1 instances, first 2028-06-16
+  left out: pit37_refund, 2 instances, first 2027-06-14
+  left out: ryczalt_pay, 2 instances, first 2027-01-20
+  left out: vat_pay, 2 instances, first 2027-01-25
+  left out: wage, 1 instances, first 2027-02-10
+  left out: zus_social_pay, 2 instances, first 2027-01-20
+  uncertain: marek_last
+  law date 2027-01-20, cut 2027-01-20
+net_worth (d = 2026-12-31): 170 202.16 PLN
+  assumed: budżet gospodarstwa na 2026, przed pierwszym wyciągiem (spend_budget[groceries], spend_budget[health_care], spend_budget[other], spend_budget[transport])
+  assumed: indeks cen równy 1 do 2027 roku (prototyp) (inflation)
+  assumed: na początek 2026 OKI nie istnieje w prawie (oki_from)
+  assumed: przed umowami B2B nie znamy faktur; umowy je podadzą (fee_net[client_a, 2026-03], fee_net[client_a, 2026-04], fee_net[client_a, 2026-05], fee_net[client_a, 2026-06], fee_net[client_a, 2026-07], fee_net[client_a, 2026-08], fee_net[client_a, 2026-09], fee_net[client_a, 2026-10], fee_net[client_a, 2026-11], fee_net[client_a, 2026-12], fee_net[client_a, 2027-01], fee_net[client_b, 2026-03], fee_net[client_b, 2026-04], fee_net[client_b, 2026-05], fee_net[client_b, 2026-06], fee_net[client_b, 2026-07], fee_net[client_b, 2026-08], fee_net[client_b, 2026-09], fee_net[client_b, 2026-10], fee_net[client_b, 2026-11], fee_net[client_b, 2026-12], fee_net[client_b, 2027-01])
+  anchor: konto 2026-09-30 end, stated 41 386.27 PLN, difference 32 097.23 PLN
+  unfulfilled: buy[ike, 2026-01]
+  unfulfilled: buy[ike, 2026-04]
+  unfulfilled: buy[ike, 2026-05]
+  unfulfilled: buy[ike, 2026-06]
+  unfulfilled: buy[ike, 2026-09]
+  unfulfilled: buy[mak, 2026-06]
+  unfulfilled: buy[mak, 2026-07]
+  unfulfilled: buy[mak, 2026-08]
+  unfulfilled: buy[mak, 2026-10]
+  unfulfilled: buy[mak, 2026-11]
+  unfulfilled: buy[mak, 2026-12]
+  unfulfilled: client_pay[client_a, 2026-03]
+  unfulfilled: client_pay[client_a, 2026-04]
+  unfulfilled: client_pay[client_a, 2026-05]
+  unfulfilled: client_pay[client_a, 2026-06]
+  unfulfilled: client_pay[client_a, 2026-07]
+  unfulfilled: client_pay[client_a, 2026-09]
+  unfulfilled: client_pay[client_a, 2026-10]
+  unfulfilled: client_pay[client_a, 2026-11]
+  unfulfilled: client_pay[client_b, 2026-03]
+  unfulfilled: client_pay[client_b, 2026-04]
+  unfulfilled: client_pay[client_b, 2026-05]
+  unfulfilled: client_pay[client_b, 2026-06]
+  unfulfilled: client_pay[client_b, 2026-09]
+  unfulfilled: client_pay[client_b, 2026-10]
+  unfulfilled: client_pay[client_b, 2026-11]
+  unfulfilled: costs_pay[2026-03]
+  unfulfilled: costs_pay[2026-04]
+  unfulfilled: costs_pay[2026-05]
+  unfulfilled: costs_pay[2026-06]
+  unfulfilled: costs_pay[2026-07]
+  unfulfilled: costs_pay[2026-08]
+  unfulfilled: costs_pay[2026-10]
+  unfulfilled: costs_pay[2026-11]
+  unfulfilled: costs_pay[2026-12]
+  unfulfilled: health_pay[2026-03]
+  unfulfilled: health_pay[2026-04]
+  unfulfilled: health_pay[2026-05]
+  unfulfilled: health_pay[2026-06]
+  unfulfilled: health_pay[2026-07]
+  unfulfilled: health_pay[2026-09]
+  unfulfilled: health_pay[2026-10]
+  unfulfilled: health_pay[2026-11]
+  unfulfilled: invest[ike, 2026-01]
+  unfulfilled: invest[ike, 2026-02]
+  unfulfilled: invest[ike, 2026-03]
+  unfulfilled: invest[ike, 2026-04]
+  unfulfilled: invest[ike, 2026-05]
+  unfulfilled: invest[ike, 2026-06]
+  unfulfilled: invest[mak, 2026-06]
+  unfulfilled: invest[mak, 2026-07]
+  unfulfilled: invest[mak, 2026-08]
+  unfulfilled: invest[mak, 2026-10]
+  unfulfilled: invest[mak, 2026-11]
+  unfulfilled: invest[mak, 2026-12]
+  unfulfilled: loan_instalment[laptop, 1]
+  unfulfilled: loan_instalment[laptop, 2]
+  unfulfilled: loan_instalment[laptop, 3]
+  unfulfilled: loan_instalment[laptop, 5]
+  unfulfilled: loan_instalment[laptop, 6]
+  unfulfilled: loan_instalment[laptop, 7]
+  unfulfilled: loan_out[laptop]
+  unfulfilled: marek_back[back1]
+  unfulfilled: marek_lend[lend1]
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: rent_pay[2026-02]
+  unfulfilled: rent_pay[2026-03]
+  unfulfilled: rent_pay[2026-04]
+  unfulfilled: rent_pay[2026-05]
+  unfulfilled: rent_pay[2026-06]
+  unfulfilled: rent_pay[2026-07]
+  unfulfilled: rent_pay[2026-08]
+  unfulfilled: rent_pay[2026-10]
+  unfulfilled: rent_pay[2026-11]
+  unfulfilled: rent_pay[2026-12]
+  unfulfilled: ryczalt_pay[2026-03]
+  unfulfilled: ryczalt_pay[2026-04]
+  unfulfilled: ryczalt_pay[2026-05]
+  unfulfilled: ryczalt_pay[2026-06]
+  unfulfilled: ryczalt_pay[2026-09]
+  unfulfilled: ryczalt_pay[2026-10]
+  unfulfilled: ryczalt_pay[2026-11]
+  unfulfilled: spend[2026-01-01]
+  unfulfilled: spend[2026-01-02]
+  unfulfilled: spend[2026-01-03]
+  unfulfilled: spend[2026-01-04]
+  unfulfilled: spend[2026-01-05]
+  unfulfilled: spend[2026-01-06]
+  unfulfilled: spend[2026-01-07]
+  unfulfilled: spend[2026-01-08]
+  unfulfilled: spend[2026-01-09]
+  unfulfilled: spend[2026-01-10]
+  unfulfilled: spend[2026-01-11]
+  unfulfilled: spend[2026-01-12]
+  unfulfilled: spend[2026-01-13]
+  unfulfilled: spend[2026-01-14]
+  unfulfilled: spend[2026-01-15]
+  unfulfilled: spend[2026-01-16]
+  unfulfilled: spend[2026-01-17]
+  unfulfilled: spend[2026-01-18]
+  unfulfilled: spend[2026-01-19]
+  unfulfilled: spend[2026-01-20]
+  unfulfilled: spend[2026-01-21]
+  unfulfilled: spend[2026-01-22]
+  unfulfilled: spend[2026-01-23]
+  unfulfilled: spend[2026-01-24]
+  unfulfilled: spend[2026-01-25]
+  unfulfilled: spend[2026-01-26]
+  unfulfilled: spend[2026-01-27]
+  unfulfilled: spend[2026-01-28]
+  unfulfilled: spend[2026-01-29]
+  unfulfilled: spend[2026-01-30]
+  unfulfilled: spend[2026-01-31]
+  unfulfilled: spend[2026-02-01]
+  unfulfilled: spend[2026-02-02]
+  unfulfilled: spend[2026-02-03]
+  unfulfilled: spend[2026-02-04]
+  unfulfilled: spend[2026-02-05]
+  unfulfilled: spend[2026-02-06]
+  unfulfilled: spend[2026-02-07]
+  unfulfilled: spend[2026-02-08]
+  unfulfilled: spend[2026-02-09]
+  unfulfilled: spend[2026-02-10]
+  unfulfilled: spend[2026-02-11]
+  unfulfilled: spend[2026-02-12]
+  unfulfilled: spend[2026-02-13]
+  unfulfilled: spend[2026-02-14]
+  unfulfilled: spend[2026-02-15]
+  unfulfilled: spend[2026-02-16]
+  unfulfilled: spend[2026-02-17]
+  unfulfilled: spend[2026-02-18]
+  unfulfilled: spend[2026-02-19]
+  unfulfilled: spend[2026-02-20]
+  unfulfilled: spend[2026-02-21]
+  unfulfilled: spend[2026-02-22]
+  unfulfilled: spend[2026-02-23]
+  unfulfilled: spend[2026-02-24]
+  unfulfilled: spend[2026-02-25]
+  unfulfilled: spend[2026-02-26]
+  unfulfilled: spend[2026-02-27]
+  unfulfilled: spend[2026-02-28]
+  unfulfilled: spend[2026-03-01]
+  unfulfilled: spend[2026-03-02]
+  unfulfilled: spend[2026-03-03]
+  unfulfilled: spend[2026-03-04]
+  unfulfilled: spend[2026-03-05]
+  unfulfilled: spend[2026-03-06]
+  unfulfilled: spend[2026-03-07]
+  unfulfilled: spend[2026-03-08]
+  unfulfilled: spend[2026-03-09]
+  unfulfilled: spend[2026-03-10]
+  unfulfilled: spend[2026-03-11]
+  unfulfilled: spend[2026-03-12]
+  unfulfilled: spend[2026-03-13]
+  unfulfilled: spend[2026-03-14]
+  unfulfilled: spend[2026-03-15]
+  unfulfilled: spend[2026-03-16]
+  unfulfilled: spend[2026-03-17]
+  unfulfilled: spend[2026-03-18]
+  unfulfilled: spend[2026-03-19]
+  unfulfilled: spend[2026-03-20]
+  unfulfilled: spend[2026-03-21]
+  unfulfilled: spend[2026-03-22]
+  unfulfilled: spend[2026-03-23]
+  unfulfilled: spend[2026-03-24]
+  unfulfilled: spend[2026-03-25]
+  unfulfilled: spend[2026-03-26]
+  unfulfilled: spend[2026-03-27]
+  unfulfilled: spend[2026-03-28]
+  unfulfilled: spend[2026-03-29]
+  unfulfilled: spend[2026-03-30]
+  unfulfilled: spend[2026-03-31]
+  unfulfilled: spend[2026-04-01]
+  unfulfilled: spend[2026-04-02]
+  unfulfilled: spend[2026-04-03]
+  unfulfilled: spend[2026-04-04]
+  unfulfilled: spend[2026-04-05]
+  unfulfilled: spend[2026-04-06]
+  unfulfilled: spend[2026-04-07]
+  unfulfilled: spend[2026-04-08]
+  unfulfilled: spend[2026-04-09]
+  unfulfilled: spend[2026-04-10]
+  unfulfilled: spend[2026-04-11]
+  unfulfilled: spend[2026-04-12]
+  unfulfilled: spend[2026-04-13]
+  unfulfilled: spend[2026-04-14]
+  unfulfilled: spend[2026-04-15]
+  unfulfilled: spend[2026-04-16]
+  unfulfilled: spend[2026-04-17]
+  unfulfilled: spend[2026-04-18]
+  unfulfilled: spend[2026-04-19]
+  unfulfilled: spend[2026-04-20]
+  unfulfilled: spend[2026-04-21]
+  unfulfilled: spend[2026-04-22]
+  unfulfilled: spend[2026-04-23]
+  unfulfilled: spend[2026-04-24]
+  unfulfilled: spend[2026-04-25]
+  unfulfilled: spend[2026-04-26]
+  unfulfilled: spend[2026-04-27]
+  unfulfilled: spend[2026-04-28]
+  unfulfilled: spend[2026-04-29]
+  unfulfilled: spend[2026-04-30]
+  unfulfilled: spend[2026-05-01]
+  unfulfilled: spend[2026-05-02]
+  unfulfilled: spend[2026-05-03]
+  unfulfilled: spend[2026-05-04]
+  unfulfilled: spend[2026-05-05]
+  unfulfilled: spend[2026-05-06]
+  unfulfilled: spend[2026-05-07]
+  unfulfilled: spend[2026-05-08]
+  unfulfilled: spend[2026-05-09]
+  unfulfilled: spend[2026-05-10]
+  unfulfilled: spend[2026-05-11]
+  unfulfilled: spend[2026-05-12]
+  unfulfilled: spend[2026-05-13]
+  unfulfilled: spend[2026-05-14]
+  unfulfilled: spend[2026-05-15]
+  unfulfilled: spend[2026-05-16]
+  unfulfilled: spend[2026-05-17]
+  unfulfilled: spend[2026-05-18]
+  unfulfilled: spend[2026-05-19]
+  unfulfilled: spend[2026-05-20]
+  unfulfilled: spend[2026-05-21]
+  unfulfilled: spend[2026-05-22]
+  unfulfilled: spend[2026-05-23]
+  unfulfilled: spend[2026-05-24]
+  unfulfilled: spend[2026-05-25]
+  unfulfilled: spend[2026-05-26]
+  unfulfilled: spend[2026-05-27]
+  unfulfilled: spend[2026-05-28]
+  unfulfilled: spend[2026-05-29]
+  unfulfilled: spend[2026-05-30]
+  unfulfilled: spend[2026-05-31]
+  unfulfilled: spend[2026-06-01]
+  unfulfilled: spend[2026-06-02]
+  unfulfilled: spend[2026-06-03]
+  unfulfilled: spend[2026-06-04]
+  unfulfilled: spend[2026-06-05]
+  unfulfilled: spend[2026-06-06]
+  unfulfilled: spend[2026-06-07]
+  unfulfilled: spend[2026-06-08]
+  unfulfilled: spend[2026-06-09]
+  unfulfilled: spend[2026-06-10]
+  unfulfilled: spend[2026-06-11]
+  unfulfilled: spend[2026-06-12]
+  unfulfilled: spend[2026-06-13]
+  unfulfilled: spend[2026-06-14]
+  unfulfilled: spend[2026-06-15]
+  unfulfilled: spend[2026-06-16]
+  unfulfilled: spend[2026-06-17]
+  unfulfilled: spend[2026-06-18]
+  unfulfilled: spend[2026-06-19]
+  unfulfilled: spend[2026-06-20]
+  unfulfilled: spend[2026-06-21]
+  unfulfilled: spend[2026-06-22]
+  unfulfilled: spend[2026-06-23]
+  unfulfilled: spend[2026-06-24]
+  unfulfilled: spend[2026-06-25]
+  unfulfilled: spend[2026-06-26]
+  unfulfilled: spend[2026-06-27]
+  unfulfilled: spend[2026-06-28]
+  unfulfilled: spend[2026-06-29]
+  unfulfilled: spend[2026-06-30]
+  unfulfilled: spend[2026-07-01]
+  unfulfilled: spend[2026-07-02]
+  unfulfilled: spend[2026-07-03]
+  unfulfilled: spend[2026-07-04]
+  unfulfilled: spend[2026-07-05]
+  unfulfilled: spend[2026-07-06]
+  unfulfilled: spend[2026-07-07]
+  unfulfilled: spend[2026-07-08]
+  unfulfilled: spend[2026-07-09]
+  unfulfilled: spend[2026-07-10]
+  unfulfilled: spend[2026-07-11]
+  unfulfilled: spend[2026-07-12]
+  unfulfilled: spend[2026-07-13]
+  unfulfilled: spend[2026-07-14]
+  unfulfilled: spend[2026-07-15]
+  unfulfilled: spend[2026-07-16]
+  unfulfilled: spend[2026-07-17]
+  unfulfilled: spend[2026-07-18]
+  unfulfilled: spend[2026-07-19]
+  unfulfilled: spend[2026-07-20]
+  unfulfilled: spend[2026-07-21]
+  unfulfilled: spend[2026-07-22]
+  unfulfilled: spend[2026-07-23]
+  unfulfilled: spend[2026-07-24]
+  unfulfilled: spend[2026-07-25]
+  unfulfilled: spend[2026-07-26]
+  unfulfilled: spend[2026-07-27]
+  unfulfilled: spend[2026-07-28]
+  unfulfilled: spend[2026-07-29]
+  unfulfilled: spend[2026-07-30]
+  unfulfilled: spend[2026-07-31]
+  unfulfilled: spend[2026-08-01]
+  unfulfilled: spend[2026-08-02]
+  unfulfilled: spend[2026-08-03]
+  unfulfilled: spend[2026-08-04]
+  unfulfilled: spend[2026-08-05]
+  unfulfilled: spend[2026-08-06]
+  unfulfilled: spend[2026-08-07]
+  unfulfilled: spend[2026-08-08]
+  unfulfilled: spend[2026-08-09]
+  unfulfilled: spend[2026-08-10]
+  unfulfilled: spend[2026-08-11]
+  unfulfilled: spend[2026-08-12]
+  unfulfilled: spend[2026-08-13]
+  unfulfilled: spend[2026-08-14]
+  unfulfilled: spend[2026-08-15]
+  unfulfilled: spend[2026-10-01]
+  unfulfilled: spend[2026-10-02]
+  unfulfilled: spend[2026-10-03]
+  unfulfilled: spend[2026-10-04]
+  unfulfilled: spend[2026-10-05]
+  unfulfilled: spend[2026-10-06]
+  unfulfilled: spend[2026-10-07]
+  unfulfilled: spend[2026-10-08]
+  unfulfilled: spend[2026-10-09]
+  unfulfilled: spend[2026-10-10]
+  unfulfilled: spend[2026-10-11]
+  unfulfilled: spend[2026-10-12]
+  unfulfilled: spend[2026-10-13]
+  unfulfilled: spend[2026-10-14]
+  unfulfilled: spend[2026-10-15]
+  unfulfilled: spend[2026-10-16]
+  unfulfilled: spend[2026-10-17]
+  unfulfilled: spend[2026-10-18]
+  unfulfilled: spend[2026-10-19]
+  unfulfilled: spend[2026-10-20]
+  unfulfilled: spend[2026-10-21]
+  unfulfilled: spend[2026-10-22]
+  unfulfilled: spend[2026-10-23]
+  unfulfilled: spend[2026-10-24]
+  unfulfilled: spend[2026-10-25]
+  unfulfilled: spend[2026-10-26]
+  unfulfilled: spend[2026-10-27]
+  unfulfilled: spend[2026-10-28]
+  unfulfilled: spend[2026-10-29]
+  unfulfilled: spend[2026-10-30]
+  unfulfilled: spend[2026-10-31]
+  unfulfilled: spend[2026-11-01]
+  unfulfilled: spend[2026-11-02]
+  unfulfilled: spend[2026-11-03]
+  unfulfilled: spend[2026-11-04]
+  unfulfilled: spend[2026-11-05]
+  unfulfilled: spend[2026-11-06]
+  unfulfilled: spend[2026-11-07]
+  unfulfilled: spend[2026-11-08]
+  unfulfilled: spend[2026-11-09]
+  unfulfilled: spend[2026-11-10]
+  unfulfilled: spend[2026-11-11]
+  unfulfilled: spend[2026-11-12]
+  unfulfilled: spend[2026-11-13]
+  unfulfilled: spend[2026-11-14]
+  unfulfilled: spend[2026-11-15]
+  unfulfilled: spend[2026-11-16]
+  unfulfilled: spend[2026-11-17]
+  unfulfilled: spend[2026-11-18]
+  unfulfilled: spend[2026-11-19]
+  unfulfilled: spend[2026-11-20]
+  unfulfilled: spend[2026-11-21]
+  unfulfilled: spend[2026-11-22]
+  unfulfilled: spend[2026-11-23]
+  unfulfilled: spend[2026-11-24]
+  unfulfilled: spend[2026-11-25]
+  unfulfilled: spend[2026-11-26]
+  unfulfilled: spend[2026-11-27]
+  unfulfilled: spend[2026-11-28]
+  unfulfilled: spend[2026-11-29]
+  unfulfilled: spend[2026-11-30]
+  unfulfilled: spend[2026-12-01]
+  unfulfilled: spend[2026-12-02]
+  unfulfilled: spend[2026-12-03]
+  unfulfilled: spend[2026-12-04]
+  unfulfilled: spend[2026-12-05]
+  unfulfilled: spend[2026-12-06]
+  unfulfilled: spend[2026-12-07]
+  unfulfilled: spend[2026-12-08]
+  unfulfilled: spend[2026-12-09]
+  unfulfilled: spend[2026-12-10]
+  unfulfilled: spend[2026-12-11]
+  unfulfilled: spend[2026-12-12]
+  unfulfilled: spend[2026-12-13]
+  unfulfilled: spend[2026-12-14]
+  unfulfilled: spend[2026-12-15]
+  unfulfilled: spend[2026-12-16]
+  unfulfilled: spend[2026-12-17]
+  unfulfilled: spend[2026-12-18]
+  unfulfilled: spend[2026-12-19]
+  unfulfilled: spend[2026-12-20]
+  unfulfilled: spend[2026-12-21]
+  unfulfilled: spend[2026-12-22]
+  unfulfilled: spend[2026-12-23]
+  unfulfilled: spend[2026-12-24]
+  unfulfilled: spend[2026-12-25]
+  unfulfilled: spend[2026-12-26]
+  unfulfilled: spend[2026-12-27]
+  unfulfilled: spend[2026-12-28]
+  unfulfilled: spend[2026-12-29]
+  unfulfilled: spend[2026-12-30]
+  unfulfilled: spend[2026-12-31]
+  unfulfilled: vat_pay[2026-03]
+  unfulfilled: vat_pay[2026-04]
+  unfulfilled: vat_pay[2026-05]
+  unfulfilled: vat_pay[2026-06]
+  unfulfilled: vat_pay[2026-09]
+  unfulfilled: vat_pay[2026-10]
+  unfulfilled: vat_pay[2026-11]
+  unfulfilled: wage[wife_acme, 2026-01]
+  unfulfilled: wage[wife_acme, 2026-02]
+  unfulfilled: wage[wife_acme, 2026-03]
+  unfulfilled: wage[wife_acme, 2026-04]
+  unfulfilled: wage[wife_acme, 2026-05]
+  unfulfilled: wage[wife_acme, 2026-06]
+  unfulfilled: wage[wife_acme, 2026-07]
+  unfulfilled: wage[wife_acme, 2026-09]
+  unfulfilled: wage[wife_acme, 2026-10]
+  unfulfilled: wage[wife_acme, 2026-11]
+  unfulfilled: zus_social_pay[2026-09]
+  unfulfilled: zus_social_pay[2026-10]
+  unfulfilled: zus_social_pay[2026-11]
+  open: loan_instalment[laptop, 4]
+  left out: client_pay, 3 instances, first 2027-02-01
+  left out: health_pay, 2 instances, first 2027-01-20
+  left out: health_settle_back, 2 instances, first 2027-05-20
+  left out: health_settle_pay, 1 instances, first 2027-05-20
+  left out: health_settle_pay, 2 instances, first 2027-05-20
+  left out: invest, 3 instances, first 2026-01-15
+  left out: invest, 3 instances, first 2026-02-15
+  left out: invest, 3 instances, first 2026-03-15
+  left out: invest, 3 instances, first 2026-04-15
+  left out: invest, 3 instances, first 2026-05-15
+  left out: invest, 3 instances, first 2026-06-15
+  left out: invest, 3 instances, first 2026-07-15
+  left out: invest, 3 instances, first 2026-08-15
+  left out: invest, 3 instances, first 2026-10-15
+  left out: invest, 3 instances, first 2026-11-15
+  left out: invest, 3 instances, first 2026-12-15
+  left out: loan_instalment, 2 instances, first 2027-02-05
+  left out: pit28_pay, 1 instances, first 2027-04-30
+  left out: pit28_pay, 2 instances, first 2027-04-30
+  left out: pit28_refund, 1 instances, first 2028-06-16
+  left out: pit28_refund, 2 instances, first 2027-06-14
+  left out: pit37_refund, 2 instances, first 2027-06-14
+  left out: ryczalt_pay, 2 instances, first 2027-01-20
+  left out: vat_pay, 2 instances, first 2027-01-25
+  left out: wage, 1 instances, first 2027-02-10
+  left out: zus_social_pay, 2 instances, first 2027-01-20
+  uncertain: marek_last
+  law date 2027-01-20, cut 2027-01-20
+replay_september: residuals konto 2026-09
+  2026-09 balance: model 9 289.04 PLN, observed 41 386.27 PLN, difference 32 097.23 PLN
+    balance konto 2026-09-30 end (anchored): booked 9 289.04 PLN, stated 41 386.27 PLN, gap 32 097.23 PLN
+  2026-09 move spend: model -4 599.90 PLN, observed 0.00 PLN, difference 4 599.90 PLN
+    expected but missing spend[2026-09-01] on 2026-09-01: model -153.33 PLN
+    expected but missing spend[2026-09-02] on 2026-09-02: model -153.33 PLN
+    expected but missing spend[2026-09-03] on 2026-09-03: model -153.33 PLN
+    expected but missing spend[2026-09-04] on 2026-09-04: model -153.33 PLN
+    expected but missing spend[2026-09-05] on 2026-09-05: model -153.33 PLN
+    expected but missing spend[2026-09-06] on 2026-09-06: model -153.33 PLN
+    expected but missing spend[2026-09-07] on 2026-09-07: model -153.33 PLN
+    expected but missing spend[2026-09-08] on 2026-09-08: model -153.33 PLN
+    expected but missing spend[2026-09-09] on 2026-09-09: model -153.33 PLN
+    expected but missing spend[2026-09-10] on 2026-09-10: model -153.33 PLN
+    expected but missing spend[2026-09-11] on 2026-09-11: model -153.33 PLN
+    expected but missing spend[2026-09-12] on 2026-09-12: model -153.33 PLN
+    expected but missing spend[2026-09-13] on 2026-09-13: model -153.33 PLN
+    expected but missing spend[2026-09-14] on 2026-09-14: model -153.33 PLN
+    expected but missing spend[2026-09-15] on 2026-09-15: model -153.33 PLN
+    expected but missing spend[2026-09-16] on 2026-09-16: model -153.33 PLN
+    expected but missing spend[2026-09-17] on 2026-09-17: model -153.33 PLN
+    expected but missing spend[2026-09-18] on 2026-09-18: model -153.33 PLN
+    expected but missing spend[2026-09-19] on 2026-09-19: model -153.33 PLN
+    expected but missing spend[2026-09-20] on 2026-09-20: model -153.33 PLN
+    expected but missing spend[2026-09-21] on 2026-09-21: model -153.33 PLN
+    expected but missing spend[2026-09-22] on 2026-09-22: model -153.33 PLN
+    expected but missing spend[2026-09-23] on 2026-09-23: model -153.33 PLN
+    expected but missing spend[2026-09-24] on 2026-09-24: model -153.33 PLN
+    expected but missing spend[2026-09-25] on 2026-09-25: model -153.33 PLN
+    expected but missing spend[2026-09-26] on 2026-09-26: model -153.33 PLN
+    expected but missing spend[2026-09-27] on 2026-09-27: model -153.33 PLN
+    expected but missing spend[2026-09-28] on 2026-09-28: model -153.33 PLN
+    expected but missing spend[2026-09-29] on 2026-09-29: model -153.33 PLN
+    expected but missing spend[2026-09-30] on 2026-09-30: model -153.33 PLN
+  2026-09 move client_pay: model 20 910.00 PLN, observed 17 220.00 PLN, difference -3 690.00 PLN
+    expected but missing client_pay[client_b, 2026-08] on 2026-09-30: model 3 690.00 PLN
+    matched client_pay[client_a, 2026-08] on 2026-09-14: model 17 220.00 PLN, observed 17 220.00 PLN, difference 0.00 PLN, timing +0 days
+  2026-09 unexplained: model 0.00 PLN, observed -3 574.02 PLN, difference -3 574.02 PLN
+    unexplained bank[r20260919a] on 2026-09-19: observed -899.99 PLN
+    unexplained bank[r20260916a] on 2026-09-16: observed -530.80 PLN
+    unexplained bank[r20260902a] on 2026-09-02: observed -412.37 PLN
+    unexplained bank[r20260929a] on 2026-09-29: observed -401.09 PLN
+    unexplained bank[r20260923a] on 2026-09-23: observed -348.62 PLN
+    unexplained bank[r20260909a] on 2026-09-09: observed -286.15 PLN
+    unexplained bank[r20260903a] on 2026-09-03: observed -250.00 PLN
+    unexplained bank[r20260918a] on 2026-09-18: observed -180.00 PLN
+    unexplained bank[r20260911a] on 2026-09-11: observed -145.00 PLN
+    unexplained bank[r20260926a] on 2026-09-26: observed -120.00 PLN
+  2026-09 move invest: model -6 535.30 PLN, observed -6 000.00 PLN, difference 535.30 PLN
+    expected but missing invest[mak, 2026-09] on 2026-09-15: model -6 535.30 PLN
+    matched invest[ike, 2026-09] on 2026-09-15: model 0.00 PLN, observed -6 000.00 PLN, difference -6 000.00 PLN, timing +0 days
+  2026-09 move loan_instalment: model -300.00 PLN, observed 0.00 PLN, difference 300.00 PLN
+    expected but missing loan_instalment[laptop, 4] on 2026-09-05: model -300.00 PLN
+  2026-09 move costs_pay: model -492.00 PLN, observed -492.00 PLN, difference 0.00 PLN
+    matched costs_pay[2026-09] on 2026-09-07: model -492.00 PLN, observed -492.00 PLN, difference 0.00 PLN, timing +0 days
+  2026-09 move health_pay: model -830.58 PLN, observed -830.58 PLN, difference 0.00 PLN
+    matched health_pay[2026-08] on 2026-09-21: model -830.58 PLN, observed -830.58 PLN, difference 0.00 PLN, timing +0 days
+  2026-09 move marek_back: model 500.00 PLN, observed 500.00 PLN, difference 0.00 PLN
+    matched marek_back[back2] on 2026-09-15: model 500.00 PLN, observed 500.00 PLN, difference 0.00 PLN, timing +0 days
+  2026-09 move rent_pay: model -3 200.00 PLN, observed -3 200.00 PLN, difference 0.00 PLN
+    matched rent_pay[2026-09] on 2026-09-01: model -3 200.00 PLN, observed -3 200.00 PLN, difference 0.00 PLN, timing +0 days
+  2026-09 move ryczalt_pay: model -1 990.00 PLN, observed -1 990.00 PLN, difference 0.00 PLN
+    matched ryczalt_pay[2026-08] on 2026-09-21: model -1 990.00 PLN, observed -1 990.00 PLN, difference 0.00 PLN, timing +0 days
+  2026-09 move vat_pay: model -3 818.00 PLN, observed -3 818.00 PLN, difference 0.00 PLN
+    matched vat_pay[2026-08] on 2026-09-25: model -3 818.00 PLN, observed -3 818.00 PLN, difference 0.00 PLN, timing +0 days
+  2026-09 move wage: model 5 101.67 PLN, observed 5 101.67 PLN, difference 0.00 PLN
+    matched wage[wife_acme, 2026-08] on 2026-09-10: model 5 101.67 PLN, observed 5 101.67 PLN, difference 0.00 PLN, timing +0 days
+  law date 2027-01-20, cut 2027-01-20
+taxes_paid (y = 2026): 52 272.00 PLN
+  unfulfilled: health_pay[2026-03]
+  unfulfilled: health_pay[2026-04]
+  unfulfilled: health_pay[2026-05]
+  unfulfilled: health_pay[2026-06]
+  unfulfilled: health_pay[2026-07]
+  unfulfilled: health_pay[2026-09]
+  unfulfilled: health_pay[2026-10]
+  unfulfilled: ryczalt_pay[2026-03]
+  unfulfilled: ryczalt_pay[2026-04]
+  unfulfilled: ryczalt_pay[2026-05]
+  unfulfilled: ryczalt_pay[2026-06]
+  unfulfilled: ryczalt_pay[2026-07]
+  unfulfilled: ryczalt_pay[2026-09]
+  unfulfilled: ryczalt_pay[2026-10]
+  unfulfilled: ryczalt_pay[2026-11]
+  unfulfilled: vat_pay[2026-03]
+  unfulfilled: vat_pay[2026-04]
+  unfulfilled: vat_pay[2026-05]
+  unfulfilled: vat_pay[2026-06]
+  unfulfilled: vat_pay[2026-07]
+  unfulfilled: vat_pay[2026-09]
+  unfulfilled: vat_pay[2026-10]
+  unfulfilled: vat_pay[2026-11]
+  unfulfilled: zus_social_pay[2026-09]
+  unfulfilled: zus_social_pay[2026-10]
+  law date 2027-01-20, cut 2027-01-20
+warning: WARN-NEGATIVE konto is below zero from 2026-03-01
+warning: WARN-NEGATIVE konto is below zero from 2026-03-17
+exit 0 in 1579s

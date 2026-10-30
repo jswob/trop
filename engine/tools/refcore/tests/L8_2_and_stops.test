@@ -1,0 +1,28 @@
+# L §8.2: "Arithmetic evaluates both operands; only and, or and if stop early (§5.11), so a row an and never read
+# isn't listed."  f is false: the assumed row of g is never read.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+input f: bool
+input g: bool
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  f = false
+  g = true assumed "a guess"
+
+ask q1: f and g
+ask q2: g and f
+=== expect
+q1: false
+  cut 2026-12-31
+q2: false
+  assumed: a guess (g)
+  cut 2026-12-31

@@ -1,15 +1,21 @@
 model ul12
-  tally 1
+  tally 2
   on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
   note "Norwegian net wealth for Peder Ås: the valuation discounts and the proportional debt reduction of skatteloven § 4-19 (Skatteetaten, 'Example calculation of valuation discount')."
   note "The income year is not settled: the values are 'as at 1 January 2024', which § 4-1 (1) makes the wealth for skattefastsettingsåret 2024 (income year 2023), while the English page dates the fund discount at 1 January 2024 and the Norwegian page at 1 January 2023. Every law-dependent figure is therefore keyed by income year and asked for both 2023 and 2024."
   note "The example computes no wealth tax, so the 2024 rates page is not used."
+
+source lifted_1_0_1 "Figures tally 1.0.1 allowed inline in rules"
 
 source lov2019_94 "Lov 20. desember 2019 nr. 94 (LOV-2019-12-20-94), del IV: new wording of skatteloven (LOV-1999-03-26-14) § 4-19 første ledd, a-d, kunngjort 20.12.2019, med virkning fra og med inntektsåret 2019; the wording is read in Lovdata's consolidated skatteloven, kapittel 4 (sist endret LOV-2026-06-23-66), https://lovdata.no/dokument/NL/lov/1999-03-26-14/KAPITTEL_4-2" at "https://lovdata.no/dokument/LTI/lov/2019-12-20-94"
 
 source modeller "The model's own readings and assumptions, each stated with its reason"
 
 source skatteetaten_en "Skatteetaten, Valuation discount in connection with assessment of wealth (no date shown; retrieved 2026-10-18)" at "https://www.skatteetaten.no/en/person/taxes/get-the-taxes-right/valuation-discount-in-connection-with-assessment-of-wealth/"
+
+unit NOK: currency minor 0.01
 
 axis ul12_pct
   down "a share printed as a percentage is cut to 2 decimals"
@@ -36,68 +42,71 @@ input rabatt_above: num
 input reduces[w in item]: bool
   note "Whether the asset's share of the debt is reduced (skatteloven § 4-19 (1))."
 
+input share_pct_0_01: num
+  note "lifted from an inline figure of tally 1.0.1"
+
 input value[w in item]: money NOK
   note "The asset's value before valuation discount, at 1 January 2024."
 
-def dd_total[y in iy]: num NOK = sum(w in item: deductible[y, w])
+def dd_total[y in iy]: num NOK = sum(deductible[y, w] for w in item) at start_of(y)
 
-def debt_reduction[y in iy]: num NOK
+def debt_reduction[y in iy]: num NOK at start_of(y)
   note "Example text: 'the debt for which he receives a deduction is reduced by NOK 60,000'."
   rule base = gjeld - dd_total[y]
 
-def debt_share[w in item]: num NOK
+def debt_share[w in item]: num NOK at reader
   note "Table row 'Share of debt before adjustment for valuation discount' (§ 4-19 (2))."
   rule base = gjeld * ratio[w]
 
-def deductible[y in iy, w in item]: num NOK
+def deductible[y in iy, w in item]: num NOK at start_of(y)
   note "Table row 'Deductible debt': the asset's share of the debt, valued at the asset's percentage where § 4-19 (1) lists the asset."
   rule base = debt_share[w]
-  rule reduced excepts base when reduces[w] = debt_share[w] * (1 - rabatt[w])
+  rule reduced beats base = debt_share[w] * (1 - rabatt[w]) when reduces[w]
 
-def net_item[y in iy, w in item]: num NOK = taxable_value[y, w] - deductible[y, w]
+def net_item[y in iy, w in item]: num NOK = taxable_value[y, w] - deductible[y, w] at start_of(y)
 
-def net_total[y in iy]: num NOK = tv_total[y] - dd_total[y]
+def net_total[y in iy]: num NOK = tv_total[y] - dd_total[y] at start_of(y)
 
-def ratio[w in item]: num
+def ratio[w in item]: num at reader
   note "§ 4-19 (2)-(3): the asset's value without reduction over the value of all the taxpayer's assets without reduction."
   rule base = value[w] / total_value
-  rule spouse excepts base when has_spouse = ? "For spouses the debt reduction uses both spouses' assets and debts (§ 4-19 (2)); that is not modelled."
+  rule spouse beats base = ?"For spouses the debt reduction uses both spouses' assets and debts (§ 4-19 (2)); that is not modelled." when has_spouse
 
-def share_pct[w in item]: num
+def share_pct[w in item]: num at reader
   note "Table row 'Share of sum wealth', printed as a percentage to 2 decimals; the debt shares use the exact ratio."
-  rule base = round(ratio[w] * 100, 0.01, ul12_pct)
+  rule base = round(ratio[w] / 1 %, share_pct_0_01, ul12_pct)
 
-def share_total_pct: num = round(sum(w in item: ratio[w]) * 100, 0.01, ul12_pct)
+def share_total_pct: num = round(sum(ratio[w] for w in item) / 1 %, share_pct_0_01, ul12_pct) at reader
 
-def taxable_value[y in iy, w in item]: num NOK
+def taxable_value[y in iy, w in item]: num NOK at start_of(y)
   note "Table row 'Taxable value': the value before discount, valued at 1 minus the discount."
   rule base = value[w] * (1 - rabatt[w])
-  rule dwelling_cap excepts base when w = dwelling = min(value[w], dw_edge) * (1 - rabatt[w]) + max(0, value[w] - dw_edge) * (1 - rabatt_above)
-  rule mixed excepts base when w = fund and aksjeandel < 1 = ? "Fund units with an interest component: § 4-12 (6) discounts only the aksjeandel; that split is not modelled."
+  rule dwelling_cap beats base = min(value[w], dw_edge) * (1 - rabatt[w]) + max(0, value[w] - dw_edge) * (1 - rabatt_above) when w == dwelling
+  rule mixed beats base = ?"Fund units with an interest component: § 4-12 (6) discounts only the aksjeandel; that split is not modelled." when w == fund and aksjeandel < 1
 
-def total_value: money NOK = sum(w in item: value[w])
+def total_value: money NOK = sum(value[w] for w in item) at reader
 
-def tv_total[y in iy]: num NOK = sum(w in item: taxable_value[y, w])
+def tv_total[y in iy]: num NOK = sum(taxable_value[y, w] for w in item) at start_of(y)
 
-ask q01_share_pct: share_pct[w] for w in item
+ask q01_share_pct: share_pct[w] for w in item law 2026-10-18
 
-ask q02_share_total: share_total_pct
+ask q02_share_total: share_total_pct law 2026-10-18
 
-ask q03_taxable_value: taxable_value[y, w] for y in iy, w in item
+ask q03_taxable_value: taxable_value[y, w] for y in iy, w in item law 2026-10-18
 
-ask q04_tv_total: tv_total[y] for y in iy
+ask q04_tv_total: tv_total[y] for y in iy law 2026-10-18
 
-ask q05_debt_share: debt_share[w] for w in item
+ask q05_debt_share: debt_share[w] for w in item law 2026-10-18
 
-ask q06_deductible: deductible[y, w] for y in iy, w in item
+ask q06_deductible: deductible[y, w] for y in iy, w in item law 2026-10-18
 
-ask q07_dd_total: dd_total[y] for y in iy
+ask q07_dd_total: dd_total[y] for y in iy law 2026-10-18
 
-ask q08_net_item: net_item[y, w] for y in iy, w in item
+ask q08_net_item: net_item[y, w] for y in iy, w in item law 2026-10-18
 
-ask q09_net_total: net_total[y] for y in iy
+ask q09_net_total: net_total[y] for y in iy law 2026-10-18
 
-ask q10_debt_reduction: debt_reduction[y] for y in iy
+ask q10_debt_reduction: debt_reduction[y] for y in iy law 2026-10-18
 
 version law_skl
   cite lov2019_94
@@ -109,8 +118,15 @@ version law_skl
   reduces[fund] = true "§ 4-19 (1) b: '§ 4-12 første til tredje og femte til sjette ledd'; § 4-12 (6) 'Aksjeandel i verdipapirfond ... verdsettes til 80 prosent'"
   reduces[deposit] = false "§ 4-19 (1): bank deposits are not listed"
 
+version lifted_figures
+  cite lifted_1_0_1
+  governs always
+  known 2019-12-20
+  share_pct_0_01 = 0.01 "inline in tally 1.0.1: share_pct line 68, round step; share_total_pct line 70, round step"
+
 version facts_example
   cite skatteetaten_en
+  governs always
   known 2026-10-18
   note "Peder Ås's facts are a hypothetical case: known from the model's on (§4.5)."
   note "The Norwegian page (Verdsettingsrabatt ved fastsetting av formue) prints the same example."
@@ -121,6 +137,7 @@ version facts_example
 
 version model_assume
   cite modeller
+  governs always
   known 2026-10-18
   note "Assumptions standing for the example's own facts: known from the model's on, as the example (§4.5)."
   aksjeandel = 1 assumed "the example discounts the whole value of the fund units, so they are taken as wholly a share component"

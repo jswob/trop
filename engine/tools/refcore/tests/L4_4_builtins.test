@@ -1,0 +1,29 @@
+# L §4.4: "Built-ins on a window (age, add_months, year_of, overlap_days and the rest) give the interval of their
+# values at its first and last day. When the two are equal it is that value."  year_of over July 2020 is 2020;
+# add_months by one month gives window(2020-08-01, 2020-08-31).  "Only a comparison decides an interval. Wherever
+# one value is needed (a print ...), an undecided interval is HOLE-IMPRECISE": days_between(d, 2020-12-31) is
+# 153 to 183 days, and printing it is a hole.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+input d: date
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  d = window(2020-07-01, 2020-07-31)
+
+ask q1: year_of(d), add_months(d, 1)
+ask q2: days_between(d, 2020-12-31)
+=== expect
+q1: (2020, window(2020-08-01, 2020-08-31))
+  cut 2026-12-31
+q2: ?"date within window(2020-07-01, 2020-07-31) not precise enough for a print" (d)
+  cut 2026-12-31

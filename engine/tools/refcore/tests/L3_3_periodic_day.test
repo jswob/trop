@@ -1,0 +1,26 @@
+# L §3.3 (round 6): "Any pairing with day other than a daily r, or a daily r over a longer period, is refused
+# (LOAD-UNIT where load sees the rate's period, RUN-DOMAIN otherwise, §8.4)": r is an input, so load doesn't see its
+# period: RUN-DOMAIN at the key.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+input r: rate
+def p: num = periodic(r, day, simple) at reader
+
+version v
+  cite s
+  governs 2026..
+  known 2026-01-01
+  r = 12 %/year
+
+ask a: p law 2026-06-30
+=== expect
+a: refused: RUN-DOMAIN ...
+  law date 2026-06-30, cut 2026-12-31

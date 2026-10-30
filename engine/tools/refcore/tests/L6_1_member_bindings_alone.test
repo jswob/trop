@@ -1,0 +1,109 @@
+# OQ-4 (L §2.3): ref and pref take a qualified id before keys (a.x[k], bal(a.p[k], d)), bind a member's kind or index
+# (h in a.heir, k in a.ix): p1 reads ana's keyed place, 1 000.00 PLN less buy's 10.00 on the first of each month
+# through 2026-06-01 (L §5.10) = 940.00; p2 counts a.persons (ana, ola) and sums a.w over a.ix (1 + 2); p3 adds ola's
+# 10.00. OQ-5 (L §6.1): "A member's items mean what they mean alone: a binding inside a member ranges over that
+# member's things, the prelude's kinds included. The joint model's own bindings over a shared kind range over every
+# member's things": b.own_total binds over accounts inside ben, ben's wsp alone, 500.00 - 6 x 1.00 = 494.00 PLN, as
+# ben alone answers (b.q); the joint model's own sum over accounts holds all three, 940 + 10 + 494 = 1 444.00 (p5);
+# b.own_moves counts ben's 12 transfers of 2026 (p6), the joint model's count both members' 24 (p7). The unfulfilled
+# registers: each plan's January instance, dated before the cut with no observation (L §8.2).
+=== options pin=bytes
+=== joint.tally
+model family
+  tally 2
+  on 2026-01-05
+  start 2026-01-01
+  end 2026-12-31
+  use a = "ana.tally" sha256 "a0802be6ee63085fa0c2bafb2e4f8c89319697bdefed67631e2c4ffe4f53058b"
+  use b = "ben.tally" sha256 "b45072e9eb234ee3f170cafa233de7b7341b37c4a40344c5e2f8212b15848f7c"
+
+ask p1: bal(a.konto[a.ana], 2026-06-01)
+ask p2: count(h in a.persons on 2026-06-01), sum(a.w[k] for k in a.ix)
+ask p3: sum(bal(a.konto[h], 2026-06-01) for h in a.persons on 2026-06-01)
+ask p4: b.own_total[2026-06-01] law 2026-06-01
+ask p5: sum(bal(x, 2026-06-01) for x in accounts on 2026-06-01)
+ask p6: b.own_moves[2026] law 2026-06-01
+ask p7: count(true for t in transfers over 2026)
+=== ana.tally
+model ana
+  tally 2
+  on 2026-01-05
+  start 2026-01-01
+  end 2026-12-31
+
+source s "umowa"
+unit PLN: currency minor 0.01
+kind persons
+place konto[p in persons]: accounts PLN lives 2019-01-01..
+index ix = [k1, k2]
+input w[k in ix]: num
+place shop: outside lives 1900-01-01..
+input amt: money PLN
+
+move buy[m in months]: transfers
+  on start_of(m)
+  leg cash from konto[ana] to shop amount amt
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  persons + [ana, ola] lives 2000-01-01..
+  w[k1] = 1
+  w[k2] = 2
+  amt = 10.00 PLN
+  opening[konto[ana]] = 1 000.00 PLN at 2026-01-01 start "wyciąg"
+  opening[konto[ola]] = 10.00 PLN at 2026-01-01 start "wyciąg"
+=== ben.tally
+model ben
+  tally 2
+  on 2026-01-05
+  start 2026-01-01
+  end 2026-12-31
+
+source s "umowa"
+unit PLN: currency minor 0.01
+place wsp: accounts PLN lives 2019-01-01..
+def own_total[d in days]: money PLN = sum(bal(x, d) for x in accounts on d) at reader
+def own_moves[y in years]: int = count(true for t in transfers over y) at reader
+place shop: outside lives 1900-01-01..
+input amt: money PLN
+
+move pay[m in months]: transfers
+  on start_of(m)
+  leg cash from wsp to shop amount amt
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  amt = 1.00 PLN
+  opening[wsp] = 500.00 PLN at 2026-01-01 start "wyciąg"
+
+ask q: own_total[2026-06-01] law 2026-06-01
+=== expect p1 p2 p3 p4 p5 p6 p7 b.q
+p1: 940.00 PLN
+  unfulfilled: a.buy[2026-01]
+  cut 2026-01-05
+p2: (2, 3)
+  cut 2026-01-05
+p3: 950.00 PLN
+  unfulfilled: a.buy[2026-01]
+  cut 2026-01-05
+p4: 494.00 PLN
+  unfulfilled: b.pay[2026-01]
+  law date 2026-06-01, cut 2026-01-05
+p5: 1 444.00 PLN
+  unfulfilled: a.buy[2026-01]
+  unfulfilled: b.pay[2026-01]
+  cut 2026-01-05
+p6: 12
+  unfulfilled: b.pay[2026-01]
+  law date 2026-06-01, cut 2026-01-05
+p7: 24
+  unfulfilled: a.buy[2026-01]
+  unfulfilled: b.pay[2026-01]
+  cut 2026-01-05
+b.q: 494.00 PLN
+  unfulfilled: pay[2026-01]
+  law date 2026-06-01, cut 2026-01-05

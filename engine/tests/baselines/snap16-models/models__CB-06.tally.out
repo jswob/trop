@@ -1,0 +1,84 @@
+q_e1_full_weeks: (18, 1)
+  law date 2026-10-19, cut 2026-10-19
+q_e1_hours: 728 hour
+  law date 2026-10-19, cut 2026-10-19
+q_e2_full_hours [edition = rfig]: 882 hour
+  reading: edition = rfig
+  law date 2026-10-19, cut 2026-10-19
+q_e2_full_hours [edition = rdr3]: 840 hour
+  reading: edition = rdr3
+  law date 2026-10-19, cut 2026-10-19
+q_e2_full_weeks [edition = rfig]: 21
+  reading: edition = rfig
+  law date 2026-10-19, cut 2026-10-19
+q_e2_full_weeks [edition = rdr3]: 20
+  reading: edition = rdr3
+  law date 2026-10-19, cut 2026-10-19
+q_gap_may: (15, 30)
+  law date 2026-10-19, cut 2026-10-19
+q_jack (g = jack_gap1): 15
+  law date 2026-10-19, cut 2026-10-19
+q_jack (g = jack_gap2): 5
+  law date 2026-10-19, cut 2026-10-19
+q_jack_total: 20
+  law date 2026-10-19, cut 2026-10-19
+q_meets [edition = *]: true
+  assumed: para 28(2)(a) and (4) allow only reasonable leave; the example deducts all of it without discussing it (leave_reasonable)
+  assumed: the year is not stated; the example subtracts from 365, so the year is taken to have no 29 February (feb29)
+  law date 2026-10-19, cut 2026-10-19
+q_net_hours [edition = rfig]: 1 730.5 hour
+  reading: edition = rfig
+  law date 2026-10-19, cut 2026-10-19
+q_net_hours [edition = rdr3]: 1 688.5 hour
+  reading: edition = rdr3
+  law date 2026-10-19, cut 2026-10-19
+q_other_days: (9, 15, 2, 5, 31)
+  assumed: para 28(2)(a) and (4) allow only reasonable leave; the example deducts all of it without discussing it (leave_reasonable)
+  law date 2026-10-19, cut 2026-10-19
+q_pw_hours (w = three_long): 97.5 hour
+  law date 2026-10-19, cut 2026-10-19
+q_pw_hours (w = two_long): 23 hour
+  law date 2026-10-19, cut 2026-10-19
+q_reductions [edition = rfig]: (4, 2, 1)
+  reading: edition = rfig
+  law date 2026-10-19, cut 2026-10-19
+q_reductions [edition = rdr3]: (5, 2, 1)
+  reading: edition = rdr3
+  law date 2026-10-19, cut 2026-10-19
+q_reference: 319
+  assumed: para 28(2)(a) and (4) allow only reasonable leave; the example deducts all of it without discussing it (leave_reasonable)
+  assumed: the year is not stated; the example subtracts from 365, so the year is taken to have no 29 February (feb29)
+  law date 2026-10-19, cut 2026-10-19
+q_step1: 0
+  law date 2026-10-19, cut 2026-10-19
+q_step4: (319/7 (45.5714285714286), 45)
+  assumed: para 28(2)(a) and (4) allow only reasonable leave; the example deducts all of it without discussing it (leave_reasonable)
+  assumed: the year is not stated; the example subtracts from 365, so the year is taken to have no 29 February (feb29)
+  law date 2026-10-19, cut 2026-10-19
+q_step5 [edition = rfig]: 3461/90 (38.4555555555556) hour
+  assumed: para 28(2)(a) and (4) allow only reasonable leave; the example deducts all of it without discussing it (leave_reasonable)
+  assumed: the year is not stated; the example subtracts from 365, so the year is taken to have no 29 February (feb29)
+  reading: edition = rfig
+  law date 2026-10-19, cut 2026-10-19
+q_step5 [edition = rdr3]: 3377/90 (37.5222222222222) hour
+  assumed: para 28(2)(a) and (4) allow only reasonable leave; the example deducts all of it without discussing it (leave_reasonable)
+  assumed: the year is not stated; the example subtracts from 365, so the year is taken to have no 29 February (feb29)
+  reading: edition = rdr3
+  law date 2026-10-19, cut 2026-10-19
+q_step5_shown [edition = rfig, step5_mode = down]: 38.45 hour
+  assumed: para 28(2)(a) and (4) allow only reasonable leave; the example deducts all of it without discussing it (leave_reasonable)
+  assumed: the year is not stated; the example subtracts from 365, so the year is taken to have no 29 February (feb29)
+  reading: edition = rfig
+  reading: step5_mode = down
+  law date 2026-10-19, cut 2026-10-19
+q_step5_shown [edition = rfig, step5_mode = half-up]: 38.46 hour
+  assumed: para 28(2)(a) and (4) allow only reasonable leave; the example deducts all of it without discussing it (leave_reasonable)
+  assumed: the year is not stated; the example subtracts from 365, so the year is taken to have no 29 February (feb29)
+  reading: edition = rfig
+  reading: step5_mode = half-up
+  law date 2026-10-19, cut 2026-10-19
+q_step5_shown [edition = rdr3, step5_mode = *]: 37.52 hour
+  assumed: para 28(2)(a) and (4) allow only reasonable leave; the example deducts all of it without discussing it (leave_reasonable)
+  assumed: the year is not stated; the example subtracts from 365, so the year is taken to have no 29 February (feb29)
+  reading: edition = rdr3
+  law date 2026-10-19, cut 2026-10-19

@@ -1,0 +1,32 @@
+model time06
+  tally 1
+  on 2026-10-25
+  note "Probe TIME-06: monthly advances from the tax on the base to date, crossing a bracket in October."
+
+source probe_card "Probe card TIME-06 (made-up story and rules)"
+
+index tmonth = month 2024-01..2024-12
+
+input base_month[m in tmonth]: money DUK
+
+band scale(x: num DUK): num
+  note "rule 1: the yearly scale as marginal rates"
+
+def advance[m in tmonth]: money DUK
+  note "rule 2: the tax on the base to date minus the advances already withheld this year"
+  rule base v card = tax_to_date[m] - sum(k in tmonth where k < m and year_of(k) = year_of(m): advance[k])
+
+def base_to_date[m in tmonth]: money DUK = sum(k in tmonth where k <= m and year_of(k) = year_of(m): base_month[k])
+
+def tax_to_date[m in tmonth]: money DUK
+  note "rule 2: the scale's tax on the base to date, rounded half up to 0.01"
+  rule base v card = round(marginal(scale, base_to_date[m]), 0.01, half-up)
+
+ask q_advances: advance[2024-09], advance[2024-10]
+
+version card
+  cite probe_card
+  known 2026-10-25
+  base_month = 13000.00 "story: the taxable base every month of 2024"
+  scale: [0, 120000] = 0.12 "rule 1: 12 % up to and including 120 000.00"
+  scale: (120000, inf) = 0.32 "rule 1: 32 % on the excess"

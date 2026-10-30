@@ -1,0 +1,40 @@
+# L §5.3 An entry is dated twice: "A thing entered by version V is seen only by asks with K ≥ V's known (earlier
+# asks don't list it, and a read of it is refused, RUN-KEY)".  ben enters by a version known 2016-02-01:
+# as known 2016-01-15 the listing holds ana only and a read of ben is RUN-KEY.
+=== m.tally
+model t
+  tally 2
+  on 2016-03-01
+  start 2015-11-01
+  end 2016-10-31
+
+source s "s"
+
+kind persons
+
+input age_of[p in persons]: int
+
+version a1
+  cite s
+  governs always
+  known 2016-01-01
+  persons + [ana] lives 1990-01-01..
+  age_of[ana] = 26
+
+version b1
+  cite s
+  governs always
+  known 2016-02-01
+  persons + [ben] lives 1991-01-01..
+  age_of[ben] = 25
+
+ask q1: count(p in persons on 2016-03-01) as known 2016-01-15
+ask q2: age_of[ben] as known 2016-01-15
+ask q3: count(p in persons on 2016-03-01)
+=== expect
+q1: 1
+  cut 2016-01-15
+q2: refused: RUN-KEY ...
+  cut 2016-01-15
+q3: 2
+  cut 2016-03-01

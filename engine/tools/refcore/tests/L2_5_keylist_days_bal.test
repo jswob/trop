@@ -1,0 +1,42 @@
+# Fault f2b_keylist_bal (writer 6): `bal(konto, d) for d in [2026-12-31, 2027-12-31]` was refused LOAD-UNIT ("the
+# day of bal is keylist"). L §2.5: a variable over a key list takes its index from its key positions; d has none, and
+# its keys are days; L §4.2 Keys as values: "a key of a year, month or day index is a value of that period type" (as
+# writer 5 did for years in a span end). pay moves 10.00 PLN out of konto (opening 0) on the first of each month: 12
+# payments by 2026-12-31 (-120.00 PLN), 24 by 2027-12-31 (-240.00 PLN).
+=== m.tally
+model m
+  tally 2
+  on 2027-12-31
+  start 2026-01-01
+  end 2027-12-31
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+index month = month 2026-01..2027-12
+
+input amt: money PLN
+
+move pay[m in month]: transfers
+  on start_of(m)
+  leg cash from konto to world amount amt
+
+source s "x"
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 10
+  opening[konto] = 0 at 2026-01-01 start
+
+
+ask q: bal(konto, d) for d in [2026-12-31, 2027-12-31]
+=== expect
+q (d = 2026-12-31): -120.00 PLN
+...
+q (d = 2027-12-31): -240.00 PLN
+...

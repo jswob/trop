@@ -1,0 +1,9 @@
+t (l = lot[x1], c = lot[x1]): 1
+  cut 2027-01-01
+t (l = lot[x1], c = lot[x2]): 0
+  cut 2027-01-01
+t (l = lot[x2], c = lot[x1]): 0
+  cut 2027-01-01
+t (l = lot[x2], c = lot[x2]): 1
+  cut 2027-01-01
+

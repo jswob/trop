@@ -1,0 +1,57 @@
+# Writer 11 (tally 2.1, 2.1-16, R-6, RC-5; L §5.19 Readings at a place that keeps parts). L §5.19: "a negative gap is a take of its size by an outflow nobody knows, so the
+# order's terms on w are holes, its terms on k still rank, and the take is undecided as far as the terms on w reach". The
+# anchor states 120.00 over 150.00 booked (gap -30.00); first in first out ranks by k alone, so the take is b1's 30.00
+# (b1 70.00, b2 50.00; scratch/exp7.py).
+=== m.tally
+model t
+  tally 2
+  on 2026-10-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+kind persons: parties
+kind couples: parties
+kind lots: place PLN min 0
+  batched
+  step minor(PLN)
+  takes k for w order k.batch.day
+place konto: lots lives 2026-01-01..
+place world: outside lives 1900-01-01..
+place shop: outside lives 1900-01-01..
+input b1_day: date
+input b1_amt: money PLN
+input b2_day: date
+input b2_amt: money PLN
+move b1: transfers
+  on b1_day
+  leg cash from world to konto amount b1_amt
+move b2: transfers
+  on b2_day
+  leg cash from world to konto amount b2_amt
+ask q: bal(konto, 2026-03-31), bal(konto, 2026-03-31) of b1, bal(konto, 2026-03-31) of b2
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  persons + [ania] lives 1980-01-01..
+  persons + [tomek] lives 1981-01-01..
+  couples + [ania_tomek] lives 2010-06-01..
+  opening[konto] = 0 PLN at 2026-01-01 start
+  b1_day = 2026-02-01
+  b1_amt = 100.00 PLN
+  b2_day = 2026-02-15
+  b2_amt = 50.00 PLN
+
+version stmt
+  cite s
+  governs 2026-03
+  known 2026-04-01
+  anchor konto
+  stated[konto] = 120.00 PLN at 2026-03-31 end
+=== expect
+q: (120.00 PLN, 70.00 PLN, 50.00 PLN)
+  anchor: konto 2026-03-31 end, stated 120.00 PLN, difference -30.00 PLN
+  cut 2026-10-01

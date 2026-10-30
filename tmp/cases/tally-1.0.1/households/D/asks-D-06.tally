@@ -1,0 +1,11 @@
+part asks_d06
+  tally 1
+  note "D-06 · The bonds, as of 2025-12-31, as known 2026-09-30. The end of 2026 reads CPI-YY of 2026-09 and 2026-10, not published by the cut: its total is a hole, and a second ask gives the part that is known."
+
+ask d06_end_2025: sum(s in isb_series: held[s, 2025-12-31]), bonds_value[2025-12-31], bonds_accrued[2025-12-31]
+
+ask d06_all_redeemed: all_fees[2025-12-31], all_tax[2025-12-31], bonds_net[2025-12-31]
+
+ask d06_end_2026: sum(s in isb_series: held[s, 2026-12-31]), bonds_value[2026-12-31]
+
+ask d06_end_2026_known: sum(s in isb_series where month_of(iy_start[s, iy_of[s, 2026-12-31]]) < 2026-11: held[s, 2026-12-31] * bond_value[s, 2026-12-31])

@@ -1,0 +1,19 @@
+part igt_5
+  tally 2
+  law
+  note "IGT-5 · Returns and payment: an acquisition that is not exempt is returned within 1 month of the day the tax arose (.1); the RO sets the tax by decision, paid within 14 days of its delivery (.2)."
+
+source igt_5 "Inheritance and Gift Tax Act, IGT-5 Returns and payment (tmp/cases/law/acts.md)"
+
+input igt5_pay_days: int question "Within how many days of the decision's delivery is the tax paid (IGT-5 .2)?"
+
+input igt5_return_months: int question "Within how many months of the tax arising is a return filed (IGT-5 .1)?"
+
+version igt5_v1
+  cite igt_5
+  governs 2018-01-01..
+  known 2017-09-01
+  enters 2018-01-01
+  note "IGT-5 v1, in force 2018-01-01 until replaced, published 2017-09-01; governs acquisitions from 2018-01-01."
+  igt5_pay_days = 14 "IGT-5 v1 .2"
+  igt5_return_months = 1 "IGT-5 v1 .1"

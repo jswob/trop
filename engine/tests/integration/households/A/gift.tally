@@ -1,0 +1,99 @@
+part gift
+  tally 2
+  note "Inheritance and gift tax on what Halina Sowa, Ania's mother, gave her: 15 000.00 DUK in cash on 2021-04-30 (A-D19) and 200 BRZ-GLB-A units on 2023-09-12 (A-D18), reported on 2024-03-14 (A-D20). IGT-2 to IGT-4."
+
+index acq: open
+  note "Ania's acquisitions from a giver"
+
+index giver = [halina]
+
+input acq_cash[a in acq]: money DUK question "How much money was given?"
+
+input acq_credited[a in acq]: bool question "Was the money credited to the acquirer's payment account (IGT-4 .4)?"
+
+input acq_from[a in acq]: key giver question "From whom was this acquired?"
+
+input acq_on[a in acq]: date question "On which day did the tax on this acquisition arise (IGT-2 .1)?"
+
+input acq_paid[a in acq]: money DUK question "How much gift tax has been paid on this acquisition?"
+
+input acq_reported[a in acq]: date question "When was the acquisition reported to the RO?"
+
+input acq_to[a in acq]: key persons question "Who acquired it?"
+
+input acq_units[a in acq]: num glb question "How many BRZ-GLB-A units were given?"
+
+input close_family[s in persons, g in giver]: bool question "Is the giver close family of the acquirer under IGT-4 .1?"
+
+input igt_grp[s in persons, g in giver]: key igt_group question "In which group of IGT-1 .2 is the acquirer to this giver?"
+
+def added_up[a in acq]: num DUK = sum(value[b] for b in acq where window[a, b]) at reader
+
+def exempt[a in acq]: bool at reader
+  note "IGT-4: close family, reported within 6 months of the day the tax arose (or no report needed), and money only if credited to the acquirer's payment account, which point 3 doesn't lift"
+  rule base = close_family[acq_to[a], acq_from[a]] and (not report_needed[a] or acq_reported[a] != none and acq_reported[a] <= add_months(acq_on[a], igt4_report_months))
+  rule cash beats base = false when acq_cash[a] > 0 and not acq_credited[a]
+
+def gift_tax[a in acq]: money DUK at acq_on[a]
+  note "IGT-3 .1–.4: the group's scale on the added-up base above the group's free amount in force on the day the last acquisition's tax arises, less the tax already paid on the window, rounded"
+  rule base = round(max(0, igt3_scale[group_of[a]](max(0, igt_base[a] - igt_free[group_of[a]])) - sum(acq_paid[b] for b in acq where window[a, b] and b != a)), 1, half-up)
+
+def group_of[a in acq]: key igt_group at reader
+  note "the acquirer's group; a close-family acquisition reported late is taxed as Group I (IGT-4 .2)"
+  rule base = igt_grp[acq_to[a], acq_from[a]]
+  rule late beats base = group_1 when close_family[acq_to[a], acq_from[a]] and not exempt[a]
+
+def igt_base[a in acq]: money DUK at reader
+  note "IGT-3 .1, IGT-2 .3: the taxable acquisitions of the window added up, rounded to whole dukats"
+  rule base = round(sum(value[b] for b in acq where window[a, b] and not exempt[b]), 1, half-up)
+
+def report_needed[a in acq]: bool at acq_on[a]
+  note "IGT-4 .3: no report is needed where the added-up acquisition is not above IGT-FREE-I, in force on the day the tax arises"
+  rule base = added_up[a] > igt_free[group_1]
+
+def value[a in acq]: num DUK at reader
+  note "IGT-2 .2: the market value on the day the tax arises; fund units at the price of that valuation day"
+  rule base = acq_cash[a] + (if acq_units[a] > 0 then acq_units[a] * px[glb, acq_on[a]] else 0)
+
+def window[a in acq, b in acq]: bool at reader
+  note "IGT-3 .1: b is from the same person to the same acquirer, on or before a and in the 5 years before it"
+  rule base = acq_from[b] == acq_from[a] and acq_to[b] == acq_to[a] and acq_on[b] <= acq_on[a] and acq_on[b] >= add_years(acq_on[a], -igt3_years)
+
+version halina_family
+  cite story
+  governs always
+  known 2021-01-01
+  close_family[ania, halina] = true "story § The cast: Ania's mother; IGT-4 .1 names ascendants and descendants"
+  igt_grp[ania, halina] = group_1 "story § The cast: Halina Sowa is Ania's mother; IGT-1 .2 puts descendants in Group I"
+
+version cash_gift
+  cite a_d19
+  governs always
+  known 2021-04-30
+  acq_cash[cash2021] = 15000.00 "A-D19: 15 000 DUK"
+  acq_credited[cash2021] = false "story 2021-04-30: Ania keeps it at home; it was never paid into an account"
+  acq_from[cash2021] = halina "A-D19: Mum gave me"
+  acq_on[cash2021] = 2021-04-30 "A-D19: 30 April 2021, in cash, in an envelope (IGT-2 .1: performed that day)"
+  acq_paid[cash2021] = 0 "story 2021-04-30: nobody reported it anywhere, so no tax was paid"
+  acq_reported[cash2021] = none "story 2021-04-30: nobody reported it anywhere"
+  acq_to[cash2021] = ania "A-D19"
+  acq_units[cash2021] = 0 "A-D19: cash only"
+
+version unit_gift
+  cite a_d18
+  governs always
+  known 2023-09-12
+  acq_cash[units2023] = 0 "A-D18: fund units only"
+  acq_credited[units2023] = false "A-D18: not money"
+  acq_from[units2023] = halina "A-D18: Halina Sowa, mother, gives Anna Lis"
+  acq_on[units2023] = 2023-09-12 "A-D18: signed 12 September 2023 (IGT-2 .1: the contract's day)"
+  acq_paid[units2023] = 0 "no tax paid yet"
+  acq_reported[units2023] = none "not reported yet on 2023-09-12"
+  acq_to[units2023] = ania "A-D18: for Anna alone"
+  acq_units[units2023] = 200 "A-D18: 200 units of BRZ-GLB-A"
+
+version unit_gift_report
+  cite a_d20
+  governs always
+  known 2024-03-14
+  replace acq_reported[units2023] = 2024-03-14 "A-D20: filed at the Revenue Office Dębowo on 14 March 2024 (stamp on the copy)"

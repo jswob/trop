@@ -1,0 +1,54 @@
+# L §2.4 sorts version items "then keys in index order"; L §6.1 a member's items are read as a.item, so a joint model's
+# input keyed by its member's list index a.ks = [zz, aa] orders its rows by that index: j[zz] before j[aa]. The order is
+# the member's, read from its files (refcore: canon.reprint with the members a use line names; was REFCORE-NOT-YET).
+=== options reprint
+=== J/joint.tally
+model family
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+  use a = "../A/ana.tally" sha256 "0000000000000000000000000000000000000000000000000000000000000000"
+
+input j[k in a.ks]: int
+
+version jv
+  cite s
+  governs always
+  known 2026-01-01
+  j[aa] = 2
+  j[zz] = 1
+=== A/ana.tally
+model ana
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+index ks = [zz, aa]
+=== expect
+--- A/ana.tally
+model ana
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+index ks = [zz, aa]
+--- J/joint.tally
+model family
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+  use a = "../A/ana.tally" sha256 "0000000000000000000000000000000000000000000000000000000000000000"
+
+input j[k in a.ks]: int
+
+version jv
+  cite s
+  governs always
+  known 2026-01-01
+  j[zz] = 1
+  j[aa] = 2
+sha256 ...

@@ -1,0 +1,211 @@
+part longview
+  tally 2
+  note "D-10 and D-11: the story's long view (story.md, The long view, points 1-10), run as D-HR3 says, on paths and with zero volatility. Its figures are the household's round assumptions, known 2026-09-30, each row assumed with its point."
+  note "Years are lyear 2026..2064: the key 2026 holds the state on 1 January 2027 and the 2026 levels; money flows from 2027. Her life and the fund's returns are random facts keyed by year, sampled per path (L §5.16); the story's Python stream (random.Random(20261001 + path)) can't be held, so path figures agree with it only within their standard errors (py_stream)."
+
+input care_2026: money DUK question "What does care cost a year, in 2026 money (point 6)?"
+
+input care_age: int question "From the year she turns what age does she pay for care (point 6)?"
+
+input fee_2026: money DUK question "What is the building fee in 2026 (point 5)?"
+
+input fund_df: int question "How many degrees of freedom has the t draw (point 7)?"
+
+input fund_mu: num question "What is the fund's mean return (point 7)?"
+
+input fund_sd: num question "What is the fund's scale on the t draw (point 7)?"
+
+input life_u[y in lyear]: dist question "What uniform number does a path draw for her life in this year (point 2)?"
+
+input lv_acct0: money DUK question "What does the account hold on 1 January 2027 (point 1)?"
+
+input lv_fund0: money DUK question "What does the fund hold on 1 January 2027 (point 1)?"
+
+input lv_index_month: int question "In which month of the year do the pensions and the rent rise, from its first day (points 4, 5)?"
+
+input lv_infl: num question "By how much do prices rise in this year (point 3)?"
+
+input min_2026: money DUK question "What is MIN-PENSION from March 2026 (point 4)?"
+
+input own_2026: money DUK question "What is her own pension from March 2026 (point 4)?"
+
+input q_base: num question "What is the chance of dying in the year she turns 68 (point 2)?"
+
+input q_growth: num question "By what factor does that chance grow with each year of age (point 2)?"
+
+input q_last_age: int question "At what age is the chance 1 (point 2)?"
+
+input q_step: num question "To what step is the chance rounded (point 2)?"
+
+input r_floor_loss: num question "What is the largest loss a return can show (point 7)?"
+
+input r_scale_root: num question "The square root of what divides the t draw (point 7: T / sqrt 2)?"
+
+input r_step: num question "To what step is a return rounded (point 7)?"
+
+input rent_2026: money DUK question "What is the rent from March 2026 (point 5)?"
+
+input spend_2026: money DUK question "What does she spend a year, in 2026 money (point 6)?"
+
+input surv_2026: money DUK question "What is the survivor pension from March 2026 (point 4)?"
+
+input sweep: money DUK question "Above what balance does the account sweep into the fund (point 8)?"
+
+input zr[y in lyear, j in draw5]: dist question "What standard normal numbers does a path draw for the fund in this year (point 7)?"
+
+def age_in[y in lyear]: int = age(born_halina, add_days(end_of(y), -1)) at start_of(y)
+
+def alive[y in lyear]: bool at start_of(y)
+  note "point 2: she dies in the first year whose uniform number is below that year's chance, and lives no part of it"
+  rule first = true when pos(y) == 1
+  rule later = alive[y - 1] and life_u[y] >= q_die[age_in[y]] when pos(y) > 1
+
+def exp_tax: num DUK = sum(surv_prob[y] * lv_pit[y] for y in lyear where pos(y) > 1) at reader
+
+def exp_years: num = sum(surv_prob[y] for y in lyear where pos(y) > 1) at reader
+
+def factor[y in lyear]: num at start_of(y)
+  rule first = 1 when pos(y) == 1
+  rule later = factor[y - 1] * grow[y] when pos(y) > 1
+
+def fee_lvl[y in lyear]: money DUK at start_of(y)
+  note "point 5: each January from 2027 by the year before's factor, to the ort"
+  rule first = fee_2026 when pos(y) == 1
+  rule later = round(fee_lvl[y - 1] * grow[y - 1], minor(DUK), hh_round) when pos(y) > 1
+
+def grow[y in lyear]: num = 1 + lv_infl at start_of(y)
+
+def lv_gross[y in lyear]: money DUK = sum(lv_month_gross[m] for m in month where year_of(m) == y) at start_of(y)
+
+def lv_health[y in lyear]: money DUK at start_of(y)
+  note "point 4: health 9 % of each month's gross, to the ort (SOC-2 .1, GEN-5 .3)"
+  rule base = sum(round(lv_month_gross[m] * soc2_rate, minor(DUK), half-up) for m in month where year_of(m) == y)
+
+def lv_money[y in lyear]: money DUK = lv_gross[y] - lv_health[y] - lv_pit[y] + ogr_year[y] - spend_year[y] at start_of(y)
+
+def lv_month_gross[m in month]: money DUK at start_of(m)
+  note "point 4: the levels of the year before until the index month, the year's own from it"
+  rule late = surv_lvl[year_of(m)] + part_at[year_of(m), year_of(m)] when start_of(m) >= start_of(month_of(start_of(year_of(m))) + lv_index_month - 1)
+  rule early beats late = surv_lvl[year_of(m) - 1] + part_at[year_of(m), year_of(m) - 1] when start_of(m) < start_of(month_of(start_of(year_of(m))) + lv_index_month - 1)
+
+def lv_month_rent[m in month]: money DUK = if start_of(m) >= start_of(month_of(start_of(year_of(m))) + lv_index_month - 1) then rent_lvl[year_of(m)] else rent_lvl[year_of(m) - 1] at start_of(m)
+
+def lv_pit[y in lyear]: money DUK at start_of(y)
+  note "point 4: the PIT-3 v3 scale on the year's gross rounded to whole dukats, less 3 900.00, rounded; point 9: the 2026 law"
+  rule base = round(max(0, marginal(pit3_rate, round(lv_gross[y], 1, half-up)) - pit3_reducing), 1, half-up)
+
+def min_lvl[y in lyear]: money DUK at start_of(y)
+  rule first = min_2026 when pos(y) == 1
+  rule later = round(min_lvl[y - 1] * grow[y - 1], minor(DUK), hh_round) when pos(y) > 1
+
+def ogr_year[y in lyear]: money DUK at start_of(y)
+  note "point 5: 13/16 of the year's rent less the year's fees, to the ort, less PIT-13's 8.5 % of 13/16 of the year's rent, rounded to whole dukats"
+  rule base = round(flat_after[halina] * (rent_year[y] - fee_lvl[y] * (1 year / 1 month)), minor(DUK), hh_round) - round(marginal(pit13_rate, rent_year[y] * flat_after[halina]), 1, half-up)
+
+def own_lvl[y in lyear]: money DUK at start_of(y)
+  rule first = own_2026 when pos(y) == 1
+  rule later = round(own_lvl[y - 1] * grow[y - 1], minor(DUK), half-up) when pos(y) > 1
+
+def p_acct[y in lyear]: money DUK at start_of(y)
+  note "point 8: above the sweep into the fund; below 0, fund units sold to bring it back to 0 as far as the fund goes"
+  rule first = lv_acct0 when pos(y) == 1
+  rule later = if p_pre[y] > sweep then sweep else if p_pre[y] < 0 then p_pre[y] + min(p_fpre[y], -p_pre[y]) else p_pre[y] when pos(y) > 1
+
+def p_dry: bool = count(y in lyear where pos(y) > 1 and alive[y] and p_acct[y] < 0) > 0 at reader
+
+def p_fpre[y in lyear]: money DUK = if pos(y) > 1 then round(p_fund[y - 1] * (1 + r_path[y]), minor(DUK), hh_round) else 0 at start_of(y)
+
+def p_fund[y in lyear]: money DUK at start_of(y)
+  rule first = lv_fund0 when pos(y) == 1
+  rule later = if p_pre[y] > sweep then p_fpre[y] + p_pre[y] - sweep else if p_pre[y] < 0 then p_fpre[y] - min(p_fpre[y], -p_pre[y]) else p_fpre[y] when pos(y) > 1
+
+def p_nw[y in lyear]: money DUK = p_acct[y] + p_fund[y] at start_of(y)
+
+def p_pre[y in lyear]: money DUK = if pos(y) > 1 then p_acct[y - 1] + lv_money[y] else 0 at start_of(y)
+
+def p_tax: money DUK = sum(lv_pit[y] for y in lyear where pos(y) > 1 and alive[y]) at reader
+
+def p_years: int = count(y in lyear where pos(y) > 1 and alive[y]) at reader
+
+def p_zv_dry: bool = zv_dry_year != none and alive[zv_dry_year] at reader
+
+def part_at[y in lyear, lv in lyear]: money DUK at start_of(y)
+  note "point 4, SOC-7 v2 .3: the part of her own pension for the months of y at the levels of lv, to the ort, cut so the two together are no more than 3 times MIN-PENSION"
+  rule base = max(0, min(round(own_lvl[lv] * soc7_part, minor(DUK), half-up), soc7_cap_mult * min_lvl[lv] - surv_lvl[lv]))
+
+def py_stream: num = ?"a foreign program's random stream (Python's random.Random(20261001 + path)) can't be held: tally's samples are SHA-256 inversions of the same distributions (L §5.16), so path figures agree with the key within their standard errors, not digit for digit"
+
+def q_die[a in life_age]: num at reader
+  rule base = round(q_base * pow(q_growth, pos(a) - 1), q_step, hh_round)
+  rule last beats base = 1 when a >= q_last_age
+
+def r_path[y in lyear]: num at start_of(y)
+  note "point 7: R = 5 % + 16 % x T / sqrt 2, never below -95 %, rounded to 6 decimal places"
+  rule base = max(-r_floor_loss, round(fund_mu + fund_sd * t_draw[y] / (sqrt(r_scale_root) to 1e-12), r_step, hh_round))
+
+def rent_lvl[y in lyear]: money DUK at start_of(y)
+  rule first = rent_2026 when pos(y) == 1
+  rule later = round(rent_lvl[y - 1] * grow[y - 1], minor(DUK), hh_round) when pos(y) > 1
+
+def rent_year[y in lyear]: money DUK = sum(lv_month_rent[m] for m in month where year_of(m) == y) at start_of(y)
+
+def spend_year[y in lyear]: money DUK = round((spend_2026 + (if age_in[y] >= care_age then care_2026 else 0)) * factor[y], minor(DUK), hh_round) at start_of(y)
+
+def surv_lvl[y in lyear]: money DUK at start_of(y)
+  rule first = surv_2026 when pos(y) == 1
+  rule later = round(surv_lvl[y - 1] * grow[y - 1], minor(DUK), half-up) when pos(y) > 1
+
+def surv_prob[y in lyear]: num at start_of(y)
+  rule first = 1 when pos(y) == 1
+  rule later = surv_prob[y - 1] * (1 - q_die[age_in[y]]) when pos(y) > 1
+
+def t_draw[y in lyear]: num at start_of(y)
+  note "point 7: T = Z / sqrt(V / 4), V the sum of four squared standard normals drawn after Z"
+  rule base = zr[y, 1] / (sqrt((zr[y, 2] * zr[y, 2] + zr[y, 3] * zr[y, 3] + zr[y, 4] * zr[y, 4] + zr[y, 5] * zr[y, 5]) / fund_df) to 1e-12)
+
+def zv_acct[y in lyear]: money DUK at start_of(y)
+  rule first = lv_acct0 when pos(y) == 1
+  rule later = if zv_pre[y] > sweep then sweep else if zv_pre[y] < 0 then zv_pre[y] + min(zv_fpre[y], -zv_pre[y]) else zv_pre[y] when pos(y) > 1
+
+def zv_dry_year: key lyear = if count(y in lyear where pos(y) > 1 and zv_acct[y] < 0) > 0 then first(y in lyear where pos(y) > 1 and zv_acct[y] < 0) else none at reader
+
+def zv_fpre[y in lyear]: money DUK = if pos(y) > 1 then round(zv_fund[y - 1] * (1 + fund_mu), minor(DUK), hh_round) else 0 at start_of(y)
+
+def zv_fund[y in lyear]: money DUK at start_of(y)
+  rule first = lv_fund0 when pos(y) == 1
+  rule later = if zv_pre[y] > sweep then zv_fpre[y] + zv_pre[y] - sweep else if zv_pre[y] < 0 then zv_fpre[y] - min(zv_fpre[y], -zv_pre[y]) else zv_fpre[y] when pos(y) > 1
+
+def zv_pre[y in lyear]: money DUK = if pos(y) > 1 then zv_acct[y - 1] + lv_money[y] else 0 at start_of(y)
+
+def zv_share: num = if zv_dry_year != none then surv_prob[zv_dry_year] else 0 at reader
+
+version long_view
+  cite story
+  governs always
+  known 2026-09-30
+  note "story.md, The long view, decided with D-HR3 on 2026-09-30"
+  care_2026 = 36000.00 assumed "point 6, in 2026 money"
+  care_age = 80 assumed "point 6: from the year she turns 80 (2039)"
+  fee_2026 = 468.00 assumed "point 5, 2026"
+  fund_df = 4 assumed "point 7"
+  fund_mu = 0.05 assumed "point 7"
+  fund_sd = 0.16 assumed "point 7"
+  life_u = uniform(0, 1) to 1e-12 assumed "point 2: one uniform number from [0, 1) for each year from 2027"
+  lv_acct0 = 10000.00 assumed "point 1: a round figure taken as given"
+  lv_fund0 = 45000.00 assumed "point 1: a round figure taken as given"
+  lv_index_month = 3 assumed "points 4 and 5: on each 1 March from 2027"
+  lv_infl = 0.03 assumed "point 3: 3 % a year from 2026 on" governs 2026..
+  min_2026 = 1970.00 assumed "point 4, MIN-PENSION from March 2026 (gazette.csv line 1910)"
+  own_2026 = 3048.80 assumed "point 4, from March 2026"
+  q_base = 0.0120 assumed "point 2"
+  q_growth = 1.105 assumed "point 2"
+  q_last_age = 105 assumed "point 2: at 105 it is 1"
+  q_step = 0.0001 assumed "point 2: rounded to 4 decimal places"
+  r_floor_loss = 0.95 assumed "point 7: never below -95 %"
+  r_scale_root = 2 assumed "point 7: T / sqrt 2"
+  r_step = 0.000001 assumed "point 7: R rounded to 6 decimal places"
+  rent_2026 = 1976.00 assumed "point 5, from March 2026"
+  spend_2026 = 54000.00 assumed "point 6, in 2026 money"
+  surv_2026 = 5247.88 assumed "point 4, from March 2026"
+  sweep = 15000.00 assumed "point 8"
+  zr = normal(0, 1) to 1e-12 assumed "point 7: Z and the four normals of V, standard normal"

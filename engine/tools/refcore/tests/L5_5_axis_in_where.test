@@ -1,0 +1,44 @@
+# L §5.5: an ask evaluates every combination of the axes its evaluation reads, and its `for … where` is part of its
+# evaluation.  Under mode = a, v[k] = base_v[k] (1, 2), so only k2 passes v[k] > lim (1); under mode = b, alt wins and
+# v[k] = 2, 3: both pass.  L §5.18 Lines: one line per binding tuple and distinct result across the axes reached: k1
+# is bound under b only; k2 under every option (`*`).  (Was REFCORE-UNSPECIFIED §5.5: axis mode read outside the
+# axes the ask reaches.)
+=== m.tally
+model p8
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+
+source s "synthetic"
+
+unit PLN: currency minor 0.01
+
+index ks = [k1, k2]
+
+axis mode
+  a "first reading"
+  b "second reading"
+
+input base_v[k in ks]: int
+input lim: int
+
+def v[k in ks]: int at reader
+  rule base = base_v[k]
+  rule alt beats base = base_v[k] + 1 when mode == b
+
+ask q: k for k in ks where v[k] > lim law 2026-06-30
+
+version v1
+  cite s
+  governs always
+  known 2026-01-01
+  base_v[k1] = 1
+  base_v[k2] = 2
+  lim = 1
+=== expect
+q (k = k1) [mode = b]: k1
+  reading: mode = b
+  law date 2026-06-30, cut 2026-10-18
+q (k = k2) [mode = *]: k2
+  law date 2026-06-30, cut 2026-10-18

@@ -1,0 +1,40 @@
+# GD-1 (round 19, writer 10): was L2_3_prefixed_band_call; R.b(x) is gone (L §2.3 Calls), so what stays is a band called by a def and an ask.
+# Its regime gains is unboxed (the items at top level, gains.x written x); the
+# figures are unchanged. The comment below is the old test's.
+# L §2.3 Calls (round 14): "A call takes a built-in's name (§2.2) or a band's id, with the prefixes that name the band
+# outside its regime ...: R.b(x) for a band regime R exports (§5.17)"; call = (ID {"." ID} ["[" expr "]"] | BUILTIN)
+# "(". owed calls fee(amt) from outside gains: amt = 500.00 PLN is in [0, 1 000.00), 10.00 PLN; the ask calls
+# fee(big), big = 1 500.00 PLN, 20.00 PLN (L §5.9 rows).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source pit_act "PIT act"
+unit PLN: currency minor 0.01
+
+band fee(x: money PLN): money PLN
+band secret(x: money PLN): money PLN
+
+input amt: money PLN
+input big: money PLN
+
+def owed: money PLN at reader
+  rule base = fee(amt)
+
+version act_2024
+  cite pit_act
+  governs 2024..
+  known 2023-12-01
+  amt = 500.00 PLN
+  big = 1 500.00 PLN
+  fee: [0 PLN, 1 000.00 PLN) = 10.00 PLN
+  fee: [1 000.00 PLN, inf) = 20.00 PLN
+  secret: [0 PLN, inf) = 1.00 PLN
+
+ask q1: owed, fee(big) law 2026-06-30
+=== expect
+q1: (10.00 PLN, 20.00 PLN)
+  law date 2026-06-30, cut 2026-12-31

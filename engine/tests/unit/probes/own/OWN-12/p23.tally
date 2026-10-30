@@ -1,0 +1,123 @@
+model own12_p23
+  tally 2
+  on 2026-10-30
+  start 2026-01-01
+  end 2026-06-30
+  note "OWN-12 P-23: the twin of P-10, and on 2 March 600.00 moves from sav to the current account, which keeps no parts and isn't outside: the move drops its labels."
+  note "Every figure whose reads reach the current account from that day on lists WARN-LABELS in its register (LANGUAGE 3.6, 8.2, 8.5); the figure itself stays exact."
+
+source card "Probe card OWN-12 (made up): story and rules"
+
+source bank "The couple's bank: its January 2026 rows (made up)"
+
+unit DUK: currency minor 0.01
+
+unit fz_units "a unit of fund Z"
+
+kind couples: parties
+
+kind persons: parties
+
+kind current_accounts: place DUK signed
+
+kind fund_accounts: place fz_units min 0
+  owned by arrive
+  step 1 fz_units
+  takes k for w order (if k.owner == ania_tomek then 0 else 1)
+
+kind fund_buys: event certain
+  leg units: fz_units
+  leg cash: DUK
+  attr buyer: key parties
+
+kind inheritances: transfers
+  attr heir: key parties
+
+kind loans: place DUK max 0
+
+kind savings: place DUK min 0
+  owned by arrive
+  step minor(DUK)
+  takes k for w order (if k.owner == ania_tomek then 0 else 1)
+
+place current: current_accounts lives 2018-01-01..
+
+place fund: fund_accounts lives 2026-01-01..
+
+place market: outside lives 1900-01-01..
+
+place mortgage: loans lives 2019-06-01..
+
+place sav: savings lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input bank_rows: observed
+
+input owns[p in parties, x in places]: num
+
+input px: num DUK/fz_units reading
+
+input stake[p in parties, e in parties]: num
+
+def arrive[m in events, p in parties]: num at m.day
+  note "rule 3: an inheritance the heir's, a purchase its buyer's, any other arrival the couple's"
+  rule community v card_rules = (if p == ania_tomek then 1 else 0)
+  rule bought beats community v card_rules = (if p == m.buyer then 1 else 0) when m in fund_buys
+  rule inherited beats community v card_rules = (if p == m.heir then 1 else 0) when m in inheritances
+
+def net_worth[o in parties, d in days]: money DUK at d
+  note "rule 2: own worth plus the stake in each entity times its own worth, half to even to 0.01"
+  rule base v card_rules = round(own_worth[o, d] + sum(stake[o, e] * own_worth[e, d] for e in parties over ..), minor(DUK), half-even)
+
+def own_worth[o in parties, d in days]: num DUK at d
+  note "rule 1: the party's parts of sav, its units of fund at the last price, its owns shares of the places that keep no parts"
+  rule base v card_rules = sum(bal(x, d) of o for x in savings on d) + sum(value(x, d) in DUK by last(px) of o for x in fund_accounts on d) + sum(bal(x, d) * owns[o, x] for x in current_accounts on d) + sum(bal(x, d) * owns[o, x] for x in loans on d)
+
+ask q_worth: own_worth[o, 2026-06-30], net_worth[o, 2026-06-30] for o in parties on 2026-06-30
+
+version card_cast
+  cite card
+  known 2026-01-01
+  note "the parties: things of the prelude kind parties, of the model's own subkinds"
+  couples + [ania_tomek] lives 2015-06-20..
+  persons + [ania] lives 1988-04-12..
+  persons + [tomek] lives 1986-09-03..
+
+version card_rules
+  cite card
+  governs always
+  known 2026-01-01
+
+version holdings_2026
+  cite card
+  governs always
+  known 2026-01-01
+  opening[current] = 8000.00 at 2026-01-01 start "the current account at the run's start"
+  opening[mortgage] = -50000.00 at 2026-01-01 start "the mortgage at the run's start"
+  owns[ania, current] = 0.5 "the current: owned half each by Ania and Tomek"
+  owns[ania_tomek, current] = 0 "the current: owned half each by Ania and Tomek"
+  owns[tomek, current] = 0.5 "the current: owned half each by Ania and Tomek"
+  owns[ania, mortgage] = 0.5 "the mortgage: owned half each by Ania and Tomek"
+  owns[ania_tomek, mortgage] = 0 "the mortgage: owned half each by Ania and Tomek"
+  owns[tomek, mortgage] = 0.5 "the mortgage: owned half each by Ania and Tomek"
+  stake = 0 "a party holds no stake in another"
+  stake[ania, ania_tomek] = 0.5 "rule 2: each spouse holds half the couple"
+  stake[tomek, ania_tomek] = 0.5 "rule 2"
+
+version prices
+  cite card
+  known 2026-05-04
+  px = 50.00 at 2026-01-15 "fund Z's price"
+  px = 52.25 at 2026-05-04 "fund Z's price"
+
+version records_2026_q1
+  cite bank
+  governs 2026-01..2026-03
+  known 2026-04-02
+  bank_rows[r1] = (on: 2026-01-05, kind: inheritances, leg cash from world to sav amount 3000.00 DUK, heir: ania) "line 1"
+  bank_rows[r2] = (on: 2026-01-06, kind: inheritances, leg cash from world to sav amount 1000.00 DUK, heir: tomek) "line 2"
+  bank_rows[r3] = (on: 2026-01-10, kind: transfers, leg cash from world to sav amount 4000.00 DUK) "line 3"
+  bank_rows[r4] = (on: 2026-01-15, kind: fund_buys, leg units from market to fund amount 10 fz_units, leg cash from current to market amount 500.00 DUK, buyer: ania) "line 4"
+  bank_rows[r5] = (on: 2026-01-16, kind: fund_buys, leg units from market to fund amount 20 fz_units, leg cash from current to market amount 1000.00 DUK, buyer: ania_tomek) "line 5"
+  bank_rows[r6] = (on: 2026-03-02, kind: transfers, leg cash from sav to current amount 600.00 DUK) "line 6"

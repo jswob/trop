@@ -1,0 +1,34 @@
+model num07
+  tally 1
+  on 2026-10-25
+  note "Probe NUM-07: a year whose gains net to a loss: tax 0, the loss carried."
+
+source probe_card "Probe card NUM-07 (made-up story and rules)"
+
+index sale = [fund_one, fund_two]
+
+input gain_rate: num
+input result[s in sale]: money DUK
+
+def loss_carried: num DUK
+  note "rule 2: a negative net is carried to later years by its size"
+  rule loss excepts no_loss v card when net < 0 = -net
+  rule no_loss v card = 0
+
+def net: money DUK
+  note "rule 1: the year's gains and losses are netted"
+  rule base v card = sum(s in sale: result[s])
+
+def tax: num DUK
+  note "rule 2: 19 % of a positive net; a negative net gives 0"
+  rule base v card = gain_rate * net
+  rule loss excepts base v card when net < 0 = 0
+
+ask q_year: net, tax, loss_carried
+
+version card
+  cite probe_card
+  known 2026-10-25
+  gain_rate = 0.19 "rule 2"
+  result[fund_one] = 1500.00 "story: sold at a gain of 1 500.00"
+  result[fund_two] = -2300.00 "story: sold at a loss of 2 300.00"

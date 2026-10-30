@@ -1,0 +1,27 @@
+# L §4.4: "A comparison is decided when the whole interval lies on one side. Otherwise it is a hole: ?"date within …
+# not precise enough for <the comparison>" (HOLE-IMPRECISE)."  "A value compared with itself is decided ... x < x is
+# false and x == x and x <= x are true even when x is a window."  An imprecise date prints as its window (L §5.18).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+input d: date
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  d = window(2020-07-01, 2020-07-31)
+
+ask q1: d, d < 2020-08-01, d > 2020-07-31, d < d, d == d, d <= d
+ask q2: d < 2020-07-15
+=== expect
+q1: (window(2020-07-01, 2020-07-31), true, false, false, true, true)
+  cut 2026-12-31
+q2: ?"date within window(2020-07-01, 2020-07-31) not precise enough for d < 2020-07-15" (d)
+  cut 2026-12-31

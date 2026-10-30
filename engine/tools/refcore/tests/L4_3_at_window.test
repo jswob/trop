@@ -1,0 +1,54 @@
+# L §4.3: "An at that gives a window (§4.4) reads the def once per law-date class the window overlaps ..., each at
+# its first day inside the window. If all give one value, that is the value; otherwise it is HOLE-IMPRECISE, unless
+# a windows clause chooses."  rate is 1 to 2026-03-15, 2 from 2026-03-16.  A window inside March 1-10 gives 1; a
+# window across the change is imprecise; windows each splits it at the change, 1 on 03-10..03-15 and 2 on
+# 03-16..03-20 (L §4.4; writer 8: windows latest is gone).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+input rate: int
+input early: date
+input across: date
+
+def y1: int at early
+  rule base = rate
+def y2: int at across
+  rule base = rate
+
+version v1
+  cite s
+  governs 2026-01-01..2026-03-15
+  known 2025-12-01
+  rate = 1
+
+version v2
+  cite s
+  governs 2026-03-16..
+  known 2026-03-01
+  rate = 2
+
+version d
+  cite s
+  governs always
+  known 2026-01-01
+  early = window(2026-03-01, 2026-03-10)
+  across = window(2026-03-10, 2026-03-20)
+
+ask q1: y1
+ask q2: y2
+ask q3: y2 windows each
+=== expect
+q1: 1
+  cut 2026-12-31
+q2: ?"date within window(2026-03-10, 2026-03-20) not precise enough for the law date of y2" (y2)
+  cut 2026-12-31
+q3 [across = 2026-03-10 .. 2026-03-15]: 1
+  cut 2026-12-31
+q3 [across = 2026-03-16 .. 2026-03-20]: 2
+  cut 2026-12-31

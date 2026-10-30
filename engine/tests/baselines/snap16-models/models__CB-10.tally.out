@@ -1,0 +1,72 @@
+case_note_deposit [note_cut = *]: 120 000.00 GBP
+  law date 2026-10-18, cut 2026-10-18
+case_note_effective_rate [note_cut = *]: 0.67
+  given: tax_charged[hr] = 28 849.84 GBP (facts2022)
+  given: tax_charged[mr] = 29 110.84 GBP (facts2022)
+  law date 2026-10-18, cut 2026-10-18
+case_note_hmrc_gain [gain_cut = *, note_cut = *]: 267 000.00 GBP
+  law date 2026-10-18, cut 2026-10-18
+case_note_mortgage [note_cut = *]: 350 000.00 GBP
+  law date 2026-10-18, cut 2026-10-18
+case_note_proceeds [note_cut = *]: 560 000.00 GBP
+  law date 2026-10-18, cut 2026-10-18
+case_note_rates [note_cut = *]: (0.43 GBP/CHF, 0.78 GBP/CHF)
+  law date 2026-10-18, cut 2026-10-18
+case_note_tp_gain [note_cut = *, tp_cut = *]: 39 000.00 GBP
+  law date 2026-10-18, cut 2026-10-18
+effective_tax_rate [pct_cut = *]: (1449017/2175000 (0.666214712643678), 0.6662)
+  given: tax_charged[hr] = 28 849.84 GBP (facts2022)
+  given: tax_charged[mr] = 29 110.84 GBP (facts2022)
+  law date 2026-10-18, cut 2026-10-18
+first_closure [gain_cut = *]: ?"How much Foreign Tax Credit Relief did HMRC give in the first closure notice? Para 8(9) says only that it was given on some of the gain." (fc_relief) ?"What did HMRC deduct from HR's half of the gain before applying the rates in the first closure notice (the annual exempt amount, any losses)? The decision doesn't say." (fc_deductions)
+  law date 2026-10-18, cut 2026-10-18
+gain_split (o = hr) [gain_cut = *]: (0.5, 133 603.5 GBP)
+  law date 2026-10-18, cut 2026-10-18
+gain_split (o = mr) [gain_cut = *]: (0.5, 133 603.5 GBP)
+  law date 2026-10-18, cut 2026-10-18
+hmrc_total_gain [gain_cut = *]: (267 207.0906 GBP, 267 207.00 GBP)
+  law date 2026-10-18, cut 2026-10-18
+penalties (o = hr) [pen_cut = down]: 4 327.47 GBP
+  given: tax_charged[hr] = 28 849.84 GBP (facts2022)
+  reading: pen_cut = down
+  law date 2026-10-18, cut 2026-10-18
+penalties (o = hr) [pen_cut = half-up]: 4 327.48 GBP
+  given: tax_charged[hr] = 28 849.84 GBP (facts2022)
+  reading: pen_cut = half-up
+  law date 2026-10-18, cut 2026-10-18
+penalties (o = mr) [pen_cut = down]: 4 366.62 GBP
+  given: tax_charged[mr] = 29 110.84 GBP (facts2022)
+  reading: pen_cut = down
+  law date 2026-10-18, cut 2026-10-18
+penalties (o = mr) [pen_cut = half-up]: 4 366.63 GBP
+  given: tax_charged[mr] = 29 110.84 GBP (facts2022)
+  reading: pen_cut = half-up
+  law date 2026-10-18, cut 2026-10-18
+rates_applied (b = basic_band): (upper_rate_gain, 0.18)
+  law date 2026-10-18, cut 2026-10-18
+rates_applied (b = higher_band): (upper_rate_gain, 0.28)
+  law date 2026-10-18, cut 2026-10-18
+tax_charge (o = hr): 28 849.84 GBP
+  given: tax_charged[hr] = 28 849.84 GBP (facts2022)
+  law date 2026-10-18, cut 2026-10-18
+tax_charge (o = mr): 29 110.84 GBP
+  given: tax_charged[mr] = 29 110.84 GBP (facts2022)
+  law date 2026-10-18, cut 2026-10-18
+taxpayers_measure: (116 000.00 GBP, 203 000.00 GBP, 87 000.00 GBP)
+  law date 2026-10-18, cut 2026-10-18
+tp_computation [tp_cut = *]: (561 024.00 GBP, 521 594.00 GBP, 39 430.00 GBP)
+  law date 2026-10-18, cut 2026-10-18
+tp_table (l = sale) [tp_cut = *]: (568 524 GBP, 568 524.00 GBP)
+  law date 2026-10-18, cut 2026-10-18
+tp_table (l = mortgage_aug16) [tp_cut = *]: (350 460 GBP, 350 460.00 GBP)
+  law date 2026-10-18, cut 2026-10-18
+tp_table (l = deposit) [tp_cut = *]: (119 784 GBP, 119 784.00 GBP)
+  law date 2026-10-18, cut 2026-10-18
+tp_table (l = fees_buy) [tp_cut = *]: (7 293.5622 GBP, 7 294.00 GBP)
+  law date 2026-10-18, cut 2026-10-18
+tp_table (l = repaid_1516) [tp_cut = *]: (16 295.5 GBP, 16 296.00 GBP)
+  law date 2026-10-18, cut 2026-10-18
+tp_table (l = mortgage_on_sale) [tp_cut = *]: (332 547.6 GBP, 332 548.00 GBP)
+  law date 2026-10-18, cut 2026-10-18
+tp_table (l = fees_sale) [tp_cut = *]: (45 671.9472 GBP, 45 672.00 GBP)
+  law date 2026-10-18, cut 2026-10-18

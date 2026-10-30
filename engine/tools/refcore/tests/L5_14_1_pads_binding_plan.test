@@ -1,0 +1,30 @@
+# Round 18, C2-14 (follows). L §5.14.1 Running reads: "a binding over a decision's movements, or over pads ... the decision
+# declares the move or the kind in reads (reads pads)"; E §3.1 step 7 now marks it. fix binds over pads with no reads:
+# LOAD-READS (L §8.3). With reads pads it is a decision and loads (L5_14_1_pads_binding_reads).
+=== m.tally
+model t
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 2026-01-01..
+input day: date
+
+move fix: transfers
+  on day
+  leg cash from world to konto amount sum(p.cash.amount for p in pads over month_of(day) - 1)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  day = 2026-03-10
+  opening[konto] = 0 PLN at 2026-01-01 start
+
+ask q: bal(konto, 2026-03-31)
+=== expect
+refused: LOAD-READS fix reaches a running read or projection of pads without reads pads ...

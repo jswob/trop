@@ -1,0 +1,271 @@
+e1_02_day: ok
+  law date 2025-12-31, cut 2026-01-15
+e1_02_family [a.pit6_health = *, a.px_round = *, d.hh_round = *]: ?"How much of his PIT-13 tax on his 3/16 of 2025's Ogrodowa rent (D-HR1 .4: he pays his own) had Jakub not paid by the end of 2025?" (e1_jakub_tax_unpaid) ?"MC-E1 stub: B's worth of Ola is not on this copy" (b.worth_ola[2025-12-31]) ?"MC-E1 stub: B's worth of Piotr is not on this copy" (b.worth_piotr[2025-12-31]) ?"On what day did this heir report the inheritance to the RO (IGT-4 .2)?" (d.reported_on[piotr]) ?"What did Jakub have and owe at the end of 2025 beyond his 3/16 of Ogrodowa and what Halina owed him? No account or record of his is among the family's papers, so not what is left of his 7 812.00 DUK payout or of what Halina sent him" (e1_jakub_rest) ?"What was the flat worth on the day the tax arose (IGT-2 .2)? The agreement's value is a price the heirs agreed, not a valuation." (d.flat_value_at_tax) ?"d.house_value has no reading on or before 2025-12-31" (d.house_value) ?"the Bank Lazur savings rate from 2025-07-01: no statement after 2025-06-30 was downloaded" (a.laz_rate)
+  assumed: D-D16 shows the statement on file for 2024; nothing in the dossier withdraws it (d.sio_reducing)
+  assumed: a redemption no statement shows yet has not been asked for; each D-D24 statement states its own day (d.red_day[red_20260304])
+  assumed: d.quarter: D-HR1 runs on, but a quarter is planned only while its due day falls in a year the holidays calendar has a row for (GEN-1's to 2026, the assumed row hol_2027 to 2027): 2027-Q4 is due in January 2028, and a due day that is a hole would spoil every span (L §5.14)
+  pinned: known d = 2020-01-10, 2020-02-11, 2020-03-11, 2020-04-10, 2020-05-10, 2020-06-10, 2020-07-10, 2020-08-12, 2020-09-10, 2020-10-10, 2020-11-12, 2020-12-10, 2021-01-10, 2021-02-10 .. 2021-02-11, 2021-03-10 .. 2021-03-11, 2021-04-10, 2021-05-10 .. 2021-05-11, 2021-06-10, 2021-07-10, 2021-08-10, 2021-08-12, 2021-09-10, 2021-10-10, 2021-10-12, 2021-11-10, 2021-11-12, 2021-12-10, 2022-01-10 .. 2022-01-11, 2022-02-10 .. 2022-02-11, 2022-03-10 .. 2022-03-11, 2022-04-10, 2022-04-12, 2022-05-10 .. 2022-05-11, 2022-06-10, 2022-07-10, 2022-07-12, 2022-08-10, 2022-08-12, 2022-09-10, 2022-10-10 .. 2022-10-12, 2022-11-10, 2022-11-12, 2022-12-10, 2023-01-10 .. 2023-01-11, 2023-02-10 .. 2023-02-11, 2023-03-10 .. 2023-03-11, 2023-04-10 .. 2023-04-12, 2023-05-10 .. 2023-05-11, 2023-06-10, 2023-07-10 .. 2023-07-12, 2023-08-10, 2023-08-12, 2023-09-10, 2023-09-12, 2023-10-10 .. 2023-10-12, 2023-11-10, 2023-11-12, 2023-12-10, 2023-12-12, 2024-01-10 .. 2024-01-11, 2024-02-10 .. 2024-02-11, 2024-03-10 .. 2024-03-11, 2024-04-10 .. 2024-04-12, 2024-05-10 .. 2024-05-11, 2024-06-10, 2024-06-12, 2024-07-10 .. 2024-07-12, 2024-08-10, 2024-08-12, 2024-09-10 .. 2024-09-12, 2024-10-10 .. 2024-10-12, 2024-11-10, 2024-11-12, 2024-12-10 .. 2024-12-12, 2025-01-10 .. 2025-01-11, 2025-02-10 .. 2025-02-12, 2025-03-10 .. 2025-03-11, 2025-04-10 .. 2025-04-12, 2025-05-10 .. 2025-05-11, 2025-06-10, 2025-06-12, 2025-07-10 .. 2025-07-12, 2025-08-10, 2025-08-12, 2025-09-10 .. 2025-09-12, 2025-10-10 .. 2025-10-12, 2025-11-10, 2025-11-12, 2025-12-10 .. 2025-12-12
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-01-15
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-01-31
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-02-14
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-02-28
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-03-14
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-03-31
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-04-15
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-04-30
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-05-15
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-05-30
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-06-13
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-06-30
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-07-15
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-07-31
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-08-14
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-08-29
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-09-15
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-09-30
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-10-15
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-10-31
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-11-14
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-11-28
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-12-15
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-12-31
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2026-01-15
+  anchor: a.ania_sav 2025-12-31 end, stated 39 162.33 DUK, difference ?"e1_wrz[w20250616a] crosses to a with no link" (e1_wrz[w20250616a])
+  anchor: a.joint 2025-12-31 end, stated 11 579.98 DUK, difference 0.00 DUK
+  anchor: a.lazur 2025-06-30 end, stated 24 223.47 DUK, difference 22 223.47 DUK
+  anchor: a.wcp_a 2025-12-31 end, stated 124.6286 a.wcp, difference 93.5829 a.wcp
+  anchor: a.wcp_t 2025-12-31 end, stated 336.6349 a.wcp, difference 279.8037 a.wcp
+  anchor: d.konto 2024-05-17 end, stated 46 761.80 DUK, difference 17 614.53 DUK
+  anchor: d.konto 2025-12-31 end, stated 14 080.75 DUK, difference -3 499.41 DUK
+  unfulfilled: a.laz_interest[2025-07]
+  unfulfilled: a.laz_interest[2025-10]
+  left out: e1_wrz[w20250616a], 1 instances, first 2025-06-16
+  held: d.valuation = 240 000.00 DUK (d.valuation_2025), read for 2025-12-31
+  law date 2025-12-31, cut 2026-01-15
+e1_02_family_known [a.pit6_health = *, a.px_round = *, d.hh_round = *]: 628 965.12 DUK + -1 × ?"How much of his PIT-13 tax on his 3/16 of 2025's Ogrodowa rent (D-HR1 .4: he pays his own) had Jakub not paid by the end of 2025?" (e1_jakub_tax_unpaid) + 1 × ?"MC-E1 stub: B's worth of Ola is not on this copy" (b.worth_ola[2025-12-31]) + 1 × ?"MC-E1 stub: B's worth of Piotr is not on this copy" (b.worth_piotr[2025-12-31]) + 1 × ?"What did Jakub have and owe at the end of 2025 beyond his 3/16 of Ogrodowa and what Halina owed him? No account or record of his is among the family's papers, so not what is left of his 7 812.00 DUK payout or of what Halina sent him" (e1_jakub_rest) + 1 × ?"d.house_value has no reading on or before 2025-12-31" (d.house_value)
+  assumed: D-D16 shows the statement on file for 2024; nothing in the dossier withdraws it (d.sio_reducing)
+  assumed: a redemption no statement shows yet has not been asked for; each D-D24 statement states its own day (d.red_day[red_20260304])
+  assumed: d.quarter: D-HR1 runs on, but a quarter is planned only while its due day falls in a year the holidays calendar has a row for (GEN-1's to 2026, the assumed row hol_2027 to 2027): 2027-Q4 is due in January 2028, and a due day that is a hole would spoil every span (L §5.14)
+  pinned: a.laz_rate = 0 /year
+  pinned: known d = 2020-01-10, 2020-02-11, 2020-03-11, 2020-04-10, 2020-05-10, 2020-06-10, 2020-07-10, 2020-08-12, 2020-09-10, 2020-10-10, 2020-11-12, 2020-12-10, 2021-01-10, 2021-02-10 .. 2021-02-11, 2021-03-10 .. 2021-03-11, 2021-04-10, 2021-05-10 .. 2021-05-11, 2021-06-10, 2021-07-10, 2021-08-10, 2021-08-12, 2021-09-10, 2021-10-10, 2021-10-12, 2021-11-10, 2021-11-12, 2021-12-10, 2022-01-10 .. 2022-01-11, 2022-02-10 .. 2022-02-11, 2022-03-10 .. 2022-03-11, 2022-04-10, 2022-04-12, 2022-05-10 .. 2022-05-11, 2022-06-10, 2022-07-10, 2022-07-12, 2022-08-10, 2022-08-12, 2022-09-10, 2022-10-10 .. 2022-10-12, 2022-11-10, 2022-11-12, 2022-12-10, 2023-01-10 .. 2023-01-11, 2023-02-10 .. 2023-02-11, 2023-03-10 .. 2023-03-11, 2023-04-10 .. 2023-04-12, 2023-05-10 .. 2023-05-11, 2023-06-10, 2023-07-10 .. 2023-07-12, 2023-08-10, 2023-08-12, 2023-09-10, 2023-09-12, 2023-10-10 .. 2023-10-12, 2023-11-10, 2023-11-12, 2023-12-10, 2023-12-12, 2024-01-10 .. 2024-01-11, 2024-02-10 .. 2024-02-11, 2024-03-10 .. 2024-03-11, 2024-04-10 .. 2024-04-12, 2024-05-10 .. 2024-05-11, 2024-06-10, 2024-06-12, 2024-07-10 .. 2024-07-12, 2024-08-10, 2024-08-12, 2024-09-10 .. 2024-09-12, 2024-10-10 .. 2024-10-12, 2024-11-10, 2024-11-12, 2024-12-10 .. 2024-12-12, 2025-01-10 .. 2025-01-11, 2025-02-10 .. 2025-02-12, 2025-03-10 .. 2025-03-11, 2025-04-10 .. 2025-04-12, 2025-05-10 .. 2025-05-11, 2025-06-10, 2025-06-12, 2025-07-10 .. 2025-07-12, 2025-08-10, 2025-08-12, 2025-09-10 .. 2025-09-12, 2025-10-10 .. 2025-10-12, 2025-11-10, 2025-11-12, 2025-12-10 .. 2025-12-12
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-01-15
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-01-31
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-02-14
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-02-28
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-03-14
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-03-31
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-04-15
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-04-30
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-05-15
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-05-30
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-06-13
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-06-30
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-07-15
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-07-31
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-08-14
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-08-29
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-09-15
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-09-30
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-10-15
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-10-31
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-11-14
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-11-28
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-12-15
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-12-31
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2026-01-15
+  world: e1_reported
+  anchor: a.ania_sav 2025-12-31 end, stated 39 162.33 DUK, difference ?"e1_wrz[w20250616a] crosses to a with no link" (e1_wrz[w20250616a])
+  anchor: a.joint 2025-12-31 end, stated 11 579.98 DUK, difference 0.00 DUK
+  anchor: a.lazur 2025-06-30 end, stated 24 223.47 DUK, difference 22 223.47 DUK
+  anchor: a.wcp_a 2025-12-31 end, stated 124.6286 a.wcp, difference 93.5829 a.wcp
+  anchor: a.wcp_t 2025-12-31 end, stated 336.6349 a.wcp, difference 279.8037 a.wcp
+  anchor: d.konto 2025-12-31 end, stated 14 080.75 DUK, difference -3 499.41 DUK
+  left out: e1_wrz[w20250616a], 1 instances, first 2025-06-16
+  held: d.valuation = 240 000.00 DUK (d.valuation_2025), read for 2025-12-31
+  law date 2025-12-31, cut 2026-01-15
+e1_02_owed [d.hh_round = *]: (?"MC-E1 stub: B's Ola-to-Piotr debt is not on this copy" (b.ola_owes_piotr[2025]), 1 174.69 DUK)
+  assumed: d.quarter: D-HR1 runs on, but a quarter is planned only while its due day falls in a year the holidays calendar has a row for (GEN-1's to 2026, the assumed row hol_2027 to 2027): 2027-Q4 is due in January 2028, and a due day that is a hole would spoil every span (L §5.14)
+  law date 2025-12-31, cut 2026-01-15
+e1_02_people (p = ania) [a.pit6_health = *, a.px_round = *, d.hh_round = *]: ?"the Bank Lazur savings rate from 2025-07-01: no statement after 2025-06-30 was downloaded" (a.laz_rate)
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-01-15
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-01-31
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-02-14
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-02-28
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-03-14
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-03-31
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-04-15
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-04-30
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-05-15
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-05-30
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-06-13
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-06-30
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-07-15
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-07-31
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-08-14
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-08-29
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-09-15
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-09-30
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-10-15
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-10-31
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-11-14
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-11-28
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-12-15
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-12-31
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2026-01-15
+  anchor: a.ania_sav 2025-12-31 end, stated 39 162.33 DUK, difference ?"e1_wrz[w20250616a] crosses to a with no link" (e1_wrz[w20250616a])
+  anchor: a.joint 2025-12-31 end, stated 11 579.98 DUK, difference 0.00 DUK
+  anchor: a.lazur 2025-06-30 end, stated 24 223.47 DUK, difference 22 223.47 DUK
+  anchor: a.wcp_a 2025-12-31 end, stated 124.6286 a.wcp, difference 93.5829 a.wcp
+  anchor: a.wcp_t 2025-12-31 end, stated 336.6349 a.wcp, difference 279.8037 a.wcp
+  unfulfilled: a.laz_interest[2025-07]
+  unfulfilled: a.laz_interest[2025-10]
+  left out: e1_wrz[w20250616a], 1 instances, first 2025-06-16
+  law date 2025-12-31, cut 2026-01-15
+e1_02_people (p = tomek) [a.pit6_health = *, a.px_round = *, d.hh_round = *]: ?"the Bank Lazur savings rate from 2025-07-01: no statement after 2025-06-30 was downloaded" (a.laz_rate)
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-01-15
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-01-31
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-02-14
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-02-28
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-03-14
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-03-31
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-04-15
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-04-30
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-05-15
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-05-30
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-06-13
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-06-30
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-07-15
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-07-31
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-08-14
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-08-29
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-09-15
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-09-30
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-10-15
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-10-31
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-11-14
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-11-28
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-12-15
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-12-31
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2026-01-15
+  anchor: a.ania_sav 2025-12-31 end, stated 39 162.33 DUK, difference ?"e1_wrz[w20250616a] crosses to a with no link" (e1_wrz[w20250616a])
+  anchor: a.joint 2025-12-31 end, stated 11 579.98 DUK, difference 0.00 DUK
+  anchor: a.lazur 2025-06-30 end, stated 24 223.47 DUK, difference 22 223.47 DUK
+  anchor: a.wcp_a 2025-12-31 end, stated 124.6286 a.wcp, difference 93.5829 a.wcp
+  anchor: a.wcp_t 2025-12-31 end, stated 336.6349 a.wcp, difference 279.8037 a.wcp
+  unfulfilled: a.laz_interest[2025-07]
+  unfulfilled: a.laz_interest[2025-10]
+  left out: e1_wrz[w20250616a], 1 instances, first 2025-06-16
+  law date 2025-12-31, cut 2026-01-15
+e1_02_people (p = piotr) [a.pit6_health = *, a.px_round = *, d.hh_round = *]: ?"MC-E1 stub: B's worth of Piotr is not on this copy" (b.worth_piotr[2025-12-31]) ?"On what day did this heir report the inheritance to the RO (IGT-4 .2)?" (d.reported_on[piotr]) ?"What was the flat worth on the day the tax arose (IGT-2 .2)? The agreement's value is a price the heirs agreed, not a valuation." (d.flat_value_at_tax)
+  pinned: known d = 2020-01-10, 2020-02-11, 2020-03-11, 2020-04-10, 2020-05-10, 2020-06-10, 2020-07-10, 2020-08-12, 2020-09-10, 2020-10-10, 2020-11-12, 2020-12-10, 2021-01-10, 2021-02-10 .. 2021-02-11, 2021-03-10 .. 2021-03-11, 2021-04-10, 2021-05-10 .. 2021-05-11, 2021-06-10, 2021-07-10, 2021-08-10, 2021-08-12, 2021-09-10, 2021-10-10, 2021-10-12, 2021-11-10, 2021-11-12, 2021-12-10, 2022-01-10 .. 2022-01-11, 2022-02-10 .. 2022-02-11, 2022-03-10 .. 2022-03-11, 2022-04-10, 2022-04-12, 2022-05-10 .. 2022-05-11, 2022-06-10, 2022-07-10, 2022-07-12, 2022-08-10, 2022-08-12, 2022-09-10, 2022-10-10 .. 2022-10-12, 2022-11-10, 2022-11-12, 2022-12-10, 2023-01-10 .. 2023-01-11, 2023-02-10 .. 2023-02-11, 2023-03-10 .. 2023-03-11, 2023-04-10 .. 2023-04-12, 2023-05-10 .. 2023-05-11, 2023-06-10, 2023-07-10 .. 2023-07-12, 2023-08-10, 2023-08-12, 2023-09-10, 2023-09-12, 2023-10-10 .. 2023-10-12, 2023-11-10, 2023-11-12, 2023-12-10, 2023-12-12, 2024-01-10 .. 2024-01-11, 2024-02-10 .. 2024-02-11, 2024-03-10 .. 2024-03-11, 2024-04-10 .. 2024-04-12, 2024-05-10 .. 2024-05-11, 2024-06-10, 2024-06-12, 2024-07-10 .. 2024-07-12, 2024-08-10, 2024-08-12, 2024-09-10 .. 2024-09-12, 2024-10-10 .. 2024-10-12
+  anchor: d.konto 2024-05-17 end, stated 46 761.80 DUK, difference 17 614.53 DUK
+  law date 2025-12-31, cut 2026-01-15
+e1_02_people (p = ola) [a.pit6_health = *, a.px_round = *, d.hh_round = *]: ?"MC-E1 stub: B's worth of Ola is not on this copy" (b.worth_ola[2025-12-31])
+  law date 2025-12-31, cut 2026-01-15
+e1_02_people (p = halina) [a.pit6_health = *, a.px_round = *, d.hh_round = *]: 242 941.73 DUK + 1 × ?"d.house_value has no reading on or before 2025-12-31" (d.house_value)
+  assumed: D-D16 shows the statement on file for 2024; nothing in the dossier withdraws it (d.sio_reducing)
+  assumed: a redemption no statement shows yet has not been asked for; each D-D24 statement states its own day (d.red_day[red_20260304])
+  assumed: d.quarter: D-HR1 runs on, but a quarter is planned only while its due day falls in a year the holidays calendar has a row for (GEN-1's to 2026, the assumed row hol_2027 to 2027): 2027-Q4 is due in January 2028, and a due day that is a hole would spoil every span (L §5.14)
+  pinned: known d = 2020-01-10, 2020-02-11, 2020-03-11, 2020-04-10, 2020-05-10, 2020-06-10, 2020-07-10, 2020-08-12, 2020-09-10, 2020-10-10, 2020-11-12, 2020-12-10, 2021-01-10, 2021-02-10 .. 2021-02-11, 2021-03-10 .. 2021-03-11, 2021-04-10, 2021-05-10 .. 2021-05-11, 2021-06-10, 2021-07-10, 2021-08-10, 2021-08-12, 2021-09-10, 2021-10-10, 2021-10-12, 2021-11-10, 2021-11-12, 2021-12-10, 2022-01-10 .. 2022-01-11, 2022-02-10 .. 2022-02-11, 2022-03-10 .. 2022-03-11, 2022-04-10, 2022-04-12, 2022-05-10 .. 2022-05-11, 2022-06-10, 2022-07-10, 2022-07-12, 2022-08-10, 2022-08-12, 2022-09-10, 2022-10-10 .. 2022-10-12, 2022-11-10, 2022-11-12, 2022-12-10, 2023-01-10 .. 2023-01-11, 2023-02-10 .. 2023-02-11, 2023-03-10 .. 2023-03-11, 2023-04-10 .. 2023-04-12, 2023-05-10 .. 2023-05-11, 2023-06-10, 2023-07-10 .. 2023-07-12, 2023-08-10, 2023-08-12, 2023-09-10, 2023-09-12, 2023-10-10 .. 2023-10-12, 2023-11-10, 2023-11-12, 2023-12-10, 2023-12-12, 2024-01-10 .. 2024-01-11, 2024-02-10 .. 2024-02-11, 2024-03-10 .. 2024-03-11, 2024-04-10 .. 2024-04-12, 2024-05-10 .. 2024-05-11, 2024-06-10, 2024-06-12, 2024-07-10 .. 2024-07-12, 2024-08-10, 2024-08-12, 2024-09-10 .. 2024-09-12, 2024-10-10 .. 2024-10-12, 2024-11-10, 2024-11-12, 2024-12-10 .. 2024-12-12, 2025-01-10 .. 2025-01-11, 2025-02-10 .. 2025-02-12, 2025-03-10 .. 2025-03-11, 2025-04-10 .. 2025-04-12, 2025-05-10 .. 2025-05-11, 2025-06-10, 2025-06-12, 2025-07-10 .. 2025-07-12, 2025-08-10, 2025-08-12, 2025-09-10 .. 2025-09-12, 2025-10-10 .. 2025-10-12, 2025-11-10, 2025-11-12, 2025-12-10 .. 2025-12-12
+  anchor: d.konto 2025-12-31 end, stated 14 080.75 DUK, difference -3 499.41 DUK
+  held: d.valuation = 240 000.00 DUK (d.valuation_2025), read for 2025-12-31
+  law date 2025-12-31, cut 2026-01-15
+e1_02_people (p = jakub) [a.pit6_health = *, a.px_round = *, d.hh_round = *]: 46 174.69 DUK + -1 × ?"How much of his PIT-13 tax on his 3/16 of 2025's Ogrodowa rent (D-HR1 .4: he pays his own) had Jakub not paid by the end of 2025?" (e1_jakub_tax_unpaid) + 1 × ?"What did Jakub have and owe at the end of 2025 beyond his 3/16 of Ogrodowa and what Halina owed him? No account or record of his is among the family's papers, so not what is left of his 7 812.00 DUK payout or of what Halina sent him" (e1_jakub_rest)
+  assumed: d.quarter: D-HR1 runs on, but a quarter is planned only while its due day falls in a year the holidays calendar has a row for (GEN-1's to 2026, the assumed row hol_2027 to 2027): 2027-Q4 is due in January 2028, and a due day that is a hole would spoil every span (L §5.14)
+  held: d.valuation = 240 000.00 DUK (d.valuation_2025), read for 2025-12-31
+  law date 2025-12-31, cut 2026-01-15
+e1_02_people_known (p = ania) [a.pit6_health = *, a.px_round = *, d.hh_round = *]: 209 642.97 DUK
+  pinned: a.laz_rate = 0 /year
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-01-15
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-01-31
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-02-14
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-02-28
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-03-14
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-03-31
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-04-15
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-04-30
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-05-15
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-05-30
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-06-13
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-06-30
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-07-15
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-07-31
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-08-14
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-08-29
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-09-15
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-09-30
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-10-15
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-10-31
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-11-14
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-11-28
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-12-15
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-12-31
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2026-01-15
+  world: e1_reported
+  anchor: a.ania_sav 2025-12-31 end, stated 39 162.33 DUK, difference ?"e1_wrz[w20250616a] crosses to a with no link" (e1_wrz[w20250616a])
+  anchor: a.joint 2025-12-31 end, stated 11 579.98 DUK, difference 0.00 DUK
+  anchor: a.lazur 2025-06-30 end, stated 24 223.47 DUK, difference 22 223.47 DUK
+  anchor: a.wcp_a 2025-12-31 end, stated 124.6286 a.wcp, difference 93.5829 a.wcp
+  anchor: a.wcp_t 2025-12-31 end, stated 336.6349 a.wcp, difference 279.8037 a.wcp
+  left out: e1_wrz[w20250616a], 1 instances, first 2025-06-16
+  law date 2025-12-31, cut 2026-01-15
+e1_02_people_known (p = tomek) [a.pit6_health = *, a.px_round = *, d.hh_round = *]: 130 205.73 DUK
+  pinned: a.laz_rate = 0 /year
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-01-15
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-01-31
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-02-14
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-02-28
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-03-14
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-03-31
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-04-15
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-04-30
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-05-15
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-05-30
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-06-13
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-06-30
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-07-15
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-07-31
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-08-14
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-08-29
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-09-15
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-09-30
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-10-15
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-10-31
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-11-14
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-11-28
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-12-15
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2025-12-31
+  pinned: wording a.pay_on[e, m] for [a.pit3_rate, a.pit3_reducing] = 2026-01-15
+  world: e1_reported
+  anchor: a.ania_sav 2025-12-31 end, stated 39 162.33 DUK, difference ?"e1_wrz[w20250616a] crosses to a with no link" (e1_wrz[w20250616a])
+  anchor: a.joint 2025-12-31 end, stated 11 579.98 DUK, difference 0.00 DUK
+  anchor: a.lazur 2025-06-30 end, stated 24 223.47 DUK, difference 22 223.47 DUK
+  anchor: a.wcp_a 2025-12-31 end, stated 124.6286 a.wcp, difference 93.5829 a.wcp
+  anchor: a.wcp_t 2025-12-31 end, stated 336.6349 a.wcp, difference 279.8037 a.wcp
+  left out: e1_wrz[w20250616a], 1 instances, first 2025-06-16
+  law date 2025-12-31, cut 2026-01-15
+e1_02_people_known (p = piotr) [a.pit6_health = *, a.px_round = *, d.hh_round = *]: 0.00 DUK + 1 × ?"MC-E1 stub: B's worth of Piotr is not on this copy" (b.worth_piotr[2025-12-31])
+  pinned: a.laz_rate = 0 /year
+  world: e1_reported
+  law date 2025-12-31, cut 2026-01-15
+e1_02_people_known (p = ola) [a.pit6_health = *, a.px_round = *, d.hh_round = *]: ?"MC-E1 stub: B's worth of Ola is not on this copy" (b.worth_ola[2025-12-31])
+  pinned: a.laz_rate = 0 /year
+  world: e1_reported
+  law date 2025-12-31, cut 2026-01-15
+e1_02_people_known (p = halina) [a.pit6_health = *, a.px_round = *, d.hh_round = *]: 242 941.73 DUK + 1 × ?"d.house_value has no reading on or before 2025-12-31" (d.house_value)
+  assumed: D-D16 shows the statement on file for 2024; nothing in the dossier withdraws it (d.sio_reducing)
+  assumed: a redemption no statement shows yet has not been asked for; each D-D24 statement states its own day (d.red_day[red_20260304])
+  assumed: d.quarter: D-HR1 runs on, but a quarter is planned only while its due day falls in a year the holidays calendar has a row for (GEN-1's to 2026, the assumed row hol_2027 to 2027): 2027-Q4 is due in January 2028, and a due day that is a hole would spoil every span (L §5.14)
+  pinned: a.laz_rate = 0 /year
+  pinned: known d = 2020-01-10, 2020-02-11, 2020-03-11, 2020-04-10, 2020-05-10, 2020-06-10, 2020-07-10, 2020-08-12, 2020-09-10, 2020-10-10, 2020-11-12, 2020-12-10, 2021-01-10, 2021-02-10 .. 2021-02-11, 2021-03-10 .. 2021-03-11, 2021-04-10, 2021-05-10 .. 2021-05-11, 2021-06-10, 2021-07-10, 2021-08-10, 2021-08-12, 2021-09-10, 2021-10-10, 2021-10-12, 2021-11-10, 2021-11-12, 2021-12-10, 2022-01-10 .. 2022-01-11, 2022-02-10 .. 2022-02-11, 2022-03-10 .. 2022-03-11, 2022-04-10, 2022-04-12, 2022-05-10 .. 2022-05-11, 2022-06-10, 2022-07-10, 2022-07-12, 2022-08-10, 2022-08-12, 2022-09-10, 2022-10-10 .. 2022-10-12, 2022-11-10, 2022-11-12, 2022-12-10, 2023-01-10 .. 2023-01-11, 2023-02-10 .. 2023-02-11, 2023-03-10 .. 2023-03-11, 2023-04-10 .. 2023-04-12, 2023-05-10 .. 2023-05-11, 2023-06-10, 2023-07-10 .. 2023-07-12, 2023-08-10, 2023-08-12, 2023-09-10, 2023-09-12, 2023-10-10 .. 2023-10-12, 2023-11-10, 2023-11-12, 2023-12-10, 2023-12-12, 2024-01-10 .. 2024-01-11, 2024-02-10 .. 2024-02-11, 2024-03-10 .. 2024-03-11, 2024-04-10 .. 2024-04-12, 2024-05-10 .. 2024-05-11, 2024-06-10, 2024-06-12, 2024-07-10 .. 2024-07-12, 2024-08-10, 2024-08-12, 2024-09-10 .. 2024-09-12, 2024-10-10 .. 2024-10-12, 2024-11-10, 2024-11-12, 2024-12-10 .. 2024-12-12, 2025-01-10 .. 2025-01-11, 2025-02-10 .. 2025-02-12, 2025-03-10 .. 2025-03-11, 2025-04-10 .. 2025-04-12, 2025-05-10 .. 2025-05-11, 2025-06-10, 2025-06-12, 2025-07-10 .. 2025-07-12, 2025-08-10, 2025-08-12, 2025-09-10 .. 2025-09-12, 2025-10-10 .. 2025-10-12, 2025-11-10, 2025-11-12, 2025-12-10 .. 2025-12-12
+  world: e1_reported
+  anchor: d.konto 2025-12-31 end, stated 14 080.75 DUK, difference -3 499.41 DUK
+  held: d.valuation = 240 000.00 DUK (d.valuation_2025), read for 2025-12-31
+  law date 2025-12-31, cut 2026-01-15
+e1_02_people_known (p = jakub) [a.pit6_health = *, a.px_round = *, d.hh_round = *]: 46 174.69 DUK + -1 × ?"How much of his PIT-13 tax on his 3/16 of 2025's Ogrodowa rent (D-HR1 .4: he pays his own) had Jakub not paid by the end of 2025?" (e1_jakub_tax_unpaid) + 1 × ?"What did Jakub have and owe at the end of 2025 beyond his 3/16 of Ogrodowa and what Halina owed him? No account or record of his is among the family's papers, so not what is left of his 7 812.00 DUK payout or of what Halina sent him" (e1_jakub_rest)
+  assumed: d.quarter: D-HR1 runs on, but a quarter is planned only while its due day falls in a year the holidays calendar has a row for (GEN-1's to 2026, the assumed row hol_2027 to 2027): 2027-Q4 is due in January 2028, and a due day that is a hole would spoil every span (L §5.14)
+  pinned: a.laz_rate = 0 /year
+  world: e1_reported
+  held: d.valuation = 240 000.00 DUK (d.valuation_2025), read for 2025-12-31
+  law date 2025-12-31, cut 2026-01-15
+warning: WARN-NEGATIVE d.konto is below zero from 2025-06-12

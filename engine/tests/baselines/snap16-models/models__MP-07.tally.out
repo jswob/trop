@@ -1,0 +1,139 @@
+a_brought_forward [mp07_pct = *, mp07_pound = *]: (0.75, 112 500.00 GBP)
+  assumed: no spouse or civil partner is related to a person except those the examples name (related[maria, allen], related[maria, brian], related[maria, cheng], related[maria, clyde], related[maria, david], related[maria, jack_e], related[maria, jack_h], related[maria, jill], related[maria, joelle], related[maria, john_d], related[maria, john_g], related[maria, joyce], related[maria, linda], related[maria, maria], related[maria, mei], related[maria, yasuo], related[maria, zac])
+  assumed: the examples assume the claims under s. 8A and s. 8L are made; none is stated (claims_made[maria])
+  law date 2026-10-19, cut 2026-10-19
+a_default [mp07_pct = *, mp07_pound = *]: (262 500.00 GBP, 0 GBP)
+  assumed: no spouse or civil partner is related to a person except those the examples name (related[maria, allen], related[maria, brian], related[maria, cheng], related[maria, clyde], related[maria, david], related[maria, jack_e], related[maria, jack_h], related[maria, jill], related[maria, joelle], related[maria, john_d], related[maria, john_g], related[maria, joyce], related[maria, linda], related[maria, maria], related[maria, mei], related[maria, yasuo], related[maria, zac])
+  assumed: the examples assume the claims under s. 8A and s. 8L are made; none is stated (claims_made[maria])
+  law date 2026-10-19, cut 2026-10-19
+a_reduction [mp07_pct = *, mp07_pound = *]: (25 000 GBP, 75 000 GBP)
+  law date 2026-10-19, cut 2026-10-19
+a_rnrb [mp07_pct = *, mp07_pound = *]: 262 500 GBP
+  assumed: no spouse or civil partner is related to a person except those the examples name (related[maria, allen], related[maria, brian], related[maria, cheng], related[maria, clyde], related[maria, david], related[maria, jack_e], related[maria, jack_h], related[maria, jill], related[maria, joelle], related[maria, john_d], related[maria, john_g], related[maria, joyce], related[maria, linda], related[maria, maria], related[maria, mei], related[maria, yasuo], related[maria, zac])
+  assumed: the examples assume the claims under s. 8A and s. 8L are made; none is stated (claims_made[maria])
+  law date 2026-10-19, cut 2026-10-19
+b_brought_forward [mp07_pct = *, mp07_pound = *]: (1, 175 000.00 GBP)
+  assumed: no spouse or civil partner is related to a person except those the examples name (related[yasuo, allen], related[yasuo, brian], related[yasuo, cheng], related[yasuo, clyde], related[yasuo, david], related[yasuo, jack_e], related[yasuo, jack_h], related[yasuo, jill], related[yasuo, joelle], related[yasuo, john_d], related[yasuo, john_g], related[yasuo, joyce], related[yasuo, linda], related[yasuo, maria], related[yasuo, mei], related[yasuo, monique], related[yasuo, yasuo], related[zac, allen], related[zac, brian], related[zac, cheng], related[zac, clyde], related[zac, david], related[zac, jack_e], related[zac, jack_h], related[zac, jill], related[zac, joelle], related[zac, john_d], related[zac, john_g], related[zac, joyce], related[zac, linda], related[zac, maria], related[zac, mei], related[zac, monique], related[zac, yasuo], related[zac, zac])
+  assumed: the examples assume the claims under s. 8A and s. 8L are made; none is stated (claims_made[yasuo], claims_made[zac])
+  law date 2026-10-19, cut 2026-10-19
+b_default [mp07_pct = *, mp07_pound = *]: 350 000.00 GBP
+  assumed: no spouse or civil partner is related to a person except those the examples name (related[yasuo, allen], related[yasuo, brian], related[yasuo, cheng], related[yasuo, clyde], related[yasuo, david], related[yasuo, jack_e], related[yasuo, jack_h], related[yasuo, jill], related[yasuo, joelle], related[yasuo, john_d], related[yasuo, john_g], related[yasuo, joyce], related[yasuo, linda], related[yasuo, maria], related[yasuo, mei], related[yasuo, monique], related[yasuo, yasuo], related[zac, allen], related[zac, brian], related[zac, cheng], related[zac, clyde], related[zac, david], related[zac, jack_e], related[zac, jack_h], related[zac, jill], related[zac, joelle], related[zac, john_d], related[zac, john_g], related[zac, joyce], related[zac, linda], related[zac, maria], related[zac, mei], related[zac, monique], related[zac, yasuo], related[zac, zac])
+  assumed: the examples assume the claims under s. 8A and s. 8L are made; none is stated (claims_made[yasuo], claims_made[zac])
+  law date 2026-10-19, cut 2026-10-19
+b_nil_point [mp07_pct = *, mp07_pound = *]: 2 700 000.00 GBP
+  assumed: no spouse or civil partner is related to a person except those the examples name (related[yasuo, allen], related[yasuo, brian], related[yasuo, cheng], related[yasuo, clyde], related[yasuo, david], related[yasuo, jack_e], related[yasuo, jack_h], related[yasuo, jill], related[yasuo, joelle], related[yasuo, john_d], related[yasuo, john_g], related[yasuo, joyce], related[yasuo, linda], related[yasuo, maria], related[yasuo, mei], related[yasuo, monique], related[yasuo, yasuo], related[zac, allen], related[zac, brian], related[zac, cheng], related[zac, clyde], related[zac, david], related[zac, jack_e], related[zac, jack_h], related[zac, jill], related[zac, joelle], related[zac, john_d], related[zac, john_g], related[zac, joyce], related[zac, linda], related[zac, maria], related[zac, mei], related[zac, monique], related[zac, yasuo], related[zac, zac])
+  assumed: the examples assume the claims under s. 8A and s. 8L are made; none is stated (claims_made[yasuo], claims_made[zac])
+  law date 2026-10-19, cut 2026-10-19
+b_rnrb [mp07_pct = *, mp07_pound = *]: 250 000 GBP
+  assumed: no spouse or civil partner is related to a person except those the examples name (related[yasuo, allen], related[yasuo, brian], related[yasuo, cheng], related[yasuo, clyde], related[yasuo, david], related[yasuo, jack_e], related[yasuo, jack_h], related[yasuo, jill], related[yasuo, joelle], related[yasuo, john_d], related[yasuo, john_g], related[yasuo, joyce], related[yasuo, linda], related[yasuo, maria], related[yasuo, mei], related[yasuo, monique], related[yasuo, yasuo], related[zac, allen], related[zac, brian], related[zac, cheng], related[zac, clyde], related[zac, david], related[zac, jack_e], related[zac, jack_h], related[zac, jill], related[zac, joelle], related[zac, john_d], related[zac, john_g], related[zac, joyce], related[zac, linda], related[zac, maria], related[zac, mei], related[zac, monique], related[zac, yasuo], related[zac, zac])
+  assumed: the examples assume the claims under s. 8A and s. 8L are made; none is stated (claims_made[yasuo], claims_made[zac])
+  law date 2026-10-19, cut 2026-10-19
+b_taper [mp07_pct = *, mp07_pound = *]: (100 000 GBP, 250 000 GBP)
+  assumed: no spouse or civil partner is related to a person except those the examples name (related[yasuo, allen], related[yasuo, brian], related[yasuo, cheng], related[yasuo, clyde], related[yasuo, david], related[yasuo, jack_e], related[yasuo, jack_h], related[yasuo, jill], related[yasuo, joelle], related[yasuo, john_d], related[yasuo, john_g], related[yasuo, joyce], related[yasuo, linda], related[yasuo, maria], related[yasuo, mei], related[yasuo, monique], related[yasuo, yasuo], related[zac, allen], related[zac, brian], related[zac, cheng], related[zac, clyde], related[zac, david], related[zac, jack_e], related[zac, jack_h], related[zac, jill], related[zac, joelle], related[zac, john_d], related[zac, john_g], related[zac, joyce], related[zac, linda], related[zac, maria], related[zac, mei], related[zac, monique], related[zac, yasuo], related[zac, zac])
+  assumed: the examples assume the claims under s. 8A and s. 8L are made; none is stated (claims_made[yasuo], claims_made[zac])
+  law date 2026-10-19, cut 2026-10-19
+b_unused [mp07_pct = *, mp07_pound = *]: (125 000 GBP, 0 GBP)
+  assumed: no spouse or civil partner is related to a person except those the examples name (related[zac, allen], related[zac, brian], related[zac, cheng], related[zac, clyde], related[zac, david], related[zac, jack_e], related[zac, jack_h], related[zac, jill], related[zac, joelle], related[zac, john_d], related[zac, john_g], related[zac, joyce], related[zac, linda], related[zac, maria], related[zac, mei], related[zac, monique], related[zac, yasuo], related[zac, zac])
+  assumed: the examples assume the claims under s. 8A and s. 8L are made; none is stated (claims_made[zac])
+  law date 2026-10-19, cut 2026-10-19
+c_brought_forward [mp07_pct = *, mp07_pound = *]: (0.625, 109 375.00 GBP)
+  assumed: no spouse or civil partner is related to a person except those the examples name (related[clyde, allen], related[clyde, brian], related[clyde, cheng], related[clyde, clyde], related[clyde, david], related[clyde, jack_e], related[clyde, jack_h], related[clyde, jill], related[clyde, john_d], related[clyde, john_g], related[clyde, joyce], related[clyde, linda], related[clyde, maria], related[clyde, mei], related[clyde, monique], related[clyde, yasuo], related[clyde, zac])
+  assumed: the examples assume the claims under s. 8A and s. 8L are made; none is stated (claims_made[clyde])
+  law date 2026-10-19, cut 2026-10-19
+c_default [mp07_pct = *, mp07_pound = *]: 284 375.00 GBP
+  assumed: no spouse or civil partner is related to a person except those the examples name (related[clyde, allen], related[clyde, brian], related[clyde, cheng], related[clyde, clyde], related[clyde, david], related[clyde, jack_e], related[clyde, jack_h], related[clyde, jill], related[clyde, john_d], related[clyde, john_g], related[clyde, joyce], related[clyde, linda], related[clyde, maria], related[clyde, mei], related[clyde, monique], related[clyde, yasuo], related[clyde, zac])
+  assumed: the examples assume the claims under s. 8A and s. 8L are made; none is stated (claims_made[clyde])
+  law date 2026-10-19, cut 2026-10-19
+c_reduction [mp07_pct = *, mp07_pound = *]: (37 500 GBP, 62 500 GBP)
+  law date 2026-10-19, cut 2026-10-19
+c_rnrb [mp07_pct = *, mp07_pound = *]: (375 000 GBP, 234 375 GBP)
+  assumed: no spouse or civil partner is related to a person except those the examples name (related[clyde, allen], related[clyde, brian], related[clyde, cheng], related[clyde, clyde], related[clyde, david], related[clyde, jack_e], related[clyde, jack_h], related[clyde, jill], related[clyde, john_d], related[clyde, john_g], related[clyde, joyce], related[clyde, linda], related[clyde, maria], related[clyde, mei], related[clyde, monique], related[clyde, yasuo], related[clyde, zac])
+  assumed: the examples assume the claims under s. 8A and s. 8L are made; none is stated (claims_made[clyde])
+  law date 2026-10-19, cut 2026-10-19
+c_taper [mp07_pct = *, mp07_pound = *]: (50 000 GBP, 234 375 GBP)
+  assumed: no spouse or civil partner is related to a person except those the examples name (related[clyde, allen], related[clyde, brian], related[clyde, cheng], related[clyde, clyde], related[clyde, david], related[clyde, jack_e], related[clyde, jack_h], related[clyde, jill], related[clyde, john_d], related[clyde, john_g], related[clyde, joyce], related[clyde, linda], related[clyde, maria], related[clyde, mei], related[clyde, monique], related[clyde, yasuo], related[clyde, zac])
+  assumed: the examples assume the claims under s. 8A and s. 8L are made; none is stated (claims_made[clyde])
+  law date 2026-10-19, cut 2026-10-19
+d_band [mp07_pct = *]: (250 000.00 GBP, 100 000.00 GBP, 150 000.00 GBP, 0.6, 480 000 GBP)
+  assumed: no spouse or civil partner is related to a person except those the examples name (related[linda, allen], related[linda, brian], related[linda, cheng], related[linda, clyde], related[linda, david], related[linda, jack_e], related[linda, jack_h], related[linda, jill], related[linda, joelle], related[linda, john_g], related[linda, joyce], related[linda, linda], related[linda, maria], related[linda, mei], related[linda, monique], related[linda, yasuo], related[linda, zac])
+  assumed: the examples assume the claims under s. 8A and s. 8L are made; none is stated (claims_made[linda])
+  law date 2026-10-19, cut 2026-10-19
+d_variant [mp07_pct = *]: (false, 0.00 GBP, 0 GBP)
+  assumed: no spouse or civil partner is related to a person except those the examples name (related[linda, allen], related[linda, brian], related[linda, cheng], related[linda, clyde], related[linda, david], related[linda, jack_e], related[linda, jack_h], related[linda, jill], related[linda, joelle], related[linda, john_g], related[linda, joyce], related[linda, linda], related[linda, maria], related[linda, mei], related[linda, monique], related[linda, yasuo], related[linda, zac])
+  assumed: the examples assume the claims under s. 8A and s. 8L are made; none is stated (claims_made[linda])
+  pinned: chargeable_on_death[john_d] = 300 000.00 GBP
+  law date 2026-10-19, cut 2026-10-19
+e_band [mp07_pct = *]: (150 000.00 GBP, 0.6, 55 000.00 GBP, 0.2, 540 000 GBP)
+  assumed: no spouse or civil partner is related to a person except those the examples name (related[mei, allen], related[mei, brian], related[mei, clyde], related[mei, david], related[mei, jack_h], related[mei, jill], related[mei, joelle], related[mei, john_d], related[mei, john_g], related[mei, joyce], related[mei, linda], related[mei, maria], related[mei, mei], related[mei, monique], related[mei, yasuo], related[mei, zac])
+  assumed: the examples assume the claims under s. 8A and s. 8L are made; none is stated (claims_made[mei])
+  given: m_value[cheng] = 250 000.00 GBP (ihtm_examples)
+  given: m_value[jack_e] = 275 000.00 GBP (ihtm_examples)
+  law date 2026-10-19, cut 2026-10-19
+f_band [mp07_pct = *]: (220 000.00 GBP, 0.8, 720 000 GBP, 600 000 GBP)
+  assumed: no spouse or civil partner is related to a person except those the examples name (related[mei, allen], related[mei, brian], related[mei, clyde], related[mei, david], related[mei, jack_h], related[mei, jill], related[mei, joelle], related[mei, john_d], related[mei, john_g], related[mei, joyce], related[mei, linda], related[mei, maria], related[mei, mei], related[mei, monique], related[mei, yasuo], related[mei, zac])
+  assumed: the examples assume the claims under s. 8A and s. 8L are made; none is stated (claims_made[mei])
+  given: m_value[cheng] = 250 000.00 GBP (ihtm_examples)
+  given: m_value[jack_e] = 275 000.00 GBP (ihtm_examples)
+  pinned: chargeable_on_death[jack_e] = 55 000.00 GBP
+  law date 2026-10-19, cut 2026-10-19
+g_brought_forward [mp07_pct = exact, mp07_pound = *]: (1, 100 000 GBP, 2/3 (0.666666666666667), 5/3 (1.66666666666667), 175 000.00 GBP)
+  assumed: IHTM46041 Example 4 gives no estate for Allen and applies no taper (within_threshold[allen])
+  assumed: IHTM46041 Example 4 gives no estate for John and treats 100% as available (within_threshold[john_g])
+  assumed: no spouse or civil partner is related to a person except those the examples name (related[allen, allen], related[allen, brian], related[allen, cheng], related[allen, clyde], related[allen, david], related[allen, jack_e], related[allen, jack_h], related[allen, jill], related[allen, joelle], related[allen, john_d], related[allen, john_g], related[allen, joyce], related[allen, linda], related[allen, maria], related[allen, mei], related[allen, monique], related[allen, yasuo], related[allen, zac], related[joyce, brian], related[joyce, cheng], related[joyce, clyde], related[joyce, david], related[joyce, jack_e], related[joyce, jack_h], related[joyce, jill], related[joyce, joelle], related[joyce, john_d], related[joyce, joyce], related[joyce, linda], related[joyce, maria], related[joyce, mei], related[joyce, monique], related[joyce, yasuo], related[joyce, zac])
+  assumed: the examples assume the claims under s. 8A and s. 8L are made; none is stated (claims_made[allen], claims_made[joyce])
+  given: enhancement_at[joyce] = 175 000.00 GBP (ihtm_examples)
+  reading: mp07_pct = exact
+  law date 2026-10-19, cut 2026-10-19
+g_brought_forward [mp07_pct = four_places, mp07_pound = *]: (1, 100 000 GBP, 0.666667, 1.666667, 175 000.00 GBP)
+  assumed: IHTM46041 Example 4 gives no estate for Allen and applies no taper (within_threshold[allen])
+  assumed: IHTM46041 Example 4 gives no estate for John and treats 100% as available (within_threshold[john_g])
+  assumed: no spouse or civil partner is related to a person except those the examples name (related[allen, allen], related[allen, brian], related[allen, cheng], related[allen, clyde], related[allen, david], related[allen, jack_e], related[allen, jack_h], related[allen, jill], related[allen, joelle], related[allen, john_d], related[allen, john_g], related[allen, joyce], related[allen, linda], related[allen, maria], related[allen, mei], related[allen, monique], related[allen, yasuo], related[allen, zac], related[joyce, brian], related[joyce, cheng], related[joyce, clyde], related[joyce, david], related[joyce, jack_e], related[joyce, jack_h], related[joyce, jill], related[joyce, joelle], related[joyce, john_d], related[joyce, joyce], related[joyce, linda], related[joyce, maria], related[joyce, mei], related[joyce, monique], related[joyce, yasuo], related[joyce, zac])
+  assumed: the examples assume the claims under s. 8A and s. 8L are made; none is stated (claims_made[allen], claims_made[joyce])
+  given: enhancement_at[joyce] = 175 000.00 GBP (ihtm_examples)
+  reading: mp07_pct = four_places
+  law date 2026-10-19, cut 2026-10-19
+h_brought_forward [mp07_pct = exact, mp07_pound = down]: (20 000 GBP, 0.2, 25 000 GBP, 1/6 (0.166666666666667), 11/30 (0.366666666666667), 64 166.00 GBP)
+  assumed: IHTM46041 Example 5 gives no estate for David and applies no taper (within_threshold[david])
+  assumed: IHTM46041 Example 5 gives no estate for Jack and applies no taper (within_threshold[jack_h])
+  assumed: no spouse or civil partner is related to a person except those the examples name (related[david, allen], related[david, brian], related[david, cheng], related[david, clyde], related[david, david], related[david, jack_e], related[david, jack_h], related[david, jill], related[david, joelle], related[david, john_d], related[david, john_g], related[david, joyce], related[david, linda], related[david, maria], related[david, mei], related[david, monique], related[david, yasuo], related[david, zac], related[jack_h, allen], related[jack_h, brian], related[jack_h, cheng], related[jack_h, clyde], related[jack_h, david], related[jack_h, jack_e], related[jack_h, jack_h], related[jack_h, jill], related[jack_h, joelle], related[jack_h, john_d], related[jack_h, john_g], related[jack_h, joyce], related[jack_h, linda], related[jack_h, maria], related[jack_h, mei], related[jack_h, monique], related[jack_h, yasuo], related[jack_h, zac], related[jill, allen], related[jill, brian], related[jill, cheng], related[jill, clyde], related[jill, jack_e], related[jill, jill], related[jill, joelle], related[jill, john_d], related[jill, john_g], related[jill, joyce], related[jill, linda], related[jill, maria], related[jill, mei], related[jill, monique], related[jill, yasuo], related[jill, zac])
+  assumed: the examples assume the claims under s. 8A and s. 8L are made; none is stated (claims_made[david], claims_made[jack_h], claims_made[jill])
+  given: enhancement_at[jill] = 175 000.00 GBP (ihtm_examples)
+  reading: mp07_pct = exact
+  reading: mp07_pound = down
+  law date 2026-10-19, cut 2026-10-19
+h_brought_forward [mp07_pct = exact, mp07_pound = half-up]: (20 000 GBP, 0.2, 25 000 GBP, 1/6 (0.166666666666667), 11/30 (0.366666666666667), 64 167.00 GBP)
+  assumed: IHTM46041 Example 5 gives no estate for David and applies no taper (within_threshold[david])
+  assumed: IHTM46041 Example 5 gives no estate for Jack and applies no taper (within_threshold[jack_h])
+  assumed: no spouse or civil partner is related to a person except those the examples name (related[david, allen], related[david, brian], related[david, cheng], related[david, clyde], related[david, david], related[david, jack_e], related[david, jack_h], related[david, jill], related[david, joelle], related[david, john_d], related[david, john_g], related[david, joyce], related[david, linda], related[david, maria], related[david, mei], related[david, monique], related[david, yasuo], related[david, zac], related[jack_h, allen], related[jack_h, brian], related[jack_h, cheng], related[jack_h, clyde], related[jack_h, david], related[jack_h, jack_e], related[jack_h, jack_h], related[jack_h, jill], related[jack_h, joelle], related[jack_h, john_d], related[jack_h, john_g], related[jack_h, joyce], related[jack_h, linda], related[jack_h, maria], related[jack_h, mei], related[jack_h, monique], related[jack_h, yasuo], related[jack_h, zac], related[jill, allen], related[jill, brian], related[jill, cheng], related[jill, clyde], related[jill, jack_e], related[jill, jill], related[jill, joelle], related[jill, john_d], related[jill, john_g], related[jill, joyce], related[jill, linda], related[jill, maria], related[jill, mei], related[jill, monique], related[jill, yasuo], related[jill, zac])
+  assumed: the examples assume the claims under s. 8A and s. 8L are made; none is stated (claims_made[david], claims_made[jack_h], claims_made[jill])
+  given: enhancement_at[jill] = 175 000.00 GBP (ihtm_examples)
+  reading: mp07_pct = exact
+  reading: mp07_pound = half-up
+  law date 2026-10-19, cut 2026-10-19
+h_brought_forward [mp07_pct = four_places, mp07_pound = down]: (20 000 GBP, 0.2, 25 000 GBP, 0.166667, 0.366667, 64 166.00 GBP)
+  assumed: IHTM46041 Example 5 gives no estate for David and applies no taper (within_threshold[david])
+  assumed: IHTM46041 Example 5 gives no estate for Jack and applies no taper (within_threshold[jack_h])
+  assumed: no spouse or civil partner is related to a person except those the examples name (related[david, allen], related[david, brian], related[david, cheng], related[david, clyde], related[david, david], related[david, jack_e], related[david, jack_h], related[david, jill], related[david, joelle], related[david, john_d], related[david, john_g], related[david, joyce], related[david, linda], related[david, maria], related[david, mei], related[david, monique], related[david, yasuo], related[david, zac], related[jack_h, allen], related[jack_h, brian], related[jack_h, cheng], related[jack_h, clyde], related[jack_h, david], related[jack_h, jack_e], related[jack_h, jack_h], related[jack_h, jill], related[jack_h, joelle], related[jack_h, john_d], related[jack_h, john_g], related[jack_h, joyce], related[jack_h, linda], related[jack_h, maria], related[jack_h, mei], related[jack_h, monique], related[jack_h, yasuo], related[jack_h, zac], related[jill, allen], related[jill, brian], related[jill, cheng], related[jill, clyde], related[jill, jack_e], related[jill, jill], related[jill, joelle], related[jill, john_d], related[jill, john_g], related[jill, joyce], related[jill, linda], related[jill, maria], related[jill, mei], related[jill, monique], related[jill, yasuo], related[jill, zac])
+  assumed: the examples assume the claims under s. 8A and s. 8L are made; none is stated (claims_made[david], claims_made[jack_h], claims_made[jill])
+  given: enhancement_at[jill] = 175 000.00 GBP (ihtm_examples)
+  reading: mp07_pct = four_places
+  reading: mp07_pound = down
+  law date 2026-10-19, cut 2026-10-19
+h_brought_forward [mp07_pct = four_places, mp07_pound = half-up]: (20 000 GBP, 0.2, 25 000 GBP, 0.166667, 0.366667, 64 167.00 GBP)
+  assumed: IHTM46041 Example 5 gives no estate for David and applies no taper (within_threshold[david])
+  assumed: IHTM46041 Example 5 gives no estate for Jack and applies no taper (within_threshold[jack_h])
+  assumed: no spouse or civil partner is related to a person except those the examples name (related[david, allen], related[david, brian], related[david, cheng], related[david, clyde], related[david, david], related[david, jack_e], related[david, jack_h], related[david, jill], related[david, joelle], related[david, john_d], related[david, john_g], related[david, joyce], related[david, linda], related[david, maria], related[david, mei], related[david, monique], related[david, yasuo], related[david, zac], related[jack_h, allen], related[jack_h, brian], related[jack_h, cheng], related[jack_h, clyde], related[jack_h, david], related[jack_h, jack_e], related[jack_h, jack_h], related[jack_h, jill], related[jack_h, joelle], related[jack_h, john_d], related[jack_h, john_g], related[jack_h, joyce], related[jack_h, linda], related[jack_h, maria], related[jack_h, mei], related[jack_h, monique], related[jack_h, yasuo], related[jack_h, zac], related[jill, allen], related[jill, brian], related[jill, cheng], related[jill, clyde], related[jill, jack_e], related[jill, jill], related[jill, joelle], related[jill, john_d], related[jill, john_g], related[jill, joyce], related[jill, linda], related[jill, maria], related[jill, mei], related[jill, monique], related[jill, yasuo], related[jill, zac])
+  assumed: the examples assume the claims under s. 8A and s. 8L are made; none is stated (claims_made[david], claims_made[jack_h], claims_made[jill])
+  given: enhancement_at[jill] = 175 000.00 GBP (ihtm_examples)
+  reading: mp07_pct = four_places
+  reading: mp07_pound = half-up
+  law date 2026-10-19, cut 2026-10-19
+i_taper [mp07_pct = *, mp07_pound = *]: (100 000.00 GBP, 75 000 GBP, 25 000 GBP)
+  assumed: no spouse or civil partner is related to a person except those the examples name (related[brian, allen], related[brian, brian], related[brian, cheng], related[brian, clyde], related[brian, david], related[brian, jack_e], related[brian, jack_h], related[brian, jill], related[brian, joelle], related[brian, john_d], related[brian, john_g], related[brian, joyce], related[brian, linda], related[brian, maria], related[brian, mei], related[brian, monique], related[brian, yasuo], related[brian, zac])
+  assumed: the examples assume the claims under s. 8A and s. 8L are made; none is stated (claims_made[brian])
+  law date 2026-10-19, cut 2026-10-19
+i_variant [mp07_pct = *, mp07_pound = *]: (125 000 GBP, 0 GBP)
+  assumed: no spouse or civil partner is related to a person except those the examples name (related[brian, allen], related[brian, brian], related[brian, cheng], related[brian, clyde], related[brian, david], related[brian, jack_e], related[brian, jack_h], related[brian, jill], related[brian, joelle], related[brian, john_d], related[brian, john_g], related[brian, joyce], related[brian, linda], related[brian, maria], related[brian, mei], related[brian, monique], related[brian, yasuo], related[brian, zac])
+  assumed: the examples assume the claims under s. 8A and s. 8L are made; none is stated (claims_made[brian])
+  pinned: estate_value[brian] = 2 250 000.00 GBP
+  law date 2026-10-19, cut 2026-10-19

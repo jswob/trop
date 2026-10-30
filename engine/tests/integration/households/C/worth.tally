@@ -1,0 +1,86 @@
+part worth
+  tally 2
+  note "What we have (C-HR9, CIV-1), at the end of a day: what is ours together counts half for each of us, the half carried exactly (.2); what is one's own counts for that one. Florens count at Bank Lazur's buy rate of the day, each amount on its own, to the ort, half up (.1). Money owed to us counts once set or claimed, money we owe once set (.3). The house and the car are gaps, never valued (.4). The mortgage counts at the principal owed (.5). Staś's money is his (.6). What one of us owes the joint account under C-HR3 or C-HR4, or it owes one of us, isn't counted (.7)."
+  note "Ours together: the joint account less all Staś has been sent (what it holds for him, and the shortfall we owe him, C-HR5 .2); the pot; the interest Marta's own account has received since the wedding (CIV-1 .2: C-D35's to 2023-12-31 and the rows since, net of the tax withheld); the dukats on Jan's Lazur account that aren't his own; his florens; the RTB assessment he has claimed and not been paid (RWT-6, at what the assessment gives); the RFF's and the FBO's child benefit set by their decisions and not yet paid; the house (a gap); less the mortgage's principal and what we owe Marta under C-HR7. Marta's own: her account less that interest, and what we owe her under C-HR7. Jan's own: Marta's gift on his Lazur account (CIV-1 .3) less what he paid from it for the car, and the car bought with it (a gap). Pay for a month is counted once paid: before its payslip nothing sets it (C-HR9 .3)."
+
+input house_value: money DUK question "What is the house ul. Graniczna 12 worth (C-HR9 .4)?"
+
+input car_value: money DUK question "What is Jan's car worth (C-HR9 .4)?"
+
+input marta_int_to_2023: money DUK question "How much interest, net of tax, did Marta's own account receive from the wedding to 2023-12-31 (C-D35)?"
+
+version not_valued
+  cite house_rules
+  governs always
+  known 2025-01-03
+  house_value = ?"the house has never been valued (C-HR9 .4; story: nobody has valued the house since it was bought)" "C-HR9 .4"
+  car_value = ?"the car has never been valued (C-HR9 .4; story: nobody has valued the car since it was bought)" "C-HR9 .4"
+
+version marta_history
+  cite c_d35
+  governs always
+  known 2024-01-05
+  marta_int_to_2023 = 2104.37 "C-D35: from 2016-09-17 to 2023-12-31 the account received only interest (net of tax): 2 104.37 DUK in all"
+
+def mo_rows[d in day]: int = count(s in seq where mo[d, s] != none)
+
+def mo_end[d in day]: money DUK
+  note "Marta's own account's balance at the end of day d"
+  rule carry = mo_end[d - 1] when pos(d) > 1
+  rule opening beats carry = open_bal[marta_own] when pos(d) == 1 and mo_rows[d] == 0
+  rule seen beats carry, opening = mo[d, last(s in seq where mo[d, s] != none)].bal when mo_rows[d] > 0
+
+def marta_comm_int[d in day]: money DUK
+  note "CIV-1 .2: the interest from Marta's own account since the wedding, community: C-D35's to 2023-12-31 and the interest rows since, less the tax withheld on them"
+  rule base = marta_int_to_2023 + sum(mo[x, s].cr - mo[x, s].dr for x in day, s in seq where x <= d and mo[x, s] != none and (mo[x, s].k == m_interest or mo[x, s].k == m_int_tax))
+
+def ld_rows[d in day]: int = count(s in seq where ld[d, s] != none)
+
+def ld_end[d in day]: money DUK
+  note "the dukat side of Jan's Lazur account at the end of day d; nothing before it opened"
+  rule carry = ld_end[d - 1] when pos(d) > 1
+  rule before beats carry = 0 DUK when d < lazur_opened
+  rule seen beats carry, before = ld[d, last(s in seq where ld[d, s] != none)].bal when d >= lazur_opened and ld_rows[d] > 0
+
+def jan_own_duk[d in day]: money DUK
+  note "CIV-1 .3: Marta's gift on the dukat side is Jan's own, less what he paid from it for the car (acquired in exchange for it)"
+  rule base = sum(ld[x, s].cr - ld[x, s].dr for x in day, s in seq where x <= d and ld[x, s] != none and (ld[x, s].k == d_gift_in or ld[x, s].k == d_car))
+
+def joint_ours[d in day]: money DUK = jw_end[d] - sent_to[d]
+
+def rtb_open[y in rv_year, d in day]: money FLR
+  note "an assessment Jan has claimed by day d and the RTB hasn't paid by then: what it gives (RWT-6)"
+  rule nothing = 0 FLR
+  rule claimed beats nothing = yr_refund[y] when end_of(y) - 1 day <= d and rtb_claimed[y] <= d and sum(lf[x, s].cr for x in day, s in seq where x <= d and x >= rtb_claimed[y] and lf[x, s] != none and lf[x, s].k == l_rtb) == 0 FLR
+
+def rtb_claim_duk[d in day]: money DUK
+  note "C-HR9 .1, .3: each claimed assessment's florens at the buy rate of the day, on its own"
+  rule base = sum(round(rtb_open[y, d] * lazur_buy[d], minor(DUK), half-up) for y in rv_year)
+
+def rff_owed_flr: money FLR
+  note "the RFF's benefit set by its decision (C-D22) for the months to the cut, less what it paid for them by the cut"
+  rule base = sum(rff_owed_q[q] for q in month where is_q_start[q] and ben_m[q])
+
+def rff_claim_duk[d in day]: money DUK = round(rff_owed_flr * lazur_buy[d], minor(DUK), half-up)
+
+def loan_owed_at[d in day]: money DUK
+  note "C-HR7: what the community owes Marta at the end of day d, set by the agreement (C-D31)"
+  rule nothing = 0 DUK
+  rule on beats nothing = owed_end[d] when loan_on[d]
+
+def mort_at[d in day]: money DUK = mort[without_x, d]
+
+def comm[d in day]: money DUK
+  note "what is ours together at the end of day d"
+  rule base = joint_ours[d] + pot_end[d] + marta_comm_int[d] + ld_end[d] - jan_own_duk[d] + held_duk[d] + rtb_claim_duk[d] + rff_claim_duk[d] + lenia_owed + house_value - mort_at[d] - loan_owed_at[d]
+
+def marta_ownw[d in day]: money DUK = mo_end[d] - marta_comm_int[d] + loan_owed_at[d]
+
+def jan_own[d in day]: money DUK = jan_own_duk[d] + car_value
+
+def worth_together[d in day]: money DUK = comm[d] + marta_ownw[d] + jan_own[d]
+
+def worth_of[s in spouse, d in day]: num DUK
+  note "C-HR9 .2: half of what is ours together, exact, and what is one's own"
+  rule marta_ = comm[d] / lifted[two] + marta_ownw[d] when s == marta
+  rule jan_ = comm[d] / lifted[two] + jan_own[d] when s == jan

@@ -1,0 +1,35 @@
+part e1_worth_part
+  tally 2
+  note "E1-02: what each of the six was worth at the end of 2025, each counted by their own household's rules (A-HR5, B-HR4, D-HR4; story.md), and Jakub, who has no household in the set, the way D-HR4 counts what Halina has; the family is the six added up. Each person's rule is the household's own reading (A-11, B-11, D-08), so the family counts no one twice: Ola's debt to Piotr is in both of B's figures (B-HR4 .3), Halina's debt to Jakub is taken off hers and added to his."
+
+index e1_person = [ania, tomek, piotr, ola, halina, jakub]
+  note "the six whose worth the family counts: ania and tomek for A's things of persons (a.ania, a.tomek), piotr and ola by B's things of persons, halina and jakub by D's keys of heir (story.md, The family). Jakub has no household of his own in the set and is counted from D's papers."
+
+input e1_day: date question "On which day does the family count what each of us is worth?"
+
+input e1_jakub_rest: money DUK question "What did Jakub have and owe at the end of 2025 beyond his 3/16 of Ogrodowa and what Halina owed him? No account or record of his is among the family's papers, so not what is left of his 7 812.00 DUK payout or of what Halina sent him"
+
+input e1_jakub_tax_unpaid: money DUK question "How much of his PIT-13 tax on his 3/16 of 2025's Ogrodowa rent (D-HR1 .4: he pays his own) had Jakub not paid by the end of 2025?"
+
+def e1_family: money DUK at reader
+  note "the family together: the six added up. A debt within the family (Ola's to Piotr, Halina's to Jakub) is one person's minus and another's plus, so it adds nothing"
+  rule base = sum(e1_worth[p] for p in e1_person)
+
+def e1_jakub_flat: money DUK at reader
+  note "D-HR4 .2 for Jakub's share: the flat at its latest valuation by an agent or a bank (d.valuation, D-D29: 240 000.00 DUK on 2025-10-06), for his share after the division (d.flat_after[jakub]), rounded as D rounds Halina's share (d.keep_value, D/sale.tally:31-33); the price the heirs agreed (D-D07 .2) is no valuation"
+  rule base = round(last(d.valuation, e1_day) * d.flat_after[jakub], minor(DUK), d.hh_round)
+
+def e1_worth[p in e1_person]: money DUK at reader
+  note "Ania and Tomek as A-11 reads them (a.nw_person, A-HR5; A counts on its own day a.nw_day, which E1-02 checks is e1_day); Piotr and Ola as B-11 does (b.worth_piotr, b.worth_ola, B-HR4), and Piotr's inheritance tax on Zbigniew's estate besides, a tax he owes in full under B-HR4 .2 if he owes it (d.igt_tax, E1-03); Halina as D-08 does (D-HR4; D holds the sum only in its ask, asks-D-08.tally:5, so the rule restates it); Jakub as D-HR4 counts: his 3/16 of Ogrodowa, what Halina owed him (D-HR4 .3), and what no paper states"
+  rule w_ania = a.nw_person[a.ania] when p == ania
+  rule w_halina = bal(d.konto, e1_day) + d.bonds_net[e1_day] + d.keep_value[e1_day] + d.sio_owes[e1_day] - d.owed_kuba[e1_day] - d.rent_adv[month_of(e1_day)] - d.pen_due[year_of(e1_day)] + d.house_at[e1_day] when p == halina
+  rule w_jakub = e1_jakub_flat + d.owed_kuba[e1_day] + e1_jakub_rest - e1_jakub_tax_unpaid when p == jakub
+  rule w_ola = b.worth_ola[e1_day] when p == ola
+  rule w_piotr = b.worth_piotr[e1_day] - d.igt_tax[piotr] when p == piotr
+  rule w_tomek = a.nw_person[a.tomek] when p == tomek
+
+version e1_count_day
+  cite e1_questions
+  governs always
+  known 2021-01-01
+  e1_day = 2025-12-31 "questions.md E1-02: at the end of 2025"

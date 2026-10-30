@@ -1,0 +1,107 @@
+# Rounds 17 and 17b, L §6.1 The joint model's own movements: "A read of that place in the joint model from the
+# movement's day until the member's next reading of the place, a balance included, is a hole naming it ... Every
+# result that reads the place on or after the movement's day lists it under left out: (§8.2)"; L §8.2 `left out:
+# <move>, <n> instances, first <day>`. (No member reads b.konto after the day.) L6_1_joint_move_in_member_place's model (help, 50.00 PLN on 2026-05-05 from a.konto to
+# b.konto, linked to nothing), read by flows over May (kf), by low over a span holding the day (kl) and by a balance on
+# the day itself (kd): each a hole naming help, with help under left out:. snap8 printed kf with no left out: line.
+=== options pin=bytes
+=== joint.tally
+model family
+  tally 2
+  on 2026-01-05
+  start 2026-01-01
+  end 2026-12-31
+  use a = "ana.tally" sha256 "0b0615a67a4ae71646df39a5edbd8b0a4fe46b72c4f53654cfa7eaa10b6a9a81"
+  use b = "ben.tally" sha256 "4f927bb0b7b8b6a1acfc3c6b41ae7af8e9f8b78b4e5a331024f351ac66548a01"
+
+source plan "plan"
+unit PLN: currency minor 0.01
+input jday: date
+input jamt: money PLN
+
+move help: transfers
+  on jday
+  leg cash from a.konto to b.konto amount jamt
+
+version jv
+  cite plan
+  governs always
+  known 2026-01-02
+  jday = 2026-05-05 "plan"
+  jamt = 50.00 PLN "plan"
+ask kf: flows(b.konto, 2026-05)
+ask kl: low(b.konto, 2026-04-01 .. 2026-06-30)
+ask kd: bal(b.konto, 2026-05-05)
+=== ana.tally
+model ana
+  tally 2
+  on 2026-01-05
+  start 2026-01-01
+  end 2026-12-31
+
+source s "umowa"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2019-01-01..
+place world: outside lives 1900-01-01..
+place to_ben: outside lives 1900-01-01..
+input wage_amt: money PLN
+input pay_dom: int
+input gift_amt: money PLN
+input gift_day: date
+
+move wage[m in months]: transfers
+  on day_of(m, pay_dom)
+  leg cash from world to konto amount wage_amt
+
+move gift: transfers
+  on gift_day
+  leg cash from konto to to_ben amount gift_amt
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  wage_amt = 1 000.00 PLN "umowa"
+  pay_dom = 10 "umowa"
+  gift_amt = 300.00 PLN "plan"
+  gift_day = 2026-03-15 "plan"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "wyciąg"
+
+ask q: bal(konto, 2026-12-31)
+=== ben.tally
+model ben
+  tally 2
+  on 2026-01-05
+  start 2026-01-01
+  end 2026-12-31
+
+source s "umowa"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2019-01-01..
+place from_ana: outside lives 1900-01-01..
+input gift_in: money PLN
+input gift_day: date
+
+move gift_in_m: transfers
+  on gift_day
+  leg cash from from_ana to konto amount gift_in
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  gift_in = 300.00 PLN "plan"
+  gift_day = 2026-03-15 "plan"
+  opening[konto] = 200.00 PLN at 2026-01-01 start "wyciąg"
+
+ask q: bal(konto, 2026-12-31)
+=== expect kf kl kd
+kf: ?"help crosses to b with no link" (help)
+  left out: help, 1 instances, first 2026-05-05
+  cut 2026-01-05
+kl: ?"help crosses to b with no link" (help)
+  left out: help, 1 instances, first 2026-05-05
+  cut 2026-01-05
+kd: ?"help crosses to b with no link" (help)
+  left out: help, 1 instances, first 2026-05-05
+  cut 2026-01-05

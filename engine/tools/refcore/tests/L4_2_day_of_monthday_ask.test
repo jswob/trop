@@ -1,0 +1,26 @@
+# GD-2 (round 19): L §4.2 day_of(y, md), y a year value: day_of(2026, file_by) with file_by = 04-30 is 2026-04-30;
+# day_of(2027, 04-30), a month-day literal in an ask (L §7.1), is 2027-04-30.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+index yrs = year 2026..2027
+input file_by: monthday
+input other: monthday
+
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  file_by = 04-30
+  other = 04-30
+ask q: day_of(2026, file_by), day_of(2027, 04-30)
+=== expect
+q: (2026-04-30, 2027-04-30)
+  cut 2026-12-31

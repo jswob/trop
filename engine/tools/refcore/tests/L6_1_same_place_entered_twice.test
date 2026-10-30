@@ -1,0 +1,61 @@
+# L §6.1 What same does: "A thing's entries are such facts: an entry only one side states stands, and on a day on which
+# the two sides' entries into one kind disagree, whatever depends on the thing being alive there is a HOLE-SAME hole (in
+# a binding over that kind, an unknown member, §5.11)"; L §5.3 a later `replace` entry restates the lifespan. ana enters
+# konto and later ends it with September (v2, known by the cut); ben's konto lives on. In June both sides hold it alive
+# and it counts once (n_jun); in October they disagree: an unknown member, the HOLE-SAME hole naming ana's entry (a.v2)
+# and ben's place (n_oct). Alone: ana 0, ben 1 (a.q, b.q). (Was REFCORE-NOT-YET: same of a place entered 2 times.)
+=== options pin=bytes
+=== joint.tally
+model family
+  tally 2
+  on 2026-01-05
+  start 2026-01-01
+  end 2026-12-31
+  use a = "ana.tally" sha256 "8018e21cfbc93b9993b14456fc33abfcdb3c8ee2c077fab519ec675b7fa0600f"
+  use b = "ben.tally" sha256 "8d4353dd3d6605654f3def4ff1e56dbf6834964b26ac5d70b9e1094c80bd0fb2"
+  same a.konto = b.konto
+
+ask n_jun: count(x in accounts on 2026-06-01)
+ask n_oct: count(x in accounts on 2026-10-01)
+=== ana.tally
+model ana
+  tally 2
+  on 2026-01-05
+  start 2026-01-01
+  end 2026-12-31
+
+source s "umowa"
+unit PLN: currency minor 0.01
+
+version v1
+  cite s
+  known 2025-12-01
+  accounts + [konto] PLN lives 2026-01-01..
+
+version v2
+  cite s
+  known 2026-01-03
+  replace accounts + [konto] PLN lives 2026-01-01..2026-09-30
+
+ask q: count(x in accounts on 2026-10-01)
+=== ben.tally
+model ben
+  tally 2
+  on 2026-01-05
+  start 2026-01-01
+  end 2026-12-31
+
+source s "umowa"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+
+ask q: count(x in accounts on 2026-10-01)
+=== expect n_jun n_oct a.q b.q
+n_jun: 1
+  cut 2026-01-05
+n_oct: ?"a.konto and b.konto are one, but the entry into accounts differs on 2026-10-01: 2026-01-01..2026-09-30 (a.v2) and 2026-01-01.. (b.konto)" (a.konto, b.konto)
+  cut 2026-01-05
+a.q: 0
+  cut 2026-01-05
+b.q: 1
+  cut 2026-01-05

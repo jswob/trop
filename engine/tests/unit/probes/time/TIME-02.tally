@@ -1,0 +1,34 @@
+model time02
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+  note "Probe TIME-02: due dates and the third-to-last business day under a holiday calendar that gains a holiday in 2026."
+
+source probe_card "Probe card TIME-02 (made-up story and rules)"
+
+index cmonth = month 2020-05..2026-06
+
+input due_dom: int
+
+input holidays: calendar
+
+input last_n: int
+
+def due[m in cmonth]: date at reader
+  note "the contribution for month m is due by the 20th of the next month; if the 20th is not a business day, the next business day"
+  rule base v card = schedule(m + 1, due_dom, following, holidays)
+
+def third_last[m in cmonth]: date at reader
+  note "question (c): the third-to-last business day of month m"
+  rule base v card = last_business(m, last_n, holidays)
+
+ask q_dates: due[2026-05], due[2020-05], third_last[2026-06] law 2026-10-25
+
+version card
+  cite probe_card
+  governs always
+  known 2026-10-25
+  due_dom = 20 "story: by the 20th of the next month"
+  holidays = calendar(weekends [sat, sun], yearly [06-22] from 2026) "rule 1: Monday to Friday, except holidays; rule 2: a holiday on 22 June, in force from 2026"
+  last_n = 3 "question (c): the third-to-last business day"

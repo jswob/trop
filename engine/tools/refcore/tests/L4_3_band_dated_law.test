@@ -1,0 +1,30 @@
+# MC-X-F12 (writer 9): the law-dated band of L4_3_band_dated_ask, read by an ask line with law (q) and by a def
+# with its own at (q2, which needs no law: L §4.3). Both read v_act's table: rate(3) = 400.00 PLN.
+=== m.tally
+model p
+  tally 2
+  on 2027-12-31
+  start 2027-01-01
+  end 2027-12-31
+
+unit PLN: currency minor 0.01
+source act "the act"
+
+input age3: int
+band rate(a: int): money PLN
+def r[m in months]: money PLN = rate(age3) at start_of(m)
+ask q: rate(age3) law 2027-05-01
+ask q2: r[2027-05]
+
+version v_act
+  cite act
+  governs 2027..
+  known 2026-12-01
+  age3 = 3 governs always "the age"
+  rate: [0, 6) = 400.00 PLN "under 6"
+  rate: [6, 18) = 250.00 PLN "6 to 17"
+=== expect
+q: 400.00 PLN
+  law date 2027-05-01, cut 2027-12-31
+q2: 400.00 PLN
+  cut 2027-12-31

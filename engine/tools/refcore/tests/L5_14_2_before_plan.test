@@ -1,0 +1,45 @@
+# GD-11, C4-1 (round 19, writer 10): L §5.14.2 "It orders a decision only against another decision: plans and
+# observations come first, and `before m` with m a plan or an observation is refused (LOAD-ORDER)"; L §8.3 `<a> before
+# <m>: <m> is a plan or an observation`. wage is a plan: refused (snap14 read konto before wage). The old comment:
+# Fault f_before (writer 6): `before wage` was ignored. L §5.14.2 "A written order outside a cycle": "`before m` may
+# also put a decision ahead of a movement it would otherwise follow; the decision then reads the balance before m
+# (SF-15)". sweep (a decision reading konto) and the plan wage (1 PLN into konto) fall on 2026-01-15; konto starts at 0
+# (its lifespan starts on 2026-01-01). With `before wage`, sweep reads konto before wage: max(0, 0) = 0.00 PLN.
+=== f_before.tally
+model fbefore
+  tally 2
+  on 2026-01-31
+  start 2026-01-01
+  end 2026-01-31
+
+source s "synthetic"
+
+unit PLN: currency minor 0.01
+
+place world: outside lives 2026-01-01..
+
+place konto: accounts PLN lives 2026-01-01..
+
+place save: accounts PLN lives 2026-01-01..
+
+input day: date
+
+move sweep: transfers
+  on day
+  reads konto
+  before wage
+  leg cash from konto to save amount max(0, bal(konto))
+
+move wage: transfers
+  on day
+  leg cash from world to konto amount 1 PLN
+
+ask q: flows(sweep, 2026-01-15) law 2026-01-31
+
+version v1
+  cite s
+  governs always
+  known 2026-01-01
+  day = 2026-01-15 "row"
+=== expect
+refused: LOAD-ORDER sweep before wage: wage is a plan or an observation (f_before.tally:19)

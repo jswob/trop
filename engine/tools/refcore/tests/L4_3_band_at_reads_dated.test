@@ -1,0 +1,35 @@
+# MC-X-F12 (writer 9): as L4_3_band_at_reads, day_band's table governing 2027..: charged's at reads a law-dated
+# band at its reader's law date, so the ask line states law (L §4.3; LOAD-LAWDATE).
+=== m.tally
+model p
+  tally 2
+  on 2027-12-31
+  start 2027-01-01
+  end 2027-12-31
+
+unit PLN: currency minor 0.01
+source act "the act"
+place konto: accounts PLN lives 2020-01-01..
+place world: outside lives 1900-01-01..
+
+input dom: int
+input fee: money PLN
+band day_band(a: int): int
+def charged[m in months]: money PLN = fee at day_of(m, day_band(dom))
+ask q: charged[2027-03]
+
+version v_act
+  cite act
+  governs 2027..
+  known 2026-12-01
+  day_band: [0, 15) = 10 "early"
+  day_band: [15, 32) = 20 "late"
+
+version v_f
+  cite act
+  governs 2027-01..2027-06
+  known 2026-12-01
+  dom = 3 governs always "dom"
+  fee = 5.00 PLN "fee"
+=== expect
+refused: LOAD-LAWDATE ask q reaches charged, whose at reads law-dated facts at its reader's law date, without law (L §4.3) (m.tally:16)

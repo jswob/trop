@@ -1,0 +1,67 @@
+# E §10 / L §5.18: of a def evaluated at walk points, explain prints "the cell at each walk point that read it, in
+# walk order, each with its point (day, stratum, movement, keys); with none, that nothing read it at those keys".
+# excess reads the running bal(konto) (L §5.14.1: a def that reaches a running read is evaluated at each reader's
+# point).  sweep runs only in January (when pos(m) <= 1): konto holds the 5 000.00 PLN wage of 2026-01-10 when sweep
+# runs on 2026-01-20, so excess[2026-01] = 5 000 - 1 000 = 4 000.00 PLN; nothing reads excess[2026-02].
+# Layout: this interpreter's (the line's value is the count of walk points). Round 14 (E §10, L §5.18): each cell is
+# "explained as a def cell (above), its running reads as balances up to that point": excess[2026-01]'s rule base, the
+# running read bal(konto) = 5 000.00 PLN as sweep reads it (before its own booking), keep_amt's row. w2, read at no
+# walk point, is as stated. (Writer 6's site U-5/U-28, was REFCORE-UNSPECIFIED E §10.)
+=== m.tally
+model hh
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source plan "plan"
+unit PLN: currency minor 0.01
+kind wages: event certain
+  leg cash: PLN
+place konto: accounts PLN lives 2019-05-01..
+place world: outside lives 1900-01-01..
+place savings: accounts PLN lives 2019-05-01..
+input sweep_dom: int
+input keep_amt: money PLN
+input wage_amt: money PLN
+input wage_dom: int
+
+def excess[m in months]: money PLN = max(0 PLN, bal(konto) - keep_amt) at start_of(m)
+
+move wage[m in months]: wages
+  on day_of(m, wage_dom)
+  at start_of(m)
+  leg cash from world to konto amount wage_amt
+
+move sweep[m in months]: transfers
+  on day_of(m, sweep_dom)
+  at start_of(m)
+  when pos(m) <= 1
+  reads konto
+  leg cash from konto to savings amount excess[m]
+
+version plan_2026
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  wage_amt = 5 000.00 PLN "umowa"
+  wage_dom = 10 "umowa"
+  sweep_dom = 20 "own rule"
+  keep_amt = 1 000.00 PLN "own rule"
+  opening[savings] = 0 PLN at 2026-01-01 start "wyciąg"
+  opening[konto] = 0 PLN at 2026-01-01 start "wyciąg"
+
+ask w1: explain excess[2026-01]
+ask w2: explain excess[2026-02]
+=== expect
+w1: walk-bound, read at 1 walk point
+  excess[2026-01] at (2026-01-20, stratum 1, sweep[2026-01]): 4 000.00 PLN
+      [1] excess[2026-01] = 4 000.00 PLN, law date 2026-01-01
+          rule base: won
+            [2] running read bal(konto) = 5 000.00 PLN, the balance up to this point of 2026-01-20
+            [3] row plan_2026:keep_amt = 1 000.00 PLN
+                version plan_2026, source plan, "plan", locator "own rule", governs 2026-01-01.., known 2026-01-01
+  cut 2026-10-20
+w2: walk-bound, read at no walk point
+  nothing read excess[2026-02] at a walk point
+  cut 2026-10-20

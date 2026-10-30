@@ -1,0 +1,22 @@
+part pit_12
+  tally 2
+  law
+  note "PIT-12 · The sale of a dwelling. Income is the price less the sale's costs less the acquisition cost (price, transfer tax, notary) (.1); taxed only when sold before the end of the 5th year after the acquisition's year (.2); 19 % of the income less the exempt part, base and tax rounded, in the return for the sale's year (.3); the exempt part is the income times the part of the price spent on the seller's own housing within 3 years after the end of the sale's year, over the price (.4); money spent after the return is filed corrects it (.5)."
+
+source pit_12 "Personal Income Tax Act, PIT-12 The sale of a dwelling (tmp/cases/law/acts.md)"
+
+input pit12_rate: num question "What is the rate on a dwelling's sale (PIT-12 .3)?"
+
+input pit12_spend_years: int question "Within how many years after the end of the sale's year does spending on housing count (PIT-12 .4)?"
+
+input pit12_taxed_years: int question "Until the end of which year after acquisition is a sale taxed (PIT-12 .2)?"
+
+version pit12_v1
+  cite pit_12
+  governs 2018-01-01..
+  known 2017-09-01
+  enters 2018-01-01
+  note "PIT-12 v1, in force 2018-01-01 until replaced, published 2017-09-01; governs sales from 2018-01-01."
+  pit12_rate = 0.19 "PIT-12 v1 .3"
+  pit12_spend_years = 3 "PIT-12 v1 .4: within 3 years after the end of the year of the sale"
+  pit12_taxed_years = 5 "PIT-12 v1 .2: before the end of the 5th year after the year of acquisition"

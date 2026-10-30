@@ -1,0 +1,9 @@
+# L §2.1 / §8.3: bad indentation is LOAD-PARSE (three spaces is not a level).
+=== m.tally
+model t
+  tally 2
+   on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+=== expect
+refused: LOAD-PARSE ...

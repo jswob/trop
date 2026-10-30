@@ -1,0 +1,76 @@
+# Writer 11 (tally 2.1, R-4, R-5; the lead's fix 2). L §5.14: "The batch's arrivals are supplies. Parts that arrive at
+# x in the same batch are supplies of its takes"; "A movement's take never includes its own arrivals"; a relabel "takes
+# parts by the leaving rule and returns them labelled by the arrival rule, batches kept". A relabel's arrival is an
+# arrival of its batch, so it is a supply of the batch's other outflows at the place.
+# The gift g (giver tomek) takes 40.00 of tomek's (its order ranks the giver's parts first); its arrival is ania's, by
+# the rule, which reads no take, so it is a supply of s1 at once: s1's 120.00 takes ania's 100.00 and 20.00 of the gift's
+# ania 40.00 (ania 20.00, tomek 10.00; scratch/expfix2.py).
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+kind persons: parties
+kind couples: parties
+kind savings: place PLN min 0
+  owned by arrive
+  step minor(PLN)
+  takes k for w order if w in gifts and k.owner == w.giver then 0 else 1, if k.owner == ania then 0 else 1
+kind gifts: transfers
+  attr giver: key persons
+  attr receiver: key persons
+kind tomeks: transfers
+place konto: savings lives 2026-01-01..
+place world: outside lives 1900-01-01..
+place shop: outside lives 1900-01-01..
+input a1_day: date
+input a1_amt: money PLN
+input t1_day: date
+input t1_amt: money PLN
+input g_day: date
+input g_amt: money PLN
+input s1_day: date
+input s1_amt: money PLN
+def arrive[m in events, p in parties]: num at m.day
+  rule base = if p == ania then 1 else 0
+  rule t beats base = if p == tomek then 1 else 0 when m in tomeks
+  rule gift beats base, t = if p == m.receiver then 1 else 0 when m in gifts
+move a1: transfers
+  on a1_day
+  leg cash from world to konto amount a1_amt
+move t1: tomeks
+  on t1_day
+  leg cash from world to konto amount t1_amt
+move g: gifts
+  on g_day
+  attr giver = tomek
+  attr receiver = ania
+  leg cash from konto to konto amount g_amt
+move s1: transfers
+  on s1_day
+  leg cash from konto to shop amount s1_amt
+ask q: bal(konto, 2026-03-01), bal(konto, 2026-03-01) of ania, bal(konto, 2026-03-01) of tomek, g.cash.amount of tomek
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  persons + [ania] lives 1980-01-01..
+  persons + [tomek] lives 1981-01-01..
+  couples + [ania_tomek] lives 2010-06-01..
+  opening[konto] = 0 PLN at 2026-01-01 start
+  a1_day = 2026-02-01
+  a1_amt = 100.00 PLN
+  t1_day = 2026-02-02
+  t1_amt = 50.00 PLN
+  g_day = 2026-03-01
+  g_amt = 40.00 PLN
+  s1_day = 2026-03-01
+  s1_amt = 120.00 PLN
+=== expect
+q: (30.00 PLN, 20.00 PLN, 10.00 PLN, 40.00 PLN)
+  cut 2026-01-01

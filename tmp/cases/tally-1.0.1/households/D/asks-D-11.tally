@@ -1,0 +1,25 @@
+part asks_d11
+  tally 1
+  note "D-11 · Prices rising 8 %, as of 2031-12-31, as known 2026-09-30: each figure in the reality (3 % throughout) and as if in scenario infl8; the bond under cpi103 (103 where unpublished) and infl8."
+
+ask d11_pairs: rent_lvl[2031], rent_lvl[2031] as if {scenario infl8}, surv_lvl[2031], surv_lvl[2031] as if {scenario infl8}, spend_year[2031], spend_year[2031] as if {scenario infl8}, lv_pit[2031], lv_pit[2031] as if {scenario infl8}, zv_dry_year, zv_dry_year as if {scenario infl8}
+
+ask d11_isb: bond_value[isb2405, 2029-12-31] as if {scenario cpi103}, bond_value[isb2405, 2029-12-31] as if {scenario infl8}
+
+ask d11_follows: inputs-of rent_lvl[2031]
+
+ask d11_follows_tax: inputs-of lv_pit[2031]
+
+ask d11_register: lv_infl, fund_mu, fund_sd, fund_df, q_base, q_growth, spend_2026, care_2026, care_age, sweep, lv_acct0, lv_fund0
+
+ask d11_follows_pension: inputs-of surv_lvl[2031]
+
+ask d11_follows_fee: inputs-of fee_lvl[2031]
+
+ask d11_follows_spending: inputs-of spend_year[2031]
+
+ask d11_follows_bond_rate: inputs-of iy_rate[isb2405, 4] with scenario infl8
+
+ask d11_not_life_table: inputs-of q_die[80]
+
+ask d11_not_returns: inputs-of r_path[1, 2031] paths 1 seed 20261001

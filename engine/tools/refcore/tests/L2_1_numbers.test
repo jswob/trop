@@ -1,0 +1,31 @@
+# L §2.1 Numbers: "19 %" is 0.19; "the loader accepts that spacing inside a number" (96 000.00);
+# a fraction "5/900" is allowed in rows when it doesn't terminate.  L §5.18 Output: a num prints
+# as the shortest terminating decimal, or as a/b beside a 15-significant-digit display.
+# 5/900 = 1/180 = 0.00555...; 15 significant digits rounded half to even: 0.00555555555555556.
+# Money prints with its minor-unit digits and grouped thousands (L §2.4: 96 000.00).
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "a source"
+unit PLN: currency minor 0.01
+
+input p: num
+input f: num
+input a: money PLN
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  p = 19 %
+  f = 5/900
+  a = 96 000.00 PLN
+
+ask q1: p, f, a
+=== expect
+q1: (0.19, 1/180 (0.00555555555555556), 96 000.00 PLN)
+  cut 2026-01-01

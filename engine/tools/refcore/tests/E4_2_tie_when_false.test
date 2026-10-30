@@ -1,0 +1,57 @@
+# MC-X-F5. E §4.2 step 3: instances due on one day "that read what each other changes run in ... the move's ties by
+# (RUN-ORDER, RUN-TIE otherwise); the others are independent, and an instance whose when is false orders nothing"; L
+# §5.14.2: ties go by ties by "where their order changes a result". settle[m, pola] and settle[m, rena] fall on one
+# day and both read the ledgers; each one's when reads its ledger on the day before (end_of(m) - 1), which no
+# decision of the day changes, so the one whose ledger is at 0.00 has a false when whichever runs first, and orders
+# nothing. pola opens at -900: settle[2027-01, pola] clears 900.00 PLN from rena's ledger on 2027-02-01, which puts
+# rena at -900 for February's, and so on, one instance a month (December's falls on 2028-01-01, after the run).
+# snap10 refused t (RUN-TIE settle has a tie at settle[2027-01, pola], settle[2027-01, rena] ...).
+=== m.tally
+model m
+  tally 2
+  on 2027-01-01
+  start 2027-01-01
+  end 2027-12-31
+source src "s"
+unit PLN: currency minor 0.01
+index hh = [pola, rena]
+kind settlements: event certain
+  leg clear: PLN
+place ledger[h in hh]: accounts PLN lives 2027-01-01..
+input other[h in hh]: key hh
+move settle[m in months, h in hh]: settlements
+  on add_months(start_of(m), 1)
+  when -bal(ledger[h], add_days(end_of(m), -1)) > 0
+  reads ledger
+  leg clear from ledger[other[h]] to ledger[h] amount -bal(ledger[h])
+version v
+  cite src
+  governs always
+  known 2027-01-01
+  other[pola] = rena
+  other[rena] = pola
+  opening[ledger[pola]] = -900 at 2027-01-01 start
+ask t: s.day, s.clear.amount for s in settlements over 2027-01-01 .. 2027-12-31
+=== expect
+t (s = settle[2027-01, pola]): (2027-02-01, 900.00 PLN)
+  cut 2027-01-01
+t (s = settle[2027-02, rena]): (2027-03-01, 900.00 PLN)
+  cut 2027-01-01
+t (s = settle[2027-03, pola]): (2027-04-01, 900.00 PLN)
+  cut 2027-01-01
+t (s = settle[2027-04, rena]): (2027-05-01, 900.00 PLN)
+  cut 2027-01-01
+t (s = settle[2027-05, pola]): (2027-06-01, 900.00 PLN)
+  cut 2027-01-01
+t (s = settle[2027-06, rena]): (2027-07-01, 900.00 PLN)
+  cut 2027-01-01
+t (s = settle[2027-07, pola]): (2027-08-01, 900.00 PLN)
+  cut 2027-01-01
+t (s = settle[2027-08, rena]): (2027-09-01, 900.00 PLN)
+  cut 2027-01-01
+t (s = settle[2027-09, pola]): (2027-10-01, 900.00 PLN)
+  cut 2027-01-01
+t (s = settle[2027-10, rena]): (2027-11-01, 900.00 PLN)
+  cut 2027-01-01
+t (s = settle[2027-11, pola]): (2027-12-01, 900.00 PLN)
+  cut 2027-01-01

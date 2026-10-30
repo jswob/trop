@@ -1,0 +1,24 @@
+s6_01: (3 513.10 DUK, 36 587.75 DUK)
+  cut 2025-11-10
+s6_02 (dl = deal_d3, p = daria): (0.00 DUK, 9 543.88 DUK)
+  law date 2025-12-31, cut 2026-01-10
+s6_02 (dl = deal_d3, p = marek): (9 543.88 DUK, 0.00 DUK)
+  law date 2025-12-31, cut 2026-01-10
+s6_03 (p = daria, d = 2025-06-30): 17 127.7 DUK
+  cut 2026-01-10
+s6_03 (p = daria, d = 2025-10-31): 28 343.875 DUK
+  cut 2026-01-10
+s6_03 (p = daria, d = 2025-12-31): 30 817.57 DUK
+  unfulfilled: settle_garage[deal_d3]
+  unfulfilled: settle_joint[deal_d3]
+  WARN-LABELS labels dropped at daria_own from 2025-12-18: bank[r26]
+  cut 2026-01-10
+s6_03 (p = marek, d = 2025-06-30): 35 627.7 DUK
+  cut 2026-01-10
+s6_03 (p = marek, d = 2025-10-31): 31 856.975 DUK
+  cut 2026-01-10
+s6_03 (p = marek, d = 2025-12-31): 38 367.33 DUK
+  unfulfilled: settle_garage[deal_d3]
+  unfulfilled: settle_joint[deal_d3]
+  WARN-LABELS labels dropped at daria_own from 2025-12-18: bank[r26]
+  cut 2026-01-10

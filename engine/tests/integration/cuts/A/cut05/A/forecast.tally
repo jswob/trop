@@ -1,0 +1,124 @@
+part sell_all
+  tally 2
+  note "A-12, what the forecast asks (story § The forecast, as we see it on 2026-01-15): the next car's day, everything in the wrapped and both Rzeka accounts at the end of 2035, the tax on selling it all that day, and what is left in January-2026 money. The walk is plan.tally's; the forecast's figures are rows of the scenario forecast (scenarios/forecast.tally), the paths stack on it."
+  note "Selling it all is booked on fc_sell_day by fc_sell and fc_redeem, which only the forecast's fc_on lets exist: each holding's units leave at that day's prices, so the gains tax is invest.tally's own, over every lot and sale to the end of 2035 (PIT-8), and the wrapped account's tax is PIT-9's."
+  note "A holding's unit has no price a def can name (S:302): a sale's proceeds are the holding's value on the day before, at the sale day's prices, which is the same position, since nothing else moves a holding on 2035-12-31 (distributions are left out, item 4)."
+
+input cash_of[x in places where not x in outside]: key places question "Into which cash account does a sale from this holding pay?"
+
+input fc_infl: num question "By what rate a month is money turned back into January-2026 money (story § The forecast, item 6)?"
+
+input fc_months: int question "For how many months is money turned back into January-2026 money (story § The forecast, item 6)?"
+
+input fc_sell_day: date question "On which day do we sell everything in the wrapped and Rzeka accounts (story § The forecast, item 5)?"
+
+input fc_sold[x in places where not x in outside]: bool question "Is this place sold or counted on the forecast's last day (story § The forecast, item 5)?"
+
+def fc_car_day: date at reader
+  note "A-HR3: the 15th on which the next car is bought"
+  rule base = rule_day[first(m in month where rule_day[m] >= walk_from and flows(hr3_sell[m].units, rule_day[m]..rule_day[m]) > 0)]
+
+def fc_keyed: bool = fc_on at walk_from
+
+def fc_day: date at start_of(month_of(walk_from))
+  note "the day everything is sold: in the forecast only"
+  rule base = if fc_on then fc_sell_day else none
+
+def fc_gains_tax: money DUK at fc_sell_day
+  note "PIT-8 .4: the year's gains and losses of each spouse, the tax of the tax year of the sale (the what-if's 25 % from 2030)"
+  rule base = sum(cg_tax[p, year_of(fc_sell_day)] for p in persons on fc_sell_day)
+
+def fc_real: money DUK at fc_sell_day
+  note "story § The forecast, item 6: what is left after both taxes, divided by 1.0025 for each of the 119 months, to the ort"
+  rule base = round((fc_value - fc_wrap_tax - fc_gains_tax) / pow(1 + fc_infl, fc_months), minor(DUK), half-up)
+
+def fc_value: money DUK at fc_sell_day
+  note "story § The forecast, item 5: everything in the wrapped and Rzeka accounts at the end of fc_sell_day, after the sale"
+  rule base = sum(bal(x, fc_sell_day) for x in places on fc_sell_day where not x in outside and fc_sold[x] and not x in holdings and not x in wrapped)
+
+def fc_wrap_left: money DUK at fc_sell_day
+  note "PIT-9 .4: the contributions not yet withdrawn on fc_sell_day: those of the register to 2025 less its withdrawals, and what the walk paid in from walk_from"
+  rule rows beats unknown = sum(sum(o.cash.amount for o in wbank over y where o in invests) - sum(o.cash.amount for o in wbank over y where o in wrap_withdrawals) for y in tax_year where start_of(y) < walk_from) + flows(invest_wrap, walk_from..fc_sell_day) when all(covered(wrap_cash, y) for y in tax_year where start_of(y) < walk_from)
+  rule unknown = ?"the contributions to the wrapped account before the walk: its register doesn't cover them"
+
+def fc_wrap_tax: money DUK at fc_sell_day
+  note "PIT-9 .4, .5: the earnings withdrawn, 19 % of them rounded, unless Ania is 60 or older and has contributed in 5 calendar years"
+  rule base = round(max(0, bal(wrap_cash, fc_sell_day) - fc_wrap_left) * pit9_rate, 1, half-up)
+  rule free beats base = 0 when age(birth_day[inv_holder[wrap_cash]], fc_sell_day) >= pit9_age and fc_wrap_years >= pit9_years
+
+def fc_wrap_years: int at fc_sell_day
+  note "PIT-9 .5: the calendar years with a contribution, the register's to 2025 and the walk's from 2026"
+  rule rows beats unknown = count(y in tax_year where start_of(y) <= fc_sell_day and (if start_of(y) < walk_from then sum(o.cash.amount for o in wbank over y where o in invests) > 0 else flows(invest_wrap, y) > 0)) when all(covered(wrap_cash, y) for y in tax_year where start_of(y) < walk_from)
+  rule unknown = ?"the years with a contribution to the wrapped account before the walk: its register doesn't cover them"
+
+def px_sell[u in funds]: num DUK/u = px[u, fc_sell_day] at fc_sell_day
+
+move fc_redeem[x in places over .. where fc_keyed and x in wrapped and fc_sold[x]]: wrap_redemptions
+  on fc_day
+  at walk_from
+  when fc_on
+  reads wrap_bnd, wrap_glb
+  after hr1_take
+  after hr3_sell
+  after zosia_save
+  leg units from x to market amount bal(x, fc_day - 1 day)
+  leg cash from market to cash_of[x] amount round(value(x, fc_day - 1 day) in DUK by px_sell, minor(DUK), half-up)
+
+move fc_sell[x in places over .. where fc_keyed and x in holdings and fc_sold[x]]: fund_sales
+  on fc_day
+  at walk_from
+  when fc_on
+  reads rza_glb, rza_mm, rzt_div, rzt_em, rzt_glb, rzt_idx
+  after fc_redeem
+  after hr1_take
+  after hr3_sell
+  after zosia_save
+  leg units from x to market amount bal(x, fc_day - 1 day)
+  leg cash from market to cash_of[x] amount round(value(x, fc_day - 1 day) in DUK by px_sell, minor(DUK), half-up)
+  leg fee from cash_of[x] to market amount 0
+
+version sold_places
+  cite story
+  governs always
+  known 2026-01-15
+  note "story § The forecast, items 4 and 5: the wrapped account and both Rzeka accounts are sold; the workplace plans, the savings accounts and the bank accounts stay as they are"
+  cash_of[ania_sav] = none "not a holding"
+  cash_of[deposit] = none "not a holding"
+  cash_of[inv_transit] = none "not a holding"
+  cash_of[joint] = none "not a holding"
+  cash_of[kop_glb] = none "closed 2024-02-29"
+  cash_of[lazur] = none "not a holding"
+  cash_of[rza_cash] = none "a cash account"
+  cash_of[rzt_cash] = none "a cash account"
+  cash_of[wrap_cash] = none "a cash account"
+  cash_of[zosia_sav] = none "not a holding"
+  cash_of[rza_glb] = rza_cash "Rzeka 4471-07"
+  cash_of[rza_mm] = rza_cash "Rzeka 4471-07"
+  cash_of[rzt_div] = rzt_cash "Rzeka 4471-02"
+  cash_of[rzt_em] = rzt_cash "Rzeka 4471-02"
+  cash_of[rzt_glb] = rzt_cash "Rzeka 4471-02"
+  cash_of[rzt_idx] = rzt_cash "Rzeka 4471-02"
+  cash_of[wcp_a] = none "a workplace plan, not sold (item 4)"
+  cash_of[wcp_t] = none "a workplace plan, not sold (item 4)"
+  cash_of[wrap_bnd] = wrap_cash "the wrapped account"
+  cash_of[wrap_glb] = wrap_cash "the wrapped account"
+  fc_sold[ania_sav] = false "item 4: a savings account"
+  fc_sold[deposit] = false "item 4: not an investment"
+  fc_sold[inv_transit] = false "item 4: the bank accounts' money"
+  fc_sold[joint] = false "item 4: a bank account"
+  fc_sold[kop_glb] = false "closed 2024-02-29"
+  fc_sold[lazur] = false "item 4: a savings account"
+  fc_sold[rza_cash] = true "item 5: Ania's Rzeka account"
+  fc_sold[rza_glb] = true "item 5: Ania's Rzeka account"
+  fc_sold[rza_mm] = true "item 5: Ania's Rzeka account"
+  fc_sold[rzt_cash] = true "item 5: Tomek's Rzeka account"
+  fc_sold[rzt_div] = true "item 5: Tomek's Rzeka account"
+  fc_sold[rzt_em] = true "item 5: Tomek's Rzeka account"
+  fc_sold[rzt_glb] = true "item 5: Tomek's Rzeka account"
+  fc_sold[rzt_idx] = true "item 5: Tomek's Rzeka account"
+  fc_sold[wcp_a] = false "item 4: a workplace plan"
+  fc_sold[wcp_t] = false "item 4: a workplace plan"
+  fc_sold[wrap_bnd] = true "item 5: the wrapped account"
+  fc_sold[wrap_cash] = true "item 5: the wrapped account"
+  fc_sold[wrap_glb] = true "item 5: the wrapped account"
+  fc_sold[zosia_sav] = false "item 4: a savings account"

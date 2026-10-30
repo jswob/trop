@@ -1,0 +1,25 @@
+# L §4.2 Date arithmetic: "a period plus any other duration (`m + 10 days`) is refused (§8.4)": the types show it,
+# LOAD-UNIT at load (the figure is a row, L §7.1).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+input ten: num day
+
+def c[m in months]: month = m + ten
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  ten = 10 day
+
+ask q: c[2026-03]
+=== expect
+refused: LOAD-UNIT ...

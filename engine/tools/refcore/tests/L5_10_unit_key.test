@@ -1,0 +1,28 @@
+# L §5.10 Kind and unit (round 7c): "unit(x) is x's unit as a key of the unit kind that holds it (`currencies` for a
+# currency, §5.7), so `unit(x) == PLN` compares two keys; a place of unit `any` has no one unit, and unit(x) of it
+# is refused (§8.4)".  q1: konto holds PLN: true; q2: false against EUR; q3: unit(p) for p in accounts on a day is a
+# key of currencies.  q4 (L5_10_unit_any): a place of unit any is refused at load where the types show it.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+
+place konto: accounts PLN lives 2020-01-01..
+place eurkonto: accounts EUR lives 2020-01-01..
+
+ask q1: unit(konto) == PLN
+ask q2: unit(konto) == EUR
+ask q3: count(p in accounts on 2026-06-30 where unit(p) == EUR)
+=== expect
+q1: true
+  cut 2026-12-31
+q2: false
+  cut 2026-12-31
+q3: 1
+  cut 2026-12-31

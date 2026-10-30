@@ -1,10 +1,14 @@
 model mp15
-  tally 1
+  tally 2
   on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
   note "Verhoeff 2004, Settling Multiple Debts Efficiently: examples (1), (4) and (27). owe[e, i, j] is the amount friend i owes friend j (the paper's a i,j)."
   note "The amounts have no unit, so they are plain num; a fill may share a plain num (LANGUAGE §5.11). The paper gives no dates beyond the end of the year, so the transfers are values, not dated pays between places."
   note "A transfer may run from any friend who must pay to any friend who must be paid, as in the paper's transfer graphs."
   note "The fewest transfers in general is a bound. The minimum-weight settlement is the fill settle; checking it against the lower bounds (28) to (30) shows when it also has the fewest arrows."
+
+source lifted_1_0_1 "Figures tally 1.0.1 allowed inline in rules"
 
 source verhoeff "Tom Verhoeff, Settling Multiple Debts Efficiently: An Invitation to Computing Science, Informatics in Education, Vol. 3, No. 1 (2004), pp. 105-126, doi:10.15388/infedu.2004.08" at "https://infedu.vu.lt/journal/INFEDU/article/612/file/pdf"
 
@@ -16,7 +20,7 @@ index friend = [f0, f1, f2, f3]
 
 index rorder = [ord_a, ord_b, ord_fig5, ord_p107]
 
-index rstep = 0..2
+index rstep = int 0..2
 
 input cycle_at[o in rorder, s in rstep]: key cycle
   note "the directed cycle that step s of reduction order o reduces"
@@ -29,6 +33,9 @@ input example_of[o in rorder]: key example
 input from_debts[o in rorder]: bool
   note "true when order o starts from the debt graph itself, false when it starts from the paired solution"
 
+input half_abs_2: int
+  note "lifted from an inline figure of tally 1.0.1"
+
 input member[e in example, i in friend]: bool
 
 input on_cycle[c in cycle, i in friend, j in friend]: bool
@@ -39,104 +46,114 @@ input owe[e in example, i in friend, j in friend]: num
 
 input steps[o in rorder]: int
 
-def arrows_lb[e in example]: int
+def arrows_lb[e in example]: int at reader
   note "(30): the number of arrows is at least the larger of the number of friends who must pay and the number who must be paid"
   rule base v verhoeff_2004 = max(count(i in friend where member[e, i] and balance[e, i] > 0), count(i in friend where member[e, i] and balance[e, i] < 0))
 
-def balance[e in example, i in friend]: num
+def balance[e in example, i in friend]: num at reader
   note "(8): b i = p i - r i; positive means friend i must pay others"
   rule base v verhoeff_2004 = owes_total[e, i] - owed_total[e, i]
 
-def balance_sum[e in example]: num = sum(i in friend where member[e, i]: balance[e, i])
+def balance_sum[e in example]: num = sum(balance[e, i] for i in friend where member[e, i]) at reader
 
-def graph[o in rorder, s in rstep, i in friend, j in friend]: num
+def fewest_transfers: num
+  note "a transfer graph with the fewest arrows, for any debt matrix"
+  rule base = ?"Verhoeff 2004, § 6.2, p. 120: finding a transfer graph with minimum number of arrows is at least as difficult as the subset-sum problem; the abstract calls it NP-hard. Tally has no construct that searches over transfer graphs."
+
+def graph[o in rorder, s in rstep, i in friend, j in friend]: num at reader
   note "the amount on arrow i -> j of the transfer graph after s cycle reductions in order o"
   note "p. 112, the directed-cycle transformation: every arrow of a directed cycle is reduced by the cycle's minimum amount"
-  rule base v verhoeff_2004 when s = 0 = if from_debts[o] then owe[example_of[o], i, j] else pair[example_of[o], i, j]
-  rule reduce v verhoeff_2004 when s > 0 = graph[o, s - 1, i, j] - (if on_cycle[cycle_at[o, s], i, j] then min(x in friend, y in friend where on_cycle[cycle_at[o, s], x, y]: graph[o, s - 1, x, y]) else 0)
+  rule base v verhoeff_2004 = if from_debts[o] then owe[example_of[o], i, j] else pair[example_of[o], i, j] when s == 0
+  rule reduce v verhoeff_2004 = graph[o, s - 1, i, j] - (if on_cycle[cycle_at[o, s], i, j] then min(graph[o, s - 1, x, y] for x in friend, y in friend where on_cycle[cycle_at[o, s], x, y]) else 0) when s > 0
 
-def graph_arrows[o in rorder, s in rstep]: int = count(i in friend, j in friend where member[example_of[o], i] and member[example_of[o], j] and i != j and graph[o, s, i, j] > 0)
+def graph_arrows[o in rorder, s in rstep]: int = count(i in friend, j in friend where member[example_of[o], i] and member[example_of[o], j] and i != j and graph[o, s, i, j] > 0) at reader
 
-def graph_weight[o in rorder, s in rstep]: num = sum(i in friend, j in friend where member[example_of[o], i] and member[example_of[o], j] and i != j: graph[o, s, i, j])
+def graph_weight[o in rorder, s in rstep]: num = sum(graph[o, s, i, j] for i in friend, j in friend where member[example_of[o], i] and member[example_of[o], j] and i != j) at reader
 
-def half_abs[e in example]: num
+def half_abs[e in example]: num at reader
   note "(29): half the sum of the absolute balances"
-  rule base v verhoeff_2004 = sum(i in friend where member[e, i]: abs(balance[e, i])) / 2
+  rule base v verhoeff_2004 = sum(abs(balance[e, i]) for i in friend where member[e, i]) / half_abs_2
 
-def opt_arrows[e in example]: int = count(i in friend, j in friend where member[e, i] and member[e, j] and i != j and settle.taken[e, i, e, j] > 0)
+def opt_arrows[e in example]: int = count(i in friend, j in friend where member[e, i] and member[e, j] and i != j and settle.taken[e, i, e, j] > 0) at reader
 
-def opt_weight[e in example]: num = sum(i in friend, j in friend where member[e, i] and member[e, j] and i != j: settle.taken[e, i, e, j])
+def opt_weight[e in example]: num = sum(settle.taken[e, i, e, j] for i in friend, j in friend where member[e, i] and member[e, j] and i != j) at reader
 
-def owed_total[e in example, j in friend]: num
+def owed_total[e in example, j in friend]: num at reader
   note "(6): r j, the total friend j is owed"
-  rule base v verhoeff_2004 = sum(k in friend where member[e, k] and k != j: owe[e, k, j])
+  rule base v verhoeff_2004 = sum(owe[e, k, j] for k in friend where member[e, k] and k != j)
 
-def owes_total[e in example, i in friend]: num
+def owes_total[e in example, i in friend]: num at reader
   note "(5): p i, the total friend i owes"
-  rule base v verhoeff_2004 = sum(k in friend where member[e, k] and k != i: owe[e, i, k])
+  rule base v verhoeff_2004 = sum(owe[e, i, k] for k in friend where member[e, k] and k != i)
 
-def pair[e in example, i in friend, j in friend]: num
+def pair[e in example, i in friend, j in friend]: num at reader
   note "p. 107, the paired solution: the mutual debts of i and j are settled by one transfer of |a i,j - a j,i|, from the one who owes more"
   rule base v verhoeff_2004 = max(0, owe[e, i, j] - owe[e, j, i])
 
-def pair_arrows[e in example]: int = count(i in friend, j in friend where member[e, i] and member[e, j] and i != j and pair[e, i, j] > 0)
+def pair_arrows[e in example]: int = count(i in friend, j in friend where member[e, i] and member[e, j] and i != j and pair[e, i, j] > 0) at reader
 
-def pair_weight[e in example]: num = sum(i in friend, j in friend where member[e, i] and member[e, j] and i != j: pair[e, i, j])
+def pair_weight[e in example]: num = sum(pair[e, i, j] for i in friend, j in friend where member[e, i] and member[e, j] and i != j) at reader
 
-def settled[e in example]: bool = all(i in friend where member[e, i]: balance[e, i] = 0)
+def settled[e in example]: bool = all(balance[e, i] == 0 for i in friend where member[e, i]) at reader
 
-def weight_lb[e in example]: num
+def weight_lb[e in example]: num at reader
   note "(28): the weight of a transfer graph is at least the sum of the positive balances"
-  rule base v verhoeff_2004 = sum(i in friend where member[e, i] and balance[e, i] > 0: balance[e, i])
+  rule base v verhoeff_2004 = sum(balance[e, i] for i in friend where member[e, i] and balance[e, i] > 0)
 
 fill settle
   note "The minimum-weight settlement: from friends with a positive balance to friends with a negative one. The order is the modeller's (friend order); the paper's § 6.1 greedy order is not in the case. In (27) only friend 0 pays, so any order gives the same graph."
   supply max(0, balance[se, si]) for se in example, si in friend where member[se, si]
   demand max(0, -balance[de, dj]) for de in example, dj in friend where member[de, dj]
-  arc se = de and si != dj
-  order si, dj
+  arc se == de and si != dj
+  order si, dj ties by (pos(se), pos(si), pos(de), pos(dj))
 
-bound fewest_transfers "a transfer graph with the fewest arrows, for any debt matrix" because "Verhoeff 2004, § 6.2, p. 120: finding a transfer graph with minimum number of arrows is at least as difficult as the subset-sum problem; the abstract calls it NP-hard. Tally has no construct that searches over transfer graphs."
+ask q_arrows_check: check opt_arrows[e] == arrows_lb[e] for e in example law 2026-10-18
 
-ask q_arrows_check: check opt_arrows[e] = arrows_lb[e] for e in example
+ask q_balance: balance[e, i] for e in example, i in friend where member[e, i] law 2026-10-18
 
-ask q_balance: balance[e, i] for e in example, i in friend where member[e, i]
+ask q_balance_sum: balance_sum[e] for e in example law 2026-10-18
 
-ask q_balance_sum: balance_sum[e] for e in example
+ask q_fewest: fewest_transfers law 2026-10-18
 
-ask q_fewest: fewest_transfers
+ask q_fig5_check: check graph[ord_fig5, 1, i, j] == pair[ex4, i, j] for i in friend where member[ex4, i], j in friend where member[ex4, j] and i != j law 2026-10-18
 
-ask q_fig5_check: check graph[ord_fig5, 1, i, j] = pair[ex4, i, j] for i in friend where member[ex4, i], j in friend where member[ex4, j] and i != j
+ask q_lower_bounds: weight_lb[e], half_abs[e], arrows_lb[e] for e in example law 2026-10-18
 
-ask q_lower_bounds: weight_lb[e], half_abs[e], arrows_lb[e] for e in example
+ask q_opt_arcs: settle.taken[ex27, i, ex27, j] for i in friend, j in friend where i != j law 2026-10-18
 
-ask q_opt_arcs: settle.taken[ex27, i, ex27, j] for i in friend, j in friend where i != j
+ask q_optimal: opt_arrows[e], opt_weight[e] for e in example law 2026-10-18
 
-ask q_optimal: opt_arrows[e], opt_weight[e] for e in example
+ask q_owed: owed_total[e, j] for e in example, j in friend where member[e, j] law 2026-10-18
 
-ask q_owed: owed_total[e, j] for e in example, j in friend where member[e, j]
+ask q_owes: owes_total[e, i] for e in example, i in friend where member[e, i] law 2026-10-18
 
-ask q_owes: owes_total[e, i] for e in example, i in friend where member[e, i]
+ask q_paired: pair_arrows[e], pair_weight[e] for e in example law 2026-10-18
 
-ask q_paired: pair_arrows[e], pair_weight[e] for e in example
+ask q_paired_arcs: pair[ex4, i, j] for i in friend where member[ex4, i], j in friend where member[ex4, j] and i != j law 2026-10-18
 
-ask q_paired_arcs: pair[ex4, i, j] for i in friend where member[ex4, i], j in friend where member[ex4, j] and i != j
+ask q_reduced: graph_arrows[o, s], graph_weight[o, s] for o in rorder, s in rstep where s <= steps[o] law 2026-10-18
 
-ask q_reduced: graph_arrows[o, s], graph_weight[o, s] for o in rorder, s in rstep where s <= steps[o]
+ask q_scale_check: check owe[ex1, i, j] == ex1_factor * owe[ex4, i, j] for i in friend where member[ex4, i], j in friend where member[ex4, j] and i != j law 2026-10-18
 
-ask q_scale_check: check owe[ex1, i, j] = ex1_factor * owe[ex4, i, j] for i in friend where member[ex4, i], j in friend where member[ex4, j] and i != j
+ask q_settled: settled[e] for e in example law 2026-10-18
 
-ask q_settled: settled[e] for e in example
+ask q_weight_check: check opt_weight[e] == weight_lb[e] for e in example law 2026-10-18
 
-ask q_weight_check: check opt_weight[e] = weight_lb[e] for e in example
+version lifted_figures
+  cite lifted_1_0_1
+  governs always
+  known 2004-04-15
+  half_abs_2 = 2 "inline in tally 1.0.1: half_abs line 64, factor"
 
 version verhoeff_2004
   cite verhoeff
+  governs always
   known 2004-04-15
   note "Article page: Pub. online: 15 April 2004, the source's own date. The rules (5), (6), (8), (28) to (30), the paired solution (p. 107) and the directed-cycle transformation (p. 112) cite this version."
 
 version verhoeff_examples
   cite verhoeff
+  governs always
   known 2026-10-18
   note "The facts of the worked examples (1), (4) and (27), with the paper's own reductions of them: a worked example's stipulations, known from the model's on, since it has no start (LANGUAGE §4.5). Locators are the journal's page numbers."
   cycle_at[ord_a, 1] = ex27_bottom "p. 113, Fig. 6 text: Order A, reduce the directed cycle through friends 0, 3 and 2"

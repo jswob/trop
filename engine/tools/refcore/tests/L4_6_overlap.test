@@ -1,0 +1,25 @@
+# L §4.6 step 2: a later row overlapping an earlier-known row at the same keys without replace: LOAD-OVERLAP.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+input n: int
+
+version v1
+  cite s
+  governs 2026..
+  known 2025-12-01
+  n = 1
+
+version v2
+  cite s
+  governs 2026-07..
+  known 2026-06-01
+  n = 2
+=== expect
+refused: LOAD-OVERLAP ...

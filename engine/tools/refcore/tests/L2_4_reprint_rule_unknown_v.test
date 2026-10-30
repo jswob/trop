@@ -1,0 +1,17 @@
+# GD-24 (round 19, writer 10): settled; was REFCORE-UNSPECIFIED §2.4. L §2.4: "a v that names no version is refused, LOAD-NAME, §5.11" (L §8.3 `rule <d>.<r>: v <x> names no version`).
+# The old comment:
+# L §2.4 sorts rules "then by the known date of their v"; a v that names no version of the reality has no known date
+# (such a model doesn't load, but its text is reprinted before load, E §3.1 step 1): REFCORE-UNSPECIFIED.
+=== options reprint
+=== m.tally
+model m
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+def f: int
+  rule a v nov = 1
+  rule a = 2
+=== expect
+refused: LOAD-NAME rule f.a: v nov names no version (m.tally:8)

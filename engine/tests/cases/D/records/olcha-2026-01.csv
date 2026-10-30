@@ -1,0 +1,31 @@
+Bank Olcha S.A.|account statement
+Account|LN73 4400 2011 0000 8817 2264 0001
+Holder|HALINA SOWA
+Period|20260101|20260131
+Opening balance|14 080,75
+Date|Type|Counterparty|Title|Amount|Balance after
+20260104|CARD|Stacja Olcha-Paliwa|card ...2264|-182,98|13 897,77
+20260105|CREDIT|Social Insurance Office|survivor pension 01/2026|4 492,02|18 389,79
+20260105|STANDING ORDER|WM Ogrodowa 2|fee Ogrodowa 2/11 01/2026|-468,00|17 921,79
+20260105|CASH|ATM Olcha Brzezie|cash withdrawal|-500,00|17 421,79
+20260106|CARD|Stacja Olcha-Paliwa|card ...2264|-133,09|17 288,70
+20260111|CARD|Piekarnia Złoty Kłos|card ...2264|-116,58|17 172,12
+20260111|CARD|Warzywniak u Janka|card ...2264|-121,57|17 050,55
+20260112|TRANSFER|Jakub Sowa|Ogrodowa 2025-Q4 3/16 to LN52 2090 0017 4471 0098 0001|-1 174,69|15 875,86
+20260114|RETURN|Jakub Sowa|returned: account closed (transfer of 12.01.2026)|1 174,69|17 050,55
+20260114|CARD|Stacja Olcha-Paliwa|card ...2264|-252,01|16 798,54
+20260114|CARD|Market Brzezie|card ...2264|-99,38|16 699,16
+20260115|TRANSFER|Jakub Sowa|Ogrodowa 2025-Q4 3/16 to LN08 1020 0044 3315 6610 0001|-1 174,69|15 524,47
+20260115|STANDING ORDER|Volta Energia|Leśna 4 energy 01/2026|-385,00|15 139,47
+20260117|CARD|Piekarnia Złoty Kłos|card ...2264|-169,40|14 970,07
+20260117|CARD|Sklep Pod Lipą|card ...2264|-30,66|14 939,41
+20260118|CARD|Warzywniak u Janka|card ...2264|-125,69|14 813,72
+20260119|CASH|ATM Olcha Brzezie|cash withdrawal|-500,00|14 313,72
+20260120|TRANSFER|Revenue Office Kłodzin|PIT-13 advance 12/2025 H. SOWA|-263,00|14 050,72
+20260120|STANDING ORDER|Telekom Lenia|phone 01/2026|-59,00|13 991,72
+20260120|CARD|Warzywniak u Janka|card ...2264|-115,36|13 876,36
+20260126|CARD|Market Brzezie|card ...2264|-43,66|13 832,70
+20260126|TRANSFER|Opieka Dom sp.|home help 01/2026|-2 150,00|11 682,70
+20260128|CARD|Apteka Rumianek|card ...2264|-43,61|11 639,09
+20260130|CARD|Warzywniak u Janka|card ...2264|-85,68|11 553,41
+Closing balance|11 553,41

@@ -1,0 +1,181 @@
+model wrona
+  tally 2
+  on 2026-09-30
+  start 2024-01-01
+  end 2029-12-31
+  note "Household C, Marta and Jan Wrona of Zabór (tmp/cases-holdout/C/story.md), married 2016-09-17 with no marital contract, and their son Staś (Stanisław), born 2023-03-09. Amounts in DUK, the dukat of Lenia (100 orts), and FLR, Rosvald's floren (100 cents). The dossier runs 2024-01-01 – 2026-09-30; the run goes on to 2029-12-31 for the mortgage forecast (C-12)."
+  note "The reality is this folder: law/ (the home law parts copied from engine/tests/integration/law, and the holdout law written here: holdout.tally for law/home-supplement.md, rosvald.tally, treaty.tally), the records turned into rows by scratch/w-c/conv.py (rec_*.tally, rates.tally), and one part per subject. The record files are rows of inputs keyed by day and the row's place in the day (seq), as they stand."
+
+unit DUK: currency minor 0.01
+
+unit FLR: currency minor 0.01
+
+source story "Household C, the story (tmp/cases-holdout/C/story.md)"
+
+source house_rules "Household C, our house rules C-HR1 – C-HR9 (tmp/cases-holdout/C/house-rules.md)"
+
+source modeller "the writer of these texts (H1, session 5r)"
+
+source jodla_wspolny "Bank Jodła, joint account history (tmp/cases-holdout/C/records/jodla-wspolny.csv)"
+
+source jodla_skarbonka "Bank Jodła, pot Skarbonka history (tmp/cases-holdout/C/records/jodla-skarbonka.csv)"
+
+source jodla_marta "Bank Jodła, Marta's own account history (tmp/cases-holdout/C/records/jodla-marta.csv)"
+
+source jodla_warsztat "Bank Jodła, the workshop's business account history (tmp/cases-holdout/C/records/jodla-warsztat.csv)"
+
+source lazur_export "Bank Lazur, Jan's account LN88 1020 0044 9172 (tmp/cases-holdout/C/records/lazur-jan.csv)"
+
+source lazur_table "Bank Lazur, exchange table FLR (engine/tests/cases/market/lazur-fx-flr.csv)"
+
+source dziennik "Jan's log (tmp/cases-holdout/C/records/dziennik-jana.csv)"
+
+source warsztat_registers "the workshop's sales and cost registers (tmp/cases-holdout/C/records/warsztat-sprzedaz.csv, warsztat-koszty.csv)"
+
+source zgody "messages about purchases (tmp/cases-holdout/C/records/zgody.txt)"
+
+source c_d01 "C-D01 marriage certificate (tmp/cases-holdout/C/docs/C-D01.md)"
+
+source c_d02 "C-D02 birth certificate (tmp/cases-holdout/C/docs/C-D02.md)"
+
+source c_d04 "C-D04 SIO yearly statement 2024 (tmp/cases-holdout/C/docs/C-D04.md)"
+
+source c_d05 "C-D05 employer's yearly statement 2024 (tmp/cases-holdout/C/docs/C-D05.md)"
+
+source c_d07 "C-D07 employer's letters on unpaid leave (tmp/cases-holdout/C/docs/C-D07.md)"
+
+source c_d08 "C-D08 employer's yearly statement 2025 (tmp/cases-holdout/C/docs/C-D08.md)"
+
+source c_d09 "C-D09 business register entry (tmp/cases-holdout/C/docs/C-D09.md)"
+
+source c_d12 "C-D12 VAT return for June 2024, confirmation (tmp/cases-holdout/C/docs/C-D12.md)"
+
+source c_d14 "C-D14 employment contract, Montagewerk Ostrel AG (tmp/cases-holdout/C/docs/C-D14.md)"
+
+source c_d15 "C-D15 class notice 2024/25 (tmp/cases-holdout/C/docs/C-D15.md)"
+
+source c_d16 "C-D16 annexes to the employment contract (tmp/cases-holdout/C/docs/C-D16.md)"
+
+source c_d17 "C-D17 class notice 2025/26 (tmp/cases-holdout/C/docs/C-D17.md)"
+
+source c_d18 "C-D18 class notice 2026/27 (tmp/cases-holdout/C/docs/C-D18.md)"
+
+source c_d19 "C-D19 RTB decision, yearly assessment 2024/25 (tmp/cases-holdout/C/docs/C-D19.md)"
+
+source c_d20 "C-D20 payslips, July 2024 – August 2026 (tmp/cases-holdout/C/docs/C-D20.md)"
+
+source c_d21 "C-D21 RTB, claim received 2025/26 (tmp/cases-holdout/C/docs/C-D21.md)"
+
+source c_d22 "C-D22 RFF decision on the child benefit (tmp/cases-holdout/C/docs/C-D22.md)"
+
+source c_d23 "C-D23 RFF letter after the report of 2025-11-24 (tmp/cases-holdout/C/docs/C-D23.md)"
+
+source c_d24 "C-D24 FBO decisions on the child benefit (tmp/cases-holdout/C/docs/C-D24.md)"
+
+source c_d25 "C-D25 FBO decision, benefit paid without entitlement (tmp/cases-holdout/C/docs/C-D25.md)"
+
+source c_d26 "C-D26 FBO decision, benefit resumed (tmp/cases-holdout/C/docs/C-D26.md)"
+
+source c_d27 "C-D27 mortgage contract (tmp/cases-holdout/C/docs/C-D27.md)"
+
+source c_d28 "C-D28 mortgage yearly statement 2025 (tmp/cases-holdout/C/docs/C-D28.md)"
+
+source c_d31 "C-D31 loan agreement (tmp/cases-holdout/C/docs/C-D31.md)"
+
+source c_d32 "C-D32 Fundacja Pod Dębem receipts, the RO's list (tmp/cases-holdout/C/docs/C-D32.md)"
+
+source c_d33 "C-D33 invoice: tiles (tmp/cases-holdout/C/docs/C-D33.md)"
+
+source c_d34 "C-D34 RO confirmations of returns (tmp/cases-holdout/C/docs/C-D34.md)"
+
+source c_d35 "C-D35 Bank Jodła, Marta's own account, history (tmp/cases-holdout/C/docs/C-D35.md)"
+
+source c_d36 "C-D36 Irena's letter (tmp/cases-holdout/C/docs/C-D36.md)"
+
+index day = day 2024-01-01..2029-12-31
+
+index month = month 2023-01..2029-12
+
+index year = year 2023..2029
+
+index seq = int 1..6
+  note "a row's place among the rows of its day in a record file, in the file's order"
+
+index spouse = [marta, jan]
+
+index jkind = [j_card, j_tiles, j_shed, j_sofa, j_laptop, j_washer, j_instal, j_overpay, j_wages, j_water, j_internet, j_gas, j_power, j_irena, j_loan_rep, j_loan_in, j_pot_in, j_pot_xmas, j_pot_out, j_fbo_rep, j_fbo_ben, j_owner_in, j_biz_close, j_car_ins, j_nursery, j_pit25_pay, j_pit24_corr, j_pit24_ref, j_vat_ref, j_soc_pay, j_health_pay, j_health_ref, j_parental, j_to_lazur, j_gift_fund, j_jan_part]
+  note "the joint account's rows by type, counterparty and title (records/jodla-wspolny.csv), the importer's classification"
+
+index skind = [s_save_in, s_flr_in, s_extra, s_to_joint, s_xmas]
+  note "the pot's rows: savings from the joint account, a floren sale, an overpayment of the mortgage, money to the joint account for every day, for Christmas"
+
+index mkind = [m_interest, m_int_tax, m_gift_out, m_estate_in, m_loan_out, m_loan_back]
+
+index bkind = [b_fee, b_client, b_cost, b_owner_out, b_close, b_soc, b_health, b_pit_adv, b_vat]
+
+index lkind = [l_canteen, l_fuel, l_market, l_bike, l_pay, l_buy, l_sale_pot, l_sale_part, l_rtb, l_rff]
+
+index dkind = [d_start_in, d_gift_in, d_buy_flr, d_car]
+
+index sleep = [dom, marrenburg, wyjazd]
+
+input jw[d in day, s in seq]: (dr money DUK, cr money DUK, bal money DUK, k key jkind, m month) question "What does this row of the joint account's history say?"
+
+input sk[d in day, s in seq]: (dr money DUK, cr money DUK, bal money DUK, k key skind) question "What does this row of the pot's history say?"
+
+input mo[d in day, s in seq]: (dr money DUK, cr money DUK, bal money DUK, k key mkind) question "What does this row of Marta's own account's history say?"
+
+input wb[d in day, s in seq]: (dr money DUK, cr money DUK, bal money DUK, k key bkind, m month) question "What does this row of the business account's history say?"
+
+input lf[d in day, s in seq]: (dr money FLR, cr money FLR, bal money FLR, k key lkind, m month, q quarter, rate num DUK/FLR, duk money DUK) question "What does this floren row of Jan's Lazur account say?"
+
+input ld[d in day, s in seq]: (dr money DUK, cr money DUK, bal money DUK, k key dkind) question "What does this dukat row of Jan's Lazur account say?"
+
+input night[d in day]: (sl key sleep, rv bool, wk bool) question "What does Jan's log say for this day?"
+
+input open_bal[a in accts]: money DUK question "What did this account hold at the start of 2024-01-01 (story § What we had)?"
+
+index accts = [joint, pot, marta_own, business]
+
+input stas_open: money DUK question "How much of the joint account's opening was Staś's (story § What we had, C-HR5 .3)?"
+
+input wedding: date question "When did Marta and Jan marry (C-D01)?"
+
+input born_stas: date question "When was Staś born (C-D02)?"
+
+input lifted[f in lifted_fig]: int question "What plain count does this rule's text name?"
+
+index lifted_fig = [two, ten, twelve, hundred, days_365, six_months, seven_days, hr3_pay_dom, hr7_pay_dom, hr8_dom, mtg_dom, gift_dom, ten_ort]
+  note "small figures the texts state in words or digits (half, a tenth, 12 months, 100 dukats …), rows by the literal rule (L §7.1)"
+
+version cast
+  cite story
+  governs always
+  known 2024-01-01
+  note "the story's cast and opening table, stated with no date of their own, so known from the model's start (L §4.5)"
+  open_bal[joint] = 14800.00 "story § What we had: joint account, 14 800.00 DUK at the start"
+  open_bal[pot] = 6200.00 "story § What we had: the pot Skarbonka, 6 200.00 DUK"
+  open_bal[marta_own] = 47350.00 "story § What we had: Marta's account LN53 … 0001, 47 350.00 DUK"
+  open_bal[business] = 18900.00 "story § What we had: business account LN81 … 0001, 18 900.00 DUK"
+  stas_open = 2700.00 "story § What we had: of which Staś's 2 700.00; C-HR5 .3: on 2024-01-01 all he had been sent was there"
+  wedding = 2016-09-17 "C-D01: married in Zabór on 2016-09-17"
+  born_stas = 2023-03-09 "C-D02: Stanisław Wrona, born in Zabór on 2023-03-09"
+
+version lifted_figures
+  cite modeller
+  governs always
+  known 2016-09-17
+  note "figures the rules' texts name, lifted to rows (L §7.1); each locator names the text"
+  lifted[two] = 2 "PIT-6 .3 twice the tax on half the base; PIT-17 .2 each spouse for half; C-HR3 .1 half of the costs; C-HR9 .2 half for each"
+  lifted[ten] = 10 "C-HR6 .2: a tenth"
+  lifted[twelve] = 12 "C-D27 .2: 1/12 of the yearly rate; RWT-6 .2 12 times the monthly allowance; C-HR8 .2 the 12 months after"
+  lifted[hundred] = 100 "RGP-3: the RNB rate is in florens for 100 dukats"
+  lifted[days_365] = 365 "C-HR7 .2: CBL-REF over 365"
+  lifted[six_months] = 6 "C-HR3 .5: the six months before the settle-up's month"
+  lifted[seven_days] = 7 "C-HR3 .5 the difference is paid within 7 days; C-HR4 .2 no answer within 7 days of the ask"
+  lifted[hr3_pay_dom] = 10 "C-HR3 .4: by the 10th of the next month"
+  lifted[hr7_pay_dom] = 10 "C-HR7 .3: on the 10th of each month"
+  lifted[hr8_dom] = 16 "C-HR8 .1: on the 16th of each month"
+  lifted[mtg_dom] = 15 "C-D27 .1: on the 15th of each month"
+  lifted[gift_dom] = 3 "story 2023-04-03, C-D36: on the 3rd of every month"
+  lifted[ten_ort] = 10 "RWT-3 .2, RWT-6 .2: rounded down to a whole 10 FLR"

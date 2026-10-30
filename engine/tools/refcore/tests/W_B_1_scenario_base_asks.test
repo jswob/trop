@@ -1,0 +1,47 @@
+# Fault W-B-1: a scenario world re-checked the base's own asks: the base's `a: x[2026-02]`, made random only by the
+# scenario's `replace rule`, refused the whole scenario `LOAD-RANDOM`. L §6.4 The base is whole without its scenarios:
+# "every ask is checked only in the worlds its line is evaluated in (§5.18)"; the ask a is in the base world, where x is 1
+# (a); and the scenario's rule, brought by its version, is inside the scenario and reads its def r ("A read of an item
+# declared in a scenario file is allowed only inside that scenario", L §6.4). b is a paths mean (its value is the
+# paths', not asserted).
+=== m.tally
+model m
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source src "a source"
+
+def x[k in months]: num at start_of(k)
+  rule base = 1
+
+ask a: x[2026-02]
+=== s.tally
+scenario s over m
+  tally 2
+  from 2026-01-01
+
+input mu: num question "mean?"
+
+def r: dist = poisson(mu)
+
+version w
+  cite src
+  governs always
+  known 2026-01-01
+  mu = 0.5 "row"
+
+version v
+  cite src
+  governs 2026-01-01..
+  known 2026-01-01
+  replace rule x.drawn beats base = r
+
+ask b: mean(x[2026-02]) in s law 2026-06-30 paths 10 seed 1
+=== expect
+a: 1
+  cut 2026-01-01
+b: ...
+  world: s
+  law date 2026-06-30, cut 2026-01-01

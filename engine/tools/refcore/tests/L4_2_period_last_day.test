@@ -1,0 +1,27 @@
+# L §4.2 (round 13b): "the last day of a period is end_of(p) - 1 day, since end_of is the first day after it";
+# start_of/end_of "the first day of period k; the first day after it"; overlap_days(a, b, k) counts the days of k in
+# [a, b]: 2026-02-20 .. 2026-03-31 holds 9 days of February 2026 (20th to 28th); last_business(p, 1, cal) is p's last
+# business day, 2026-02-27 a Friday (2026-02-28 a Saturday, weekends [sat, sun]).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+input len: calendar
+
+version v
+  cite s
+  governs 2026
+  known 2025-12-01
+  len = calendar(weekends [sat, sun])
+
+ask q: end_of(2026-02), end_of(2026-02) - 1 day, overlap_days(2026-02-20, 2026-03-31, 2026-02)
+ask r: last_business(2026-02, 1, len)
+=== expect
+q: (2026-03-01, 2026-02-28, 9)
+  cut 2026-12-31
+r: 2026-02-27
+  cut 2026-12-31

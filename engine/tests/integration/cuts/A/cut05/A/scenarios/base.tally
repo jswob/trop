@@ -1,0 +1,10 @@
+scenario base over forecast
+  tally 2
+  from 2026-01-01
+  note "Path base: every fund's price +0.40 % a month (story § The forecast, item 3)."
+
+version path_base
+  cite story
+  governs 2026-01-01..
+  known 2026-01-15
+  path_rate[*] = 0.004 governs 2026-01.. "story § The forecast, item 3: base +0.40 % a month"

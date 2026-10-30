@@ -1,0 +1,320 @@
+model i15_gold
+  tally 2
+  on 2027-01-01
+  start 2027-01-01
+  end 2028-12-31
+  note "I-15: gold counted in grams, priced in solars, converted to dukats; a storage fee taken in metal; an average-cost pool per holding; coins delivered as a holding of their own; a levy on one change of form; two price paths for 2028."
+
+source card "Card I-15: story, price table, rules 1-10 and question"
+
+source vault_terms "Vault Mira's terms (card I-15, rules 1-3)"
+
+source gains_act "Gains Act of Lenia (card I-15, rules 4-8)"
+
+source levy_act "Value-Added Levy Act of Lenia (card I-15, rules 9-10)"
+
+source modeller "The modeller's assumptions, each with its reason"
+
+unit DUK: currency minor 0.01
+
+unit SOL: currency minor 0.01
+
+unit gram "a gram of fine gold"
+
+kind gold_holdings: place gram min 0
+  note "each holding is a pool of its own (rules 4 and 6)"
+
+kind coin_holdings: gold_holdings
+
+kind metal_accts: gold_holdings
+
+kind purses: place DUK signed
+  note "Adam's dukats at large; only the case's movements touch them"
+
+kind sol_cashes: place SOL min 0
+
+kind tax_pays: event certain
+  leg cash: DUK
+
+kind purchases: event certain
+  leg duk: DUK
+  leg sol: SOL
+  leg gold: gram
+  leg spend: SOL
+  note "rule 1: dukats paid, the rest converted to solar cash, grams credited, their price taken from the cash"
+
+kind gold_outs: event certain
+  leg gold: gram
+  note "gold leaving a holding"
+
+kind deliveries: gold_outs
+  leg mint: DUK
+  leg levy: DUK
+
+kind disposals: gold_outs
+
+kind gold_sales: disposals
+  leg duk: DUK
+
+kind metal_fees: disposals
+
+axis gram_cost_mode
+  down "grams times price is rounded down to whole minor units of the solar"
+  half-up "grams times price is rounded half up to whole minor units of the solar"
+  up "grams times price is rounded up to whole minor units of the solar"
+
+axis price_path
+  p_low "2028: 120.00 SOL per g and 1.9000 DUK per SOL, flat all year"
+  p_high "2028: 150.00 SOL per g and 2.0500 DUK per SOL, flat all year"
+
+index acct_sale_ix = [s20280701]
+
+index buy_ix = [b20270105, b20270405, b20270705, b20271005]
+
+index coin_sale_ix = [c20280303]
+
+index delivery_ix = [d20271010]
+
+place adam_duk: purses lives 2027-01-01..
+
+place coins: coin_holdings lives 2027-10-10..
+
+place dealer: outside lives 1900-01-01..
+
+place sol_cash: sol_cashes lives 2027-01-01..
+
+place treasury: outside lives 1900-01-01..
+
+place vault: outside lives 1900-01-01..
+
+place vault_acct: metal_accts lives 2027-01-01..
+
+input as_day[k in acct_sale_ix]: date
+
+input as_grams[k in acct_sale_ix]: num gram
+
+input buy_amt[k in buy_ix]: money DUK
+
+input buy_day[k in buy_ix]: date
+
+input buy_fee_rate: num
+
+input cs_day[k in coin_sale_ix]: date
+
+input cs_grams[k in coin_sale_ix]: num gram
+
+input cs_price[k in coin_sale_ix]: money DUK
+
+input del_day[k in delivery_ix]: date
+
+input del_fineness[k in delivery_ix]: num
+
+input del_grams[k in delivery_ix]: num gram
+
+input gains_rate: num
+
+input gold_px[p in price_path]: num SOL/gram reading
+
+input gram_step: num gram
+
+input invest_min: num
+
+input levy_rate: num
+
+input mint_fee[k in delivery_ix]: money DUK
+
+input opening_cost[x in gold_holdings]: money DUK
+
+input rate_px[p in price_path]: num DUK/SOL reading
+
+input registered: bool
+
+input sol_cap: money SOL
+
+input storage_rate: num
+
+input tax_due_dom: int
+
+input tax_due_month: int
+
+def added_cost[x in gold_holdings, d in days]: money DUK = sum(p.duk.amount for p in purchases on d where p.gold.to == x) + sum(leave_cost[o] + o.mint.amount + o.levy.amount for o in deliveries on d where o.gold.to == x)
+
+def added_g[x in gold_holdings, d in days]: num gram = sum(p.gold.amount for p in purchases on d where p.gold.to == x) + sum(o.gold.amount for o in deliveries on d where o.gold.to == x)
+
+def buy_fee[k in buy_ix]: money DUK = round(buy_amt[k] * buy_fee_rate, minor(DUK), half-up)
+
+def cash_gain[y in years]: money DUK
+  note "rule 8: solar cash up to the threshold is outside the Act; above it the card describes nothing"
+  rule outside = 0 when all(bal(sol_cash, d) <= sol_cap for d in days where year_of(d) == y)
+  rule inside = ?"the card describes no gain on solar cash above the threshold" when any(bal(sol_cash, d) > sol_cap for d in days where year_of(d) == y)
+
+def coin_levy[k in delivery_ix]: money DUK
+  note "rule 9: coins below the fineness of investment gold are a supply by the vault at the gold's value plus the minting fee"
+  rule exempt = 0
+  rule taxed beats exempt = round((coin_value[k] + mint_fee[k]) * levy_rate, minor(DUK), half-up) when del_fineness[k] < invest_min
+
+def coin_value[k in delivery_ix]: money DUK = round(del_grams[k] * price_on[del_day[k]] * rate_on[del_day[k]], minor(DUK), half-up)
+
+def converted[k in buy_ix]: money SOL = round((buy_amt[k] - buy_fee[k]) / rate_on[buy_day[k]], minor(SOL), down)
+
+def cost_end[x in gold_holdings, d in days]: money DUK = cost_start[x, d] + added_cost[x, d] - sum(leave_cost[o] for o in gold_outs on d where o.gold.from == x)
+
+def cost_start[x in gold_holdings, d in days]: money DUK
+  rule first = opening_cost[x] when pos(d) == 1
+  rule later = cost_end[x, d - 1] when pos(d) > 1
+
+def fee_gain[o in metal_fees]: money DUK = fee_value[o] - leave_cost[o]
+
+def fee_value[o in metal_fees]: money DUK = round(o.gold.amount * price_on[o.day] * rate_on[o.day], minor(DUK), half-up)
+
+def gains_tax[y in years]: money DUK = round(max(0 DUK, taxable[y]) * gains_rate, 1 DUK, half-up)
+
+def gram_cost[k in buy_ix]: money SOL = round(grams_bought[k] * price_on[buy_day[k]], minor(SOL), gram_cost_mode)
+
+def grams_bought[k in buy_ix]: num gram = round((bal(sol_cash) + converted[k]) / price_on[buy_day[k]], gram_step, down)
+
+def leave_cost[o in gold_outs]: money DUK = round((cost_start[o.gold.from, o.day] + added_cost[o.gold.from, o.day]) * o.gold.amount / (bal(o.gold.from, o.day start) + added_g[o.gold.from, o.day]), minor(DUK), half-up)
+
+def net_before[y in years]: money DUK = sum(sale_gain[o] for o in gold_sales over y) + sum(fee_gain[o] for o in metal_fees over y) - sum(fee_value[o] for o in metal_fees over y) + cash_gain[y]
+
+def price_on[d in days]: num SOL/gram = last(gold_px[price_path], d) at d
+
+def rate_on[d in days]: num DUK/SOL = last(rate_px[price_path], d) at d
+
+def sale_gain[o in gold_sales]: money DUK = o.duk.amount - leave_cost[o]
+
+def sale_levy[o in gold_sales]: money DUK
+  note "rule 10: a sale by a person not registered under the Act bears no levy"
+  rule unregistered = 0 when not registered
+  rule registered_seller = ?"the card describes no levy on a registered seller's sale" when registered
+
+def tax_due[y in years]: date = day_of(month_of(end_of(y)) + (tax_due_month - 1), tax_due_dom)
+
+def taxable[y in years]: money DUK
+  note "rule 7: a net loss is carried to the next year only"
+  rule first = net_before[y] when pos(y) == 1
+  rule carry = net_before[y] + min(0 DUK, net_before[y - 1]) when pos(y) > 1
+
+move buy[k in buy_ix]: purchases
+  on buy_day[k]
+  reads sol_cash
+  leg duk from adam_duk to vault amount buy_amt[k]
+  leg sol from vault to sol_cash amount converted[k]
+  leg gold from vault to vault_acct amount grams_bought[k]
+  leg spend from sol_cash to vault amount gram_cost[k]
+
+move deliver[k in delivery_ix]: deliveries
+  on del_day[k]
+  leg gold from vault_acct to coins amount del_grams[k]
+  leg mint from adam_duk to vault amount mint_fee[k]
+  leg levy from adam_duk to treasury amount coin_levy[k]
+
+move pay_tax[y in years]: tax_pays
+  on tax_due[y]
+  when gains_tax[y] > 0 DUK
+  reads vault_acct, coins, sol_cash, buy, storage
+  leg cash from adam_duk to treasury amount gains_tax[y]
+
+move sell_coins[k in coin_sale_ix]: gold_sales
+  on cs_day[k]
+  leg gold from coins to dealer amount cs_grams[k]
+  leg duk from dealer to adam_duk amount cs_price[k]
+
+move sell_gold[k in acct_sale_ix]: gold_sales
+  on as_day[k]
+  leg gold from vault_acct to vault amount as_grams[k]
+  leg duk from vault to adam_duk amount round(as_grams[k] * price_on[as_day[k]] * rate_on[as_day[k]], minor(DUK), half-up)
+
+move storage[d in days where quarter_of(d) != quarter_of(add_days(d, 1)), x in metal_accts on d]: metal_fees
+  on d
+  reads vault_acct
+  leg gold from x to vault amount round(bal(x) * storage_rate, gram_step, up)
+
+ask after_events_2027: bal(vault_acct, d), cost_end[vault_acct, d], bal(sol_cash, d) for d in days where year_of(d) == 2027 and count(p in purchases on d) + count(o in gold_outs on d) > 0
+
+ask coin_levy_cost: coin_levy[k], cost_end[coins, del_day[k]] for k in delivery_ix
+
+ask fees: o.day, o.gold.amount, fee_value[o], leave_cost[o], fee_gain[o] for o in metal_fees over ..
+
+ask sales_2028: o.day, o.duk.amount, leave_cost[o], sale_gain[o], sale_levy[o] for o in gold_sales over 2028
+
+ask tax: taxable[y], gains_tax[y], tax_due[y] for y in years
+
+version openings
+  cite card
+  known 2027-01-01
+  opening[sol_cash] = 0 at 2027-01-01 start "story: no solar cash"
+  opening[vault_acct] = 60 at 2027-01-01 start "story: 60.000 g on 1 January 2027"
+
+version facts
+  cite card
+  governs always
+  known 2027-01-01
+  as_day[s20280701] = 2028-07-01 "story"
+  as_grams[s20280701] = 40 "story: 40.000 g from the account"
+  buy_amt = 3000 "story: he buys for 3 000.00 DUK"
+  buy_day[b20270105] = 2027-01-05 "story"
+  buy_day[b20270405] = 2027-04-05 "story"
+  buy_day[b20270705] = 2027-07-05 "story"
+  buy_day[b20271005] = 2027-10-05 "story"
+  cs_day[c20280303] = 2028-03-03 "story"
+  cs_grams[c20280303] = 30 "story: he sells the coins, 30.000 g of fine gold"
+  cs_price[c20280303] = 7300 "story: to a dealer in Lenia for 7 300.00 DUK"
+  del_day[d20271010] = 2027-10-10 "story"
+  del_fineness[d20271010] = 91.6 % "story: coins of 916 parts per thousand"
+  del_grams[d20271010] = 30 "story: containing 30.000 g of fine gold"
+  mint_fee[d20271010] = 40 "story: the minting fee is 40.00 DUK"
+  opening_cost[coins] = 0 "a new holding"
+  opening_cost[vault_acct] = 14400 "story: a cost of 14 400.00 DUK"
+  gold_px = 130 at 2027-01-05 "table"
+  gold_px = 129 at 2027-03-31 "table"
+  gold_px = 128.5 at 2027-04-05 "table"
+  gold_px = 133 at 2027-06-30 "table"
+  gold_px = 134.2 at 2027-07-05 "table"
+  gold_px = 137.4 at 2027-09-30 "table"
+  gold_px = 138 at 2027-10-05 "table"
+  gold_px = 139.1 at 2027-10-10 "table"
+  gold_px = 141 at 2027-12-31 "table"
+  gold_px[p_high] = 150 at 2028-01-01 "story: the high path, flat for 2028"
+  gold_px[p_low] = 120 at 2028-01-01 "story: the low path, flat for 2028"
+  rate_px = 1.92 at 2027-01-05 "table"
+  rate_px = 1.93 at 2027-03-31 "table"
+  rate_px = 1.935 at 2027-04-05 "table"
+  rate_px = 1.95 at 2027-06-30 "table"
+  rate_px = 1.96 at 2027-07-05 "table"
+  rate_px = 1.975 at 2027-09-30 "table"
+  rate_px = 1.98 at 2027-10-05 "table"
+  rate_px = 1.982 at 2027-10-10 "table"
+  rate_px = 1.99 at 2027-12-31 "table"
+  rate_px[p_high] = 2.05 at 2028-01-01 "story: the high path, flat for 2028"
+  rate_px[p_low] = 1.9 at 2028-01-01 "story: the low path, flat for 2028"
+
+version facts_assumed
+  cite modeller
+  governs always
+  known 2027-01-01
+  registered = false assumed "the card does not say whether Adam is registered under the Levy Act; a private holder is taken as not registered"
+
+version vault_rules
+  cite vault_terms
+  governs always
+  known 2027-01-01
+  buy_fee_rate = 1.5 % "rule 1"
+  gram_step = 0.001 "story: counted to 0.001 g"
+  storage_rate = 0.12 % "rule 3"
+
+version gains_rules
+  cite gains_act
+  governs always
+  known 2027-01-01
+  gains_rate = 19 % "rule 7"
+  sol_cap = 50 "rule 8"
+  tax_due_dom = 30 "rule 7: due 30 April of the next year"
+  tax_due_month = 4 "rule 7: due 30 April of the next year"
+
+version levy_rules
+  cite levy_act
+  governs always
+  known 2027-01-01
+  invest_min = 99.5 % "rule 9: at least 995 parts per thousand"
+  levy_rate = 23 % "rule 9"

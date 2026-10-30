@@ -1,0 +1,16 @@
+# GD-2 (round 19, writer 10): L §3.1 monthday "`02-29` is no month-day, since not every year has it (refused,
+# `LOAD-PARSE`)". snap14 took 02-29 as a month-day and refused day_of(2027, 02-29) at the value (RUN-DOMAIN); now the
+# literal is refused at load, and the whole text with it.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+ask q: day_of(2027, 02-28), day_of(2027, 02-29)
+=== expect
+refused: LOAD-PARSE cannot parse: 02-29 is not a month-day every year has (m.tally:10)

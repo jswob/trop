@@ -1,0 +1,31 @@
+model rule08
+  tally 2
+  on 2025-06-15
+  start 2025-01-01
+  end 2025-06-30
+  note "RULE-08: the 15th rule's floor is the mean of the three full months before the decision's month, half up to 0.01. The window reads only months before the decision's month, so the estimator reads history up to the decision date."
+
+source card "Probe card RULE-08: Ania's spending and the 15th rule's floor"
+
+unit DUK: currency minor 0.01
+
+input spending[m in months]: money DUK
+
+input window: int
+
+def floor_on[m in months]: money DUK at start_of(m)
+  note "the floor on the 15th of month m"
+  rule base = round(mean(spending[k] for k in months where k < m and m - k <= window), minor(DUK), half-up)
+
+ask q: floor_on[2025-04], floor_on[2025-06] law 2025-06-15
+
+version card_2025
+  cite card
+  governs always
+  known 2025-01-01
+  spending[2025-01] = 3100 "January"
+  spending[2025-02] = 2900 "February"
+  spending[2025-03] = 3650 "March"
+  spending[2025-04] = 3200 "April"
+  spending[2025-05] = 2950 "May"
+  window = 3 "rule 1: the three full months before the decision's month"

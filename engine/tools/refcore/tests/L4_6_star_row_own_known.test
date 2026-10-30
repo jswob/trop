@@ -1,0 +1,33 @@
+# Round 18, C2-15 (follows). L §5.8: "A row x[*] = v states every key of x that exists at the row's known, its own or
+# else its version's (§4.6)"; L §4.6 step 1. ks gains c in v2 (known 2026-06-01). x[*] = 1 is known 2026-01-01
+# (its version's): it covers a and b, so x[c] is a hole (as L4_6_closed_world). y[*] = 2 states its own known
+# 2026-07-01, after c came: it covers c too, y[c] = 2.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+index ks = [a, b]
+input x[k in ks]: int
+input y[k in ks]: int
+
+version v1
+  cite s
+  governs always
+  known 2026-01-01
+  x[*] = 1
+  y[*] = 2 known 2026-07-01
+
+version v2
+  cite s
+  known 2026-06-01
+  ks + [c]
+
+ask q1: x[a], x[c], y[a], y[c] law 2026-07-01
+=== expect
+q1: (1, ?"x at c: no value at 2026-07-01" (x[c]), 2, 2)
+  law date 2026-07-01, cut 2026-12-31

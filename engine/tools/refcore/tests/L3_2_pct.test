@@ -1,0 +1,28 @@
+# L §3.2: "`%` is the dimensionless unit 1/100, a scale: `19 %` is the number 0.19 ... `num %` differs from
+# `num` only in how it prints (`19 %` against `0.19`)"; L §2.4: "A value of the unit `%` prints with it".
+# A bare literal in a row takes its target's declared type and unit (L §3.2): r = 19 is 19 %.  L §7.1: a bare
+# 1 takes the unit of the other operand in `+`: r + 1 is 19 % + 1 % = 20 %.  `1 %` is an inline figure (value
+# 0.01, L §7.1): f = r / 1 % is r as a plain number of per cent, 19.  g = r * 2 is 0.38 (a num: this
+# interpreter keeps the % print only through +, -, min, max and if; see HANDOVER).
+=== m.tally
+model t
+  tally 2
+  on 2027-01-01
+  start 2026-01-01
+  end 2027-12-31
+
+source s "s"
+input r: num %
+def w: num % = r + 1 at reader
+def f: num = r / 1 % at reader
+
+version v1
+  cite s
+  governs always
+  known 2025-12-01
+  r = 19
+
+ask q1: r, w, f law 2026-12-31
+=== expect
+q1: (19 %, 20 %, 19)
+  law date 2026-12-31, cut 2027-01-01

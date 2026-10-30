@@ -1,0 +1,57 @@
+# Round 18, C3-2 (follows). L §2.5: "Two top-level items with one id are refused (LOAD-DUP), but two scenarios over one
+# base never meet, so each may declare an id the other declares (§6.4)". sa and sb each declare input bonus.
+=== base.tally
+model base
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+input pay: money PLN
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  pay = 10.00 PLN
+
+ask qb: pay
+=== sa.tally
+scenario sa over base
+  tally 2
+  from 2026-01-01
+
+input bonus: money PLN
+
+version va
+  cite s
+  governs always
+  known 2026-06-01
+  bonus = 1.00 PLN
+
+ask qa: bonus in sa
+=== sb.tally
+scenario sb over base
+  tally 2
+  from 2026-01-01
+
+input bonus: money PLN
+
+version vb
+  cite s
+  governs always
+  known 2026-06-01
+  bonus = 2.00 PLN
+
+ask qs: bonus in sb
+=== expect
+qa: 1.00 PLN
+  world: sa
+  cut 2026-12-31
+qb: 10.00 PLN
+  cut 2026-12-31
+qs: 2.00 PLN
+  world: sb
+  cut 2026-12-31

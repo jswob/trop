@@ -1,0 +1,15 @@
+flagged (a = pkb-1201): pkb_1201
+  cut 2026-10-25
+flagged (a = pkb-1202): pkb_1202
+  cut 2026-10-25
+flagged (a = pkb-7731): ?"PKB-7731 is in the bank's statement; the model names no place for it" (account_place[pkb-7731])
+  cut 2026-10-25
+ledger: residuals pkb_1201 2025-03
+  2025-03 balance: model 3 200.00 DUK, observed 3 150.00 DUK, difference -50.00 DUK
+    balance pkb_1201 2025-03-31 end (anchored): booked 3 200.00 DUK, stated 3 150.00 DUK, gap -50.00 DUK
+  cut 2026-10-25
+residual: -50.00 DUK
+  cut 2026-10-25
+stands: (3 150.00 DUK, 0.00 DUK)
+  anchor: pkb_1201 2025-03-31 end, stated 3 150.00 DUK, difference -50.00 DUK
+  cut 2026-10-25

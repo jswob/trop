@@ -1,0 +1,19 @@
+part asks_a12
+  tally 2
+  note "A-12 · Ten years on (questions.md): as of 2035-12-31, known as of 2026-01-15, one ask per path and per path under the what-if (t25_<path>): the next car's day, the value of the wrapped and Rzeka accounts at the end of 2035-12-31 after selling it all, the PIT-9 tax on the wrapped account, the PIT-8 tax on the gains, and what is left in January-2026 money. The price rounding of the forecast (item 3) is the axis px_round."
+
+ask a12_base: fc_car_day, fc_value, fc_wrap_tax, fc_gains_tax, fc_real with scenario base law 2026-01-15 as known 2026-01-15
+
+ask a12_t25_base: fc_car_day, fc_value, fc_wrap_tax, fc_gains_tax, fc_real with scenario t25_base law 2026-01-15 as known 2026-01-15
+
+ask a12_crash: fc_car_day, fc_value, fc_wrap_tax, fc_gains_tax, fc_real with scenario crash law 2026-01-15 as known 2026-01-15
+
+ask a12_t25_crash: fc_car_day, fc_value, fc_wrap_tax, fc_gains_tax, fc_real with scenario t25_crash law 2026-01-15 as known 2026-01-15
+
+ask a12_flat: fc_car_day, fc_value, fc_wrap_tax, fc_gains_tax, fc_real with scenario flat law 2026-01-15 as known 2026-01-15
+
+ask a12_t25_flat: fc_car_day, fc_value, fc_wrap_tax, fc_gains_tax, fc_real with scenario t25_flat law 2026-01-15 as known 2026-01-15
+
+ask a12_switch: fc_car_day, fc_value, fc_wrap_tax, fc_gains_tax, fc_real with scenario switch law 2026-01-15 as known 2026-01-15
+
+ask a12_t25_switch: fc_car_day, fc_value, fc_wrap_tax, fc_gains_tax, fc_real with scenario t25_switch law 2026-01-15 as known 2026-01-15

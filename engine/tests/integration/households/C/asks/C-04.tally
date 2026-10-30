@@ -1,0 +1,9 @@
+part asks_c04
+  tally 2
+  note "C-04 · Our return for 2025 (questions.md), as of and known as of 2026-09-30, as we filed it (2026-04-27): (Marta base, Jan base, deduction Marta, deduction Jan, combined base, joint tax, child relief, credit, due, advances, difference: positive payable), and exempt: Jan's Rosvald pay taken as exempt, the exempt base (PIT-18 .4). tenth: 2025's tenth by that return (C-HR6 .2); for December 2026: that tenth less 2025's estimate (what we gave less what 2024's tenth added, or plus what it took off), positive added, negative taken off."
+
+ask c04_return: tax_base[marta, 2025], tax_base[jan, 2025], gift_ded[marta, 2025], gift_ded[jan, 2025], comb_base[2025], joint_tax[2025], relief[2025], credit[2025, f_filed], due[2025, f_filed], advances[2025], difference[2025, f_filed] law 2026-09-30
+
+ask c04_exempt: exempt_base[2025] law 2026-09-30
+
+ask c04_tenth: tenth[2025, f_filed], estimate[2025], carry[2025, last_filing[2025]] law 2026-09-30

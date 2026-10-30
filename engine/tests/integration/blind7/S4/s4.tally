@@ -1,0 +1,448 @@
+model s4
+  tally 2
+  on 2027-12-31
+  start 2027-02-13
+  end 2027-12-31
+  note "Card S4: Edvin and Ruta Malek, Edvin's death, his will, Lea's claim and the division of the estate, SPS and SUC; all made up."
+
+source card_s4 "Card S4, Cast and Entries: the stipulations of the case"
+source sps_law "Card S4, Law: SPS-1 Spouses' property"
+source suc_law "Card S4, Law: SUC-1 Heirs and the estate"
+source house_rules "Card S4, House rules: H-1 What each of us is worth"
+source will_doc "Card S4, S4-D1: Notary Olek Fenn, Torvin, will of 2019-10-02, opened 2027-03-08"
+source deed_doc "Card S4, S4-D2: Notary Olek Fenn, Torvin, deed of division 311/2027, issued 2027-09-20"
+source banka_torvin "Card S4, S4-R1: Banka Torvin, account 2208 1145, all rows from 2027-02-14 to 2027-12-31"
+source valuations "Card S4, S4-R2: valuations kept"
+source balances "Card S4, S4-R3: balances kept"
+
+unit DUK: currency minor 0.01
+
+unit property "one whole property (the flat, or the cottage)"
+
+kind persons: parties
+
+kind couples: parties
+  note "a married couple as the owner of its joint property (SPS-1 point 1)"
+
+kind estates: parties
+  note "a deceased's estate, owned by the heirs together, each in their share (SUC-1 point 1)"
+
+kind closings: event certain
+  leg cash: DUK
+  note "money moved between accounts when one is closed; it stays whose it was (SPS-1 point 1: in whatever account)"
+
+kind deaths: event certain
+  leg what: any
+  attr couple: key couples
+  attr deceased: key persons
+  attr estate: key estates
+  attr survivor: key persons
+
+kind division_pays: event certain
+  leg cash: DUK
+  attr deed: key deeds_ix
+  attr payee: key persons
+  attr payer: key persons
+
+kind divisions: event certain
+  leg what: any
+  attr deed: key deeds_ix
+  attr estate: key estates
+
+kind estate_debt_pays: event certain
+  leg cash: DUK
+  attr debtor: key estates
+
+kind owned_accounts: place DUK min 0
+  owned by sps_arrive
+  step minor(DUK)
+  takes k for w order take_rank[w, k.owner], take_rest[w, k.owner]
+  note "accounts holding joint, own or estate money, kept as parts by owner"
+
+kind properties: place property min 0
+  owned by sps_arrive
+  step 0.01 property
+  takes k for w order take_rank[w, k.owner], take_rest[w, k.owner]
+  note "the flat and the cottage, kept as parts by owner, each counted at its latest valuation (H-1 point 2)"
+
+index deeds_ix: open
+  note "deeds of division; a deed's key comes with the deed's version, so no division exists before it is known"
+
+place a1145: owned_accounts lives 1900-01-01..
+  note "the joint account 2208 1145; the day it was opened isn't given, so an early day stands for it (L 5.7)"
+
+place a3390: owned_accounts lives 1900-01-01..
+  note "Edvin's account 2208 3390; the day it was opened isn't given, so an early day stands for it (L 5.7)"
+
+place lea_own: accounts DUK lives 1900-01-01..
+  note "Lea's own account"
+
+place pavo_own: accounts DUK lives 1900-01-01..
+  note "Pavo's own account"
+
+place cottage: properties priced last(cottage_val) lives 1900-01-01..
+  note "the cottage; counted at its latest valuation (H-1 point 2)"
+
+place flat: properties priced last(flat_val) lives 1900-01-01..
+  note "the flat in Torvin; counted at its latest valuation (H-1 point 2)"
+
+place ruta_own: accounts DUK lives 2027-03-01..
+  note "2208 7702, Ruta's own, opened 2027-03-01 for her pension"
+
+place world: outside lives 1900-01-01..
+
+input allot[dv in deeds_ix, x in places, p in persons]: num
+  note "the share of the estate's parts at a place that a deed of division gives each heir"
+
+input bank: observed
+
+input child_of[c in persons, p in persons]: bool
+
+input claim_fraction: num
+  note "SUC-1 point 4: the fraction of the no-will share a child left out may claim"
+
+input couple_of[e in estates]: key couples
+
+input deceased_of[e in estates]: key persons
+
+input deed_day[dv in deeds_ix]: date
+
+input deed_estate[dv in deeds_ix]: key estates
+
+input deed_part[dv in deeds_ix, p in persons]: num
+
+input deed_value[dv in deeds_ix, x in properties]: money DUK
+
+input first_named[e in estates]: key persons
+
+input flat_val: num DUK/property reading
+  note "a valuation of the whole flat, for the day it is for"
+
+input heir_share[p in persons, e in estates]: num
+
+input joint_share[p in persons, c in couples]: num
+  note "H-1 point 1: joint property half to each spouse"
+
+input owns[p in persons, x in accounts]: num
+
+input cottage_val: num DUK/property reading
+  note "a valuation of the whole cottage, for the day it is for"
+
+input reason_true[e in estates, c in persons]: bool question "Is the reason the will gives for leaving the child out true (SUC-1 point 6)?"
+
+input survivor_half: num
+  note "SPS-1 point 2: at a death, half of each joint thing and joint money becomes the survivor's own, half the estate's"
+
+input survivor_of[e in estates]: key persons
+
+def claim[e in estates, c in persons]: money DUK at death_day[e]
+  note "SUC-1 points 4 and 6: a child the will leaves nothing may claim a fraction of their no-will share of the estate's net value at the death, rounded to whole orts, half up; none if the will's reason is true"
+  rule left_out v suc1_v1 = round(claim_fraction * no_will_share[e] * net_at_death[e], minor(DUK), half-up) when child_of[c, deceased_of[e]] and heir_share[c, e] == 0
+  rule not_left_out v suc1_v1 = 0 when not (child_of[c, deceased_of[e]] and heir_share[c, e] == 0)
+  rule reason_true beats left_out v suc1_v1 = 0 when child_of[c, deceased_of[e]] and heir_share[c, e] == 0 and reason_true[e, c]
+
+def claim_from[e in estates, c in persons, h in persons]: money DUK at death_day[e]
+  note "SUC-1 point 5: the heirs owe the claim in their shares, the first-named heir's part rounded to whole orts, half up, the other's the rest"
+  rule first v suc1_v1 = round(claim[e, c] * heir_share[h, e], minor(DUK), half-up) when heir_share[h, e] > 0 and h == first_named[e]
+  rule not_heir v suc1_v1 = 0 when heir_share[h, e] == 0
+  rule rest v suc1_v1 = claim[e, c] - claim_from[e, c, first_named[e]] when heir_share[h, e] > 0 and h != first_named[e]
+
+def claims_net[p in persons, d in days]: num DUK
+  note "H-1 point 1: a claim counts for the one owed, against the one owing"
+  rule base = sum(claim[e, p] - sum(claim_from[e, c, p] for c in persons on death_day[e]) for e in estates on d)
+
+def counts_for[p in persons, q in parties, d in days]: num at d
+  note "H-1 point 1: how much of party q's parts counts for person p: one's own whole, joint property half to each spouse, a share of an estate at that share"
+  rule estate v h1_v1 = heir_share[p, q] when q in estates
+  rule joint v h1_v1 = joint_share[p, q] when q in couples
+  rule own v h1_v1 = (if q == p then 1 else 0) when q in persons
+
+def death_day[e in estates]: date = lifespan(e).from
+
+def deed_estate_value[dv in deeds_ix]: num DUK at deed_day[dv]
+  note "S4-D2 point 2: the estate valued at the deed's values, its money as the estate holds it that day"
+  rule d2 v deed_d2 = sum(deed_value[dv, x] for x in properties on deed_day[dv]) + sum(deed_money[dv, x] for x in owned_accounts on deed_day[dv])
+
+def deed_money[dv in deeds_ix, x in owned_accounts]: money DUK at deed_day[dv]
+  note "S4-D2 point 2: the money the estate holds in an account on the deed's day, before the division"
+  rule d2 v deed_d2 = bal(x, deed_day[dv] start) of deed_estate[dv]
+
+def deed_takes[dv in deeds_ix, h in persons]: num DUK at deed_day[dv]
+  note "S4-D2 points 1-2: what the deed gives an heir, at the deed's values"
+  rule d2 v deed_d2 = sum(allot[dv, x, h] * deed_value[dv, x] for x in properties on deed_day[dv]) + sum(allot[dv, x, h] * deed_money[dv, x] for x in owned_accounts on deed_day[dv])
+
+def div_net[p in persons, d in days]: num DUK
+  note "H-1 point 1: the division's payment counts for the one owed, against the one owing, from the deed's day until paid"
+  rule base = sum((if d >= deed_day[dv] then div_owed[dv, p] - div_owes[dv, p] else 0) + div_paid[dv, p, d] - div_received[dv, p, d] for dv in deeds_ix)
+
+def div_owed[dv in deeds_ix, h in persons]: money DUK at deed_day[dv]
+  note "S4-D2 point 3: what the heir who takes less is paid"
+  rule not_heir v deed_d2 = 0 when deed_part[dv, h] == 0
+  rule pays v deed_d2 = 0 when deed_part[dv, h] > 0 and div_owes[dv, h] > 0
+  rule receives v deed_d2 = sum(div_owes[dv, h2] for h2 in persons over .. where h2 != h) when deed_part[dv, h] > 0 and div_owes[dv, h] == 0
+
+def div_owes[dv in deeds_ix, h in persons]: money DUK at deed_day[dv]
+  note "S4-D2 point 3: each heir's part is half the estate so valued; who takes more pays the other the difference, rounded to whole orts, half up"
+  rule more v deed_d2 = round(deed_takes[dv, h] - deed_part[dv, h] * deed_estate_value[dv], minor(DUK), half-up) when deed_takes[dv, h] > deed_part[dv, h] * deed_estate_value[dv]
+  rule not_more v deed_d2 = 0 when deed_takes[dv, h] <= deed_part[dv, h] * deed_estate_value[dv]
+
+def div_paid[dv in deeds_ix, h in persons, d in days]: money DUK = sum(o.cash.amount for o in division_pays over .. d where o.deed == dv and o.payer == h)
+
+def div_received[dv in deeds_ix, h in persons, d in days]: money DUK = sum(o.cash.amount for o in division_pays over .. d where o.deed == dv and o.payee == h)
+
+def net_at_death[e in estates]: num DUK
+  note "SUC-1 point 4: the estate's net value at the death: its things at the valuations for that day (the sworn appraiser's), plus its money, less its debts, the funeral included"
+  rule base = (value(cottage, death_day[e]) in DUK of e) + (value(flat, death_day[e]) in DUK of e) + sum(bal(x, death_day[e]) of e for x in owned_accounts on death_day[e]) - sum(o.cash.amount for o in estate_debt_pays over .. where o.debtor == e)
+
+def no_will_share[e in estates]: num at death_day[e]
+  note "SUC-1 point 1: with no will, spouse and children inherit equally"
+  rule suc1_1 v suc1_v1 = 1 / count(q in persons on death_day[e] where q == survivor_of[e] or child_of[q, deceased_of[e]])
+
+def parts_worth[p in persons, d in days]: num DUK
+  note "H-1: the parts of every owner, counted for p as counts_for says; money at its balance, a property at its latest valuation. The two properties are named: value() over a binding of the kind is refused at load (LOAD-PRICE), since each place names its own price"
+  rule base = sum(counts_for[p, q, d] * (bal(x, d) of q) for x in owned_accounts on d, q in parties on d) + sum(counts_for[p, q, d] * ((value(cottage, d) in DUK of q) + (value(flat, d) in DUK of q)) for q in parties on d)
+
+def sps_arrive[m in events, p in parties]: num at m.day
+  note "whose each arrival at an owned place is"
+  rule death_estate v sps1_v1 = ((m.what.amount of m.couple) * survivor_half + (m.what.amount of m.deceased)) / m.what.amount when m in deaths and p == m.estate
+  rule death_others v sps1_v1 = 0 when m in deaths and p != m.estate and p != m.survivor
+  rule death_survivor v sps1_v1 = (m.what.amount of m.couple) * survivor_half / m.what.amount when m in deaths and p == m.survivor
+  rule divided v suc1_v1 = allot[m.deed, m.what.to, p] when m in divisions and p in persons
+  rule divided_others v suc1_v1 = 0 when m in divisions and not p in persons
+  rule kept v sps1_v1 = (m.cash.amount of p) / m.cash.amount when m in closings
+
+def take_rank[w in events, p in parties]: int at w.day
+  note "which parts an outflow takes first (lower first)"
+  rule closing v sps1_v1 = 0 when w in closings
+  rule death v sps1_v1 = (if p == w.deceased or p == w.couple then 0 else 1) when w in deaths
+  rule divided v suc1_v1 = (if p == w.estate then 0 else 1) when w in divisions
+  rule estate_debt v suc1_v1 = (if p == w.debtor then 0 else 1) when w in estate_debt_pays
+  rule payer v deed_d2 = (if p == w.payer then 0 else 1) when w in division_pays
+
+def take_rest[w in events, p in parties]: int
+  note "after the parts an outflow names: a death or a division takes exactly the parts it names, a closing all; SUC-1 point 2 and the deed name no money after the estate's or the payer's"
+  rule named = 0 when take_rank[w, p] == 0
+  rule unnamed = ?"the law names no money an estate debt, or a division's payment, takes after the money it names first" when take_rank[w, p] == 1 and (w in estate_debt_pays or w in division_pays)
+  rule unreached = 0 when take_rank[w, p] == 1 and not (w in estate_debt_pays or w in division_pays)
+
+def worth[p in persons, d in days]: num DUK at d
+  note "H-1: what one owns less what one owes; no rounding"
+  rule h1 v h1_v1 = parts_worth[p, d] + sum(bal(x, d) * owns[p, x] for x in accounts on d) + claims_net[p, d] + div_net[p, d]
+
+move death_a1145[e in estates over ..]: deaths
+  on death_day[e]
+  reads a1145
+  attr couple = couple_of[e]
+  attr deceased = deceased_of[e]
+  attr estate = e
+  attr survivor = survivor_of[e]
+  leg what from a1145 to a1145 amount (bal(a1145) of deceased_of[e]) + (bal(a1145) of couple_of[e])
+  note "SPS-1 point 2 and SUC-1 point 1, at the joint account 2208 1145: at the death, the deceased's own and the joint parts are relabelled, half the joint the survivor's own, the rest the estate's"
+
+move death_a3390[e in estates over ..]: deaths
+  on death_day[e]
+  reads a3390
+  attr couple = couple_of[e]
+  attr deceased = deceased_of[e]
+  attr estate = e
+  attr survivor = survivor_of[e]
+  leg what from a3390 to a3390 amount (bal(a3390) of deceased_of[e]) + (bal(a3390) of couple_of[e])
+  note "SPS-1 point 2 and SUC-1 point 1, at Edvin's account 2208 3390: at the death, the deceased's own and the joint parts are relabelled, half the joint the survivor's own, the rest the estate's"
+
+move death_cottage[e in estates over ..]: deaths
+  on death_day[e]
+  reads cottage
+  attr couple = couple_of[e]
+  attr deceased = deceased_of[e]
+  attr estate = e
+  attr survivor = survivor_of[e]
+  leg what from cottage to cottage amount (bal(cottage) of deceased_of[e]) + (bal(cottage) of couple_of[e])
+  note "SPS-1 point 2 and SUC-1 point 1, at the cottage: at the death, the deceased's own and the joint parts are relabelled, half the joint the survivor's own, the rest the estate's"
+
+move death_flat[e in estates over ..]: deaths
+  on death_day[e]
+  reads flat
+  attr couple = couple_of[e]
+  attr deceased = deceased_of[e]
+  attr estate = e
+  attr survivor = survivor_of[e]
+  leg what from flat to flat amount (bal(flat) of deceased_of[e]) + (bal(flat) of couple_of[e])
+  note "SPS-1 point 2 and SUC-1 point 1, at the flat: at the death, the deceased's own and the joint parts are relabelled, half the joint the survivor's own, the rest the estate's"
+
+move divide_a1145[dv in deeds_ix]: divisions
+  on deed_day[dv]
+  at deed_day[dv]
+  reads a1145
+  attr deed = dv
+  attr estate = deed_estate[dv]
+  leg what from a1145 to a1145 amount bal(a1145) of deed_estate[dv]
+  note "SUC-1 point 3, at the joint account 2208 1145: from the deed's day each heir alone owns what it gives them"
+
+move divide_a3390[dv in deeds_ix]: divisions
+  on deed_day[dv]
+  at deed_day[dv]
+  reads a3390
+  attr deed = dv
+  attr estate = deed_estate[dv]
+  leg what from a3390 to a3390 amount bal(a3390) of deed_estate[dv]
+  note "SUC-1 point 3, at Edvin's account 2208 3390: from the deed's day each heir alone owns what it gives them"
+
+move divide_cottage[dv in deeds_ix]: divisions
+  on deed_day[dv]
+  at deed_day[dv]
+  reads cottage
+  attr deed = dv
+  attr estate = deed_estate[dv]
+  leg what from cottage to cottage amount bal(cottage) of deed_estate[dv]
+  note "SUC-1 point 3, at the cottage: from the deed's day each heir alone owns what it gives them"
+
+move divide_flat[dv in deeds_ix]: divisions
+  on deed_day[dv]
+  at deed_day[dv]
+  reads flat
+  attr deed = dv
+  attr estate = deed_estate[dv]
+  leg what from flat to flat amount bal(flat) of deed_estate[dv]
+  note "SUC-1 point 3, at the flat: from the deed's day each heir alone owns what it gives them"
+
+ask s4_01: net_at_death[e] for e in estates over .. as known 2027-04-10
+
+ask s4_02: div_owes[dv, h], div_owed[dv, h] for dv in deeds_ix, h in persons over .. where deed_part[dv, h] > 0 law 2027-10-31 as known 2027-11-05
+
+ask s4_03: claim_from[e, lea, ruta], claim_from[e, lea, pavo] for e in estates over .. as known 2027-12-31
+
+ask s4_04: worth[p, d] for p in persons over .., d in [2027-02-13, 2027-06-30, 2027-12-31] where p != edvin or d == 2027-02-13 as known 2027-12-31
+
+version sps1_v1
+  cite sps_law
+  governs 1975-01-01..
+  known 1974-06-03
+  survivor_half = 0.5 "SPS-1 point 2: half the survivor's own, half the estate's"
+
+version suc1_v1
+  cite suc_law
+  governs 1990-01-01..
+  known 1989-05-02
+  note "SUC-1 v1; v2 (deaths from 2027-07-01) is as v1 but for point 4's fraction, so the rules cite v1 and only the fraction changes"
+  claim_fraction = 0.5 governs 1990-01-01..2027-06-30 "SUC-1 v1 point 4: half their no-will share"
+
+version cast
+  cite card_s4
+  governs always
+  known 2027-02-13
+  persons + [edvin] lives 1951-03-02..
+  persons + [lea] lives 1980-05-06..
+  persons + [pavo] lives 1983-12-11..
+  persons + [ruta] lives 1954-08-19..
+  couples + [maleks] lives 1979-07-07..
+  child_of = false "Cast: no other children"
+  child_of[lea, edvin] = true "Cast: children Lea and Pavo"
+  child_of[lea, ruta] = true "Cast: children Lea and Pavo"
+  child_of[pavo, edvin] = true "Cast: children Lea and Pavo"
+  child_of[pavo, ruta] = true "Cast: children Lea and Pavo"
+  owns = 0 "each own account is its holder's alone"
+  owns[lea, lea_own] = 1 "S4-R3: Lea's own"
+  owns[pavo, pavo_own] = 1 "S4-R3: Pavo's own"
+  owns[ruta, ruta_own] = 1 "S4-R3: Ruta's own, for her pension (SPS-1 point 2: what the survivor receives afterwards is their own)"
+  opening[cottage] = 1 property at 2027-02-13 start "Cast: a cottage, Edvin's own, inherited 2004"
+  opening[cottage] of edvin = 1 property at 2027-02-13 start "Cast: Edvin's own, inherited 2004 (SPS-1 point 1)"
+  opening[flat] = 1 property at 2027-02-13 start "Cast: a flat in Torvin"
+  opening[flat] of maleks = 1 property at 2027-02-13 start "Cast: bought 1991 with joint money (SPS-1 point 1)"
+
+version h1_v1
+  cite house_rules
+  governs 2020-01-01..
+  known 2027-02-13
+  joint_share = 0 "H-1 point 1: joint property counts only for the spouses"
+  joint_share[edvin, maleks] = 0.5 "H-1 point 1: half to each spouse"
+  joint_share[ruta, maleks] = 0.5 "H-1 point 1: half to each spouse"
+
+version valuations_r2
+  cite valuations
+  known 2025-09-01
+  cottage_val = 151000 DUK/property known 2025-09-01 at 2025-09-01 "S4-R2: Lipa Insurance"
+  cottage_val = 156500 DUK/property known 2027-04-02 at 2027-02-14 "S4-R2: sworn appraiser M. Ostrova, report 77/2027 of 2027-04-02"
+  cottage_val = 171000 DUK/property known 2027-11-15 at 2027-11-15 "S4-R2: Lipa Insurance, for Pavo"
+  flat_val = 398000 DUK/property known 2026-05-12 at 2026-05-12 "S4-R2: Banka Torvin, for a loan offer not taken"
+  flat_val = 412000 DUK/property known 2027-04-02 at 2027-02-14 "S4-R2: sworn appraiser M. Ostrova, report 77/2027 of 2027-04-02"
+
+version balances_r3
+  cite balances
+  known 2027-02-13
+  anchor a3390
+  anchor lea_own
+  anchor pavo_own
+  anchor ruta_own
+  stated[a3390] = 7315.40 DUK known 2027-02-13 at 2027-02-13 end "S4-R3: 2208 3390 (Edvin)"
+  stated[a3390] of maleks = 7315.40 DUK known 2027-02-13 at 2027-02-13 end "Cast: only pension paid in during the marriage, joint (SPS-1 point 1)"
+  stated[a3390] = 7315.40 DUK known 2027-10-04 at 2027-10-04 end "S4-R3: 2208 3390 (Edvin)"
+  stated[lea_own] = 6200.00 DUK known 2027-02-13 at 2027-02-13 end "S4-R3: Lea's own"
+  stated[lea_own] = 6200.00 DUK known 2027-06-30 at 2027-06-30 end "S4-R3: Lea's own"
+  stated[lea_own] = 6200.00 DUK known 2027-12-31 at 2027-12-31 end "S4-R3: Lea's own"
+  stated[pavo_own] = 3400.00 DUK known 2027-02-13 at 2027-02-13 end "S4-R3: Pavo's own"
+  stated[pavo_own] = 3400.00 DUK known 2027-06-30 at 2027-06-30 end "S4-R3: Pavo's own"
+  stated[pavo_own] = 34911.33 DUK known 2027-12-31 at 2027-12-31 end "S4-R3: Pavo's own"
+  stated[ruta_own] = 3210.15 DUK known 2027-06-30 at 2027-06-30 end "S4-R3: 2208 7702 (Ruta's own)"
+  stated[ruta_own] = 4077.90 DUK known 2027-12-31 at 2027-12-31 end "S4-R3: 2208 7702 (Ruta's own)"
+
+version stmt_r1
+  cite banka_torvin
+  governs 2027-02-14..2027-12-31
+  known 2027-02-14
+  anchor a1145
+  note "S4-R1 holds all the account's rows from 2027-02-14 to 2027-12-31, but no covers line is written: on a covered day the death's and the division's relabels at the account (L 5.14), which no bank row shows, would be modelled past and never booked (L 5.19)"
+  stated[a1145] = 38420.60 DUK at 2027-02-13 end "S4-R1 row 0: closing balance 13.02.2027"
+  stated[a1145] of maleks = 38420.60 DUK at 2027-02-13 end "Cast: the joint account (SPS-1 point 1)"
+  bank[r1] = (on: 2027-02-24, kind: estate_debt_pays, leg cash from a1145 to world amount 9845.35 DUK, debtor: edvin_estate) known 2027-02-24 "S4-R1 row 1: LIPA FUNERAL HOME INVOICE 2027/118 (SUC-1 point 2: an estate debt)"
+  bank[r2] = (on: 2027-10-05, kind: closings, leg cash from a3390 to a1145 amount 7315.40 DUK) known 2027-10-05 "S4-R1 row 2: FROM 2208 3390 ACCOUNT CLOSED E.MALEK"
+  bank[r3] = (on: 2027-10-12, kind: division_pays, leg cash from a1145 to pavo_own amount 31511.33 DUK, deed: deed_311, payee: pavo, payer: ruta) known 2027-10-12 "S4-R1 row 3: TO P.MALEK DEED 311/2027"
+
+version death
+  cite card_s4
+  governs always
+  known 2027-02-14
+  note "Entries: Edvin dies on 2027-02-14 (no document); the marriage ends with him"
+  estates + [edvin_estate] lives 2027-02-14..
+  replace couples + [maleks] lives 1979-07-07..2027-02-14
+  replace persons + [edvin] lives 1951-03-02..2027-02-14
+  couple_of[edvin_estate] = maleks "Cast: married 1979-07-07"
+  deceased_of[edvin_estate] = edvin "Entries: Edvin dies"
+  survivor_of[edvin_estate] = ruta "Cast: Ruta, his wife"
+
+version will
+  cite will_doc
+  governs 2027-02-14..
+  known 2027-03-08
+  heir_share = 0 "S4-D1: no one else is an heir; Lea is left nothing"
+  heir_share[pavo, edvin_estate] = 0.5 "S4-D1: my heirs are my wife Ruta and my son Pavo, in equal shares"
+  heir_share[ruta, edvin_estate] = 0.5 "S4-D1: my heirs are my wife Ruta and my son Pavo, in equal shares"
+  first_named[edvin_estate] = ruta governs always "S4-D1: Ruta is named first"
+
+version suc1_v2
+  cite suc_law
+  governs 2027-07-01..
+  known 2027-05-14
+  claim_fraction = 2/3 "SUC-1 v2 point 4: two thirds instead of half"
+
+version suit
+  cite card_s4
+  governs always
+  known 2027-05-26
+  reason_true[edvin_estate, lea] = ?"Is the will's reason for leaving Lea out true? Lea sued Ruta and Pavo on 2027-05-20 calling it untrue; no ruling yet (hearing 2028-02-15)" "Entries: no document kept"
+
+version deed_d2
+  cite deed_doc
+  governs 2027-09-20..
+  known 2027-09-20
+  allot = 0 "S4-D2 point 1: the deed gives nothing else"
+  allot[deed_311, a1145, ruta] = 1 "S4-D2 point 1: Ruta takes all the estate's money"
+  allot[deed_311, a3390, ruta] = 1 "S4-D2 point 1: Ruta takes all the estate's money"
+  allot[deed_311, cottage, pavo] = 1 "S4-D2 point 1: Pavo, the cottage"
+  allot[deed_311, flat, ruta] = 1 "S4-D2 point 1: Ruta takes the estate's half of the flat"
+  deed_day[deed_311] = 2027-09-20 governs always "S4-D2: issued 2027-09-20"
+  deed_estate[deed_311] = edvin_estate "S4-D2: Edvin's estate"
+  deed_part = 0 "S4-D2 point 3: only the two heirs have parts"
+  deed_part[deed_311, pavo] = 0.5 "S4-D2 point 3: each heir's part is half the estate so valued"
+  deed_part[deed_311, ruta] = 0.5 "S4-D2 point 3: each heir's part is half the estate so valued"
+  deed_value[deed_311, cottage] = 160000.00 DUK "S4-D2 point 2: the cottage 160.000,00"
+  deed_value[deed_311, flat] = 210000.00 DUK "S4-D2 point 2: that half of the flat 210.000,00"

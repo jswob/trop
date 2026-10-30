@@ -1,0 +1,13 @@
+part asks_b07
+  tally 2
+  note "B-07 · Ola's pay (questions.md): as of 2025-04-30, known as of 2025-04-30."
+
+ask b07_october: gross_found[2024-10] law 2025-04-30 as known 2025-04-30
+
+ask b07_return: ola_income[2024], ola_base[2024], ola_tax[2024], ola_advances[2024], ola_result[2024] with ola_gross[2024-10] = gross_found[2024-10] law 2025-04-30 as known 2025-04-30
+
+ask b07_jointly: jointly[2024] law 2025-04-30 as known 2025-04-30
+
+ask b07_wrzos_seen: bal(wrzos, 2025-02-28) law 2025-04-30 as known 2025-02-27 windows each
+
+ask b07_wrzos_was: bal(wrzos, 2025-02-28) law 2025-04-30 as known 2025-04-30 windows each

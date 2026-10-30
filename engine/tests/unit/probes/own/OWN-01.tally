@@ -1,0 +1,43 @@
+model own01
+  tally 2
+  on 2026-10-25
+  start 2025-01-01
+  end 2025-12-31
+  note "OWN-01: a savings account opened on 1 March with a month-end fee; the fees of the first quarter and net worth on 15 February."
+  note "Each account is a thing with a lifespan (LANGUAGE 5.7, 5.10): before it opens it is in no binding, so it has no line. The fee applies by kind, to every savings account alive at a month's end (a move keyed by a kind, 5.14)."
+
+source card "Probe card OWN-01 (made up): story and rules"
+
+unit DUK: currency minor 0.01
+
+kind savings_accounts: place DUK signed
+
+place bank_fees: outside lives 2025-01-01..
+
+input fee_amount: money DUK
+
+move fee[m in months, x in savings_accounts on add_days(end_of(m), -1)]: transfers
+  on add_days(end_of(m), -1)
+  leg cash from x to bank_fees amount fee_amount
+  note "rule 2: the fee at the end of each month the account is open"
+
+ask q_a_fees: flows(fee, 2025-01..2025-03)
+
+ask q_b_lines: bal(x, 2025-02-15) for x in places on 2025-02-15 where not (x in outside)
+
+ask q_b_net_worth: sum(bal(x, 2025-02-15) for x in places on 2025-02-15 where not x in outside)
+
+version card_facts
+  cite card
+  known 2025-01-01
+  anchor current
+  note "current: held for years, opened 2015-01-01 (the card's inputs); savings: opened on 1 March 2025"
+  accounts + [current] DUK lives 2015-01-01..
+  savings_accounts + [savings] lives 2025-03-01..
+  stated[current] = 1000.00 at 2025-02-15 end "story: holds 1 000.00 on 15 February 2025"
+
+version card_rules
+  cite card
+  governs always
+  known 2025-01-01
+  fee_amount = 5.00 "rule 2: a fee of 5.00 at each month's end while open"

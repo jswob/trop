@@ -1,0 +1,55 @@
+# L §5.19: "A reading whose value is none states no balance: it neither pads nor anchors, and with replace it removes
+# the reading it replaces, as replace bank[r18] = none removes a movement." The none reading of 2026-02-28 leaves
+# konto at its opening, 1 000.00; the 1 500.00 reading of 2026-03-31 pads 500.00. s3 replaces the 2 000.00 reading of
+# 2026-05-31 with none: q2 stays at 1 500.00; as known 2026-06-15, before s3, that reading pads 500.00 (q3).
+# (Writer 6: was REFCORE-UNSPECIFIED §5.19; a replace of a balance reading by none was LOAD-REPLACE.)
+=== m.tally
+model hh
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source bank "bank"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2019-05-01..
+place unexplained: outside lives 1900-01-01..
+
+version open
+  cite bank
+  governs 2026..
+  known 2026-01-01
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "wyciąg"
+
+version s1
+  cite bank
+  known 2026-04-01
+  pad konto from unexplained
+  stated[konto] = 1 500.00 PLN at 2026-03-31 end "saldo"
+  stated[konto] = none at 2026-02-28 end "brak"
+
+version s2
+  cite bank
+  known 2026-06-01
+  pad konto from unexplained
+  stated[konto] = 2 000.00 PLN at 2026-05-31 end "saldo"
+
+version s3
+  cite bank
+  known 2026-07-01
+  pad konto from unexplained
+  replace stated[konto] = none at 2026-05-31 end "korekta"
+
+ask q1: bal(konto, 2026-02-28), bal(konto, 2026-03-31)
+ask q2: bal(konto, 2026-06-30)
+ask q3: bal(konto, 2026-06-30) as known 2026-06-15
+=== expect
+q1: (1 000.00 PLN, 1 500.00 PLN)
+  pad: konto 2026-03-31 end, pads:s1:konto@2026-03-31 end of 500.00 PLN
+  cut 2026-10-20
+q2: 1 500.00 PLN
+  pad: konto 2026-03-31 end, pads:s1:konto@2026-03-31 end of 500.00 PLN
+  cut 2026-10-20
+q3: 2 000.00 PLN
+  pad: konto 2026-05-31 end, pads:s2:konto@2026-05-31 end of 500.00 PLN
+  cut 2026-06-15

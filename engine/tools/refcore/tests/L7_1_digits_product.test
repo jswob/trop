@@ -1,0 +1,42 @@
+# L §7.1 (and §5.11): "A value whose numerator or denominator passes 4 096 decimal digits is refused at that key
+# (RUN-DIGITS). The digits are counted on the reduced fraction ... A long product of market data ... can reach it."
+# g[k] = 0.123456789^k: the reduced denominator is 10^(9k), 9k + 1 digits; numerator 123456789^k, about 8.1k digits.
+# g[455] has a 4 096-digit denominator: a value (q1, and printed whole in q3, 0.000... with 4 095 decimals); g[456]
+# passes the cap: refused at that key, and every key after it (q2, q4).  (A run used to crash converting such values
+# to text.)
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+index ks = int 1..600
+
+input r: num
+
+def g[k in ks]: num
+  rule first = r when k == 1
+  rule later = g[k - 1] * r when k > 1
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  r = 0.123456789
+
+ask q1: g[455] > 0
+ask q2: g[456] > 0
+ask q3: g[455]
+ask q4: g[600] > 0
+=== expect
+q1: true
+  cut 2026-12-31
+q2: refused: RUN-DIGITS ...
+  cut 2026-12-31
+q3: 0.000 ...
+  cut 2026-12-31
+q4: refused: RUN-DIGITS ...
+  cut 2026-12-31

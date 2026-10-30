@@ -1,0 +1,41 @@
+# L §4.6 step 3: "prefer in turn: 1. inside a scenario, the row from the higher layer (§6.4); 2. the narrower row".
+# In sc, the scenario's x[1..5] beats the base's narrower x[3] at key 3, since step 3.1 comes first; in the base only
+# x[3] is a candidate.
+=== base.tally
+model base
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2028-12-31
+
+source s "s"
+
+index ns = 1..10
+input x[n in ns]: int
+
+version v1
+  cite s
+  governs 2026..
+  known 2025-12-01
+  x[3] = 1
+
+ask qb: x[3] law 2027-06-01
+=== sc.tally
+scenario sc over base
+  tally 2
+  from 2027-01-01
+
+version w
+  cite s
+  governs 2027..
+  known 2026-06-01
+  x[1..5] = 2
+
+ask qs: x[3] in sc law 2027-06-01
+ask qs4: x[4] in sc law 2027-06-01
+=== expect
+qb: 1
+...
+qs: 2
+  world: sc
+...

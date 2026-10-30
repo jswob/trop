@@ -1,0 +1,48 @@
+# L §5.19 observations, L §3.1 holes: a row's field may be a hole, `paid_from: ?"whose money paid?"`, and "a read of a
+# hole is that hole" (L §3.1; HOLE-INPUT shape, L §8.1, naming the row).  q1: the attribute itself; q2: compared with a
+# key, an order or a guard reads it so (`==` over a hole is a hole, L §3.1); q3: the known row's attribute stays known.
+# (refcore 2.0 kept the row's hole marker raw: q1 printed it and q2 was refused LOAD-UNIT "ania and ('hole', ...)
+# compared", a 2.0 interpreter fault found by the probe writer's p20, writer 11.)
+=== m.tally
+model t
+  tally 2
+  on 2026-02-10
+  start 2026-01-01
+  end 2026-01-31
+
+source s "s"
+unit DUK: currency minor 0.01
+
+kind persons: parties
+kind withdrawals: transfers
+  attr paid_from: key persons
+
+place sav: accounts DUK lives 2026-01-01..
+place world: outside lives 1900-01-01..
+
+input bank_rows: observed
+
+version cast
+  cite s
+  known 2026-01-01
+  persons + [ania] lives 1988-04-12..
+  persons + [tomek] lives 1986-09-03..
+
+version rows
+  cite s
+  governs 2026-01
+  known 2026-02-03
+  opening[sav] = 1000.00 DUK at 2026-01-01 start "line 0"
+  bank_rows[r1] = (on: 2026-01-25, kind: withdrawals, leg cash from sav to world amount 900.00 DUK, paid_from: ?"whose money paid?") "line 1"
+  bank_rows[r2] = (on: 2026-01-26, kind: withdrawals, leg cash from sav to world amount 50.00 DUK, paid_from: tomek) "line 2"
+
+ask q1: o.paid_from for o in withdrawals over 2026-01-25..2026-01-25
+ask q2: o.paid_from == ania for o in withdrawals over 2026-01-25..2026-01-25
+ask q3: o.paid_from for o in withdrawals over 2026-01-26..2026-01-26
+=== expect
+q1 (o = bank_rows[r1]): ?"whose money paid?" (bank_rows[r1])
+...
+q2 (o = bank_rows[r1]): ?"whose money paid?" (bank_rows[r1])
+...
+q3 (o = bank_rows[r2]): tomek
+...

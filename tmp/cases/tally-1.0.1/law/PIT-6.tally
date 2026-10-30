@@ -1,0 +1,17 @@
+part pit_6
+  tally 1
+  law
+  note "PIT-6 · Joint filing by spouses. The joint tax is twice the PIT-3 tax on half the combined base (combined base rounded, half exact, joint tax rounded, .3); both child reliefs come off it (.4); each spouse's part is in proportion to their base in whole dukats, a dukat left over to the larger base (.5)."
+  note "pit6_health: for tax years under PIT-5 v1, whether a spouse's health deduction (PIT-5 v1 .3) also comes off a joint return, which PIT-6 .4 doesn't name (A-01 reading E or N)."
+
+source pit_6 "Personal Income Tax Act, PIT-6 Joint filing by spouses (tmp/cases/law/acts.md)"
+
+axis pit6_health
+  health_off "E: each spouse's health deduction (PIT-5 v1 .3) also comes off their part of the joint tax"
+  reliefs_only "N: PIT-6 .4 deducts only the child reliefs from the joint tax"
+
+version pit6_v1
+  cite pit_6
+  governs 2018..
+  known 2017-09-01
+  note "PIT-6 v1, in force 2018-01-01 until replaced, published 2017-09-01; governs returns for tax years from 2018."

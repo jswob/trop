@@ -1,0 +1,26 @@
+# GD-2 (round 19): L §4.2 "the month-days that are holidays every year (values of type `monthday`, §3.1 ...)";
+# §3.1: 02-29 is no month-day (LOAD-PARSE).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+index yrs = year 2026..2027
+input file_by: monthday
+input other: monthday
+input len: calendar
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  file_by = 04-30
+  other = 04-30
+  len = calendar(weekends [sat, sun], yearly [02-29])
+ask q: file_by
+=== expect
+refused: LOAD-PARSE cannot parse: 02-29 is not a month-day every year has (m.tally:20)

@@ -1,0 +1,24 @@
+# L §5.9: "A hole x makes the read a hole with x's questions only: no row is chosen, so no row's question is added."
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+band b(n: int): int
+input x: int
+
+version v
+  cite s
+  governs 2026..
+  known 2025-12-01
+  b: [0, 10) = ?"row question"
+  b: [10, inf) = 2
+  x = ?"what is x?"
+
+ask q1: b(x) law 2026-06-30
+=== expect
+q1: ?"what is x?" (x)
+  law date 2026-06-30, cut 2026-01-01

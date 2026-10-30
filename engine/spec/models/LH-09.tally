@@ -1,6 +1,8 @@
 model lh09
-  tally 1
+  tally 2
   on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
   note "US Roth IRA distribution ordering, the Form 5329 line 1 recapture amount, and a qualified charitable distribution from a traditional IRA, from the worked examples of IRS Publication 590-B (2025)."
   note "Roth examples: amelia (p. 36) and ishmael (pp. 36-37). The distribution is taken in Form 8606 order: line 20 (first home), line 22 (regular contributions), then conversions and rollovers oldest first, the taxable part before the nontaxable part (fill fifo), then earnings."
   note "Traditional IRA example: amy (p. 14)."
@@ -18,6 +20,8 @@ source p590b "IRS Publication 590-B (2025), Distributions from Individual Retire
 
 source usc408 "26 U.S. Code 408(d)(8), Distributions for charitable purposes (as amended, last by Pub. L. 117-328, div. T, title III, sec. 307, Dec. 29, 2022)" at "https://www.law.cornell.edu/uscode/text/26/408"
 
+unit USD: currency minor 0.01
+
 axis lh09_line1
   i5329 "Form 5329 instructions, line 1: recapture only from conversions and rollovers of 2021 through 2025"
   pub "Pub 590-B p. 36, Amount to include on Form 5329, line 1: amounts allocated to the 2015 through 2025 Forms 8606, line 18, and the 2016 and 2017 Forms 1040, line 16b"
@@ -26,11 +30,11 @@ index conv = [am2021, is2005, is2016]
 
 index ira_owner = [amy]
 
+index person = [amelia, ishmael]
+
 index portion = [taxable, nontaxable]
   v v_cfr
   note "A-8(b): within a conversion or rollover, the part includible in gross income comes out first"
-
-index person = [amelia, ishmael]
 
 index yr = year 2000..2030
 
@@ -76,120 +80,123 @@ input roth_dist[p in person]: money USD
 
 input split_limit[y in yr]: money USD
 
-def after20[p in person]: money USD = roth_dist[p] - line20[p]
+def after20[p in person]: money USD = roth_dist[p] - line20[p] at reader
 
-def after22[p in person]: money USD = after20[p] - from_regular[p]
+def after22[p in person]: money USD = after20[p] - from_regular[p] at reader
 
-def basis_after[o in ira_owner]: money USD = ira_basis[o] - basis_used[o]
+def basis_after[o in ira_owner]: money USD = ira_basis[o] - basis_used[o] at reader
 
-def basis_used[o in ira_owner]: money USD = min(qcd_rest[o], ira_basis[o])
+def basis_used[o in ira_owner]: money USD = min(qcd_rest[o], ira_basis[o]) at reader
 
-def charity_ded[o in ira_owner]: money USD
+def charity_ded[o in ira_owner]: money USD at reader
   note "the part of the distribution paid to charity that can be deducted as a charitable contribution, before the AGI limits"
   rule base v v_p590b = basis_used[o]
 
-def conv_income[c in conv]: money USD
+def conv_income[c in conv]: money USD at reader
   note "the amount included in gross income because of the conversion or rollover"
   rule base v v_p590b = conv_total[c] - conv_basis[c]
 
-def conv_part[c in conv, t in portion]: money USD
+def conv_part[c in conv, t in portion]: money USD at reader
   rule base v v_cfr = conv_income[c]
-  rule non excepts base v v_cfr when t = nontaxable = conv_basis[c]
+  rule non beats base v v_cfr = conv_basis[c] when t == nontaxable
 
-def earn_taken[p in person]: money USD = after22[p] - sum(c in conv, t in portion: fifo.taken[p, c, t])
+def earn_taken[p in person]: money USD = after22[p] - sum(fifo.taken[p, c, t] for c in conv, t in portion) at reader
 
-def from_regular[p in person]: money USD
+def from_regular[p in person]: money USD at reader
   rule base v v_cfr = min(after20[p], regular_basis[p])
 
-def includible[p in person]: money USD
+def includible[p in person]: money USD at reader
   note "the part of the distribution includible in income: only earnings, since regular contributions and amounts converted were taxed before or were basis"
   rule base v v_p590b = earn_taken[p]
 
-def line1[p in person]: money USD
+def line1[p in person]: money USD at reader
   note "Form 5329 line 1: line 20, the recapture amount, and the earnings of a nonqualified distribution"
   rule base v v_p590b = line20[p] + recapture[p] + earn_taken[p]
 
-def line20[p in person]: money USD
+def line20[p in person]: money USD at reader
   rule base v v_i8606 = min(home_expense[p], home_cap - prior_home[p])
 
-def line4b[o in ira_owner]: money USD = qcd_rest[o] - basis_used[o]
+def line4b[o in ira_owner]: money USD = qcd_rest[o] - basis_used[o] at reader
 
-def qcd[o in ira_owner]: money USD
+def qcd[o in ira_owner]: money USD at reader
   note "a QCD is limited to what would otherwise be includible, the distribution being paid first out of taxable income"
   rule base v v_usc408 = min(min(qcd_dist[o], taxable_all[o]), qcd_limit[year_of(qcd_on[o])] - post70_ded[o])
 
-def qcd_rest[o in ira_owner]: money USD = qcd_dist[o] - qcd[o]
+def qcd_rest[o in ira_owner]: money USD = qcd_dist[o] - qcd[o] at reader
 
-def recapture[p in person]: money USD = sum(c in conv, t in portion where t = taxable and conv_year[c] >= recapture_from[lh09_line1]: fifo.taken[p, c, t])
+def recapture[p in person]: money USD = sum(fifo.taken[p, c, t] for c in conv, t in portion where t == taxable and conv_year[c] >= recapture_from[lh09_line1]) at reader
 
-def regular_basis[p in person]: money USD
+def regular_basis[p in person]: money USD at reader
   note "Form 8606 line 22: regular contributions of the year plus undistributed regular contributions of earlier years"
   rule base v v_i8606 = regular_prior[p] + regular_year[p]
 
-def taxable_all[o in ira_owner]: money USD = ira_value[o] - ira_basis[o]
+def taxable_all[o in ira_owner]: money USD = ira_value[o] - ira_basis[o] at reader
 
 fill fifo
   v v_cfr
   note "A-8(a): regular contributions first, then conversion and rollover contributions first in, first out, then earnings; A-8(b): the taxable part of each before its nontaxable part"
   supply after22[sp] for sp in person
   demand conv_part[c, t] for c in conv, t in portion
-  arc conv_owner[c] = sp
-  order conv_year[c], t
+  arc conv_owner[c] == sp
+  order conv_year[c], t ties by (pos(sp), pos(c), pos(t))
 
-ask a_first: from_regular[amelia]
+ask a_first: from_regular[amelia] law 2026-10-18
 
-ask a_included: conv_income[am2021]
+ask a_included: conv_income[am2021] law 2026-10-18
 
-ask a_includible: includible[amelia]
+ask a_includible: includible[amelia] law 2026-10-18
 
-ask a_next: fifo.taken[amelia, am2021, taxable]
+ask a_next: fifo.taken[amelia, am2021, taxable] law 2026-10-18
 
-ask b_2005_l17: fifo.taken[ishmael, is2005, nontaxable]
+ask b_2005_l17: fifo.taken[ishmael, is2005, nontaxable] law 2026-10-18
 
-ask b_2005_l18: fifo.taken[ishmael, is2005, taxable]
+ask b_2005_l18: fifo.taken[ishmael, is2005, taxable] law 2026-10-18
 
-ask b_2016_alloc: fifo.taken[ishmael, is2016, taxable]
+ask b_2016_alloc: fifo.taken[ishmael, is2016, taxable] law 2026-10-18
 
-ask b_2016_l16a: conv_total[is2016]
+ask b_2016_l16a: conv_total[is2016] law 2026-10-18
 
-ask b_2016_l16b: conv_part[is2016, taxable]
+ask b_2016_l16b: conv_part[is2016, taxable] law 2026-10-18
 
-ask b_5329_l1: line1[ishmael]
+ask b_5329_l1: line1[ishmael] law 2026-10-18
 
-ask b_5329_l2: line20[ishmael], home_exc
+ask b_5329_l2: line20[ishmael], home_exc law 2026-10-18
 
-ask b_l19: roth_dist[ishmael]
+ask b_l19: roth_dist[ishmael] law 2026-10-18
 
-ask b_l20: line20[ishmael]
+ask b_l20: line20[ishmael] law 2026-10-18
 
-ask b_l22: from_regular[ishmael]
+ask b_l22: from_regular[ishmael] law 2026-10-18
 
-ask c_basis_after: basis_after[amy]
+ask c_basis_after: basis_after[amy] law 2026-10-18
 
-ask c_deductible: charity_ded[amy]
+ask c_deductible: charity_ded[amy] law 2026-10-18
 
-ask c_l4a: qcd_dist[amy]
+ask c_l4a: qcd_dist[amy] law 2026-10-18
 
-ask c_l4b: line4b[amy]
+ask c_l4b: line4b[amy] law 2026-10-18
 
-ask c_limit: qcd_limit[2025]
+ask c_limit: qcd_limit[2025] law 2026-10-18
 
-ask c_qcd: qcd[amy]
+ask c_qcd: qcd[amy] law 2026-10-18
 
-ask c_split: split_limit[2025]
+ask c_split: split_limit[2025] law 2026-10-18
 
 version v_usc408
   cite usc408
+  governs always
   known 2022-12-29
   note "Law, known from its promulgation (LANGUAGE 4.5): Pub. L. 117-328, enacted Dec. 29, 2022, sec. 307 added (d)(8)(F) and (G), the latest amendment in the LII notes to 408; (A) was last amended by Pub. L. 116-94 (2019). (d)(8)(B): a QCD only to the extent the distribution would be includible; (d)(8)(D): includible as if all amounts in all the individual's IRAs were distributed."
 
 version v_cfr
   cite cfr_408a6
+  governs always
   known 2024-07-19
   note "Law, known from its publication (LANGUAGE 4.5): T.D. 10001, 89 FR 58906, July 19, 2024, the latest amendment in the section's source note (LII). A-8 and A-9 were first published by T.D. 8816, 64 FR 5607, Feb. 4, 1999; which T.D. last changed them isn't checked, so the latest one is taken. A-8(a): regular contributions first, then conversion contributions first-in-first-out, then earnings; A-8(b): within a conversion, the part includible in gross income first. A-9: distributions and contributions of a year are aggregated."
 
 version v_n2480
   cite n2480
+  governs always
   known 2024-11-01
   note "Known from its publication (LANGUAGE 4.5): the IRS issued Notice 2024-80 on November 1, 2024, with news release IR-2024-285 (Thomson Reuters Checkpoint summary). Pub 590-B p. 14 states the same 2025 limits."
   qcd_limit[2025] = 108000 "p. 5: section 408(d)(8)(A) amount increased from $105,000 to $108,000"
@@ -197,12 +204,14 @@ version v_n2480
 
 version v_p590b
   cite p590b
+  governs always
   known 2026-01-21
   note "Known from the Pub's earliest public stamp (LANGUAGE §4.5): 'Jan 21, 2026', printed in the footer of p. 1, as case LH-07 records it. Round 2 read it as undated and took the PDF's own created stamp, the same day (D8). PDF page numbers equal printed page numbers. This version holds the Pub's own statement of the law and the rules that cite it; the worked examples' facts are in v_p590b_ex."
   recapture_from[pub] = 2015 "p. 36, Amount to include on Form 5329, line 1: the 2015 through 2025 Forms 8606, line 18; the 2016 and 2017 Forms 1040, line 16b"
 
 version v_i5329
   cite i5329_src
+  governs always
   known 2026-04-30
   note "An undated source takes its updated stamp (LANGUAGE 4.5): the PDF prints no date; the same instructions on irs.gov/instructions/i5329 (2025) say Page Last Reviewed or Updated: 30-Apr-2026."
   home_exc = 9 "Part I, Line 1: include the line 20 amount on line 2 and enter exception number 09"
@@ -210,12 +219,14 @@ version v_i5329
 
 version v_i8606
   cite i8606
+  governs always
   known 2026-04-30
   note "An undated source takes its updated stamp (LANGUAGE 4.5): the PDF prints no date; the same instructions on irs.gov/instructions/i8606 (2025) say Page Last Reviewed or Updated: 30-Apr-2026. Part III, p. 14."
   home_cap = 10000 "Line 20: don't enter more than $10,000 reduced by the total of all your prior qualified first-time homebuyer distributions"
 
 version v_p590b_ex
   cite p590b
+  governs always
   known 2026-10-18
   note "The worked examples' facts are a hypothetical case's stipulations, known from the model's on date, as it has no start (LANGUAGE 4.5). The assumed rows stand for facts the examples leave out and take the same date."
   conv_basis[am2021] = 20000 "p. 36, Example (Amelia): $20,000 of the amount converted is her basis"

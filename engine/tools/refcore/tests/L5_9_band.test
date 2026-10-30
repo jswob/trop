@@ -1,0 +1,41 @@
+# L §5.9 example band and version, copied whole (with allowances and its index declared and rows for it).
+# "Return the row whose interval holds x": zr(3) is the row [0, 5) = allowances[u5]; zr(18) the row [18, 24]
+# = allowances[u24]; zr(30) the row (24, inf) whose value is the hole "zasiłek nie przysługuje powyżej 24 lat"
+# (a deliberate gap, N-709).
+=== m.tally
+model t
+  tally 2
+  on 2016-03-01
+  start 2015-11-01
+  end 2016-10-31
+
+source rm1238 "Rozporządzenie"
+unit PLN: currency minor 0.01
+index age_groups = [u5, u18, u24]
+input allowances[g in age_groups]: money PLN
+input age_in: int
+input age_18: int
+input age_30: int
+
+band zr(n: int): money PLN
+  note "kwota zasiłku według wieku dziecka"
+
+version rm2015
+  cite rm1238
+  governs 2015-11..
+  known 2015-09-07
+  zr: [0, 5) = allowances[u5] "§ 2 ust. 1 pkt 1 lit. a"
+  zr: [5, 18) = allowances[u18] "lit. b"
+  zr: [18, 24] = allowances[u24] "lit. c"
+  zr: (24, inf) = ?"zasiłek nie przysługuje powyżej 24 lat"
+  allowances[u5] = 89.00 PLN
+  allowances[u18] = 118.00 PLN
+  allowances[u24] = 129.00 PLN
+  age_in = 3
+  age_18 = 18
+  age_30 = 30
+
+ask q1: zr(age_in), zr(age_18), zr(age_30) law 2016-01-01
+=== expect
+q1: (89.00 PLN, 129.00 PLN, ?"zasiłek nie przysługuje powyżej 24 lat" (zr))
+  law date 2016-01-01, cut 2016-03-01

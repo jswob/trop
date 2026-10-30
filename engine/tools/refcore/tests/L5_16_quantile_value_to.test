@@ -1,0 +1,21 @@
+# L §5.16, §7.3 (round 6): quantile of a normal distribution value needs to u: without it, LOAD-TO.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+input lvl: num
+def qn: num = quantile(normal(0, 1), lvl) at reader
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  lvl = 0.25
+
+ask q: qn law 2026-06-30
+=== expect
+refused: LOAD-TO ...

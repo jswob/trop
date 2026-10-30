@@ -1,0 +1,19 @@
+# L §3.3 dcf: "With n the days from a to b, a counted and b not, act365 gives n/365 (Actual/365 Fixed ...). b before a
+# gives the negative of dcf(b, a)": 2026-01-01..2026-07-01 is 181 days, 181/365; reversed, -181/365. Non-terminating
+# values print a/b with a 15-digit display (L §5.18 Output). (Writer 8: act360, actact and the 30/360 counts are gone;
+# L §2.2 lists the one day count act365, so another word in a daycount position is no daycount code, LOAD-UNIT, as
+# L3_3_dcf_gone shows.)
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+ask a: dcf(2026-01-01, 2026-07-01, act365), dcf(2026-07-01, 2026-01-01, act365)
+=== expect
+a: (181/365 (0.495890410958904), -181/365 (-0.495890410958904))
+  cut 2026-12-31

@@ -1,0 +1,11 @@
+# The blind cards S1..S6 (cases 1.4.0, session 7c): session 7's six blind cards, written blind in tally 2.1 by session 7b's
+# writer (tmp/session7b/blind-run/S<n>/s<n>.tally, copied unchanged), one check per card with all its asks, I:S<n>:S<n>-01~s<n>;
+# and S4's pinned twin (G2 Q-1): s4.tally unchanged plus the judge's pinned asks (S4/pinned.tally), I:S4:S4-03P~pinned.
+# Columns: id, layer, cwd, files (relative to cwd), asks, note. Keys: engine/tests/cases/keys/S<n>/ (keys_s<n>.py).
+I:S1:S1-01~s1	integration	engine/tests/integration/blind7/S1	s1.tally	s1_01 s1_02 s1_03	questions S1-01,S1-02,S1-03 | blind card S1, the 7b writer's text
+I:S2:S2-01~s2	integration	engine/tests/integration/blind7/S2	s2.tally	s2_01 s2_02 s2_03	questions S2-01,S2-02,S2-03 | blind card S2, the 7b writer's text
+I:S3:S3-01~s3	integration	engine/tests/integration/blind7/S3	s3.tally	s3_01 s3_02 s3_03	questions S3-01,S3-02,S3-03 | blind card S3, the 7b writer's text
+I:S4:S4-01~s4	integration	engine/tests/integration/blind7/S4	s4.tally	s4_01 s4_02 s4_03 s4_04	questions S4-01,S4-02,S4-03,S4-04 | blind card S4, the 7b writer's text
+I:S5:S5-01~s5	integration	engine/tests/integration/blind7/S5	s5.tally	s5_01 s5_02 s5_03	questions S5-01,S5-02,S5-03 | blind card S5, the 7b writer's text
+I:S6:S6-01~s6	integration	engine/tests/integration/blind7/S6	s6.tally	s6_01 s6_02 s6_03	questions S6-01,S6-02,S6-03 | blind card S6, the 7b writer's text
+I:S4:S4-03P~pinned	integration	engine/tests/integration/blind7/S4	s4.tally pinned.tally	j3_true j3_untrue j4_true j4_untrue j5_true j5_untrue	questions S4-03P,S4-04P | S4's pinned twin (G2 Q-1): the ruling on the will's reason pinned by with; Ruta on 2027-12-31 as known 2028-01-01 (j5)

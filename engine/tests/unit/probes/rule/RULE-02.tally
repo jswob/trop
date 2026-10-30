@@ -1,0 +1,67 @@
+model rule02
+  tally 2
+  on 2025-05-15
+  start 2025-05-15
+  end 2025-06-30
+  note "RULE-02: the lowest balance to 30 June over planned items only, and with the friend's promise counted."
+  note "The promise is a movement of an uncertain kind: a look-ahead counts it only when the read states with uncertain (L 5.14, 5.14.1)."
+
+source card "Probe card RULE-02: Ania's account, the planned items and the friend's promise"
+
+unit DUK: currency minor 0.01
+
+kind promises: transfers uncertain
+
+place konto: accounts DUK lives 2025-05-15..
+
+place world: outside lives 2025-05-15..
+
+input loan_amt: money DUK
+
+input loan_day: date
+
+input promise_amt: money DUK
+
+input promise_day: date
+
+input rent_amt: money DUK
+
+input rent_day: date
+
+input wage_amt: money DUK
+
+input wage_day: date
+
+move friend_back: promises
+  on promise_day
+  leg cash from world to konto amount promise_amt
+
+move loan: transfers
+  on loan_day
+  leg cash from konto to world amount loan_amt
+
+move rent: transfers
+  on rent_day
+  leg cash from konto to world amount rent_amt
+
+move wage: transfers
+  on wage_day
+  leg cash from world to konto amount wage_amt
+
+ask lowest_counted: low(konto, 2025-05-15 .. 2025-06-30) from 2025-05-15 with uncertain, argmin(bal(konto, d) from 2025-05-15 with uncertain for d in days) ties by d
+
+ask lowest_planned: low(konto, 2025-05-15 .. 2025-06-30) from 2025-05-15, argmin(bal(konto, d) from 2025-05-15 for d in days) ties by d
+
+version card_2025
+  cite card
+  governs always
+  known 2025-05-15
+  loan_amt = 1200 "planned: the loan instalment"
+  loan_day = 2025-06-05 "planned"
+  opening[konto] = 4000 at 2025-05-15 start "story: the account on 15 May 2025"
+  promise_amt = 800 "promised, not planned"
+  promise_day = 2025-06-03 assumed "the friend said around 3 June; the card's worked answer takes 3 June" "story"
+  rent_amt = 2500 "planned: rent"
+  rent_day = 2025-06-01 "planned"
+  wage_amt = 6000 "planned: pay"
+  wage_day = 2025-06-10 "planned"

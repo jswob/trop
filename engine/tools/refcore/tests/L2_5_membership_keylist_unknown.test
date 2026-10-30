@@ -1,0 +1,17 @@
+# L §2.5 Keys: a bare key in a membership list takes the other operand's index; z is not a key of cat, so
+# LOAD-KEY "<key> is not a key of <index>" (L §8.3), at load.
+=== m.tally
+model t
+  tally 2
+  on 2027-01-01
+  start 2026-01-01
+  end 2027-12-31
+
+index cat = [a, b, c, s]
+def r[q in cat]: num at reader
+  rule base = 1
+  rule nil beats base = 0 when q in [c, z]
+
+ask qb: r[q] for q in cat law 2026-12-31
+=== expect
+refused: LOAD-KEY z is not a key of cat ...

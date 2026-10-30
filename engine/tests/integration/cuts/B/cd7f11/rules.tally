@@ -1,0 +1,283 @@
+part house_rules
+  tally 2
+  note "Household B's own rules B-HR1 – B-HR6 (house-rules.md), Bartek's loan (B-D24), Bank Cis's card fee (B-D36), and what the gap in the November Cis export leaves open. B-HR1's costs are in flat.tally; B-HR3's forecast in forecast.tally."
+
+input answer_round: rounding question "How is an amount the question asks for rounded to the ort, where no rule names a mode?"
+
+input bartek_loan: money DUK question "How much did Piotr lend Bartek (B-D24)?"
+
+input bartek_lent_on: date question "On which day did Piotr lend Bartek the money (story, B-D24)?"
+
+input bartek_part[k in bartek_parts]: (on date, amount money DUK) question "What has Bartek paid back, or promised to, and on which day (B-D24)?"
+
+input bartek_promised: date question "On which day has Bartek promised to pay the rest (B-D24)?"
+
+input card_fee: money DUK question "What is the yearly card fee (B-D36)?"
+
+input card_fee_dom: int question "On which day of the month is the card fee charged (B-D36)?"
+
+input card_fee_from: date question "From when does B-D36's fee apply?"
+
+input card_fee_month: int question "In which month of the year is the card fee charged (B-D36)?"
+
+input gap_from: date question "From which day are the November Cis export's rows missing?"
+
+input gap_to: date question "To which day are the November Cis export's rows missing?"
+
+input gap_cards: money DUK question "What did Piotr pay by card on the days the November Cis export lacks?"
+
+input ziarno_inv: key invoices question "Which invoice of Kawiarnia Ziarno may it have paid on the days the November Cis export lacks?"
+
+input gap_ziarno: bool question "Did Kawiarnia Ziarno pay its invoice on the days the November Cis export lacks?"
+
+input hr2_cap: money DUK question "Up to how much goes to the mortgage as an overpayment on the 26th (B-HR2 .3)?"
+
+input hr2_contrib: money DUK question "What does B-HR2's reserve hold for the contributions (B-HR2 .2)?"
+
+input hr2_dom: int question "On which day of the month does B-HR2 run (B-HR2 .1)?"
+
+input hr2_floor: money DUK question "What is B-HR2's reserve floor (B-HR2 .2)?"
+
+input hr2_fx_round: rounding question "How are the florens rounded to the ort in B-HR2 .1?"
+
+input hr2_from: date question "From which day does B-HR2 run?"
+
+input hr2_keep: money DUK question "How much must Cis keep after B-HR2's transfers (B-HR2 .4)?"
+
+input hr2_tax_round: rounding question "How is B-HR2's 12 % rounded to the ort (B-HR2 .2)?"
+
+input hr2_tax_share: num question "What share of the month's net does B-HR2's reserve hold for the tax (B-HR2 .2)?"
+
+input hr4_from: date question "From which day does B-HR4 count what we have?"
+
+input hr4_round: rounding question "How are florens rounded to the ort under B-HR4 .5?"
+
+input hr6_settle_diff: money DUK question "By how much may a payment differ from what's owed and still settle the invoice (B-HR6 .1)?"
+
+input hr6_missed_days: int question "After how many days past due with no word is a debt missed (B-HR6 .2)?"
+
+input promised_on[i in invoices]: date question "On which day has the debtor said they will pay this invoice (B-HR6 .2)?"
+
+input promised_on_flr[j in flr_invoices]: date question "On which day has Kessel said they will pay this invoice (B-HR6 .2)?"
+
+input said_soon[i in invoices]: bool question "Has the debtor said they will probably pay this invoice, or pay soon, without promising a day (B-HR6 .2)?"
+
+input said_soon_flr[j in flr_invoices]: bool question "Has Kessel said they will probably pay this invoice, or pay soon, without promising a day (B-HR6 .2)?"
+
+def bartek_status: key owed_statuses
+  note "B-HR6 .2: Bartek has given a day he will pay the rest on (B-D24)"
+  rule unclear = ?"What has Bartek said about the rest of his loan?"
+  rule promised_r beats unclear = promised when bartek_promised != none
+
+def card_fee_day[y in years]: date = schedule(month_of(add_months(start_of(y), card_fee_month - 1)), card_fee_dom, following, holidays) at start_of(y)
+
+def hr2_laz[d in days]: money DUK = if bal(lazur) == 0 FLR then 0 DUK else round(bal(lazur) * lazur_buy[d], minor(DUK), hr2_fx_round)
+
+def hr2_month_net[d in days]: money DUK = sum(sale[i].net for i in invoices where month_of(sale[i].issued) == month_of(d) and sale[i].issued <= d) + sum(rev_flr[j] for j in flr_invoices where month_of(sale_flr[j].issued) == month_of(d) and sale_flr[j].issued <= d)
+
+def hr2_month_vat[d in days]: money DUK = sum(sale[i].vat for i in invoices where month_of(sale[i].issued) == month_of(d) and sale[i].issued <= d) + sum(vat_flr[j] for j in flr_invoices where month_of(sale_flr[j].issued) == month_of(d) and sale_flr[j].issued <= d)
+
+def hr2_reserve[d in days]: money DUK = hr2_floor + hr2_month_vat[d] + round(hr2_month_net[d] * hr2_tax_share, minor(DUK), hr2_tax_round) + hr2_contrib at d
+
+def hr2_runs[d in days]: bool at d
+  note "B-HR2 runs on its day of the month from hr2_from. The rule exists only at cuts that know its version hr2_v1 (made on 2025-01-26, L §5.11 step 2); before, nothing runs, so no instance is planned"
+  rule off = false
+  rule runs beats off v hr2_v1 = d >= hr2_from and d == schedule(month_of(d), hr2_dom, following, holidays)
+
+def v2_act[d in days]: money DUK = flows(hr2_overpay, d) + flows(hr2_save, d)
+
+def v2_base_cis[d in days]: money DUK = bal(cis, d) + v2_act[d]
+
+def v2_cis[d in days]: money DUK = v2_base_cis[d] + v2_shift[d]
+
+def v2_laz[d in days]: money DUK = round(bal(lazur, d) * lazur_buy[d], minor(DUK), hr2_fx_round)
+
+def v2_op[d in days]: money DUK = max(0 DUK, min(hr2_cap, v2_cis[d] + v2_laz[d] - hr2_reserve[d], v2_cis[d] - hr2_keep)) at d
+
+def v2_shift[d in days]: money DUK = sum(v2_act[k] - v2_op[k] - v2_sv[k] for k in days where k < d and hr2_runs[k])
+
+def v2_short[d in days]: money DUK = (v2_cis[d] - v2_op[d] - v2_sv[d]) - (v2_base_cis[d] - v2_act[d])
+
+def v2_sv[d in days]: money DUK = max(0 DUK, min(v2_cis[d] - v2_op[d] + v2_laz[d] - hr2_reserve[d], v2_cis[d] - v2_op[d] - hr2_keep)) at d
+
+def owed_open[i in invoices, d in days]: money DUK = if bal(inv_owed[i], d) <= hr6_settle_diff and bal(inv_owed[i], d) >= 0 DUK - hr6_settle_diff then 0 DUK else bal(inv_owed[i], d)
+
+def owed_counts[i in invoices, d in days]: money DUK = if owed_open[i, d] == 0 DUK then 0 DUK else (if owed_status[i, d] == missed then 0 DUK else owed_open[i, d])
+
+def owed_counts_flr[j in flr_invoices, d in days]: money DUK = if owed_status_flr[j, d] == missed then 0 DUK else round(bal(inv_owed_flr[j], d) * hr4_fx[d], minor(DUK), hr4_round)
+
+def owed_status[i in invoices, d in days]: key owed_statuses
+  note "B-HR6 .2, in our words"
+  rule unclear = ?"Past due, not yet 30 days, and nothing heard: B-HR6 .2 gives no word for it"
+  rule missed_r beats unclear = missed when days_between(sale[i].due, d) > hr6_missed_days
+  rule expected_r beats unclear, missed_r = expected when sale[i].due <= d and said_soon[i]
+  rule promised_r beats unclear, missed_r, expected_r = promised when sale[i].due <= d and promised_on[i] != none
+  rule not_due beats unclear, missed_r, expected_r, promised_r = not_yet_due when d < sale[i].due
+
+def owed_status_flr[j in flr_invoices, d in days]: key owed_statuses
+  rule unclear = ?"Past due, not yet 30 days, and nothing heard: B-HR6 .2 gives no word for it"
+  rule missed_r beats unclear = missed when days_between(sale_flr[j].due, d) > hr6_missed_days
+  rule expected_r beats unclear, missed_r = expected when sale_flr[j].due <= d and said_soon_flr[j]
+  rule promised_r beats unclear, missed_r, expected_r = promised when sale_flr[j].due <= d and promised_on_flr[j] != none
+  rule not_due beats unclear, missed_r, expected_r, promised_r = not_yet_due when d < sale_flr[j].due
+
+def owed_total[d in days]: money DUK = sum(owed_counts[i, d] for i in invoices where sale[i].issued <= d) + sum(owed_counts_flr[j, d] for j in flr_invoices where sale_flr[j].issued <= d) + bal(bartek, d)
+
+def hr4_fx[d in days]: num DUK/FLR = last(fx_mid, d) at d
+
+def tax_owed_month[m in months, d in days]: money DUK at start_of(m)
+  note "B-HR4 .2: what is owed for a month that has ended, until it is paid: due after d, or due by d with no Cis row paying it on a day an export covers; on a day no export covers, whether it was paid is not known"
+  rule owed = social[m] + health[m] + tax_flat[m] + vat_payable[m]
+  rule paid beats owed = 0 DUK when observed(social_pay[m]) != none and observed(health_pay[m]) != none and observed(pit_pay[m]) != none and (vat_payable[m] == 0 DUK or observed(vat_pay[m]) != none)
+  rule unknown beats owed = ?"Were this month's contributions, health contribution, PIT advance and VAT paid? Their days fall where no Cis export covers" when vat_due[m] <= d and not (covered(cis, schedule(month_of(end_of(m)), soc3_pay_dom, following, holidays)) and covered(cis, vat_due[m]))
+
+def taxes_owed[d in days]: money DUK = sum(tax_owed_month[k, d] for k in months where end_of(k) <= d + 1 and start_of(k) >= hr4_from) + (if month_of(d + 1) != month_of(d) and year_of(d + 1) != year_of(d) then health_settle[year_of(d)] else 0 DUK)
+
+def worth_ola[d in days]: money DUK = bal(wrzos, d) + flat_part[ola] - mtg_part[ola, d] - ola_owes_piotr[year_of(d)] + ola_result[year_of(d)]
+
+def worth_piotr[d in days]: money DUK = bal(cis, d) + bal(savings, d) + round(bal(lazur, d) * hr4_fx[d], minor(DUK), hr4_round) + flat_part[piotr] - mtg_part[piotr, d] + owed_total[d] + ola_owes_piotr[year_of(d)] - taxes_owed[d]
+
+move bartek_back[k in bartek_parts]: promises
+  on bartek_part[k].on
+  leg cash from bartek to cis amount bartek_part[k].amount
+
+move bartek_lend: transfers
+  on bartek_lent_on
+  leg cash from savings to bartek amount bartek_loan
+
+move card_fee_pay[y in years]: transfers
+  on card_fee_day[y]
+  at start_of(y)
+  when start_of(y) >= card_fee_from
+  leg cash from cis to world amount card_fee
+
+move gap_card_pays: card_pays
+  on window(gap_from, gap_to)
+  leg cash from cis to shops amount gap_cards
+
+move gap_ziarno_pay: transfers
+  on window(gap_from, gap_to)
+  when gap_ziarno
+  leg cash from inv_owed[ziarno_inv] to cis amount sale[ziarno_inv].net + sale[ziarno_inv].vat
+
+move hr2_overpay[d in days]: transfers
+  on d
+  at d
+  when hr2_runs[d]
+  reads cis, lazur
+  leg cash from cis to jodla_over amount max(0 DUK, min(hr2_cap, bal(cis) + hr2_laz[d] - hr2_reserve[d], bal(cis) - hr2_keep))
+
+move hr2_save[d in days]: transfers
+  on d
+  at d
+  when hr2_runs[d]
+  reads cis, lazur
+  after hr2_overpay
+  leg cash from cis to savings amount max(0 DUK, min(bal(cis) + hr2_laz[d] - hr2_reserve[d], bal(cis) - hr2_keep))
+
+version answer_rounding
+  cite questions
+  governs always
+  known 2022-03-01
+  answer_round = half-up assumed "questions.md: amounts to the ort, no mode named; half up" "questions.md, the preamble"
+
+version hr2_v1
+  cite house_rules
+  governs always
+  known 2025-01-26
+  hr2_cap = 3000.00 DUK "B-HR2 v1 .3"
+  hr2_contrib = 4000.00 DUK "B-HR2 v1 .2"
+  hr2_dom = 26 "B-HR2 v1 .1: on the 26th, the next business day where it isn't one"
+  hr2_floor = 5000.00 DUK governs 2025-01-26.. "B-HR2 v1 .2"
+  hr2_from = 2025-01-26 "B-HR2 v1: from 2025-01-26"
+  hr2_fx_round = down "B-HR2 v1 .1: rounded down to the ort"
+  hr2_keep = 1000.00 DUK "B-HR2 v1 .4"
+  hr2_tax_round = half-up assumed "B-HR2 .2 says 12 % of the net to the ort and names no mode" "B-HR2 v1 .2"
+  hr2_tax_share = 0.12 "B-HR2 v1 .2"
+
+version hr2_v2
+  cite house_rules
+  governs always
+  known 2025-04-14
+  replace hr2_floor = 8000.00 DUK governs 2025-01-26.. "B-HR2 v2: as v1, but the floor is 8 000.00 DUK; stated on 2025-04-14, as if since January"
+
+version hr4_hr6
+  cite house_rules
+  governs always
+  known 2025-01-01
+  hr4_from = 2025-01-01 "B-HR4: from 2025-01-01"
+  hr4_round = half-up assumed "B-HR4 .5 says each amount to the ort and names no mode" "B-HR4 .5"
+  hr6_missed_days = 30 "B-HR6 .2"
+  hr6_settle_diff = 1.00 DUK "B-HR6 .1: a payment that differs from what's owed by 1.00 DUK or less settles the invoice"
+  promised_on[*] = none "B-HR6 .2: no debtor has given a day unless a letter says so"
+  promised_on_flr[*] = none "B-HR6 .2: no debtor has given a day unless a letter says so"
+  said_soon[*] = false "B-HR6 .2: no word unless a letter says so"
+  said_soon_flr[*] = false "B-HR6 .2: no word unless a letter says so"
+
+version card_fees
+  cite b_d36
+  governs always
+  known 2024-11-20
+  card_fee = 249.00 DUK "B-D36: a yearly card fee of 249.00 DUK"
+  card_fee_dom = 9 "B-D36: charged on 9 December, the next business day where the 9th isn't one"
+  card_fee_from = 2025-01-01 "B-D36: fees from 2025"
+  card_fee_month = 12 "B-D36: charged on 9 December"
+
+version bartek_loan_given
+  cite story
+  governs always
+  known 2025-02-10
+  bartek_loan = 6000.00 DUK "story: 2025-02-10, Piotr lends Bartek 6 000.00 DUK from his savings account (B-D24)"
+  bartek_lent_on = 2025-02-10 "story: 2025-02-10"
+
+version bartek_note
+  cite b_d24
+  governs always
+  known 2025-07-01
+  bartek_part[part1] = (on: 2025-07-01, amount: 3500.00 DUK) "B-D24: today I sent you 3 500.00 DUK"
+  bartek_part[part2] = (on: 2026-03-31, amount: 2500.00 DUK) "B-D24: I will pay the rest on 31.03.2026"
+  bartek_promised = 2026-03-31 "B-D24: I will pay the rest on 31.03.2026"
+
+version arnika_letter
+  cite b_d19
+  governs always
+  known 2025-11-14
+  promised_on[fv_023_2025] = 2026-01-08 "B-D19: we will pay it on 08.01.2026"
+
+version cis_gap
+  cite cis_export
+  governs always
+  known 2025-12-02
+  assumed "the November export's day is not stated: the 2nd of the next month (story)"
+  note "The November export stops on 2025-11-13 though its header names the whole month (records/cis-2025.tally); December's opens on 2025-12-01. What happened on Cis in between is not in the records."
+  gap_cards = ?"What did Piotr pay by card from 2025-11-14 to 2025-11-30? The November export stops on the 13th" "cis-5521-3380-0001-2025-11.csv: the last row is of 2025-11-13"
+  gap_from = 2025-11-14 "cis-5521-3380-0001-2025-11.csv: the last row is of 2025-11-13"
+  gap_to = 2025-11-30 "cis-5521-3380-0001-2025-12.csv line 5: the December export opens on 2025-12-01"
+  gap_ziarno = ?"Did Kawiarnia Ziarno pay FV 016/2025 from 2025-11-14 to 2025-11-30? Those Cis rows are missing" "cis-5521-3380-0001-2025-11.csv: the last row is of 2025-11-13"
+
+version bez_letter
+  cite b_d20
+  governs always
+  known 2025-12-29
+  said_soon[fv_011_2025] = true "B-D20: we'll probably pay it next week"
+  promised_on[fv_011_2025] = none "B-D20: 'probably next week' gives no day (B-HR6 .2)"
+
+version kessel_letter
+  cite b_d22
+  governs always
+  known 2025-12-30
+  said_soon_flr[fv_026_2025] = true "B-D22: it will be paid in the first days of January, probably on the 5th"
+  promised_on_flr[fv_026_2025] = none "B-D22: a day given only as likely ('probably on the 5th') isn't one (B-HR6 .2)"
+
+version ziarno_silent
+  cite story
+  governs always
+  known 2025-12-31
+  said_soon[fv_016_2025] = false "story: 2025-12-31, nothing heard from Kawiarnia Ziarno about its August invoice"
+  promised_on[fv_016_2025] = none "story: 2025-12-31, nothing heard from Kawiarnia Ziarno about its August invoice"
+
+version ziarno_open
+  cite faktura
+  governs always
+  known 2025-08-14
+  ziarno_inv = fv_016_2025 "faktura-sales-2022-2025.csv line 60: Kawiarnia Ziarno's August invoice FV 016/2025, issued 2025-08-14, the one the story says nothing was heard about. An input, not the literal key, since the gap's movement is read at cuts before the invoice exists (RUN-KEY), and known on its issue day so that the movement, read as known on its own days, sees it"

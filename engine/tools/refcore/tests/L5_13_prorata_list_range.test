@@ -1,0 +1,44 @@
+# L §5.13 prorata over a key list and over a stepped range (L §5.11 "A bind is over an index, a kind, a key list or a
+# stepped range").  q1: weights 1 and 2 over [a, b]: 100.00 * 1/3 = 33.333.. -> half-up 33.33 PLN, 100.00 * 2/3 =
+# 66.666.. -> 66.67 PLN.  q2: equal weights over 1 .. 3, rounded down to 33.33 PLN, the last takes the remainder,
+# 33.34 PLN ("rest last: each key but the last is rounded with mode, and the last takes whatever remains").
+=== m.tally
+model pr
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source s "umowa"
+unit PLN: currency minor 0.01
+index parts = [a, b, c]
+input total: money PLN
+input w[p in parts]: num
+input n_inst: int
+
+def share_list[p in parts]: money PLN = prorata(total, w[j] for j in [a, b], p, minor(PLN), half-up, rest none)
+def share_range[i in parts]: money PLN = prorata(total, 1 for k in 1 .. n_inst, pos(i), minor(PLN), down, rest last)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  total = 100.00 PLN
+  w[a] = 1
+  w[b] = 2
+  w[c] = 3
+  n_inst = 3
+
+ask q1: share_list[p] for p in [a, b]
+ask q2: share_range[i] for i in parts
+=== expect
+q1 (p = a): 33.33 PLN
+  cut 2026-10-20
+q1 (p = b): 66.67 PLN
+  cut 2026-10-20
+q2 (i = a): 33.33 PLN
+  cut 2026-10-20
+q2 (i = b): 33.33 PLN
+  cut 2026-10-20
+q2 (i = c): 33.34 PLN
+  cut 2026-10-20

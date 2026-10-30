@@ -1,0 +1,39 @@
+# L §4.5: "known may be a window when the day is known only to lie in it ...; an as-known read on a day inside the
+# window then states windows each or is HOLE-IMPRECISE (§4.4)."  The row of v2 is known within 2026-10-15..2026-11-01:
+# as known 2026-10-20 it is imprecise; windows each splits at the day v2 becomes known: unseen (1) on any day of the
+# window after the cut, seen (2) on a day by it (writer 8: windows earliest and latest are gone).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+input n: int
+
+version v1
+  cite s
+  governs always
+  known 2026-01-01
+  n = 1
+
+version v2
+  cite s
+  governs always
+  known window(2026-10-15, 2026-11-01)
+  replace n = 2
+
+ask q1: n as known 2026-10-20
+ask q2: n as known 2026-10-20 windows each
+ask q4: n
+=== expect
+q1: ?"date within window(2026-10-15, 2026-11-01) not precise enough for the cut 2026-10-20" ...
+  cut 2026-10-20
+q2 [known of v2 = 2026-10-15 .. 2026-10-20]: 2
+  cut 2026-10-20
+q2 [known of v2 = 2026-10-21 .. 2026-11-01]: 1
+  cut 2026-10-20
+q4: 2
+  cut 2026-12-31

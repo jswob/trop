@@ -1,0 +1,15 @@
+part pit_2
+  tally 2
+  law
+  note "PIT-2 · Employment income and its base. Income is counted on the day paid (.1); the base is income less the payer's SOC-1 deductions less the costs, never below 0 (.3). The households' payroll defs apply it with v pit2_v1."
+
+source pit_2 "Personal Income Tax Act, PIT-2 Employment income and its base (tmp/cases/law/acts.md)"
+
+input pit2_costs_month: money DUK question "What are the monthly costs of an employment (PIT-2 .2)?"
+
+version pit2_v1
+  cite pit_2
+  governs 2018-01-01..
+  known 2017-09-01
+  note "PIT-2 v1, in force 2018-01-01 until replaced, published 2017-09-01; governs tax years from 2018 and advances paid from 2018-01-01."
+  pit2_costs_month = 250.00 "PIT-2 v1 .2: 250.00 DUK for each month in which pay from an employment is paid, for each employment"

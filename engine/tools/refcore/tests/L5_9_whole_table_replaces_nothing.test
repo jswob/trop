@@ -1,0 +1,24 @@
+# Round 18, C3-16 (follows). L §5.9 Rows replaced: "a whole table that replaces no table on any day of its span" is
+# refused (LOAD-REPLACE, §4.6 step 2). v2's replace rows form a whole table and no earlier table exists.
+=== m.tally
+model t
+  tally 2
+  on 2027-01-01
+  start 2026-01-01
+  end 2027-12-31
+
+source s "s"
+band b(n: int): int
+input mid: int
+
+version v2
+  cite s
+  governs 2027..
+  known 2026-12-01
+  replace b: [0, 20] = 5
+  replace b: (20, inf) = 6
+  mid = 15
+
+ask q1: b(mid) law 2027-06-30
+=== expect
+refused: LOAD-REPLACE ...

@@ -1,0 +1,49 @@
+model pty01
+  tally 2
+  on 2026-10-25
+  start 2019-01-01
+  end 2025-12-31
+  note "PTY-01: a couple who marry mid-year; the first tax year whose joint rule reads them as spouses, and the same under a last-day rule."
+  note "The marriage is a dated relation: rows of married[c] that govern spans (LANGUAGE 3.5). married_day[d] reads it at day d's law date (4.3 rule 1). The card's facts are stipulations, known from the run's start (4.5)."
+
+source card "Probe card PTY-01 (made up): story and rules"
+
+index couples = [piotr_ola]
+
+index persons = [piotr, ola]
+
+index tax_years = year 2019..2025
+
+input married[c in couples]: bool
+
+input member[c in couples, p in persons]: bool
+
+input together[c in couples]: bool
+
+def joint_last_day[y in tax_years]: bool at start_of(y)
+  note "contrast: a rule reading married on the tax year's last day"
+  rule base v card_rules = married_day[add_days(end_of(y), -1)]
+
+def joint_throughout[y in tax_years]: bool at start_of(y)
+  note "rule 1: married throughout the tax year (the calendar year)"
+  rule base v card_rules = all(married_day[d] for d in days where year_of(d) == y)
+
+def married_day[d in days]: bool = married[piotr_ola] at d
+
+ask q_first_joint: first(y in tax_years where joint_throughout[y]), first(y in tax_years where joint_last_day[y])
+
+version card_facts
+  cite card
+  governs always
+  known 2019-01-01
+  married[piotr_ola] = false governs ..2023-07-07 "story: not married before 8 July 2023"
+  married[piotr_ola] = true governs 2023-07-08.. "story: marry on 8 July 2023"
+  member[piotr_ola, piotr] = true "story"
+  member[piotr_ola, ola] = true "story"
+  together[piotr_ola] = false governs ..2018-12-31 "story: live together from 2019"
+  together[piotr_ola] = true governs 2019.. "story: live together from 2019"
+
+version card_rules
+  cite card
+  governs always
+  known 2019-01-01

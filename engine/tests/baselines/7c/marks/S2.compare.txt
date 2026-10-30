@@ -1,0 +1,6 @@
+# S2
+S2-01: read
+  ? S2-01/pay by/missing: key says ["the day the Revenue Office's decision is delivered: the tax is due 14 days after it, and on 2027-03-15 no decision has been delivered"]; answer says ["\"On what day was the tax decision delivered (GFT-1 point 4)?\" (delivered_on[rino])"]
+S2-02: pass
+S2-03: pass
+pass 2  read 1

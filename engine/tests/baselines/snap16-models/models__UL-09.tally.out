@@ -1,0 +1,1487 @@
+q01_r_bank (e = ex22_1) [ul09_euro = *, ul09_method = *]: 0 EUR
+  law date 2026-10-18, cut 2026-10-18
+q01_r_bank (e = ex22_2) [ul09_euro = *, ul09_method = *]: 0 EUR
+  law date 2026-10-18, cut 2026-10-18
+q01_r_bank (e = ex22_3) [ul09_euro = *, ul09_method = *]: 0 EUR
+  law date 2026-10-18, cut 2026-10-18
+q01_r_bank (e = ex25_1) [ul09_euro = *, ul09_method = *]: 2 055 EUR
+  law date 2026-10-18, cut 2026-10-18
+q01_r_bank (e = ex25_2) [ul09_euro = *, ul09_method = *]: 2 055 EUR
+  law date 2026-10-18, cut 2026-10-18
+q01_r_bank (e = ex25_3) [ul09_euro = *, ul09_method = *]: 2 055 EUR
+  law date 2026-10-18, cut 2026-10-18
+q01_r_bank (e = ex25_4) [ul09_euro = *, ul09_method = *]: 2 055 EUR
+  law date 2026-10-18, cut 2026-10-18
+q01_r_bank (e = ex25_5) [ul09_euro = *, ul09_method = statute]: 68.5 EUR
+  reading: ul09_method = statute
+  law date 2026-10-18, cut 2026-10-18
+q01_r_bank (e = ex25_5) [ul09_euro = down, ul09_method = page]: 68 EUR
+  reading: ul09_euro = down
+  reading: ul09_method = page
+  law date 2026-10-18, cut 2026-10-18
+q01_r_bank (e = ex25_5) [ul09_euro = half-up, ul09_method = page]: 69 EUR
+  reading: ul09_euro = half-up
+  reading: ul09_method = page
+  law date 2026-10-18, cut 2026-10-18
+q02_r_other (e = ex22_1) [ul09_euro = *, ul09_method = *]: 0 EUR
+  law date 2026-10-18, cut 2026-10-18
+q02_r_other (e = ex22_2) [ul09_euro = *, ul09_method = *]: 2 765 EUR
+  law date 2026-10-18, cut 2026-10-18
+q02_r_other (e = ex22_3) [ul09_euro = *, ul09_method = *]: 8 295 EUR
+  law date 2026-10-18, cut 2026-10-18
+q02_r_other (e = ex25_1) [ul09_euro = *, ul09_method = *]: 0 EUR
+  law date 2026-10-18, cut 2026-10-18
+q02_r_other (e = ex25_2) [ul09_euro = *, ul09_method = *]: 0 EUR
+  law date 2026-10-18, cut 2026-10-18
+q02_r_other (e = ex25_3) [ul09_euro = *, ul09_method = *]: 16 170 EUR
+  law date 2026-10-18, cut 2026-10-18
+q02_r_other (e = ex25_4) [ul09_euro = *, ul09_method = *]: 16 170 EUR
+  law date 2026-10-18, cut 2026-10-18
+q02_r_other (e = ex25_5) [ul09_euro = *, ul09_method = statute]: 20 425.7088 EUR
+  assumed: the page treats the green investments as qualifying under art. 5.14 without saying so (green_ok[ex25_5])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_5])
+  reading: ul09_method = statute
+  law date 2026-10-18, cut 2026-10-18
+q02_r_other (e = ex25_5) [ul09_euro = down, ul09_method = page]: 20 425 EUR
+  assumed: the page treats the green investments as qualifying under art. 5.14 without saying so (green_ok[ex25_5])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_5])
+  reading: ul09_euro = down
+  reading: ul09_method = page
+  law date 2026-10-18, cut 2026-10-18
+q02_r_other (e = ex25_5) [ul09_euro = half-up, ul09_method = page]: 20 426 EUR
+  assumed: the page treats the green investments as qualifying under art. 5.14 without saying so (green_ok[ex25_5])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_5])
+  reading: ul09_euro = half-up
+  reading: ul09_method = page
+  law date 2026-10-18, cut 2026-10-18
+q03_drempel (e = ex22_1): 3 200.00 EUR
+  law date 2026-10-18, cut 2026-10-18
+q03_drempel (e = ex22_2): 6 400.00 EUR
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex22_2])
+  law date 2026-10-18, cut 2026-10-18
+q03_drempel (e = ex22_3): 6 400.00 EUR
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex22_3])
+  law date 2026-10-18, cut 2026-10-18
+q03_drempel (e = ex25_1): 3 800.00 EUR
+  law date 2026-10-18, cut 2026-10-18
+q03_drempel (e = ex25_2): 7 600.00 EUR
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_2])
+  law date 2026-10-18, cut 2026-10-18
+q03_drempel (e = ex25_3): 3 800.00 EUR
+  law date 2026-10-18, cut 2026-10-18
+q03_drempel (e = ex25_4): 7 600.00 EUR
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_4])
+  law date 2026-10-18, cut 2026-10-18
+q03_drempel (e = ex25_5): 7 600.00 EUR
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_5])
+  law date 2026-10-18, cut 2026-10-18
+q04_schuld_aftr (e = ex22_1): 0.00 EUR
+  law date 2026-10-18, cut 2026-10-18
+q04_schuld_aftr (e = ex22_2): 0.00 EUR
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex22_2])
+  law date 2026-10-18, cut 2026-10-18
+q04_schuld_aftr (e = ex22_3): 43 600.00 EUR
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex22_3])
+  law date 2026-10-18, cut 2026-10-18
+q04_schuld_aftr (e = ex25_1): 0.00 EUR
+  law date 2026-10-18, cut 2026-10-18
+q04_schuld_aftr (e = ex25_2): 0.00 EUR
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_2])
+  law date 2026-10-18, cut 2026-10-18
+q04_schuld_aftr (e = ex25_3): 96 200.00 EUR
+  law date 2026-10-18, cut 2026-10-18
+q04_schuld_aftr (e = ex25_4): 92 400.00 EUR
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_4])
+  law date 2026-10-18, cut 2026-10-18
+q04_schuld_aftr (e = ex25_5): 0.00 EUR
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_5])
+  law date 2026-10-18, cut 2026-10-18
+q05_r_debt (e = ex22_1) [ul09_debt = *, ul09_method = *]: 0 EUR
+  law date 2026-10-18, cut 2026-10-18
+q05_r_debt (e = ex22_2) [ul09_debt = *, ul09_method = *]: 0 EUR
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex22_2])
+  law date 2026-10-18, cut 2026-10-18
+q05_r_debt (e = ex22_3) [ul09_debt = *, ul09_method = page]: 994 EUR
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex22_3])
+  reading: ul09_method = page
+  law date 2026-10-18, cut 2026-10-18
+q05_r_debt (e = ex22_3) [ul09_debt = *, ul09_method = statute]: 994.08 EUR
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex22_3])
+  reading: ul09_method = statute
+  law date 2026-10-18, cut 2026-10-18
+q05_r_debt (e = ex25_1) [ul09_debt = *, ul09_method = *]: 0 EUR
+  law date 2026-10-18, cut 2026-10-18
+q05_r_debt (e = ex25_2) [ul09_debt = *, ul09_method = *]: 0 EUR
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_2])
+  law date 2026-10-18, cut 2026-10-18
+q05_r_debt (e = ex25_3) [ul09_debt = *, ul09_method = page]: 2 597 EUR
+  reading: ul09_method = page
+  law date 2026-10-18, cut 2026-10-18
+q05_r_debt (e = ex25_3) [ul09_debt = *, ul09_method = statute]: 2 597.4 EUR
+  reading: ul09_method = statute
+  law date 2026-10-18, cut 2026-10-18
+q05_r_debt (e = ex25_4) [ul09_debt = *, ul09_method = statute]: 2 494.8 EUR
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_4])
+  reading: ul09_method = statute
+  law date 2026-10-18, cut 2026-10-18
+q05_r_debt (e = ex25_4) [ul09_debt = down, ul09_method = page]: 2 494 EUR
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_4])
+  reading: ul09_debt = down
+  reading: ul09_method = page
+  law date 2026-10-18, cut 2026-10-18
+q05_r_debt (e = ex25_4) [ul09_debt = half-up, ul09_method = page]: 2 495 EUR
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_4])
+  reading: ul09_debt = half-up
+  reading: ul09_method = page
+  law date 2026-10-18, cut 2026-10-18
+q05_r_debt (e = ex25_5) [ul09_debt = *, ul09_method = *]: 0 EUR
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_5])
+  law date 2026-10-18, cut 2026-10-18
+q06_green_ex (e = ex25_5): 52 624.00 EUR
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_5])
+  law date 2026-10-18, cut 2026-10-18
+q07_green_taxable (e = ex25_5): 97 376.00 EUR
+  assumed: the page treats the green investments as qualifying under art. 5.14 without saying so (green_ok[ex25_5])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_5])
+  law date 2026-10-18, cut 2026-10-18
+q08_rendement (e = ex22_1) [ul09_debt = *, ul09_euro = *, ul09_method = *]: 0 EUR
+  law date 2026-10-18, cut 2026-10-18
+q08_rendement (e = ex22_2) [ul09_debt = *, ul09_euro = *, ul09_method = *]: 2 765 EUR
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex22_2])
+  law date 2026-10-18, cut 2026-10-18
+q08_rendement (e = ex22_3) [ul09_debt = *, ul09_euro = *, ul09_method = page]: 7 301 EUR
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex22_3])
+  reading: ul09_method = page
+  law date 2026-10-18, cut 2026-10-18
+q08_rendement (e = ex22_3) [ul09_debt = *, ul09_euro = *, ul09_method = statute]: 7 300.92 EUR
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex22_3])
+  reading: ul09_method = statute
+  law date 2026-10-18, cut 2026-10-18
+q08_rendement (e = ex25_1) [ul09_debt = *, ul09_euro = *, ul09_method = *]: 2 055 EUR
+  law date 2026-10-18, cut 2026-10-18
+q08_rendement (e = ex25_2) [ul09_debt = *, ul09_euro = *, ul09_method = *]: 2 055 EUR
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_2])
+  law date 2026-10-18, cut 2026-10-18
+q08_rendement (e = ex25_3) [ul09_debt = *, ul09_euro = *, ul09_method = page]: 15 628 EUR
+  reading: ul09_method = page
+  law date 2026-10-18, cut 2026-10-18
+q08_rendement (e = ex25_3) [ul09_debt = *, ul09_euro = *, ul09_method = statute]: 15 627.6 EUR
+  reading: ul09_method = statute
+  law date 2026-10-18, cut 2026-10-18
+q08_rendement (e = ex25_4) [ul09_debt = *, ul09_euro = *, ul09_method = statute]: 15 730.2 EUR
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_4])
+  reading: ul09_method = statute
+  law date 2026-10-18, cut 2026-10-18
+q08_rendement (e = ex25_4) [ul09_debt = down, ul09_euro = *, ul09_method = page]: 15 731 EUR
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_4])
+  reading: ul09_debt = down
+  reading: ul09_method = page
+  law date 2026-10-18, cut 2026-10-18
+q08_rendement (e = ex25_4) [ul09_debt = half-up, ul09_euro = *, ul09_method = page]: 15 730 EUR
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_4])
+  reading: ul09_debt = half-up
+  reading: ul09_method = page
+  law date 2026-10-18, cut 2026-10-18
+q08_rendement (e = ex25_5) [ul09_debt = *, ul09_euro = *, ul09_method = statute]: 20 494.2088 EUR
+  assumed: the page treats the green investments as qualifying under art. 5.14 without saying so (green_ok[ex25_5])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_5])
+  reading: ul09_method = statute
+  law date 2026-10-18, cut 2026-10-18
+q08_rendement (e = ex25_5) [ul09_debt = *, ul09_euro = down, ul09_method = page]: 20 493 EUR
+  assumed: the page treats the green investments as qualifying under art. 5.14 without saying so (green_ok[ex25_5])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_5])
+  reading: ul09_euro = down
+  reading: ul09_method = page
+  law date 2026-10-18, cut 2026-10-18
+q08_rendement (e = ex25_5) [ul09_debt = *, ul09_euro = half-up, ul09_method = page]: 20 495 EUR
+  assumed: the page treats the green investments as qualifying under art. 5.14 without saying so (green_ok[ex25_5])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_5])
+  reading: ul09_euro = half-up
+  reading: ul09_method = page
+  law date 2026-10-18, cut 2026-10-18
+q09_bezit (e = ex22_1): 150 000.00 EUR
+  law date 2026-10-18, cut 2026-10-18
+q09_bezit (e = ex22_2): 400 000.00 EUR
+  law date 2026-10-18, cut 2026-10-18
+q09_bezit (e = ex22_3): 250 000.00 EUR
+  law date 2026-10-18, cut 2026-10-18
+q09_bezit (e = ex25_1): 150 000.00 EUR
+  law date 2026-10-18, cut 2026-10-18
+q09_bezit (e = ex25_2): 150 000.00 EUR
+  law date 2026-10-18, cut 2026-10-18
+q09_bezit (e = ex25_3): 425 000.00 EUR
+  law date 2026-10-18, cut 2026-10-18
+q09_bezit (e = ex25_4): 425 000.00 EUR
+  law date 2026-10-18, cut 2026-10-18
+q09_bezit (e = ex25_5): 352 376.00 EUR
+  assumed: the page treats the green investments as qualifying under art. 5.14 without saying so (green_ok[ex25_5])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_5])
+  law date 2026-10-18, cut 2026-10-18
+q10_rg (e = ex22_1): 150 000.00 EUR
+  law date 2026-10-18, cut 2026-10-18
+q10_rg (e = ex22_2): 400 000.00 EUR
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex22_2])
+  law date 2026-10-18, cut 2026-10-18
+q10_rg (e = ex22_3): 206 400.00 EUR
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex22_3])
+  law date 2026-10-18, cut 2026-10-18
+q10_rg (e = ex25_1): 150 000.00 EUR
+  law date 2026-10-18, cut 2026-10-18
+q10_rg (e = ex25_2): 150 000.00 EUR
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_2])
+  law date 2026-10-18, cut 2026-10-18
+q10_rg (e = ex25_3): 328 800.00 EUR
+  law date 2026-10-18, cut 2026-10-18
+q10_rg (e = ex25_4): 332 600.00 EUR
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_4])
+  law date 2026-10-18, cut 2026-10-18
+q10_rg (e = ex25_5): 352 376.00 EUR
+  assumed: the page treats the green investments as qualifying under art. 5.14 without saying so (green_ok[ex25_5])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_5])
+  law date 2026-10-18, cut 2026-10-18
+q11_hvv_total (e = ex22_1): 50 650.00 EUR
+  law date 2026-10-18, cut 2026-10-18
+q11_hvv_total (e = ex22_2): 101 300.00 EUR
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex22_2])
+  law date 2026-10-18, cut 2026-10-18
+q11_hvv_total (e = ex22_3): 101 300.00 EUR
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex22_3])
+  law date 2026-10-18, cut 2026-10-18
+q11_hvv_total (e = ex25_1): 57 684.00 EUR
+  law date 2026-10-18, cut 2026-10-18
+q11_hvv_total (e = ex25_2): 115 368.00 EUR
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_2])
+  law date 2026-10-18, cut 2026-10-18
+q11_hvv_total (e = ex25_3): 57 684.00 EUR
+  law date 2026-10-18, cut 2026-10-18
+q11_hvv_total (e = ex25_4): 115 368.00 EUR
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_4])
+  law date 2026-10-18, cut 2026-10-18
+q11_hvv_total (e = ex25_5): 115 368.00 EUR
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_5])
+  law date 2026-10-18, cut 2026-10-18
+q12_grondslag (e = ex22_1): 99 350.00 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex22_1])
+  law date 2026-10-18, cut 2026-10-18
+q12_grondslag (e = ex22_2): 298 700.00 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex22_2])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex22_2])
+  law date 2026-10-18, cut 2026-10-18
+q12_grondslag (e = ex22_3): 105 100.00 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex22_3])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex22_3])
+  law date 2026-10-18, cut 2026-10-18
+q12_grondslag (e = ex25_1): 92 316.00 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_1])
+  law date 2026-10-18, cut 2026-10-18
+q12_grondslag (e = ex25_2): 34 632.00 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_2])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_2])
+  law date 2026-10-18, cut 2026-10-18
+q12_grondslag (e = ex25_3): 271 116.00 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_3])
+  law date 2026-10-18, cut 2026-10-18
+q12_grondslag (e = ex25_4): 217 232.00 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_4])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_4])
+  law date 2026-10-18, cut 2026-10-18
+q12_grondslag (e = ex25_5): 237 008.00 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_5])
+  assumed: the page treats the green investments as qualifying under art. 5.14 without saying so (green_ok[ex25_5])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_5])
+  law date 2026-10-18, cut 2026-10-18
+q13_grondslag_p (e = ex22_1, p = taxpayer): 99 350 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex22_1])
+  law date 2026-10-18, cut 2026-10-18
+q13_grondslag_p (e = ex22_2, p = taxpayer): 149 350 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex22_2])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex22_2])
+  law date 2026-10-18, cut 2026-10-18
+q13_grondslag_p (e = ex22_2, p = fpartner): 149 350 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex22_2])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex22_2])
+  law date 2026-10-18, cut 2026-10-18
+q13_grondslag_p (e = ex22_3, p = taxpayer): 105 100 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex22_3])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex22_3])
+  law date 2026-10-18, cut 2026-10-18
+q13_grondslag_p (e = ex22_3, p = fpartner): 0 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex22_3])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex22_3])
+  law date 2026-10-18, cut 2026-10-18
+q13_grondslag_p (e = ex25_1, p = taxpayer): 92 316 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_1])
+  law date 2026-10-18, cut 2026-10-18
+q13_grondslag_p (e = ex25_2, p = taxpayer): 17 316 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_2])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_2])
+  law date 2026-10-18, cut 2026-10-18
+q13_grondslag_p (e = ex25_2, p = fpartner): 17 316 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_2])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_2])
+  law date 2026-10-18, cut 2026-10-18
+q13_grondslag_p (e = ex25_3, p = taxpayer): 271 116 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_3])
+  law date 2026-10-18, cut 2026-10-18
+q13_grondslag_p (e = ex25_4, p = taxpayer): 108 616 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_4])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_4])
+  law date 2026-10-18, cut 2026-10-18
+q13_grondslag_p (e = ex25_4, p = fpartner): 108 616 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_4])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_4])
+  law date 2026-10-18, cut 2026-10-18
+q13_grondslag_p (e = ex25_5, p = taxpayer): 237 008 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_5])
+  assumed: the page treats the green investments as qualifying under art. 5.14 without saying so (green_ok[ex25_5])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_5])
+  law date 2026-10-18, cut 2026-10-18
+q13_grondslag_p (e = ex25_5, p = fpartner): 0 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_5])
+  assumed: the page treats the green investments as qualifying under art. 5.14 without saying so (green_ok[ex25_5])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_5])
+  law date 2026-10-18, cut 2026-10-18
+q14_aandeel (e = ex22_1, p = taxpayer) [ul09_share = *]: 66.23
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex22_1])
+  law date 2026-10-18, cut 2026-10-18
+q14_aandeel (e = ex22_2, p = taxpayer) [ul09_share = down]: 37.33
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex22_2])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex22_2])
+  reading: ul09_share = down
+  law date 2026-10-18, cut 2026-10-18
+q14_aandeel (e = ex22_2, p = taxpayer) [ul09_share = half-up]: 37.34
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex22_2])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex22_2])
+  reading: ul09_share = half-up
+  law date 2026-10-18, cut 2026-10-18
+q14_aandeel (e = ex22_2, p = fpartner) [ul09_share = down]: 37.33
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex22_2])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex22_2])
+  reading: ul09_share = down
+  law date 2026-10-18, cut 2026-10-18
+q14_aandeel (e = ex22_2, p = fpartner) [ul09_share = half-up]: 37.34
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex22_2])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex22_2])
+  reading: ul09_share = half-up
+  law date 2026-10-18, cut 2026-10-18
+q14_aandeel (e = ex22_3, p = taxpayer) [ul09_share = *]: 50.92
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex22_3])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex22_3])
+  law date 2026-10-18, cut 2026-10-18
+q14_aandeel (e = ex22_3, p = fpartner) [ul09_share = *]: 0
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex22_3])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex22_3])
+  law date 2026-10-18, cut 2026-10-18
+q14_aandeel (e = ex25_1, p = taxpayer) [ul09_share = *]: 61.54
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_1])
+  law date 2026-10-18, cut 2026-10-18
+q14_aandeel (e = ex25_2, p = taxpayer) [ul09_share = *]: 11.54
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_2])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_2])
+  law date 2026-10-18, cut 2026-10-18
+q14_aandeel (e = ex25_2, p = fpartner) [ul09_share = *]: 11.54
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_2])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_2])
+  law date 2026-10-18, cut 2026-10-18
+q14_aandeel (e = ex25_3, p = taxpayer) [ul09_share = down]: 82.45
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_3])
+  reading: ul09_share = down
+  law date 2026-10-18, cut 2026-10-18
+q14_aandeel (e = ex25_3, p = taxpayer) [ul09_share = half-up]: 82.46
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_3])
+  reading: ul09_share = half-up
+  law date 2026-10-18, cut 2026-10-18
+q14_aandeel (e = ex25_4, p = taxpayer) [ul09_share = down]: 32.65
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_4])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_4])
+  reading: ul09_share = down
+  law date 2026-10-18, cut 2026-10-18
+q14_aandeel (e = ex25_4, p = taxpayer) [ul09_share = half-up]: 32.66
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_4])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_4])
+  reading: ul09_share = half-up
+  law date 2026-10-18, cut 2026-10-18
+q14_aandeel (e = ex25_4, p = fpartner) [ul09_share = down]: 32.65
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_4])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_4])
+  reading: ul09_share = down
+  law date 2026-10-18, cut 2026-10-18
+q14_aandeel (e = ex25_4, p = fpartner) [ul09_share = half-up]: 32.66
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_4])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_4])
+  reading: ul09_share = half-up
+  law date 2026-10-18, cut 2026-10-18
+q14_aandeel (e = ex25_5, p = taxpayer) [ul09_share = down]: 67.25
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_5])
+  assumed: the page treats the green investments as qualifying under art. 5.14 without saying so (green_ok[ex25_5])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_5])
+  reading: ul09_share = down
+  law date 2026-10-18, cut 2026-10-18
+q14_aandeel (e = ex25_5, p = taxpayer) [ul09_share = half-up]: 67.26
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_5])
+  assumed: the page treats the green investments as qualifying under art. 5.14 without saying so (green_ok[ex25_5])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_5])
+  reading: ul09_share = half-up
+  law date 2026-10-18, cut 2026-10-18
+q14_aandeel (e = ex25_5, p = fpartner) [ul09_share = *]: 0
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_5])
+  assumed: the page treats the green investments as qualifying under art. 5.14 without saying so (green_ok[ex25_5])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_5])
+  law date 2026-10-18, cut 2026-10-18
+q15_voordeel_new (e = ex22_1, p = taxpayer) [ul09_debt = *, ul09_euro = *, ul09_method = *, ul09_share = *]: 0 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex22_1])
+  law date 2026-10-18, cut 2026-10-18
+q15_voordeel_new (e = ex22_2, p = taxpayer) [ul09_debt = *, ul09_euro = *, ul09_method = page, ul09_share = *]: 1 032 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex22_2])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex22_2])
+  reading: ul09_method = page
+  law date 2026-10-18, cut 2026-10-18
+q15_voordeel_new (e = ex22_2, p = taxpayer) [ul09_debt = *, ul09_euro = *, ul09_method = statute, ul09_share = *]: 1 032.381875 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex22_2])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex22_2])
+  reading: ul09_method = statute
+  law date 2026-10-18, cut 2026-10-18
+q15_voordeel_new (e = ex22_2, p = fpartner) [ul09_debt = *, ul09_euro = *, ul09_method = page, ul09_share = *]: 1 032 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex22_2])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex22_2])
+  reading: ul09_method = page
+  law date 2026-10-18, cut 2026-10-18
+q15_voordeel_new (e = ex22_2, p = fpartner) [ul09_debt = *, ul09_euro = *, ul09_method = statute, ul09_share = *]: 1 032.381875 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex22_2])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex22_2])
+  reading: ul09_method = statute
+  law date 2026-10-18, cut 2026-10-18
+q15_voordeel_new (e = ex22_3, p = taxpayer) [ul09_debt = *, ul09_euro = *, ul09_method = statute, ul09_share = *]: 63943891/17200 (3 717.66808139535) EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex22_3])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex22_3])
+  reading: ul09_method = statute
+  law date 2026-10-18, cut 2026-10-18
+q15_voordeel_new (e = ex22_3, p = taxpayer) [ul09_debt = *, ul09_euro = down, ul09_method = page, ul09_share = *]: 3 717 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex22_3])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex22_3])
+  reading: ul09_euro = down
+  reading: ul09_method = page
+  law date 2026-10-18, cut 2026-10-18
+q15_voordeel_new (e = ex22_3, p = taxpayer) [ul09_debt = *, ul09_euro = half-up, ul09_method = page, ul09_share = *]: 3 718 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex22_3])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex22_3])
+  reading: ul09_euro = half-up
+  reading: ul09_method = page
+  law date 2026-10-18, cut 2026-10-18
+q15_voordeel_new (e = ex22_3, p = fpartner) [ul09_debt = *, ul09_euro = *, ul09_method = *, ul09_share = *]: 0 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex22_3])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex22_3])
+  law date 2026-10-18, cut 2026-10-18
+q15_voordeel_new (e = ex25_1, p = taxpayer) [ul09_debt = *, ul09_euro = *, ul09_method = statute, ul09_share = *]: 1 264.7292 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_1])
+  reading: ul09_method = statute
+  law date 2026-10-18, cut 2026-10-18
+q15_voordeel_new (e = ex25_1, p = taxpayer) [ul09_debt = *, ul09_euro = down, ul09_method = page, ul09_share = *]: 1 264 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_1])
+  reading: ul09_euro = down
+  reading: ul09_method = page
+  law date 2026-10-18, cut 2026-10-18
+q15_voordeel_new (e = ex25_1, p = taxpayer) [ul09_debt = *, ul09_euro = half-up, ul09_method = page, ul09_share = *]: 1 265 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_1])
+  reading: ul09_euro = half-up
+  reading: ul09_method = page
+  law date 2026-10-18, cut 2026-10-18
+q15_voordeel_new (e = ex25_2, p = taxpayer) [ul09_debt = *, ul09_euro = *, ul09_method = page, ul09_share = *]: 237 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_2])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_2])
+  reading: ul09_method = page
+  law date 2026-10-18, cut 2026-10-18
+q15_voordeel_new (e = ex25_2, p = taxpayer) [ul09_debt = *, ul09_euro = *, ul09_method = statute, ul09_share = *]: 237.2292 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_2])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_2])
+  reading: ul09_method = statute
+  law date 2026-10-18, cut 2026-10-18
+q15_voordeel_new (e = ex25_2, p = fpartner) [ul09_debt = *, ul09_euro = *, ul09_method = page, ul09_share = *]: 237 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_2])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_2])
+  reading: ul09_method = page
+  law date 2026-10-18, cut 2026-10-18
+q15_voordeel_new (e = ex25_2, p = fpartner) [ul09_debt = *, ul09_euro = *, ul09_method = statute, ul09_share = *]: 237.2292 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_2])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_2])
+  reading: ul09_method = statute
+  law date 2026-10-18, cut 2026-10-18
+q15_voordeel_new (e = ex25_3, p = taxpayer) [ul09_debt = *, ul09_euro = *, ul09_method = page, ul09_share = down]: 12 885 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_3])
+  reading: ul09_method = page
+  reading: ul09_share = down
+  law date 2026-10-18, cut 2026-10-18
+q15_voordeel_new (e = ex25_3, p = taxpayer) [ul09_debt = *, ul09_euro = *, ul09_method = statute, ul09_share = *]: 882685917/68500 (12 885.9257956204) EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_3])
+  reading: ul09_method = statute
+  law date 2026-10-18, cut 2026-10-18
+q15_voordeel_new (e = ex25_3, p = taxpayer) [ul09_debt = *, ul09_euro = down, ul09_method = page, ul09_share = half-up]: 12 886 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_3])
+  reading: ul09_euro = down
+  reading: ul09_method = page
+  reading: ul09_share = half-up
+  law date 2026-10-18, cut 2026-10-18
+q15_voordeel_new (e = ex25_3, p = taxpayer) [ul09_debt = *, ul09_euro = half-up, ul09_method = page, ul09_share = half-up]: 12 887 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_3])
+  reading: ul09_euro = half-up
+  reading: ul09_method = page
+  reading: ul09_share = half-up
+  law date 2026-10-18, cut 2026-10-18
+q15_voordeel_new (e = ex25_4, p = taxpayer) [ul09_debt = *, ul09_euro = *, ul09_method = statute, ul09_share = *]: 1067844627/207875 (5 136.9555117258) EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_4])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_4])
+  reading: ul09_method = statute
+  law date 2026-10-18, cut 2026-10-18
+q15_voordeel_new (e = ex25_4, p = taxpayer) [ul09_debt = down, ul09_euro = *, ul09_method = page, ul09_share = down]: 5 136 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_4])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_4])
+  reading: ul09_debt = down
+  reading: ul09_method = page
+  reading: ul09_share = down
+  law date 2026-10-18, cut 2026-10-18
+q15_voordeel_new (e = ex25_4, p = taxpayer) [ul09_debt = down, ul09_euro = down, ul09_method = page, ul09_share = half-up]: 5 137 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_4])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_4])
+  reading: ul09_debt = down
+  reading: ul09_euro = down
+  reading: ul09_method = page
+  reading: ul09_share = half-up
+  law date 2026-10-18, cut 2026-10-18
+q15_voordeel_new (e = ex25_4, p = taxpayer) [ul09_debt = down, ul09_euro = half-up, ul09_method = page, ul09_share = half-up]: 5 138 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_4])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_4])
+  reading: ul09_debt = down
+  reading: ul09_euro = half-up
+  reading: ul09_method = page
+  reading: ul09_share = half-up
+  law date 2026-10-18, cut 2026-10-18
+q15_voordeel_new (e = ex25_4, p = taxpayer) [ul09_debt = half-up, ul09_euro = *, ul09_method = page, ul09_share = half-up]: 5 137 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_4])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_4])
+  reading: ul09_debt = half-up
+  reading: ul09_method = page
+  reading: ul09_share = half-up
+  law date 2026-10-18, cut 2026-10-18
+q15_voordeel_new (e = ex25_4, p = taxpayer) [ul09_debt = half-up, ul09_euro = down, ul09_method = page, ul09_share = down]: 5 135 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_4])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_4])
+  reading: ul09_debt = half-up
+  reading: ul09_euro = down
+  reading: ul09_method = page
+  reading: ul09_share = down
+  law date 2026-10-18, cut 2026-10-18
+q15_voordeel_new (e = ex25_4, p = taxpayer) [ul09_debt = half-up, ul09_euro = half-up, ul09_method = page, ul09_share = down]: 5 136 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_4])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_4])
+  reading: ul09_debt = half-up
+  reading: ul09_euro = half-up
+  reading: ul09_method = page
+  reading: ul09_share = down
+  law date 2026-10-18, cut 2026-10-18
+q15_voordeel_new (e = ex25_4, p = fpartner) [ul09_debt = *, ul09_euro = *, ul09_method = statute, ul09_share = *]: 1067844627/207875 (5 136.9555117258) EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_4])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_4])
+  reading: ul09_method = statute
+  law date 2026-10-18, cut 2026-10-18
+q15_voordeel_new (e = ex25_4, p = fpartner) [ul09_debt = down, ul09_euro = *, ul09_method = page, ul09_share = down]: 5 136 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_4])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_4])
+  reading: ul09_debt = down
+  reading: ul09_method = page
+  reading: ul09_share = down
+  law date 2026-10-18, cut 2026-10-18
+q15_voordeel_new (e = ex25_4, p = fpartner) [ul09_debt = down, ul09_euro = down, ul09_method = page, ul09_share = half-up]: 5 137 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_4])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_4])
+  reading: ul09_debt = down
+  reading: ul09_euro = down
+  reading: ul09_method = page
+  reading: ul09_share = half-up
+  law date 2026-10-18, cut 2026-10-18
+q15_voordeel_new (e = ex25_4, p = fpartner) [ul09_debt = down, ul09_euro = half-up, ul09_method = page, ul09_share = half-up]: 5 138 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_4])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_4])
+  reading: ul09_debt = down
+  reading: ul09_euro = half-up
+  reading: ul09_method = page
+  reading: ul09_share = half-up
+  law date 2026-10-18, cut 2026-10-18
+q15_voordeel_new (e = ex25_4, p = fpartner) [ul09_debt = half-up, ul09_euro = *, ul09_method = page, ul09_share = half-up]: 5 137 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_4])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_4])
+  reading: ul09_debt = half-up
+  reading: ul09_method = page
+  reading: ul09_share = half-up
+  law date 2026-10-18, cut 2026-10-18
+q15_voordeel_new (e = ex25_4, p = fpartner) [ul09_debt = half-up, ul09_euro = down, ul09_method = page, ul09_share = down]: 5 135 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_4])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_4])
+  reading: ul09_debt = half-up
+  reading: ul09_euro = down
+  reading: ul09_method = page
+  reading: ul09_share = down
+  law date 2026-10-18, cut 2026-10-18
+q15_voordeel_new (e = ex25_4, p = fpartner) [ul09_debt = half-up, ul09_euro = half-up, ul09_method = page, ul09_share = down]: 5 136 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_4])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_4])
+  reading: ul09_debt = half-up
+  reading: ul09_euro = half-up
+  reading: ul09_method = page
+  reading: ul09_share = down
+  law date 2026-10-18, cut 2026-10-18
+q15_voordeel_new (e = ex25_5, p = taxpayer) [ul09_debt = *, ul09_euro = *, ul09_method = statute, ul09_share = *]: 379475893693/27529375 (13 784.3991624583) EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_5])
+  assumed: the page treats the green investments as qualifying under art. 5.14 without saying so (green_ok[ex25_5])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_5])
+  reading: ul09_method = statute
+  law date 2026-10-18, cut 2026-10-18
+q15_voordeel_new (e = ex25_5, p = taxpayer) [ul09_debt = *, ul09_euro = down, ul09_method = page, ul09_share = down]: 13 781 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_5])
+  assumed: the page treats the green investments as qualifying under art. 5.14 without saying so (green_ok[ex25_5])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_5])
+  reading: ul09_euro = down
+  reading: ul09_method = page
+  reading: ul09_share = down
+  law date 2026-10-18, cut 2026-10-18
+q15_voordeel_new (e = ex25_5, p = taxpayer) [ul09_debt = *, ul09_euro = down, ul09_method = page, ul09_share = half-up]: 13 783 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_5])
+  assumed: the page treats the green investments as qualifying under art. 5.14 without saying so (green_ok[ex25_5])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_5])
+  reading: ul09_euro = down
+  reading: ul09_method = page
+  reading: ul09_share = half-up
+  law date 2026-10-18, cut 2026-10-18
+q15_voordeel_new (e = ex25_5, p = taxpayer) [ul09_debt = *, ul09_euro = half-up, ul09_method = page, ul09_share = down]: 13 783 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_5])
+  assumed: the page treats the green investments as qualifying under art. 5.14 without saying so (green_ok[ex25_5])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_5])
+  reading: ul09_euro = half-up
+  reading: ul09_method = page
+  reading: ul09_share = down
+  law date 2026-10-18, cut 2026-10-18
+q15_voordeel_new (e = ex25_5, p = taxpayer) [ul09_debt = *, ul09_euro = half-up, ul09_method = page, ul09_share = half-up]: 13 785 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_5])
+  assumed: the page treats the green investments as qualifying under art. 5.14 without saying so (green_ok[ex25_5])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_5])
+  reading: ul09_euro = half-up
+  reading: ul09_method = page
+  reading: ul09_share = half-up
+  law date 2026-10-18, cut 2026-10-18
+q15_voordeel_new (e = ex25_5, p = fpartner) [ul09_debt = *, ul09_euro = *, ul09_method = *, ul09_share = *]: 0 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_5])
+  assumed: the page treats the green investments as qualifying under art. 5.14 without saying so (green_ok[ex25_5])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_5])
+  law date 2026-10-18, cut 2026-10-18
+q16_tax_new (e = ex22_1, p = taxpayer) [ul09_debt = *, ul09_euro = *, ul09_method = *, ul09_share = *]: 0 EUR
+  assumed: no persoonsgebonden aftrek is mentioned; the pages tax the voordeel directly (art. 5.1) (pga[ex22_1, taxpayer])
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex22_1])
+  law date 2026-10-18, cut 2026-10-18
+q16_tax_new (e = ex22_2, p = taxpayer) [ul09_debt = *, ul09_euro = *, ul09_method = statute, ul09_share = *]: 320.03838125 EUR
+  assumed: no persoonsgebonden aftrek is mentioned; the pages tax the voordeel directly (art. 5.1) (pga[ex22_2, taxpayer])
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex22_2])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex22_2])
+  reading: ul09_method = statute
+  law date 2026-10-18, cut 2026-10-18
+q16_tax_new (e = ex22_2, p = taxpayer) [ul09_debt = *, ul09_euro = down, ul09_method = page, ul09_share = *]: 319 EUR
+  assumed: no persoonsgebonden aftrek is mentioned; the pages tax the voordeel directly (art. 5.1) (pga[ex22_2, taxpayer])
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex22_2])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex22_2])
+  reading: ul09_euro = down
+  reading: ul09_method = page
+  law date 2026-10-18, cut 2026-10-18
+q16_tax_new (e = ex22_2, p = taxpayer) [ul09_debt = *, ul09_euro = half-up, ul09_method = page, ul09_share = *]: 320 EUR
+  assumed: no persoonsgebonden aftrek is mentioned; the pages tax the voordeel directly (art. 5.1) (pga[ex22_2, taxpayer])
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex22_2])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex22_2])
+  reading: ul09_euro = half-up
+  reading: ul09_method = page
+  law date 2026-10-18, cut 2026-10-18
+q16_tax_new (e = ex22_2, p = fpartner) [ul09_debt = *, ul09_euro = *, ul09_method = statute, ul09_share = *]: 320.03838125 EUR
+  assumed: no persoonsgebonden aftrek is mentioned; the pages tax the voordeel directly (art. 5.1) (pga[ex22_2, fpartner])
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex22_2])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex22_2])
+  reading: ul09_method = statute
+  law date 2026-10-18, cut 2026-10-18
+q16_tax_new (e = ex22_2, p = fpartner) [ul09_debt = *, ul09_euro = down, ul09_method = page, ul09_share = *]: 319 EUR
+  assumed: no persoonsgebonden aftrek is mentioned; the pages tax the voordeel directly (art. 5.1) (pga[ex22_2, fpartner])
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex22_2])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex22_2])
+  reading: ul09_euro = down
+  reading: ul09_method = page
+  law date 2026-10-18, cut 2026-10-18
+q16_tax_new (e = ex22_2, p = fpartner) [ul09_debt = *, ul09_euro = half-up, ul09_method = page, ul09_share = *]: 320 EUR
+  assumed: no persoonsgebonden aftrek is mentioned; the pages tax the voordeel directly (art. 5.1) (pga[ex22_2, fpartner])
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex22_2])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex22_2])
+  reading: ul09_euro = half-up
+  reading: ul09_method = page
+  law date 2026-10-18, cut 2026-10-18
+q16_tax_new (e = ex22_3, p = taxpayer) [ul09_debt = *, ul09_euro = *, ul09_method = statute, ul09_share = *]: 1982260621/1720000 (1 152.47710523256) EUR
+  assumed: no persoonsgebonden aftrek is mentioned; the pages tax the voordeel directly (art. 5.1) (pga[ex22_3, taxpayer])
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex22_3])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex22_3])
+  reading: ul09_method = statute
+  law date 2026-10-18, cut 2026-10-18
+q16_tax_new (e = ex22_3, p = taxpayer) [ul09_debt = *, ul09_euro = down, ul09_method = page, ul09_share = *]: 1 152 EUR
+  assumed: no persoonsgebonden aftrek is mentioned; the pages tax the voordeel directly (art. 5.1) (pga[ex22_3, taxpayer])
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex22_3])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex22_3])
+  reading: ul09_euro = down
+  reading: ul09_method = page
+  law date 2026-10-18, cut 2026-10-18
+q16_tax_new (e = ex22_3, p = taxpayer) [ul09_debt = *, ul09_euro = half-up, ul09_method = page, ul09_share = *]: 1 153 EUR
+  assumed: no persoonsgebonden aftrek is mentioned; the pages tax the voordeel directly (art. 5.1) (pga[ex22_3, taxpayer])
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex22_3])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex22_3])
+  reading: ul09_euro = half-up
+  reading: ul09_method = page
+  law date 2026-10-18, cut 2026-10-18
+q16_tax_new (e = ex22_3, p = fpartner) [ul09_debt = *, ul09_euro = *, ul09_method = *, ul09_share = *]: 0 EUR
+  assumed: no persoonsgebonden aftrek is mentioned; the pages tax the voordeel directly (art. 5.1) (pga[ex22_3, fpartner])
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex22_3])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex22_3])
+  law date 2026-10-18, cut 2026-10-18
+q16_tax_new (e = ex25_1, p = taxpayer) [ul09_debt = *, ul09_euro = *, ul09_method = page, ul09_share = *]: 455 EUR
+  assumed: no persoonsgebonden aftrek is mentioned; the pages tax the voordeel directly (art. 5.1) (pga[ex25_1, taxpayer])
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_1])
+  reading: ul09_method = page
+  law date 2026-10-18, cut 2026-10-18
+q16_tax_new (e = ex25_1, p = taxpayer) [ul09_debt = *, ul09_euro = *, ul09_method = statute, ul09_share = *]: 455.302512 EUR
+  assumed: no persoonsgebonden aftrek is mentioned; the pages tax the voordeel directly (art. 5.1) (pga[ex25_1, taxpayer])
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_1])
+  reading: ul09_method = statute
+  law date 2026-10-18, cut 2026-10-18
+q16_tax_new (e = ex25_2, p = taxpayer) [ul09_debt = *, ul09_euro = *, ul09_method = page, ul09_share = *]: 85 EUR
+  assumed: no persoonsgebonden aftrek is mentioned; the pages tax the voordeel directly (art. 5.1) (pga[ex25_2, taxpayer])
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_2])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_2])
+  reading: ul09_method = page
+  law date 2026-10-18, cut 2026-10-18
+q16_tax_new (e = ex25_2, p = taxpayer) [ul09_debt = *, ul09_euro = *, ul09_method = statute, ul09_share = *]: 85.402512 EUR
+  assumed: no persoonsgebonden aftrek is mentioned; the pages tax the voordeel directly (art. 5.1) (pga[ex25_2, taxpayer])
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_2])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_2])
+  reading: ul09_method = statute
+  law date 2026-10-18, cut 2026-10-18
+q16_tax_new (e = ex25_2, p = fpartner) [ul09_debt = *, ul09_euro = *, ul09_method = page, ul09_share = *]: 85 EUR
+  assumed: no persoonsgebonden aftrek is mentioned; the pages tax the voordeel directly (art. 5.1) (pga[ex25_2, fpartner])
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_2])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_2])
+  reading: ul09_method = page
+  law date 2026-10-18, cut 2026-10-18
+q16_tax_new (e = ex25_2, p = fpartner) [ul09_debt = *, ul09_euro = *, ul09_method = statute, ul09_share = *]: 85.402512 EUR
+  assumed: no persoonsgebonden aftrek is mentioned; the pages tax the voordeel directly (art. 5.1) (pga[ex25_2, fpartner])
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_2])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_2])
+  reading: ul09_method = statute
+  law date 2026-10-18, cut 2026-10-18
+q16_tax_new (e = ex25_3, p = taxpayer) [ul09_debt = *, ul09_euro = *, ul09_method = statute, ul09_share = *]: 7944173253/1712500 (4 638.93328642336) EUR
+  assumed: no persoonsgebonden aftrek is mentioned; the pages tax the voordeel directly (art. 5.1) (pga[ex25_3, taxpayer])
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_3])
+  reading: ul09_method = statute
+  law date 2026-10-18, cut 2026-10-18
+q16_tax_new (e = ex25_3, p = taxpayer) [ul09_debt = *, ul09_euro = down, ul09_method = page, ul09_share = *]: 4 638 EUR
+  assumed: no persoonsgebonden aftrek is mentioned; the pages tax the voordeel directly (art. 5.1) (pga[ex25_3, taxpayer])
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_3])
+  reading: ul09_euro = down
+  reading: ul09_method = page
+  law date 2026-10-18, cut 2026-10-18
+q16_tax_new (e = ex25_3, p = taxpayer) [ul09_debt = *, ul09_euro = half-up, ul09_method = page, ul09_share = *]: 4 639 EUR
+  assumed: no persoonsgebonden aftrek is mentioned; the pages tax the voordeel directly (art. 5.1) (pga[ex25_3, taxpayer])
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_3])
+  reading: ul09_euro = half-up
+  reading: ul09_method = page
+  law date 2026-10-18, cut 2026-10-18
+q16_tax_new (e = ex25_4, p = taxpayer) [ul09_debt = *, ul09_euro = *, ul09_method = statute, ul09_share = *]: 9610601643/5196875 (1 849.30398422129) EUR
+  assumed: no persoonsgebonden aftrek is mentioned; the pages tax the voordeel directly (art. 5.1) (pga[ex25_4, taxpayer])
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_4])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_4])
+  reading: ul09_method = statute
+  law date 2026-10-18, cut 2026-10-18
+q16_tax_new (e = ex25_4, p = taxpayer) [ul09_debt = *, ul09_euro = down, ul09_method = page, ul09_share = down]: 1 848 EUR
+  assumed: no persoonsgebonden aftrek is mentioned; the pages tax the voordeel directly (art. 5.1) (pga[ex25_4, taxpayer])
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_4])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_4])
+  reading: ul09_euro = down
+  reading: ul09_method = page
+  reading: ul09_share = down
+  law date 2026-10-18, cut 2026-10-18
+q16_tax_new (e = ex25_4, p = taxpayer) [ul09_debt = down, ul09_euro = down, ul09_method = page, ul09_share = half-up]: 1 849 EUR
+  assumed: no persoonsgebonden aftrek is mentioned; the pages tax the voordeel directly (art. 5.1) (pga[ex25_4, taxpayer])
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_4])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_4])
+  reading: ul09_debt = down
+  reading: ul09_euro = down
+  reading: ul09_method = page
+  reading: ul09_share = half-up
+  law date 2026-10-18, cut 2026-10-18
+q16_tax_new (e = ex25_4, p = taxpayer) [ul09_debt = down, ul09_euro = half-up, ul09_method = page, ul09_share = down]: 1 849 EUR
+  assumed: no persoonsgebonden aftrek is mentioned; the pages tax the voordeel directly (art. 5.1) (pga[ex25_4, taxpayer])
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_4])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_4])
+  reading: ul09_debt = down
+  reading: ul09_euro = half-up
+  reading: ul09_method = page
+  reading: ul09_share = down
+  law date 2026-10-18, cut 2026-10-18
+q16_tax_new (e = ex25_4, p = taxpayer) [ul09_debt = down, ul09_euro = half-up, ul09_method = page, ul09_share = half-up]: 1 850 EUR
+  assumed: no persoonsgebonden aftrek is mentioned; the pages tax the voordeel directly (art. 5.1) (pga[ex25_4, taxpayer])
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_4])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_4])
+  reading: ul09_debt = down
+  reading: ul09_euro = half-up
+  reading: ul09_method = page
+  reading: ul09_share = half-up
+  law date 2026-10-18, cut 2026-10-18
+q16_tax_new (e = ex25_4, p = taxpayer) [ul09_debt = half-up, ul09_euro = down, ul09_method = page, ul09_share = half-up]: 1 849 EUR
+  assumed: no persoonsgebonden aftrek is mentioned; the pages tax the voordeel directly (art. 5.1) (pga[ex25_4, taxpayer])
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_4])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_4])
+  reading: ul09_debt = half-up
+  reading: ul09_euro = down
+  reading: ul09_method = page
+  reading: ul09_share = half-up
+  law date 2026-10-18, cut 2026-10-18
+q16_tax_new (e = ex25_4, p = taxpayer) [ul09_debt = half-up, ul09_euro = half-up, ul09_method = page, ul09_share = *]: 1 849 EUR
+  assumed: no persoonsgebonden aftrek is mentioned; the pages tax the voordeel directly (art. 5.1) (pga[ex25_4, taxpayer])
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_4])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_4])
+  reading: ul09_debt = half-up
+  reading: ul09_euro = half-up
+  reading: ul09_method = page
+  law date 2026-10-18, cut 2026-10-18
+q16_tax_new (e = ex25_4, p = fpartner) [ul09_debt = *, ul09_euro = *, ul09_method = statute, ul09_share = *]: 9610601643/5196875 (1 849.30398422129) EUR
+  assumed: no persoonsgebonden aftrek is mentioned; the pages tax the voordeel directly (art. 5.1) (pga[ex25_4, fpartner])
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_4])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_4])
+  reading: ul09_method = statute
+  law date 2026-10-18, cut 2026-10-18
+q16_tax_new (e = ex25_4, p = fpartner) [ul09_debt = *, ul09_euro = down, ul09_method = page, ul09_share = down]: 1 848 EUR
+  assumed: no persoonsgebonden aftrek is mentioned; the pages tax the voordeel directly (art. 5.1) (pga[ex25_4, fpartner])
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_4])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_4])
+  reading: ul09_euro = down
+  reading: ul09_method = page
+  reading: ul09_share = down
+  law date 2026-10-18, cut 2026-10-18
+q16_tax_new (e = ex25_4, p = fpartner) [ul09_debt = down, ul09_euro = down, ul09_method = page, ul09_share = half-up]: 1 849 EUR
+  assumed: no persoonsgebonden aftrek is mentioned; the pages tax the voordeel directly (art. 5.1) (pga[ex25_4, fpartner])
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_4])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_4])
+  reading: ul09_debt = down
+  reading: ul09_euro = down
+  reading: ul09_method = page
+  reading: ul09_share = half-up
+  law date 2026-10-18, cut 2026-10-18
+q16_tax_new (e = ex25_4, p = fpartner) [ul09_debt = down, ul09_euro = half-up, ul09_method = page, ul09_share = down]: 1 849 EUR
+  assumed: no persoonsgebonden aftrek is mentioned; the pages tax the voordeel directly (art. 5.1) (pga[ex25_4, fpartner])
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_4])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_4])
+  reading: ul09_debt = down
+  reading: ul09_euro = half-up
+  reading: ul09_method = page
+  reading: ul09_share = down
+  law date 2026-10-18, cut 2026-10-18
+q16_tax_new (e = ex25_4, p = fpartner) [ul09_debt = down, ul09_euro = half-up, ul09_method = page, ul09_share = half-up]: 1 850 EUR
+  assumed: no persoonsgebonden aftrek is mentioned; the pages tax the voordeel directly (art. 5.1) (pga[ex25_4, fpartner])
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_4])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_4])
+  reading: ul09_debt = down
+  reading: ul09_euro = half-up
+  reading: ul09_method = page
+  reading: ul09_share = half-up
+  law date 2026-10-18, cut 2026-10-18
+q16_tax_new (e = ex25_4, p = fpartner) [ul09_debt = half-up, ul09_euro = down, ul09_method = page, ul09_share = half-up]: 1 849 EUR
+  assumed: no persoonsgebonden aftrek is mentioned; the pages tax the voordeel directly (art. 5.1) (pga[ex25_4, fpartner])
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_4])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_4])
+  reading: ul09_debt = half-up
+  reading: ul09_euro = down
+  reading: ul09_method = page
+  reading: ul09_share = half-up
+  law date 2026-10-18, cut 2026-10-18
+q16_tax_new (e = ex25_4, p = fpartner) [ul09_debt = half-up, ul09_euro = half-up, ul09_method = page, ul09_share = *]: 1 849 EUR
+  assumed: no persoonsgebonden aftrek is mentioned; the pages tax the voordeel directly (art. 5.1) (pga[ex25_4, fpartner])
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_4])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_4])
+  reading: ul09_debt = half-up
+  reading: ul09_euro = half-up
+  reading: ul09_method = page
+  law date 2026-10-18, cut 2026-10-18
+q16_tax_new (e = ex25_5, p = taxpayer) [ul09_debt = *, ul09_euro = *, ul09_method = statute, ul09_share = *]: 3415283043237/688234375 (4 962.38369848498) EUR
+  assumed: no persoonsgebonden aftrek is mentioned; the pages tax the voordeel directly (art. 5.1) (pga[ex25_5, taxpayer])
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_5])
+  assumed: the page treats the green investments as qualifying under art. 5.14 without saying so (green_ok[ex25_5])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_5])
+  reading: ul09_method = statute
+  law date 2026-10-18, cut 2026-10-18
+q16_tax_new (e = ex25_5, p = taxpayer) [ul09_debt = *, ul09_euro = down, ul09_method = page, ul09_share = *]: 4 961 EUR
+  assumed: no persoonsgebonden aftrek is mentioned; the pages tax the voordeel directly (art. 5.1) (pga[ex25_5, taxpayer])
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_5])
+  assumed: the page treats the green investments as qualifying under art. 5.14 without saying so (green_ok[ex25_5])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_5])
+  reading: ul09_euro = down
+  reading: ul09_method = page
+  law date 2026-10-18, cut 2026-10-18
+q16_tax_new (e = ex25_5, p = taxpayer) [ul09_debt = *, ul09_euro = half-up, ul09_method = page, ul09_share = down]: 4 962 EUR
+  assumed: no persoonsgebonden aftrek is mentioned; the pages tax the voordeel directly (art. 5.1) (pga[ex25_5, taxpayer])
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_5])
+  assumed: the page treats the green investments as qualifying under art. 5.14 without saying so (green_ok[ex25_5])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_5])
+  reading: ul09_euro = half-up
+  reading: ul09_method = page
+  reading: ul09_share = down
+  law date 2026-10-18, cut 2026-10-18
+q16_tax_new (e = ex25_5, p = taxpayer) [ul09_debt = *, ul09_euro = half-up, ul09_method = page, ul09_share = half-up]: 4 963 EUR
+  assumed: no persoonsgebonden aftrek is mentioned; the pages tax the voordeel directly (art. 5.1) (pga[ex25_5, taxpayer])
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_5])
+  assumed: the page treats the green investments as qualifying under art. 5.14 without saying so (green_ok[ex25_5])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_5])
+  reading: ul09_euro = half-up
+  reading: ul09_method = page
+  reading: ul09_share = half-up
+  law date 2026-10-18, cut 2026-10-18
+q16_tax_new (e = ex25_5, p = fpartner) [ul09_debt = *, ul09_euro = *, ul09_method = *, ul09_share = *]: 0 EUR
+  assumed: no persoonsgebonden aftrek is mentioned; the pages tax the voordeel directly (art. 5.1) (pga[ex25_5, fpartner])
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_5])
+  assumed: the page treats the green investments as qualifying under art. 5.14 without saying so (green_ok[ex25_5])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_5])
+  law date 2026-10-18, cut 2026-10-18
+q17_voordeel_old (e = ex22_1, p = taxpayer): 3 047.4525 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex22_1])
+  law date 2026-10-18, cut 2026-10-18
+q17_voordeel_old (e = ex22_2, p = taxpayer): 5 230.7525 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex22_2])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex22_2])
+  law date 2026-10-18, cut 2026-10-18
+q17_voordeel_old (e = ex22_2, p = fpartner): 5 230.7525 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex22_2])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex22_2])
+  law date 2026-10-18, cut 2026-10-18
+q17_voordeel_old (e = ex22_3, p = taxpayer): 3 298.532 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex22_3])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex22_3])
+  law date 2026-10-18, cut 2026-10-18
+q17_voordeel_old (e = ex22_3, p = fpartner): 0 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex22_3])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex22_3])
+  law date 2026-10-18, cut 2026-10-18
+q18_voordeel (e = ex22_1, p = taxpayer) [ul09_debt = *, ul09_euro = *, ul09_method = *, ul09_share = *]: 0 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex22_1])
+  law date 2026-10-18, cut 2026-10-18
+q18_voordeel (e = ex22_2, p = taxpayer) [ul09_debt = *, ul09_euro = *, ul09_method = page, ul09_share = *]: 1 032 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex22_2])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex22_2])
+  reading: ul09_method = page
+  law date 2026-10-18, cut 2026-10-18
+q18_voordeel (e = ex22_2, p = taxpayer) [ul09_debt = *, ul09_euro = *, ul09_method = statute, ul09_share = *]: 1 032.381875 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex22_2])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex22_2])
+  reading: ul09_method = statute
+  law date 2026-10-18, cut 2026-10-18
+q18_voordeel (e = ex22_2, p = fpartner) [ul09_debt = *, ul09_euro = *, ul09_method = page, ul09_share = *]: 1 032 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex22_2])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex22_2])
+  reading: ul09_method = page
+  law date 2026-10-18, cut 2026-10-18
+q18_voordeel (e = ex22_2, p = fpartner) [ul09_debt = *, ul09_euro = *, ul09_method = statute, ul09_share = *]: 1 032.381875 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex22_2])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex22_2])
+  reading: ul09_method = statute
+  law date 2026-10-18, cut 2026-10-18
+q18_voordeel (e = ex22_3, p = taxpayer) [ul09_debt = *, ul09_euro = *, ul09_method = statute, ul09_share = *]: 3 298.532 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex22_3])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex22_3])
+  reading: ul09_method = statute
+  law date 2026-10-18, cut 2026-10-18
+q18_voordeel (e = ex22_3, p = taxpayer) [ul09_debt = *, ul09_euro = down, ul09_method = page, ul09_share = *]: 3 298 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex22_3])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex22_3])
+  reading: ul09_euro = down
+  reading: ul09_method = page
+  law date 2026-10-18, cut 2026-10-18
+q18_voordeel (e = ex22_3, p = taxpayer) [ul09_debt = *, ul09_euro = half-up, ul09_method = page, ul09_share = *]: 3 299 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex22_3])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex22_3])
+  reading: ul09_euro = half-up
+  reading: ul09_method = page
+  law date 2026-10-18, cut 2026-10-18
+q18_voordeel (e = ex22_3, p = fpartner) [ul09_debt = *, ul09_euro = *, ul09_method = *, ul09_share = *]: 0 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex22_3])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex22_3])
+  law date 2026-10-18, cut 2026-10-18
+q18_voordeel (e = ex25_1, p = taxpayer) [ul09_debt = *, ul09_euro = *, ul09_method = statute, ul09_share = *]: 1 264.7292 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_1])
+  reading: ul09_method = statute
+  law date 2026-10-18, cut 2026-10-18
+q18_voordeel (e = ex25_1, p = taxpayer) [ul09_debt = *, ul09_euro = down, ul09_method = page, ul09_share = *]: 1 264 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_1])
+  reading: ul09_euro = down
+  reading: ul09_method = page
+  law date 2026-10-18, cut 2026-10-18
+q18_voordeel (e = ex25_1, p = taxpayer) [ul09_debt = *, ul09_euro = half-up, ul09_method = page, ul09_share = *]: 1 265 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_1])
+  reading: ul09_euro = half-up
+  reading: ul09_method = page
+  law date 2026-10-18, cut 2026-10-18
+q18_voordeel (e = ex25_2, p = taxpayer) [ul09_debt = *, ul09_euro = *, ul09_method = page, ul09_share = *]: 237 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_2])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_2])
+  reading: ul09_method = page
+  law date 2026-10-18, cut 2026-10-18
+q18_voordeel (e = ex25_2, p = taxpayer) [ul09_debt = *, ul09_euro = *, ul09_method = statute, ul09_share = *]: 237.2292 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_2])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_2])
+  reading: ul09_method = statute
+  law date 2026-10-18, cut 2026-10-18
+q18_voordeel (e = ex25_2, p = fpartner) [ul09_debt = *, ul09_euro = *, ul09_method = page, ul09_share = *]: 237 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_2])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_2])
+  reading: ul09_method = page
+  law date 2026-10-18, cut 2026-10-18
+q18_voordeel (e = ex25_2, p = fpartner) [ul09_debt = *, ul09_euro = *, ul09_method = statute, ul09_share = *]: 237.2292 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_2])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_2])
+  reading: ul09_method = statute
+  law date 2026-10-18, cut 2026-10-18
+q18_voordeel (e = ex25_3, p = taxpayer) [ul09_debt = *, ul09_euro = *, ul09_method = page, ul09_share = down]: 12 885 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_3])
+  reading: ul09_method = page
+  reading: ul09_share = down
+  law date 2026-10-18, cut 2026-10-18
+q18_voordeel (e = ex25_3, p = taxpayer) [ul09_debt = *, ul09_euro = *, ul09_method = statute, ul09_share = *]: 882685917/68500 (12 885.9257956204) EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_3])
+  reading: ul09_method = statute
+  law date 2026-10-18, cut 2026-10-18
+q18_voordeel (e = ex25_3, p = taxpayer) [ul09_debt = *, ul09_euro = down, ul09_method = page, ul09_share = half-up]: 12 886 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_3])
+  reading: ul09_euro = down
+  reading: ul09_method = page
+  reading: ul09_share = half-up
+  law date 2026-10-18, cut 2026-10-18
+q18_voordeel (e = ex25_3, p = taxpayer) [ul09_debt = *, ul09_euro = half-up, ul09_method = page, ul09_share = half-up]: 12 887 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_3])
+  reading: ul09_euro = half-up
+  reading: ul09_method = page
+  reading: ul09_share = half-up
+  law date 2026-10-18, cut 2026-10-18
+q18_voordeel (e = ex25_4, p = taxpayer) [ul09_debt = *, ul09_euro = *, ul09_method = statute, ul09_share = *]: 1067844627/207875 (5 136.9555117258) EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_4])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_4])
+  reading: ul09_method = statute
+  law date 2026-10-18, cut 2026-10-18
+q18_voordeel (e = ex25_4, p = taxpayer) [ul09_debt = down, ul09_euro = *, ul09_method = page, ul09_share = down]: 5 136 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_4])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_4])
+  reading: ul09_debt = down
+  reading: ul09_method = page
+  reading: ul09_share = down
+  law date 2026-10-18, cut 2026-10-18
+q18_voordeel (e = ex25_4, p = taxpayer) [ul09_debt = down, ul09_euro = down, ul09_method = page, ul09_share = half-up]: 5 137 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_4])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_4])
+  reading: ul09_debt = down
+  reading: ul09_euro = down
+  reading: ul09_method = page
+  reading: ul09_share = half-up
+  law date 2026-10-18, cut 2026-10-18
+q18_voordeel (e = ex25_4, p = taxpayer) [ul09_debt = down, ul09_euro = half-up, ul09_method = page, ul09_share = half-up]: 5 138 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_4])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_4])
+  reading: ul09_debt = down
+  reading: ul09_euro = half-up
+  reading: ul09_method = page
+  reading: ul09_share = half-up
+  law date 2026-10-18, cut 2026-10-18
+q18_voordeel (e = ex25_4, p = taxpayer) [ul09_debt = half-up, ul09_euro = *, ul09_method = page, ul09_share = half-up]: 5 137 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_4])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_4])
+  reading: ul09_debt = half-up
+  reading: ul09_method = page
+  reading: ul09_share = half-up
+  law date 2026-10-18, cut 2026-10-18
+q18_voordeel (e = ex25_4, p = taxpayer) [ul09_debt = half-up, ul09_euro = down, ul09_method = page, ul09_share = down]: 5 135 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_4])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_4])
+  reading: ul09_debt = half-up
+  reading: ul09_euro = down
+  reading: ul09_method = page
+  reading: ul09_share = down
+  law date 2026-10-18, cut 2026-10-18
+q18_voordeel (e = ex25_4, p = taxpayer) [ul09_debt = half-up, ul09_euro = half-up, ul09_method = page, ul09_share = down]: 5 136 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_4])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_4])
+  reading: ul09_debt = half-up
+  reading: ul09_euro = half-up
+  reading: ul09_method = page
+  reading: ul09_share = down
+  law date 2026-10-18, cut 2026-10-18
+q18_voordeel (e = ex25_4, p = fpartner) [ul09_debt = *, ul09_euro = *, ul09_method = statute, ul09_share = *]: 1067844627/207875 (5 136.9555117258) EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_4])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_4])
+  reading: ul09_method = statute
+  law date 2026-10-18, cut 2026-10-18
+q18_voordeel (e = ex25_4, p = fpartner) [ul09_debt = down, ul09_euro = *, ul09_method = page, ul09_share = down]: 5 136 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_4])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_4])
+  reading: ul09_debt = down
+  reading: ul09_method = page
+  reading: ul09_share = down
+  law date 2026-10-18, cut 2026-10-18
+q18_voordeel (e = ex25_4, p = fpartner) [ul09_debt = down, ul09_euro = down, ul09_method = page, ul09_share = half-up]: 5 137 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_4])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_4])
+  reading: ul09_debt = down
+  reading: ul09_euro = down
+  reading: ul09_method = page
+  reading: ul09_share = half-up
+  law date 2026-10-18, cut 2026-10-18
+q18_voordeel (e = ex25_4, p = fpartner) [ul09_debt = down, ul09_euro = half-up, ul09_method = page, ul09_share = half-up]: 5 138 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_4])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_4])
+  reading: ul09_debt = down
+  reading: ul09_euro = half-up
+  reading: ul09_method = page
+  reading: ul09_share = half-up
+  law date 2026-10-18, cut 2026-10-18
+q18_voordeel (e = ex25_4, p = fpartner) [ul09_debt = half-up, ul09_euro = *, ul09_method = page, ul09_share = half-up]: 5 137 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_4])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_4])
+  reading: ul09_debt = half-up
+  reading: ul09_method = page
+  reading: ul09_share = half-up
+  law date 2026-10-18, cut 2026-10-18
+q18_voordeel (e = ex25_4, p = fpartner) [ul09_debt = half-up, ul09_euro = down, ul09_method = page, ul09_share = down]: 5 135 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_4])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_4])
+  reading: ul09_debt = half-up
+  reading: ul09_euro = down
+  reading: ul09_method = page
+  reading: ul09_share = down
+  law date 2026-10-18, cut 2026-10-18
+q18_voordeel (e = ex25_4, p = fpartner) [ul09_debt = half-up, ul09_euro = half-up, ul09_method = page, ul09_share = down]: 5 136 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_4])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_4])
+  reading: ul09_debt = half-up
+  reading: ul09_euro = half-up
+  reading: ul09_method = page
+  reading: ul09_share = down
+  law date 2026-10-18, cut 2026-10-18
+q18_voordeel (e = ex25_5, p = taxpayer) [ul09_debt = *, ul09_euro = *, ul09_method = statute, ul09_share = *]: 379475893693/27529375 (13 784.3991624583) EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_5])
+  assumed: the page treats the green investments as qualifying under art. 5.14 without saying so (green_ok[ex25_5])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_5])
+  reading: ul09_method = statute
+  law date 2026-10-18, cut 2026-10-18
+q18_voordeel (e = ex25_5, p = taxpayer) [ul09_debt = *, ul09_euro = down, ul09_method = page, ul09_share = down]: 13 781 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_5])
+  assumed: the page treats the green investments as qualifying under art. 5.14 without saying so (green_ok[ex25_5])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_5])
+  reading: ul09_euro = down
+  reading: ul09_method = page
+  reading: ul09_share = down
+  law date 2026-10-18, cut 2026-10-18
+q18_voordeel (e = ex25_5, p = taxpayer) [ul09_debt = *, ul09_euro = down, ul09_method = page, ul09_share = half-up]: 13 783 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_5])
+  assumed: the page treats the green investments as qualifying under art. 5.14 without saying so (green_ok[ex25_5])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_5])
+  reading: ul09_euro = down
+  reading: ul09_method = page
+  reading: ul09_share = half-up
+  law date 2026-10-18, cut 2026-10-18
+q18_voordeel (e = ex25_5, p = taxpayer) [ul09_debt = *, ul09_euro = half-up, ul09_method = page, ul09_share = down]: 13 783 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_5])
+  assumed: the page treats the green investments as qualifying under art. 5.14 without saying so (green_ok[ex25_5])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_5])
+  reading: ul09_euro = half-up
+  reading: ul09_method = page
+  reading: ul09_share = down
+  law date 2026-10-18, cut 2026-10-18
+q18_voordeel (e = ex25_5, p = taxpayer) [ul09_debt = *, ul09_euro = half-up, ul09_method = page, ul09_share = half-up]: 13 785 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_5])
+  assumed: the page treats the green investments as qualifying under art. 5.14 without saying so (green_ok[ex25_5])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_5])
+  reading: ul09_euro = half-up
+  reading: ul09_method = page
+  reading: ul09_share = half-up
+  law date 2026-10-18, cut 2026-10-18
+q18_voordeel (e = ex25_5, p = fpartner) [ul09_debt = *, ul09_euro = *, ul09_method = *, ul09_share = *]: 0 EUR
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_5])
+  assumed: the page treats the green investments as qualifying under art. 5.14 without saying so (green_ok[ex25_5])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_5])
+  law date 2026-10-18, cut 2026-10-18
+q19_tax3 (e = ex22_1, p = taxpayer) [ul09_debt = *, ul09_euro = *, ul09_method = *, ul09_share = *]: 0 EUR
+  assumed: no persoonsgebonden aftrek is mentioned; the pages tax the voordeel directly (art. 5.1) (pga[ex22_1, taxpayer])
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex22_1])
+  law date 2026-10-18, cut 2026-10-18
+q19_tax3 (e = ex22_2, p = taxpayer) [ul09_debt = *, ul09_euro = *, ul09_method = statute, ul09_share = *]: 320.03838125 EUR
+  assumed: no persoonsgebonden aftrek is mentioned; the pages tax the voordeel directly (art. 5.1) (pga[ex22_2, taxpayer])
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex22_2])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex22_2])
+  reading: ul09_method = statute
+  law date 2026-10-18, cut 2026-10-18
+q19_tax3 (e = ex22_2, p = taxpayer) [ul09_debt = *, ul09_euro = down, ul09_method = page, ul09_share = *]: 319 EUR
+  assumed: no persoonsgebonden aftrek is mentioned; the pages tax the voordeel directly (art. 5.1) (pga[ex22_2, taxpayer])
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex22_2])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex22_2])
+  reading: ul09_euro = down
+  reading: ul09_method = page
+  law date 2026-10-18, cut 2026-10-18
+q19_tax3 (e = ex22_2, p = taxpayer) [ul09_debt = *, ul09_euro = half-up, ul09_method = page, ul09_share = *]: 320 EUR
+  assumed: no persoonsgebonden aftrek is mentioned; the pages tax the voordeel directly (art. 5.1) (pga[ex22_2, taxpayer])
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex22_2])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex22_2])
+  reading: ul09_euro = half-up
+  reading: ul09_method = page
+  law date 2026-10-18, cut 2026-10-18
+q19_tax3 (e = ex22_2, p = fpartner) [ul09_debt = *, ul09_euro = *, ul09_method = statute, ul09_share = *]: 320.03838125 EUR
+  assumed: no persoonsgebonden aftrek is mentioned; the pages tax the voordeel directly (art. 5.1) (pga[ex22_2, fpartner])
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex22_2])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex22_2])
+  reading: ul09_method = statute
+  law date 2026-10-18, cut 2026-10-18
+q19_tax3 (e = ex22_2, p = fpartner) [ul09_debt = *, ul09_euro = down, ul09_method = page, ul09_share = *]: 319 EUR
+  assumed: no persoonsgebonden aftrek is mentioned; the pages tax the voordeel directly (art. 5.1) (pga[ex22_2, fpartner])
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex22_2])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex22_2])
+  reading: ul09_euro = down
+  reading: ul09_method = page
+  law date 2026-10-18, cut 2026-10-18
+q19_tax3 (e = ex22_2, p = fpartner) [ul09_debt = *, ul09_euro = half-up, ul09_method = page, ul09_share = *]: 320 EUR
+  assumed: no persoonsgebonden aftrek is mentioned; the pages tax the voordeel directly (art. 5.1) (pga[ex22_2, fpartner])
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex22_2])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex22_2])
+  reading: ul09_euro = half-up
+  reading: ul09_method = page
+  law date 2026-10-18, cut 2026-10-18
+q19_tax3 (e = ex22_3, p = taxpayer) [ul09_debt = *, ul09_euro = *, ul09_method = statute, ul09_share = *]: 1 022.54492 EUR
+  assumed: no persoonsgebonden aftrek is mentioned; the pages tax the voordeel directly (art. 5.1) (pga[ex22_3, taxpayer])
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex22_3])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex22_3])
+  reading: ul09_method = statute
+  law date 2026-10-18, cut 2026-10-18
+q19_tax3 (e = ex22_3, p = taxpayer) [ul09_debt = *, ul09_euro = down, ul09_method = page, ul09_share = *]: 1 022 EUR
+  assumed: no persoonsgebonden aftrek is mentioned; the pages tax the voordeel directly (art. 5.1) (pga[ex22_3, taxpayer])
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex22_3])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex22_3])
+  reading: ul09_euro = down
+  reading: ul09_method = page
+  law date 2026-10-18, cut 2026-10-18
+q19_tax3 (e = ex22_3, p = taxpayer) [ul09_debt = *, ul09_euro = half-up, ul09_method = page, ul09_share = *]: 1 023 EUR
+  assumed: no persoonsgebonden aftrek is mentioned; the pages tax the voordeel directly (art. 5.1) (pga[ex22_3, taxpayer])
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex22_3])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex22_3])
+  reading: ul09_euro = half-up
+  reading: ul09_method = page
+  law date 2026-10-18, cut 2026-10-18
+q19_tax3 (e = ex22_3, p = fpartner) [ul09_debt = *, ul09_euro = *, ul09_method = *, ul09_share = *]: 0 EUR
+  assumed: no persoonsgebonden aftrek is mentioned; the pages tax the voordeel directly (art. 5.1) (pga[ex22_3, fpartner])
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex22_3])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex22_3])
+  law date 2026-10-18, cut 2026-10-18
+q19_tax3 (e = ex25_1, p = taxpayer) [ul09_debt = *, ul09_euro = *, ul09_method = page, ul09_share = *]: 455 EUR
+  assumed: no persoonsgebonden aftrek is mentioned; the pages tax the voordeel directly (art. 5.1) (pga[ex25_1, taxpayer])
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_1])
+  reading: ul09_method = page
+  law date 2026-10-18, cut 2026-10-18
+q19_tax3 (e = ex25_1, p = taxpayer) [ul09_debt = *, ul09_euro = *, ul09_method = statute, ul09_share = *]: 455.302512 EUR
+  assumed: no persoonsgebonden aftrek is mentioned; the pages tax the voordeel directly (art. 5.1) (pga[ex25_1, taxpayer])
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_1])
+  reading: ul09_method = statute
+  law date 2026-10-18, cut 2026-10-18
+q19_tax3 (e = ex25_2, p = taxpayer) [ul09_debt = *, ul09_euro = *, ul09_method = page, ul09_share = *]: 85 EUR
+  assumed: no persoonsgebonden aftrek is mentioned; the pages tax the voordeel directly (art. 5.1) (pga[ex25_2, taxpayer])
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_2])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_2])
+  reading: ul09_method = page
+  law date 2026-10-18, cut 2026-10-18
+q19_tax3 (e = ex25_2, p = taxpayer) [ul09_debt = *, ul09_euro = *, ul09_method = statute, ul09_share = *]: 85.402512 EUR
+  assumed: no persoonsgebonden aftrek is mentioned; the pages tax the voordeel directly (art. 5.1) (pga[ex25_2, taxpayer])
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_2])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_2])
+  reading: ul09_method = statute
+  law date 2026-10-18, cut 2026-10-18
+q19_tax3 (e = ex25_2, p = fpartner) [ul09_debt = *, ul09_euro = *, ul09_method = page, ul09_share = *]: 85 EUR
+  assumed: no persoonsgebonden aftrek is mentioned; the pages tax the voordeel directly (art. 5.1) (pga[ex25_2, fpartner])
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_2])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_2])
+  reading: ul09_method = page
+  law date 2026-10-18, cut 2026-10-18
+q19_tax3 (e = ex25_2, p = fpartner) [ul09_debt = *, ul09_euro = *, ul09_method = statute, ul09_share = *]: 85.402512 EUR
+  assumed: no persoonsgebonden aftrek is mentioned; the pages tax the voordeel directly (art. 5.1) (pga[ex25_2, fpartner])
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_2])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_2])
+  reading: ul09_method = statute
+  law date 2026-10-18, cut 2026-10-18
+q19_tax3 (e = ex25_3, p = taxpayer) [ul09_debt = *, ul09_euro = *, ul09_method = statute, ul09_share = *]: 7944173253/1712500 (4 638.93328642336) EUR
+  assumed: no persoonsgebonden aftrek is mentioned; the pages tax the voordeel directly (art. 5.1) (pga[ex25_3, taxpayer])
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_3])
+  reading: ul09_method = statute
+  law date 2026-10-18, cut 2026-10-18
+q19_tax3 (e = ex25_3, p = taxpayer) [ul09_debt = *, ul09_euro = down, ul09_method = page, ul09_share = *]: 4 638 EUR
+  assumed: no persoonsgebonden aftrek is mentioned; the pages tax the voordeel directly (art. 5.1) (pga[ex25_3, taxpayer])
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_3])
+  reading: ul09_euro = down
+  reading: ul09_method = page
+  law date 2026-10-18, cut 2026-10-18
+q19_tax3 (e = ex25_3, p = taxpayer) [ul09_debt = *, ul09_euro = half-up, ul09_method = page, ul09_share = *]: 4 639 EUR
+  assumed: no persoonsgebonden aftrek is mentioned; the pages tax the voordeel directly (art. 5.1) (pga[ex25_3, taxpayer])
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_3])
+  reading: ul09_euro = half-up
+  reading: ul09_method = page
+  law date 2026-10-18, cut 2026-10-18
+q19_tax3 (e = ex25_4, p = taxpayer) [ul09_debt = *, ul09_euro = *, ul09_method = statute, ul09_share = *]: 9610601643/5196875 (1 849.30398422129) EUR
+  assumed: no persoonsgebonden aftrek is mentioned; the pages tax the voordeel directly (art. 5.1) (pga[ex25_4, taxpayer])
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_4])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_4])
+  reading: ul09_method = statute
+  law date 2026-10-18, cut 2026-10-18
+q19_tax3 (e = ex25_4, p = taxpayer) [ul09_debt = *, ul09_euro = down, ul09_method = page, ul09_share = down]: 1 848 EUR
+  assumed: no persoonsgebonden aftrek is mentioned; the pages tax the voordeel directly (art. 5.1) (pga[ex25_4, taxpayer])
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_4])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_4])
+  reading: ul09_euro = down
+  reading: ul09_method = page
+  reading: ul09_share = down
+  law date 2026-10-18, cut 2026-10-18
+q19_tax3 (e = ex25_4, p = taxpayer) [ul09_debt = down, ul09_euro = down, ul09_method = page, ul09_share = half-up]: 1 849 EUR
+  assumed: no persoonsgebonden aftrek is mentioned; the pages tax the voordeel directly (art. 5.1) (pga[ex25_4, taxpayer])
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_4])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_4])
+  reading: ul09_debt = down
+  reading: ul09_euro = down
+  reading: ul09_method = page
+  reading: ul09_share = half-up
+  law date 2026-10-18, cut 2026-10-18
+q19_tax3 (e = ex25_4, p = taxpayer) [ul09_debt = down, ul09_euro = half-up, ul09_method = page, ul09_share = down]: 1 849 EUR
+  assumed: no persoonsgebonden aftrek is mentioned; the pages tax the voordeel directly (art. 5.1) (pga[ex25_4, taxpayer])
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_4])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_4])
+  reading: ul09_debt = down
+  reading: ul09_euro = half-up
+  reading: ul09_method = page
+  reading: ul09_share = down
+  law date 2026-10-18, cut 2026-10-18
+q19_tax3 (e = ex25_4, p = taxpayer) [ul09_debt = down, ul09_euro = half-up, ul09_method = page, ul09_share = half-up]: 1 850 EUR
+  assumed: no persoonsgebonden aftrek is mentioned; the pages tax the voordeel directly (art. 5.1) (pga[ex25_4, taxpayer])
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_4])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_4])
+  reading: ul09_debt = down
+  reading: ul09_euro = half-up
+  reading: ul09_method = page
+  reading: ul09_share = half-up
+  law date 2026-10-18, cut 2026-10-18
+q19_tax3 (e = ex25_4, p = taxpayer) [ul09_debt = half-up, ul09_euro = down, ul09_method = page, ul09_share = half-up]: 1 849 EUR
+  assumed: no persoonsgebonden aftrek is mentioned; the pages tax the voordeel directly (art. 5.1) (pga[ex25_4, taxpayer])
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_4])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_4])
+  reading: ul09_debt = half-up
+  reading: ul09_euro = down
+  reading: ul09_method = page
+  reading: ul09_share = half-up
+  law date 2026-10-18, cut 2026-10-18
+q19_tax3 (e = ex25_4, p = taxpayer) [ul09_debt = half-up, ul09_euro = half-up, ul09_method = page, ul09_share = *]: 1 849 EUR
+  assumed: no persoonsgebonden aftrek is mentioned; the pages tax the voordeel directly (art. 5.1) (pga[ex25_4, taxpayer])
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_4])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_4])
+  reading: ul09_debt = half-up
+  reading: ul09_euro = half-up
+  reading: ul09_method = page
+  law date 2026-10-18, cut 2026-10-18
+q19_tax3 (e = ex25_4, p = fpartner) [ul09_debt = *, ul09_euro = *, ul09_method = statute, ul09_share = *]: 9610601643/5196875 (1 849.30398422129) EUR
+  assumed: no persoonsgebonden aftrek is mentioned; the pages tax the voordeel directly (art. 5.1) (pga[ex25_4, fpartner])
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_4])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_4])
+  reading: ul09_method = statute
+  law date 2026-10-18, cut 2026-10-18
+q19_tax3 (e = ex25_4, p = fpartner) [ul09_debt = *, ul09_euro = down, ul09_method = page, ul09_share = down]: 1 848 EUR
+  assumed: no persoonsgebonden aftrek is mentioned; the pages tax the voordeel directly (art. 5.1) (pga[ex25_4, fpartner])
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_4])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_4])
+  reading: ul09_euro = down
+  reading: ul09_method = page
+  reading: ul09_share = down
+  law date 2026-10-18, cut 2026-10-18
+q19_tax3 (e = ex25_4, p = fpartner) [ul09_debt = down, ul09_euro = down, ul09_method = page, ul09_share = half-up]: 1 849 EUR
+  assumed: no persoonsgebonden aftrek is mentioned; the pages tax the voordeel directly (art. 5.1) (pga[ex25_4, fpartner])
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_4])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_4])
+  reading: ul09_debt = down
+  reading: ul09_euro = down
+  reading: ul09_method = page
+  reading: ul09_share = half-up
+  law date 2026-10-18, cut 2026-10-18
+q19_tax3 (e = ex25_4, p = fpartner) [ul09_debt = down, ul09_euro = half-up, ul09_method = page, ul09_share = down]: 1 849 EUR
+  assumed: no persoonsgebonden aftrek is mentioned; the pages tax the voordeel directly (art. 5.1) (pga[ex25_4, fpartner])
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_4])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_4])
+  reading: ul09_debt = down
+  reading: ul09_euro = half-up
+  reading: ul09_method = page
+  reading: ul09_share = down
+  law date 2026-10-18, cut 2026-10-18
+q19_tax3 (e = ex25_4, p = fpartner) [ul09_debt = down, ul09_euro = half-up, ul09_method = page, ul09_share = half-up]: 1 850 EUR
+  assumed: no persoonsgebonden aftrek is mentioned; the pages tax the voordeel directly (art. 5.1) (pga[ex25_4, fpartner])
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_4])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_4])
+  reading: ul09_debt = down
+  reading: ul09_euro = half-up
+  reading: ul09_method = page
+  reading: ul09_share = half-up
+  law date 2026-10-18, cut 2026-10-18
+q19_tax3 (e = ex25_4, p = fpartner) [ul09_debt = half-up, ul09_euro = down, ul09_method = page, ul09_share = half-up]: 1 849 EUR
+  assumed: no persoonsgebonden aftrek is mentioned; the pages tax the voordeel directly (art. 5.1) (pga[ex25_4, fpartner])
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_4])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_4])
+  reading: ul09_debt = half-up
+  reading: ul09_euro = down
+  reading: ul09_method = page
+  reading: ul09_share = half-up
+  law date 2026-10-18, cut 2026-10-18
+q19_tax3 (e = ex25_4, p = fpartner) [ul09_debt = half-up, ul09_euro = half-up, ul09_method = page, ul09_share = *]: 1 849 EUR
+  assumed: no persoonsgebonden aftrek is mentioned; the pages tax the voordeel directly (art. 5.1) (pga[ex25_4, fpartner])
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_4])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_4])
+  reading: ul09_debt = half-up
+  reading: ul09_euro = half-up
+  reading: ul09_method = page
+  law date 2026-10-18, cut 2026-10-18
+q19_tax3 (e = ex25_5, p = taxpayer) [ul09_debt = *, ul09_euro = *, ul09_method = statute, ul09_share = *]: 3415283043237/688234375 (4 962.38369848498) EUR
+  assumed: no persoonsgebonden aftrek is mentioned; the pages tax the voordeel directly (art. 5.1) (pga[ex25_5, taxpayer])
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_5])
+  assumed: the page treats the green investments as qualifying under art. 5.14 without saying so (green_ok[ex25_5])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_5])
+  reading: ul09_method = statute
+  law date 2026-10-18, cut 2026-10-18
+q19_tax3 (e = ex25_5, p = taxpayer) [ul09_debt = *, ul09_euro = down, ul09_method = page, ul09_share = *]: 4 961 EUR
+  assumed: no persoonsgebonden aftrek is mentioned; the pages tax the voordeel directly (art. 5.1) (pga[ex25_5, taxpayer])
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_5])
+  assumed: the page treats the green investments as qualifying under art. 5.14 without saying so (green_ok[ex25_5])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_5])
+  reading: ul09_euro = down
+  reading: ul09_method = page
+  law date 2026-10-18, cut 2026-10-18
+q19_tax3 (e = ex25_5, p = taxpayer) [ul09_debt = *, ul09_euro = half-up, ul09_method = page, ul09_share = down]: 4 962 EUR
+  assumed: no persoonsgebonden aftrek is mentioned; the pages tax the voordeel directly (art. 5.1) (pga[ex25_5, taxpayer])
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_5])
+  assumed: the page treats the green investments as qualifying under art. 5.14 without saying so (green_ok[ex25_5])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_5])
+  reading: ul09_euro = half-up
+  reading: ul09_method = page
+  reading: ul09_share = down
+  law date 2026-10-18, cut 2026-10-18
+q19_tax3 (e = ex25_5, p = taxpayer) [ul09_debt = *, ul09_euro = half-up, ul09_method = page, ul09_share = half-up]: 4 963 EUR
+  assumed: no persoonsgebonden aftrek is mentioned; the pages tax the voordeel directly (art. 5.1) (pga[ex25_5, taxpayer])
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_5])
+  assumed: the page treats the green investments as qualifying under art. 5.14 without saying so (green_ok[ex25_5])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_5])
+  reading: ul09_euro = half-up
+  reading: ul09_method = page
+  reading: ul09_share = half-up
+  law date 2026-10-18, cut 2026-10-18
+q19_tax3 (e = ex25_5, p = fpartner) [ul09_debt = *, ul09_euro = *, ul09_method = *, ul09_share = *]: 0 EUR
+  assumed: no persoonsgebonden aftrek is mentioned; the pages tax the voordeel directly (art. 5.1) (pga[ex25_5, fpartner])
+  assumed: residence for the whole year is not stated; the pages apply no proration (resident_all_year[ex25_5])
+  assumed: the page treats the green investments as qualifying under art. 5.14 without saying so (green_ok[ex25_5])
+  assumed: the pages say only 'U hebt een fiscale partner'; the joint heffingvrij vermogen and drempel they apply need partners for the whole year (partner_all_year[ex25_5])
+  law date 2026-10-18, cut 2026-10-18

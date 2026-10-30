@@ -1,0 +1,24 @@
+# L §5.10 Value, §5.7 (round 10): `priced p` names "the price input p", valued as num CUR (a place's single position,
+# tally 1's asset) or num CUR/u (a price per unit, a holding); a text input prices nothing: LOAD-UNIT, "a value of the
+# wrong type" (L §8.3).
+=== pr.tally
+model pr
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "synthetic"
+unit PLN: currency minor 0.01
+input val: text
+place flat: assets PLN priced val lives 2026-01-01..
+
+ask q: value(flat, 2026-03-01) in PLN law 2026-06-30
+
+version v1
+  cite s
+  governs always
+  known 2026-01-01
+  val = "x" "own"
+=== expect
+refused: LOAD-UNIT ...

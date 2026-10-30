@@ -1,0 +1,27 @@
+# L §2.5 "A bare key used elsewhere (k == u5) takes the index ... of the other operand", §7.1 (a key literal in a
+# comparison with a key): 2026 compared with a key of cy is the key 2026 of cy, the year from 2026-02-01 (L §4.1
+# anchored periods).  2026-01 lies in cy's 2025, 2026-02 and 2026-03 in its 2026, so q2 keeps the last two months.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+index cy = year 2025..2026 from 02-01
+index mth = month 2026-01..2026-03
+def cy_of[m in mth]: key cy = first(c in cy where start_of(c) <= start_of(m) and start_of(m) < end_of(c)) at start_of(m)
+
+ask q1: cy_of[m] for m in mth
+ask q2: cy_of[m] for m in mth where cy_of[m] == 2026
+=== expect
+q1 (m = 2026-01): 2025
+  cut 2026-12-31
+q1 (m = 2026-02): 2026
+  cut 2026-12-31
+q1 (m = 2026-03): 2026
+  cut 2026-12-31
+q2 (m = 2026-02): 2026
+  cut 2026-12-31
+q2 (m = 2026-03): 2026
+  cut 2026-12-31

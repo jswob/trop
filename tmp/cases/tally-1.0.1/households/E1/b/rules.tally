@@ -1,0 +1,158 @@
+part b_house_rules
+  tally 1
+  note "Household B's own rules B-HR1 – B-HR6 (house-rules.md): their figures as rows of a source, their logic as defs and state pays (L §5.13)."
+
+input b_hr2_floor: money DUK question "What is B-HR2's reserve floor?"
+input hr2_contrib: money DUK question "What does B-HR2's reserve hold for contributions?"
+input hr2_cap: money DUK question "Up to how much goes to the mortgage as an overpayment on the 26th?"
+input hr2_keep: money DUK question "How much must Cis keep after the transfers?"
+input hr2_tax_share: num question "What share of the month's net does the reserve hold for tax?"
+input hr2_from: date question "From which day does B-HR2 run?"
+input hr2_floor_v2: money DUK question "What is v2's floor, as if since January (B-HR2 v2)?"
+input hr5_target: money DUK question "To what does B-HR5 bring Cis?"
+input hr6_tolerance: money DUK question "Within how much does a payment settle an invoice (B-HR6 .1)?"
+input hr6_missed_days: int question "After how many days past due with no word is a debt missed (B-HR6 .2)?"
+input promised_on[i in inv_duk]: date question "On which day has the debtor said they will pay this invoice?"
+input said_soon[i in inv_duk]: bool question "Has the debtor said they will probably pay this invoice, without a day?"
+input said_soon_flr[j in inv_flr]: bool question "Has Kessel said they will probably pay this invoice, without a day?"
+input bartek_paid[k in bartek_part]: (paid_day date, amt money DUK, promised_flag bool) question "What has Bartek paid back, or promised, and when (B-D24)?"
+
+version hr2_v1
+  cite b_house_rules
+  known 2025-01-26
+  b_hr2_floor = 5000.00 governs 2025-01-26..2025-04-13 "B-HR2 v1 .2"
+  hr2_contrib = 4000.00 "B-HR2 v1 .2"
+  hr2_cap = 3000.00 "B-HR2 v1 .3"
+  hr2_keep = 1000.00 "B-HR2 v1 .4"
+  hr2_tax_share = 0.12 "B-HR2 v1 .2"
+  hr2_from = 2025-01-26 "B-HR2 v1: from 2025-01-26"
+
+version hr2_v2
+  cite b_house_rules
+  known 2025-04-14
+  b_hr2_floor = 8000.00 governs 2025-04-14.. "B-HR2 v2: as v1, the floor 8 000.00; stated on 2025-04-14"
+  hr2_floor_v2 = 8000.00 "B-HR2 v2: as if since January"
+
+version hr5_hr6
+  cite b_house_rules
+  known 2025-01-01
+  hr5_target = 1000.00 "B-HR5"
+  hr6_tolerance = 1.00 "B-HR6 .1"
+  hr6_missed_days = 30 "B-HR6 .2"
+  promised_on[*] = - assumed "no debtor has given a day unless a letter says so" "B-HR6 .2"
+  said_soon[*] = false assumed "no word unless a letter says so" "B-HR6 .2"
+  said_soon_flr[*] = false assumed "no word unless a letter says so" "B-HR6 .2"
+
+version arnika_letter
+  cite b_d19
+  known 2025-11-14
+  promised_on[fv_023_2025] = 2026-01-08 "B-D19: we will pay it on 08.01.2026"
+
+version bez_letter
+  cite b_d20
+  known 2025-12-29
+  said_soon[fv_011_2025] = true "B-D20: we'll probably pay it next week"
+
+version kessel_letter
+  cite b_d22
+  known 2025-12-30
+  said_soon_flr[fv_026_2025] = true "B-D22: probably on the 5th"
+
+version bartek_note
+  cite b_d24
+  known 2025-07-01
+  bartek_paid[part1] = (2025-07-01, 3500.00, false) "B-D24: today I sent you 3 500.00 DUK"
+  bartek_paid[part2] = (2026-03-31, 2500.00, true) "B-D24: I will pay the rest on 31.03.2026"
+
+pay bartek_lend
+  from savings
+  to bartek
+  amount sum(k in bartek_part: bartek_paid[k].amt)
+  on add_days(start_of(2025-02), 9)
+
+pay bartek_back[k in bartek_part]
+  from bartek
+  to cis
+  amount bartek_paid[k].amt
+  on bartek_paid[k].paid_day
+  promised
+
+def hr2_day[m in b_month]: date at day_of(m, 26) = next_business(day_of(m, 26), holidays)
+
+def hr2_runs[d in b_day]: bool = d >= hr2_from and d = hr2_day[month_of(d)]
+
+def hr2_rate[d in b_day]: num DUK/FLR at d = lazur_buy
+
+def hr2_have[d in b_day]: money DUK = bal(cis) + round(bal(b_lazur) * hr2_rate[d], 0.01, down)
+
+def hr2_seen[d in b_day]: money DUK = bal(cis, d) + flows(hr2_overpay[d], d) + flows(hr2_save[d], d) + round(bal(b_lazur, d) * hr2_rate[d], 0.01, down)
+
+def hr2_month_vat[d in b_day]: money DUK = sum(i in inv_duk where month_of(b_sale[i].issued) = month_of(d) and b_sale[i].issued <= d: b_sale[i].vat) + sum(j in inv_flr where month_of(sale_flr[j].issued) = month_of(d) and sale_flr[j].issued <= d: vat_flr[j])
+
+def hr2_month_net[d in b_day]: money DUK = sum(i in inv_duk where month_of(b_sale[i].issued) = month_of(d) and b_sale[i].issued <= d: b_sale[i].net) + sum(j in inv_flr where month_of(sale_flr[j].issued) = month_of(d) and sale_flr[j].issued <= d: rev_flr[j])
+
+def hr2_reserve[d in b_day]: money DUK at d = b_hr2_floor + hr2_month_vat[d] + round(hr2_month_net[d] * hr2_tax_share, 0.01, half-up) + hr2_contrib
+
+def hr2_surplus[d in b_day]: money DUK = hr2_have[d] - hr2_reserve[d]
+
+def hr2_cis_now[d in b_day]: money DUK = bal(cis)
+
+def hr2_op[d in b_day]: money DUK = max(0, min(hr2_cap, hr2_surplus[d], hr2_cis_now[d] - hr2_keep))
+
+def hr2_sv[d in b_day]: money DUK = max(0, min(hr2_surplus[d] - hr2_op[d], hr2_cis_now[d] - hr2_keep - hr2_op[d]))
+
+pay hr2_overpay[d in b_day]
+  from cis
+  to mortgage_cash
+  amount hr2_op[d]
+  on d
+  when hr2_runs[d]
+  phase 2
+
+pay hr2_save[d in b_day]
+  from cis
+  to savings
+  amount hr2_sv[d]
+  on d
+  when hr2_runs[d]
+  phase 2
+
+def hr6_status[i in inv_duk, d in b_day]: key owed_status
+  rule missed_r = missed
+  rule due_r excepts missed_r when d < b_sale[i].due = not_yet_due
+  rule promised_r excepts missed_r when d >= b_sale[i].due and promised_on[i] != - = promised
+  rule expected_r excepts missed_r when d >= b_sale[i].due and promised_on[i] = - and said_soon[i] = expected
+  rule unknown_r excepts missed_r when d >= b_sale[i].due and promised_on[i] = - and not said_soon[i] and days(b_sale[i].due, d) <= hr6_missed_days = ? "What has the debtor said? Past due, 30 days not over, no word"
+
+def hr6_status_flr[j in inv_flr, d in b_day]: key owed_status
+  rule missed_r = missed
+  rule due_r excepts missed_r when d < sale_flr[j].due = not_yet_due
+  rule expected_r excepts missed_r when d >= sale_flr[j].due and said_soon_flr[j] = expected
+
+def hr4_counts[i in inv_duk, d in b_day]: money DUK = if hr6_status[i, d] = missed then 0 else bal(inv_owed[i], d)
+
+def hr4_counts_flr[j in inv_flr, d in b_day]: money DUK = if hr6_status_flr[j, d] = missed then 0 else round(bal(inv_owed_flr[j], d) * hr4_fx[d], 0.01, half-up)
+
+def owed_to_piotr[d in b_day]: money DUK = sum(i in inv_duk where b_sale[i].issued <= d: hr4_counts[i, d]) + sum(j in inv_flr where sale_flr[j].issued <= d: hr4_counts_flr[j, d]) + bal(bartek, d)
+
+def owed_known[d in b_day]: money DUK = sum(i in inv_duk where b_sale[i].issued <= d and b_sale[i].cl != kawiarnia_ziarno: hr4_counts[i, d]) + sum(j in inv_flr where sale_flr[j].issued <= d: hr4_counts_flr[j, d]) + bal(bartek, d)
+
+def taxes_owed[d in b_day]: money DUK = social[month_of(d)] + b_health[month_of(d)] + tax_flat[month_of(d)] + vat_payable[month_of(d)] + settle_owed[year_of(d)] - health_paid[year_of(d)]
+
+def mtg_share[p in person, d in b_day]: money DUK
+  rule ola_r when p = ola = round(mtg_bal[d] * own_share[ola], 0.01, half-up)
+  rule piotr_r excepts ola_r = mtg_bal[d] - mtg_share[ola, d]
+
+def flat_share[p in person]: money DUK
+  rule ola_r when p = ola = round(flat_value * own_share[ola], 0.01, half-up)
+  rule piotr_r excepts ola_r = flat_value - flat_share[ola]
+
+def worth_piotr[d in b_day]: money DUK = bal(cis, d) + bal(savings, d) + round(bal(b_lazur, d) * hr4_fx[d], 0.01, half-up) + flat_share[piotr] - mtg_share[piotr, d] + owed_to_piotr[d] + ola_owes_piotr[year_of(d)] - taxes_owed[d]
+
+def worth_ola[d in b_day]: money DUK = bal(wrzos, d) + flat_share[ola] - mtg_share[ola, d] - ola_owes_piotr[year_of(d)] + ola_result[year_of(d)]
+
+def hr2_v2_shift[d in b_day]: money DUK = sum(k in b_day where k < d and hr2_runs[k]: flows(hr2_overpay[k], k) + flows(hr2_save[k], k) - hr2_v2_op[k] - hr2_v2_sv[k])
+
+def hr2_v2_op[d in b_day]: money DUK = hr2_op[d] as if {b_hr2_floor = hr2_floor_v2, hr2_have[d] = hr2_seen[d] + hr2_v2_shift[d], hr2_cis_now[d] = bal(cis, d) + flows(hr2_overpay[d], d) + flows(hr2_save[d], d) + hr2_v2_shift[d]}
+
+def hr2_v2_sv[d in b_day]: money DUK = hr2_sv[d] as if {b_hr2_floor = hr2_floor_v2, hr2_have[d] = hr2_seen[d] + hr2_v2_shift[d], hr2_cis_now[d] = bal(cis, d) + flows(hr2_overpay[d], d) + flows(hr2_save[d], d) + hr2_v2_shift[d]}

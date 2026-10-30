@@ -1,0 +1,17 @@
+# L §2.5 Keys: a bare key compared with a key takes its index; 13 is no key of ages = int 1..12: LOAD-KEY.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+index ages = int 1..12
+
+def a[k in ages]: int at reader
+  rule base = 0
+  rule young beats base = 1 when k == 13
+
+ask q: a[10] law 2026-06-30
+=== expect
+refused: LOAD-KEY 13 is not a key of ages ...

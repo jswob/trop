@@ -1,0 +1,46 @@
+# L §6.4 (round 8): "A move the scenario declares books nothing before D: its instances dated earlier are left out
+# (LOAD-SCENARIO where load sees the day)". extra's day reads dom, so load doesn't see it: its 2026 instances are
+# left out (listed in the register, as instances outside [S, E] are, L §5.14.3), and the twelve of 2027 book
+# 10.00 PLN each: 100.00 - 120.00 = -20.00 PLN at the end of 2027. The base is unchanged: 100.00 PLN. (Was
+# REFCORE-UNSPECIFIED §6.4, a scenario move booking before from.)
+=== household.tally
+model household
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2027-12-31
+
+source plan "plan"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2019-05-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input dom: int
+
+version base
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  amt = 10.00 PLN "own"
+  dom = 5 "own"
+  opening[konto] = 100.00 PLN at 2026-01-01 start "wyciąg"
+
+ask b: bal(konto, 2027-12-31)
+=== early.tally
+scenario early over household
+  tally 2
+  from 2027-01-01
+
+move extra[m in months]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  leg cash from konto to world amount amt
+
+ask e: bal(konto, 2027-12-31) in early
+=== expect
+b: 100.00 PLN
+...
+e: -20.00 PLN
+  world: early
+  left out: extra, 12 instances, first 2026-01-05
+...

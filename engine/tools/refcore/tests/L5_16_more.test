@@ -1,0 +1,83 @@
+# L §5.16, uniforms by the stated SHA-256 rule (scratch/refcore-r2/gen/u_text.py): draw|1|1..4: 0.0025, 0.558, 0.921,
+# 0.228; emp|3|1, 2: 0.643, 0.391; g[ka]|1|2: 0.91063168066422544235532544887323780358201474882662296295166015625.
+# discrete(1, 3 over [ka, kb]) draws ka for u <= 1/4; empirical(0, 2) gives 0 for u <= 1/2, else 2.
+# a1: E §8 "the statistic is an ask term, written inline in the check: n/N for a share": 2 of 4 = 0.5 == lvl: ok.
+# a2: lifting (a def reading a random fact is random): y = 2 × emp = 4, 0: mean 2, s^2 = 8, standard error
+# sqrt(8/2) = 2.
+# a3, a4: "A hole parameter makes the distribution, and every sample of it, a hole naming it" (a stated hole row).
+# a5: discrete "pmf and cdf exact": cdf(draw, ka) = 1/4, pmf(draw, kb) = 3/4.
+# a6: "with growth[2030] = normal(…) to … is an ordinary pin: it replaces the distribution": mean of uniform(0, 2) = 1.
+# a7: with sample g[*] = 0.5 "fixes every address of the fact": plain 0.5 on the path.
+# a8: g[kb] pinned, g[ka] sampled: quantile(uniform(0, 1), u) = u, rounded to 0.01: 0.91, widened ± 0.005 (L §7.3,
+# "a sample is one").
+# (Writer 8: empirical is gone (L §2.3); emp is now discrete(eq[k] for k in ks), eq = 1 at both keys, and its
+# value is read as ev = vals[emp], the form L §5.16 gives for "one of n known values drawn with equal weight",
+# e[discrete(1 for k in IDX)]: the same uniforms, and the samples 0 and 2 as before, emp itself now ka or kb.)
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+index ks = [ka, kb]
+input w[k in ks]: num
+input vals[k in ks]: num
+input eq[k in ks]: num
+input lvl: num
+input hz: dist
+input g[k in ks]: dist
+input two: num
+def draw: dist = discrete(w[k] for k in ks) at reader
+def emp: dist = discrete(eq[k] for k in ks) at reader
+def ev: num = vals[emp] at reader
+def y: num = ev * two at reader
+def cd: num = cdf(draw, ka) at reader
+def pd: num = pmf(draw, kb) at reader
+
+version v
+  cite s
+  governs 2026..
+  known 2026-01-01
+  w[ka] = 1
+  w[kb] = 3
+  vals[ka] = 0
+  vals[kb] = 2
+  eq[*] = 1
+  lvl = 0.5
+  hz = ?"which distribution?"
+  g[*] = uniform(0, 1) to 0.01
+  two = 2
+
+ask a1: check share(draw == ka) == lvl law 2026-06-30 paths 4 seed 1
+ask a2: mean(y) law 2026-06-30 paths 2 seed 3
+ask a3: mean(hz) law 2026-06-30
+ask a4: hz law 2026-06-30 paths 2 seed 1 path 1
+ask a5: cd, pd law 2026-06-30
+ask a6: mean(g[ka]) with g[ka] = uniform(0, two) to 0.01 law 2026-06-30
+ask a7: g[ka], g[kb] with sample g[*] = lvl law 2026-06-30 paths 2 seed 1 path 2
+ask a8: g[ka] with sample g[kb] = lvl law 2026-06-30 paths 2 seed 1 path 2
+=== expect
+a1: ok
+  law date 2026-06-30, cut 2026-12-31
+a2: 2 (standard error 2; 2 paths; horizon 2026-06-30)
+  law date 2026-06-30, cut 2026-12-31
+a3: ?"which distribution?" (hz)
+  law date 2026-06-30, cut 2026-12-31
+a4: ?"which distribution?" (hz)
+  law date 2026-06-30, cut 2026-12-31
+a5: (0.25, 0.75)
+  law date 2026-06-30, cut 2026-12-31
+a6: 1 (horizon 2026-06-30)
+  pinned: g[ka] = uniform(0, 2) to 0.01
+  law date 2026-06-30, cut 2026-12-31
+a7: (0.5, 0.5)
+  pinned sample: g[*] = 0.5
+  law date 2026-06-30, cut 2026-12-31
+a8: ≈ 0.91 ± 0.005
+  pinned sample: g[kb] = 0.5
+  sample: g[ka] = 0.91 (u = 0.91063168066422544235532544887323780358201474882662296295166015625 (0.910631680664225))
+  law date 2026-06-30, cut 2026-12-31

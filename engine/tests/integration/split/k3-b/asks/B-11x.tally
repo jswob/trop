@@ -1,0 +1,7 @@
+part asks_b11x
+  tally 2
+  note "MC-B's probes (cut-down copy only): the Wrzos balance that worth_ola reads, and worth_ola's other terms, as the text writes them."
+
+ask b11x_wrzos: bal(wrzos, 2025-12-31) law 2025-12-31 as known 2026-01-07 partial
+
+ask b11x_ola_rest: flat_part[ola] - mtg_part[ola, 2025-12-31] - ola_owes_piotr[2025] + ola_result[2025] law 2025-12-31 as known 2026-01-07

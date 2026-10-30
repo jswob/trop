@@ -1,0 +1,27 @@
+# L §5.6: an index "may carry assumed STR ...; every figure keyed by it, and every result that reaches one, then
+# lists assumed: <index>: <reason> in its register (§8.2)."
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+index tys = year 2025..2026 from 04-06
+  assumed "no source gives the tax year's start"
+
+input n[t in tys]: int
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  n[*] = 1
+
+ask q1: n[2025] law 2026-01-01
+=== expect
+q1: 1
+  assumed: tys: no source gives the tax year's start
+  law date 2026-01-01, cut 2026-01-01

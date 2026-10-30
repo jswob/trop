@@ -1,0 +1,63 @@
+# L §2.3 `price = ref | "last" "(" ref ")"` after `priced` on the kind's place line
+# and the place section; L §5.10 Value: "A price that is a reading (a valuation) is named with its carry, `priced
+# last(val)` (§4.6), on the kind, the place or the entry, and `value` reads it so; a plain `priced
+# val` reads it as any reading is read, a hole on a day with no reading"; L §5.7: `priced p` "values a place whose
+# single position is valued by the price input p" (assets: "value = v at d, from valuation readings"). val has one
+# reading, 500 000.00 PLN at 2026-03-01. a1: flat (plain `priced val`) on the reading's day: 500 000 PLN. a2: the next
+# day, no reading: HOLE-NOREADING (L §4.6, §8.1 "<x>[k] has no reading at <instant>"). a3: flat2 `priced last(val)`
+# carries it: 500 000 PLN. a4: house, of the kind `homes ... priced last(val)`, carries the reading
+# of 2026-03-01 on 2026-03-02 (writer 8: `within` and HOLE-STALE are gone, L §2.3). a5: on 2026-03-01 it is 500 000 PLN.
+# value multiplies exactly and doesn't round (L §5.10), so it prints as a num PLN.
+=== pr.tally
+model pr
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "synthetic"
+unit PLN: currency minor 0.01
+unit etf "fund unit"
+
+kind homes: place PLN min 0 priced last(val)
+
+place flat: assets PLN priced val lives 2026-01-01..
+place flat2: assets PLN priced last(val) lives 2026-01-01..
+place house: homes lives 2026-01-01..
+place world: outside lives 2026-01-01..
+place konto: accounts PLN lives 2026-01-01..
+
+input val: money PLN reading
+input age: int
+input px: num PLN/etf reading
+input day: date
+
+move buy: transfers
+  on day
+  leg cash from world to konto amount 0 PLN
+
+ask a1: value(flat, 2026-03-01) in PLN law 2026-06-30
+ask a2: value(flat, 2026-03-02) in PLN law 2026-06-30
+ask a3: value(flat2, 2026-03-02) in PLN law 2026-06-30
+ask a4: value(house, 2026-03-02) in PLN law 2026-06-30
+ask a5: value(house, 2026-03-01) in PLN law 2026-06-30
+
+version v1
+  cite s
+  governs always
+  known 2026-01-01
+  val = 500 000.00 PLN at 2026-03-01 "wycena"
+  age = 0 "own"
+  day = 2026-02-01 "own"
+  opening[konto] = 0 PLN at 2026-01-01 start "own"
+=== expect
+a1: 500 000 PLN
+  law date 2026-06-30, cut 2026-06-30
+a2: ?"val has no reading at 2026-03-02" (val)
+  law date 2026-06-30, cut 2026-06-30
+a3: 500 000 PLN
+  law date 2026-06-30, cut 2026-06-30
+a4: 500 000 PLN
+  law date 2026-06-30, cut 2026-06-30
+a5: 500 000 PLN
+  law date 2026-06-30, cut 2026-06-30

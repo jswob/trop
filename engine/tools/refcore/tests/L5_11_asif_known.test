@@ -1,0 +1,30 @@
+# L §5.11 as if: "known D: the cut K inside."  The row of v2 is known 2026-06-01: inside as if {known 2026-03-01}
+# only v1's row is seen.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+input n: int
+
+version v1
+  cite s
+  governs always
+  known 2026-01-01
+  n = 1
+
+version v2
+  cite s
+  governs always
+  known 2026-06-01
+  replace n = 2
+
+ask q1: n, n as if {known 2026-03-01}
+=== expect
+q1: (2, 1)
+  pinned: known 2026-03-01
+  cut 2026-12-31

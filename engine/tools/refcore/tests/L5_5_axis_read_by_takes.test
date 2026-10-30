@@ -1,0 +1,77 @@
+# L §5.5: an ask's cone holds every axis its run reads; the walk reads a place's leaving rule (L §3.6, §5.14), so an
+# axis that only a takes clause's order reads, through rank's rules, forks every ask that reads the place (E §3.3).
+# The migrator's F-l (t13, ask qb), cut down: acc gets 200.00 DUK of ania's and 200.00 DUK of tomek's (gifts, by
+# donee), then w1 takes 200.00 DUK by rank[k.owner].  ania_first: ania's part goes (0.00, and tomek's 200.00 stays);
+# tomek_first: the other way; every figure is a gift's amount carried through, or 0.  Before: REFCORE-NOT-YET axis
+# rule_ax read outside the axes the ask reaches.
+=== m.tally
+model t13
+  tally 2
+  on 2026-01-15
+  start 2025-01-01
+  end 2026-12-31
+
+source src "test"
+
+unit DUK: currency minor 0.01
+
+kind couples: parties
+
+kind persons: parties
+
+kind gifts_in: transfers
+  attr donee: key persons
+
+kind cash_accounts: place one min 0
+  owned by arrive
+  step minor(DUK)
+  takes k for w order rank[k.owner]
+
+place acc: cash_accounts DUK lives 2025-01-01..
+
+place world: outside lives 2000-01-01..
+
+input jb: observed
+
+axis rule_ax
+  ania_first "assumed"
+  tomek_first "assumed"
+
+def rank[p in parties]: int at reader
+  rule af = (if p == ania then 0 else 1) when rule_ax == ania_first
+  rule tf = (if p == tomek then 0 else 1) when rule_ax == tomek_first
+
+def arrive[m in events, p in parties]: num at m.day
+  rule community = (if p == ania_tomek then 1 else 0)
+  rule gifted beats community = (if p == m.donee then 1 else 0) when m in gifts_in
+
+ask q: bal(acc, 2025-12-31) of ania, bal(acc, 2025-12-31) of tomek
+
+version cast
+  cite src
+  known 2021-01-01
+  persons + [ania] lives 1991-03-14..
+  persons + [tomek] lives 1989-07-02..
+  couples + [ania_tomek] lives 2016-09-10..
+
+version open
+  cite src
+  governs always
+  known 2021-01-01
+  opening[acc] = 0 at 2025-01-01 start
+
+version j
+  cite src
+  governs 2025-01..2025-12
+  known 2025-01-01
+  covers acc
+  jb[g1] = (on: 2025-02-01, kind: gifts_in, leg cash from world to acc amount 200.00 DUK, donee: ania) "g1"
+  jb[g2] = (on: 2025-02-01, kind: gifts_in, leg cash from world to acc amount 200.00 DUK, donee: tomek) "g2"
+  jb[w1] = (on: 2025-03-01, kind: transfers, leg cash from acc to world amount 200.00 DUK) "w1"
+=== expect
+q [rule_ax = ania_first]: (0.00 DUK, 200.00 DUK)
+  reading: rule_ax = ania_first
+  cut 2026-01-15
+q [rule_ax = tomek_first]: (200.00 DUK, 0.00 DUK)
+  reading: rule_ax = tomek_first
+  cut 2026-01-15

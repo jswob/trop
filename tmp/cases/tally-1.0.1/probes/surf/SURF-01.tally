@@ -1,0 +1,31 @@
+model surf01
+  tally 1
+  on 2025-01-01
+  start 2025-01-01
+  end 2025-12-31
+  note "SURF-01: house rule A-1 with every figure a named fact. The floor is a row of the house rules from A-1's start; the 15th stays bare as a day of the month. savings_goal is read by nothing, so the loader flags it (WARN-UNREAD)."
+
+source house_rules "The household's house rules: A-1, from 1 January 2025"
+
+index month = month 2025-01..2025-12
+
+place konto: account DUK
+
+place savings: account DUK
+
+input keep_floor: money DUK question "How much does A-1 keep in the current account?"
+
+input savings_goal: money DUK
+
+pay sweep_a1[m in month]
+  from konto
+  to savings
+  amount max(0, bal(konto) - keep_floor)
+  on day_of(m, 15)
+
+version a1_v1
+  cite house_rules
+  governs 2025-01-01..
+  known 2025-01-01
+  keep_floor = 1000.00 "A-1: keep 1 000.00 DUK in the current account"
+  savings_goal = 20000.00 assumed "illustration: a named figure that no rule reads" "not in A-1"

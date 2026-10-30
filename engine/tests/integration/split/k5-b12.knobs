@@ -1,0 +1,14 @@
+# K5 (knobs.md): B-12 with the run end 2028-12-31 -> 2027-01-31, from scratch/mc-b/b12_11 (session 4's copy, paths cut to 3)
+reality.tally	5	run end 2028-12-31 -> 2027-01-31 (K5)
+market.tally	53	the F8 row names days past the end: shortened to the run end
+ola.tally	122	ola_spend row past the end: shortened to 2027-01
+ola.tally	125	ola_spends row past the end: shortened to 2027-01
+scenarios/no_overpay.tally	13	b12_share: its date 2028-12-31 -> the run end (every B-12 figure is dated at the end or sums to it)
+scenarios/no_overpay.tally	15	b12_share_without: the same
+scenarios/no_overpay.tally	17	b12_shortfall: the same
+scenarios/no_overpay.tally	19	b12_shortfall_without: the same
+scenarios/no_overpay.tally	21	b12_mortgage: the same (mtg_bal at the end)
+scenarios/no_overpay.tally	23	b12_tax: the same
+scenarios/no_overpay.tally	25	b12_liquid: the same
+scenarios/no_overpay.tally	27	b12_zero_tax: the same
+scenarios/no_overpay.tally	29	b12_mortgage_q07: the same

@@ -1,0 +1,12 @@
+scenario kept over scen02
+  tally 2
+  from 2024-09-15
+  note "Had they kept the car: a branch from the sale's day."
+
+ask cash_diff: flows(konto, 2024-09-15..2024-12-31) as if {scenario kept} - flows(konto, 2024-09-15..2024-12-31) in scen02
+
+version kept_car
+  cite what_if
+  governs 2024-09-15..
+  known 2024-09-15
+  replace sold = false "the car is kept: no sale, and none of what needs the sale"

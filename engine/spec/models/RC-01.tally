@@ -1,6 +1,8 @@
 model rc01
-  tally 1
+  tally 2
   on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
   note "UK Universal Credit, self-employed earnings: losses carried forward (reg 57, 57A), the minimum income floor (reg 62) and surplus earnings (reg 54A), from the worked examples of ADM H4."
   note "Derek Ex.1, Derek Ex.2 and Rodney are keys of se; Tiana's three periods are keys of tap. No AP dates are given, so every def runs at the model's on date and the parameters the examples state are rows or axis options, not dated law."
   note "The law comes from the enacting instruments: S.I. 2013/376 as made; S.I. 2015/345 (regs 57(2) and 57A), postponed by S.I. 2016/215, 2017/197 and 2018/65; S.I. 2018/65 (reg 54A as it substituted it before commencement, the reg 57(2) Step 3 and reg 57A(1)(a) amendments, and the temporary de minimis period); the Secretary of State's determinations extending that period; and S.I. 2021/1283 (the 55% taper and the reg 54A(6) formula). The revised text on legislation.gov.uk is only their locator."
@@ -33,6 +35,8 @@ source si2018_65 "The Universal Credit (Miscellaneous Amendments, Saving and Tra
 
 source si2021_1283 "The Universal Credit (Work Allowance and Taper) (Amendment) Regulations 2021 (S.I. 2021/1283)" at "https://www.legislation.gov.uk/uksi/2021/1283/made"
 
+unit GBP: currency minor 0.01
+
 axis uc_de_minimis
   dm300 "£300: the figure the Tiana example uses, and reg 54A(6) outside the temporary period"
   dm2500 "£2,500: claims in the temporary de minimis period, which ADM H3310 says runs from 11.4.18 to 31.03.27"
@@ -41,7 +45,7 @@ axis uc_taper
   ex063 "0.63, the taper the Tiana example uses (and the nil UC threshold divides by 63)"
   reg22 "55%, the taper of reg 22(1)(b) since S.I. 2021/1283 (and ADM H3308 divides by 55)"
 
-index ap = 1..9
+index ap = int 1..9
 
 index biz = [b1, b2]
 
@@ -85,149 +89,149 @@ input taxni[c in se, b in biz, k in ap]: money GBP question "What income tax and
 
 input trades[c in se, b in biz]: bool
 
-def de_minimis: money GBP
+def de_minimis: money GBP at reader
   note "the amount added to the nil UC threshold to give the relevant threshold"
-  rule std v ucr_2018_65 when uc_de_minimis = dm300 = dm_standard
-  rule temp v ucr_2018_65 when uc_de_minimis = dm2500 = dm_temporary
+  rule std v ucr_2018_65 = dm_standard when uc_de_minimis == dm300
+  rule temp v ucr_2018_65 = dm_temporary when uc_de_minimis == dm2500
 
-def earned_used[c in se, k in ap]: money GBP
+def earned_used[c in se, k in ap]: money GBP at reader
   note "earned income after the minimum income floor, reg 62(2)"
   rule base v ucr_2013 = max(earnings[c, k], mif[c])
 
-def earnings[c in se, k in ap]: money GBP
+def earnings[c in se, k in ap]: money GBP at reader
   note "self-employed earnings for the AP: the result if above nil, else nil, reg 57(2) Steps 3 and 5"
   rule base v ucr_2015_345 = max(0, result[c, k])
 
-def max_uc: money GBP
+def max_uc: money GBP at reader
   note "maximum UC amount: standard allowance plus housing element"
   rule base v h4_2026 = t_std_allowance + t_housing
 
-def mif_applies[c in se, k in ap]: bool
+def mif_applies[c in se, k in ap]: bool at reader
   note "reg 62(2): earned income less than the individual threshold"
   rule base v ucr_2013 = earnings[c, k] < mif[c]
 
-def nil_threshold: money GBP
+def nil_threshold: money GBP at reader
   note "(M - U) / taper x 100 + WA, reg 54A(6) as substituted by S.I. 2021/1283 reg 2(2); its formula is an image on legislation.gov.uk and is read from ADM H3308. The example divides by 63 and H3308 by 55, so the divisor is the taper of the reading; a fraction of a penny rounds by reg 6(1)"
-  rule base v ucr_2021_1283 = round((max_uc - t_unearned) / taper_rate + t_work_allowance, 0.01, half-up)
+  rule base v ucr_2021_1283 = round((max_uc - t_unearned) / taper_rate + t_work_allowance, minor(GBP), half-up)
 
-def original_surplus: money GBP
+def original_surplus: money GBP at reader
   note "reg 54A: total earned income in the final AP of the old award (Tiana's AP1) less the relevant threshold, when it exceeds it"
   rule base v ucr_2018_65 = t_actual[t_ap1] - relevant_threshold
-  rule nil excepts base v ucr_2018_65 when t_actual[t_ap1] <= relevant_threshold = 0
+  rule nil beats base v ucr_2018_65 = 0 when t_actual[t_ap1] <= relevant_threshold
 
-def pool[c in se, k in ap]: money GBP
+def pool[c in se, k in ap]: money GBP at reader
   note "unused losses carried out of AP k, reg 57A(1)-(2); one total, since oldest-first order changes which loss is extinguished but not the amount"
-  rule ap1 when k = 1 = max(0, opening_loss[c] + pool_change[c, k])
-  rule later when k > 1 = max(0, pool[c, k - 1] + pool_change[c, k])
+  rule ap1 = max(0, opening_loss[c] + pool_change[c, k]) when k == 1
+  rule later = max(0, pool[c, k - 1] + pool_change[c, k]) when k > 1
 
-def pool_change[c in se, k in ap]: money GBP
+def pool_change[c in se, k in ap]: money GBP at reader
   note "a negative steps 1-3 result is a loss added to the pool, reg 57A(1)(a) as amended by S.I. 2018/65 reg 7(4)(b)(i) (no 11-AP limit); otherwise Step 5 deducts the Step 4 result from the pool"
   rule base v ucr_2015_345 = -max(0, s4[c, k])
-  rule loss excepts base v ucr_2018_65 when s13[c, k] < 0 = -s13[c, k]
+  rule loss beats base v ucr_2018_65 = -s13[c, k] when s13[c, k] < 0
 
-def relevant_threshold: money GBP
+def relevant_threshold: money GBP at reader
   note "the nil UC threshold plus the de minimis, reg 54A(6) and ADM H3309"
   rule base v ucr_2018_65 = nil_threshold + de_minimis
 
-def result[c in se, k in ap]: money GBP
+def result[c in se, k in ap]: money GBP at reader
   note "the amount the guide prints for the AP: steps 1-3 when nil or less, otherwise steps 1-4 less the unused losses brought in"
-  rule ap1 when k = 1 = s4[c, k] - opening_loss[c]
-  rule later when k > 1 = s4[c, k] - pool[c, k - 1]
-  rule nil13 excepts ap1, later v ucr_2015_345 when s13[c, k] <= 0 = s13[c, k]
+  rule ap1 = s4[c, k] - opening_loss[c] when k == 1
+  rule later = s4[c, k] - pool[c, k - 1] when k > 1
+  rule nil13 beats ap1, later v ucr_2015_345 = s13[c, k] when s13[c, k] <= 0
 
-def s13[c in se, k in ap]: money GBP
+def s13[c in se, k in ap]: money GBP at reader
   note "reg 57(2) Steps 1-3, as substituted by S.I. 2015/345 reg 3(2), with Step 3's tax and NI words as amended by S.I. 2018/65 reg 7(4)(a): receipts less expenses for each trade, added together, less tax and NI paid"
-  rule base v ucr_2018_65 = sum(b in biz where trades[c, b]: receipts[c, b, k] - expenses[c, b, k] - taxni[c, b, k])
+  rule base v ucr_2018_65 = sum(receipts[c, b, k] - expenses[c, b, k] - taxni[c, b, k] for b in biz where trades[c, b])
 
-def s4[c in se, k in ap]: money GBP
+def s4[c in se, k in ap]: money GBP at reader
   note "reg 57(2) Step 4: less relievable pension contributions"
   rule base v ucr_2015_345 = s13[c, k] - pension[c, k]
 
-def t_actual[t in tap]: money GBP
+def t_actual[t in tap]: money GBP at reader
   note "Tiana's self-employed earnings: nil when steps 1-3 give a loss; no unused losses are mentioned before these periods"
   rule base v ucr_2015_345 = max(0, t_s13[t])
 
-def t_earned_total[t in tap]: money GBP
+def t_earned_total[t in tap]: money GBP at reader
   note "earned income before the minimum income floor: actual earnings plus surplus earnings treated as earned income, reg 54A(2)"
   rule base v ucr_2018_65 = t_actual[t] + t_surplus_in[t]
 
-def t_earned_used[t in tap]: money GBP
+def t_earned_used[t in tap]: money GBP at reader
   note "reg 62(2): the minimum income floor when earned income is below it"
   rule base v ucr_2013 = max(t_earned_total[t], t_mif)
 
-def t_exceeds[t in tap]: bool
+def t_exceeds[t in tap]: bool at reader
   note "whether the period's total earned income exceeds the relevant threshold"
   rule base v ucr_2018_65 = t_earned_total[t] > relevant_threshold
 
-def t_loss_cf[t in tap]: money GBP
+def t_loss_cf[t in tap]: money GBP at reader
   note "a loss of the period carried forward, reg 57A(1)(a) as amended by S.I. 2018/65 reg 7(4)(b)(i)"
   rule base v ucr_2018_65 = max(0, -t_s13[t])
 
-def t_max_less_taper[t in tap]: money GBP
+def t_max_less_taper[t in tap]: money GBP at reader
   note "maximum UC amount less the taper deduction; the example calls a negative result excess income"
   rule base v h4_2026 = max_uc - t_taper_ded[t]
 
-def t_mif_applies[t in tap]: bool
+def t_mif_applies[t in tap]: bool at reader
   rule base v ucr_2013 = t_earned_total[t] < t_mif
 
-def t_surplus_in[t in tap]: money GBP
+def t_surplus_in[t in tap]: money GBP at reader
   note "surplus earnings treated as earned income in the first AP of a new claim, reg 54A(2), (3)(a)"
   rule base = 0
-  rule reclaim excepts base v ucr_2018_65 when t_first_reclaim[t] = original_surplus
+  rule reclaim beats base v ucr_2018_65 = original_surplus when t_first_reclaim[t]
 
-def t_taper_ded[t in tap]: money GBP
+def t_taper_ded[t in tap]: money GBP at reader
   note "earned income times the taper, reg 22(1)(b), a fraction of a penny rounded by reg 6(1)"
-  rule base v ucr_2013 = round(t_earned_used[t] * taper_rate, 0.01, half-up)
+  rule base v ucr_2013 = round(t_earned_used[t] * taper_rate, minor(GBP), half-up)
 
-def taper_rate: num
-  rule ex063 when uc_taper = ex063 = taper_example
-  rule reg22 when uc_taper = reg22 = taper_reg22
+def taper_rate: num at reader
+  rule ex063 = taper_example when uc_taper == ex063
+  rule reg22 = taper_reg22 when uc_taper == reg22
 
-ask a1_derek1_ap1_result: result[derek1, 1]
+ask a1_derek1_ap1_result: result[derek1, 1] law 2026-10-18
 
-ask a2_derek1_ap1_earnings: earnings[derek1, 1], mif_applies[derek1, 1], pool[derek1, 1]
+ask a2_derek1_ap1_earnings: earnings[derek1, 1], mif_applies[derek1, 1], pool[derek1, 1] law 2026-10-18
 
-ask a3_derek1_ap2_result: result[derek1, 2]
+ask a3_derek1_ap2_result: result[derek1, 2] law 2026-10-18
 
-ask a4_derek1_ap2_earnings: earnings[derek1, 2], mif_applies[derek1, 2], pool[derek1, 2]
+ask a4_derek1_ap2_earnings: earnings[derek1, 2], mif_applies[derek1, 2], pool[derek1, 2] law 2026-10-18
 
-ask a5_derek1_ap8_losses: pool[derek1, 8]
+ask a5_derek1_ap8_losses: pool[derek1, 8] law 2026-10-18
 
-ask a5_derek1_steady_nil: earnings[derek1, k], mif_applies[derek1, k] for k in [3, 4, 5, 6, 7, 8]
+ask a5_derek1_steady_nil: earnings[derek1, k], mif_applies[derek1, k] for k in [3, 4, 5, 6, 7, 8] law 2026-10-18
 
-ask a6_derek1_ap9_result: result[derek1, 9]
+ask a6_derek1_ap9_result: result[derek1, 9] law 2026-10-18
 
-ask a7_derek1_ap9_mif: earnings[derek1, 9], mif_applies[derek1, 9]
+ask a7_derek1_ap9_mif: earnings[derek1, 9], mif_applies[derek1, 9] law 2026-10-18
 
-ask b1_derek2_ap1_result: result[derek2, 1]
+ask b1_derek2_ap1_result: result[derek2, 1] law 2026-10-18
 
-ask b2_derek2_ap1_earnings: earnings[derek2, 1], mif_applies[derek2, 1], pool[derek2, 1]
+ask b2_derek2_ap1_earnings: earnings[derek2, 1], mif_applies[derek2, 1], pool[derek2, 1] law 2026-10-18
 
-ask b3_derek2_ap2_earnings: result[derek2, 2], earnings[derek2, 2]
+ask b3_derek2_ap2_earnings: result[derek2, 2], earnings[derek2, 2] law 2026-10-18
 
-ask b4_derek2_ap2_mif: mif_applies[derek2, 2], earned_used[derek2, 2]
+ask b4_derek2_ap2_mif: mif_applies[derek2, 2], earned_used[derek2, 2] law 2026-10-18
 
-ask c1_rodney_results: result[rodney, k], earnings[rodney, k], mif_applies[rodney, k] for k in [1, 2, 3, 4]
+ask c1_rodney_results: result[rodney, k], earnings[rodney, k], mif_applies[rodney, k] for k in [1, 2, 3, 4] law 2026-10-18
 
-ask c2_rodney_carried: pool[rodney, k] for k in [1, 2, 3]
+ask c2_rodney_carried: pool[rodney, k] for k in [1, 2, 3] law 2026-10-18
 
-ask d1_tiana_max_uc: max_uc
+ask d1_tiana_max_uc: max_uc law 2026-10-18
 
-ask d2_tiana_earned_used: t_earned_used[t], t_mif_applies[t] for t in [t_typical, t_ap2]
+ask d2_tiana_earned_used: t_earned_used[t], t_mif_applies[t] for t in [t_typical, t_ap2] law 2026-10-18
 
-ask d3_tiana_taper: t_taper_ded[t] for t in tap
+ask d3_tiana_taper: t_taper_ded[t] for t in tap law 2026-10-18
 
-ask d4_tiana_award: t_max_less_taper[t] for t in tap
+ask d4_tiana_award: t_max_less_taper[t] for t in tap law 2026-10-18
 
-ask d5_tiana_nil_threshold: nil_threshold
+ask d5_tiana_nil_threshold: nil_threshold law 2026-10-18
 
-ask d6_tiana_relevant_threshold: relevant_threshold
+ask d6_tiana_relevant_threshold: relevant_threshold law 2026-10-18
 
-ask d7_tiana_original_surplus: original_surplus
+ask d7_tiana_original_surplus: original_surplus law 2026-10-18
 
-ask d8_tiana_ap2_exceeds: t_exceeds[t_ap2]
+ask d8_tiana_ap2_exceeds: t_exceeds[t_ap2] law 2026-10-18
 
-ask d9_tiana_ap2_loss_carried: t_loss_cf[t_ap2]
+ask d9_tiana_ap2_loss_carried: t_loss_cf[t_ap2] law 2026-10-18
 
 version ucr_2013
   cite si2013_376
@@ -244,12 +248,14 @@ version ucr_2015_345
 
 version ucr_2016_215
   cite si2016_215
+  governs always
   known 2016-02-23
   moves ucr_2015_345 to 2017-04-03..
   note "made 23 February 2016, laid 1 March 2016, in force 23 March 2016; reg 2: in reg 1 of S.I. 2015/345, for '6th April 2016' substitute '3rd April 2017'"
 
 version ucr_2017_197
   cite si2017_197
+  governs always
   known 2017-02-22
   moves ucr_2015_345 to 2018-04-02..
   note "made 22 February 2017, laid 27 February 2017, in force 21 days after laying; reg 2: in reg 1 of S.I. 2015/345, for '3rd April 2017' substitute '2nd April 2018'"
@@ -272,18 +278,21 @@ version ucr_2018_65_dm
 
 version det_2019
   cite det2019
+  governs always
   known 2019-03-31
   moves ucr_2018_65_dm to 2018-04-11..2020-03-31
   note "the determination's text and date were not found. Budget 2018 (29 October 2018) announced the extension to April 2020 (revenuebenefits.org.uk, 29 March 2021, Wayback capture 2021-04-17), and HCWS147 (5 March 2020) calls £2,500 the current level. Known on the latest day it can be (§4.5): 31 March 2019, the last day of the period it extends"
 
 version det_2020
   cite det2020
+  governs always
   known 2020-03-31
   moves ucr_2018_65_dm to 2018-04-11..2021-03-31
   note "HCWS147 of 5 March 2020: 'I will sign a Determination to extend the current £2,500 Universal Credit surplus earnings de minimis level from 1 April 2020 to 31 March 2021 and will place a copy in the library'. The determination's text and signature date were not found, so it is known on the latest day it can be (§4.5): 31 March 2020, the last day of the period it extends"
 
 version det_2021
   cite det2021_24
+  governs always
   known 2021-03-23
   moves ucr_2018_65_dm to 2018-04-11..2022-03-31
   note "[2021 Determination], Will Quince MP, Minister for Welfare Delivery, 23 March 2021: the temporary de minimis period 'will end on 31 March 2022'. Known from its making, the date it is signed (§4.5): the power of reg 5(2) needs no publication"
@@ -297,47 +306,55 @@ version ucr_2021_1283
 
 version det_2022
   cite det2021_24
+  governs always
   known 2022-03-03
   moves ucr_2018_65_dm to 2018-04-11..2023-03-31
   note "[2022 Determination], David Rutley MP, Minister for Welfare Delivery, 3 March 2022: 'will end on 31 March 2023'. Known from its making (§4.5)"
 
 version det_2023
   cite det2021_24
+  governs always
   known 2023-03-20
   moves ucr_2018_65_dm to 2018-04-11..2024-03-31
   note "[2023 Determination], Guy Opperman MP, Minister for Employment, 20 March 2023: 'will end on 31 March 2024'. Known from its making (§4.5)"
 
 version det_2024
   cite det2021_24
+  governs always
   known 2024-02-22
   moves ucr_2018_65_dm to 2018-04-11..2025-03-31
   note "[2024 Determination], Jo Churchill MP, Minister for Employment, 22 February 2024: 'will end on 31 March 2025'. Known from its making (§4.5)"
 
 version det_2025
   cite det2025
+  governs always
   known 2025-02-26
   moves ucr_2018_65_dm to 2018-04-11..2026-03-31
   note "Sir Stephen Timms, Minister for Social Security and Disability, 26 February 2025: 'will end on 31 March 2026'. Known from its making (§4.5); GOV.UK published it on 13 March 2025"
 
 version det_2026
   cite det2026
+  governs always
   known 2026-01-20
   moves ucr_2018_65_dm to 2018-04-11..2027-03-31
   note "Sir Stephen Timms, Minister for Social Security and Disability, 20 January 2026: 'will end on 31st March 2027'. Known from its making (§4.5); deposited in the Commons Library (DEP2026-0009, letter of 20 January 2026) and published on GOV.UK on 31 March 2026"
 
 version adm_h3_2026
   cite adm_h3
+  governs always
   known 2026-04-08
   note "guidance, known from its first public release (§4.5): the GOV.UK ADM page's change note of 8 April 2026 'Updated ... Chapter H3: Earned income, employed earnings', the edition read (asset 69d52884, uploaded 7 April 2026). Round 2 took the PDF's modify date, 30 March 2026"
   note "no items: the locator of the reg 54A(6) formula (H3308), which legislation.gov.uk prints as an image, and of the de minimis period as extended to 31.03.27 (H3310). The period's rows are now the determinations' moves"
 
 version h4_2026
   cite adm_h4
+  governs always
   known 2026-04-21
   note "no items: the version the example's award lines cite (max_uc, t_max_less_taper). Guidance, known from its first public release (§4.5): the GOV.UK ADM page's change note of 21 April 2026 updated Chapter H4 with ADM Memo 05/26; the edition read is asset 69dfa3a8, uploaded 15 April 2026"
 
 version h4_examples
   cite adm_h4
+  governs always
   known 2026-10-18
   note "the worked examples' stipulations (H4503 Ex.1 and Ex.2, H4504, Appendix 3 Ex.4), known from the model's on date since it has no start (§4.5); the example amounts are illustrative and older than the chapter"
   expenses[derek1, b1, 1] = 2300 "H4503 Ex.1, p. 66: AP 1 permitted expenses"
@@ -360,7 +377,7 @@ version h4_examples
   receipts[derek2, b2, 1] = 1500 "H4503 Ex.2, p. 66: business 2 AP1"
   receipts[derek2, b2, 2] = 2000 "H4503 Ex.2, p. 67: business 2 AP 2"
   receipts[rodney, b1, 1..4] = 1250 "H4504 Ex., p. 68: £1,250 (receipts) each AP"
-  s13[derek1, 3..8] = 100 "H4503 Ex.1, p. 66: income and expenditure remain steady throughout the following 6 APs, reducing his unused losses by £100 in each AP"
+  given s13[derek1, 3..8] = 100 "H4503 Ex.1, p. 66: income and expenditure remain steady throughout the following 6 APs, reducing his unused losses by £100 in each AP"
   t_first_reclaim[t_typical] = false "App. 3 Ex.4, p. 77: typical award"
   t_first_reclaim[t_ap1] = false "App. 3 Ex.4, p. 77: AP1 ends UC entitlement"
   t_first_reclaim[t_ap2] = true "App. 3 Ex.4, p. 78: Tiana reclaims UC (first reclaim)"
@@ -390,6 +407,7 @@ version h4_examples
 
 version model_assumptions
   cite modeller
+  governs always
   known 2026-10-18
   note "assumptions that stand for the examples' own facts, known from the model's on date (§4.5)"
   opening_loss[derek1] = 0 assumed "no unused loss before AP 1 is mentioned; the guide carries forward exactly AP 1's loss"

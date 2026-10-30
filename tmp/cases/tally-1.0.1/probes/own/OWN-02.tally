@@ -1,0 +1,63 @@
+model own02
+  tally 1
+  on 2026-10-25
+  start 2025-05-15
+  end 2025-06-30
+  note "OWN-02: a loan to a friend, partly repaid, the rest promised; net worth counts the claim, the look-ahead doesn't count the promise."
+  note "plan_low is the spec's look-ahead, but it may be read only in a state pay and the defs it reaches (LANGUAGE 5.13.1, LOAD-STATE). The ask rebuilds it: the balance on each day less the promised pay's movements so far."
+
+source card "Probe card OWN-02 (made up): story and rules"
+
+index day = day 2025-05-15..2025-06-30
+
+place friend_loan: claim DUK
+
+place konto: account DUK
+
+place landlord: outside DUK
+
+input promise_amount: money DUK
+
+input promise_day: date
+
+input rent_amount: money DUK
+
+input rent_day: date
+
+input window_start: date
+
+def ahead[d in day]: money DUK
+  note "rule 2: planned items only; the promise is taken back out"
+  rule base v card_rules = bal(konto, d) - flows(repay_rest, window_start..d)
+
+pay rent
+  from konto
+  to landlord
+  amount rent_amount
+  on rent_day
+
+pay repay_rest
+  from friend_loan
+  to konto
+  amount promise_amount
+  on promise_day
+  promised
+
+ask q_lowest_ahead: min(d in day: ahead[d]), argmin(d in day: ahead[d])
+
+ask q_net_worth: sum(x in place where kind(x) = account or kind(x) = claim: bal(x, 2025-05-15))
+
+version card_facts
+  cite card
+  known 2025-05-15
+  opening[friend_loan] = 800.00 "story: 2 000.00 lent, 1 200.00 came back"
+  opening[konto] = 5000.00 "story: holds 5 000.00 on 15 May 2025"
+  promise_amount = 800.00 "story: the other 800.00 promised"
+  promise_day = 2025-06-30 "story: by the end of June"
+  rent_amount = 3000.00 "story: rent 3 000.00"
+  rent_day = 2025-06-01 "story: planned for 1 June"
+  window_start = 2025-05-15 "question: ahead from 15 May"
+
+version card_rules
+  cite card
+  known 2025-05-15

@@ -1,0 +1,17 @@
+# L §5.3: "LOAD-NAME: an item names an unknown id" (here the cited source).
+=== m.tally
+model t
+  tally 2
+  on 2016-03-01
+  start 2015-11-01
+  end 2016-10-31
+
+input n: int
+
+version v
+  cite nowhere
+  governs always
+  known 2016-01-01
+  n = 1
+=== expect
+refused: LOAD-NAME ...

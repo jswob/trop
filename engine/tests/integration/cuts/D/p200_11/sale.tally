@@ -1,0 +1,82 @@
+part sale
+  tally 2
+  note "D-09: the offer of 15 September 2026 for Halina's 13/16 of Ogrodowa (D-D30), PIT-12 on each part of it, and the rent she keeps if she doesn't sell. D-08: the flat's value as D-HR4 counts it."
+
+input agent_rate: num question "What share of the price is the agent's fee (D-D30)?"
+
+input inh_acquired: date question "On what day does Halina's inherited share count as acquired (PIT-12 .2)?"
+
+input notary_flat: money DUK question "What part of the division's notary fee was for the flat's transfer (D-D07 .6)?"
+
+input offer_price: money DUK question "What does the buyer offer for the 13/16 (D-D30)?"
+
+input sale_day: date question "On what day would the sale be made (D-D30)?"
+
+input sale_spent: money DUK question "How much of the price will Halina spend on her own housing within 3 years after the end of the sale's year (PIT-12 .4)?"
+
+input valuation: money DUK reading question "What did an agent or a bank value the whole flat at (D-HR4 .2)?"
+
+def advice: key choice = ?"Sell or keep: a choice the dossier leaves to Halina; no house rule or law decides it, and both sides are shown"
+
+def bought_cost: money DUK at reader
+  note "PIT-12 .1: the price paid for the shares bought in the division, with the notary's fee for their transfer; no transfer tax (D-D07 .6)"
+  rule base = sum(buyout_flat_part[h] for h in heir where h != halina and flat_keeper[h] == false) + notary_flat
+
+def bought_part: num = flat_after[halina] - share[halina] at reader
+
+def bought_taxed: bool = year_of(sale_day) <= year_of(div_day) + pit12_taxed_years at sale_day
+
+def inherited_taxed: bool = year_of(sale_day) <= year_of(inh_acquired) + pit12_taxed_years at sale_day
+
+def keep_value[d in day]: money DUK at d
+  note "D-HR4 .2: the flat at its latest valuation by an agent or a bank, for her share"
+  rule base = round(last(valuation, d) * flat_after[halina], minor(DUK), hh_round)
+
+def net_rent_year[m in month]: money DUK at start_of(m)
+  note "D-09: a year of today's rent less today's fee, her 13/16, less PIT-13 on her share of the rent"
+  rule base = round(flat_after[halina] * (rent_amt[m] - fee_amt[year_of(m)]) * (1 year / 1 month), minor(DUK), hh_round) - round(marginal(pit13_rate, rent_amt[m] * (1 year / 1 month) * flat_after[halina]), 1, half-up)
+
+def sale_base: money DUK at sale_day
+  note "PIT-12 .3, .4: the income less the exempt part, rounded"
+  rule base = round(sale_income - sale_income * sale_spent / offer_price, 1, half-up)
+
+def sale_fee: money DUK = round(offer_price * agent_rate, minor(DUK), hh_round) at reader
+
+def sale_income: num DUK at sale_day
+  note "PIT-12 .2: each part taxed only when sold before the end of the 5th year after its acquisition's year"
+  rule base = (if inherited_taxed then sale_income_inh else 0) + (if bought_taxed then sale_income_bought else 0)
+
+def sale_income_bought: num DUK = (offer_price - sale_fee) * bought_part / flat_after[halina] - bought_cost at reader
+
+def sale_income_inh: num DUK at reader
+  note "PIT-12 .1: for a share acquired by inheritance, the acquisition cost is the inheritance tax paid on it"
+  rule base = (offer_price - sale_fee) * share[halina] / flat_after[halina] - igt_tax[halina]
+
+def sale_net: money DUK = offer_price - sale_fee - sale_tax at reader
+
+def sale_tax: money DUK = round(sale_base * pit12_rate, 1, half-up) at sale_day
+
+version land_register_chain
+  cite d_d06
+  governs always
+  known 2024-07-02
+  inh_acquired = window(1976-01-01, 1976-12-31) "D-D06: Zbigniew's mother owned it since 1976; he inherited it from her, Halina from him, so by PIT-12 .2 applied to each inheritance it counts as acquired when the mother acquired it"
+
+version division_fee
+  cite d_d07
+  governs always
+  known 2025-06-12
+  notary_flat = 1230.00 "D-D07 .6: of the notary's fee 1 845.00, 1 230.00 for the transfer of the shares in the flat"
+
+version valuation_2025
+  cite d_d29
+  known 2025-10-08
+  valuation = 240000.00 at 2025-10-06 "D-D29: the flat, let, 240 000.00 DUK as of 6 October 2025"
+
+version offer
+  cite d_d30
+  governs always
+  known 2026-09-15
+  agent_rate = 0.02 "D-D30: our fee is 2 % of the price"
+  offer_price = 201500.00 "D-D30"
+  sale_day = 2026-11-30 "D-D30: the deed on 30 November 2026"

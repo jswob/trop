@@ -1,0 +1,56 @@
+q_fund_03_31 (p = tomek_estate): 45 fz_units
+  unfulfilled: death_fund
+  cut 2026-10-30
+q_fund_03_31 (p = ania): 10 fz_units
+  unfulfilled: death_fund
+  cut 2026-10-30
+q_fund_03_31 (p = kuba): 0 fz_units
+  unfulfilled: death_fund
+  cut 2026-10-30
+q_fund_03_31 (p = tomek): 0 fz_units
+  unfulfilled: death_fund
+  cut 2026-10-30
+q_fund_06_30 (p = tomek_estate): 0 fz_units
+  unfulfilled: death_fund
+  unfulfilled: divide_fund
+  cut 2026-10-30
+q_fund_06_30 (p = ania): 10 fz_units
+  unfulfilled: death_fund
+  unfulfilled: divide_fund
+  cut 2026-10-30
+q_fund_06_30 (p = kuba): 45 fz_units
+  unfulfilled: death_fund
+  unfulfilled: divide_fund
+  cut 2026-10-30
+q_fund_06_30 (p = tomek): 0 fz_units
+  unfulfilled: death_fund
+  unfulfilled: divide_fund
+  cut 2026-10-30
+q_sav_03_31 (p = tomek_estate): 7 000.00 DUK
+  unfulfilled: death_sav
+  cut 2026-10-30
+q_sav_03_31 (p = ania): 1 500.00 DUK
+  unfulfilled: death_sav
+  cut 2026-10-30
+q_sav_03_31 (p = kuba): 0.00 DUK
+  unfulfilled: death_sav
+  cut 2026-10-30
+q_sav_03_31 (p = tomek): 0.00 DUK
+  unfulfilled: death_sav
+  cut 2026-10-30
+q_sav_06_30 (p = tomek_estate): 0.00 DUK
+  unfulfilled: death_sav
+  unfulfilled: divide_sav
+  cut 2026-10-30
+q_sav_06_30 (p = ania): 3 833.33 DUK
+  unfulfilled: death_sav
+  unfulfilled: divide_sav
+  cut 2026-10-30
+q_sav_06_30 (p = kuba): 4 666.67 DUK
+  unfulfilled: death_sav
+  unfulfilled: divide_sav
+  cut 2026-10-30
+q_sav_06_30 (p = tomek): 0.00 DUK
+  unfulfilled: death_sav
+  unfulfilled: divide_sav
+  cut 2026-10-30

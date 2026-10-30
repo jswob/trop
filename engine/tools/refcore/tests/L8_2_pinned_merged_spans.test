@@ -1,0 +1,39 @@
+# OQ-8, L §8.2 `pinned:`: "The pins one def forms under many as if (a known d at each of its keys, as cpi_yy[m] as if
+# {known d}) print once, their days merged into maximal spans". first_seen[d] reads n as known on d: 1 on
+# 2026-03-01, 2 from v2's known 2026-03-02 (L §5.11 as if `known D`: the cut K inside), so tot = 1 + 2 + 2 + 2 = 7; the
+# four pins print once, 2026-03-01 .. 2026-03-03 and 2026-03-10 (the layout of the merged line is refcore's).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+input n: int
+input a: date
+input b: date
+input c: date
+def first_seen[d in days]: int = n as if {known d} at reader
+def tot: int = sum(first_seen[d] for d in days where d >= a and d <= b) + first_seen[c] at reader
+
+version v1
+  cite s
+  governs always
+  known 2026-01-01
+  n = 1
+  a = 2026-03-01
+  b = 2026-03-03
+  c = 2026-03-10
+
+version v2
+  cite s
+  governs always
+  known 2026-03-02
+  replace n = 2
+
+ask q1: tot law 2026-06-30
+=== expect
+q1: 7
+  pinned: known d = 2026-03-01 .. 2026-03-03, 2026-03-10
+  law date 2026-06-30, cut 2026-12-31

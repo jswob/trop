@@ -1,0 +1,236 @@
+model mp09
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+  note "Düsseldorfer Tabelle 2026, Teil C (Mangelfälle), Beispiel: U owes cash maintenance to three children K1 (18, in allgemeiner Schulausbildung), K2 (7) and K3 (5), who live with E. E receives the Kindergeld and is not owed maintenance."
+  note "Amounts are monthly. The month of 2026 is not stated, so the ages are read as stated rows, not from birth dates (§ 1612a Abs. 3 BGB)."
+
+source bgb "Bürgerliches Gesetzbuch §§ 1603, 1609, 1612a, 1612b (gesetze-im-internet.de)" at "https://www.gesetze-im-internet.de/bgb/__1609.html"
+
+source lifted_1_0_1 "Figures tally 1.0.1 allowed inline in rules"
+
+source modeller "The modeller's own assumptions, each stated with its reason"
+
+source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf" at "https://www.olg-duesseldorf.nrw.de/infos/Duesseldorfer_Tabelle/Tabelle-2026/DT_2026.pdf"
+
+unit EUR: currency minor 0.01
+
+axis dt_cut_round
+  nearest "each child's share rounded half up to the cent, independently (the source states no rule)"
+  largest_rem "each share rounded down to the cent, the leftover cents to the largest remainders (the source states no rule)"
+
+axis dt_u_work
+  employed "U is in work (erwerbstätig), Anm. A.VII; the source does not state it"
+  not_employed "U is not in work (nicht erwerbstätig), Anm. A.VII"
+
+index agegroup = [a0_5, a6_11, a12_17, a18]
+
+index child = [k1, k2, k3]
+
+index incgroup = [g1, g2, g3, g4, g5, g6, g7, g8, g9, g10, g11, g12, g13, g14, g15]
+
+input child_age[c in child]: int question "Wie alt ist das Kind im maßgeblichen Monat?"
+
+input dt_amount[g in incgroup, a in agegroup]: money EUR
+
+input first_rank_18: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input first_rank_21: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input in_school[c in child]: bool question "Befindet sich das volljährige Kind in der allgemeinen Schulausbildung?"
+
+input income: money EUR question "Wie hoch ist das bereinigte Nettoeinkommen des Unterhaltspflichtigen im Monat?"
+
+input kindergeld: money EUR
+
+input lives_with_parent[c in child]: bool question "Lebt das Kind im Haushalt der Eltern oder eines Elternteils?"
+
+input selbstbehalt[w in dt_u_work]: money EUR
+
+input unmarried[c in child]: bool question "Ist das volljährige Kind unverheiratet?"
+
+input zahlbetrag_2: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+band dt_age(n: int): key agegroup
+  note "Altersstufen of the table, page 1"
+
+band dt_group(x: money EUR): key incgroup
+  note "Einkommensgruppen of the table, page 1. Bands are printed in whole euros; an income with cents above a printed upper bound is read as the next group."
+
+def eigenbedarf: money EUR at reader
+  note "Notwendiger Eigenbedarf (Selbstbehalt) of U, Anm. A.VII"
+  rule base v dt2026 = selbstbehalt[dt_u_work]
+
+def einsatz[c in child]: money EUR at reader
+  note "Teil C: der Einsatzbetrag für den Kindesunterhalt entspricht dem Zahlbetrag"
+  rule base v dt2026 = zahlbetrag[dt_group(income), dt_age(child_age[c])]
+
+def einsatz_sum: money EUR = sum(einsatz[c] for c in child where first_rank[c]) at reader
+
+def first_rank[c in child]: bool at reader
+  note "§ 1609 Nr. 1 BGB: minderjährige Kinder und Kinder im Sinne des § 1603 Abs. 2 Satz 2"
+  rule base v bgb_2026 = child_age[c] < first_rank_18
+  rule privileged beats base v bgb_2026 = unmarried[c] and child_age[c] < first_rank_21 and lives_with_parent[c] and in_school[c] when child_age[c] >= first_rank_18
+
+def mangelfall: bool at reader
+  note "Teil C: das Einkommen reicht zur Deckung des Bedarfs gleichrangiger Unterhaltsberechtigter nicht aus"
+  rule base v dt2026 = masse < einsatz_sum
+
+def masse: money EUR at reader
+  note "Verteilungsmasse: Einkommen nach Abzug des notwendigen Eigenbedarfs"
+  rule base v dt2026 = max(0, income - eigenbedarf)
+
+def unterhalt[c in child]: money EUR at reader
+  note "Teil C: im Mangelfall wird die Verteilungsmasse im Verhältnis der Einsatzbeträge verteilt"
+  rule base v dt2026 = einsatz[c]
+  rule cut_largest beats base v dt2026 = prorata(masse, einsatz[j] for j in child where first_rank[j], c, minor(EUR), rest largest ties by pos(j)) when mangelfall and first_rank[c] and dt_cut_round == largest_rem
+  rule cut_nearest beats base v dt2026 = prorata(masse, einsatz[j] for j in child where first_rank[j], c, minor(EUR), half-up, rest none) when mangelfall and first_rank[c] and dt_cut_round == nearest
+  rule second beats base = ?"Nachrangige Kinder (§ 1609 Nr. 4 BGB) sind in diesem Modell nicht beschrieben." when not first_rank[c]
+
+def zahlbetrag[g in incgroup, a in agegroup]: money EUR at reader
+  note "Anhang page 6: Tabellenbetrag nach Abzug des Kindergeldanteils (hälftig bei Minderjährigen, voll bei Volljährigen), § 1612b Abs. 1 BGB"
+  rule adult beats base v dt2026 = dt_amount[g, a] - kindergeld when a == a18
+  rule base v dt2026 = dt_amount[g, a] - round(kindergeld / zahlbetrag_2, minor(EUR), half-up)
+
+ask q_eigenbedarf: eigenbedarf law 2026-10-18
+
+ask q_einsatz: einsatz[c] for c in child law 2026-10-18
+
+ask q_einsatz_sum: einsatz_sum law 2026-10-18
+
+ask q_masse: masse law 2026-10-18
+
+ask q_split_check: check sum(unterhalt[c] for c in child) == masse law 2026-10-18
+
+ask q_unterhalt: unterhalt[c] for c in child law 2026-10-18
+
+ask q_zahlbetrag: zahlbetrag[g1, a] for a in agegroup law 2026-10-18
+
+version bgb_2026
+  cite bgb
+  governs always
+  known 2017-07-21
+  note "§ 1609 Nr. 1 BGB in the wording of the Gesetz zur Änderung des Unterhaltsrechts of 21.12.2007 (BGBl. I Nr. 69 of 28.12.2007, S. 3189); § 1603 Abs. 2 Satz 2 BGB in the wording of the Gesetz zur Bekämpfung von Kinderehen of 17.07.2017 (BGBl. I Nr. 48 of 21.07.2017, S. 2429; lexetius.com/BGB/1603, Anm. 5-6)"
+  note "Known from the later promulgation, 21.07.2017, since the rules of first_rank read both provisions. The rank rules cite this version."
+
+version lifted_figures
+  cite lifted_1_0_1
+  governs always
+  known 2017-07-21
+  first_rank_18 = 18 "inline in tally 1.0.1: first_rank line 59, operand; first_rank line 60, operand"
+  first_rank_21 = 21 "inline in tally 1.0.1: first_rank line 60, operand"
+  zahlbetrag_2 = 2 "inline in tally 1.0.1: zahlbetrag line 80, factor"
+
+version dt2026
+  cite olg_dt2026
+  governs 2026-01..
+  known 2025-12-01
+  note "Known from its publication: press release of the OLG Düsseldorf of 1 December 2025 (justiz.nrw/node/6813), the table ab sofort auf der Internetseite abrufbar. The PDF's own stamps (created 25 Nov, modified 28 Nov 2025) are before it."
+  dt_age: [0, 5] = a0_5 "page 1, table heading, Altersstufe 0-5"
+  dt_age: [6, 11] = a6_11 "page 1, table heading, Altersstufe 6 - 11"
+  dt_age: [12, 17] = a12_17 "page 1, table heading, Altersstufe 12 - 17"
+  dt_age: [18, inf) = a18 "page 1, table heading, ab 18"
+  dt_amount[g1, a0_5] = 486 "page 1, row 1, 0-5"
+  dt_amount[g1, a6_11] = 558 "page 1, row 1, 6 - 11"
+  dt_amount[g1, a12_17] = 653 "page 1, row 1, 12 - 17"
+  dt_amount[g1, a18] = 698 "page 1, row 1, ab 18"
+  dt_amount[g2, a0_5] = 511 "page 1, row 2, 0-5"
+  dt_amount[g2, a6_11] = 586 "page 1, row 2, 6 - 11"
+  dt_amount[g2, a12_17] = 686 "page 1, row 2, 12 - 17"
+  dt_amount[g2, a18] = 733 "page 1, row 2, ab 18"
+  dt_amount[g3, a0_5] = 535 "page 1, row 3, 0-5"
+  dt_amount[g3, a6_11] = 614 "page 1, row 3, 6 - 11"
+  dt_amount[g3, a12_17] = 719 "page 1, row 3, 12 - 17"
+  dt_amount[g3, a18] = 768 "page 1, row 3, ab 18"
+  dt_amount[g4, a0_5] = 559 "page 1, row 4, 0-5"
+  dt_amount[g4, a6_11] = 642 "page 1, row 4, 6 - 11"
+  dt_amount[g4, a12_17] = 751 "page 1, row 4, 12 - 17"
+  dt_amount[g4, a18] = 803 "page 1, row 4, ab 18"
+  dt_amount[g5, a0_5] = 584 "page 1, row 5, 0-5"
+  dt_amount[g5, a6_11] = 670 "page 1, row 5, 6 - 11"
+  dt_amount[g5, a12_17] = 784 "page 1, row 5, 12 - 17"
+  dt_amount[g5, a18] = 838 "page 1, row 5, ab 18"
+  dt_amount[g6, a0_5] = 623 "page 1, row 6, 0-5"
+  dt_amount[g6, a6_11] = 715 "page 1, row 6, 6 - 11"
+  dt_amount[g6, a12_17] = 836 "page 1, row 6, 12 - 17"
+  dt_amount[g6, a18] = 894 "page 1, row 6, ab 18"
+  dt_amount[g7, a0_5] = 661 "page 1, row 7, 0-5"
+  dt_amount[g7, a6_11] = 759 "page 1, row 7, 6 - 11"
+  dt_amount[g7, a12_17] = 889 "page 1, row 7, 12 - 17"
+  dt_amount[g7, a18] = 950 "page 1, row 7, ab 18"
+  dt_amount[g8, a0_5] = 700 "page 1, row 8, 0-5"
+  dt_amount[g8, a6_11] = 804 "page 1, row 8, 6 - 11"
+  dt_amount[g8, a12_17] = 941 "page 1, row 8, 12 - 17"
+  dt_amount[g8, a18] = 1006 "page 1, row 8, ab 18"
+  dt_amount[g9, a0_5] = 739 "page 1, row 9, 0-5"
+  dt_amount[g9, a6_11] = 849 "page 1, row 9, 6 - 11"
+  dt_amount[g9, a12_17] = 993 "page 1, row 9, 12 - 17"
+  dt_amount[g9, a18] = 1061 "page 1, row 9, ab 18"
+  dt_amount[g10, a0_5] = 778 "page 1, row 10, 0-5"
+  dt_amount[g10, a6_11] = 893 "page 1, row 10, 6 - 11"
+  dt_amount[g10, a12_17] = 1045 "page 1, row 10, 12 - 17"
+  dt_amount[g10, a18] = 1117 "page 1, row 10, ab 18"
+  dt_amount[g11, a0_5] = 817 "page 1, row 11, 0-5"
+  dt_amount[g11, a6_11] = 938 "page 1, row 11, 6 - 11"
+  dt_amount[g11, a12_17] = 1098 "page 1, row 11, 12 - 17"
+  dt_amount[g11, a18] = 1173 "page 1, row 11, ab 18"
+  dt_amount[g12, a0_5] = 856 "page 1, row 12, 0-5"
+  dt_amount[g12, a6_11] = 983 "page 1, row 12, 6 - 11"
+  dt_amount[g12, a12_17] = 1150 "page 1, row 12, 12 - 17"
+  dt_amount[g12, a18] = 1229 "page 1, row 12, ab 18"
+  dt_amount[g13, a0_5] = 895 "page 1, row 13, 0-5"
+  dt_amount[g13, a6_11] = 1027 "page 1, row 13, 6 - 11"
+  dt_amount[g13, a12_17] = 1202 "page 1, row 13, 12 - 17"
+  dt_amount[g13, a18] = 1285 "page 1, row 13, ab 18"
+  dt_amount[g14, a0_5] = 934 "page 1, row 14, 0-5"
+  dt_amount[g14, a6_11] = 1072 "page 1, row 14, 6 - 11"
+  dt_amount[g14, a12_17] = 1254 "page 1, row 14, 12 - 17"
+  dt_amount[g14, a18] = 1341 "page 1, row 14, ab 18"
+  dt_amount[g15, a0_5] = 972 "page 1, row 15, 0-5"
+  dt_amount[g15, a6_11] = 1116 "page 1, row 15, 6 - 11"
+  dt_amount[g15, a12_17] = 1306 "page 1, row 15, 12 - 17"
+  dt_amount[g15, a18] = 1396 "page 1, row 15, ab 18"
+  dt_group: [0, 2100] = g1 "page 1, row 1, bis 2.100"
+  dt_group: (2100, 2500] = g2 "page 1, row 2, 2.101 - 2.500"
+  dt_group: (2500, 2900] = g3 "page 1, row 3, 2.501 - 2.900"
+  dt_group: (2900, 3300] = g4 "page 1, row 4, 2.901 - 3.300"
+  dt_group: (3300, 3700] = g5 "page 1, row 5, 3.301 - 3.700"
+  dt_group: (3700, 4100] = g6 "page 1, row 6, 3.701 - 4.100"
+  dt_group: (4100, 4500] = g7 "page 1, row 7, 4.101 - 4.500"
+  dt_group: (4500, 4900] = g8 "page 1, row 8, 4.501 - 4.900"
+  dt_group: (4900, 5300] = g9 "page 1, row 9, 4.901 - 5.300"
+  dt_group: (5300, 5700] = g10 "page 1, row 10, 5.301 - 5.700"
+  dt_group: (5700, 6400] = g11 "page 1, row 11, 5.701 - 6.400"
+  dt_group: (6400, 7200] = g12 "page 1, row 12, 6.401 - 7.200"
+  dt_group: (7200, 8200] = g13 "page 1, row 13, 7.201 - 8.200"
+  dt_group: (8200, 9700] = g14 "page 1, row 14, 8.201 - 9.700"
+  dt_group: (9700, 11200] = g15 "page 1, row 15, 9.701 - 11.200"
+  dt_group: (11200, inf) = ?"Das Einkommen liegt über der 15. Einkommensgruppe; die Tabelle nennt dafür keinen Betrag." "page 1, below row 15"
+  kindergeld = 259 governs 2026 "page 6, Anhang: Im Jahr 2026 beträgt das Kindergeld einheitlich je Kind 259,00 EUR"
+  selbstbehalt[employed] = 1450 "page 2, Anm. A.VII: für den erwerbstätigen Unterhaltspflichtigen monatlich 1.450 EUR"
+  selbstbehalt[not_employed] = 1200 "page 2, Anm. A.VII: für den nicht erwerbstätigen Unterhaltspflichtigen monatlich 1.200 EUR"
+
+version dt2026_example
+  cite olg_dt2026
+  governs always
+  known 2026-10-18
+  note "The facts of the Teil C Beispiel, page 4: a worked example's stipulations, known from the model's on, since it has no start (LANGUAGE §4.5)"
+  child_age[k1] = 18 "page 4, C. Beispiel: im Alter von 18 Jahren (K1)"
+  child_age[k2] = 7 "page 4, C. Beispiel: 7 Jahren (K2)"
+  child_age[k3] = 5 "page 4, C. Beispiel: 5 Jahren (K3)"
+  in_school[k1] = true "page 4, C. Beispiel: in allgemeiner Schulausbildung befindlich"
+  income = 1750 "page 4, C. Beispiel: Bereinigtes Nettoeinkommen des Unterhaltspflichtigen (U): 1.750 EUR"
+  lives_with_parent[k1] = true "page 4, C. Beispiel: die bei dem ... Elternteil (E) leben"
+  lives_with_parent[k2] = true "page 4, C. Beispiel: die bei dem ... Elternteil (E) leben"
+  lives_with_parent[k3] = true "page 4, C. Beispiel: die bei dem ... Elternteil (E) leben"
+
+version mp09_assumed
+  cite modeller
+  governs always
+  known 2026-10-18
+  note "An assumption that stands for a fact of the example: known with the stipulations, from the model's on (LANGUAGE §4.5)"
+  unmarried[k1] = true assumed "the example treats K1 as a first-rank child; § 1603 Abs. 2 Satz 2 BGB requires unverheiratet, which the example does not state" "page 4, C. Beispiel"

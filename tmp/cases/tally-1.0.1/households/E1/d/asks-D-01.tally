@@ -1,0 +1,15 @@
+part asks_d01
+  tally 1
+  note "D-01 · Zbigniew's estate, as of and as known 2025-06-16."
+
+ask d01_shares: share[h] for h in heir as known 2025-06-16
+
+ask d01_division: bonds_all[2025-06-12], acct_at_death, refund_2024, div_setoff, estate_divided, keeper_base as known 2025-06-16
+
+ask d01_payouts: payout[h] for h in [piotr, anna, marta, jakub] as known 2025-06-16
+
+ask d01_paid: div_paid_on, d_deposit, kept_by_rounding as known 2025-06-16
+
+ask d01_flat: flat_after[h] for h in [halina, jakub] as known 2025-06-16
+
+ask d01_deposit_row: check d_deposit = -bank[r20250612a].amount

@@ -1,0 +1,10 @@
+scenario wife_stops over tropek
+  tally 2
+  from 2027-01-01
+  note "Co jeśli żona przestanie pracować od stycznia 2027? (oświadczenie gospodarstwa z 2026-10-19)"
+
+version wife_stops_salary
+  cite household
+  governs 2027-01-01..
+  known 2026-10-19
+  replace salary[wife_acme] = 0 "założenie scenariusza: brak pensji od stycznia 2027"

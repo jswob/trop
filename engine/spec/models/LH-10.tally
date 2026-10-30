@@ -1,6 +1,8 @@
 model lh10
-  tally 1
+  tally 2
   on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
   note "mBank mortgage risk notice of 25.04.2024: sample instalments by term (Tab. 1-3), rate shocks (Tab. 4), a fixed-then-floating 360-month loan (Tab. 5-9), LTV examples (Tab. 10-11) and two representative examples (pp. 12-13)."
   note "Every loan is one key of index loan, with a monthly schedule over inst: interest on the opening balance, an annuity instalment recomputed when the rate changes, and a capital part. Declining loans repay principal / months a month."
   note "The document states no rounding rule and no day count. Axis lh10_calc says whether parts are rounded to the grosz as they are computed or carried exact; lh10_mode gives the unstated rounding mode, also for every printed figure; lh10_last says whether the last instalment clears the balance."
@@ -8,9 +10,13 @@ model lh10
 
 source khip "Ustawa z dnia 23 marca 2017 r. o kredycie hipotecznym oraz o nadzorze nad pośrednikami kredytu hipotecznego i agentami, Dz. U. 2017 poz. 819; read in the tekst jednolity Dz. U. 2025 poz. 720" at "https://api.sejm.gov.pl/eli/acts/DU/2025/720/text.pdf"
 
+source lifted_1_0_1 "Figures tally 1.0.1 allowed inline in rules"
+
 source mbank "mBank S.A., Informacja o ryzykach dla kredytobiorców hipotecznych (według zaleceń Rekomendacji S Komisji Nadzoru Finansowego), data sporządzenia 25.04.2024" at "https://www.mbank.pl/pdf/ind/kredyty/kredyt-hipoteczny/mbank/informacja-o-ryzykach-dla-kredytobiorcow.pdf"
 
 source modeller "The model's own assumptions, each stated with its reason"
+
+unit PLN: currency minor 0.01
 
 axis lh10_calc
   exact "instalments, interest and capital parts are carried exact; only printed figures are rounded to the grosz"
@@ -32,11 +38,11 @@ axis lh10_mode
 
 index day_basis = [monthly, actual]
 
-index inst = 1..360
+index inst = int 1..360
 
 index loan = [t1_15, t1_20, t1_25, t2_15, t2_20, t2_25, t4a_171, t4a_3, t4a_5, t4a_10, t4a_15, t4d_171, t4d_3, t4d_5, t4d_10, t4d_15, t5_023, t8_3, t8_5, t8_10, t8_15, t8_423, t8_127, t9_020, t9_010, t9_005, t9_0, t9_m023, t25_fix, t25_float, r1, r2]
 
-index move = [fall, rise]
+index move_ = [fall, rise]
 
 index repay_kind = [annuity, declining]
 
@@ -69,8 +75,11 @@ input fee_val[l in loan]: money PLN
 
 input first_due[l in loan]: date
 
-input fixed_rate[l in loan, k in inst]: rate nominal 12 /year
+input fixed_rate[l in loan, k in inst]: rate
   note "the fixed rate for instalment k, or - where the rate is WIBOR 3M plus the margin"
+
+input insurance_12: int
+  note "lifted from an inline figure of tally 1.0.1"
 
 input premium_year[l in loan]: money PLN
   note "the representative examples' property insurance premium a year"
@@ -78,242 +87,250 @@ input premium_year[l in loan]: money PLN
 input rrso_x[l in loan]: num
   note "the RRSO, X in załącznik nr 3 pkt 1: an effective annual rate as a fraction; only the solve of an ask pins it"
 
-input s2_margin: rate nominal 12 /year
+input s2_margin: rate
 
-input s2_wibor: rate nominal 12 /year
+input s2_wibor: rate
 
 input t10_loan: money PLN
 
 input t10_value[c in t10_case]: money PLN
 
-input t11_change[m in move]: num
+input t11_change[m in move_]: num
 
 input t11_loan[c in t11_case]: money PLN
 
 input t11_value: money PLN
 
-input terms[l in loan]: (principal money PLN, months int, repay key repay_kind, margin rate nominal 12 /year)
+input terms[l in loan]: (principal money PLN, months int, repay key repay_kind, margin rate)
 
-input wibor[l in loan]: rate nominal 12 /year
+input wibor[l in loan]: rate
 
-input wibor_max12: rate nominal 12 /year
+input wibor_max12: rate
   note "the highest WIBOR 3M of the 12 months before the notice"
 
-input wibor_min12: rate nominal 12 /year
+input wibor_min12: rate
   note "the lowest WIBOR 3M of the 12 months before the notice"
 
-def accr[l in loan, k in inst]: num
+def accr[l in loan, k in inst]: num at reader
   note "interest for instalment k per zloty of the opening balance"
-  rule base = ? "Which day count does the bank use for the interest of this loan?"
-  rule monthly excepts base when day_count[l] = monthly = pm[l, k]
+  rule base = ?"Which day count does the bank use for the interest of this loan?"
+  rule monthly beats base = pm[l, k] when day_count[l] == monthly
 
-def ann[l in loan, k in inst]: num PLN
+def ann[l in loan, k in inst]: num PLN at reader
   rule base = ann_raw[l, k]
-  rule grosz excepts base when lh10_calc = grosz = round(ann_raw[l, k], 0.01, lh10_mode)
+  rule grosz beats base = round(ann_raw[l, k], minor(PLN), lh10_mode) when lh10_calc == grosz
 
-def ann_raw[l in loan, k in inst]: num PLN = open_bal[l, k] * pm[l, k] * growth[l, k] / (growth[l, k] - 1)
+def ann_raw[l in loan, k in inst]: num PLN = open_bal[l, k] * pm[l, k] * growth[l, k] / (growth[l, k] - 1) at reader
 
-def capital[l in loan, k in inst]: num PLN
+def capital[l in loan, k in inst]: num PLN at reader
   rule base = level[l, k] - interest[l, k]
-  rule decl excepts base when terms[l].repay = declining = decl_cap[l]
-  rule last excepts base, decl when lh10_last = absorb and k = terms[l].months = open_bal[l, k]
+  rule decl beats base = decl_cap[l] when terms[l].repay == declining
+  rule last beats base, decl = open_bal[l, k] when lh10_last == absorb and k == terms[l].months
 
-def ckk7: num PLN
+def ckk7: num PLN at reader
   note "Tabela 7's całkowity koszt kredytu, for the loan of Tab. 5: interest up to an instalment the document doesn't name, plus costs it doesn't name"
-  rule base v v_khip = sum(k in inst where k <= ckk7_last: interest[t5_023, k]) + ckk7_other
+  rule base v v_khip = sum(interest[t5_023, k] for k in inst where k <= ckk7_last) + ckk7_other
 
-def ckk_repr[l in loan]: num PLN
+def ckk_repr[l in loan]: num PLN at reader
   note "art. 4 pkt 5: całkowity koszt kredytu, the interest, the fees and taxes the consumer pays, and the insurance the loan requires; notarial and court fees are not in it"
   rule base v v_khip = total_int[l] + fee_val[l] + fee_pcc[l] + insurance[l] + ckk_unnamed[l]
 
-def ckk_t[l in loan]: num PLN
+def ckk_t[l in loan]: num PLN at reader
   note "the całkowity koszt kredytu of a Tabela 8 or 9 row: interest up to an instalment the document doesn't name, plus costs it doesn't name"
-  rule base v v_khip = sum(k in inst where k <= ckk_last[l]: interest[l, k]) + ckk_other[l]
+  rule base v v_khip = sum(interest[l, k] for k in inst where k <= ckk_last[l]) + ckk_other[l]
 
-def closing[l in loan, k in inst]: num PLN = open_bal[l, k] - capital[l, k]
+def closing[l in loan, k in inst]: num PLN = open_bal[l, k] - capital[l, k] at reader
 
-def decl_cap[l in loan]: num PLN
+def decl_cap[l in loan]: num PLN at reader
   rule base = terms[l].principal / terms[l].months
-  rule grosz excepts base when lh10_calc = grosz = round(terms[l].principal / terms[l].months, 0.01, lh10_mode)
+  rule grosz beats base = round(terms[l].principal / terms[l].months, minor(PLN), lh10_mode) when lh10_calc == grosz
 
-def due[l in loan, k in inst]: date = add_months(first_due[l], pos(k) - 1)
+def due[l in loan, k in inst]: date = add_months(first_due[l], pos(k) - 1) at reader
 
-def growth[l in loan, k in inst]: num = pow(1 + pm[l, k], terms[l].months - pos(k) + 1)
+def growth[l in loan, k in inst]: num = pow(1 + pm[l, k], terms[l].months - pos(k) + 1) at reader
 
-def insurance[l in loan]: money PLN
+def insurance[l in loan]: money PLN at reader
   note "the whole-term property insurance of the representative examples: the document gives about 400 zł a year and no premium schedule (p. 12, p. 13); lh10_ins says how many premiums the term holds"
-  rule pro_rata when lh10_ins = pro_rata = round(premium_year[l] * terms[l].months / 12, 0.01, lh10_mode)
-  rule started when lh10_ins = started = premium_year[l] * round(terms[l].months / 12, 1, ceil)
-  rule whole when lh10_ins = whole = premium_year[l] * round(terms[l].months / 12, 1, floor)
+  rule pro_rata = round(premium_year[l] * terms[l].months / insurance_12, minor(PLN), lh10_mode) when lh10_ins == pro_rata
+  rule started = premium_year[l] * round(terms[l].months / insurance_12, 1, ceil) when lh10_ins == started
+  rule whole = premium_year[l] * round(terms[l].months / insurance_12, 1, floor) when lh10_ins == whole
 
-def interest[l in loan, k in inst]: num PLN
+def interest[l in loan, k in inst]: num PLN at reader
   rule base = open_bal[l, k] * accr[l, k]
-  rule grosz excepts base when lh10_calc = grosz = round(open_bal[l, k] * accr[l, k], 0.01, lh10_mode)
+  rule grosz beats base = round(open_bal[l, k] * accr[l, k], minor(PLN), lh10_mode) when lh10_calc == grosz
 
-def level[l in loan, k in inst]: num PLN = (if k = 1 then ann[l, k] else if rate_at[l, k] != rate_at[l, k - 1] then ann[l, k] else level[l, k - 1])
+def level[l in loan, k in inst]: num PLN = if k == 1 then ann[l, k] else if rate_at[l, k] != rate_at[l, k - 1] then ann[l, k] else level[l, k - 1] at reader
 
-def ltv10[c in t10_case]: num = t10_loan / t10_value[c]
+def ltv10[c in t10_case]: num = t10_loan / t10_value[c] at reader
 
-def ltv11_after[c in t11_case, m in move]: num = t11_loan[c] / t11_new_value[m]
+def ltv11_after[c in t11_case, m in move_]: num = t11_loan[c] / t11_new_value[m] at reader
 
-def ltv11_start[c in t11_case]: num = t11_loan[c] / t11_value
+def ltv11_start[c in t11_case]: num = t11_loan[c] / t11_value at reader
 
-def maxmin_wibor: rate nominal 12 /year
+def maxmin_wibor: rate at reader
   note "Tabela 8, last row: the current WIBOR 3M raised by the difference between the highest and the lowest of the last 12 months"
   rule base v v_mbank = wibor[t5_023] + wibor_max12 - wibor_min12
 
-def open_bal[l in loan, k in inst]: num PLN = (if k = 1 then terms[l].principal else closing[l, k - 1])
+def open_bal[l in loan, k in inst]: num PLN = if k == 1 then terms[l].principal else closing[l, k - 1] at reader
 
-def payment[l in loan, k in inst]: num PLN = capital[l, k] + interest[l, k]
+def payment[l in loan, k in inst]: num PLN = capital[l, k] + interest[l, k] at reader
 
-def pm[l in loan, k in inst]: num = periodic(rate_at[l, k], month)
+def pm[l in loan, k in inst]: num = periodic(rate_at[l, k], month, nominal 12) at reader
 
-def rate_at[l in loan, k in inst]: rate nominal 12 /year
+def rate_at[l in loan, k in inst]: rate at reader
   rule base = terms[l].margin + wibor[l]
-  rule fixed excepts base when fixed_rate[l, k] != - = fixed_rate[l, k]
+  rule fixed beats base = fixed_rate[l, k] when fixed_rate[l, k] != none
 
-def rrso_npv[l in loan]: num PLN
+def rrso_npv[l in loan]: num PLN at reader
   note "załącznik nr 3 pkt 1: the drawdowns, discounted at X, less the repayments and the charges, discounted at X. Pkt 4 a): the whole amount is taken as drawn at once, a single drawdown at t = 0, so its term is the principal undiscounted"
-  rule base v v_khip = terms[l].principal - sum(k in inst where k <= terms[l].months: payment[l, k] * (pow(1 + rrso_x[l], -rrso_t[l, k]) to 1e-12)) - rrso_other_pv[l]
+  rule base v v_khip = terms[l].principal - sum(payment[l, k] * (pow(1 + rrso_x[l], -rrso_t[l, k]) to 1e-12) for k in inst where k <= terms[l].months) - rrso_other_pv[l]
 
-def rrso_other_pv[l in loan]: num PLN
-  rule base v v_khip = ? "What is the present value at X of the valuation fee, the PCC, the insurance premiums and the unnamed cost of this example (załącznik nr 3 pkt 1)? Their payment dates, and the count of the premiums, are not given."
+def rrso_other_pv[l in loan]: num PLN at reader
+  rule base v v_khip = ?"What is the present value at X of the valuation fee, the PCC, the insurance premiums and the unnamed cost of this example (załącznik nr 3 pkt 1)? Their payment dates, and the count of the premiums, are not given."
 
-def rrso_t[l in loan, k in inst]: num
-  rule base v v_khip = ? "How many years after the first drawdown is instalment k paid (załącznik nr 3 pkt 3 b and c)? Neither the drawdown date nor the instalment dates of the representative examples are given."
+def rrso_t[l in loan, k in inst]: num at reader
+  rule base v v_khip = ?"How many years after the first drawdown is instalment k paid (załącznik nr 3 pkt 3 b and c)? Neither the drawdown date nor the instalment dates of the representative examples are given."
 
-def t11_new_value[m in move]: num PLN = t11_value * (1 + t11_change[m])
+def t11_new_value[m in move_]: num PLN = t11_value * (1 + t11_change[m]) at reader
 
-def total_cap[l in loan]: num PLN = sum(k in inst where k <= terms[l].months: capital[l, k])
+def total_cap[l in loan]: num PLN = sum(capital[l, k] for k in inst where k <= terms[l].months) at reader
 
-def total_due[l in loan]: num PLN
+def total_due[l in loan]: num PLN at reader
   note "art. 4 pkt 3: całkowita kwota do zapłaty, the całkowity koszt kredytu plus the całkowita kwota kredytu"
   rule base v v_khip = terms[l].principal + ckk_repr[l]
 
-def total_int[l in loan]: num PLN = sum(k in inst where k <= terms[l].months: interest[l, k])
+def total_int[l in loan]: num PLN = sum(interest[l, k] for k in inst where k <= terms[l].months) at reader
 
-def total_paid[l in loan]: num PLN = sum(k in inst where k <= terms[l].months: payment[l, k])
+def total_paid[l in loan]: num PLN = sum(payment[l, k] for k in inst where k <= terms[l].months) at reader
 
-ask p5_share: 100 * capital[l, 1] / payment[l, 1] for l in [t1_15, t1_25]
+ask p5_share: capital[l, 1] / payment[l, 1] / 1 % for l in [t1_15, t1_25] law 2026-10-18
 
-ask p5_text: round(payment[l, 1], 1, lh10_mode) for l in [t1_15, t1_25, t2_15, t2_25]
+ask p5_text: round(payment[l, 1], 1, lh10_mode) for l in [t1_15, t1_25, t2_15, t2_25] law 2026-10-18
 
-ask r1_ckk: round(ckk_repr[r1], 0.01, lh10_mode)
+ask r1_ckk: round(ckk_repr[r1], minor(PLN), lh10_mode) law 2026-10-18
 
-ask r1_inst: round(payment[r1, 1], 0.01, lh10_mode)
+ask r1_inst: round(payment[r1, 1], minor(PLN), lh10_mode) law 2026-10-18
 
-ask r1_insurance: insurance[r1]
+ask r1_insurance: insurance[r1] law 2026-10-18
 
-ask r1_interest: round(total_int[r1], 0.01, lh10_mode)
+ask r1_interest: round(total_int[r1], minor(PLN), lh10_mode) law 2026-10-18
 
-ask r1_rate: terms[r1].margin + wibor[r1]
+ask r1_rate: terms[r1].margin + wibor[r1] law 2026-10-18
 
-ask r1_rrso: solve rrso_x[r1] in [0, 0.2] to 0.0001: rrso_npv[r1] = 0
+ask r1_rrso: solve rrso_npv[r1] == 0 for rrso_x[r1] in [0, 0.2] to 0.0001 law 2026-10-18
 
-ask r1_total: round(total_due[r1], 0.01, lh10_mode)
+ask r1_total: round(total_due[r1], minor(PLN), lh10_mode) law 2026-10-18
 
-ask r2_ckk: round(ckk_repr[r2], 0.01, lh10_mode)
+ask r2_ckk: round(ckk_repr[r2], minor(PLN), lh10_mode) law 2026-10-18
 
-ask r2_inst: round(payment[r2, 1], 0.01, lh10_mode)
+ask r2_inst: round(payment[r2, 1], minor(PLN), lh10_mode) law 2026-10-18
 
-ask r2_insurance: insurance[r2]
+ask r2_insurance: insurance[r2] law 2026-10-18
 
-ask r2_interest: round(total_int[r2], 0.01, lh10_mode)
+ask r2_interest: round(total_int[r2], minor(PLN), lh10_mode) law 2026-10-18
 
-ask r2_rrso: solve rrso_x[r2] in [0, 0.2] to 0.0001: rrso_npv[r2] = 0
+ask r2_rrso: solve rrso_npv[r2] == 0 for rrso_x[r2] in [0, 0.2] to 0.0001 law 2026-10-18
 
-ask r2_total: round(total_due[r2], 0.01, lh10_mode)
+ask r2_total: round(total_due[r2], minor(PLN), lh10_mode) law 2026-10-18
 
-ask s2_rate: s2_margin + s2_wibor
+ask s2_rate: s2_margin + s2_wibor law 2026-10-18
 
-ask t10_ltv: round(100 * ltv10[c], 1, lh10_mode) for c in t10_case
+ask t10_ltv: round(ltv10[c] / 1 %, 1, lh10_mode) for c in t10_case law 2026-10-18
 
-ask t11_after: round(100 * ltv11_after[c, m], 1, lh10_mode) for c in t11_case, m in move
+ask t11_after: round(ltv11_after[c, m] / 1 %, 1, lh10_mode) for c in t11_case, m in move_ law 2026-10-18
 
-ask t11_start: 100 * ltv11_start[c] for c in t11_case
+ask t11_start: ltv11_start[c] / 1 % for c in t11_case law 2026-10-18
 
-ask t11_values: t11_new_value[m] for m in move
+ask t11_values: t11_new_value[m] for m in move_ law 2026-10-18
 
-ask t1_row0: terms[l].principal for l in [t1_15, t1_20, t1_25]
+ask t1_row0: terms[l].principal for l in [t1_15, t1_20, t1_25] law 2026-10-18
 
-ask t1_rows: round(payment[l, k], 0.01, lh10_mode), round(capital[l, k], 0.01, lh10_mode), round(interest[l, k], 0.01, lh10_mode), round(closing[l, k], 0.01, lh10_mode) for l in [t1_15, t1_20, t1_25], k in [1, 12, 24, 36, 48, 60, 72, 84, 96, 108, 120, 132, 144, 156, 168, 180, 192, 204, 216, 228, 240, 252, 264, 276, 288, 300] where k <= terms[l].months
+ask t1_rows: round(payment[l, k], minor(PLN), lh10_mode), round(capital[l, k], minor(PLN), lh10_mode), round(interest[l, k], minor(PLN), lh10_mode), round(closing[l, k], minor(PLN), lh10_mode) for l in [t1_15, t1_20, t1_25], k in [1, 12, 24, 36, 48, 60, 72, 84, 96, 108, 120, 132, 144, 156, 168, 180, 192, 204, 216, 228, 240, 252, 264, 276, 288, 300] where k <= terms[l].months law 2026-10-18
 
-ask t2_row0: terms[l].principal for l in [t2_15, t2_20, t2_25]
+ask t2_row0: terms[l].principal for l in [t2_15, t2_20, t2_25] law 2026-10-18
 
-ask t2_rows: round(payment[l, k], 0.01, lh10_mode), round(capital[l, k], 0.01, lh10_mode), round(interest[l, k], 0.01, lh10_mode), round(closing[l, k], 0.01, lh10_mode) for l in [t2_15, t2_20, t2_25], k in [1, 12, 24, 36, 48, 60, 72, 84, 96, 108, 120, 132, 144, 156, 168, 180, 192, 204, 216, 228, 240, 252, 264, 276, 288, 300] where k <= terms[l].months
+ask t2_rows: round(payment[l, k], minor(PLN), lh10_mode), round(capital[l, k], minor(PLN), lh10_mode), round(interest[l, k], minor(PLN), lh10_mode), round(closing[l, k], minor(PLN), lh10_mode) for l in [t2_15, t2_20, t2_25], k in [1, 12, 24, 36, 48, 60, 72, 84, 96, 108, 120, 132, 144, 156, 168, 180, 192, 204, 216, 228, 240, 252, 264, 276, 288, 300] where k <= terms[l].months law 2026-10-18
 
-ask t3: round(total_paid[l], 0.01, lh10_mode), round(total_cap[l], 0.01, lh10_mode), round(total_int[l], 0.01, lh10_mode) for l in [t1_15, t1_20, t1_25, t2_15, t2_20, t2_25]
+ask t3: round(total_paid[l], minor(PLN), lh10_mode), round(total_cap[l], minor(PLN), lh10_mode), round(total_int[l], minor(PLN), lh10_mode) for l in [t1_15, t1_20, t1_25, t2_15, t2_20, t2_25] law 2026-10-18
 
-ask t4_declining: round(payment[l, 1], 0.01, lh10_mode), round(total_paid[l], 0.01, lh10_mode) for l in [t4d_171, t4d_3, t4d_5, t4d_10, t4d_15]
+ask t4_declining: round(payment[l, 1], minor(PLN), lh10_mode), round(total_paid[l], minor(PLN), lh10_mode) for l in [t4d_171, t4d_3, t4d_5, t4d_10, t4d_15] law 2026-10-18
 
-ask t4_equal: round(payment[l, 1], 0.01, lh10_mode), round(total_paid[l], 0.01, lh10_mode) for l in [t4a_171, t4a_3, t4a_5, t4a_10, t4a_15]
+ask t4_equal: round(payment[l, 1], minor(PLN), lh10_mode), round(total_paid[l], minor(PLN), lh10_mode) for l in [t4a_171, t4a_3, t4a_5, t4a_10, t4a_15] law 2026-10-18
 
-ask t4_rate: terms[l].margin + wibor[l] for l in [t4a_171, t4a_3, t4a_5, t4a_10, t4a_15]
+ask t4_rate: terms[l].margin + wibor[l] for l in [t4a_171, t4a_3, t4a_5, t4a_10, t4a_15] law 2026-10-18
 
-ask t5_float: rate_at[t5_023, 61]
+ask t5_float: rate_at[t5_023, 61] law 2026-10-18
 
-ask t5_inst: round(payment[t5_023, 1], 0.01, lh10_mode)
+ask t5_inst: round(payment[t5_023, 1], minor(PLN), lh10_mode) law 2026-10-18
 
-ask t6: due[t5_023, k], round(closing[t5_023, k], 0.01, lh10_mode), round(payment[t5_023, k], 0.01, lh10_mode), round(interest[t5_023, k], 0.01, lh10_mode), round(capital[t5_023, k], 0.01, lh10_mode) for k in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 24, 36, 60, 61, 62, 72, 108, 204, 300, 360]
+ask t6: due[t5_023, k], round(closing[t5_023, k], minor(PLN), lh10_mode), round(payment[t5_023, k], minor(PLN), lh10_mode), round(interest[t5_023, k], minor(PLN), lh10_mode), round(capital[t5_023, k], minor(PLN), lh10_mode) for k in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 24, 36, 60, 61, 62, 72, 108, 204, 300, 360] law 2026-10-18
 
-ask t7_ckk: round(ckk7, 0.01, lh10_mode)
+ask t7_ckk: round(ckk7, minor(PLN), lh10_mode) law 2026-10-18
 
-ask t7_inst: round(payment[t5_023, 1], 0.01, lh10_mode), round(payment[t5_023, 60], 0.01, lh10_mode)
+ask t7_inst: round(payment[t5_023, 1], minor(PLN), lh10_mode), round(payment[t5_023, 60], minor(PLN), lh10_mode) law 2026-10-18
 
-ask t8_ckk: round(ckk_t[l], 0.01, lh10_mode) for l in [t25_fix, t25_float, t5_023, t8_3, t8_5, t8_10, t8_15, t8_423, t8_127]
+ask t8_ckk: round(ckk_t[l], minor(PLN), lh10_mode) for l in [t25_fix, t25_float, t5_023, t8_3, t8_5, t8_10, t8_15, t8_423, t8_127] law 2026-10-18
 
-ask t8_inst: round(payment[l, 61], 0.01, lh10_mode), round(payment[l, terms[l].months], 0.01, lh10_mode) for l in [t25_fix, t25_float, t5_023, t8_3, t8_5, t8_10, t8_15, t8_423, t8_127]
+ask t8_inst: round(payment[l, 61], minor(PLN), lh10_mode), round(payment[l, terms[l].months], minor(PLN), lh10_mode) for l in [t25_fix, t25_float, t5_023, t8_3, t8_5, t8_10, t8_15, t8_423, t8_127] law 2026-10-18
 
-ask t8_maxmin: maxmin_wibor
+ask t8_maxmin: maxmin_wibor law 2026-10-18
 
-ask t9_ckk: round(ckk_t[l], 0.01, lh10_mode) for l in [t25_fix, t25_float, t9_020, t9_010, t9_005, t9_0, t9_m023]
+ask t9_ckk: round(ckk_t[l], minor(PLN), lh10_mode) for l in [t25_fix, t25_float, t9_020, t9_010, t9_005, t9_0, t9_m023] law 2026-10-18
 
-ask t9_inst: round(payment[l, 61], 0.01, lh10_mode), round(payment[l, terms[l].months], 0.01, lh10_mode) for l in [t25_fix, t25_float, t9_020, t9_010, t9_005, t9_0, t9_m023]
+ask t9_inst: round(payment[l, 61], minor(PLN), lh10_mode), round(payment[l, terms[l].months], minor(PLN), lh10_mode) for l in [t25_fix, t25_float, t9_020, t9_010, t9_005, t9_0, t9_m023] law 2026-10-18
+
+version lifted_figures
+  cite lifted_1_0_1
+  governs always
+  known 2017-04-21
+  insurance_12 = 12 "inline in tally 1.0.1: insurance line 145, factor; insurance line 146, factor; insurance line 147, factor"
 
 version v_khip
   cite khip
+  governs always
   known 2017-04-21
   note "Law, known from its promulgation (LANGUAGE 4.5): the act of 23 March 2017 was published in Dz. U. 2017 poz. 819 on 2017-04-21. The tekst jednolity Dz. U. 2025 poz. 720 reprints it and is only the locator (LANGUAGE 5.3); whether the acts amending it since changed art. 4 or załącznik nr 3 isn't checked. No rows: rules point here for art. 4 pkt 3, 4 and 5 and załącznik nr 3 pkt 1-4."
 
 version v_mbank
   cite mbank
+  governs always
   known 2026-10-18
   note "The document's examples are a hypothetical case's stipulations, known from the model's on date, as it has no start (LANGUAGE 4.5). The document itself is dated 25.04.2024 (Data sporządzenia dokumentu, every page). 14 pages; the PDF text layer drops two values on pp. 12-13 that the rendered pages show."
-  ckk7_last = ? "Over which instalments does Tabela 7's całkowity koszt kredytu count interest? The document doesn't say." "p. 9, Tabela 7, Całkowity koszt kredytu"
-  ckk7_other = ? "Which costs besides interest does Tabela 7's całkowity koszt kredytu include, and how much are they? The document doesn't say." "p. 9, Tabela 7, Całkowity koszt kredytu"
-  ckk_last = ? "Over which instalments does the całkowity koszt kredytu of this Tabela 8 or 9 row count interest? The document doesn't say." "p. 10, Tabela 8 and Tabela 9, column Całkowity koszt kredytu"
-  ckk_other = ? "Which costs besides interest does the całkowity koszt kredytu of this Tabela 8 or 9 row include, and how much are they? The document doesn't say." "p. 10, Tabela 8 and Tabela 9, column Całkowity koszt kredytu"
-  ckk_unnamed = ? "Which cost besides the interest, the valuation fee, the PCC and the insurance does this example's całkowity koszt kredytu include, and how much is it? The document names no other." "p. 12 and p. 13, row Całkowity koszt kredytu"
+  ckk7_last = ?"Over which instalments does Tabela 7's całkowity koszt kredytu count interest? The document doesn't say." "p. 9, Tabela 7, Całkowity koszt kredytu"
+  ckk7_other = ?"Which costs besides interest does Tabela 7's całkowity koszt kredytu include, and how much are they? The document doesn't say." "p. 9, Tabela 7, Całkowity koszt kredytu"
+  ckk_last = ?"Over which instalments does the całkowity koszt kredytu of this Tabela 8 or 9 row count interest? The document doesn't say." "p. 10, Tabela 8 and Tabela 9, column Całkowity koszt kredytu"
+  ckk_other = ?"Which costs besides interest does the całkowity koszt kredytu of this Tabela 8 or 9 row include, and how much are they? The document doesn't say." "p. 10, Tabela 8 and Tabela 9, column Całkowity koszt kredytu"
+  ckk_unnamed = ?"Which cost besides the interest, the valuation fee, the PCC and the insurance does this example's całkowity koszt kredytu include, and how much is it? The document names no other." "p. 12 and p. 13, row Całkowity koszt kredytu"
   fee_pcc[r1] = 19 "p. 12: PCC 19 zł jednorazowo"
   fee_pcc[r2] = 19 "p. 13: PCC 19 zł jednorazowo"
   fee_val[r1] = 300 "p. 12: ocena nieruchomości 300 zł"
   fee_val[r2] = 300 "p. 13: ocena nieruchomości 300 zł"
   first_due[t5_023] = 2020-11-08 "p. 9, Tabela 6, row 1.: 08.11.2020, then the 8th of each month"
-  fixed_rate = - "the rate is WIBOR 3M plus the margin unless a fixed rate is stated: p. 7, Tab. 4; p. 9, Tab. 5 after 5 years; p. 12"
-  fixed_rate[t1_15, *] = 0.045 "p. 3: oprocentowanie 4,50% nominalne w skali roku"
-  fixed_rate[t1_20, *] = 0.045 "p. 3: oprocentowanie 4,50% nominalne w skali roku"
-  fixed_rate[t1_25, *] = 0.045 "p. 3: oprocentowanie 4,50% nominalne w skali roku"
-  fixed_rate[t2_15, *] = 0.045 "p. 3: oprocentowanie 4,50% nominalne w skali roku"
-  fixed_rate[t2_20, *] = 0.045 "p. 3: oprocentowanie 4,50% nominalne w skali roku"
-  fixed_rate[t2_25, *] = 0.045 "p. 3: oprocentowanie 4,50% nominalne w skali roku"
-  fixed_rate[t5_023, 1..60] = 0.0253 "p. 9, Tab. 5: oprocentowanie stałe 2,53% przez 5 lat; p. 8: niezmienne przez okres 5 lat (60 miesięcy) od dnia wypłaty kredytu"
-  fixed_rate[t8_3, 1..60] = 0.0253 "p. 10, Tabela 8: the loan of Tab. 5 from the sixty-first instalment"
-  fixed_rate[t8_5, 1..60] = 0.0253 "p. 10, Tabela 8: the loan of Tab. 5 from the sixty-first instalment"
-  fixed_rate[t8_10, 1..60] = 0.0253 "p. 10, Tabela 8: the loan of Tab. 5 from the sixty-first instalment"
-  fixed_rate[t8_15, 1..60] = 0.0253 "p. 10, Tabela 8: the loan of Tab. 5 from the sixty-first instalment"
-  fixed_rate[t8_423, 1..60] = 0.0253 "p. 10, Tabela 8: the loan of Tab. 5 from the sixty-first instalment"
-  fixed_rate[t8_127, 1..60] = 0.0253 "p. 10, Tabela 8: the loan of Tab. 5 from the sixty-first instalment"
-  fixed_rate[t9_020, 1..60] = 0.0253 "p. 10, Tabela 9: the loan of Tab. 5 from the sixty-first instalment"
-  fixed_rate[t9_010, 1..60] = 0.0253 "p. 10, Tabela 9: the loan of Tab. 5 from the sixty-first instalment"
-  fixed_rate[t9_005, 1..60] = 0.0253 "p. 10, Tabela 9: the loan of Tab. 5 from the sixty-first instalment"
-  fixed_rate[t9_0, 1..60] = 0.0253 "p. 10, Tabela 9: the loan of Tab. 5 from the sixty-first instalment"
-  fixed_rate[t9_m023, 1..60] = 0.0253 "p. 10, Tabela 9: the loan of Tab. 5 from the sixty-first instalment"
-  fixed_rate[t25_fix, 1..60] = 0.0253 "p. 10, Tabela 8 and 9, row 1: Jeśli wybierzesz 25-letni okres kredytowania; one reading of the unstated rate path: the fixed period kept"
-  fixed_rate[r2, 1..60] = 0.0752 "p. 13: oprocentowanie stałe przez 5 lat 7,52%"
+  fixed_rate = none "the rate is WIBOR 3M plus the margin unless a fixed rate is stated: p. 7, Tab. 4; p. 9, Tab. 5 after 5 years; p. 12"
+  fixed_rate[t1_15, *] = 0.045 1/year "p. 3: oprocentowanie 4,50% nominalne w skali roku"
+  fixed_rate[t1_20, *] = 0.045 1/year "p. 3: oprocentowanie 4,50% nominalne w skali roku"
+  fixed_rate[t1_25, *] = 0.045 1/year "p. 3: oprocentowanie 4,50% nominalne w skali roku"
+  fixed_rate[t2_15, *] = 0.045 1/year "p. 3: oprocentowanie 4,50% nominalne w skali roku"
+  fixed_rate[t2_20, *] = 0.045 1/year "p. 3: oprocentowanie 4,50% nominalne w skali roku"
+  fixed_rate[t2_25, *] = 0.045 1/year "p. 3: oprocentowanie 4,50% nominalne w skali roku"
+  fixed_rate[t5_023, 1..60] = 0.0253 1/year "p. 9, Tab. 5: oprocentowanie stałe 2,53% przez 5 lat; p. 8: niezmienne przez okres 5 lat (60 miesięcy) od dnia wypłaty kredytu"
+  fixed_rate[t8_3, 1..60] = 0.0253 1/year "p. 10, Tabela 8: the loan of Tab. 5 from the sixty-first instalment"
+  fixed_rate[t8_5, 1..60] = 0.0253 1/year "p. 10, Tabela 8: the loan of Tab. 5 from the sixty-first instalment"
+  fixed_rate[t8_10, 1..60] = 0.0253 1/year "p. 10, Tabela 8: the loan of Tab. 5 from the sixty-first instalment"
+  fixed_rate[t8_15, 1..60] = 0.0253 1/year "p. 10, Tabela 8: the loan of Tab. 5 from the sixty-first instalment"
+  fixed_rate[t8_423, 1..60] = 0.0253 1/year "p. 10, Tabela 8: the loan of Tab. 5 from the sixty-first instalment"
+  fixed_rate[t8_127, 1..60] = 0.0253 1/year "p. 10, Tabela 8: the loan of Tab. 5 from the sixty-first instalment"
+  fixed_rate[t9_020, 1..60] = 0.0253 1/year "p. 10, Tabela 9: the loan of Tab. 5 from the sixty-first instalment"
+  fixed_rate[t9_010, 1..60] = 0.0253 1/year "p. 10, Tabela 9: the loan of Tab. 5 from the sixty-first instalment"
+  fixed_rate[t9_005, 1..60] = 0.0253 1/year "p. 10, Tabela 9: the loan of Tab. 5 from the sixty-first instalment"
+  fixed_rate[t9_0, 1..60] = 0.0253 1/year "p. 10, Tabela 9: the loan of Tab. 5 from the sixty-first instalment"
+  fixed_rate[t9_m023, 1..60] = 0.0253 1/year "p. 10, Tabela 9: the loan of Tab. 5 from the sixty-first instalment"
+  fixed_rate[t25_fix, 1..60] = 0.0253 1/year "p. 10, Tabela 8 and 9, row 1: Jeśli wybierzesz 25-letni okres kredytowania; one reading of the unstated rate path: the fixed period kept"
+  fixed_rate[r2, 1..60] = 0.0752 1/year "p. 13: oprocentowanie stałe przez 5 lat 7,52%"
   premium_year[r1] = 400 "p. 12: ubezpieczenie nieruchomości średnio wynosi ok 400 zł za rok"
   premium_year[r2] = 400 "p. 13: ubezpieczenie nieruchomości ok 400 zł za rok, stałe przez cały okres"
-  s2_margin = 0.02 "p. 6, section II: marża banku 2%"
-  s2_wibor = 0.06 "p. 6, section II: Jeżeli WIBOR 3M będzie wynosił 6%"
+  s2_margin = 0.02 1/year "p. 6, section II: marża banku 2%"
+  s2_wibor = 0.06 1/year "p. 6, section II: Jeżeli WIBOR 3M będzie wynosił 6%"
   t10_loan = 120000 "p. 11, Tab. 10: kwota kredytu 120 000,00"
   t10_value[v133] = 133000 "p. 11, Tab. 10, row 1: 133 000,00"
   t10_value[v160] = 160000 "p. 11, Tab. 10, row 2: 160 000,00"
@@ -324,69 +341,70 @@ version v_mbank
   t11_loan[k350] = 350000 "p. 11, Tab. 11, row 350 000"
   t11_loan[k420] = 420000 "p. 11, Tab. 11, row 420 000"
   t11_value = 400000 "p. 11, Tab. 11: wartość nieruchomości 400 000; footnote: przy założeniu stałej wartości kwoty kredytu"
-  terms[t1_15] = (400000, 180, annuity, -) "p. 3: kredyt na kwotę 400 000 złotych, 15 lat (180 rat); Tab. 1 raty równe"
-  terms[t1_20] = (400000, 240, annuity, -) "p. 3: kredyt na kwotę 400 000 złotych, 20 lat (240 rat); Tab. 1 raty równe"
-  terms[t1_25] = (400000, 300, annuity, -) "p. 3: kredyt na kwotę 400 000 złotych, 25 lat (300 rat); Tab. 1 raty równe"
-  terms[t2_15] = (400000, 180, declining, -) "p. 3: kredyt na kwotę 400 000 złotych, 15 lat (180 rat); Tab. 2 raty malejące"
-  terms[t2_20] = (400000, 240, declining, -) "p. 3: kredyt na kwotę 400 000 złotych, 20 lat (240 rat); Tab. 2 raty malejące"
-  terms[t2_25] = (400000, 300, declining, -) "p. 3: kredyt na kwotę 400 000 złotych, 25 lat (300 rat); Tab. 2 raty malejące"
-  terms[t4a_171] = (400000, 300, annuity, 0.02) "p. 7, Tab. 4: Kwota kredytu: 400 000 zł, okres spłaty: 25 lat (300 rat), marża kredytu: 2%; rata równa"
-  terms[t4a_3] = (400000, 300, annuity, 0.02) "p. 7, Tab. 4: Kwota kredytu: 400 000 zł, okres spłaty: 25 lat (300 rat), marża kredytu: 2%; rata równa"
-  terms[t4a_5] = (400000, 300, annuity, 0.02) "p. 7, Tab. 4: Kwota kredytu: 400 000 zł, okres spłaty: 25 lat (300 rat), marża kredytu: 2%; rata równa"
-  terms[t4a_10] = (400000, 300, annuity, 0.02) "p. 7, Tab. 4: Kwota kredytu: 400 000 zł, okres spłaty: 25 lat (300 rat), marża kredytu: 2%; rata równa"
-  terms[t4a_15] = (400000, 300, annuity, 0.02) "p. 7, Tab. 4: Kwota kredytu: 400 000 zł, okres spłaty: 25 lat (300 rat), marża kredytu: 2%; rata równa"
-  terms[t4d_171] = (400000, 300, declining, 0.02) "p. 7, Tab. 4: Kwota kredytu: 400 000 zł, okres spłaty: 25 lat (300 rat), marża kredytu: 2%; rata malejąca"
-  terms[t4d_3] = (400000, 300, declining, 0.02) "p. 7, Tab. 4: Kwota kredytu: 400 000 zł, okres spłaty: 25 lat (300 rat), marża kredytu: 2%; rata malejąca"
-  terms[t4d_5] = (400000, 300, declining, 0.02) "p. 7, Tab. 4: Kwota kredytu: 400 000 zł, okres spłaty: 25 lat (300 rat), marża kredytu: 2%; rata malejąca"
-  terms[t4d_10] = (400000, 300, declining, 0.02) "p. 7, Tab. 4: Kwota kredytu: 400 000 zł, okres spłaty: 25 lat (300 rat), marża kredytu: 2%; rata malejąca"
-  terms[t4d_15] = (400000, 300, declining, 0.02) "p. 7, Tab. 4: Kwota kredytu: 400 000 zł, okres spłaty: 25 lat (300 rat), marża kredytu: 2%; rata malejąca"
-  terms[t5_023] = (300000, 360, annuity, 0.019) "p. 9, Tab. 5: Kwota kredytu 300 000 zł; Okres spłaty 360 miesięcy; Typ rat równe; marża 1,90%"
-  terms[t8_3] = (300000, 360, annuity, 0.019) "p. 10, Tabela 8: the loan of Tab. 5"
-  terms[t8_5] = (300000, 360, annuity, 0.019) "p. 10, Tabela 8: the loan of Tab. 5"
-  terms[t8_10] = (300000, 360, annuity, 0.019) "p. 10, Tabela 8: the loan of Tab. 5"
-  terms[t8_15] = (300000, 360, annuity, 0.019) "p. 10, Tabela 8: the loan of Tab. 5"
-  terms[t8_423] = (300000, 360, annuity, 0.019) "p. 10, Tabela 8: the loan of Tab. 5"
-  terms[t8_127] = (300000, 360, annuity, 0.019) "p. 10, Tabela 8: the loan of Tab. 5"
-  terms[t9_020] = (300000, 360, annuity, 0.019) "p. 10, Tabela 9: the loan of Tab. 5"
-  terms[t9_010] = (300000, 360, annuity, 0.019) "p. 10, Tabela 9: the loan of Tab. 5"
-  terms[t9_005] = (300000, 360, annuity, 0.019) "p. 10, Tabela 9: the loan of Tab. 5"
-  terms[t9_0] = (300000, 360, annuity, 0.019) "p. 10, Tabela 9: the loan of Tab. 5"
-  terms[t9_m023] = (300000, 360, annuity, 0.019) "p. 10, Tabela 9: the loan of Tab. 5"
-  terms[t25_fix] = (300000, 300, annuity, 0.019) "p. 10, Tabela 8 and 9, row 1: Jeśli wybierzesz 25-letni okres kredytowania"
-  terms[t25_float] = (300000, 300, annuity, 0.019) "p. 10, Tabela 8 and 9, row 1: Jeśli wybierzesz 25-letni okres kredytowania"
-  terms[r1] = (812770, 249, declining, 0.0175) "p. 12: kwota kredytu 812 770 zł, okres 249 miesięcy, rata Malejąca, marża 1,75%"
-  terms[r2] = (812770, 249, annuity, 0.0175) "p. 13: kwota kredytu 812 770 zł, okres 249 miesięcy, rata Równa, marża po 5 latach 1,75%"
-  wibor[t4a_171] = 0.0171 "p. 7, Tab. 4: STAWKA WIBOR 3M 1,71% (* przykładowy WIBOR 3M)"
-  wibor[t4a_3] = 0.03 "p. 7, Tab. 4: STAWKA WIBOR 3M 3%"
-  wibor[t4a_5] = 0.05 "p. 7, Tab. 4: STAWKA WIBOR 3M 5%"
-  wibor[t4a_10] = 0.1 "p. 7, Tab. 4: STAWKA WIBOR 3M 10%"
-  wibor[t4a_15] = 0.15 "p. 7, Tab. 4: STAWKA WIBOR 3M 15%"
-  wibor[t4d_171] = 0.0171 "p. 7, Tab. 4: STAWKA WIBOR 3M 1,71% (* przykładowy WIBOR 3M)"
-  wibor[t4d_3] = 0.03 "p. 7, Tab. 4: STAWKA WIBOR 3M 3%"
-  wibor[t4d_5] = 0.05 "p. 7, Tab. 4: STAWKA WIBOR 3M 5%"
-  wibor[t4d_10] = 0.1 "p. 7, Tab. 4: STAWKA WIBOR 3M 10%"
-  wibor[t4d_15] = 0.15 "p. 7, Tab. 4: STAWKA WIBOR 3M 15%"
-  wibor[t5_023] = 0.0023 "p. 9, Tab. 5: WIBOR 3M 0,23%; p. 10, Tabela 8: Obecna wartość stawki referencyjnej nie zmieni się"
-  wibor[t8_3] = 0.03 "p. 10, Tabela 8: Stawka referencyjna wyniesie: WIBOR 3M = 3%"
-  wibor[t8_5] = 0.05 "p. 10, Tabela 8: WIBOR 3M = 5%"
-  wibor[t8_10] = 0.1 "p. 10, Tabela 8: WIBOR 3M = 10%"
-  wibor[t8_15] = 0.15 "p. 10, Tabela 8: WIBOR 3M = 15%"
-  wibor[t8_423] = 0.0423 "p. 10, Tabela 8: Obecna stawka referencyjna wzrośnie o 4 p.p.: WIBOR 3M = 4,23%"
-  wibor[t8_127] = 0.0127 "p. 10, Tabela 8, last row: wzrośnie o różnicę między maksymalnym a minimalnym notowaniem z ostatnich 12 miesięcy: WIBOR 3M = 1,27%"
-  wibor[t9_020] = 0.002 "p. 10, Tabela 9: WIBOR 3M = 0,20%"
-  wibor[t9_010] = 0.001 "p. 10, Tabela 9: WIBOR 3M = 0,10%"
-  wibor[t9_005] = 0.0005 "p. 10, Tabela 9: WIBOR 3M = 0,05%"
-  wibor[t9_0] = 0 "p. 10, Tabela 9: WIBOR 3M = 0%"
-  wibor[t9_m023] = -0.0023 "p. 10, Tabela 9: Stawka referencyjna jest ujemna WIBOR 3M = -0,23%"
-  wibor[t25_fix] = 0.0023 "p. 10, Tabela 8 and 9, row 1: WIBOR 3M = 0,23%"
-  wibor[t25_float] = 0.0023 "p. 10, Tabela 8 and 9, row 1: WIBOR 3M = 0,23%"
-  wibor[r1] = 0.0585 "p. 12: WIBOR 3M 5,85% (kalkulacja na dzień 04.04.2024)"
-  wibor[r2] = 0.0585 "p. 13: WIBOR 3M na dzień sporządzenia przykładu 5,85%"
-  wibor_max12 = ? "What was the highest WIBOR 3M of the 12 months before the notice? Only the resulting rate is printed." "p. 10, Tabela 8, last row: wzrośnie o różnicę między maksymalnym a minimalnym notowaniem z ostatnich 12 miesięcy"
-  wibor_min12 = ? "What was the lowest WIBOR 3M of the 12 months before the notice? Only the resulting rate is printed." "p. 10, Tabela 8, last row: wzrośnie o różnicę między maksymalnym a minimalnym notowaniem z ostatnich 12 miesięcy"
+  terms[t1_15] = (principal: 400000, months: 180, repay: annuity, margin: none) "p. 3: kredyt na kwotę 400 000 złotych, 15 lat (180 rat); Tab. 1 raty równe"
+  terms[t1_20] = (principal: 400000, months: 240, repay: annuity, margin: none) "p. 3: kredyt na kwotę 400 000 złotych, 20 lat (240 rat); Tab. 1 raty równe"
+  terms[t1_25] = (principal: 400000, months: 300, repay: annuity, margin: none) "p. 3: kredyt na kwotę 400 000 złotych, 25 lat (300 rat); Tab. 1 raty równe"
+  terms[t2_15] = (principal: 400000, months: 180, repay: declining, margin: none) "p. 3: kredyt na kwotę 400 000 złotych, 15 lat (180 rat); Tab. 2 raty malejące"
+  terms[t2_20] = (principal: 400000, months: 240, repay: declining, margin: none) "p. 3: kredyt na kwotę 400 000 złotych, 20 lat (240 rat); Tab. 2 raty malejące"
+  terms[t2_25] = (principal: 400000, months: 300, repay: declining, margin: none) "p. 3: kredyt na kwotę 400 000 złotych, 25 lat (300 rat); Tab. 2 raty malejące"
+  terms[t4a_171] = (principal: 400000, months: 300, repay: annuity, margin: 0.02 1/year) "p. 7, Tab. 4: Kwota kredytu: 400 000 zł, okres spłaty: 25 lat (300 rat), marża kredytu: 2%; rata równa"
+  terms[t4a_3] = (principal: 400000, months: 300, repay: annuity, margin: 0.02 1/year) "p. 7, Tab. 4: Kwota kredytu: 400 000 zł, okres spłaty: 25 lat (300 rat), marża kredytu: 2%; rata równa"
+  terms[t4a_5] = (principal: 400000, months: 300, repay: annuity, margin: 0.02 1/year) "p. 7, Tab. 4: Kwota kredytu: 400 000 zł, okres spłaty: 25 lat (300 rat), marża kredytu: 2%; rata równa"
+  terms[t4a_10] = (principal: 400000, months: 300, repay: annuity, margin: 0.02 1/year) "p. 7, Tab. 4: Kwota kredytu: 400 000 zł, okres spłaty: 25 lat (300 rat), marża kredytu: 2%; rata równa"
+  terms[t4a_15] = (principal: 400000, months: 300, repay: annuity, margin: 0.02 1/year) "p. 7, Tab. 4: Kwota kredytu: 400 000 zł, okres spłaty: 25 lat (300 rat), marża kredytu: 2%; rata równa"
+  terms[t4d_171] = (principal: 400000, months: 300, repay: declining, margin: 0.02 1/year) "p. 7, Tab. 4: Kwota kredytu: 400 000 zł, okres spłaty: 25 lat (300 rat), marża kredytu: 2%; rata malejąca"
+  terms[t4d_3] = (principal: 400000, months: 300, repay: declining, margin: 0.02 1/year) "p. 7, Tab. 4: Kwota kredytu: 400 000 zł, okres spłaty: 25 lat (300 rat), marża kredytu: 2%; rata malejąca"
+  terms[t4d_5] = (principal: 400000, months: 300, repay: declining, margin: 0.02 1/year) "p. 7, Tab. 4: Kwota kredytu: 400 000 zł, okres spłaty: 25 lat (300 rat), marża kredytu: 2%; rata malejąca"
+  terms[t4d_10] = (principal: 400000, months: 300, repay: declining, margin: 0.02 1/year) "p. 7, Tab. 4: Kwota kredytu: 400 000 zł, okres spłaty: 25 lat (300 rat), marża kredytu: 2%; rata malejąca"
+  terms[t4d_15] = (principal: 400000, months: 300, repay: declining, margin: 0.02 1/year) "p. 7, Tab. 4: Kwota kredytu: 400 000 zł, okres spłaty: 25 lat (300 rat), marża kredytu: 2%; rata malejąca"
+  terms[t5_023] = (principal: 300000, months: 360, repay: annuity, margin: 0.019 1/year) "p. 9, Tab. 5: Kwota kredytu 300 000 zł; Okres spłaty 360 miesięcy; Typ rat równe; marża 1,90%"
+  terms[t8_3] = (principal: 300000, months: 360, repay: annuity, margin: 0.019 1/year) "p. 10, Tabela 8: the loan of Tab. 5"
+  terms[t8_5] = (principal: 300000, months: 360, repay: annuity, margin: 0.019 1/year) "p. 10, Tabela 8: the loan of Tab. 5"
+  terms[t8_10] = (principal: 300000, months: 360, repay: annuity, margin: 0.019 1/year) "p. 10, Tabela 8: the loan of Tab. 5"
+  terms[t8_15] = (principal: 300000, months: 360, repay: annuity, margin: 0.019 1/year) "p. 10, Tabela 8: the loan of Tab. 5"
+  terms[t8_423] = (principal: 300000, months: 360, repay: annuity, margin: 0.019 1/year) "p. 10, Tabela 8: the loan of Tab. 5"
+  terms[t8_127] = (principal: 300000, months: 360, repay: annuity, margin: 0.019 1/year) "p. 10, Tabela 8: the loan of Tab. 5"
+  terms[t9_020] = (principal: 300000, months: 360, repay: annuity, margin: 0.019 1/year) "p. 10, Tabela 9: the loan of Tab. 5"
+  terms[t9_010] = (principal: 300000, months: 360, repay: annuity, margin: 0.019 1/year) "p. 10, Tabela 9: the loan of Tab. 5"
+  terms[t9_005] = (principal: 300000, months: 360, repay: annuity, margin: 0.019 1/year) "p. 10, Tabela 9: the loan of Tab. 5"
+  terms[t9_0] = (principal: 300000, months: 360, repay: annuity, margin: 0.019 1/year) "p. 10, Tabela 9: the loan of Tab. 5"
+  terms[t9_m023] = (principal: 300000, months: 360, repay: annuity, margin: 0.019 1/year) "p. 10, Tabela 9: the loan of Tab. 5"
+  terms[t25_fix] = (principal: 300000, months: 300, repay: annuity, margin: 0.019 1/year) "p. 10, Tabela 8 and 9, row 1: Jeśli wybierzesz 25-letni okres kredytowania"
+  terms[t25_float] = (principal: 300000, months: 300, repay: annuity, margin: 0.019 1/year) "p. 10, Tabela 8 and 9, row 1: Jeśli wybierzesz 25-letni okres kredytowania"
+  terms[r1] = (principal: 812770, months: 249, repay: declining, margin: 0.0175 1/year) "p. 12: kwota kredytu 812 770 zł, okres 249 miesięcy, rata Malejąca, marża 1,75%"
+  terms[r2] = (principal: 812770, months: 249, repay: annuity, margin: 0.0175 1/year) "p. 13: kwota kredytu 812 770 zł, okres 249 miesięcy, rata Równa, marża po 5 latach 1,75%"
+  wibor[t4a_171] = 0.0171 1/year "p. 7, Tab. 4: STAWKA WIBOR 3M 1,71% (* przykładowy WIBOR 3M)"
+  wibor[t4a_3] = 0.03 1/year "p. 7, Tab. 4: STAWKA WIBOR 3M 3%"
+  wibor[t4a_5] = 0.05 1/year "p. 7, Tab. 4: STAWKA WIBOR 3M 5%"
+  wibor[t4a_10] = 0.1 1/year "p. 7, Tab. 4: STAWKA WIBOR 3M 10%"
+  wibor[t4a_15] = 0.15 1/year "p. 7, Tab. 4: STAWKA WIBOR 3M 15%"
+  wibor[t4d_171] = 0.0171 1/year "p. 7, Tab. 4: STAWKA WIBOR 3M 1,71% (* przykładowy WIBOR 3M)"
+  wibor[t4d_3] = 0.03 1/year "p. 7, Tab. 4: STAWKA WIBOR 3M 3%"
+  wibor[t4d_5] = 0.05 1/year "p. 7, Tab. 4: STAWKA WIBOR 3M 5%"
+  wibor[t4d_10] = 0.1 1/year "p. 7, Tab. 4: STAWKA WIBOR 3M 10%"
+  wibor[t4d_15] = 0.15 1/year "p. 7, Tab. 4: STAWKA WIBOR 3M 15%"
+  wibor[t5_023] = 0.0023 1/year "p. 9, Tab. 5: WIBOR 3M 0,23%; p. 10, Tabela 8: Obecna wartość stawki referencyjnej nie zmieni się"
+  wibor[t8_3] = 0.03 1/year "p. 10, Tabela 8: Stawka referencyjna wyniesie: WIBOR 3M = 3%"
+  wibor[t8_5] = 0.05 1/year "p. 10, Tabela 8: WIBOR 3M = 5%"
+  wibor[t8_10] = 0.1 1/year "p. 10, Tabela 8: WIBOR 3M = 10%"
+  wibor[t8_15] = 0.15 1/year "p. 10, Tabela 8: WIBOR 3M = 15%"
+  wibor[t8_423] = 0.0423 1/year "p. 10, Tabela 8: Obecna stawka referencyjna wzrośnie o 4 p.p.: WIBOR 3M = 4,23%"
+  wibor[t8_127] = 0.0127 1/year "p. 10, Tabela 8, last row: wzrośnie o różnicę między maksymalnym a minimalnym notowaniem z ostatnich 12 miesięcy: WIBOR 3M = 1,27%"
+  wibor[t9_020] = 0.002 1/year "p. 10, Tabela 9: WIBOR 3M = 0,20%"
+  wibor[t9_010] = 0.001 1/year "p. 10, Tabela 9: WIBOR 3M = 0,10%"
+  wibor[t9_005] = 0.0005 1/year "p. 10, Tabela 9: WIBOR 3M = 0,05%"
+  wibor[t9_0] = 0 1/year "p. 10, Tabela 9: WIBOR 3M = 0%"
+  wibor[t9_m023] = -0.0023 1/year "p. 10, Tabela 9: Stawka referencyjna jest ujemna WIBOR 3M = -0,23%"
+  wibor[t25_fix] = 0.0023 1/year "p. 10, Tabela 8 and 9, row 1: WIBOR 3M = 0,23%"
+  wibor[t25_float] = 0.0023 1/year "p. 10, Tabela 8 and 9, row 1: WIBOR 3M = 0,23%"
+  wibor[r1] = 0.0585 1/year "p. 12: WIBOR 3M 5,85% (kalkulacja na dzień 04.04.2024)"
+  wibor[r2] = 0.0585 1/year "p. 13: WIBOR 3M na dzień sporządzenia przykładu 5,85%"
+  wibor_max12 = ?"What was the highest WIBOR 3M of the 12 months before the notice? Only the resulting rate is printed." "p. 10, Tabela 8, last row: wzrośnie o różnicę między maksymalnym a minimalnym notowaniem z ostatnich 12 miesięcy"
+  wibor_min12 = ?"What was the lowest WIBOR 3M of the 12 months before the notice? Only the resulting rate is printed." "p. 10, Tabela 8, last row: wzrośnie o różnicę między maksymalnym a minimalnym notowaniem z ostatnich 12 miesięcy"
 
 version v_modeller
   cite modeller
+  governs always
   known 2026-10-18
   note "A modeller's assumption standing for the case's own fact takes the date of the stipulations, the model's on (LANGUAGE 4.5)."
   day_count = monthly assumed "the document states no day count; Tabela 6 row 1 is consistent with interest of 1/12 of the annual rate a month, and Tab. 1-4 and the representative examples give no dates"

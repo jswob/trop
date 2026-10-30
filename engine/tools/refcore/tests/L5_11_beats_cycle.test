@@ -1,0 +1,15 @@
+# L §5.11: "A cycle in beats is refused (LOAD-CYCLE)."
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+def a: int
+  rule p beats q = 0
+  rule q beats p = 1
+=== expect
+refused: LOAD-CYCLE ...

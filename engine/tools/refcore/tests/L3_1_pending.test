@@ -1,0 +1,31 @@
+# L §3.1 (writer 8): pending is gone; first, last and next over a binding empty at the cut whose span reaches past it
+# give a hole naming the binding (HOLE-NOTYET), and "only a hole spreads (§8.1)": retired read at that key is the
+# same hole (q1). A removed word is no longer reserved (L §2.2 lists no `pending`), so an input may be named pending
+# (q2).
+=== m.tally
+model t
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+kind persons
+input retired[p in persons]: bool
+input pending: bool
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  persons + [ana] lives 1990-01-01..
+  retired[ana] = false
+  pending = true
+
+ask q1: retired[first(p in persons over 2026-01-01 .. 2026-12-31 where retired[p]) ties by lifespan(p).from]
+ask q2: pending
+=== expect
+q1: ?"p: no persons yet, and its span reaches past the cut" (persons)
+  cut 2026-06-30
+q2: true
+  cut 2026-06-30

@@ -1,0 +1,29 @@
+# MC-B-F5. E §3.1 step 10: "An ask line whose value is random that neither applies a query nor replays a path ... [is]
+# refused (LOAD-RANDOM)"; L §8.3 `<line> is random; apply a query`. low_w is random through w's balances, which a
+# move with a random day books (E §3.1 step 10, E §7 step 2), so a line reading it bare is refused at load.
+=== m.tally
+model m
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+unit DUK: currency minor 0.01
+source s "s"
+index delays = 1..10
+place w: accounts DUK lives 2026-01-01..
+place world: outside lives 2026-01-01..
+input amt: money DUK question "amount?"
+version o
+  cite s
+  known 2026-01-01
+  opening[w] = 0.00 DUK at 2026-01-01 start
+  amt = 100.00 DUK governs always "a"
+def delay[m in months]: dist = discrete(1 for k in delays)
+def low_w: money DUK = min(bal(w, end_of(m) - 1) for m in months)
+move pay[m in months]: transfers
+  on add_days(start_of(m), delay[m])
+  at start_of(m)
+  leg cash from world to w amount amt
+ask q4: low_w law 2026-12-31
+=== expect
+refused: LOAD-RANDOM ask q4: low_w is random; apply a query ...

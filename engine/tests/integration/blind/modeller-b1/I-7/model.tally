@@ -1,0 +1,266 @@
+model i7
+  tally 2
+  on 2025-01-01
+  start 2025-01-01
+  end 2028-12-31
+  note "Card I-7: a retirement plan across two employers, one yearly limit, a match, and a vesting clock that pauses."
+  note "Question (c)'s two leaving days are the scenarios leave_feb and leave_mar."
+
+source story "Card I-7, story and plan table"
+
+source act "Card I-7, Retirement Saving Act, rules 1 to 7"
+
+source modeller "The modeller's own assumptions, each with its reason"
+
+unit PLN: currency minor 0.01
+
+kind persons
+
+kind jobs
+
+kind plans
+
+kind workplace_plans: plans
+
+kind personal_plans: plans
+
+kind own_contribs: event certain
+  leg cash: PLN
+  attr plan: key plans
+  attr member: key persons
+  note "a member's own contribution to a plan"
+
+kind er_contribs: event certain
+  leg basic: PLN
+  leg match: PLN
+  attr plan: key plans
+  attr member: key persons
+  note "an employer's contribution: its basic part and its match"
+
+kind plan_moves: event certain
+  leg own: PLN
+  leg er: PLN
+  attr member: key persons
+  attr from_plan: key plans
+  attr to_plan: key plans
+
+kind forfeits: event certain
+  leg cash: PLN
+  attr member: key persons
+
+kind refunds: event certain
+  leg cash: PLN
+  attr plan: key plans
+  attr member: key persons
+
+index move_ids = [mv1]
+
+index one_offs = [dec_extra]
+
+place own_bal[pl in plans, p in persons]: claims PLN lives 2025-01-01..
+
+place er_bal[pl in plans, p in persons]: claims PLN lives 2025-01-01..
+
+place payroll: outside lives 2025-01-01..
+
+place her_money: outside lives 2025-01-01..
+
+input contrib_mode: rounding
+
+input ded_cap: money PLN
+
+input extra[j in jobs, m in months]: num question "Jaką dodatkową składkę wybrała w tym miesiącu?"
+
+input forfeit_window: int
+
+input member_share: num
+
+input move_terms[x in move_ids]: (member key persons, from_plan key plans, to_plan key plans, moved_on date)
+
+input one_off[x in one_offs]: (plan key plans, member key persons, amt money PLN, paid_on date)
+
+input personal_order[m in months]: (plan key plans, member key persons, amt money PLN, dom int)
+
+input plan_of[j in jobs]: key plans
+
+input plan_terms[pl in plans]: (er_share num, match_share num, match_cap num)
+
+input refund_months: int
+
+input salary[j in jobs, m in months]: money PLN question "Ile wynosi pensja brutto z tej pracy w tym miesiącu?"
+
+input vest_months: int
+
+input works_for[j in jobs]: key persons
+
+def cm[p in persons, m in months]: int
+  note "rules 4 and 5: counted months of workplace membership; lost when a forfeit falls in the month"
+  rule first = if counted[p, m] then 1 else 0 when pos(m) == 1
+  rule next = cm[p, m - 1] + (if counted[p, m] then 1 else 0) when pos(m) > 1
+  rule lost beats first, next = if counted[p, m] then 1 else 0 when any(forfeits_at[j] for j in jobs over .. where works_for[j] == p and lifespan(j).to != never and month_of(forfeit_day[j]) == m)
+
+def counted[p in persons, m in months]: bool = all(any(works_for[j] == p and plan_of[j] in workplace_plans for j in jobs on d) for d in days where month_of(d) == m)
+
+def deducted[p in persons, y in years]: money PLN = own_total[p, y] - sum(refund_of[p, y, pl] for pl in plans over y)
+
+def er_basic_amt[j in jobs, m in months]: money PLN = round(salary[j, m] * plan_terms[plan_of[j]].er_share, minor(PLN), contrib_mode)
+
+def er_match_amt[j in jobs, m in months]: money PLN = round(salary[j, m] * plan_terms[plan_of[j]].match_share * min(extra[j, m], plan_terms[plan_of[j]].match_cap), minor(PLN), contrib_mode)
+
+def er_taxable[p in persons, m in months]: money PLN = sum(e.basic.amount + e.match.amount for e in er_contribs over m where e.member == p)
+
+def excess[p in persons, y in years]: money PLN = max(0, own_total[p, y] - ded_cap)
+
+def forfeit_day[j in jobs]: date = add_months(lifespan(j).to, forfeit_window)
+
+def forfeit_effect[p in persons, y in years]: money PLN = -forfeited[p, y]
+
+def forfeited[p in persons, y in years]: money PLN = sum(f.cash.amount for f in forfeits over y where f.member == p)
+
+def forfeits_at[j in jobs]: bool = not vested_at_leave[j] and not moved_within[j]
+
+def held_on[p in persons, d in days]: money PLN = sum(bal(er_bal[pl, p], d) for pl in plans over ..)
+
+def moved_within[j in jobs]: bool = any(x.from_plan == plan_of[j] and x.to_plan in workplace_plans and any(plan_of[k] == x.to_plan for k in jobs on x.day where works_for[k] == works_for[j]) for x in plan_moves over add_days(lifespan(j).to, 1) .. forfeit_day[j] where x.member == works_for[j])
+
+def own_amt[j in jobs, m in months]: money PLN = round(salary[j, m] * (member_share + extra[j, m]), minor(PLN), contrib_mode)
+
+def own_to[p in persons, y in years, pl in plans]: money PLN = sum(c.cash.amount for c in own_contribs over y where c.member == p and c.plan == pl)
+
+def own_total[p in persons, y in years]: money PLN = sum(c.cash.amount for c in own_contribs over y where c.member == p and (c.plan in workplace_plans or c.plan in personal_plans))
+
+def refund_deadline[y in years]: date = add_days(add_months(start_of(y), refund_months), -1)
+
+def refund_of[p in persons, y in years, pl in plans]: money PLN = sum(refund_fill[y, p].taken[c] for c in own_contribs over y where c.member == p and c.plan == pl)
+
+def taxable_income[p in persons, y in years]: money PLN
+  note "rules 2, 3 and 7: salary, plus employer contributions in the month paid, less own contributions deducted, less forfeits"
+  rule base = sum(salary[j, m] for m in months where year_of(m) == y, j in jobs on add_days(end_of(m), -1) where works_for[j] == p) + sum(er_taxable[p, m] for m in months where year_of(m) == y) - deducted[p, y] + forfeit_effect[p, y]
+
+def unvested_on[p in persons, d in days]: money PLN
+  rule base = held_on[p, d]
+  rule vested beats base = 0 when any(cm[p, m] >= vest_months for m in months where add_days(end_of(m), -1) <= d)
+
+def vest_day[p in persons]: date = add_days(end_of(first(m in months where cm[p, m] >= vest_months)), -1)
+
+def vested_at_leave[j in jobs]: bool = cm[works_for[j], month_of(lifespan(j).to)] >= vest_months
+
+fill refund_fill[y in years, p in persons over y]
+  note "rule 2: the excess is refunded from personal-kind plans first, latest payment first"
+  supply excess[p, y]
+  demand c.cash.amount for c in own_contribs over y where c.member == p and (c.plan in workplace_plans or c.plan in personal_plans)
+  arc true
+  order c.plan in workplace_plans, days_between(c.day, end_of(y))
+
+move er_pay[m in months, j in jobs on add_days(end_of(m), -1)]: er_contribs
+  on add_days(end_of(m), -1)
+  attr plan = plan_of[j]
+  attr member = works_for[j]
+  leg basic from payroll to er_bal[plan_of[j], works_for[j]] amount er_basic_amt[j, m]
+  leg match from payroll to er_bal[plan_of[j], works_for[j]] amount er_match_amt[j, m]
+
+move forfeit[j in jobs over .. where lifespan(j).to != never]: forfeits
+  on forfeit_day[j]
+  when forfeits_at[j]
+  reads er_bal, plan_move
+  attr member = works_for[j]
+  leg cash from er_bal[plan_of[j], works_for[j]] to payroll amount bal(er_bal[plan_of[j], works_for[j]])
+
+move one_off_pay[x in one_offs]: own_contribs
+  on one_off[x].paid_on
+  attr plan = one_off[x].plan
+  attr member = one_off[x].member
+  leg cash from her_money to own_bal[one_off[x].plan, one_off[x].member] amount one_off[x].amt
+
+move own_pay[m in months, j in jobs on add_days(end_of(m), -1)]: own_contribs
+  on add_days(end_of(m), -1)
+  attr plan = plan_of[j]
+  attr member = works_for[j]
+  leg cash from payroll to own_bal[plan_of[j], works_for[j]] amount own_amt[j, m]
+
+move personal_pay[m in months where personal_order[m] != none]: own_contribs
+  on day_of(m, personal_order[m].dom)
+  attr plan = personal_order[m].plan
+  attr member = personal_order[m].member
+  leg cash from her_money to own_bal[personal_order[m].plan, personal_order[m].member] amount personal_order[m].amt
+
+move plan_move[x in move_ids]: plan_moves
+  on move_terms[x].moved_on
+  reads own_bal, er_bal
+  attr member = move_terms[x].member
+  attr from_plan = move_terms[x].from_plan
+  attr to_plan = move_terms[x].to_plan
+  leg own from own_bal[move_terms[x].from_plan, move_terms[x].member] to own_bal[move_terms[x].to_plan, move_terms[x].member] amount bal(own_bal[move_terms[x].from_plan, move_terms[x].member])
+  leg er from er_bal[move_terms[x].from_plan, move_terms[x].member] to er_bal[move_terms[x].to_plan, move_terms[x].member] amount bal(er_bal[move_terms[x].from_plan, move_terms[x].member])
+
+move refund_pay[y in years, p in persons over y, pl in plans over y]: refunds
+  on window(end_of(y), refund_deadline[y])
+  when refund_of[p, y, pl] > 0
+  attr plan = pl
+  attr member = p
+  leg cash from own_bal[pl, p] to her_money amount refund_of[p, y, pl]
+
+ask a_own: own_to[jola, 2027, pl] for pl in plans over 2027
+
+ask a_deducted: deducted[jola, 2027]
+
+ask a_refund: refund_of[jola, 2027, pl], refund_deadline[2027] for pl in plans over 2027
+
+ask b_held: held_on[jola, 2027-12-31], unvested_on[jola, 2027-12-31], vest_day[jola]
+
+version card_things
+  cite story
+  known 2025-01-01
+  jobs + [alfa_job] lives 2025-03-01..2027-06-30
+  jobs + [beta_job] lives 2027-08-01..
+
+version card_assumed_things
+  cite modeller
+  known 2025-01-01
+  assumed "the card gives no birth date and no plan start dates; these lifespans start at the run's start or earlier"
+  persons + [jola] lives 1980-01-01..
+  personal_plans + [orla_plan] lives 2025-01-01..
+  workplace_plans + [alfa_plan] lives 2025-01-01..
+  workplace_plans + [beta_plan] lives 2025-01-01..
+
+version card_story
+  cite story
+  governs always
+  known 2025-01-01
+  move_terms[mv1] = (member: jola, from_plan: alfa_plan, to_plan: beta_plan, moved_on: 2027-09-20) "Alfa's plan moves her whole balance to Beta's plan"
+  one_off[dec_extra] = (plan: orla_plan, member: jola, amt: 3000.00 PLN, paid_on: 2027-12-20) "3 000.00 on 20 December 2027"
+  plan_of[alfa_job] = alfa_plan "each employer runs a plan of the workplace kind"
+  plan_of[beta_job] = beta_plan "each employer runs a plan of the workplace kind"
+  plan_terms[alfa_plan] = (er_share: 1.5 %, match_share: 100 %, match_cap: 2 %) "plan table, Alfa's"
+  plan_terms[beta_plan] = (er_share: 1.5 %, match_share: 50 %, match_cap: 4 %) "plan table, Beta's"
+  works_for[alfa_job] = jola "works for Alfa"
+  works_for[beta_job] = jola "works for Beta"
+
+version card_monthly
+  cite story
+  governs 2025-01..2028-12
+  known 2025-01-01
+  extra[alfa_job, *] = 2 % governs 2025-03..2027-06 "an extra 2 % throughout at Alfa"
+  extra[beta_job, *] = 0 governs 2027-08..2027-09 "no extra in August and September 2027"
+  extra[beta_job, *] = 3 % governs 2027-10.. "an extra 3 % from 1 October 2027"
+  personal_order[2025-01..2026-12] = none "payments to the personal plan are stated for 2027 only"
+  personal_order[2027-01..2027-12] = (plan: orla_plan, member: jola, amt: 500.00 PLN, dom: 10) "500.00 on the 10th of every month of 2027"
+  personal_order[2028-01..2028-12] = none "payments to the personal plan are stated for 2027 only"
+  salary[alfa_job, *] = 9000.00 PLN governs 2025-03..2027-06 "Alfa, 9 000.00 a month"
+  salary[beta_job, *] = 11000.00 PLN governs 2027-08.. "Beta, 11 000.00 a month"
+
+version card_act
+  cite act
+  governs always
+  known 2025-01-01
+  ded_cap = 9000.00 PLN "rule 2: up to 9 000.00 for all plans together"
+  forfeit_window = 3 "rule 5: within 3 months of leaving"
+  member_share = 2 % "rule 1: 2 % of each month's gross salary"
+  refund_months = 15 "rule 2: by 31 March of the next year, the day before 15 months after the year starts"
+  vest_months = 36 "rule 4: the 36th counted month"
+
+version card_rounding
+  cite modeller
+  governs always
+  known 2025-01-01
+  contrib_mode = half-up assumed "the act states no rounding of contributions; whole minor units half up"

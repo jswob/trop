@@ -1,0 +1,38 @@
+# L §4.4 "One rule for every window a line meets": "A read whose value depends on where in a window the day falls is
+# a hole, HOLE-IMPRECISE, unless the line states windows each", which "prints one line per maximal sub-window ... over
+# which the answer is constant": e = one_of([03-02, 03-09]) gives a line per day (q1); "A text that takes a window as
+# one day pins it to that day with a with pin (§5.18), which the register prints (pinned:, §8.2)": d pinned to
+# 2020-07-31 is not before 2020-07-15 (q2); "A comparison is decided when the whole interval lies on one side": e is
+# before 2020-03-10 on both days (q3). (Writer 8: windows latest, windows earliest, latest() and earliest() are gone.)
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+input d: date
+input e: date
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  d = window(2020-07-01, 2020-07-31)
+  e = one_of([2020-03-02, 2020-03-09])
+
+ask q1: e windows each
+ask q2: d < 2020-07-15 with d = 2020-07-31
+ask q3: e < 2020-03-10
+=== expect
+q1 [e = 2020-03-02]: 2020-03-02
+  cut 2026-12-31
+q1 [e = 2020-03-09]: 2020-03-09
+  cut 2026-12-31
+q2: false
+  pinned: d = 2020-07-31
+  cut 2026-12-31
+q3: true
+  cut 2026-12-31

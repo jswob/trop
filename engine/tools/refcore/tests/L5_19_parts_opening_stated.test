@@ -1,0 +1,42 @@
+# Writer 11 (tally 2.1, 2.1-16, R-6, RC-5; L §5.19 Readings at a place that keeps parts). L §5.19 Stated parts: "rows of the reading input with of: stated[x] of q = v at the reading's instant and, where the
+# walk starts, opening[x] of q = v ... They stand beside the reading's total, in the same version and at the same instant
+# (LOAD-PARTS otherwise), and sum to at most it (LOAD-PARTS where load sees both, RUN-RECORD otherwise); the rest of the
+# total, if any, is the unstated rest".
+# The opening states 150.00, ania's 100.00: the unstated rest, 50.00 (scratch/exp7.py), is a hole part that can't be
+# ania's, so tomek's is HOLE-PART and ania's is known.
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+kind persons: parties
+kind couples: parties
+kind savings: place PLN min 0
+  owned by arrive
+  step minor(PLN)
+  takes k for w order if k.owner == ania then 0 else 1
+kind tomeks: transfers
+place konto: savings lives 2026-01-01..
+place world: outside lives 1900-01-01..
+place shop: outside lives 1900-01-01..
+def arrive[m in events, p in parties]: num at m.day
+  rule base = if p == ania then 1 else 0
+  rule t beats base = if p == tomek then 1 else 0 when m in tomeks
+ask q: bal(konto, 2026-01-31), bal(konto, 2026-01-31) of ania, bal(konto, 2026-01-31) of tomek
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  persons + [ania] lives 1980-01-01..
+  persons + [tomek] lives 1981-01-01..
+  couples + [ania_tomek] lives 2010-06-01..
+  opening[konto] = 150.00 PLN at 2026-01-01 start
+  opening[konto] of ania = 100.00 PLN at 2026-01-01 start
+=== expect
+q: (150.00 PLN, 100.00 PLN, ?"konto: 50.00 PLN may be tomek's: whose are 50.00 PLN of konto at 2026-01-01 start?" (konto))
+  cut 2026-01-01

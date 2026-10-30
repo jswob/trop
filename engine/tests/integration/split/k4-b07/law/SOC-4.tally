@@ -1,0 +1,51 @@
+part soc_4
+  tally 2
+  law
+  note "SOC-4 · A sole trader's health contribution. (a) 9 % of the month's income, (b) 4.9 %, both never below 9 % of the MIN-WAGE in force on 1 January (.1, .2). (c) by the tier of the year's revenue to the month's end: up to 60 000.00 DUK, 9 % of 60 % of AVG-WAGE-Q4; to 300 000.00, of 100 %; above, of 180 %; AVG-WAGE-Q4 as in force on the month's first day (.3). Each month rounded to the ort and paid by the 20th of the next month (.4). Settled by 20 April of the next year; under (c) each month of activity at the tier of the year's whole revenue and that month's AVG-WAGE-Q4, summed, less what was paid (.5). Never deducted from a tax (.6)."
+
+source soc_4 "Social Insurance Act, SOC-4 A sole trader's health contribution (tmp/cases/law/acts.md)"
+
+input avg_wage_q4: money DUK question "What AVG-WAGE-Q4 is in force on this day (gazette AVG-WAGE-Q4)?"
+
+input soc4_rate: num question "What is the health contribution's rate under form (a) and (c) (SOC-4 .1, .3)?"
+
+input soc4_rate_b: num question "What is the health contribution's rate under form (b) (SOC-4 .2)?"
+
+band soc4_tier(x: num DUK): num
+  note "share of AVG-WAGE-Q4 by the year's revenue to date (SOC-4 .3), read for form (c)"
+
+version soc4_v1
+  cite soc_4
+  governs 2022-01-01..
+  known 2021-11-15
+  enters 2022-01-01
+  note "SOC-4 v1, in force 2022-01-01 until replaced, published 2021-11-15; governs months of activity from January 2022."
+  soc4_rate = 0.09 "SOC-4 v1 .1, .3"
+  soc4_rate_b = 0.049 "SOC-4 v1 .2"
+  soc4_tier: [0, 60000] = 0.60 "SOC-4 v1 .3: up to 60 000.00 DUK, 60 %"
+  soc4_tier: (60000, 300000] = 1.00 "SOC-4 v1 .3: above 60 000.00 up to 300 000.00 DUK, 100 %"
+  soc4_tier: (300000, inf) = 1.80 "SOC-4 v1 .3: above 300 000.00 DUK, 180 %"
+
+version awq4_2022
+  cite gazette
+  governs 2022-02-01..2023-01-31
+  known 2022-01-20
+  avg_wage_q4 = 6050.20 "gazette.csv line 12 AVG-WAGE-Q4"
+
+version awq4_2023
+  cite gazette
+  governs 2023-02-01..2024-01-31
+  known 2023-01-19
+  avg_wage_q4 = 6920.75 "gazette.csv line 13 AVG-WAGE-Q4"
+
+version awq4_2024
+  cite gazette
+  governs 2024-02-01..2025-01-31
+  known 2024-01-22
+  avg_wage_q4 = 7810.40 "gazette.csv line 14 AVG-WAGE-Q4"
+
+version awq4_2025
+  cite gazette
+  governs 2025-02-01..2026-01-31
+  known 2025-01-21
+  avg_wage_q4 = 8530.10 "gazette.csv line 15 AVG-WAGE-Q4"

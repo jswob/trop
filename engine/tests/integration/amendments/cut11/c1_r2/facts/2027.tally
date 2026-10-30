@@ -1,0 +1,13 @@
+part facts_2027
+  tally 2
+
+source contract_c "Umowa B2B z klientem C, 2027-01-20"
+
+version client_c_2027
+  cite contract_c
+  governs always
+  known 2027-01-20
+  client + [client_c] lives 2027-01-20..
+  fee_net[client_c] = 0 governs 2026-01..2027-01 "przed umową"
+  fee_net[client_c] = 6000 governs 2027-02.. "§ 5"
+  terms[client_c] = 21 "§ 6"

@@ -1,0 +1,27 @@
+# L §3.1: never is "later than every date"; a def whose `at` gives never has no law date that governs: no meaning,
+# found at the key (RUN-DOMAIN, L §8.4).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+input dl: date
+input x: int
+def c: int = x at dl
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  dl = never
+  x = 1
+
+ask q: c
+=== expect
+q: refused: RUN-DOMAIN ...
+  cut 2026-12-31

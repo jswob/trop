@@ -1,0 +1,42 @@
+# L §5.16: "path p (1 <= p <= N)"; p outside it is outside the clause's stated domain, refused at load where the
+# literal shows it (L §8.4: LOAD-DOMAIN).
+# (Writer 8: empirical is gone (L §2.3); emp is now discrete(eq[k] for k in ks), eq = 1 at both keys, and its
+# value is read as ev = vals[emp], the form L §5.16 gives for "one of n known values drawn with equal weight",
+# e[discrete(1 for k in IDX)]: the same uniforms, and the samples 0 and 2 as before, emp itself now ka or kb.)
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+index ks = [ka, kb]
+input w[k in ks]: num
+input vals[k in ks]: num
+input eq[k in ks]: num
+input q25: num
+input neg: num
+input y1: num
+def draw: dist = discrete(w[k] for k in ks) at reader
+def emp: dist = discrete(eq[k] for k in ks) at reader
+def ev: num = vals[emp] at reader
+
+version v
+  cite s
+  governs 2026..
+  known 2026-01-01
+  w[ka] = 1
+  w[kb] = 1
+  vals[ka] = 0
+  vals[kb] = 2
+  eq[*] = 1
+  q25 = 0.25
+  neg = -1
+  y1 = 1
+
+ask a: draw law 2026-06-30 paths 4 seed 1 path 5
+=== expect
+refused: LOAD-DOMAIN ...

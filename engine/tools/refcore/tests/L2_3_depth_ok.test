@@ -1,0 +1,16 @@
+# L §2.3: eight levels are allowed (the cap is 8).
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "a source"
+
+def x: int = ((((((((1))))))))
+
+ask q1: x
+=== expect
+q1: 1
+  cut 2026-01-01

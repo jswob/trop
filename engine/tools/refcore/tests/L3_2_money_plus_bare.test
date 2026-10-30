@@ -1,0 +1,19 @@
+# L §8.3 LOAD-UNIT: "money ± a bare number".
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "a source"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+unit hour "godzina"
+
+input a: money PLN
+input x: num
+
+ask q1: a + x
+=== expect
+refused: LOAD-UNIT ...

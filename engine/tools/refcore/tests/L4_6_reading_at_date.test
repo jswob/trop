@@ -1,0 +1,27 @@
+# L §4.6 Reading at a date: "An item keyed by one time index, read with a date or a period of another granularity
+# in that key position (cpi[d] for a day d ...), reads the key whose period holds it. A date outside the index is
+# RUN-KEY. A period longer than the index's keys holds no key: it is refused (LOAD-KEY)."
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+input cpi[m in months]: num
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  cpi[2026-03] = 101.5
+
+ask q1: cpi[2026-03-17]
+ask q2: cpi[2027-01-05]
+=== expect
+q1: 101.5
+  cut 2026-12-31
+q2: refused: RUN-KEY ...
+  cut 2026-12-31

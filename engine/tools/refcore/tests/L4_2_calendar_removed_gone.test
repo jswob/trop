@@ -1,0 +1,21 @@
+# L §2.3 calval (writer 8): calendar(weekends [...], yearly [...] [from Y], added [...]); the `removed` list is gone (a
+# version replaces that year's row, L §4.2), so `removed [...]` doesn't parse: LOAD-PARSE.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+input len: calendar
+
+version v
+  cite s
+  governs 2026
+  known 2026-01-01
+  len = calendar(weekends [sat, sun], removed [2026-01-01])
+
+ask q: is_business(2026-01-02, len)
+=== expect
+refused: LOAD-PARSE ...

@@ -1,0 +1,24 @@
+# L §7.2 rounds a `num U`; L §3.3 "A rate is not money and not a bare number" and enters arithmetic only through
+# its built-ins: `round` of a rate has no meaning, LOAD-UNIT at load (L §8.4).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+input r: rate
+def c: rate = round(r, 1, half-up) at reader
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  r = 5 %/year
+
+ask q: c law 2026-06-30
+=== expect
+refused: LOAD-UNIT ...

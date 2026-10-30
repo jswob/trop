@@ -1,0 +1,62 @@
+# L §5.12 example fill, copied (payers an index, the years a year index 2020..2023, carry_years = 1).  Arcs for ewa:
+# supply year o to demand year t with t >= o - 1 and t - o <= 1.  Sorted by (o, t): (2020, 2020), (2020, 2021),
+# (2021, 2020), (2021, 2021), (2021, 2022), ...  Supplies 100, 50; rooms 30, 80, 80, 0.  Takes: min(100, 30) = 30
+# (R = 70, Q2020 = 0); min(70, 80) = 70 (R = 0, Q2021 = 10); (2021, 2020): Q = 0, 0; min(50, 10) = 10 (R = 40);
+# min(40, 80) = 40.  Pairs that aren't arcs take 0 (Outputs).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+index payers = [ewa, jan]
+index yrs = year 2020..2023
+input credit[sx in payers, o in yrs]: money PLN
+input room[dx in payers, t in yrs]: money PLN
+input carry_years: int
+
+fill absorb
+  supply credit[sx, o] for sx in payers, o in yrs
+  demand room[dx, t] for dx in payers, t in yrs
+  arc sx == dx and t >= o - 1 and t - o <= carry_years
+  order o, t ties by pos(sx)
+
+version v
+  cite s
+  governs 2020..
+  known 2020-01-01
+  credit[ewa, 2020] = 100.00 PLN
+  credit[ewa, 2021] = 50.00 PLN
+  credit[ewa, 2022] = 0.00 PLN
+  credit[ewa, 2023] = 0.00 PLN
+  credit[jan, *] = 0.00 PLN
+  room[ewa, 2020] = 30.00 PLN
+  room[ewa, 2021] = 80.00 PLN
+  room[ewa, 2022] = 80.00 PLN
+  room[ewa, 2023] = 0.00 PLN
+  room[jan, *] = 10.00 PLN
+  carry_years = 1
+
+ask f1: absorb.taken[ewa, 2020, ewa, t] for t in yrs law 2026-06-30
+ask f2: absorb.taken[ewa, 2021, ewa, t] for t in yrs law 2026-06-30
+=== expect
+f1 (t = 2020): 30.00 PLN
+  law date 2026-06-30, cut 2026-12-31
+f1 (t = 2021): 70.00 PLN
+  law date 2026-06-30, cut 2026-12-31
+f1 (t = 2022): 0.00 PLN
+  law date 2026-06-30, cut 2026-12-31
+f1 (t = 2023): 0.00 PLN
+  law date 2026-06-30, cut 2026-12-31
+f2 (t = 2020): 0.00 PLN
+  law date 2026-06-30, cut 2026-12-31
+f2 (t = 2021): 10.00 PLN
+  law date 2026-06-30, cut 2026-12-31
+f2 (t = 2022): 40.00 PLN
+  law date 2026-06-30, cut 2026-12-31
+f2 (t = 2023): 0.00 PLN
+  law date 2026-06-30, cut 2026-12-31

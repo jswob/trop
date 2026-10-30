@@ -1,0 +1,26 @@
+# GD-1 (round 19): no `R.x` names. L §2.5: "An imported model's items are read as a.item"; gains is no member, so
+# gains.rate in a rule is an unknown id (L §8.3 LOAD-NAME `unknown id <x>`; snap14 said LOAD-FIELD, reading gains as
+# a key literal).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+input rate: num
+def owed: num at reader
+  rule base = gains.rate
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  rate = 2
+
+ask q: owed law 2026-06-30
+=== expect
+refused: LOAD-NAME unknown id gains.rate (m.tally:12)

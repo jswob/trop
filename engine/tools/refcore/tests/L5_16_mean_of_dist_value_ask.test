@@ -1,0 +1,25 @@
+# Round 18, C1-47 (fixed). L §5.16 The closed list: "mean(d) of a distribution value is refused (LOAD-RANDOM, A-42)",
+# in an ask line too (snap11 printed the table's mean, 5).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+input a2: num
+input b4: num
+input m5: num
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  a2 = 2
+  b4 = 4
+  m5 = 5
+
+ask q1: mean(normal(m5, b4))
+=== expect
+refused: LOAD-RANDOM ...

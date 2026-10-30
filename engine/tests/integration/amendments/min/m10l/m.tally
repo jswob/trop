@@ -1,0 +1,25 @@
+model m
+  tally 2
+  on 2027-01-01
+  start 2027-01-01
+  end 2027-12-31
+source src "s"
+unit PLN: currency minor 0.01
+index hh = [pola, rena]
+kind settlements: event certain
+  leg clear: PLN
+place ledger[h in hh]: accounts PLN lives 2027-01-01..
+input other[h in hh]: key hh
+move settle[m in months, h in hh]: settlements
+  on add_months(start_of(m), 1)
+  when -bal(ledger[h], add_days(end_of(m), -1)) > 0
+  reads ledger
+  leg clear from ledger[other[h]] to ledger[h] amount -bal(ledger[h])
+version v
+  cite src
+  governs always
+  known 2027-01-01
+  other[pola] = rena
+  other[rena] = pola
+  opening[ledger[pola]] = -900 at 2027-01-01 start
+ask t: s.day, s.clear.amount for s in settlements over 2027-01-01 .. 2027-12-31

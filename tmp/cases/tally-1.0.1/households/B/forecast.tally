@@ -1,0 +1,111 @@
+part forecast
+  tally 1
+  note "The story's forecast for 2026 – 2028, as seen on 2026-01-02 (story.md, The forecast, points 1 – 9), and B-HR3. Draws are Tally's (L §5.14), not the story's Python stream: the key's random figures are matched within its tolerance p, not draw for draw."
+
+index fc_month = month 2026-01..2028-12
+index proj_slot = 1..8
+
+input fc_arnika_net: money DUK question "What does Arnika-Delta pay net a month (F1)?"
+input fc_delay_lo: int question "Fewest days from Arnika's invoice to its payment (F1)?"
+input fc_delay_hi: int question "Most days (F1)?"
+input fc_proj_mean: num question "Mean number of project invoices a month (F2)?"
+input fc_proj_median: money DUK question "Median project net (F2)?"
+input fc_proj_sigma: num question "Sigma of the project net's logarithm (F2)?"
+input fc_pdelay_lo: int question "Fewest days to a project's payment (F2)?"
+input fc_pdelay_hi: int question "Most days (F2)?"
+input fc_living: money DUK question "Living money each time (F3)?"
+input fc_power: money DUK question "Electricity a month (F3)?"
+input fc_plot: money DUK question "The building plot (F4)?"
+input fc_plot_day: date question "When the plot's money leaves Cis (F4)?"
+input fc_law_odds: num question "The odds that the IT rate is 15 % from 2027 (F7)?"
+input fc_it_rate_hi: num question "The IT rate if the law changes (F7)?"
+input fc_awq4[y in tax_year]: money DUK question "AVG-WAGE-Q4 the forecast uses from February of this year (F6)?"
+input fc_proj_year[y in tax_year]: money DUK question "AVG-WAGE-PROJ the forecast uses for this year (F6)?"
+input hr3_line: money DUK question "B-HR3's liquid line?"
+input hr3_odds: num question "B-HR3's share of paths?"
+
+version story_forecast
+  cite story
+  known 2026-01-02
+  note "story.md lines 81 – 98"
+  fc_arnika_net = 16000.00 "F1"
+  fc_delay_lo = 10 "F1"
+  fc_delay_hi = 40 "F1"
+  fc_proj_mean = 0.5 "F2"
+  fc_proj_median = 8000.00 "F2"
+  fc_proj_sigma = 0.5 "F2"
+  fc_pdelay_lo = 14 "F2"
+  fc_pdelay_hi = 60 "F2"
+  fc_living = 2375.00 "F3"
+  fc_power = 175.00 "F3"
+  fc_plot = 180000.00 "F4"
+  fc_plot_day = 2026-09-15 "F4"
+  fc_law_odds = 0.30 "F7"
+  fc_it_rate_hi = 0.15 "F7"
+  fc_proj_year[2027] = 9900.00 "F6"
+  fc_proj_year[2028] = 10500.00 "F6"
+  fc_awq4[2027] = 9800.00 "F6: from February 2027"
+  fc_awq4[2028] = 10400.00 "F6: from February 2028"
+  hr3_line = 60000.00 "B-HR3"
+  hr3_odds = 0.20 "B-HR3: more than one path in five"
+
+draw fc_law[p in path] ~ binomial(1, fc_law_odds)
+
+draw fc_delay[p in path, m in fc_month] ~ uniform(fc_delay_lo, fc_delay_hi + 1) to 1 plan 25
+
+draw fc_nproj[p in path, m in fc_month] ~ poisson(fc_proj_mean) plan 0
+
+draw fc_pnet[p in path, m in fc_month, s in proj_slot] ~ lognormal(fc_proj_median, fc_proj_sigma) to 1 plan fc_proj_median
+
+draw fc_pdelay[p in path, m in fc_month, s in proj_slot] ~ uniform(fc_pdelay_lo, fc_pdelay_hi + 1) to 1 plan 30
+
+def fc_issue[m in fc_month]: date at end_of(m) = prev_business(add_days(end_of(m), -1), holidays)
+
+def fc_pissue[m in fc_month]: date at day_of(m, 15) = next_business(day_of(m, 15), holidays)
+
+def fc_it_rate[m in fc_month]: num
+  rule now = pit10_flat_rate[it]
+  rule changed excepts now when year_of(m) > year_of(start_of(2026-01)) and fc_law = 1 = fc_it_rate_hi
+
+pay fc_arnika[m in fc_month]
+  from clients
+  to cis
+  amount round(fc_arnika_net * (1 + vat_rate), 0.01, half-up)
+  on next_business(add_days(fc_issue[m], fc_delay[m]), holidays)
+
+pay fc_project[m in fc_month, s in proj_slot]
+  from clients
+  to cis
+  amount fc_pnet[m, s] + round(fc_pnet[m, s] * vat_rate, 0.01, half-up)
+  on next_business(add_days(fc_pissue[m], fc_pdelay[m, s]), holidays)
+  when s <= fc_nproj[m]
+
+pay fc_living_pay[m in fc_month, w in [1, 8, 15, 22]]
+  from cis
+  to elsewhere
+  amount fc_living
+  on next_business(day_of(m, w), holidays)
+
+pay fc_fee[m in fc_month]
+  from cis
+  to association
+  amount assoc_fee
+  on next_business(day_of(m, 10), holidays)
+
+pay fc_power_pay[m in fc_month]
+  from cis
+  to elsewhere
+  amount fc_power
+  on next_business(day_of(m, 12), holidays)
+
+pay fc_plot_pay
+  from cis
+  to elsewhere
+  amount fc_plot
+  on fc_plot_day
+
+def fc_rev[m in fc_month]: money DUK = fc_arnika_net + sum(s in proj_slot where s <= fc_nproj[m]: fc_pnet[m, s])
+
+def fc_tax[m in fc_month]: money DUK = round(round(max(0, fc_rev[m] - social[m - 1]), 1, half-up) * fc_it_rate[m], 1, half-up)
+
+def fc_low[p in path]: money DUK = min(m in fc_month: bal(cis, add_days(end_of(m), -1)) + bal(savings, add_days(end_of(m), -1)))

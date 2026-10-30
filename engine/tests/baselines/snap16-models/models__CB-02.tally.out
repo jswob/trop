@@ -1,0 +1,43 @@
+q_after_relief [rate_reading = *]: 6 714.88 PLN
+  assumed: Przykład 5 shows no health contribution, though art. 27g ust. 1 deducts the relief from the tax after it (health[ewa, 2021])
+  assumed: the example applies the cap, so the care work in Norway is taken to be on land (work_area_of[ewa, 2021])
+  law date 2026-10-19, cut 2026-10-19
+q_cap (y = 2021): 1 360.00 PLN
+  law date 2026-10-19, cut 2026-10-19
+q_credit_limit: 6 537.44 PLN
+  law date 2026-10-19, cut 2026-10-19
+q_diff [rate_reading = down | half-up]: 1 538.88 PLN
+  reading: rate_reading = down | half-up
+  law date 2026-10-19, cut 2026-10-19
+q_diff [rate_reading = exact]: 1 537.44 PLN
+  reading: rate_reading = exact
+  law date 2026-10-19, cut 2026-10-19
+q_full_relief (p = seafarer, y = 2021): true
+  law date 2026-10-19, cut 2026-10-19
+q_full_relief (p = platform_worker, y = 2021): true
+  law date 2026-10-19, cut 2026-10-19
+q_income_total: 80 000.00 PLN
+  law date 2026-10-19, cut 2026-10-19
+q_rate [rate_reading = down | half-up]: 0.1634
+  reading: rate_reading = down | half-up
+  law date 2026-10-19, cut 2026-10-19
+q_rate [rate_reading = exact]: 0.163436
+  reading: rate_reading = exact
+  law date 2026-10-19, cut 2026-10-19
+q_relief [rate_reading = *]: 1 360 PLN
+  assumed: the example applies the cap, so the care work in Norway is taken to be on land (work_area_of[ewa, 2021])
+  law date 2026-10-19, cut 2026-10-19
+q_tax_credit: 8 074.88 PLN
+  law date 2026-10-19, cut 2026-10-19
+q_tax_due [rate_reading = *]: 6 715.00 PLN
+  assumed: Przykład 5 shows no health contribution, though art. 27g ust. 1 deducts the relief from the tax after it (health[ewa, 2021])
+  assumed: the example applies the cap, so the care work in Norway is taken to be on land (work_area_of[ewa, 2021])
+  law date 2026-10-19, cut 2026-10-19
+q_tax_prog [rate_reading = down | half-up]: 6 536 PLN
+  reading: rate_reading = down | half-up
+  law date 2026-10-19, cut 2026-10-19
+q_tax_prog [rate_reading = exact]: 6 537.44 PLN
+  reading: rate_reading = exact
+  law date 2026-10-19, cut 2026-10-19
+q_tax_scale: 13 074.88 PLN
+  law date 2026-10-19, cut 2026-10-19

@@ -1,0 +1,63 @@
+# Writer 11 (tally 2.1, 2.1-11, RC-3). L §5.14: "Two outflows never share a part: two outflows tied for one part that
+# can't cover both are refused (RUN-TIE), with or without prorata, and a law that ranks them writes a term on w"; L §8.4
+# `<outflows> tie for a part of <place> that can't cover both`. s1 and s2, two plans of one day, both rank b1 (100.00)
+# first, and need 120.00. Both legs are refused, and konto's balance from there; on 03-31 b1 holds its 100.00.
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+kind persons: parties
+kind couples: parties
+kind lots: place PLN min 0
+  batched
+  step minor(PLN)
+  takes k for w order k.batch.day
+place konto: lots lives 2026-01-01..
+place world: outside lives 1900-01-01..
+place shop: outside lives 1900-01-01..
+input b1_day: date
+input b1_amt: money PLN
+input b2_day: date
+input b2_amt: money PLN
+input s1_day: date
+input s1_amt: money PLN
+input s2_day: date
+input s2_amt: money PLN
+move b1: transfers
+  on b1_day
+  leg cash from world to konto amount b1_amt
+move b2: transfers
+  on b2_day
+  leg cash from world to konto amount b2_amt
+move s1: transfers
+  on s1_day
+  leg cash from konto to shop amount s1_amt
+move s2: transfers
+  on s2_day
+  leg cash from konto to shop amount s2_amt
+ask q: bal(konto, 2026-04-30), bal(konto, 2026-04-30) of b2, bal(konto, 2026-03-31) of b1
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  persons + [ania] lives 1980-01-01..
+  persons + [tomek] lives 1981-01-01..
+  couples + [ania_tomek] lives 2010-06-01..
+  opening[konto] = 0 PLN at 2026-01-01 start
+  b1_day = 2026-02-01
+  b1_amt = 100.00 PLN
+  b2_day = 2026-03-01
+  b2_amt = 50.00 PLN
+  s1_day = 2026-04-01
+  s1_amt = 60.00 PLN
+  s2_day = 2026-04-01
+  s2_amt = 60.00 PLN
+=== expect
+q: (refused: RUN-TIE s1, s2 tie for a part of konto that can't cover both, refused: RUN-TIE s1, s2 tie for a part of konto that can't cover both, 100.00 PLN)
+  cut 2026-01-01

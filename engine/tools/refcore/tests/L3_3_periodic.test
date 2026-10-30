@@ -1,0 +1,45 @@
+# L §3.3 periodic: "For nominal m it is (1 + r/m)^(m·t) - 1, which is r/m for a period of 1/m year": 0.12/12 =
+# 0.01.  simple: r × t = 0.12 × 1/12 = 0.01; a quarter, t = 1/4: 0.03.  discount d: i = d/(1 - d) = 0.2/0.8 = 0.25,
+# then (1 + i)^1 - 1 = 0.25.  effective over its own period: (1.12)^1 - 1 = 0.12.  factor = (1 + periodic)^n, exact
+# for an integer n: 1.01^12 = 1.126825030131969720661201 (L §5.18 Output: more than 15 significant digits, so a
+# 15-digit display beside it), and 1.12^1 = 1.12.  Round 6: factor is exact when load shows its whole power is an
+# integer, LOAD-TO otherwise: over a year, t is 1, 4 or 12 whatever r's period, so m·t·n and t·n are integers for an
+# int n and a code written inline (`nominal 12`, allowed inline by round 6's L §7.1); n1 = 1.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+input r: rate
+input d: rate
+input c12: compounding
+input n1: int
+def p_nom: num = periodic(r, month, c12) at reader
+def p_sim: num = periodic(r, month, simple) at reader
+def p_q: num = periodic(r, quarter, simple) at reader
+def p_dis: num = periodic(d, year, discount) at reader
+def p_eff: num = periodic(r, year, effective) at reader
+def f_nom: num = factor(r, n1, year, nominal 12) at reader
+def f_eff: num = factor(r, n1, year, effective) at reader
+
+version v
+  cite s
+  governs 2026..
+  known 2026-01-01
+  r = 12 %/year
+  d = 20 %/year
+  c12 = nominal 12
+  n1 = 1
+
+ask a: p_nom, p_sim, p_q, p_dis, p_eff law 2026-06-30
+ask b: f_nom, f_eff law 2026-06-30
+=== expect
+a: (0.01, 0.01, 0.03, 0.25, 0.12)
+  law date 2026-06-30, cut 2026-12-31
+b: (1.126825030131969720661201 (1.12682503013197), 1.12)
+  law date 2026-06-30, cut 2026-12-31

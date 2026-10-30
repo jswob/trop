@@ -1,0 +1,77 @@
+model time05
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+  note "Probe TIME-05: three clocks, each under its own month-end or year-end wording."
+
+source probe_card "Probe card TIME-05 (made-up story and rules)"
+
+input a_bought: date
+
+input a_sold: date
+
+input b_acquired: date
+
+input b_sold: date
+
+input c_death: date
+
+input c_reported: date
+
+input flat_years: int
+
+input report_months: int
+
+input short_months: int
+
+def a_short_term: bool at reader
+  note "rule 1: the end day is inside the window"
+  rule base v card = a_sold <= a_window_end
+
+def a_window_end: date at reader
+  note "rule 1: the same-numbered day; a month lacking it, its last day"
+  rule base v card = add_months(a_bought, short_months)
+
+def b_clock_end: date at reader
+  note "rule 2: 5 years counted from the end of the year of acquisition"
+  rule base v card = add_years(add_days(end_of(year_of(b_acquired)), -1), flat_years)
+
+def b_exempt: bool at reader
+  note "rule 2: exempt if the sale falls after the clock's end"
+  rule base v card = b_sold > b_clock_end
+
+def b_first_exempt: date at reader
+  rule base v card = add_days(b_clock_end, 1)
+
+def c_day_for_day: date at reader
+  note "the contrast the question asks: day-for-day counting from the day of death"
+  rule base = add_months(c_death, report_months)
+
+def c_deadline: date at reader
+  note "rule 3: 6 months from the end of the month of death; counted from a month's last day, it ends on the last day of its final month"
+  rule base v card = add_days(end_of(month_of(c_death) + report_months), -1)
+
+def c_in_time: bool at reader
+  note "rule 3: within the period, its last day included"
+  rule base v card = c_reported <= c_deadline
+
+ask q_a: a_window_end, a_short_term law 2026-10-25
+
+ask q_b: b_clock_end, b_exempt, b_first_exempt law 2026-10-25
+
+ask q_c: c_deadline, c_in_time, c_day_for_day law 2026-10-25
+
+version card
+  cite probe_card
+  governs always
+  known 2026-10-25
+  a_bought = 2022-08-31 "story (a): units bought 31 August 2022"
+  a_sold = 2023-02-28 "story (a): sold 28 February 2023"
+  b_acquired = 2019-03-15 "story (b): flat acquired 15 March 2019"
+  b_sold = 2024-12-30 "story (b): sold 30 December 2024"
+  c_death = 2024-04-30 "story (c): Zbigniew dies 30 April 2024"
+  c_reported = 2024-10-31 "story (c): Halina reports on 31 October 2024"
+  flat_years = 5 "rule 2"
+  report_months = 6 "rule 3"
+  short_months = 6 "rule 1"

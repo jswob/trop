@@ -1,0 +1,23 @@
+Bank Olcha S.A.|account statement
+Account|LN73 4400 2011 0000 8817 2264 0001
+Holder|HALINA SOWA
+Period|20250301|20250331
+Opening balance|122 855,02
+Date|Type|Counterparty|Title|Amount|Balance after
+20250303|CASH|ATM Olcha Brzezie|cash withdrawal|-500,00|122 355,02
+20250305|CREDIT|Social Insurance Office|survivor pension 03/2025|4 227,07|126 582,09
+20250305|STANDING ORDER|WM Ogrodowa 2|fee Ogrodowa 2/11 03/2025|-445,00|126 137,09
+20250306|CARD|Market Brzezie|card ...2264|-215,54|125 921,55
+20250310|CARD|Piekarnia Złoty Kłos|card ...2264|-221,25|125 700,30
+20250316|CARD|Drogeria Konwalia|card ...2264|-165,92|125 534,38
+20250317|STANDING ORDER|Volta Energia|Leśna 4 energy 03/2025|-385,00|125 149,38
+20250317|CASH|ATM Olcha Brzezie|cash withdrawal|-500,00|124 649,38
+20250317|CARD|Stacja Olcha-Paliwa|card ...2264|-37,03|124 612,35
+20250319|CARD|Apteka Rumianek|card ...2264|-30,29|124 582,06
+20250319|CARD|Market Brzezie|card ...2264|-121,46|124 460,60
+20250320|STANDING ORDER|Telekom Lenia|phone 03/2025|-59,00|124 401,60
+20250325|TRANSFER|Opieka Dom sp.|home help 03/2025|-1 100,00|123 301,60
+20250328|CARD|Piekarnia Złoty Kłos|card ...2264|-163,72|123 137,88
+20250328|CARD|Stacja Olcha-Paliwa|card ...2264|-149,90|122 987,98
+20250328|CARD|Drogeria Konwalia|card ...2264|-53,05|122 934,93
+Closing balance|122 934,93

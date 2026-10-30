@@ -1,0 +1,26 @@
+Bank Olcha S.A.|account statement
+Account|LN73 4400 2011 0000 8817 2264 0001
+Holder|HALINA SOWA
+Period|20240601|20240630
+Opening balance|45 376,83
+Date|Type|Counterparty|Title|Amount|Balance after
+20240603|CASH|ATM Olcha Brzezie|cash withdrawal|-500,00|44 876,83
+20240604|CARD|Apteka Rumianek|card ...2264|-106,59|44 770,24
+20240604|CARD|Piekarnia Złoty Kłos|card ...2264|-199,62|44 570,62
+20240605|CREDIT|Social Insurance Office|pension 06/2024 H. SOWA|2 472,98|47 043,60
+20240605|DIRECT DEBIT|Bank Buk|loan 3310-20 instalment 45|-972,28|46 071,32
+20240605|STANDING ORDER|WM Ogrodowa 2|fee Ogrodowa 2/11 06/2024|-420,00|45 651,32
+20240605|CARD|Market Brzezie|card ...2264|-145,45|45 505,87
+20240608|CARD|Piekarnia Złoty Kłos|card ...2264|-206,90|45 298,97
+20240612|CARD|Drogeria Konwalia|card ...2264|-49,90|45 249,07
+20240613|CARD|Apteka Rumianek|card ...2264|-237,40|45 011,67
+20240617|STANDING ORDER|Volta Energia|Leśna 4 energy 06/2024|-385,00|44 626,67
+20240617|CASH|ATM Olcha Brzezie|cash withdrawal|-500,00|44 126,67
+20240619|CARD|Sklep Pod Lipą|card ...2264|-137,12|43 989,55
+20240620|STANDING ORDER|Telekom Lenia|phone 06/2024|-59,00|43 930,55
+20240622|CARD|Drogeria Konwalia|card ...2264|-26,63|43 903,92
+20240624|CREDIT|Social Insurance Office|survivor pension 06/2024, difference (decision 2024-06-14)|1 549,55|45 453,47
+20240625|TRANSFER|Opieka Dom sp.|home help 06/2024|-1 100,00|44 353,47
+20240628|CREDIT|TU Opoka S.A.|group life GZ-7741 benefit, insured Z. Sowa|90 000,00|134 353,47
+20240628|CARD|Stacja Olcha-Paliwa|card ...2264|-241,73|134 111,74
+Closing balance|134 111,74

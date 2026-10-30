@@ -1,0 +1,67 @@
+# Writer 11 (tally 2.1, 2.1-11, 2.1-18, C-4). L §5.14: "A hole in a term (an attribute that is a hole ...) makes the
+# arcs it ranks undecided. Only the parts the take could reach under some reading of the holes merge, into one hole part
+# with the total known"; "A fill refuses an undecided order (RUN-ORDER) ...; a take's outcome is a fact, so it stays a
+# hole". w1's paid_from is a hole: either part could go first, so ania's 100.00 and tomek's 50.00 merge into one hole
+# part of 120.00 that may be either's (HOLE-PART), the total 120.00 known, and w1's leg read of tomek a hole too.
+# L5_14_parts_decided answers the hole.
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+kind persons: parties
+kind couples: parties
+kind savings: place PLN min 0
+  owned by arrive
+  step minor(PLN)
+  takes k for w order if w in withdrawals and k.owner == w.paid_from then 0 else 1
+kind withdrawals: transfers
+  attr paid_from: key persons
+kind tomeks: transfers
+input pf: key persons
+place konto: savings lives 2026-01-01..
+place world: outside lives 1900-01-01..
+place shop: outside lives 1900-01-01..
+input a1_day: date
+input a1_amt: money PLN
+input t1_day: date
+input t1_amt: money PLN
+input w1_day: date
+input w1_amt: money PLN
+def arrive[m in events, p in parties]: num at m.day
+  rule base = if p == ania then 1 else 0
+  rule t beats base = if p == tomek then 1 else 0 when m in tomeks
+move a1: transfers
+  on a1_day
+  leg cash from world to konto amount a1_amt
+move t1: tomeks
+  on t1_day
+  leg cash from world to konto amount t1_amt
+move w1: withdrawals
+  on w1_day
+  attr paid_from = pf
+  leg cash from konto to shop amount w1_amt
+ask q: bal(konto, 2026-03-31), bal(konto, 2026-03-31) of ania, bal(konto, 2026-03-31) of tomek, w1.cash.amount of tomek
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  persons + [ania] lives 1980-01-01..
+  persons + [tomek] lives 1981-01-01..
+  couples + [ania_tomek] lives 2010-06-01..
+  opening[konto] = 0 PLN at 2026-01-01 start
+  a1_day = 2026-02-01
+  a1_amt = 100.00 PLN
+  t1_day = 2026-02-02
+  t1_amt = 50.00 PLN
+  w1_day = 2026-03-01
+  w1_amt = 30.00 PLN
+  pf = ?"who paid"
+=== expect
+q: (120.00 PLN, ?"konto: 120.00 PLN may be ania's: who paid" (konto), ?"konto: 120.00 PLN may be tomek's: who paid" (konto), ?"konto: 30.00 PLN may be tomek's: who paid" (konto))
+  cut 2026-01-01

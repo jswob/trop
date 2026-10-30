@@ -1,0 +1,9 @@
+part asks_b01
+  tally 1
+  note "Question B-01 (tmp/cases/B/questions.md)."
+
+ask b01_months: rev[m], rev_ytd[m], social[m], b_health[m], tax_flat[m], paid_on[m] for m in b_month where year_of(m) = 2024 with law 2025-04-30 as known 2025-04-30
+
+ask b01_settlement: rev_year[2024], settle_owed[2024], health_paid[2024], settle_owed[2024] - health_paid[2024], settle_due[2024] with law 2025-04-30 as known 2025-04-30
+
+ask b01_forms: contrib_paid_in[2024], tax_b[2024], tax_c_year[2024] with law 2025-04-30 as known 2025-04-30

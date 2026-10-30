@@ -1,0 +1,21 @@
+# L §7.1: "A text literal ... in a rule it is refused (LOAD-LITERAL)" (writer 8, OQ-6).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+input form: text
+def is37: bool = form == "PIT-37"
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  form = "PIT-37"
+
+ask q1: is37
+=== expect
+refused: LOAD-LITERAL ...

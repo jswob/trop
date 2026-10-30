@@ -1,0 +1,42 @@
+# W8-SEEN (writer 8's third pass). E §7 step 1: "Cells that no random fact reaches are computed once and shared by
+# every path: ... every plan that no random fact reaches"; E §3.1 step 10 / L §5.16: a line is random only where it
+# reaches a random fact. pay books w on a random day; low_v reads v, which only fee books (100.00 DUK on the first of
+# each month, opening 0.00 DUK), so q6 is no random line and is answered: the lowest month-end balance is January's
+# 100.00 DUK. q8, a query over paths of low_w, still evaluates w per path (L5_16_random_balance_def: 0 of 3). snap9
+# refused the load (LOAD-RANDOM the line is random ...): pay's refused day held for the whole main walk.
+=== m.tally
+model m
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+unit DUK: currency minor 0.01
+source s "s"
+index delays = 1..10
+place w: accounts DUK lives 2026-01-01..
+place world: outside lives 2026-01-01..
+place v: accounts DUK lives 2026-01-01..
+input amt: money DUK question "amount?"
+version o
+  cite s
+  known 2026-01-01
+  opening[w] = 0.00 DUK at 2026-01-01 start
+  opening[v] = 0.00 DUK at 2026-01-01 start
+  amt = 100.00 DUK governs always "a"
+def delay[m in months]: dist = discrete(1 for k in delays)
+def low_w: money DUK = min(bal(w, end_of(m) - 1) for m in months)
+move pay[m in months]: transfers
+  on add_days(start_of(m), delay[m])
+  at start_of(m)
+  leg cash from world to w amount amt
+def low_v: money DUK = min(bal(v, end_of(m) - 1) for m in months)
+move fee[m in months]: transfers
+  on start_of(m)
+  leg cash from world to v amount amt
+ask q6: low_v law 2026-12-31
+ask q8: share(low_w < amt) law 2026-12-31 paths 3 seed 1
+=== expect
+q6: 100.00 DUK
+  law date 2026-12-31, cut 2026-01-01
+q8: 0 of 3, 0 (standard error 0; 3 paths; horizon none)
+  law date 2026-12-31, cut 2026-01-01

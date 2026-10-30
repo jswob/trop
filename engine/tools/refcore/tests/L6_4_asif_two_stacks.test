@@ -1,0 +1,47 @@
+# L §5.18: "an ask is checked and answered only in the worlds its line is evaluated in (its in, both worlds of a
+# diff, each as if {scenario s} in it)"; L §6.4 Asking: "Inside an expression, x as if {scenario s} is x in s". s1 and
+# s2 are each over hh (two stacks that never meet): salary at law 2027-06-30 is 6 000.00 PLN in s1 and 4 000.00 PLN in
+# s2 (each replaces the base's row on its span, L §4.6 step 2), so d = 6 000.00 - 4 000.00 = 2 000.00 PLN.
+=== hh.tally
+model hh
+  tally 2
+  on 2026-11-15
+  start 2026-01-01
+  end 2027-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+input salary: money PLN
+
+version v1
+  cite s
+  governs 2026-01-01..
+  known 2026-01-01
+  salary = 5 000.00 PLN "umowa"
+
+ask d: salary as if {scenario s1} - salary as if {scenario s2} law 2027-06-30
+=== s1.tally
+scenario s1 over hh
+  tally 2
+  from 2027-01-01
+
+version a
+  cite s
+  governs 2027-01-01..
+  known 2026-10-20
+  replace salary = 6 000.00 PLN "s1"
+=== s2.tally
+scenario s2 over hh
+  tally 2
+  from 2027-01-01
+
+version b
+  cite s
+  governs 2027-01-01..
+  known 2026-10-20
+  replace salary = 4 000.00 PLN "s2"
+=== expect
+d: 2 000.00 PLN
+  world: s1
+  world: s2
+  law date 2027-06-30, cut 2026-11-15

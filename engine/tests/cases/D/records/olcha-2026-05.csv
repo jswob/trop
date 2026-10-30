@@ -1,0 +1,27 @@
+Bank Olcha S.A.|account statement
+Account|LN73 4400 2011 0000 8817 2264 0001
+Holder|HALINA SOWA
+Period|20260501|20260531
+Opening balance|9 327,19
+Date|Type|Counterparty|Title|Amount|Balance after
+20260504|CASH|ATM Olcha Brzezie|cash withdrawal|-500,00|8 827,19
+20260505|CREDIT|Social Insurance Office|survivor pension 05/2026|4 492,02|13 319,21
+20260505|STANDING ORDER|WM Ogrodowa 2|fee Ogrodowa 2/11 05/2026|-468,00|12 851,21
+20260505|CARD|Apteka Rumianek|card ...2264|-139,19|12 712,02
+20260507|CARD|Drogeria Konwalia|card ...2264|-132,14|12 579,88
+20260511|CREDIT|Oskar Wilczek|rent 05/2026 Ogrodowa 2/11|1 976,00|14 555,88
+20260512|CARD|Piekarnia Złoty Kłos|card ...2264|-165,73|14 390,15
+20260515|STANDING ORDER|Volta Energia|Leśna 4 energy 05/2026|-385,00|14 005,15
+20260518|CASH|ATM Olcha Brzezie|cash withdrawal|-500,00|13 505,15
+20260519|CARD|Market Brzezie|card ...2264|-78,03|13 427,12
+20260520|TRANSFER|Revenue Office Kłodzin|PIT-13 advance 04/2026 H. SOWA|-136,00|13 291,12
+20260520|STANDING ORDER|Telekom Lenia|phone 05/2026|-59,00|13 232,12
+20260520|CARD|Piekarnia Złoty Kłos|card ...2264|-45,26|13 186,86
+20260522|CARD|Warzywniak u Janka|card ...2264|-37,77|13 149,09
+20260523|CARD|Sklep Pod Lipą|card ...2264|-155,12|12 993,97
+20260525|CARD|Drogeria Konwalia|card ...2264|-53,33|12 940,64
+20260525|CARD|Sklep Pod Lipą|card ...2264|-177,89|12 762,75
+20260525|TRANSFER|Opieka Dom sp.|home help 05/2026|-2 150,00|10 612,75
+20260531|CARD|Apteka Rumianek|card ...2264|-220,30|10 392,45
+20260531|CARD|Sklep Pod Lipą|card ...2264|-214,46|10 177,99
+Closing balance|10 177,99

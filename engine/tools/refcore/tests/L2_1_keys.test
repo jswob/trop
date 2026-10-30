@@ -1,0 +1,28 @@
+# L §2.1 Keys: "A token that matches the key pattern is one key, - included" (ty2014-15, t4e-171).
+# The keys are read back as they are written (L §5.18 prints a key as itself).
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "a source"
+
+index tys = [ty2014-15, t4e-171]
+
+input n[k in tys]: int
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  n[ty2014-15] = 1
+  n[t4e-171] = 2
+
+ask q1: n[k] for k in tys
+=== expect
+q1 (k = ty2014-15): 1
+  cut 2026-01-01
+q1 (k = t4e-171): 2
+  cut 2026-01-01

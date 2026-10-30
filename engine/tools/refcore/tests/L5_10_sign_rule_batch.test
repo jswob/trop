@@ -1,0 +1,56 @@
+# L §5.10 The sign rule (round 16): checked "1. after the day's first batch, taken together: its readings at the start,
+# its observations ... and its plans (so an amount that arises and is paid on one day nets inside it)"; "A balance that
+# breaks the rule at one of these points is refused from there (RUN-PLACE), with the legs at the place that brought it
+# there: the batch's"; L §8.4 `<place> is <b> after the day's observations and plans of <d>`. owed is a debt (max 0):
+# on 2026-03-10 a_repay pays 100.00 PLN into it and b_borrow takes 100.00 PLN out, which net to 0 whatever their
+# order: no refusal (q). With c_over paying 1.00 PLN more (q2) the batch leaves owed at 1.00 PLN: refused, and so are
+# the batch's legs at owed (flows of a_repay and c_over; E §4.2 step 5).
+=== m.tally
+model t
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+place owed: debts PLN lives 2026-01-01..
+place konto: accounts PLN lives 2026-01-01..
+input amt: money PLN
+input day: date
+input big: money PLN
+
+move a_repay: transfers
+  on day
+  leg cash from konto to owed amount amt
+
+move b_borrow: transfers
+  on day
+  leg cash from owed to konto amount amt
+
+move c_over: transfers
+  on day
+  leg cash from konto to owed amount big
+
+ask q: bal(owed, 2026-03-31), bal(konto, 2026-03-31)
+ask q2: bal(owed, 2026-03-31), flows(a_repay, 2026-03), flows(c_over, 2026-03) with big = 1.00 PLN
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN
+  big = 0.00 PLN
+  day = 2026-03-10
+  opening[owed] = 0 PLN at 2026-01-01 start
+  opening[konto] = 500.00 PLN at 2026-01-01 start
+=== expect
+q: (0.00 PLN, 500.00 PLN)
+  unfulfilled: a_repay
+  unfulfilled: b_borrow
+  cut 2026-06-30
+q2: (refused: RUN-PLACE owed is 1.00 PLN after the day's observations and plans of 2026-03-10, refused: RUN-PLACE owed is 1.00 PLN after the day's observations and plans of 2026-03-10, refused: RUN-PLACE owed is 1.00 PLN after the day's observations and plans of 2026-03-10)
+  pinned: big = 1.00 PLN
+  unfulfilled: a_repay
+  unfulfilled: c_over
+  cut 2026-06-30

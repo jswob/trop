@@ -1,0 +1,259 @@
+model cb06
+  tally 2
+  on 2026-10-19
+  start 2026-01-01
+  end 2026-12-31
+  note "UK statutory residence test, third automatic overseas test, sufficient hours (FA 2013 Sch 45 para 14(3) Steps 1-5): HMRC RFIG20160 Example 2 (MayLing) and Example 1 (Jack's gaps), with the December 2013 RDR3 version of MayLing's example."
+  note "The tax year is not stated (the previous tax year), so the facts govern no period; the Schedule governs from 2013-14 on. Only the sufficient hours limb is modelled; the significant break, UK work days and UK days limbs of para 14(1) are not."
+
+source fa2013_sch45 "Finance Act 2013, Schedule 45 (Statutory residence test), paras 14 and 28" at "https://www.legislation.gov.uk/ukpga/2013/29/schedule/45"
+
+source lifted_1_0_1 "Figures tally 1.0.1 allowed inline in rules"
+
+source rdr3_2013 "HMRC RDR3 Guidance Note: Statutory Residence Test (SRT), Published December 2013 (archived copy)" at "https://web.archive.org/web/20141021053122id_/http://www.hmrc.gov.uk/international/rdr3.pdf"
+
+source rfig20160 "HMRC Residence and FIG Regime Manual RFIG20160, SRT: Automatic overseas tests: Gaps between employments (updated 3 July 2026)" at "https://www.gov.uk/hmrc-internal-manuals/residence-and-fig-regime-manual/rfig20160"
+
+unit hour "godzina"
+
+axis edition
+  rfig "RFIG20160 (current): block A of employer 2's leave reduces the full working weeks by 4"
+  rdr3 "RDR3 (December 2013): block A reduces the full working weeks by five"
+
+axis step5_mode
+  down "the Step 5 figure is shown truncated to two decimals, as printed"
+  half-up "the Step 5 figure is shown rounded half up to two decimals"
+
+index gap = [may_break, jack_gap1, jack_gap2]
+
+index person = [mayling, jack]
+
+index pweek = [three_long, two_long]
+
+input avg_shown_0_01: num hour
+  note "lifted from an inline figure of tally 1.0.1"
+
+input block_a_days: int
+
+input block_b_days: int
+
+input block_b_embedded: int
+
+input e1_days_per_week: int
+
+input e1_hours_per_day: num hour
+
+input e1_leave_days: int
+
+input e1_weeks: int
+
+input e2_long_days: int
+
+input e2_long_hours: num hour
+
+input e2_short_days: int
+
+input e2_short_hours: num hour
+
+input e2_weeks: int
+
+input feb29: bool
+
+input gap_cap: int
+
+input gap_len[g in gap]: int
+
+input gap_of[g in gap]: key person
+
+input gap_total_cap: int
+
+input leave_reasonable: bool
+
+input pw_count[w in pweek]: int
+
+input pw_long_days[w in pweek]: int
+
+input rdr3_block_a_reduction: int
+
+input sick_days: int
+
+input step4_raw_7: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input threshold: num hour
+
+input uk_work_days: int
+
+input year_days_common: int
+
+input year_days_leap: int
+
+def avg: num hour at reader
+  note "Step 5: net overseas hours divided by the Step 4 number"
+  rule base v fa2013 = net_hours / step4_weeks
+
+def avg_shown: num hour = round(avg, avg_shown_0_01, step5_mode) at reader
+
+def block_a_reduction: int at reader
+  note "full working weeks lost to block A of employer 2's leave: the weeks it touches"
+  rule base = sum(pw_count[w] for w in pweek)
+  rule rdr3 beats base v rdr3_dec2013 = rdr3_block_a_reduction when edition == rdr3
+
+def block_b_reduction: num = block_b_days / e2_days_per_week at reader
+
+def disregarded: int at reader
+  note "Step 1: days on which more than 3 hours' work is done in the UK"
+  rule base v fa2013 = uk_work_days
+
+def e1_extra_days: int = e1_work_days - e1_full_weeks * e1_days_per_week at reader
+
+def e1_full_weeks: int = round(e1_work_days / e1_days_per_week, 1, floor) at reader
+
+def e1_hours: num hour = e1_work_days * e1_hours_per_day at reader
+
+def e1_work_days: int = e1_weeks * e1_days_per_week - e1_leave_days at reader
+
+def e2_days_per_week: int = e2_long_days + e2_short_days at reader
+
+def e2_full_hours: num hour = e2_full_weeks * e2_week_hours at reader
+
+def e2_full_weeks: num = e2_weeks - block_a_reduction - block_b_reduction - sick_reduction at reader
+
+def e2_hours: num hour = e2_full_hours + sum(pw_hours[w] for w in pweek) at reader
+
+def e2_leave: int = block_a_days + block_b_days at reader
+
+def e2_week_hours: num hour = e2_long_days * e2_long_hours + e2_short_days * e2_short_hours at reader
+
+def gap_allowed[g in gap]: int at reader
+  note "para 28(9)(a): a gap of more than 15 days counts as 15"
+  rule base v fa2013 = min(gap_len[g], gap_cap)
+
+def gap_sum[p in person]: int = sum(gap_allowed[g] for g in gap where gap_of[g] == p) at reader
+
+def gap_total[p in person]: int at reader
+  note "para 28(9)(b): with more than one change of employment, at most 30 days for all gaps; two gaps mean at least two changes"
+  rule base = gap_sum[p]
+  rule capped beats base v fa2013 = min(gap_sum[p], gap_total_cap) when count(g in gap where gap_of[g] == p) > 1
+
+def meets: bool at reader
+  note "Step 5: 35 or more is sufficient hours overseas"
+  rule base v fa2013 = avg >= threshold
+
+def net_hours: num hour = e1_hours + e2_hours at reader
+
+def other_days: int at reader
+  note "Step 3 and para 28(2): reasonable annual leave, sick leave and non-working days embedded in a block of leave"
+  rule base v fa2013 = e1_leave_days + e2_leave + block_b_embedded + sick_days
+  rule unreasonable beats base v fa2013 = ?"Para 28(2)(a) and (4) allow only reasonable leave; how much of MayLing's leave counts is not in the case." when not leave_reasonable
+
+def pw_hours[w in pweek]: num hour = pw_count[w] * (pw_long_days[w] * e2_long_hours + e2_short_days * e2_short_hours) at reader
+
+def reference: int at reader
+  note "Step 3: the days of the year less disregarded days, leave and gaps between employments"
+  rule base v fa2013 = year_days - disregarded - other_days - gap_total[mayling]
+
+def sick_reduction: num = sick_days / e2_days_per_week at reader
+
+def step4_raw: num = reference / step4_raw_7 at reader
+
+def step4_weeks: int at reader
+  note "Step 4: more than 1 and not whole is rounded down; less than 1 is rounded up to 1"
+  rule base v fa2013 = round(step4_raw, 1, floor)
+  rule small beats base v fa2013 = 1 when step4_raw < 1
+
+def year_days: int at reader
+  note "Step 3: 365, or 366 if year X includes 29 February"
+  rule base v fa2013 = if feb29 then year_days_leap else year_days_common
+
+ask q_e1_full_weeks: e1_full_weeks, e1_extra_days law 2026-10-19
+
+ask q_e1_hours: e1_hours law 2026-10-19
+
+ask q_e2_full_hours: e2_full_hours law 2026-10-19
+
+ask q_e2_full_weeks: e2_full_weeks law 2026-10-19
+
+ask q_gap_may: gap_total[mayling], gap_len[may_break] law 2026-10-19
+
+ask q_jack: gap_allowed[g] for g in [jack_gap1, jack_gap2] law 2026-10-19
+
+ask q_jack_total: gap_total[jack] law 2026-10-19
+
+ask q_meets: meets law 2026-10-19
+
+ask q_net_hours: net_hours law 2026-10-19
+
+ask q_other_days: e1_leave_days, e2_leave, block_b_embedded, sick_days, other_days law 2026-10-19
+
+ask q_pw_hours: pw_hours[w] for w in pweek law 2026-10-19
+
+ask q_reductions: block_a_reduction, block_b_reduction, sick_reduction law 2026-10-19
+
+ask q_reference: reference law 2026-10-19
+
+ask q_step1: disregarded law 2026-10-19
+
+ask q_step4: step4_raw, step4_weeks law 2026-10-19
+
+ask q_step5: avg law 2026-10-19
+
+ask q_step5_shown: avg_shown law 2026-10-19
+
+version fa2013
+  cite fa2013_sch45
+  governs 2013-04-06..
+  known 2013-07-17
+  note "Known from Royal Assent: the Act's introductory text is dated 17th July 2013 (https://www.legislation.gov.uk/ukpga/2013/29/introduction/enacted). Para 153(1): Parts 1 and 2 have effect for the tax year 2013-14 or any subsequent tax year. The rows are read in the revised text on legislation.gov.uk (retrieved 2026-10-18); amendments to paras 14(3) and 28(9) are not traced. para 28(2) was modified from 22.7.2020 by FA 2020 s.109(6), which the case doesn't transcribe."
+  gap_cap = 15 "para 28(9)(a): if the gap lasts for more than 15 days, only 15 days may be subtracted"
+  gap_total_cap = 30 "para 28(9)(b): the maximum number of days that may be subtracted for all the gaps in total is 30"
+  threshold = 35 "para 14(3) Step 5: If the answer is 35 or more"
+  year_days_common = 365 "para 14(3) Step 3: 365, or 366 if year X includes 29 February"
+  year_days_leap = 366 "para 14(3) Step 3: 365, or 366 if year X includes 29 February"
+
+version lifted_figures
+  cite lifted_1_0_1
+  governs always
+  known 2013-07-17
+  avg_shown_0_01 = 0.01 "inline in tally 1.0.1: avg_shown line 81, round step"
+  step4_raw_7 = 7 "inline in tally 1.0.1: step4_raw line 144, factor"
+
+version rdr3_dec2013
+  cite rdr3_2013
+  governs always
+  known 2026-10-19
+  note "RDR3's Example 3 is the same hypothetical case in its December 2013 wording; its stipulation is known from the model's on date (LANGUAGE 4.5; the model has no start). The note was published December 2013."
+  rdr3_block_a_reduction = 5 "Example 3, printed p. 15: reducing her number of full working weeks by five weeks"
+
+version rfig_2026
+  cite rfig20160
+  governs always
+  known 2026-10-19
+  note "The examples' facts are a hypothetical case's stipulations, known from the model's on date (LANGUAGE 4.5; the model has no start), as are the two assumptions that stand for what the example leaves unsaid. The page is updated 3 July 2026."
+  note "Example 2: employer 1 from 6 April to 23 August (20 weeks); a break of 30 days to tour Italy; employer 2 from 23 September to 5 April (27 weeks and 6 days, amounting to 28 working weeks)."
+  block_a_days = 5 "Example 2, first bullet: 5 days annual leave"
+  block_b_days = 10 "Example 2, second bullet: 10 days annual leave"
+  block_b_embedded = 2 "Example 2, second bullet: with 2 embedded non-working days, (the Saturday and Sunday in the middle of this 2-week period)"
+  e1_days_per_week = 5 "Example 2: an average of 8 hours a day, 5 days per week"
+  e1_hours_per_day = 8 "Example 2: an average of 8 hours a day"
+  e1_leave_days = 9 "Example 2: 9 days annual leave; there were no embedded non-working days"
+  e1_weeks = 20 "Example 2: 6 April to 23 August (20 weeks)"
+  e2_long_days = 4 "Example 2: from Monday to Thursday"
+  e2_long_hours = 9.5 "Example 2: 9 hours and 30 minutes from Monday to Thursday"
+  e2_short_days = 1 "Example 2: and for 4 hours on a Friday"
+  e2_short_hours = 4 "Example 2: and for 4 hours on a Friday"
+  e2_weeks = 28 "Example 2: 27 weeks and 6 days - amounting to 28 working weeks"
+  feb29 = false assumed "the year is not stated; the example subtracts from 365, so the year is taken to have no 29 February" "Example 2, Step 3: subtract from 365 days"
+  gap_len[may_break] = 30 "Example 2: took a break of 30 days to tour round Italy"
+  gap_len[jack_gap1] = 21 "Example 1: The first gap was of 21 days"
+  gap_len[jack_gap2] = 5 "Example 1: and the second 5 days"
+  gap_of[may_break] = mayling "Example 2"
+  gap_of[jack_gap1] = jack "Example 1"
+  gap_of[jack_gap2] = jack "Example 1"
+  leave_reasonable = true assumed "para 28(2)(a) and (4) allow only reasonable leave; the example deducts all of it without discussing it" "Example 2, Step 3"
+  pw_count[three_long] = 3 "Example 2, first bullet: for 3 weeks she only worked 3 long days and a short day"
+  pw_count[two_long] = 1 "Example 2, first bullet: and for 1 week she worked 2 long days and a short day"
+  pw_long_days[three_long] = 3 "Example 2, first bullet: 3 long days and a short day"
+  pw_long_days[two_long] = 2 "Example 2, first bullet: 2 long days and a short day"
+  sick_days = 5 "Example 2, third bullet: 5 days continuous sick leave, (with no embedded non-working days)"
+  uk_work_days = 0 "Example 2: MayLing spends no time in the UK in the tax year."

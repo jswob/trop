@@ -1,0 +1,21 @@
+# L §3.2 with L §5.16: a dist U row gives a distribution over quantities of unit U; normal(1 PLN, ...) for a
+# dist with no unit mixes units (LOAD-UNIT).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+input z: dist
+
+version v
+  cite s
+  governs 2026..
+  known 2026-01-01
+  z = normal(1 PLN, 1) to 1e-9
+=== expect
+refused: LOAD-UNIT ...

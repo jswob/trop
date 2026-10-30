@@ -1,0 +1,45 @@
+# L §5.18: "`for` binds keys: one line per binding tuple whose `where` holds. A tuple whose `where` is a hole prints its
+# line as that hole, its value unevaluated, and so does a `diff` line in the world where its `where` is a hole."
+# lim has no row at kb in the base, so lim[kb] > 0 is a hole there: q's line for kb is that hole (v[kb] = 20 is not
+# printed). In sc lim[kb] = 1, so the where holds; d's line for kb holds 20 in sc and the hole in base (L §5.18's diff
+# row: "changed with both values"); ka is 10 in both worlds, counted unchanged. (Writer 6.)
+=== base.tally
+model base
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2028-12-31
+
+source s "s"
+index ks = [ka, kb]
+input lim[k in ks]: int
+input v[k in ks]: int
+
+version v1
+  cite s
+  governs 2026..
+  known 2025-12-01
+  lim[ka] = 1
+  v[ka] = 10
+  v[kb] = 20
+
+ask q: v[k] for k in ks where lim[k] > 0 law 2027-06-01
+=== sc.tally
+scenario sc over base
+  tally 2
+  from 2027-01-01
+
+version w
+  cite s
+  governs 2027..
+  known 2026-06-01
+  lim[kb] = 1
+
+ask d: diff(v[k] for k in ks where lim[k] > 0) in sc against base law 2027-06-01
+=== expect
+d: diff in sc against base: 1 changed, 0 added, 0 removed, 1 unchanged
+  changed (k = kb): 20 against ?"lim at kb ...
+...
+q (k = ka): 10
+...
+q (k = kb): ?"lim at kb ...

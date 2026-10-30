@@ -1,10 +1,16 @@
 model mp01
-  tally 1
+  tally 2
   on 2026-10-19
+  start 2026-01-01
+  end 2026-12-31
   note "Jones v Kernott [2011] UKSC 53: the beneficial shares in 39 Badger Hall Avenue after the couple separated."
   note "Money is in pounds. Only months are given for the dates, and no figure here needs a day."
 
+source lifted_1_0_1 "Figures tally 1.0.1 allowed inline in rules"
+
 source uksc53 "Jones v Kernott [2011] UKSC 53 (judgment given 9 November 2011), Lord Walker and Lady Hale paras 37-54, Lord Wilson para 89" at "https://caselaw.nationalarchives.gov.uk/uksc/2011/53"
+
+unit GBP: currency minor 0.01
 
 axis mp01_pound
   down "each share but the last is rounded down to the pound; the last party takes the rest"
@@ -21,6 +27,9 @@ input direct_contribution[p in party]: money GBP
 
 input endowment_2008: money GBP
 
+input him_rough_2: int
+  note "lifted from an inline figure of tally 1.0.1"
+
 input mortgage_2008: money GBP
 
 input portion[c in court, p in party]: num
@@ -35,69 +44,76 @@ input taken_value[m in crystal]: money GBP
 
 input value_2008: money GBP
 
-def badger_net: money GBP = value_2008 - mortgage_2008 + endowment_2008
+def badger_net: money GBP = value_2008 - mortgage_2008 + endowment_2008 at reader
 
-def contribution_ratio: num = direct_contribution[jones] / direct_contribution[kernott]
+def contribution_ratio: num = direct_contribution[jones] / direct_contribution[kernott] at reader
 
-def endow_jones: money GBP = endowment_2008 - endow_kernott
+def endow_jones: money GBP = endowment_2008 - endow_kernott at reader
 
-def endow_kernott: money GBP
+def endow_kernott: money GBP at reader
   note "Para 41: Mr Kernott's part of the endowment policy's value; Ms Jones keeps the rest (endow_jones)."
-  rule base v uksc53_facts = ? "Para 41 splits the endowment policy on the basis that the parties contributed jointly for eight years and five months and Ms Jones alone for fourteen and a half years, but states no method, and neither time-proportion of those periods reproduces the split: how was Mr Kernott's part computed?"
+  rule base v uksc53_facts = ?"Para 41 splits the endowment policy on the basis that the parties contributed jointly for eight years and five months and Ms Jones alone for fourteen and a half years, but states no method, and neither time-proportion of those periods reproduces the split: how was Mr Kernott's part computed?"
 
-def held[c in court, p in party]: num
+def held[c in court, p in party]: num at reader
   note "The beneficial share each court arrived at."
   rule base = portion[c, p]
-  rule restore excepts base v uksc53_order when c = supreme = portion[county, p]
+  rule restore beats base v uksc53_order = portion[county, p] when c == supreme
 
-def her_pct[m in crystal]: num = her_rough[m] / value_2008
+def her_pct[m in crystal]: num = her_rough[m] / value_2008 at reader
 
-def her_rough[m in crystal]: num GBP = value_2008 - him_rough[m]
+def her_rough[m in crystal]: num GBP = value_2008 - him_rough[m] at reader
 
-def him_pct[m in crystal]: num = him_rough[m] / value_2008
+def him_pct[m in crystal]: num = him_rough[m] / value_2008 at reader
 
-def him_rough[m in crystal]: num GBP
+def him_rough[m in crystal]: num GBP at reader
   note "Para 49: the value at crystallisation is shared equally, and the balance up to the 2008 value goes to Ms Jones. The calculation ignores the mortgage."
-  rule base = taken_value[m] / 2
+  rule base = taken_value[m] / him_rough_2
 
-def kernott_total: money GBP = sale_pounds[kernott] + stanley_net
+def kernott_total: money GBP = sale_pounds[kernott] + stanley_net at reader
 
-def sale_exact[p in party]: num GBP = badger_net * held[county, p]
+def sale_exact[p in party]: num GBP = badger_net * held[county, p] at reader
 
-def sale_pounds[p in party]: money GBP
+def sale_pounds[p in party]: money GBP at reader
   note "Para 43: the net worth divided on the judge's shares, in whole pounds. The judgment states no rounding, so the mode is the axis mp01_pound."
   rule base = prorata(badger_net, held[county, j] for j in party, p, 1, mp01_pound, rest last)
 
-def stanley_net: money GBP = stanley_value - stanley_mortgage
+def stanley_net: money GBP = stanley_value - stanley_mortgage at reader
 
-ask p41_badger_net: badger_net
+ask p41_badger_net: badger_net law 2026-10-19
 
-ask p41_endowment_split: endow_kernott, endow_jones
+ask p41_endowment_split: endow_kernott, endow_jones law 2026-10-19
 
-ask p41_stanley_net: stanley_net
+ask p41_stanley_net: stanley_net law 2026-10-19
 
-ask p43_court_shares: held[county, p] for p in party
+ask p43_court_shares: held[county, p] for p in party law 2026-10-19
 
-ask p43_kernott_total: kernott_total
+ask p43_kernott_total: kernott_total law 2026-10-19
 
-ask p43_sale_exact: sale_exact[p] for p in party
+ask p43_sale_exact: sale_exact[p] for p in party law 2026-10-19
 
-ask p43_sale_pounds: sale_pounds[p] for p in party
+ask p43_sale_pounds: sale_pounds[p] for p in party law 2026-10-19
 
-ask p44_contribution_ratio: contribution_ratio
+ask p44_contribution_ratio: contribution_ratio law 2026-10-19
 
-ask p45_appeal_shares: held[appeal, p] for p in party
+ask p45_appeal_shares: held[appeal, p] for p in party law 2026-10-19
 
-ask p49_rough: him_rough[m], her_rough[m], him_pct[m], her_pct[m] for m in crystal
+ask p49_rough: him_rough[m], her_rough[m], him_pct[m], her_pct[m] for m in crystal law 2026-10-19
 
-ask p54_supreme_shares: held[supreme, p] for p in party
+ask p54_supreme_shares: held[supreme, p] for p in party law 2026-10-19
+
+version lifted_figures
+  cite lifted_1_0_1
+  governs always
+  known 2011-11-09
+  him_rough_2 = 2 "inline in tally 1.0.1: him_rough line 61, factor"
 
 version uksc53_facts
   cite uksc53
+  governs always
   known 2011-11-09
   note "The facts as the Supreme Court restates them from the trial judge's findings, at the hearing in April 2008."
   note "Known 2011-11-09: a real case, known from the day the judgment was given and published (its own date, §4.5)."
-  direct_contribution = ? "Para 44 reports the High Court's ratio of the parties' direct contributions, but no court states the contributions themselves: what did each party contribute directly?"
+  direct_contribution = ?"Para 44 reports the High Court's ratio of the parties' direct contributions, but no court states the contributions themselves: what did each party contribute directly?"
   endowment_2008 = 25209 "para 41: value of the endowment policy supporting the mortgage"
   mortgage_2008 = 26664 "para 41: outstanding mortgage debt on 39 Badger Hall Avenue"
   portion[county, jones] = 0.9 "para 43: 90% for Ms Jones"
@@ -112,6 +128,7 @@ version uksc53_facts
 
 version uksc53_order
   cite uksc53
+  governs always
   known 2011-11-09
   note "Para 54: we would allow this appeal and restore the order of the judge. Lord Wilson, para 89, restates the result as the proportions the judge ruled."
   note "No items: the rule held.restore points at it. Known 2011-11-09, the day the judgment was given."

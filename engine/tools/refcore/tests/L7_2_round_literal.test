@@ -1,0 +1,16 @@
+# L §7.1: "the step of a round is 1 with a unit, minor(CUR) (a currency's declared minor unit, C-3), or a row" in a
+# def (LOAD-LITERAL otherwise).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+unit CHF: currency minor 0.01
+input p: money CHF
+
+def r: money CHF at reader
+  rule base = round(p, 0.05 CHF, half-up)
+=== expect
+refused: LOAD-LITERAL ...

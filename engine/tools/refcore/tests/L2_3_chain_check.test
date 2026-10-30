@@ -1,0 +1,15 @@
+# L §2.3 parse rule 1: "The == of check and solve counts: check a == b == c is refused."
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "a source"
+
+input a: int
+
+ask q1: check a == a == a
+=== expect
+refused: LOAD-PARSE ...

@@ -1,0 +1,17 @@
+model own12_p17
+  tally 2
+  on 2026-10-30
+  start 2026-01-01
+  end 2026-06-30
+  use a = "ania.tally" sha256 "64612ba4350963bd6cc2383eb6dee6dcd0c05b836b6923cf7f91d4a4c9432574"
+  use d = "halina.tally" sha256 "73aea27822246909c59995501b231568e264f5ea10c1074a831b627078174db5"
+  same a.ania = d.ania
+  same a.persons = d.persons
+  note "OWN-12 P-17: a joint model of households A and D. parties is the prelude's, shared by every member; the two members' persons are one kind and the two Anias one party only by the same lines (LANGUAGE 3.5, 6.1)."
+  note "A party stated same is one owner: of a.ania reads the parts labelled with either side, in every member."
+
+ask q_ania: bal(a.sav, 2026-06-30) of a.ania, bal(d.deposit, 2026-06-30) of a.ania
+
+ask q_halina: bal(d.deposit, 2026-06-30) of d.halina
+
+ask q_total: bal(a.sav, 2026-06-30) of a.ania + bal(d.deposit, 2026-06-30) of a.ania

@@ -1,0 +1,12 @@
+advances: (1 060.00 DUK, 960.00 DUK, 40.00 DUK)
+  pinned: law old_last_day = 2022-06-30
+  law date 2022-07-01, cut 2026-10-25
+july_sides (e = ania): (1 060.00 DUK, 960.00 DUK)
+  pinned: law 2022-06-30
+  law date 2022-07-01, cut 2026-10-25
+july_sides (e = ola): (40.00 DUK, 240.00 DUK)
+  pinned: law 2022-06-30
+  law date 2022-07-01, cut 2026-10-25
+june_unchanged: ok
+  pinned: wording 2022-06-30 for [adv, rate, relief]
+  law date 2022-07-01, cut 2026-10-25

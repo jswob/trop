@@ -16,20 +16,21 @@ The user's main work is B2B, so a new job is a new client contract. (The wife's 
 
 --- facts/2027.tally   (new file)
 +part facts_2027
-+  tally 1
++  tally 2
 +
 +source contract_c "Umowa B2B z klientem C, 2027-01-20"
 +
 +version client_c_2027
 +  cite contract_c
++  governs always
 +  known 2027-01-20
-+  client + [client_c]
++  client + [client_c] lives 2027-01-20..
 +  fee_net[client_c] = 0 governs 2026-01..2027-01 "przed umową"
 +  fee_net[client_c] = 6000 governs 2027-02.. "§ 5"
 +  terms[client_c] = 21 "§ 6"
 ```
 
-Lines added: 12 (10 non-blank, 2 blank), plus the `on` line. Lines edited: the `on` line only.
+Lines added: 13 (11 non-blank, 2 blank), plus the `on` line. Lines edited: the `on` line only.
 
 **New keys checked against closed-world rows.** `client` keys two inputs: `fee_net` and `terms`. The base rows for both are keyed rows (`fee_net[client_a]`, `terms[client_b]`), and neither keyless row covers `client_c`, home_2026's `fee_net = 0 governs 2026-01..2026-02` nor forecast_2026's `fee_net = 0 governs 2026-03.. assumed`: a keyless row covers the keys its index had on the row's `known` date (LANGUAGE §4.6). Without the two `fee_net[client_c]` rows and the `terms` row, every `sum(c in client: …)` would be a hole for every month. With them, there are no new holes.
 

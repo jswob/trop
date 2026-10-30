@@ -1,0 +1,43 @@
+# L §5.8 Values: a code (act365), a list ([] included), none, never for a date, a hole ?"question", and a value
+# with assumed "reason" ("Every result that reaches it lists the reason", L §8.2 "assumed: <reason> ... once,
+# with the keys it filled"); "A row x[*] = v states every key of x."  count over a list: none here; the
+# assumed row is read for b and c.
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+index ks = [a, b, c]
+
+input basis: daycount
+input hols: dates
+input stop: date
+input missing_fact: int
+input gone: int
+input n[k in ks]: int
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  basis = act365
+  hols = []
+  stop = never
+  missing_fact = ?"how many?"
+  gone = none
+  n[*] = 4 assumed "a planning guess"
+
+ask q1: basis, hols, stop, gone
+ask q2: missing_fact
+ask q3: n[b] + n[c]
+=== expect
+q1: (act365, [], never, none)
+  cut 2026-01-01
+q2: ?"how many?" (missing_fact)
+  cut 2026-01-01
+q3: 8
+  assumed: a planning guess (n[b], n[c])
+  cut 2026-01-01

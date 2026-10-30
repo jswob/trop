@@ -1,0 +1,28 @@
+model num06
+  tally 1
+  on 2026-10-25
+  note "Probe NUM-06: spending stated in 2025 prices, read as 2030 nominal money through a stated index path."
+
+source probe_card "Probe card NUM-06 (made-up story and rules)"
+
+index yr = year 2025..2030
+
+input growth[y in yr]: num
+input spend: money DUK prices 2025 by price_level
+
+def price_level[y in yr]: num
+  note "rule 1: the stated index path as a level with 2025 = 1; a prices read takes only its ratios (L §3.4)"
+  rule base v card = price_level[y - 1] * (1 + growth[y])
+  rule start_year excepts base when pos(y) = 1 = 1
+
+ask q_nominal_2030: round(spend, 0.01, half-up) with law 2030-01-01
+
+version card
+  cite probe_card
+  known 2026-10-25
+  growth[2026] = 0.04 "story: +4 % in 2026"
+  growth[2027] = 0.03 "story: +3 % in 2027"
+  growth[2028] = 0.03 "story: +3 % in 2028"
+  growth[2029] = 0.02 "story: +2 % in 2029"
+  growth[2030] = 0.02 "story: +2 % in 2030"
+  spend = 3000.00 "story: 3 000.00 DUK a month in 2025 prices"

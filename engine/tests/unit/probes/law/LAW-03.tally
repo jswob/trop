@@ -1,0 +1,74 @@
+model law03
+  tally 2
+  on 2026-10-25
+  start 2022-01-01
+  end 2022-12-31
+  note "Probe LAW-03: a mid-year law change with a transitional rule that runs the old version beside the new and keeps the lower advance."
+  note "The card's law and facts are stipulations, known from start (L 4.5). The old and the new version govern spans that don't overlap."
+
+source card "Probe card LAW-03 (tmp/cases/probes/law/LAW-03.md): story, rules 1-4 and question"
+
+unit DUK: currency minor 0.01
+
+index emp = [ania, ola]
+
+index mo = month 2022-01..2022-12
+
+input old_last_day: date question "On what day does the old version last govern?"
+
+input pay_base[e in emp]: money DUK question "What is the employee's monthly base?"
+
+input rate: num question "What advance rate is in force?"
+
+input relief: money DUK question "What monthly relief is in force?"
+
+def adv[e in emp, m in mo]: money DUK at start_of(m)
+  note "the advance the payroll keeps: the formula under the month's own law, or, under rule 3, the lower of that and the formula under the old version's law, on the same base"
+  rule base = formula[e]
+  rule transitional beats base v card_transitional = min(formula[e], formula[e] as if {law old_last_day})
+
+def formula[e in emp]: money DUK at reader
+  note "rules 1-2 and 4: the rate times the base less the relief, rounded half up to 0.01, with the rate and the relief in force on its reader's law date (L 4.3: at reader, so a law pin reaches it)"
+  rule base v card_rules = round(rate * pay_base[e] - relief, minor(DUK), half-up)
+
+ask advances: adv[ania, 2022-06], adv[ania, 2022-07], adv[ola, 2022-07] law 2022-07-01
+
+ask july_sides: formula[e] as if {law 2022-06-30}, formula[e] for e in emp law 2022-07-01
+
+ask june_unchanged: check adv[ania, 2022-06] == adv[ania, 2022-06] as if {wording 2022-06-30 for [adv, rate, relief]} law 2022-07-01
+
+version card_facts
+  cite card
+  governs always
+  known 2022-01-01
+  pay_base[ania] = 8000 "story: Ania's base is 8 000.00"
+  pay_base[ola] = 2000 "story: Ola's 2 000.00"
+
+version card_new
+  cite card
+  governs 2022-07-01..
+  known 2022-01-01
+  note "rule 2: the new version, from 1 July 2022; it enters into force on 1 July, the later of known and the start of governs (L 5.3)"
+  rate = 0.12 "rule 2: 12 % of the base"
+  relief = 0 "rule 2: no relief"
+
+version card_old
+  cite card
+  governs ..2022-06-30
+  known 2022-01-01
+  note "rule 1: the old version, to 30 June 2022"
+  old_last_day = 2022-06-30 governs always "rule 1: old version, to 30 June 2022"
+  rate = 0.17 "rule 1: 17 % of the base"
+  relief = 300 "rule 1: minus a monthly relief of 300.00"
+
+version card_rules
+  cite card
+  governs always
+  known 2022-01-01
+  note "rules 1-2 and 4: no items; the advance formula's rule points at it (the figures are each version's rows; rule 4 rounds half up to 0.01)"
+
+version card_transitional
+  cite card
+  governs 2022-07..2022-12
+  known 2022-01-01
+  note "rule 3: no items; the transitional rule of adv points at it. July to December 2022 the payroll computes both and keeps the lower"

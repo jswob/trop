@@ -1,0 +1,27 @@
+# GD-1 (round 19): L §2.2's reserved words drop `regime` and its clause words drop `export`, so both are ids: an input
+# named regime and one named export load and are read (their rows, stated outright).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+input regime: num
+input export: num
+def r: num = regime
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  regime = 2
+  export = 3
+
+ask q: r, export
+=== expect
+q: (2, 3)
+  cut 2026-12-31

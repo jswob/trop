@@ -1,0 +1,82 @@
+joel_period [mp05_period = printed]: (2, 8)
+  reading: mp05_period = printed
+  law date 2026-10-19, cut 2026-10-19
+joel_period [mp05_period = dates]: (2, 4)
+  assumed: only John's gift is said to be made with a reservation (reservation_end[joel_house])
+  reading: mp05_period = dates
+  law date 2026-10-19, cut 2026-10-19
+joel_relief [mp05_period = *]: (50 000.00 GBP, 20 000 GBP)
+  assumed: only John's gift is said to be made with a reservation (reservation_end[joel_house])
+  pinned: fiv_claimed[joel_house] = true
+  law date 2026-10-19, cut 2026-10-19
+joel_without [mp05_period = *]: (75 000.00 GBP, 30 000 GBP)
+  assumed: only John's gift is said to be made with a reservation (reservation_end[joel_house])
+  law date 2026-10-19, cut 2026-10-19
+john_excess: 150 000.00 GBP
+  assumed: no other claim for fall in value relief is mentioned (fiv_claimed[john_house])
+  law date 2026-10-19, cut 2026-10-19
+john_period [mp05_period = printed]: (5, 5)
+  reading: mp05_period = printed
+  law date 2026-10-19, cut 2026-10-19
+john_period [mp05_period = dates]: (4, 7)
+  reading: mp05_period = dates
+  law date 2026-10-19, cut 2026-10-19
+john_rate [mp05_period = printed]: 0.16
+  reading: mp05_period = printed
+  law date 2026-10-19, cut 2026-10-19
+john_rate [mp05_period = dates]: 0.24
+  reading: mp05_period = dates
+  law date 2026-10-19, cut 2026-10-19
+john_start: 2016-07-01
+  law date 2026-10-19, cut 2026-10-19
+masood_first_over: m4
+  assumed: only John's gift is said to be made with a reservation (reservation_end[m1], reservation_end[m2], reservation_end[m3], reservation_end[m4], reservation_end[m5], reservation_end[m6])
+  law date 2026-10-19, cut 2026-10-19
+masood_running (g = m1): 150 000.00 GBP
+  assumed: only John's gift is said to be made with a reservation (reservation_end[m1], reservation_end[m2], reservation_end[m3], reservation_end[m4], reservation_end[m5], reservation_end[m6])
+  law date 2026-10-19, cut 2026-10-19
+masood_running (g = m2): 250 000.00 GBP
+  assumed: only John's gift is said to be made with a reservation (reservation_end[m1], reservation_end[m2], reservation_end[m3], reservation_end[m4], reservation_end[m5], reservation_end[m6])
+  law date 2026-10-19, cut 2026-10-19
+masood_running (g = m3): 300 000.00 GBP
+  assumed: only John's gift is said to be made with a reservation (reservation_end[m1], reservation_end[m2], reservation_end[m3], reservation_end[m4], reservation_end[m5], reservation_end[m6])
+  law date 2026-10-19, cut 2026-10-19
+masood_running (g = m4): 330 000.00 GBP
+  assumed: only John's gift is said to be made with a reservation (reservation_end[m1], reservation_end[m2], reservation_end[m3], reservation_end[m4], reservation_end[m5], reservation_end[m6])
+  law date 2026-10-19, cut 2026-10-19
+masood_running (g = m5): 347 000.00 GBP
+  assumed: only John's gift is said to be made with a reservation (reservation_end[m1], reservation_end[m2], reservation_end[m3], reservation_end[m4], reservation_end[m5], reservation_end[m6])
+  law date 2026-10-19, cut 2026-10-19
+masood_running (g = m6): 357 000.00 GBP
+  assumed: only John's gift is said to be made with a reservation (reservation_end[m1], reservation_end[m2], reservation_end[m3], reservation_end[m4], reservation_end[m5], reservation_end[m6])
+  law date 2026-10-19, cut 2026-10-19
+masood_taxable: 5 000.00 GBP
+  assumed: no other claim for fall in value relief is mentioned (fiv_claimed[m4])
+  assumed: only John's gift is said to be made with a reservation (reservation_end[m1], reservation_end[m2], reservation_end[m3], reservation_end[m4], reservation_end[m5], reservation_end[m6])
+  law date 2026-10-19, cut 2026-10-19
+wayne_due [mp05_period = *]: (15 000 GBP, 5 000.00 GBP, 10 000 GBP)
+  assumed: only John's gift is said to be made with a reservation (reservation_end[wayne_daughter], reservation_end[wayne_shares])
+  law date 2026-10-19, cut 2026-10-19
+wayne_excess: (325 000.00 GBP, 37 500.00 GBP)
+  assumed: only John's gift is said to be made with a reservation (reservation_end[wayne_daughter], reservation_end[wayne_shares])
+  law date 2026-10-19, cut 2026-10-19
+wayne_lifetime: 5 000.00 GBP
+  law date 2026-10-19, cut 2026-10-19
+wayne_periods (g = wayne_daughter) [mp05_period = printed]: (3, 7)
+  reading: mp05_period = printed
+  law date 2026-10-19, cut 2026-10-19
+wayne_periods (g = wayne_daughter) [mp05_period = dates]: (3, ?"date within window(2009-01-01, 2009-01-31) not precise enough for a print" (gift_date[wayne_daughter]))
+  assumed: only John's gift is said to be made with a reservation (reservation_end[wayne_daughter])
+  reading: mp05_period = dates
+  law date 2026-10-19, cut 2026-10-19
+wayne_periods (g = wayne_shares) [mp05_period = printed]: (2, 7)
+  reading: mp05_period = printed
+  law date 2026-10-19, cut 2026-10-19
+wayne_periods (g = wayne_shares) [mp05_period = dates]: (2, ?"date within window(2009-12-01, 2009-12-31) not precise enough for a print" (gift_date[wayne_shares]))
+  assumed: only John's gift is said to be made with a reservation (reservation_end[wayne_shares])
+  reading: mp05_period = dates
+  law date 2026-10-19, cut 2026-10-19
+wayne_value: (100 000.00 GBP, 262 500.00 GBP, 362 500.00 GBP)
+  assumed: no other claim for fall in value relief is mentioned (fiv_claimed[wayne_daughter])
+  assumed: only John's gift is said to be made with a reservation (reservation_end[wayne_daughter], reservation_end[wayne_shares])
+  law date 2026-10-19, cut 2026-10-19

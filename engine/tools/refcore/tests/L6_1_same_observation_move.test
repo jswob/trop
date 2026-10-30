@@ -1,0 +1,77 @@
+# L §6.1 same: "each side names a thing, a row or a move instance ... (same a.a_stmt[a_g1] = d.gift)": ana's statement
+# row a_g1 (100.00 PLN from a.konto to her outside place to_d) and dora's planned gift (from her outside place from_a
+# into d.konto) are one movement, which counts once (in d.konto, and in a binding over the prelude's transfers: n = 1,
+# L §6.1 Kinds across members). a.to_d stated same as d.konto contributes its leg there. By L §5.10 bal: a.konto
+# 1 000.00 - 100.00, d.konto 0 + 100.00 = 100.00 PLN; t = 1 000.00 PLN.
+=== options pin=bytes
+=== joint.tally
+model family
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  use a = "ana.tally" sha256 "3f23d6cf64e65f9269838a9bf4129fc234d80754fcf890a98a39c5b90892143f"
+  use d = "dora.tally" sha256 "1d8cb31883ef20021727b7b2f9bf3d65a92dce46c2954d0134d7c5522b8d8ba8"
+  same a.to_d = d.konto
+  same a.a_stmt[a_g1] = d.gift
+
+ask n: count(x in transfers over 2026-01)
+ask t: sum(bal(p, 2026-01-31) for p in accounts on 2026-01-31)
+ask kd: bal(d.konto, 2026-01-31)
+=== ana.tally
+model ana
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source bank_export "wyciąg"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2019-01-01..
+place to_d: outside lives 1900-01-01..
+input a_stmt: observed
+
+version opening_2026
+  cite bank_export
+  governs always
+  known 2026-01-01
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "saldo"
+
+version statement_01
+  cite bank_export
+  governs 2026-01
+  known 2026-02-01
+  covers konto
+  a_stmt[a_g1] = (on: 2026-01-12, kind: transfers, leg cash from konto to to_d amount 100.00 PLN) "przelew dla D"
+=== dora.tally
+model dora
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "umowa"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2019-01-01..
+place from_a: outside lives 1900-01-01..
+input gift_amt: money PLN
+input gift_day: date
+
+move gift: transfers
+  on gift_day
+  leg cash from from_a to konto amount gift_amt
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  gift_amt = 100.00 PLN "umowa"
+  gift_day = 2026-01-12 "umowa"
+  opening[konto] = 0 PLN at 2026-01-01 start "saldo"
+=== expect n t kd
+n: 1
+  cut 2026-03-01
+t: 1 000.00 PLN
+  cut 2026-03-01
+kd: 100.00 PLN
+  cut 2026-03-01

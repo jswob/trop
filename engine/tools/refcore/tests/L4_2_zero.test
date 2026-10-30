@@ -1,0 +1,21 @@
+# L §4.2: add_business with "n = 0 is refused (RUN-ZERO): rolling a day is schedule's job".
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+input len: calendar
+
+version v
+  cite s
+  governs 2026
+  known 2025-12-01
+  len = calendar(weekends [sat, sun])
+
+ask q1: add_business(2026-03-02, 0, len)
+=== expect
+q1: refused: RUN-ZERO ...
+  cut 2026-12-31

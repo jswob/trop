@@ -1,0 +1,26 @@
+# L §4.2 Date arithmetic defines date ± duration and date ± int; the difference of two dates is days_between(a, b).
+# L §8.4: an operation with no meaning for the types it is given is refused at load (LOAD-UNIT).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+input a: date
+input b: date
+def c: int = b - a at reader
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  a = 2026-01-01
+  b = 2026-03-01
+
+ask q: c law 2026-06-30
+=== expect
+refused: LOAD-UNIT ...

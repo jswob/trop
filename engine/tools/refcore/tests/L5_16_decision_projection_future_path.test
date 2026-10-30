@@ -1,0 +1,56 @@
+# GD-4 (round 19, writer 10): L5_16_decision_projection_future without s1, whose balance of savings (a place save,
+# a random movement under L §8.3 item 10, books) is refused at load: p1 replays a path, so the line loads, and on the
+# path the decision's projection reads spend[2026-01] after its day: RUN-FUTURE (L §5.16). The old comment:
+# L §5.16 Decisions and projections: with neither a random clause nor a query around the read "the read would be the
+# decision's future ... it is refused: at load where load sees the projection reach the random fact after the
+# decision's day (LOAD-RANDOM), otherwise at the read (RUN-FUTURE)". The reality of
+# L5_16_decision_projection_clause without its clause; save's day is day_of(m, dom), a row, so load doesn't see it:
+# RUN-FUTURE (L §8.4 `<decision> on <d> reads <x> at <d'> after its day`), in a run without paths as on a path (p1).
+=== m.tally
+model r
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source own "own"
+unit PLN: currency minor 0.01
+kind spends: event certain
+  leg cash: PLN
+place konto: accounts PLN lives 2020-01-01..
+place savings: accounts PLN lives 2020-01-01..
+place shop: outside lives 1900-01-01..
+input spend_mu: money PLN
+input spend_sd: money PLN
+input spend_dom: int
+input dom: int
+input floor: money PLN
+def spend[m in months]: dist PLN = normal(spend_mu, spend_sd) to 1e-9 at end_of(m)
+
+move buy[m in months]: spends
+  on day_of(m, spend_dom)
+  at end_of(m)
+  leg cash from konto to shop amount round(spend[m], minor(PLN), half-even)
+
+move save[m in months]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  reads konto
+  leg cash from konto to savings amount max(0 PLN, bal(konto, end_of(m)) from day_of(m, dom) - floor)
+
+version v
+  cite own
+  governs 2026..
+  known 2026-01-01
+  spend_mu = 1 000.00 PLN "own"
+  spend_sd = 100.00 PLN "own"
+  spend_dom = 15 "own"
+  dom = 5 "own"
+  floor = 8 000.00 PLN "own"
+  opening[konto] = 10 000.00 PLN at 2026-01-01 start "statement"
+  opening[savings] = 0 PLN at 2026-01-01 start "statement"
+
+ask p1: bal(savings, 2026-01-31) paths 2 seed 1 path 1
+=== expect
+p1: refused: RUN-FUTURE a decision on 2026-01-05 reads spend[2026-01] at 2026-02-01 after its day (a projection from 2026-01-05 with no random clause or query)
+  cut 2026-01-01

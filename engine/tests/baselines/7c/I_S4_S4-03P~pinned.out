@@ -1,0 +1,282 @@
+j3_true (e = edvin_estate): (0.00 DUK, 0.00 DUK)
+  pinned: reason_true[edvin_estate, lea] = true
+  cut 2027-12-31
+j3_untrue (e = edvin_estate): (31 293.56 DUK, 31 293.55 DUK)
+  pinned: reason_true[edvin_estate, lea] = false
+  anchor: a1145 2027-02-13 end, stated 38 420.60 DUK, difference ?"a1145 has no balance before 2027-02-13" (a1145)
+  anchor: a3390 2027-02-13 end, stated 7 315.40 DUK, difference ?"a3390 has no balance before 2027-02-13" (a3390)
+  unfulfilled: death_a1145[edvin_estate]
+  unfulfilled: death_a3390[edvin_estate]
+  unfulfilled: death_cottage[edvin_estate]
+  unfulfilled: death_flat[edvin_estate]
+  cut 2027-12-31
+j4_true (p = lea, d = 2027-06-30): 6 200 DUK
+  pinned: reason_true[edvin_estate, lea] = true
+  anchor: a1145 2027-02-13 end, stated 38 420.60 DUK, difference ?"a1145 has no balance before 2027-02-13" (a1145)
+  anchor: a3390 2027-02-13 end, stated 7 315.40 DUK, difference ?"a3390 has no balance before 2027-02-13" (a3390)
+  anchor: lea_own 2027-06-30 end, stated 6 200.00 DUK, difference 0.00 DUK
+  anchor: pavo_own 2027-06-30 end, stated 3 400.00 DUK, difference 0.00 DUK
+  anchor: ruta_own 2027-06-30 end, stated 3 210.15 DUK, difference 3 210.15 DUK
+  unfulfilled: death_a1145[edvin_estate]
+  unfulfilled: death_a3390[edvin_estate]
+  unfulfilled: death_cottage[edvin_estate]
+  unfulfilled: death_flat[edvin_estate]
+  cut 2027-12-31
+j4_true (p = lea, d = 2027-12-31): 6 200 DUK
+  pinned: reason_true[edvin_estate, lea] = true
+  anchor: a1145 2027-02-13 end, stated 38 420.60 DUK, difference ?"a1145 has no balance before 2027-02-13" (a1145)
+  anchor: a3390 2027-02-13 end, stated 7 315.40 DUK, difference ?"a3390 has no balance before 2027-02-13" (a3390)
+  anchor: a3390 2027-10-04 end, stated 7 315.40 DUK, difference 0.00 DUK
+  anchor: lea_own 2027-06-30 end, stated 6 200.00 DUK, difference 0.00 DUK
+  anchor: pavo_own 2027-06-30 end, stated 3 400.00 DUK, difference 0.00 DUK
+  anchor: ruta_own 2027-06-30 end, stated 3 210.15 DUK, difference 3 210.15 DUK
+  unfulfilled: death_a1145[edvin_estate]
+  unfulfilled: death_a3390[edvin_estate]
+  unfulfilled: death_cottage[edvin_estate]
+  unfulfilled: death_flat[edvin_estate]
+  unfulfilled: divide_a1145[deed_311]
+  unfulfilled: divide_cottage[deed_311]
+  unfulfilled: divide_flat[deed_311]
+  WARN-LABELS labels dropped at pavo_own from 2027-10-12: bank[r3]
+  cut 2027-12-31
+j4_true (p = pavo, d = 2027-06-30): 191 161.325 DUK
+  pinned: reason_true[edvin_estate, lea] = true
+  anchor: a1145 2027-02-13 end, stated 38 420.60 DUK, difference ?"a1145 has no balance before 2027-02-13" (a1145)
+  anchor: a3390 2027-02-13 end, stated 7 315.40 DUK, difference ?"a3390 has no balance before 2027-02-13" (a3390)
+  anchor: lea_own 2027-06-30 end, stated 6 200.00 DUK, difference 0.00 DUK
+  anchor: pavo_own 2027-06-30 end, stated 3 400.00 DUK, difference 0.00 DUK
+  anchor: ruta_own 2027-06-30 end, stated 3 210.15 DUK, difference 3 210.15 DUK
+  unfulfilled: death_a1145[edvin_estate]
+  unfulfilled: death_a3390[edvin_estate]
+  unfulfilled: death_cottage[edvin_estate]
+  unfulfilled: death_flat[edvin_estate]
+  cut 2027-12-31
+j4_true (p = pavo, d = 2027-12-31): 205 911.33 DUK
+  pinned: reason_true[edvin_estate, lea] = true
+  anchor: a1145 2027-02-13 end, stated 38 420.60 DUK, difference ?"a1145 has no balance before 2027-02-13" (a1145)
+  anchor: a3390 2027-02-13 end, stated 7 315.40 DUK, difference ?"a3390 has no balance before 2027-02-13" (a3390)
+  anchor: a3390 2027-10-04 end, stated 7 315.40 DUK, difference 0.00 DUK
+  anchor: lea_own 2027-06-30 end, stated 6 200.00 DUK, difference 0.00 DUK
+  anchor: pavo_own 2027-06-30 end, stated 3 400.00 DUK, difference 0.00 DUK
+  anchor: ruta_own 2027-06-30 end, stated 3 210.15 DUK, difference 3 210.15 DUK
+  unfulfilled: death_a1145[edvin_estate]
+  unfulfilled: death_a3390[edvin_estate]
+  unfulfilled: death_cottage[edvin_estate]
+  unfulfilled: death_flat[edvin_estate]
+  unfulfilled: divide_a1145[deed_311]
+  unfulfilled: divide_cottage[deed_311]
+  unfulfilled: divide_flat[deed_311]
+  WARN-LABELS labels dropped at pavo_own from 2027-10-12: bank[r3]
+  cut 2027-12-31
+j4_true (p = ruta, d = 2027-06-30): 419 839.475 DUK
+  pinned: reason_true[edvin_estate, lea] = true
+  anchor: a1145 2027-02-13 end, stated 38 420.60 DUK, difference ?"a1145 has no balance before 2027-02-13" (a1145)
+  anchor: a3390 2027-02-13 end, stated 7 315.40 DUK, difference ?"a3390 has no balance before 2027-02-13" (a3390)
+  anchor: lea_own 2027-06-30 end, stated 6 200.00 DUK, difference 0.00 DUK
+  anchor: pavo_own 2027-06-30 end, stated 3 400.00 DUK, difference 0.00 DUK
+  anchor: ruta_own 2027-06-30 end, stated 3 210.15 DUK, difference 3 210.15 DUK
+  unfulfilled: death_a1145[edvin_estate]
+  unfulfilled: death_a3390[edvin_estate]
+  unfulfilled: death_cottage[edvin_estate]
+  unfulfilled: death_flat[edvin_estate]
+  cut 2027-12-31
+j4_true (p = ruta, d = 2027-12-31): 419 589.47 DUK
+  pinned: reason_true[edvin_estate, lea] = true
+  anchor: a1145 2027-02-13 end, stated 38 420.60 DUK, difference ?"a1145 has no balance before 2027-02-13" (a1145)
+  anchor: a3390 2027-02-13 end, stated 7 315.40 DUK, difference ?"a3390 has no balance before 2027-02-13" (a3390)
+  anchor: a3390 2027-10-04 end, stated 7 315.40 DUK, difference 0.00 DUK
+  anchor: lea_own 2027-06-30 end, stated 6 200.00 DUK, difference 0.00 DUK
+  anchor: pavo_own 2027-06-30 end, stated 3 400.00 DUK, difference 0.00 DUK
+  anchor: ruta_own 2027-06-30 end, stated 3 210.15 DUK, difference 3 210.15 DUK
+  unfulfilled: death_a1145[edvin_estate]
+  unfulfilled: death_a3390[edvin_estate]
+  unfulfilled: death_cottage[edvin_estate]
+  unfulfilled: death_flat[edvin_estate]
+  unfulfilled: divide_a1145[deed_311]
+  unfulfilled: divide_cottage[deed_311]
+  unfulfilled: divide_flat[deed_311]
+  WARN-LABELS labels dropped at pavo_own from 2027-10-12: bank[r3]
+  cut 2027-12-31
+j4_untrue (p = lea, d = 2027-06-30): 68 787.11 DUK
+  pinned: reason_true[edvin_estate, lea] = false
+  anchor: a1145 2027-02-13 end, stated 38 420.60 DUK, difference ?"a1145 has no balance before 2027-02-13" (a1145)
+  anchor: a3390 2027-02-13 end, stated 7 315.40 DUK, difference ?"a3390 has no balance before 2027-02-13" (a3390)
+  anchor: lea_own 2027-06-30 end, stated 6 200.00 DUK, difference 0.00 DUK
+  anchor: pavo_own 2027-06-30 end, stated 3 400.00 DUK, difference 0.00 DUK
+  anchor: ruta_own 2027-06-30 end, stated 3 210.15 DUK, difference 3 210.15 DUK
+  unfulfilled: death_a1145[edvin_estate]
+  unfulfilled: death_a3390[edvin_estate]
+  unfulfilled: death_cottage[edvin_estate]
+  unfulfilled: death_flat[edvin_estate]
+  cut 2027-12-31
+j4_untrue (p = lea, d = 2027-12-31): 68 787.11 DUK
+  pinned: reason_true[edvin_estate, lea] = false
+  anchor: a1145 2027-02-13 end, stated 38 420.60 DUK, difference ?"a1145 has no balance before 2027-02-13" (a1145)
+  anchor: a3390 2027-02-13 end, stated 7 315.40 DUK, difference ?"a3390 has no balance before 2027-02-13" (a3390)
+  anchor: a3390 2027-10-04 end, stated 7 315.40 DUK, difference 0.00 DUK
+  anchor: lea_own 2027-06-30 end, stated 6 200.00 DUK, difference 0.00 DUK
+  anchor: pavo_own 2027-06-30 end, stated 3 400.00 DUK, difference 0.00 DUK
+  anchor: ruta_own 2027-06-30 end, stated 3 210.15 DUK, difference 3 210.15 DUK
+  unfulfilled: death_a1145[edvin_estate]
+  unfulfilled: death_a3390[edvin_estate]
+  unfulfilled: death_cottage[edvin_estate]
+  unfulfilled: death_flat[edvin_estate]
+  unfulfilled: divide_a1145[deed_311]
+  unfulfilled: divide_cottage[deed_311]
+  unfulfilled: divide_flat[deed_311]
+  WARN-LABELS labels dropped at pavo_own from 2027-10-12: bank[r3]
+  cut 2027-12-31
+j4_untrue (p = pavo, d = 2027-06-30): 159 867.775 DUK
+  pinned: reason_true[edvin_estate, lea] = false
+  anchor: a1145 2027-02-13 end, stated 38 420.60 DUK, difference ?"a1145 has no balance before 2027-02-13" (a1145)
+  anchor: a3390 2027-02-13 end, stated 7 315.40 DUK, difference ?"a3390 has no balance before 2027-02-13" (a3390)
+  anchor: lea_own 2027-06-30 end, stated 6 200.00 DUK, difference 0.00 DUK
+  anchor: pavo_own 2027-06-30 end, stated 3 400.00 DUK, difference 0.00 DUK
+  anchor: ruta_own 2027-06-30 end, stated 3 210.15 DUK, difference 3 210.15 DUK
+  unfulfilled: death_a1145[edvin_estate]
+  unfulfilled: death_a3390[edvin_estate]
+  unfulfilled: death_cottage[edvin_estate]
+  unfulfilled: death_flat[edvin_estate]
+  cut 2027-12-31
+j4_untrue (p = pavo, d = 2027-12-31): 174 617.78 DUK
+  pinned: reason_true[edvin_estate, lea] = false
+  anchor: a1145 2027-02-13 end, stated 38 420.60 DUK, difference ?"a1145 has no balance before 2027-02-13" (a1145)
+  anchor: a3390 2027-02-13 end, stated 7 315.40 DUK, difference ?"a3390 has no balance before 2027-02-13" (a3390)
+  anchor: a3390 2027-10-04 end, stated 7 315.40 DUK, difference 0.00 DUK
+  anchor: lea_own 2027-06-30 end, stated 6 200.00 DUK, difference 0.00 DUK
+  anchor: pavo_own 2027-06-30 end, stated 3 400.00 DUK, difference 0.00 DUK
+  anchor: ruta_own 2027-06-30 end, stated 3 210.15 DUK, difference 3 210.15 DUK
+  unfulfilled: death_a1145[edvin_estate]
+  unfulfilled: death_a3390[edvin_estate]
+  unfulfilled: death_cottage[edvin_estate]
+  unfulfilled: death_flat[edvin_estate]
+  unfulfilled: divide_a1145[deed_311]
+  unfulfilled: divide_cottage[deed_311]
+  unfulfilled: divide_flat[deed_311]
+  WARN-LABELS labels dropped at pavo_own from 2027-10-12: bank[r3]
+  cut 2027-12-31
+j4_untrue (p = ruta, d = 2027-06-30): 388 545.915 DUK
+  pinned: reason_true[edvin_estate, lea] = false
+  anchor: a1145 2027-02-13 end, stated 38 420.60 DUK, difference ?"a1145 has no balance before 2027-02-13" (a1145)
+  anchor: a3390 2027-02-13 end, stated 7 315.40 DUK, difference ?"a3390 has no balance before 2027-02-13" (a3390)
+  anchor: lea_own 2027-06-30 end, stated 6 200.00 DUK, difference 0.00 DUK
+  anchor: pavo_own 2027-06-30 end, stated 3 400.00 DUK, difference 0.00 DUK
+  anchor: ruta_own 2027-06-30 end, stated 3 210.15 DUK, difference 3 210.15 DUK
+  unfulfilled: death_a1145[edvin_estate]
+  unfulfilled: death_a3390[edvin_estate]
+  unfulfilled: death_cottage[edvin_estate]
+  unfulfilled: death_flat[edvin_estate]
+  cut 2027-12-31
+j4_untrue (p = ruta, d = 2027-12-31): 388 295.91 DUK
+  pinned: reason_true[edvin_estate, lea] = false
+  anchor: a1145 2027-02-13 end, stated 38 420.60 DUK, difference ?"a1145 has no balance before 2027-02-13" (a1145)
+  anchor: a3390 2027-02-13 end, stated 7 315.40 DUK, difference ?"a3390 has no balance before 2027-02-13" (a3390)
+  anchor: a3390 2027-10-04 end, stated 7 315.40 DUK, difference 0.00 DUK
+  anchor: lea_own 2027-06-30 end, stated 6 200.00 DUK, difference 0.00 DUK
+  anchor: pavo_own 2027-06-30 end, stated 3 400.00 DUK, difference 0.00 DUK
+  anchor: ruta_own 2027-06-30 end, stated 3 210.15 DUK, difference 3 210.15 DUK
+  unfulfilled: death_a1145[edvin_estate]
+  unfulfilled: death_a3390[edvin_estate]
+  unfulfilled: death_cottage[edvin_estate]
+  unfulfilled: death_flat[edvin_estate]
+  unfulfilled: divide_a1145[deed_311]
+  unfulfilled: divide_cottage[deed_311]
+  unfulfilled: divide_flat[deed_311]
+  WARN-LABELS labels dropped at pavo_own from 2027-10-12: bank[r3]
+  cut 2027-12-31
+j5_true (p = lea): 6 200 DUK
+  pinned: reason_true[edvin_estate, lea] = true
+  anchor: a1145 2027-02-13 end, stated 38 420.60 DUK, difference ?"a1145 has no balance before 2027-02-13" (a1145)
+  anchor: a3390 2027-02-13 end, stated 7 315.40 DUK, difference ?"a3390 has no balance before 2027-02-13" (a3390)
+  anchor: a3390 2027-10-04 end, stated 7 315.40 DUK, difference 0.00 DUK
+  anchor: lea_own 2027-12-31 end, stated 6 200.00 DUK, difference 0.00 DUK
+  anchor: pavo_own 2027-12-31 end, stated 34 911.33 DUK, difference 0.00 DUK
+  anchor: ruta_own 2027-12-31 end, stated 4 077.90 DUK, difference 867.75 DUK
+  unfulfilled: death_a1145[edvin_estate]
+  unfulfilled: death_a3390[edvin_estate]
+  unfulfilled: death_cottage[edvin_estate]
+  unfulfilled: death_flat[edvin_estate]
+  unfulfilled: divide_a1145[deed_311]
+  unfulfilled: divide_cottage[deed_311]
+  unfulfilled: divide_flat[deed_311]
+  cut 2028-01-01
+j5_true (p = pavo): 205 911.33 DUK
+  pinned: reason_true[edvin_estate, lea] = true
+  anchor: a1145 2027-02-13 end, stated 38 420.60 DUK, difference ?"a1145 has no balance before 2027-02-13" (a1145)
+  anchor: a3390 2027-02-13 end, stated 7 315.40 DUK, difference ?"a3390 has no balance before 2027-02-13" (a3390)
+  anchor: a3390 2027-10-04 end, stated 7 315.40 DUK, difference 0.00 DUK
+  anchor: lea_own 2027-12-31 end, stated 6 200.00 DUK, difference 0.00 DUK
+  anchor: pavo_own 2027-12-31 end, stated 34 911.33 DUK, difference 0.00 DUK
+  anchor: ruta_own 2027-12-31 end, stated 4 077.90 DUK, difference 867.75 DUK
+  unfulfilled: death_a1145[edvin_estate]
+  unfulfilled: death_a3390[edvin_estate]
+  unfulfilled: death_cottage[edvin_estate]
+  unfulfilled: death_flat[edvin_estate]
+  unfulfilled: divide_a1145[deed_311]
+  unfulfilled: divide_cottage[deed_311]
+  unfulfilled: divide_flat[deed_311]
+  cut 2028-01-01
+j5_true (p = ruta): 420 457.22 DUK
+  pinned: reason_true[edvin_estate, lea] = true
+  anchor: a1145 2027-02-13 end, stated 38 420.60 DUK, difference ?"a1145 has no balance before 2027-02-13" (a1145)
+  anchor: a3390 2027-02-13 end, stated 7 315.40 DUK, difference ?"a3390 has no balance before 2027-02-13" (a3390)
+  anchor: a3390 2027-10-04 end, stated 7 315.40 DUK, difference 0.00 DUK
+  anchor: lea_own 2027-12-31 end, stated 6 200.00 DUK, difference 0.00 DUK
+  anchor: pavo_own 2027-12-31 end, stated 34 911.33 DUK, difference 0.00 DUK
+  anchor: ruta_own 2027-12-31 end, stated 4 077.90 DUK, difference 867.75 DUK
+  unfulfilled: death_a1145[edvin_estate]
+  unfulfilled: death_a3390[edvin_estate]
+  unfulfilled: death_cottage[edvin_estate]
+  unfulfilled: death_flat[edvin_estate]
+  unfulfilled: divide_a1145[deed_311]
+  unfulfilled: divide_cottage[deed_311]
+  unfulfilled: divide_flat[deed_311]
+  cut 2028-01-01
+j5_untrue (p = lea): 68 787.11 DUK
+  pinned: reason_true[edvin_estate, lea] = false
+  anchor: a1145 2027-02-13 end, stated 38 420.60 DUK, difference ?"a1145 has no balance before 2027-02-13" (a1145)
+  anchor: a3390 2027-02-13 end, stated 7 315.40 DUK, difference ?"a3390 has no balance before 2027-02-13" (a3390)
+  anchor: a3390 2027-10-04 end, stated 7 315.40 DUK, difference 0.00 DUK
+  anchor: lea_own 2027-12-31 end, stated 6 200.00 DUK, difference 0.00 DUK
+  anchor: pavo_own 2027-12-31 end, stated 34 911.33 DUK, difference 0.00 DUK
+  anchor: ruta_own 2027-12-31 end, stated 4 077.90 DUK, difference 867.75 DUK
+  unfulfilled: death_a1145[edvin_estate]
+  unfulfilled: death_a3390[edvin_estate]
+  unfulfilled: death_cottage[edvin_estate]
+  unfulfilled: death_flat[edvin_estate]
+  unfulfilled: divide_a1145[deed_311]
+  unfulfilled: divide_cottage[deed_311]
+  unfulfilled: divide_flat[deed_311]
+  cut 2028-01-01
+j5_untrue (p = pavo): 174 617.78 DUK
+  pinned: reason_true[edvin_estate, lea] = false
+  anchor: a1145 2027-02-13 end, stated 38 420.60 DUK, difference ?"a1145 has no balance before 2027-02-13" (a1145)
+  anchor: a3390 2027-02-13 end, stated 7 315.40 DUK, difference ?"a3390 has no balance before 2027-02-13" (a3390)
+  anchor: a3390 2027-10-04 end, stated 7 315.40 DUK, difference 0.00 DUK
+  anchor: lea_own 2027-12-31 end, stated 6 200.00 DUK, difference 0.00 DUK
+  anchor: pavo_own 2027-12-31 end, stated 34 911.33 DUK, difference 0.00 DUK
+  anchor: ruta_own 2027-12-31 end, stated 4 077.90 DUK, difference 867.75 DUK
+  unfulfilled: death_a1145[edvin_estate]
+  unfulfilled: death_a3390[edvin_estate]
+  unfulfilled: death_cottage[edvin_estate]
+  unfulfilled: death_flat[edvin_estate]
+  unfulfilled: divide_a1145[deed_311]
+  unfulfilled: divide_cottage[deed_311]
+  unfulfilled: divide_flat[deed_311]
+  cut 2028-01-01
+j5_untrue (p = ruta): 389 163.66 DUK
+  pinned: reason_true[edvin_estate, lea] = false
+  anchor: a1145 2027-02-13 end, stated 38 420.60 DUK, difference ?"a1145 has no balance before 2027-02-13" (a1145)
+  anchor: a3390 2027-02-13 end, stated 7 315.40 DUK, difference ?"a3390 has no balance before 2027-02-13" (a3390)
+  anchor: a3390 2027-10-04 end, stated 7 315.40 DUK, difference 0.00 DUK
+  anchor: lea_own 2027-12-31 end, stated 6 200.00 DUK, difference 0.00 DUK
+  anchor: pavo_own 2027-12-31 end, stated 34 911.33 DUK, difference 0.00 DUK
+  anchor: ruta_own 2027-12-31 end, stated 4 077.90 DUK, difference 867.75 DUK
+  unfulfilled: death_a1145[edvin_estate]
+  unfulfilled: death_a3390[edvin_estate]
+  unfulfilled: death_cottage[edvin_estate]
+  unfulfilled: death_flat[edvin_estate]
+  unfulfilled: divide_a1145[deed_311]
+  unfulfilled: divide_cottage[deed_311]
+  unfulfilled: divide_flat[deed_311]
+  cut 2028-01-01

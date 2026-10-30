@@ -1,0 +1,17 @@
+# L §2.2 Built-in ids: "the built-in indexes days months years bank_account"; L §4.1 "A quarter ... is a value,
+# never a key: an index's period kinds are day, month and year". The built-in index quarters is gone (writer 8), so
+# an input keyed by it names no index: LOAD-NAME.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+input amt[q in quarters]: money PLN
+
+ask a: 1
+=== expect
+refused: LOAD-NAME ...

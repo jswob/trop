@@ -1,0 +1,25 @@
+# L §4.2 day_of(m, n) is "day n of month m"; n = 0 is outside its domain, known only at the key: RUN-DOMAIN
+# (L §8.4).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+input n0: int
+def c[m in months]: date = day_of(m, n0) at reader
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  n0 = 0
+
+ask q: c[2026-03] law 2026-06-30
+=== expect
+q: refused: RUN-DOMAIN ...
+  law date 2026-06-30, cut 2026-12-31

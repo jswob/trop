@@ -1,0 +1,10 @@
+q_balances: (2 000.00 FLR, 2 000.00 FLR)
+  cut 2026-10-25
+q_revaluation: -100 DUK
+  cut 2026-10-25
+q_transfers: (0.00 FLR, 0)
+  cut 2026-10-25
+q_values (d = 2024-05-31): 8 600 DUK
+  cut 2026-10-25
+q_values (d = 2024-06-30): 8 500 DUK
+  cut 2026-10-25

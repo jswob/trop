@@ -1,0 +1,44 @@
+# L §5.11 missing(): the outlier example, copied whole (with pnl, var and version mar32).  "missing(r) is true
+# when the read r is a hole because no row gives it, or its row is a stated ?, and false otherwise; it is never
+# itself a hole. ... Every result that such a rule decides, where a missing test in its when read true and the rule
+# won, lists it in its register: missing record counted by <version>."  On 2026-03-02 pnl has no row: true,
+# counted by mar32.  On 2026-03-03 pnl = -5, var = 2: base, -5 < -2, true, with no register entry of its own.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+source rule32 "MAR art. 32"
+
+input pnl[d in days]: num
+input var[d in days]: num
+
+def outlier[d in days]: bool at d
+  rule base = pnl[d] < -var[d]
+  rule no_record beats base v mar32 = true when missing(pnl[d]) or missing(var[d])
+
+version mar32
+  cite rule32
+  governs 2026..
+  known 2025-12-01
+
+version data
+  cite s
+  governs always
+  known 2026-01-01
+  pnl[2026-03-03] = -5
+  var[2026-03-02] = 2
+  var[2026-03-03] = 2
+
+ask q1: outlier[2026-03-02], outlier[2026-03-03]
+ask q2: outlier[2026-03-02]
+=== expect
+q1: (true, true)
+  missing record counted by mar32
+  cut 2026-12-31
+q2: true
+  missing record counted by mar32
+  cut 2026-12-31

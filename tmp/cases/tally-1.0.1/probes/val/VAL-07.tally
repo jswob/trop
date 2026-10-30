@@ -1,0 +1,38 @@
+model val07
+  tally 1
+  on 2026-10-25
+
+source lease "VAL-07 card: Halina's rent in 2025"
+source forecast "VAL-07 card: the forecast's stated assumptions"
+
+index yr = year 2025..2027
+
+input cpi_change[y in yr]: num
+
+input rent_2025: money DUK
+
+input rent_margin: num
+
+def rent[y in yr]: money DUK
+  rule first excepts next when pos(y) = 1 = rent_2025
+  rule next v a_rent = round(rent[y - 1] * (1 + cpi_change[y] + rent_margin), 0.01, half-up)
+
+ask q: rent[2027]
+
+version a_cpi
+  cite forecast
+  known 2026-10-25
+  assumed "A-CPI: the price index rises 3 % a year from 2026"
+  cpi_change[2026] = 0.03 "A-CPI"
+  cpi_change[2027] = 0.03 "A-CPI"
+
+version a_rent
+  cite forecast
+  known 2026-10-25
+  assumed "A-RENT: the rent rises each January by the price index + 1 point"
+  rent_margin = 0.01 "A-RENT"
+
+version rent_fact
+  cite lease
+  known 2026-10-25
+  rent_2025 = 2000.00 "2 000.00 a month in 2025"

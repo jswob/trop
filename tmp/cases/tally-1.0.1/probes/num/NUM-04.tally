@@ -1,0 +1,32 @@
+model num04
+  tally 1
+  on 2026-10-25
+  note "Probe NUM-04: a refund the act leaves unclear, under each reading."
+
+source probe_card "Probe card NUM-04 (made-up story and rules)"
+
+axis refund_reading
+  by_time "T: pro rata by time, months left / all months"
+  by_balance "B: by the falling balance, balances still owed in the months left / balances of all months"
+
+index inst = 1..24
+  v card
+  note "story: 24 equal principal instalments"
+
+input early_cost: money DUK
+input paid: int
+
+def months: int = count(k in inst)
+
+def refund: num DUK
+  note "rule 1: the cost for the remaining period; the act doesn't say how, so rules 2 and 3 are readings"
+  rule by_balance v card when refund_reading = by_balance = early_cost * sum(k in inst where k > paid: months - k + 1) / sum(k in inst: months - k + 1)
+  rule by_time v card when refund_reading = by_time = early_cost * (months - paid) / months
+
+ask q_refund: refund
+
+version card
+  cite probe_card
+  known 2026-10-25
+  early_cost = 1200.00 "story: the credit's non-interest cost"
+  paid = 8 "story: repaid in full after the 8th instalment"

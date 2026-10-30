@@ -1,0 +1,38 @@
+# Round 18, C2-2. E §4.2 step 0: "Each opening reading at t start that the cut sees, with t before K, anchors its place";
+# L §5.10: an anchor reading at or before a place's first read; L §5.19: "Like an observation, a reading applies only
+# before the cut K". konto lives from before S with its first reading an opening at 2026-03-01 start: February is
+# HOLE-ANCHOR `<place> has no balance before <d>`, d its first reading's instant (L §8.1); March is 500.00 + 10.00 booked
+# since = 510.00 PLN (follows: snap11 the same). The opening at 2026-08-01 start is after K (2026-06-30), so it is not
+# applied: August is 510.00 PLN (fixed: snap11 applied it, 900.00 PLN).
+=== m.tally
+model t
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2025-01-01..
+place world: outside lives 2025-01-01..
+input amt: money PLN
+input day: date
+
+move p: transfers
+  on day
+  leg cash from world to konto amount amt
+
+ask q: bal(konto, 2026-02-28), bal(konto, 2026-03-31), bal(konto, 2026-08-31)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 10.00 PLN
+  day = 2026-03-10
+  opening[konto] = 500.00 PLN at 2026-03-01 start
+  opening[konto] = 900.00 PLN at 2026-08-01 start
+=== expect
+q: (?"konto has no balance before 2026-03-01" (konto), 510.00 PLN, 510.00 PLN)
+  unfulfilled: p
+  cut 2026-06-30

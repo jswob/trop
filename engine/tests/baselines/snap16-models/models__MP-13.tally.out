@@ -1,0 +1,40 @@
+q_cum_check: ok
+  law date 2026-10-18, cut 2026-10-18
+q_exits: 50 000.00 GBP
+  law date 2026-10-18, cut 2026-10-18
+q_nrba: 274 980.00 GBP
+  law date 2026-10-18, cut 2026-10-18
+q_s1_a: 350 000.00 GBP
+  law date 2026-10-18, cut 2026-10-18
+q_s1_b: 150 000.00 GBP
+  law date 2026-10-18, cut 2026-10-18
+q_s1_c: 0.00 GBP
+  law date 2026-10-18, cut 2026-10-18
+q_s1_d: 0.00 GBP
+  law date 2026-10-18, cut 2026-10-18
+q_s1_total: 500 000.00 GBP
+  law date 2026-10-18, cut 2026-10-18
+q_s3_c: 225 020.00 GBP
+  law date 2026-10-18, cut 2026-10-18
+q_s3_d: 45 004 GBP
+  law date 2026-10-18, cut 2026-10-18
+q_s3_e [iht_pct_round = ceil | half-up]: 9.001
+  reading: iht_pct_round = ceil | half-up
+  law date 2026-10-18, cut 2026-10-18
+q_s3_e [iht_pct_round = down]: 9
+  reading: iht_pct_round = down
+  law date 2026-10-18, cut 2026-10-18
+q_s3_f [iht_pct_round = ceil]: 2.701
+  reading: iht_pct_round = ceil
+  law date 2026-10-18, cut 2026-10-18
+q_s3_f [iht_pct_round = down | half-up]: 2.7
+  reading: iht_pct_round = down | half-up
+  law date 2026-10-18, cut 2026-10-18
+q_tax [iht_pct_round = ceil]: 9 453.50 GBP
+  assumed: Example 3 applies no reduction under s. 66(2) and does not discuss one; the property is read as relevant property for the full ten years (quarters_[trust_d])
+  reading: iht_pct_round = ceil
+  law date 2026-10-18, cut 2026-10-18
+q_tax [iht_pct_round = down | half-up]: 9 450.00 GBP
+  assumed: Example 3 applies no reduction under s. 66(2) and does not discuss one; the property is read as relevant property for the full ten years (quarters_[trust_d])
+  reading: iht_pct_round = down | half-up
+  law date 2026-10-18, cut 2026-10-18

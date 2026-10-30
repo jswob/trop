@@ -1,0 +1,6 @@
+q_refund [refund_reading = by_time]: 800 DUK
+  reading: refund_reading = by_time
+  law date 2026-10-25, cut 2026-10-25
+q_refund [refund_reading = by_balance]: 544 DUK
+  reading: refund_reading = by_balance
+  law date 2026-10-25, cut 2026-10-25

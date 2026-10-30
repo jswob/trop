@@ -1,0 +1,118 @@
+part florens
+  tally 2
+  note "Jan's florens (C-HR2): his part goes to the joint account (.1); after a month in which Bank Lazur's buy rate was at or above 4.1100 on every day it published one, he sells all his florens above 1 500.00 on the first business day of the next month into the pot, at most one such sale in a calendar quarter (.2); otherwise, holding more than 14 000.00 at a month's end, he sells those above 6 000.00 then (.3); at the buy rate of the sale's day (.4). v1 from July 2024 (C-HR1 .1); v2 lifts .2 and .3 from 2026-10-01 to 2027-09-30."
+  note "The florens held: the Lazur floren side's balance (rec_lazur). A sale is made before the day's other rows, as the export shows every sale into the pot first in its day, so what a due sale takes is what he held at the end of the day before."
+
+index c2_rule = [c2_point2, c2_point3]
+
+input c2_rate_floor: num DUK/FLR question "At or above which buy rate on every day of a month does point 2 sell (C-HR2 .2)?"
+
+input c2_keep2: money FLR question "Above what does a point-2 sale sell (C-HR2 .2)?"
+
+input c2_hold3: money FLR question "Above what month-end holding does point 3 sell (C-HR2 .3)?"
+
+input c2_keep3: money FLR question "Above what does a point-3 sale sell (C-HR2 .3)?"
+
+input c2_v1_signed: date question "On which day did the second of us sign C-HR2 v1?"
+
+input c2_pause_from: date question "From which day do points 2 and 3 not apply (C-HR2 v2)?"
+
+input c2_pause_to: date question "To which day do points 2 and 3 not apply (C-HR2 v2)?"
+
+input sale_round: rounding question "How does Bank Lazur round the dukats of a sale to the ort?"
+
+input lazur_opened: date question "On which day was Jan's Lazur account opened?"
+
+version c2_v1_text
+  cite house_rules
+  governs always
+  known 2024-06-24
+  c2_rate_floor = 4.1100 "C-HR2 .2: at or above 4.1100"
+  c2_keep2 = 1500.00 "C-HR2 .2: all his florens above 1 500.00"
+  c2_hold3 = 14000.00 "C-HR2 .3: more than 14 000.00 florens at a month's end"
+  c2_keep3 = 6000.00 "C-HR2 .3: those above 6 000.00"
+  c2_v1_signed = 2024-06-24 "C-HR2 v1: signed by Jan on 2024-06-20, by Marta on 2024-06-24"
+
+version c2_v2_text
+  cite house_rules
+  governs always
+  known 2026-09-25
+  c2_pause_from = 2026-10-01 "C-HR2 v2: from 2026-10-01 to 2027-09-30 points 2 and 3 don't apply"
+  c2_pause_to = 2027-09-30 "C-HR2 v2: from 2026-10-01 to 2027-09-30"
+
+version lazur_facts
+  cite lazur_export
+  governs always
+  known 2024-06-28
+  lazur_opened = 2024-06-28 "lazur-jan.csv: wyciąg 2024-06-28..2026-09-30; story 2024-06-28: Jan's new account at Bank Lazur"
+  sale_round = half-up assumed "a sale's dukats are to the ort (the export's rows); the mode isn't stated, half up as C-HR9 .1 rounds florens counted in dukats" "lazur-jan.csv: sale rows"
+
+def lf_rows[d in day]: int = count(s in seq where lf[d, s] != none)
+
+def lf_end[d in day]: money FLR
+  note "the florens Jan held at the end of day d: the floren side's balance after its last row, or the day before's; nothing before the account opened"
+  rule carry = lf_end[d - 1] when pos(d) > 1
+  rule before beats carry = 0 FLR when d < lazur_opened
+  rule seen beats carry, before = lf[d, last(s in seq where lf[d, s] != none)].bal when d >= lazur_opened and lf_rows[d] > 0
+
+def c2_from: date = start_of(month_of(c2_v1_signed) + 1)
+
+def first_bd[m in month]: date
+  note "the first business day of month m (Lenia's, GEN-1)"
+  rule base = add_business(start_of(m) - 1 day, 1, holidays)
+
+def rate_ok[m in month]: bool
+  note "C-HR2 .2: the buy rate at or above 4.1100 on every day of month m on which Bank Lazur published one"
+  rule base = all(lazur_buy[d] >= c2_rate_floor for d in day where month_of(d) == m and lazur_buy[d] != none)
+
+def c2_on[m in month]: bool
+  note "points 2 and 3 apply to a sale on the first business day of the month after m: from C-HR2 v1's start, outside v2's pause"
+  rule base = start_of(m) >= c2_from and not (first_bd[m + 1] >= c2_pause_from and first_bd[m + 1] <= c2_pause_to)
+
+def due2[m in month]: bool
+  note "C-HR2 .2: a point-2 sale is due on the first business day of the month after m, where he then holds florens above 1 500.00 (a sale of nothing is no sale), unless a point-2 sale already fell due earlier in that day's calendar quarter (the sales due for the two months before)"
+  rule base = c2_on[m] and rate_ok[m] and lf_end[first_bd[m + 1] - 1 day] > c2_keep2 and not (pos(m) > 1 and due2[m - 1] and quarter_of(first_bd[m]) == quarter_of(first_bd[m + 1])) and not (pos(m) > 2 and due2[m - 2] and quarter_of(first_bd[m - 1]) == quarter_of(first_bd[m + 1]))
+
+def due3[m in month]: bool
+  note "C-HR2 .3: otherwise, holding more than 14 000.00 at the end of month m, a sale of those above 6 000.00 is due on the first business day of the next month"
+  rule base = c2_on[m] and not due2[m] and lf_end[end_of(m) - 1 day] > c2_hold3
+
+def due_rule[m in month]: key c2_rule
+  rule nothing = none
+  rule p2 beats nothing = c2_point2 when due2[m]
+  rule p3 beats nothing = c2_point3 when due3[m]
+
+def due_day[m in month]: date
+  rule nothing = none
+  rule due beats nothing = first_bd[m + 1] when due_rule[m] != none
+
+def due_flr[m in month]: money FLR
+  note "what the due sale sells: what he held at the end of the day before the due day, above 1 500.00 (point 2) or 6 000.00 (point 3)"
+  rule nothing = 0 FLR
+  rule p2 beats nothing = max(0 FLR, lf_end[due_day[m] - 1 day] - c2_keep2) when due_rule[m] == c2_point2
+  rule p3 beats nothing = max(0 FLR, lf_end[due_day[m] - 1 day] - c2_keep3) when due_rule[m] == c2_point3
+
+def due_duk[m in month]: money DUK
+  note "C-HR2 .4: at Bank Lazur's buy rate of the day the sale is due"
+  rule nothing = 0 DUK
+  rule due beats nothing = round(due_flr[m] * lazur_buy[due_day[m]], minor(DUK), sale_round) when due_rule[m] != none
+
+def sale_flr[d in day]: money FLR = sum(lf[d, s].dr for s in seq where lf[d, s] != none and lf[d, s].k == l_sale_pot)
+
+def sale_rate[d in day]: num DUK/FLR = sum(lf[d, s].rate for s in seq where lf[d, s] != none and lf[d, s].k == l_sale_pot)
+
+def sale_duk[d in day]: money DUK
+  note "the dukats the pot's row shows from the sale (records/jodla-skarbonka.csv)"
+  rule base = sum(sk[d, s].cr for s in seq where sk[d, s] != none and sk[d, s].k == s_flr_in)
+
+def sale_made[m in month]: date
+  note "the day the sale into the pot due for month m was made: the first sale into the pot from the due day, before the next month's due day"
+  rule nothing = none
+  rule made beats nothing = first(d in day where d >= due_day[m] and d < first_bd[m + 2] and sale_flr[d] > 0 FLR) when due_rule[m] != none
+
+def off_rule[m in month]: bool
+  rule base = due_rule[m] != none and sale_made[m] != due_day[m]
+
+def held_duk[d in day]: money DUK
+  note "C-HR9 .1: florens at Bank Lazur's buy rate of the day, to the ort, half up"
+  rule base = round(lf_end[d] * lazur_buy[d], minor(DUK), half-up)

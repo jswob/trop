@@ -1,0 +1,49 @@
+# L §5.9 Rows replaced: "Otherwise its `replace` rows must form a whole table (ordered, without gaps or overlaps),
+# which replaces the earlier table wholly on the version's span, with its own intervals."  v2's rows [0, 20] and
+# (20, inf) are not v1's intervals and form a whole table: in 2027 b(15) is 5 (v1 would give 2) and b(50) is 6; in
+# 2026 v1's table gives 2 and 2.  q3: a single replace row (20, inf) is a whole table too, so it replaces v3's table
+# wholly and b2(5), outside every row, is a hole ("An x outside every row is a hole").
+=== m.tally
+model t
+  tally 2
+  on 2027-01-01
+  start 2026-01-01
+  end 2027-12-31
+
+source s "s"
+band b(n: int): int
+band b2(n: int): int
+input mid: int
+input hi: int
+input lo: int
+
+version v1
+  cite s
+  governs 2026..
+  known 2025-12-01
+  b: [0, 10] = 1
+  b: (10, inf) = 2
+  b2: [0, 10] = 1
+  b2: (10, inf) = 2
+  mid = 15
+  hi = 50
+  lo = 5
+
+version v2
+  cite s
+  governs 2027..
+  known 2026-12-01
+  replace b: [0, 20] = 5
+  replace b: (20, inf) = 6
+  replace b2: (20, inf) = 3
+
+ask q1: b(mid), b(hi) law 2027-06-30
+ask q2: b(mid), b(hi) law 2026-06-30
+ask q3: b2(lo) law 2027-06-30
+=== expect
+q1: (5, 6)
+...
+q2: (2, 2)
+  law date 2026-06-30, cut 2027-01-01
+q3: ...
+...

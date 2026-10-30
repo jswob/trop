@@ -1,0 +1,27 @@
+# L §5.16: cdf of a distribution value (not a fact): cdf(uniform(0, 4) to 0.001, 1) = 1/4, exact (table: uniform
+# "exact"); its sample step plays no part.  L §7.3: cdf of normal needs to u (LOAD-TO without it, at load).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+input one4: num
+input four: num
+def c: num = cdf(uniform(0, four) to 0.001, one4) at reader
+
+version v
+  cite s
+  governs 2026..
+  known 2026-01-01
+  one4 = 1
+  four = 4
+
+ask a: c law 2026-06-30
+=== expect
+a: 0.25
+  law date 2026-06-30, cut 2026-12-31

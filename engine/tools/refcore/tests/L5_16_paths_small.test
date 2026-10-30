@@ -1,0 +1,95 @@
+# L §5.16 example with 200 paths (cost), goal and theta_mid given rows.  over_goal prints "n of N" and the
+# fraction with its standard error and the horizon, the latest law date at which the line reads a random fact:
+# returns[2040] at end_of(2040) = 2041-01-01.  test_mode pins theta's sample on every path: "pinned sample:" in the
+# register, and theta is not read (no held theta); theta_mid, the pin's expression, is read at the ask's law date:
+# held.  Values are path statistics of SHA-256 samples: not asserted.
+=== m.tally
+model hh
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2040-12-31
+
+source own_assumption "own"
+unit PLN: currency minor 0.01
+input goal: money PLN
+input theta_mid: num 1/year
+
+input growth[y in years]: dist 1/year
+input theta: dist 1/year
+input vol: num 1/year
+input start_balance: money PLN
+def returns[y in years]: dist 1/year = normal(theta, vol) to 1e-9 at end_of(y)
+def balance_end[y in years]: money PLN at end_of(y)
+  rule first = start_balance
+  rule later beats first = round(balance_end[y - 1] * (1 + returns[y] * 1 year), minor(PLN), half-even) when pos(y) > 1
+
+version assumptions
+  cite own_assumption
+  governs 2026..
+  known 2026-01-01
+  growth[*] = normal(3 %/year, 10 %/year) to 1e-9 "planning assumption"
+  theta = uniform(1 %/year, 5 %/year) to 1e-9 "own range"
+  vol = 10 %/year "own guess"
+  start_balance = 50 000.00 PLN "statement"
+  goal = 60 000.00 PLN "goal"
+  theta_mid = 3 %/year "midpoint"
+
+ask growth_q1: quantile(growth[2030], 25 %) law 2030-12-31
+ask median_2040: quantile(balance_end[2040], 50 %) law 2040-12-31 paths 200 seed 7
+ask over_goal: share(balance_end[2040] > goal) law 2040-12-31 paths 200 seed 7
+ask bad_years: mean(balance_end[2040] where returns[2030] < 0) law 2040-12-31 paths 200 seed 7
+ask one_path: balance_end[2040] law 2040-12-31 paths 200 seed 7 path 12
+ask test_mode: mean(balance_end[2040]) with sample theta = theta_mid law 2040-12-31 paths 200 seed 7
+=== expect over_goal test_mode
+over_goal: ...
+  held: goal = 60 000.00 PLN (assumptions), read for 2040-12-31
+  held: start_balance = 50 000.00 PLN (assumptions), read for 2027-01-01
+  held: theta = uniform(0.01, 0.05) to 0.000000001 (assumptions), read for 2028-01-01
+  held: theta = uniform(0.01, 0.05) to 0.000000001 (assumptions), read for 2029-01-01
+  held: theta = uniform(0.01, 0.05) to 0.000000001 (assumptions), read for 2030-01-01
+  held: theta = uniform(0.01, 0.05) to 0.000000001 (assumptions), read for 2031-01-01
+  held: theta = uniform(0.01, 0.05) to 0.000000001 (assumptions), read for 2032-01-01
+  held: theta = uniform(0.01, 0.05) to 0.000000001 (assumptions), read for 2033-01-01
+  held: theta = uniform(0.01, 0.05) to 0.000000001 (assumptions), read for 2034-01-01
+  held: theta = uniform(0.01, 0.05) to 0.000000001 (assumptions), read for 2035-01-01
+  held: theta = uniform(0.01, 0.05) to 0.000000001 (assumptions), read for 2036-01-01
+  held: theta = uniform(0.01, 0.05) to 0.000000001 (assumptions), read for 2037-01-01
+  held: theta = uniform(0.01, 0.05) to 0.000000001 (assumptions), read for 2038-01-01
+  held: theta = uniform(0.01, 0.05) to 0.000000001 (assumptions), read for 2039-01-01
+  held: theta = uniform(0.01, 0.05) to 0.000000001 (assumptions), read for 2040-01-01
+  held: theta = uniform(0.01, 0.05) to 0.000000001 (assumptions), read for 2041-01-01
+  held: vol = 0.1 1/year (assumptions), read for 2028-01-01
+  held: vol = 0.1 1/year (assumptions), read for 2029-01-01
+  held: vol = 0.1 1/year (assumptions), read for 2030-01-01
+  held: vol = 0.1 1/year (assumptions), read for 2031-01-01
+  held: vol = 0.1 1/year (assumptions), read for 2032-01-01
+  held: vol = 0.1 1/year (assumptions), read for 2033-01-01
+  held: vol = 0.1 1/year (assumptions), read for 2034-01-01
+  held: vol = 0.1 1/year (assumptions), read for 2035-01-01
+  held: vol = 0.1 1/year (assumptions), read for 2036-01-01
+  held: vol = 0.1 1/year (assumptions), read for 2037-01-01
+  held: vol = 0.1 1/year (assumptions), read for 2038-01-01
+  held: vol = 0.1 1/year (assumptions), read for 2039-01-01
+  held: vol = 0.1 1/year (assumptions), read for 2040-01-01
+  held: vol = 0.1 1/year (assumptions), read for 2041-01-01
+  law date 2040-12-31, cut 2026-10-20
+test_mode: ...
+  pinned sample: theta = 0.03 1/year
+  held: start_balance = 50 000.00 PLN (assumptions), read for 2027-01-01
+  held: theta_mid = 0.03 1/year (assumptions), read for 2040-12-31
+  held: vol = 0.1 1/year (assumptions), read for 2028-01-01
+  held: vol = 0.1 1/year (assumptions), read for 2029-01-01
+  held: vol = 0.1 1/year (assumptions), read for 2030-01-01
+  held: vol = 0.1 1/year (assumptions), read for 2031-01-01
+  held: vol = 0.1 1/year (assumptions), read for 2032-01-01
+  held: vol = 0.1 1/year (assumptions), read for 2033-01-01
+  held: vol = 0.1 1/year (assumptions), read for 2034-01-01
+  held: vol = 0.1 1/year (assumptions), read for 2035-01-01
+  held: vol = 0.1 1/year (assumptions), read for 2036-01-01
+  held: vol = 0.1 1/year (assumptions), read for 2037-01-01
+  held: vol = 0.1 1/year (assumptions), read for 2038-01-01
+  held: vol = 0.1 1/year (assumptions), read for 2039-01-01
+  held: vol = 0.1 1/year (assumptions), read for 2040-01-01
+  held: vol = 0.1 1/year (assumptions), read for 2041-01-01
+  law date 2040-12-31, cut 2026-10-20

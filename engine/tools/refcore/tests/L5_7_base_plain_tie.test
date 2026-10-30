@@ -1,0 +1,23 @@
+# L §5.7 (round 12): two earliest plain entries "tied on both" (known and lifespan start) are refused, LOAD-DUP.
+=== m.tally
+model t
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+kind volunteers
+kind members
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  volunteers + [bo] lives 2026-01-01..
+  members + [bo] lives 2026-01-01..
+
+ask q: count(k in members on 2026-06-01)
+=== expect
+refused: LOAD-DUP a key entered twice: bo (volunteers, members, known and starting the same day) ...

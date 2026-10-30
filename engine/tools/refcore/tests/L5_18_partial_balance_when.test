@@ -1,0 +1,37 @@
+# MC-B-F2, the gated variant. L §5.18 Partial answers: "A rounding, min, max, a band, a comparison or a product of two
+# holes meeting a hole makes the line a plain hole naming every hole." The spending move's `when sp[m] != none` is a
+# comparison meeting the March hole, so the movement's existence is a hole (L §5.14) and the balance is a plain hole.
+=== m.tally
+model m
+  tally 2
+  on 2026-01-01
+  start 2025-01-01
+  end 2025-12-31
+
+unit DUK: currency minor 0.01
+source s "s"
+place w: accounts DUK lives 2025-01-01..
+place shop: outside lives 2025-01-01..
+input sp[m in months]: money DUK question "spent?"
+
+version o
+  cite s
+  known 2025-01-01
+  opening[w] = 100.00 DUK at 2025-01-01 start
+
+version v
+  cite s
+  governs always
+  known 2025-01-01
+  sp[*] = none "the other months"
+  sp[2025-03] = ?"What was spent in March?" "March"
+
+move spent[m in months]: transfers
+  on end_of(m) - 1
+  when sp[m] != none
+  leg cash from w to shop amount sp[m]
+
+ask q: bal(w, 2025-12-31) law 2025-12-31 partial
+=== expect
+q: ?"What was spent in March?" (sp[2025-03])
+  law date 2025-12-31, cut 2026-01-01

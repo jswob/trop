@@ -1,0 +1,8 @@
+cases/probes/law/LAW-13/LAW-13.tally rc=0 sec=0 lines=31 notyet=0 unspec=0 refused=0
+cases/probes/rand/RAND-04/RAND-04.tally rc=0 sec=9 lines=6 notyet=0 unspec=0 refused=0
+cases/probes/rule/RULE-09/RULE-09.tally rc=0 sec=0 lines=3 notyet=0 unspec=0 refused=1
+cases/probes/scen/SCEN-01/SCEN-01.tally rc=0 sec=0 lines=32 notyet=0 unspec=0 refused=0
+cases/probes/scen/SCEN-02/SCEN-02.tally rc=0 sec=0 lines=72 notyet=0 unspec=0 refused=0
+cases/probes/scen/SCEN-03/SCEN-03.tally rc=0 sec=0 lines=11 notyet=0 unspec=0 refused=0
+cases/probes/scen/SCEN-04/SCEN-04.tally rc=0 sec=0 lines=5 notyet=0 unspec=0 refused=0
+cases/probes/surf/SURF-04/SURF-04.tally rc=0 sec=0 lines=126 notyet=0 unspec=0 refused=1

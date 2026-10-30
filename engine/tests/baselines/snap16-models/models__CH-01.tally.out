@@ -1,0 +1,774 @@
+bcbs1996_p8 [inc_read = increment, print_round = half-up, zread = exact]: (1.13, 0.4)
+  reading: inc_read = increment
+  reading: print_round = half-up
+  reading: zread = exact
+  law date 2026-10-18, cut 2026-10-18
+bcbs1996_p8 [inc_read = increment, print_round = half-up, zread = table2]: (1.14, 0.41)
+  reading: inc_read = increment
+  reading: print_round = half-up
+  reading: zread = table2
+  law date 2026-10-18, cut 2026-10-18
+bcbs1996_p8 [inc_read = increment, print_round = down, zread = exact]: (1.13, 0.39)
+  reading: inc_read = increment
+  reading: print_round = down
+  reading: zread = exact
+  law date 2026-10-18, cut 2026-10-18
+bcbs1996_p8 [inc_read = increment, print_round = down, zread = table2]: (1.13, 0.4)
+  reading: inc_read = increment
+  reading: print_round = down
+  reading: zread = table2
+  law date 2026-10-18, cut 2026-10-18
+bcbs1996_p8 [inc_read = new_factor, print_round = half-up, zread = exact]: (1.13, 3.4)
+  reading: inc_read = new_factor
+  reading: print_round = half-up
+  reading: zread = exact
+  law date 2026-10-18, cut 2026-10-18
+bcbs1996_p8 [inc_read = new_factor, print_round = half-up, zread = table2]: (1.14, 3.41)
+  reading: inc_read = new_factor
+  reading: print_round = half-up
+  reading: zread = table2
+  law date 2026-10-18, cut 2026-10-18
+bcbs1996_p8 [inc_read = new_factor, print_round = down, zread = exact]: (1.13, 3.39)
+  reading: inc_read = new_factor
+  reading: print_round = down
+  reading: zread = exact
+  law date 2026-10-18, cut 2026-10-18
+bcbs1996_p8 [inc_read = new_factor, print_round = down, zread = table2]: (1.13, 3.4)
+  reading: inc_read = new_factor
+  reading: print_round = down
+  reading: zread = table2
+  law date 2026-10-18, cut 2026-10-18
+bcbs1996_t2 (k = 0) [print_round = half-up]: (green, 0, 0.0811)
+  reading: print_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+bcbs1996_t2 (k = 0) [print_round = down]: (green, 0, 0.081)
+  reading: print_round = down
+  law date 2026-10-18, cut 2026-10-18
+bcbs1996_t2 (k = 1) [print_round = half-up]: (green, 0, 0.2858)
+  reading: print_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+bcbs1996_t2 (k = 1) [print_round = down]: (green, 0, 0.2857)
+  reading: print_round = down
+  law date 2026-10-18, cut 2026-10-18
+bcbs1996_t2 (k = 2) [print_round = half-up]: (green, 0, 0.5432)
+  reading: print_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+bcbs1996_t2 (k = 2) [print_round = down]: (green, 0, 0.5431)
+  reading: print_round = down
+  law date 2026-10-18, cut 2026-10-18
+bcbs1996_t2 (k = 3) [print_round = *]: (green, 0, 0.7581)
+  law date 2026-10-18, cut 2026-10-18
+bcbs1996_t2 (k = 4) [print_round = half-up]: (green, 0, 0.8922)
+  reading: print_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+bcbs1996_t2 (k = 4) [print_round = down]: (green, 0, 0.8921)
+  reading: print_round = down
+  law date 2026-10-18, cut 2026-10-18
+bcbs1996_t2 (k = 5) [print_round = *]: (amber, 0.4, 0.9588)
+  law date 2026-10-18, cut 2026-10-18
+bcbs1996_t2 (k = 6) [print_round = half-up]: (amber, 0.5, 0.9863)
+  reading: print_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+bcbs1996_t2 (k = 6) [print_round = down]: (amber, 0.5, 0.9862)
+  reading: print_round = down
+  law date 2026-10-18, cut 2026-10-18
+bcbs1996_t2 (k = 7) [print_round = half-up]: (amber, 0.65, 0.996)
+  reading: print_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+bcbs1996_t2 (k = 7) [print_round = down]: (amber, 0.65, 0.9959)
+  reading: print_round = down
+  law date 2026-10-18, cut 2026-10-18
+bcbs1996_t2 (k = 8) [print_round = *]: (amber, 0.75, 0.9989)
+  law date 2026-10-18, cut 2026-10-18
+bcbs1996_t2 (k = 9) [print_round = *]: (amber, 0.85, 0.9997)
+  law date 2026-10-18, cut 2026-10-18
+bcbs1996_t2 (k = 10) [print_round = *]: (red, 1, 0.9999)
+  law date 2026-10-18, cut 2026-10-18
+mar99_11 [print_round = half-up]: 0.067
+  reading: print_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+mar99_11 [print_round = down]: 0.066
+  reading: print_round = down
+  law date 2026-10-18, cut 2026-10-18
+mar99_12 [print_round = *]: 0.109
+  law date 2026-10-18, cut 2026-10-18
+mar99_13 [print_round = half-up]: (0.919, 0.081)
+  reading: print_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+mar99_13 [print_round = down]: (0.918, 0.081)
+  reading: print_round = down
+  law date 2026-10-18, cut 2026-10-18
+mar99_14 [print_round = *]: 0.375
+  law date 2026-10-18, cut 2026-10-18
+mar99_17 [print_round = *]: (0.9588, 5, 10)
+  law date 2026-10-18, cut 2026-10-18
+mar99_19: (5, 9)
+  law date 2026-10-18, cut 2026-10-18
+mar99_21 [inc_read = increment, print_round = half-up, zread = exact]: (1.13, 0.13)
+  reading: inc_read = increment
+  reading: print_round = half-up
+  reading: zread = exact
+  law date 2026-10-18, cut 2026-10-18
+mar99_21 [inc_read = increment, print_round = half-up, zread = table2]: (1.14, 0.14)
+  reading: inc_read = increment
+  reading: print_round = half-up
+  reading: zread = table2
+  law date 2026-10-18, cut 2026-10-18
+mar99_21 [inc_read = increment, print_round = down, zread = *]: (1.13, 0.13)
+  reading: inc_read = increment
+  reading: print_round = down
+  law date 2026-10-18, cut 2026-10-18
+mar99_21 [inc_read = new_factor, print_round = half-up, zread = exact]: (1.13, 1.13)
+  reading: inc_read = new_factor
+  reading: print_round = half-up
+  reading: zread = exact
+  law date 2026-10-18, cut 2026-10-18
+mar99_21 [inc_read = new_factor, print_round = half-up, zread = table2]: (1.14, 1.14)
+  reading: inc_read = new_factor
+  reading: print_round = half-up
+  reading: zread = table2
+  law date 2026-10-18, cut 2026-10-18
+mar99_21 [inc_read = new_factor, print_round = down, zread = *]: (1.13, 1.13)
+  reading: inc_read = new_factor
+  reading: print_round = down
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c99, k = 0) [print_round = *]: 0.081
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c99, k = 1) [print_round = half-up]: 0.205
+  reading: print_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c99, k = 1) [print_round = down]: 0.204
+  reading: print_round = down
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c99, k = 2) [print_round = *]: 0.257
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c99, k = 3) [print_round = half-up]: 0.215
+  reading: print_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c99, k = 3) [print_round = down]: 0.214
+  reading: print_round = down
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c99, k = 4) [print_round = *]: 0.134
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c99, k = 5) [print_round = half-up]: 0.067
+  reading: print_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c99, k = 5) [print_round = down]: 0.066
+  reading: print_round = down
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c99, k = 6) [print_round = *]: 0.027
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c99, k = 7) [print_round = half-up]: 0.01
+  reading: print_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c99, k = 7) [print_round = down]: 0.009
+  reading: print_round = down
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c99, k = 8) [print_round = half-up]: 0.003
+  reading: print_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c99, k = 8) [print_round = down]: 0.002
+  reading: print_round = down
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c99, k = 9) [print_round = half-up]: 0.001
+  reading: print_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c99, k = 9) [print_round = down]: 0
+  reading: print_round = down
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c99, k = 10) [print_round = *]: 0
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c99, k = 11) [print_round = *]: 0
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c99, k = 12) [print_round = *]: 0
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c99, k = 13) [print_round = *]: 0
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c99, k = 14) [print_round = *]: 0
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c99, k = 15) [print_round = *]: 0
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c98, k = 0) [print_round = *]: 0.006
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c98, k = 1) [print_round = half-up]: 0.033
+  reading: print_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c98, k = 1) [print_round = down]: 0.032
+  reading: print_round = down
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c98, k = 2) [print_round = *]: 0.083
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c98, k = 3) [print_round = *]: 0.14
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c98, k = 4) [print_round = half-up]: 0.177
+  reading: print_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c98, k = 4) [print_round = down]: 0.176
+  reading: print_round = down
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c98, k = 5) [print_round = *]: 0.177
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c98, k = 6) [print_round = half-up]: 0.148
+  reading: print_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c98, k = 6) [print_round = down]: 0.147
+  reading: print_round = down
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c98, k = 7) [print_round = *]: 0.105
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c98, k = 8) [print_round = *]: 0.065
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c98, k = 9) [print_round = half-up]: 0.036
+  reading: print_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c98, k = 9) [print_round = down]: 0.035
+  reading: print_round = down
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c98, k = 10) [print_round = half-up]: 0.018
+  reading: print_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c98, k = 10) [print_round = down]: 0.017
+  reading: print_round = down
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c98, k = 11) [print_round = half-up]: 0.008
+  reading: print_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c98, k = 11) [print_round = down]: 0.007
+  reading: print_round = down
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c98, k = 12) [print_round = *]: 0.003
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c98, k = 13) [print_round = *]: 0.001
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c98, k = 14) [print_round = *]: 0
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c98, k = 15) [print_round = *]: 0
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c97, k = 0) [print_round = *]: 0
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c97, k = 1) [print_round = half-up]: 0.004
+  reading: print_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c97, k = 1) [print_round = down]: 0.003
+  reading: print_round = down
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c97, k = 2) [print_round = half-up]: 0.015
+  reading: print_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c97, k = 2) [print_round = down]: 0.014
+  reading: print_round = down
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c97, k = 3) [print_round = half-up]: 0.038
+  reading: print_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c97, k = 3) [print_round = down]: 0.037
+  reading: print_round = down
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c97, k = 4) [print_round = half-up]: 0.072
+  reading: print_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c97, k = 4) [print_round = down]: 0.071
+  reading: print_round = down
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c97, k = 5) [print_round = *]: 0.109
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c97, k = 6) [print_round = half-up]: 0.138
+  reading: print_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c97, k = 6) [print_round = down]: 0.137
+  reading: print_round = down
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c97, k = 7) [print_round = half-up]: 0.149
+  reading: print_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c97, k = 7) [print_round = down]: 0.148
+  reading: print_round = down
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c97, k = 8) [print_round = half-up]: 0.14
+  reading: print_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c97, k = 8) [print_round = down]: 0.139
+  reading: print_round = down
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c97, k = 9) [print_round = *]: 0.116
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c97, k = 10) [print_round = *]: 0.086
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c97, k = 11) [print_round = *]: 0.058
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c97, k = 12) [print_round = half-up]: 0.036
+  reading: print_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c97, k = 12) [print_round = down]: 0.035
+  reading: print_round = down
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c97, k = 13) [print_round = *]: 0.02
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c97, k = 14) [print_round = half-up]: 0.011
+  reading: print_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c97, k = 14) [print_round = down]: 0.01
+  reading: print_round = down
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c97, k = 15) [print_round = *]: 0.005
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c96, k = 0) [print_round = *]: 0
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c96, k = 1) [print_round = *]: 0
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c96, k = 2) [print_round = half-up]: 0.002
+  reading: print_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c96, k = 2) [print_round = down]: 0.001
+  reading: print_round = down
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c96, k = 3) [print_round = half-up]: 0.007
+  reading: print_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c96, k = 3) [print_round = down]: 0.006
+  reading: print_round = down
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c96, k = 4) [print_round = half-up]: 0.018
+  reading: print_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c96, k = 4) [print_round = down]: 0.017
+  reading: print_round = down
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c96, k = 5) [print_round = *]: 0.036
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c96, k = 6) [print_round = half-up]: 0.062
+  reading: print_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c96, k = 6) [print_round = down]: 0.061
+  reading: print_round = down
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c96, k = 7) [print_round = half-up]: 0.09
+  reading: print_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c96, k = 7) [print_round = down]: 0.089
+  reading: print_round = down
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c96, k = 8) [print_round = *]: 0.113
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c96, k = 9) [print_round = *]: 0.127
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c96, k = 10) [print_round = half-up]: 0.128
+  reading: print_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c96, k = 10) [print_round = down]: 0.127
+  reading: print_round = down
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c96, k = 11) [print_round = *]: 0.116
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c96, k = 12) [print_round = *]: 0.096
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c96, k = 13) [print_round = *]: 0.073
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c96, k = 14) [print_round = half-up]: 0.052
+  reading: print_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c96, k = 14) [print_round = down]: 0.051
+  reading: print_round = down
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c96, k = 15) [print_round = half-up]: 0.034
+  reading: print_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c96, k = 15) [print_round = down]: 0.033
+  reading: print_round = down
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c95, k = 0) [print_round = *]: 0
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c95, k = 1) [print_round = *]: 0
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c95, k = 2) [print_round = *]: 0
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c95, k = 3) [print_round = *]: 0.001
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c95, k = 4) [print_round = *]: 0.003
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c95, k = 5) [print_round = half-up]: 0.009
+  reading: print_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c95, k = 5) [print_round = down]: 0.008
+  reading: print_round = down
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c95, k = 6) [print_round = *]: 0.018
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c95, k = 7) [print_round = half-up]: 0.034
+  reading: print_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c95, k = 7) [print_round = down]: 0.033
+  reading: print_round = down
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c95, k = 8) [print_round = half-up]: 0.054
+  reading: print_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c95, k = 8) [print_round = down]: 0.053
+  reading: print_round = down
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c95, k = 9) [print_round = half-up]: 0.076
+  reading: print_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c95, k = 9) [print_round = down]: 0.075
+  reading: print_round = down
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c95, k = 10) [print_round = *]: 0.096
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c95, k = 11) [print_round = half-up]: 0.111
+  reading: print_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c95, k = 11) [print_round = down]: 0.11
+  reading: print_round = down
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c95, k = 12) [print_round = half-up]: 0.116
+  reading: print_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c95, k = 12) [print_round = down]: 0.115
+  reading: print_round = down
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c95, k = 13) [print_round = half-up]: 0.112
+  reading: print_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c95, k = 13) [print_round = down]: 0.111
+  reading: print_round = down
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c95, k = 14) [print_round = half-up]: 0.1
+  reading: print_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c95, k = 14) [print_round = down]: 0.099
+  reading: print_round = down
+  law date 2026-10-18, cut 2026-10-18
+t1_exact (c = c95, k = 15) [print_round = *]: 0.082
+  law date 2026-10-18, cut 2026-10-18
+t1_notes [print_round = half-up]: (0.108, 0.128)
+  reading: print_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+t1_notes [print_round = down]: (0.107, 0.128)
+  reading: print_round = down
+  law date 2026-10-18, cut 2026-10-18
+t1_type1 (k = 0) [print_round = *]: 1
+  law date 2026-10-18, cut 2026-10-18
+t1_type1 (k = 1) [print_round = half-up]: 0.919
+  reading: print_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+t1_type1 (k = 1) [print_round = down]: 0.918
+  reading: print_round = down
+  law date 2026-10-18, cut 2026-10-18
+t1_type1 (k = 2) [print_round = *]: 0.714
+  law date 2026-10-18, cut 2026-10-18
+t1_type1 (k = 3) [print_round = half-up]: 0.457
+  reading: print_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+t1_type1 (k = 3) [print_round = down]: 0.456
+  reading: print_round = down
+  law date 2026-10-18, cut 2026-10-18
+t1_type1 (k = 4) [print_round = half-up]: 0.242
+  reading: print_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+t1_type1 (k = 4) [print_round = down]: 0.241
+  reading: print_round = down
+  law date 2026-10-18, cut 2026-10-18
+t1_type1 (k = 5) [print_round = half-up]: 0.108
+  reading: print_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+t1_type1 (k = 5) [print_round = down]: 0.107
+  reading: print_round = down
+  law date 2026-10-18, cut 2026-10-18
+t1_type1 (k = 6) [print_round = *]: 0.041
+  law date 2026-10-18, cut 2026-10-18
+t1_type1 (k = 7) [print_round = half-up]: 0.014
+  reading: print_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+t1_type1 (k = 7) [print_round = down]: 0.013
+  reading: print_round = down
+  law date 2026-10-18, cut 2026-10-18
+t1_type1 (k = 8) [print_round = *]: 0.004
+  law date 2026-10-18, cut 2026-10-18
+t1_type1 (k = 9) [print_round = *]: 0.001
+  law date 2026-10-18, cut 2026-10-18
+t1_type1 (k = 10) [print_round = *]: 0
+  law date 2026-10-18, cut 2026-10-18
+t1_type1 (k = 11) [print_round = *]: 0
+  law date 2026-10-18, cut 2026-10-18
+t1_type1 (k = 12) [print_round = *]: 0
+  law date 2026-10-18, cut 2026-10-18
+t1_type1 (k = 13) [print_round = *]: 0
+  law date 2026-10-18, cut 2026-10-18
+t1_type1 (k = 14) [print_round = *]: 0
+  law date 2026-10-18, cut 2026-10-18
+t1_type1 (k = 15) [print_round = *]: 0
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c98, k = 0) [print_round = *]: 0
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c98, k = 1) [print_round = *]: 0.006
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c98, k = 2) [print_round = *]: 0.039
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c98, k = 3) [print_round = *]: 0.122
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c98, k = 4) [print_round = *]: 0.262
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c98, k = 5) [print_round = half-up]: 0.439
+  reading: print_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c98, k = 5) [print_round = down]: 0.438
+  reading: print_round = down
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c98, k = 6) [print_round = half-up]: 0.616
+  reading: print_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c98, k = 6) [print_round = down]: 0.615
+  reading: print_round = down
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c98, k = 7) [print_round = half-up]: 0.764
+  reading: print_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c98, k = 7) [print_round = down]: 0.763
+  reading: print_round = down
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c98, k = 8) [print_round = half-up]: 0.869
+  reading: print_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c98, k = 8) [print_round = down]: 0.868
+  reading: print_round = down
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c98, k = 9) [print_round = half-up]: 0.934
+  reading: print_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c98, k = 9) [print_round = down]: 0.933
+  reading: print_round = down
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c98, k = 10) [print_round = half-up]: 0.97
+  reading: print_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c98, k = 10) [print_round = down]: 0.969
+  reading: print_round = down
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c98, k = 11) [print_round = *]: 0.987
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c98, k = 12) [print_round = *]: 0.995
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c98, k = 13) [print_round = *]: 0.998
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c98, k = 14) [print_round = *]: 0.999
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c98, k = 15) [print_round = half-up]: 1
+  reading: print_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c98, k = 15) [print_round = down]: 0.999
+  reading: print_round = down
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c97, k = 0) [print_round = *]: 0
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c97, k = 1) [print_round = *]: 0
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c97, k = 2) [print_round = *]: 0.004
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c97, k = 3) [print_round = half-up]: 0.019
+  reading: print_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c97, k = 3) [print_round = down]: 0.018
+  reading: print_round = down
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c97, k = 4) [print_round = half-up]: 0.057
+  reading: print_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c97, k = 4) [print_round = down]: 0.056
+  reading: print_round = down
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c97, k = 5) [print_round = *]: 0.128
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c97, k = 6) [print_round = *]: 0.237
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c97, k = 7) [print_round = *]: 0.375
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c97, k = 8) [print_round = half-up]: 0.524
+  reading: print_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c97, k = 8) [print_round = down]: 0.523
+  reading: print_round = down
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c97, k = 9) [print_round = *]: 0.663
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c97, k = 10) [print_round = *]: 0.779
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c97, k = 11) [print_round = half-up]: 0.866
+  reading: print_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c97, k = 11) [print_round = down]: 0.865
+  reading: print_round = down
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c97, k = 12) [print_round = half-up]: 0.924
+  reading: print_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c97, k = 12) [print_round = down]: 0.923
+  reading: print_round = down
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c97, k = 13) [print_round = half-up]: 0.96
+  reading: print_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c97, k = 13) [print_round = down]: 0.959
+  reading: print_round = down
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c97, k = 14) [print_round = *]: 0.98
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c97, k = 15) [print_round = half-up]: 0.991
+  reading: print_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c97, k = 15) [print_round = down]: 0.99
+  reading: print_round = down
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c96, k = 0) [print_round = *]: 0
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c96, k = 1) [print_round = *]: 0
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c96, k = 2) [print_round = *]: 0
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c96, k = 3) [print_round = *]: 0.002
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c96, k = 4) [print_round = *]: 0.009
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c96, k = 5) [print_round = *]: 0.027
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c96, k = 6) [print_round = *]: 0.063
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c96, k = 7) [print_round = *]: 0.125
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c96, k = 8) [print_round = half-up]: 0.215
+  reading: print_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c96, k = 8) [print_round = down]: 0.214
+  reading: print_round = down
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c96, k = 9) [print_round = *]: 0.328
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c96, k = 10) [print_round = *]: 0.455
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c96, k = 11) [print_round = *]: 0.583
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c96, k = 12) [print_round = *]: 0.699
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c96, k = 13) [print_round = *]: 0.795
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c96, k = 14) [print_round = half-up]: 0.869
+  reading: print_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c96, k = 14) [print_round = down]: 0.868
+  reading: print_round = down
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c96, k = 15) [print_round = half-up]: 0.921
+  reading: print_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c96, k = 15) [print_round = down]: 0.92
+  reading: print_round = down
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c95, k = 0) [print_round = *]: 0
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c95, k = 1) [print_round = *]: 0
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c95, k = 2) [print_round = *]: 0
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c95, k = 3) [print_round = *]: 0
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c95, k = 4) [print_round = *]: 0.001
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c95, k = 5) [print_round = half-up]: 0.005
+  reading: print_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c95, k = 5) [print_round = down]: 0.004
+  reading: print_round = down
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c95, k = 6) [print_round = *]: 0.013
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c95, k = 7) [print_round = *]: 0.031
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c95, k = 8) [print_round = half-up]: 0.065
+  reading: print_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c95, k = 8) [print_round = down]: 0.064
+  reading: print_round = down
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c95, k = 9) [print_round = half-up]: 0.119
+  reading: print_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c95, k = 9) [print_round = down]: 0.118
+  reading: print_round = down
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c95, k = 10) [print_round = half-up]: 0.195
+  reading: print_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c95, k = 10) [print_round = down]: 0.194
+  reading: print_round = down
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c95, k = 11) [print_round = half-up]: 0.291
+  reading: print_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c95, k = 11) [print_round = down]: 0.29
+  reading: print_round = down
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c95, k = 12) [print_round = half-up]: 0.402
+  reading: print_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c95, k = 12) [print_round = down]: 0.401
+  reading: print_round = down
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c95, k = 13) [print_round = half-up]: 0.518
+  reading: print_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c95, k = 13) [print_round = down]: 0.517
+  reading: print_round = down
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c95, k = 14) [print_round = *]: 0.629
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c95, k = 15) [print_round = half-up]: 0.729
+  reading: print_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+t1_type2 (c = c95, k = 15) [print_round = down]: 0.728
+  reading: print_round = down
+  law date 2026-10-18, cut 2026-10-18
+t2_zones (k = 0) [print_round = half-up]: (green, 1.5, 0.0811)
+  reading: print_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+t2_zones (k = 0) [print_round = down]: (green, 1.5, 0.081)
+  reading: print_round = down
+  law date 2026-10-18, cut 2026-10-18
+t2_zones (k = 1) [print_round = half-up]: (green, 1.5, 0.2858)
+  reading: print_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+t2_zones (k = 1) [print_round = down]: (green, 1.5, 0.2857)
+  reading: print_round = down
+  law date 2026-10-18, cut 2026-10-18
+t2_zones (k = 2) [print_round = half-up]: (green, 1.5, 0.5432)
+  reading: print_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+t2_zones (k = 2) [print_round = down]: (green, 1.5, 0.5431)
+  reading: print_round = down
+  law date 2026-10-18, cut 2026-10-18
+t2_zones (k = 3) [print_round = *]: (green, 1.5, 0.7581)
+  law date 2026-10-18, cut 2026-10-18
+t2_zones (k = 4) [print_round = half-up]: (green, 1.5, 0.8922)
+  reading: print_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+t2_zones (k = 4) [print_round = down]: (green, 1.5, 0.8921)
+  reading: print_round = down
+  law date 2026-10-18, cut 2026-10-18
+t2_zones (k = 5) [print_round = *]: (amber, 1.7, 0.9588)
+  law date 2026-10-18, cut 2026-10-18
+t2_zones (k = 6) [print_round = half-up]: (amber, 1.76, 0.9863)
+  reading: print_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+t2_zones (k = 6) [print_round = down]: (amber, 1.76, 0.9862)
+  reading: print_round = down
+  law date 2026-10-18, cut 2026-10-18
+t2_zones (k = 7) [print_round = half-up]: (amber, 1.83, 0.996)
+  reading: print_round = half-up
+  law date 2026-10-18, cut 2026-10-18
+t2_zones (k = 7) [print_round = down]: (amber, 1.83, 0.9959)
+  reading: print_round = down
+  law date 2026-10-18, cut 2026-10-18
+t2_zones (k = 8) [print_round = *]: (amber, 1.88, 0.9989)
+  law date 2026-10-18, cut 2026-10-18
+t2_zones (k = 9) [print_round = *]: (amber, 1.92, 0.9997)
+  law date 2026-10-18, cut 2026-10-18
+t2_zones (k = 10) [print_round = *]: (red, 2, 0.9999)
+  law date 2026-10-18, cut 2026-10-18

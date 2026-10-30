@@ -1,0 +1,28 @@
+Bank Olcha S.A.|account statement
+Account|LN73 4400 2011 0000 8817 2264 0001
+Holder|ZBIGNIEW SOWA, HALINA SOWA
+Period|20240401|20240430
+Opening balance|38 292,76
+Date|Type|Counterparty|Title|Amount|Balance after
+20240403|CASH|ATM Olcha Brzezie|cash withdrawal|-500,00|37 792,76
+20240405|CREDIT|Social Insurance Office|pension 04/2024 Z. SOWA|4 674,74|42 467,50
+20240405|CREDIT|Social Insurance Office|pension 04/2024 H. SOWA|2 472,98|44 940,48
+20240405|DIRECT DEBIT|Bank Buk|loan 3310-20 instalment 43|-972,28|43 968,20
+20240405|STANDING ORDER|WM Ogrodowa 2|fee Ogrodowa 2/11 04/2024|-420,00|43 548,20
+20240405|CARD|Piekarnia Złoty Kłos|card ...2264|-253,95|43 294,25
+20240408|CREDIT|Igor Mazur|rent 04/2024 Ogrodowa 2/11|1 780,00|45 074,25
+20240410|TRANSFER|Treasury ISB|ISB2404 5 bonds reg. 55-1904-2271|-500,00|44 574,25
+20240410|CARD|Drogeria Konwalia|card ...2264|-134,94|44 439,31
+20240412|CARD|Drogeria Konwalia|card ...2264|-110,25|44 329,06
+20240413|CARD|Piekarnia Złoty Kłos|card ...2264|-233,15|44 095,91
+20240413|CARD|Market Brzezie|card ...2264|-199,83|43 896,08
+20240414|CARD|Stacja Olcha-Paliwa|card ...2264|-201,89|43 694,19
+20240415|STANDING ORDER|Volta Energia|Leśna 4 energy 04/2024|-385,00|43 309,19
+20240417|CASH|ATM Olcha Brzezie|cash withdrawal|-500,00|42 809,19
+20240420|CARD|Market Brzezie|card ...2264|-31,32|42 777,87
+20240422|STANDING ORDER|Telekom Lenia|phone 04/2024|-59,00|42 718,87
+20240422|CARD|Drogeria Konwalia|card ...2264|-169,20|42 549,67
+20240422|CARD|Warzywniak u Janka|card ...2264|-229,23|42 320,44
+20240423|CARD|Sklep Pod Lipą|card ...2264|-36,16|42 284,28
+20240425|TRANSFER|Opieka Dom sp.|home help 04/2024|-600,00|41 684,28
+Closing balance|41 684,28

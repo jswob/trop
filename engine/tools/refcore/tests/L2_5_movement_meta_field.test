@@ -1,0 +1,32 @@
+# L §2.5: "A movement's fields are its legs, its declared attributes and the built-in fields day, kind, fulfils
+# (§5.14)"; version, source, known, governs, held, assumed and at are meta's (§3.7), not a movement's: LOAD-FIELD.
+# (Writer 6: was REFCORE-UNSPECIFIED §2.2.)
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2019-05-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input gift_day: date
+
+move gift: transfers
+  on gift_day
+  leg cash from world to konto amount amt
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 10 PLN "s"
+  gift_day = 2026-03-01 "s"
+  opening[konto] = 0 PLN at 2026-01-01 start "s"
+
+ask q: count(g in transfers over 2026 where g.known <= 2026-06-30)
+=== expect
+refused: LOAD-FIELD known is not a field of transfers ...

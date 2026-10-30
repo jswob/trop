@@ -1,0 +1,22 @@
+# L §4.2 Key arithmetic: "y - 1, m + 12 ... A result outside the index is refused at that key (RUN-KEY) where it
+# stands in a key position. In a value position a key of an integer index is an int, so k - 1 at the first key is
+# plain int arithmetic."  "The difference of two keys of one ordered index, k1 - k2, is an int: the difference of
+# their positions (for an integer or period index, of the integers or periods)."  Date arithmetic: "month ± int
+# by months, year ± int by years".
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+index ks = 1..3
+index gs = [g1, g2, g3]
+
+ask q1: k - 1 for k in ks where pos(k) == 1
+ask q2: count(g in gs where g - g1 == 1), 2026-03 + 1, year_of(2026-05-10) - 1
+=== expect
+q1 (k = 1): 0
+  cut 2026-12-31
+q2: (1, 2026-04, 2025)
+  cut 2026-12-31

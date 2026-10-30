@@ -1,0 +1,92 @@
+# L §6.1 Identities are written: "a thing (a keyed place at its keys included)"; What same does: "on a day on which the
+# two sides' entries into one kind disagree, whatever depends on the thing being alive there is a HOLE-SAME hole (in a
+# binding over that kind, an unknown member, §5.11)". As L6_1_same_keyed_place, but b.sav lives from 2026-06-01: the
+# deposit (one movement) on 2026-03-01 is booked by ana's side and refused by ben's (RUN-LIFESPAN), so the joint
+# balance is a HOLE-SAME hole (ka) and a binding over accounts that day has an unknown member (n_mar); in December both
+# sides hold the place alive and it counts once (n_dec). Alone: ana 10.00 + 100.00 = 110.00 PLN (a.q), ben refuses the
+# leg (b.q). (Was REFCORE-NOT-YET.)
+=== options pin=bytes
+=== joint.tally
+model family
+  tally 2
+  on 2026-01-05
+  start 2026-01-01
+  end 2026-12-31
+  use a = "ana.tally" sha256 "68706e69477e3e58a03c8045cca0809eba9f753f7565facf19ce427acf620205"
+  use b = "ben.tally" sha256 "2bbfc70f3568f9832dfcbb38f3bc074690521caa9689b6e464df042124f67267"
+  same a.persons = b.persons
+  same a.kid = b.kid
+  same a.sav[kid] = b.sav[kid]
+  same a.dep = b.dep_seen
+
+ask ka: bal(a.sav[kid], 2026-12-31)
+ask n_mar: count(p in accounts on 2026-03-01)
+ask n_dec: count(p in accounts on 2026-12-31)
+=== ana.tally
+model ana
+  tally 2
+  on 2026-01-05
+  start 2026-01-01
+  end 2026-12-31
+
+source s "umowa"
+unit PLN: currency minor 0.01
+kind persons
+place sav[p in persons]: accounts PLN lives 2019-01-01..
+place world: outside lives 1900-01-01..
+input dep_amt: money PLN
+input dep_day: date
+
+move dep: transfers
+  on dep_day
+  leg cash from world to sav[kid] amount dep_amt
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  persons + [kid] lives 2019-01-01..
+  dep_amt = 100.00 PLN "plan"
+  dep_day = 2026-03-01 "plan"
+  opening[sav[kid]] = 10.00 PLN at 2026-01-01 start "wyciąg"
+
+ask q: bal(sav[kid], 2026-12-31)
+=== ben.tally
+model ben
+  tally 2
+  on 2026-01-05
+  start 2026-01-01
+  end 2026-12-31
+
+source s "umowa"
+unit PLN: currency minor 0.01
+kind persons
+place sav[p in persons]: accounts PLN lives 2026-06-01..
+place from_ana: outside lives 1900-01-01..
+input dep_amt: money PLN
+input dep_day: date
+
+move dep_seen: transfers
+  on dep_day
+  leg cash from from_ana to sav[kid] amount dep_amt
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  persons + [kid] lives 2019-01-01..
+  dep_amt = 100.00 PLN "plan"
+  dep_day = 2026-03-01 "plan"
+
+ask q: bal(sav[kid], 2026-12-31)
+=== expect ka n_mar n_dec a.q b.q
+ka: ?"a.sav[a.kid] and b.sav[a.kid] are one, but the entry into accounts differs on 2026-03-01: 2019-01-01.. (a.sav[a.kid]) and 2026-06-01.. (b.sav[a.kid])" (a.sav[a.kid], b.sav[a.kid])
+  cut 2026-01-05
+n_mar: ?"a.sav[a.kid] and b.sav[a.kid] are one, but the entry into accounts differs on 2026-03-01: 2019-01-01.. (a.sav[a.kid]) and 2026-06-01.. (b.sav[a.kid])" (a.sav[a.kid], b.sav[a.kid])
+  cut 2026-01-05
+n_dec: 1
+  cut 2026-01-05
+a.q: 110.00 PLN
+  cut 2026-01-05
+b.q: refused: RUN-LIFESPAN dep_seen.cash moves into or out of sav[kid] outside its lifespan
+  cut 2026-01-05

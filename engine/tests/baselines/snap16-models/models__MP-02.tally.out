@@ -1,0 +1,38 @@
+check_loan: ok
+  law date 2026-10-19, cut 2026-10-19
+check_principal: ok
+  law date 2026-10-19, cut 2026-10-19
+line1_principal: 100 000.00 USD
+  law date 2026-10-19, cut 2026-10-19
+line2_ratio: 1/3 (0.333333333333333)
+  law date 2026-10-19, cut 2026-10-19
+line3_appreciation [mp02_appreciation = purchase]: 300 000.00 USD
+  reading: mp02_appreciation = purchase
+  law date 2026-10-19, cut 2026-10-19
+line3_appreciation [mp02_appreciation = marriage]: ?"What was the home worth on the date of marriage? The example gives no value at marriage." (value_marriage)
+  reading: mp02_appreciation = marriage
+  law date 2026-10-19, cut 2026-10-19
+line4_community_app [mp02_appreciation = purchase]: 100 000 USD
+  reading: mp02_appreciation = purchase
+  law date 2026-10-19, cut 2026-10-19
+line4_community_app [mp02_appreciation = marriage]: ?"What was the home worth on the date of marriage? The example gives no value at marriage." (value_marriage)
+  reading: mp02_appreciation = marriage
+  law date 2026-10-19, cut 2026-10-19
+line5_community_interest [mp02_appreciation = purchase]: 200 000 USD
+  reading: mp02_appreciation = purchase
+  law date 2026-10-19, cut 2026-10-19
+line5_community_interest [mp02_appreciation = marriage]: ?"What was the home worth on the date of marriage? The example gives no value at marriage." (value_marriage)
+  reading: mp02_appreciation = marriage
+  law date 2026-10-19, cut 2026-10-19
+line6_separate [mp02_appreciation = purchase]: 282 000 USD
+  reading: mp02_appreciation = purchase
+  law date 2026-10-19, cut 2026-10-19
+line6_separate [mp02_appreciation = marriage]: ?"What was the home worth on the date of marriage? The example gives no value at marriage." (value_marriage)
+  reading: mp02_appreciation = marriage
+  law date 2026-10-19, cut 2026-10-19
+line7_equity [mp02_appreciation = purchase]: (482 000.00 USD, 200 000 USD, 282 000 USD)
+  reading: mp02_appreciation = purchase
+  law date 2026-10-19, cut 2026-10-19
+line7_equity [mp02_appreciation = marriage]: (482 000.00 USD, ?"What was the home worth on the date of marriage? The example gives no value at marriage." (value_marriage), ?"What was the home worth on the date of marriage? The example gives no value at marriage." (value_marriage))
+  reading: mp02_appreciation = marriage
+  law date 2026-10-19, cut 2026-10-19

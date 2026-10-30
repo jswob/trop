@@ -1,0 +1,410 @@
+model rc08
+  tally 2
+  on 2026-10-18
+  start 2022-01-01
+  end 2026-12-31
+  note "Poland, ulga dla pracowników (the middle-class relief) of 2022: the payroll relief of art. 32 ust. 2a and the annual relief of art. 26 ust. 4a-4c PIT, as enacted by Dz.U. 2021 poz. 2105, and their removal by Dz.U. 2022 poz. 1265."
+  note "The monthly relief is keyed by month, so its law date is the month's first day: art. 18 ust. 3 and art. 23 ust. 4 of poz. 1265 stop it for income from 1 July 2022. The annual relief is keyed by tax year: art. 18 ust. 2 disapplies it for all 2022 income, a change known only from 15 June 2022."
+  note "The Ministry's guides are dated 6 April 2022, so the asks that reproduce their annual answers and their simulations run as known on that day. The monthly examples run on current knowledge, in a month the relief still covers. The examples' facts are stipulations, known from start, 1 January 2022, the first day of their year."
+  note "No provision states how the relief is rounded; the two firms differ, so it is an axis. The simulations' advances and taxes are modelled as the law states them, art. 32 ust. 1, 2a and 3 and art. 27 ust. 1, with the bases and the amounts rounded to full złoty by Ordynacja podatkowa art. 63 § 1; the payroll figures the sources don't give (the costs, the social insurance contributions, whether a PIT-2 statement was filed) are holes, and so are the 2021 law and the joint method of art. 6 ust. 2, which the case doesn't transcribe."
+
+source du2011_1707 "Ustawa z dnia 22 grudnia 2011 r. o zmianie niektórych ustaw związanych z realizacją ustawy budżetowej (Dz.U. 2011 Nr 291 poz. 1707), art. 4 pkt 1: Ordynacja podatkowa art. 63 § 1 otrzymuje brzmienie" at "https://api.sejm.gov.pl/eli/acts/DU/2011/1707/text.pdf"
+
+source du2019_1835 "Ustawa z dnia 30 sierpnia 2019 r. o zmianie ustawy o podatku dochodowym od osób fizycznych oraz ustawy o zmianie ustawy o podatku dochodowym od osób fizycznych oraz niektórych innych ustaw (Dz.U. 2019 poz. 1835)" at "https://api.sejm.gov.pl/eli/acts/DU/2019/1835/text.html"
+
+source du2021_2105 "Ustawa z dnia 29 października 2021 r. o zmianie ustawy o podatku dochodowym od osób fizycznych, ustawy o podatku dochodowym od osób prawnych oraz niektórych innych ustaw (Dz.U. 2021 poz. 2105)" at "https://api.sejm.gov.pl/eli/acts/DU/2021/2105/text.html"
+
+source du2022_1265 "Ustawa z dnia 9 czerwca 2022 r. o zmianie ustawy o podatku dochodowym od osób fizycznych oraz niektórych innych ustaw (Dz.U. 2022 poz. 1265)" at "https://api.sejm.gov.pl/eli/acts/DU/2022/1265/text.html"
+
+source ifirma "IFIRMA S.A., Ulga dla klasy średniej w Polskim Ładzie (Małgorzata Jagusiak), 2021-11-23" at "https://www.ifirma.pl/blog/podatki/polski-lad/ulga-dla-klasy-sredniej-w-polskim-ladzie/"
+
+source lifted_1_0_1 "Figures tally 1.0.1 allowed inline in rules"
+
+source mf_employer "Ministerstwo Finansów / KAS, Przewodnik dla pracodawcy: Ulga dla klasy średniej, wersja z 06.04.2022 r. (Wayback capture of 2022-08-05)" at "https://web.archive.org/web/20220805042959id_/https://www.podatki.gov.pl/media/8050/polski_lad_poradnik_dla_pracodawcy_06_04.pdf"
+
+source mf_taxpayer "Ministerstwo Finansów / KAS, Przewodnik dla podatnika: Ulga dla klasy średniej, stan na 06.04.2022 r. (Wayback capture of 2022-08-05)" at "https://web.archive.org/web/20220805043008id_/https://www.podatki.gov.pl/media/8049/polski_lad_poradnik_dla_podatnika_06_04.pdf"
+
+source modeller "The model's own assumptions, each stated with its reason"
+
+unit PLN: currency minor 0.01
+
+axis mc_round
+  gr_down "the relief cut to the grosz below, as wFirma prints it"
+  gr_exact "no rounding is stated: the relief is kept exact"
+  gr_half_up "the relief rounded to the nearest grosz, a half grosz up, as ifirma prints it"
+
+index abr = [below, f1, f2, above]
+
+index basis = [individual, joint]
+
+index jcase = [q2, q3, q4, q5, q6, q7, s2a, s2b, s3]
+
+index mcase = [m1, m2, m3, m4, q1, s1a, s1b]
+
+index mo = month 2022-01..2022-12
+
+index payment = [m1_pay, m2_pay, m3_pay1, m3_pay2, m4_pay1, m4_pay2, q1_salary, q1_sick, s1a_pay, s1b_pay]
+
+index pkind = [employment, social_benefit]
+
+index spouse = [sp1, sp2]
+
+index yr = year 2022..2022
+
+input a_basis_2: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input adv_free_12: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input adv_rate: num
+
+input ann_c1: money PLN
+
+input ann_c2: money PLN
+
+input ann_r1: num
+
+input ann_r2: num
+
+input biz_net[j in jcase, s in spouse]: money PLN question "What was the spouse's revenue from business taxed on the scale, less the costs of the business other than social insurance contributions, in the year?"
+
+input emp_income[j in jcase, s in spouse]: money PLN question "What was the spouse's income from employment in the year: the revenue less the costs of earning it and the social insurance contributions deducted from income?"
+
+input emp_rev[j in jcase, s in spouse]: money PLN question "What was the spouse's revenue from employment taxed under art. 27 in the year?"
+
+input formula_div: num
+
+input free_amount: money PLN
+
+input granted[c in mcase]: money PLN question "What relief did the payer already apply at an earlier payment in the month?"
+
+input mon_c1: money PLN
+
+input mon_c2: money PLN
+
+input mon_r1: num
+
+input mon_r2: num
+
+input month_income[c in mcase]: money PLN question "What is the month's income from the employment under art. 32 ust. 2: the revenue less the costs of earning it and the social insurance contributions?"
+
+input pay_amount[p in payment]: money PLN question "How much was paid?"
+
+input pay_case[p in payment]: key mcase
+
+input pay_kind[p in payment]: key pkind question "Is the payment revenue from employment, or a cash benefit from social insurance?"
+
+input pit2_filed[c in mcase]: bool question "Did the employee file the statement of art. 32 ust. 3 (PIT-2) with the payer before the year's first payment?"
+
+input waiver[c in mcase]: bool question "Did the employee ask in writing that the payer not reduce the income by the relief (art. 32 ust. 2b)?"
+
+band ann_band(a: num PLN): key abr
+  note "art. 26 ust. 4a-4b: which formula applies to A, the year's revenue"
+
+band mon_band(a: money PLN): key abr
+  note "art. 32 ust. 2a: which formula applies to A, the month's revenue"
+
+band pit_scale(x: num PLN): num PLN
+  note "art. 27 ust. 1: the tax on the base. Below 30 000 zł the first row is negative; the transcribed text doesn't say what the tax is then, and no example reaches it"
+
+def a_basis[j in jcase, s in spouse, b in basis]: num PLN at reader
+  note "the A the relief is figured on: the spouse's own (art. 26 ust. 4a), or half the spouses' combined A when they file jointly (ust. 4c)"
+  rule individual v dz2021_2105 = a_rev[j, s] when b == individual
+  rule joint v dz2021_2105 = sum(a_rev[j, t] for t in spouse) / a_basis_2 when b == joint
+
+def a_rev[j in jcase, s in spouse]: money PLN at reader
+  note "art. 26 ust. 4a: A is the year's employment revenue taxed under art. 27 plus the business revenue less its costs other than social insurance contributions"
+  rule base v dz2021_2105 = emp_rev[j, s] + biz_net[j, s]
+
+def addback[c in mcase, m in mo]: num PLN at start_of(m)
+  note "MF employer guide p. 4, Przykład II: when the month's total payments leave the band, the relief applied at an earlier payment is added to the base of the advance at the later payment"
+  rule base v mf_employer_2022 = max(0, granted[c] - mon_relief[c, m])
+
+def adv[c in mcase, m in mo]: money PLN at start_of(m)
+  note "the month's advance, a kwota podatku, rounded to full złoty: Ordynacja podatkowa art. 63 § 1"
+  rule base v dz2011_1707 = round(adv_raw[c, m], 1, half-up)
+
+def adv_2021[c in mcase, m in mo]: money PLN at start_of(m)
+  note "the MF simulation's '2021 rules' column: the advance on the same salary under the law of 2021"
+  rule base = ?"The 2021 law behind the MF simulation's '2021 rules' columns is not among the case's sources."
+
+def adv_base[c in mcase, m in mo]: money PLN at start_of(m)
+  note "the base of the advance, a podstawa opodatkowania, rounded to full złoty: Ordynacja podatkowa art. 63 § 1, końcówki kwot wynoszące mniej niż 50 groszy pomija się, a końcówki kwot wynoszące 50 i więcej groszy podwyższa się do pełnych złotych"
+  rule base v dz2011_1707 = round(adv_income[c, m], 1, half-up)
+
+def adv_free[c in mcase, m in mo]: num PLN at start_of(m)
+  note "art. 32 ust. 3: the advance is reduced by 1/12 of the kwota zmniejszająca podatek of the scale's first bracket when the employee filed the statement before the year's first payment"
+  rule base = 0
+  rule pit2 beats base v dz2021_2105 = free_amount / adv_free_12 when pit2_filed[c]
+
+def adv_income[c in mcase, m in mo]: num PLN at start_of(m)
+  note "art. 32 ust. 2a: the month's income less the relief. The relief reduces the income before the base is rounded, as art. 32 ust. 2a reduces the dochód"
+  rule base v dz2021_2105 = month_income[c] - mon_relief[c, m]
+
+def adv_raw[c in mcase, m in mo]: num PLN at start_of(m)
+  note "art. 32 ust. 1 pkt 1 and ust. 3: the rate times the rounded base, less the monthly part of the kwota zmniejszająca podatek"
+  note "art. 32 ust. 1 pkt 2 (32% on the part of the year's income from the payer above the first bracket) is not modelled"
+  rule base v dz2021_2105 = adv_base[c, m] * adv_rate - adv_free[c, m]
+
+def ann_applies[y in yr, j in jcase, s in spouse, b in basis]: bool at start_of(y)
+  note "art. 26 ust. 4b: the relief applies when A is at least the lower limit and not above the upper one; ust. 4c applies ust. 4b to the joint A"
+  rule base v dz2021_2105 = ann_band(a_basis[j, s, b]) in [f1, f2]
+  rule repealed beats base v dz2022_1265_y = false
+
+def ann_relief[y in yr, j in jcase, s in spouse, b in basis]: num PLN at start_of(y)
+  note "art. 26 ust. 4a: the annual relief, deducted from income under ust. 1 pkt 2aa"
+  rule f1 v dz2021_2105 = (a_basis[j, s, b] * ann_r1 - ann_c1) / formula_div when ann_band(a_basis[j, s, b]) == f1
+  rule f2 v dz2021_2105 = (a_basis[j, s, b] * ann_r2 + ann_c2) / formula_div when ann_band(a_basis[j, s, b]) == f2
+  rule outside v dz2021_2105 = 0 when ann_band(a_basis[j, s, b]) in [below, above]
+  rule repealed beats f1, f2, outside v dz2022_1265_y = 0
+
+def joint_base[y in yr, j in jcase]: num PLN at start_of(y)
+  note "art. 26 ust. 4c: spouses filing jointly each deduct the relief figured on half their combined A; this is their combined income after it"
+  rule base v dz2021_2105 = sum(emp_income[j, s] - ann_relief[y, j, s, joint] for s in spouse)
+
+def mon_applies[c in mcase, m in mo]: bool at start_of(m)
+  note "art. 32 ust. 2a: the payer reduces the income for months in which the employment revenue is from the lower limit to the upper one"
+  rule base v dz2021_2105 = mon_band(month_a[c]) in [f1, f2]
+  rule repealed beats base v dz2022_1265_m = false
+
+def mon_relief[c in mcase, m in mo]: num PLN at start_of(m)
+  note "the payroll relief as the reading rounds it"
+  rule gr_down = round(mon_relief_x[c, m], minor(PLN), down) when mc_round == gr_down
+  rule gr_exact = mon_relief_x[c, m] when mc_round == gr_exact
+  rule gr_half_up = round(mon_relief_x[c, m], minor(PLN), half-up) when mc_round == gr_half_up
+
+def mon_relief_x[c in mcase, m in mo]: num PLN at start_of(m)
+  note "art. 32 ust. 2a: the payer reduces the month's income by the relief, by formula 1 or 2"
+  rule f1 v dz2021_2105 = (month_a[c] * mon_r1 - mon_c1) / formula_div when mon_band(month_a[c]) == f1
+  rule f2 v dz2021_2105 = (month_a[c] * mon_r2 + mon_c2) / formula_div when mon_band(month_a[c]) == f2
+  rule outside v dz2021_2105 = 0 when mon_band(month_a[c]) in [below, above]
+  rule repealed beats f1, f2, outside, waived v dz2022_1265_m = 0
+  rule waived beats f1, f2 v dz2021_2105 = 0 when waiver[c]
+
+def month_a[c in mcase]: money PLN at reader
+  note "art. 32 ust. 2a: A is the month's employment revenue taxed under art. 27, every partial payment of the month added (MF taxpayer guide p. 8); cash benefits from social insurance are not employment revenue (MF employer guide p. 2)"
+  rule base v dz2021_2105 = sum(pay_amount[p] for p in payment where pay_case[p] == c and pay_kind[p] == employment)
+
+def tax_2021_ind[j in jcase, s in spouse]: money PLN at reader
+  note "the MF tables' '2021 rules' figures for one taxpayer"
+  rule base = ?"The 2021 law behind the MF tables' '2021 rules' figures is not among the case's sources."
+
+def tax_2021_joint[j in jcase]: money PLN at reader
+  note "the MF spouses table's '2021 rules' figure for the joint return"
+  rule base = ?"The 2021 law behind the MF tables' '2021 rules' figures is not among the case's sources."
+
+def tax_base[y in yr, j in jcase, s in spouse]: money PLN at start_of(y)
+  note "the base of the tax, a podstawa opodatkowania, rounded to full złoty: Ordynacja podatkowa art. 63 § 1"
+  rule base v dz2011_1707 = round(tax_income[y, j, s], 1, half-up)
+
+def tax_income[y in yr, j in jcase, s in spouse]: num PLN at start_of(y)
+  note "art. 26 ust. 1 pkt 2aa: the year's employment income less the relief figured on the spouse's own A. Only employment income is modelled, as in the MF simulations"
+  rule base v dz2021_2105 = emp_income[j, s] - ann_relief[y, j, s, individual]
+
+def tax_ind[y in yr, j in jcase, s in spouse]: money PLN at start_of(y)
+  note "the year's tax, a kwota podatku, rounded to full złoty: Ordynacja podatkowa art. 63 § 1"
+  rule base v dz2011_1707 = round(tax_raw[y, j, s], 1, half-up)
+
+def tax_joint[y in yr, j in jcase]: money PLN at start_of(y)
+  note "the tax of spouses filing jointly under art. 6 ust. 2, on joint_base"
+  rule base = ?"The joint taxation method of art. 6 ust. 2 is not transcribed in the case."
+
+def tax_raw[y in yr, j in jcase, s in spouse]: num PLN at start_of(y)
+  note "art. 27 ust. 1: the scale on the rounded base"
+  rule base v dz2021_2105 = pit_scale(tax_base[y, j, s])
+
+ask ask_annual_now: ann_applies[2022, j, s, b] for j in jcase, s in spouse, b in basis law 2026-10-18
+
+ask ask_july: mon_relief[c, 2022-07], mon_applies[c, 2022-07] for c in [m1, m2] law 2026-10-18
+
+ask ask_m1: mon_relief[m1, 2022-01] law 2026-10-18
+
+ask ask_m2: mon_relief[m2, 2022-01] law 2026-10-18
+
+ask ask_m3: month_a[m3], mon_relief[m3, m] for m in [2022-01, 2022-02, 2022-03, 2022-04, 2022-05, 2022-06] law 2026-10-18
+
+ask ask_m4: month_a[m4], mon_applies[m4, m], addback[m4, m] for m in [2022-01, 2022-02, 2022-03, 2022-04, 2022-05, 2022-06] law 2026-10-18
+
+ask ask_q1: month_a[q1], mon_applies[q1, m] for m in [2022-01, 2022-02, 2022-03, 2022-04, 2022-05, 2022-06] law 2026-10-18
+
+ask ask_q2: ann_applies[2022, q2, s, b] for s in spouse, b in basis law 2022-04-06 as known 2022-04-06
+
+ask ask_q3: ann_applies[2022, q3, s, b] for s in spouse, b in basis law 2022-04-06 as known 2022-04-06
+
+ask ask_q4: a_basis[q4, sp1, joint], ann_applies[2022, q4, s, b] for s in spouse, b in basis law 2022-04-06 as known 2022-04-06
+
+ask ask_q5: a_basis[q5, sp1, joint], ann_applies[2022, q5, s, b] for s in spouse, b in basis law 2022-04-06 as known 2022-04-06
+
+ask ask_q6: ann_applies[2022, q6, s, b] for s in spouse, b in basis law 2022-04-06 as known 2022-04-06
+
+ask ask_q7: ann_applies[2022, q7, s, b] for s in spouse, b in basis law 2022-04-06 as known 2022-04-06
+
+ask ask_s1: mon_relief[c, m], adv[c, m], adv[c, m] as if {mon_relief[c, m] = 0}, adv_2021[c, m] for c in [s1a, s1b], m in mo law 2022-04-06 as known 2022-04-06
+
+ask ask_s1_total: sum(adv[c, m] for m in mo), sum(adv[c, m] as if {mon_relief[c, m] = 0} for m in mo), sum(adv_2021[c, m] for m in mo) for c in [s1a, s1b] law 2022-04-06 as known 2022-04-06
+
+ask ask_s2: a_rev[j, sp1], ann_relief[2022, j, sp1, individual], tax_ind[2022, j, sp1], tax_ind[2022, j, sp1] as if {ann_relief[2022, j, sp1, individual] = 0}, tax_2021_ind[j, sp1] for j in [s2a, s2b] law 2022-04-06 as known 2022-04-06
+
+ask ask_s3: tax_ind[2022, s3, s], tax_ind[2022, s3, s] as if {ann_relief[2022, s3, s, individual] = 0}, tax_2021_ind[s3, s] for s in spouse law 2022-04-06 as known 2022-04-06
+
+ask ask_s3_basis: a_basis[s3, s, joint], ann_applies[2022, s3, s, b] for s in spouse, b in basis law 2022-04-06 as known 2022-04-06
+
+ask ask_s3_joint: ann_relief[2022, s3, sp1, joint], ann_relief[2022, s3, sp2, joint], joint_base[2022, s3], joint_base[2022, s3] as if {ann_relief[2022, s3, sp1, joint] = 0, ann_relief[2022, s3, sp2, joint] = 0}, tax_joint[2022, s3], tax_2021_joint[s3] law 2022-04-06 as known 2022-04-06
+
+version dz2011_1707
+  cite du2011_1707
+  governs 2012-03-31..
+  known 2011-12-30
+  note "ogłoszona 2011-12-30 (Dz.U. 2011 Nr 291, ELI promulgation date); art. 41 pkt 2: art. 4 wchodzi w życie po upływie trzech miesięcy od dnia ogłoszenia, which the consolidated text Dz.U. 2012 poz. 749 gives as 31 March 2012 (footnote 90)"
+  note "no items: the version the rounding rules cite. Footnote 90 of Dz.U. 2012 poz. 749 records art. 63 § 1 as 'W brzmieniu ustalonym przez art. 4 pkt 1' of this act. The consolidated texts Dz.U. 2015 poz. 613, 2021 poz. 1540 (in force for 2022) and 2022 poz. 2651 print the same words, so no later act gave § 1 its wording (§4.5, Which act). The enacting text is available, so the consolidated text is not the source (§5.3)"
+
+version lifted_figures
+  cite lifted_1_0_1
+  governs always
+  known 2011-12-30
+  a_basis_2 = 2 "inline in tally 1.0.1: a_basis line 103, factor"
+  adv_free_12 = 12 "inline in tally 1.0.1: adv_free line 128, factor"
+
+version dz2019_1835
+  cite du2019_1835
+  governs 2020-01-01..
+  known 2019-09-26
+  note "ogłoszona 2019-09-26 (ELI promulgation date); art. 8: in force 1 October 2019, except art. 1 pkt 5, in force 1 January 2020. Dz.U. 2021 poz. 2105 leaves art. 32 ust. 1 as it stands (its art. 1 pkt 62 amends ust. 1a, 1c, 1e, 1f and adds 2a, 2b), so the 17% holds through 2022 until poz. 1265 art. 23 ust. 1 replaces it"
+  adv_rate = 0.17 "art. 1 pkt 5 lit. a, art. 32 ust. 1 pkt 1: 17% dochodu uzyskanego w danym miesiącu"
+
+version dz2021_2105
+  cite du2021_2105
+  governs 2022-01-01..
+  known 2021-11-23
+  note "ogłoszona 2021-11-23; art. 89: in force 1 January 2022, and art. 1 pkt 40, 47 and 62 are not among the exceptions"
+  ann_band: (-inf, 68412) = below "art. 26 ust. 4b: co najmniej 68 412 zł"
+  ann_band: [68412, 102588] = f1 "art. 26 ust. 4a pkt 1: dla A wynoszącego co najmniej 68 412 zł i nieprzekraczającego kwoty 102 588 zł"
+  ann_band: (102588, 133692] = f2 "art. 26 ust. 4a pkt 2: dla A wyższego od 102 588 zł i nieprzekraczającego kwoty 133 692 zł"
+  ann_band: (133692, inf) = above "art. 26 ust. 4b: nie przekracza kwoty 133 692 zł"
+  ann_c1 = 4566 "art. 26 ust. 4a pkt 1: (A × 6,68% - 4566 zł) ÷ 0,17"
+  ann_c2 = 9829 "art. 26 ust. 4a pkt 2: (A × (-7,35%) + 9829 zł) ÷ 0,17"
+  ann_r1 = 0.0668 "art. 26 ust. 4a pkt 1: A × 6,68%"
+  ann_r2 = -0.0735 "art. 26 ust. 4a pkt 2: A × (-7,35%)"
+  formula_div = 0.17 "art. 26 ust. 4a pkt 1-2 and art. 32 ust. 2a pkt 1-2: ÷ 0,17"
+  free_amount = 5100 "art. 1 pkt 47 lit. a, art. 27 ust. 1: 17% minus kwota zmniejszająca podatek 5100 zł; art. 32 ust. 3 takes 1/12 of the amount of the first bracket"
+  mon_band: (-inf, 5701) = below "art. 32 ust. 2a: w wysokości wynoszącej od 5701 zł"
+  mon_band: [5701, 8549] = f1 "art. 32 ust. 2a pkt 1: dla A wynoszącego co najmniej 5701 zł i nieprzekraczającego kwoty 8549 zł"
+  mon_band: (8549, 11141] = f2 "art. 32 ust. 2a pkt 2: dla A wyższego od 8549 zł i nieprzekraczającego kwoty 11 141 zł"
+  mon_band: (11141, inf) = above "art. 32 ust. 2a: do 11 141 zł"
+  mon_c1 = 380.5 "art. 32 ust. 2a pkt 1: (A × 6,68% - 380,50 zł) ÷ 0,17"
+  mon_c2 = 819.08 "art. 32 ust. 2a pkt 2: (A × (-7,35%) + 819,08 zł) ÷ 0,17"
+  mon_r1 = 0.0668 "art. 32 ust. 2a pkt 1: A × 6,68%"
+  mon_r2 = -0.0735 "art. 32 ust. 2a pkt 2: A × (-7,35%)"
+  pit_scale: (-inf, 120000] = 0.17 * x - 5100 "art. 1 pkt 47 lit. a, art. 27 ust. 1: do 120 000, 17% minus kwota zmniejszająca podatek 5100 zł"
+  pit_scale: (120000, inf) = 15300 + 0.32 * (x - band_lo(pit_scale, x)) "art. 1 pkt 47 lit. a, art. 27 ust. 1: ponad 120 000, 15 300 zł + 32% nadwyżki ponad 120 000 zł"
+
+version example_assumptions
+  cite modeller
+  governs always
+  known 2022-01-01
+  note "Assumptions that stand for the MF guides' own facts, known from start like the facts they complete (§4.5); made by the modeller on 2026-10-18"
+  biz_net[*, *] = 0 assumed "the guide lists every revenue a spouse had; one it doesn't list as business revenue is none"
+  biz_net[q2, sp2] = 65000 assumed "p. 10 states the business revenue, 65 000 zł, and no costs; costs could only lower A, so revenue is taken for A"
+  emp_rev[*, *] = 0 assumed "the guide lists every revenue a spouse had; a pension (Q4), a renta (Q7) and an umowa zlecenia (Q5) are not employment revenue"
+  waiver[*] = false assumed "no example mentions a request under art. 32 ust. 2b"
+
+version ifirma_examples
+  cite ifirma
+  governs always
+  known 2022-01-01
+  note "section 'Miesięczne obliczanie kwoty ulgi': a worked example's stipulations, known from start; wFirma's Przykład 1 and 2 (pomoc.wfirma.pl) take the same revenues, 6000 zł and 10 000 zł brutto, with no month"
+  pay_amount[m1_pay] = 6000 "Przykład 1: Pracownik osiągnął w miesiącu styczniu 2022 roku przychód w wysokości 6.000 zł."
+  pay_amount[m2_pay] = 10000 "Przykład 2: przychód w wysokości 10.000 zł"
+  pay_case[m1_pay] = m1 "Przykład 1"
+  pay_case[m2_pay] = m2 "Przykład 2"
+  pay_kind[m1_pay] = employment "Przykład 1: Pracownik osiągnął ... przychód"
+  pay_kind[m2_pay] = employment "section Miesięczne obliczanie kwoty ulgi, Przykład 2: przychód w wysokości 10.000 zł"
+
+version mf_employer_examples
+  cite mf_employer
+  governs always
+  known 2022-01-01
+  note "p. 4, Przykład I (dla stawki podatku 17%) and Przykład II: two payments in one month. A worked example's stipulations, known from start"
+  granted[m3] = 0 "p. 4, Przykład I: Pierwsza wypłata w miesiącu 5000 zł – bez ulgi"
+  granted[m4] = 512.35 "p. 4, Przykład II: Pierwsza wypłata w miesiącu 7000 zł – z ulgą 512,35 zł"
+  pay_amount[m3_pay1] = 5000 "p. 4, Przykład I: Pierwsza wypłata w miesiącu 5000 zł"
+  pay_amount[m3_pay2] = 2000 "p. 4, Przykład I: Druga wypłata w tym samym miesiącu 2000 zł"
+  pay_amount[m4_pay1] = 7000 "p. 4, Przykład II: Pierwsza wypłata w miesiącu 7000 zł"
+  pay_amount[m4_pay2] = 7000 "p. 4, Przykład II: Druga wypłata w tym samym miesiącu 7000 zł"
+  pay_case[m3_pay1] = m3 "p. 4, Przykład I"
+  pay_case[m3_pay2] = m3 "p. 4, Przykład I: w tym samym miesiącu"
+  pay_case[m4_pay1] = m4 "p. 4, Przykład II"
+  pay_case[m4_pay2] = m4 "p. 4, Przykład II: w tym samym miesiącu"
+  pay_kind[m3_pay1] = employment "p. 4, Przykład I: Pierwsza wypłata w miesiącu"
+  pay_kind[m3_pay2] = employment "p. 4, Przykład I: Druga wypłata w tym samym miesiącu"
+  pay_kind[m4_pay1] = employment "p. 4, Przykład II: Pierwsza wypłata w miesiącu"
+  pay_kind[m4_pay2] = employment "p. 4, Przykład II: Druga wypłata w tym samym miesiącu"
+
+version mf_taxpayer_examples
+  cite mf_taxpayer
+  governs always
+  known 2022-01-01
+  note "pp. 3-4 (the monthly simulation and the annual tax), p. 6 (the spouses simulation) and pp. 9-12 (Pytania i odpowiedzi): worked examples' stipulations, known from start"
+  biz_net[q4, sp1] = 135000 "p. 11: business revenue less costs (excluding social contributions) w kwocie 135 000 zł"
+  biz_net[q6, sp2] = 0 "p. 12: drugi z małżonków nie uzyskał żadnych przychodów"
+  biz_net[q7, sp1] = 138000 "p. 12: business revenue less costs (excluding social contributions) w kwocie 138 000 zł"
+  emp_income[s2a, sp1] = ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." "p. 3: z uwzględnieniem podstawowych zryczałtowanych kosztów uzyskania przychodów"
+  emp_income[s2b, sp1] = ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." "p. 3: z uwzględnieniem podstawowych zryczałtowanych kosztów uzyskania przychodów"
+  emp_income[s3, sp1] = ?"The spouses simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." "p. 6: z uwzględnieniem podstawowych zryczałtowanych kosztów uzyskania przychodów"
+  emp_income[s3, sp2] = ?"The spouses simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." "p. 6: z uwzględnieniem podstawowych zryczałtowanych kosztów uzyskania przychodów"
+  emp_rev[q2, sp1] = 50000 "p. 10: przychody z pracy w kwocie 50 000 zł"
+  emp_rev[q2, sp2] = 0 "p. 10: wyłącznie przychody z działalności gospodarczej opodatkowanej według skali"
+  emp_rev[q3, sp1] = 90000 "p. 10: przychody z pracy w kwocie 90 000 zł"
+  emp_rev[q3, sp2] = 50000 "p. 10: drugi z małżonków w kwocie 50 000 zł"
+  emp_rev[q5, sp1] = 132000 "p. 11: przychody z pracy w kwocie 132 000 zł"
+  emp_rev[q6, sp1] = 140000 "p. 12: przychody z pracy w kwocie 140 000 zł"
+  emp_rev[q6, sp2] = 0 "p. 12: drugi z małżonków nie uzyskał żadnych przychodów"
+  emp_rev[s2a, sp1] = 72000 "p. 3: wynagrodzenie miesięczne 6000 zł, paid in each month from January to December, twelve payments"
+  emp_rev[s2b, sp1] = 120000 "p. 3: wynagrodzenie miesięczne 10 000 zł, paid in each month from January to December, twelve payments"
+  emp_rev[s3, sp1] = 150000 "p. 6: Indywidualne rozliczenie podatnika (przychód podatnika 150 000 zł), wynagrodzenie za pracę na etacie"
+  emp_rev[s3, sp2] = 50000 "p. 6: Indywidualne rozliczenie małżonka (przychód 50 000 zł)"
+  month_income[s1a] = ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." "p. 3: z uwzględnieniem podstawowych zryczałtowanych kosztów uzyskania przychodów"
+  month_income[s1b] = ?"The simulation's costs and social insurance contributions are not stated; it says only that it takes the basic flat-rate costs into account." "p. 3: z uwzględnieniem podstawowych zryczałtowanych kosztów uzyskania przychodów"
+  pay_amount[q1_salary] = 8000 "p. 9: wynagrodzenie z pracy na etacie 8000 zł"
+  pay_amount[q1_sick] = 4000 "p. 9: zasiłek chorobowy w wysokości 4000 zł"
+  pay_amount[s1a_pay] = 6000 "p. 3: wynagrodzenie miesięczne 6000 zł"
+  pay_amount[s1b_pay] = 10000 "p. 3: wynagrodzenie miesięczne 10 000 zł"
+  pay_case[q1_salary] = q1 "p. 9: in one month"
+  pay_case[q1_sick] = q1 "p. 9: in one month"
+  pay_case[s1a_pay] = s1a "p. 3: the 6000 zł column, each month"
+  pay_case[s1b_pay] = s1b "p. 3: the 10 000 zł column, each month"
+  pay_kind[q1_salary] = employment "p. 9: wynagrodzenie z pracy na etacie"
+  pay_kind[q1_sick] = social_benefit "p. 9: zasiłek chorobowy; dla potrzeb ulgi dla klasy średniej nie uwzględnia się zasiłków pieniężnych z ubezpieczenia społecznego"
+  pay_kind[s1a_pay] = employment "p. 3: wynagrodzenie miesięczne"
+  pay_kind[s1b_pay] = employment "p. 3: wynagrodzenie miesięczne"
+  pit2_filed[s1a] = ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." "pp. 3-4, simulation table"
+  pit2_filed[s1b] = ?"The simulation doesn't say whether the employee filed the PIT-2 statement of art. 32 ust. 3." "pp. 3-4, simulation table"
+
+version mf_employer_2022
+  cite mf_employer
+  governs always
+  known 2022-04-07
+  note "no items: the version the add-back rule cites. p. 4, Przykład II states the method; wersja z 06.04.2022"
+  note "guidance, known from its first public release (§4.5). No release notice was found. The PDF at its public URL carries HTTP Last-Modified 7 April 2022, 07:28 GMT (Wayback capture of 5 August 2022, the earliest), taken as its release; the PDF was created on 6 April 2022, 11:58 CEST. Round 2 took 6 April 2022, the guide's version date"
+
+version dz2022_1265_m
+  cite du2022_1265
+  governs 2022-07-01..
+  known 2022-06-15
+  note "ogłoszona 2022-06-15; art. 40: in force 1 July 2022"
+  note "art. 18 ust. 3: Przepisów art. 32 ust. 2a i 2b ... nie stosuje się do dochodów (przychodów) uzyskanych od dnia 1 lipca 2022 r.; art. 23 ust. 4: from 1 July to 31 December 2022 the income is not reduced by the relief of art. 32 ust. 2a"
+  note "art. 23 ust. 1 sets the advance rate for July to December 2022; the new art. 27 ust. 1 (art. 1 pkt 13) gives the first bracket's kwota zmniejszająca podatek that art. 32 ust. 3 reads from 1 July 2022"
+  replace adv_rate = 0.12 governs 2022-07-01..2022-12-31 "art. 23 ust. 1: od dochodów uzyskanych w okresie od dnia 1 lipca 2022 r. do dnia 31 grudnia 2022 r. zamiast stawki 17% stosuje się stawkę 12%"
+  replace free_amount = 3600 "art. 1 pkt 13, art. 27 ust. 1: 12% minus kwota zmniejszająca podatek 3600 zł"
+
+version dz2022_1265_y
+  cite du2022_1265
+  governs 2022-01-01..
+  known 2022-06-15
+  enters 2022-07-01
+  note "art. 40: in force 1 July 2022; art. 1 pkt 10, art. 1 pkt 13 lit. a and art. 18 ust. 1-2 are not among its exceptions. Its default enters would be 15 June 2022, the later of known and the start of governs (§5.3). A wording pin to 30 June 2022, as the art. 26 hypothetical tax reads the scale and the relief ('w brzmieniu z dnia 30 czerwca 2022 r.'), needs it; no published figure asks for that tax, so no ask uses the pin"
+  note "art. 18 ust. 2: Przepisów art. 26 ust. 1 pkt 2aa i ust. 4a-4c ... w brzmieniu dotychczasowym, nie stosuje się do dochodów (przychodów) uzyskanych od dnia 1 stycznia 2022 r.; art. 1 pkt 10 repeals them; the relief survives only in the art. 26 hypothetical tax, in force from 1 January 2023"
+  note "art. 18 ust. 1: the new art. 27 ust. 1 scale applies to income from 1 January 2022"
+  replace pit_scale: (-inf, 120000] = 0.12 * x - 3600 "art. 1 pkt 13, art. 27 ust. 1: do 120 000 zł, 12% minus kwota zmniejszająca podatek 3600 zł"
+  replace pit_scale: (120000, inf) = 10800 + 0.32 * (x - band_lo(pit_scale, x)) "art. 1 pkt 13, art. 27 ust. 1: ponad 120 000 zł, 10 800 zł + 32% nadwyżki ponad 120 000 zł"

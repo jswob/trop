@@ -1,0 +1,39 @@
+# Fault F12 (W-A, didn't reproduce on snap6 and doesn't now): under `windows each`, a rounding axis's line wasn't split
+# by window. L §4.4: `windows each` prints one line per sub-window that changes the result; an axis prints a
+# line per reading (L §5.5 axis). d < e holds for d in 2026-03-01 .. 2026-03-06 (1) and not after; round(0.5, 1) is
+# 1 up and 0 down: four lines (the order of the lines is this interpreter's).
+=== m.tally
+model t11
+  tally 2
+  on 2026-01-15
+  start 2026-01-01
+  end 2026-12-31
+source src "s"
+axis md
+  up "up"
+  down "down"
+input d: date
+input e: date
+input f: num
+def y: num = (if d < e then 1 else 0) + round(f, 1, md) at reader
+ask q: y law 2026-06-30 windows each
+version v
+  cite src
+  governs always
+  known 2026-01-01
+  d = window(2026-03-01, 2026-03-31) "d"
+  e = 2026-03-07 "e"
+  f = 0.5 "f"
+=== expect
+q [d = 2026-03-01 .. 2026-03-06] [md = up]: 2
+  reading: md = up
+  law date 2026-06-30, cut 2026-01-15
+q [d = 2026-03-07 .. 2026-03-31] [md = up]: 1
+  reading: md = up
+  law date 2026-06-30, cut 2026-01-15
+q [d = 2026-03-01 .. 2026-03-06] [md = down]: 1
+  reading: md = down
+  law date 2026-06-30, cut 2026-01-15
+q [d = 2026-03-07 .. 2026-03-31] [md = down]: 0
+  reading: md = down
+  law date 2026-06-30, cut 2026-01-15

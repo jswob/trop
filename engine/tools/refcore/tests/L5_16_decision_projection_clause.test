@@ -1,0 +1,60 @@
+# L §5.16 Decisions and projections: a projection a decision reaches "reads a random amount dated after the
+# decision's day as a question about the distribution as known on that day ... a random clause, on the projection
+# read or on the ask line: random at mean evaluates each random amount the projection reaches after day t at its
+# distribution's mean". save[2026-01] on 2026-01-05 reads bal(konto, end_of(m)) from its day: konto holds 10 000.00
+# PLN, buy[2026-01] on the 15th pays spend[2026-01] at the mean of normal(1 000 PLN, 100 PLN), 1 000 PLN (table), so
+# the projection gives 9 000.00 PLN (the decision itself left out, L §5.14.1) and save moves 9 000 - 8 000 = 1 000.00
+# PLN. The ask line itself reads no random value, so it needs no query (konto's balance, which is random, it never
+# reads).
+=== m.tally
+model r
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source own "own"
+unit PLN: currency minor 0.01
+kind spends: event certain
+  leg cash: PLN
+place konto: accounts PLN lives 2020-01-01..
+place savings: accounts PLN lives 2020-01-01..
+place shop: outside lives 1900-01-01..
+input spend_mu: money PLN
+input spend_sd: money PLN
+input spend_dom: int
+input dom: int
+input floor: money PLN
+def spend[m in months]: dist PLN = normal(spend_mu, spend_sd) to 1e-9 at end_of(m)
+
+move buy[m in months]: spends
+  on day_of(m, spend_dom)
+  at end_of(m)
+  leg cash from konto to shop amount round(spend[m], minor(PLN), half-even)
+
+move save[m in months]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  reads konto
+  leg cash from konto to savings amount max(0 PLN, bal(konto, end_of(m)) from day_of(m, dom) random at mean - floor)
+
+version v
+  cite own
+  governs 2026..
+  known 2026-01-01
+  spend_mu = 1 000.00 PLN "own"
+  spend_sd = 100.00 PLN "own"
+  spend_dom = 15 "own"
+  dom = 5 "own"
+  floor = 8 000.00 PLN "own"
+  opening[konto] = 10 000.00 PLN at 2026-01-01 start "statement"
+  opening[savings] = 0 PLN at 2026-01-01 start "statement"
+
+ask s1: bal(savings, 2026-01-31)
+=== expect
+s1: 1 000.00 PLN
+  left out: save, 1 instances, first 2026-01-05
+  held: spend_dom = 15 (v), read for 2026-02-01
+  held: spend_mu = 1 000.00 PLN (v), read for 2026-02-01
+  held: spend_sd = 100.00 PLN (v), read for 2026-02-01
+  cut 2026-01-01

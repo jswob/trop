@@ -1,0 +1,55 @@
+# Fault scen_ask_world (writer 6): `ask q: x.cash.amount for x in transfers over 2025-01-01..2025-12-31 in sc` in a
+# scenario file was refused LOAD-WORLD: the span's end read `in sc` as a membership test. L §2.3 parse rule 4: "On an ask
+# line, in ID after the body and its for names the world". L §6.4 (round 11b): amt and gday are inputs the scenario
+# declares, so their rows may govern always. gift moves 7.00 DUK into konto (opening 5.00) on 2025-03-01: q = 7.00 DUK,
+# r = 12.00 DUK. Writer 7: q's line now lists the instance it binds, unfulfilled: gift (L §8.2; writer 6's known gap,
+# L8_2_for_unfulfilled_per_line.test).
+=== b.tally
+model b
+  tally 2
+  on 2025-12-31
+  start 2025-01-01
+  end 2025-12-31
+
+source s "s"
+
+source t "t"
+
+unit DUK: currency minor 0.01
+
+place konto: accounts DUK lives 2025-01-01..
+=== sc.tally
+scenario sc over b
+  tally 2
+  from 2025-01-01
+
+place world: outside lives 2025-01-01..
+
+input amt: money DUK
+
+input gday: date
+
+move gift: transfers
+  on gday
+  leg cash from world to konto amount amt
+
+ask q: x.cash.amount for x in transfers over 2025-01-01..2025-12-31 in sc
+
+ask r: bal(konto, 2025-12-31) in sc
+
+version v
+  cite t
+  governs always
+  known 2025-01-01
+  amt = 7.00 "a"
+  gday = 2025-03-01 "g"
+  opening[konto] = 5.00 at 2025-01-01 start "o"
+=== expect
+q (x = gift): 7.00 DUK
+  world: sc
+  unfulfilled: gift
+  cut 2025-12-31
+r: 12.00 DUK
+  world: sc
+  unfulfilled: gift
+  cut 2025-12-31

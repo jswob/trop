@@ -1,0 +1,718 @@
+# Bank Lazur S.A. | rachunek wielowalutowy LN88 1020 0044 9172 | Jan Wrona
+# subkonta: DUK, FLR | wyciąg 2024-06-28..2026-09-30
+data,waluta,typ,kontrahent,opis,kwota,saldo
+2024-06-28,DUK,PRZELEW PRZYCH.,"Marta i Jan Wrona LN27 6100 3001 0000 4410 7765 0001","na start",4424.50,4424.50
+2024-07-01,DUK,PRZELEW PRZYCH.,"Marta Wrona LN53 6100 3001 0000 2209 5148 0001","darowizna",40000.00,44424.50
+2024-07-01,DUK,KUPNO WALUTY,"Jan Wrona (FLR)","kupno 1000.00 FLR po 4.4245",-4424.50,40000.00
+2024-07-01,FLR,KUPNO WALUTY,"Jan Wrona (DUK)","kupno 1000.00 FLR po 4.4245",1000.00,1000.00
+2024-07-01,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,988.20
+2024-07-01,FLR,KARTA,"Tankhof Ostrel","Diesel",-60.40,927.80
+2024-07-02,DUK,PRZELEW WYCH.,"Auto-Komis Rybak","zakup samochodu, umowa z 2024-07-02",-39500.00,500.00
+2024-07-02,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,916.00
+2024-07-03,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,904.20
+2024-07-04,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,892.40
+2024-07-05,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,880.60
+2024-07-08,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,868.80
+2024-07-08,FLR,KARTA,"Tankhof Ostrel","Diesel",-58.40,810.40
+2024-07-09,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,798.60
+2024-07-10,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,786.80
+2024-07-11,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,775.00
+2024-07-12,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,763.20
+2024-07-15,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,751.40
+2024-07-15,FLR,KARTA,"Tankhof Ostrel","Diesel",-73.40,678.00
+2024-07-16,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,666.20
+2024-07-17,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,654.40
+2024-07-18,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,642.60
+2024-07-19,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,630.80
+2024-07-22,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,619.00
+2024-07-22,FLR,KARTA,"Tankhof Ostrel","Diesel",-71.40,547.60
+2024-07-23,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,535.80
+2024-07-24,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,524.00
+2024-07-25,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,512.20
+2024-07-26,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,500.40
+2024-07-28,FLR,KARTA,"Markthalle Ostrel","Einkauf",-185.00,315.40
+2024-07-29,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,303.60
+2024-07-29,FLR,KARTA,"Tankhof Ostrel","Diesel",-69.40,234.20
+2024-07-30,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,222.40
+2024-07-31,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,210.60
+2024-08-01,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,198.80
+2024-08-02,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,187.00
+2024-08-05,FLR,WYNAGRODZENIE,"Montagewerk Ostrel AG","Lohn 07/2024",3881.62,4068.62
+2024-08-05,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,4056.82
+2024-08-05,FLR,KARTA,"Tankhof Ostrel","Diesel",-67.40,3989.42
+2024-08-06,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,3977.62
+2024-08-07,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,3965.82
+2024-08-08,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,3954.02
+2024-08-09,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,3942.22
+2024-08-12,FLR,SPRZEDAŻ WALUTY,"Marta i Jan Wrona LN27 6100 3001 0000 4410 7765 0001","udział 07/2024: 2827.04 DUK po 4.2161",-670.54,3271.68
+2024-08-12,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,3259.88
+2024-08-12,FLR,KARTA,"Tankhof Ostrel","Diesel",-65.40,3194.48
+2024-08-13,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,3182.68
+2024-08-14,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,3170.88
+2024-08-15,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,3159.08
+2024-08-16,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,3147.28
+2024-08-26,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,3135.48
+2024-08-26,FLR,KARTA,"Tankhof Ostrel","Diesel",-61.40,3074.08
+2024-08-27,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,3062.28
+2024-08-28,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,3050.48
+2024-08-29,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,3038.68
+2024-08-30,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,3026.88
+2024-09-02,FLR,SPRZEDAŻ WALUTY,"Skarbonka LN27 6100 3001 0000 4410 7765 0002","sprzedaż 1526.88 FLR po 4.1690",-1526.88,1500.00
+2024-09-02,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,1488.20
+2024-09-02,FLR,KARTA,"Tankhof Ostrel","Diesel",-59.40,1428.80
+2024-09-03,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,1417.00
+2024-09-04,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,1405.20
+2024-09-05,FLR,WYNAGRODZENIE,"Montagewerk Ostrel AG","Lohn 08/2024",3732.00,5137.20
+2024-09-05,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,5125.40
+2024-09-06,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,5113.60
+2024-09-09,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,5101.80
+2024-09-09,FLR,KARTA,"Tankhof Ostrel","Diesel",-74.40,5027.40
+2024-09-10,FLR,SPRZEDAŻ WALUTY,"Marta i Jan Wrona LN27 6100 3001 0000 4410 7765 0001","udział 08/2024: 2799.54 DUK po 4.1532",-674.07,4353.33
+2024-09-10,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,4341.53
+2024-09-11,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,4329.73
+2024-09-12,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,4317.93
+2024-09-13,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,4306.13
+2024-09-16,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,4294.33
+2024-09-16,FLR,KARTA,"Tankhof Ostrel","Diesel",-72.40,4221.93
+2024-09-17,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,4210.13
+2024-09-18,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,4198.33
+2024-09-19,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,4186.53
+2024-09-20,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,4174.73
+2024-09-23,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,4162.93
+2024-09-23,FLR,KARTA,"Tankhof Ostrel","Diesel",-70.40,4092.53
+2024-09-24,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,4080.73
+2024-09-25,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,4068.93
+2024-09-26,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,4057.13
+2024-09-27,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,4045.33
+2024-09-30,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,4033.53
+2024-09-30,FLR,KARTA,"Tankhof Ostrel","Diesel",-68.40,3965.13
+2024-10-01,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,3953.33
+2024-10-02,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,3941.53
+2024-10-04,FLR,WYNAGRODZENIE,"Montagewerk Ostrel AG","Lohn 09/2024",4078.12,8019.65
+2024-10-04,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,8007.85
+2024-10-07,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,7996.05
+2024-10-07,FLR,KARTA,"Tankhof Ostrel","Diesel",-66.40,7929.65
+2024-10-08,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,7917.85
+2024-10-09,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,7906.05
+2024-10-10,FLR,SPRZEDAŻ WALUTY,"Marta i Jan Wrona LN27 6100 3001 0000 4410 7765 0001","udział 09/2024: 2817.04 DUK po 4.0673",-692.61,7213.44
+2024-10-10,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,7201.64
+2024-10-11,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,7189.84
+2024-10-14,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,7178.04
+2024-10-14,FLR,KARTA,"Tankhof Ostrel","Diesel",-64.40,7113.64
+2024-10-15,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,7101.84
+2024-10-16,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,7090.04
+2024-10-17,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,7078.24
+2024-10-18,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,7066.44
+2024-10-21,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,7054.64
+2024-10-21,FLR,KARTA,"Tankhof Ostrel","Diesel",-62.40,6992.24
+2024-10-22,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,6980.44
+2024-10-23,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,6968.64
+2024-10-24,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,6956.84
+2024-10-25,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,6945.04
+2024-10-28,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,6933.24
+2024-10-28,FLR,KARTA,"Tankhof Ostrel","Diesel",-60.40,6872.84
+2024-10-29,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,6861.04
+2024-10-30,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,6849.24
+2024-10-31,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,6837.44
+2024-11-01,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,6825.64
+2024-11-04,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,6813.84
+2024-11-04,FLR,KARTA,"Tankhof Ostrel","Diesel",-58.40,6755.44
+2024-11-05,FLR,WYNAGRODZENIE,"Montagewerk Ostrel AG","Lohn 10/2024",3954.94,10710.38
+2024-11-05,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,10698.58
+2024-11-06,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,10686.78
+2024-11-07,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,10674.98
+2024-11-08,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,10663.18
+2024-11-11,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,10651.38
+2024-11-11,FLR,KARTA,"Tankhof Ostrel","Diesel",-73.40,10577.98
+2024-11-12,FLR,SPRZEDAŻ WALUTY,"Marta i Jan Wrona LN27 6100 3001 0000 4410 7765 0001","udział 10/2024: 2801.54 DUK po 4.0939",-684.33,9893.65
+2024-11-12,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,9881.85
+2024-11-13,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,9870.05
+2024-11-14,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,9858.25
+2024-11-15,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,9846.45
+2024-11-18,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,9834.65
+2024-11-18,FLR,KARTA,"Tankhof Ostrel","Diesel",-71.40,9763.25
+2024-11-19,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,9751.45
+2024-11-20,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,9739.65
+2024-11-21,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,9727.85
+2024-11-22,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,9716.05
+2024-11-25,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,9704.25
+2024-11-25,FLR,KARTA,"Tankhof Ostrel","Diesel",-69.40,9634.85
+2024-11-26,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,9623.05
+2024-11-27,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,9611.25
+2024-11-28,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,9599.45
+2024-11-29,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,9587.65
+2024-12-01,FLR,KARTA,"Markthalle Ostrel","Einkauf",-143.00,9444.65
+2024-12-02,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,9432.85
+2024-12-02,FLR,KARTA,"Tankhof Ostrel","Diesel",-67.40,9365.45
+2024-12-03,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,9353.65
+2024-12-04,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,9341.85
+2024-12-05,FLR,WYNAGRODZENIE,"Montagewerk Ostrel AG","Lohn 11/2024",4028.25,13370.10
+2024-12-05,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,13358.30
+2024-12-06,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,13346.50
+2024-12-09,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,13334.70
+2024-12-09,FLR,KARTA,"Tankhof Ostrel","Diesel",-65.40,13269.30
+2024-12-10,FLR,SPRZEDAŻ WALUTY,"Marta i Jan Wrona LN27 6100 3001 0000 4410 7765 0001","udział 11/2024: 2941.54 DUK po 4.1234",-713.38,12555.92
+2024-12-10,FLR,PRZELEW PRZYCH.,"Rosvald Family Fund","Kindergeld Q3/2024",630.00,13185.92
+2024-12-10,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,13174.12
+2024-12-11,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,13162.32
+2024-12-12,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,13150.52
+2024-12-13,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,13138.72
+2024-12-16,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,13126.92
+2024-12-16,FLR,KARTA,"Tankhof Ostrel","Diesel",-63.40,13063.52
+2024-12-17,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,13051.72
+2024-12-18,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,13039.92
+2024-12-19,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,13028.12
+2024-12-20,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,13016.32
+2024-12-23,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,13004.52
+2024-12-23,FLR,KARTA,"Tankhof Ostrel","Diesel",-61.40,12943.12
+2025-01-02,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,12931.32
+2025-01-03,FLR,WYNAGRODZENIE,"Montagewerk Ostrel AG","Lohn 12/2024",3830.75,16762.07
+2025-01-03,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,16750.27
+2025-01-06,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,16738.47
+2025-01-06,FLR,KARTA,"Tankhof Ostrel","Diesel",-74.40,16664.07
+2025-01-07,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,16652.27
+2025-01-08,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,16640.47
+2025-01-09,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,16628.67
+2025-01-10,FLR,SPRZEDAŻ WALUTY,"Marta i Jan Wrona LN27 6100 3001 0000 4410 7765 0001","udział 12/2024: 2959.04 DUK po 4.0813",-725.03,15903.64
+2025-01-10,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,15891.84
+2025-01-13,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,15880.04
+2025-01-13,FLR,KARTA,"Tankhof Ostrel","Diesel",-72.40,15807.64
+2025-01-14,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,15795.84
+2025-01-15,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,15784.04
+2025-01-16,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,15772.24
+2025-01-17,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,15760.44
+2025-01-20,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,15748.64
+2025-01-20,FLR,KARTA,"Tankhof Ostrel","Diesel",-70.40,15678.24
+2025-01-21,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,15666.44
+2025-01-22,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,15654.64
+2025-01-23,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,15642.84
+2025-01-24,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,15631.04
+2025-01-27,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,15619.24
+2025-01-27,FLR,KARTA,"Tankhof Ostrel","Diesel",-68.40,15550.84
+2025-01-28,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,15539.04
+2025-01-29,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,15527.24
+2025-01-30,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,15515.44
+2025-01-31,FLR,PRZELEW PRZYCH.,"Rosvald Family Fund","Kindergeld Q4/2024",476.18,15991.62
+2025-01-31,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,15979.82
+2025-02-03,FLR,SPRZEDAŻ WALUTY,"Skarbonka LN27 6100 3001 0000 4410 7765 0002","sprzedaż 9979.82 FLR po 4.0935",-9979.82,6000.00
+2025-02-03,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,5988.20
+2025-02-03,FLR,KARTA,"Tankhof Ostrel","Diesel",-66.40,5921.80
+2025-02-04,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,5910.00
+2025-02-05,FLR,WYNAGRODZENIE,"Montagewerk Ostrel AG","Lohn 01/2025",3980.38,9890.38
+2025-02-05,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,9878.58
+2025-02-06,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,9866.78
+2025-02-07,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,9854.98
+2025-02-10,FLR,SPRZEDAŻ WALUTY,"Marta i Jan Wrona LN27 6100 3001 0000 4410 7765 0001","udział 01/2025: 2962.54 DUK po 4.1065",-721.43,9133.55
+2025-02-10,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,9121.75
+2025-02-10,FLR,KARTA,"Tankhof Ostrel","Diesel",-64.40,9057.35
+2025-02-11,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,9045.55
+2025-02-12,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,9033.75
+2025-02-13,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,9021.95
+2025-02-14,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,9010.15
+2025-02-24,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,8998.35
+2025-02-24,FLR,KARTA,"Tankhof Ostrel","Diesel",-60.40,8937.95
+2025-02-25,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,8926.15
+2025-02-26,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,8914.35
+2025-02-27,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,8902.55
+2025-02-28,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,8890.75
+2025-03-03,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,8878.95
+2025-03-03,FLR,KARTA,"Tankhof Ostrel","Diesel",-58.40,8820.55
+2025-03-04,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,8808.75
+2025-03-05,FLR,WYNAGRODZENIE,"Montagewerk Ostrel AG","Lohn 02/2025",3732.00,12540.75
+2025-03-05,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,12528.95
+2025-03-06,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,12517.15
+2025-03-07,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,12505.35
+2025-03-10,FLR,SPRZEDAŻ WALUTY,"Marta i Jan Wrona LN27 6100 3001 0000 4410 7765 0001","udział 02/2025: 2221.16 DUK po 4.1065",-540.89,11964.46
+2025-03-10,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,11952.66
+2025-03-10,FLR,KARTA,"Tankhof Ostrel","Diesel",-73.40,11879.26
+2025-03-11,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,11867.46
+2025-03-12,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,11855.66
+2025-03-13,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,11843.86
+2025-03-14,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,11832.06
+2025-03-17,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,11820.26
+2025-03-17,FLR,KARTA,"Tankhof Ostrel","Diesel",-71.40,11748.86
+2025-03-18,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,11737.06
+2025-03-19,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,11725.26
+2025-03-20,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,11713.46
+2025-03-21,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,11701.66
+2025-03-24,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,11689.86
+2025-03-24,FLR,KARTA,"Tankhof Ostrel","Diesel",-69.40,11620.46
+2025-03-25,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,11608.66
+2025-03-26,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,11596.86
+2025-03-27,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,11585.06
+2025-03-28,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,11573.26
+2025-03-30,FLR,KARTA,"Markthalle Ostrel","Einkauf",-140.00,11433.26
+2025-03-31,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,11421.46
+2025-03-31,FLR,KARTA,"Tankhof Ostrel","Diesel",-67.40,11354.06
+2025-04-01,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,11342.26
+2025-04-02,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,11330.46
+2025-04-03,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,11318.66
+2025-04-04,FLR,WYNAGRODZENIE,"Montagewerk Ostrel AG","Lohn 03/2025",3741.06,15059.72
+2025-04-04,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,15047.92
+2025-04-07,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,15036.12
+2025-04-07,FLR,KARTA,"Tankhof Ostrel","Diesel",-65.40,14970.72
+2025-04-08,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,14958.92
+2025-04-09,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,14947.12
+2025-04-10,FLR,SPRZEDAŻ WALUTY,"Marta i Jan Wrona LN27 6100 3001 0000 4410 7765 0001","udział 03/2025: 2934.04 DUK po 4.0993",-715.75,14231.37
+2025-04-10,FLR,KARTA,"Velohaus Brandt Ostrel","Fahrrad",-600.00,13631.37
+2025-04-10,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,13619.57
+2025-04-11,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,13607.77
+2025-04-14,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,13595.97
+2025-04-14,FLR,KARTA,"Tankhof Ostrel","Diesel",-63.40,13532.57
+2025-04-15,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,13520.77
+2025-04-16,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,13508.97
+2025-04-17,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,13497.17
+2025-04-18,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,13485.37
+2025-04-21,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,13473.57
+2025-04-21,FLR,KARTA,"Tankhof Ostrel","Diesel",-61.40,13412.17
+2025-04-22,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,13400.37
+2025-04-23,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,13388.57
+2025-04-24,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,13376.77
+2025-04-25,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,13364.97
+2025-04-28,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,13353.17
+2025-04-28,FLR,KARTA,"Tankhof Ostrel","Diesel",-59.40,13293.77
+2025-04-29,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,13281.97
+2025-04-30,FLR,PRZELEW PRZYCH.,"Rosvald Family Fund","Kindergeld Q1/2025",196.81,13478.78
+2025-04-30,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,13466.98
+2025-05-05,FLR,WYNAGRODZENIE,"Montagewerk Ostrel AG","Lohn 04/2025",3981.08,17448.06
+2025-05-05,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,17436.26
+2025-05-05,FLR,KARTA,"Tankhof Ostrel","Diesel",-74.40,17361.86
+2025-05-06,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,17350.06
+2025-05-07,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,17338.26
+2025-05-08,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,17326.46
+2025-05-09,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,17314.66
+2025-05-12,FLR,SPRZEDAŻ WALUTY,"Marta i Jan Wrona LN27 6100 3001 0000 4410 7765 0001","udział 04/2025: 2798.54 DUK po 4.1126",-680.48,16634.18
+2025-05-12,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,16622.38
+2025-05-12,FLR,KARTA,"Tankhof Ostrel","Diesel",-72.40,16549.98
+2025-05-13,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,16538.18
+2025-05-14,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,16526.38
+2025-05-15,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,16514.58
+2025-05-16,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,16502.78
+2025-05-19,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,16490.98
+2025-05-19,FLR,KARTA,"Tankhof Ostrel","Diesel",-70.40,16420.58
+2025-05-20,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,16408.78
+2025-05-21,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,16396.98
+2025-05-22,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,16385.18
+2025-05-23,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,16373.38
+2025-05-26,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,16361.58
+2025-05-26,FLR,KARTA,"Tankhof Ostrel","Diesel",-68.40,16293.18
+2025-05-27,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,16281.38
+2025-05-28,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,16269.58
+2025-05-29,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,16257.78
+2025-05-30,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,16245.98
+2025-06-02,FLR,SPRZEDAŻ WALUTY,"Skarbonka LN27 6100 3001 0000 4410 7765 0002","sprzedaż 10245.98 FLR po 4.0760",-10245.98,6000.00
+2025-06-02,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,5988.20
+2025-06-02,FLR,KARTA,"Tankhof Ostrel","Diesel",-66.40,5921.80
+2025-06-03,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,5910.00
+2025-06-04,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,5898.20
+2025-06-05,FLR,WYNAGRODZENIE,"Montagewerk Ostrel AG","Lohn 05/2025",3961.20,9859.40
+2025-06-05,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,9847.60
+2025-06-06,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,9835.80
+2025-06-09,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,9824.00
+2025-06-09,FLR,KARTA,"Tankhof Ostrel","Diesel",-64.40,9759.60
+2025-06-10,FLR,SPRZEDAŻ WALUTY,"Marta i Jan Wrona LN27 6100 3001 0000 4410 7765 0001","udział 05/2025: 3046.04 DUK po 4.1094",-741.24,9018.36
+2025-06-10,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,9006.56
+2025-06-11,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,8994.76
+2025-06-12,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,8982.96
+2025-06-13,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,8971.16
+2025-06-16,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,8959.36
+2025-06-16,FLR,KARTA,"Tankhof Ostrel","Diesel",-62.40,8896.96
+2025-06-17,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,8885.16
+2025-06-18,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,8873.36
+2025-06-19,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,8861.56
+2025-06-20,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,8849.76
+2025-06-23,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,8837.96
+2025-06-23,FLR,KARTA,"Tankhof Ostrel","Diesel",-60.40,8777.56
+2025-06-24,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,8765.76
+2025-06-25,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,8753.96
+2025-06-26,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,8742.16
+2025-06-27,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,8730.36
+2025-06-30,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,8718.56
+2025-06-30,FLR,KARTA,"Tankhof Ostrel","Diesel",-58.40,8660.16
+2025-07-01,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,8648.36
+2025-07-02,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,8636.56
+2025-07-03,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,8624.76
+2025-07-04,FLR,WYNAGRODZENIE,"Montagewerk Ostrel AG","Lohn 06/2025",4088.88,12713.64
+2025-07-04,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,12701.84
+2025-07-07,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,12690.04
+2025-07-07,FLR,KARTA,"Tankhof Ostrel","Diesel",-73.40,12616.64
+2025-07-08,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,12604.84
+2025-07-09,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,12593.04
+2025-07-10,FLR,SPRZEDAŻ WALUTY,"Marta i Jan Wrona LN27 6100 3001 0000 4410 7765 0001","udział 06/2025: 3063.54 DUK po 4.1406",-739.88,11853.16
+2025-07-10,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,11841.36
+2025-07-11,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,11829.56
+2025-07-14,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,11817.76
+2025-07-14,FLR,KARTA,"Tankhof Ostrel","Diesel",-71.40,11746.36
+2025-07-15,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,11734.56
+2025-07-16,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,11722.76
+2025-07-17,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,11710.96
+2025-07-18,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,11699.16
+2025-07-21,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,11687.36
+2025-07-21,FLR,KARTA,"Tankhof Ostrel","Diesel",-69.40,11617.96
+2025-07-22,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,11606.16
+2025-07-23,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,11594.36
+2025-07-24,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,11582.56
+2025-07-25,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,11570.76
+2025-07-28,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,11558.96
+2025-07-28,FLR,KARTA,"Tankhof Ostrel","Diesel",-67.40,11491.56
+2025-07-29,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,11479.76
+2025-07-30,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,11467.96
+2025-07-31,FLR,PRZELEW PRZYCH.,"Rosvald Family Fund","Kindergeld Q2/2025",195.94,11663.90
+2025-07-31,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,11652.10
+2025-08-01,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,11640.30
+2025-08-05,FLR,WYNAGRODZENIE,"Montagewerk Ostrel AG","Lohn 07/2025",4011.68,15651.98
+2025-08-11,FLR,SPRZEDAŻ WALUTY,"Marta i Jan Wrona LN27 6100 3001 0000 4410 7765 0001","udział 07/2025: 3050.54 DUK po 4.1263",-739.30,14912.68
+2025-08-18,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,14900.88
+2025-08-18,FLR,KARTA,"Tankhof Ostrel","Diesel",-61.40,14839.48
+2025-08-19,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,14827.68
+2025-08-20,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,14815.88
+2025-08-21,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,14804.08
+2025-08-22,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,14792.28
+2025-08-25,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,14780.48
+2025-08-25,FLR,KARTA,"Tankhof Ostrel","Diesel",-59.40,14721.08
+2025-08-26,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,14709.28
+2025-08-27,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,14697.48
+2025-08-28,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,14685.68
+2025-08-29,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,14673.88
+2025-09-01,FLR,SPRZEDAŻ WALUTY,"Skarbonka LN27 6100 3001 0000 4410 7765 0002","sprzedaż 13173.88 FLR po 4.1557",-13173.88,1500.00
+2025-09-01,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,1488.20
+2025-09-01,FLR,KARTA,"Tankhof Ostrel","Diesel",-74.40,1413.80
+2025-09-02,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,1402.00
+2025-09-03,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,1390.20
+2025-09-04,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,1378.40
+2025-09-05,FLR,WYNAGRODZENIE,"Montagewerk Ostrel AG","Lohn 08/2025",3884.00,5262.40
+2025-09-05,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,5250.60
+2025-09-08,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,5238.80
+2025-09-08,FLR,KARTA,"Tankhof Ostrel","Diesel",-72.40,5166.40
+2025-09-09,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,5154.60
+2025-09-10,FLR,SPRZEDAŻ WALUTY,"Marta i Jan Wrona LN27 6100 3001 0000 4410 7765 0001","udział 08/2025: 1674.52 DUK po 4.1696",-401.61,4752.99
+2025-09-10,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,4741.19
+2025-09-11,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,4729.39
+2025-09-12,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,4717.59
+2025-09-15,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,4705.79
+2025-09-15,FLR,KARTA,"Tankhof Ostrel","Diesel",-70.40,4635.39
+2025-09-16,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,4623.59
+2025-09-17,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,4611.79
+2025-09-18,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,4599.99
+2025-09-19,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,4588.19
+2025-09-22,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,4576.39
+2025-09-22,FLR,KARTA,"Tankhof Ostrel","Diesel",-68.40,4507.99
+2025-09-23,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,4496.19
+2025-09-24,FLR,PRZELEW PRZYCH.,"Rosvald Tax Board","Erstattung Steuerjahr 2024/25",2294.00,6790.19
+2025-09-24,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,6778.39
+2025-09-25,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,6766.59
+2025-09-26,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,6754.79
+2025-09-29,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,6742.99
+2025-09-29,FLR,KARTA,"Tankhof Ostrel","Diesel",-66.40,6676.59
+2025-09-30,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,6664.79
+2025-10-01,FLR,SPRZEDAŻ WALUTY,"Skarbonka LN27 6100 3001 0000 4410 7765 0002","sprzedaż 5164.79 FLR po 4.1441",-5164.79,1500.00
+2025-10-01,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,1488.20
+2025-10-02,FLR,WYNAGRODZENIE,"Montagewerk Ostrel AG","Lohn 09/2025",4293.76,5781.96
+2025-10-02,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,5770.16
+2025-10-06,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,5758.36
+2025-10-06,FLR,KARTA,"Tankhof Ostrel","Diesel",-64.40,5693.96
+2025-10-07,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,5682.16
+2025-10-08,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,5670.36
+2025-10-09,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,5658.56
+2025-10-10,FLR,SPRZEDAŻ WALUTY,"Marta i Jan Wrona LN27 6100 3001 0000 4410 7765 0001","udział 09/2025: 1637.89 DUK po 4.1595",-393.78,5264.78
+2025-10-10,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,5252.98
+2025-10-13,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,5241.18
+2025-10-13,FLR,KARTA,"Tankhof Ostrel","Diesel",-62.40,5178.78
+2025-10-14,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,5166.98
+2025-10-15,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,5155.18
+2025-10-16,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,5143.38
+2025-10-17,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,5131.58
+2025-10-20,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,5119.78
+2025-10-20,FLR,KARTA,"Tankhof Ostrel","Diesel",-60.40,5059.38
+2025-10-21,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,5047.58
+2025-10-22,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,5035.78
+2025-10-23,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,5023.98
+2025-10-24,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,5012.18
+2025-10-31,FLR,PRZELEW PRZYCH.,"Rosvald Family Fund","Kindergeld Q3/2025",199.79,5211.97
+2025-11-03,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,5200.17
+2025-11-03,FLR,KARTA,"Tankhof Ostrel","Diesel",-73.40,5126.77
+2025-11-04,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,5114.97
+2025-11-05,FLR,WYNAGRODZENIE,"Montagewerk Ostrel AG","Lohn 10/2025",4216.56,9331.53
+2025-11-05,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,9319.73
+2025-11-06,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,9307.93
+2025-11-07,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,9296.13
+2025-11-10,FLR,SPRZEDAŻ WALUTY,"Marta i Jan Wrona LN27 6100 3001 0000 4410 7765 0001","udział 10/2025: 1774.18 DUK po 4.1178",-430.86,8865.27
+2025-11-10,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,8853.47
+2025-11-10,FLR,KARTA,"Tankhof Ostrel","Diesel",-71.40,8782.07
+2025-11-11,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,8770.27
+2025-11-12,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,8758.47
+2025-11-13,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,8746.67
+2025-11-14,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,8734.87
+2025-11-17,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,8723.07
+2025-11-17,FLR,KARTA,"Tankhof Ostrel","Diesel",-69.40,8653.67
+2025-11-18,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,8641.87
+2025-11-19,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,8630.07
+2025-11-20,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,8618.27
+2025-11-21,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,8606.47
+2025-11-24,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,8594.67
+2025-11-24,FLR,KARTA,"Tankhof Ostrel","Diesel",-67.40,8527.27
+2025-11-25,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,8515.47
+2025-11-26,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,8503.67
+2025-11-27,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,8491.87
+2025-11-28,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,8480.07
+2025-12-01,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,8468.27
+2025-12-01,FLR,KARTA,"Tankhof Ostrel","Diesel",-65.40,8402.87
+2025-12-02,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,8391.07
+2025-12-03,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,8379.27
+2025-12-04,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,8367.47
+2025-12-05,FLR,WYNAGRODZENIE,"Montagewerk Ostrel AG","Lohn 11/2025",4192.82,12560.29
+2025-12-05,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,12548.49
+2025-12-07,FLR,KARTA,"Markthalle Ostrel","Einkauf",-176.00,12372.49
+2025-12-08,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,12360.69
+2025-12-08,FLR,KARTA,"Tankhof Ostrel","Diesel",-63.40,12297.29
+2025-12-09,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,12285.49
+2025-12-10,FLR,SPRZEDAŻ WALUTY,"Marta i Jan Wrona LN27 6100 3001 0000 4410 7765 0001","udział 11/2025: 1491.25 DUK po 4.1181",-362.13,11923.36
+2025-12-10,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,11911.56
+2025-12-11,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,11899.76
+2025-12-12,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,11887.96
+2025-12-15,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,11876.16
+2025-12-15,FLR,KARTA,"Tankhof Ostrel","Diesel",-61.40,11814.76
+2025-12-16,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,11802.96
+2025-12-17,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,11791.16
+2025-12-18,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,11779.36
+2025-12-19,FLR,PRZELEW PRZYCH.,"Rosvald Family Fund","Kindergeld Korrektur 09/2025",153.14,11932.50
+2025-12-19,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,11920.70
+2026-01-02,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,11908.90
+2026-01-05,FLR,WYNAGRODZENIE,"Montagewerk Ostrel AG","Lohn 12/2025",3934.47,15843.37
+2026-01-05,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,15831.57
+2026-01-05,FLR,KARTA,"Tankhof Ostrel","Diesel",-72.40,15759.17
+2026-01-06,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,15747.37
+2026-01-07,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,15735.57
+2026-01-08,FLR,SPRZEDAŻ WALUTY,"Skarbonka LN27 6100 3001 0000 4410 7765 0002","sprzedaż 14235.57 FLR po 4.1122",-14235.57,1500.00
+2026-01-08,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,1488.20
+2026-01-09,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,1476.40
+2026-01-12,FLR,SPRZEDAŻ WALUTY,"Marta i Jan Wrona LN27 6100 3001 0000 4410 7765 0001","udział 12/2025: 3198.54 DUK po 4.1065",-778.90,697.50
+2026-01-12,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,685.70
+2026-01-12,FLR,KARTA,"Tankhof Ostrel","Diesel",-70.40,615.30
+2026-01-13,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,603.50
+2026-01-14,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,591.70
+2026-01-15,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,579.90
+2026-01-16,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,568.10
+2026-01-19,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,556.30
+2026-01-19,FLR,KARTA,"Tankhof Ostrel","Diesel",-68.40,487.90
+2026-01-20,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,476.10
+2026-01-21,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,464.30
+2026-01-22,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,452.50
+2026-01-23,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,440.70
+2026-01-26,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,428.90
+2026-01-26,FLR,KARTA,"Tankhof Ostrel","Diesel",-66.40,362.50
+2026-01-27,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,350.70
+2026-01-28,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,338.90
+2026-01-29,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,327.10
+2026-01-30,FLR,PRZELEW PRZYCH.,"Rosvald Family Fund","Kindergeld Q4/2025",660.00,987.10
+2026-01-30,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,975.30
+2026-02-02,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,963.50
+2026-02-02,FLR,KARTA,"Tankhof Ostrel","Diesel",-64.40,899.10
+2026-02-03,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,887.30
+2026-02-04,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,875.50
+2026-02-05,FLR,WYNAGRODZENIE,"Montagewerk Ostrel AG","Lohn 01/2026",4115.62,4991.12
+2026-02-05,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,4979.32
+2026-02-06,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,4967.52
+2026-02-09,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,4955.72
+2026-02-09,FLR,KARTA,"Tankhof Ostrel","Diesel",-62.40,4893.32
+2026-02-10,FLR,SPRZEDAŻ WALUTY,"Marta i Jan Wrona LN27 6100 3001 0000 4410 7765 0001","udział 01/2026: 3216.54 DUK po 4.1295",-778.92,4114.40
+2026-02-10,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,4102.60
+2026-02-11,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,4090.80
+2026-02-12,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,4079.00
+2026-02-13,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,4067.20
+2026-02-23,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,4055.40
+2026-02-23,FLR,KARTA,"Tankhof Ostrel","Diesel",-58.40,3997.00
+2026-02-24,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,3985.20
+2026-02-25,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,3973.40
+2026-02-26,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,3961.60
+2026-02-27,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,3949.80
+2026-03-02,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,3938.00
+2026-03-02,FLR,KARTA,"Tankhof Ostrel","Diesel",-73.40,3864.60
+2026-03-03,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,3852.80
+2026-03-04,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,3841.00
+2026-03-05,FLR,WYNAGRODZENIE,"Montagewerk Ostrel AG","Lohn 02/2026",4038.41,7879.41
+2026-03-05,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,7867.61
+2026-03-06,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,7855.81
+2026-03-09,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,7844.01
+2026-03-09,FLR,KARTA,"Tankhof Ostrel","Diesel",-71.40,7772.61
+2026-03-10,FLR,SPRZEDAŻ WALUTY,"Marta i Jan Wrona LN27 6100 3001 0000 4410 7765 0001","udział 02/2026: 3215.54 DUK po 4.1192",-780.63,6991.98
+2026-03-10,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,6980.18
+2026-03-11,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,6968.38
+2026-03-12,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,6956.58
+2026-03-13,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,6944.78
+2026-03-16,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,6932.98
+2026-03-16,FLR,KARTA,"Tankhof Ostrel","Diesel",-69.40,6863.58
+2026-03-17,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,6851.78
+2026-03-18,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,6839.98
+2026-03-19,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,6828.18
+2026-03-20,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,6816.38
+2026-03-23,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,6804.58
+2026-03-23,FLR,KARTA,"Tankhof Ostrel","Diesel",-67.40,6737.18
+2026-03-24,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,6725.38
+2026-03-25,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,6713.58
+2026-03-26,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,6701.78
+2026-03-27,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,6689.98
+2026-03-30,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,6678.18
+2026-03-30,FLR,KARTA,"Tankhof Ostrel","Diesel",-65.40,6612.78
+2026-03-31,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,6600.98
+2026-04-01,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,6589.18
+2026-04-02,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,6577.38
+2026-04-03,FLR,WYNAGRODZENIE,"Montagewerk Ostrel AG","Lohn 03/2026",4102.88,10680.26
+2026-04-03,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,10668.46
+2026-04-06,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,10656.66
+2026-04-06,FLR,KARTA,"Tankhof Ostrel","Diesel",-63.40,10593.26
+2026-04-07,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,10581.46
+2026-04-08,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,10569.66
+2026-04-09,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,10557.86
+2026-04-10,FLR,SPRZEDAŻ WALUTY,"Marta i Jan Wrona LN27 6100 3001 0000 4410 7765 0001","udział 03/2026: 3188.04 DUK po 4.1410",-769.88,9787.98
+2026-04-10,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,9776.18
+2026-04-13,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,9764.38
+2026-04-13,FLR,KARTA,"Tankhof Ostrel","Diesel",-61.40,9702.98
+2026-04-14,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,9691.18
+2026-04-15,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,9679.38
+2026-04-16,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,9667.58
+2026-04-17,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,9655.78
+2026-04-20,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,9643.98
+2026-04-20,FLR,KARTA,"Tankhof Ostrel","Diesel",-59.40,9584.58
+2026-04-21,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,9572.78
+2026-04-22,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,9560.98
+2026-04-23,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,9549.18
+2026-04-24,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,9537.38
+2026-04-27,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,9525.58
+2026-04-27,FLR,KARTA,"Tankhof Ostrel","Diesel",-74.40,9451.18
+2026-04-28,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,9439.38
+2026-04-29,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,9427.58
+2026-04-30,FLR,PRZELEW PRZYCH.,"Rosvald Family Fund","Kindergeld Q1/2026",690.00,10117.58
+2026-04-30,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,10105.78
+2026-05-04,FLR,SPRZEDAŻ WALUTY,"Skarbonka LN27 6100 3001 0000 4410 7765 0002","sprzedaż 8605.78 FLR po 4.1431",-8605.78,1500.00
+2026-05-04,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,1488.20
+2026-05-04,FLR,KARTA,"Tankhof Ostrel","Diesel",-72.40,1415.80
+2026-05-05,FLR,WYNAGRODZENIE,"Montagewerk Ostrel AG","Lohn 04/2026",4259.91,5675.71
+2026-05-05,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,5663.91
+2026-05-06,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,5652.11
+2026-05-07,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,5640.31
+2026-05-08,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,5628.51
+2026-05-11,FLR,SPRZEDAŻ WALUTY,"Marta i Jan Wrona LN27 6100 3001 0000 4410 7765 0001","udział 04/2026: 3052.54 DUK po 4.1534",-734.95,4893.56
+2026-05-11,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,4881.76
+2026-05-11,FLR,KARTA,"Tankhof Ostrel","Diesel",-70.40,4811.36
+2026-05-12,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,4799.56
+2026-05-13,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,4787.76
+2026-05-14,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,4775.96
+2026-05-15,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,4764.16
+2026-05-18,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,4752.36
+2026-05-18,FLR,KARTA,"Tankhof Ostrel","Diesel",-68.40,4683.96
+2026-05-19,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,4672.16
+2026-05-20,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,4660.36
+2026-05-21,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,4648.56
+2026-05-22,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,4636.76
+2026-05-24,FLR,KARTA,"Markthalle Ostrel","Einkauf",-140.00,4496.76
+2026-05-25,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,4484.96
+2026-05-25,FLR,KARTA,"Tankhof Ostrel","Diesel",-66.40,4418.56
+2026-05-26,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,4406.76
+2026-05-27,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,4394.96
+2026-05-28,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,4383.16
+2026-05-29,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,4371.36
+2026-06-01,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,4359.56
+2026-06-01,FLR,KARTA,"Tankhof Ostrel","Diesel",-64.40,4295.16
+2026-06-02,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,4283.36
+2026-06-03,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,4271.56
+2026-06-04,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,4259.76
+2026-06-05,FLR,WYNAGRODZENIE,"Montagewerk Ostrel AG","Lohn 05/2026",4102.02,8361.78
+2026-06-05,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,8349.98
+2026-06-08,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,8338.18
+2026-06-08,FLR,KARTA,"Tankhof Ostrel","Diesel",-62.40,8275.78
+2026-06-09,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,8263.98
+2026-06-10,FLR,SPRZEDAŻ WALUTY,"Marta i Jan Wrona LN27 6100 3001 0000 4410 7765 0001","udział 05/2026: 3055.54 DUK po 4.1391",-738.22,7525.76
+2026-06-10,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,7513.96
+2026-06-11,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,7502.16
+2026-06-12,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,7490.36
+2026-06-15,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,7478.56
+2026-06-15,FLR,KARTA,"Tankhof Ostrel","Diesel",-60.40,7418.16
+2026-06-16,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,7406.36
+2026-06-17,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,7394.56
+2026-06-18,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,7382.76
+2026-06-19,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,7370.96
+2026-06-22,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,7359.16
+2026-06-22,FLR,KARTA,"Tankhof Ostrel","Diesel",-58.40,7300.76
+2026-06-23,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,7288.96
+2026-06-24,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,7277.16
+2026-06-25,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,7265.36
+2026-06-26,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,7253.56
+2026-06-29,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,7241.76
+2026-06-29,FLR,KARTA,"Tankhof Ostrel","Diesel",-73.40,7168.36
+2026-06-30,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,7156.56
+2026-07-01,FLR,SPRZEDAŻ WALUTY,"Skarbonka LN27 6100 3001 0000 4410 7765 0002","sprzedaż 5656.56 FLR po 4.1684",-5656.56,1500.00
+2026-07-01,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,1488.20
+2026-07-02,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,1476.40
+2026-07-03,FLR,WYNAGRODZENIE,"Montagewerk Ostrel AG","Lohn 06/2026",4182.46,5658.86
+2026-07-03,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,5647.06
+2026-07-06,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,5635.26
+2026-07-06,FLR,KARTA,"Tankhof Ostrel","Diesel",-71.40,5563.86
+2026-07-07,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,5552.06
+2026-07-08,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,5540.26
+2026-07-09,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,5528.46
+2026-07-10,FLR,SPRZEDAŻ WALUTY,"Marta i Jan Wrona LN27 6100 3001 0000 4410 7765 0001","udział 06/2026: 3042.54 DUK po 4.1062",-740.97,4787.49
+2026-07-10,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,4775.69
+2026-07-13,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,4763.89
+2026-07-13,FLR,KARTA,"Tankhof Ostrel","Diesel",-69.40,4694.49
+2026-07-14,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,4682.69
+2026-07-15,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,4670.89
+2026-07-16,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,4659.09
+2026-07-17,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,4647.29
+2026-07-31,FLR,PRZELEW PRZYCH.,"Rosvald Family Fund","Kindergeld Q2/2026",690.00,5337.29
+2026-08-03,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,5325.49
+2026-08-03,FLR,KARTA,"Tankhof Ostrel","Diesel",-63.40,5262.09
+2026-08-04,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,5250.29
+2026-08-05,FLR,WYNAGRODZENIE,"Montagewerk Ostrel AG","Lohn 07/2026",4076.20,9326.49
+2026-08-05,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,9314.69
+2026-08-06,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,9302.89
+2026-08-07,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,9291.09
+2026-08-10,FLR,SPRZEDAŻ WALUTY,"Marta i Jan Wrona LN27 6100 3001 0000 4410 7765 0001","udział 07/2026: 1670.13 DUK po 4.1462",-402.81,8888.28
+2026-08-10,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,8876.48
+2026-08-10,FLR,KARTA,"Tankhof Ostrel","Diesel",-61.40,8815.08
+2026-08-11,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,8803.28
+2026-08-12,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,8791.48
+2026-08-13,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,8779.68
+2026-08-14,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,8767.88
+2026-08-17,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,8756.08
+2026-08-17,FLR,KARTA,"Tankhof Ostrel","Diesel",-59.40,8696.68
+2026-08-18,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,8684.88
+2026-08-19,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,8673.08
+2026-08-20,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,8661.28
+2026-08-21,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,8649.48
+2026-08-24,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,8637.68
+2026-08-24,FLR,KARTA,"Tankhof Ostrel","Diesel",-74.40,8563.28
+2026-08-25,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,8551.48
+2026-08-26,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,8539.68
+2026-08-27,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,8527.88
+2026-08-28,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,8516.08
+2026-08-31,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,8504.28
+2026-08-31,FLR,KARTA,"Tankhof Ostrel","Diesel",-72.40,8431.88
+2026-09-01,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,8420.08
+2026-09-02,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,8408.28
+2026-09-03,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,8396.48
+2026-09-04,FLR,WYNAGRODZENIE,"Montagewerk Ostrel AG","Lohn 08/2026",3995.75,12392.23
+2026-09-04,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,12380.43
+2026-09-07,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,12368.63
+2026-09-07,FLR,KARTA,"Tankhof Ostrel","Diesel",-70.40,12298.23
+2026-09-08,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,12286.43
+2026-09-09,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,12274.63
+2026-09-10,FLR,SPRZEDAŻ WALUTY,"Marta i Jan Wrona LN27 6100 3001 0000 4410 7765 0001","udział 08/2026: 3063.04 DUK po 4.1290",-741.84,11532.79
+2026-09-10,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,11520.99
+2026-09-11,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,11509.19
+2026-09-14,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,11497.39
+2026-09-14,FLR,KARTA,"Tankhof Ostrel","Diesel",-68.40,11428.99
+2026-09-15,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,11417.19
+2026-09-16,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,11405.39
+2026-09-17,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,11393.59
+2026-09-18,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,11381.79
+2026-09-21,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,11369.99
+2026-09-21,FLR,KARTA,"Tankhof Ostrel","Diesel",-66.40,11303.59
+2026-09-22,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,11291.79
+2026-09-23,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,11279.99
+2026-09-24,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,11268.19
+2026-09-25,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,11256.39
+2026-09-28,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,11244.59
+2026-09-28,FLR,KARTA,"Tankhof Ostrel","Diesel",-64.40,11180.19
+2026-09-29,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,11168.39
+2026-09-30,FLR,KARTA,"Kantine Montagewerk","Mittagessen",-11.80,11156.59

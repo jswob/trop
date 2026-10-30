@@ -1,14 +1,23 @@
 model mp11
-  tally 1
+  tally 2
   on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
   note "BOFiP BOI-IR-LIQ-20-20-20, plafonnement des effets du quotient familial: § 40 Exemple (couple marié, quatre enfants, 5 parts) and § 185 Exemple (the same couple, one child invalid, 5,5 parts), revenus 2025."
   note "Each example is a key of foyer. The second liquidation of § 20 (sur deux parts) is the same tax as if the household had base_parts parts: an as if pin in second_term."
   note "Every def of the liquidation is evaluated at the start of the income year (at start_of(income_year[f])), so the barème for revenus 2025 applies."
 
 source boi_liq_20_10 "BOI-IR-LIQ-20-10, IR - Liquidation - Détermination de l'impôt brut, version du 07/04/2026" at "https://bofip.impots.gouv.fr/bofip/2491-PGP.html/identifiant=BOI-IR-LIQ-20-10-20260407"
+
 source boi_liq_20_20_20 "BOI-IR-LIQ-20-20-20, IR - Liquidation - Plafonnement des effets du quotient familial, version en vigueur du 07/04/2026" at "https://bofip.impots.gouv.fr/bofip/2494-PGP.html/identifiant=BOI-IR-LIQ-20-20-20-20260407"
+
 source boi_liq_20_20_40 "BOI-IR-LIQ-20-20-40, IR - Liquidation - Autres corrections, IV. Règles d'arrondissement, version du 04/07/2018" at "https://bofip.impots.gouv.fr/bofip/2496-PGP.html/identifiant=BOI-IR-LIQ-20-20-40-20180704"
+
+source lifted_1_0_1 "Figures tally 1.0.1 allowed inline in rules"
+
 source loi_2026_103 "Loi n° 2026-103 du 19 février 2026 de finances pour 2026, art. 4, I-A et B (CGI art. 197, I), published in the Journal officiel of 20 February 2026; the text was not fetched (Légifrance HTTP 403), its figures are read where the BOFiP reprints them"
+
+unit EUR: currency minor 0.01
 
 axis fr_comp_order
   example "the complementary reduction cap is added to the capped benefit in the second term, then the terms are compared (§ 185 Exemple)"
@@ -25,6 +34,9 @@ input cap_half: money EUR
 input comp_halves[f in foyer]: int
   note "the half-parts that open the réduction d'impôt complémentaire (CGI art. 197, I-2 al. 4)"
 
+input extra_halves_2: int
+  note "lifted from an inline figure of tally 1.0.1"
+
 input income[f in foyer]: money EUR question "Quel est le revenu net imposable du foyer?"
 
 input income_year[f in foyer]: year
@@ -37,7 +49,7 @@ band bareme(x: num EUR): num
 def benefit[f in foyer]: money EUR at start_of(income_year[f])
   note "§ 20: la somme des plafonds en impôt résultant des demi-parts additionnelles"
   rule base v qf2026 = gen_benefit[f]
-  rule with_comp excepts base v qf2026 when fr_comp_order = example = gen_benefit[f] + comp_cap[f]
+  rule with_comp beats base v qf2026 = gen_benefit[f] + comp_cap[f] when fr_comp_order == example
 
 def capped[f in foyer]: bool at start_of(income_year[f])
   note "§ 20: si le premier terme est inférieur au second, le plafonnement est applicable"
@@ -50,11 +62,11 @@ def comp_cap[f in foyer]: money EUR at start_of(income_year[f])
 def comp_reduction[f in foyer]: money EUR at start_of(income_year[f])
   note "§ 140: la différence entre l'impôt avant plafonnement et l'impôt après plafonnement, nulle sans plafonnement; § 150 cap"
   rule base v qf2026 = min(comp_cap[f], max(0, second_term[f] - first_term[f]))
-  rule in_benefit excepts base when fr_comp_order = example = 0
+  rule in_benefit beats base = 0 when fr_comp_order == example
 
 def extra_halves[f in foyer]: num at start_of(income_year[f])
   note "§ 40: les demi-parts supplémentaires soumises au plafonnement, au-delà des parts de base"
-  rule base v qf2026 = (parts[f] - base_parts) * 2
+  rule base v qf2026 = (parts[f] - base_parts) * extra_halves_2
 
 def first_term[f in foyer]: money EUR at start_of(income_year[f])
   note "§ 20: premier terme, l'impôt calculé dans les conditions de droit commun, avec les parts du foyer"
@@ -88,26 +100,33 @@ def tax_raw[f in foyer]: num EUR at start_of(income_year[f])
   note "BOI-IR-LIQ-20-10 § 1: le chiffre obtenu est multiplié par le nombre de parts"
   rule base v bareme2025 = part_tax[f] * parts[f]
 
-ask q_benefit: benefit[f] for f in foyer
+ask q_benefit: benefit[f] for f in foyer law 2026-10-18
 
-ask q_capped: capped[f] for f in foyer
+ask q_capped: capped[f] for f in foyer law 2026-10-18
 
-ask q_extra_halves: extra_halves[f] for f in foyer
+ask q_extra_halves: extra_halves[f] for f in foyer law 2026-10-18
 
-ask q_qf: qf[f], qf[f] as if {parts[f] = base_parts} for f in foyer
+ask q_qf: qf[f], qf[f] as if {parts[f] = base_parts} for f in foyer law 2026-10-18
 
-ask q_second_term: second_term[f] for f in foyer
+ask q_second_term: second_term[f] for f in foyer law 2026-10-18
 
-ask q_tax: tax[f], tax[f] as if {parts[f] = base_parts} for f in foyer
+ask q_tax: tax[f], tax[f] as if {parts[f] = base_parts} for f in foyer law 2026-10-18
 
-ask q_tax_due: tax_due[f] for f in foyer
+ask q_tax_due: tax_due[f] for f in foyer law 2026-10-18
 
-ask q_tax_raw: tax_raw[f], tax_raw[f] as if {parts[f] = base_parts} for f in foyer
+ask q_tax_raw: tax_raw[f], tax_raw[f] as if {parts[f] = base_parts} for f in foyer law 2026-10-18
 
 version arrondi2018
   cite boi_liq_20_20_40
+  governs always
   known 2018-07-04
   note "IV. Règles d'arrondissement, § 50; the rounding rule of tax cites this version. Known from the BOI's own date, version du 04/07/2018."
+
+version lifted_figures
+  cite lifted_1_0_1
+  governs always
+  known 2018-07-04
+  extra_halves_2 = 2 "inline in tally 1.0.1: extra_halves line 57, factor"
 
 version lf2026_art4
   cite loi_2026_103
@@ -131,12 +150,14 @@ version bareme2025
 
 version qf2026
   cite boi_liq_20_20_20
+  governs always
   known 2026-04-07
   note "Version en vigueur du 07/04/2026 (Date de début de publication du BOI : 07/04/2026), the known date"
   base_parts = 2 "§ 20: second terme ... sur deux parts s'il est marié ... et soumis à imposition commune"
 
 version examples2026
   cite boi_liq_20_20_20
+  governs always
   known 2026-10-18
   note "The facts of the § 40 and § 185 Exemples: a worked example's stipulations, known from the model's on, since it has no start (LANGUAGE §4.5)"
   comp_halves[ex40] = 0 "§ 40, Exemple: quatre enfants à charge, none invalid"

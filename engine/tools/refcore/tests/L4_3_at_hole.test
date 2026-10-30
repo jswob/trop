@@ -1,0 +1,30 @@
+# L §4.3: "An at that is a hole makes the def a hole at those keys, carrying the at's questions, and its rules
+# aren't evaluated."  The rule would divide by zero; the at is a hole, so the result is the hole.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+input when_d: date
+input zero: int
+input one: int
+
+def y: num at when_d
+  rule base = one / zero
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  when_d = ?"on which day?"
+  zero = 0
+  one = 1
+
+ask q1: y
+=== expect
+q1: ?"on which day?" (when_d)
+  cut 2026-12-31

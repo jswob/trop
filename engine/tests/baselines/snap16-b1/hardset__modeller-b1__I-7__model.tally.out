@@ -1,0 +1,124 @@
+a_deducted: 9 000.00 PLN
+  assumed: the act states no rounding of contributions; whole minor units half up (contrib_mode)
+  held: extra[beta_job, 2027-10] = 0.03 (card_monthly), read for 2027-10
+  held: extra[beta_job, 2027-11] = 0.03 (card_monthly), read for 2027-11
+  held: extra[beta_job, 2027-12] = 0.03 (card_monthly), read for 2027-12
+  held: salary[beta_job, 2027-08] = 11 000.00 PLN (card_monthly), read for 2027-08
+  held: salary[beta_job, 2027-09] = 11 000.00 PLN (card_monthly), read for 2027-09
+  held: salary[beta_job, 2027-10] = 11 000.00 PLN (card_monthly), read for 2027-10
+  held: salary[beta_job, 2027-11] = 11 000.00 PLN (card_monthly), read for 2027-11
+  held: salary[beta_job, 2027-12] = 11 000.00 PLN (card_monthly), read for 2027-12
+  cut 2025-01-01
+a_own (pl = orla_plan): 9 000.00 PLN
+  assumed: the act states no rounding of contributions; whole minor units half up (contrib_mode)
+  held: extra[beta_job, 2027-10] = 0.03 (card_monthly), read for 2027-10
+  held: extra[beta_job, 2027-11] = 0.03 (card_monthly), read for 2027-11
+  held: extra[beta_job, 2027-12] = 0.03 (card_monthly), read for 2027-12
+  held: salary[beta_job, 2027-08] = 11 000.00 PLN (card_monthly), read for 2027-08
+  held: salary[beta_job, 2027-09] = 11 000.00 PLN (card_monthly), read for 2027-09
+  held: salary[beta_job, 2027-10] = 11 000.00 PLN (card_monthly), read for 2027-10
+  held: salary[beta_job, 2027-11] = 11 000.00 PLN (card_monthly), read for 2027-11
+  held: salary[beta_job, 2027-12] = 11 000.00 PLN (card_monthly), read for 2027-12
+  cut 2025-01-01
+a_own (pl = alfa_plan): 2 160.00 PLN
+  assumed: the act states no rounding of contributions; whole minor units half up (contrib_mode)
+  held: extra[beta_job, 2027-10] = 0.03 (card_monthly), read for 2027-10
+  held: extra[beta_job, 2027-11] = 0.03 (card_monthly), read for 2027-11
+  held: extra[beta_job, 2027-12] = 0.03 (card_monthly), read for 2027-12
+  held: salary[beta_job, 2027-08] = 11 000.00 PLN (card_monthly), read for 2027-08
+  held: salary[beta_job, 2027-09] = 11 000.00 PLN (card_monthly), read for 2027-09
+  held: salary[beta_job, 2027-10] = 11 000.00 PLN (card_monthly), read for 2027-10
+  held: salary[beta_job, 2027-11] = 11 000.00 PLN (card_monthly), read for 2027-11
+  held: salary[beta_job, 2027-12] = 11 000.00 PLN (card_monthly), read for 2027-12
+  cut 2025-01-01
+a_own (pl = beta_plan): 2 090.00 PLN
+  assumed: the act states no rounding of contributions; whole minor units half up (contrib_mode)
+  held: extra[beta_job, 2027-10] = 0.03 (card_monthly), read for 2027-10
+  held: extra[beta_job, 2027-11] = 0.03 (card_monthly), read for 2027-11
+  held: extra[beta_job, 2027-12] = 0.03 (card_monthly), read for 2027-12
+  held: salary[beta_job, 2027-08] = 11 000.00 PLN (card_monthly), read for 2027-08
+  held: salary[beta_job, 2027-09] = 11 000.00 PLN (card_monthly), read for 2027-09
+  held: salary[beta_job, 2027-10] = 11 000.00 PLN (card_monthly), read for 2027-10
+  held: salary[beta_job, 2027-11] = 11 000.00 PLN (card_monthly), read for 2027-11
+  held: salary[beta_job, 2027-12] = 11 000.00 PLN (card_monthly), read for 2027-12
+  cut 2025-01-01
+a_refund (pl = orla_plan): (4 250.00 PLN, 2028-03-31)
+  assumed: the act states no rounding of contributions; whole minor units half up (contrib_mode)
+  held: extra[beta_job, 2027-10] = 0.03 (card_monthly), read for 2027-10
+  held: extra[beta_job, 2027-11] = 0.03 (card_monthly), read for 2027-11
+  held: extra[beta_job, 2027-12] = 0.03 (card_monthly), read for 2027-12
+  held: salary[beta_job, 2027-08] = 11 000.00 PLN (card_monthly), read for 2027-08
+  held: salary[beta_job, 2027-09] = 11 000.00 PLN (card_monthly), read for 2027-09
+  held: salary[beta_job, 2027-10] = 11 000.00 PLN (card_monthly), read for 2027-10
+  held: salary[beta_job, 2027-11] = 11 000.00 PLN (card_monthly), read for 2027-11
+  held: salary[beta_job, 2027-12] = 11 000.00 PLN (card_monthly), read for 2027-12
+  cut 2025-01-01
+a_refund (pl = alfa_plan): (0.00 PLN, 2028-03-31)
+  assumed: the act states no rounding of contributions; whole minor units half up (contrib_mode)
+  held: extra[beta_job, 2027-10] = 0.03 (card_monthly), read for 2027-10
+  held: extra[beta_job, 2027-11] = 0.03 (card_monthly), read for 2027-11
+  held: extra[beta_job, 2027-12] = 0.03 (card_monthly), read for 2027-12
+  held: salary[beta_job, 2027-08] = 11 000.00 PLN (card_monthly), read for 2027-08
+  held: salary[beta_job, 2027-09] = 11 000.00 PLN (card_monthly), read for 2027-09
+  held: salary[beta_job, 2027-10] = 11 000.00 PLN (card_monthly), read for 2027-10
+  held: salary[beta_job, 2027-11] = 11 000.00 PLN (card_monthly), read for 2027-11
+  held: salary[beta_job, 2027-12] = 11 000.00 PLN (card_monthly), read for 2027-12
+  cut 2025-01-01
+a_refund (pl = beta_plan): (0.00 PLN, 2028-03-31)
+  assumed: the act states no rounding of contributions; whole minor units half up (contrib_mode)
+  held: extra[beta_job, 2027-10] = 0.03 (card_monthly), read for 2027-10
+  held: extra[beta_job, 2027-11] = 0.03 (card_monthly), read for 2027-11
+  held: extra[beta_job, 2027-12] = 0.03 (card_monthly), read for 2027-12
+  held: salary[beta_job, 2027-08] = 11 000.00 PLN (card_monthly), read for 2027-08
+  held: salary[beta_job, 2027-09] = 11 000.00 PLN (card_monthly), read for 2027-09
+  held: salary[beta_job, 2027-10] = 11 000.00 PLN (card_monthly), read for 2027-10
+  held: salary[beta_job, 2027-11] = 11 000.00 PLN (card_monthly), read for 2027-11
+  held: salary[beta_job, 2027-12] = 11 000.00 PLN (card_monthly), read for 2027-12
+  cut 2025-01-01
+b_held: (10 140.00 PLN, 10 140.00 PLN, 2028-03-31)
+  assumed: the act states no rounding of contributions; whole minor units half up (contrib_mode)
+  held: extra[beta_job, 2027-10] = 0.03 (card_monthly), read for 2027-10
+  held: extra[beta_job, 2027-11] = 0.03 (card_monthly), read for 2027-11
+  held: extra[beta_job, 2027-12] = 0.03 (card_monthly), read for 2027-12
+  held: salary[beta_job, 2027-08] = 11 000.00 PLN (card_monthly), read for 2027-08
+  held: salary[beta_job, 2027-09] = 11 000.00 PLN (card_monthly), read for 2027-09
+  held: salary[beta_job, 2027-10] = 11 000.00 PLN (card_monthly), read for 2027-10
+  held: salary[beta_job, 2027-11] = 11 000.00 PLN (card_monthly), read for 2027-11
+  held: salary[beta_job, 2027-12] = 11 000.00 PLN (card_monthly), read for 2027-12
+  cut 2025-01-01
+c_forfeit_feb (f = forfeit[beta_job]): (2028-05-29, 10 800.00 PLN)
+  assumed: the act states no rounding of contributions; whole minor units half up (contrib_mode)
+  world: leave_feb
+  held: extra[beta_job, 2027-10] = 0.03 (card_monthly), read for 2027-10
+  held: extra[beta_job, 2027-11] = 0.03 (card_monthly), read for 2027-11
+  held: extra[beta_job, 2027-12] = 0.03 (card_monthly), read for 2027-12
+  held: extra[beta_job, 2028-01] = 0.03 (card_monthly), read for 2028-01
+  held: extra[beta_job, 2028-02] = 0.03 (card_monthly), read for 2028-02
+  held: salary[beta_job, 2027-08] = 11 000.00 PLN (card_monthly), read for 2027-08
+  held: salary[beta_job, 2027-09] = 11 000.00 PLN (card_monthly), read for 2027-09
+  held: salary[beta_job, 2027-10] = 11 000.00 PLN (card_monthly), read for 2027-10
+  held: salary[beta_job, 2027-11] = 11 000.00 PLN (card_monthly), read for 2027-11
+  held: salary[beta_job, 2027-12] = 11 000.00 PLN (card_monthly), read for 2027-12
+  held: salary[beta_job, 2028-01] = 11 000.00 PLN (card_monthly), read for 2028-01
+  held: salary[beta_job, 2028-02] = 11 000.00 PLN (card_monthly), read for 2028-02
+  cut 2025-01-01
+c_income_feb: -10 800.00 PLN
+  assumed: the act states no rounding of contributions; whole minor units half up (contrib_mode)
+  world: leave_feb
+  held: extra[beta_job, 2027-10] = 0.03 (card_monthly), read for 2027-10
+  held: extra[beta_job, 2027-11] = 0.03 (card_monthly), read for 2027-11
+  held: extra[beta_job, 2027-12] = 0.03 (card_monthly), read for 2027-12
+  held: extra[beta_job, 2028-01] = 0.03 (card_monthly), read for 2028-01
+  held: extra[beta_job, 2028-02] = 0.03 (card_monthly), read for 2028-02
+  held: salary[beta_job, 2027-08] = 11 000.00 PLN (card_monthly), read for 2027-08
+  held: salary[beta_job, 2027-09] = 11 000.00 PLN (card_monthly), read for 2027-09
+  held: salary[beta_job, 2027-10] = 11 000.00 PLN (card_monthly), read for 2027-10
+  held: salary[beta_job, 2027-11] = 11 000.00 PLN (card_monthly), read for 2027-11
+  held: salary[beta_job, 2027-12] = 11 000.00 PLN (card_monthly), read for 2027-12
+  held: salary[beta_job, 2028-01] = 11 000.00 PLN (card_monthly), read for 2028-01
+  held: salary[beta_job, 2028-02] = 11 000.00 PLN (card_monthly), read for 2028-02
+  cut 2025-01-01
+c_income_mar: 0.00 PLN
+  world: leave_mar
+  cut 2025-01-01
+warning: WARN-UNREAD def taxable_income is read by nothing

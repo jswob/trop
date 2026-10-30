@@ -1,0 +1,46 @@
+# L §2.3 Calls (round 14): a band's id "with the prefixes that name the band outside ... its base: household.b(x) in a
+# scenario's expression row (§6.4)". L6_4_expression_row_reads.test's s3 with the band written household.fee: fee's one
+# row gives 10 PLN.
+=== household.tally
+model household
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2040-12-31
+
+source plan "plan"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2019-05-01..
+input cap: num PLN
+input day0: date
+band fee(x: num PLN): num PLN
+
+def held: num PLN
+  rule r = bal(konto, day0)
+
+version base_2026
+  cite plan
+  governs always
+  known 2026-01-01
+  cap = 1 000.00 PLN "own"
+  day0 = 2026-06-30 "own"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "wyciąg"
+  fee: [0 PLN, inf) = 10.00 PLN "own"
+
+ask c: cap law 2031-06-30
+=== s3.tally
+scenario s3 over household
+  tally 2
+  from 2031-01-01
+
+version v3
+  cite plan
+  governs 2031-01-01..
+  known 2026-10-20
+  replace cap = household.fee(household.cap) "z pasma"
+
+ask a: cap in s3 law 2031-06-30
+=== expect
+a: 10 PLN
+  world: s3
+...

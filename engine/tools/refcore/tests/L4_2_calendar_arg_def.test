@@ -1,0 +1,26 @@
+# L §4.2 (round 12): "the calendar a business-day function takes is a read of a calendar input, at any keys
+# (cal[country[p]]); any other calendar expression (a def, an if) is refused (LOAD-UNIT)". (Was REFCORE-UNSPECIFIED
+# §4.2, writer 5's T-14.)
+=== m.tally
+model t
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+input cal: calendar
+def c2: calendar = cal
+input d0: date
+def d: date = add_business(d0, 1, c2)
+
+version v
+  cite s
+  governs 2026
+  known 2026-01-01
+  cal = calendar(weekends [sat, sun])
+  d0 = 2026-03-02
+
+ask q: d law 2026-03-02
+=== expect
+refused: LOAD-UNIT add_business: its calendar c2 is not a read of a calendar input (m.tally:11)

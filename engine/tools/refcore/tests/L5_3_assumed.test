@@ -1,0 +1,25 @@
+# L §5.3: "assumed STR marks the whole version ... Every row of it ... puts the reason in the register of each
+# result that reads it (§8.2)."  L §8.2: "assumed: <reason> ... once, with the keys it filled".
+=== m.tally
+model t
+  tally 2
+  on 2016-03-01
+  start 2015-11-01
+  end 2016-10-31
+
+source s "s"
+
+input n: int
+
+version v
+  cite s
+  governs always
+  known 2016-01-01
+  assumed "a 2022 text read for 2016"
+  n = 1
+
+ask q1: n
+=== expect
+q1: 1
+  assumed: a 2022 text read for 2016 (n)
+  cut 2016-03-01

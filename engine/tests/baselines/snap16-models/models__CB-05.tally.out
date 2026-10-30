@@ -1,0 +1,180 @@
+q_beyond: (?"What is the foreign tax credit limit (general category) in this example for this year? The example gives none after its last year." (limit[ex1, 2026], limit[ex1, 2027], limit[ex1, 2028], limit[ex1, 2029], limit[ex1, 2030], limit[ex1, 2031], limit[ex1, 2032], limit[ex1, 2033], limit[ex1, 2034], limit[ex1, 2035]) ?"What qualified foreign taxes (general category) were paid in this example for this year? The example gives none after its last year." (tax_paid[ex1, 2026], tax_paid[ex1, 2027], tax_paid[ex1, 2028], tax_paid[ex1, 2029], tax_paid[ex1, 2030], tax_paid[ex1, 2031], tax_paid[ex1, 2032], tax_paid[ex1, 2033], tax_paid[ex1, 2034], tax_paid[ex1, 2035]), ?"Did H and W file a joint return for this year? Table 5 ends in 2025." (joint[2026], joint[2027], joint[2028], joint[2029], joint[2030], joint[2031], joint[2032], joint[2033], joint[2034]) ?"What is this spouse's unused foreign tax (positive) or excess limit (negative) for this year? Table 5 ends in 2025." (t5_net[h, 2026], t5_net[h, 2027], t5_net[h, 2028], t5_net[h, 2029], t5_net[h, 2030], t5_net[h, 2031], t5_net[h, 2032], t5_net[h, 2033], t5_net[h, 2034], t5_net[w, 2026], t5_net[w, 2027], t5_net[w, 2028], t5_net[w, 2029], t5_net[w, 2030], t5_net[w, 2031], t5_net[w, 2032], t5_net[w, 2033], t5_net[w, 2034]), ?"Did H and W file a joint return for this year? Table 5 ends in 2025." (joint[2026], joint[2027], joint[2028], joint[2029], joint[2030], joint[2031], joint[2032], joint[2033], joint[2034]) ?"What is this spouse's unused foreign tax (positive) or excess limit (negative) for this year? Table 5 ends in 2025." (t5_net[h, 2026], t5_net[h, 2027], t5_net[h, 2028], t5_net[h, 2029], t5_net[h, 2030], t5_net[h, 2031], t5_net[h, 2032], t5_net[h, 2033], t5_net[h, 2034], t5_net[w, 2026], t5_net[w, 2027], t5_net[w, 2028], t5_net[w, 2029], t5_net[w, 2030], t5_net[w, 2031], t5_net[w, 2032], t5_net[w, 2033], t5_net[w, 2034]))
+  law date 2026-10-19, cut 2026-10-19
+q_bob (c = col_i): 80.00 USD
+  law date 2026-10-19, cut 2026-10-19
+q_bob (c = col_ii): 60.00 USD
+  law date 2026-10-19, cut 2026-10-19
+q_bob (c = col_iii): 110.00 USD
+  law date 2026-10-19, cut 2026-10-19
+q_bob_total: 250.00 USD
+  law date 2026-10-19, cut 2026-10-19
+q_dy_absorbed: 100.00 USD
+  law date 2026-10-19, cut 2026-10-19
+q_dy_carry_out: 100.00 USD
+  law date 2026-10-19, cut 2026-10-19
+q_dy_credit [election_2025 = credit]: 700.00 USD
+  reading: election_2025 = credit
+  law date 2026-10-19, cut 2026-10-19
+q_dy_credit [election_2025 = deduction]: 0.00 USD
+  reading: election_2025 = deduction
+  law date 2026-10-19, cut 2026-10-19
+q_dy_deduction [election_2025 = credit]: 0.00 USD
+  reading: election_2025 = credit
+  law date 2026-10-19, cut 2026-10-19
+q_dy_deduction [election_2025 = deduction]: 600.00 USD
+  reading: election_2025 = deduction
+  law date 2026-10-19, cut 2026-10-19
+q_ex1_back: 100.00 USD
+  law date 2026-10-19, cut 2026-10-19
+q_ex1_diff (y = 2024): -100.00 USD
+  law date 2026-10-19, cut 2026-10-19
+q_ex1_diff (y = 2025): 200.00 USD
+  law date 2026-10-19, cut 2026-10-19
+q_ex1_left: 100.00 USD
+  law date 2026-10-19, cut 2026-10-19
+q_ex2_2021 (t = 2020): 0.00 USD
+  assumed: no foreign income in 2020, so no foreign tax for that year is taken (tax_paid[ex2, 2020])
+  law date 2026-10-19, cut 2026-10-19
+q_ex2_2021 (t = 2021): 0.00 USD
+  law date 2026-10-19, cut 2026-10-19
+q_ex2_2021 (t = 2022): 0.00 USD
+  law date 2026-10-19, cut 2026-10-19
+q_ex2_2021 (t = 2023): 0.00 USD
+  law date 2026-10-19, cut 2026-10-19
+q_ex2_2021 (t = 2024): 150.00 USD
+  law date 2026-10-19, cut 2026-10-19
+q_ex2_2021 (t = 2025): 50.00 USD
+  law date 2026-10-19, cut 2026-10-19
+q_ex2_2021 (t = 2026): 0.00 USD
+  law date 2026-10-19, cut 2026-10-19
+q_ex2_2021_left: 0.00 USD
+  assumed: no foreign income in 2020, so no foreign tax for that year is taken (tax_paid[ex2, 2020])
+  law date 2026-10-19, cut 2026-10-19
+q_ex2_diff (y = 2021): 200.00 USD
+  law date 2026-10-19, cut 2026-10-19
+q_ex2_diff (y = 2022): 100.00 USD
+  law date 2026-10-19, cut 2026-10-19
+q_ex2_diff (y = 2023): 200.00 USD
+  law date 2026-10-19, cut 2026-10-19
+q_ex2_diff (y = 2024): -150.00 USD
+  law date 2026-10-19, cut 2026-10-19
+q_ex2_diff (y = 2025): -100.00 USD
+  law date 2026-10-19, cut 2026-10-19
+q_ex2_diff (y = 2026): 50.00 USD
+  law date 2026-10-19, cut 2026-10-19
+q_t5_allocation (sp = h, y = 2021): t5_net[sp, y] = 50.00 USD, t5_alloc_net[sp, y] = ?"What foreign taxes (general category) did this spouse pay or accrue for this year? Table 5 gives only the allocated results." (t5_taxes[h, 2021]) ?"What was H and W's joint foreign tax credit limit (general category) for this joint year? Table 5 gives only the allocated results." (t5_joint_limit[2021]) ?"What was this spouse's foreign-source taxable income in the general category for this year? Table 5 gives only the allocated results." (t5_fsti[h, 2021], t5_fsti[w, 2021])
+  law date 2026-10-19, cut 2026-10-19
+q_t5_allocation (sp = h, y = 2023): t5_net[sp, y] = -65.00 USD, t5_alloc_net[sp, y] = ?"What foreign taxes (general category) did this spouse pay or accrue for this year? Table 5 gives only the allocated results." (t5_taxes[h, 2023]) ?"What was H and W's joint foreign tax credit limit (general category) for this joint year? Table 5 gives only the allocated results." (t5_joint_limit[2023]) ?"What was this spouse's foreign-source taxable income in the general category for this year? Table 5 gives only the allocated results." (t5_fsti[h, 2023], t5_fsti[w, 2023])
+  law date 2026-10-19, cut 2026-10-19
+q_t5_allocation (sp = h, y = 2024): t5_net[sp, y] = 104.00 USD, t5_alloc_net[sp, y] = ?"What foreign taxes (general category) did this spouse pay or accrue for this year? Table 5 gives only the allocated results." (t5_taxes[h, 2024]) ?"What was H and W's joint foreign tax credit limit (general category) for this joint year? Table 5 gives only the allocated results." (t5_joint_limit[2024]) ?"What was this spouse's foreign-source taxable income in the general category for this year? Table 5 gives only the allocated results." (t5_fsti[h, 2024], t5_fsti[w, 2024])
+  law date 2026-10-19, cut 2026-10-19
+q_t5_allocation (sp = w, y = 2021): t5_net[sp, y] = 30.00 USD, t5_alloc_net[sp, y] = ?"What foreign taxes (general category) did this spouse pay or accrue for this year? Table 5 gives only the allocated results." (t5_taxes[w, 2021]) ?"What was H and W's joint foreign tax credit limit (general category) for this joint year? Table 5 gives only the allocated results." (t5_joint_limit[2021]) ?"What was this spouse's foreign-source taxable income in the general category for this year? Table 5 gives only the allocated results." (t5_fsti[h, 2021], t5_fsti[w, 2021])
+  law date 2026-10-19, cut 2026-10-19
+q_t5_allocation (sp = w, y = 2023): t5_net[sp, y] = -20.00 USD, t5_alloc_net[sp, y] = ?"What foreign taxes (general category) did this spouse pay or accrue for this year? Table 5 gives only the allocated results." (t5_taxes[w, 2023]) ?"What was H and W's joint foreign tax credit limit (general category) for this joint year? Table 5 gives only the allocated results." (t5_joint_limit[2023]) ?"What was this spouse's foreign-source taxable income in the general category for this year? Table 5 gives only the allocated results." (t5_fsti[h, 2023], t5_fsti[w, 2023])
+  law date 2026-10-19, cut 2026-10-19
+q_t5_allocation (sp = w, y = 2024): t5_net[sp, y] = 69.00 USD, t5_alloc_net[sp, y] = ?"What foreign taxes (general category) did this spouse pay or accrue for this year? Table 5 gives only the allocated results." (t5_taxes[w, 2024]) ?"What was H and W's joint foreign tax credit limit (general category) for this joint year? Table 5 gives only the allocated results." (t5_joint_limit[2024]) ?"What was this spouse's foreign-source taxable income in the general category for this year? Table 5 gives only the allocated results." (t5_fsti[h, 2024], t5_fsti[w, 2024])
+  law date 2026-10-19, cut 2026-10-19
+q_t5_h2021 (ds = h, t = 2021): 0.00 USD
+  law date 2026-10-19, cut 2026-10-19
+q_t5_h2021 (ds = h, t = 2022): 0.00 USD
+  law date 2026-10-19, cut 2026-10-19
+q_t5_h2021 (ds = h, t = 2023): 50.00 USD
+  law date 2026-10-19, cut 2026-10-19
+q_t5_h2021 (ds = h, t = 2024): 0.00 USD
+  law date 2026-10-19, cut 2026-10-19
+q_t5_h2021 (ds = h, t = 2025): 0.00 USD
+  law date 2026-10-19, cut 2026-10-19
+q_t5_h2021 (ds = w, t = 2021): 0.00 USD
+  law date 2026-10-19, cut 2026-10-19
+q_t5_h2021 (ds = w, t = 2022): 0.00 USD
+  law date 2026-10-19, cut 2026-10-19
+q_t5_h2021 (ds = w, t = 2023): 0.00 USD
+  law date 2026-10-19, cut 2026-10-19
+q_t5_h2021 (ds = w, t = 2024): 0.00 USD
+  law date 2026-10-19, cut 2026-10-19
+q_t5_h2021 (ds = w, t = 2025): 0.00 USD
+  law date 2026-10-19, cut 2026-10-19
+q_t5_h2022 (ds = h, t = 2021): 0.00 USD
+  law date 2026-10-19, cut 2026-10-19
+q_t5_h2022 (ds = h, t = 2022): 0.00 USD
+  law date 2026-10-19, cut 2026-10-19
+q_t5_h2022 (ds = h, t = 2023): 15.00 USD
+  law date 2026-10-19, cut 2026-10-19
+q_t5_h2022 (ds = h, t = 2024): 0.00 USD
+  law date 2026-10-19, cut 2026-10-19
+q_t5_h2022 (ds = h, t = 2025): 0.00 USD
+  law date 2026-10-19, cut 2026-10-19
+q_t5_h2022 (ds = w, t = 2021): 0.00 USD
+  law date 2026-10-19, cut 2026-10-19
+q_t5_h2022 (ds = w, t = 2022): 0.00 USD
+  law date 2026-10-19, cut 2026-10-19
+q_t5_h2022 (ds = w, t = 2023): 10.00 USD
+  law date 2026-10-19, cut 2026-10-19
+q_t5_h2022 (ds = w, t = 2024): 0.00 USD
+  law date 2026-10-19, cut 2026-10-19
+q_t5_h2022 (ds = w, t = 2025): 0.00 USD
+  law date 2026-10-19, cut 2026-10-19
+q_t5_h2024 (ds = h, t = 2021): 0.00 USD
+  law date 2026-10-19, cut 2026-10-19
+q_t5_h2024 (ds = h, t = 2022): 0.00 USD
+  law date 2026-10-19, cut 2026-10-19
+q_t5_h2024 (ds = h, t = 2023): 0.00 USD
+  law date 2026-10-19, cut 2026-10-19
+q_t5_h2024 (ds = h, t = 2024): 0.00 USD
+  law date 2026-10-19, cut 2026-10-19
+q_t5_h2024 (ds = h, t = 2025): 50.00 USD
+  law date 2026-10-19, cut 2026-10-19
+q_t5_h2024 (ds = w, t = 2021): 0.00 USD
+  law date 2026-10-19, cut 2026-10-19
+q_t5_h2024 (ds = w, t = 2022): 0.00 USD
+  law date 2026-10-19, cut 2026-10-19
+q_t5_h2024 (ds = w, t = 2023): 0.00 USD
+  law date 2026-10-19, cut 2026-10-19
+q_t5_h2024 (ds = w, t = 2024): 0.00 USD
+  law date 2026-10-19, cut 2026-10-19
+q_t5_h2024 (ds = w, t = 2025): 0.00 USD
+  law date 2026-10-19, cut 2026-10-19
+q_t5_remaining (sp = h): 54.00 USD
+  law date 2026-10-19, cut 2026-10-19
+q_t5_remaining (sp = w): 59.00 USD
+  law date 2026-10-19, cut 2026-10-19
+q_t5_w2021 (ds = h, t = 2021): 0.00 USD
+  law date 2026-10-19, cut 2026-10-19
+q_t5_w2021 (ds = h, t = 2022): 0.00 USD
+  law date 2026-10-19, cut 2026-10-19
+q_t5_w2021 (ds = h, t = 2023): 0.00 USD
+  law date 2026-10-19, cut 2026-10-19
+q_t5_w2021 (ds = h, t = 2024): 0.00 USD
+  law date 2026-10-19, cut 2026-10-19
+q_t5_w2021 (ds = h, t = 2025): 0.00 USD
+  law date 2026-10-19, cut 2026-10-19
+q_t5_w2021 (ds = w, t = 2021): 0.00 USD
+  law date 2026-10-19, cut 2026-10-19
+q_t5_w2021 (ds = w, t = 2022): 20.00 USD
+  law date 2026-10-19, cut 2026-10-19
+q_t5_w2021 (ds = w, t = 2023): 10.00 USD
+  law date 2026-10-19, cut 2026-10-19
+q_t5_w2021 (ds = w, t = 2024): 0.00 USD
+  law date 2026-10-19, cut 2026-10-19
+q_t5_w2021 (ds = w, t = 2025): 0.00 USD
+  law date 2026-10-19, cut 2026-10-19
+q_t5_w2024 (ds = h, t = 2021): 0.00 USD
+  law date 2026-10-19, cut 2026-10-19
+q_t5_w2024 (ds = h, t = 2022): 0.00 USD
+  law date 2026-10-19, cut 2026-10-19
+q_t5_w2024 (ds = h, t = 2023): 0.00 USD
+  law date 2026-10-19, cut 2026-10-19
+q_t5_w2024 (ds = h, t = 2024): 0.00 USD
+  law date 2026-10-19, cut 2026-10-19
+q_t5_w2024 (ds = h, t = 2025): 0.00 USD
+  law date 2026-10-19, cut 2026-10-19
+q_t5_w2024 (ds = w, t = 2021): 0.00 USD
+  law date 2026-10-19, cut 2026-10-19
+q_t5_w2024 (ds = w, t = 2022): 0.00 USD
+  law date 2026-10-19, cut 2026-10-19
+q_t5_w2024 (ds = w, t = 2023): 0.00 USD
+  law date 2026-10-19, cut 2026-10-19
+q_t5_w2024 (ds = w, t = 2024): 0.00 USD
+  law date 2026-10-19, cut 2026-10-19
+q_t5_w2024 (ds = w, t = 2025): 10.00 USD
+  law date 2026-10-19, cut 2026-10-19

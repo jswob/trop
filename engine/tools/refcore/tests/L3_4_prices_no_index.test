@@ -1,0 +1,28 @@
+# L §3.4 A price year with no index: "Read at a law date in Y it is the figure itself, in its declared type
+# (money CUR for a money input). At any other date it is a hole: <x> is in Y prices; no index moves it to <d>
+# (HOLE-PRICE)."
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2015-01-01
+  end 2026-12-31
+
+source s "a source"
+unit PLN: currency minor 0.01
+
+input old: money PLN prices 2015
+
+version v
+  cite s
+  governs always
+  known 2015-01-01
+  old = 500.00 PLN
+
+ask q1: old law 2015-06-30
+ask q2: old law 2026-06-30
+=== expect
+q1: 500.00 PLN
+  law date 2015-06-30, cut 2026-01-01
+q2: ?"old is in 2015 prices; no index moves it to 2026-06-30" (old)
+  law date 2026-06-30, cut 2026-01-01

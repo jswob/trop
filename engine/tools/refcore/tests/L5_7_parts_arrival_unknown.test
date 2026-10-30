@@ -1,0 +1,34 @@
+# Writer 11 (tally 2.1, 2.1-8, 2.1-20). L §5.7 What a kind can be: "The parts clauses (tally 2.1, §3.6) are body lines
+# of a place kind: owned by D [ties by e], batched, step u and takes k for w ..., in that order. A kind that states
+# owned by or batched states step and takes, and step or takes stands only beside one of them. Its sign rule is min 0,
+# and it is no subkind of assets ... D is a def of type num keyed by an event kind and by parties (either a subkind), in
+# that order, at the law date m.day of its movement key m. A subkind of a kind that keeps parts keeps its clauses and
+# states none of its own; a subkind of a place kind that keeps none may state them for its own things. Anything else is
+# refused (LOAD-PARTS)." L §8.3 LOAD-PARTS's messages.
+# owned by naming no item: LOAD-NAME (L §8.3 `unknown id <x>`).
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+kind persons: parties
+kind savings: place PLN min 0
+  owned by arrive
+  step minor(PLN)
+  takes k for w order if k.owner == ania then 0 else 1
+place konto: savings lives 2026-01-01..
+ask q: bal(konto, 2026-06-30)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  persons + [ania] lives 1980-01-01..
+  persons + [tomek] lives 1981-01-01..
+  opening[konto] = 0 PLN at 2026-01-01 start
+=== expect
+refused: LOAD-NAME unknown id arrive ...

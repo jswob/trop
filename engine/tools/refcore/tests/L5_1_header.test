@@ -1,0 +1,14 @@
+# L §5.1 example header, copied whole, with one ask: it loads.  An ask that reads nothing law-dated needs no
+# law; its register line is the cut, the header's on (L §4.5 "K is ... the model's on date if it states none").
+=== m.tally
+model ul05
+  tally 2
+  on 2016-03-01
+  start 2015-11-01
+  end 2016-10-31
+  note "Zasiłek rodzinny, okres zasiłkowy 2015/2016, złotówka za złotówkę."
+
+ask q1: cut
+=== expect
+q1: 2016-03-01
+  cut 2016-03-01

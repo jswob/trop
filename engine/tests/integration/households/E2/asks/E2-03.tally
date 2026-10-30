@@ -1,0 +1,5 @@
+part e2_asks_03
+  tally 2
+  note "E2-03 · Marta's inheritance (tmp/cases-holdout/E2/questions.md): as of and known as of 2026-09-30. share and paid: D's (d.share[marta], d.payout[marta], paid on d.div_paid_on), e2_03_share; the rest (what her account shows paid, hers alone, lent to the community, owed to her at the forgiveness, the gift to Jan) is C's, asked in the C-side run (e2c_03_paid, e2c_03_loan)."
+
+ask e2_03_share: d.share[marta], d.payout[marta], d.div_paid_on law 2026-09-30 as known 2026-09-30

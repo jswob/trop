@@ -1,5 +1,5 @@
 model cmp01
-  tally 1
+  tally 2
   on 2026-10-18
   start 2026-01-01
   end 2026-01-31
@@ -10,20 +10,40 @@ model cmp01
   note "MP-11's defs are evaluated at the start of the income year (at start_of(income_year[f])), so the barème for revenus 2025 applies."
 
 source bgb "Bürgerliches Gesetzbuch §§ 1603, 1609, 1612a, 1612b (gesetze-im-internet.de)" at "https://www.gesetze-im-internet.de/bgb/__1609.html"
+
 source boi_liq_20_10 "BOI-IR-LIQ-20-10, IR - Liquidation - Détermination de l'impôt brut, version du 07/04/2026" at "https://bofip.impots.gouv.fr/bofip/2491-PGP.html/identifiant=BOI-IR-LIQ-20-10-20260407"
+
 source boi_liq_20_20_20 "BOI-IR-LIQ-20-20-20, IR - Liquidation - Plafonnement des effets du quotient familial, version en vigueur du 07/04/2026" at "https://bofip.impots.gouv.fr/bofip/2494-PGP.html/identifiant=BOI-IR-LIQ-20-20-20-20260407"
+
 source boi_liq_20_20_40 "BOI-IR-LIQ-20-20-40, IR - Liquidation - Autres corrections, IV. Règles d'arrondissement, version du 04/07/2018" at "https://bofip.impots.gouv.fr/bofip/2496-PGP.html/identifiant=BOI-IR-LIQ-20-20-40-20180704"
+
 source composition "CMP-01 composition (tmp/verification/sources/CMP.md): the stipulated facts that join the three examples; not a published document"
+
 source dgfip_brochure "Brochure pratique IR 2026 (revenus 2025), chapitre Calcul de l'impôt, pp. 369-382, DGFiP" at "https://www.impots.gouv.fr/www2/fichiers/documentation/brochure/ir_2026/pdf_som/21-calcul_impot_369a382.pdf"
+
+source lifted_1_0_1 "Figures tally 1.0.1 allowed inline in rules"
+
 source loi_2026_103 "Loi n° 2026-103 du 19 février 2026 de finances pour 2026, art. 4, I-A et B (CGI art. 197, I), published in the Journal officiel of 20 February 2026; the text was not fetched (Légifrance HTTP 403), its figures are read where the BOFiP reprints them"
+
 source modeller "The modeller's own assumptions, each stated with its reason"
+
 source muvaendv_7 "Siebte Verordnung zur Änderung der Mindestunterhaltsverordnung vom 15. November 2024 (BGBl. 2024 I Nr. 359, published 21 November 2024), Art. 1; read in the consolidated MinUhV § 1 (gesetze-im-internet.de/minuhv/__1.html)" at "https://www.gesetze-im-internet.de/minuhv/__1.html"
+
 source nbp_api_rate "NBP Web API, exchange rate of EUR, table A, 2025-12-31" at "https://api.nbp.pl/api/exchangerates/rates/a/eur/2025-12-31/?format=json"
+
 source nbp_api_table "NBP Web API, table A of 2025-12-31 (table endpoint)" at "https://api.nbp.pl/api/exchangerates/tables/a/2025-12-31/?format=json"
+
 source nbp_xml "NBP, Tabela kursów typ A, numer 251/A/NBP/2025, data publikacji 2025-12-31 (archive XML file)" at "https://static.nbp.pl/dane/kursy/xml/a251z251231.xml"
+
 source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf" at "https://www.olg-duesseldorf.nrw.de/infos/Duesseldorfer_Tabelle/Tabelle-2026/DT_2026.pdf"
+
 source stefeg "Steuerfortentwicklungsgesetz (SteFeG) vom 23. Dezember 2024 (BGBl. 2024 I Nr. 449, ausgegeben 30. Dezember 2024), Art. 2 (§ 66 Abs. 1 EStG from 1 January 2026); read in the consolidated EStG § 66 (gesetze-im-internet.de/estg/__66.html)" at "https://www.gesetze-im-internet.de/estg/__66.html"
+
 source verhoeff "Tom Verhoeff, Settling Multiple Debts Efficiently: An Invitation to Computing Science, Informatics in Education, Vol. 3, No. 1 (2004), pp. 105-126, doi:10.15388/infedu.2004.08" at "https://infedu.vu.lt/journal/INFEDU/article/612/file/pdf"
+
+unit EUR: currency minor 0.01
+
+unit PLN: currency minor 0.01
 
 axis cmp_spouses
   a_is_f2 "the French spouse fr_a is friend 2 and fr_b is friend 3 (the composition does not say)"
@@ -55,9 +75,9 @@ index parts_col = [p2, p2_5, p3, p3_5, p4, p4_5, p5]
 
 index person = [de_u, de_e, de_k1, de_k2, de_k3, fr_a, fr_b, fr_c1, fr_c2, fr_c3, fr_c4]
 
-place eur[p in person]: account EUR
+place eur[p in person]: accounts EUR lives 2026-01-01..
 
-place pln[p in person]: account PLN
+place pln[p in person]: accounts PLN lives 2026-01-01..
 
 input base_parts: num
 
@@ -87,6 +107,15 @@ input eur_pln: num PLN/EUR
 input eur_pln_table: num PLN/EUR
 
 input eur_pln_xml: num PLN/EUR
+
+input extra_halves_2: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input first_rank_18: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input first_rank_21: int
+  note "lifted from an inline figure of tally 1.0.1"
 
 input flow_month: month
   note "the month questions 4 and 5 ask about"
@@ -118,6 +147,9 @@ input selbstbehalt[w in dt_u_work]: money EUR
 
 input unmarried[c in child]: bool question "Ist das volljährige Kind unverheiratet?"
 
+input zahlbetrag_2: int
+  note "lifted from an inline figure of tally 1.0.1"
+
 band bareme(x: num EUR): num
   note "the barème of CGI art. 197, I-1: the marginal rate of each tranche of the quotient, per part; read with marginal()"
 
@@ -127,22 +159,22 @@ band dt_age(n: int): key agegroup
 band dt_group(x: money EUR): key incgroup
   note "Einkommensgruppen of the table, page 1. Bands are printed in whole euros; an income with cents above a printed upper bound is read as the next group."
 
-def adult_balance[p in person]: money PLN = adult_owes[p] - adult_owed[p]
+def adult_balance[p in person]: money PLN = adult_owes[p] - adult_owed[p] at reader
 
-def adult_owed[p in person]: money PLN = sum(i in friend where friend_person[i] = p: owed_total[i])
+def adult_owed[p in person]: money PLN = sum(owed_total[i] for i in friend where friend_person[i] == p) at reader
 
-def adult_owes[p in person]: money PLN = sum(i in friend where friend_person[i] = p: owes_total[i])
+def adult_owes[p in person]: money PLN = sum(owes_total[i] for i in friend where friend_person[i] == p) at reader
 
-def balance[i in friend]: money PLN
+def balance[i in friend]: money PLN at reader
   note "(8): b i = p i - r i; positive means friend i must pay others"
   rule base v verhoeff_2004 = owes_total[i] - owed_total[i]
 
-def balance_sum: money PLN = sum(i in friend: balance[i])
+def balance_sum: money PLN = sum(balance[i] for i in friend) at reader
 
 def benefit[f in foyer]: money EUR at start_of(income_year[f])
   note "§ 20: la somme des plafonds en impôt résultant des demi-parts additionnelles"
   rule base v qf2026 = gen_benefit[f]
-  rule with_comp excepts base v qf2026 when fr_comp_order = example = gen_benefit[f] + comp_cap[f]
+  rule with_comp beats base v qf2026 = gen_benefit[f] + comp_cap[f] when fr_comp_order == example
 
 def capped[f in foyer]: bool at start_of(income_year[f])
   note "§ 20: si le premier terme est inférieur au second, le plafonnement est applicable"
@@ -155,30 +187,30 @@ def comp_cap[f in foyer]: money EUR at start_of(income_year[f])
 def comp_reduction[f in foyer]: money EUR at start_of(income_year[f])
   note "§ 140: la différence entre l'impôt avant plafonnement et l'impôt après plafonnement, nulle sans plafonnement; § 150 cap"
   rule base v qf2026 = min(comp_cap[f], max(0, second_term[f] - first_term[f]))
-  rule in_benefit excepts base when fr_comp_order = example = 0
+  rule in_benefit beats base = 0 when fr_comp_order == example
 
-def eigenbedarf: money EUR
+def eigenbedarf: money EUR at reader
   note "Notwendiger Eigenbedarf (Selbstbehalt) of U, Anm. A.VII"
   rule base v dt2026 = selbstbehalt[dt_u_work]
 
-def einsatz[c in child]: money EUR
+def einsatz[c in child]: money EUR at reader
   note "Teil C: der Einsatzbetrag für den Kindesunterhalt entspricht dem Zahlbetrag"
   rule base v dt2026 = zahlbetrag[dt_group(income), dt_age(child_age[c])]
 
-def einsatz_sum: money EUR = sum(c in child where first_rank[c]: einsatz[c])
+def einsatz_sum: money EUR = sum(einsatz[c] for c in child where first_rank[c]) at reader
 
 def extra_halves[f in foyer]: num at start_of(income_year[f])
   note "§ 40: les demi-parts supplémentaires soumises au plafonnement, au-delà des parts de base"
-  rule base v qf2026 = (parts[f] - base_parts) * 2
+  rule base v qf2026 = (parts[f] - base_parts) * extra_halves_2
 
-def first_rank[c in child]: bool
+def first_rank[c in child]: bool at reader
   note "§ 1609 Nr. 1 BGB: minderjährige Kinder und Kinder im Sinne des § 1603 Abs. 2 Satz 2"
-  rule base v bgb_2026 = child_age[c] < 18
-  rule privileged excepts base v bgb_2026 when child_age[c] >= 18 = unmarried[c] and child_age[c] < 21 and lives_with_parent[c] and in_school[c]
+  rule base v bgb_2026 = child_age[c] < first_rank_18
+  rule privileged beats base v bgb_2026 = unmarried[c] and child_age[c] < first_rank_21 and lives_with_parent[c] and in_school[c] when child_age[c] >= first_rank_18
 
-def first_term[f in foyer]: money EUR at start_of(income_year[f]) = tax[f]
+def first_term[f in foyer]: money EUR = tax[f] at start_of(income_year[f])
 
-def friend_person[i in friend]: key person
+def friend_person[i in friend]: key person at reader
   note "the composition: friend 0 is U, friend 1 is E, friends 2 and 3 are the French spouses in an order it does not give"
   rule base = friend_of[cmp_spouses, i]
 
@@ -186,43 +218,43 @@ def gen_benefit[f in foyer]: money EUR at start_of(income_year[f])
   note "§ 40: plafond par demi-part supplémentaire"
   rule base v qf2026 = round(cap_half * extra_halves[f], 1, half-up)
 
-def maint_pln[c in child]: money PLN
+def maint_pln[c in child]: money PLN at reader
   note "question 1: each child's maintenance at the NBP rate, half up to the grosz, as the question sets"
-  rule base = round(unterhalt[c] * eur_pln, 0.01, half-up)
+  rule base = round(unterhalt[c] * eur_pln, minor(PLN), half-up)
 
-def maint_pln_diff: money PLN = maint_pln_sum - maint_pln_once
+def maint_pln_diff: money PLN = maint_pln_sum - maint_pln_once at reader
 
-def maint_pln_once: money PLN
+def maint_pln_once: money PLN at reader
   note "question 1: the total maintenance in euros, converted at once and rounded the same way"
-  rule base = round(sum(c in child: unterhalt[c]) * eur_pln, 0.01, half-up)
+  rule base = round(sum(unterhalt[c] for c in child) * eur_pln, minor(PLN), half-up)
 
-def maint_pln_sum: money PLN = sum(c in child: maint_pln[c])
+def maint_pln_sum: money PLN = sum(maint_pln[c] for c in child) at reader
 
-def mangelfall: bool
+def mangelfall: bool at reader
   note "Teil C: das Einkommen reicht zur Deckung des Bedarfs gleichrangiger Unterhaltsberechtigter nicht aus"
   rule base v dt2026 = masse < einsatz_sum
 
-def masse: money EUR
+def masse: money EUR at reader
   note "Verteilungsmasse: Einkommen nach Abzug des notwendigen Eigenbedarfs"
   rule base v dt2026 = max(0, income - eigenbedarf)
 
-def net_flow[p in person]: money PLN
+def net_flow[p in person]: money PLN at reader
   note "questions 4 and 5: the person's flows in the month, in złoty: the złoty account, plus the euro account converted movement by movement at the NBP rate, half up to the grosz (LANGUAGE §5.13.3). No pay reaches it, so it may read flows (§5.13.1)."
   rule base = flows(pln[p], flow_month) + (flows(eur[p], flow_month) in PLN at eur_pln half-up)
 
-def owed_total[j in friend]: money PLN
+def owed_total[j in friend]: money PLN at reader
   note "(6): r j, the total friend j is owed"
-  rule base v verhoeff_2004 = sum(k in friend where k != j: owe[k, j])
+  rule base v verhoeff_2004 = sum(owe[k, j] for k in friend where k != j)
 
-def owes_total[i in friend]: money PLN
+def owes_total[i in friend]: money PLN at reader
   note "(5): p i, the total friend i owes"
-  rule base v verhoeff_2004 = sum(k in friend where k != i: owe[i, k])
+  rule base v verhoeff_2004 = sum(owe[i, k] for k in friend where k != i)
 
 def part_tax[f in foyer]: num EUR at start_of(income_year[f])
   note "BOI-IR-LIQ-20-10 § 1 (CGI art. 193): le barème s'applique au quotient, tranche par tranche"
   rule base v bareme2025 = marginal(bareme, qf[f])
 
-def payer_outflow: money PLN
+def payer_outflow: money PLN at reader
   note "question 4: U's maintenance converted payment by payment, plus U's net balance from the debts (positive: U must pay)"
   rule base = maint_pln_sum + adult_balance[de_u]
 
@@ -242,135 +274,145 @@ def tax_due[f in foyer]: money EUR at start_of(income_year[f])
   note "§ 20: l'impôt à retenir; § 170: la réduction complémentaire vient en diminution de la cotisation après plafonnement"
   rule base v qf2026 = (if capped[f] then second_term[f] else first_term[f]) - comp_reduction[f]
 
-def tax_due_pln: money PLN
+def tax_due_pln: money PLN at reader
   note "question 2: the French tax due at the NBP rate, half up to the grosz"
-  rule base = round(tax_due[ex40] * eur_pln, 0.01, half-up)
+  rule base = round(tax_due[ex40] * eur_pln, minor(PLN), half-up)
 
 def tax_raw[f in foyer]: num EUR at start_of(income_year[f])
   note "BOI-IR-LIQ-20-10 § 1: le chiffre obtenu est multiplié par le nombre de parts"
   rule base v bareme2025 = part_tax[f] * parts[f]
 
-def unterhalt[c in child]: money EUR
+def unterhalt[c in child]: money EUR at reader
   note "Teil C: im Mangelfall wird die Verteilungsmasse im Verhältnis der Einsatzbeträge verteilt"
   rule base v dt2026 = einsatz[c]
-  rule cut_largest excepts base v dt2026 when mangelfall and first_rank[c] and dt_cut_round = largest_rem = prorata(masse, einsatz[j] for j in child where first_rank[j], c, 0.01, rest largest)
-  rule cut_nearest excepts base v dt2026 when mangelfall and first_rank[c] and dt_cut_round = nearest = prorata(masse, einsatz[j] for j in child where first_rank[j], c, 0.01, half-up, rest none)
-  rule second excepts base when not first_rank[c] = ? "Nachrangige Kinder (§ 1609 Nr. 4 BGB) sind in diesem Modell nicht beschrieben."
+  rule cut_largest beats base v dt2026 = prorata(masse, einsatz[j] for j in child where first_rank[j], c, minor(EUR), rest largest ties by pos(j)) when mangelfall and first_rank[c] and dt_cut_round == largest_rem
+  rule cut_nearest beats base v dt2026 = prorata(masse, einsatz[j] for j in child where first_rank[j], c, minor(EUR), half-up, rest none) when mangelfall and first_rank[c] and dt_cut_round == nearest
+  rule second beats base = ?"Nachrangige Kinder (§ 1609 Nr. 4 BGB) sind in diesem Modell nicht beschrieben." when not first_rank[c]
 
-def zahlbetrag[g in incgroup, a in agegroup]: money EUR
+def zahlbetrag[g in incgroup, a in agegroup]: money EUR at reader
   note "Anhang page 6: Tabellenbetrag nach Abzug des Kindergeldanteils (hälftig bei Minderjährigen, voll bei Volljährigen), § 1612b Abs. 1 BGB"
-  rule adult excepts base v dt2026 when a = a18 = dt_amount[g, a] - kindergeld
-  rule base v dt2026 = dt_amount[g, a] - round(kindergeld / 2, 0.01, half-up)
+  rule adult beats base v dt2026 = dt_amount[g, a] - kindergeld when a == a18
+  rule base v dt2026 = dt_amount[g, a] - round(kindergeld / zahlbetrag_2, minor(EUR), half-up)
 
-pay debt_pay[i in friend, j in friend where j != i]
-  from pln[friend_person[i]]
-  to pln[friend_person[j]]
-  amount owe[i, j]
+move debt_pay[i in friend, j in friend where j != i]: transfers
   on debts_on
+  at debts_on
+  leg cash from pln[friend_person[i]] to pln[friend_person[j]] amount owe[i, j]
 
-pay maint[c in child]
-  from eur[de_u]
-  to eur[child_person[c]]
-  amount unterhalt[c]
+move maint[c in child]: transfers
   on maint_on
+  at maint_on
+  leg cash from eur[de_u] to eur[child_person[c]] amount unterhalt[c]
 
-ask q_balance: balance[i] for i in friend
+ask q_balance: balance[i] for i in friend law 2026-10-18
 
-ask q_balance_sum: balance_sum
+ask q_balance_sum: balance_sum law 2026-10-18
 
-ask q_benefit: benefit[f] for f in foyer
+ask q_benefit: benefit[f] for f in foyer law 2026-10-18
 
-ask q_brochure_2parts: check tax[ex40] as if {parts[ex40] = base_parts} = brochure_row[p2]
+ask q_brochure_2parts: check tax[ex40] as if {parts[ex40] = base_parts} == brochure_row[p2] law 2026-10-18
 
-ask q_brochure_5parts: check tax_due[ex40] = brochure_row[p5]
+ask q_brochure_5parts: check tax_due[ex40] == brochure_row[p5] law 2026-10-18
 
-ask q_c1_maint_pln: maint_pln[c] for c in child
+ask q_c1_maint_pln: maint_pln[c] for c in child law 2026-10-18
 
-ask q_c1_totals: maint_pln_sum, maint_pln_once, maint_pln_diff
+ask q_c1_totals: maint_pln_sum, maint_pln_once, maint_pln_diff law 2026-10-18
 
-ask q_c2_tax_pln: tax_due_pln
+ask q_c2_tax_pln: tax_due_pln law 2026-10-18
 
-ask q_c3_adults: adult_owes[p], adult_owed[p], adult_balance[p] for p in [de_u, de_e, fr_a, fr_b]
+ask q_c3_adults: adult_owes[p], adult_owed[p], adult_balance[p] for p in [de_u, de_e, fr_a, fr_b] law 2026-10-18
 
-ask q_c3_friends: friend_person[i] for i in friend
+ask q_c3_friends: friend_person[i] for i in friend law 2026-10-18
 
-ask q_c4_flows_check: check -net_flow[de_u] = payer_outflow
+ask q_c4_flows_check: check -net_flow[de_u] == payer_outflow law 2026-10-18
 
-ask q_c4_outflow: payer_outflow
+ask q_c4_outflow: payer_outflow law 2026-10-18
 
-ask q_c5_net: net_flow[p] for p in person
+ask q_c5_net: net_flow[p] for p in person law 2026-10-18
 
-ask q_c5_sum: sum(p in person: net_flow[p])
+ask q_c5_sum: sum(net_flow[p] for p in person) law 2026-10-18
 
-ask q_c6_b0: inputs-of balance[f0]
+ask q_c6_b0: inputs-of balance[f0] law 2026-10-18
 
-ask q_c6_b1: inputs-of balance[f1]
+ask q_c6_b1: inputs-of balance[f1] law 2026-10-18
 
-ask q_c6_b2: inputs-of balance[f2]
+ask q_c6_b2: inputs-of balance[f2] law 2026-10-18
 
-ask q_c6_b3: inputs-of balance[f3]
+ask q_c6_b3: inputs-of balance[f3] law 2026-10-18
 
-ask q_c6_k1: inputs-of unterhalt[k1]
+ask q_c6_k1: inputs-of unterhalt[k1] law 2026-10-18
 
-ask q_c6_k2: inputs-of unterhalt[k2]
+ask q_c6_k2: inputs-of unterhalt[k2] law 2026-10-18
 
-ask q_c6_k3: inputs-of unterhalt[k3]
+ask q_c6_k3: inputs-of unterhalt[k3] law 2026-10-18
 
-ask q_c6_tax: inputs-of tax_due[ex40]
+ask q_c6_tax: inputs-of tax_due[ex40] law 2026-10-18
 
-ask q_capped: capped[f] for f in foyer
+ask q_capped: capped[f] for f in foyer law 2026-10-18
 
-ask q_eigenbedarf: eigenbedarf
+ask q_eigenbedarf: eigenbedarf law 2026-10-18
 
-ask q_einsatz: einsatz[c] for c in child
+ask q_einsatz: einsatz[c] for c in child law 2026-10-18
 
-ask q_einsatz_sum: einsatz_sum
+ask q_einsatz_sum: einsatz_sum law 2026-10-18
 
-ask q_extra_halves: extra_halves[f] for f in foyer
+ask q_extra_halves: extra_halves[f] for f in foyer law 2026-10-18
 
-ask q_kindergeld_check: check kindergeld = estg_kindergeld
+ask q_kindergeld_check: check kindergeld == estg_kindergeld law 2026-10-18
 
-ask q_masse: masse
+ask q_masse: masse law 2026-10-18
 
-ask q_minuhv_check: check dt_amount[g1, a] = minuhv_amount[a] for a in [a0_5, a6_11, a12_17]
+ask q_minuhv_check: check dt_amount[g1, a] == minuhv_amount[a] for a in [a0_5, a6_11, a12_17] law 2026-10-18
 
-ask q_nbp_table_check: check eur_pln = eur_pln_table
+ask q_nbp_table_check: check eur_pln == eur_pln_table law 2026-10-18
 
-ask q_nbp_xml_check: check eur_pln = eur_pln_xml
+ask q_nbp_xml_check: check eur_pln == eur_pln_xml law 2026-10-18
 
-ask q_owed: owed_total[j] for j in friend
+ask q_owed: owed_total[j] for j in friend law 2026-10-18
 
-ask q_owes: owes_total[i] for i in friend
+ask q_owes: owes_total[i] for i in friend law 2026-10-18
 
-ask q_qf: qf[f], qf[f] as if {parts[f] = base_parts} for f in foyer
+ask q_qf: qf[f], qf[f] as if {parts[f] = base_parts} for f in foyer law 2026-10-18
 
-ask q_second_term: second_term[f] for f in foyer
+ask q_second_term: second_term[f] for f in foyer law 2026-10-18
 
-ask q_split_check: check sum(c in child: unterhalt[c]) = masse
+ask q_split_check: check sum(unterhalt[c] for c in child) == masse law 2026-10-18
 
-ask q_tax: tax[f], tax[f] as if {parts[f] = base_parts} for f in foyer
+ask q_tax: tax[f], tax[f] as if {parts[f] = base_parts} for f in foyer law 2026-10-18
 
-ask q_tax_due: tax_due[f] for f in foyer
+ask q_tax_due: tax_due[f] for f in foyer law 2026-10-18
 
-ask q_tax_raw: tax_raw[f], tax_raw[f] as if {parts[f] = base_parts} for f in foyer
+ask q_tax_raw: tax_raw[f], tax_raw[f] as if {parts[f] = base_parts} for f in foyer law 2026-10-18
 
-ask q_unterhalt: unterhalt[c] for c in child
+ask q_unterhalt: unterhalt[c] for c in child law 2026-10-18
 
-ask q_zahlbetrag: zahlbetrag[g1, a] for a in agegroup
+ask q_zahlbetrag: zahlbetrag[g1, a] for a in agegroup law 2026-10-18
+
+version lifted_figures
+  cite lifted_1_0_1
+  governs always
+  known 2004-04-15
+  extra_halves_2 = 2 "inline in tally 1.0.1: extra_halves line 172, factor"
+  first_rank_18 = 18 "inline in tally 1.0.1: first_rank line 176, operand; first_rank line 177, operand"
+  first_rank_21 = 21 "inline in tally 1.0.1: first_rank line 177, operand"
+  zahlbetrag_2 = 2 "inline in tally 1.0.1: zahlbetrag line 263, factor"
 
 version verhoeff_2004
   cite verhoeff
+  governs always
   known 2004-04-15
   note "Article page: Pub. online: 15 April 2004, the source's own date. The rules (5), (6) and (8) cite this version."
 
 version bgb_2026
   cite bgb
+  governs always
   known 2017-07-21
   note "§ 1609 Nr. 1 BGB in the wording of the Gesetz zur Änderung des Unterhaltsrechts of 21.12.2007 (BGBl. I Nr. 69 of 28.12.2007, S. 3189); § 1603 Abs. 2 Satz 2 BGB in the wording of the Gesetz zur Bekämpfung von Kinderehen of 17.07.2017 (BGBl. I Nr. 48 of 21.07.2017, S. 2429; lexetius.com/BGB/1603, Anm. 5-6)"
   note "Known from the later promulgation, 21.07.2017, since the rules of first_rank read both provisions. The rank rules cite this version."
 
 version arrondi2018
   cite boi_liq_20_20_40
+  governs always
   known 2018-07-04
   note "IV. Règles d'arrondissement, § 50; the rounding rule of tax cites this version. Known from the BOI's own date, version du 04/07/2018."
 
@@ -385,6 +427,7 @@ version minuhv_2026
 
 version estg66
   cite stefeg
+  governs always
   known 2024-12-30
   note "Law, known from its publication: the Steuerfortentwicklungsgesetz of 23.12.2024, BGBl. 2024 I Nr. 449, ausgegeben am 30.12.2024 (recht.bund.de); its Art. 2 sets § 66 Abs. 1 EStG at 259 Euro from 1 January 2026. The locator is the consolidated § 66, which is not the row's version (LANGUAGE §5.3)."
   estg_kindergeld = 259 governs 2026 "§ 66 Abs. 1: Das Kindergeld beträgt monatlich für jedes Kind 259 Euro."
@@ -473,36 +516,40 @@ version dt2026
   dt_group: (7200, 8200] = g13 "page 1, row 13, 7.201 - 8.200"
   dt_group: (8200, 9700] = g14 "page 1, row 14, 8.201 - 9.700"
   dt_group: (9700, 11200] = g15 "page 1, row 15, 9.701 - 11.200"
-  dt_group: (11200, inf) = ? "Das Einkommen liegt über der 15. Einkommensgruppe; die Tabelle nennt dafür keinen Betrag." "page 1, below row 15"
+  dt_group: (11200, inf) = ?"Das Einkommen liegt über der 15. Einkommensgruppe; die Tabelle nennt dafür keinen Betrag." "page 1, below row 15"
   kindergeld = 259 governs 2026 "page 6, Anhang: Im Jahr 2026 beträgt das Kindergeld einheitlich je Kind 259,00 EUR"
   selbstbehalt[employed] = 1450 "page 2, Anm. A.VII: für den erwerbstätigen Unterhaltspflichtigen monatlich 1.450 EUR"
   selbstbehalt[not_employed] = 1200 "page 2, Anm. A.VII: für den nicht erwerbstätigen Unterhaltspflichtigen monatlich 1.200 EUR"
 
 version nbp_251a
   cite nbp_api_rate
+  governs always
   known 2025-12-31
   note "Table 251/A/NBP/2025, effectiveDate 2025-12-31, the last table A of December 2025. The row has no governs span: the composition applies this one rate to the January 2026 payments."
   eur_pln = 4.2267 "rates[0]: no 251/A/NBP/2025, effectiveDate 2025-12-31, mid 4.2267"
 
 version nbp_251a_table
   cite nbp_api_table
+  governs always
   known 2025-12-31
   eur_pln_table = 4.2267 "table A, no 251/A/NBP/2025, effectiveDate 2025-12-31, rates entry code EUR, mid 4.2267"
 
 version nbp_251a_xml
   cite nbp_xml
+  governs always
   known 2025-12-31
   eur_pln_xml = 4.2267 "numer_tabeli 251/A/NBP/2025, data_publikacji 2025-12-31, pozycja kod_waluty EUR: przelicznik 1, kurs_sredni 4,2267"
 
 version cmp01_composition
   cite composition
+  governs always
   known 2026-01-01
   note "The composition's stipulated facts, known from the model's start (LANGUAGE §4.5)."
   note "The composition does not say which French spouse is friend 2: the rows for friends 2 and 3 are keyed by the axis cmp_spouses."
   child_person[k1] = de_k1 "Inputs, Composition: maintenance payments: each German child's maintenance is paid to that child"
   child_person[k2] = de_k2 "Inputs, Composition: maintenance payments: each German child's maintenance is paid to that child"
   child_person[k3] = de_k3 "Inputs, Composition: maintenance payments: each German child's maintenance is paid to that child"
-  debts_on = 2026-01 "Missing facts, Debts: the composition reads them as złoty and counts them in January 2026"
+  debts_on = window(2026-01-01, 2026-01-31) "Missing facts, Debts: the composition reads them as złoty and counts them in January 2026"
   flow_month = 2026-01 "Story, What is asked, questions 4 and 5: For January 2026"
   friend_of[a_is_f2, f0] = de_u "Inputs, Composition: friends: friend 0 = U"
   friend_of[a_is_f2, f1] = de_e "Inputs, Composition: friends: friend 1 = E"
@@ -512,10 +559,11 @@ version cmp01_composition
   friend_of[b_is_f2, f1] = de_e "Inputs, Composition: friends: friend 1 = E"
   friend_of[b_is_f2, f2] = fr_b "Inputs, Composition: friends: friend 2 and friend 3 = the French couple's two spouses"
   friend_of[b_is_f2, f3] = fr_a "Inputs, Composition: friends: friend 2 and friend 3 = the French couple's two spouses"
-  maint_on = 2026-01 "Inputs, Composition: maintenance payments: monthly, for January 2026"
+  maint_on = window(2026-01-01, 2026-01-31) "Inputs, Composition: maintenance payments: monthly, for January 2026"
 
 version dt2026_example
   cite olg_dt2026
+  governs always
   known 2026-01-01
   note "The facts of the Teil C Beispiel, page 4: a worked example's stipulations, known from the model's start (LANGUAGE §4.5)"
   child_age[k1] = 18 "page 4, C. Beispiel: im Alter von 18 Jahren (K1)"
@@ -529,6 +577,7 @@ version dt2026_example
 
 version examples2026
   cite boi_liq_20_20_20
+  governs always
   known 2026-01-01
   note "The facts of the § 40 Exemple: a worked example's stipulations, known from the model's start (LANGUAGE §4.5), though the BOI that prints them is of 07/04/2026"
   comp_halves[ex40] = 0 "§ 40, Exemple: quatre enfants à charge, none invalid"
@@ -538,12 +587,14 @@ version examples2026
 
 version mp09_assumed
   cite modeller
+  governs always
   known 2026-01-01
   note "An assumption that stands for a fact of the example: known with the stipulations, from the model's start (LANGUAGE §4.5)"
   unmarried[k1] = true assumed "the example treats K1 as a first-rank child; § 1603 Abs. 2 Satz 2 BGB requires unverheiratet, which the example does not state" "page 4, C. Beispiel"
 
 version verhoeff_27
   cite verhoeff
+  governs always
   known 2026-01-01
   note "The debt matrix of example (27): a worked example's stipulations, known from the model's start (LANGUAGE §4.5). Locators are the journal's page numbers."
   owe[f0, f1] = 3 "p. 113, (27): row 0, column 1"
@@ -575,6 +626,7 @@ version lf2026_art4
 
 version brochure_ir2026
   cite dgfip_brochure
+  governs always
   known 2026-03-25
   note "Known date: the PDF prints no date of its own, so its updated stamp: the server's Last-Modified, Wed, 25 Mar 2026 06:42:01 GMT, read 2026-10-19 (LANGUAGE §4.5). The barème is for revenus 2025 and, per p. 372, takes the plafonnement du quotient familial and the décote into account."
   brochure_row[p2] = 25208 "p. 378, MARIÉS OU PACSÉS, row 130000, column 2"
@@ -593,6 +645,7 @@ version bareme2025
 
 version qf2026
   cite boi_liq_20_20_20
+  governs always
   known 2026-04-07
   note "Version en vigueur du 07/04/2026 (Date de début de publication du BOI : 07/04/2026), the known date"
   base_parts = 2 "§ 20: second terme ... sur deux parts s'il est marié ... et soumis à imposition commune"

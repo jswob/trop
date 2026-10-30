@@ -1,0 +1,24 @@
+# Fault W-E1-F2: reading an observed row by its key (`o[r1].on`) was refused `LOAD-KEY wrong number of keys for o: 1,
+# not 0`. L §5.19: observation rows are rows keyed by their ids, so `o[r1]` is the movement r1; L §2.5 Record fields:
+# "A movement's fields are its legs, its declared attributes and the built-in fields `day` and `fulfils`", so its day
+# is `o[r1].day` (2026-01-15) and its leg's amount 5.00 DUK (q), while `on` is the row's field as written, no field
+# of the movement (LOAD-FIELD: W_E1_F2_observed_row_on_field).
+=== m.tally
+model s
+  tally 2
+  on 2026-01-31
+  start 2026-01-01
+  end 2026-01-31
+unit DUK: currency minor 0.01
+source s "s"
+place jw: outside lives 2026-01-01..
+input o: observed
+version v
+  cite s
+  governs 2026-01
+  known 2026-01-20
+  o[r1] = (on: 2026-01-15, kind: transfers, leg cash from jw to jw amount 5.00 DUK) "line 1"
+ask q: o[r1].day, o[r1].cash.amount law 2026-01-20
+=== expect
+q: (2026-01-15, 5.00 DUK)
+  law date 2026-01-20, cut 2026-01-31

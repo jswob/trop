@@ -1,0 +1,1726 @@
+table (i = i25000, r = r1200) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i25000, r = r1400) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i25000, r = r1600) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i25000, r = r1800) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i25000, r = r2000) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i25000, r = r2200) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i25000, r = r2400) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i25000, r = r2600) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i25000, r = r2800) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i25000, r = r3000) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i25000, r = r3200) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i25000, r = r3500) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i26000, r = r1200) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i26000, r = r1400) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i26000, r = r1600) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i26000, r = r1800) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i26000, r = r2000) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i26000, r = r2200) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i26000, r = r2400) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i26000, r = r2600) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i26000, r = r2800) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i26000, r = r3000) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i26000, r = r3200) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i26000, r = r3500) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i27000, r = r1200) [rr_cents = c_down | c_half_up, rr_eighth = eighth, rr_nil = *]: 525.83 NZD
+  reading: rr_cents = c_down | c_half_up
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i27000, r = r1200) [rr_cents = c_down | c_half_up, rr_eighth = whole, rr_nil = *]: 526.33 NZD
+  reading: rr_cents = c_down | c_half_up
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i27000, r = r1200) [rr_cents = c_exact, rr_eighth = eighth, rr_nil = *]: 3155/6 (525.833333333333) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i27000, r = r1200) [rr_cents = c_exact, rr_eighth = whole, rr_nil = *]: 1579/3 (526.333333333333) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i27000, r = r1400) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i27000, r = r1600) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i27000, r = r1800) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i27000, r = r2000) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i27000, r = r2200) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i27000, r = r2400) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i27000, r = r2600) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i27000, r = r2800) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i27000, r = r3000) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i27000, r = r3200) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i27000, r = r3500) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i28000, r = r1200) [rr_cents = c_down | c_half_up, rr_eighth = eighth, rr_nil = *]: 400.83 NZD
+  reading: rr_cents = c_down | c_half_up
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i28000, r = r1200) [rr_cents = c_down | c_half_up, rr_eighth = whole, rr_nil = *]: 401.33 NZD
+  reading: rr_cents = c_down | c_half_up
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i28000, r = r1200) [rr_cents = c_exact, rr_eighth = eighth, rr_nil = *]: 2405/6 (400.833333333333) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i28000, r = r1200) [rr_cents = c_exact, rr_eighth = whole, rr_nil = *]: 1204/3 (401.333333333333) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i28000, r = r1400) [rr_cents = c_down, rr_eighth = eighth, rr_nil = *]: 534.16 NZD
+  reading: rr_cents = c_down
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i28000, r = r1400) [rr_cents = c_down, rr_eighth = whole, rr_nil = *]: 534.66 NZD
+  reading: rr_cents = c_down
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i28000, r = r1400) [rr_cents = c_exact, rr_eighth = eighth, rr_nil = *]: 3205/6 (534.166666666667) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i28000, r = r1400) [rr_cents = c_exact, rr_eighth = whole, rr_nil = *]: 1604/3 (534.666666666667) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i28000, r = r1400) [rr_cents = c_half_up, rr_eighth = eighth, rr_nil = *]: 534.17 NZD
+  reading: rr_cents = c_half_up
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i28000, r = r1400) [rr_cents = c_half_up, rr_eighth = whole, rr_nil = *]: 534.67 NZD
+  reading: rr_cents = c_half_up
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i28000, r = r1600) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i28000, r = r1800) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i28000, r = r2000) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i28000, r = r2200) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i28000, r = r2400) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i28000, r = r2600) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i28000, r = r2800) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i28000, r = r3000) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i28000, r = r3200) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i28000, r = r3500) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i29000, r = r1200) [rr_cents = c_down | c_half_up, rr_eighth = eighth, rr_nil = *]: 275.83 NZD
+  reading: rr_cents = c_down | c_half_up
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i29000, r = r1200) [rr_cents = c_down | c_half_up, rr_eighth = whole, rr_nil = *]: 276.33 NZD
+  reading: rr_cents = c_down | c_half_up
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i29000, r = r1200) [rr_cents = c_exact, rr_eighth = eighth, rr_nil = *]: 1655/6 (275.833333333333) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i29000, r = r1200) [rr_cents = c_exact, rr_eighth = whole, rr_nil = *]: 829/3 (276.333333333333) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i29000, r = r1400) [rr_cents = c_down, rr_eighth = eighth, rr_nil = *]: 409.16 NZD
+  reading: rr_cents = c_down
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i29000, r = r1400) [rr_cents = c_down, rr_eighth = whole, rr_nil = *]: 409.66 NZD
+  reading: rr_cents = c_down
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i29000, r = r1400) [rr_cents = c_exact, rr_eighth = eighth, rr_nil = *]: 2455/6 (409.166666666667) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i29000, r = r1400) [rr_cents = c_exact, rr_eighth = whole, rr_nil = *]: 1229/3 (409.666666666667) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i29000, r = r1400) [rr_cents = c_half_up, rr_eighth = eighth, rr_nil = *]: 409.17 NZD
+  reading: rr_cents = c_half_up
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i29000, r = r1400) [rr_cents = c_half_up, rr_eighth = whole, rr_nil = *]: 409.67 NZD
+  reading: rr_cents = c_half_up
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i29000, r = r1600) [rr_cents = *, rr_eighth = eighth, rr_nil = *]: 542.5 NZD
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i29000, r = r1600) [rr_cents = *, rr_eighth = whole, rr_nil = *]: 543 NZD
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i29000, r = r1800) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i29000, r = r2000) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i29000, r = r2200) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i29000, r = r2400) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i29000, r = r2600) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i29000, r = r2800) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i29000, r = r3000) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i29000, r = r3200) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i29000, r = r3500) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i30000, r = r1200) [rr_cents = c_down | c_half_up, rr_eighth = eighth, rr_nil = *]: 150.83 NZD
+  reading: rr_cents = c_down | c_half_up
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i30000, r = r1200) [rr_cents = c_down | c_half_up, rr_eighth = whole, rr_nil = *]: 151.33 NZD
+  reading: rr_cents = c_down | c_half_up
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i30000, r = r1200) [rr_cents = c_exact, rr_eighth = eighth, rr_nil = *]: 905/6 (150.833333333333) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i30000, r = r1200) [rr_cents = c_exact, rr_eighth = whole, rr_nil = *]: 454/3 (151.333333333333) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i30000, r = r1400) [rr_cents = c_down, rr_eighth = eighth, rr_nil = *]: 284.16 NZD
+  reading: rr_cents = c_down
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i30000, r = r1400) [rr_cents = c_down, rr_eighth = whole, rr_nil = *]: 284.66 NZD
+  reading: rr_cents = c_down
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i30000, r = r1400) [rr_cents = c_exact, rr_eighth = eighth, rr_nil = *]: 1705/6 (284.166666666667) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i30000, r = r1400) [rr_cents = c_exact, rr_eighth = whole, rr_nil = *]: 854/3 (284.666666666667) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i30000, r = r1400) [rr_cents = c_half_up, rr_eighth = eighth, rr_nil = *]: 284.17 NZD
+  reading: rr_cents = c_half_up
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i30000, r = r1400) [rr_cents = c_half_up, rr_eighth = whole, rr_nil = *]: 284.67 NZD
+  reading: rr_cents = c_half_up
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i30000, r = r1600) [rr_cents = *, rr_eighth = eighth, rr_nil = *]: 417.5 NZD
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i30000, r = r1600) [rr_cents = *, rr_eighth = whole, rr_nil = *]: 418 NZD
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i30000, r = r1800) [rr_cents = c_down | c_half_up, rr_eighth = eighth, rr_nil = *]: 550.83 NZD
+  reading: rr_cents = c_down | c_half_up
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i30000, r = r1800) [rr_cents = c_down | c_half_up, rr_eighth = whole, rr_nil = *]: 551.33 NZD
+  reading: rr_cents = c_down | c_half_up
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i30000, r = r1800) [rr_cents = c_exact, rr_eighth = eighth, rr_nil = *]: 3305/6 (550.833333333333) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i30000, r = r1800) [rr_cents = c_exact, rr_eighth = whole, rr_nil = *]: 1654/3 (551.333333333333) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i30000, r = r2000) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i30000, r = r2200) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i30000, r = r2400) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i30000, r = r2600) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i30000, r = r2800) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i30000, r = r3000) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i30000, r = r3200) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i30000, r = r3500) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i31000, r = r1200) [rr_cents = c_down | c_half_up, rr_eighth = eighth, rr_nil = *]: 25.83 NZD
+  reading: rr_cents = c_down | c_half_up
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i31000, r = r1200) [rr_cents = c_down | c_half_up, rr_eighth = whole, rr_nil = *]: 26.33 NZD
+  reading: rr_cents = c_down | c_half_up
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i31000, r = r1200) [rr_cents = c_exact, rr_eighth = eighth, rr_nil = *]: 155/6 (25.8333333333333) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i31000, r = r1200) [rr_cents = c_exact, rr_eighth = whole, rr_nil = *]: 79/3 (26.3333333333333) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i31000, r = r1400) [rr_cents = c_down, rr_eighth = eighth, rr_nil = *]: 159.16 NZD
+  reading: rr_cents = c_down
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i31000, r = r1400) [rr_cents = c_down, rr_eighth = whole, rr_nil = *]: 159.66 NZD
+  reading: rr_cents = c_down
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i31000, r = r1400) [rr_cents = c_exact, rr_eighth = eighth, rr_nil = *]: 955/6 (159.166666666667) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i31000, r = r1400) [rr_cents = c_exact, rr_eighth = whole, rr_nil = *]: 479/3 (159.666666666667) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i31000, r = r1400) [rr_cents = c_half_up, rr_eighth = eighth, rr_nil = *]: 159.17 NZD
+  reading: rr_cents = c_half_up
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i31000, r = r1400) [rr_cents = c_half_up, rr_eighth = whole, rr_nil = *]: 159.67 NZD
+  reading: rr_cents = c_half_up
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i31000, r = r1600) [rr_cents = *, rr_eighth = eighth, rr_nil = *]: 292.5 NZD
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i31000, r = r1600) [rr_cents = *, rr_eighth = whole, rr_nil = *]: 293 NZD
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i31000, r = r1800) [rr_cents = c_down | c_half_up, rr_eighth = eighth, rr_nil = *]: 425.83 NZD
+  reading: rr_cents = c_down | c_half_up
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i31000, r = r1800) [rr_cents = c_down | c_half_up, rr_eighth = whole, rr_nil = *]: 426.33 NZD
+  reading: rr_cents = c_down | c_half_up
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i31000, r = r1800) [rr_cents = c_exact, rr_eighth = eighth, rr_nil = *]: 2555/6 (425.833333333333) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i31000, r = r1800) [rr_cents = c_exact, rr_eighth = whole, rr_nil = *]: 1279/3 (426.333333333333) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i31000, r = r2000) [rr_cents = c_down, rr_eighth = eighth, rr_nil = *]: 559.16 NZD
+  reading: rr_cents = c_down
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i31000, r = r2000) [rr_cents = c_down, rr_eighth = whole, rr_nil = *]: 559.66 NZD
+  reading: rr_cents = c_down
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i31000, r = r2000) [rr_cents = c_exact, rr_eighth = eighth, rr_nil = *]: 3355/6 (559.166666666667) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i31000, r = r2000) [rr_cents = c_exact, rr_eighth = whole, rr_nil = *]: 1679/3 (559.666666666667) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i31000, r = r2000) [rr_cents = c_half_up, rr_eighth = eighth, rr_nil = *]: 559.17 NZD
+  reading: rr_cents = c_half_up
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i31000, r = r2000) [rr_cents = c_half_up, rr_eighth = whole, rr_nil = *]: 559.67 NZD
+  reading: rr_cents = c_half_up
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i31000, r = r2200) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i31000, r = r2400) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i31000, r = r2600) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i31000, r = r2800) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i31000, r = r3000) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i31000, r = r3200) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i31000, r = r3500) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i32000, r = r1200) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i32000, r = r1200) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i32000, r = r1400) [rr_cents = c_down, rr_eighth = eighth, rr_nil = *]: 34.16 NZD
+  reading: rr_cents = c_down
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i32000, r = r1400) [rr_cents = c_down, rr_eighth = whole, rr_nil = *]: 34.66 NZD
+  reading: rr_cents = c_down
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i32000, r = r1400) [rr_cents = c_exact, rr_eighth = eighth, rr_nil = *]: 205/6 (34.1666666666667) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i32000, r = r1400) [rr_cents = c_exact, rr_eighth = whole, rr_nil = *]: 104/3 (34.6666666666667) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i32000, r = r1400) [rr_cents = c_half_up, rr_eighth = eighth, rr_nil = *]: 34.17 NZD
+  reading: rr_cents = c_half_up
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i32000, r = r1400) [rr_cents = c_half_up, rr_eighth = whole, rr_nil = *]: 34.67 NZD
+  reading: rr_cents = c_half_up
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i32000, r = r1600) [rr_cents = *, rr_eighth = eighth, rr_nil = *]: 167.5 NZD
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i32000, r = r1600) [rr_cents = *, rr_eighth = whole, rr_nil = *]: 168 NZD
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i32000, r = r1800) [rr_cents = c_down | c_half_up, rr_eighth = eighth, rr_nil = *]: 300.83 NZD
+  reading: rr_cents = c_down | c_half_up
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i32000, r = r1800) [rr_cents = c_down | c_half_up, rr_eighth = whole, rr_nil = *]: 301.33 NZD
+  reading: rr_cents = c_down | c_half_up
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i32000, r = r1800) [rr_cents = c_exact, rr_eighth = eighth, rr_nil = *]: 1805/6 (300.833333333333) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i32000, r = r1800) [rr_cents = c_exact, rr_eighth = whole, rr_nil = *]: 904/3 (301.333333333333) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i32000, r = r2000) [rr_cents = c_down, rr_eighth = eighth, rr_nil = *]: 434.16 NZD
+  reading: rr_cents = c_down
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i32000, r = r2000) [rr_cents = c_down, rr_eighth = whole, rr_nil = *]: 434.66 NZD
+  reading: rr_cents = c_down
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i32000, r = r2000) [rr_cents = c_exact, rr_eighth = eighth, rr_nil = *]: 2605/6 (434.166666666667) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i32000, r = r2000) [rr_cents = c_exact, rr_eighth = whole, rr_nil = *]: 1304/3 (434.666666666667) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i32000, r = r2000) [rr_cents = c_half_up, rr_eighth = eighth, rr_nil = *]: 434.17 NZD
+  reading: rr_cents = c_half_up
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i32000, r = r2000) [rr_cents = c_half_up, rr_eighth = whole, rr_nil = *]: 434.67 NZD
+  reading: rr_cents = c_half_up
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i32000, r = r2200) [rr_cents = *, rr_eighth = eighth, rr_nil = *]: 567.5 NZD
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i32000, r = r2200) [rr_cents = *, rr_eighth = whole, rr_nil = *]: 568 NZD
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i32000, r = r2400) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i32000, r = r2600) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i32000, r = r2800) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i32000, r = r3000) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i32000, r = r3200) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i32000, r = r3500) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i33000, r = r1200) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i33000, r = r1200) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i33000, r = r1400) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i33000, r = r1400) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i33000, r = r1600) [rr_cents = *, rr_eighth = eighth, rr_nil = *]: 42.5 NZD
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i33000, r = r1600) [rr_cents = *, rr_eighth = whole, rr_nil = *]: 43 NZD
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i33000, r = r1800) [rr_cents = c_down | c_half_up, rr_eighth = eighth, rr_nil = *]: 175.83 NZD
+  reading: rr_cents = c_down | c_half_up
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i33000, r = r1800) [rr_cents = c_down | c_half_up, rr_eighth = whole, rr_nil = *]: 176.33 NZD
+  reading: rr_cents = c_down | c_half_up
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i33000, r = r1800) [rr_cents = c_exact, rr_eighth = eighth, rr_nil = *]: 1055/6 (175.833333333333) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i33000, r = r1800) [rr_cents = c_exact, rr_eighth = whole, rr_nil = *]: 529/3 (176.333333333333) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i33000, r = r2000) [rr_cents = c_down, rr_eighth = eighth, rr_nil = *]: 309.16 NZD
+  reading: rr_cents = c_down
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i33000, r = r2000) [rr_cents = c_down, rr_eighth = whole, rr_nil = *]: 309.66 NZD
+  reading: rr_cents = c_down
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i33000, r = r2000) [rr_cents = c_exact, rr_eighth = eighth, rr_nil = *]: 1855/6 (309.166666666667) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i33000, r = r2000) [rr_cents = c_exact, rr_eighth = whole, rr_nil = *]: 929/3 (309.666666666667) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i33000, r = r2000) [rr_cents = c_half_up, rr_eighth = eighth, rr_nil = *]: 309.17 NZD
+  reading: rr_cents = c_half_up
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i33000, r = r2000) [rr_cents = c_half_up, rr_eighth = whole, rr_nil = *]: 309.67 NZD
+  reading: rr_cents = c_half_up
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i33000, r = r2200) [rr_cents = *, rr_eighth = eighth, rr_nil = *]: 442.5 NZD
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i33000, r = r2200) [rr_cents = *, rr_eighth = whole, rr_nil = *]: 443 NZD
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i33000, r = r2400) [rr_cents = c_down | c_half_up, rr_eighth = eighth, rr_nil = *]: 575.83 NZD
+  reading: rr_cents = c_down | c_half_up
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i33000, r = r2400) [rr_cents = c_down | c_half_up, rr_eighth = whole, rr_nil = *]: 576.33 NZD
+  reading: rr_cents = c_down | c_half_up
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i33000, r = r2400) [rr_cents = c_exact, rr_eighth = eighth, rr_nil = *]: 3455/6 (575.833333333333) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i33000, r = r2400) [rr_cents = c_exact, rr_eighth = whole, rr_nil = *]: 1729/3 (576.333333333333) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i33000, r = r2600) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i33000, r = r2800) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i33000, r = r3000) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i33000, r = r3200) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i33000, r = r3500) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i34000, r = r1200) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i34000, r = r1200) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i34000, r = r1400) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i34000, r = r1400) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i34000, r = r1600) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i34000, r = r1600) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i34000, r = r1800) [rr_cents = c_down | c_half_up, rr_eighth = eighth, rr_nil = *]: 50.83 NZD
+  reading: rr_cents = c_down | c_half_up
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i34000, r = r1800) [rr_cents = c_down | c_half_up, rr_eighth = whole, rr_nil = *]: 51.33 NZD
+  reading: rr_cents = c_down | c_half_up
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i34000, r = r1800) [rr_cents = c_exact, rr_eighth = eighth, rr_nil = *]: 305/6 (50.8333333333333) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i34000, r = r1800) [rr_cents = c_exact, rr_eighth = whole, rr_nil = *]: 154/3 (51.3333333333333) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i34000, r = r2000) [rr_cents = c_down, rr_eighth = eighth, rr_nil = *]: 184.16 NZD
+  reading: rr_cents = c_down
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i34000, r = r2000) [rr_cents = c_down, rr_eighth = whole, rr_nil = *]: 184.66 NZD
+  reading: rr_cents = c_down
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i34000, r = r2000) [rr_cents = c_exact, rr_eighth = eighth, rr_nil = *]: 1105/6 (184.166666666667) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i34000, r = r2000) [rr_cents = c_exact, rr_eighth = whole, rr_nil = *]: 554/3 (184.666666666667) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i34000, r = r2000) [rr_cents = c_half_up, rr_eighth = eighth, rr_nil = *]: 184.17 NZD
+  reading: rr_cents = c_half_up
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i34000, r = r2000) [rr_cents = c_half_up, rr_eighth = whole, rr_nil = *]: 184.67 NZD
+  reading: rr_cents = c_half_up
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i34000, r = r2200) [rr_cents = *, rr_eighth = eighth, rr_nil = *]: 317.5 NZD
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i34000, r = r2200) [rr_cents = *, rr_eighth = whole, rr_nil = *]: 318 NZD
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i34000, r = r2400) [rr_cents = c_down | c_half_up, rr_eighth = eighth, rr_nil = *]: 450.83 NZD
+  reading: rr_cents = c_down | c_half_up
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i34000, r = r2400) [rr_cents = c_down | c_half_up, rr_eighth = whole, rr_nil = *]: 451.33 NZD
+  reading: rr_cents = c_down | c_half_up
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i34000, r = r2400) [rr_cents = c_exact, rr_eighth = eighth, rr_nil = *]: 2705/6 (450.833333333333) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i34000, r = r2400) [rr_cents = c_exact, rr_eighth = whole, rr_nil = *]: 1354/3 (451.333333333333) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i34000, r = r2600) [rr_cents = c_down, rr_eighth = eighth, rr_nil = *]: 584.16 NZD
+  reading: rr_cents = c_down
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i34000, r = r2600) [rr_cents = c_down, rr_eighth = whole, rr_nil = *]: 584.66 NZD
+  reading: rr_cents = c_down
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i34000, r = r2600) [rr_cents = c_exact, rr_eighth = eighth, rr_nil = *]: 3505/6 (584.166666666667) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i34000, r = r2600) [rr_cents = c_exact, rr_eighth = whole, rr_nil = *]: 1754/3 (584.666666666667) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i34000, r = r2600) [rr_cents = c_half_up, rr_eighth = eighth, rr_nil = *]: 584.17 NZD
+  reading: rr_cents = c_half_up
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i34000, r = r2600) [rr_cents = c_half_up, rr_eighth = whole, rr_nil = *]: 584.67 NZD
+  reading: rr_cents = c_half_up
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i34000, r = r2800) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i34000, r = r3000) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i34000, r = r3200) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i34000, r = r3500) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i35000, r = r1200) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i35000, r = r1200) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i35000, r = r1400) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i35000, r = r1400) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i35000, r = r1600) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i35000, r = r1600) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i35000, r = r1800) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i35000, r = r1800) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i35000, r = r2000) [rr_cents = c_down, rr_eighth = eighth, rr_nil = *]: 59.16 NZD
+  reading: rr_cents = c_down
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i35000, r = r2000) [rr_cents = c_down, rr_eighth = whole, rr_nil = *]: 59.66 NZD
+  reading: rr_cents = c_down
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i35000, r = r2000) [rr_cents = c_exact, rr_eighth = eighth, rr_nil = *]: 355/6 (59.1666666666667) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i35000, r = r2000) [rr_cents = c_exact, rr_eighth = whole, rr_nil = *]: 179/3 (59.6666666666667) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i35000, r = r2000) [rr_cents = c_half_up, rr_eighth = eighth, rr_nil = *]: 59.17 NZD
+  reading: rr_cents = c_half_up
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i35000, r = r2000) [rr_cents = c_half_up, rr_eighth = whole, rr_nil = *]: 59.67 NZD
+  reading: rr_cents = c_half_up
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i35000, r = r2200) [rr_cents = *, rr_eighth = eighth, rr_nil = *]: 192.5 NZD
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i35000, r = r2200) [rr_cents = *, rr_eighth = whole, rr_nil = *]: 193 NZD
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i35000, r = r2400) [rr_cents = c_down | c_half_up, rr_eighth = eighth, rr_nil = *]: 325.83 NZD
+  reading: rr_cents = c_down | c_half_up
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i35000, r = r2400) [rr_cents = c_down | c_half_up, rr_eighth = whole, rr_nil = *]: 326.33 NZD
+  reading: rr_cents = c_down | c_half_up
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i35000, r = r2400) [rr_cents = c_exact, rr_eighth = eighth, rr_nil = *]: 1955/6 (325.833333333333) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i35000, r = r2400) [rr_cents = c_exact, rr_eighth = whole, rr_nil = *]: 979/3 (326.333333333333) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i35000, r = r2600) [rr_cents = c_down, rr_eighth = eighth, rr_nil = *]: 459.16 NZD
+  reading: rr_cents = c_down
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i35000, r = r2600) [rr_cents = c_down, rr_eighth = whole, rr_nil = *]: 459.66 NZD
+  reading: rr_cents = c_down
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i35000, r = r2600) [rr_cents = c_exact, rr_eighth = eighth, rr_nil = *]: 2755/6 (459.166666666667) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i35000, r = r2600) [rr_cents = c_exact, rr_eighth = whole, rr_nil = *]: 1379/3 (459.666666666667) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i35000, r = r2600) [rr_cents = c_half_up, rr_eighth = eighth, rr_nil = *]: 459.17 NZD
+  reading: rr_cents = c_half_up
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i35000, r = r2600) [rr_cents = c_half_up, rr_eighth = whole, rr_nil = *]: 459.67 NZD
+  reading: rr_cents = c_half_up
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i35000, r = r2800) [rr_cents = *, rr_eighth = eighth, rr_nil = *]: 592.5 NZD
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i35000, r = r2800) [rr_cents = *, rr_eighth = whole, rr_nil = *]: 593 NZD
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i35000, r = r3000) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i35000, r = r3200) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i35000, r = r3500) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i36000, r = r1200) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i36000, r = r1200) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i36000, r = r1400) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i36000, r = r1400) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i36000, r = r1600) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i36000, r = r1600) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i36000, r = r1800) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i36000, r = r1800) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i36000, r = r2000) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i36000, r = r2000) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i36000, r = r2200) [rr_cents = *, rr_eighth = eighth, rr_nil = *]: 67.5 NZD
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i36000, r = r2200) [rr_cents = *, rr_eighth = whole, rr_nil = *]: 68 NZD
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i36000, r = r2400) [rr_cents = c_down | c_half_up, rr_eighth = eighth, rr_nil = *]: 200.83 NZD
+  reading: rr_cents = c_down | c_half_up
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i36000, r = r2400) [rr_cents = c_down | c_half_up, rr_eighth = whole, rr_nil = *]: 201.33 NZD
+  reading: rr_cents = c_down | c_half_up
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i36000, r = r2400) [rr_cents = c_exact, rr_eighth = eighth, rr_nil = *]: 1205/6 (200.833333333333) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i36000, r = r2400) [rr_cents = c_exact, rr_eighth = whole, rr_nil = *]: 604/3 (201.333333333333) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i36000, r = r2600) [rr_cents = c_down, rr_eighth = eighth, rr_nil = *]: 334.16 NZD
+  reading: rr_cents = c_down
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i36000, r = r2600) [rr_cents = c_down, rr_eighth = whole, rr_nil = *]: 334.66 NZD
+  reading: rr_cents = c_down
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i36000, r = r2600) [rr_cents = c_exact, rr_eighth = eighth, rr_nil = *]: 2005/6 (334.166666666667) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i36000, r = r2600) [rr_cents = c_exact, rr_eighth = whole, rr_nil = *]: 1004/3 (334.666666666667) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i36000, r = r2600) [rr_cents = c_half_up, rr_eighth = eighth, rr_nil = *]: 334.17 NZD
+  reading: rr_cents = c_half_up
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i36000, r = r2600) [rr_cents = c_half_up, rr_eighth = whole, rr_nil = *]: 334.67 NZD
+  reading: rr_cents = c_half_up
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i36000, r = r2800) [rr_cents = *, rr_eighth = eighth, rr_nil = *]: 467.5 NZD
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i36000, r = r2800) [rr_cents = *, rr_eighth = whole, rr_nil = *]: 468 NZD
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i36000, r = r3000) [rr_cents = c_down | c_half_up, rr_eighth = eighth, rr_nil = *]: 600.83 NZD
+  reading: rr_cents = c_down | c_half_up
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i36000, r = r3000) [rr_cents = c_down | c_half_up, rr_eighth = whole, rr_nil = *]: 601.33 NZD
+  reading: rr_cents = c_down | c_half_up
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i36000, r = r3000) [rr_cents = c_exact, rr_eighth = eighth, rr_nil = *]: 3605/6 (600.833333333333) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i36000, r = r3000) [rr_cents = c_exact, rr_eighth = whole, rr_nil = *]: 1804/3 (601.333333333333) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i36000, r = r3200) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i36000, r = r3500) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i37000, r = r1200) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i37000, r = r1200) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i37000, r = r1400) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i37000, r = r1400) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i37000, r = r1600) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i37000, r = r1600) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i37000, r = r1800) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i37000, r = r1800) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i37000, r = r2000) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i37000, r = r2000) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i37000, r = r2200) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i37000, r = r2200) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i37000, r = r2400) [rr_cents = c_down | c_half_up, rr_eighth = eighth, rr_nil = *]: 75.83 NZD
+  reading: rr_cents = c_down | c_half_up
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i37000, r = r2400) [rr_cents = c_down | c_half_up, rr_eighth = whole, rr_nil = *]: 76.33 NZD
+  reading: rr_cents = c_down | c_half_up
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i37000, r = r2400) [rr_cents = c_exact, rr_eighth = eighth, rr_nil = *]: 455/6 (75.8333333333333) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i37000, r = r2400) [rr_cents = c_exact, rr_eighth = whole, rr_nil = *]: 229/3 (76.3333333333333) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i37000, r = r2600) [rr_cents = c_down, rr_eighth = eighth, rr_nil = *]: 209.16 NZD
+  reading: rr_cents = c_down
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i37000, r = r2600) [rr_cents = c_down, rr_eighth = whole, rr_nil = *]: 209.66 NZD
+  reading: rr_cents = c_down
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i37000, r = r2600) [rr_cents = c_exact, rr_eighth = eighth, rr_nil = *]: 1255/6 (209.166666666667) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i37000, r = r2600) [rr_cents = c_exact, rr_eighth = whole, rr_nil = *]: 629/3 (209.666666666667) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i37000, r = r2600) [rr_cents = c_half_up, rr_eighth = eighth, rr_nil = *]: 209.17 NZD
+  reading: rr_cents = c_half_up
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i37000, r = r2600) [rr_cents = c_half_up, rr_eighth = whole, rr_nil = *]: 209.67 NZD
+  reading: rr_cents = c_half_up
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i37000, r = r2800) [rr_cents = *, rr_eighth = eighth, rr_nil = *]: 342.5 NZD
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i37000, r = r2800) [rr_cents = *, rr_eighth = whole, rr_nil = *]: 343 NZD
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i37000, r = r3000) [rr_cents = c_down | c_half_up, rr_eighth = eighth, rr_nil = *]: 475.83 NZD
+  reading: rr_cents = c_down | c_half_up
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i37000, r = r3000) [rr_cents = c_down | c_half_up, rr_eighth = whole, rr_nil = *]: 476.33 NZD
+  reading: rr_cents = c_down | c_half_up
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i37000, r = r3000) [rr_cents = c_exact, rr_eighth = eighth, rr_nil = *]: 2855/6 (475.833333333333) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i37000, r = r3000) [rr_cents = c_exact, rr_eighth = whole, rr_nil = *]: 1429/3 (476.333333333333) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i37000, r = r3200) [rr_cents = c_down, rr_eighth = eighth, rr_nil = *]: 609.16 NZD
+  reading: rr_cents = c_down
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i37000, r = r3200) [rr_cents = c_down, rr_eighth = whole, rr_nil = *]: 609.66 NZD
+  reading: rr_cents = c_down
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i37000, r = r3200) [rr_cents = c_exact, rr_eighth = eighth, rr_nil = *]: 3655/6 (609.166666666667) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i37000, r = r3200) [rr_cents = c_exact, rr_eighth = whole, rr_nil = *]: 1829/3 (609.666666666667) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i37000, r = r3200) [rr_cents = c_half_up, rr_eighth = eighth, rr_nil = *]: 609.17 NZD
+  reading: rr_cents = c_half_up
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i37000, r = r3200) [rr_cents = c_half_up, rr_eighth = whole, rr_nil = *]: 609.67 NZD
+  reading: rr_cents = c_half_up
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i37000, r = r3500) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i38000, r = r1200) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i38000, r = r1200) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i38000, r = r1400) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i38000, r = r1400) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i38000, r = r1600) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i38000, r = r1600) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i38000, r = r1800) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i38000, r = r1800) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i38000, r = r2000) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i38000, r = r2000) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i38000, r = r2200) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i38000, r = r2200) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i38000, r = r2400) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i38000, r = r2400) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i38000, r = r2600) [rr_cents = c_down, rr_eighth = eighth, rr_nil = *]: 84.16 NZD
+  reading: rr_cents = c_down
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i38000, r = r2600) [rr_cents = c_down, rr_eighth = whole, rr_nil = *]: 84.66 NZD
+  reading: rr_cents = c_down
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i38000, r = r2600) [rr_cents = c_exact, rr_eighth = eighth, rr_nil = *]: 505/6 (84.1666666666667) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i38000, r = r2600) [rr_cents = c_exact, rr_eighth = whole, rr_nil = *]: 254/3 (84.6666666666667) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i38000, r = r2600) [rr_cents = c_half_up, rr_eighth = eighth, rr_nil = *]: 84.17 NZD
+  reading: rr_cents = c_half_up
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i38000, r = r2600) [rr_cents = c_half_up, rr_eighth = whole, rr_nil = *]: 84.67 NZD
+  reading: rr_cents = c_half_up
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i38000, r = r2800) [rr_cents = *, rr_eighth = eighth, rr_nil = *]: 217.5 NZD
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i38000, r = r2800) [rr_cents = *, rr_eighth = whole, rr_nil = *]: 218 NZD
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i38000, r = r3000) [rr_cents = c_down | c_half_up, rr_eighth = eighth, rr_nil = *]: 350.83 NZD
+  reading: rr_cents = c_down | c_half_up
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i38000, r = r3000) [rr_cents = c_down | c_half_up, rr_eighth = whole, rr_nil = *]: 351.33 NZD
+  reading: rr_cents = c_down | c_half_up
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i38000, r = r3000) [rr_cents = c_exact, rr_eighth = eighth, rr_nil = *]: 2105/6 (350.833333333333) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i38000, r = r3000) [rr_cents = c_exact, rr_eighth = whole, rr_nil = *]: 1054/3 (351.333333333333) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i38000, r = r3200) [rr_cents = c_down, rr_eighth = eighth, rr_nil = *]: 484.16 NZD
+  reading: rr_cents = c_down
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i38000, r = r3200) [rr_cents = c_down, rr_eighth = whole, rr_nil = *]: 484.66 NZD
+  reading: rr_cents = c_down
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i38000, r = r3200) [rr_cents = c_exact, rr_eighth = eighth, rr_nil = *]: 2905/6 (484.166666666667) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i38000, r = r3200) [rr_cents = c_exact, rr_eighth = whole, rr_nil = *]: 1454/3 (484.666666666667) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i38000, r = r3200) [rr_cents = c_half_up, rr_eighth = eighth, rr_nil = *]: 484.17 NZD
+  reading: rr_cents = c_half_up
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i38000, r = r3200) [rr_cents = c_half_up, rr_eighth = whole, rr_nil = *]: 484.67 NZD
+  reading: rr_cents = c_half_up
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i38000, r = r3500) [rr_cents = *, rr_eighth = *, rr_nil = *]: 640 NZD
+  law date 2026-10-18, cut 2026-10-18
+table (i = i39000, r = r1200) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i39000, r = r1200) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i39000, r = r1400) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i39000, r = r1400) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i39000, r = r1600) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i39000, r = r1600) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i39000, r = r1800) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i39000, r = r1800) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i39000, r = r2000) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i39000, r = r2000) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i39000, r = r2200) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i39000, r = r2200) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i39000, r = r2400) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i39000, r = r2400) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i39000, r = r2600) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i39000, r = r2600) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i39000, r = r2800) [rr_cents = *, rr_eighth = eighth, rr_nil = *]: 92.5 NZD
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i39000, r = r2800) [rr_cents = *, rr_eighth = whole, rr_nil = *]: 93 NZD
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i39000, r = r3000) [rr_cents = c_down | c_half_up, rr_eighth = eighth, rr_nil = *]: 225.83 NZD
+  reading: rr_cents = c_down | c_half_up
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i39000, r = r3000) [rr_cents = c_down | c_half_up, rr_eighth = whole, rr_nil = *]: 226.33 NZD
+  reading: rr_cents = c_down | c_half_up
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i39000, r = r3000) [rr_cents = c_exact, rr_eighth = eighth, rr_nil = *]: 1355/6 (225.833333333333) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i39000, r = r3000) [rr_cents = c_exact, rr_eighth = whole, rr_nil = *]: 679/3 (226.333333333333) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i39000, r = r3200) [rr_cents = c_down, rr_eighth = eighth, rr_nil = *]: 359.16 NZD
+  reading: rr_cents = c_down
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i39000, r = r3200) [rr_cents = c_down, rr_eighth = whole, rr_nil = *]: 359.66 NZD
+  reading: rr_cents = c_down
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i39000, r = r3200) [rr_cents = c_exact, rr_eighth = eighth, rr_nil = *]: 2155/6 (359.166666666667) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i39000, r = r3200) [rr_cents = c_exact, rr_eighth = whole, rr_nil = *]: 1079/3 (359.666666666667) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i39000, r = r3200) [rr_cents = c_half_up, rr_eighth = eighth, rr_nil = *]: 359.17 NZD
+  reading: rr_cents = c_half_up
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i39000, r = r3200) [rr_cents = c_half_up, rr_eighth = whole, rr_nil = *]: 359.67 NZD
+  reading: rr_cents = c_half_up
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i39000, r = r3500) [rr_cents = c_down, rr_eighth = eighth, rr_nil = *]: 559.16 NZD
+  reading: rr_cents = c_down
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i39000, r = r3500) [rr_cents = c_down, rr_eighth = whole, rr_nil = *]: 559.66 NZD
+  reading: rr_cents = c_down
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i39000, r = r3500) [rr_cents = c_exact, rr_eighth = eighth, rr_nil = *]: 3355/6 (559.166666666667) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i39000, r = r3500) [rr_cents = c_exact, rr_eighth = whole, rr_nil = *]: 1679/3 (559.666666666667) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i39000, r = r3500) [rr_cents = c_half_up, rr_eighth = eighth, rr_nil = *]: 559.17 NZD
+  reading: rr_cents = c_half_up
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i39000, r = r3500) [rr_cents = c_half_up, rr_eighth = whole, rr_nil = *]: 559.67 NZD
+  reading: rr_cents = c_half_up
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i40000, r = r1200) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i40000, r = r1200) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i40000, r = r1400) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i40000, r = r1400) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i40000, r = r1600) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i40000, r = r1600) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i40000, r = r1800) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i40000, r = r1800) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i40000, r = r2000) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i40000, r = r2000) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i40000, r = r2200) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i40000, r = r2200) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i40000, r = r2400) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i40000, r = r2400) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i40000, r = r2600) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i40000, r = r2600) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i40000, r = r2800) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i40000, r = r2800) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i40000, r = r3000) [rr_cents = c_down | c_half_up, rr_eighth = eighth, rr_nil = *]: 100.83 NZD
+  reading: rr_cents = c_down | c_half_up
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i40000, r = r3000) [rr_cents = c_down | c_half_up, rr_eighth = whole, rr_nil = *]: 101.33 NZD
+  reading: rr_cents = c_down | c_half_up
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i40000, r = r3000) [rr_cents = c_exact, rr_eighth = eighth, rr_nil = *]: 605/6 (100.833333333333) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i40000, r = r3000) [rr_cents = c_exact, rr_eighth = whole, rr_nil = *]: 304/3 (101.333333333333) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i40000, r = r3200) [rr_cents = c_down, rr_eighth = eighth, rr_nil = *]: 234.16 NZD
+  reading: rr_cents = c_down
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i40000, r = r3200) [rr_cents = c_down, rr_eighth = whole, rr_nil = *]: 234.66 NZD
+  reading: rr_cents = c_down
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i40000, r = r3200) [rr_cents = c_exact, rr_eighth = eighth, rr_nil = *]: 1405/6 (234.166666666667) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i40000, r = r3200) [rr_cents = c_exact, rr_eighth = whole, rr_nil = *]: 704/3 (234.666666666667) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i40000, r = r3200) [rr_cents = c_half_up, rr_eighth = eighth, rr_nil = *]: 234.17 NZD
+  reading: rr_cents = c_half_up
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i40000, r = r3200) [rr_cents = c_half_up, rr_eighth = whole, rr_nil = *]: 234.67 NZD
+  reading: rr_cents = c_half_up
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i40000, r = r3500) [rr_cents = c_down, rr_eighth = eighth, rr_nil = *]: 434.16 NZD
+  reading: rr_cents = c_down
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i40000, r = r3500) [rr_cents = c_down, rr_eighth = whole, rr_nil = *]: 434.66 NZD
+  reading: rr_cents = c_down
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i40000, r = r3500) [rr_cents = c_exact, rr_eighth = eighth, rr_nil = *]: 2605/6 (434.166666666667) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i40000, r = r3500) [rr_cents = c_exact, rr_eighth = whole, rr_nil = *]: 1304/3 (434.666666666667) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i40000, r = r3500) [rr_cents = c_half_up, rr_eighth = eighth, rr_nil = *]: 434.17 NZD
+  reading: rr_cents = c_half_up
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i40000, r = r3500) [rr_cents = c_half_up, rr_eighth = whole, rr_nil = *]: 434.67 NZD
+  reading: rr_cents = c_half_up
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i41000, r = r1200) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i41000, r = r1200) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i41000, r = r1400) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i41000, r = r1400) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i41000, r = r1600) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i41000, r = r1600) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i41000, r = r1800) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i41000, r = r1800) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i41000, r = r2000) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i41000, r = r2000) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i41000, r = r2200) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i41000, r = r2200) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i41000, r = r2400) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i41000, r = r2400) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i41000, r = r2600) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i41000, r = r2600) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i41000, r = r2800) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i41000, r = r2800) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i41000, r = r3000) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i41000, r = r3000) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i41000, r = r3200) [rr_cents = c_down, rr_eighth = eighth, rr_nil = *]: 109.16 NZD
+  reading: rr_cents = c_down
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i41000, r = r3200) [rr_cents = c_down, rr_eighth = whole, rr_nil = *]: 109.66 NZD
+  reading: rr_cents = c_down
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i41000, r = r3200) [rr_cents = c_exact, rr_eighth = eighth, rr_nil = *]: 655/6 (109.166666666667) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i41000, r = r3200) [rr_cents = c_exact, rr_eighth = whole, rr_nil = *]: 329/3 (109.666666666667) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i41000, r = r3200) [rr_cents = c_half_up, rr_eighth = eighth, rr_nil = *]: 109.17 NZD
+  reading: rr_cents = c_half_up
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i41000, r = r3200) [rr_cents = c_half_up, rr_eighth = whole, rr_nil = *]: 109.67 NZD
+  reading: rr_cents = c_half_up
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i41000, r = r3500) [rr_cents = c_down, rr_eighth = eighth, rr_nil = *]: 309.16 NZD
+  reading: rr_cents = c_down
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i41000, r = r3500) [rr_cents = c_down, rr_eighth = whole, rr_nil = *]: 309.66 NZD
+  reading: rr_cents = c_down
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i41000, r = r3500) [rr_cents = c_exact, rr_eighth = eighth, rr_nil = *]: 1855/6 (309.166666666667) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i41000, r = r3500) [rr_cents = c_exact, rr_eighth = whole, rr_nil = *]: 929/3 (309.666666666667) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i41000, r = r3500) [rr_cents = c_half_up, rr_eighth = eighth, rr_nil = *]: 309.17 NZD
+  reading: rr_cents = c_half_up
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i41000, r = r3500) [rr_cents = c_half_up, rr_eighth = whole, rr_nil = *]: 309.67 NZD
+  reading: rr_cents = c_half_up
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i42000, r = r1200) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i42000, r = r1200) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i42000, r = r1400) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i42000, r = r1400) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i42000, r = r1600) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i42000, r = r1600) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i42000, r = r1800) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i42000, r = r1800) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i42000, r = r2000) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i42000, r = r2000) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i42000, r = r2200) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i42000, r = r2200) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i42000, r = r2400) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i42000, r = r2400) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i42000, r = r2600) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i42000, r = r2600) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i42000, r = r2800) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i42000, r = r2800) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i42000, r = r3000) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i42000, r = r3000) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i42000, r = r3200) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i42000, r = r3200) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i42000, r = r3500) [rr_cents = c_down, rr_eighth = eighth, rr_nil = *]: 184.16 NZD
+  reading: rr_cents = c_down
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i42000, r = r3500) [rr_cents = c_down, rr_eighth = whole, rr_nil = *]: 184.66 NZD
+  reading: rr_cents = c_down
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i42000, r = r3500) [rr_cents = c_exact, rr_eighth = eighth, rr_nil = *]: 1105/6 (184.166666666667) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i42000, r = r3500) [rr_cents = c_exact, rr_eighth = whole, rr_nil = *]: 554/3 (184.666666666667) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i42000, r = r3500) [rr_cents = c_half_up, rr_eighth = eighth, rr_nil = *]: 184.17 NZD
+  reading: rr_cents = c_half_up
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i42000, r = r3500) [rr_cents = c_half_up, rr_eighth = whole, rr_nil = *]: 184.67 NZD
+  reading: rr_cents = c_half_up
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i43000, r = r1200) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i43000, r = r1200) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i43000, r = r1400) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i43000, r = r1400) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i43000, r = r1600) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i43000, r = r1600) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i43000, r = r1800) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i43000, r = r1800) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i43000, r = r2000) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i43000, r = r2000) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i43000, r = r2200) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i43000, r = r2200) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i43000, r = r2400) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i43000, r = r2400) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i43000, r = r2600) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i43000, r = r2600) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i43000, r = r2800) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i43000, r = r2800) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i43000, r = r3000) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i43000, r = r3000) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i43000, r = r3200) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i43000, r = r3200) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i43000, r = r3500) [rr_cents = c_down, rr_eighth = eighth, rr_nil = *]: 59.16 NZD
+  reading: rr_cents = c_down
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i43000, r = r3500) [rr_cents = c_down, rr_eighth = whole, rr_nil = *]: 59.66 NZD
+  reading: rr_cents = c_down
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i43000, r = r3500) [rr_cents = c_exact, rr_eighth = eighth, rr_nil = *]: 355/6 (59.1666666666667) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i43000, r = r3500) [rr_cents = c_exact, rr_eighth = whole, rr_nil = *]: 179/3 (59.6666666666667) NZD
+  reading: rr_cents = c_exact
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i43000, r = r3500) [rr_cents = c_half_up, rr_eighth = eighth, rr_nil = *]: 59.17 NZD
+  reading: rr_cents = c_half_up
+  reading: rr_eighth = eighth
+  law date 2026-10-18, cut 2026-10-18
+table (i = i43000, r = r3500) [rr_cents = c_half_up, rr_eighth = whole, rr_nil = *]: 59.67 NZD
+  reading: rr_cents = c_half_up
+  reading: rr_eighth = whole
+  law date 2026-10-18, cut 2026-10-18
+table (i = i44000, r = r1200) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i44000, r = r1200) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i44000, r = r1400) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i44000, r = r1400) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i44000, r = r1600) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i44000, r = r1600) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i44000, r = r1800) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i44000, r = r1800) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i44000, r = r2000) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i44000, r = r2000) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i44000, r = r2200) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i44000, r = r2200) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i44000, r = r2400) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i44000, r = r2400) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i44000, r = r2600) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i44000, r = r2600) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i44000, r = r2800) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i44000, r = r2800) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i44000, r = r3000) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i44000, r = r3000) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i44000, r = r3200) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i44000, r = r3200) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18
+table (i = i44000, r = r3500) [rr_cents = *, rr_eighth = *, rr_nil = nil]: 0 NZD
+  reading: rr_nil = nil
+  law date 2026-10-18, cut 2026-10-18
+table (i = i44000, r = r3500) [rr_cents = *, rr_eighth = *, rr_nil = none_]: none
+  reading: rr_nil = none_
+  law date 2026-10-18, cut 2026-10-18

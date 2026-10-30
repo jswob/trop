@@ -1,0 +1,42 @@
+# L §7.3 The error bound: "A printed result that rests on rounded transcendentals, with no round after them, prints
+# ≈ and a bound".  pdf(d, k) to 1e-30 is a correctly rounded transcendental; a mean over keys of it (L §5.11 queries
+# over keys), the weights normalised by their sum, and their sum all rest on it: each prints ≈ (only the ≈ is checked
+# here; its digits are the interpreter's).
+=== m.tally
+model p13
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+
+source s "synthetic"
+
+index ks = int 1..3
+
+input mu: num
+input sd: num
+
+def d: dist = normal(mu, sd) to 1e-6
+def p[k in ks]: num = pdf(d, k) to 1e-30
+def w[k in ks]: num = p[k] / sum(p[j] for j in ks)
+
+ask q1: mean(p[k] for k in ks) orient higher
+ask q2: w[1] orient higher
+ask q3: mean(w[k] for k in ks) orient higher
+
+version v1
+  cite s
+  governs always
+  known 2026-01-01
+  mu = 2
+  sd = 1
+=== expect
+q1: ≈ ...
+  cut 2026-10-18
+  orient higher
+q2: ≈ ...
+  cut 2026-10-18
+  orient higher
+q3: ≈ ...
+  cut 2026-10-18
+  orient higher

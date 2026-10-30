@@ -1,0 +1,43 @@
+# L §5.16: "a sample read at a later date is the path's future, refused (RUN-FUTURE), so a rule never sees its
+# path's drawn future" (L §8.4 wording).  The reality of L5_16_decision_path with save reading spend_late[m], read at
+# end_of(m) = the first day of m + 1 (L §4.2), after the decision's day.
+=== m.tally
+model r
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source own "own"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2020-01-01..
+place savings: accounts PLN lives 2020-01-01..
+input spend_mu: money PLN
+input spend_sd: money PLN
+input dom: int
+def spend[m in months]: dist PLN = normal(spend_mu, spend_sd) to 1e-9 at start_of(m)
+def spend_late[m in months]: dist PLN = normal(spend_mu, spend_sd) to 1e-9 at end_of(m)
+
+move save[m in months]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  reads konto
+  leg cash from konto to savings amount max(0 PLN, bal(konto) - round(spend_late[m], minor(PLN), half-even))
+
+version v
+  cite own
+  governs 2026..
+  known 2026-01-01
+  spend_mu = 1 000.00 PLN "own"
+  spend_sd = 100.00 PLN "own"
+  dom = 5 "own"
+  opening[konto] = 5 000.00 PLN at 2026-01-01 start "statement"
+  opening[savings] = 0 PLN at 2026-01-01 start "statement"
+
+ask p1: bal(savings, 2026-03-31) with sample spend[2026-01] = 1 000.00 PLN, sample spend[2026-02] = 1 000.00 PLN, sample spend[2026-03] = 1 000.00 PLN paths 10 seed 1 path 1
+=== expect
+p1: refused: RUN-FUTURE ...
+  pinned sample: spend[2026-01] = 1 000.00 PLN
+  pinned sample: spend[2026-02] = 1 000.00 PLN
+  pinned sample: spend[2026-03] = 1 000.00 PLN
+  cut 2026-01-01

@@ -1,0 +1,22 @@
+part tsb_1
+  tally 2
+  law
+  note "TSB-1 · The bonds: ten-year indexed savings bonds in monthly series ISB<yymm>, sold during that month at 100.00 DUK, registered (.1); interest years run from the purchase day, maturity 10 years after it (GEN-3.1) (.2)."
+  note "isb_series is open: the keys are the series the gazette rows of TSB-2 bring (L §5.6)."
+
+source tsb_1 "Treasury Savings Bonds, terms of issue, TSB-1 The bonds (tmp/cases/law/acts.md)"
+
+index isb_series: open
+
+input tsb1_price: money DUK question "At what price is a bond sold (TSB-1 .1)?"
+
+input tsb1_years: int question "After how many years does a bond mature (TSB-1 .2)?"
+
+version tsb1_v1
+  cite tsb_1
+  governs 2018-01-01..
+  known 2017-11-20
+  enters 2018-01-01
+  note "TSB-1 v1, in force 2018-01-01 until replaced, published 2017-11-20; governs series issued from January 2018."
+  tsb1_price = 100.00 "TSB-1 v1 .1"
+  tsb1_years = 10 "TSB-1 v1 .2"

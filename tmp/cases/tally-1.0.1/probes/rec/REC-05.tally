@@ -1,0 +1,58 @@
+model rec05
+  tally 1
+  on 2026-10-25
+
+source bank_stmt "REC-05 card: Ola's bank account, the net pay for May 2025"
+source payslips "REC-05 card: Ola's payslips"
+source card "REC-05 card: its rules: the rates, and gross inferred from net by the law"
+
+index cent = 0..10000
+
+input cent_step: money DUK
+
+input gross_in: money DUK
+
+input gross_lo: money DUK
+
+input net_in: money DUK
+
+input pension_rate: num
+
+input tax_rate: num
+
+def advance: money DUK
+  rule base v card_rules = round(tax_rate * (gross_in - contrib), 1, half-up)
+
+def contrib: money DUK
+  rule base v card_rules = round(pension_rate * gross_in, 0.01, half-up)
+
+def gross: money DUK
+  rule inferred excepts stated v card_rules when missing(gross_in) = solve gross_in in [6000, 7000] to 0.01: net_calc = net_in
+  rule stated = gross_in
+
+def net_calc: money DUK
+  rule base v card_rules = gross_in - contrib - advance
+
+ask q: gross
+
+ask payslip: gross_in
+
+ask unique: count(c in cent where net_calc as if {gross_in = gross_lo + c * cent_step} = net_in)
+
+version bank_v
+  cite bank_stmt
+  known 2026-10-25
+  net_in = 5148.00 "net pay for May 2025"
+
+version slip_v
+  cite payslips
+  known 2026-10-25
+  gross_in = ? "Ola's payslip for May 2025 is missing: what was her gross pay?"
+
+version card_rules
+  cite card
+  known 2026-10-25
+  cent_step = 0.01 "the check steps by one cent"
+  gross_lo = 6450.00 "the check starts 50.00 below 6 500.00"
+  pension_rate = 0.10 "pension contribution 10 % of gross"
+  tax_rate = 0.12 "tax advance 12 % of gross minus the contribution"

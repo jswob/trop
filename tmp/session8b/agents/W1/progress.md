@@ -1,0 +1,12 @@
+# W1 progress
+- 22:3x read common, brief, outlines, PERFORMANCE, BOUNDS, STALE, DONE, decisions, NOTE, shape
+- next: R1-R4 summaries, load.tsv, benchmarks, spec ranges; then write drafts piece by piece
+- read all inputs (R1-R4 parts, load, benchmarks, E 30-490, L ranges, CHANGES 1-40, BUILD-NOTES). Derivations planned: non-empty day list (E4.2 steps 0-5, l.177 windows, l.211 holes, L l.1435 HOLE-CHANGED, L6.1 joint own movements); trimming: drop (P,t) when cone reaches no running read/projection/random/clause; O-W1-1 = projection hole vs read-rule hole
+- next: find MC spans (D-10, household-bands, LH-*), then write PERFORMANCE header+§1
+- PERFORMANCE header, §1, §2 written (23 KB). next §3 trimming (O-W1-1), §4, §5
+- §3 §4 §5 written. next §6 §7 §8 §9 §10
+- §6 §7 §8 written. next §9 §10, then fix the python block in 8.2 (paste real output)
+- PERFORMANCE complete (all §1-§10). next: open.md W1 items, then BOUNDS
+- BOUNDS rows 1-27 written; next rows 28-53 + closing
+- BOUNDS complete. next: open.md W1 items, cross-checks
+- final edits done (K8-5, K8-17, O-W1 cites). open.md W1 O-W1-1..6 appended. next: final report

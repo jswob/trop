@@ -1,0 +1,42 @@
+model cur03
+  tally 2
+  on 2026-10-25
+  start 2024-05-31
+  end 2024-06-30
+  note "CUR-03: a foreign balance held across a rate change: its DUK value before and after, and no transfer."
+  note "value(x, d) in DUK by fx[d] values the FLR position at the day's rate (LANGUAGE 5.10); nothing is booked by a revaluation."
+
+source card "Probe card CUR-03 (made up): story and rules"
+
+unit DUK: currency minor 0.01
+
+unit FLR: currency minor 0.01
+
+place flr_acc: accounts FLR lives 2024-05-31..
+
+input fx[d in days]: num DUK/FLR
+
+def value_duk[d in days]: num DUK at d
+  note "rule 1: valued at the day's stated rate"
+  rule base v card_rules = value(flr_acc, d) in DUK by fx[d]
+
+ask q_balances: bal(flr_acc, 2024-05-31), bal(flr_acc, 2024-06-30)
+
+ask q_revaluation: value_duk[2024-06-30] - value_duk[2024-05-31]
+
+ask q_transfers: flows(flr_acc, 2024-05-31 .. 2024-06-30), count(m in events over 2024-05-31 .. 2024-06-30)
+
+ask q_values: value_duk[d] for d in [2024-05-31, 2024-06-30]
+
+version card_facts
+  cite card
+  governs always
+  known 2024-05-31
+  opening[flr_acc] = 2000.00 at 2024-05-31 start "story: holds 2 000.00 FLR from 31 May"
+
+version card_rules
+  cite card
+  governs always
+  known 2024-05-31
+  fx[2024-05-31] = 4.30 "rule 1"
+  fx[2024-06-30] = 4.25 "rule 1"

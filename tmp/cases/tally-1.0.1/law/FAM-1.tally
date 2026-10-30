@@ -1,0 +1,39 @@
+part fam_1
+  tally 1
+  law
+  note "FAM-1 · The child benefit: a monthly amount for a child under 18 (.1), granted for benefit periods 1 June – 31 May; a claim filed by 30 April before the period gives it from June, a later claim from the month filed (.2); for a child born during a period, a claim within 3 months of the birth gives it from the birth month, a later one from the month filed (.3); the birth month is prorated by days, rounded down to the ort (.4)."
+  note "fam1_filed: the act doesn't say whether a claim sent by registered post is filed when posted or when the FBO receives it."
+
+source fam_1 "Family Benefits Act, FAM-1 The child benefit (tmp/cases/law/acts.md)"
+
+index benefit_period = year 2018..2030 from 06-01
+  v fam1_v1
+  note "benefit periods run 1 June – 31 May (FAM-1 .2); key 2022 is 2022-06-01 – 2023-05-31"
+
+axis fam1_filed
+  posted "a claim sent by registered post is filed on the day it is posted"
+  received "a claim is filed on the day the FBO receives it"
+
+input fam1_amount: money DUK question "What is the monthly child benefit (FAM-1 .1)?"
+
+input fam1_birth_months: int question "Within how many months of the birth must the claim be filed (FAM-1 .3)?"
+
+input fam1_age: int question "Under what age is a child entitled (FAM-1 .1)?"
+
+version fam1_v1
+  cite fam_1
+  governs 2018-01..2023-12
+  known 2017-09-01
+  note "FAM-1 v1, in force 2018-01-01 – 2023-12-31, published 2017-09-01; governs months 2018-01 – 2023-12."
+  fam1_amount = 400.00 "FAM-1 v1 .1"
+  fam1_birth_months = 3 "FAM-1 v1 .3"
+  fam1_age = 18 "FAM-1 v1 .1"
+
+version fam1_v2
+  cite fam_1
+  governs 2024-01..
+  known 2023-08-10
+  note "FAM-1 v2, in force 2024-01-01 until replaced, published 2023-08-10; governs months from 2024-01 (points 2–5 as v1)."
+  fam1_amount = 650.00 "FAM-1 v2 .1"
+  fam1_birth_months = 3 "FAM-1 v2 .3 (as v1)"
+  fam1_age = 18 "FAM-1 v2 .1"

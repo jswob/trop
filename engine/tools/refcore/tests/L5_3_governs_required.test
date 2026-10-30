@@ -1,0 +1,18 @@
+# L §5.3: "LOAD-GOVERNS: a version with a row or rule that has no time of its own, and no governs."
+=== m.tally
+model t
+  tally 2
+  on 2016-03-01
+  start 2015-11-01
+  end 2016-10-31
+
+source s "s"
+
+input n: int
+
+version v
+  cite s
+  known 2015-09-07
+  n = 1
+=== expect
+refused: LOAD-GOVERNS ...
