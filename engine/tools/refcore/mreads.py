@@ -660,6 +660,11 @@ def m_span_members(self, dom, sp, ctx):
         m = self.m
         sub = m.kinds[b._dom[1]].subtree(m)
         t = kday(ctx.wp)
+        arr = getattr(ctx.walk, 'in_arrival', None)
+        if arr is not None and ('pads' in sub or any(mi.decision and mi.kind in sub for mi in m.moves.values())) and \
+                (sp.end is None or sp.end > t):
+            # an arrival rule's running read of its arrival's day's end or later is RUN-CYCLE (L §5.14.1, 2.1-C7b-3)
+            raise arrival_span_cycle(arr, '%s over %s' % (b._dom[1], span_text(sp)))
         if ('pads' in sub or any(mi.decision and mi.kind in sub for mi in m.moves.values())) and \
                 (sp.end is None or sp.end > t + ONE_DAY):
             raise refuse('RUN-FUTURE', 'a decision on %s binds over %s through %s, after its day' % (
@@ -907,6 +912,19 @@ def less_own_obs(w, place, unit, key, v):
     if delta == 0:
         return v
     return add_q(v, Num(delta, v.u, money=v.money), 1)
+
+
+def span_text(sp):
+    a = sp.start.isoformat() if sp.start is not None else ''
+    b = (sp.end - ONE_DAY).isoformat() if sp.end is not None else ''
+    return '%s..%s' % (a, b)
+
+
+def arrival_span_cycle(arr, what):
+    """L §5.14.1 (2.1-C7b-3): an arrival rule's running read of its arrival's day's end or later, reached through a
+    computed day, is RUN-CYCLE (`<x>[k] reads itself through <path>`, L §8.4), never RUN-FUTURE, a decision's."""
+    return refuse('RUN-CYCLE', '%s[%s, *] reads itself through %s: the end of its arrival\'s day or later' % (
+        arr[0], arr[1], what))
 
 
 def m_bal_day(self, place, unit, d, key, ctx):
@@ -1244,6 +1262,10 @@ def m_flows_place(self, place, sp, conv, env, ctx, fk=None):
     if w is not None and ctx.wp is not None:
         t = kday(ctx.wp)
         note_read(w, place, last >= t)
+        arr = getattr(w, 'in_arrival', None)
+        if arr is not None and last >= t:
+            # an arrival rule's running read of its arrival's day's end or later is RUN-CYCLE (L §5.14.1, 2.1-C7b-3)
+            raise arrival_span_cycle(arr, 'flows(%s, %s)' % (place, span_text(sp)))
         if last > t:
             raise refuse('RUN-FUTURE', 'a decision on %s reads flows of %s through %s, after its day' % (
                 t, place, last))
@@ -1407,6 +1429,10 @@ def m_flows_move(self, n, sp, fk, conv, env, ctx):
         limit = None
         if w is not None and ctx.wp is not None:
             t = kday(ctx.wp)
+            arr = getattr(w, 'in_arrival', None)
+            if arr is not None and last >= t:
+                # an arrival rule's running read of its arrival's day's end or later (L §5.14.1, 2.1-C7b-3)
+                raise arrival_span_cycle(arr, 'flows(%s, %s)' % (mi.id, span_text(sp)))
             if last > t:
                 raise refuse('RUN-FUTURE', 'a decision on %s reads flows of %s through %s, after its day' % (
                     t, mi.id, last))

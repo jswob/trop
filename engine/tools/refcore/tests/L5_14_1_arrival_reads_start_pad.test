@@ -1,0 +1,74 @@
+# L §5.14.1 (2.1-C7b-20, open for G2): where a start pad takes with the day's first batch (E §4.2 steps 0-2), an
+# arrival rule's read of bal(x, d start) of q at that place has no single point: before the pad, or after it, which
+# takes with the batch the arrival is in.  As L5_14_1_arrival_reads_start, with a reading of dep at 2026-03-01 start
+# that pads (450.00 against 400.00 booked; the model's on moved to 2026-10-01 so the cut sees it): REFCORE-UNSPECIFIED, the arrival refused, so konto's parts are refused from
+# there.  The user chooses at G2.
+=== m.tally
+model t
+  tally 2
+  on 2026-10-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+kind persons: parties
+kind couples: parties
+kind savings: place PLN min 0
+  owned by arrive
+  step minor(PLN)
+  takes k for w prorata
+kind interests: transfers
+kind tomeks: transfers
+input k0: int
+place konto: savings lives 2026-01-01..
+place dep: savings lives 2026-01-01..
+place world: outside lives 1900-01-01..
+place shop: outside lives 1900-01-01..
+input a1_day: date
+input a1_amt: money PLN
+input t1_day: date
+input t1_amt: money PLN
+input i1_day: date
+input i1_amt: money PLN
+def arrive[m in events, p in parties]: num at m.day
+  rule base = if p == ania then 1 else 0
+  rule t beats base = if p == tomek then 1 else 0 when m in tomeks
+  rule income beats base, t = bal(dep, m.day start) of p / bal(dep, m.day start) when m in interests
+move a1: transfers
+  on a1_day
+  leg cash from world to dep amount a1_amt
+move t1: tomeks
+  on t1_day
+  leg cash from world to dep amount t1_amt
+move i1: interests
+  on i1_day
+  leg cash from world to konto amount i1_amt
+ask q: bal(konto, 2026-03-31) of ania, bal(konto, 2026-03-31) of tomek, k0
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  persons + [ania] lives 1980-01-01..
+  persons + [tomek] lives 1981-01-01..
+  couples + [ania_tomek] lives 2010-06-01..
+  opening[konto] = 0 PLN at 2026-01-01 start
+  opening[dep] = 0 PLN at 2026-01-01 start
+  a1_day = 2026-02-01
+  a1_amt = 300.00 PLN
+  t1_day = 2026-02-02
+  t1_amt = 100.00 PLN
+  i1_day = 2026-03-01
+  i1_amt = 40.00 PLN
+  k0 = 0
+
+version stmt
+  cite s
+  governs 2026-03
+  known 2026-01-01
+  pad dep from world
+  stated[dep] = 450.00 PLN at 2026-03-01 start
+=== expect
+q: (refused: REFCORE-UNSPECIFIED §5.14.1: a start-of-day read of parts at dep, whose start pad takes with the day's first batch, refused: REFCORE-UNSPECIFIED §5.14.1: a start-of-day read of parts at dep, whose start pad takes with the day's first batch, 0)
+...

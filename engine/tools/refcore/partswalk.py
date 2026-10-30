@@ -2087,6 +2087,14 @@ def eng_bal_of_day(self, place, unit, d, key, ctx, q):
         t = kday(ctx.wp)
         note_read(w, place, False)
         arrival_cycle(w, ctx, key, place, d)
+        if getattr(w, 'in_arrival', None) is not None and key[1] == 0:
+            # 2.1-C7b-20, open for G2: a start pad takes with the day's first batch (E §4.2 steps 0-2), so the parts
+            # at the start of that day have no single point for an arrival rule (L §5.14.1)
+            log = w.logs.get((place, unit))
+            if log is not None and any(e.kind == 'reset' and _is_pad(e) and e.key[0] == key[0] and e.key[1] == 0 and
+                                       not (isinstance(e.flow, Num) and e.flow.q == 0) for e in log.ents):
+                raise Unspecified('§5.14.1', 'a start-of-day read of parts at %s, whose start pad takes with the day\'s '
+                                             'first batch' % place)
         if key[0] > ctx.wp[0] or (key[0] == ctx.wp[0] and key[1] >= 3):
             if d > t:
                 raise refuse('RUN-FUTURE', 'a decision on %s reads %s at %s after its day' % (t, place, d))

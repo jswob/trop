@@ -1,0 +1,58 @@
+# L §3.6 The arrival rule: "Its law date is the event's: it states at m.day"; E §4.2 Steps 0-2 (2.1-C7b-11): the walk
+# runs the arrival rule "its law at its movement's day (at m.day, LANGUAGE §3.6)", even for a leg with its own later
+# on.  pay is dated 2026-02-20 and its leg lands on 2026-03-05; the rule's input sa is 1 under the law of February and 0
+# from March.  The arrival is labelled by February's law: Ania's 100.00 (carried through), Tomek's 0.
+=== m.tally
+model t
+  tally 2
+  on 2026-10-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+kind persons: parties
+kind savings: place PLN min 0
+  owned by arrive
+  step minor(PLN)
+  takes k for w prorata
+place konto: savings lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input sa: num
+input mday: date
+input lday: date
+input amt: money PLN
+def arrive[m in events, p in parties]: num at m.day
+  rule base = (if p == ania then sa else if p == tomek then 1 - sa else 0)
+
+move pay: transfers
+  on mday
+  leg cash from world to konto amount amt on lday
+
+ask q: bal(konto, 2026-03-31) of ania, bal(konto, 2026-03-31) of tomek
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  persons + [ania] lives 1980-01-01..
+  persons + [tomek] lives 1981-01-01..
+  opening[konto] = 0 PLN at 2026-01-01 start
+  mday = 2026-02-20
+  lday = 2026-03-05
+  amt = 100.00 PLN
+
+version feb
+  cite s
+  governs 2026-01..2026-02
+  known 2026-01-01
+  sa = 1
+
+version mar
+  cite s
+  governs 2026-03..
+  known 2026-01-01
+  sa = 0
+=== expect
+q: (100.00 PLN, 0.00 PLN)
+...

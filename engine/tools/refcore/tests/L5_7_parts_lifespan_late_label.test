@@ -1,0 +1,81 @@
+# L §5.7 Parts and lifespans (2.1-C7b-8): "a death's posting reads the place, so it runs after every movement that
+# changes the place that day and doesn't depend on it (§5.14.2), and a part labelled to the party by a movement after
+# the posting that day is one it holds at the close, so that part's place is refused from that day on (RUN-LIFESPAN,
+# <party> ends on <d> holding parts of <place>; ENGINE.md §4.2 step 5)".  tomek dies on 2026-03-10; death_sav relabels
+# his parts to his estate; final_pay, `after death_sav` (its when reads his part, now 0), pays his last wage into sav labelled his.  q: sav before the
+# day is known; from 2026-03-10 it is refused.  (The probe writer's p24, writer 11's third round.)
+=== m.tally
+model t
+  tally 2
+  on 2026-10-30
+  start 2026-01-01
+  end 2026-06-30
+
+source src "s"
+unit DUK: currency minor 0.01
+kind estates: parties
+kind persons: parties
+kind deaths: event certain
+  leg what: any
+  attr deceased: key persons
+  attr estate: key estates
+kind inheritances: transfers
+  attr heir: key parties
+kind wages_in: transfers
+  attr employee: key persons
+kind savings: place DUK min 0
+  owned by arrive
+  step minor(DUK)
+  takes k for w order (if w in deaths and k.owner == w.deceased then 0 else 1)
+place sav: savings lives 2026-01-01..
+place employer: outside lives 1900-01-01..
+place world: outside lives 1900-01-01..
+input rows: observed
+input death_day: date
+input who_died: key persons
+input estate_of: key estates
+input wage: money DUK
+def arrive[m in events, p in parties]: num at m.day
+  rule inherited = (if p == m.heir then 1 else 0) when m in inheritances
+  rule to_estate = (if p == m.estate then 1 else 0) when m in deaths
+  rule paid = (if p == m.employee then 1 else 0) when m in wages_in
+
+move death_sav: deaths
+  on death_day
+  at death_day
+  reads sav
+  attr deceased = who_died
+  attr estate = estate_of
+  leg what from sav to sav amount bal(sav) of who_died
+
+move final_pay: wages_in
+  on death_day
+  at death_day
+  when bal(sav) of who_died == 0 DUK
+  reads sav
+  after death_sav
+  attr employee = who_died
+  leg cash from employer to sav amount wage
+
+ask q: bal(sav, 2026-03-09) of tomek, bal(sav, 2026-03-10), bal(sav, 2026-03-31) of tomek_estate
+
+version cast
+  cite src
+  known 2026-01-01
+  persons + [ania] lives 1988-04-12..
+  persons + [tomek] lives 1986-09-03..2026-03-10
+  estates + [tomek_estate] lives 2026-03-10..
+
+version recs
+  cite src
+  governs always
+  known 2026-01-01
+  opening[sav] = 0 at 2026-01-01 start
+  death_day = 2026-03-10
+  who_died = tomek
+  estate_of = tomek_estate
+  wage = 2400.00 DUK
+  rows[r1] = (on: 2026-01-05, kind: inheritances, leg cash from world to sav amount 7000.00 DUK, heir: tomek) "line 1"
+=== expect
+q: (7 000.00 DUK, refused: RUN-LIFESPAN tomek ends on 2026-03-10 holding parts of sav, refused: RUN-LIFESPAN tomek ends on 2026-03-10 holding parts of sav)
+...

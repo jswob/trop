@@ -5,7 +5,8 @@
 # (the couple's 700.00 cover it; konto2's arrival keeps its label), spend2 400.00 (the couple's 100.00, then tomek's
 # 300.00). L §5.10: bal(x, d) of q is "the sum of x's parts labelled q at the end of day d"; value(...) of q those parts
 # at their prices (PLN at its amount); L §5.14 the leg read: what the leg took from q's parts. Figures by
-# scratch/exp_a1.py.
+# scratch/exp_a1.py.  The rule is the example's text after 2.1-C7b-18 (`inherited` beats `moved`); no movement here is
+# an inheritance paid from savings, so no figure changes (L3_6_parts_inherited_from_savings has one).
 === m.tally
 model t
   tally 2
@@ -40,9 +41,9 @@ input spend2_day: date
 input spend2_amt: money PLN
 
 def civ_arrive[m in events, p in parties]: num at m.day
-  rule community = if p == ania_tomek then 1 else 0
-  rule inherited beats community = if p == m.heir then 1 else 0 when m in inheritances
-  rule moved beats community, inherited = m.cash.amount of p / m.cash.amount when m in transfers and m.cash.from in savings
+  rule community = (if p == ania_tomek then 1 else 0)
+  rule inherited beats community, moved = (if p == m.heir then 1 else 0) when m in inheritances
+  rule moved beats community = m.cash.amount of p / m.cash.amount when m in transfers and m.cash.from in savings
 
 move wage: transfers
   on wage_day
