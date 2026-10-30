@@ -38,6 +38,12 @@ tally 2.1 adds owners and batches as labels on amounts, from session 6's decided
 | Row | Where | What | Found by |
 |---|---|---|---|
 | 2.1-F1 | L §5.7, `MIGRATION.md` | a field of a subkind read where no kind test narrows the variable stays refused as in 2.0, `LOAD-FIELD`; the spec round had named `LOAD-LEG`, which would change a 2.0 text's output against the opt-in rule | writer 11's F-1 |
+| 2.1-F2 | L §5.19, §8.4 | a reading at a day's start that pads and states parts, at a place the day's first batch also moves, is refused (`RUN-RECORD`), the reading at the end of the day before written instead: its pad takes with the batch (E §4.2), so the stated parts had no one point to compare at | writer 11's F-2 |
+| 2.1-F3 | E §6.3 | the residual ledger's balance line shows each stated part's gap and the unstated rest's, so "every such gap is listed with the reading" (L §5.19) has a form | writer 11's F-3 |
+| 2.1-F4 | L §3.6, §8.4 | a share below 0 is `RUN-LABEL`: a part is never below zero (§10, signed parts) | writer 11's F-4 |
+| 2.1-F5 | L §3.6 | in an arrival's split the hole part of hole shares ranks after every party, which `ties by` can't rank ("a known share is never lost to a hole") | writer 11's F-5 |
+| 2.1-F6 | L §5.19, §8.3 | a stated part below 0, and two stated parts of one reading that overlap, are `LOAD-PARTS` | writer 11's F-6 |
+| 2.1-F7 | L §8.1 | the hole part's questions are worded for a gap, an unstated rest, a cycle of observed rows, an unknown outflow and a stated part's open batches | writer 11's F-7 |
 
 ---
 
