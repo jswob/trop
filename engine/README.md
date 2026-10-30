@@ -2,9 +2,9 @@
 
 Tally is a language for a household's money and the law that governs it, plus the engine that runs it: a standalone Rust library and binary, input to output. It is built and proven here before the app, the store or an MCP server uses it. Nothing in `apps/` or `packages/` imports it.
 
-## `spec/`: tally 2.0
+## `spec/`: tally 2.1
 
-The commit tagged `tally-2.0` froze it. Tally 2 is a new version of the language, with a migration from tally 1 (`spec/MIGRATION.md`, `LANGUAGE.md` §9). `tally 1.0.1` stays reachable by its tag `tally-1.0.1`. `spec/VERSION` names the tag the tree matches, and `spec/SHA256SUMS` lists every file's checksum.
+The commit tagged `tally-2.0` froze tally 2.0. Tally 2.1 adds owners and batches as labels on amounts, opted into per place kind (`CHANGES.md`, `MIGRATION.md` § 2.0 → 2.1); a 2.0 text runs unchanged. Tally 2 is a new version of the language, with a migration from tally 1 (`spec/MIGRATION.md`, `LANGUAGE.md` §9). `tally 1.0.1` stays reachable by its tag `tally-1.0.1`. `spec/VERSION` names the tag the tree matches, and `spec/SHA256SUMS` lists every file's checksum.
 
 - **The definition:** `LANGUAGE.md` (what a construct means) and `ENGINE.md` (how the engine computes it), with `DECISIONS.md` (why: tally 2's records in Part I, tally 1.0.1's decisions carried in Part II) and `coverage.md`.
 - **The migration:** `MIGRATION.md`, each tally 1.0.1 construct and its tally 2 form, automatic, warned or manual.
@@ -20,6 +20,10 @@ The commit tagged `tally-2.0` froze it. Tally 2 is a new version of the language
 
 ## `tools/refcore/`: the reference interpreter
 
-The Python reference interpreter of tally 2.0, written from `spec/LANGUAGE.md` and `spec/ENGINE.md` alone by writers who never saw an engine. It is the oracle of `DONE.md`'s gate 10 (differential testing). It uses the standard library only and was built and tested under Python 3.14.3; from `engine/`, `python3 -I -B tools/refcore test` runs its 950 tests, `… run <files of one reality> [--ask id …]` answers a reality's asks, and `… reprint <files>` prints each file's canonical form. Where the spec is silent it refuses `REFCORE-UNSPECIFIED <section>: <question>` (`refcore/UNSPECIFIED.md`); `refcore/HANDOVER.md` describes how it is built. `tools/SHA256SUMS` lists its files' checksums.
+The Python reference interpreter of tally 2.1, written from `spec/LANGUAGE.md` and `spec/ENGINE.md` alone by writers who never saw an engine. It is the oracle of `DONE.md`'s gate 10 (differential testing). It uses the standard library only and was built and tested under Python 3.14.3; from `engine/`, `python3 -I -B tools/refcore test` runs its 1105 tests, `… run <files of one reality> [--ask id …]` answers a reality's asks, and `… reprint <files>` prints each file's canonical form. Where the spec is silent it refuses `REFCORE-UNSPECIFIED <section>: <question>` (`refcore/UNSPECIFIED.md`); `refcore/HANDOVER.md` describes how it is built. `tools/SHA256SUMS` lists its files' checksums.
+
+## `BUILD-NOTES.md`: the engine's seams
+
+What the Rust engine must leave room for from the start: a joint model's members as their own contexts, a slot for a range on every unknown, the symbol table, the memo keyed by key values, "is it random" per context, and the labels' cost paid only where a kind opts in. Not normative: where it and `spec/` differ, the spec wins.
 
 **Never here:** the held-out cases, and any real household's data. The household in `amendments/` is synthetic.
