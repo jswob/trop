@@ -1,0 +1,148 @@
+# L §6.1 joints, nested (E §3.1 step 1: "a member that is itself a joint model pins its own members through its use
+# lines"): f is a joint model of a and d whose own party ania is a's and d's Ania by its same lines; the outer model
+# joins f's ania and b's Ania, `same f.ania = b.ania`.  f's own name ania is a name f declares (its entry in
+# fam_cast), so the outer model reads it as f.ania, the one thing f's same lines made of it.  q1: f's own figure,
+# Ania's parts at a and d (600.00, scratch/nested/mk_nested.py); q2, q3: b's pot holds 70.00 of Ania's, read as f.ania
+# or b.ania (carried through).  (Was LOAD-SAME "same f.ania = b.ania: a field path and a thing": f's join renamed its
+# own ania to its member's, and the outer model lost the name; the probe writer's pair/family.)
+=== options pin=bytes
+=== j.tally
+model family
+  tally 2
+  on 2026-10-30
+  start 2026-01-01
+  end 2026-06-30
+  use b = "hb.tally" sha256 "60a1c4098cc69b5635048da5abe1e95ef9e3aff77350f28408ec0d4e345b6633"
+  use f = "fam.tally" sha256 "7b64f7833415e5f8ee8e434f304de60f2a216327383418edbb79085390891870"
+  same f.ania = b.ania
+
+ask q1: f.ania_parts[2026-06-30]
+ask q2: bal(b.pot, 2026-06-30) of f.ania
+ask q3: bal(b.pot, 2026-06-30) of b.ania
+=== fam.tally
+model fam
+  tally 2
+  on 2026-10-30
+  start 2026-01-01
+  end 2026-06-30
+  use a = "ha.tally" sha256 "ee0df750f773e1f31d7dc054aa039d0738c44c34246a8aa951ea57e2cd3301d0"
+  use d = "hd.tally" sha256 "1c70ec565b0d3c12a5e0405f7217c90fb914543113d186387e631dbb10478f71"
+  same a.ania = ania
+  same d.ania = ania
+
+source fam_papers "who is who"
+
+def ania_parts[t in days]: money DUK = bal(a.sav, t) of ania + bal(d.dep, t) of ania
+
+ask q_fam: ania_parts[2026-06-30]
+
+version fam_cast
+  cite fam_papers
+  known 2026-01-01
+  parties + [ania] lives 1988-04-12..
+=== ha.tally
+model pa
+  tally 2
+  on 2026-10-30
+  start 2026-01-01
+  end 2026-06-30
+
+source papers "papers"
+unit DUK: currency minor 0.01
+kind inheritances: transfers
+  attr heir: key parties
+kind savings: place DUK min 0
+  owned by arrive
+  step minor(DUK)
+  takes k for w prorata ties by (if k.owner == ania then 0 else 1)
+place sav: savings lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input rows: observed
+def arrive[m in events, p in parties]: num at m.day
+  rule inherited = (if p == m.heir then 1 else 0) when m in inheritances
+
+version cast
+  cite papers
+  known 2026-01-01
+  parties + [ania] lives 1988-04-12..
+  parties + [tomek] lives 1960-01-01..
+
+version recs
+  cite papers
+  governs 2026-01
+  known 2026-02-03
+  rows[r1] = (on: 2026-01-05, kind: inheritances, leg cash from world to sav amount 150.00 DUK, heir: tomek) "line 1"
+  rows[r2] = (on: 2026-01-06, kind: inheritances, leg cash from world to sav amount 200.00 DUK, heir: ania) "line 2"
+=== hd.tally
+model pd
+  tally 2
+  on 2026-10-30
+  start 2026-01-01
+  end 2026-06-30
+
+source papers "papers"
+unit DUK: currency minor 0.01
+kind inheritances: transfers
+  attr heir: key parties
+kind deposits: place DUK min 0
+  owned by arrive
+  step minor(DUK)
+  takes k for w prorata ties by (if k.owner == ania then 0 else 1)
+place dep: deposits lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input rows: observed
+def arrive[m in events, p in parties]: num at m.day
+  rule inherited = (if p == m.heir then 1 else 0) when m in inheritances
+
+version cast
+  cite papers
+  known 2026-01-01
+  parties + [ania] lives 1988-04-12..
+  parties + [halina] lives 1960-01-01..
+
+version recs
+  cite papers
+  governs 2026-01
+  known 2026-02-03
+  rows[r1] = (on: 2026-01-05, kind: inheritances, leg cash from world to dep amount 1000.00 DUK, heir: halina) "line 1"
+  rows[r2] = (on: 2026-01-06, kind: inheritances, leg cash from world to dep amount 400.00 DUK, heir: ania) "line 2"
+=== hb.tally
+model pb
+  tally 2
+  on 2026-10-30
+  start 2026-01-01
+  end 2026-06-30
+
+source papers "papers"
+unit DUK: currency minor 0.01
+kind inheritances: transfers
+  attr heir: key parties
+kind pots: place DUK min 0
+  owned by arrive
+  step minor(DUK)
+  takes k for w prorata ties by (if k.owner == ania then 0 else 1)
+place pot: pots lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input rows: observed
+def arrive[m in events, p in parties]: num at m.day
+  rule inherited = (if p == m.heir then 1 else 0) when m in inheritances
+
+version cast
+  cite papers
+  known 2026-01-01
+  parties + [ania] lives 1988-04-12..
+  parties + [piotr] lives 1960-01-01..
+
+version recs
+  cite papers
+  governs 2026-01
+  known 2026-02-03
+  rows[r1] = (on: 2026-01-05, kind: inheritances, leg cash from world to pot amount 300.00 DUK, heir: piotr) "line 1"
+  rows[r2] = (on: 2026-01-06, kind: inheritances, leg cash from world to pot amount 70.00 DUK, heir: ania) "line 2"
+=== expect
+q1: 600.00 DUK
+...
+q2: 70.00 DUK
+...
+q3: 70.00 DUK
+...

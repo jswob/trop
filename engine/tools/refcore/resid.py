@@ -402,8 +402,10 @@ def m_residuals(self, place, span, by, ctx, unit=None):
             # after the total's, with its three figures) is this interpreter's
             gl = w.pgap_lines(r, key)
             for lab, b_, s_ in gl or ():
+                # a booked part that is a hole (the hole balance's, 2.1-F10) has a hole gap
                 txt += '; %s: booked %s, stated %s, gap %s' % (lab, self.rtext(b_, unit), self.rtext(s_, unit),
-                                                               self.rtext(s_ - b_, unit))
+                                                               self.rtext(b_ if isinstance(b_, Hole) else s_ - b_,
+                                                                          unit))
         lines.append(RLine('balance', d, (month_period(d.year, d.month), 'balance'), booked, stated, gap, txt,
                            (d, 9)))
     # groups, totals, order (E §6.3)
@@ -456,6 +458,9 @@ def obs_field(o, f):
     if f == 'kind':
         return o.kind
     v = o.attrs.get(f) if o.attrs else None
+    if isinstance(v, tuple) and v and v[0] in ('mvref', 'hole'):
+        # the loader's markers: a ref prints as rows print, a hole as its question (writer 11)
+        return v[1] if v[0] == 'mvref' else '?"%s"' % v[1]
     return fmt(v) if v is not None else None
 
 

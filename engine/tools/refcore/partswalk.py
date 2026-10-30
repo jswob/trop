@@ -52,6 +52,57 @@ class HolePart:
         self.sure = sure                # its amount is surely its possible labels' (a stated part's own gap)
 
 
+class _Unk:
+    """The amount of the hole part of a hole balance (L §5.10 Parts, 2.1-F10): unknown, at least 0, and with no bound,
+    so a take may always reach it and it never covers an outflow; what is added to it or taken from it stays it."""
+    __slots__ = ()
+
+    def __repr__(self):
+        return 'UNK'
+
+    def __gt__(self, o):
+        return True
+
+    def __ge__(self, o):
+        return True
+
+    def __lt__(self, o):
+        return False
+
+    def __le__(self, o):
+        return False
+
+    def __eq__(self, o):
+        return o is self
+
+    def __ne__(self, o):
+        return o is not self
+
+    def __hash__(self):
+        return 0
+
+    def __add__(self, o):
+        return self
+    __radd__ = __add__
+    __sub__ = __add__
+    __rsub__ = __add__
+
+
+UNK = _Unk()
+
+
+def is_unk(x):
+    return x is UNK
+
+
+def hb_of(st):
+    """The hole part of a hole balance among a state's hole parts, or None."""
+    for h in st.holes:
+        if h.amt is UNK:
+            return h
+    return None
+
+
 _ROOTS = {}
 
 
@@ -251,10 +302,14 @@ def w_plog_state(self, place, unit, key):
 
 def w_pinit(self, place, unit):
     """The parts before a place's first group: a projection's are its base's at its start point (E §4.3), a place
-    that starts empty in the run has none, and one alive before S has a balance that waits for its opening (HOLE-ANCHOR
-    is the read's answer then)."""
+    that starts empty in the run has none, and one alive before S "has no known parts before its first anchor reading,
+    as it has no balance there ...: its parts are one hole part, of the hole balance, possibly anyone's" (L §5.10
+    Parts, 2.1-F10); its question is the balance's HOLE-ANCHOR one (an opening at S drops it, preset)."""
     if self.base is not None and self.point is not None:
         return self.base.plog_state(place, unit, self.point)
+    st0 = self.default(place, unit)
+    if st0.val is None and not st0.hole and not st0.bad:
+        return PState(holes=(HolePart(UNK, [self.anchor_question(place)], [(ANY, ANY)]),))
     return PState()
 
 
@@ -421,6 +476,14 @@ def w_pgroup_run(self, place, unit, grp, prev, refused):
     if batch:
         st = self.ptake_batch(place, unit, st, batch, grp[-1].key, bad)
     for e in pads:
+        if hb_of(st) is not None and isinstance(e.val, Num) and not isinstance(e.flow, Num):
+            # the first pad of a place alive before S (2.1-F10): its amount is a hole, as the booked balance is, and
+            # the reading states the total; L §5.19 with the hole balance's part among the booked parts (pstated_hb)
+            if others and self.pstated_rows(e):
+                st = self.ppad_parts(place, unit, st, e, others)
+            else:
+                st = self.pstated_safe(place, unit, st, e.val.q, e)
+            continue
         st = self.ppad_parts(place, unit, st, e, others)
     return st, bad
 
@@ -545,6 +608,8 @@ def w_pstated(self, place, unit, base, total, parts, e):
     if base.bad is not None:
         return base
     coll = base.coll
+    if hb_of(base) is not None:
+        return self.pstated_hb(place, unit, base, total, parts, e)
     if not parts:
         gap = total - _st_total(base)
         if gap == 0:
@@ -618,6 +683,68 @@ def w_pstated(self, place, unit, base, total, parts, e):
         for lab, a in r.known.items():
             known[lab] = known.get(lab, Fraction(0)) + a
         holes.extend(r.holes)
+    return _state_of(known, holes, coll)
+
+
+def w_pstated_hb(self, place, unit, base, total, parts, e):
+    """The first anchor or pad of a place alive before S (L §5.10 Parts, 2.1-F10, with L §5.19): the hole part of the
+    hole balance is among the booked parts, so the booked total, and the gap of the unstated rest, is a hole. A stated
+    part's booked part is its known parts (the hole part is in the rest), so its own gap is known and goes as §5.19
+    says. The rest's gap could be negative by any amount, a take by an outflow nobody knows that "could reach under
+    some reading of the holes" every booked part of the rest (L §5.14), so they merge: the rest is one hole part of
+    its stated amount, the reading's unstated rest (`whose are <a> of <x> at <instant>?`, L §8.1), possibly anyone's
+    but the stated labels; none where the stated parts cover the total."""
+    from .walk import kday
+    coll = base.coll
+    hb = hb_of(base)
+    stated = []
+    if parts:
+        m = self.m
+        pk = self.pk(place)
+        for qn, v, pr in parts:
+            q = getattr(pr, 'ofq', None)
+            if q is None:
+                raise refuse('RUN-DOMAIN', 'of %s: a party, a batch or the pair' % _ntext(qn))
+            check_sort(m, pk, place, q)
+            if not isinstance(v, Num):
+                raise NotYet('a stated part that is a hole or none')
+            stated.append((q, v.q))
+    tot_s = sum((v for q, v in stated), Fraction(0))
+    if tot_s > total:
+        return PState(coll=coll, bad=refuse('RUN-RECORD', 'the stated parts of %s at %s sum to %s, over its total %s' % (
+            place, '%s %s' % (kday(e.key).isoformat(), 'start' if e.key[1] == 0 else 'end'), fmt(qty(tot_s, unit)),
+            fmt(qty(total, unit)))))
+    labs = labels_of(self.pk(place))
+    known = {}
+    holes = []
+    gl = []
+    for q, v in stated:
+        kq = dict((lab, a) for lab, a in base.known.items() if lab_hits(lab, q))
+        g = v - sum(kq.values(), Fraction(0))
+        gl.append(('of %s' % _qtext(q), sum(kq.values(), Fraction(0)), v))
+        if g >= 0:
+            for lab, a in kq.items():
+                known[lab] = known.get(lab, Fraction(0)) + a
+            if g > 0:
+                full = _full_label(q, labs)
+                if full is not None:
+                    known[full] = known.get(full, Fraction(0)) + g
+                else:
+                    holes.append(HolePart(g, [self.pgap_question(place, e, g, q)], [_pattern(q)], sure=True))
+        else:
+            r = self.pgap_take(place, unit, kq, (), -g, e, coll)
+            if r.bad is not None:
+                return r
+            for lab, a in r.known.items():
+                known[lab] = known.get(lab, Fraction(0)) + a
+            holes.extend(r.holes)
+    rest = total - tot_s
+    gl.append(('rest', Hole(hb.qs), rest))
+    if getattr(e, 'row', None) is not None:
+        self.__dict__.setdefault('pgaps', {})[e.row.sid] = gl
+    if rest > 0:
+        holes.append(HolePart(rest, [self.pgap_question(place, e, rest)], [(ANY, ANY)],
+                              [_pattern(q) for q, v in stated]))
     return _state_of(known, holes, coll)
 
 
@@ -1134,6 +1261,8 @@ def w_ptake_of(self, mv, lg, key):
     if tk is None and isinstance(frm, Thing) and self.pk(frm.name) is not None:
         self.pneed(frm.name, lg.unit, key)
         tk = self.__dict__.get('ptake', {}).get((mv.id, lg.name))
+        if tk is None:
+            tk = self.ptake_same(mv, lg)
     if tk is None:
         if isinstance(lg.amount, Num) and lg.amount.q == 0:
             return Take(frm.name if isinstance(frm, Thing) else None)
@@ -1143,6 +1272,33 @@ def w_ptake_of(self, mv, lg, key):
         raise Unspecified('§5.14', 'the take of %s.%s, a leg the walk didn\'t book at %s' % (
             mv.id, lg.name, frm.name if isinstance(frm, Thing) else '?'))
     return tk
+
+
+def w_ptake_same(self, mv, lg):
+    """L §5.14: "Two observed rows stated `same` are one movement (§5.19), so its take at the `from` end and its arrival
+    at the `to` end belong together": the take of mv's leg is the one its group booked at that place (a leg of the same
+    name first, then any leg out of that place in that unit), or None."""
+    pr = self.same_pairs().get(getattr(mv, 'id', None))
+    if pr is None:
+        return None
+    frm = lg.frm
+    takes = self.__dict__.get('ptake', {})
+    for x in pr[0]:
+        if x == mv.id:
+            continue
+        o = self.decs.get(x) or self.movement(x)
+        if o is None:
+            continue
+        legs = sorted(o.legs, key=lambda g: g.name != lg.name)
+        for g in legs:
+            if isinstance(g.frm, Thing) and g.frm.name == frm.name and (g.unit or '*') == (lg.unit or '*'):
+                tk = takes.get((x, g.name))
+                if tk is not None:
+                    return tk
+                bad = self.bad_legs.get((x, g.name))
+                if bad is not None:
+                    raise bad
+    return None
 
 
 # -- the fill over (part, outflow) arcs (L §5.14 The take is a fill over arcs) ---------------------------------------
@@ -1183,7 +1339,83 @@ def w_pterms(self, pk, s, w_mv, day, key, coll):
     finally:
         eng.stack.pop()
     coll.merge(c)
+    if isinstance(w_mv, Mv) and any(isinstance(v, Hole) for v in vals):
+        vals = self.pterms_readings(tk, env, ctx, w_mv, vals)
     return vals
+
+
+def w_pterms_readings(self, tk, env, ctx, w_mv, vals):
+    """L §5.14 A hole in a term: the take's reach is "under some reading of the holes". An attribute of w that is a
+    hole stands for a value of its declared type, so where it is a key of a kind (or a bool), each thing of that kind
+    is one reading of it; a term that every reading gives one value is that value, as an order term over a hole part
+    is known where every possible label gives it one value (L §8.1). Other holes stay holes. The readings are
+    evaluated apart: what they cache is dropped, and they leave no register, trace or walk record (writer 11)."""
+    import itertools
+    import collections
+    eng = self.eng
+    m = self.m
+    src = eng.mv_record(w_mv, ctx)
+    attrs = getattr(src, 'attrs', None) or {}
+    holes = [a for a, v in sorted(attrs.items()) if isinstance(v, Hole)]
+    if not holes or getattr(src, 'kind', None) not in m.kinds:
+        return vals
+    types = dict(m.kind_attrs(src.kind))
+    axes = []
+    for a in holes:
+        t = types.get(a)
+        if t is None:
+            continue
+        if t.k == 'bool':
+            axes.append((a, [True, False]))
+        elif t.k == 'key' and t.ix in m.kinds:
+            sub = m.kinds[t.ix].subtree(m)
+            things = [Thing(x.name) for x in sorted(m.things.values(), key=lambda x: x.name) if x.base in sub or
+                      any(getattr(e, 'kind', None) in sub for e in getattr(x, 'entries', ()))]
+            if things:
+                axes.append((a, things))
+    if not axes:
+        return vals
+    import copy
+    from .values import vkey
+    per = []
+    old_memo, old_tr, old_wb = eng.memo, eng.tracing, getattr(eng, '_explaining_wb', False)
+    eng.memo = collections.ChainMap({}, old_memo)
+    eng.tracing = False
+    eng._explaining_wb = True
+    try:
+        for combo in itertools.product(*[vs for a, vs in axes]):
+            rec = copy.copy(src)
+            rec.attrs = dict(attrs)
+            for (a, vs), v in zip(axes, combo):
+                rec.attrs[a] = v
+            if hasattr(rec, 'ran'):
+                rec.ran = True
+            env2 = dict(env)
+            env2[tk.w] = Mv(w_mv.id, rec)
+            eng.stack.append(_coll())
+            try:
+                row = []
+                for e in tk.order:
+                    try:
+                        row.append(eng.ev(e, env2, ctx))
+                    except TallyError as err:
+                        if load_now(err):
+                            raise
+                        row.append(None)
+                per.append(row)
+            finally:
+                eng.stack.pop()
+    finally:
+        eng.memo, eng.tracing, eng._explaining_wb = old_memo, old_tr, old_wb
+    out = []
+    for i, v in enumerate(vals):
+        if isinstance(v, Hole):
+            got = [r[i] for r in per]
+            if got and all(g is not None and not isinstance(g, Hole) for g in got) and \
+                    len(set(vkey(g) for g in got)) == 1:
+                v = got[0]
+        out.append(v)
+    return tuple(out)
 
 
 def w_pfill(self, place, unit, pk, step, supplies, outflows, key, coll, bad):
@@ -1224,7 +1456,7 @@ def w_pfill(self, place, unit, pk, step, supplies, outflows, key, coll, bad):
                     raise
                 bad[(o[0].mv.id, o[1].name)] = err
                 continue
-            (unsure if any(isinstance(v, Hole) for v in t) else certain).append((si, oi, t))
+            (unsure if any(isinstance(v, Hole) for v in t) or s.amt is UNK else certain).append((si, oi, t))
     if any((o[0].mv.id, o[1].name) in bad for o in outs):
         return
     takes = self.__dict__.setdefault('ptake', {})
@@ -1275,14 +1507,44 @@ def w_pfill(self, place, unit, pk, step, supplies, outflows, key, coll, bad):
     def group(si):
         s = supplies[si]
         return ('lab', s.lab) if s.hole is None else ('hole', si)
+    def before(t1, t2):
+        """Whether terms t1 rank before t2 under every reading of their holes: the order is lexicographic (§5.12), so
+        a known first difference decides whatever the later terms are (writer 11, the migrator's item 8)."""
+        for x, y in zip(t1, t2):
+            if isinstance(x, Hole) or isinstance(y, Hole):
+                return False
+            r = eng.cmp3(x, y, None)
+            if r:
+                return r < 0
+        return False
     undecided = False
-    for cl in classes:
-        cl = [a for a in cl if live(a)]
-        if not cl:
-            continue
-        if any(live(u) and not after(u, cl[0][2]) for u in unsure):
-            undecided = True
-            break
+    ci = 0
+    while True:
+        while ci < len(classes) and not any(live(a) for a in classes[ci]):
+            ci += 1
+        cl = [a for a in classes[ci] if live(a)] if ci < len(classes) else []
+        lu = [u for u in unsure if live(u)]
+        if cl and all(after(u, cl[0][2]) for u in lu):
+            ci += 1
+        else:
+            # an undecided arc whose known first terms rank it before every other live arc is taken first under every
+            # reading of its holes: a class of its own, with the arcs of its outflow from parts of its label (their
+            # terms are its terms, and their order changes no take). The hole balance's part never is (its amount is
+            # unknown).
+            pick = None
+            for u in lu:
+                if supplies[u[0]].amt is UNK:
+                    continue
+                mates = [b for b in lu if b[1] == u[1] and group(b[0]) == group(u[0])]
+                ids = set(id(b) for b in mates)
+                if all(id(b) in ids or before(u[2], b[2]) for b in lu) and (not cl or before(u[2], cl[0][2])):
+                    pick = mates
+                    break
+            if pick is None:
+                if lu:
+                    undecided = True
+                break
+            cl = pick
         by_part = {}
         by_out = {}
         for a in cl:
@@ -1390,39 +1652,39 @@ def w_pundecided(self, place, unit, supplies, outs, arcs, coll):
     take together."""
     eng = self.eng
     total = sum(o[2] for o in outs)
-    certain = {}
-    unsure = set()
-    for si, oi, t in arcs:
-        if any(isinstance(v, Hole) for v in t):
-            unsure.add(si)
-        else:
-            certain.setdefault(oi, []).append((t, si))
     qs = set()
     for si, oi, t in arcs:
         for v in t:
             if isinstance(v, Hole):
                 qs |= set(v.qs)
 
-    def lt(a, b):
-        for x, y in zip(a, b):
+    def before(t1, t2):
+        # lexicographic under every reading of the holes: a known first difference decides (§5.12)
+        for x, y in zip(t1, t2):
+            if isinstance(x, Hole) or isinstance(y, Hole):
+                return False
             r = eng.cmp3(x, y, None)
             if r:
                 return r < 0
         return False
     reach = set()
     for si, s in enumerate(supplies):
-        if si in unsure or s.amt <= 0:
-            if s.amt > 0:
+        if s.amt is UNK:
+            # the hole balance's part (2.1-F10) is always within reach and never covers what is ranked after it
+            if any(x == si for x, oi, t in arcs):
                 reach.add(si)
             continue
+        if s.amt <= 0:
+            continue
         safe = True
-        for oi in range(len(outs)):
-            mine = [t for t, x in certain.get(oi, []) if x == si]
-            if not mine:
+        for x, oi, t in arcs:
+            if x != si:
                 continue
-            before = sum(supplies[x].amt for t2, x in certain.get(oi, []) if x != si and lt(t2, mine[0]))
-            if before < total:
+            ahead = sum(supplies[y].amt for y, o2, t2 in arcs
+                        if o2 == oi and y != si and supplies[y].amt is not UNK and before(t2, t))
+            if ahead < total:
                 safe = False
+                break
         if not safe:
             reach.add(si)
     amt = sum(supplies[si].amt for si in reach)

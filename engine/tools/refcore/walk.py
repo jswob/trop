@@ -1592,6 +1592,14 @@ class Walk:
             for y in range(n):
                 if x != y and not off[x] and not off[y] and reads_of(x, y):
                     after[x].add(y)
+        # a before or after line between two members orders their instances (L §5.14.2 Cycles: "the writer states
+        # before m or after m on one of them"); the component only lifts the order the reads alone don't give
+        wo = getattr(m, 'written_order', ())
+        for x in range(n):
+            for y in range(n):
+                if x != y and not off[x] and not off[y] and (info[x][0].move.id, info[y][0].move.id) in wo:
+                    after[x].add(y)
+                    after[y].discard(x)
         bad = {}
         for x in range(n):
             for y in sorted(after[x]):

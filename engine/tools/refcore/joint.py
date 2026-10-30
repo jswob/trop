@@ -59,6 +59,8 @@ class JointInfo:
         self.owner_place = {}      # (owner, representative) -> True when that owner holds a non-outside place there
         self.things = {}           # representative thing -> [(owner, name as written)]: things stated same, whose
         #                            entries are all kept and read together (L §6.1)
+        self.own_alias = {}        # the joint model's own names its same lines joined to a member's: name -> the
+        #                            representative, so a model that has it as a member still reads them (f.ania)
         self.place_others = {}     # representative place -> [(owner, kind, [(lives, version id or None, replace,
         #                            loc)])]: the other sides of places stated same whose lifespans may differ, read
         #                            together with the representative's (L §6.1; loader.joint_place_sides)
@@ -475,15 +477,28 @@ def joint_texts(texts, uses, options, pool=None, jfile=None, own=None):
     # the joint model's reads of a member, a.x (a.b.x of a member's member), as one name, and the keys written as
     # literals after them as the member's things
     keynames = dict((a, set(n for n, c in d.cat.items() if c in ('thing', 'place'))) for a, d in decls.items())
+    # a member that is a joint model declares its own names, those its same lines joined to one of its members' too:
+    # f.ania is f's ania, the one thing f made of it (L §6.1; E §3.1 step 1; writer 11, the probe writer's family)
+    rename_j = dict(rename)
+    alias = {}
+    for a in sorted(sub):
+        own = getattr(sub[a], 'own_alias', {}) or {}
+        if own:
+            rename_j[a] = set(rename[a]) | set(own)
+            for x, r in own.items():
+                alias[a + SEP + x] = a + SEP + r
     for f, ls in jlines:
         for l in ls:
-            l.toks = rewrite_member_refs(l.toks, rename, keynames)
+            l.toks = rewrite_member_refs(l.toks, rename_j, keynames)
+            if alias:
+                l.toks = [retok(t, alias[t.s]) if t.t == 'ID' and t.s in alias else t for t in l.toks]
     jdecls = collect_decls('', jlines, units)
     # same lines of things, places and kinds (the rest stay for the loader)
     joins, kept = same_joins(jf_lines, decls, jdecls)
     info = JointInfo()
     info.members = sorted(mlines)
     jmap, drop_secs, drop_keys = plan_joins(joins, decls, jdecls, info)
+    info.own_alias = dict((x, r) for x, r in jmap.items() if owner_of(x) == '')
     # a member that is a joint model: its place groups and its same lines of rows and movements, under its prefix
     hoisted = []
     for a in sorted(sub):

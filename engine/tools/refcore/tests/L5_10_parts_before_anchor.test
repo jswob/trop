@@ -1,0 +1,67 @@
+# L §5.10 Parts (2.1-F10): "A place alive before S has no known parts before its first anchor reading, as it has no
+# balance there (Balances, above; HOLE-ANCHOR): its parts are one hole part, of the hole balance, possibly anyone's
+# (§8.1), besides the parts arrivals add; a take from it reaches that hole part (§5.14), and the sign rule is not
+# checked against a hole balance, as in 2.0."  joint lives from 2016 and has no opening; r1 moves 100.00 from joint to
+# wrap, whose arrival rule keeps the owners by the leg read (rule moved).  q1: joint's balance and its parts read
+# before any anchor are the HOLE-ANCHOR hole (the read's own row, L §8.1).  q2: the take reached the hole part, so
+# the leg read of each party is HOLE-PART on the leg's 100.00, with the hole part's question.  q3: wrap's total is
+# known (100.00, carried through), its parts the arrival's hole part, whose questions are the take's (L §8.1).
+# (Was RUN-PLACE "wb[r1] takes joint below 0": a 2.1 parts walk that started joint at zero parts; the migrator.)
+=== m.tally
+model t
+  tally 2
+  on 2026-01-15
+  start 2021-01-01
+  end 2021-12-31
+
+source s "test"
+unit DUK: currency minor 0.01
+kind couples: parties
+kind persons: parties
+kind moves_own: transfers
+kind banks: place one min 0
+  owned by arrive
+  step minor(DUK)
+  takes k for w prorata ties by (if k.owner == ania_tomek then 0 else 1)
+place joint: banks DUK lives 2016-09-10..
+place wrap: banks DUK lives 2021-01-01..
+place world: outside lives 1900-01-01..
+input wb: observed
+def arrive[m in events, p in parties]: num at m.day
+  rule community = (if p == ania_tomek then 1 else 0)
+  rule moved beats community = m.cash.amount of p / m.cash.amount when m in transfers and m.cash.from in banks
+
+ask q1: bal(joint, 2021-03-31), bal(joint, 2021-03-31) of ania
+ask q2: o.cash.amount of p for o in moves_own over 2021-02-15..2021-02-15, p in parties on 2021-03-31
+ask q3: bal(wrap, 2021-03-31), bal(wrap, 2021-03-31) of ania_tomek
+
+version cast
+  cite s
+  known 2021-01-01
+  persons + [ania] lives 1988-01-01..
+  persons + [tomek] lives 1987-01-01..
+  couples + [ania_tomek] lives 2016-09-10..
+
+version open
+  cite s
+  governs always
+  known 2021-01-01
+  opening[wrap] = 0 at 2021-01-01 start
+
+version wv
+  cite s
+  governs 2021-01..2021-12
+  known 2021-01-01
+  covers wrap
+  wb[r1] = (on: 2021-02-15, kind: moves_own, leg cash from joint to wrap amount 100.00 DUK) "r1"
+=== expect
+q1: (?"joint has no opening or stated reading" (joint), ?"joint has no opening or stated reading" (joint))
+...
+q2 (o = wb[r1], p = ania_tomek): ?"joint: 100.00 DUK may be ania_tomek's: joint has no opening or stated reading" (joint)
+...
+q2 (o = wb[r1], p = ania): ?"joint: 100.00 DUK may be ania's: joint has no opening or stated reading" (joint)
+...
+q2 (o = wb[r1], p = tomek): ?"joint: 100.00 DUK may be tomek's: joint has no opening or stated reading" (joint)
+...
+q3: (100.00 DUK, ?"wrap: 100.00 DUK may be ania_tomek's: joint has no opening or stated reading" (wrap))
+...

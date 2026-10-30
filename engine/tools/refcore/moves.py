@@ -112,6 +112,17 @@ class Inst(Movement):
         return 'Inst(%s)' % self.id
 
 
+def _obs_attr(v, o):
+    """An observed row's attribute as a value: a hole names the row (L §3.1, §5.19); a ref to a movement (a key of an
+    event kind, L §3.1, §5.7) is that movement, its record found at the reader's cut (mreads.mv_record). Writer 11."""
+    if isinstance(v, tuple) and v:
+        if v[0] == 'hole':
+            return Hole([(v[1], o.sid)])
+        if v[0] == 'mvref':
+            return Mv(v[1])
+    return v
+
+
 class ObsMv(Movement):
     """An observation the cut sees (L §5.19)."""
 
@@ -121,7 +132,8 @@ class ObsMv(Movement):
         self.kind = o.kind
         self.day = o.day
         self.legs = legs
-        self.attrs = o.attrs
+        # a field that is a hole is read as that hole, naming the row; a ref as its movement (writer 11)
+        self.attrs = {a: _obs_attr(v, o) for a, v in o.attrs.items()} if o.attrs else o.attrs
         self.fulfils = o.fulfils
         self.forp = None
         self.err = None

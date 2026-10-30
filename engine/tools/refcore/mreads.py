@@ -87,8 +87,13 @@ def m_e_obsrow(self, n, env, ctx):
 
 
 def m_mv_record(self, v, ctx):
-    """The record behind a movement value at the context's timeline: a decision's run in the walk."""
+    """The record behind a movement value at the context's timeline: a decision's run in the walk. A movement named by
+    its id only (a row's ref to a movement, a batch's label) is found by its id at the context's cut."""
     src = v.src
+    if src is None:
+        src = self.mv_by_id(v.id, ctx)
+        if src is None:
+            return None
     if isinstance(src, Inst) and src.decision and not getattr(src, 'ran', False):
         w = ctx.walk if ctx.walk is not None else None
         run = None
@@ -103,6 +108,23 @@ def m_mv_record(self, v, ctx):
             return src
         return run
     return src
+
+
+def m_mv_by_id(self, mid, ctx):
+    """The record of the movement with id mid at the context's cut: a move's instance, or an observation; None when
+    the cut sees none (writer 11: a row's ref to a movement, L §3.1 `key K` of an event kind)."""
+    name = mid.split('[', 1)[0]
+    mi = self.m.moves.get(name)
+    if mi is not None:
+        insts = self.decision_instances(mi, ctx) if mi.decision else self.move_instances(mi, ctx)
+        for inst in insts:
+            if inst.id == mid:
+                return inst
+        return None
+    for o in self.observations(ctx):
+        if o.id == mid:
+            return o
+    return None
 
 
 def m_leg_refused(self, iid, leg, ctx, day=None):
@@ -1627,6 +1649,13 @@ def m_e_value(self, n, env, ctx):
             continue
         if getattr(n, '_price', None):
             pr = self.price_read(n._price, [Thing(u)], d, n, env, ctx, place, u)
+            if getattr(n, '_price_unkeyed', False) and isinstance(pr, Num):
+                # an unkeyed price read through its carry is one unit's price: the position's unit must be it, as for a
+                # price written as an expression (L §5.10; writer 11)
+                want = tuple(sorted([(cur, 1), (u, -1)]))
+                if tuple(sorted(pr.u)) != want:
+                    raise refuse('RUN-DOMAIN', 'value(%s) in %s: the price %s is not in %s/%s' % (
+                        place, cur, fmt(pr), cur, u))
         elif priced is not None:
             if priced._cur != cur or priced._per != u:
                 raise refuse('LOAD-UNIT', 'value(%s) in %s: %s is priced in %s/%s, not %s/%s' % (

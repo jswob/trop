@@ -841,7 +841,21 @@ def m_t_value(self, n, sc, expect):
                 len(hit[1].binds) == 0:
             # an unkeyed price, num CUR/u: an expression of that type with its keys (none) (L §5.10)
             hit = None
-        if hit is not None and hit[0] in ('input', 'def'):
+        if by.k == 'name' and hit is not None and hit[0] == 'input' and n.bylast and len(hit[1].binds) == 0:
+            # an unkeyed price that is a reading, read through its carry, `by last(px)` (L §5.10, §4.6; L §3.6's
+            # example): the key is asked only "when the place may hold several units".  Its type is num CUR/u, as
+            # for a price written as an expression; a position in another unit is RUN-DOMAIN at run (writer 11)
+            inf = hit[1]
+            pt = inf.type
+            if pt is None or pt.k != 'num' or not any(b == n.cur and e == 1 for b, e in (pt.u or ())) or \
+                    len(pt.u) != 2:
+                raise uerr('value by last(%s): the price is %s, not num %s/u' % (by.id, T.show(pt), n.cur), n.loc)
+            by._r = ('input', inf.id)
+            n._price = inf.id
+            n._price_kind = 'input'
+            n._price_unkeyed = True
+            self.edge(sc, ('input', inf.id), 'explicit')
+        elif hit is not None and hit[0] in ('input', 'def'):
             # an input or def of type num CUR/u keyed by unit, read at the position's unit (L §5.10)
             inf = hit[1]
             if len(inf.binds) != 1 or inf.type is None or inf.type.k != 'num':
@@ -1294,8 +1308,9 @@ def m_strata(self):
             if (any(_meets(r, changes[b], m) for r in mi.read_targets if r[0] != 'move') or reads_b) and \
                     not reaches(('move', b), ('move', a)):
                 after[a].add(b)
-    # before / after lines
+    # before / after lines; the pairs they write are kept for the walk's components (writer 11: (a, b) is a after b)
     m.deferred_plans = {}
+    m.written_order = set()
     for a in dec:
         mi = m.moves[a]
         for w, other in mi.decl.order:
@@ -1315,9 +1330,11 @@ def m_strata(self):
                                     mi.decl.loc)
                 after[a].discard(b)
                 after[b].add(a)
+                m.written_order.add((b, a))
             else:
                 after[a].add(b)
                 after[b].discard(a)
+                m.written_order.add((a, b))
     # cycles left: LOAD-ORDER where the days are known at load, RUN-ORDER in the walk otherwise
     state = {}
     m.order_groups = []

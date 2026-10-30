@@ -1990,6 +1990,31 @@ class Loader:
                     elif r.instant is not None:
                         sid += ' %s' % (r.instant[0],)
                 r.sid = sid
+        self.check_mv_refs()
+
+    def check_mv_refs(self):
+        """An observed row's attribute that names a movement (a key of an event kind, L §3.1, §5.7) names an observed
+        row of that kind, or an instance of a move of it (LOAD-KEY otherwise, as for a key not of its kind)."""
+        m = self.m
+        obs = {}
+        for inf in m.inputs.values():
+            if getattr(inf, 'observed', False):
+                for o in getattr(inf, 'obs', ()):
+                    obs[o.sid] = o
+        for o in obs.values():
+            if not o.attrs:
+                continue
+            types = None
+            for a, v in o.attrs.items():
+                if not (isinstance(v, tuple) and v and v[0] == 'mvref'):
+                    continue
+                if types is None:
+                    types = dict(m.kind_attrs(o.kind))
+                kid = types[a].ix
+                name = v[1].split('[', 1)[0]
+                tk = m.moves[name].kind if name in m.moves else (obs[v[1]].kind if v[1] in obs else None)
+                if tk is None or tk not in m.kinds[kid].subtree(m):
+                    raise LoadError('LOAD-KEY', '%s is not a key of %s' % (v[1], kid), o.loc)
 
     def check_part_rows(self, inf):
         """A reading's stated parts (L §5.19, tally 2.1): "They stand beside the reading's total, in the same version
@@ -2881,6 +2906,13 @@ def convert_value(m, node, ty, loc, factor, target, binds=None, pattern=None, al
             else:
                 added.append(('oneof', frozenset(a.days)))
         return Cal(tuple(node.weekends), tuple(node.yearly), node.yfrom, tuple(added))
+    if tk == 'key' and ty.ix in m.kinds and ty.ix in m.kinds['events'].subtree(m) and k in ('index', 'name'):
+        # a key of an event kind is a movement (L §3.1 `key K`, "a thing of kind K"; L §5.7; L §2.3 field: a ref): an
+        # observed row `kb[k03]` or a move's instance, kept by its id and read as that movement (writer 11, the
+        # migrator's lot_ref)
+        mid = movement_ref(m, node, loc)
+        if mid is not None:
+            return ('mvref', mid)
     if k in ('name', 'key', 'cur', 'mmdd'):
         if tk == 'key':
             return key_value(m, node, ty, loc)
@@ -2899,6 +2931,31 @@ def convert_value(m, node, ty, loc, factor, target, binds=None, pattern=None, al
             return ('node', node)
         raise LoadError('LOAD-UNIT', 'a distribution for %s' % T.show(ty), loc)
     raise LoadError('LOAD-UNIT', 'a value of the wrong type for %s' % target, loc)
+
+
+def movement_ref(m, node, loc):
+    """The id of the movement a row's ref names (an observed row by its id, a move's instance by its keys), or None
+    when it names no movement."""
+    if node.k == 'name':
+        name, keys = node.id, []
+    elif node.k == 'index' and node.obj.k == 'name':
+        name, keys = node.obj.id, node.keys
+    else:
+        return None
+    hit = m.lookup(name)
+    if hit is None:
+        return None
+    kind, info = hit
+    if kind == 'input' and getattr(info, 'observed', False):
+        if len(keys) != 1 or keys[0].k not in ('name', 'key', 'num'):
+            raise LoadError('LOAD-KEY', 'an observation row is named by its id: %s[<id>]' % info.id, loc)
+        return '%s[%s]' % (info.id, resolve_text(keys[0]))
+    if kind == 'move':
+        if len(keys) != len(info.binds):
+            raise LoadError('LOAD-KEY', 'wrong number of keys for %s' % info.id, loc)
+        kvs = [resolve_key_literal(m, kn, b.dom, loc) for kn, b in zip(keys, info.binds)]
+        return '%s[%s]' % (info.id, ', '.join(key_text(k) for k in kvs)) if kvs else info.id
+    return None
 
 
 def key_value(m, node, ty, loc):
