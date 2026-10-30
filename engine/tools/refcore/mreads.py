@@ -356,6 +356,11 @@ def m_made_to_exist_leg(self, src, name, ctx):
 def m_mv_kind_in(self, v, kind, ctx):
     src = v.src
     if src is None:
+        # writer 12 (F-1): a movement value with no record (a row's attribute naming a movement, moves._obs_attr; a
+        # batch label) is the movement of that id as an ask finds it, at the reader's cut (mv_by_id; L §3.1 `key K`, a
+        # movement a thing of its event kind, §5.7); one the cut doesn't see is in no kind
+        src = self.mv_by_id(v.id, ctx)
+    if src is None:
         return False
     return src.kind in self.m.kinds[kind].subtree(self.m)
 
