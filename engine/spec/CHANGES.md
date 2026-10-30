@@ -45,6 +45,7 @@ tally 2.1 adds owners and batches as labels on amounts, from session 6's decided
 | 2.1-F6 | L §5.19, §8.3 | a stated part below 0, and two stated parts of one reading that overlap, are `LOAD-PARTS` | writer 11's F-6 |
 | 2.1-F7 | L §8.1 | the hole part's questions are worded for a gap, an unstated rest, a cycle of observed rows, an unknown outflow and a stated part's open batches | writer 11's F-7 |
 | 2.1-F9 | L §8.1 | the question of a stated batch's part whose owners are open, at a place that keeps pairs | writer 11's F-9 |
+| 2.1-F10 | L §5.10 | a place alive before S has no known parts before its first anchor, as it has no balance: one hole part of the hole balance, which takes reach, and no sign checked against it | the migrator (A's joint account) |
 
 ---
 
