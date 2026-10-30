@@ -1,0 +1,309 @@
+model s6
+  tally 2
+  on 2026-01-10
+  start 2025-04-01
+  end 2025-12-31
+  note "Card S6: Daria and Marek Holm, the joint account, the divorce and the settlement, MRG and DIV; all made up."
+
+source card_s6 "Card S6, Cast and Entries: the stipulations of the case"
+source mrg_law "Card S6, Law: MRG-1 Spouses' property"
+source div_law "Card S6, Law: DIV-1 Divorce"
+source house_rules "Card S6, House rules: H-1 What we are worth"
+source court_d2 "Card S6, S6-D2: District Court Holt, certificate of finality, issued 2025-11-03, received 2025-11-05"
+source settlement_d3 "Card S6, S6-D3: settlement of Daria and Marek Holm, signed 2025-12-15"
+source banka_holt "Card S6, S6-R1: Banka Holt statement export, account 5150 2077, all rows from 2025-04-01 to 2025-12-31"
+source banka_lenska "Card S6, S6-R2: Banka Lenska statement, account 0420 6613 (Daria Holm), opened 2025-11-01"
+source car_values "Card S6, S6-R3: valuations of the car kept"
+
+unit DUK: currency minor 0.01
+
+unit car "a car (the Orsa 2.0 of 2022)"
+
+kind persons: parties
+
+kind couples: parties
+  note "a married couple as the owner of its joint property, and, after a divorce, of the former joint property until it is divided (DIV-1, H-1)"
+
+kind joint_accounts: place DUK min 0
+  owned by mrg_arrive
+  batched
+  step minor(DUK)
+  takes k for w v mrg1_v1 order take_first[w, k.owner], k.batch.day, line_of[k.batch]
+  note "an account kept as parts by owner and by the money's arrival (batch): MRG-1 point 2, money leaves in the order it came in"
+
+kind own_rows: event certain
+  leg cash: DUK
+  note "a row of Daria's own account"
+
+kind rows_r1: event certain
+  leg cash: DUK
+  attr line: int
+  note "a row of the joint account's statement, with its line number (MRG-1 point 2 orders one day's money as the statement lists it)"
+
+kind inheritances: rows_r1
+  attr heir: key persons
+
+kind openings: rows_r1
+  note "the money in the account when the statement starts (MRG-1 point 2: older than any of its rows)"
+
+kind pays_in: rows_r1
+  attr earner: key persons
+
+kind settle_pays: rows_r1
+  attr deal: key deals
+  attr payee: key persons
+  attr payer: key persons
+
+kind spends: rows_r1
+
+kind settlements: event certain
+  leg what: any
+  attr couple: key couples
+  attr deal: key deals
+  note "the division of former joint property by a written agreement (DIV-1 point 2)"
+
+kind vehicles: place car min 0 priced last(car_val)
+  owned by mrg_arrive
+  step 0.01 car
+  takes k for w order take_first[w, k.owner]
+  note "the car, kept as parts by owner, counted at its latest valuation on or before the day (H-1 point 2)"
+
+index deals: open
+  note "written agreements dividing former joint property; a deal's key comes with its version"
+
+place daria_own: accounts DUK lives 2025-11-01..
+  note "Banka Lenska 0420 6613, Daria's own, opened 2025-11-01"
+
+place garage: vehicles lives 1900-01-01..
+  note "where the household's car is counted; an early day stands for its start (L 5.7)"
+
+place joint: joint_accounts lives 1900-01-01..
+  note "Banka Holt 5150 2077, held by both; the day it was opened isn't given, so an early day stands for it (L 5.7)"
+
+place world: outside lives 1900-01-01..
+
+input bank: observed
+
+input car_val: num DUK/car reading
+
+input couple_of[p in persons]: key couples
+
+input dbank: observed
+
+input deal_couple[dl in deals]: key couples
+
+input deal_day[dl in deals]: date
+
+input deal_part[dl in deals, p in persons]: num
+
+input deal_value[dl in deals, x in vehicles]: money DUK
+
+input final_on[c in couples]: date
+  note "the day a couple's divorce judgment became final (never while married)"
+
+input joint_share[p in persons, c in couples]: num
+  note "H-1 point 1: half of the joint (after the divorce, the former joint) money and things to each spouse"
+
+input owns[p in persons, x in accounts]: num
+
+input settle_allot[dl in deals, x in places, p in persons]: num
+  note "the share of the former joint parts at a place that a settlement gives each former spouse"
+
+def counts_for[p in persons, q in parties, d in days]: num at d
+  note "H-1 point 1: how much of party q's parts counts for person p"
+  rule joint v h1_v1 = joint_share[p, q] when q in couples
+  rule own v h1_v1 = (if q == p then 1 else 0) when q in persons
+
+def deal_money[dl in deals, x in joint_accounts]: money DUK at deal_day[dl]
+  note "S6-D3 point 2: the former joint money the account holds on the day of signing, before the division"
+  rule d3 v d3_v = bal(x, deal_day[dl] start) of deal_couple[dl]
+
+def deal_net[p in persons, d in days]: num DUK
+  note "H-1 point 1: the settlement's payment counts for the one owed, against the one owing, from the signing until paid"
+  rule base = sum((if d >= deal_day[dl] then deal_owed[dl, p] - deal_owes[dl, p] else 0) + deal_paid[dl, p, d] - deal_received[dl, p, d] for dl in deals)
+
+def deal_owed[dl in deals, p in persons]: money DUK at deal_day[dl]
+  note "S6-D3 point 3: what the one who takes less is paid"
+  rule not_party v d3_v = 0 when deal_part[dl, p] == 0
+  rule pays v d3_v = 0 when deal_part[dl, p] > 0 and deal_owes[dl, p] > 0
+  rule receives v d3_v = sum(deal_owes[dl, q] for q in persons over .. where q != p) when deal_part[dl, p] > 0 and deal_owes[dl, p] == 0
+
+def deal_owes[dl in deals, p in persons]: money DUK at deal_day[dl]
+  note "S6-D3 point 3: whoever takes more than half of the former joint property so valued pays the other the difference, rounded to whole orts, half up"
+  rule more v d3_v = round(deal_takes[dl, p] - deal_part[dl, p] * deal_total[dl], minor(DUK), half-up) when deal_takes[dl, p] > deal_part[dl, p] * deal_total[dl]
+  rule not_more v d3_v = 0 when deal_takes[dl, p] <= deal_part[dl, p] * deal_total[dl]
+
+def deal_paid[dl in deals, p in persons, d in days]: money DUK = sum(o.cash.amount for o in settle_pays over .. d where o.deal == dl and o.payer == p)
+
+def deal_received[dl in deals, p in persons, d in days]: money DUK = sum(o.cash.amount for o in settle_pays over .. d where o.deal == dl and o.payee == p)
+
+def deal_takes[dl in deals, p in persons]: num DUK at deal_day[dl]
+  note "S6-D3 points 1-2: what the settlement gives each, at its values"
+  rule d3 v d3_v = sum(settle_allot[dl, x, p] * deal_value[dl, x] for x in vehicles on deal_day[dl]) + sum(settle_allot[dl, x, p] * deal_money[dl, x] for x in joint_accounts on deal_day[dl])
+
+def deal_total[dl in deals]: num DUK at deal_day[dl]
+  note "S6-D3 point 2: the former joint property so valued"
+  rule d3 v d3_v = sum(deal_value[dl, x] for x in vehicles on deal_day[dl]) + sum(deal_money[dl, x] for x in joint_accounts on deal_day[dl])
+
+def line_of[b in events]: int
+  note "a batch's line on the statement (MRG-1 point 2)"
+  rule not_a_row = 0 when not b in rows_r1
+  rule r1 = b.line when b in rows_r1
+
+def mrg_arrive[m in events, p in parties]: num at m.day
+  note "whose each arrival is"
+  rule divided v div1_v1 = settle_allot[m.deal, m.what.to, p] when m in settlements and p in persons
+  rule divided_others v div1_v1 = 0 when m in settlements and not p in persons
+  rule inherited v mrg1_v1 = (if p == m.heir then 1 else 0) when m in inheritances
+  rule opening v mrg1_v1 = (if p in couples then 1 else 0) when m in openings
+  rule pay_joint v mrg1_v1 = (if p == couple_of[m.earner] then 1 else 0) when m in pays_in and m.day < final_on[couple_of[m.earner]]
+  rule pay_own v div1_v1 = (if p == m.earner then 1 else 0) when m in pays_in and m.day >= final_on[couple_of[m.earner]]
+
+def parts_worth[p in persons, d in days]: num DUK
+  note "H-1: every owner's parts, counted for p as counts_for says; money at its balance, the car at its latest valuation"
+  rule base = sum(counts_for[p, q, d] * (bal(x, d) of q) for x in joint_accounts on d, q in parties on d) + sum(counts_for[p, q, d] * (value(x, d) in DUK of q) for x in vehicles on d, q in parties on d)
+
+def take_first[w in events, p in parties]: int at w.day
+  note "a settlement's relabel takes exactly the former joint parts; every payment takes the oldest money, whoever owns it and whatever it is for (MRG-1 point 2)"
+  rule divided v div1_v1 = (if p == w.couple then 0 else 1) when w in settlements
+  rule fifo v mrg1_v1 = 0 when not w in settlements
+
+def worth[p in persons, d in days]: num DUK at d
+  note "H-1: own money and things, plus half of the joint (after the divorce, the former joint, until divided) money and things, less what one owes; no rounding"
+  rule h1 v h1_v1 = parts_worth[p, d] + sum(bal(x, d) * owns[p, x] for x in accounts on d) + deal_net[p, d]
+
+move settle_garage[dl in deals]: settlements
+  on deal_day[dl]
+  at deal_day[dl]
+  reads garage
+  attr couple = deal_couple[dl]
+  attr deal = dl
+  leg what from garage to garage amount bal(garage) of deal_couple[dl]
+  note "DIV-1 point 2: from the signing each alone owns what the agreement gives them"
+
+move settle_joint[dl in deals]: settlements
+  on deal_day[dl]
+  at deal_day[dl]
+  reads joint
+  attr couple = deal_couple[dl]
+  attr deal = dl
+  leg what from joint to joint amount bal(joint) of deal_couple[dl]
+  note "DIV-1 point 2: from the signing each alone owns what the agreement gives them"
+
+ask s6_01: bal(joint, 2025-10-30) of marek, bal(joint, 2025-10-30) of holms as known 2025-11-10
+
+ask s6_02: deal_owes[dl, p], deal_owed[dl, p] for dl in deals, p in persons over .. where deal_part[dl, p] > 0 law 2025-12-31 as known 2026-01-10
+
+ask s6_03: worth[p, d] for p in persons over .., d in [2025-06-30, 2025-10-31, 2025-12-31] as known 2026-01-10
+
+version mrg1_v1
+  cite mrg_law
+  governs 2005-01-01..
+  known 2004-05-20
+  note "MRG-1 v1, from 2005-01-01"
+
+version div1_v1
+  cite div_law
+  governs 2005-01-01..
+  known 2004-05-20
+  note "DIV-1 v1, divorces from 2005-01-01"
+
+version h1_v1
+  cite house_rules
+  governs 2013-09-07..
+  known 2025-04-01
+  joint_share = 0 "H-1 point 1: joint money and things count only for the spouses"
+  joint_share[daria, holms] = 0.5 "H-1 point 1: half of the joint money and things"
+  joint_share[marek, holms] = 0.5 "H-1 point 1: half of the joint money and things"
+
+version cast
+  cite card_s6
+  governs always
+  known 2025-04-01
+  persons + [daria] lives 1986-02-27..
+  persons + [marek] lives 1984-07-08..
+  couples + [holms] lives 2013-09-07..
+  couple_of[daria] = holms "Cast: married 2013-09-07"
+  couple_of[marek] = holms "Cast: married 2013-09-07"
+  final_on[holms] = never "Cast: married; no divorce yet"
+  owns = 0 "Cast: we own nothing else"
+  owns[daria, daria_own] = 1 "S6-R2: Daria's own account"
+  opening[garage] = 1 car at 2025-04-01 start "Cast: an Orsa 2.0 from 2022"
+  opening[garage] of holms = 1 car at 2025-04-01 start "Cast: bought with joint money (MRG-1 point 1)"
+  opening[joint] = 2600.00 DUK at 2025-04-01 start "Cast: on 2025-04-01 it held 2 600.00"
+  opening[joint] of (holms, bank[r0]) = 2600.00 DUK at 2025-04-01 start "Cast: all of it joint money"
+
+version opening_money
+  cite card_s6
+  known 2025-03-31
+  note "the money in the account when the statement starts, as one movement before the run, so it can be a batch older than every row (MRG-1 point 2); its day isn't given"
+  bank[r0] = (on: 2025-03-31, kind: openings, leg cash from world to joint amount 2600.00 DUK, line: 0) assumed "the day the opening money came in isn't given; any day before the statement's first row serves, since MRG-1 point 2 makes it older than every row" "Cast: on 2025-04-01 it held 2 600.00, all of it joint money"
+
+version car_r3
+  cite car_values
+  known 2025-03-15
+  car_val = 22400 DUK/car known 2025-03-15 at 2025-03-15 "S6-R3: Holt Insurance"
+  car_val = 20100 DUK/car known 2025-09-20 at 2025-09-20 "S6-R3: Holt Insurance"
+  car_val = 18900 DUK/car known 2025-12-01 at 2025-12-01 "S6-R3: Orsa dealer, for Daria"
+
+version stmt_r1
+  cite banka_holt
+  governs 2025-04-01..2025-12-31
+  known 2025-04-01
+  note "each row is known on its own date (Entries). S6-R1 holds all the account's rows, but no covers line is written: on a covered day the settlement's relabel (L 5.14), which no bank row shows, would be modelled past and never booked (L 5.19). Row 6 is Marek's part of his mother's estate (S6-D1); row 13 is a holiday for the two of us"
+  bank[r1] = (on: 2025-04-05, kind: pays_in, leg cash from world to joint amount 3412.37 DUK, earner: daria, line: 1) known 2025-04-05 "S6-R1 row 1: SALARY D.HOLM ARVEN CLINIC"
+  bank[r2] = (on: 2025-04-05, kind: pays_in, leg cash from world to joint amount 3905.18 DUK, earner: marek, line: 2) known 2025-04-05 "S6-R1 row 2: SALARY M.HOLM KESTA TRANSPORT"
+  bank[r3] = (on: 2025-04-20, kind: spends, leg cash from joint to world amount 4212.80 DUK, line: 3) known 2025-04-20 "S6-R1 row 3: HOUSEHOLD CARD SETTLEMENT"
+  bank[r4] = (on: 2025-05-05, kind: pays_in, leg cash from world to joint amount 3412.37 DUK, earner: daria, line: 4) known 2025-05-05 "S6-R1 row 4: SALARY D.HOLM ARVEN CLINIC"
+  bank[r5] = (on: 2025-05-05, kind: pays_in, leg cash from world to joint amount 3905.18 DUK, earner: marek, line: 5) known 2025-05-05 "S6-R1 row 5: SALARY M.HOLM KESTA TRANSPORT"
+  bank[r6] = (on: 2025-05-12, kind: inheritances, leg cash from world to joint amount 18500.00 DUK, heir: marek, line: 6) known 2025-05-12 "S6-R1 row 6: NOTARY P.LUND ESTATE I.HOLM SHARE M.HOLM"
+  bank[r7] = (on: 2025-05-20, kind: spends, leg cash from joint to world amount 4096.35 DUK, line: 7) known 2025-05-20 "S6-R1 row 7: HOUSEHOLD CARD SETTLEMENT"
+  bank[r8] = (on: 2025-06-05, kind: pays_in, leg cash from world to joint amount 3412.37 DUK, earner: daria, line: 8) known 2025-06-05 "S6-R1 row 8: SALARY D.HOLM ARVEN CLINIC"
+  bank[r9] = (on: 2025-06-05, kind: pays_in, leg cash from world to joint amount 3905.18 DUK, earner: marek, line: 9) known 2025-06-05 "S6-R1 row 9: SALARY M.HOLM KESTA TRANSPORT"
+  bank[r10] = (on: 2025-06-20, kind: spends, leg cash from joint to world amount 4388.10 DUK, line: 10) known 2025-06-20 "S6-R1 row 10: HOUSEHOLD CARD SETTLEMENT"
+  bank[r11] = (on: 2025-07-05, kind: pays_in, leg cash from world to joint amount 3412.37 DUK, earner: daria, line: 11) known 2025-07-05 "S6-R1 row 11: SALARY D.HOLM ARVEN CLINIC"
+  bank[r12] = (on: 2025-07-05, kind: pays_in, leg cash from world to joint amount 3905.18 DUK, earner: marek, line: 12) known 2025-07-05 "S6-R1 row 12: SALARY M.HOLM KESTA TRANSPORT"
+  bank[r13] = (on: 2025-07-14, kind: spends, leg cash from joint to world amount 2750.00 DUK, line: 13) known 2025-07-14 "S6-R1 row 13: SOLMAR TRAVEL HOLIDAY"
+  bank[r14] = (on: 2025-07-20, kind: spends, leg cash from joint to world amount 4150.00 DUK, line: 14) known 2025-07-20 "S6-R1 row 14: HOUSEHOLD CARD SETTLEMENT"
+  bank[r15] = (on: 2025-08-05, kind: pays_in, leg cash from world to joint amount 3412.37 DUK, earner: daria, line: 15) known 2025-08-05 "S6-R1 row 15: SALARY D.HOLM ARVEN CLINIC"
+  bank[r16] = (on: 2025-08-05, kind: pays_in, leg cash from world to joint amount 3905.18 DUK, earner: marek, line: 16) known 2025-08-05 "S6-R1 row 16: SALARY M.HOLM KESTA TRANSPORT"
+  bank[r17] = (on: 2025-08-20, kind: spends, leg cash from joint to world amount 4301.65 DUK, line: 17) known 2025-08-20 "S6-R1 row 17: HOUSEHOLD CARD SETTLEMENT"
+  bank[r18] = (on: 2025-09-05, kind: pays_in, leg cash from world to joint amount 3412.37 DUK, earner: daria, line: 18) known 2025-09-05 "S6-R1 row 18: SALARY D.HOLM ARVEN CLINIC"
+  bank[r19] = (on: 2025-09-05, kind: pays_in, leg cash from world to joint amount 3905.18 DUK, earner: marek, line: 19) known 2025-09-05 "S6-R1 row 19: SALARY M.HOLM KESTA TRANSPORT"
+  bank[r20] = (on: 2025-09-20, kind: spends, leg cash from joint to world amount 4077.20 DUK, line: 20) known 2025-09-20 "S6-R1 row 20: HOUSEHOLD CARD SETTLEMENT"
+  bank[r21] = (on: 2025-10-05, kind: pays_in, leg cash from world to joint amount 3412.37 DUK, earner: daria, line: 21) known 2025-10-05 "S6-R1 row 21: SALARY D.HOLM ARVEN CLINIC"
+  bank[r22] = (on: 2025-10-05, kind: pays_in, leg cash from world to joint amount 3905.18 DUK, earner: marek, line: 22) known 2025-10-05 "S6-R1 row 22: SALARY M.HOLM KESTA TRANSPORT"
+  bank[r23] = (on: 2025-10-20, kind: spends, leg cash from joint to world amount 4245.90 DUK, line: 23) known 2025-10-20 "S6-R1 row 23: HOUSEHOLD CARD SETTLEMENT"
+  bank[r24] = (on: 2025-11-05, kind: pays_in, leg cash from world to joint amount 3905.18 DUK, earner: marek, line: 24) known 2025-11-05 "S6-R1 row 24: SALARY M.HOLM KESTA TRANSPORT"
+  bank[r25] = (on: 2025-12-05, kind: pays_in, leg cash from world to joint amount 3905.18 DUK, earner: marek, line: 25) known 2025-12-05 "S6-R1 row 25: SALARY M.HOLM KESTA TRANSPORT"
+  bank[r26] = (on: 2025-12-18, kind: settle_pays, leg cash from joint to daria_own amount 9543.88 DUK, deal: deal_d3, payee: daria, payer: marek, line: 26) known 2025-12-18 "S6-R1 row 26: TO D.HOLM SETTLEMENT 2025-12-15"
+
+version stmt_r2
+  cite banka_lenska
+  governs 2025-11-01..2025-12-31
+  known 2025-11-01
+  note "S6-R2; its row of 18.12.2025 FROM M.HOLM SETTLEMENT 9 543,88 is the same movement as S6-R1 row 26, written once there"
+  dbank[n1] = (on: 2025-11-05, kind: own_rows, leg cash from world to daria_own amount 3412.37 DUK) known 2025-11-05 "S6-R2: 05.11.2025 PAY ARVEN CLINIC"
+  dbank[n2] = (on: 2025-11-24, kind: own_rows, leg cash from daria_own to world amount 2140.30 DUK) known 2025-11-24 "S6-R2: 24.11.2025 CARD"
+  dbank[n3] = (on: 2025-12-05, kind: own_rows, leg cash from world to daria_own amount 3412.37 DUK) known 2025-12-05 "S6-R2: 05.12.2025 PAY ARVEN CLINIC"
+  dbank[n5] = (on: 2025-12-22, kind: own_rows, leg cash from daria_own to world amount 2310.75 DUK) known 2025-12-22 "S6-R2: 22.12.2025 CARD"
+
+version court
+  cite court_d2
+  governs always
+  known 2025-11-05
+  replace final_on[holms] = 2025-10-31 "S6-D2: the judgment of 09.10.2025 became final on 31.10.2025"
+
+version d3_v
+  cite settlement_d3
+  governs 2025-12-15..
+  known 2025-12-15
+  deal_couple[deal_d3] = holms "S6-D3: Daria Holm and Marek Holm"
+  deal_day[deal_d3] = 2025-12-15 governs always "S6-D3: signed 2025-12-15"
+  deal_part = 0 "S6-D3 point 3: only the two have parts"
+  deal_part[deal_d3, daria] = 0.5 "S6-D3 point 3: half of the former joint property"
+  deal_part[deal_d3, marek] = 0.5 "S6-D3 point 3: half of the former joint property"
+  deal_value[deal_d3, garage] = 17500.00 DUK "S6-D3 point 2: the car 17 500.00"
+  settle_allot = 0 "S6-D3 point 1: the settlement gives nothing else"
+  settle_allot[deal_d3, garage, daria] = 1 "S6-D3 point 1: Daria takes the car"
+  settle_allot[deal_d3, joint, marek] = 1 "S6-D3 point 1: Marek takes the former joint money in account 5150 2077"

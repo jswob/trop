@@ -1,0 +1,7 @@
+# S6
+S6-01: pass
+S6-02: read
+  ? S6-02/paid by: key says "Marek"; answer says null
+  ? S6-02/paid to: key says "Daria"; answer says null
+S6-03: pass
+pass 2  read 1

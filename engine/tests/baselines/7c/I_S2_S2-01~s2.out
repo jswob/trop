@@ -1,0 +1,37 @@
+s2_01 (g = deeds[d1]): (2 017.00 DUK, 2027-02-28, ?"On what day was the tax decision delivered (GFT-1 point 4)?" (delivered_on[rino]))
+  held: car_list = 41 300 DUK/car (motor_lists), read for 2026-08-31
+  cut 2027-03-15
+s2_02 (g = deeds[d1]): (0.00 DUK, 21 DUK)
+  held: car_list = 41 300 DUK/car (motor_lists), read for 2026-08-31
+  cut 2027-07-05
+s2_03 (p = oskar, d = 2026-12-31): 5 490.275 DUK
+  anchor: joint 2026-12-31 end, stated 12 480.55 DUK, difference ?"joint has no balance before 2026-12-31" (joint)
+  cut 2027-08-15
+s2_03 (p = oskar, d = 2027-06-30): 7 303.71 DUK
+  anchor: joint 2026-12-31 end, stated 12 480.55 DUK, difference ?"joint has no balance before 2026-12-31" (joint)
+  pad: joint 2027-06-09 end, pads:s2_r1_lines:joint@2027-06-09 end of 2 821.55 DUK
+  pad: joint 2027-06-30 end, pads:s2_r1_lines:joint@2027-06-30 end of 805.32 DUK
+  cut 2027-08-15
+s2_03 (p = oskar, d = 2027-07-31): 7 096.935 DUK
+  anchor: joint 2026-12-31 end, stated 12 480.55 DUK, difference ?"joint has no balance before 2026-12-31" (joint)
+  pad: joint 2027-06-09 end, pads:s2_r1_lines:joint@2027-06-09 end of 2 821.55 DUK
+  pad: joint 2027-06-30 end, pads:s2_r1_lines:joint@2027-06-30 end of 805.32 DUK
+  pad: joint 2027-07-31 end, pads:s2_r1_lines:joint@2027-07-31 end of -413.55 DUK
+  cut 2027-08-15
+s2_03 (p = talia, d = 2026-12-31): 44 173.275 DUK
+  anchor: joint 2026-12-31 end, stated 12 480.55 DUK, difference ?"joint has no balance before 2026-12-31" (joint)
+  held: car_list = 41 300 DUK/car (motor_lists), read for 2026-08-31
+  cut 2027-08-15
+s2_03 (p = talia, d = 2027-06-30): 43 565.71 DUK
+  anchor: joint 2026-12-31 end, stated 12 480.55 DUK, difference ?"joint has no balance before 2026-12-31" (joint)
+  pad: joint 2027-06-09 end, pads:s2_r1_lines:joint@2027-06-09 end of 2 821.55 DUK
+  pad: joint 2027-06-30 end, pads:s2_r1_lines:joint@2027-06-30 end of 805.32 DUK
+  held: car_list = 41 300 DUK/car (motor_lists), read for 2026-08-31
+  cut 2027-08-15
+s2_03 (p = talia, d = 2027-07-31): 42 958.935 DUK
+  anchor: joint 2026-12-31 end, stated 12 480.55 DUK, difference ?"joint has no balance before 2026-12-31" (joint)
+  pad: joint 2027-06-09 end, pads:s2_r1_lines:joint@2027-06-09 end of 2 821.55 DUK
+  pad: joint 2027-06-30 end, pads:s2_r1_lines:joint@2027-06-30 end of 805.32 DUK
+  pad: joint 2027-07-31 end, pads:s2_r1_lines:joint@2027-07-31 end of -413.55 DUK
+  held: car_list = 41 300 DUK/car (motor_lists), read for 2026-08-31
+  cut 2027-08-15

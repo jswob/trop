@@ -5,7 +5,7 @@
     python3 -I -B engine/tests/map/examples.py            # the lint: exit 1 on any fault
 
 An example is an English description the suite was made from: a household (its story), a law text (its provision in
-the case set's acts.md), an old model (its story header), a light twin, a blind text. Its row names:
+the case set's acts.md), an old model (its story header), a light twin, a blind text, a blind card (cases 1.4.0). Its row names:
 - unit: the catalogue edges tagged (map/tags.tsv) on its integration checks' questions or texts; for a law text only
   the LAW-axis ones (a household loads its whole law set, so its other edges say nothing of one text);
 - integration: its checks in checks.tsv, as ids or id globs (a glob stands for every check of a household);
@@ -155,6 +155,10 @@ def build():
         story = [os.path.join(d, f) for d in ('integration/blind/invented-b1', 'integration/blind/invented-b2')
                  for f in sorted(os.listdir(ROOT + T + d)) if f.startswith(b + '-')]
         row('blind:' + b, 'blind text', T + story[0] if story else 'none: MISSING', ms, {tag_id(by_id[i]) for i in ms}, [])
+    # the blind cards (session 7c, cases 1.4.0): one example per card, its story the card (defs/blind7.tsv's checks)
+    for card in sorted(d for d in os.listdir(ROOT + T + 'cases') if re.match(r'^S\d+$', d)):
+        ms = [c['id'] for c in integ if c['id'].startswith('I:%s:' % card)]
+        row('card:' + card, 'blind card', T + 'cases/%s/card.md' % card, ms, [], [], 'no check runs its text')
     with open(OUT, 'w', encoding='utf-8') as f:
         f.write('# The examples and their three levels (TESTING.md §9). Written by map/examples.py --build; '
                 'never edit by hand.\n')

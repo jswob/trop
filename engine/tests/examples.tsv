@@ -162,3 +162,9 @@ blind:I-12	blind text	engine/tests/integration/blind/invented-b2/I-12-divorce-di
 blind:I-13	blind text	engine/tests/integration/blind/invented-b2/I-13-income-protection-claim.md	NUM-02 NUM-03 TIME-05 LAW-03 LAW-07 LIFE-02 ASK-03	I:hardset/modeller-b2/I-13/claim	none: no load.tsv row names it; its checks run at full size
 blind:I-14	blind text	engine/tests/integration/blind/invented-b2/I-14-children-two-homes.md	NUM-05 TIME-05 PTY-04 PTY-05 LAW-11 LIFE-04	I:hardset/modeller-b2/I-14/homes	none: no load.tsv row names it; its checks run at full size
 blind:I-15	blind text	engine/tests/integration/blind/invented-b2/I-15-gold-grams-solars.md	NUM-01 OWN-06 FLOW-02 CUR-01 CUR-02 VAL-05 SCEN-04	I:hardset/modeller-b2/I-15/gold	none: no load.tsv row names it; its checks run at full size
+card:S1	blind card	engine/tests/cases/S1/card.md	none: no edge is tagged on its checks	I:S1:S1-01~s1	none: no load.tsv row names it; its checks run at full size
+card:S2	blind card	engine/tests/cases/S2/card.md	none: no edge is tagged on its checks	I:S2:S2-01~s2	none: no load.tsv row names it; its checks run at full size
+card:S3	blind card	engine/tests/cases/S3/card.md	none: no edge is tagged on its checks	I:S3:S3-01~s3	none: no load.tsv row names it; its checks run at full size
+card:S4	blind card	engine/tests/cases/S4/card.md	none: no edge is tagged on its checks	I:S4:S4-01~s4 I:S4:S4-03P~pinned	none: no load.tsv row names it; its checks run at full size
+card:S5	blind card	engine/tests/cases/S5/card.md	none: no edge is tagged on its checks	I:S5:S5-01~s5	none: no load.tsv row names it; its checks run at full size
+card:S6	blind card	engine/tests/cases/S6/card.md	none: no edge is tagged on its checks	I:S6:S6-01~s6	none: no load.tsv row names it; its checks run at full size

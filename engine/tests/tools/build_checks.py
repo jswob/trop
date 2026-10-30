@@ -344,6 +344,19 @@ for l in open(ROOT + CHK + 'holdout.tsv', encoding='utf-8') if os.path.exists(RO
         baseline=base if os.path.exists(ROOT + base) else '', question=cid.split(':')[-1].split('~')[0],
         note=note + ' | unsealed holdout (session 5r), cases 1.2.0')
 
+# --- the blind cards (session 7c, cases 1.4.0): session 7's cards S1..S6 as written blind in 7b, one check per card with
+# all its asks, and S4's pinned twin (G2 Q-1) (defs/blind7.tsv); the baseline is refcore's output, marked by compare.py
+# against keys/S<n> (baselines/7c/marks/)
+B7C = SNAP + '7c/'
+for l in open(ROOT + CHK + 'blind7.tsv', encoding='utf-8') if os.path.exists(ROOT + CHK + 'blind7.tsv') else []:
+    if not l.strip() or l.startswith('#'):
+        continue
+    cid, layer, cwd, files, asks, note = l.rstrip('\n').split('\t')
+    base = B7C + cid.replace('/', '__').replace(':', '_') + '.out'
+    add(id=cid, layer=layer, cwd=cwd, files=' '.join(cwd + '/' + f for f in files.split()), asks=asks,
+        baseline=base if os.path.exists(ROOT + base) else '', question=cid.split(':')[-1].split('~')[0],
+        note=note + ' | blind cards (session 7c), cases 1.4.0')
+
 # --- retired from the quick set (4.5c, the user's calls of 2026-10-29): the rows stay, ids are for life; a `not-run:`
 # note keeps run.py from running them, and load/load.tsv lists each with its load twin
 RETIRE = [
@@ -399,6 +412,8 @@ def key_label(r):
     if r['baseline'].startswith(B7) and not r['block']:  # a household run's 7b file keeps its asks' key labels
         return ('keyed by keys_probes.py (cases 1.3.0, session 7b); the agreeing output is the baseline' if i.startswith('U:')
                 else 'marked by compare.py against the key (cases 1.3.0, session 7b); the passed output is the baseline')
+    if r['baseline'].startswith(B7C):
+        return 'marked by compare.py against keys/%s (cases 1.4.0, session 7c); the passed output is the baseline' % i.split(':')[1]
     if r['baseline'].startswith(SNAP + '5r/'):
         return 'marked by compare.py against keys/C, keys/E2 (cases 1.2.0; session 5r, after its text fixes); the passed output is the baseline'
     if r['baseline'].startswith(SNAP + '4.5c/'):
