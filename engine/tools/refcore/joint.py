@@ -781,6 +781,20 @@ def thing_kind(name, cat, d):
     return (o + SEP + k) if o else k
 
 
+def decl_keeps_parts(d, bare):
+    """Whether a member's (or the joint model's) declared place keeps parts: its kind or a parent states the parts
+    clauses (L §3.6, §5.7)."""
+    kn = d.places[bare][0]
+    seen = set()
+    while kn is not None and kn not in seen and kn in d.kinds:
+        seen.add(kn)
+        kd = d.kinds[kn]
+        if getattr(kd, 'pclauses', None):
+            return True
+        kn = kd.parent
+    return False
+
+
 def plan_joins(joins, decls, jdecls, info):
     """Union the joined names; pick each group's representative; check kinds (LOAD-SAME).  Returns the name map
     (name -> representative), the blocks to drop per owner ({(fname, start)}) and the entry keys to drop per owner
@@ -864,6 +878,12 @@ def plan_joins(joins, decls, jdecls, info):
                 members.append((x, o, bare, full_kind(o, kn), None, False, ('enter', ent, eline), d))
         a0, b0, l0 = lines_of[root][0]
         if cat == 'place':
+            # L §6.1 (tally 2.1, R-2, C-9): "a place whose kind keeps parts (§3.6) can't be stated same at all
+            # (LOAD-PARTS), since two members' arrival rules would book its parts"
+            for mm in members:
+                if decl_keeps_parts(mm[7], mm[2]):
+                    raise LoadError('LOAD-PARTS', 'same %s = %s: %s keeps parts' % (shown(a0), shown(b0), shown(mm[0])),
+                                    l0.loc)
             inside = [mm for mm in members if not mm[5]]
             kinds = sorted(set(mm[3] for mm in inside))
             if len(kinds) > 1:

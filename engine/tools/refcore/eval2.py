@@ -944,13 +944,32 @@ def m_path_stat(self, n, env, ctx, to=None):
         st.update(count=cnt, value=Num(s, ()), se=self.se_share(s, M))
         return st
     if n.fn == 'mean':
-        acc = None
+        # L §5.16 (tally 2.1, 2.1-15): "The sums under them aren't values at a key, so the 4 096-digit cap doesn't
+        # reach them (§7.1)": the sum is kept as a fraction (a Num is capped where it is made), in the first term's
+        # unit as + takes it; the mean itself is the line's value, capped as any
         for v in kept:
             if not isinstance(v, Num):
                 raise refuse('LOAD-UNIT', 'mean of %s' % fmt(v))
-            acc = v if acc is None else _ev().arith('+', acc, v, None, None, None)
-        mean = Num(acc.q / M, acc.u, enc=None if acc.enc is None else
-                   ((None, None) if acc.enc[0] is None else (acc.enc[0] / M, acc.enc[1] / M)))
+        v0 = kept[0]
+        if all(v.u == v0.u and not v.rate for v in kept):
+            tot = sum((v.q for v in kept), Fraction(0))
+            any_enc = any(v.enc is not None for v in kept)
+            encs = [v.enc if v.enc is not None else (v.q, v.q) for v in kept]
+            enc = None if any(x[0] is None for x in encs) else (sum((x[0] for x in encs), Fraction(0)),
+                                                                sum((x[1] for x in encs), Fraction(0)))
+            acc = Num(v0.q, v0.u)       # the unit the sum is in, for the standard error
+            mean_q = tot / M
+        else:
+            # terms in units + converts, a rate: summed as + sums them (each partial sum a value, as on 2.0)
+            acc = None
+            for v in kept:
+                acc = v if acc is None else _ev().arith('+', acc, v, None, None, None)
+            any_enc = acc.enc is not None
+            enc = acc.enc if any_enc else None
+            mean_q = acc.q / M
+        _ev().check_digits(mean_q)
+        mean = Num(mean_q, acc.u, enc=None if not any_enc else
+                   ((None, None) if enc is None or enc[0] is None else (enc[0] / M, enc[1] / M)))
         st.update(value=mean, se=lambda: self.se_mean([v.q * (U.conv(v.u, acc.u) or 1) for v in kept], mean.q))
         return st
     q = self.ev(n.q, env, ctx)

@@ -1,0 +1,65 @@
+# Writer 11 (tally 2.1, 2.1-17, C-9). L §6.1 Identities are written: "a place whose kind keeps parts (§3.6) can't be
+# stated same at all (LOAD-PARTS), since two members' arrival rules would book its parts"; L §8.3 LOAD-PARTS
+# `same <p> = <q>: <x> keeps parts`.
+=== options pin=bytes
+=== joint.tally
+model family
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+  use a = "ana.tally" sha256 "8c84b74dc0b49589d87291460bb625f593f0d8ee5d618f9fcce20f9be127f93f"
+  use b = "ben.tally" sha256 "b1a051c64f2091b933a1912ca9b1b358dea233fd3267ed1e6c3da2fe98397e48"
+  same a.konto = b.konto
+
+ask t: bal(a.konto, 2026-06-30)
+=== ana.tally
+model ana
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+kind persons: parties
+kind savings: place PLN min 0
+  owned by arrive
+  step minor(PLN)
+  takes k for w prorata
+place konto: savings lives 2026-01-01..
+def arrive[m in events, p in parties]: num = 1 at m.day
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 0 PLN at 2026-01-01 start
+
+ask q: bal(konto, 2026-06-30)
+=== ben.tally
+model ben
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+kind persons: parties
+kind savings: place PLN min 0
+  owned by arrive
+  step minor(PLN)
+  takes k for w prorata
+place konto: savings lives 2026-01-01..
+def arrive[m in events, p in parties]: num = 1 at m.day
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 0 PLN at 2026-01-01 start
+
+ask q: bal(konto, 2026-06-30)
+=== expect
+refused: LOAD-PARTS same a.konto = b.konto: a.konto keeps parts (joint.tally:8)

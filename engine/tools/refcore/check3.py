@@ -245,6 +245,19 @@ def m_movement_field(self, n, t, sc):
     if name == 'fulfils':
         n._r = ('mvfield', 'fulfils', name)
         return T.key('events')
+    # L §5.7 A kind test narrows (tally 2.1, R-17): "There v's legs and attributes of K are readable"
+    obj = n.obj
+    while obj.k == 'paren':
+        obj = obj.e
+    nk = sc.narrow.get(obj.id) if obj.k == 'name' and getattr(sc, 'narrow', None) else None
+    if nk is not None and nk[0] != kid:
+        try:
+            ty = self.movement_field(n, T.key(nk[0]), sc)
+        except LoadError:
+            ty = None
+        if ty is not None:
+            nk[1][0] = True
+            return ty
     if kid == 'events':
         # a movement of a kind not known statically (a.adjusts, an observed row): its legs and attributes are
         # read by name at run
@@ -260,6 +273,8 @@ def m_movement_field(self, n, t, sc):
                 if a == name:
                     n._r = ('mvfield', 'attr', name)
                     return at if at is not None else DYN
+    # L §5.7 (2.1-F1): "a field of K read where no test narrows v stays refused, as in 2.0 (LOAD-FIELD, <field> is not
+    # a field of <type>)"; a variable bound over the root events keeps 2.0's reading by name at run, above
     # L §2.2: the built-in fields of a movement are `day fulfils`; it has no readable kind (a binding over a kind, or
     # `m in K`, tests it); a lifespan's from and to are no fields of a movement
     raise LoadError('LOAD-FIELD', '%s is not a field of %s' % (name, kid), n.loc)
@@ -574,7 +589,72 @@ def m_t_bal(self, n, sc, expect):
         self.mark(sc, 'bal', target)
         n._ctgt = ('bal', target)
     self.edge(sc, ('balances',), 'bal')
+    if getattr(n, 'of', None) is not None:
+        # tally 2.1 (L §5.10): bal(x, d) of q
+        self.check_of(n.of, sc, n.ref, t)
     return ut
+
+
+def m_check_of(self, q, sc, ref, pt):
+    """`of q` (tally 2.1, L §3.6, §5.10, §5.14): q a party, a batch, or the pair; LOAD-PARTS `of <q> at <x>, which keeps
+    no labels of its sort` where load sees the place's kind and q's kind."""
+    m = self.m
+    from .parts import parts_kind, labels_of
+
+    def sort_of(node, want=None):
+        t = self.tc(node, sc, expect=T.key('parties') if want != 'batch' else None)
+        if t.k in ('dyn', 'hole'):
+            return None
+        if t.k == 'key' and t.ix in m.kinds:
+            if t.ix in m.kinds['parties'].subtree(m):
+                if want == 'batch':
+                    raise uerr('of %s: %s is a party, not a batch' % (_txt(node), T.show(t)), node.loc)
+                return 'owner'
+            if m.kinds[t.ix].spec == 'event':
+                if want == 'owner':
+                    raise uerr('of %s: %s is a batch, not a party' % (_txt(node), T.show(t)), node.loc)
+                return 'batch'
+        raise uerr('of %s is %s, not a party, a batch or the pair' % (_txt(node), T.show(t)), node.loc)
+    if q.k == 'ofpair':
+        need = {sort_of(q.a, 'owner') or 'owner', sort_of(q.b, 'batch') or 'batch'}
+    else:
+        x = sort_of(q)
+        need = {x} if x else set()
+    pk = None
+    th = self.literal_place(ref) if ref is not None else None
+    if th is not None:
+        pk = parts_kind(m, m.things[th].base) if m.things[th].base is not None else None
+        where = th
+        seen = True
+    elif pt is not None and pt.k == 'key' and pt.ix in m.kinds:
+        pk = parts_kind(m, pt.ix)
+        where = pt.ix
+        seen = pk is not None
+    else:
+        seen = False
+    if seen and not need <= (labels_of(pk) if pk is not None else set()):
+        raise LoadError('LOAD-PARTS', 'of %s at %s, which keeps no labels of its sort' % (_txt(q), where), q.loc)
+
+
+def m_t_legof(self, n, sc, expect):
+    """`m.leg.amount of q` (tally 2.1, L §5.14 The leg read)."""
+    f = n.e
+    t = self.tc(f, sc, expect)
+    if f.k != 'field' or f.name != 'amount' or f.obj.k != 'field' or \
+            getattr(f.obj, '_r', (None, None))[:2] != ('mvfield', 'leg'):
+        raise LoadError('LOAD-FIELD', 'of after %s: a read of parts follows a leg\'s amount (m.leg.amount of q)'
+                        % _txt(f), n.loc)
+    self.check_of(n.q, sc, None, None)
+    self.legof_read(n, sc)
+    return t
+
+
+def m_legof_read(self, n, sc):
+    """The leg read's class (L §5.14.1, R-10): booking state, as a balance is. Recorded for the walk's readers
+    (writer 11's step 5)."""
+    self.edge(sc, ('balances',), 'bal')
+    self.mark(sc, 'legof', ('unknown',))
+    n._ctgt = ('legof', ('unknown',))
 
 
 def m_check_proj(self, n, sc, target):
@@ -786,6 +866,9 @@ def m_t_value(self, n, sc, expect):
     self.edge(sc, ('balances',), 'bal')
     self.mark(sc, 'bal', self.place_target(n.ref))
     n._ctgt = ('bal', self.place_target(n.ref))
+    if getattr(n, 'of', None) is not None:
+        # tally 2.1 (L §5.10): value(x, d) in C [by p] of q
+        self.check_of(n.of, sc, n.ref, t)
     return T.num(((n.cur, 1),))
 
 

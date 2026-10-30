@@ -394,10 +394,18 @@ def m_residuals(self, place, span, by, ctx, unit=None):
         role = r.version.gap_roles.get(place)
         mark = 'anchored' if role is not None and role[0] == 'anchor' else 'padded'
         it = '%s %s' % (d, pos) if pos is not None else instant_text(r)
-        lines.append(RLine('balance', d, (month_period(d.year, d.month), 'balance'), booked, stated, gap,
-                           'balance %s %s (%s): booked %s, stated %s, gap %s' % (
-                               place, it, mark, self.rtext(booked, unit), self.rtext(stated, unit),
-                               self.rtext(gap, unit)), (d, 9)))
+        txt = 'balance %s %s (%s): booked %s, stated %s, gap %s' % (
+            place, it, mark, self.rtext(booked, unit), self.rtext(stated, unit), self.rtext(gap, unit))
+        if r.__dict__.get('parts'):
+            # E §6.3 (tally 2.1, 2.1-F3): "a reading that states parts also shows each stated part's gap, of <q>, and
+            # the unstated rest's, rest, each stated - booked, in the order of the reading's rows"; the layout (each
+            # after the total's, with its three figures) is this interpreter's
+            gl = w.pgap_lines(r, key)
+            for lab, b_, s_ in gl or ():
+                txt += '; %s: booked %s, stated %s, gap %s' % (lab, self.rtext(b_, unit), self.rtext(s_, unit),
+                                                               self.rtext(s_ - b_, unit))
+        lines.append(RLine('balance', d, (month_period(d.year, d.month), 'balance'), booked, stated, gap, txt,
+                           (d, 9)))
     # groups, totals, order (E §6.3)
     groups = {}
     for ln in lines:

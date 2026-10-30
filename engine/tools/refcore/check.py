@@ -60,6 +60,7 @@ class Scope:
         self.dist_role = False     # a dist-typed read here is the distribution, not its sample (L §5.16)
         self.in_query = False      # inside a query over random values (L §5.16)
         self.covered_spans = set() # spans a covered() guard holds here (L §5.19 LOAD-COVERED)
+        self.narrow = {}           # var -> (kind K, [used]): a kind test narrows it here (L §5.7, tally 2.1, R-17)
 
     def child(self):
         s = Scope(self.c, self.item, self.regime, self.where, self.keyvars)
@@ -72,6 +73,7 @@ class Scope:
         s.readmode = self.readmode
         s.in_query = self.in_query
         s.covered_spans = set(self.covered_spans)
+        s.narrow = dict(self.narrow)
         return s
 
 
@@ -108,6 +110,8 @@ class Checker:
 
     def run(self):
         m = self.m
+        # tally 2.1: the parts clauses (L §3.6, §5.7, LOAD-PARTS)
+        self.check_parts()
         self.check_priced()
         # an input keyed by a stepped range (L §5.6): its range's ends and step are typed like a def's key binds; its
         # literals are a declaration's (L §7.1: date literals "in index declarations")
@@ -161,6 +165,8 @@ class Checker:
         self.inline_fill_edges()
         self.check_graph()
         self.check_moves_graph()
+        self.parts_walk_bound()
+        self.check_arrival_reads()
         self.check_after_readings()
         self.check_seen_days()
         self.check_period_keys()
@@ -402,6 +408,9 @@ class Checker:
                 sc.cited = rv.v is not None
                 sc.guards = set(guard)
                 sc.covered_spans = self.covered_spans_of(r.when)
+                # L §5.7 A kind test narrows (tally 2.1, R-17): "in a rule whose when is v in K, or a conjunction with
+                # that test, throughout its value and its when"
+                sc, nw = self.narrowed(sc, r.when)
                 if r.when is not None:
                     sw = sc.child()
                     sw.in_when = True
@@ -422,8 +431,60 @@ class Checker:
                 else:
                     t = self.tc(val, sc, expect=d.type)
                     self.assign(d.type, val, r.loc, 'rule %s of %s' % (lab, d.id))
+                self.narrow_mark(r.when, nw)
         for g in d.givens:
             pass
+
+    # -- L §5.7 A kind test narrows (tally 2.1, R-17; occurrence typing) ----------------------------------------
+    def narrow_tests(self, c):
+        """The kind tests `v in K` (no on) that a condition is or holds as a conjunct; `or`, `not` and `on` narrow
+        nothing (L §5.7: "or narrows to neither side, and x in K on d narrows nothing")."""
+        if c is None:
+            return []
+        while c.k == 'paren':
+            c = c.e
+        if c.k == 'in' and c.on is None and c.l.k == 'name' and c.r.k == 'name':
+            return [c]
+        if c.k == 'and':
+            return self.narrow_tests(c.l) + self.narrow_tests(c.r)
+        return []
+
+    def narrowed(self, sc, c):
+        """A child scope in which each variable a kind test of c narrows to a subkind K of its bound kind reads K's
+        legs and attributes; and the flags that say a narrowed field was read."""
+        m = self.m
+        out = None
+        flags = []
+        for t in self.narrow_tests(c):
+            v = t.l.id
+            var = sc.vars.get(v)
+            if var is None or var.ty is None or var.ty.k != 'key' or var.ty.ix not in m.kinds:
+                continue
+            hit = m.lookup(t.r.id)
+            if hit is None or hit[0] != 'kind' or hit[1] is None:
+                continue
+            K = hit[1].id
+            P = sc.narrow[v][0] if v in sc.narrow else var.ty.ix
+            if K == P or K not in m.kinds[P].subtree(m):
+                continue
+            if out is None:
+                out = sc.child()
+            f = [False]
+            flags.append((t, f))
+            out.narrow[v] = (K, f)
+        return (out if out is not None else sc), flags
+
+    def narrow_mark(self, c, flags):
+        """L §5.7: "A conjunct that reads them is evaluated only where the test holds, and the conjunction is false
+        where it doesn't": a conjunction whose narrowed fields are read evaluates its kind tests first (evaluate.e_and;
+        a 2.0 text, which reads none, keeps its order)."""
+        used = [t for t, f in flags if f[0]]
+        if not used or c is None:
+            return
+        while c.k == 'paren':
+            c = c.e
+        if c.k == 'and':
+            c._narrow = used
 
     def _beats_cycle(self, d, beats):
         state = {}
@@ -1652,19 +1713,26 @@ class Checker:
     t_or = t_and
 
     def t_if(self, n, sc, expect):
-        ct = self.tc(n.c, sc)
+        # L §5.7 (tally 2.1, R-17): "in if c then e1 else e2 whose condition c is v in K or such a conjunction,
+        # throughout c and e1"
+        scn, nw = self.narrowed(sc, n.c)
+        ct = self.tc(n.c, scn)
         if not self.is_bool(ct):
             raise uerr('if of %s' % T.show(ct), n.loc)
-        sc2 = sc.child()
+        sc2 = scn.child()
         sc2.guards |= self.tested_vars(n.c, set(sc.keyvars))
         sc2.covered_spans |= self.covered_spans_of(n.c)
+        sc3 = sc.child()
+        sc3.guards |= self.tested_vars(n.c, set(sc.keyvars))
+        sc3.covered_spans |= self.covered_spans_of(n.c)
         at = self.tc(n.a, sc2, expect)
-        bt = self.tc(n.b, sc2, expect)
+        bt = self.tc(n.b, sc3, expect)
+        self.narrow_mark(n.c, nw)
         if expect is None:
             if at.k in ('keylit', 'flex', 'year4') and bt.k not in ('keylit', 'flex', 'year4', 'none', 'hole'):
                 at = self.tc(n.a, sc2, bt)
             if bt.k in ('keylit', 'flex', 'year4') and at.k not in ('keylit', 'flex', 'year4', 'none', 'hole'):
-                bt = self.tc(n.b, sc2, at)
+                bt = self.tc(n.b, sc3, at)
         out = self.unify(at, bt, n.loc)
         # a bare figure as an if branch takes the type of the whole (L §2.5, §7.1)
         if out.k in ('num', 'money', 'int'):
@@ -1707,6 +1775,11 @@ class Checker:
             return T.DATE
         if a.k == 'key' and b.k == 'key' and a.ix in self.m.kinds and b.ix in self.m.kinds:
             return a
+        if self.is_date(a) and self.is_date(b):
+            # L §3.1 (tally 2.1, R-14): "Where a date is expected (... min or max with a date, an if branch whose other
+            # branch is a date ...), a key of a day index may stand, and means start_of(k)": a day index's keys are
+            # dates here (key_value_kind); a month's, a year's or a day range's by n aren't, and stay LOAD-UNIT
+            return T.DATE
         raise uerr('%s and %s have different types' % (T.show(a), T.show(b)), loc)
 
     def t_cmp(self, n, sc, expect):
@@ -2933,6 +3006,8 @@ class Checker:
         for r, ts in E.items():
             for t in ts:
                 read.add(t)
+        # tally 2.1: a def an arrival rule or a takes clause reads is read (parts.chk_check_parts)
+        read |= getattr(self, 'parts_reads', set())
         for qid, inf in m.inputs.items():
             if inf.builtin:
                 continue
@@ -3266,3 +3341,5 @@ from . import check2 as _check2  # noqa: E402
 _check2.install(Checker)
 from . import check3 as _check3  # noqa: E402
 _check3.install(Checker)
+from . import parts as _parts  # noqa: E402
+_parts.install(Checker)

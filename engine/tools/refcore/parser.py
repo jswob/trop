@@ -557,6 +557,10 @@ class P:
                     e = self.N('call', name=chain[-1], args=args, bkey=None, prefix=chain[:-1])
             else:
                 break
+        if e.k == 'field' and self.at('of'):
+            # L §2.3 (tally 2.1): post = atom {...} ["." FIELD "of" ofq] ...: a leg's amount, m.cash.amount of p (§5.14)
+            self.i += 1
+            e = self.N('legof', e=e, q=self.ofq())
         if not no_to and self.at('to'):
             self.i += 1
             e = self.N('to', e=e, unit=self.step_unit())
@@ -756,6 +760,49 @@ class P:
             self.i = save
         return [self.post()]
 
+    def ofq(self):
+        """ofq = ref | "(" expr "," expr ")" (L §2.3, tally 2.1: a party, a batch, or the pair, §3.6)"""
+        if self.at('('):
+            self.i += 1
+            self.open()
+            a = self.expr()
+            self.expect(',')
+            b = self.expr()
+            self.expect(')')
+            self.close()
+            return self.N('ofpair', a=a, b=b)
+        return self.ref()
+
+    def sref(self):
+        """sref = ID {"." FIELD | "[" lit {"," lit} "]"} (L §2.3)"""
+        e = self.N('name', id=self.ident('an id'))
+        while True:
+            if self.at('.') and not self.peek().ws:
+                self.i += 1
+                tok = self.next()
+                if tok.t != 'ID':
+                    self.err('a field')
+                e = self.N('field', obj=e, name=tok.s)
+            elif self.at('['):
+                self.i += 1
+                keys = [self.lit()]
+                while self.accept(','):
+                    keys.append(self.lit())
+                self.expect(']')
+                e = self.N('index', obj=e, keys=keys)
+            else:
+                return e
+
+    def ofrow(self):
+        """ofrow = sref | "(" sref "," sref ")" (L §2.3, tally 2.1)"""
+        if self.accept('('):
+            a = self.sref()
+            self.expect(',')
+            b = self.sref()
+            self.expect(')')
+            return self.N('ofpair', a=a, b=b)
+        return self.sref()
+
     def proj(self):
         out = {}
         if self.accept('from'):
@@ -871,7 +918,7 @@ class P:
             return self.N('call', name=s, args=args, bkey=None)
         return self.N('name', id=s)
 
-    def field(self):
+    def field(self, row=False):
         tok = self.peek()
         if tok is None or tok.t != 'ID' or not (self.at(':', 1) or tok.s == 'leg'):
             # L §3.1, §8.3: a positional record is refused (LOAD-FIELD)
@@ -881,9 +928,17 @@ class P:
         self.i += 1
         name = tok.s
         self.expect(':')
-        return (name, self.field_value())
+        return (name, self.field_value(row))
 
-    def field_value(self):
+    def field_value(self, row=False):
+        if row and self.at('-') and self.peek(1) is not None and self.peek(1).t in ('INT', 'DEC'):
+            # L §2.3: field = FIELD ":" (slit | ...), slit = ["-"] lit: a row's record field may be a signed literal
+            # (tally 2.1, 2.1-27, R-12: refcore refused it at load, a fault)
+            save = self.i
+            v = self.lit()
+            if self.at(',') or self.at(')'):
+                return v
+            self.i = save
         if self.at('?') and self.at_t('STR', 1):
             self.i += 1
             return self.N('hole', text=self.string())
@@ -927,6 +982,12 @@ class P:
                     start = True
             self.expect(')')
             self.close()
+            # L §2.3 (tally 2.1): balx = "bal" "(" ... ")" ["of" ofq] [proj | "modelled"]; parse rule 7: a balance's of
+            # comes before its projection clauses
+            of = None
+            if self.at('of'):
+                self.i += 1
+                of = self.ofq()
             modelled = False
             if self.at('modelled'):
                 self.i += 1
@@ -943,7 +1004,7 @@ class P:
                 if self.at('with') and self.at('uncertain', 1):
                     self.i += 2
                     proj['uncertain'] = True
-            return self.N('bal', ref=r, args=args, start=start, modelled=modelled, proj=proj)
+            return self.N('bal', ref=r, args=args, start=start, modelled=modelled, proj=proj, of=of)
         if s == 'low':
             self.i += 1
             self.expect('(')
@@ -975,7 +1036,12 @@ class P:
                     bylast = True
                 else:
                     by = self.ref()
-            n = self.N('value', ref=r, d=d, cur=c, by=by, bylast=bylast)
+            # L §2.3 (tally 2.1): valuex = ... ["by" ...] ["of" ofq]; a value's of comes after its by (parse rule 7)
+            of = None
+            if self.at('of'):
+                self.i += 1
+                of = self.ofq()
+            n = self.N('value', ref=r, d=d, cur=c, by=by, bylast=bylast, of=of)
             n._t0, n._t1 = self.t[i0], self.t[self.i - 1]
             return n
         if s == 'flows':
@@ -1435,9 +1501,9 @@ class P:
             v = self.N('str', v=tok.v)
         elif self.at('('):
             self.i += 1
-            fields = [self.field()]
+            fields = [self.field(row=True)]
             while self.accept(','):
-                fields.append(self.field())
+                fields.append(self.field(row=True))
             self.expect(')')
             v = self.N('record', fields=fields)
         elif self.at('['):
@@ -1583,6 +1649,13 @@ class P:
                 ks.append(self.rowkey())
             self.expect(']')
             keys = ks
+        of = None
+        if self.at('of') and not self.at(':', 1):
+            # L §2.3 (tally 2.1): row = qid [rowkeys] ["of" ofrow] "=" ... (a reading's parts, §5.19)
+            self.i += 1
+            of = self.ofrow()
+            if not self.at('='):
+                self.err('"="')
         if self.at(':'):
             if given:
                 self.err('a row')
@@ -1607,7 +1680,7 @@ class P:
         gov, known, instant, loc = self.rowmeta()
         self.end()
         return self.N('row', qual=q, target=x, keys=keys, value=val, assumed=assumed, governs=gov, known=known,
-                      instant=instant, locator=loc, given=given, replace=replace)
+                      instant=instant, locator=loc, given=given, replace=replace, of=of)
 
     def rulebody(self, label):
         beats = []
@@ -1892,7 +1965,8 @@ def sec_unit(p, body, units, line):
 def sec_kind(p, body, units, line):
     kid = p.ident()
     k = Node('kind', id=kid, spec='plain', parent=None, certainty=None, unit=None, sign=None, priced=None,
-             outside=False, legs=[], attrs=[], notes=[])
+             outside=False, legs=[], attrs=[], notes=[], owned=None, batched=False, step=None, takes=None,
+             pclauses=[])
     if p.accept(':'):
         if p.accept('place'):
             k.spec = 'place'
@@ -1956,6 +2030,45 @@ def sec_kind(p, body, units, line):
             k.attrs.append((name, q.type()))
         elif w == 'note':
             k.notes.append(q.string())
+        elif w == 'owned' and q.at('by'):
+            # L §2.3 (tally 2.1): kline = "owned" "by" ID [tieby] | "batched" | "step" UNIT | "takes" ...
+            q.i += 1
+            d = q.ident('an arrival rule')
+            tie = q.tieby() if q.at('ties') else None
+            k.owned = Node('owned', l.loc, d=d, tie=tie)
+            k.pclauses.append(('owned', l.loc))
+        elif w == 'batched':
+            k.batched = True
+            k.pclauses.append(('batched', l.loc))
+        elif w == 'step':
+            k.step = q.step_unit()
+            k.pclauses.append(('step', l.loc))
+        elif w == 'takes':
+            kv = q.ident('a part')
+            q.expect('for')
+            wv = q.ident('an outflow')
+            vv = None
+            if q.accept('v'):
+                vv = q.ident('a version')
+            order = []
+            pro = False
+            tie = None
+            if q.accept('order'):
+                order.append(q.expr())
+                while q.accept(','):
+                    order.append(q.expr())
+                if q.at('prorata') and not q.at('(', 1):
+                    q.i += 1
+                    pro = True
+            elif q.at('prorata') and not q.at('(', 1):
+                q.i += 1
+                pro = True
+            else:
+                q.err('order or prorata')
+            if pro and q.at('ties'):
+                tie = q.tieby()
+            k.takes = Node('takes', l.loc, part=kv, w=wv, v=vv, order=order, prorata=pro, tie=tie)
+            k.pclauses.append(('takes', l.loc))
         else:
             raise LoadError('LOAD-PARSE', 'cannot parse: %s in a kind' % w, l.loc)
         q.end()
@@ -2052,9 +2165,12 @@ def sec_place(p, body, units, line):
     p.expect('lives')
     lives = p.lspan()
     p.end()
-    if body:
-        raise LoadError('LOAD-PARSE', 'cannot parse: a place has no body', body[0].loc)
-    return Node('place', id=pid, binds=binds, kind=kind, unit=unit, priced=priced, lives=lives)
+    # L §2.3 (tally 2.1, R-11): place = ... "lives" lspan NL {IN "note" STR NL}
+    _flat(body, line)
+    notes, rest = _notes(body, units)
+    if rest:
+        raise LoadError('LOAD-PARSE', 'cannot parse: a place has no body but notes', rest[0].loc)
+    return Node('place', id=pid, binds=binds, kind=kind, unit=unit, priced=priced, lives=lives, notes=notes)
 
 
 def sec_input(p, body, units, line):
@@ -2118,17 +2234,27 @@ def sec_def(p, body, units, line):
     n = Node('def', id=did, binds=binds, type=t, at=None, rules=[], notes=[], short=False)
     if p.accept('='):
         n.short = True
+        n._eq = p.t[p.i - 1]
         if p.at('?') and p.at_t('STR', 1):
             p.i += 1
             val = Node('hole', p.loc, text=p.string())
         else:
             val = p.expr()
+        if p.at('at'):
+            n._at = p.peek()
         if p.accept('at'):
             n.at = _lawdate(p)
         p.end()
         n.rules = [Node('rule', line.loc, label='base', beats=[], v=None, governs=None, value=val, when=None)]
         if body:
-            raise LoadError('LOAD-PARSE', 'cannot parse: a short def has no body', body[0].loc)
+            # L §2.3, §2.4 (tally 2.1, R-11): "A one-line def followed by note lines means the long form, the same def
+            # with its one rule labelled base and those notes, and prints as it"
+            _flat(body, line)
+            notes, rest = _notes(body, units)
+            if rest:
+                raise LoadError('LOAD-PARSE', 'cannot parse: a short def has no body but notes', rest[0].loc)
+            n.notes = notes
+            n.short_notes = True
         return n
     if p.at('at'):
         n._at = p.peek()

@@ -1,0 +1,28 @@
+# Writer 11 (tally 2.1, 2.1-6, R-2). L §3.5: "The prelude kind parties is their root: a model declares its own
+# subkinds of it (kind persons: parties, ...), or enters its parties at parties itself when it declares none"; L §5.7:
+# "a binding over a kind ranges over every thing ... of that kind, its subkinds included". q counts the parties alive on
+# 2026-06-30: ania and tomek (persons) and the estate e (estates, from 2026-05-01): 3; on 2026-03-01 the estate isn't
+# alive: 2; persons alone: 2. q2 is a model with no subkinds that enters its parties at parties itself.
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+kind persons: parties
+kind estates: parties
+ask q: count(p in parties on 2026-06-30), count(p in parties on 2026-03-01), count(p in persons on 2026-06-30)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  persons + [ania] lives 1980-01-01..
+  persons + [tomek] lives 1981-01-01..
+  estates + [e] lives 2026-05-01..
+=== expect
+q: (3, 2, 2)
+  cut 2026-01-01

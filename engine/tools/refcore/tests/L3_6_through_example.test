@@ -3,6 +3,8 @@
 # of pb.  through[pa, h, 1] = owns[pa, h] = 0; through[pa, h, 2] = owns[pa, h] + stake[pa, pa] × through[pa, h, 1]
 # + stake[pa, pb] × through[pb, h, 1] = 0 + 0 × 0 + 0.5 × 1 = 0.5; through[pb, h, 2] = 1 + 0 × 0 + 0 × 1 = 1
 # (L §5.11 Recurrences, aggregates in binding order).
+# Writer 11 (tally 2.1, R-2, MIGRATION.md 2.0 -> 2.1 row 1): `kind parties` dropped, as L §3.6's own example dropped it:
+# parties is a prelude kind, a built-in id (declaring it again is LOAD-DUP); things enter it directly (L §3.5).
 === m.tally
 model t
   tally 2
@@ -17,7 +19,6 @@ unit PLN: currency minor 0.01
 input owns[p in parties, x in places]: num
 input stake[p in parties, e in parties]: num
 
-kind parties
 index depths = 1..4
 
 def through[p in parties, x in places, k in depths]: num at reader

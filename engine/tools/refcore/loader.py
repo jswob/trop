@@ -100,6 +100,15 @@ def _txt_node(n):
     except Exception:
         return getattr(n, 'id', '?')
 
+def _parts_overlap(a, b):
+    """Two stated parts' labels that may name one part (L §5.19, 2.1-F6): one label twice, a party and a batch, or a party
+    or a batch and a pair that holds it."""
+    def pat(q):
+        return (q[1], None) if q[0] == 'owner' else (None, q[1]) if q[0] == 'batch' else (q[1], q[2])
+    pa, pb = pat(a), pat(b)
+    return (pa[0] is None or pb[0] is None or pa[0] == pb[0]) and (pa[1] is None or pb[1] is None or pa[1] == pb[1])
+
+
 class Loader:
     def __init__(self, trees, worlds=None, members=None):
         self.trees = trees
@@ -435,6 +444,8 @@ class Loader:
         K['places'] = KindInfo('places', 'place')
         K['events'] = KindInfo('events', 'event')
         K['currencies'] = KindInfo('currencies', 'unit')
+        # L §5.7 The prelude (tally 2.1, R-2): "and the plain kind parties, the root of the model's owners (§3.5)"
+        K['parties'] = KindInfo('parties', 'plain')
         for kid, (unit, sign, outside) in PRELUDE_PLACE.items():
             k = KindInfo(kid, 'place', 'places')
             k.unit, k.sign, k.outside = unit, sign, outside
@@ -1846,6 +1857,10 @@ class Loader:
         m = self.m
         allowed = ('def',) if it.given else ('input',)
         kind, inf = self.target(it.qual, it.target, it.loc, allowed)
+        of = getattr(it, 'of', None)
+        if of is not None and not (kind == 'input' and inf.id in ('stated', 'opening') and getattr(inf, 'builtin', False)):
+            # L §2.3 row (tally 2.1): "of: only on a row of opening or stated, §5.19, LOAD-PARTS otherwise"
+            raise LoadError('LOAD-PARTS', 'of on a row of %s' % inf.id, it.loc)
         if kind == 'input' and inf.observed:
             return self.obs_item(v, it, inf)
         binds = inf.binds
@@ -1921,9 +1936,12 @@ class Loader:
         row = Row(inf, tuple(pattern), nstated, it.value, it.assumed, v, own_span, own_known, instant, it.locator,
                   it.given, it.replace, it.loc, it)
         if kind == 'input':
-            inf.rows.append(row)
-            if inf.observed:
-                pass
+            if of is not None:
+                # a reading's stated parts (L §5.19, tally 2.1): kept beside the readings, never a total
+                row.of = of
+                inf.__dict__.setdefault('part_rows', []).append(row)
+            else:
+                inf.rows.append(row)
         else:
             inf.givens.append(row)
         return own_span is not None or instant is not None
@@ -1958,6 +1976,8 @@ class Loader:
                 r.val = convert_value(m, r.value, tyv, r.loc, getattr(inf, 'unit_factor', Fraction(1)),
                                       inf.id, binds=inf.binds, pattern=r.pattern)
             self.check_overlap(inf, rows)
+            if isinstance(inf, InputInfo) and inf.builtin and inf.id in ('opening', 'stated'):
+                self.check_part_rows(inf)
             # stable ids (L §2.5)
             per = {}
             for r in rows:
@@ -1970,6 +1990,85 @@ class Loader:
                     elif r.instant is not None:
                         sid += ' %s' % (r.instant[0],)
                 r.sid = sid
+
+    def check_part_rows(self, inf):
+        """A reading's stated parts (L §5.19, tally 2.1): "They stand beside the reading's total, in the same version
+        and at the same instant (LOAD-PARTS otherwise), and sum to at most it (LOAD-PARTS where load sees both,
+        RUN-RECORD otherwise)". Each total row gets its parts: [(q node, value, row)]."""
+        from .moves import instant_text
+        from .parts import thing_parts, labels_of
+        m = self.m
+        for r in inf.__dict__.get('part_rows', ()):
+            r.val = self.place_value(inf, r)
+            place = r.pattern[0][1].name
+            th = m.things[place]
+            labs = labels_of(thing_parts(m, th)) if thing_parts(m, th) is not None else set()
+            q = self.of_row_q(r.of, r.loc)
+            r.ofq = q
+            if q is not None:
+                need = {'owner': {'owner'}, 'batch': {'batch'}, 'pair': {'owner', 'batch'}}[q[0]]
+                if not need <= labs:
+                    qt = '(%s, %s)' % (q[1], q[2]) if q[0] == 'pair' else q[1]
+                    raise LoadError('LOAD-PARTS', 'of %s at %s, which keeps no labels of its sort' % (qt, place),
+                                    r.loc)
+            it = instant_text(r)
+            tot = [t for t in inf.rows if t.version is r.version and t.pattern[0][1].name == place and t.instant is not None
+                   and instant_text(t) == it and t.val is not NONE]
+            if not tot:
+                raise LoadError('LOAD-PARTS', 'the parts of %s at %s have no total in %s' % (place, it, r.version.id),
+                                r.loc)
+            t = tot[-1]
+            qt = None if q is None else ('(%s, %s)' % (q[1], q[2]) if q[0] == 'pair' else q[1])
+            if isinstance(r.val, Num) and r.val.q < 0:
+                # L §5.19 (2.1-F6): stated parts "are each at least 0 ..., LOAD-PARTS otherwise"
+                raise LoadError('LOAD-PARTS', 'the stated part of %s at %s is below 0' % (
+                    qt if qt is not None else _txt_node(r.of), place), r.loc)
+            if q is not None:
+                for q2, v2, r2 in t.__dict__.get('parts', ()):
+                    o2 = getattr(r2, 'ofq', None)
+                    if o2 is not None and _parts_overlap(o2, q):
+                        # L §5.19 (2.1-F6): "no two of them overlap (a party and a batch at a place that keeps pairs,
+                        # or a party or a batch and a pair that holds it), ... LOAD-PARTS otherwise"
+                        q2t = '(%s, %s)' % (o2[1], o2[2]) if o2[0] == 'pair' else o2[1]
+                        raise LoadError('LOAD-PARTS', 'the stated parts %s and %s of %s overlap' % (q2t, qt, place),
+                                        r.loc)
+            t.__dict__.setdefault('parts', []).append((r.of, r.val, r))
+        for t in inf.rows:
+            parts = t.__dict__.get('parts')
+            if not parts or not isinstance(t.val, Num) or not all(isinstance(v, Num) for q, v, r in parts):
+                continue
+            s_ = sum((v.q for q, v, r in parts), Fraction(0))
+            if s_ > t.val.q:
+                from .values import fmt
+                from .moves import qty
+                raise LoadError('LOAD-PARTS', 'the stated parts of %s sum to %s, over its total %s' % (
+                    t.pattern[0][1].name, fmt(qty(s_, t.val.u[0][0])), fmt(t.val)), parts[-1][2].loc)
+
+    def of_row_q(self, n, loc):
+        """q of a stated part where load sees it: ('owner', party) | ('batch', movement id) | ('pair', ...), or None
+        (the walk resolves it)."""
+        m = self.m
+
+        def one(x):
+            try:
+                hit = self.sref(x, loc)
+            except LoadError:
+                return None
+            if hit[0] == 'thing' and hit[1] in m.things:
+                th = m.things[hit[1]]
+                sub = m.kinds['parties'].subtree(m)
+                if th.base in sub or any(e.kind in sub for e in getattr(th, 'entries', ())):
+                    return ('owner', hit[1])
+                return None
+            if hit[0] == 'move':
+                return ('batch', hit[1])
+            return None
+        if n.k == 'ofpair':
+            a, b = one(n.a), one(n.b)
+            if a is None or b is None:
+                return None
+            return ('pair', a[1], b[1])
+        return one(n)
 
     def place_value(self, inf, r):
         """A balance reading's value: a quantity in its place's unit; a place of unit any states one row per unit

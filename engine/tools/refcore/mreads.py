@@ -810,6 +810,9 @@ def m_e_bal(self, n, env, ctx):
     unit = self.bal_unit(n, place, env, ctx)
     if isinstance(unit, Hole):
         return unit
+    if getattr(n, 'of', None) is not None:
+        # tally 2.1 (L §5.10): bal(x, d) of q, bal(x, d start) of q, and in a decision the running bal(x) of q
+        return self.e_bal_of(n, place, unit, env, ctx)
     if form == 'now':
         w = ctx.walk
         if w is None or ctx.wp is None:
@@ -890,6 +893,10 @@ def m_bal_day(self, place, unit, d, key, ctx):
     if w is not None and ctx.wp is not None:
         t = kday(ctx.wp)
         note_read(w, place, False)
+        if getattr(w, 'in_arrival', None) is not None:
+            # tally 2.1 (L §5.14.1): the arrival rule's reads of its day's end or later (partswalk)
+            from .partswalk import arrival_cycle
+            arrival_cycle(w, ctx, key, place, d)
         if key[0] > ctx.wp[0] or (key[0] == ctx.wp[0] and key[1] >= 3):
             if d > t:
                 raise refuse('RUN-FUTURE', 'a decision on %s reads %s at %s after its day' % (t, place, d))
@@ -1587,8 +1594,15 @@ def m_e_value(self, n, env, ctx):
         units = [pu]
     total = Fraction(0)
     holes = []
+    ofq = None
+    if getattr(n, 'of', None) is not None:
+        # tally 2.1 (L §5.10): "value(x, d) in C [by p] of q is those parts at their prices"
+        ofq = self.of_value(n.of, env, ctx)
+        if isinstance(ofq, Hole):
+            return ofq
     for u in units:
-        q = self.bal_day(place, u, d, K_end(d), ctx)
+        q = self.bal_day(place, u, d, K_end(d), ctx) if ofq is None else self.bal_of_day(place, u, d, K_end(d), ctx,
+                                                                                         ofq)
         if isinstance(q, Hole):
             holes.append(q)
             continue

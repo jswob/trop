@@ -2187,6 +2187,13 @@ class Engine:
         return not v
 
     def e_and(self, n, env, ctx):
+        nar = getattr(n, '_narrow', None)
+        if nar:
+            # L §5.7 (tally 2.1, R-17): "A conjunct that reads them is evaluated only where the test holds, and the
+            # conjunction is false where it doesn't"
+            for t in nar:
+                if self.ev(t, env, ctx) is False:
+                    return False
         a = self.ev(n.l, env, ctx)
         self.no_none(a, 'and')
         if a is False:
@@ -4520,3 +4527,5 @@ _walk.install(Engine)
 _mreads.install(Engine)
 from . import resid as _resid  # noqa: E402
 _resid.install(Engine)
+from . import partswalk as _partswalk  # noqa: E402
+_partswalk.install(_walk.Walk, Engine)

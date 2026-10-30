@@ -1,0 +1,68 @@
+# Writer 11 (tally 2.1, 2.1-12, R-3, RC-6). L §3.6 The arrival rule, What it may read: "parts as they stood at the start
+# of the arrival's day or earlier (bal(y, m.day start) of q), so income from a co-owned asset can follow its owners'
+# parts. The walk runs it when it books the arrival, so these are the walk's reads (§5.14.1); a read at the end of the
+# arrival's day or later is a cycle with the booking (LOAD-CYCLE)"; L §5.14.1 The arrival rule is a reader too: "The
+# start of the arrival's day is booked before anything that day, so reading it is no cycle; a read of the end of the
+# arrival's day or later is (LOAD-CYCLE where load sees the day, RUN-CYCLE otherwise)".
+# The rule reads bal(dep, m.day) of p, the end of its arrival's day, which load sees: LOAD-CYCLE.
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+kind persons: parties
+kind couples: parties
+kind savings: place PLN min 0
+  owned by arrive
+  step minor(PLN)
+  takes k for w prorata
+kind interests: transfers
+kind tomeks: transfers
+input k0: int
+place konto: savings lives 2026-01-01..
+place dep: savings lives 2026-01-01..
+place world: outside lives 1900-01-01..
+place shop: outside lives 1900-01-01..
+input a1_day: date
+input a1_amt: money PLN
+input t1_day: date
+input t1_amt: money PLN
+input i1_day: date
+input i1_amt: money PLN
+def arrive[m in events, p in parties]: num at m.day
+  rule base = if p == ania then 1 else 0
+  rule t beats base = if p == tomek then 1 else 0 when m in tomeks
+  rule income beats base, t = bal(dep, m.day) of p / bal(dep, m.day) when m in interests
+move a1: transfers
+  on a1_day
+  leg cash from world to dep amount a1_amt
+move t1: tomeks
+  on t1_day
+  leg cash from world to dep amount t1_amt
+move i1: interests
+  on i1_day
+  leg cash from world to konto amount i1_amt
+ask q: bal(konto, 2026-03-31) of ania, bal(konto, 2026-03-31) of tomek, k0
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  persons + [ania] lives 1980-01-01..
+  persons + [tomek] lives 1981-01-01..
+  couples + [ania_tomek] lives 2010-06-01..
+  opening[konto] = 0 PLN at 2026-01-01 start
+  opening[dep] = 0 PLN at 2026-01-01 start
+  a1_day = 2026-02-01
+  a1_amt = 300.00 PLN
+  t1_day = 2026-02-02
+  t1_amt = 100.00 PLN
+  i1_day = 2026-03-01
+  i1_amt = 40.00 PLN
+  k0 = 0
+=== expect
+refused: LOAD-CYCLE arrival rule arrive reads bal(dep, m.day): the end of its arrival's day ...

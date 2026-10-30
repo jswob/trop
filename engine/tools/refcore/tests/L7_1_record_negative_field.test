@@ -1,0 +1,23 @@
+# Writer 11 (tally 2.1, 2.1-27, R-12). L §2.3: field = FIELD ":" (slit | STR | hole | ...), slit = ["-"] lit: a
+# row's record field may be a negative literal (refcore refused it at load, LOAD-UNIT, a fault). The fields read back as
+# written.
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+input r: (a money PLN, b int, c num)
+ask q: r.a, r.b, r.c
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  r = (a: -5.00 PLN, b: -3, c: -0.25)
+=== expect
+q: (-5.00 PLN, -3, -0.25)
+  cut 2026-01-01

@@ -1,6 +1,8 @@
 # L §3.6 look-through, with the binding given `on d` (L §5.7) so it loads.  At depth 1 rule first applies
 # (k == 1) and gives owns[p, x]; at depth 2 rule deeper applies and, every stake being 0, each sum term is
 # 0 × through[...] = 0 (L §3.2), so through = owns[p, x] again.  owns[a, konto] = 0.5.
+# Writer 11 (tally 2.1, R-2, MIGRATION.md 2.0 -> 2.1 row 1): `kind parties` dropped: parties is a prelude kind, a
+# built-in id (declaring it again is LOAD-DUP); things enter it directly (L §3.5).
 === m.tally
 model t
   tally 2
@@ -11,7 +13,6 @@ model t
 source s "s"
 unit PLN: currency minor 0.01
 
-kind parties
 index depths = 1..4
 
 input owns[p in parties, x in places]: num

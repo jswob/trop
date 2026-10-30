@@ -1,0 +1,25 @@
+# Writer 11 (tally 2.1, 2.1-4, R-11). L §2.3: def = "def" ID [binds] ":" type "=" (expr | hole) ["at" lawdate] NL
+# {IN "note" STR NL}; L §2.4: "A one-line def followed by note lines means the long form, the same def with its one
+# rule labelled base and those notes" (2.0: a parse failure). rate is its row carried through.
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+input r: num
+def rate: num = r at reader
+  note "the rate the bank states"
+ask q: rate law 2026-06-30
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  r = 0.05
+=== expect
+q: 0.05
+  law date 2026-06-30, cut 2026-01-01

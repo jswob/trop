@@ -1,4 +1,4 @@
-# refcore: hand-over from writers 1 (core), 2 (numbers, randomness, fill, prorata, solve), 3 (movements), 4 (rounds 7, 7b, 7c; faults; the NOT-YET list), 5 (rounds 8, 8b; faults), 6 (rounds 9-13; joint models; faults; UNSPECIFIED sites the current text settles), 7 (rounds 12, 12b, 13b, 14; the triage's sites; faults; writer 6's open items) and 8 (rounds 15, 16 and the redesign review; the removed forms; faults; UNSPECIFIED and NOT-YET sites; a second pass over the joint-model sites, the canonical reprint and the pin; a third pass over the judges' faults on snap8 and round 17; a fourth pass over the second batch and round 17b; a fifth pass over the third and fourth batches; a sixth pass over round 18 and MC-X-F9 to F11), 9 (MC-X-F12, MC-X-F13) and 10 (spec round 19, the G2 decisions GD-1 to GD-26, the contra edits C4; TX-F1)
+# refcore: hand-over from writers 1 (core), 2 (numbers, randomness, fill, prorata, solve), 3 (movements), 4 (rounds 7, 7b, 7c; faults; the NOT-YET list), 5 (rounds 8, 8b; faults), 6 (rounds 9-13; joint models; faults; UNSPECIFIED sites the current text settles), 7 (rounds 12, 12b, 13b, 14; the triage's sites; faults; writer 6's open items) and 8 (rounds 15, 16 and the redesign review; the removed forms; faults; UNSPECIFIED and NOT-YET sites; a second pass over the joint-model sites, the canonical reprint and the pin; a third pass over the judges' faults on snap8 and round 17; a fourth pass over the second batch and round 17b; a fifth pass over the third and fourth batches; a sixth pass over round 18 and MC-X-F9 to F11), 9 (MC-X-F12, MC-X-F13), 10 (spec round 19, the G2 decisions GD-1 to GD-26, the contra edits C4; TX-F1) and 11 (tally 2.1: parts, readings' parts, a kind test narrows, the small items)
 
 refcore is a reference interpreter for Tally 2, written from `spec/LANGUAGE.md` (L) and `spec/ENGINE.md` (E) alone,
 as a spec-checking artefact. Exact rationals throughout (Fraction); no floating point enters a result (floats are
@@ -6,6 +6,93 @@ used only as first guesses of a quantile, which are then verified by interval ar
 or unclear it refuses `REFCORE-UNSPECIFIED <section>: <what>` (the list is `UNSPECIFIED.md`); a construct this
 interpreter doesn't build refuses `REFCORE-NOT-YET <construct>`. Nothing may crash: an internal error becomes
 `REFCORE-NOT-YET an input this interpreter can't handle (...)` unless `REFCORE_DEBUG` is set.
+
+## Writer 11
+
+Tally 2.1 (`engine/spec/CHANGES.md` 2.0 -> 2.1, rows 2.1-n; `DECISIONS.md` § "The tally 2.1 records"), one pass, from
+the spec diff `git diff tally-2.0 -- engine/spec` and the changed sections. The running log and the findings for the
+lead (F-1 to F-9; F-1 to F-7 settled by the lead's spec fixes 2.1-F1 to F7) are in
+`tmp/session7b/agents/writer/notes.md`; my scripts and texts in its `scratch/` (each test
+whose expected figure is computed names its `exp*.py`). **1069 tests, all pass** (tally-2.0's 950 and 119 new; 14.8 s, peak 0.26 GB). Opt-in
+holds: a text with no `owned` or `batched` kind and none of the small items' forms prints as on 2.0; two existing
+tests changed (`L3_6_through_example`, `L3_6_through_on`: their `kind parties` is now the prelude's, LOAD-DUP; their
+comments say so). New modules: `parts.py` (the clauses at load) and `partswalk.py` (parts in the walk).
+
+- **Words and grammar (2.1-1 to 2.1-4; fixed).** `parser`: the kind lines `owned by D [ties by e]`, `batched`,
+  `step u`, `takes k for w [v V] order ... [prorata [ties by e]]` / `takes k for w [v V] prorata [ties by e]`; `of q`
+  on `bal(...)` before its projection clauses, on `value(...) in C [by p]` after its `by`, on a leg's amount
+  (`Node('legof')`), after a reading row's keys (`ofrow`); `note` lines after a one-line def (the long form, reprinted
+  so) and after a `place`; a record row's field `slit` with its sign (2.1-27). `model`/`loader`: the prelude kind
+  `parties` (a plain kind, a built-in id). `canon` reprints the clauses. Tests `L2_2_parties_*`, `L2_3_of_after_*`,
+  `L2_4_reprint_parts`, `L2_4_short_def_notes*`, `L3_5_parties_*`, `L5_10_place_notes`, `L7_1_record_negative_field`.
+- **A kind test narrows (2.1-8, R-17; fixed).** `check`: a rule's `when` and an `if`'s condition narrow a movement or
+  thing variable to a subkind, conjunctions included (`Scope.narrow`); `evaluate.e_and` evaluates a narrowing test
+  first, so a conjunct reading the narrowed field runs only where it holds. An un-narrowed read is `LOAD-FIELD` with
+  2.0's message (2.1-F1, the lead's fix of F-1); a variable over the root `events` keeps 2.0's reading by name at run
+  (listed by the lead for G2). Tests `L5_7_narrow_*` (10).
+- **The kind clauses at load (2.1-8, 2.1-20; fixed).** `parts.chk_check_parts`: every `LOAD-PARTS` case of L §8.3's
+  row with its message; `owns` at a place keeping parts; `joint.plan_joins`: `same` on one. Tests `L5_7_parts_*` (26),
+  `L6_1_same_parts_place`.
+- **Parts in the walk (2.1-7, -9, -11, -23; fixed).** `Walk.add` queues every entry at a place keeping parts
+  (`padd`); each point of the day's order is one group (`pgroup`): the first batch (a start reading's pad in it, E §4.2
+  steps 0-2; the lead's fix 1), each decision's point, each closing reading, the close. Arrivals are labelled by the
+  arrival rule (shares, RUN-LABEL, hole shares, RUN-NO-RULE, the split by `rest largest` at the step with the owned
+  clause's `ties by`, RUN-PRORATA, RUN-TIE, RUN-LIFESPAN) or start/keep batches; outflows take as a fill over (part,
+  outflow) arcs (`pfill`: an outflow is one leg; two outflows never share a part; `prorata` within one outflow; parts
+  of one label are one supply for ties; the batch's arrivals among the supplies; undecided only from the first arc an
+  undecided arc may precede, `pundecided` merging what the take can reach); a relabel's arrival is a supply of its
+  batch's other outflows (the lead's fix 2: `prelabel`, `prelabel_cycle`). Reads `bal(x, d) of q`, `bal(x, d start)
+  of q`, `bal(x, u, d) of q`, the running `bal(x) of q` in a decision, `value(x, d) in C [by p] of q`,
+  `m.leg.amount of q`; RUN-DOMAIN / LOAD-PARTS for `of` at a place without labels of q's sort; WARN-LABELS in the
+  register (`walk.book_leg`, `ask.register`); a party ending holding parts, RUN-LIFESPAN after the day's whole order
+  (`parts_close`). Tests `L3_6_parts_*`, `L5_13_parts_*`, `L5_14_parts_*`, `L5_7_parts_lifespan_*`, `L5_10_parts_*`.
+  NOT-YET: `of` on a projection, a modelled balance or with `uncertain`; a modelled-past decision's read of parts;
+  `of` after a field other than a leg's amount; a prorata take whose `ties by` is a hole. The lead's spec fixes
+  2.1-F4 and F5: a share below 0 is RUN-LABEL `the share of <party> in <movement>'s arrival at <place> is below 0`
+  (`L3_6_parts_negative_share`); in a split's remainder the hole part of hole shares ranks after every party
+  (`psplit`'s `last`; `L3_6_parts_split_hole_last`). 2.1-F7: the hole parts' questions are L §8.1's, each ending in
+  `?`; a stated batch's part whose owners are open (a place that is both) asks `which owners are <b>'s ...?`, a text
+  L §8.1 doesn't give (notes.md F-9).
+- **The arrival rule as a reader; the leg read's class (2.1-12; fixed).** `parts.chk_check_arrival_reads` (LOAD-CYCLE
+  for a read of its arrival's day's end or later where load sees the day), `partswalk.arrival_cycle` (RUN-CYCLE at
+  run); the leg read a `legof` mark (LOAD-READS in a plan). Tests `L5_14_1_arrival_reads_*`, `L5_14_1_leg_read_*`.
+- **Takes in one batch and their cycles; holes (2.1-13, 2.1-18; fixed).** A group needing a take of a group being
+  taken at its point raises `PartsCycle`; the place it closes at settles it (`pcycle`, `ptry`): each group tried with
+  the cycle's arrivals as parts of unknown labels, takes with no hole part decided and kept (`_pdecided`); else
+  RUN-CYCLE naming the links' movements when one is a plan, or, for observed rows only, hole parts with the question
+  `which of <rows> went first on <d>` (totals known). A hole part keeps its amount, questions (a HOLE-PART question it
+  rests on unwrapped to its own), possible labels, the labels it can't be (`excl`) and whether its labels are surely
+  its possible ones (`sure`). Tests `L5_14_2_cycle_*` (6), `L5_14_parts_relabel_cycle_*`. UNSPECIFIED: a cycle at a
+  decision's point no take breaks (two sites, F-8).
+- **Readings (2.1-16; fixed).** `loader.check_part_rows`: `of` only on opening/stated rows, a part's total in its
+  version at its instant, the sum at most the total (LOAD-PARTS with L §8.3's messages), the label resolved at load;
+  `partswalk.pstated`: a zero gap keeps the parts, a positive gap with no stated parts a hole part possibly anyone's, a
+  negative one a take by an outflow nobody knows (`pgap_take`: terms on w holes); stated parts against booked parts
+  (q's own gap a part of q's or a take of q's parts; the unstated rest by the anchor's rules over the rest, hole parts
+  included, which then can't be a stated label); pads labelled by the arrival rule or taken by the leaving rule, a pad
+  no rule reaches RUN-NO-RULE at both ends (`prefuse_pad`). A refusal in the parts refuses them from the reading on
+  (`PState.bad`), the total standing. Tests `L5_19_parts_*` (19). The lead's spec fixes 2.1-F2, F3, F6 (commit
+  4783daf): a start reading that pads and states parts while the day's first batch moves the place is RUN-RECORD
+  `reading <r> of <x> at <d> start pads and states parts while the day's first batch moves <x>` (<r> the reading's
+  stable id; `L5_19_parts_start_pad_stated`); a stated part below 0 and two overlapping stated parts are LOAD-PARTS
+  at load (`loader.check_part_rows`, `_parts_overlap`; `L5_19_parts_stated_negative`, `_stated_overlap`); the
+  residual ledger's balance line of a reading that states parts shows each stated part's gap and the rest's (E §6.3,
+  `resid.py`, from `partswalk.pgaps` recorded by `pstated`). **The layout I chose:** after the total's `booked B,
+  stated S, gap G`, the same three per part, `; of <q>: booked B, stated S, gap G`, in the order of the reading's
+  rows, then `; rest: booked B, stated S, gap G`; a reading that states no parts prints as on 2.0
+  (`L5_19_parts_residuals`). NOT-YET: a stated part that is a hole or none, or known in a window that holds the cut.
+- **Labels at the ask's cut and decision 22's exception (2.1-14; fixed by construction):** `L5_14_3_labels_at_cut`.
+  **Joints (2.1-17; fixed):** `parties` shared, things stated same one owner (`L6_1_same_party_of`). **A day key
+  where a date is expected (2.1-5; fixed):** `check.unify` lets a day index's key meet a date in min/max and if
+  branches (comparisons and date arguments already took it); month keys and by-n ranges stay LOAD-UNIT
+  (`L3_1_day_key_*`). **The 4 096-digit cap (2.1-15; fixed):** refcore capped the sum under a path mean;
+  `eval2.path_stat` sums same-unit terms as fractions and caps only the mean (`L7_1_path_mean_cap`).
+- **refcore_fast:** no change; the 2.1 code reads no parts state through `read_input` or `candidates` (stated parts
+  are kept apart from the readings' rows). 24 parts texts and a joint ran byte-equal both ways under `--verify 1`.
+- **UNSPECIFIED.md** is regenerated by `tmp/session7b/agents/writer/scratch/gen_unspecified.py` (my AST scan; the
+  earlier generator isn't in this checkout): 4 sites, 3 new (§5.14 a take of a leg the walk didn't book, an internal
+  marker; §5.14.2 two decision-point cycles, F-8, kept for G2). The six sites of F-2 to F-6 are closed by the lead's
+  fixes (above).
 
 ## Writer 10
 

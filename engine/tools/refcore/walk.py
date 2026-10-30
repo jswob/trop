@@ -88,10 +88,11 @@ class LeftHole(Hole):
 
 class Ent:
     __slots__ = ('key', 'kind', 'val', 'qs', 'err', 'wid', 'mv', 'flow', 'reg', 'coll', 'st', 'win', 'note', 'sgn',
-                 'leg')
+                 'leg', 'row')
 
     def __init__(self, key, kind, val=None, qs=EMPTY, err=None, wid=None, mv=None, flow=None, reg=(), coll=None,
-                 win=None, note=None, sgn=None, leg=None):
+                 win=None, note=None, sgn=None, leg=None, row=None):
+        self.row = row          # a reading's row (its stated parts, L §5.19, tally 2.1)
         self.sgn = sgn          # a hole leg's direction at the place (-1 out, +1 in) and the leg: a partial ask line
         self.leg = leg          # reads the balance as its known part plus the leg's holes (mreads.m_partial_bal)
         self.key = key
@@ -329,6 +330,8 @@ class Walk:
         e.st = apply(prev, e, len(lg.ents))
         lg.ents.append(e)
         lg.keys.append(e.key)
+        # tally 2.1: an entry at a place that keeps parts waits for its point's group (partswalk)
+        self.padd(place, unit, e)
         for r in e.reg or ():
             if r and r[0] == 'left out joint':
                 # L §6.1 (round 17b): "Every result that reads the place on or after the movement's day lists it
@@ -697,12 +700,19 @@ class Walk:
         batch_open = True
         i = 0
         closing = None
+        o_ = d.toordinal()
+        start_open = True
         while i < len(acts):
             key, kind, obj = acts[i]
+            if start_open and key[1] >= 1:
+                # tally 2.1: the start readings' parts before the day's first batch (partswalk)
+                start_open = False
+                self.parts_flush((o_, 0, 999))
             if batch_open and key[1] > 2:
                 # the day's first batch ends: its sign rule, taken together (L §5.10 point 1)
                 batch_open = False
                 self.check_batch(d, (d.toordinal(), 2, 9, '\uffff', 9))
+                self.parts_flush((o_, 2, 999))
             if closing is None and key[1] >= 4:
                 # the readings at the day's end: their pads are tested together (L §5.10 point 3; E §4.2 step 5)
                 closing = self.grp_legs = {}
@@ -713,8 +723,11 @@ class Walk:
             else:
                 self.act(key, kind, obj)
             i += 1
+        if start_open:
+            self.parts_flush((o_, 0, 999))
         if batch_open:
             self.check_batch(d, (d.toordinal(), 2, 9, '\uffff', 9))
+            self.parts_flush((o_, 2, 999))
         if closing is not None:
             self.grp_legs = None
             o = d.toordinal()
@@ -722,7 +735,9 @@ class Walk:
                              lambda place, b, legs: '%s takes %s %s' % (
                                  ', '.join(sorted(set(mv.id for mv, lg in legs))), place,
                                  'below 0' if self.m.kind_sign(self.m.things[place].base) == 'min0' else 'above 0'))
+        self.parts_flush((o_, 99))
         self.close_day(d)
+        self.parts_close(d)
 
     def check_batch(self, d, key):
         """L §5.10 The sign rule, point 1: after the day's first batch, taken together (its readings at the start,
@@ -1213,10 +1228,16 @@ class Walk:
         # conservation (E §9 invariant 1): a leg booked whole adds its two ends; a pad's other end is its reading's
         # reset; an observed leg booked end by end from two statements is the WARN-LEGS case (E §6.1), left out
         whole = all(on for p, s, on in sides) or isinstance(mv, PadMv)
+        drop = self.labels_drop(lg)
         for i_, (p, s, on) in enumerate(sides):
             if on and isinstance(p, Thing):
                 f = qty(s * amt.q, u)
-                self.add(p.name, u, Ent(key, 'delta', mv=mv, flow=f, reg=reg, coll=coll, wid=wid,
+                r_ = reg
+                if drop and s == 1:
+                    # tally 2.1 (L §3.6, §8.2, §8.5): WARN-LABELS, listed in the register of every result whose reads
+                    # reach the receiving place from that leg on
+                    r_ = tuple(reg) + (('labels', p.name, str(kday(key)), mv.id),)
+                self.add(p.name, u, Ent(key, 'delta', mv=mv, flow=f, reg=r_, coll=coll, wid=wid,
                                         win=lg.day if wid else None, note=lg.name))
                 if whole:
                     self.cons[u] = self.cons.get(u, 0) + s * amt.q
@@ -1287,9 +1308,9 @@ class Walk:
                 self.inv2_add(unit, None)
             if isinstance(rv, Hole):
                 self.add(place, unit, Ent(key, 'reset', val=qty(0, unit), qs=frozenset(rv.qs), coll=c,
-                                          note='opening'))
+                                          note='opening', row=r))
             else:
-                self.add(place, unit, Ent(key, 'reset', val=rv, coll=c, note='opening'))
+                self.add(place, unit, Ent(key, 'reset', val=rv, coll=c, note='opening', row=r))
             return
         day = kday(key)
         if not day < self.K:
@@ -1316,7 +1337,7 @@ class Walk:
                                                                else fmt_hole(rv), gtext(gap))
             self.add(place, unit, Ent(key, 'reset', val=rv if not isinstance(rv, Hole) else qty(0, unit),
                                       qs=frozenset(rv.qs) if isinstance(rv, Hole) else EMPTY, coll=c,
-                                      reg=(('anchor', txt[len('anchor: '):]),), note='anchor'))
+                                      reg=(('anchor', txt[len('anchor: '):]),), note='anchor', row=r))
             return
         y = role[1]
         if isinstance(gap, TallyError):
@@ -1348,7 +1369,7 @@ class Walk:
         self.add(place, unit, Ent(key[:4] + (key[4] + 1,), 'reset',
                                   val=rv if not isinstance(rv, Hole) else qty(0, unit),
                                   qs=frozenset(rv.qs) if isinstance(rv, Hole) else EMPTY, coll=c, reg=reg,
-                                  mv=pad, flow=flow, note='pad'))
+                                  mv=pad, flow=flow, note='pad', row=r))
 
     def booked_coll(self, place, unit, key):
         """The register of a place's booked balance at an instant (as a balance read gathers it, mreads.read_state)."""
@@ -1673,6 +1694,8 @@ class Walk:
                                  run.id, place, 'below 0' + (' units' if self.m.things[place].base in
                                                              self.m.kinds['holdings'].subtree(self.m) else '')
                                  if self.m.kind_sign(self.m.things[place].base) == 'min0' else 'above 0'))
+        # tally 2.1: the decision's takes and arrivals at its point (E §4.2 step 3, partswalk)
+        self.parts_flush(tuple(key[:4]) + (999,))
         if getattr(run, '_after', False):
             self.after_mv(run, key)
         return run
@@ -1993,3 +2016,6 @@ def m_proj_walk(self, ctx, t, leftout, clauses):
         finally:
             self.stack.pop()
     return w
+
+
+from . import partswalk as _partswalk  # noqa: E402

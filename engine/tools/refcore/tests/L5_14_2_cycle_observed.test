@@ -1,0 +1,61 @@
+# Writer 11 (tally 2.1, 2.1-13, R-4, RC-6). L §5.14.2 Takes in the first batch: "A cycle among them (two places
+# sweeping into each other in one batch, each arrival keeping labels) breaks where it can: each take is tried with the
+# cycle's arrivals as parts of unknown labels, and a take whose outcome is the same under every reading of them ... is
+# decided, which breaks the cycle. Otherwise a cycle that holds a plan is refused (RUN-CYCLE, naming the movements) ...
+# A cycle of observed rows only is an unknown fact ...: the takes it reaches are undecided, each place holds a hole part
+# with its total known (§8.1)".
+# konto (b1 100.00) and konto2 (b2 50.00) send each other observed rows r1 30.00 and r2 20.00 on one day, both batched,
+# first in first out: each take reaches the other's arrival, so each place holds a hole part with its total known
+# (90.00, 60.00; scratch/exp6.py), and its batches are HOLE-PART. The question is L §8.1's (2.1-F7).
+=== m.tally
+model t
+  tally 2
+  on 2026-10-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+kind persons: parties
+kind couples: parties
+kind lots: place PLN min 0
+  batched
+  step minor(PLN)
+  takes k for w order k.batch.day
+input bank: observed
+place konto: lots lives 2026-01-01..
+place konto2: lots lives 2026-01-01..
+place world: outside lives 1900-01-01..
+place shop: outside lives 1900-01-01..
+input b1_day: date
+input b1_amt: money PLN
+input b2_day: date
+input b2_amt: money PLN
+move b1: transfers
+  on b1_day
+  leg cash from world to konto amount b1_amt
+move b2: transfers
+  on b2_day
+  leg cash from world to konto2 amount b2_amt
+ask q: bal(konto, 2026-03-01), bal(konto, 2026-03-01) of b1, bal(konto2, 2026-03-01), bal(konto2, 2026-03-01) of b2
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  persons + [ania] lives 1980-01-01..
+  persons + [tomek] lives 1981-01-01..
+  couples + [ania_tomek] lives 2010-06-01..
+  opening[konto] = 0 PLN at 2026-01-01 start
+  opening[konto2] = 0 PLN at 2026-01-01 start
+  b1_day = 2026-02-01
+  b1_amt = 100.00 PLN
+  b2_day = 2026-02-15
+  b2_amt = 50.00 PLN
+  bank[r1] = (on: 2026-03-01, kind: transfers, leg cash from konto to konto2 amount 30.00 PLN) "r1"
+  bank[r2] = (on: 2026-03-01, kind: transfers, leg cash from konto2 to konto amount 20.00 PLN) "r2"
+=== expect
+q: (90.00 PLN, ?"konto: 90.00 PLN may be b1's: which of bank[r1], bank[r2] went first on 2026-03-01?" (konto), 60.00 PLN, ?"konto2: 60.00 PLN may be b2's: which of bank[r1], bank[r2] went first on 2026-03-01?" (konto2))
+  unfulfilled: b1
+  unfulfilled: b2
+  cut 2026-10-01

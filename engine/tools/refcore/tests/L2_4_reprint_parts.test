@@ -1,0 +1,94 @@
+# Writer 11 (tally 2.1, 2.1-2, 2.1-4). L §2.3: kline = "owned" "by" ID [tieby] | "batched" | "step" UNIT | "takes" ID
+# "for" ID ["v" ID] ("order" expr {"," expr} ["prorata" [tieby]] | "prorata" [tieby]) | ...; place = ... "lives" lspan
+# NL {IN "note" STR NL}; balx ... ["of" ofq]; valuex ... ["by" ...] ["of" ofq]; post ... ["." FIELD "of" ofq]; row =
+# qid [rowkeys] ["of" ofrow] "=" .... L §2.4: "A one-line def followed by note lines means the long form, the same def
+# with its one rule labelled base and those notes, and prints as it" (arrive); "Parentheses appear only where
+# precedence needs them" (the order's first term and the ties by keep theirs: tieby takes one term, parse rule 7; the
+# if after `order` loses its pair, as `(if ...)` alone does in L2_4_reprint_expressions); a kind's lines are one
+# repeated choice, kept in file order (canon's BODY_RANK); kinds in tree order, persons (under the prelude's parties)
+# among the roots (GD-9); a place's notes follow its line. A reading's part row sorts
+# beside its total by GD-28's ASCII tie ("stated[konto] = ..." before "stated[konto] of ...").
+=== options reprint
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+kind persons: parties
+kind savings: place one min 0
+  note "a joint account"
+  owned by arrive ties by (if p == ania then 0 else 1)
+  step minor(PLN)
+  takes k for w v v order (if k.owner == ania then 0 else 1), k.batch.day prorata ties by (if k.owner == ania then 0 else 1)
+kind lots: place one   min 0
+  batched
+  step 1
+  takes k for w prorata
+place konto: savings PLN lives 2026-01-01..
+  note "the joint account"
+def arrive[m in events, p in parties]: num = (if p == ania then 1 else 0) at m.day
+  note "everything is ania's"
+  note "a second note"
+def a_part: money PLN = bal(konto, 2026-06-30) of ania at 2026-06-30
+def b_part: money PLN = bal(konto, 2026-06-30)  of  (ania, w1) at 2026-06-30
+def v_part: money PLN = value(konto, 2026-06-30) in PLN of ania at 2026-06-30
+def l_part[m in events]: money PLN = (m.cash.amount of ania) / 2 at m.day
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  stated[konto] of ania = 10 PLN at 2026-03-31 end
+  stated[konto] = 10 PLN at 2026-03-31 end
+=== expect
+--- m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+unit PLN: currency minor 0.01
+
+kind lots: place one min 0
+  batched
+  step 1
+  takes k for w prorata
+
+kind persons: parties
+
+kind savings: place one min 0
+  note "a joint account"
+  owned by arrive ties by (if p == ania then 0 else 1)
+  step minor(PLN)
+  takes k for w v v order if k.owner == ania then 0 else 1, k.batch.day prorata ties by (if k.owner == ania then 0 else 1)
+
+place konto: savings PLN lives 2026-01-01..
+  note "the joint account"
+
+def a_part: money PLN = bal(konto, 2026-06-30) of ania at 2026-06-30
+
+def arrive[m in events, p in parties]: num at m.day
+  note "everything is ania's"
+  note "a second note"
+  rule base = if p == ania then 1 else 0
+
+def b_part: money PLN = bal(konto, 2026-06-30) of (ania, w1) at 2026-06-30
+
+def l_part[m in events]: money PLN = m.cash.amount of ania / 2 at m.day
+
+def v_part: money PLN = value(konto, 2026-06-30) in PLN of ania at 2026-06-30
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  stated[konto] = 10 PLN at 2026-03-31 end
+  stated[konto] of ania = 10 PLN at 2026-03-31 end
+sha256 ...

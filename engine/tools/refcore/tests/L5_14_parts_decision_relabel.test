@@ -1,0 +1,65 @@
+# Writer 11 (tally 2.1, 2.1-9, 2.1-11). L §5.14: a relabel's "amount is written: "all of p's" is bal(x) of p, a running
+# read, so such a posting is a decision with reads x (§5.14.1)"; L §5.10: "inside a decision, the running bal(x) of q
+# read[s] the same points as [its total does]". g gives all of tomek's (80.00, inh's) to ania: ania 80.00, tomek 0.00,
+# g's leg 80.00 (scratch/exp4.py).
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+kind persons: parties
+kind couples: parties
+kind savings: place PLN min 0
+  owned by arrive
+  step minor(PLN)
+  takes k for w order if w in gifts and k.owner == w.giver then 0 else 1, if k.owner == ania_tomek then 0 else 1
+kind gifts: transfers
+  attr giver: key persons
+  attr receiver: key persons
+kind inhs: transfers
+place konto: savings lives 2026-01-01..
+place world: outside lives 1900-01-01..
+place shop: outside lives 1900-01-01..
+input wage_day: date
+input wage_amt: money PLN
+input inh_day: date
+input inh_amt: money PLN
+input g_day: date
+def arrive[m in events, p in parties]: num at m.day
+  rule community = if p == ania_tomek then 1 else 0
+  rule gift beats community = if p == m.receiver then 1 else 0 when m in gifts
+  rule inh beats community = if p == tomek then 1 else 0 when m in inhs
+move wage: transfers
+  on wage_day
+  leg cash from world to konto amount wage_amt
+move inh: inhs
+  on inh_day
+  leg cash from world to konto amount inh_amt
+move g: gifts
+  on g_day
+  reads konto
+  attr giver = tomek
+  attr receiver = ania
+  leg cash from konto to konto amount bal(konto) of tomek
+ask q: bal(konto, 2026-03-31) of ania, bal(konto, 2026-03-31) of tomek, g.cash.amount
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  persons + [ania] lives 1980-01-01..
+  persons + [tomek] lives 1981-01-01..
+  couples + [ania_tomek] lives 2010-06-01..
+  opening[konto] = 0 PLN at 2026-01-01 start
+  wage_day = 2026-02-01
+  wage_amt = 100.00 PLN
+  inh_day = 2026-02-15
+  inh_amt = 80.00 PLN
+  g_day = 2026-03-01
+=== expect
+q: (80.00 PLN, 0.00 PLN, 80.00 PLN)
+  cut 2026-01-01

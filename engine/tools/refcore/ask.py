@@ -1015,6 +1015,13 @@ class Asker:
                 # member's place that nothing links (§6.1)
                 lj.setdefault(e[1], set()).add(e[2])
                 continue
+            if kind == 'labels':
+                # tally 2.1 (L §8.2 Dropped labels, §8.5 WARN-LABELS `labels dropped at <place> from <d>: <movements>`)
+                lb = ent.setdefault('_labels', {})
+                cur = lb.setdefault(e[1], [e[2], set()])
+                cur[0] = min(cur[0], e[2])
+                cur[1].add(e[3])
+                continue
             if kind == 'assumed':
                 assumed.setdefault(e[1], set()).add(e[2])
             elif kind == 'missing':
@@ -1044,6 +1051,8 @@ class Asker:
         out.extend('reading: %s' % r for r in reading)
         for kind in ('anchor', 'pad', 'adjustment', 'unfulfilled', 'open', 'left out', 'uncertain'):
             out.extend(sorted(ent.get(kind, ())))
+        for place, (d0, mids) in sorted(ent.get('_labels', {}).items()):
+            out.append('WARN-LABELS labels dropped at %s from %s: %s' % (place, d0, ', '.join(sorted(mids))))
         out.extend(sorted(ent.get('held', ())))
         if laws is not None:
             # a check whose sides are read at different law dates lists each (L §8.2, §5.18)

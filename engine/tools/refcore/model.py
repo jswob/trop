@@ -783,7 +783,7 @@ PRELUDE_PLACE = {
 BUILTIN_INPUTS = ('opening', 'stated', 'account_place')
 BUILTIN_INDEXES = ('days', 'months', 'years', 'bank_account')
 PRELUDE_KINDS = ('places', 'accounts', 'cash', 'holdings', 'assets', 'debts', 'claims', 'outside', 'currencies',
-                 'events', 'transfers', 'adjustments', 'pads')
+                 'events', 'transfers', 'adjustments', 'pads', 'parties')
 BUILTIN_IDS = set(BUILTIN_INPUTS + BUILTIN_INDEXES + PRELUDE_KINDS + ('cut',))
 
 

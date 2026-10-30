@@ -46,7 +46,7 @@ LIST_WORDS = ('weekends', 'yearly', 'added')       # calendar(weekends [sat, sun
 # "Clause order is the order in the grammar"; lines of one rank keep their order. A kind's lines are one repeated
 # choice in the grammar (kline = leg | attr | note), so they keep the file's order
 BODY_RANK = {
-    'kind': {'note': 0, 'leg': 0, 'attr': 0},
+    'kind': {'note': 0, 'leg': 0, 'attr': 0, 'owned': 0, 'batched': 0, 'step': 0, 'takes': 0},
     'index': {'v': 0, 'assumed': 1, 'note': 2},
     'input': {'note': 0},
     'band': {'note': 0},
@@ -535,6 +535,19 @@ class FilePrinter:
     def sec_def(self, n, block, lev):
         ind = '  ' * lev
         head = block[0]
+        if n.short and getattr(n, 'short_notes', False):
+            # L §2.4 (tally 2.1, R-11): "A one-line def followed by note lines means the long form, the same def with
+            # its one rule labelled base and those notes, and prints as it"
+            ht = head.toks
+            eq = [i for i, t in enumerate(ht) if t is n._eq][0]
+            at = getattr(n, '_at', None)
+            k = [i for i, t in enumerate(ht) if t is at]
+            a = k[0] if k else len(ht)
+            out = [ind + line_text(ht[:eq] + ht[a:])]
+            for l in block[1:]:
+                out.append(ind + '  ' + line_text(l.toks))
+            out.append(ind + '  rule base = ' + line_text(ht[eq + 1:a]))
+            return out
         if n.short:
             return [ind + line_text(head.toks)]
         body = block[1:]
