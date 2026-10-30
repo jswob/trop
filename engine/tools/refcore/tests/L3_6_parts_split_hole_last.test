@@ -1,7 +1,8 @@
 # Writer 11 (tally 2.1, 2.1-F5). L §3.6 Its split: "Parties whose remainders tie go by the owned clause's ties by e ...;
 # a tie with none is refused (RUN-TIE, §5.13) ... The hole part of hole shares ranks after every party, so a known share
 # is never lost to a hole." 1.01 PLN by ania's half and the hole part of tomek's unknown share: the remainders tie at
-# the last cent, which goes to ania, with no ties by (ania 0.51, a hole part of 0.50; scratch/expf.py).
+# the last cent, which goes to ania, with no ties by (ania 0.51, a hole part of 0.50; scratch/expf.py).  Its only
+# possible owner is tomek, so of tomek reads 0.50 (L §8.1, 2.1-F12; was a HOLE-PART before 2.1-F12).
 === m.tally
 model t
   tally 2
@@ -43,5 +44,5 @@ version v
   wage_day = 2026-02-01
   wage_amt = 1.01 PLN
 === expect
-q: (1.01 PLN, 0.51 PLN, ?"konto: 0.50 PLN may be tomek's: what share is tomek's" (konto), 0.00 PLN)
+q: (1.01 PLN, 0.51 PLN, 0.50 PLN, 0.00 PLN)
   cut 2026-01-01

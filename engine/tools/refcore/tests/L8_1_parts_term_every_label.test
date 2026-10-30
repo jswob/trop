@@ -1,0 +1,58 @@
+# L §8.1 (2.1-F12): "an order term over it (k.owner, k.batch.day) [is] known where every possible label gives it one
+# value"; judged per term, not per field.  sav holds the couple's 100.00, Kuba's 50.00 and a hole part of 200.00 that
+# may be Ania's or Tomek's (an arrival whose shares are holes, sh).  The order is (if k.owner == ania_tomek then 0 else
+# 1), (if k.owner == kuba then 1 else 0): the hole part's terms are 1 and 0 under both its labels.  The outflow of 150.00 takes the
+# couple's 100.00, then 50.00 of the hole part; Kuba's part ranks last and stays known.  q: the couple 0, Kuba 50.00,
+# the hole part 150.00 that may be Ania's (scratch/exp_r3.py).  (Was: the hole part's term a hole, the take undecided
+# and Kuba's part merged.)
+=== m.tally
+model t
+  tally 2
+  on 2026-02-10
+  start 2026-01-01
+  end 2026-01-31
+
+source src "test"
+unit DUK: currency minor 0.01
+kind children: parties
+kind couples: parties
+kind persons: parties
+kind mixed_ins: transfers
+kind inheritances: transfers
+  attr heir: key parties
+kind savings: place DUK min 0
+  owned by arrive
+  step minor(DUK)
+  takes k for w order (if k.owner == ania_tomek then 0 else 1), (if k.owner == kuba then 1 else 0)
+place sav: savings lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input rows: observed
+input sh: num
+def arrive[m in events, p in parties]: num at m.day
+  rule community = (if p == ania_tomek then 1 else 0)
+  rule inherited beats community = (if p == m.heir then 1 else 0) when m in inheritances
+  rule mixed beats community = (if p == ania then sh else if p == tomek then 1 - sh else 0) when m in mixed_ins
+
+ask q: bal(sav, 2026-01-31) of ania_tomek, bal(sav, 2026-01-31) of kuba, bal(sav, 2026-01-31) of ania
+
+version cast
+  cite src
+  known 2026-01-01
+  children + [kuba] lives 2010-02-14..
+  couples + [ania_tomek] lives 2015-06-20..
+  persons + [ania] lives 1988-04-12..
+  persons + [tomek] lives 1986-09-03..
+
+version recs
+  cite src
+  governs 2026-01
+  known 2026-02-03
+  opening[sav] = 0 at 2026-01-01 start
+  sh = ?"what share is Ania's?"
+  rows[r1] = (on: 2026-01-05, kind: transfers, leg cash from world to sav amount 100.00 DUK) "line 1"
+  rows[r2] = (on: 2026-01-06, kind: inheritances, leg cash from world to sav amount 50.00 DUK, heir: kuba) "line 2"
+  rows[r3] = (on: 2026-01-07, kind: mixed_ins, leg cash from world to sav amount 200.00 DUK) "line 3"
+  rows[r4] = (on: 2026-01-20, kind: transfers, leg cash from sav to world amount 150.00 DUK) "line 4"
+=== expect
+q: (0.00 DUK, 50.00 DUK, ?"sav: 150.00 DUK may be ania's: what share is Ania's?" (sav))
+...

@@ -2,7 +2,9 @@
 # known shares, whose possible owners are the parties whose shares are holes (§8.1). A known share is never lost to a
 # hole." L §8.1: "A read of q is a hole only for a q it may be" (HOLE-PART, `<place>: <amount> may be <q>'s:
 # <questions>`); "The place's total stays known throughout". ania's share is half, tomek's a hole: ania 50.00, a hole
-# part of 50.00 that may be tomek's, the couple's 0 (scratch/exp4.py).
+# part of 50.00 that may be tomek's, the couple's 0 (scratch/exp4.py).  L §8.1 (2.1-F12): "a part whose every
+# possible label is q's is read as q's": the hole part's only possible owner is tomek, so of tomek reads 50.00 (was
+# the HOLE-PART `konto: 50.00 PLN may be tomek's: what share is tomek's`, before 2.1-F12).
 === m.tally
 model t
   tally 2
@@ -44,5 +46,5 @@ version v
   wage_day = 2026-02-01
   wage_amt = 100.00 PLN
 === expect
-q: (100.00 PLN, 50.00 PLN, ?"konto: 50.00 PLN may be tomek's: what share is tomek's" (konto), 0.00 PLN)
+q: (100.00 PLN, 50.00 PLN, 50.00 PLN, 0.00 PLN)
   cut 2026-01-01

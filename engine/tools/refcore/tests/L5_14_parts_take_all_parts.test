@@ -1,0 +1,79 @@
+# L §5.14 A hole in a term: "Only the parts the take could reach under some reading of the holes merge"; L §8.1
+# (2.1-F12): "a part whose every possible label is q's is read as q's".  b1 holds two batches of Ania's gifts of one
+# day, 9 and 6; its order (k.batch.day, rank[k.owner], rank a hole) ties them.  One sale takes 15, all of both: under
+# every reading it takes every part whole, so the take is decided.  q1: b1 is left at 0, and the sale's cash arrives at
+# b1c as Ania's by the leg read (3 000.00, carried through).  q2: the leg read of Ania is 15, of each batch its own 9
+# and 6.  (Was: the take undecided, and the leg read a hole "b1c: 3 000.00 DUK may be ania's"; the migrator's
+# t7_qa_qb, ask qb.)
+=== m.tally
+model t
+  tally 2
+  on 2026-01-15
+  start 2021-01-01
+  end 2026-12-31
+
+source src "test"
+unit DUK: currency minor 0.01
+kind funds: unit
+kind couples: parties
+kind persons: parties
+kind gifts: event certain
+  leg units: funds
+  attr donee: key persons
+kind buys: event certain
+  leg units: funds
+  leg cash: DUK
+kind sales: event certain
+  leg units: funds
+  leg cash: DUK
+kind cash_accounts: place one min 0
+  owned by arrive
+  step minor(DUK)
+  takes k for w order rank[k.owner]
+kind lots: holdings
+  owned by arrive
+  batched
+  step 0.0001
+  takes k for w order k.batch.day, rank[k.owner]
+place b1: lots idx lives 2021-01-01..
+place b1c: cash_accounts DUK lives 2021-01-01..
+place world: outside lives 2000-01-01..
+place market: outside lives 2000-01-01..
+input jb: observed
+def rank[p in parties]: int = ?"which money leaves first?" at reader
+def arrive[m in events, p in parties]: num at m.day
+  rule community = (if p == ania_tomek then 1 else 0)
+  rule gifted beats community = (if p == m.donee then 1 else 0) when m in gifts
+  rule sold beats community = m.units.amount of p / m.units.amount when m in sales
+
+ask q1: bal(b1, 2025-12-31), bal(b1c, 2025-12-31) of ania
+ask q2: s.units.amount of ania, s.units.amount of jb[g1], s.units.amount of jb[g2] for s in sales over 2025-03-01..2025-03-01
+
+version cast
+  cite src
+  known 2021-01-01
+  funds + [idx] lives 2018-01-01..
+  persons + [ania] lives 1991-03-14..
+  persons + [tomek] lives 1989-07-02..
+  couples + [ania_tomek] lives 2016-09-10..
+
+version open
+  cite src
+  governs always
+  known 2021-01-01
+  opening[b1] = 0 at 2021-01-01 start
+  opening[b1c] = 0 at 2021-01-01 start
+
+version j
+  cite src
+  governs 2025-01..2025-12
+  known 2025-01-01
+  covers b1, b1c
+  jb[g1] = (on: 2025-02-01, kind: gifts, leg units from world to b1 amount 9 idx, donee: ania) "g1"
+  jb[g2] = (on: 2025-02-01, kind: gifts, leg units from world to b1 amount 6 idx, donee: ania) "g2"
+  jb[s1] = (on: 2025-03-01, kind: sales, leg units from b1 to market amount 15 idx, leg cash from market to b1c amount 3000.00 DUK) "s1"
+=== expect
+q1: (0 idx, 3 000.00 DUK)
+...
+q2 (s = jb[s1]): (15 idx, 9 idx, 6 idx)
+...

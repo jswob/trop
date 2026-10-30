@@ -1303,9 +1303,32 @@ def w_ptake_same(self, mv, lg):
 
 # -- the fill over (part, outflow) arcs (L §5.14 The take is a fill over arcs) ---------------------------------------
 
+def w_ppart_recs(self, s):
+    """A hole part as the takes clause's k under each of its possible labels (L §8.1, 2.1-F12: an order term over it
+    is known where every possible label gives it one value): one record per label, a field a label leaves open (any
+    party, any batch) the hole."""
+    if s.hole is None or not s.hole.poss:
+        return None
+    bm = self.batch_mv()
+    h = Hole(s.hole.qs) if s.hole.qs else Hole([('the label of a hole part', '?')])
+
+    def bval(b):
+        if b is None:
+            return NONE
+        mv = bm.get(b)
+        return mv if mv is not None else Mv(b)
+    out = []
+    for o, b in sorted(s.hole.poss, key=lambda x: (str(x[0]), str(x[1]))):
+        ov = h if o == ANY else (Thing(o) if o is not None else NONE)
+        bv = h if b == ANY else bval(b)
+        out.append(Rec([('owner', ov), ('batch', bv)]))
+    return out
+
+
 def w_ppart_rec(self, s):
     """A supply as the takes clause's k: a record of its built-in fields owner and batch (L §3.6); a field of a hole
-    part is known where every possible label gives it one value, a hole otherwise (L §8.1)."""
+    part is known where every possible label gives it one value, a hole otherwise (L §8.1); its terms are then judged
+    per label (ppart_recs, pterms_readings)."""
     bm = self.batch_mv()
 
     def bval(b):
@@ -1339,27 +1362,30 @@ def w_pterms(self, pk, s, w_mv, day, key, coll):
     finally:
         eng.stack.pop()
     coll.merge(c)
-    if isinstance(w_mv, Mv) and any(isinstance(v, Hole) for v in vals):
-        vals = self.pterms_readings(tk, env, ctx, w_mv, vals)
+    if any(isinstance(v, Hole) for v in vals):
+        krecs = self.ppart_recs(s)
+        if krecs is not None or isinstance(w_mv, Mv):
+            vals = self.pterms_readings(tk, env, ctx, w_mv if isinstance(w_mv, Mv) else None, vals, krecs)
     return vals
 
 
-def w_pterms_readings(self, tk, env, ctx, w_mv, vals):
+def w_pterms_readings(self, tk, env, ctx, w_mv, vals, krecs=None):
     """L §5.14 A hole in a term: the take's reach is "under some reading of the holes". An attribute of w that is a
     hole stands for a value of its declared type, so where it is a key of a kind (or a bool), each thing of that kind
     is one reading of it; a term that every reading gives one value is that value, as an order term over a hole part
     is known where every possible label gives it one value (L §8.1). Other holes stay holes. The readings are
-    evaluated apart: what they cache is dropped, and they leave no register, trace or walk record (writer 11)."""
+    evaluated apart: what they cache is dropped, and they leave no register, trace or walk record (writer 11). A hole
+    part k is read under each of its possible labels too (krecs; L §8.1, 2.1-F12)."""
     import itertools
     import collections
     eng = self.eng
     m = self.m
-    src = eng.mv_record(w_mv, ctx)
+    src = eng.mv_record(w_mv, ctx) if w_mv is not None else None
     attrs = getattr(src, 'attrs', None) or {}
     holes = [a for a, v in sorted(attrs.items()) if isinstance(v, Hole)]
     if not holes or getattr(src, 'kind', None) not in m.kinds:
-        return vals
-    types = dict(m.kind_attrs(src.kind))
+        holes = []
+    types = dict(m.kind_attrs(src.kind)) if holes else {}
     axes = []
     for a in holes:
         t = types.get(a)
@@ -1373,7 +1399,7 @@ def w_pterms_readings(self, tk, env, ctx, w_mv, vals):
                       any(getattr(e, 'kind', None) in sub for e in getattr(x, 'entries', ()))]
             if things:
                 axes.append((a, things))
-    if not axes:
+    if not axes and not krecs:
         return vals
     import copy
     from .values import vkey
@@ -1383,15 +1409,17 @@ def w_pterms_readings(self, tk, env, ctx, w_mv, vals):
     eng.tracing = False
     eng._explaining_wb = True
     try:
-        for combo in itertools.product(*[vs for a, vs in axes]):
-            rec = copy.copy(src)
-            rec.attrs = dict(attrs)
-            for (a, vs), v in zip(axes, combo):
-                rec.attrs[a] = v
-            if hasattr(rec, 'ran'):
-                rec.ran = True
+        for kr, combo in itertools.product(krecs or [env[tk.part]], itertools.product(*[vs for a, vs in axes])):
             env2 = dict(env)
-            env2[tk.w] = Mv(w_mv.id, rec)
+            env2[tk.part] = kr
+            if axes:
+                rec = copy.copy(src)
+                rec.attrs = dict(attrs)
+                for (a, vs), v in zip(axes, combo):
+                    rec.attrs[a] = v
+                if hasattr(rec, 'ran'):
+                    rec.ran = True
+                env2[tk.w] = Mv(w_mv.id, rec)
             eng.stack.append(_coll())
             try:
                 row = []
@@ -1517,6 +1545,18 @@ def w_pfill(self, place, unit, pk, step, supplies, outflows, key, coll, bad):
             if r:
                 return r < 0
         return False
+    def invariant(arcs):
+        sup = set(a[0] for a in arcs)
+        if any(supplies[si].amt is UNK for si in sup):
+            return None
+        outs_ = set(a[1] for a in arcs)
+        have = sum((S[si] for si in sup), Fraction(0))
+        need = sum((D[oi] for oi in outs_), Fraction(0))
+        if len(set(group(si) for si in sup)) == 1 and have >= need:
+            return arcs
+        if len(outs_) == 1 and need >= have:
+            return arcs
+        return None
     undecided = False
     ci = 0
     while True:
@@ -1540,9 +1580,15 @@ def w_pfill(self, place, unit, pk, step, supplies, outflows, key, coll, bad):
                 if all(id(b) in ids or before(u[2], b[2]) for b in lu) and (not cl or before(u[2], cl[0][2])):
                     pick = mates
                     break
-            if pick is None:
-                if lu:
+            if pick is None and lu:
+                # the take is the same under every reading of the holes, though no arc is certainly first (L §5.14:
+                # ties matter only "whose order changes a take", and only the parts a take "could reach under some
+                # reading" merge): the live arcs all draw on parts of one label that cover every live outflow, or
+                # one outflow takes every part it can reach (writer 11, the migrator's F-e and F-f)
+                pick = invariant([a for c in classes[ci:] for a in c if live(a)] + lu)
+                if pick is None:
                     undecided = True
+            if pick is None:
                 break
             cl = pick
         by_part = {}
@@ -1790,9 +1836,12 @@ def w_ptry(self, place, unit, grp, prev, members, pt):
         for e in mg:
             if e.kind != 'delta' or e.mv is None:
                 continue
-            lg = _leg_of(e.mv, e.note)
-            if lg is not None and isinstance(lg.frm, Thing) and isinstance(lg.to, Thing) and \
-                    lg.frm.name in places and lg.to.name in places and lg.frm.name != lg.to.name:
+            # a link is a movement out of one of the cycle's places and into another, by one leg (a sweep) or by two
+            # (a sale whose cash arrives labelled by its units' take): L §8.1 names the cycle's movements
+            legs = getattr(e.mv, 'legs', None) or ()
+            outs_ = set(g.frm.name for g in legs if isinstance(g.frm, Thing) and g.frm.name in places)
+            ins_ = set(g.to.name for g in legs if isinstance(g.to, Thing) and g.to.name in places)
+            if any(a != b for a in outs_ for b in ins_):
                 links.append(e)
     q = 'which of %s went first on %s?' % (', '.join(sorted(set(e.mv.id for e in links))), kday(pt).isoformat())
     prevc = self.__dict__.get('_pcyc')
@@ -1921,8 +1970,9 @@ def parts_value(place, unit, known, holes, q, money):
             tot += a
     qs = set()
     for h in holes:
-        if h.sure and poss_all(h.poss, q):
-            tot += h.amt        # every label it may have is q's (a stated part's gap at a place that is both)
+        if poss_all(h.poss, q):
+            # L §8.1 (2.1-F12): "a part whose every possible label is q's is read as q's"
+            tot += h.amt
             continue
         if poss_hits(h.poss, q) and not excl_hits(h.excl, q):
             inner = '; '.join(sorted(set(x[0] for x in h.qs))) if h.qs else 'no question'
