@@ -1,6 +1,6 @@
 # Changes: tally 2.0 → tally 2.1
 
-tally 2.1 adds owners and batches as labels on amounts, from session 6's decided items, designed in session 7 and written in session 7b (2026-10-30). It is **opt-in**: a text with no `owned` or `batched` kind, and none of the small items' forms (notes after a one-line def or a place, a negative record field, a day key where a date is expected), means and prints what it did on 2.0, except where it declares the new built-in id `parties` (`MIGRATION.md`, 2.0 → 2.1). The reasons are `DECISIONS.md`'s "tally 2.1 records" (R-1 to R-17, G1, the four picks); the round's files are `tmp/session7/` and `tmp/session7b/`. One row per change:
+tally 2.1 adds owners and batches as labels on amounts, from session 6's decided items, designed in session 7 and written in session 7b (2026-10-30). It is **opt-in**: a text with no `owned` or `batched` kind, and none of the small items' forms (notes after a one-line def or a place, a negative record field, a day key where a date is expected), means and prints what it did on 2.0, except as the rows of `MIGRATION.md` § 2.0 → 2.1 say (a declared `parties`, a kind named by a clause word, a kind test that now narrows). The reasons are `DECISIONS.md`'s "tally 2.1 records" (R-1 to R-17, G1, the four picks); the round's files are `tmp/session7/` and `tmp/session7b/`. One row per change:
 
 | # | Where | Change | Record |
 |---|---|---|---|
@@ -47,6 +47,20 @@ tally 2.1 adds owners and batches as labels on amounts, from session 6's decided
 | 2.1-F9 | L §8.1 | the question of a stated batch's part whose owners are open, at a place that keeps pairs | writer 11's F-9 |
 | 2.1-F10 | L §5.10 | a place alive before S has no known parts before its first anchor, as it has no balance: one hole part of the hole balance, which takes reach, and no sign checked against it | the migrator (A's joint account) |
 | 2.1-F12 | L §8.1 | a read `of q` of a hole part, like an order term over it, is known where every possible label gives it one value: a part whose every possible label is q's is read as q's | the migrator (A's cycle question) |
+| 2.1-C7b-1 | E §5, E §9 invariant 5, L P-8 | decision 22 restated with L §5.14.3's one exception (parts) | the contradiction read (verifier) |
+| 2.1-C7b-2 | L §5.14.1, §8.3 LOAD-READS | running reads allowed in an arrival rule and its defs, as L §5.14.1 says | the contradiction read (verifier) |
+| 2.1-C7b-3 | L §5.14.1, §8.4 RUN-CYCLE, RUN-FUTURE | an arrival rule's read of its day's end or later is RUN-CYCLE; RUN-FUTURE is a decision's | the contradiction read (verifier) |
+| 2.1-C7b-5 | L §5.10, §5.14, §5.14.2, §5.19 | "batch" kept for the day's first batch, "part" for a label's amount (members, pieces) | the contradiction read (verifier) |
+| 2.1-C7b-6 | L §3.6 | w is the outflow's movement; an outflow is one leg | the contradiction read (verifier) |
+| 2.1-C7b-7 | L §5.12 | a split by origin may be written as a fill or as parts | the contradiction read (verifier) |
+| 2.1-C7b-8 | L §5.7 | a late label to a party on its last day refuses that part's place, as E §4.2 step 5 says | the contradiction read (verifier) |
+| 2.1-C7b-9 | L §3.6 | WARN-LABELS and the relabel at a place that keeps parts, not only an owned one | the contradiction read (verifier) |
+| 2.1-C7b-11 | E §4.2, L §3.6 | the arrival rule's law at its movement's day (`at m.day`) | the contradiction read (verifier) |
+| 2.1-C7b-13 | L §5.19 | a zero-gap anchor leaves the parts but for its stated parts' gaps | the contradiction read (verifier) |
+| 2.1-C7b-18 | L §3.6 example | `inherited` beats `moved`, as the prose says | the contradiction read (verifier) |
+| 2.1-C7b-19 | L §3.1 | a day range `by 1` is a day index | the contradiction read (verifier) |
+| 2.1-C7b-21 | L §8.1 HOLE-PART row | the row lists every source of a hole part | the contradiction read (verifier) |
+| 2.1-C7b-22 | L §5.14 | a take's demands include the start pads, and a later reading's pad at its point | the contradiction read (verifier) |
 
 ---
 
