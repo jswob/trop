@@ -4,7 +4,7 @@ Tally is a language for a household's money and the law that governs it, plus th
 
 ## `spec/`: tally 2.1
 
-The commit tagged `tally-2.0` froze tally 2.0. Tally 2.1 adds owners and batches as labels on amounts, opted into per place kind (`CHANGES.md`, `MIGRATION.md` § 2.0 → 2.1); a 2.0 text runs unchanged. Tally 2 is a new version of the language, with a migration from tally 1 (`spec/MIGRATION.md`, `LANGUAGE.md` §9). `tally 1.0.1` stays reachable by its tag `tally-1.0.1`. `spec/VERSION` names the tag the tree matches, and `spec/SHA256SUMS` lists every file's checksum.
+The commit tagged `tally-2.1` freezes it, as `tally-2.0` froze tally 2.0. Tally 2.1 adds owners and batches as labels on amounts, opted into per place kind (`CHANGES.md`, `MIGRATION.md` § 2.0 → 2.1); a 2.0 text runs unchanged. Tally 2 is a new version of the language, with a migration from tally 1 (`spec/MIGRATION.md`, `LANGUAGE.md` §9). `tally 1.0.1` stays reachable by its tag `tally-1.0.1`. `spec/VERSION` names the tag the tree matches, and `spec/SHA256SUMS` lists every file's checksum.
 
 - **The definition:** `LANGUAGE.md` (what a construct means) and `ENGINE.md` (how the engine computes it), with `DECISIONS.md` (why: tally 2's records in Part I, tally 1.0.1's decisions carried in Part II) and `coverage.md`.
 - **The migration:** `MIGRATION.md`, each tally 1.0.1 construct and its tally 2 form, automatic, warned or manual.
@@ -14,7 +14,7 @@ The commit tagged `tally-2.0` froze tally 2.0. Tally 2.1 adds owners and batches
 - **The answer keys:** `models/` and `expected/` (the 79 cases, carried into tally 2 with their keys kept), and `amendments/` (the synthetic household and its 7 changes as tally 2 texts, with `amendments/expected/`). `montecarlo/` holds the Monte Carlo models and keys.
 - **`tools/loadcheck.py`:** the static load scan for tally 2. Run it with `python3 -I spec/tools/loadcheck.py` (`--selftest` first).
 
-**Changing it.** After the freeze, a change needs three things: a failing test or a logged contradiction, a row in the gap log (`spec/CHANGES.md`), and a patch that names both. Each patch raises the version (`tally 2.0.1`, …), updates `SHA256SUMS`, and every gate in `DONE.md` is run again.
+**Changing it.** After the freeze, a change needs three things: a failing test or a logged contradiction, a row in the gap log (`spec/CHANGES.md`), and a patch that names both. Each patch raises the version (`tally 2.1.1`, …), updates `SHA256SUMS`, and every gate in `DONE.md` is run again.
 
 **Paths.** The spec was written in `tmp/design2/`, and its paths are relative to that folder, so `models/`, `amendments/`, `montecarlo/` and `tools/` resolve here. Provenance references (`REPORT.md`, `trace.md`, `regress.md`, `review/`, `rows/`, `cases/`, `refcore/`, `prior-art/`, `problems.md`, `core.md`) point at the design record. That record stays in the gitignored `tmp/` and isn't part of the spec. Part II of `DECISIONS.md` and the stale documents keep tally 1.0.1's paths (`tmp/design/`).
 

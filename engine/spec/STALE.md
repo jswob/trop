@@ -1,6 +1,8 @@
-# Stale in tally 2.0
+# Stale in tally 2.1
 
 These documents are carried into the package as they are. They plan or check the engine's build for tally 1.0.1, and nothing in session 4's design round checked them against tally 2 (brief §8). Each is rewritten for tally 2 before a gate that cites it is judged (`DONE-proposals.md`). Below, per document, the sections that name a construct tally 2 removed, merged or changed, and what reaches it. The list comes from a word scan (`scratch/lead/stale_map.py`), so it says where to reread, not what the new text is. A section not listed may still be reached through a word the scan doesn't know.
+
+**Tally 2.1** (session 7b, 2026-10-30) reaches them once more: a place whose kind keeps parts (`owned`, `batched`) carries a part map, an arrival rule and takes, so `PERFORMANCE.md`'s costs and `BOUNDS.md`'s bounds don't cover the labels' cost (`engine/BUILD-NOTES.md`, the labels' cost; load row L:18). They stay stale as they are, rewritten for tally 2 with the rest.
 
 
 ## `OPERATIONS.md`
