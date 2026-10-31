@@ -142,6 +142,15 @@ In every role but app work it refuses a commit message with an AI co-author or a
 - it refuses a message the shell computes (`-m "$(cat f)"`, `-m "$M"`) or pipes in (`-F -` without a here-document), since it can't read either;
 - `-m "$(cat <<'EOF' … EOF)"` passes, because its text is in the command.
 
+In every role, app work included, it refuses landing on `master` (R-132):
+
+- a `git push` whose destination is `master`: `master`, `HEAD:master`, `refs/heads/master`, `+master`, `-f`/`--force`/`--force-with-lease`, `:master` and `--delete master`, and `--all`, `--mirror`, `--branches`;
+- a bare `git push` (or `git push origin`, or `HEAD`) while `master` is checked out, read from the git files;
+- a refspec the shell computes (`git push origin "$B"`), since it can't read it;
+- `gh pr merge`, and a `gh api` call that merges a pull request or a branch, moves or deletes `master`'s ref, or changes its protection.
+
+A branch (`git push -u origin <branch>`), a tag, `gh pr create`, `gh pr view` and `gh pr checks` pass.
+
 **The other two hooks.** ConfigChange, in the build role, refuses a settings change and logs `CONFIG-CHANGE BLOCKED` in `BUILD-LOG.md` (R-81). Stop, in the build role, runs `tools/check fast` and keeps the turn going while it is red, unless a STOP-REPORT heading was added to `BUILD-LOG.md` since the last commit, or by it; after three identical blocks it lets the fourth stop through and logs `STOPPED RED` (R-83). `BUILD-LOG.md` holds the STOP-REPORT's template.
 
 **It fails closed.** The shim `tools/guard` turns any exit but 0 into 2, so a crash refuses the call. The hook strings in `settings.json` run the shim with `/bin/bash` and also turn any exit but 0 into 2, so a missing `bash` or `python3` refuses too. When `engine/` exists and the guard is missing or isn't executable, they refuse every call and say which (R-79). `guard-test` runs the real hook strings and forces an internal failure to prove it.
@@ -161,6 +170,7 @@ In every role but app work it refuses a commit message with an AI co-author or a
 - A worktree's `.claude/settings.json` isn't loaded by the session that wrote it, so the guard binds the next session started there.
 - Each role's reach is by path. The `rules` role can write every rule file, which is why a rule change takes the user's dated approval and its own commit (R-112), and the audit reads every such commit.
 - `git merge engine` is refused in every role, because `engine` is also a folder: the user runs merges of branch `engine` in their own shell (audit A-3).
+- R-132's push and merge refusals are a tripwire too, with no wall behind them on GitHub (branch protection needs GitHub Pro). It doesn't catch a git alias (`git config alias.p push`, then `git p origin master`), a push configured elsewhere (`remote.*.push`, `push.default=upstream`, `--git-dir`), plumbing (`git send-pack`), a script run by an interpreter (`python3 x.py` that pushes), a `gh` alias or extension, or the user's own shell, where the user merges.
 
 ## 4. Setting the kernel at S (R-85)
 
@@ -337,6 +347,7 @@ One line per rule: the rule (shortened; the rulebook has its full text), what en
 - **R-129** Each milestone ends with a one-page report for the owner (G1, 2026-10-30). **Enforced by:** the gate session; review. **Proven by:** review only.
 - **R-130** Optimised code lives only in named fence modules, each with a `PERF:` header, a benchmark, a plain twin and an equivalence test. `#[inline(always)]` and `#[cold]` outside a fence are listed for review. **Enforced by:** review; the `trace` script (a fence's `PERF:` line names a P8 row of PERFORMANCE §8 and its plain twin, error); ast-grep (`inline-hint-review`, report; the fences are its `ignores:`, empty at the scaffold, added through R-112). **Proven by:** selftest: `inline-always`, `cold`, `fence-names-no-budget-row`, `fence-names-no-twin`.
 - **R-131** Strictness written readably: domain newtypes with checked methods, named helpers in one kernel module, no arithmetic macros or operator-like extension traits on integers (G1, 2026-10-30). **Enforced by:** review (macros are already an error, R-73). **Proven by:** review only.
+- **R-132** Changes land on `master` only by a pull request the user merges: no Claude session, in any role, pushes to `master`, deletes it, force-pushes it or merges a pull request (issue #3, 2026-10-31; branch protection needs GitHub Pro on a private repo). **Enforced by:** a Bash tripwire in the guard, every role: `git push` to `master` in any form, `--all`, `--mirror`, a bare push while `master` is checked out (read from the git files), a computed refspec; `gh pr merge`; `gh api` calls that merge, move `master`'s ref or change its protection (section 3 has its limits). **Proven by:** engine/tools/guard-test (each refused form, and the controls: a branch, a tag, `gh pr create`, `view`, `checks`, a bare push on another branch).
 
 ## 8. Deviations from C
 

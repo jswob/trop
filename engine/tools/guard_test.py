@@ -317,6 +317,61 @@ BASH = [
     ("git tag -a v1 -F engine/target/msg-ai.txt", {"unset"}, ""),
     ("git tag -a v1 -m 'Release'", ALL, ""),
     ("git notes add -m 'Generated with Claude Code' HEAD", {"unset"}, ""),
+    # R-132: no session pushes to master, deletes it, force-pushes it or merges a PR;
+    # every role refused, unset included (the throwaway has master checked out)
+    ("git push origin master", set(), ""),
+    ("git push origin Master", set(), ""),
+    ("git push origin HEAD:master", set(), ""),
+    ("git push origin HEAD:refs/heads/master", set(), ""),
+    ("git push origin feature:master", set(), ""),
+    ("git push origin +master", set(), ""),
+    ("git push origin +HEAD:master", set(), ""),
+    ("git push -f origin master", set(), ""),
+    ("git push --force origin master", set(), ""),
+    ("git push --force-with-lease origin master", set(), ""),
+    ("git push --force-with-lease=master:abc123 origin HEAD:master", set(), ""),
+    ("git push origin :master", set(), ""),
+    ("git push origin --delete master", set(), ""),
+    ("git push -d origin master", set(), ""),
+    ("git push --all origin", set(), ""),
+    ("git push --mirror origin", set(), ""),
+    ("git push --branches origin", set(), ""),
+    ("git push --dry-run origin HEAD:master", set(), ""),
+    ("git push -o ci.skip origin master", set(), ""),
+    ("git push --repo=origin master", set(), ""),
+    ("git push origin feature master", set(), ""),
+    ("git -C engine push origin master", set(), ""),
+    ("cd engine && git push origin master", set(), ""),
+    ("bash -c 'git push origin master'", set(), ""),
+    ("echo \"$(git push origin HEAD:master)\"", set(), ""),
+    ("B=master; git push origin \"$B\"", set(), ""),
+    ("git push", set(), ""),
+    ("git push origin", set(), ""),
+    ("git push -u origin HEAD", set(), "engine"),
+    ("git push --follow-tags", set(), ""),
+    ("gh pr merge 3", set(), ""),
+    ("gh pr merge --squash --auto 3", set(), ""),
+    ("gh -R jswob/trop pr merge 3", set(), ""),
+    ("gh api -X PUT repos/jswob/trop/pulls/3/merge", set(), ""),
+    ("gh api repos/jswob/trop/branches/master/protection -X DELETE", set(), ""),
+    ("gh api -X PUT repos/jswob/trop/branches/master/protection --input /tmp/p.json", set(), ""),
+    ("gh api -X PATCH repos/jswob/trop/git/refs/heads/master -f sha=abc -F force=true", set(), ""),
+    ("gh api repos/jswob/trop/merges -f base=master -f head=feature", set(), ""),
+    ("gh api graphql -f query='mutation { mergePullRequest(input: {pullRequestId: \"x\"}) { clientMutationId } }'", set(), ""),
+    # R-132's controls: a branch, a tag, the PR's own commands
+    ("git push -u origin rules/rulebook-home", ALL, ""),
+    ("git push origin feature:feature", ALL, ""),
+    ("git push origin master-notes", ALL, ""),
+    ("git push origin v1", ALL, ""),
+    ("git push origin refs/tags/v1", ALL, ""),
+    ("git push origin --tags", ALL, ""),
+    ("git push -o ci.skip origin rules/x", ALL, ""),
+    ("gh pr create --title 'Rulebook home' --body 'Closes #3'", ALL, ""),
+    ("gh pr view 3", ALL, ""),
+    ("gh pr checks 3 --watch", ALL, ""),
+    ("gh api repos/jswob/trop/pulls/3", ALL, ""),
+    ("git log origin/master..HEAD", ALL, ""),
+    ("echo 'git push origin master'", ALL, ""),
 ]
 
 
@@ -356,7 +411,7 @@ def setup(root):
                 'esac\n')
     os.chmod(os.path.join(root, "engine/tools/check"), 0o755)
     git = ["git", "-C", root, "-c", "user.name=guard-test", "-c", "user.email=guard-test@example.invalid"]
-    subprocess.run(["git", "init", "-q", root], check=True)
+    subprocess.run(["git", "init", "-q", "--initial-branch=master", root], check=True)  # R-132's rows need master checked out
     subprocess.run([*git, "add", "-A"], check=True)
     subprocess.run([*git, "commit", "-q", "-m", "fixture"], check=True)
 
@@ -429,6 +484,16 @@ def main():
                 code, err = call(root, ["guard"], {"tool_name": "Bash", "tool_input": {"command": command},
                                                    "cwd": os.path.join(root, cwd)}, role)
                 expect(f"Bash `{command}` as {role}", code, 0 if role in allowed else 2, err)
+        # R-132 on another branch: a bare push pushes that branch; master by name still refuses
+        git = ["git", "-C", root, "-c", "user.name=guard-test", "-c", "user.email=guard-test@example.invalid"]
+        subprocess.run([*git, "switch", "-q", "-c", "feature"], check=True)
+        for command, allowed in [("git push", ALL), ("git push origin", ALL), ("git push -u origin HEAD", ALL),
+                                 ("git push origin @", ALL), ("git push origin HEAD:master", set()),
+                                 ("git push origin feature:refs/heads/master", set())]:
+            for role in ROLES:
+                code, err = call(root, ["guard"], {"tool_name": "Bash", "tool_input": {"command": command}, "cwd": root}, role)
+                expect(f"Bash `{command}` on branch feature as {role}", code, 0 if role in allowed else 2, err)
+        subprocess.run([*git, "switch", "-q", "master"], check=True)
         # every checkout of the repo is judged alike (F-1): a linked worktree beside the
         # throwaway and one inside it, the way Claude Code makes them
         git = ["git", "-C", root, "-c", "user.name=guard-test", "-c", "user.email=guard-test@example.invalid"]

@@ -854,6 +854,113 @@ def check_message(sub, rest, cwd, role, state):
             raise Refused(f"{what}: the message file {value} has an AI co-author or attribution line (R-100).")
 
 
+# --- R-132: changes land on master only by a pull request the user merges ----------
+
+
+MASTER = "master"
+LANDING = (
+    "changes land on master only by a pull request the user merges (R-132). "
+    "Push your own branch and open a PR with `gh pr create`; the user merges it"
+)
+# git push's options whose value is the next word
+PUSH_VALUED = {"-o", "--push-option", "--repo", "--receive-pack", "--exec"}
+# git push's options that push every branch, master included
+PUSH_EVERY = {"--all", "--mirror", "--branches"}
+# gh api endpoints and GraphQL mutations that merge, move or unprotect master
+GH_API_MERGES = re.compile(
+    r"pulls/[^/\s]+/merge(?![\w-])|/merges(?![\w-])|branches/master/protection|git/refs/heads/master(?![\w-])"
+    r"|mergePullRequest|enablePullRequestAutoMerge|mergeBranch|updateRef|deleteRef",
+    re.IGNORECASE,
+)
+
+
+def current_branch(cwd):
+    """The branch checked out where `cwd` is, from the git files without running git:
+    the nearest `.git` above it (a folder, or a linked worktree's `gitdir:` file) and
+    its HEAD. None when no repo holds `cwd` or HEAD is detached."""
+    d = cwd
+    while not os.path.lexists(os.path.join(d, ".git")):
+        if os.path.dirname(d) == d:
+            return None
+        d = os.path.dirname(d)
+    dotgit = os.path.join(d, ".git")
+    try:
+        gitdir = dotgit
+        if not os.path.isdir(dotgit):
+            line = read_line(dotgit)
+            if not line.startswith("gitdir:"):
+                raise ValueError(f"{dotgit} has no gitdir line")
+            gitdir = os.path.join(d, line[len("gitdir:") :].strip())
+        head = read_line(os.path.join(gitdir, "HEAD"))
+    except (OSError, ValueError) as e:
+        raise Refused(f"engine guard: can't read which branch {d} has checked out ({e}), so a `git push` can't be checked against master; refusing (R-132).") from e
+    return head[len("ref: refs/heads/") :] if head.startswith("ref: refs/heads/") else None
+
+
+def is_master(ref):
+    """Whether a ref names master: `master`, `heads/master`, `refs/heads/master`, in any case."""
+    return ref is not None and ref.removeprefix("refs/").removeprefix("heads/").casefold() == MASTER
+
+
+def check_push(rest, cwd, role, state):
+    """R-132: no `git push` whose destination is master, in any form: a refspec naming
+    it (`master`, `HEAD:master`, `+master`, `:master`, `--delete master`, forced or
+    not), `--all`, `--mirror`, or no refspec at all while master is checked out."""
+    what = f"engine guard (role {role}): refused `git push`"
+    words, repo_given, tags, it = [], False, False, iter(rest)
+    for a in it:
+        if a == "--":
+            words += list(it)
+            break
+        key = a.split("=", 1)[0]
+        if key in PUSH_EVERY:
+            raise Refused(f"{what} {key}, which pushes master too: {LANDING}.")
+        if key == "--repo":
+            repo_given = True
+        if a in PUSH_VALUED:
+            next(it, None)
+        elif a == "--tags":
+            tags = True
+        elif not a.startswith("--") and a.startswith("-"):
+            hit = short_value(a, "o")
+            if hit and not hit[1]:
+                next(it, None)  # -o VALUE, -fo VALUE
+        if not a.startswith("-"):
+            words.append(a)
+    refspecs = words if repo_given else words[1:]
+    if not refspecs:
+        if tags:
+            return  # only the tags
+        if is_master(current_branch(cwd)):
+            raise Refused(f"{what} on branch master, which pushes master: {LANDING}.")
+        return
+    for spec in refspecs:
+        if dynamic(spec) and state.get("expands"):
+            raise Refused(f"{what} to a computed ref ({spec}), which can't be checked against master (R-132); name the branch.")
+        src, colon, dest = spec.lstrip("+").partition(":")
+        dest = dest if colon and dest else src
+        if dest in ("HEAD", "@"):
+            dest = current_branch(cwd)
+        if is_master(dest):
+            raise Refused(f"{what} to master ({spec}): {LANDING}.")
+
+
+def check_gh(args, role):
+    """R-132: no `gh pr merge`, and no `gh api` call that merges a pull request or a
+    branch, moves or deletes master's ref, or changes master's protection."""
+    words, it = [], iter(args)
+    for a in it:
+        if a in ("-R", "--repo"):
+            next(it, None)
+        elif not a.startswith("-"):
+            words.append(a)
+    what = f"engine guard (role {role}): refused"
+    if words[:2] == ["pr", "merge"]:
+        raise Refused(f"{what} `gh pr merge`: {LANDING}.")
+    if words[:1] == ["api"] and any(GH_API_MERGES.search(a) for a in args):
+        raise Refused(f"{what} a `gh api` call that merges, moves master or changes its protection: {LANDING}.")
+
+
 def check_git(args, cwd, role, state):
     sub, rest = None, list(args)
     while rest:
@@ -870,6 +977,9 @@ def check_git(args, cwd, role, state):
         break
     if role != "unset" and sub in GIT_MESSAGES:
         check_message(sub, rest, cwd, role, state)
+    if sub == "push":
+        check_push(rest, cwd, role, state)
+        return
     if sub not in GIT_WRITES or sub == "commit":
         return
     if "--" in rest:
@@ -1066,6 +1176,9 @@ def check_segment(argv, cwd, role, depth, state):
         if sub == "clippy" and "--fix" in own or sub in CARGO_WRITES and "--check" not in rest:
             for m in cargo_targets(own, cwd):
                 check_target(m, cwd, role, f"`cargo {sub}` (it acts on each package's files: name yours with -p)")
+        return cwd
+    if name == "gh":
+        check_gh(args, role)
         return cwd
     if name == "git":
         check_git(args, cwd, role, state)

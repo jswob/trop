@@ -1,6 +1,6 @@
 ---
 name: engine-rust
-description: How to write, fix and review the Tally engine's Rust under its approved rulebook (R-1 to R-131) and builder guidance, so the code stays exact, deterministic, crash-free, fast by structure and readable by an owner who doesn't read Rust. Invoke it by name at the start of every engine build or review session (TALLY_ROLE=build). Also use it whenever you edit or review code under engine/crates/, when clippy, ast-grep, cargo-deny, the guard or the Stop hook blocks you, when you are tempted to add an allow or expect, when a test or the spec looks wrong, when a count or time budget misses, or when you write numbers, the memo, the day walk, threads, parts and labels, holes or joint members.
+description: How to write, fix and review the Tally engine's Rust under its approved rulebook (R-1 to R-132) and builder guidance, so the code stays exact, deterministic, crash-free, fast by structure and readable by an owner who doesn't read Rust. Invoke it by name at the start of every engine build or review session (TALLY_ROLE=build). Also use it whenever you edit or review code under engine/crates/, when clippy, ast-grep, cargo-deny, the guard or the Stop hook blocks you, when you are tempted to add an allow or expect, when a test or the spec looks wrong, when a count or time budget misses, or when you write numbers, the memo, the day walk, threads, parts and labels, holes or joint members.
 ---
 
 # engine-rust: writing the Tally engine
