@@ -225,7 +225,8 @@ def grade(worktree, name, base, target, transcript=None):
     info["fixture_unchanged"] = f"engine/{case['file']}" not in changed
     info["changed"] = changed
     info["skill_loaded"] = any(n == "Skill" and "engine-rust" in t for n, t in calls) or (
-        transcript is not None and os.path.exists(transcript) and "skills/engine-rust" in open(transcript, encoding="utf-8").read())
+        transcript is not None and os.path.exists(transcript)
+        and "Base directory for this skill" in open(transcript, encoding="utf-8").read())
     info["skill_reads"] = [t[:200] for n, t in calls if "skills/engine-rust" in t]
     info["seal_hits"] = seal_hits(transcript)
     info["transcript"] = transcript

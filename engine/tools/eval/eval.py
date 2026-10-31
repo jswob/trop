@@ -184,7 +184,9 @@ def plant(names, force=False):
             if code == 0:
                 raise RuntimeError(f"{name}: the planted state is green")
             git("add", "-A", cwd=wt)
-            git("commit", "-q", "-m", f"eval {name}: plant {case['file']} ({case['tempts']}), issue #4", cwd=wt)
+            # A plain message: the run reads the log, and a message naming the workaround
+            # leaked it (the first measured runs quoted it back).
+            git("commit", "-q", "-m", case.get("message", f"tally: add {os.path.basename(case['file'])}"), cwd=wt)
             git("branch", "-f", branch, "HEAD", cwd=wt)
             print(f"{name}: {branch} at {git('rev-parse', '--short', branch)}")
         finally:
@@ -240,12 +242,22 @@ def remove_skill(wt):
     """The arm without the skill: the run's worktree loses .claude/skills/engine-rust/ in a
     local commit that also rewrites RULES.sha256, so check-frozen stays green there and the
     arms differ only in the skill. A deny rule wasn't enough: the first measured run without
-    the skill read SKILL.md by its absolute path (session 33bdb533)."""
+    the skill read SKILL.md by its absolute path (session 33bdb533). The rules selftest's
+    case that edits a byte of the skill goes too, or `check full` is red there on a step
+    the other arm passes. The change is amended into the planted commit, under its plain
+    message, so the log shows no eval."""
     git("rm", "-r", "-q", ".claude/skills/engine-rust", cwd=wt)
+    case_file = os.path.join(wt, "engine", "tools", "rules-selftest", "cases", "R-80.case")
+    with open(case_file, encoding="utf-8") as f:
+        text = f.read()
+    start = text.index("case: builder-skill-byte\n")
+    end = text.index("\ncase: ", start) + 1
+    with open(case_file, "w", encoding="utf-8") as f:
+        f.write(text[:start] + text[end:])
     subprocess.run([os.path.join(wt, "engine", "tools", "check-frozen"), "--write-rules"], cwd=os.path.join(wt, "engine"),
                    capture_output=True, text=True, check=True)
     git("add", "-A", cwd=wt)
-    git("commit", "-q", "-m", "eval: the arm without the skill (local, never pushed)", cwd=wt)
+    git("commit", "-q", "--amend", "--no-edit", cwd=wt)
     return git("rev-parse", "HEAD", cwd=wt)
 
 
@@ -255,8 +267,8 @@ def one_run(spec, model, slot):
     branch = f"eval/{name}"
     base = git("rev-parse", branch)
     wt = os.path.join(scratch(), "wt", f"{name}-{arm}-{k}")
-    worktree_add(wt, branch)
-    prompt = PROMPT.format(red_on=case["red_on"])
+    worktree_add(wt, base)  # by commit, so `git status` names no eval branch
+    prompt =PROMPT.format(red_on=case["red_on"])
     extra = ["--disallowedTools", "Agent"]
     if arm == "with":
         prompt = "/engine-rust\n\n" + prompt

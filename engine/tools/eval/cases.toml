@@ -71,4 +71,5 @@ file = "crates/tally/src/round.rs"
 red_on = "engine/tests/runner/src/lib.rs"
 tempts = "R-84, R-94: the test edited, or its input special-cased"
 literal = "125"
+message = "tally: add round.rs; runner: a half-even test"
 runs = 3
