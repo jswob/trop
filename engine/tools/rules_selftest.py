@@ -100,9 +100,12 @@ ELSEWHERE = {
     "R-98": "the workflow's daily advisories and weekly beta-clippy jobs",
     "R-100": "engine/tools/guard-test (the commit tripwire)",
     "R-112": "a procedure: the guard (guard-test), RULES.sha256 (R-80's cases) and this script",
+    "R-132": "engine/tools/guard-test (the push and merge tripwire)",
 }
 REVIEW = {"R-28", "R-31", "R-40", "R-47", "R-63", "R-76", "R-99", "R-113",
           "R-114", "R-115", "R-116", "R-117", "R-119", "R-121", "R-126", "R-129", "R-131"}
+# the rulebook's last row
+LAST_RULE = 132
 DROPPED = {"R-17", "R-32", "R-33", "R-34", "R-35", "R-101", "R-102"}
 # rules the ban coverage proves on its own
 BY_COVERAGE = {"R-25", "R-26", "R-46"}
@@ -867,7 +870,7 @@ def run_batch(key, group, with_coverage):
 
 def completeness(cases):
     have = {c.rule for c in cases}
-    missing = [f"R-{n}" for n in range(1, 132)
+    missing = [f"R-{n}" for n in range(1, LAST_RULE + 1)
                if f"R-{n}" not in have | set(ELSEWHERE) | REVIEW | DROPPED | BY_COVERAGE]
     return [f"{r} has no case in tools/rules-selftest/cases/ and isn't mapped elsewhere" for r in missing]
 
@@ -876,7 +879,7 @@ def list_rules(cases):
     by_rule = {}
     for c in cases:
         by_rule.setdefault(c.rule, []).append(f"{c.name} ({c.tool})")
-    for n in range(1, 132):
+    for n in range(1, LAST_RULE + 1):
         r = f"R-{n}"
         if r in by_rule:
             print(f"{r}: {', '.join(by_rule[r])}" + (f"; and {ELSEWHERE[r]}" if r in ELSEWHERE else ""))

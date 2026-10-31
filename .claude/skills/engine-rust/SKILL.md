@@ -1,6 +1,6 @@
 ---
 name: engine-rust
-description: How to write, fix and review the Tally engine's Rust under its approved rulebook (R-1 to R-131) and builder guidance, so the code stays exact, deterministic, crash-free, fast by structure and readable by an owner who doesn't read Rust. Invoke it by name at the start of every engine build or review session (TALLY_ROLE=build). Also use it whenever you edit or review code under engine/crates/, when clippy, ast-grep, cargo-deny, the guard or the Stop hook blocks you, when you are tempted to add an allow or expect, when a test or the spec looks wrong, when a count or time budget misses, or when you write numbers, the memo, the day walk, threads, parts and labels, holes or joint members.
+description: How to write, fix and review the Tally engine's Rust under its approved rulebook (R-1 to R-132) and builder guidance, so the code stays exact, deterministic, crash-free, fast by structure and readable by an owner who doesn't read Rust. Invoke it by name at the start of every engine build or review session (TALLY_ROLE=build). Also use it whenever you edit or review code under engine/crates/, when clippy, ast-grep, cargo-deny, the guard or the Stop hook blocks you, when you are tempted to add an allow or expect, when a test or the spec looks wrong, when a count or time budget misses, or when you write numbers, the memo, the day walk, threads, parts and labels, holes or joint members.
 ---
 
 # engine-rust: writing the Tally engine
@@ -14,7 +14,7 @@ The engine is a standalone Rust library and CLI: a reality (Tally text files) an
 
 Speed comes from the structure (skip empty days, share walks, a well-keyed memo, dense columns), not from clever code. Plain code first; optimised code only in fences.
 
-**Where the rules live.** The lints, the guard, the Stop hook and CI are the walls: they hold whatever you read. `engine/CLAUDE.md` (printed at session start and after compaction) holds the never-miss rules. This skill holds the how. The full texts: `tmp/research_notes/engine-rust-strictness/RULEBOOK.md` (every rule with its reason) and `BUILDER.md` (§1–§13). The design: `engine/spec/PERFORMANCE.md`, `BUILD-ORDER.md`; the meaning: `engine/spec/LANGUAGE.md` (L) and `ENGINE.md` (E). Where this skill and the rulebook differ, the rulebook wins; where either differs from the spec, the spec wins, and you stop.
+**Where the rules live.** The lints, the guard, the Stop hook and CI are the walls: they hold whatever you read. `engine/CLAUDE.md` (printed at session start and after compaction) holds the never-miss rules. This skill holds the how. The full texts: `engine/RULEBOOK.md` (every rule with its reason) and `engine/BUILDER.md` (§1–§13). The design: `engine/spec/PERFORMANCE.md`, `BUILD-ORDER.md`; the meaning: `engine/spec/LANGUAGE.md` (L) and `ENGINE.md` (E). Where this skill and the rulebook differ, the rulebook wins; where either differs from the spec, the spec wins, and you stop.
 
 ## 1. The hard rules
 

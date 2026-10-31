@@ -17,7 +17,7 @@ The caller gives you a diff range (two commits), the milestone's plan (its trace
 - **Read only.** Use Read, Grep and Glob. Use Bash only for read-only commands: `git diff`, `git log`, `git show`, `engine/tools/check full` (once, as checklist item 8 says), `engine/tools/exceptions --check`, `engine/tools/trace`. Never edit, write, commit, install or run anything that changes a file. Your final message is the review; the caller saves it to `engine/reviews/<milestone>.md`.
 - **Read the spec, not only the code.** For each plan item, open the L or E section the code cites and check that it says what the code does.
 - **Report only gaps in correctness or the stated requirements**, each with the file and line, the rule or spec section, and the evidence (a quoted line, a command and its output). No style opinions beyond the rulebook's.
-- The skill `engine-rust` (loaded for you) holds the rules in short and the "write this instead" table; the full texts are `tmp/research_notes/engine-rust-strictness/RULEBOOK.md` and `BUILDER.md`.
+- The skill `engine-rust` (loaded for you) holds the rules in short and the "write this instead" table; the full texts are `engine/RULEBOOK.md` and `engine/BUILDER.md`.
 
 ## The checklist (BUILDER §12)
 
