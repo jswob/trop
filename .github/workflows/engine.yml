@@ -70,6 +70,10 @@ jobs:
           echo "$HOME/.cargo-tools/bin" >> "$GITHUB_PATH"
       - name: engine/tools/check full
         run: engine/tools/check full
+      # the commits themselves: attribution lines (R-100) and rule changes' trailers (R-112)
+      - name: engine/tools/commit-check
+        if: github.event_name == 'pull_request'
+        run: engine/tools/commit-check "origin/${{ github.base_ref }}"
       - if: failure()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:

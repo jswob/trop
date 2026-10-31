@@ -1,0 +1,27 @@
+# R-112: a rule changes only through one procedure. commit-check (CI, on a pull request)
+# fails a commit that changes a rule file without its Rule-Change trailer, the
+# checksums and a proof. Each case commits in the scratch and takes the commit back.
+
+case: rule-change-without-trailer
+tool: run
+exit: any
+expect: with no Rule-Change trailer (R-112)
+--- append clippy.toml
+# planted
+--- run
+git -c user.name=rules-selftest -c user.email=rules-selftest@invalid commit -qa -m "planted: a rule change with no trailer"
+tools/commit-check HEAD~1
+git reset -q --hard HEAD~1
+
+case: rule-change-without-checksums
+tool: run
+exit: any
+expect: but not tools/RULES.sha256 (R-112)
+--- append clippy.toml
+# planted
+--- write tools/rules-selftest/cases/R-999.case
+# planted
+--- run
+git add -A && git -c user.name=rules-selftest -c user.email=rules-selftest@invalid commit -qa -m "planted: a rule change" -m "Rule-Change: R-45 approved 2026-10-31"
+tools/commit-check HEAD~1
+git reset -q --hard HEAD~1

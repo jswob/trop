@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# The commits a pull request brings (R-100, R-112): engine/tools/commit-check BASE
+d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)" || exit 1
+exec python3 -I -B "$d/commit_check.py" "$@"

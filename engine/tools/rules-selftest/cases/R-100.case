@@ -1,0 +1,16 @@
+# R-100: no AI co-author or attribution line, ever. The guard's tripwire reads the
+# command; commit-check (CI) reads the commits themselves, so `git commit -F file` can't
+# hide one.
+
+case: attribution-in-a-commit
+tool: run
+exit: any
+expect: an AI co-author or attribution line
+--- write zz-message.txt
+planted: a commit
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+--- run
+git add -A && git -c user.name=rules-selftest -c user.email=rules-selftest@invalid commit -q -F zz-message.txt
+tools/commit-check HEAD~1
+git reset -q --hard HEAD~1
