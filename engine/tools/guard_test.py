@@ -70,6 +70,10 @@ EDITS = [
     (".claude/skills/engine-rust/SKILL.md", RULES),
     (".claude/skills/engine-rust/references/numbers.md", RULES),
     (".claude/agents/engine-reviewer.md", RULES),
+    # the rules' full texts (issue #3)
+    ("engine/RULEBOOK.md", RULES),
+    ("engine/BUILDER.md", RULES),
+    ("engine/rulebook.md", RULES),
     (".claude/skills/design/SKILL.md", APP),
     ("engine/crates/tally/build.rs", APP),
     ("engine/crates/tally-cli/build.rs", APP),
@@ -180,6 +184,9 @@ BASH = [
     ("rm -rf engine/crates/tally", RULES, ""),  # it holds benches/, a rule folder
     ("rm -rf engine/crates/tally/src", BUILD, ""),
     ("echo x > engine/crates/tally/build.rs", APP, ""),
+    # the rules' full texts (issue #3)
+    ("sed -i '' 's/a/b/' engine/RULEBOOK.md", RULES, ""),
+    ("echo x >> engine/BUILDER.md", RULES, ""),
     # the build role's extra refusals (R-81, R-100)
     ("jq '.disableAllHooks=true' .claude/settings.local.json > /tmp/s.json", NOT_BUILD, ""),
     ("claude -p 'edit the spec'", NOT_BUILD, ""),

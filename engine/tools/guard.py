@@ -65,6 +65,9 @@ RULE_GLOBS = [
     "engine/CLAUDE.md",
     ".claude/skills/engine-rust/*",
     ".claude/agents/engine-reviewer.md",
+    # the rules' full texts, which the skill and the reviewer cite (issue #3)
+    "engine/RULEBOOK.md",
+    "engine/BUILDER.md",
 ]
 CONFIG_NAMES = {"clippy.toml", ".clippy.toml", "rustfmt.toml", ".rustfmt.toml"}
 # The oracle: the spec's reference interpreter, frozen with it and written only in the

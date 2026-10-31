@@ -14,7 +14,7 @@ The engine is a standalone Rust library and CLI: a reality (Tally text files) an
 
 Speed comes from the structure (skip empty days, share walks, a well-keyed memo, dense columns), not from clever code. Plain code first; optimised code only in fences.
 
-**Where the rules live.** The lints, the guard, the Stop hook and CI are the walls: they hold whatever you read. `engine/CLAUDE.md` (printed at session start and after compaction) holds the never-miss rules. This skill holds the how. The full texts: `tmp/research_notes/engine-rust-strictness/RULEBOOK.md` (every rule with its reason) and `BUILDER.md` (§1–§13). The design: `engine/spec/PERFORMANCE.md`, `BUILD-ORDER.md`; the meaning: `engine/spec/LANGUAGE.md` (L) and `ENGINE.md` (E). Where this skill and the rulebook differ, the rulebook wins; where either differs from the spec, the spec wins, and you stop.
+**Where the rules live.** The lints, the guard, the Stop hook and CI are the walls: they hold whatever you read. `engine/CLAUDE.md` (printed at session start and after compaction) holds the never-miss rules. This skill holds the how. The full texts: `engine/RULEBOOK.md` (every rule with its reason) and `engine/BUILDER.md` (§1–§13). The design: `engine/spec/PERFORMANCE.md`, `BUILD-ORDER.md`; the meaning: `engine/spec/LANGUAGE.md` (L) and `ENGINE.md` (E). Where this skill and the rulebook differ, the rulebook wins; where either differs from the spec, the spec wins, and you stop.
 
 ## 1. The hard rules
 

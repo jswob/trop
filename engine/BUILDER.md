@@ -1,8 +1,8 @@
 # Builder guidance (not part of the scaffold)
 
-**Made:** 2026-10-22 by the phase-1 lead, from A1 §6, A2 §5, A3 §5, A4 §5 and A5 §5 (this directory). **For:** the build session's brief, later.
+**Made:** 2026-10-22 by the phase-1 lead, from A1 §6, A2 §5, A3 §5, A4 §5 and A5 §5, the phase-1 research notes, which stay local and untracked in `tmp/research_notes/engine-rust-strictness/`. **For:** the build session's brief, later.
 
-**Updated:** 2026-10-30 by session 8b, for tally 2.1, from session 8's gate G1 (`tmp/session8/decisions.md`: items 1 to 8, each answered "I approve" on 2026-10-30), the lead's note `tmp/research_notes/engine-prep/NOTE.md` (settlements K8-1..K8-17) and the reports R1–R6 there. Where G1 reverses a phase 1 sentence, the sentence is replaced and a line marked _Changed 2026-10-30_ says what changed and why. New: §13, performance. The copy before this update is `BUILDER.before-8b.md`.
+**Updated:** 2026-10-30 by session 8b, for tally 2.1, from session 8's gate G1 (`tmp/session8/decisions.md`: items 1 to 8, each answered "I approve" on 2026-10-30), the lead's note `tmp/research_notes/engine-prep/NOTE.md` (settlements K8-1..K8-17) and the reports R1–R6 there. Where G1 reverses a phase 1 sentence, the sentence is replaced and a line marked _Changed 2026-10-30_ says what changed and why. New: §13, performance. The copy before this update is `BUILDER.before-8b.md`, kept with those local notes.
 
 This is how the research says the engine should be written. The scaffold doesn't encode any of it. Items marked **[Tally syntax]** rest on LANGUAGE §2 as frozen in tally 1.0.1, and change if the design round changes the syntax. _Note 2026-10-30:_ their line citations (l.71, l.198, l.228, l.233) are 1.0.1's; tally 2.1 moved the lines (`LOAD-DEPTH` is now at L l.325), and this update did not recheck the [Tally syntax] items. Rule ids (R-n) point into `RULEBOOK.md`; decision ids (D1-1, K8-1) into session 8's decisions and NOTE.
 
