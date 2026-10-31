@@ -1,0 +1,8 @@
+# T's expected output digests for the P8 rows that run a check (engine/tools/perf; tools/perf_digests.py).
+# id<TAB>sha256 of refcore's output (stdout then stderr) for the check's command line, from refcore's run.
+I:A:a05_ania@c05-ania	60f0a337000a539676fa06fef52648e3dd8a2d988674cecc2b87741b7784ef39
+I:E1:tx2_mtg_day	23a0c66101442d3f659a7ed9e9dab0eea1bb89eb68693eaddfe394f9701fe3e9
+I:E2:E2-01~e2_01a	4a17684f242dc25686d0f92fd8c1a893eb74f035608ffde198aacb3b81af56d7
+I:E2:E2-01~e2_01b	6c687fe1f0a9758bdfc72de823398e80e4fe1815c40230f768590f51958f19c3
+I:X:replay_september@b_r1	6436b5e2c35ccbcb682c60fdf3cfd1a40dc29e3f5307ca7dfaae606e8553fd10
+U:set/pairs/PTY-05+OWN-12/ania	6c6766bf608a9000cc48cefda90e5612cf1c9d7db3b9475297c69f789afabdf5
