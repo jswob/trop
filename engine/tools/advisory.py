@@ -3,9 +3,10 @@
     engine/tools/advisory
 
 It reports, for the review to read:
-  - function length and nesting depth: clippy's too_many_lines, cognitive_complexity and
-    excessive_nesting as warnings, in a pass of their own (the strict passes allow the
-    first and leave the last off);
+  - function length and cognitive complexity: clippy's too_many_lines and
+    cognitive_complexity as warnings at clippy's defaults (100 lines, 25), in a pass of
+    their own (the strict passes allow the first and leave the second off). Nesting is
+    an error at 5 in the strict passes since 2026-10-30 (R-74);
   - clone density: `.clone()` calls per 100 lines of code, per library file;
   - kernel functions whose doc comment cites no spec section (`/// L §7.2`), once the
     lead has set the kernel at S (tools/kernel.toml).
@@ -29,9 +30,9 @@ import check  # noqa: E402  the cleaned environment
 import check_rules  # noqa: E402  the lexer and the file walk
 
 OUT = os.path.join(ENGINE, "target", "advisory")
-LINTS = ["clippy::too_many_lines", "clippy::cognitive_complexity", "clippy::excessive_nesting"]
+LINTS = ["clippy::too_many_lines", "clippy::cognitive_complexity"]
 # the advisory pass's thresholds, in its own copy of clippy.toml, so the strict passes don't see them
-THRESHOLDS = "\n# advisory pass only (R-74)\ntoo-many-lines-threshold = 60\ncognitive-complexity-threshold = 20\nexcessive-nesting-threshold = 4\n"
+THRESHOLDS = "\n# advisory pass only (R-74): clippy's defaults, reported\ntoo-many-lines-threshold = 100\ncognitive-complexity-threshold = 25\n"
 CITATION = re.compile(r"\b[A-Z][A-Z-]*(?:\.md)? §[0-9]+(?:\.[0-9]+)*")
 FN = re.compile(r"^\s*(?:pub(?:\([^)]*\))?\s+)?(?:const\s+)?(?:unsafe\s+)?fn\s+([A-Za-z_][A-Za-z0-9_]*)")
 
