@@ -21,5 +21,10 @@ expect: area cli has 4 exceptions, over its budget of 3 (R-111)
 pub fn planted() -> u8 {
     return 1;
 }
+/// Planted too: the CLI holds two since its stdin read went (audit C1).
+#[expect(clippy::needless_return, reason = "R-66: a second planted exception with a proper reason")]
+pub fn planted_too() -> u8 {
+    return 2;
+}
 --- run
 tools/exceptions --check

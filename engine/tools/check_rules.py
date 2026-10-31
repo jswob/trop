@@ -426,6 +426,57 @@ def check_code_text(problems):
             problems.append(f"engine/crates/tally/src/lib.rs: the {feature} compile_error! guard is missing or changed (R-51)")
 
 
+CLI_IO = os.path.join(TOOLS, "cli-io.toml")
+CLI_WATCHED = ("std::fs", "std::env", "std::io", "std::process", "std::net")
+
+
+def use_paths(tree, prefix=""):
+    """The leaf paths of a `use` tree's text, braces expanded; `x as y` gives x."""
+    tree = tree.strip()
+    brace = tree.find("{")
+    if brace < 0:
+        leaf = tree.split(" as ")[0].strip()
+        return [prefix + leaf] if leaf else []
+    head, body = tree[:brace].strip(), tree[brace + 1 : tree.rindex("}")]
+    parts, depth, cur = [], 0, ""
+    for ch in body:
+        depth += (ch == "{") - (ch == "}")
+        if ch == "," and depth == 0:
+            parts.append(cur)
+            cur = ""
+        else:
+            cur += ch
+    parts.append(cur)
+    out = []
+    for p in parts:
+        out += use_paths(p, prefix + head)
+    return [x.replace("self", "").rstrip(":") if x.endswith("::self") else x for x in out]
+
+
+def check_cli_io(problems):
+    """R-39 (audit F-19): main.rs names std's I/O items only from tools/cli-io.toml."""
+    main_rs = os.path.join(ENGINE, "crates", "tally-cli", "src", "main.rs")
+    if not os.path.isfile(main_rs):
+        return
+    allowed = set(load(CLI_IO).get("allowed", []))
+    for p in sorted(allowed):
+        if p.startswith(("std::process", "std::net")) and p != "std::process::ExitCode":
+            problems.append(f"engine/tools/cli-io.toml: {p}: std::process and std::net give only the exit code (R-39)")
+    code, _ = lex(open(main_rs, encoding="utf-8").read())
+    named = []
+    for m in re.finditer(r"\buse\s+((?:::)?(?:std|core)\b[^;]*);", code):
+        named += use_paths(m.group(1).lstrip(":"))
+    named += [m.group(1) for m in re.finditer(r"(?<![\w:])(?:::)?(std(?:::\w+)+)", code)]
+    if re.search(r"\b(?:std|core)\s+as\b", code) or re.search(r"\bextern\s+crate\b", code):
+        problems.append("engine/crates/tally-cli/src/main.rs: std renamed (`as`, `extern crate`), which hides what it names (R-39)")
+    for p in sorted(set(named)):
+        if p.startswith(CLI_WATCHED) and p not in allowed:
+            problems.append(f"engine/crates/tally-cli/src/main.rs: {p} isn't on tools/cli-io.toml's list (R-39)")
+    for p in sorted(set(named)):
+        if p.endswith("::*"):
+            problems.append(f"engine/crates/tally-cli/src/main.rs: a glob import ({p}) hides what it names (R-39)")
+
+
 def known_crates():
     """The crates in Cargo.lock, and those the cargo-deny configs name (a ban may
     anticipate a crate that isn't a dependency yet, such as chrono)."""
@@ -499,7 +550,7 @@ def main():
         return 64
     problems = []
     for check in (check_frozen_tables, check_manifests, check_build_scripts_and_config, check_code_text,
-                  check_ban_paths, check_num_bigint, check_generated, check_kernel):
+                  check_ban_paths, check_num_bigint, check_generated, check_kernel, check_cli_io):
         try:
             check(problems)
         except (OSError, ValueError, KeyError, TypeError) as e:

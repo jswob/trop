@@ -1,5 +1,5 @@
 //! The `tally` binary, the one file that does I/O (R-39, R-108): it reads the arguments
-//! and standard input and writes the output bytes and the exit code.
+//! and writes the output bytes and the exit code; never standard input, as refcore.
 //! Spec: none, a stub.
 //! Twin: none, a stub.
 //! Invariants: `main` holds no exception, and a `process::exit` in it still fails (R-10).
@@ -8,21 +8,19 @@
 //! from `main` (R-10, R-11).
 //!
 //! Each I/O call sits in its own small function with its own exception (the CLI's
-//! budget of three: arguments, reading the reality, writing output), so `main` holds
-//! none, and a `process::exit` written in it still fails (R-10).
+//! budget of three: arguments, reading the reality's files, writing output), so `main`
+//! holds none, and a `process::exit` written in it still fails (R-10). The std items it
+//! may name are listed in tools/cli-io.toml (R-39).
 
 #![forbid(unsafe_code)]
 
 use std::ffi::OsString;
-use std::io::{IsTerminal, Read, Write};
+use std::io::Write;
 use std::process::ExitCode;
 
 fn main() -> ExitCode {
     let args = arguments();
-    let Some(input) = read_input() else {
-        return ExitCode::from(tally_cli::EXIT_IO);
-    };
-    let output = tally_cli::run(&args, &input);
+    let output = tally_cli::run(&args, &[]);
     if write_output(&output).is_err() {
         return ExitCode::from(tally_cli::EXIT_IO);
     }
@@ -36,20 +34,6 @@ fn main() -> ExitCode {
 )]
 fn arguments() -> Vec<OsString> {
     std::env::args_os().skip(1).collect()
-}
-
-/// Standard input's bytes, empty when it is a terminal, or `None` when the read fails.
-#[expect(
-    clippy::disallowed_methods,
-    reason = "R-39: the CLI reads the reality from standard input in this one sanctioned file"
-)]
-fn read_input() -> Option<Vec<u8>> {
-    let mut input = Vec::new();
-    let mut stdin = std::io::stdin().lock();
-    if !stdin.is_terminal() && stdin.read_to_end(&mut input).is_err() {
-        return None;
-    }
-    Some(input)
 }
 
 /// Writes the output's bytes to standard output and standard error.

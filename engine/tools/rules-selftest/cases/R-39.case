@@ -40,3 +40,26 @@ pub fn planted() -> bool {
 }
 --- run
 tools/check-rules
+
+case: cli-names-a-process
+tool: run
+expect: std::process::Command isn't on tools/cli-io.toml's list (R-39)
+--- append crates/tally-cli/src/main.rs
+/// Planted.
+#[expect(clippy::disallowed_types, reason = "R-39: a planted process start in the sanctioned file")]
+fn planted() -> std::process::Command {
+    std::process::Command::new("planted")
+}
+--- run
+tools/check-rules
+
+case: cli-imports-a-module
+tool: run
+expect: std::fs isn't on tools/cli-io.toml's list (R-39)
+--- replace crates/tally-cli/src/main.rs
+use std::io::Write;
+--- with
+use std::io::Write;
+use std::{fs, ffi::OsStr};
+--- run
+tools/check-rules

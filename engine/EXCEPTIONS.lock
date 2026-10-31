@@ -2,9 +2,8 @@
 # `engine/tools/exceptions --write`; commit it with the code. Columns: area, file,
 # item, kind and lints, reason. Lines carry no line numbers, so moving code doesn't
 # change the lock; adding or removing an exception does.
-# count: 5; report-only hits: 0
+# count: 4; report-only hits: 0
 cli	crates/tally-cli/src/main.rs	fn arguments	expect clippy::disallowed_methods	R-12: the arguments are read once, here, through args_os, which can't crash
-cli	crates/tally-cli/src/main.rs	fn read_input	expect clippy::disallowed_methods	R-39: the CLI reads the reality from standard input in this one sanctioned file
 cli	crates/tally-cli/src/main.rs	fn write_output	expect clippy::disallowed_methods	R-39: the CLI writes its output bytes in this one sanctioned file
 deny	deny.toml	syn@2.0.119	bans.skip	R-55: dev only; zerocopy-derive (criterion via half) is still on syn 2 while serde_derive is on syn 3
 deny	deny.toml	zerocopy	bans.build.bypass	R-56: zerocopy (criterion only, dev) ships its maintainers' CI shell scripts; nothing runs them
