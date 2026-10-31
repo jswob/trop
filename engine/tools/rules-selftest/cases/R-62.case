@@ -1,0 +1,48 @@
+# R-62: a match over the engine's own enums names every case.
+
+case: wildcard-arm
+tool: clippy
+expect: clippy::wildcard_enum_match_arm
+--- module
+/// Planted.
+#[derive(Debug, Clone, Copy)]
+pub enum Planted {
+    /// One.
+    A,
+    /// Two.
+    B,
+    /// Three.
+    C,
+}
+
+/// Planted.
+pub fn planted(p: Planted) -> u8 {
+    match p {
+        Planted::A => 1,
+        _ => 2,
+    }
+}
+
+case: wildcard-for-one-case
+tool: clippy
+expect: clippy::match_wildcard_for_single_variants
+--- module
+/// Planted.
+#[derive(Debug, Clone, Copy)]
+pub enum Planted {
+    /// One.
+    A,
+    /// Two.
+    B,
+    /// Three.
+    C,
+}
+
+/// Planted.
+pub fn planted(p: Planted) -> u8 {
+    match p {
+        Planted::A => 1,
+        Planted::B => 2,
+        _ => 3,
+    }
+}

@@ -1,0 +1,13 @@
+[package]
+name = "tally-runner"
+description = "The test runner. A stub: T's content replaces it, and on merge T's wins"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[dependencies]
+tally-cli = { workspace = true }
+
+[lints]
+workspace = true

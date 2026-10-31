@@ -1,0 +1,7 @@
+# ast-grep for the engine (C §4). A rule file: only the `rules` role edits it. Run from
+# engine/: `ast-grep test --skip-snapshot-tests` and `ast-grep scan`. Errors fail CI;
+# warnings are report-only and the exception counter lists them.
+ruleDirs:
+  - tools/ast-grep/rules
+testConfigs:
+  - testDir: tools/ast-grep/tests

@@ -1,0 +1,51 @@
+# R-51: the fault-injection hook can't exist in a release build.
+
+case: guard-removed-check-rules
+tool: run
+expect: the fault-injection compile_error! guard is missing
+--- replace crates/tally/src/lib.rs
+compile_error!("the fault-injection feature exists only in builds with debug assertions (R-51)");
+--- with
+--- run
+tools/check-rules
+
+case: guard-removed-probe
+tool: run
+expect: a release build with the fault-injection feature compiled
+--- replace crates/tally/src/lib.rs
+compile_error!("the fault-injection feature exists only in builds with debug assertions (R-51)");
+--- with
+--- run
+tools/check step fault-injection-probe
+
+case: cli-turns-it-on
+tool: run
+expect: tally-cli turns on tally's fault-injection feature
+--- replace crates/tally-cli/Cargo.toml
+tally = { workspace = true }
+--- with
+tally = { workspace = true, features = ["fault-injection"] }
+--- run
+tools/check step fault-injection-probe
+
+case: counters-without-guard
+tool: run
+expect: the counters compile_error! guard is missing
+--- replace crates/tally/src/lib.rs
+#[cfg(all(feature = "counters", not(debug_assertions)))]
+compile_error!("the counters feature exists only in builds with debug assertions (R-51)");
+--- with
+// planted: the stub declares counters (D4-8), and its guard is gone
+--- run
+tools/check-rules
+
+case: reverse-order-in-a-release-build
+tool: run
+expect: a release build with the reverse-order feature compiled
+--- replace crates/tally/Cargo.toml
+fault-injection = []
+--- with
+fault-injection = []
+reverse-order = []
+--- run
+tools/check step fault-injection-probe

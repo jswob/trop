@@ -1,0 +1,12 @@
+id: no-cfg-clippy
+language: rust
+severity: error
+message: 'R-70: no code hidden from clippy (cfg(clippy), cfg(not(clippy)), cfg_attr(clippy, ...))'
+rule:
+  any:
+    - kind: attribute_item
+      regex: "cfg(_attr)?\\s*\\([^\\]]*\\bclippy\\s*[,)]"
+    - kind: inner_attribute_item
+      regex: "cfg(_attr)?\\s*\\([^\\]]*\\bclippy\\s*[,)]"
+    - kind: macro_invocation
+      regex: "^(::)?(std::|core::)?cfg\\s*!\\s*\\(.*\\bclippy\\s*[,)]"

@@ -1,0 +1,14 @@
+# R-91: benches and fuzz targets are the lead's instruments; a bench's path can't lead
+# outside benches/, where the builder could edit it (check-rules; the guard's side is
+# guard-test's).
+
+case: bench-path-climbs-out
+tool: run
+expect: lives outside benches/
+--- append crates/tally/Cargo.toml
+[[bench]]
+name = "planted"
+path = "benches/../src/lib.rs"
+harness = false
+--- run
+tools/check-rules

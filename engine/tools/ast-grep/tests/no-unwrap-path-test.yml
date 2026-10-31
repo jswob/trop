@@ -1,0 +1,23 @@
+id: no-unwrap-path
+valid:
+  - 'fn f(v: Option<u8>) -> Option<u8> { v.map(u8::from) }'
+  - 'fn f(v: Option<u8>) -> u8 { v.unwrap_or(1) }'
+  - 'fn f(v: Vec<Option<u8>>) -> Option<Vec<u8>> { v.into_iter().collect() }'
+  - 'fn f(v: Option<u8>) -> bool { Option::is_some(&v) }'
+  - 'fn f(v: Result<u8, E>) -> Option<u8> { Result::ok(v) }'
+  - 'use std::option::Option;'
+  - '#[cfg(test)] mod tests { fn f(v: Vec<Option<u8>>) -> Vec<u8> { v.into_iter().map(Option::unwrap).collect() } }'
+invalid:
+  - 'fn f(v: Vec<Option<u8>>) -> Vec<u8> { v.into_iter().map(Option::unwrap).collect() }'
+  - 'fn f(v: Option<u8>) -> u8 { Option::unwrap(v) }'
+  - 'fn f(v: Option<u8>) -> u8 { Option::expect(v, "x") }'
+  - 'fn f(v: Result<u8, E>) -> u8 { Result::unwrap(v) }'
+  - 'fn f(v: Result<u8, E>) -> u8 { Result::expect(v, "x") }'
+  - 'fn f(v: Result<u8, E>) -> E { Result::unwrap_err(v) }'
+  - 'fn f(v: Result<u8, E>) -> E { Result::expect_err(v, "x") }'
+  - 'fn f(v: Option<u8>) -> u8 { std::option::Option::unwrap(v) }'
+  - 'fn f(v: Option<u8>) -> u8 { ::core::option::Option::unwrap(v) }'
+  - 'fn f(v: Result<u8, E>) -> u8 { core::result::Result::expect(v, "x") }'
+  - 'fn f(v: Option<u8>) -> u8 { Option::<u8>::unwrap(v) }'
+  - 'fn f(v: Option<u8>) -> u8 { <Option<u8>>::unwrap(v) }'
+  - 'fn f(v: Vec<Result<u8, E>>) -> Vec<u8> { v.into_iter().map(Result::unwrap).collect() }'

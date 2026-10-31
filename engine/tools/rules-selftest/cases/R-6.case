@@ -1,0 +1,10 @@
+# R-6: no byte-range slicing of text.
+
+case: string-slice
+tool: clippy
+expect: clippy::string_slice
+--- module
+/// Planted.
+pub fn planted(s: &str) -> &str {
+    &s[1..]
+}

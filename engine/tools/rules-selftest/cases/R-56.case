@@ -1,0 +1,42 @@
+# R-56: no dependency runs a build script or ships a binary unless listed.
+
+case: build-script
+tool: deny
+expect: build-script-not-allowed
+--- fake zz-build 0.0.1
+build = "build.rs"
+--- fakefile zz-build-0.0.1/build.rs
+fn main() {}
+--- replace crates/tally/Cargo.toml
+[dependencies]
+--- with
+[dependencies]
+zz-build = { path = "@FAKES@/zz-build-0.0.1", version = "0.0.1" }
+
+case: script-in-proc-macro
+tool: deny
+expect: detected-executable-script
+--- fake zz-macro 0.0.1
+[lib]
+proc-macro = true
+--- fakefile zz-macro-0.0.1/tools/run.sh exec
+#!/bin/sh
+echo planted
+--- replace crates/tally/Cargo.toml
+[dependencies]
+--- with
+[dependencies]
+zz-macro = { path = "@FAKES@/zz-macro-0.0.1", version = "0.0.1" }
+
+case: binary-in-proc-macro
+tool: deny
+expect: detected-executable
+--- fake zz-macro 0.0.1
+[lib]
+proc-macro = true
+--- fakebinary zz-macro-0.0.1/bin/planted
+--- replace crates/tally/Cargo.toml
+[dependencies]
+--- with
+[dependencies]
+zz-macro = { path = "@FAKES@/zz-macro-0.0.1", version = "0.0.1" }

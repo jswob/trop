@@ -1,0 +1,10 @@
+id: no-panic-in-macro-body
+valid:
+  - 'macro_rules! m { ($x:expr) => { $x.checked_add(1) }; }'
+  - 'fn f() { x.unwrap(); }'
+invalid:
+  - 'macro_rules! m { ($x:expr) => { $x.unwrap() }; }'
+  - 'macro_rules! m { ($x:expr) => { $x.expect("no") }; }'
+  - 'macro_rules! m { () => { panic!("no") }; }'
+  - 'macro_rules! m { ($x:expr) => { assert!($x) }; }'
+  - 'macro_rules! m { () => { unreachable!() }; }'

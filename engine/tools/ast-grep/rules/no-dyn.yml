@@ -1,0 +1,15 @@
+id: no-dyn
+language: rust
+severity: error
+message: 'R-122: no dyn (trait objects) in the engine: dispatch through an enum and an exhaustive match'
+note: "Every trait object, in any position: &dyn T, Box<dyn T>, dyn Fn(..), and dyn written inside a macro's arguments. The builder's tests included; T's runner (tests/runner) is T's. A real need is a STOP-REPORT and a rules change (R-112); ast-grep rules take no #[expect] (R-109)."
+files:
+  - 'crates/**/*.rs'
+rule:
+  any:
+    - kind: dynamic_type
+    - kind: identifier
+      regex: '^dyn$'
+      inside:
+        kind: token_tree
+        stopBy: end

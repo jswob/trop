@@ -1,0 +1,27 @@
+# R-9: a crash aborts the process (exit 134, SIGABRT), never unwinds (exit 101).
+
+case: release-crash-aborts
+tool: run
+expect: exit 134
+exit: any
+--- write crates/tally-cli/src/bin/zz_crash.rs
+//! Planted.
+
+fn main() {
+    let v: Vec<u8> = core::hint::black_box(Vec::new());
+    core::hint::black_box(v[0]);
+}
+--- run
+cargo build --offline --release -p tally-cli --bin zz_crash 2>&1 | tail -2
+"$CARGO_TARGET_DIR/release/zz_crash"
+echo "exit $?"
+
+case: catch-unwind
+tool: clippy
+expect: clippy::disallowed_methods
+text: R-9
+--- module
+/// Planted.
+pub fn planted() -> bool {
+    std::panic::catch_unwind(|| 1_u8).is_ok()
+}

@@ -1,0 +1,21 @@
+# R-108: exceptions to the ban lists live only in the sanctioned files.
+
+case: ban-exception-in-library
+tool: ast-grep
+expect: disallowed-exception-outside-sanctioned-file
+--- module
+/// Planted.
+#[expect(clippy::disallowed_methods, reason = "R-39: a planted exception outside the sanctioned file")]
+pub fn planted() -> bool {
+    std::env::var_os("HOME").is_some()
+}
+
+case: ban-exception-in-cli-library
+tool: ast-grep
+expect: disallowed-exception-outside-sanctioned-file
+--- module tally-cli
+/// Planted.
+#[expect(clippy::disallowed_types, reason = "R-36: a planted exception outside the sanctioned file")]
+pub fn planted(m: &std::collections::HashMap<u8, u8>) -> usize {
+    m.len()
+}

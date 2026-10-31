@@ -1,0 +1,12 @@
+# R-16: the stack is never measured: stacker is banned.
+
+case: stacker
+tool: deny
+expect: banned
+text: stacker
+--- fake stacker 0.0.1
+--- replace crates/tally/Cargo.toml
+[dependencies]
+--- with
+[dependencies]
+stacker = { path = "@FAKES@/stacker-0.0.1", version = "0.0.1" }

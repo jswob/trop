@@ -1,0 +1,12 @@
+# R-57: crates.io only; no git or unknown-registry dependencies.
+
+case: git-dependency
+tool: deny
+expect: source-not-allowed
+fetch: yes
+--- gitfake zz-git 0.0.1
+--- replace crates/tally/Cargo.toml
+[dependencies]
+--- with
+[dependencies]
+zz-git = { git = "file://@FAKES@/zz-git-0.0.1" }

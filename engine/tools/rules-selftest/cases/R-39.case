@@ -1,0 +1,65 @@
+# R-39: the library touches no environment, files, stdin, stdout, processes or network.
+
+case: path-exists
+tool: clippy
+expect: clippy::disallowed_methods
+text: R-39
+--- module
+/// Planted.
+pub fn planted(p: &std::path::Path) -> bool {
+    p.exists()
+}
+
+case: env-var
+tool: clippy
+expect: clippy::disallowed_methods
+text: R-39
+--- module
+/// Planted.
+pub fn planted() -> bool {
+    std::env::var_os("HOME").is_some()
+}
+
+case: stdin
+tool: clippy
+expect: clippy::disallowed_methods
+text: R-39
+--- module
+/// Planted.
+pub fn planted() -> bool {
+    std::io::stdin().lines().next().is_some()
+}
+
+case: std-fs-text
+tool: run
+expect: std::fs: the library reads no files
+--- module
+/// Planted.
+pub fn planted() -> bool {
+    std::fs::metadata("x").is_ok()
+}
+--- run
+tools/check-rules
+
+case: cli-names-a-process
+tool: run
+expect: std::process::Command isn't on tools/cli-io.toml's list (R-39)
+--- append crates/tally-cli/src/main.rs
+/// Planted.
+#[expect(clippy::disallowed_types, reason = "R-39: a planted process start in the sanctioned file")]
+fn planted() -> std::process::Command {
+    std::process::Command::new("planted")
+}
+--- run
+tools/check-rules
+
+case: cli-imports-a-module
+tool: run
+expect: std::fs isn't on tools/cli-io.toml's list (R-39)
+--- replace crates/tally-cli/src/main.rs
+use std::io::Write;
+--- with
+use std::io::Write;
+use std::{fs, ffi::OsStr};
+--- run
+tools/check-rules

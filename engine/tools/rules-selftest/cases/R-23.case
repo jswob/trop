@@ -1,0 +1,39 @@
+# R-23: no silent wrapping or clamping: the types (clippy, in the ban coverage) and the
+# calls (ast-grep).
+
+case: wrapping-call
+tool: ast-grep
+expect: no-wrapping-arith
+--- module
+/// Planted.
+pub fn planted(a: u8, b: u8) -> u8 {
+    a.wrapping_add(b)
+}
+
+case: saturating-call
+tool: ast-grep
+expect: no-wrapping-arith
+--- module
+/// Planted.
+pub fn planted(a: u8, b: u8) -> u8 {
+    a.saturating_sub(b)
+}
+
+case: overflowing-call
+tool: ast-grep
+expect: no-wrapping-arith
+--- module
+/// Planted.
+pub fn planted(a: u8, b: u8) -> u8 {
+    u8::overflowing_mul(a, b).0
+}
+
+case: wrapping-type
+tool: clippy
+expect: clippy::disallowed_types
+text: R-23
+--- module
+/// Planted.
+pub fn planted(v: core::num::Wrapping<u8>) -> core::num::Wrapping<u8> {
+    v
+}

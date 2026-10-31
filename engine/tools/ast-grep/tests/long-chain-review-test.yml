@@ -1,0 +1,14 @@
+id: long-chain-review
+valid:
+  - 'fn f(v: &[u8]) -> Vec<u8> { v.iter().filter(|x| **x > 1).map(|x| x + 1).collect() }'
+  - 'fn f(v: &[u8]) -> Vec<u8> { Foo::new().a().b().c().d() }'
+  - 'fn f(v: &[u8]) -> Vec<u8> { a.b(c.d().e()).f().g().h() }'
+  - 'fn f(v: &[u8]) -> Vec<u8> { v.iter().map(|x| x.a().b().c()).rev().count() }'
+  - 'fn f() -> u8 { (x.a().b()).c().d().e() }'
+  - '#[cfg(test)] mod tests { fn f() { v.iter().filter(p).map(g).rev().collect::<Vec<_>>(); } }'
+invalid:
+  - 'fn f(v: &[u8]) -> Vec<u8> { v.iter().filter(|x| **x > 1).map(|x| x + 1).rev().collect() }'
+  - 'fn f(v: &[u8]) -> Vec<u8> { v.iter().copied().filter(p).map(g).collect::<Vec<u8>>() }'
+  - 'fn f() -> Result<u8, E> { a.b()?.c()?.d().e()?.f() }'
+  - 'fn f() { let n = self.rows.iter().skip(1).take(2).step(3).last(); }'
+  - 'fn f(v: &[u8]) -> u8 { g(v.iter().a().b().c().d()) }'

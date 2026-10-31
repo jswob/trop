@@ -1,0 +1,35 @@
+# R-38: no clock: the std types (clippy) and a date crate's clock features (cargo-deny).
+
+case: chrono-clock
+tool: deny-tally
+expect: feature-banned
+text: clock
+--- fake chrono 0.0.1
+[features]
+clock = []
+now = []
+--- replace crates/tally/Cargo.toml
+[dependencies]
+--- with
+[dependencies]
+chrono = { path = "@FAKES@/chrono-0.0.1", version = "0.0.1", features = ["clock"] }
+
+case: system-time
+tool: clippy
+expect: clippy::disallowed_methods
+text: R-38
+--- module
+/// Planted.
+pub fn planted() -> bool {
+    std::time::SystemTime::now() > std::time::UNIX_EPOCH
+}
+
+case: instant
+tool: clippy
+expect: clippy::disallowed_types
+text: R-38
+--- module
+/// Planted.
+pub fn planted(v: std::time::Instant) -> std::time::Instant {
+    v
+}

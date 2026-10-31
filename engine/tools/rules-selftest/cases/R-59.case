@@ -1,0 +1,36 @@
+# R-59: a crate declared once, centrally; unused declarations fail. cargo-deny's
+# workspace-duplicate needs two members declaring it; check-rules wants every member
+# dependency to be `workspace = true`.
+
+case: declared-twice
+tool: deny
+expect: workspace-duplicate
+--- replace crates/tally/Cargo.toml
+num-traits = { workspace = true }
+--- with
+num-traits = { version = "=0.2.19", default-features = false }
+--- replace crates/tally-cli/Cargo.toml
+tally = { workspace = true }
+--- with
+tally = { workspace = true }
+num-traits = { version = "=0.2.19", default-features = false }
+
+case: declared-in-member
+tool: run
+expect: num-traits is declared here, not in engine/Cargo.toml [workspace.dependencies]
+--- replace crates/tally/Cargo.toml
+num-traits = { workspace = true }
+--- with
+num-traits = { version = "=0.2.19", default-features = false }
+--- run
+tools/check-rules
+
+case: unused-declaration
+tool: deny
+expect: unused-workspace-dependency
+--- fake zz-unused 0.0.1
+--- replace Cargo.toml
+# Workspace members
+--- with
+zz-unused = { path = "@FAKES@/zz-unused-0.0.1", version = "0.0.1" }
+# Workspace members

@@ -1,0 +1,5 @@
+id: macro-definition-review
+valid:
+  - 'fn f() {}'
+invalid:
+  - 'macro_rules! m { () => {}; }'

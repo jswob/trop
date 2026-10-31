@@ -1,0 +1,12 @@
+id: derive-order-review
+valid:
+  - '#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)] struct S;'
+  - '#[derive(PartialOrderly)] struct S;'
+  - 'impl Ord for S { fn cmp(&self, o: &Self) -> core::cmp::Ordering { self.0.cmp(&o.0) } }'
+  - '#[cfg(test)] mod tests { #[derive(PartialEq, Eq, PartialOrd, Ord)] struct S; }'
+invalid:
+  - '#[derive(PartialEq, Eq, PartialOrd, Ord)] struct S(u8);'
+  - '#[derive(PartialOrd)] enum E { A, B }'
+  - '#[derive(Debug, core::cmp::Ord)] struct S;'
+  - "#[derive(\n    Debug,\n    PartialEq,\n    Eq,\n    PartialOrd,\n)]\nstruct S;"
+  - '#[cfg_attr(feature = "x", derive(Ord))] struct S;'

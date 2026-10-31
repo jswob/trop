@@ -1,0 +1,31 @@
+# R-69: a misspelled or renamed lint name, or a misspelled cfg name, fails.
+
+case: unknown-lint
+tool: clippy
+expect: unknown_lints
+--- module
+/// Planted.
+#[expect(clippy::no_such_lint_at_all, reason = "R-69: a planted lint name that does not exist")]
+pub fn planted() -> u8 {
+    1
+}
+
+case: renamed-lint
+tool: clippy
+expect: renamed_and_removed_lints
+--- module
+/// Planted.
+#[expect(clippy::box_vec, reason = "R-69: a planted lint name that was renamed")]
+pub fn planted(v: Box<Vec<u8>>) -> usize {
+    v.len()
+}
+
+case: unexpected-cfg
+tool: clippy
+expect: unexpected_cfgs
+--- module
+/// Planted.
+#[cfg(fuzzin)]
+pub fn planted() -> u8 {
+    1
+}

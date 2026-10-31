@@ -1,0 +1,22 @@
+# R-110: the exception list equals the committed lock.
+
+case: new-exception-not-locked
+tool: run
+expect: not in EXCEPTIONS.lock
+--- append tests/runner/src/lib.rs
+/// Planted.
+#[expect(clippy::needless_return, reason = "R-66: a planted exception with a proper reason")]
+pub fn planted() -> u8 {
+    return 1;
+}
+--- run
+tools/exceptions --check
+
+case: locked-exception-gone
+tool: run
+expect: in EXCEPTIONS.lock but gone
+--- replace deny.toml
+  { crate = "syn@2.0.119", reason = "R-55: dev only; zerocopy-derive (criterion via half) is still on syn 2 while serde_derive is on syn 3" },
+--- with
+--- run
+tools/exceptions --check

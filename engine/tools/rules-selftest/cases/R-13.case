@@ -1,0 +1,21 @@
+# R-13: no unwrap, expect, crash macro or assert inside a macro definition.
+
+case: unwrap-in-macro
+tool: ast-grep
+expect: no-panic-in-macro-body
+--- module
+macro_rules! planted {
+    ($v:expr) => {
+        $v.unwrap()
+    };
+}
+
+case: assert-in-macro
+tool: ast-grep
+expect: no-panic-in-macro-body
+--- module
+macro_rules! planted {
+    ($v:expr) => {
+        assert!($v)
+    };
+}

@@ -1,0 +1,51 @@
+# R-45: no debug formatting in library code; tests may use it. Clippy's use_debug sees
+# print! and write!; the ast-grep rule no-debug-format sees format! and the rest.
+
+case: debug-write
+tool: clippy
+expect: clippy::use_debug
+--- module
+/// Planted.
+///
+/// # Errors
+///
+/// Never; planted.
+pub fn planted(v: Option<u8>, s: &mut String) -> core::fmt::Result {
+    use core::fmt::Write as _;
+    write!(s, "{v:?}")
+}
+
+case: debug-format
+tool: ast-grep
+expect: no-debug-format
+--- module
+/// Planted.
+pub fn planted(v: Option<u8>) -> String {
+    format!("{v:?}")
+}
+
+case: tests-may-debug-format
+tool: clippy-tests
+expect: pass
+--- module
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn planted() {
+        let v = format!("{:?}", core::hint::black_box(Some(1_u8)));
+        assert_eq!(v, "Some(1)", "planted");
+    }
+}
+
+case: tests-may-debug-format-ast-grep
+tool: ast-grep
+expect: pass
+--- module
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn planted() {
+        let v = format!("{:?}", core::hint::black_box(Some(1_u8)));
+        assert_eq!(v, "Some(1)", "planted");
+    }
+}

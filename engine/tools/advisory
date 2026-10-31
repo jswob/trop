@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# The report-only measures (R-74, R-75); never fails: engine/tools/advisory
+d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)" || exit 1
+exec python3 -I -B "$d/advisory.py" "$@"

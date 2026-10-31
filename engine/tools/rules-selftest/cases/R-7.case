@@ -1,0 +1,32 @@
+# R-7: no crashing std call where a non-crashing twin exists (every entry is in the ban
+# coverage; these are the method-call forms).
+
+case: vec-remove
+tool: clippy
+expect: clippy::disallowed_methods
+text: R-7
+--- module
+/// Planted.
+pub fn planted(v: &mut Vec<u8>) -> u8 {
+    v.remove(0)
+}
+
+case: split-at
+tool: clippy
+expect: clippy::disallowed_methods
+text: R-7
+--- module
+/// Planted.
+pub fn planted(v: &[u8]) -> usize {
+    v.split_at(1).0.len()
+}
+
+case: integer-pow
+tool: clippy
+expect: clippy::disallowed_methods
+text: R-7
+--- module
+/// Planted.
+pub fn planted(v: u32) -> u32 {
+    v.pow(2)
+}

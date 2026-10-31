@@ -1,0 +1,24 @@
+# R-86: no mutation skips: no `mutants::` text, no mutants crate.
+
+case: mutants-skip-attribute
+tool: run
+expect: `mutants::` text; no mutation skips (R-86)
+--- module
+/// Planted.
+#[cfg_attr(test, mutants::skip)]
+pub fn planted() -> u8 {
+    1
+}
+--- run
+tools/check-rules
+
+case: mutants-crate
+tool: deny
+expect: banned
+text: mutants
+--- fake mutants 0.0.1
+--- replace crates/tally/Cargo.toml
+[dev-dependencies]
+--- with
+[dev-dependencies]
+mutants = { path = "@FAKES@/mutants-0.0.1", version = "0.0.1" }

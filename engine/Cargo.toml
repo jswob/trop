@@ -1,0 +1,182 @@
+# The Tally engine's workspace. The lint and profile sections are rules: check-rules
+# compares them with engine/tools/frozen-lints.toml, and only the `rules` role changes
+# them (engine/SCAFFOLD.md). Rule ids R-n point to the approved rulebook.
+
+[workspace]
+resolver = "3"
+members = ["crates/tally", "crates/tally-cli", "tests/runner"]
+exclude = ["fuzz"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.99"
+publish = false
+
+[workspace.dependencies]
+# Pinned exactly, default features off (R-30, R-60). The stub declares them in `tally`
+# without calling them.
+num-bigint = { version = "=0.4.8", default-features = false }
+num-integer = { version = "=0.1.47", default-features = false }
+num-traits = { version = "=0.2.19", default-features = false }
+sha2 = { version = "=0.11.1", default-features = false }
+# Workspace members
+tally = { path = "crates/tally" }
+tally-cli = { path = "crates/tally-cli" }
+# Benchmarks only (gate 12)
+criterion = { version = "0.8.2", default-features = false }
+
+# --- lints: begin frozen section ---
+[workspace.lints.rust]
+# No exception (R-1, R-106)
+unsafe_code = "forbid"
+# Lint and cfg names must be real; stale exceptions fail (R-69, R-105)
+unknown_lints = "deny"
+renamed_and_removed_lints = "deny"
+unfulfilled_lint_expectations = "deny"
+unexpected_cfgs = { level = "deny", check-cfg = ["cfg(fuzzing)", "cfg(coverage)", "cfg(coverage_nightly)"] }
+# Docs (R-68) and the consistency set (R-71)
+missing_docs = "deny"
+unreachable_pub = "deny"
+non_ascii_idents = "deny"
+ambiguous_negative_literals = "deny"
+elided_lifetimes_in_paths = "deny"
+let_underscore_drop = "deny"
+missing_debug_implementations = "deny"
+redundant_imports = "deny"
+redundant_lifetimes = "deny"
+trivial_casts = "deny"
+trivial_numeric_casts = "deny"
+unit_bindings = "deny"
+unused_lifetimes = "deny"
+unused_qualifications = "deny"
+rust_2018_idioms = { level = "deny", priority = -1 }
+future_incompatible = { level = "deny", priority = -1 }
+nonstandard_style = { level = "deny", priority = -1 }
+
+[workspace.lints.rustdoc]
+# R-68: CI builds the docs with -D warnings, or these never fire
+broken_intra_doc_links = "deny"
+private_intra_doc_links = "deny"
+invalid_codeblock_attributes = "deny"
+invalid_html_tags = "deny"
+invalid_rust_codeblocks = "deny"
+bare_urls = "deny"
+unescaped_backticks = "deny"
+redundant_explicit_links = "deny"
+
+[workspace.lints.clippy]
+# Groups (R-67): the defaults, pedantic and cargo; nursery off
+correctness = { level = "deny", priority = -1 }
+suspicious = { level = "deny", priority = -1 }
+perf = { level = "deny", priority = -1 }
+complexity = { level = "deny", priority = -1 }
+style = { level = "deny", priority = -1 }
+pedantic = { level = "deny", priority = -1 }
+cargo = { level = "deny", priority = -1 }
+# Allowed back (R-67), and the two that recommend a banned call (R-27)
+must_use_candidate = "allow"
+similar_names = "allow"
+missing_errors_doc = "allow"
+too_many_lines = "allow"
+multiple_crate_versions = "allow"
+cargo_common_metadata = "allow"
+unwrap_or_default = "allow"
+manual_unwrap_or_default = "allow"
+# No exception: forbid rejects any attribute that tries (R-106)
+float_arithmetic = "forbid"
+allow_attributes = "forbid"
+allow_attributes_without_reason = "forbid"
+unwrap_used = "forbid"
+expect_used = "forbid"
+panic = "forbid"
+todo = "forbid"
+unimplemented = "forbid"
+dbg_macro = "forbid"
+print_stdout = "forbid"
+print_stderr = "forbid"
+exit = "forbid"
+# Error; the only exception is a counted #[expect(lint, reason = "R-n: ...")]
+# crashes (R-3, R-5, R-6, R-4 backup, R-14, R-15)
+unreachable = "deny"
+indexing_slicing = "deny"
+string_slice = "deny"
+panic_in_result_fn = "deny"
+fallible_impl_from = "deny"
+infinite_loop = "deny"
+# readability (R-74: nesting at 5, clippy.toml)
+excessive_nesting = "deny"
+# readability (R-123: a function names the concrete type it takes)
+impl_trait_in_params = "deny"
+# numbers (R-19, R-21, R-22)
+arithmetic_side_effects = "deny"
+as_conversions = "deny"
+integer_division = "deny"
+modulo_arithmetic = "deny"
+# determinism (R-36, R-45)
+iter_over_hash_type = "deny"
+use_debug = "deny"
+# matches (R-62, R-64)
+wildcard_enum_match_arm = "deny"
+match_wildcard_for_single_variants = "deny"
+enum_glob_use = "deny"
+# dropped errors (R-66; map_err_ignore stays off)
+let_underscore_must_use = "deny"
+unused_result_ok = "deny"
+# tests (R-93, R-109)
+cfg_not_test = "deny"
+tests_outside_test_module = "deny"
+ignore_without_reason = "deny"
+# the ban lists in engine/clippy.toml
+disallowed_types = "deny"
+disallowed_methods = "deny"
+disallowed_macros = "deny"
+# the consistency set (R-71)
+shadow_unrelated = "deny"
+missing_assert_message = "deny"
+mem_forget = "deny"
+assertions_on_result_states = "deny"
+clone_on_ref_ptr = "deny"
+empty_drop = "deny"
+empty_enum_variants_with_brackets = "deny"
+empty_structs_with_brackets = "deny"
+error_impl_error = "deny"
+fn_to_numeric_cast_any = "deny"
+get_unwrap = "deny"
+if_then_some_else_none = "deny"
+mod_module_files = "deny"
+redundant_type_annotations = "deny"
+renamed_function_params = "deny"
+rest_pat_in_fully_bound_structs = "deny"
+same_name_method = "deny"
+semicolon_outside_block = "deny"
+unneeded_field_pattern = "deny"
+# --- lints: end frozen section ---
+
+# --- profiles: begin frozen section ---
+# R-8, R-9: a crash stops the process; overflow crashes instead of wrapping
+[profile.release]
+panic = "abort"
+overflow-checks = true
+lto = "fat"
+codegen-units = 1
+debug = "line-tables-only"
+
+[profile.bench]
+overflow-checks = true
+
+# The release profile with debug assertions on, for the test suite in release: the
+# fault-injection feature (R-51) refuses to compile without debug assertions, and the
+# engine's code never reads them (R-93), so nothing else differs.
+[profile.release-test]
+inherits = "release"
+debug-assertions = true
+
+[profile.dev.package."*"]
+opt-level = 2
+
+# cargo-mutants (R-88)
+[profile.mutants]
+inherits = "test"
+debug = "none"
+# --- profiles: end frozen section ---

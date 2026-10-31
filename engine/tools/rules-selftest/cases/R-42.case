@@ -1,0 +1,33 @@
+# R-42: threads only in the sanctioned module, through thread::scope; no rayon, no CPU
+# count.
+
+case: rayon
+tool: deny-tally
+expect: banned
+text: rayon
+--- fake rayon 0.0.1
+--- replace crates/tally/Cargo.toml
+[dependencies]
+--- with
+[dependencies]
+rayon = { path = "@FAKES@/rayon-0.0.1", version = "0.0.1" }
+
+case: thread-spawn
+tool: clippy
+expect: clippy::disallowed_methods
+text: R-42
+--- module
+/// Planted.
+pub fn planted() -> bool {
+    std::thread::spawn(|| 1_u8).join().is_ok()
+}
+
+case: cpu-count
+tool: clippy
+expect: clippy::disallowed_methods
+text: R-42
+--- module
+/// Planted.
+pub fn planted() -> bool {
+    std::thread::available_parallelism().is_ok()
+}

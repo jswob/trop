@@ -1,0 +1,31 @@
+# R-8: plain-integer overflow crashes in the release and bench profiles too.
+
+case: release-overflow-crashes
+tool: run
+expect: attempt to add with overflow
+--- write crates/tally/tests/zz_overflow.rs
+//! Planted.
+
+#[test]
+fn planted() {
+    let v = core::hint::black_box(u8::MAX);
+    let w = v + core::hint::black_box(1);
+    core::hint::black_box(w);
+}
+--- run
+cargo test --offline --release -p tally --test zz_overflow
+
+case: bench-overflow-crashes
+tool: run
+expect: attempt to add with overflow
+--- write crates/tally/tests/zz_overflow.rs
+//! Planted.
+
+#[test]
+fn planted() {
+    let v = core::hint::black_box(u8::MAX);
+    let w = v + core::hint::black_box(1);
+    core::hint::black_box(w);
+}
+--- run
+cargo test --offline --profile bench -p tally --test zz_overflow

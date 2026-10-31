@@ -1,0 +1,56 @@
+# R-130 (report): #[inline(always)] and #[cold] outside a fence are listed for review.
+# The fences are the rule's ignores:, empty at the scaffold.
+
+case: inline-always
+tool: ast-grep
+expect: inline-hint-review
+--- module
+/// Planted.
+#[inline(always)]
+pub fn planted() -> u8 {
+    1
+}
+
+case: cold
+tool: ast-grep
+expect: inline-hint-review
+--- module
+/// Planted.
+#[cold]
+pub fn planted() -> u8 {
+    1
+}
+
+case: fence-names-no-budget-row
+tool: run
+expect: the PERF: line's P8-99 isn't a row of PERFORMANCE §8 (R-130)
+--- module
+//! A planted fence that names a budget row PERFORMANCE §8 doesn't have.
+//! Spec: L §4.6.
+//! Twin: engine/tools/refcore/evaluate.py.
+//! Invariants: the same rows, in the same order, as the plain read.
+//! PERF: P8-99 (reads repeat); plain twin: lib.rs.
+
+/// Planted (L §4.6).
+pub fn planted() -> u8 {
+    1
+}
+--- run
+tools/trace
+
+case: fence-names-no-twin
+tool: run
+expect: the PERF: line names no plain twin that exists (`plain twin: <file>`) (R-130)
+--- module
+//! A planted fence that names its budget row but no plain twin beside it.
+//! Spec: L §4.6.
+//! Twin: engine/tools/refcore/evaluate.py.
+//! Invariants: the same rows, in the same order, as the plain read.
+//! PERF: P8-10 (reads repeat 25–43× per key).
+
+/// Planted (L §4.6).
+pub fn planted() -> u8 {
+    1
+}
+--- run
+tools/trace

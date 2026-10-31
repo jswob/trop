@@ -1,0 +1,61 @@
+# R-66: errors are never dropped silently; map_err(|_| ...) stays allowed. Clippy sees
+# let _ = and .ok(); the ast-grep rule no-underscore-discard sees _ = call() and
+# let _name = call() in library code.
+
+case: let-underscore-result
+tool: clippy
+expect: clippy::let_underscore_must_use
+--- module
+/// Planted.
+pub fn planted(v: &[u8]) {
+    let _ = crate::parse(v);
+}
+
+case: discarded-ok
+tool: clippy
+expect: clippy::unused_result_ok
+--- module
+/// Planted.
+pub fn planted(v: &[u8]) {
+    crate::parse(v).ok();
+}
+
+case: map-err-allowed
+tool: clippy
+expect: pass
+--- module
+/// Planted.
+pub fn planted(v: Result<u8, u16>) -> Result<u8, crate::NotImplemented> {
+    v.map_err(|_| crate::NotImplemented)
+}
+
+case: underscore-assign
+tool: ast-grep
+expect: no-underscore-discard
+--- module
+/// Planted.
+pub fn planted(v: &[u8]) {
+    _ = crate::parse(v);
+}
+
+case: underscore-named-binding
+tool: ast-grep
+expect: no-underscore-discard
+--- module
+/// Planted.
+pub fn planted(v: &[u8]) {
+    let _ignored = crate::parse(v);
+}
+
+case: tests-may-discard
+tool: ast-grep
+expect: pass
+--- module
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn planted() {
+        _ = crate::parse(b"");
+        let _ignored = crate::parse(b"");
+    }
+}

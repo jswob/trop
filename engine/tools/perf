@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# The budget rows on the reference Mac, the counts, the profile and the gungraun limits
+# (BUILDER §13.3, §13.5): engine/tools/perf table|fingerprint|row|all|counts|profile|limits
+d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)" || exit 1
+exec python3 -I -B "$d/perf.py" "$@"

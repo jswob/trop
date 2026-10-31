@@ -1,0 +1,24 @@
+[package]
+name = "tally-cli"
+description = "The tally command: run(args, stdin) -> Output, and the binary around it"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[[bin]]
+name = "tally"
+path = "src/main.rs"
+# The library is also `tally`: one doc page each would collide, and the binary has no API
+doc = false
+
+[features]
+# --stats: the work counters on standard error (D4-8, BUILDER §13.2), a build-side
+# instrument; tally refuses it in a build without debug assertions (R-51).
+counters = ["tally/counters"]
+
+[dependencies]
+tally = { workspace = true }
+
+[lints]
+workspace = true

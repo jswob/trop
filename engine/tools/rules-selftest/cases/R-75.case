@@ -1,0 +1,31 @@
+# R-75: each kernel function's doc comment cites the spec section it implements: an
+# error in the kernel (tools/kernel.toml's globs), a report line elsewhere.
+
+case: uncited-kernel-function
+tool: run
+expect: fn planted: its doc comment cites no spec section, and the file is in the kernel (R-75)
+--- replace tools/kernel.toml
+kernel = []
+protected_non_kernel = []
+--- with
+kernel = ["crates/tally/src/zz_*.rs"]
+protected_non_kernel = []
+--- module
+/// Planted: a kernel function that names no section.
+pub fn planted() -> u8 {
+    1
+}
+--- run
+tools/trace
+
+case: uncited-elsewhere-is-a-report
+tool: run
+expect: fn planted: its doc comment cites no spec section (R-75; an error only in the kernel)
+exit: any
+--- module
+/// Planted: a function outside the kernel that names no section.
+pub fn planted() -> u8 {
+    1
+}
+--- run
+tools/trace

@@ -1,0 +1,30 @@
+# R-10: the program ends only by returning from main.
+
+case: exit-in-library
+tool: clippy
+expect: clippy::exit
+--- module
+/// Planted.
+pub fn planted() {
+    std::process::exit(1);
+}
+
+case: exit-in-main
+tool: clippy
+expect: clippy::disallowed_methods
+text: R-10
+at: crates/tally-cli/src/main.rs
+--- replace crates/tally-cli/src/main.rs
+    ExitCode::from(output.code)
+--- with
+    std::process::exit(i32::from(output.code))
+
+case: abort
+tool: clippy
+expect: clippy::disallowed_methods
+text: R-10
+--- module
+/// Planted.
+pub fn planted() {
+    std::process::abort();
+}

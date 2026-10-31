@@ -1,0 +1,22 @@
+# R-73: no macro_rules! in the library outside the lead's list (no-macro-definition, an
+# error); every macro_rules! is still listed for review (macro-definition-review).
+
+case: macro-definition
+tool: ast-grep
+expect: macro-definition-review
+--- module
+macro_rules! planted {
+    () => {
+        1
+    };
+}
+
+case: macro-definition-outside-list
+tool: ast-grep
+expect: no-macro-definition
+--- module
+macro_rules! planted {
+    () => {
+        1
+    };
+}

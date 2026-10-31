@@ -1,0 +1,22 @@
+# cargo-mutants (R-84 to R-88; DONE gate 8). A rule file: only the `rules` role edits it.
+# The score counts T's tests only (R-84): the runner is the one test package. cargo-mutants
+# 27.1.0 runs its baseline on the mutated package (tally, which has no tests) whatever
+# test_package says, so every run passes --baseline skip after running the baseline
+# itself: `cargo nextest run -p tally-runner --cargo-profile mutants --profile mutants`.
+test_package = ["tally-runner"]
+test_tool = "nextest"
+profile = "mutants"
+# The nextest profile for each mutant's tests: no retries, stop at the first failure
+additional_cargo_test_args = ["--profile=mutants"]
+# Strict lints must not reject a mutant before its tests run (R-88)
+cap_lints = true
+# The kernel's files. The lead sets them at milestone S from the builder's plan (R-85);
+# check-rules then fails on any library file in neither this list nor the protected
+# non-kernel list.
+examine_globs = ["crates/tally/src/lib.rs"]
+# No skip list of our own (R-86); the defaults only skip with_capacity's argument
+skip_calls = []
+# Hung mutants are ended, and counted as not caught (R-87, R-88). The baseline is skipped
+# (above), so no timeout can be derived from it: every command line sets them explicitly,
+# `--timeout 300 --build-timeout 600` (seconds; root package.json and engine.yml). The
+# lead revisits them once T's suite exists.

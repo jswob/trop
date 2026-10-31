@@ -1,0 +1,19 @@
+id: no-underscore-discard
+valid:
+  - 'fn f(v: &[u8]) -> Result<(), E> { parse(v)?; Ok(()) }'
+  - 'fn f(v: &[u8]) -> Result<(), E> { _ = parse(v)?; Ok(()) }'
+  - 'fn f(v: &[u8]) -> Result<(), E> { let _n = parse(v)?; Ok(()) }'
+  - 'fn f(v: &[u8]) { let n = parse(v); }'
+  - 'fn f(x: u8) { let _y = x; }'
+  - 'fn f(x: u8) { _ = x; }'
+  - 'fn f(x: u8) { let _ = parse(x); }'
+  - 'fn f(_unused: u8) {}'
+  - '#[cfg(test)] mod tests { fn f(v: &[u8]) { _ = parse(v); let _ignored = parse(v); } }'
+invalid:
+  - 'fn f(v: &[u8]) { _ = parse(v); }'
+  - 'fn f(v: &[u8]) { let _ignored = parse(v); }'
+  - 'fn f(v: &[u8]) { let _ignored: Result<u8, E> = crate::parse(v); }'
+  - 'fn f(v: &[u8]) { let mut _x = parse(v); }'
+  - 'fn f(s: &mut String) { _ = s.write_str("x"); }'
+  - 'fn f(s: &mut String) { let _written = write!(s, "x"); }'
+  - 'fn f(v: &[u8]) { _ = crate::parse(v).map(|n| n + 1); }'

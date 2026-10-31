@@ -1,0 +1,20 @@
+# R-1: no unsafe code anywhere; each crate root forbids it as well.
+
+case: unsafe-block
+tool: clippy
+expect: unsafe_code
+--- module
+/// Planted.
+pub fn planted() -> u8 {
+    // SAFETY: nothing; a planted violation
+    unsafe { core::hint::black_box(1) }
+}
+
+case: crate-root-without-forbid
+tool: run
+expect: no #![forbid(unsafe_code)] at the crate root
+--- replace crates/tally/src/lib.rs
+#![forbid(unsafe_code)]
+--- with
+--- run
+tools/check-rules

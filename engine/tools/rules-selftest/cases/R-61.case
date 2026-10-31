@@ -1,0 +1,20 @@
+# R-61: the toolchain is pinned, and no second toolchain file overrides it.
+
+case: toolchain-bumped
+tool: run
+expect: rules: engine/rust-toolchain.toml changed
+--- replace rust-toolchain.toml
+channel = "1.99.1"
+--- with
+channel = "1.99.0"
+--- run
+tools/check-frozen
+
+case: second-toolchain-file
+tool: run
+expect: an unexpected config file (R-80)
+--- write crates/tally/rust-toolchain.toml
+[toolchain]
+channel = "nightly"
+--- run
+tools/check-rules

@@ -1,0 +1,32 @@
+# R-85: once the kernel is set, a library file in neither list fails, and the mutants
+# config follows the kernel.
+
+case: unlisted-library-file
+tool: run
+expect: in neither the kernel nor the protected non-kernel list (R-85)
+--- replace tools/kernel.toml
+set_at_s = false
+--- with
+set_at_s = true
+--- run
+tools/check-rules
+
+case: mutants-config-differs
+tool: run
+expect: examine_globs differs from tools/kernel.toml's kernel (R-85)
+--- replace tools/kernel.toml
+set_at_s = false
+--- with
+set_at_s = true
+--- replace tools/kernel.toml
+kernel = []
+protected_non_kernel = []
+--- with
+kernel = ["crates/tally/src/lib.rs"]
+protected_non_kernel = ["crates/tally/src/zz_*.rs"]
+--- replace .cargo/mutants.toml
+examine_globs = ["crates/tally/src/lib.rs"]
+--- with
+examine_globs = ["crates/tally/src/**"]
+--- run
+tools/check-rules

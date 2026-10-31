@@ -1,0 +1,15 @@
+id: silent-default-literal
+language: rust
+severity: warning
+message: 'R-27 (report): a missing value turned into a literal default; listed for review'
+rule:
+  any:
+    - pattern: $X.unwrap_or(0)
+    - pattern: $X.unwrap_or("")
+    - pattern: $X.unwrap_or(false)
+    - pattern: $X.unwrap_or(String::new())
+    - pattern: $X.unwrap_or(Vec::new())
+    - pattern: $X.unwrap_or_else(|| 0)
+    - pattern: $X.unwrap_or_else(|| "")
+    - pattern: $X.map_or(0, $F)
+    - pattern: $X.map_or(false, $F)

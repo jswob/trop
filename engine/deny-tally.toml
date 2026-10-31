@@ -1,0 +1,78 @@
+# cargo-deny for what ships: tally's own graph, dev dependencies excluded. A rule file:
+# only the `rules` role edits it (engine/SCAFFOLD.md). It runs as
+#   cargo deny --locked --manifest-path crates/tally/Cargo.toml --config deny-tally.toml check bans
+
+[graph]
+targets = ["aarch64-apple-darwin", "x86_64-unknown-linux-gnu", "i686-unknown-linux-gnu"]
+all-features = true
+exclude-dev = true
+
+[bans]
+multiple-versions = "deny"
+wildcards = "deny"
+allow-wildcard-paths = true
+highlight = "all"
+# R-52: what ships is on its own allow-list
+allow-workspace = false
+allow = [
+  { crate = "tally", reason = "the library itself" },
+  { crate = "num-bigint", reason = "the number stack, pinned (R-30)" },
+  { crate = "num-integer", reason = "the number stack, pinned (R-30)" },
+  { crate = "num-traits", reason = "the number stack, pinned (R-30)" },
+  { crate = "autocfg", reason = "num-traits' build dependency (R-30)" },
+  { crate = "sha2", reason = "draws are SHA-256 (R-60)" },
+  { crate = "digest", reason = "sha2's dependency (R-60)" },
+  { crate = "block-buffer", reason = "sha2's dependency (R-60)" },
+  { crate = "crypto-common", reason = "sha2's dependency (R-60)" },
+  { crate = "hybrid-array", reason = "sha2's dependency (R-60)" },
+  { crate = "typenum", reason = "sha2's dependency (R-60)" },
+  { crate = "cfg-if", reason = "sha2's dependency (R-60)" },
+  { crate = "cpufeatures", reason = "sha2's CPU feature detection; the digest is the same on every machine (R-60)" },
+  { crate = "libc", reason = "cpufeatures' system interface on Linux and macOS (R-60)" },
+]
+# R-37, R-41, R-42: no randomness, hash order or thread pools in what ships
+deny = [
+  { crate = "rand", reason = "R-41: draws are SHA-256 addressed (LANGUAGE §5.14)" },
+  { crate = "getrandom", reason = "R-41: draws are SHA-256 addressed" },
+  { crate = "fastrand", reason = "R-41: draws are SHA-256 addressed" },
+  { crate = "rayon", reason = "R-42: threads only in the sanctioned module, through thread::scope" },
+  { crate = "hashbrown", wrappers = ["indexmap"], reason = "R-37: hash-ordered map; only indexmap may wrap it" },
+  { crate = "ahash", reason = "R-37: randomly seeded hasher" },
+  { crate = "rustc-hash", reason = "R-37: hash-ordered map look-alike" },
+  { crate = "fxhash", reason = "R-37: hash-ordered map look-alike" },
+  { crate = "foldhash", reason = "R-37: hash-ordered map look-alike" },
+  { crate = "dashmap", reason = "R-37: hash-ordered and concurrent" },
+]
+
+# R-38: no clock in a date crate
+[[bans.features]]
+crate = "chrono"
+deny = ["clock", "now"]
+reason = "R-38: no clock; dates come from the reality"
+
+# R-30: no float (std, libm) or randomness features on the number stack
+[[bans.features]]
+crate = "num-traits"
+deny = ["std", "libm"]
+reason = "R-30: std and libm bring floating-point functions"
+
+[[bans.features]]
+crate = "num-bigint"
+deny = ["std", "rand", "serde", "arbitrary", "quickcheck"]
+reason = "R-30: std brings floats, the rest randomness or a second encoding"
+
+[[bans.features]]
+crate = "num-integer"
+deny = ["std"]
+reason = "R-30: std brings num-traits' floating-point functions"
+
+# R-56: what ships runs only the listed build scripts
+[bans.build]
+allow-build-scripts = [
+  { crate = "num-traits", reason = "R-56: probes the compiler with autocfg" },
+  { crate = "libc", reason = "R-56: probes the target's system interface" },
+]
+executables = "deny"
+interpreted = "deny"
+include-dependencies = true
+include-workspace = true

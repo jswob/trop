@@ -1,0 +1,8 @@
+id: no-macro-definition
+valid:
+  - 'fn f() -> u8 { 1 }'
+  - 'fn f() -> String { format!("{}", 1) }'
+invalid:
+  - 'macro_rules! m { () => {}; }'
+  - 'fn f() { macro_rules! inner { () => { 1 }; } }'
+  - '#[cfg(test)] mod tests { macro_rules! m { () => {}; } }'

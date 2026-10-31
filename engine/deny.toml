@@ -1,0 +1,173 @@
+# cargo-deny for the whole workspace, dev tools included (R-52 to R-59). A rule file:
+# only the `rules` role edits it (engine/SCAFFOLD.md). Shipped-graph bans are in
+# deny-tally.toml. Every allow and skip carries a reason, and the exception counter
+# lists the skips.
+
+[graph]
+targets = ["aarch64-apple-darwin", "x86_64-unknown-linux-gnu", "i686-unknown-linux-gnu"]
+all-features = true
+
+[advisories]
+# R-53: vulnerable, yanked, unmaintained or unsound crates fail; a stale ignore fails
+yanked = "deny"
+unmaintained = "all"
+unsound = "all"
+unused-ignored-advisory = "deny"
+ignore = []
+
+[licenses]
+# R-54: permissive licences only
+allow = ["MIT", "Apache-2.0", "Apache-2.0 WITH LLVM-exception", "BSD-2-Clause", "BSD-3-Clause", "ISC", "Unicode-3.0", "Zlib"]
+confidence-threshold = 0.93
+unused-allowed-license = "allow"
+include-dev = true
+include-build = true
+
+[licenses.private]
+ignore = true
+
+[bans]
+# R-55: one version of each crate; no wildcard versions (path members excepted)
+multiple-versions = "deny"
+multiple-versions-include-dev = true
+wildcards = "deny"
+allow-wildcard-paths = true
+highlight = "all"
+# R-52: every crate is on the allow-list with a reason
+allow-workspace = true
+allow = [
+  { crate = "aho-corasick", reason = "criterion and its dependencies: benchmarks only, dev (gate 12)" },
+  { crate = "alloca", reason = "criterion and its dependencies: benchmarks only, dev (gate 12)" },
+  { crate = "anes", reason = "criterion and its dependencies: benchmarks only, dev (gate 12)" },
+  { crate = "anstyle", reason = "criterion and its dependencies: benchmarks only, dev (gate 12)" },
+  { crate = "autocfg", reason = "num-traits' build dependency (R-30)" },
+  { crate = "block-buffer", reason = "sha2 and its dependencies: draws are SHA-256 (R-60)" },
+  { crate = "cast", reason = "criterion and its dependencies: benchmarks only, dev (gate 12)" },
+  { crate = "cc", reason = "criterion and its dependencies: benchmarks only, dev (gate 12)" },
+  { crate = "cfg-if", reason = "sha2 and its dependencies: draws are SHA-256 (R-60)" },
+  { crate = "ciborium", reason = "criterion and its dependencies: benchmarks only, dev (gate 12)" },
+  { crate = "ciborium-io", reason = "criterion and its dependencies: benchmarks only, dev (gate 12)" },
+  { crate = "ciborium-ll", reason = "criterion and its dependencies: benchmarks only, dev (gate 12)" },
+  { crate = "clap", reason = "criterion and its dependencies: benchmarks only, dev (gate 12)" },
+  { crate = "clap_builder", reason = "criterion and its dependencies: benchmarks only, dev (gate 12)" },
+  { crate = "clap_lex", reason = "criterion and its dependencies: benchmarks only, dev (gate 12)" },
+  { crate = "cpufeatures", reason = "sha2 and its dependencies: draws are SHA-256 (R-60); CPU feature detection, same output on every machine" },
+  { crate = "criterion", reason = "criterion and its dependencies: benchmarks only, dev (gate 12)" },
+  { crate = "criterion-plot", reason = "criterion and its dependencies: benchmarks only, dev (gate 12)" },
+  { crate = "crypto-common", reason = "sha2 and its dependencies: draws are SHA-256 (R-60)" },
+  { crate = "digest", reason = "sha2 and its dependencies: draws are SHA-256 (R-60)" },
+  { crate = "either", reason = "criterion and its dependencies: benchmarks only, dev (gate 12)" },
+  { crate = "find-msvc-tools", reason = "criterion and its dependencies: benchmarks only, dev (gate 12)" },
+  { crate = "half", reason = "criterion and its dependencies: benchmarks only, dev (gate 12)" },
+  { crate = "hybrid-array", reason = "sha2 and its dependencies: draws are SHA-256 (R-60)" },
+  { crate = "itertools", reason = "criterion and its dependencies: benchmarks only, dev (gate 12)" },
+  { crate = "itoa", reason = "criterion and its dependencies: benchmarks only, dev (gate 12)" },
+  { crate = "libc", reason = "cpufeatures' system interface on Linux and macOS" },
+  { crate = "memchr", reason = "criterion and its dependencies: benchmarks only, dev (gate 12)" },
+  { crate = "num-bigint", reason = "the number stack, pinned (R-30); check-rules keeps it a dependency of tally alone (R-29)" },
+  { crate = "num-integer", reason = "the number stack, pinned (R-30)" },
+  { crate = "num-traits", reason = "the number stack, pinned (R-30)" },
+  { crate = "oorandom", reason = "criterion and its dependencies: benchmarks only, dev (gate 12)" },
+  { crate = "page_size", reason = "criterion and its dependencies: benchmarks only, dev (gate 12)" },
+  { crate = "proc-macro2", reason = "criterion and its dependencies: benchmarks only, dev (gate 12)" },
+  { crate = "quote", reason = "criterion and its dependencies: benchmarks only, dev (gate 12)" },
+  { crate = "regex", reason = "criterion and its dependencies: benchmarks only, dev (gate 12)" },
+  { crate = "regex-automata", reason = "criterion and its dependencies: benchmarks only, dev (gate 12)" },
+  { crate = "regex-syntax", reason = "criterion and its dependencies: benchmarks only, dev (gate 12)" },
+  { crate = "same-file", reason = "criterion and its dependencies: benchmarks only, dev (gate 12)" },
+  { crate = "serde", reason = "criterion and its dependencies: benchmarks only, dev (gate 12)" },
+  { crate = "serde_core", reason = "criterion and its dependencies: benchmarks only, dev (gate 12)" },
+  { crate = "serde_derive", reason = "criterion and its dependencies: benchmarks only, dev (gate 12)" },
+  { crate = "serde_json", reason = "criterion and its dependencies: benchmarks only, dev (gate 12)" },
+  { crate = "sha2", reason = "sha2 and its dependencies: draws are SHA-256 (R-60)" },
+  { crate = "shlex", reason = "criterion and its dependencies: benchmarks only, dev (gate 12)" },
+  { crate = "syn", reason = "criterion and its dependencies: benchmarks only, dev (gate 12)" },
+  { crate = "tinytemplate", reason = "criterion and its dependencies: benchmarks only, dev (gate 12)" },
+  { crate = "typenum", reason = "sha2 and its dependencies: draws are SHA-256 (R-60)" },
+  { crate = "unicode-ident", reason = "criterion and its dependencies: benchmarks only, dev (gate 12)" },
+  { crate = "walkdir", reason = "criterion and its dependencies: benchmarks only, dev (gate 12)" },
+  { crate = "zerocopy", reason = "criterion and its dependencies: benchmarks only, dev (gate 12)" },
+  { crate = "zerocopy-derive", reason = "criterion and its dependencies: benchmarks only, dev (gate 12)" },
+  { crate = "zmij", reason = "criterion and its dependencies: benchmarks only, dev (gate 12)" },
+]
+skip = [
+  { crate = "syn@2.0.119", reason = "R-55: dev only; zerocopy-derive (criterion via half) is still on syn 2 while serde_derive is on syn 3" },
+]
+deny = [
+  { crate = "anyhow", reason = "a catch-all error type that erases the spec's codes (R-58)" },
+  { crate = "eyre", reason = "a catch-all error type that erases the spec's codes (R-58)" },
+  { crate = "openssl", reason = "no networking or system crypto; sha2 is pure Rust (R-58)" },
+  { crate = "openssl-sys", reason = "as openssl (R-58)" },
+  { crate = "stacker", reason = "nesting is bounded by a counted depth, never by measuring the stack (R-16, R-58)" },
+  { crate = "insta", reason = "no snapshot testing: checked-in answers are never rewritten (R-89)" },
+  { crate = "mutants", reason = "no mutation skips (R-86)" },
+  { crate = "num-rational", reason = "the engine owns its rationals: Ratio::new panics, Ratio<i64> wraps" },
+  { crate = "num-bigint-dig", reason = "a second big-integer crate (R-30)" },
+  { crate = "ibig", reason = "a second big-integer crate (R-30)" },
+  { crate = "ramp", reason = "a second big-integer crate (R-30)" },
+  { crate = "dashu-int", reason = "a second big-integer crate (R-30)" },
+  { crate = "dashu-ratio", reason = "a second rational crate (R-30)" },
+  { crate = "dashu-float", reason = "floating point (R-18)" },
+  { crate = "malachite", reason = "LGPL-3.0-only: needs the user's licence decision (R-54)" },
+  { crate = "malachite-nz", reason = "as malachite (R-54)" },
+  { crate = "malachite-q", reason = "as malachite (R-54)" },
+  { crate = "malachite-float", reason = "as malachite (R-54)" },
+  { crate = "malachite-bigint", reason = "as malachite (R-54)" },
+  { crate = "rug", reason = "LGPL C big numbers (GMP/MPFR) with a build script (R-30, R-54)" },
+  { crate = "gmp-mpfr-sys", reason = "C build of GMP/MPFR (R-30)" },
+  { crate = "flint3-sys", reason = "C FLINT: an offline oracle only (R-30)" },
+  { crate = "flint-sys", reason = "as flint3-sys (R-30)" },
+  { crate = "arb-sys", reason = "as flint3-sys (R-30)" },
+  { crate = "fraction", reason = "division by zero gives Infinity, not a refusal (R-30)" },
+  { crate = "rust_decimal", reason = "cannot hold 1/3; numbers are exact rationals (R-30)" },
+  { crate = "bigdecimal", reason = "cannot hold 1/3 (R-30)" },
+  { crate = "fastnum", reason = "cannot hold 1/3 (R-30)" },
+  { crate = "inari", reason = "f64 interval endpoints (R-18)" },
+  { crate = "astro-float", reason = "floating point (R-18)" },
+  { crate = "statrs", reason = "f64 statistics (R-18)" },
+  { crate = "libm", reason = "float special functions (R-18)" },
+]
+
+# R-30: no float (std) or randomness features on the number stack
+[[bans.features]]
+crate = "num-bigint"
+deny = ["std", "rand", "serde", "arbitrary", "quickcheck"]
+reason = "R-30: std brings floats, the rest randomness or a second encoding"
+
+# R-56: no build script unless listed
+[bans.build]
+allow-build-scripts = [
+  { crate = "num-traits", reason = "R-56: probes the compiler with autocfg" },
+  { crate = "libc", reason = "R-56: probes the target's system interface" },
+  { crate = "alloca", reason = "R-56: criterion only (dev); compiles its C shim" },
+  { crate = "proc-macro2", reason = "R-56: criterion only (dev); probes the compiler" },
+  { crate = "quote", reason = "R-56: criterion only (dev); probes the compiler" },
+  { crate = "serde", reason = "R-56: criterion only (dev); probes the compiler" },
+  { crate = "serde_core", reason = "R-56: criterion only (dev); probes the compiler" },
+  { crate = "serde_json", reason = "R-56: criterion only (dev); probes the compiler" },
+  { crate = "zerocopy", reason = "R-56: criterion only (dev); probes the compiler" },
+  { crate = "zmij", reason = "R-56: criterion only (dev); probes the compiler" },
+]
+executables = "deny"
+# A bypass has no reason field, so each entry's reason is the comment line above it, in
+# the counter's form (R-109)
+bypass = [
+  # R-56: zerocopy (criterion only, dev) ships its maintainers' CI shell scripts; nothing runs them
+  { crate = "zerocopy", allow-globs = ["ci/*.sh", "cargo.sh"] },
+]
+interpreted = "deny"
+include-dependencies = true
+include-workspace = true
+
+# R-59: a crate declared once, centrally; unused declarations fail
+[bans.workspace-dependencies]
+duplicates = "deny"
+include-path-dependencies = true
+unused = "deny"
+
+[sources]
+# R-57: crates.io only
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]
+allow-git = []

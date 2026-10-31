@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# Every tool-enforced rule fires on a planted violation (R-78): rules-selftest/run [R-n ...]
+d="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)" || exit 1
+exec python3 -I -B "$d/rules_selftest.py" "$@"

@@ -1,0 +1,31 @@
+# R-124 (report): own type parameters, trait definitions and explicit lifetimes other
+# than 'static and '_ are listed for review.
+
+case: type-parameter
+tool: ast-grep
+expect: type-parameter-review
+--- module
+/// Planted.
+pub fn planted<T: Copy>(v: T) -> T {
+    v
+}
+
+case: trait-definition
+tool: ast-grep
+expect: trait-definition-review
+--- module
+/// Planted.
+pub trait Planted {
+    /// Planted.
+    fn planted(&self) -> u8;
+}
+
+case: lifetime
+tool: ast-grep
+expect: lifetime-review
+--- module
+/// Planted.
+pub struct Planted<'text> {
+    /// Planted.
+    pub text: &'text [u8],
+}

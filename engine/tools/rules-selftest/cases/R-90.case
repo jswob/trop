@@ -1,0 +1,13 @@
+# R-90: the test runner's config is protected.
+
+case: nextest-retries
+tool: run
+expect: rules: engine/.config/nextest.toml changed
+--- replace .config/nextest.toml
+[profile.ci]
+retries = 0
+--- with
+[profile.ci]
+retries = 3
+--- run
+tools/check-frozen

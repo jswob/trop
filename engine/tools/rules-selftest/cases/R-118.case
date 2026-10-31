@@ -1,0 +1,9 @@
+# R-118 (report): every derived PartialOrd or Ord on the engine's own types is listed.
+
+case: derive-ord
+tool: ast-grep
+expect: derive-order-review
+--- module
+/// Planted.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+pub struct Planted(pub u8);

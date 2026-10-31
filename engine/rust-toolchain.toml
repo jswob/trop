@@ -1,0 +1,6 @@
+# R-61: the toolchain is pinned. A bump is its own change by the `rules` role and
+# reruns rules-selftest. Fuzzing alone uses nightly-2026-10-21 (engine/fuzz).
+[toolchain]
+channel = "1.99.1"
+components = ["clippy", "rustfmt", "llvm-tools-preview", "rust-analyzer"]
+profile = "minimal"
