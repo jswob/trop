@@ -35,7 +35,7 @@ A run passes when every check passes: **G-1** `check fast` green, or a STOP-REPO
 ## The arms
 
 - **with:** `TALLY_ROLE=build claude -p`, the prompt's first line `/engine-rust`.
-- **without:** the same prompt without that line, with `--disallowedTools Skill "Read(./.claude/skills/**)"`. The skill's files stay in place (removing them would turn check-frozen red); a run that reads them anyway is flagged.
+- **without:** the same prompt without that line, with `--disallowedTools Skill`, in a worktree whose `.claude/skills/engine-rust/` is removed by a local commit that also rewrites `tools/RULES.sha256` (so check-frozen stays green there; the run is graded against that commit). A deny rule on reads wasn't enough: the first measured run without the skill read `SKILL.md` by its absolute path, and was excluded.
 
 Both: `--disallowedTools Agent`, at most 80 turns and 45 minutes, the SessionStart hook printing `engine/CLAUDE.md`, the guard and the Stop hook on. The prompt names the red file and asks for green, with BUILDER §9's prompt line and the seals; it asks the session not to commit.
 

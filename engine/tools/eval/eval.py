@@ -236,6 +236,19 @@ def selftest(names):
     return 0 if ok else 1
 
 
+def remove_skill(wt):
+    """The arm without the skill: the run's worktree loses .claude/skills/engine-rust/ in a
+    local commit that also rewrites RULES.sha256, so check-frozen stays green there and the
+    arms differ only in the skill. A deny rule wasn't enough: the first measured run without
+    the skill read SKILL.md by its absolute path (session 33bdb533)."""
+    git("rm", "-r", "-q", ".claude/skills/engine-rust", cwd=wt)
+    subprocess.run([os.path.join(wt, "engine", "tools", "check-frozen"), "--write-rules"], cwd=os.path.join(wt, "engine"),
+                   capture_output=True, text=True, check=True)
+    git("add", "-A", cwd=wt)
+    git("commit", "-q", "-m", "eval: the arm without the skill (local, never pushed)", cwd=wt)
+    return git("rev-parse", "HEAD", cwd=wt)
+
+
 def one_run(spec, model, slot):
     name, arm, k = spec.split(":")
     case = CASES[name]
@@ -248,7 +261,8 @@ def one_run(spec, model, slot):
     if arm == "with":
         prompt = "/engine-rust\n\n" + prompt
     elif arm == "without":
-        extra = ["--disallowedTools", "Agent", "Skill", "Read(./.claude/skills/**)"]
+        extra = ["--disallowedTools", "Agent", "Skill"]
+        base = remove_skill(wt)
     else:
         raise SystemExit(f"eval: arm {arm!r} is `with` or `without`")
     result, code, wall = claude(prompt, wt, "build", model, extra=extra, slot=slot)
