@@ -9,10 +9,11 @@ and the unviable count, which the score leaves out.
 
 Every survivor must be a row of engine/MUTANTS-SURVIVORS.md:
 
-    | crates/tally/src/x.rs | parse | replace parse -> bool with true | R-21: why it lives |
+    | crates/tally/src/x.rs | parse | replace parse -> bool with true | R-87: equivalent: why |
 
 by file, function and mutation (cargo-mutants' description, without the line and
-column, which move), with a reason naming its rule. It fails on a survivor that isn't
+column, which move), with the reason the mutant is equivalent (DONE gate 8): the form
+`R-87: equivalent: ` and at least 20 characters saying why no test can tell it apart. It fails on a survivor that isn't
 listed, a listed one that is now caught or unviable, a listed one no run produced, and
 a row without a reason, and on a score under DONE gate 8's 90 %. Until the lead sets
 the kernel at S (tools/kernel.toml), it reports the same problems and exits 0, since the
@@ -29,7 +30,7 @@ TOOLS = os.path.dirname(os.path.realpath(__file__))
 ENGINE = os.path.dirname(TOOLS)
 SURVIVORS = os.path.join(ENGINE, "MUTANTS-SURVIVORS.md")
 KERNEL = os.path.join(TOOLS, "kernel.toml")
-REASON = re.compile(r"^R-([1-9][0-9]*): \S")
+REASON = re.compile(r"^R-87: equivalent: \S.{19,}$")
 POSITION = re.compile(r"^(?P<file>[^:]+):[0-9]+:[0-9]+: (?P<mutation>.+)$")
 SURVIVED = {"MissedMutant": "missed", "Timeout": "timed out"}
 GATE = 90  # DONE gate 8: at least 90 % of the kernel's mutants killed
@@ -81,7 +82,8 @@ def listed(problems):
                 continue
             file, function, mutation, reason = cells
             if not REASON.match(reason):
-                problems.append(f"engine/MUTANTS-SURVIVORS.md:{n}: the reason must start with its rule, 'R-<n>: ' (R-87)")
+                problems.append(f"engine/MUTANTS-SURVIVORS.md:{n}: the reason must say why the mutant is equivalent: "
+                                "'R-87: equivalent: ' and 20 characters or more (R-87, DONE gate 8)")
             rows[(file, function, mutation)] = reason
     return rows
 

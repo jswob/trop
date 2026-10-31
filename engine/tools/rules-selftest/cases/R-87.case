@@ -27,7 +27,7 @@ set_at_s = false
 --- with
 set_at_s = true
 --- append MUTANTS-SURVIVORS.md
-| crates/tally/src/lib.rs | parse | replace parse -> Result<(), NotImplemented> with Ok(()) | R-28: a planted row whose mutant is caught |
+| crates/tally/src/lib.rs | parse | replace parse -> Result<(), NotImplemented> with Ok(()) | R-87: equivalent: a planted row whose mutant is caught |
 --- write zz-mutants/mutants.out/outcomes.json
 {"outcomes": [
  {"scenario": {"Mutant": {"name": "crates/tally/src/lib.rs:18:5: replace parse -> Result<(), NotImplemented> with Ok(())",
@@ -44,7 +44,7 @@ set_at_s = false
 --- with
 set_at_s = true
 --- append MUTANTS-SURVIVORS.md
-| crates/tally/src/lib.rs | gone | replace gone -> u8 with 1 | R-28: a planted row whose mutant no longer exists |
+| crates/tally/src/lib.rs | gone | replace gone -> u8 with 1 | R-87: equivalent: a planted row whose mutant no longer exists |
 --- write zz-mutants/mutants.out/outcomes.json
 {"outcomes": []}
 --- run
@@ -52,7 +52,7 @@ tools/mutants-survivors zz-mutants
 
 case: row-without-reason
 tool: run
-expect: the reason must start with its rule
+expect: the reason must say why the mutant is equivalent
 --- replace tools/kernel.toml
 set_at_s = false
 --- with
@@ -90,13 +90,31 @@ set_at_s = false
 --- with
 set_at_s = true
 --- append MUTANTS-SURVIVORS.md
-| crates/tally/src/lib.rs | parse | replace parse -> Result<(), NotImplemented> with Ok(()) | R-28: a planted row; one survivor in two is a score of 50 % |
+| crates/tally/src/lib.rs | parse | replace parse -> Result<(), NotImplemented> with Ok(()) | R-87: equivalent: a planted row; one survivor in two is a score of 50 % |
 --- write zz-mutants/mutants.out/outcomes.json
 {"outcomes": [
  {"scenario": {"Mutant": {"name": "crates/tally/src/lib.rs:18:5: replace parse -> Result<(), NotImplemented> with Ok(())",
   "file": "crates/tally/src/lib.rs", "function": {"function_name": "parse"}}}, "summary": "MissedMutant"},
  {"scenario": {"Mutant": {"name": "crates/tally/src/lib.rs:9:1: replace planted -> u8 with 0",
   "file": "crates/tally/src/lib.rs", "function": {"function_name": "planted"}}}, "summary": "CaughtMutant"}
+]}
+--- run
+tools/mutants-survivors zz-mutants
+
+case: survivor-not-equivalent
+tool: run
+expect: the reason must say why the mutant is equivalent
+--- replace tools/kernel.toml
+set_at_s = false
+--- with
+set_at_s = true
+--- append MUTANTS-SURVIVORS.md
+| crates/tally/src/lib.rs | parse | replace parse -> Result<(), NotImplemented> with Ok(()) | R-28: the tests don't reach this planted branch yet |
+--- write zz-mutants/mutants.out/outcomes.json
+{"outcomes": [
+ {"scenario": "Baseline", "summary": "Success"},
+ {"scenario": {"Mutant": {"name": "crates/tally/src/lib.rs:18:5: replace parse -> Result<(), NotImplemented> with Ok(())",
+  "file": "crates/tally/src/lib.rs", "function": {"function_name": "parse"}}}, "summary": "MissedMutant"}
 ]}
 --- run
 tools/mutants-survivors zz-mutants
