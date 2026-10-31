@@ -1,0 +1,2277 @@
+14:determinism-00,3:one,1:0,468:bals: (2 450.89 DUK, 1 594.05 DUK, 1 890.29 DUK, 1 226.11 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_2
+  unfulfilled: mv_3
+  unfulfilled: mv_4
+  unfulfilled: sweep
+  cut 2025-02-17
+flows_all: (483.44 DUK, -1 328.12 DUK, 1 878.79 DUK, -1 264.79 DUK, 777.30 DUK, -546.62 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_2
+  unfulfilled: mv_3
+  unfulfilled: mv_4
+  unfulfilled: sweep
+  cut 2025-02-17
+swept: 487.49 DUK
+  unfulfilled: mv_3
+  unfulfilled: sweep
+  cut 2025-02-17
+,14:determinism-00,5:split,1:0,468:bals: (2 450.89 DUK, 1 594.05 DUK, 1 890.29 DUK, 1 226.11 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_2
+  unfulfilled: mv_3
+  unfulfilled: mv_4
+  unfulfilled: sweep
+  cut 2025-02-17
+flows_all: (483.44 DUK, -1 328.12 DUK, 1 878.79 DUK, -1 264.79 DUK, 777.30 DUK, -546.62 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_2
+  unfulfilled: mv_3
+  unfulfilled: mv_4
+  unfulfilled: sweep
+  cut 2025-02-17
+swept: 487.49 DUK
+  unfulfilled: mv_3
+  unfulfilled: sweep
+  cut 2025-02-17
+,14:determinism-01,3:one,1:0,510:bals: (-151.63 DUK, 3 934.37 DUK, -939.80 DUK, 3 296.73 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: mv_3
+  unfulfilled: mv_4
+  cut 2025-03-10
+flows_all: (0.00 DUK, -1 050.44 DUK, -18.14 DUK, -1 385.03 DUK, 2 453.61 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: mv_3
+  unfulfilled: mv_4
+  cut 2025-03-10
+warning: WARN-NEGATIVE acc_0 is below zero from 2025-01-02
+warning: WARN-NEGATIVE acc_2 is below zero from 2025-01-28
+warning: WARN-NEGATIVE acc_0 is below zero from 2025-03-26
+,14:determinism-01,5:split,1:0,510:bals: (-151.63 DUK, 3 934.37 DUK, -939.80 DUK, 3 296.73 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: mv_3
+  unfulfilled: mv_4
+  cut 2025-03-10
+flows_all: (0.00 DUK, -1 050.44 DUK, -18.14 DUK, -1 385.03 DUK, 2 453.61 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: mv_3
+  unfulfilled: mv_4
+  cut 2025-03-10
+warning: WARN-NEGATIVE acc_0 is below zero from 2025-01-02
+warning: WARN-NEGATIVE acc_2 is below zero from 2025-01-28
+warning: WARN-NEGATIVE acc_0 is below zero from 2025-03-26
+,14:determinism-02,3:one,1:0,359:bals: (2 978.00 DUK, 1 298.13 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  unfulfilled: mv_3
+  unfulfilled: mv_4
+  unfulfilled: mv_5
+  cut 2025-03-10
+flows_all: (820.57 DUK, -401.95 DUK, -418.62 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  unfulfilled: mv_3
+  unfulfilled: mv_4
+  unfulfilled: mv_5
+  cut 2025-03-10
+,14:determinism-02,5:split,1:0,359:bals: (2 978.00 DUK, 1 298.13 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  unfulfilled: mv_3
+  unfulfilled: mv_4
+  unfulfilled: mv_5
+  cut 2025-03-10
+flows_all: (820.57 DUK, -401.95 DUK, -418.62 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  unfulfilled: mv_3
+  unfulfilled: mv_4
+  unfulfilled: mv_5
+  cut 2025-03-10
+,14:determinism-03,3:one,1:0,348:bals: (4 648.48 DUK, 944.75 DUK, -98.94 DUK)
+  unfulfilled: mv_0
+  unfulfilled: sweep
+  cut 2025-03-12
+flows_all: (1 209.39 DUK, 3 965.43 DUK, -3 965.43 DUK, -1 209.39 DUK)
+  unfulfilled: mv_0
+  unfulfilled: sweep
+  cut 2025-03-12
+swept: 3 965.43 DUK
+  unfulfilled: sweep
+  cut 2025-03-12
+warning: WARN-NEGATIVE acc_2 is below zero from 2025-02-09
+,14:determinism-03,5:split,1:0,348:bals: (4 648.48 DUK, 944.75 DUK, -98.94 DUK)
+  unfulfilled: mv_0
+  unfulfilled: sweep
+  cut 2025-03-12
+flows_all: (1 209.39 DUK, 3 965.43 DUK, -3 965.43 DUK, -1 209.39 DUK)
+  unfulfilled: mv_0
+  unfulfilled: sweep
+  cut 2025-03-12
+swept: 3 965.43 DUK
+  unfulfilled: sweep
+  cut 2025-03-12
+warning: WARN-NEGATIVE acc_2 is below zero from 2025-02-09
+,14:determinism-04,3:one,1:0,259:bals: (1 387.66 DUK, 5 354.43 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  cut 2025-03-04
+flows_all: (1 687.78 DUK, -1 898.87 DUK, -1 630.57 DUK, 1 841.66 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  cut 2025-03-04
+,14:determinism-04,5:split,1:0,259:bals: (1 387.66 DUK, 5 354.43 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  cut 2025-03-04
+flows_all: (1 687.78 DUK, -1 898.87 DUK, -1 630.57 DUK, 1 841.66 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  cut 2025-03-04
+,14:determinism-05,3:one,1:0,221:bals: 2 028.96 DUK
+  unfulfilled: mv_1
+  unfulfilled: mv_3
+  cut 2025-03-22
+flows_all: (-678.17 DUK, 38.98 DUK, 639.19 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  unfulfilled: mv_3
+  cut 2025-03-22
+,14:determinism-05,5:split,1:0,221:bals: 2 028.96 DUK
+  unfulfilled: mv_1
+  unfulfilled: mv_3
+  cut 2025-03-22
+flows_all: (-678.17 DUK, 38.98 DUK, 639.19 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  unfulfilled: mv_3
+  cut 2025-03-22
+,14:determinism-06,3:one,1:0,276:bals: (5 316.43 DUK, 5 923.27 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_2
+  unfulfilled: mv_3
+  cut 2025-03-18
+flows_all: (484.20 DUK, -2 982.27 DUK, 1 421.10 DUK, 1 076.97 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  unfulfilled: mv_3
+  cut 2025-03-18
+,14:determinism-06,5:split,1:0,276:bals: (5 316.43 DUK, 5 923.27 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_2
+  unfulfilled: mv_3
+  cut 2025-03-18
+flows_all: (484.20 DUK, -2 982.27 DUK, 1 421.10 DUK, 1 076.97 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  unfulfilled: mv_3
+  cut 2025-03-18
+,14:determinism-07,3:one,1:0,347:bals: (3 735.27 DUK, 3 183.57 DUK, 994.56 DUK, 2 210.54 DUK)
+  unfulfilled: mv_0
+  unfulfilled: sweep
+  cut 2025-03-04
+flows_all: (-3 085.40 DUK, 1 836.47 DUK, 2 595.01 DUK, 639.62 DUK, 0.00 DUK, -1 985.70 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: sweep
+  cut 2025-03-04
+swept: 1 346.08 DUK
+  unfulfilled: sweep
+  cut 2025-03-04
+,14:determinism-07,5:split,1:0,347:bals: (3 735.27 DUK, 3 183.57 DUK, 994.56 DUK, 2 210.54 DUK)
+  unfulfilled: mv_0
+  unfulfilled: sweep
+  cut 2025-03-04
+flows_all: (-3 085.40 DUK, 1 836.47 DUK, 2 595.01 DUK, 639.62 DUK, 0.00 DUK, -1 985.70 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: sweep
+  cut 2025-03-04
+swept: 1 346.08 DUK
+  unfulfilled: sweep
+  cut 2025-03-04
+,14:determinism-08,3:one,1:0,384:bals: -557.03 DUK
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  unfulfilled: mv_3
+  unfulfilled: mv_4
+  cut 2025-03-28
+flows_all: (1 860.94 DUK, 105.33 DUK, -1 966.27 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  unfulfilled: mv_3
+  unfulfilled: mv_4
+  unfulfilled: mv_5
+  cut 2025-03-28
+warning: WARN-NEGATIVE acc_0 is below zero from 2025-02-27
+,14:determinism-08,5:split,1:0,384:bals: -557.03 DUK
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  unfulfilled: mv_3
+  unfulfilled: mv_4
+  cut 2025-03-28
+flows_all: (1 860.94 DUK, 105.33 DUK, -1 966.27 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  unfulfilled: mv_3
+  unfulfilled: mv_4
+  unfulfilled: mv_5
+  cut 2025-03-28
+warning: WARN-NEGATIVE acc_0 is below zero from 2025-02-27
+,14:determinism-09,3:one,1:0,315:bals: (4 589.57 DUK, 719.73 DUK, 3 610.87 DUK)
+  unfulfilled: mv_0
+  unfulfilled: sweep
+  cut 2025-02-23
+flows_all: (-1 345.34 DUK, 0.00 DUK, 1 482.91 DUK, -137.57 DUK, 0.00 DUK)
+  unfulfilled: mv_0
+  unfulfilled: sweep
+  cut 2025-02-23
+swept: 1 482.91 DUK
+  unfulfilled: mv_0
+  unfulfilled: sweep
+  cut 2025-02-23
+,14:determinism-09,5:split,1:0,315:bals: (4 589.57 DUK, 719.73 DUK, 3 610.87 DUK)
+  unfulfilled: mv_0
+  unfulfilled: sweep
+  cut 2025-02-23
+flows_all: (-1 345.34 DUK, 0.00 DUK, 1 482.91 DUK, -137.57 DUK, 0.00 DUK)
+  unfulfilled: mv_0
+  unfulfilled: sweep
+  cut 2025-02-23
+swept: 1 482.91 DUK
+  unfulfilled: mv_0
+  unfulfilled: sweep
+  cut 2025-02-23
+,14:determinism-10,3:one,1:0,285:bals: (913.71 DUK, 2 731.76 DUK)
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  cut 2025-03-28
+flows_all: (-154.02 DUK, 775.21 DUK, -1 252.53 DUK, 631.34 DUK)
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  cut 2025-03-28
+swept: 0.00 DUK
+  unfulfilled: mv_2
+  unfulfilled: sweep
+  cut 2025-03-28
+,14:determinism-10,5:split,1:0,285:bals: (913.71 DUK, 2 731.76 DUK)
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  cut 2025-03-28
+flows_all: (-154.02 DUK, 775.21 DUK, -1 252.53 DUK, 631.34 DUK)
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  cut 2025-03-28
+swept: 0.00 DUK
+  unfulfilled: mv_2
+  unfulfilled: sweep
+  cut 2025-03-28
+,14:determinism-11,3:one,1:0,201:bals: (2 101.35 DUK, 3 445.37 DUK)
+  unfulfilled: mv_1
+  unfulfilled: mv_4
+  cut 2025-02-20
+flows_all: (-885.79 DUK, 1 814.53 DUK, -928.74 DUK)
+  unfulfilled: mv_1
+  unfulfilled: mv_4
+  cut 2025-02-20
+,14:determinism-11,5:split,1:0,201:bals: (2 101.35 DUK, 3 445.37 DUK)
+  unfulfilled: mv_1
+  unfulfilled: mv_4
+  cut 2025-02-20
+flows_all: (-885.79 DUK, 1 814.53 DUK, -928.74 DUK)
+  unfulfilled: mv_1
+  unfulfilled: mv_4
+  cut 2025-02-20
+,14:determinism-12,3:one,1:0,297:bals: (7 909.60 DUK, 6.29 DUK, 4 105.33 DUK)
+  unfulfilled: mv_0
+  unfulfilled: sweep
+  cut 2025-02-15
+flows_all: (-1 013.91 DUK, 0.00 DUK, 3 196.25 DUK, -2 933.56 DUK, 751.22 DUK)
+  unfulfilled: mv_0
+  unfulfilled: sweep
+  cut 2025-02-15
+swept: 2 933.56 DUK
+  unfulfilled: sweep
+  cut 2025-02-15
+,14:determinism-12,5:split,1:0,297:bals: (7 909.60 DUK, 6.29 DUK, 4 105.33 DUK)
+  unfulfilled: mv_0
+  unfulfilled: sweep
+  cut 2025-02-15
+flows_all: (-1 013.91 DUK, 0.00 DUK, 3 196.25 DUK, -2 933.56 DUK, 751.22 DUK)
+  unfulfilled: mv_0
+  unfulfilled: sweep
+  cut 2025-02-15
+swept: 2 933.56 DUK
+  unfulfilled: sweep
+  cut 2025-02-15
+,14:determinism-13,3:one,1:0,389:bals: (4 611.45 DUK, 614.76 DUK, 1 057.50 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  cut 2025-03-23
+flows_all: (0.00 DUK, 503.28 DUK, 1 035.37 DUK, -2 247.43 DUK, 708.78 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  cut 2025-03-23
+swept: 0.00 DUK
+  unfulfilled: sweep
+  cut 2025-03-23
+warning: WARN-NEGATIVE acc_2 is below zero from 2025-02-08
+,14:determinism-13,5:split,1:0,389:bals: (4 611.45 DUK, 614.76 DUK, 1 057.50 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  cut 2025-03-23
+flows_all: (0.00 DUK, 503.28 DUK, 1 035.37 DUK, -2 247.43 DUK, 708.78 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  cut 2025-03-23
+swept: 0.00 DUK
+  unfulfilled: sweep
+  cut 2025-03-23
+warning: WARN-NEGATIVE acc_2 is below zero from 2025-02-08
+,14:determinism-14,3:one,1:0,445:bals: (2 139.00 DUK, -218.75 DUK, 1 049.01 DUK, 1 990.06 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  unfulfilled: mv_3
+  cut 2025-03-13
+flows_all: (-1 222.10 DUK, 0.00 DUK, -863.40 DUK, 595.23 DUK, 1 490.27 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  unfulfilled: mv_3
+  cut 2025-03-13
+swept: 0.00 DUK
+  unfulfilled: sweep
+  cut 2025-03-13
+warning: WARN-NEGATIVE acc_1 is below zero from 2025-02-22
+,14:determinism-14,5:split,1:0,445:bals: (2 139.00 DUK, -218.75 DUK, 1 049.01 DUK, 1 990.06 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  unfulfilled: mv_3
+  cut 2025-03-13
+flows_all: (-1 222.10 DUK, 0.00 DUK, -863.40 DUK, 595.23 DUK, 1 490.27 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  unfulfilled: mv_3
+  cut 2025-03-13
+swept: 0.00 DUK
+  unfulfilled: sweep
+  cut 2025-03-13
+warning: WARN-NEGATIVE acc_1 is below zero from 2025-02-22
+,14:determinism-15,3:one,1:0,246:bals: (416.49 DUK, 3 989.73 DUK, 1 887.06 DUK, 1 667.62 DUK)
+  unfulfilled: mv_0
+  cut 2025-02-10
+flows_all: (-1 419.81 DUK, 0.00 DUK, 1 419.81 DUK, -890.27 DUK, 890.27 DUK)
+  unfulfilled: mv_0
+  cut 2025-02-10
+swept: 890.27 DUK
+  cut 2025-02-10
+,14:determinism-15,5:split,1:0,246:bals: (416.49 DUK, 3 989.73 DUK, 1 887.06 DUK, 1 667.62 DUK)
+  unfulfilled: mv_0
+  cut 2025-02-10
+flows_all: (-1 419.81 DUK, 0.00 DUK, 1 419.81 DUK, -890.27 DUK, 890.27 DUK)
+  unfulfilled: mv_0
+  cut 2025-02-10
+swept: 890.27 DUK
+  cut 2025-02-10
+,14:determinism-16,3:one,1:0,205:bals: 1 482.88 DUK
+  unfulfilled: mv_2
+  unfulfilled: mv_3
+  cut 2025-02-24
+flows_all: (-396.62 DUK, 1 103.54 DUK, -706.92 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_2
+  unfulfilled: mv_3
+  cut 2025-02-24
+,14:determinism-16,5:split,1:0,205:bals: 1 482.88 DUK
+  unfulfilled: mv_2
+  unfulfilled: mv_3
+  cut 2025-02-24
+flows_all: (-396.62 DUK, 1 103.54 DUK, -706.92 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_2
+  unfulfilled: mv_3
+  cut 2025-02-24
+,14:determinism-17,3:one,1:0,243:bals: (919.99 DUK, 184.66 DUK, 2 981.97 DUK, 1 874.86 DUK)
+  unfulfilled: mv_2
+  cut 2025-02-02
+flows_all: (2 779.03 DUK, 645.38 DUK, 0.00 DUK, -2 671.30 DUK, -1 203.92 DUK, 450.81 DUK)
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  cut 2025-02-02
+,14:determinism-17,5:split,1:0,243:bals: (919.99 DUK, 184.66 DUK, 2 981.97 DUK, 1 874.86 DUK)
+  unfulfilled: mv_2
+  cut 2025-02-02
+flows_all: (2 779.03 DUK, 645.38 DUK, 0.00 DUK, -2 671.30 DUK, -1 203.92 DUK, 450.81 DUK)
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  cut 2025-02-02
+,14:determinism-18,3:one,1:0,220:bals: (1 576.81 DUK, 3 999.43 DUK, 952.19 DUK, 4 570.76 DUK)
+  unfulfilled: mv_1
+  cut 2025-02-11
+flows_all: (-1 680.51 DUK, -1 448.44 DUK, 1 593.47 DUK, -1 855.31 DUK, 3 390.79 DUK)
+  unfulfilled: mv_1
+  cut 2025-02-11
+,14:determinism-18,5:split,1:0,220:bals: (1 576.81 DUK, 3 999.43 DUK, 952.19 DUK, 4 570.76 DUK)
+  unfulfilled: mv_1
+  cut 2025-02-11
+flows_all: (-1 680.51 DUK, -1 448.44 DUK, 1 593.47 DUK, -1 855.31 DUK, 3 390.79 DUK)
+  unfulfilled: mv_1
+  cut 2025-02-11
+,14:determinism-19,3:one,1:0,160:bals: (3 585.64 DUK, 2 236.52 DUK)
+  unfulfilled: mv_0
+  cut 2025-03-13
+flows_all: (0.00 DUK, -1 108.34 DUK, 1 108.34 DUK)
+  unfulfilled: mv_0
+  cut 2025-03-13
+,14:determinism-19,5:split,1:0,160:bals: (3 585.64 DUK, 2 236.52 DUK)
+  unfulfilled: mv_0
+  cut 2025-03-13
+flows_all: (0.00 DUK, -1 108.34 DUK, 1 108.34 DUK)
+  unfulfilled: mv_0
+  cut 2025-03-13
+,14:determinism-20,3:one,1:0,223:bals: (2 912.28 DUK, 1 748.52 DUK)
+  unfulfilled: mv_0
+  cut 2025-02-01
+flows_all: (-241.59 DUK, 0.00 DUK, -495.44 DUK, 737.03 DUK)
+  unfulfilled: mv_0
+  cut 2025-02-01
+swept: 0.00 DUK
+  unfulfilled: sweep
+  cut 2025-02-01
+,14:determinism-20,5:split,1:0,223:bals: (2 912.28 DUK, 1 748.52 DUK)
+  unfulfilled: mv_0
+  cut 2025-02-01
+flows_all: (-241.59 DUK, 0.00 DUK, -495.44 DUK, 737.03 DUK)
+  unfulfilled: mv_0
+  cut 2025-02-01
+swept: 0.00 DUK
+  unfulfilled: sweep
+  cut 2025-02-01
+,14:determinism-21,3:one,1:0,216:bals: (754.01 DUK, 609.34 DUK, 1 397.28 DUK, 5 602.43 DUK)
+  unfulfilled: mv_0
+  cut 2025-03-05
+flows_all: (878.25 DUK, -807.61 DUK, -878.25 DUK, 94.46 DUK, 0.00 DUK, 713.15 DUK)
+  unfulfilled: mv_0
+  cut 2025-03-05
+,14:determinism-21,5:split,1:0,216:bals: (754.01 DUK, 609.34 DUK, 1 397.28 DUK, 5 602.43 DUK)
+  unfulfilled: mv_0
+  cut 2025-03-05
+flows_all: (878.25 DUK, -807.61 DUK, -878.25 DUK, 94.46 DUK, 0.00 DUK, 713.15 DUK)
+  unfulfilled: mv_0
+  cut 2025-03-05
+,14:determinism-22,3:one,1:0,483:bals: (3 491.30 DUK, 1 337.40 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  unfulfilled: mv_3
+  unfulfilled: mv_4
+  unfulfilled: mv_5
+  unfulfilled: sweep
+  cut 2025-03-31
+flows_all: (-717.13 DUK, 2 162.08 DUK, -1 444.95 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  unfulfilled: mv_3
+  unfulfilled: mv_4
+  unfulfilled: mv_5
+  unfulfilled: sweep
+  cut 2025-03-31
+swept: 1 922.23 DUK
+  unfulfilled: mv_5
+  unfulfilled: sweep
+  cut 2025-03-31
+,14:determinism-22,5:split,1:0,483:bals: (3 491.30 DUK, 1 337.40 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  unfulfilled: mv_3
+  unfulfilled: mv_4
+  unfulfilled: mv_5
+  unfulfilled: sweep
+  cut 2025-03-31
+flows_all: (-717.13 DUK, 2 162.08 DUK, -1 444.95 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  unfulfilled: mv_3
+  unfulfilled: mv_4
+  unfulfilled: mv_5
+  unfulfilled: sweep
+  cut 2025-03-31
+swept: 1 922.23 DUK
+  unfulfilled: mv_5
+  unfulfilled: sweep
+  cut 2025-03-31
+,14:determinism-23,3:one,1:0,251:bals: (1 469.91 DUK, 4 779.12 DUK)
+  unfulfilled: mv_3
+  cut 2025-02-02
+flows_all: (279.97 DUK, 561.47 DUK, -3 371.87 DUK, 2 530.43 DUK)
+  unfulfilled: mv_2
+  unfulfilled: mv_3
+  unfulfilled: mv_4
+  cut 2025-02-02
+swept: 3 371.87 DUK
+  cut 2025-02-02
+,14:determinism-23,5:split,1:0,251:bals: (1 469.91 DUK, 4 779.12 DUK)
+  unfulfilled: mv_3
+  cut 2025-02-02
+flows_all: (279.97 DUK, 561.47 DUK, -3 371.87 DUK, 2 530.43 DUK)
+  unfulfilled: mv_2
+  unfulfilled: mv_3
+  unfulfilled: mv_4
+  cut 2025-02-02
+swept: 3 371.87 DUK
+  cut 2025-02-02
+,15:conservation-00,3:one,1:0,158:flows_all: (-2 437.26 DUK, -1 846.83 DUK, 466.06 DUK, -688.57 DUK, 4 506.60 DUK)
+  unfulfilled: mv_2
+  unfulfilled: mv_3
+  unfulfilled: mv_5
+  cut 2025-02-22
+,15:conservation-01,3:one,1:0,160:flows_all: (-117.87 DUK, -1 947.59 DUK, -1 173.17 DUK, 1 368.91 DUK, 1 869.72 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_2
+  unfulfilled: mv_3
+  cut 2025-02-08
+,15:conservation-02,3:one,1:0,238:flows_all: (-388.47 DUK, -1 703.34 DUK, 2 973.02 DUK, 841.40 DUK, -1 722.61 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  unfulfilled: sweep
+  cut 2025-03-24
+warning: WARN-NEGATIVE acc_3 is below zero from 2025-03-11
+,15:conservation-03,3:one,1:0,141:flows_all: (-1 960.12 DUK, -240.17 DUK, 1 930.66 DUK, 2 185.40 DUK, -1 915.77 DUK)
+  unfulfilled: mv_5
+  unfulfilled: sweep
+  cut 2025-02-14
+,15:conservation-04,3:one,1:0,153:flows_all: (410.01 DUK, 0.00 DUK, 0.00 DUK, -410.01 DUK)
+  unfulfilled: mv_0
+  cut 2025-03-19
+warning: WARN-NEGATIVE acc_1 is below zero from 2025-02-21
+,15:conservation-05,3:one,1:0,180:flows_all: (-196.27 DUK, 2 388.79 DUK, -2 192.52 DUK, 0.00 DUK)
+  unfulfilled: mv_1
+  unfulfilled: mv_3
+  cut 2025-03-05
+warning: WARN-NEGATIVE acc_0 is below zero from 2025-01-06
+,15:conservation-06,3:one,1:0,70:flows_all: (178.89 DUK, 2 046.56 DUK, -2 225.45 DUK)
+  cut 2025-02-03
+,15:conservation-07,3:one,1:0,126:flows_all: (-4 928.97 DUK, 1 153.21 DUK, 1 869.29 DUK, 1 906.47 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_2
+  cut 2025-03-06
+,15:conservation-08,3:one,1:0,104:flows_all: (0.00 DUK, 0.00 DUK, 704.66 DUK, -704.66 DUK, 0.00 DUK)
+  unfulfilled: mv_0
+  cut 2025-03-22
+,15:conservation-09,3:one,1:0,147:flows_all: (0.00 DUK, 1 923.82 DUK, -1 923.82 DUK)
+  unfulfilled: mv_0
+  cut 2025-02-04
+warning: WARN-NEGATIVE acc_1 is below zero from 2025-01-18
+,15:conservation-10,3:one,1:0,182:flows_all: (316.57 DUK, 3 232.72 DUK, -136.06 DUK, -3 413.23 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_3
+  cut 2025-02-05
+warning: WARN-NEGATIVE acc_1 is below zero from 2025-02-01
+,15:conservation-11,3:one,1:0,122:flows_all: (-2 413.10 DUK, 2 599.47 DUK, 95.42 DUK, -281.79 DUK)
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  cut 2025-02-12
+,15:conservation-12,3:one,1:0,252:flows_all: (-688.90 DUK, -122.36 DUK, 1 296.68 DUK, -555.96 DUK, 70.54 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_2
+  unfulfilled: mv_3
+  unfulfilled: mv_4
+  unfulfilled: mv_5
+  cut 2025-02-15
+warning: WARN-NEGATIVE acc_1 is below zero from 2025-01-16
+,15:conservation-13,3:one,1:0,178:flows_all: (1 596.03 DUK, -1 745.77 DUK, 845.53 DUK, -2 441.56 DUK, 1 745.77 DUK)
+  unfulfilled: mv_2
+  cut 2025-02-09
+warning: WARN-NEGATIVE acc_1 is below zero from 2025-02-20
+,15:conservation-14,3:one,1:0,148:flows_all: (1 414.47 DUK, -1 051.45 DUK, 4 390.54 DUK, -4 753.56 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_2
+  unfulfilled: sweep
+  cut 2025-02-20
+,15:conservation-15,3:one,1:0,130:flows_all: (-2 718.72 DUK, 379.21 DUK, 2 339.51 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  cut 2025-03-06
+,15:conservation-16,3:one,1:0,90:flows_all: (-3 990.15 DUK, 3 096.49 DUK, 893.66 DUK)
+  unfulfilled: mv_2
+  cut 2025-02-05
+,15:conservation-17,3:one,1:0,58:flows_all: (1 441.79 DUK, -1 441.79 DUK)
+  cut 2025-02-12
+,15:conservation-18,3:one,1:0,84:flows_all: (0.00 DUK, 212.66 DUK, 0.00 DUK, -212.66 DUK, 0.00 DUK)
+  cut 2025-03-14
+,15:conservation-19,3:one,1:0,204:flows_all: (-285.41 DUK, 1 148.14 DUK, -2 150.37 DUK, 1 287.64 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: mv_3
+  cut 2025-03-22
+warning: WARN-NEGATIVE acc_1 is below zero from 2025-02-03
+,15:conservation-20,3:one,1:0,314:flows_all: (2 458.25 DUK, -1 006.43 DUK, 0.00 DUK, -1 614.38 DUK, 162.56 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_2
+  unfulfilled: mv_4
+  unfulfilled: mv_5
+  unfulfilled: sweep
+  cut 2025-02-27
+warning: WARN-NEGATIVE acc_2 is below zero from 2025-01-09
+warning: WARN-NEGATIVE acc_2 is below zero from 2025-03-07
+,15:conservation-21,3:one,1:0,99:flows_all: (-813.65 DUK, 1 659.70 DUK, 0.00 DUK, 0.00 DUK, -846.05 DUK, 0.00 DUK)
+  cut 2025-02-08
+,15:conservation-22,3:one,1:0,140:flows_all: (0.00 DUK, 0.00 DUK, 1 982.54 DUK, -2 009.04 DUK, 0.00 DUK, 26.50 DUK)
+  unfulfilled: mv_0
+  unfulfilled: sweep
+  cut 2025-03-26
+,15:conservation-23,3:one,1:0,111:flows_all: (632.86 DUK, -2 461.96 DUK, 1 829.10 DUK)
+  unfulfilled: mv_0
+  unfulfilled: sweep
+  cut 2025-03-23
+,18:foresight-known-00,4:base,1:0,277:at_on: (-304.75 DUK, -328.36 DUK, 0.00 DUK, 797.32 DUK, -164.21 DUK, 1 582.62 DUK, 3 869.14 DUK, 2 793.74 DUK)
+  unfulfilled: sweep
+  cut 2025-03-08
+early: (-304.75 DUK, -328.36 DUK, 0.00 DUK, 797.32 DUK, -164.21 DUK, 1 582.62 DUK, 3 869.14 DUK, 2 793.74 DUK)
+  cut 2025-01-07
+,18:foresight-known-00,5:later,1:0,278:at_on: (-1 048.32 DUK, -328.36 DUK, 0.00 DUK, 797.32 DUK, 579.36 DUK, 1 582.62 DUK, 3 869.14 DUK, 3 537.31 DUK)
+  unfulfilled: sweep
+  cut 2025-03-08
+early: (-304.75 DUK, -328.36 DUK, 0.00 DUK, 797.32 DUK, -164.21 DUK, 1 582.62 DUK, 3 869.14 DUK, 2 793.74 DUK)
+  cut 2025-01-07
+,18:foresight-known-01,4:base,1:0,315:at_on: (215.86 DUK, -551.89 DUK, -2 331.12 DUK, 2 667.15 DUK, 2 308.24 DUK, 6 668.31 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: sweep
+  cut 2025-03-18
+early: (215.86 DUK, -551.89 DUK, -2 331.12 DUK, 2 667.15 DUK, 2 308.24 DUK, 6 668.31 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  cut 2025-02-12
+,18:foresight-known-01,5:later,1:0,824:at_on: (215.86 DUK, ?"mv_0 on 2025-01-25 changed after it was paid (version late); is back pay due, and when?" (mv_0), ?"mv_0 on 2025-01-25 changed after it was paid (version late); is back pay due, and when?" (mv_0), ?"mv_0 on 2025-01-25 changed after it was paid (version late); is back pay due, and when?" (mv_0), ?"mv_0 on 2025-01-25 changed after it was paid (version late); is back pay due, and when?" (mv_0), ?"mv_0 on 2025-01-25 changed after it was paid (version late); is back pay due, and when?" (mv_0))
+  adjustment: mv_0 by 124.97 DUK on 2025-02-15 (version late), remaining 124.97 DUK
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: sweep
+  cut 2025-03-18
+early: (215.86 DUK, -551.89 DUK, -2 331.12 DUK, 2 667.15 DUK, 2 308.24 DUK, 6 668.31 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  cut 2025-02-12
+,18:foresight-known-02,4:base,1:0,344:at_on: (-3 470.77 DUK, 0.00 DUK, 0.00 DUK, 1 963.22 DUK, 1 507.55 DUK, 3 021.22 DUK, 592.63 DUK, 4 230.25 DUK, 3 555.54 DUK)
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  cut 2025-03-01
+early: (-3 470.77 DUK, 0.00 DUK, 0.00 DUK, 1 963.22 DUK, 1 507.55 DUK, 3 021.22 DUK, 592.63 DUK, 4 230.25 DUK, 3 555.54 DUK)
+  unfulfilled: mv_1
+  cut 2025-01-25
+,18:foresight-known-02,5:later,1:0,688:at_on: (?"mv_1 on 2025-01-03 changed after it was paid (version late); is back pay due, and when?" (mv_1), 0.00 DUK, 0.00 DUK, ?"mv_1 on 2025-01-03 changed after it was paid (version late); is back pay due, and when?" (mv_1), 1 507.55 DUK, 3 021.22 DUK, 592.63 DUK, ?"mv_1 on 2025-01-03 changed after it was paid (version late); is back pay due, and when?" (mv_1), 3 555.54 DUK)
+  adjustment: mv_1 by -1 052.68 DUK on 2025-01-27 (version late), remaining -1 052.68 DUK
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  cut 2025-03-01
+early: (-3 470.77 DUK, 0.00 DUK, 0.00 DUK, 1 963.22 DUK, 1 507.55 DUK, 3 021.22 DUK, 592.63 DUK, 4 230.25 DUK, 3 555.54 DUK)
+  unfulfilled: mv_1
+  cut 2025-01-25
+,18:foresight-known-03,4:base,1:0,330:at_on: (1 198.43 DUK, -742.24 DUK, 0.00 DUK, 742.24 DUK, -1 198.43 DUK, 3 123.25 DUK, 2 358.81 DUK, 1 934.35 DUK, 1 448.70 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  cut 2025-03-07
+early: (1 198.43 DUK, -742.24 DUK, 0.00 DUK, 742.24 DUK, -1 198.43 DUK, 3 123.25 DUK, 2 358.81 DUK, 1 934.35 DUK, 1 448.70 DUK)
+  cut 2025-01-09
+,18:foresight-known-03,5:later,1:0,330:at_on: (1 198.43 DUK, -774.07 DUK, 0.00 DUK, 774.07 DUK, -1 198.43 DUK, 3 091.42 DUK, 2 358.81 DUK, 1 966.18 DUK, 1 448.70 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  cut 2025-03-07
+early: (1 198.43 DUK, -742.24 DUK, 0.00 DUK, 742.24 DUK, -1 198.43 DUK, 3 123.25 DUK, 2 358.81 DUK, 1 934.35 DUK, 1 448.70 DUK)
+  cut 2025-01-09
+,18:foresight-known-04,4:base,1:0,240:at_on: (-1 143.44 DUK, 1 822.21 DUK, -236.87 DUK, -441.90 DUK, 3 391.16 DUK, 403.74 DUK, 2 780.90 DUK)
+  cut 2025-02-18
+early: (-1 143.44 DUK, 1 822.21 DUK, -236.87 DUK, -441.90 DUK, 3 391.16 DUK, 403.74 DUK, 2 780.90 DUK)
+  cut 2025-01-19
+,18:foresight-known-04,5:later,1:0,238:at_on: (-1 143.44 DUK, 1 284.43 DUK, -236.87 DUK, 95.88 DUK, 2 853.38 DUK, 403.74 DUK, 3 318.68 DUK)
+  cut 2025-02-18
+early: (-1 143.44 DUK, 1 822.21 DUK, -236.87 DUK, -441.90 DUK, 3 391.16 DUK, 403.74 DUK, 2 780.90 DUK)
+  cut 2025-01-19
+,18:foresight-known-05,4:base,1:0,362:at_on: (-769.11 DUK, 457.58 DUK, 1 992.03 DUK, -2 440.26 DUK, 759.76 DUK, 2 125.46 DUK, 720.93 DUK, 1 671.97 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  unfulfilled: mv_3
+  cut 2025-03-09
+early: (-769.11 DUK, 457.58 DUK, 1 992.03 DUK, -2 440.26 DUK, 759.76 DUK, 2 125.46 DUK, 720.93 DUK, 1 671.97 DUK)
+  unfulfilled: mv_1
+  cut 2025-01-20
+,18:foresight-known-05,5:later,1:0,704:at_on: (?"mv_1 on 2025-01-10 changed after it was paid (version late); is back pay due, and when?" (mv_1), 457.58 DUK, 1 992.03 DUK, -2 440.26 DUK, ?"mv_1 on 2025-01-10 changed after it was paid (version late); is back pay due, and when?" (mv_1), 2 125.46 DUK, 720.93 DUK, ?"mv_1 on 2025-01-10 changed after it was paid (version late); is back pay due, and when?" (mv_1))
+  adjustment: mv_1 by 789.90 DUK on 2025-02-14 (version late), remaining 789.90 DUK
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  unfulfilled: mv_3
+  cut 2025-03-09
+early: (-769.11 DUK, 457.58 DUK, 1 992.03 DUK, -2 440.26 DUK, 759.76 DUK, 2 125.46 DUK, 720.93 DUK, 1 671.97 DUK)
+  unfulfilled: mv_1
+  cut 2025-01-20
+,18:foresight-known-06,4:base,1:0,343:at_on: (12.47 DUK, 896.37 DUK, 817.32 DUK, -1 726.16 DUK, 845.12 DUK, 2 656.22 DUK)
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  unfulfilled: mv_4
+  unfulfilled: mv_5
+  unfulfilled: sweep
+  cut 2025-03-09
+early: (12.47 DUK, 896.37 DUK, 817.32 DUK, -1 726.16 DUK, 845.12 DUK, 2 656.22 DUK)
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  cut 2025-01-15
+,18:foresight-known-06,5:later,1:0,602:at_on: (?"mv_1 on 2025-01-08 changed after it was paid (version late); is back pay due, and when?" (mv_1), ?"mv_1 on 2025-01-08 changed after it was paid (version late); is back pay due, and when?" (mv_1), 817.32 DUK, -1 726.16 DUK, 845.12 DUK, 2 656.22 DUK)
+  adjustment: mv_1 by 535.40 DUK on 2025-02-23 (version late), remaining 535.40 DUK
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  unfulfilled: mv_4
+  unfulfilled: mv_5
+  unfulfilled: sweep
+  cut 2025-03-09
+early: (12.47 DUK, 896.37 DUK, 817.32 DUK, -1 726.16 DUK, 845.12 DUK, 2 656.22 DUK)
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  cut 2025-01-15
+,18:foresight-known-07,4:base,1:0,205:at_on: (860.34 DUK, -860.34 DUK, -144.03 DUK)
+  unfulfilled: mv_1
+  cut 2025-02-28
+early: (860.34 DUK, -860.34 DUK, -144.03 DUK)
+  cut 2025-01-19
+warning: WARN-NEGATIVE acc_0 is below zero from 2025-02-02
+,18:foresight-known-07,5:later,1:0,209:at_on: (1 052.78 DUK, -1 052.78 DUK, -336.47 DUK)
+  unfulfilled: mv_1
+  cut 2025-02-28
+early: (860.34 DUK, -860.34 DUK, -144.03 DUK)
+  cut 2025-01-19
+warning: WARN-NEGATIVE acc_0 is below zero from 2025-02-02
+,18:foresight-known-08,4:base,1:0,372:at_on: (-2 080.81 DUK, 1 216.17 DUK, -2 579.68 DUK, 3 444.32 DUK, 5 029.05 DUK, 2 123.95 DUK, 4 463.76 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  unfulfilled: sweep
+  cut 2025-03-26
+early: (-2 080.81 DUK, 1 216.17 DUK, -2 579.68 DUK, 3 444.32 DUK, 5 029.05 DUK, 2 123.95 DUK, 4 463.76 DUK)
+  unfulfilled: mv_1
+  unfulfilled: sweep
+  cut 2025-01-22
+,18:foresight-known-08,5:later,1:0,792:at_on: (-2 080.81 DUK, ?"mv_0 on 2025-02-08 changed after it was paid (version late); is back pay due, and when?" (mv_0), -2 579.68 DUK, ?"mv_0 on 2025-02-08 changed after it was paid (version late); is back pay due, and when?" (mv_0), ?"mv_0 on 2025-02-08 changed after it was paid (version late); is back pay due, and when?" (mv_0), 2 123.95 DUK, ?"mv_0 on 2025-02-08 changed after it was paid (version late); is back pay due, and when?" (mv_0))
+  adjustment: mv_0 by 1.22 DUK on 2025-02-11 (version late), remaining 1.22 DUK
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  unfulfilled: sweep
+  cut 2025-03-26
+early: (-2 080.81 DUK, 1 216.17 DUK, -2 579.68 DUK, 3 444.32 DUK, 5 029.05 DUK, 2 123.95 DUK, 4 463.76 DUK)
+  unfulfilled: mv_1
+  unfulfilled: sweep
+  cut 2025-01-22
+,18:foresight-known-09,4:base,1:0,515:at_on: (-790.95 DUK, 1 972.32 DUK, 1 028.01 DUK, -1 063.90 DUK, 83.09 DUK, -1 228.57 DUK, 4 256.87 DUK, 554.04 DUK, 236.05 DUK, -441.36 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  unfulfilled: mv_3
+  cut 2025-03-24
+early: (-790.95 DUK, 1 972.32 DUK, 1 028.01 DUK, -1 063.90 DUK, 83.09 DUK, -1 228.57 DUK, 4 256.87 DUK, 554.04 DUK, 236.05 DUK, -441.36 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_2
+  unfulfilled: mv_3
+  cut 2025-01-13
+warning: WARN-NEGATIVE acc_3 is below zero from 2025-01-11
+,18:foresight-known-09,5:later,1:0,940:at_on: (-790.95 DUK, 1 972.32 DUK, ?"mv_1 on 2025-01-29 changed after it was paid (version late); is back pay due, and when?" (mv_1), ?"mv_1 on 2025-01-29 changed after it was paid (version late); is back pay due, and when?" (mv_1), 83.09 DUK, -1 228.57 DUK, ?"mv_1 on 2025-01-29 changed after it was paid (version late); is back pay due, and when?" (mv_1), ?"mv_1 on 2025-01-29 changed after it was paid (version late); is back pay due, and when?" (mv_1), 236.05 DUK, -441.36 DUK)
+  adjustment: mv_1 by 700.66 DUK on 2025-02-22 (version late), remaining 700.66 DUK
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  unfulfilled: mv_3
+  cut 2025-03-24
+early: (-790.95 DUK, 1 972.32 DUK, 1 028.01 DUK, -1 063.90 DUK, 83.09 DUK, -1 228.57 DUK, 4 256.87 DUK, 554.04 DUK, 236.05 DUK, -441.36 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_2
+  unfulfilled: mv_3
+  cut 2025-01-13
+warning: WARN-NEGATIVE acc_3 is below zero from 2025-01-11
+,18:foresight-known-10,4:base,1:0,334:at_on: (1 639.33 DUK, 152.14 DUK, -3 248.47 DUK, 1 457.00 DUK, -974.01 DUK, 4 855.14 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_2
+  unfulfilled: sweep
+  cut 2025-02-19
+early: (1 639.33 DUK, 152.14 DUK, -3 248.47 DUK, 1 457.00 DUK, -974.01 DUK, 4 855.14 DUK)
+  cut 2025-01-03
+warning: WARN-NEGATIVE acc_0 is below zero from 2025-03-01
+,18:foresight-known-10,5:later,1:0,336:at_on: (1 639.33 DUK, 152.14 DUK, -3 393.45 DUK, 1 601.98 DUK, -1 118.99 DUK, 5 000.12 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_2
+  unfulfilled: sweep
+  cut 2025-02-19
+early: (1 639.33 DUK, 152.14 DUK, -3 248.47 DUK, 1 457.00 DUK, -974.01 DUK, 4 855.14 DUK)
+  cut 2025-01-03
+warning: WARN-NEGATIVE acc_0 is below zero from 2025-03-01
+,18:foresight-known-11,4:base,1:0,327:at_on: (4 092.63 DUK, -3 232.14 DUK, -860.49 DUK, 0.00 DUK, 847.82 DUK, -671.34 DUK, 297.53 DUK)
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  cut 2025-02-07
+early: (4 092.63 DUK, -3 232.14 DUK, -860.49 DUK, 0.00 DUK, 847.82 DUK, -671.34 DUK, 297.53 DUK)
+  cut 2025-01-10
+warning: WARN-NEGATIVE acc_1 is below zero from 2025-03-04
+,18:foresight-known-11,5:later,1:0,329:at_on: (3 096.08 DUK, -2 235.59 DUK, -860.49 DUK, 0.00 DUK, 1 844.37 DUK, -671.34 DUK, 297.53 DUK)
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  cut 2025-02-07
+early: (4 092.63 DUK, -3 232.14 DUK, -860.49 DUK, 0.00 DUK, 847.82 DUK, -671.34 DUK, 297.53 DUK)
+  cut 2025-01-10
+warning: WARN-NEGATIVE acc_1 is below zero from 2025-03-04
+,18:foresight-known-12,4:base,1:0,429:at_on: (3 678.54 DUK, -3 969.56 DUK, 291.02 DUK, -1 617.70 DUK, 1 385.57 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  unfulfilled: sweep
+  cut 2025-03-21
+early: (3 678.54 DUK, -3 969.56 DUK, 291.02 DUK, -1 617.70 DUK, 1 385.57 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  cut 2025-01-30
+warning: WARN-NEGATIVE acc_1 is below zero from 2025-01-23
+warning: WARN-NEGATIVE acc_0 is below zero from 2025-03-28
+,18:foresight-known-12,5:later,1:0,774:at_on: (?"mv_2 on 2025-02-10 changed after it was paid (version late); is back pay due, and when?" (mv_2), -3 969.56 DUK, ?"mv_2 on 2025-02-10 changed after it was paid (version late); is back pay due, and when?" (mv_2), -1 617.70 DUK, ?"mv_2 on 2025-02-10 changed after it was paid (version late); is back pay due, and when?" (mv_2))
+  adjustment: mv_2 by 1 092.84 DUK on 2025-03-11 (version late), remaining 1 092.84 DUK
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  unfulfilled: sweep
+  cut 2025-03-21
+early: (3 678.54 DUK, -3 969.56 DUK, 291.02 DUK, -1 617.70 DUK, 1 385.57 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  cut 2025-01-30
+warning: WARN-NEGATIVE acc_1 is below zero from 2025-01-23
+warning: WARN-NEGATIVE acc_0 is below zero from 2025-03-28
+,18:foresight-known-13,4:base,1:0,264:at_on: (0.00 DUK, 0.00 DUK, 328.21 DUK, -328.21 DUK, 1 838.04 DUK, 4 855.35 DUK, 3 998.92 DUK)
+  unfulfilled: mv_0
+  cut 2025-03-01
+early: (0.00 DUK, 0.00 DUK, 328.21 DUK, -328.21 DUK, 1 838.04 DUK, 4 855.35 DUK, 3 998.92 DUK)
+  unfulfilled: mv_0
+  cut 2025-02-18
+,18:foresight-known-13,5:later,1:0,691:at_on: (0.00 DUK, 0.00 DUK, ?"mv_0 on 2025-02-03 changed after it was paid (version late); is back pay due, and when?" (mv_0), ?"mv_0 on 2025-02-03 changed after it was paid (version late); is back pay due, and when?" (mv_0), 1 838.04 DUK, ?"mv_0 on 2025-02-03 changed after it was paid (version late); is back pay due, and when?" (mv_0), ?"mv_0 on 2025-02-03 changed after it was paid (version late); is back pay due, and when?" (mv_0))
+  adjustment: mv_0 by -46.77 DUK on 2025-02-24 (version late), remaining -46.77 DUK
+  unfulfilled: mv_0
+  cut 2025-03-01
+early: (0.00 DUK, 0.00 DUK, 328.21 DUK, -328.21 DUK, 1 838.04 DUK, 4 855.35 DUK, 3 998.92 DUK)
+  unfulfilled: mv_0
+  cut 2025-02-18
+,18:foresight-known-14,4:base,1:0,426:at_on: (-1 599.27 DUK, -1 120.10 DUK, -754.42 DUK, -698.29 DUK, 3 417.66 DUK, 754.42 DUK, 1 700.82 DUK, 1 284.70 DUK, 4 278.42 DUK, 4 168.74 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  unfulfilled: mv_3
+  unfulfilled: mv_4
+  cut 2025-03-26
+early: (-1 599.27 DUK, -1 120.10 DUK, -754.42 DUK, -698.29 DUK, 3 417.66 DUK, 754.42 DUK, 1 700.82 DUK, 1 284.70 DUK, 4 278.42 DUK, 4 168.74 DUK)
+  cut 2025-01-10
+,18:foresight-known-14,5:later,1:0,424:at_on: (-149.17 DUK, -1 120.10 DUK, -754.42 DUK, -698.29 DUK, 1 967.56 DUK, 754.42 DUK, 1 700.82 DUK, 1 284.70 DUK, 2 828.32 DUK, 4 168.74 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  unfulfilled: mv_3
+  unfulfilled: mv_4
+  cut 2025-03-26
+early: (-1 599.27 DUK, -1 120.10 DUK, -754.42 DUK, -698.29 DUK, 3 417.66 DUK, 754.42 DUK, 1 700.82 DUK, 1 284.70 DUK, 4 278.42 DUK, 4 168.74 DUK)
+  cut 2025-01-10
+,18:foresight-known-15,4:base,1:0,279:at_on: (504.14 DUK, -1 331.33 DUK, 827.19 DUK, 191.21 DUK, 4 020.91 DUK)
+  unfulfilled: mv_3
+  cut 2025-02-03
+early: (504.14 DUK, -1 331.33 DUK, 827.19 DUK, 191.21 DUK, 4 020.91 DUK)
+  unfulfilled: mv_3
+  cut 2025-01-17
+warning: WARN-NEGATIVE acc_0 is below zero from 2025-03-03
+,18:foresight-known-15,5:later,1:0,624:at_on: (?"mv_3 on 2025-01-05 changed after it was paid (version late); is back pay due, and when?" (mv_3), -1 331.33 DUK, ?"mv_3 on 2025-01-05 changed after it was paid (version late); is back pay due, and when?" (mv_3), 191.21 DUK, ?"mv_3 on 2025-01-05 changed after it was paid (version late); is back pay due, and when?" (mv_3))
+  adjustment: mv_3 by -383.93 DUK on 2025-01-19 (version late), remaining -383.93 DUK
+  unfulfilled: mv_3
+  cut 2025-02-03
+early: (504.14 DUK, -1 331.33 DUK, 827.19 DUK, 191.21 DUK, 4 020.91 DUK)
+  unfulfilled: mv_3
+  cut 2025-01-17
+warning: WARN-NEGATIVE acc_0 is below zero from 2025-03-03
+,18:foresight-known-16,4:base,1:0,278:at_on: (0.00 DUK, 0.00 DUK, 761.33 DUK, -761.33 DUK, 2 436.71 DUK, 1 451.25 DUK)
+  unfulfilled: mv_0
+  unfulfilled: sweep
+  cut 2025-03-27
+early: (0.00 DUK, 0.00 DUK, 761.33 DUK, -761.33 DUK, 2 436.71 DUK, 1 451.25 DUK)
+  unfulfilled: mv_0
+  unfulfilled: sweep
+  cut 2025-02-13
+,18:foresight-known-16,5:later,1:0,705:at_on: (0.00 DUK, 0.00 DUK, ?"mv_0 on 2025-02-01 changed after it was paid (version late); is back pay due, and when?" (mv_0), ?"mv_0 on 2025-02-01 changed after it was paid (version late); is back pay due, and when?" (mv_0), ?"mv_0 on 2025-02-01 changed after it was paid (version late); is back pay due, and when?" (mv_0), ?"mv_0 on 2025-02-01 changed after it was paid (version late); is back pay due, and when?" (mv_0))
+  adjustment: mv_0 by 327.96 DUK on 2025-03-01 (version late), remaining 327.96 DUK
+  unfulfilled: mv_0
+  unfulfilled: sweep
+  cut 2025-03-27
+early: (0.00 DUK, 0.00 DUK, 761.33 DUK, -761.33 DUK, 2 436.71 DUK, 1 451.25 DUK)
+  unfulfilled: mv_0
+  unfulfilled: sweep
+  cut 2025-02-13
+,18:foresight-known-17,4:base,1:0,335:at_on: (976.16 DUK, 1 473.86 DUK, 0.00 DUK, -976.16 DUK, -3 133.26 DUK, 1 659.40 DUK, 1 401.65 DUK, 3 889.80 DUK, 949.81 DUK, 4 746.00 DUK)
+  unfulfilled: sweep
+  cut 2025-02-17
+early: (976.16 DUK, 1 473.86 DUK, 0.00 DUK, -976.16 DUK, -3 133.26 DUK, 1 659.40 DUK, 1 401.65 DUK, 3 889.80 DUK, 949.81 DUK, 4 746.00 DUK)
+  cut 2025-01-11
+,18:foresight-known-17,5:later,1:0,339:at_on: (1 467.87 DUK, 1 473.86 DUK, 0.00 DUK, -1 467.87 DUK, -3 133.26 DUK, 1 659.40 DUK, 1 401.65 DUK, 3 398.09 DUK, 949.81 DUK, 4 746.00 DUK)
+  unfulfilled: sweep
+  cut 2025-02-17
+early: (976.16 DUK, 1 473.86 DUK, 0.00 DUK, -976.16 DUK, -3 133.26 DUK, 1 659.40 DUK, 1 401.65 DUK, 3 889.80 DUK, 949.81 DUK, 4 746.00 DUK)
+  cut 2025-01-11
+,18:foresight-known-18,4:base,1:0,457:at_on: (-302.47 DUK, 725.24 DUK, 0.00 DUK, -1 409.04 DUK, 986.27 DUK, 952.08 DUK, 974.50 DUK, 2 266.12 DUK, 3 746.93 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  unfulfilled: mv_3
+  cut 2025-03-14
+early: (-302.47 DUK, 725.24 DUK, 0.00 DUK, -1 409.04 DUK, 986.27 DUK, 952.08 DUK, 974.50 DUK, 2 266.12 DUK, 3 746.93 DUK)
+  unfulfilled: mv_1
+  unfulfilled: mv_3
+  cut 2025-02-05
+warning: WARN-NEGATIVE acc_0 is below zero from 2025-01-19
+,18:foresight-known-18,5:later,1:0,888:at_on: (-302.47 DUK, ?"mv_2 on 2025-02-08 changed after it was paid (version late); is back pay due, and when?" (mv_2), 0.00 DUK, ?"mv_2 on 2025-02-08 changed after it was paid (version late); is back pay due, and when?" (mv_2), 986.27 DUK, ?"mv_2 on 2025-02-08 changed after it was paid (version late); is back pay due, and when?" (mv_2), 974.50 DUK, ?"mv_2 on 2025-02-08 changed after it was paid (version late); is back pay due, and when?" (mv_2), 3 746.93 DUK)
+  adjustment: mv_2 by 1 632.69 DUK on 2025-03-02 (version late), remaining 1 632.69 DUK
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  unfulfilled: mv_3
+  cut 2025-03-14
+early: (-302.47 DUK, 725.24 DUK, 0.00 DUK, -1 409.04 DUK, 986.27 DUK, 952.08 DUK, 974.50 DUK, 2 266.12 DUK, 3 746.93 DUK)
+  unfulfilled: mv_1
+  unfulfilled: mv_3
+  cut 2025-02-05
+warning: WARN-NEGATIVE acc_0 is below zero from 2025-01-19
+,18:foresight-known-19,4:base,1:0,196:at_on: (2 627.45 DUK, -2 627.45 DUK, 1 205.69 DUK)
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  unfulfilled: mv_3
+  cut 2025-03-08
+early: (2 627.45 DUK, -2 627.45 DUK, 1 205.69 DUK)
+  cut 2025-01-03
+,18:foresight-known-19,5:later,1:0,253:at_on: (3 907.69 DUK, -3 907.69 DUK, -74.55 DUK)
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  unfulfilled: mv_3
+  cut 2025-03-08
+early: (2 627.45 DUK, -2 627.45 DUK, 1 205.69 DUK)
+  cut 2025-01-03
+warning: WARN-NEGATIVE acc_0 is below zero from 2025-03-20
+,18:foresight-known-20,4:base,1:0,363:at_on: (2 994.28 DUK, -19.03 DUK, -2 858.96 DUK, -116.29 DUK, 0.00 DUK, 1 892.60 DUK, -724.18 DUK, 2 580.11 DUK, 910.64 DUK)
+  unfulfilled: mv_3
+  cut 2025-02-05
+early: (2 994.28 DUK, -19.03 DUK, -2 858.96 DUK, -116.29 DUK, 0.00 DUK, 1 892.60 DUK, -724.18 DUK, 2 580.11 DUK, 910.64 DUK)
+  cut 2025-01-16
+warning: WARN-NEGATIVE acc_1 is below zero from 2025-03-12
+,18:foresight-known-20,5:later,1:0,791:at_on: (2 994.28 DUK, ?"mv_3 on 2025-01-24 changed after it was paid (version late); is back pay due, and when?" (mv_3), ?"mv_3 on 2025-01-24 changed after it was paid (version late); is back pay due, and when?" (mv_3), -116.29 DUK, 0.00 DUK, ?"mv_3 on 2025-01-24 changed after it was paid (version late); is back pay due, and when?" (mv_3), ?"mv_3 on 2025-01-24 changed after it was paid (version late); is back pay due, and when?" (mv_3), 2 580.11 DUK, 910.64 DUK)
+  adjustment: mv_3 by -390.94 DUK on 2025-01-28 (version late), remaining -390.94 DUK
+  unfulfilled: mv_3
+  cut 2025-02-05
+early: (2 994.28 DUK, -19.03 DUK, -2 858.96 DUK, -116.29 DUK, 0.00 DUK, 1 892.60 DUK, -724.18 DUK, 2 580.11 DUK, 910.64 DUK)
+  cut 2025-01-16
+warning: WARN-NEGATIVE acc_1 is below zero from 2025-03-12
+,18:foresight-known-21,4:base,1:0,304:at_on: (0.00 DUK, 267.28 DUK, 0.00 DUK, -267.28 DUK, 4 268.37 DUK, 4 267.02 DUK, 4 196.10 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  unfulfilled: mv_3
+  cut 2025-03-30
+early: (0.00 DUK, 267.28 DUK, 0.00 DUK, -267.28 DUK, 4 268.37 DUK, 4 267.02 DUK, 4 196.10 DUK)
+  cut 2025-01-12
+,18:foresight-known-21,5:later,1:0,731:at_on: (0.00 DUK, ?"mv_3 on 2025-02-15 changed after it was paid (version late); is back pay due, and when?" (mv_3), 0.00 DUK, ?"mv_3 on 2025-02-15 changed after it was paid (version late); is back pay due, and when?" (mv_3), ?"mv_3 on 2025-02-15 changed after it was paid (version late); is back pay due, and when?" (mv_3), 4 267.02 DUK, ?"mv_3 on 2025-02-15 changed after it was paid (version late); is back pay due, and when?" (mv_3))
+  adjustment: mv_3 by 693.35 DUK on 2025-02-18 (version late), remaining 693.35 DUK
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  unfulfilled: mv_3
+  cut 2025-03-30
+early: (0.00 DUK, 267.28 DUK, 0.00 DUK, -267.28 DUK, 4 268.37 DUK, 4 267.02 DUK, 4 196.10 DUK)
+  cut 2025-01-12
+,18:foresight-known-22,4:base,1:0,297:at_on: (24.63 DUK, 2 248.97 DUK, -640.66 DUK, -1 632.94 DUK, 3 340.00 DUK, 2 396.26 DUK, 414.93 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: sweep
+  cut 2025-02-17
+early: (24.63 DUK, 2 248.97 DUK, -640.66 DUK, -1 632.94 DUK, 3 340.00 DUK, 2 396.26 DUK, 414.93 DUK)
+  cut 2025-01-02
+,18:foresight-known-22,5:later,1:0,360:at_on: (1 057.32 DUK, 2 248.97 DUK, -640.66 DUK, -2 665.63 DUK, 3 340.00 DUK, 2 396.26 DUK, -617.76 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: sweep
+  cut 2025-02-17
+early: (24.63 DUK, 2 248.97 DUK, -640.66 DUK, -1 632.94 DUK, 3 340.00 DUK, 2 396.26 DUK, 414.93 DUK)
+  cut 2025-01-02
+warning: WARN-NEGATIVE acc_2 is below zero from 2025-02-19
+,18:foresight-known-23,4:base,1:0,214:at_on: (-91.22 DUK, -1 455.46 DUK, -601.18 DUK, 2 147.86 DUK, 1 820.18 DUK, 2 975.67 DUK)
+  cut 2025-02-01
+early: (-91.22 DUK, -1 455.46 DUK, -601.18 DUK, 2 147.86 DUK, 1 820.18 DUK, 2 975.67 DUK)
+  cut 2025-01-16
+,18:foresight-known-23,5:later,1:0,214:at_on: (-91.22 DUK, -1 373.28 DUK, -601.18 DUK, 2 065.68 DUK, 1 820.18 DUK, 2 893.49 DUK)
+  cut 2025-02-01
+early: (-91.22 DUK, -1 455.46 DUK, -601.18 DUK, 2 147.86 DUK, 1 820.18 DUK, 2 975.67 DUK)
+  cut 2025-01-16
+,21:foresight-decision-00,4:base,1:0,194:swept: 365.63 DUK
+  unfulfilled: mv_0
+  unfulfilled: sweep
+  cut 2025-02-07
+warning: WARN-NEGATIVE acc_0 is below zero from 2025-01-08
+warning: WARN-NEGATIVE acc_1 is below zero from 2025-02-13
+,21:foresight-decision-00,5:later,1:0,194:swept: 365.63 DUK
+  unfulfilled: mv_0
+  unfulfilled: sweep
+  cut 2025-02-07
+warning: WARN-NEGATIVE acc_0 is below zero from 2025-01-08
+warning: WARN-NEGATIVE acc_1 is below zero from 2025-02-13
+,21:foresight-decision-00,7:control,1:0,214:swept: 835.48 DUK
+  unfulfilled: mv_0
+  unfulfilled: mv_x
+  unfulfilled: sweep
+  cut 2025-02-07
+warning: WARN-NEGATIVE acc_0 is below zero from 2025-01-08
+warning: WARN-NEGATIVE acc_1 is below zero from 2025-02-13
+,21:foresight-decision-01,4:base,1:0,56:swept: 319.11 DUK
+  unfulfilled: sweep
+  cut 2025-02-25
+,21:foresight-decision-01,5:later,1:0,56:swept: 319.11 DUK
+  unfulfilled: sweep
+  cut 2025-02-25
+,21:foresight-decision-01,7:control,1:0,78:swept: 1 108.09 DUK
+  unfulfilled: mv_x
+  unfulfilled: sweep
+  cut 2025-02-25
+,21:foresight-decision-02,4:base,1:0,96:swept: 1 708.88 DUK
+  cut 2025-02-27
+warning: WARN-NEGATIVE acc_1 is below zero from 2025-02-05
+,21:foresight-decision-02,5:later,1:0,96:swept: 1 708.88 DUK
+  cut 2025-02-27
+warning: WARN-NEGATIVE acc_1 is below zero from 2025-02-05
+,21:foresight-decision-02,7:control,1:0,96:swept: 2 614.74 DUK
+  cut 2025-02-27
+warning: WARN-NEGATIVE acc_1 is below zero from 2025-02-05
+,21:foresight-decision-03,4:base,1:0,94:swept: 292.26 DUK
+  cut 2025-02-16
+warning: WARN-NEGATIVE acc_2 is below zero from 2025-01-01
+,21:foresight-decision-03,5:later,1:0,94:swept: 292.26 DUK
+  cut 2025-02-16
+warning: WARN-NEGATIVE acc_2 is below zero from 2025-01-01
+,21:foresight-decision-03,7:control,1:0,114:swept: 948.59 DUK
+  unfulfilled: mv_x
+  cut 2025-02-16
+warning: WARN-NEGATIVE acc_2 is below zero from 2025-01-01
+,21:foresight-decision-04,4:base,1:0,58:swept: 2 631.05 DUK
+  unfulfilled: sweep
+  cut 2025-03-24
+,21:foresight-decision-04,5:later,1:0,58:swept: 2 631.05 DUK
+  unfulfilled: sweep
+  cut 2025-03-24
+,21:foresight-decision-04,7:control,1:0,78:swept: 3 416.10 DUK
+  unfulfilled: mv_x
+  unfulfilled: sweep
+  cut 2025-03-24
+,21:foresight-decision-05,4:base,1:0,35:swept: 308.69 DUK
+  cut 2025-02-24
+,21:foresight-decision-05,5:later,1:0,35:swept: 308.69 DUK
+  cut 2025-02-24
+,21:foresight-decision-05,7:control,1:0,55:swept: 520.91 DUK
+  unfulfilled: mv_x
+  cut 2025-02-24
+,21:foresight-decision-06,4:base,1:0,98:swept: 2 179.97 DUK
+  unfulfilled: mv_0
+  unfulfilled: mv_2
+  unfulfilled: sweep
+  cut 2025-03-23
+,21:foresight-decision-06,5:later,1:0,98:swept: 2 179.97 DUK
+  unfulfilled: mv_0
+  unfulfilled: mv_2
+  unfulfilled: sweep
+  cut 2025-03-23
+,21:foresight-decision-06,7:control,1:0,118:swept: 2 365.60 DUK
+  unfulfilled: mv_0
+  unfulfilled: mv_2
+  unfulfilled: mv_x
+  unfulfilled: sweep
+  cut 2025-03-23
+,21:foresight-decision-07,4:base,1:0,136:swept: 4 173.87 DUK
+  unfulfilled: mv_2
+  unfulfilled: mv_3
+  cut 2025-02-28
+warning: WARN-NEGATIVE acc_1 is below zero from 2025-02-12
+,21:foresight-decision-07,5:later,1:0,136:swept: 4 173.87 DUK
+  unfulfilled: mv_2
+  unfulfilled: mv_3
+  cut 2025-02-28
+warning: WARN-NEGATIVE acc_1 is below zero from 2025-02-12
+,21:foresight-decision-07,7:control,1:0,136:swept: 4 631.45 DUK
+  unfulfilled: mv_2
+  unfulfilled: mv_3
+  cut 2025-02-28
+warning: WARN-NEGATIVE acc_1 is below zero from 2025-02-12
+,21:foresight-decision-08,4:base,1:0,98:swept: 4 568.93 DUK
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  unfulfilled: sweep
+  cut 2025-02-04
+,21:foresight-decision-08,5:later,1:0,98:swept: 4 568.93 DUK
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  unfulfilled: sweep
+  cut 2025-02-04
+,21:foresight-decision-08,7:control,1:0,118:swept: 5 111.21 DUK
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  unfulfilled: mv_x
+  unfulfilled: sweep
+  cut 2025-02-04
+,21:foresight-decision-09,4:base,1:0,118:swept: 5 147.72 DUK
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  unfulfilled: sweep
+  cut 2025-03-14
+,21:foresight-decision-09,5:later,1:0,118:swept: 5 147.72 DUK
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  unfulfilled: sweep
+  cut 2025-03-14
+,21:foresight-decision-09,7:control,1:0,138:swept: 5 708.18 DUK
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  unfulfilled: mv_x
+  unfulfilled: sweep
+  cut 2025-03-14
+,21:foresight-decision-10,4:base,1:0,58:swept: 1 765.14 DUK
+  unfulfilled: sweep
+  cut 2025-03-27
+,21:foresight-decision-10,5:later,1:0,58:swept: 1 765.14 DUK
+  unfulfilled: sweep
+  cut 2025-03-27
+,21:foresight-decision-10,7:control,1:0,78:swept: 2 666.18 DUK
+  unfulfilled: mv_x
+  unfulfilled: sweep
+  cut 2025-03-27
+,21:foresight-decision-11,4:base,1:0,57:swept: 3 379.97 DUK
+  unfulfilled: mv_0
+  cut 2025-02-08
+,21:foresight-decision-11,5:later,1:0,57:swept: 3 379.97 DUK
+  unfulfilled: mv_0
+  cut 2025-02-08
+,21:foresight-decision-11,7:control,1:0,77:swept: 3 664.14 DUK
+  unfulfilled: mv_0
+  unfulfilled: mv_x
+  cut 2025-02-08
+,21:foresight-decision-12,4:base,1:0,78:swept: 1 004.80 DUK
+  unfulfilled: mv_3
+  unfulfilled: sweep
+  cut 2025-03-15
+,21:foresight-decision-12,5:later,1:0,78:swept: 1 004.80 DUK
+  unfulfilled: mv_3
+  unfulfilled: sweep
+  cut 2025-03-15
+,21:foresight-decision-12,7:control,1:0,98:swept: 1 091.17 DUK
+  unfulfilled: mv_3
+  unfulfilled: mv_x
+  unfulfilled: sweep
+  cut 2025-03-15
+,21:foresight-decision-13,4:base,1:0,78:swept: 1 409.47 DUK
+  unfulfilled: mv_1
+  unfulfilled: sweep
+  cut 2025-03-28
+,21:foresight-decision-13,5:later,1:0,78:swept: 1 409.47 DUK
+  unfulfilled: mv_1
+  unfulfilled: sweep
+  cut 2025-03-28
+,21:foresight-decision-13,7:control,1:0,98:swept: 1 824.71 DUK
+  unfulfilled: mv_1
+  unfulfilled: mv_x
+  unfulfilled: sweep
+  cut 2025-03-28
+,21:foresight-decision-14,4:base,1:0,98:swept: 1 415.69 DUK
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: sweep
+  cut 2025-03-17
+,21:foresight-decision-14,5:later,1:0,98:swept: 1 415.69 DUK
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: sweep
+  cut 2025-03-17
+,21:foresight-decision-14,7:control,1:0,118:swept: 2 278.36 DUK
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: mv_x
+  unfulfilled: sweep
+  cut 2025-03-17
+,21:foresight-decision-15,4:base,1:0,56:swept: 563.71 DUK
+  unfulfilled: sweep
+  cut 2025-02-13
+,21:foresight-decision-15,5:later,1:0,56:swept: 563.71 DUK
+  unfulfilled: sweep
+  cut 2025-02-13
+,21:foresight-decision-15,7:control,1:0,78:swept: 1 396.69 DUK
+  unfulfilled: mv_x
+  unfulfilled: sweep
+  cut 2025-02-13
+,21:foresight-decision-16,4:base,1:0,98:swept: 3 240.59 DUK
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: sweep
+  cut 2025-02-05
+,21:foresight-decision-16,5:later,1:0,98:swept: 3 240.59 DUK
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: sweep
+  cut 2025-02-05
+,21:foresight-decision-16,7:control,1:0,118:swept: 3 971.47 DUK
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: mv_x
+  unfulfilled: sweep
+  cut 2025-02-05
+,21:foresight-decision-17,4:base,1:0,275:swept: 4 069.09 DUK
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  unfulfilled: sweep
+  cut 2025-03-23
+warning: WARN-NEGATIVE acc_2 is below zero from 2025-01-23
+warning: WARN-NEGATIVE acc_0 is below zero from 2025-02-10
+warning: WARN-NEGATIVE acc_1 is below zero from 2025-03-11
+,21:foresight-decision-17,5:later,1:0,275:swept: 4 069.09 DUK
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  unfulfilled: sweep
+  cut 2025-03-23
+warning: WARN-NEGATIVE acc_2 is below zero from 2025-01-23
+warning: WARN-NEGATIVE acc_0 is below zero from 2025-02-10
+warning: WARN-NEGATIVE acc_1 is below zero from 2025-03-11
+,21:foresight-decision-17,7:control,1:0,295:swept: 4 504.90 DUK
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  unfulfilled: mv_x
+  unfulfilled: sweep
+  cut 2025-03-23
+warning: WARN-NEGATIVE acc_2 is below zero from 2025-01-23
+warning: WARN-NEGATIVE acc_0 is below zero from 2025-02-10
+warning: WARN-NEGATIVE acc_1 is below zero from 2025-03-11
+,21:foresight-decision-18,4:base,1:0,117:swept: 1 553.25 DUK
+  unfulfilled: sweep
+  cut 2025-02-10
+warning: WARN-NEGATIVE acc_2 is below zero from 2025-02-28
+,21:foresight-decision-18,5:later,1:0,117:swept: 1 553.25 DUK
+  unfulfilled: sweep
+  cut 2025-02-10
+warning: WARN-NEGATIVE acc_2 is below zero from 2025-02-28
+,21:foresight-decision-18,7:control,1:0,137:swept: 2 440.71 DUK
+  unfulfilled: mv_x
+  unfulfilled: sweep
+  cut 2025-02-10
+warning: WARN-NEGATIVE acc_2 is below zero from 2025-02-28
+,21:foresight-decision-19,4:base,1:0,78:swept: 3 553.13 DUK
+  unfulfilled: mv_2
+  unfulfilled: sweep
+  cut 2025-03-21
+,21:foresight-decision-19,5:later,1:0,78:swept: 3 553.13 DUK
+  unfulfilled: mv_2
+  unfulfilled: sweep
+  cut 2025-03-21
+,21:foresight-decision-19,7:control,1:0,98:swept: 4 096.17 DUK
+  unfulfilled: mv_2
+  unfulfilled: mv_x
+  unfulfilled: sweep
+  cut 2025-03-21
+,21:foresight-decision-20,4:base,1:0,117:swept: 1 573.02 DUK
+  unfulfilled: sweep
+  cut 2025-03-19
+warning: WARN-NEGATIVE acc_0 is below zero from 2025-02-20
+,21:foresight-decision-20,5:later,1:0,58:swept: 1 573.02 DUK
+  unfulfilled: sweep
+  cut 2025-03-19
+,21:foresight-decision-20,7:control,1:0,137:swept: 1 620.04 DUK
+  unfulfilled: mv_x
+  unfulfilled: sweep
+  cut 2025-03-19
+warning: WARN-NEGATIVE acc_0 is below zero from 2025-02-20
+,21:foresight-decision-21,4:base,1:0,58:swept: 2 679.40 DUK
+  unfulfilled: sweep
+  cut 2025-03-31
+,21:foresight-decision-21,5:later,1:0,58:swept: 2 679.40 DUK
+  unfulfilled: sweep
+  cut 2025-03-31
+,21:foresight-decision-21,7:control,1:0,78:swept: 2 864.42 DUK
+  unfulfilled: mv_x
+  unfulfilled: sweep
+  cut 2025-03-31
+,21:foresight-decision-22,4:base,1:0,37:swept: 3 202.29 DUK
+  cut 2025-02-13
+,21:foresight-decision-22,5:later,1:0,37:swept: 3 202.29 DUK
+  cut 2025-02-13
+,21:foresight-decision-22,7:control,1:0,57:swept: 3 454.15 DUK
+  unfulfilled: mv_x
+  cut 2025-02-13
+,21:foresight-decision-23,4:base,1:0,76:swept: 858.80 DUK
+  unfulfilled: mv_0
+  unfulfilled: sweep
+  cut 2025-03-30
+,21:foresight-decision-23,5:later,1:0,76:swept: 858.80 DUK
+  unfulfilled: mv_0
+  unfulfilled: sweep
+  cut 2025-03-30
+,21:foresight-decision-23,7:control,1:0,98:swept: 1 622.66 DUK
+  unfulfilled: mv_0
+  unfulfilled: mv_x
+  unfulfilled: sweep
+  cut 2025-03-30
+,23:foresight-projection-00,4:base,1:0,168:swept: 104 857.33 DUK
+  unfulfilled: sweep
+  left out: sweep, 1 instances, first 2025-01-20
+  cut 2025-02-06
+warning: WARN-NEGATIVE acc_3 is below zero from 2025-01-16
+,23:foresight-projection-00,5:later,1:0,227:swept: 104 857.33 DUK
+  unfulfilled: sweep
+  left out: sweep, 1 instances, first 2025-01-20
+  cut 2025-02-06
+warning: WARN-NEGATIVE acc_3 is below zero from 2025-01-16
+warning: WARN-NEGATIVE acc_2 is below zero from 2025-02-16
+,23:foresight-projection-00,7:control,1:0,167:swept: 71 230.33 DUK
+  unfulfilled: sweep
+  left out: sweep, 1 instances, first 2025-01-20
+  cut 2025-02-06
+warning: WARN-NEGATIVE acc_3 is below zero from 2025-01-16
+,23:foresight-projection-01,4:base,1:0,128:swept: 60 768.81 DUK
+  unfulfilled: mv_1
+  unfulfilled: sweep
+  left out: sweep, 1 instances, first 2025-01-30
+  cut 2025-03-05
+,23:foresight-projection-01,5:later,1:0,128:swept: 60 768.81 DUK
+  unfulfilled: mv_1
+  unfulfilled: sweep
+  left out: sweep, 1 instances, first 2025-01-30
+  cut 2025-03-05
+,23:foresight-projection-01,7:control,1:0,128:swept: 25 969.26 DUK
+  unfulfilled: mv_1
+  unfulfilled: sweep
+  left out: sweep, 1 instances, first 2025-01-30
+  cut 2025-03-05
+,23:foresight-projection-02,4:base,1:0,128:swept: 62 208.01 DUK
+  unfulfilled: mv_0
+  unfulfilled: sweep
+  left out: sweep, 1 instances, first 2025-02-05
+  cut 2025-03-19
+,23:foresight-projection-02,5:later,1:0,128:swept: 62 208.01 DUK
+  unfulfilled: mv_0
+  unfulfilled: sweep
+  left out: sweep, 1 instances, first 2025-02-05
+  cut 2025-03-19
+,23:foresight-projection-02,7:control,1:0,128:swept: 31 762.15 DUK
+  unfulfilled: mv_0
+  unfulfilled: sweep
+  left out: sweep, 1 instances, first 2025-02-05
+  cut 2025-03-19
+,23:foresight-projection-03,4:base,1:0,207:swept: 88 418.90 DUK
+  unfulfilled: mv_1
+  unfulfilled: mv_5
+  unfulfilled: sweep
+  left out: sweep, 1 instances, first 2025-01-27
+  cut 2025-02-23
+warning: WARN-NEGATIVE acc_0 is below zero from 2025-01-04
+,23:foresight-projection-03,5:later,1:0,266:swept: 88 418.90 DUK
+  unfulfilled: mv_1
+  unfulfilled: mv_5
+  unfulfilled: sweep
+  left out: sweep, 1 instances, first 2025-01-27
+  cut 2025-02-23
+warning: WARN-NEGATIVE acc_0 is below zero from 2025-01-04
+warning: WARN-NEGATIVE acc_2 is below zero from 2025-03-19
+,23:foresight-projection-03,7:control,1:0,207:swept: 55 095.63 DUK
+  unfulfilled: mv_1
+  unfulfilled: mv_5
+  unfulfilled: sweep
+  left out: sweep, 1 instances, first 2025-01-27
+  cut 2025-02-23
+warning: WARN-NEGATIVE acc_0 is below zero from 2025-01-04
+,23:foresight-projection-04,4:base,1:0,187:swept: 66 028.01 DUK
+  unfulfilled: mv_3
+  unfulfilled: sweep
+  left out: sweep, 1 instances, first 2025-01-22
+  cut 2025-03-04
+warning: WARN-NEGATIVE acc_1 is below zero from 2025-03-11
+,23:foresight-projection-04,5:later,1:0,187:swept: 66 028.01 DUK
+  unfulfilled: mv_3
+  unfulfilled: sweep
+  left out: sweep, 1 instances, first 2025-01-22
+  cut 2025-03-04
+warning: WARN-NEGATIVE acc_1 is below zero from 2025-03-11
+,23:foresight-projection-04,7:control,1:0,187:swept: 33 104.14 DUK
+  unfulfilled: mv_3
+  unfulfilled: sweep
+  left out: sweep, 1 instances, first 2025-01-22
+  cut 2025-03-04
+warning: WARN-NEGATIVE acc_1 is below zero from 2025-03-11
+,23:foresight-projection-05,4:base,1:0,187:swept: 78 030.86 DUK
+  unfulfilled: mv_1
+  unfulfilled: sweep
+  left out: sweep, 1 instances, first 2025-02-20
+  cut 2025-02-21
+warning: WARN-NEGATIVE acc_0 is below zero from 2025-01-12
+,23:foresight-projection-05,5:later,1:0,246:swept: 78 030.86 DUK
+  unfulfilled: mv_1
+  unfulfilled: sweep
+  left out: sweep, 1 instances, first 2025-02-20
+  cut 2025-02-21
+warning: WARN-NEGATIVE acc_0 is below zero from 2025-01-12
+warning: WARN-NEGATIVE acc_2 is below zero from 2025-03-18
+,23:foresight-projection-05,7:control,1:0,187:swept: 43 748.16 DUK
+  unfulfilled: mv_1
+  unfulfilled: sweep
+  left out: sweep, 1 instances, first 2025-02-20
+  cut 2025-02-21
+warning: WARN-NEGATIVE acc_0 is below zero from 2025-01-12
+,23:foresight-projection-06,4:base,1:0,108:swept: 95 936.78 DUK
+  unfulfilled: sweep
+  left out: sweep, 1 instances, first 2025-01-28
+  cut 2025-03-26
+,23:foresight-projection-06,5:later,1:0,167:swept: 95 936.78 DUK
+  unfulfilled: sweep
+  left out: sweep, 1 instances, first 2025-01-28
+  cut 2025-03-26
+warning: WARN-NEGATIVE acc_0 is below zero from 2025-02-20
+,23:foresight-projection-06,7:control,1:0,108:swept: 64 196.11 DUK
+  unfulfilled: sweep
+  left out: sweep, 1 instances, first 2025-01-28
+  cut 2025-03-26
+,23:foresight-projection-07,4:base,1:0,148:swept: 96 792.22 DUK
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  unfulfilled: sweep
+  left out: sweep, 1 instances, first 2025-01-20
+  cut 2025-03-24
+,23:foresight-projection-07,5:later,1:0,207:swept: 96 792.22 DUK
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  unfulfilled: sweep
+  left out: sweep, 1 instances, first 2025-01-20
+  cut 2025-03-24
+warning: WARN-NEGATIVE acc_0 is below zero from 2025-03-28
+,23:foresight-projection-07,7:control,1:0,148:swept: 64 254.99 DUK
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  unfulfilled: sweep
+  left out: sweep, 1 instances, first 2025-01-20
+  cut 2025-03-24
+,23:foresight-projection-08,4:base,1:0,87:swept: 75 916.85 DUK
+  left out: sweep, 1 instances, first 2025-02-18
+  cut 2025-02-12
+,23:foresight-projection-08,5:later,1:0,87:swept: 75 916.85 DUK
+  left out: sweep, 1 instances, first 2025-02-18
+  cut 2025-02-12
+,23:foresight-projection-08,7:control,1:0,87:swept: 44 016.10 DUK
+  left out: sweep, 1 instances, first 2025-02-18
+  cut 2025-02-12
+,23:foresight-projection-09,4:base,1:0,128:swept: 58 777.37 DUK
+  unfulfilled: mv_2
+  unfulfilled: sweep
+  left out: sweep, 1 instances, first 2025-02-19
+  cut 2025-03-14
+,23:foresight-projection-09,5:later,1:0,128:swept: 58 777.37 DUK
+  unfulfilled: mv_2
+  unfulfilled: sweep
+  left out: sweep, 1 instances, first 2025-02-19
+  cut 2025-03-14
+,23:foresight-projection-09,7:control,1:0,128:swept: 26 992.57 DUK
+  unfulfilled: mv_2
+  unfulfilled: sweep
+  left out: sweep, 1 instances, first 2025-02-19
+  cut 2025-03-14
+,23:foresight-projection-10,4:base,1:0,148:swept: 83 176.75 DUK
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: sweep
+  left out: sweep, 1 instances, first 2025-02-22
+  cut 2025-03-27
+,23:foresight-projection-10,5:later,1:0,148:swept: 83 176.75 DUK
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: sweep
+  left out: sweep, 1 instances, first 2025-02-22
+  cut 2025-03-27
+,23:foresight-projection-10,7:control,1:0,148:swept: 52 385.21 DUK
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: sweep
+  left out: sweep, 1 instances, first 2025-02-22
+  cut 2025-03-27
+,23:foresight-projection-11,4:base,1:0,128:swept: 80 724.32 DUK
+  unfulfilled: mv_2
+  unfulfilled: sweep
+  left out: sweep, 1 instances, first 2025-01-27
+  cut 2025-02-19
+,23:foresight-projection-11,5:later,1:0,187:swept: 80 724.32 DUK
+  unfulfilled: mv_2
+  unfulfilled: sweep
+  left out: sweep, 1 instances, first 2025-01-27
+  cut 2025-02-19
+warning: WARN-NEGATIVE acc_1 is below zero from 2025-03-25
+,23:foresight-projection-11,7:control,1:0,128:swept: 50 158.15 DUK
+  unfulfilled: mv_2
+  unfulfilled: sweep
+  left out: sweep, 1 instances, first 2025-01-27
+  cut 2025-02-19
+,23:foresight-projection-12,4:base,1:0,187:swept: 109 625.47 DUK
+  unfulfilled: mv_1
+  unfulfilled: mv_4
+  left out: sweep, 1 instances, first 2025-02-24
+  cut 2025-02-21
+warning: WARN-NEGATIVE acc_1 is below zero from 2025-02-09
+,23:foresight-projection-12,5:later,1:0,246:swept: 109 625.47 DUK
+  unfulfilled: mv_1
+  unfulfilled: mv_4
+  left out: sweep, 1 instances, first 2025-02-24
+  cut 2025-02-21
+warning: WARN-NEGATIVE acc_1 is below zero from 2025-02-09
+warning: WARN-NEGATIVE acc_0 is below zero from 2025-03-26
+,23:foresight-projection-12,7:control,1:0,186:swept: 76 040.13 DUK
+  unfulfilled: mv_1
+  unfulfilled: mv_4
+  left out: sweep, 1 instances, first 2025-02-24
+  cut 2025-02-21
+warning: WARN-NEGATIVE acc_1 is below zero from 2025-02-09
+,23:foresight-projection-13,4:base,1:0,87:swept: 58 693.15 DUK
+  left out: sweep, 1 instances, first 2025-02-19
+  cut 2025-02-16
+,23:foresight-projection-13,5:later,1:0,87:swept: 58 693.15 DUK
+  left out: sweep, 1 instances, first 2025-02-19
+  cut 2025-02-16
+,23:foresight-projection-13,7:control,1:0,87:swept: 26 863.58 DUK
+  left out: sweep, 1 instances, first 2025-02-19
+  cut 2025-02-16
+,23:foresight-projection-14,4:base,1:0,187:swept: 75 121.83 DUK
+  unfulfilled: mv_0
+  unfulfilled: sweep
+  left out: sweep, 1 instances, first 2025-02-21
+  cut 2025-03-16
+warning: WARN-NEGATIVE acc_1 is below zero from 2025-01-23
+,23:foresight-projection-14,5:later,1:0,187:swept: 75 121.83 DUK
+  unfulfilled: mv_0
+  unfulfilled: sweep
+  left out: sweep, 1 instances, first 2025-02-21
+  cut 2025-03-16
+warning: WARN-NEGATIVE acc_1 is below zero from 2025-01-23
+,23:foresight-projection-14,7:control,1:0,187:swept: 43 655.77 DUK
+  unfulfilled: mv_0
+  unfulfilled: sweep
+  left out: sweep, 1 instances, first 2025-02-21
+  cut 2025-03-16
+warning: WARN-NEGATIVE acc_1 is below zero from 2025-01-23
+,23:foresight-projection-15,4:base,1:0,108:swept: 86 648.20 DUK
+  unfulfilled: sweep
+  left out: sweep, 1 instances, first 2025-02-09
+  cut 2025-03-15
+,23:foresight-projection-15,5:later,1:0,167:swept: 86 648.20 DUK
+  unfulfilled: sweep
+  left out: sweep, 1 instances, first 2025-02-09
+  cut 2025-03-15
+warning: WARN-NEGATIVE acc_1 is below zero from 2025-03-26
+,23:foresight-projection-15,7:control,1:0,108:swept: 56 306.32 DUK
+  unfulfilled: sweep
+  left out: sweep, 1 instances, first 2025-02-09
+  cut 2025-03-15
+,23:foresight-projection-16,4:base,1:0,129:swept: 101 849.54 DUK
+  unfulfilled: mv_0
+  unfulfilled: sweep
+  left out: sweep, 1 instances, first 2025-01-25
+  cut 2025-03-25
+,23:foresight-projection-16,5:later,1:0,188:swept: 101 849.54 DUK
+  unfulfilled: mv_0
+  unfulfilled: sweep
+  left out: sweep, 1 instances, first 2025-01-25
+  cut 2025-03-25
+warning: WARN-NEGATIVE acc_1 is below zero from 2025-03-12
+,23:foresight-projection-16,7:control,1:0,128:swept: 71 273.24 DUK
+  unfulfilled: mv_0
+  unfulfilled: sweep
+  left out: sweep, 1 instances, first 2025-01-25
+  cut 2025-03-25
+,23:foresight-projection-17,4:base,1:0,129:swept: 100 667.94 DUK
+  unfulfilled: mv_2
+  unfulfilled: sweep
+  left out: sweep, 1 instances, first 2025-02-01
+  cut 2025-03-08
+,23:foresight-projection-17,5:later,1:0,188:swept: 100 667.94 DUK
+  unfulfilled: mv_2
+  unfulfilled: sweep
+  left out: sweep, 1 instances, first 2025-02-01
+  cut 2025-03-08
+warning: WARN-NEGATIVE acc_1 is below zero from 2025-03-10
+,23:foresight-projection-17,7:control,1:0,128:swept: 68 491.86 DUK
+  unfulfilled: mv_2
+  unfulfilled: sweep
+  left out: sweep, 1 instances, first 2025-02-01
+  cut 2025-03-08
+,23:foresight-projection-18,4:base,1:0,109:swept: 108 806.05 DUK
+  unfulfilled: sweep
+  left out: sweep, 1 instances, first 2025-01-15
+  cut 2025-02-22
+,23:foresight-projection-18,5:later,1:0,168:swept: 108 806.05 DUK
+  unfulfilled: sweep
+  left out: sweep, 1 instances, first 2025-01-15
+  cut 2025-02-22
+warning: WARN-NEGATIVE acc_0 is below zero from 2025-03-15
+,23:foresight-projection-18,7:control,1:0,108:swept: 76 590.16 DUK
+  unfulfilled: sweep
+  left out: sweep, 1 instances, first 2025-01-15
+  cut 2025-02-22
+,23:foresight-projection-19,4:base,1:0,128:swept: 87 021.19 DUK
+  unfulfilled: mv_3
+  unfulfilled: sweep
+  left out: sweep, 1 instances, first 2025-01-27
+  cut 2025-03-19
+,23:foresight-projection-19,5:later,1:0,187:swept: 87 021.19 DUK
+  unfulfilled: mv_3
+  unfulfilled: sweep
+  left out: sweep, 1 instances, first 2025-01-27
+  cut 2025-03-19
+warning: WARN-NEGATIVE acc_1 is below zero from 2025-03-21
+,23:foresight-projection-19,7:control,1:0,128:swept: 55 276.98 DUK
+  unfulfilled: mv_3
+  unfulfilled: sweep
+  left out: sweep, 1 instances, first 2025-01-27
+  cut 2025-03-19
+,23:foresight-projection-20,4:base,1:0,227:swept: 88 094.02 DUK
+  unfulfilled: mv_1
+  unfulfilled: mv_3
+  unfulfilled: mv_4
+  unfulfilled: sweep
+  left out: sweep, 1 instances, first 2025-02-16
+  cut 2025-03-26
+warning: WARN-NEGATIVE acc_1 is below zero from 2025-02-09
+,23:foresight-projection-20,5:later,1:0,286:swept: 88 094.02 DUK
+  unfulfilled: mv_1
+  unfulfilled: mv_3
+  unfulfilled: mv_4
+  unfulfilled: sweep
+  left out: sweep, 1 instances, first 2025-02-16
+  cut 2025-03-26
+warning: WARN-NEGATIVE acc_1 is below zero from 2025-02-09
+warning: WARN-NEGATIVE acc_0 is below zero from 2025-03-06
+,23:foresight-projection-20,7:control,1:0,227:swept: 54 982.60 DUK
+  unfulfilled: mv_1
+  unfulfilled: mv_3
+  unfulfilled: mv_4
+  unfulfilled: sweep
+  left out: sweep, 1 instances, first 2025-02-16
+  cut 2025-03-26
+warning: WARN-NEGATIVE acc_1 is below zero from 2025-02-09
+,23:foresight-projection-21,4:base,1:0,107:swept: 91 026.59 DUK
+  unfulfilled: mv_1
+  left out: sweep, 1 instances, first 2025-02-28
+  cut 2025-02-23
+,23:foresight-projection-21,5:later,1:0,166:swept: 91 026.59 DUK
+  unfulfilled: mv_1
+  left out: sweep, 1 instances, first 2025-02-28
+  cut 2025-02-23
+warning: WARN-NEGATIVE acc_1 is below zero from 2025-03-20
+,23:foresight-projection-21,7:control,1:0,107:swept: 60 519.02 DUK
+  unfulfilled: mv_1
+  left out: sweep, 1 instances, first 2025-02-28
+  cut 2025-02-23
+,23:foresight-projection-22,4:base,1:0,167:swept: 85 842.30 DUK
+  unfulfilled: sweep
+  left out: sweep, 1 instances, first 2025-01-23
+  cut 2025-03-30
+warning: WARN-NEGATIVE acc_0 is below zero from 2025-02-09
+,23:foresight-projection-22,5:later,1:0,226:swept: 85 842.30 DUK
+  unfulfilled: sweep
+  left out: sweep, 1 instances, first 2025-01-23
+  cut 2025-03-30
+warning: WARN-NEGATIVE acc_0 is below zero from 2025-02-09
+warning: WARN-NEGATIVE acc_1 is below zero from 2025-03-31
+,23:foresight-projection-22,7:control,1:0,167:swept: 54 728.68 DUK
+  unfulfilled: sweep
+  left out: sweep, 1 instances, first 2025-01-23
+  cut 2025-03-30
+warning: WARN-NEGATIVE acc_0 is below zero from 2025-02-09
+,23:foresight-projection-23,4:base,1:0,108:swept: 85 610.78 DUK
+  unfulfilled: sweep
+  left out: sweep, 1 instances, first 2025-02-01
+  cut 2025-03-13
+,23:foresight-projection-23,5:later,1:0,167:swept: 85 610.78 DUK
+  unfulfilled: sweep
+  left out: sweep, 1 instances, first 2025-02-01
+  cut 2025-03-13
+warning: WARN-NEGATIVE acc_2 is below zero from 2025-02-16
+,23:foresight-projection-23,7:control,1:0,108:swept: 50 714.58 DUK
+  unfulfilled: sweep
+  left out: sweep, 1 instances, first 2025-02-01
+  cut 2025-03-13
+,7:hole-00,4:base,1:0,341:bals: (2 912.20 DUK, 3 148.26 DUK)
+  unfulfilled: mv_1
+  unfulfilled: mv_3
+  unfulfilled: mv_4
+  unfulfilled: sweep
+  cut 2025-03-07
+flows_all: (-1 215.00 DUK, -364.67 DUK, 1 579.67 DUK)
+  unfulfilled: mv_1
+  unfulfilled: mv_3
+  unfulfilled: mv_4
+  unfulfilled: sweep
+  cut 2025-03-07
+zero: (0.00 DUK, 0.00 DUK, 293.61 DUK)
+  cut 2025-03-07
+,7:hole-00,7:dropped,1:0,507:bals: (?"How much does mv_0 move?" (amt_mv_0), 3 148.26 DUK)
+  unfulfilled: mv_1
+  unfulfilled: mv_3
+  unfulfilled: mv_4
+  unfulfilled: sweep
+  cut 2025-03-07
+flows_all: (?"How much does mv_0 move?" (amt_mv_0), ?"How much does mv_0 move?" (amt_mv_0), 1 579.67 DUK)
+  unfulfilled: mv_1
+  unfulfilled: mv_3
+  unfulfilled: mv_4
+  unfulfilled: sweep
+  cut 2025-03-07
+zero: (?"How much does mv_0 move?" (amt_mv_0), ?"How much does mv_0 move?" (amt_mv_0), ?"How much does mv_0 move?" (amt_mv_0))
+  cut 2025-03-07
+,7:hole-01,4:base,1:0,438:bals: (4 474.03 DUK, 238.36 DUK, -808.85 DUK)
+  unfulfilled: mv_1
+  unfulfilled: mv_3
+  unfulfilled: mv_4
+  unfulfilled: mv_5
+  cut 2025-03-08
+flows_all: (-3 485.82 DUK, 2 713.07 DUK, 2 940.38 DUK, -349.08 DUK, -1 818.55 DUK)
+  unfulfilled: mv_1
+  unfulfilled: mv_3
+  unfulfilled: mv_4
+  unfulfilled: mv_5
+  cut 2025-03-08
+zero: (0.00 DUK, 0.00 DUK, 349.08 DUK)
+  cut 2025-03-08
+warning: WARN-NEGATIVE acc_2 is below zero from 2025-01-14
+,7:hole-01,7:dropped,1:0,685:bals: (?"How much does mv_5 move?" (amt_mv_5), ?"How much does mv_5 move?" (amt_mv_5), ?"How much does mv_5 move?" (amt_mv_5))
+  unfulfilled: mv_1
+  unfulfilled: mv_3
+  unfulfilled: mv_4
+  unfulfilled: mv_5
+  cut 2025-03-08
+flows_all: (-3 485.82 DUK, 2 713.07 DUK, ?"How much does mv_5 move?" (amt_mv_5), ?"How much does mv_5 move?" (amt_mv_5), ?"How much does mv_5 move?" (amt_mv_5))
+  unfulfilled: mv_1
+  unfulfilled: mv_3
+  unfulfilled: mv_4
+  unfulfilled: mv_5
+  cut 2025-03-08
+zero: (?"How much does mv_5 move?" (amt_mv_5), ?"How much does mv_5 move?" (amt_mv_5), ?"How much does mv_5 move?" (amt_mv_5))
+  cut 2025-03-08
+warning: WARN-NEGATIVE acc_2 is below zero from 2025-01-14
+,7:hole-02,4:base,1:0,458:bals: (-1 482.22 DUK, 996.46 DUK, 9 946.96 DUK, 4 091.79 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  unfulfilled: mv_4
+  cut 2025-02-15
+flows_all: (-2 461.21 DUK, 0.00 DUK, -2 589.38 DUK, 0.00 DUK, 4 995.72 DUK, 54.87 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  unfulfilled: mv_4
+  cut 2025-02-15
+zero: (0.00 DUK, 0.00 DUK, 522.04 DUK)
+  cut 2025-02-15
+warning: WARN-NEGATIVE acc_0 is below zero from 2025-02-27
+,7:hole-02,7:dropped,1:0,623:bals: (-1 482.22 DUK, 996.46 DUK, ?"How much does mv_0 move?" (amt_mv_0), 4 091.79 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  unfulfilled: mv_4
+  cut 2025-02-15
+flows_all: (?"How much does mv_0 move?" (amt_mv_0), 0.00 DUK, -2 589.38 DUK, 0.00 DUK, ?"How much does mv_0 move?" (amt_mv_0), 54.87 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  unfulfilled: mv_4
+  cut 2025-02-15
+zero: (?"How much does mv_0 move?" (amt_mv_0), ?"How much does mv_0 move?" (amt_mv_0), ?"How much does mv_0 move?" (amt_mv_0))
+  cut 2025-02-15
+warning: WARN-NEGATIVE acc_0 is below zero from 2025-02-27
+,7:hole-03,4:base,1:0,436:bals: (5 836.24 DUK, -2 579.31 DUK, 423.57 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  unfulfilled: mv_3
+  cut 2025-03-22
+flows_all: (28.70 DUK, 584.93 DUK, 3 417.21 DUK, -3 417.21 DUK, -613.63 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  unfulfilled: mv_3
+  cut 2025-03-22
+zero: (0.00 DUK, 0.00 DUK, 1 912.46 DUK)
+  cut 2025-03-22
+warning: WARN-NEGATIVE acc_1 is below zero from 2025-01-30
+,7:hole-03,7:dropped,1:0,565:bals: (?"How much does mv_2 move?" (amt_mv_2), ?"How much does mv_2 move?" (amt_mv_2), 423.57 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  unfulfilled: mv_3
+  cut 2025-03-22
+flows_all: (28.70 DUK, 584.93 DUK, ?"How much does mv_2 move?" (amt_mv_2), ?"How much does mv_2 move?" (amt_mv_2), -613.63 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  unfulfilled: mv_3
+  cut 2025-03-22
+zero: (?"How much does mv_2 move?" (amt_mv_2), ?"How much does mv_2 move?" (amt_mv_2), ?"How much does mv_2 move?" (amt_mv_2))
+  cut 2025-03-22
+,7:hole-04,4:base,1:0,282:bals: (6 362.80 DUK, 4 009.94 DUK, 273.94 DUK, 1 188.65 DUK)
+  unfulfilled: mv_1
+  cut 2025-02-09
+flows_all: (-422.10 DUK, 0.00 DUK, 2 942.53 DUK, 0.00 DUK, -1 175.73 DUK, -1 344.70 DUK)
+  unfulfilled: mv_1
+  cut 2025-02-09
+zero: (0.00 DUK, 0.00 DUK, 1 175.73 DUK)
+  cut 2025-02-09
+,7:hole-04,7:dropped,1:0,448:bals: (6 362.80 DUK, 4 009.94 DUK, ?"How much does mv_1 move?" (amt_mv_1), 1 188.65 DUK)
+  unfulfilled: mv_1
+  cut 2025-02-09
+flows_all: (?"How much does mv_1 move?" (amt_mv_1), 0.00 DUK, 2 942.53 DUK, 0.00 DUK, ?"How much does mv_1 move?" (amt_mv_1), -1 344.70 DUK)
+  unfulfilled: mv_1
+  cut 2025-02-09
+zero: (?"How much does mv_1 move?" (amt_mv_1), ?"How much does mv_1 move?" (amt_mv_1), ?"How much does mv_1 move?" (amt_mv_1))
+  cut 2025-02-09
+,7:hole-05,4:base,1:0,329:bals: (-1 579.64 DUK, 2 847.31 DUK, 3 976.81 DUK, 4 511.17 DUK)
+  unfulfilled: mv_2
+  cut 2025-02-19
+flows_all: (0.00 DUK, -2 066.70 DUK, -199.56 DUK, 633.82 DUK, 1 632.44 DUK)
+  unfulfilled: mv_2
+  cut 2025-02-19
+zero: (0.00 DUK, 0.00 DUK, 199.56 DUK)
+  cut 2025-02-19
+warning: WARN-NEGATIVE acc_0 is below zero from 2025-03-18
+,7:hole-05,7:dropped,1:0,522:bals: (-1 579.64 DUK, ?"How much does mv_2 move?" (amt_mv_2), 3 976.81 DUK, ?"How much does mv_2 move?" (amt_mv_2))
+  unfulfilled: mv_2
+  cut 2025-02-19
+flows_all: (0.00 DUK, -2 066.70 DUK, ?"How much does mv_2 move?" (amt_mv_2), 633.82 DUK, ?"How much does mv_2 move?" (amt_mv_2))
+  unfulfilled: mv_2
+  cut 2025-02-19
+zero: (?"How much does mv_2 move?" (amt_mv_2), ?"How much does mv_2 move?" (amt_mv_2), ?"How much does mv_2 move?" (amt_mv_2))
+  cut 2025-02-19
+warning: WARN-NEGATIVE acc_0 is below zero from 2025-03-18
+,7:hole-06,4:base,1:0,333:bals: (1 460.72 DUK, 1 194.20 DUK, 5 904.74 DUK)
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  unfulfilled: sweep
+  cut 2025-03-10
+flows_all: (1 479.66 DUK, -2 093.43 DUK, -1 906.23 DUK, 2 520.00 DUK)
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  unfulfilled: sweep
+  cut 2025-03-10
+zero: (0.00 DUK, 0.00 DUK, 1 531.24 DUK)
+  cut 2025-03-10
+,7:hole-06,7:dropped,1:0,497:bals: (1 460.72 DUK, 1 194.20 DUK, ?"How much does mv_0 move?" (amt_mv_0))
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  unfulfilled: sweep
+  cut 2025-03-10
+flows_all: (?"How much does mv_0 move?" (amt_mv_0), -2 093.43 DUK, -1 906.23 DUK, ?"How much does mv_0 move?" (amt_mv_0))
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  unfulfilled: sweep
+  cut 2025-03-10
+zero: (?"How much does mv_0 move?" (amt_mv_0), ?"How much does mv_0 move?" (amt_mv_0), ?"How much does mv_0 move?" (amt_mv_0))
+  cut 2025-03-10
+,7:hole-07,4:base,1:0,368:bals: (2 972.90 DUK, 1 799.08 DUK, 3 694.13 DUK, 3 541.39 DUK)
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  unfulfilled: sweep
+  cut 2025-03-01
+flows_all: (2 863.80 DUK, 0.00 DUK, -1 265.01 DUK, -905.50 DUK, -1 071.81 DUK, 378.52 DUK)
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  unfulfilled: sweep
+  cut 2025-03-01
+zero: (0.00 DUK, 0.00 DUK, 1 071.81 DUK)
+  cut 2025-03-01
+,7:hole-07,7:dropped,1:0,531:bals: (2 972.90 DUK, 1 799.08 DUK, ?"How much does mv_0 move?" (amt_mv_0), 3 541.39 DUK)
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  unfulfilled: sweep
+  cut 2025-03-01
+flows_all: (?"How much does mv_0 move?" (amt_mv_0), 0.00 DUK, -1 265.01 DUK, -905.50 DUK, ?"How much does mv_0 move?" (amt_mv_0), 378.52 DUK)
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  unfulfilled: sweep
+  cut 2025-03-01
+zero: (?"How much does mv_0 move?" (amt_mv_0), ?"How much does mv_0 move?" (amt_mv_0), ?"How much does mv_0 move?" (amt_mv_0))
+  cut 2025-03-01
+,7:hole-08,4:base,1:0,276:bals: (351.88 DUK, 2 002.60 DUK, 4 982.69 DUK, 4 879.87 DUK)
+  unfulfilled: mv_1
+  cut 2025-02-17
+flows_all: (-1 591.82 DUK, 0.00 DUK, 111.53 DUK, 0.00 DUK, 0.00 DUK, 1 480.29 DUK)
+  unfulfilled: mv_1
+  cut 2025-02-17
+zero: (0.00 DUK, 0.00 DUK, 1 591.82 DUK)
+  cut 2025-02-17
+,7:hole-08,7:dropped,1:0,439:bals: (351.88 DUK, 2 002.60 DUK, 4 982.69 DUK, ?"How much does mv_0 move?" (amt_mv_0))
+  unfulfilled: mv_1
+  cut 2025-02-17
+flows_all: (?"How much does mv_0 move?" (amt_mv_0), 0.00 DUK, 111.53 DUK, 0.00 DUK, 0.00 DUK, ?"How much does mv_0 move?" (amt_mv_0))
+  unfulfilled: mv_1
+  cut 2025-02-17
+zero: (?"How much does mv_0 move?" (amt_mv_0), ?"How much does mv_0 move?" (amt_mv_0), ?"How much does mv_0 move?" (amt_mv_0))
+  cut 2025-02-17
+,7:hole-09,4:base,1:0,241:bals: (3 447.86 DUK, -2 579.75 DUK)
+  cut 2025-02-06
+flows_all: (-130.38 DUK, 2 960.22 DUK, -2 829.84 DUK)
+  cut 2025-02-06
+zero: (0.00 DUK, 0.00 DUK, 1 630.25 DUK)
+  cut 2025-02-06
+warning: WARN-NEGATIVE acc_1 is below zero from 2025-02-28
+,7:hole-09,7:dropped,1:0,370:bals: (?"How much does mv_1 move?" (amt_mv_1), ?"How much does mv_1 move?" (amt_mv_1))
+  cut 2025-02-06
+flows_all: (-130.38 DUK, ?"How much does mv_1 move?" (amt_mv_1), ?"How much does mv_1 move?" (amt_mv_1))
+  cut 2025-02-06
+zero: (?"How much does mv_1 move?" (amt_mv_1), ?"How much does mv_1 move?" (amt_mv_1), ?"How much does mv_1 move?" (amt_mv_1))
+  cut 2025-02-06
+,7:hole-10,4:base,1:0,398:bals: (-1 006.85 DUK, 3 885.31 DUK, 4 940.64 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  cut 2025-03-17
+flows_all: (-447.85 DUK, 0.00 DUK, -1 219.48 DUK, -291.69 DUK, 1 959.02 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  cut 2025-03-17
+zero: (0.00 DUK, 0.00 DUK, 1 667.33 DUK)
+  cut 2025-03-17
+warning: WARN-NEGATIVE acc_0 is below zero from 2025-02-04
+,7:hole-10,7:dropped,1:0,564:bals: (-1 006.85 DUK, ?"How much does mv_2 move?" (amt_mv_2), 4 940.64 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  cut 2025-03-17
+flows_all: (?"How much does mv_2 move?" (amt_mv_2), 0.00 DUK, -1 219.48 DUK, ?"How much does mv_2 move?" (amt_mv_2), 1 959.02 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  cut 2025-03-17
+zero: (?"How much does mv_2 move?" (amt_mv_2), ?"How much does mv_2 move?" (amt_mv_2), ?"How much does mv_2 move?" (amt_mv_2))
+  cut 2025-03-17
+warning: WARN-NEGATIVE acc_0 is below zero from 2025-02-04
+,7:hole-11,4:base,1:0,257:bals: (1 331.62 DUK, 4 669.18 DUK, 8 321.44 DUK)
+  unfulfilled: mv_1
+  cut 2025-02-08
+flows_all: (0.00 DUK, -1 875.63 DUK, -2 695.27 DUK, 635.70 DUK, 3 935.20 DUK)
+  unfulfilled: mv_1
+  cut 2025-02-08
+zero: (0.00 DUK, 0.00 DUK, 665.07 DUK)
+  cut 2025-02-08
+,7:hole-11,7:dropped,1:0,451:bals: (1 331.62 DUK, ?"How much does mv_2 move?" (amt_mv_2), ?"How much does mv_2 move?" (amt_mv_2))
+  unfulfilled: mv_1
+  cut 2025-02-08
+flows_all: (0.00 DUK, -1 875.63 DUK, -2 695.27 DUK, ?"How much does mv_2 move?" (amt_mv_2), ?"How much does mv_2 move?" (amt_mv_2))
+  unfulfilled: mv_1
+  cut 2025-02-08
+zero: (?"How much does mv_2 move?" (amt_mv_2), ?"How much does mv_2 move?" (amt_mv_2), ?"How much does mv_2 move?" (amt_mv_2))
+  cut 2025-02-08
+,7:hole-12,4:base,1:0,494:bals: (2 208.28 DUK, -2 584.84 DUK, 5 345.02 DUK, 5 881.89 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  unfulfilled: mv_3
+  unfulfilled: mv_4
+  cut 2025-03-21
+flows_all: (-566.81 DUK, -741.06 DUK, -3 152.19 DUK, 2 678.22 DUK, 1 781.84 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  unfulfilled: mv_3
+  unfulfilled: mv_4
+  cut 2025-03-21
+zero: (0.00 DUK, 0.00 DUK, 415.64 DUK)
+  cut 2025-03-21
+warning: WARN-NEGATIVE acc_1 is below zero from 2025-02-05
+,7:hole-12,7:dropped,1:0,662:bals: (?"How much does mv_1 move?" (amt_mv_1), -2 584.84 DUK, 5 345.02 DUK, 5 881.89 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  unfulfilled: mv_3
+  unfulfilled: mv_4
+  cut 2025-03-21
+flows_all: (?"How much does mv_1 move?" (amt_mv_1), ?"How much does mv_1 move?" (amt_mv_1), -3 152.19 DUK, 2 678.22 DUK, 1 781.84 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  unfulfilled: mv_3
+  unfulfilled: mv_4
+  cut 2025-03-21
+zero: (?"How much does mv_1 move?" (amt_mv_1), ?"How much does mv_1 move?" (amt_mv_1), ?"How much does mv_1 move?" (amt_mv_1))
+  cut 2025-03-21
+warning: WARN-NEGATIVE acc_1 is below zero from 2025-02-05
+,7:hole-13,4:base,1:0,194:bals: (709.04 DUK, 2 339.28 DUK, 3 650.63 DUK)
+  cut 2025-02-28
+flows_all: (719.17 DUK, 0.00 DUK, -719.17 DUK, 0.00 DUK)
+  cut 2025-02-28
+zero: (0.00 DUK, 0.00 DUK, 719.17 DUK)
+  cut 2025-02-28
+,7:hole-13,7:dropped,1:0,363:bals: (709.04 DUK, ?"How much does mv_0 move?" (amt_mv_0), 3 650.63 DUK)
+  cut 2025-02-28
+flows_all: (?"How much does mv_0 move?" (amt_mv_0), 0.00 DUK, ?"How much does mv_0 move?" (amt_mv_0), 0.00 DUK)
+  cut 2025-02-28
+zero: (?"How much does mv_0 move?" (amt_mv_0), ?"How much does mv_0 move?" (amt_mv_0), ?"How much does mv_0 move?" (amt_mv_0))
+  cut 2025-02-28
+,7:hole-14,4:base,1:0,384:bals: (708.24 DUK, 1 546.40 DUK, 2 262.73 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: sweep
+  cut 2025-03-22
+flows_all: (-115.83 DUK, -1 982.16 DUK, 0.00 DUK, 2 097.99 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: sweep
+  cut 2025-03-22
+zero: (0.00 DUK, 0.00 DUK, 1 323.99 DUK)
+  cut 2025-03-22
+warning: WARN-NEGATIVE acc_2 is below zero from 2025-01-17
+,7:hole-14,7:dropped,1:0,549:bals: (708.24 DUK, 1 546.40 DUK, ?"How much does mv_1 move?" (amt_mv_1))
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: sweep
+  cut 2025-03-22
+flows_all: (?"How much does mv_1 move?" (amt_mv_1), -1 982.16 DUK, 0.00 DUK, ?"How much does mv_1 move?" (amt_mv_1))
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: sweep
+  cut 2025-03-22
+zero: (?"How much does mv_1 move?" (amt_mv_1), ?"How much does mv_1 move?" (amt_mv_1), ?"How much does mv_1 move?" (amt_mv_1))
+  cut 2025-03-22
+warning: WARN-NEGATIVE acc_2 is below zero from 2025-01-17
+,7:hole-15,4:base,1:0,180:bals: (4 319.48 DUK, 617.46 DUK)
+  cut 2025-03-25
+flows_all: (-137.45 DUK, 0.00 DUK, 0.00 DUK, 137.45 DUK)
+  cut 2025-03-25
+zero: (0.00 DUK, 0.00 DUK, 137.45 DUK)
+  cut 2025-03-25
+,7:hole-15,7:dropped,1:0,351:bals: (4 319.48 DUK, ?"How much does mv_0 move?" (amt_mv_0))
+  cut 2025-03-25
+flows_all: (?"How much does mv_0 move?" (amt_mv_0), 0.00 DUK, 0.00 DUK, ?"How much does mv_0 move?" (amt_mv_0))
+  cut 2025-03-25
+zero: (?"How much does mv_0 move?" (amt_mv_0), ?"How much does mv_0 move?" (amt_mv_0), ?"How much does mv_0 move?" (amt_mv_0))
+  cut 2025-03-25
+,7:hole-16,4:base,1:0,448:bals: (3 899.26 DUK, 2 883.73 DUK, 4 095.13 DUK, 2 576.78 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  unfulfilled: mv_3
+  unfulfilled: sweep
+  cut 2025-02-18
+flows_all: (-1 500.10 DUK, 694.18 DUK, 284.89 DUK, 2 081.35 DUK, -462.42 DUK, -1 097.90 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  unfulfilled: mv_3
+  unfulfilled: sweep
+  cut 2025-02-18
+zero: (0.00 DUK, 0.00 DUK, 462.42 DUK)
+  cut 2025-02-18
+,7:hole-16,7:dropped,1:0,641:bals: (3 899.26 DUK, ?"How much does mv_3 move?" (amt_mv_3), ?"How much does mv_3 move?" (amt_mv_3), 2 576.78 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  unfulfilled: mv_3
+  unfulfilled: sweep
+  cut 2025-02-18
+flows_all: (-1 500.10 DUK, 694.18 DUK, 284.89 DUK, ?"How much does mv_3 move?" (amt_mv_3), ?"How much does mv_3 move?" (amt_mv_3), -1 097.90 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  unfulfilled: mv_3
+  unfulfilled: sweep
+  cut 2025-02-18
+zero: (?"How much does mv_3 move?" (amt_mv_3), ?"How much does mv_3 move?" (amt_mv_3), ?"How much does mv_3 move?" (amt_mv_3))
+  cut 2025-02-18
+,7:hole-17,4:base,1:0,276:bals: (5 328.79 DUK, 3 654.08 DUK, 2 828.72 DUK, 2 734.78 DUK)
+  unfulfilled: mv_0
+  cut 2025-02-19
+flows_all: (-1 807.64 DUK, 0.00 DUK, 1 807.64 DUK, 0.00 DUK, 0.00 DUK, 0.00 DUK)
+  unfulfilled: mv_0
+  cut 2025-02-19
+zero: (0.00 DUK, 0.00 DUK, 1 807.64 DUK)
+  cut 2025-02-19
+,7:hole-17,7:dropped,1:0,439:bals: (?"How much does mv_0 move?" (amt_mv_0), 3 654.08 DUK, 2 828.72 DUK, 2 734.78 DUK)
+  unfulfilled: mv_0
+  cut 2025-02-19
+flows_all: (?"How much does mv_0 move?" (amt_mv_0), 0.00 DUK, ?"How much does mv_0 move?" (amt_mv_0), 0.00 DUK, 0.00 DUK, 0.00 DUK)
+  unfulfilled: mv_0
+  cut 2025-02-19
+zero: (?"How much does mv_0 move?" (amt_mv_0), ?"How much does mv_0 move?" (amt_mv_0), ?"How much does mv_0 move?" (amt_mv_0))
+  cut 2025-02-19
+,7:hole-18,4:base,1:0,512:bals: (7 956.91 DUK, -729.59 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: mv_3
+  unfulfilled: mv_4
+  unfulfilled: mv_5
+  unfulfilled: sweep
+  cut 2025-03-29
+flows_all: (581.48 DUK, 1 524.35 DUK, 3 508.27 DUK, -5 614.10 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  unfulfilled: mv_3
+  unfulfilled: mv_4
+  unfulfilled: mv_5
+  unfulfilled: sweep
+  cut 2025-03-29
+zero: (0.00 DUK, 0.00 DUK, 846.64 DUK)
+  cut 2025-03-29
+warning: WARN-NEGATIVE acc_1 is below zero from 2025-03-22
+,7:hole-18,7:dropped,1:0,621:bals: (7 956.91 DUK, ?"How much does mv_3 move?" (amt_mv_3))
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: mv_3
+  unfulfilled: mv_4
+  unfulfilled: mv_5
+  unfulfilled: sweep
+  cut 2025-03-29
+flows_all: (?"How much does mv_3 move?" (amt_mv_3), 1 524.35 DUK, 3 508.27 DUK, ?"How much does mv_3 move?" (amt_mv_3))
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: mv_2
+  unfulfilled: mv_3
+  unfulfilled: mv_4
+  unfulfilled: mv_5
+  unfulfilled: sweep
+  cut 2025-03-29
+zero: (?"How much does mv_3 move?" (amt_mv_3), ?"How much does mv_3 move?" (amt_mv_3), ?"How much does mv_3 move?" (amt_mv_3))
+  cut 2025-03-29
+,7:hole-19,4:base,1:0,334:bals: (-574.69 DUK, 3 338.26 DUK, 1 214.27 DUK, 5 208.99 DUK)
+  unfulfilled: mv_0
+  cut 2025-02-03
+flows_all: (-715.53 DUK, -2 820.47 DUK, 2 820.47 DUK, -527.37 DUK, 1 242.90 DUK)
+  unfulfilled: mv_0
+  cut 2025-02-03
+zero: (0.00 DUK, 0.00 DUK, 1 939.14 DUK)
+  cut 2025-02-03
+warning: WARN-NEGATIVE acc_0 is below zero from 2025-03-17
+,7:hole-19,7:dropped,1:0,465:bals: (?"How much does mv_3 move?" (amt_mv_3), ?"How much does mv_3 move?" (amt_mv_3), 1 214.27 DUK, 5 208.99 DUK)
+  unfulfilled: mv_0
+  cut 2025-02-03
+flows_all: (-715.53 DUK, ?"How much does mv_3 move?" (amt_mv_3), ?"How much does mv_3 move?" (amt_mv_3), -527.37 DUK, 1 242.90 DUK)
+  unfulfilled: mv_0
+  cut 2025-02-03
+zero: (?"How much does mv_3 move?" (amt_mv_3), ?"How much does mv_3 move?" (amt_mv_3), ?"How much does mv_3 move?" (amt_mv_3))
+  cut 2025-02-03
+,7:hole-20,4:base,1:0,260:bals: (3 572.43 DUK, 2 566.29 DUK)
+  unfulfilled: mv_0
+  unfulfilled: sweep
+  cut 2025-03-30
+flows_all: (-1 565.65 DUK, 948.79 DUK, 616.86 DUK)
+  unfulfilled: mv_0
+  unfulfilled: sweep
+  cut 2025-03-30
+zero: (0.00 DUK, 0.00 DUK, 1 565.65 DUK)
+  cut 2025-03-30
+,7:hole-20,7:dropped,1:0,479:bals: (?"How much does mv_0 move?" (amt_mv_0), ?"How much does mv_0 move?" (amt_mv_0))
+  unfulfilled: mv_0
+  unfulfilled: sweep
+  cut 2025-03-30
+flows_all: (?"How much does mv_0 move?" (amt_mv_0), ?"How much does mv_0 move?" (amt_mv_0), ?"How much does mv_0 move?" (amt_mv_0))
+  unfulfilled: mv_0
+  unfulfilled: sweep
+  cut 2025-03-30
+zero: (?"How much does mv_0 move?" (amt_mv_0), ?"How much does mv_0 move?" (amt_mv_0), ?"How much does mv_0 move?" (amt_mv_0))
+  cut 2025-03-30
+,7:hole-21,4:base,1:0,387:bals: (-1 223.41 DUK, -745.46 DUK, 1 135.50 DUK, 3 503.30 DUK)
+  unfulfilled: mv_1
+  cut 2025-02-03
+flows_all: (0.00 DUK, -1 740.05 DUK, -747.86 DUK, 740.21 DUK, 1 747.70 DUK)
+  unfulfilled: mv_1
+  cut 2025-02-03
+zero: (0.00 DUK, 0.00 DUK, 740.21 DUK)
+  cut 2025-02-03
+warning: WARN-NEGATIVE acc_0 is below zero from 2025-01-11
+warning: WARN-NEGATIVE acc_1 is below zero from 2025-02-22
+,7:hole-21,7:dropped,1:0,520:bals: (?"How much does mv_1 move?" (amt_mv_1), -745.46 DUK, ?"How much does mv_1 move?" (amt_mv_1), 3 503.30 DUK)
+  unfulfilled: mv_1
+  cut 2025-02-03
+flows_all: (0.00 DUK, ?"How much does mv_1 move?" (amt_mv_1), -747.86 DUK, ?"How much does mv_1 move?" (amt_mv_1), 1 747.70 DUK)
+  unfulfilled: mv_1
+  cut 2025-02-03
+zero: (?"How much does mv_1 move?" (amt_mv_1), ?"How much does mv_1 move?" (amt_mv_1), ?"How much does mv_1 move?" (amt_mv_1))
+  cut 2025-02-03
+warning: WARN-NEGATIVE acc_1 is below zero from 2025-02-22
+,7:hole-22,4:base,1:0,325:bals: -2 186.22 DUK
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  cut 2025-02-23
+flows_all: (-141.57 DUK, 3 121.55 DUK, -2 979.98 DUK)
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: mv_3
+  cut 2025-02-23
+zero: (0.00 DUK, 0.00 DUK, 1 544.11 DUK)
+  cut 2025-02-23
+warning: WARN-NEGATIVE acc_0 is below zero from 2025-01-17
+,7:hole-22,7:dropped,1:0,428:bals: ?"How much does mv_1 move?" (amt_mv_1)
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  cut 2025-02-23
+flows_all: (-141.57 DUK, ?"How much does mv_1 move?" (amt_mv_1), ?"How much does mv_1 move?" (amt_mv_1))
+  unfulfilled: mv_0
+  unfulfilled: mv_1
+  unfulfilled: mv_3
+  cut 2025-02-23
+zero: (?"How much does mv_1 move?" (amt_mv_1), ?"How much does mv_1 move?" (amt_mv_1), ?"How much does mv_1 move?" (amt_mv_1))
+  cut 2025-02-23
+,7:hole-23,4:base,1:0,333:bals: (-229.49 DUK, 1 286.92 DUK)
+  unfulfilled: mv_3
+  unfulfilled: sweep
+  cut 2025-02-13
+flows_all: (1 200.09 DUK, 1 402.11 DUK, -277.27 DUK, -2 324.93 DUK)
+  unfulfilled: mv_3
+  unfulfilled: sweep
+  cut 2025-02-13
+zero: (0.00 DUK, 0.00 DUK, 970.48 DUK)
+  cut 2025-02-13
+warning: WARN-NEGATIVE acc_0 is below zero from 2025-02-13
+,7:hole-23,7:dropped,1:0,493:bals: (?"How much does mv_3 move?" (amt_mv_3), ?"How much does mv_3 move?" (amt_mv_3))
+  unfulfilled: mv_3
+  unfulfilled: sweep
+  cut 2025-02-13
+flows_all: (1 200.09 DUK, ?"How much does mv_3 move?" (amt_mv_3), ?"How much does mv_3 move?" (amt_mv_3), ?"How much does mv_3 move?" (amt_mv_3))
+  unfulfilled: mv_3
+  unfulfilled: sweep
+  cut 2025-02-13
+zero: (?"How much does mv_3 move?" (amt_mv_3), ?"How much does mv_3 move?" (amt_mv_3), ?"How much does mv_3 move?" (amt_mv_3))
+  cut 2025-02-13
+,
