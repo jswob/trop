@@ -229,6 +229,15 @@ def check_manifests(problems):
             problems.append(f"{r}: build-dependencies, though no crate has a build script (R-80)")
 
 
+# cargo commands the checks, the hooks and CI run, and their short forms: an alias with one
+# of these names in a cargo config above the engine would run something else (R-82)
+CARGO_VERBS = {
+    "build", "b", "check", "c", "test", "t", "run", "r", "bench", "doc", "d", "fmt", "clippy", "fix",
+    "tree", "metadata", "fetch", "update", "rustc", "rustdoc", "install", "nextest", "deny", "mutants",
+    "fuzz", "llvm-cov", "pgo",
+}
+
+
 def cargo_config_problems(path):
     """What in a cargo config file outside the engine would change its build."""
     try:
@@ -238,7 +247,8 @@ def cargo_config_problems(path):
     build = cfg.get("build", {})
     bad = [f"build.{k}" for k in ("rustflags", "rustdocflags", "rustc", "rustc-wrapper", "rustc-workspace-wrapper", "target-dir") if k in build]
     bad += [f"target.{t}.{k}" for t, v in cfg.get("target", {}).items() if isinstance(v, dict) for k in ("rustflags", "linker", "runner") if k in v]
-    bad += [k for k in ("profile", "patch", "source", "unstable") if k in cfg]
+    bad += [k for k in ("profile", "patch", "source", "unstable", "env", "include") if k in cfg]
+    bad += [f"alias.{a}" for a in cfg.get("alias", {}) if a in CARGO_VERBS]
     return [f"{path}: sets {', '.join(bad)}, which changes the engine's build (R-82)"] if bad else []
 
 

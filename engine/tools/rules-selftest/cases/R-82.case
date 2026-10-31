@@ -27,3 +27,37 @@ fn planted() {
 --- run
 CARGO_PROFILE_RELEASE_TEST_OVERFLOW_CHECKS=false CARGO_PROFILE_RELEASE_OVERFLOW_CHECKS=false tools/check step test-release
 cat target/check-logs/test-release.log
+
+case: rustfmt-env-cleared
+tool: run
+expect: FAIL fmt
+--- module
+/// Planted.
+pub fn planted( a : u8 ) -> u8 { a }
+--- run
+RUSTFMT=/usr/bin/true tools/check step fmt
+
+case: bench-env-cleared
+tool: run
+exit: any
+expect: bench variables cleared
+--- run
+GUNGRAUN_REGRESSION=soft CRITERION_HOME=/tmp RUSTC_BOOTSTRAP=1 python3 -I -B -c 'import sys; sys.path.insert(0, "tools"); import check; e = check.clean_env(); print("bench variables " + ("leaked" if any(k.startswith(("GUNGRAUN_", "CRITERION_")) or k == "RUSTC_BOOTSTRAP" for k in e) else "cleared"))'
+
+case: cargo-config-env-above
+tool: run
+expect: sets env, which changes the engine's build (R-82)
+--- write ../.cargo/config.toml
+[env]
+CLIPPY_CONF_DIR = "/tmp"
+--- run
+tools/check-rules
+
+case: cargo-config-alias-above
+tool: run
+expect: sets alias.clippy, which changes the engine's build (R-82)
+--- write ../.cargo/config.toml
+[alias]
+clippy = "check"
+--- run
+tools/check-rules
