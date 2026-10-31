@@ -209,7 +209,7 @@ def check_manifests(problems):
                 problems.append(f"{r}: [lints] must be exactly `workspace = true` (R-80)")
         for bench in m.get("bench", []):
             p = bench.get("path", f"benches/{bench.get('name', '')}.rs")
-            if not p.startswith("benches/"):
+            if not os.path.normpath(p).replace(os.sep, "/").startswith("benches/"):
                 problems.append(f"{r}: bench {bench.get('name')!r} lives outside benches/ ({p}), where the builder could edit it (R-91)")
         tables = [m.get(t, {}) for t in DEP_TABLES]
         tables += [t.get(k, {}) for t in m.get("target", {}).values() for k in DEP_TABLES]
