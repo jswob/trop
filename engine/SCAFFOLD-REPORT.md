@@ -324,9 +324,9 @@ Every copy in .claude/ is its package's file, every patch is in order, nothing i
 [exit 0]
 $ bunx prettier --check .
 [warn] .claude/skills/react-frontend-best-practices/STATE.md
-[warn] packages/drizzle-fixtures/docs/index.md
-[warn] packages/drizzle-fixtures/docs/traits.md
-[warn] packages/toolkit/claude/skills/react-frontend-best-practices/STATE.md
+[warn] docs/index.md (in the drizzle-fixtures package)
+[warn] docs/traits.md (in the drizzle-fixtures package)
+[warn] claude/skills/react-frontend-best-practices/STATE.md (in the toolkit package)
 [exit 1]
 ```
 
