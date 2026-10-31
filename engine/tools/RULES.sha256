@@ -23,6 +23,7 @@ e2852480d1cd4a2895d4463fd93ffa5ef3130baff043989b22848477cc574b18  engine/tools/a
 30a5b62756d7fa964c48db8d0d715298093e496e865a962a441d556bf4df8054  engine/tools/ast-grep/rules/no-allow.yml
 336e185821d6045b3aec0e52bad95c7cf98a6bac9795263a4800317751a16db2  engine/tools/ast-grep/rules/no-cfg-clippy.yml
 c41a1cd931b537f2b0594e59e71a1c4cbac882cd6b5792a5a2203b9f171571ad  engine/tools/ast-grep/rules/no-debug-format.yml
+2d161fe2babe926881b5f8a7a9293e553cefe0d37979f96abebecd63b14e0840  engine/tools/ast-grep/rules/no-dyn.yml
 908af7d54662e83627aa21abf2491caa11c497308accb5d6d140cb3793be74ab  engine/tools/ast-grep/rules/no-float.yml
 8d8867af980b550a64b187834563b6ee29616ea9111172409641fe8cb61caf10  engine/tools/ast-grep/rules/no-module-expect.yml
 406c0efb7163519f7dec05b97c699f36155d5ada0b120e8e7083e86ec1ed35c6  engine/tools/ast-grep/rules/no-non-exhaustive.yml
@@ -38,6 +39,7 @@ a2ef6001ebeaf4609a152b297f3d1ab8e225ac8dc45e47217364a11b5d6e4392  engine/tools/a
 5d35d0a288ca065df3f6b624e6578226d5546df2189aff27837550e821d22568  engine/tools/ast-grep/tests/no-allow-test.yml
 8272e0aca57ab9677739f5625330a6253d87b2eec6d2b84db183e711202f5f3d  engine/tools/ast-grep/tests/no-cfg-clippy-test.yml
 a21ac1ed7c4dcb8e3004e16e34dce50592c15d68cab0e0d1a3576a5875bad842  engine/tools/ast-grep/tests/no-debug-format-test.yml
+302d0854f6cc66bc9a187ea41064e636fa1cca92dbbb52bc552a66e30dbbb431  engine/tools/ast-grep/tests/no-dyn-test.yml
 d6847f0a04a871e2faea06a3a65d764b1c20096cf22d0ba302a639fa930a7647  engine/tools/ast-grep/tests/no-float-test.yml
 35412c6fe74e658cffbbc720e107eef5b719aa7578ff148904d93f32d9d60d27  engine/tools/ast-grep/tests/no-module-expect-test.yml
 9ebc945d5ccfc74eb3b692f02aaa570e8fb8048d4f795ac39824aac62a2fc704  engine/tools/ast-grep/tests/no-non-exhaustive-test.yml
@@ -78,6 +80,7 @@ fff1fe1c355eec9e6a0265ce08765776182ddcb117e1a72a607a424b89130207  engine/tools/m
 0d27126a35a8d23206fe512071557ef0251f03b22d2fe1b632054869e0b1260c  engine/tools/rules-selftest/cases/R-110.case
 511f3cc873adb3268d40a2a7c16a8ab32251fd092a5ae58700346fce8dc9b9f2  engine/tools/rules-selftest/cases/R-111.case
 7d7b544c54776ac9d68112bf79f46f60ca4e4cd98e9c34f68aac53bc330cd55e  engine/tools/rules-selftest/cases/R-12.case
+1b1ccb194b15909ff52a666e79ad2b70156205eb5a6a5be175fa591af3990987  engine/tools/rules-selftest/cases/R-122.case
 841d38474655ecd6f52ae604ca4857d9008aa5fcb68b2c09450afb952779bbfc  engine/tools/rules-selftest/cases/R-123.case
 db12bb21de1e837b211d365200a8c1c8bcd1de7cd9158ec9c6935caeb951b0f1  engine/tools/rules-selftest/cases/R-13.case
 5acded1e6cf8af85b1aabe27d104b1c32f7c6847e718d0ecab44596cdd4640ec  engine/tools/rules-selftest/cases/R-14.case

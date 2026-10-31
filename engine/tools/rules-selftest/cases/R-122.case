@@ -1,0 +1,23 @@
+# R-122: no dyn anywhere in the engine, tests included (no-dyn, an error).
+
+case: dyn-trait-object
+tool: ast-grep
+expect: no-dyn
+--- module
+/// Planted.
+pub fn planted(v: &[u8]) -> Box<dyn Iterator<Item = &u8> + '_> {
+    Box::new(v.iter())
+}
+
+case: dyn-in-test-module
+tool: ast-grep
+expect: no-dyn
+--- module
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn planted() {
+        let f: &dyn Fn(u8) -> u8 = &|x| x;
+        assert_eq!(f(1), 1, "planted");
+    }
+}

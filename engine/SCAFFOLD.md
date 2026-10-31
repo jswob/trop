@@ -259,6 +259,7 @@ One line per rule: the rule (shortened; the rulebook has its full text), what en
 - **R-111** A budget per area, protected, raised only with the user's dated approval. **Enforced by:** the counter; the guard protects the budget file. **Proven by:** selftest: `library-over-budget`, `cli-over-budget`.
 - **R-112** A rule changes only through one procedure: a STOP-REPORT naming the rule, the blocked code and the strict alternative it tried; the lead reproduces it; the user approves in plain words, dated in the rulebook; one commit by the `rules` role with the config, its selftest case, the SCAFFOLD.md map entry and the checksums. **Enforced by:** the guard; rules-selftest; `RULES.sha256`. **Proven by:** selftest: `guard`.
 - **R-113** The audit reads every exception added since the last milestone tag and reports the count and the reasons to the user. **Enforced by:** review. **Proven by:** review only.
+- **R-122** No `dyn` anywhere in the engine's code, its tests included (G1, 2026-10-30); a real need is a STOP-REPORT and an R-112 change, since an ast-grep rule takes no `#[expect]` (R-109). T's runner is T's. **Enforced by:** ast-grep (`no-dyn`, error) on every trait object in `crates/**`, inside macro arguments too. **Proven by:** selftest: `dyn-trait-object`, `dyn-in-test-module`.
 - **R-123** No `impl Trait` arguments: a function names the concrete type it takes (G1, 2026-10-30). **Enforced by:** clippy, error (`impl_trait_in_params`, denied in the workspace lints). **Proven by:** selftest: `impl-trait-argument`.
 
 ## 8. Deviations from C

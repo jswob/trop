@@ -1,0 +1,14 @@
+id: no-dyn
+valid:
+  - 'enum Op { Add, Sub } fn f(op: Op) -> u8 { match op { Op::Add => 1, Op::Sub => 2 } }'
+  - 'fn f(x: impl Fn(u8) -> u8) -> u8 { x(1) }'
+  - 'fn f() -> &''static str { "dyn is only text here" }'
+  - 'fn f() { m!("dyn"); }'
+invalid:
+  - 'fn f(x: &dyn Fn(u8) -> u8) -> u8 { x(1) }'
+  - 'fn f() -> Box<dyn core::fmt::Display> { todo() }'
+  - 'struct S { f: Box<dyn Fn(u8) -> u8 + Send> }'
+  - 'type Handler = fn(&mut dyn core::fmt::Write);'
+  - 'impl dyn Shape { fn area(&self) {} }'
+  - '#[cfg(test)] mod tests { fn f(x: &dyn Fn()) {} }'
+  - 'fn f() { let v = vec![Box::new(1) as Box<dyn Any>]; }'
