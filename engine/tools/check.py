@@ -90,6 +90,7 @@ def steps(mode):
         ("check-frozen", tool("check-frozen"), {}),
         ("check-rules", tool("check-rules"), {}),
         ("headers", tool("headers"), {}),
+        ("trace", tool("trace"), {}),
     ]
     if mode == "fast":
         return fast
