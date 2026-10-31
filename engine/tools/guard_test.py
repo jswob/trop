@@ -274,6 +274,19 @@ BASH = [
     ("sed -i -es/a/b/ engine/spec/DONE.md", SPEC, ""),
     ("python3 -c 'print(1)'", ALL, ""),
     ("perl -ne 'print' /tmp/tally-guard-x.txt", ALL, ""),
+    # issue #15, kept: a bare word that names a protected folder from the cwd is that
+    # folder, whatever it means to the program (`fix.py engine` may write there); an
+    # option's attached value isn't read, so T's runner takes `--interp=engine`
+    ("python3 -I -B engine/tests/run.py --interp engine", set(), ""),
+    ("python3 -I -B tmp/t1/fix.py engine", set(), ""),
+    ("python3 -I -B fix.py tests", TESTS, "engine"),
+    ("python3 -I -B run.py --interp engine", TESTS, "engine/tests"),
+    ("python3 -I -B engine/tests/run.py --interp=engine", ALL, ""),
+    ("python3 -I -B engine/tests/run.py --interp refcore", ALL, ""),
+    # and inline code, a here-document's too, can't tell a read from a write: naming a
+    # path the role can't write refuses it; a script in a file isn't opened
+    ("python3 - <<'EOF'\nprint(open('engine/spec/BUILD-ORDER.md').read())\nEOF", SPEC, ""),
+    ("python3 -I -B tmp/t1/read.py", ALL, ""),
     # F-4: writers and their targets
     ("rustfmt engine/fuzz/fuzz_targets/parse.rs", RULES, ""),
     ("rustfmt --edition 2024 engine/crates/tally/src/lib.rs", BUILD, ""),
