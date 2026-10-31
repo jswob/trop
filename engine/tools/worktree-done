@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# The lead's worktree clean-up (R-132, issue #18): engine/tools/worktree-done <path>, see worktree_done.py
+d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)" || exit 1
+exec python3 -I -B "$d/worktree_done.py" "$@"

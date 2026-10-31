@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# The lead's merge (R-132, issue #18): engine/tools/merge-pr <n>, see merge_pr.py
+d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)" || exit 1
+exec python3 -I -B "$d/merge_pr.py" "$@"

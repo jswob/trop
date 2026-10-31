@@ -100,7 +100,7 @@ ELSEWHERE = {
     "R-98": "the workflow's daily advisories and weekly beta-clippy jobs",
     "R-100": "engine/tools/guard-test (the commit tripwire)",
     "R-112": "a procedure: the guard (guard-test), RULES.sha256 (R-80's cases) and this script",
-    "R-132": "engine/tools/guard-test (the push and merge tripwire)",
+    "R-132": "engine/tools/guard-test (the push and merge tripwire; merge-pr and worktree-done, the lead's)",
 }
 REVIEW = {"R-28", "R-31", "R-40", "R-47", "R-63", "R-76", "R-99", "R-113",
           "R-114", "R-115", "R-116", "R-117", "R-119", "R-121", "R-126", "R-129", "R-131"}
