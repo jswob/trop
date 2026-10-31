@@ -106,6 +106,8 @@ fallible_impl_from = "deny"
 infinite_loop = "deny"
 # readability (R-74: nesting at 5, clippy.toml)
 excessive_nesting = "deny"
+# readability (R-123: a function names the concrete type it takes)
+impl_trait_in_params = "deny"
 # numbers (R-19, R-21, R-22)
 arithmetic_side_effects = "deny"
 as_conversions = "deny"
