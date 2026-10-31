@@ -1,4 +1,7 @@
 //! The Tally engine: a reality goes in as bytes, a result comes out (ENGINE §1).
+//! Spec: none, a stub.
+//! Twin: none, a stub.
+//! Invariants: none yet; every entry point answers `NotImplemented`.
 //!
 //! A stub. Every entry point answers [`NotImplemented`], and the build session
 //! replaces it. Nothing here is a design choice the spec owns.

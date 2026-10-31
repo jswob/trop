@@ -1,5 +1,10 @@
-//! A benchmark stub (gate 12). Benchmarks are instruments: the lead writes the real
-//! ones on the builder's request (R-91).
+//! A benchmark stub for gate 12, timing the stub `parse` on empty input.
+//! Spec: none, a stub.
+//! Twin: none, a stub.
+//! Invariants: none, a stub.
+//!
+//! Benchmarks are instruments: the lead writes the real ones on the builder's request
+//! (R-91).
 
 use criterion::{Criterion, criterion_group, criterion_main};
 use std::hint::black_box;

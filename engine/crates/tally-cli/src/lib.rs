@@ -1,5 +1,8 @@
 //! The `tally` command as a function, `run(args, stdin) -> Output`, which the binary
 //! and the test runner both call (engine-tests §4).
+//! Spec: none, a stub.
+//! Twin: none, a stub.
+//! Invariants: the exit codes stay clear of 101 (a panic) and 134 (an abort).
 //!
 //! A stub. Every command answers "not implemented". The exit codes are placeholders
 //! until the test interface fixes them, and they stay clear of 101 (a panic) and
