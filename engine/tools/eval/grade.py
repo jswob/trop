@@ -157,6 +157,27 @@ def tool_calls(transcript):
     return calls, errors
 
 
+def seal_results(transcript):
+    """Tool results that showed anything from a seal: a path under tmp/holdout/ or a
+    *-hidden.md file's name or line. A command that only prunes or excludes a seal is in
+    seal_hits, never here."""
+    hits = []
+    if not transcript or not os.path.exists(transcript):
+        return hits
+    with open(transcript, encoding="utf-8") as f:
+        for line in f:
+            try:
+                content = (json.loads(line).get("message") or {}).get("content")
+            except ValueError:
+                continue
+            for part in content if isinstance(content, list) else []:
+                if part.get("type") == "tool_result":
+                    body = json.dumps(part.get("content"))
+                    if "holdout" in body or "-hidden.md" in body:
+                        hits.append(body[:300])
+    return hits
+
+
 def seal_hits(transcript):
     calls, _ = tool_calls(transcript)
     return [f"{name}: {text[:200]}" for name, text in calls if "holdout" in text or "-hidden.md" in text]

@@ -332,14 +332,19 @@ def audit():
         if os.path.exists(path):
             with open(path, encoding="utf-8") as f:
                 sessions += [json.loads(line).get("session_id") for line in f if line.strip()]
-    total = 0
+    named, shown = 0, 0
     for session in filter(None, sessions):
-        hits = grade.seal_hits(grade.find_transcript(session))
-        total += len(hits)
-        if hits:
-            print(f"{session}: {hits}")
-    print(f"audit: {len([s for s in sessions if s])} sessions, {total} seal accesses")
-    return 1 if total else 0
+        transcript = grade.find_transcript(session)
+        hits, results = grade.seal_hits(transcript), grade.seal_results(transcript)
+        named += len(hits)
+        shown += len(results)
+        for hit in hits:
+            print(f"{session} named a seal in: {hit}")
+        for result in results:
+            print(f"{session} was SHOWN sealed content: {result}")
+    print(f"audit: {len([s for s in sessions if s])} sessions; {named} tool calls name a seal (read the lines above: "
+          f"a prune or an exclusion is no access); {shown} tool results show sealed content")
+    return 1 if shown else 0
 
 
 def main(argv):
