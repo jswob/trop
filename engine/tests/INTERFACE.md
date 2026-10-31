@@ -61,7 +61,7 @@ refcore takes the files in the order of its command line, and a directory in `os
 - **A synthetic pair** (`tmp/t1/syn/`, two files that each fail to load): refcore prints only the refusal of the file it read first, so `run a.tally b.tally` and `run b.tally a.tally` print different lines.
 - **The spec:** L §9 says the order of files changes nothing, and E §3.1 orders files only for the hash. Neither says in what order warnings print (L §8.5), nor which refusal prints when several files have one (L §8.3).
 
-**So the order reaches the output, and the spec doesn't say what it should be.** That is a spec question (DONE rule 3), open at gate G-T (issue #5). Until it is answered, T compares nothing that depends on it: the property tests' realities read every item they declare, so they raise no `WARN-UNREAD`, and no check is changed.
+**So the order reaches the output, and the spec doesn't say what it should be.** A spec question (DONE rule 3), **decided by the user at G-T, 2026-10-31: "Sort warnings"**: warnings print sorted by code, then by their text, whatever the files' order; when several load refusals exist, the first in full-path order (then by line) prints. The spec patch, refcore's fix and the re-run of the affected baselines are issue #13. Until then, T compares nothing that depends on it: the property tests' realities read every item they declare, so they raise no `WARN-UNREAD`, and no check is changed.
 
 ## 6. What the tests role keeps of this page
 
@@ -91,10 +91,10 @@ Each is something refcore does that the engine can't copy, or a place the spec i
 
 | # | Where | refcore | The engine | Who decides |
 |---|---|---|---|---|
-| I-1 | a path that doesn't exist | crashes: a Python traceback on stderr, exit 1 (`run_paths`' `open`) | can't crash (R-2); needs a refusal code and message, which L §8.3 doesn't list | the spec role |
-| I-2 | `reprint` of a file that isn't UTF-8 | crashes (`main` decodes without the `run` path's catch) | as `run`: `LOAD-PARSE … file is not UTF-8` is the likely reading | the spec role |
+| I-1 | a path that doesn't exist | crashes: a Python traceback on stderr, exit 1 (`run_paths`' `open`) | can't crash (R-2); needs a refusal code and message, which L §8.3 doesn't list | the spec role, issue #13 |
+| I-2 | `reprint` of a file that isn't UTF-8 | crashes (`main` decodes without the `run` path's catch) | as `run`: `LOAD-PARSE … file is not UTF-8` is the likely reading | the spec role, issue #13 |
 | I-3 | `reprint`'s path names | relative to a directory given, else the file's base name, so two files given from different folders with one name collide | follows refcore | T, when a check needs `reprint` |
 | I-4 | `--pin=` with a word other than `bytes` | taken as the canonical pin, silently | follows refcore, or refuses as a usage error | the spec role, if a check ever sends one |
-| I-5 | the order of the files: which refusal prints when several files each have one, and the order of `WARN-UNREAD` lines | §5: the command line's order | §5: R-40's full-path order | the user, at G-T (a spec question) |
+| I-5 | the order of the files: which refusal prints when several files each have one, and the order of `WARN-UNREAD` lines | §5: the command line's order | §5: R-40's full-path order | decided at G-T: sorted warnings, the first refusal by full path; issue #13 |
 
 8c's draft said two checks name a directory or a non-`.tally` path; at `eb16d53` none does (the two key scripts name a `.py` and `.md` files, and run no engine).
