@@ -1,0 +1,11 @@
+id: no-macro-definition
+language: rust
+severity: error
+message: "R-73: no macro_rules! in the library outside the lead's list of files; write a plain function"
+note: "The lead's list is this rule's `ignores:`, empty at the scaffold; a file joins it only through R-112. macro-definition-review still lists every macro, the listed files' included. Test modules are not exempt."
+files:
+  - 'crates/*/src/**/*.rs'
+# The lead's list (R-73): the files allowed to define a macro. Changed only through R-112.
+ignores: []
+rule:
+  kind: macro_definition
