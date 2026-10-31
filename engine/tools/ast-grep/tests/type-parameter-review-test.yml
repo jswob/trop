@@ -1,0 +1,17 @@
+id: type-parameter-review
+valid:
+  - 'fn f(x: Option<u8>) -> Result<u8, E> { todo() }'
+  - "struct Cursor<'a> { text: &'a str }"
+  - 'fn f() -> impl Iterator<Item = u8> { todo() }'
+  - 'fn f(v: Vec<u8>) -> u8 { v.into_iter().collect::<Vec<u8>>().len() }'
+  - '#[cfg(test)] mod tests { fn f<T>(x: T) -> T { x } }'
+invalid:
+  - 'fn f<T>(x: T) -> T { x }'
+  - 'struct Table<I, T> { rows: Vec<(I, T)> }'
+  - 'enum E<T> { A(T) }'
+  - 'impl<T> S<T> { fn f(&self) {} }'
+  - 'trait Tr<T> { fn f(&self, t: T); }'
+  - 'struct A<const N: usize> { v: [u8; N] }'
+  - 'type Pair<T> = (T, T);'
+  - 'fn f(x: impl Iterator<Item = u8>) -> u8 { todo() }'
+  - 'fn f(x: &impl core::fmt::Display) {}'

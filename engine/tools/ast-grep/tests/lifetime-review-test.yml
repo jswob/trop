@@ -1,0 +1,14 @@
+id: lifetime-review
+valid:
+  - 'fn f() -> &''static str { "x" }'
+  - "fn f(f: &mut core::fmt::Formatter<'_>) {}"
+  - 'fn f(x: &str) -> &str { x }'
+  - "fn f() { 'outer: loop { break 'outer; } }"
+  - "fn f<T: 'static>(t: T) {}"
+  - "#[cfg(test)] mod tests { struct C<'a> { t: &'a str } }"
+invalid:
+  - "struct Cursor<'a> { text: &'a str, at: usize }"
+  - "fn longest<'a>(a: &'a str, b: &'a str) -> &'a str { a }"
+  - "impl<'a> Cursor<'a> { fn f(&self) {} }"
+  - "fn f(g: &dyn for<'b> Fn(&'b str)) {}"
+  - "enum E<'a, 'b: 'a> { A(&'a u8), B(&'b u8) }"

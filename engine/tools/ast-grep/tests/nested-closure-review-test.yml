@@ -1,0 +1,9 @@
+id: nested-closure-review
+valid:
+  - 'fn f(v: &[u8]) -> Vec<u8> { v.iter().map(|x| x + 1).filter(|x| *x > 2).collect() }'
+  - 'fn f() { let g = |x: u8| x + 1; let h = |y: u8| y; }'
+  - '#[cfg(test)] mod tests { fn f() { let g = |x: u8| move |y: u8| x + y; } }'
+invalid:
+  - 'fn f() { let g = |x: u8| move |y: u8| x + y; }'
+  - 'fn f(v: &[Vec<u8>]) -> u8 { v.iter().map(|r| r.iter().filter(|x| **x > 0).count()).sum() }'
+  - 'fn f() { let g = |x: u8| { let h = |y: u8| y; h(x) }; }'

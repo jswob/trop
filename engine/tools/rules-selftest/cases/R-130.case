@@ -1,0 +1,22 @@
+# R-130 (report): #[inline(always)] and #[cold] outside a fence are listed for review.
+# The fences are the rule's ignores:, empty at the scaffold.
+
+case: inline-always
+tool: ast-grep
+expect: inline-hint-review
+--- module
+/// Planted.
+#[inline(always)]
+pub fn planted() -> u8 {
+    1
+}
+
+case: cold
+tool: ast-grep
+expect: inline-hint-review
+--- module
+/// Planted.
+#[cold]
+pub fn planted() -> u8 {
+    1
+}

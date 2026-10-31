@@ -1,0 +1,30 @@
+id: inline-hint-review
+language: rust
+severity: warning
+message: 'R-130 (report): #[inline(always)] or #[cold] outside a fence, listed for review: optimised code lives only in fence modules'
+note: "The fences are this rule's ignores:, empty at the scaffold; the lead adds each fence's file through R-112."
+files:
+  - 'crates/*/src/**/*.rs'
+# The fences (R-130): one file each, added by the lead through R-112.
+ignores: []
+utils:
+  in-test-module:
+    inside:
+      kind: mod_item
+      stopBy: end
+      follows:
+        kind: attribute_item
+        regex: '^#\[cfg\(test\)\]$'
+        stopBy:
+          not:
+            any:
+              - kind: attribute_item
+              - kind: line_comment
+              - kind: block_comment
+rule:
+  any:
+    - kind: attribute_item
+    - kind: inner_attribute_item
+  regex: '(?s)^#!?\[\s*(cfg_attr\s*\(.*[(,]\s*)?(cold|inline\s*\(\s*always\s*\))\s*[,)\]]'
+  not:
+    matches: in-test-module

@@ -1,0 +1,29 @@
+# R-125 (report): a chain of 5 or more method calls, and a closure inside a closure,
+# are listed for review; a chain of 4 is not.
+
+case: long-chain
+tool: ast-grep
+expect: long-chain-review
+--- module
+/// Planted.
+pub fn planted(v: &[u8]) -> Vec<u8> {
+    v.iter().copied().filter(|x| *x > 1).rev().collect()
+}
+
+case: nested-closure
+tool: ast-grep
+expect: nested-closure-review
+--- module
+/// Planted.
+pub fn planted(v: &[Vec<u8>]) -> usize {
+    v.iter().map(|r| r.iter().filter(|x| **x > 0).count()).count()
+}
+
+case: four-step-chain-not-listed
+tool: ast-grep
+expect: pass
+--- module
+/// Planted.
+pub fn planted(v: &[u8]) -> Vec<u8> {
+    v.iter().copied().filter(|x| *x > 1).collect()
+}
