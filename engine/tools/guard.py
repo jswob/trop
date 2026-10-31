@@ -14,6 +14,9 @@ The role comes from TALLY_ROLE (R-79):
   spec   the clean-side lead patching the spec: engine/spec/ and the oracle only
   unset  app work: anything but the spec, the oracle, the tests and the rule files
 
+Every role also writes tmp/, the local scratch nothing tracks (issue #11); the four
+above don't write the sealed tmp/holdout/ and tmp/cases-holdout/, or tmp/active/.
+
 The oracle is the spec's reference interpreter: engine/tools/refcore/, refcore_fast/
 and engine/tools/SHA256SUMS (refcore's checksums). It is frozen with the spec.
 
@@ -87,6 +90,9 @@ BUILD_FILES = {
     "engine/mutants-survivors.md",
     "engine/exceptions.lock",
 }
+# tmp/ is local scratch, never tracked, which every role writes (issue #11), but these
+# and tmp/active/ (the master's briefs); app work keeps all of tmp/
+SEALED_SCRATCH = ("tmp/holdout", "tmp/cases-holdout")
 
 WRITERS = {
     "cp", "mv", "rm", "rmdir", "touch", "ln", "install", "rsync", "dd", "truncate",
@@ -247,9 +253,27 @@ def build_allowed(r):
     return not (len(parts) > 3 and parts[3] == "benches")
 
 
+def under(r, folder):
+    """Whether the checkout-relative path `r` is `folder` or inside it."""
+    return r is not None and (r == folder or r.startswith(folder + "/"))
+
+
+def scratch_verdict(r):
+    """In every role but app work: None for a path under tmp/, which is scratch (issue
+    #11), or the reason for one of its sealed folders. `r` is the real path, casefolded,
+    so neither a symlink nor a case form reaches them."""
+    if any(under(r, f) for f in SEALED_SCRATCH):
+        return "the sealed exam and its record, which no session writes (R-79)"
+    if under(r, "tmp/active"):
+        return "the master's briefs, which a session doesn't rewrite (R-79)"
+    return None
+
+
 def verdict(path, role):
     """None if `role` may write `path`, else the reason it may not."""
     root, r = locate(path)
+    if role != "unset" and under(r, "tmp"):
+        return scratch_verdict(r)
     spec = r is not None and (r == "engine/spec" or r.startswith("engine/spec/"))
     tests = r is not None and (r == "engine/tests" or r.startswith("engine/tests/"))
     oracle = r is not None and is_oracle(r)
@@ -325,7 +349,7 @@ def watched(path, role):
         return any(p == d or p.startswith(d + os.sep) for d in outside_watched())
     if role != "build":
         return True
-    return r.startswith(("engine", ".claude", ".github")) or os.path.basename(r) in CONFIG_NAMES or "/.cargo/" in "/" + r + "/"
+    return r.startswith(("engine", ".claude", ".github")) or under(r, "tmp") or os.path.basename(r) in CONFIG_NAMES or "/.cargo/" in "/" + r + "/"
 
 
 # One path inside each protected area, to catch a command on a folder that holds one
@@ -345,6 +369,9 @@ ANCHORS = [
     ".claude/settings.local.json",
     ".claude/skills/engine-rust/SKILL.md",
     ".claude/agents/engine-reviewer.md",
+    "tmp/holdout/x",
+    "tmp/cases-holdout/x",
+    "tmp/active/x",
 ]
 
 
