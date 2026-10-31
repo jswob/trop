@@ -20,7 +20,7 @@
 				"hooks": [
 					{
 						"type": "command",
-						"command": "g=\"$CLAUDE_PROJECT_DIR/engine/tools/guard\"; if [ -x \"$g\" ]; then exec \"$g\"; elif [ -e \"$CLAUDE_PROJECT_DIR/engine\" ]; then echo \"engine guard: engine/tools/guard is missing; refusing the call (fails closed, R-79)\" >&2; exit 2; else exit 0; fi"
+						"command": "g=\"$CLAUDE_PROJECT_DIR/engine/tools/guard\"; if [ -x \"$g\" ]; then /bin/bash \"$g\"; c=$?; [ \"$c\" -eq 0 ] || exit 2; elif [ -e \"$g\" ]; then echo \"engine guard: engine/tools/guard isn't executable; refusing the call (fails closed, R-79)\" >&2; exit 2; elif [ -e \"$CLAUDE_PROJECT_DIR/engine\" ]; then echo \"engine guard: engine/tools/guard is missing; refusing the call (fails closed, R-79)\" >&2; exit 2; else exit 0; fi"
 					}
 				]
 			}
@@ -41,7 +41,7 @@
 				"hooks": [
 					{
 						"type": "command",
-						"command": "g=\"$CLAUDE_PROJECT_DIR/engine/tools/guard\"; if [ -x \"$g\" ]; then exec \"$g\" --config-change; elif [ -e \"$CLAUDE_PROJECT_DIR/engine\" ]; then echo \"engine guard: engine/tools/guard is missing; refusing the call (fails closed, R-79)\" >&2; exit 2; else exit 0; fi"
+						"command": "g=\"$CLAUDE_PROJECT_DIR/engine/tools/guard\"; if [ -x \"$g\" ]; then /bin/bash \"$g\" --config-change; c=$?; [ \"$c\" -eq 0 ] || exit 2; elif [ -e \"$g\" ]; then echo \"engine guard: engine/tools/guard isn't executable; refusing the call (fails closed, R-79)\" >&2; exit 2; elif [ -e \"$CLAUDE_PROJECT_DIR/engine\" ]; then echo \"engine guard: engine/tools/guard is missing; refusing the call (fails closed, R-79)\" >&2; exit 2; else exit 0; fi"
 					}
 				]
 			}

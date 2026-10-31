@@ -1,0 +1,45 @@
+# R-81: hooks can't be switched off from a build session. The guard's side is proven by
+# engine/tools/guard-test; these cases prove check-frozen's: the git-ignored
+# .claude/settings.local.json, which no checksum covers, can't switch off the next
+# session's hooks or its permission prompts (F-11).
+
+case: local-settings-disable-all-hooks
+tool: run
+expect: settings: .claude/settings.local.json sets disableAllHooks (R-81)
+--- write ../.claude/settings.local.json
+{"disableAllHooks": true}
+--- run
+tools/check-frozen
+
+case: local-settings-hooks
+tool: run
+expect: settings: .claude/settings.local.json sets hooks
+--- write ../.claude/settings.local.json
+{"hooks": {"PreToolUse": []}}
+--- run
+tools/check-frozen
+
+case: local-settings-bypass-permissions
+tool: run
+expect: settings: .claude/settings.local.json sets the bypassPermissions mode (R-81)
+--- write ../.claude/settings.local.json
+{"permissions": {"defaultMode": "bypassPermissions"}}
+--- run
+tools/check-frozen
+
+case: local-settings-unreadable
+tool: run
+expect: settings: .claude/settings.local.json can't be read as JSON
+--- write ../.claude/settings.local.json
+{"disableAllHooks": true,
+--- run
+tools/check-frozen
+
+case: local-settings-allowed
+tool: run
+expect: check-frozen: spec, oracle, pin and rules unchanged
+exit: any
+--- write ../.claude/settings.local.json
+{"permissions": {"allow": ["Bash(cargo test:*)"], "defaultMode": "acceptEdits"}}
+--- run
+tools/check-frozen

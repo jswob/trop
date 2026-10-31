@@ -11,10 +11,14 @@ It verifies:
   - that engine/spec/ and the oracle (refcore/, refcore_fast/, tools/SHA256SUMS) match
     the commit tools/frozen.toml pins: the tag named in engine/spec/VERSION, or an
     approved amendment after it that kept the version;
-  - engine/tools/RULES.sha256 over every rule file (the set the guard protects).
+  - engine/tools/RULES.sha256 over every rule file (the set the guard protects);
+  - that .claude/settings.local.json (git-ignored, so no checksum covers it) doesn't
+    switch off the hooks or the permission prompts: no disableAllHooks, no hooks, no
+    bypassPermissions mode (R-81).
 """
 
 import hashlib
+import json
 import os
 import subprocess
 import sys
@@ -34,7 +38,14 @@ PINNED = ["engine/spec", "engine/tools/refcore", "engine/tools/refcore_fast", "e
 TESTS_OUTPUT = ("cache/", "out/", "results/")
 SKIP_DIRS = {"__pycache__", "target", "corpus", "artifacts", "coverage", ".git"}
 SKIP_FILES = {".DS_Store"}
-OUTSIDE = [".github/workflows/engine.yml", ".claude/settings.json"]
+# rule files outside engine/ (a folder stands for every file under it)
+OUTSIDE = [
+    ".github/workflows/engine.yml",
+    ".claude/settings.json",
+    ".claude/skills/engine-rust",
+    ".claude/agents/engine-reviewer.md",
+]
+LOCAL_SETTINGS = ".claude/settings.local.json"
 
 
 def sha256(path):
@@ -146,7 +157,12 @@ def rule_files():
             continue
         if guard.is_rule(rel.casefold()):
             found.append(rel)
-    found += [p for p in OUTSIDE if os.path.isfile(os.path.join(ROOT, p))]
+    for p in OUTSIDE:
+        full = os.path.join(ROOT, p)
+        if os.path.isdir(full):
+            found += [f"{p}/{n}" for n in files_under(full)]
+        elif os.path.isfile(full):
+            found.append(p)
     return sorted(found)
 
 
@@ -166,6 +182,31 @@ def verify_rules():
             problems.append(f"rules: {name} changed (checksum differs); a rule changes only through R-112")
     for name in sorted(set(sums) - set(current)):
         problems.append(f"rules: {name} is in RULES.sha256 but missing")
+    return problems
+
+
+def verify_local_settings():
+    """The git-ignored local settings can't switch off the next session's hooks or its
+    permission prompts (R-81): a build-role script could write them, and no checksum
+    or clean CI runner sees the file."""
+    path = os.path.join(ROOT, LOCAL_SETTINGS)
+    if not os.path.lexists(path):
+        return []
+    try:
+        with open(path, encoding="utf-8") as f:
+            data = json.load(f)
+    except (OSError, ValueError) as e:
+        return [f"settings: {LOCAL_SETTINGS} can't be read as JSON ({e}); it must not switch off the hooks (R-81)"]
+    if not isinstance(data, dict):
+        return [f"settings: {LOCAL_SETTINGS} isn't a JSON object (R-81)"]
+    problems = []
+    if "disableAllHooks" in data:
+        problems.append(f"settings: {LOCAL_SETTINGS} sets disableAllHooks (R-81)")
+    if "hooks" in data:
+        problems.append(f"settings: {LOCAL_SETTINGS} sets hooks, which belong in .claude/settings.json (R-81)")
+    permissions = data.get("permissions")
+    if isinstance(permissions, dict) and permissions.get("defaultMode") == "bypassPermissions":
+        problems.append(f"settings: {LOCAL_SETTINGS} sets the bypassPermissions mode (R-81)")
     return problems
 
 
@@ -193,6 +234,7 @@ def main():
         print("check-frozen: notice: engine/tests/TESTS.sha256 isn't written yet (T writes it); skipped")
     problems += verify_pin()
     problems += verify_rules()
+    problems += verify_local_settings()
     for p in problems:
         print(f"FAIL {p}")
     if problems:

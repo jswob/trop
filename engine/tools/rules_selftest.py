@@ -74,7 +74,8 @@ TARGET = os.path.join(SCRATCH, "target")
 GIT_HOME = os.path.join(SCRATCH, "cargo-home")
 LOGS = os.path.join(SCRATCH, "logs")
 COPY_SKIP = {"target", "__pycache__", ".DS_Store", "corpus", "artifacts", "coverage", "mutants.out"}
-OUTSIDE = ["package.json", ".github/workflows/engine.yml", ".claude/settings.json"]
+OUTSIDE = ["package.json", ".github/workflows/engine.yml", ".claude/settings.json",
+           ".claude/skills/engine-rust", ".claude/agents/engine-reviewer.md"]
 COVERAGE_FILE = "crates/tally/src/zz_ban_coverage.rs"
 TOOL_NAMES = {"clippy", "clippy-tests", "rustdoc", "ast-grep", "deny", "deny-tally", "run"}
 BLOCKS = {"module", "write", "append", "replace", "delete", "fake", "fakefile", "fakebinary", "gitfake", "run"}
@@ -87,7 +88,7 @@ ELSEWHERE = {
     "R-77": "the clean run: the workflow runs `engine/tools/check full`, whose steps are R-77's list",
     "R-78": "this script",
     "R-79": "engine/tools/guard-test",
-    "R-81": "engine/tools/guard-test",
+    "R-81": "engine/tools/guard-test (the guard and the hook strings)",
     "R-83": "engine/tools/guard-test (the Stop hook)",
     "R-84": "the protected mutants config (test_package); checksummed",
     "R-88": "the protected mutants and nextest configs; checksummed",
@@ -276,7 +277,9 @@ def build_scratch():
     shutil.copytree(ENGINE, WS, ignore=copy_ignore, symlinks=True)
     pin_the_tag()
     for p in OUTSIDE:
-        if os.path.isfile(os.path.join(ROOT, p)):
+        if os.path.isdir(os.path.join(ROOT, p)):
+            shutil.copytree(os.path.join(ROOT, p), os.path.join(REPO, p), ignore=copy_ignore)
+        elif os.path.isfile(os.path.join(ROOT, p)):
             os.makedirs(os.path.dirname(os.path.join(REPO, p)) or REPO, exist_ok=True)
             shutil.copy2(os.path.join(ROOT, p), os.path.join(REPO, p))
     git("init", "-q")
@@ -876,7 +879,7 @@ def list_rules(cases):
     for n in range(1, 114):
         r = f"R-{n}"
         if r in by_rule:
-            print(f"{r}: {', '.join(by_rule[r])}")
+            print(f"{r}: {', '.join(by_rule[r])}" + (f"; and {ELSEWHERE[r]}" if r in ELSEWHERE else ""))
         elif r in BY_COVERAGE:
             print(f"{r}: the ban coverage")
         elif r in ELSEWHERE:

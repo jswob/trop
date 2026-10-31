@@ -87,22 +87,67 @@ The guard is a Claude Code PreToolUse hook (`engine/tools/guard`), set in `.clau
 | A spec patch  | `TALLY_ROLE=spec claude`  | the clean-side lead only                       | `engine/spec/` and the oracle only, through the patch rule in `engine/README.md`                                                                                                                                                                   |
 | App work      | `claude` (role unset)     | anyone                                         | anything but the spec, the oracle, the tests and the rule files                                                                                                                                                                                    |
 
-**The rule files** are refused to every role but `rules`: `clippy.toml`, `deny*.toml`, `sgconfig.yml`, `rust-toolchain*`, `.cargo/*`, `.config/*`, `tools/*` (with the ast-grep rules), `fuzz/*`, `crates/*/benches/*`, `.github/workflows/engine.yml`, `.claude/settings.json`, and any `clippy.toml`, `rustfmt.toml`, `rust-toolchain*` or `.cargo/` anywhere under `engine/`. Their checksums are in `tools/RULES.sha256`. A role the guard doesn't know refuses everything.
+**The rule files** are refused to every role but `rules`: `clippy.toml`, `deny*.toml`, `sgconfig.yml`, `rust-toolchain*`, `.cargo/*`, `.config/*`, `tools/*` (with the ast-grep rules, but not the oracle), `fuzz/*`, `crates/*/benches/*`, `engine/CLAUDE.md`, `.github/workflows/engine.yml`, `.claude/settings.json`, the builder's skill `.claude/skills/engine-rust/` and its reviewer `.claude/agents/engine-reviewer.md`, and any `clippy.toml`, `rustfmt.toml`, `rust-toolchain*` or `.cargo/` anywhere under `engine/`. Their checksums are in `tools/RULES.sha256`. The rest of `.claude/` (other skills, agents, hooks) belongs to the toolkit, which syncs it. `.claude/settings.local.json` is app work's, but `check-frozen` fails when it holds `disableAllHooks`, a `hooks` key or the `bypassPermissions` mode (R-81). A role the guard doesn't know refuses everything.
 
 **The oracle** is the spec's reference interpreter: `tools/refcore/`, `tools/refcore_fast/` and `tools/SHA256SUMS` (refcore's checksums). It lives in `tools/` but isn't a rule file: like the spec, only the `spec` role writes it, and `check-frozen` holds it to `tools/SHA256SUMS` and to the commit `tools/frozen.toml` pins. Every role may run it.
 
-**What the guard checks.** `Edit`, `Write`, `MultiEdit` and `NotebookEdit` by their path. `Bash` by a tripwire: it refuses a command that names a protected path together with a form that writes: a writing command (`cp`, `mv`, `rm`, `sed -i`, `tee`, `truncate`, …), a redirect, an interpreter given a path or code that names one, a git command that writes the tree (`checkout`, `restore`, `reset`, `stash`, …), or `find` with `-delete` or `-exec`. In the build role it also watches `~/.claude` and `~/.cargo`, refuses `disableAllHooks`, a nested `claude` run (R-81), a command naming `TALLY_ROLE` (R-79) and whole-tree git operations. In every role but app work it refuses a commit message with an AI co-author or attribution line (R-100).
+**Every checkout alike.** The guard finds every checkout of the repo from its git files (`.git`, and the common folder's `worktrees/*/gitdir`) without running git. It judges a path by the checkout that holds it; for a worktree inside another, that is the inner one. So the main checkout's `engine/spec/` is the spec from every worktree. The build role writes only in its own checkout. If the git files can't be read, the guard refuses everything.
+
+**What the guard checks.** `Edit`, `Write`, `MultiEdit` and `NotebookEdit` by their path. `Bash` by a tripwire: it refuses a command that names a protected path together with a form that writes:
+
+- a writing command (`cp`, `mv`, `rm`, `sed -i`, `tee`, `truncate`, `ditto`, `rustfmt`, `vim`/`ex`/`ed`, …), judged by what it writes:
+  - `tar -x`: its `-C` folder or the cwd; `tar -c`: its archive;
+  - `unzip`: its `-d` folder or the cwd;
+  - `curl -o`/`-O` and `wget`: the file they save;
+  - `sort -o`: its output;
+  - `ln` without `-s` and `cp -l`: the source too, since a hard link is a second name for it;
+- cargo's writers (`fmt`, `fix`, `clippy --fix`, `add`, `remove`), judged by the manifest of each package they act on. `cargo fmt` in `engine/` also formats T's runner, so it is refused; the builder names its packages: `cargo fmt -p tally -p tally-cli`;
+- a redirect;
+- an interpreter given a path, or inline code that names one; after inline code every operand counts (`perl -pi -e '…' file`);
+- a git command that writes the tree (`checkout`, `restore`, `reset`, `stash`, …);
+- `find` with `-delete` or `-exec`.
+
+It reads past shell syntax to the command word:
+
+- reserved words: `if … then`, `for … do`, `{ }`, `!`;
+- `$(…)` and backticks, also inside double quotes;
+- process substitutions `>(…)` and `<(…)`;
+- prefixes with their options: `env -u`/`-S`/`-C`, `nice -n`, `timeout -s`, `xargs -n`/`-I`, `sudo -u`, `stdbuf`, `flock`, `ionice`, `caffeinate`, `unbuffer`.
+
+A `for` loop's variable stands for each of its words.
+
+In the build role it also:
+
+- watches `~/.claude`, `~/.claude.json`, `$CLAUDE_CONFIG_DIR`, `~/.cargo`, `$CARGO_HOME`, and every `.cargo/` from the repo up to `/`;
+- refuses `disableAllHooks` and a nested `claude` run (R-81);
+- refuses a command naming `TALLY_ROLE` (R-79);
+- refuses whole-tree git operations and `patch` without a file.
+
+In every role but app work it refuses a commit message with an AI co-author or attribution line (R-100):
+
+- it looks in the command's text (`git commit`, `merge`, `tag`, `notes`, `commit-tree`) and in the file `-F` names;
+- it refuses a message the shell computes (`-m "$(cat f)"`, `-m "$M"`) or pipes in (`-F -` without a here-document), since it can't read either;
+- `-m "$(cat <<'EOF' … EOF)"` passes, because its text is in the command.
 
 **The other two hooks.** ConfigChange, in the build role, refuses a settings change and logs `CONFIG-CHANGE BLOCKED` in `BUILD-LOG.md` (R-81). Stop, in the build role, runs `tools/check fast` and keeps the turn going while it is red, unless a STOP-REPORT heading was added to `BUILD-LOG.md` since the last commit, or by it; after three identical blocks it lets the fourth stop through and logs `STOPPED RED` (R-83). `BUILD-LOG.md` holds the STOP-REPORT's template.
 
-**It fails closed.** The shim `tools/guard` turns any exit but 0 into 2, so a crash refuses the call; the hook's command in `settings.json` refuses every call when `engine/` exists and the guard doesn't (R-79). `guard-test` forces an internal failure to prove it.
+**It fails closed.** The shim `tools/guard` turns any exit but 0 into 2, so a crash refuses the call. The hook strings in `settings.json` run the shim with `/bin/bash` and also turn any exit but 0 into 2, so a missing `bash` or `python3` refuses too. When `engine/` exists and the guard is missing or isn't executable, they refuse every call and say which (R-79). `guard-test` runs the real hook strings and forces an internal failure to prove it.
 
 **Its limits.**
 
-- The Bash check is a tripwire, not a wall. It can't see what a script run by an interpreter writes (`python3 x.py`, where `x.py` writes a rule file). The wall is the checksums: `check-frozen` fails on any changed byte of the spec, the oracle, T's tests or a rule file, and CI runs it on a clean runner.
+- The Bash check is a tripwire, not a wall. It can't see what a script run by an interpreter writes (`python3 x.py`, where `x.py` writes a rule file). It reads paths as written, so it doesn't follow:
+  - a computed directory: `D=engine/spec; cd "$D" && echo x > DONE.md` (F-7);
+  - outside the build role, a computed target: `F=…; echo x > "$F"`;
+  - git's pathspec magic and globs: `git checkout HEAD~1 -- ':(top)engine/spec'`, `git restore -s HEAD~1 -- '*.md'`, `git --work-tree=engine checkout HEAD -- spec/DONE.md` (F-6);
+  - a commit message reused from another commit (`-C`, `-c`) or written in an editor.
+- The wall is the checksums and CI, and it covers this checkout only:
+  - `check-frozen` fails on any changed byte of the spec, the oracle, T's tests or a rule file, and on a local settings file that switches off the hooks;
+  - CI runs `check full` on a clean runner and checks the branch's commit messages (R-100).
+- Three things are outside the wall: another checkout's files (its own `check-frozen` sees them), a cargo config above the repo or in `$CARGO_HOME` (`check-rules` reads it), and the user's Claude settings (`~/.claude`, `$CLAUDE_CONFIG_DIR`). For the user's Claude settings, the build role's tripwire is the only guard.
 - It guards Claude Code sessions only. A person's own shell isn't guarded, and neither is a session started with a different `TALLY_ROLE`: the role is trusted as set at launch.
 - A worktree's `.claude/settings.json` isn't loaded by the session that wrote it, so the guard binds the next session started there.
 - Each role's reach is by path. The `rules` role can write every rule file, which is why a rule change takes the user's dated approval and its own commit (R-112), and the audit reads every such commit.
+- `git merge engine` is refused in every role, because `engine` is also a folder: the user runs merges of branch `engine` in their own shell (audit A-3).
 
 ## 4. Setting the kernel at S (R-85)
 
@@ -226,9 +271,9 @@ One line per rule: the rule (shortened; the rulebook has its full text), what en
 - **R-76** The 87 refusal and warning codes live in one catalogue: one enum, one list, one exhaustive match for code and message, and a builder test that compares it with the spec's tables. **Enforced by:** review; the builder's test (the catalogue's file is the builder's). **Proven by:** review only.
 - **R-77** Every pull request runs the full check: format; both clippy passes; docs; build; tests in the dev and release profiles; both cargo-deny runs; check-frozen; the spec's load check; the guard's tests; rules-selftest; check-rules; the exception counter; ast-grep's tests and scan; a 60-second fuzz run per target with its regressions replayed; the fault-injection probe. **Enforced by:** CI (`.github/workflows/engine.yml`, on pull requests into `master` and `engine`), every action pinned by SHA. **Proven by:** the clean run: the workflow runs `engine/tools/check full`, whose steps are R-77's list, and its trigger names both branches.
 - **R-78** Every tool-enforced rule is proven to fire: one planted violation each, which must fail with that rule's name, and a clean stub that passes. The output must also hold none of the silent-failure messages, every ban path's crate name must be known, and `CLIPPY_CONF_DIR` must be unset. **Enforced by:** `engine/tools/rules-selftest` in CI. **Proven by:** selftest: `clippy-conf-dir`, `unknown-crate-in-a-ban`, `allow-invalid`, `unresolved-path`.
-- **R-79** The guard works by role, set by `TALLY_ROLE`: `build` may write only an allow-list; `rules` may write the lint and tool configs; `tests` writes `engine/tests/`; `spec` writes `engine/spec/` and the oracle (refcore); unset keeps C's deny-list for app work. The guard fails closed: if it crashes, the edit is refused. **Enforced by:** the guard (a PreToolUse hook), tested by its own script. **Proven by:** engine/tools/guard-test.
-- **R-80** Every rule file is protected and checksummed: clippy.toml, deny*.toml, the ast-grep rules, rust-toolchain.toml, `.cargo/**`, the mutants and nextest configs, `engine/tools/**`, the CI workflow. Files the builder must edit are checked by `check-rules`: lint and profile sections equal a frozen copy; every crate inherits the workspace lints; no `[patch]`, no build script, no unexpected config file. The spec and the oracle match their checksums and the commit `tools/frozen.toml` pins (the tag `spec/VERSION` names, or an approved amendment after it). **Enforced by:** the guard, check-frozen, check-rules. **Proven by:** selftest: `spec-byte`, `spec-new-file`, `rule-file-byte`, `ast-grep-rule-byte`, `new-rule-file`, `lints-table-edited`, `profile-edited`, `member-lints-removed`, `patch-section`, `cargo-config`, `crate-outside-the-workspace`, `root-script-edited`, `oracle-byte`, `oracle-new-file`, `oracle-off-the-pin`, `version-off-the-pin`.
-- **R-81** Hooks can't be switched off from a build session: `.claude/settings*.json`, `.claude/hooks/**` and `.claude/agents/**` are protected; a ConfigChange hook blocks settings changes and logs them; the Bash tripwire refuses `disableAllHooks` and nested `claude` runs. **Enforced by:** the guard; a ConfigChange hook. **Proven by:** engine/tools/guard-test.
+- **R-79** The guard works by role, set by `TALLY_ROLE`: `build` may write only an allow-list, in its own checkout; `rules` may write the lint and tool configs; `tests` writes `engine/tests/`; `spec` writes `engine/spec/` and the oracle (refcore); unset keeps C's deny-list for app work. Every checkout of the repo is judged alike (audit F-1). The guard fails closed: the edit is refused if it crashes, if `bash` or `python3` is missing (audit F-10), or if it can't read the repo's git files. **Enforced by:** the guard (a PreToolUse hook, run through `/bin/bash`), tested by its own script. **Proven by:** engine/tools/guard-test (every role against every path class, other checkouts, the shell forms of audit F-2 to F-5, the real hook strings).
+- **R-80** Every rule file is protected and checksummed: clippy.toml, deny*.toml, the ast-grep rules, rust-toolchain.toml, `.cargo/**`, the mutants and nextest configs, `engine/tools/**` (the oracle aside), the CI workflow, `.claude/settings.json`, `engine/CLAUDE.md`, the builder's skill (`.claude/skills/engine-rust/`) and its reviewer (`.claude/agents/engine-reviewer.md`) (D6-3, audit F-23). Files the builder must edit are checked by `check-rules`: lint and profile sections equal a frozen copy; every crate inherits the workspace lints; no `[patch]`, no build script, no unexpected config file. The spec and the oracle match their checksums and the commit `tools/frozen.toml` pins (the tag `spec/VERSION` names, or an approved amendment after it). **Enforced by:** the guard, check-frozen, check-rules. **Proven by:** selftest: `spec-byte`, `spec-new-file`, `rule-file-byte`, `ast-grep-rule-byte`, `new-rule-file`, `lints-table-edited`, `profile-edited`, `member-lints-removed`, `patch-section`, `cargo-config`, `crate-outside-the-workspace`, `root-script-edited`, `oracle-byte`, `oracle-new-file`, `oracle-off-the-pin`, `version-off-the-pin`, `builder-skill-byte`, `reviewer-agent-byte`.
+- **R-81** Hooks can't be switched off from a build session: `.claude/settings.json` and the builder's instructions (`engine/CLAUDE.md`, the engine-rust skill, the reviewer) are rule files; `.claude/settings.local.json` may not hold `disableAllHooks`, `hooks` or the `bypassPermissions` mode (audit F-11); a ConfigChange hook blocks settings changes and logs them; the Bash tripwire refuses `disableAllHooks` and nested `claude` runs, and in the build role it watches `~/.claude`, `~/.claude.json` and `$CLAUDE_CONFIG_DIR`. The rest of `.claude/` is the toolkit's. **Enforced by:** the guard; a ConfigChange hook; check-frozen. **Proven by:** engine/tools/guard-test; selftest: `local-settings-disable-all-hooks`, `local-settings-hooks`, `local-settings-bypass-permissions`, `local-settings-unreadable`, `local-settings-allowed`.
 - **R-82** One check command, `engine/tools/check`, with fixed flags, used alike by the hook, the builder and CI. It clears the environment variables that change lints or profiles and prints one line per failure. **Enforced by:** the script. **Proven by:** selftest: `cap-lints-cleared`, `release-profile-env-cleared`.
 - **R-83** A build turn can't end while `check fast` is red, unless a STOP-REPORT is newer than the last commit; after three identical blocks it lets go and logs "STOPPED RED". A STOP-REPORT is the builder's legal exit when a test, the spec or a rule seems wrong. **Enforced by:** a Stop hook; the build session's CLAUDE.md. **Proven by:** engine/tools/guard-test (the Stop hook).
 - **R-84** Gate 8's mutation score counts **T's tests only**; the builder's own tests give a second score, for information. **Enforced by:** the protected mutants config (`test_package`). **Proven by:** selftest: `config`.
@@ -247,7 +292,7 @@ One line per rule: the rule (shortened; the rulebook has its full text), what en
 - **R-97** Benchmarks run nightly, with their reports kept for gate 12. **Enforced by:** criterion. **Proven by:** the workflow's nightly benchmark job.
 - **R-98** Advisories checked daily; clippy on the next Rust version weekly. **Enforced by:** CI schedules. **Proven by:** the workflow's daily advisories and weekly beta-clippy jobs.
 - **R-99** A fresh-context, read-only reviewer checks each milestone and every commit that adds an exception, against a fixed checklist; the builder's reports quote commands and exit codes, never claims. **Enforced by:** review. **Proven by:** review only.
-- **R-100** Small commits, one green step each; no AI co-author or attribution line, ever. **Enforced by:** a Bash tripwire on `git commit`. **Proven by:** engine/tools/guard-test (the commit tripwire).
+- **R-100** Small commits, one green step each; no AI co-author or attribution line, ever. **Enforced by:** a Bash tripwire on `git commit`, `merge`, `tag`, `notes` and `commit-tree`: it reads the command's text and the file `-F` names, and refuses a computed or piped message (audit F-8). **Proven by:** engine/tools/guard-test (the commit tripwire).
 - **R-101** Kani. Dropped at gate 1.
 - **R-102** Miri. Dropped at gate 1.
 - **R-103** An exception is `#[expect]`, never `#[allow]`: not as an outer or inner attribute, not inside a conditional attribute, not inside a macro body. **Enforced by:** clippy, error with no exception (`allow_attributes`); ast-grep (`no-allow`) for the forms clippy misses. **Proven by:** selftest: `allow-attribute`, `allow-outer`, `allow-inner`, `allow-in-cfg-attr`, `allow-in-macro-body`.

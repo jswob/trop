@@ -147,3 +147,19 @@ expect: but tools/frozen.toml pins
 tally-9.9
 --- run
 tools/check-frozen
+
+case: builder-skill-byte
+tool: run
+expect: rules: .claude/skills/engine-rust/references/numbers.md changed
+--- append ../.claude/skills/engine-rust/references/numbers.md
+planted
+--- run
+tools/check-frozen
+
+case: reviewer-agent-byte
+tool: run
+expect: rules: .claude/agents/engine-reviewer.md changed
+--- append ../.claude/agents/engine-reviewer.md
+planted
+--- run
+tools/check-frozen
