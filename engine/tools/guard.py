@@ -13,9 +13,11 @@ The role comes from TALLY_ROLE (R-79):
   tests  the test owner (T): engine/tests/ only
   spec   the clean-side lead patching the spec: engine/spec/ and the oracle only
   unset  app work: anything but the spec, the oracle, the tests and the rule files
+  lead   the coordinator (issue #18): writes like app work, and alone runs
+         engine/tools/merge-pr and engine/tools/worktree-done
 
-Every role also writes tmp/, the local scratch nothing tracks (issue #11); the four
-above don't write the sealed tmp/holdout/ and tmp/cases-holdout/, or tmp/active/.
+Every role also writes tmp/, the local scratch nothing tracks (issue #11); build, rules,
+tests and spec don't write the sealed tmp/holdout/ and tmp/cases-holdout/, or tmp/active/.
 
 The oracle is the spec's reference interpreter: engine/tools/refcore/, refcore_fast/
 and engine/tools/SHA256SUMS (refcore's checksums). It is frozen with the spec.
@@ -43,7 +45,10 @@ TOOLS = os.path.dirname(os.path.realpath(__file__))
 ENGINE = os.path.dirname(TOOLS)
 ROOT = os.path.dirname(ENGINE)
 HOME = os.path.realpath(os.path.expanduser("~"))
-ROLES = ("build", "rules", "tests", "spec", "unset")
+ROLES = ("build", "rules", "tests", "spec", "lead", "unset")
+# the roles that write like app work: anything but the spec, the oracle, the tests and
+# the rule files, and all of tmp/ (the lead, issue #18)
+APP_WRITERS = ("unset", "lead")
 
 REPORT = (
     "Report it instead: a STOP-REPORT in engine/BUILD-LOG.md (R-83); a test gap is T's, "
@@ -272,7 +277,7 @@ def scratch_verdict(r):
 def verdict(path, role):
     """None if `role` may write `path`, else the reason it may not."""
     root, r = locate(path)
-    if role != "unset" and under(r, "tmp"):
+    if role not in APP_WRITERS and under(r, "tmp"):
         return scratch_verdict(r)
     spec = r is not None and (r == "engine/spec" or r.startswith("engine/spec/"))
     tests = r is not None and (r == "engine/tests" or r.startswith("engine/tests/"))
@@ -306,7 +311,7 @@ def verdict(path, role):
         return None if tests else "the tests role writes engine/tests/ only (R-79)"
     if role == "spec":
         return None if spec or oracle else "the spec role writes engine/spec/ and the reference interpreter only (R-79)"
-    # unset: app work
+    # unset (app work) and lead
     if spec:
         return "the spec is frozen and checksummed (R-80)"
     if tests:
@@ -881,14 +886,18 @@ def check_message(sub, rest, cwd, role, state):
             raise Refused(f"{what}: the message file {value} has an AI co-author or attribution line (R-100).")
 
 
-# --- R-132: changes land on master only by a pull request the user merges ----------
+# --- R-132: changes land on master only by a pull request the user merges, or the --
+# --- lead merges through engine/tools/merge-pr (issue #18) --------------------------
 
 
 MASTER = "master"
 LANDING = (
-    "changes land on master only by a pull request the user merges (R-132). "
-    "Push your own branch and open a PR with `gh pr create`; the user merges it"
+    "changes land on master only by a pull request the user merges, or the lead merges "
+    "through engine/tools/merge-pr (R-132). Push your own branch and open a PR with "
+    "`gh pr create`"
 )
+# the lead's tools, which only the lead runs (issue #18): by name, with or without .py
+LEAD_TOOLS = ("merge-pr", "merge_pr", "worktree-done", "worktree_done")
 # git push's options whose value is the next word
 PUSH_VALUED = {"-o", "--push-option", "--repo", "--receive-pack", "--exec"}
 # git push's options that push every branch, master included
@@ -974,7 +983,8 @@ def check_push(rest, cwd, role, state):
 
 def check_gh(args, role):
     """R-132: no `gh pr merge`, and no `gh api` call that merges a pull request or a
-    branch, moves or deletes master's ref, or changes master's protection."""
+    branch, moves or deletes master's ref, or changes master's protection, in every
+    role, the lead included: the lead merges only through engine/tools/merge-pr."""
     words, it = [], iter(args)
     for a in it:
         if a in ("-R", "--repo"):
@@ -986,6 +996,29 @@ def check_gh(args, role):
         raise Refused(f"{what} `gh pr merge`: {LANDING}.")
     if words[:1] == ["api"] and any(GH_API_MERGES.search(a) for a in args):
         raise Refused(f"{what} a `gh api` call that merges, moves master or changes its protection: {LANDING}.")
+
+
+def lead_tool(name, args):
+    """The lead's tool a command runs, or None (issue #18): the command word itself
+    (`merge-pr`, `merge_pr.py`, any case), a script given to a shell, `source` or an
+    interpreter, or an interpreter's inline code naming one (`python3 -c "…merge_pr…"`).
+    A shell's `-c` string is checked as a command of its own."""
+    def stem(word):
+        return os.path.basename(word).casefold().removesuffix(".py")
+
+    if stem(name) in LEAD_TOOLS:
+        return stem(name)
+    interpreter = name in INTERPRETERS or re.fullmatch(r"python3?(\.\d+)?|perl\d*|ruby\d*|node\d*", name)
+    if not (interpreter or name in SHELLS or name in ("source", ".")):
+        return None
+    for a in args:
+        if stem(a) in LEAD_TOOLS:
+            return stem(a)
+        if interpreter:
+            hit = next((t for t in LEAD_TOOLS if t in a.casefold()), None)
+            if hit:
+                return hit
+    return None
 
 
 def check_git(args, cwd, role, state):
@@ -1119,6 +1152,10 @@ def check_segment(argv, cwd, role, depth, state):
         if target != "-":
             cwd = os.path.realpath(resolve(target, cwd))
         return cwd
+    if role != "lead":
+        tool = lead_tool(name, args)
+        if tool:
+            raise Refused(f"engine guard (role {role}): refused `{tool}`: only the lead role (TALLY_ROLE=lead) runs it (R-132, issue #18).")
     if role == "build" and (name == "claude" or "claude-code" in " ".join(words)):
         raise Refused(f"engine guard (role build): refused a nested claude run (R-81). {REPORT}")
     if name in SHELLS:
