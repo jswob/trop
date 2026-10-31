@@ -1,0 +1,9 @@
+scenario switch
+  tally 1
+  from 2026-01-01
+  over base
+  note "Path switch: the base to December 2029, then −0.10 % a month (story § The forecast, item 3)."
+
+version path_switch
+  cite story
+  path_rate[2030-01..2035-12] = -0.001 "story § The forecast, item 3: switch, −0.10 % a month from January 2030"

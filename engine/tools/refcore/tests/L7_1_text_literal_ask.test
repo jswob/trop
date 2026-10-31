@@ -1,0 +1,27 @@
+# L §2.3 atom: STR is "a text literal, §7.1"; L §7.1 "A text literal ... stands in a row, a pin or an ask line" (writer 8,
+# OQ-6). form's row is "PIT-37": the ask's comparison holds (q1); pinned to "PIT-36" it doesn't (q2, the pin listed,
+# L §8.2 pinned:).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+input form: text
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  form = "PIT-37"
+
+ask q1: form == "PIT-37"
+ask q2: form == "PIT-37" with form = "PIT-36"
+=== expect
+q1: true
+  cut 2026-12-31
+q2: false
+  pinned: form = "PIT-36"
+  cut 2026-12-31

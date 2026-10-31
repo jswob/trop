@@ -1,0 +1,50 @@
+# L §5.18: "diff(e) in S against B: e evaluated in world S and in world B"; L §6.1 the reality is all its files; L §6.4
+# reads of scenario items are allowed in diff. s1 and s2 are each over hh (two stacks): salary at law 2027-06-30 is
+# 6 000.00 in s1 and 4 000.00 in s2 (each replaces the base's row on its span, L §4.6 step 2). (Was
+# REFCORE-UNSPECIFIED §6.4, writer 5's T-96, stated.) The layout is this interpreter's (diff, as for d2).
+=== hh.tally
+model hh
+  tally 2
+  on 2026-11-15
+  start 2026-01-01
+  end 2027-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+input salary: money PLN
+
+version v1
+  cite s
+  governs 2026-01-01..
+  known 2026-01-01
+  salary = 5 000.00 PLN "umowa"
+
+ask d: diff(salary) in s1 against s2 law 2027-06-30
+ask d2: diff(salary) in s1 against hh law 2027-06-30
+=== s1.tally
+scenario s1 over hh
+  tally 2
+  from 2027-01-01
+
+version a
+  cite s
+  governs 2027-01-01..
+  known 2026-10-20
+  replace salary = 6 000.00 PLN "s1"
+=== s2.tally
+scenario s2 over hh
+  tally 2
+  from 2027-01-01
+
+version b
+  cite s
+  governs 2027-01-01..
+  known 2026-10-20
+  replace salary = 4 000.00 PLN "s2"
+=== expect
+d: diff in s1 against s2: 1 changed, 0 added, 0 removed, 0 unchanged
+  changed salary: 6 000.00 PLN against 4 000.00 PLN
+...
+d2: diff in s1 against hh: 1 changed, 0 added, 0 removed, 0 unchanged
+  changed salary: 6 000.00 PLN against 5 000.00 PLN
+...

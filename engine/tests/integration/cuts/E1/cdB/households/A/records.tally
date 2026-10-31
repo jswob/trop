@@ -1,0 +1,72 @@
+part records
+  tally 2
+  note "The balances read from the record files whose rows no question reads one by one: the Wektor registers (units after each purchase) and the Lazur export (balance after each row). Each is a reading of the place's balance (L §5.19) with the version anchoring it; the rows before it are not imported, so these places' balances before a reading are what is booked on them, and the readings restart them. Each states the reading's parts once (L §5.19), from the story's column whose: all community. Ania's savings export is booked row by row, its last balance read again. The joint account's statements, the Brzask register and the Rzeka and DM Kopia registers are observations (statements/statements.tally)."
+
+input abank: observed
+  note "Rzeka Securities, client 4471-07, Anna Lis: the register's rows (rzk-4471-07-anna.csv)"
+
+input jbank: observed
+  note "Bank Wrzos, the joint account LN27 … 0412: the statements' rows, 2024-08 to 2025-12 (wrz-joint-*.csv)"
+
+input kbank: observed
+  note "DM Kopia, account 30-118-552, Anna Lis: the register's rows (kop-30-118-552-ania.csv)"
+
+input tbank: observed
+  note "Rzeka Securities, client 4471-02, Tomasz Lis: the register's rows (rzk-4471-02-tomasz.csv)"
+
+input sbank: observed
+  note "Bank Wrzos, Ania's savings account LN61 … 5503: the export's rows, 2025-06 to 2025-12 (wrz-ania-savings-2025.csv)"
+
+input wbank: observed
+  note "Brzask, the wrapped account BRZ-WRAP-0091-A: the register's rows (brz-wrapped-ania.csv)"
+
+version laz_stmt_2025h1
+  cite laz_sav
+  governs 2021-03..2025-06
+  known 2025-07-01
+  anchor lazur
+  note "the last Lazur statement downloaded (story 2025-06-30, known 2025-07-01)"
+  stated[lazur] = 24223.47 DUK at 2025-06-30 end "laz-savings-1020-0044-7310.csv line 41, balance after"
+  stated[lazur] of ania_tomek = 24223.47 DUK at 2025-06-30 end "story 2021-03-01: in both our names, our shared reserve, community"
+
+version wek_t_register
+  cite wek_t
+  governs 2021-01..2025-12
+  known 2026-01-15
+  anchor wcp_t
+  note "the Wektor register of Tomek's plan, read at its last row (story: the records end on 2025-12-31, known 2026-01-15)"
+  stated[wcp_t] = 336.6349 wcp at 2025-12-31 end "wek-wcp-lis-tomasz.csv line 128, units after the purchase of 15.12.2025"
+  stated[wcp_t] of ania_tomek = 336.6349 wcp at 2025-12-31 end "story § What we had: Nurt's plan in Tomek's name, community; its units bought with the contributions and the state's payments (WCP-1 .4)"
+
+version wek_a_register
+  cite wek_a
+  governs 2021-01..2025-12
+  known 2026-01-15
+  anchor wcp_a
+  note "the Wektor register of Ania's plan, read at its last row"
+  stated[wcp_a] = 124.6286 wcp at 2025-12-31 end "wek-wcp-lis-anna.csv line 106, units after the purchase of 15.12.2025"
+  stated[wcp_a] of ania_tomek = 124.6286 wcp at 2025-12-31 end "story § What we had: Kalina's plan in Ania's name, community; its units bought with the contributions and the state's payments (WCP-1 .4)"
+
+version wrz_ania_2025
+  cite wrz_ania
+  governs 2025-06..2025-12
+  known 2026-01-15
+  covers ania_sav
+  anchor ania_sav
+  note "Ania's savings export for 2025, every row (the account opened 2025-06-02 with a balance of 0.00, line 5), read again at its last row: the estate payout, hers (CIV-1 .3), and the interest, community (CIV-1 .2), each tax withheld taking the couple's part first (reality.tally, money_accounts). The reading confirms the booked balance, so its gap is 0 and the anchor leaves the parts as booked (L §5.19)"
+  sbank[s20250616_07] = (on: 2025-06-16, kind: inheritances, leg cash from world to ania_sav amount 38750.00 DUK, heir: ania) known 2026-01-15 "wrz-ania-savings-2025.csv line 7: 16.06.2025;INCOMING TRANSFER;Kancelaria Notarialna Brzoza – escrow;payout, division of the estate of Zbigniew Sowa, A. Lis; A-D36: Anna Lis receives 38 750.00 DUK for her share of the estate (CIV-1 .3)"
+  sbank[s20250630_08] = (on: 2025-06-30, kind: interests, leg cash from world to ania_sav amount 38.22 DUK) known 2026-01-15 "wrz-ania-savings-2025.csv line 8: 30.06.2025;INTEREST;Bank Wrzos SA;interest"
+  sbank[s20250630_09] = (on: 2025-06-30, kind: taxes_withheld, leg cash from ania_sav to world amount 7.00 DUK) known 2026-01-15 "wrz-ania-savings-2025.csv line 9: 30.06.2025;TAX;Bank Wrzos SA;tax on interest 19%"
+  sbank[s20250731_10] = (on: 2025-07-31, kind: interests, leg cash from world to ania_sav amount 79.05 DUK) known 2026-01-15 "wrz-ania-savings-2025.csv line 10: 31.07.2025;INTEREST;Bank Wrzos SA;interest"
+  sbank[s20250731_11] = (on: 2025-07-31, kind: taxes_withheld, leg cash from ania_sav to world amount 15.00 DUK) known 2026-01-15 "wrz-ania-savings-2025.csv line 11: 31.07.2025;TAX;Bank Wrzos SA;tax on interest 19%"
+  sbank[s20250831_12] = (on: 2025-08-31, kind: interests, leg cash from world to ania_sav amount 79.18 DUK) known 2026-01-15 "wrz-ania-savings-2025.csv line 12: 31.08.2025;INTEREST;Bank Wrzos SA;interest"
+  sbank[s20250831_13] = (on: 2025-08-31, kind: taxes_withheld, leg cash from ania_sav to world amount 15.00 DUK) known 2026-01-15 "wrz-ania-savings-2025.csv line 13: 31.08.2025;TAX;Bank Wrzos SA;tax on interest 19%"
+  sbank[s20250930_14] = (on: 2025-09-30, kind: interests, leg cash from world to ania_sav amount 76.75 DUK) known 2026-01-15 "wrz-ania-savings-2025.csv line 14: 30.09.2025;INTEREST;Bank Wrzos SA;interest"
+  sbank[s20250930_15] = (on: 2025-09-30, kind: taxes_withheld, leg cash from ania_sav to world amount 15.00 DUK) known 2026-01-15 "wrz-ania-savings-2025.csv line 15: 30.09.2025;TAX;Bank Wrzos SA;tax on interest 19%"
+  sbank[s20251031_16] = (on: 2025-10-31, kind: interests, leg cash from world to ania_sav amount 79.44 DUK) known 2026-01-15 "wrz-ania-savings-2025.csv line 16: 31.10.2025;INTEREST;Bank Wrzos SA;interest"
+  sbank[s20251031_17] = (on: 2025-10-31, kind: taxes_withheld, leg cash from ania_sav to world amount 15.00 DUK) known 2026-01-15 "wrz-ania-savings-2025.csv line 17: 31.10.2025;TAX;Bank Wrzos SA;tax on interest 19%"
+  sbank[s20251130_18] = (on: 2025-11-30, kind: interests, leg cash from world to ania_sav amount 77.00 DUK) known 2026-01-15 "wrz-ania-savings-2025.csv line 18: 30.11.2025;INTEREST;Bank Wrzos SA;interest"
+  sbank[s20251130_19] = (on: 2025-11-30, kind: taxes_withheld, leg cash from ania_sav to world amount 15.00 DUK) known 2026-01-15 "wrz-ania-savings-2025.csv line 19: 30.11.2025;TAX;Bank Wrzos SA;tax on interest 19%"
+  sbank[s20251231_20] = (on: 2025-12-31, kind: interests, leg cash from world to ania_sav amount 79.69 DUK) known 2026-01-15 "wrz-ania-savings-2025.csv line 20: 31.12.2025;INTEREST;Bank Wrzos SA;interest"
+  sbank[s20251231_21] = (on: 2025-12-31, kind: taxes_withheld, leg cash from ania_sav to world amount 15.00 DUK) known 2026-01-15 "wrz-ania-savings-2025.csv line 21: 31.12.2025;TAX;Bank Wrzos SA;tax on interest 19%"
+  stated[ania_sav] = 39162.33 DUK at 2025-12-31 end "wrz-ania-savings-2025.csv line 21, balance after"

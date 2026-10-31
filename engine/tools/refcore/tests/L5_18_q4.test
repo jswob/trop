@@ -1,0 +1,40 @@
+# L §5.18 example ask q4, copied: with pins a value (§5.11), law D gives the law date, as known D sets the cut K
+# (§4.5).  net_tax = income + foreign_income; the pin makes foreign_income[ewa] 0 PLN: 1 000.00 + 0 = 1 000.00 PLN.
+# The income row of the version known 2021-09-01 is unseen at the cut 2021-06-30, so the 2021-01 row (1 000.00)
+# is read.  pinned: lists the pin (L §8.2); the open row read at a law date after the cut is held.
+=== m.tally
+model t
+  tally 2
+  on 2022-01-01
+  start 2021-01-01
+  end 2021-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+index persons = [ewa]
+
+input income[p in persons]: money PLN
+input foreign_income[p in persons]: money PLN
+
+def net_tax[p in persons]: money PLN at reader
+  rule base = income[p] + foreign_income[p]
+
+version v1
+  cite s
+  governs 2021..
+  known 2021-01-01
+  income[ewa] = 1 000.00 PLN
+  foreign_income[ewa] = 300.00 PLN
+
+version v2
+  cite s
+  governs 2021..
+  known 2021-09-01
+  replace income[ewa] = 2 000.00 PLN
+
+ask q4: net_tax[ewa] with foreign_income[ewa] = 0 PLN law 2021-12-31 as known 2021-06-30
+=== expect
+q4: 1 000.00 PLN
+  pinned: foreign_income[ewa] = 0.00 PLN
+  held: income[ewa] = 1 000.00 PLN (v1), read for 2021-12-31
+  law date 2021-12-31, cut 2021-06-30

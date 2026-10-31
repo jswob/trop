@@ -1,0 +1,38 @@
+model time01
+  tally 1
+  on 2026-10-25
+  note "Probe TIME-01: a purchase known only to the month, on a 5-year clock that ends in that month."
+
+source probe_card "Probe card TIME-01 (made-up story and rules)"
+
+index lot = [l1]
+
+input bought[l in lot]: date
+input cgt_rate: num
+input hold_years: int
+input lot_cost[l in lot]: money DUK
+input proceeds[l in lot]: money DUK
+input sold[l in lot]: date
+
+def exempt[l in lot]: bool
+  note "rule 1: exempt if the sale falls after the day 5 years from the purchase day (same day number; a month lacking it, its last day)"
+  rule base v card = sold[l] > add_years(bought[l], hold_years)
+
+def gain[l in lot]: money DUK = proceeds[l] - lot_cost[l]
+
+def tax[l in lot]: num DUK
+  note "rule 2: otherwise taxed at 19 %"
+  rule base v card = cgt_rate * gain[l]
+  rule exempt_sale excepts base v card when exempt[l] = 0
+
+ask q_l1: gain[l1], tax[l1]
+
+version card
+  cite probe_card
+  known 2026-10-25
+  bought[l1] = 2019-03 "father's notes: lot L1, 10 units, bought in March 2019"
+  cgt_rate = 0.19 "rule 2"
+  hold_years = 5 "rule 1"
+  lot_cost[l1] = 1000.00 "father's notes"
+  proceeds[l1] = 1600.00 "story: sold for 1 600.00"
+  sold[l1] = 2024-03-14 "story: sold on 14 March 2024"

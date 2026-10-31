@@ -1,0 +1,70 @@
+# L §6.4 "A scenario row may be an expression over the base's facts, the base's items named with the base's id as a
+# prefix and the scenario's own items bare (replace sale_price[flat] = household.valuation[flat] * keep_share, with
+# keep_share a scenario input) ... The expression is evaluated at the row's keys and law date: its prefixed names in
+# the base, its bare names in the scenario."
+# Base: valuation[flat] 800 000.00 PLN, sale_price[flat] 700 000.00 PLN, bare_price[flat] 650 000.00 PLN.  Scenario
+# sell (from 2031-01-01) replaces valuation[flat] with 1 000 000.00 PLN, keep_share = 0.9, and from 2031 gives
+# sale_price = household.valuation * keep_share and bare_price = valuation * keep_share.
+# a1 (in sell, law 2031-06-30): sale_price reads the base's valuation: 800 000 * 0.9 = 720 000.00 PLN; bare_price
+# reads the scenario's: 1 000 000 * 0.9 = 900 000.00 PLN.  a2: the base is unchanged (700 000.00, 650 000.00 PLN).
+# a3: before the scenario's rows govern (law 2030-06-30), the base's rows: 700 000.00 PLN.
+# a4: loop = loop * keep_share reads itself in the scenario, at the same key: RUN-CYCLE (L §8.4 table, `<x>[k]
+# reads itself through <path>`).
+# The linked figures are num PLN, as L §6.4 now declares sale_price ("with sale_price a num PLN input of the base",
+# round 8): a money times a num is a num CUR (L §3.2).
+=== household.tally
+model household
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2040-12-31
+
+source plan "plan"
+unit PLN: currency minor 0.01
+index flats = [flat]
+input valuation[f in flats]: money PLN
+input sale_price[f in flats]: num PLN
+input bare_price[f in flats]: num PLN
+input loop: num PLN
+
+version base_2026
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  valuation[flat] = 800 000.00 PLN "operat"
+  sale_price[flat] = 700 000.00 PLN "oferta"
+  bare_price[flat] = 650 000.00 PLN "oferta"
+  loop = 1.00 PLN "own"
+
+ask a2: sale_price[flat], bare_price[flat] law 2031-06-30
+=== sell.tally
+scenario sell over household
+  tally 2
+  from 2031-01-01
+
+input keep_share: num
+
+version sell_2031
+  cite plan
+  governs 2031-01-01..
+  known 2026-10-20
+  replace valuation[flat] = 1 000 000.00 PLN "założenie"
+  keep_share = 0.9 "założenie"
+  replace sale_price[flat] = household.valuation[flat] * keep_share "powiązana cena"
+  replace bare_price[flat] = valuation[flat] * keep_share "powiązana cena"
+  replace loop = loop * keep_share "pętla"
+
+ask a1: sale_price[flat], bare_price[flat] in sell law 2031-06-30
+ask a3: sale_price[flat] in sell law 2030-06-30
+ask a4: loop in sell law 2031-06-30
+=== expect
+a1: (720 000 PLN, 900 000 PLN)
+  world: sell
+...
+a2: (700 000 PLN, 650 000 PLN)
+...
+a3: 700 000 PLN
+  world: sell
+...
+a4: refused: RUN-CYCLE ...
+...

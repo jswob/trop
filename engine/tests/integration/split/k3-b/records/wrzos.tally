@@ -1,0 +1,355 @@
+part wrzos_records
+  tally 2
+  note "Bank Wrzos statements of Ola's account LN27 1140 2004 0000 3402 8830 1177: October 2024, February and March 2025, all she kept (story). A ';' CSV with decimal commas (O:B-1), written out whole. The account is seen live: each day's rows are known on their day, one version per day with rows covering that day; the other days of a statement's month are covered by a version known when the statement came (the 2nd of the next month, assumed)."
+
+version wrz_2024_10_rest
+  cite wrzos_export
+  governs 2024-10
+  known 2024-11-02
+  assumed "the statement's day is not stated: the 2nd of the next month"
+  covers wrzos 2024-10-03..2024-10-06, wrzos 2024-10-09..2024-10-09, wrzos 2024-10-11..2024-10-15, wrzos 2024-10-17..2024-10-20, wrzos 2024-10-26..2024-10-27, wrzos 2024-10-30..2024-10-30
+  anchor wrzos
+  stated[wrzos] = 4127.55 DUK at 2024-10-01 start "wrz-ola-2024-10.csv line 5 Opening balance"
+
+version wrz_2024_10_01
+  cite wrzos_export
+  governs 2024-10-01
+  known 2024-10-01
+  covers wrzos
+  anchor wrzos
+  wrzr[w20241001a] = (on: 2024-10-01, kind: card_pays, leg cash from wrzos to shops amount 30.49 DUK) "wrz-ola-2024-10.csv line 7 CARD PAYMENT Sklep Jagoda Kłodzin card ...1177"
+  stated[wrzos] = 4097.06 DUK at 2024-10-01 end "wrz-ola-2024-10.csv line 7 Balance after"
+
+version wrz_2024_10_02
+  cite wrzos_export
+  governs 2024-10-02
+  known 2024-10-02
+  covers wrzos
+  anchor wrzos
+  wrzr[w20241002a] = (on: 2024-10-02, kind: card_pays, leg cash from wrzos to shops amount 32.48 DUK) "wrz-ola-2024-10.csv line 8 CARD PAYMENT Perfumeria Lilia card ...1177"
+  stated[wrzos] = 4064.58 DUK at 2024-10-02 end "wrz-ola-2024-10.csv line 8 Balance after"
+
+version wrz_2024_10_07
+  cite wrzos_export
+  governs 2024-10-07
+  known 2024-10-07
+  covers wrzos
+  anchor wrzos
+  wrzr[w20241007a] = (on: 2024-10-07, kind: transfers, leg cash from wrzos to cis amount 1700.00 DUK, fulfils: ola_order[2024-10]) "wrz-ola-2024-10.csv line 9 STANDING ORDER PIOTR SOWA flat share"
+  stated[wrzos] = 2364.58 DUK at 2024-10-07 end "wrz-ola-2024-10.csv line 9 Balance after"
+
+version wrz_2024_10_08
+  cite wrzos_export
+  governs 2024-10-08
+  known 2024-10-08
+  covers wrzos
+  anchor wrzos
+  wrzr[w20241008a] = (on: 2024-10-08, kind: card_pays, leg cash from wrzos to shops amount 85.83 DUK) "wrz-ola-2024-10.csv line 10 CARD PAYMENT Kawiarnia Pod Lipą card ...1177"
+  stated[wrzos] = 2278.75 DUK at 2024-10-08 end "wrz-ola-2024-10.csv line 10 Balance after"
+
+version wrz_2024_10_10
+  cite wrzos_export
+  governs 2024-10-10
+  known 2024-10-10
+  covers wrzos
+  anchor wrzos
+  wrzr[w20241010a] = (on: 2024-10-10, kind: card_pays, leg cash from wrzos to shops amount 39.64 DUK) "wrz-ola-2024-10.csv line 11 CARD PAYMENT Drogeria Malwa card ...1177"
+  stated[wrzos] = 2239.11 DUK at 2024-10-10 end "wrz-ola-2024-10.csv line 11 Balance after"
+
+version wrz_2024_10_16
+  cite wrzos_export
+  governs 2024-10-16
+  known 2024-10-16
+  covers wrzos
+  anchor wrzos
+  wrzr[w20241016a] = (on: 2024-10-16, kind: card_pays, leg cash from wrzos to shops amount 17.11 DUK) "wrz-ola-2024-10.csv line 12 CARD PAYMENT Kawiarnia Pod Lipą card ...1177"
+  stated[wrzos] = 2222.00 DUK at 2024-10-16 end "wrz-ola-2024-10.csv line 12 Balance after"
+
+version wrz_2024_10_21
+  cite wrzos_export
+  governs 2024-10-21
+  known 2024-10-21
+  covers wrzos
+  anchor wrzos
+  wrzr[w20241021a] = (on: 2024-10-21, kind: card_pays, leg cash from wrzos to shops amount 82.10 DUK) "wrz-ola-2024-10.csv line 13 CARD PAYMENT Perfumeria Lilia card ...1177"
+  stated[wrzos] = 2139.90 DUK at 2024-10-21 end "wrz-ola-2024-10.csv line 13 Balance after"
+
+version wrz_2024_10_22
+  cite wrzos_export
+  governs 2024-10-22
+  known 2024-10-22
+  covers wrzos
+  anchor wrzos
+  wrzr[w20241022a] = (on: 2024-10-22, kind: card_pays, leg cash from wrzos to shops amount 71.45 DUK) "wrz-ola-2024-10.csv line 14 CARD PAYMENT Kawiarnia Pod Lipą card ...1177"
+  stated[wrzos] = 2068.45 DUK at 2024-10-22 end "wrz-ola-2024-10.csv line 14 Balance after"
+
+version wrz_2024_10_23
+  cite wrzos_export
+  governs 2024-10-23
+  known 2024-10-23
+  covers wrzos
+  anchor wrzos
+  wrzr[w20241023a] = (on: 2024-10-23, kind: card_pays, leg cash from wrzos to shops amount 49.08 DUK) "wrz-ola-2024-10.csv line 15 CARD PAYMENT Perfumeria Lilia card ...1177"
+  stated[wrzos] = 2019.37 DUK at 2024-10-23 end "wrz-ola-2024-10.csv line 15 Balance after"
+
+version wrz_2024_10_24
+  cite wrzos_export
+  governs 2024-10-24
+  known 2024-10-24
+  covers wrzos
+  anchor wrzos
+  wrzr[w20241024a] = (on: 2024-10-24, kind: card_pays, leg cash from wrzos to shops amount 9.71 DUK) "wrz-ola-2024-10.csv line 16 CARD PAYMENT Księgarnia Kaganek card ...1177"
+  stated[wrzos] = 2009.66 DUK at 2024-10-24 end "wrz-ola-2024-10.csv line 16 Balance after"
+
+version wrz_2024_10_25
+  cite wrzos_export
+  governs 2024-10-25
+  known 2024-10-25
+  covers wrzos
+  anchor wrzos
+  wrzr[w20241025a] = (on: 2024-10-25, kind: card_pays, leg cash from wrzos to shops amount 34.29 DUK) "wrz-ola-2024-10.csv line 17 CARD PAYMENT Księgarnia Kaganek card ...1177"
+  stated[wrzos] = 1975.37 DUK at 2024-10-25 end "wrz-ola-2024-10.csv line 17 Balance after"
+
+version wrz_2024_10_28
+  cite wrzos_export
+  governs 2024-10-28
+  known 2024-10-28
+  covers wrzos
+  anchor wrzos
+  wrzr[w20241028a] = (on: 2024-10-28, kind: transfers, leg cash from employer to wrzos amount 7351.59 DUK, fulfils: mewa_pay[2024-10]) "wrz-ola-2024-10.csv line 18 TRANSFER IN MEWA SP. pay 10/2024"
+  stated[wrzos] = 9326.96 DUK at 2024-10-28 end "wrz-ola-2024-10.csv line 18 Balance after"
+
+version wrz_2024_10_29
+  cite wrzos_export
+  governs 2024-10-29
+  known 2024-10-29
+  covers wrzos
+  anchor wrzos
+  wrzr[w20241029a] = (on: 2024-10-29, kind: card_pays, leg cash from wrzos to shops amount 67.73 DUK) "wrz-ola-2024-10.csv line 19 CARD PAYMENT Kiosk Ruta card ...1177"
+  stated[wrzos] = 9259.23 DUK at 2024-10-29 end "wrz-ola-2024-10.csv line 19 Balance after"
+
+version wrz_2024_10_31
+  cite wrzos_export
+  governs 2024-10-31
+  known 2024-10-31
+  covers wrzos
+  anchor wrzos
+  wrzr[w20241031a] = (on: 2024-10-31, kind: card_pays, leg cash from wrzos to shops amount 50.60 DUK) "wrz-ola-2024-10.csv line 20 CARD PAYMENT Apteka Mięta card ...1177"
+  stated[wrzos] = 9208.63 DUK at 2024-10-31 end "wrz-ola-2024-10.csv line 20 Balance after"
+
+version wrz_2025_02_rest
+  cite wrzos_export
+  governs 2025-02
+  known 2025-03-02
+  assumed "the statement's day is not stated: the 2nd of the next month"
+  covers wrzos 2025-02-01..2025-02-03, wrzos 2025-02-07..2025-02-11, wrzos 2025-02-14..2025-02-16, wrzos 2025-02-18..2025-02-23, wrzos 2025-02-27..2025-02-28
+  anchor wrzos
+  stated[wrzos] = 3412.18 DUK at 2025-02-01 start "wrz-ola-2025-02.csv line 5 Opening balance"
+
+version wrz_2025_02_04
+  cite wrzos_export
+  governs 2025-02-04
+  known 2025-02-04
+  covers wrzos
+  anchor wrzos
+  wrzr[w20250204a] = (on: 2025-02-04, kind: card_pays, leg cash from wrzos to shops amount 70.52 DUK) "wrz-ola-2025-02.csv line 7 CARD PAYMENT Apteka Mięta card ...1177"
+  stated[wrzos] = 3341.66 DUK at 2025-02-04 end "wrz-ola-2025-02.csv line 7 Balance after"
+
+version wrz_2025_02_05
+  cite wrzos_export
+  governs 2025-02-05
+  known 2025-02-05
+  covers wrzos
+  anchor wrzos
+  wrzr[w20250205a] = (on: 2025-02-05, kind: transfers, leg cash from wrzos to cis amount 1700.00 DUK) "wrz-ola-2025-02.csv line 8 STANDING ORDER PIOTR SOWA flat share"
+  stated[wrzos] = 1641.66 DUK at 2025-02-05 end "wrz-ola-2025-02.csv line 8 Balance after"
+
+version wrz_2025_02_06
+  cite wrzos_export
+  governs 2025-02-06
+  known 2025-02-06
+  covers wrzos
+  anchor wrzos
+  wrzr[w20250206a] = (on: 2025-02-06, kind: card_pays, leg cash from wrzos to shops amount 22.55 DUK) "wrz-ola-2025-02.csv line 9 CARD PAYMENT Sklep Jagoda Kłodzin card ...1177"
+  stated[wrzos] = 1619.11 DUK at 2025-02-06 end "wrz-ola-2025-02.csv line 9 Balance after"
+
+version wrz_2025_02_12
+  cite wrzos_export
+  governs 2025-02-12
+  known 2025-02-12
+  covers wrzos
+  anchor wrzos
+  wrzr[w20250212a] = (on: 2025-02-12, kind: card_pays, leg cash from wrzos to shops amount 74.42 DUK) "wrz-ola-2025-02.csv line 10 CARD PAYMENT Kawiarnia Pod Lipą card ...1177"
+  stated[wrzos] = 1544.69 DUK at 2025-02-12 end "wrz-ola-2025-02.csv line 10 Balance after"
+
+version wrz_2025_02_13
+  cite wrzos_export
+  governs 2025-02-13
+  known 2025-02-13
+  covers wrzos
+  anchor wrzos
+  wrzr[w20250213a] = (on: 2025-02-13, kind: card_pays, leg cash from wrzos to shops amount 89.11 DUK) "wrz-ola-2025-02.csv line 11 CARD PAYMENT Kawiarnia Pod Lipą card ...1177"
+  stated[wrzos] = 1455.58 DUK at 2025-02-13 end "wrz-ola-2025-02.csv line 11 Balance after"
+
+version wrz_2025_02_17
+  cite wrzos_export
+  governs 2025-02-17
+  known 2025-02-17
+  covers wrzos
+  anchor wrzos
+  wrzr[w20250217a] = (on: 2025-02-17, kind: card_pays, leg cash from wrzos to shops amount 42.49 DUK) "wrz-ola-2025-02.csv line 12 CARD PAYMENT Kawiarnia Pod Lipą card ...1177"
+  stated[wrzos] = 1413.09 DUK at 2025-02-17 end "wrz-ola-2025-02.csv line 12 Balance after"
+
+version wrz_2025_02_24
+  cite wrzos_export
+  governs 2025-02-24
+  known 2025-02-24
+  covers wrzos
+  anchor wrzos
+  wrzr[w20250224a] = (on: 2025-02-24, kind: card_pays, leg cash from wrzos to shops amount 27.44 DUK) "wrz-ola-2025-02.csv line 13 CARD PAYMENT Apteka Mięta card ...1177"
+  stated[wrzos] = 1385.65 DUK at 2025-02-24 end "wrz-ola-2025-02.csv line 13 Balance after"
+
+version wrz_2025_02_25
+  cite wrzos_export
+  governs 2025-02-25
+  known 2025-02-25
+  covers wrzos
+  anchor wrzos
+  wrzr[w20250225a] = (on: 2025-02-25, kind: card_pays, leg cash from wrzos to shops amount 39.58 DUK) "wrz-ola-2025-02.csv line 14 CARD PAYMENT Apteka Mięta card ...1177"
+  stated[wrzos] = 1346.07 DUK at 2025-02-25 end "wrz-ola-2025-02.csv line 14 Balance after"
+
+version wrz_2025_02_26
+  cite wrzos_export
+  governs 2025-02-26
+  known 2025-02-26
+  covers wrzos
+  anchor wrzos
+  wrzr[w20250226a] = (on: 2025-02-26, kind: card_pays, leg cash from wrzos to shops amount 28.78 DUK) "wrz-ola-2025-02.csv line 15 CARD PAYMENT Kiosk Ruta card ...1177"
+  stated[wrzos] = 1317.29 DUK at 2025-02-26 end "wrz-ola-2025-02.csv line 15 Balance after"
+
+version wrz_2025_03_rest
+  cite wrzos_export
+  governs 2025-03
+  known 2025-04-02
+  assumed "the statement's day is not stated: the 2nd of the next month"
+  covers wrzos 2025-03-01..2025-03-03, wrzos 2025-03-06..2025-03-06, wrzos 2025-03-08..2025-03-09, wrzos 2025-03-12..2025-03-12, wrzos 2025-03-14..2025-03-16, wrzos 2025-03-18..2025-03-20, wrzos 2025-03-22..2025-03-23, wrzos 2025-03-27..2025-03-27, wrzos 2025-03-29..2025-03-30
+  anchor wrzos
+  stated[wrzos] = 1317.29 DUK at 2025-03-01 start "wrz-ola-2025-03.csv line 5 Opening balance"
+
+version wrz_2025_03_04
+  cite wrzos_export
+  governs 2025-03-04
+  known 2025-03-04
+  covers wrzos
+  anchor wrzos
+  wrzr[w20250304a] = (on: 2025-03-04, kind: card_pays, leg cash from wrzos to shops amount 19.70 DUK) "wrz-ola-2025-03.csv line 7 CARD PAYMENT Kiosk Ruta card ...1177"
+  stated[wrzos] = 1297.59 DUK at 2025-03-04 end "wrz-ola-2025-03.csv line 7 Balance after"
+
+version wrz_2025_03_05
+  cite wrzos_export
+  governs 2025-03-05
+  known 2025-03-05
+  covers wrzos
+  anchor wrzos
+  note "wrz-ola-2025-03.csv line 8 STANDING ORDER REJECTED PIOTR SOWA flat share - insufficient funds: a row of 0.00, no movement"
+  stated[wrzos] = 1297.59 DUK at 2025-03-05 end "wrz-ola-2025-03.csv line 8 Balance after"
+
+version wrz_2025_03_07
+  cite wrzos_export
+  governs 2025-03-07
+  known 2025-03-07
+  covers wrzos
+  anchor wrzos
+  wrzr[w20250307a] = (on: 2025-03-07, kind: transfers, leg cash from employer to wrzos amount 5487.80 DUK, fulfils: mewa_pay[2025-02]) "wrz-ola-2025-03.csv line 9 TRANSFER IN MEWA SP. pay 02/2025"
+  wrzr[w20250307b] = (on: 2025-03-07, kind: card_pays, leg cash from wrzos to shops amount 85.75 DUK) "wrz-ola-2025-03.csv line 10 CARD PAYMENT Kiosk Ruta card ...1177"
+  stated[wrzos] = 6699.64 DUK at 2025-03-07 end "wrz-ola-2025-03.csv line 10 Balance after"
+
+version wrz_2025_03_10
+  cite wrzos_export
+  governs 2025-03-10
+  known 2025-03-10
+  covers wrzos
+  anchor wrzos
+  wrzr[w20250310a] = (on: 2025-03-10, kind: transfers, leg cash from wrzos to world amount 520.00 DUK) "wrz-ola-2025-03.csv line 11 TRANSFER OUT TU Bocian S.A. policy flat WRZ-12/5 2025/26"
+  stated[wrzos] = 6179.64 DUK at 2025-03-10 end "wrz-ola-2025-03.csv line 11 Balance after"
+
+version wrz_2025_03_11
+  cite wrzos_export
+  governs 2025-03-11
+  known 2025-03-11
+  covers wrzos
+  anchor wrzos
+  wrzr[w20250311a] = (on: 2025-03-11, kind: card_pays, leg cash from wrzos to shops amount 51.17 DUK) "wrz-ola-2025-03.csv line 12 CARD PAYMENT Kawiarnia Pod Lipą card ...1177"
+  stated[wrzos] = 6128.47 DUK at 2025-03-11 end "wrz-ola-2025-03.csv line 12 Balance after"
+
+version wrz_2025_03_13
+  cite wrzos_export
+  governs 2025-03-13
+  known 2025-03-13
+  covers wrzos
+  anchor wrzos
+  wrzr[w20250313a] = (on: 2025-03-13, kind: card_pays, leg cash from wrzos to shops amount 38.55 DUK) "wrz-ola-2025-03.csv line 13 CARD PAYMENT Drogeria Malwa card ...1177"
+  stated[wrzos] = 6089.92 DUK at 2025-03-13 end "wrz-ola-2025-03.csv line 13 Balance after"
+
+version wrz_2025_03_17
+  cite wrzos_export
+  governs 2025-03-17
+  known 2025-03-17
+  covers wrzos
+  anchor wrzos
+  wrzr[w20250317a] = (on: 2025-03-17, kind: card_pays, leg cash from wrzos to shops amount 88.19 DUK) "wrz-ola-2025-03.csv line 14 CARD PAYMENT Perfumeria Lilia card ...1177"
+  stated[wrzos] = 6001.73 DUK at 2025-03-17 end "wrz-ola-2025-03.csv line 14 Balance after"
+
+version wrz_2025_03_21
+  cite wrzos_export
+  governs 2025-03-21
+  known 2025-03-21
+  covers wrzos
+  anchor wrzos
+  wrzr[w20250321a] = (on: 2025-03-21, kind: card_pays, leg cash from wrzos to shops amount 40.69 DUK) "wrz-ola-2025-03.csv line 15 CARD PAYMENT Apteka Mięta card ...1177"
+  stated[wrzos] = 5961.04 DUK at 2025-03-21 end "wrz-ola-2025-03.csv line 15 Balance after"
+
+version wrz_2025_03_24
+  cite wrzos_export
+  governs 2025-03-24
+  known 2025-03-24
+  covers wrzos
+  anchor wrzos
+  wrzr[w20250324a] = (on: 2025-03-24, kind: card_pays, leg cash from wrzos to shops amount 28.12 DUK) "wrz-ola-2025-03.csv line 16 CARD PAYMENT Sklep Jagoda Kłodzin card ...1177"
+  stated[wrzos] = 5932.92 DUK at 2025-03-24 end "wrz-ola-2025-03.csv line 16 Balance after"
+
+version wrz_2025_03_25
+  cite wrzos_export
+  governs 2025-03-25
+  known 2025-03-25
+  covers wrzos
+  anchor wrzos
+  wrzr[w20250325a] = (on: 2025-03-25, kind: card_pays, leg cash from wrzos to shops amount 37.79 DUK) "wrz-ola-2025-03.csv line 17 CARD PAYMENT Kiosk Ruta card ...1177"
+  stated[wrzos] = 5895.13 DUK at 2025-03-25 end "wrz-ola-2025-03.csv line 17 Balance after"
+
+version wrz_2025_03_26
+  cite wrzos_export
+  governs 2025-03-26
+  known 2025-03-26
+  covers wrzos
+  anchor wrzos
+  wrzr[w20250326a] = (on: 2025-03-26, kind: card_pays, leg cash from wrzos to shops amount 68.30 DUK) "wrz-ola-2025-03.csv line 18 CARD PAYMENT Drogeria Malwa card ...1177"
+  stated[wrzos] = 5826.83 DUK at 2025-03-26 end "wrz-ola-2025-03.csv line 18 Balance after"
+
+version wrz_2025_03_28
+  cite wrzos_export
+  governs 2025-03-28
+  known 2025-03-28
+  covers wrzos
+  anchor wrzos
+  wrzr[w20250328a] = (on: 2025-03-28, kind: transfers, leg cash from employer to wrzos amount 5130.80 DUK, fulfils: mewa_pay[2025-03]) "wrz-ola-2025-03.csv line 19 TRANSFER IN MEWA SP. pay 03/2025"
+  stated[wrzos] = 10957.63 DUK at 2025-03-28 end "wrz-ola-2025-03.csv line 19 Balance after"
+
+version wrz_2025_03_31
+  cite wrzos_export
+  governs 2025-03-31
+  known 2025-03-31
+  covers wrzos
+  anchor wrzos
+  wrzr[w20250331a] = (on: 2025-03-31, kind: card_pays, leg cash from wrzos to shops amount 24.53 DUK) "wrz-ola-2025-03.csv line 20 CARD PAYMENT Kawiarnia Pod Lipą card ...1177"
+  stated[wrzos] = 10933.10 DUK at 2025-03-31 end "wrz-ola-2025-03.csv line 20 Balance after"

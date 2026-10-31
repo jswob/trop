@@ -1,0 +1,11 @@
+# L §2.2: built-in ids "follow the rules of ids: declaring one again is LOAD-DUP" (months is a built-in index).
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+index months = [a, b]
+=== expect
+refused: LOAD-DUP ...

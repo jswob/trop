@@ -1,0 +1,28 @@
+q_keeper_pays: 180 000 DUK
+  law date 2025-06-01, cut 2026-10-25
+q_payout_at_death (p = ania): 37 500 DUK
+  cut 2026-10-25
+q_payout_at_death (p = piotr): 37 500 DUK
+  cut 2026-10-25
+q_payout_at_death (p = marta): 37 500 DUK
+  cut 2026-10-25
+q_payout_at_death (p = kuba): 37 500 DUK
+  cut 2026-10-25
+q_payouts (p = ania): 45 000 DUK
+  cut 2026-10-25
+q_payouts (p = piotr): 45 000 DUK
+  cut 2026-10-25
+q_payouts (p = marta): 45 000 DUK
+  cut 2026-10-25
+q_payouts (p = kuba): 45 000 DUK
+  cut 2026-10-25
+q_shares (p = halina): 0.625
+  law date 2025-06-01, cut 2026-10-25
+q_shares (p = ania): 0.09375
+  law date 2025-06-01, cut 2026-10-25
+q_shares (p = piotr): 0.09375
+  law date 2025-06-01, cut 2026-10-25
+q_shares (p = marta): 0.09375
+  law date 2025-06-01, cut 2026-10-25
+q_shares (p = kuba): 0.09375
+  law date 2025-06-01, cut 2026-10-25

@@ -1,0 +1,21 @@
+model m
+  tally 2
+  on 2027-01-01
+  start 2027-01-01
+  end 2027-12-31
+unit PLN: currency minor 0.01
+kind items: event certain
+  leg cash: PLN
+kind refunds: event certain
+  leg cash: PLN
+  attr item: key items
+place acct: accounts PLN lives 2027-01-01..
+place world: outside lives 2027-01-01..
+move get[m in months]: items
+  on start_of(m)
+  leg cash from world to acct amount 0
+move back[r in items over ..]: refunds
+  on r.day
+  attr item = r
+  leg cash from acct to world amount 0
+ask t: count(f in refunds over .. where f.item == r) for r in items over 2027-03

@@ -1,0 +1,39 @@
+# MC-E1-F1, the other ways a member's base ask names its own scenario (L §5.18 `in S`, `diff(e) in S against B`; L
+# §6.1, §6.4 as in L6_1_member_ask_own_scenario): each answered by the member alone with all its files, as the member
+# answers it alone; qb names no scenario. s1 changes nothing, so the diff finds x unchanged.
+=== j/joint.tally
+model j
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+  use m = "../m" sha256 "fc4882b62f05831ca2eb568438fd74987a9a92759d12989bdc1c853999c4c801"
+
+ask jq: m.x law 2026-06-30
+=== m/model.tally
+model m
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+input x: int question "x?"
+
+ask q: x with scenario s1 law 2026-06-30
+ask qi: x in s1 law 2026-06-30
+ask qd: diff(x) in s1 against m law 2026-06-30
+ask qb: x law 2026-06-30
+=== m/scenarios/s1.tally
+scenario s1 over m
+  tally 2
+  from 2026-03-01
+=== expect m.qi m.qd m.qb
+m.qi: ?"x?" (x)
+  world: s1
+  law date 2026-06-30, cut 2026-01-01
+m.qd: diff in s1 against m: 0 changed, 0 added, 0 removed, 1 unchanged
+  world: m
+  world: s1
+  law date 2026-06-30, cut 2026-01-01
+m.qb: ?"x?" (x)
+  law date 2026-06-30, cut 2026-01-01

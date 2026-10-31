@@ -1,0 +1,61 @@
+model law07
+  tally 2
+  on 2026-10-25
+  start 2024-01-01
+  end 2024-12-31
+  note "Probe LAW-07: a VAT exemption lost mid-year; VAT from the sale by which the year's revenue exceeds the threshold, on that sale's whole value."
+
+source card "Probe card LAW-07 (tmp/cases/probes/law/LAW-07.md): story, rules 1-2 and question"
+
+unit DUK: currency minor 0.01
+
+index inv = [i41, i42, i43]
+
+input inv_net[i in inv]: money DUK question "What is the invoice's net value?"
+
+input inv_on[i in inv]: date question "On what day was the invoice issued?"
+
+input rev_before: money DUK question "What was the year's revenue by 30 September 2024?"
+
+input threshold: money DUK question "Above what yearly revenue is the exemption lost?"
+
+input vat_rate: num question "What is the VAT rate?"
+
+def cum[i in inv]: money DUK at reader
+  note "the year's revenue after sale i: the revenue by 30 September and every October sale up to i's day"
+  rule base v card_law = rev_before + sum(inv_net[j] for j in inv where inv_on[j] <= inv_on[i])
+
+def first_vat: key inv at reader
+  note "rule 1: the sale by which the year's revenue exceeds the threshold; the index lists the invoices in the order of their days"
+  rule base v card_law = first(i in inv where cum[i] > threshold)
+
+def vat[i in inv]: money DUK at reader
+  note "rules 1-2: VAT from the sale by which the exemption is lost, on its whole value, rounded half up to 0.01"
+  rule exempt v card_law = 0
+  rule lost beats exempt v card_law = round(vat_rate * inv_net[i], minor(DUK), half-up) when i >= first_vat
+
+def vat_total: money DUK = sum(vat[i] for i in inv) at reader
+
+ask first_taxed: first_vat, vat_total law 2024-10-31
+
+ask revenue_after: cum[i] for i in inv law 2024-10-31
+
+version card_facts
+  cite card
+  governs always
+  known 2024-01-01
+  inv_net[i41] = 4000 "story: #41, 4 000.00 net"
+  inv_net[i42] = 5000 "story: #42, 5 000.00 net"
+  inv_net[i43] = 2000 "story: #43, 2 000.00 net"
+  inv_on[i41] = 2024-10-03 "story: #41 (3 Oct)"
+  inv_on[i42] = 2024-10-12 "story: #42 (12 Oct)"
+  inv_on[i43] = 2024-10-20 "story: #43 (20 Oct)"
+  rev_before = 192500 "story: by 30 September 2024 his year's revenue is 192 500.00 DUK"
+
+version card_law
+  cite card
+  governs always
+  known 2024-01-01
+  note "the card's own rules, stipulations known from the model's start (L 4.5)"
+  threshold = 200000 "rule 1: when the year's revenue exceeds 200 000.00"
+  vat_rate = 0.23 "rule 2: VAT is 23 %"

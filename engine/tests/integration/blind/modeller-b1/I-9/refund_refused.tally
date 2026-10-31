@@ -1,0 +1,18 @@
+scenario refund_refused over i9
+  tally 2
+  from 2028-01-15
+  note "Outcome: Varnia's office refuses the refund."
+
+source outcome_refused "Card I-9, question: Varnia's office refuses the refund"
+
+ask credits_refused: credit_item[r] for r in foreign_income over 2027 in refund_refused
+
+ask tax_2027_refused: tax_year[marek, 2027], gains_tax[marek, 2027], tax_year[marek, 2027] + gains_tax[marek, 2027], due_day[2027] in refund_refused
+
+ask added_2028_refused: added[marek, 2028], due_day[2028] in refund_refused
+
+version refund_on_refused
+  cite outcome_refused
+  governs 2028-01-15..
+  known 2027-01-01
+  replace refund_day = none "Varnia's office refuses the refund"

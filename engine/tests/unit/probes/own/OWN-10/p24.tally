@@ -1,0 +1,192 @@
+model own10_p24
+  tally 2
+  on 2026-10-30
+  start 2026-01-01
+  end 2026-06-30
+  note "OWN-10 P-24: refused on purpose. Its twin is P-08: the same, and after the death posting that day the employer pays Tomek's last wage into sav, labelled the employee's."
+  note "A part labelled to a party by a movement after its death's posting that day is refused (RUN-LIFESPAN, LANGUAGE 5.7); the fund account, which the wage doesn't touch, stands."
+
+source card "Probe card OWN-10 (made up): story and rules"
+
+source bank "The bank and fund rows of January 2026 (made up)"
+
+unit DUK: currency minor 0.01
+
+unit fz_units "a unit of fund Z"
+
+kind estates: parties
+
+kind persons: parties
+
+kind deaths: event certain
+  leg what: any
+  attr deceased: key persons
+  attr estate: key estates
+
+kind divisions: event certain
+  leg what: any
+  attr agreement: key agreements
+  attr estate: key estates
+
+kind fund_accounts: place fz_units min 0
+  owned by arrive
+  step 1 fz_units
+  takes k for w order (if w in deaths and k.owner == w.deceased then 0 else 1), (if w in divisions and k.owner == w.estate then 0 else 1)
+
+kind fund_buys: event certain
+  leg units: fz_units
+  leg cash: DUK
+  attr buyer: key persons
+
+kind inheritances: transfers
+  attr heir: key parties
+
+kind savings: place DUK min 0
+  owned by arrive
+  step minor(DUK)
+  takes k for w order (if w in deaths and k.owner == w.deceased then 0 else 1), (if w in divisions and k.owner == w.estate then 0 else 1)
+
+kind wages_in: transfers
+  attr employee: key persons
+
+index agreements = [agr1]
+
+place cash_acc: accounts DUK lives 2020-01-01..
+
+place employer: outside lives 1900-01-01..
+
+place fund: fund_accounts lives 2026-01-01..
+
+place market: outside lives 1900-01-01..
+
+place sav: savings lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input bank_rows: observed
+
+input death_day: date
+
+input division_day: date
+
+input division_share[a in agreements, x in places, q in parties]: num
+
+input estate_of_death: key estates
+
+input final_wage: money DUK
+
+input the_agreement: key agreements
+
+input who_died: key persons
+
+def arrive[m in events, p in parties]: num at m.day
+  note "rule 1: an inheritance the heir's, a purchase its buyer's; rule 2: a death's relabel the estate's; rule 4: a division's by the agreement's share for that place"
+  rule bought v card_rules = (if p == m.buyer then 1 else 0) when m in fund_buys
+  rule divided v card_rules = division_share[m.agreement, m.what.to, p] when m in divisions
+  rule inherited v card_rules = (if p == m.heir then 1 else 0) when m in inheritances
+  rule to_estate v card_rules = (if p == m.estate then 1 else 0) when m in deaths
+  rule wage v card_rules = (if p == m.employee then 1 else 0) when m in wages_in
+
+move death_fund: deaths
+  on death_day
+  at death_day
+  reads fund
+  attr deceased = who_died
+  attr estate = estate_of_death
+  leg what from fund to fund amount bal(fund) of who_died
+  note "rule 2: on the death day, all the deceased's parts to the estate"
+
+move death_sav: deaths
+  on death_day
+  at death_day
+  reads sav
+  attr deceased = who_died
+  attr estate = estate_of_death
+  leg what from sav to sav amount bal(sav) of who_died
+  note "rule 2: on the death day, all the deceased's parts to the estate"
+
+move divide_fund: divisions
+  on division_day
+  at division_day
+  reads fund
+  attr agreement = the_agreement
+  attr estate = estate_of_death
+  leg what from fund to fund amount bal(fund) of estate_of_death
+  note "rule 4: the division relabels all the estate's parts at fund to the heirs"
+
+move divide_sav: divisions
+  on division_day
+  at division_day
+  reads sav
+  attr agreement = the_agreement
+  attr estate = estate_of_death
+  leg what from sav to sav amount bal(sav) of estate_of_death
+  note "rule 4: the division relabels all the estate's parts at sav to the heirs"
+
+move final_pay: wages_in
+  on death_day
+  at death_day
+  when bal(sav) of who_died == 0 DUK
+  reads sav
+  after death_sav
+  attr employee = who_died
+  leg cash from employer to sav amount final_wage
+  note "rule 6: the last wage, paid once the bank has moved the deceased's money to the estate"
+
+ask q_fund_03_09: bal(fund, 2026-03-09) of p for p in parties over 2026
+
+ask q_sav_03_09: bal(sav, 2026-03-09) of p for p in parties over 2026
+
+ask q_fund_03_31: bal(fund, 2026-03-31) of p for p in parties over 2026
+
+ask q_sav_03_31: bal(sav, 2026-03-31) of p for p in parties over 2026
+
+version card_cast
+  cite card
+  known 2026-01-01
+  persons + [ania] lives 1988-04-12..
+  persons + [kuba] lives 2010-02-14..
+  persons + [tomek] lives 1986-09-03..
+
+version cash_open
+  cite card
+  known 2026-01-01
+  opening[cash_acc] = 10000.00 at 2026-01-01 start "the cash account at the run's start"
+
+version card_rules
+  cite card
+  governs always
+  known 2026-01-01
+
+version records_2026_01
+  cite bank
+  governs 2026-01
+  known 2026-02-03
+  bank_rows[r1] = (on: 2026-01-05, kind: inheritances, leg cash from world to sav amount 7000.00 DUK, heir: tomek) "line 1"
+  bank_rows[r2] = (on: 2026-01-06, kind: inheritances, leg cash from world to sav amount 1500.00 DUK, heir: ania) "line 2"
+  bank_rows[r3] = (on: 2026-01-10, kind: fund_buys, leg units from market to fund amount 45 fz_units, leg cash from cash_acc to market amount 2250.00 DUK, buyer: tomek) "line 3"
+  bank_rows[r4] = (on: 2026-01-12, kind: fund_buys, leg units from market to fund amount 10 fz_units, leg cash from cash_acc to market amount 500.00 DUK, buyer: ania) "line 4"
+
+version death
+  cite card
+  governs always
+  known 2026-03-10
+  note "the death certificate: Tomek died on 2026-03-10; his estate is a party from that day"
+  estates + [tomek_estate] lives 2026-03-10..
+  replace persons + [tomek] lives 1986-09-03..2026-03-10
+  death_day = 2026-03-10 "certificate"
+  estate_of_death = tomek_estate "certificate"
+  who_died = tomek "certificate"
+  final_wage = 2400.00 "the employer's letter"
+
+version agreement
+  cite card
+  governs always
+  known 2026-05-25
+  note "the heirs' division agreement agr1, signed 25 May, carried out on 2026-06-01"
+  division_share = 0 "the agreement: no other share"
+  division_share[agr1, fund, kuba] = 1 "the agreement: fund"
+  division_share[agr1, sav, ania] = 1/3 "the agreement: sav"
+  division_share[agr1, sav, kuba] = 2/3 "the agreement: sav"
+  division_day = 2026-06-01 "the agreement"
+  the_agreement = agr1 "the agreement"

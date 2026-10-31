@@ -1,0 +1,36 @@
+# L §5.11 guards: "in an if ... (if k == 1 then … else …)".  A guard that doesn't suffice is checked per key
+# (RUN-KEY): here x[k - 2] at k = 2 lies outside ks = 1..3.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+index ks = 1..3
+input step: int
+
+def x[k in ks]: int at reader
+  rule base = if k == 1 then step else x[k - 1] + step
+def y[k in ks]: int at reader
+  rule base = if k == 1 then step else y[k - 1 - 1] + step
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  step = 1
+
+ask q1: x[k] for k in ks law 2026-06-30
+ask q2: y[2] law 2026-06-30
+=== expect
+q1 (k = 1): 1
+  law date 2026-06-30, cut 2026-12-31
+q1 (k = 2): 2
+  law date 2026-06-30, cut 2026-12-31
+q1 (k = 3): 3
+  law date 2026-06-30, cut 2026-12-31
+q2: refused: RUN-KEY ...
+  law date 2026-06-30, cut 2026-12-31

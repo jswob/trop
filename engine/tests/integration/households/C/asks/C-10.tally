@@ -1,0 +1,9 @@
+part asks_c10
+  tally 2
+  note "C-10 · What we have (questions.md), as of and known as of 2026-08-31, at the end of that day (C-HR9). together, Marta, Jan: partial lines, the known part and the gaps the house and the car leave (C-HR9 .4), each with its coefficient. The items are printed beside them: ours together (joint account less Staś's, pot, Marta's community interest, Jan's dukats not his own, his florens counted, the RTB claim counted, the RFF's owed counted, the FBO's owed, the mortgage, the loan owed to Marta), and each one's own."
+
+ask c10_worth: worth_together[2026-08-31], worth_of[marta, 2026-08-31], worth_of[jan, 2026-08-31] law 2026-08-31 as known 2026-08-31 partial
+
+ask c10_items: joint_ours[2026-08-31], jw_end[2026-08-31], sent_to[2026-08-31], pot_end[2026-08-31], marta_comm_int[2026-08-31], ld_end[2026-08-31], jan_own_duk[2026-08-31], lf_end[2026-08-31], held_duk[2026-08-31], rtb_claim_duk[2026-08-31], rff_owed_flr, rff_claim_duk[2026-08-31], lenia_owed, mort_at[2026-08-31], loan_owed_at[2026-08-31], mo_end[2026-08-31] law 2026-08-31 as known 2026-08-31
+
+ask c10_own: comm[2026-08-31], marta_ownw[2026-08-31], jan_own[2026-08-31] law 2026-08-31 as known 2026-08-31 partial

@@ -1,0 +1,23 @@
+# L §5.6 example indexes, copied whole.  "Lists are ordered as written"; pos(k) is "a key's 1-based position in
+# its index" (L §4.2): pos(buy) = 2.  lots = 1..12 has 12 keys.  L §4.1: "index tax_years = year 2014..2025
+# from 04-06 makes key 2014 the span [2014-04-06, 2015-04-06) ... A key prints as the year or month in which its
+# period starts"; start_of(k) is the first day of k, end_of(k) the first day after it (L §4.2).
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+index lots = 1..12
+index options = [rent, buy, wait]
+index tax_years = year 2014..2025 from 04-06
+index bank_rows: open
+
+ask q1: count(k in lots), pos(buy), first(t in tax_years)
+ask q2: start_of(t), end_of(t) for t in tax_years where pos(t) == 1
+=== expect
+q1: (12, 2, 2014)
+  cut 2026-01-01
+q2 (t = 2014): (2014-04-06, 2015-04-06)
+  cut 2026-01-01

@@ -1,0 +1,231 @@
+model i9
+  tally 2
+  on 2027-01-01
+  start 2027-01-01
+  end 2029-12-31
+  note "Card I-9: income in talars, a credit for foreign tax, foreign cash as lots, and a refund that may come late."
+  note "The three refund outcomes are the scenarios refund_early, refund_late and refund_refused; the base plans no refund."
+
+source story "Card I-9, story and event table"
+
+source income_act "Card I-9, Income Act, rules 1 and 2"
+
+source credit_act "Card I-9, Credit Act, rules 3 and 4"
+
+source gains_act "Card I-9, Gains Act, rule 5"
+
+source central_bank "Card I-9, central bank rates, DUK per 1 TAL"
+
+source modeller "The modeller's own assumptions, each with its reason"
+
+unit DUK: currency minor 0.01
+
+unit TAL: currency minor 0.01
+
+kind persons
+
+kind foreign_income: event certain
+  leg net: TAL
+  leg withheld: TAL
+  attr holder: key persons
+  attr inc_kind: key income_kinds
+  note "an amount received abroad: the net credited, and the tax withheld at source"
+
+kind wht_refunds: event certain
+  leg cash: TAL
+  attr item: key foreign_income
+  note "a refund of tax withheld from an item"
+
+kind conversions: event certain
+  leg tal: TAL
+  leg duk: DUK
+  attr holder: key persons
+
+kind lots: event certain
+  attr holder: key persons
+  attr qty: money TAL
+  attr cost: money DUK
+  note "a lot of foreign cash: it moves nothing; its cash sits in the account"
+
+index conversion_ids = [cv1]
+
+index income_kinds = [dividend, interest]
+
+index opening_lots = [lot0]
+
+index receipts = [div_mar, int_jun, div_sep]
+
+place tal_acct: accounts TAL lives 2020-01-01..
+
+place duk_acct: accounts DUK lives 2027-01-01..
+
+place payers: outside lives 2020-01-01..
+
+place varnia_tax: outside lives 2020-01-01..
+
+place bank_fx: outside lives 2020-01-01..
+
+input bank_mode: rounding
+
+input cal: calendar
+
+input cb_rate: num DUK/TAL reading
+
+input conv[x in conversion_ids]: (holder key persons, on_day date, tal money TAL, rate num DUK/TAL)
+
+input filed_on[y in years]: date question "Kiedy złożono zeznanie za ten rok?"
+
+input lot_terms[x in opening_lots]: (holder key persons, qty money TAL, cost money DUK, held_from date, held_to date)
+
+input receipt[x in receipts]: (holder key persons, inc_kind key income_kinds, received date, gross money TAL, wht_rate num)
+
+input refund_claim: date
+
+input refund_day: date
+
+input resident[p in persons]: bool
+
+input treaty_share: num
+
+input varnia_mode: rounding
+
+move convert[x in conversion_ids]: conversions
+  on conv[x].on_day
+  attr holder = conv[x].holder
+  leg tal from tal_acct to bank_fx amount conv[x].tal
+  leg duk from bank_fx to duk_acct amount round(conv[x].tal * conv[x].rate, minor(DUK), bank_mode)
+
+move refund_in[r in foreign_income over .. where r.inc_kind == dividend]: wht_refunds
+  on refund_day
+  at refund_claim
+  attr item = r
+  leg cash from varnia_tax to tal_acct amount round((r.net.amount + r.withheld.amount) * treaty_share, minor(TAL), varnia_mode)
+  note "the treaty refund of each dividend; its day, or none if refused, is a row read at the claim's date"
+
+move opening_lot[x in opening_lots]: lots
+  on window(lot_terms[x].held_from, lot_terms[x].held_to)
+  attr holder = lot_terms[x].holder
+  attr qty = lot_terms[x].qty
+  attr cost = lot_terms[x].cost
+
+move receive[x in receipts]: foreign_income
+  on receipt[x].received
+  attr holder = receipt[x].holder
+  attr inc_kind = receipt[x].inc_kind
+  leg net from payers to tal_acct amount receipt[x].gross - round(receipt[x].gross * receipt[x].wht_rate, minor(TAL), varnia_mode)
+  leg withheld from payers to varnia_tax amount round(receipt[x].gross * receipt[x].wht_rate, minor(TAL), varnia_mode)
+
+input due_months: int
+input income_tax_rate: num
+def added[p in persons, y in years]: money DUK
+  note "rule 4: the differences of refunds received in year y after the item's return was filed"
+  rule base = sum(late_diff[f] for f in wht_refunds over y where f.item.holder == p and f.day >= filed_on[year_of(f.item.day)])
+def credit_item[r in foreign_income]: num DUK
+  note "rule 3: foreign tax paid, up to the Lenian tax on the item"
+  rule base = min(paid_at_filing[r], item_tax[r])
+def due_day[y in years]: date = add_days(add_months(start_of(y), due_months), -1)
+def fx_on[r in foreign_income]: num DUK/TAL = cb_rate at rate_day[r]
+def gross_duk[r in foreign_income]: money DUK = round((r.net.amount + r.withheld.amount) * fx_on[r], minor(DUK), half-up)
+def item_tax[r in foreign_income]: num DUK
+  note "rule 1: 19 % of the gross amount of dividends and interest, for a resident"
+  rule base = gross_duk[r] * income_tax_rate when resident[r.holder] and (r.inc_kind == dividend or r.inc_kind == interest)
+  rule nonresident beats base = ?"Opodatkowanie nierezydenta nie jest opisane." when not resident[r.holder]
+def late_diff[f in wht_refunds]: money DUK
+  note "rule 4: the item's credit recomputed as if this refund had come before the return; one refund per item is assumed"
+  rule base = round(credit_item[f.item] - min(paid_at_filing[f.item] - refund_duk[f], item_tax[f.item]), 1 DUK, half-up)
+def paid_at_filing[r in foreign_income]: money DUK
+  note "rule 3: tax withheld less the parts refunded before the return is filed"
+  rule base = wht_duk[r] - sum(refund_duk[f] for f in wht_refunds over .. where f.item == r and f.day < filed_on[year_of(r.day)])
+def rate_day[r in foreign_income]: date = add_business(r.day, -1, cal)
+def refund_duk[f in wht_refunds]: money DUK = round(f.cash.amount * fx_on[f.item], minor(DUK), half-up)
+def tax_year[p in persons, y in years]: money DUK = round(sum(item_tax[r] - credit_item[r] for r in foreign_income over y where r.holder == p), 1 DUK, half-up)
+def wht_duk[r in foreign_income]: money DUK = round(r.withheld.amount * fx_on[r], minor(DUK), half-up)
+
+input gains_rate: num
+def cost[c in conversions]: num DUK = sum(matched[c.holder].taken[l, c] * l.cost / l.qty for l in lots over ..)
+def gain[c in conversions]: num DUK = c.duk.amount - cost[c]
+def gains_tax[p in persons, y in years]: money DUK
+  note "rule 5: a year's net gain at 19 %, to whole dukats half up"
+  rule base = round(sum(gain[c] for c in conversions over y where c.holder == p) * gains_rate, 1 DUK, half-up)
+  rule loss beats base = ?"Strata netto roku: ustawa nie mówi, co z nią zrobić." when sum(gain[c] for c in conversions over y where c.holder == p) < 0
+fill matched[p in persons over ..]
+  note "rule 5: a conversion of foreign cash is matched to lots, oldest first"
+  supply l.qty for l in lots over .. where l.holder == p
+  demand c.tal.amount for c in conversions over .. where c.holder == p
+  arc l.day <= c.day
+  order l.day
+move lot_in[r in foreign_income over ..]: lots
+  on r.day
+  attr holder = r.holder
+  attr qty = r.net.amount
+  attr cost = round(r.net.amount * fx_on[r], minor(DUK), half-up)
+
+ask items_2027: rate_day[r], gross_duk[r], item_tax[r] for r in foreign_income over 2027
+
+ask lots_used: matched[marek].taken[l, c], l.day, l.cost for c in conversions over 2027, l in lots over .. where matched[marek].taken[l, c] > 0
+
+ask gain_2027: gain[c] for c in conversions over 2027
+
+version card_things
+  cite story
+  known 2027-01-01
+  assumed "Marek's birth date isn't given; the lifespan only has to cover the run"
+  persons + [marek] lives 1950-01-01..
+
+version card_story
+  cite story
+  governs always
+  known 2027-01-01
+  conv[cv1] = (holder: marek, on_day: 2027-12-13, tal: 3000.00 TAL, rate: 4.2300 DUK/TAL) "Mon 13 Dec: 3 000.00 TAL at the bank's 4.2300 DUK per TAL"
+  lot_terms[lot0] = (holder: marek, qty: 1000.00 TAL, cost: 4050.00 DUK, held_from: 2020-01-01, held_to: 2026-12-31) assumed "the lot's acquisition day isn't given: some day before 2027, from the account's assumed opening" "one lot held on 1 January 2027"
+  receipt[div_mar] = (holder: marek, inc_kind: dividend, received: 2027-03-12, gross: 2000.00 TAL, wht_rate: 25 %) "Fri 12 Mar: Orvel dividend"
+  receipt[div_sep] = (holder: marek, inc_kind: dividend, received: 2027-09-30, gross: 3000.00 TAL, wht_rate: 25 %) "Thu 30 Sep: Orvel dividend"
+  receipt[int_jun] = (holder: marek, inc_kind: interest, received: 2027-06-28, gross: 120.00 TAL, wht_rate: 0 %) "Mon 28 Jun: interest, nothing withheld"
+  refund_claim = 2028-01-15 "Marek claims the treaty refund on 15 January 2028"
+  resident[marek] = true "Marek lives in Lenia"
+  treaty_share = 10 % "the treaty allows 10 % of each dividend's gross"
+
+version card_opening
+  cite story
+  known 2027-01-01
+  opening[tal_acct] = 1000.00 TAL at 2027-01-01 start "on 1 January 2027 the account holds 1 000.00 TAL"
+
+version card_filing
+  cite story
+  governs 2027..2029
+  known 2027-01-01
+  filed_on[2027] = 2028-04-30 "Marek files his 2027 return on 30 April 2028"
+
+version card_refund_unknown
+  cite story
+  governs 2028-01-15..
+  known 2027-01-01
+  refund_day = ?"Kiedy Varnia wypłaci zwrot podatku, czy też odmówi? (none: odmowa)" "the office may pay it, or refuse it; when it pays is not known"
+
+version card_rates
+  cite central_bank
+  known 2027-01-01
+  cb_rate = 4.2150 DUK/TAL at 2027-03-11 "Thu 11 Mar 2027"
+  cb_rate = 4.1020 DUK/TAL at 2027-06-25 "Fri 25 Jun 2027"
+  cb_rate = 4.3075 DUK/TAL at 2027-09-29 "Wed 29 Sep 2027"
+
+version card_income_act
+  cite income_act
+  governs always
+  known 2027-01-01
+  due_months = 16 "rule 1: due by a return on 30 April of the next year, the day before 16 months after the year starts"
+  income_tax_rate = 19 % "rule 1: 19 % of the gross amount"
+
+version card_gains_act
+  cite gains_act
+  governs always
+  known 2027-01-01
+  gains_rate = 19 % "rule 5: taxed at 19 %"
+
+version card_assumed
+  cite modeller
+  governs always
+  known 2027-01-01
+  bank_mode = half-up assumed "the bank's rounding of the converted dukats isn't stated"
+  cal = calendar(weekends [sat, sun]) assumed "no day in this card is a holiday; business days are Monday to Friday"
+  varnia_mode = half-up assumed "Varnia's rounding of the tax it withholds isn't stated"

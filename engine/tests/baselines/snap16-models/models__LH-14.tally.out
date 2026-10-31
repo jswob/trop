@@ -1,0 +1,920 @@
+backpay_by: ?"By what day does SSA deposit the one-time retroactive payment? SSA's administrative schedule; the Act fixes none (Fairness Act page)" (backpay_due)
+  law date 2026-10-18, cut 2026-10-18
+chart_example: 58.00 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 990, n = 20) [chart_cut = *]: 178.00 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 990, n = 21) [chart_cut = *]: 160.20 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 990, n = 22) [chart_cut = *]: 142.40 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 990, n = 23) [chart_cut = *]: 124.60 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 990, n = 24) [chart_cut = *]: 106.80 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 990, n = 25) [chart_cut = *]: 89.00 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 990, n = 26) [chart_cut = *]: 71.20 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 990, n = 27) [chart_cut = *]: 53.40 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 990, n = 28) [chart_cut = *]: 35.60 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 990, n = 29) [chart_cut = *]: 17.80 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 990, n = 30) [chart_cut = *]: 0.00 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 991, n = 20) [chart_cut = *]: 185.00 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 991, n = 21) [chart_cut = *]: 166.50 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 991, n = 22) [chart_cut = *]: 148.00 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 991, n = 23) [chart_cut = *]: 129.50 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 991, n = 24) [chart_cut = *]: 111.00 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 991, n = 25) [chart_cut = *]: 92.50 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 991, n = 26) [chart_cut = *]: 74.00 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 991, n = 27) [chart_cut = *]: 55.50 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 991, n = 28) [chart_cut = *]: 37.00 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 991, n = 29) [chart_cut = *]: 18.50 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 991, n = 30) [chart_cut = *]: 0.00 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 992, n = 20) [chart_cut = *]: 193.50 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 992, n = 21) [chart_cut = down]: 174.10 USD
+  reading: chart_cut = down
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 992, n = 21) [chart_cut = half-even | half-up | up]: 174.20 USD
+  reading: chart_cut = half-even | half-up | up
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 992, n = 22) [chart_cut = *]: 154.80 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 992, n = 23) [chart_cut = down | half-even]: 135.40 USD
+  reading: chart_cut = down | half-even
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 992, n = 23) [chart_cut = half-up | up]: 135.50 USD
+  reading: chart_cut = half-up | up
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 992, n = 24) [chart_cut = *]: 116.10 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 992, n = 25) [chart_cut = down]: 96.70 USD
+  reading: chart_cut = down
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 992, n = 25) [chart_cut = half-even | half-up | up]: 96.80 USD
+  reading: chart_cut = half-even | half-up | up
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 992, n = 26) [chart_cut = *]: 77.40 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 992, n = 27) [chart_cut = down | half-even]: 58.00 USD
+  reading: chart_cut = down | half-even
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 992, n = 27) [chart_cut = half-up | up]: 58.10 USD
+  reading: chart_cut = half-up | up
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 992, n = 28) [chart_cut = *]: 38.70 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 992, n = 29) [chart_cut = down]: 19.30 USD
+  reading: chart_cut = down
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 992, n = 29) [chart_cut = half-even | half-up | up]: 19.40 USD
+  reading: chart_cut = half-even | half-up | up
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 992, n = 30) [chart_cut = *]: 0.00 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 993, n = 20) [chart_cut = *]: 200.50 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 993, n = 21) [chart_cut = down | half-even]: 180.40 USD
+  reading: chart_cut = down | half-even
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 993, n = 21) [chart_cut = half-up | up]: 180.50 USD
+  reading: chart_cut = half-up | up
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 993, n = 22) [chart_cut = *]: 160.40 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 993, n = 23) [chart_cut = down]: 140.30 USD
+  reading: chart_cut = down
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 993, n = 23) [chart_cut = half-even | half-up | up]: 140.40 USD
+  reading: chart_cut = half-even | half-up | up
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 993, n = 24) [chart_cut = *]: 120.30 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 993, n = 25) [chart_cut = down | half-even]: 100.20 USD
+  reading: chart_cut = down | half-even
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 993, n = 25) [chart_cut = half-up | up]: 100.30 USD
+  reading: chart_cut = half-up | up
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 993, n = 26) [chart_cut = *]: 80.20 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 993, n = 27) [chart_cut = down]: 60.10 USD
+  reading: chart_cut = down
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 993, n = 27) [chart_cut = half-even | half-up | up]: 60.20 USD
+  reading: chart_cut = half-even | half-up | up
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 993, n = 28) [chart_cut = *]: 40.10 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 993, n = 29) [chart_cut = down | half-even]: 20.00 USD
+  reading: chart_cut = down | half-even
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 993, n = 29) [chart_cut = half-up | up]: 20.10 USD
+  reading: chart_cut = half-up | up
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 993, n = 30) [chart_cut = *]: 0.00 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 994, n = 20) [chart_cut = *]: 211.00 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 994, n = 21) [chart_cut = *]: 189.90 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 994, n = 22) [chart_cut = *]: 168.80 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 994, n = 23) [chart_cut = *]: 147.70 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 994, n = 24) [chart_cut = *]: 126.60 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 994, n = 25) [chart_cut = *]: 105.50 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 994, n = 26) [chart_cut = *]: 84.40 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 994, n = 27) [chart_cut = *]: 63.30 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 994, n = 28) [chart_cut = *]: 42.20 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 994, n = 29) [chart_cut = *]: 21.10 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 994, n = 30) [chart_cut = *]: 0.00 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 995, n = 20) [chart_cut = *]: 213.00 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 995, n = 21) [chart_cut = *]: 191.70 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 995, n = 22) [chart_cut = *]: 170.40 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 995, n = 23) [chart_cut = *]: 149.10 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 995, n = 24) [chart_cut = *]: 127.80 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 995, n = 25) [chart_cut = *]: 106.50 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 995, n = 26) [chart_cut = *]: 85.20 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 995, n = 27) [chart_cut = *]: 63.90 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 995, n = 28) [chart_cut = *]: 42.60 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 995, n = 29) [chart_cut = *]: 21.30 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 995, n = 30) [chart_cut = *]: 0.00 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 996, n = 20) [chart_cut = *]: 218.50 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 996, n = 21) [chart_cut = down | half-even]: 196.60 USD
+  reading: chart_cut = down | half-even
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 996, n = 21) [chart_cut = half-up | up]: 196.70 USD
+  reading: chart_cut = half-up | up
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 996, n = 22) [chart_cut = *]: 174.80 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 996, n = 23) [chart_cut = down]: 152.90 USD
+  reading: chart_cut = down
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 996, n = 23) [chart_cut = half-even | half-up | up]: 153.00 USD
+  reading: chart_cut = half-even | half-up | up
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 996, n = 24) [chart_cut = *]: 131.10 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 996, n = 25) [chart_cut = down | half-even]: 109.20 USD
+  reading: chart_cut = down | half-even
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 996, n = 25) [chart_cut = half-up | up]: 109.30 USD
+  reading: chart_cut = half-up | up
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 996, n = 26) [chart_cut = *]: 87.40 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 996, n = 27) [chart_cut = down]: 65.50 USD
+  reading: chart_cut = down
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 996, n = 27) [chart_cut = half-even | half-up | up]: 65.60 USD
+  reading: chart_cut = half-even | half-up | up
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 996, n = 28) [chart_cut = *]: 43.70 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 996, n = 29) [chart_cut = down | half-even]: 21.80 USD
+  reading: chart_cut = down | half-even
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 996, n = 29) [chart_cut = half-up | up]: 21.90 USD
+  reading: chart_cut = half-up | up
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 996, n = 30) [chart_cut = *]: 0.00 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 997, n = 20) [chart_cut = *]: 227.50 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 997, n = 21) [chart_cut = down]: 204.70 USD
+  reading: chart_cut = down
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 997, n = 21) [chart_cut = half-even | half-up | up]: 204.80 USD
+  reading: chart_cut = half-even | half-up | up
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 997, n = 22) [chart_cut = *]: 182.00 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 997, n = 23) [chart_cut = down | half-even]: 159.20 USD
+  reading: chart_cut = down | half-even
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 997, n = 23) [chart_cut = half-up | up]: 159.30 USD
+  reading: chart_cut = half-up | up
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 997, n = 24) [chart_cut = *]: 136.50 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 997, n = 25) [chart_cut = down]: 113.70 USD
+  reading: chart_cut = down
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 997, n = 25) [chart_cut = half-even | half-up | up]: 113.80 USD
+  reading: chart_cut = half-even | half-up | up
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 997, n = 26) [chart_cut = *]: 91.00 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 997, n = 27) [chart_cut = down | half-even]: 68.20 USD
+  reading: chart_cut = down | half-even
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 997, n = 27) [chart_cut = half-up | up]: 68.30 USD
+  reading: chart_cut = half-up | up
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 997, n = 28) [chart_cut = *]: 45.50 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 997, n = 29) [chart_cut = down]: 22.70 USD
+  reading: chart_cut = down
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 997, n = 29) [chart_cut = half-even | half-up | up]: 22.80 USD
+  reading: chart_cut = half-even | half-up | up
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 997, n = 30) [chart_cut = *]: 0.00 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 998, n = 20) [chart_cut = *]: 238.50 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 998, n = 21) [chart_cut = down | half-even]: 214.60 USD
+  reading: chart_cut = down | half-even
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 998, n = 21) [chart_cut = half-up | up]: 214.70 USD
+  reading: chart_cut = half-up | up
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 998, n = 22) [chart_cut = *]: 190.80 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 998, n = 23) [chart_cut = down]: 166.90 USD
+  reading: chart_cut = down
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 998, n = 23) [chart_cut = half-even | half-up | up]: 167.00 USD
+  reading: chart_cut = half-even | half-up | up
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 998, n = 24) [chart_cut = *]: 143.10 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 998, n = 25) [chart_cut = down | half-even]: 119.20 USD
+  reading: chart_cut = down | half-even
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 998, n = 25) [chart_cut = half-up | up]: 119.30 USD
+  reading: chart_cut = half-up | up
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 998, n = 26) [chart_cut = *]: 95.40 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 998, n = 27) [chart_cut = down]: 71.50 USD
+  reading: chart_cut = down
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 998, n = 27) [chart_cut = half-even | half-up | up]: 71.60 USD
+  reading: chart_cut = half-even | half-up | up
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 998, n = 28) [chart_cut = *]: 47.70 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 998, n = 29) [chart_cut = down | half-even]: 23.80 USD
+  reading: chart_cut = down | half-even
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 998, n = 29) [chart_cut = half-up | up]: 23.90 USD
+  reading: chart_cut = half-up | up
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 998, n = 30) [chart_cut = *]: 0.00 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 999, n = 20) [chart_cut = *]: 252.50 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 999, n = 21) [chart_cut = down | half-even]: 227.20 USD
+  reading: chart_cut = down | half-even
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 999, n = 21) [chart_cut = half-up | up]: 227.30 USD
+  reading: chart_cut = half-up | up
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 999, n = 22) [chart_cut = *]: 202.00 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 999, n = 23) [chart_cut = down]: 176.70 USD
+  reading: chart_cut = down
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 999, n = 23) [chart_cut = half-even | half-up | up]: 176.80 USD
+  reading: chart_cut = half-even | half-up | up
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 999, n = 24) [chart_cut = *]: 151.50 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 999, n = 25) [chart_cut = down | half-even]: 126.20 USD
+  reading: chart_cut = down | half-even
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 999, n = 25) [chart_cut = half-up | up]: 126.30 USD
+  reading: chart_cut = half-up | up
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 999, n = 26) [chart_cut = *]: 101.00 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 999, n = 27) [chart_cut = down]: 75.70 USD
+  reading: chart_cut = down
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 999, n = 27) [chart_cut = half-even | half-up | up]: 75.80 USD
+  reading: chart_cut = half-even | half-up | up
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 999, n = 28) [chart_cut = *]: 50.50 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 999, n = 29) [chart_cut = down | half-even]: 25.20 USD
+  reading: chart_cut = down | half-even
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 999, n = 29) [chart_cut = half-up | up]: 25.30 USD
+  reading: chart_cut = half-up | up
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 1 999, n = 30) [chart_cut = *]: 0.00 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 000, n = 20) [chart_cut = *]: 265.50 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 000, n = 21) [chart_cut = down]: 238.90 USD
+  reading: chart_cut = down
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 000, n = 21) [chart_cut = half-even | half-up | up]: 239.00 USD
+  reading: chart_cut = half-even | half-up | up
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 000, n = 22) [chart_cut = *]: 212.40 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 000, n = 23) [chart_cut = down | half-even]: 185.80 USD
+  reading: chart_cut = down | half-even
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 000, n = 23) [chart_cut = half-up | up]: 185.90 USD
+  reading: chart_cut = half-up | up
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 000, n = 24) [chart_cut = *]: 159.30 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 000, n = 25) [chart_cut = down]: 132.70 USD
+  reading: chart_cut = down
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 000, n = 25) [chart_cut = half-even | half-up | up]: 132.80 USD
+  reading: chart_cut = half-even | half-up | up
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 000, n = 26) [chart_cut = *]: 106.20 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 000, n = 27) [chart_cut = down | half-even]: 79.60 USD
+  reading: chart_cut = down | half-even
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 000, n = 27) [chart_cut = half-up | up]: 79.70 USD
+  reading: chart_cut = half-up | up
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 000, n = 28) [chart_cut = *]: 53.10 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 000, n = 29) [chart_cut = down]: 26.50 USD
+  reading: chart_cut = down
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 000, n = 29) [chart_cut = half-even | half-up | up]: 26.60 USD
+  reading: chart_cut = half-even | half-up | up
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 000, n = 30) [chart_cut = *]: 0.00 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 001, n = 20) [chart_cut = *]: 280.50 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 001, n = 21) [chart_cut = down | half-even]: 252.40 USD
+  reading: chart_cut = down | half-even
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 001, n = 21) [chart_cut = half-up | up]: 252.50 USD
+  reading: chart_cut = half-up | up
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 001, n = 22) [chart_cut = *]: 224.40 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 001, n = 23) [chart_cut = down]: 196.30 USD
+  reading: chart_cut = down
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 001, n = 23) [chart_cut = half-even | half-up | up]: 196.40 USD
+  reading: chart_cut = half-even | half-up | up
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 001, n = 24) [chart_cut = *]: 168.30 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 001, n = 25) [chart_cut = down | half-even]: 140.20 USD
+  reading: chart_cut = down | half-even
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 001, n = 25) [chart_cut = half-up | up]: 140.30 USD
+  reading: chart_cut = half-up | up
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 001, n = 26) [chart_cut = *]: 112.20 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 001, n = 27) [chart_cut = down]: 84.10 USD
+  reading: chart_cut = down
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 001, n = 27) [chart_cut = half-even | half-up | up]: 84.20 USD
+  reading: chart_cut = half-even | half-up | up
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 001, n = 28) [chart_cut = *]: 56.10 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 001, n = 29) [chart_cut = down | half-even]: 28.00 USD
+  reading: chart_cut = down | half-even
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 001, n = 29) [chart_cut = half-up | up]: 28.10 USD
+  reading: chart_cut = half-up | up
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 001, n = 30) [chart_cut = *]: 0.00 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 002, n = 20) [chart_cut = *]: 296.00 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 002, n = 21) [chart_cut = *]: 266.40 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 002, n = 22) [chart_cut = *]: 236.80 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 002, n = 23) [chart_cut = *]: 207.20 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 002, n = 24) [chart_cut = *]: 177.60 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 002, n = 25) [chart_cut = *]: 148.00 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 002, n = 26) [chart_cut = *]: 118.40 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 002, n = 27) [chart_cut = *]: 88.80 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 002, n = 28) [chart_cut = *]: 59.20 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 002, n = 29) [chart_cut = *]: 29.60 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 002, n = 30) [chart_cut = *]: 0.00 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 003, n = 20) [chart_cut = *]: 303.00 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 003, n = 21) [chart_cut = *]: 272.70 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 003, n = 22) [chart_cut = *]: 242.40 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 003, n = 23) [chart_cut = *]: 212.10 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 003, n = 24) [chart_cut = *]: 181.80 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 003, n = 25) [chart_cut = *]: 151.50 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 003, n = 26) [chart_cut = *]: 121.20 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 003, n = 27) [chart_cut = *]: 90.90 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 003, n = 28) [chart_cut = *]: 60.60 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 003, n = 29) [chart_cut = *]: 30.30 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 003, n = 30) [chart_cut = *]: 0.00 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 004, n = 20) [chart_cut = *]: 306.00 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 004, n = 21) [chart_cut = *]: 275.40 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 004, n = 22) [chart_cut = *]: 244.80 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 004, n = 23) [chart_cut = *]: 214.20 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 004, n = 24) [chart_cut = *]: 183.60 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 004, n = 25) [chart_cut = *]: 153.00 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 004, n = 26) [chart_cut = *]: 122.40 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 004, n = 27) [chart_cut = *]: 91.80 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 004, n = 28) [chart_cut = *]: 61.20 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 004, n = 29) [chart_cut = *]: 30.60 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 004, n = 30) [chart_cut = *]: 0.00 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 005, n = 20) [chart_cut = *]: 313.50 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 005, n = 21) [chart_cut = down]: 282.10 USD
+  reading: chart_cut = down
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 005, n = 21) [chart_cut = half-even | half-up | up]: 282.20 USD
+  reading: chart_cut = half-even | half-up | up
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 005, n = 22) [chart_cut = *]: 250.80 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 005, n = 23) [chart_cut = down | half-even]: 219.40 USD
+  reading: chart_cut = down | half-even
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 005, n = 23) [chart_cut = half-up | up]: 219.50 USD
+  reading: chart_cut = half-up | up
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 005, n = 24) [chart_cut = *]: 188.10 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 005, n = 25) [chart_cut = down]: 156.70 USD
+  reading: chart_cut = down
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 005, n = 25) [chart_cut = half-even | half-up | up]: 156.80 USD
+  reading: chart_cut = half-even | half-up | up
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 005, n = 26) [chart_cut = *]: 125.40 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 005, n = 27) [chart_cut = down | half-even]: 94.00 USD
+  reading: chart_cut = down | half-even
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 005, n = 27) [chart_cut = half-up | up]: 94.10 USD
+  reading: chart_cut = half-up | up
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 005, n = 28) [chart_cut = *]: 62.70 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 005, n = 29) [chart_cut = down]: 31.30 USD
+  reading: chart_cut = down
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 005, n = 29) [chart_cut = half-even | half-up | up]: 31.40 USD
+  reading: chart_cut = half-even | half-up | up
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 005, n = 30) [chart_cut = *]: 0.00 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 006, n = 20) [chart_cut = *]: 328.00 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 006, n = 21) [chart_cut = *]: 295.20 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 006, n = 22) [chart_cut = *]: 262.40 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 006, n = 23) [chart_cut = *]: 229.60 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 006, n = 24) [chart_cut = *]: 196.80 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 006, n = 25) [chart_cut = *]: 164.00 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 006, n = 26) [chart_cut = *]: 131.20 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 006, n = 27) [chart_cut = *]: 98.40 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 006, n = 28) [chart_cut = *]: 65.60 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 006, n = 29) [chart_cut = *]: 32.80 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 006, n = 30) [chart_cut = *]: 0.00 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 007, n = 20) [chart_cut = *]: 340.00 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 007, n = 21) [chart_cut = *]: 306.00 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 007, n = 22) [chart_cut = *]: 272.00 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 007, n = 23) [chart_cut = *]: 238.00 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 007, n = 24) [chart_cut = *]: 204.00 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 007, n = 25) [chart_cut = *]: 170.00 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 007, n = 26) [chart_cut = *]: 136.00 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 007, n = 27) [chart_cut = *]: 102.00 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 007, n = 28) [chart_cut = *]: 68.00 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 007, n = 29) [chart_cut = *]: 34.00 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 007, n = 30) [chart_cut = *]: 0.00 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 008, n = 20) [chart_cut = *]: 355.50 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 008, n = 21) [chart_cut = down]: 319.90 USD
+  reading: chart_cut = down
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 008, n = 21) [chart_cut = half-even | half-up | up]: 320.00 USD
+  reading: chart_cut = half-even | half-up | up
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 008, n = 22) [chart_cut = *]: 284.40 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 008, n = 23) [chart_cut = down | half-even]: 248.80 USD
+  reading: chart_cut = down | half-even
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 008, n = 23) [chart_cut = half-up | up]: 248.90 USD
+  reading: chart_cut = half-up | up
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 008, n = 24) [chart_cut = *]: 213.30 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 008, n = 25) [chart_cut = down]: 177.70 USD
+  reading: chart_cut = down
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 008, n = 25) [chart_cut = half-even | half-up | up]: 177.80 USD
+  reading: chart_cut = half-even | half-up | up
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 008, n = 26) [chart_cut = *]: 142.20 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 008, n = 27) [chart_cut = down | half-even]: 106.60 USD
+  reading: chart_cut = down | half-even
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 008, n = 27) [chart_cut = half-up | up]: 106.70 USD
+  reading: chart_cut = half-up | up
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 008, n = 28) [chart_cut = *]: 71.10 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 008, n = 29) [chart_cut = down]: 35.50 USD
+  reading: chart_cut = down
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 008, n = 29) [chart_cut = half-even | half-up | up]: 35.60 USD
+  reading: chart_cut = half-even | half-up | up
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 008, n = 30) [chart_cut = *]: 0.00 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 009, n = 20) [chart_cut = *]: 372.00 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 009, n = 21) [chart_cut = *]: 334.80 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 009, n = 22) [chart_cut = *]: 297.60 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 009, n = 23) [chart_cut = *]: 260.40 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 009, n = 24) [chart_cut = *]: 223.20 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 009, n = 25) [chart_cut = *]: 186.00 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 009, n = 26) [chart_cut = *]: 148.80 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 009, n = 27) [chart_cut = *]: 111.60 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 009, n = 28) [chart_cut = *]: 74.40 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 009, n = 29) [chart_cut = *]: 37.20 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 009, n = 30) [chart_cut = *]: 0.00 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 010, n = 20) [chart_cut = *]: 380.50 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 010, n = 21) [chart_cut = down | half-even]: 342.40 USD
+  reading: chart_cut = down | half-even
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 010, n = 21) [chart_cut = half-up | up]: 342.50 USD
+  reading: chart_cut = half-up | up
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 010, n = 22) [chart_cut = *]: 304.40 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 010, n = 23) [chart_cut = down]: 266.30 USD
+  reading: chart_cut = down
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 010, n = 23) [chart_cut = half-even | half-up | up]: 266.40 USD
+  reading: chart_cut = half-even | half-up | up
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 010, n = 24) [chart_cut = *]: 228.30 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 010, n = 25) [chart_cut = down | half-even]: 190.20 USD
+  reading: chart_cut = down | half-even
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 010, n = 25) [chart_cut = half-up | up]: 190.30 USD
+  reading: chart_cut = half-up | up
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 010, n = 26) [chart_cut = *]: 152.20 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 010, n = 27) [chart_cut = down]: 114.10 USD
+  reading: chart_cut = down
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 010, n = 27) [chart_cut = half-even | half-up | up]: 114.20 USD
+  reading: chart_cut = half-even | half-up | up
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 010, n = 28) [chart_cut = *]: 76.10 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 010, n = 29) [chart_cut = down | half-even]: 38.00 USD
+  reading: chart_cut = down | half-even
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 010, n = 29) [chart_cut = half-up | up]: 38.10 USD
+  reading: chart_cut = half-up | up
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 010, n = 30) [chart_cut = *]: 0.00 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 011, n = 20) [chart_cut = *]: 374.50 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 011, n = 21) [chart_cut = down | half-even]: 337.00 USD
+  reading: chart_cut = down | half-even
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 011, n = 21) [chart_cut = half-up | up]: 337.10 USD
+  reading: chart_cut = half-up | up
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 011, n = 22) [chart_cut = *]: 299.60 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 011, n = 23) [chart_cut = down]: 262.10 USD
+  reading: chart_cut = down
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 011, n = 23) [chart_cut = half-even | half-up | up]: 262.20 USD
+  reading: chart_cut = half-even | half-up | up
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 011, n = 24) [chart_cut = *]: 224.70 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 011, n = 25) [chart_cut = down | half-even]: 187.20 USD
+  reading: chart_cut = down | half-even
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 011, n = 25) [chart_cut = half-up | up]: 187.30 USD
+  reading: chart_cut = half-up | up
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 011, n = 26) [chart_cut = *]: 149.80 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 011, n = 27) [chart_cut = down]: 112.30 USD
+  reading: chart_cut = down
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 011, n = 27) [chart_cut = half-even | half-up | up]: 112.40 USD
+  reading: chart_cut = half-even | half-up | up
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 011, n = 28) [chart_cut = *]: 74.90 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 011, n = 29) [chart_cut = down | half-even]: 37.40 USD
+  reading: chart_cut = down | half-even
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 011, n = 29) [chart_cut = half-up | up]: 37.50 USD
+  reading: chart_cut = half-up | up
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 011, n = 30) [chart_cut = *]: 0.00 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 012, n = 20) [chart_cut = *]: 383.50 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 012, n = 21) [chart_cut = down]: 345.10 USD
+  reading: chart_cut = down
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 012, n = 21) [chart_cut = half-even | half-up | up]: 345.20 USD
+  reading: chart_cut = half-even | half-up | up
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 012, n = 22) [chart_cut = *]: 306.80 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 012, n = 23) [chart_cut = down | half-even]: 268.40 USD
+  reading: chart_cut = down | half-even
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 012, n = 23) [chart_cut = half-up | up]: 268.50 USD
+  reading: chart_cut = half-up | up
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 012, n = 24) [chart_cut = *]: 230.10 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 012, n = 25) [chart_cut = down]: 191.70 USD
+  reading: chart_cut = down
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 012, n = 25) [chart_cut = half-even | half-up | up]: 191.80 USD
+  reading: chart_cut = half-even | half-up | up
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 012, n = 26) [chart_cut = *]: 153.40 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 012, n = 27) [chart_cut = down | half-even]: 115.00 USD
+  reading: chart_cut = down | half-even
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 012, n = 27) [chart_cut = half-up | up]: 115.10 USD
+  reading: chart_cut = half-up | up
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 012, n = 28) [chart_cut = *]: 76.70 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 012, n = 29) [chart_cut = down]: 38.30 USD
+  reading: chart_cut = down
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 012, n = 29) [chart_cut = half-even | half-up | up]: 38.40 USD
+  reading: chart_cut = half-even | half-up | up
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 012, n = 30) [chart_cut = *]: 0.00 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 013, n = 20) [chart_cut = *]: 395.50 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 013, n = 21) [chart_cut = down]: 355.90 USD
+  reading: chart_cut = down
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 013, n = 21) [chart_cut = half-even | half-up | up]: 356.00 USD
+  reading: chart_cut = half-even | half-up | up
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 013, n = 22) [chart_cut = *]: 316.40 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 013, n = 23) [chart_cut = down | half-even]: 276.80 USD
+  reading: chart_cut = down | half-even
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 013, n = 23) [chart_cut = half-up | up]: 276.90 USD
+  reading: chart_cut = half-up | up
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 013, n = 24) [chart_cut = *]: 237.30 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 013, n = 25) [chart_cut = down]: 197.70 USD
+  reading: chart_cut = down
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 013, n = 25) [chart_cut = half-even | half-up | up]: 197.80 USD
+  reading: chart_cut = half-even | half-up | up
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 013, n = 26) [chart_cut = *]: 158.20 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 013, n = 27) [chart_cut = down | half-even]: 118.60 USD
+  reading: chart_cut = down | half-even
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 013, n = 27) [chart_cut = half-up | up]: 118.70 USD
+  reading: chart_cut = half-up | up
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 013, n = 28) [chart_cut = *]: 79.10 USD
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 013, n = 29) [chart_cut = down]: 39.50 USD
+  reading: chart_cut = down
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 013, n = 29) [chart_cut = half-even | half-up | up]: 39.60 USD
+  reading: chart_cut = half-even | half-up | up
+  law date 2026-10-18, cut 2026-10-18
+chart_rows (e = 2 013, n = 30) [chart_cut = *]: 0.00 USD
+  law date 2026-10-18, cut 2026-10-18
+cola_example [ex_round = *, guarantee = applied]: (?"Non-covered pension of the ELY 2013 example worker: the example states none" (ex_pension), 20.00 USD, 1 416.00 USD, ?"Non-covered pension of the ELY 2013 example worker: the example states none" (ex_pension))
+  reading: guarantee = applied
+  law date 2026-10-18, cut 2026-10-18
+cola_example [ex_round = *, guarantee = ignored]: (15.00 USD, 20.00 USD, 1 416.00 USD, 1 015.00 USD)
+  reading: guarantee = ignored
+  law date 2026-10-18, cut 2026-10-18
+cola_wep_cut [ex_round = *, guarantee = applied]: ?"Non-covered pension of the ELY 2013 example worker: the example states none" (ex_pension)
+  reading: guarantee = applied
+  law date 2026-10-18, cut 2026-10-18
+cola_wep_cut [ex_round = *, guarantee = ignored]: 401.00 USD
+  reading: guarantee = ignored
+  law date 2026-10-18, cut 2026-10-18
+delayed_benefits [ex_round = *, guarantee = applied]: (?"Non-covered pension of the ELY 2013 example worker: the example states none" (ex_pension), 1 842.00 USD)
+  reading: guarantee = applied
+  law date 2026-10-18, cut 2026-10-18
+delayed_benefits [ex_round = *, guarantee = ignored]: (1 320.00 USD, 1 842.00 USD)
+  reading: guarantee = ignored
+  law date 2026-10-18, cut 2026-10-18
+delayed_increase: 0.32
+  law date 2026-10-18, cut 2026-10-18
+delayed_wep_cut [ex_round = *, guarantee = applied]: ?"Non-covered pension of the ELY 2013 example worker: the example states none" (ex_pension)
+  reading: guarantee = applied
+  law date 2026-10-18, cut 2026-10-18
+delayed_wep_cut [ex_round = *, guarantee = ignored]: 522.00 USD
+  reading: guarantee = ignored
+  law date 2026-10-18, cut 2026-10-18
+early_benefits [ex_round = *, guarantee = applied]: (?"Non-covered pension of the ELY 2013 example worker: the example states none" (ex_pension), 1 047.00 USD)
+  reading: guarantee = applied
+  law date 2026-10-18, cut 2026-10-18
+early_benefits [ex_round = *, guarantee = ignored]: (750.00 USD, 1 047.00 USD)
+  reading: guarantee = ignored
+  law date 2026-10-18, cut 2026-10-18
+early_factor: 0.75
+  law date 2026-10-18, cut 2026-10-18
+early_wep_cut [ex_round = *, guarantee = applied]: ?"Non-covered pension of the ELY 2013 example worker: the example states none" (ex_pension)
+  reading: guarantee = applied
+  law date 2026-10-18, cut 2026-10-18
+early_wep_cut [ex_round = *, guarantee = ignored]: 297.00 USD
+  reading: guarantee = ignored
+  law date 2026-10-18, cut 2026-10-18
+ely2013_benefit [ex_round = *, guarantee = applied]: ?"Non-covered pension of the ELY 2013 example worker: the example states none" (ex_pension)
+  reading: guarantee = applied
+  law date 2026-10-18, cut 2026-10-18
+ely2013_benefit [ex_round = *, guarantee = ignored]: 1 000.00 USD
+  reading: guarantee = ignored
+  law date 2026-10-18, cut 2026-10-18
+ely2013_cut [guarantee = applied]: ?"Non-covered pension of the ELY 2013 example worker: the example states none" (ex_pension)
+  reading: guarantee = applied
+  law date 2026-10-18, cut 2026-10-18
+ely2013_cut [guarantee = ignored]: 395.5 USD
+  reading: guarantee = ignored
+  law date 2026-10-18, cut 2026-10-18
+first_free_month: 2024-01
+  law date 2026-10-18, cut 2026-10-18
+first_new_paid: 2025-04
+  law date 2026-10-18, cut 2026-10-18
+illus_2024 (i = avg3000) [illus_cut = dime]: (1 640.90 USD, 16409/30000 (0.546966666666667))
+  reading: illus_cut = dime
+  law date 2026-10-18, cut 2026-10-18
+illus_2024 (i = avg3000) [illus_cut = dollar]: (1 640.00 USD, 41/75 (0.546666666666667))
+  reading: illus_cut = dollar
+  law date 2026-10-18, cut 2026-10-18
+illus_2024 (i = avg8000) [illus_cut = dime]: (3 084.10 USD, 0.3855125)
+  reading: illus_cut = dime
+  law date 2026-10-18, cut 2026-10-18
+illus_2024 (i = avg8000) [illus_cut = dollar]: (3 084.00 USD, 0.3855)
+  reading: illus_cut = dollar
+  law date 2026-10-18, cut 2026-10-18
+illus_2025 (i = avg3000) [illus_cut = *]: (1 671.00 USD, 0.557)
+  law date 2026-10-18, cut 2026-10-18
+illus_2025 (i = avg8000) [illus_cut = dime]: (3 167.50 USD, 0.3959375)
+  reading: illus_cut = dime
+  law date 2026-10-18, cut 2026-10-18
+illus_2025 (i = avg8000) [illus_cut = dollar]: (3 167.00 USD, 0.395875)
+  reading: illus_cut = dollar
+  law date 2026-10-18, cut 2026-10-18
+jan2024_received: 2024-02
+  law date 2026-10-18, cut 2026-10-18
+last_wep_month: 2023-12
+  law date 2026-10-18, cut 2026-10-18
+last_wep_month_before: 2025-12
+  law date 2025-01-04, cut 2025-01-04
+max_2025_leaflet: 613 USD
+  law date 2025-01-02, cut 2025-01-02
+max_2025_now: 0 USD
+  law date 2026-10-18, cut 2026-10-18
+payments_start: ?"On what day did SSA begin paying retroactive benefits and the higher monthly amounts? SSA's administrative schedule; the Act fixes none (Fairness Act page)" (pay_start)
+  law date 2026-10-18, cut 2026-10-18
+rr_2013_high: ?"What average monthly earnings stand behind the 2013 edition's rate for highly paid workers? The edition states an average over a group with no earnings behind it" (rr_aime[high_paid])
+  assumed: the edition states no worker behind its rates; read under its own 'How it works' formula, for a worker turning 62 in 2013 (rr_ely)
+  law date 2026-10-18, cut 2026-10-18
+rr_2013_low: ?"What average monthly earnings stand behind the 2013 edition's lower-paid replacement rate? The edition states the rate with no earnings behind it" (rr_aime[low_paid])
+  assumed: the edition states no worker behind its rates; read under its own 'How it works' formula, for a worker turning 62 in 2013 (rr_ely)
+  law date 2026-10-18, cut 2026-10-18
+signed_on: 2025-01-05
+  law date 2026-10-18, cut 2026-10-18
+stat_affected: ?"How many people did WEP and GPO reduce or eliminate benefits for? SSA's caseload count; the case holds no caseload records (press release of 2025-03-04, paragraph 3)" (affected_count)
+  law date 2026-10-18, cut 2026-10-18
+stat_apps: (?"How many new applications had SSA taken since the Act by the week ending 2025-02-28? SSA's workload count; the case holds no workload records (Fairness Act page)" (apps_taken), ?"What share of the new applications since the Act had SSA completed by the week ending 2025-02-28? SSA's workload count; the case holds no workload records (Fairness Act page)" (apps_done_share))
+  law date 2026-10-18, cut 2026-10-18
+stat_complex: ?"How many months may SSA take to adjust a complex, manually processed case? SSA's processing estimate; the case holds no processing records (Fairness Act page)" (complex_months)
+  law date 2026-10-18, cut 2026-10-18
+stat_covered: ?"What share of state and local public employees work in Social Security-covered employment? A labour-force statistic; the case holds no employment data (Fairness Act page)" (covered_share)
+  law date 2026-10-18, cut 2026-10-18
+stat_increase: ?"What is the largest monthly increase the repeal gives a beneficiary? It needs every affected beneficiary's benefit; the case holds none (Fairness Act page)" (increase_top)
+  law date 2026-10-18, cut 2026-10-18
+stat_paid: (?"How many people had SSA paid retroactive benefits through 2025-03-04? SSA's payment records, which the case doesn't hold (press release of 2025-03-04, paragraph 1)" (retro_count), ?"How much had SSA paid in retroactive benefits through 2025-03-04? SSA's payment records, which the case doesn't hold (press release of 2025-03-04, paragraph 1)" (retro_total), ?"How many people had SSA paid retroactive benefits through 2025-03-04? SSA's payment records, which the case doesn't hold (press release of 2025-03-04, paragraph 1)" (retro_count) ?"How much had SSA paid in retroactive benefits through 2025-03-04? SSA's payment records, which the case doesn't hold (press release of 2025-03-04, paragraph 1)" (retro_total))
+  law date 2026-10-18, cut 2026-10-18

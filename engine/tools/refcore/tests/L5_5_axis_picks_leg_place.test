@@ -1,0 +1,68 @@
+# L §5.5 ('the axis id in a key position reads the input at the current option, and fans out') and E §3.1 step 8 /
+# E §3.3: an ask fans out over every axis its evaluation reads, the axis that picks a leg's place included. gift
+# books amt = 10.00 PLN from world to pln[payee[spouse]]: pln[ana] under first, pln[ben] under second. So
+# flows(pln[p], 2026) (L §5.14.3: movements into x minus those out) is 10.00 PLN for the place the option names and
+# 0.00 PLN for the other, directly in the ask (q) and through a def (n). (Was: 0.00 PLN for both, with no fan-out:
+# the move's refusal was left out of a place's flows in silence; a fault found by running a text.)
+=== m.tally
+model p13
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+
+source s "synthetic"
+
+unit PLN: currency minor 0.01
+
+axis spouse
+  first "the first reading"
+  second "the second reading"
+
+index people = [ana, ben]
+
+place pln[p in people]: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+
+input payee[o in spouse]: key people
+input amt: money PLN
+input pay_day: date
+input yr: year
+
+move gift: transfers
+  on pay_day
+  leg cash from world to pln[payee[spouse]] amount amt
+
+def net_flow[p in people]: money PLN = flows(pln[p], yr)
+
+ask n: net_flow[p] for p in people law 2026-06-30
+ask q: flows(pln[p], 2026) for p in people law 2026-06-30
+
+version v1
+  cite s
+  governs always
+  known 2026-01-01
+  payee[first] = ana
+  payee[second] = ben
+  amt = 10.00 PLN
+  pay_day = 2026-03-01
+  yr = 2026
+  opening[pln[ana]] = 0.00 PLN at 2026-01-01 start "s"
+  opening[pln[ben]] = 0.00 PLN at 2026-01-01 start "s"
+=== expect
+n (p = ana) [spouse = first]: 10.00 PLN
+...
+n (p = ana) [spouse = second]: 0.00 PLN
+...
+n (p = ben) [spouse = first]: 0.00 PLN
+...
+n (p = ben) [spouse = second]: 10.00 PLN
+...
+q (p = ana) [spouse = first]: 10.00 PLN
+...
+q (p = ana) [spouse = second]: 0.00 PLN
+...
+q (p = ben) [spouse = first]: 0.00 PLN
+...
+q (p = ben) [spouse = second]: 10.00 PLN
+...

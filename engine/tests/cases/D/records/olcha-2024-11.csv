@@ -1,0 +1,24 @@
+Bank Olcha S.A.|account statement
+Account|LN73 4400 2011 0000 8817 2264 0001
+Holder|HALINA SOWA
+Period|20241101|20241130
+Opening balance|124 884,53
+Date|Type|Counterparty|Title|Amount|Balance after
+20241103|CARD|Piekarnia Złoty Kłos|card ...2264|-205,24|124 679,29
+20241104|CASH|ATM Olcha Brzezie|cash withdrawal|-500,00|124 179,29
+20241104|CARD|Warzywniak u Janka|card ...2264|-28,51|124 150,78
+20241104|CARD|Sklep Pod Lipą|card ...2264|-116,96|124 033,82
+20241105|CREDIT|Social Insurance Office|survivor pension 11/2024|4 022,53|128 056,35
+20241105|STANDING ORDER|WM Ogrodowa 2|fee Ogrodowa 2/11 11/2024|-420,00|127 636,35
+20241108|CARD|Warzywniak u Janka|card ...2264|-86,20|127 550,15
+20241109|CARD|Drogeria Konwalia|card ...2264|-87,06|127 463,09
+20241111|CARD|Stacja Olcha-Paliwa|card ...2264|-179,45|127 283,64
+20241114|CARD|Piekarnia Złoty Kłos|card ...2264|-176,97|127 106,67
+20241115|STANDING ORDER|Volta Energia|Leśna 4 energy 11/2024|-385,00|126 721,67
+20241117|CARD|Drogeria Konwalia|card ...2264|-54,77|126 666,90
+20241118|CASH|ATM Olcha Brzezie|cash withdrawal|-500,00|126 166,90
+20241118|CARD|Piekarnia Złoty Kłos|card ...2264|-211,94|125 954,96
+20241120|STANDING ORDER|Telekom Lenia|phone 11/2024|-59,00|125 895,96
+20241123|CARD|Apteka Rumianek|card ...2264|-204,65|125 691,31
+20241125|TRANSFER|Opieka Dom sp.|home help 11/2024|-1 100,00|124 591,31
+Closing balance|124 591,31

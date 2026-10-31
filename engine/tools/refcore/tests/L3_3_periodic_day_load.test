@@ -1,0 +1,14 @@
+# L §3.3 (round 6): "Any pairing with day other than a daily r ... is refused (LOAD-UNIT where load sees the rate's
+# period ...)": the rate is written inline, `1 %/month` (L §7.1: 1 with a unit), so load sees a monthly r over a day.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+def p: num = periodic(1 %/month, day, simple)
+
+ask a: p
+=== expect
+refused: LOAD-UNIT ...

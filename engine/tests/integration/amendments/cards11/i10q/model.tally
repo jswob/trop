@@ -1,0 +1,308 @@
+model i10
+  tally 2
+  on 2027-01-01
+  start 2027-01-01
+  end 2028-03-31
+  note "Card I-10: a car shared by two households: shares that change, a running ledger, and an accident paid for in two years."
+  note "Ledger sign: a household's ledger balance is what the other household owes it; below zero, what it owes the other."
+
+source story "Card I-10, story"
+
+source agreement_src "Card I-10, the sisters' agreement, rules 1 to 7"
+
+source insurer_src "Card I-10, the insurer's terms, rule 8"
+
+source modeller "The modeller's own assumptions, each with its reason"
+
+unit PLN: currency minor 0.01
+
+kind households
+
+kind cars
+
+kind accidents
+  note "an accident: a thing whose lifespan is its day"
+
+kind ledgers: place PLN signed
+
+kind car_costs: event certain
+  leg cash: PLN
+  attr payer: key households
+  attr car: key cars
+  attr accident: key accidents
+  attr cover_year: year
+  note "a payment for the car by one household; accident and cover_year are none where they don't apply"
+
+kind fuel_buys: car_costs
+
+kind services: car_costs
+
+kind repairs: car_costs
+
+kind premiums: car_costs
+
+kind car_receipts: event certain
+  leg cash: PLN
+  attr receiver: key households
+  attr car: key cars
+  attr accident: key accidents
+
+kind share_sales: event certain
+  leg cash: PLN
+  attr seller: key households
+  attr buyer: key households
+  attr car: key cars
+  attr fraction: num
+
+kind ledger_entries: event certain
+  leg cash: PLN
+
+kind settlements: event certain
+  leg cash: PLN
+  leg clear: PLN
+  attr payer: key households
+
+axis settle_balance
+  month_end "the whole balance is the balance at the end of the month"
+  pay_day "the whole balance is the balance on the 10th, when it is paid"
+
+index receipt_ids = [ins1]
+
+index repair_ids = [rep1]
+
+index sale_ids = [sale1]
+
+index service_ids = [srv1]
+
+place purse[h in households]: outside lives 2027-01-01..
+
+place world: outside lives 2027-01-01..
+
+input claimed[a in accidents]: bool
+
+input driver_hh[a in accidents]: key households
+
+input fuel_amt[h in households, m in months]: money PLN question "Ile to gospodarstwo wydało na paliwo w tym miesiącu?"
+
+input km_share[h in households, m in months]: num question "Jaką część kilometrów miesiąca przejechało to gospodarstwo?"
+
+input other[h in households]: key households
+
+input owns[h in households, x in cars]: num
+
+input policy_excess: money PLN
+
+input premium_day[y in years]: date
+
+input premium_payer[y in years]: key households
+
+input premium_stated[y in years]: money PLN
+
+input receipt_terms[x in receipt_ids]: (receiver key households, car key cars, accident key accidents, paid_on date, amt money PLN)
+
+input repair_terms[x in repair_ids]: (payer key households, car key cars, accident key accidents, paid_on date, amt money PLN)
+
+input sale_terms[x in sale_ids]: (seller key households, buyer key households, car key cars, sold_on date, fraction num, price money PLN)
+
+input service_terms[x in service_ids]: (payer key households, car key cars, paid_on date, amt money PLN)
+
+input shared_car: key cars
+
+input split_mode: rounding
+
+move fuel_buy[m in months, h in households over m]: fuel_buys
+  on add_days(end_of(m), -1)
+  when fuel_amt[h, m] > 0
+  attr payer = h
+  attr car = shared_car
+  attr accident = none
+  attr cover_year = none
+  leg cash from purse[h] to world amount fuel_amt[h, m]
+  note "the card gives no day for the month's fuel; it is entered on the month's last day, when the log is complete"
+
+move premium_pay[y in years]: premiums
+  on premium_day[y]
+  attr payer = premium_payer[y]
+  attr car = shared_car
+  attr accident = none
+  attr cover_year = y
+  leg cash from purse[premium_payer[y]] to world amount premium[y]
+
+move receipt[x in receipt_ids]: car_receipts
+  on receipt_terms[x].paid_on
+  attr receiver = receipt_terms[x].receiver
+  attr car = receipt_terms[x].car
+  attr accident = receipt_terms[x].accident
+  leg cash from world to purse[receipt_terms[x].receiver] amount receipt_terms[x].amt
+
+move repair_pay[x in repair_ids]: repairs
+  on repair_terms[x].paid_on
+  attr payer = repair_terms[x].payer
+  attr car = repair_terms[x].car
+  attr accident = repair_terms[x].accident
+  attr cover_year = none
+  leg cash from purse[repair_terms[x].payer] to world amount repair_terms[x].amt
+
+move sale[x in sale_ids]: share_sales
+  on sale_terms[x].sold_on
+  attr seller = sale_terms[x].seller
+  attr buyer = sale_terms[x].buyer
+  attr car = sale_terms[x].car
+  attr fraction = sale_terms[x].fraction
+  leg cash from ledger[sale_terms[x].buyer] to ledger[sale_terms[x].seller] amount sale_terms[x].price
+  note "rule 5: the price of a share is paid through the ledger"
+
+move service_pay[x in service_ids]: services
+  on service_terms[x].paid_on
+  attr payer = service_terms[x].payer
+  attr car = service_terms[x].car
+  attr accident = none
+  attr cover_year = none
+  leg cash from purse[service_terms[x].payer] to world amount service_terms[x].amt
+
+input settle_dom: int
+input threshold: money PLN
+def borne[c in car_costs, h in households]: money PLN
+  note "what household h bears of cost c, after the ledger"
+  rule payer = c.cash.amount - part_of[c, other[h]] when h == c.payer
+  rule other_hh = part_of[c, h] when h != c.payer
+def causer_of[c in car_costs]: key households
+  rule repair = driver_hh[c.accident] when c in repairs
+  rule premium = claim_causer[c.cover_year] when c in premiums
+def charged[c in car_costs]: money PLN
+  note "rules 3 and 4: the part of a cost charged to the household whose driver caused it"
+  rule nothing = 0
+  rule excess beats nothing = min(policy_excess, c.cash.amount) when c in repairs and c.accident != none
+  rule extra beats nothing = extra_premium[c.cover_year] when c in premiums
+def claim_causer[y in years]: key households
+  rule one = driver_hh[first(a in accidents over y - 1 where claimed[a]) ties by (lifespan(a).from)]
+  rule many beats one = ?"Kilka szkód w roku: której szkodzie przypisać dodatkową składkę?" when count(a in accidents over y - 1 where claimed[a]) > 1
+def extra_premium[y in years]: money PLN = premium[y] - (premium[y] as if {claimed[*] = false})
+def owes_at[h in households, m in months]: money PLN = -bal(ledger[h], add_days(end_of(m), -1))
+def part_of[c in car_costs, h in households]: money PLN at c.day
+  note "rule 6: household h's part of a cost the other household paid"
+  rule shares = round((c.cash.amount - charged[c]) * owns[h, c.car], minor(PLN), split_mode) + (if charged[c] > 0 then (if h == causer_of[c] then charged[c] else 0) else 0)
+  rule fuel beats shares = round(c.cash.amount * km_share[h, month_of(c.day)], minor(PLN), split_mode) when c in fuel_buys
+def receipt_part[r in car_receipts, h in households]: money PLN = round(r.cash.amount * owns[h, r.car], minor(PLN), split_mode) at r.day
+def settle_amt[h in households, m in months]: money PLN
+  rule month_end = owes_at[h, m] when settle_balance == month_end
+  rule pay_day = -bal(ledger[h]) when settle_balance == pay_day
+def year_end[m in months]: bool = end_of(year_of(m)) == end_of(m)
+place ledger[h in households]: ledgers lives 2027-01-01..
+move post_cost[c in car_costs over ..]: ledger_entries
+  on c.day
+  at c.day
+  when part_of[c, other[c.payer]] > 0
+  leg cash from ledger[other[c.payer]] to ledger[c.payer] amount part_of[c, other[c.payer]]
+move post_receipt[r in car_receipts over ..]: ledger_entries
+  on r.day
+  at r.day
+  when receipt_part[r, other[r.receiver]] > 0
+  leg cash from ledger[r.receiver] to ledger[other[r.receiver]] amount receipt_part[r, other[r.receiver]]
+move settle[m in months, h in households over m]: settlements
+  on add_months(day_of(m, settle_dom), 1)
+  when owes_at[h, m] > threshold or (year_end[m] and owes_at[h, m] > 0)
+  reads ledger
+  attr payer = h
+  leg cash from purse[h] to purse[other[h]] amount settle_amt[h, m]
+  leg clear from ledger[other[h]] to ledger[h] amount settle_amt[h, m]
+
+input base_premium: money PLN
+input claim_discount: num
+input free_discount: num
+input premium_mode: rounding
+def discount[y in years]: num at start_of(y)
+  rule no_claim = free_discount
+  rule claim beats no_claim = claim_discount when any(claimed[a] for a in accidents over y - 1)
+def premium[y in years]: money PLN at start_of(y)
+  note "rule 8: the premium is stated, or the terms' base less the discount"
+  rule stated = premium_stated[y] when premium_stated[y] != none
+  rule terms = round(base_premium * (1 - discount[y]), minor(PLN), premium_mode) when premium_stated[y] == none
+
+ask payments: s.day, s.payer, s.cash.amount for s in settlements over 2027-01-01 .. 2028-03-10
+
+ask premium_2028: premium[2028], extra_premium[2028], claim_causer[2028]
+
+ask costs_2027: sum(borne[c, h] for c in car_costs over 2027) for h in households over 2027
+
+version card_things
+  cite story
+  known 2027-01-01
+  accidents + [acc1] lives 2027-11-18..2027-11-18
+  cars + [car1] lives 2027-01-01..
+  households + [pola_hh] lives 2000-01-01..
+  households + [rena_hh] lives 2000-01-01..
+
+version card_story
+  cite story
+  governs always
+  known 2027-01-01
+  claimed[acc1] = true "the insurer pays Pola for the repair: the accident led to a claim"
+  driver_hh[acc1] = rena_hh "Rena was driving and caused it"
+  other[pola_hh] = rena_hh "two households"
+  other[rena_hh] = pola_hh "two households"
+  policy_excess = 1000.00 PLN "the policy excess of 1 000.00"
+  receipt_terms[ins1] = (receiver: pola_hh, car: car1, accident: acc1, paid_on: 2028-02-14, amt: 6000.00 PLN) "14 Feb 2028: the insurer pays Pola 6 000.00"
+  repair_terms[rep1] = (payer: pola_hh, car: car1, accident: acc1, paid_on: 2027-11-25, amt: 7000.00 PLN) "Pola pays the repair, 7 000.00, on 25 Nov 2027"
+  sale_terms[sale1] = (seller: pola_hh, buyer: rena_hh, car: car1, sold_on: 2027-07-01, fraction: 10 %, price: 5400.00 PLN) "1 Jul 2027: Rena buys 10 % of the car from Pola for 5 400.00"
+  service_terms[srv1] = (payer: rena_hh, car: car1, paid_on: 2027-04-12, amt: 1500.00 PLN) "12 Apr 2027: Rena pays for a service, 1 500.00"
+  shared_car = car1 "they buy a car together"
+
+version card_years
+  cite story
+  governs 2027..2028
+  known 2027-01-01
+  premium_day[2027] = 2027-01-01 "1 Jan 2027: Pola pays the 2027 premium"
+  premium_day[2028] = 2028-01-01 "1 Jan 2028: Rena pays the 2028 premium"
+  premium_payer[2027] = pola_hh "Pola pays the 2027 premium"
+  premium_payer[2028] = rena_hh "Rena pays the 2028 premium"
+  premium_stated[2027] = 2400.00 PLN "the 2027 premium, 2 400.00"
+  premium_stated[2028] = none "the 2028 premium follows the insurer's terms"
+
+version card_months
+  cite story
+  governs 2027-01..2028-03
+  known 2027-01-01
+  fuel_amt[pola_hh, *] = 300.00 PLN governs 2027-01..2027-12 "every month of 2027, 300.00"
+  fuel_amt[pola_hh, *] = 250.00 PLN governs 2028-01.. "in 2028, 250.00 a month"
+  fuel_amt[rena_hh, *] = 200.00 PLN governs 2027-01..2027-12 "every month of 2027, 200.00"
+  fuel_amt[rena_hh, *] = 250.00 PLN governs 2028-01.. "in 2028, 250.00 a month"
+  km_share[pola_hh, *] = 60 % governs 2027-01..2027-06 "the log: 60 % of each month's kilometres, January to June"
+  km_share[pola_hh, *] = 40 % governs 2027-07..2027-12 "the log: 40 %, July to December"
+  km_share[pola_hh, *] = 50 % governs 2028-01.. "in 2028 each drives half"
+  km_share[rena_hh, *] = 40 % governs 2027-01..2027-06 "the log: the rest of the kilometres"
+  km_share[rena_hh, *] = 60 % governs 2027-07..2027-12 "the log: the rest of the kilometres"
+  km_share[rena_hh, *] = 50 % governs 2028-01.. "in 2028 each drives half"
+
+version card_shares
+  cite story
+  governs 2027-01-01..
+  known 2027-01-01
+  owns[pola_hh, car1] = 60 % governs 2027-01-01..2027-06-30 "Pola 60 %"
+  owns[pola_hh, car1] = 50 % governs 2027-07-01.. "from 1 July they own it half and half"
+  owns[rena_hh, car1] = 40 % governs 2027-01-01..2027-06-30 "Rena 40 %"
+  owns[rena_hh, car1] = 50 % governs 2027-07-01.. "from 1 July they own it half and half"
+
+version card_agreement
+  cite agreement_src
+  governs always
+  known 2027-01-01
+  settle_dom = 10 "rule 7: on the 10th of the next month"
+  threshold = 800.00 PLN "rule 7: more than 800.00"
+
+version card_insurer
+  cite insurer_src
+  governs 2028
+  known 2027-01-01
+  base_premium = 3000.00 PLN "rule 8: 3 000.00 less a discount"
+  claim_discount = 10 % "rule 8: 10 % if one did"
+  free_discount = 30 % "rule 8: 30 % if no accident in 2027 led to a claim"
+
+version card_assumed
+  cite modeller
+  governs always
+  known 2027-01-01
+  premium_mode = half-up assumed "the insurer's rounding isn't stated"
+  split_mode = half-up assumed "the agreement states no rounding of a household's part"
+
+ask q1: owes_at[h, 2027-12], bal(ledger[h], 2028-01-09), bal(ledger[h], 2028-01-10) for h in [pola_hh, rena_hh]

@@ -1,0 +1,49 @@
+# L §5.11 example def and version, copied whole (with the families, inputs and the source it names).
+# Steps 2-6: before rm2016 governs (2016-03) the def's own base applies: max(0 PLN, 500.00 − 100.00) = 400.00 PLN,
+# small's when (400.00 < 20.00) is false.  From 2016-04 the replacing version of base wins on its span (step 2):
+# max(0 PLN, 600.00 − 100.00) = 500.00 PLN.  For f2 small applies (110.00 − 100.00 = 10.00 < 20.00) and beats
+# base: 0 PLN, the money 0.00 PLN. (Writer 8: reasons() is gone, L §2.2; q2 read it.)
+=== m.tally
+model ul05
+  tally 2
+  on 2016-10-31
+  start 2015-11-01
+  end 2016-10-31
+
+source rm1238 "Rozporządzenie 2015"
+source rm2016_act "Rozporządzenie 2016"
+unit PLN: currency minor 0.01
+kind families
+
+input entitled[f in families, m in months]: money PLN
+input entitled_2016[f in families, m in months]: money PLN
+input excess[f in families, m in months]: money PLN
+input min_payment: money PLN
+
+def payable[f in families, m in months]: money PLN at start_of(m)
+  note "kwota wypłacana po obniżeniu, art. 5 ust. 3"
+  rule base = max(0 PLN, entitled[f, m] - excess[f, m])
+  rule small beats base = 0 PLN when entitled[f, m] - excess[f, m] < min_payment
+
+version rm2015
+  cite rm1238
+  governs 2015-11..
+  known 2015-09-07
+  families + [f1, f2] lives 2010-01-01..
+  entitled[f1, *] = 500.00 PLN
+  entitled[f2, *] = 110.00 PLN
+  entitled_2016[f1, *] = 600.00 PLN
+  entitled_2016[f2, *] = 110.00 PLN
+  excess[*, *] = 100.00 PLN
+  min_payment = 20.00 PLN
+
+version rm2016
+  cite rm2016_act
+  governs 2016-04..
+  known 2016-02-10
+  replace rule payable.base = max(0 PLN, entitled_2016[f, m] - excess[f, m])
+
+ask q1: payable[f1, 2016-03], payable[f1, 2016-05], payable[f2, 2016-05]
+=== expect
+q1: (400.00 PLN, 500.00 PLN, 0.00 PLN)
+  cut 2016-10-31

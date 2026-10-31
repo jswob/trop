@@ -1,0 +1,67 @@
+# L §6.1: "A member is closed. A member's items mean what they mean alone"; "The member's own answers, asked as a.q, are
+# unchanged"; rows stated same are one movement, bound once (L §5.19 Bindings).  The migrator's F-k (t12/J): the
+# member's def paid sums its own inh rows into sav; the joint states its own row fb[f1] (kind a.inh, same day, amount
+# and places) same as a.sb[s1].  a.paid is the member's alone (100.00 DUK, a.m1 asked in M, sb[s1]'s amount carried
+# through); the joint's binding over a.inh meets the one movement once (100.00 DUK); a.sav on 2025-10-01 books it
+# once (100.00 DUK).  Before: a.paid 0.00 DUK (the member's binding bound the group by the joint's row, which the
+# member doesn't see).
+=== J/j.tally
+model fam
+  tally 2
+  on 2026-01-15
+  start 2025-01-01
+  end 2026-12-31
+  use a = "../M" sha256 "698df48002fc3a96782f72b267c71502d5dab16c627313160ff750729059a3da"
+
+source fsrc "test"
+
+input fb: observed
+
+ask j1: a.paid, sum(o.cash.amount for o in a.inh over ..), bal(a.sav, 2025-10-01) law 2026-01-15 as known 2026-01-15
+
+version f
+  cite fsrc
+  governs 2025-06..2025-12
+  known 2026-01-15
+  same fb[f1] = a.sb[s1]
+  fb[f1] = (on: 2025-06-16, kind: a.inh, leg cash from a.world to a.sav amount 100.00 DUK) "f1"
+=== M/m.tally
+model m
+  tally 2
+  on 2026-01-15
+  start 2025-01-01
+  end 2026-12-31
+
+source src "test"
+
+unit DUK: currency minor 0.01
+
+kind inh: transfers
+
+place sav: accounts DUK lives 2025-01-01..
+
+place world: outside lives 2000-01-01..
+
+input sb: observed
+
+def paid: money DUK = sum(o.cash.amount for o in inh over .. where o.cash.to == sav) at reader
+
+ask m1: paid law 2026-01-15 as known 2026-01-15
+
+version open
+  cite src
+  governs always
+  known 2025-01-01
+  opening[sav] = 0 at 2025-01-01 start
+
+version s
+  cite src
+  governs 2025-06..2025-12
+  known 2026-01-15
+  covers sav
+  anchor sav
+  sb[s1] = (on: 2025-06-16, kind: inh, leg cash from world to sav amount 100.00 DUK) "s1"
+  stated[sav] = 100.00 DUK at 2025-12-31 end "last"
+=== expect
+j1: (100.00 DUK, 100.00 DUK, 100.00 DUK)
+  law date 2026-01-15, cut 2026-01-15

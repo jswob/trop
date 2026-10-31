@@ -1,0 +1,54 @@
+# L §5.11 An iteration the law names, copied whole (with taxpayers, iters and the inputs it names).  "init applies
+# at i = 0 and beats step"; first(i in iters where c) is the first key whose where is true.  With the steps
+# constant (deduction_from_credit and c rows equal at every key), d[t, i] = d0[t] for i ≥ 1 by rule step and at
+# i = 0 by rule init, so the first i > 0 with |d[t, i] − d[t, i − 1]| < tolerance is i = 1; deduction = d[t, 1].
+# q2: "If no key satisfies the condition within the index, first is refused (RUN-EMPTY)": tolerance 0 makes
+# every difference (0) fail "< 0".
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit USD: currency minor 0.01
+
+kind taxpayers
+input d0[t in taxpayers]: num USD
+input deduction_from_credit[t in taxpayers, i in iters]: num USD
+input c[t in taxpayers, i in iters]: num USD
+input tolerance: num USD
+
+index iters = 0..50
+def d[t in taxpayers, i in iters]: num USD at reader
+  rule init beats step = d0[t] when i == 0
+  rule step = deduction_from_credit[t, i - 1]
+
+def deduction[t in taxpayers]: num USD = d[t, stop[t]] at reader
+
+def stop[t in taxpayers]: key iters = first(i in iters where i > 0 and abs(d[t, i] - d[t, i - 1]) < tolerance and abs(c[t, i] - c[t, i - 1]) < tolerance) at reader
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  taxpayers + [ann] lives 1980-01-01..
+  d0[ann] = 100 USD
+  deduction_from_credit[ann, *] = 100 USD
+  c[ann, *] = 5 USD
+  tolerance = 0.01 USD
+
+version tight
+  cite s
+  governs always
+  known 2026-06-01
+  replace tolerance = 0 USD
+
+ask q1: stop[ann], deduction[ann] law 2026-06-30 as known 2026-05-01
+ask q2: stop[ann] law 2026-06-30
+=== expect
+q1: (1, 100 USD)
+  law date 2026-06-30, cut 2026-05-01
+q2: refused: RUN-EMPTY ...
+  law date 2026-06-30, cut 2026-12-31

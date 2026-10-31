@@ -1,0 +1,49 @@
+model rec03
+  tally 2
+  on 2026-10-25
+  start 2025-02-01
+  end 2025-04-30
+
+source card "REC-03 card: its rules"
+
+source card_stmt "REC-03 card: Ania's card rows and her card's cycle"
+
+unit DUK: currency minor 0.01
+
+index crow = [c1, c2, c3, c4]
+
+input bill_due: date
+
+input crow_amt[r in crow]: money DUK
+
+input crow_on[r in crow]: date
+
+input cycle_from: date
+
+input cycle_to: date
+
+def bill: money DUK at reader
+  rule cycle v card_rules = sum(crow_amt[r] for r in crow where crow_on[r] >= cycle_from and crow_on[r] <= cycle_to)
+
+ask q: bill, bill_due law 2026-10-25
+
+version card_rows
+  cite card_stmt
+  governs always
+  known 2025-02-01
+  bill_due = 2025-04-10 "payable 10 April"
+  crow_amt[c1] = 300.00 "purchase"
+  crow_amt[c2] = 1200.00 "purchase"
+  crow_amt[c3] = -200.00 "refund, part of the 25 February purchase"
+  crow_amt[c4] = 50.00 "purchase"
+  crow_on[c1] = 2025-02-25 "25 February"
+  crow_on[c2] = 2025-03-03 "3 March"
+  crow_on[c3] = 2025-03-12 "12 March"
+  crow_on[c4] = 2025-03-21 "21 March"
+  cycle_from = 2025-02-21 "cycle 21 February - 20 March 2025"
+  cycle_to = 2025-03-20 "cycle 21 February - 20 March 2025"
+
+version card_rules
+  cite card
+  governs always
+  known 2025-02-01

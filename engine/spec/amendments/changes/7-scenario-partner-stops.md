@@ -8,21 +8,23 @@
 
 ```diff
 --- scenarios/wife_stops.tally   (new file)
-+scenario wife_stops
-+  tally 1
++scenario wife_stops over tropek
++  tally 2
 +  from 2027-01-01
 +  note "Co jeśli żona przestanie pracować od stycznia 2027? (oświadczenie gospodarstwa z 2026-10-19)"
 +
 +version wife_stops_salary
 +  cite household
-+  salary[wife_acme] = 0 "założenie scenariusza: brak pensji od stycznia 2027"
++  governs 2027-01-01..
++  known 2026-10-19
++  replace salary[wife_acme] = 0 "założenie scenariusza: brak pensji od stycznia 2027"
 ```
 
-**Lines:** 8 added (7 non-blank). Lines edited: 0.
+**Lines:** 10 added (9 non-blank). Lines edited: 0.
 
 **Scenario rules** (`LOAD-SCENARIO`) hold:
-- the version has no `known`, `arrears` or `correction`;
-- its row's span defaults to `2027-01-01..`, not before `from`;
+- the version is an ordinary version (LANGUAGE §6.4): it states `governs 2027-01-01..`, not before `from` (tally 1.0.1's default span, written), and `known 2026-10-19`, the day of the household's statement, which is the reality's `on`;
+- its row overlaps the base's `salary[wife_acme]` row and says `replace`;
 - nothing in the reality reads it.
 
 ## How to run it

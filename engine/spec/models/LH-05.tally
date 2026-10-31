@@ -1,6 +1,8 @@
 model lh05
-  tally 1
+  tally 2
   on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
   note "Polish IKE and IKZE contribution limits for 2026: a multiple of the forecast average monthly wage for the year, but not below the amount announced for the year before (ustawa o IKE i IKZE, art. 13 and 13a)."
   note "The floor is art. 13 ust. 1a and art. 13a ust. 2: a limit below the amount announced in the previous calendar year is replaced by that amount. The rule next of limit says it."
   note "No rounding is stated in the act or the notices, so the limits are not rounded."
@@ -20,6 +22,8 @@ source mp2024_1055 "Obwieszczenie MRPiPS z dnia 10 grudnia 2024 r. w sprawie wys
 
 source mp2025_1206 "Obwieszczenie MRPiPS z dnia 19 listopada 2025 r. w sprawie kwoty ograniczenia rocznej podstawy wymiaru składek w roku 2026 oraz przyjętej do jej ustalenia kwoty prognozowanego przeciętnego wynagrodzenia (M.P. 2025 poz. 1206)" at "https://api.sejm.gov.pl/eli/acts/MP/2025/1206/text.pdf"
 
+unit PLN: currency minor 0.01
+
 index acct = [ike, ikze, ikze_biz]
 
 index yr = year 2025..2026
@@ -30,28 +34,30 @@ input mult[k in acct]: num
 
 input wage[y in yr]: money PLN
 
-def limit[k in acct, y in yr]: num PLN
-  rule first when pos(y) = 1 = ? "The 2025 limit rests on the 2025 forecast wage, which this model doesn't state."
-  rule next when pos(y) > 1 = max(mult[k] * wage[y], announced[k, y - 1])
+def limit[k in acct, y in yr]: num PLN at start_of(y)
+  rule first = ?"The 2025 limit rests on the 2025 forecast wage, which this model doesn't state." when pos(y) == 1
+  rule next = max(mult[k] * wage[y], announced[k, y - 1]) when pos(y) > 1
 
-ask ike_2026: limit[ike, 2026]
+ask ike_2026: limit[ike, 2026] law 2026-10-18
 
-ask ike_2026_notice: limit[ike, 2026] as known 2025-11-24
+ask ike_2026_notice: limit[ike, 2026] law 2025-11-24 as known 2025-11-24
 
-ask ikze_2026: limit[ikze, 2026]
+ask ikze_2026: limit[ikze, 2026] law 2026-10-18
 
-ask ikze_2026_notice: limit[ikze, 2026], limit[ikze_biz, 2026] as known 2025-11-18
+ask ikze_2026_notice: limit[ikze, 2026], limit[ikze_biz, 2026] law 2025-11-18 as known 2025-11-18
 
-ask ikze_biz_2026: limit[ikze_biz, 2026]
+ask ikze_biz_2026: limit[ikze_biz, 2026] law 2026-10-18
 
 version ikeact_2008_1432
   cite du2008_1432
+  governs always
   known 2008-12-12
   note "Law is known from the promulgation of the act that enacted the row (LANGUAGE §4.5): Dz. U. 2008 nr 220 poz. 1432, promulgated 12 December 2008 (ELI DU/2008/1432). Art. 1 pkt 3 gave art. 13 ust. 1 its present wording, with the threefold multiple. The row is read in the tekst jednolity Dz. U. z 2024 r. poz. 707 (same in Dz. U. z 2026 r. poz. 91), which restates it and isn't a version of it (LANGUAGE §5.3)."
   mult[ike] = 3 "art. 1 pkt 3 (art. 13 ust. 1, tekst jednolity Dz. U. z 2024 r. poz. 707): trzykrotności przeciętnego prognozowanego wynagrodzenia miesięcznego"
 
 version ikeact_2018_2215
   cite du2018_2215
+  governs always
   known 2018-11-28
   note "Dz. U. 2018 poz. 2215, promulgated 28 November 2018 (ELI DU/2018/2215). Art. 124 pkt 4 gave art. 13a ust. 1 its present wording and added ust. 1a; the act puts the amendment that added ust. 1a in force on 1 January 2021, so its row governs from 2021. The 1,2 multiple itself dates from Dz. U. 2013 poz. 1717; the row is known from the act whose wording it is read in. Both rows are read in the tekst jednolity Dz. U. z 2024 r. poz. 707."
   mult[ikze] = 1.2 "art. 124 pkt 4 (art. 13a ust. 1, tekst jednolity Dz. U. z 2024 r. poz. 707): 1,2-krotności przeciętnego prognozowanego wynagrodzenia miesięcznego"
@@ -59,12 +65,14 @@ version ikeact_2018_2215
 
 version mp2024_1053_ike
   cite mp2024_1053
+  governs always
   known 2024-12-11
   note "Promulgated 11 December 2024 (ELI MP/2024/1053)."
   announced[ike, 2025] = 26019 "single paragraph: w roku 2025 wynosi 26 019 zł"
 
 version mp2024_1055_ikze
   cite mp2024_1055
+  governs always
   known 2024-12-12
   note "Promulgated 12 December 2024 (ELI MP/2024/1055)."
   announced[ikze, 2025] = 10407.6 "pkt 1, art. 13a ust. 1: w roku 2025 wynosi 10 407,60 zł"
@@ -72,19 +80,22 @@ version mp2024_1055_ikze
 
 version budget2026_draft
   cite druk1749
+  governs always
   known 2025-09-30
   note "The Council of Ministers' draft budget for 2026, Sejm print 1749: its documentDate and deliveryDate in the Sejm API (api.sejm.gov.pl/sejm/term10/prints/1749) are both 30 September 2025. A draft isn't promulgated, so it is known from the day it was delivered to the Sejm and made public (LANGUAGE §4.5)."
   note "Art. 13 ust. 1 and art. 13a ust. 1 read the wage 'określonego w ustawie budżetowej lub ustawie o prowizorium budżetowym lub w ich projektach, jeżeli odpowiednie ustawy nie zostały uchwalone'. The enacted act's row (budget2026_art24) is known later, so it wins from its known date (LANGUAGE §4.6)."
-  wage[2026] = ? "What forecast average monthly wage for 2026 does the draft budget (druk nr 1749) state? The case didn't fetch it." "druk nr 1749, the article on the forecast average monthly wage"
+  wage[2026] = ?"What forecast average monthly wage for 2026 does the draft budget (druk nr 1749) state? The case didn't fetch it." "druk nr 1749, the article on the forecast average monthly wage"
 
 version mp2025_1206_wage
   cite mp2025_1206
+  governs always
   known 2025-11-25
   note "Warszawa, dnia 25 listopada 2025 r., Poz. 1206. The wage is stated for the social-insurance cap; the IKE and IKZE notices don't say which wage they used."
-  wage[2026] = 9420 "single paragraph: przyjęta do jej ustalenia kwota prognozowanego przeciętnego wynagrodzenia wynosi 9420 zł"
+  replace wage[2026] = 9420 "single paragraph: przyjęta do jej ustalenia kwota prognozowanego przeciętnego wynagrodzenia wynosi 9420 zł"
 
 version budget2026_art24
   cite budget2026
+  governs always
   known 2026-01-20
   note "Passed on 9 January 2026 and promulgated on 20 January 2026 (Dz. U. 2026 poz. 62, ELI DU/2026/62); law is known from its promulgation (LANGUAGE §4.5)."
-  wage[2026] = 9420 "art. 24 (PDF p. 4): Prognozowane przeciętne miesięczne wynagrodzenie brutto w gospodarce narodowej wynosi 9 420 zł"
+  replace wage[2026] = 9420 "art. 24 (PDF p. 4): Prognozowane przeciętne miesięczne wynagrodzenie brutto w gospodarce narodowej wynosi 9 420 zł"

@@ -1,0 +1,15 @@
+# L §2.1 "A four-digit literal is a year where a period is expected and an integer in an integer index"; in
+# `x - 1000` with x money no period is expected, so 1000 is a figure and L §7.1's literal rule refuses it in a def
+# (`LOAD-LITERAL`), as it refuses `x - 500` (fault, writer 7: it was refused LOAD-UNIT as `money DUK and year4`).
+=== f.tally
+model f
+  tally 2
+  on 2025-01-01
+  start 2025-01-01
+  end 2025-12-31
+unit DUK: currency minor 0.01
+input x: money DUK
+def y: money DUK = x - 1000
+ask q: y
+=== expect
+refused: LOAD-LITERAL figure 1000 in a rule; make it a row (f.tally:8)

@@ -1,0 +1,33 @@
+# Round 19 (writer 10): settled; was REFCORE-UNSPECIFIED E §3.2. GD-22: E §3.2 "A stretch of law dates over which the rows and rules the item reaches don't change is one class
+# even where no row covers it, so a window at inside such a stretch is read once, at its first day inside the window,
+# and gives one hole, which names that day": q3 is the gap hole of 2026-06-10. The old comment:
+# Round 18, C3-7. As L4_3_at_window_lifespan with the window inside ola's life, 2026-06-10 .. 2026-06-14, and no row of
+# city: each day gives the gap rule's hole naming that day (L §4.6 step 5), while E §3.2 says every law date of a class
+# gives one value, and whether the window is one class (one hole, at its first day, L §4.3) or several turns on the
+# class's unstated extent: REFCORE-UNSPECIFIED (snap11 merged the five questions).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+kind persons
+input city[p in persons]: text
+input w: date
+
+def c[p in persons]: text at w
+  rule r = city[p]
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  persons + [ola] lives 1950-01-01..2026-06-15
+  w = window(2026-06-10, 2026-06-14)
+
+ask q3: c[ola]
+=== expect
+q3: ?"city at ola: no value at 2026-06-10" (city[ola])
+  cut 2026-12-31

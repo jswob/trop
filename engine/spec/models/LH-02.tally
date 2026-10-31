@@ -1,6 +1,8 @@
 model lh02
-  tally 1
+  tally 2
   on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
   note "UK share identification for Capital Gains Tax, HS284 (2025): Example 1 (one Section 104 holding), Example 2 (the 30-day rule against the holding) and Example 3 (a holding built and drawn down)."
   note "Example 2 is matched by the fill ident: same day first, then the 30 days after the disposal, then the Section 104 holding, then later acquisitions, earliest first. The fill cites the identification order (version tcga1992_order)."
   note "Example 3 is a recurrence over its four events. Its allowable cost on a disposal is the holding's cost times shares sold over shares held. No rounding is stated, so the rounding of that cost is the axis cg_round: no rounding, or one of three modes to the whole pound."
@@ -10,6 +12,8 @@ source hs284 "HMRC, HS284 Shares and Capital Gains Tax (2025), helpsheet page, U
 source hs284_ex3 "HMRC, HS284 Example 3 (2025): gain for shares in a Section 104 holding (PDF)" at "https://assets.publishing.service.gov.uk/media/67d053a7472ec44ed2307859/HS284_Example_3_2025.pdf"
 
 source tcga1992 "Taxation of Chargeable Gains Act 1992 (legislation.gov.uk), retrieved 2026-10-18" at "https://www.legislation.gov.uk/ukpga/1992/12"
+
+unit GBP: currency minor 0.01
 
 unit shr "share"
 
@@ -27,7 +31,7 @@ index disp2 = [aug30]
 
 index evk = [buy, sell]
 
-index step = 1..4
+index step = int 1..4
 
 input a2_cost[a in acq2]: money GBP
 
@@ -57,112 +61,115 @@ input res_uk[a in acq2]: bool
 
 input window2: int
 
-def add_cost[k in step]: num GBP
+def add_cost[k in step]: num GBP at reader
   rule base = 0
-  rule bought excepts base when ev_kind[k] = buy = ev_sh[k] * ev_px[k] + ev_costs[k]
+  rule bought beats base = ev_sh[k] * ev_px[k] + ev_costs[k] when ev_kind[k] == buy
 
-def alloc_cost[k in step]: num GBP
+def alloc_cost[k in step]: num GBP at reader
   rule base = alloc_exact[k]
-  rule to_even excepts base when cg_round = half-even = round(alloc_exact[k], 1, half-even)
-  rule to_near excepts base when cg_round = half-up = round(alloc_exact[k], 1, half-up)
-  rule to_up excepts base when cg_round = ceil = round(alloc_exact[k], 1, ceil)
+  rule to_even beats base = round(alloc_exact[k], 1, half-even) when cg_round == half-even
+  rule to_near beats base = round(alloc_exact[k], 1, half-up) when cg_round == half-up
+  rule to_up beats base = round(alloc_exact[k], 1, ceil) when cg_round == ceil
 
-def alloc_exact[k in step]: num GBP
+def alloc_exact[k in step]: num GBP at reader
   rule base = 0
-  rule sold excepts base when k > 1 and ev_kind[k] = sell = pool_cost[k - 1] * ev_sh[k] / pool_sh[k - 1]
+  rule sold beats base = pool_cost[k - 1] * ev_sh[k] / pool_sh[k - 1] when k > 1 and ev_kind[k] == sell
 
-def allow_total[k in step]: num GBP = alloc_cost[k] + ev_costs[k]
+def allow_total[k in step]: num GBP = alloc_cost[k] + ev_costs[k] at reader
 
-def bnb[d in disp2, a in acq2]: bool
-  rule base = days(d2_on[d], a2_on[a]) >= 1 and days(d2_on[d], a2_on[a]) <= window2 and res_uk[a]
-  rule pooled excepts base when a2_pool[a] = false
+def bnb[d in disp2, a in acq2]: bool at reader
+  rule base = days_between(d2_on[d], a2_on[a]) >= 1 and days_between(d2_on[d], a2_on[a]) <= window2 and res_uk[a]
+  rule pooled beats base = false when a2_pool[a]
 
-def ex1_pool: num shr = sum(b in buy1: b1_sh[b])
+def ex1_pool: num shr = sum(b1_sh[b] for b in buy1) at reader
 
-def gain[k in step]: num GBP = gross[k] - allow_total[k]
+def gain[k in step]: num GBP = gross[k] - allow_total[k] at reader
 
-def gross[k in step]: num GBP = ev_sh[k] * ev_px[k]
+def gross[k in step]: num GBP = ev_sh[k] * ev_px[k] at reader
 
-def later[d in disp2, a in acq2]: bool
-  rule base = days(d2_on[d], a2_on[a]) >= 0
-  rule pooled excepts base when a2_pool[a] = false
+def later[d in disp2, a in acq2]: bool at reader
+  rule base = days_between(d2_on[d], a2_on[a]) >= 0
+  rule pooled beats base = false when a2_pool[a]
 
-def part_cost[d in disp2, a in acq2]: num GBP = a2_cost[a] * ident.taken[d, a] / a2_sh[a]
+def part_cost[d in disp2, a in acq2]: num GBP = a2_cost[a] * ident.taken[d, a] / a2_sh[a] at reader
 
-def part_loss[d in disp2, a in acq2]: num GBP = part_cost[d, a] - part_proceeds[d, a]
+def part_loss[d in disp2, a in acq2]: num GBP = part_cost[d, a] - part_proceeds[d, a] at reader
 
-def part_proceeds[d in disp2, a in acq2]: num GBP = d2_amt[d] * ident.taken[d, a] / d2_sh[d]
+def part_proceeds[d in disp2, a in acq2]: num GBP = d2_amt[d] * ident.taken[d, a] / d2_sh[d] at reader
 
-def pool_cost[k in step]: num GBP
-  rule first when k = 1 = add_cost[k]
-  rule next when k > 1 = pool_cost[k - 1] + add_cost[k] - alloc_cost[k]
+def pool_cost[k in step]: num GBP at reader
+  rule first = add_cost[k] when k == 1
+  rule next = pool_cost[k - 1] + add_cost[k] - alloc_cost[k] when k > 1
 
-def pool_sh[k in step]: num shr
-  rule first when k = 1 = sh_in[k]
-  rule next when k > 1 = pool_sh[k - 1] + sh_in[k]
+def pool_sh[k in step]: num shr at reader
+  rule first = sh_in[k] when k == 1
+  rule next = pool_sh[k - 1] + sh_in[k] when k > 1
 
-def same_day[d in disp2, a in acq2]: bool
-  rule base = (a2_on[a] = d2_on[d])
-  rule pooled excepts base when a2_pool[a] = false
+def same_day[d in disp2, a in acq2]: bool at reader
+  rule base = a2_on[a] == d2_on[d]
+  rule pooled beats base = false when a2_pool[a]
 
-def sh_in[k in step]: num shr
+def sh_in[k in step]: num shr at reader
   rule base = ev_sh[k]
-  rule sold excepts base when ev_kind[k] = sell = -ev_sh[k]
+  rule sold beats base = -ev_sh[k] when ev_kind[k] == sell
 
 fill ident
   v tcga1992_order
   supply d2_sh[d] for d in disp2
   demand a2_sh[a] for a in acq2
   arc a2_pool[a] or later[d, a]
-  order d, not same_day[d, a], not bnb[d, a], not a2_pool[a], a
+  order d, not same_day[d, a], not bnb[d, a], not a2_pool[a], a ties by (pos(d), pos(a))
 
-ask ex1_holding: ex1_pool
+ask ex1_holding: ex1_pool law 2026-10-18
 
-ask ex2_bnb: ident.taken[aug30, sep11]
+ask ex2_bnb: ident.taken[aug30, sep11] law 2026-10-18
 
-ask ex2_cost: part_cost[aug30, sep11]
+ask ex2_cost: part_cost[aug30, sep11] law 2026-10-18
 
-ask ex2_loss: part_loss[aug30, sep11]
+ask ex2_loss: part_loss[aug30, sep11] law 2026-10-18
 
-ask ex2_pool: ident.taken[aug30, pool2]
+ask ex2_pool: ident.taken[aug30, pool2] law 2026-10-18
 
-ask ex2_proceeds: part_proceeds[aug30, sep11]
+ask ex2_proceeds: part_proceeds[aug30, sep11] law 2026-10-18
 
-ask ex3_added: add_cost[2]
+ask ex3_added: add_cost[2] law 2026-10-18
 
-ask ex3_cost: alloc_cost[k] for k in [3, 4]
+ask ex3_cost: alloc_cost[k] for k in [3, 4] law 2026-10-18
 
-ask ex3_cost_plus: allow_total[k] for k in [3, 4]
+ask ex3_cost_plus: allow_total[k] for k in [3, 4] law 2026-10-18
 
-ask ex3_gain: gain[k] for k in [3, 4]
+ask ex3_gain: gain[k] for k in [3, 4] law 2026-10-18
 
-ask ex3_pool_cost: pool_cost[k] for k in step
+ask ex3_pool_cost: pool_cost[k] for k in step law 2026-10-18
 
-ask ex3_pool_sh: pool_sh[k] for k in step
+ask ex3_pool_sh: pool_sh[k] for k in step law 2026-10-18
 
-ask ex3_proceeds: gross[k] for k in [3, 4]
+ask ex3_proceeds: gross[k] for k in [3, 4] law 2026-10-18
 
 version tcga1992_106a
   cite tcga1992
+  governs always
   known 1998-07-31
   note "Law is known from the promulgation of the act that enacted the row (LANGUAGE §4.5). Section 106A was inserted by the Finance Act 1998 (c. 36), s. 124(1), which received Royal Assent on 31 July 1998 (legislation.gov.uk). The later amendments of s. 106A(5) listed there (Finance Act 2013, Sch. 24, about EMI shares) don't change the thirty days."
   window2 = 30 "s. 106A(5): within the period of thirty days after the disposal"
 
 version tcga1992_order
   cite tcga1992
+  governs always
   known 2008-07-21
   note "The identification order for disposals from 6 April 2008: same-day acquisitions (s. 105(1)), then acquisitions within the thirty days after the disposal, earliest first, outside any Section 104 holding (s. 106A(5), (5ZA)), then the Section 104 holding (s. 104), then later acquisitions, earliest first (HS284 s. 2). The fill ident cites this version; it has no rows."
   note "It is known from the Royal Assent of the Finance Act 2008 (c. 9), 21 July 2008 (legislation.gov.uk), whose Sch. 2 (para. 87) gave s. 106A this form for the regime from 6 April 2008 (CG51560)."
 
 version hs284_2025
   cite hs284
+  governs always
   known 2026-10-18
   note "Example 1: Wilson and Strickland plc 25 pence ordinary shares."
   note "Example 2: Mr Schneider, Mesopotamia plc. He 'owned 10,000 shares', counting the 500 bought after the sale; on the sale date 9,500 were in the Section 104 holding. The holding's cost is not stated."
   note "The examples are hypothetical: their figures are stipulations, known from the model's on (LANGUAGE §4.5), and so is the assumed residence. The page's Updated stamp (6 April 2026) isn't used."
-  a2_cost[pool2] = ? "What did the 9,500 shares in Mr Schneider's Section 104 holding cost? HS284 doesn't say." "s. 2.1 Example 2"
+  a2_cost[pool2] = ?"What did the 9,500 shares in Mr Schneider's Section 104 holding cost? HS284 doesn't say." "s. 2.1 Example 2"
   a2_cost[sep11] = 850 "s. 3.1 Example 2 continued: paid £850 for the 500"
-  a2_on[pool2] = - "s. 2.1 Example 2: the Section 104 holding has no single acquisition date"
+  a2_on[pool2] = none "s. 2.1 Example 2: the Section 104 holding has no single acquisition date"
   a2_on[sep11] = 2024-09-11 "s. 2.1 Example 2"
   a2_pool[pool2] = true "s. 2.1 Example 2: the remaining 9,500 are held in the Section 104 holding"
   a2_pool[sep11] = false "s. 2.1 Example 2"
@@ -180,6 +187,7 @@ version hs284_2025
 
 version hs284_ex3_2025
   cite hs284_ex3
+  governs always
   known 2026-10-18
   note "Ms Pierson, Lobster plc shares. Only months are given: step 1 April 2016, step 2 September 2019, step 3 May 2024, step 4 February 2025."
   note "No acquisition follows either disposal and none falls on a disposal's day, so every disposal is identified with the Section 104 holding."

@@ -1,0 +1,18 @@
+# L §5.7: "LOAD-LIFESPAN: an entry into a kind without lives".
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+kind persons
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  persons + [ana]
+=== expect
+refused: LOAD-LIFESPAN ...

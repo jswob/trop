@@ -1,0 +1,28 @@
+# L §4.6 Readings: "With no reading on or before d, last and since are holes (HOLE-NOREADING)"; L §8.1 HOLE-NOREADING
+# "<x>[k] has no reading on or before <d>". r's one reading is at 2026-06-01. q3: "since(x[k], d) is the age in days of
+# the last reading": 2026-06-11 - 2026-06-01 = 10. (Was REFCORE-UNSPECIFIED §4.6, the holes of last and since.)
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+input r: num reading
+
+version v
+  cite s
+  known 2026-01-01
+  r = 5 at 2026-06-01 "s"
+
+ask q1: last(r, 2026-03-01) law 2026-12-31
+ask q2: since(r, 2026-03-01) law 2026-12-31
+ask q3: since(r, 2026-06-11) law 2026-12-31
+=== expect
+q1: ?"r has no reading on or before 2026-03-01" (r)
+  law date 2026-12-31, cut 2026-12-31
+q2: ?"r has no reading on or before 2026-03-01" (r)
+  law date 2026-12-31, cut 2026-12-31
+q3: 10
+  law date 2026-12-31, cut 2026-12-31

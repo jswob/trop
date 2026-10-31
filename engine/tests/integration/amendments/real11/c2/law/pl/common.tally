@@ -1,0 +1,129 @@
+part pl_common
+  tally 2
+  law
+  note "Wskaźniki wspólne: płaca minimalna, prognozowane przeciętne wynagrodzenie, podstawa zdrowotnej, kalendarz świąt, termin zeznania rocznego."
+  note "Wycinek przykładowy z kwotami prototypu; nie przeszedł bramki (OPERATIONS §3)."
+
+source dz_2025_1242 "Rozporządzenie RM w sprawie minimalnego wynagrodzenia za pracę w 2026 r., Dz.U. 2025 poz. 1242"
+
+source health_act "Ustawa o świadczeniach opieki zdrowotnej finansowanych ze środków publicznych (tekst jednolity)"
+
+source holidays_act "Ustawa z 18 stycznia 1951 r. o dniach wolnych od pracy (tekst jednolity)"
+
+source mp_2025_1206 "Obwieszczenie w sprawie prognozowanego przeciętnego wynagrodzenia na 2026 r., M.P. 2025 poz. 1206"
+
+source mp_2026_117 "Komunikat Prezesa GUS o przeciętnym wynagrodzeniu w IV kwartale 2025 r., M.P. 2026 poz. 117"
+
+source ordynacja "Ustawa Ordynacja podatkowa (tekst jednolity)"
+
+source pit_act "Ustawa o podatku dochodowym od osób fizycznych (tekst jednolity)"
+
+source sus_act "Ustawa o systemie ubezpieczeń społecznych (tekst jednolity)"
+
+index zus_part = [pension, disability, sickness, accident, labour_fund]
+
+input health_base_wage: money PLN question "Ile wynosi przeciętne wynagrodzenie w IV kwartale poprzedniego roku (podstawa składki zdrowotnej)?"
+
+input health_rate: num
+
+input holidays_pl: calendar
+
+input min_wage: money PLN question "Ile wynosi płaca minimalna w tym roku?"
+
+input proj_wage: money PLN question "Ile wynosi prognozowane przeciętne wynagrodzenie na ten rok?"
+
+input refund_days: int
+
+input return_day_16: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input wage_growth: num
+
+def health_base_y[y in tax_year]: money PLN at start_of(y)
+  note "opublikowana kwota roku; bez niej rzut z poprzedniego roku"
+  rule projected beats published v wage_fc_2026 = round(health_base_y[y - 1] * (1 + wage_growth), minor(PLN), half-up) when missing(health_base_wage) and pos(y) > 1
+  rule published = health_base_wage
+
+def min_wage_y[y in tax_year]: money PLN at start_of(y)
+  note "opublikowana kwota roku; bez niej rzut z poprzedniego roku"
+  rule projected beats published v wage_fc_2026 = round(min_wage_y[y - 1] * (1 + wage_growth), minor(PLN), half-up) when missing(min_wage) and pos(y) > 1
+  rule published = min_wage
+
+def proj_wage_y[y in tax_year]: money PLN at start_of(y)
+  note "opublikowana kwota roku; bez niej rzut z poprzedniego roku"
+  rule projected beats published v wage_fc_2026 = round(proj_wage_y[y - 1] * (1 + wage_growth), minor(PLN), half-up) when missing(proj_wage) and pos(y) > 1
+  rule published = proj_wage
+
+def return_day[y in tax_year]: date at start_of(y)
+  note "30 kwietnia roku następnego, przesunięty na dzień roboczy"
+  rule base v pit_return_2022 = if is_business(add_days(add_months(start_of(y), return_day_16), -1), holidays_pl) then add_days(add_months(start_of(y), return_day_16), -1) else add_business(add_days(add_months(start_of(y), return_day_16), -1), 1, holidays_pl)
+
+version health_2022
+  cite health_act
+  governs 2022..
+  known 2021-11-15
+  health_rate = 0.09 "art. 79 ust. 1"
+
+version pit_return_2022
+  cite pit_act
+  governs 2022..
+  known 2022-06-24
+  note "termin zeznania rocznego, art. 45 ust. 1"
+
+version min_wage_2026
+  cite dz_2025_1242
+  governs 2026
+  known 2025-09-15
+  min_wage = 4806 "§ 1"
+
+version proj_wage_2026
+  cite mp_2025_1206
+  governs 2026
+  known 2025-12-19
+  proj_wage = 9420 "pkt 1"
+
+version holidays_2026_2030
+  cite holidays_act
+  governs 2026..2030
+  known 2025-12-31
+  holidays_pl = calendar(weekends [sat, sun], added [2026-01-01, 2026-01-06, 2026-04-06, 2026-05-01, 2026-06-04, 2026-11-11, 2026-12-24, 2026-12-25, 2027-01-01, 2027-01-06, 2027-03-29, 2027-05-03, 2027-05-27, 2027-11-01, 2027-11-11, 2027-12-24, 2028-01-06, 2028-04-17, 2028-05-01, 2028-05-03, 2028-06-15, 2028-08-15, 2028-11-01, 2028-12-25, 2028-12-26, 2029-01-01, 2029-04-02, 2029-05-01, 2029-05-03, 2029-05-31, 2029-08-15, 2029-11-01, 2029-12-24, 2029-12-25, 2029-12-26, 2030-01-01, 2030-04-22, 2030-05-01, 2030-05-03, 2030-06-20, 2030-08-15, 2030-11-01, 2030-11-11, 2030-12-24, 2030-12-25, 2030-12-26]) governs 2026..2030 "art. 1 pkt 1; święta w dni robocze"
+
+version holidays_later
+  cite modeller
+  governs 2031..
+  known 2025-12-31
+  holidays_pl = calendar(weekends [sat, sun]) assumed "kalendarz świąt po 2030 nie jest wpisany; terminy przesuwają tylko soboty i niedziele"
+
+version refund_rule
+  cite ordynacja
+  governs always
+  known 2025-12-31
+  refund_days = 45 "art. 77b § 1 pkt 1"
+
+version wage_fc_2026
+  cite modeller
+  governs 2026..
+  known 2025-12-31
+  note "rzut wskaźników płacowych na lata bez opublikowanej kwoty (prototyp: indeks płac +4% rocznie)"
+  wage_growth = 0.04 assumed "indeks płac +4% rocznie, założenie prototypu"
+
+version health_base_2026
+  cite mp_2026_117
+  governs 2026
+  known 2026-02-10
+  health_base_wage = 9228.64 "pkt 1"
+
+source dz_2026_mw "Rozporządzenie RM w sprawie minimalnego wynagrodzenia za pracę w 2027 r. (kwota przykładowa)"
+source mp_2026_pw "Obwieszczenie w sprawie prognozowanego przeciętnego wynagrodzenia na 2027 r. (kwota przykładowa)"
+
+version min_wage_2027
+  cite dz_2026_mw
+  governs 2027
+  known 2026-09-12
+  min_wage = 5000 "§ 1"
+
+version proj_wage_2027
+  cite mp_2026_pw
+  governs 2027
+  known 2026-12-18
+  proj_wage = 9800 "pkt 1"

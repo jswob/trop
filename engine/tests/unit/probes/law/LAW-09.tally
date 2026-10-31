@@ -1,0 +1,55 @@
+model law09
+  tally 2
+  on 2026-10-25
+  start 2020-01-01
+  end 2025-12-31
+  note "Probe LAW-09: a loss carried forward 5 years, in any one year at most half its original size."
+
+source card "Probe card LAW-09 (tmp/cases/probes/law/LAW-09.md): story, rule 1 and question"
+
+unit DUK: currency minor 0.01
+
+index yr = year 2021..2025
+
+input carry_years: int question "For how many years after its year is a loss used?"
+
+input gain[y in yr]: money DUK question "What is Ania's fund gain in this year?"
+
+input loss: money DUK question "What is Ania's 2020 fund loss?"
+
+input loss_year: year question "In which year did the loss arise?"
+
+input max_share: num question "At most what share of the original loss may be used in any one year?"
+
+def avail[y in yr]: num DUK at start_of(y)
+  note "what is left of the loss at the start of year y"
+  rule base = if pos(y) == 1 then loss else avail[y - 1] - used[y - 1]
+
+def taxable[y in yr]: num DUK = gain[y] - used[y] at start_of(y)
+
+def used[y in yr]: num DUK at start_of(y)
+  note "rule 1: in the 5 years after the loss, the gain, half the original loss, or what is left, whichever is least"
+  rule outside v card_law = 0
+  rule window beats outside v card_law = min(gain[y], loss * max_share, avail[y]) when y > loss_year and y <= loss_year + carry_years
+
+ask each_year: used[y], taxable[y] for y in [2021, 2022, 2023]
+
+ask left_after: avail[2024]
+
+version card_facts
+  cite card
+  governs always
+  known 2020-01-01
+  gain[2021] = 3000 "story: 3 000.00 in 2021"
+  gain[2022] = 8000 "story: 8 000.00 in 2022"
+  gain[2023] = 9000 "story: 9 000.00 in 2023"
+  loss = 10000 "story: Ania's 2020 fund loss is 10 000.00 DUK"
+  loss_year = 2020 "story: the 2020 loss"
+
+version card_law
+  cite card
+  governs always
+  known 2020-01-01
+  note "the card's own rule, a stipulation known from the model's start (L 4.5)"
+  carry_years = 5 "rule 1: the next 5 years' gains"
+  max_share = 50 % "rule 1: in any one year at most half its original size"

@@ -1,0 +1,26 @@
+# L §5.3: "Two items of one label, or of one target at the same stated keys, with overlapping spans in one version
+# are refused (LOAD-OVERLAP); rows at different stated keys are ordered by precedence (§4.6 step 3)."  n = 1
+# states no key, n[a] = 2 states one, both in one version over one span: n[a] = 2 (the row that states more keys,
+# §4.6 step 3.2), n[b] = 1.
+=== m.tally
+model t
+  tally 2
+  on 2016-03-01
+  start 2015-11-01
+  end 2016-10-31
+
+source s "s"
+index ks = [a, b]
+input n[k in ks]: int
+
+version v
+  cite s
+  governs 2015-11..
+  known 2016-01-01
+  n = 1
+  n[a] = 2
+
+ask q: n[a], n[b] law 2016-02-01
+=== expect
+q: (2, 1)
+  law date 2016-02-01, cut 2016-03-01

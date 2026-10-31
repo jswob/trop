@@ -1,0 +1,26 @@
+q_parts (p = kuba): 500.00 DUK
+  cut 2026-10-30
+q_parts (p = ania_tomek): 650.00 DUK
+  cut 2026-10-30
+q_parts (p = ania): 0.00 DUK
+  cut 2026-10-30
+q_parts (p = tomek): 400.00 DUK
+  cut 2026-10-30
+q_took (o = bank_rows[r5], p = kuba): 0.00 DUK
+  cut 2026-10-30
+q_took (o = bank_rows[r5], p = ania_tomek): 50.00 DUK
+  cut 2026-10-30
+q_took (o = bank_rows[r5], p = ania): 0.00 DUK
+  cut 2026-10-30
+q_took (o = bank_rows[r5], p = tomek): 0.00 DUK
+  cut 2026-10-30
+q_took (o = bank_rows[r6], p = kuba): 0.00 DUK
+  cut 2026-10-30
+q_took (o = bank_rows[r6], p = ania_tomek): 300.00 DUK
+  cut 2026-10-30
+q_took (o = bank_rows[r6], p = ania): 600.00 DUK
+  cut 2026-10-30
+q_took (o = bank_rows[r6], p = tomek): 0.00 DUK
+  cut 2026-10-30
+q_total: 1 550.00 DUK
+  cut 2026-10-30

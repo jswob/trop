@@ -1,0 +1,314 @@
+id	layer	edges	sources	note
+U:ask/ASK-01	unit	ASK-01	ASK-01=card edge:	
+U:ask/ASK-02	unit	ASK-02	ASK-02=card edge:	
+U:ask/ASK-03	unit	ASK-03	ASK-03=card edge:	
+U:ask/ASK-04	unit	ASK-04	ASK-04=card edge:	
+U:ask/ASK-05	unit	ASK-05	ASK-05=card edge:	
+U:cur/CUR-01	unit	CUR-01	CUR-01=card edge:	
+U:cur/CUR-02	unit	CUR-02	CUR-02=card edge:	
+U:cur/CUR-03	unit	CUR-03	CUR-03=card edge:	
+U:flow/FLOW-01	unit	FLOW-01	FLOW-01=card edge:	
+U:flow/FLOW-02	unit	FLOW-02	FLOW-02=card edge:	
+U:flow/FLOW-03	unit	FLOW-03	FLOW-03=card edge:	
+U:law/LAW-01	unit	LAW-01	LAW-01=card edge:	
+U:law/LAW-02	unit	LAW-02	LAW-02=card edge:	
+U:law/LAW-03	unit	LAW-03	LAW-03=card edge:	
+U:law/LAW-04	unit	LAW-04	LAW-04=card edge:	
+U:law/LAW-05	unit	LAW-05	LAW-05=card edge:	
+U:law/LAW-06	unit	LAW-06	LAW-06=card edge:	
+U:law/LAW-07	unit	LAW-07	LAW-07=card edge:	
+U:law/LAW-08	unit	LAW-08	LAW-08=card edge:	
+U:law/LAW-09	unit	LAW-09	LAW-09=card edge:	
+U:law/LAW-10	unit	LAW-10	LAW-10=card edge:	
+U:law/LAW-11	unit	LAW-11	LAW-11=card edge:	
+U:law/LAW-12	unit	LAW-12	LAW-12=card edge:	
+U:law/LAW-13/LAW-13	unit	LAW-13	LAW-13=card edge:	
+U:law/LAW-13/rate25	unit	LAW-13	LAW-13=card edge:	
+U:life/LIFE-01	unit	LIFE-01	LIFE-01=card edge:	
+U:life/LIFE-02	unit	LIFE-02	LIFE-02=card edge:	
+U:life/LIFE-03	unit	LIFE-03	LIFE-03=card edge:	
+U:life/LIFE-04	unit	LIFE-04	LIFE-04=card edge:	
+U:life/LIFE-05	unit	LIFE-05	LIFE-05=card edge:	
+U:num/NUM-01	unit	NUM-01	NUM-01=card edge:	
+U:num/NUM-02	unit	NUM-02	NUM-02=card edge:	
+U:num/NUM-03	unit	NUM-03	NUM-03=card edge:	
+U:num/NUM-04	unit	NUM-04	NUM-04=card edge:	
+U:num/NUM-05	unit	NUM-05	NUM-05=card edge:	
+U:num/NUM-06	unit	NUM-06	NUM-06=card edge:	
+U:num/NUM-07	unit	NUM-07	NUM-07=card edge:	
+U:own/OWN-01	unit	OWN-01	OWN-01=card edge:	
+U:own/OWN-02	unit	OWN-02	OWN-02=card edge:	
+U:own/OWN-03	unit	OWN-03	OWN-03=card edge:	
+U:own/OWN-04	unit	OWN-04	OWN-04=card edge:	
+U:own/OWN-05	unit	OWN-05	OWN-05=card edge:	
+U:own/OWN-06	unit	OWN-06	OWN-06=card edge:	
+U:own/OWN-07	unit	OWN-07	OWN-07=card edge:	
+U:own/OWN-08	unit	OWN-08	OWN-08=card edge:	
+U:own/OWN-09	unit	OWN-09	OWN-09=card edge:	
+U:pty/PTY-01	unit	PTY-01	PTY-01=card edge:	
+U:pty/PTY-02	unit	PTY-02	PTY-02=card edge:	
+U:pty/PTY-03	unit	PTY-03	PTY-03=card edge:	
+U:pty/PTY-04	unit	PTY-04	PTY-04=card edge:	
+U:pty/PTY-05/ania	unit	PTY-05	PTY-05=card edge:	
+U:pty/PTY-05/halina	unit	PTY-05	PTY-05=card edge:	
+U:pty/PTY-05/joint	unit	PTY-05	PTY-05=card edge:	
+U:rand/RAND-01	unit	RAND-01	RAND-01=card edge:	
+U:rand/RAND-02	unit	RAND-02	RAND-02=card edge:	
+U:rand/RAND-03	unit	RAND-03	RAND-03=card edge:	
+U:rand/RAND-04/plan_b	unit	RAND-04	RAND-04=card edge:	
+U:rand/RAND-04/RAND-04	unit	RAND-04	RAND-04=card edge:	
+U:rec/REC-01	unit	REC-01	REC-01=card edge:	
+U:rec/REC-02	unit	REC-02	REC-02=card edge:	
+U:rec/REC-03	unit	REC-03	REC-03=card edge:	
+U:rec/REC-04	unit	REC-04	REC-04=card edge:	
+U:rec/REC-05	unit	REC-05	REC-05=card edge:	
+U:rec/REC-06	unit	REC-06	REC-06=card edge:	
+U:rec/REC-07	unit	REC-07	REC-07=card edge:	
+U:rule/RULE-01	unit	RULE-01	RULE-01=card edge:	
+U:rule/RULE-02	unit	RULE-02	RULE-02=card edge:	
+U:rule/RULE-03	unit	RULE-03	RULE-03=card edge:	
+U:rule/RULE-04	unit	RULE-04	RULE-04=card edge:	
+U:rule/RULE-05	unit	RULE-05	RULE-05=card edge:	
+U:rule/RULE-06	unit	RULE-06	RULE-06=card edge:	
+U:rule/RULE-07	unit	RULE-07	RULE-07=card edge:	
+U:rule/RULE-08	unit	RULE-08	RULE-08=card edge:	
+U:rule/RULE-09/inpath	unit	RULE-09	RULE-09=card edge:	
+U:rule/RULE-09/RULE-09	unit	RULE-09	RULE-09=card edge:	
+U:scen/SCEN-01/amend	unit	SCEN-01	SCEN-01=card edge:	
+U:scen/SCEN-01/SCEN-01	unit	SCEN-01	SCEN-01=card edge:	
+U:scen/SCEN-02/kept	unit	SCEN-02	SCEN-02=card edge:	
+U:scen/SCEN-02/SCEN-02	unit	SCEN-02	SCEN-02=card edge:	
+U:scen/SCEN-03/infl8	unit	SCEN-03	SCEN-03=card edge:	
+U:scen/SCEN-03/SCEN-03	unit	SCEN-03	SCEN-03=card edge:	
+U:scen/SCEN-04/crash	unit	SCEN-04	SCEN-04=card edge:	
+U:scen/SCEN-04/SCEN-04	unit	SCEN-04	SCEN-04=card edge:	
+U:surf/SURF-01	unit	SURF-01	SURF-01=card edge:	key: no key by design (SURF)
+U:surf/SURF-02	unit	SURF-02	SURF-02=card edge:	key: no key by design (SURF)
+U:surf/SURF-03	unit	SURF-03	SURF-03=card edge:	key: no key by design (SURF)
+U:surf/SURF-04/redefine	unit	SURF-04	SURF-04=card edge:	key: no key by design (SURF)
+U:surf/SURF-04/SURF-04	unit	SURF-04	SURF-04=card edge:	key: no key by design (SURF)
+U:time/TIME-01	unit	TIME-01	TIME-01=card edge:	
+U:time/TIME-02	unit	TIME-02	TIME-02=card edge:	
+U:time/TIME-03	unit	TIME-03	TIME-03=card edge:	
+U:time/TIME-04	unit	TIME-04	TIME-04=card edge:	
+U:time/TIME-05	unit	TIME-05	TIME-05=card edge:	
+U:time/TIME-06	unit	TIME-06	TIME-06=card edge:	
+U:time/TIME-07.reverse	unit	TIME-07	TIME-07=card edge:	
+U:time/TIME-07	unit	TIME-07	TIME-07=card edge:	
+U:val/VAL-01	unit	VAL-01	VAL-01=card edge:	
+U:val/VAL-02	unit	VAL-02	VAL-02=card edge:	
+U:val/VAL-03	unit	VAL-03	VAL-03=card edge:	
+U:val/VAL-04	unit	VAL-04	VAL-04=card edge:	
+U:val/VAL-05	unit	VAL-05	VAL-05=card edge:	
+U:val/VAL-06	unit	VAL-06	VAL-06=card edge:	
+U:val/VAL-07	unit	VAL-07	VAL-07=card edge:	
+U:set/law/LAW-13/LAW-13	unit	LAW-13	LAW-13=card edge:	
+U:set/rand/RAND-04/RAND-04	unit	RAND-04	RAND-04=card edge:	
+U:set/rule/RULE-09/RULE-09	unit	RULE-09	RULE-09=card edge:	
+U:set/scen/SCEN-01/SCEN-01	unit	SCEN-01	SCEN-01=card edge:	
+U:set/scen/SCEN-02/SCEN-02	unit	SCEN-02	SCEN-02=card edge:	
+U:set/scen/SCEN-03/SCEN-03	unit	SCEN-03	SCEN-03=card edge:	
+U:set/scen/SCEN-04/SCEN-04	unit	SCEN-04	SCEN-04=card edge:	
+U:set/surf/SURF-04/SURF-04	unit	SURF-04	SURF-04=card edge:	key: no key by design (SURF)
+U:set/pty/PTY-05/ania	unit	PTY-05	PTY-05=card edge:	
+I:M:CB-01	integration	LAW-01 LAW-05	LAW-01=hdr; LAW-05=hdr	mechanics with no edge: MX-01
+I:M:CB-02	integration	LAW-03 NUM-02 NUM-03 LAW-05 LAW-08	LAW-03=mx MX-04; NUM-02=mx MX-09; NUM-03=mx MX-09; LAW-05=mx MX-32; LAW-08=hdr	mechanics with no edge: MX-01
+I:M:CB-03	integration	VAL-04 LAW-05	VAL-04=mx MX-29; LAW-05=hdr	mechanics with no edge: MX-02
+I:M:CB-04	integration	LAW-01 LAW-05	LAW-01=hdr; LAW-05=hdr	mechanics with no edge: MX-02
+I:M:CB-05	integration	LAW-09 PTY-02	LAW-09=mx MX-11; PTY-02=hdr	mechanics with no edge: MX-02
+I:M:CB-06	integration	NUM-02 NUM-03 TIME-04 LAW-07	NUM-02=mx MX-09; NUM-03=mx MX-09; TIME-04=mx MX-33; LAW-07=hdr	mechanics with no edge: MX-03
+I:M:CB-07	integration	LAW-03 LAW-07 TIME-04	LAW-03=mx MX-04; LAW-07=hdr; TIME-04=hdr	mechanics with no edge: MX-03
+I:M:CB-08	integration	CUR-01 CUR-03 LIFE-03	CUR-01=mx MX-06; CUR-03=mx MX-06; LIFE-03=hdr	
+I:M:CB-09	integration	CUR-01 CUR-03 OWN-08	CUR-01=mx MX-06; CUR-03=mx MX-06; OWN-08=hdr	
+I:M:CB-10	integration	CUR-01 CUR-03 OWN-04 LIFE-03	CUR-01=mx MX-06; CUR-03=mx MX-06; OWN-04=hdr; LIFE-03=hdr	
+I:M:CB-11	integration	NUM-02 NUM-03 VAL-06 LAW-05 LAW-07	NUM-02=mx MX-09; NUM-03=mx MX-09; VAL-06=mx MX-17; LAW-05=hdr; LAW-07=hdr	mechanics with no edge: MX-07
+I:M:CB-12	integration	LAW-05 LAW-07	LAW-05=hdr; LAW-07=hdr	mechanics with no edge: MX-07
+I:M:CB-13	integration	NUM-05 OWN-05	NUM-05=hdr; OWN-05=hdr	mechanics with no edge: MX-08
+I:M:CB-14	integration	NUM-02 NUM-03 LAW-11	NUM-02=mx MX-09; NUM-03=mx MX-09; LAW-11=hdr	mechanics with no edge: MX-08
+I:M:CH-01	integration	LAW-01 RAND-02	LAW-01=hdr; RAND-02=hdr	mechanics with no edge: MX-40
+I:M:CH-02	integration			mechanics with no edge: MX-40
+I:M:CH-03	integration	RAND-02	RAND-02=hdr	mechanics with no edge: MX-40
+I:M:CH-04	integration	REC-07 VAL-03 REC-06	REC-07=mx MX-38; VAL-03=hdr; REC-06=hdr	
+I:M:CH-05	integration	RULE-08 NUM-06 VAL-06	RULE-08=mx MX-39; NUM-06=hdr; VAL-06=hdr	
+I:M:CH-06	integration	RULE-08 RAND-01 RAND-02	RULE-08=mx MX-39; RAND-01=hdr; RAND-02=hdr	
+I:M:CMP-01	integration	CUR-01 CUR-03 FLOW-03 PTY-02 LAW-05 PTY-04	CUR-01=mx MX-06; CUR-03=mx MX-06; FLOW-03=mx MX-25; PTY-02=mx MX-26; LAW-05=hdr; PTY-04=hdr	
+I:M:CMP-02	integration	FLOW-03 FLOW-02	FLOW-03=mx MX-28; FLOW-02=hdr	
+I:M:LH-01	integration	OWN-06 OWN-07 TIME-05	OWN-06=mx MX-10; OWN-07=hdr; TIME-05=hdr	
+I:M:LH-02	integration	NUM-02 NUM-03 OWN-06 OWN-07 TIME-05	NUM-02=mx MX-09; NUM-03=mx MX-09; OWN-06=mx MX-10; OWN-07=hdr; TIME-05=hdr	
+I:M:LH-03	integration	LAW-09 PTY-02	LAW-09=mx MX-11; PTY-02=hdr	
+I:M:LH-04	integration	LAW-09 LAW-06	LAW-09=mx MX-11; LAW-06=hdr	
+I:M:LH-05	integration	OWN-08 VAL-01	OWN-08=mx MX-12; VAL-01=hdr	
+I:M:LH-06	integration	OWN-08 LAW-09 TIME-04	OWN-08=mx MX-12; LAW-09=hdr; TIME-04=hdr	
+I:M:LH-07	integration	VAL-04 PTY-01 TIME-05 LAW-01	VAL-04=mx MX-29; PTY-01=hdr; TIME-05=hdr; LAW-01=hdr	mechanics with no edge: MX-13
+I:M:LH-08	integration	LAW-01 LAW-06	LAW-01=hdr; LAW-06=hdr	mechanics with no edge: MX-13
+I:M:LH-09	integration	OWN-08 TIME-05	OWN-08=mx MX-14; TIME-05=hdr	
+I:M:LH-10	integration	LIFE-03 SCEN-01	LIFE-03=mx MX-15; SCEN-01=hdr	
+I:M:LH-11	integration	LIFE-03	LIFE-03=mx MX-15	
+I:M:LH-12	integration	VAL-06 LAW-05 LAW-03 VAL-01	VAL-06=mx MX-17; LAW-05=mx MX-32; LAW-03=hdr; VAL-01=hdr	mechanics with no edge: MX-13
+I:M:LH-13	integration	NUM-02 NUM-03 VAL-06 LAW-01	NUM-02=mx MX-09; NUM-03=mx MX-09; VAL-06=mx MX-17; LAW-01=hdr	mechanics with no edge: MX-13
+I:M:LH-14	integration	LAW-04 NUM-02 NUM-03 VAL-06 LAW-01 LAW-03	LAW-04=mx MX-05; NUM-02=mx MX-09; NUM-03=mx MX-09; VAL-06=mx MX-17; LAW-01=hdr; LAW-03=hdr	mechanics with no edge: MX-13
+I:M:LH-15	integration	REC-07 NUM-06	REC-07=mx MX-18; NUM-06=hdr	
+I:M:LH-16	integration	REC-07 NUM-06	REC-07=mx MX-18; NUM-06=hdr	
+I:M:LH-17	integration	RAND-02 REC-07 RAND-01	RAND-02=mx MX-19; REC-07=mx MX-38; RAND-01=hdr	
+I:M:LH-18	integration	RAND-02 REC-07	RAND-02=mx MX-19; REC-07=mx MX-38	
+I:M:MP-01	integration	OWN-04 OWN-05	OWN-04=mx MX-20; OWN-05=hdr	
+I:M:MP-02	integration	OWN-04 LIFE-03 OWN-08	OWN-04=mx MX-20; LIFE-03=hdr; OWN-08=hdr	
+I:M:MP-03	integration	PTY-03 OWN-05 LAW-11 NUM-05	PTY-03=mx MX-21; OWN-05=mx MX-21; LAW-11=hdr; NUM-05=hdr	
+I:M:MP-04	integration	PTY-03 OWN-05 OWN-04 VAL-06	PTY-03=mx MX-21; OWN-05=mx MX-21; OWN-04=hdr; VAL-06=hdr	
+I:M:MP-05	integration	LAW-11 PTY-03 TIME-05 LAW-01	LAW-11=mx MX-22; PTY-03=mx MX-27; TIME-05=hdr; LAW-01=hdr	
+I:M:MP-06	integration	LAW-11 TIME-05	LAW-11=mx MX-22; TIME-05=hdr	
+I:M:MP-07	integration	PTY-04 LAW-02	PTY-04=mx MX-24; LAW-02=hdr	
+I:M:MP-08	integration	PTY-04 LAW-06 PTY-01	PTY-04=mx MX-24; LAW-06=hdr; PTY-01=hdr	
+I:M:MP-09	integration	FLOW-03 NUM-05 LAW-01	FLOW-03=mx MX-25; NUM-05=hdr; LAW-01=hdr	
+I:M:MP-10	integration	VAL-04 LAW-01	VAL-04=mx MX-29; LAW-01=hdr	
+I:M:MP-11	integration	PTY-02 LAW-05 LAW-01	PTY-02=mx MX-26; LAW-05=mx MX-32; LAW-01=hdr	
+I:M:MP-12	integration	NUM-02 NUM-03 PTY-03 NUM-05	NUM-02=mx MX-09; NUM-03=mx MX-09; PTY-03=mx MX-27; NUM-05=hdr	
+I:M:MP-13	integration	LAW-11 PTY-03 TIME-05	LAW-11=mx MX-22; PTY-03=mx MX-27; TIME-05=hdr	
+I:M:MP-14	integration	FLOW-03 FLOW-02 NUM-05	FLOW-03=mx MX-28; FLOW-02=hdr; NUM-05=hdr	
+I:M:MP-15	integration	FLOW-03 NUM-07	FLOW-03=mx MX-28; NUM-07=hdr	
+I:M:MP-16	integration	FLOW-03 PTY-04 NUM-05 LAW-01	FLOW-03=mx MX-25; PTY-04=hdr; NUM-05=hdr; LAW-01=hdr	
+I:M:RC-01	integration	NUM-02 NUM-03 TIME-05 VAL-04 LAW-09 LIFE-05 LIFE-04 TIME-04	NUM-02=mx MX-09; NUM-03=mx MX-09; TIME-05=mx MX-23; VAL-04=mx MX-29; LAW-09=hdr; LIFE-05=hdr; LIFE-04=hdr; TIME-04=hdr	
+I:M:RC-02	integration	TIME-05 PTY-02 PTY-01 LAW-07	TIME-05=mx MX-23; PTY-02=mx MX-26; PTY-01=hdr; LAW-07=hdr	
+I:M:RC-03	integration	PTY-02 PTY-04	PTY-02=mx MX-26; PTY-04=mx MX-30	
+I:M:RC-04	integration	LAW-02 LAW-01 TIME-04	LAW-02=mx MX-31; LAW-01=hdr; TIME-04=hdr	
+I:M:RC-05	integration	LAW-03 NUM-02 NUM-03 VAL-04 LAW-08 LAW-02	LAW-03=mx MX-04; NUM-02=mx MX-09; NUM-03=mx MX-09; VAL-04=mx MX-29; LAW-08=hdr; LAW-02=hdr	
+I:M:RC-06	integration	LAW-08 LAW-07	LAW-08=mx MX-36; LAW-07=hdr	
+I:M:RC-07	integration	LAW-08 LIFE-05 LAW-01	LAW-08=mx MX-36; LIFE-05=hdr; LAW-01=hdr	
+I:M:RC-08	integration	LAW-03 LAW-01 TIME-06	LAW-03=mx MX-04; LAW-01=hdr; TIME-06=hdr	
+I:M:UL-01	integration	LAW-02 TIME-06 LIFE-05 LAW-01	LAW-02=mx MX-31; TIME-06=mx MX-34; LIFE-05=hdr; LAW-01=hdr	
+I:M:UL-02	integration	LAW-03 TIME-04 LIFE-05	LAW-03=mx MX-04; TIME-04=mx MX-33; LIFE-05=hdr	
+I:M:UL-03	integration	TIME-05 LAW-02 LAW-11 LAW-01	TIME-05=mx MX-23; LAW-02=mx MX-31; LAW-11=hdr; LAW-01=hdr	
+I:M:UL-04	integration	LAW-03 VAL-04 PTY-04 LAW-02	LAW-03=mx MX-04; VAL-04=mx MX-29; PTY-04=mx MX-30; LAW-02=hdr	
+I:M:UL-05	integration	VAL-04 PTY-04 LAW-02 TIME-04 TIME-06 PTY-02	VAL-04=mx MX-29; PTY-04=mx MX-30; LAW-02=mx MX-31; TIME-04=mx MX-33; TIME-06=mx MX-34; PTY-02=hdr	
+I:M:UL-06	integration	LAW-03 LAW-04 TIME-04 TIME-03	LAW-03=mx MX-04; LAW-04=mx MX-05; TIME-04=mx MX-33; TIME-03=hdr	
+I:M:UL-07	integration	TIME-05 PTY-04 LAW-05 RULE-04 PTY-02 LAW-20	TIME-05=mx MX-23; PTY-04=mx MX-30; LAW-05=mx MX-32; RULE-04=mx MX-35; PTY-02=hdr; LAW-20=reach the publication's named solver for the circular deduction and credit (MX-35; boundaries.md LAW-20 where:, 4.5c)	
+I:M:UL-08	integration	LAW-03 PTY-04 LAW-02 TIME-06 RULE-04 LAW-06 LAW-20	LAW-03=mx MX-04; PTY-04=mx MX-30; LAW-02=mx MX-31; TIME-06=mx MX-34; RULE-04=mx MX-35; LAW-06=hdr; LAW-20=reach the publication's named solver for the circular deduction and credit (MX-35; boundaries.md LAW-20 where:, 4.5c)	
+I:M:UL-09	integration	LAW-04 NUM-02 NUM-03 LAW-05 VAL-02	LAW-04=mx MX-05; NUM-02=mx MX-09; NUM-03=mx MX-09; LAW-05=mx MX-32; VAL-02=hdr	
+I:M:UL-10	integration	PTY-02 LAW-05 PTY-01 LAW-06	PTY-02=mx MX-26; LAW-05=mx MX-32; PTY-01=hdr; LAW-06=hdr	
+I:M:UL-11	integration	LAW-08 LAW-02	LAW-08=mx MX-36; LAW-02=hdr	
+I:M:UL-12	integration	VAL-04 LAW-08 NUM-05	VAL-04=mx MX-29; LAW-08=mx MX-36; NUM-05=hdr	
+I:M:UL-13	integration	OWN-08 LAW-07	OWN-08=mx MX-12; LAW-07=hdr	
+I:M:UL-14	integration	TIME-05 LAW-02 ASK-03 LAW-01	TIME-05=mx MX-23; LAW-02=mx MX-31; ASK-03=mx MX-37; LAW-01=hdr	
+I:M:UL-15	integration	LAW-03 ASK-03 TIME-06	LAW-03=mx MX-04; ASK-03=mx MX-37; TIME-06=hdr	
+I:A:A-01	integration	LAW-03 LAW-04 LAW-06 LAW-07 LAW-08 PTY-02 PTY-04 LAW-02 LAW-01 REC-05 TIME-03 NUM-03 LIFE-04 ASK-05	LAW-03=key edges:; LAW-04=key edges:; LAW-06=key edges:; LAW-07=key edges:; LAW-08=key edges:; PTY-02=key edges:; PTY-04=key edges:; LAW-02=key edges:; LAW-01=key edges:; REC-05=key edges:; TIME-03=key edges:; NUM-03=key edges:; LIFE-04=key edges:; ASK-05=key edges:	
+I:A:A-02	integration	VAL-03 REC-06 LAW-03	VAL-03=key edges:; REC-06=key edges:; LAW-03=key edges:	
+I:A:A-03	integration	NUM-03 TIME-06 LAW-05 TIME-02 TIME-03 LAW-08	NUM-03=key edges:; TIME-06=key edges:; LAW-05=key edges:; TIME-02=key edges:; TIME-03=key edges:; LAW-08=key edges:	
+I:A:A-04	integration	TIME-05 TIME-04 NUM-02 LIFE-04 ASK-03	TIME-05=key edges:; TIME-04=key edges:; NUM-02=key edges:; LIFE-04=key edges:; ASK-03=key edges:	
+I:A:A-05	integration	OWN-06 OWN-07 LAW-09 NUM-07 VAL-04 TIME-01 OWN-04 OWN-08 VAL-05 LAW-12	OWN-06=key edges:; OWN-07=key edges:; LAW-09=key edges:; NUM-07=key edges:; VAL-04=key edges:; TIME-01=key edges:; OWN-04=key edges:; OWN-08=key edges:; VAL-05=key edges:; LAW-12=key edges:	
+I:A:A-06	integration	LAW-11 LAW-12 OWN-05 TIME-05	LAW-11=key edges:; LAW-12=key edges:; OWN-05=key edges:; TIME-05=key edges:	
+I:A:A-07	integration	LIFE-02 NUM-02 NUM-04 FLOW-02 LIFE-03	LIFE-02=key edges:; NUM-02=key edges:; NUM-04=key edges:; FLOW-02=key edges:; LIFE-03=key edges:	
+I:A:A-08	integration	SCEN-02 LIFE-02 FLOW-02	SCEN-02=key edges:; LIFE-02=key edges:; FLOW-02=key edges:	
+I:A:A-09	integration	RULE-01 RULE-02 RULE-07 RULE-08 OWN-08 VAL-02 TIME-07 TIME-02 REC-03 FLOW-01	RULE-01=key edges:; RULE-02=key edges:; RULE-07=key edges:; RULE-08=key edges:; OWN-08=key edges:; VAL-02=key edges:; TIME-07=key edges:; TIME-02=key edges:; REC-03=key edges:; FLOW-01=key edges:	
+I:A:A-10	integration	RULE-03 ASK-03	RULE-03=key edges:; ASK-03=key edges:	
+I:A:A-11	integration	ASK-02 OWN-04 OWN-03 NUM-05 OWN-01 ASK-03	ASK-02=key edges:; OWN-04=key edges:; OWN-03=key edges:; NUM-05=key edges:; OWN-01=key edges:; ASK-03=key edges:	
+I:A:A-12	integration	LIFE-01 NUM-06 VAL-06 SCEN-04 LAW-13 RULE-05	LIFE-01=key edges:; NUM-06=key edges:; VAL-06=key edges:; SCEN-04=key edges:; LAW-13=key edges:; RULE-05=key edges:	
+I:B:B-01	integration	LIFE-05 LAW-01 LAW-02 LAW-06 LAW-08 LAW-11 TIME-02 TIME-03 TIME-04 TIME-06 VAL-02 ASK-01	LIFE-05=key edges:; LAW-01=key edges:; LAW-02=key edges:; LAW-06=key edges:; LAW-08=key edges:; LAW-11=key edges:; TIME-02=key edges:; TIME-03=key edges:; TIME-04=key edges:; TIME-06=key edges:; VAL-02=key edges:; ASK-01=key edges:	
+I:B:B-02	integration	LAW-07 TIME-02 NUM-01	LAW-07=key edges:; TIME-02=key edges:; NUM-01=key edges:	
+I:B:B-03	integration	CUR-01 CUR-02 CUR-03 NUM-01 TIME-02 VAL-01 VAL-02 REC-05	CUR-01=key edges:; CUR-02=key edges:; CUR-03=key edges:; NUM-01=key edges:; TIME-02=reach B-03 steps 1-10: the CBL rate of the business day before (gaps b4, 4.5c); VAL-01=reach B-03 steps 14-15: the gazette FX-FLR figure, read at a date (gaps b5, 4.5c); VAL-02=reach B-03 steps 14-15: published dates of the gazette rate (gaps b5, 4.5c); REC-05=reach B-03: Lazur's own rates are rows of B/records/laz-8813-flr-2025.csv (gaps b6, 4.5c)	
+I:B:B-04	integration	LAW-10 LIFE-02 OWN-01 OWN-04 NUM-02 PTY-01	LAW-10=key edges:; LIFE-02=key edges:; OWN-01=key edges:; OWN-04=key edges:; NUM-02=key edges:; PTY-01=key edges:	
+I:B:B-05	integration	LIFE-03 VAL-05 NUM-02 SCEN-01 SCEN-02 REC-01 REC-02	LIFE-03=key edges:; VAL-05=key edges:; NUM-02=key edges:; SCEN-01=key edges:; SCEN-02=key edges:; REC-01=reach B-05 steps 1-2: the Cis exports' overpayments (gaps b7, 4.5c); REC-02=reach B-05 step 2: the days no export shows (gaps b7, 4.5c)	
+I:B:B-06	integration	LIFE-02 FLOW-02 LAW-02 LAW-07	LIFE-02=key edges:; FLOW-02=key edges:; LAW-02=key edges:; LAW-07=key edges:	
+I:B:B-07	integration	REC-05 NUM-07 PTY-02 LAW-08 REC-06 ASK-03	REC-05=key edges:; NUM-07=key edges:; PTY-02=key edges:; LAW-08=key edges:; REC-06=key edges:; ASK-03=key edges:	
+I:B:B-08	integration	REC-02 REC-01 REC-03 TIME-07 ASK-03	REC-02=key edges:; REC-01=key edges:; REC-03=key edges:; TIME-07=key edges:; ASK-03=key edges:	
+I:B:B-09	integration	REC-04 OWN-02 TIME-02 ASK-03	REC-04=key edges:; OWN-02=key edges:; TIME-02=key edges:; ASK-03=key edges:	
+I:B:B-10	integration	RULE-01 RULE-02 RULE-03 RULE-04 RULE-06 REC-07 TIME-07 ASK-03	RULE-01=key edges:; RULE-02=key edges:; RULE-03=key edges:; RULE-04=key edges:; RULE-06=key edges:; REC-07=key edges:; TIME-07=key edges:; ASK-03=key edges:	
+I:B:B-11	integration	ASK-02 OWN-03 OWN-04 FLOW-03 RULE-07 OWN-02 PTY-01 CUR-03 SCEN-02	ASK-02=key edges:; OWN-03=key edges:; OWN-04=key edges:; FLOW-03=key edges:; RULE-07=key edges:; OWN-02=key edges:; PTY-01=key edges:; CUR-03=reach B-11 step 2: Piotr's florens counted at the rate (16 516.65, B-03 step 13) (gaps b1, 4.5c); SCEN-02=reach B-11 step 6: "without the twist" (gaps b2, 4.5c)	
+I:B:B-12	integration	RAND-01 RAND-02 RAND-03 RAND-04 LAW-13 RULE-09 SURF-03 SCEN-01 TIME-03 TIME-02 FLOW-01 LIFE-03	RAND-01=key edges:; RAND-02=key edges:; RAND-03=key edges:; RAND-04=key edges:; LAW-13=key edges:; RULE-09=key edges:; SURF-03=key edges:; SCEN-01=reach B-12: scenarios/no_overpay on common draws (gaps b8, 4.5c); TIME-03=reach B-12: b_paths.draws draws Arnika's delay each month (gaps b9, 4.5c); TIME-02=reach B-12: b_paths business uses on_or_next(15th) (gaps b9, 4.5c); FLOW-01=reach B-12: overpayments and savings transfers on each path (gaps b10, 4.5c); LIFE-03=reach B-12: the mortgage on each path (gaps b10, 4.5c)	
+I:D:D-01	integration	OWN-04 OWN-05 PTY-01 PTY-02 PTY-03 NUM-01 NUM-05 FLOW-03 OWN-06 LIFE-03	OWN-04=key edges:; OWN-05=key edges:; PTY-01=key edges:; PTY-02=key edges:; PTY-03=key edges:; NUM-01=key edges:; NUM-05=key edges:; FLOW-03=key edges:; OWN-06=key edges:; LIFE-03=key edges:	
+I:D:D-02	integration	LAW-12 TIME-05 PTY-03	LAW-12=key edges:; TIME-05=key edges:; PTY-03=key edges:	
+I:D:D-03	integration	LIFE-04 PTY-04 LAW-03 LAW-04 LAW-07 VAL-04 VAL-06 TIME-04	LIFE-04=key edges:; PTY-04=key edges:; LAW-03=key edges:; LAW-04=key edges:; LAW-07=key edges:; VAL-04=key edges:; VAL-06=key edges:; TIME-04=key edges:	
+I:D:D-04	integration	LAW-04 LIFE-04 NUM-05	LAW-04=key edges:; LIFE-04=key edges:; NUM-05=key edges:	
+I:D:D-05	integration	REC-02 FLOW-03 OWN-02 NUM-05	REC-02=key edges:; FLOW-03=key edges:; OWN-02=key edges:; NUM-05=key edges:	
+I:D:D-06	integration	OWN-06 OWN-03 NUM-01 NUM-03 VAL-01 VAL-02	OWN-06=key edges:; OWN-03=key edges:; NUM-01=key edges:; NUM-03=key edges:; VAL-01=key edges:; VAL-02=key edges:	
+I:D:D-07	integration	RULE-02 RULE-05 OWN-07 OWN-09	RULE-02=key edges:; RULE-05=key edges:; OWN-07=key edges:; OWN-09=key edges:	
+I:D:D-08	integration	OWN-01 OWN-02 OWN-03 ASK-02 NUM-05 VAL-04	OWN-01=key edges:; OWN-02=key edges:; OWN-03=key edges:; ASK-02=key edges:; NUM-05=key edges:; VAL-04=key edges:	
+I:D:D-09	integration	ASK-04 LAW-10 OWN-01 NUM-05	ASK-04=key edges:; LAW-10=key edges:; OWN-01=key edges:; NUM-05=key edges:	
+I:D:D-10	integration	LIFE-01 RAND-01 RAND-02 RAND-03 RAND-04 SURF-03 NUM-06 ASK-01 PTY-01 VAL-07	LIFE-01=key edges:; RAND-01=key edges:; RAND-02=key edges:; RAND-03=key edges:; RAND-04=key edges:; SURF-03=key edges:; NUM-06=key edges:; ASK-01=reach D-10 step 5: net-worth bands on the paths she is alive (gaps b3, 4.5c); PTY-01=reach D-10 step 1: her lifetime drawn, ending her incomes (gaps b11, 4.5c); VAL-07=reach D-10: the draw parameters are the long view's assumed rows, printed in its register (snap16 D-d10p200.out); confirmed by 4.5c (gaps b12, 4.5c)	
+I:D:D-11	integration	SCEN-03 VAL-06 VAL-07 VAL-02 NUM-06	SCEN-03=key edges:; VAL-06=key edges:; VAL-07=key edges:; VAL-02=key edges:; NUM-06=key edges:	
+I:D:D-12	integration	REC-07 NUM-01	REC-07=key edges:; NUM-01=key edges:	
+I:E1:E1-01	integration	PTY-05 FLOW-01 FLOW-02 REC-04 REC-06	PTY-05=key edges:; FLOW-01=key edges:; FLOW-02=key edges:; REC-04=key edges:; REC-06=key edges:	
+I:E1:E1-02	integration	ASK-02 PTY-05 OWN-02 OWN-03 OWN-04	ASK-02=key edges:; PTY-05=key edges:; OWN-02=key edges:; OWN-03=key edges:; OWN-04=key edges:	
+I:E1:E1-03	integration	PTY-05 LAW-11 LAW-12 PTY-03 TIME-05 OWN-05	PTY-05=key edges:; LAW-11=key edges:; LAW-12=key edges:; PTY-03=key edges:; TIME-05=key edges:; OWN-05=key edges:	
+I:C:C-01	integration	LIFE-02 LIFE-05 NUM-02 LAW-08 TIME-03 OWN-03	LIFE-02=key edges:; LIFE-05=key edges:; NUM-02=key edges:; LAW-08=key edges:; TIME-03=key edges:; OWN-03=key edges:	
+I:C:C-02	integration	REC-05 TIME-04 NUM-03 LAW-07 TIME-03	REC-05=key edges:; TIME-04=key edges:; NUM-03=key edges:; LAW-07=key edges:; TIME-03=key edges:	HID-03: boundaries-hidden.md, no unit probe (cases 1.2.0)
+I:C:C-03	integration	LAW-08 CUR-01 CUR-02 PTY-04 LAW-10	LAW-08=key edges:; CUR-01=key edges:; CUR-02=key edges:; PTY-04=key edges:; LAW-10=key edges:	HID-02 HID-05: boundaries-hidden.md, no unit probe (cases 1.2.0)
+I:C:C-04	integration	LAW-08 LAW-02 TIME-03	LAW-08=key edges:; LAW-02=key edges:; TIME-03=key edges:	HID-01 HID-05: boundaries-hidden.md, no unit probe (cases 1.2.0)
+I:C:C-05	integration	PTY-04 LIFE-04 CUR-01 CUR-02 OWN-03 TIME-05	PTY-04=key edges:; LIFE-04=key edges:; CUR-01=key edges:; CUR-02=key edges:; OWN-03=key edges:; TIME-05=key edges:	HID-04: boundaries-hidden.md, no unit probe (cases 1.2.0)
+I:C:C-06	integration	CUR-01 CUR-03 RULE-07 RULE-05 RULE-01 CUR-02	CUR-01=key edges:; CUR-03=key edges:; RULE-07=key edges:; RULE-05=key edges:; RULE-01=key edges:; CUR-02=key edges:	
+I:C:C-07	integration	RULE-06 FLOW-03 OWN-03 TIME-03	RULE-06=key edges:; FLOW-03=key edges:; OWN-03=key edges:; TIME-03=key edges:	HID-05: boundaries-hidden.md, no unit probe (cases 1.2.0)
+I:C:C-08	integration	NUM-04 CUR-01 TIME-05 RULE-02 REC-04	NUM-04=key edges:; CUR-01=key edges:; TIME-05=key edges:; RULE-02=key edges:; REC-04=key edges:	HID-05: boundaries-hidden.md, no unit probe (cases 1.2.0)
+I:C:C-09	integration	OWN-02 RULE-01 PTY-04 TIME-05 LAW-07 LAW-11	OWN-02=key edges:; RULE-01=key edges:; PTY-04=key edges:; TIME-05=key edges:; LAW-07=key edges:; LAW-11=key edges:	
+I:C:C-10	integration	OWN-04 OWN-02 OWN-03 CUR-03 NUM-01 OWN-01 OWN-05 ASK-02 ASK-03	OWN-04=key edges:; OWN-02=key edges:; OWN-03=key edges:; CUR-03=key edges:; NUM-01=key edges:; OWN-01=key edges:; OWN-05=key edges:; ASK-02=key edges:; ASK-03=key edges:	
+I:C:C-11	integration	LIFE-03 OWN-05 LAW-11 TIME-05 NUM-04 PTY-04	LIFE-03=key edges:; OWN-05=key edges:; LAW-11=key edges:; TIME-05=key edges:; NUM-04=key edges:; PTY-04=key edges:	
+I:C:C-12	integration	RULE-09 RULE-04 LIFE-03 REC-01 ASK-03	RULE-09=key edges:; RULE-04=key edges:; LIFE-03=key edges:; REC-01=key edges:; ASK-03=key edges:	HID-05: boundaries-hidden.md, no unit probe (cases 1.2.0)
+I:E2:E2-01	integration	PTY-05 FLOW-01 FLOW-02 REC-04 REC-06	PTY-05=key edges:; FLOW-01=key edges:; FLOW-02=key edges:; REC-04=key edges:; REC-06=key edges:	
+I:E2:E2-02	integration	PTY-05 LAW-11 LAW-12 PTY-03 PTY-04 TIME-05 OWN-05	PTY-05=key edges:; LAW-11=key edges:; LAW-12=key edges:; PTY-03=key edges:; PTY-04=key edges:; TIME-05=key edges:; OWN-05=key edges:	
+I:E2:E2-03	integration	PTY-05 OWN-04 OWN-05 LIFE-03	PTY-05=key edges:; OWN-04=key edges:; OWN-05=key edges:; LIFE-03=key edges:	
+I:X:base	integration	LIFE-05 OWN-03 RULE-01 RULE-03 OWN-08 OWN-02 LIFE-03 LIFE-04 REC-01 REC-02 TIME-02 VAL-01 VAL-07 LAW-08 VAL-05 TIME-06 LAW-01	LIFE-05=README; OWN-03=README; RULE-01=README; RULE-03=README; OWN-08=README; OWN-02=README; LIFE-03=README; LIFE-04=README; REC-01=README; REC-02=README; TIME-02=README; VAL-01=README; VAL-07=README; LAW-08=README; VAL-05=README; TIME-06=README; LAW-01=README	key: weaker key: hand arithmetic (amendments/README.md)
+I:X:1	integration	TIME-02 TIME-03 TIME-05 RULE-01 LIFE-05 REC-06 LAW-01	TIME-02=change desc; TIME-03=change desc; TIME-05=change desc; RULE-01=change desc; LIFE-05=change desc; REC-06=change desc; LAW-01=change desc	key: weaker key: hand arithmetic (amendments/README.md)
+I:X:2	integration	LAW-03 VAL-01 VAL-03 REC-06	LAW-03=change desc; VAL-01=change desc; VAL-03=change desc; REC-06=change desc	key: weaker key: hand arithmetic (amendments/README.md)
+I:X:3	integration	LAW-04 REC-06 TIME-06 LAW-01	LAW-04=change desc; REC-06=change desc; TIME-06=change desc; LAW-01=change desc	key: weaker key: hand arithmetic (amendments/README.md)
+I:X:4	integration	PTY-01 LIFE-04 LAW-06 REC-06	PTY-01=change desc; LIFE-04=change desc; LAW-06=change desc; REC-06=change desc	key: weaker key: hand arithmetic; cells 42-44 interpreter-keyed (freeze/KEYS.md rows 6-8)
+I:X:5	integration	CUR-01 CUR-02 PTY-01 OWN-01 LIFE-02 FLOW-02 ASK-03	CUR-01=change desc; CUR-02=change desc; PTY-01=change desc; OWN-01=change desc; LIFE-02=change desc; FLOW-02=change desc; ASK-03=change desc	key: weaker key: hand arithmetic; cells 9-16, 20, 24 interpreter-keyed (freeze/KEYS.md rows 9-17)
+I:X:6	integration	LIFE-03 FLOW-02 REC-06 OWN-01	LIFE-03=change desc; FLOW-02=change desc; REC-06=change desc; OWN-01=change desc	key: weaker key: hand arithmetic (amendments/README.md)
+I:X:7	integration	SCEN-01 ASK-01	SCEN-01=change desc; ASK-01=change desc	key: weaker key: hand arithmetic (amendments/README.md)
+I:light/LH-15-light	integration	REC-07 NUM-06	REC-07=twin of I:M:LH-15; NUM-06=twin of I:M:LH-15	light twin
+I:light/LH-16-light	integration	REC-07 NUM-06	REC-07=twin of I:M:LH-16; NUM-06=twin of I:M:LH-16	light twin
+I:light/LH-17-mc-light	integration	RAND-02 REC-07 RAND-01	RAND-02=twin of I:M:LH-17; REC-07=twin of I:M:LH-17; RAND-01=twin of I:M:LH-17	light twin
+I:hardset/modeller-b1/I-6/model	integration	LIFE-03 OWN-04 VAL-06 LAW-06 NUM-03 NUM-05 SCEN-04	LIFE-03=card; OWN-04=card; VAL-06=card; LAW-06=card; NUM-03=card; NUM-05=card; SCEN-04=card	blind text, outside the brief §4 ids; key: no key: blind text, baseline = snap16 print
+I:hardset/modeller-b1/I-7/model	integration	LIFE-02 OWN-08 LAW-06 TIME-05 FLOW-02 PTY-01	LIFE-02=card; OWN-08=card; LAW-06=card; TIME-05=card; FLOW-02=card; PTY-01=card	blind text, outside the brief §4 ids; key: no key: blind text, baseline = snap16 print
+I:hardset/modeller-b1/I-8/model	integration	LAW-11 PTY-02 LIFE-04 REC-06 VAL-03 LAW-02 TIME-04	LAW-11=card; PTY-02=card; LIFE-04=card; REC-06=card; VAL-03=card; LAW-02=card; TIME-04=card	blind text, outside the brief §4 ids; key: no key: blind text, baseline = snap16 print
+I:hardset/modeller-b1/I-9/model	integration	CUR-01 CUR-02 CUR-03 OWN-06 TIME-02 LAW-10 NUM-07	CUR-01=card; CUR-02=card; CUR-03=card; OWN-06=card; TIME-02=card; LAW-10=card; NUM-07=card	blind text, outside the brief §4 ids; key: no key: blind text, baseline = snap16 print
+I:hardset/modeller-b1/I-10/model	integration	OWN-04 OWN-05 FLOW-03 PTY-05 NUM-05 TIME-03	OWN-04=card; OWN-05=card; FLOW-03=card; PTY-05=card; NUM-05=card; TIME-03=card	blind text, outside the brief §4 ids; key: no key: blind text, baseline = snap16 print
+I:hardset/modeller-b2/I-11/budget	integration	RULE-03 RULE-05 OWN-08 RULE-01 FLOW-01	RULE-03=card; RULE-05=card; OWN-08=card; RULE-01=card; FLOW-01=card	blind text, outside the brief §4 ids; key: no key: blind text, baseline = snap16 print
+I:hardset/modeller-b2/I-12/division	integration	OWN-04 OWN-05 VAL-02 OWN-08 PTY-01 OWN-06 LIFE-03	OWN-04=card; OWN-05=card; VAL-02=card; OWN-08=card; PTY-01=card; OWN-06=card; LIFE-03=card	blind text, outside the brief §4 ids; key: no key: blind text, baseline = snap16 print
+I:hardset/modeller-b2/I-13/claim	integration	TIME-05 NUM-02 NUM-03 LAW-07 LAW-03 ASK-03 LIFE-02	TIME-05=card; NUM-02=card; NUM-03=card; LAW-07=card; LAW-03=card; ASK-03=card; LIFE-02=card	blind text, outside the brief §4 ids; key: no key: blind text, baseline = snap16 print
+I:hardset/modeller-b2/I-14/homes	integration	PTY-05 PTY-04 TIME-05 LAW-11 LIFE-04 NUM-05	PTY-05=card; PTY-04=card; TIME-05=card; LAW-11=card; LIFE-04=card; NUM-05=card	blind text, outside the brief §4 ids; key: no key: blind text, baseline = snap16 print
+I:hardset/modeller-b2/I-15/gold	integration	NUM-01 CUR-01 CUR-02 OWN-06 FLOW-02 SCEN-04 VAL-05	NUM-01=card; CUR-01=card; CUR-02=card; OWN-06=card; FLOW-02=card; SCEN-04=card; VAL-05=card	blind text, outside the brief §4 ids; key: no key: blind text, baseline = snap16 print
+I:hardset/b2fix/division	integration	OWN-04 OWN-05 VAL-02 OWN-08 PTY-01 OWN-06 LIFE-03	OWN-04=card; OWN-05=card; VAL-02=card; OWN-08=card; PTY-01=card; OWN-06=card; LIFE-03=card	blind text, outside the brief §4 ids; key: no key: blind text, baseline = snap16 print
+I:A:A-13	integration	SCEN-02 SCEN-01 LAW-05 TIME-04 PTY-02 PTY-04 LAW-07 ASK-05 OWN-06 OWN-07 TIME-05 TIME-01	SCEN-02=key edges:; SCEN-01=key edges:; LAW-05=key edges:; TIME-04=key edges:; PTY-02=key edges:; PTY-04=key edges:; LAW-07=key edges:; ASK-05=key edges:; OWN-06=key edges:; OWN-07=key edges:; TIME-05=key edges:; TIME-01=key edges:	cases 1.1 (4.5c); runs: C2's text, marked by J
+I:B:B-13	integration	CUR-01 CUR-02 CUR-03 SCEN-01 SCEN-03 RULE-01 TIME-02 TIME-07	CUR-01=key edges:; CUR-02=key edges:; CUR-03=key edges:; SCEN-01=key edges:; SCEN-03=key edges:; RULE-01=key edges:; TIME-02=key edges:; TIME-07=key edges:	cases 1.1 (4.5c); runs: C2's text, marked by J
+I:D:D-13	integration	OWN-06 OWN-07 RAND-01 RAND-02 RAND-03 RAND-04 SCEN-01 VAL-07 TIME-05 LAW-09	OWN-06=key edges:; OWN-07=key edges:; RAND-01=key edges:; RAND-02=key edges:; RAND-03=key edges:; RAND-04=key edges:; SCEN-01=key edges:; VAL-07=key edges:; TIME-05=key edges:; LAW-09=key edges:	cases 1.1 (4.5c); runs: C2's text, marked by J
+U:pairs/CUR-01+RAND-01	unit	CUR-01 RAND-01	CUR-01=card edge:; RAND-01=card edge:	cases 1.1 pair card (4.5c)
+U:law/LAW-20	unit	LAW-20	LAW-20=card edge:	cases 1.1 (4.5c)
+U:time/TIME-08-before	unit	TIME-07	TIME-07=TC-5 (a written order within one day, L §5.14.2)	4.5f: no card; the edge is the probe's own subject
+U:own/OWN-10/p01	unit	OWN-10	OWN-10=card edge:	session 7b (tally 2.1 parts)
+U:own/OWN-10/p02	unit	OWN-10	OWN-10=card edge:	session 7b (tally 2.1 parts)
+U:own/OWN-10/p03	unit	OWN-10	OWN-10=card edge:	session 7b (tally 2.1 parts)
+U:own/OWN-10/p07	unit	OWN-10	OWN-10=card edge:	session 7b (tally 2.1 parts)
+U:own/OWN-10/p08	unit	OWN-10	OWN-10=card edge:	session 7b (tally 2.1 parts)
+U:own/OWN-10/p09	unit	OWN-10	OWN-10=card edge:	session 7b (tally 2.1 parts)
+U:own/OWN-10/p11	unit	OWN-10	OWN-10=card edge:	session 7b (tally 2.1 parts)
+U:own/OWN-10/p13	unit	OWN-10	OWN-10=card edge:	session 7b (tally 2.1 parts)
+U:own/OWN-10/p14	unit	OWN-10	OWN-10=card edge:	session 7b (tally 2.1 parts)
+U:own/OWN-10/p15	unit	OWN-10	OWN-10=card edge:	session 7b (tally 2.1 parts)
+U:own/OWN-10/p16	unit	OWN-10	OWN-10=card edge:	session 7b (tally 2.1 parts)
+U:own/OWN-10/p18	unit	OWN-10	OWN-10=card edge:	session 7b (tally 2.1 parts)
+U:own/OWN-10/p24	unit	OWN-10	OWN-10=card edge:	session 7b (tally 2.1 parts)
+U:own/OWN-11/p04	unit	OWN-11	OWN-11=card edge:	session 7b (tally 2.1 parts)
+U:own/OWN-11/p05	unit	OWN-11	OWN-11=card edge:	session 7b (tally 2.1 parts)
+U:own/OWN-11/p06	unit	OWN-11	OWN-11=card edge:	session 7b (tally 2.1 parts)
+U:own/OWN-11/p12	unit	OWN-11	OWN-11=card edge:	session 7b (tally 2.1 parts)
+U:own/OWN-11/p19	unit	OWN-11	OWN-11=card edge:	session 7b (tally 2.1 parts)
+U:own/OWN-11/p20	unit	OWN-11	OWN-11=card edge:	session 7b (tally 2.1 parts)
+U:own/OWN-11/p21-below	unit	OWN-11	OWN-11=card edge:	session 7b (tally 2.1 parts)
+U:own/OWN-11/p21-signed	unit	OWN-11	OWN-11=card edge:	session 7b (tally 2.1 parts)
+U:own/OWN-11/p22-decision	unit	OWN-11	OWN-11=card edge:	session 7b (tally 2.1 parts)
+U:own/OWN-11/p22-hole	unit	OWN-11	OWN-11=card edge:	session 7b (tally 2.1 parts)
+U:own/OWN-12/p10	unit	OWN-12	OWN-12=card edge:	session 7b (tally 2.1 parts)
+U:own/OWN-12/p17/ania	unit	OWN-12	OWN-12=card edge:	session 7b (tally 2.1 parts)
+U:own/OWN-12/p17/halina	unit	OWN-12	OWN-12=card edge:	session 7b (tally 2.1 parts)
+U:own/OWN-12/p17/joint	unit	OWN-12	OWN-12=card edge:	session 7b (tally 2.1 parts)
+U:own/OWN-12/p23	unit	OWN-12	OWN-12=card edge:	session 7b (tally 2.1 parts)
+U:pairs/PTY-05+OWN-12/ania	unit	PTY-05 OWN-12	PTY-05=card edge:; OWN-12=card edge:	session 7b pair card: a nested joint model (tally 2.1)
+U:pairs/PTY-05+OWN-12/fam	unit	PTY-05 OWN-12	PTY-05=card edge:; OWN-12=card edge:	session 7b pair card: a nested joint model (tally 2.1)
+U:pairs/PTY-05+OWN-12/family	unit	PTY-05 OWN-12	PTY-05=card edge:; OWN-12=card edge:	session 7b pair card: a nested joint model (tally 2.1)
+U:pairs/PTY-05+OWN-12/halina	unit	PTY-05 OWN-12	PTY-05=card edge:; OWN-12=card edge:	session 7b pair card: a nested joint model (tally 2.1)
+U:pairs/PTY-05+OWN-12/piotr	unit	PTY-05 OWN-12	PTY-05=card edge:; OWN-12=card edge:	session 7b pair card: a nested joint model (tally 2.1)
+U:surf/SURF-05	unit	SURF-05	SURF-05=card edge:	key: no key by design (SURF); session 7b (tally 2.1's writing forms)
+U:surf/SURF-06	unit	SURF-06	SURF-06=card edge:	key: no key by design (SURF); session 7b (tally 2.1's writing forms)
+U:surf/SURF-07	unit	SURF-07	SURF-07=card edge:	key: no key by design (SURF); session 7b (tally 2.1's writing forms)
+U:set/own/OWN-12/p17/ania	unit	OWN-12	OWN-12=card edge:	session 7b (tally 2.1 parts)
+U:set/pairs/PTY-05+OWN-12/ania	unit	PTY-05 OWN-12	PTY-05=card edge:; OWN-12=card edge:	session 7b pair card: a nested joint model (tally 2.1)
+I:A:A-14	integration	OWN-10 OWN-11 OWN-12 OWN-04 NUM-04 SCEN-01	OWN-10=key edges:; OWN-11=key edges:; OWN-12=key edges:; OWN-04=key edges:; NUM-04=key edges:; SCEN-01=key edges:	cases 1.3.0 (session 7b, tally 2.1); runs: the migrator's text, marked by compare.py
+I:A:A-15	integration	OWN-10 OWN-11 OWN-12 OWN-04 SCEN-01	OWN-10=key edges:; OWN-11=key edges:; OWN-12=key edges:; OWN-04=key edges:; SCEN-01=key edges:	cases 1.3.0 (session 7b, tally 2.1); runs: the migrator's variant, marked by compare.py

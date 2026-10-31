@@ -1,0 +1,279 @@
+model i8
+  tally 2
+  on 2028-11-30
+  start 2027-10-01
+  end 2028-11-30
+  note "Card I-8: family support assessed on one year, paid over another, recomputed when the facts move."
+  note "Rule 8 is the booking cut: each month's payment is booked with what the office knew on its payday; the correction known 2028-07-12 makes adjustments, settled by withholding and a debt."
+
+source story "Card I-8, story"
+
+source act "Card I-8, Family Support Act, rules 1 to 9"
+
+source correction "Card I-8: the tax office's correction of Kasia's 2026 income, learned by the support office on 12 July 2028"
+
+source rule6_claim "Card I-8: Kasia's claim under rule 6, 10 March 2028"
+
+source job_report "Card I-8: report of Leon's new job, 15 July 2028"
+
+source modeller "The modeller's own assumptions, each with its reason"
+
+unit PLN: currency minor 0.01
+
+kind persons
+
+kind families
+
+kind sources
+  note "a source of a person's income"
+
+kind support_pays: event certain
+  leg cash: PLN
+  attr family: key families
+
+kind withholdings: event certain
+  leg cash: PLN
+
+kind debts_raised: event certain
+  leg cash: PLN
+  attr family: key families
+  attr due: date
+
+index benefit_periods = year 2027..2028 from 10-01
+  v card_act
+
+index income_years = year 2020..2030
+
+place acct[p in persons]: accounts PLN lives 2027-10-01..
+
+place owed[p in persons]: debts PLN lives 2027-10-01..
+
+place office: outside lives 2027-10-01..
+
+input adult[f in families, p in persons]: bool
+
+input born[p in persons]: date
+
+input child_age: int
+
+input claim6[s in sources]: date
+
+input claimant[f in families, q in benefit_periods]: key persons
+
+input due_days: int
+
+input income_lag: int
+
+input lives_with[f in families, p in persons]: bool
+
+input min_pay: money PLN
+
+input month_income[s in sources, m in months]: money PLN question "Ile wynosi miesięczny dochód z tego źródła w tym miesiącu?"
+
+input owner[s in sources]: key persons
+
+input parent[c in persons, k in persons]: bool
+
+input pay_dom: int
+
+input per_member: money PLN
+
+input report_days: int
+
+input reported_on[s in sources]: date
+
+input withhold_share: num
+
+input year_income[s in sources, y in income_years]: money PLN question "Ile wynosi dochód z tego źródła w roku dochodowym, według urzędu skarbowego?"
+
+input year_months_div: int
+
+input year_months_mul: int
+
+band child_rate(a: int): money PLN
+  note "rule 3: full support per child by age on the first day of the month"
+
+def bp_end[q in benefit_periods]: date = end_of(q)
+
+def bp_start[q in benefit_periods]: date = start_of(q)
+
+def excess[f in families, m in months]: money PLN = max(0, inc_m[f, m] - per_member * members_n[f, m])
+
+def first_full[s in sources]: month = if start_of(month_of(lifespan(s).from)) == lifespan(s).from then month_of(lifespan(s).from) else month_of(lifespan(s).from) + 1
+
+def full[f in families, m in months]: money PLN = sum(child_rate(age(born[c], start_of(m))) for c in persons on start_of(m) where member[f, c, m] and not adult[f, c])
+
+def inc_m[f in families, m in months]: money PLN = round(sum(src_income[s, m] for s in sources over .. where member[f, owner[s], m]) / year_months_div, minor(PLN), half-up)
+
+def income_year_of[m in months]: year = year_of(add_days(add_months(bp_start[m], -income_lag), -1))
+
+def member[f in families, p in persons, m in months]: bool
+  note "rule 2: the parents, and their children under 18 who live with them; a child born in a month joins from the next month"
+  rule adult beats child = true when adult[f, p]
+  rule child = lives_with[f, p] and any(parent[p, a] and adult[f, a] for a in persons over ..) and born[p] < start_of(m) and age(born[p], start_of(m)) < child_age
+
+def members_n[f in families, m in months]: int = count(p in persons on start_of(m) where member[f, p, m])
+
+def overpaid[f in families]: money PLN = -sum(a.change for a in adjustments over .. where a.adjusts in support_pays and a.adjusts.family == f and a.change < 0)
+
+def remaining[a in adjustments]: money PLN = -a.change - sum(withholding[a.adjusts.family].taken[m, a] for m in months)
+
+def report_ok[s in sources]: bool = days_between(lifespan(s).from, reported_on[s]) <= report_days
+
+def src_income[s in sources, m in months]: money PLN
+  note "rules 4, 6 and 7: what a source adds to the income year's income for month m"
+  rule old = year_income[s, income_year_of[m]] when lifespan(s).from < end_of(income_year_of[m])
+  rule left_out beats old = 0 when claim6[s] != none and lifespan(s).to != never and lifespan(s).to >= start_of(income_year_of[m]) and m > month_of(claim6[s])
+  rule gained = year_months_mul * month_income[s, first_full[s]] when lifespan(s).from >= end_of(income_year_of[m]) and m > month_of(lifespan(s).from)
+  rule not_yet = 0 when lifespan(s).from >= end_of(income_year_of[m]) and m <= month_of(lifespan(s).from)
+
+def support_due[f in families, m in months]: money PLN
+  note "rules 3 and 5: full support less the excess of income over the threshold; under the minimum, nothing"
+  rule base = full[f, m] - excess[f, m]
+  rule small beats base = 0 when full[f, m] - excess[f, m] < min_pay
+
+def wh_cap[f in families, m in months]: money PLN = round(support_due[f, m] * withhold_share, minor(PLN), down)
+
+def withheld[f in families, m in months]: money PLN = sum(withholding[f].taken[m, a] for a in adjustments over .. where a.adjusts in support_pays and a.adjusts.family == f and a.change < 0)
+
+fill withholding[f in families over ..]
+  note "rule 9: an overpayment is withheld from later payments of the same benefit period, at most half of each; overpayments of earlier months first (the card states no order among them; totals per payday don't depend on it)"
+  supply wh_cap[f, m] for m in months
+  demand -a.change for a in adjustments over .. where a.adjusts in support_pays and a.adjusts.family == f and a.change < 0
+  arc day_of(m, pay_dom) > a.day and day_of(m, pay_dom) < bp_end[a.adjusts.day]
+  order m, a.adjusts.day
+
+move debt_after[a in adjustments over .. where a.adjusts in support_pays and a.change < 0]: debts_raised
+  on add_days(bp_end[a.adjusts.day], -1)
+  when remaining[a] > 0
+  attr family = a.adjusts.family
+  attr due = add_days(add_days(bp_end[a.adjusts.day], -1), due_days)
+  leg cash from owed[claimant[a.adjusts.family, a.adjusts.day]] to office amount remaining[a]
+  fulfils a
+
+move support_pay[f in families over .., m in months]: support_pays
+  on day_of(m, pay_dom)
+  for m
+  when claimant[f, m] != none and support_due[f, m] > 0
+  attr family = f
+  leg cash from office to acct[claimant[f, m]] amount support_due[f, m]
+
+move withhold[f in families over .., m in months, a in adjustments over .. where a.adjusts in support_pays and a.adjusts.family == f and a.change < 0]: withholdings
+  on day_of(m, pay_dom)
+  when withholding[f].taken[m, a] > 0
+  leg cash from acct[claimant[f, m]] to office amount withholding[f].taken[m, a]
+  fulfils a
+
+ask a_members: members_n[kl_family, m] for m in months where m <= 2028-09
+
+ask a_who: member[kl_family, p, m] for m in months where m <= 2028-09, p in persons on start_of(m)
+
+ask a_without_correction: inc_m[kl_family, m], support_due[kl_family, m] for m in months where m <= 2028-09 with year_income[kasia_inc, 2026] = year_income[kasia_inc, 2026] as if {known 2028-07-11}
+
+ask b_after_correction: inc_m[kl_family, m], support_due[kl_family, m] for m in months where m <= 2028-09
+
+ask c_overpayment: overpaid[kl_family]
+
+ask c_paydays: support_due[kl_family, m], withheld[kl_family, m], support_due[kl_family, m] - withheld[kl_family, m] for m in months where m >= 2028-07 and m <= 2028-09
+
+ask c_owed_after: d.cash.amount, d.due for d in debts_raised over ..
+
+ask report_in_time: check report_ok[leon_new] == true
+
+version card_act
+  cite act
+  governs always
+  known 2027-10-01
+  child_age = 18 "rule 2: children under 18"
+  child_rate: [0, 6) = 400.00 PLN "rule 3: a child under 6 on the first day of the month"
+  child_rate: [6, 18) = 250.00 PLN "rule 3: a child aged 6 to 17 on that day"
+  due_days = 30 "rule 9: due 30 days after 30 September"
+  income_lag = 9 "rule 4: the calendar year that ends 9 months before the period starts"
+  min_pay = 20.00 PLN "rule 5: a result under 20.00 is not paid"
+  pay_dom = 20 "rule 1: on the 20th of each month"
+  per_member = 1800.00 PLN "rule 5: 1 800.00 times the number of members"
+  report_days = 30 "rule 7: report within 30 days"
+  withhold_share = 50 % "rule 9: at most half of each payment"
+  year_months_div = 12 "rule 4: the income year's income divided by 12"
+  year_months_mul = 12 "rule 7: 12 times the first full month's income"
+
+version card_family
+  cite story
+  governs always
+  known 2027-10-01
+  families + [kl_family] lives 2000-01-01..
+  persons + [kasia] lives 1980-01-01..
+  persons + [leon] lives 1980-01-01..
+  persons + [mira] lives 2019-05-03..
+  adult = false "the family's parents are Kasia and Leon"
+  adult[kl_family, kasia] = true "Kasia and Leon live together"
+  adult[kl_family, leon] = true "Kasia and Leon live together"
+  born[kasia] = 1980-01-01 assumed "no birth date given; an adult"
+  born[leon] = 1980-01-01 assumed "no birth date given; an adult"
+  born[mira] = 2019-05-03 "Mira, born 3 May 2019"
+  lives_with = false "only their children live with them"
+  lives_with[kl_family, mira] = true "they live with their daughter Mira"
+  parent = false "no other parent relations"
+  parent[mira, kasia] = true "their daughter"
+  parent[mira, leon] = true "their daughter"
+
+version card_claim
+  cite story
+  governs 2027-10-01..2029-09-30
+  known 2027-10-01
+  claimant[kl_family, 2027] = kasia "Kasia claims for the period starting 1 October 2027"
+  claimant[kl_family, 2028] = none "no claim for the next period is stated"
+
+version card_sources
+  cite story
+  governs always
+  known 2027-10-01
+  sources + [kasia_inc] lives 2000-01-01..
+  sources + [leon_corvo] lives 2000-01-01..
+  claim6 = none "no claim under rule 6 yet"
+  owner[kasia_inc] = kasia "Kasia's income"
+  owner[leon_corvo] = leon "Leon's job at Corvo"
+
+version card_incomes_2026
+  cite story
+  governs 2026
+  known 2027-10-01
+  year_income[kasia_inc, 2026] = 60000.00 PLN "2026, as the tax office first has it"
+  year_income[leon_corvo, 2026] = 30000.00 PLN "2026, all from his job at Corvo"
+
+version nel_born
+  cite story
+  governs always
+  known 2028-02-14
+  assumed "the card doesn't say when the office learns of the birth; on the day of birth"
+  persons + [nel] lives 2028-02-14..
+  replace adult = false "the family's parents are Kasia and Leon"
+  born[nel] = 2028-02-14 "Nel, born 14 February 2028"
+  replace lives_with = false "only their children live with them"
+  lives_with[kl_family, nel] = true "Nel lives with them"
+  replace parent = false "no other parent relations"
+  parent[nel, kasia] = true "their son"
+  parent[nel, leon] = true "their son"
+
+version corvo_claim
+  cite rule6_claim
+  governs always
+  known 2028-03-10
+  replace sources + [leon_corvo] lives 2000-01-01..2028-01-31
+  claim6[leon_corvo] = 2028-03-10 "Kasia claims under rule 6 on 10 March 2028"
+
+version kasia_corrected
+  cite correction
+  governs 2026
+  known 2028-07-12
+  replace year_income[kasia_inc, 2026] = 64800.00 PLN "the tax office's corrected figure"
+
+version leon_new_job
+  cite job_report
+  governs always
+  known 2028-07-15
+  sources + [leon_new] lives 2028-07-01..
+  claim6[leon_new] = none "no claim under rule 6"
+  month_income[leon_new, *] = 3000.00 PLN governs 2028-07.. "3 000.00 a month"
+  owner[leon_new] = leon "Leon's new job"
+  reported_on[leon_new] = 2028-07-15 "reported on 15 July 2028"

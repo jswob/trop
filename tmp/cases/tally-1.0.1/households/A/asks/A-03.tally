@@ -1,0 +1,7 @@
+part asks_a03
+  tally 1
+  note "A-03 · Tomek's pay, second half of 2022 (questions.md): each payment from July to December 2022, keyed by the month it is paid in, known as of 2023-01-31."
+
+ask a03: pay_on[nurt, m], inc[nurt, m], mbase[nurt, m], adv[nurt, m], net[nurt, m] for m in month where m >= 2022-07 and m <= 2022-12 as known 2023-01-31
+
+ask a03_advances: sum(m in month where m >= 2022-07 and m <= 2022-12: adv[nurt, m]) as known 2023-01-31

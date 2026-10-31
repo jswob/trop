@@ -1,0 +1,48 @@
+model time07_reverse
+  tally 2
+  on 2025-05-31
+  start 2025-05-01
+  end 2025-05-31
+  note "Probe TIME-07, the reverse order the question asks: the 15th rule reads the balance at its day's start, before the pay lands (`bal(konto, rule_day start)`, L §5.14.2: plans come first, so no `before` can put a decision ahead of one). The stated order is TIME-07.tally."
+
+source probe_card "Probe card TIME-07 (made-up story and rules)"
+
+unit DUK: currency minor 0.01
+
+place employer: outside lives 2025-05-01..
+
+place konto: accounts DUK lives 2025-05-01..
+
+place savings: accounts DUK lives 2025-05-01..
+
+input keep_floor: money DUK
+
+input pay_amt: money DUK
+
+input pay_day: date
+
+input rule_day: date
+
+move sweep: transfers
+  on rule_day
+  reads konto
+  leg cash from konto to savings amount max(0, bal(konto, rule_day start) - keep_floor)
+  note "rule 1: keep a floor of 2 000.00, move the rest to savings; a decision that reads the balance at the start of its day, before the pay (L §5.14.1, §5.14.2)"
+
+move wage: transfers
+  on pay_day
+  leg cash from employer to konto amount pay_amt
+  note "story: her pay lands on 15 May 2025"
+
+ask q_reverse: flows(sweep, 2025-05-15) law 2025-05-31
+
+version card
+  cite probe_card
+  governs always
+  known 2025-05-01
+  note "Stipulations, known from the model's start (L §4.5)."
+  keep_floor = 2000.00 "rule 1: keep a floor of 2 000.00"
+  opening[konto] = 1500.00 at 2025-05-01 start "story: 1 500.00 before anything happens on 15 May 2025; no movement before it"
+  pay_amt = 6000.00 "story: her pay"
+  pay_day = 2025-05-15 "story: the pay lands on 15 May 2025"
+  rule_day = 2025-05-15 "story: the 15th rule runs that day"

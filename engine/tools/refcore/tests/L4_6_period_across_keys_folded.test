@@ -1,0 +1,27 @@
+# GD-27 (C4-9, the user, 2026-10-28; writer 10): L §4.6 Reading at a date "A period no longer than the keys that no
+# key's period holds (it lies across two keys, as a calendar month across the months of an anchored index) is refused at
+# load where load sees the period and the keys (LOAD-KEY, §8.3), and otherwise at that value (RUN-DOMAIN)"; L §8.3
+# LOAD-KEY `<period> lies across keys <a> and <b> of <index>`. Load folds the key c of the declared index cm (L §8.3 items 5 and 9):
+# at c = 2022-05 the calendar month lies across tmonth's 2022-04 (from 2022-04-06) and 2022-05 (from 2022-05-06).
+=== m.tally
+model f1
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+
+source s "minimal text"
+index tmonth = month 2022-04..2023-03 from 6
+index cm = month 2022-05..2022-07
+
+def first_day[t in tmonth]: date = start_of(t)
+def cal_first[c in cm]: date = first_day[c]
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+
+ask q: first_day[2022-06] law 2026-10-18
+=== expect
+refused: LOAD-KEY 2022-05 lies across keys 2022-04 and 2022-05 of tmonth (m.tally:12)

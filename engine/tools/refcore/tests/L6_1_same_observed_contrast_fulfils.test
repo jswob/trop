@@ -1,0 +1,50 @@
+# TX-F1 (W-TX's fault, writer 10). L §5.19 Booking an observation: "Each end of an observed leg is booked at its place
+# from the observation of the version that covers that place on that day"; L §6.1: "Movements stated same, observed rows
+# among them, are one movement ... booked once at each place. A place one of them books (an observed row books where its
+# statement covers, §5.19) takes that one's legs"; L §5.19 Coverage: the planned movements that touch a covered place on
+# a covered day before K are the modelled past, "never booked", and "its observations stand in for it where they are
+# booked".
+# The contrast with fulfils: gift in place of the same line: the row fulfils the instance and stands in for it: 5 000.00 DUK, as snap14.
+=== m.tally
+model one
+  tally 2
+  on 2026-10-25
+  start 2024-01-01
+  end 2024-12-31
+
+source s "made up"
+
+unit DUK: currency minor 0.01
+
+place acc: accounts DUK lives 2024-01-01..
+
+place other: outside lives 2024-01-01..
+
+input stmt: observed
+
+input g_day: date
+
+input g_amt: money DUK
+
+move gift: transfers
+  on g_day
+  leg cash from other to acc amount g_amt
+
+ask q: flows(acc, 2024)
+
+version v
+  cite s
+  governs 2024-05
+  known 2024-05-02
+  covers acc
+  stmt[r1] = (on: 2024-05-02, kind: transfers, leg cash from other to acc amount 5000.00 DUK, fulfils: gift) "r1"
+
+version plan
+  cite s
+  governs always
+  known 2024-01-01
+  g_day = 2024-05-02 "plan"
+  g_amt = 5000.00 "plan"
+=== expect
+q: 5 000.00 DUK
+  cut 2026-10-25

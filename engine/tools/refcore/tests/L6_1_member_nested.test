@@ -1,0 +1,57 @@
+# E §3.1 step 1: "a member that is itself a joint model pins its own members through its use lines"; L §6.1 a member
+# is closed and its items are read as a.item, so a member b of the member a is read as a.b.item, and a's asks (which
+# ask b's as b.f) are asked as a.q and a.b.f (L §6.1 "A member's asks are asked inside the joint model as a.q"). The
+# rate is a's 0.12, the fee b's 0.5.
+=== J/joint.tally
+model family
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+  use a = "../A" sha256 "1526b6dad9dc828d1ce585ede0bcc1b7f20fd060ab0b523921fa13115787d510"
+
+ask r: a.rate + a.b.fee
+=== A/reality.tally
+model ana
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+  use b = "../B" sha256 "c4b684c4fce98a815fc847486937beb4b31c409645f11a2a883ba5f16fbacfcf"
+
+source s "umowa"
+
+input rate: num
+
+version v
+  cite s
+  governs always
+  known 2025-01-01
+  rate = 0.12 "umowa"
+
+ask q: rate + b.fee
+=== B/reality.tally
+model ben
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source s "umowa"
+
+input fee: num
+
+version v
+  cite s
+  governs always
+  known 2025-01-01
+  fee = 0.5 "umowa"
+
+ask f: fee
+=== expect r a.q a.b.f
+r: 0.62
+  cut 2026-10-20
+a.q: 0.62
+  cut 2026-10-20
+a.b.f: 0.5
+  cut 2026-10-20

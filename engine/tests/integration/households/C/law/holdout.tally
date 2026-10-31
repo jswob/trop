@@ -1,0 +1,61 @@
+part holdout_law
+  tally 2
+  law
+  note "The home law points only the hidden household reads (tmp/cases-holdout/law/home-supplement.md): PIT-5 .3 and PIT-6 .4 with the foreign tax credit; SOC-3 .5 pro rata in the month the business closes; PIT-10 .7 the closing day ends the year's period; FAM-1 .6 an agreement decides; VAT-4 .4 the closing month's return is the last; IGT-2 .4 a released debt is a gift; PIT-16 foreign income; PIT-17 gifts to public-benefit bodies; PIT-18 pay from work abroad; FAM-2 benefits paid without entitlement; and the CBL reference rate (home-gazette-supplement.csv). Also the figures of the visible acts that no copied part holds (VAT-4, the 20th days of SOC-3 .6, SOC-4 .4 and PIT-10 .5, GEN-2)."
+
+source home_supplement "The home law: what the visible copy leaves out (tmp/cases-holdout/law/home-supplement.md)"
+
+source home_gazette_supplement "The home gazette's figures for contracts (tmp/cases-holdout/law/home-gazette-supplement.csv)"
+
+source acts "The home law of Lenia (engine/tests/cases/law/acts.md)"
+
+input cbl_ref: rate question "What is the CBL reference rate in force on this day (CBL-REF)?"
+
+input pit17_cap: num question "What share of a giver's base may the gift deduction reach (PIT-17 .3)?"
+
+input pay_dom_20: int question "On which day of the next month are a sole trader's contributions and advances due (SOC-3 .6, SOC-4 .4, PIT-10 .5)?"
+
+input vat4_dom: int question "By which day of the next month is a VAT return filed (VAT-4 .1)?"
+
+input vat4_refund_days: int question "Within how many days of the return is a requested VAT refund paid (VAT-4 .2)?"
+
+input pit5_file_dom: int question "By which day of April of the next year is the yearly return filed (PIT-5 .1)?"
+
+input pit5_file_month: int question "In which month of the next year is the yearly return due (PIT-5 .1)?"
+
+input fam1_amount: money DUK question "What is the monthly child benefit (FAM-1 v2 .1)?"
+
+version pit16_18_v1
+  cite home_supplement
+  governs always
+  known 2017-09-01
+  note "PIT-16, PIT-17, PIT-18 v1, in force 2018-01-01 until replaced, published 2017-09-01, governing tax years from 2018"
+  pit17_cap = 0.10 "PIT-17 v1 .3: at most 10 % of that giver's base before the deduction"
+
+version acts_days
+  cite acts
+  governs always
+  known 2017-09-01
+  note "days the visible acts name"
+  pay_dom_20 = 20 "SOC-3 v1 .6, SOC-4 v1 .4, PIT-10 v1 .5: by the 20th of the next month"
+  vat4_dom = 25 "VAT-4 v1 .1: by the 25th of the next month"
+  vat4_refund_days = 60 "VAT-4 v1 .2: refunded within 60 days of the return"
+  pit5_file_dom = 30 "PIT-5 v1 .1: by 30 April of the next year"
+  pit5_file_month = 4 "PIT-5 v1 .1: by 30 April of the next year"
+
+version fam1_v2
+  cite acts
+  governs 2024-01-01..
+  known 2023-08-10
+  note "FAM-1 v2, in force 2024-01-01 until replaced, published 2023-08-10, governing months from 2024-01"
+  fam1_amount = 650.00 "FAM-1 v2 .1: 650.00 DUK a month for the child"
+
+version cbl_ref_rows
+  cite home_gazette_supplement
+  governs always
+  known 2023-10-04
+  note "CBL-REF, each row known on its publication day and governing its from – to span"
+  cbl_ref = 5.75 %/year governs 2023-10-05..2025-03-05 known 2023-10-04 "home-gazette-supplement.csv line 2 CBL-REF"
+  cbl_ref = 5.25 %/year governs 2025-03-06..2025-10-01 known 2025-03-05 "home-gazette-supplement.csv line 3 CBL-REF"
+  cbl_ref = 4.75 %/year governs 2025-10-02..2026-05-06 known 2025-10-01 "home-gazette-supplement.csv line 4 CBL-REF"
+  cbl_ref = 4.50 %/year governs 2026-05-07.. known 2026-05-06 "home-gazette-supplement.csv line 5 CBL-REF"

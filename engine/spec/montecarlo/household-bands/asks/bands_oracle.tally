@@ -1,6 +1,6 @@
 part bands_oracle
-  tally 1
-  note "Wartości wyroczni i tolerancje testu pasm gospodarstwa (DONE, bramka 7, część 2). Czytają je tylko pytania check w scenarios/surprises i scenarios/costly_repairs."
+  tally 2
+  note "Wartości wyroczni i tolerancje testu pasm gospodarstwa (DONE, bramka 7, część 2). Czytają je tylko scenarios/surprises i scenarios/costly_repairs: wyrocznie pytania check, próg dwóch czynszów także below_two_rents, dzień niespodzianek ruchy i losowania surprises."
   note "Tolerancja = 4·SE + błąd kroku + własny błąd wyroczni (ENGINE §8), zaokrąglona w górę; wyprowadzenie w household-bands.md."
 
 source bands_key "Klucz odpowiedzi pasm gospodarstwa: montecarlo/household-bands.md, wartości w formie zamkniętej"
@@ -31,8 +31,16 @@ input oracle_value[k in oracle_stat]: num PLN
 
 input oracle_value_tol[k in oracle_stat]: num PLN
 
+input surprise_dom: int
+  note "dzień miesiąca, w którym w scenariuszu surprises przychodzą niespodzianki (naprawa i odchylenie wydatków); od niego też liczy się data prawa obu losowań"
+
+input threshold_rents: int
+  note "lifted from an inline figure of tally 1.0.1"
+  note "próg pytań below_two_rents i check_two_rents w czynszach: konto poniżej tylu czynszów na koniec 2027"
+
 version bands_oracle_rows
   cite bands_key
+  governs always
   known 2026-10-19
   oracle_konto[2027-06-30, q05] = 3760.19 "§4.1"
   oracle_konto[2027-06-30, q25] = 6373.22 "§4.1"
@@ -102,3 +110,10 @@ version bands_oracle_rows
   oracle_value_tol[tm_konto_1231] = 0 "§4.8"
   oracle_value_tol[tm_net_worth_1231] = 0 "§4.8"
   oracle_value_tol[tm_room_11] = 0 "§4.8"
+
+version lifted_figures_household_bands
+  cite lifted_1_0_1
+  governs always
+  known 2026-10-19
+  surprise_dom = 25 "inline in tally 1.0.1: repair line 41, spend_over line 49 and spend_under line 57, argument 2 of day_of; one fact, every surprise lands on the 25th (household-bands.md §1)"
+  threshold_rents = 2 "inline in tally 1.0.1: asks below_two_rents line 69 and check_two_rents line 113, factor of rent; one fact, the two-rents threshold (household-bands.md §1, §4.5)"

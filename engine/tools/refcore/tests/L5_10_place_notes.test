@@ -1,0 +1,24 @@
+# Writer 11 (tally 2.1, 2.1-2, R-11). L §2.3: place = "place" ID [binds] ":" ID [CUR | ID] ["priced" price] "lives"
+# lspan NL {IN "note" STR NL} (2.0: a place had no body). konto's balance is its opening carried through.
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+  note "the joint account at the bank"
+  note "opened in January"
+ask q: bal(konto, 2026-06-30)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 100.00 PLN at 2026-01-01 start
+=== expect
+q: 100.00 PLN
+  cut 2026-01-01

@@ -1,0 +1,97 @@
+# L §5.16 example, copied whole (goal, theta_mid and the source declared).  The 10 000-path asks cost minutes in
+# this interpreter, so the test answers growth_q1 and one_path; L5_16_paths_small runs the path statistics.
+# growth_q1: closed form (L §5.16 table) a = 1, b = 0: quantile(normal(0.03, 0.1), 0.25) correctly rounded to the
+# fact's step 1e-9: printed with ≈ (its digits not asserted, L §7.3).  The row governs 2026.. and growth is read at
+# its time key 2030, after the cut: held (L §8.2).
+# one_path: path 512 of seed 7 prints balance_end[2040] on that path, plain (money after round), with every sample
+# it reached in canonical order (L §5.16 Order: law date ascending, then id): returns[y] is read at its law date
+# end_of(y) = the first day of y + 1 (L §4.2), and theta (a parameter of returns, drawn once per path) at the law date
+# of its first reader, 2028-01-01; so returns[2027], theta, returns[2028], ..., returns[2040].  held (L §8.2):
+# start_balance is read by balance_end[2026] at 2027-01-01, theta and vol by returns[2027..2040] at 2028-01-01 ..
+# 2041-01-01, all after the cut 2026-10-20 under an open span.
+=== m.tally
+model hh
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2040-12-31
+
+source own_assumption "own"
+unit PLN: currency minor 0.01
+input goal: money PLN
+input theta_mid: num 1/year
+
+input growth[y in years]: dist 1/year
+input theta: dist 1/year
+input vol: num 1/year
+input start_balance: money PLN
+def returns[y in years]: dist 1/year = normal(theta, vol) to 1e-9 at end_of(y)
+def balance_end[y in years]: money PLN at end_of(y)
+  rule first = start_balance
+  rule later beats first = round(balance_end[y - 1] * (1 + returns[y] * 1 year), minor(PLN), half-even) when pos(y) > 1
+
+version assumptions
+  cite own_assumption
+  governs 2026..
+  known 2026-01-01
+  growth[*] = normal(3 %/year, 10 %/year) to 1e-9 "planning assumption"
+  theta = uniform(1 %/year, 5 %/year) to 1e-9 "own range"
+  vol = 10 %/year "own guess"
+  start_balance = 50 000.00 PLN "statement"
+
+ask growth_q1: quantile(growth[2030], 25 %) law 2030-12-31
+ask median_2040: quantile(balance_end[2040], 50 %) law 2040-12-31 paths 10000 seed 7
+ask over_goal: share(balance_end[2040] > goal) law 2040-12-31 paths 10000 seed 7
+ask bad_years: mean(balance_end[2040] where returns[2030] < 0) law 2040-12-31 paths 10000 seed 7
+ask one_path: balance_end[2040] law 2040-12-31 paths 10000 seed 7 path 512
+ask test_mode: mean(balance_end[2040]) with sample theta = theta_mid law 2040-12-31 paths 10000 seed 7
+=== expect growth_q1 one_path
+growth_q1: ≈ ...
+  held: growth[2030] = normal(0.03, 0.1) to 0.000000001 (assumptions), read for 2030
+  law date 2030-12-31, cut 2026-10-20
+one_path: ...
+  sample: returns[2027] = ...
+  sample: theta = ...
+  sample: returns[2028] = ...
+  sample: returns[2029] = ...
+  sample: returns[2030] = ...
+  sample: returns[2031] = ...
+  sample: returns[2032] = ...
+  sample: returns[2033] = ...
+  sample: returns[2034] = ...
+  sample: returns[2035] = ...
+  sample: returns[2036] = ...
+  sample: returns[2037] = ...
+  sample: returns[2038] = ...
+  sample: returns[2039] = ...
+  sample: returns[2040] = ...
+  held: start_balance = 50 000.00 PLN (assumptions), read for 2027-01-01
+  held: theta = uniform(0.01, 0.05) to 0.000000001 (assumptions), read for 2028-01-01
+  held: theta = uniform(0.01, 0.05) to 0.000000001 (assumptions), read for 2029-01-01
+  held: theta = uniform(0.01, 0.05) to 0.000000001 (assumptions), read for 2030-01-01
+  held: theta = uniform(0.01, 0.05) to 0.000000001 (assumptions), read for 2031-01-01
+  held: theta = uniform(0.01, 0.05) to 0.000000001 (assumptions), read for 2032-01-01
+  held: theta = uniform(0.01, 0.05) to 0.000000001 (assumptions), read for 2033-01-01
+  held: theta = uniform(0.01, 0.05) to 0.000000001 (assumptions), read for 2034-01-01
+  held: theta = uniform(0.01, 0.05) to 0.000000001 (assumptions), read for 2035-01-01
+  held: theta = uniform(0.01, 0.05) to 0.000000001 (assumptions), read for 2036-01-01
+  held: theta = uniform(0.01, 0.05) to 0.000000001 (assumptions), read for 2037-01-01
+  held: theta = uniform(0.01, 0.05) to 0.000000001 (assumptions), read for 2038-01-01
+  held: theta = uniform(0.01, 0.05) to 0.000000001 (assumptions), read for 2039-01-01
+  held: theta = uniform(0.01, 0.05) to 0.000000001 (assumptions), read for 2040-01-01
+  held: theta = uniform(0.01, 0.05) to 0.000000001 (assumptions), read for 2041-01-01
+  held: vol = 0.1 1/year (assumptions), read for 2028-01-01
+  held: vol = 0.1 1/year (assumptions), read for 2029-01-01
+  held: vol = 0.1 1/year (assumptions), read for 2030-01-01
+  held: vol = 0.1 1/year (assumptions), read for 2031-01-01
+  held: vol = 0.1 1/year (assumptions), read for 2032-01-01
+  held: vol = 0.1 1/year (assumptions), read for 2033-01-01
+  held: vol = 0.1 1/year (assumptions), read for 2034-01-01
+  held: vol = 0.1 1/year (assumptions), read for 2035-01-01
+  held: vol = 0.1 1/year (assumptions), read for 2036-01-01
+  held: vol = 0.1 1/year (assumptions), read for 2037-01-01
+  held: vol = 0.1 1/year (assumptions), read for 2038-01-01
+  held: vol = 0.1 1/year (assumptions), read for 2039-01-01
+  held: vol = 0.1 1/year (assumptions), read for 2040-01-01
+  held: vol = 0.1 1/year (assumptions), read for 2041-01-01
+  law date 2040-12-31, cut 2026-10-20

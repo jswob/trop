@@ -1,0 +1,131 @@
+# L §6.5 change 5 (a move abroad), copied whole with its stub law part, in the round-7 text: the base's wage move and
+# the change's wage_eur bind `j in jobs over m`, and `salary_eur = 0 EUR governs 2026-10..`.
+# e1: konto_eur opens at 0 EUR on 2030-05-01 (07-24: 0.00 EUR; the other jobs' `when` salary_eur > 0 EUR is false, so
+# no euro instance of them); on 07-25 wage_eur[2030-07, ana_berlin] moves net_wage_eur, the stub law part's hole:
+# "every result that needs it is a hole with its question" (L §6.5), and "A hole movement makes both ends' balances
+# holes from its day on" (E §4.2).
+# e2: wage_eur[2030-07, ana_berlin] is on day 25 (pay_dom 25); in August 2030 only ana_berlin has salary_eur > 0: one
+# movement.
+# Over the base excerpt (L §6.5) copied whole, with the household_base header (on moved to 2030-12-31, past the
+# change's known date, §6.2 advance; `unit EUR: currency minor 0.01` added, L §5.4) and its completion (pit_scale,
+# net_wage = salary, taxable = 0 PLN).
+# e3: "salary[ana_berlin] = 0 PLN gives the Polish wage move its figure at the new key (an instance of 0, which
+# books nothing)": 0.00 PLN.
+# e4: "The Polish pit for Ana from 2031 shows 'Podatek nierezydenta Polski nie jest opisany'": residence[ana,
+# 2030-01] is pl (base), residence[ana, 2031-01] is de (the change), so pit[ana, 2030] is base's 0.00 PLN (read at
+# start_of(2030), before the cut: nothing held).
+=== change5.tally
+part change5
+  tally 2
+
+kind wages_eur: event certain
+  leg cash: EUR
+place world_eur: outside lives 1900-01-01..
+input salary_eur[j in jobs, m in months]: money EUR question "Ile wynosi pensja w euro z tej pracy w tym miesiącu?"
+move wage_eur[m in months, j in jobs over m]: wages_eur
+  on day_of(m, pay_dom[j])
+  at start_of(m)
+  when salary_eur[j, m] > 0 EUR
+  leg cash from world_eur to konto_eur amount net_wage_eur[j, m]
+
+version ana_berlin_job
+  cite household
+  governs 2030-07..
+  known 2030-05-01
+  accounts + [konto_eur] EUR lives 2030-05-01..
+  jobs + [ana_berlin] lives 2030-07-01..
+  replace jobs + [ana_acme] lives 2020-02-01..2030-06-30
+  opening[konto_eur] = 0 EUR at 2030-05-01 start "konto w euro, otwarte przed przeprowadzką"
+  pay_dom[ana_berlin] = 25 "Arbeitsvertrag, § 5"
+  residence[ana] = de "wymeldowanie; umowa najmu w Berlinie"
+  salary[ana_berlin] = 0 PLN "pensja w euro, nie w złotych"
+  salary_eur = 0 EUR governs 2026-10.. "brak pensji w euro"
+  salary_eur[ana_berlin] = 5 200.00 EUR "Arbeitsvertrag, § 4"
+  works_for[ana_berlin] = ana
+ask e1: bal(konto_eur, 2030-07-24), bal(konto_eur, 2030-07-25)
+ask e2: wage_eur[2030-07, ana_berlin].day, count(w in wages_eur over 2030-08)
+ask e3: wage[2030-07, ana_berlin].cash.amount
+ask e4: pit[ana, 2030], pit[ana, 2031]
+=== de_employment.tally
+part de_employment
+  tally 2
+  law
+
+def net_wage_eur[j in jobs, m in months]: money EUR = ?"Wynagrodzenie netto z niemieckiej umowy o pracę nie jest opisane." at start_of(m)
+=== household.tally
+model household
+  tally 2
+  on 2030-12-31
+  start 2026-10-01
+  end 2040-12-31
+
+source household "the household's own records"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+index instalments = [equal, decreasing]
+index overpay_choices = [shorter, lower]
+index pit_brackets = [low, high]
+index countries = [pl, de]
+index tax_years = year 2026..2040
+
+kind persons
+kind jobs
+kind loans
+kind wages: event certain
+  leg cash: PLN
+
+place konto[p in persons]: accounts PLN lives 2019-05-01..
+place world: outside lives 1900-01-01..
+
+input loan_terms[l in loans]: (principal money PLN, months int, plan key instalments)
+input overpay[l in loans, m in months]: (amount money PLN, choice key overpay_choices)
+input parent[c in persons, k in persons]: bool
+input pay_dom[j in jobs]: int
+input pit_free: money PLN
+input pit_rate[b in pit_brackets]: num
+input residence[p in persons, m in months]: key countries
+input salary[j in jobs, m in months]: money PLN question "Ile wynosi pensja brutto z tej pracy w tym miesiącu?"
+input works_for[j in jobs]: key persons
+
+band pit_scale(x: num PLN): num PLN
+def net_wage[j in jobs, m in months]: money PLN = salary[j, m] at start_of(m)
+def taxable[p in persons, y in tax_years]: money PLN = 0 PLN
+
+def pit[p in persons, y in tax_years]: money PLN at start_of(y)
+  rule base = round(pit_scale(taxable[p, y]), 1 PLN, half-up)
+  rule abroad beats base = ?"Podatek nierezydenta Polski nie jest opisany." when residence[p, month_of(start_of(y))] != pl
+
+move wage[m in months, j in jobs over m]: wages
+  on day_of(m, pay_dom[j])
+  at start_of(m)
+  leg cash from world to konto[works_for[j]] amount net_wage[j, m]
+
+version home_2026
+  cite household
+  governs 2026-10..
+  known 2026-10-19
+  persons + [ana] lives 1990-04-02..
+  persons + [ben] lives 1988-11-30..
+  jobs + [ana_acme] lives 2020-02-01..
+  jobs + [ben_bolt] lives 2021-09-01..
+  parent = false "brak dzieci"
+  pay_dom = 10 "umowy o pracę, § 5"
+  residence = pl "meldunek w Krakowie"
+  works_for[ana_acme] = ana
+  works_for[ben_bolt] = ben
+  opening[konto[ana]] = 12 400.00 PLN at 2026-10-01 start "wyciąg"
+  opening[konto[ben]] = 3 150.00 PLN at 2026-10-01 start "wyciąg"
+  pit_scale: [0, inf) = 12 % * x "art. 27"
+
+=== expect
+e1: (0.00 EUR, ?"Wynagrodzenie netto z niemieckiej umowy o pracę nie jest opisane." (net_wage_eur[ana_berlin, 2030-07]))
+  unfulfilled: wage_eur[2030-07, ana_berlin]
+  cut 2030-12-31
+e2: (2030-07-25, 1)
+  unfulfilled: wage_eur[2030-08, ana_berlin]
+  cut 2030-12-31
+e3: 0.00 PLN
+  cut 2030-12-31
+e4: (0.00 PLN, ?"Podatek nierezydenta Polski nie jest opisany." (pit[ana, 2031]))
+  held: residence[ana, 2031-01] = de (ana_berlin_job), read for 2031-01
+  cut 2030-12-31

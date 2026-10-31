@@ -1,0 +1,226 @@
+part rosvald_pay
+  tally 2
+  note "Jan's pay in Rosvald (C-D14, C-D16, the payslips C-D20, the class notices C-D15, C-D17, C-D18) and Rosvald's wage tax on it (RWT, RSI-2), his days of presence (RWT-5, his log) and the yearly assessment (RWT-6, C-D19). A month is the month the pay is for; the payment is paid in the next month."
+  note "The payslip for October 2025 is lost (story): its gross is the one whose net, by RSI-2 and RWT-3, is the net the Lazur row 'Lohn 10/2025' shows, the hours being whole (C-D14 .1): the least whole number of overtime hours whose net is that net (L §5.11, an inverse over a stepped range)."
+
+index hours_ix = int 0..120
+  note "overtime hours a month can hold, whole hours (C-D14 .1)"
+
+input slip[m in month]: (paid date, cls key rv_class, hours int, gross money FLR, rsi money FLR, tax money FLR, net money FLR) question "What does Jan's payslip for this month say (C-D20)?"
+
+input base_pay[m in month]: money FLR question "What is Jan's monthly base pay for this month's pay (C-D14 .1, C-D16)?"
+
+input ot_rate[m in month]: money FLR question "What is Jan's overtime pay for an hour of this month (C-D14 .1, C-D16)?"
+
+input lost_slip: month question "Which month's payslip is lost (story)?"
+
+input notice_in[y in rv_year]: date question "On which day did Jan's class notice for this tax year reach the employer (C-D15, C-D17, C-D18)?"
+
+input notice_cls[y in rv_year]: key rv_class question "Which class does Jan's class notice for this tax year give (RWT-4 .1)?"
+
+input log_from: date question "From which day does Jan's log run?"
+
+input rv_before_log[d in day]: bool question "Was Jan in Rosvald on this day, before his log starts (story 2024-07-01)?"
+
+input rtb_decision[y in rv_year]: (decided date, presence_ok bool, pay money FLR, contrib money FLR, allowance money FLR, taxable money FLR, tax money FLR, withheld money FLR, refund money FLR) question "What does the RTB's decision on the yearly assessment of this tax year say (C-D19)?"
+
+input rtb_claimed[y in rv_year]: date question "When did Jan claim the yearly assessment of this tax year (story, C-D21)?"
+
+version contract
+  cite c_d14
+  governs always
+  known 2024-06-10
+  base_pay[2024-07..2025-03] = 4800.00 "C-D14 .1: base pay 4 800.00 FLR a month"
+  ot_rate[2024-07..2025-03] = 37.50 "C-D14 .1: overtime 37.50 FLR an hour, in whole hours"
+
+version annex_2025
+  cite c_d16
+  governs always
+  known 2025-03-14
+  base_pay[2025-04..2026-03] = 5000.00 "C-D16 2025-03-14: from the pay for April 2025, base pay 5 000.00 FLR"
+  ot_rate[2025-04..2026-03] = 39.00 "C-D16 2025-03-14: overtime 39.00 FLR an hour"
+
+version annex_2026
+  cite c_d16
+  governs always
+  known 2026-03-13
+  base_pay[2026-04..2029-12] = 5150.00 "C-D16 2026-03-13: from the pay for April 2026, base pay 5 150.00 FLR"
+  ot_rate[2026-04..2029-12] = 40.25 "C-D16 2026-03-13: overtime 40.25 FLR an hour"
+
+version notice_2024
+  cite c_d15
+  governs always
+  known 2024-07-01
+  notice_in[2024] = 2024-07-01 "C-D15: received 2024-07-01 (employer's stamp)"
+  notice_cls[2024] = class2 "C-D15: married, living with a child under 16; class 2 requested"
+
+version notice_2025
+  cite c_d17
+  governs always
+  known 2025-05-20
+  notice_in[2025] = 2025-05-20 "C-D17: received 2025-05-20 (employer's stamp)"
+  notice_cls[2025] = class2 "C-D17: class 2 requested"
+
+version notice_2026
+  cite c_d18
+  governs always
+  known 2026-04-01
+  notice_in[2026] = 2026-04-01 "C-D18: received 2026-04-01 (employer's stamp)"
+  notice_cls[2026] = class2 "C-D18: class 2 requested"
+
+version log_start
+  cite story
+  governs always
+  known 2024-07-01
+  log_from = 2024-07-01 "story § What happened, 2024-07-01; the log has one row a day from 2024-07-01"
+  rv_before_log[2024-01-01..2024-06-30] = false "story 2024-07-01: before today he hadn't been in Rosvald at all in 2024"
+  lost_slip = 2025-10 "story: Jan's payslip for October 2025 is lost; C-D20: the slip for October 2025 is missing"
+
+version rtb_2024_25
+  cite c_d19
+  governs always
+  known 2025-09-12
+  rtb_decision[2024] = (decided: 2025-09-10, presence_ok: true, pay: 40462.50, contrib: 5462.44, allowance: 20400.00, taxable: 14600.00, tax: 1488.00, withheld: 3782.00, refund: 2294.00) "C-D19: claim filed 2025-06-12; at least 183 days; pay 40 462.50; contributions 5 462.44; allowance 20 400.00; taxable 14 600.00; yearly tax 1 488.00; withheld 3 782.00; refund 2 294.00 FLR"
+
+version rtb_claims
+  cite story
+  governs always
+  known 2025-06-12
+  rtb_claimed[2024] = 2025-06-12 "story 2025-06-12: Jan claims Rosvald's assessment for 2024/25"
+  rtb_claimed[2025] = 2026-07-14 known 2026-07-16 "story 2026-07-14, C-D21: claim received 2026-07-14"
+
+version payslips
+  cite c_d20
+  governs always
+  known 2024-08-05
+  note "C-D20 as kept, one row per slip, each known on its pay day"
+  slip[2024-07] = (paid: 2024-08-05, cls: class2, hours: 6, gross: 5025.00, rsi: 678.38, tax: 465.00, net: 3881.62) known 2024-08-05 "C-D20 row 2024-07"
+  slip[2024-08] = (paid: 2024-09-05, cls: class2, hours: 0, gross: 4800.00, rsi: 648.00, tax: 420.00, net: 3732.00) known 2024-09-05 "C-D20 row 2024-08"
+  slip[2024-09] = (paid: 2024-10-04, cls: class2, hours: 14, gross: 5325.00, rsi: 718.88, tax: 528.00, net: 4078.12) known 2024-10-04 "C-D20 row 2024-09"
+  slip[2024-10] = (paid: 2024-11-05, cls: class2, hours: 9, gross: 5137.50, rsi: 693.56, tax: 489.00, net: 3954.94) known 2024-11-05 "C-D20 row 2024-10"
+  slip[2024-11] = (paid: 2024-12-05, cls: class2, hours: 12, gross: 5250.00, rsi: 708.75, tax: 513.00, net: 4028.25) known 2024-12-05 "C-D20 row 2024-11"
+  slip[2024-12] = (paid: 2025-01-03, cls: class2, hours: 4, gross: 4950.00, rsi: 668.25, tax: 451.00, net: 3830.75) known 2025-01-03 "C-D20 row 2024-12"
+  slip[2025-01] = (paid: 2025-02-05, cls: class2, hours: 10, gross: 5175.00, rsi: 698.62, tax: 496.00, net: 3980.38) known 2025-02-05 "C-D20 row 2025-01"
+  slip[2025-02] = (paid: 2025-03-05, cls: class2, hours: 0, gross: 4800.00, rsi: 648.00, tax: 420.00, net: 3732.00) known 2025-03-05 "C-D20 row 2025-02"
+  slip[2025-03] = (paid: 2025-04-04, cls: class1, hours: 7, gross: 5062.50, rsi: 683.44, tax: 638.00, net: 3741.06) known 2025-04-04 "C-D20 row 2025-03"
+  slip[2025-04] = (paid: 2025-05-05, cls: class1, hours: 11, gross: 5429.00, rsi: 732.92, tax: 715.00, net: 3981.08) known 2025-05-05 "C-D20 row 2025-04"
+  slip[2025-05] = (paid: 2025-06-05, cls: class2, hours: 3, gross: 5117.00, rsi: 690.80, tax: 465.00, net: 3961.20) known 2025-06-05 "C-D20 row 2025-05"
+  slip[2025-06] = (paid: 2025-07-04, cls: class2, hours: 8, gross: 5312.00, rsi: 717.12, tax: 506.00, net: 4088.88) known 2025-07-04 "C-D20 row 2025-06"
+  slip[2025-07] = (paid: 2025-08-05, cls: class2, hours: 5, gross: 5195.00, rsi: 701.32, tax: 482.00, net: 4011.68) known 2025-08-05 "C-D20 row 2025-07"
+  slip[2025-08] = (paid: 2025-09-05, cls: class2, hours: 0, gross: 5000.00, rsi: 675.00, tax: 441.00, net: 3884.00) known 2025-09-05 "C-D20 row 2025-08"
+  slip[2025-09] = (paid: 2025-10-02, cls: class2, hours: 16, gross: 5624.00, rsi: 759.24, tax: 571.00, net: 4293.76) known 2025-10-02 "C-D20 row 2025-09"
+  slip[2025-10] = ?"Jan's payslip for October 2025 (lost)" known 2025-11-05 "story: the payslip for October 2025 is lost"
+  slip[2025-11] = (paid: 2025-12-05, cls: class2, hours: 12, gross: 5468.00, rsi: 738.18, tax: 537.00, net: 4192.82) known 2025-12-05 "C-D20 row 2025-11"
+  slip[2025-12] = (paid: 2026-01-05, cls: class2, hours: 2, gross: 5078.00, rsi: 685.53, tax: 458.00, net: 3934.47) known 2026-01-05 "C-D20 row 2025-12"
+  slip[2026-01] = (paid: 2026-02-05, cls: class2, hours: 9, gross: 5351.00, rsi: 722.38, tax: 513.00, net: 4115.62) known 2026-02-05 "C-D20 row 2026-01"
+  slip[2026-02] = (paid: 2026-03-05, cls: class2, hours: 6, gross: 5234.00, rsi: 706.59, tax: 489.00, net: 4038.41) known 2026-03-05 "C-D20 row 2026-02"
+  slip[2026-03] = (paid: 2026-04-03, cls: class2, hours: 8, gross: 5312.00, rsi: 717.12, tax: 492.00, net: 4102.88) known 2026-04-03 "C-D20 row 2026-03"
+  slip[2026-04] = (paid: 2026-05-05, cls: class2, hours: 10, gross: 5552.50, rsi: 749.59, tax: 543.00, net: 4259.91) known 2026-05-05 "C-D20 row 2026-04"
+  slip[2026-05] = (paid: 2026-06-05, cls: class2, hours: 4, gross: 5311.00, rsi: 716.98, tax: 492.00, net: 4102.02) known 2026-06-05 "C-D20 row 2026-05"
+  slip[2026-06] = (paid: 2026-07-03, cls: class2, hours: 7, gross: 5431.75, rsi: 733.29, tax: 516.00, net: 4182.46) known 2026-07-03 "C-D20 row 2026-06"
+  slip[2026-07] = (paid: 2026-08-05, cls: class2, hours: 3, gross: 5270.75, rsi: 711.55, tax: 483.00, net: 4076.20) known 2026-08-05 "C-D20 row 2026-07"
+  slip[2026-08] = (paid: 2026-09-04, cls: class2, hours: 0, gross: 5150.00, rsi: 695.25, tax: 459.00, net: 3995.75) known 2026-09-04 "C-D20 row 2026-08"
+
+def paid_in[m in month, y in rv_year]: bool
+  note "the pay of month m is paid in tax year y: it is paid in the next month (C-D14 .2: on the 5th of the next month, or the Rosvald business day before), and Jan works from his first day in Ostrel (C-D14)"
+  rule base = m >= month_of(log_from) and m + 1 >= month_of(start_of(y)) and m + 1 < month_of(end_of(y))
+
+def seen_net[m in month]: money FLR
+  note "the net the Lazur floren side shows for the pay of month m (its row's text 'Lohn MM/YYYY')"
+  rule base = sum(lf[d, s].cr for d in day, s in seq where d > end_of(m) - 1 day and d < end_of(m + 1) and lf[d, s] != none and lf[d, s].k == l_pay and lf[d, s].m == m)
+
+def seen_paid[m in month]: date
+  note "the day the Lazur floren side shows the pay of month m"
+  rule base = first(d in day where d > end_of(m) - 1 day and d < end_of(m + 1) and any(lf[d, s] != none and lf[d, s].k == l_pay and lf[d, s].m == m for s in seq))
+
+def cls_on[p in day]: key rv_class
+  note "RWT-4 .1, .2: class 2 for a payment paid after the day the tax year's class notice reached the employer; class 1 otherwise"
+  rule c1 = class1
+  rule c2 beats c1 = notice_cls[rvy[p]] when p > notice_in[rvy[p]]
+
+def rvy[p in day]: key rv_year
+  note "RWT-1 .2: the tax year in which a payment is paid"
+  rule base = first(y in rv_year where p >= start_of(y) and p < end_of(y))
+
+def rsi_of[m in month, g in hours_ix]: money FLR
+  note "RSI-2 .1: 13.50 % of the gross, up to the ceiling of the calendar year of payment, to the cent, half to even (RGP-2 .1); the gross with g hours of overtime, paid on the day the Lazur row shows"
+  rule base = round(rsi_rate * min(gross_h[m, g], rsi_ceil[year_of(seen_paid[m])]), minor(FLR), half-even)
+
+def gross_h[m in month, g in hours_ix]: money FLR
+  note "C-D14 .1: base pay and overtime in whole hours"
+  rule base = base_pay[m] + ot_rate[m] * g
+
+def taxable_h[m in month, g in hours_ix]: money FLR
+  note "RWT-3 .2: gross less the contribution less the class's monthly allowance, rounded down to a whole 10 FLR, never below 0"
+  rule base = max(0 FLR, round(gross_h[m, g] - rsi_of[m, g] - rwt_allow[cls_on[seen_paid[m]], rvy[seen_paid[m]]], rwt_step, floor))
+
+def tax_h[m in month, g in hours_ix]: money FLR
+  note "RWT-3 .3: 10 % to RWT-EDGE1, 24 % to RWT-EDGE2, 38 % above, of the tax year of payment; rounded down to a whole floren"
+  rule base = round(rwt_r1 * min(taxable_h[m, g], rwt_edge1[rvy[seen_paid[m]]]) + rwt_r2 * max(0 FLR, min(taxable_h[m, g], rwt_edge2[rvy[seen_paid[m]]]) - rwt_edge1[rvy[seen_paid[m]]]) + rwt_r3 * max(0 FLR, taxable_h[m, g] - rwt_edge2[rvy[seen_paid[m]]]), 1, floor)
+
+def net_h[m in month, g in hours_ix]: money FLR = gross_h[m, g] - rsi_of[m, g] - tax_h[m, g]
+
+def lost_hours[m in month]: int
+  note "the least whole number of overtime hours whose net is the net the Lazur row shows (an inverse, L §5.11)"
+  rule base = min(g for g in hours_ix where net_h[m, g] == seen_net[m])
+
+def pay_gross[m in month]: money FLR
+  note "the gross of the pay for month m: the payslip's, or for the lost slip the one the Lazur net gives"
+  rule slip = slip[m].gross
+  rule lost beats slip = gross_h[m, lost_hours[m]] when m == lost_slip
+
+def pay_rsi[m in month]: money FLR
+  rule slip = slip[m].rsi
+  rule lost beats slip = rsi_of[m, lost_hours[m]] when m == lost_slip
+
+def pay_tax[m in month]: money FLR
+  rule slip = slip[m].tax
+  rule lost beats slip = tax_h[m, lost_hours[m]] when m == lost_slip
+
+def pay_net[m in month]: money FLR
+  rule slip = slip[m].net
+  rule lost beats slip = seen_net[m] when m == lost_slip
+
+def pay_day[m in month]: date
+  rule slip = slip[m].paid
+  rule lost beats slip = seen_paid[m] when m == lost_slip
+
+def pay_class[m in month]: key rv_class
+  rule slip = slip[m].cls
+  rule lost beats slip = cls_on[seen_paid[m]] when m == lost_slip
+
+def in_rv[d in day]: bool
+  note "RWT-5 .1: a day on which Jan was in Rosvald at any time: his log from its first day, the story before it"
+  rule log = night[d].rv
+  rule before beats log = rv_before_log[d] when d < log_from
+
+def presence[y in rv_year]: int
+  note "RWT-5 .1: the days of presence in the tax year"
+  rule base = count(d in day where d >= start_of(y) and d < end_of(y) and in_rv[d])
+
+def yr_gross[y in rv_year]: money FLR = sum(pay_gross[m] for m in month where paid_in[m, y])
+
+def yr_rsi[y in rv_year]: money FLR = sum(pay_rsi[m] for m in month where paid_in[m, y])
+
+def yr_withheld[y in rv_year]: money FLR = sum(pay_tax[m] for m in month where paid_in[m, y])
+
+def yr_class[y in rv_year]: key rv_class
+  note "RWT-6 .2: the worker's class on the year's last day"
+  rule base = cls_on[end_of(y) - 1 day]
+
+def yr_taxable[y in rv_year]: money FLR
+  note "RWT-6 .2: the year's gross less the year's contributions less 12 times the monthly allowance of the class on the year's last day, rounded down to a whole 10 FLR, never below 0"
+  rule base = max(0 FLR, round(yr_gross[y] - yr_rsi[y] - lifted[twelve] * rwt_allow[yr_class[y], y], rwt_step, floor))
+
+def yr_tax[y in rv_year]: money FLR
+  note "RWT-6 .3: RWT-3 .3 with each edge taken 12 times, rounded down to a whole floren"
+  rule base = round(rwt_r1 * min(yr_taxable[y], lifted[twelve] * rwt_edge1[y]) + rwt_r2 * max(0 FLR, min(yr_taxable[y], lifted[twelve] * rwt_edge2[y]) - lifted[twelve] * rwt_edge1[y]) + rwt_r3 * max(0 FLR, yr_taxable[y] - lifted[twelve] * rwt_edge2[y]), 1, floor)
+
+def yr_refund[y in rv_year]: money FLR
+  note "RWT-6 .1, .4: what the assessment gives: the tax withheld less the yearly tax (positive: refunded within 14 days of the decision; negative: payable within 30 days); none where the days of presence are under 183, since then no claim may be made"
+  rule base = yr_withheld[y] - yr_tax[y] when presence[y] >= rwt_presence_min
+  rule short = none when presence[y] < rwt_presence_min
+
+def refund_seen[y in rv_year]: money FLR
+  note "the refund the Lazur floren side shows from the RTB for the tax year (the row's text names it)"
+  rule base = sum(lf[d, s].cr for d in day, s in seq where d >= rtb_claimed[y] and lf[d, s] != none and lf[d, s].k == l_rtb)

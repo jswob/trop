@@ -1,0 +1,57 @@
+part benefit
+  tally 2
+  note "The child benefit (FAM-1): the claims Ania sent for Zosia (A-D16), the day each counts as filed under the axis fam1_filed (FAM-1 leaves it open), the month each claim gives the benefit from, and each month's amount, the birth month prorated by days and rounded down to the ort (FAM-1 .4)."
+  note "The FBO's decision (A-D17, known 2023-09-14) settles the reading; A-04 asks as known 2023-08-31, before it, so both readings stand."
+
+index bclaim: open
+  note "the benefit claims, one key per claim form"
+
+input claim_child[k in bclaim]: key child question "For which child is this claim?"
+
+input claim_period[k in bclaim]: key benefit_period question "For which benefit period is this claim?"
+
+input claim_posted[k in bclaim]: date question "When was this claim posted by registered post?"
+
+input claim_received[k in bclaim]: date question "When did the FBO receive this claim?"
+
+def benefit[c in child, m in month]: money DUK at start_of(m)
+  note "what the claims give for child c in month m: a claim covers the months of its period from its from_month"
+  rule base = sum(due_month[c, m] for k in bclaim where claim_child[k] == c and start_of(m) >= start_of(claim_period[k]) and start_of(m) < end_of(claim_period[k]) and m >= from_month[k])
+
+def born_in_period[k in bclaim]: bool = born[claim_child[k]] >= start_of(claim_period[k]) and born[claim_child[k]] < end_of(claim_period[k]) at reader
+
+def due_month[c in child, m in month]: money DUK at start_of(m)
+  note "FAM-1 .1, .4: the monthly amount for a child under 18; the birth month prorated by its days from the birth, rounded down to the ort"
+  rule birth_month beats none = round(fam1_amount * overlap_days(born[c], add_days(end_of(m), -1), m) / days_between(start_of(m), end_of(m)), minor(DUK), down) when month_of(born[c]) == m
+  rule full beats none = fam1_amount when born[c] < start_of(m) and age(born[c], start_of(m)) < fam1_age
+  rule none = 0
+
+def filed_day[k in bclaim]: date at reader
+  note "the day the claim is filed: FAM-1 doesn't say whether a claim sent by registered post is filed when posted or when received"
+  rule posted = claim_posted[k] when fam1_filed == posted
+  rule received = claim_received[k] when fam1_filed == received
+
+def from_month[k in bclaim]: month at reader
+  note "FAM-1 .2: a claim filed by 30 April before the period gives the benefit from June, a later claim from the month filed; .3: for a child born during the period, a claim within 3 months of the birth (GEN-3 .1, .3) gives it from the birth month, a later one from the month filed"
+  rule birth beats filed, june = month_of(born[claim_child[k]]) when born_in_period[k] and filed_day[k] <= add_months(born[claim_child[k]], fam1_birth_months)
+  rule filed = month_of(filed_day[k])
+  rule june beats filed = month_of(start_of(claim_period[k])) when filed_day[k] <= fam1_file_by[claim_period[k]]
+
+version claims_posted
+  cite a_d16
+  governs always
+  known 2023-07-27
+  claim_child[c2022] = zosia "A-D16: claim 1, for Zofia Lis, born 27 April 2023"
+  claim_child[c2023] = zosia "A-D16: claim 2, for Zofia Lis"
+  claim_period[c2022] = 2022 "A-D16: claim 1, for the benefit period June 2022 – May 2023"
+  claim_period[c2023] = 2023 "A-D16: claim 2, for the benefit period June 2023 – May 2024"
+  claim_posted[c2022] = 2023-07-27 "A-D16: registered-post receipt, posted 27 July 2023, 17:42"
+  claim_posted[c2023] = 2023-07-27 "A-D16: registered-post receipt, posted 27 July 2023, 17:42"
+
+version claims_received
+  cite a_d16
+  governs always
+  known 2023-07-31
+  assumed "the FBO's stamp on the copy returned with its acknowledgement reads 31.07.2023; the copy came back on some day after it, and the stamp's day is taken as the day it was known"
+  claim_received[c2022] = 2023-07-31 "A-D16: stamp of the FBO, received 31.07.2023"
+  claim_received[c2023] = 2023-07-31 "A-D16: stamp of the FBO, received 31.07.2023"

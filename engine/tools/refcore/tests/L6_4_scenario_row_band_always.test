@@ -1,0 +1,42 @@
+# MC-X-F12 (writer 9), a scenario's expression row (L §6.4: "evaluated at the row's keys and law date"; it "reads
+# inputs, bands and defs"): k, which the scenario declares, has one row governing always, `hh.rate(3)`, and rate's
+# table governs always, so k reads nothing law-dated and r needs no at (L §4.3 rule 2; L §6.4 "A row of an input the
+# scenario declares may govern always (it then needs no law date, §4.3)"). rate(3) = 400.00 PLN. snap12: REFCORE-NOT-YET
+# (the interpreter guard on every band read with no law date).
+=== base.tally
+model hh
+  tally 2
+  on 2027-12-31
+  start 2027-01-01
+  end 2027-12-31
+
+unit PLN: currency minor 0.01
+source act "the act"
+
+band rate(a: int): money PLN
+
+version v_act
+  cite act
+  governs always
+  known 2026-12-01
+  rate: [0, 6) = 400.00 PLN "under 6"
+  rate: [6, 18) = 250.00 PLN "6 to 17"
+=== s.tally
+scenario s over hh
+  tally 2
+  from 2027-01-01
+
+input k: money PLN
+def r: money PLN = k
+
+version vs
+  cite act
+  governs always
+  known 2026-12-01
+  k = hh.rate(3) "linked"
+
+ask q: r in s
+=== expect
+q: 400.00 PLN
+  world: s
+  cut 2027-12-31

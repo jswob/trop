@@ -1,0 +1,38 @@
+model life04
+  tally 2
+  on 2026-10-25
+  start 2025-01-01
+  end 2025-12-31
+  note "Probe LIFE-04: a running benefit raised by law mid-year; each month reads the amount in force."
+  note "The award and the act are the card's stipulations, both known from start (L 4.5), so the act can't replace the award's row (a replace needs an earlier-known row, L 4.6 step 2); the act brings a rule that beats the award from its commencement (L 5.11 step 2, a rule with v exists only where its version governs)."
+
+source card "Probe card LIFE-04 (tmp/cases/probes/life/LIFE-04.md): story, rule 1 and question"
+
+unit DUK: currency minor 0.01
+
+index mo = month 2025-01..2025-12
+
+input award: money DUK question "What monthly benefit was Halina awarded?"
+
+input raised: money DUK question "To what monthly amount does the act raise running benefits?"
+
+def monthly[m in mo]: money DUK at start_of(m)
+  note "rule 1: a running benefit is recalculated from the date the law raises it"
+  rule awarded v card_award = award
+  rule raised_by_act beats awarded v card_act = raised
+
+ask total_2025: sum(monthly[m] for m in mo)
+
+version card_act
+  cite card
+  governs 2025-09-01..
+  known 2025-01-01
+  note "the act: running benefits raised from 1 September 2025"
+  raised = 1100 "story: an act raises running benefits to 1 100.00 from 1 September 2025"
+
+version card_award
+  cite card
+  governs 2025
+  known 2025-01-01
+  note "Halina's award, through 2025"
+  award = 1000 "story: Halina receives a benefit of 1 000.00 DUK a month through 2025"

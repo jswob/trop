@@ -1,0 +1,12 @@
+scenario inpath over rule09
+  tally 2
+  from 2025-01-01
+  note "RULE-09 part b: D-3 written inside one path's run. Each path draws one of the forecast's runs; a share over paths outside an ask is LOAD-ASKONLY (L 5.16), so this scenario is refused at load and the reality still runs (L 8.3)."
+
+def path_run: dist = discrete(1 for k in runs)
+
+def ruined_on_path: bool = runs_dry[path_run]
+
+def stop_in_path: bool = share(ruined_on_path) > limit
+
+ask q_b: stop_in_path in inpath law 2025-01-01 paths 5 seed 1

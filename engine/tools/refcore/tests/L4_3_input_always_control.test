@@ -1,0 +1,29 @@
+# MC-X-F12 control (writer 9): L §4.3 rule 2, "an input whose rows all govern `always` ... is read without one,
+# by a def as by a move". base governs always: r needs no at, q = 400.00 PLN.
+=== m.tally
+model f12b
+  tally 2
+  on 2027-12-31
+  start 2027-01-01
+  end 2027-12-31
+  note "MC-X-F12 control: the same with an input whose row governs always (L 4.3 rule 2: read without a law date)."
+
+unit PLN: currency minor 0.01
+
+source act "the act"
+
+
+input base: money PLN
+
+def r[m in months]: money PLN = base
+
+ask q: r[2027-05]
+
+version v_act
+  cite act
+  governs always
+  known 2026-12-01
+  base = 400.00 PLN "the base"
+=== expect
+q: 400.00 PLN
+  cut 2027-12-31

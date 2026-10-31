@@ -1,0 +1,5 @@
+part asks_a07
+  tally 1
+  note "A-07 · Selling the car (questions.md): as of 2024-12-31, known as of 2024-08-25. It fans out over the axis cc1_refund (by_time, by_balance): CC-1 doesn't say how the commission is refunded."
+
+ask a07: car_left as known 2024-08-25

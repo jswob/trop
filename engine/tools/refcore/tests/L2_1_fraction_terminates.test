@@ -1,0 +1,22 @@
+# L §2.1: fractions "allowed only in rows and only when the value doesn't terminate as a decimal";
+# L §8.3 LOAD-PRECISION: "<a/b> terminates; write it as a decimal".
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "a source"
+
+input f: num
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  f = 1/4
+
+ask q1: f
+=== expect
+refused: LOAD-PRECISION ...

@@ -1,0 +1,12 @@
+q_parts (p = ania_tomek): 0.00 DUK
+  cut 2026-10-30
+q_parts (p = ania): 166.66 DUK
+  cut 2026-10-30
+q_parts (p = tomek): 333.34 DUK
+  cut 2026-10-30
+q_took (o = bank_rows[r4], p = ania_tomek): 100.00 DUK
+  cut 2026-10-30
+q_took (o = bank_rows[r4], p = ania): 166.67 DUK
+  cut 2026-10-30
+q_took (o = bank_rows[r4], p = tomek): 333.33 DUK
+  cut 2026-10-30

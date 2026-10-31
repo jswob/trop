@@ -1,0 +1,27 @@
+Bank Olcha S.A.|account statement
+Account|LN73 4400 2011 0000 8817 2264 0001
+Holder|HALINA SOWA
+Period|20260201|20260228
+Opening balance|11 553,41
+Date|Type|Counterparty|Title|Amount|Balance after
+20260203|CASH|ATM Olcha Brzezie|cash withdrawal|-500,00|11 053,41
+20260205|CREDIT|Social Insurance Office|survivor pension 02/2026|4 492,02|15 545,43
+20260205|STANDING ORDER|WM Ogrodowa 2|fee Ogrodowa 2/11 02/2026|-468,00|15 077,43
+20260209|CREDIT|Oskar Wilczek|rent 02/2026 Ogrodowa 2/11|1 900,00|16 977,43
+20260209|CREDIT|Oskar Wilczek|rent 02/2026 Ogrodowa 2/11|1 900,00|16 977,43
+20260212|CARD|Apteka Rumianek|card ...2264|-101,64|16 875,79
+20260214|CARD|Sklep Pod Lipą|card ...2264|-45,61|16 830,18
+20260215|CARD|Drogeria Konwalia|card ...2264|-116,28|16 713,90
+20260215|CARD|Sklep Pod Lipą|card ...2264|-192,05|16 521,85
+20260216|STANDING ORDER|Volta Energia|Leśna 4 energy 02/2026|-385,00|16 136,85
+20260217|CASH|ATM Olcha Brzezie|cash withdrawal|-500,00|15 636,85
+20260217|CARD|Sklep Pod Lipą|card ...2264|-191,23|15 445,62
+20260217|CARD|Warzywniak u Janka|card ...2264|-140,69|15 304,93
+20260218|TRANSFER|Termo-Kłodzin sp.|invoice FV/2026/0216 Ogrodowa 2/11 boiler|-6 840,00|8 464,93
+20260220|STANDING ORDER|Telekom Lenia|phone 02/2026|-59,00|8 405,93
+20260220|CARD|Stacja Olcha-Paliwa|card ...2264|-129,45|8 276,48
+20260225|TRANSFER|Opieka Dom sp.|home help 02/2026|-2 150,00|6 126,48
+20260226|CARD|Apteka Rumianek|card ...2264|-193,05|5 933,43
+20260228|CARD|Drogeria Konwalia|card ...2264|-191,66|5 741,77
+20260228|CARD|Apteka Rumianek|card ...2264|-129,30|5 612,47
+Closing balance|5 612,47

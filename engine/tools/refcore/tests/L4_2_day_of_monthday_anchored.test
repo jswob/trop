@@ -1,0 +1,27 @@
+# GD-2 (round 19): L §4.2 day_of(y, md): "Of a key of an anchored year index it is refused as `day_of(m, n)` of an
+# anchored key is", at load where load sees the index (LOAD-DOMAIN, L §8.3 round 19: "`day_of` or `schedule` of a key
+# of an anchored index").
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+index yrs = year 2026..2027
+input file_by: monthday
+input other: monthday
+index fy = year 2026..2027 from 04-06
+def d[y in fy]: date = day_of(y, file_by)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  file_by = 04-30
+  other = 04-30
+ask q: d[2026]
+=== expect
+refused: LOAD-DOMAIN day_of of a key of the anchored index fy has no meaning (m.tally:13)

@@ -1,0 +1,69 @@
+# L §6.5 change 1 without its line pay_dom[ben_cogs] = 10: "the base's row covers only the jobs known when it was
+# stated (§6.2)", and L §4.6 step 1 (a key a row leaves unstated is one its kind had on the row's known date):
+# pay_dom[ben_cogs] is a hole (HOLE-UNGOVERNED, no time key: "x at k: no value at <law date>").
+=== household.tally
+model household
+  tally 2
+  on 2029-12-31
+  start 2026-01-01
+  end 2040-12-31
+
+source household "the household's own records"
+unit PLN: currency minor 0.01
+index instalments = [equal, decreasing]
+index overpay_choices = [shorter, lower]
+index pit_brackets = [low, high]
+index countries = [pl, de]
+
+kind persons
+kind jobs
+kind loans
+
+input loan_terms[l in loans]: (principal money PLN, months int, plan key instalments)
+input overpay[l in loans, m in months]: (amount money PLN, choice key overpay_choices)
+input parent[c in persons, k in persons]: bool
+input pay_dom[j in jobs]: int
+input pit_free: money PLN
+input pit_rate[b in pit_brackets]: num
+input residence[p in persons, m in months]: key countries
+input salary[j in jobs, m in months]: money PLN question "Ile wynosi pensja brutto z tej pracy w tym miesiącu?"
+input works_for[j in jobs]: key persons
+
+version home_2026
+  cite household
+  governs 2026-10..
+  known 2026-10-19
+  persons + [ana] lives 1990-04-02..
+  persons + [ben] lives 1988-11-30..
+  jobs + [ana_acme] lives 2020-02-01..
+  jobs + [ben_bolt] lives 2021-09-01..
+  parent = false "brak dzieci"
+  pay_dom = 10 "umowy o pracę, § 5"
+  residence = pl "meldunek w Krakowie"
+  works_for[ana_acme] = ana
+  works_for[ben_bolt] = ben
+=== change1.tally
+part change1
+  tally 2
+
+source cogs_contract "Umowa o pracę Bena z Cogs sp. z o.o., 2028-02-10"
+
+version ben_cogs_job
+  cite cogs_contract
+  governs 2028-03..
+  known 2028-02-10
+  jobs + [ben_cogs] lives 2028-03-01..
+  replace jobs + [ben_bolt] lives 2021-09-01..2028-02-29
+  salary[ben_cogs] = 8 200.00 PLN "§ 3"
+  works_for[ben_cogs] = ben
+
+ask q1: salary[ben_cogs, 2028-03]
+ask q2: ben_bolt in jobs on 2028-02-29, ben_bolt in jobs on 2028-03-01, (ben_cogs in jobs on 2028-03-01)
+ask q3: pay_dom[ben_bolt], pay_dom[ben_cogs] law 2028-03-10
+=== expect q1 q2 q3
+q1: 8 200.00 PLN
+  cut 2029-12-31
+q2: (true, false, true)
+  cut 2029-12-31
+q3: (10, ?"pay_dom at ben_cogs: no value at 2028-03-10" (pay_dom[ben_cogs]))
+  law date 2028-03-10, cut 2029-12-31

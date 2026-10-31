@@ -1,0 +1,43 @@
+# Fault f_before's twin (writer 6): without `before`, observations and plans come first (L §5.14.2 "Observations and
+# plans come first, since they read nothing running"), so sweep reads konto after wage: max(0, 1 PLN) = 1.00 PLN, and
+# its register lists wage.
+=== f_after.tally
+model fbefore
+  tally 2
+  on 2026-01-31
+  start 2026-01-01
+  end 2026-01-31
+
+source s "synthetic"
+
+unit PLN: currency minor 0.01
+
+place world: outside lives 2026-01-01..
+
+place konto: accounts PLN lives 2026-01-01..
+
+place save: accounts PLN lives 2026-01-01..
+
+input day: date
+
+move sweep: transfers
+  on day
+  reads konto
+  leg cash from konto to save amount max(0, bal(konto))
+
+move wage: transfers
+  on day
+  leg cash from world to konto amount 1 PLN
+
+ask q: flows(sweep, 2026-01-15) law 2026-01-31
+
+version v1
+  cite s
+  governs always
+  known 2026-01-01
+  day = 2026-01-15 "row"
+=== expect
+q: 1.00 PLN
+  unfulfilled: sweep
+  unfulfilled: wage
+  law date 2026-01-31, cut 2026-01-31

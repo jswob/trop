@@ -1,0 +1,23 @@
+# L §4.2: "A day in added may be a hole or a window ... every day known but one"; L §8.1 HOLE-CALENDAR: "an added
+# day that is a hole or a window decides the result", its question "the added day's question".  A Monday that is
+# otherwise a business day may be the added day: a hole; a Saturday is no business day whatever the added day is.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+input len: calendar
+
+version v
+  cite s
+  governs 2026
+  known 2025-12-01
+  len = calendar(weekends [sat, sun], added [?"which day is the bridge day?"])
+
+ask q1: is_business(2026-03-02, len), is_business(2026-03-07, len)
+=== expect
+q1: (?"which day is the bridge day?" (len), false)
+  cut 2026-12-31

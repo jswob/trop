@@ -1,0 +1,48 @@
+chk_165: ok
+  assumed: the step on which the distribution of S in question 165 is read: both loss amounts and the deductible are whole numbers, and any step that divides them gives the same result (h165)
+  law date 2026-10-18, cut 2026-10-18
+chk_289: ok
+  law date 2026-10-18, cut 2026-10-18
+q164_key: b
+  law date 2026-10-18, cut 2026-10-18
+q164_lamstar: 15
+  law date 2026-10-18, cut 2026-10-18
+q164_m2: 4 500 XXX^2
+  law date 2026-10-18, cut 2026-10-18
+q164_var: 67 500 XXX^2
+  law date 2026-10-18, cut 2026-10-18
+q165_es: 2.8 XXX
+  law date 2026-10-18, cut 2026-10-18
+q165_fs (s = 0): (1, ≈ 0.135335283236613 ± 0.0000000000000005)
+  assumed: the step on which the distribution of S in question 165 is read: both loss amounts and the deductible are whole numbers, and any step that divides them gives the same result (h165)
+  law date 2026-10-18, cut 2026-10-18
+q165_fs (s = 1): (1.2, ≈ 0.1624023398839356 (0.162402339883936) ± 0.0000000000000006)
+  assumed: the step on which the distribution of S in question 165 is read: both loss amounts and the deductible are whole numbers, and any step that divides them gives the same result (h165)
+  law date 2026-10-18, cut 2026-10-18
+q165_fs (s = 2): (1.52, ≈ 0.20570963051965176 (0.205709630519652) ± 0.00000000000000076)
+  assumed: the step on which the distribution of S in question 165 is read: both loss amounts and the deductible are whole numbers, and any step that divides them gives the same result (h165)
+  law date 2026-10-18, cut 2026-10-18
+q165_key [ded_basis = *]: a
+  assumed: the step on which the distribution of S in question 165 is read: both loss amounts and the deductible are whole numbers, and any step that divides them gives the same result (h165)
+  law date 2026-10-18, cut 2026-10-18
+q165_pay [ded_basis = aggregate, disp = *]: (≈ 0.73652015999736196 (0.736520159997362) XXX ± 0.0000000000000035 XXX, 0.7365 XXX)
+  assumed: the step on which the distribution of S in question 165 is read: both loss amounts and the deductible are whole numbers, and any step that divides them gives the same result (h165)
+  reading: ded_basis = aggregate
+  law date 2026-10-18, cut 2026-10-18
+q165_pay [ded_basis = per_loss, disp = *]: (0 XXX, 0 XXX)
+  reading: ded_basis = per_loss
+  law date 2026-10-18, cut 2026-10-18
+q289_key: d
+  law date 2026-10-18, cut 2026-10-18
+q289_six [disp = *]: (≈ 1347589399817/35156250000000 (0.0383314318170169) ± 0.0000000000000029, 0.03833)
+  law date 2026-10-18, cut 2026-10-18
+q289_total [disp = half-up]: (≈ 1347589399817/22500000000000 (0.0598928622140889) ± 0.0000000000000045, 5.99)
+  reading: disp = half-up
+  law date 2026-10-18, cut 2026-10-18
+q289_total [disp = down]: (≈ 1347589399817/22500000000000 (0.0598928622140889) ± 0.0000000000000045, 5.98)
+  reading: disp = down
+  law date 2026-10-18, cut 2026-10-18
+q289_two [disp = *]: (≈ 0.021561430397072 ± 0.0000000000000016, 0.02156)
+  law date 2026-10-18, cut 2026-10-18
+q531_var: 40 claimant^2
+  law date 2026-10-18, cut 2026-10-18

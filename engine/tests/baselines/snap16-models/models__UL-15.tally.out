@@ -1,0 +1,323 @@
+q01_doplata (e = ex_a) [ul15_hypo = apart]: ?"Did this payer reduce each advance by 1/12 of the kwota zmniejszająca podatek (PIT-2 statement, art. 32 ust. 3 pkt 5; for a pension, the organ rentowy)?" (pit2[ex_a, job1], pit2[ex_a, job2]) ?"What advance did this payer collect in this month of January-June 2022? The rolowanie regulation (the lower of the advance under the 2022 and the 2021 rules) is not in the sources." (adv_raw[ex_a, job1, 2022-01], adv_raw[ex_a, job1, 2022-02], adv_raw[ex_a, job1, 2022-03], adv_raw[ex_a, job1, 2022-04], adv_raw[ex_a, job1, 2022-05], adv_raw[ex_a, job1, 2022-06], adv_raw[ex_a, job2, 2022-01], adv_raw[ex_a, job2, 2022-02], adv_raw[ex_a, job2, 2022-03], adv_raw[ex_a, job2, 2022-04], adv_raw[ex_a, job2, 2022-05], adv_raw[ex_a, job2, 2022-06]) ?"What share of the gross pay are the employee's social insurance contributions (emerytalne, rentowe, chorobowe) that the employer deducts (art. 26 ust. 1 pkt 2; art. 32 ust. 2)?" (zus_rate)
+  assumed: the page gives monthly amounts with no months named; each source is taken as paid in all twelve months of 2022 (full_year[ex_a, job1], full_year[ex_a, job2])
+  assumed: the page names no commuting, so each employer is taken to apply the basic costs (commuter[ex_a, job1], commuter[ex_a, job2])
+  assumed: the page says 'zarabia 3 tys. zł'; the amounts are taken as gross pay (gross[ex_a])
+  reading: ul15_hypo = apart
+  law date 2022-12-31, cut 2026-10-18
+q01_doplata (e = ex_a) [ul15_hypo = netted]: ?"Did this payer reduce each advance by 1/12 of the kwota zmniejszająca podatek (PIT-2 statement, art. 32 ust. 3 pkt 5; for a pension, the organ rentowy)?" (pit2[ex_a, job1], pit2[ex_a, job2]) ?"What advance did this payer collect in this month of January-June 2022? The rolowanie regulation (the lower of the advance under the 2022 and the 2021 rules) is not in the sources." (adv_raw[ex_a, job1, 2022-01], adv_raw[ex_a, job1, 2022-02], adv_raw[ex_a, job1, 2022-03], adv_raw[ex_a, job1, 2022-04], adv_raw[ex_a, job1, 2022-05], adv_raw[ex_a, job1, 2022-06], adv_raw[ex_a, job2, 2022-01], adv_raw[ex_a, job2, 2022-02], adv_raw[ex_a, job2, 2022-03], adv_raw[ex_a, job2, 2022-04], adv_raw[ex_a, job2, 2022-05], adv_raw[ex_a, job2, 2022-06]) ?"What is the ulga dla pracowników of art. 26 ust. 1 pkt 2aa and ust. 4a-4c, in the wording of Dz.U. 2021 poz. 2105 in force on 30 June 2022, on this person's 2022 employment revenue? That text is not among the case's sources." (ulga_prac[ex_a]) ?"What share of the gross pay are the employee's social insurance contributions (emerytalne, rentowe, chorobowe) that the employer deducts (art. 26 ust. 1 pkt 2; art. 32 ust. 2)?" (zus_rate)
+  assumed: the page gives monthly amounts with no months named; each source is taken as paid in all twelve months of 2022 (full_year[ex_a, job1], full_year[ex_a, job2])
+  assumed: the page names no commuting, so each employer is taken to apply the basic costs (commuter[ex_a, job1], commuter[ex_a, job2])
+  assumed: the page says 'zarabia 3 tys. zł'; the amounts are taken as gross pay (gross[ex_a])
+  pinned: wording wording_day for [pit_kz, pit_r1, pit_r2, pit_scale, pit_t2, ulga_prac] = 2022-06-30
+  reading: ul15_hypo = netted
+  law date 2022-12-31, cut 2026-10-18
+q01_doplata (e = ex_b) [ul15_hypo = apart]: ?"Did this payer reduce each advance by 1/12 of the kwota zmniejszająca podatek (PIT-2 statement, art. 32 ust. 3 pkt 5; for a pension, the organ rentowy)?" (pit2[ex_b, job1], pit2[ex_b, job2]) ?"What advance did this payer collect in this month of January-June 2022? The rolowanie regulation (the lower of the advance under the 2022 and the 2021 rules) is not in the sources." (adv_raw[ex_b, job1, 2022-01], adv_raw[ex_b, job1, 2022-02], adv_raw[ex_b, job1, 2022-03], adv_raw[ex_b, job1, 2022-04], adv_raw[ex_b, job1, 2022-05], adv_raw[ex_b, job1, 2022-06], adv_raw[ex_b, job2, 2022-01], adv_raw[ex_b, job2, 2022-02], adv_raw[ex_b, job2, 2022-03], adv_raw[ex_b, job2, 2022-04], adv_raw[ex_b, job2, 2022-05], adv_raw[ex_b, job2, 2022-06]) ?"What share of the gross pay are the employee's social insurance contributions (emerytalne, rentowe, chorobowe) that the employer deducts (art. 26 ust. 1 pkt 2; art. 32 ust. 2)?" (zus_rate)
+  assumed: the page gives monthly amounts with no months named; each source is taken as paid in all twelve months of 2022 (full_year[ex_b, job1], full_year[ex_b, job2])
+  assumed: the page names no commuting, so each employer is taken to apply the basic costs (commuter[ex_b, job1], commuter[ex_b, job2])
+  assumed: the page says 'zarabia 3 tys. zł'; the amounts are taken as gross pay (gross[ex_b])
+  reading: ul15_hypo = apart
+  law date 2022-12-31, cut 2026-10-18
+q01_doplata (e = ex_b) [ul15_hypo = netted]: ?"Did this payer reduce each advance by 1/12 of the kwota zmniejszająca podatek (PIT-2 statement, art. 32 ust. 3 pkt 5; for a pension, the organ rentowy)?" (pit2[ex_b, job1], pit2[ex_b, job2]) ?"What advance did this payer collect in this month of January-June 2022? The rolowanie regulation (the lower of the advance under the 2022 and the 2021 rules) is not in the sources." (adv_raw[ex_b, job1, 2022-01], adv_raw[ex_b, job1, 2022-02], adv_raw[ex_b, job1, 2022-03], adv_raw[ex_b, job1, 2022-04], adv_raw[ex_b, job1, 2022-05], adv_raw[ex_b, job1, 2022-06], adv_raw[ex_b, job2, 2022-01], adv_raw[ex_b, job2, 2022-02], adv_raw[ex_b, job2, 2022-03], adv_raw[ex_b, job2, 2022-04], adv_raw[ex_b, job2, 2022-05], adv_raw[ex_b, job2, 2022-06]) ?"What is the ulga dla pracowników of art. 26 ust. 1 pkt 2aa and ust. 4a-4c, in the wording of Dz.U. 2021 poz. 2105 in force on 30 June 2022, on this person's 2022 employment revenue? That text is not among the case's sources." (ulga_prac[ex_b]) ?"What share of the gross pay are the employee's social insurance contributions (emerytalne, rentowe, chorobowe) that the employer deducts (art. 26 ust. 1 pkt 2; art. 32 ust. 2)?" (zus_rate)
+  assumed: the page gives monthly amounts with no months named; each source is taken as paid in all twelve months of 2022 (full_year[ex_b, job1], full_year[ex_b, job2])
+  assumed: the page names no commuting, so each employer is taken to apply the basic costs (commuter[ex_b, job1], commuter[ex_b, job2])
+  assumed: the page says 'zarabia 3 tys. zł'; the amounts are taken as gross pay (gross[ex_b])
+  pinned: wording wording_day for [pit_kz, pit_r1, pit_r2, pit_scale, pit_t2, ulga_prac] = 2022-06-30
+  reading: ul15_hypo = netted
+  law date 2022-12-31, cut 2026-10-18
+q01_doplata (e = ex_c) [ul15_hypo = apart]: ?"Did this payer reduce each advance by 1/12 of the kwota zmniejszająca podatek (PIT-2 statement, art. 32 ust. 3 pkt 5; for a pension, the organ rentowy)?" (pit2[ex_c, job1], pit2[ex_c, job2]) ?"What advance did this payer collect in this month of January-June 2022? The rolowanie regulation (the lower of the advance under the 2022 and the 2021 rules) is not in the sources." (adv_raw[ex_c, job1, 2022-01], adv_raw[ex_c, job1, 2022-02], adv_raw[ex_c, job1, 2022-03], adv_raw[ex_c, job1, 2022-04], adv_raw[ex_c, job1, 2022-05], adv_raw[ex_c, job1, 2022-06], adv_raw[ex_c, job2, 2022-01], adv_raw[ex_c, job2, 2022-02], adv_raw[ex_c, job2, 2022-03], adv_raw[ex_c, job2, 2022-04], adv_raw[ex_c, job2, 2022-05], adv_raw[ex_c, job2, 2022-06]) ?"What share of the gross pay are the employee's social insurance contributions (emerytalne, rentowe, chorobowe) that the employer deducts (art. 26 ust. 1 pkt 2; art. 32 ust. 2)?" (zus_rate)
+  assumed: the page gives monthly amounts with no months named; each source is taken as paid in all twelve months of 2022 (full_year[ex_c, job1], full_year[ex_c, job2])
+  assumed: the page names no commuting, so each employer is taken to apply the basic costs (commuter[ex_c, job1], commuter[ex_c, job2])
+  assumed: the page says 'zarabia 3 tys. zł'; the amounts are taken as gross pay (gross[ex_c])
+  reading: ul15_hypo = apart
+  law date 2022-12-31, cut 2026-10-18
+q01_doplata (e = ex_c) [ul15_hypo = netted]: ?"Did this payer reduce each advance by 1/12 of the kwota zmniejszająca podatek (PIT-2 statement, art. 32 ust. 3 pkt 5; for a pension, the organ rentowy)?" (pit2[ex_c, job1], pit2[ex_c, job2]) ?"What advance did this payer collect in this month of January-June 2022? The rolowanie regulation (the lower of the advance under the 2022 and the 2021 rules) is not in the sources." (adv_raw[ex_c, job1, 2022-01], adv_raw[ex_c, job1, 2022-02], adv_raw[ex_c, job1, 2022-03], adv_raw[ex_c, job1, 2022-04], adv_raw[ex_c, job1, 2022-05], adv_raw[ex_c, job1, 2022-06], adv_raw[ex_c, job2, 2022-01], adv_raw[ex_c, job2, 2022-02], adv_raw[ex_c, job2, 2022-03], adv_raw[ex_c, job2, 2022-04], adv_raw[ex_c, job2, 2022-05], adv_raw[ex_c, job2, 2022-06]) ?"What is the ulga dla pracowników of art. 26 ust. 1 pkt 2aa and ust. 4a-4c, in the wording of Dz.U. 2021 poz. 2105 in force on 30 June 2022, on this person's 2022 employment revenue? That text is not among the case's sources." (ulga_prac[ex_c]) ?"What share of the gross pay are the employee's social insurance contributions (emerytalne, rentowe, chorobowe) that the employer deducts (art. 26 ust. 1 pkt 2; art. 32 ust. 2)?" (zus_rate)
+  assumed: the page gives monthly amounts with no months named; each source is taken as paid in all twelve months of 2022 (full_year[ex_c, job1], full_year[ex_c, job2])
+  assumed: the page names no commuting, so each employer is taken to apply the basic costs (commuter[ex_c, job1], commuter[ex_c, job2])
+  assumed: the page says 'zarabia 3 tys. zł'; the amounts are taken as gross pay (gross[ex_c])
+  pinned: wording wording_day for [pit_kz, pit_r1, pit_r2, pit_scale, pit_t2, ulga_prac] = 2022-06-30
+  reading: ul15_hypo = netted
+  law date 2022-12-31, cut 2026-10-18
+q01_doplata (e = ex_d) [ul15_hypo = apart]: ?"Did this payer reduce each advance by 1/12 of the kwota zmniejszająca podatek (PIT-2 statement, art. 32 ust. 3 pkt 5; for a pension, the organ rentowy)?" (pit2[ex_d, job1], pit2[ex_d, job2]) ?"What advance did this payer collect in this month of January-June 2022? The rolowanie regulation (the lower of the advance under the 2022 and the 2021 rules) is not in the sources." (adv_raw[ex_d, job1, 2022-01], adv_raw[ex_d, job1, 2022-02], adv_raw[ex_d, job1, 2022-03], adv_raw[ex_d, job1, 2022-04], adv_raw[ex_d, job1, 2022-05], adv_raw[ex_d, job1, 2022-06], adv_raw[ex_d, job2, 2022-01], adv_raw[ex_d, job2, 2022-02], adv_raw[ex_d, job2, 2022-03], adv_raw[ex_d, job2, 2022-04], adv_raw[ex_d, job2, 2022-05], adv_raw[ex_d, job2, 2022-06]) ?"What share of the gross pay are the employee's social insurance contributions (emerytalne, rentowe, chorobowe) that the employer deducts (art. 26 ust. 1 pkt 2; art. 32 ust. 2)?" (zus_rate)
+  assumed: the page gives monthly amounts with no months named; each source is taken as paid in all twelve months of 2022 (full_year[ex_d, job1], full_year[ex_d, job2])
+  assumed: the page names no commuting, so each employer is taken to apply the basic costs (commuter[ex_d, job1], commuter[ex_d, job2])
+  assumed: the page says 'zarabia 3 tys. zł'; the amounts are taken as gross pay (gross[ex_d])
+  reading: ul15_hypo = apart
+  law date 2022-12-31, cut 2026-10-18
+q01_doplata (e = ex_d) [ul15_hypo = netted]: ?"Did this payer reduce each advance by 1/12 of the kwota zmniejszająca podatek (PIT-2 statement, art. 32 ust. 3 pkt 5; for a pension, the organ rentowy)?" (pit2[ex_d, job1], pit2[ex_d, job2]) ?"What advance did this payer collect in this month of January-June 2022? The rolowanie regulation (the lower of the advance under the 2022 and the 2021 rules) is not in the sources." (adv_raw[ex_d, job1, 2022-01], adv_raw[ex_d, job1, 2022-02], adv_raw[ex_d, job1, 2022-03], adv_raw[ex_d, job1, 2022-04], adv_raw[ex_d, job1, 2022-05], adv_raw[ex_d, job1, 2022-06], adv_raw[ex_d, job2, 2022-01], adv_raw[ex_d, job2, 2022-02], adv_raw[ex_d, job2, 2022-03], adv_raw[ex_d, job2, 2022-04], adv_raw[ex_d, job2, 2022-05], adv_raw[ex_d, job2, 2022-06]) ?"What is the ulga dla pracowników of art. 26 ust. 1 pkt 2aa and ust. 4a-4c, in the wording of Dz.U. 2021 poz. 2105 in force on 30 June 2022, on this person's 2022 employment revenue? That text is not among the case's sources." (ulga_prac[ex_d]) ?"What share of the gross pay are the employee's social insurance contributions (emerytalne, rentowe, chorobowe) that the employer deducts (art. 26 ust. 1 pkt 2; art. 32 ust. 2)?" (zus_rate)
+  assumed: the page gives monthly amounts with no months named; each source is taken as paid in all twelve months of 2022 (full_year[ex_d, job1], full_year[ex_d, job2])
+  assumed: the page names no commuting, so each employer is taken to apply the basic costs (commuter[ex_d, job1], commuter[ex_d, job2])
+  assumed: the page says 'zarabia 3 tys. zł'; the amounts are taken as gross pay (gross[ex_d])
+  pinned: wording wording_day for [pit_kz, pit_r1, pit_r2, pit_scale, pit_t2, ulga_prac] = 2022-06-30
+  reading: ul15_hypo = netted
+  law date 2022-12-31, cut 2026-10-18
+q01_doplata (e = ex_e) [ul15_hypo = apart]: ?"Did this payer reduce each advance by 1/12 of the kwota zmniejszająca podatek (PIT-2 statement, art. 32 ust. 3 pkt 5; for a pension, the organ rentowy)?" (pit2[ex_e, job1], pit2[ex_e, job2]) ?"What advance did this payer collect in this month of January-June 2022? The rolowanie regulation (the lower of the advance under the 2022 and the 2021 rules) is not in the sources." (adv_raw[ex_e, job1, 2022-01], adv_raw[ex_e, job1, 2022-02], adv_raw[ex_e, job1, 2022-03], adv_raw[ex_e, job1, 2022-04], adv_raw[ex_e, job1, 2022-05], adv_raw[ex_e, job1, 2022-06], adv_raw[ex_e, job2, 2022-01], adv_raw[ex_e, job2, 2022-02], adv_raw[ex_e, job2, 2022-03], adv_raw[ex_e, job2, 2022-04], adv_raw[ex_e, job2, 2022-05], adv_raw[ex_e, job2, 2022-06]) ?"What share of the gross pay are the employee's social insurance contributions (emerytalne, rentowe, chorobowe) that the employer deducts (art. 26 ust. 1 pkt 2; art. 32 ust. 2)?" (zus_rate)
+  assumed: the page gives monthly amounts with no months named; each source is taken as paid in all twelve months of 2022 (full_year[ex_e, job1], full_year[ex_e, job2])
+  assumed: the page names no commuting, so each employer is taken to apply the basic costs (commuter[ex_e, job1], commuter[ex_e, job2])
+  assumed: the page says 'zarabia 3 tys. zł'; the amounts are taken as gross pay (gross[ex_e])
+  reading: ul15_hypo = apart
+  law date 2022-12-31, cut 2026-10-18
+q01_doplata (e = ex_e) [ul15_hypo = netted]: ?"Did this payer reduce each advance by 1/12 of the kwota zmniejszająca podatek (PIT-2 statement, art. 32 ust. 3 pkt 5; for a pension, the organ rentowy)?" (pit2[ex_e, job1], pit2[ex_e, job2]) ?"What advance did this payer collect in this month of January-June 2022? The rolowanie regulation (the lower of the advance under the 2022 and the 2021 rules) is not in the sources." (adv_raw[ex_e, job1, 2022-01], adv_raw[ex_e, job1, 2022-02], adv_raw[ex_e, job1, 2022-03], adv_raw[ex_e, job1, 2022-04], adv_raw[ex_e, job1, 2022-05], adv_raw[ex_e, job1, 2022-06], adv_raw[ex_e, job2, 2022-01], adv_raw[ex_e, job2, 2022-02], adv_raw[ex_e, job2, 2022-03], adv_raw[ex_e, job2, 2022-04], adv_raw[ex_e, job2, 2022-05], adv_raw[ex_e, job2, 2022-06]) ?"What is the ulga dla pracowników of art. 26 ust. 1 pkt 2aa and ust. 4a-4c, in the wording of Dz.U. 2021 poz. 2105 in force on 30 June 2022, on this person's 2022 employment revenue? That text is not among the case's sources." (ulga_prac[ex_e]) ?"What share of the gross pay are the employee's social insurance contributions (emerytalne, rentowe, chorobowe) that the employer deducts (art. 26 ust. 1 pkt 2; art. 32 ust. 2)?" (zus_rate)
+  assumed: the page gives monthly amounts with no months named; each source is taken as paid in all twelve months of 2022 (full_year[ex_e, job1], full_year[ex_e, job2])
+  assumed: the page names no commuting, so each employer is taken to apply the basic costs (commuter[ex_e, job1], commuter[ex_e, job2])
+  assumed: the page says 'zarabia 3 tys. zł'; the amounts are taken as gross pay (gross[ex_e])
+  pinned: wording wording_day for [pit_kz, pit_r1, pit_r2, pit_scale, pit_t2, ulga_prac] = 2022-06-30
+  reading: ul15_hypo = netted
+  law date 2022-12-31, cut 2026-10-18
+q01_doplata (e = ex_p1) [ul15_hypo = *]: ?"Did this payer reduce each advance by 1/12 of the kwota zmniejszająca podatek (PIT-2 statement, art. 32 ust. 3 pkt 5; for a pension, the organ rentowy)?" (pit2[ex_p1, job1], pit2[ex_p1, pension]) ?"What advance did this payer collect in this month of January-June 2022? The rolowanie regulation (the lower of the advance under the 2022 and the 2021 rules) is not in the sources." (adv_raw[ex_p1, job1, 2022-01], adv_raw[ex_p1, job1, 2022-02], adv_raw[ex_p1, job1, 2022-03], adv_raw[ex_p1, job1, 2022-04], adv_raw[ex_p1, job1, 2022-05], adv_raw[ex_p1, job1, 2022-06], adv_raw[ex_p1, pension, 2022-01], adv_raw[ex_p1, pension, 2022-02], adv_raw[ex_p1, pension, 2022-03], adv_raw[ex_p1, pension, 2022-04], adv_raw[ex_p1, pension, 2022-05], adv_raw[ex_p1, pension, 2022-06]) ?"What share of the gross pay are the employee's social insurance contributions (emerytalne, rentowe, chorobowe) that the employer deducts (art. 26 ust. 1 pkt 2; art. 32 ust. 2)?" (zus_rate)
+  assumed: the page gives monthly amounts with no months named; each source is taken as paid in all twelve months of 2022 (full_year[ex_p1, job1], full_year[ex_p1, pension])
+  assumed: the page names no commuting, so each employer is taken to apply the basic costs (commuter[ex_p1, job1])
+  assumed: the page says 'zarabia 3 tys. zł'; the amounts are taken as gross pay (gross[ex_p1])
+  law date 2022-12-31, cut 2026-10-18
+q01_doplata (e = ex_p2) [ul15_hypo = *]: ?"Did this payer reduce each advance by 1/12 of the kwota zmniejszająca podatek (PIT-2 statement, art. 32 ust. 3 pkt 5; for a pension, the organ rentowy)?" (pit2[ex_p2, job1], pit2[ex_p2, pension]) ?"What advance did this payer collect in this month of January-June 2022? The rolowanie regulation (the lower of the advance under the 2022 and the 2021 rules) is not in the sources." (adv_raw[ex_p2, job1, 2022-01], adv_raw[ex_p2, job1, 2022-02], adv_raw[ex_p2, job1, 2022-03], adv_raw[ex_p2, job1, 2022-04], adv_raw[ex_p2, job1, 2022-05], adv_raw[ex_p2, job1, 2022-06], adv_raw[ex_p2, pension, 2022-01], adv_raw[ex_p2, pension, 2022-02], adv_raw[ex_p2, pension, 2022-03], adv_raw[ex_p2, pension, 2022-04], adv_raw[ex_p2, pension, 2022-05], adv_raw[ex_p2, pension, 2022-06]) ?"What share of the gross pay are the employee's social insurance contributions (emerytalne, rentowe, chorobowe) that the employer deducts (art. 26 ust. 1 pkt 2; art. 32 ust. 2)?" (zus_rate)
+  assumed: the page gives monthly amounts with no months named; each source is taken as paid in all twelve months of 2022 (full_year[ex_p2, job1], full_year[ex_p2, pension])
+  assumed: the page names no commuting, so each employer is taken to apply the basic costs (commuter[ex_p2, job1])
+  assumed: the page says 'zarabia 3 tys. zł'; the amounts are taken as gross pay (gross[ex_p2])
+  law date 2022-12-31, cut 2026-10-18
+q01_doplata (e = ex_p3) [ul15_hypo = apart]: ?"Did this payer reduce each advance by 1/12 of the kwota zmniejszająca podatek (PIT-2 statement, art. 32 ust. 3 pkt 5; for a pension, the organ rentowy)?" (pit2[ex_p3, job1], pit2[ex_p3, pension]) ?"What advance did this payer collect in this month of January-June 2022? The rolowanie regulation (the lower of the advance under the 2022 and the 2021 rules) is not in the sources." (adv_raw[ex_p3, job1, 2022-01], adv_raw[ex_p3, job1, 2022-02], adv_raw[ex_p3, job1, 2022-03], adv_raw[ex_p3, job1, 2022-04], adv_raw[ex_p3, job1, 2022-05], adv_raw[ex_p3, job1, 2022-06], adv_raw[ex_p3, pension, 2022-01], adv_raw[ex_p3, pension, 2022-02], adv_raw[ex_p3, pension, 2022-03], adv_raw[ex_p3, pension, 2022-04], adv_raw[ex_p3, pension, 2022-05], adv_raw[ex_p3, pension, 2022-06]) ?"What share of the gross pay are the employee's social insurance contributions (emerytalne, rentowe, chorobowe) that the employer deducts (art. 26 ust. 1 pkt 2; art. 32 ust. 2)?" (zus_rate)
+  assumed: the page gives monthly amounts with no months named; each source is taken as paid in all twelve months of 2022 (full_year[ex_p3, job1], full_year[ex_p3, pension])
+  assumed: the page names no commuting, so each employer is taken to apply the basic costs (commuter[ex_p3, job1])
+  assumed: the page says 'zarabia 3 tys. zł'; the amounts are taken as gross pay (gross[ex_p3])
+  reading: ul15_hypo = apart
+  law date 2022-12-31, cut 2026-10-18
+q01_doplata (e = ex_p3) [ul15_hypo = netted]: ?"Did this payer reduce each advance by 1/12 of the kwota zmniejszająca podatek (PIT-2 statement, art. 32 ust. 3 pkt 5; for a pension, the organ rentowy)?" (pit2[ex_p3, job1], pit2[ex_p3, pension]) ?"What advance did this payer collect in this month of January-June 2022? The rolowanie regulation (the lower of the advance under the 2022 and the 2021 rules) is not in the sources." (adv_raw[ex_p3, job1, 2022-01], adv_raw[ex_p3, job1, 2022-02], adv_raw[ex_p3, job1, 2022-03], adv_raw[ex_p3, job1, 2022-04], adv_raw[ex_p3, job1, 2022-05], adv_raw[ex_p3, job1, 2022-06], adv_raw[ex_p3, pension, 2022-01], adv_raw[ex_p3, pension, 2022-02], adv_raw[ex_p3, pension, 2022-03], adv_raw[ex_p3, pension, 2022-04], adv_raw[ex_p3, pension, 2022-05], adv_raw[ex_p3, pension, 2022-06]) ?"What is the ulga dla pracowników of art. 26 ust. 1 pkt 2aa and ust. 4a-4c, in the wording of Dz.U. 2021 poz. 2105 in force on 30 June 2022, on this person's 2022 employment revenue? That text is not among the case's sources." (ulga_prac[ex_p3]) ?"What share of the gross pay are the employee's social insurance contributions (emerytalne, rentowe, chorobowe) that the employer deducts (art. 26 ust. 1 pkt 2; art. 32 ust. 2)?" (zus_rate)
+  assumed: the page gives monthly amounts with no months named; each source is taken as paid in all twelve months of 2022 (full_year[ex_p3, job1], full_year[ex_p3, pension])
+  assumed: the page names no commuting, so each employer is taken to apply the basic costs (commuter[ex_p3, job1])
+  assumed: the page says 'zarabia 3 tys. zł'; the amounts are taken as gross pay (gross[ex_p3])
+  pinned: wording wording_day for [pit_kz, pit_r1, pit_r2, pit_scale, pit_t2, ulga_prac] = 2022-06-30
+  reading: ul15_hypo = netted
+  law date 2022-12-31, cut 2026-10-18
+q01_doplata (e = ex_p4) [ul15_hypo = *]: ?"Did this payer reduce each advance by 1/12 of the kwota zmniejszająca podatek (PIT-2 statement, art. 32 ust. 3 pkt 5; for a pension, the organ rentowy)?" (pit2[ex_p4, job1], pit2[ex_p4, pension]) ?"What advance did this payer collect in this month of January-June 2022? The rolowanie regulation (the lower of the advance under the 2022 and the 2021 rules) is not in the sources." (adv_raw[ex_p4, job1, 2022-01], adv_raw[ex_p4, job1, 2022-02], adv_raw[ex_p4, job1, 2022-03], adv_raw[ex_p4, job1, 2022-04], adv_raw[ex_p4, job1, 2022-05], adv_raw[ex_p4, job1, 2022-06], adv_raw[ex_p4, pension, 2022-01], adv_raw[ex_p4, pension, 2022-02], adv_raw[ex_p4, pension, 2022-03], adv_raw[ex_p4, pension, 2022-04], adv_raw[ex_p4, pension, 2022-05], adv_raw[ex_p4, pension, 2022-06]) ?"What share of the gross pay are the employee's social insurance contributions (emerytalne, rentowe, chorobowe) that the employer deducts (art. 26 ust. 1 pkt 2; art. 32 ust. 2)?" (zus_rate)
+  assumed: the page gives monthly amounts with no months named; each source is taken as paid in all twelve months of 2022 (full_year[ex_p4, job1], full_year[ex_p4, pension])
+  assumed: the page names no commuting, so each employer is taken to apply the basic costs (commuter[ex_p4, job1])
+  assumed: the page says 'zarabia 3 tys. zł'; the amounts are taken as gross pay (gross[ex_p4])
+  law date 2022-12-31, cut 2026-10-18
+q02_gain (e = ex_a): ?"What share of the gross pay are the employee's social insurance contributions (emerytalne, rentowe, chorobowe) that the employer deducts (art. 26 ust. 1 pkt 2; art. 32 ust. 2)?" (zus_rate) ?"What would this person's tax for 2021 have been on the same pay? The 2021 rules and the assumptions behind the page's comparison are not in the sources." (tax_2021[ex_a])
+  assumed: the page gives monthly amounts with no months named; each source is taken as paid in all twelve months of 2022 (full_year[ex_a, job1], full_year[ex_a, job2])
+  assumed: the page names no commuting, so each employer is taken to apply the basic costs (commuter[ex_a, job1], commuter[ex_a, job2])
+  assumed: the page says 'zarabia 3 tys. zł'; the amounts are taken as gross pay (gross[ex_a])
+  law date 2022-12-31, cut 2026-10-18
+q02_gain (e = ex_b): ?"What share of the gross pay are the employee's social insurance contributions (emerytalne, rentowe, chorobowe) that the employer deducts (art. 26 ust. 1 pkt 2; art. 32 ust. 2)?" (zus_rate) ?"What would this person's tax for 2021 have been on the same pay? The 2021 rules and the assumptions behind the page's comparison are not in the sources." (tax_2021[ex_b])
+  assumed: the page gives monthly amounts with no months named; each source is taken as paid in all twelve months of 2022 (full_year[ex_b, job1], full_year[ex_b, job2])
+  assumed: the page names no commuting, so each employer is taken to apply the basic costs (commuter[ex_b, job1], commuter[ex_b, job2])
+  assumed: the page says 'zarabia 3 tys. zł'; the amounts are taken as gross pay (gross[ex_b])
+  law date 2022-12-31, cut 2026-10-18
+q02_gain (e = ex_c): ?"What share of the gross pay are the employee's social insurance contributions (emerytalne, rentowe, chorobowe) that the employer deducts (art. 26 ust. 1 pkt 2; art. 32 ust. 2)?" (zus_rate) ?"What would this person's tax for 2021 have been on the same pay? The 2021 rules and the assumptions behind the page's comparison are not in the sources." (tax_2021[ex_c])
+  assumed: the page gives monthly amounts with no months named; each source is taken as paid in all twelve months of 2022 (full_year[ex_c, job1], full_year[ex_c, job2])
+  assumed: the page names no commuting, so each employer is taken to apply the basic costs (commuter[ex_c, job1], commuter[ex_c, job2])
+  assumed: the page says 'zarabia 3 tys. zł'; the amounts are taken as gross pay (gross[ex_c])
+  law date 2022-12-31, cut 2026-10-18
+q02_gain (e = ex_d): ?"What share of the gross pay are the employee's social insurance contributions (emerytalne, rentowe, chorobowe) that the employer deducts (art. 26 ust. 1 pkt 2; art. 32 ust. 2)?" (zus_rate) ?"What would this person's tax for 2021 have been on the same pay? The 2021 rules and the assumptions behind the page's comparison are not in the sources." (tax_2021[ex_d])
+  assumed: the page gives monthly amounts with no months named; each source is taken as paid in all twelve months of 2022 (full_year[ex_d, job1], full_year[ex_d, job2])
+  assumed: the page names no commuting, so each employer is taken to apply the basic costs (commuter[ex_d, job1], commuter[ex_d, job2])
+  assumed: the page says 'zarabia 3 tys. zł'; the amounts are taken as gross pay (gross[ex_d])
+  law date 2022-12-31, cut 2026-10-18
+q02_gain (e = ex_e): ?"What share of the gross pay are the employee's social insurance contributions (emerytalne, rentowe, chorobowe) that the employer deducts (art. 26 ust. 1 pkt 2; art. 32 ust. 2)?" (zus_rate) ?"What would this person's tax for 2021 have been on the same pay? The 2021 rules and the assumptions behind the page's comparison are not in the sources." (tax_2021[ex_e])
+  assumed: the page gives monthly amounts with no months named; each source is taken as paid in all twelve months of 2022 (full_year[ex_e, job1], full_year[ex_e, job2])
+  assumed: the page names no commuting, so each employer is taken to apply the basic costs (commuter[ex_e, job1], commuter[ex_e, job2])
+  assumed: the page says 'zarabia 3 tys. zł'; the amounts are taken as gross pay (gross[ex_e])
+  law date 2022-12-31, cut 2026-10-18
+q02_gain (e = ex_p1): ?"What share of the gross pay are the employee's social insurance contributions (emerytalne, rentowe, chorobowe) that the employer deducts (art. 26 ust. 1 pkt 2; art. 32 ust. 2)?" (zus_rate) ?"What would this person's tax for 2021 have been on the same pay? The 2021 rules and the assumptions behind the page's comparison are not in the sources." (tax_2021[ex_p1])
+  assumed: the page gives monthly amounts with no months named; each source is taken as paid in all twelve months of 2022 (full_year[ex_p1, job1], full_year[ex_p1, pension])
+  assumed: the page names no commuting, so each employer is taken to apply the basic costs (commuter[ex_p1, job1])
+  assumed: the page says 'zarabia 3 tys. zł'; the amounts are taken as gross pay (gross[ex_p1])
+  law date 2022-12-31, cut 2026-10-18
+q02_gain (e = ex_p2): ?"What share of the gross pay are the employee's social insurance contributions (emerytalne, rentowe, chorobowe) that the employer deducts (art. 26 ust. 1 pkt 2; art. 32 ust. 2)?" (zus_rate) ?"What would this person's tax for 2021 have been on the same pay? The 2021 rules and the assumptions behind the page's comparison are not in the sources." (tax_2021[ex_p2])
+  assumed: the page gives monthly amounts with no months named; each source is taken as paid in all twelve months of 2022 (full_year[ex_p2, job1], full_year[ex_p2, pension])
+  assumed: the page names no commuting, so each employer is taken to apply the basic costs (commuter[ex_p2, job1])
+  assumed: the page says 'zarabia 3 tys. zł'; the amounts are taken as gross pay (gross[ex_p2])
+  law date 2022-12-31, cut 2026-10-18
+q02_gain (e = ex_p3): ?"What share of the gross pay are the employee's social insurance contributions (emerytalne, rentowe, chorobowe) that the employer deducts (art. 26 ust. 1 pkt 2; art. 32 ust. 2)?" (zus_rate) ?"What would this person's tax for 2021 have been on the same pay? The 2021 rules and the assumptions behind the page's comparison are not in the sources." (tax_2021[ex_p3])
+  assumed: the page gives monthly amounts with no months named; each source is taken as paid in all twelve months of 2022 (full_year[ex_p3, job1], full_year[ex_p3, pension])
+  assumed: the page names no commuting, so each employer is taken to apply the basic costs (commuter[ex_p3, job1])
+  assumed: the page says 'zarabia 3 tys. zł'; the amounts are taken as gross pay (gross[ex_p3])
+  law date 2022-12-31, cut 2026-10-18
+q02_gain (e = ex_p4): ?"What share of the gross pay are the employee's social insurance contributions (emerytalne, rentowe, chorobowe) that the employer deducts (art. 26 ust. 1 pkt 2; art. 32 ust. 2)?" (zus_rate) ?"What would this person's tax for 2021 have been on the same pay? The 2021 rules and the assumptions behind the page's comparison are not in the sources." (tax_2021[ex_p4])
+  assumed: the page gives monthly amounts with no months named; each source is taken as paid in all twelve months of 2022 (full_year[ex_p4, job1], full_year[ex_p4, pension])
+  assumed: the page names no commuting, so each employer is taken to apply the basic costs (commuter[ex_p4, job1])
+  assumed: the page says 'zarabia 3 tys. zł'; the amounts are taken as gross pay (gross[ex_p4])
+  law date 2022-12-31, cut 2026-10-18
+q03_job_rev (e = ex_a): 72 000.00 PLN
+  assumed: the page gives monthly amounts with no months named; each source is taken as paid in all twelve months of 2022 (full_year[ex_a, job1], full_year[ex_a, job2])
+  assumed: the page says 'zarabia 3 tys. zł'; the amounts are taken as gross pay (gross[ex_a])
+  law date 2022-12-31, cut 2026-10-18
+q03_job_rev (e = ex_b): 84 000.00 PLN
+  assumed: the page gives monthly amounts with no months named; each source is taken as paid in all twelve months of 2022 (full_year[ex_b, job1], full_year[ex_b, job2])
+  assumed: the page says 'zarabia 3 tys. zł'; the amounts are taken as gross pay (gross[ex_b])
+  law date 2022-12-31, cut 2026-10-18
+q03_job_rev (e = ex_c): 108 000.00 PLN
+  assumed: the page gives monthly amounts with no months named; each source is taken as paid in all twelve months of 2022 (full_year[ex_c, job1], full_year[ex_c, job2])
+  assumed: the page says 'zarabia 3 tys. zł'; the amounts are taken as gross pay (gross[ex_c])
+  law date 2022-12-31, cut 2026-10-18
+q03_job_rev (e = ex_d): 72 000.00 PLN
+  assumed: the page gives monthly amounts with no months named; each source is taken as paid in all twelve months of 2022 (full_year[ex_d, job1], full_year[ex_d, job2])
+  assumed: the page says 'zarabia 3 tys. zł'; the amounts are taken as gross pay (gross[ex_d])
+  law date 2022-12-31, cut 2026-10-18
+q03_job_rev (e = ex_e): 108 000.00 PLN
+  assumed: the page gives monthly amounts with no months named; each source is taken as paid in all twelve months of 2022 (full_year[ex_e, job1], full_year[ex_e, job2])
+  assumed: the page says 'zarabia 3 tys. zł'; the amounts are taken as gross pay (gross[ex_e])
+  law date 2022-12-31, cut 2026-10-18
+q03_job_rev (e = ex_p1): 12 000.00 PLN
+  assumed: the page gives monthly amounts with no months named; each source is taken as paid in all twelve months of 2022 (full_year[ex_p1, job1])
+  assumed: the page says 'zarabia 3 tys. zł'; the amounts are taken as gross pay (gross[ex_p1])
+  law date 2022-12-31, cut 2026-10-18
+q03_job_rev (e = ex_p2): 36 000.00 PLN
+  assumed: the page gives monthly amounts with no months named; each source is taken as paid in all twelve months of 2022 (full_year[ex_p2, job1])
+  assumed: the page says 'zarabia 3 tys. zł'; the amounts are taken as gross pay (gross[ex_p2])
+  law date 2022-12-31, cut 2026-10-18
+q03_job_rev (e = ex_p3): 72 000.00 PLN
+  assumed: the page gives monthly amounts with no months named; each source is taken as paid in all twelve months of 2022 (full_year[ex_p3, job1])
+  assumed: the page says 'zarabia 3 tys. zł'; the amounts are taken as gross pay (gross[ex_p3])
+  law date 2022-12-31, cut 2026-10-18
+q03_job_rev (e = ex_p4): 60 000.00 PLN
+  assumed: the page gives monthly amounts with no months named; each source is taken as paid in all twelve months of 2022 (full_year[ex_p4, job1])
+  assumed: the page says 'zarabia 3 tys. zł'; the amounts are taken as gross pay (gross[ex_p4])
+  law date 2022-12-31, cut 2026-10-18
+q04_in_band (e = ex_a): true
+  assumed: the page gives monthly amounts with no months named; each source is taken as paid in all twelve months of 2022 (full_year[ex_a, job1], full_year[ex_a, job2])
+  assumed: the page says 'zarabia 3 tys. zł'; the amounts are taken as gross pay (gross[ex_a])
+  law date 2022-12-31, cut 2026-10-18
+q04_in_band (e = ex_b): true
+  assumed: the page gives monthly amounts with no months named; each source is taken as paid in all twelve months of 2022 (full_year[ex_b, job1], full_year[ex_b, job2])
+  assumed: the page says 'zarabia 3 tys. zł'; the amounts are taken as gross pay (gross[ex_b])
+  law date 2022-12-31, cut 2026-10-18
+q04_in_band (e = ex_c): true
+  assumed: the page gives monthly amounts with no months named; each source is taken as paid in all twelve months of 2022 (full_year[ex_c, job1], full_year[ex_c, job2])
+  assumed: the page says 'zarabia 3 tys. zł'; the amounts are taken as gross pay (gross[ex_c])
+  law date 2022-12-31, cut 2026-10-18
+q04_in_band (e = ex_d): true
+  assumed: the page gives monthly amounts with no months named; each source is taken as paid in all twelve months of 2022 (full_year[ex_d, job1], full_year[ex_d, job2])
+  assumed: the page says 'zarabia 3 tys. zł'; the amounts are taken as gross pay (gross[ex_d])
+  law date 2022-12-31, cut 2026-10-18
+q04_in_band (e = ex_e): true
+  assumed: the page gives monthly amounts with no months named; each source is taken as paid in all twelve months of 2022 (full_year[ex_e, job1], full_year[ex_e, job2])
+  assumed: the page says 'zarabia 3 tys. zł'; the amounts are taken as gross pay (gross[ex_e])
+  law date 2022-12-31, cut 2026-10-18
+q04_in_band (e = ex_p1): false
+  assumed: the page gives monthly amounts with no months named; each source is taken as paid in all twelve months of 2022 (full_year[ex_p1, job1])
+  assumed: the page says 'zarabia 3 tys. zł'; the amounts are taken as gross pay (gross[ex_p1])
+  law date 2022-12-31, cut 2026-10-18
+q04_in_band (e = ex_p2): false
+  assumed: the page gives monthly amounts with no months named; each source is taken as paid in all twelve months of 2022 (full_year[ex_p2, job1])
+  assumed: the page says 'zarabia 3 tys. zł'; the amounts are taken as gross pay (gross[ex_p2])
+  law date 2022-12-31, cut 2026-10-18
+q04_in_band (e = ex_p3): true
+  assumed: the page gives monthly amounts with no months named; each source is taken as paid in all twelve months of 2022 (full_year[ex_p3, job1])
+  assumed: the page says 'zarabia 3 tys. zł'; the amounts are taken as gross pay (gross[ex_p3])
+  law date 2022-12-31, cut 2026-10-18
+q04_in_band (e = ex_p4): false
+  assumed: the page gives monthly amounts with no months named; each source is taken as paid in all twelve months of 2022 (full_year[ex_p4, job1])
+  assumed: the page says 'zarabia 3 tys. zł'; the amounts are taken as gross pay (gross[ex_p4])
+  law date 2022-12-31, cut 2026-10-18
+q05_costs (e = ex_a): 4 500 PLN
+  assumed: the page names no commuting, so each employer is taken to apply the basic costs (commuter[ex_a, job1], commuter[ex_a, job2])
+  law date 2022-12-31, cut 2026-10-18
+q05_costs (e = ex_b): 4 500 PLN
+  assumed: the page names no commuting, so each employer is taken to apply the basic costs (commuter[ex_b, job1], commuter[ex_b, job2])
+  law date 2022-12-31, cut 2026-10-18
+q05_costs (e = ex_c): 4 500 PLN
+  assumed: the page names no commuting, so each employer is taken to apply the basic costs (commuter[ex_c, job1], commuter[ex_c, job2])
+  law date 2022-12-31, cut 2026-10-18
+q05_costs (e = ex_d): 4 500 PLN
+  assumed: the page names no commuting, so each employer is taken to apply the basic costs (commuter[ex_d, job1], commuter[ex_d, job2])
+  law date 2022-12-31, cut 2026-10-18
+q05_costs (e = ex_e): 4 500 PLN
+  assumed: the page names no commuting, so each employer is taken to apply the basic costs (commuter[ex_e, job1], commuter[ex_e, job2])
+  law date 2022-12-31, cut 2026-10-18
+q05_costs (e = ex_p1): 3 000 PLN
+  assumed: the page names no commuting, so each employer is taken to apply the basic costs (commuter[ex_p1, job1])
+  law date 2022-12-31, cut 2026-10-18
+q05_costs (e = ex_p2): 3 000 PLN
+  assumed: the page names no commuting, so each employer is taken to apply the basic costs (commuter[ex_p2, job1])
+  law date 2022-12-31, cut 2026-10-18
+q05_costs (e = ex_p3): 3 000 PLN
+  assumed: the page names no commuting, so each employer is taken to apply the basic costs (commuter[ex_p3, job1])
+  law date 2022-12-31, cut 2026-10-18
+q05_costs (e = ex_p4): 3 000 PLN
+  assumed: the page names no commuting, so each employer is taken to apply the basic costs (commuter[ex_p4, job1])
+  law date 2022-12-31, cut 2026-10-18
+q06_adv_july (e = ex_a, s = job1, m = 2022-07): ?"Did this payer reduce each advance by 1/12 of the kwota zmniejszająca podatek (PIT-2 statement, art. 32 ust. 3 pkt 5; for a pension, the organ rentowy)?" (pit2[ex_a, job1]) ?"What share of the gross pay are the employee's social insurance contributions (emerytalne, rentowe, chorobowe) that the employer deducts (art. 26 ust. 1 pkt 2; art. 32 ust. 2)?" (zus_rate)
+  assumed: the page gives monthly amounts with no months named; each source is taken as paid in all twelve months of 2022 (full_year[ex_a, job1])
+  assumed: the page names no commuting, so each employer is taken to apply the basic costs (commuter[ex_a, job1])
+  assumed: the page says 'zarabia 3 tys. zł'; the amounts are taken as gross pay (gross[ex_a])
+  law date 2026-10-18, cut 2026-10-18
+q06_adv_july (e = ex_a, s = job2, m = 2022-07): ?"Did this payer reduce each advance by 1/12 of the kwota zmniejszająca podatek (PIT-2 statement, art. 32 ust. 3 pkt 5; for a pension, the organ rentowy)?" (pit2[ex_a, job2]) ?"What share of the gross pay are the employee's social insurance contributions (emerytalne, rentowe, chorobowe) that the employer deducts (art. 26 ust. 1 pkt 2; art. 32 ust. 2)?" (zus_rate)
+  assumed: the page gives monthly amounts with no months named; each source is taken as paid in all twelve months of 2022 (full_year[ex_a, job2])
+  assumed: the page names no commuting, so each employer is taken to apply the basic costs (commuter[ex_a, job2])
+  assumed: the page says 'zarabia 3 tys. zł'; the amounts are taken as gross pay (gross[ex_a])
+  law date 2026-10-18, cut 2026-10-18
+q06_adv_july (e = ex_b, s = job1, m = 2022-07): ?"Did this payer reduce each advance by 1/12 of the kwota zmniejszająca podatek (PIT-2 statement, art. 32 ust. 3 pkt 5; for a pension, the organ rentowy)?" (pit2[ex_b, job1]) ?"What share of the gross pay are the employee's social insurance contributions (emerytalne, rentowe, chorobowe) that the employer deducts (art. 26 ust. 1 pkt 2; art. 32 ust. 2)?" (zus_rate)
+  assumed: the page gives monthly amounts with no months named; each source is taken as paid in all twelve months of 2022 (full_year[ex_b, job1])
+  assumed: the page names no commuting, so each employer is taken to apply the basic costs (commuter[ex_b, job1])
+  assumed: the page says 'zarabia 3 tys. zł'; the amounts are taken as gross pay (gross[ex_b])
+  law date 2026-10-18, cut 2026-10-18
+q06_adv_july (e = ex_b, s = job2, m = 2022-07): ?"Did this payer reduce each advance by 1/12 of the kwota zmniejszająca podatek (PIT-2 statement, art. 32 ust. 3 pkt 5; for a pension, the organ rentowy)?" (pit2[ex_b, job2]) ?"What share of the gross pay are the employee's social insurance contributions (emerytalne, rentowe, chorobowe) that the employer deducts (art. 26 ust. 1 pkt 2; art. 32 ust. 2)?" (zus_rate)
+  assumed: the page gives monthly amounts with no months named; each source is taken as paid in all twelve months of 2022 (full_year[ex_b, job2])
+  assumed: the page names no commuting, so each employer is taken to apply the basic costs (commuter[ex_b, job2])
+  assumed: the page says 'zarabia 3 tys. zł'; the amounts are taken as gross pay (gross[ex_b])
+  law date 2026-10-18, cut 2026-10-18
+q06_adv_july (e = ex_c, s = job1, m = 2022-07): ?"Did this payer reduce each advance by 1/12 of the kwota zmniejszająca podatek (PIT-2 statement, art. 32 ust. 3 pkt 5; for a pension, the organ rentowy)?" (pit2[ex_c, job1]) ?"What share of the gross pay are the employee's social insurance contributions (emerytalne, rentowe, chorobowe) that the employer deducts (art. 26 ust. 1 pkt 2; art. 32 ust. 2)?" (zus_rate)
+  assumed: the page gives monthly amounts with no months named; each source is taken as paid in all twelve months of 2022 (full_year[ex_c, job1])
+  assumed: the page names no commuting, so each employer is taken to apply the basic costs (commuter[ex_c, job1])
+  assumed: the page says 'zarabia 3 tys. zł'; the amounts are taken as gross pay (gross[ex_c])
+  law date 2026-10-18, cut 2026-10-18
+q06_adv_july (e = ex_c, s = job2, m = 2022-07): ?"Did this payer reduce each advance by 1/12 of the kwota zmniejszająca podatek (PIT-2 statement, art. 32 ust. 3 pkt 5; for a pension, the organ rentowy)?" (pit2[ex_c, job2]) ?"What share of the gross pay are the employee's social insurance contributions (emerytalne, rentowe, chorobowe) that the employer deducts (art. 26 ust. 1 pkt 2; art. 32 ust. 2)?" (zus_rate)
+  assumed: the page gives monthly amounts with no months named; each source is taken as paid in all twelve months of 2022 (full_year[ex_c, job2])
+  assumed: the page names no commuting, so each employer is taken to apply the basic costs (commuter[ex_c, job2])
+  assumed: the page says 'zarabia 3 tys. zł'; the amounts are taken as gross pay (gross[ex_c])
+  law date 2026-10-18, cut 2026-10-18
+q06_adv_july (e = ex_d, s = job1, m = 2022-07): ?"Did this payer reduce each advance by 1/12 of the kwota zmniejszająca podatek (PIT-2 statement, art. 32 ust. 3 pkt 5; for a pension, the organ rentowy)?" (pit2[ex_d, job1]) ?"What share of the gross pay are the employee's social insurance contributions (emerytalne, rentowe, chorobowe) that the employer deducts (art. 26 ust. 1 pkt 2; art. 32 ust. 2)?" (zus_rate)
+  assumed: the page gives monthly amounts with no months named; each source is taken as paid in all twelve months of 2022 (full_year[ex_d, job1])
+  assumed: the page names no commuting, so each employer is taken to apply the basic costs (commuter[ex_d, job1])
+  assumed: the page says 'zarabia 3 tys. zł'; the amounts are taken as gross pay (gross[ex_d])
+  law date 2026-10-18, cut 2026-10-18
+q06_adv_july (e = ex_d, s = job2, m = 2022-07): ?"Did this payer reduce each advance by 1/12 of the kwota zmniejszająca podatek (PIT-2 statement, art. 32 ust. 3 pkt 5; for a pension, the organ rentowy)?" (pit2[ex_d, job2]) ?"What share of the gross pay are the employee's social insurance contributions (emerytalne, rentowe, chorobowe) that the employer deducts (art. 26 ust. 1 pkt 2; art. 32 ust. 2)?" (zus_rate)
+  assumed: the page gives monthly amounts with no months named; each source is taken as paid in all twelve months of 2022 (full_year[ex_d, job2])
+  assumed: the page names no commuting, so each employer is taken to apply the basic costs (commuter[ex_d, job2])
+  assumed: the page says 'zarabia 3 tys. zł'; the amounts are taken as gross pay (gross[ex_d])
+  law date 2026-10-18, cut 2026-10-18
+q06_adv_july (e = ex_e, s = job1, m = 2022-07): ?"Did this payer reduce each advance by 1/12 of the kwota zmniejszająca podatek (PIT-2 statement, art. 32 ust. 3 pkt 5; for a pension, the organ rentowy)?" (pit2[ex_e, job1]) ?"What share of the gross pay are the employee's social insurance contributions (emerytalne, rentowe, chorobowe) that the employer deducts (art. 26 ust. 1 pkt 2; art. 32 ust. 2)?" (zus_rate)
+  assumed: the page gives monthly amounts with no months named; each source is taken as paid in all twelve months of 2022 (full_year[ex_e, job1])
+  assumed: the page names no commuting, so each employer is taken to apply the basic costs (commuter[ex_e, job1])
+  assumed: the page says 'zarabia 3 tys. zł'; the amounts are taken as gross pay (gross[ex_e])
+  law date 2026-10-18, cut 2026-10-18
+q06_adv_july (e = ex_e, s = job2, m = 2022-07): ?"Did this payer reduce each advance by 1/12 of the kwota zmniejszająca podatek (PIT-2 statement, art. 32 ust. 3 pkt 5; for a pension, the organ rentowy)?" (pit2[ex_e, job2]) ?"What share of the gross pay are the employee's social insurance contributions (emerytalne, rentowe, chorobowe) that the employer deducts (art. 26 ust. 1 pkt 2; art. 32 ust. 2)?" (zus_rate)
+  assumed: the page gives monthly amounts with no months named; each source is taken as paid in all twelve months of 2022 (full_year[ex_e, job2])
+  assumed: the page names no commuting, so each employer is taken to apply the basic costs (commuter[ex_e, job2])
+  assumed: the page says 'zarabia 3 tys. zł'; the amounts are taken as gross pay (gross[ex_e])
+  law date 2026-10-18, cut 2026-10-18
+q06_adv_july (e = ex_p1, s = job1, m = 2022-07): ?"Did this payer reduce each advance by 1/12 of the kwota zmniejszająca podatek (PIT-2 statement, art. 32 ust. 3 pkt 5; for a pension, the organ rentowy)?" (pit2[ex_p1, job1]) ?"What share of the gross pay are the employee's social insurance contributions (emerytalne, rentowe, chorobowe) that the employer deducts (art. 26 ust. 1 pkt 2; art. 32 ust. 2)?" (zus_rate)
+  assumed: the page gives monthly amounts with no months named; each source is taken as paid in all twelve months of 2022 (full_year[ex_p1, job1])
+  assumed: the page names no commuting, so each employer is taken to apply the basic costs (commuter[ex_p1, job1])
+  assumed: the page says 'zarabia 3 tys. zł'; the amounts are taken as gross pay (gross[ex_p1])
+  law date 2026-10-18, cut 2026-10-18
+q06_adv_july (e = ex_p1, s = pension, m = 2022-07): ?"Did this payer reduce each advance by 1/12 of the kwota zmniejszająca podatek (PIT-2 statement, art. 32 ust. 3 pkt 5; for a pension, the organ rentowy)?" (pit2[ex_p1, pension])
+  assumed: the page gives monthly amounts with no months named; each source is taken as paid in all twelve months of 2022 (full_year[ex_p1, pension])
+  assumed: the page says 'zarabia 3 tys. zł'; the amounts are taken as gross pay (gross[ex_p1])
+  law date 2026-10-18, cut 2026-10-18
+q06_adv_july (e = ex_p2, s = job1, m = 2022-07): ?"Did this payer reduce each advance by 1/12 of the kwota zmniejszająca podatek (PIT-2 statement, art. 32 ust. 3 pkt 5; for a pension, the organ rentowy)?" (pit2[ex_p2, job1]) ?"What share of the gross pay are the employee's social insurance contributions (emerytalne, rentowe, chorobowe) that the employer deducts (art. 26 ust. 1 pkt 2; art. 32 ust. 2)?" (zus_rate)
+  assumed: the page gives monthly amounts with no months named; each source is taken as paid in all twelve months of 2022 (full_year[ex_p2, job1])
+  assumed: the page names no commuting, so each employer is taken to apply the basic costs (commuter[ex_p2, job1])
+  assumed: the page says 'zarabia 3 tys. zł'; the amounts are taken as gross pay (gross[ex_p2])
+  law date 2026-10-18, cut 2026-10-18
+q06_adv_july (e = ex_p2, s = pension, m = 2022-07): ?"Did this payer reduce each advance by 1/12 of the kwota zmniejszająca podatek (PIT-2 statement, art. 32 ust. 3 pkt 5; for a pension, the organ rentowy)?" (pit2[ex_p2, pension])
+  assumed: the page gives monthly amounts with no months named; each source is taken as paid in all twelve months of 2022 (full_year[ex_p2, pension])
+  assumed: the page says 'zarabia 3 tys. zł'; the amounts are taken as gross pay (gross[ex_p2])
+  law date 2026-10-18, cut 2026-10-18
+q06_adv_july (e = ex_p3, s = job1, m = 2022-07): ?"Did this payer reduce each advance by 1/12 of the kwota zmniejszająca podatek (PIT-2 statement, art. 32 ust. 3 pkt 5; for a pension, the organ rentowy)?" (pit2[ex_p3, job1]) ?"What share of the gross pay are the employee's social insurance contributions (emerytalne, rentowe, chorobowe) that the employer deducts (art. 26 ust. 1 pkt 2; art. 32 ust. 2)?" (zus_rate)
+  assumed: the page gives monthly amounts with no months named; each source is taken as paid in all twelve months of 2022 (full_year[ex_p3, job1])
+  assumed: the page names no commuting, so each employer is taken to apply the basic costs (commuter[ex_p3, job1])
+  assumed: the page says 'zarabia 3 tys. zł'; the amounts are taken as gross pay (gross[ex_p3])
+  law date 2026-10-18, cut 2026-10-18
+q06_adv_july (e = ex_p3, s = pension, m = 2022-07): ?"Did this payer reduce each advance by 1/12 of the kwota zmniejszająca podatek (PIT-2 statement, art. 32 ust. 3 pkt 5; for a pension, the organ rentowy)?" (pit2[ex_p3, pension])
+  assumed: the page gives monthly amounts with no months named; each source is taken as paid in all twelve months of 2022 (full_year[ex_p3, pension])
+  assumed: the page says 'zarabia 3 tys. zł'; the amounts are taken as gross pay (gross[ex_p3])
+  law date 2026-10-18, cut 2026-10-18
+q06_adv_july (e = ex_p4, s = job1, m = 2022-07): ?"Did this payer reduce each advance by 1/12 of the kwota zmniejszająca podatek (PIT-2 statement, art. 32 ust. 3 pkt 5; for a pension, the organ rentowy)?" (pit2[ex_p4, job1]) ?"What share of the gross pay are the employee's social insurance contributions (emerytalne, rentowe, chorobowe) that the employer deducts (art. 26 ust. 1 pkt 2; art. 32 ust. 2)?" (zus_rate)
+  assumed: the page gives monthly amounts with no months named; each source is taken as paid in all twelve months of 2022 (full_year[ex_p4, job1])
+  assumed: the page names no commuting, so each employer is taken to apply the basic costs (commuter[ex_p4, job1])
+  assumed: the page says 'zarabia 3 tys. zł'; the amounts are taken as gross pay (gross[ex_p4])
+  law date 2026-10-18, cut 2026-10-18
+q06_adv_july (e = ex_p4, s = pension, m = 2022-07): ?"Did this payer reduce each advance by 1/12 of the kwota zmniejszająca podatek (PIT-2 statement, art. 32 ust. 3 pkt 5; for a pension, the organ rentowy)?" (pit2[ex_p4, pension])
+  assumed: the page gives monthly amounts with no months named; each source is taken as paid in all twelve months of 2022 (full_year[ex_p4, pension])
+  assumed: the page says 'zarabia 3 tys. zł'; the amounts are taken as gross pay (gross[ex_p4])
+  law date 2026-10-18, cut 2026-10-18

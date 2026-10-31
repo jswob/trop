@@ -1,0 +1,21 @@
+part pit_8
+  tally 1
+  law
+  note "PIT-8 · Capital income: gains on fund units (proceeds less cost, lots first in first out within an account, .2–.3), the year's net gain less carried losses taxed at 19 %, base and tax rounded (.4); a year's loss carried 5 years, at most half of it used in any one year, only against a net gain, older first (.5); a gain on units held more than 5 years exempt, gifted lots counting from the giver's acquisition (.6)."
+
+source pit_8 "Personal Income Tax Act, PIT-8 Capital income (tmp/cases/law/acts.md)"
+
+input pit8_rate: num question "What is the tax rate on capital income (PIT-8 .4, .7)?"
+
+input pit8_carry_years: int question "For how many tax years is a loss carried (PIT-8 .5)?"
+
+input pit8_exempt_years: int question "After how many years of holding is a gain exempt (PIT-8 .6)?"
+
+version pit8_v1
+  cite pit_8
+  governs 2018..
+  known 2017-09-01
+  note "PIT-8 v1, in force 2018-01-01 until replaced, published 2017-09-01; governs tax years from 2018 and payments from 2018-01-01."
+  pit8_rate = 0.19 "PIT-8 v1 .4"
+  pit8_carry_years = 5 "PIT-8 v1 .5"
+  pit8_exempt_years = 5 "PIT-8 v1 .6"

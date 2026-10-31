@@ -1,0 +1,27 @@
+# Fault F8 (W-A): `h - round(h/2)` under `partial` printed `1 + 0 × ?a`, as if the rounding were linear in its hole.
+# L §5.18 Partial answers: "A rounding, `min`, `max`, a band, a comparison or a product of two holes meeting a hole
+# makes the line a plain hole naming every hole." x is a rounding meeting the hole a, and y = h - x takes x: both lines
+# are the plain hole a (q). The same for min (q2) and a comparison (q3).
+=== m.tally
+model t10
+  tally 2
+  on 2026-01-15
+  start 2026-01-01
+  end 2026-12-31
+unit DUK: currency minor 0.01
+input a: money DUK
+def h: money DUK = a + 1 at reader
+def x: money DUK = round(h / (1 + 1), minor(DUK), down) at reader
+def y: money DUK = h - x at reader
+def z: money DUK = h - min(h, 1) at reader
+def c: int = (if h > 1 then 1 else 0) + 1 at reader
+ask q: x, y law 2026-01-15 partial
+ask q2: z law 2026-01-15 partial
+ask q3: c law 2026-01-15 partial
+=== expect
+q: (?"a: no value at 2026-01-15" (a), ?"a: no value at 2026-01-15" (a))
+  law date 2026-01-15, cut 2026-01-15
+q2: ?"a: no value at 2026-01-15" (a)
+  law date 2026-01-15, cut 2026-01-15
+q3: ?"a: no value at 2026-01-15" (a)
+  law date 2026-01-15, cut 2026-01-15

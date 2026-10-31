@@ -1,0 +1,55 @@
+model law08
+  tally 2
+  on 2026-10-25
+  start 2024-01-01
+  end 2024-12-31
+  note "Probe LAW-08: gross to net through two laws in a stated order, with the pension contribution capped on the year's gross to date."
+
+source card "Probe card LAW-08 (tmp/cases/probes/law/LAW-08.md): story, rules 1-3 and question"
+
+unit DUK: currency minor 0.01
+
+index mo = month 2024-01..2024-12
+
+input adv_rate: num question "What is the tax advance rate?"
+
+input cap: money DUK question "Up to what year's gross to date is the pension contribution charged?"
+
+input gross[m in mo]: money DUK question "What is Tomek's gross pay this month?"
+
+input pension_rate: num question "What is the pension contribution rate?"
+
+def advance[m in mo]: money DUK at start_of(m)
+  note "rule 2: 12 % of gross minus the contribution, rounded half up to whole DUK"
+  rule base v card_law = round(adv_rate * (gross[m] - contribution[m]), 1, half-up)
+
+def contribution[m in mo]: money DUK at start_of(m)
+  note "rule 1: 9.76 % of the capped base, rounded half up to 0.01"
+  rule base v card_law = round(pension_rate * pension_base[m], minor(DUK), half-up)
+
+def net[m in mo]: money DUK at start_of(m)
+  note "rule 3: gross minus the contribution minus the advance"
+  rule base v card_law = gross[m] - contribution[m] - advance[m]
+
+def pension_base[m in mo]: money DUK at start_of(m)
+  note "rule 1: gross only until the year's gross to date reaches the cap"
+  rule base v card_law = max(0, min(gross[m], cap - ytd_before[m]))
+
+def ytd_before[m in mo]: money DUK = sum(gross[k] for k in mo where k < m) at start_of(m)
+
+ask net_pay: pension_base[m], contribution[m], advance[m], net[m] for m in [2024-10, 2024-11, 2024-12] law 2024-12-31
+
+version card_facts
+  cite card
+  governs always
+  known 2024-01-01
+  gross = 16500 "story: Tomek's gross pay is 16 500.00 DUK every month of 2024"
+
+version card_law
+  cite card
+  governs always
+  known 2024-01-01
+  note "the card's own rules, stipulations known from start (L 4.5)"
+  adv_rate = 0.12 "rule 2: the tax advance is 12 %"
+  cap = 180000 "rule 1: until the year's gross to date reaches 180 000.00"
+  pension_rate = 0.0976 "rule 1: 9.76 % of gross"

@@ -1,0 +1,36 @@
+# MC-X-F12 (writer 9): a row of rate reads b, an `at reader` def, which "takes its law date from whoever reads it"
+# (L §4.3): rate is read at its reader's law date, so r states at (LOAD-LAWDATE).
+=== m.tally
+model p
+  tally 2
+  on 2027-12-31
+  start 2027-01-01
+  end 2027-12-31
+
+unit PLN: currency minor 0.01
+source act "the act"
+place konto: accounts PLN lives 2020-01-01..
+place world: outside lives 1900-01-01..
+
+input age3: int
+input base: money PLN
+def b: money PLN = base at reader
+band rate(a: int): money PLN
+def r[m in months]: money PLN = rate(age3)
+ask q: r[2027-05]
+
+version v_law
+  cite act
+  governs 2027..
+  known 2026-12-01
+  base = 400.00 PLN "the base"
+
+version v_act
+  cite act
+  governs always
+  known 2026-12-01
+  age3 = 3 "the age"
+  rate: [0, 6) = b "under 6"
+  rate: [6, 18) = 250.00 PLN "6 to 17"
+=== expect
+refused: LOAD-LAWDATE r reads law-dated facts and states no at (m.tally:16)

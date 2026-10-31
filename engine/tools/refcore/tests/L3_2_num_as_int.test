@@ -1,0 +1,35 @@
+# L §3.2: "A num that is an integer is accepted where an int is expected ... Any other num there is refused at
+# that key (RUN-NOT-INT)."  6 / 3 = 2 (an integer num); 7 / 2 = 3.5 is not an integer.
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "a source"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+unit hour "godzina"
+
+index ks = [a, b]
+input x[k in ks]: int
+input y: int
+
+def c[k in ks]: int at reader
+  rule base = x[k] / y
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  x[a] = 6
+  x[b] = 7
+  y = 3
+
+ask q1: c[k] for k in ks law 2026-06-30
+=== expect
+q1 (k = a): 2
+  law date 2026-06-30, cut 2026-01-01
+q1 (k = b): refused: RUN-NOT-INT ...
+  law date 2026-06-30, cut 2026-01-01

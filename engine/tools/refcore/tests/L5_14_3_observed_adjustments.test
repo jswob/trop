@@ -1,0 +1,25 @@
+# L §5.14.3: "Only the engine makes adjustments: a move or an observed row of kind adjustments, or of a subkind of it,
+# is refused (LOAD-KIND)." (Writer 6: was LOAD-LEG.)
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2019-05-01..
+place world: outside lives 1900-01-01..
+input rows: observed
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 0 PLN at 2026-01-01 start "s"
+  rows[r1] = (on: 2026-03-01, kind: adjustments, leg cash from world to konto amount 10 PLN, adjusts: x, of_leg: "cash", change: 10 PLN) "s"
+
+ask q: bal(konto, 2026-12-31)
+=== expect
+refused: LOAD-KIND ...

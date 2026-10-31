@@ -1,0 +1,23 @@
+Bank Olcha S.A.|account statement
+Account|LN73 4400 2011 0000 8817 2264 0001
+Holder|HALINA SOWA
+Period|20250401|20250430
+Opening balance|122 934,93
+Date|Type|Counterparty|Title|Amount|Balance after
+20250402|CARD|Piekarnia Złoty Kłos|card ...2264|-243,34|122 691,59
+20250403|CASH|ATM Olcha Brzezie|cash withdrawal|-500,00|122 191,59
+20250403|CARD|Warzywniak u Janka|card ...2264|-111,20|122 080,39
+20250404|CREDIT|Social Insurance Office|survivor pension 04/2025|4 227,07|126 307,46
+20250407|STANDING ORDER|WM Ogrodowa 2|fee Ogrodowa 2/11 04/2025|-445,00|125 862,46
+20250411|CARD|Market Brzezie|card ...2264|-101,51|125 760,95
+20250415|STANDING ORDER|Volta Energia|Leśna 4 energy 04/2025|-385,00|125 375,95
+20250415|CARD|Drogeria Konwalia|card ...2264|-163,71|125 212,24
+20250417|CASH|ATM Olcha Brzezie|cash withdrawal|-500,00|124 712,24
+20250417|CARD|Apteka Rumianek|card ...2264|-65,67|124 646,57
+20250422|STANDING ORDER|Telekom Lenia|phone 04/2025|-59,00|124 587,57
+20250425|TRANSFER|Opieka Dom sp.|home help 04/2025|-1 100,00|123 487,57
+20250428|CARD|Warzywniak u Janka|card ...2264|-173,24|123 314,33
+20250429|CARD|Drogeria Konwalia|card ...2264|-153,73|123 160,60
+20250430|CARD|Stacja Olcha-Paliwa|card ...2264|-167,87|122 992,73
+20250430|CARD|Sklep Pod Lipą|card ...2264|-174,10|122 818,63
+Closing balance|122 818,63

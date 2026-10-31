@@ -1,0 +1,60 @@
+# L §5.14.1 next(K, d): "the first movement of event kind K whose day is on or after d (first(m in K over d ..) ties
+# by m.day): two movements on that first day are a tie, refused (RUN-TIE); a reader that needs one of them writes the
+# first itself with a fuller ties by, first(m in K over d ..) ties by (m.day, e)". bonus[x] and bonus[y] fall on one
+# day: RUN-TIE (n1; index order never breaks a tie, L §5.11), as g1 and g2 of two moves (n2). n3 states the fuller
+# ties by (m.day, m.rank), rank = pos(j): bonus[x] (rank 1). (Writer 8: n1 was bonus[x] by key order, removed.)
+=== m.tally
+model n
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+index jobs = [x, y]
+
+kind wages: event certain
+  leg cash: PLN
+  attr rank: int
+kind gifts: event certain
+  leg cash: PLN
+
+input bday: date
+input gday: date
+input amt: money PLN
+
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+
+move bonus[j in jobs]: wages
+  on bday
+  attr rank = pos(j)
+  leg cash from world to konto amount amt
+
+move g1: gifts
+  on gday
+  leg cash from world to konto amount amt
+
+move g2: gifts
+  on gday
+  leg cash from world to konto amount amt
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  bday = 2026-03-10
+  gday = 2026-04-01
+  amt = 10.00 PLN
+
+ask n1: next(wages, 2026-03-01)
+ask n2: next(gifts, 2026-03-01)
+ask n3: first(m in wages over 2026-03-01 ..) ties by (m.day, m.rank)
+=== expect
+n1: refused: RUN-TIE next(wages, 2026-03-01) has a tie at bonus[x], bonus[y] that changes the result, and its ties by doesn't break it
+  cut 2026-01-01
+n2: refused: RUN-TIE ...
+  cut 2026-01-01
+n3: bonus[x]
+  cut 2026-01-01

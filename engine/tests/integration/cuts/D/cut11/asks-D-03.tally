@@ -1,0 +1,21 @@
+part asks_d03
+  tally 2
+  note "D-03 · Her pensions, as of and as known 2026-09-30. Without the twist (no death): no survivor claim and no SOC-7 v2 claim."
+
+ask d03_arrears: arrears_day, sio_in[2025-12] - sio_for[2025-12] law 2026-09-30
+
+ask d03_cap: cap_law[2025-07], soc7_cap_mult * sio_min_used law 2026-09-30
+
+ask d03_months: entitled[m], sio_for[m] for m in month where m >= 2024-01 and m <= 2026-09 law 2026-09-30
+
+ask d03_owed: sio_owes[2026-09-30] law 2026-09-30
+
+ask d03_own: capital, own_first law 2026-09-30
+
+ask d03_without: entitled[m], sio_for[m] for m in month where m >= 2024-01 and m <= 2026-09 with surv_claim = none, v2_claim = none law 2026-09-30
+
+ask d03_without_owed: sio_owes[2026-09-30] with surv_claim = none, v2_claim = none law 2026-09-30
+
+ask d03_zb: lvl[zb, 2024-05], zb_pay_day[2024-05], soc7_death_month_full as if {law death_day}, surv_from law 2026-09-30
+
+ask d03_gap: check entitled[m] - sio_for[m] == entitled[m] - surv[m] - sio_part[m] for m in month where m >= 2025-07 and m <= 2026-09 law 2026-09-30

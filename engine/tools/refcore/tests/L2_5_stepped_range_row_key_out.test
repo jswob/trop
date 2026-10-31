@@ -1,0 +1,24 @@
+# L §2.5 (round 12): a written key at a stepped range's position that isn't one of its values is refused (LOAD-KEY):
+# 2026-01-09 is not 2026-01-01 + 7·i. (Was REFCORE-UNSPECIFIED §2.5, writer 5's T-5.)
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+input r[d in 2026-01-01 .. 2026-12-31 step 7 days]: int
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  r[2026-01-09] = 1 "s"
+  r[*] = 0 "s"
+
+ask q: r[2026-01-15]
+ask q2: sum(r[d] for d in 2026-01-01 .. 2026-01-31 step 7 days)
+=== expect
+refused: LOAD-KEY 2026-01-09 is not a value of 2026-01-01 .. 2026-12-31 step 7 day (m.tally:15)

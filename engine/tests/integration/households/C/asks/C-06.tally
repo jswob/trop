@@ -1,0 +1,9 @@
+part asks_c06
+  tally 2
+  note "C-06 · Jan's florens (questions.md), as of and known as of 2026-09-30. sales: each sale into the pot, by its day (the Lazur floren row): (day, florens, rate, dukats the pot's row shows). due: for each month whose end made a sale due under C-HR2 .2 or .3, (month, rule, due day, florens due, dukats due at the buy rate of the due day, the day the sale was made, whether it was made other than on its due day). held: the florens Jan held at the end of 2026-09-30, and their dukats at Bank Lazur's buy rate of that day (C-HR9 .1)."
+
+ask c06_sales: d, sale_flr[d], sale_rate[d], sale_duk[d] for d in day where d >= lazur_opened and d <= 2026-09-30 and sale_flr[d] > 0 FLR law 2026-09-30
+
+ask c06_due: m, due_rule[m], due_day[m], due_flr[m], due_duk[m], sale_made[m], off_rule[m] for m in month where m >= 2024-06 and m <= 2026-08 and due_rule[m] != none law 2026-09-30
+
+ask c06_held: lf_end[2026-09-30], lazur_buy[2026-09-30], held_duk[2026-09-30] law 2026-09-30

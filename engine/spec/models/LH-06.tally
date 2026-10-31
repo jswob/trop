@@ -1,6 +1,8 @@
 model lh06
-  tally 1
+  tally 2
   on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
   note "UK pension annual allowance carry forward: HMRC Pensions Tax Manual PTM055100 Examples 9 (Sybille) and 10 (Sam), and the four 2017-18 variants of PTM057100."
   note "The tax years of the examples are keys of pty, with 2015-16 split into its pre-alignment and post-alignment years. pty has no anchored dates: the split years are one-off periods, and nothing here reads a date."
   note "An excess over a year's allowance uses unused allowance of the earlier years in its window, earliest first; earlier excesses use it up first (FA 2004 s. 228A(6), (7)). The fill cf does this. In the post-alignment year the pre-alignment year's unused allowance is used first (s. 228C(8)(c))."
@@ -20,6 +22,8 @@ source fna2017 "Finance (No. 2) Act 2017 c. 32, s. 7, Money purchase annual allo
 source ptm055100 "HMRC Pensions Tax Manual, PTM055100 Annual allowance: carry forward: general, retrieved 2026-10-18" at "https://www.gov.uk/hmrc-internal-manuals/pensions-tax-manual/ptm055100"
 
 source ptm057100 "HMRC Pensions Tax Manual, PTM057100 Annual allowance: tapered annual allowance, retrieved 2026-10-18" at "https://www.gov.uk/hmrc-internal-manuals/pensions-tax-manual/ptm057100"
+
+unit GBP: currency minor 0.01
 
 axis p57_mpaa
   example "PTM057100's own allowances for variants 3 and 4: £30,000 alternative AA and £25,000 reduced alternative AA, £10,000 less than the standard and tapered AA"
@@ -54,104 +58,106 @@ input red_alt_aa17: money GBP
 
 input taa17: money GBP
 
-def aa17[pv in p57]: money GBP
-  rule mpaa when pv = mpaa and p57_mpaa = example = alt_aa17
-  rule mpaa_law when pv = mpaa and p57_mpaa = statute = aa_std17 - mpaa17
-  rule mpaa_tapered when pv = mpaa_tapered and p57_mpaa = example = red_alt_aa17
-  rule mpaa_tapered_law when pv = mpaa_tapered and p57_mpaa = statute = taa17 - mpaa17
-  rule normal when pv = normal = aa_std17
-  rule tapered when pv = tapered = taa17
+def aa17[pv in p57]: money GBP at reader
+  rule mpaa = alt_aa17 when pv == mpaa and p57_mpaa == example
+  rule mpaa_law = aa_std17 - mpaa17 when pv == mpaa and p57_mpaa == statute
+  rule mpaa_tapered = red_alt_aa17 when pv == mpaa_tapered and p57_mpaa == example
+  rule mpaa_tapered_law = taa17 - mpaa17 when pv == mpaa_tapered and p57_mpaa == statute
+  rule normal = aa_std17 when pv == normal
+  rule tapered = taa17 when pv == tapered
 
-def aa_used[p in person, y in pty]: money GBP = min(pia[p, y], aa[p, y])
+def aa_used[p in person, y in pty]: money GBP = min(pia[p, y], aa[p, y]) at reader
 
-def avail_cf[p in person, y in pty]: money GBP = sum(s in pty where pos(s) < pos(y) and pos(s) >= pos(y) - lookback[y]: left_before[p, s, y])
+def avail_cf[p in person, y in pty]: money GBP = sum(left_before[p, s, y] for s in pty where pos(s) < pos(y) and pos(s) >= pos(y) - lookback[y]) at reader
 
-def capacity[p in person, y in pty]: money GBP = aa[p, y] + avail_cf[p, y]
+def capacity[p in person, y in pty]: money GBP = aa[p, y] + avail_cf[p, y] at reader
 
-def cf17[pv in p57]: money GBP = max(0, aa17[pv] - pia17)
+def cf17[pv in p57]: money GBP = max(0, aa17[pv] - pia17) at reader
 
-def chargeable[p in person, y in pty]: money GBP = excess[p, y] - sum(s in pty: cf.taken[p, s, p, y])
+def chargeable[p in person, y in pty]: money GBP = excess[p, y] - sum(cf.taken[p, s, p, y] for s in pty) at reader
 
-def excess[p in person, y in pty]: money GBP = max(0, pia[p, y] - aa[p, y])
+def excess[p in person, y in pty]: money GBP = max(0, pia[p, y] - aa[p, y]) at reader
 
-def left_after[p in person, s in pty, y in pty]: money GBP = unused_cf[p, s] - sum(d in pty where pos(d) <= pos(y): cf.taken[p, s, p, d])
+def left_after[p in person, s in pty, y in pty]: money GBP = unused_cf[p, s] - sum(cf.taken[p, s, p, d] for d in pty where pos(d) <= pos(y)) at reader
 
-def left_before[p in person, s in pty, y in pty]: money GBP = unused_cf[p, s] - sum(d in pty where pos(d) < pos(y): cf.taken[p, s, p, d])
+def left_before[p in person, s in pty, y in pty]: money GBP = unused_cf[p, s] - sum(cf.taken[p, s, p, d] for d in pty where pos(d) < pos(y)) at reader
 
-def unused[p in person, y in pty]: money GBP = max(0, aa[p, y] - pia[p, y])
+def unused[p in person, y in pty]: money GBP = max(0, aa[p, y] - pia[p, y]) at reader
 
-def unused_cf[p in person, y in pty]: money GBP
+def unused_cf[p in person, y in pty]: money GBP at reader
   rule base = unused[p, y]
-  rule capped excepts base when cf_cap[y] != - = min(unused[p, y], cf_cap[y])
+  rule capped beats base = min(unused[p, y], cf_cap[y]) when cf_cap[y] != none
 
 fill cf
   v fa2011_sch17
   supply unused_cf[sp, sy] for sp in person, sy in pty
   demand excess[dp, dy] for dp in person, dy in pty
-  arc sp = dp and pos(sy) < pos(dy) and pos(sy) >= pos(dy) - lookback[dy] and excess[dp, dy] > 0
-  order dy, not first_use[sy, dy], sy
+  arc sp == dp and pos(sy) < pos(dy) and pos(sy) >= pos(dy) - lookback[dy] and excess[dp, dy] > 0
+  order dy, not first_use[sy, dy], sy ties by (pos(sp), pos(sy), pos(dp), pos(dy))
 
-ask p57_cf: cf17[pv] for pv in p57
+ask p57_cf: cf17[pv] for pv in p57 law 2026-10-18
 
-ask s10_capacity_1415: capacity[sam, ty2014-15]
+ask s10_capacity_1415: capacity[sam, ty2014-15] law 2026-10-18
 
-ask s10_cf_1415: avail_cf[sam, ty2014-15]
+ask s10_cf_1415: avail_cf[sam, ty2014-15] law 2026-10-18
 
-ask s10_charge_1415: chargeable[sam, ty2014-15]
+ask s10_charge_1415: chargeable[sam, ty2014-15] law 2026-10-18
 
-ask s10_excess_1314: excess[sam, ty2013-14]
+ask s10_excess_1314: excess[sam, ty2013-14] law 2026-10-18
 
-ask s10_excess_1415: excess[sam, ty2014-15]
+ask s10_excess_1415: excess[sam, ty2014-15] law 2026-10-18
 
-ask s10_to_pre_1213: left_after[sam, ty2012-13, ty2014-15]
+ask s10_to_pre_1213: left_after[sam, ty2012-13, ty2014-15] law 2026-10-18
 
-ask s10_unused: unused_cf[sam, y] for y in [ty2011-12, ty2012-13]
+ask s10_unused: unused_cf[sam, y] for y in [ty2011-12, ty2012-13] law 2026-10-18
 
-ask s10_used_by_1314: cf.taken[sam, s, sam, ty2013-14] for s in [ty2010-11, ty2011-12, ty2012-13]
+ask s10_used_by_1314: cf.taken[sam, s, sam, ty2013-14] for s in [ty2010-11, ty2011-12, ty2012-13] law 2026-10-18
 
-ask s10n_capacity_1415: capacity[sam, ty2014-15] with pia[sam, ty2010-11] = 50000
+ask s10n_capacity_1415: capacity[sam, ty2014-15] with pia[sam, ty2010-11] = 50000 law 2026-10-18
 
-ask s10n_cf_1415: avail_cf[sam, ty2014-15] with pia[sam, ty2010-11] = 50000
+ask s10n_cf_1415: avail_cf[sam, ty2014-15] with pia[sam, ty2010-11] = 50000 law 2026-10-18
 
-ask s10n_to_pre_1213: left_after[sam, ty2012-13, ty2014-15] with pia[sam, ty2010-11] = 50000
+ask s10n_to_pre_1213: left_after[sam, ty2012-13, ty2014-15] with pia[sam, ty2010-11] = 50000 law 2026-10-18
 
-ask s9_capacity_1415: capacity[sybille, ty2014-15]
+ask s9_capacity_1415: capacity[sybille, ty2014-15] law 2026-10-18
 
-ask s9_cf_1415: avail_cf[sybille, ty2014-15]
+ask s9_cf_1415: avail_cf[sybille, ty2014-15] law 2026-10-18
 
-ask s9_cf_1617: avail_cf[sybille, ty2016-17]
+ask s9_cf_1617: avail_cf[sybille, ty2016-17] law 2026-10-18
 
-ask s9_cf_1617_parts: left_before[sybille, s, ty2016-17] for s in [ty2013-14, ty2014-15, ty2015-pre, ty2015-post]
+ask s9_cf_1617_parts: left_before[sybille, s, ty2016-17] for s in [ty2013-14, ty2014-15, ty2015-pre, ty2015-post] law 2026-10-18
 
-ask s9_cf_pre: avail_cf[sybille, ty2015-pre]
+ask s9_cf_pre: avail_cf[sybille, ty2015-pre] law 2026-10-18
 
-ask s9_charge_1415: chargeable[sybille, ty2014-15]
+ask s9_charge_1415: chargeable[sybille, ty2014-15] law 2026-10-18
 
-ask s9_lapse_1112: left_after[sybille, ty2011-12, ty2014-15]
+ask s9_lapse_1112: left_after[sybille, ty2011-12, ty2014-15] law 2026-10-18
 
-ask s9_pre_left_post: left_after[sybille, ty2015-pre, ty2015-post]
+ask s9_pre_left_post: left_after[sybille, ty2015-pre, ty2015-post] law 2026-10-18
 
-ask s9_unused: unused_cf[sybille, y] for y in [ty2011-12, ty2012-13, ty2013-14]
+ask s9_unused: unused_cf[sybille, y] for y in [ty2011-12, ty2012-13, ty2013-14] law 2026-10-18
 
-ask s9_unused_pre: unused_cf[sybille, ty2015-pre]
+ask s9_unused_pre: unused_cf[sybille, ty2015-pre] law 2026-10-18
 
-ask s9_used_1112: cf.taken[sybille, ty2011-12, sybille, ty2014-15]
+ask s9_used_1112: cf.taken[sybille, ty2011-12, sybille, ty2014-15] law 2026-10-18
 
-ask s9_used_current: aa_used[sybille, ty2014-15]
+ask s9_used_current: aa_used[sybille, ty2014-15] law 2026-10-18
 
 version fa2011_sch17
   cite fa2011
+  governs always
   known 2011-07-19
   note "Law is known from the promulgation of the act that enacted the rows: for an Act of Parliament, its Royal Assent, 19 July 2011 (LANGUAGE §4.5). Para. 4 substituted FA 2004 s. 228 (£50,000 for 2011-12 and each later year); para. 5 inserted s. 228A (carry forward); para. 30(3)(a) assumes the allowance for 2008-09 to 2010-11."
   note "The fill cf cites this version for its order: s. 228A(7), the excess of an earlier tax year is used before that of a later one."
   aa[*, ty2010-11] = 50000 "para. 30(3)(a): for s. 228A in 2011-12 to 2013-14, the annual allowance for each of 2008-09, 2009-10 and 2010-11 is assumed to have been £50,000 (PTM055100: a deemed annual allowance of £50,000)"
   aa[*, ty2011-12..ty2013-14] = 50000 "para. 4 (FA 2004 s. 228(1)): £50,000 for 2011-12 and each subsequent tax year (PTM055100: the annual allowance was £50,000)"
-  cf_cap = - "para. 5 (FA 2004 s. 228A): no cap on the unused allowance carried forward"
+  cf_cap = none "para. 5 (FA 2004 s. 228A): no cap on the unused allowance carried forward"
   first_use = false "para. 5 (FA 2004 s. 228A(7)): an amount of the excess for an earlier tax year is to be taken to have had effect before that for a later tax year"
   lookback = 3 "para. 5 (FA 2004 s. 228A(3)): the immediately preceding tax year and the two tax years before it"
 
 version fa2013_s49
   cite fa2013
+  governs always
   known 2013-07-17
   note "Royal Assent 17 July 2013 (legislation.gov.uk). s. 49(2) substitutes FA 2004 s. 228(1); by s. 49(4) it has effect for 2014-15 and subsequent tax years, 2017-18 among them."
   aa[*, ty2014-15] = 40000 "s. 49(2) (FA 2004 s. 228(1)): the annual allowance for the tax year 2014-15 and each subsequent tax year is £40,000 (PTM055100: the annual allowance was £40,000)"
@@ -159,6 +165,7 @@ version fa2013_s49
 
 version fna2015_sch4
   cite fna2015
+  governs always
   known 2015-11-18
   note "Royal Assent 18 November 2015 (legislation.gov.uk). Sch. 4 para. 6 inserted FA 2004 s. 228C, which splits 2015-16 into the pre-alignment tax year (6 April to 8 July 2015) and the post-alignment tax year (9 July 2015 to 5 April 2016)."
   note "The £40,000 cap of s. 228C(6)(a) and (8)(a) holds when the pre-alignment chargeable amount is the default one; with the alternative chargeable amount it is £30,000 (s. 228C(6)(b), (8)(b)). Sybille has no money purchase annual allowance, so hers is the default."
@@ -170,12 +177,14 @@ version fna2015_sch4
 
 version fna2017_s7
   cite fna2017
+  governs always
   known 2017-11-16
   note "Royal Assent 16 November 2017 (legislation.gov.uk, enacted text: EnactmentDate 2017-11-16). s. 7(3) substitutes £4,000 for £10,000 in FA 2004 s. 227B(1)(b) and (2), the alternative chargeable amount; by s. 7(5) the amendments have effect for 2017-18 and subsequent tax years."
   mpaa17 = 4000 "s. 7(3) (FA 2004 s. 227B(1)(b), (2)): for '£10,000' substitute '£4,000'; s. 7(5): 2017-18 and subsequent tax years"
 
 version ptm055100_cf
   cite ptm055100
+  governs always
   known 2026-10-18
   note "Sybille's pension input amounts before 2011-12 and after the post-alignment year, and Sam's after 2014-15, are not given; their reads are holes."
   note "The examples are hypothetical: their figures are stipulations, known from the model's on (LANGUAGE §4.5). The page's public_updated_at stamp (5 September 2023, gov.uk content API) isn't used."
@@ -194,6 +203,7 @@ version ptm055100_cf
 
 version ptm057100_taper
   cite ptm057100
+  governs always
   known 2026-10-18
   note "Carrying forward unused annual allowance: one carry-forward year, 2017-18, with a total pension input amount of £14,000. The taper calculations behind the tapered and reduced alternative allowances are not given."
   note "The variants are hypothetical: their figures are stipulations, known from the model's on (LANGUAGE §4.5). The £30,000 alternative allowance implies a £10,000 money purchase annual allowance, not the £4,000 of 2017-18, so these allowances are kept as the example's own figures, not as law, read under p57_mpaa = example; statute reads fna2017_s7. The page's public_updated_at stamp (27 March 2024, gov.uk content API) isn't used."

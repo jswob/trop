@@ -1,0 +1,38 @@
+# L §2.4: version items are sorted "then by the start of their own governs span or their instant"; L §4.6 Readings: a
+# reading of a balance states its place in the day, "at D start (before the day's movements), at D end (after them)".
+# In time: 2026-02-01's end, then 2026-03-01's start, then its end (numbers as the shortest exact decimal).
+=== options reprint
+=== m.tally
+model m
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+place konto: accounts PLN lives 2019-01-01..
+
+version r
+  cite s
+  known 2026-03-02
+  anchor konto
+  stated[konto] = 5.00 PLN at 2026-03-01 end "wyciąg"
+  stated[konto] = 3.00 PLN at 2026-03-01 start "wyciąg"
+  stated[konto] = 9.00 PLN at 2026-02-01 end "wyciąg"
+=== expect
+--- m.tally
+model m
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+place konto: accounts PLN lives 2019-01-01..
+
+version r
+  cite s
+  known 2026-03-02
+  anchor konto
+  stated[konto] = 9 PLN at 2026-02-01 end "wyciąg"
+  stated[konto] = 3 PLN at 2026-03-01 start "wyciąg"
+  stated[konto] = 5 PLN at 2026-03-01 end "wyciąg"
+sha256 ...

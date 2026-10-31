@@ -1,0 +1,42 @@
+# As L5_14_3_flows_of_plan, with a raise of amt to 15 governing 2026-01.. known 2026-02-15: rent[2026-01] and
+# rent[2026-02], booked before, change after they were paid, and no move settles them, so every flows that counts
+# them from 2026-02-15 on is HOLE-CHANGED (L §6.5 change 3: "Without the two moves, every flows that could count the
+# adjustments ... is a hole asking whether back pay is due"; E §5 steps 3-6).  echo_pay[2026-02], re-evaluated at
+# 2026-02-15 (E §5 step 3), reads flows(rent, 2026-02), now that hole, so it changes too.  What matters here: the read
+# measures rent's adjustments, not a pass over every plan that would reach echo_pay itself (no RUN-CYCLE).
+=== m.tally
+model m
+  tally 2
+  on 2026-03-15
+  start 2026-01-01
+  end 2026-06-30
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 2026-01-01..
+index month = month 2026-01..2026-06
+input amt: money PLN
+move rent[m in month]: transfers
+  on start_of(m)
+  at start_of(m)
+  leg cash from konto to world amount amt
+move echo_pay[m in month]: transfers
+  on add_days(start_of(m), 1)
+  at start_of(m)
+  leg cash from konto to world amount flows(rent, m)
+source s "x"
+version v1
+  cite s
+  governs always
+  known 2025-12-31
+  amt = 10
+  opening[konto] = 0 at 2026-01-01 start
+ask q: flows(echo_pay, 2026), flows(rent, 2026) law cut
+
+version raise
+  cite s
+  governs 2026-01..
+  known 2026-02-15
+  replace amt = 15
+=== expect
+q: (?"echo_pay[2026-02] on 2026-02-02 changed after it was paid (version raise); is back pay due, and when?" ...
+...

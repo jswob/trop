@@ -1,0 +1,56 @@
+# L §6.1: "A model is one or more .tally files in one directory tree"; "use a = "file" sha256 "…"" imports a closed
+# model; E §3.1 step 1: its hash is of "its canonical text, its files reprinted and taken in the order of their paths
+# in its directory tree", every file (the scenario file included: "A reality's hash covers every file", L §6.1). The
+# member a is the tree ../A: its law part holds the rate (0.12) its model reads; its ask q is asked as a.q (L §6.1);
+# its scenario file is no part of its base (L §6.4 "The base is whole without its scenarios").
+=== J/joint.tally
+model family
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+  use a = "../A" sha256 "e6d5403b51fe7411ad65011b8b940d26098814144cccb5cfa52220ced833dfd6"
+
+ask r: a.rate
+=== A/reality.tally
+model ana
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+def doubled: num = rate + rate
+=== A/law/pit.tally
+part pit
+  tally 2
+  law
+
+source act "ustawa"
+
+input rate: num
+
+version pit_2026
+  cite act
+  governs always
+  known 2025-01-01
+  rate = 0.12 "art. 1"
+=== A/asks/q.tally
+part asks
+  tally 2
+
+ask q: doubled
+=== A/scenarios/s.tally
+scenario s over ana
+  tally 2
+  from 2026-06-01
+
+version s_rate
+  cite act
+  governs 2026-06-01..
+  known 2025-01-01
+  replace rate = 0.5 "scenariusz"
+=== expect r a.q
+r: 0.12
+  cut 2026-10-20
+a.q: 0.24
+  cut 2026-10-20

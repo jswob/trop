@@ -1,0 +1,9 @@
+part asks_c09
+  tally 2
+  note "C-09 · Staś's money (questions.md), as of and known as of 2026-09-30. sent: all Irena has sent for him (the 2 700.00 of 2023 the opening held, C-HR5 .3, and her rows since). held: what the joint account held for him at the end of 2026-09-30 (C-HR5 .2). short: the shortfall at the end of that day. days short: the days from 2024-01-01 to 2026-09-30 on whose end the balance was below all he had been sent. largest shortfall: its amount and the first day it was reached. gift tax: the returns due before 2026-09-30 (IGT-5 .1; none filed), the next return's deadline, and the tax on the last gift (IGT-3, Group I, added up over 5 years)."
+
+ask c09_sent_held: sent_to[2026-09-30], stas_held[2026-09-30], stas_short[2026-09-30], jw_end[2026-09-30] law 2026-09-30
+
+ask c09_short: days_short[2026-09-30], short_max[2026-09-30], short_max_on[2026-09-30] law 2026-09-30
+
+ask c09_gift_tax: returns_overdue[2026-09-30], next_return[2026-09-30], gift_tax[2026-09], gifts_5y[2026-09] law 2026-09-30

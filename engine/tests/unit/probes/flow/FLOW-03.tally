@@ -1,0 +1,50 @@
+model flow03
+  tally 2
+  on 2026-10-25
+  start 2025-01-01
+  end 2025-12-31
+  note "FLOW-03: three co-owners, one pays all costs, the rent comes into another's account; the net balances."
+  note "The card dates nothing inside the year, so the year's totals are inputs and the balances defs (LANGUAGE 5.10)."
+
+source card "Probe card FLOW-03 (made up): story and rules"
+
+unit DUK: currency minor 0.01
+
+index owners = [halina, ania, kuba]
+
+index tax_years = year 2025..2025
+
+input cost_paid[p in owners, y in tax_years]: money DUK
+
+input own_share[p in owners]: num
+
+input rent_in[p in owners, y in tax_years]: money DUK
+
+def balance[p in owners, y in tax_years]: num DUK at start_of(y)
+  note "rule 2: costs paid - share of costs + share of rent - rent received; + is owed to them"
+  rule base v card_rules = cost_paid[p, y] - own_share[p] * total_cost[y] + own_share[p] * total_rent[y] - rent_in[p, y]
+
+def total_cost[y in tax_years]: money DUK = sum(cost_paid[q, y] for q in owners) at start_of(y)
+
+def total_rent[y in tax_years]: money DUK = sum(rent_in[q, y] for q in owners) at start_of(y)
+
+ask q_balances: balance[p, 2025] for p in owners
+
+ask q_sum: check sum(balance[p, 2025] for p in owners) == 0
+
+version card_facts
+  cite card
+  governs always
+  known 2025-01-01
+  cost_paid = 0.00 "story: Halina pays all its costs"
+  cost_paid[halina, 2025] = 1200.00 "story: 1 200.00"
+  own_share[halina] = 0.5 "story: Halina 1/2"
+  own_share[ania] = 0.25 "story: Ania 1/4"
+  own_share[kuba] = 0.25 "story: Kuba 1/4"
+  rent_in = 0.00 "story: the rent goes into Kuba's account"
+  rent_in[kuba, 2025] = 2000.00 "story: the year's rent, 2 000.00"
+
+version card_rules
+  cite card
+  governs always
+  known 2025-01-01

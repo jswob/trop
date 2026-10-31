@@ -1,0 +1,11 @@
+part asks_b06
+  tally 2
+  note "B-06 · Selling the car (questions.md): as of 2025-12-31, known as of 2025-12-31. Each leg signed from Piotr's side."
+
+ask b06_legs: sale[car_sale_inv].net + sale[car_sale_inv].vat, 0 DUK - car_vat_due, 0 DUK - car_sale_tax, 0 DUK - (loan_left + car_loan_interest + car_loan_fee), 0 DUK - car_loan_fee, insurance_refund, road_refund law 2025-12-31 as known 2025-12-31
+
+ask b06_left: sale[car_sale_inv].net + sale[car_sale_inv].vat - car_vat_due - car_sale_tax - (loan_left + car_loan_interest + car_loan_fee) + insurance_refund + road_refund law 2025-12-31 as known 2025-12-31
+
+ask b06_purchase_vat: deductible[car_purchase[ln4471k]] / buy[car_purchase[ln4471k]].vat, deductible[car_purchase[ln4471k]] law 2025-12-31 as known 2025-12-31
+
+ask b06_health: health_owed_year[2025], health_owed_year[2025] as if {sale[car_sale_inv].net = 0 DUK}, health_owed_year[2025] - health_owed_year[2025] as if {sale[car_sale_inv].net = 0 DUK} law 2025-12-31 as known 2025-12-31

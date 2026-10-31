@@ -1,0 +1,26 @@
+# GD-20 (round 19, writer 10): L §4.2 Keys as values "a key of a year, month or day range `by n` with n above 1
+# stands for its n periods (§4.1), so it is a period, never a law date: `at k` with k such a key is refused
+# (LOAD-LAWPERIOD, §4.3)"; L §8.3 row `at <m>: a period is not a law date`. A week (a day range by 7).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+index wk = day 2026-01-05..2026-12-28 by 7
+input r: int
+def d[w in wk]: int at w
+  rule a = r
+
+version v
+  cite s
+  governs 2026..
+  known 2026-01-01
+  r = 2
+
+ask q: d[2026-01-05]
+=== expect
+refused: LOAD-LAWPERIOD at w: a period is not a law date (m.tally:11)

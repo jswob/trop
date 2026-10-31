@@ -1,0 +1,40 @@
+# MC-X-F6. L §4.4: a comparison on a window "is decided when the whole interval lies on one side", and "A value
+# compared with itself is decided ... x <= x [is] true even when x is a window"; L §5.12 Sort: the arcs sort by the
+# order tuple, and "An order that can't be decided (a hole) is refused (RUN-ORDER)". lot[x1] is dated by the window
+# 2027-02-01 .. 2027-02-28, lot[x2] on 2027-03-12: lot[x1].day against itself is equal and against 2027-03-12 is
+# before, so every comparison of the order (l.day, c.day) is decided and each lot takes from itself, as with a plain
+# day (the judge's m12e). snap10 refused the load (LOAD-UNIT window(...) and window(...) compared).
+=== m.tally
+model m
+  tally 2
+  on 2027-01-01
+  start 2027-01-01
+  end 2027-12-31
+source src "s"
+unit PLN: currency minor 0.01
+kind lots: event certain
+index ids = [x1, x2]
+input day[i in ids]: date
+move lot[i in ids]: lots
+  on day[i]
+fill f
+  supply 1 for l in lots over ..
+  demand 1 for c in lots over ..
+  arc true
+  order l.day, c.day
+version v
+  cite src
+  governs always
+  known 2027-01-01
+  day[x1] = window(2027-02-01, 2027-02-28)
+  day[x2] = 2027-03-12
+ask t: f.taken[l, c] for l in lots over .., c in lots over ..
+=== expect
+t (l = lot[x1], c = lot[x1]): 1
+  cut 2027-01-01
+t (l = lot[x1], c = lot[x2]): 0
+  cut 2027-01-01
+t (l = lot[x2], c = lot[x1]): 0
+  cut 2027-01-01
+t (l = lot[x2], c = lot[x2]): 1
+  cut 2027-01-01

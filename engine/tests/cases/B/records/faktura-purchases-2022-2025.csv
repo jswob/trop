@@ -1,0 +1,35 @@
+Faktura+ export;purchase register;Piotr Sowa IT services, Kłodzin;2022-04-11..2025-12-31
+number;received;supplier;item;net;vat;gross
+P001;2022-11-08;Komputery Sowiniec sp.;laptop;7000.00;1540.00;8540.00
+P002;2023-03-15;Auto Grab sp.;car LN 4471K;80000.00;17600.00;97600.00
+P003;2023-05-04;Stacja Paliw Tor sp.;fuel 2023-04;655.66;144.25;799.91
+P004;2023-06-02;Stacja Paliw Tor sp.;fuel 2023-05;729.19;160.42;889.61
+P005;2023-07-04;Stacja Paliw Tor sp.;fuel 2023-06;650.30;143.07;793.37
+P006;2023-08-02;Stacja Paliw Tor sp.;fuel 2023-07;575.95;126.71;702.66
+P007;2023-09-04;Stacja Paliw Tor sp.;fuel 2023-08;717.49;157.85;875.34
+P008;2023-10-03;Stacja Paliw Tor sp.;fuel 2023-09;610.60;134.33;744.93
+P009;2023-11-03;Stacja Paliw Tor sp.;fuel 2023-10;498.27;109.62;607.89
+P010;2023-12-04;Stacja Paliw Tor sp.;fuel 2023-11;735.43;161.79;897.22
+P011;2024-01-03;Stacja Paliw Tor sp.;fuel 2023-12;716.77;157.69;874.46
+P012;2024-02-02;Stacja Paliw Tor sp.;fuel 2024-01;500.17;110.04;610.21
+P013;2024-03-04;Stacja Paliw Tor sp.;fuel 2024-02;661.20;145.46;806.66
+P014;2024-04-03;Stacja Paliw Tor sp.;fuel 2024-03;530.90;116.80;647.70
+P015;2024-05-06;Stacja Paliw Tor sp.;fuel 2024-04;517.53;113.86;631.39
+P016;2024-05-21;Komputery Sowiniec sp.;monitor;1800.00;396.00;2196.00
+P017;2024-06-04;Stacja Paliw Tor sp.;fuel 2024-05;602.88;132.63;735.51
+P018;2024-07-02;Stacja Paliw Tor sp.;fuel 2024-06;680.03;149.61;829.64
+P019;2024-08-02;Stacja Paliw Tor sp.;fuel 2024-07;647.33;142.41;789.74
+P020;2024-09-03;Stacja Paliw Tor sp.;fuel 2024-08;741.44;163.12;904.56
+P021;2024-10-02;Stacja Paliw Tor sp.;fuel 2024-09;557.53;122.66;680.19
+P022;2024-11-05;Stacja Paliw Tor sp.;fuel 2024-10;730.88;160.79;891.67
+P023;2024-12-03;Stacja Paliw Tor sp.;fuel 2024-11;645.90;142.10;788.00
+P024;2025-01-03;Stacja Paliw Tor sp.;fuel 2024-12;741.02;163.02;904.04
+P025;2025-02-04;Stacja Paliw Tor sp.;fuel 2025-01;602.77;132.61;735.38
+P026;2025-03-04;Stacja Paliw Tor sp.;fuel 2025-02;520.41;114.49;634.90
+P027;2025-04-02;Stacja Paliw Tor sp.;fuel 2025-03;613.73;135.02;748.75
+P028;2025-05-05;Stacja Paliw Tor sp.;fuel 2025-04;593.62;130.60;724.22
+P029;2025-06-03;Stacja Paliw Tor sp.;fuel 2025-05;578.01;127.16;705.17
+P030;2025-07-02;Stacja Paliw Tor sp.;fuel 2025-06;671.65;147.76;819.41
+P031;2025-08-04;Stacja Paliw Tor sp.;fuel 2025-07;495.61;109.03;604.64
+P032;2025-09-02;Stacja Paliw Tor sp.;fuel 2025-08;637.02;140.14;777.16
+P033;2025-10-02;Stacja Paliw Tor sp.;fuel 2025-09;214.60;47.21;261.81

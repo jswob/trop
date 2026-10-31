@@ -1,0 +1,7 @@
+part asks_a04
+  tally 1
+  note "A-04 · Zosia's child benefit (questions.md), as known 2023-08-31. It fans out over the axis fam1_filed (posted, received): FAM-1 doesn't say when a posted claim is filed."
+
+ask a04_months: m, benefit[zosia, m] for m in month where m >= 2023-04 and m <= 2023-08 as known 2023-08-31
+
+ask a04_total: sum(m in month where m >= 2023-04 and m <= 2023-08: benefit[zosia, m]) as known 2023-08-31

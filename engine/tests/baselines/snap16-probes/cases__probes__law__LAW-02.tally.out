@@ -1,0 +1,8 @@
+contribution_at_edge (t = at_edge): (60 000.00 DUK, 300.00 DUK)
+  law date 2026-10-25, cut 2026-10-25
+contribution_at_edge (t = above_edge): (60 000.01 DUK, 500.00 DUK)
+  law date 2026-10-25, cut 2026-10-25
+relief_at_edge (t = at_edge): (100 000.00 DUK, 1 200.00 DUK)
+  law date 2026-10-25, cut 2026-10-25
+relief_at_edge (t = above_edge): (100 000.01 DUK, 1 199.99 DUK)
+  law date 2026-10-25, cut 2026-10-25

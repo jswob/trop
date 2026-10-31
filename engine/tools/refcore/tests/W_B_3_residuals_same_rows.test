@@ -1,0 +1,46 @@
+# Fault W-B-3: the residual ledger listed both rows of a pair stated `same` as unexplained, each at its full amount.
+# L §5.19 One movement on two statements: "rows stated `same` are one movement ...: each end is booked once"; L §6.1:
+# "it is booked once, at the point in the day's order of the latest of them"; E §6.3: "A pair of rows stated `same` is
+# one movement (LANGUAGE §5.19): the ledger lists it once, on one line, and names both rows as its evidence".
+# konto opens at 1 000.00 PLN; r1 and r2 state one 400.00 PLN payment: 600.00 PLN at February's end, flows -400.00 PLN
+# (b), and one unexplained line of -400.00 PLN naming both rows (led; the layout is this interpreter's).
+=== m.tally
+model hh
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source plan "plan"
+source bank "bank"
+unit PLN: currency minor 0.01
+input bank_rows: observed
+place konto: accounts PLN lives 2019-05-01..
+place world: outside lives 1900-01-01..
+place unexplained: outside lives 1900-01-01..
+
+version plan_2026
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "wyciąg"
+
+version statement_02
+  cite bank
+  governs 2026-02
+  known 2026-03-02
+  covers konto
+  pad konto from unexplained
+  bank_rows[r1] = (on: 2026-02-20, kind: transfers, leg cash from konto to world amount 400.00 PLN) "line 1"
+  bank_rows[r2] = (on: 2026-02-20, kind: transfers, leg cash from konto to world amount 400.00 PLN) "line 2"
+  same bank_rows[r2] = bank_rows[r1]
+
+ask led: residuals konto 2026-02
+ask b: bal(konto, 2026-02-28), flows(konto, 2026-02)
+=== expect
+b: (600.00 PLN, -400.00 PLN)
+  cut 2026-10-20
+led: residuals konto 2026-02
+  2026-02 unexplained: model 0.00 PLN, observed -400.00 PLN, difference -400.00 PLN
+    unexplained bank_rows[r1], bank_rows[r2] on 2026-02-20: observed -400.00 PLN
+  cut 2026-10-20

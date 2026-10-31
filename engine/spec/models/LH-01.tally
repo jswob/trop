@@ -1,6 +1,8 @@
 model lh01
-  tally 1
+  tally 2
   on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
   note "US wash sales, IRC 1091: Publication 550 (2025) situations A to E, and the examples of 26 CFR 1.1091-1(h) and 26 CFR 1.1091-2(a)."
   note "Each worked situation is a key of sit. Its purchases are keys of lot, in order of acquisition; its sales are keys of sale, in order of disposition."
   note "A loss is matched with replacement lots of the same situation bought within the window, earliest acquisition first (26 CFR 1.1091-1(c), (d)), by the fill wash, which cites that order (version cfr1091_1_order)."
@@ -14,6 +16,8 @@ source modeller "The modeller's wiring: not-applicable defaults for the per-shar
 source pub550 "IRS Publication 550 (2025), Investment Income and Expenses, chapter 4, Wash Sales" at "https://www.irs.gov/pub/irs-pdf/p550.pdf"
 
 source usc1091 "26 U.S. Code 1091, Loss from wash sales of stock or securities (LII), retrieved 2026-10-18" at "https://www.law.cornell.edu/uscode/text/26/1091"
+
+unit USD: currency minor 0.01
 
 unit shr "share of stock"
 
@@ -49,99 +53,102 @@ input stated_within[s in sale, l in lot]: bool
 
 input window_days: int
 
-def added[l in lot]: num USD = sum(s in sale where lot_sit[sold_lot[s]] = lot_sit[l]: wash.taken[s, l] * loss_ps[s])
+def added[l in lot]: num USD = sum(wash.taken[s, l] * loss_ps[s] for s in sale where lot_sit[sold_lot[s]] == lot_sit[l]) at reader
 
-def basis[l in lot]: num USD = cost[l] + added[l]
+def basis[l in lot]: num USD = cost[l] + added[l] at reader
 
-def basis_d[l in lot]: num USD = cost[l] + sum(s in sale where lot_sit[sold_lot[s]] = lot_sit[l]: wash.taken[s, l] * (sold_cost[s] - proceeds[s]) / sale_sh[s])
+def basis_d[l in lot]: num USD = cost[l] + sum(wash.taken[s, l] * (sold_cost[s] - proceeds[s]) / sale_sh[s] for s in sale where lot_sit[sold_lot[s]] == lot_sit[l]) at reader
 
-def cost[l in lot]: num USD
+def cost[l in lot]: num USD at reader
   rule base = lot_cost[l]
-  rule per_share excepts base when lot_px[l] != - = lot_px[l] * lot_sh[l]
+  rule per_share beats base = lot_px[l] * lot_sh[l] when lot_px[l] != none
 
-def deductible[s in sale]: num USD = loss[s] - disallowed[s]
+def deductible[s in sale]: num USD = loss[s] - disallowed[s] at reader
 
-def disallowed[s in sale]: num USD = loss_ps[s] * sum(l in lot: wash.taken[s, l])
+def disallowed[s in sale]: num USD = loss_ps[s] * sum(wash.taken[s, l] for l in lot) at reader
 
-def in_window[s in sale, l in lot]: bool
-  rule base = days(acq_on[l], sale_on[s]) <= window_days and days(sale_on[s], acq_on[l]) <= window_days
-  rule stated excepts base when stated_within[s, l] != - = stated_within[s, l]
+def in_window[s in sale, l in lot]: bool at reader
+  rule base = days_between(acq_on[l], sale_on[s]) <= window_days and days_between(sale_on[s], acq_on[l]) <= window_days
+  rule stated beats base = stated_within[s, l] when stated_within[s, l] != none
 
-def loss[s in sale]: num USD
+def loss[s in sale]: num USD at reader
   rule base = max(0, sold_cost[s] - proceeds[s])
-  rule stated excepts base when stated_loss[s] != - = stated_loss[s]
+  rule stated beats base = stated_loss[s] when stated_loss[s] != none
 
-def loss_ps[s in sale]: num USD/shr = loss[s] / sale_sh[s]
+def loss_ps[s in sale]: num USD/shr = loss[s] / sale_sh[s] at reader
 
-def proceeds[s in sale]: num USD
+def proceeds[s in sale]: num USD at reader
   rule base = sale_amt[s]
-  rule per_share excepts base when sale_px[s] != - = sale_px[s] * sale_sh[s]
+  rule per_share beats base = sale_px[s] * sale_sh[s] when sale_px[s] != none
 
-def sold_cost[s in sale]: num USD = cost[sold_lot[s]] * sale_sh[s] / lot_sh[sold_lot[s]]
+def sold_cost[s in sale]: num USD = cost[sold_lot[s]] * sale_sh[s] / lot_sh[sold_lot[s]] at reader
 
 fill wash
   v cfr1091_1_order
   supply sale_sh[s] for s in sale
   demand lot_sh[l] for l in lot
-  arc lot_sit[l] = lot_sit[sold_lot[s]] and l != sold_lot[s] and loss[s] > 0 and in_window[s, l]
-  order s, l
+  arc lot_sit[l] == lot_sit[sold_lot[s]] and l != sold_lot[s] and loss[s] > 0 and in_window[s, l]
+  order s, l ties by (pos(s), pos(l))
 
-ask a_basis_new: basis[a_new]
+ask a_basis_new: basis[a_new] law 2026-10-18
 
-ask a_disallowed: disallowed[a_s]
+ask a_disallowed: disallowed[a_s] law 2026-10-18
 
-ask b_added_dec13: added[b_dec13]
+ask b_added_dec13: added[b_dec13] law 2026-10-18
 
-ask b_basis_dec13: basis[b_dec13]
+ask b_basis_dec13: basis[b_dec13] law 2026-10-18
 
-ask b_basis_dec20: basis[b_dec20]
+ask b_basis_dec20: basis[b_dec20] law 2026-10-18
 
-ask b_deductible: deductible[b_s]
+ask b_deductible: deductible[b_s] law 2026-10-18
 
-ask b_disallowed: disallowed[b_s]
+ask b_disallowed: disallowed[b_s] law 2026-10-18
 
-ask b_loss: loss[b_s]
+ask b_loss: loss[b_s] law 2026-10-18
 
-ask c_added_feb3: added[c_feb3]
+ask c_added_feb3: added[c_feb3] law 2026-10-18
 
-ask c_added_feb4: added[c_feb4]
+ask c_added_feb4: added[c_feb4] law 2026-10-18
 
-ask c_disallowed: disallowed[c_s]
+ask c_disallowed: disallowed[c_s] law 2026-10-18
 
-ask d_disallowed_ps: disallowed[d_s1] / sale_sh[d_s1]
+ask d_disallowed_ps: disallowed[d_s1] / sale_sh[d_s1] law 2026-10-18
 
-ask e_disallowed: disallowed[e_s]
+ask e_disallowed: disallowed[e_s] law 2026-10-18
 
-ask x1_deductible: deductible[x1_s]
+ask x1_deductible: deductible[x1_s] law 2026-10-18
 
-ask x2_basis_dec21: basis_d[x2_dec21]
+ask x2_basis_dec21: basis_d[x2_dec21] law 2026-10-18
 
-ask x2_basis_dec27: basis_d[x2_dec27]
+ask x2_basis_dec27: basis_d[x2_dec27] law 2026-10-18
 
-ask x2_deductible: deductible[x2_s]
+ask x2_deductible: deductible[x2_s] law 2026-10-18
 
-ask x2_disallowed: disallowed[x2_s]
+ask x2_disallowed: disallowed[x2_s] law 2026-10-18
 
-ask x3_matched: wash.taken[x3_s, l] for l in lot where lot_sit[l] = x3
+ask x3_matched: wash.taken[x3_s, l] for l in lot where lot_sit[l] == x3 law 2026-10-18
 
-ask y1_basis_new: basis_d[y1_new]
+ask y1_basis_new: basis_d[y1_new] law 2026-10-18
 
-ask y2_basis_new: basis_d[y2_new]
+ask y2_basis_new: basis_d[y2_new] law 2026-10-18
 
 version usc1091_a
   cite usc1091
+  governs always
   known 1954-08-16
   note "Law is known from its enactment (LANGUAGE §4.5). The 30-day window of subsection (a) is in the Internal Revenue Code of 1954 (Aug. 16, 1954, ch. 736, 68A Stat. 319), as the section's history on LII gives it; the later amendments of (a) listed there (Pub. L. 98-369, 1984; Pub. L. 100-647, 1988) don't change the window."
   window_days = 30 "subsection (a): a period beginning 30 days before the date of such sale and ending 30 days after such date"
 
 version cfr1091_1_order
   cite cfr1091_1
+  governs always
   known 1967-08-09
   note "Paragraphs (b) to (d): losses are taken in order of disposition, and shares are matched in order of acquisition, beginning with the earliest acquisition. The fill wash cites this version; it has no rows."
   note "The section's source note on eCFR: T.D. 6500, 25 FR 11910, Nov. 26, 1960, as amended by T.D. 6926, 32 FR 11468, Aug. 9, 1967. Which paragraphs T.D. 6926 changed wasn't checked, so the later publication is taken as the known date, and no view sees the rule too early."
 
 version cfr1091_1_h
   cite cfr1091_1
+  governs always
   known 2026-10-18
   note "Paragraph (h), Examples 1 to 3. Example 2 repeats Pub situation B with 1954-55 dates; Example 3 prices Pub situation C."
   note "The examples are hypothetical: their figures are stipulations, known from the model's on (LANGUAGE §4.5)."
@@ -200,12 +207,13 @@ version cfr1091_1_h
 
 version cfr1091_2_a
   cite cfr1091_2
+  governs always
   known 2026-10-18
   note "Paragraph (a), Examples 1 and 2: one old share bought in 1935, sold January 15, 1955; one new share bought February 1, 1955."
   note "The examples are hypothetical: their figures are stipulations, known from the model's on (LANGUAGE §4.5)."
-  acq_on[y1_old] = 1935 "(a) Example 1: in 1935"
+  acq_on[y1_old] = window(1935-01-01, 1935-12-31) "(a) Example 1: in 1935"
   acq_on[y1_new] = 1955-02-01 "(a) Example 1"
-  acq_on[y2_old] = 1935 "(a) Example 2: in 1935"
+  acq_on[y2_old] = window(1935-01-01, 1935-12-31) "(a) Example 2: in 1935"
   acq_on[y2_new] = 1955-02-01 "(a) Example 2"
   lot_cost[y1_old] = 100 "(a) Example 1"
   lot_cost[y1_new] = 90 "(a) Example 1"
@@ -230,6 +238,7 @@ version cfr1091_2_a
 
 version pub550_2025
   cite pub550
+  governs always
   known 2026-10-18
   note "The Pub's situations are worked examples: their figures are stipulations, known from the model's on (LANGUAGE §4.5), and so are the assumed years of E. The PDF's own date (created 2026-03-06) isn't used."
   note "Its printed page numbers equal the PDF page numbers."
@@ -244,9 +253,9 @@ version pub550_2025
   acq_on[c_feb4] = 2025-02-04 "p. 87, More or less stock bought than sold, Example 2"
   acq_on[c_feb5] = 2025-02-05 "p. 87, More or less stock bought than sold, Example 2"
   acq_on[c_feb6] = 2025-02-06 "p. 87, More or less stock bought than sold, Example 2"
-  acq_on[d_b1] = 2019 "p. 87, Loss and gain on same day, Example: During 2019"
-  acq_on[d_b2] = 2019 "p. 87, Loss and gain on same day, Example: During 2019"
-  acq_on[d_b3] = 2019 "p. 87, Loss and gain on same day, Example: During 2019"
+  acq_on[d_b1] = window(2019-01-01, 2019-12-31) "p. 87, Loss and gain on same day, Example: During 2019"
+  acq_on[d_b2] = window(2019-01-01, 2019-12-31) "p. 87, Loss and gain on same day, Example: During 2019"
+  acq_on[d_b3] = window(2019-01-01, 2019-12-31) "p. 87, Loss and gain on same day, Example: During 2019"
   acq_on[d_jan10] = 2025-01-10 "p. 87, Loss and gain on same day, Example"
   acq_on[e_jun4] = 2025-06-04 assumed "the Pub gives June 4 with no year; the year of the 2025 edition is taken" "p. 87, Short sales, Example"
   acq_on[e_oct16] = 2025-10-16 assumed "the Pub gives October 16 with no year; the year of the 2025 edition is taken" "p. 87, Short sales, Example"
@@ -255,12 +264,12 @@ version pub550_2025
   lot_cost[b_sep] = 5000 "p. 87, More or less stock bought than sold, Example 1"
   lot_cost[b_dec13] = 2750 "p. 87, More or less stock bought than sold, Example 1"
   lot_cost[b_dec20] = 1125 "p. 87, More or less stock bought than sold, Example 1"
-  lot_cost[c_sep] = ? "What did the 100 shares bought September 16, 2024 cost? The Pub states only the loss." "p. 87, More or less stock bought than sold, Example 2"
-  lot_cost[c_feb3] = ? "What did the 50 shares bought February 3, 2025 cost? The Pub gives no price." "p. 87, More or less stock bought than sold, Example 2"
-  lot_cost[c_feb4] = ? "What did the 50 shares bought February 4, 2025 cost? The Pub gives no price." "p. 87, More or less stock bought than sold, Example 2"
-  lot_cost[c_feb5] = ? "What did the 50 shares bought February 5, 2025 cost? The Pub gives no price." "p. 87, More or less stock bought than sold, Example 2"
-  lot_cost[c_feb6] = ? "What did the 50 shares bought February 6, 2025 cost? The Pub gives no price." "p. 87, More or less stock bought than sold, Example 2"
-  lot_cost[d_jan10] = ? "What did the 250 shares bought January 10, 2025 cost? The Pub gives no price." "p. 87, Loss and gain on same day, Example"
+  lot_cost[c_sep] = ?"What did the 100 shares bought September 16, 2024 cost? The Pub states only the loss." "p. 87, More or less stock bought than sold, Example 2"
+  lot_cost[c_feb3] = ?"What did the 50 shares bought February 3, 2025 cost? The Pub gives no price." "p. 87, More or less stock bought than sold, Example 2"
+  lot_cost[c_feb4] = ?"What did the 50 shares bought February 4, 2025 cost? The Pub gives no price." "p. 87, More or less stock bought than sold, Example 2"
+  lot_cost[c_feb5] = ?"What did the 50 shares bought February 5, 2025 cost? The Pub gives no price." "p. 87, More or less stock bought than sold, Example 2"
+  lot_cost[c_feb6] = ?"What did the 50 shares bought February 6, 2025 cost? The Pub gives no price." "p. 87, More or less stock bought than sold, Example 2"
+  lot_cost[d_jan10] = ?"What did the 250 shares bought January 10, 2025 cost? The Pub gives no price." "p. 87, Loss and gain on same day, Example"
   lot_cost[e_jun4] = 1000 "p. 87, Short sales, Example"
   lot_cost[e_oct16] = 750 "p. 87, Short sales, Example"
   lot_px[d_b1] = 158 "p. 87, Loss and gain on same day, Example: first block"
@@ -300,7 +309,7 @@ version pub550_2025
   lot_sit[e_oct16] = pe
   sale_amt[a_s] = 750 "p. 86, Wash Sales, Example 1"
   sale_amt[b_s] = 4000 "p. 87, More or less stock bought than sold, Example 1"
-  sale_amt[c_s] = ? "What were the proceeds of the January 29, 2025 sale? The Pub states only the loss." "p. 87, More or less stock bought than sold, Example 2"
+  sale_amt[c_s] = ?"What were the proceeds of the January 29, 2025 sale? The Pub states only the loss." "p. 87, More or less stock bought than sold, Example 2"
   sale_amt[e_s] = 750 "p. 87, Short sales, Example: sold short for $750"
   sale_on[b_s] = 2025-01-03 "p. 87, More or less stock bought than sold, Example 1"
   sale_on[c_s] = 2025-01-29 "p. 87, More or less stock bought than sold, Example 2"
@@ -330,9 +339,10 @@ version pub550_2025
 
 version wiring
   cite modeller
+  governs always
   known 2026-10-18
   note "Not-applicable defaults that stand for the cases' own facts, so they take the stipulations' known date, the model's on (LANGUAGE §4.5)."
-  lot_px = - "a lot has a per-share price only where the source gives one"
-  sale_px = - "a sale has a per-share price only where the source gives one"
-  stated_loss = - "a loss is stated as a fact only where the source gives no prices"
-  stated_within = - "the window is stated as a fact only where the source gives no dates"
+  lot_px = none "a lot has a per-share price only where the source gives one"
+  sale_px = none "a sale has a per-share price only where the source gives one"
+  stated_loss = none "a loss is stated as a fact only where the source gives no prices"
+  stated_within = none "the window is stated as a fact only where the source gives no dates"

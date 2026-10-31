@@ -1,0 +1,48 @@
+# L §5.18 example ask q5, copied, over the §5.11 example def.  Explanation order: "the def's rules in canonical
+# order (§2.4: by label), each with its label and state: won; beaten, by whom; not applicable ...  Under the
+# winning rule come its causes, depth first, in the order their terms are written ... A cause that is a row prints
+# its version, source, locator ...; then come the law date and cut".  (The layout of the lines is this
+# interpreter's; L §5.18 fixes the order and contents; a trailing * prints as a key left out, which L §4.6
+# treats alike.)  small doesn't apply (400.00 ≥ 20.00): base wins.
+=== m.tally
+model t
+  tally 2
+  on 2016-10-31
+  start 2015-11-01
+  end 2016-10-31
+
+source rm1238 "Rozporządzenie"
+unit PLN: currency minor 0.01
+index families = [f1]
+
+input entitled[f in families, m in months]: money PLN
+input excess[f in families, m in months]: money PLN
+input min_payment: money PLN
+
+def payable[f in families, m in months]: money PLN at start_of(m)
+  rule base = max(0 PLN, entitled[f, m] - excess[f, m])
+  rule small beats base = 0 PLN when entitled[f, m] - excess[f, m] < min_payment
+
+version rm2015
+  cite rm1238
+  governs 2015-11..
+  known 2015-09-07
+  entitled[f1, *] = 500.00 PLN "§ 1"
+  excess[f1, *] = 100.00 PLN "§ 2"
+  min_payment = 20.00 PLN "§ 3"
+
+ask q5: explain payable[f1, 2016-04] law 2016-04-30
+=== expect
+q5: 400.00 PLN
+  [1] payable[f1, 2016-04] = 400.00 PLN, law date 2016-04-01
+      rule base: won
+        [2] row rm2015:entitled[f1] = 500.00 PLN
+            version rm2015, source rm1238, "Rozporządzenie", locator "§ 1", governs 2015-11-01.., known 2015-09-07
+        [3] row rm2015:excess[f1] = 100.00 PLN
+            version rm2015, source rm1238, "Rozporządzenie", locator "§ 2", governs 2015-11-01.., known 2015-09-07
+      rule small: not applicable
+        (rm2015:entitled[f1]: see [2])
+        (rm2015:excess[f1]: see [3])
+        [4] row rm2015:min_payment = 20.00 PLN
+            version rm2015, source rm1238, "Rozporządzenie", locator "§ 3", governs 2015-11-01.., known 2015-09-07
+  law date 2016-04-30, cut 2016-10-31

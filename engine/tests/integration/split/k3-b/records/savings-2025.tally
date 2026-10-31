@@ -1,0 +1,35 @@
+part savings_2025
+  tally 2
+  note "Bank Cis savings account LN45 2090 0017 5521 3380 0002, 2025: the whole export (12 rows), exported on 2026-01-02 (story). Same dialect as the current account (O:B-1)."
+
+version savings_2025
+  cite cis_savings_export
+  governs 2025
+  known 2026-01-02
+  covers savings
+  anchor savings
+  stated[savings] = 52000.00 DUK at 2025-01-01 start "cis-5521-3380-0002-2025.csv line 5 Opening balance"
+  savr[s20250127a] = (on: 2025-01-27, kind: transfers, leg cash from cis to savings amount 20231.12 DUK) "cis-5521-3380-0002-2025.csv line 7 OWN TRANSFER PIOTR SOWA from 0001"
+  savr[s20250210a] = (on: 2025-02-10, kind: transfers, leg cash from savings to bartek amount 6000.00 DUK, fulfils: bartek_lend) "cis-5521-3380-0002-2025.csv line 8 TRANSFER OUT Bartłomiej Kos loan"
+  savr[s20250326a] = (on: 2025-03-26, kind: transfers, leg cash from cis to savings amount 2430.29 DUK) "cis-5521-3380-0002-2025.csv line 9 OWN TRANSFER PIOTR SOWA from 0001"
+  savr[s20250526a] = (on: 2025-05-26, kind: transfers, leg cash from cis to savings amount 5472.60 DUK) "cis-5521-3380-0002-2025.csv line 10 OWN TRANSFER PIOTR SOWA from 0001"
+  savr[s20250616a] = (on: 2025-06-16, kind: transfers, leg cash from world to savings amount 38750.00 DUK) "cis-5521-3380-0002-2025.csv line 11 TRANSFER IN KANCELARIA NOTARIALNA BRZOZA estate of Zbigniew Sowa: payout"
+  savr[s20250626a] = (on: 2025-06-26, kind: transfers, leg cash from cis to savings amount 3029.37 DUK) "cis-5521-3380-0002-2025.csv line 12 OWN TRANSFER PIOTR SOWA from 0001"
+  savr[s20250728a] = (on: 2025-07-28, kind: transfers, leg cash from cis to savings amount 15938.57 DUK) "cis-5521-3380-0002-2025.csv line 13 OWN TRANSFER PIOTR SOWA from 0001"
+  savr[s20250926a] = (on: 2025-09-26, kind: transfers, leg cash from cis to savings amount 48026.07 DUK) "cis-5521-3380-0002-2025.csv line 14 OWN TRANSFER PIOTR SOWA from 0001"
+  savr[s20251027a] = (on: 2025-10-27, kind: transfers, leg cash from cis to savings amount 9540.78 DUK) "cis-5521-3380-0002-2025.csv line 15 OWN TRANSFER PIOTR SOWA from 0001"
+  savr[s20251120a] = (on: 2025-11-20, kind: transfers, leg cash from savings to cis amount 2300.00 DUK) "cis-5521-3380-0002-2025.csv line 16 OWN TRANSFER PIOTR SOWA to 0001"
+  savr[s20251125a] = (on: 2025-11-25, kind: transfers, leg cash from savings to cis amount 6100.00 DUK) "cis-5521-3380-0002-2025.csv line 17 OWN TRANSFER PIOTR SOWA to 0001"
+  savr[s20251229a] = (on: 2025-12-29, kind: transfers, leg cash from cis to savings amount 8847.11 DUK) "cis-5521-3380-0002-2025.csv line 18 OWN TRANSFER PIOTR SOWA from 0001"
+  stated[savings] = 72231.12 DUK at 2025-01-27 end "cis-5521-3380-0002-2025.csv line 7 Balance"
+  stated[savings] = 66231.12 DUK at 2025-02-10 end "cis-5521-3380-0002-2025.csv line 8 Balance"
+  stated[savings] = 68661.41 DUK at 2025-03-26 end "cis-5521-3380-0002-2025.csv line 9 Balance"
+  stated[savings] = 74134.01 DUK at 2025-05-26 end "cis-5521-3380-0002-2025.csv line 10 Balance"
+  stated[savings] = 112884.01 DUK at 2025-06-16 end "cis-5521-3380-0002-2025.csv line 11 Balance"
+  stated[savings] = 115913.38 DUK at 2025-06-26 end "cis-5521-3380-0002-2025.csv line 12 Balance"
+  stated[savings] = 131851.95 DUK at 2025-07-28 end "cis-5521-3380-0002-2025.csv line 13 Balance"
+  stated[savings] = 179878.02 DUK at 2025-09-26 end "cis-5521-3380-0002-2025.csv line 14 Balance"
+  stated[savings] = 189418.80 DUK at 2025-10-27 end "cis-5521-3380-0002-2025.csv line 15 Balance"
+  stated[savings] = 187118.80 DUK at 2025-11-20 end "cis-5521-3380-0002-2025.csv line 16 Balance"
+  stated[savings] = 181018.80 DUK at 2025-11-25 end "cis-5521-3380-0002-2025.csv line 17 Balance"
+  stated[savings] = 189865.91 DUK at 2025-12-29 end "cis-5521-3380-0002-2025.csv line 18 Balance"

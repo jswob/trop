@@ -1,0 +1,66 @@
+model surf04
+  tally 2
+  on 2025-01-01
+  start 2025-01-01
+  end 2025-12-31
+  note "SURF-04: the contribution formula stated once, as the def contrib, and read in three places: the monthly payroll (a move), the yearly return's check (a check ask) and a what-if with a raise (a with pin). The scenario file redefine states contrib again and is refused at load (LOAD-DUP)."
+
+source contract "The employment contract's gross"
+
+source contrib_law "The contribution law: 9.76 % of gross, on gross only until the year's gross to date reaches the cap, rounded half up to 0.01"
+
+source what_if "The household's what-if: a raise"
+
+unit DUK: currency minor 0.01
+
+place fund: outside lives 2025-01-01..
+
+place konto: accounts DUK lives 2025-01-01..
+
+input contrib_cap: money DUK
+
+input contrib_rate: num
+
+input pay_dom: int
+
+input raised_salary: money DUK
+
+input salary: money DUK
+
+def contrib[m in months]: money DUK at start_of(m)
+  rule base v contrib_2025 = round(contrib_rate * max(0, min(gross[m], contrib_cap - gross_before[m])), minor(DUK), half-up)
+
+def gross[m in months]: money DUK = salary at start_of(m)
+
+def gross_before[m in months]: money DUK = sum(gross[k] for k in months where year_of(k) == year_of(m) and k < m) at start_of(m)
+
+move contrib_pay[m in months]: transfers
+  on day_of(m, pay_dom)
+  at start_of(m)
+  leg cash from konto to fund amount contrib[m]
+
+ask payroll: contrib[m] for m in months law 2025-01-01
+
+ask raise: sum(contrib[m] for m in months) with salary = raised_salary law 2025-01-01
+
+ask return_check: check flows(contrib_pay, 2025) == sum(contrib[m] for m in months) law 2025-01-01
+
+version contrib_2025
+  cite contrib_law
+  governs 2025..
+  known 2025-01-01
+  contrib_cap = 100000 assumed "illustration: the card names a cap but gives no figure" "the cap"
+  contrib_rate = 9.76 % "9.76 % of gross"
+
+version gross_2025
+  cite contract
+  governs always
+  known 2025-01-01
+  pay_dom = 10 assumed "the card gives no payday" "the payroll's day"
+  salary = 12000 assumed "illustration: the card gives no gross" "monthly gross"
+
+version raise_2025
+  cite what_if
+  governs always
+  known 2025-01-01
+  raised_salary = 13000 assumed "illustration: the card gives no raise" "the what-if's gross"

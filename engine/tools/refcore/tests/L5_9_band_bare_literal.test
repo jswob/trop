@@ -1,0 +1,30 @@
+# L §7.1: "A bare literal in a band row takes its unit as a bare `0` does in a def: ... the band's declared
+# unit where it is the row's whole value (`kz: (13000, 85528] = 525.12` in a band of `PLN` is 525.12 zł; in
+# `0.12 * x - 3600`, 3600 is in x's unit)".  kz(10 000.00 PLN) = 525.12 PLN; kz(20 000.00 PLN) =
+# 0.12 × 20 000 − 3 600 = -1 200 PLN (a num PLN: a band of num PLN, L §3.2 money × num → num CUR).
+=== m.tally
+model t
+  tally 2
+  on 2027-01-01
+  start 2026-01-01
+  end 2027-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+input a: money PLN
+input b: money PLN
+band kz(x: money PLN): num PLN
+
+version v1
+  cite s
+  governs always
+  known 2025-12-01
+  a = 10000.00
+  b = 20000.00
+  kz: [0, 13000] = 525.12 "row 1"
+  kz: (13000, inf) = 0.12 * x - 3600 "row 2"
+
+ask q1: kz(a), kz(b) law 2026-12-31
+=== expect
+q1: (525.12 PLN, -1 200 PLN)
+  law date 2026-12-31, cut 2027-01-01

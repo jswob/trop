@@ -1,0 +1,550 @@
+q_balance (i = f0): 6.00 PLN
+  law date 2026-10-18, cut 2026-10-18
+q_balance (i = f1): -1.00 PLN
+  law date 2026-10-18, cut 2026-10-18
+q_balance (i = f2): -2.00 PLN
+  law date 2026-10-18, cut 2026-10-18
+q_balance (i = f3): -3.00 PLN
+  law date 2026-10-18, cut 2026-10-18
+q_balance_sum: 0.00 PLN
+  law date 2026-10-18, cut 2026-10-18
+q_benefit (f = ex40) [fr_comp_order = *]: 10 842.00 EUR
+  law date 2026-10-18, cut 2026-10-18
+q_brochure_2parts: ok
+  pinned: parts[ex40] = 2
+  law date 2026-10-18, cut 2026-10-18
+q_brochure_5parts [fr_comp_order = *]: ok
+  pinned: parts[f] = base_parts for f in foyer
+  law date 2026-10-18, cut 2026-10-18
+q_c1_maint_pln (c = k1) [dt_cut_round = *, dt_u_work = employed]: 454.79 PLN
+  assumed: the example treats K1 as a first-rank child; § 1603 Abs. 2 Satz 2 BGB requires unverheiratet, which the example does not state (unmarried[k1])
+  reading: dt_u_work = employed
+  law date 2026-10-18, cut 2026-10-18
+q_c1_maint_pln (c = k1) [dt_cut_round = *, dt_u_work = not_employed]: 833.76 PLN
+  assumed: the example treats K1 as a first-rank child; § 1603 Abs. 2 Satz 2 BGB requires unverheiratet, which the example does not state (unmarried[k1])
+  reading: dt_u_work = not_employed
+  law date 2026-10-18, cut 2026-10-18
+q_c1_maint_pln (c = k2) [dt_cut_round = *, dt_u_work = employed]: 443.89 PLN
+  assumed: the example treats K1 as a first-rank child; § 1603 Abs. 2 Satz 2 BGB requires unverheiratet, which the example does not state (unmarried[k1])
+  reading: dt_u_work = employed
+  law date 2026-10-18, cut 2026-10-18
+q_c1_maint_pln (c = k2) [dt_cut_round = nearest, dt_u_work = not_employed]: 813.81 PLN
+  assumed: the example treats K1 as a first-rank child; § 1603 Abs. 2 Satz 2 BGB requires unverheiratet, which the example does not state (unmarried[k1])
+  reading: dt_cut_round = nearest
+  reading: dt_u_work = not_employed
+  law date 2026-10-18, cut 2026-10-18
+q_c1_maint_pln (c = k2) [dt_cut_round = largest_rem, dt_u_work = not_employed]: 813.85 PLN
+  assumed: the example treats K1 as a first-rank child; § 1603 Abs. 2 Satz 2 BGB requires unverheiratet, which the example does not state (unmarried[k1])
+  reading: dt_cut_round = largest_rem
+  reading: dt_u_work = not_employed
+  law date 2026-10-18, cut 2026-10-18
+q_c1_maint_pln (c = k3) [dt_cut_round = *, dt_u_work = employed]: 369.33 PLN
+  assumed: the example treats K1 as a first-rank child; § 1603 Abs. 2 Satz 2 BGB requires unverheiratet, which the example does not state (unmarried[k1])
+  reading: dt_u_work = employed
+  law date 2026-10-18, cut 2026-10-18
+q_c1_maint_pln (c = k3) [dt_cut_round = *, dt_u_work = not_employed]: 677.08 PLN
+  assumed: the example treats K1 as a first-rank child; § 1603 Abs. 2 Satz 2 BGB requires unverheiratet, which the example does not state (unmarried[k1])
+  reading: dt_u_work = not_employed
+  law date 2026-10-18, cut 2026-10-18
+q_c1_totals [dt_cut_round = *, dt_u_work = employed]: (1 268.01 PLN, 1 268.01 PLN, 0.00 PLN)
+  assumed: the example treats K1 as a first-rank child; § 1603 Abs. 2 Satz 2 BGB requires unverheiratet, which the example does not state (unmarried[k1])
+  reading: dt_u_work = employed
+  law date 2026-10-18, cut 2026-10-18
+q_c1_totals [dt_cut_round = nearest, dt_u_work = not_employed]: (2 324.65 PLN, 2 324.64 PLN, 0.01 PLN)
+  assumed: the example treats K1 as a first-rank child; § 1603 Abs. 2 Satz 2 BGB requires unverheiratet, which the example does not state (unmarried[k1])
+  reading: dt_cut_round = nearest
+  reading: dt_u_work = not_employed
+  law date 2026-10-18, cut 2026-10-18
+q_c1_totals [dt_cut_round = largest_rem, dt_u_work = not_employed]: (2 324.69 PLN, 2 324.69 PLN, 0.00 PLN)
+  assumed: the example treats K1 as a first-rank child; § 1603 Abs. 2 Satz 2 BGB requires unverheiratet, which the example does not state (unmarried[k1])
+  reading: dt_cut_round = largest_rem
+  reading: dt_u_work = not_employed
+  law date 2026-10-18, cut 2026-10-18
+q_c2_tax_pln [fr_comp_order = *]: 60 720.77 PLN
+  pinned: parts[f] = base_parts for f in foyer
+  law date 2026-10-18, cut 2026-10-18
+q_c3_adults (p = de_u) [cmp_spouses = *]: (9.00 PLN, 3.00 PLN, 6.00 PLN)
+  law date 2026-10-18, cut 2026-10-18
+q_c3_adults (p = de_e) [cmp_spouses = *]: (6.00 PLN, 7.00 PLN, -1.00 PLN)
+  law date 2026-10-18, cut 2026-10-18
+q_c3_adults (p = fr_a) [cmp_spouses = a_is_f2]: (6.00 PLN, 8.00 PLN, -2.00 PLN)
+  reading: cmp_spouses = a_is_f2
+  law date 2026-10-18, cut 2026-10-18
+q_c3_adults (p = fr_a) [cmp_spouses = b_is_f2]: (3.00 PLN, 6.00 PLN, -3.00 PLN)
+  reading: cmp_spouses = b_is_f2
+  law date 2026-10-18, cut 2026-10-18
+q_c3_adults (p = fr_b) [cmp_spouses = a_is_f2]: (3.00 PLN, 6.00 PLN, -3.00 PLN)
+  reading: cmp_spouses = a_is_f2
+  law date 2026-10-18, cut 2026-10-18
+q_c3_adults (p = fr_b) [cmp_spouses = b_is_f2]: (6.00 PLN, 8.00 PLN, -2.00 PLN)
+  reading: cmp_spouses = b_is_f2
+  law date 2026-10-18, cut 2026-10-18
+q_c3_friends (i = f0) [cmp_spouses = *]: de_u
+  law date 2026-10-18, cut 2026-10-18
+q_c3_friends (i = f1) [cmp_spouses = *]: de_e
+  law date 2026-10-18, cut 2026-10-18
+q_c3_friends (i = f2) [cmp_spouses = a_is_f2]: fr_a
+  reading: cmp_spouses = a_is_f2
+  law date 2026-10-18, cut 2026-10-18
+q_c3_friends (i = f2) [cmp_spouses = b_is_f2]: fr_b
+  reading: cmp_spouses = b_is_f2
+  law date 2026-10-18, cut 2026-10-18
+q_c3_friends (i = f3) [cmp_spouses = a_is_f2]: fr_b
+  reading: cmp_spouses = a_is_f2
+  law date 2026-10-18, cut 2026-10-18
+q_c3_friends (i = f3) [cmp_spouses = b_is_f2]: fr_a
+  reading: cmp_spouses = b_is_f2
+  law date 2026-10-18, cut 2026-10-18
+q_c4_flows_check [cmp_spouses = *, dt_cut_round = *, dt_u_work = *]: ok
+  assumed: the example treats K1 as a first-rank child; § 1603 Abs. 2 Satz 2 BGB requires unverheiratet, which the example does not state (unmarried[k1])
+  unfulfilled: debt_pay[f0, f1]
+  unfulfilled: debt_pay[f0, f3]
+  unfulfilled: debt_pay[f1, f0]
+  unfulfilled: debt_pay[f2, f0]
+  unfulfilled: maint[k1]
+  unfulfilled: maint[k2]
+  unfulfilled: maint[k3]
+  law date 2026-10-18, cut 2026-10-18
+q_c4_outflow [cmp_spouses = *, dt_cut_round = *, dt_u_work = employed]: 1 274.01 PLN
+  assumed: the example treats K1 as a first-rank child; § 1603 Abs. 2 Satz 2 BGB requires unverheiratet, which the example does not state (unmarried[k1])
+  reading: dt_u_work = employed
+  law date 2026-10-18, cut 2026-10-18
+q_c4_outflow [cmp_spouses = *, dt_cut_round = nearest, dt_u_work = not_employed]: 2 330.65 PLN
+  assumed: the example treats K1 as a first-rank child; § 1603 Abs. 2 Satz 2 BGB requires unverheiratet, which the example does not state (unmarried[k1])
+  reading: dt_cut_round = nearest
+  reading: dt_u_work = not_employed
+  law date 2026-10-18, cut 2026-10-18
+q_c4_outflow [cmp_spouses = *, dt_cut_round = largest_rem, dt_u_work = not_employed]: 2 330.69 PLN
+  assumed: the example treats K1 as a first-rank child; § 1603 Abs. 2 Satz 2 BGB requires unverheiratet, which the example does not state (unmarried[k1])
+  reading: dt_cut_round = largest_rem
+  reading: dt_u_work = not_employed
+  law date 2026-10-18, cut 2026-10-18
+q_c5_net (p = de_u) [cmp_spouses = *, dt_cut_round = *, dt_u_work = employed]: -1 274.01 PLN
+  assumed: the example treats K1 as a first-rank child; § 1603 Abs. 2 Satz 2 BGB requires unverheiratet, which the example does not state (unmarried[k1])
+  reading: dt_u_work = employed
+  unfulfilled: debt_pay[f0, f1]
+  unfulfilled: debt_pay[f0, f3]
+  unfulfilled: debt_pay[f1, f0]
+  unfulfilled: debt_pay[f2, f0]
+  unfulfilled: maint[k1]
+  unfulfilled: maint[k2]
+  unfulfilled: maint[k3]
+  law date 2026-10-18, cut 2026-10-18
+q_c5_net (p = de_u) [cmp_spouses = *, dt_cut_round = nearest, dt_u_work = not_employed]: -2 330.65 PLN
+  assumed: the example treats K1 as a first-rank child; § 1603 Abs. 2 Satz 2 BGB requires unverheiratet, which the example does not state (unmarried[k1])
+  reading: dt_cut_round = nearest
+  reading: dt_u_work = not_employed
+  unfulfilled: debt_pay[f0, f1]
+  unfulfilled: debt_pay[f0, f3]
+  unfulfilled: debt_pay[f1, f0]
+  unfulfilled: debt_pay[f2, f0]
+  unfulfilled: maint[k1]
+  unfulfilled: maint[k2]
+  unfulfilled: maint[k3]
+  law date 2026-10-18, cut 2026-10-18
+q_c5_net (p = de_u) [cmp_spouses = *, dt_cut_round = largest_rem, dt_u_work = not_employed]: -2 330.69 PLN
+  assumed: the example treats K1 as a first-rank child; § 1603 Abs. 2 Satz 2 BGB requires unverheiratet, which the example does not state (unmarried[k1])
+  reading: dt_cut_round = largest_rem
+  reading: dt_u_work = not_employed
+  unfulfilled: debt_pay[f0, f1]
+  unfulfilled: debt_pay[f0, f3]
+  unfulfilled: debt_pay[f1, f0]
+  unfulfilled: debt_pay[f2, f0]
+  unfulfilled: maint[k1]
+  unfulfilled: maint[k2]
+  unfulfilled: maint[k3]
+  law date 2026-10-18, cut 2026-10-18
+q_c5_net (p = de_e) [cmp_spouses = *, dt_cut_round = *, dt_u_work = *]: 1.00 PLN
+  unfulfilled: debt_pay[f0, f1]
+  unfulfilled: debt_pay[f1, f0]
+  unfulfilled: debt_pay[f1, f2]
+  unfulfilled: debt_pay[f2, f1]
+  law date 2026-10-18, cut 2026-10-18
+q_c5_net (p = de_k1) [cmp_spouses = *, dt_cut_round = *, dt_u_work = employed]: 454.79 PLN
+  assumed: the example treats K1 as a first-rank child; § 1603 Abs. 2 Satz 2 BGB requires unverheiratet, which the example does not state (unmarried[k1])
+  reading: dt_u_work = employed
+  unfulfilled: maint[k1]
+  law date 2026-10-18, cut 2026-10-18
+q_c5_net (p = de_k1) [cmp_spouses = *, dt_cut_round = *, dt_u_work = not_employed]: 833.76 PLN
+  assumed: the example treats K1 as a first-rank child; § 1603 Abs. 2 Satz 2 BGB requires unverheiratet, which the example does not state (unmarried[k1])
+  reading: dt_u_work = not_employed
+  unfulfilled: maint[k1]
+  law date 2026-10-18, cut 2026-10-18
+q_c5_net (p = de_k2) [cmp_spouses = *, dt_cut_round = *, dt_u_work = employed]: 443.89 PLN
+  assumed: the example treats K1 as a first-rank child; § 1603 Abs. 2 Satz 2 BGB requires unverheiratet, which the example does not state (unmarried[k1])
+  reading: dt_u_work = employed
+  unfulfilled: maint[k2]
+  law date 2026-10-18, cut 2026-10-18
+q_c5_net (p = de_k2) [cmp_spouses = *, dt_cut_round = nearest, dt_u_work = not_employed]: 813.81 PLN
+  assumed: the example treats K1 as a first-rank child; § 1603 Abs. 2 Satz 2 BGB requires unverheiratet, which the example does not state (unmarried[k1])
+  reading: dt_cut_round = nearest
+  reading: dt_u_work = not_employed
+  unfulfilled: maint[k2]
+  law date 2026-10-18, cut 2026-10-18
+q_c5_net (p = de_k2) [cmp_spouses = *, dt_cut_round = largest_rem, dt_u_work = not_employed]: 813.85 PLN
+  assumed: the example treats K1 as a first-rank child; § 1603 Abs. 2 Satz 2 BGB requires unverheiratet, which the example does not state (unmarried[k1])
+  reading: dt_cut_round = largest_rem
+  reading: dt_u_work = not_employed
+  unfulfilled: maint[k2]
+  law date 2026-10-18, cut 2026-10-18
+q_c5_net (p = de_k3) [cmp_spouses = *, dt_cut_round = *, dt_u_work = employed]: 369.33 PLN
+  assumed: the example treats K1 as a first-rank child; § 1603 Abs. 2 Satz 2 BGB requires unverheiratet, which the example does not state (unmarried[k1])
+  reading: dt_u_work = employed
+  unfulfilled: maint[k3]
+  law date 2026-10-18, cut 2026-10-18
+q_c5_net (p = de_k3) [cmp_spouses = *, dt_cut_round = *, dt_u_work = not_employed]: 677.08 PLN
+  assumed: the example treats K1 as a first-rank child; § 1603 Abs. 2 Satz 2 BGB requires unverheiratet, which the example does not state (unmarried[k1])
+  reading: dt_u_work = not_employed
+  unfulfilled: maint[k3]
+  law date 2026-10-18, cut 2026-10-18
+q_c5_net (p = fr_a) [cmp_spouses = a_is_f2, dt_cut_round = *, dt_u_work = *]: 2.00 PLN
+  reading: cmp_spouses = a_is_f2
+  unfulfilled: debt_pay[f1, f2]
+  unfulfilled: debt_pay[f2, f0]
+  unfulfilled: debt_pay[f2, f1]
+  unfulfilled: debt_pay[f3, f2]
+  law date 2026-10-18, cut 2026-10-18
+q_c5_net (p = fr_a) [cmp_spouses = b_is_f2, dt_cut_round = *, dt_u_work = *]: 3.00 PLN
+  reading: cmp_spouses = b_is_f2
+  unfulfilled: debt_pay[f0, f3]
+  unfulfilled: debt_pay[f3, f2]
+  law date 2026-10-18, cut 2026-10-18
+q_c5_net (p = fr_b) [cmp_spouses = a_is_f2, dt_cut_round = *, dt_u_work = *]: 3.00 PLN
+  reading: cmp_spouses = a_is_f2
+  unfulfilled: debt_pay[f0, f3]
+  unfulfilled: debt_pay[f3, f2]
+  law date 2026-10-18, cut 2026-10-18
+q_c5_net (p = fr_b) [cmp_spouses = b_is_f2, dt_cut_round = *, dt_u_work = *]: 2.00 PLN
+  reading: cmp_spouses = b_is_f2
+  unfulfilled: debt_pay[f1, f2]
+  unfulfilled: debt_pay[f2, f0]
+  unfulfilled: debt_pay[f2, f1]
+  unfulfilled: debt_pay[f3, f2]
+  law date 2026-10-18, cut 2026-10-18
+q_c5_net (p = fr_c1) [cmp_spouses = *, dt_cut_round = *, dt_u_work = *]: 0.00 PLN
+  law date 2026-10-18, cut 2026-10-18
+q_c5_net (p = fr_c2) [cmp_spouses = *, dt_cut_round = *, dt_u_work = *]: 0.00 PLN
+  law date 2026-10-18, cut 2026-10-18
+q_c5_net (p = fr_c3) [cmp_spouses = *, dt_cut_round = *, dt_u_work = *]: 0.00 PLN
+  law date 2026-10-18, cut 2026-10-18
+q_c5_net (p = fr_c4) [cmp_spouses = *, dt_cut_round = *, dt_u_work = *]: 0.00 PLN
+  law date 2026-10-18, cut 2026-10-18
+q_c5_sum [cmp_spouses = *, dt_cut_round = *, dt_u_work = *]: 0.00 PLN
+  assumed: the example treats K1 as a first-rank child; § 1603 Abs. 2 Satz 2 BGB requires unverheiratet, which the example does not state (unmarried[k1])
+  unfulfilled: debt_pay[f0, f1]
+  unfulfilled: debt_pay[f0, f3]
+  unfulfilled: debt_pay[f1, f0]
+  unfulfilled: debt_pay[f1, f2]
+  unfulfilled: debt_pay[f2, f0]
+  unfulfilled: debt_pay[f2, f1]
+  unfulfilled: debt_pay[f3, f2]
+  unfulfilled: maint[k1]
+  unfulfilled: maint[k2]
+  unfulfilled: maint[k3]
+  law date 2026-10-18, cut 2026-10-18
+q_c6_b0:
+  verhoeff_27:owe[f0, f1] (source verhoeff "Tom Verhoeff, Settling Multiple Debts Efficiently: An Invitation to Computing Science, Informatics in Education, Vol. 3, No. 1 (2004), pp. 105-126, doi:10.15388/infedu.2004.08", locator "p. 113, (27): row 0, column 1")
+  verhoeff_27:owe[f0, f2] (source verhoeff "Tom Verhoeff, Settling Multiple Debts Efficiently: An Invitation to Computing Science, Informatics in Education, Vol. 3, No. 1 (2004), pp. 105-126, doi:10.15388/infedu.2004.08", locator "p. 113, (27): row 0, column 2")
+  verhoeff_27:owe[f0, f3] (source verhoeff "Tom Verhoeff, Settling Multiple Debts Efficiently: An Invitation to Computing Science, Informatics in Education, Vol. 3, No. 1 (2004), pp. 105-126, doi:10.15388/infedu.2004.08", locator "p. 113, (27): row 0, column 3")
+  verhoeff_27:owe[f1, f0] (source verhoeff "Tom Verhoeff, Settling Multiple Debts Efficiently: An Invitation to Computing Science, Informatics in Education, Vol. 3, No. 1 (2004), pp. 105-126, doi:10.15388/infedu.2004.08", locator "p. 113, (27): row 1, column 0")
+  verhoeff_27:owe[f2, f0] (source verhoeff "Tom Verhoeff, Settling Multiple Debts Efficiently: An Invitation to Computing Science, Informatics in Education, Vol. 3, No. 1 (2004), pp. 105-126, doi:10.15388/infedu.2004.08", locator "p. 113, (27): row 2, column 0")
+  verhoeff_27:owe[f3, f0] (source verhoeff "Tom Verhoeff, Settling Multiple Debts Efficiently: An Invitation to Computing Science, Informatics in Education, Vol. 3, No. 1 (2004), pp. 105-126, doi:10.15388/infedu.2004.08", locator "p. 113, (27): row 3, column 0")
+  law date 2026-10-18, cut 2026-10-18
+q_c6_b1:
+  verhoeff_27:owe[f0, f1] (source verhoeff "Tom Verhoeff, Settling Multiple Debts Efficiently: An Invitation to Computing Science, Informatics in Education, Vol. 3, No. 1 (2004), pp. 105-126, doi:10.15388/infedu.2004.08", locator "p. 113, (27): row 0, column 1")
+  verhoeff_27:owe[f1, f0] (source verhoeff "Tom Verhoeff, Settling Multiple Debts Efficiently: An Invitation to Computing Science, Informatics in Education, Vol. 3, No. 1 (2004), pp. 105-126, doi:10.15388/infedu.2004.08", locator "p. 113, (27): row 1, column 0")
+  verhoeff_27:owe[f1, f2] (source verhoeff "Tom Verhoeff, Settling Multiple Debts Efficiently: An Invitation to Computing Science, Informatics in Education, Vol. 3, No. 1 (2004), pp. 105-126, doi:10.15388/infedu.2004.08", locator "p. 113, (27): row 1, column 2")
+  verhoeff_27:owe[f1, f3] (source verhoeff "Tom Verhoeff, Settling Multiple Debts Efficiently: An Invitation to Computing Science, Informatics in Education, Vol. 3, No. 1 (2004), pp. 105-126, doi:10.15388/infedu.2004.08", locator "p. 113, (27): row 1, column 3")
+  verhoeff_27:owe[f2, f1] (source verhoeff "Tom Verhoeff, Settling Multiple Debts Efficiently: An Invitation to Computing Science, Informatics in Education, Vol. 3, No. 1 (2004), pp. 105-126, doi:10.15388/infedu.2004.08", locator "p. 113, (27): row 2, column 1")
+  verhoeff_27:owe[f3, f1] (source verhoeff "Tom Verhoeff, Settling Multiple Debts Efficiently: An Invitation to Computing Science, Informatics in Education, Vol. 3, No. 1 (2004), pp. 105-126, doi:10.15388/infedu.2004.08", locator "p. 113, (27): row 3, column 1")
+  law date 2026-10-18, cut 2026-10-18
+q_c6_b2:
+  verhoeff_27:owe[f0, f2] (source verhoeff "Tom Verhoeff, Settling Multiple Debts Efficiently: An Invitation to Computing Science, Informatics in Education, Vol. 3, No. 1 (2004), pp. 105-126, doi:10.15388/infedu.2004.08", locator "p. 113, (27): row 0, column 2")
+  verhoeff_27:owe[f1, f2] (source verhoeff "Tom Verhoeff, Settling Multiple Debts Efficiently: An Invitation to Computing Science, Informatics in Education, Vol. 3, No. 1 (2004), pp. 105-126, doi:10.15388/infedu.2004.08", locator "p. 113, (27): row 1, column 2")
+  verhoeff_27:owe[f2, f0] (source verhoeff "Tom Verhoeff, Settling Multiple Debts Efficiently: An Invitation to Computing Science, Informatics in Education, Vol. 3, No. 1 (2004), pp. 105-126, doi:10.15388/infedu.2004.08", locator "p. 113, (27): row 2, column 0")
+  verhoeff_27:owe[f2, f1] (source verhoeff "Tom Verhoeff, Settling Multiple Debts Efficiently: An Invitation to Computing Science, Informatics in Education, Vol. 3, No. 1 (2004), pp. 105-126, doi:10.15388/infedu.2004.08", locator "p. 113, (27): row 2, column 1")
+  verhoeff_27:owe[f2, f3] (source verhoeff "Tom Verhoeff, Settling Multiple Debts Efficiently: An Invitation to Computing Science, Informatics in Education, Vol. 3, No. 1 (2004), pp. 105-126, doi:10.15388/infedu.2004.08", locator "p. 113, (27): row 2, column 3")
+  verhoeff_27:owe[f3, f2] (source verhoeff "Tom Verhoeff, Settling Multiple Debts Efficiently: An Invitation to Computing Science, Informatics in Education, Vol. 3, No. 1 (2004), pp. 105-126, doi:10.15388/infedu.2004.08", locator "p. 113, (27): row 3, column 2")
+  law date 2026-10-18, cut 2026-10-18
+q_c6_b3:
+  verhoeff_27:owe[f0, f3] (source verhoeff "Tom Verhoeff, Settling Multiple Debts Efficiently: An Invitation to Computing Science, Informatics in Education, Vol. 3, No. 1 (2004), pp. 105-126, doi:10.15388/infedu.2004.08", locator "p. 113, (27): row 0, column 3")
+  verhoeff_27:owe[f1, f3] (source verhoeff "Tom Verhoeff, Settling Multiple Debts Efficiently: An Invitation to Computing Science, Informatics in Education, Vol. 3, No. 1 (2004), pp. 105-126, doi:10.15388/infedu.2004.08", locator "p. 113, (27): row 1, column 3")
+  verhoeff_27:owe[f2, f3] (source verhoeff "Tom Verhoeff, Settling Multiple Debts Efficiently: An Invitation to Computing Science, Informatics in Education, Vol. 3, No. 1 (2004), pp. 105-126, doi:10.15388/infedu.2004.08", locator "p. 113, (27): row 2, column 3")
+  verhoeff_27:owe[f3, f0] (source verhoeff "Tom Verhoeff, Settling Multiple Debts Efficiently: An Invitation to Computing Science, Informatics in Education, Vol. 3, No. 1 (2004), pp. 105-126, doi:10.15388/infedu.2004.08", locator "p. 113, (27): row 3, column 0")
+  verhoeff_27:owe[f3, f1] (source verhoeff "Tom Verhoeff, Settling Multiple Debts Efficiently: An Invitation to Computing Science, Informatics in Education, Vol. 3, No. 1 (2004), pp. 105-126, doi:10.15388/infedu.2004.08", locator "p. 113, (27): row 3, column 1")
+  verhoeff_27:owe[f3, f2] (source verhoeff "Tom Verhoeff, Settling Multiple Debts Efficiently: An Invitation to Computing Science, Informatics in Education, Vol. 3, No. 1 (2004), pp. 105-126, doi:10.15388/infedu.2004.08", locator "p. 113, (27): row 3, column 2")
+  law date 2026-10-18, cut 2026-10-18
+q_c6_k1 [dt_cut_round = *, dt_u_work = employed]:
+  dt2026:dt_age [0, 5] (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 1, table heading, Altersstufe 0-5")
+  dt2026:dt_age [18, inf) (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 1, table heading, ab 18")
+  dt2026:dt_age [6, 11] (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 1, table heading, Altersstufe 6 - 11")
+  dt2026:dt_amount[g1, a0_5] (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 1, row 1, 0-5")
+  dt2026:dt_amount[g1, a18] (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 1, row 1, ab 18")
+  dt2026:dt_amount[g1, a6_11] (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 1, row 1, 6 - 11")
+  dt2026:dt_group [0, 2 100] (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 1, row 1, bis 2.100")
+  dt2026:kindergeld (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 6, Anhang: Im Jahr 2026 beträgt das Kindergeld einheitlich je Kind 259,00 EUR")
+  dt2026:selbstbehalt[employed] (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 2, Anm. A.VII: für den erwerbstätigen Unterhaltspflichtigen monatlich 1.450 EUR")
+  dt2026_example:child_age[k1] (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 4, C. Beispiel: im Alter von 18 Jahren (K1)")
+  dt2026_example:child_age[k2] (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 4, C. Beispiel: 7 Jahren (K2)")
+  dt2026_example:child_age[k3] (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 4, C. Beispiel: 5 Jahren (K3)")
+  dt2026_example:in_school[k1] (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 4, C. Beispiel: in allgemeiner Schulausbildung befindlich")
+  dt2026_example:income (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 4, C. Beispiel: Bereinigtes Nettoeinkommen des Unterhaltspflichtigen (U): 1.750 EUR")
+  dt2026_example:lives_with_parent[k1] (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 4, C. Beispiel: die bei dem ... Elternteil (E) leben")
+  lifted_figures:first_rank_18 (source lifted_1_0_1 "Figures tally 1.0.1 allowed inline in rules", locator "inline in tally 1.0.1: first_rank line 176, operand; first_rank line 177, operand")
+  lifted_figures:first_rank_21 (source lifted_1_0_1 "Figures tally 1.0.1 allowed inline in rules", locator "inline in tally 1.0.1: first_rank line 177, operand")
+  lifted_figures:zahlbetrag_2 (source lifted_1_0_1 "Figures tally 1.0.1 allowed inline in rules", locator "inline in tally 1.0.1: zahlbetrag line 263, factor")
+  mp09_assumed:unmarried[k1] (source modeller "The modeller's own assumptions, each stated with its reason", locator "page 4, C. Beispiel")
+  assumed: the example treats K1 as a first-rank child; § 1603 Abs. 2 Satz 2 BGB requires unverheiratet, which the example does not state (unmarried[k1])
+  reading: dt_u_work = employed
+  law date 2026-10-18, cut 2026-10-18
+q_c6_k1 [dt_cut_round = *, dt_u_work = not_employed]:
+  dt2026:dt_age [0, 5] (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 1, table heading, Altersstufe 0-5")
+  dt2026:dt_age [18, inf) (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 1, table heading, ab 18")
+  dt2026:dt_age [6, 11] (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 1, table heading, Altersstufe 6 - 11")
+  dt2026:dt_amount[g1, a0_5] (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 1, row 1, 0-5")
+  dt2026:dt_amount[g1, a18] (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 1, row 1, ab 18")
+  dt2026:dt_amount[g1, a6_11] (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 1, row 1, 6 - 11")
+  dt2026:dt_group [0, 2 100] (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 1, row 1, bis 2.100")
+  dt2026:kindergeld (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 6, Anhang: Im Jahr 2026 beträgt das Kindergeld einheitlich je Kind 259,00 EUR")
+  dt2026:selbstbehalt[not_employed] (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 2, Anm. A.VII: für den nicht erwerbstätigen Unterhaltspflichtigen monatlich 1.200 EUR")
+  dt2026_example:child_age[k1] (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 4, C. Beispiel: im Alter von 18 Jahren (K1)")
+  dt2026_example:child_age[k2] (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 4, C. Beispiel: 7 Jahren (K2)")
+  dt2026_example:child_age[k3] (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 4, C. Beispiel: 5 Jahren (K3)")
+  dt2026_example:in_school[k1] (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 4, C. Beispiel: in allgemeiner Schulausbildung befindlich")
+  dt2026_example:income (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 4, C. Beispiel: Bereinigtes Nettoeinkommen des Unterhaltspflichtigen (U): 1.750 EUR")
+  dt2026_example:lives_with_parent[k1] (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 4, C. Beispiel: die bei dem ... Elternteil (E) leben")
+  lifted_figures:first_rank_18 (source lifted_1_0_1 "Figures tally 1.0.1 allowed inline in rules", locator "inline in tally 1.0.1: first_rank line 176, operand; first_rank line 177, operand")
+  lifted_figures:first_rank_21 (source lifted_1_0_1 "Figures tally 1.0.1 allowed inline in rules", locator "inline in tally 1.0.1: first_rank line 177, operand")
+  lifted_figures:zahlbetrag_2 (source lifted_1_0_1 "Figures tally 1.0.1 allowed inline in rules", locator "inline in tally 1.0.1: zahlbetrag line 263, factor")
+  mp09_assumed:unmarried[k1] (source modeller "The modeller's own assumptions, each stated with its reason", locator "page 4, C. Beispiel")
+  assumed: the example treats K1 as a first-rank child; § 1603 Abs. 2 Satz 2 BGB requires unverheiratet, which the example does not state (unmarried[k1])
+  reading: dt_u_work = not_employed
+  law date 2026-10-18, cut 2026-10-18
+q_c6_k2 [dt_cut_round = *, dt_u_work = employed]:
+  dt2026:dt_age [0, 5] (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 1, table heading, Altersstufe 0-5")
+  dt2026:dt_age [18, inf) (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 1, table heading, ab 18")
+  dt2026:dt_age [6, 11] (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 1, table heading, Altersstufe 6 - 11")
+  dt2026:dt_amount[g1, a0_5] (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 1, row 1, 0-5")
+  dt2026:dt_amount[g1, a18] (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 1, row 1, ab 18")
+  dt2026:dt_amount[g1, a6_11] (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 1, row 1, 6 - 11")
+  dt2026:dt_group [0, 2 100] (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 1, row 1, bis 2.100")
+  dt2026:kindergeld (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 6, Anhang: Im Jahr 2026 beträgt das Kindergeld einheitlich je Kind 259,00 EUR")
+  dt2026:selbstbehalt[employed] (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 2, Anm. A.VII: für den erwerbstätigen Unterhaltspflichtigen monatlich 1.450 EUR")
+  dt2026_example:child_age[k1] (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 4, C. Beispiel: im Alter von 18 Jahren (K1)")
+  dt2026_example:child_age[k2] (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 4, C. Beispiel: 7 Jahren (K2)")
+  dt2026_example:child_age[k3] (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 4, C. Beispiel: 5 Jahren (K3)")
+  dt2026_example:in_school[k1] (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 4, C. Beispiel: in allgemeiner Schulausbildung befindlich")
+  dt2026_example:income (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 4, C. Beispiel: Bereinigtes Nettoeinkommen des Unterhaltspflichtigen (U): 1.750 EUR")
+  dt2026_example:lives_with_parent[k1] (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 4, C. Beispiel: die bei dem ... Elternteil (E) leben")
+  lifted_figures:first_rank_18 (source lifted_1_0_1 "Figures tally 1.0.1 allowed inline in rules", locator "inline in tally 1.0.1: first_rank line 176, operand; first_rank line 177, operand")
+  lifted_figures:first_rank_21 (source lifted_1_0_1 "Figures tally 1.0.1 allowed inline in rules", locator "inline in tally 1.0.1: first_rank line 177, operand")
+  lifted_figures:zahlbetrag_2 (source lifted_1_0_1 "Figures tally 1.0.1 allowed inline in rules", locator "inline in tally 1.0.1: zahlbetrag line 263, factor")
+  mp09_assumed:unmarried[k1] (source modeller "The modeller's own assumptions, each stated with its reason", locator "page 4, C. Beispiel")
+  assumed: the example treats K1 as a first-rank child; § 1603 Abs. 2 Satz 2 BGB requires unverheiratet, which the example does not state (unmarried[k1])
+  reading: dt_u_work = employed
+  law date 2026-10-18, cut 2026-10-18
+q_c6_k2 [dt_cut_round = *, dt_u_work = not_employed]:
+  dt2026:dt_age [0, 5] (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 1, table heading, Altersstufe 0-5")
+  dt2026:dt_age [18, inf) (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 1, table heading, ab 18")
+  dt2026:dt_age [6, 11] (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 1, table heading, Altersstufe 6 - 11")
+  dt2026:dt_amount[g1, a0_5] (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 1, row 1, 0-5")
+  dt2026:dt_amount[g1, a18] (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 1, row 1, ab 18")
+  dt2026:dt_amount[g1, a6_11] (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 1, row 1, 6 - 11")
+  dt2026:dt_group [0, 2 100] (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 1, row 1, bis 2.100")
+  dt2026:kindergeld (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 6, Anhang: Im Jahr 2026 beträgt das Kindergeld einheitlich je Kind 259,00 EUR")
+  dt2026:selbstbehalt[not_employed] (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 2, Anm. A.VII: für den nicht erwerbstätigen Unterhaltspflichtigen monatlich 1.200 EUR")
+  dt2026_example:child_age[k1] (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 4, C. Beispiel: im Alter von 18 Jahren (K1)")
+  dt2026_example:child_age[k2] (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 4, C. Beispiel: 7 Jahren (K2)")
+  dt2026_example:child_age[k3] (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 4, C. Beispiel: 5 Jahren (K3)")
+  dt2026_example:in_school[k1] (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 4, C. Beispiel: in allgemeiner Schulausbildung befindlich")
+  dt2026_example:income (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 4, C. Beispiel: Bereinigtes Nettoeinkommen des Unterhaltspflichtigen (U): 1.750 EUR")
+  dt2026_example:lives_with_parent[k1] (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 4, C. Beispiel: die bei dem ... Elternteil (E) leben")
+  lifted_figures:first_rank_18 (source lifted_1_0_1 "Figures tally 1.0.1 allowed inline in rules", locator "inline in tally 1.0.1: first_rank line 176, operand; first_rank line 177, operand")
+  lifted_figures:first_rank_21 (source lifted_1_0_1 "Figures tally 1.0.1 allowed inline in rules", locator "inline in tally 1.0.1: first_rank line 177, operand")
+  lifted_figures:zahlbetrag_2 (source lifted_1_0_1 "Figures tally 1.0.1 allowed inline in rules", locator "inline in tally 1.0.1: zahlbetrag line 263, factor")
+  mp09_assumed:unmarried[k1] (source modeller "The modeller's own assumptions, each stated with its reason", locator "page 4, C. Beispiel")
+  assumed: the example treats K1 as a first-rank child; § 1603 Abs. 2 Satz 2 BGB requires unverheiratet, which the example does not state (unmarried[k1])
+  reading: dt_u_work = not_employed
+  law date 2026-10-18, cut 2026-10-18
+q_c6_k3 [dt_cut_round = *, dt_u_work = employed]:
+  dt2026:dt_age [0, 5] (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 1, table heading, Altersstufe 0-5")
+  dt2026:dt_age [18, inf) (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 1, table heading, ab 18")
+  dt2026:dt_age [6, 11] (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 1, table heading, Altersstufe 6 - 11")
+  dt2026:dt_amount[g1, a0_5] (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 1, row 1, 0-5")
+  dt2026:dt_amount[g1, a18] (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 1, row 1, ab 18")
+  dt2026:dt_amount[g1, a6_11] (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 1, row 1, 6 - 11")
+  dt2026:dt_group [0, 2 100] (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 1, row 1, bis 2.100")
+  dt2026:kindergeld (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 6, Anhang: Im Jahr 2026 beträgt das Kindergeld einheitlich je Kind 259,00 EUR")
+  dt2026:selbstbehalt[employed] (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 2, Anm. A.VII: für den erwerbstätigen Unterhaltspflichtigen monatlich 1.450 EUR")
+  dt2026_example:child_age[k1] (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 4, C. Beispiel: im Alter von 18 Jahren (K1)")
+  dt2026_example:child_age[k2] (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 4, C. Beispiel: 7 Jahren (K2)")
+  dt2026_example:child_age[k3] (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 4, C. Beispiel: 5 Jahren (K3)")
+  dt2026_example:in_school[k1] (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 4, C. Beispiel: in allgemeiner Schulausbildung befindlich")
+  dt2026_example:income (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 4, C. Beispiel: Bereinigtes Nettoeinkommen des Unterhaltspflichtigen (U): 1.750 EUR")
+  dt2026_example:lives_with_parent[k1] (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 4, C. Beispiel: die bei dem ... Elternteil (E) leben")
+  lifted_figures:first_rank_18 (source lifted_1_0_1 "Figures tally 1.0.1 allowed inline in rules", locator "inline in tally 1.0.1: first_rank line 176, operand; first_rank line 177, operand")
+  lifted_figures:first_rank_21 (source lifted_1_0_1 "Figures tally 1.0.1 allowed inline in rules", locator "inline in tally 1.0.1: first_rank line 177, operand")
+  lifted_figures:zahlbetrag_2 (source lifted_1_0_1 "Figures tally 1.0.1 allowed inline in rules", locator "inline in tally 1.0.1: zahlbetrag line 263, factor")
+  mp09_assumed:unmarried[k1] (source modeller "The modeller's own assumptions, each stated with its reason", locator "page 4, C. Beispiel")
+  assumed: the example treats K1 as a first-rank child; § 1603 Abs. 2 Satz 2 BGB requires unverheiratet, which the example does not state (unmarried[k1])
+  reading: dt_u_work = employed
+  law date 2026-10-18, cut 2026-10-18
+q_c6_k3 [dt_cut_round = *, dt_u_work = not_employed]:
+  dt2026:dt_age [0, 5] (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 1, table heading, Altersstufe 0-5")
+  dt2026:dt_age [18, inf) (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 1, table heading, ab 18")
+  dt2026:dt_age [6, 11] (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 1, table heading, Altersstufe 6 - 11")
+  dt2026:dt_amount[g1, a0_5] (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 1, row 1, 0-5")
+  dt2026:dt_amount[g1, a18] (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 1, row 1, ab 18")
+  dt2026:dt_amount[g1, a6_11] (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 1, row 1, 6 - 11")
+  dt2026:dt_group [0, 2 100] (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 1, row 1, bis 2.100")
+  dt2026:kindergeld (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 6, Anhang: Im Jahr 2026 beträgt das Kindergeld einheitlich je Kind 259,00 EUR")
+  dt2026:selbstbehalt[not_employed] (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 2, Anm. A.VII: für den nicht erwerbstätigen Unterhaltspflichtigen monatlich 1.200 EUR")
+  dt2026_example:child_age[k1] (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 4, C. Beispiel: im Alter von 18 Jahren (K1)")
+  dt2026_example:child_age[k2] (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 4, C. Beispiel: 7 Jahren (K2)")
+  dt2026_example:child_age[k3] (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 4, C. Beispiel: 5 Jahren (K3)")
+  dt2026_example:in_school[k1] (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 4, C. Beispiel: in allgemeiner Schulausbildung befindlich")
+  dt2026_example:income (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 4, C. Beispiel: Bereinigtes Nettoeinkommen des Unterhaltspflichtigen (U): 1.750 EUR")
+  dt2026_example:lives_with_parent[k1] (source olg_dt2026 "Düsseldorfer Tabelle, Stand: 01.01.2026 (Tabelle, Anmerkungen A–E, Anhang: Tabelle Zahlbeträge), OLG Düsseldorf", locator "page 4, C. Beispiel: die bei dem ... Elternteil (E) leben")
+  lifted_figures:first_rank_18 (source lifted_1_0_1 "Figures tally 1.0.1 allowed inline in rules", locator "inline in tally 1.0.1: first_rank line 176, operand; first_rank line 177, operand")
+  lifted_figures:first_rank_21 (source lifted_1_0_1 "Figures tally 1.0.1 allowed inline in rules", locator "inline in tally 1.0.1: first_rank line 177, operand")
+  lifted_figures:zahlbetrag_2 (source lifted_1_0_1 "Figures tally 1.0.1 allowed inline in rules", locator "inline in tally 1.0.1: zahlbetrag line 263, factor")
+  mp09_assumed:unmarried[k1] (source modeller "The modeller's own assumptions, each stated with its reason", locator "page 4, C. Beispiel")
+  assumed: the example treats K1 as a first-rank child; § 1603 Abs. 2 Satz 2 BGB requires unverheiratet, which the example does not state (unmarried[k1])
+  reading: dt_u_work = not_employed
+  law date 2026-10-18, cut 2026-10-18
+q_c6_tax [fr_comp_order = *]:
+  examples2026:comp_halves[ex40] (source boi_liq_20_20_20 "BOI-IR-LIQ-20-20-20, IR - Liquidation - Plafonnement des effets du quotient familial, version en vigueur du 07/04/2026", locator "§ 40, Exemple: quatre enfants à charge, none invalid")
+  examples2026:fr_income[ex40] (source boi_liq_20_20_20 "BOI-IR-LIQ-20-20-20, IR - Liquidation - Plafonnement des effets du quotient familial, version en vigueur du 07/04/2026", locator "§ 40, Exemple: a, pour 2025, un revenu imposable de 130 000 €")
+  examples2026:income_year[ex40] (source boi_liq_20_20_20 "BOI-IR-LIQ-20-20-20, IR - Liquidation - Plafonnement des effets du quotient familial, version en vigueur du 07/04/2026", locator "§ 40, Exemple: pour 2025")
+  examples2026:parts[ex40] (source boi_liq_20_20_20 "BOI-IR-LIQ-20-20-20, IR - Liquidation - Plafonnement des effets du quotient familial, version en vigueur du 07/04/2026", locator "§ 40, Exemple: ayant quatre enfants à charge (5 parts)")
+  lf2026_art4:bareme (11 600, 29 579] (source loi_2026_103 "Loi n° 2026-103 du 19 février 2026 de finances pour 2026, art. 4, I-A et B (CGI art. 197, I), published in the Journal officiel of 20 February 2026; the text was not fetched (Légifrance HTTP 403), its figures are read where the BOFiP reprints them", locator "BOI-IR-LIQ-20-10 § 40: Supérieure à 11 600 € et inférieure ou égale à 29 579 €, 11 %")
+  lf2026_art4:bareme (29 579, 84 577] (source loi_2026_103 "Loi n° 2026-103 du 19 février 2026 de finances pour 2026, art. 4, I-A et B (CGI art. 197, I), published in the Journal officiel of 20 February 2026; the text was not fetched (Légifrance HTTP 403), its figures are read where the BOFiP reprints them", locator "BOI-IR-LIQ-20-10 § 40: Supérieure à 29 579 € et inférieure ou égale à 84 577 €, 30 %")
+  lf2026_art4:bareme [0, 11 600] (source loi_2026_103 "Loi n° 2026-103 du 19 février 2026 de finances pour 2026, art. 4, I-A et B (CGI art. 197, I), published in the Journal officiel of 20 February 2026; the text was not fetched (Légifrance HTTP 403), its figures are read where the BOFiP reprints them", locator "BOI-IR-LIQ-20-10 § 40, Barème pour l'imposition sur les revenus 2025: N'excédant pas 11 600 €, 0 %")
+  lf2026_art4:cap_comp (source loi_2026_103 "Loi n° 2026-103 du 19 février 2026 de finances pour 2026, art. 4, I-A et B (CGI art. 197, I), published in the Journal officiel of 20 February 2026; the text was not fetched (Légifrance HTTP 403), its figures are read where the BOFiP reprints them", locator "BOI-IR-LIQ-20-20-20 § 150: fixé à 1 801 € à compter de l'imposition des revenus de l'année 2025")
+  lf2026_art4:cap_half (source loi_2026_103 "Loi n° 2026-103 du 19 février 2026 de finances pour 2026, art. 4, I-A et B (CGI art. 197, I), published in the Journal officiel of 20 February 2026; the text was not fetched (Légifrance HTTP 403), its figures are read where the BOFiP reprints them", locator "BOI-IR-LIQ-20-20-20 § 40: fixé à 1 807 € par demi-part supplémentaire à compter de l'imposition des revenus de l'année 2025")
+  lifted_figures:extra_halves_2 (source lifted_1_0_1 "Figures tally 1.0.1 allowed inline in rules", locator "inline in tally 1.0.1: extra_halves line 172, factor")
+  qf2026:base_parts (source boi_liq_20_20_20 "BOI-IR-LIQ-20-20-20, IR - Liquidation - Plafonnement des effets du quotient familial, version en vigueur du 07/04/2026", locator "§ 20: second terme ... sur deux parts s'il est marié ... et soumis à imposition commune")
+  pinned: parts[f] = base_parts for f in foyer
+  law date 2026-10-18, cut 2026-10-18
+q_capped (f = ex40) [fr_comp_order = *]: true
+  pinned: parts[f] = base_parts for f in foyer
+  law date 2026-10-18, cut 2026-10-18
+q_eigenbedarf [dt_u_work = employed]: 1 450.00 EUR
+  reading: dt_u_work = employed
+  law date 2026-10-18, cut 2026-10-18
+q_eigenbedarf [dt_u_work = not_employed]: 1 200.00 EUR
+  reading: dt_u_work = not_employed
+  law date 2026-10-18, cut 2026-10-18
+q_einsatz (c = k1): 439.00 EUR
+  law date 2026-10-18, cut 2026-10-18
+q_einsatz (c = k2): 428.50 EUR
+  law date 2026-10-18, cut 2026-10-18
+q_einsatz (c = k3): 356.50 EUR
+  law date 2026-10-18, cut 2026-10-18
+q_einsatz_sum: 1 224.00 EUR
+  assumed: the example treats K1 as a first-rank child; § 1603 Abs. 2 Satz 2 BGB requires unverheiratet, which the example does not state (unmarried[k1])
+  law date 2026-10-18, cut 2026-10-18
+q_extra_halves (f = ex40): 6
+  law date 2026-10-18, cut 2026-10-18
+q_kindergeld_check: ok
+  law date 2026-10-18, cut 2026-10-18
+q_masse [dt_u_work = employed]: 300.00 EUR
+  reading: dt_u_work = employed
+  law date 2026-10-18, cut 2026-10-18
+q_masse [dt_u_work = not_employed]: 550.00 EUR
+  reading: dt_u_work = not_employed
+  law date 2026-10-18, cut 2026-10-18
+q_minuhv_check (a = a0_5): ok
+  law date 2026-10-18, cut 2026-10-18
+q_minuhv_check (a = a6_11): ok
+  law date 2026-10-18, cut 2026-10-18
+q_minuhv_check (a = a12_17): ok
+  law date 2026-10-18, cut 2026-10-18
+q_nbp_table_check: ok
+  law date 2026-10-18, cut 2026-10-18
+q_nbp_xml_check: ok
+  law date 2026-10-18, cut 2026-10-18
+q_owed (j = f0): 3.00 PLN
+  law date 2026-10-18, cut 2026-10-18
+q_owed (j = f1): 7.00 PLN
+  law date 2026-10-18, cut 2026-10-18
+q_owed (j = f2): 8.00 PLN
+  law date 2026-10-18, cut 2026-10-18
+q_owed (j = f3): 6.00 PLN
+  law date 2026-10-18, cut 2026-10-18
+q_owes (i = f0): 9.00 PLN
+  law date 2026-10-18, cut 2026-10-18
+q_owes (i = f1): 6.00 PLN
+  law date 2026-10-18, cut 2026-10-18
+q_owes (i = f2): 6.00 PLN
+  law date 2026-10-18, cut 2026-10-18
+q_owes (i = f3): 3.00 PLN
+  law date 2026-10-18, cut 2026-10-18
+q_qf (f = ex40): (26 000 EUR, 65 000 EUR)
+  pinned: parts[f] = base_parts for f in foyer
+  law date 2026-10-18, cut 2026-10-18
+q_second_term (f = ex40) [fr_comp_order = *]: 14 366.00 EUR
+  pinned: parts[f] = base_parts for f in foyer
+  law date 2026-10-18, cut 2026-10-18
+q_split_check [dt_cut_round = nearest, dt_u_work = employed]: ok
+  assumed: the example treats K1 as a first-rank child; § 1603 Abs. 2 Satz 2 BGB requires unverheiratet, which the example does not state (unmarried[k1])
+  reading: dt_cut_round = nearest
+  reading: dt_u_work = employed
+  law date 2026-10-18, cut 2026-10-18
+q_split_check [dt_cut_round = nearest, dt_u_work = not_employed]: differs: sum(...) = 549.99 EUR, masse = 550.00 EUR, difference -0.01 EUR
+  assumed: the example treats K1 as a first-rank child; § 1603 Abs. 2 Satz 2 BGB requires unverheiratet, which the example does not state (unmarried[k1])
+  reading: dt_cut_round = nearest
+  reading: dt_u_work = not_employed
+  law date 2026-10-18, cut 2026-10-18
+q_split_check [dt_cut_round = largest_rem, dt_u_work = *]: ok
+  assumed: the example treats K1 as a first-rank child; § 1603 Abs. 2 Satz 2 BGB requires unverheiratet, which the example does not state (unmarried[k1])
+  reading: dt_cut_round = largest_rem
+  law date 2026-10-18, cut 2026-10-18
+q_tax (f = ex40): (7 920.00 EUR, 25 208.00 EUR)
+  pinned: parts[f] = base_parts for f in foyer
+  law date 2026-10-18, cut 2026-10-18
+q_tax_due (f = ex40) [fr_comp_order = *]: 14 366.00 EUR
+  pinned: parts[f] = base_parts for f in foyer
+  law date 2026-10-18, cut 2026-10-18
+q_tax_raw (f = ex40): (7 920 EUR, 25 207.98 EUR)
+  pinned: parts[f] = base_parts for f in foyer
+  law date 2026-10-18, cut 2026-10-18
+q_unterhalt (c = k1) [dt_cut_round = *, dt_u_work = employed]: 107.60 EUR
+  assumed: the example treats K1 as a first-rank child; § 1603 Abs. 2 Satz 2 BGB requires unverheiratet, which the example does not state (unmarried[k1])
+  reading: dt_u_work = employed
+  law date 2026-10-18, cut 2026-10-18
+q_unterhalt (c = k1) [dt_cut_round = *, dt_u_work = not_employed]: 197.26 EUR
+  assumed: the example treats K1 as a first-rank child; § 1603 Abs. 2 Satz 2 BGB requires unverheiratet, which the example does not state (unmarried[k1])
+  reading: dt_u_work = not_employed
+  law date 2026-10-18, cut 2026-10-18
+q_unterhalt (c = k2) [dt_cut_round = *, dt_u_work = employed]: 105.02 EUR
+  assumed: the example treats K1 as a first-rank child; § 1603 Abs. 2 Satz 2 BGB requires unverheiratet, which the example does not state (unmarried[k1])
+  reading: dt_u_work = employed
+  law date 2026-10-18, cut 2026-10-18
+q_unterhalt (c = k2) [dt_cut_round = nearest, dt_u_work = not_employed]: 192.54 EUR
+  assumed: the example treats K1 as a first-rank child; § 1603 Abs. 2 Satz 2 BGB requires unverheiratet, which the example does not state (unmarried[k1])
+  reading: dt_cut_round = nearest
+  reading: dt_u_work = not_employed
+  law date 2026-10-18, cut 2026-10-18
+q_unterhalt (c = k2) [dt_cut_round = largest_rem, dt_u_work = not_employed]: 192.55 EUR
+  assumed: the example treats K1 as a first-rank child; § 1603 Abs. 2 Satz 2 BGB requires unverheiratet, which the example does not state (unmarried[k1])
+  reading: dt_cut_round = largest_rem
+  reading: dt_u_work = not_employed
+  law date 2026-10-18, cut 2026-10-18
+q_unterhalt (c = k3) [dt_cut_round = *, dt_u_work = employed]: 87.38 EUR
+  assumed: the example treats K1 as a first-rank child; § 1603 Abs. 2 Satz 2 BGB requires unverheiratet, which the example does not state (unmarried[k1])
+  reading: dt_u_work = employed
+  law date 2026-10-18, cut 2026-10-18
+q_unterhalt (c = k3) [dt_cut_round = *, dt_u_work = not_employed]: 160.19 EUR
+  assumed: the example treats K1 as a first-rank child; § 1603 Abs. 2 Satz 2 BGB requires unverheiratet, which the example does not state (unmarried[k1])
+  reading: dt_u_work = not_employed
+  law date 2026-10-18, cut 2026-10-18
+q_zahlbetrag (a = a0_5): 356.50 EUR
+  law date 2026-10-18, cut 2026-10-18
+q_zahlbetrag (a = a6_11): 428.50 EUR
+  law date 2026-10-18, cut 2026-10-18
+q_zahlbetrag (a = a12_17): 523.50 EUR
+  law date 2026-10-18, cut 2026-10-18
+q_zahlbetrag (a = a18): 439.00 EUR
+  law date 2026-10-18, cut 2026-10-18
+warning: WARN-NEGATIVE eur[de_u] is below zero from 2026-01-31

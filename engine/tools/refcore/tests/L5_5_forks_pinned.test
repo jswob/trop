@@ -1,0 +1,40 @@
+# L §5.5: the 64 cap is counted "after its with pins": with a1 pinned, 2^6 = 64 combinations are allowed.
+# Only the combination with every axis p gives 1 (rule r1); a1 is pinned to q, so the value is 0 everywhere.
+=== m.tally
+model t
+  tally 2
+  on 2016-03-01
+  start 2015-11-01
+  end 2016-10-31
+
+axis a1
+  p "p"
+  q "q"
+axis a2
+  p "p"
+  q "q"
+axis a3
+  p "p"
+  q "q"
+axis a4
+  p "p"
+  q "q"
+axis a5
+  p "p"
+  q "q"
+axis a6
+  p "p"
+  q "q"
+axis a7
+  p "p"
+  q "q"
+
+def n: int
+  rule base = 0
+  rule r1 beats base = 1 when a1 == p and a2 == p and a3 == p and a4 == p and a5 == p and a6 == p and a7 == p
+
+ask q1: n with a1 = q
+=== expect
+q1 [a2 = *, a3 = *, a4 = *, a5 = *, a6 = *, a7 = *]: 0
+  pinned: a1 = q
+  cut 2016-03-01

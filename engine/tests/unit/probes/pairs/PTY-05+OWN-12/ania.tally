@@ -1,0 +1,49 @@
+model pair_a
+  tally 2
+  on 2026-10-30
+  start 2026-01-01
+  end 2026-06-30
+  note "PTY-05 x OWN-12, household A (Ania and Tomek), alone."
+
+source papers "pair_a: the household's own papers (made up)"
+
+unit DUK: currency minor 0.01
+
+kind inheritances: transfers
+  attr heir: key parties
+
+kind savings: place DUK min 0
+  owned by arrive
+  step minor(DUK)
+  takes k for w prorata ties by (if k.owner == ania then 0 else 1)
+
+place sav: savings lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input rows: observed
+
+def arrive[m in events, p in parties]: num at m.day
+  note "rule 1: an inheritance is the heir's"
+  rule inherited v card_rules = (if p == m.heir then 1 else 0) when m in inheritances
+
+ask q_parts: bal(sav, 2026-06-30) of p for p in parties on 2026-06-30
+
+version cast
+  cite papers
+  known 2026-01-01
+  note "the household enters its people at the prelude's parties, which it gives no subkinds"
+  parties + [ania] lives 1988-04-12..
+  parties + [tomek] lives 1986-09-03..
+
+version card_rules
+  cite papers
+  governs always
+  known 2026-01-01
+
+version records_2026_01
+  cite papers
+  governs 2026-01
+  known 2026-02-03
+  rows[r1] = (on: 2026-01-05, kind: inheritances, leg cash from world to sav amount 2000.00 DUK, heir: ania) "line 1"
+  rows[r2] = (on: 2026-01-06, kind: inheritances, leg cash from world to sav amount 1500.00 DUK, heir: tomek) "line 2"

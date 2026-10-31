@@ -1,0 +1,52 @@
+a_basis_new: 1 050 USD
+  law date 2026-10-18, cut 2026-10-18
+a_disallowed: 250 USD
+  law date 2026-10-18, cut 2026-10-18
+b_added_dec13: 500 USD
+  law date 2026-10-18, cut 2026-10-18
+b_basis_dec13: 3 250 USD
+  law date 2026-10-18, cut 2026-10-18
+b_basis_dec20: 1 375 USD
+  law date 2026-10-18, cut 2026-10-18
+b_deductible: 250 USD
+  law date 2026-10-18, cut 2026-10-18
+b_disallowed: 750 USD
+  law date 2026-10-18, cut 2026-10-18
+b_loss: 1 000 USD
+  law date 2026-10-18, cut 2026-10-18
+c_added_feb3: 500 USD
+  law date 2026-10-18, cut 2026-10-18
+c_added_feb4: 500 USD
+  law date 2026-10-18, cut 2026-10-18
+c_disallowed: 1 000 USD
+  law date 2026-10-18, cut 2026-10-18
+d_disallowed_ps: 33 USD/shr
+  law date 2026-10-18, cut 2026-10-18
+e_disallowed: 250 USD
+  assumed: the Pub gives October 15 with no year; the year of the 2025 edition is taken (sale_on[e_s])
+  assumed: the Pub gives October 16 with no year; the year of the 2025 edition is taken (acq_on[e_oct16])
+  law date 2026-10-18, cut 2026-10-18
+x1_deductible: 0 USD
+  law date 2026-10-18, cut 2026-10-18
+x2_basis_dec21: 3 250 USD
+  law date 2026-10-18, cut 2026-10-18
+x2_basis_dec27: 1 375 USD
+  law date 2026-10-18, cut 2026-10-18
+x2_deductible: 250 USD
+  law date 2026-10-18, cut 2026-10-18
+x2_disallowed: 750 USD
+  law date 2026-10-18, cut 2026-10-18
+x3_matched (l = x3_sep15): 0 shr
+  law date 2026-10-18, cut 2026-10-18
+x3_matched (l = x3_feb15): 50 shr
+  law date 2026-10-18, cut 2026-10-18
+x3_matched (l = x3_feb16): 50 shr
+  law date 2026-10-18, cut 2026-10-18
+x3_matched (l = x3_feb17): 0 shr
+  law date 2026-10-18, cut 2026-10-18
+x3_matched (l = x3_feb18): 0 shr
+  law date 2026-10-18, cut 2026-10-18
+y1_basis_new: 110 USD
+  law date 2026-10-18, cut 2026-10-18
+y2_basis_new: 90 USD
+  law date 2026-10-18, cut 2026-10-18

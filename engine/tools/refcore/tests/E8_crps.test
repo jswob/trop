@@ -1,0 +1,66 @@
+# E §8: the evaluation layer's ask, copied whole, over a minimal reality: konto opens at 1 000.00 PLN and a monthly
+# spend of spend_amt[m] leaves it on each month's first day.  The forecast version (known 2025-12-01) states 100.00
+# PLN; a version known 2026-06-01 replaces it with 300.00 PLN from 2026-07.  "Inside as if {known K}, versions and
+# rows known after K are masked" (E §8): the forecast at 2026-03-31 counts nine spends of 100.00 PLN, so bal = 100.00
+# PLN; the outcome, at the ask's cut, counts six of 100.00 and three of 300.00 (each instance at its booking cut
+# min(t, K), L §5.14.3), so bal = -500.00 PLN.  The forecast is the same on every path, so crps of its N path values
+# (L §5.15: (1/n)·Σ|x_i - y| - (1/(2n²))·ΣΣ|x_i - x_j|) is |100 - (-500)| = 600 PLN.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2019-05-01..
+place shop: outside lives 1900-01-01..
+input spend_amt[m in months]: money PLN
+
+move spend[m in months]: transfers
+  on start_of(m)
+  at start_of(m)
+  leg cash from konto to shop amount spend_amt[m]
+
+version forecast
+  cite s
+  governs 2026
+  known 2025-12-01
+  spend_amt = 100.00 PLN
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start
+
+version dearer
+  cite s
+  governs 2026-07..2026-12
+  known 2026-06-01
+  replace spend_amt = 300.00 PLN
+
+ask crps_sep: crps(bal(konto, 2026-09-30) as if {known 2026-03-31}, bal(konto, 2026-09-30)) law 2026-09-30 paths 1000 seed 7 orient lower
+ask parts: bal(konto, 2026-09-30) as if {known 2026-03-31}, bal(konto, 2026-09-30)
+=== expect
+crps_sep: 600 PLN (horizon ...
+  pinned: known 2026-03-31
+  unfulfilled: spend[2026-01]
+  unfulfilled: spend[2026-02]
+  unfulfilled: spend[2026-03]
+  unfulfilled: spend[2026-04]
+  unfulfilled: spend[2026-05]
+  unfulfilled: spend[2026-06]
+  unfulfilled: spend[2026-07]
+  unfulfilled: spend[2026-08]
+  unfulfilled: spend[2026-09]
+  law date 2026-09-30, cut 2026-12-31
+  orient lower
+parts: (100.00 PLN, -500.00 PLN)
+  pinned: known 2026-03-31
+  unfulfilled: spend[2026-01]
+  unfulfilled: spend[2026-02]
+  unfulfilled: spend[2026-03]
+  unfulfilled: spend[2026-04]
+  unfulfilled: spend[2026-05]
+  unfulfilled: spend[2026-06]
+  unfulfilled: spend[2026-07]
+  unfulfilled: spend[2026-08]
+  unfulfilled: spend[2026-09]
+  cut 2026-12-31

@@ -1,0 +1,23 @@
+# C2 progress (session 4.5c text writer)
+- [ ] read LANGUAGE.md (piecewise)
+- [ ] A-13
+- [ ] B-13
+- [ ] D-13
+- [ ] CUR-01+RAND-01
+- [ ] LAW-20
+- [ ] ASKS.md
+- LANGUAGE.md read: §1-§4.6, §5.11, §5.16, §5.18, §6.4-§7.5 (lines 1-690, 1032-1231, 1381-1575, 1746-2110). Not yet: §5.1-5.10, §5.12-5.15 (move 1242-1364), §5.19, §8.
+- Key: foreign random stream (Python random.Random) is a hole with reason (§5.16 end, §8.1).
+- [x] LAW-20 written + runs (0.5 s rc 0). asks a_rule3 a_closed_form_agrees a_closed_form_deduction b_rule4 b_rounds b_fixed_point. Gap: short def can't carry a note (LOAD-PARSE) -> long form.
+- [x] CUR-01+RAND-01 written + runs. Run 1: q_days q_python_stream q_means (27.6 s rc 0); run 2: q_means_again (28.0 s rc 0) - same output. Gaps: `cash` is a built-in id (LOAD-DUP) -> cash_received; Python stream = hole def python_stream; binomial(1,1/2) maps u>1/2 to up (Python: below 0.5 up), statistically same.
+- A-13 files: new/A-13/a13_calc.tally (control layer, rules), a13_jul.tally, a13_apr.tally, A-13.tally (asks). Control diff vs lis: all 0 (5.9 s). Next: run a/c asks, then (b) a13_jul_sale.tally (planned sale move at kop_glb, net_gain added rule, remove 2024 transfers/sale/buy).
+- A-13 (b) a13_jul_sale.tally written: planned move a13b_sale + `moves kop_register to ..2023-12-14` (planned move on covered day not bound otherwise), net_gain added rule. a13_b_sale/lots ~8 s; a13_b_tax, a13_b_differs_2023, a13_b_differs_2024_plain 10.8 s. a13_b_differs_2024 (windows each) over 60 s; base a05_ania also over 60 s.
+- A-13 runs: (a) 6 asks 6.7 s; (c) 6 asks 6.6 s; control 4 asks 5.9 s; why asks 3 (kalina_due, a/c parental explain).
+- B-13 plan: base part b13_rows.tally (gazette fx_mid + Lazur buy rows for rule days 07-01,08-01,09-01,10-01,11-03,12-01), scenario b13_fx (from 2025-07-01, expression rows x0.95 round 4dp half-up for fx_mid per day and lazur_buy per day), scenario b13_rule over b13_fx (defs: sweep recurrence over bal(lazur) since a decision on covered Lazur days is modelled past). Base B run ~41 s per run: few asks per run.
+- B-13 written: new/B-13/b13_rows.tally (base part), b13_fx.tally, b13_rule.tally, B-13.tally. Runs (one per run, ~45 s): b13_a_invoices+b13_a_lazur 45.2 s; b13_b_days 45.0; b13_b_sales 44.2; b13_b_lazur 43.8; b13_b_gain (pending). Two (b) asks together go over 60 s.
+- B-13 b13_b_gain 45.5 s rc 0. B-13 done (asks one per run except a pair for (a)).
+- D-13 plan: part new/D-13/longview_taxed.tally: unit lvu, t_* recurrences (pre with last year's tax, worth=fpre/units, lots by year, FIFO by cumulative-interval overlap, exempt >5y, loss carry by lag index 1..5), path asks at paths 200 seed 20261001; zero-vol via `as if {r_path[*] = fund_mu}` (fallback: duplicate chain).
+- D-13 written: new/D-13/longview_taxed.tally (t_ chain + z_ zero-vol copy; as-if pin of r_path refused LOAD-RANDOM), D-13.tally asks d13_paths, d13_paths_ever, d13_zero, d13_stream. d13_zero+d13_stream 4.3 s. Next: time d13_paths.
+- D-13: d13_paths 25.9 s, d13_zero+stream 4.1 s; "ever" reading dropped (over 60 s).
+- ASKS.md written. ALL DONE 2026-10-29: hand back.
+- T-1 fix: a13_calc.tally:21-22 res_joint/together_joint law rules; A1 7.4 s rc 0, A2 7.4 s rc 0; ASKS.md updated.

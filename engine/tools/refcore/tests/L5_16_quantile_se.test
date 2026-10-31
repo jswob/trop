@@ -1,0 +1,57 @@
+# L §5.16 (round 19, GD-3; E §7 step 4): "`quantile(e, q)` ... prints the value with its standard error by the
+# Maritz-Jarrett method: with the N samples sorted x(1) <= ... <= x(N) and m = ceil(q·N), the rank of the type-1 value,
+# the weights are W_i = I(i/N) - I((i - 1)/N), where I is the distribution function of Beta(m, N - m + 1), equivalently
+# the chance that a binomial of N trials with success chance x has at least m successes (exact for whole N); with C_k =
+# sum W_i·x(i)^k, the standard error is sqrt(C2 - C1^2), correctly rounded to 1e-6, as mean's; with N = 1 it is none".
+# The lines of L5_16_quantile_se_check without the option (a7: q = 0 is outside (0, 1], refused at the value as
+# before, L §5.16, §8.4).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+index ks = [ka, kb, kc]
+input w[k in ks]: num
+input vals[k in ks]: num
+input flat[k in ks]: num
+def draw: dist = discrete(w[k] for k in ks) at reader
+def ev: num = vals[draw] at reader
+def eq3: num = flat[draw] at reader
+
+version v
+  cite s
+  governs 2026..
+  known 2026-01-01
+  w[ka] = 1
+  w[kb] = 1
+  w[kc] = 1
+  vals[ka] = 0
+  vals[kb] = 2
+  vals[kc] = 5
+  flat[ka] = 3
+  flat[kb] = 3
+  flat[kc] = 3
+
+ask a1: quantile(ev, 50 %) law 2026-06-30 paths 1 seed 3
+ask a2: quantile(eq3, 50 %) law 2026-06-30 paths 5 seed 3
+ask a3: quantile(ev, 50 %) law 2026-06-30 paths 5 seed 3
+ask a4: quantile(ev, 100 %) law 2026-06-30 paths 6 seed 2
+ask a5: quantile(ev where draw != ka, 25 %) law 2026-06-30 paths 8 seed 1
+ask a7: quantile(ev, 0) law 2026-06-30 paths 4 seed 1
+=== expect
+a1: 5 (standard error none; 1 paths; horizon 2026-06-30)
+  law date 2026-06-30, cut 2026-12-31
+a2: 3 (standard error 0; 5 paths; horizon 2026-06-30)
+  law date 2026-06-30, cut 2026-12-31
+a3: 5 (standard error 0.700776; 5 paths; horizon 2026-06-30)
+  law date 2026-06-30, cut 2026-12-31
+a4: 5 (standard error 0.976381; 6 paths; horizon 2026-06-30)
+  law date 2026-06-30, cut 2026-12-31
+a5: 2 (standard error 1.418013; 5 of 8 paths; horizon 2026-06-30)
+  law date 2026-06-30, cut 2026-12-31
+a7: refused: RUN-DOMAIN quantile at 0: no smallest value with at least 0 of the samples at or below it
+  law date 2026-06-30, cut 2026-12-31

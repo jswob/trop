@@ -1,0 +1,11 @@
+scenario switch over forecast
+  tally 2
+  from 2026-01-01
+  note "Path switch: the base to December 2029, then −0.10 % a month (story § The forecast, item 3). Written over forecast with the whole path (fault F5, see crash)."
+
+version path_switch
+  cite story
+  governs 2026-01-01..
+  known 2026-01-15
+  path_rate[*] = 0.004 governs 2026-01..2029-12 "story § The forecast, item 3: switch, the base (+0.40 % a month) to December 2029"
+  path_rate[*] = -0.001 governs 2030-01.. "story § The forecast, item 3: switch, −0.10 % a month from January 2030"

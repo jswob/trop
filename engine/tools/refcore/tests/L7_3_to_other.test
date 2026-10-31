@@ -1,0 +1,17 @@
+# L §7.3 lists what takes `to u` (transcendentals, distribution functions and samples, crps of a normal,
+# periodic and factor); `to` on an exact plain value is given no meaning, refused at load where the types show it
+# (L §8.4 What isn't defined is refused: LOAD-UNIT).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+input x: num
+def y: num = x to 0.01 at reader
+=== expect
+refused: LOAD-UNIT ...

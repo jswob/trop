@@ -1,0 +1,7 @@
+a05_ania_why (c = cost_basis) [px_round = *]: (cost_basis, 1 118.00 DUK)
+  law date 2025-04-30, cut 2025-04-30
+a05_ania_why (c = holding_test) [window(2019-03-01, 2019-03-31) = 2019-03-01 .. 2019-03-06] [px_round = *]: (holding_test, 319.00 DUK)
+  law date 2025-04-30, cut 2025-04-30
+a05_ania_why (c = holding_test) [window(2019-03-01, 2019-03-31) = 2019-03-07 .. 2019-03-31] [px_round = *]: (holding_test, 191.00 DUK)
+  law date 2025-04-30, cut 2025-04-30
+

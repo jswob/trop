@@ -1,0 +1,80 @@
+model own10_p03
+  tally 2
+  on 2026-10-30
+  start 2026-01-01
+  end 2026-01-31
+  note "OWN-10 P-03: a purchase paid by two owners: its units are each owner's in proportion to what its two cash legs took of their parts (m.leg.amount of p, LANGUAGE 3.6, 5.14)."
+  note "The split rounds to the fund account's step, 1 unit, by the largest remainder (LANGUAGE 5.13)."
+
+source card "Probe card OWN-10 (made up): story and rules"
+
+source bank "The couple's bank: its January 2026 rows (made up)"
+
+unit DUK: currency minor 0.01
+
+unit fz_units "a unit of fund Z"
+
+kind couples: parties
+
+kind persons: parties
+
+kind fund_accounts: place fz_units min 0
+  owned by arrive
+  step 1 fz_units
+  takes k for w order (if k.owner == ania_tomek then 0 else 1)
+
+kind fund_buys: event certain
+  leg units: fz_units
+  leg cash_a: DUK
+  leg cash_b: DUK
+
+kind inheritances: transfers
+  attr heir: key parties
+
+kind savings: place DUK min 0
+  owned by arrive
+  step minor(DUK)
+  takes k for w order (if k.owner == ania_tomek then 0 else 1)
+
+place acc_ania: savings lives 2026-01-01..
+
+place acc_tomek: savings lives 2026-01-01..
+
+place fund: fund_accounts lives 2026-01-01..
+
+place market: outside lives 1900-01-01..
+
+place world: outside lives 1900-01-01..
+
+input bank_rows: observed
+
+def arrive[m in events, p in parties]: num at m.day
+  note "R1: an inheritance the heir's, any other arrival the couple's; a purchase's units as its cash legs paid"
+  rule community v card_rules = (if p == ania_tomek then 1 else 0)
+  rule inherited beats community v card_rules = (if p == m.heir then 1 else 0) when m in inheritances
+  rule as_paid beats community v card_rules = (m.cash_a.amount of p + m.cash_b.amount of p) / (m.cash_a.amount + m.cash_b.amount) when m in fund_buys
+
+ask q_units: bal(fund, 2026-01-31) of p for p in parties on 2026-01-31
+
+ask q_total: bal(fund, 2026-01-31)
+
+version card_cast
+  cite card
+  known 2026-01-01
+  note "the parties: things of the prelude kind parties, of the model's own subkinds"
+  couples + [ania_tomek] lives 2015-06-20..
+  persons + [ania] lives 1988-04-12..
+  persons + [tomek] lives 1986-09-03..
+
+version card_rules
+  cite card
+  governs always
+  known 2026-01-01
+
+version records_2026_01
+  cite bank
+  governs 2026-01
+  known 2026-02-03
+  bank_rows[r1] = (on: 2026-01-05, kind: inheritances, leg cash from world to acc_ania amount 1000.00 DUK, heir: ania) "line 1"
+  bank_rows[r2] = (on: 2026-01-06, kind: inheritances, leg cash from world to acc_tomek amount 2000.00 DUK, heir: tomek) "line 2"
+  bank_rows[r3] = (on: 2026-01-20, kind: fund_buys, leg units from market to fund amount 100 fz_units, leg cash_a from acc_ania to market amount 1000.00 DUK, leg cash_b from acc_tomek to market amount 2000.00 DUK) "line 3"

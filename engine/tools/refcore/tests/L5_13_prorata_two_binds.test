@@ -1,0 +1,38 @@
+# L §2.3: prorata = "prorata" "(" expr "," expr "for" bind "," expr "," UNIT "," ...: one binding; a second is refused
+# (LOAD-PARSE). (Writer 6: was REFCORE-UNSPECIFIED §5.13.)
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+index parts = [a1, a2, a3]
+input tot: money PLN
+input neg: money PLN
+input w[j in parts]: num
+input inc[j in parts]: bool
+input hm: rounding
+def sg[j in parts]: money PLN = prorata(neg, w[i] for i in parts, j, minor(PLN), rest largest ties by pos(i)) at reader
+def so[j in parts]: money PLN = prorata(tot, w[i] for i in parts, x in parts, j, minor(PLN), hm, rest none) at reader
+
+version v
+  cite s
+  governs 2026..
+  known 2026-01-01
+  tot = 100.00 PLN
+  neg = -100.00 PLN
+  w[a1] = 1
+  w[a2] = 1
+  w[a3] = 1
+  inc[a1] = true
+  inc[a2] = true
+  inc[a3] = false
+  hm = half-even
+
+ask a: sg[j], so[j] for j in parts law 2026-06-30
+=== expect
+refused: LOAD-PARSE ...

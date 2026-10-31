@@ -1,0 +1,20 @@
+part cc_1
+  tally 1
+  law
+  note "CC-1 · Early repayment: allowed at any time (.1); the total cost of the credit is reduced by the costs that relate to the period by which the term is shortened, even if paid before (.2); the lender settles within 14 days (.3)."
+  note "cc1_refund: .2 doesn't say how a cost paid up front relates to the months cut off: in proportion to time, or to the balance owed in them."
+
+source cc_1 "Consumer Credit Act, CC-1 Early repayment (tmp/cases/law/acts.md)"
+
+axis cc1_refund
+  by_time "T: an up-front cost is refunded for the months cut off in proportion to the months of the term"
+  by_balance "B: an up-front cost is refunded in proportion to the balances owed in the months cut off, over those of the whole term"
+
+input cc1_settle_days: int question "Within how many days does the lender settle an early repayment (CC-1 .3)?"
+
+version cc1_v1
+  cite cc_1
+  governs 2018-01-01..
+  known 2017-09-01
+  note "CC-1 v1, in force 2018-01-01 until replaced, published 2017-09-01; governs repayments from 2018-01-01."
+  cc1_settle_days = 14 "CC-1 v1 .3"

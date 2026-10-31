@@ -1,17 +1,18 @@
-scenario costly_repairs
-  tally 1
+scenario costly_repairs over surprises
+  tally 2
   from 2027-01-01
-  over surprises
   note "Co jeśli naprawa kosztuje dwa razy więcej? Te same losowania co w surprises (adresy nie nazywają scenariusza), więc różnica jest liczona parami."
 
-ask check_no_repair: check abs(share(p in path: net_worth_on[2027-12-31] - net_worth_on[2027-12-31] as if {scenario surprises} = 0) - oracle_share[no_repair]) <= oracle_share_tol[no_repair] = true with scenario costly_repairs paths 1000 seed 7
+ask check_no_repair: check (abs(share(net_worth_on[2027-12-31] - net_worth_on[2027-12-31] as if {scenario surprises} == 0) - oracle_share[no_repair]) <= oracle_share_tol[no_repair]) == true in costly_repairs law 2026-10-19 random at quantile(0.5) paths 1000 seed 7
 
-ask check_paired_mean: check abs(mean(p in path: net_worth_on[2027-12-31] - net_worth_on[2027-12-31] as if {scenario surprises}) - oracle_value[paired_mean]) <= oracle_value_tol[paired_mean] = true with scenario costly_repairs paths 1000 seed 7
+ask check_paired_mean: check (abs(mean(net_worth_on[2027-12-31] - net_worth_on[2027-12-31] as if {scenario surprises}) - oracle_value[paired_mean]) <= oracle_value_tol[paired_mean]) == true in costly_repairs law 2026-10-19 random at quantile(0.5) paths 1000 seed 7
 
-ask check_paired_median: check quantile(p in path: net_worth_on[2027-12-31] - net_worth_on[2027-12-31] as if {scenario surprises}, 0.5) = oracle_value[paired_median] with scenario costly_repairs paths 1000 seed 7
+ask check_paired_median: check quantile(net_worth_on[2027-12-31] - net_worth_on[2027-12-31] as if {scenario surprises}, 0.5) == oracle_value[paired_median] in costly_repairs law 2026-10-19 random at quantile(0.5) paths 1000 seed 7
 
-ask paired_cost: quantile(p in path: net_worth_on[2027-12-31] - net_worth_on[2027-12-31] as if {scenario surprises}, 0.5), mean(p in path: net_worth_on[2027-12-31] - net_worth_on[2027-12-31] as if {scenario surprises}), share(p in path: net_worth_on[2027-12-31] - net_worth_on[2027-12-31] as if {scenario surprises} = 0) with scenario costly_repairs paths 1000 seed 7
+ask paired_cost: quantile(net_worth_on[2027-12-31] - net_worth_on[2027-12-31] as if {scenario surprises}, 0.5), mean(net_worth_on[2027-12-31] - net_worth_on[2027-12-31] as if {scenario surprises}), share(net_worth_on[2027-12-31] - net_worth_on[2027-12-31] as if {scenario surprises} == 0) in costly_repairs law 2026-10-19 random at quantile(0.5) paths 1000 seed 7
 
 version costly_repairs_cost
   cite modeller
-  repair_cost = 6000 assumed "scenariusz: naprawa za 6 000 zł zamiast 3 000 zł"
+  governs 2027-01-01..
+  known 2026-10-19
+  replace repair_cost = 6000 assumed "scenariusz: naprawa za 6 000 zł zamiast 3 000 zł"

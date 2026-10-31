@@ -1,0 +1,28 @@
+# L §7.3: "pow(x, q) with a non-integer q" needs to u; "pow(x, n) with an integer n is exact" (§7.1).  A power
+# read from a row is an integer here: exact, 2^3 = 8; a non-integer power without to is refused LOAD-TO (found at
+# run: the whole reality is refused, L §8.3).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+input two: num
+input three: num
+def p: num = pow(two, three) at reader
+
+version v
+  cite s
+  governs 2026..
+  known 2026-01-01
+  two = 2
+  three = 3
+
+ask a: p law 2026-06-30
+=== expect
+a: 8
+  law date 2026-06-30, cut 2026-12-31

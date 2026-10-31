@@ -1,0 +1,47 @@
+model pty05
+  tally 1
+  on 2026-10-25
+  start 2024-01-01
+  end 2024-12-31
+  note "PTY-05: the union of two households' statements of one gift. D derives the gift (pay gift); A states it as an outside fact, written as a record that explains D's pay (LANGUAGE 5.18)."
+  note "A reality is one set of files (6.1): this file is the union; neither household's own reality can be run beside it."
+
+source a_household "Household A's statement: received 5 000.00 from Halina (made up)"
+source d_household "Household D's records: given 5 000.00 to Ania (made up)"
+
+index a_row: open
+
+place acc_ania: account DUK
+
+place acc_halina: account DUK
+
+input a_stmt[r in a_row]: movement DUK
+
+input gift_amount: money DUK
+
+input gift_day: date
+
+pay gift
+  from acc_halina
+  to acc_ania
+  amount gift_amount
+  on gift_day
+
+ask q_family: flows(acc_ania, 2024) + flows(acc_halina, 2024)
+
+ask q_people: flows(acc_ania, 2024), flows(acc_halina, 2024)
+
+ask q_transfer: flows(gift, 2024)
+
+version a_statement
+  cite a_household
+  governs 2024-05
+  known 2024-01-01
+  covers acc_ania
+  a_stmt[a_g1] = (2024-05-02, acc_ania, 5000.00, gift) "A-G1: received from Halina"
+
+version d_records
+  cite d_household
+  known 2024-01-01
+  gift_amount = 5000.00 "D-G1: given to Ania"
+  gift_day = 2024-05-02 "D-G1"

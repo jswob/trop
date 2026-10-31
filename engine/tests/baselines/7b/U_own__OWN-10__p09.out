@@ -1,0 +1,12 @@
+q_parts (p = ania_tomek): 0.00 DUK
+  unfulfilled: divorce_sav
+  cut 2026-10-30
+q_parts (p = ania): 2 800.01 DUK
+  unfulfilled: divorce_sav
+  cut 2026-10-30
+q_parts (p = tomek): 2 500.00 DUK
+  unfulfilled: divorce_sav
+  cut 2026-10-30
+q_total: 5 300.01 DUK
+  unfulfilled: divorce_sav
+  cut 2026-10-30

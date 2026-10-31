@@ -1,8 +1,12 @@
 model lh13
-  tally 1
+  tally 2
   on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
   note "US Social Security, 2026: PIA bend points, indexing, highest-35 AIME, PIA with COLAs, early reduction and delayed credits. SSA OACT worked cases A and B, and the maximum-taxable earner retiring in January 2026."
   note "Known dates (§4.5): law rows from the approval of the act that enacted them; the SSA pages, which carry no updated stamp, from their retrieval date 2026-10-18; the worked cases' stipulations and the modeller's stand-ins for them from on, the same day. Each version's note says which."
+
+source lifted_1_0_1 "Figures tally 1.0.1 allowed inline in rules"
 
 source modeller "The modeller's readings of figures the case does not print, each stated with its reason"
 
@@ -24,6 +28,8 @@ source ssa_rb1 "SSA OACT, Benefit Calculation Examples for Workers Retiring in 2
 
 source ssa_rb2 "SSA OACT, Benefit Calculation Examples for Workers Retiring in 2026, page 2 (Wayback capture 2026-10-13)" at "https://web.archive.org/web/20261013082425id_/https://www.ssa.gov/oact/progdata/retirebenefit2.html"
 
+unit USD: currency minor 0.01
+
 axis index_cut
   dollar "each indexed amount rounded to the whole dollar, as retirebenefit1 prints it"
   exact "indexed amounts kept exact; the page states no rounding"
@@ -33,7 +39,10 @@ index tier = [t1, t2, t3]
 
 index worker = [case_a, case_b, max62, max65, max66, max67, max70]
 
-index yr = 1977..2026
+index yr = int 1977..2026
+
+input aime_calc_12: int
+  note "lifted from an inline figure of tally 1.0.1"
 
 input at_max[w in worker]: bool
   note "true where the source states the worker's earnings only as 'at the maximum taxable', with no yearly amounts; they are then the year's contribution and benefit base"
@@ -49,6 +58,9 @@ input bp2_1979: money USD
 input cbb[y in yr]: money USD question "Contribution and benefit base for this year: the case fetched no base series, and retirebenefit1 gives it only for 1986-2025, through case B"
 
 input claim_age[w in worker]: (yrs int, mos int)
+
+input claim_months_12: int
+  note "lifted from an inline figure of tally 1.0.1"
 
 input cola[y in yr]: num question "COLA effective December of this year: the case gives colaseries rows 2021-2026 only"
 
@@ -70,106 +82,139 @@ input earn_to[w in worker]: key yr
 
 input elig_year[w in worker]: key yr
 
+input idx_factor_2: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input increase_0_1: money USD
+  note "lifted from an inline figure of tally 1.0.1"
+
+input months_late_12: int
+  note "lifted from an inline figure of tally 1.0.1"
+
 input n_comp: int
 
 input nra[w in worker]: (yrs int, mos int)
 
+input nra_months_12: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input pia_0_1: money USD
+  note "lifted from an inline figure of tally 1.0.1"
+
 input pia_pct[t in tier]: num
 
-def aime[w in worker]: money USD
+input reduction_0_1: money USD
+  note "lifted from an inline figure of tally 1.0.1"
+
+def aime[w in worker]: money USD at reader
   note "the AIME the benefit uses: aime_calc, unless a source prints the AIME (the maximum-taxable earners' AIMEs are givens from examplemax)"
   rule base = aime_calc[w]
 
-def aime_calc[w in worker]: money USD = round(total35[w] / (12 * n_comp), 1, down)
+def aime_calc[w in worker]: money USD = round(total35[w] / (aime_calc_12 * n_comp), 1, down) at reader
 
-def benefit[w in worker]: money USD = round(pia_now[w] - reduction[w] + increase[w], 1, down)
+def benefit[w in worker]: money USD = round(pia_now[w] - reduction[w] + increase[w], 1, down) at reader
 
-def bp1[y in yr]: money USD = round(bp1_raw[y], 1, half-up)
+def bp1[y in yr]: money USD = round(bp1_raw[y], 1, half-up) at reader
 
-def bp1_raw[y in yr]: num USD = bp1_1979 * awi[y - 2] / awi[1977]
+def bp1_raw[y in yr]: num USD = bp1_1979 * awi[y - 2] / awi[1977] at reader
 
-def bp2[y in yr]: money USD = round(bp2_raw[y], 1, half-up)
+def bp2[y in yr]: money USD = round(bp2_raw[y], 1, half-up) at reader
 
-def bp2_raw[y in yr]: num USD = bp2_1979 * awi[y - 2] / awi[1977]
+def bp2_raw[y in yr]: num USD = bp2_1979 * awi[y - 2] / awi[1977] at reader
 
-def claim_months[w in worker]: int = claim_age[w].yrs * 12 + claim_age[w].mos
+def claim_months[w in worker]: int = claim_age[w].yrs * claim_months_12 + claim_age[w].mos at reader
 
-def earnings[w in worker, y in yr]: money USD
+def earnings[w in worker, y in yr]: money USD at reader
   note "covered earnings: the printed row, or the year's contribution and benefit base for a worker stated only as earning the maximum taxable"
-  rule at_max excepts base when at_max[w] = cbb[y]
+  rule at_max beats base = cbb[y] when at_max[w]
   rule base = earn[w, y]
 
-def formula[w in worker]: num USD = pia_pct[t1] * min(aime[w], bp1[elig_year[w]]) + pia_pct[t2] * max(0, min(aime[w], bp2[elig_year[w]]) - bp1[elig_year[w]]) + pia_pct[t3] * max(0, aime[w] - bp2[elig_year[w]])
+def formula[w in worker]: num USD = pia_pct[t1] * min(aime[w], bp1[elig_year[w]]) + pia_pct[t2] * max(0, min(aime[w], bp2[elig_year[w]]) - bp1[elig_year[w]]) + pia_pct[t3] * max(0, aime[w] - bp2[elig_year[w]]) at reader
 
-def idx_factor[w in worker, y in yr]: num = if y >= elig_year[w] - 2 then 1 else awi[elig_year[w] - 2] / awi[y]
+def idx_factor[w in worker, y in yr]: num = if y >= elig_year[w] - idx_factor_2 then 1 else awi[elig_year[w] - idx_factor_2] / awi[y] at reader
 
-def increase[w in worker]: money USD = round(pia_now[w] * drc_pct * months_late[w], 0.1, down)
+def increase[w in worker]: money USD = round(pia_now[w] * drc_pct * months_late[w], increase_0_1, down) at reader
 
-def indexed[w in worker, y in yr]: num USD
+def indexed[w in worker, y in yr]: num USD at reader
   note "earnings times the indexing factor, §215(b)(3); whether the product is rounded is a reading"
   rule base = earnings[w, y] * idx_factor[w, y]
-  rule dollar excepts base when index_cut = dollar = round(earnings[w, y] * idx_factor[w, y], 1, half-up)
-  rule penny excepts base when index_cut = penny = round(earnings[w, y] * idx_factor[w, y], 0.01, half-up)
+  rule dollar beats base = round(earnings[w, y] * idx_factor[w, y], 1, half-up) when index_cut == dollar
+  rule penny beats base = round(earnings[w, y] * idx_factor[w, y], minor(USD), half-up) when index_cut == penny
 
-def months_early[w in worker]: int = max(0, nra_months[w] - claim_months[w])
+def months_early[w in worker]: int = max(0, nra_months[w] - claim_months[w]) at reader
 
-def months_late[w in worker]: int = max(0, min(claim_months[w], drc_end_age * 12) - nra_months[w])
+def months_late[w in worker]: int = max(0, min(claim_months[w], drc_end_age * months_late_12) - nra_months[w]) at reader
 
-def nra_months[w in worker]: int = nra[w].yrs * 12 + nra[w].mos
+def nra_months[w in worker]: int = nra[w].yrs * nra_months_12 + nra[w].mos at reader
 
-def pia[w in worker, y in yr]: money USD
+def pia[w in worker, y in yr]: money USD at reader
   note "the PIA payable for January to November of year y: the formula result of the year of first eligibility rounded down to the dime, then each December COLA of the years before y, rounded down to the dime each time (§215(a)(1)(A), §215(i)(2)(A)(ii))"
-  rule base when y = elig_year[w] = round(formula[w], 0.1, down)
-  rule cola_step when y > elig_year[w] = round(pia[w, y - 1] * (1 + cola[y - 1]), 0.1, down)
+  rule base = round(formula[w], pia_0_1, down) when y == elig_year[w]
+  rule cola_step = round(pia[w, y - 1] * (1 + cola[y - 1]), pia_0_1, down) when y > elig_year[w]
 
-def pia_now[w in worker]: money USD = pia[w, benefit_year]
+def pia_now[w in worker]: money USD = pia[w, benefit_year] at reader
 
-def rank[w in worker, y in yr]: int = 1 + count(z in yr where z >= earn_from[w] and z <= earn_to[w] and (indexed[w, z] > indexed[w, y] or indexed[w, z] = indexed[w, y] and z < y))
+def rank[w in worker, y in yr]: int = 1 + count(z in yr where z >= earn_from[w] and z <= earn_to[w] and (indexed[w, z] > indexed[w, y] or indexed[w, z] == indexed[w, y] and z < y)) at reader
 
-def red_frac[w in worker]: num = early_pct_1 * min(months_early[w], early_cut) + early_pct_2 * max(0, months_early[w] - early_cut)
+def red_frac[w in worker]: num = early_pct_1 * min(months_early[w], early_cut) + early_pct_2 * max(0, months_early[w] - early_cut) at reader
 
-def reduction[w in worker]: money USD = round(pia_now[w] * red_frac[w], 0.1, up)
+def reduction[w in worker]: money USD = round(pia_now[w] * red_frac[w], reduction_0_1, up) at reader
 
-def total35[w in worker]: num USD = sum(y in yr where y >= earn_from[w] and y <= earn_to[w] and rank[w, y] <= n_comp: indexed[w, y])
+def total35[w in worker]: num USD = sum(indexed[w, y] for y in yr where y >= earn_from[w] and y <= earn_to[w] and rank[w, y] <= n_comp) at reader
 
-ask aimes: aime[w] for w in [case_a, case_b]
+ask aimes: aime[w] for w in [case_a, case_b] law 2026-10-18
 
-ask benefits: benefit[w] for w in [case_a, case_b]
+ask benefits: benefit[w] for w in [case_a, case_b] law 2026-10-18
 
-ask bp_2021: bp1[2021], bp2[2021]
+ask bp_2021: bp1[2021], bp2[2021] law 2026-10-18
 
-ask bp_2026: bp1[2026], bp2[2026]
+ask bp_2026: bp1[2026], bp2[2026] law 2026-10-18
 
-ask bp_raw_2026: bp1_raw[2026], bp2_raw[2026]
+ask bp_raw_2026: bp1_raw[2026], bp2_raw[2026] law 2026-10-18
 
-ask chain_b: pia[case_b, y] for y in [2021, 2022, 2023, 2024, 2025, 2026]
+ask chain_b: pia[case_b, y] for y in [2021, 2022, 2023, 2024, 2025, 2026] law 2026-10-18
 
-ask dropped: indexed[w, y] for w in [case_a, case_b], y in yr where y >= earn_from[w] and y <= earn_to[w] and rank[w, y] > n_comp
+ask dropped: indexed[w, y] for w in [case_a, case_b], y in yr where y >= earn_from[w] and y <= earn_to[w] and rank[w, y] > n_comp law 2026-10-18
 
-ask formulas: formula[w] for w in [case_a, case_b]
+ask formulas: formula[w] for w in [case_a, case_b] law 2026-10-18
 
-ask indexing: idx_factor[w, y], indexed[w, y] for w in [case_a, case_b], y in yr where y >= earn_from[w] and y <= earn_to[w]
+ask indexing: idx_factor[w, y], indexed[w, y] for w in [case_a, case_b], y in yr where y >= earn_from[w] and y <= earn_to[w] law 2026-10-18
 
-ask max_aime: aime_calc[w] for w in [max62, max65, max66, max67, max70]
+ask max_aime: aime_calc[w] for w in [max62, max65, max66, max67, max70] law 2026-10-18
 
-ask max_benefits: benefit[w] for w in [max62, max65, max66, max67, max70]
+ask max_benefits: benefit[w] for w in [max62, max65, max66, max67, max70] law 2026-10-18
 
-ask months_a: months_early[case_a]
+ask months_a: months_early[case_a] law 2026-10-18
 
-ask pias: pia_now[w] for w in [case_a, case_b]
+ask pias: pia_now[w] for w in [case_a, case_b] law 2026-10-18
 
-ask reduction_60: 100 * red_frac[case_a]
+ask reduction_60: red_frac[case_a] / 1 % law 2026-10-18
 
-ask totals: total35[w] for w in [case_a, case_b]
+ask totals: total35[w] for w in [case_a, case_b] law 2026-10-18
+
+version lifted_figures
+  cite lifted_1_0_1
+  governs always
+  known 1961-06-30
+  aime_calc_12 = 12 "inline in tally 1.0.1: aime_calc line 83, factor"
+  claim_months_12 = 12 "inline in tally 1.0.1: claim_months line 95, factor"
+  idx_factor_2 = 2 "inline in tally 1.0.1: idx_factor line 104, operand"
+  increase_0_1 = 0.1 "inline in tally 1.0.1: increase line 106, round step"
+  months_late_12 = 12 "inline in tally 1.0.1: months_late line 116, factor"
+  nra_months_12 = 12 "inline in tally 1.0.1: nra_months line 118, factor"
+  pia_0_1 = 0.1 "inline in tally 1.0.1: pia line 122, round step; pia line 123, round step"
+  reduction_0_1 = 0.1 "inline in tally 1.0.1: reduction line 131, round step"
 
 version pl87_64_v
   cite pl87_64
+  governs always
   known 1961-06-30
   note "known: the Act's approval date (law from promulgation, §4.5), from the slip law at uscode.house.gov. The 5/9-of-1-percent monthly reduction was first enacted for women by the Social Security Amendments of 1956 (Pub. L. 84-880, approved 1956-08-01); this Act extended reduced benefits at 62 to men, so the row holds for every worker from it. SSA's compilation of §202 (Wayback capture 2026-10-05) is the locator only (§5.3)"
   early_pct_1 = 1/180 "§202(q)(1)(A), 5/9 of 1 percent per month (SSA compilation of §202)"
 
 version pl95_216_v
   cite pl95_216
+  governs always
   known 1977-12-20
   note "known: the Act's approval date (law from promulgation, §4.5). Its Title II rewrote §215(a): the 1979 bend points and the 90/32/15 percent formula. SSA's compilation of §215 (Wayback capture 2026-06-16) is the locator only (§5.3)"
   bp1_1979 = 180 "§215(a)(1)(B)(i), '$180 and $1,085, respectively' (SSA compilation of §215)"
@@ -180,6 +225,7 @@ version pl95_216_v
 
 version pl98_21_v
   cite pl98_21
+  governs always
   known 1983-04-20
   note "known: the Act's approval date (law from promulgation, §4.5). It added the 5/12-of-1-percent reduction beyond 36 months (§202(q)(9), Sec. 201(b) of the Act), phased the delayed retirement credit up to 2/3 of 1 percent a month (§202(w)(6), Sec. 114) and moved the age at which credits stop from 72 to 70 (SSA POMS RS 00615.693: 'The 1983 Amendments changed the age at which delayed retirement credits (DRC) stopped'). SSA's compilation of §202 (Wayback capture 2026-10-05) is the locator only (§5.3)"
   drc_end_age = 70 "§202(w)(2)(A), months 'prior to the month in which such individual attained age 70' (SSA compilation of §202)"
@@ -189,6 +235,7 @@ version pl98_21_v
 
 version awi_v
   cite ssa_awi
+  governs always
   known 2026-10-18
   note "known: the page carries no updated stamp, so its retrieval date (§4.5); the case read it as the Wayback capture of 2026-10-17"
   awi[1977] = 9779.44 "AWI series table, row 1977"
@@ -234,6 +281,7 @@ version awi_v
 
 version cola_v
   cite ssa_cola
+  governs always
   known 2026-10-18
   note "known: the page carries no updated stamp, so its retrieval date (§4.5); the case read it as the Wayback capture of 2026-10-17"
   cola[2021] = 0.059 "table row 2021 | 5.9; intro, effective with benefits payable for December"
@@ -245,22 +293,24 @@ version cola_v
 
 version examplemax_v
   cite ssa_examplemax
+  governs always
   known 2026-10-18
   note "known: the page carries no updated stamp, so its retrieval date (§4.5); the worker it stipulates would be known from on, the same day"
-  aime[max62] = 14358 "table 'Worker with steady earnings at the maximum level since age 22', row 2026, 'Retirement at age 62 a', AIME"
-  aime[max65] = 12602 "row 2026, 'Retirement at age 65 b', AIME"
-  aime[max66] = 11724 "row 2026, 'Retirement at age 66 c', AIME"
-  aime[max67] = 11463 "row 2026, 'Retirement at age 67 d', AIME"
-  aime[max70] = 10593 "row 2026, 'Retirement at age 70 e', AIME"
+  given aime[max62] = 14358 "table 'Worker with steady earnings at the maximum level since age 22', row 2026, 'Retirement at age 62 a', AIME"
+  given aime[max65] = 12602 "row 2026, 'Retirement at age 65 b', AIME"
+  given aime[max66] = 11724 "row 2026, 'Retirement at age 66 c', AIME"
+  given aime[max67] = 11463 "row 2026, 'Retirement at age 67 d', AIME"
+  given aime[max70] = 10593 "row 2026, 'Retirement at age 70 e', AIME"
   at_max[max62..max70] = true "table title, 'Worker with steady earnings at the maximum level since age 22'"
-  claim_age[max62] = (62, 1) "footnote a, exact age 62 and 1 month, retirement in January 2026"
-  claim_age[max65] = (65, 0) "footnote b, exact age 65 and 0 months"
-  claim_age[max66] = (66, 0) "footnote c, exact age 66 and 0 months"
-  claim_age[max67] = (67, 0) "footnote d, exact age 67 and 0 months"
-  claim_age[max70] = (70, 0) assumed "footnote e says only retirement at age 70; read as 70 and 0 months" "footnote e"
+  claim_age[max62] = (yrs: 62, mos: 1) "footnote a, exact age 62 and 1 month, retirement in January 2026"
+  claim_age[max65] = (yrs: 65, mos: 0) "footnote b, exact age 65 and 0 months"
+  claim_age[max66] = (yrs: 66, mos: 0) "footnote c, exact age 66 and 0 months"
+  claim_age[max67] = (yrs: 67, mos: 0) "footnote d, exact age 67 and 0 months"
+  claim_age[max70] = (yrs: 70, mos: 0) assumed "footnote e says only retirement at age 70; read as 70 and 0 months" "footnote e"
 
 version modeller_v
   cite modeller
+  governs always
   known 2026-10-18
   note "known: the modeller's stand-ins for facts of the stipulated workers take the stipulations' date, on (§4.5)"
   earn_from[max62] = 1986 assumed "since age 22; age 62 in 2026 read as age 22 in 1986" "examplemax table title, 'since age 22'"
@@ -274,21 +324,23 @@ version modeller_v
   elig_year[max66] = 2022 assumed "age 66 in January 2026 read as age 62 in 2022" "case notes, age 66"
   elig_year[max67] = 2021 assumed "age 67 in January 2026 read as age 62 in 2021, as case B" "case notes, age 67"
   elig_year[max70] = 2018 assumed "age 70 in January 2026 read as age 62 in 2018" "case notes, age 70 not checked"
-  nra[max62] = (67, 0) assumed "examplemax prints no NRA; born 1963-64, NRA 67, the transcriber's reading" "case notes, age 62"
-  nra[max65] = (67, 0) assumed "examplemax prints no NRA; born 1960-61, NRA 67" "case notes, age 65"
-  nra[max66] = (67, 0) assumed "examplemax prints no NRA; born 1960, NRA 67" "case notes, age 66"
-  nra[max67] = (66, 10) assumed "examplemax prints no NRA; born 1959, NRA 66 and 10 months" "case notes, age 67"
-  nra[max70] = (66, 4) assumed "examplemax prints no NRA; born January 1956 read, so age 62 in 2018 and §216(l)(3)(B) gives 66 and 4 months (24 months from January 2017 times two-twelfths)" "case notes, age 70 not checked"
+  nra[max62] = (yrs: 67, mos: 0) assumed "examplemax prints no NRA; born 1963-64, NRA 67, the transcriber's reading" "case notes, age 62"
+  nra[max65] = (yrs: 67, mos: 0) assumed "examplemax prints no NRA; born 1960-61, NRA 67" "case notes, age 65"
+  nra[max66] = (yrs: 67, mos: 0) assumed "examplemax prints no NRA; born 1960, NRA 67" "case notes, age 66"
+  nra[max67] = (yrs: 66, mos: 10) assumed "examplemax prints no NRA; born 1959, NRA 66 and 10 months" "case notes, age 67"
+  nra[max70] = (yrs: 66, mos: 4) assumed "examplemax prints no NRA; born January 1956 read, so age 62 in 2018 and §216(l)(3)(B) gives 66 and 4 months (24 months from January 2017 times two-twelfths)" "case notes, age 70 not checked"
 
 version nra_v
   cite ssa_nra
+  governs always
   known 2026-10-18
   note "known: the page carries no updated stamp, so its retrieval date (§4.5). The table is §216(l), enacted by Pub. L. 98-21; these rows apply it to the cases' birth years, which are stipulations known from on, the same day"
-  nra[case_a] = (67, 0) "table 'Normal Retirement Age', row '1960 and later | 67'"
-  nra[case_b] = (66, 10) "table 'Normal Retirement Age', row '1959 | 66 and 10 months'"
+  nra[case_a] = (yrs: 67, mos: 0) "table 'Normal Retirement Age', row '1960 and later | 67'"
+  nra[case_b] = (yrs: 66, mos: 10) "table 'Normal Retirement Age', row '1959 | 66 and 10 months'"
 
 version rb1_v
   cite ssa_rb1
+  governs always
   known 2026-10-18
   note "known: the page carries no updated stamp, so its retrieval date (§4.5); cases A and B are stipulations known from on, the same day"
   at_max[case_a] = false "table 'Earnings before and after indexing': case A's yearly amounts printed"
@@ -422,9 +474,10 @@ version rb1_v
 
 version rb2_v
   cite ssa_rb2
+  governs always
   known 2026-10-18
   note "known: the page carries no updated stamp, so its retrieval date (§4.5); its claim ages and eligibility years are stipulations known from on, the same day"
-  claim_age[case_a] = (62, 0) "'Benefit Based on PIA and Age', the earliest possible age, which is age 62"
-  claim_age[case_b] = (66, 10) "'Benefit Based on PIA and Age', benefits begin exactly at normal retirement age of 66 years and 10 months"
+  claim_age[case_a] = (yrs: 62, mos: 0) "'Benefit Based on PIA and Age', the earliest possible age, which is age 62"
+  claim_age[case_b] = (yrs: 66, mos: 10) "'Benefit Based on PIA and Age', benefits begin exactly at normal retirement age of 66 years and 10 months"
   elig_year[case_a] = 2026 "'Primary Insurance Amount', the worker in case A is first eligible for benefits in 2026"
   elig_year[case_b] = 2021 "'Primary Insurance Amount', the worker in case B is first eligible in 2021"

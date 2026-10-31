@@ -1,0 +1,37 @@
+# L §5.18 check e == f: "ok, or differs: e = …, f = … and the difference e − f; a hole or refused side prints in its
+# place (? with its questions, or refused: …), with the other side's value beside it (e = 120.00 PLN, f = ?)".
+# 120.00 − 100.00 = 20.00 PLN.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+input a: money PLN
+input b: money PLN
+input c: money PLN
+input h: money PLN
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  a = 120.00 PLN
+  b = 100.00 PLN
+  c = 120.00 PLN
+  h = ?"what was recorded?"
+
+ask c1: check a == c
+ask c2: check a == b
+ask c3: check a == h
+=== expect
+c1: ok
+  cut 2026-12-31
+c2: differs: a = 120.00 PLN, b = 100.00 PLN, difference 20.00 PLN
+  cut 2026-12-31
+c3: a = 120.00 PLN, h = ?"what was recorded?" (h)
+  cut 2026-12-31

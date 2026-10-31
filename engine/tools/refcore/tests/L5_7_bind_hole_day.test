@@ -1,0 +1,53 @@
+# L §5.7 Bindings (round 8): a binding whose day is a hole is a hole only where a thing of the kind, known at the
+# cut, could be alive on one of its possible days; where none could, it binds nothing ('a binding over adjustments
+# before any adjustment exists'). d0 is a stated hole (any day is possible): no adjustment and no pet exists, so adj
+# and none_alive count nothing (0, L §5.11: count of no member); ana is alive, so some_alive is the hole. ruled_out:
+# ana fails the where (she is no pet) whatever the day, so the domain is decided without the day (L §8.1: a hole
+# stops propagating where the outcome is decided without it): 0. no_row: at cut 2026-06-30 d1 has no row
+# (HOLE-UNGOVERNED, read with no law date), and no adjustment exists: 0, with no question needed.
+=== m.tally
+model p17
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+
+source s "synthetic"
+
+unit PLN: currency minor 0.01
+
+kind persons
+kind pets
+
+input d0: date
+input d1: date
+
+ask adj: count(a in adjustments on d0) law 2026-06-30
+ask none_alive: count(x in pets on d0) law 2026-06-30
+ask some_alive: count(p in persons on d0) law 2026-06-30
+ask ruled_out: count(p in persons on d0 where p in pets) law 2026-06-30
+ask no_row: count(a in adjustments on d1) as known 2026-06-30
+
+version v1
+  cite s
+  governs always
+  known 2026-01-01
+  d0 = ?"which day?"
+  persons + [ana] lives 1990-01-01..
+
+version v2
+  cite s
+  governs always
+  known 2026-07-01
+  d1 = 2026-07-01
+=== expect
+adj: 0
+  law date 2026-06-30, cut 2026-10-18
+no_row: 0
+  cut 2026-06-30
+none_alive: 0
+  law date 2026-06-30, cut 2026-10-18
+ruled_out: 0
+  law date 2026-06-30, cut 2026-10-18
+some_alive: ?"which day?" (d0)
+  law date 2026-06-30, cut 2026-10-18

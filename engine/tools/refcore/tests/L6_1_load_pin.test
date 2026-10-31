@@ -1,0 +1,18 @@
+# L §6.1 Joint models: "use a = \"file\" sha256 \"…\" in the header imports a closed model ... A file that doesn't
+# match its hash is refused (LOAD-PIN)." The member ana.tally is imported, not one of the reality's files; its sha256
+# is not 0000.
+=== joint.tally
+model family
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+  use a = "ana.tally" sha256 "0000"
+=== ana.tally
+model ana
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+=== expect
+refused: LOAD-PIN ...

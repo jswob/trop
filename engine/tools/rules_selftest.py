@@ -49,6 +49,7 @@ A case file holds one or more cases:
 """
 
 import dataclasses
+import hashlib
 import json
 import os
 import re
@@ -250,10 +251,30 @@ def copy_ignore(_dir, names):
     return [n for n in names if n in COPY_SKIP]
 
 
+def pin_the_tag():
+    """The scratch's one commit carries the spec's tag, but tools/frozen.toml may pin
+    a later commit only the real history has: the scratch pins the tag instead, and its
+    RULES.sha256 line for frozen.toml follows."""
+    frozen = os.path.join(WS, "tools", "frozen.toml")
+    with open(frozen, encoding="utf-8") as f:
+        lines = f.readlines()
+    with open(frozen, "w", encoding="utf-8") as f:
+        f.writelines(line for line in lines if not line.startswith("pin = "))
+    with open(frozen, "rb") as f:
+        digest = hashlib.sha256(f.read()).hexdigest()
+    sums = os.path.join(WS, "tools", "RULES.sha256")
+    with open(sums, encoding="utf-8") as f:
+        lines = f.readlines()
+    with open(sums, "w", encoding="utf-8") as f:
+        for line in lines:
+            f.write(f"{digest}  engine/tools/frozen.toml\n" if line.endswith("  engine/tools/frozen.toml\n") else line)
+
+
 def build_scratch():
     shutil.rmtree(REPO, ignore_errors=True)
     shutil.rmtree(FAKES, ignore_errors=True)
     shutil.copytree(ENGINE, WS, ignore=copy_ignore, symlinks=True)
+    pin_the_tag()
     for p in OUTSIDE:
         if os.path.isfile(os.path.join(ROOT, p)):
             os.makedirs(os.path.dirname(os.path.join(REPO, p)) or REPO, exist_ok=True)

@@ -1,0 +1,36 @@
+# Writer 11 (tally 2.1, R-11). L §2.4: a one-line def with notes "means the long form, the same def with its one
+# rule labelled base and those notes": `replace rule rate.base` in a later version replaces that rule (L §5.11), so
+# q2, at the cut that sees v2, reads r2 = 0.07; q, as known before v2, reads r = 0.05.
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+input r: num
+input r2: num
+def rate: num = r at reader
+  note "the rate the bank states"
+ask q: rate law 2026-06-30 as known 2025-12-15
+ask q2: rate law 2026-06-30
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  r = 0.05
+  r2 = 0.07
+
+version v2
+  cite s
+  governs always
+  known 2026-01-01
+  replace rule rate.base = r2
+=== expect
+q: 0.05
+  law date 2026-06-30, cut 2025-12-15
+q2: 0.07
+  law date 2026-06-30, cut 2026-01-01

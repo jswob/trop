@@ -1,0 +1,50 @@
+q_1040_income: (100 836.00 USD, 100 836.00 USD, 24 328.00 USD, 125 164.00 USD, 2 719.00 USD, 122 445.00 USD, 122 445.00 USD, 15 750.00 USD)
+  assumed: Schedule SE line 5a (church employee income) is blank, and line 5b is figured from line 5a (entry[bse_05b])
+  assumed: the case lists no entry for Schedule SE line 8b (unreported tips, Form 4137), and the scenario has no Form 4137 (entry[bse_08b])
+  assumed: the case lists no entry for Schedule SE line 8c (wages, Form 8919), and the scenario has no Form 8919 (entry[bse_08c])
+  assumed: the case's W-2 transcription lists no box 7 (social security tips) (w2_box7)
+  law date 2025-12-31, cut 2026-10-18
+q_1040_pay: (14 444.00 USD, 14 444.00 USD, 14 444.00 USD, 7 448.00 USD)
+  assumed: Schedule SE line 5a (church employee income) is blank, and line 5b is figured from line 5a (entry[bse_05b])
+  assumed: the case lists no entry for Form 1040 line 25b (Form(s) 1099 withholding), and the scenario has no Form 1099 (entry[b1040_25b])
+  assumed: the case lists no entry for Form 1040 line 25c (other forms), and the scenario has no other withholding form (entry[b1040_25c])
+  assumed: the case lists no entry for Schedule SE line 8b (unreported tips, Form 4137), and the scenario has no Form 4137 (entry[bse_08b])
+  assumed: the case lists no entry for Schedule SE line 8c (wages, Form 8919), and the scenario has no Form 8919 (entry[bse_08c])
+  assumed: the case's W-2 transcription lists no box 7 (social security tips) (w2_box7)
+  law date 2025-12-31, cut 2026-10-18
+q_1040_tax: (15 750.00 USD, 106 695.00 USD, 18 454.00 USD, 18 454.00 USD, 18 454.00 USD, 3 438.00 USD, 21 892.00 USD)
+  assumed: Schedule SE line 5a (church employee income) is blank, and line 5b is figured from line 5a (entry[bse_05b])
+  assumed: the case lists no entry for Schedule SE line 8b (unreported tips, Form 4137), and the scenario has no Form 4137 (entry[bse_08b])
+  assumed: the case lists no entry for Schedule SE line 8c (wages, Form 8919), and the scenario has no Form 8919 (entry[bse_08c])
+  assumed: the case's W-2 transcription lists no box 7 (social security tips) (w2_box7)
+  law date 2025-12-31, cut 2026-10-18
+q_7206: (1 000.00 USD, 24 328.00 USD, 24 328.00 USD, 1, 1 719.00 USD, 22 609.00 USD, 22 609.00 USD, 22 609.00 USD, 1 000.00 USD)
+  assumed: Schedule SE line 5a (church employee income) is blank, and line 5b is figured from line 5a (entry[bse_05b])
+  assumed: the case lists no entry for Schedule SE line 8b (unreported tips, Form 4137), and the scenario has no Form 4137 (entry[bse_08b])
+  assumed: the case lists no entry for Schedule SE line 8c (wages, Form 8919), and the scenario has no Form 8919 (entry[bse_08c])
+  assumed: the case's W-2 transcription lists no box 7 (social security tips) (w2_box7)
+  law date 2025-12-31, cut 2026-10-18
+q_7217: (32 507.00 USD, 4 000.00 USD, 4 000.00 USD, 0.00 USD, 6 000.00 USD, 6 000.00 USD, 32 507.00 USD)
+  law date 2025-12-31, cut 2026-10-18
+q_7217_e: (?"The section 732 allocation of line 10 among the distributed properties is not transcribed in the case, and the one property is described only as CASH." (f7217_col_e[item1]), ?"The section 732 allocation of line 10 among the distributed properties is not transcribed in the case, and the one property is described only as CASH." (f7217_col_e[item1]))
+  law date 2025-12-31, cut 2026-10-18
+q_s1: (24 328.00 USD, 24 328.00 USD, 1 719.00 USD, 1 000.00 USD, 2 719.00 USD)
+  assumed: Schedule SE line 5a (church employee income) is blank, and line 5b is figured from line 5a (entry[bse_05b])
+  assumed: the case lists no entry for Schedule SE line 8b (unreported tips, Form 4137), and the scenario has no Form 4137 (entry[bse_08b])
+  assumed: the case lists no entry for Schedule SE line 8c (wages, Form 8919), and the scenario has no Form 8919 (entry[bse_08c])
+  assumed: the case's W-2 transcription lists no box 7 (social security tips) (w2_box7)
+  law date 2025-12-31, cut 2026-10-18
+q_s2: (3 438.00 USD, 3 438.00 USD)
+  assumed: Schedule SE line 5a (church employee income) is blank, and line 5b is figured from line 5a (entry[bse_05b])
+  assumed: the case lists no entry for Schedule SE line 8b (unreported tips, Form 4137), and the scenario has no Form 4137 (entry[bse_08b])
+  assumed: the case lists no entry for Schedule SE line 8c (wages, Form 8919), and the scenario has no Form 8919 (entry[bse_08c])
+  assumed: the case's W-2 transcription lists no box 7 (social security tips) (w2_box7)
+  law date 2025-12-31, cut 2026-10-18
+q_sc: (35 235.00 USD, 35 235.00 USD, 35 235.00 USD, 10 907.00 USD, 24 328.00 USD, 24 328.00 USD)
+  law date 2025-12-31, cut 2026-10-18
+q_se: (24 328.00 USD, 24 328.00 USD, 22 467.00 USD, 22 467.00 USD, 22 467.00 USD, 105 878.00 USD, 105 878.00 USD, 70 222.00 USD, 2 786.00 USD, 652.00 USD, 3 438.00 USD, 1 719.00 USD)
+  assumed: Schedule SE line 5a (church employee income) is blank, and line 5b is figured from line 5a (entry[bse_05b])
+  assumed: the case lists no entry for Schedule SE line 8b (unreported tips, Form 4137), and the scenario has no Form 4137 (entry[bse_08b])
+  assumed: the case lists no entry for Schedule SE line 8c (wages, Form 8919), and the scenario has no Form 8919 (entry[bse_08c])
+  assumed: the case's W-2 transcription lists no box 7 (social security tips) (w2_box7)
+  law date 2025-12-31, cut 2026-10-18

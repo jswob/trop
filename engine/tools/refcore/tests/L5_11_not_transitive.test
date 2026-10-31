@@ -1,0 +1,35 @@
+# L §5.11 step 4: "beats is not transitive: if a beats b and b beats c, an applicable a defeats c only if it says
+# beats c too. One rule can't win with the help of another (there is no team defeat)."  k1: a applies (and beats
+# b, whose when is then skipped, step 3); c is beaten by no applicable rule: a and c are candidates, RUN-CONFLICT.
+# k2: a doesn't apply, b applies and beats c: b is the one candidate, value -1.  (Inline figures, L §7.1.)
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+index ks = [k1, k2]
+input fa[k in ks]: bool
+input fb[k in ks]: bool
+
+def x[k in ks]: int at reader
+  rule a beats b = 1 when fa[k]
+  rule b beats c = -1 when fb[k]
+  rule c = 0
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  fa[k1] = true
+  fa[k2] = false
+  fb[*] = true
+
+ask q1: x[k] for k in ks law 2026-06-30
+=== expect
+q1 (k = k1): refused: RUN-CONFLICT ...
+  law date 2026-06-30, cut 2026-01-01
+q1 (k = k2): -1
+  law date 2026-06-30, cut 2026-01-01

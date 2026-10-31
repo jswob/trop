@@ -1,0 +1,48 @@
+# L §5.3 Entry into force (round 16): "for each row of the version, the later of the version's `known` and the start of
+# the row's own time (P-6): its own span, lifespan or instant where it states one, else the version's `governs` ... So a
+# version with no `governs`, all of whose rows carry their own time, still enters into force row by row"; L §4.3 the
+# `wording D for [...]` pin. v2 (known 2026-01-10, no governs): its x row governs from 2026-03, so it enters into force
+# on 2026-03-01; its y row from 2026-01, so on 2026-01-10. At the law date 2026-04-01: x - y = 2 - 3 = -1 (q1); in the
+# wording of 2026-02-01, x is v1's 1 and y is 3: -2 (q2); in that of 2026-03-01 both rows: -1 (q3).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+input x: int
+input y: int
+
+def xy: int at reader
+  rule base = x - y
+
+version v1
+  cite s
+  governs 2025..
+  known 2025-01-01
+  x = 1
+  y = 1
+
+version v2
+  cite s
+  known 2026-01-10
+  replace x = 2 governs 2026-03..
+  replace y = 3 governs 2026-01..
+
+ask q1: xy law 2026-04-01
+ask q2: xy as if {law 2026-04-01, wording 2026-02-01 for [x, y]}
+ask q3: xy as if {law 2026-04-01, wording 2026-03-01 for [x, y]}
+=== expect
+q1: -1
+  law date 2026-04-01, cut 2026-12-31
+q2: -2
+  pinned: law 2026-04-01
+  pinned: wording 2026-02-01 for [x, y]
+  cut 2026-12-31
+q3: -1
+  pinned: law 2026-04-01
+  pinned: wording 2026-03-01 for [x, y]
+  cut 2026-12-31

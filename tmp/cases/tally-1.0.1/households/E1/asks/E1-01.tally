@@ -1,0 +1,17 @@
+part e1_asks_01
+  tally 1
+  note "E1-01 · Zbigniew's estate, paid out (tmp/cases/E1/questions.md): as of 2025-06-30, known 2026-01-15."
+
+ask e1_01_deposit: e1_paid_in, d_deposit, e1_deposit_left with law 2025-06-30 as known 2026-01-15
+
+ask e1_01_payouts: payout[h], div_paid_on, e1_paid_to[h], e1_arrived[h] for h in [piotr, anna, marta, jakub] with law 2025-06-30 as known 2026-01-15
+
+ask e1_01_in_is_out: check e1_paid_in = d_deposit with law 2025-06-30 as known 2026-01-15
+
+ask e1_01_piotr_stated: check payout[piotr] = e1_piotr_notice with law 2025-06-30 as known 2026-01-15
+
+ask e1_01_piotr_shown: check payout[piotr] = sav[s20250616a].amount with law 2025-06-30 as known 2026-01-15
+
+ask e1_01_anna_stated: check payout[anna] = estate_paid with law 2025-06-30 as known 2026-01-15
+
+ask e1_01_anna_shown: check payout[anna] = e1_wrz[w20250616a].amount with law 2025-06-30 as known 2026-01-15

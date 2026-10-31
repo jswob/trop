@@ -1,0 +1,19 @@
+# L §7.1: date literals ("months, quarters or years used as dates or keys") appear only in rows, governs, asks ...;
+# "A rule can't test m >= 2028-01 on a time key" (LOAD-LITERAL). A quarter in a def's comparison is refused.
+# (Writer 8: the built-in index quarters is gone, L §2.2, §4.1 "A quarter ... is a value, never a key"; the
+# comparison now reads quarter_of of an input's date.)
+=== m.tally
+model t
+  tally 2
+  on 2026-10-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+input d0: date
+
+def early: bool = quarter_of(d0) <= 2026-Q2
+ask a: early
+=== expect
+refused: LOAD-LITERAL a date in a rule; make it a version (m.tally:11)

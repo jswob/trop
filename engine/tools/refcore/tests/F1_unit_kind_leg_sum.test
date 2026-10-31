@@ -1,0 +1,32 @@
+# Fault F1 (W-A): a sum over unit-kind leg amounts was refused `LOAD-UNIT 0 funds and 90 glb`. L §3.2 A key that load
+# can't see: "A 0 with no key (a bare 0, a sum over no keys ...) takes the key of what it meets", so the sum of the
+# one buy of 90 glb is 90 glb (q); "values in two keys of K that meet in ... a sum's terms ... are refused (RUN-DOMAIN)":
+# 90 glb and 10 eur together (q2).
+=== m.tally
+model t13
+  tally 2
+  on 2026-01-15
+  start 2026-01-01
+  end 2026-12-31
+source src "s"
+kind funds: unit
+kind buys: event certain
+  leg units: funds
+place h: holdings glb lives 2026-01-01..
+place h2: holdings eur lives 2026-01-01..
+place mk: outside lives 2000-01-01..
+input b: observed
+ask q: sum(o.units.amount for o in buys over 2026-01) law 2026-06-30
+ask q2: sum(o.units.amount for o in buys over 2026) law 2026-06-30
+version v
+  cite src
+  governs always
+  known 2026-01-01
+  funds + [glb, eur] lives 2018-01-01..
+  b[r1] = (on: 2026-01-05, kind: buys, leg units from mk to h amount 90 glb) "r1"
+  b[r2] = (on: 2026-02-05, kind: buys, leg units from mk to h2 amount 10 eur) "r2"
+=== expect
+q: 90 glb
+  law date 2026-06-30, cut 2026-01-15
+q2: refused: RUN-DOMAIN ...
+  law date 2026-06-30, cut 2026-01-15

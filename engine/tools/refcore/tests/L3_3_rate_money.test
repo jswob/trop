@@ -1,0 +1,19 @@
+# L §3.3: "Anything else (rate × money, rate + num) is refused at load."
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "a source"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+unit hour "godzina"
+
+input wibor: rate
+input a: money PLN
+
+ask q1: wibor * a
+=== expect
+refused: LOAD-UNIT ...

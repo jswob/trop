@@ -1,0 +1,36 @@
+# L §6.1: "each side names a kind, a thing (a keyed place at its keys included), a row ... or a movement ...; any other
+# pair is refused (LOAD-SAME)". A keyed place named without its keys is a family of places, no thing.
+=== options pin=bytes
+=== joint.tally
+model family
+  tally 2
+  on 2026-01-05
+  start 2026-01-01
+  end 2026-12-31
+  use a = "ana.tally" sha256 "432b7b5dd0fd5f137444cfc19bed9e25e0dc859eaf9235087972744d12a85c21"
+  use b = "ana2.tally" sha256 "432b7b5dd0fd5f137444cfc19bed9e25e0dc859eaf9235087972744d12a85c21"
+  same a.sav = b.sav
+
+ask n: count(p in accounts on 2026-12-31)
+=== ana.tally
+model ana
+  tally 2
+  on 2026-01-05
+  start 2026-01-01
+  end 2026-12-31
+
+unit PLN: currency minor 0.01
+kind persons
+place sav[p in persons]: accounts PLN lives 2019-01-01..
+=== ana2.tally
+model ana
+  tally 2
+  on 2026-01-05
+  start 2026-01-01
+  end 2026-12-31
+
+unit PLN: currency minor 0.01
+kind persons
+place sav[p in persons]: accounts PLN lives 2019-01-01..
+=== expect
+refused: LOAD-SAME same names a.sav, a keyed place, without its keys ...

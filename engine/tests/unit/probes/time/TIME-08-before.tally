@@ -1,0 +1,60 @@
+model time08_before
+  tally 2
+  on 2025-05-31
+  start 2025-05-01
+  end 2025-05-31
+  note "Probe TIME-08: two rules on one day put in a written order with `before` (L §5.14.2, a written order outside a cycle). Both are decisions that read konto; the sweep changes konto, the parents' top-up doesn't, so without an order the top-up would act after the sweep. `before sweep` puts it ahead, so it reads konto's balance before the sweep. The order names a decision, never a plan or an observation (GD-11). A minimal text of session 5's list (TC-5): no card and no key."
+
+source probe_text "Probe TIME-08 (session 5's text list, TC-5): a made-up story and rules, with no card and no key"
+
+unit DUK: currency minor 0.01
+
+place employer: outside lives 2025-05-01..
+
+place konto: accounts DUK lives 2025-05-01..
+
+place parents: outside lives 2025-05-01..
+
+place savings: accounts DUK lives 2025-05-01..
+
+input keep_floor: money DUK
+
+input pay_amt: money DUK
+
+input pay_day: date
+
+input rule_day: date
+
+input top_up_rate: num
+
+move sweep: transfers
+  on rule_day
+  reads konto
+  leg cash from konto to savings amount max(0, bal(konto) - keep_floor)
+  note "rule 1: keep a floor in konto and move the rest to savings; a decision, so it runs after the day's plans (L §5.14.2)"
+
+move top_up: transfers
+  on rule_day
+  reads konto
+  before sweep
+  leg cash from parents to savings amount round(bal(konto) * top_up_rate, minor(DUK), half-up)
+  note "rule 2: the parents add a part of what konto holds to savings, looking at konto before the sweep (`before sweep`, L §5.14.2: a decision put ahead of another decision it would otherwise follow)"
+
+move wage: transfers
+  on pay_day
+  leg cash from employer to konto amount pay_amt
+  note "story: the pay lands on the rules' day; a plan, so it is booked before both decisions"
+
+ask q_before: flows(top_up, 2025-05-15), flows(sweep, 2025-05-15) law 2025-05-31
+
+version story
+  cite probe_text
+  governs always
+  known 2025-05-01
+  note "Stipulations, known from the model's start (L §4.5)."
+  keep_floor = 2000.00 "rule 1: the floor kept in konto"
+  opening[konto] = 1500.00 at 2025-05-01 start "story: konto's balance before anything happens in May 2025"
+  pay_amt = 6000.00 "story: the pay"
+  pay_day = 2025-05-15 "story: the pay lands on 15 May 2025"
+  rule_day = 2025-05-15 "story: both rules run on 15 May 2025"
+  top_up_rate = 10 % "rule 2: the parents add 10 % of konto's balance"

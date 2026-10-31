@@ -1,0 +1,17 @@
+# L §5.11: missing() "may appear only in the when of a rule that points at a version with v ... (LOAD-MISSING
+# elsewhere)".
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+input pnl[d in days]: num
+
+def gone[d in days]: bool at d
+  rule base = missing(pnl[d])
+=== expect
+refused: LOAD-MISSING ...

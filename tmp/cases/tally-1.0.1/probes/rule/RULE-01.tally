@@ -1,0 +1,52 @@
+model rule01
+  tally 1
+  on 2025-06-15
+  start 2025-06-15
+  end 2025-06-15
+  note "RULE-01: house rule A-1 on the 15th, read on the real balance after pay. The balance at the start of the run is the one after pay; the pay itself is not modelled."
+
+source card "Probe card RULE-01: Ania's story and house rule A-1"
+
+index month = month 2025-06..2025-06
+
+place broker: account DUK
+
+place konto: account DUK
+
+place wrapped: account DUK
+
+input keep_floor: money DUK
+
+input wrapped_limit: money DUK
+
+input wrapped_used: money DUK
+
+def surplus: money DUK
+  note "A-1: what is above the floor at this point of the walk; read afresh by each state pay (L 5.13.1)"
+  rule base = max(0, bal(konto) - keep_floor)
+
+def wrapped_room: money DUK = max(0, wrapped_limit - wrapped_used)
+
+pay to_broker[m in month]
+  from konto
+  to broker
+  amount surplus
+  on day_of(m, 15)
+  phase 6
+
+pay to_wrapped[m in month]
+  from konto
+  to wrapped
+  amount min(surplus, wrapped_room)
+  on day_of(m, 15)
+  phase 5
+
+ask q: flows(wrapped, 2025-06-15), flows(broker, 2025-06-15), bal(konto, 2025-06-15)
+
+version card_2025
+  cite card
+  known 2025-06-15
+  keep_floor = 3000 "A-1: keep 3 000.00"
+  opening[konto] = 9400 "story: the account on 15 June 2025, after pay"
+  wrapped_limit = 10000 "story: the wrapped account's yearly limit"
+  wrapped_used = 8500 "story: already put in this year"

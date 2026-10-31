@@ -1,0 +1,12 @@
+# L §2.1: "A four-digit literal is a year where a period is expected and an integer in an integer index; where both
+# readings fit, it is refused (LOAD-AMBIG, D-14)."  2026 - 1 reads as year − int and as int − int.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+ask q1: 2026 - 1
+=== expect
+refused: LOAD-AMBIG ...

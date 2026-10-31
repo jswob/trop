@@ -1,0 +1,30 @@
+# L §4.2 Keys as values: "an int in a key position of an integer index is that key", and a key of an integer index is
+# also an int.  fpl's value is a key of sizes (2); family_size, an int def, gives the key 3.  (A row value of type key
+# of an integer index once crashed the printer; nothing may crash.)
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+index sizes = int 1..4
+input fpl[n in sizes]: key sizes
+input fs: int
+def family_size: int = fs at reader
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  fpl[*] = 2
+  fs = 3
+
+ask q: fpl[family_size] law 2026-01-01
+ask q2: fpl[3] + 1
+=== expect
+q: 2
+  law date 2026-01-01, cut 2026-12-31
+q2: 3
+  cut 2026-12-31

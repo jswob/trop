@@ -1,0 +1,76 @@
+model own11_p20
+  tally 2
+  on 2026-10-30
+  start 2026-01-01
+  end 2026-01-31
+  note "OWN-11 P-20: a hole on purpose. Its twin is P-12: the same, but the withdrawal's row leaves its payer blank."
+  note "The order term reads a hole field: the take merges only the parts it could reach under some reading of the hole (the payer is a person) into one hole part; Kuba's part and the total stay known (HOLE-PART, LANGUAGE 5.14, 8.1)."
+
+source card "Probe card OWN-11 (made up): story and rules"
+
+source bank "The couple's bank: its January 2026 rows (made up)"
+
+unit DUK: currency minor 0.01
+
+kind children: parties
+
+kind couples: parties
+
+kind persons: parties
+
+kind fees: transfers
+
+kind inheritances: transfers
+  attr heir: key parties
+
+kind savings: place DUK min 0
+  owned by arrive
+  step minor(DUK)
+  takes k for w order (if w in withdrawals and k.owner == w.paid_from then 0 else 1), (if k.owner == ania_tomek then 0 else 1)
+
+kind withdrawals: transfers
+  attr paid_from: key persons
+
+place bank_fees: outside lives 1900-01-01..
+
+place sav: savings lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input bank_rows: observed
+
+def arrive[m in events, p in parties]: num at m.day
+  note "R1: an inheritance the heir's, any other arrival the couple's"
+  rule community v card_rules = (if p == ania_tomek then 1 else 0)
+  rule inherited beats community v card_rules = (if p == m.heir then 1 else 0) when m in inheritances
+
+ask q_parts: bal(sav, 2026-01-31) of p for p in parties on 2026-01-31
+
+ask q_total: bal(sav, 2026-01-31)
+
+ask q_took: o.cash.amount of p for o in transfers over 2026-01-20..2026-01-25 where o.cash.from in savings, p in parties on 2026-01-31
+
+version card_cast
+  cite card
+  known 2026-01-01
+  note "the parties: things of the prelude kind parties, of the model's own subkinds"
+  children + [kuba] lives 2010-02-14..
+  couples + [ania_tomek] lives 2015-06-20..
+  persons + [ania] lives 1988-04-12..
+  persons + [tomek] lives 1986-09-03..
+
+version card_rules
+  cite card
+  governs always
+  known 2026-01-01
+
+version records_2026_01
+  cite bank
+  governs 2026-01
+  known 2026-02-03
+  bank_rows[r1] = (on: 2026-01-05, kind: inheritances, leg cash from world to sav amount 600.00 DUK, heir: ania) "line 1"
+  bank_rows[r2] = (on: 2026-01-06, kind: transfers, leg cash from world to sav amount 1000.00 DUK) "line 2"
+  bank_rows[r3] = (on: 2026-01-07, kind: inheritances, leg cash from world to sav amount 400.00 DUK, heir: tomek) "line 3"
+  bank_rows[r4] = (on: 2026-01-08, kind: inheritances, leg cash from world to sav amount 500.00 DUK, heir: kuba) "line 4"
+  bank_rows[r5] = (on: 2026-01-20, kind: fees, leg cash from sav to bank_fees amount 50.00 DUK) "line 5"
+  bank_rows[r6] = (on: 2026-01-25, kind: withdrawals, leg cash from sav to world amount 900.00 DUK, paid_from: ?"whose money paid the withdrawal of 900.00 on 2026-01-25?") "line 6"

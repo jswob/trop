@@ -1,0 +1,22 @@
+# L §2.3 parse rule 6: "min(k in ks) is the aggregate, and count(k in a, j in b) binds two."
+# count of two bindings over 2 and 3 keys: 2 × 3 = 6 binding tuples.  min of a bare binding over an
+# index is its first key in index order (keys compare in index order, L §4.2).
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "a source"
+
+index a = [x, y]
+index b = [p, q, r]
+
+def n: int = count(i in a, j in b)
+def lo: key b = min(j in b)
+
+ask q1: n, lo
+=== expect
+q1: (6, p)
+  cut 2026-01-01

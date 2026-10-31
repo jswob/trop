@@ -1,0 +1,36 @@
+# GD-2 (round 19): a monthday input (L §2.3 type "monthday") and its row `file_by = 04-30` reprint as written (L §2.4
+# canonical format: sections in kind order, a version's rows).
+=== options reprint
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+input file_by: monthday
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  file_by = 04-30
+=== expect
+--- m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+input file_by: monthday
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  file_by = 04-30
+sha256 ...

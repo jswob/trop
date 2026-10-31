@@ -1,0 +1,15 @@
+# L §7.1: "A rule can't test m >= 2028-01 on a time key, nor read rate[2025]: a law that starts on a date is a
+# version with governs (LOAD-LITERAL)."
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+input rate[y in years]: num
+
+def x: num at reader
+  rule base = rate[2026]
+=== expect
+refused: LOAD-LITERAL ...

@@ -1,0 +1,32 @@
+model surf05
+  tally 2
+  on 2026-10-30
+  start 2026-01-01
+  end 2026-03-31
+  note "SURF-05: notes after a one-line def and after a place (LANGUAGE 2.3, 2.4; tally 2.1). The one-line def buffer with its note means the long form, its one rule labelled base with the note, and prints as it."
+
+source house_rules "The household's house rules: B-1, from 1 January 2026 (made up)"
+
+unit DUK: currency minor 0.01
+
+place konto: accounts DUK lives 2026-01-01..
+  note "the current account, opened on 1 January 2026"
+
+input buffer_months: int
+
+input monthly_costs: money DUK
+
+def buffer: money DUK = monthly_costs * buffer_months
+  note "B-1: keep a buffer of buffer_months months of costs"
+
+ask q_balance: bal(konto, 2026-03-31)
+
+ask q_buffer: buffer
+
+version house_b1
+  cite house_rules
+  governs always
+  known 2026-01-01
+  buffer_months = 3 "B-1: three months"
+  monthly_costs = 4200.00 "B-1: the costs a month"
+  opening[konto] = 15000.00 at 2026-01-01 start "the account's opening deposit"

@@ -1,0 +1,14 @@
+# L §2.5: "A key literal that is also a top-level id is refused (LOAD-KEY)."
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "a source"
+
+index ks = [a, b]
+input a: int
+=== expect
+refused: LOAD-KEY ...

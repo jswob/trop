@@ -1,0 +1,19 @@
+by_records: 3 500.00 DUK
+  open: standing[2025-03]
+  cut 2025-07-01
+by_rule: 4 000.00 DUK
+  cut 2025-07-01
+gap: residuals savings 2025-01 .. 2025-06
+  2025-03 move standing: model 500.00 DUK, observed 0.00 DUK, difference -500.00 DUK
+    expected but missing standing[2025-03] on 2025-03-01: model 500.00 DUK
+  2025-01 move standing: model 500.00 DUK, observed 500.00 DUK, difference 0.00 DUK
+    matched standing[2025-01] on 2025-01-01: model 500.00 DUK, observed 500.00 DUK, difference 0.00 DUK, timing +0 days
+  2025-02 move standing: model 500.00 DUK, observed 500.00 DUK, difference 0.00 DUK
+    matched standing[2025-02] on 2025-02-01: model 500.00 DUK, observed 500.00 DUK, difference 0.00 DUK, timing +0 days
+  2025-04 move standing: model 500.00 DUK, observed 500.00 DUK, difference 0.00 DUK
+    matched standing[2025-04] on 2025-04-01: model 500.00 DUK, observed 500.00 DUK, difference 0.00 DUK, timing +0 days
+  2025-05 move standing: model 500.00 DUK, observed 500.00 DUK, difference 0.00 DUK
+    matched standing[2025-05] on 2025-05-01: model 500.00 DUK, observed 500.00 DUK, difference 0.00 DUK, timing +0 days
+  2025-06 move standing: model 500.00 DUK, observed 500.00 DUK, difference 0.00 DUK
+    matched standing[2025-06] on 2025-06-01: model 500.00 DUK, observed 500.00 DUK, difference 0.00 DUK, timing +0 days
+  cut 2025-07-01

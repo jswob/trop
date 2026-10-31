@@ -1,0 +1,54 @@
+# L §5.14.2 Cycles: "When two decisions on one day each read what the other changes, the writer states before m or
+# after m on one of them. An unordered cycle is refused ... at run, only between instances due on one day that read
+# what each other changes there (RUN-ORDER)."  sweep, top and later each read konto and move money at it, on days that
+# are rows (known only at run), so the three are one component of the load graph; top states `after sweep`, and
+# later's day is another.  On 2026-03-10 sweep moves konto's 100.00 to save, then top, whose when reads konto's
+# running balance, finds 0 and adds amt: konto 10.00, save 100.00 (carried through).  (Was RUN-ORDER "decisions sweep
+# and top read each other": the walk's component dropped the written after; the probe writer's p24.  A 2.0 fault.)
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place save: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input d1: date
+input d2: date
+input amt: money PLN
+
+move sweep: transfers
+  on d1
+  reads konto
+  leg cash from konto to save amount bal(konto)
+
+move top: transfers
+  on d1
+  when bal(konto) == 0
+  reads konto
+  after sweep
+  leg cash from world to konto amount amt
+
+move later: transfers
+  on d2
+  reads konto
+  leg cash from konto to world amount bal(konto)
+
+ask q: bal(konto, 2026-03-10), bal(save, 2026-03-10)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  d1 = 2026-03-10 "own"
+  d2 = 2026-06-01 "own"
+  amt = 10.00 PLN "own"
+  opening[konto] = 100.00 PLN at 2026-01-01 start "own"
+  opening[save] = 0 PLN at 2026-01-01 start "own"
+=== expect
+q: (10.00 PLN, 100.00 PLN)
+...

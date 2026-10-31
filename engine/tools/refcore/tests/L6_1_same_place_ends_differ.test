@@ -1,0 +1,85 @@
+# L §6.1 What same does: "on a day on which the two sides' entries into one kind disagree, whatever depends on the
+# thing being alive there is a HOLE-SAME hole"; L §5.10 "A place ends only empty: its lifespan may end only on a day
+# when every position in it is zero ... (RUN-LIFESPAN)". a.konto ends with 2026-06-30, b.konto lives on; the pay (one
+# movement, same a.pay = b.pay_seen) leaves 200.00 PLN in it. Before the end both sides agree: 200.00 PLN (k). On
+# 2026-06-30 ana's side refuses the end and ben's doesn't, so the balance from there is a HOLE-SAME hole naming both
+# lifespans (k_end), and a binding over accounts after it has an unknown member (n_aug). Each member alone: ana refuses
+# its end (a.q, L §8.4 `<place> ends on <d> holding <positions>`); ben has 200.00 PLN (b.q).
+=== options pin=bytes
+=== joint.tally
+model family
+  tally 2
+  on 2026-01-05
+  start 2026-01-01
+  end 2026-12-31
+  use a = "ana.tally" sha256 "28c163cea447a7c182f915c180d99385e24a4e106288bbaab039de2f4076ed8f"
+  use b = "ben.tally" sha256 "30416ddb962c36d85ad95ea8d32d4f66fd672b94ebf6aeb621debe8632ab8c55"
+  same a.konto = b.konto
+  same a.pay = b.pay_seen
+
+ask k: bal(a.konto, 2026-05-31)
+ask k_end: bal(a.konto, 2026-12-31)
+ask n_aug: count(x in accounts on 2026-08-01)
+=== ana.tally
+model ana
+  tally 2
+  on 2026-01-05
+  start 2026-01-01
+  end 2026-12-31
+
+source s "umowa"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..2026-06-30
+place world: outside lives 1900-01-01..
+input pay_amt: money PLN
+input pay_day: date
+
+move pay: transfers
+  on pay_day
+  leg cash from world to konto amount pay_amt
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  pay_amt = 200.00 PLN "plan"
+  pay_day = 2026-04-15 "plan"
+
+ask q: bal(konto, 2026-12-31)
+=== ben.tally
+model ben
+  tally 2
+  on 2026-01-05
+  start 2026-01-01
+  end 2026-12-31
+
+source s "umowa"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place from_ana: outside lives 1900-01-01..
+input pay_amt: money PLN
+input pay_day: date
+
+move pay_seen: transfers
+  on pay_day
+  leg cash from from_ana to konto amount pay_amt
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  pay_amt = 200.00 PLN "plan"
+  pay_day = 2026-04-15 "plan"
+
+ask q: bal(konto, 2026-12-31)
+=== expect k k_end n_aug a.q b.q
+k: 200.00 PLN
+  cut 2026-01-05
+k_end: ?"a.konto and b.konto are one, but the entry into accounts differs on 2026-07-01: 2026-01-01..2026-06-30 (a.konto) and 2026-01-01.. (b.konto)" (a.konto, b.konto)
+  cut 2026-01-05
+n_aug: ?"a.konto and b.konto are one, but the entry into accounts differs on 2026-08-01: 2026-01-01..2026-06-30 (a.konto) and 2026-01-01.. (b.konto)" (a.konto, b.konto)
+  cut 2026-01-05
+a.q: refused: RUN-LIFESPAN konto ends on 2026-06-30 holding 200.00 PLN
+  cut 2026-01-05
+b.q: 200.00 PLN
+  cut 2026-01-05

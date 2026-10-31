@@ -1,0 +1,85 @@
+part places
+  tally 2
+  note "Places of the household (story § What we had on 1 January 2021, and the accounts opened later), their owners and their openings. A holding holds one fund, its unit (L §3.2); money and units from and to the world go to the outside places world and market (L §5.10)."
+  note "The joint account was opened before the run (we married 2016-09-10, story) and its statements were kept only from August 2024: it has no opening, so its balance is a hole until its first statement's reading (HOLE-ANCHOR, L §5.19), and its parts one hole part until that reading states them (L §5.10, statements.tally)."
+  note "Whose each place's money is (CIV-1; story § What we had, its column whose): every place we hold keeps its balance as parts by owner (L §3.6, the kinds in reality.tally), each arrival labelled by one rule written once, civ1_arrive, and a fund holding under PIT-8 keeps its lots as batches. An opening that isn't 0 states its parts once, citing the story; the places opened later start empty."
+
+place ania_sav: money_accounts DUK lives 2025-06-02..
+
+place deposit: deposits DUK lives 2021-01-01..
+
+place joint: money_accounts DUK lives 2016-09-10..
+
+place kop_glb: lot_holdings glb lives 2023-09-12..2024-02-29
+
+place lazur: money_accounts DUK lives 2021-03-01..
+
+place market: outside lives 2000-01-01..
+
+place rza_cash: money_accounts DUK lives 2024-02-12..
+
+place rza_glb: lot_holdings glb lives 2024-02-12..
+
+place rza_mm: lot_holdings mm lives 2024-02-12..
+
+place rzt_cash: money_accounts DUK lives 2021-01-01..
+
+place rzt_div: lot_holdings div lives 2021-01-01..
+
+place rzt_em: lot_holdings em lives 2021-01-01..
+
+place rzt_glb: lot_holdings glb lives 2021-01-01..
+
+place rzt_idx: lot_holdings idx lives 2021-01-01..
+
+place wcp_a: plan_holdings wcp lives 2021-01-01..
+
+place wcp_t: plan_holdings wcp lives 2021-01-01..
+
+place world: outside lives 2000-01-01..
+
+place wrap_bnd: wrapped bnd lives 2021-01-01..
+
+place wrap_cash: money_accounts DUK lives 2021-01-01..
+
+place wrap_glb: wrapped glb lives 2021-01-01..
+
+place zosia_sav: money_accounts DUK lives 2021-01-01..
+
+def civ1_arrive[m in events, p in parties]: num at m.day
+  note "CIV-1 .2, .3, written once: whose the money or units are that a movement brings into one of our places (L §3.6). Community is what either of us acquires during the marriage, our earnings and the income of either's separate assets included (.2): every arrival no rule below names, our pay, benefits, refunds, interest and distributions among them, and the contributions from the joint account to the wrapped and Rzeka accounts, which the story states community (§ What we had: the joint account, community; both investment accounts, community). Separate is what one of us acquires by gift or inheritance, unless the giver states it is for both, and what is acquired in exchange for separate assets (.3): a gift is its donee's, an estate's payout its heir's, a purchase's units are whose the money that paid for them was, and a sale's or a redemption's money whose the units sold were. Money or units moved between our own places, other than a contribution, stay whose they were. What goes into Zosia's savings is hers (A-HR4)."
+  rule bought beats community v civ1_v1 = m.cash.amount of p / m.cash.amount when m in fund_buys and m.cash.amount > 0
+  rule bought_wrapped beats community v civ1_v1 = m.cash.amount of p / m.cash.amount when m in wrap_buys and m.cash.amount > 0
+  rule community v civ1_v1 = (if p == ania_tomek then 1 else 0)
+  rule gifted beats community v civ1_v1 = (if p == m.donee then 1 else 0) when m in gifts_in
+  rule inherited beats community v civ1_v1 = (if p == m.heir then 1 else 0) when m in inheritances
+  rule moved beats community v civ1_v1 = m.cash.amount of p / m.cash.amount when m in transfers and (m in own_moves or m in wrap_withdrawals) and m.cash.amount > 0
+  rule moved_lot beats community v civ1_v1 = m.units.amount of p / m.units.amount when m in lot_transfers and m.units.amount > 0
+  rule redeemed beats community v civ1_v1 = m.units.amount of p / m.units.amount when m in wrap_redemptions and m.units.amount > 0
+  rule sold beats community v civ1_v1 = m.units.amount of p / m.units.amount when m in fund_sales and m.units.amount > 0
+  rule zosias beats community v hr4_v1 = (if p == zosia then 1 else 0) when m in transfers and m.cash.to == zosia_sav
+
+def leave_rank[p in parties]: int at reader
+  note "which owner's money or units an outflow from one of our places takes first, where the law states no order (the kinds' takes clauses, reality.tally): no paper of ours says, so it is a hole (L §3.6, §5.14: a take it decides is a hole part, its total known); a scenario may state it"
+  rule base = ?"Whose money leaves one of our accounts first when it holds money of more than one of us? None of our papers states a rule"
+
+version openings
+  cite story
+  governs always
+  known 2021-01-01
+  note "story § What we had on 1 January 2021. The joint account has no opening (HOLE-ANCHOR until its first statement); the places opened later start empty on the day they open. An opening that isn't 0 states its parts (L §5.19): everything we had on 1 January 2021 was community (the story's column whose)."
+  opening[wrap_cash] = 0 at 2021-01-01 start "story § What we had: Brzask wrapped account, opened, empty"
+  opening[wrap_glb] = 0 at 2021-01-01 start "story § What we had: Brzask wrapped account, opened, empty"
+  opening[wrap_bnd] = 0 at 2021-01-01 start "story § What we had: Brzask wrapped account, opened, empty"
+  opening[rzt_cash] = 0 at 2021-01-01 start "story § What we had: Rzeka 4471-02, opened, empty"
+  opening[rzt_em] = 0 at 2021-01-01 start "story § What we had: Rzeka 4471-02, opened, empty"
+  opening[rzt_idx] = 0 at 2021-01-01 start "story § What we had: Rzeka 4471-02, opened, empty"
+  opening[rzt_div] = 0 at 2021-01-01 start "story § What we had: Rzeka 4471-02, opened, empty"
+  opening[rzt_glb] = 0 at 2021-01-01 start "story § What we had: Rzeka 4471-02, opened, empty"
+  opening[wcp_t] = 56.8312 wcp at 2021-01-01 start "story § What we had: Nurt's plan, 56.8312 units; wek-wcp-lis-tomasz.csv line 3"
+  opening[wcp_t] of ania_tomek = 56.8312 wcp at 2021-01-01 start "story § What we had: Nurt's plan in Tomek's name, community"
+  opening[wcp_a] = 31.0457 wcp at 2021-01-01 start "story § What we had: Kalina's plan, 31.0457 units; wek-wcp-lis-anna.csv line 3"
+  opening[wcp_a] of ania_tomek = 31.0457 wcp at 2021-01-01 start "story § What we had: Kalina's plan in Ania's name, community"
+  opening[deposit] = 6400.00 DUK at 2021-01-01 start "story § What we had: rent deposit, 6 400.00 DUK with the landlord (A-D30)"
+  opening[deposit] of ania_tomek = 6400.00 DUK at 2021-01-01 start "story § What we had: rent deposit, both, community"
+  opening[zosia_sav] = 0 at 2021-01-01 start "not in the story's list of 2021-01-01: A-HR4 starts 2026-01-15"

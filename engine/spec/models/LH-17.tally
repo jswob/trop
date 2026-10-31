@@ -1,11 +1,15 @@
 model lh17
-  tally 1
+  tally 2
   on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
   note "Milevsky and Robinson (2005). Ruin is the event that the stochastic present value (SPV) of $1 a year of real spending exceeds the initial wealth w. Returns are lognormal with drift mu and volatility sigma, and the remaining lifetime is exponential with rate lam."
   note "Eq. 8: prob[SPV > w] = GammaDist(alpha, beta | 1/w), with alpha = (2 mu + 4 lam) / (sigma^2 + lam) - 1 and beta = (sigma^2 + lam) / 2. It is exact for lam = 0 (an endowment, eventual ruin) and a moment-matched approximation for lam > 0."
   note "Spending is a continuous flow, as in Eq. 8; the paper gives no other timing for its tables. The 'exact' finite-lifetime figures integrate the ruin over the RP-2000 mortality table: a numerical integral the language can't do, so they are a bound (§5.17). The case doesn't carry the table either."
 
 source kalas2014 "Martin Kalaš, Sustainable Retirement Spending (slides, 21 November 2014), Czech Society of Actuaries" at "https://www.actuaria.cz/uploads-old/sustainable_retirement_spending_sav_20141121.pdf"
+
+source lifted_1_0_1 "Figures tally 1.0.1 allowed inline in rules"
 
 source mr2005 "Milevsky and Robinson, A Sustainable Spending Rate without Simulation, Financial Analysts Journal 61(6), 2005, pp. 89-100 (QWeMA reprint, Internet Archive capture 2016-08-03)" at "http://web.archive.org/web/20160803142333/http://www.qwema.ca:80/pdf_research/2007SEPT_SustSpending.pdf"
 
@@ -27,11 +31,23 @@ index spend = [k2, k3, k4, k5, k6, k7, k8, k9, k10, w20, b40k, b50k, b60k, b90k]
 
 input age_at[l in life]: num
 
+input alpha_2: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input alpha_4: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input avg_spend_2: int
+  note "lifted from an inline figure of tally 1.0.1"
+
 input bb_lam: num
 
 input bb_s1: num
 
 input bb_s2: num
+
+input beta_2: int
+  note "lifted from an inline figure of tally 1.0.1"
 
 input det_r: num
 
@@ -39,11 +55,29 @@ input det_t: int
 
 input det_w: num
 
+input eventual_2: int
+  note "lifted from an inline figure of tally 1.0.1"
+
 input k_solve: num question "the spending per $100 that a solve pins; it has no value of its own"
+
+input lam_0_0001: num
+  note "lifted from an inline figure of tally 1.0.1"
+
+input lam_2: num
+  note "lifted from an inline figure of tally 1.0.1"
 
 input med_death[l in life]: num
 
+input med_life_2: num
+  note "lifted from an inline figure of tally 1.0.1"
+
 input mu[p in pf]: num
+
+input neg_ret_10_2: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input neg_ret_7_2: int
+  note "lifted from an inline figure of tally 1.0.1"
 
 input rg_alpha: num
 
@@ -55,192 +89,222 @@ input sigma[p in pf]: num
 
 input spend_amt[s in spend]: num
 
+input t2_geo_2: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input t3_geo_2: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input t5_geo_2: int
+  note "lifted from an inline figure of tally 1.0.1"
+
 input wealth[s in spend]: num
 
-def alpha[p in pf, l in life]: num = (2 * mu[p] + 4 * lam[l]) / (pow(sigma[p], 2) + lam[l]) - 1
+def alpha[p in pf, l in life]: num = (alpha_2 * mu[p] + alpha_4 * lam[l]) / (pow(sigma[p], alpha_2) + lam[l]) - 1 at reader
 
-def avg_spend[p in pf, l in life]: num
+def avg_spend[p in pf, l in life]: num at reader
   note "1 / E(SPV): 'The expected value of the SPV is (mu - sigma^2 + lam)^-1' (p. 94); p. 99 calls it the average-sustainability spending"
-  rule base = mu[p] - pow(sigma[p], 2) + lam[l]
+  rule base = mu[p] - pow(sigma[p], avg_spend_2) + lam[l]
 
-def beta[p in pf, l in life]: num = (pow(sigma[p], 2) + lam[l]) / 2
+def beta[p in pf, l in life]: num = (pow(sigma[p], beta_2) + lam[l]) / beta_2 at reader
 
-def eventual[p in pf, s in spend]: num
+def eventual[p in pf, s in spend]: num at reader
   note "Eventual ruin (lam = 0), as Kalaš slide 18 prints it after Milevsky (1997): G(k/w; 2 mu / sigma^2 - 1, sigma^2 / 2). Table 2's 'Exact.' row for the endowment"
-  rule base v kalas2014_v = cdf(gamma(2 * mu[p] / pow(sigma[p], 2) - 1, pow(sigma[p], 2) / 2), inv_w[s]) to 1e-9
-  rule rate_form excepts base when gamma_form = rate_beta = cdf(gamma(2 * mu[p] / pow(sigma[p], 2) - 1, 2 / pow(sigma[p], 2)), inv_w[s]) to 1e-9
+  rule base v kalas2014_v = cdf(gamma(eventual_2 * mu[p] / pow(sigma[p], eventual_2) - 1, pow(sigma[p], eventual_2) / eventual_2), inv_w[s]) to 1e-9
+  rule rate_form beats base = cdf(gamma(eventual_2 * mu[p] / pow(sigma[p], eventual_2) - 1, eventual_2 / pow(sigma[p], eventual_2)), inv_w[s]) to 1e-9 when gamma_form == rate_beta
 
-def inv_w[s in spend]: num = spend_amt[s] / wealth[s]
+def inv_w[s in spend]: num = spend_amt[s] / wealth[s] at reader
 
-def lam[l in life]: num
+def lam[l in life]: num at reader
   note "lam = ln(2) / median remaining lifetime (p. 94, p. 96). The endowment's lam = 0 is a given. The 1e-30 precision of ln(2) is the modeller's"
-  rule base = (ln(2) to 1e-30) / med_rem[l]
-  rule four_dp excepts base when lam_round = four_dp = round((ln(2) to 1e-30) / med_rem[l], 0.0001, half-up)
+  rule base = (ln(lam_2) to 1e-30) / med_rem[l]
+  rule four_dp beats base = round((ln(lam_2) to 1e-30) / med_rem[l], lam_0_0001, half-up) when lam_round == four_dp
 
-def med_rem[l in life]: num = med_death[l] - age_at[l]
+def med_rem[l in life]: num = med_death[l] - age_at[l] at reader
 
-def ruin[p in pf, l in life, s in spend]: num
+def rp2000_exact: num
+  note "the 'exact' ruin probabilities for finite lifetimes"
+  rule base = ?"they integrate the ruin over the RP-2000 Society of Actuaries mortality table from age 65 (note 8; p. 96): the present value of spending over a lifetime drawn from a table has no closed form, and the language has no numerical integral; the case doesn't carry the table either. Eq. 8 gives only the exponential-lifetime approximation"
+
+def ruin[p in pf, l in life, s in spend]: num at reader
   note "Eq. 8 at 1/w = spending per $1 of wealth. The 1e-9 precision is the modeller's; the source prints at most 4 significant digits"
   rule base = cdf(gamma(alpha[p, l], beta[p, l]), inv_w[s]) to 1e-9
-  rule rate_form excepts base when gamma_form = rate_beta = cdf(gamma(alpha[p, l], 1 / beta[p, l]), inv_w[s]) to 1e-9
+  rule rate_form beats base = cdf(gamma(alpha[p, l], 1 / beta[p, l]), inv_w[s]) to 1e-9 when gamma_form == rate_beta
 
-def ruin_k[p in pf, l in life]: num
+def ruin_k[p in pf, l in life]: num at reader
   note "Eq. 8 at k_solve per $100, for p. 98's inversion ('inverting Equation 8 to solve for the level of spending')"
-  rule base = cdf(gamma(alpha[p, l], beta[p, l]), k_solve / 100) to 1e-9
-  rule rate_form excepts base when gamma_form = rate_beta = cdf(gamma(alpha[p, l], 1 / beta[p, l]), k_solve / 100) to 1e-9
+  rule base = cdf(gamma(alpha[p, l], beta[p, l]), k_solve * 1 %) to 1e-9
+  rule rate_form beats base = cdf(gamma(alpha[p, l], 1 / beta[p, l]), k_solve * 1 %) to 1e-9 when gamma_form == rate_beta
 
-bound rp2000_exact "the 'exact' ruin probabilities for finite lifetimes" because "they integrate the ruin over the RP-2000 Society of Actuaries mortality table from age 65 (note 8; p. 96): the present value of spending over a lifetime drawn from a table has no closed form, and the language has no numerical integral; the case doesn't carry the table either. Eq. 8 gives only the exponential-lifetime approximation"
+ask avg_sust: avg_spend[eq, endow] law 2026-10-18
 
-ask avg_sust: avg_spend[eq, endow]
+ask bal_40k: ruin[balanced, a65, b40k] law 2026-10-18
 
-ask bal_40k: ruin[balanced, a65, b40k]
+ask bal_60k: ruin[balanced, a65, b60k] law 2026-10-18
 
-ask bal_60k: ruin[balanced, a65, b60k]
+ask bal_70_60k: ruin[balanced, a70, b60k] law 2026-10-18
 
-ask bal_70_60k: ruin[balanced, a70, b60k]
+ask base_erg: ruin[eq, a65, b60k] law 2026-10-18
 
-ask base_erg: ruin[eq, a65, b60k]
+ask base_exact: rp2000_exact law 2026-10-18
 
-ask base_exact: rp2000_exact
+ask base_gap: ruin[eq, a65, b60k] - rp2000_exact law 2026-10-18
 
-ask base_gap: ruin[eq, a65, b60k] - rp2000_exact
+ask e_life: 1 / bb_lam law 2026-10-18
 
-ask e_life: 1 / bb_lam
+ask endow_high: ruin[eq, endow, k10] law 2026-10-18
 
-ask endow_high: ruin[eq, endow, k10]
+ask endow_low: ruin[eq, endow, k2] law 2026-10-18
 
-ask endow_low: ruin[eq, endow, k2]
+ask endow_range: min(ruin[p, endow, s] for p in [eq, balanced], s in [k4, k5, k6]), max(ruin[p, endow, s] for p in [eq, balanced], s in [k4, k5, k6]) law 2026-10-18
 
-ask endow_range: min(p in [eq, balanced], s in [k4, k5, k6]: ruin[p, endow, s]), max(p in [eq, balanced], s in [k4, k5, k6]: ruin[p, endow, s])
+ask erg_40k: ruin[eq, a65, b40k] law 2026-10-18
 
-ask erg_40k: ruin[eq, a65, b40k]
+ask erg_50k: ruin[eq, a65, b50k] law 2026-10-18
 
-ask erg_50k: ruin[eq, a65, b50k]
+ask erg_90k: ruin[eq, a65, b90k] law 2026-10-18
 
-ask erg_90k: ruin[eq, a65, b90k]
+ask exact_40k: rp2000_exact law 2026-10-18
 
-ask exact_40k: rp2000_exact
+ask exact_50k: rp2000_exact law 2026-10-18
 
-ask exact_50k: rp2000_exact
+ask exact_90k: rp2000_exact law 2026-10-18
 
-ask exact_90k: rp2000_exact
+ask extra_10: avg_spend[eq, m10] - avg_spend[eq, endow] law 2026-10-18
 
-ask extra_10: avg_spend[eq, m10] - avg_spend[eq, endow]
+ask extra_20: avg_spend[eq, m20] - avg_spend[eq, endow] law 2026-10-18
 
-ask extra_20: avg_spend[eq, m20] - avg_spend[eq, endow]
+ask extra_30: avg_spend[eq, m30] - avg_spend[eq, endow] law 2026-10-18
 
-ask extra_30: avg_spend[eq, m30] - avg_spend[eq, endow]
+ask hi_4: ruin[hi, endow, k4] law 2026-10-18
 
-ask hi_4: ruin[hi, endow, k4]
+ask hi_5: ruin[hi, endow, k5] law 2026-10-18
 
-ask hi_5: ruin[hi, endow, k5]
+ask hi_6: ruin[hi, endow, k6] law 2026-10-18
 
-ask hi_6: ruin[hi, endow, k6]
+ask lam_50: lam[a50] law 2026-10-18
 
-ask lam_50: lam[a50]
+ask lam_65: lam[a65] law 2026-10-18
 
-ask lam_65: lam[a65]
+ask mass_ruin: ruin[eq, a50, w20] law 2026-10-18
 
-ask mass_ruin: ruin[eq, a50, w20]
+ask mass_sust: 1 - ruin[eq, a50, w20] law 2026-10-18
 
-ask mass_sust: 1 - ruin[eq, a50, w20]
+ask med_life: (ln(med_life_2) to 1e-30) / bb_lam law 2026-10-18
 
-ask med_life: (ln(2) to 1e-30) / bb_lam
+ask neg_ret_10: cdf(normal(mu[mu10] - pow(sigma[mu10], neg_ret_10_2) / neg_ret_10_2, sigma[mu10]), 0) to 1e-9 law 2026-10-18
 
-ask neg_ret_10: cdf(normal(mu[mu10] - pow(sigma[mu10], 2) / 2, sigma[mu10]), 0) to 1e-9
+ask neg_ret_7: cdf(normal(mu[eq] - pow(sigma[eq], neg_ret_7_2) / neg_ret_7_2, sigma[eq]), 0) to 1e-9 law 2026-10-18
 
-ask neg_ret_7: cdf(normal(mu[eq] - pow(sigma[eq], 2) / 2, sigma[eq]), 0) to 1e-9
+ask perp: 1 / det_r law 2026-10-18
 
-ask perp: 1 / det_r
+ask pv_25: (1 - 1 / pow(1 + det_r, det_t)) / det_r law 2026-10-18
 
-ask pv_25: (1 - 1 / pow(1 + det_r, det_t)) / det_r
+ask rg_mean: 1 / (rg_beta * (rg_alpha - 1)) law 2026-10-18
 
-ask rg_mean: 1 / (rg_beta * (rg_alpha - 1))
+ask ruin_ex: ruin[eq, a50, w20] law 2026-10-18
 
-ask ruin_ex: ruin[eq, a50, w20]
+ask runout_years: (ln(1 / (1 - det_w * det_r)) to 1e-12) / (ln(1 + det_r) to 1e-12) law 2026-10-18
 
-ask runout_years: (ln(1 / (1 - det_w * det_r)) to 1e-12) / (ln(1 + det_r) to 1e-12)
+ask spv_mean: 1 / avg_spend[eq, a65] law 2026-10-18
 
-ask spv_mean: 1 / avg_spend[eq, a65]
+ask ss_10: solve ruin_k[balanced, a65] == ruin_lvl[r10] for k_solve in [0, 20] to 0.01 law 2026-10-18
 
-ask ss_10: solve k_solve in [0, 20] to 0.01: ruin_k[balanced, a65] = ruin_lvl[r10]
+ask ss_5: solve ruin_k[balanced, a65] == ruin_lvl[r05] for k_solve in [0, 20] to 0.01 law 2026-10-18
 
-ask ss_5: solve k_solve in [0, 20] to 0.01: ruin_k[balanced, a65] = ruin_lvl[r05]
+ask surv_25: exp(-bb_lam * bb_s1) to 1e-9 law 2026-10-18
 
-ask surv_25: exp(-bb_lam * bb_s1) to 1e-9
+ask surv_40: exp(-bb_lam * bb_s2) to 1e-9 law 2026-10-18
 
-ask surv_40: exp(-bb_lam * bb_s2) to 1e-9
+ask t2_a50: ruin[eq, a50, s] for s in [k2, k3, k4, k5, k6, k7, k8, k9, k10] law 2026-10-18
 
-ask t2_a50: ruin[eq, a50, s] for s in [k2, k3, k4, k5, k6, k7, k8, k9, k10]
+ask t2_a55: ruin[eq, a55, s] for s in [k2, k3, k4, k5, k6, k7, k8, k9, k10] law 2026-10-18
 
-ask t2_a55: ruin[eq, a55, s] for s in [k2, k3, k4, k5, k6, k7, k8, k9, k10]
+ask t2_a60: ruin[eq, a60, s] for s in [k2, k3, k4, k5, k6, k7, k8, k9, k10] law 2026-10-18
 
-ask t2_a60: ruin[eq, a60, s] for s in [k2, k3, k4, k5, k6, k7, k8, k9, k10]
+ask t2_a65: ruin[eq, a65, s] for s in [k2, k3, k4, k5, k6, k7, k8, k9, k10] law 2026-10-18
 
-ask t2_a65: ruin[eq, a65, s] for s in [k2, k3, k4, k5, k6, k7, k8, k9, k10]
+ask t2_a70: ruin[eq, a70, s] for s in [k2, k3, k4, k5, k6, k7, k8, k9, k10] law 2026-10-18
 
-ask t2_a70: ruin[eq, a70, s] for s in [k2, k3, k4, k5, k6, k7, k8, k9, k10]
+ask t2_a75: ruin[eq, a75, s] for s in [k2, k3, k4, k5, k6, k7, k8, k9, k10] law 2026-10-18
 
-ask t2_a75: ruin[eq, a75, s] for s in [k2, k3, k4, k5, k6, k7, k8, k9, k10]
+ask t2_a80: ruin[eq, a80, s] for s in [k2, k3, k4, k5, k6, k7, k8, k9, k10] law 2026-10-18
 
-ask t2_a80: ruin[eq, a80, s] for s in [k2, k3, k4, k5, k6, k7, k8, k9, k10]
+ask t2_endow: ruin[eq, endow, s] for s in [k2, k3, k4, k5, k6, k7, k8, k9, k10] law 2026-10-18
 
-ask t2_endow: ruin[eq, endow, s] for s in [k2, k3, k4, k5, k6, k7, k8, k9, k10]
+ask t2_endow_diff: eventual[eq, s] - ruin[eq, endow, s] for s in [k2, k3, k4, k5, k6, k7, k8, k9, k10] law 2026-10-18
 
-ask t2_endow_diff: eventual[eq, s] - ruin[eq, endow, s] for s in [k2, k3, k4, k5, k6, k7, k8, k9, k10]
+ask t2_endow_exact: eventual[eq, s] for s in [k2, k3, k4, k5, k6, k7, k8, k9, k10] law 2026-10-18
 
-ask t2_endow_exact: eventual[eq, s] for s in [k2, k3, k4, k5, k6, k7, k8, k9, k10]
+ask t2_geo: mu[eq] - pow(sigma[eq], t2_geo_2) / t2_geo_2 law 2026-10-18
 
-ask t2_geo: mu[eq] - pow(sigma[eq], 2) / 2
+ask t2_lam: lam[l] for l in [a50, a55, a60, a65, a70, a75, a80] law 2026-10-18
 
-ask t2_lam: lam[l] for l in [a50, a55, a60, a65, a70, a75, a80]
+ask t3_a50: ruin[balanced, a50, s] for s in [k2, k3, k4, k5, k6, k7, k8, k9, k10] law 2026-10-18
 
-ask t3_a50: ruin[balanced, a50, s] for s in [k2, k3, k4, k5, k6, k7, k8, k9, k10]
+ask t3_a55: ruin[balanced, a55, s] for s in [k2, k3, k4, k5, k6, k7, k8, k9, k10] law 2026-10-18
 
-ask t3_a55: ruin[balanced, a55, s] for s in [k2, k3, k4, k5, k6, k7, k8, k9, k10]
+ask t3_a60: ruin[balanced, a60, s] for s in [k2, k3, k4, k5, k6, k7, k8, k9, k10] law 2026-10-18
 
-ask t3_a60: ruin[balanced, a60, s] for s in [k2, k3, k4, k5, k6, k7, k8, k9, k10]
+ask t3_a65: ruin[balanced, a65, s] for s in [k2, k3, k4, k5, k6, k7, k8, k9, k10] law 2026-10-18
 
-ask t3_a65: ruin[balanced, a65, s] for s in [k2, k3, k4, k5, k6, k7, k8, k9, k10]
+ask t3_a70: ruin[balanced, a70, s] for s in [k2, k3, k4, k5, k6, k7, k8, k9, k10] law 2026-10-18
 
-ask t3_a70: ruin[balanced, a70, s] for s in [k2, k3, k4, k5, k6, k7, k8, k9, k10]
+ask t3_a75: ruin[balanced, a75, s] for s in [k2, k3, k4, k5, k6, k7, k8, k9, k10] law 2026-10-18
 
-ask t3_a75: ruin[balanced, a75, s] for s in [k2, k3, k4, k5, k6, k7, k8, k9, k10]
+ask t3_a80: ruin[balanced, a80, s] for s in [k2, k3, k4, k5, k6, k7, k8, k9, k10] law 2026-10-18
 
-ask t3_a80: ruin[balanced, a80, s] for s in [k2, k3, k4, k5, k6, k7, k8, k9, k10]
+ask t3_endow: ruin[balanced, endow, s] for s in [k2, k3, k4, k5, k6, k7, k8, k9, k10] law 2026-10-18
 
-ask t3_endow: ruin[balanced, endow, s] for s in [k2, k3, k4, k5, k6, k7, k8, k9, k10]
+ask t3_geo: mu[balanced] - pow(sigma[balanced], t3_geo_2) / t3_geo_2 law 2026-10-18
 
-ask t3_geo: mu[balanced] - pow(sigma[balanced], 2) / 2
+ask t5_geo: mu[p] - pow(sigma[p], t5_geo_2) / t5_geo_2 for p in [p300, p400, p500, p600, p700, p800] law 2026-10-18
 
-ask t5_geo: mu[p] - pow(sigma[p], 2) / 2 for p in [p300, p400, p500, p600, p700, p800]
+ask t5a_p300: solve ruin_k[p300, endow] == ruin_lvl[r10] for k_solve in [0, 20] to 0.01 law 2026-10-18
 
-ask t5a_p300: solve k_solve in [0, 20] to 0.01: ruin_k[p300, endow] = ruin_lvl[r10]
+ask t5a_p400: solve ruin_k[p400, endow] == ruin_lvl[r10] for k_solve in [0, 20] to 0.01 law 2026-10-18
 
-ask t5a_p400: solve k_solve in [0, 20] to 0.01: ruin_k[p400, endow] = ruin_lvl[r10]
+ask t5a_p500: solve ruin_k[p500, endow] == ruin_lvl[r10] for k_solve in [0, 20] to 0.01 law 2026-10-18
 
-ask t5a_p500: solve k_solve in [0, 20] to 0.01: ruin_k[p500, endow] = ruin_lvl[r10]
+ask t5a_p600: solve ruin_k[p600, endow] == ruin_lvl[r10] for k_solve in [0, 20] to 0.01 law 2026-10-18
 
-ask t5a_p600: solve k_solve in [0, 20] to 0.01: ruin_k[p600, endow] = ruin_lvl[r10]
+ask t5a_p700: solve ruin_k[p700, endow] == ruin_lvl[r10] for k_solve in [0, 20] to 0.01 law 2026-10-18
 
-ask t5a_p700: solve k_solve in [0, 20] to 0.01: ruin_k[p700, endow] = ruin_lvl[r10]
+ask t5a_p800: solve ruin_k[p800, endow] == ruin_lvl[r10] for k_solve in [0, 20] to 0.01 law 2026-10-18
 
-ask t5a_p800: solve k_solve in [0, 20] to 0.01: ruin_k[p800, endow] = ruin_lvl[r10]
+ask t5b_p300: solve ruin_k[p300, endow] == ruin_lvl[r05] for k_solve in [0, 20] to 0.01 law 2026-10-18
 
-ask t5b_p300: solve k_solve in [0, 20] to 0.01: ruin_k[p300, endow] = ruin_lvl[r05]
+ask t5b_p400: solve ruin_k[p400, endow] == ruin_lvl[r05] for k_solve in [0, 20] to 0.01 law 2026-10-18
 
-ask t5b_p400: solve k_solve in [0, 20] to 0.01: ruin_k[p400, endow] = ruin_lvl[r05]
+ask t5b_p500: solve ruin_k[p500, endow] == ruin_lvl[r05] for k_solve in [0, 20] to 0.01 law 2026-10-18
 
-ask t5b_p500: solve k_solve in [0, 20] to 0.01: ruin_k[p500, endow] = ruin_lvl[r05]
+ask t5b_p600: solve ruin_k[p600, endow] == ruin_lvl[r05] for k_solve in [0, 20] to 0.01 law 2026-10-18
 
-ask t5b_p600: solve k_solve in [0, 20] to 0.01: ruin_k[p600, endow] = ruin_lvl[r05]
+ask t5b_p700: solve ruin_k[p700, endow] == ruin_lvl[r05] for k_solve in [0, 20] to 0.01 law 2026-10-18
 
-ask t5b_p700: solve k_solve in [0, 20] to 0.01: ruin_k[p700, endow] = ruin_lvl[r05]
+ask t5b_p800: solve ruin_k[p800, endow] == ruin_lvl[r05] for k_solve in [0, 20] to 0.01 law 2026-10-18
 
-ask t5b_p800: solve k_solve in [0, 20] to 0.01: ruin_k[p800, endow] = ruin_lvl[r05]
+version lifted_figures
+  cite lifted_1_0_1
+  governs always
+  known 2005-11-01
+  alpha_2 = 2 "inline in tally 1.0.1: alpha line 60, factor; alpha line 60, argument 2 of pow"
+  alpha_4 = 4 "inline in tally 1.0.1: alpha line 60, factor"
+  avg_spend_2 = 2 "inline in tally 1.0.1: avg_spend line 64, argument 2 of pow"
+  beta_2 = 2 "inline in tally 1.0.1: beta line 66, argument 2 of pow; beta line 66, factor"
+  eventual_2 = 2 "inline in tally 1.0.1: eventual line 70, factor; eventual line 70, argument 2 of pow; eventual line 71, factor; eventual line 71, argument 2 of pow"
+  lam_0_0001 = 0.0001 "inline in tally 1.0.1: lam line 78, round step"
+  lam_2 = 2 "inline in tally 1.0.1: lam line 77, argument 1 of ln; lam line 78, argument 1 of ln"
+  med_life_2 = 2 "inline in tally 1.0.1: med_life line 148, argument 1 of ln"
+  neg_ret_10_2 = 2 "inline in tally 1.0.1: neg_ret_10 line 150, argument 2 of pow; neg_ret_10 line 150, factor"
+  neg_ret_7_2 = 2 "inline in tally 1.0.1: neg_ret_7 line 152, argument 2 of pow; neg_ret_7 line 152, factor"
+  t2_geo_2 = 2 "inline in tally 1.0.1: t2_geo line 194, argument 2 of pow; t2_geo line 194, factor"
+  t3_geo_2 = 2 "inline in tally 1.0.1: t3_geo line 214, argument 2 of pow; t3_geo line 214, factor"
+  t5_geo_2 = 2 "inline in tally 1.0.1: t5_geo line 216, argument 2 of pow; t5_geo line 216, factor"
 
 version mr2005_v
   cite mr2005
+  governs always
   known 2005-11-01
   note "known: the article's own date, 1 November 2005, as the publisher's page gives it for Financial Analysts Journal 61(6), the November/December 2005 issue (https://rpc.cfainstitute.org/research/financial-analysts-journal/2005/a-sustainable-spending-rate-without-simulation). Round 1 used the date the Internet Archive captured the reprint, 2016-08-03, which is the copy's, not the article's (§4.5)"
   age_at[a50] = 50 "Tables 2 and 3, row 50; p. 94: a 50-year-old"
@@ -256,7 +320,7 @@ version mr2005_v
   det_r = 0.07 "p. 91, Eq. 1: R = 7 percent"
   det_t = 25 "p. 91, Eq. 1: T = 25 years"
   det_w = 10 "p. 91: starting wealth 10 times real consumption"
-  lam[endow] = 0 "p. 94: 'In the infinite horizon case of lambda = 0'; Table 2 row NA, Infinity, 0.00%"
+  given lam[endow] = 0 "p. 94: 'In the infinite horizon case of lambda = 0'; Table 2 row NA, Infinity, 0.00%"
   med_death[a50] = 78.1 "Tables 2 and 3, row 50, median age at death (RP-2000)"
   med_death[a55] = 83 "Tables 2 and 3, row 55, median 83.0"
   med_death[a60] = 83.4 "Tables 2 and 3, row 60, median"
@@ -264,9 +328,9 @@ version mr2005_v
   med_death[a70] = 84.6 "Tables 2 and 3, row 70, median"
   med_death[a75] = 85.7 "Tables 2 and 3, row 75, median"
   med_death[a80] = 87.4 "Tables 2 and 3, row 80, median"
-  med_rem[m10] = 10 "p. 99, left column: a median of 10 more years"
-  med_rem[m20] = 20 "p. 99, left column: 20 more years"
-  med_rem[m30] = 30 "p. 99, left column: 30 more years"
+  given med_rem[m10] = 10 "p. 99, left column: a median of 10 more years"
+  given med_rem[m20] = 20 "p. 99, left column: 20 more years"
+  given med_rem[m30] = 30 "p. 99, left column: 30 more years"
   mu[eq] = 0.07 "Table 2 notes: mean arithmetic portfolio return 7 percent; p. 94: 7 percent real return"
   mu[balanced] = 0.05 "Table 3 note: mean arithmetic portfolio return 5 percent"
   mu[hi] = 0.09 "p. 97, right column: mu = 9 percent"
@@ -322,6 +386,7 @@ version mr2005_v
 
 version kalas2014_v
   cite kalas2014
+  governs always
   known 2014-11-21
   note "No rows: it is the version eventual's base rule points at, so the slides' formula for eventual ruin is cited and the source is read (§5.3)"
   note "known: the date on the slides, 21 November 2014 (§4.5)"

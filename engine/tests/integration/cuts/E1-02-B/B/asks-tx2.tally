@@ -1,0 +1,15 @@
+part asks_tx2
+  tally 2
+  note "W-TX2's scratch asks: E1-02's three B-side cells on B alone, at E1's law date and cut (rows/E1.check.md, Q:E1-02)."
+
+ask tx2_owes: ola_owes_piotr[2025] law 2025-12-31 as known 2026-01-15
+
+ask tx2_owes_explain: explain ola_owes_piotr[2025] law 2025-12-31 as known 2026-01-15
+
+ask tx2_worth: worth_piotr[2025-12-31], worth_ola[2025-12-31] law 2025-12-31 as known 2026-01-15 partial
+
+ask tx2_cis_explain: explain bal(cis, 2025-12-31) law 2025-12-31 as known 2026-01-15
+
+ask tx2_mtg_day: mtg_pay[2027-04].day, bdays_due[2027-04], flows(mtg_pay, 2025), flows(ola_order, 2025) law 2025-12-31 as known 2026-01-15
+
+ask tx2_mtg_live: mtg_live[2027-04], mtg_pay[2027-04].day, flows(cis, 2025), bal(cis, 2025-06-30) law 2025-12-31 as known 2026-01-15

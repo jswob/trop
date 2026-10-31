@@ -1,0 +1,54 @@
+model pty02
+  tally 1
+  on 2026-10-25
+  note "PTY-02: a joint return's tax, traced back to each spouse in proportion to the tax each would pay alone."
+
+source card "Probe card PTY-02 (made up): story and rules"
+
+index person = [tomek, ania]
+
+index taxunit = [lis_2024]
+
+index tyear = year 2024..2024
+
+input income[p in person, y in tyear]: money DUK
+
+input member[g in taxunit, p in person]: bool
+
+band scale(x: num DUK): num
+  note "rule 1: marginal rates, read with marginal()"
+
+def alone[p in person, y in tyear]: num DUK
+  rule base v card_rules = marginal(scale, income[p, y])
+
+def combined[g in taxunit, y in tyear]: money DUK = sum(p in person where member[g, p]: income[p, y])
+
+def joint[g in taxunit, y in tyear]: num DUK
+  note "rule 2: twice the scale's tax on half the combined income"
+  rule base v card_rules = 2 * marginal(scale, combined[g, y] / 2)
+
+def part_of[g in taxunit, p in person, y in tyear]: money DUK
+  note "rule 3: in proportion to the tax alone; floored to 0.01, leftover units to the largest remainders"
+  rule base v card_rules = prorata(joint[g, y], alone[j, y] for j in person where member[g, j], p, 0.01, rest largest)
+
+ask q_alone: alone[p, 2024] for p in person
+
+ask q_joint: joint[lis_2024, 2024]
+
+ask q_parts: part_of[lis_2024, p, 2024] for p in person
+
+ask q_parts_sum: check sum(p in person: part_of[lis_2024, p, 2024]) = joint[lis_2024, 2024]
+
+version card_facts
+  cite card
+  known 2026-10-25
+  income[tomek, 2024] = 90000.00 "story: Tomek earns a taxable 90 000.00"
+  income[ania, 2024] = 30000.00 "story: Ania 30 000.00"
+  member[lis_2024, tomek] = true "story: they file jointly"
+  member[lis_2024, ania] = true "story: they file jointly"
+
+version card_rules
+  cite card
+  known 2026-10-25
+  scale: [0, 60000] = 0.12 "rule 1: 12 % up to and including 60 000.00"
+  scale: (60000, inf) = 0.32 "rule 1: 32 % on the excess"

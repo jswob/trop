@@ -1,0 +1,13 @@
+part asks_c03
+  tally 2
+  note "C-03 · Our return for 2024 (questions.md), as of and known as of 2025-12-31. One line per filing, f_filed as we filed it (2025-04-28) and f_corrected as we corrected it (2025-10-20): (filing, Marta base, Jan base, deduction Marta, deduction Jan, combined base, joint tax, child relief, credit, due, advances, difference: positive payable, negative refunded). paid with it: the corrected difference less the filed one. tenth: 2024's tenth by the return as filed and as corrected (C-HR6 .2), the 21 300.00 given (our estimate), and what the next December's gift carries: the tenth by the return as last filed before it (the corrected one) less the estimate, positive added, negative taken off."
+
+ask c03_returns: f, tax_base[marta, 2024], tax_base[jan, 2024], gift_ded[marta, 2024], gift_ded[jan, 2024], comb_base[2024], joint_tax[2024], relief[2024], credit[2024, f], due[2024, f], advances[2024], difference[2024, f] for f in filing law 2025-12-31 as known 2025-12-31
+
+ask c03_paid_with: paid_with_correction[2024] law 2025-12-31 as known 2025-12-31
+
+ask c03_tenth: f, tenth[2024, f] for f in filing law 2025-12-31 as known 2025-12-31
+
+ask c03_carry: estimate[2024], last_filing[2024], carry[2024, last_filing[2024]] law 2025-12-31 as known 2025-12-31
+
+ask c03_detail: credited_base[2024], ftax[2024, f_filed], ftax[2024, f_corrected], parents_income[2024], bases_before[2024] law 2025-12-31 as known 2025-12-31

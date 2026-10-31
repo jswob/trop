@@ -1,0 +1,7 @@
+part de_employment
+  tally 2
+  law
+  note "Niemiecka umowa o pracę: Lohnsteuer, Solidaritätszuschlag, składki. Zalążek: wynik jest dziurą z pytaniem, dopóki część nie zostanie napisana i nie przejdzie bramki."
+
+def net_wage_eur[j in job, m in month]: money EUR at start_of(m)
+  rule stub = ?"Wynagrodzenie netto z niemieckiej umowy o pracę nie jest opisane (Lohnsteuer, składki)."

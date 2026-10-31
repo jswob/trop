@@ -1,0 +1,5 @@
+part asks_a06
+  tally 2
+  note "A-06 · Mum's gift (questions.md), as known 2024-04-30: the tax on each of Halina's gifts to Ania, and on both, in whole dukats."
+
+ask a06: gift_tax[cash2021], gift_tax[units2023], sum(gift_tax[a] for a in acq) law 2024-04-30 as known 2024-04-30

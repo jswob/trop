@@ -1,0 +1,66 @@
+model own11_p21_signed
+  tally 2
+  on 2026-10-30
+  start 2026-01-01
+  end 2026-01-31
+  note "OWN-11 P-21 (a): refused on purpose, at load. Its twin is P-04, whose account kind is min 0."
+  note "An owned kind is min 0, so a part never goes below zero; this one is declared signed (LOAD-PARTS, LANGUAGE 5.7)."
+
+source card "Probe card OWN-11 (made up): story and rules"
+
+source bank "The couple's bank: its January 2026 rows (made up)"
+
+unit DUK: currency minor 0.01
+
+kind couples: parties
+
+kind persons: parties
+
+kind inheritances: transfers
+  attr heir: key parties
+
+kind interest_taxes: transfers
+
+kind savings: place DUK signed
+  owned by arrive
+  step minor(DUK)
+  takes k for w order (if k.owner == ania_tomek then 0 else 1), (if w in interest_taxes then 0 else 1)
+
+place sav: savings lives 2026-01-01..
+
+place tax_office: outside lives 1900-01-01..
+
+place world: outside lives 1900-01-01..
+
+input bank_rows: observed
+
+def arrive[m in events, p in parties]: num at m.day
+  note "R1: an inheritance the heir's, any other arrival the couple's"
+  rule community v card_rules = (if p == ania_tomek then 1 else 0)
+  rule inherited beats community v card_rules = (if p == m.heir then 1 else 0) when m in inheritances
+
+ask q_parts: bal(sav, 2026-01-31) of p for p in parties on 2026-01-31
+
+ask q_took: o.cash.amount of p for o in transfers over 2026-01-31 where o.cash.from in savings, p in parties on 2026-01-31
+
+version card_cast
+  cite card
+  known 2026-01-01
+  note "the parties: things of the prelude kind parties, of the model's own subkinds"
+  couples + [ania_tomek] lives 2015-06-20..
+  persons + [ania] lives 1988-04-12..
+  persons + [tomek] lives 1986-09-03..
+
+version card_rules
+  cite card
+  governs always
+  known 2026-01-01
+
+version records_2026_01
+  cite bank
+  governs 2026-01
+  known 2026-02-03
+  bank_rows[r1] = (on: 2026-01-05, kind: inheritances, leg cash from world to sav amount 2000.00 DUK, heir: ania) "line 1"
+  bank_rows[r2] = (on: 2026-01-08, kind: transfers, leg cash from world to sav amount 500.00 DUK) "line 2"
+  bank_rows[r3] = (on: 2026-01-31, kind: interest_taxes, leg cash from sav to tax_office amount 120.00 DUK) "line 3"
+  bank_rows[r4] = (on: 2026-01-31, kind: transfers, leg cash from sav to world amount 450.00 DUK) "line 4"

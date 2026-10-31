@@ -1,0 +1,21 @@
+Bank Wrzos SA;Account history
+Account;LN61 1140 2004 0000 3402 9921 5503
+Holders;ANNA LIS
+Period;02.06.2025;31.12.2025
+Opening balance;0,00
+Booking date;Type;Counterparty;Title;Amount;Balance after
+16.06.2025;INCOMING TRANSFER;Kancelaria Notarialna Brzoza – escrow;payout, division of the estate of Zbigniew Sowa, A. Lis;38750,00;38750,00
+30.06.2025;INTEREST;Bank Wrzos SA;interest;38,22;38788,22
+30.06.2025;TAX;Bank Wrzos SA;tax on interest 19%;-7,00;38781,22
+31.07.2025;INTEREST;Bank Wrzos SA;interest;79,05;38860,27
+31.07.2025;TAX;Bank Wrzos SA;tax on interest 19%;-15,00;38845,27
+31.08.2025;INTEREST;Bank Wrzos SA;interest;79,18;38924,45
+31.08.2025;TAX;Bank Wrzos SA;tax on interest 19%;-15,00;38909,45
+30.09.2025;INTEREST;Bank Wrzos SA;interest;76,75;38986,20
+30.09.2025;TAX;Bank Wrzos SA;tax on interest 19%;-15,00;38971,20
+31.10.2025;INTEREST;Bank Wrzos SA;interest;79,44;39050,64
+31.10.2025;TAX;Bank Wrzos SA;tax on interest 19%;-15,00;39035,64
+30.11.2025;INTEREST;Bank Wrzos SA;interest;77,00;39112,64
+30.11.2025;TAX;Bank Wrzos SA;tax on interest 19%;-15,00;39097,64
+31.12.2025;INTEREST;Bank Wrzos SA;interest;79,69;39177,33
+31.12.2025;TAX;Bank Wrzos SA;tax on interest 19%;-15,00;39162,33

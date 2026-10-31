@@ -1,0 +1,184 @@
+model cb09
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+  note "HMRC CG25431, Example 3: a UK resident, non-domiciled individual's foreign bank account in currency F, with a transfer to the UK in February 2009."
+  note "F is the manual's own hypothetical currency, written as XXX. Rates are in F per pound."
+  note "Dates are months only, as the page gives them. The transfer falls in tax year 2008-09."
+  note "The page doesn't say whether the individual claimed the remittance basis for 2008-09. The model follows the page's matching."
+  note "The page states no rounding, so the F amounts of the analysis and the matching are exact."
+
+source cg25385 "CG25385 Remittance basis: mixed funds: ordering rules: summary (HMRC Capital Gains Manual)" at "https://www.gov.uk/hmrc-internal-manuals/capital-gains-manual/cg25385"
+
+source cg25391 "CG25391 Remittance basis: gains to be computed in Sterling (HMRC Capital Gains Manual)" at "https://www.gov.uk/hmrc-internal-manuals/capital-gains-manual/cg25391"
+
+source cg25431 "CG25431 Disposal of assets situated abroad: example 3 (HMRC Capital Gains Manual)" at "https://www.gov.uk/hmrc-internal-manuals/capital-gains-manual/cg25431"
+
+source ita2007_s809q "Income Tax Act 2007 s. 809Q, point in time 28/02/2009 (legislation.gov.uk)" at "https://www.legislation.gov.uk/ukpga/2007/3/section/809Q/2009-02-28"
+
+unit GBP: currency minor 0.01
+
+unit XXX: currency minor 0.01
+
+index mon = month 1998-12..2009-02
+
+index nature = [income, gains, capital]
+
+index para = [a, b, c, d, e, f, g, h, i]
+  v s809q_2009
+  note "The paragraphs of s. 809Q(4), in the order steps 2 to 5 of s. 809Q(3) take them: (a) first, (i) last."
+
+input acquired_in: key mon
+
+input cost_f: money XXX
+
+input disposed_in: key mon
+
+input fx[m in mon]: num XXX/GBP question "What was the rate of exchange, in F per £1, in this month?"
+
+input gain_taxed_abroad: bool
+
+input income_f: money XXX
+
+input opening_f: money XXX
+
+input para_nature[p in para]: key nature
+
+input proceeds_f: money XXX
+
+input remit_f: money XXX
+
+input remitted_in: key mon
+
+input rfi_taxed_abroad: bool
+
+def analysis_f[n in nature]: num XXX = sum(cat_f[p] for p in para where para_nature[p] == n) at start_of(remitted_in)
+
+def analysis_subtotal_f: num XXX = sum(cat_f[p] for p in para where p != i) at start_of(remitted_in)
+
+def cat_f[p in para]: num XXX at start_of(remitted_in)
+  note "s. 809Q(3) step 1: the amount in each paragraph of (4) in the fund immediately before the transfer. The page puts the rest of the fund in (i) as a balancing figure of capital."
+  rule balance v cg25431_page = fund_f - sum(listed_f[q] for q in para where q != i) when p == i
+  rule listed = listed_f[p] when p != i
+
+def cost_gbp: num GBP at reader
+  note "CG25391: each entry of the computation is converted into sterling at the spot rate on the date that part of the transaction occurred."
+  rule base v sterling_rule = cost_f / fx[acquired_in]
+
+def fund_f: money XXX = opening_f + income_f + proceeds_f at reader
+
+def gain_f: num XXX at reader
+  note "CG25431: the sterling gain is re-expressed in F at the rate on the date of the transfer."
+  rule base v cg25431_page = gain_gbp * fx[remitted_in]
+
+def gain_gbp: num GBP = proceeds_gbp - cost_gbp at reader
+
+def listed_f[p in para]: num XXX at start_of(remitted_in)
+  note "s. 809Q(4): the paragraph that each part of the fund falls in. The fund holds no employment income, so paragraphs (a), (b), (c) and (f) are nil; (i) is left to cat_f."
+  rule base = 0
+  rule gains_taxed beats base v s809q_2009 = gain_f when p == h and gain_taxed_abroad
+  rule gains_untaxed beats base v s809q_2009 = gain_f when p == e and not gain_taxed_abroad
+  rule rfi_taxed beats base v s809q_2009 = income_f when p == g and rfi_taxed_abroad
+  rule rfi_untaxed beats base v s809q_2009 = income_f when p == d and not rfi_taxed_abroad
+
+def matched_f[n in nature]: num XXX = sum(remit_match.taken[p] for p in para where para_nature[p] == n) at start_of(remitted_in)
+
+def matched_gbp[n in nature]: num GBP at reader
+  note "CG25431 values each matched part in sterling at the rate on the date of the transfer. For the income part, the page cites no provision for this."
+  rule base v cg25431_page = matched_f[n] / fx[remitted_in]
+
+def proceeds_gbp: num GBP at reader
+  note "CG25391: each entry of the computation is converted into sterling at the spot rate on the date that part of the transaction occurred."
+  rule base v sterling_rule = proceeds_f / fx[disposed_in]
+
+def taxable_part[n in nature]: bool at reader
+  note "CG25385: a transfer is matched first to the categories that give rise to taxable remittances, and to capital only when those are fully matched."
+  rule base v order_summary = n != capital
+
+fill remit_match
+  v s809q_2009
+  note "s. 809Q(3) steps 2 to 5: the transfer is treated as made from the first paragraph of (4) that holds an amount, then the next, until the transfer is used up. The one transfer is the supply, with no keys."
+  supply remit_f
+  demand cat_f[p] for p in para
+  arc true
+  order p ties by pos(p)
+
+ask analysis: analysis_f[n] for n in nature law 2026-10-18
+
+ask analysis_subtotal: analysis_subtotal_f law 2026-10-18
+
+ask analysis_total: sum(analysis_f[n] for n in nature) law 2026-10-18
+
+ask cost_in_gbp: cost_gbp law 2026-10-18
+
+ask gain_in_f: gain_f law 2026-10-18
+
+ask gain_in_gbp: gain_gbp law 2026-10-18
+
+ask gain_tax_either_way: check matched_f[n] == matched_f[n] as if {gain_taxed_abroad = true} for n in nature law 2026-10-18
+
+ask proceeds_in_gbp: proceeds_gbp law 2026-10-18
+
+ask remit_split: matched_f[n], matched_gbp[n] for n in nature law 2026-10-18
+
+ask taxable_remitted: taxable_part[n], matched_f[n] for n in nature law 2026-10-18
+
+version s809q_2009
+  cite ita2007_s809q
+  governs 2008-07-21..2025-04-05
+  known 2008-07-21
+  note "Inserted with effect from 21 July 2008 by Finance Act 2008, Sch. 7 para. 1. The remittance basis was abolished from 6 April 2025."
+  note "Known from the Royal Assent of the Finance Act 2008 (c. 9), 21 July 2008 (legislation.gov.uk, enactment date)."
+  note "A transfer that covers a whole paragraph takes all of it; the relevant-proportion split of (3) step 3 within one paragraph isn't needed here, since each paragraph holds one kind."
+  para_nature[a] = income "(4)(a): employment income"
+  para_nature[b] = income "(4)(b): relevant foreign earnings"
+  para_nature[c] = income "(4)(c): foreign specific employment income"
+  para_nature[d] = income "(4)(d): relevant foreign income"
+  para_nature[e] = gains "(4)(e): foreign chargeable gains"
+  para_nature[f] = income "(4)(f): employment income subject to a foreign tax"
+  para_nature[g] = income "(4)(g): relevant foreign income subject to a foreign tax"
+  para_nature[h] = gains "(4)(h): foreign chargeable gains subject to a foreign tax"
+
+version order_summary
+  cite cg25385
+  governs always
+  known 2016-01-25
+  note "Second and third paragraphs. The page carries a 'Changes from 6 April 2025' banner."
+  note "The page has no date of its own, so it takes its updated stamp, 25 January 2016 (GOV.UK content API, public_updated_at). The 2025 banner is later than that stamp; the paragraphs read are not."
+
+version sterling_rule
+  cite cg25391
+  governs always
+  known 2016-01-25
+  note "Sterling is the currency of capital gains computations (Bentley v Pike, 53 TC 590; Capcount Trading v Evans, 65 TC 545)."
+  note "The page has no date of its own, so it takes its updated stamp, 25 January 2016 (GOV.UK content API, public_updated_at). It carries the same 'Changes from 6 April 2025' banner as CG25385."
+
+version cg25431_page
+  cite cg25431
+  governs always
+  known 2025-06-25
+  note "The page's method: the balancing figure of capital, the gain re-expressed in F and the matched parts valued in sterling, all at the rate on the date of the transfer."
+  note "The page has no date of its own, so it takes its updated stamp, 25 June 2025 (GOV.UK content API, public_updated_at)."
+  para_nature[i] = capital "analysis table, row 'Figure of capital to balance'"
+
+version example3
+  cite cg25431
+  governs always
+  known 2026-10-18
+  note "The account entries and the rates of exchange of CG25431, Example 3. Dates are months only."
+  note "These are the example's stipulations, so they are known from the model's on date (LANGUAGE.md 4.5)."
+  acquired_in = 1998-12 "entries table: the shares cost 10,560F in December 1998"
+  cost_f = 10560 "entries table"
+  disposed_in = 2009-01 "entries table: January 2009, proceeds of sale of shares"
+  fx[1998-12] = 2.2 "'The rate of exchange is': December 1998"
+  fx[2008-12] = 2 "'The rate of exchange is': December 2008 and January 2009"
+  fx[2009-01] = 2 "'The rate of exchange is': December 2008 and January 2009"
+  fx[2009-02] = 2.5 "'The rate of exchange is': February 2009"
+  gain_taxed_abroad = false assumed "the page doesn't say whether the share gain was subject to a foreign tax, which decides s. 809Q(4)(e) or (h); the transfer covers both in full either way, as the ask gain_tax_either_way checks"
+  income_f = 10000 "entries table: December 2008, partnership profits"
+  opening_f = 0 "entries table: November 2008, Nil"
+  proceeds_f = 15000 "entries table: January 2009"
+  remit_f = 20000 "entries table: February 2009, withdrawal brought to the UK"
+  remitted_in = 2009-02 "entries table: February 2009"
+  rfi_taxed_abroad = true "entries table: the partnership profits are subject to foreign tax"

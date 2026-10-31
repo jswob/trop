@@ -1,0 +1,21 @@
+part facts_2027
+  tally 2
+
+source car_contract "Umowa kredytu samochodowego, 2027-04-02"
+
+version car_loan
+  cite car_contract
+  governs always
+  known 2027-04-02
+  loan + [car] lives 2027-04-02..
+  seller + [car_dealer] lives 2027-04-02..
+  loan_seller[car] = car_dealer "§ 1: wypłata na rachunek sprzedawcy"
+  loan_terms[car] = (principal: 40000, n: 48, apr: 0.0899 1/year, first_month: 2027-05, due: 10) "§ 2"
+  overpay[car] = 0 "brak nadpłat"
+  overpay_choice[car] = shorten "§ 9: nadpłata skraca okres kredytowania"
+
+version car_overpay_2028_01
+  cite household
+  governs always
+  known 2028-01-08
+  overpay[car, 9] = 5000 "nadpłata przy 9. racie, styczeń 2028"

@@ -1,0 +1,30 @@
+# L §5.11: "Every exact value is capped at 4 096 decimal digits in its numerator and its denominator; above that
+# it is refused at that key (RUN-DIGITS)".  pow(10, 5000) has 5 001 digits; pow(10, 4000) has 4 001.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+input x: num
+input big: int
+input ok: int
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  x = 10
+  big = 5000
+  ok = 4000
+
+ask q1: pow(x, big)
+ask q2: pow(x, ok) > x
+=== expect
+q1: refused: RUN-DIGITS ...
+  cut 2026-12-31
+q2: true
+  cut 2026-12-31

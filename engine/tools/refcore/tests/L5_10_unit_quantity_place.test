@@ -1,0 +1,16 @@
+# L §5.10 (round 12): "a quantity unit (unit hour …, §5.4) is a key of no unit kind, so unit(x) of either place is
+# refused (§8.4)", at load where the types show it (LOAD-UNIT). (Was REFCORE-UNSPECIFIED §5.10, writer 5's T-53.)
+=== m.tally
+model t
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+unit kg "kilogram"
+place silo: holdings kg lives 2026-01-01..
+ask q: unit(silo)
+=== expect
+refused: LOAD-UNIT unit(silo): its unit kg is a quantity unit, a key of no unit kind (m.tally:11)

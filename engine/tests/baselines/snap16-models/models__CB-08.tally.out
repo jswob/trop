@@ -1,0 +1,50 @@
+ex1_fx_on_interest (y = 1992): 0 USD
+  law date 2026-10-18, cut 2026-10-18
+ex1_fx_on_interest (y = 1993): 0 USD
+  law date 2026-10-18, cut 2026-10-18
+ex1_fx_on_interest (y = 1994): 0 USD
+  law date 2026-10-18, cut 2026-10-18
+ex1_interest (y = 1992): 1 350 USD
+  law date 2026-10-18, cut 2026-10-18
+ex1_interest (y = 1993): 1 400 USD
+  law date 2026-10-18, cut 2026-10-18
+ex1_interest (y = 1994): 1 450 USD
+  law date 2026-10-18, cut 2026-10-18
+ex2_fx_on_interest (y = 1992): 30 USD
+  law date 2026-10-18, cut 2026-10-18
+ex2_fx_on_interest (y = 1993): 30 USD
+  law date 2026-10-18, cut 2026-10-18
+ex2_fx_on_interest (y = 1994): 30 USD
+  law date 2026-10-18, cut 2026-10-18
+ex2_fx_on_interest_total: 90 USD
+  law date 2026-10-18, cut 2026-10-18
+ex2_interest (y = 1992): 1 320 USD
+  law date 2026-10-18, cut 2026-10-18
+ex2_interest (y = 1993): 1 370 USD
+  law date 2026-10-18, cut 2026-10-18
+ex2_interest (y = 1994): 1 420 USD
+  law date 2026-10-18, cut 2026-10-18
+ex2_spot_value (y = 1992): 1 350 USD
+  law date 2026-10-18, cut 2026-10-18
+ex2_spot_value (y = 1993): 1 400 USD
+  law date 2026-10-18, cut 2026-10-18
+ex2_spot_value (y = 1994): 1 450 USD
+  law date 2026-10-18, cut 2026-10-18
+loan_dollars: ok
+  law date 2026-10-18, cut 2026-10-18
+principal_gain: 1 500 USD
+  law date 2026-10-18, cut 2026-10-18
+principal_lent: 13 000 USD
+  law date 2026-10-18, cut 2026-10-18
+principal_received: 14 500 USD
+  law date 2026-10-18, cut 2026-10-18
+trade_amount_realized: 166.00 USD
+  law date 2026-10-18, cut 2026-10-18
+trade_basis: 141.00 USD
+  law date 2026-10-18, cut 2026-10-18
+trade_disposal: 1990-12-30
+  law date 2026-10-18, cut 2026-10-18
+trade_gain: 25.00 USD
+  law date 2026-10-18, cut 2026-10-18
+trade_gbp_basis: 166.00 USD
+  law date 2026-10-18, cut 2026-10-18

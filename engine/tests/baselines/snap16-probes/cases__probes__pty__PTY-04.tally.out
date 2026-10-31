@@ -1,0 +1,10 @@
+q_after (p = ania): (112 000.01 DUK, false, 0 DUK)
+  pinned: income[tomek, 2024] = 52 000.01 DUK
+  cut 2026-10-25
+q_after (p = tomek): (112 000.01 DUK, false, 0 DUK)
+  pinned: income[tomek, 2024] = 52 000.01 DUK
+  cut 2026-10-25
+q_before (p = ania): (112 000.00 DUK, true, 500 DUK)
+  cut 2026-10-25
+q_before (p = tomek): (112 000.00 DUK, true, 500 DUK)
+  cut 2026-10-25

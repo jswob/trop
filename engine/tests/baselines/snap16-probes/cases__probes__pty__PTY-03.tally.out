@@ -1,0 +1,12 @@
+q_shares (h = halina): 0.25
+  law date 2026-01-01, cut 2026-10-25
+q_shares (h = ania): 0.1875
+  law date 2026-01-01, cut 2026-10-25
+q_shares (h = piotr): 0.1875
+  law date 2026-01-01, cut 2026-10-25
+q_shares (h = marta): 0.1875
+  law date 2026-01-01, cut 2026-10-25
+q_shares (h = kuba): 0.1875
+  law date 2026-01-01, cut 2026-10-25
+q_shares_sum: ok
+  law date 2026-01-01, cut 2026-10-25

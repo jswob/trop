@@ -1,0 +1,47 @@
+# L §5.14.1 Running reads (round 12): "A span past the reader's day, in a binding or in flows, is its future, refused
+# as a plain bal(x, d) after its day is (LOAD-CYCLE where load sees the day, RUN-FUTURE otherwise)": second, on the 5th,
+# binds over sweeps through day_of(m, late), the 28th, known only at run: RUN-FUTURE. (Writer 5's T-65.)
+=== m.tally
+model hh
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source plan "plan"
+unit PLN: currency minor 0.01
+input amt: money PLN
+input dom: int
+input late: int
+place konto: accounts PLN lives 2019-05-01..
+place savings: accounts PLN lives 2019-05-01..
+place world: outside lives 1900-01-01..
+kind sweeps: transfers
+
+move first[m in months]: sweeps
+  on day_of(m, dom)
+  at start_of(m)
+  reads konto
+  leg cash from konto to savings amount min(amt, bal(konto))
+
+version plan_2026
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  amt = 1 000.00 PLN "own"
+  dom = 5 "own"
+  late = 28 "own"
+  opening[konto] = 5 000.00 PLN at 2026-01-01 start "s"
+  opening[savings] = 0 PLN at 2026-01-01 start "s"
+
+move second[m in months]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  after first
+  reads first
+  leg cash from konto to savings amount amt * count(x in sweeps over day_of(m, dom) .. day_of(m, late))
+
+ask q: flows(second, 2026-01-01 .. 2026-01-31)
+=== expect
+q: refused: RUN-FUTURE ...
+...

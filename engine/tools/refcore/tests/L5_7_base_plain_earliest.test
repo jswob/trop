@@ -1,0 +1,33 @@
+# L §5.7 (round 12): "a key that enters only plain kinds has as base the kind of its earliest entry, by known, then by
+# its lifespan's start"; "Two ... earliest plain entries tied on both, are refused (LOAD-DUP)". q: ana enters
+# volunteers (known 2026-01-01) and members (known 2026-02-01): base volunteers, and things of a kind compare "in the
+# order they entered, then by key" (L §4.2), so both are counted in each kind on their days. r: bo enters two plain kinds
+# in one version with one lifespan: refused. (Was REFCORE-UNSPECIFIED §5.7, writer 5's T-46.)
+=== m.tally
+model t
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+kind volunteers
+kind members
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  volunteers + [ana] lives 2026-01-01..
+
+version w
+  cite s
+  governs always
+  known 2026-02-01
+  members + [ana] lives 2026-02-01..
+
+ask q: count(k in volunteers on 2026-06-01), count(k in members on 2026-06-01)
+=== expect
+q: (1, 1)
+  cut 2026-10-18

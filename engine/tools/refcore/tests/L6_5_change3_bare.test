@@ -1,0 +1,162 @@
+# L §6.5 change 3 without its two moves: "Without the two moves, every flows that could count the adjustments, from
+# 2028-06-15 on, is a hole asking whether back pay is due (HOLE-CHANGED)" (L §8.1 wording), and each unsettled
+# remainder is listed (`adjustment:`, L §8.2; E §5 step 5).
+# The base excerpt (L §6.5) copied whole, with a header (on 2028-07-01, after the change's known date, §6.2 advance),
+# and the items change 3 names that the excerpt doesn't show, declared minimally: "The base's moves pit_advance
+# (monthly, of kind pit_advances) and pit_settle (the annual return, of kind pit_settlements, paid from the
+# taxpayer's account to fisc) aren't shown above."  pit_advance pays round(pit[p, year] / 24) on day 20 of each
+# month; pit_settle pays, on 30 April of the next year, pit[p, y] less the advances as booked ("the settlement,
+# which reads the advances as booked").  taxable = income - pit_free (income 120 000.00 PLN, pit_free 30 000.00 PLN
+# in a completion version), read `at start_of(y)` as the base's pit is (round 7).
+# Hand-checked from the stated rules: 2027 tax 12 % * 90 000 = 10 800 PLN, advances 450.00 PLN, settlement
+# 10 800 - 12 * 450 = 5 400.00 PLN.  Under change 3, tax 12 % * 84 000 = 10 080 PLN: each 2027 advance changes by
+# 420.00 - 450.00 = -30.00 PLN, each settlement by 10 080 - 5 400 - 5 400 = -720.00 PLN (E §5 step 3), all dated
+# 2028-06-15 (step 4).
+# (Writer 8: L §5.10 refuses a unit stated on an outside place, and flows of a place of unit any is refused (L §5.14.3),
+# so fisc is a thing of its own outside kind of unit PLN, tax_offices.)
+=== change3.tally
+part change3
+  tally 2
+
+source pit_2027_retro "Ustawa z 2028-06-15, art. 2: stosuje się od 2027-01-01"
+
+kind waivers: event certain
+input refund_day: date
+input act_day: date
+
+version pit_2027_refund
+  cite pit_2027_retro
+  governs 2027
+  known 2028-06-15
+  replace pit_free = 36 000.00 PLN "art. 2 ust. 1"
+  refund_day = 2029-04-30 governs always "art. 2 ust. 2"
+  act_day = 2028-06-15 governs always "tytuł ustawy"
+
+ask bare: flows(fisc, 2028-06-15 .. 2028-06-30)
+=== household.tally
+model household
+  tally 2
+  on 2028-07-01
+  start 2026-10-01
+  end 2030-12-31
+
+source household "the household's own records"
+unit PLN: currency minor 0.01
+index instalments = [equal, decreasing]
+index overpay_choices = [shorter, lower]
+index pit_brackets = [low, high]
+index countries = [pl, de]
+index tax_years = year 2026..2040
+
+kind persons
+kind jobs
+kind loans
+kind wages: event certain
+  leg cash: PLN
+
+place konto[p in persons]: accounts PLN lives 2019-05-01..
+place world: outside lives 1900-01-01..
+
+input loan_terms[l in loans]: (principal money PLN, months int, plan key instalments)
+input overpay[l in loans, m in months]: (amount money PLN, choice key overpay_choices)
+input parent[c in persons, k in persons]: bool
+input pay_dom[j in jobs]: int
+input pit_free: money PLN
+input pit_rate[b in pit_brackets]: num
+input residence[p in persons, m in months]: key countries
+input salary[j in jobs, m in months]: money PLN question "Ile wynosi pensja brutto z tej pracy w tym miesiącu?"
+input works_for[j in jobs]: key persons
+
+band pit_scale(x: num PLN): num PLN
+def net_wage[j in jobs, m in months]: money PLN = salary[j, m] at start_of(m)
+def taxable[p in persons, y in tax_years]: money PLN = max(income - pit_free, 0 PLN) at start_of(y)
+
+def pit[p in persons, y in tax_years]: money PLN at start_of(y)
+  rule base = round(pit_scale(taxable[p, y]), 1 PLN, half-up)
+  rule abroad beats base = ?"Podatek nierezydenta Polski nie jest opisany." when residence[p, month_of(start_of(y))] != pl
+
+move wage[m in months, j in jobs over m]: wages
+  on day_of(m, pay_dom[j])
+  at start_of(m)
+  leg cash from world to konto[works_for[j]] amount net_wage[j, m]
+
+version home_2026
+  cite household
+  governs 2026-10..
+  known 2026-10-19
+  persons + [ana] lives 1990-04-02..
+  persons + [ben] lives 1988-11-30..
+  jobs + [ana_acme] lives 2020-02-01..
+  jobs + [ben_bolt] lives 2021-09-01..
+  parent = false "brak dzieci"
+  pay_dom = 10 "umowy o pracę, § 5"
+  residence = pl "meldunek w Krakowie"
+  works_for[ana_acme] = ana
+  works_for[ben_bolt] = ben
+  opening[konto[ana]] = 12 400.00 PLN at 2026-10-01 start "wyciąg"
+  opening[konto[ben]] = 3 150.00 PLN at 2026-10-01 start "wyciąg"
+  pit_scale: [0, inf) = 12 % * x "art. 27"
+
+kind pit_advances: event certain
+  leg cash: PLN
+kind pit_settlements: event certain
+  leg cash: PLN
+kind tax_offices: place PLN signed outside
+place fisc: tax_offices lives 1900-01-01..
+input income: money PLN
+input adv_dom: int
+input adv_parts: int
+input settle_lag: int
+input settle_dom: int
+
+move pit_advance[m in months, p in persons on day_of(m, adv_dom)]: pit_advances
+  on day_of(m, adv_dom)
+  at start_of(m)
+  leg cash from konto[p] to fisc amount round(pit[p, year_of(start_of(m))] / adv_parts, minor(PLN), half-up)
+
+move pit_settle[y in tax_years, p in persons on day_of(month_of(add_months(end_of(y), settle_lag)), settle_dom)]: pit_settlements
+  on day_of(month_of(add_months(end_of(y), settle_lag)), settle_dom)
+  at end_of(y)
+  leg cash from konto[p] to fisc amount pit[p, y] - sum(a.cash.amount for a in pit_advances over y where a.cash.from == konto[p])
+
+version base_figures
+  cite household
+  governs 2026..
+  known 2026-10-01
+  income = 120 000.00 PLN "PIT-11"
+  pit_free = 30 000.00 PLN "art. 27"
+  adv_dom = 20 "art. 44"
+  adv_parts = 24 "art. 44"
+  settle_lag = 3 "art. 45"
+  settle_dom = 30 "art. 45"
+=== expect
+bare: ?"pit_advance[2027-01, ana] on 2027-01-20 changed after it was paid (version pit_2027_refund); is back pay due, and when?" ...
+  adjustment: pit_advance[2027-01, ana] by -30.00 PLN on 2028-06-15 (version pit_2027_refund), remaining -30.00 PLN
+  adjustment: pit_advance[2027-01, ben] by -30.00 PLN on 2028-06-15 (version pit_2027_refund), remaining -30.00 PLN
+  adjustment: pit_advance[2027-02, ana] by -30.00 PLN on 2028-06-15 (version pit_2027_refund), remaining -30.00 PLN
+  adjustment: pit_advance[2027-02, ben] by -30.00 PLN on 2028-06-15 (version pit_2027_refund), remaining -30.00 PLN
+  adjustment: pit_advance[2027-03, ana] by -30.00 PLN on 2028-06-15 (version pit_2027_refund), remaining -30.00 PLN
+  adjustment: pit_advance[2027-03, ben] by -30.00 PLN on 2028-06-15 (version pit_2027_refund), remaining -30.00 PLN
+  adjustment: pit_advance[2027-04, ana] by -30.00 PLN on 2028-06-15 (version pit_2027_refund), remaining -30.00 PLN
+  adjustment: pit_advance[2027-04, ben] by -30.00 PLN on 2028-06-15 (version pit_2027_refund), remaining -30.00 PLN
+  adjustment: pit_advance[2027-05, ana] by -30.00 PLN on 2028-06-15 (version pit_2027_refund), remaining -30.00 PLN
+  adjustment: pit_advance[2027-05, ben] by -30.00 PLN on 2028-06-15 (version pit_2027_refund), remaining -30.00 PLN
+  adjustment: pit_advance[2027-06, ana] by -30.00 PLN on 2028-06-15 (version pit_2027_refund), remaining -30.00 PLN
+  adjustment: pit_advance[2027-06, ben] by -30.00 PLN on 2028-06-15 (version pit_2027_refund), remaining -30.00 PLN
+  adjustment: pit_advance[2027-07, ana] by -30.00 PLN on 2028-06-15 (version pit_2027_refund), remaining -30.00 PLN
+  adjustment: pit_advance[2027-07, ben] by -30.00 PLN on 2028-06-15 (version pit_2027_refund), remaining -30.00 PLN
+  adjustment: pit_advance[2027-08, ana] by -30.00 PLN on 2028-06-15 (version pit_2027_refund), remaining -30.00 PLN
+  adjustment: pit_advance[2027-08, ben] by -30.00 PLN on 2028-06-15 (version pit_2027_refund), remaining -30.00 PLN
+  adjustment: pit_advance[2027-09, ana] by -30.00 PLN on 2028-06-15 (version pit_2027_refund), remaining -30.00 PLN
+  adjustment: pit_advance[2027-09, ben] by -30.00 PLN on 2028-06-15 (version pit_2027_refund), remaining -30.00 PLN
+  adjustment: pit_advance[2027-10, ana] by -30.00 PLN on 2028-06-15 (version pit_2027_refund), remaining -30.00 PLN
+  adjustment: pit_advance[2027-10, ben] by -30.00 PLN on 2028-06-15 (version pit_2027_refund), remaining -30.00 PLN
+  adjustment: pit_advance[2027-11, ana] by -30.00 PLN on 2028-06-15 (version pit_2027_refund), remaining -30.00 PLN
+  adjustment: pit_advance[2027-11, ben] by -30.00 PLN on 2028-06-15 (version pit_2027_refund), remaining -30.00 PLN
+  adjustment: pit_advance[2027-12, ana] by -30.00 PLN on 2028-06-15 (version pit_2027_refund), remaining -30.00 PLN
+  adjustment: pit_advance[2027-12, ben] by -30.00 PLN on 2028-06-15 (version pit_2027_refund), remaining -30.00 PLN
+  adjustment: pit_settle[2027, ana] by -720.00 PLN on 2028-06-15 (version pit_2027_refund), remaining -720.00 PLN
+  adjustment: pit_settle[2027, ben] by -720.00 PLN on 2028-06-15 (version pit_2027_refund), remaining -720.00 PLN
+  unfulfilled: pit_advance[2028-06, ana]
+  unfulfilled: pit_advance[2028-06, ben]
+  cut 2028-07-01

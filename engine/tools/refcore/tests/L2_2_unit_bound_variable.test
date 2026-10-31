@@ -1,0 +1,21 @@
+# Round 18, C1-27 (follows). L §2.2 Built-in names: "any id, key, record field, bound variable or rule label may take
+# one, except unit, which is also a keyword and so may name only a rule label". A bound variable named unit is
+# refused (LOAD-RESERVED). (L2_2_unit_rule_label: a rule labelled unit loads.)
+=== m.tally
+model m
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+source s "s"
+index ks = [a, b]
+input v[k in ks]: int
+def t: int = sum(v[unit] for unit in ks)
+version v1
+  cite s
+  governs always
+  known 2025-12-01
+  v[*] = 1
+ask q: t
+=== expect
+refused: LOAD-RESERVED unit is a keyword (m.tally:9)

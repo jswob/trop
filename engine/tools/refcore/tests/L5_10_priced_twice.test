@@ -1,0 +1,25 @@
+# L §5.10 (round 14): "A place's price input is named once: on its kind, or on the place itself (its place section or
+# its entry), never on both (LOAD-PRICE)"; L §8.4 LOAD-PRICE: "<x> names a price input on its kind <K> and on itself".
+# flat's kind homes is priced val and flat states priced val too. (Writer 7: was REFCORE-UNSPECIFIED §5.10, U-14.)
+=== pr.tally
+model pr
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "synthetic"
+unit PLN: currency minor 0.01
+kind homes: place PLN min 0 priced val
+input val: money PLN
+place flat: homes priced val lives 2026-01-01..
+
+ask q: value(flat, 2026-03-01) in PLN law 2026-06-30
+
+version v1
+  cite s
+  governs always
+  known 2026-01-01
+  val = 5.00 PLN "own"
+=== expect
+refused: LOAD-PRICE flat names a price input on its kind homes and on itself ...

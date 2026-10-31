@@ -1,0 +1,35 @@
+t (s = settle[2027-01, pola]): (2027-02-01, 900.00 PLN)
+  cut 2027-01-01
+t (s = settle[2027-02, rena]): (2027-03-01, 900.00 PLN)
+  cut 2027-01-01
+t (s = settle[2027-03, pola]): (2027-04-01, 900.00 PLN)
+  cut 2027-01-01
+t (s = settle[2027-04, rena]): (2027-05-01, 900.00 PLN)
+  cut 2027-01-01
+t (s = settle[2027-05, pola]): (2027-06-01, 900.00 PLN)
+  cut 2027-01-01
+t (s = settle[2027-06, rena]): (2027-07-01, 900.00 PLN)
+  cut 2027-01-01
+t (s = settle[2027-07, pola]): (2027-08-01, 900.00 PLN)
+  cut 2027-01-01
+t (s = settle[2027-08, rena]): (2027-09-01, 900.00 PLN)
+  cut 2027-01-01
+t (s = settle[2027-09, pola]): (2027-10-01, 900.00 PLN)
+  cut 2027-01-01
+t (s = settle[2027-10, rena]): (2027-11-01, 900.00 PLN)
+  cut 2027-01-01
+t (s = settle[2027-11, pola]): (2027-12-01, 900.00 PLN)
+  cut 2027-01-01
+warning: WARN-NEGATIVE ledger[pola] is below zero from 2027-01-01
+warning: WARN-NEGATIVE ledger[rena] is below zero from 2027-02-01
+warning: WARN-NEGATIVE ledger[pola] is below zero from 2027-03-01
+warning: WARN-NEGATIVE ledger[rena] is below zero from 2027-04-01
+warning: WARN-NEGATIVE ledger[pola] is below zero from 2027-05-01
+warning: WARN-NEGATIVE ledger[rena] is below zero from 2027-06-01
+warning: WARN-NEGATIVE ledger[pola] is below zero from 2027-07-01
+warning: WARN-NEGATIVE ledger[rena] is below zero from 2027-08-01
+warning: WARN-NEGATIVE ledger[pola] is below zero from 2027-09-01
+warning: WARN-NEGATIVE ledger[rena] is below zero from 2027-10-01
+warning: WARN-NEGATIVE ledger[pola] is below zero from 2027-11-01
+warning: WARN-NEGATIVE ledger[rena] is below zero from 2027-12-01
+

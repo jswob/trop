@@ -1,0 +1,13 @@
+# L §8.3 LOAD-LABEL: "beats names no rule <label>".
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+def x: int
+  rule base = 0
+  rule other beats nothing = 1
+=== expect
+refused: LOAD-LABEL ...

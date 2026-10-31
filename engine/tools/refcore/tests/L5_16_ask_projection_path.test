@@ -1,0 +1,52 @@
+# L §5.16: "An ask line's own projection is no decision: it reads an amount after t by its random clause, by the
+# line's query, or on a path by that path's sample (§5.14.1)". The reality of L5_16_projection_random with no
+# clause: on path 1 the projection reads the samples, here every address of spend pinned to 900.00 PLN (L §5.16 Pins
+# `with sample growth[*] = e`): 10 000 - 3 * 900 = 7 300.00 PLN (r5); the line's query over the paths is the same
+# on both paths, standard error 0 (r6).
+=== m.tally
+model r
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source own "own"
+unit PLN: currency minor 0.01
+kind spends: event certain
+  leg cash: PLN
+place konto: accounts PLN lives 2020-01-01..
+place shop: outside lives 1900-01-01..
+input spend_mu: money PLN
+input spend_sd: money PLN
+input spend_dom: int
+def spend[m in months]: dist PLN = normal(spend_mu, spend_sd) to 1e-9 at end_of(m)
+
+move buy[m in months]: spends
+  on day_of(m, spend_dom)
+  at end_of(m)
+  leg cash from konto to shop amount round(spend[m], minor(PLN), half-even)
+
+version v
+  cite own
+  governs 2026..
+  known 2026-01-01
+  spend_mu = 1 000.00 PLN "own"
+  spend_sd = 100.00 PLN "own"
+  spend_dom = 15 "own"
+  opening[konto] = 10 000.00 PLN at 2026-01-01 start "statement"
+
+ask r5: bal(konto, 2026-03-31) from 2026-01-01 with sample spend[*] = 900.00 PLN paths 2 seed 1 path 1
+ask r6: mean(bal(konto, 2026-03-31) from 2026-01-01) with sample spend[*] = 900.00 PLN paths 2 seed 1
+=== expect
+r5: 7 300.00 PLN
+  pinned sample: spend[*] = 900.00 PLN
+  held: spend_dom = 15 (v), read for 2026-02-01
+  held: spend_dom = 15 (v), read for 2026-03-01
+  held: spend_dom = 15 (v), read for 2026-04-01
+  cut 2026-01-01
+r6: 7 300 PLN (standard error 0; 2 paths; horizon 2026-04-01)
+  pinned sample: spend[*] = 900.00 PLN
+  held: spend_dom = 15 (v), read for 2026-02-01
+  held: spend_dom = 15 (v), read for 2026-03-01
+  held: spend_dom = 15 (v), read for 2026-04-01
+  cut 2026-01-01

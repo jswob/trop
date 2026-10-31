@@ -1,0 +1,30 @@
+# Round 18, C1-2 and C1-3 (follows). L §3.2 Inline figures now lists what §7.1 does: "offsets in key arithmetic (m - 1)
+# and the same integer in their guards, precision steps, key literals in key positions, a cited solve's bracket and the
+# integer of a code". a reads v[3]; g reads v[k - 2] behind pos(k) > 2; c is sqrt(4) to 1e-9; p is 12 %/year a month,
+# nominal 12 (L §3.3): 0.01.
+=== m.tally
+model m
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+source s "s"
+index ks = int 1..5
+input v[k in ks]: num
+input r: rate
+def a: num = v[3]
+def g[k in ks]: num
+  rule late = v[k - 2] when pos(k) > 2
+  rule early = 0 when pos(k) <= 2
+def c: num = sqrt(v[4]) to 1e-9
+def p: num = periodic(r, month, nominal 12)
+version v1
+  cite s
+  governs always
+  known 2025-12-01
+  v[*] = 4
+  r = 12 %/year
+ask q: a, g[3], g[1], c, p
+=== expect
+q: (4, 4, 0, 2, 0.01)
+  cut 2026-12-31

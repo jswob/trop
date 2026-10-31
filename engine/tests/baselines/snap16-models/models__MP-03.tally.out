@@ -1,0 +1,90 @@
+a1_substrate [mp03_own_gift = excluded]: 800 000.00 PLN
+  reading: mp03_own_gift = excluded
+  law date 2026-10-19, cut 2026-10-19
+a1_substrate [mp03_own_gift = added]: 850 000.00 PLN
+  reading: mp03_own_gift = added
+  law date 2026-10-19, cut 2026-10-19
+a2_intestate: 0.5
+  assumed: the mini-case mentions no spouse; the article's earlier two-child illustration says 'małżonek nie żyje' (spouse_survives[mini])
+  law date 2026-10-19, cut 2026-10-19
+a3_fraction: 0.5
+  law date 2026-10-19, cut 2026-10-19
+a4_zachowek [mp03_own_gift = excluded, mp03_round = *]: 200 000.00 PLN
+  assumed: the mini-case mentions no spouse; the article's earlier two-child illustration says 'małżonek nie żyje' (spouse_survives[mini])
+  reading: mp03_own_gift = excluded
+  law date 2026-10-19, cut 2026-10-19
+a4_zachowek [mp03_own_gift = added, mp03_round = *]: 212 500.00 PLN
+  assumed: the mini-case mentions no spouse; the article's earlier two-child illustration says 'małżonek nie żyje' (spouse_survives[mini])
+  reading: mp03_own_gift = added
+  law date 2026-10-19, cut 2026-10-19
+a5_to_pay [mp03_own_gift = excluded, mp03_round = *]: 150 000.00 PLN
+  assumed: the mini-case mentions no spouse; the article's earlier two-child illustration says 'małżonek nie żyje' (spouse_survives[mini])
+  reading: mp03_own_gift = excluded
+  law date 2026-10-19, cut 2026-10-19
+a5_to_pay [mp03_own_gift = added, mp03_round = *]: 162 500.00 PLN
+  assumed: the mini-case mentions no spouse; the article's earlier two-child illustration says 'małżonek nie żyje' (spouse_survives[mini])
+  reading: mp03_own_gift = added
+  law date 2026-10-19, cut 2026-10-19
+a6_rule_plain: 0.25
+  assumed: the mini-case mentions no spouse; the article's earlier two-child illustration says 'małżonek nie żyje' (spouse_survives[mini])
+  law date 2026-10-19, cut 2026-10-19
+a7_rule_protected: 1/3 (0.333333333333333)
+  assumed: the mini-case mentions no spouse; the article's earlier two-child illustration says 'małżonek nie żyje' (spouse_survives[mini])
+  pinned: protected[anna] = true
+  law date 2026-10-19, cut 2026-10-19
+gp1_zachowek [mp03_own_gift = *, mp03_round = *]: 150 000.00 PLN
+  assumed: Przykład 1 names only the two children (spouse_survives[gp1])
+  given: substrate[gp1] = 600 000.00 PLN (gazeta_examples)
+  law date 2026-10-19, cut 2026-10-19
+gp2_zachowek [mp03_own_gift = *, mp03_round = *]: 600 000.00 PLN
+  assumed: Przykład 2 names only the child and gives the share as 1/1 (spouse_survives[gp2])
+  given: substrate[gp2] = 900 000.00 PLN (gazeta_examples)
+  law date 2026-10-19, cut 2026-10-19
+gp3_theoretical [mp03_own_gift = *, mp03_round = *]: 200 000.00 PLN
+  given: fraction[gp3_heir] = 0.5 (gazeta_examples)
+  given: intestate[gp3_heir] = 0.5 (gazeta_examples)
+  given: substrate[gp3] = 800 000.00 PLN (gazeta_examples)
+  law date 2026-10-19, cut 2026-10-19
+gp3_to_pay [mp03_own_gift = *, mp03_round = *]: 140 000.00 PLN
+  given: fraction[gp3_heir] = 0.5 (gazeta_examples)
+  given: intestate[gp3_heir] = 0.5 (gazeta_examples)
+  given: substrate[gp3] = 800 000.00 PLN (gazeta_examples)
+  law date 2026-10-19, cut 2026-10-19
+rc1_three [mp03_round = *]: (100 000.00 PLN, 100 000 PLN, 100 000 PLN)
+  law date 2026-10-19, cut 2026-10-19
+rc2_five [mp03_round = down]: (66 666.00 PLN, 0.25, 100 000 PLN, 60 000 PLN)
+  reading: mp03_round = down
+  law date 2026-10-19, cut 2026-10-19
+rc2_five [mp03_round = half-up]: (66 667.00 PLN, 0.25, 100 000 PLN, 60 000 PLN)
+  reading: mp03_round = half-up
+  law date 2026-10-19, cut 2026-10-19
+rc3_one [mp03_round = *]: (200 000.00 PLN, 200 000 PLN, 200 000 PLN)
+  law date 2026-10-19, cut 2026-10-19
+sz_fraction (k = sz_child): 1/6 (0.166666666666667)
+  assumed: the report mentions no spouse (spouse_survives[szczecin])
+  law date 2026-10-19, cut 2026-10-19
+sz_fraction (k = sz_grandchild): 1/18 (0.0555555555555556)
+  assumed: the report mentions no spouse (spouse_survives[szczecin])
+  law date 2026-10-19, cut 2026-10-19
+sz_intestate (k = sz_child): 1/3 (0.333333333333333)
+  assumed: the report mentions no spouse (spouse_survives[szczecin])
+  law date 2026-10-19, cut 2026-10-19
+sz_intestate (k = sz_grandchild): 1/9 (0.111111111111111)
+  assumed: the report mentions no spouse (spouse_survives[szczecin])
+  law date 2026-10-19, cut 2026-10-19
+sz_zachowek (k = sz_child) [mp03_own_gift = *, mp03_round = down]: 31 916.66 PLN
+  assumed: the report mentions no spouse (spouse_survives[szczecin])
+  reading: mp03_round = down
+  law date 2026-10-19, cut 2026-10-19
+sz_zachowek (k = sz_child) [mp03_own_gift = *, mp03_round = half-up]: 31 916.67 PLN
+  assumed: the report mentions no spouse (spouse_survives[szczecin])
+  reading: mp03_round = half-up
+  law date 2026-10-19, cut 2026-10-19
+sz_zachowek (k = sz_grandchild) [mp03_own_gift = *, mp03_round = down]: 10 638.88 PLN
+  assumed: the report mentions no spouse (spouse_survives[szczecin])
+  reading: mp03_round = down
+  law date 2026-10-19, cut 2026-10-19
+sz_zachowek (k = sz_grandchild) [mp03_own_gift = *, mp03_round = half-up]: 10 638.89 PLN
+  assumed: the report mentions no spouse (spouse_survives[szczecin])
+  reading: mp03_round = half-up
+  law date 2026-10-19, cut 2026-10-19

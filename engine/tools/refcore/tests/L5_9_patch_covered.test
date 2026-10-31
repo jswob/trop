@@ -1,0 +1,46 @@
+# L §5.9 Rows replaced: replace rows that "all take intervals of the table they replace" leave "that table ... with
+# those rows' values replaced", applied "to the table in force on each day". L5_9_patch_no_table_load with v2 governing
+# 2027 only, inside v1's span: it loads; in 2027 b(15) lies in (10, 20], which v2 doesn't patch: 2 (q1); in 2028 no
+# table is in force: a hole (q2, L §4.6 step 5); in 2026 v1's, 2 (q3).
+=== m.tally
+model t
+  tally 2
+  on 2027-01-01
+  start 2026-01-01
+  end 2028-12-31
+
+source s "s"
+band b(n: int): int
+input mid: int
+
+version v1
+  cite s
+  governs 2026..2027
+  known 2025-12-01
+  b: [0, 10] = 1
+  b: (10, 20] = 2
+  b: (20, inf) = 3
+
+version facts
+  cite s
+  governs always
+  known 2025-12-01
+  mid = 15
+
+version v2
+  cite s
+  governs 2027
+  known 2026-12-01
+  replace b: [0, 10] = 5
+  replace b: (20, inf) = 6
+
+ask q1: b(mid) law 2027-06-30
+ask q2: b(mid) law 2028-06-30
+ask q3: b(mid) law 2026-06-30
+=== expect
+q1: 2
+  law date 2027-06-30, cut 2027-01-01
+q2: ?"b: no value at 2028-06-30" (b)
+  law date 2028-06-30, cut 2027-01-01
+q3: 2
+  law date 2026-06-30, cut 2027-01-01

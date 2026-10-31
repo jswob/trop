@@ -1,0 +1,6 @@
+each_set (s = o): 4 900 DUK
+  law date 2022-12-31, cut 2026-10-25
+each_set (s = n): 6 000 DUK
+  law date 2022-12-31, cut 2026-10-25
+lower_kept: (4 900 DUK, o)
+  law date 2022-12-31, cut 2026-10-25

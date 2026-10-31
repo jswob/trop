@@ -1,0 +1,43 @@
+# L §2.3 Calls: "A call takes a built-in's name (§2.2) or a band's id, with the prefixes that name the band outside its
+# regime, its member or its base: ... a.b(x) for a member's (§6.1)"; L §5.9 Keyed bands: "the band is called b[k](x)".
+# ana's keyed band of L5_9_keyed read from the joint model as a.b[k](x): class c1 at 12 gives 2, c2 gives 5 with upper
+# end 20, as ana alone gives (L §6.1 "joining changes no member's answer").
+=== options pin=bytes
+=== joint.tally
+model family
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+  use a = "ana.tally" sha256 "45a28d6bffceb27af279385c07ab34c94d674bf6966cac54e916f99e86e4bbcc"
+
+ask j1: a.b[c1](a.x), a.b[c2](a.x), band_hi(a.b[c2], a.x) law 2026-06-30
+=== ana.tally
+model ana
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+index classes = [c1, c2]
+band b[k in classes](n: int): int
+input x: int
+
+version v
+  cite s
+  governs 2026..
+  known 2025-12-01
+  b[c1]: [0, 10) = 1
+  b[c1]: [10, inf) = 2
+  b[c2]: [0, 20) = 5
+  b[c2]: [20, inf) = 6
+  x = 12
+
+ask q1: b[c1](x), b[c2](x), band_hi(b[c2], x) law 2026-06-30
+=== expect
+j1: (2, 5, 20)
+  held: a.b[c1] row [10, inf) (a.v), read for 2026-06-30
+  held: a.b[c2] row [0, 20) (a.v), read for 2026-06-30
+  held: a.x = 12 (a.v), read for 2026-06-30
+  law date 2026-06-30, cut 2026-01-01

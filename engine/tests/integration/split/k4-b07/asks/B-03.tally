@@ -1,0 +1,11 @@
+part asks_b03
+  tally 2
+  note "B-03 · Kessel's florens, 2025 (questions.md): as of 2025-12-31, known as of 2026-01-07. The November invoice is FV 026/2025 (faktura-sales-2022-2025.csv)."
+
+ask b03_invoices: rev_flr[j], vat_flr[j], flr_fate[j] for j in flr_invoices where year_of(sale_flr[j].issued) == 2025 law 2025-12-31 as known 2026-01-07
+
+ask b03_sold: duk_got[j], credited[j] for j in flr_invoices where flr_fate[j] == sold law 2025-12-31 as known 2026-01-07
+
+ask b03_lazur: bal(lazur, 2025-12-31), round(bal(lazur, 2025-12-31) * hr4_fx[2025-12-31], minor(DUK), hr4_round) law 2025-12-31 as known 2026-01-07
+
+ask b03_november: bal(inv_owed_flr[fv_026_2025], d), round(bal(inv_owed_flr[fv_026_2025], d) * hr4_fx[d], minor(DUK), hr4_round) for d in [2025-11-30, 2025-12-31] law 2025-12-31 as known 2026-01-07

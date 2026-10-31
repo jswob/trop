@@ -1,0 +1,80 @@
+model own11_p22_decision
+  tally 2
+  on 2026-10-30
+  start 2026-01-01
+  end 2026-01-31
+  note "OWN-11 P-22 (b): the twin of P-22 (a): the same transfers, the first a plan and the return the household's decision, which reads acc2 and so acts after the plan (LANGUAGE 5.14.1, 5.14.2)."
+  note "The day's order places the decision, so the takes compute exactly; a cycle that held a plan would be refused (RUN-CYCLE)."
+
+source card "Probe card OWN-11 (made up): story and rules"
+
+source bank "The couple's bank: its January 2026 rows (made up)"
+
+unit DUK: currency minor 0.01
+
+kind persons: parties
+
+kind inheritances: transfers
+  attr heir: key parties
+
+kind savings: place DUK min 0
+  owned by arrive
+  step minor(DUK)
+  takes k for w prorata ties by (if k.owner == ania then 0 else 1)
+
+place acc2: savings lives 2026-01-01..
+
+place sav: savings lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input bank_rows: observed
+
+def arrive[m in events, p in parties]: num at m.day
+  note "rule 3: an inheritance the heir's; rule 1: money moved between the two keeps its labels"
+  rule inherited v card_rules = (if p == m.heir then 1 else 0) when m in inheritances
+  rule moved beats inherited v card_rules = m.cash.amount of p / m.cash.amount when m in transfers and m.cash.from in savings
+
+input back_amount: money DUK
+
+input back_day: date
+
+input out_amount: money DUK
+
+input out_day: date
+
+move back: transfers
+  on back_day
+  at back_day
+  reads acc2
+  leg cash from acc2 to sav amount min(back_amount, bal(acc2))
+  note "the return, decided after the first transfer: at most what acc2 holds"
+
+move out: transfers
+  on out_day
+  leg cash from sav to acc2 amount out_amount
+  note "the first transfer, a plan"
+
+ask q_parts: bal(x, 2026-01-31) of p for x in savings on 2026-01-31, p in persons on 2026-01-31
+
+version card_cast
+  cite card
+  known 2026-01-01
+  persons + [ania] lives 1988-04-12..
+  persons + [tomek] lives 1986-09-03..
+
+version card_rules
+  cite card
+  governs always
+  known 2026-01-01
+  back_amount = 300.00 "the return"
+  back_day = 2026-01-15 "the return"
+  out_amount = 500.00 "the first transfer"
+  out_day = 2026-01-15 "the first transfer"
+
+version records_2026_01
+  cite bank
+  governs 2026-01
+  known 2026-02-03
+  bank_rows[r1] = (on: 2026-01-05, kind: inheritances, leg cash from world to sav amount 1000.00 DUK, heir: ania) "line 1"
+  bank_rows[r2] = (on: 2026-01-06, kind: inheritances, leg cash from world to acc2 amount 1000.00 DUK, heir: tomek) "line 2"

@@ -1,0 +1,51 @@
+model num01
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+  note "Probe NUM-01: amounts carry their currency; a monthly instalment from a yearly nominal rate."
+
+source probe_card "Probe card NUM-01 (made-up story and rules)"
+
+unit DUK: currency minor 0.01
+
+unit FLR: currency minor 0.01
+
+input credit_months: int
+
+input credit_principal: money DUK
+
+input credit_rate: rate
+
+input cur_acct: money DUK
+
+input flr_acct: money FLR
+
+input flr_rate: num DUK/FLR question "At what rate do FLR convert to DUK? No rate is stated."
+
+def instalment: money DUK at reader
+  note "rule 2: a level (annuity) instalment, rounded half up to 0.01"
+  rule base v card = round(credit_principal * monthly_rate / (1 - 1 / pow(1 + monthly_rate, credit_months)), minor(DUK), half-up)
+
+def monthly_rate: num at reader
+  note "rule 2: nominal yearly, compounded monthly: a twelfth of it"
+  rule base v card = periodic(credit_rate, month, nominal 12)
+
+def total_duk: num DUK at reader
+  note "rule 1: amounts in two currencies are added only at a stated rate"
+  rule base v card = cur_acct + flr_acct * flr_rate
+
+ask q_a_total: total_duk law 2026-10-25
+
+ask q_b_instalment: instalment law 2026-10-25
+
+version card
+  cite probe_card
+  governs always
+  known 2026-10-25
+  note "The card's story and rules: a made-up case's stipulations, known from the model's on (L §4.5)."
+  credit_months = 12 "story: over 12 months"
+  credit_principal = 12000.00 "story: a credit of 12 000.00 DUK"
+  credit_rate = 12 %/year "story: a nominal 12 % a year"
+  cur_acct = 1250.00 "story: current account"
+  flr_acct = 300.00 "story: foreign-currency account"

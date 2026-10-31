@@ -1,0 +1,20 @@
+# Fault f_low (writer 7): L §5.14.1 defines low(x, span) from t as min(bal(x, d) from t for d in days where ...),
+# "with the same clauses": with uncertain counts the uncertain instances in low as in the bal it is the min of, so the
+# two are equal. refcore printed (0.00 DUK, 1.00 DUK) for them: low dropped with uncertain.
+=== f.tally
+model f
+  tally 2
+  on 2025-05-15
+  start 2025-05-15
+  end 2025-06-30
+unit DUK: currency minor 0.01
+kind promises: transfers uncertain
+place konto: accounts DUK lives 2025-05-15..
+place world: outside lives 2025-05-15..
+move back[m in months]: promises
+  on start_of(m)
+  leg cash from world to konto amount 1
+ask q: (low(konto, 2025-06-01 .. 2025-06-30) from 2025-05-15 with uncertain) == min(bal(konto, d) from 2025-05-15 with uncertain for d in days where d >= 2025-06-01)
+=== expect
+q: true
+...

@@ -1,0 +1,45 @@
+# L §2.5 (round 14): LOAD-KEY "for a literal where the range's ends and step are literals, which load sees; otherwise
+# RUN-KEY where the key is read, and a fulfils or a same side at a key the range doesn't hold names an instance that
+# doesn't exist, RUN-RECORD". pay is keyed by 1 .. cnt (cnt a row, 3): pay[5] names no instance, so the observation
+# that fulfils it is refused (L §5.19 RUN-RECORD), and the balance that books it. (Writer 6's whole-model LOAD-KEY at
+# run is not adopted, round 14's U-8.)
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2019-05-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input cnt: int
+input first_day: date
+input bank: observed
+
+move pay[n in 1 .. cnt]: transfers
+  on add_days(first_day, n)
+  leg cash from konto to world amount amt
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 10.00 PLN "s"
+  cnt = 3 "s"
+  first_day = 2026-01-01 "s"
+  opening[konto] = 100.00 PLN at 2026-01-01 start "s"
+
+version st
+  cite s
+  governs 2026-01
+  known 2026-02-01
+  covers konto
+  bank[r1] = (on: 2026-01-03, kind: transfers, leg cash from konto to world amount 12.00 PLN, fulfils: pay[5]) "l1"
+
+ask q: bal(konto, 2026-01-31)
+=== expect
+q: refused: RUN-RECORD observation bank[r1] fulfils pay[5], which doesn't exist ...
+...

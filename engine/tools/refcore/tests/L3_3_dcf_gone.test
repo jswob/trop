@@ -1,0 +1,16 @@
+# L §2.2 codes: "the day count act365 (§3.3)" is the only daycount code (writer 8: act360, actact, e30_360,
+# bond30_360 and us30_360 are gone); L §3.3 "A text that needs another day count writes a def over the two dates".
+# A word in a code position that is no code of its family is a value of the wrong type: LOAD-UNIT (L §8.3).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+ask a: dcf(2026-02-28, 2026-03-31, us30_360)
+=== expect
+refused: LOAD-UNIT ...

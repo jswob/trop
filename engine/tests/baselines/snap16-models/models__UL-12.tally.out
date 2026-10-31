@@ -1,0 +1,104 @@
+q01_share_pct (w = dwelling) [ul12_pct = *]: 80
+  assumed: marital status is not given; the example uses Peder's own assets and debt only (has_spouse)
+  law date 2026-10-18, cut 2026-10-18
+q01_share_pct (w = fund) [ul12_pct = down]: 16.66
+  assumed: marital status is not given; the example uses Peder's own assets and debt only (has_spouse)
+  reading: ul12_pct = down
+  law date 2026-10-18, cut 2026-10-18
+q01_share_pct (w = fund) [ul12_pct = half-up]: 16.67
+  assumed: marital status is not given; the example uses Peder's own assets and debt only (has_spouse)
+  reading: ul12_pct = half-up
+  law date 2026-10-18, cut 2026-10-18
+q01_share_pct (w = deposit) [ul12_pct = *]: 3.33
+  assumed: marital status is not given; the example uses Peder's own assets and debt only (has_spouse)
+  law date 2026-10-18, cut 2026-10-18
+q02_share_total [ul12_pct = *]: 100
+  assumed: marital status is not given; the example uses Peder's own assets and debt only (has_spouse)
+  law date 2026-10-18, cut 2026-10-18
+q03_taxable_value (y = 2023, w = dwelling): 1 200 000 NOK
+  law date 2026-10-18, cut 2026-10-18
+q03_taxable_value (y = 2023, w = fund): 800 000 NOK
+  assumed: the example discounts the whole value of the fund units, so they are taken as wholly a share component (aksjeandel)
+  law date 2026-10-18, cut 2026-10-18
+q03_taxable_value (y = 2023, w = deposit): 200 000 NOK
+  law date 2026-10-18, cut 2026-10-18
+q03_taxable_value (y = 2024, w = dwelling): 1 200 000 NOK
+  law date 2026-10-18, cut 2026-10-18
+q03_taxable_value (y = 2024, w = fund): 800 000 NOK
+  assumed: the example discounts the whole value of the fund units, so they are taken as wholly a share component (aksjeandel)
+  law date 2026-10-18, cut 2026-10-18
+q03_taxable_value (y = 2024, w = deposit): 200 000 NOK
+  law date 2026-10-18, cut 2026-10-18
+q04_tv_total (y = 2023): 2 200 000 NOK
+  assumed: the example discounts the whole value of the fund units, so they are taken as wholly a share component (aksjeandel)
+  law date 2026-10-18, cut 2026-10-18
+q04_tv_total (y = 2024): 2 200 000 NOK
+  assumed: the example discounts the whole value of the fund units, so they are taken as wholly a share component (aksjeandel)
+  law date 2026-10-18, cut 2026-10-18
+q05_debt_share (w = dwelling): 1 440 000 NOK
+  assumed: marital status is not given; the example uses Peder's own assets and debt only (has_spouse)
+  law date 2026-10-18, cut 2026-10-18
+q05_debt_share (w = fund): 300 000 NOK
+  assumed: marital status is not given; the example uses Peder's own assets and debt only (has_spouse)
+  law date 2026-10-18, cut 2026-10-18
+q05_debt_share (w = deposit): 60 000 NOK
+  assumed: marital status is not given; the example uses Peder's own assets and debt only (has_spouse)
+  law date 2026-10-18, cut 2026-10-18
+q06_deductible (y = 2023, w = dwelling): 1 440 000 NOK
+  assumed: marital status is not given; the example uses Peder's own assets and debt only (has_spouse)
+  law date 2026-10-18, cut 2026-10-18
+q06_deductible (y = 2023, w = fund): 240 000 NOK
+  assumed: marital status is not given; the example uses Peder's own assets and debt only (has_spouse)
+  law date 2026-10-18, cut 2026-10-18
+q06_deductible (y = 2023, w = deposit): 60 000 NOK
+  assumed: marital status is not given; the example uses Peder's own assets and debt only (has_spouse)
+  law date 2026-10-18, cut 2026-10-18
+q06_deductible (y = 2024, w = dwelling): 1 440 000 NOK
+  assumed: marital status is not given; the example uses Peder's own assets and debt only (has_spouse)
+  law date 2026-10-18, cut 2026-10-18
+q06_deductible (y = 2024, w = fund): 240 000 NOK
+  assumed: marital status is not given; the example uses Peder's own assets and debt only (has_spouse)
+  law date 2026-10-18, cut 2026-10-18
+q06_deductible (y = 2024, w = deposit): 60 000 NOK
+  assumed: marital status is not given; the example uses Peder's own assets and debt only (has_spouse)
+  law date 2026-10-18, cut 2026-10-18
+q07_dd_total (y = 2023): 1 740 000 NOK
+  assumed: marital status is not given; the example uses Peder's own assets and debt only (has_spouse)
+  law date 2026-10-18, cut 2026-10-18
+q07_dd_total (y = 2024): 1 740 000 NOK
+  assumed: marital status is not given; the example uses Peder's own assets and debt only (has_spouse)
+  law date 2026-10-18, cut 2026-10-18
+q08_net_item (y = 2023, w = dwelling): -240 000 NOK
+  assumed: marital status is not given; the example uses Peder's own assets and debt only (has_spouse)
+  law date 2026-10-18, cut 2026-10-18
+q08_net_item (y = 2023, w = fund): 560 000 NOK
+  assumed: marital status is not given; the example uses Peder's own assets and debt only (has_spouse)
+  assumed: the example discounts the whole value of the fund units, so they are taken as wholly a share component (aksjeandel)
+  law date 2026-10-18, cut 2026-10-18
+q08_net_item (y = 2023, w = deposit): 140 000 NOK
+  assumed: marital status is not given; the example uses Peder's own assets and debt only (has_spouse)
+  law date 2026-10-18, cut 2026-10-18
+q08_net_item (y = 2024, w = dwelling): -240 000 NOK
+  assumed: marital status is not given; the example uses Peder's own assets and debt only (has_spouse)
+  law date 2026-10-18, cut 2026-10-18
+q08_net_item (y = 2024, w = fund): 560 000 NOK
+  assumed: marital status is not given; the example uses Peder's own assets and debt only (has_spouse)
+  assumed: the example discounts the whole value of the fund units, so they are taken as wholly a share component (aksjeandel)
+  law date 2026-10-18, cut 2026-10-18
+q08_net_item (y = 2024, w = deposit): 140 000 NOK
+  assumed: marital status is not given; the example uses Peder's own assets and debt only (has_spouse)
+  law date 2026-10-18, cut 2026-10-18
+q09_net_total (y = 2023): 460 000 NOK
+  assumed: marital status is not given; the example uses Peder's own assets and debt only (has_spouse)
+  assumed: the example discounts the whole value of the fund units, so they are taken as wholly a share component (aksjeandel)
+  law date 2026-10-18, cut 2026-10-18
+q09_net_total (y = 2024): 460 000 NOK
+  assumed: marital status is not given; the example uses Peder's own assets and debt only (has_spouse)
+  assumed: the example discounts the whole value of the fund units, so they are taken as wholly a share component (aksjeandel)
+  law date 2026-10-18, cut 2026-10-18
+q10_debt_reduction (y = 2023): 60 000 NOK
+  assumed: marital status is not given; the example uses Peder's own assets and debt only (has_spouse)
+  law date 2026-10-18, cut 2026-10-18
+q10_debt_reduction (y = 2024): 60 000 NOK
+  assumed: marital status is not given; the example uses Peder's own assets and debt only (has_spouse)
+  law date 2026-10-18, cut 2026-10-18

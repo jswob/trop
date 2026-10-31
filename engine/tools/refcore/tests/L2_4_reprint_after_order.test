@@ -1,0 +1,39 @@
+# GD-24 (round 19, writer 10): settled; was REFCORE-UNSPECIFIED §2.4. L §2.4: a row read `after m` sorts "after the dated ones of its target and keys".
+# The old comment:
+# L §2.4 sorts version items "then by the start of their own governs span or their instant"; a reading `after m` (L
+# §4.6: "just after movement m") has its place in time only on m's day, which the text doesn't hold (m's day is a
+# value), so its order against `at D end` of one target and keys is not stated: REFCORE-UNSPECIFIED (it decides the
+# canonical text, so the hash).
+=== options reprint
+=== m.tally
+model m
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+place konto: accounts PLN lives 2019-01-01..
+
+version r
+  cite s
+  known 2026-03-02
+  anchor konto
+  stated[konto] = 5.00 PLN at 2026-03-01 end "wyciąg"
+  stated[konto] = 3.00 PLN after pay[2026-03] "wyciąg"
+=== expect
+--- m.tally
+model m
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+place konto: accounts PLN lives 2019-01-01..
+
+version r
+  cite s
+  known 2026-03-02
+  anchor konto
+  stated[konto] = 5 PLN at 2026-03-01 end "wyciąg"
+  stated[konto] = 3 PLN after pay[2026-03] "wyciąg"
+sha256 ...

@@ -1,0 +1,39 @@
+# Round 18, C1-16 (follows). L §4.3: "A read through a def that states its own at needs none, unless that at itself
+# reads something law-dated, which is read at the line's law date (at e, below)"; "the reads inside e are made at the
+# law date of the read that asks for the def (its reader's, or the ask's law)". q reads surprise_dom at 2026-03-01
+# (10), so fee at 2026-03-10 (5); q2 at 2026-08-01 (20), so fee at 2026-03-20 (7). L4_3_at_reads_lawdated_no_law: the
+# line without law is LOAD-LAWDATE.
+=== m.tally
+model m
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+source s "s"
+unit PLN: currency minor 0.01
+input surprise_dom: int
+input fee: money PLN
+def charged[m in months]: money PLN = fee at day_of(m, surprise_dom)
+version v1
+  cite s
+  governs 2026-01-01..2026-06-30
+  known 2025-12-01
+  surprise_dom = 10
+version v2
+  cite s
+  governs 2026-07-01..
+  known 2025-12-01
+  surprise_dom = 20
+version f
+  cite s
+  governs always
+  known 2025-12-01
+  fee = 5 governs 2026-01-01..2026-03-15
+  fee = 7 governs 2026-03-16..
+ask q: charged[2026-03] law 2026-03-01
+ask q2: charged[2026-03] law 2026-08-01
+=== expect
+q: 5.00 PLN
+  law date 2026-03-01, cut 2026-12-31
+q2: 7.00 PLN
+  law date 2026-08-01, cut 2026-12-31

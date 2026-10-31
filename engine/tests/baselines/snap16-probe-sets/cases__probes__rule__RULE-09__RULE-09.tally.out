@@ -1,0 +1,3 @@
+scenario inpath: refused: LOAD-ASKONLY share(ruined_on_path) has no closed form outside an ask (unit/probes/rule/RULE-09/inpath.tally:10)
+q_a: (0.4, true)
+  law date 2025-01-01, cut 2025-01-01

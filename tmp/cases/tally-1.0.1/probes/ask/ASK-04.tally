@@ -1,0 +1,32 @@
+model ask04
+  tally 1
+  on 2026-10-25
+  note "Probe ASK-04: which loan is better? Both costs and the breakeven rate, no choice."
+
+source probe_card "Probe card ASK-04 (made-up story and rules)"
+
+index loan = [loan_a, loan_b]
+
+input fee[l in loan]: money DUK
+input loan_rate[l in loan]: rate simple /year
+input principal[l in loan]: money DUK
+
+def cost[l in loan]: num DUK
+  note "a loan's cost: its fee plus a year's interest"
+  rule base v card = fee[l] + principal[l] * periodic(loan_rate[l], year)
+
+bound no_choice "which loan is better" because "rule 1: a question asking for a choice gets no choice; it gets both consequences and the rate at which they are equal"
+
+ask q_asked: no_choice, cost[loan_a], cost[loan_b]
+
+ask q_breakeven: solve loan_rate[loan_b] in [0, 0.2] to 0.0001: cost[loan_b] = cost[loan_a]
+
+version card
+  cite probe_card
+  known 2026-10-25
+  note "The card states the interest only as 6 % and 8 % for a year; the rows read them as simple yearly rates, which over one year equal effective ones."
+  fee[loan_a] = 500.00 "story: loan A's fee"
+  fee[loan_b] = 0.00 "story: loan B, no fee"
+  loan_rate[loan_a] = 0.06 "story: loan A, 6 % interest"
+  loan_rate[loan_b] = 0.08 "story: loan B, 8 % interest"
+  principal = 20000.00 "story: both 20 000.00 DUK for a year"

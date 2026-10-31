@@ -1,0 +1,87 @@
+model own07
+  tally 2
+  on 2026-10-25
+  start 2022-01-01
+  end 2023-12-31
+  note "OWN-07: three lots in two accounts, one partial sale; FIFO within the account, and across both for contrast."
+  note "The sale gives only its year, so the lots and the sale are keys of indexes and the matching is a fill over them (LANGUAGE 5.12); each lot is one arc, so no tie can arise."
+
+source card "Probe card OWN-07 (made up): story and rules"
+
+unit DUK: currency minor 0.01
+
+unit g_units "a unit of fund G"
+
+index brokerages = [acc_x, acc_y]
+
+index lots = [l1, l2, l3]
+
+index sales = [s1]
+
+input lot_account[l in lots]: key brokerages
+
+input lot_bought[l in lots]: date
+
+input lot_cost[l in lots]: money DUK
+
+input lot_units[l in lots]: num g_units
+
+input sale_account[s in sales]: key brokerages
+
+input sale_price: num DUK/g_units
+
+input sale_units[s in sales]: num g_units
+
+def cost[s in sales]: num DUK = sum(fifo_account.taken[l, s] * lot_cost[l] / lot_units[l] for l in lots) at reader
+
+def cost_across[s in sales]: num DUK = sum(fifo_across.taken[l, s] * lot_cost[l] / lot_units[l] for l in lots) at reader
+
+def gain[s in sales]: num DUK = proceeds[s] - cost[s] at reader
+
+def gain_across[s in sales]: num DUK = proceeds[s] - cost_across[s] at reader
+
+def proceeds[s in sales]: num DUK = sale_units[s] * sale_price at reader
+
+fill fifo_account
+  v card_rules
+  note "rule 1: first in, first out, within the account sold from"
+  supply lot_units[l] for l in lots
+  demand sale_units[s] for s in sales
+  arc lot_account[l] == sale_account[s]
+  order lot_bought[l]
+
+fill fifo_across
+  note "contrast: first in, first out across both accounts"
+  supply lot_units[l] for l in lots
+  demand sale_units[s] for s in sales
+  arc true
+  order lot_bought[l]
+
+ask q_across: cost_across[s1], gain_across[s1] law 2023-12-31
+
+ask q_per_account: cost[s1], gain[s1] law 2023-12-31
+
+version card_facts
+  cite card
+  governs always
+  known 2022-01-01
+  lot_account[l1] = acc_x "story: X: L1"
+  lot_account[l2] = acc_y "story: Y: L2"
+  lot_account[l3] = acc_x "story: X: L3"
+  lot_bought[l1] = 2022-01-10 "story"
+  lot_bought[l2] = 2022-03-01 "story"
+  lot_bought[l3] = 2022-06-01 "story"
+  lot_cost[l1] = 1000.00 "story"
+  lot_cost[l2] = 1200.00 "story"
+  lot_cost[l3] = 900.00 "story"
+  lot_units[l1] = 10 "story"
+  lot_units[l2] = 10 "story"
+  lot_units[l3] = 10 "story"
+  sale_account[s1] = acc_x "story: sells from X"
+  sale_price = 130.00 "story: at 130.00"
+  sale_units[s1] = 15 "story: 15 units"
+
+version card_rules
+  cite card
+  governs always
+  known 2022-01-01

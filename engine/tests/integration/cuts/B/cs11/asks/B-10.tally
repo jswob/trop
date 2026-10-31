@@ -1,0 +1,9 @@
+part asks_b10
+  tally 2
+  note "B-10 · The 26th (questions.md): as of 2026-01-26, known as of 2026-01-07. v3 is asked in scenarios/hr2_v3.tally."
+
+ask b10_2025: hr2_overpay[d].cash.amount, hr2_save[d].cash.amount for d in days where year_of(d) == 2025 and hr2_runs[d] law 2026-01-26 as known 2026-01-07
+
+ask b10_v2: v2_op[d], v2_sv[d] for d in days where hr2_runs[d] and d < 2025-04-01 law 2026-01-26 as known 2026-01-07
+
+ask b10_short: v2_short[2025-03-26] law 2026-01-26 as known 2026-01-07

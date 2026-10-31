@@ -1,0 +1,50 @@
+# MC-X-F12 (writer 9): pay's `at` reads day_band, whose rows govern always: "The at ends every chain, so it
+# reads nothing law-dated itself" (L §4.3), and day_band is not law-dated. at = 2027-03-01, amt = 10.00 PLN.
+# snap12: REFCORE-NOT-YET (the interpreter guard on every band read with no law date).
+=== m.tally
+model p
+  tally 2
+  on 2027-12-31
+  start 2027-01-01
+  end 2027-12-31
+
+unit PLN: currency minor 0.01
+source act "the act"
+place konto: accounts PLN lives 2020-01-01..
+place world: outside lives 1900-01-01..
+
+input age3: int
+input amt: money PLN
+input pay_day: date
+band day_band(a: int): date
+
+move pay: transfers
+  on pay_day
+  at day_band(age3)
+  leg cash from world to konto amount amt
+
+ask q: bal(konto, 2027-12-31)
+
+version v_act
+  cite act
+  governs always
+  known 2026-12-01
+  day_band: [0, 6) = 2027-03-01 "under 6"
+  day_band: [6, 18) = 2027-04-01 "6 to 17"
+
+version v_f
+  cite act
+  governs always
+  known 2026-12-01
+  age3 = 3 "the age"
+  pay_day = 2027-02-01
+  opening[konto] = 0 PLN at 2027-01-01 start
+
+version v_amt
+  cite act
+  governs 2027..
+  known 2026-12-01
+  amt = 10.00 PLN "amt"
+=== expect
+q: 10.00 PLN
+...

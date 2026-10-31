@@ -1,0 +1,47 @@
+# L §8.4 and L §5.14 Legs: a leg's place is a place, or a hole of a place type; a none place is refused (RUN-NONE),
+# and a refused movement whose place isn't known could book into any place, so a place's flows can't leave it out in
+# silence: flows of either candidate place is refused, as a balance is. (Was: 0.00 PLN, the movement left out of
+# flows; found with the fault of L5_5_axis_picks_leg_place.)
+=== m.tally
+model p14
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+
+source s "synthetic"
+
+unit PLN: currency minor 0.01
+
+index people = [ana, ben]
+
+place pln[p in people]: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+
+input dest: key people
+input amt: money PLN
+input pay_day: date
+
+move gift: transfers
+  on pay_day
+  leg cash from world to pln[dest] amount amt
+
+ask q: flows(pln[p], 2026) for p in people law 2026-06-30
+ask b: bal(pln[ana], 2026-12-31) law 2026-06-30
+
+version v1
+  cite s
+  governs always
+  known 2026-01-01
+  dest = none
+  amt = 10.00 PLN
+  pay_day = 2026-03-01
+  opening[pln[ana]] = 0.00 PLN at 2026-01-01 start "s"
+  opening[pln[ben]] = 0.00 PLN at 2026-01-01 start "s"
+=== expect
+b: refused: RUN-NONE ...
+...
+q (p = ana): refused: RUN-NONE ...
+...
+q (p = ben): refused: RUN-NONE ...
+...

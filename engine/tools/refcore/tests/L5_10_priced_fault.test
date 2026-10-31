@@ -1,0 +1,41 @@
+# Fault f_priced (writer 6): `value` of a place stated `priced v` crashed (KeyError). L §5.10 Value: "For a place of a
+# `priced` kind, `value` uses its price"; L §5.7: "`priced p` values a place whose single position is valued by the price
+# input p (tally 1's asset)"; the prelude's assets: "value = v at d". a is an asset stated `priced v` on its place
+# section, v = 5.00 PLN (governs always): qa = 5 PLN. b is of the kind `valued: place PLN min 0 priced w`, w keyed by the
+# kind, w[b] = 7.00 PLN: qb = 7 PLN (value doesn't round, L §5.10: a num PLN).
+=== f_priced.tally
+model fpriced
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "synthetic"
+
+unit PLN: currency minor 0.01
+
+kind valued: place PLN min 0 priced w
+
+place a: assets PLN priced v lives 2026-01-01..
+
+place b: valued lives 2026-01-01..
+
+input v: money PLN
+
+input w[x in valued]: money PLN
+
+ask qa: value(a, 2026-06-30) in PLN law 2026-06-30
+
+ask qb: value(b, 2026-06-30) in PLN law 2026-06-30
+
+version v1
+  cite s
+  governs always
+  known 2026-01-01
+  v = 5.00 "row"
+  w[b] = 7.00 "row"
+=== expect
+qa: 5 PLN
+  law date 2026-06-30, cut 2026-06-30
+qb: 7 PLN
+  law date 2026-06-30, cut 2026-06-30

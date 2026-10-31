@@ -1,0 +1,77 @@
+part pit_9
+  tally 1
+  law
+  note "PIT-9 · The wrapped account: contributions up to the year's WRAP-LIMIT (.2); a withdrawal takes the contributions not yet withdrawn first, earliest year first, then the earnings (.4); the earnings withdrawn are taxed at 19 %, rounded, unless the holder is 60 or older and has contributed in at least 5 calendar years (.5)."
+
+source pit_9 "Personal Income Tax Act, PIT-9 The wrapped account (tmp/cases/law/acts.md)"
+
+input pit9_rate: num question "At what rate are the earnings withdrawn taxed (PIT-9 .5)?"
+
+input pit9_age: int question "From what age is a withdrawal free of tax (PIT-9 .5)?"
+
+input pit9_years: int question "In how many calendar years must the holder have contributed (PIT-9 .5)?"
+
+input wrap_limit: money DUK question "What is this year's WRAP-LIMIT (PIT-9 .2)?"
+
+version pit9_v1
+  cite pit_9
+  governs 2018-01-01..
+  known 2017-09-01
+  note "PIT-9 v1, in force 2018-01-01 until replaced, published 2017-09-01; governs contributions and withdrawals from 2018-01-01."
+  pit9_rate = 0.19 "PIT-9 v1 .5"
+  pit9_age = 60 "PIT-9 v1 .5"
+  pit9_years = 5 "PIT-9 v1 .5"
+
+version wrap_limit_2018
+  cite gazette
+  governs 2018-01-01..2018-12-31
+  known 2017-11-23
+  wrap_limit = 13200.00 "gazette.csv line 1985 WRAP-LIMIT"
+
+version wrap_limit_2019
+  cite gazette
+  governs 2019-01-01..2019-12-31
+  known 2018-11-24
+  wrap_limit = 14100.00 "gazette.csv line 1986 WRAP-LIMIT"
+
+version wrap_limit_2020
+  cite gazette
+  governs 2020-01-01..2020-12-31
+  known 2019-11-20
+  wrap_limit = 14950.00 "gazette.csv line 1987 WRAP-LIMIT"
+
+version wrap_limit_2021
+  cite gazette
+  governs 2021-01-01..2021-12-31
+  known 2020-11-21
+  wrap_limit = 15300.00 "gazette.csv line 1988 WRAP-LIMIT"
+
+version wrap_limit_2022
+  cite gazette
+  governs 2022-01-01..2022-12-31
+  known 2021-11-22
+  wrap_limit = 16500.00 "gazette.csv line 1989 WRAP-LIMIT"
+
+version wrap_limit_2023
+  cite gazette
+  governs 2023-01-01..2023-12-31
+  known 2022-11-23
+  wrap_limit = 19800.00 "gazette.csv line 1990 WRAP-LIMIT"
+
+version wrap_limit_2024
+  cite gazette
+  governs 2024-01-01..2024-12-31
+  known 2023-11-24
+  wrap_limit = 22400.00 "gazette.csv line 1991 WRAP-LIMIT"
+
+version wrap_limit_2025
+  cite gazette
+  governs 2025-01-01..2025-12-31
+  known 2024-11-20
+  wrap_limit = 25100.00 "gazette.csv line 1992 WRAP-LIMIT"
+
+version wrap_limit_2026
+  cite gazette
+  governs 2026-01-01..2026-12-31
+  known 2025-11-21
+  wrap_limit = 27300.00 "gazette.csv line 1993 WRAP-LIMIT"

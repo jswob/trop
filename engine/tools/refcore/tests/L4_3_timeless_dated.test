@@ -1,0 +1,29 @@
+# L §4.3 rule 2: "a later version that gives it a dated row makes such a reader state `at` (LOAD-LAWDATE)".
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "a source"
+
+input n: int
+
+def m2: int = n + 1
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  n = 2
+
+version v2
+  cite s
+  governs 2026-06..
+  known 2026-05-01
+  replace n = 3
+
+ask q1: m2
+=== expect
+refused: LOAD-LAWDATE ...

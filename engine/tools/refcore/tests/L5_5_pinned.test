@@ -1,0 +1,29 @@
+# L §5.5: "with a = opt fixes an axis for one ask. A pinned axis is listed under pinned: only, never reading:,
+# since it doesn't fan out."
+=== m.tally
+model t
+  tally 2
+  on 2016-03-01
+  start 2015-11-01
+  end 2016-10-31
+
+source s "s"
+
+axis rr
+  o1 "one"
+  o2 "two"
+
+input v[a in rr]: int
+
+version x
+  cite s
+  governs always
+  known 2016-01-01
+  v[o1] = 1
+  v[o2] = 2
+
+ask q1: v[rr] with rr = o2
+=== expect
+q1: 2
+  pinned: rr = o2
+  cut 2016-03-01

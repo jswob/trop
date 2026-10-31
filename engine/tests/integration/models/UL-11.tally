@@ -1,0 +1,174 @@
+model ul11
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+  note "Spanish wealth tax (IP) 2025 capped by income tax (IRPF): art. 31 Ley 19/1991, the 60 per cent limit and the 80 per cent maximum reduction, for Don J.B.A., single and resident in Toledo (AEAT Manual práctico de Patrimonio 2025, Ejemplo)."
+  note "Every ask is evaluated at the devengo of the 2025 tax, 31 December 2025."
+  note "The example also gives the base liquidable general (48.000) and the mínimo personal y familiar (5.550); the cap doesn't use them, so they are not inputs."
+  note "Not modelled, as in the example: regional bonificaciones, the deduction for taxes paid abroad, and the Impuesto Temporal de Solidaridad de las Grandes Fortunas."
+
+source aeat_ejemplo "AEAT, Manual práctico de Patrimonio 2025, Capítulo 5, Límite de cuota íntegra y cuota mínima, Ejemplo (Página actualizada: 17/marzo/2026)" at "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/patrimonio-2025/c-5-determinacion-cuota-ingresar/limite-cuota-integra-cuota-minima-patrimonio/ejemplo.html"
+
+source aeat_reglas "AEAT, Manual práctico de Patrimonio 2025, Capítulo 5, Límite de cuota íntegra: Reglas (Página actualizada: 17/marzo/2026)" at "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/patrimonio-2025/c-5-determinacion-cuota-ingresar/limite-cuota-integra-cuota-minima-patrimonio/reglas.html"
+
+source ley35_2006 "Ley 35/2006, de 28 de noviembre, del IRPF, disposición final cuarta, apartado Tres: new wording of the whole of art. 31 of Ley 19/1991, de 6 de junio, del Impuesto sobre el Patrimonio (BOE núm. 285, 29/11/2006); the wording is read in the BOE texto consolidado of Ley 19/1991, https://www.boe.es/buscar/act.php?id=BOE-A-1991-14392 ('Última actualización, publicada el 29/11/2006, en vigor a partir del 01/01/2007')" at "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
+
+source modeller "The model's own readings and assumptions, each stated with its reason"
+
+unit EUR: currency minor 0.01
+
+axis ul11_cent
+  down "amounts computed to the cent are cut down to the cent"
+  half-up "amounts computed to the cent go to the nearest cent, ties up (the example prints 89.883,496 as 89.883,50)"
+
+input bi_ahorro: money EUR
+
+input bi_general: money EUR
+
+input bi_ip: money EUR
+
+input c0424: money EUR question "What is casilla [0424], the net gains in the IRPF savings base?"
+
+input cap_rate: num
+
+input cuota_ahorro: money EUR
+
+input cuota_general: money EUR
+
+input cuota_ip: money EUR
+
+input epn: money EUR
+  note "Net value of the assets that by their nature or use can't produce income taxed by the IRPF (art. 31.Uno b))."
+
+input gains_gt1: money EUR
+  note "Positive balance of gains on assets held more than one year, inside the savings base (art. 31.Uno a))."
+
+input max_red: num
+
+input min_share: num
+
+input offsets: money EUR question "What are the loss and negative-yield offsets in casillas [0436], [0439]-[0445] and [0447]?"
+
+def cuota_improd: money EUR at reader
+  note "Solución line 1; Regla 3ª: CIBI = EPN × cuota íntegra ÷ base imponible (art. 31.Uno b))."
+  rule base v reglas2025 = round(epn * cuota_ip / bi_ip, minor(EUR), ul11_cent)
+
+def cuota_ingresar: num EUR at reader
+  note "Solución last line: the cuota íntegra less the reduction."
+  rule base v law_ip31 = cuota_ip - reduction
+
+def cuota_min: money EUR at reader
+  note "Nota (3); Regla 3ª: the cuota mínima no reducible, 20 per cent of the cuota íntegra."
+  rule base v reglas2025 = round(min_share * cuota_ip, minor(EUR), ul11_cent)
+
+def cuota_susc: money EUR at reader
+  note "Solución line 2: the IP cuota subject to the limit."
+  rule base v law_ip31 = cuota_ip - cuota_improd
+
+def excess: num EUR at reader
+  note "Nota (3): the exceso no reducible, the theoretical reduction above the maximum."
+  rule base = max(0, red_theory - red_max)
+
+def excl_base: num EUR at reader
+  note "Regla 1ª: the part of the savings base left out, (gains over one year ÷ [0424]) × ([0424] − offsets), when the balance is below [0424]."
+  rule base v reglas2025 = gains_gt1 / c0424 * (c0424 - offsets)
+  rule notbelow beats base = ?"Regla 1ª as given covers a balance of gains over one year below casilla [0424]; the other case is not in the sources." when gains_gt1 >= c0424
+
+def irpf_sum: num EUR at reader
+  note "Solución line 5: the IRPF cuotas counted for the limit."
+  rule base v law_ip31 = cuota_general + kept_cuota_ahorro
+
+def kept_base: num EUR at reader
+  note "Solución, 'Base imponible del ahorro IRPF: 1.000 (2)': the savings base counted for the limit (art. 31.Uno a))."
+  rule base v law_ip31 = bi_ahorro - excl_base
+
+def kept_cuota_ahorro: num EUR at reader
+  note "Solución line 4 and Nota (1); Regla 2ª: (cuotas del ahorro ÷ base imponible del ahorro) × the savings base counted."
+  rule base v reglas2025 = cuota_ahorro / bi_ahorro * kept_base
+
+def limit60: num EUR at reader
+  note "Solución line 7: 60 per cent of the IRPF bases counted (art. 31.Uno)."
+  rule base v law_ip31 = cap_rate * (bi_general + kept_base)
+
+def red_max: money EUR at reader
+  note "Solución line 9: the reduction may not exceed 80 per cent of the IP cuota (art. 31.Uno c))."
+  rule base v law_ip31 = round(max_red * cuota_ip, minor(EUR), ul11_cent)
+
+def red_theory: num EUR at reader
+  note "Solución line 8: the reduction that would bring the cuotas down to the limit."
+  rule base v law_ip31 = max(0, total_cuotas - limit60)
+
+def reduction: num EUR at reader
+  note "Art. 31.Uno c): reduced to the limit, by no more than the maximum."
+  rule base v law_ip31 = min(red_theory, red_max)
+
+def total_cuotas: num EUR at reader
+  note "Solución line 6: IRPF cuotas plus the IP cuota subject to the limit."
+  rule base v law_ip31 = irpf_sum + cuota_susc
+
+ask q01_improd: cuota_improd law 2025-12-31
+
+ask q02_susc: cuota_susc law 2025-12-31
+
+ask q03_ahorro: kept_cuota_ahorro law 2025-12-31
+
+ask q04_irpf_sum: irpf_sum law 2025-12-31
+
+ask q05_total: total_cuotas law 2025-12-31
+
+ask q06_kept_base: kept_base law 2025-12-31
+
+ask q07_limit: limit60 law 2025-12-31
+
+ask q08_red_theory: red_theory law 2025-12-31
+
+ask q09_red_max: red_max law 2025-12-31
+
+ask q10_ingresar: cuota_ingresar law 2025-12-31
+
+ask q11_min: cuota_min law 2025-12-31
+
+ask q12_excess: excess law 2025-12-31
+
+ask q13_coincide: check cuota_ingresar == cuota_min law 2025-12-31
+
+version law_ip31
+  cite ley35_2006
+  governs 2007..
+  known 2006-11-29
+  note "Known from the publication of Ley 35/2006 in the BOE, 29/11/2006 (BOE núm. 285; https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764), whose disposición final cuarta, Tres gave art. 31 the wording in force from 01/01/2007. The BOE consolidated text of Ley 19/1991 is the locator, not the version."
+  note "Art. 31.Dos (joint IRPF filing, prorated reduction) doesn't apply: the taxpayer is single."
+  cap_rate = 0.6 "art. 31.Uno 'del 60 por 100 de la suma de las bases imponibles' (texto consolidado BOE-A-1991-14392)"
+  max_red = 0.8 "art. 31.Uno c) 'sin que la reducción pueda exceder del 80 por 100' (texto consolidado BOE-A-1991-14392)"
+
+version reglas2025
+  cite aeat_reglas
+  governs 2025
+  known 2026-03-17
+  note "The Reglas page carries no date of its own: known from its updated stamp, 'Página actualizada: 17/marzo/2026' (§4.5)."
+  note "Regla 1ª: the excluded part of the savings base; Regla 2ª: 'Casilla [35] = (Cuotas ... [0540] + [0541] ÷ base imponible del ahorro Casilla [0460]) x Casilla [32]'; Regla 3ª: 'CIBI = EPN x Cuota íntegra ÷ Base Imponible'."
+  min_share = 0.2 "Regla 3ª 'una cuota mínima no reducible ... equivalente al 20 por 100 de la cuota íntegra'"
+
+version facts_ejemplo
+  cite aeat_ejemplo
+  governs always
+  known 2026-10-18
+  note "The example's stipulations are a hypothetical case: known from the model's on (§4.5), not from the page's updated stamp (17/marzo/2026)."
+  note "Ejercicio 2025. The 2024 edition of the Manual prints the same example with the same figures."
+  bi_ahorro = 2000 "Ejemplo: 'Base imponible y liquidable del ahorro del IRPF: 2.000'"
+  bi_general = 50000 "Ejemplo: 'Base imponible general del IRPF: 50.000'"
+  bi_ip = 8000000 "Ejemplo: 'Base imponible del Impuesto sobre el Patrimonio: 8.000.000'"
+  cuota_ahorro = 380 "Ejemplo: 'Cuota íntegra del ahorro del IRPF: 380'"
+  cuota_general = 12407 "Ejemplo: 'Cuota íntegra general estatal y autonómica del IRPF: 12.407'"
+  cuota_ip = 112354.37 "Ejemplo: 'Cuota íntegra del Impuesto sobre el Patrimonio: 112.354,37'"
+  epn = 250000 "Ejemplo: the net value of the assets not capable of producing IRPF income 'asciende a 250.000 euros'"
+  gains_gt1 = 1000 "Ejemplo: the part of the savings base from gains on assets held more than one year 'asciende a 1.000 euros'"
+
+version model_assume
+  cite modeller
+  governs always
+  known 2026-10-18
+  note "Assumptions standing for the example's own facts: known from the model's on, as the example (§4.5)."
+  c0424 = 2000 assumed "the example applies Regla 1ª with 2.000, the whole savings base, in place of casilla [0424], as if the savings base were all gains"
+  offsets = 0 assumed "the example subtracts no loss or negative-yield offsets ([0436], [0439]-[0445], [0447])"

@@ -1,0 +1,13 @@
+part asks_c01
+  tally 2
+  note "C-01 · Closing the workshop (questions.md), as of and known as of 2024-12-31. June social: the SOC-3 contributions for June 2024, each part and their sum (pro rata 14 of 30 days, SOC-3 .5); June health: SOC-4 (a); due: the day both were due by (the 20th of July, moved to the next business day). Last VAT return: its month, its result (negative: an excess, refunded on request), the day the RO had to refund it by and the day the refund came into the joint account. Advances: those the business account paid for 2024 (by month and in all), beside what PIT-10 .5 made due. Profit: the 2024 profit for the tax (PIT-10 .3, .7). After closing: what the joint account paid for the workshop in 2024, and what came in for it."
+
+ask c01_june_social: c, soc_part[c, 2024-06] for c in soc3_part law 2024-12-31 as known 2024-12-31
+
+ask c01_june: social[2024-06], health[2024-06], contrib_due_day[2024-06], soc_base[2024-06] law 2024-12-31 as known 2024-12-31
+
+ask c01_vat: last_vat_month, vat_result[last_vat_month], vat_refund_by, vat_refunded_on law 2024-12-31 as known 2024-12-31
+
+ask c01_advances: m, adv_paid[m], adv_due[m] for m in month where m >= 2024-01 and m <= 2024-06 law 2024-12-31 as known 2024-12-31
+
+ask c01_totals: adv_paid_year[2024], profit_2024, out_after_close[2024], in_after_close[2024] law 2024-12-31 as known 2024-12-31

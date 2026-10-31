@@ -1,0 +1,71 @@
+# L §2.4 Short form: "a def with one rule labelled base, no v, no when, no own governs, no notes prints as
+# def x: T = expr at E" (u; w keeps its note, z its when, so both stay long). "Inside a section: notes come first,
+# then rules (sorted by label, then by the known date of their v, a rule without v first, then by the start of their
+# own governs)" (y: a before b; base without v before base with v; v2 known before v1). "A beats list is sorted by
+# label, with ', '" (y's rule a, and the replace rule in the version).
+=== options reprint
+=== m.tally
+model m
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+def u: num at 2026-12-31
+  rule base = (1)
+def w: num
+  note "kept long"
+  rule base = 1
+def z: num
+  rule base = 1 when c
+def y: int
+  rule b = 1
+  rule base v v1 = 4
+  rule base v v2 = 3
+  rule base = 0
+  rule a beats c,b = 2
+
+version v1
+  cite s
+  governs 2026..
+  known 2026-05-01
+  replace rule y.b beats zz, base = 7
+version v2
+  cite s
+  governs 2026..
+  known 2026-02-01
+=== expect
+--- m.tally
+model m
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+def u: num = 1 at 2026-12-31
+
+def w: num
+  note "kept long"
+  rule base = 1
+
+def y: int
+  rule a beats b, c = 2
+  rule b = 1
+  rule base = 0
+  rule base v v2 = 3
+  rule base v v1 = 4
+
+def z: num
+  rule base = 1 when c
+
+version v2
+  cite s
+  governs 2026..
+  known 2026-02-01
+
+version v1
+  cite s
+  governs 2026..
+  known 2026-05-01
+  replace rule y.b beats base, zz = 7
+sha256 ...

@@ -1,0 +1,21 @@
+# L §2.3 cday = DAY | hole | dayset (writer 8: a month-day in added is gone); L §4.2 "A month-day (04-30) is no
+# value: ... it stands only in a calendar's yearly list and an anchored index's from". `added [06-22]`: LOAD-PARSE.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+input len: calendar
+
+version v
+  cite s
+  governs 2026
+  known 2026-01-01
+  len = calendar(weekends [sat, sun], added [06-22])
+
+ask q: is_business(2026-06-22, len)
+=== expect
+refused: LOAD-PARSE ...

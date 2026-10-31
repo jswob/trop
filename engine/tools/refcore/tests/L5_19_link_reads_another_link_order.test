@@ -1,0 +1,60 @@
+# MC-X-F1, the other order: L5_19_link_reads_another_link's text with q asked before f gives the same lines (an answer
+# never depends on what else the run asks or in which order; E §9 invariant 5).
+=== m.tally
+model m
+  tally 2
+  on 2026-10-19
+  start 2026-01-01
+  end 2026-12-31
+
+source plan "plan"
+source bank "bank"
+unit PLN: currency minor 0.01
+input bank_rows: observed
+input adv: money PLN
+input fee: money PLN
+input adv_dom: int
+input probe_dom: int
+place konto: accounts PLN lives 2019-05-01..
+place us: outside lives 1900-01-01..
+place unexplained: outside lives 1900-01-01..
+
+move adv_pay[m in months]: transfers
+  on day_of(m, adv_dom)
+  at start_of(m)
+  leg cash from konto to us amount adv
+
+move probe[m in months]: transfers
+  on day_of(m, probe_dom)
+  at start_of(m)
+  when flows(adv_pay[m], m) > adv
+  leg cash from konto to us amount fee
+
+ask q: bal(konto, 2026-03-31)
+ask f: flows(adv_pay[2026-03], 2026-03)
+
+version plan_2026
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  adv = 100.00 PLN "own"
+  fee = 10.00 PLN "own"
+  adv_dom = 20 "own"
+  probe_dom = 5 "own"
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "wyciąg"
+
+version stmt
+  cite bank
+  governs 2026-03
+  known 2026-04-02
+  covers konto
+  pad konto from unexplained
+  bank_rows[r1] = (on: 2026-03-05, kind: transfers, leg cash from konto to us amount 10.00 PLN, fulfils: probe[2026-03]) "line 1"
+  bank_rows[r2] = (on: 2026-03-20, kind: transfers, leg cash from konto to us amount 150.00 PLN, fulfils: adv_pay[2026-03]) "line 2"
+=== expect q f
+q: 640.00 PLN
+  unfulfilled: adv_pay[2026-01]
+  unfulfilled: adv_pay[2026-02]
+  cut 2026-10-19
+f: 150.00 PLN
+  cut 2026-10-19

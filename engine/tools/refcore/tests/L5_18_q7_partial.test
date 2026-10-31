@@ -1,0 +1,41 @@
+# L §5.18 example ask q7, copied; Partial answers: "A line marked partial prints, when its value is a hole, its
+# known part and the named holes it is linear in, each with its coefficient ... (412 300.00 PLN + 1 × ?"value of
+# the firm share")."  flat + savings = 400 000.00 + 12 300.00 = 412 300.00 PLN; the firm share is a hole row.
+# Without partial the line is the plain hole.  "A rounding ... meeting a hole makes the line a plain hole".
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+input flat: money PLN
+input savings: money PLN
+input firm_share: money PLN
+
+def estate_value: money PLN at reader
+  rule base = flat + savings + firm_share
+def rounded: money PLN at reader
+  rule base = round(estate_value, 1 PLN, half-up)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  flat = 400 000.00 PLN
+  savings = 12 300.00 PLN
+  firm_share = ?"value of the firm share"
+
+ask q7: estate_value law 2026-06-30 partial
+ask q7b: estate_value law 2026-06-30
+ask q7c: rounded law 2026-06-30 partial
+=== expect
+q7: 412 300.00 PLN + 1 × ?"value of the firm share" (firm_share)
+  law date 2026-06-30, cut 2026-12-31
+q7b: ?"value of the firm share" (firm_share)
+  law date 2026-06-30, cut 2026-12-31
+q7c: ?"value of the firm share" (firm_share)
+  law date 2026-06-30, cut 2026-12-31

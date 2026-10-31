@@ -1,0 +1,64 @@
+# Writer 11 (tally 2.1, 2.1-11, RC-7). L5_14_parts_undecided with paid_from = tomek: "a row that says whose money paid,
+# by a fact it states (if w in withdrawals and k.owner == w.paid_from then 0 else 1)": tomek's 50.00 first, so 20.00
+# left of his, ania's 100.00 untouched (scratch/exp4.py).
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+kind persons: parties
+kind couples: parties
+kind savings: place PLN min 0
+  owned by arrive
+  step minor(PLN)
+  takes k for w order if w in withdrawals and k.owner == w.paid_from then 0 else 1
+kind withdrawals: transfers
+  attr paid_from: key persons
+kind tomeks: transfers
+input pf: key persons
+place konto: savings lives 2026-01-01..
+place world: outside lives 1900-01-01..
+place shop: outside lives 1900-01-01..
+input a1_day: date
+input a1_amt: money PLN
+input t1_day: date
+input t1_amt: money PLN
+input w1_day: date
+input w1_amt: money PLN
+def arrive[m in events, p in parties]: num at m.day
+  rule base = if p == ania then 1 else 0
+  rule t beats base = if p == tomek then 1 else 0 when m in tomeks
+move a1: transfers
+  on a1_day
+  leg cash from world to konto amount a1_amt
+move t1: tomeks
+  on t1_day
+  leg cash from world to konto amount t1_amt
+move w1: withdrawals
+  on w1_day
+  attr paid_from = pf
+  leg cash from konto to shop amount w1_amt
+ask q: bal(konto, 2026-03-31), bal(konto, 2026-03-31) of ania, bal(konto, 2026-03-31) of tomek, w1.cash.amount of tomek
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  persons + [ania] lives 1980-01-01..
+  persons + [tomek] lives 1981-01-01..
+  couples + [ania_tomek] lives 2010-06-01..
+  opening[konto] = 0 PLN at 2026-01-01 start
+  a1_day = 2026-02-01
+  a1_amt = 100.00 PLN
+  t1_day = 2026-02-02
+  t1_amt = 50.00 PLN
+  w1_day = 2026-03-01
+  w1_amt = 30.00 PLN
+  pf = tomek
+=== expect
+q: (120.00 PLN, 100.00 PLN, 20.00 PLN, 30.00 PLN)
+  cut 2026-01-01

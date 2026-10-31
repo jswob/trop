@@ -1,0 +1,51 @@
+model val04
+  tally 1
+  on 2026-10-25
+
+source sale_note "VAL-04 card: Ania's sale of the gifted fund units"
+source gift_deed "VAL-04 card: the gift, the giver's cost and the units' value on the day of the gift"
+source broker_stmt "VAL-04 card: the new broker's yearly statement"
+source card "VAL-04 card: its rules"
+
+input gift_value: money DUK
+
+input giver_cost: money DUK
+
+input proceeds: money DUK
+
+input stmt_gain: money DUK
+
+def cost_by_law: money DUK
+  rule gift v card_rules = gift_value
+
+def cost_in_stmt: money DUK = proceeds - stmt_gain
+
+def gap: money DUK = stmt_gain - law_gain
+
+def law_gain: money DUK = proceeds - cost_by_law
+
+ask q: stmt_gain, law_gain, gap, cost_in_stmt, cost_by_law
+
+ask gain_check: check stmt_gain = law_gain
+
+ask cause_check: check cost_in_stmt = giver_cost
+
+version sale_v
+  cite sale_note
+  known 2026-10-25
+  proceeds = 8900.00 "sold for 8 900.00"
+
+version gift_v
+  cite gift_deed
+  known 2026-10-25
+  gift_value = 6000.00 "worth 6 000.00 on the day of the gift"
+  giver_cost = 4700.00 "the giver paid 4 700.00"
+
+version stmt_v
+  cite broker_stmt
+  known 2026-10-25
+  stmt_gain = 4200.00 "taxable gain as the statement shows it, kept as stated"
+
+version card_rules
+  cite card
+  known 2026-10-25

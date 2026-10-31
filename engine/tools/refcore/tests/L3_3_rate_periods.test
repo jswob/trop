@@ -1,0 +1,29 @@
+# L §3.3: rate ± rate only "of one period"; comparisons "within one period".  A yearly and a monthly rate
+# added are refused (LOAD-UNIT, "rate arithmetic outside §3.3"); the periods are in the values, so this is
+# found when the values are read.  L §8.3: a load refusal means the model does not run, so it prints once,
+# as a load refusal, not per value (the lead's note on writer 1's per-value LOAD codes).
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "a source"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+unit hour "godzina"
+
+input a: rate
+input b: rate
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  a = 5 %/year
+  b = 0.5 %/month
+
+ask q1: a + b
+=== expect
+refused: LOAD-UNIT ...

@@ -1,0 +1,4 @@
+10:51:16 started sh engine/tests/integration/amendments/tools/job11.sh i10q engine/tests/integration/amendments/cards11/i10q --ask q1
+10:51:22 started sh engine/tests/integration/amendments/tools/job11.sh b_r1s engine/tests/integration/amendments/cut11/b_r1s
+10:54:27 started python3 -I -B engine/tests/integration/amendments/tools/ddmin11.py engine/tests/integration/amendments/cards11/i7 model.tally engine/tests/integration/amendments/dd11/i7min RUN-CYCLE --ask a_deducted > engine/tests/integration/amendments/out11/dd_i7.log 2>&1; sh engine/tests/integration/amendments/tools/job11.sh c2_r2 engine/tests/integration/amendments/cut11/c2_r2
+11:23:29 queue done

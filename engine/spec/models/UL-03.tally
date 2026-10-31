@@ -1,12 +1,14 @@
 model ul03
-  tally 1
+  tally 2
   on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
   note "Medicare Part B premiums and IRMAA for 2026, by MAGI bracket and filing status. The Part D IRMAA and the CPI indexing of the edges are holes: the case has neither the Part D formula nor the CPI-U averages."
   note "MAGI is the one for the taxable year beginning two years before (2024 for 2026; 2023 if 2024 is not available); a major life-changing event (20 CFR 418.1205) is not modelled."
 
-source bba2018 "Bipartisan Budget Act of 2018, Pub. L. 115-123, div. E, title XII, § 53114 (approved February 9, 2018)" at "https://www.congress.gov/115/plaws/publ123/PLAW-115publ123.htm"
-
 source bba2015 "Bipartisan Budget Act of 2015, Pub. L. 114-74, § 601(c) (approved November 2, 2015)" at "https://www.govinfo.gov/content/pkg/PLAW-114publ74/html/PLAW-114publ74.htm"
+
+source bba2018 "Bipartisan Budget Act of 2018, Pub. L. 115-123, div. E, title XII, § 53114 (approved February 9, 2018)" at "https://www.congress.gov/115/plaws/publ123/PLAW-115publ123.htm"
 
 source cms_fact_sheet "CMS, 2026 Medicare Parts A & B Premiums and Deductibles (fact sheet, November 14, 2025)" at "https://www.cms.gov/newsroom/fact-sheets/2026-medicare-parts-b-premiums-deductibles"
 
@@ -14,7 +16,11 @@ source fr_cms_8091 "CMS-8091-N, Medicare Part B Monthly Actuarial Rates, Premium
 
 source fr_ssa_2018 "SSA, amendment of 20 CFR 418.1115, What are the modified adjusted gross income ranges?, 83 FR 55628 (November 7, 2018)" at "https://www.federalregister.gov/citation/83-FR-55628"
 
+source lifted_1_0_1 "Figures tally 1.0.1 allowed inline in rules"
+
 source mma2003 "Medicare Prescription Drug, Improvement, and Modernization Act of 2003, Pub. L. 108-173, § 811(a) (approved December 8, 2003)" at "https://www.congress.gov/108/plaws/publ173/PLAW-108publ173.htm"
+
+unit USD: currency minor 0.01
 
 axis ul03_mfs
   statute "each dollar amount reduced by the year's individual threshold ((i)(3)(C)(iii)): the top edge is $500,000 less $109,000, as CMS and POMS print"
@@ -53,7 +59,19 @@ input cost_factor: num
 input cpi_avg[w in cpi_window]: num question "What is the average of the Consumer Price Index for all urban consumers (United States city average) for the 12-month period ending with this August (2018 or 2025)?"
   note "no row: the CPI-U averages were not fetched (case, Missing facts)"
 
+input full_total_0_1: money USD
+  note "lifted from an inline figure of tally 1.0.1"
+
+input immuno_irmaa_0_1: money USD
+  note "lifted from an inline figure of tally 1.0.1"
+
 input immuno_share: num
+
+input immuno_standard_0_1: money USD
+  note "lifted from an inline figure of tally 1.0.1"
+
+input indexed_edge_1000: money USD
+  note "lifted from an inline figure of tally 1.0.1"
 
 input magi: money USD question "What was the beneficiary's modified adjusted gross income for 2024 (or 2023 if 2024 is not available)?"
 
@@ -66,6 +84,9 @@ input repay_high[t in tier]: money USD
 input repay_mult: int
 
 input repay_std: money USD
+
+input standard_0_1: money USD
+  note "lifted from an inline figure of tally 1.0.1"
 
 input std_pct: num
 
@@ -84,91 +105,102 @@ band irmaa_mfs[r in ul03_mfs](magi_mfs: money USD): key tier
 band irmaa_single(magi_single: money USD): key tier
   note "the individual-return brackets as CMS prints them for 2026 (single, head of household, qualifying surviving spouse, married filing separately and living apart)"
 
-def cost: num USD = cost_factor * aged_rate
+def cost: num USD = cost_factor * aged_rate at reader
 
-def deductible: money USD
+def deductible: money USD at reader
   note "the 2026 Part B annual deductible, which the CMS fact sheet prints beside the standard premium"
-  rule base = ? "What is the 2026 Part B annual deductible? Its rule (Social Security Act § 1833(b), 42 U.S.C. 1395l(b)) and the figures it is indexed from are not in the case."
+  rule base = ?"What is the 2026 Part B annual deductible? Its rule (Social Security Act § 1833(b), 42 U.S.C. 1395l(b)) and the figures it is indexed from are not in the case."
 
-def full_irmaa[t in tier]: money USD = full_total[t] - standard
+def full_irmaa[t in tier]: money USD = full_total[t] - standard at reader
 
-def full_total[t in tier]: money USD
+def full_total[t in tier]: money USD at reader
   note "CMS: a total premium of a share of the total cost of Part B coverage plus a repayment amount (FR SUMMARY); rounding (c)"
   rule base = standard
-  rule high excepts base when t != t0 = round(pct[t] * cost, 0.1, ul03_tie) + repay_total[t]
-  rule high_after excepts base, high when t != t0 and ul03_round_at = after = round(pct[t] * cost + repay_total[t], 0.1, ul03_tie)
-  rule high_statute excepts base, high, high_after when t != t0 and ul03_repay = statute = round(std_share * aged_rate + repay_std + (pct[t] - std_pct) * (cost + repay_mult * repay_std), 0.1, ul03_tie)
+  rule high beats base = round(pct[t] * cost, full_total_0_1, ul03_tie) + repay_total[t] when t != t0
+  rule high_after beats base, high = round(pct[t] * cost + repay_total[t], full_total_0_1, ul03_tie) when t != t0 and ul03_round_at == after
+  rule high_statute beats base, high, high_after = round(std_share * aged_rate + repay_std + (pct[t] - std_pct) * (cost + repay_mult * repay_std), full_total_0_1, ul03_tie) when t != t0 and ul03_repay == statute
 
-def immuno_irmaa[t in tier]: money USD
+def immuno_irmaa[t in tier]: money USD at reader
   note "the immunosuppressive enrollees pay the IRMAA (FR p. 52065) but not the repayment amounts; the printed amounts carry none"
   rule base = 0
-  rule high excepts base when t != t0 = round((pct[t] - std_pct) * cost, 0.1, ul03_tie)
+  rule high beats base = round((pct[t] - std_pct) * cost, immuno_irmaa_0_1, ul03_tie) when t != t0
 
-def immuno_standard: money USD = round(immuno_share * cost, 0.1, ul03_tie)
+def immuno_standard: money USD = round(immuno_share * cost, immuno_standard_0_1, ul03_tie) at reader
 
-def immuno_total[t in tier]: money USD = immuno_standard + immuno_irmaa[t]
+def immuno_total[t in tier]: money USD = immuno_standard + immuno_irmaa[t] at reader
 
-def increase: money USD = standard - prior_year_standard
+def increase: money USD = standard - prior_year_standard at reader
 
-def indexed_edge[t in tier]: money USD
+def indexed_edge[t in tier]: money USD at reader
   note "(i)(5)(A)-(B): for 2026, each dollar amount is increased by the percentage (if any) by which the CPI-U average for the 12 months ending August 2025 exceeds the one for the 12 months ending August 2018, then rounded to the nearest multiple of $1,000; the $500,000 edge is not indexed ((i)(5)(C)(i)); joint edges are twice these ((i)(3)(C)(ii))"
-  rule base = round(base_edge[t] * max(1, cpi_avg[to_2025_08] / cpi_avg[to_2018_08]), 1000, ul03_tie1000)
+  rule base = round(base_edge[t] * max(1, cpi_avg[to_2025_08] / cpi_avg[to_2018_08]), indexed_edge_1000, ul03_tie1000)
 
-def partd_irmaa[t in tier]: money USD
+def partd_irmaa[t in tier]: money USD at reader
   note "the Part D income-related monthly adjustment amount, which CMS prints beside the Part B tables; no amount below the threshold"
   rule base = 0
-  rule high excepts base when t != t0 = ? "What is the 2026 Part D income-related monthly adjustment amount for this tier? The national base beneficiary premium and the Part D formula (Social Security Act § 1860D-13(a)(7)) are not in the case."
+  rule high beats base = ?"What is the 2026 Part D income-related monthly adjustment amount for this tier? The national base beneficiary premium and the Part D formula (Social Security Act § 1860D-13(a)(7)) are not in the case." when t != t0
 
-def repay_total[t in tier]: money USD
-  rule additional excepts base when ul03_repay = additional = repay_std + repay_high[t]
+def repay_total[t in tier]: money USD at reader
+  rule additional beats base = repay_std + repay_high[t] when ul03_repay == additional
   rule base = repay_high[t]
 
-def standard: money USD
+def standard: money USD at reader
   note "FR SUMMARY: 50 percent of the aged actuarial rate plus the $0.20 repayment amount"
-  rule after excepts base when ul03_round_at = after = round(std_share * aged_rate + repay_std, 0.1, ul03_tie)
-  rule base = round(std_share * aged_rate, 0.1, ul03_tie) + repay_std
+  rule after beats base = round(std_share * aged_rate + repay_std, standard_0_1, ul03_tie) when ul03_round_at == after
+  rule base = round(std_share * aged_rate, standard_0_1, ul03_tie) + repay_std
 
-def tier_of[f in filing]: key tier
+def tier_of[f in filing]: key tier at reader
   rule base = irmaa_single(magi)
-  rule joint excepts base when f = joint = irmaa_joint(magi)
-  rule mfs excepts base when f = mfs = irmaa_mfs[ul03_mfs](magi)
+  rule joint beats base = irmaa_joint(magi) when f == joint
+  rule mfs beats base = irmaa_mfs[ul03_mfs](magi) when f == mfs
 
-ask deductible_2026: deductible
+ask deductible_2026: deductible law 2026-10-18
 
-ask edges_from_cpi: indexed_edge[t] for t in [t0, t1, t2, t3]
+ask edges_from_cpi: indexed_edge[t] for t in [t0, t1, t2, t3] law 2026-10-18
 
-ask full_part_b: full_irmaa[t], full_total[t] for t in tier
+ask full_part_b: full_irmaa[t], full_total[t] for t in tier law 2026-10-18
 
-ask immuno_only: immuno_irmaa[t], immuno_total[t] for t in tier
+ask immuno_only: immuno_irmaa[t], immuno_total[t] for t in tier law 2026-10-18
 
-ask joint_at_750000: tier_of[joint] with magi = 750000
+ask joint_at_750000: tier_of[joint] with magi = 750000 law 2026-10-18
 
-ask joint_below_750000: tier_of[joint] with magi = 749999.99
+ask joint_below_750000: tier_of[joint] with magi = 749999.99 law 2026-10-18
 
-ask mfs_above_109000: tier_of[mfs] with magi = 109000.01
+ask mfs_above_109000: tier_of[mfs] with magi = 109000.01 law 2026-10-18
 
-ask mfs_at_109000: tier_of[mfs] with magi = 109000
+ask mfs_at_109000: tier_of[mfs] with magi = 109000 law 2026-10-18
 
-ask mfs_at_391000: tier_of[mfs], full_total[tier_of[mfs]], immuno_total[tier_of[mfs]] with magi = 391000
+ask mfs_at_391000: tier_of[mfs], full_total[tier_of[mfs]], immuno_total[tier_of[mfs]] with magi = 391000 law 2026-10-18
 
-ask mfs_at_415000: tier_of[mfs] with magi = 415000
+ask mfs_at_415000: tier_of[mfs] with magi = 415000 law 2026-10-18
 
-ask mfs_edge_statute: check band_lo(irmaa_mfs[statute], magi) = top_edge_single - threshold_single with magi = 391000
+ask mfs_edge_statute: check band_lo(irmaa_mfs[statute], magi) == top_edge_single - threshold_single with magi = 391000 law 2026-10-18
 
-ask part_d: partd_irmaa[t] for t in tier
+ask part_d: partd_irmaa[t] for t in tier law 2026-10-18
 
-ask single_above_109000: tier_of[single] with magi = 109000.01
+ask single_above_109000: tier_of[single] with magi = 109000.01 law 2026-10-18
 
-ask single_at_109000: tier_of[single] with magi = 109000
+ask single_at_109000: tier_of[single] with magi = 109000 law 2026-10-18
 
-ask single_at_500000: tier_of[single] with magi = 500000
+ask single_at_500000: tier_of[single] with magi = 500000 law 2026-10-18
 
-ask single_below_500000: tier_of[single] with magi = 499999.99
+ask single_below_500000: tier_of[single] with magi = 499999.99 law 2026-10-18
 
-ask standard_premium: standard, immuno_standard, increase
+ask standard_premium: standard, immuno_standard, increase law 2026-10-18
+
+version lifted_figures
+  cite lifted_1_0_1
+  governs always
+  known 2003-12-08
+  full_total_0_1 = 0.1 "inline in tally 1.0.1: full_total line 98, round step; full_total line 99, round step; full_total line 100, round step"
+  immuno_irmaa_0_1 = 0.1 "inline in tally 1.0.1: immuno_irmaa line 105, round step"
+  immuno_standard_0_1 = 0.1 "inline in tally 1.0.1: immuno_standard line 107, round step"
+  indexed_edge_1000 = 1000 "inline in tally 1.0.1: indexed_edge line 115, round step"
+  standard_0_1 = 0.1 "inline in tally 1.0.1: standard line 128, round step; standard line 129, round step"
 
 version mma2003_s811
   cite mma2003
+  governs always
   known 2003-12-08
   note "known from the act's approval, December 8, 2003 (the slip law's heading); § 811(a) added 42 U.S.C. 1395r(i)"
   note "the LII text of 42 U.S.C. 1395r (https://www.law.cornell.edu/uscode/text/42/1395r) is a consolidated text with no date of its own: it is the locator, not a version; its amendment notes say Pub. L. 114-74 § 601(c)(1) (2015) moved the 200 percent into subclause (I) of (i)(3)(A)(ii) unchanged"
@@ -177,6 +209,7 @@ version mma2003_s811
 
 version bba2015_s601
   cite bba2015
+  governs always
   known 2015-11-02
   note "known from the act's approval, November 2, 2015 (the slip law's last line); § 601(c)(3) added subclause (II) to 42 U.S.C. 1395r(i)(3)(A)(ii), so the unsubsidized Part B premium amount is 200 percent of the aged actuarial rate plus 4 times the (a)(6) increase"
   repay_mult = 4 "§ 601(c)(3): 42 U.S.C. 1395r(i)(3)(A)(ii)(II), 4 times the amount of the increase in the monthly premium under subsection (a)(6) for a month in the year"

@@ -1,0 +1,22 @@
+part pit_5
+  tally 2
+  law
+  note "PIT-5 · The yearly return. The year's base is the sum of the person's PIT-2 bases from every payer, rounded (.2); the tax is the PIT-3 tax of the version governing the year, less the child relief, (v1: less the year's health contributions up to 7.75 % of their bases), never below 0, rounded (.3); less the advances (.4). No figures of its own: the households' return defs point at these versions."
+
+source pit_5 "Personal Income Tax Act, PIT-5 The yearly return (tmp/cases/law/acts.md)"
+
+input pit5_refund_days: int question "Within how many days of filing does the RO refund (PIT-5 .4)?"
+
+version pit5_v1
+  cite pit_5
+  governs 2018..2021
+  known 2017-09-01
+  note "PIT-5 v1, in force 2018-01-01 – 2021-12-31, published 2017-09-01; governs returns for tax years 2018–2021."
+  pit5_refund_days = 45 "PIT-5 v1 .4"
+
+version pit5_v2
+  cite pit_5
+  governs 2022..
+  known 2021-11-15
+  note "PIT-5 v2, in force 2022-01-01 until replaced, published 2021-11-15; governs returns for tax years from 2022 (point 3 without the health contributions)."
+  pit5_refund_days = 45 "PIT-5 v2 .4 (as v1)"

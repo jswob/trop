@@ -1,0 +1,39 @@
+# GD-27 (C4-9, the user, 2026-10-28; writer 10): L §4.6 "... is refused at load where load sees the period and the
+# keys (LOAD-KEY, §8.3), and otherwise at that value (RUN-DOMAIN)". Here the period is month_of(d), d a row, which
+# load doesn't see (L §8.3 "a value read from a row, or computed from one"): RUN-DOMAIN at the value, as before. The
+# load cases are L4_6_period_across_keys_literal and _folded. The old comment:
+# Round 19 (writer 10): settled; was REFCORE-UNSPECIFIED §4.6. GD-24: L §4.6 Reading at a date "A period no longer than the keys that no key's period holds (it lies across
+# two keys, as a calendar month across the months of an anchored index) is refused at that value (RUN-DOMAIN)"
+# (C4-9 waits for the user; RUN-DOMAIN until it is decided otherwise). The old comment:
+# L §4.6 Reading at a date: "An item keyed by one time index, read with a date or a period of another granularity in
+# that key position ..., reads the key whose period holds it. A date outside the index is RUN-KEY. A period longer than
+# the index's keys holds no key: it is refused (LOAD-KEY)." The calendar month 2022-06 read at tmonth (months from the
+# 6th) is no longer than its keys, yet none holds it (it lies across the keys starting 2022-05-06 and 2022-06-06): the
+# section states no outcome, so REFCORE-UNSPECIFIED (snap8 refused RUN-DOMAIN, a message no row of L §8.4 has;
+# MC-M-F1). A day is read at the key holding it (by_day).
+=== m.tally
+model f1
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+
+source s "minimal text"
+index tmonth = month 2022-04..2023-03 from 6
+input d: date
+
+def first_day[t in tmonth]: date = start_of(t)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  d = 2022-06-10
+
+ask by_month: first_day[month_of(d)] law 2026-10-18
+ask by_day: first_day[d] law 2026-10-18
+=== expect
+by_day: 2022-06-06
+  law date 2026-10-18, cut 2026-10-18
+by_month: refused: RUN-DOMAIN the period 2022-06 lies across two keys of tmonth: no key's period holds it
+  law date 2026-10-18, cut 2026-10-18

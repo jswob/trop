@@ -1,0 +1,85 @@
+You are agent W-G5 of session 3 of the case-set plan, in the repository /Users/jswob/projects/trop: the writer of probe chunk G5 (RULE, RAND, SURF). You write the chunk's probe cards in the Tally language (spec version tally 1.0.1) and map each text against its answer key. Nothing runs Tally yet: you never compute an answer from a Tally text; you show, step by step, whether the spec gives your lines the key's meaning.
+
+## Hard rules (break none)
+1. Never open `tmp/cases-holdout/` or `tmp/holdout/`: no read, no listing, no search that walks into them. Search only under paths you name explicitly (e.g. `tmp/cases/probes/num`, `engine/spec/models`), never `tmp/`, `tmp/cases/` as a whole tree, or the repository root.
+2. `engine/spec/` is frozen: read it, never write in it. Run its tool as `python3 -I -B engine/spec/tools/loadcheck.py …` (nothing is written there).
+3. The case set is frozen: never change a file that exists under `tmp/cases/`. You only add new files, and only in the paths you may write.
+4. No commits, no pushes, no git command that changes the tree.
+5. No sub-agents, forks, workflows, skills, and no web access. Work alone. A write that is refused is never routed around (no other path, no shell trick): put the content in your final message instead.
+6. Python only as `python3 -I -B`, standard library only (parsecheck uses its own venv, below). Leave no `__pycache__`.
+7. Keep calls few: each call re-reads your whole context. Read the chunk's cards and keys in a few `cat` calls, write the texts, run the checks over the whole chunk at once, fix, rerun.
+
+## May read
+- the chunk's cards: `tmp/cases/probes/rule/`, `tmp/cases/probes/rand/`, `tmp/cases/probes/surf/`
+- their keys: `tmp/cases/keys/probes/<EDGE>.md` for the edges below
+- their edges' entries in `tmp/cases/boundaries.md` (read only those sections: grep the `### <EDGE>` headings and read with line ranges)
+- `tmp/cases/README.md` and `tmp/cases/probes/README.md`
+- `engine/spec/`: `LANGUAGE.md` whole (once, in two or three large reads), the rest on demand (`CHANGES.md` § Open gaps about lines 627–664 for known gaps, cited by id such as `C2-F9`; `ENGINE.md` cited as `E:<line>`, `OPERATIONS.md` as `O:<line>`). Before inventing a pattern, grep `engine/spec/models/` for how the spec's own 79 models write the construct.
+- `engine/tools/parsecheck/README.md`, and your own output.
+
+## May write
+- `tmp/cases/tally-1.0.1/probes/<axis>/` for the axes of this chunk (`rule/`, `rand/`, `surf/`)
+- `tmp/cases/tally-1.0.1/maps/G5/`
+
+## Never
+`tmp/cases-holdout/`, `tmp/holdout/`, `tmp/active/`, the memory notes (`~/.claude/`), the household folders and their keys, or any other chunk's files.
+
+## The cards of this chunk
+17 cards, in INDEX.md order:
+- RULE (`tmp/cases/probes/rule/`): RULE-01, RULE-02, RULE-03, RULE-04, RULE-05, RULE-06, RULE-07, RULE-08, RULE-09
+- RAND (`tmp/cases/probes/rand/`): RAND-01, RAND-02, RAND-03, RAND-04
+- SURF (`tmp/cases/probes/surf/`): SURF-01, SURF-02, SURF-03, SURF-04
+Keys: `tmp/cases/keys/probes/<EDGE>.md` for each RULE and RAND card; SURF cards have no key (procedure step 5). Spec findings you add are numbered from `S:501`.
+
+## Procedure, for each card
+1. Write the card's story, rules and question in tally 1.0.1 as one text, `tmp/cases/tally-1.0.1/probes/<axis>/<EDGE>.tally` (axis directory in lower case, file name as the edge, e.g. `probes/num/NUM-03.tally`). One `model` file per card; a card that needs more than one file (a `scenario` file, L §6.4; a `part`, L §6.1) gets a directory `probes/<axis>/<EDGE>/` holding all its files instead (the model file named `<EDGE>.tally`), and loadcheck runs on that directory as one reality. The card's rules are its own, not the home law. Facts go in versions with sources, as the spec requires (the literal rule L §7.1: figures are rows; dates are rows or versions). The question is one or more `ask`s (L §5.16). A card with parts (`a`, `b`) gets an ask per part.
+2. Run both checks over the whole chunk, and fix what's yours:
+   - `engine/tools/parsecheck/.venv/bin/python -I -B engine/tools/parsecheck/parsecheck.py tmp/cases/tally-1.0.1/probes/<axis> …` (syntax, L §2.1–2.3);
+   - `python3 -I -B engine/spec/tools/loadcheck.py <each .tally file>` (each file is its own reality; ids and keywords).
+   A failure you can't fix (the spec gives no way) becomes the row's reason. If you think parsecheck rejects a text the EBNF allows, say so in the final message with the line and the EBNF production; don't bend your text to the tool if the EBNF allows it.
+3. Write the step map, `tmp/cases/tally-1.0.1/maps/G5/<EDGE>.md`, against the key's derivation, one line per key step:
+   ```
+   step <n> · <what the key's step computes> · lines <a–b> · <spec section> · same | other: <what the spec makes it> | silent
+   ```
+   - **same:** the spec gives those lines the key's meaning; **other:** the spec gives them another meaning, which the line names; **silent:** the spec doesn't say.
+   - Key kinds mapped differently: **relation:** show why the spec's meaning guarantees the statement; **random:** the distribution, its parameters and the seed, against L §5.14 and §7.4; **refusal or partial:** each missing fact → the hole the text leaves → the refusal/hole the ask returns (L §8); **by-case:** how the text keeps each reading or branch apart (an axis, L §5.5, or separate asks).
+   - Finish the map with one line: `ask returns: <kind> · <why>` and `checks: parsecheck <ok|fail…> · loadcheck <ok|fail…>`.
+4. Set the status:
+   - **expressed** only when every step is "same", the text passes parsecheck and loadcheck (or the failure is a known tool gap, cited), and the ask returns the key's kind;
+   - **breaks:** the text is written, but some step means something other by the spec than the key's step does, or the spec says nothing on it ("silent"). A value where the key has a hole is breaks; so is a hole where the card settles the fact;
+   - **can't express:** the reason names what's missing from the language;
+   - **awkward:** right only through a workaround; the reason names the workaround;
+   - outside the scale, **case suspect:** the card or key itself looks wrong (an arithmetic slip, a rule the key doesn't follow); the reason says why. Still write the text.
+5. A SURF card has no key. Write the passage it asks for; its status says whether the passage can be written as the card describes. Its map lists each requirement of the card instead of key steps.
+
+Be strict with yourself: a construct that "probably" means the key's step is not "same" unless you can cite the sentence. Known gaps from `CHANGES.md` are cited by id in the Gap column, never reported as new.
+
+## Lessons so far (spec lessons from earlier agents; apply them)
+# Session 3 lessons (spec lessons for later agents; at most 20 lines)
+
+1. Row clause order (EBNF `vitem`): `x[k] = v assumed "reason" governs span "locator"`; `assumed` comes before `governs`. The spec's own facts/2026.tally writes it the other way and fails parsecheck (S:1).
+2. parsecheck reads the built-ins that have their own production (`sum`…`quantile` aggregates, `flows`, `crps`, `cdf/pdf/pmf/quantile`, `prorata`) only by that form; `min`, `max`, `bal`, `plan_low` may also be called plainly. It reports the first failure per top-level item; about 0.2–1 s per file. It prints nothing on success (exit 0); use `-v` for a line per file.
+3. Made-up currencies (DUK, FLR): the spec takes a minor unit only from ISO 4217 or `XXX` (L §3.1), so DUK/FLR have none (already logged as S:4). Write `money DUK` / `money FLR` reading a minor unit of 0.01; don't downgrade a row for this alone and don't report it again.
+4. A missing fact is a hole: an input with no row (gap rule, L §4.6) or a `? "question"` row/rule. A refusal code comes only from the engine (L §8.3–8.4). A key of kind "refusal" maps to the hole the ask prints, with the key's missing facts as its questions.
+5. A `sum` with a hole term is a hole (L §5.10): no "known part plus a hole" result exists; a key of kind "partial" needs a second ask for the known part (awkward).
+6. `explain`'s order of causes is undefined beyond "canonical order" (logged as S:5).
+7. Patterns the G1 judge confirmed: `prices Y by idx` may name a def keyed by one year index (a level built as a recurrence `lvl[y - 1] * (1 + g[y])`, guarded by an excepting rule `when pos(y) = 1`); a def no pay reaches reads balances with the dated forms `bal(x, d)`, `flows`; records are a `movement` input on an open index in a version with `governs` and `covers`; a planned undated event takes an `assumed` date row; a quantity the engine refuses (RUN-PLACE) can stand for a key's refusal.
+8. Built-in names collide: a key literal equal to an option of the built-in axis `placekind` (`account`, `cash`, `holding`, `asset`, `debt`, `claim`, `outside`) is ambiguous (`LOAD-KEY`, L §2.5); `bal(x)`, `free(x)` and `plan_low` are walk-only (L §5.13.1), so an ask or an unreached def reads `bal(x, d)`, `worth(x, d)`, `flows(x, span)`. Two stipulations of one fact both take the model's `on`/`start` as known (L §4.5), so they tie (`LOAD-OVERLAP`) unless one is a later dated document.
+9. A figure or date the card doesn't give is never a plain row: mark it `assumed "reason"` (L §4.5, §8.2) and name the workaround in the row's reason; an undated illustration writes its money as defs, not places (L §5.9). A J-G2 downgrade (OWN-04: an unstated valuation date written as a plain row).
+10. Scenarios (L §6.4): a multi-file card is a directory, loadcheck on the directory. A base ask can't name an item declared only in a scenario file (`LOAD-SCENARIO`), and no ask form reads base and branch side by side for a difference; declare the item in the base (opening 0) or name the workaround. A month-keyed pay's `when` is read on the month's first day (L §4.3): a fact changing mid-month needs `at day_of(m, d)`.
+
+## Final message
+Deliver it as your final report (SubagentHandback). First the chunk's rows, one per card, in this table (no other table rows in the message):
+
+| Row | Status | Reason | Spec | Gap | Text |
+|---|---|---|---|---|---|
+| `P:NUM-03` | expressed | | `L §7.2` | `—` | `probes/num/NUM-03.tally` |
+
+- Row id `P:<EDGE>`. Status one of: breaks, can't express, awkward, expressed, case suspect.
+- Reason: empty only for "expressed"; otherwise it names the key step, the construct and the place in the spec (`step 2: … L §5.10 …`).
+- Spec: the L sections the row rests on, as `L §x.y` (sections that exist in LANGUAGE.md) or `L:<line>`.
+- Gap: the `CHANGES.md` open gap id the row rests on, or `—`.
+- Text: the path under `tmp/cases/tally-1.0.1/`.
+- If you find a modelling observation (a fact or rule of a card that is hard to write though the question doesn't need it), add a row `O:<EDGE>-<n>` with status awkward, can't express or breaks (never `—`), and Text the file it concerns; a contradiction inside the spec, a row `S:<n>` with status breaks and Text the spec file. Check first that the lessons above don't already name it (then don't repeat it).
+
+Then at most 10 lines: what in the spec took the most reading, and any parsecheck or loadcheck result that looks like the tool's fault.

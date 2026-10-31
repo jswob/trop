@@ -1,0 +1,54 @@
+model law12
+  tally 1
+  on 2026-10-25
+  note "Probe LAW-12: an exemption, its exception, and an exception to that exception, with the middle rule inapplicable for one heir."
+  note "Rule 3 says a minor needn't report, so it excepts the duty to report (must_report), not the exemption's exception: an excepts chain on exempt itself is transitive (L 5.10 step 4) and would let Leon through."
+
+source card "Probe card LAW-12 (tmp/cases/probes/law/LAW-12.md): story, rules 1-4 and question"
+
+index heir = [kuba, leon]
+
+index relation = [spouse, child, grandchild, nephew]
+
+input amount[h in heir]: money DUK question "How much does the heir inherit?"
+
+input free: money DUK question "Above what amount is a taxed inheritance taxed?"
+
+input minor[h in heir]: bool question "Is the heir a minor?"
+
+input rate: num question "At what rate is a taxed inheritance taxed?"
+
+input rel[h in heir]: key relation question "How is the heir related to the deceased?"
+
+input unreported[h in heir]: bool question "Did the heir fail to report the inheritance within 6 months?"
+
+def exempt[h in heir]: bool
+  rule base v card_law = false
+  rule close excepts base v card_law when rel[h] in [spouse, child, grandchild] = true
+  rule late excepts close v card_law when must_report[h] and unreported[h] = false
+
+def must_report[h in heir]: bool
+  rule base v card_law = true
+  rule minors excepts base v card_law when minor[h] = false
+
+def tax[h in heir]: num DUK
+  note "rule 4: a taxed inheritance pays 12 % above 5 000.00; the card states no rounding"
+  rule base v card_law = (if exempt[h] then 0 else rate * max(0, amount[h] - free))
+
+ask each_heir: exempt[h], tax[h] for h in heir
+
+version card_law
+  cite card
+  known 2026-10-25
+  note "the card's own rules, stipulations known from on (L 4.5). Rule 1 is exempt.close, rule 2 exempt.late, rule 3 must_report.minors, rule 4 tax"
+  free = 5000 "rule 4: above 5 000.00"
+  rate = 0.12 "rule 4: 12 %"
+
+version card_facts
+  cite card
+  known 2026-10-25
+  amount = 50000 "story: two heirs each inherit 50 000.00 DUK"
+  minor = true "story: both are aged 15, minors"
+  rel[kuba] = grandchild "story: Kuba is the deceased's grandson"
+  rel[leon] = nephew "story: Leon is his nephew"
+  unreported = true "story: neither reports it within 6 months"

@@ -1,0 +1,61 @@
+# L §6.1 (round 14): two kinds are of one sort when "declared alike (the same clauses, legs and attributes, and
+# the same parent ...; their notes aside)"; "two kinds stated same are one kind, so a binding over either ranges over
+# the things and movements of both". b.persons carries a note: the kinds join; ana, ola, ben, ola_k: 4. (Writer 6's U-16:
+# its minimal text had a note.)
+=== options pin=bytes
+=== joint.tally
+model family
+  tally 2
+  on 2026-01-05
+  start 2026-01-01
+  end 2026-12-31
+  use a = "ana.tally" sha256 "e438b0e9e801813f005290db20ae57dbafcfc06810324f3ba998080e5c2db6c3"
+  use b = "ben.tally" sha256 "18de2a27793461f4611c11bf195a17c2c5531e8e27c4f6af5d0401a0297a4816"
+  same a.persons = b.persons
+ask n: count(p in a.persons on 2026-06-01), count(p in b.persons on 2026-06-01)
+=== ana.tally
+model ana
+  tally 2
+  on 2026-01-05
+  start 2026-01-01
+  end 2026-12-31
+
+source s "umowa"
+unit PLN: currency minor 0.01
+kind persons
+place wsp: accounts PLN lives 2019-01-01..
+input income[p in persons]: money PLN
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  persons + [ana, ola] lives 2000-01-01..
+  income[ana] = 100.00 PLN "umowa"
+  income[ola] = 10.00 PLN "umowa"
+  opening[wsp] = 1 000.00 PLN at 2026-01-01 start "wyciąg"
+=== ben.tally
+model ben
+  tally 2
+  on 2026-01-05
+  start 2026-01-01
+  end 2026-12-31
+
+source s "umowa"
+unit PLN: currency minor 0.01
+kind persons
+  note "osoby w gospodarstwie"
+place wsp: accounts PLN lives 2019-01-01..
+input pocket[p in persons]: money PLN
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  persons + [ben, ola_k] lives 2000-01-01..
+  pocket[ben] = 50.00 PLN "umowa"
+  pocket[ola_k] = 5.00 PLN "umowa"
+  opening[wsp] = 1 000.00 PLN at 2026-01-01 start "wyciąg"
+=== expect
+n: (4, 4)
+...

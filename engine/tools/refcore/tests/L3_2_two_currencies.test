@@ -1,0 +1,19 @@
+# L §3.2: "adding two currencies is refused (N-202)" (LOAD-UNIT at load).
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "a source"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+unit hour "godzina"
+
+input a: money PLN
+input e: money EUR
+
+ask q1: a + e
+=== expect
+refused: LOAD-UNIT ...

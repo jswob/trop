@@ -1,0 +1,49 @@
+nr;data faktury;dostawca;co;netto;VAT;zapłacono
+K/2023/001;2023-07-03;Hala Przemysłowa Zabór sp. z o.o.;najem warsztatu;2600,00;572,00;2023-07-05
+K/2023/002;2023-07-07;Farby Lazurowe Zabór;lakiery;1197,70;263,49;2023-07-10
+K/2023/003;2023-07-14;Tartak Borówka sp.j.;drewno;986,90;217,12;2023-07-17
+K/2023/004;2023-08-01;Hala Przemysłowa Zabór sp. z o.o.;najem warsztatu;2600,00;572,00;2023-08-03
+K/2023/005;2023-08-04;Tartak Borówka sp.j.;drewno;1178,10;259,18;2023-08-07
+K/2023/006;2023-08-14;Narzędziownia Kos;narzędzia;1416,80;311,70;2023-08-17
+K/2023/007;2023-08-21;Tartak Borówka sp.j.;drewno;2478,30;545,23;2023-08-24
+K/2023/008;2023-09-01;Hala Przemysłowa Zabór sp. z o.o.;najem warsztatu;2600,00;572,00;2023-09-03
+K/2023/009;2023-09-07;Farby Lazurowe Zabór;lakiery;2891,60;636,15;2023-09-10
+K/2023/010;2023-09-12;Farby Lazurowe Zabór;lakiery;1344,60;295,81;2023-09-15
+K/2023/011;2023-10-02;Hala Przemysłowa Zabór sp. z o.o.;najem warsztatu;2600,00;572,00;2023-10-04
+K/2023/012;2023-10-06;Narzędziownia Kos;narzędzia;1827,50;402,05;2023-10-09
+K/2023/013;2023-10-13;Narzędziownia Kos;narzędzia;1128,40;248,25;2023-10-16
+K/2023/014;2023-10-18;Narzędziownia Kos;narzędzia;1065,00;234,30;2023-10-21
+K/2023/015;2023-10-27;Tartak Borówka sp.j.;drewno;670,40;147,49;2023-10-30
+K/2023/016;2023-11-02;Hala Przemysłowa Zabór sp. z o.o.;najem warsztatu;2600,00;572,00;2023-11-04
+K/2023/017;2023-11-03;Tartak Borówka sp.j.;drewno;422,60;92,97;2023-11-06
+K/2023/018;2023-11-14;Narzędziownia Kos;narzędzia;1610,60;354,33;2023-11-17
+K/2023/019;2023-11-17;Farby Lazurowe Zabór;lakiery;2352,90;517,64;2023-11-20
+K/2023/020;2023-12-01;Hala Przemysłowa Zabór sp. z o.o.;najem warsztatu;2600,00;572,00;2023-12-03
+K/2023/021;2023-12-06;Farby Lazurowe Zabór;lakiery;1225,60;269,63;2023-12-09
+K/2023/022;2023-12-11;Farby Lazurowe Zabór;lakiery;897,40;197,43;2023-12-14
+K/2023/023;2023-12-18;Farby Lazurowe Zabór;lakiery;824,90;181,48;2023-12-21
+K/2024/024;2024-01-02;Hala Przemysłowa Zabór sp. z o.o.;najem warsztatu;2600,00;572,00;2024-01-04
+K/2024/025;2024-01-05;Okucia Zając;okucia;2747,60;604,47;2024-01-08
+K/2024/026;2024-01-12;Okucia Zając;okucia;1805,40;397,19;2024-01-15
+K/2024/027;2024-01-17;Okucia Zając;okucia;1105,80;243,28;2024-01-20
+K/2024/028;2024-01-26;Farby Lazurowe Zabór;lakiery;1362,40;299,73;2024-01-29
+K/2024/029;2024-02-01;Hala Przemysłowa Zabór sp. z o.o.;najem warsztatu;2600,00;572,00;2024-02-03
+K/2024/030;2024-02-06;Tartak Borówka sp.j.;drewno;481,60;105,95;2024-02-09
+K/2024/031;2024-02-14;Tartak Borówka sp.j.;drewno;1780,40;391,69;2024-02-17
+K/2024/032;2024-02-16;Farby Lazurowe Zabór;lakiery;1060,90;233,40;2024-02-19
+K/2024/033;2024-03-01;Hala Przemysłowa Zabór sp. z o.o.;najem warsztatu;2600,00;572,00;2024-03-03
+K/2024/034;2024-03-01;Farby Lazurowe Zabór;lakiery;2443,00;537,46;2024-03-04
+K/2024/035;2024-03-11;Narzędziownia Kos;narzędzia;1760,90;387,40;2024-03-14
+K/2024/036;2024-03-20;Tartak Borówka sp.j.;drewno;1931,70;424,97;2024-03-23
+K/2024/037;2024-03-25;Okucia Zając;okucia;1379,60;303,51;2024-03-28
+K/2024/038;2024-04-02;Hala Przemysłowa Zabór sp. z o.o.;najem warsztatu;2600,00;572,00;2024-04-04
+K/2024/039;2024-04-04;Okucia Zając;okucia;1291,70;284,17;2024-04-07
+K/2024/040;2024-04-11;Okucia Zając;okucia;2484,00;546,48;2024-04-14
+K/2024/041;2024-04-18;Farby Lazurowe Zabór;lakiery;1615,70;355,45;2024-04-21
+K/2024/042;2024-05-02;Hala Przemysłowa Zabór sp. z o.o.;najem warsztatu;2600,00;572,00;2024-05-04
+K/2024/043;2024-05-06;Tartak Borówka sp.j.;drewno;1094,60;240,81;2024-05-09
+K/2024/044;2024-05-10;Tartak Borówka sp.j.;drewno;2384,20;524,52;2024-05-13
+K/2024/045;2024-06-03;Hala Przemysłowa Zabór sp. z o.o.;najem warsztatu;2600,00;572,00;2024-06-05
+K/2024/046;2024-06-03;Tartak Borówka sp.j.;drewno;4582,60;1008,17;2024-06-06
+K/2024/047;2024-06-12;Farby Lazurowe Zabór;lakiery;2011,90;442,62;2024-06-15
+K/2024/048;2024-06-14;Tartak Borówka sp.j.;drewno;1204,70;265,03;2024-06-17

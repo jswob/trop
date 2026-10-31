@@ -1,0 +1,10 @@
+scenario hr2_v3
+  tally 1
+  from 2026-01-26
+  note "B-HR2 v3, Ola's proposal of 2026-01-02, not decided: the reserve is the next three instalments as they will be after this day's overpayment. The reserve reads the overpayment and the overpayment reads the reserve: LOAD-CYCLE (L §5.10), the refusal B-10 asks for."
+
+def v3_reserve[d in day]: money DUK = sum(k in month where k > month_of(d) and k <= add_months(start_of(month_of(d)), 3): mtg_inst[k] as if {mtg_over_on[d] = v3_op[d]}) + hr2_month_vat[d] + round(hr2_month_net[d] * hr2_tax_share, 0.01, half-up) + hr2_contrib
+
+def v3_op[d in day]: money DUK = max(0, min(hr2_cap, hr2_have[d] - v3_reserve[d]))
+
+ask b10_v3: v3_op[2026-01-26] as known 2026-01-07

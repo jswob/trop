@@ -1,0 +1,63 @@
+# L §6.1 same: "the joint model settles it with a version row of its own that states the value": the joint version
+# settle states a.rent[2026-03] = 2 050.00 PLN, read from both sides of the same line.
+=== options pin=bytes
+=== joint.tally
+model family
+  tally 2
+  on 2026-01-05
+  start 2026-01-01
+  end 2026-12-31
+  use a = "ana.tally" sha256 "e42519b086605a071d9ecc73cede5a0d6c7a969e069b921d3607f5353dd04a6c"
+  use b = "ben.tally" sha256 "0100e9a6e9d46e4f564190c5f45cf81d6966cbd6c5a95b32effabbaea4534b0d"
+  same a.rent[2026-03] = b.rent_in[2026-03]
+
+source joint_s "ustalenie"
+unit PLN: currency minor 0.01
+
+version settle
+  cite joint_s
+  governs 2026..
+  known 2026-01-02
+  a.rent[2026-03] = 2 050.00 PLN "aneks"
+
+ask ra: a.rent[2026-03]
+ask rb: b.rent_in[2026-03]
+ask r4: b.rent_in[2026-04]
+=== ana.tally
+model ana
+  tally 2
+  on 2026-01-05
+  start 2026-01-01
+  end 2026-12-31
+
+source s "umowa"
+unit PLN: currency minor 0.01
+input rent[m in months]: money PLN
+
+version v
+  cite s
+  governs 2026..
+  known 2025-12-01
+  rent[2026-03] = 2 000.00 PLN "umowa najmu"
+=== ben.tally
+model ben
+  tally 2
+  on 2026-01-05
+  start 2026-01-01
+  end 2026-12-31
+
+source s "umowa"
+unit PLN: currency minor 0.01
+input rent_in[m in months]: money PLN
+
+version v
+  cite s
+  governs 2026..
+  known 2025-12-01
+  rent_in[2026-03] = 2 100.00 PLN "umowa najmu"
+  rent_in[2026-04] = 2 100.00 PLN "umowa najmu"
+=== expect ra rb
+ra: 2 050.00 PLN
+...
+rb: 2 050.00 PLN
+...

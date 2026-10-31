@@ -1,0 +1,18 @@
+part cc_2
+  tally 1
+  law
+  note "CC-2 · The early repayment fee: only where the agreement sets one and the rate was fixed (.1); at most 1 % of the amount repaid early with more than a year left to the agreed end, 0.5 % otherwise, never more than the interest the consumer would have paid to the end (.2)."
+
+source cc_2 "Consumer Credit Act, CC-2 The early repayment fee (tmp/cases/law/acts.md)"
+
+input cc2_fee_long: num question "What is the fee cap with more than a year left (CC-2 .2)?"
+
+input cc2_fee_short: num question "What is the fee cap with a year or less left (CC-2 .2)?"
+
+version cc2_v1
+  cite cc_2
+  governs 2018-01-01..
+  known 2017-09-01
+  note "CC-2 v1, in force 2018-01-01 until replaced, published 2017-09-01; governs repayments from 2018-01-01."
+  cc2_fee_long = 0.01 "CC-2 v1 .2"
+  cc2_fee_short = 0.005 "CC-2 v1 .2"

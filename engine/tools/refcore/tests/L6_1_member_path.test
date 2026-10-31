@@ -1,0 +1,30 @@
+# E §3.1 step 1 / L §6.1: `use a = "file" sha256 "..."` names the member's file; it is found relative to the joint model's
+# file (members/ana.tally beside joint.tally). With pin=bytes the pin matches, and a.rate reads ana's rate (0.12).
+=== options pin=bytes
+=== joint.tally
+model family
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+  use a = "members/ana.tally" sha256 "caf5f7622e7fa75fe10974cb18199597c91e70a92e887654d54870c36f543c67"
+
+ask r: a.rate
+=== members/ana.tally
+model ana
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source s "umowa"
+input rate: num
+
+version v
+  cite s
+  governs always
+  known 2025-01-01
+  rate = 0.12 "umowa"
+=== expect
+r: 0.12
+  cut 2026-10-20

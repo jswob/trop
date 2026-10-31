@@ -1,0 +1,31 @@
+# L §7.3: "Where the exact value is a rational on a cell edge, the engine detects it exactly: perfect powers,
+# exp(0), ln(1)"; such a value isn't widened, so it prints plain (The error bound).  exp(0) = 1, ln(1) = 0,
+# sqrt(4) = 2, pow(4, 0.5) = 2, each on its step's grid.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+input four: num
+input half: num
+def ex: num = exp(0) to 0.1 at reader
+def lx: num = ln(1) to 1e-9 at reader
+def sq: num = sqrt(four) to 1 at reader
+def pw: num = pow(four, half) to 1e-3 at reader
+
+version v
+  cite s
+  governs 2026..
+  known 2026-01-01
+  four = 4
+  half = 0.5
+
+ask a: ex, lx, sq, pw law 2026-06-30
+=== expect
+a: (1, 0, 2, 2)
+  law date 2026-06-30, cut 2026-12-31

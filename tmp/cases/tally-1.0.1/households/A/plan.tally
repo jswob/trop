@@ -1,0 +1,269 @@
+part plan
+  tally 1
+  note "The walk. The past is read from the documents and from the closing anchors of 2025 (records.tally), not walked: the model's pays are booked from walk_from on (L §5.18: on days no version covers, the plan), except the Lazur reserve's, booked from the day after its last statement."
+  note "From 2026: the pay into the joint account, the standing orders, Zosia's savings (A-HR4, a flow pay, so booked before every state pay of the day, L §5.13.2), the 15th (A-HR1 v2, or the forecast's fixed sum from February 2026), the purchases it makes (A-D11, A-D12) and the next car (A-HR3). The 15th's money goes through inv_transit, a place of the model's own, so the wrapped account's share and Rzeka's are each taken from what the rule took, not from a balance read again after the first transfer (awkward)."
+
+input walk_from: date question "From which day does the walk book the model's pays?"
+
+input res_on[t in res_tx]: date question "On which day was this transfer to the Lazur reserve made?"
+
+input res_amt[t in res_tx]: money DUK question "How much went to the Lazur reserve?"
+
+input laz_rate: num question "What yearly rate does the Lazur savings account pay (A-D31, A-D32)?"
+
+input laz_last_stmt: date question "On which day does the last Lazur statement end?"
+
+input fc_fixed[y in tax_year]: money DUK question "What fixed sum does the forecast invest on each 15th of this year (story § The forecast, item 1)?"
+
+input fc_fixed_from: month question "From which month does the forecast invest a fixed sum?"
+
+index res_tx: open
+  note "transfers from the joint account to the Lazur reserve (story)"
+
+index lazq = month 2025-07..2025-10 by 3
+  note "the quarters after the last Lazur statement to the end of 2025; the savings accounts stay outside the forecast (story § The forecast, item 4)"
+
+place inv_transit: account DUK
+
+place car_dealer: outside DUK
+
+version walk_start
+  cite modeller
+  known 2021-01-01
+  walk_from = 2026-01-01 assumed "the records end on 2025-12-31 (story); before, the past is the documents and the closing anchors, since the records are not imported (O:A-1)"
+  opening[inv_transit] = 0 "a place of the model's own, empty"
+  owns[ania, inv_transit] = 0.5 governs 2021-01-01.. "the joint account's money on its way to investing (CIV-1 .2)"
+  owns[tomek, inv_transit] = 0.5 governs 2021-01-01.. "the joint account's money on its way to investing (CIV-1 .2)"
+  owns[ania, car_dealer] = 0 governs 2021-01-01.. "the world outside"
+  owns[tomek, car_dealer] = 0 governs 2021-01-01.. "the world outside"
+  inv_holder[inv_transit] = - "not a fund account"
+  inv_holder[car_dealer] = - "not a fund account"
+
+version reserve_moves
+  cite story
+  known 2025-10-06
+  res_on[r20241220] = 2024-12-20 "story 2024-12-20: 2 000.00 DUK from the joint account to the Lazur reserve (wrz-joint-2024-12.csv line 30)"
+  res_amt[r20241220] = 2000.00 "story 2024-12-20"
+  res_on[r20251006] = 2025-10-06 "story 2025-10-06: 1 500.00 DUK from the joint account to the Lazur reserve (wrz-joint-2025-10.csv line 14)"
+  res_amt[r20251006] = 1500.00 "story 2025-10-06"
+
+version laz_rate_2021
+  cite a_d31
+  known 2021-03-01
+  laz_rate = 0.031 governs 2021-03-01.. "A-D31: 3.10 % a year on the daily balance, over 365 days"
+
+version laz_rate_2024
+  cite a_d32
+  known 2023-12-04
+  laz_rate = 0.042 governs 2024-01-01.. "A-D32: from 1 January 2024, 4.20 % a year"
+
+version laz_stmt_end
+  cite laz_sav
+  known 2025-07-01
+  note "story 2025-06-30, known 2025-07-01: the last Lazur statement downloaded; the second half of 2025 wasn't downloaded, and Bank Lazur didn't write about its rate. The key reads the rate from 2025-07-01 as missing; A-D31 changes it only by notice, which may settle it at 4.20 % (see the row for A-11)."
+  laz_last_stmt = 2025-06-30 "laz-savings-1020-0044-7310.csv line 41"
+  laz_rate = ? "the Bank Lazur savings rate from 2025-07-01: no statement after 2025-06-30 was downloaded" governs 2025-07-01..
+
+input card_spend[m in month]: money DUK question "How much do we spend by card from the joint account in this month?"
+
+version card_unknown
+  cite modeller
+  known 2026-01-15
+  note "the walk's months have no records (they end 2025-12-31) and the story plans no card spending; A-HR1 v2's floor holds a card average, not a plan. The pay cards falls on days of the month nobody knows: its `on` is the month, an imprecise date (L §4.4)"
+  card_spend[*] = ? "our card spending from the joint account from 2026: no records after 2025-12-31 and no plan for it (story)"
+
+pay cards[m in month]
+  from joint
+  to outside_duk
+  amount card_spend[m]
+  on m
+  when start_of(m) >= walk_from
+
+pay wage[e in payer, m in month]
+  from outside_duk
+  to joint
+  amount net[e, m]
+  on pay_on[e, m]
+  when pay_on[e, m] >= walk_from
+
+pay so_pay[o in so, k in month]
+  from joint
+  to outside_duk
+  amount so_amount[o]
+  on so_day[o, k]
+  when so_day[o, k] >= walk_from and so_runs[o, k]
+
+pay reserve[t in res_tx]
+  from joint
+  to lazur
+  amount res_amt[t]
+  on res_on[t]
+  when res_on[t] > laz_last_stmt
+
+def laz_gross[q in lazq]: money DUK at start_of(q)
+  note "A-D31: the daily balance times the rate over 365 days, credited on the quarter's last day; that day's balance is the day before's"
+  rule base = round(sum(d in day where d >= start_of(q) and d < end_of(q): bal(lazur, min(d, add_days(end_of(q), -2)))) * laz_rate / 365, 0.01, half-up)
+
+def laz_net[q in lazq]: money DUK
+  note "A-D31, PIT-8 .7: credited less the 19 % tax withheld, the tax rounded (GEN-5 .1)"
+  rule base = laz_gross[q] - round(laz_gross[q] * pit8_rate, 1, half-up)
+
+pay laz_interest[q in lazq]
+  from outside_duk
+  to lazur
+  amount laz_net[q]
+  on add_days(end_of(q), -1)
+  when start_of(q) > laz_last_stmt
+
+def hr4_amt[m in month]: money DUK at rule_day[m] = hr4_amount
+
+pay zosia_save[m in month]
+  from joint
+  to zosia_sav
+  amount hr4_amt[m]
+  on rule_day[m]
+  when rule_day[m] >= walk_from
+
+def inv_want[m in month]: money DUK at rule_day[m]
+  note "A-HR1 v2 .1: everything in the joint account above the floor, read at this point of the day, after the day's records and flow pays (A-HR4's transfer included) and before the rule's own transfers; from fc_fixed_from the forecast's fixed sum instead (story § The forecast, item 1)"
+  rule v2 v hr1_v2 = max(0, bal(joint) - hr1_floor - due[m] - card_avg[m])
+  rule fixed excepts v2 v fc_moves when m >= fc_fixed_from = fc_fixed[year_of(m)]
+
+pay invest_take[m in month]
+  from joint
+  to inv_transit
+  amount inv_want[m]
+  on rule_day[m]
+  when rule_day[m] >= walk_from
+  phase 3
+
+def wrap_room_now[m in month]: money DUK at rule_day[m]
+  note "PIT-9 .2: the year's limit less what the walk has paid into the wrapped account this year"
+  rule base = max(0, wrap_limit - flows(invest_wrap, start_of(year_of(m))..add_days(rule_day[m], -1)))
+
+pay invest_wrap[m in month]
+  from inv_transit
+  to wrap_cash
+  amount min(bal(inv_transit), wrap_room_now[m])
+  on rule_day[m]
+  when rule_day[m] >= walk_from
+  phase 4
+
+pay invest_rzk[m in month]
+  from inv_transit
+  to rzt_cash
+  amount bal(inv_transit)
+  on rule_day[m]
+  when rule_day[m] >= walk_from
+  phase 5
+
+def wrap_c[m in month]: money DUK = flows(invest_wrap[m], rule_day[m]..rule_day[m])
+
+def w_bnd_money[m in month]: money DUK
+  note "A-D11 .1, A-HR1 .3: half to each fund; an odd ort goes to GLB"
+  rule base = round(wrap_c[m] / 2, 0.01, down)
+
+def w_glb_money[m in month]: money DUK = wrap_c[m] - w_bnd_money[m]
+
+def w_glb_units[m in month]: num fund_u
+  note "A-D11 .1: units to 4 places, rounded down"
+  rule base = round(w_glb_money[m] / px_glb[rule_day[m]], 0.0001, down)
+
+def w_bnd_units[m in month]: num fund_u
+  note "A-D11 .1: units to 4 places, rounded down"
+  rule base = round(w_bnd_money[m] / px_bnd[rule_day[m]], 0.0001, down)
+
+pay wbuy_glb_cash[m in month]
+  from wrap_cash
+  to outside_duk
+  amount round(w_glb_units[m] * px_glb[rule_day[m]], 0.01, half-up)
+  on rule_day[m]
+  when rule_day[m] >= walk_from and wrap_c[m] > 0
+  phase 6
+
+pay wbuy_glb_units[m in month]
+  from outside_fund_u
+  to wrap_glb
+  amount w_glb_units[m]
+  on rule_day[m]
+  when rule_day[m] >= walk_from and wrap_c[m] > 0
+  phase 6
+
+pay wbuy_bnd_cash[m in month]
+  from wrap_cash
+  to outside_duk
+  amount round(w_bnd_units[m] * px_bnd[rule_day[m]], 0.01, half-up)
+  on rule_day[m]
+  when rule_day[m] >= walk_from and wrap_c[m] > 0
+  phase 6
+
+pay wbuy_bnd_units[m in month]
+  from outside_fund_u
+  to wrap_bnd
+  amount w_bnd_units[m]
+  on rule_day[m]
+  when rule_day[m] >= walk_from and wrap_c[m] > 0
+  phase 6
+
+def r_c[m in month]: money DUK = flows(invest_rzk[m], rule_day[m]..rule_day[m])
+
+def r_fee[m in month]: money DUK at rule_day[m]
+  note "A-D12 .1: 0.25 % of the money placed, at least 5.00 DUK, rounded to the ort; the money placed and the fee together are what arrived"
+  rule base = max(rzk_fee_min, round(r_c[m] - r_c[m] / (1 + rzk_fee_rate), 0.01, half-up))
+
+def r_units[m in month]: num fund_u
+  note "A-D12 .1, A-HR1 v2 .4: BRZ-GLB-A at the day's price, units to 4 places, rounded down; what isn't invested stays as cash"
+  rule base = round((r_c[m] - r_fee[m]) / px_glb[rule_day[m]], 0.0001, down)
+
+pay rbuy_cash[m in month]
+  from rzt_cash
+  to outside_duk
+  amount round(r_units[m] * px_glb[rule_day[m]], 0.01, half-up) + r_fee[m]
+  on rule_day[m]
+  when rule_day[m] >= walk_from and r_c[m] > 0
+  phase 6
+
+pay rbuy_units[m in month]
+  from outside_fund_u
+  to rzt_glb
+  amount r_units[m]
+  on rule_day[m]
+  when rule_day[m] >= walk_from and r_c[m] > 0
+  phase 6
+
+def rzt_worth_now[m in month]: num DUK
+  note "A-HR3: Tomek's Rzeka account at this point of the day, its cash and its units at the day's prices"
+  rule base = bal(rzt_cash) + bal(rzt_glb) * px_glb[rule_day[m]] + bal(rzt_div) * px_div[rule_day[m]] + bal(rzt_idx) * px_idx[rule_day[m]] + bal(rzt_em) * px_em[rule_day[m]]
+
+def hr3_go[m in month]: bool at rule_day[m]
+  note "A-HR3: on a 15th, after that day's investing, once only"
+  rule none = false
+  rule on excepts none v hr3_v1 when flows(car_dealer, walk_from..add_days(rule_day[m], -1)) = 0 = rzt_worth_now[m] >= hr3_threshold
+
+def hr3_units[m in month]: num fund_u
+  note "A-HR3 sells 45 000.00 DUK of units; the units to 4 places, rounded up so the sale brings the sum (assumed: the rule doesn't say)"
+  rule base = round(hr3_amount / px_glb[rule_day[m]], 0.0001, up)
+
+pay hr3_sell[m in month]
+  from rzt_glb
+  to outside_fund_u
+  amount hr3_units[m]
+  on rule_day[m]
+  when rule_day[m] >= walk_from and hr3_go[m]
+  phase 7
+
+pay hr3_proceeds[m in month]
+  from outside_duk
+  to rzt_cash
+  amount round(hr3_units[m] * px_glb[rule_day[m]], 0.01, half-up)
+  on rule_day[m]
+  when flows(hr3_sell[m], rule_day[m]..rule_day[m]) > 0
+  phase 8
+
+pay hr3_car[m in month]
+  from rzt_cash
+  to car_dealer
+  amount hr3_amount
+  on rule_day[m]
+  when flows(hr3_sell[m], rule_day[m]..rule_day[m]) > 0
+  phase 9

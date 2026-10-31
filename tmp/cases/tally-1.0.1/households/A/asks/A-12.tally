@@ -1,0 +1,35 @@
+part asks_a12
+  tally 1
+  note "A-12 · Ten years on (questions.md): as of 2035-12-31, known as of 2026-01-15, one ask per path and per path under the what-if (t25_<path>). January 2026 invests what A-HR1 v2 gives, a hole (the card average reads records not imported, and see A-10), so the walk's places are holes from 2026-01-15; the _jan0 asks pin January's sum at 0 to show the rest. The wrap tax reads the register's contributions to 2025, a hole (O:A-1)."
+
+ask a12_base: fc_car_day, fc_value, fc_wrap_tax, fc_gains_tax, fc_real with scenario base as known 2026-01-15
+
+ask a12_crash: fc_car_day, fc_value, fc_wrap_tax, fc_gains_tax, fc_real with scenario crash as known 2026-01-15
+
+ask a12_flat: fc_car_day, fc_value, fc_wrap_tax, fc_gains_tax, fc_real with scenario flat as known 2026-01-15
+
+ask a12_switch: fc_car_day, fc_value, fc_wrap_tax, fc_gains_tax, fc_real with scenario switch as known 2026-01-15
+
+ask a12_t25_base: fc_car_day, fc_value, fc_wrap_tax, fc_gains_tax, fc_real with scenario t25_base as known 2026-01-15
+
+ask a12_t25_crash: fc_car_day, fc_value, fc_wrap_tax, fc_gains_tax, fc_real with scenario t25_crash as known 2026-01-15
+
+ask a12_t25_flat: fc_car_day, fc_value, fc_wrap_tax, fc_gains_tax, fc_real with scenario t25_flat as known 2026-01-15
+
+ask a12_t25_switch: fc_car_day, fc_value, fc_wrap_tax, fc_gains_tax, fc_real with scenario t25_switch as known 2026-01-15
+
+ask a12_base_jan0: fc_car_day, fc_value, fc_wrap_tax, fc_gains_tax, fc_real with scenario base, inv_want[2026-01] = 0 as known 2026-01-15
+
+ask a12_crash_jan0: fc_car_day, fc_value, fc_wrap_tax, fc_gains_tax, fc_real with scenario crash, inv_want[2026-01] = 0 as known 2026-01-15
+
+ask a12_flat_jan0: fc_car_day, fc_value, fc_wrap_tax, fc_gains_tax, fc_real with scenario flat, inv_want[2026-01] = 0 as known 2026-01-15
+
+ask a12_switch_jan0: fc_car_day, fc_value, fc_wrap_tax, fc_gains_tax, fc_real with scenario switch, inv_want[2026-01] = 0 as known 2026-01-15
+
+ask a12_t25_base_jan0: fc_car_day, fc_value, fc_wrap_tax, fc_gains_tax, fc_real with scenario t25_base, inv_want[2026-01] = 0 as known 2026-01-15
+
+ask a12_t25_crash_jan0: fc_car_day, fc_value, fc_wrap_tax, fc_gains_tax, fc_real with scenario t25_crash, inv_want[2026-01] = 0 as known 2026-01-15
+
+ask a12_t25_flat_jan0: fc_car_day, fc_value, fc_wrap_tax, fc_gains_tax, fc_real with scenario t25_flat, inv_want[2026-01] = 0 as known 2026-01-15
+
+ask a12_t25_switch_jan0: fc_car_day, fc_value, fc_wrap_tax, fc_gains_tax, fc_real with scenario t25_switch, inv_want[2026-01] = 0 as known 2026-01-15

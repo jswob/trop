@@ -1,0 +1,126 @@
+deductible_2026: ?"What is the 2026 Part B annual deductible? Its rule (Social Security Act § 1833(b), 42 U.S.C. 1395l(b)) and the figures it is indexed from are not in the case." (deductible)
+  law date 2026-10-18, cut 2026-10-18
+edges_from_cpi (t = t0) [ul03_tie1000 = *]: ?"What is the average of the Consumer Price Index for all urban consumers (United States city average) for the 12-month period ending with this August (2018 or 2025)?" (cpi_avg[to_2018_08], cpi_avg[to_2025_08])
+  law date 2026-10-18, cut 2026-10-18
+edges_from_cpi (t = t1) [ul03_tie1000 = *]: ?"What is the average of the Consumer Price Index for all urban consumers (United States city average) for the 12-month period ending with this August (2018 or 2025)?" (cpi_avg[to_2018_08], cpi_avg[to_2025_08])
+  law date 2026-10-18, cut 2026-10-18
+edges_from_cpi (t = t2) [ul03_tie1000 = *]: ?"What is the average of the Consumer Price Index for all urban consumers (United States city average) for the 12-month period ending with this August (2018 or 2025)?" (cpi_avg[to_2018_08], cpi_avg[to_2025_08])
+  law date 2026-10-18, cut 2026-10-18
+edges_from_cpi (t = t3) [ul03_tie1000 = *]: ?"What is the average of the Consumer Price Index for all urban consumers (United States city average) for the 12-month period ending with this August (2018 or 2025)?" (cpi_avg[to_2018_08], cpi_avg[to_2025_08])
+  law date 2026-10-18, cut 2026-10-18
+full_part_b (t = t0) [ul03_repay = *, ul03_round_at = *, ul03_tie = *]: (0.00 USD, 202.90 USD)
+  law date 2026-10-18, cut 2026-10-18
+full_part_b (t = t1) [ul03_repay = respectively | statute, ul03_round_at = *, ul03_tie = *]: (81.20 USD, 284.10 USD)
+  reading: ul03_repay = respectively | statute
+  law date 2026-10-18, cut 2026-10-18
+full_part_b (t = t1) [ul03_repay = additional, ul03_round_at = *, ul03_tie = *]: (81.40 USD, 284.30 USD)
+  reading: ul03_repay = additional
+  law date 2026-10-18, cut 2026-10-18
+full_part_b (t = t2) [ul03_repay = respectively | statute, ul03_round_at = *, ul03_tie = *]: (202.90 USD, 405.80 USD)
+  reading: ul03_repay = respectively | statute
+  law date 2026-10-18, cut 2026-10-18
+full_part_b (t = t2) [ul03_repay = additional, ul03_round_at = *, ul03_tie = *]: (203.10 USD, 406.00 USD)
+  reading: ul03_repay = additional
+  law date 2026-10-18, cut 2026-10-18
+full_part_b (t = t3) [ul03_repay = respectively | statute, ul03_round_at = *, ul03_tie = *]: (324.60 USD, 527.50 USD)
+  reading: ul03_repay = respectively | statute
+  law date 2026-10-18, cut 2026-10-18
+full_part_b (t = t3) [ul03_repay = additional, ul03_round_at = *, ul03_tie = *]: (324.80 USD, 527.70 USD)
+  reading: ul03_repay = additional
+  law date 2026-10-18, cut 2026-10-18
+full_part_b (t = t4) [ul03_repay = respectively, ul03_round_at = *, ul03_tie = *]: (446.30 USD, 649.20 USD)
+  reading: ul03_repay = respectively
+  law date 2026-10-18, cut 2026-10-18
+full_part_b (t = t4) [ul03_repay = additional, ul03_round_at = *, ul03_tie = *]: (446.50 USD, 649.40 USD)
+  reading: ul03_repay = additional
+  law date 2026-10-18, cut 2026-10-18
+full_part_b (t = t4) [ul03_repay = statute, ul03_round_at = *, ul03_tie = *]: (446.40 USD, 649.30 USD)
+  reading: ul03_repay = statute
+  law date 2026-10-18, cut 2026-10-18
+full_part_b (t = t5) [ul03_repay = respectively | statute, ul03_round_at = *, ul03_tie = *]: (487.00 USD, 689.90 USD)
+  reading: ul03_repay = respectively | statute
+  law date 2026-10-18, cut 2026-10-18
+full_part_b (t = t5) [ul03_repay = additional, ul03_round_at = *, ul03_tie = *]: (487.20 USD, 690.10 USD)
+  reading: ul03_repay = additional
+  law date 2026-10-18, cut 2026-10-18
+immuno_only (t = t0) [ul03_tie = *]: (0.00 USD, 121.60 USD)
+  law date 2026-10-18, cut 2026-10-18
+immuno_only (t = t1) [ul03_tie = *]: (81.10 USD, 202.70 USD)
+  law date 2026-10-18, cut 2026-10-18
+immuno_only (t = t2) [ul03_tie = *]: (202.70 USD, 324.30 USD)
+  law date 2026-10-18, cut 2026-10-18
+immuno_only (t = t3) [ul03_tie = *]: (324.30 USD, 445.90 USD)
+  law date 2026-10-18, cut 2026-10-18
+immuno_only (t = t4) [ul03_tie = *]: (445.90 USD, 567.50 USD)
+  law date 2026-10-18, cut 2026-10-18
+immuno_only (t = t5) [ul03_tie = *]: (486.50 USD, 608.10 USD)
+  law date 2026-10-18, cut 2026-10-18
+joint_at_750000 [ul03_mfs = *]: t5
+  pinned: magi = 750 000.00 USD
+  law date 2026-10-18, cut 2026-10-18
+joint_below_750000 [ul03_mfs = *]: t4
+  pinned: magi = 749 999.99 USD
+  law date 2026-10-18, cut 2026-10-18
+mfs_above_109000 [ul03_mfs = *]: t4
+  pinned: magi = 109 000.01 USD
+  law date 2026-10-18, cut 2026-10-18
+mfs_at_109000 [ul03_mfs = *]: t0
+  pinned: magi = 109 000.00 USD
+  law date 2026-10-18, cut 2026-10-18
+mfs_at_391000 [ul03_mfs = statute, ul03_repay = respectively | statute, ul03_round_at = *, ul03_tie = *]: (t5, 689.90 USD, 608.10 USD)
+  pinned: magi = 391 000.00 USD
+  reading: ul03_mfs = statute
+  reading: ul03_repay = respectively | statute
+  law date 2026-10-18, cut 2026-10-18
+mfs_at_391000 [ul03_mfs = statute, ul03_repay = additional, ul03_round_at = *, ul03_tie = *]: (t5, 690.10 USD, 608.10 USD)
+  pinned: magi = 391 000.00 USD
+  reading: ul03_mfs = statute
+  reading: ul03_repay = additional
+  law date 2026-10-18, cut 2026-10-18
+mfs_at_391000 [ul03_mfs = cfr, ul03_repay = respectively, ul03_round_at = *, ul03_tie = *]: (t4, 649.20 USD, 567.50 USD)
+  pinned: magi = 391 000.00 USD
+  reading: ul03_mfs = cfr
+  reading: ul03_repay = respectively
+  law date 2026-10-18, cut 2026-10-18
+mfs_at_391000 [ul03_mfs = cfr, ul03_repay = additional, ul03_round_at = *, ul03_tie = *]: (t4, 649.40 USD, 567.50 USD)
+  pinned: magi = 391 000.00 USD
+  reading: ul03_mfs = cfr
+  reading: ul03_repay = additional
+  law date 2026-10-18, cut 2026-10-18
+mfs_at_391000 [ul03_mfs = cfr, ul03_repay = statute, ul03_round_at = *, ul03_tie = *]: (t4, 649.30 USD, 567.50 USD)
+  pinned: magi = 391 000.00 USD
+  reading: ul03_mfs = cfr
+  reading: ul03_repay = statute
+  law date 2026-10-18, cut 2026-10-18
+mfs_at_415000 [ul03_mfs = *]: t5
+  pinned: magi = 415 000.00 USD
+  law date 2026-10-18, cut 2026-10-18
+mfs_edge_statute: ok
+  pinned: magi = 391 000.00 USD
+  law date 2026-10-18, cut 2026-10-18
+part_d (t = t0): 0.00 USD
+  law date 2026-10-18, cut 2026-10-18
+part_d (t = t1): ?"What is the 2026 Part D income-related monthly adjustment amount for this tier? The national base beneficiary premium and the Part D formula (Social Security Act § 1860D-13(a)(7)) are not in the case." (partd_irmaa[t1])
+  law date 2026-10-18, cut 2026-10-18
+part_d (t = t2): ?"What is the 2026 Part D income-related monthly adjustment amount for this tier? The national base beneficiary premium and the Part D formula (Social Security Act § 1860D-13(a)(7)) are not in the case." (partd_irmaa[t2])
+  law date 2026-10-18, cut 2026-10-18
+part_d (t = t3): ?"What is the 2026 Part D income-related monthly adjustment amount for this tier? The national base beneficiary premium and the Part D formula (Social Security Act § 1860D-13(a)(7)) are not in the case." (partd_irmaa[t3])
+  law date 2026-10-18, cut 2026-10-18
+part_d (t = t4): ?"What is the 2026 Part D income-related monthly adjustment amount for this tier? The national base beneficiary premium and the Part D formula (Social Security Act § 1860D-13(a)(7)) are not in the case." (partd_irmaa[t4])
+  law date 2026-10-18, cut 2026-10-18
+part_d (t = t5): ?"What is the 2026 Part D income-related monthly adjustment amount for this tier? The national base beneficiary premium and the Part D formula (Social Security Act § 1860D-13(a)(7)) are not in the case." (partd_irmaa[t5])
+  law date 2026-10-18, cut 2026-10-18
+single_above_109000 [ul03_mfs = *]: t1
+  pinned: magi = 109 000.01 USD
+  law date 2026-10-18, cut 2026-10-18
+single_at_109000 [ul03_mfs = *]: t0
+  pinned: magi = 109 000.00 USD
+  law date 2026-10-18, cut 2026-10-18
+single_at_500000 [ul03_mfs = *]: t5
+  pinned: magi = 500 000.00 USD
+  law date 2026-10-18, cut 2026-10-18
+single_below_500000 [ul03_mfs = *]: t4
+  pinned: magi = 499 999.99 USD
+  law date 2026-10-18, cut 2026-10-18
+standard_premium [ul03_round_at = *, ul03_tie = *]: (202.90 USD, 121.60 USD, 17.90 USD)
+  law date 2026-10-18, cut 2026-10-18

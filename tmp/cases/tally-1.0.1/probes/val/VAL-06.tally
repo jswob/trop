@@ -1,0 +1,38 @@
+model val06
+  tally 1
+  on 2026-10-25
+
+source pension_acct "VAL-06 card: Halina's pension account, its earnings records"
+source idx_notice "VAL-06 card: the yearly indices"
+source card "VAL-06 card: its rules"
+
+index yr = year 2021..2024
+
+input earn[y in yr]: money DUK
+
+input idx[y in yr]: num
+
+def acct[y in yr]: money DUK
+  rule base v card_rules = round(acct[y - 1] * idx[y], 0.01, half-up) + earn[y]
+  rule first excepts base v card_rules when pos(y) = 1 = earn[y]
+
+ask q: acct[2024]
+
+version earn_rows
+  cite pension_acct
+  known 2026-10-25
+  earn[2021] = 40000.00 "earnings 2021"
+  earn[2022] = 44000.00 "earnings 2022"
+  earn[2023] = 48000.00 "earnings 2023"
+  earn[2024] = 0 assumed "the account records no earnings for 2024; the key adds none" "not in the records"
+
+version idx_rows
+  cite idx_notice
+  known 2026-10-25
+  idx[2022] = 1.050 "index 2022"
+  idx[2023] = 1.080 "index 2023"
+  idx[2024] = 1.040 "index 2024"
+
+version card_rules
+  cite card
+  known 2026-10-25

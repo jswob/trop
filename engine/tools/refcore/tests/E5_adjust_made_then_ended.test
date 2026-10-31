@@ -1,0 +1,57 @@
+# MC-X-F13, beside it (writer 9). v1's amt is 0 PLN, so pay[]'s when is false at its booking cut: it didn't exist
+# then, A₀ = 0 (E §5 step 1). v2 (known 2027-03-01) makes it exist, "δ = Aᵥ" = +100.00 PLN; v3 (known 2027-04-01)
+# ends it, "δ = −A_previous" = -100.00 PLN (E §5 step 3): two adjustments (step 4), summing to 0.00 PLN. snap13
+# found the legs to compare in the booked instance (none) or the step's (none under v3), and lost v3's.
+=== m.tally
+model f13
+  tally 2
+  on 2027-12-31
+  start 2027-01-01
+  end 2027-12-31
+  note "MC-X-F13 (beside it): a plan instance that a later version makes exist and a version after that ends."
+
+unit PLN: currency minor 0.01
+source s "s"
+place konto: accounts PLN lives 2020-01-01..
+place world: outside lives 1900-01-01..
+
+input amt: money PLN
+input pay_day: date
+
+move pay: transfers
+  on pay_day
+  when amt > 0 PLN
+  leg cash from world to konto amount amt
+
+ask q1: count(a in adjustments over ..)
+ask q2: sum(a.change for a in adjustments over ..)
+ask q3: a.change for a in adjustments over ..
+
+version v1
+  cite s
+  governs always
+  known 2026-12-01
+  amt = 0 PLN
+  pay_day = 2027-02-01
+  opening[konto] = 0 PLN at 2027-01-01 start
+
+version v2
+  cite s
+  governs always
+  known 2027-03-01
+  replace amt = 100.00 PLN
+
+version v3
+  cite s
+  governs always
+  known 2027-04-01
+  replace amt = 0 PLN
+=== expect
+q1: 2
+  cut 2027-12-31
+q2: 0.00 PLN
+  cut 2027-12-31
+q3 (a = adjustments[pay.cash, v2]): 100.00 PLN
+  cut 2027-12-31
+q3 (a = adjustments[pay.cash, v3]): -100.00 PLN
+  cut 2027-12-31

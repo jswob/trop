@@ -1,0 +1,32 @@
+# L §7.1/§7.2: a bare step "takes the unit of round's operand (`round(x, 1, down)` rounds to whole units of x's
+# unit)"; L §7.2 Its type: round "gives money when U is a currency and the step is a whole number of minor
+# units, wherever it stands, an operand included".  x = 10.57 PLN: round(x, 1, half-up) = 11.00 PLN (money,
+# so y, a money def, accepts it); z = 11.00 PLN + 10.57 PLN = 21.57 PLN.  L §7.1 An ask: "the step of a round
+# (a bare step takes the unit of round's operand, §7.2)": 0.05 is 0.05 PLN, five minor units, so money;
+# 10.57 / 0.05 = 211.4, half-up gives 211, 211 × 0.05 = 10.55 PLN.
+=== m.tally
+model t
+  tally 2
+  on 2027-01-01
+  start 2026-01-01
+  end 2027-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+input x: money PLN
+def y: money PLN = round(x, 1, half-up) at reader
+def z: num PLN = round(x, 1, half-up) + x at reader
+
+version v1
+  cite s
+  governs always
+  known 2025-12-01
+  x = 10.57
+
+ask q1: y, z law 2026-12-31
+ask q2: round(x, 0.05, half-up) law 2026-12-31
+=== expect
+q1: (11.00 PLN, 21.57 PLN)
+  law date 2026-12-31, cut 2027-01-01
+q2: 10.55 PLN
+  law date 2026-12-31, cut 2027-01-01

@@ -1,0 +1,20 @@
+# L §7.1: key literals are allowed "in key positions: ... a comparison with a key (`allowance[u5]`, `k == pl`,
+# `k <= 10` on an integer index)".  On ages = int 1..12, `k <= 10` is a key comparison, not a figure: a = 1 for
+# k <= 10, else 0 (the bare 0 and 1 are inline figures, L §7.1). 
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+index ages = int 1..12
+
+def a[k in ages]: int at reader
+  rule base = 0
+  rule young beats base = 1 when k <= 10
+
+ask q: a[10], a[11] law 2026-06-30
+=== expect
+q: (1, 0)
+  law date 2026-06-30, cut 2026-12-31

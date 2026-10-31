@@ -1,0 +1,27 @@
+# L §3.3 factor: "a non-integer n needs to u (§7.3)": (1.01)^(1/2) without to is refused LOAD-TO.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+input r: rate
+input c12: compounding
+input half: num
+def f: num = factor(r, half, month, c12) at reader
+
+version v
+  cite s
+  governs 2026..
+  known 2026-01-01
+  r = 12 %/year
+  c12 = nominal 12
+  half = 0.5
+
+ask a: f law 2026-06-30
+=== expect
+refused: LOAD-TO ...

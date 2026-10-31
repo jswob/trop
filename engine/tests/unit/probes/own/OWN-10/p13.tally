@@ -1,0 +1,74 @@
+model own10_p13
+  tally 2
+  on 2026-10-30
+  start 2026-01-01
+  end 2026-01-31
+  note "OWN-10 P-13: stated opening parts where the walk starts, then a zero-gap anchor that keeps them (LANGUAGE 5.19)."
+  note "The booked parts are asked on 30 January, the last day before the reading with a movement-free 31 January; the reading anchors at the end of 31 January."
+
+source card "Probe card OWN-10 (made up): story and rules"
+
+source bank "The couple's bank: its January 2026 rows (made up)"
+
+source letter "The bank's year-end letter of 2025 (made up)"
+
+unit DUK: currency minor 0.01
+
+kind couples: parties
+
+kind persons: parties
+
+kind inheritances: transfers
+  attr heir: key parties
+
+kind savings: place DUK min 0
+  owned by arrive
+  step minor(DUK)
+  takes k for w order (if k.owner == ania_tomek then 0 else 1)
+
+place sav: savings lives 2020-03-01..
+
+place world: outside lives 1900-01-01..
+
+input bank_rows: observed
+
+def arrive[m in events, p in parties]: num at m.day
+  note "rule 2: an inheritance the heir's, any other arrival the couple's"
+  rule community v card_rules = (if p == ania_tomek then 1 else 0)
+  rule inherited beats community v card_rules = (if p == m.heir then 1 else 0) when m in inheritances
+
+ask q_booked: bal(sav, 2026-01-30) of p for p in parties on 2026-01-31
+
+ask q_gap: gap(sav, 2026-01-31)
+
+ask q_parts: bal(sav, 2026-01-31) of p for p in parties on 2026-01-31
+
+version card_cast
+  cite card
+  known 2026-01-01
+  note "the parties: things of the prelude kind parties, of the model's own subkinds"
+  couples + [ania_tomek] lives 2015-06-20..
+  persons + [ania] lives 1988-04-12..
+  persons + [tomek] lives 1986-09-03..
+
+version card_rules
+  cite card
+  governs always
+  known 2026-01-01
+
+version opening_2026
+  cite letter
+  known 2026-01-01
+  opening[sav] = 8000.00 at 2026-01-01 start "the year-end letter: the balance"
+  opening[sav] of ania = 3000.00 at 2026-01-01 start "the year-end letter: ania's part"
+  opening[sav] of ania_tomek = 5000.00 at 2026-01-01 start "the year-end letter: ania_tomek's part"
+
+version statement_2026_01
+  cite bank
+  governs 2026-01
+  known 2026-02-03
+  covers sav
+  anchor sav
+  bank_rows[r1] = (on: 2026-01-12, kind: transfers, leg cash from world to sav amount 500.00 DUK) "line 1"
+  bank_rows[r2] = (on: 2026-01-20, kind: transfers, leg cash from sav to world amount 200.00 DUK) "line 2"
+  stated[sav] = 8300.00 at 2026-01-31 end "the closing balance"

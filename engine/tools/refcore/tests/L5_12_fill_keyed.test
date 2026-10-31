@@ -1,0 +1,49 @@
+# L §5.12 Keyed fills: "fill F[y in IDX] is one fill per key. Its terms may read F[y - 1].taken behind a guard ...
+# so a cap carried from year to year is a recurrence over fills".  Here the carried part goes through a def: avail[y]
+# = cap[y] + left[y - 1] (guarded by pos(y) > 1), left[y] = avail[y] - Σ taken.  2020: avail 100, ordered by pos(k):
+# ka 30, kb 50, left 20.  2021: avail 10 + 20 = 30: ka 30, kb 0.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+index yrs = year 2020..2021
+index ks = [ka, kb]
+input cap[y in yrs]: money PLN
+input need[y in yrs, k in ks]: money PLN
+
+fill carry[y in yrs]
+  supply avail[y]
+  demand need[y, k] for k in ks
+  arc true
+  order pos(k)
+
+def avail[y in yrs]: money PLN at reader
+  rule first = cap[y]
+  rule later beats first = cap[y] + left[y - 1] when pos(y) > 1
+def left[y in yrs]: money PLN = avail[y] - sum(carry[y].taken[k] for k in ks) at reader
+
+version v
+  cite s
+  governs 2020..
+  known 2020-01-01
+  cap[2020] = 100.00 PLN
+  cap[2021] = 10.00 PLN
+  need[*, ka] = 30.00 PLN
+  need[*, kb] = 50.00 PLN
+
+ask a: carry[y].taken[k] for y in yrs, k in ks law 2026-06-30
+=== expect
+a (y = 2020, k = ka): 30.00 PLN
+  law date 2026-06-30, cut 2026-12-31
+a (y = 2020, k = kb): 50.00 PLN
+  law date 2026-06-30, cut 2026-12-31
+a (y = 2021, k = ka): 30.00 PLN
+  law date 2026-06-30, cut 2026-12-31
+a (y = 2021, k = kb): 0.00 PLN
+  law date 2026-06-30, cut 2026-12-31

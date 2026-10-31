@@ -1,0 +1,231 @@
+part pl_business
+  tally 2
+  law
+  note "Jednoosobowa działalność (B2B): ryczałt, składki ZUS przedsiębiorcy (ulga na start, preferencyjne, pełne), zdrowotna na ryczałcie z rozliczeniem rocznym, VAT miesięczny."
+  note "Wycinek przykładowy z kwotami prototypu; nie przeszedł bramki."
+
+source ryczalt_act "Ustawa o zryczałtowanym podatku dochodowym od niektórych przychodów (tekst jednolity)"
+
+source vat_act "Ustawa o podatku od towarów i usług (tekst jednolity)"
+
+kind health_pay_pays: event certain
+  leg cash: any
+
+index form = [ryczalt, scale, linear]
+
+index stage = [inactive, relief, preferential, standard]
+
+index tier = [low, mid, high]
+
+input health_settle_day_16: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input health_settle_day_19: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input health_share[t in tier]: num
+
+input pref_share: num
+
+input ryczalt_health_ded: num
+
+input ryczalt_pay_20: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input ryczalt_rate: num
+
+input standard_share: num
+
+input vat_day_25: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input vat_rate: num
+
+input zus_due[z in zus_part, s in stage]: bool
+
+input zus_rate[z in zus_part]: num
+
+input zus_pay_dom: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+band health_tier(rev: num PLN): key tier
+  note "próg przychodów roku dla składki zdrowotnej na ryczałcie"
+
+def active_months[y in tax_year]: int = count(m in month where year_of(m) == y and zus_stage[m] != inactive) at start_of(y)
+
+def health_month[m in month]: money PLN at start_of(m)
+  note "składka miesięczna według przychodów od początku roku"
+  rule base v health_ryczalt_2022 = round(health_rate * health_share[health_tier(rev_ytd[m])] * health_base_y[year_of(m)], minor(PLN), half-up)
+
+def health_paid[y in tax_year]: money PLN = sum(flows(health_pay[m], start_of(m)..health_settle_day[y]) for m in month where year_of(m) == y) at start_of(y)
+
+def health_settle[y in tax_year]: money PLN = health_year[y] - health_paid[y] at start_of(y)
+
+def health_settle_day[y in tax_year]: date at start_of(y)
+  rule base v health_ryczalt_2022 = if is_business(add_days(add_months(start_of(y), health_settle_day_16), health_settle_day_19), holidays_pl) then add_days(add_months(start_of(y), health_settle_day_16), health_settle_day_19) else add_business(add_days(add_months(start_of(y), health_settle_day_16), health_settle_day_19), 1, holidays_pl)
+
+def health_year[y in tax_year]: money PLN at start_of(y)
+  note "rozliczenie roczne: składka miesięczna według przychodów całego roku, razy miesiące działalności"
+  rule base v health_ryczalt_2022 = active_months[y] * round(health_rate * health_share[health_tier(revenue_year[y])] * health_base_y[y], minor(PLN), half-up)
+
+def invoice_gross[c in client, m in month]: money PLN = fee_net[c, m] + vat_out[c, m] at start_of(m)
+
+def issue_day[m in month]: date = add_days(end_of(m), -1) at start_of(m)
+
+def pay_day[c in client, m in month]: date = if is_business(add_days(issue_day[m], terms[c]), holidays_pl) then add_days(issue_day[m], terms[c]) else add_business(add_days(issue_day[m], terms[c]), 1, holidays_pl) at start_of(m)
+
+def pit28_due[y in tax_year]: money PLN = pit28_tax[y] - sum(flows(ryczalt_pay[m], start_of(m)..return_day[y]) for m in month where year_of(m) == y) at start_of(y)
+
+def pit28_tax[y in tax_year]: money PLN at start_of(y)
+  rule base v ryczalt_2022 = round(round(max(0, revenue_year[y] - flows(zus_social_pay, y) - flows(health_pay, y) * ryczalt_health_ded), 1, half-up) * ryczalt_rate, 1, half-up)
+  rule other_form beats base v ryczalt_2022 = ?"Zeznanie dla innej formy opodatkowania niż ryczałt nie jest opisane." when revenue_year[y] > 0 and tax_form[y] != ryczalt
+
+def rev_ytd[m in month]: money PLN = sum(revenue[k] for k in month where year_of(k) == year_of(m) and k <= m) at start_of(m)
+
+def revenue[m in month]: money PLN = sum(fee_net[c, m] for c in client over ..) at start_of(m)
+
+def revenue_year[y in tax_year]: money PLN = sum(revenue[m] for m in month where year_of(m) == y) at start_of(y)
+
+def ryczalt_adv[m in month]: money PLN at start_of(m)
+  note "zaliczka: stawka od przychodu miesiąca po odliczeniu składek społecznych i połowy zdrowotnej zapłaconych w miesiącu"
+  rule base v ryczalt_2022 = round(round(max(0, revenue[m] - flows(zus_social_pay, m) - flows(health_pay, m) * ryczalt_health_ded), 1, half-up) * ryczalt_rate, 1, half-up)
+  rule other_form beats base v ryczalt_2022 = ?"Zaliczki dla innej formy opodatkowania niż ryczałt nie są opisane." when revenue[m] > 0 and tax_form[year_of(m)] != ryczalt
+
+def vat_day[m in month]: date at start_of(m)
+  rule base v vat_2026 = if is_business(add_months(day_of(m, vat_day_25), 1), holidays_pl) then add_months(day_of(m, vat_day_25), 1) else add_business(add_months(day_of(m, vat_day_25), 1), 1, holidays_pl)
+
+def vat_due[m in month]: money PLN at start_of(m)
+  rule base v vat_2026 = round(sum(vat_out[c, m] for c in client over ..) - cost_vat[m], 1, half-up)
+  rule surplus beats base v vat_2026 = ?"Nadwyżka VAT naliczonego: przeniesienie na następny miesiąc czy zwrot (art. 87)?" when sum(vat_out[c, m] for c in client over ..) < cost_vat[m]
+
+def vat_out[c in client, m in month]: money PLN at start_of(m)
+  rule base v vat_2026 = round(fee_net[c, m] * vat_rate, minor(PLN), half-up)
+
+def vat_owed[d in day]: money PLN at start_of(d)
+  note "VAT należny z faktur już zapłaconych przez klientów, a jeszcze nie wpłacony do urzędu: nie nasz"
+  rule base = sum(vat_out[c, m] for c in client over .., m in month where fee_net[c, m] > 0 and pay_day[c, m] <= d and vat_day[m] > d)
+
+def zus_base[m in month]: money PLN at start_of(m)
+  rule nobase v sus_rates_2026 = 0 when zus_stage[m] == inactive or zus_stage[m] == relief
+  rule pref v sus_rates_2026 = round(min_wage_y[year_of(m)] * pref_share, minor(PLN), half-up) when zus_stage[m] == preferential
+  rule standard v sus_rates_2026 = round(proj_wage_y[year_of(m)] * standard_share, minor(PLN), half-up) when zus_stage[m] == standard
+
+def zus_social[m in month]: money PLN = sum(round(zus_base[m] * zus_rate[z], minor(PLN), half-up) for z in zus_part where zus_due[z, zus_stage[m]] and (z != sickness or sickness_opt)) at start_of(m)
+
+move client_pay[c in client over .., m in month]: transfers
+  on pay_day[c, m]
+  at start_of(m)
+  for m
+  when fee_net[c, m] > 0
+  leg cash from klienci to konto amount invoice_gross[c, m]
+
+move health_pay[m in month]: health_pay_pays
+  on if is_business(add_months(day_of(m, zus_pay_dom), 1), holidays_pl) then add_months(day_of(m, zus_pay_dom), 1) else add_business(add_months(day_of(m, zus_pay_dom), 1), 1, holidays_pl)
+  at start_of(m)
+  for m
+  when zus_stage[m] != inactive
+  leg cash from konto to zus amount health_month[m]
+
+move health_settle_back[y in tax_year]: transfers
+  on health_settle_day[y]
+  at start_of(y)
+  for y
+  when health_settle[y] < 0
+  leg cash from zus to konto amount -health_settle[y]
+
+move health_settle_pay[y in tax_year]: transfers
+  on health_settle_day[y]
+  at start_of(y)
+  for y
+  when health_settle[y] > 0
+  leg cash from konto to zus amount health_settle[y]
+
+move pit28_pay[y in tax_year]: transfers
+  on return_day[y]
+  at start_of(y)
+  for y
+  when pit28_due[y] > 0
+  leg cash from konto to urzad_skarbowy amount pit28_due[y]
+
+move pit28_refund[y in tax_year]: transfers
+  on add_days(return_day[y], refund_days)
+  at start_of(y)
+  for y
+  when pit28_due[y] < 0
+  leg cash from urzad_skarbowy to konto amount -pit28_due[y]
+
+move ryczalt_pay[m in month]: transfers
+  on if is_business(add_months(day_of(m, ryczalt_pay_20), 1), holidays_pl) then add_months(day_of(m, ryczalt_pay_20), 1) else add_business(add_months(day_of(m, ryczalt_pay_20), 1), 1, holidays_pl)
+  at start_of(m)
+  for m
+  when ryczalt_adv[m] > 0
+  leg cash from konto to urzad_skarbowy amount ryczalt_adv[m]
+
+move vat_pay[m in month]: transfers
+  on vat_day[m]
+  at start_of(m)
+  for m
+  when vat_due[m] > 0
+  leg cash from konto to urzad_skarbowy amount vat_due[m]
+
+move zus_social_pay[m in month]: transfers
+  on if is_business(add_months(day_of(m, zus_pay_dom), 1), holidays_pl) then add_months(day_of(m, zus_pay_dom), 1) else add_business(add_months(day_of(m, zus_pay_dom), 1), 1, holidays_pl)
+  at start_of(m)
+  for m
+  when zus_social[m] > 0
+  leg cash from konto to zus amount zus_social[m]
+
+version health_ryczalt_2022
+  cite health_act
+  governs 2022..
+  known 2021-11-15
+  health_share[high] = 1.8 "art. 81 ust. 2i pkt 3"
+  health_share[low] = 0.6 "art. 81 ust. 2i pkt 1"
+  health_share[mid] = 1 "art. 81 ust. 2i pkt 2"
+  health_tier: [0, 60000] = low "art. 81 ust. 2i pkt 1"
+  health_tier: (60000, 300000] = mid "art. 81 ust. 2i pkt 2"
+  health_tier: (300000, inf) = high "art. 81 ust. 2i pkt 3"
+
+version ryczalt_2022
+  cite ryczalt_act
+  governs 2022..
+  known 2021-11-15
+  ryczalt_health_ded = 0.5 "art. 11 ust. 1c"
+  ryczalt_rate = 0.12 "art. 12 ust. 1 pkt 2b"
+
+version sus_rates_2026
+  cite sus_act
+  governs 2026..
+  known 2025-12-31
+  pref_share = 0.3 "art. 18a ust. 1"
+  standard_share = 0.6 "art. 18 ust. 8"
+  zus_due = false "poza wymienionymi niżej"
+  zus_due[accident, preferential] = true "art. 12"
+  zus_due[accident, standard] = true "art. 12"
+  zus_due[disability, preferential] = true "art. 6"
+  zus_due[disability, standard] = true "art. 6"
+  zus_due[labour_fund, standard] = true "ustawa o rynku pracy, art. 255"
+  zus_due[pension, preferential] = true "art. 6"
+  zus_due[pension, standard] = true "art. 6"
+  zus_due[sickness, preferential] = true "art. 11 ust. 2, dobrowolna"
+  zus_due[sickness, standard] = true "art. 11 ust. 2, dobrowolna"
+  zus_rate[accident] = 0.0167 "art. 15 ust. 1, stawka dla płatnika do 9 ubezpieczonych"
+  zus_rate[disability] = 0.08 "art. 22 ust. 1 pkt b"
+  zus_rate[labour_fund] = 0.0245 "ustawa o rynku pracy, art. 255"
+  zus_rate[pension] = 0.1952 "art. 22 ust. 1 pkt a"
+  zus_rate[sickness] = 0.0245 "art. 22 ust. 1 pkt c"
+
+version vat_2026
+  cite vat_act
+  governs 2026..
+  known 2025-12-31
+  vat_rate = 0.23 "art. 146ef ust. 1"
+
+source health_2027_cut "Ustawa z 2027-06-15 o zmianie ustawy o świadczeniach opieki zdrowotnej (przykład), art. 1 pkt 2 i art. 3: stosuje się od 2027-01-01"
+
+
+version health_ryczalt_2027
+  cite health_2027_cut
+  governs 2027..
+  known 2027-06-15
+  replace health_share[mid] = 0.9 "art. 1 pkt 2"

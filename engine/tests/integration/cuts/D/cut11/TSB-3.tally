@@ -1,0 +1,14 @@
+part tsb_3
+  tally 2
+  law
+  note "TSB-3 · The bond's value: at each interest year's end the old value times one plus the year's rate, to whole orts half up, per bond (.1); inside an interest year the value at its start times one plus the rate times the days elapsed over the interest year's days, to whole orts half up, per bond (.2)."
+  note "No figure: round(x, 0.01, half-up) is stated, and the day count is days(a, b) (L §4.2)."
+
+source tsb_3 "Treasury Savings Bonds, terms of issue, TSB-3 The bond's value (tmp/cases/law/acts.md)"
+
+version tsb3_v1
+  cite tsb_3
+  governs 2018-01-01..
+  known 2017-11-20
+  enters 2018-01-01
+  note "TSB-3 v1, in force 2018-01-01 until replaced, published 2017-11-20; governs series issued from January 2018."

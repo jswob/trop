@@ -1,0 +1,154 @@
+part invest
+  tally 2
+  note "Fund units and their tax (PIT-8, PIT-9), over the registers' movements (statements/statements.tally): a fund holding keeps its lots as batches (L §3.6, lot_holdings in reality.tally), a lot being the purchase or the gift that brought its units in, and a sale takes them first in, first out by acquisition day within the holding (PIT-8 .3, the kind's takes clause); a sale's gain per lot is its proceeds less its fee and the cost of the units it took from the lot (.2), written once over every lot; a gain on units held more than 5 years is left out (.6), a gifted lot counting from the giver's acquisition; a person's year adds up (.4); a year's loss is carried 5 years, at most half of it in a year, older first (.5). The wrapped account's withdrawal (PIT-9 .4, .5)."
+  note "A gifted lot's cost is its units at the fund's price on the gift day (.2): the value of the lot's own parts of the holding it came into, at the end of the gift day (value … of b, L §5.10)."
+
+index why5 = [cost_basis, holding_test]
+  note "the two ways A-D22's tax departs from PIT-8 that A-05 names"
+
+input inv_holder[x in places where not x in outside]: key persons question "In whose name is this fund account (PIT-8, PIT-9)?"
+
+input loss_want_2: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+fill carry[y in tax_year]
+  note "PIT-8 .5: losses are used only against a net gain, the older first"
+  supply loss_want[p, o, y] for p in persons over y, o in tax_year
+  demand cg_gain[q, y] for q in persons over y
+  arc p == q
+  order o ties by (if p == ania then 0 else 1)
+
+def broker_cost[b in lots_in]: num DUK at b.day
+  note "A-D22's way: a lot moved in from another broker at the cost basis that broker reported (A-D21, the transfer's reported); any other lot at its cost (PIT-8 .2)"
+  rule base = lot_cost[b]
+  rule reported beats base = sum(t.reported for t in lot_transfers over .. where t.lot == b) when count(t in lot_transfers over .. where t.lot == b) > 0
+
+def broker_tax[p in persons, y in tax_year]: money DUK at start_of(y)
+  note "A-D22's way, for comparison: every transferred lot at the cost the transferring broker reported (A-D21), and no holding test"
+  rule base = round(round(sum((s.units.amount of b) * (s.cash.amount - s.fee.amount) / s.units.amount - (s.units.amount of b) * broker_cost[b] / b.units.amount for s in fund_sales over y, b in lots_in over .. where inv_holder[s.units.from] == p and s.units.amount of b > 0), 1, half-up) * pit8_rate, 1, half-up)
+
+def cg_base[p in persons, y in tax_year]: money DUK at start_of(y)
+  note "PIT-8 .4: the net gain less the losses carried in, rounded (GEN-5 .1)"
+  rule base = round(cg_gain[p, y] - loss_used[p, y], 1, half-up)
+
+def why_differs[c in why5, p in persons, y in tax_year]: money DUK at start_of(y)
+  note "how much each of the broker's departures from PIT-8 adds to the tax it reported (A-D22): the cost from the giver's purchases instead of the gift-day price (.2), and no 5-year test for gifted units (.6)"
+  rule cost = broker_tax[p, y] - nohold_tax[p, y] when c == cost_basis
+  rule hold = nohold_tax[p, y] - cg_tax[p, y] when c == holding_test
+
+def cg_gain[p in persons, y in tax_year]: num DUK = max(0, net_gain[p, y]) at start_of(y)
+
+def cg_loss[p in persons, o in tax_year]: num DUK = max(0, -net_gain[p, o]) at start_of(o)
+
+def cg_paid[p in persons, y in tax_year]: money DUK at end_of(y)
+  note "what the joint account paid the Revenue Office in the year after for this spouse's tax on fund sales (wrz-joint statements, the payer read from the title)"
+  rule base = sum(o.cash.amount for o in cg_tax_pays over y + 1 where o.payer == p)
+
+def cg_tax[p in persons, y in tax_year]: money DUK at start_of(y)
+  note "PIT-8 .4: 19 % of the base, rounded (GEN-5 .1)"
+  rule base = round(cg_base[p, y] * pit8_rate, 1, half-up)
+
+def cg_too_much[p in persons, y in tax_year]: money DUK = cg_paid[p, y] - cg_tax[p, y] at end_of(y)
+
+def lot_exempt[b in lots_in, s in fund_sales]: bool at s.day
+  note "PIT-8 .6, GEN-3 .1: a gain on units held more than 5 years since their acquisition, a gifted lot counting from the giver's (held_from); a loss on them still counts (.6 exempts a gain)"
+  rule base = s.day > add_years(held_from[b], pit8_exempt_years) and lot_gain[b, s] > 0
+
+def lot_gain[b in lots_in, s in fund_sales]: num DUK at s.day
+  note "PIT-8 .2: the proceeds of the units sale s took from lot b, less their part of the sale's fee, less their part of the lot's cost; what s took from b is its units leg's take of b (L §5.14), first in, first out (.3)"
+  rule base = (s.units.amount of b) * (s.cash.amount - s.fee.amount) / s.units.amount - (s.units.amount of b) * lot_cost[b] / b.units.amount
+
+def held_from[b in lots_in]: date at b.day
+  note "PIT-8 .6: the day the holding counts from: a purchase's own day; for a gift, the day the giver bought the lot, of which the register gives the month only (kop-30-118-552-ania.csv), so a day in it, an imprecise date (L §4.4)"
+  rule bought = b.day when b in fund_buys
+  rule gift = if b.bought == mca_window_month then window(start_of(b.bought), end_of(b.bought) - 1 day) else start_of(b.bought) when b in gifts_in
+
+def loss_avail[p in persons, o in tax_year, y in tax_year]: num DUK at start_of(o)
+  note "what is left of the loss of year o at the start of year y"
+  rule next beats start = loss_left[p, o, y - 1] when pos(y) > pos(o) + 1
+  rule start = cg_loss[p, o]
+
+def loss_left[p in persons, o in tax_year, y in tax_year]: num DUK = loss_avail[p, o, y] - loss_used_from[p, o, y] at start_of(o)
+
+def loss_left_after[p in persons, y in tax_year]: num DUK at start_of(y)
+  note "the losses still inside their 5 years after year y, and what is left of them"
+  rule base = sum(loss_left[p, o, y] for o in tax_year where pos(o) <= pos(y) and pos(y) < pos(o) + pit8_carry_years)
+
+def loss_used[p in persons, y in tax_year]: num DUK = sum(loss_used_from[p, o, y] for o in tax_year) at start_of(y)
+
+def loss_used_from[p in persons, o in tax_year, y in tax_year]: num DUK = carry[y].taken[p, o, p] at start_of(o)
+
+def loss_want[p in persons, o in tax_year, y in tax_year]: num DUK at start_of(o)
+  note "PIT-8 .5: in the 5 years after the loss, at most half of it in any one year"
+  rule none = 0
+  rule window beats none = min(loss_avail[p, o, y], cg_loss[p, o] / loss_want_2) when pos(y) > pos(o) and pos(y) <= pos(o) + pit8_carry_years
+
+def lot_cost[b in lots_in]: num DUK at b.day
+  note "PIT-8 .2: what a lot cost: a purchase, the price paid with its fee; a gift, its units at the fund's price on the gift day, the value of the gift's own parts of the holding it came into at the end of that day"
+  rule bought = b.cash.amount + b.fee.amount when b in fund_buys
+  rule gift = value(b.units.to, b.day) in DUK by mk of b when b in gifts_in
+
+def net_gain[p in persons, y in tax_year]: num DUK at start_of(y)
+  note "PIT-8 .4: all of the person's gains and losses of the year added; an exempt part is left out (.6)"
+  rule base = sum(lot_gain[b, s] for s in fund_sales over y, b in lots_in over .. where inv_holder[s.units.from] == p and s.units.amount of b > 0 and not lot_exempt[b, s])
+
+def nohold_tax[p in persons, y in tax_year]: money DUK at start_of(y)
+  note "the tax with every lot's cost as PIT-8 .2 sets it but no 5-year test (.6), no loss carried: the middle step between A-D22's way and the tax owed"
+  rule base = round(round(sum(lot_gain[b, s] for s in fund_sales over y, b in lots_in over .. where inv_holder[s.units.from] == p and s.units.amount of b > 0), 1, half-up) * pit8_rate, 1, half-up)
+
+def wd_left[w in wrap_withdrawals]: money DUK at w.day
+  note "PIT-9 .4: the contributions not yet withdrawn before this withdrawal, from the wrapped account's register"
+  rule rows beats unknown = sum(sum(o.cash.amount for o in wbank over y where o in invests and o.day < w.day) - sum(o.cash.amount for o in wbank over y where o in wrap_withdrawals and o.day < w.day) for y in tax_year where start_of(y) <= w.day) when all(covered(wrap_cash, y) for y in tax_year where start_of(y) <= w.day)
+  rule unknown = ?"the contributions to the wrapped account before this withdrawal: its register doesn't cover the years before it"
+
+def wd_tax[w in wrap_withdrawals]: money DUK at w.day
+  note "PIT-9 .5: 19 % of the earnings withdrawn (.4: a withdrawal takes the contributions not yet withdrawn first), rounded, unless the holder is 60 or older and has contributed in 5 calendar years"
+  rule base = round(max(0 DUK, w.cash.amount - wd_left[w]) * pit9_rate, 1 DUK, half-up)
+  rule free beats base = 0 when age(birth_day[inv_holder[w.cash.from]], w.day) >= pit9_age and wd_years[w] >= pit9_years
+
+def wd_years[w in wrap_withdrawals]: int at w.day
+  note "PIT-9 .5: the calendar years up to the withdrawal with a contribution"
+  rule rows beats unknown = count(y in tax_year where start_of(y) <= w.day and sum(o.cash.amount for o in wbank over y where o in invests) > 0) when all(covered(wrap_cash, y) for y in tax_year where start_of(y) <= w.day)
+  rule unknown = ?"the years with a contribution to the wrapped account: its register doesn't cover the years before it"
+
+version holders
+  cite story
+  governs always
+  known 2021-01-01
+  inv_holder[wrap_cash] = ania "A-D11: account BRZ-WRAP-0091-A, holder Anna Lis"
+  inv_holder[wrap_glb] = ania "A-D11: holder Anna Lis"
+  inv_holder[wrap_bnd] = ania "A-D11: holder Anna Lis"
+  inv_holder[rzt_cash] = tomek "story § What we had: Rzeka 4471-02 in Tomek's name"
+  inv_holder[rzt_em] = tomek "story § What we had: Rzeka 4471-02 in Tomek's name"
+  inv_holder[rzt_idx] = tomek "story § What we had: Rzeka 4471-02 in Tomek's name"
+  inv_holder[rzt_div] = tomek "story § What we had: Rzeka 4471-02 in Tomek's name"
+  inv_holder[rzt_glb] = tomek "story § What we had: Rzeka 4471-02 in Tomek's name"
+  inv_holder[joint] = none "not a fund account"
+  inv_holder[lazur] = none "not a fund account"
+  inv_holder[ania_sav] = none "not a fund account"
+  inv_holder[zosia_sav] = none "not a fund account"
+  inv_holder[wcp_t] = none "a workplace plan, not under PIT-8 (PIT-8 .1)"
+  inv_holder[wcp_a] = none "a workplace plan, not under PIT-8 (PIT-8 .1)"
+  inv_holder[deposit] = none "not a fund account"
+
+version holders_kop
+  cite a_d18
+  governs always
+  known 2023-09-12
+  inv_holder[kop_glb] = ania "story 2023-09-12: a securities account at DM Kopia opened for the gifted units"
+
+version holders_rza
+  cite a_d21
+  governs always
+  known 2024-02-13
+  inv_holder[rza_cash] = ania "A-D21: client 4471-07 (Anna Lis)"
+  inv_holder[rza_glb] = ania "A-D21: client 4471-07 (Anna Lis)"
+  inv_holder[rza_mm] = ania "A-D21: client 4471-07 (Anna Lis)"
+
+input mca_window_month: month question "MC-A cut-down only: the one lot month whose giver's day stays a window"
+
+version mca_cut
+  cite modeller
+  governs always
+  known 2021-01-01
+  mca_window_month = 2019-03 "MC-A cut-down: only the March 2019 lot keeps its window (the 2018-11 and 2019-08 lots take the month's first day)"

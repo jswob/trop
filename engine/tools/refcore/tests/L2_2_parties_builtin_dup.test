@@ -1,0 +1,15 @@
+# Writer 11 (tally 2.1, 2.1-1, R-2). L §2.2: "Built-in ids ... declaring one again is LOAD-DUP ... the prelude's
+# kinds (§5.7): ... pads parties". MIGRATION.md 2.0 -> 2.1: "a text that declares an item named parties: renamed".
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+kind parties
+ask q: 1
+=== expect
+refused: LOAD-DUP parties is declared twice (a built-in id) (m.tally:9)

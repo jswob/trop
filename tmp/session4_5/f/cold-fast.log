@@ -1,0 +1,15 @@
+DIFFER pypy+fast U:law/LAW-13/LAW-13: line 3: 'before_unchanged: refused: LOAD-SCENARIO ask before_unchanged names ra' != 'before_unchanged: refused: LOAD-SCENARIO ask before_unchanged names ra' | inputs older than the baseline
+DIFFER pypy+fast U:rand/RAND-04/RAND-04: line 1: 'q_crn: refused: LOAD-SCENARIO ask q_crn names plan_b, neither the mode' != 'q_crn: refused: LOAD-SCENARIO ask q_crn names plan_b, neither the mode' | inputs older than the baseline
+DIFFER pypy+fast U:scen/SCEN-02/SCEN-02: line 1: 'facts: refused: LOAD-SCENARIO ask facts names kept, neither the model ' != 'facts: refused: LOAD-SCENARIO ask facts names kept, neither the model ' | inputs older than the baseline
+DIFFER pypy+fast U:scen/SCEN-03/SCEN-03: line 5: 'rent_over: refused: LOAD-SCENARIO ask rent_over names infl8, neither t' != 'rent_over: refused: LOAD-SCENARIO ask rent_over names infl8, neither t' | inputs older than the baseline
+DIFFER pypy+fast U:scen/SCEN-04/SCEN-04: line 3: 'crash_path: refused: LOAD-SCENARIO ask crash_path names crash, neither' != 'crash_path: refused: LOAD-SCENARIO ask crash_path names crash, neither' | inputs older than the baseline
+DIFFER pypy+fast U:set/rule/RULE-09/RULE-09: line 1: 'scenario inpath: refused: LOAD-ASKONLY share(ruined_on_path) has no cl' != 'scenario inpath: refused: LOAD-ASKONLY share(ruined_on_path) has no cl' | inputs older than the baseline
+DIFFER pypy+fast U:set/surf/SURF-04/SURF-04: line 1: 'scenario redefine: refused: LOAD-DUP contrib is declared twice (/Users' != 'scenario redefine: refused: LOAD-DUP contrib is declared twice (unit/p' | inputs older than the baseline
+DIFFER pypy+fast I:M:MP-10: line 1: 'refused: LOAD-BAND band hanau_group in hanau2026: rows unordered, over' != 'refused: LOAD-BAND band hanau_group in hanau2026: rows unordered, over' | inputs older than the baseline
+| layer | runtime | checks | same | differ | over | killed | known fault | fixed | ran (J marks) | cached | not run | wall s | pypy≠cpython |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| interpreter | pypy+fast | 1 | 1 | 0 | 0 | 0 | 0 | 0 | 0 | 1 | 0 | 0 |  |
+| unit | pypy+fast | 115 | 108 | 7 | 0 | 0 | 0 | 0 | 0 | 115 | 0 | 0 |  |
+| integration | pypy+fast | 452 | 359 | 1 | 6 | 0 | 1 | 0 | 0 | 0 | 85 | 1146 |  |
+
+total wall 1147 s, 2026-10-29 18:01, budget 60 s, jobs 3

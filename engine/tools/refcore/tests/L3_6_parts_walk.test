@@ -1,0 +1,94 @@
+# Writer 11 (tally 2.1, 2.1-7, 2.1-9, 2.1-11, E §4.2 Parts in the walk). L §3.6's example kind savings and its arrival
+# rule civ_arrive, whole (community: the couple's; inherited: the heir's; moved: "m.cash.amount of p / m.cash.amount",
+# the labels kept), and its leaving rule: "an outflow takes the couple's part first, and shares what is left in
+# proportion". wage 1 000.00 (community), inh 500.00 (tomek's), spend 300.00 (from the couple's), mv 600.00 to konto2
+# (the couple's 700.00 cover it; konto2's arrival keeps its label), spend2 400.00 (the couple's 100.00, then tomek's
+# 300.00). L §5.10: bal(x, d) of q is "the sum of x's parts labelled q at the end of day d"; value(...) of q those parts
+# at their prices (PLN at its amount); L §5.14 the leg read: what the leg took from q's parts. Figures by
+# scratch/exp_a1.py.  The rule is the example's text after 2.1-C7b-18 (`inherited` beats `moved`); no movement here is
+# an inheritance paid from savings, so no figure changes (L3_6_parts_inherited_from_savings has one).
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+kind persons: parties
+kind couples: parties
+kind inheritances: transfers
+  attr heir: key persons
+kind savings: place PLN min 0
+  owned by civ_arrive
+  step minor(PLN)
+  takes k for w v civ order (if k.owner == ania_tomek then 0 else 1) prorata ties by (if k.owner == ania then 0 else 1)
+place konto: savings lives 2026-01-01..
+place konto2: savings lives 2026-01-01..
+place world: outside lives 1900-01-01..
+place shop: outside lives 1900-01-01..
+
+input wage_day: date
+input wage_amt: money PLN
+input inh_day: date
+input inh_amt: money PLN
+input spend_day: date
+input spend_amt: money PLN
+input mv_day: date
+input mv_amt: money PLN
+input spend2_day: date
+input spend2_amt: money PLN
+
+def civ_arrive[m in events, p in parties]: num at m.day
+  rule community = (if p == ania_tomek then 1 else 0)
+  rule inherited beats community, moved = (if p == m.heir then 1 else 0) when m in inheritances
+  rule moved beats community = m.cash.amount of p / m.cash.amount when m in transfers and m.cash.from in savings
+
+move wage: transfers
+  on wage_day
+  leg cash from world to konto amount wage_amt
+move inh: inheritances
+  on inh_day
+  attr heir = tomek
+  leg cash from world to konto amount inh_amt
+move spend: transfers
+  on spend_day
+  leg cash from konto to shop amount spend_amt
+move mv: transfers
+  on mv_day
+  leg cash from konto to konto2 amount mv_amt
+move spend2: transfers
+  on spend2_day
+  leg cash from konto to shop amount spend2_amt
+
+ask q1: bal(konto, 2026-06-30), bal(konto, 2026-06-30) of ania_tomek, bal(konto, 2026-06-30) of tomek, bal(konto, 2026-06-30) of ania
+ask q2: bal(konto2, 2026-06-30) of ania_tomek, bal(konto, 2026-03-31) of tomek, value(konto, 2026-06-30) in PLN of tomek
+ask q3: mv.cash.amount of ania_tomek, spend2.cash.amount of tomek
+
+version civ
+  cite s
+  governs always
+  known 2026-01-01
+  persons + [ania] lives 1980-01-01..
+  persons + [tomek] lives 1981-01-01..
+  couples + [ania_tomek] lives 2010-06-01..
+  opening[konto] = 0 PLN at 2026-01-01 start
+  opening[konto2] = 0 PLN at 2026-01-01 start
+  wage_day = 2026-02-01
+  wage_amt = 1 000.00 PLN
+  inh_day = 2026-03-01
+  inh_amt = 500.00 PLN
+  spend_day = 2026-04-01
+  spend_amt = 300.00 PLN
+  mv_day = 2026-05-01
+  mv_amt = 600.00 PLN
+  spend2_day = 2026-06-01
+  spend2_amt = 400.00 PLN
+=== expect
+q1: (200.00 PLN, 0.00 PLN, 200.00 PLN, 0.00 PLN)
+  cut 2026-01-01
+q2: (600.00 PLN, 500.00 PLN, 200 PLN)
+  cut 2026-01-01
+q3: (600.00 PLN, 300.00 PLN)
+  cut 2026-01-01

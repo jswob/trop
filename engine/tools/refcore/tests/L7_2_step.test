@@ -1,0 +1,30 @@
+# L §7.2: "Steps that aren't powers of ten exist in law, such as 5 Rappen (N-208) ... An ask may write any positive
+# step."  "It gives money when U is a currency and the step is a whole number of minor units".  1.07 CHF to 0.05 CHF
+# half-up: 1.07 / 0.05 = 21.4, the nearest multiple 21 × 0.05 = 1.05 CHF.  An integer num from round(x, 1, mode)
+# is accepted as an int (here a def typed int).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit CHF: currency minor 0.01
+input p: money CHF
+input y: num
+
+def nyears: int at reader
+  rule base = round(y, 1, ceil)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  p = 1.07 CHF
+  y = 2.1
+
+ask q1: round(p, 0.05 CHF, half-up), nyears law 2026-06-30
+=== expect
+q1: (1.05 CHF, 3)
+  law date 2026-06-30, cut 2026-12-31

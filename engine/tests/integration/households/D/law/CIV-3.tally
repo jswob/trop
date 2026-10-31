@@ -1,0 +1,16 @@
+part civ_3
+  tally 2
+  law
+  note "CIV-3 · Succession by law: with no will the spouse and the children inherit in equal shares, the spouse's never below 1/4, the children sharing the rest equally (.1); a child who died before is replaced by its own children in equal parts (.2); the heirs hold the estate in their shares from the death until the division, and bear its debts in them (.3)."
+
+source civ_3 "Civil and Family Code, CIV-3 Succession by law (tmp/cases/law/acts.md)"
+
+input civ3_spouse_min: num question "What is the least share of the estate the spouse inherits by law (CIV-3 .1)?"
+
+version civ3_v1
+  cite civ_3
+  governs 2018-01-01..
+  known 2017-03-01
+  enters 2018-01-01
+  note "CIV-3 v1, in force 2018-01-01 until replaced, published 2017-03-01; governs deaths from 2018-01-01."
+  civ3_spouse_min = 0.25 "CIV-3 v1 .1: never less than 1/4"

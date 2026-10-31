@@ -1,0 +1,25 @@
+part e2_gifts
+  tally 2
+  note "E2-02: gifts and inheritances across the family, 2021 to 2026-09-30. Halina's gifts to Ania are A's (a.acq, a.gift_tax; A/gift.tally); Zbigniew's estate, the shares, the day its tax arose, the report deadline and each heir's tax are D's (d.share, d.igt_tax, d.igt_arises, d.report_by; D/estate.tally). Marta's gifts to Jan (2024-07-01 and the release of 2026-09-17) and Irena's gifts to Staś are C's (C's loan.tally and stas.tally), asked in the C-side run (../cside, W-E2-4). E2 adds only what no household states: that Halina gave from her own property, so nothing she gave Ania was part of Zbigniew's estate."
+  note "Whether Piotr, Anna, Marta and Jakub reported their inheritance no paper says (story.md 2025-05-05): the tax of each turns on it, so it is asked under each case: reported by d.report_by (a pin of D's rows reported_on, L §5.18), and not reported (the scenario scenarios/e2_not_reported.tally)."
+
+index e2_gift = [cash2021, units2023]
+  note "Halina's gifts to Ania, by A's keys of acq: the 15 000.00 DUK in cash of 2021-04-30 (A-D19) and the 200 BRZ-GLB-A units of 2023-09-12 (A-D18)"
+
+input e2_gift_own[g in e2_gift]: bool question "Did Halina give this from her own property, outside the community with Zbigniew (CIV-1 .3)?"
+
+def e2_gifts_in_estate: bool
+  note "whether any of Halina's gifts to Ania came out of what became Zbigniew's estate: the estate is his own property and his half of the community (CIV-2 .2, CIV-3 .3), so a gift of Halina's own property (CIV-1 .3) is no part of it"
+  rule base = any(not e2_gift_own[g] for g in e2_gift)
+
+version e2_gift_cash
+  cite e2_story
+  governs always
+  known 2021-04-30
+  e2_gift_own[cash2021] = true "story.md 2021-04-30 (A-D19): from the money she inherited from her mother in 2018 (her own); CIV-1 .3: what a spouse acquires by inheritance is her own"
+
+version e2_gift_units
+  cite e2_story
+  governs always
+  known 2023-09-12
+  e2_gift_own[units2023] = true "story.md 2023-09-12 (A-D18): bought with Halina's own money; CIV-1 .3: what is acquired in exchange for separate assets is separate"

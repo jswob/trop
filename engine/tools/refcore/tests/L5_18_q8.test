@@ -1,0 +1,46 @@
+# L §5.18 example ask q8, copied, over a minimal reality: the model is `base` (q8 diffs against it), free_cash[m] =
+# income read at start_of(m), income = 5 000.00 PLN from 2026 (version known 2026-01-01); the scenario job_change
+# (from 2026-07-01) replaces it with 6 000.00 PLN from 2026-07.
+# q8: one line per month of the run (L §4.1); January..June unchanged (counted, not printed), July..December
+# changed with both values (L §5.18 diff; L §6.4: a scenario row replaces the base's on its span, §4.6 step 2).
+# q8 sits in the base file: diff may name a scenario (L §6.4 Asking).
+=== m.tally
+model base
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source pay "payslips"
+unit PLN: currency minor 0.01
+input income: money PLN
+def free_cash[m in months]: money PLN = income at start_of(m)
+
+version v2026
+  cite pay
+  governs 2026..
+  known 2026-01-01
+  income = 5 000.00 PLN "payslip"
+
+ask q8: diff(free_cash[m] for m in months) in job_change against base law 2026-12-31
+=== job_change.tally
+scenario job_change over base
+  tally 2
+  from 2026-07-01
+
+version new_job
+  cite pay
+  governs 2026-07..
+  known 2026-06-01
+  replace income = 6 000.00 PLN "new contract"
+=== expect
+q8: diff in job_change against base: 6 changed, 0 added, 0 removed, 6 unchanged
+  changed (m = 2026-07): 6 000.00 PLN against 5 000.00 PLN
+  changed (m = 2026-08): 6 000.00 PLN against 5 000.00 PLN
+  changed (m = 2026-09): 6 000.00 PLN against 5 000.00 PLN
+  changed (m = 2026-10): 6 000.00 PLN against 5 000.00 PLN
+  changed (m = 2026-11): 6 000.00 PLN against 5 000.00 PLN
+  changed (m = 2026-12): 6 000.00 PLN against 5 000.00 PLN
+  world: base
+  world: job_change
+  law date 2026-12-31, cut 2026-12-31

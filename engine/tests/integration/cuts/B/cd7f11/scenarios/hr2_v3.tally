@@ -1,0 +1,18 @@
+scenario hr2_v3 over household_b
+  tally 2
+  from 2026-01-26
+  note "B-HR2 v3, Ola's proposal of 2026-01-02 for the 26th from 2026-01-26, not decided: as v2, but the reserve is the next three mortgage instalments as they will be after this day's overpayment, plus the VAT and the 12 % of point 2, plus the contributions. The reserve reads the day's overpayment and the overpayment reads the reserve."
+
+input v3_months: int question "How many next instalments does v3's reserve hold (B-HR2 v3)?"
+
+def v3_op[d in days]: money DUK = max(0 DUK, min(hr2_cap, v2_base_cis[d] + v2_laz[d] - v3_reserve[d], v2_base_cis[d] - hr2_keep)) at d
+
+def v3_reserve[d in days]: money DUK = sum(mtg_inst[k] as if {ov_on[d] = v3_op[d]} for k in loan_months where bdays_due[k] > d and bdays_due[k] <= add_months(d, v3_months)) + hr2_month_vat[d] + round(hr2_month_net[d] * hr2_tax_share, minor(DUK), hr2_tax_round) + hr2_contrib at d
+
+version hr2_v3_proposal
+  cite house_rules
+  governs always
+  known 2026-01-02
+  v3_months = 3 "B-HR2 v3 .2: the next three mortgage instalments"
+
+ask b10_v3: v3_op[2026-01-26] in hr2_v3 law 2026-01-26 as known 2026-01-07

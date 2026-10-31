@@ -1,0 +1,163 @@
+model s1
+  tally 2
+  on 2026-01-20
+  start 2025-03-01
+  end 2025-12-31
+  note "Card S1: Mirela and Joran Danek, the shared account at Banka Severa, FAM; all made up."
+
+source fam_law "Card S1, Law: FAM-1 (joint and own property) and FAM-2 (payments from an account holding joint and own money)"
+source card_s1 "Card S1, Cast and Entries: the stipulations of the case"
+source house_rules "Card S1, House rules: H-1 What we are worth"
+source banka_severa "Card S1, S1-R1: Banka Severa statement export, account 11 2040 7781, all rows from 2025-03-01 to 2025-12-31"
+
+unit DUK: currency minor 0.01
+
+kind persons: parties
+
+kind couples: parties
+  note "a married couple as the owner of its joint money (FAM-1 point 1)"
+
+kind inheritances: event certain
+  leg cash: DUK
+  attr heir: key persons
+
+kind interests: event certain
+  leg cash: DUK
+
+kind joint_accounts: place DUK min 0
+  owned by fam_arrive ties by (if p in couples then 1 else 0)
+  step minor(DUK)
+  takes k for w order (if w in payments then take_rank[w, k.owner] else 0), take_rest[w, k.owner] prorata ties by (if k.owner in couples then 1 else 0)
+  note "an account holding a couple's joint money and each spouse's own money, kept as parts by owner"
+
+kind payments: event certain
+  leg cash: DUK
+  attr for_one: key persons
+  note "for_one: the spouse a payment is for alone (FAM-2 point 2); none for a payment for common needs (FAM-2 point 1)"
+
+kind pays: event certain
+  leg cash: DUK
+
+place shared: joint_accounts lives 1900-01-01..
+  note "Banka Severa 11 2040 7781, held by both; the day it was opened isn't given, so an early day stands for it (L 5.7)"
+
+place world: outside lives 1900-01-01..
+
+input bank: observed
+
+input joint_share[p in persons, c in couples]: num
+  note "H-1 point 1: the share of the joint money each spouse is worth"
+
+def fam_arrive[m in events, p in parties]: num at m.day
+  note "FAM-1: whose money each arrival at the shared account is"
+  rule inherited v fam1_v1 = (if p == m.heir then 1 else 0) when m in inheritances
+  rule interest_joint v fam1_v1 = (m.cash.amount - sum(int_own[m, q] for q in persons on m.day)) / m.cash.amount when m in interests and p in couples
+  rule interest_own v fam1_v1 = int_own[m, p] / m.cash.amount when m in interests and p in persons
+  rule pay v fam1_v1 = (if p in couples then 1 else 0) when m in pays
+
+def int_own[m in interests, p in persons]: money DUK at m.day
+  note "FAM-1 point 2: a spouse's own part of an interest credit, in proportion to their own money just before the credit, rounded to whole orts, half up. Each interest row is the only row of its day, so just before the credit is the start of its day."
+  rule fam1_2 v fam1_v1 = round(m.cash.amount * (bal(m.cash.to, m.day start) of p) / bal(m.cash.to, m.day start), minor(DUK), half-up)
+
+def take_rank[w in payments, p in parties]: int at w.day
+  note "FAM-2: which money a payment takes first (lower first); parts of one rank share the payment in proportion"
+  rule common_v1 v fam2_v1 = (if p in couples then 0 else 1) when w.for_one == none
+  rule common_v2 v fam2_v2 = 0 when w.for_one == none
+  rule own_v1 v fam2_v1 = (if p == w.for_one then -1 else (if p in couples then 0 else 1)) when w.for_one != none
+  rule own_v2 v fam2_v2 = (if p == w.for_one then -1 else (if p in couples then 0 else 1)) when w.for_one != none
+
+def take_rest[w in events, p in parties]: int at w.day
+  note "FAM-2 point 2 names no money a payment for one spouse takes once that spouse's own money and the joint money are used up"
+  rule base = 0
+  rule other_own_v1 beats base v fam2_v1 = ?"FAM-2 doesn't say whose money a payment for one spouse takes once that spouse's own money and the joint money are used up" when w in payments and w.for_one != none and p != w.for_one and p in persons
+  rule other_own_v2 beats base v fam2_v2 = ?"FAM-2 doesn't say whose money a payment for one spouse takes once that spouse's own money and the joint money are used up" when w in payments and w.for_one != none and p != w.for_one and p in persons
+
+def worth[p in persons, d in days]: num DUK at d
+  note "H-1 point 1: own money plus half the joint money, less what one owes (nothing is owed); no rounding"
+  rule h1 v h1_v1 = sum((bal(x, d) of p) + joint_share[p, c] * (bal(x, d) of c) for x in joint_accounts on d, c in couples on d)
+
+ask s1_01: bal(shared, 2025-06-30) of mirela, bal(shared, 2025-06-30) of danek as known 2025-07-10
+
+ask s1_02: o.day, int_own[o, mirela] for o in interests over 2025 as known 2026-01-20
+
+ask s1_03: worth[p, d] for p in persons over .., d in [2025-06-30, 2025-09-30, 2025-12-31] as known 2026-01-20
+
+version fam1_v1
+  cite fam_law
+  governs 2016-01-01..
+  known 2015-09-01
+  note "FAM-1 v1, in force from 2016-01-01, published 2015-09-01"
+
+version fam2_v1
+  cite fam_law
+  governs 2016-01-01..2025-06-30
+  known 2015-09-01
+  note "FAM-2 v1: payments made up to 2025-06-30"
+
+version cast
+  cite card_s1
+  known 2025-03-01
+  persons + [joran] lives 1988-09-30..
+  persons + [mirela] lives 1990-04-12..
+  couples + [danek] lives 2018-06-16..
+  opening[shared] = 1180.00 DUK at 2025-03-01 start "Cast: on 2025-03-01 it held 1 180,00"
+  opening[shared] of danek = 1180.00 DUK at 2025-03-01 start "Cast: all of it joint money"
+
+version h1_v1
+  cite house_rules
+  governs 2018-06-16..
+  known 2025-03-01
+  joint_share[joran, danek] = 0.5 "H-1 point 1: half the joint money"
+  joint_share[mirela, danek] = 0.5 "H-1 point 1: half the joint money"
+
+version stmt
+  cite banka_severa
+  governs 2025-03-01..2025-12-31
+  known 2025-03-01
+  covers shared
+  note "each row is known on its own date (Entries); row 3 is Mirela's part of her aunt's estate (S1-D1)"
+  bank[r1] = (on: 2025-03-10, kind: pays, leg cash from world to shared amount 3150.00 DUK) known 2025-03-10 "S1-R1 row 1: PAY OSTRA LOGISTIKA M.DANEK"
+  bank[r2] = (on: 2025-03-10, kind: pays, leg cash from world to shared amount 2870.00 DUK) known 2025-03-10 "S1-R1 row 2: PAY VERNO TECH J.DANEK"
+  bank[r3] = (on: 2025-03-14, kind: inheritances, leg cash from world to shared amount 28000.00 DUK, heir: mirela) known 2025-03-14 "S1-R1 row 3: NOTARY K.BRELL ESTATE A.VORN M.DANEK"
+  bank[r4] = (on: 2025-03-20, kind: payments, leg cash from shared to world amount 3950.00 DUK, for_one: none) known 2025-03-20 "S1-R1 row 4: HOUSEHOLD ORDER RENT BILLS SHOPPING"
+  bank[r5] = (on: 2025-03-31, kind: interests, leg cash from world to shared amount 18.42 DUK) known 2025-03-31 "S1-R1 row 5: INTEREST"
+  bank[r6] = (on: 2025-04-10, kind: pays, leg cash from world to shared amount 3150.00 DUK) known 2025-04-10 "S1-R1 row 6: PAY OSTRA LOGISTIKA M.DANEK"
+  bank[r7] = (on: 2025-04-10, kind: pays, leg cash from world to shared amount 2870.00 DUK) known 2025-04-10 "S1-R1 row 7: PAY VERNO TECH J.DANEK"
+  bank[r8] = (on: 2025-04-20, kind: payments, leg cash from shared to world amount 3950.00 DUK, for_one: none) known 2025-04-20 "S1-R1 row 8: HOUSEHOLD ORDER RENT BILLS SHOPPING"
+  bank[r9] = (on: 2025-04-22, kind: payments, leg cash from shared to world amount 2400.00 DUK, for_one: mirela) known 2025-04-22 "S1-R1 row 9: LINGVA SCHOOL COURSE FEE M.DANEK"
+  bank[r10] = (on: 2025-05-10, kind: pays, leg cash from world to shared amount 3150.00 DUK) known 2025-05-10 "S1-R1 row 10: PAY OSTRA LOGISTIKA M.DANEK"
+  bank[r11] = (on: 2025-05-10, kind: pays, leg cash from world to shared amount 2870.00 DUK) known 2025-05-10 "S1-R1 row 11: PAY VERNO TECH J.DANEK"
+  bank[r12] = (on: 2025-05-12, kind: payments, leg cash from shared to world amount 12600.00 DUK, for_one: none) known 2025-05-12 "S1-R1 row 12: TRAVEL ARDENA BOOKING 5521"
+  bank[r13] = (on: 2025-05-20, kind: payments, leg cash from shared to world amount 3950.00 DUK, for_one: none) known 2025-05-20 "S1-R1 row 13: HOUSEHOLD ORDER RENT BILLS SHOPPING"
+  bank[r14] = (on: 2025-06-10, kind: pays, leg cash from world to shared amount 3150.00 DUK) known 2025-06-10 "S1-R1 row 14: PAY OSTRA LOGISTIKA M.DANEK"
+  bank[r15] = (on: 2025-06-10, kind: pays, leg cash from world to shared amount 2870.00 DUK) known 2025-06-10 "S1-R1 row 15: PAY VERNO TECH J.DANEK"
+  bank[r16] = (on: 2025-06-20, kind: payments, leg cash from shared to world amount 3950.00 DUK, for_one: none) known 2025-06-20 "S1-R1 row 16: HOUSEHOLD ORDER RENT BILLS SHOPPING"
+  bank[r17] = (on: 2025-06-30, kind: interests, leg cash from world to shared amount 102.37 DUK) known 2025-06-30 "S1-R1 row 17: INTEREST"
+  bank[r18] = (on: 2025-07-10, kind: pays, leg cash from world to shared amount 3150.00 DUK) known 2025-07-10 "S1-R1 row 18: PAY OSTRA LOGISTIKA M.DANEK"
+  bank[r19] = (on: 2025-07-10, kind: pays, leg cash from world to shared amount 2870.00 DUK) known 2025-07-10 "S1-R1 row 19: PAY VERNO TECH J.DANEK"
+  bank[r20] = (on: 2025-07-20, kind: payments, leg cash from shared to world amount 3950.00 DUK, for_one: none) known 2025-07-20 "S1-R1 row 20: HOUSEHOLD ORDER RENT BILLS SHOPPING"
+  bank[r21] = (on: 2025-08-10, kind: pays, leg cash from world to shared amount 3150.00 DUK) known 2025-08-10 "S1-R1 row 21: PAY OSTRA LOGISTIKA M.DANEK"
+  bank[r22] = (on: 2025-08-10, kind: pays, leg cash from world to shared amount 2870.00 DUK) known 2025-08-10 "S1-R1 row 22: PAY VERNO TECH J.DANEK"
+  bank[r23] = (on: 2025-08-19, kind: payments, leg cash from shared to world amount 1850.00 DUK, for_one: joran) known 2025-08-19 "S1-R1 row 23: AEROKLUB TORVIN LESSONS J.DANEK"
+  bank[r24] = (on: 2025-08-20, kind: payments, leg cash from shared to world amount 3950.00 DUK, for_one: none) known 2025-08-20 "S1-R1 row 24: HOUSEHOLD ORDER RENT BILLS SHOPPING"
+  bank[r25] = (on: 2025-09-10, kind: pays, leg cash from world to shared amount 3150.00 DUK) known 2025-09-10 "S1-R1 row 25: PAY OSTRA LOGISTIKA M.DANEK"
+  bank[r26] = (on: 2025-09-10, kind: pays, leg cash from world to shared amount 2870.00 DUK) known 2025-09-10 "S1-R1 row 26: PAY VERNO TECH J.DANEK"
+  bank[r27] = (on: 2025-09-20, kind: payments, leg cash from shared to world amount 3950.00 DUK, for_one: none) known 2025-09-20 "S1-R1 row 27: HOUSEHOLD ORDER RENT BILLS SHOPPING"
+  bank[r28] = (on: 2025-09-30, kind: interests, leg cash from world to shared amount 96.81 DUK) known 2025-09-30 "S1-R1 row 28: INTEREST"
+  bank[r29] = (on: 2025-10-10, kind: pays, leg cash from world to shared amount 3150.00 DUK) known 2025-10-10 "S1-R1 row 29: PAY OSTRA LOGISTIKA M.DANEK"
+  bank[r30] = (on: 2025-10-10, kind: pays, leg cash from world to shared amount 2870.00 DUK) known 2025-10-10 "S1-R1 row 30: PAY VERNO TECH J.DANEK"
+  bank[r31] = (on: 2025-10-17, kind: payments, leg cash from shared to world amount 1500.00 DUK, for_one: ?"S1-R1 row 31: on what was the 1 500,00 taken out in cash on 2025-10-17 spent: common needs, or one spouse alone, and whose?") known 2025-10-17 "S1-R1 row 31: ATM 0412 TORVIN CENTRUM CASH"
+  bank[r32] = (on: 2025-10-20, kind: payments, leg cash from shared to world amount 3950.00 DUK, for_one: none) known 2025-10-20 "S1-R1 row 32: HOUSEHOLD ORDER RENT BILLS SHOPPING"
+  bank[r33] = (on: 2025-11-10, kind: pays, leg cash from world to shared amount 3150.00 DUK) known 2025-11-10 "S1-R1 row 33: PAY OSTRA LOGISTIKA M.DANEK"
+  bank[r34] = (on: 2025-11-10, kind: pays, leg cash from world to shared amount 2870.00 DUK) known 2025-11-10 "S1-R1 row 34: PAY VERNO TECH J.DANEK"
+  bank[r35] = (on: 2025-11-20, kind: payments, leg cash from shared to world amount 3950.00 DUK, for_one: none) known 2025-11-20 "S1-R1 row 35: HOUSEHOLD ORDER RENT BILLS SHOPPING"
+  bank[r36] = (on: 2025-12-10, kind: pays, leg cash from world to shared amount 3150.00 DUK) known 2025-12-10 "S1-R1 row 36: PAY OSTRA LOGISTIKA M.DANEK"
+  bank[r37] = (on: 2025-12-10, kind: pays, leg cash from world to shared amount 2870.00 DUK) known 2025-12-10 "S1-R1 row 37: PAY VERNO TECH J.DANEK"
+  bank[r38] = (on: 2025-12-20, kind: payments, leg cash from shared to world amount 3950.00 DUK, for_one: none) known 2025-12-20 "S1-R1 row 38: HOUSEHOLD ORDER RENT BILLS SHOPPING"
+  bank[r39] = (on: 2025-12-31, kind: interests, leg cash from world to shared amount 88.05 DUK) known 2025-12-31 "S1-R1 row 39: INTEREST"
+
+version fam2_v2
+  cite fam_law
+  governs 2025-07-01..
+  known 2025-05-20
+  note "FAM-2 v2: payments made from 2025-07-01"

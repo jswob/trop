@@ -1,0 +1,292 @@
+model i11_envelopes
+  tally 2
+  on 2027-01-01
+  start 2027-01-01
+  end 2027-12-31
+  note "I-11: an envelope budget over one joint account J, a savings goal in H, a back-up payer whose payments are a debt."
+  note "Envelopes are earmarks inside J: tally 2 has no form for parts of one place's balance, so each envelope is a place of its own kind, every fill and every charge a leg against the outside place pool, and unassigned money a def over the real balances."
+
+source card "Card I-11: story, table, rules 1-8 and question"
+
+source modeller "The modeller's assumptions, each with its reason"
+
+unit XXX: currency minor 0.01
+
+kind persons
+
+kind envelopes: place XXX signed
+  note "an earmark ledger: an envelope's balance is a part of J's, carried from month to month, below zero after an overspend"
+
+kind budget_pays: event certain
+  leg cash: XXX
+  leg backup: XXX
+  leg charge: XXX
+  attr line: key lines
+  note "a payment for an envelope: from J, or by Natalia as a debt of the household (rule 6), and always charged to its envelope (rule 2)"
+
+kind catchups: event certain
+  leg earmark: XXX
+
+kind fills: event certain
+  leg earmark: XXX
+  leg release: XXX
+  note "a monthly fill (rule 3) and the return of what a personal envelope holds above its cap (rule 5)"
+
+kind repays: event certain
+  leg cash: XXX
+
+kind wages: event certain
+  leg cash: XXX
+
+axis food_path
+  f1800 "the food bill is 1 800.00 a month"
+  f2100 "the food bill is 2 100.00 a month"
+  f2400 "the food bill is 2 400.00 a month"
+
+index env_ix = [home, food, transport, fun_n, fun_o]
+  v budget_rules
+  note "the fill order of rule 3, as the card lists the envelopes"
+
+index lines = [rent, food_5, food_12, food_19, food_26, transport_spend, insurance, fun_n_spend, fun_o_spend]
+  v budget_rules
+  note "the payments of the table, in the card's order, which is their order on one day"
+
+place env[e in env_ix]: envelopes lives 2027-01-01..
+
+place h: accounts XXX lives 2027-01-01..
+
+place j: accounts XXX lives 2027-01-01..
+
+place owed_natalia: debts XXX lives 2027-01-01..
+
+place pool: outside lives 1900-01-01..
+
+place world: outside lives 1900-01-01..
+
+input catchup_day: date
+
+input catchup_from: month
+
+input catchup_stated: money XXX
+
+input env_amount[e in env_ix]: money XXX
+
+input food_bill[f in food_path]: money XXX
+
+input food_round: rounding
+
+input goal: money XXX
+
+input line_dom[l in lines]: int
+
+input line_env[l in lines]: key env_ix
+
+input line_fixed[l in lines]: money XXX
+
+input line_food_share[l in lines]: num
+
+input line_once[l in lines]: month
+
+input pay_dom[p in persons]: int
+
+input personal[e in env_ix]: bool
+
+input personal_after_goal: money XXX
+
+input personal_cap: money XXX
+
+input sweep_dom: int
+
+input sweep_keep: money XXX
+
+input wage_amt[p in persons]: money XXX
+
+def catchup[e in env_ix]: money XXX = sum(month_amt[e, month_of(catchup_day)] - month_amt[e, k] for k in months where k >= catchup_from and k < month_of(catchup_day))
+
+def excess[e in env_ix, m in months]: money XXX
+  note "rule 5: after its fill a personal envelope holds at most the cap; the rest goes back to unassigned"
+  rule base = 0
+  rule capped beats base = max(0 XXX, bal(env[e]) + take[e, m] - personal_cap) when personal[e]
+
+def fill_amt[e in env_ix, m in months]: money XXX
+  note "rule 3's monthly amount; rule 8 from the month after the goal is first held"
+  rule base = month_amt[e, m]
+  rule after_goal beats base = personal_after_goal when personal[e] and goal_met_before[start_of(m)]
+
+def goal_day: date
+  note "the first day H holds the goal; never if no day of the run does (question)"
+  rule base = first(d in days where bal(h, d) >= goal)
+  rule unreached beats base = never when not any(bal(h, d) >= goal for d in days)
+
+def goal_met_before[d in days]: bool = any(bal(h, k) >= goal for k in days where k < d)
+
+def line_due[l in lines]: money XXX
+  rule fixed = line_fixed[l]
+  rule food beats fixed = round(food_bill[food_path] * line_food_share[l], minor(XXX), food_round) when line_food_share[l] != none
+
+def month_amt[e in env_ix, m in months]: money XXX = env_amount[e] at start_of(m)
+
+def take[e in env_ix, m in months]: money XXX = max(0 XXX, min(fill_amt[e, m], unassigned))
+
+def unassigned: money XXX = bal(j) + bal(owed_natalia) - sum(bal(env[e]) for e in env_ix)
+
+fill repaid
+  v fifo_order
+  note "which repayment pays which back-up payment: the debt is one balance, so the earliest debt is taken as repaid first"
+  supply b.backup.amount for b in budget_pays over .. where b.backup.amount > 0 XXX
+  demand r.cash.amount for r in repays over ..
+  arc b.day <= r.day
+  order b.day, r.day ties by pos(b.line)
+
+move catch_up[e in env_ix]: catchups
+  on catchup_day
+  when catchup[e] > 0 XXX
+  reads j, owed_natalia, env
+  after fill_env
+  ties by pos(e)
+  leg earmark from pool to env[e] amount min(catchup[e], max(0 XXX, unassigned))
+
+move fill_env[m in months, e in env_ix]: fills
+  on start_of(m)
+  reads j, owed_natalia, env, h
+  ties by pos(e)
+  leg earmark from pool to env[e] amount take[e, m]
+  leg release from env[e] to pool amount excess[e, m]
+
+move pay[l in lines, m in months]: budget_pays
+  on day_of(m, line_dom[l])
+  when line_once[l] == none or line_once[l] == m
+  reads j
+  ties by pos(l)
+  attr line = l
+  leg cash from j to world amount if bal(j) >= line_due[l] then line_due[l] else 0 XXX
+  leg backup from owed_natalia to world amount if bal(j) >= line_due[l] then 0 XXX else line_due[l]
+  leg charge from env[line_env[l]] to pool amount line_due[l]
+
+move repay[m in months, p in persons over m]: repays
+  on day_of(m, pay_dom[p])
+  when bal(owed_natalia) < 0 XXX
+  reads owed_natalia
+  after pay
+  leg cash from j to owed_natalia amount min(-bal(owed_natalia), wage_amt[p])
+
+move sweep[m in months]: transfers
+  on day_of(m, sweep_dom)
+  when not goal_met_before[day_of(m, sweep_dom)]
+  reads j, owed_natalia, env, h
+  after catch_up
+  after fill_env
+  after pay
+  leg cash from j to h amount min(max(0 XXX, unassigned - sweep_keep), goal - bal(h))
+
+move wage[m in months, p in persons over m]: wages
+  on day_of(m, pay_dom[p])
+  leg cash from world to j amount wage_amt[p]
+
+ask catchup_check: check catchup[transport] == catchup_stated
+
+ask envelopes_end: bal(env[e], 2027-12-31) for e in env_ix
+
+ask goal_reached: goal_day
+
+ask money_end: bal(j, 2027-12-31), bal(j, 2027-12-31) + bal(owed_natalia, 2027-12-31) - sum(bal(env[e], 2027-12-31) for e in env_ix)
+
+ask natalia_paid: b.day, b.backup.amount for b in budget_pays over 2027 where b.backup.amount > 0 XXX
+
+ask natalia_repaid: b.day, b.backup.amount, r.day, repaid.taken[b, r] for b in budget_pays over 2027 where b.backup.amount > 0 XXX, r in repays over .. where repaid.taken[b, r] > 0 XXX
+
+ask sweeps: flows(sweep[m], m), bal(h, day_of(m, sweep_dom)) for m in months where flows(sweep[m], m) > 0 XXX
+
+version people
+  cite modeller
+  known 2027-01-01
+  assumed "the card gives no birth dates; each person's lifespan is written from the run's start"
+  persons + [natalia] lives 2027-01-01..
+  persons + [oskar] lives 2027-01-01..
+
+version budget_rules
+  cite card
+  governs always
+  known 2027-01-01
+  catchup_day = 2027-04-01 "rule 4: on 1 April"
+  catchup_from = 2027-01 "rule 4: as if since January"
+  catchup_stated = 450 "rule 4: Transport also receives 450.00"
+  env_amount[food] = 2000 governs 2027-01.. "table: Food"
+  env_amount[fun_n] = 400 governs 2027-01.. "table: Fun-N"
+  env_amount[fun_o] = 400 governs 2027-01.. "table: Fun-O"
+  env_amount[home] = 3100 governs 2027-01.. "table: Home"
+  env_amount[transport] = 600 governs 2027-01..2027-03 "table: Transport"
+  env_amount[transport] = 750 governs 2027-04.. "rule 4: from 1 April 2027"
+  goal = 30000 "story: their goal is 30 000.00 in H"
+  line_dom[food_12] = 12 "table: Food, the 12th"
+  line_dom[food_19] = 19 "table: Food, the 19th"
+  line_dom[food_26] = 26 "table: Food, the 26th"
+  line_dom[food_5] = 5 "table: Food, the 5th"
+  line_dom[fun_n_spend] = 20 "table: Fun-N, the 20th"
+  line_dom[fun_o_spend] = 20 "table: Fun-O, the 20th"
+  line_dom[insurance] = 15 "table: car insurance on 15 March 2027"
+  line_dom[rent] = 3 "table: rent on the 3rd"
+  line_dom[transport_spend] = 15 "table: Transport, the 15th"
+  line_env[food_12] = food
+  line_env[food_19] = food
+  line_env[food_26] = food
+  line_env[food_5] = food
+  line_env[fun_n_spend] = fun_n
+  line_env[fun_o_spend] = fun_o
+  line_env[insurance] = transport "table: car insurance is a Transport payment"
+  line_env[rent] = home
+  line_env[transport_spend] = transport
+  line_fixed[food_12] = none "a share of the food bill"
+  line_fixed[food_19] = none "a share of the food bill"
+  line_fixed[food_26] = none "a share of the food bill"
+  line_fixed[food_5] = none "a share of the food bill"
+  line_fixed[fun_n_spend] = 450 "table: Fun-N"
+  line_fixed[fun_o_spend] = 300 "table: Fun-O"
+  line_fixed[insurance] = 1260 "table: car insurance"
+  line_fixed[rent] = 3100 "table: rent"
+  line_fixed[transport_spend] = 640 "table: Transport"
+  line_food_share = none "a fixed payment"
+  line_food_share[food_12] = 25 % "table: a quarter of the month's food bill"
+  line_food_share[food_19] = 25 % "table: a quarter of the month's food bill"
+  line_food_share[food_26] = 25 % "table: a quarter of the month's food bill"
+  line_food_share[food_5] = 25 % "table: a quarter of the month's food bill"
+  line_once = none "a monthly payment"
+  line_once[insurance] = 2027-03 "table: car insurance, once, in March 2027"
+  pay_dom[natalia] = 28 "story: Natalia is paid on the 28th"
+  pay_dom[oskar] = 10 "story: Oskar is paid on the 10th"
+  personal = false "rule 5: only Fun-N and Fun-O are personal"
+  personal[fun_n] = true "rule 5"
+  personal[fun_o] = true "rule 5"
+  personal_after_goal = 500 "rule 8"
+  personal_cap = 600 "rule 5"
+  sweep_dom = 27 "rule 7: on the 27th"
+  sweep_keep = 1000 "rule 7: unassigned money above 1 000.00"
+  wage_amt[natalia] = 7200 "story"
+  wage_amt[oskar] = 5400 "story"
+
+version openings
+  cite card
+  known 2027-01-01
+  opening[env[food]] = 0 assumed "the card gives no envelope balances on 1 January 2027; each starts empty" at 2027-01-01 start
+  opening[env[fun_n]] = 0 assumed "the card gives no envelope balances on 1 January 2027; each starts empty" at 2027-01-01 start
+  opening[env[fun_o]] = 0 assumed "the card gives no envelope balances on 1 January 2027; each starts empty" at 2027-01-01 start
+  opening[env[home]] = 0 assumed "the card gives no envelope balances on 1 January 2027; each starts empty" at 2027-01-01 start
+  opening[env[transport]] = 0 assumed "the card gives no envelope balances on 1 January 2027; each starts empty" at 2027-01-01 start
+  opening[h] = 0 at 2027-01-01 start "story: H holds 0.00 on 1 January 2027"
+  opening[j] = 2500 at 2027-01-01 start "story: J holds 2 500.00 on 1 January 2027"
+  opening[owed_natalia] = 0 assumed "the card names no debt to Natalia on 1 January 2027" at 2027-01-01 start
+
+version paths
+  cite card
+  governs always
+  known 2027-01-01
+  food_bill[f1800] = 1800 "story: three paths are asked"
+  food_bill[f2100] = 2100 "story: three paths are asked"
+  food_bill[f2400] = 2400 "story: three paths are asked"
+  food_round = half-up assumed "the card states no rounding of a quarter of the bill; each path divides into whole minor units"
+
+version fifo_order
+  cite modeller
+  governs always
+  known 2027-01-01
+  assumed "rule 6 keeps one debt; a repayment is taken to pay the earliest back-up payment first"

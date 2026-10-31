@@ -1,0 +1,34 @@
+# L §5.16: cdf takes "a distribution value, a random fact read directly, or an affine form of one; anything
+# else is refused (LOAD-RANDOM ...)"; L §8.3 "cdf of a non-affine random value".
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+input z: dist
+input u01: dist
+input u4: dist
+input cnt: dist
+input q25: num
+input two: num
+input lvl: num
+def c: num = cdf(u01 * u01, lvl) at reader
+
+version v
+  cite s
+  governs 2026..
+  known 2026-01-01
+  z = normal(0, 1) to 1e-9
+  u01 = uniform(0, 1) to 0.001
+  u4 = uniform(0, 4) to 0.001
+  cnt = binomial(4, 0.5)
+  q25 = 0.25
+  two = 2
+  lvl = 0.5
+=== expect
+refused: LOAD-RANDOM ...

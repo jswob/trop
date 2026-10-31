@@ -1,0 +1,171 @@
+cut_ok (e = w60_500) [lh12_mode = *, lh12_ok = *]: 17.00 PLN
+  assumed: the day of reaching 60 or 65 is not stated; taken as the application day, so art. 26 ust. 6 changes nothing for the examples (reached_on[w60_500])
+  assumed: the release names only '60-latka' and '65-latek' and divides by the column-0 values (age_months[w60_500])
+  assumed: the release says only that the new table applies to those retiring from 1 April 2026 to 31 March 2027; any day in that window gives the same table (apply_on[w60_500])
+  pinned: apply_on[e] = 2026-03-31 for e in example
+  pinned: reached_on[e] = 2026-03-31 for e in example
+  law date 2026-10-18, cut 2026-10-18
+cut_ok (e = m65_500) [lh12_mode = *, lh12_ok = *]: 19.00 PLN
+  assumed: the day of reaching 60 or 65 is not stated; taken as the application day, so art. 26 ust. 6 changes nothing for the examples (reached_on[m65_500])
+  assumed: the release names only '60-latka' and '65-latek' and divides by the column-0 values (age_months[m65_500])
+  assumed: the release says only that the new table applies to those retiring from 1 April 2026 to 31 March 2027; any day in that window gives the same table (apply_on[m65_500])
+  pinned: apply_on[e] = 2026-03-31 for e in example
+  pinned: reached_on[e] = 2026-03-31 for e in example
+  law date 2026-10-18, cut 2026-10-18
+cut_ok (e = w60_700) [lh12_mode = *, lh12_ok = *]: 24.00 PLN
+  assumed: the day of reaching 60 or 65 is not stated; taken as the application day, so art. 26 ust. 6 changes nothing for the examples (reached_on[w60_700])
+  assumed: the release names only '60-latka' and '65-latek' and divides by the column-0 values (age_months[w60_700])
+  assumed: the release says only that the new table applies to those retiring from 1 April 2026 to 31 March 2027; any day in that window gives the same table (apply_on[w60_700])
+  pinned: apply_on[e] = 2026-03-31 for e in example
+  pinned: reached_on[e] = 2026-03-31 for e in example
+  law date 2026-10-18, cut 2026-10-18
+cut_ok (e = m65_700) [lh12_mode = *, lh12_ok = *]: 27.00 PLN
+  assumed: the day of reaching 60 or 65 is not stated; taken as the application day, so art. 26 ust. 6 changes nothing for the examples (reached_on[m65_700])
+  assumed: the release names only '60-latka' and '65-latek' and divides by the column-0 values (age_months[m65_700])
+  assumed: the release says only that the new table applies to those retiring from 1 April 2026 to 31 March 2027; any day in that window gives the same table (apply_on[m65_700])
+  pinned: apply_on[e] = 2026-03-31 for e in example
+  pinned: reached_on[e] = 2026-03-31 for e in example
+  law date 2026-10-18, cut 2026-10-18
+div_new (e = w60_500): 268.9
+  assumed: the day of reaching 60 or 65 is not stated; taken as the application day, so art. 26 ust. 6 changes nothing for the examples (reached_on[w60_500])
+  assumed: the release names only '60-latka' and '65-latek' and divides by the column-0 values (age_months[w60_500])
+  assumed: the release says only that the new table applies to those retiring from 1 April 2026 to 31 March 2027; any day in that window gives the same table (apply_on[w60_500])
+  law date 2026-10-18, cut 2026-10-18
+div_new (e = m65_500): 222.7
+  assumed: the day of reaching 60 or 65 is not stated; taken as the application day, so art. 26 ust. 6 changes nothing for the examples (reached_on[m65_500])
+  assumed: the release names only '60-latka' and '65-latek' and divides by the column-0 values (age_months[m65_500])
+  assumed: the release says only that the new table applies to those retiring from 1 April 2026 to 31 March 2027; any day in that window gives the same table (apply_on[m65_500])
+  law date 2026-10-18, cut 2026-10-18
+div_new (e = w60_700): 268.9
+  assumed: the day of reaching 60 or 65 is not stated; taken as the application day, so art. 26 ust. 6 changes nothing for the examples (reached_on[w60_700])
+  assumed: the release names only '60-latka' and '65-latek' and divides by the column-0 values (age_months[w60_700])
+  assumed: the release says only that the new table applies to those retiring from 1 April 2026 to 31 March 2027; any day in that window gives the same table (apply_on[w60_700])
+  law date 2026-10-18, cut 2026-10-18
+div_new (e = m65_700): 222.7
+  assumed: the day of reaching 60 or 65 is not stated; taken as the application day, so art. 26 ust. 6 changes nothing for the examples (reached_on[m65_700])
+  assumed: the release names only '60-latka' and '65-latek' and divides by the column-0 values (age_months[m65_700])
+  assumed: the release says only that the new table applies to those retiring from 1 April 2026 to 31 March 2027; any day in that window gives the same table (apply_on[m65_700])
+  law date 2026-10-18, cut 2026-10-18
+div_old (e = w60_500): 266.4
+  assumed: the release names only '60-latka' and '65-latek' and divides by the column-0 values (age_months[w60_500])
+  pinned: apply_on[e] = 2026-03-31 for e in example
+  pinned: reached_on[e] = 2026-03-31 for e in example
+  law date 2026-10-18, cut 2026-10-18
+div_old (e = m65_500): 220.8
+  assumed: the release names only '60-latka' and '65-latek' and divides by the column-0 values (age_months[m65_500])
+  pinned: apply_on[e] = 2026-03-31 for e in example
+  pinned: reached_on[e] = 2026-03-31 for e in example
+  law date 2026-10-18, cut 2026-10-18
+div_old (e = w60_700): 266.4
+  assumed: the release names only '60-latka' and '65-latek' and divides by the column-0 values (age_months[w60_700])
+  pinned: apply_on[e] = 2026-03-31 for e in example
+  pinned: reached_on[e] = 2026-03-31 for e in example
+  law date 2026-10-18, cut 2026-10-18
+div_old (e = m65_700): 220.8
+  assumed: the release names only '60-latka' and '65-latek' and divides by the column-0 values (age_months[m65_700])
+  pinned: apply_on[e] = 2026-03-31 for e in example
+  pinned: reached_on[e] = 2026-03-31 for e in example
+  law date 2026-10-18, cut 2026-10-18
+inc_2022_2025 (a = 60): 27.5
+  pinned: law 2022-04-01
+  pinned: law 2025-04-01
+  law date 2026-10-18, cut 2026-10-18
+inc_2022_2025 (a = 65): 24.6
+  pinned: law 2022-04-01
+  pinned: law 2025-04-01
+  law date 2026-10-18, cut 2026-10-18
+inc_2025_2026 (a = 60): 2.5
+  pinned: law 2025-04-01
+  pinned: law 2026-04-01
+  law date 2026-10-18, cut 2026-10-18
+inc_2025_2026 (a = 65): 1.9
+  pinned: law 2025-04-01
+  pinned: law 2026-04-01
+  law date 2026-10-18, cut 2026-10-18
+le_2022 (a = 60): 238.9
+  law date 2022-04-01, cut 2026-10-18
+le_2022 (a = 65): 196.2
+  law date 2022-04-01, cut 2026-10-18
+le_2025 (a = 60): 266.4
+  law date 2025-04-01, cut 2026-10-18
+le_2025 (a = 65): 220.8
+  law date 2025-04-01, cut 2026-10-18
+le_2026 (a = 60): 268.9
+  law date 2026-04-01, cut 2026-10-18
+le_2026 (a = 65): 222.7
+  law date 2026-04-01, cut 2026-10-18
+pension_new (e = w60_500) [lh12_mode = down]: 1 859.42 PLN
+  assumed: the day of reaching 60 or 65 is not stated; taken as the application day, so art. 26 ust. 6 changes nothing for the examples (reached_on[w60_500])
+  assumed: the release names only '60-latka' and '65-latek' and divides by the column-0 values (age_months[w60_500])
+  assumed: the release says only that the new table applies to those retiring from 1 April 2026 to 31 March 2027; any day in that window gives the same table (apply_on[w60_500])
+  reading: lh12_mode = down
+  law date 2026-10-18, cut 2026-10-18
+pension_new (e = w60_500) [lh12_mode = half-even | half-up]: 1 859.43 PLN
+  assumed: the day of reaching 60 or 65 is not stated; taken as the application day, so art. 26 ust. 6 changes nothing for the examples (reached_on[w60_500])
+  assumed: the release names only '60-latka' and '65-latek' and divides by the column-0 values (age_months[w60_500])
+  assumed: the release says only that the new table applies to those retiring from 1 April 2026 to 31 March 2027; any day in that window gives the same table (apply_on[w60_500])
+  reading: lh12_mode = half-even | half-up
+  law date 2026-10-18, cut 2026-10-18
+pension_new (e = m65_500) [lh12_mode = *]: 2 245.17 PLN
+  assumed: the day of reaching 60 or 65 is not stated; taken as the application day, so art. 26 ust. 6 changes nothing for the examples (reached_on[m65_500])
+  assumed: the release names only '60-latka' and '65-latek' and divides by the column-0 values (age_months[m65_500])
+  assumed: the release says only that the new table applies to those retiring from 1 April 2026 to 31 March 2027; any day in that window gives the same table (apply_on[m65_500])
+  law date 2026-10-18, cut 2026-10-18
+pension_new (e = w60_700) [lh12_mode = down]: 2 603.19 PLN
+  assumed: the day of reaching 60 or 65 is not stated; taken as the application day, so art. 26 ust. 6 changes nothing for the examples (reached_on[w60_700])
+  assumed: the release names only '60-latka' and '65-latek' and divides by the column-0 values (age_months[w60_700])
+  assumed: the release says only that the new table applies to those retiring from 1 April 2026 to 31 March 2027; any day in that window gives the same table (apply_on[w60_700])
+  reading: lh12_mode = down
+  law date 2026-10-18, cut 2026-10-18
+pension_new (e = w60_700) [lh12_mode = half-even | half-up]: 2 603.20 PLN
+  assumed: the day of reaching 60 or 65 is not stated; taken as the application day, so art. 26 ust. 6 changes nothing for the examples (reached_on[w60_700])
+  assumed: the release names only '60-latka' and '65-latek' and divides by the column-0 values (age_months[w60_700])
+  assumed: the release says only that the new table applies to those retiring from 1 April 2026 to 31 March 2027; any day in that window gives the same table (apply_on[w60_700])
+  reading: lh12_mode = half-even | half-up
+  law date 2026-10-18, cut 2026-10-18
+pension_new (e = m65_700) [lh12_mode = *]: 3 143.24 PLN
+  assumed: the day of reaching 60 or 65 is not stated; taken as the application day, so art. 26 ust. 6 changes nothing for the examples (reached_on[m65_700])
+  assumed: the release names only '60-latka' and '65-latek' and divides by the column-0 values (age_months[m65_700])
+  assumed: the release says only that the new table applies to those retiring from 1 April 2026 to 31 March 2027; any day in that window gives the same table (apply_on[m65_700])
+  law date 2026-10-18, cut 2026-10-18
+pension_old (e = w60_500) [lh12_mode = down]: 1 876.87 PLN
+  assumed: the release names only '60-latka' and '65-latek' and divides by the column-0 values (age_months[w60_500])
+  pinned: apply_on[e] = 2026-03-31 for e in example
+  pinned: reached_on[e] = 2026-03-31 for e in example
+  reading: lh12_mode = down
+  law date 2026-10-18, cut 2026-10-18
+pension_old (e = w60_500) [lh12_mode = half-even | half-up]: 1 876.88 PLN
+  assumed: the release names only '60-latka' and '65-latek' and divides by the column-0 values (age_months[w60_500])
+  pinned: apply_on[e] = 2026-03-31 for e in example
+  pinned: reached_on[e] = 2026-03-31 for e in example
+  reading: lh12_mode = half-even | half-up
+  law date 2026-10-18, cut 2026-10-18
+pension_old (e = m65_500) [lh12_mode = *]: 2 264.49 PLN
+  assumed: the release names only '60-latka' and '65-latek' and divides by the column-0 values (age_months[m65_500])
+  pinned: apply_on[e] = 2026-03-31 for e in example
+  pinned: reached_on[e] = 2026-03-31 for e in example
+  law date 2026-10-18, cut 2026-10-18
+pension_old (e = w60_700) [lh12_mode = down]: 2 627.62 PLN
+  assumed: the release names only '60-latka' and '65-latek' and divides by the column-0 values (age_months[w60_700])
+  pinned: apply_on[e] = 2026-03-31 for e in example
+  pinned: reached_on[e] = 2026-03-31 for e in example
+  reading: lh12_mode = down
+  law date 2026-10-18, cut 2026-10-18
+pension_old (e = w60_700) [lh12_mode = half-even | half-up]: 2 627.63 PLN
+  assumed: the release names only '60-latka' and '65-latek' and divides by the column-0 values (age_months[w60_700])
+  pinned: apply_on[e] = 2026-03-31 for e in example
+  pinned: reached_on[e] = 2026-03-31 for e in example
+  reading: lh12_mode = half-even | half-up
+  law date 2026-10-18, cut 2026-10-18
+pension_old (e = m65_700) [lh12_mode = down]: 3 170.28 PLN
+  assumed: the release names only '60-latka' and '65-latek' and divides by the column-0 values (age_months[m65_700])
+  pinned: apply_on[e] = 2026-03-31 for e in example
+  pinned: reached_on[e] = 2026-03-31 for e in example
+  reading: lh12_mode = down
+  law date 2026-10-18, cut 2026-10-18
+pension_old (e = m65_700) [lh12_mode = half-even | half-up]: 3 170.29 PLN
+  assumed: the release names only '60-latka' and '65-latek' and divides by the column-0 values (age_months[m65_700])
+  pinned: apply_on[e] = 2026-03-31 for e in example
+  pinned: reached_on[e] = 2026-03-31 for e in example
+  reading: lh12_mode = half-even | half-up
+  law date 2026-10-18, cut 2026-10-18

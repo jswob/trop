@@ -1,0 +1,25 @@
+# L §5.16: "A query that has no closed form is a statistic over paths: it stands only in an ask line that states
+# paths N seed S (LOAD-ASKONLY elsewhere)"; "A query with where has no closed form". L §8.3 LOAD-ASKONLY `<query> has
+# no closed form outside an ask`. (Writer 8: a closed-form query in a rule is computed, L5_16_query_closed_in_rule.)
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+input g: dist
+input lo: num
+def mq: num = mean(g where g > lo) at reader
+
+version v
+  cite s
+  governs 2026..
+  known 2026-01-01
+  g = uniform(0, 1) to 0.01
+  lo = 0.5 "s"
+
+ask a: mq law 2026-06-30
+=== expect
+refused: LOAD-ASKONLY mean(g where g > lo) has no closed form outside an ask ...

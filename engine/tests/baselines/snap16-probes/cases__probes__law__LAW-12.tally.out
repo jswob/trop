@@ -1,0 +1,4 @@
+each_heir (h = kuba): (true, 0 DUK)
+  law date 2026-10-25, cut 2026-10-25
+each_heir (h = leon): (false, 5 400 DUK)
+  law date 2026-10-25, cut 2026-10-25

@@ -1,0 +1,31 @@
+# Round 18, C1-11 (fixed). Two replace rows of one input known the same day whose spans overlap (May 2026): neither
+# is known before the other, so step 2 doesn't order them, step 3 doesn't either, and step 4 refuses the tie
+# (LOAD-OVERLAP, L §4.6). snap11: LOAD-REPLACE two replace lines of rate known the same day.
+=== m.tally
+model m
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+source s "s"
+unit PLN: currency minor 0.01
+input rate: money PLN
+def r[d in days]: money PLN = rate at d
+version v1
+  cite s
+  governs 2026..
+  known 2025-12-01
+  rate = 100
+version v2
+  cite s
+  governs 2026..
+  known 2026-02-01
+  replace rate = 150 governs 2026-03..2026-05
+version v3
+  cite s
+  governs 2026..
+  known 2026-02-01
+  replace rate = 170 governs 2026-05..2026-08
+ask q: r[2026-01-15], r[2026-04-15], r[2026-06-15], r[2026-07-15]
+=== expect
+refused: LOAD-OVERLAP rows m.tally:19 and m.tally:24 of rate overlap at no keys, neither replacing the other (m.tally:24)

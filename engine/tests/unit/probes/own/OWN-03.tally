@@ -1,0 +1,47 @@
+model own03
+  tally 2
+  on 2026-10-25
+  start 2024-12-31
+  end 2025-03-31
+  note "OWN-03: next spring's tax on this year's income in net worth from the year's end; still owed at the run's end."
+  note "The payment falls after the run's end: it isn't booked, and the register lists it (LANGUAGE 5.14.3)."
+
+source card "Probe card OWN-03 (made up): story and rules"
+
+unit DUK: currency minor 0.01
+
+index tax_years = year 2024..2024
+
+place konto: accounts DUK lives 2024-12-31..
+
+place tax_debt: debts DUK lives 2024-12-31..
+
+place tax_office: outside lives 2024-12-31..
+
+input tax_due[y in tax_years]: date
+
+input tax_for[y in tax_years]: money DUK
+
+move tax_accrue[y in tax_years]: transfers
+  on add_days(end_of(y), -1)
+  for y
+  leg cash from tax_debt to tax_office amount tax_for[y]
+  note "rule 1: owed from the year's end"
+
+move tax_payment[y in tax_years]: transfers
+  on tax_due[y]
+  for y
+  leg cash from konto to tax_debt amount tax_for[y]
+  note "rule 1: paid when due"
+
+ask q_net_worth_dec31: sum(bal(x, 2024-12-31) for x in places on 2024-12-31 where not x in outside)
+
+ask q_owed_at_end: -bal(tax_debt, 2025-03-31), tax_due[2024]
+
+version card_facts
+  cite card
+  governs always
+  known 2024-12-31
+  opening[konto] = 10000.00 at 2024-12-31 start "story: holds 10 000.00 on 31 December 2024"
+  tax_due[2024] = 2025-04-30 "story: due by 30 April 2025"
+  tax_for[2024] = 1840.00 "story: her tax for 2024"

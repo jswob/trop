@@ -1,0 +1,19 @@
+# L §5.3: "LOAD-KNOWN: a version ... known after the model's on."
+=== m.tally
+model t
+  tally 2
+  on 2016-03-01
+  start 2015-11-01
+  end 2016-10-31
+
+source s "s"
+
+input n: int
+
+version v
+  cite s
+  governs always
+  known 2016-03-02
+  n = 1
+=== expect
+refused: LOAD-KNOWN ...

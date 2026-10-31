@@ -1,0 +1,71 @@
+model rec02
+  tally 2
+  on 2026-10-25
+  start 2025-03-01
+  end 2025-03-31
+
+source acct_open "REC-02 card: the account's opening in March 2025"
+
+source card "REC-02 card: its rules"
+
+source wrzos_export "REC-02 card: Bank Wrzosowy's export for PKB-1201, March 2025: semicolon-separated, decimal comma, dates dd.mm.yyyy, two header lines, a balance-after column"
+
+unit DUK: currency minor 0.01
+
+index row = int 1..5
+
+input opening_bal: money DUK
+
+input row_after[r in row]: money DUK
+
+input row_amt[r in row]: money DUK
+
+def closing: money DUK at reader
+  rule last_row v card_rules = row_after[last(r in row)]
+
+def faulty_amt: money DUK = sum(row_amt[r] for r in row where no_effect[r]) at reader
+
+def naive_sum: money DUK = opening_bal + sum(row_amt[r] for r in row) at reader
+
+def no_effect[r in row]: bool at reader
+  rule twice v card_rules = row_after[r] == prev_after[r]
+
+def prev_after[r in row]: money DUK at reader
+  rule base = row_after[r - 1]
+  rule first beats base = opening_bal when pos(r) == 1
+
+def without_faulty: money DUK = opening_bal + sum(row_amt[r] for r in row where not no_effect[r]) at reader
+
+ask closes: check without_faulty == closing law 2026-10-25
+
+ask issues: no_effect[r], row_amt[r] for r in row law 2026-10-25
+
+ask moves_exactly: check naive_sum - without_faulty == faulty_amt law 2026-10-25
+
+ask q: closing, naive_sum, without_faulty law 2026-10-25
+
+version card_rules
+  cite card
+  governs always
+  known 2025-03-01
+
+version export_2025_03
+  cite wrzos_export
+  governs always
+  known 2025-03-01
+  row_after[1] = 800.00 "line 3: 03.03.2025;Sklep Rolnik;-200,00;800,00"
+  row_after[2] = 1300.00 "line 4: 05.03.2025;Klient Kowal;500,00;1300,00"
+  row_after[3] = 1300.00 "line 5: 05.03.2025;Klient Kowal;500,00;1300,00"
+  row_after[4] = 1200.00 "line 6: 10.03.2025;Apteka;-100,00;1200,00"
+  row_after[5] = 1150.00 "line 7: 12.03.2025;Kawiarnia;-50,00;1150,00"
+  row_amt[1] = -200.00 "line 3"
+  row_amt[2] = 500.00 "line 4"
+  row_amt[3] = 500.00 "line 5"
+  row_amt[4] = -100.00 "line 6"
+  row_amt[5] = -50.00 "line 7"
+
+version open_v
+  cite acct_open
+  governs always
+  known 2025-03-01
+  opening_bal = 1000.00 "the account opens March 2025 at 1 000.00"

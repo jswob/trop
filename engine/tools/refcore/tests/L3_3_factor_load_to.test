@@ -1,0 +1,25 @@
+# L §3.3 (round 6): factor "otherwise needs to u (§7.3), LOAD-TO where load can't show the power is an integer": over
+# a month, t is 1/12, 1/3 or 1 by r's period, which load doesn't see (r is an input), so the power t·n isn't shown to
+# be an integer, though n is an int: refused at load.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+input r: rate
+input n12: int
+def f: num = factor(r, n12, month, effective) at reader
+
+version v
+  cite s
+  governs 2026..
+  known 2026-01-01
+  r = 12 %/year
+  n12 = 12
+
+ask b: f law 2026-06-30
+=== expect
+refused: LOAD-TO ...

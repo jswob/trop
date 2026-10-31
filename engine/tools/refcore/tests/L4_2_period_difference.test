@@ -1,0 +1,37 @@
+# MC-B-F3 (S:325). L §4.2 Differences: "month, quarter and year are one dimension of counted periods (§3.2), so two
+# values of one period type, keys or not, differ by an int of periods ...: m - month_of(d) is the int number of months
+# from month_of(d) to m, so month_of(d) + (m - month_of(d)) is m." d0 = 2025-01-15: 2025-01 - 2025-01 = 0 and
+# 2025-04 - 2025-01 = 3 months; 2025-Q2 - 2025-Q1 = 1 quarter; the round trip gives m back. snap8 refused LOAD-UNIT
+# "the difference of two month values that are not keys of one index".
+=== m.tally
+model m
+  tally 2
+  on 2026-01-01
+  start 2025-01-01
+  end 2025-12-31
+
+source s "s"
+input d0: date question "a day?"
+
+version v
+  cite s
+  governs always
+  known 2025-01-01
+  d0 = 2025-01-15 "a day"
+
+def gap_m[m in months]: int = m - month_of(d0)
+def gap_q[m in months]: int = quarter_of(start_of(m)) - quarter_of(d0)
+def back[m in months]: month = month_of(d0) + (m - month_of(d0))
+
+ask q: gap_m[m] for m in [2025-01, 2025-04] law 2025-12-31
+ask qq: gap_q[2025-04] law 2025-12-31
+ask r: back[2025-04] law 2025-12-31
+=== expect
+q (m = 2025-01): 0
+  law date 2025-12-31, cut 2026-01-01
+q (m = 2025-04): 3
+  law date 2025-12-31, cut 2026-01-01
+qq: 1
+  law date 2025-12-31, cut 2026-01-01
+r: 2025-04
+  law date 2025-12-31, cut 2026-01-01

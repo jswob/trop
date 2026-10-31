@@ -1,0 +1,20 @@
+# L §3.2 Exchange rates: "A rate applies only from B to A (U-05): a money A or num A times num A/B ... is refused
+# (LOAD-UNIT), though the unit algebra above would give it a unit."
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "a source"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+unit hour "godzina"
+
+input a: money PLN
+input fx: num PLN/EUR
+
+ask q1: a * fx
+=== expect
+refused: LOAD-UNIT ...

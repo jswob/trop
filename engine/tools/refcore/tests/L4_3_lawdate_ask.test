@@ -1,0 +1,19 @@
+# L §4.3: "An ask that reaches an at reader def states law D"; L §5.18 "A line that reaches one without it is
+# refused (LOAD-LAWDATE)".
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+input rate: int
+
+def y: int at reader
+  rule base = rate
+
+ask q1: y
+=== expect
+refused: LOAD-LAWDATE ...

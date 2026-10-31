@@ -1,0 +1,49 @@
+# L §5.19 (round 16, the fresh critic's settlement): "Every observation is booked on its own day", each end at a place
+# no version covers "booked from the observation itself" (E §6.1 Booking observations); and "on any day, an instance
+# that an observation the cut sees fulfils is never booked or measured, and its observations stand in for it" (E §4.1
+# step 3). konto, covered by no version, opens at 100.00 PLN; fee_out takes 4.00 PLN each month from January to June
+# (24.00 PLN), and in July its instance is fulfilled by the observed 5.00 PLN, booked on 2026-07-07 in its stead:
+# 71.00 PLN at the end of July, flows of konto in July -5.00 PLN (q2); flows of fee_out: July 5.00 PLN, August 4.00 PLN
+# (q).
+=== m.tally
+model m
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+source own "own"
+unit PLN: currency minor 0.01
+input bank: observed
+input dom: int
+input fee_amt[y in years]: money PLN question "fee?"
+place konto: accounts PLN lives 2019-05-01..
+place world: outside lives 1900-01-01..
+move fee_out[m in months]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  leg cash from konto to world amount fee_amt[year_of(m)]
+ask q: flows(fee_out, 2026-07), flows(fee_out, 2026-08)
+ask q2: bal(konto, 2026-07-31), flows(konto, 2026-07)
+version v
+  cite own
+  governs 2026..
+  known 2026-01-01
+  dom = 7 "own"
+  fee_amt[2026] = 4.00 PLN "own"
+  opening[konto] = 100.00 PLN at 2026-01-01 start "o"
+version b
+  cite own
+  known 2026-07-08
+  bank[r1] = (on: 2026-07-07, kind: transfers, leg cash from konto to world amount 5.00 PLN, fulfils: fee_out[2026-07]) "x"
+=== expect
+q: (5.00 PLN, 4.00 PLN)
+  unfulfilled: fee_out[2026-08]
+  cut 2026-10-20
+q2: (71.00 PLN, -5.00 PLN)
+  unfulfilled: fee_out[2026-01]
+  unfulfilled: fee_out[2026-02]
+  unfulfilled: fee_out[2026-03]
+  unfulfilled: fee_out[2026-04]
+  unfulfilled: fee_out[2026-05]
+  unfulfilled: fee_out[2026-06]
+  cut 2026-10-20

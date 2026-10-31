@@ -1,0 +1,66 @@
+# Writer 11 (tally 2.1, 2.1-12, R-10, M-15). L §5.14.1 The leg read's class: "m.leg.amount of q reads booking state, as
+# a balance does: in a def no movement reaches, or an ask, after the walk; in an arrival rule, for the movement it books;
+# in another movement, only in a decision that declares reads of the place the leg took from, the reader above m
+# (§5.14.2). So a tax per giver on a gift is a posting that is a decision."
+# tax, a plan, reads g's leg: LOAD-READS.
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+kind persons: parties
+kind couples: parties
+kind savings: place PLN min 0
+  owned by arrive
+  step minor(PLN)
+  takes k for w order if w in gifts and k.owner == w.giver then 0 else 1 prorata
+kind gifts: transfers
+  attr giver: key persons
+  attr receiver: key persons
+kind tomeks: transfers
+input rate: num
+place konto: savings lives 2026-01-01..
+place world: outside lives 1900-01-01..
+place shop: outside lives 1900-01-01..
+input t1_day: date
+input t1_amt: money PLN
+input g_day: date
+input g_amt: money PLN
+input tax_day: date
+def arrive[m in events, p in parties]: num at m.day
+  rule base = if p == ania then 1 else 0
+  rule t beats base = if p == tomek then 1 else 0 when m in tomeks
+  rule gift beats base, t = if p == m.receiver then 1 else 0 when m in gifts
+move t1: tomeks
+  on t1_day
+  leg cash from world to konto amount t1_amt
+move g: gifts
+  on g_day
+  attr giver = tomek
+  attr receiver = ania
+  leg cash from konto to konto amount g_amt
+move tax: transfers
+  on tax_day
+  leg cash from konto to shop amount round(g.cash.amount of tomek * rate, minor(PLN), half-even)
+ask q: bal(konto, 2026-03-31) of ania, bal(konto, 2026-03-31) of tomek, tax.cash.amount
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  persons + [ania] lives 1980-01-01..
+  persons + [tomek] lives 1981-01-01..
+  couples + [ania_tomek] lives 2010-06-01..
+  opening[konto] = 0 PLN at 2026-01-01 start
+  t1_day = 2026-02-02
+  t1_amt = 100.00 PLN
+  g_day = 2026-03-01
+  g_amt = 40.00 PLN
+  rate = 0.1
+  tax_day = 2026-03-02
+=== expect
+refused: LOAD-READS tax reaches a running read or projection of a place without reads a place ...

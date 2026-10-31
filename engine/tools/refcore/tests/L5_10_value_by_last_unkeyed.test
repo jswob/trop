@@ -1,0 +1,69 @@
+# L §5.10 Value: "`by p` names: an input or def of type `num CUR/u`, keyed by unit when the place may hold several
+# units (read at the position's unit) ... a price that is a reading is read through its carry, `by last(px)` (§4.6)";
+# L §3.6 writes `value(x, d) in PLN by last(px) of o`.  px is an unkeyed `num PLN/etf reading` and fund holds one unit,
+# so no key is asked.  fund gets 1 etf on 2026-02-02; px = 12 PLN/etf, read on 2026-03-01 only.  q1: on 2026-06-30
+# by last(px) carries the reading: 1 x 12 = 12 PLN.  q2: plain `by px` on 2026-06-30 reads px as any reading is read,
+# a hole (no reading that day, as `priced val` in L5_10_priced_reading).  The plans are unfulfilled (on is 06-30).  q3: on 2026-01-31, before fund holds anything, 0 PLN (no position to price).
+# q4: mixed, a place of unit any with 1 etf and 1 EUR valued by last(px): the EUR position's price would be px, in
+# PLN/etf, not PLN/EUR (RUN-DOMAIN, as for a price written as an expression).  (2.0 refcore refused q1-q4 at load,
+# LOAD-UNIT "a price is a num CUR/u keyed by unit": a 2.0 interpreter fault, writer 11.)
+=== m.tally
+model t
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+unit etf "fund unit"
+
+kind funds: place etf min 0
+kind mixed: place any min 0
+kind buys: event certain
+  leg units: etf
+
+input px: num PLN/etf reading
+input day: date
+input amt: num etf
+input eur_amt: money EUR
+
+place fund: funds lives 2026-01-01..
+place box: mixed lives 2026-01-01..
+place market: outside lives 1900-01-01..
+
+move buy: buys
+  on day
+  leg units from market to fund amount amt
+
+move buy2: buys
+  on day
+  leg units from market to box amount amt
+
+move fx: transfers
+  on day
+  leg cash from market to box amount eur_amt
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  px = 12 PLN/etf at 2026-03-01 "kurs"
+  day = 2026-02-02 "own"
+  amt = 1 etf "own"
+  eur_amt = 1.00 EUR "own"
+
+ask q1: value(fund, 2026-06-30) in PLN by last(px)
+ask q2: value(fund, 2026-06-30) in PLN by px law 2026-06-30
+ask q3: value(fund, 2026-01-31) in PLN by last(px)
+ask q4: value(box, 2026-06-30) in PLN by last(px)
+=== expect
+q1: 12 PLN
+...
+q2: ?"px has no reading at 2026-06-30" (px)
+...
+q3: 0 PLN
+...
+q4: refused: RUN-DOMAIN value(box) in PLN: the price 12 PLN/etf is not in PLN/EUR ...
+...

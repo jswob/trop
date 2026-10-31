@@ -1,0 +1,55 @@
+# Round 18, C2-13 (fixed). L §5.19: "bal(x, d) modelled is the model's own balance of the modelled past on a covered day:
+# from x's last reading before d, plus the planned movements that touch x ... Comparing it with the reading is the
+# residual"; E §6.2 now "its last reading before d (the opening, before the first)". L5_19_modelled_decision_less_own_obs
+# with a reading of konto at 2026-01-31 end, 700.00 PLN (the booked 1 000.00 - 300.00, gap 0): the modelled balance
+# on 2026-01-31 starts from the opening (1 000.00), not from that reading, and the modelled sweep moves 500.00 out:
+# 500.00 PLN (snap11: 700.00, the reading itself). q2 alone lists no reading in its register.
+=== m.tally
+model hh
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source plan "plan"
+source bank "bank"
+unit PLN: currency minor 0.01
+input bank_rows: observed
+input keep: money PLN
+input dom: int
+place konto: accounts PLN lives 2019-05-01..
+place savings: accounts PLN lives 2019-05-01..
+place unexplained: outside lives 1900-01-01..
+
+move sweep[m in months]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  reads konto
+  leg cash from konto to savings amount max(0, bal(konto) - keep)
+
+version stmt
+  cite bank
+  governs 2026-01
+  known 2026-02-02
+  covers konto
+  pad konto from unexplained
+  bank_rows[r1] = (on: 2026-01-08, kind: transfers, leg cash from konto to savings amount 300.00 PLN, fulfils: sweep[2026-01]) "line 1"
+  stated[konto] = 700.00 PLN at 2026-01-31 end "saldo"
+
+ask q: bal(konto, 2026-01-31), bal(konto, 2026-01-31) modelled
+ask q2: bal(konto, 2026-01-31) modelled
+
+version plan_2026
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  keep = 500.00 PLN "own"
+  dom = 10 "own"
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "wyciąg"
+  opening[savings] = 0 PLN at 2026-01-01 start "wyciąg"
+=== expect
+q: (700.00 PLN, 500.00 PLN)
+  pad: konto 2026-01-31 end, pads:stmt:konto@2026-01-31 end of 0.00 PLN
+  cut 2026-10-20
+q2: 500.00 PLN
+  cut 2026-10-20

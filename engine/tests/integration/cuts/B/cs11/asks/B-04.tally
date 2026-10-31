@@ -1,0 +1,17 @@
+part asks_b04
+  tally 2
+  note "B-04 · The flat, 2022 (questions.md): as of 2022-07-31, known as of 2022-07-31. In the end turns on what Ola spends on her housing by 2024-12-31, a fact not known on 2022-07-31: the base gives a hole, and the scenarios nothing_more and kitchen give each case (L §6.4)."
+
+ask b04_deed: own_paid[p], tt_due[p], notary_paid[p] for p in persons on 2022-03-18 law 2022-07-31 as known 2022-07-31
+
+ask b04_studio: studio_income, studio_tax_return[ola], studio_tax_end[ola] law 2022-07-31 as known 2022-07-31
+
+ask b04_end_nothing: studio_tax_end[ola] in nothing_more law 2022-07-31 as known 2022-07-31
+
+ask b04_end_kitchen: studio_tax_end[ola] in kitchen law 2022-07-31 as known 2022-07-31
+
+ask b04_not_seller: studio_tax_return[piotr], studio_tax_end[piotr] law 2022-07-31 as known 2022-07-31
+
+ask b04_rent: rent_owned law 2022-07-31 as known 2022-07-31
+
+ask b04_deposit: deposit_back, deposit_back_on, deposit - deposit_back law 2022-07-31 as known 2022-07-31

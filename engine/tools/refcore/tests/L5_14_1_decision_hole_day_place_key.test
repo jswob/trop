@@ -1,0 +1,64 @@
+# Writer 12 (session 7c, A2). L §5.14 `on d`: "A day that is a hole and not a window has no bound, so that is every
+# span, earlier ones included, whatever the instance's `when` says: its booking cut min(t, K) is a hole with it
+# (§5.14.3)." L §5.14.3: "An amount, or a `when`, that was a hole at its cut stays a hole movement until a version
+# answers it." A keyed decision (a relabel, `reads x`) whose binding's `on` and own day are the hole hday is a hole
+# movement: the balance it reaches is a hole naming hday, as its plan twin's is (triage scratch a2/v18, the leg to
+# world and no `reads`, prints these three lines). refcore had crashed with KeyError: 'x' (scratch a2/v16).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+kind persons: parties
+kind savings: place PLN min 0
+  owned by arrive
+  step minor(PLN)
+  takes k for w order if w in gifts and k.owner == w.giver then 0 else 1, if k.owner == ania then 0 else 1
+kind gifts: transfers
+  attr giver: key persons
+  attr receiver: key persons
+place k1: savings lives 2026-01-01..
+place k2: savings lives 2026-01-01..
+index ks = [a, b]
+place acct[j in ks]: savings lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input wage_day: date
+input g_day: date
+input wage_amt: money PLN
+def arrive[m in events, p in parties]: num at m.day
+  rule base = if p == tomek then 1 else 0
+  rule gift beats base = if p == m.receiver then 1 else 0 when m in gifts
+move w1[x in savings on wage_day]: transfers
+  on wage_day
+  leg cash from world to x amount wage_amt
+input hday: date
+move g[x in savings on hday]: gifts
+  on hday
+  reads x
+  attr giver = tomek
+  attr receiver = ania
+  leg cash from x to x amount bal(x) of tomek
+ask q: bal(k1, 2026-12-31) of ania
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  persons + [ania] lives 1980-01-01..
+  persons + [tomek] lives 1981-01-01..
+  opening[k1] = 0 PLN at 2026-01-01 start
+  opening[k2] = 0 PLN at 2026-01-01 start
+  opening[acct[a]] = 0 PLN at 2026-01-01 start
+  opening[acct[b]] = 0 PLN at 2026-01-01 start
+  wage_day = 2026-02-01
+  wage_amt = 100.00 PLN
+  g_day = 2026-03-01
+  hday = ?"not yet"
+=== expect
+q: ?"not yet" (hday)
+  unfulfilled: w1[k1]
+  cut 2026-12-31

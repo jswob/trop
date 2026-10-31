@@ -1,0 +1,23 @@
+# L §7.1 (round 6): "the integer of a code (nominal 12, §2.2): part of the code's name, not a figure" is allowed inline.
+# periodic(r, month, nominal 12) = (1 + r/12)^(12 · 1/12) - 1 = r/12 = 0.12/12 = 0.01 (L §3.3).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+input r: rate
+def p: num = periodic(r, month, nominal 12) at reader
+
+version v
+  cite s
+  governs 2026..
+  known 2026-01-01
+  r = 12 %/year
+
+ask a: p law 2026-06-30
+=== expect
+a: 0.01
+  law date 2026-06-30, cut 2026-12-31

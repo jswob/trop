@@ -1,0 +1,5 @@
+DM Kopia	securities account 30-118-117 (HALINA SOWA)	statement 01.01.2023 - 31.10.2023	closed 31.10.2023
+Date	Event	Instrument	Qty	Note
+2023-01-01	OPENING	BRZ-GLB-A	200	units held
+2023-09-12	TRANSFER OUT (gift)	BRZ-GLB-A	-200	to 30-118-552 (ANNA LIS)
+2023-10-31	CLOSING	BRZ-GLB-A	0	account closed

@@ -1,0 +1,124 @@
+part places
+  tally 1
+  note "Places of the household (story § What we had on 1 January 2021, and the accounts opened later), their owners and their openings at the start, 2021-01-01."
+  note "Money from and to the world goes to the built-in outside places (outside_duk, and outside_<unit> for units, L §5.9)."
+
+place joint: account DUK
+
+place lazur: account DUK
+
+place ania_sav: account DUK
+
+place zosia_sav: account DUK
+
+place wrap_cash: account DUK
+
+place wrap_glb: holding fund_u priced px_glb
+
+place wrap_bnd: holding fund_u priced px_bnd
+
+place rzt_cash: account DUK
+
+place rzt_em: holding fund_u priced px_em
+
+place rzt_idx: holding fund_u priced px_idx
+
+place rzt_div: holding fund_u priced px_div
+
+place rzt_glb: holding fund_u priced px_glb
+
+place rza_cash: account DUK
+
+place rza_glb: holding fund_u priced px_glb
+
+place rza_mm: holding fund_u priced px_mm
+
+place kop_glb: holding fund_u priced px_glb
+
+place wcp_t: holding fund_u priced px_wcp
+
+place wcp_a: holding fund_u priced px_wcp
+
+place deposit: claim DUK
+
+input owns[s in spouse, x in place]: num question "What share of this place is this spouse's?"
+  note "CIV-1: what either spouse acquires during the marriage is community property, held half each (A-HR5 .1); what one got by gift or inheritance, or in exchange for it, is that spouse's alone (CIV-1 .3, A-HR5 .2)"
+
+version openings
+  cite story
+  known 2021-01-01
+  note "story § What we had on 1 January 2021. The joint account has no opening: its statements were kept only from August 2024, so its balance is a hole until its first stated anchor (L §5.9)."
+  opening[wrap_cash] = 0 "story § What we had: Brzask wrapped account, opened, empty"
+  opening[wrap_glb] = 0 "story § What we had: Brzask wrapped account, opened, empty"
+  opening[wrap_bnd] = 0 "story § What we had: Brzask wrapped account, opened, empty"
+  opening[rzt_cash] = 0 "story § What we had: Rzeka 4471-02, opened, empty"
+  opening[rzt_em] = 0 "story § What we had: Rzeka 4471-02, opened, empty"
+  opening[rzt_idx] = 0 "story § What we had: Rzeka 4471-02, opened, empty"
+  opening[rzt_div] = 0 "story § What we had: Rzeka 4471-02, opened, empty"
+  opening[rzt_glb] = 0 "story § What we had: Rzeka 4471-02, opened, empty"
+  opening[wcp_t] = 56.8312 "story § What we had: Nurt's plan, 56.8312 units; wek-wcp-lis-tomasz.csv line 3"
+  opening[wcp_a] = 31.0457 "story § What we had: Kalina's plan, 31.0457 units; wek-wcp-lis-anna.csv line 3"
+  opening[deposit] = 6400.00 "story § What we had: rent deposit, 6 400.00 DUK with the landlord (A-D30)"
+  opening[lazur] = 0 "not in the story's list of 2021-01-01: opened 2021-03-01 (A-D31)"
+  opening[ania_sav] = 0 "not in the story's list of 2021-01-01: opened 2025-06-02 (A-D37)"
+  opening[zosia_sav] = 0 "not in the story's list of 2021-01-01: A-HR4 starts 2026-01-15"
+  opening[rza_cash] = 0 "not in the story's list of 2021-01-01: Rzeka 4471-07 opened 2024-02-12 (A-D21)"
+  opening[rza_glb] = 0 "not in the story's list of 2021-01-01: Rzeka 4471-07 opened 2024-02-12 (A-D21)"
+  opening[rza_mm] = 0 "not in the story's list of 2021-01-01: Rzeka 4471-07 opened 2024-02-12 (A-D21)"
+  opening[kop_glb] = 0 "not in the story's list of 2021-01-01: DM Kopia account opened for the gift of 2023-09-12 (story)"
+
+version ownership
+  cite civ_1
+  known 2021-01-01
+  note "the story's ownership column (whose: community or one person's) under CIV-1 .1–.3; stated with no date, so known from the start"
+  owns[ania, joint] = 0.5 governs 2021-01-01.. "story § What we had: joint account, community"
+  owns[tomek, joint] = 0.5 governs 2021-01-01.. "story § What we had: joint account, community"
+  owns[ania, lazur] = 0.5 governs 2021-01-01.. "story 2021-03-01: in both our names, our shared reserve"
+  owns[tomek, lazur] = 0.5 governs 2021-01-01.. "story 2021-03-01: in both our names, our shared reserve"
+  owns[ania, wrap_cash] = 0.5 governs 2021-01-01.. "story § What we had: wrapped account in Ania's name, community"
+  owns[tomek, wrap_cash] = 0.5 governs 2021-01-01.. "story § What we had: wrapped account in Ania's name, community"
+  owns[ania, wrap_glb] = 0.5 governs 2021-01-01.. "story § What we had: wrapped account, community"
+  owns[tomek, wrap_glb] = 0.5 governs 2021-01-01.. "story § What we had: wrapped account, community"
+  owns[ania, wrap_bnd] = 0.5 governs 2021-01-01.. "story § What we had: wrapped account, community"
+  owns[tomek, wrap_bnd] = 0.5 governs 2021-01-01.. "story § What we had: wrapped account, community"
+  owns[ania, rzt_cash] = 0.5 governs 2021-01-01.. "story § What we had: Rzeka 4471-02 in Tomek's name, community"
+  owns[tomek, rzt_cash] = 0.5 governs 2021-01-01.. "story § What we had: Rzeka 4471-02, community"
+  owns[ania, rzt_em] = 0.5 governs 2021-01-01.. "story § What we had: Rzeka 4471-02, community"
+  owns[tomek, rzt_em] = 0.5 governs 2021-01-01.. "story § What we had: Rzeka 4471-02, community"
+  owns[ania, rzt_idx] = 0.5 governs 2021-01-01.. "story § What we had: Rzeka 4471-02, community"
+  owns[tomek, rzt_idx] = 0.5 governs 2021-01-01.. "story § What we had: Rzeka 4471-02, community"
+  owns[ania, rzt_div] = 0.5 governs 2021-01-01.. "story § What we had: Rzeka 4471-02, community"
+  owns[tomek, rzt_div] = 0.5 governs 2021-01-01.. "story § What we had: Rzeka 4471-02, community"
+  owns[ania, rzt_glb] = 0.5 governs 2021-01-01.. "story § What we had: Rzeka 4471-02, community"
+  owns[tomek, rzt_glb] = 0.5 governs 2021-01-01.. "story § What we had: Rzeka 4471-02, community"
+  owns[ania, wcp_t] = 0.5 governs 2021-01-01.. "story § What we had: Nurt's plan in Tomek's name, community"
+  owns[tomek, wcp_t] = 0.5 governs 2021-01-01.. "story § What we had: Nurt's plan, community"
+  owns[ania, wcp_a] = 0.5 governs 2021-01-01.. "story § What we had: Kalina's plan in Ania's name, community"
+  owns[tomek, wcp_a] = 0.5 governs 2021-01-01.. "story § What we had: Kalina's plan, community"
+  owns[ania, deposit] = 0.5 governs 2021-01-01.. "story § What we had: rent deposit, both, community"
+  owns[tomek, deposit] = 0.5 governs 2021-01-01.. "story § What we had: rent deposit, both, community"
+  owns[ania, zosia_sav] = 0 governs 2021-01-01.. "A-HR4: Zosia's savings are hers, not ours"
+  owns[tomek, zosia_sav] = 0 governs 2021-01-01.. "A-HR4: Zosia's savings are hers, not ours"
+
+version ownership_gift
+  cite a_d18
+  known 2023-09-12
+  owns[ania, kop_glb] = 1 governs 2023-09-12.. "A-D18: for Anna alone (CIV-1 .3)"
+  owns[tomek, kop_glb] = 0 governs 2023-09-12.. "A-D18: for Anna alone (CIV-1 .3)"
+
+version ownership_rza
+  cite a_d21
+  known 2024-02-13
+  owns[ania, rza_glb] = 1 governs 2024-02-12.. "A-D21: the gifted units move to Ania's own Rzeka account (CIV-1 .3)"
+  owns[tomek, rza_glb] = 0 governs 2024-02-12.. "A-D21: Ania's own"
+  owns[ania, rza_cash] = 1 governs 2024-02-12.. "story 2024-03-07: the proceeds of the gifted units are hers (CIV-1 .3, in exchange for separate assets)"
+  owns[tomek, rza_cash] = 0 governs 2024-02-12.. "story 2024-03-07: hers"
+  owns[ania, rza_mm] = 1 governs 2024-02-12.. "story 2024-03-07: BRZ-MM-A bought with the proceeds; it's hers"
+  owns[tomek, rza_mm] = 0 governs 2024-02-12.. "story 2024-03-07: hers"
+
+version ownership_ania_sav
+  cite a_d37
+  known 2025-06-02
+  note "the account is Ania's, and the estate payout in it is hers (CIV-1 .3); the interest it earns is community (CIV-1 .2), which a share of the place can't say: worth.tally splits the balance (A-11, awkward)"
+  owns[ania, ania_sav] = 1 governs 2025-06-02.. "A-D37: holder Anna Lis"
+  owns[tomek, ania_sav] = 0 governs 2025-06-02.. "A-D37: holder Anna Lis"

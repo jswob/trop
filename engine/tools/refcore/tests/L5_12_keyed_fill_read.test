@@ -1,0 +1,51 @@
+# GD-1 (round 19, writer 10): was L5_17_export_keyed_fill; what stays is L §5.12 "A keyed fill's output is F[y].taken[…]" read by a def and asks.
+# Its regime gains is unboxed (the items at top level, gains.x written x); the
+# figures are unchanged. The comment below is the old test's.
+# MC-X-F8. L §2.3 post = atom {"[" expr {"," expr} "]" | "." FIELD} …, so keys may follow a field; L §5.12 "A keyed
+# fill's output is F[y].taken[…]"; L §5.17: an item R lists in export "any item may read, in another regime or outside
+# every regime"; §2.5 puts a keyed item's keys after the qualified id. The regime gains exports the keyed fill
+# matched[p]; outside it, the def took and the ask lines read matched[marek].taken[l, c]. Hand-checked from L
+# §5.12: marek's supplies l1 = 3, l2 = 5, demand c1 = 4, arcs ordered by l (index order): l1 gives 3, l2 gives 1, so
+# took = 4. snap10 refused the load (LOAD-PARSE … matched[marek].taken is not read with keys).
+=== m.tally
+model t
+  tally 2
+  on 2024-12-31
+  start 2024-01-01
+  end 2024-12-31
+
+source s "s"
+index ps = [marek]
+index ls = [l1, l2]
+index cs = [c1]
+
+input sup[p in ps, l in ls]: num
+input dem[p in ps, c in cs]: num
+fill matched[p in ps]
+  supply sup[p, l] for l in ls
+  demand dem[p, c] for c in cs
+  arc true
+  order l
+
+def took: num = matched[marek].taken[l1, c1] + matched[marek].taken[l2, c1]
+
+ask q: took
+ask r: matched[marek].taken[l2, c1]
+ask t: matched[marek].taken[l, c] for l in ls, c in cs
+
+version v
+  cite s
+  governs always
+  known 2024-01-01
+  sup[marek, l1] = 3
+  sup[marek, l2] = 5
+  dem[marek, c1] = 4
+=== expect
+q: 4
+  cut 2024-12-31
+r: 1
+  cut 2024-12-31
+t (l = l1, c = c1): 3
+  cut 2024-12-31
+t (l = l2, c = c1): 1
+  cut 2024-12-31

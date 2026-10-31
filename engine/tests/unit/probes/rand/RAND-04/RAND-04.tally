@@ -1,0 +1,45 @@
+model rand04
+  tally 2
+  on 2026-01-02
+  start 2026-01-01
+  end 2035-12-31
+  note "RAND-04: plan A is the reality, plan B the scenario plan_b, known a day after the base's stipulations so that its replace has an earlier row to replace (L 4.6 step 2). Random addresses don't name the scenario, so both plans run on the same paths (L 6.4, 5.16). The contrast draws plan B's fund on its own fact r_ind."
+
+source card "Probe card RAND-04: two plans over 10 years"
+
+unit DUK: currency minor 0.01
+
+index yr = int 1..10
+
+input cash_kept: money DUK
+
+input fund_in: money DUK
+
+input mu: num
+
+input sigma: num
+
+def end_worth: num DUK = fund_in * growth + cash_kept at reader
+
+def end_worth_ind: num DUK = fund_in * growth_ind + cash_kept at reader
+
+def growth: num = exp(sum(r[y] for y in yr)) to 1e-9 at reader
+
+def growth_ind: num = exp(sum(r_ind[y] for y in yr)) to 1e-9 at reader
+
+def r[y in yr]: dist = normal(mu, sigma) to 1e-9 at reader
+
+def r_ind[y in yr]: dist = normal(mu, sigma) to 1e-9 at reader
+
+ask q_crn: quantile(end_worth as if {scenario plan_b} - end_worth, 50 %), share(end_worth as if {scenario plan_b} > end_worth) law 2026-01-01 paths 1000 seed 11
+
+ask q_independent: quantile(end_worth_ind as if {scenario plan_b} - end_worth, 50 %) law 2026-01-01 paths 1000 seed 11
+
+version card_plans
+  cite card
+  governs always
+  known 2026-01-01
+  cash_kept = 0 "plan A: no cash"
+  fund_in = 10000 "both plans put 10 000.00 into the fund"
+  mu = 0.05 "the fund's yearly log-return: mean"
+  sigma = 0.15 "the fund's yearly log-return: deviation"

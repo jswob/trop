@@ -1,0 +1,27 @@
+# L §2.2: "the everyday words of the domain (age, discount, debt, share, order, rate, start, up) stay free
+# for ids"; built-in names "are read as built-ins only directly before (", so any id ... may take one;
+# rule labels may be keywords ("rule first", "rule none").  share = 2 rows, age = share + 1 (L §3.2 int + int).
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "a source"
+
+input share: int
+
+def age: int at reader
+  rule none = share + 1
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  share = 2
+
+ask q1: age law 2026-06-30
+=== expect
+q1: 3
+  law date 2026-06-30, cut 2026-01-01

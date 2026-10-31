@@ -1,0 +1,33 @@
+model num03
+  tally 1
+  on 2026-10-25
+  note "Probe NUM-03: two roundings in the law's order, against one rounding at the end."
+
+source probe_card "Probe card NUM-03 (made-up story and rules)"
+
+input costs: money DUK
+input income: money DUK
+input relief: money DUK
+input tax_rate: num
+
+def advance: money DUK
+  note "rule 2: 17 % of the base minus the relief, rounded half up to whole DUK"
+  rule base v card = round(tax_rate * base_amt - relief, 1, half-up)
+
+def advance_once: money DUK
+  note "the contrast the question asks: no rounding of the base, one rounding at the end"
+  rule base = round(tax_rate * (income - costs) - relief, 1, half-up)
+
+def base_amt: money DUK
+  note "rule 1: income minus costs, rounded half up to whole DUK"
+  rule base v card = round(income - costs, 1, half-up)
+
+ask q_advance: advance, advance_once, advance - advance_once
+
+version card
+  cite probe_card
+  known 2026-10-25
+  costs = 250.00 "story: deductible costs"
+  income = 4560.50 "story: monthly income"
+  relief = 43.37 "story: monthly relief"
+  tax_rate = 0.17 "rule 2"

@@ -1,0 +1,24 @@
+# Round 18, C1-8 (fixed). L §2.3: enter = … ["lives" (lspan | lit ".." hole)]; L §5.7: "the open end written `..` and
+# an end not yet known a hole (`lives 1950-01-01..?"date of death"`, HOLE-STATED, D-7)". On a day after its start jan
+# may be alive, so a binding over persons meets an unknown member (L §5.7: a hole "only where a thing of the kind ...
+# could be alive"), and lifespan(jan).to is the hole; before the start nothing is alive. snap11: LOAD-PARSE.
+=== m.tally
+model m
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+source s "s"
+kind persons
+version v
+  cite s
+  known 2025-12-01
+  persons + [ola] lives 1950-01-01..
+  persons + [jan] lives 1950-01-01..?"date of death"
+ask q: count(p in persons on 2026-06-01), lifespan(jan).to, lifespan(ola).to
+ask q2: count(p in persons on 1940-06-01)
+=== expect
+q: (?"date of death" (jan), ?"date of death" (jan), never)
+  cut 2026-12-31
+q2: 0
+  cut 2026-12-31

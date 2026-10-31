@@ -1,0 +1,36 @@
+exclusion_amount: 890 000.00 USD
+  law date 2026-10-18, cut 2026-10-18
+notice_allocated (p = prop_a): 563 400 USD
+  law date 2026-10-18, cut 2026-10-18
+notice_allocated (p = prop_b): 62 600 USD
+  law date 2026-10-18, cut 2026-10-18
+notice_includible (p = prop_a): 1 236 600 USD
+  law date 2026-10-18, cut 2026-10-18
+notice_includible (p = prop_b): 137 400 USD
+  law date 2026-10-18, cut 2026-10-18
+tax_on_exit: ?"What is the tax on the deemed gains? The other income, deductions and rates, and any election to defer the tax under s. 877A(b), aren't given." (exit_tax[xavier])
+  law date 2026-10-18, cut 2026-10-18
+thresholds: (206 000.00 USD, 2 000 000.00 USD)
+  law date 2026-10-18, cut 2026-10-18
+xavier_allocated (p = prop_a): 801 000 USD
+  assumed: the example's dates are placeholders ('Date 1'), so its year is taken from the title, 'Instructions for Form 8854 (2025)' (expat_year[xavier])
+  law date 2026-10-18, cut 2026-10-18
+xavier_allocated (p = prop_b): 89 000 USD
+  assumed: the example's dates are placeholders ('Date 1'), so its year is taken from the title, 'Instructions for Form 8854 (2025)' (expat_year[xavier])
+  law date 2026-10-18, cut 2026-10-18
+xavier_builtin (p = prop_a): 1 800 000.00 USD
+  law date 2026-10-18, cut 2026-10-18
+xavier_builtin (p = prop_b): 200 000.00 USD
+  law date 2026-10-18, cut 2026-10-18
+xavier_builtin (p = prop_c): -300 000.00 USD
+  law date 2026-10-18, cut 2026-10-18
+xavier_loss_report: f1040_part_year
+  law date 2026-10-18, cut 2026-10-18
+xavier_recognized (p = prop_a): (999 000 USD, f8854_sec_c)
+  assumed: the example's dates are placeholders ('Date 1'), so its year is taken from the title, 'Instructions for Form 8854 (2025)' (expat_year[xavier])
+  law date 2026-10-18, cut 2026-10-18
+xavier_recognized (p = prop_b): (111 000 USD, f8854_sec_c)
+  assumed: the example's dates are placeholders ('Date 1'), so its year is taken from the title, 'Instructions for Form 8854 (2025)' (expat_year[xavier])
+  law date 2026-10-18, cut 2026-10-18
+xavier_total_gain: 2 000 000.00 USD
+  law date 2026-10-18, cut 2026-10-18

@@ -1,0 +1,32 @@
+part mbank_2026_09
+  tally 2
+  note "Wyciąg konta wspólnego za wrzesień 2026, syntetyczny. Faktura klienta B za sierpień (płatna 30 września) nie wpłynęła."
+
+source mbank_export "Eksport wyciągu mBank, konto wspólne"
+
+version mbank_2026_09
+  cite mbank_export
+  governs 2026-09
+  known 2026-10-02
+  covers konto
+  anchor konto
+  bank[r20260901a] = (on: 2026-09-01, kind: transfers, leg cash from konto to wynajmujacy amount 3200.00 PLN, fulfils: rent_pay[2026-09]) "CZYNSZ WRZESIEN"
+  bank[r20260902a] = (on: 2026-09-02, kind: spending, leg cash from konto to niewyjasnione amount 412.37 PLN, cat: groceries) "BIEDRONKA KRAKOW"
+  bank[r20260903a] = (on: 2026-09-03, kind: spending, leg cash from konto to niewyjasnione amount 250.00 PLN, cat: transport) "ORLEN STACJA 4021"
+  bank[r20260907a] = (on: 2026-09-07, kind: transfers, leg cash from konto to dostawcy amount 492.00 PLN, fulfils: costs_pay[2026-09]) "DOSTAWCA FV 09/2026"
+  bank[r20260909a] = (on: 2026-09-09, kind: spending, leg cash from konto to niewyjasnione amount 286.15 PLN, cat: groceries) "LIDL KRAKOW"
+  bank[r20260910a] = (on: 2026-09-10, kind: transfers, leg cash from pracodawcy to konto amount 5101.67 PLN, fulfils: wage[wife_acme, 2026-08]) "ACME SP Z O O WYNAGR 08/2026"
+  bank[r20260911a] = (on: 2026-09-11, kind: spending, leg cash from konto to niewyjasnione amount 145.00 PLN, cat: health_care) "APTEKA"
+  bank[r20260914a] = (on: 2026-09-14, kind: transfers, leg cash from klienci to konto amount 17220.00 PLN, fulfils: client_pay[client_a, 2026-08]) "KLIENT A FV 08/2026"
+  bank[r20260915a] = (on: 2026-09-15, kind: transfers, leg cash from marek to konto amount 500.00 PLN, fulfils: marek_back[back2]) "MAREK ZWROT"
+  bank[r20260915b] = (on: 2026-09-15, kind: transfers, leg cash from konto to wcash[ike] amount 6000.00 PLN, fulfils: invest[ike, 2026-09]) "PRZELEW NA IKE"
+  bank[r20260916a] = (on: 2026-09-16, kind: spending, leg cash from konto to niewyjasnione amount 530.80 PLN, cat: groceries) "AUCHAN KRAKOW"
+  bank[r20260918a] = (on: 2026-09-18, kind: spending, leg cash from konto to niewyjasnione amount 180.00 PLN, cat: transport) "PKP INTERCITY"
+  bank[r20260919a] = (on: 2026-09-19, kind: spending, leg cash from konto to niewyjasnione amount 899.99 PLN, cat: other) "MEDIA EXPERT"
+  bank[r20260921a] = (on: 2026-09-21, kind: health_pay_pays, leg cash from konto to zus amount 830.58 PLN, fulfils: health_pay[2026-08]) "ZUS SKLADKA ZDROWOTNA 08/2026"
+  bank[r20260921b] = (on: 2026-09-21, kind: transfers, leg cash from konto to urzad_skarbowy amount 1990.00 PLN, fulfils: ryczalt_pay[2026-08]) "URZAD SKARBOWY RYCZALT 08/2026"
+  bank[r20260923a] = (on: 2026-09-23, kind: spending, leg cash from konto to niewyjasnione amount 348.62 PLN, cat: groceries) "BIEDRONKA KRAKOW"
+  bank[r20260925a] = (on: 2026-09-25, kind: transfers, leg cash from konto to urzad_skarbowy amount 3818.00 PLN, fulfils: vat_pay[2026-08]) "URZAD SKARBOWY VAT 08/2026"
+  bank[r20260926a] = (on: 2026-09-26, kind: spending, leg cash from konto to niewyjasnione amount 120.00 PLN, cat: other) "RESTAURACJA"
+  bank[r20260929a] = (on: 2026-09-29, kind: spending, leg cash from konto to niewyjasnione amount 401.09 PLN, cat: groceries) "BIEDRONKA KRAKOW"
+  stated[konto] = 41386.27 at 2026-09-30 end "saldo końcowe"

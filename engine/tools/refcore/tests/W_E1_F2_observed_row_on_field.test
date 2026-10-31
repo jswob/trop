@@ -1,0 +1,21 @@
+# Fault W-E1-F2, the fault's own line: `o[r1].on`. L §2.5 Record fields: a movement's fields are its legs, its declared
+# attributes and the built-in fields `day` and `fulfils`; `on` is the observed row's field as written (L §5.19), no
+# field of the movement it is: LOAD-FIELD (L §8.3), no longer LOAD-KEY.
+=== m.tally
+model s
+  tally 2
+  on 2026-01-31
+  start 2026-01-01
+  end 2026-01-31
+unit DUK: currency minor 0.01
+source s "s"
+place jw: outside lives 2026-01-01..
+input o: observed
+version v
+  cite s
+  governs 2026-01
+  known 2026-01-20
+  o[r1] = (on: 2026-01-15, kind: transfers, leg cash from jw to jw amount 5.00 DUK) "line 1"
+ask q: o[r1].on law 2026-01-20
+=== expect
+refused: LOAD-FIELD on is not a field of ...

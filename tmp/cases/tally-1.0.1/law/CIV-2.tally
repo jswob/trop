@@ -1,0 +1,14 @@
+part civ_2
+  tally 1
+  law
+  note "CIV-2 · The end of community property: on a spouse's death, divorce or a marital contract, that day (.1); from that day each spouse, or the deceased's estate, holds half of every community asset and owes half of every community debt (.2)."
+  note "No figure: the half is the literal 2 (L §7.1) in the households' defs."
+
+source civ_2 "Civil and Family Code, CIV-2 The end of community property (tmp/cases/law/acts.md)"
+
+version civ2_v1
+  cite civ_2
+  governs 2018-01-01..
+  known 2017-03-01
+  enters 2018-01-01
+  note "CIV-2 v1, in force 2018-01-01 until replaced, published 2017-03-01; governs ends of community from 2018-01-01."

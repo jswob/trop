@@ -1,0 +1,40 @@
+# Fault g1b_unit_key (writer 6): `unit(x) == PLN` over `x in places` was refused LOAD-UNIT ("unitkey and key
+# currencies compared"). L §5.10 (round 7c): "`unit(x)` is x's unit as a key of the unit kind that holds it
+# (`currencies` for a currency, §5.7), so `unit(x) == PLN` compares two keys". The places' units differ (konto PLN, world
+# of unit any), so the key's kind is known only at run; `and` stops at `not x in outside` for world (L §5.11), so
+# unit(world) is never read. konto at 2026-12-31: 12 payments of 10.00 PLN out from 0: -120.00 PLN.
+=== m.tally
+model m
+  tally 2
+  on 2027-12-31
+  start 2026-01-01
+  end 2027-12-31
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+index month = month 2026-01..2027-12
+
+input amt: money PLN
+
+move pay[m in month]: transfers
+  on start_of(m)
+  leg cash from konto to world amount amt
+
+source s "x"
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 10
+  opening[konto] = 0 at 2026-01-01 start
+
+
+ask q: sum(bal(x, 2026-12-31) for x in places over .. where not x in outside and unit(x) == PLN)
+=== expect
+q: -120.00 PLN
+...

@@ -1,0 +1,85 @@
+a06 [px_round = *]: (0.00 DUK, 308.00 DUK, 308.00 DUK)
+  law date 2024-04-30, cut 2024-04-30
+a07 [cc1_refund = by_time]: 32 644.01 DUK
+  reading: cc1_refund = by_time
+  law date 2024-08-25, cut 2024-08-25
+a07 [cc1_refund = by_balance]: 32 249.98 DUK
+  reading: cc1_refund = by_balance
+  law date 2024-08-25, cut 2024-08-25
+a08: 46 088.26 DUK
+  law date 2025-05-14, cut 2025-05-14
+a08_steps: (32 644.01 DUK, 13 444.25 DUK)
+  law date 2025-05-14, cut 2025-05-14
+a09 (m = 2025-01) [px_round = *]: (2025-01-15, 0.00 DUK, 0.00 DUK, 0.00 DUK, 0.00 DUK, 0.00 DUK)
+  anchor: joint 2025-01-01 start, stated 9 432.71 DUK, difference 0.00 DUK
+  law date 2026-01-15, cut 2026-01-15
+a09 (m = 2025-02) [px_round = *]: (2025-02-17, 572.72 DUK, 572.72 DUK, 0.00 DUK, 500.00 DUK, -72.72 DUK)
+  anchor: joint 2025-02-01 start, stated 11 251.61 DUK, difference 0.00 DUK
+  law date 2026-01-15, cut 2026-01-15
+a09 (m = 2025-03) [px_round = *]: (2025-03-17, 2 688.20 DUK, 2 688.20 DUK, 0.00 DUK, 2 600.00 DUK, -88.20 DUK)
+  anchor: joint 2025-03-01 start, stated 13 174.09 DUK, difference 0.00 DUK
+  law date 2026-01-15, cut 2026-01-15
+a09 (m = 2025-04) [px_round = *]: (2025-04-15, 2 491.00 DUK, 2 491.00 DUK, 0.00 DUK, 2 400.00 DUK, -91.00 DUK)
+  anchor: joint 2025-04-01 start, stated 12 430.70 DUK, difference 0.00 DUK
+  law date 2026-01-15, cut 2026-01-15
+a09 (m = 2025-05) [px_round = *]: (2025-05-15, 0.00 DUK, 0.00 DUK, 0.00 DUK, 0.00 DUK, 0.00 DUK)
+  anchor: joint 2025-05-01 start, stated 9 791.46 DUK, difference 0.00 DUK
+  law date 2026-01-15, cut 2026-01-15
+a09 (m = 2025-06) [px_round = *]: (2025-06-16, 3 377.47 DUK, 3 377.47 DUK, 0.00 DUK, 3 300.00 DUK, -77.47 DUK)
+  anchor: joint 2025-06-01 start, stated 13 370.60 DUK, difference 0.00 DUK
+  law date 2026-01-15, cut 2026-01-15
+a09 (m = 2025-07) [px_round = *]: (2025-07-15, 3 304.64 DUK, 3 304.64 DUK, 0.00 DUK, 0.00 DUK, -3 304.64 DUK)
+  anchor: joint 2025-07-01 start, stated 13 027.05 DUK, difference 0.00 DUK
+  law date 2026-01-15, cut 2026-01-15
+a09 (m = 2025-08) [px_round = *]: (2025-08-18, 4 990.42 DUK, 4 990.42 DUK, 0.00 DUK, 4 900.00 DUK, -90.42 DUK)
+  anchor: joint 2025-08-01 start, stated 14 924.22 DUK, difference 0.00 DUK
+  law date 2026-01-15, cut 2026-01-15
+a09 (m = 2025-09) [px_round = *]: (2025-09-15, 2 559.01 DUK, 2 559.01 DUK, 0.00 DUK, 2 500.00 DUK, -59.01 DUK)
+  anchor: joint 2025-09-01 start, stated 12 506.23 DUK, difference 0.00 DUK
+  law date 2026-01-15, cut 2026-01-15
+a09 (m = 2025-10) [px_round = *]: (2025-10-15, 945.51 DUK, 945.51 DUK, 0.00 DUK, 900.00 DUK, -45.51 DUK)
+  anchor: joint 2025-10-01 start, stated 11 595.59 DUK, difference 0.00 DUK
+  law date 2026-01-15, cut 2026-01-15
+a09 (m = 2025-11) [px_round = *]: (2025-11-17, 2 677.71 DUK, 2 677.71 DUK, 0.00 DUK, 3 600.00 DUK, 922.29 DUK)
+  anchor: joint 2025-11-01 start, stated 12 043.60 DUK, difference 0.00 DUK
+  law date 2026-01-15, cut 2026-01-15
+a09 (m = 2025-12) [px_round = *]: (2025-12-15, 1 355.58 DUK, 1 355.58 DUK, 0.00 DUK, 1 300.00 DUK, -55.58 DUK)
+  anchor: joint 2025-12-01 start, stated 11 405.35 DUK, difference 0.00 DUK
+  law date 2026-01-15, cut 2026-01-15
+a09_steps (m = 2025-01) [px_round = *]: (2025-01-15, 8 569.17 DUK, 5 119.99 DUK, 3 411.72 DUK, 9 531.71 DUK)
+  anchor: joint 2025-01-01 start, stated 9 432.71 DUK, difference 0.00 DUK
+  law date 2026-01-15, cut 2026-01-15
+a09_steps (m = 2025-02) [px_round = *]: (2025-02-17, 9 888.48 DUK, 5 119.99 DUK, 3 195.77 DUK, 9 315.76 DUK)
+  anchor: joint 2025-02-01 start, stated 11 251.61 DUK, difference 0.00 DUK
+  law date 2026-01-15, cut 2026-01-15
+a09_steps (m = 2025-03) [px_round = *]: (2025-03-17, 12 002.30 DUK, 5 119.99 DUK, 3 194.11 DUK, 9 314.10 DUK)
+  anchor: joint 2025-03-01 start, stated 13 174.09 DUK, difference 0.00 DUK
+  law date 2026-01-15, cut 2026-01-15
+a09_steps (m = 2025-04) [px_round = *]: (2025-04-15, 11 478.28 DUK, 5 119.99 DUK, 2 867.29 DUK, 8 987.28 DUK)
+  anchor: joint 2025-04-01 start, stated 12 430.70 DUK, difference 0.00 DUK
+  law date 2026-01-15, cut 2026-01-15
+a09_steps (m = 2025-05) [px_round = *]: (2025-05-15, 9 216.76 DUK, 5 119.99 DUK, 3 216.40 DUK, 9 336.39 DUK)
+  anchor: joint 2025-05-01 start, stated 9 791.46 DUK, difference 0.00 DUK
+  law date 2026-01-15, cut 2026-01-15
+a09_steps (m = 2025-06) [px_round = *]: (2025-06-16, 12 645.06 DUK, 5 119.99 DUK, 3 147.60 DUK, 9 267.59 DUK)
+  anchor: joint 2025-06-01 start, stated 13 370.60 DUK, difference 0.00 DUK
+  law date 2026-01-15, cut 2026-01-15
+a09_steps (m = 2025-07) [px_round = *]: (2025-07-15, 12 315.32 DUK, 5 119.99 DUK, 2 890.69 DUK, 9 010.68 DUK)
+  anchor: joint 2025-07-01 start, stated 13 027.05 DUK, difference 0.00 DUK
+  law date 2026-01-15, cut 2026-01-15
+a09_steps (m = 2025-08) [px_round = *]: (2025-08-18, 13 781.99 DUK, 5 119.99 DUK, 2 671.58 DUK, 8 791.57 DUK)
+  anchor: joint 2025-08-01 start, stated 14 924.22 DUK, difference 0.00 DUK
+  law date 2026-01-15, cut 2026-01-15
+a09_steps (m = 2025-09) [px_round = *]: (2025-09-15, 11 398.88 DUK, 5 119.99 DUK, 2 719.88 DUK, 8 839.87 DUK)
+  anchor: joint 2025-09-01 start, stated 12 506.23 DUK, difference 0.00 DUK
+  law date 2026-01-15, cut 2026-01-15
+a09_steps (m = 2025-10) [px_round = *]: (2025-10-15, 9 785.59 DUK, 4 739.99 DUK, 3 100.09 DUK, 8 840.08 DUK)
+  anchor: joint 2025-10-01 start, stated 11 595.59 DUK, difference 0.00 DUK
+  law date 2026-01-15, cut 2026-01-15
+a09_steps (m = 2025-11) [px_round = *]: (2025-11-17, 11 397.14 DUK, 4 739.99 DUK, 2 979.44 DUK, 8 719.43 DUK)
+  anchor: joint 2025-11-01 start, stated 12 043.60 DUK, difference 0.00 DUK
+  law date 2026-01-15, cut 2026-01-15
+a09_steps (m = 2025-12) [px_round = *]: (2025-12-15, 9 938.03 DUK, 4 739.99 DUK, 2 842.46 DUK, 8 582.45 DUK)
+  anchor: joint 2025-12-01 start, stated 11 405.35 DUK, difference 0.00 DUK
+  law date 2026-01-15, cut 2026-01-15
+

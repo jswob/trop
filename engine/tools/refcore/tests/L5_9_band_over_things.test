@@ -1,0 +1,23 @@
+# L §5.9 (round 12): "The argument is a number, a date, a period or a key of an index, never a thing (LOAD-UNIT):
+# things order by entry, which the cut changes"; L §8.3 LOAD-UNIT "a band over things (§5.9)". (Was
+# REFCORE-UNSPECIFIED §5.9, writer 5's T-51.)
+=== m.tally
+model t
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+kind persons
+band b(x: key persons): int
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  persons + [ana, ben] lives 2026-01-01..
+
+ask q: b(ana)
+=== expect
+refused: LOAD-UNIT band b over things of persons (m.tally:9)

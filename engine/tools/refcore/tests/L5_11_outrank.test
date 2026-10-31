@@ -1,0 +1,26 @@
+# L §5.11: "Refusals outrank holes: when both reach a result, the result is refused."
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+input h: int
+input zero: int
+input one: int
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  h = ?"unknown"
+  zero = 0
+  one = 1
+
+ask q1: h + one / zero
+=== expect
+q1: refused: RUN-DIV ...
+  cut 2026-12-31

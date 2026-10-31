@@ -1,0 +1,77 @@
+# L §5.10 Parts (2.1-F10): "the sign rule is not checked against a hole balance, as in 2.0" (E §4.2 step 5), the arrival
+# side of the migrator's F-h: acc, owned and min 0, opens at 0; inc brings the hole amount got (ania_tomek's by the
+# community rule), then out takes a fixed 50.00.  The balance after inc is a hole; inc's part is one hole part of the
+# hole balance, possibly ania_tomek's only, and out's take reaches it: no RUN-PLACE.  q1: the balance's hole (got),
+# read of parts included.  q2: out took 50.00 (a_out carried through) from parts whose every possible label is
+# ania_tomek's (L §8.1, 2.1-F12).  Before: `out takes acc below 0` (the hole arrival added no part).
+=== m.tally
+model t10
+  tally 2
+  on 2026-01-15
+  start 2025-01-01
+  end 2026-12-31
+
+source src "test"
+
+unit DUK: currency minor 0.01
+
+kind couples: parties
+
+kind persons: parties
+
+kind cash_accounts: place one min 0
+  owned by arrive
+  step minor(DUK)
+  takes k for w order rank[k.owner]
+
+place acc: cash_accounts DUK lives 2025-01-01..
+
+place world: outside lives 2000-01-01..
+
+input got: money DUK question "how much came in?"
+
+input d_in: date
+
+input d_out: date
+
+input a_out: money DUK
+
+def rank[p in parties]: int = ?"which money leaves first?" at reader
+
+def arrive[m in events, p in parties]: num at m.day
+  rule community = (if p == ania_tomek then 1 else 0)
+
+move inc: transfers
+  on d_in
+  at d_in
+  leg cash from world to acc amount got
+
+move out: transfers
+  on d_out
+  at d_out
+  leg cash from acc to world amount a_out
+
+ask q1: bal(acc, 2025-04-30), bal(acc, 2025-04-30) of ania_tomek
+
+ask q2: out.cash.amount of ania_tomek
+
+version cast
+  cite src
+  known 2021-01-01
+  persons + [ania] lives 1991-03-14..
+  persons + [tomek] lives 1989-07-02..
+  couples + [ania_tomek] lives 2016-09-10..
+
+version facts
+  cite src
+  governs always
+  known 2021-01-01
+  opening[acc] = 0 at 2025-01-01 start
+  d_in = 2025-02-01
+  d_out = 2025-03-01
+  a_out = 50.00
+=== expect
+q1: (?"how much came in?" (got), ?"how much came in?" (got))
+...
+q2: 50.00 DUK
+...

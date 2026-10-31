@@ -1,0 +1,31 @@
+# L §2.3 parse rule 2: "as if binds to the reference before it. x[t] + y as if {…} applies the pins to y only;
+# write (x[t] + y) as if {…} for both."  x = 1, y = 2 (rows).  q1 pins x inside y only: 1 + 2 = 3.
+# q2 pins x for the sum: 10 + 2 = 12.  The pin is listed under pinned: where the result rests on it
+# (L §8.2 "the things it rests on"): q1 never reads the pinned x inside the as if.
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "a source"
+
+input x: int
+input y: int
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  x = 1
+  y = 2
+
+ask q1: x + y as if {x = 10}
+ask q2: (x + y) as if {x = 10}
+=== expect
+q1: 3
+  cut 2026-01-01
+q2: 12
+  pinned: x = 10
+  cut 2026-01-01

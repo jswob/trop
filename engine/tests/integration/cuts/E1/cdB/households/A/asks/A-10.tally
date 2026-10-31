@@ -1,0 +1,5 @@
+part asks_a10
+  tally 2
+  note "A-10 · 15 January 2026 (questions.md), as known 2026-01-15: what the walk books on 2026-01-15 to investing (A-HR1 v2, hr1_take) and to Zosia's savings (A-HR4, zosia_save). Both are decisions that read the joint account's running balance and change it, and no house rule orders them: an unordered cycle (L §5.14.2, RUN-ORDER). The day's balance also needs our card spending of 1–15 January 2026, which no record or plan gives (a hole)."
+
+ask a10: flows(hr1_take[2026-01], 2026-01-15..2026-01-15), flows(zosia_save[2026-01], 2026-01-15..2026-01-15) law 2026-01-15 as known 2026-01-15

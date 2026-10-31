@@ -1,0 +1,79 @@
+# L §8.1 (2.1-F12): "A read `of q` and an order term over it ... are each known where every possible label gives it one
+# value ... a part whose every possible label is q's is read as q's", at a place that keeps pairs too.  b1 holds
+# Ania's batches jb[g1] (9) and jb[g2] (6); its order rank_b[k.batch] is a hole per batch, so the sale of 5 is
+# undecided and b1 keeps one hole part of 10 (scratch/exp_r3.py) whose possible labels are (ania, jb[g1]) and (ania,
+# jb[g2]).  q1: of ania it is 10, and the sale's cash arrives at b1c as Ania's (1 000.00, carried through); of jb[g1]
+# it is a hole.  q2: the leg read of Ania is 5; of each batch a hole.
+=== m.tally
+model t
+  tally 2
+  on 2026-01-15
+  start 2021-01-01
+  end 2026-12-31
+
+source src "test"
+unit DUK: currency minor 0.01
+kind funds: unit
+kind couples: parties
+kind persons: parties
+kind gifts: event certain
+  leg units: funds
+  attr donee: key persons
+kind buys: event certain
+  leg units: funds
+  leg cash: DUK
+kind sales: event certain
+  leg units: funds
+  leg cash: DUK
+kind cash_accounts: place one min 0
+  owned by arrive
+  step minor(DUK)
+  takes k for w order rank[k.owner]
+kind lots: holdings
+  owned by arrive
+  batched
+  step 0.0001
+  takes k for w order rank_b[k.batch]
+place b1: lots idx lives 2021-01-01..
+place b1c: cash_accounts DUK lives 2021-01-01..
+place world: outside lives 2000-01-01..
+place market: outside lives 2000-01-01..
+input jb: observed
+def rank[p in parties]: int = ?"which money leaves first?" at reader
+def rank_b[b in gifts]: int = ?"which lot leaves first?" at reader
+def arrive[m in events, p in parties]: num at m.day
+  rule community = (if p == ania_tomek then 1 else 0)
+  rule gifted beats community = (if p == m.donee then 1 else 0) when m in gifts
+  rule sold beats community = m.units.amount of p / m.units.amount when m in sales
+
+ask q1: bal(b1, 2025-12-31) of ania, bal(b1c, 2025-12-31) of ania, bal(b1, 2025-12-31) of jb[g1]
+ask q2: s.units.amount of ania, s.units.amount of jb[g1], s.units.amount of jb[g2] for s in sales over 2025-03-01..2025-03-01
+
+version cast
+  cite src
+  known 2021-01-01
+  funds + [idx] lives 2018-01-01..
+  persons + [ania] lives 1991-03-14..
+  persons + [tomek] lives 1989-07-02..
+  couples + [ania_tomek] lives 2016-09-10..
+
+version open
+  cite src
+  governs always
+  known 2021-01-01
+  opening[b1] = 0 at 2021-01-01 start
+  opening[b1c] = 0 at 2021-01-01 start
+
+version j
+  cite src
+  governs 2025-01..2025-12
+  known 2025-01-01
+  covers b1, b1c
+  jb[g1] = (on: 2025-02-01, kind: gifts, leg units from world to b1 amount 9 idx, donee: ania) "g1"
+  jb[g2] = (on: 2025-02-05, kind: gifts, leg units from world to b1 amount 6 idx, donee: ania) "g2"
+  jb[s1] = (on: 2025-03-01, kind: sales, leg units from b1 to market amount 5 idx, leg cash from market to b1c amount 1000.00 DUK) "s1"
+=== expect
+q1: (10 idx, 1 000.00 DUK, ?"b1: 10 idx may be jb[g1]'s: which lot leaves first?" (b1))
+...
+q2 (s = jb[s1]): (5 idx, ?"b1: 5 idx may be jb[g1]'s: which lot leaves first?" (b1), ?"b1: 5 idx may be jb[g2]'s: which lot leaves first?" (b1))
+...

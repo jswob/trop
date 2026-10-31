@@ -1,0 +1,36 @@
+# Fault J-D-1: a hole movement (fee_out[2026-07], amount the hole fee_amt[2026]) fulfilled by an observation still
+# printed the hole. L §5.19 Realised amounts: "An observation that fulfils a hole movement answers it: its day and
+# amounts are the instance's"; E §4.1 step 3: an instance "fulfilled by an observation the cut sees, which stands in
+# for it" is modelled past. flows of fee_out over July is the observation's 5.00 PLN; over August, the hole (q).
+=== m.tally
+model m
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+source own "own"
+unit PLN: currency minor 0.01
+input bank: observed
+input dom: int
+input fee_amt[y in years]: money PLN question "fee?"
+place konto: accounts PLN lives 2019-05-01..
+place world: outside lives 1900-01-01..
+move fee_out[m in months]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  leg cash from konto to world amount fee_amt[year_of(m)]
+ask q: flows(fee_out, 2026-07), flows(fee_out, 2026-08)
+version v
+  cite own
+  governs 2026..
+  known 2026-01-01
+  dom = 7 "own"
+  opening[konto] = 100.00 PLN at 2026-01-01 start "o"
+version b
+  cite own
+  known 2026-07-08
+  bank[r1] = (on: 2026-07-07, kind: transfers, leg cash from konto to world amount 5.00 PLN, fulfils: fee_out[2026-07]) "x"
+=== expect
+q: (5.00 PLN, ?"fee?" (fee_amt[2026]))
+  unfulfilled: fee_out[2026-08]
+  cut 2026-10-20

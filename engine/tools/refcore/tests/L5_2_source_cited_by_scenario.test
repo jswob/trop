@@ -1,0 +1,35 @@
+# Fault scen_ask_world (writer 6): the base printed `WARN-UNREAD source t` for a source that only the scenario's version
+# cites. L §5.2: "a source that no version cites gets WARN-UNREAD"; a scenario's versions are ordinary versions (L §6.4).
+# s is cited by nothing: it stays. The scenario's opening of konto is 5.00 DUK (r).
+=== b.tally
+model b
+  tally 2
+  on 2025-12-31
+  start 2025-01-01
+  end 2025-12-31
+
+source s "s"
+
+source t "t"
+
+unit DUK: currency minor 0.01
+
+place konto: accounts DUK lives 2025-01-01..
+=== sc.tally
+scenario sc over b
+  tally 2
+  from 2025-01-01
+
+
+
+ask r: bal(konto, 2025-12-31) in sc
+
+version v
+  cite t
+  known 2025-01-01
+  opening[konto] = 5.00 at 2025-01-01 start "o"
+=== expect
+r: 5.00 DUK
+  world: sc
+  cut 2025-12-31
+warning: WARN-UNREAD source s is read by nothing

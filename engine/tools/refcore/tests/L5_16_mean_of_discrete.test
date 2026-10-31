@@ -1,0 +1,22 @@
+# L §5.16 table: discrete(w for k in IDX) has "no mean (keys aren't numbers)"; and since round 18 (C1-47) "mean(d) of a
+# distribution value is refused (LOAD-RANDOM, A-42)" whatever the distribution (snap11: LOAD-UNIT, as no mean).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+index ks = [ka, kb]
+input w[k in ks]: num
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  w[*] = 1
+
+ask q1: mean(discrete(w[k] for k in ks))
+=== expect
+refused: LOAD-RANDOM ...

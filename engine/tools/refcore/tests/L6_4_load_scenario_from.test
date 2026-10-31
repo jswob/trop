@@ -1,0 +1,77 @@
+# L §6.4 (round 11b): "from D is the day the branch diverges: no scenario row of an item the base declares governs a
+# day before D (LOAD-SCENARIO). A row of an input the scenario declares may govern always ..., since only the scenario
+# reads it." child's version governs 2026.., before its from 2027-01-01, but its row is of benefit_amt, which child
+# declares: child loads. In March 2027 ana and ola (from 2027-03-01) each get the gift (2 x 100.00) and ola the
+# benefit (50.00): b = 250.00 PLN. child2's version replaces gift_amt, a base input, from 2026: child2 is refused,
+# the base runs (L §8.3).
+# Over the base of L6_4_scenario_stack (a gift of 100.00 PLN to each person monthly into konto) and its scenario
+# child (a hypothetical child ola, a benefit move), with one change each.
+=== household.tally
+model household
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2030-12-31
+
+source plan "plan"
+unit PLN: currency minor 0.01
+kind persons
+kind gifts: event certain
+  leg cash: PLN
+place konto: accounts PLN lives 2019-05-01..
+place world: outside lives 1900-01-01..
+input gift_amt: money PLN
+input gift_dom: int
+
+move gift[m in months, p in persons on day_of(m, gift_dom)]: gifts
+  on day_of(m, gift_dom)
+  at start_of(m)
+  leg cash from world to konto amount gift_amt
+
+version plan_2026
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  persons + [ana] lives 1990-04-02..
+  gift_amt = 100.00 PLN "own"
+  gift_dom = 5 "own"
+  opening[konto] = 0 PLN at 2026-01-01 start "wyciąg"
+
+ask c1: count(p in persons on 2027-06-01)
+=== child.tally
+scenario child over household
+  tally 2
+  from 2027-01-01
+  note "a child in March 2027"
+
+input benefit_amt: money PLN
+move benefit[m in months, p in persons on day_of(m, gift_dom)]: gifts
+  on day_of(m, gift_dom)
+  at start_of(m)
+  when p == ola
+  leg cash from world to konto amount benefit_amt
+
+version ola_born
+  cite plan
+  governs 2026..
+  known 2026-10-15
+  persons + [ola] lives 2027-03-01..
+  benefit_amt = 50.00 PLN "benefit act"
+
+ask b: flows(konto, 2027-03) in child
+=== child2.tally
+scenario child2 over household
+  tally 2
+  from 2027-01-01
+
+version more
+  cite plan
+  governs 2026..
+  known 2026-10-15
+  replace gift_amt = 150.00 PLN "own"
+=== expect
+scenario child2: refused: LOAD-SCENARIO a row of child2 for gift_amt, an item of the base, governs a day before 2027-01-01 (child2.tally:9)
+b: 250.00 PLN
+...
+c1: 1
+  cut 2026-10-20

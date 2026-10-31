@@ -1,0 +1,17 @@
+# L §5.6: the key bind of a def, input or place "is defined for every key" (also L §5.7): an `on` there has no
+# meaning: LOAD-DOMAIN at load (L §8.4).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+kind persons
+input d0: date
+input x[p in persons on d0]: int
+=== expect
+refused: LOAD-DOMAIN ...

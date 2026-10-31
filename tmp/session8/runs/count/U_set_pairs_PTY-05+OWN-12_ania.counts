@@ -1,0 +1,33 @@
+argv: run unit/probes/pairs/PTY-05+OWN-12/ania.tally unit/probes/pairs/PTY-05+OWN-12/fam.tally unit/probes/pairs/PTY-05+OWN-12/family.tally unit/probes/pairs/PTY-05+OWN-12/halina.tally unit/probes/pairs/PTY-05+OWN-12/piotr.tally
+cwd: /Users/jswob/projects/trop/engine/tests
+seconds: 0.4
+fast layer: False
+
+act:obs                                18
+acts                                   18
+arith:+                                 3
+def_cell                               74
+def_miss                               74
+engines                                 3
+ev                                    830
+legs_booked                            18
+log_entries                            36
+money_made                            124
+num_den1                              337
+num_den_decimal6                        9
+num_made                              346
+parts_entries                          36
+parts_flush                          1629
+parts_groups_run                       18
+read_def                               74
+walk_days                             543
+walk_days_nonempty                     12
+walks                                   3
+read_input_distinct                     0
+def_items_evaluated                     4
+
+def misses by item (top 8): [('b·arrive', 24), ('f·a·arrive', 24), ('f·d·arrive', 24), ('f·ania_parts', 2)]
+memo entries at end, all engines: 74 by kind {'def': 74}
+walk spans (days): n 3, min 180, median 180, max 180, sum 540
+decision strata per day with decisions: {}
+Num results by max bit length: {'<=63': 346}; max 14 bits

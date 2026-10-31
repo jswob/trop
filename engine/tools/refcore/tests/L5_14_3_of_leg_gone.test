@@ -1,0 +1,20 @@
+# L §5.14.3 (writer 8): an adjustment has "the attributes adjusts ... and change"; of_leg is gone (the leg is in the
+# change's name, adjustments[m[keys].leg, V]); L §2.2 lists `adjusts change` as the attributes of adjustments. a.of_leg
+# is no field: LOAD-FIELD.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+kind waivers: event certain
+input wd: date
+
+move wv[a in adjustments on wd where a.of_leg == "cash"]: waivers
+  on a.day
+  fulfils a
+=== expect
+refused: LOAD-FIELD ...

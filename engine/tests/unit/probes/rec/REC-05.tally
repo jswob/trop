@@ -1,0 +1,73 @@
+model rec05
+  tally 2
+  on 2026-10-25
+  start 2025-05-01
+  end 2025-05-31
+
+source bank_stmt "REC-05 card: Ola's bank account, the net pay for May 2025"
+
+source card "REC-05 card: its rules: the rates, and gross inferred from net by the law"
+
+source payslips "REC-05 card: Ola's payslips"
+
+unit DUK: currency minor 0.01
+
+input gross_hi: money DUK
+
+input gross_in: money DUK
+
+input gross_lo: money DUK
+
+input net_in: money DUK
+
+input pension_rate: num
+
+input tax_rate: num
+
+def advance_of[g in gross_lo .. gross_hi step minor(DUK)]: money DUK at reader
+  rule base v card_rules = round(tax_rate * (g - contrib_of[g]), 1, half-up)
+
+def contrib_of[g in gross_lo .. gross_hi step minor(DUK)]: money DUK at reader
+  rule base v card_rules = round(pension_rate * g, minor(DUK), half-up)
+
+def gross: money DUK at reader
+  rule inferred beats stated v card_rules = min(g for g in gross_lo .. gross_hi step minor(DUK) where net_of[g] == net_in) when missing(gross_in)
+  rule stated = gross_in
+
+def net_of[g in gross_lo .. gross_hi step minor(DUK)]: money DUK at reader
+  rule base v card_rules = g - contrib_of[g] - advance_of[g]
+
+ask grosses: g for g in gross_lo .. gross_hi step minor(DUK) where net_of[g] == net_in law 2025-05-31
+
+ask payslip: gross_in law 2025-05-31
+
+ask q: gross law 2025-05-31
+
+ask unique: count(g in gross_lo .. gross_hi step minor(DUK) where net_of[g] == net_in) law 2025-05-31
+
+version bank_v
+  cite bank_stmt
+  governs always
+  known 2025-05-01
+  net_in = 5148.00 "net pay for May 2025"
+
+version card_rules
+  cite card
+  governs always
+  known 2025-05-01
+  pension_rate = 10 % "rule 1: pension contribution 10 % of gross"
+  tax_rate = 12 % "rule 1: tax advance 12 % of gross minus the contribution"
+
+version search
+  cite card
+  governs always
+  known 2025-05-01
+  assumed "the card names no range to search: every cent within 50.00 of 6 500.00, the gross its worked line estimates (net = 0.792 x gross)"
+  gross_hi = 6550.00 "50.00 above 6 500.00"
+  gross_lo = 6450.00 "50.00 below 6 500.00"
+
+version slip_v
+  cite payslips
+  governs always
+  known 2025-05-01
+  gross_in = ?"Ola's payslip for May 2025 is missing: what was her gross pay?"

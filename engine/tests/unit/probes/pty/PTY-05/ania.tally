@@ -1,0 +1,25 @@
+model ania
+  tally 2
+  on 2026-10-25
+  start 2024-01-01
+  end 2024-12-31
+  note "PTY-05, household A (Ania): the gift stated as an outside fact, a row of A's own statement, received from Halina, whom A doesn't keep (an outside place)."
+
+source a_household "Household A's statement: received 5 000.00 from Halina (made up)"
+
+unit DUK: currency minor 0.01
+
+place acc_ania: accounts DUK lives 2024-01-01..
+
+place halina: outside lives 2024-01-01..
+
+input a_stmt: observed
+
+ask q_ania: flows(acc_ania, 2024)
+
+version a_statement
+  cite a_household
+  governs 2024-05
+  known 2024-05-02
+  covers acc_ania
+  a_stmt[a_g1] = (on: 2024-05-02, kind: transfers, leg cash from halina to acc_ania amount 5000.00 DUK) "A-G1: received from Halina"

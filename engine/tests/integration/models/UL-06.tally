@@ -1,0 +1,182 @@
+model ul06
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+  note "Class 1 National Insurance 2022-23: thresholds by tax week and tax month (the 6 July 2022 rise), rates by the date of payment (the 6 November 2022 cut), and the directors' annual rates."
+  note "Figures that only the GOV.UK 2022-23 tables state (the LEL monthly and yearly equivalents, the Freeport, under-21, apprentice and veterans upper secondary thresholds) have no row and are holes."
+
+source govuk_2021_22_src "HMRC, Rates and thresholds for employers 2021 to 2022 (GOV.UK guidance)" at "https://www.gov.uk/guidance/rates-and-thresholds-for-employers-2021-to-2022"
+
+source hscl2021 "Health and Social Care Levy Act 2021 (c. 28), s. 5, as enacted" at "https://www.legislation.gov.uk/ukpga/2021/28/section/5/enacted"
+
+source nica2022 "National Insurance Contributions (Increase of Thresholds) Act 2022 (c. 16), ss. 1 and 4, as enacted" at "https://www.legislation.gov.uk/ukpga/2022/16/section/1/enacted"
+
+source repeal2022_src "Health and Social Care Levy (Repeal) Act 2022 (c. 43), s. 2 and Schedule, as enacted" at "https://www.legislation.gov.uk/ukpga/2022/43/section/2/enacted"
+
+source si2022_232 "Social Security (Contributions) (Rates, Limits and Thresholds Amendments) and National Insurance Funds Payments Regulations 2022 (S.I. 2022/232), reg. 6 and Explanatory Note" at "https://www.legislation.gov.uk/uksi/2022/232/made"
+
+source si2022_416 "Social Security (Contributions) (Amendment No. 2) Regulations 2022 (S.I. 2022/416)" at "https://www.legislation.gov.uk/uksi/2022/416/made"
+
+unit GBP: currency minor 0.01
+
+index cat = [a, b, j, c, f, h, i, l, m, s, v, z]
+  note "HMRC's category letters name the employee's conditions: b and i a married woman's reduced-rate election, j, l and z deferment, c and s over State Pension age; f, i, l and s a Freeport employee, m and z under 21, h an apprentice under 25, v a veteran. Only the first group changes a primary percentage. The others change the secondary percentage below their upper secondary thresholds, which the law fetched doesn't state, so no ask reads them by category"
+
+index nband = [lel_pt, pt_uel, above_uel]
+
+index payday = day 2022-04-06..2023-04-05
+
+index per = [wk, mo, yr]
+
+index taxyear = year 2022..2022 from 04-06
+
+index thr = [lel, pt, st, fust, ust, aust, vust, uel, dir_pt]
+
+index tmonth = month 2022-04..2023-03 from 6
+
+index tweek = day 2022-04-06..2023-04-05 by 7
+
+input add_pct: num
+
+input class1a_pct: num
+
+input class1b_pct: num
+
+input dir_add_pct: num
+
+input dir_main_pct: num
+
+input dir_reduced_pct: num
+
+input dir_sec_pct: num
+
+input main_pct: num
+
+input reduced_pct: num
+
+input sec_pct: num
+
+input threshold[k in thr, p in per]: money GBP question "What is this limit or threshold, for this earnings period, under the law in force?"
+  note "lel lower earnings limit; pt primary threshold; st secondary threshold; fust Freeport upper secondary threshold; ust upper secondary threshold (under 21); aust apprentice upper secondary threshold; vust veterans upper secondary threshold; uel upper earnings limit; dir_pt directors' primary threshold"
+
+def class1a[y in taxyear]: num = class1a_pct at start_of(y)
+
+def class1a_term[d in payday]: num at start_of(d)
+  note "Repeal Act Sch. para 2(2): termination awards and sporting testimonials at the secondary percentage that applies at the time of the payment"
+  rule base = sec_pct
+
+def class1b[y in taxyear]: num = class1b_pct at start_of(y)
+
+def dir_rate[q in cat, n in nband, y in taxyear]: num at start_of(y)
+  note "directors' primary percentages on an annual earnings period (Repeal Act Sch. para 5)"
+  rule above beats base = dir_add_pct when n == above_uel
+  rule base = 0
+  rule j_main beats base, main = dir_add_pct when q in [j, l, z] and n == pt_uel
+  rule main beats base = dir_main_pct when n == pt_uel
+  rule nil beats above, base, j_main, main, reduced = none when q in [c, s]
+  rule reduced beats base, main = dir_reduced_pct when q in [b, i] and n == pt_uel
+
+def dir_sec[y in taxyear]: num = dir_sec_pct at start_of(y)
+
+def emp_rate[q in cat, n in nband, d in payday]: num at start_of(d)
+  note "employee primary percentages by the date the earnings are paid (Repeal Act s. 2(1)); categories c and s are nil"
+  rule above beats base = add_pct when n == above_uel
+  rule base = 0
+  rule j_main beats base, main = add_pct when q in [j, l, z] and n == pt_uel
+  rule main beats base = main_pct when n == pt_uel
+  rule nil beats above, base, j_main, main, reduced = none when q in [c, s]
+  rule reduced beats base, main = reduced_pct when q in [b, i] and n == pt_uel
+
+def sec_rate[d in payday]: num = sec_pct at start_of(d)
+
+def thr_month[k in thr, t in tmonth]: money GBP = threshold[k, mo] at start_of(t)
+
+def thr_week[k in thr, w in tweek]: money GBP = threshold[k, wk] at start_of(w)
+
+def thr_year[k in thr, d in payday]: money GBP = threshold[k, yr] at start_of(d)
+
+ask class1a_1b: class1a[2022], class1b[2022], class1a_term[d] for d in [2022-11-05, 2022-11-06] law 2026-10-18
+
+ask directors: dir_rate[q, n, 2022], dir_sec[2022] for q in cat, n in nband law 2026-10-18
+
+ask employee_from_6_nov: emp_rate[q, n, 2022-11-06] for q in cat, n in nband law 2026-10-18
+
+ask employee_to_5_nov: emp_rate[q, n, 2022-11-05] for q in cat, n in nband law 2026-10-18
+
+ask employer: sec_rate[d] for d in [2022-11-05, 2022-11-06] law 2026-10-18
+
+ask pt_by_tax_month: thr_month[pt, t] for t in [2022-06, 2022-07] law 2026-10-18
+
+ask pt_by_tax_week: thr_week[pt, w] for w in [2022-06-29, 2022-07-06] law 2026-10-18
+
+ask pt_yearly_by_day: thr_year[pt, d] for d in [2022-07-05, 2022-07-06] law 2026-10-18
+
+ask thresholds: thr_week[k, 2022-04-06], thr_month[k, 2022-04], thr_year[k, 2022-04-06] for k in thr law 2026-10-18
+
+version hscl2021_s5
+  cite hscl2021
+  governs 2022-04-06..2023-04-05
+  known 2021-10-20
+  note "Royal Assent 20 October 2021, the bracketed date on the Act's enacted introduction (https://www.legislation.gov.uk/ukpga/2021/28/introduction/enacted); s. 5(1): transitional provision for the tax year 2022-23"
+  add_pct = 0.0325 "s. 5(2)(a)(ii): for 2 there were substituted 3.25"
+  main_pct = 0.1325 "s. 5(2)(a)(i): for 12 there were substituted 13.25"
+  sec_pct = 0.1505 "s. 5(2)(b): for 13.8 there were substituted 15.05"
+
+version govuk_2021_22
+  cite govuk_2021_22_src
+  governs 2021-04-06..
+  known 2022-02-07
+  note "a web page has no date of its own, so its Updated stamp is its known date (§4.5): Updated 7 February 2022, public_updated_at 2022-02-07 in the GOV.UK content API (https://www.gov.uk/api/content/guidance/rates-and-thresholds-for-employers-2021-to-2022); its change history says the 2021-22 rates were added on 16 March 2021"
+  note "S.I. 2022/232's Explanatory Note says the prescribed equivalents of the upper earnings limit remain the same; the 2021-22 figures are this page's"
+  threshold[uel, mo] = 4189 "Class 1 thresholds, row Upper earnings limit: £4,189 per month"
+  threshold[uel, yr] = 50270 "Class 1 thresholds, row Upper earnings limit: £50,270 per year"
+
+version si2022_232_reg6
+  cite si2022_232
+  governs 2022-04-06..
+  known 2022-03-07
+  note "made 7th March 2022, in force 6th April 2022; known from its made date, the date an S.I. binds from (law, §4.5). Round 2 took 2022-03-08, the date legislation.gov.uk's metadata gives the made text (dc:modified, https://www.legislation.gov.uk/uksi/2022/232/made/data.xml): document metadata, which §4.5 doesn't use for a law (D8)"
+  threshold[lel, wk] = 123 "reg. 6(2)(b)"
+  threshold[pt, wk] = 190 "reg. 6(2)(c)"
+  threshold[pt, mo] = 823 "reg. 6(3)(a)(i)"
+  threshold[pt, yr] = 9880 "reg. 6(3)(a)(ii)"
+  threshold[st, wk] = 175 "reg. 6(2)(d)"
+  threshold[st, mo] = 758 "reg. 6(3)(b)(i)"
+  threshold[st, yr] = 9100 "reg. 6(3)(b)(ii)"
+  threshold[uel, wk] = 967 "Explanatory Note: the upper earnings limit ... remains at £967"
+
+version nica2022_s1_s4
+  cite nica2022
+  governs 2022-07-06..
+  known 2022-03-31
+  note "Royal Assent 31st March 2022, the bracketed date on the Act's enacted introduction (https://www.legislation.gov.uk/ukpga/2022/16/introduction/enacted); s. 1(4): in force 6 July 2022, not affecting any tax week commencing before that date"
+  replace threshold[pt, wk] = 242 "s. 1(2)"
+  replace threshold[pt, mo] = 1048 "s. 1(3)(a)"
+  replace threshold[pt, yr] = 12570 "s. 1(3)(b)"
+  threshold[dir_pt, wk] = 229 governs 2022-04-06..2023-04-05 "s. 4(1), (2)(a), (3): for the tax year 2022-23"
+  threshold[dir_pt, yr] = 11908 governs 2022-04-06..2023-04-05 "s. 4(2)(b), (3)"
+
+version si2022_416_reg2
+  cite si2022_416
+  governs 2022-04-06..2023-04-05
+  known 2022-03-31
+  note "made 31st March 2022; reg. 1(2): for the tax year 2022-23"
+  note "known from its made date, the date an S.I. binds from (law, §4.5). Round 2 took 2022-04-01, the date legislation.gov.uk's metadata gives the made text (dc:modified, https://www.legislation.gov.uk/uksi/2022/416/made/data.xml): document metadata, which §4.5 doesn't use for a law (D8)"
+  reduced_pct = 0.071 "reg. 2: for 5.85 there were substituted 7.1"
+
+version repeal2022
+  cite repeal2022_src
+  governs 2022-04-06..2023-04-05
+  known 2022-10-25
+  note "Royal Assent 25th October 2022, the bracketed date on the Act's enacted introduction (https://www.legislation.gov.uk/ukpga/2022/43/introduction/enacted); s. 2(1) keeps the 2021 Act's s. 5(2)(a)-(b) only for payments of earnings made before 6 November 2022"
+  replace add_pct = 0.02 governs 2022-11-06..2023-04-05 "s. 2(1); the base figure 2 of SSCBA 1992 s. 8(2)(b)"
+  class1a_pct = 0.1453 "Sch. para 1(2)"
+  class1b_pct = 0.1453 "Sch. para 3(1)"
+  dir_add_pct = 0.0273 "Sch. para 5(3)(a)(ii)"
+  dir_main_pct = 0.1273 "Sch. para 5(3)(a)(i)"
+  dir_reduced_pct = 0.0658 "Sch. para 5(5)"
+  dir_sec_pct = 0.1453 "Sch. para 5(3)(b)"
+  replace main_pct = 0.12 governs 2022-11-06..2023-04-05 "s. 2(1); the base figure 12 of SSCBA 1992 s. 8(2)(a)"
+  replace reduced_pct = 0.0585 governs 2022-11-06..2023-04-05 "Sch. para 4 (S.I. 2022/416 reg. 1(2) only for payments before 6 November); the base figure 5.85 of reg. 131"
+  replace sec_pct = 0.138 governs 2022-11-06..2023-04-05 "s. 2(1); the base figure 13.8 of SSCBA 1992 s. 9(2), as substituted for in Sch. para 5(3)(b)"

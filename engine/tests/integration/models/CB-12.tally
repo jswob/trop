@@ -1,0 +1,113 @@
+model cb12
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+  note "The ministry page 'Świadczenia emerytalne i rentowe' covers three examples: ZUS's pensions for Katarzyna Kowalska (24 years in Poland, 4 in Spain) and Konrad Piotrowski (15 years in Poland, 3 in France, 13 in Belgium), and the fractions for Hieronim Nowak. The ZUS leaflet adds a fraction example."
+  note "ZUS's own amounts under the Polish pension act are taken as given: the page doesn't give the earnings, periods or formula behind them."
+  note "Kowalska claimed in mid-2005, when Regulation 1408/71 Art. 46 applied. Piotrowski's claim date isn't given. Both regulations state the same method, and the rules cite Regulation 883/2004, which the page cites."
+  note "Periods are the whole years printed, and no overlap is stated."
+
+source mrpips_page "Świadczenia emerytalne i rentowe (Ministerstwo Rodziny, Pracy i Polityki Społecznej, gov.pl)" at "https://www.gov.pl/web/rodzina/wiadczenia-emerytalne-i-rentowe"
+
+source reg883 "Regulation (EC) No 883/2004, OJ L 166, 30.4.2004, read in the consolidated text 2004R0883 01.01.2014 (Publications Office of the EU)" at "http://publications.europa.eu/resource/celex/02004R0883-20140101"
+
+source zus_leaflet "Emerytura z ZUS w świetle prawa Unii Europejskiej (ulotka ZUS, Warszawa, październik 2017)" at "https://www.zus.pl/documents/10182/167561/799_14_Emerytura_z_ZUS_w_%C5%9Bwietle_prawa_UE_ulotka.pdf/47568dc6-bd1f-4407-80ea-cdf57552f335"
+
+unit PLN: currency minor 0.01
+
+axis zl_cut
+  half-up "the pro rata pension is rounded to the grosz, with ties away from zero"
+  down "the pro rata pension is cut to the grosz"
+
+index country = [pl, es, fr, be, no, se, dk]
+
+index person = [kowalska, piotrowski, nowak, leaflet_ex]
+
+input entitled_alone[p in person]: bool
+
+input ins_years[p in person, c in country]: num
+
+def fraction[p in person, c in country]: num at reader
+  note "art. 52(1)(b)(ii): the periods under one state's legislation over the periods under the legislations of all the states concerned."
+  rule base v eu_rules = ins_years[p, c] / total_years[p]
+
+def independent[p in person]: money PLN at reader
+  note "art. 52(1)(a): the pension on Polish periods only, as ZUS computes it under the Polish pension act."
+  rule base = ?"How did ZUS compute the pension on Polish periods only? The earnings, periods and formula aren't given."
+
+def paid[p in person]: money PLN at reader
+  note "art. 52(1)(a) and (3): where Polish law alone gives entitlement, the higher of the independent and the pro rata pension; otherwise the pro rata pension."
+  rule higher v eu_rules = max(independent[p], prorata_amount[p]) when entitled_alone[p]
+  rule pro_rata_only v eu_rules = prorata_amount[p] when not entitled_alone[p]
+
+def prorata_amount[p in person]: money PLN at reader
+  note "art. 52(1)(b)(ii): the theoretical amount times the Polish fraction. The rounding to the grosz isn't stated."
+  rule base v eu_rules = round(theoretical[p] * fraction[p, pl], minor(PLN), zl_cut)
+
+def theoretical[p in person]: money PLN at reader
+  note "art. 52(1)(b)(i): the pension as if all the periods were Polish, as ZUS computes it under the Polish pension act."
+  rule base = ?"How did ZUS compute the theoretical pension? The earnings, periods and formula aren't given."
+
+def total_years[p in person]: num = sum(ins_years[p, c] for c in country) at reader
+
+ask kowalska_amounts: independent[kowalska], theoretical[kowalska] law 2026-10-18
+
+ask kowalska_fraction: ins_years[kowalska, pl], total_years[kowalska], fraction[kowalska, pl] law 2026-10-18
+
+ask kowalska_paid: paid[kowalska] law 2026-10-18
+
+ask kowalska_pro_rata: prorata_amount[kowalska] law 2026-10-18
+
+ask kowalska_spanish_share: fraction[kowalska, es] law 2026-10-18
+
+ask leaflet_fraction: fraction[leaflet_ex, pl] law 2026-10-18
+
+ask nowak_fractions: fraction[nowak, c] for c in country where ins_years[nowak, c] > 0 law 2026-10-18
+
+ask nowak_total: total_years[nowak] law 2026-10-18
+
+ask piotrowski_amount: theoretical[piotrowski] law 2026-10-18
+
+ask piotrowski_fractions: fraction[piotrowski, c] for c in country where ins_years[piotrowski, c] > 0 law 2026-10-18
+
+ask piotrowski_paid: paid[piotrowski] law 2026-10-18
+
+ask piotrowski_total: total_years[piotrowski] law 2026-10-18
+
+version eu_rules
+  cite reg883
+  governs always
+  known 2004-04-30
+  note "Known from the regulation's publication in OJ L 166 of 30.4.2004. Art. 52(1)(a), (1)(b)(i)-(ii) and (3) read the same in the text as adopted, in the corrigendum (OJ L 200, 7.6.2004) and in the 01.01.2014 consolidation; Regulation 988/2009 changed (4) and added (5)."
+  note "Regulation 1408/71 Art. 46(1)-(3), consolidated 28.04.2006, states the same method; it applied to a claim in 2005, and wasn't cited separately."
+  note "Art. 52(4)-(5) with Annex VIII 'POLAND': the pro rata calculation may be waived for defined benefit old-age pensions, and doesn't apply to defined contribution ones. The page computes it."
+
+version leaflet_2017
+  cite zus_leaflet
+  governs always
+  known 2026-10-18
+  note "The leaflet is dated October 2017, but its example's periods are stipulations, known from the model's on date (LANGUAGE.md 4.5)."
+  ins_years[leaflet_ex, pl] = 15 "leaflet, 'Przykład' on the pro-rata calculation"
+  ins_years[leaflet_ex, be] = 10 "leaflet, 'Przykład' on the pro-rata calculation"
+
+version ministry_page
+  cite mrpips_page
+  governs always
+  known 2026-10-18
+  note "The page carries no date. Its examples' facts and ZUS's amounts for them are stipulations, known from the model's on date (LANGUAGE.md 4.5)."
+  entitled_alone[kowalska] = true "section 4, first Przykład: 'to wystarczający staż ubezpieczeniowy'"
+  entitled_alone[piotrowski] = false "section 4, second Przykład: 'zbyt krótki okres ubezpieczenia w Polsce'"
+  given independent[kowalska] = 1049.71 "section 4, first Przykład: 'Obliczono jej emeryturę na podstawie 24 lat pracy w Polsce'"
+  ins_years = 0 assumed "no insurance periods other than those the examples name"
+  ins_years[kowalska, pl] = 24 "section 4, first Przykład"
+  ins_years[kowalska, es] = 4 "section 4, first Przykład"
+  ins_years[piotrowski, pl] = 15 "section 4, second Przykład: '15 lat okresów składkowych'"
+  ins_years[piotrowski, fr] = 3 "section 4, second Przykład"
+  ins_years[piotrowski, be] = 13 "section 4, second Przykład"
+  ins_years[nowak, pl] = 8 "section 2, Przykład"
+  ins_years[nowak, no] = 8 "section 2, Przykład"
+  ins_years[nowak, se] = 6 "section 2, Przykład"
+  ins_years[nowak, dk] = 3 "section 2, Przykład"
+  given theoretical[kowalska] = 1148.54 "section 4, first Przykład: 24 years in Poland and 4 in Spain"
+  given theoretical[piotrowski] = 1216.57 "section 4, second Przykład: 'ZUS wyliczył, że polska emerytura wyniesie'"

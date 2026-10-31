@@ -1,0 +1,223 @@
+model s3
+  tally 2
+  on 2027-01-20
+  start 2026-01-01
+  end 2026-12-31
+  note "Card S3: Nadia and Emil Feld, separate property, units of the Lenia Growth Fund A, SEP and CGT; all made up."
+
+source card_s3 "Card S3, Cast and Entries: the stipulations of the case"
+source contract_d1 "Card S3, S3-D1: Notary Wit Arlen, Torvin, contract 214/2008 of separate property, issued 2008-04-02"
+source sep_law "Card S3, Law: SEP-1 Separate property"
+source cgt_law "Card S3, Law: CGT-1 Units, sales and tax"
+source house_rules "Card S3, House rules: H-1 What we are worth"
+source arkon_units "Card S3, S3-R1: Arkon Securities, transactions in LGF-A units, accounts N-4471 and E-2290"
+source arkon_cash "Card S3, S3-R2: Arkon Securities, cash account N-4471, 2026; and the entry that Emil's cash account had no rows in 2026"
+source fund_prices "Card S3, S3-R3: Lenia Growth Fund A, published unit prices kept"
+
+unit DUK: currency minor 0.01
+
+unit lgf_a "a unit of the Lenia Growth Fund A (LGF-A)"
+
+kind persons: parties
+
+kind fund_accounts: place lgf_a min 0 priced last(lgf_px)
+  owned by sep_arrive
+  batched
+  step 1 lgf_a
+  takes k for w order take_day[w, k.batch]
+  note "an account's units of LGF-A, kept as parts by owner and batch (CGT-1 point 1: units are held in batches)"
+
+kind unit_moves: event certain
+  leg units: lgf_a
+
+kind trades: unit_moves
+  leg cash: DUK
+  attr fee: money DUK
+  attr price: num DUK/lgf_a
+  attr trader: key persons
+
+kind buys: trades
+
+kind sells: trades
+
+kind unit_gifts: unit_moves
+  attr donee: key persons
+  attr giver: key persons
+
+place e_cash: accounts DUK lives 1900-01-01..
+  note "Arkon Securities E-2290, Emil's cash; the day it was opened isn't given, so an early day stands for it (L 5.7)"
+
+place e_units: fund_accounts lives 1900-01-01..
+  note "Arkon Securities E-2290, Emil's LGF-A units"
+
+place market: outside lives 1900-01-01..
+
+place n_cash: accounts DUK lives 1900-01-01..
+  note "Arkon Securities N-4471, Nadia's cash"
+
+place n_units: fund_accounts lives 1900-01-01..
+  note "Arkon Securities N-4471, Nadia's LGF-A units"
+
+input hold_years: int
+
+input lgf_px: num DUK/lgf_a reading
+  note "the fund's published price per unit"
+
+input owns[p in persons, x in accounts]: num
+  note "who owns a cash account's money (S3-D1: each alone owns what they have)"
+
+input tax_rate: num
+
+input trades_r: observed
+
+def cost_before[m in unit_moves, p in persons, b in buys]: num DUK
+  note "CGT-1 points 1-2: the remaining cost of p's units of batch b just before m: its cost when it came to p, less the cost of units taken from it earlier"
+  rule base = cost_in[p, b, m.day] - sum(cost_taken[m2, p, b] for m2 in unit_moves over .. where m2.day < m.day)
+
+def cost_in[p in persons, b in buys, d in days]: num DUK
+  note "CGT-1 point 1: the cost of batch b that came to p before day d: the price paid plus the fee, for p's own purchase; the giver's cost of the units given, for a gift"
+  rule base = (if b.trader == p and b.day < d then b.cash.amount else 0) + sum(cost_taken[g, g.giver, b] for g in unit_gifts over .. where g.donee == p and g.day < d)
+
+def cost_left[p in persons, b in buys, d in days]: num DUK
+  note "CGT-1 point 2: the cost p's units of batch b keep at the end of day d"
+  rule base = cost_in[p, b, d] + (if b.trader == p and b.day == d then b.cash.amount else 0) + sum(cost_taken[g, g.giver, b] for g in unit_gifts over d .. d where g.donee == p) - sum(cost_taken[m, p, b] for m in unit_moves over .. d)
+
+def cost_taken[m in unit_moves, p in persons, b in buys]: money DUK at m.day
+  note "CGT-1 point 2: units taken from a batch cost its remaining cost times the units taken over its remaining units, rounded to whole orts, half up"
+  rule nothing v cgt1_v1 = 0 when took[m, p, b] == 0
+  rule taken v cgt1_v1 = round(cost_before[m, p, b] * took[m, p, b] / units_before[m, p, b], minor(DUK), half-up) when took[m, p, b] > 0
+
+def fee_share[s in sells, p in persons, b in buys]: money DUK at s.day
+  note "CGT-1 point 3: a sale's fee spread over the batches it takes in proportion to their units; each share but the youngest batch's rounded to whole orts, half up; the youngest takes the rest"
+  rule nothing v cgt1_v1 = 0 when took[s, p, b] == 0
+  rule share v cgt1_v1 = round(s.fee * took[s, p, b] / s.units.amount, minor(DUK), half-up) when took[s, p, b] > 0
+  rule youngest beats share v cgt1_v1 = s.fee - sum(fee_share[s, p, b2] for b2 in buys over .. where b2 != b and took[s, p, b2] > 0) when took[s, p, b] > 0 and all(b2.day < b.day for b2 in buys over .. where b2 != b and took[s, p, b2] > 0)
+
+def gain[s in sells, p in persons, b in buys]: num DUK at s.day
+  note "CGT-1 point 3: the gain on a batch's part of a sale: its units times the price, less its fee share, less its cost"
+  rule cgt1_3 v cgt1_v1 = took[s, p, b] * s.price - fee_share[s, p, b] - cost_taken[s, p, b]
+
+def left_out[s in sells, b in buys]: bool at s.day
+  note "CGT-1 point 4: a part held more than 3 years on the day of sale; the 3 years end on the same-numbered day three years after acquisition, or that month's last day"
+  rule cgt1_4 v cgt1_v1 = s.day > add_years(b.day, hold_years)
+
+def sep_arrive[m in events, p in parties]: num at m.day
+  note "S3-D1 and SEP-1: each alone owns what they buy or are given, a gift from the other spouse included"
+  rule bought v sep_contract = (if p == m.trader then 1 else 0) when m in buys
+  rule given v sep_contract = (if p == m.donee then 1 else 0) when m in unit_gifts
+
+def take_day[w in events, b in events]: date at w.day
+  note "CGT-1 point 3: a sale takes units from the seller's batches oldest first, by acquisition day (a batch's acquisition day is its purchase's day, kept through a gift: point 1)"
+  rule oldest v cgt1_v1 = b.day when w in sells
+  rule other v cgt1_v1 = ?"CGT-1 says which batches a sale takes, but not which batches a gift takes" when not w in sells
+
+def tax_to_date[p in persons, d in days]: money DUK at d
+  note "CGT-1 point 5 and H-1 point 2: the tax the year's sales up to day d would give if the year ended then"
+  rule cgt1_5 v cgt1_v1 = round(taxed_gain_to[p, d] * tax_rate, 1 DUK, half-up)
+
+def taxed_gain_to[p in persons, d in days]: money DUK at d
+  note "CGT-1 point 5: the sum of the gains and losses not left out of the year's sales up to day d, rounded to whole dukats, half up; a negative sum counts as 0"
+  rule cgt1_5 v cgt1_v1 = max(0 DUK, round(sum(gain[s, p, b] for s in sells over start_of(year_of(d)) .. d, b in buys over .. where s.trader == p and not left_out[s, b]), 1 DUK, half-up))
+
+def took[m in unit_moves, p in persons, b in buys]: num lgf_a
+  note "the units of p's part of batch b that m's units leg took at its from place"
+  rule from_market = 0 when not m.units.from in fund_accounts
+  rule from_parts = m.units.amount of (p, b) when m.units.from in fund_accounts
+
+def units_before[m in unit_moves, p in persons, b in buys]: num lgf_a
+  note "p's units of batch b just before m; no two movements take from one batch on one day here, so that is the start of m's day"
+  rule base = sum(bal(x, m.day start) of (p, b) for x in fund_accounts on m.day)
+
+def units_left[p in persons, b in buys, d in days]: num lgf_a
+  rule base = sum(bal(x, d) of (p, b) for x in fund_accounts on d)
+
+def untaxed_gain_to[p in persons, d in days]: num DUK at d
+  note "CGT-1 point 4: the gains and losses left out, of the year's sales up to day d"
+  rule cgt1_4 v cgt1_v1 = sum(gain[s, p, b] for s in sells over start_of(year_of(d)) .. d, b in buys over .. where s.trader == p and left_out[s, b])
+
+def worth[p in persons, d in days]: num DUK at d
+  note "H-1: own cash and units, a unit at the fund's price published for the day or the latest before it, less what one owes (the tax on gains as owed from the sale, point 2)"
+  rule h1 v h1_v1 = sum(value(x, d) in DUK of p for x in fund_accounts on d) + sum(bal(x, d) * owns[p, x] for x in accounts on d) - tax_to_date[p, d]
+
+ask s3_01: taxed_gain_to[nadia, 2026-12-31], untaxed_gain_to[nadia, 2026-12-31], tax_to_date[nadia, 2026-12-31] as known 2027-01-20
+
+ask s3_02: b.day, units_left[nadia, b, 2026-12-31], cost_left[nadia, b, 2026-12-31] for b in buys over .. where units_left[nadia, b, 2026-12-31] > 0 as known 2027-01-20
+
+ask s3_03: worth[p, d] for p in persons over .., d in [2026-06-30, 2026-09-30, 2026-12-31] as known 2027-01-20
+
+version sep1_v1
+  cite sep_law
+  governs 2000-01-01..
+  known 1999-06-01
+  note "SEP-1 v1: each spouse alone owns what the contract gives them; what a sale brings in is the seller's"
+
+version cgt1_v1
+  cite cgt_law
+  governs 2019-01-01..
+  known 2018-07-02
+  hold_years = 3 "CGT-1 point 4: held more than 3 years"
+  tax_rate = 19 % "CGT-1 point 5"
+
+version h1_v1
+  cite house_rules
+  governs 2008-05-10..
+  known 2026-01-01
+  note "H-1 v1, from 2008-05-10"
+
+version sep_contract
+  cite contract_d1
+  governs 2008-05-10..
+  known 2008-04-02
+  note "S3-D1: each alone owns what they have, earn, buy, inherit or are given, a gift from the other spouse included"
+
+version trades_2022
+  cite arkon_units
+  known 2022-11-15
+  trades_r[r1] = (on: 2022-11-15, kind: buys, leg units from market to e_units amount 70 lgf_a, leg cash from e_cash to market amount 3659.00 DUK, fee: 12.00 DUK, price: 52.10 DUK/lgf_a, trader: emil) known 2022-11-15 "S3-R1 row 1: E-2290 BUY 70 at 52.10, fee 12.00, amount -3659.00"
+  trades_r[r2] = (on: 2023-10-20, kind: buys, leg units from market to n_units amount 100 lgf_a, leg cash from n_cash to market amount 4135.00 DUK, fee: 15.00 DUK, price: 41.20 DUK/lgf_a, trader: nadia) known 2023-10-20 "S3-R1 row 2: N-4471 BUY 100 at 41.20, fee 15.00, amount -4135.00"
+  trades_r[r3] = (on: 2025-09-18, kind: buys, leg units from market to n_units amount 60 lgf_a, leg cash from n_cash to market amount 3540.00 DUK, fee: 15.00 DUK, price: 58.75 DUK/lgf_a, trader: nadia) known 2025-09-18 "S3-R1 row 3: N-4471 BUY 60 at 58.75, fee 15.00, amount -3540.00"
+  trades_r[r4] = (on: 2026-03-10, kind: unit_gifts, leg units from e_units to n_units amount 40 lgf_a, donee: nadia, giver: emil) known 2026-03-10 "S3-R1 rows 4-5: E-2290 TRANSFER OUT (GIFT TO N-4471) 40, N-4471 TRANSFER IN (GIFT FROM E-2290) 40, one movement"
+  trades_r[r6] = (on: 2026-06-01, kind: buys, leg units from market to n_units amount 50 lgf_a, leg cash from n_cash to market amount 3185.00 DUK, fee: 15.00 DUK, price: 63.40 DUK/lgf_a, trader: nadia) known 2026-06-01 "S3-R1 row 6: N-4471 BUY 50 at 63.40, fee 15.00, amount -3185.00"
+  trades_r[r7] = (on: 2026-09-14, kind: sells, leg units from n_units to market amount 90 lgf_a, leg cash from market to n_cash amount 5943.00 DUK, fee: 15.00 DUK, price: 66.20 DUK/lgf_a, trader: nadia) known 2026-09-14 "S3-R1 row 7: N-4471 SELL 90 at 66.20, fee 15.00, amount 5943.00"
+  trades_r[r8] = (on: 2026-11-30, kind: sells, leg units from n_units to market amount 80 lgf_a, leg cash from market to n_cash amount 4393.00 DUK, fee: 15.00 DUK, price: 55.10 DUK/lgf_a, trader: nadia) known 2026-11-30 "S3-R1 row 8: N-4471 SELL 80 at 55.10, fee 15.00, amount 4393.00"
+
+version cast
+  cite card_s3
+  governs 2008-05-10..
+  known 2026-01-01
+  persons + [emil] lives 1977-06-05..
+  persons + [nadia] lives 1979-01-17..
+  owns = 0 "S3-D1: a spouse owns nothing of the other's account"
+  owns[emil, e_cash] = 1 "S3-D1: each alone owns what they have; E-2290 is Emil's"
+  owns[nadia, n_cash] = 1 "S3-D1: each alone owns what they have; N-4471 is Nadia's"
+  opening[e_cash] = 4380.00 DUK at 2026-01-01 start "Cast: Emil holds 4 380,00 cash"
+  opening[e_units] = 70 lgf_a at 2026-01-01 start "Cast: Emil holds 70 units"
+  opening[e_units] of (emil, trades_r[r1]) = 70 lgf_a at 2026-01-01 start "S3-R1 row 1: the batch bought 2022-11-15"
+  opening[n_cash] = 3640.00 DUK at 2026-01-01 start "Cast: Nadia holds 3 640,00 cash; S3-R2 opening balance"
+  opening[n_units] = 160 lgf_a at 2026-01-01 start "Cast: Nadia holds 160 units"
+  opening[n_units] of (nadia, trades_r[r2]) = 100 lgf_a at 2026-01-01 start "S3-R1 row 2: the batch bought 2023-10-20"
+  opening[n_units] of (nadia, trades_r[r3]) = 60 lgf_a at 2026-01-01 start "S3-R1 row 3: the batch bought 2025-09-18"
+
+version prices
+  cite fund_prices
+  known 2026-03-10
+  lgf_px = 61.85 DUK/lgf_a known 2026-03-10 at 2026-03-10 "S3-R3"
+  lgf_px = 63.40 DUK/lgf_a known 2026-06-01 at 2026-06-01 "S3-R3"
+  lgf_px = 64.12 DUK/lgf_a known 2026-06-30 at 2026-06-30 "S3-R3"
+  lgf_px = 66.20 DUK/lgf_a known 2026-09-14 at 2026-09-14 "S3-R3"
+  lgf_px = 65.07 DUK/lgf_a known 2026-09-30 at 2026-09-30 "S3-R3"
+  lgf_px = 55.10 DUK/lgf_a known 2026-11-30 at 2026-11-30 "S3-R3"
+  lgf_px = 56.48 DUK/lgf_a known 2026-12-30 at 2026-12-30 "S3-R3; the fund was closed on 2026-12-31 and published no price"
+
+version n_cash_2026
+  cite arkon_cash
+  known 2027-01-05
+  anchor n_cash
+  stated[n_cash] = 10791.00 DUK at 2026-12-31 end "S3-R2: closing balance"
+
+version e_cash_2026
+  cite arkon_cash
+  governs 2026
+  known 2027-01-05
+  covers e_cash
+  note "Entries: Emil's cash account had no rows in 2026"

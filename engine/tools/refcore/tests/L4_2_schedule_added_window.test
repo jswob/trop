@@ -1,0 +1,78 @@
+# W-B-Q1: schedule over a calendar whose added list holds a one_of window. L §4.2: a day in added may be a window,
+# "every day known but one. Such a window is one the line meets, so a result that depends on its day is HOLE-IMPRECISE
+# unless the line states windows each (§4.4)"; L §4.4: "Built-ins on a window ... give the interval of their values",
+# "Only a comparison decides an interval", "One rule for every window a line meets ... a day in a calendar's added
+# list (§4.2)"; L §5.14: `on d` is "a date, a window (§4.4), a hole, or none". pay[2026-06] is scheduled on Monday
+# 2026-06-22, rolled following: where the added day is 06-22 it is 06-23, where it is 06-23 it is 06-22 (d2, windows
+# each), so its day is the window of the two (d1), not a hole with no bound (L §5.14 bounds only "a day that is a hole
+# and not a window"). L §4.4: "A movement dated by a window counts in a span when its whole window lies inside it, and
+# not at all when it lies wholly outside. When it crosses an end of the span, flows over that span is a hole
+# (HOLE-IMPRECISE), and so is bal(x, d) for a d inside the window": f6 and b1 count it, f5 doesn't, f6a and b2 are
+# holes. The interval spans every day the window can take (one pass per day), not only its first and last
+# (HANDOVER contradiction 46).
+=== m.tally
+model m
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+input len: calendar
+input pay_dom: int
+input amt: money PLN
+place konto: accounts PLN lives 2019-05-01..
+place employer: outside lives 1900-01-01..
+
+move pay[m in months]: transfers
+  on schedule(m, pay_dom, following, len)
+  at start_of(m)
+  leg cash from employer to konto amount amt
+
+ask d1: schedule(2026-06, pay_dom, following, len) law 2026-06-01
+ask d2: schedule(2026-06, pay_dom, following, len) law 2026-06-01 windows each
+ask f5: flows(pay, 2026-05)
+ask f6: flows(pay, 2026-06)
+ask f6a: flows(pay, 2026-06-01..2026-06-22)
+ask b1: bal(konto, 2026-06-30)
+ask b2: bal(konto, 2026-06-22)
+
+version v
+  cite s
+  governs 2026
+  known 2025-12-01
+  len = calendar(weekends [sat, sun], added [one_of([2026-06-22, 2026-06-23])])
+  pay_dom = 22 "own"
+  amt = 100.00 PLN "own"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "own"
+=== expect
+b1: 600.00 PLN
+  unfulfilled: pay[2026-01]
+  unfulfilled: pay[2026-02]
+  unfulfilled: pay[2026-03]
+  unfulfilled: pay[2026-04]
+  unfulfilled: pay[2026-05]
+  unfulfilled: pay[2026-06]
+  cut 2026-12-31
+b2: ?"date within window(2026-06-22, 2026-06-23) not precise enough for a balance" (pay[2026-06])
+  unfulfilled: pay[2026-01]
+  unfulfilled: pay[2026-02]
+  unfulfilled: pay[2026-03]
+  unfulfilled: pay[2026-04]
+  unfulfilled: pay[2026-05]
+  cut 2026-12-31
+d1: window(2026-06-22, 2026-06-23)
+  law date 2026-06-01, cut 2026-12-31
+d2 [added one_of([2026-06-22, 2026-06-23]) = 2026-06-22]: 2026-06-23
+  law date 2026-06-01, cut 2026-12-31
+d2 [added one_of([2026-06-22, 2026-06-23]) = 2026-06-23]: 2026-06-22
+  law date 2026-06-01, cut 2026-12-31
+f5: 100.00 PLN
+  unfulfilled: pay[2026-05]
+  cut 2026-12-31
+f6: 100.00 PLN
+  unfulfilled: pay[2026-06]
+  cut 2026-12-31
+f6a: ?"date within window(2026-06-22, 2026-06-23) not precise enough for flows of pay" (pay[2026-06])
+  cut 2026-12-31

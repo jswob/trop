@@ -1,0 +1,64 @@
+part tax
+  tally 1
+  note "D-04 and D-08: Halina's PIT on her pensions (PIT-2, PIT-3, PIT-4, PIT-5) and on the rent (PIT-13)."
+
+input sio_reducing: bool question "Did the SIO apply 1/12 of the reducing amount to each advance this year (a reducing statement on file, PIT-4 .2)?"
+
+input sio_adv_stated[y in year]: money DUK question "What advances does the SIO's yearly statement show for this year?"
+
+input sio_paid_stated[y in year]: money DUK question "What pensions does the SIO's yearly statement show paid this year?"
+
+def pen_income[y in year]: money DUK = sum(m in month where year_of(m) = y: sio_in[m])
+
+def pen_base[y in year]: money DUK = round(pen_income[y], 1, half-up)
+
+def pen_tax[y in year]: money DUK = round(max(0, marginal(pit3_rate, pen_base[y]) - pit3_reducing), 1, half-up)
+
+def adv_base[m in month]: money DUK = round(sio_in[m], 1, half-up)
+
+def ytd_base[m in month]: money DUK = sum(k in month where year_of(k) = year_of(m) and k <= m: adv_base[k])
+
+def pen_adv[m in month]: money DUK = round(max(0, marginal(pit3_rate, ytd_base[m]) - marginal(pit3_rate, ytd_base[m] - adv_base[m]) - (if sio_reducing then pit3_reducing / 12 else 0)), 1, half-up)
+
+def pen_adv_year[y in year]: money DUK = sum(m in month where year_of(m) = y: pen_adv[m])
+
+def pen_due[y in year]: money DUK = pen_tax[y] - pen_adv_year[y]
+
+def rent_rcv[y in year]: money DUK = flows(rent_in, y)
+
+def rent_share[y in year]: num DUK = rent_rcv[y] * flat_after[halina]
+
+def rent_tax[y in year]: money DUK = round(marginal(pit13_rate, rent_share[y]), 1, half-up)
+
+def rent_tax_ytd[m in month]: money DUK = round(marginal(pit13_rate, flows(rent_in, start_of(year_of(m))..add_days(end_of(m), -1)) * flat_after[halina]), 1, half-up)
+
+def rent_adv[m in month]: money DUK = if start_of(m) = start_of(year_of(m)) then rent_tax_ytd[m] else rent_tax_ytd[m] - rent_tax_ytd[m - 1]
+
+def rent_adv_year[y in year]: money DUK = sum(m in month where year_of(m) = y: rent_adv[m])
+
+def rent_due[y in year]: money DUK = rent_tax[y] - rent_adv_year[y]
+
+def bond_interest_stated: bool = tsb8_final = false
+
+def return_day[y in year]: date = day_of(month_of(add_months(start_of(y + 1), 3)), 30)
+
+def return_due[y in year]: date at return_day[y] = next_business(return_day[y], holidays)
+
+version sio_2024_statement
+  cite d_d16
+  known 2025-02-14
+  sio_reducing = true governs 2024 "D-D16: a reducing statement was on file for the whole year"
+  sio_adv_stated[2024] = 2136.00 "D-D16"
+  sio_paid_stated[2024] = 46356.46 "D-D16"
+
+version reducing_2025
+  cite modeller
+  known 2025-02-14
+  sio_reducing = true assumed "D-D16 shows the statement on file for 2024; nothing in the dossier withdraws it" governs 2025..
+
+version sio_2025_statement
+  cite d_d17
+  known 2026-02-13
+  sio_reducing = true governs 2025 "D-D17: a reducing statement was on file for the whole year"
+  sio_adv_stated[2025] = 4098.00 "D-D17"
+  sio_paid_stated[2025] = 61546.64 "D-D17"

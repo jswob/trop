@@ -1,11 +1,16 @@
 model mp12
-  tally 1
+  tally 2
   on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
   note "26 CFR § 1.662(a)-3(d), Example: a trust must pay A income each year; the trustee pays further amounts to A, B, C and D. Tier one is the income required to be distributed currently; tier two shares what is left of distributable net income in proportion to the other amounts paid."
   note "The taxable year is not stated. Amounts are for that one year, and the defs are read at the model's on date."
 
 source ecfr_1662a2 "26 CFR § 1.662(a)-2 Currently distributable income (eCFR)" at "https://www.ecfr.gov/current/title-26/section-1.662(a)-2"
+
 source ecfr_1662a3 "26 CFR § 1.662(a)-3 Other amounts distributed (eCFR, Title 26 up to date as of 2026-10-15)" at "https://www.ecfr.gov/current/title-26/section-1.662(a)-3"
+
+unit USD: currency minor 0.01
 
 axis us_round
   nearest "each share rounded half up to the dollar (the example prints whole dollars and states no rule)"
@@ -19,57 +24,60 @@ input other_paid[b in ben]: money USD question "What other amounts were properly
 
 input required[b in ben]: money USD question "How much income is this beneficiary required to receive currently?"
 
-def inclusion[b in ben]: num USD = tier1[b] + tier2_dollars[b]
+def inclusion[b in ben]: num USD = tier1[b] + tier2_dollars[b] at reader
 
-def other_total: money USD = sum(x in ben: other_paid[x])
+def other_total: money USD = sum(other_paid[x] for x in ben) at reader
 
-def required_total: money USD = sum(x in ben: required[x])
+def required_total: money USD = sum(required[x] for x in ben) at reader
 
-def tier1[b in ben]: num USD
+def tier1[b in ben]: num USD at reader
   note "§ 1.662(a)-2(a) and (b): income required to be distributed currently is included first, pro rata to DNI when it exceeds DNI"
   rule base v cfr_1662a2 = required[b]
-  rule over_dni excepts base v cfr_1662a2 when required_total > dni = dni * required[b] / required_total
+  rule over_dni beats base v cfr_1662a2 = dni * required[b] / required_total when required_total > dni
 
-def tier2[b in ben]: num USD
+def tier2[b in ben]: num USD at reader
   note "§ 1.662(a)-3(c): each beneficiary includes his proportionate share of the amount includible"
   rule base v cfr_1662a3 = other_paid[b]
-  rule over_dni excepts base v cfr_1662a3 when other_total > 0 and required_total + other_total > dni = tier2_includible * other_paid[b] / other_total
+  rule over_dni beats base v cfr_1662a3 = tier2_includible * other_paid[b] / other_total when other_total > 0 and required_total + other_total > dni
 
-def tier2_dollars[b in ben]: money USD
+def tier2_dollars[b in ben]: money USD at reader
   note "The example prints whole dollars; how it rounds is not stated."
-  rule nearest when us_round = nearest = round(tier2[b], 1, half-up)
-  rule rem_largest when us_round = largest_rem = prorata(tier2_includible, other_paid[j] for j in ben, b, 1, rest largest)
+  rule nearest = round(tier2[b], 1, half-up) when us_round == nearest
+  rule rem_largest = prorata(tier2_includible, other_paid[j] for j in ben, b, 1, rest largest ties by pos(j)) when us_round == largest_rem
 
-def tier2_includible: num USD
+def tier2_includible: num USD at reader
   note "§ 1.662(a)-3(c): other amounts are included only to the extent of the excess of distributable net income over the income required to be distributed currently"
-  rule base v cfr_1662a3 = min(other_total, max(0, dni - sum(x in ben: tier1[x])))
+  rule base v cfr_1662a3 = min(other_total, max(0, dni - sum(tier1[x] for x in ben)))
 
-ask q_inclusion: inclusion[b] for b in ben
+ask q_inclusion: inclusion[b] for b in ben law 2026-10-18
 
-ask q_other_total: other_total
+ask q_other_total: other_total law 2026-10-18
 
-ask q_tier1: tier1[b] for b in ben
+ask q_tier1: tier1[b] for b in ben law 2026-10-18
 
-ask q_tier2_check: check sum(b in ben: tier2_dollars[b]) = tier2_includible
+ask q_tier2_check: check sum(tier2_dollars[b] for b in ben) == tier2_includible law 2026-10-18
 
-ask q_tier2_dollars: tier2_dollars[b] for b in ben
+ask q_tier2_dollars: tier2_dollars[b] for b in ben law 2026-10-18
 
-ask q_tier2_exact: tier2[b] for b in ben
+ask q_tier2_exact: tier2[b] for b in ben law 2026-10-18
 
-ask q_tier2_includible: tier2_includible
+ask q_tier2_includible: tier2_includible law 2026-10-18
 
 version cfr_1662a2
   cite ecfr_1662a2
+  governs always
   known 1973-09-27
   note "§ 1.662(a)-2 (a) and (b); the tier-one rules cite this version. Known from the publication of its last amendment: source note T.D. 6500, 25 FR 11814, Nov. 26, 1960; 25 FR 14021, Dec. 31, 1960, as amended by T.D. 7287, 38 FR 26912, Sept. 27, 1973 (as printed in the LII copy, law.cornell.edu/cfr/text/26/1.662(a)-2, read 2026-10-19)"
 
 version cfr_1662a3
   cite ecfr_1662a3
+  governs always
   known 1973-09-27
   note "§ 1.662(a)-3 (a) and (c); the tier-two rules cite this version. Known from the publication of its last amendment: source note T.D. 6500, 25 FR 11814, Nov. 26, 1960; 25 FR 14021, Dec. 31, 1960, as amended by T.D. 7287, 38 FR 26913, Sept. 27, 1973"
 
 version cfr_1662a3_example
   cite ecfr_1662a3
+  governs always
   known 2026-10-18
   note "The facts of the § 1.662(a)-3(d) Example: a worked example's stipulations, known from the model's on, since it has no start (LANGUAGE §4.5)"
   dni = 20000 "§ 1.662(a)-3(d), Example: Distributable net income is $20,000."

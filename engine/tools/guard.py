@@ -9,10 +9,13 @@ shim beside it turns any other exit into 2, so a crash refuses the call (R-79).
 The role comes from TALLY_ROLE (R-79):
   build  the build session: writes only its allow-list (the engine's code, the Cargo
          files, its log, the survivors file, the exception lock)
-  rules  the clean-side lead: everything but engine/spec/ and engine/tests/
+  rules  the clean-side lead: everything but the spec, the oracle and engine/tests/
   tests  the test owner (T): engine/tests/ only
-  spec   the clean-side lead patching the spec: engine/spec/ only
-  unset  app work: anything but the spec, the tests and the rule files
+  spec   the clean-side lead patching the spec: engine/spec/ and the oracle only
+  unset  app work: anything but the spec, the oracle, the tests and the rule files
+
+The oracle is the spec's reference interpreter: engine/tools/refcore/, refcore_fast/
+and engine/tools/SHA256SUMS (refcore's checksums). It is frozen with the spec.
 
 The Bash check is a tripwire, not a wall: it refuses a command that names a protected
 path together with a form that writes. The checksums (check-frozen) and a clean CI
@@ -54,6 +57,15 @@ RULE_GLOBS = [
     ".claude/settings.json",
 ]
 CONFIG_NAMES = {"clippy.toml", ".clippy.toml", "rustfmt.toml", ".rustfmt.toml"}
+# The oracle: the spec's reference interpreter, frozen with it and written only in the
+# `spec` role (R-80); inside engine/tools/ but not a rule file
+ORACLE_GLOBS = [
+    "engine/tools/refcore",
+    "engine/tools/refcore/*",
+    "engine/tools/refcore_fast",
+    "engine/tools/refcore_fast/*",
+    "engine/tools/sha256sums",
+]
 # The build role's allow-list (C §5)
 BUILD_FILES = {
     "engine/cargo.toml",
@@ -102,7 +114,13 @@ def matches(r, globs):
     return any(fnmatch.fnmatchcase(r, g.casefold()) for g in globs)
 
 
+def is_oracle(r):
+    return matches(r, ORACLE_GLOBS)
+
+
 def is_rule(r):
+    if is_oracle(r):
+        return False
     if matches(r, RULE_GLOBS):
         return True
     if not r.startswith("engine/"):
@@ -131,6 +149,7 @@ def verdict(path, role):
     r = rel(path)
     spec = r is not None and (r == "engine/spec" or r.startswith("engine/spec/"))
     tests = r is not None and (r == "engine/tests" or r.startswith("engine/tests/"))
+    oracle = r is not None and is_oracle(r)
     rule = r is not None and is_rule(r)
     if role == "build":
         if r is not None and build_allowed(r):
@@ -139,6 +158,8 @@ def verdict(path, role):
             return "the spec is frozen and checksummed (R-80)"
         if tests:
             return "the tests are T's and checksummed (R-80, R-84)"
+        if oracle:
+            return "the reference interpreter is frozen with the spec and checksummed (R-80)"
         if rule:
             return "a rule file, protected and checksummed (R-80, R-81, R-91)"
         if r is None:
@@ -149,16 +170,20 @@ def verdict(path, role):
             return "the spec changes only in the spec role (R-80)"
         if tests:
             return "the tests change only in the tests role (R-80)"
+        if oracle:
+            return "the reference interpreter changes only in the spec role (R-80)"
         return None
     if role == "tests":
         return None if tests else "the tests role writes engine/tests/ only (R-79)"
     if role == "spec":
-        return None if spec else "the spec role writes engine/spec/ only (R-79)"
+        return None if spec or oracle else "the spec role writes engine/spec/ and the reference interpreter only (R-79)"
     # unset: app work
     if spec:
         return "the spec is frozen and checksummed (R-80)"
     if tests:
         return "the tests are T's and checksummed (R-80)"
+    if oracle:
+        return "the reference interpreter is frozen with the spec and checksummed (R-80)"
     if rule:
         return "a rule file, protected and checksummed (R-80, R-81)"
     return None
@@ -184,6 +209,9 @@ def watched(path, role):
 ANCHORS = [
     "engine/spec/DONE.md",
     "engine/tests/x",
+    "engine/tools/refcore/x",
+    "engine/tools/refcore_fast/x",
+    "engine/tools/SHA256SUMS",
     "engine/tools/guard",
     "engine/clippy.toml",
     "engine/fuzz/Cargo.toml",

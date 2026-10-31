@@ -1,0 +1,24 @@
+model m
+  tally 2
+  on 2027-01-01
+  start 2027-01-01
+  end 2027-12-31
+source src "s"
+unit PLN: currency minor 0.01
+kind lots: event certain
+index ids = [x1, x2]
+input day[i in ids]: date
+move lot[i in ids]: lots
+  on day[i]
+fill f
+  supply 1 for l in lots over ..
+  demand 1 for c in lots over ..
+  arc true
+  order l.day, c.day
+version v
+  cite src
+  governs always
+  known 2027-01-01
+  day[x1] = 2027-02-15
+  day[x2] = 2027-03-12
+ask t: f.taken[l, c] for l in lots over .., c in lots over ..

@@ -1,0 +1,37 @@
+# L §4.6 step 2: "a row that says replace wins on its span over the rows known before it; a later row that overlaps
+# an earlier-known row at the same keys without replace is refused at load (LOAD-OVERLAP)".  v2 replaces from
+# 2026-07: 2 there, 1 before.  As known before v2, 1 everywhere: v1's open row read after that cut is held (L §8.2).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+input n: int
+
+version v1
+  cite s
+  governs 2026..
+  known 2025-12-01
+  n = 1
+
+version v2
+  cite s
+  governs 2026-07..
+  known 2026-06-01
+  replace n = 2
+
+ask q1: n law 2026-03-01
+ask q2: n law 2026-08-01
+ask q3: n law 2026-08-01 as known 2026-05-01
+=== expect
+q1: 1
+  law date 2026-03-01, cut 2026-12-31
+q2: 2
+  law date 2026-08-01, cut 2026-12-31
+q3: 1
+  held: n = 1 (v1), read for 2026-08-01
+  law date 2026-08-01, cut 2026-05-01

@@ -1,0 +1,24 @@
+Bank Olcha S.A.|account statement
+Account|LN73 4400 2011 0000 8817 2264 0001
+Holder|HALINA SOWA
+Period|20240901|20240930
+Opening balance|134 474,55
+Date|Type|Counterparty|Title|Amount|Balance after
+20240903|CASH|ATM Olcha Brzezie|cash withdrawal|-500,00|133 974,55
+20240905|CREDIT|Social Insurance Office|survivor pension 09/2024|4 022,53|137 997,08
+20240905|STANDING ORDER|WM Ogrodowa 2|fee Ogrodowa 2/11 09/2024|-420,00|137 577,08
+20240905|CARD|Sklep Pod Lipą|card ...2264|-59,74|137 517,34
+20240908|CARD|Warzywniak u Janka|card ...2264|-156,33|137 361,01
+20240909|CARD|Sklep Pod Lipą|card ...2264|-222,31|137 138,70
+20240910|CARD|Market Brzezie|card ...2264|-198,66|136 940,04
+20240914|CARD|Warzywniak u Janka|card ...2264|-55,26|136 884,78
+20240916|STANDING ORDER|Volta Energia|Leśna 4 energy 09/2024|-385,00|136 499,78
+20240917|CASH|ATM Olcha Brzezie|cash withdrawal|-500,00|135 999,78
+20240917|CARD|Sklep Pod Lipą|card ...2264|-195,16|135 804,62
+20240920|TRANSFER|Kamieniarz Bazalt|headstone Z. Sowa|-8 600,00|127 204,62
+20240920|STANDING ORDER|Telekom Lenia|phone 09/2024|-59,00|127 145,62
+20240925|CARD|Apteka Rumianek|card ...2264|-168,81|126 976,81
+20240925|TRANSFER|Opieka Dom sp.|home help 09/2024|-1 100,00|125 876,81
+20240927|CARD|Piekarnia Złoty Kłos|card ...2264|-182,80|125 694,01
+20240928|CARD|Sklep Pod Lipą|card ...2264|-183,37|125 510,64
+Closing balance|125 510,64

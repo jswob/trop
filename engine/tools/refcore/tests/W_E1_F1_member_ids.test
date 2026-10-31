@@ -1,0 +1,53 @@
+# Fault W-E1-F1: the joint merge renamed a member's id even where the same word is a word of the language: an index
+# named `month` (`index month = month ...`), a def named `value` (a built-in name), ids named like record fields
+# (`amount`, `day`): LOAD-PARSE or LOAD-FIELD when joined, fine alone. L §2.2: built-in names are built-ins "only
+# directly before `(`", contextual words "are reserved only in their own position, and are free everywhere else"; L
+# §6.1 a member is read as when it loads alone. The member alone gives (1, 1, 3.00 DUK, 7.00 DUK) (q0, an ask of the
+# member, not asked here); the joint model reads the same values under the prefix a (q): w is 1, value is 1, pay moves
+# amount = 3.00 DUK out of x, which opens at 10.00 DUK.
+=== options pin=bytes
+=== f1j.tally
+model j
+  tally 2
+  on 2026-01-31
+  start 2026-01-01
+  end 2026-01-31
+  use a = "f1m.tally" sha256 "da930679075d6aedcdf58b52a89ab9ea46eedd8a69e239fc19ceecdc028db907"
+
+ask q: a.w[2026-02], a.value, a.paid[2026-01], bal(a.x, 2026-01-31)
+=== f1m.tally
+model m
+  tally 2
+  on 2026-01-31
+  start 2026-01-01
+  end 2026-01-31
+
+unit DUK: currency minor 0.01
+source s "s"
+
+index month = month 2026-01..2026-03
+
+def w[k in month]: int = 1
+def value: int = 1
+input amount: money DUK
+input day: date
+place x: accounts DUK lives 2026-01-01..
+place world: outside lives 2026-01-01..
+move pay: transfers
+  on day
+  leg cash from x to world amount amount
+def paid[k in month]: money DUK = sum(t.cash.amount for t in transfers over k)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amount = 3.00 DUK "a"
+  day = 2026-01-10 "d"
+  opening[x] = 10.00 DUK at 2026-01-01 start "o"
+
+ask q0: w[2026-02], value, paid[2026-01], bal(x, 2026-01-31)
+=== expect
+q: (1, 1, 3.00 DUK, 7.00 DUK)
+  unfulfilled: a.pay
+  cut 2026-01-31

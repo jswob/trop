@@ -1,0 +1,53 @@
+# L §5.7 / §8.4 RUN-LIFESPAN: "<leg> moves into or out of <thing> outside its lifespan"; "<place> ends on <d>
+# holding <positions>".  old lives to 2026-03-31; pay moves 1 000.00 PLN into it on day 5 each month: konto is
+# 5 000 - 3 000 = 2 000.00 PLN at the end of March and refused from April's pay; old holds 3 000.00 PLN on 2026-03-30
+# and its balance on its last day, when it must be empty, is refused (E §9 invariant 6).
+# Own reality: konto opens at 5 000.00 PLN, savings at 0; amt = 1 000.00 PLN, dom = 5.
+=== m.tally
+model hh
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source plan "plan"
+source bank "bank"
+unit PLN: currency minor 0.01
+input bank_rows: observed
+input amt: money PLN
+input dom: int
+place konto: accounts PLN lives 2019-05-01..
+place savings: accounts PLN lives 2019-05-01..
+place world: outside lives 1900-01-01..
+place unexplained: outside lives 1900-01-01..
+
+place old: accounts PLN lives 2019-05-01..2026-03-31
+
+move pay[m in months]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  leg cash from konto to old amount amt
+
+ask q: bal(konto, 2026-03-31), bal(konto, 2026-04-30)
+ask q2: bal(old, 2026-03-30), bal(old, 2026-03-31)
+
+version plan_2026
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  amt = 1 000.00 PLN "own"
+  dom = 5 "own"
+  opening[konto] = 5 000.00 PLN at 2026-01-01 start "wyciąg"
+  opening[savings] = 0 PLN at 2026-01-01 start "wyciąg"
+  opening[old] = 0 PLN at 2026-01-01 start "wyciąg"
+=== expect
+q: (2 000.00 PLN, refused: RUN-LIFESPAN pay[2026-04].cash moves into or out of old outside its lifespan)
+  unfulfilled: pay[2026-01]
+  unfulfilled: pay[2026-02]
+  unfulfilled: pay[2026-03]
+  cut 2026-10-20
+q2: (3 000.00 PLN, refused: RUN-LIFESPAN old ends on 2026-03-31 holding 3 000.00 PLN)
+  unfulfilled: pay[2026-01]
+  unfulfilled: pay[2026-02]
+  unfulfilled: pay[2026-03]
+  cut 2026-10-20

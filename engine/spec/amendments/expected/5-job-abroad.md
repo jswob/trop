@@ -79,6 +79,8 @@ No value changes. The registers' cut line moves to 2029-05-01 and the `held` ent
 
 ## The variant as first written
 
+*At the tally 2.0 freeze (G2, keys), cells 9–15, 20 and 24 below carry what tally 2 prints. Cells 16–19, 21–23, 25–26 and 41 keep their tally 1.0.1 key: they are long-horizon walk cells, unjudged until the engine, and the m2 map's tally 2 reading clears 16–19, 25–26 and 41 too. See `KEYS.md` beside the package.*
+
 The 1.0 diff gives `konto_eur` no `opening` row. By LANGUAGE §5.9, `bal(konto_eur)` is a hole from S until its first anchor, and it has none. `fx_in` and `fx_out` read it from 2026-01-28, so konto is a hole from 2026-01-28. The 2026-09-30 anchor stops that, but the IKE cap's `flows` over the February–August hole invests make konto a hole again from 2026-10-15.
 
 | # | Ask | Key | Before | After | Status |
@@ -91,22 +93,22 @@ The 1.0 diff gives `konto_eur` no `opening` row. By LANGUAGE §5.9, `bal(konto_e
 | 6 | social_and_health | 2027-01, health_month | 518.28 | 518.28 | exact |
 | 7 | social_and_health | 2028-09, zus_social | 2083.99 | 2083.99 | exact |
 | 8 | social_and_health | 2028-09, health_month | 898.35 | 898.35 | exact |
-| 9 | replay_september | konto 2026-09 | the HH4-b §5 ledger: balance line +32097.23 (stated 41386.27, booked 9289.04), then spend +4599.90, client_pay −3690.00, unexplained −3574.02, invest +535.30, loan_instalment +300.00, seven groups at 0.00 | **three hole groups first, by name: balance (booked ?, records 41386.27), fx_in (fx_in[2026-09], 2026-09-28, expected but missing), invest (ike matched: model ?, records −6000.00; mak expected but missing ?), each with `Po jakim kursie wymieniamy euro na złote?` and `opening at konto_eur: no value at 2026-01-01`; then the base groups from spend on, unchanged** | hole |
-| 10 | explain_room | room[2026-11], (2026-11-15, phase 6, invest[ike, 2026-11]) | 4386.89 | **hole: `Po jakim kursie wymieniamy euro na złote?`, `opening at konto_eur: no value at 2026-01-01`** | hole |
-| 11 | explain_room | room[2026-11], (2026-11-15, phase 6, invest[mak, 2026-11]) | 4386.89 | **hole: `Po jakim kursie wymieniamy euro na złote?`, `opening at konto_eur: no value at 2026-01-01`** | hole |
-| 12 | konto_balance | 2026-10-31, bal | 6064.17 | **hole: `Po jakim kursie wymieniamy euro na złote?`, `opening at konto_eur: no value at 2026-01-01`** | hole |
-| 13 | konto_balance | 2026-10-31, bal − vat_owed | 6064.17 | **hole: `Po jakim kursie wymieniamy euro na złote?`, `opening at konto_eur: no value at 2026-01-01`** | hole |
-| 14 | konto_balance | 2026-12-31, bal | 6944.90 | **hole: `Po jakim kursie wymieniamy euro na złote?`, `opening at konto_eur: no value at 2026-01-01`** | hole |
-| 15 | konto_balance | 2026-12-31, bal − vat_owed | 6944.90 | **hole: `Po jakim kursie wymieniamy euro na złote?`, `opening at konto_eur: no value at 2026-01-01`** | hole |
+| 9 | replay_september | konto 2026-09 | the HH4-b §5 ledger: balance line +32097.23 (stated 41386.27, booked 9289.04), then spend +4599.90, client_pay −3690.00, unexplained −3574.02, invest +535.30, loan_instalment +300.00, seven groups at 0.00 | **the base's ledger with no hole group: balance gap 32 097.23 (booked 9 289.04, stated 41 386.27), spend 4 599.90, client_pay −3 690.00, unexplained −3 574.02, invest 535.30, loan_instalment 300.00, seven moves at 0.00 (tally 2)** | exact |
+| 10 | explain_room | room[2026-11], (2026-11-15, phase 6, invest[ike, 2026-11]) | 4386.89 | **4386.89 (tally 2)** | exact |
+| 11 | explain_room | room[2026-11], (2026-11-15, phase 6, invest[mak, 2026-11]) | 4386.89 | **4386.89 (tally 2)** | exact |
+| 12 | konto_balance | 2026-10-31, bal | 6064.17 | **6064.17 (tally 2)** | exact |
+| 13 | konto_balance | 2026-10-31, bal − vat_owed | 6064.17 | **6064.17 (tally 2)** | exact |
+| 14 | konto_balance | 2026-12-31, bal | 6944.90 | **6944.90 (tally 2)** | exact |
+| 15 | konto_balance | 2026-12-31, bal − vat_owed | 6944.90 | **6944.90 (tally 2)** | exact |
 | 16 | konto_balance | 2027-06-30, bal | 6760.19 | **hole: `Po jakim kursie wymieniamy euro na złote?`, `opening at konto_eur: no value at 2026-01-01`** | hole |
 | 17 | konto_balance | 2027-06-30, bal − vat_owed | 6760.19 | **hole: `Po jakim kursie wymieniamy euro na złote?`, `opening at konto_eur: no value at 2026-01-01`** | hole |
 | 18 | konto_balance | 2027-12-31, bal | 6656.75 | **hole: `Po jakim kursie wymieniamy euro na złote?`, `opening at konto_eur: no value at 2026-01-01`** | hole |
 | 19 | konto_balance | 2027-12-31, bal − vat_owed | 6656.75 | **hole: `Po jakim kursie wymieniamy euro na złote?`, `opening at konto_eur: no value at 2026-01-01`** | hole |
-| 20 | net_worth | 2026-12-31 | 170202.16 | **hole: `Po jakim kursie wymieniamy euro na złote?`, `opening at konto_eur: no value at 2026-01-01`** | hole |
+| 20 | net_worth | 2026-12-31 | 170202.16 | **170202.16 (tally 2)** | exact |
 | 21 | net_worth | 2031-12-31 | not computed (run-only) | **hole: `Po jakim kursie wymieniamy euro na złote?`, `Wynagrodzenie netto z niemieckiej umowy o pracę nie jest opisane (Lohnsteuer, składki).`, `Zmiana rezydencji podatkowej w roku nie jest opisana (art. 3, umowa o unikaniu podwójnego opodatkowania).`, `opening at konto_eur: no value at 2026-01-01`** | hole |
 | 22 | net_worth | 2041-12-31 | not computed (run-only) | **hole: `Po jakim kursie wymieniamy euro na złote?`, `Wynagrodzenie netto z niemieckiej umowy o pracę nie jest opisane (Lohnsteuer, składki).`, `Zmiana rezydencji podatkowej w roku nie jest opisana (art. 3, umowa o unikaniu podwójnego opodatkowania).`, `opening at konto_eur: no value at 2026-01-01`** | hole |
 | 23 | net_worth | 2059-12-31 | not computed (run-only) | **hole: `Po jakim kursie wymieniamy euro na złote?`, `Wynagrodzenie netto z niemieckiej umowy o pracę nie jest opisane (Lohnsteuer, składki).`, `Zmiana rezydencji podatkowej w roku nie jest opisana (art. 3, umowa o unikaniu podwójnego opodatkowania).`, `opening at konto_eur: no value at 2026-01-01`** | hole |
-| 24 | ike_left | 2026 | −6000.00 | **hole: `Po jakim kursie wymieniamy euro na złote?`, `opening at konto_eur: no value at 2026-01-01`** | hole |
+| 24 | ike_left | 2026 | −6000.00 | **−6000.00 (tally 2)** | exact |
 | 25 | ike_left | 2027 | 0.00 | **hole: `Po jakim kursie wymieniamy euro na złote?`, `opening at konto_eur: no value at 2026-01-01`** | hole |
 | 26 | ike_left | 2028 | 0.00 | **hole: `Po jakim kursie wymieniamy euro na złote?`, `opening at konto_eur: no value at 2026-01-01`** | hole |
 | 27 | pit28 | 2026 | 2.00 | 2.00 | exact |

@@ -1,0 +1,6 @@
+scenario redefine over surf04
+  tally 2
+  from 2025-01-01
+  note "contrib stated a second time: one namespace holds every top-level id of a reality (L 2.5), so this file is refused at load (LOAD-DUP) before anything runs; a load refusal in a scenario file refuses only that scenario (L 8.3)."
+
+def contrib[m in months]: money DUK = round(contrib_rate * gross[m], minor(DUK), half-up) at start_of(m)

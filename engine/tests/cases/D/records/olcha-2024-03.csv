@@ -1,0 +1,28 @@
+Bank Olcha S.A.|account statement
+Account|LN73 4400 2011 0000 8817 2264 0001
+Holder|ZBIGNIEW SOWA, HALINA SOWA
+Period|20240301|20240331
+Opening balance|34 679,11
+Date|Type|Counterparty|Title|Amount|Balance after
+20240304|CASH|ATM Olcha Brzezie|cash withdrawal|-500,00|34 179,11
+20240305|CREDIT|Social Insurance Office|pension 03/2024 Z. SOWA|4 674,74|38 853,85
+20240305|CREDIT|Social Insurance Office|pension 03/2024 H. SOWA|2 472,98|41 326,83
+20240305|DIRECT DEBIT|Bank Buk|loan 3310-20 instalment 42|-972,28|40 354,55
+20240305|STANDING ORDER|WM Ogrodowa 2|fee Ogrodowa 2/11 03/2024|-420,00|39 934,55
+20240307|CARD|Market Brzezie|card ...2264|-39,17|39 895,38
+20240308|CREDIT|Igor Mazur|rent 03/2024 Ogrodowa 2/11|1 780,00|41 675,38
+20240311|TRANSFER|Treasury ISB|ISB2403 5 bonds reg. 55-1904-2271|-500,00|41 175,38
+20240313|CARD|Market Brzezie|card ...2264|-165,79|41 009,59
+20240314|CARD|Stacja Olcha-Paliwa|card ...2264|-130,53|40 879,06
+20240315|STANDING ORDER|Volta Energia|Leśna 4 energy 03/2024|-385,00|40 494,06
+20240317|CARD|Warzywniak u Janka|card ...2264|-70,56|40 423,50
+20240318|CASH|ATM Olcha Brzezie|cash withdrawal|-500,00|39 923,50
+20240320|STANDING ORDER|Telekom Lenia|phone 03/2024|-59,00|39 864,50
+20240321|CARD|Warzywniak u Janka|card ...2264|-147,81|39 716,69
+20240323|CARD|Apteka Rumianek|card ...2264|-181,27|39 535,42
+20240325|CARD|Market Brzezie|card ...2264|-90,07|39 445,35
+20240325|TRANSFER|Opieka Dom sp.|home help 03/2024|-600,00|38 845,35
+20240326|CARD|Warzywniak u Janka|card ...2264|-129,63|38 715,72
+20240328|CARD|Drogeria Konwalia|card ...2264|-179,83|38 535,89
+20240328|CARD|Drogeria Konwalia|card ...2264|-243,13|38 292,76
+Closing balance|38 292,76

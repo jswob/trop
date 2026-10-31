@@ -1,0 +1,74 @@
+model tropek
+  tally 2
+  on 2027-01-20
+  start 2026-01-01
+  end 2059-12-31
+  note "Syntetyczne gospodarstwo z prototypu (spec §12, kwoty przykładowe). To nie są dane gospodarstwa."
+  note "Główna praca: działalność B2B na ryczałcie. Żona: umowa o pracę."
+
+source household "Oświadczenia gospodarstwa: umowy, rejestracje, decyzje i wybory"
+
+source index_keys_1_0_1 "Keys tally 1.0.1 listed in index declarations"
+
+source lifted_1_0_1 "Figures tally 1.0.1 allowed inline in rules"
+
+source modeller "Założenia modelu, każde z powodem"
+
+unit PLN: currency minor 0.01
+
+unit etf_unit "jednostka funduszu ETF"
+
+kind client
+
+kind job
+
+kind loan
+
+kind person
+
+index country = [pl, de]
+
+index day = day 2026-01-01..2059-12-31
+
+index marek_loan: open
+
+index marek_part: open
+
+index month = month 2026-01..2059-12
+
+index tax_year = year 2026..2059
+
+index wrapper = [ike, oki, mak]
+
+version lifted_figures
+  cite lifted_1_0_1
+  governs always
+  known 2004-04-20
+  b800_pay_20 = 20 "inline in tally 1.0.1: b800_pay line 31, argument 2 of day_of"
+  buy_dom = 16 "inline in tally 1.0.1: buy_cash line 78 and buy_units line 85, argument 2 of day_of; one fact, the day units are bought"
+  costs_pay_5 = 5 "inline in tally 1.0.1: costs_pay line 92, argument 2 of day_of"
+  health_settle_day_16 = 16 "inline in tally 1.0.1: health_settle_day line 46, argument 2 of add_months"
+  health_settle_day_19 = 19 "inline in tally 1.0.1: health_settle_day line 46, argument 2 of add_days"
+  ike_limit_3 = 3 "inline in tally 1.0.1: ike_limit line 26, factor"
+  invest_dom = 15 "inline in tally 1.0.1: invest_amt line 57, room line 63 (twice), invest line 100, argument 2 of day_of; one fact, the day of the rule of the 15th"
+  nbp_oct_2 = 2 "inline in tally 1.0.1: nbp_oct line 28, argument 2 of add_months"
+  oki_rate_0_0001 = 0.0001 "inline in tally 1.0.1: oki_rate line 35, round step"
+  oki_tax_pay_17 = 17 "inline in tally 1.0.1: oki_tax_pay line 44, argument 2 of add_months"
+  relief_months_18 = 18 "inline in tally 1.0.1: relief_months line 60, operand"
+  return_day_16 = 16 "inline in tally 1.0.1: return_day line 49, argument 2 of add_months"
+  ryczalt_pay_20 = 20 "inline in tally 1.0.1: ryczalt_pay line 148, argument 2 of day_of"
+  spend_price_year = 2026 "inline in tally 1.0.1: spend_day line 65 and spend_month line 70, a year key; one fact, the price year of the spending figures"
+  vat_day_25 = 25 "inline in tally 1.0.1: vat_day line 76, argument 2 of day_of"
+  wage_10 = 10 "inline in tally 1.0.1: wage line 85, argument 2 of day_of"
+  zus_cap_30 = 30 "inline in tally 1.0.1: zus_cap line 63, factor"
+  zus_pay_dom = 20 "inline in tally 1.0.1: health_pay line 108 and zus_social_pay line 164, argument 2 of day_of; one fact, the day ZUS contributions are due"
+
+version things_1_0_1
+  cite index_keys_1_0_1
+  known 2004-04-20
+  client + [client_a] lives 2026-01-01..
+  client + [client_b] lives 2026-01-01..
+  job + [wife_acme] lives 2026-01-01..
+  person + [me] lives 1991-02-14..
+  person + [wife] lives 1992-07-03..
+  seller + [electro] lives 2026-01-01..

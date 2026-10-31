@@ -1,0 +1,45 @@
+# L §6.1 What same does: a place two of them book takes it at the point of the last of them in the day's order, "and
+# where they give it different amounts or days it is a hole movement there (HOLE-SAME) that may fall on either day";
+# L §8.1 HOLE-SAME "<p> and <q> are one, but <x> differs on <d>: <a> (<row>) and <b> (<row>)". As
+# L6_1_same_decision_waits, but the bank's row says 250.00 PLN where sweep, at its point, moves 300.00 PLN: both places
+# take the hole from 2026-03-31.
+=== m.tally
+model m
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source s "umowa"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2019-01-01..
+place savings: accounts PLN lives 2019-01-01..
+input bank: observed
+input sweep_day: date
+
+move sweep: transfers
+  on sweep_day
+  reads konto
+  leg cash from konto to savings amount bal(konto)
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  sweep_day = 2026-03-31 "plan"
+  opening[konto] = 300.00 PLN at 2026-01-01 start "wyciąg"
+  opening[savings] = 0.00 PLN at 2026-01-01 start "wyciąg"
+
+version stmt
+  cite s
+  known 2026-04-02
+  bank[r1] = (on: 2026-03-31, kind: transfers, leg cash from konto to savings amount 250.00 PLN) "linia 1"
+  same bank[r1] = sweep
+
+ask k: bal(konto, 2026-12-31)
+ask sv: bal(savings, 2026-12-31)
+=== expect
+k: ?"bank[r1] and sweep are one, but the leg at konto differs on 2026-03-31: 250.00 PLN (bank[r1]) and 300.00 PLN (sweep)" (bank[r1], sweep)
+  cut 2026-10-20
+sv: ?"bank[r1] and sweep are one, but the leg at savings differs on 2026-03-31: 250.00 PLN (bank[r1]) and 300.00 PLN (sweep)" (bank[r1], sweep)
+  cut 2026-10-20

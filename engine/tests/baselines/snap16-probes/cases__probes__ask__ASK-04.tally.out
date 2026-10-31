@@ -1,0 +1,6 @@
+q_asked: (1 700 DUK, 1 600 DUK)
+  assumed: the card states 6 % and 8 % for a year with no basis; over one year simple and effective give the same interest (loan_basis)
+  law date 2026-10-25, cut 2026-10-25
+q_breakeven: 0.085 /year
+  assumed: the card states 6 % and 8 % for a year with no basis; over one year simple and effective give the same interest (loan_basis)
+  law date 2026-10-25, cut 2026-10-25

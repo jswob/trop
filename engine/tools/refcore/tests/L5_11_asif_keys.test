@@ -1,0 +1,36 @@
+# L §5.11: "A pin's keys are any key expressions: an ask's for variables, a def's keys, an aggregate's bound
+# variable"; "A pin on a record field pins that field."  rel[k] is pinned at k = b only: the sum over ks reads
+# rel[a] = 1 and the pinned rel[b] = 5: 6.  r.base pinned to 7 leaves r.share as it is (0.5).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+index ks = [a, b]
+input rel[k in ks]: int
+input five: int
+input seven: int
+input r: (share num, base int)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  rel[*] = 1
+  five = 5
+  seven = 7
+  r = (share: 50 %, base: 3)
+
+ask q1: sum(rel[k] for k in ks) as if {rel[b] = five}
+ask q2: r.share as if {r.base = seven}, r.base as if {r.base = seven}
+=== expect
+q1: 6
+  pinned: rel[b] = 5
+  cut 2026-12-31
+q2: (0.5, 7)
+  pinned: r.base = 7
+  cut 2026-12-31

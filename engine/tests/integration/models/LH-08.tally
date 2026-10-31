@@ -1,0 +1,143 @@
+model lh08
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+  note "Canadian RRIF minimum amount: (A x B) + C under ITA s. 146.3(1), with the prescribed factor B from ITR s. 7308; nil in the year the fund was entered into."
+  note "Funds: alex (the CRA example) and td_ex (TD's example). The C and D sub-cases ask the prescribed factor alone at ages 55, 70 and 71, as the publishers print it."
+  note "No source states a rounding rule for the minimum amount, so amounts are exact num CAD and are never rounded."
+
+source cra_ex "Canada Revenue Agency, Example - Calculating the minimum amount" at "https://www.canada.ca/en/revenue-agency/services/tax/businesses/topics/completing-slips-summaries/t4rsp-t4rif-information-returns/payments/example-calculating-minimum-amount.html"
+
+source ita1463 "Income Tax Act (R.S.C. 1985, c. 1 (5th Supp.)), s. 146.3(1) 'minimum amount'" at "https://laws-lois.justice.gc.ca/eng/acts/I-3.3/section-146.3.html"
+
+source itr7308 "Income Tax Regulations (C.R.C., c. 945), s. 7308" at "https://laws-lois.justice.gc.ca/eng/regulations/C.R.C.,_c._945/section-7308.html"
+
+source td "TD Bank Group, RRIF minimum payment schedule" at "https://www.td.com/ca/en/personal-banking/personal-investing/products/registered-plans/rif/rrif-minimum-payment-schedule"
+
+unit CAD: currency minor 0.01
+
+axis lh08_shown
+  down "a printed factor truncated to the printed decimals; the publishers state no rounding mode"
+  half-up "a printed factor rounded to the nearest at the printed decimals; the publishers state no rounding mode"
+
+index fund = [alex, td_ex]
+
+index rrif_kind = [qualifying, other]
+
+index years_old = int 0..120
+
+index yr = year 2020..2030
+
+input age_start[f in fund, y in yr]: int question "What age in whole years had the annuitant attained at the beginning of the year?"
+
+input annuity[f in fund, y in yr]: money CAD
+  note "C: periodic payments in the year from locked-in annuity contracts held at the beginning of the year"
+
+input elected_spouse[f in fund]: bool
+
+input first_year[f in fund, y in yr]: bool
+  note "whether y is the year the fund was entered into"
+
+input fmv[f in fund, y in yr]: money CAD
+  note "A: fair market value at the beginning of the year of the property other than locked-in annuity contracts"
+
+input itr_base: int
+
+input itr_tab[a in years_old, k in rrif_kind]: num
+
+input rrif_class[f in fund]: key rrif_kind
+
+input spouse_age_start[f in fund, y in yr]: int
+
+input table_from[k in rrif_kind]: int
+
+def age_used[f in fund, y in yr]: int at start_of(y)
+  rule base v v_ita = age_start[f, y]
+  rule spouse beats base v v_ita = spouse_age_start[f, y] when elected_spouse[f]
+
+def factor[f in fund, y in yr]: num = pfactor[age_used[f, y], rrif_class[f]] at start_of(y)
+
+def left[f in fund, y in yr]: num CAD = fmv[f, y] - minimum[f, y] at start_of(y)
+
+def line3[f in fund, y in yr]: num CAD = fmv[f, y] * factor[f, y] at start_of(y)
+
+def minimum[f in fund, y in yr]: num CAD at start_of(y)
+  rule base v v_ita = line3[f, y] + annuity[f, y]
+  rule nil beats base v v_ita = 0 when first_year[f, y]
+
+def pfactor[a in years_old, k in rrif_kind]: num at reader
+  note "the prescribed factor at age a in whole years at the beginning of the year: the formula below the table's first age, else the table"
+  rule base v v_itr = 1 / (itr_base - a)
+  rule table beats base v v_itr = itr_tab[a, k] when a >= table_from[k]
+
+ask a_added: annuity[alex, 2025] law 2026-10-18
+
+ask a_factor: factor[alex, 2025] law 2026-10-18
+
+ask a_line3: line3[alex, 2025] law 2026-10-18
+
+ask a_minimum: minimum[alex, 2025] law 2026-10-18
+
+ask b_factor: factor[td_ex, 2025] law 2026-10-18
+
+ask b_left: left[td_ex, 2025] law 2026-10-18
+
+ask b_minimum: minimum[td_ex, 2025] law 2026-10-18
+
+ask c55_taxtips: round(pfactor[55, other], 0.000001, lh08_shown) law 2026-10-18
+
+ask c55_td: round(pfactor[55, other] / 1 %, 0.01, lh08_shown) law 2026-10-18
+
+ask c70_taxtips: round(pfactor[70, other], 0.000001, lh08_shown) law 2026-10-18
+
+ask c70_td: round(pfactor[70, other] / 1 %, 0.01, lh08_shown) law 2026-10-18
+
+ask d71_other: pfactor[71, other] law 2026-10-18
+
+ask d71_qual: round(pfactor[71, qualifying], 0.0001, lh08_shown) law 2026-10-18
+
+version v_itr
+  cite itr7308
+  governs always
+  known 2015-06-23
+  note "Law, known from its promulgation (LANGUAGE 4.5): S.C. 2015, c. 36 (Economic Action Plan 2015 Act, No. 1), assented to 2015-06-23, s. 23, the latest amendment in s. 7308's history (SOR/94-127, s. 1; SOR/2000-63, s. 2; SOR/2005-264, s. 14; 2015, c. 36, s. 23). Text read in the version current to 2026-09-30. 7308(3) for a fund that was a qualifying retirement income fund at the beginning of the year; 7308(4) for any other fund."
+  itr_base = 90 "7308(3) Under 72 1/(90 - X); 7308(4) Under 71 1/(90 - Y)"
+  itr_tab[71, other] = 0.0528 "7308(4) table, 71"
+  itr_tab[72, qualifying] = 0.054 "7308(3) table, 72"
+  itr_tab[73, qualifying] = 0.0553 "7308(3) table, 73"
+  itr_tab[73, other] = 0.0553 "7308(4) table, 73"
+  itr_tab[74, qualifying] = 0.0567 "7308(3) table, 74"
+  itr_tab[75, qualifying] = 0.0582 "7308(3) table, 75"
+  table_from[qualifying] = 72 "7308(3): the table begins Under 72"
+  table_from[other] = 71 "7308(4): the table begins Under 71"
+
+version v_ita
+  cite ita1463
+  governs always
+  known 2024-06-20
+  note "Law, known from its promulgation (LANGUAGE 4.5): S.C. 2024, c. 17 (Budget Implementation Act, 2024, No. 1), assented to 2024-06-20, s. 50(F), the latest amendment in s. 146.3's history. Which amendment last changed the minimum amount definition isn't checked, so the latest one is taken. Text read in the version current to 2026-09-30: minimum amount is nil for the year the fund was entered into, else (A x B) + C; B is the factor for the annuitant, or for the spouse or common-law partner if so elected before any payment."
+
+version v_cra_ex
+  cite cra_ex
+  governs always
+  known 2026-10-18
+  note "The worked example's facts (Alex) are a hypothetical case's stipulations, known from the model's on date, as it has no start (LANGUAGE 4.5). The page's own date, Page details 2026-01-07, doesn't date them."
+  age_start[alex, 2025] = 73 "Example: is 73 years old at the start of 2025"
+  annuity[alex, 2025] = 5000 "Example: the locked-in annuity pays $5,000 annually; Step 2"
+  elected_spouse[alex] = false "Example: Alex had no spouse or common-law partner when the RRIF was being set up"
+  first_year[alex, 2025] = false "Example: In December 2022, before his RRSP matured, he set up a trusteed RRIF"
+  fmv[alex, 2025] = 75000 "Example: The fair market value (FMV) of the other property at the start of January 2025 is $75,000"
+  rrif_class[alex] = other "Example: set up in December 2022 with all the property from his RRSP, so not a qualifying fund under ITR 7308(2)"
+
+version v_td
+  cite td
+  governs always
+  known 2026-10-18
+  note "The worked example's facts are a hypothetical case's stipulations, known from the model's on date, as it has no start (LANGUAGE 4.5); the assumed rows stand for facts the example leaves out and take the same date. Retrieved 2026-10-18; 'How do I calculate the minimum RRIF payment?' Example. TD bases the factor on the age on January 1."
+  age_start[td_ex, 2025] = 73 "Example: You're 73 years old."
+  annuity[td_ex, 2025] = 0 assumed "the example names no locked-in annuity contract" "Example"
+  elected_spouse[td_ex] = false assumed "the example doesn't say whether a spouse's age was elected" "Example"
+  first_year[td_ex, 2025] = false assumed "the example computes a 2025 minimum; whether 2025 is the year the RRIF was opened is not stated" "Example"
+  fmv[td_ex, 2025] = 300000 "Example: Your RRIF is worth $300,000 on January 1, 2025."
+  rrif_class[td_ex] = other assumed "the example doesn't say whether the RRIF is a qualifying RRIF; footnote 1 describes non-qualifying RRIFs" "Example; footnote 1"

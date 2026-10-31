@@ -71,6 +71,14 @@ def tool(name, *args):
     return [os.path.join(TOOLS, name), *args]
 
 
+def spec_realities():
+    """What the spec's load scan reads: tally 2's scan has no default run, so the 79
+    models and the household (BUILD-ORDER: "over the 79 models, the household")."""
+    models = os.path.join(ENGINE, "spec", "models")
+    names = sorted(n for n in os.listdir(models) if n.endswith(".tally")) if os.path.isdir(models) else []
+    return [f"spec/models/{n}" for n in names] + ["spec/amendments/household"]
+
+
 # (name, argv or a function, extra env)
 def steps(mode):
     fast = [
@@ -102,7 +110,7 @@ def steps(mode):
         ("guard-test", tool("guard-test"), {}),
         ("rules-selftest", tool("rules-selftest/run"), {}),
         ("spec-loadcheck-selftest", ["python3", "-I", "-B", "spec/tools/loadcheck.py", "--selftest"], {}),
-        ("spec-loadcheck", ["python3", "-I", "-B", "spec/tools/loadcheck.py"], {}),
+        ("spec-loadcheck", ["python3", "-I", "-B", "spec/tools/loadcheck.py", *spec_realities()], {}),
         ("fuzz", fuzz, {}),
     ]
 

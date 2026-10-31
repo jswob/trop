@@ -1,0 +1,162 @@
+q01_ln01 (t = ex1, y = 2025): 5 980 USD
+  law date 2026-10-18, cut 2026-10-18
+q01_ln01 (t = johnsons, y = 2025): 10 000 USD
+  law date 2026-10-18, cut 2026-10-18
+q01_ln01 (t = terry, y = 2025): 11 000 USD
+  law date 2026-10-18, cut 2026-10-18
+q02_ln02 (t = ex1, y = 2025): 2 990 USD
+  law date 2026-10-18, cut 2026-10-18
+q02_ln02 (t = johnsons, y = 2025): 5 000 USD
+  law date 2026-10-18, cut 2026-10-18
+q02_ln02 (t = terry, y = 2025): 5 500 USD
+  law date 2026-10-18, cut 2026-10-18
+q03_ln03 (t = ex1, y = 2025): 28 990 USD
+  law date 2026-10-18, cut 2026-10-18
+q03_ln03 (t = johnsons, y = 2025): 40 500 USD
+  law date 2026-10-18, cut 2026-10-18
+q03_ln03 (t = terry, y = 2025): 25 500 USD
+  law date 2026-10-18, cut 2026-10-18
+q04_ln04 (t = ex1, y = 2025): 0 USD
+  law date 2026-10-18, cut 2026-10-18
+q04_ln04 (t = johnsons, y = 2025): 0 USD
+  law date 2026-10-18, cut 2026-10-18
+q04_ln04 (t = terry, y = 2025): 0 USD
+  law date 2026-10-18, cut 2026-10-18
+q05_ln05 (t = ex1, y = 2025): 0 USD
+  law date 2026-10-18, cut 2026-10-18
+q05_ln05 (t = johnsons, y = 2025): 0 USD
+  law date 2026-10-18, cut 2026-10-18
+q05_ln05 (t = terry, y = 2025): 0 USD
+  law date 2026-10-18, cut 2026-10-18
+q06_ln06 (t = ex1, y = 2025): 31 980 USD
+  law date 2026-10-18, cut 2026-10-18
+q06_ln06 (t = johnsons, y = 2025): 45 500 USD
+  law date 2026-10-18, cut 2026-10-18
+q06_ln06 (t = terry, y = 2025): 31 000 USD
+  law date 2026-10-18, cut 2026-10-18
+q07_ln07 (t = ex1, y = 2025): 0 USD
+  law date 2026-10-18, cut 2026-10-18
+q07_ln07 (t = johnsons, y = 2025): 0 USD
+  law date 2026-10-18, cut 2026-10-18
+q07_ln07 (t = terry, y = 2025): 0 USD
+  law date 2026-10-18, cut 2026-10-18
+q08_ln08 (t = ex1, y = 2025): 31 980 USD
+  law date 2026-10-18, cut 2026-10-18
+q08_ln08 (t = johnsons, y = 2025): 45 500 USD
+  law date 2026-10-18, cut 2026-10-18
+q08_ln08 (t = terry, y = 2025): 31 000 USD
+  law date 2026-10-18, cut 2026-10-18
+q09_ln09 (t = ex1, y = 2025): 25 000 USD
+  law date 2026-10-18, cut 2026-10-18
+q09_ln09 (t = johnsons, y = 2025): 32 000 USD
+  law date 2026-10-18, cut 2026-10-18
+q09_ln09 (t = terry, y = 2025): 25 000 USD
+  law date 2026-10-18, cut 2026-10-18
+q10_ln10 (t = ex1, y = 2025): 6 980 USD
+  law date 2026-10-18, cut 2026-10-18
+q10_ln10 (t = johnsons, y = 2025): 13 500 USD
+  law date 2026-10-18, cut 2026-10-18
+q10_ln10 (t = terry, y = 2025): 6 000 USD
+  law date 2026-10-18, cut 2026-10-18
+q11_ln11 (t = ex1, y = 2025): 9 000 USD
+  law date 2026-10-18, cut 2026-10-18
+q11_ln11 (t = johnsons, y = 2025): 12 000 USD
+  law date 2026-10-18, cut 2026-10-18
+q11_ln11 (t = terry, y = 2025): 9 000 USD
+  law date 2026-10-18, cut 2026-10-18
+q12_ln12 (t = ex1, y = 2025): 0 USD
+  law date 2026-10-18, cut 2026-10-18
+q12_ln12 (t = johnsons, y = 2025): 1 500 USD
+  law date 2026-10-18, cut 2026-10-18
+q12_ln12 (t = terry, y = 2025): 0 USD
+  law date 2026-10-18, cut 2026-10-18
+q13_ln13 (t = ex1, y = 2025): 6 980 USD
+  law date 2026-10-18, cut 2026-10-18
+q13_ln13 (t = johnsons, y = 2025): 12 000 USD
+  law date 2026-10-18, cut 2026-10-18
+q13_ln13 (t = terry, y = 2025): 6 000 USD
+  law date 2026-10-18, cut 2026-10-18
+q14_ln14 (t = ex1, y = 2025): 3 490 USD
+  law date 2026-10-18, cut 2026-10-18
+q14_ln14 (t = johnsons, y = 2025): 6 000 USD
+  law date 2026-10-18, cut 2026-10-18
+q14_ln14 (t = terry, y = 2025): 3 000 USD
+  law date 2026-10-18, cut 2026-10-18
+q15_ln15 (t = ex1, y = 2025): 2 990 USD
+  law date 2026-10-18, cut 2026-10-18
+q15_ln15 (t = johnsons, y = 2025): 5 000 USD
+  law date 2026-10-18, cut 2026-10-18
+q15_ln15 (t = terry, y = 2025): 3 000 USD
+  law date 2026-10-18, cut 2026-10-18
+q16_ln16 (t = ex1, y = 2025): 0 USD
+  law date 2026-10-18, cut 2026-10-18
+q16_ln16 (t = johnsons, y = 2025): 1 275 USD
+  law date 2026-10-18, cut 2026-10-18
+q16_ln16 (t = terry, y = 2025): 0 USD
+  law date 2026-10-18, cut 2026-10-18
+q17_ln17 (t = ex1, y = 2025): 2 990 USD
+  law date 2026-10-18, cut 2026-10-18
+q17_ln17 (t = johnsons, y = 2025): 6 275 USD
+  law date 2026-10-18, cut 2026-10-18
+q17_ln17 (t = terry, y = 2025): 3 000 USD
+  law date 2026-10-18, cut 2026-10-18
+q18_ln18 (t = ex1, y = 2025): 5 083 USD
+  law date 2026-10-18, cut 2026-10-18
+q18_ln18 (t = johnsons, y = 2025): 8 500 USD
+  law date 2026-10-18, cut 2026-10-18
+q18_ln18 (t = terry, y = 2025): 9 350 USD
+  law date 2026-10-18, cut 2026-10-18
+q19_ln19 (t = ex1, y = 2025): 2 990 USD
+  law date 2026-10-18, cut 2026-10-18
+q19_ln19 (t = johnsons, y = 2025): 6 275 USD
+  law date 2026-10-18, cut 2026-10-18
+q19_ln19 (t = terry, y = 2025): 3 000 USD
+  law date 2026-10-18, cut 2026-10-18
+q20_ln20: (none, 0 USD)
+  assumed: Worksheet 2 line 1 is $2,000, the lump-sum portion alone, so Terry received no benefits in 2024 itself (benefits[terry, 2024])
+  assumed: Worksheet 2 line 7 prints -0-; the example states no 2024 adjustments, so 2024 AGI is the income total of $23,000 (adj[terry, 2024])
+  assumed: the 2024 filing status isn't stated; Worksheet 2 line 9 uses $25,000, the single amount (status[terry, 2024])
+  pinned: benefits[t, y] = benefits[t, y] + lump_for[t, y] for t in tp, y in ty
+  law date 2026-10-18, cut 2026-10-18
+q21_ln21: (0 USD, 2 500 USD)
+  assumed: Worksheet 2 line 1 is $2,000, the lump-sum portion alone, so Terry received no benefits in 2024 itself (benefits[terry, 2024])
+  assumed: Worksheet 2 line 7 prints -0-; the example states no 2024 adjustments, so 2024 AGI is the income total of $23,000 (adj[terry, 2024])
+  assumed: the 2024 filing status isn't stated; Worksheet 2 line 9 uses $25,000, the single amount (status[terry, 2024])
+  pinned: benefits[t, y] = benefits[t, y] + lump_for[t, y] for t in tp, y in ty
+  pinned: benefits[t, y] = benefits[t, y] - sum(lump_for[t, k] for k in ty where k < y) for y in ty, t in tp
+  law date 2026-10-18, cut 2026-10-18
+q22_taxable (t = ex1, y = 2025): 2 990 USD
+  law date 2026-10-18, cut 2026-10-18
+q22_taxable (t = johnsons, y = 2025): 6 275 USD
+  law date 2026-10-18, cut 2026-10-18
+q22_taxable (t = terry, y = 2025): 3 000 USD
+  law date 2026-10-18, cut 2026-10-18
+q23_over_adj (t = johnsons, y = 2025): true
+  law date 2026-10-18, cut 2026-10-18
+q24_smaller (t = terry, y = 2025): true
+  assumed: Worksheet 2 line 1 is $2,000, the lump-sum portion alone, so Terry received no benefits in 2024 itself (benefits[terry, 2024])
+  assumed: Worksheet 2 line 7 prints -0-; the example states no 2024 adjustments, so 2024 AGI is the income total of $23,000 (adj[terry, 2024])
+  assumed: the 2024 filing status isn't stated; Worksheet 2 line 9 uses $25,000, the single amount (status[terry, 2024])
+  pinned: benefits[t, y] = benefits[t, y] + lump_for[t, y] for t in tp, y in ty
+  pinned: benefits[t, y] = benefits[t, y] - sum(lump_for[t, k] for k in ty where k < y) for y in ty, t in tp
+  law date 2026-10-18, cut 2026-10-18
+q25_line6b (t = terry, y = 2025) [ul14_election = lump_sum]: 2 500 USD
+  assumed: Worksheet 2 line 1 is $2,000, the lump-sum portion alone, so Terry received no benefits in 2024 itself (benefits[terry, 2024])
+  assumed: Worksheet 2 line 7 prints -0-; the example states no 2024 adjustments, so 2024 AGI is the income total of $23,000 (adj[terry, 2024])
+  assumed: the 2024 filing status isn't stated; Worksheet 2 line 9 uses $25,000, the single amount (status[terry, 2024])
+  pinned: benefits[t, y] = benefits[t, y] + lump_for[t, y] for t in tp, y in ty
+  pinned: benefits[t, y] = benefits[t, y] - sum(lump_for[t, k] for k in ty where k < y) for y in ty, t in tp
+  reading: ul14_election = lump_sum
+  law date 2026-10-18, cut 2026-10-18
+q25_line6b (t = terry, y = 2025) [ul14_election = regular]: 3 000 USD
+  reading: ul14_election = regular
+  law date 2026-10-18, cut 2026-10-18
+q26_ws2 (t = terry, y = 2024): (2 000 USD, 1 000 USD, 23 000 USD, 0 USD, 0 USD, 24 000 USD, 0 USD, 24 000 USD, 25 000 USD, none, none, none, none, none, none, none, none, none, none)
+  assumed: Worksheet 2 line 1 is $2,000, the lump-sum portion alone, so Terry received no benefits in 2024 itself (benefits[terry, 2024])
+  assumed: Worksheet 2 line 7 prints -0-; the example states no 2024 adjustments, so 2024 AGI is the income total of $23,000 (adj[terry, 2024])
+  assumed: the 2024 filing status isn't stated; Worksheet 2 line 9 uses $25,000, the single amount (status[terry, 2024])
+  pinned: benefits[terry, 2024] = 2 000.00 USD
+  law date 2026-10-18, cut 2026-10-18
+q27_ws4 (t = terry, y = 2025): (9 000 USD, 4 500 USD, 25 500 USD, 0 USD, 0 USD, 30 000 USD, 0 USD, 30 000 USD, 25 000 USD, 5 000 USD, 9 000 USD, 0 USD, 5 000 USD, 2 500 USD, 2 500 USD, 0 USD, 2 500 USD, 7 650 USD, 2 500 USD)
+  pinned: benefits[terry, 2025] = 9 000.00 USD
+  law date 2026-10-18, cut 2026-10-18

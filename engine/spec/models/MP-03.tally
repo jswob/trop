@@ -1,6 +1,8 @@
 model mp03
-  tally 1
+  tally 2
   on 2026-10-19
+  start 2026-01-01
+  end 2026-12-31
   note "Polish intestate shares (art. 931 KC) and the forced share, zachowek (arts. 991-996 KC), over the four sources' worked examples."
   note "Estates: mini is the prawnik.cc mini-case; gp1 to gp3 are GazetaPrawna's Przykład 1 to 3; b3, b5 and b1 are rulecalc's three bullets; szczecin is the infor.pl report of III C 225/23."
 
@@ -13,6 +15,8 @@ source kc "Kodeks cywilny, ustawa z dnia 23 kwietnia 1964 r., Dz. U. 1964 nr 16 
 source prawnik "Zachowek po darowiźnie mieszkania: kiedy się należy, jak liczyć, jak się bronić (prawnik.cc, 13 stycznia 2026)" at "https://prawnik.cc/blogs/zachowek-po-darowiznie-mieszkania-kiedy-sie-nalezy-jak-liczyc-jak-sie-bronic"
 
 source rulecalc "Udział małżonka w spadku — art. 931 § 1 KC (rulecalc.com, ostatnia aktualizacja 18. 4. 2026)" at "https://rulecalc.com/pl/sady/kc-dziedziczenie-malzonek-1-4"
+
+unit PLN: currency minor 0.01
 
 axis mp03_own_gift
   excluded "a gift later counted against the recipient's own zachowek is not added to the substrate, as the prawnik.cc mini-case computes it"
@@ -69,89 +73,89 @@ input spouse_min: num
 
 input spouse_survives[e in estate]: bool
 
-def child_amount[e in estate]: num PLN = estate_net[e] * child_part[e]
+def child_amount[e in estate]: num PLN = estate_net[e] * child_part[e] at reader
 
-def child_part[e in estate]: num
+def child_part[e in estate]: num at reader
   note "art. 931 § 1: the children share equally what the spouse doesn't take."
   rule base v kc1964 = (1 - spouse_part[e]) / children[e]
 
-def counted[g in gift]: bool
+def counted[g in gift]: bool at reader
   note "art. 993 § 1 adds gifts to the estate; art. 994 § 1 leaves out gifts made more than ten years before the opening to persons who are neither heirs nor entitled. Rule kept_out is the source reading of the axis mp03_own_gift."
   rule base v kc1964 = gift_heir[g] or gift_years[g] <= lookback_years
-  rule kept_out excepts base when gift_claimant[g] != - and mp03_own_gift = excluded = false
+  rule kept_out beats base = false when gift_claimant[g] != none and mp03_own_gift == excluded
 
-def equal_share[e in estate]: money PLN
+def equal_share[e in estate]: money PLN at reader
   note "rulecalc's equal share among all heirs, in whole złoty. The law sets no rounding, so the mode is the axis mp03_round."
   rule base = round(estate_net[e] / heirs[e], 1, mp03_round)
 
-def fraction[k in claimant]: num
+def fraction[k in claimant]: num at reader
   note "art. 991 § 1: two thirds for a protected claimant, otherwise one half."
   rule base v kc1964 = if protected[k] then frac_protected else frac_other
 
-def grandchild_part[e in estate]: num
+def grandchild_part[e in estate]: num at reader
   note "art. 931 § 2: a predeceased child's share goes to his children in equal parts."
   rule base v kc1964 = child_part[e] / grandchildren[e]
 
-def heirs[e in estate]: int = children[e] + (if spouse_survives[e] then 1 else 0)
+def heirs[e in estate]: int = children[e] + (if spouse_survives[e] then 1 else 0) at reader
 
-def intestate[k in claimant]: num
+def intestate[k in claimant]: num at reader
   note "The claimant's intestate share, the base of the zachowek (art. 991 § 1)."
-  rule base v kc1964 when line_of[k] = child = child_part[estate_of[k]]
-  rule grand v kc1964 when line_of[k] = grandchild = grandchild_part[estate_of[k]]
+  rule base v kc1964 = child_part[estate_of[k]] when line_of[k] == child
+  rule grand v kc1964 = grandchild_part[estate_of[k]] when line_of[k] == grandchild
 
-def own_gift[k in claimant]: money PLN = sum(g in gift where gift_claimant[g] != - and gift_claimant[g] = k: gift_value[g])
+def own_gift[k in claimant]: money PLN = sum(gift_value[g] for g in gift where gift_claimant[g] != none and gift_claimant[g] == k) at reader
 
-def spouse_amount[e in estate]: num PLN = estate_net[e] * spouse_part[e]
+def spouse_amount[e in estate]: num PLN = estate_net[e] * spouse_part[e] at reader
 
-def spouse_part[e in estate]: num
+def spouse_part[e in estate]: num at reader
   note "art. 931 § 1: equal shares, but the spouse's part is not less than one quarter of the estate."
   rule base v kc1964 = if spouse_survives[e] then max(spouse_min, 1 / heirs[e]) else 0
 
-def substrate[e in estate]: money PLN
+def substrate[e in estate]: money PLN at reader
   note "The net estate with the counted gifts added (art. 993 § 1)."
-  rule base v kc1964 = estate_net[e] + sum(g in gift where gift_estate[g] = e and counted[g]: gift_value[g])
+  rule base v kc1964 = estate_net[e] + sum(gift_value[g] for g in gift where gift_estate[g] == e and counted[g])
 
-def to_pay[k in claimant]: money PLN
+def to_pay[k in claimant]: money PLN at reader
   note "art. 996 § 1: a gift to the person entitled is counted against the zachowek; art. 991 § 2 gives the claim for the rest."
   rule base v kc1964 = max(0, zachowek[k] - own_gift[k])
 
-def zachowek[k in claimant]: money PLN
+def zachowek[k in claimant]: money PLN at reader
   note "art. 991 § 1: the fraction of the intestate share, applied to the substrate. Rounded to the grosz; the mode is the axis mp03_round."
-  rule base v kc1964 = round(substrate[estate_of[k]] * intestate[k] * fraction[k], 0.01, mp03_round)
+  rule base v kc1964 = round(substrate[estate_of[k]] * intestate[k] * fraction[k], minor(PLN), mp03_round)
 
-ask a1_substrate: substrate[mini]
+ask a1_substrate: substrate[mini] law 2026-10-19
 
-ask a2_intestate: intestate[anna]
+ask a2_intestate: intestate[anna] law 2026-10-19
 
-ask a3_fraction: fraction[anna]
+ask a3_fraction: fraction[anna] law 2026-10-19
 
-ask a4_zachowek: zachowek[anna]
+ask a4_zachowek: zachowek[anna] law 2026-10-19
 
-ask a5_to_pay: to_pay[anna]
+ask a5_to_pay: to_pay[anna] law 2026-10-19
 
-ask a6_rule_plain: intestate[anna] * fraction[anna]
+ask a6_rule_plain: intestate[anna] * fraction[anna] law 2026-10-19
 
-ask a7_rule_protected: intestate[anna] * fraction[anna] with protected[anna] = true
+ask a7_rule_protected: intestate[anna] * fraction[anna] with protected[anna] = true law 2026-10-19
 
-ask gp1_zachowek: zachowek[gp1_child]
+ask gp1_zachowek: zachowek[gp1_child] law 2026-10-19
 
-ask gp2_zachowek: zachowek[gp2_child]
+ask gp2_zachowek: zachowek[gp2_child] law 2026-10-19
 
-ask gp3_theoretical: zachowek[gp3_heir]
+ask gp3_theoretical: zachowek[gp3_heir] law 2026-10-19
 
-ask gp3_to_pay: to_pay[gp3_heir]
+ask gp3_to_pay: to_pay[gp3_heir] law 2026-10-19
 
-ask rc1_three: equal_share[b3], spouse_amount[b3], child_amount[b3]
+ask rc1_three: equal_share[b3], spouse_amount[b3], child_amount[b3] law 2026-10-19
 
-ask rc2_five: equal_share[b5], spouse_part[b5], spouse_amount[b5], child_amount[b5]
+ask rc2_five: equal_share[b5], spouse_part[b5], spouse_amount[b5], child_amount[b5] law 2026-10-19
 
-ask rc3_one: equal_share[b1], spouse_amount[b1], child_amount[b1]
+ask rc3_one: equal_share[b1], spouse_amount[b1], child_amount[b1] law 2026-10-19
 
-ask sz_fraction: intestate[k] * fraction[k] for k in [sz_child, sz_grandchild]
+ask sz_fraction: intestate[k] * fraction[k] for k in [sz_child, sz_grandchild] law 2026-10-19
 
-ask sz_intestate: intestate[k] for k in [sz_child, sz_grandchild]
+ask sz_intestate: intestate[k] for k in [sz_child, sz_grandchild] law 2026-10-19
 
-ask sz_zachowek: zachowek[k] for k in [sz_child, sz_grandchild]
+ask sz_zachowek: zachowek[k] for k in [sz_child, sz_grandchild] law 2026-10-19
 
 version kc1964
   cite kc
@@ -167,6 +171,7 @@ version kc1964
 
 version infor_szczecin
   cite infor
+  governs always
   known 2026-10-08
   note "Sąd Rejonowy Szczecin-Centrum, III C 225/23, wyrok z 21 sierpnia 2024 r., as the portal reports it. A daughter took the flat under the will; two children and three grandchildren were left out."
   note "Known 2026-10-08: a real case, read in the report, which is dated 8 October 2026; the judgment itself was not fetched."
@@ -183,6 +188,7 @@ version infor_szczecin
 
 version gazeta_examples
   cite gazeta
+  governs always
   known 2026-10-19
   note "Section 'Przykładowe wyliczenia - jak obliczyć zachowek w praktyce?'. The article states each substrate directly."
   note "Known 2026-10-19: the examples are hypothetical, so their stipulations and the figures they state are known from the model's on date (§4.5). The article is dated 1 February 2026."
@@ -191,31 +197,32 @@ version gazeta_examples
   estate_of[gp1_child] = gp1 "Przykład 1"
   estate_of[gp2_child] = gp2 "Przykład 2"
   estate_of[gp3_heir] = gp3 "Przykład 3"
-  fraction[gp3_heir] = 0.5 "Przykład 3: 800 000 zł × 1/2 × 1/2"
+  given fraction[gp3_heir] = 0.5 "Przykład 3: 800 000 zł × 1/2 × 1/2"
   gift_claimant[gift_gp3] = gp3_heir "Przykład 3: the gift counted against the zachowek"
   gift_estate[gift_gp3] = gp3 "Przykład 3"
   gift_heir[gift_gp3] = true "Przykład 3: a gift to the entitled person"
   gift_value[gift_gp3] = 60000 "Przykład 3"
-  intestate[gp3_heir] = 0.5 "Przykład 3: 800 000 zł × 1/2 × 1/2"
+  given intestate[gp3_heir] = 0.5 "Przykład 3: 800 000 zł × 1/2 × 1/2"
   line_of[gp1_child] = child "Przykład 1"
   line_of[gp2_child] = child "Przykład 2"
   protected[gp1_child] = false "Przykład 1: adult children"
   protected[gp2_child] = true "Przykład 2: a minor child"
   spouse_survives[gp1] = false assumed "Przykład 1 names only the two children"
   spouse_survives[gp2] = false assumed "Przykład 2 names only the child and gives the share as 1/1"
-  substrate[gp1] = 600000 "Przykład 1"
-  substrate[gp2] = 900000 "Przykład 2"
-  substrate[gp3] = 800000 "Przykład 3"
+  given substrate[gp1] = 600000 "Przykład 1"
+  given substrate[gp2] = 900000 "Przykład 2"
+  given substrate[gp3] = 800000 "Przykład 3"
 
 version prawnik_case
   cite prawnik
+  governs always
   known 2026-10-19
   note "Section 'Przykład liczbowy (mini-case)'. A parent with two children gave a flat to Bartek; Anna claims her zachowek."
   note "Known 2026-10-19: the mini-case is hypothetical, so its stipulations are known from the model's on date, as the model has no start (§4.5). The article is dated 13 January 2026."
   children[mini] = 2 "Przykład liczbowy (mini-case): two children, Anna and Bartek"
   estate_net[mini] = 100000 "mini-case: 100 000 zł oszczędności"
   estate_of[anna] = mini "mini-case"
-  gift_claimant[flat_bartek] = - "mini-case: Bartek makes no claim"
+  gift_claimant[flat_bartek] = none "mini-case: Bartek makes no claim"
   gift_claimant[money_anna] = anna "mini-case, last paragraph: darowizny pieniężne, które podlegają zaliczeniu"
   gift_estate[flat_bartek] = mini "mini-case"
   gift_estate[money_anna] = mini "mini-case, last paragraph"
@@ -224,13 +231,14 @@ version prawnik_case
   gift_value[flat_bartek] = 700000 "mini-case: według stanu z dnia darowizny, ale cen dzisiejszych"
   gift_value[money_anna] = 50000 "mini-case, last paragraph"
   gift_years[flat_bartek] = 8 "mini-case: 8 lat przed śmiercią"
-  gift_years[money_anna] = ? "Kiedy Anna otrzymała darowizny pieniężne od rodzica?" "mini-case, last paragraph (no date given)"
+  gift_years[money_anna] = ?"Kiedy Anna otrzymała darowizny pieniężne od rodzica?" "mini-case, last paragraph (no date given)"
   line_of[anna] = child "mini-case"
   protected[anna] = false "mini-case: pełnoletnia i zdolna do pracy"
   spouse_survives[mini] = false assumed "the mini-case mentions no spouse; the article's earlier two-child illustration says 'małżonek nie żyje'"
 
 version rulecalc_examples
   cite rulecalc
+  governs always
   known 2026-10-19
   note "Section 'Przykłady obliczeń': a spouse inheriting with children."
   note "Known 2026-10-19: the examples are hypothetical, so their stipulations are known from the model's on date (§4.5). The page was last updated on 18 April 2026."

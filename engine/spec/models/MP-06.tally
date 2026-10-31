@@ -1,6 +1,8 @@
 model mp06
-  tally 1
+  tally 2
   on 2026-10-19
+  start 2026-01-01
+  end 2026-12-31
   note "German gift and inheritance tax: the ten-year cumulation of acquisitions from one person (§ 14 ErbStG), with the rate table and hardship relief of § 19."
   note "Each acquisition is taxed three ways, keyed by calc: total (§ 14 (1) sentence 1), fict (the earlier acquisitions under the last one's circumstances, sentence 2) and alone (the acquisition by itself, sentence 4)."
   note "No def has a time key or at, so each runs at the ask's cut, the model's on date (§4.3). C and D have no dates, so an at acq_date[q] would be a hole for them, which §4.3 doesn't define. For the dated acquisitions it would change nothing: every version read governs 2015 to 2023, and its rows haven't changed since."
@@ -14,6 +16,8 @@ source juhn "Die 10-Jahres-Frist bei Erbschaften und Schenkungen (Nico Flegel, J
 source smartsteuer "Erbschaftsteuer: Berücksichtigung früherer Erwerbe (smartsteuer Lexikon, Stand: 25. August 2025)" at "https://www.smartsteuer.de/online/lexikon/e/erbschaftsteuer-beruecksichtigung-frueherer-erwerbe/"
 
 source wachsbg "Wachstumsbeschleunigungsgesetz vom 22. Dezember 2009, BGBl. I 2009 Nr. 81 S. 3950, ausgegeben am 30. Dezember 2009: Art. 6, which restates ErbStG § 19 (1) with its rate table from 1 January 2010 ('§ 19 Absatz 1 wird wie folgt gefasst'). Read in the ErbStG at gesetze-im-internet.de, and the amending instruction at buzer.de" at "https://www.gesetze-im-internet.de/erbstg_1974/__19.html"
+
+unit EUR: currency minor 0.01
 
 axis mp06_total_hardship
   relieved "§ 19 (3) applies to the cumulated total, as the law reads and as Juhn's example 1.3 applies it to the same amount"
@@ -56,119 +60,119 @@ input window_years: int
 band rate_band[t in tax_class](x: money EUR): num
   note "§ 19 (1): the rate on the taxable acquisition, up to and including each Wertgrenze, by tax class. A row's lower end is the previous Wertgrenze of § 19 (3)."
 
-def actual_tax[q in acq]: num EUR = sum(e in acq where earlier[e, q]: assessed[e])
+def actual_tax[q in acq]: num EUR = sum(assessed[e] for e in acq where earlier[e, q]) at reader
 
-def after_credit[q in acq]: num EUR = tax_used[q, total] - credit[q]
+def after_credit[q in acq]: num EUR = tax_used[q, total] - credit[q] at reader
 
-def applied_rate[q in acq, c in calc]: num = rate_band[class_of[q]](taxable[q, c])
+def applied_rate[q in acq, c in calc]: num = rate_band[class_of[q]](taxable[q, c]) at reader
 
-def assessed[q in acq]: num EUR
+def assessed[q in acq]: num EUR at reader
   note "The tax actually payable on an acquisition: its due, which reads the tax on its own earlier acquisitions in turn, at the keys earlier finds (§5.10, a read at a computed key)."
   rule base = due[q]
 
-def base_value[q in acq, c in calc]: money EUR
-  rule alone when c = alone = value[q]
-  rule fict v erbstrg_2008 when c = fict = earlier_value[q]
-  rule total v erbstrg_2008 when c = total = value[q] + earlier_value[q]
+def base_value[q in acq, c in calc]: money EUR at reader
+  rule alone = value[q] when c == alone
+  rule fict v erbstrg_2008 = earlier_value[q] when c == fict
+  rule total v erbstrg_2008 = value[q] + earlier_value[q] when c == total
 
-def cap_amount[q in acq]: num EUR = value[q] * cap_share
+def cap_amount[q in acq]: num EUR = value[q] * cap_share at reader
 
-def capped_extra[q in acq, c in calc]: num EUR = min(extra_tax[q, c], hardship_cover[q, c])
+def capped_extra[q in acq, c in calc]: num EUR = min(extra_tax[q, c], hardship_cover[q, c]) at reader
 
-def credit[q in acq]: num EUR
+def credit[q in acq]: num EUR at reader
   note "§ 14 (1) sentences 2-3: the fictitious tax on the earlier acquisitions, or the tax actually payable on them if higher; at most the tax on the total, as smartsteuer's Lösung 4 deducts it."
   rule base v erbstrg_2008 = min(max(fict_tax[q], actual_tax[q]), tax_used[q, total])
 
-def deduction[q in acq, c in calc]: money EUR
+def deduction[q in acq, c in calc]: money EUR at reader
   note "§ 16 (1): the allowance of the recipient's circumstances at the last acquisition. For the fictitious tax it is limited to the allowance the earlier acquisitions used."
   rule base v erbstrg_2008 = allowance[kind_of[q]]
-  rule fict excepts base v smartsteuer_method when c = fict = min(allowance[kind_of[q]], earlier_allowance_used[q])
+  rule fict beats base v smartsteuer_method = min(allowance[kind_of[q]], earlier_allowance_used[q]) when c == fict
 
-def due[q in acq]: num EUR
+def due[q in acq]: num EUR at reader
   note "§ 14 (1) sentence 4: not below the tax on the last acquisition alone; § 14 (3): not more than half of that acquisition."
   rule base v erbstrg_2008 = min(max(after_credit[q], tax_used[q, alone]), cap_amount[q])
 
-def earlier[e in acq, q in acq]: bool
+def earlier[e in acq, q in acq]: bool at reader
   note "§ 14 (1): an acquisition from the same person within the ten years before the last one."
-  rule base v erbstrg_2008 = (chain_of[e] = chain_of[q] and acq_date[e] < acq_date[q] and acq_date[e] > add_years(acq_date[q], -window_years))
-  rule itself excepts base when e = q = false
+  rule base v erbstrg_2008 = chain_of[e] == chain_of[q] and acq_date[e] < acq_date[q] and acq_date[e] > add_years(acq_date[q], -window_years)
+  rule itself beats base = false when e == q
 
-def earlier_allowance_used[q in acq]: money EUR = sum(e in acq where earlier[e, q]: own_allowance[e])
+def earlier_allowance_used[q in acq]: money EUR = sum(own_allowance[e] for e in acq where earlier[e, q]) at reader
 
-def earlier_value[q in acq]: money EUR = sum(e in acq where earlier[e, q]: value[e])
+def earlier_value[q in acq]: money EUR = sum(value[e] for e in acq where earlier[e, q]) at reader
 
-def extra_tax[q in acq, c in calc]: num EUR = tax_plain[q, c] - tax_at_limit[q, c]
+def extra_tax[q in acq, c in calc]: num EUR = tax_plain[q, c] - tax_at_limit[q, c] at reader
 
-def fict_tax[q in acq]: num EUR = tax_used[q, fict]
+def fict_tax[q in acq]: num EUR = tax_used[q, fict] at reader
 
-def hardship_cover[q in acq, c in calc]: num EUR
+def hardship_cover[q in acq, c in calc]: num EUR at reader
   note "§ 19 (3): the part of the amount above the previous Wertgrenze that may cover the extra tax: half at a rate up to 30 per cent, three quarters above."
   rule base v erbstrg_2008 = (taxable[q, c] - prev_limit[q, c]) * (if applied_rate[q, c] <= hardship_rate_limit then hardship_low else hardship_high)
 
-def hardship_relief[q in acq, c in calc]: num EUR = tax_plain[q, c] - tax_relieved[q, c]
+def hardship_relief[q in acq, c in calc]: num EUR = tax_plain[q, c] - tax_relieved[q, c] at reader
 
-def has_earlier[q in acq]: bool = any(e in acq: earlier[e, q])
+def has_earlier[q in acq]: bool = any(earlier[e, q] for e in acq) at reader
 
-def own_allowance[q in acq]: money EUR
+def own_allowance[q in acq]: money EUR at reader
   note "The allowance an acquisition used when it was taxed by itself."
   rule base = min(allowance[kind_of[q]], value[q])
 
-def prev_limit[q in acq, c in calc]: money EUR
+def prev_limit[q in acq, c in calc]: money EUR at reader
   note "§ 19 (3): the Wertgrenze the taxable amount last exceeded, the lower end of its row of the rate table; 0 in the first row, which exceeds none."
   rule base v erbstrg_2008 = band_lo(rate_band[class_of[q]], taxable[q, c])
 
-def tax_at_limit[q in acq, c in calc]: num EUR
+def tax_at_limit[q in acq, c in calc]: num EUR at reader
   note "§ 19 (3): the tax that would arise if the acquisition had not exceeded the previous Wertgrenze, at the rate of the row that ends there."
   rule base v erbstrg_2008 = prev_limit[q, c] * rate_band[class_of[q]](prev_limit[q, c])
 
-def tax_plain[q in acq, c in calc]: num EUR = taxable[q, c] * applied_rate[q, c]
+def tax_plain[q in acq, c in calc]: num EUR = taxable[q, c] * applied_rate[q, c] at reader
 
-def tax_relieved[q in acq, c in calc]: num EUR
+def tax_relieved[q in acq, c in calc]: num EUR at reader
   note "§ 19 (3): the tax at the previous Wertgrenze plus the extra tax as far as the cover reaches."
   rule base v erbstrg_2008 = tax_at_limit[q, c] + capped_extra[q, c]
-  rule lowest excepts base when prev_limit[q, c] = 0 = tax_plain[q, c]
+  rule lowest beats base = tax_plain[q, c] when prev_limit[q, c] == 0
 
-def tax_used[q in acq, c in calc]: num EUR
+def tax_used[q in acq, c in calc]: num EUR at reader
   rule base = tax_relieved[q, c]
-  rule plain_total excepts base v juhn_method when mp06_total_hardship = unrelieved and c = total and has_earlier[q] = tax_plain[q, c]
+  rule plain_total beats base v juhn_method = tax_plain[q, c] when mp06_total_hardship == unrelieved and c == total and has_earlier[q]
 
-def taxable[q in acq, c in calc]: money EUR = max(0, base_value[q, c] - deduction[q, c])
+def taxable[q in acq, c in calc]: money EUR = max(0, base_value[q, c] - deduction[q, c]) at reader
 
-ask a_total: base_value[a2018, total]
+ask a_total: base_value[a2018, total] law 2026-10-19
 
-ask b_credit: fict_tax[b2020], actual_tax[b2020], credit[b2020], after_credit[b2020]
+ask b_credit: fict_tax[b2020], actual_tax[b2020], credit[b2020], after_credit[b2020] law 2026-10-19
 
-ask b_hardship: hardship_relief[b2020, total]
+ask b_hardship: hardship_relief[b2020, total] law 2026-10-19
 
-ask b_minimum: tax_used[b2020, alone], due[b2020]
+ask b_minimum: tax_used[b2020, alone], due[b2020] law 2026-10-19
 
-ask b_total: base_value[b2020, total], deduction[b2020, total], taxable[b2020, total], applied_rate[b2020, total], tax_used[b2020, total]
+ask b_total: base_value[b2020, total], deduction[b2020, total], taxable[b2020, total], applied_rate[b2020, total], tax_used[b2020, total] law 2026-10-19
 
-ask c_assessed: credit[c_later] + due[c_later]
+ask c_assessed: credit[c_later] + due[c_later] law 2026-10-19
 
-ask c_credit: fict_tax[c_later], credit[c_later], after_credit[c_later], cap_amount[c_later], due[c_later]
+ask c_credit: fict_tax[c_later], credit[c_later], after_credit[c_later], cap_amount[c_later], due[c_later] law 2026-10-19
 
-ask c_total: base_value[c_later, total], deduction[c_later, total], taxable[c_later, total], applied_rate[c_later, total], tax_used[c_later, total]
+ask c_total: base_value[c_later, total], deduction[c_later, total], taxable[c_later, total], applied_rate[c_later, total], tax_used[c_later, total] law 2026-10-19
 
-ask d_hardship: taxable[d_single, alone], applied_rate[d_single, alone], tax_plain[d_single, alone], tax_at_limit[d_single, alone], extra_tax[d_single, alone], capped_extra[d_single, alone], tax_relieved[d_single, alone]
+ask d_hardship: taxable[d_single, alone], applied_rate[d_single, alone], tax_plain[d_single, alone], tax_at_limit[d_single, alone], extra_tax[d_single, alone], capped_extra[d_single, alone], tax_relieved[d_single, alone] law 2026-10-19
 
-ask e_first: taxable[e2021, alone], applied_rate[e2021, alone], tax_used[e2021, alone]
+ask e_first: taxable[e2021, alone], applied_rate[e2021, alone], tax_used[e2021, alone] law 2026-10-19
 
-ask e_increase: due[e2023] - (tax_used[e2021, alone] + tax_used[e2023, alone])
+ask e_increase: due[e2023] - (tax_used[e2021, alone] + tax_used[e2023, alone]) law 2026-10-19
 
-ask e_second: base_value[e2023, total], taxable[e2023, total], applied_rate[e2023, total], tax_used[e2023, total], credit[e2023], due[e2023]
+ask e_second: base_value[e2023, total], taxable[e2023, total], applied_rate[e2023, total], tax_used[e2023, total], credit[e2023], due[e2023] law 2026-10-19
 
-ask e_separate: tax_used[e2021, alone] + tax_used[e2023, alone]
+ask e_separate: tax_used[e2021, alone] + tax_used[e2023, alone] law 2026-10-19
 
-ask f_credit: actual_tax[f2023], credit[f2023], after_credit[f2023]
+ask f_credit: actual_tax[f2023], credit[f2023], after_credit[f2023] law 2026-10-19
 
-ask f_fict: deduction[f2023, fict], taxable[f2023, fict], applied_rate[f2023, fict], fict_tax[f2023]
+ask f_fict: deduction[f2023, fict], taxable[f2023, fict], applied_rate[f2023, fict], fict_tax[f2023] law 2026-10-19
 
-ask f_first: taxable[f2018, alone], applied_rate[f2018, alone], assessed[f2018]
+ask f_first: taxable[f2018, alone], applied_rate[f2018, alone], assessed[f2018] law 2026-10-19
 
-ask f_minimum: taxable[f2023, alone], applied_rate[f2023, alone], tax_used[f2023, alone], due[f2023]
+ask f_minimum: taxable[f2023, alone], applied_rate[f2023, alone], tax_used[f2023, alone], due[f2023] law 2026-10-19
 
-ask f_total: base_value[f2023, total], deduction[f2023, total], taxable[f2023, total], applied_rate[f2023, total], tax_used[f2023, total]
+ask f_total: base_value[f2023, total], deduction[f2023, total], taxable[f2023, total], applied_rate[f2023, total], tax_used[f2023, total] law 2026-10-19
 
 version erbstrg_2008
   cite erbstrg
@@ -224,26 +228,29 @@ version jstg_2010
 
 version juhn_method
   cite juhn
+  governs always
   known 2023-11-17
   note "No items: the rule tax_used.plain_total points at it, for the printed working of example 2.5."
   note "Known 2023-11-17, the date the page shows under its title (juhn.com, read 2026-10-19). Its metadata gives dateModified 2026-08-18, a record that no printed stamp beats, so the page would take it (§4.5); but the rows read are known to predate the update, so its own date applies. Wayback captures of 2023-12-03, 2024-07-25, 2025-02-08 and 2025-12-09 (read 2026-10-19) print 2.5's working as the case reads it. The update changed 1.3's printed total, not 2.5."
 
 version smartsteuer_method
   cite smartsteuer
+  governs always
   known 2025-08-25
   note "No items: the rule deduction.fict points at it, for H E 14.1 ErbStH and BFH II R 43/03 as the lexicon reports them (not fetched). Known 2025-08-25, the page's own 'Stand: 25. August 2025'."
 
 version juhn_examples
   cite juhn
+  governs always
   known 2026-10-19
   note "Examples 2.1 (A), 2.2 (B), 2.5 (C) and 1.3 (D)."
   note "Known 2026-10-19: the examples are hypothetical, so their stipulations, and the assumption that stands for D's unstated allowance, are known from the model's on date, as the model has no start (§4.5)."
-  acq_date[a2015] = 2015 "2.1 Beispiel: share portfolio in 2015"
-  acq_date[a2018] = 2018 "2.1 Beispiel: two rental properties in 2018"
-  acq_date[b2015] = 2015 "2.2 Beispiel: share portfolio in 2015"
-  acq_date[b2020] = 2020 "2.2 Beispiel: two let apartment buildings in 2020"
+  acq_date[a2015] = window(2015-01-01, 2015-12-31) "2.1 Beispiel: share portfolio in 2015"
+  acq_date[a2018] = window(2018-01-01, 2018-12-31) "2.1 Beispiel: two rental properties in 2018"
+  acq_date[b2015] = window(2015-01-01, 2015-12-31) "2.2 Beispiel: share portfolio in 2015"
+  acq_date[b2020] = window(2020-01-01, 2020-12-31) "2.2 Beispiel: two let apartment buildings in 2020"
   allowance[unstated] = 0 assumed "the example taxes the whole EUR 6.100.000 and deducts no allowance" "1.3, Erweiterung des Beispiels"
-  assessed[b2015] = 22000 "2.2 Beispiel: Die gezahlte Steuer lag bei EUR 22.000"
+  given assessed[b2015] = 22000 "2.2 Beispiel: Die gezahlte Steuer lag bei EUR 22.000"
   chain_of[a2015] = ch_a "2.1 Beispiel: father V to daughter T"
   chain_of[a2018] = ch_a "2.1 Beispiel: father V to daughter T"
   chain_of[b2015] = ch_b "2.2 Beispiel: father V to daughter T"
@@ -258,8 +265,8 @@ version juhn_examples
   class_of[c_earlier] = kl1 "2.5: son"
   class_of[c_later] = kl1 "2.5: son"
   class_of[d_single] = kl1 "1.3: from his father"
-  earlier[c_earlier, c_later] = true "2.5: vor sieben Jahren; no dates are given"
-  earlier[c_later, c_earlier] = false "2.5: the later gift follows the earlier one"
+  given earlier[c_earlier, c_later] = true "2.5: vor sieben Jahren; no dates are given"
+  given earlier[c_later, c_earlier] = false "2.5: the later gift follows the earlier one"
   kind_of[a2015] = child "2.1 Beispiel: daughter"
   kind_of[a2018] = child "2.1 Beispiel: daughter"
   kind_of[b2015] = child "2.2 Beispiel: Freibeträge wurden in voller Höhe abgezogen"
@@ -277,6 +284,7 @@ version juhn_examples
 
 version smartsteuer_examples
   cite smartsteuer
+  governs always
   known 2026-10-19
   note "Beispiel 1 / Lösung 1 (section 1) and Beispiel 4 / Lösung 4 (section 3.2.1)."
   note "Known 2026-10-19: the examples are hypothetical, so their stipulations are known from the model's on date (§4.5)."

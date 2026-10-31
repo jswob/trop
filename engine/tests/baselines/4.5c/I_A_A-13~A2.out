@@ -1,0 +1,172 @@
+a13_c [pit6_health = *]: (2 835.00 DUK, -873.5 DUK, -3 168.5 DUK, -4 042 DUK, 1 125.00 DUK)
+  assumed: A-D15 says by the 10th, not the day; the 10th is taken, on the last business day before it where it isn't one (payday_dom[sio, 2023-01], payday_dom[sio, 2023-02], payday_dom[sio, 2023-03], payday_dom[sio, 2023-04], payday_dom[sio, 2023-05], payday_dom[sio, 2023-06], payday_dom[sio, 2023-07], payday_dom[sio, 2023-08], payday_dom[sio, 2023-09], payday_dom[sio, 2023-10], payday_dom[sio, 2023-11], payday_dom[sio, 2023-12])
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-01-10
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-01-31
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-02-10
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-02-28
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-03-10
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-03-31
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-04-07
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-04-28
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-05-10
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-05-31
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-06-09
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-06-30
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-07-10
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-07-31
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-08-10
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-08-31
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-09-08
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-09-29
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-10-10
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-10-31
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-11-10
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-11-30
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-12-08
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-12-29
+  world: a13_apr
+  law date 2025-04-30, cut 2025-04-30
+a13_c_differs [pit6_health = *]: (-4 002.00 DUK, 1 160.5 DUK, -2 074.5 DUK, -914 DUK, 591.00 DUK)
+  assumed: A-D15 says by the 10th, not the day; the 10th is taken, on the last business day before it where it isn't one (payday_dom[sio, 2023-01], payday_dom[sio, 2023-02], payday_dom[sio, 2023-03], payday_dom[sio, 2023-04], payday_dom[sio, 2023-05], payday_dom[sio, 2023-06], payday_dom[sio, 2023-07], payday_dom[sio, 2023-08], payday_dom[sio, 2023-09], payday_dom[sio, 2023-10], payday_dom[sio, 2023-11], payday_dom[sio, 2023-12])
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-01-10
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-01-31
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-02-10
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-02-28
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-03-10
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-03-31
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-04-07
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-04-28
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-05-10
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-05-31
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-06-09
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-06-30
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-07-10
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-07-31
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-08-10
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-08-31
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-09-08
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-09-29
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-10-10
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-10-31
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-11-10
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-11-30
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-12-08
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-12-29
+  world: a13_apr
+  law date 2025-04-30, cut 2025-04-30
+a13_c_differs_ania: (-31 660.12 DUK, -30 781.00 DUK, -30 781.00 DUK, -3 679.00 DUK)
+  assumed: A-D15 says by the 10th, not the day; the 10th is taken, on the last business day before it where it isn't one (payday_dom[sio, 2023-01], payday_dom[sio, 2023-02], payday_dom[sio, 2023-03], payday_dom[sio, 2023-04], payday_dom[sio, 2023-05], payday_dom[sio, 2023-06], payday_dom[sio, 2023-07], payday_dom[sio, 2023-08], payday_dom[sio, 2023-09], payday_dom[sio, 2023-10], payday_dom[sio, 2023-11], payday_dom[sio, 2023-12])
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-01-10
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-01-31
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-02-10
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-02-28
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-03-10
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-03-31
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-04-07
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-04-28
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-05-10
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-05-31
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-06-09
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-06-30
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-07-10
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-07-31
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-08-10
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-08-31
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-09-08
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-09-29
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-10-10
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-10-31
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-11-10
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-11-30
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-12-08
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-12-29
+  world: a13_apr
+  law date 2025-04-30, cut 2025-04-30
+a13_c_why_paid: diff in a13_apr against a13_calc: 9 changed, 0 added, 0 removed, 27 unchanged
+  changed (e = kalina, m = 2023-04): 0.00 DUK against 4 680.00 DUK
+  changed (e = sio, m = 2023-05): 0.00 DUK against 493.76 DUK
+  changed (e = sio, m = 2023-06): 0.00 DUK against 3 826.64 DUK
+  changed (e = sio, m = 2023-07): 0.00 DUK against 3 703.20 DUK
+  changed (e = sio, m = 2023-08): 0.00 DUK against 3 826.64 DUK
+  changed (e = sio, m = 2023-09): 0.00 DUK against 3 826.64 DUK
+  changed (e = sio, m = 2023-10): 0.00 DUK against 3 703.20 DUK
+  changed (e = sio, m = 2023-11): 0.00 DUK against 3 826.64 DUK
+  changed (e = sio, m = 2023-12): 0.00 DUK against 3 703.20 DUK
+  world: a13_apr
+  world: a13_calc
+  law date 2025-04-30, cut 2025-04-30
+a13_c_why_income: diff in a13_apr against a13_calc: 10 changed, 0 added, 0 removed, 26 unchanged
+  changed (e = kalina, m = 2023-04): 81.00 DUK against 4 761.00 DUK
+  changed (e = kalina, m = 2023-05): 0.00 DUK against 70.20 DUK
+  changed (e = sio, m = 2023-05): 0.00 DUK against 493.76 DUK
+  changed (e = sio, m = 2023-06): 0.00 DUK against 3 826.64 DUK
+  changed (e = sio, m = 2023-07): 0.00 DUK against 3 703.20 DUK
+  changed (e = sio, m = 2023-08): 0.00 DUK against 3 826.64 DUK
+  changed (e = sio, m = 2023-09): 0.00 DUK against 3 826.64 DUK
+  changed (e = sio, m = 2023-10): 0.00 DUK against 3 703.20 DUK
+  changed (e = sio, m = 2023-11): 0.00 DUK against 3 826.64 DUK
+  changed (e = sio, m = 2023-12): 0.00 DUK against 3 703.20 DUK
+  world: a13_apr
+  world: a13_calc
+  law date 2025-04-30, cut 2025-04-30
+a13_c_why_advances: diff in a13_apr against a13_calc: 9 changed, 0 added, 0 removed, 27 unchanged
+  changed (e = kalina, m = 2023-04): 0.00 DUK against 180.00 DUK
+  changed (e = sio, m = 2023-05): 0.00 DUK against 64.00 DUK
+  changed (e = sio, m = 2023-06): 0.00 DUK against 498.00 DUK
+  changed (e = sio, m = 2023-07): 0.00 DUK against 481.00 DUK
+  changed (e = sio, m = 2023-08): 0.00 DUK against 498.00 DUK
+  changed (e = sio, m = 2023-09): 0.00 DUK against 498.00 DUK
+  changed (e = sio, m = 2023-10): 0.00 DUK against 481.00 DUK
+  changed (e = sio, m = 2023-11): 0.00 DUK against 498.00 DUK
+  changed (e = sio, m = 2023-12): 0.00 DUK against 481.00 DUK
+  assumed: A-D15 says by the 10th, not the day; the 10th is taken, on the last business day before it where it isn't one (payday_dom[sio, 2023-01], payday_dom[sio, 2023-02], payday_dom[sio, 2023-03], payday_dom[sio, 2023-04], payday_dom[sio, 2023-05], payday_dom[sio, 2023-06], payday_dom[sio, 2023-07], payday_dom[sio, 2023-08], payday_dom[sio, 2023-09], payday_dom[sio, 2023-10], payday_dom[sio, 2023-11], payday_dom[sio, 2023-12])
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-01-10
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-01-31
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-02-10
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-02-28
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-03-10
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-03-31
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-04-07
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-04-28
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-05-10
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-05-31
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-06-09
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-06-30
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-07-10
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-07-31
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-08-10
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-08-31
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-09-08
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-09-29
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-10-10
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-10-31
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-11-10
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-11-30
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-12-08
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-12-29
+  world: a13_apr
+  world: a13_calc
+  law date 2025-04-30, cut 2025-04-30
+warning: WARN-UNREAD source a_d11 is read by nothing
+warning: WARN-UNREAD source a_d13_kalina_2021 is read by nothing
+warning: WARN-UNREAD source a_d13_kalina_2022 is read by nothing
+warning: WARN-UNREAD source a_d13_kalina_2023 is read by nothing
+warning: WARN-UNREAD source a_d17 is read by nothing
+warning: WARN-UNREAD source a_d22 is read by nothing
+warning: WARN-UNREAD source a_d30 is read by nothing
+warning: WARN-UNREAD source a_d34 is read by nothing
+warning: WARN-UNREAD source a_d35 is read by nothing
+warning: WARN-UNREAD source a_d38 is read by nothing
+warning: WARN-UNREAD input pit5_refund_days is read by nothing
+warning: WARN-UNREAD input soc1_er_pension is read by nothing
+warning: WARN-UNREAD input soc8_base_cut is read by nothing
+warning: WARN-UNREAD input soc8_elect_days is read by nothing
+warning: WARN-UNREAD input soc8_pay_by is read by nothing
+warning: WARN-UNREAD input soc8_rate_elected is read by nothing
+warning: WARN-UNREAD input soc8_rate_first is read by nothing
+warning: WARN-UNREAD input soc8_rate_rest is read by nothing
+warning: WARN-UNREAD input soc8_weeks is read by nothing
+warning: WARN-UNREAD input soc8_weeks_first is read by nothing
+warning: WARN-UNREAD input wcp1_ee_extra_max is read by nothing
+warning: WARN-UNREAD input wcp1_er_topup_max is read by nothing
+warning: WARN-UNREAD input cc1_settle_days is read by nothing

@@ -1,0 +1,26 @@
+# L §3.1 A day key where a date is expected (2.1-C7b-19): "A day index is days or a range of day periods without by n,
+# or by 1 (§4.1). A key of a month or a year index, or of a day range by n with n above 1, doesn't convert".  A key of
+# a day range by 1 is a day: min(w, cutoff) means min(start_of(w), cutoff), here the key's own day 2026-01-05 (carried
+# through).  (L3_1_day_key_by_n keeps by 7 refused.)
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+input cutoff: date
+index dd = day 2026-01-05..2026-12-28 by 1
+def lo[w in dd]: date = min(w, cutoff) at cutoff
+ask q: lo[2026-01-05]
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  cutoff = 2026-03-10
+=== expect
+q: 2026-01-05
+...

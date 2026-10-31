@@ -1,0 +1,72 @@
+cash_diff: -25 300.82 DUK
+  world: kept
+  world: scen02
+  unfulfilled: credit[2024-09]
+  unfulfilled: credit[2024-10]
+  unfulfilled: credit[2024-11]
+  unfulfilled: credit[2024-12]
+  unfulfilled: parking[2024-10]
+  unfulfilled: parking[2024-11]
+  unfulfilled: parking[2024-12]
+  unfulfilled: refund
+  unfulfilled: sale
+  cut 2026-10-25
+facts: diff in kept against scen02: 0 changed, 6 added, 2 removed, 1 unchanged
+  added (x = credit[2024-09]): 400.00 DUK
+  added (x = credit[2024-10]): 400.00 DUK
+  added (x = parking[2024-11]): 150.00 DUK
+  added (x = credit[2024-11]): 400.00 DUK
+  added (x = parking[2024-12]): 150.00 DUK
+  added (x = credit[2024-12]): 400.00 DUK
+  removed (x = sale): 23 050.00 DUK
+  removed (x = refund): 350.82 DUK
+  world: kept
+  world: scen02
+  unfulfilled: credit[2024-09]
+  unfulfilled: credit[2024-10]
+  unfulfilled: credit[2024-11]
+  unfulfilled: credit[2024-12]
+  unfulfilled: parking[2024-10]
+  unfulfilled: parking[2024-11]
+  unfulfilled: parking[2024-12]
+  unfulfilled: refund
+  unfulfilled: sale
+  cut 2026-10-25
+flows_base (x = sale): 23 050.00 DUK
+  unfulfilled: sale
+  cut 2026-10-25
+flows_base (x = refund): 350.82 DUK
+  unfulfilled: refund
+  cut 2026-10-25
+flows_base (x = parking[2024-10]): 150.00 DUK
+  unfulfilled: parking[2024-10]
+  cut 2026-10-25
+flows_kept (x = credit[2024-09]): 400.00 DUK
+  world: kept
+  unfulfilled: credit[2024-09]
+  cut 2026-10-25
+flows_kept (x = parking[2024-10]): 150.00 DUK
+  world: kept
+  unfulfilled: parking[2024-10]
+  cut 2026-10-25
+flows_kept (x = credit[2024-10]): 400.00 DUK
+  world: kept
+  unfulfilled: credit[2024-10]
+  cut 2026-10-25
+flows_kept (x = parking[2024-11]): 150.00 DUK
+  world: kept
+  unfulfilled: parking[2024-11]
+  cut 2026-10-25
+flows_kept (x = credit[2024-11]): 400.00 DUK
+  world: kept
+  unfulfilled: credit[2024-11]
+  cut 2026-10-25
+flows_kept (x = parking[2024-12]): 150.00 DUK
+  world: kept
+  unfulfilled: parking[2024-12]
+  cut 2026-10-25
+flows_kept (x = credit[2024-12]): 400.00 DUK
+  world: kept
+  unfulfilled: credit[2024-12]
+  cut 2026-10-25
+warning: WARN-NEGATIVE konto is below zero from 2024-09-01

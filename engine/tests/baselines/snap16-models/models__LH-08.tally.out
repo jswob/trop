@@ -1,0 +1,40 @@
+a_added: 5 000.00 CAD
+  law date 2026-10-18, cut 2026-10-18
+a_factor: 0.0553
+  law date 2026-10-18, cut 2026-10-18
+a_line3: 4 147.5 CAD
+  law date 2026-10-18, cut 2026-10-18
+a_minimum: 9 147.5 CAD
+  law date 2026-10-18, cut 2026-10-18
+b_factor: 0.0553
+  assumed: the example doesn't say whether a spouse's age was elected (elected_spouse[td_ex])
+  assumed: the example doesn't say whether the RRIF is a qualifying RRIF; footnote 1 describes non-qualifying RRIFs (rrif_class[td_ex])
+  law date 2026-10-18, cut 2026-10-18
+b_left: 283 410 CAD
+  assumed: the example computes a 2025 minimum; whether 2025 is the year the RRIF was opened is not stated (first_year[td_ex, 2025])
+  assumed: the example doesn't say whether a spouse's age was elected (elected_spouse[td_ex])
+  assumed: the example doesn't say whether the RRIF is a qualifying RRIF; footnote 1 describes non-qualifying RRIFs (rrif_class[td_ex])
+  assumed: the example names no locked-in annuity contract (annuity[td_ex, 2025])
+  law date 2026-10-18, cut 2026-10-18
+b_minimum: 16 590 CAD
+  assumed: the example computes a 2025 minimum; whether 2025 is the year the RRIF was opened is not stated (first_year[td_ex, 2025])
+  assumed: the example doesn't say whether a spouse's age was elected (elected_spouse[td_ex])
+  assumed: the example doesn't say whether the RRIF is a qualifying RRIF; footnote 1 describes non-qualifying RRIFs (rrif_class[td_ex])
+  assumed: the example names no locked-in annuity contract (annuity[td_ex, 2025])
+  law date 2026-10-18, cut 2026-10-18
+c55_taxtips [lh08_shown = *]: 0.028571
+  law date 2026-10-18, cut 2026-10-18
+c55_td [lh08_shown = down]: 2.85
+  reading: lh08_shown = down
+  law date 2026-10-18, cut 2026-10-18
+c55_td [lh08_shown = half-up]: 2.86
+  reading: lh08_shown = half-up
+  law date 2026-10-18, cut 2026-10-18
+c70_taxtips [lh08_shown = *]: 0.05
+  law date 2026-10-18, cut 2026-10-18
+c70_td [lh08_shown = *]: 5
+  law date 2026-10-18, cut 2026-10-18
+d71_other: 0.0528
+  law date 2026-10-18, cut 2026-10-18
+d71_qual [lh08_shown = *]: 0.0526
+  law date 2026-10-18, cut 2026-10-18

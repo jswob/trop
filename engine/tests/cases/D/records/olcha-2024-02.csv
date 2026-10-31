@@ -1,0 +1,31 @@
+Bank Olcha S.A.|account statement
+Account|LN73 4400 2011 0000 8817 2264 0001
+Holder|ZBIGNIEW SOWA, HALINA SOWA
+Period|20240201|20240229
+Opening balance|32 209,91
+Date|Type|Counterparty|Title|Amount|Balance after
+20240205|CREDIT|Social Insurance Office|pension 02/2024 Z. SOWA|4 205,79|36 415,70
+20240205|CREDIT|Social Insurance Office|pension 02/2024 H. SOWA|2 235,88|38 651,58
+20240205|DIRECT DEBIT|Bank Buk|loan 3310-20 instalment 41|-972,28|37 679,30
+20240205|STANDING ORDER|WM Ogrodowa 2|fee Ogrodowa 2/11 02/2024|-420,00|37 259,30
+20240205|CASH|ATM Olcha Brzezie|cash withdrawal|-500,00|36 759,30
+20240205|CARD|Stacja Olcha-Paliwa|card ...2264|-131,57|36 627,73
+20240208|CREDIT|Igor Mazur|rent 02/2024 Ogrodowa 2/11|1 780,00|38 407,73
+20240208|CARD|Drogeria Konwalia|card ...2264|-119,49|38 288,24
+20240209|CARD|Stacja Olcha-Paliwa|card ...2264|-63,71|38 224,53
+20240210|CARD|Sklep Pod Lipą|card ...2264|-204,65|38 019,88
+20240212|TRANSFER|Treasury ISB|ISB2402 5 bonds reg. 55-1904-2271|-500,00|37 519,88
+20240214|CARD|Drogeria Konwalia|card ...2264|-139,48|37 380,40
+20240215|STANDING ORDER|Volta Energia|Leśna 4 energy 02/2024|-385,00|36 995,40
+20240215|CARD|Piekarnia Złoty Kłos|card ...2264|-105,05|36 890,35
+20240217|CARD|Sklep Pod Lipą|card ...2264|-244,00|36 646,35
+20240218|CARD|Drogeria Konwalia|card ...2264|-28,60|36 617,75
+20240219|CASH|ATM Olcha Brzezie|cash withdrawal|-500,00|36 117,75
+20240220|STANDING ORDER|Telekom Lenia|phone 02/2024|-59,00|36 058,75
+20240220|CARD|Apteka Rumianek|card ...2264|-240,24|35 818,51
+20240220|CARD|Sklep Pod Lipą|card ...2264|-189,47|35 629,04
+20240222|CARD|Sklep Pod Lipą|card ...2264|-140,09|35 488,95
+20240223|CARD|Market Brzezie|card ...2264|-55,85|35 433,10
+20240226|TRANSFER|Opieka Dom sp.|home help 02/2024|-600,00|34 833,10
+20240227|CARD|Warzywniak u Janka|card ...2264|-153,99|34 679,11
+Closing balance|34 679,11

@@ -1,0 +1,10 @@
+scenario t25_flat over flat
+  tally 2
+  from 2030-01-01
+  note "The what-if on the path flat: from tax year 2030 the gains tax is 25 % instead of 19 % (story § The forecast, item 7)."
+
+version gains_25_flat
+  cite story
+  governs 2030-01-01..
+  known 2026-01-15
+  replace pit8_rate = 0.25 governs 2030.. "story § The forecast, item 7: from tax year 2030 the gains tax is 25 %"

@@ -1,0 +1,87 @@
+model cur01rand01
+  tally 2
+  on 2026-02-20
+  start 2026-02-20
+  end 2026-04-01
+  note "Probe pair CUR-01 x RAND-01: an invoice in florens whose revenue takes the drawn mid rate of the last business day before the invoice date (the law's leg), and whose cash takes the bank's rate on the day paid, the drawn mid rate less the spread. The model's today is 20 February 2026, the day of the last known mid rate: neither rate is known yet."
+  note "Rule 4's draws: the engine's own samples, addressed by fact, seed and path (L 5.16), with the card's seed and number of paths. Python's random.Random(20260301) stream is a foreign program's stream, which no row can give (L 5.16, L 8.1): the def python_stream says so as a hole, and the means are judged as statistics."
+
+source card "Probe card CUR-01+RAND-01 (tmp/cases/probes/pairs/CUR-01+RAND-01.md): story, rules 1-4 and question"
+
+unit DUK: currency minor 0.01
+
+unit FLR: currency minor 0.01
+
+input amount: money FLR
+
+input cal: calendar
+
+input chance: num
+
+input down_step: num DUK/FLR
+
+input issued: date
+
+input paid: date
+
+input spread: num DUK/FLR
+
+input start_rate: num DUK/FLR
+
+input up_step: num DUK/FLR
+
+def bank_rate[d in days]: num DUK/FLR at reader
+  note "rule 2: the bank's own rate, that day's mid rate less the spread"
+  rule base v card_rules = mid[d] - spread
+
+def cash_received: money DUK at reader
+  note "rules 2 and 3: the money converted at the bank's rate of the day paid, half up to 0.01 DUK on each path"
+  rule base v card_rules = round(amount * bank_rate[paid], minor(DUK), half-up)
+
+def law_day: date at reader
+  note "rule 1: the last business day before the invoice date"
+  rule base v card_rules = add_business(issued, -1, cal)
+
+def mid[d in days]: num DUK/FLR at reader
+  note "rule 4: the known rate on the run's first day, 20 February; on each business day after it the day before's plus the up step or plus the down step (a negative row); a day that isn't a business day keeps the day before's rate (no rule reads such a day's rate)"
+  rule first beats step v card_rules = start_rate when pos(d) == 1
+  rule step v card_rules = if is_business(d, cal) then mid[d - 1] + (if up[d] == 1 then up_step else down_step) else mid[d - 1]
+
+def python_stream: bool = ?"Rule 4 draws with Python's random.Random(20260301), one random() per business day per path; a foreign program's stream is no row a text can give (L 5.16), so the draws are the engine's own samples under the same seed and number of paths."
+
+def revenue: money DUK at reader
+  note "rules 1 and 3: the revenue converted at the drawn mid rate of the law's day, half up to 0.01 DUK on each path"
+  rule base v card_rules = round(amount * mid[law_day], minor(DUK), half-up)
+
+def up[d in days]: dist at reader
+  note "rule 4: up with chance 1/2 on each business day, independently; a sample of 1 is up, 0 is down"
+  rule base v card_rules = binomial(1, chance)
+
+ask q_days: law_day, paid law 2026-04-01
+
+ask q_means: mean(revenue), mean(cash_received) law 2026-04-01 paths 20000 seed 20260301
+
+ask q_means_again: mean(revenue), mean(cash_received) law 2026-04-01 paths 20000 seed 20260301
+
+ask q_python_stream: python_stream
+
+version card_facts
+  cite card
+  governs always
+  known 2026-02-20
+  note "the card's story, a stipulation known from the model's start (L 4.5)"
+  amount = 1000 "story: invoice of 1 000.00 FLR"
+  issued = 2026-03-02 "story: invoiced on Monday 2 March 2026"
+  paid = 2026-04-01 "story: the client pays on Wednesday 1 April 2026"
+
+version card_rules
+  cite card
+  governs always
+  known 2026-02-20
+  note "the card's own rules"
+  cal = calendar(weekends [sat, sun]) "rule 4: business days Monday to Friday; no holidays in these weeks"
+  chance = 0.5 "rule 4: each with chance 1/2"
+  down_step = -0.0200 "rule 4: less 0.0200"
+  spread = 0.0800 "rule 2: that day's mid rate less 0.0800 DUK/FLR"
+  start_rate = 4.2000 "rule 4: 4.2000 on Friday 20 February 2026"
+  up_step = 0.0400 "rule 4: plus 0.0400"

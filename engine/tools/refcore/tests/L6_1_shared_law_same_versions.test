@@ -1,0 +1,55 @@
+# L §6.1 Shared law: two members copying one law part with the same versions (pit_2025 in both) are not refused: each
+# member stays closed and reads its own copy (a.rate, c.rate).
+=== J/joint.tally
+model family
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+  use a = "../A" sha256 "4a2c937a217bc98027215d3c8f76ea54b565d5e8738267fd7bf2268d8d5c04ed"
+  use c = "../C" sha256 "eb365491d24abf193947ef44eaccf6c5c4e448676ad35a1cfc66907bca4f0f2a"
+
+ask r: a.rate + c.rate law 2026-06-01
+=== A/reality.tally
+model ma
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+=== A/law/pit.tally
+part pit
+  tally 2
+  law
+
+source act "ustawa"
+
+input rate: num
+
+version pit_2025
+  cite act
+  governs 2025-01-01..
+  known 2024-12-01
+  rate = 0.12 "art. 1"
+=== C/reality.tally
+model mc
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+=== C/law/pit.tally
+part pit
+  tally 2
+  law
+
+source act "ustawa"
+
+input rate: num
+
+version pit_2025
+  cite act
+  governs 2025-01-01..
+  known 2024-12-01
+  rate = 0.12 "art. 1"
+=== expect
+r: 0.24
+  law date 2026-06-01, cut 2026-10-20

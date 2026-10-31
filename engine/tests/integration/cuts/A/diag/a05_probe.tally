@@ -1,0 +1,7 @@
+part asks_mca_a05
+  tally 2
+  note "MC-A diagnostic, not a household text: balances at A-05's cut on the full text (F10), and A-05 Ania's line without windows each."
+
+ask mca05_bal: bal(kop_glb, 2023-09-12), bal(joint, 2025-04-30), bal(rza_glb, 2024-03-07) law 2025-04-30 as known 2025-04-30
+
+ask mca05_plain: cg_tax[ania, 2024], net_gain[ania, 2024], cg_too_much[ania, 2024] law 2025-04-30 as known 2025-04-30

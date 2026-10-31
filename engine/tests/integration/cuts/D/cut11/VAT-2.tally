@@ -1,0 +1,16 @@
+part vat_2
+  tally 2
+  law
+  note "VAT-2 · The small-business exemption. Supplies of the previous year not above 200 000.00 DUK: exempt until the supply with which the year's supplies first go above 200 000.00 DUK, that supply included (.1); a business starting in the year has the limit times its days of activity over the year's days, rounded to the ort (.2, GEN-5 .3); exempt supplies and sales of business assets not counted (.3); the exemption may be given up from a month's first day (.4)."
+
+source vat_2 "Value Added Tax Act, VAT-2 The small-business exemption (tmp/cases/law/acts.md)"
+
+input vat2_limit: money DUK question "What is the yearly small-business limit (VAT-2 .1)?"
+
+version vat2_v1
+  cite vat_2
+  governs 2018-01-01..
+  known 2017-09-01
+  enters 2018-01-01
+  note "VAT-2 v1, in force 2018-01-01 until replaced, published 2017-09-01; governs supplies from 2018-01-01."
+  vat2_limit = 200000.00 "VAT-2 v1 .1"

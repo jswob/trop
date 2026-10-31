@@ -1,0 +1,50 @@
+# Round 18, C2-32 (follows). As L4_4_known_inside_window, with v2 (known 2026-03-15, inside g's window) changing amt to
+# 200.00 PLN: at the booking cut min(t, K) = t, v2 is visible for t from 2026-03-15 and not before (L §5.14.3), so the
+# amount depends on the day: HOLE-IMPRECISE (q); windows each splits it, 100.00 PLN on 2026-03-01 .. 2026-03-14 and
+# 200.00 PLN on 2026-03-15 .. 2026-03-31 (q2, L §4.4).
+=== m.tally
+model t
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+kind gifts: event certain
+  leg cash: PLN
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 2026-01-01..
+input amt: money PLN
+input other: money PLN
+input w: date
+
+move g: gifts
+  on w
+  leg cash from world to konto amount amt
+
+ask q: g.cash.amount
+ask q2: g.cash.amount windows each
+
+version v1
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN
+  other = 1.00 PLN
+  w = window(2026-03-01, 2026-03-31)
+  opening[konto] = 0 PLN at 2026-01-01 start
+
+version v2
+  cite s
+  governs always
+  known 2026-03-15
+  replace amt = 200.00 PLN
+=== expect
+q: ?"date within window(2026-03-01, 2026-03-31) not precise enough for the booking cut of g" (g)
+  cut 2026-06-30
+q2 [w = 2026-03-01 .. 2026-03-14]: 100.00 PLN
+  cut 2026-06-30
+q2 [w = 2026-03-15 .. 2026-03-31]: 200.00 PLN
+  cut 2026-06-30
+warning: WARN-UNREAD input other is read by nothing

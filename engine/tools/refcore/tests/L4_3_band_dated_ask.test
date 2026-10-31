@@ -1,0 +1,25 @@
+# MC-X-F12 (writer 9): rate's table governs 2027.., so it is law-dated, and an ask line that reads it directly
+# states law (L §4.3 Where a chain ends, an ask line; LOAD-LAWDATE).
+=== m.tally
+model p
+  tally 2
+  on 2027-12-31
+  start 2027-01-01
+  end 2027-12-31
+
+unit PLN: currency minor 0.01
+source act "the act"
+
+input age3: int
+band rate(a: int): money PLN
+ask q: rate(age3)
+
+version v_act
+  cite act
+  governs 2027..
+  known 2026-12-01
+  age3 = 3 governs always "the age"
+  rate: [0, 6) = 400.00 PLN "under 6"
+  rate: [6, 18) = 250.00 PLN "6 to 17"
+=== expect
+refused: LOAD-LAWDATE ask q reads law-dated rate directly, without law (m.tally:12)

@@ -1,0 +1,9 @@
+part asks_c12
+  tally 2
+  note "C-12 · Paying off the mortgage (questions.md), as of and known as of 2026-09-30. with extras / without extras: for each plan, the pot's lowest end-of-day balance over the forecast (2026-10-01 to the payoff or to 2027-09-30, where the forecast stops, whichever is first) and the first day it is reached, the day the mortgage is paid off (the principal owed reaches 0) and the last instalment (its day and amount). October 2026 extra: C-HR8 .2 under the plan of .3 (our forecast, to 2027-09-30): true is paid, false skipped, a hole where the two orders of deciding (October before the later months, or after them) disagree; beside it each order's result and the plan's lowest pot in October's window under each, the last month of the window the plan shows, and the window's ends. The principal and the pot at the cut, the extras paid in the with_x plan, and the October plan's lowest pot are printed beside them."
+
+ask c12_plans: c, pot_low[c], pot_low_on[c], paid_off[c], last_inst_day[c], last_inst[c] for c in plan law 2026-09-30
+
+ask c12_october: oct_extra_paid, oct_paid_before, oct_paid_after, oct_plan_low, oct_plan_low_after, oct_last_j, x_day[2026-10], x_end[2026-10], fc_until law 2026-09-30
+
+ask c12_detail: c, mort[c, 2026-09-30], pot_f[c, 2026-09-30], extras_paid[c], last_extra[c] for c in plan law 2026-09-30

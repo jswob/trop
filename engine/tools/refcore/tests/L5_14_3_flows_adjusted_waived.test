@@ -1,0 +1,57 @@
+# Fault f9_flows_adjusted (writer 6): p2's amount reads flows(pay, m); once v2 adjusts pay and the waiver wv settles
+# it, p2 was refused RUN-CYCLE. E §4.1: "Plans read other plans through flows(m[keys], span) ... The instance graph is
+# acyclic"; L §5.14.3: "Anything that reads the instance later, through flows, reads the booked amount plus the
+# settlements dated in its span"; E §5 step 2: settlements aren't measured. pay[m] is booked on day 20 at cut
+# min(t, K): Jan-May at share 1 (100.00 PLN), adjusted by v2 (known 2027-06-15, share 0.9) by -10.00 each, waived by
+# wv (no legs, settlement 0). flows(pay, m) for Jan-May is 100 + 0, so p2 = 50.00 each (5 x 50 = 250); Jun-Dec are
+# planned at cut K with share 0.9: pay 90.00, p2 45.00 (7 x 45 = 315). Sum: 565.00 PLN.
+=== m.tally
+model m
+  tally 2
+  on 2027-06-15
+  start 2027-01-01
+  end 2027-12-31
+unit PLN: currency minor 0.01
+index month = month 2027-01..2027-12
+kind pays: event certain
+  leg cash: PLN
+kind waivers: event certain
+place konto: accounts PLN lives 2027-01-01..
+place zus: outside lives 2027-01-01..
+input share: num
+input base: money PLN
+input dom: int
+input wd: date
+input rate: num
+def amt[m in month]: money PLN = round(base * share, minor(PLN), half-up) at start_of(m)
+move pay[m in month]: pays
+  on day_of(m, dom)
+  at start_of(m)
+  leg cash from konto to zus amount amt[m]
+move p2[m in month]: pays
+  on day_of(m, dom)
+  at start_of(m)
+  leg cash from konto to zus amount round(flows(pay, m) * rate, minor(PLN), half-up)
+move wv[a in adjustments on wd where a.adjusts in pays]: waivers
+  on a.day
+  fulfils a
+source s "x"
+version v1
+  cite s
+  governs always
+  known 2027-01-01
+  share = 1
+  base = 100
+  dom = 20
+  wd = 2027-06-15
+  rate = 0.5
+  opening[konto] = 1000 at 2027-01-01 start
+version v2
+  cite s
+  governs 2027..
+  known 2027-06-15
+  replace share = 0.9
+ask q: sum(flows(p2[m], start_of(m)..2027-12-31) for m in month where year_of(m) == 2027) law cut
+=== expect
+q: 565.00 PLN
+...

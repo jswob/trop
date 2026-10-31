@@ -1,0 +1,42 @@
+# L §5.5: "a line whose result read no option of an axis prints * for it"; "On a line, an axis prints * when,
+# with the line's other options held, every option of it gives the line's result ... An axis printed * has no
+# reading: entry."  For k = a the value doesn't depend on the axis; for k = b it does.
+=== m.tally
+model t
+  tally 2
+  on 2016-03-01
+  start 2015-11-01
+  end 2016-10-31
+
+source s "s"
+
+axis mode
+  low "a low reading"
+  high "a high reading"
+
+index ks = [a, b]
+input v[m in mode]: int
+input w: int
+
+def r[k in ks]: int at reader
+  rule base = w
+  rule special beats base = v[mode] when k == b
+
+version x
+  cite s
+  governs always
+  known 2016-01-01
+  v[low] = 1
+  v[high] = 2
+  w = 7
+
+ask q1: r[k] for k in ks law 2016-03-01
+=== expect
+q1 (k = a) [mode = *]: 7
+  law date 2016-03-01, cut 2016-03-01
+q1 (k = b) [mode = low]: 1
+  reading: mode = low
+  law date 2016-03-01, cut 2016-03-01
+q1 (k = b) [mode = high]: 2
+  reading: mode = high
+  law date 2016-03-01, cut 2016-03-01

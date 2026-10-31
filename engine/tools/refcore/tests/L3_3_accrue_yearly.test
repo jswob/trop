@@ -1,0 +1,30 @@
+# L §3.3 accrue takes "yearly rate r": a monthly rate is refused (LOAD-UNIT; the period is in the value, found
+# at run, L §8.3).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+input p: money PLN
+input r: rate
+input d1: date
+input d2: date
+def a: num PLN = accrue(p, r, d1, d2, act365, simple) at reader
+
+version v
+  cite s
+  governs 2026..
+  known 2026-01-01
+  p = 1 000.00 PLN
+  r = 1 %/month
+  d1 = 2026-01-01
+  d2 = 2026-07-01
+
+ask q: a law 2026-06-30
+=== expect
+refused: LOAD-UNIT ...

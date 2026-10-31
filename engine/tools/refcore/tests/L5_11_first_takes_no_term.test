@@ -1,0 +1,12 @@
+# L §2.3 (round 14): agg = ... | ("first" | "last") "(" bind {"," bind} ")" [tieby] (no term, §5.11), AGG without
+# them, so first with a term doesn't parse: LOAD-PARSE. (Round 14's U-9, refcore's outcome stated.)
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+ask q: first(m for m in months)
+=== expect
+refused: LOAD-PARSE ...

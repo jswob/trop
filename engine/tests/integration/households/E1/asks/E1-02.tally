@@ -1,0 +1,11 @@
+part e1_asks_02
+  tally 2
+  note "E1-02 · What each of us was worth, end of 2025 (tmp/cases/E1/questions.md): as of 2025-12-31, known 2026-01-15. Five of the six and the family are partial. A partial line can't carry a hole through A-HR5's rounding of the halves, nor through the comparisons that decide Piotr's inheritance tax (L §5.18), so these lines are holes naming every missing item; the known parts are asked in scenarios/e1_reported.tally, with the Lazur rate from 2025-07-01 pinned at 0 %/year as A-11 does and Piotr's report made in time."
+
+ask e1_02_day: check a.nw_day == e1_day law 2025-12-31 as known 2026-01-15
+
+ask e1_02_family: e1_family law 2025-12-31 as known 2026-01-15 partial
+
+ask e1_02_owed: b.ola_owes_piotr[year_of(e1_day)], d.owed_kuba[e1_day] law 2025-12-31 as known 2026-01-15
+
+ask e1_02_people: e1_worth[p] for p in e1_person law 2025-12-31 as known 2026-01-15 partial

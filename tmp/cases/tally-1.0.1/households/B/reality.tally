@@ -1,0 +1,99 @@
+model household_b
+  tally 1
+  on 2026-01-07
+  start 2022-03-01
+  end 2047-12-31
+  note "Household B (tmp/cases/B): Piotr Sowa, a sole trader on the flat rate from 2022-04-11, and Aleksandra (Ola) Wilk, employed by Mewa; not married. One reality (L §6.1): each document is a source, its facts in versions known on the document's day (L §4.5)."
+  note "The model's today is 2026-01-07, the dossier's last known day; each question's ask carries its own as known. DUK and FLR are written money DUK / money FLR, read with a minor unit of 0.01 (S:4)."
+  note "Law: the parts in tmp/cases/tally-1.0.1/law, copied in (L §6.1). Record exports no text loads (O:B-1) are represented by the rows the asks read, each citing file and line."
+
+source story "Household B's own account, with known dates (tmp/cases/B/story.md)"
+source house_rules "Household B's house rules B-HR1 – B-HR6 (tmp/cases/B/house-rules.md)"
+source modeller "Assumptions of this model, each with its reason"
+source cis_export "Bank Cis exports, current account LN45 2090 0017 5521 3380 0001 (tmp/cases/B/records/cis-5521-3380-0001-2025-*.csv)"
+source cis_savings_export "Bank Cis export, savings account LN45 2090 0017 5521 3380 0002 (tmp/cases/B/records/cis-5521-3380-0002-2025.csv)"
+source lazur_export "Bank Lazur export, floren account LN88 1020 0044 8813 FLR (tmp/cases/B/records/laz-8813-flr-2025.csv)"
+source wrzos_export "Bank Wrzos statements of Ola's account LN27 1140 2004 0000 3402 8830 1177 (tmp/cases/B/records/wrz-ola-*.csv)"
+source faktura "Faktura+ sales and purchase registers (tmp/cases/B/records/faktura-*.csv)"
+source market "Market data: Bank Lazur's exchange table and DUKOR fixings (tmp/cases/market/lazur-fx-flr.csv, dukor.csv)"
+
+source b_d01 "B-D01 Business register entry: Piotr Sowa (tmp/cases/B/docs/B-D01.md)"
+source b_d02 "B-D02 Notice to the Revenue Office: form of business tax (tmp/cases/B/docs/B-D02.md)"
+source b_d03 "B-D03 SIO: sickness insurance from 1 November 2022 (tmp/cases/B/docs/B-D03.md)"
+source b_d04 "B-D04 Deed of sale: the flat ul. Wrzosowa 12/5 (extract) (tmp/cases/B/docs/B-D04.md)"
+source b_d05 "B-D05 Notice to the Revenue Office: VAT (tmp/cases/B/docs/B-D05.md)"
+source b_d06 "B-D06 Arnika Soft · contract for IT services (extract, with its annexes) (tmp/cases/B/docs/B-D06.md)"
+source b_d07 "B-D07 Bank Jodła · mortgage loan agreement 7710-22 (extract) (tmp/cases/B/docs/B-D07.md)"
+source b_d08 "B-D08 Bank Jodła · payment holidays granted on loan 7710-22 (tmp/cases/B/docs/B-D08.md)"
+source b_d09 "B-D09 WM Wrzosowa 12 · the building fee for 2025 (tmp/cases/B/docs/B-D09.md)"
+source b_d10 "B-D10 TU Bocian · flat insurance policy WRZ-12/5 2025/26 (tmp/cases/B/docs/B-D10.md)"
+source b_d11 "B-D11 Auto Grab · invoice FA/2023/0311: the car LN 4471K (tmp/cases/B/docs/B-D11.md)"
+source b_d12 "B-D12 Bank Cis · car loan agreement 5521-K (extract) (tmp/cases/B/docs/B-D12.md)"
+source b_d13 "B-D13 TU Bocian · car liability policy MTPL 88-4471 2025/26 (tmp/cases/B/docs/B-D13.md)"
+source b_d14 "B-D14 Gmina Kłodzin · road tax 2025, car LN 4471K (tmp/cases/B/docs/B-D14.md)"
+source b_d15 "B-D15 Invoice FV of the car sale (tmp/cases/B/docs/B-D15.md)"
+source b_d16 "B-D16 Bank Cis · loan 5521-K repaid early (tmp/cases/B/docs/B-D16.md)"
+source b_d17 "B-D17 TU Bocian · policy MTPL 88-4471 ended (tmp/cases/B/docs/B-D17.md)"
+source b_d18 "B-D18 Arnika-Delta · merger notice (tmp/cases/B/docs/B-D18.md)"
+source b_d19 "B-D19 Arnika-Delta · the recalled payment (tmp/cases/B/docs/B-D19.md)"
+source b_d20 "B-D20 Studio Bez · the rest of the June invoice (tmp/cases/B/docs/B-D20.md)"
+source b_d21 "B-D21 Kessel Lenia · contract for IT services (extract) (tmp/cases/B/docs/B-D21.md)"
+source b_d22 "B-D22 Kessel · the November invoice (tmp/cases/B/docs/B-D22.md)"
+source b_d23 "B-D23 Bank Lazur · floren account LN88 1020 0044 8813 FLR: terms (extract) (tmp/cases/B/docs/B-D23.md)"
+source b_d24 "B-D24 Note from Bartek (tmp/cases/B/docs/B-D24.md)"
+source b_d25 "B-D25 Mewa Logistyka · pay from January 2024 (tmp/cases/B/docs/B-D25.md)"
+source b_d25b "B-D25b Mewa Logistyka · pay from January 2025 (tmp/cases/B/docs/B-D25b.md)"
+source b_d26 "B-D26 Mewa Logistyka · February's pay is late (tmp/cases/B/docs/B-D26.md)"
+source b_d27 "B-D27 Notary · estate of Zbigniew Sowa: payout to Piotr Sowa (tmp/cases/B/docs/B-D27.md)"
+source b_d28 "B-D28 Bank Jodła · loan 7710-22: payments received in 2025 (tmp/cases/B/docs/B-D28.md)"
+source b_d29 "B-D29 Bank Jodła · valuation of the flat ul. Wrzosowa 12/5 (tmp/cases/B/docs/B-D29.md)"
+source b_d30 "B-D30 Our note: the flat's costs settled to the end of 2024 (tmp/cases/B/docs/B-D30.md)"
+source b_d31 "B-D31 Lease of the flat ul. Lipowa 4/7, Kłodzin (extract) (tmp/cases/B/docs/B-D31.md)"
+source b_d32 "B-D32 Ul. Lipowa 4/7 · the lease ended, the deposit settled (tmp/cases/B/docs/B-D32.md)"
+source b_d33 "B-D33 Deed of sale: the studio ul. Polna 3/14, Dębowo (extract) (tmp/cases/B/docs/B-D33.md)"
+source b_d34 "B-D34 Deed of sale: the studio ul. Polna 3/14 sold (extract), with the agent's invoice (tmp/cases/B/docs/B-D34.md)"
+source b_d35 "B-D35 Kuchnie Buk · quote for a fitted kitchen, ul. Wrzosowa 12/5 (tmp/cases/B/docs/B-D35.md)"
+source b_d36 "B-D36 Bank Cis · fees for account LN45 2090 0017 5521 3380 0001 from 2025 (tmp/cases/B/docs/B-D36.md)"
+
+index person = [piotr, ola]
+
+index day = day 2022-03-01..2047-12-31
+
+index month = month 2022-03..2047-12
+
+index tax_year = year 2022..2047
+
+index client = [arnika, arnika_delta, studio_bez, pracownia_ul, kawiarnia_ziarno, kessel, auto_mlecz]
+
+index buy_kind = [laptop, car, fuel, monitor]
+
+index row_kind = [card, card_refund, friend_back, transfer]
+
+index jodla_kind = [instalment, overpayment]
+
+index owed_status = [not_yet_due, promised, expected, missed]
+
+index housing_item: open
+
+index inv_duk: open
+
+index inv_flr: open
+
+index purchase: open
+
+index cis_row: open
+
+index sav_row: open
+
+index laz_row: open
+
+index wrz_row: open
+
+index jodla_row: open
+
+index bartek_part: open
+
+index carloan_inst = 1..36
+
+index ola_cent = 720000..2000000
+  note "Ola's possible gross pays in orts, 7 200.00 – 20 000.00 DUK, searched for the October 2024 gross (ola.tally)"

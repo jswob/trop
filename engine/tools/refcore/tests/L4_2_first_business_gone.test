@@ -1,0 +1,22 @@
+# L §2.2 (writer 8): first_business is gone from the built-ins ("The n-th business day of a period p is
+# add_business(start_of(p) - 1 day, n, cal)", L §4.2); a call takes a built-in's name or a band's id (L §2.3 Calls),
+# so first_business(...) names no band: LOAD-NAME.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+input len: calendar
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  len = calendar(weekends [sat, sun])
+
+ask q: first_business(2026-03, 1, len)
+=== expect
+refused: LOAD-NAME ...

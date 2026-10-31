@@ -1,0 +1,32 @@
+# Round 18, C1-38 (fixed): "the key bind of a def, input, place or fill, which is defined for every key" needs no on or over (L §5.6, §5.7 LOAD-ALIVE). The take in pos order gives s1 min(10, 6) = 6 and s2 the rest 4 (L §5.12).
+=== m.tally
+model m
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+source s "s"
+unit PLN: currency minor 0.01
+kind persons
+index slots = [s1, s2]
+input cap[p in persons]: money PLN
+input need[k in slots]: money PLN
+fill f[p in persons]
+  supply cap[p]
+  demand need[k] for k in slots
+  arc true
+  order pos(k)
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  persons + [ola] lives 1950-01-01..
+  cap[ola] = 10
+  need[s1] = 6
+  need[s2] = 6
+ask q: f[ola].taken[k] for k in slots
+=== expect
+q (k = s1): 6.00 PLN
+  cut 2026-12-31
+q (k = s2): 4.00 PLN
+  cut 2026-12-31

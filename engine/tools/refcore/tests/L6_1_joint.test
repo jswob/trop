@@ -1,0 +1,93 @@
+# L §6.1 Joint models: `use a = "file" sha256 "..."` imports a closed model, pinned by its content (run with
+# pin=bytes: the sha256 of the member file as the test gives it, E §3.1 step 1 leaving open what the hash is over);
+# "its items are read as a.item (a.konto, a.tax[ola, 2025])"; "A member's asks are asked inside the joint model as a.q;
+# since imports are pinned and never changed, joining changes no member's answer". The members are loaded under their
+# prefixes (E §3.1 step 1) and read at the joint model's law date and cut. j1: ana's income for y plus ben's 80 000.00
+# PLN: 180 000, 200 000, 210 000 PLN (num PLN, the def's type). j2: ana's tax[2026] = 120 000 * 0.12 = 14 400 PLN; a.q
+# gives the same, as ana alone does; b.q is ben's income. A key of the joint's year index is a year (L §4.2 Keys as
+# values), so it keys the member's year index. The register names the member's items and versions a.item, a.v. (The
+# key 2026 is written in an ask: in a def it is a date literal in a rule, LOAD-LITERAL, L §7.1, in a joint model as in
+# any.)
+=== options pin=bytes
+=== joint.tally
+model family
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+  use a = "ana.tally" sha256 "26a08dc22b514dc0b6eb7c1263103f06b216244b4ed980752bbc810412d05e45"
+  use b = "ben.tally" sha256 "a8bf3b260e60f625766da425a660f922557f525c28dcf8ed70567ec64d600ccc"
+
+unit PLN: currency minor 0.01
+index jy = year 2025..2027
+
+def income_sum[y in jy]: num PLN = a.income[y] + b.income at reader
+
+ask j1: income_sum[y] for y in jy law 2026-12-31
+ask j2: a.tax[2026] law 2026-12-31
+ask j3: a.rate law 2026-12-31
+=== ana.tally
+model ana
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source s "umowa"
+unit PLN: currency minor 0.01
+index yrs = year 2025..2027
+input income[y in yrs]: money PLN
+input rate: num
+def tax[y in yrs]: num PLN = income[y] * rate at reader
+
+version v
+  cite s
+  governs 2025..
+  known 2025-01-01
+  income[2025] = 100 000.00 PLN
+  income[2026] = 120 000.00 PLN
+  income[2027] = 130 000.00 PLN
+  rate = 0.12
+
+ask q: tax[2026] law 2026-12-31
+=== ben.tally
+model ben
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source s "umowa"
+unit PLN: currency minor 0.01
+input income: money PLN
+
+version v
+  cite s
+  governs 2025..
+  known 2025-01-01
+  income = 80 000.00 PLN
+
+ask q: income law 2026-12-31
+=== expect j1 j2 j3 a.q b.q
+j1 (y = 2025): 180 000 PLN
+  held: b.income = 80 000.00 PLN (b.v), read for 2026-12-31
+  law date 2026-12-31, cut 2026-10-20
+j1 (y = 2026): 200 000 PLN
+  held: b.income = 80 000.00 PLN (b.v), read for 2026-12-31
+  law date 2026-12-31, cut 2026-10-20
+j1 (y = 2027): 210 000 PLN
+  held: a.income[2027] = 130 000.00 PLN (a.v), read for 2027
+  held: b.income = 80 000.00 PLN (b.v), read for 2026-12-31
+  law date 2026-12-31, cut 2026-10-20
+j2: 14 400 PLN
+  held: a.rate = 0.12 (a.v), read for 2026-12-31
+  law date 2026-12-31, cut 2026-10-20
+j3: 0.12
+  held: a.rate = 0.12 (a.v), read for 2026-12-31
+  law date 2026-12-31, cut 2026-10-20
+a.q: 14 400 PLN
+  held: rate = 0.12 (v), read for 2026-12-31
+  law date 2026-12-31, cut 2026-10-20
+b.q: 80 000.00 PLN
+  held: income = 80 000.00 PLN (v), read for 2026-12-31
+  law date 2026-12-31, cut 2026-10-20

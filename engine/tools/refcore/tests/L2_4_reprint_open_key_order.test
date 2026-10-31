@@ -1,0 +1,41 @@
+# GD-24 (round 19, writer 10): settled; was REFCORE-UNSPECIFIED §2.4. L §2.4: "At one key position the wider key comes first: `*` before every other key".
+# The old comment:
+# L §2.4 sorts version items "then keys in index order (things and an open index's keys in the text order of their
+# stable ids, §2.5)"; a `*` (every key, §4.6) is no key of the index, and the section gives it no place among them:
+# REFCORE-UNSPECIFIED (the order of pay[*] and pay[ola] decides the canonical text, so the hash).
+=== options reprint
+=== m.tally
+model m
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+kind persons
+input pay[p in persons]: money PLN
+
+version v
+  cite s
+  governs 2026..
+  known 2026-01-01
+  pay[ola] = 2 PLN
+  pay[*] = 1 PLN
+=== expect
+--- m.tally
+model m
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+kind persons
+
+input pay[p in persons]: money PLN
+
+version v
+  cite s
+  governs 2026..
+  known 2026-01-01
+  pay[*] = 1 PLN
+  pay[ola] = 2 PLN
+sha256 ...

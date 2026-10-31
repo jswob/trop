@@ -1,0 +1,12 @@
+scenario crash over forecast
+  tally 2
+  from 2026-01-01
+  note "Path crash: the base, but −50 % on 2027-03-31 (story § The forecast, item 3). Written over forecast with the whole path, not over base with one replaced month: a replace known the same day as the row it replaces is refused by the reference interpreter (fault F5)."
+
+version path_crash
+  cite story
+  governs 2026-01-01..
+  known 2026-01-15
+  path_rate[*] = 0.004 governs 2026-01..2027-02 "story § The forecast, item 3: crash, the base (+0.40 % a month)"
+  path_rate[*] = -0.50 governs 2027-03 "story § The forecast, item 3: crash, −50 % on 2027-03-31"
+  path_rate[*] = 0.004 governs 2027-04.. "story § The forecast, item 3: crash, the base (+0.40 % a month)"

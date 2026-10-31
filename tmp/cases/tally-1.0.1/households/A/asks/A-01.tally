@@ -1,0 +1,16 @@
+part asks_a01
+  tally 1
+  note "A-01 · Our tax returns, 2021–2023 (questions.md), as known 2024-04-30. A result is the tax less the advances: positive is payable, negative a refund. 2021 jointly fans out over the axis pit6_health (L §5.5): health_off is the key's reading E, reliefs_only its reading N. The causes print in the index order of cause, which the question wants largest first (the ask can't sort)."
+  note "without: the scenario no_cut, PIT-3 v2 for 2022 on, advances computed again under it."
+
+ask a01_2021: res_sep[ania, 2021], res_sep[tomek, 2021], res_joint[ania, 2021], res_joint[tomek, 2021] as known 2024-04-30
+
+ask a01_2022: joint_tax[2022], res_joint[ania, 2022], res_joint[tomek, 2022], together_joint[2022] as known 2024-04-30
+
+ask a01_2022_causes: c, gain[c, 2022] for c in cause as known 2024-04-30
+
+ask a01_2023: joint_tax[2023], res_joint[ania, 2023], res_joint[tomek, 2023], together_joint[2023], relief[2023] as known 2024-04-30
+
+ask a01_without_2022: joint_tax[2022], together_joint[2022] with scenario no_cut as known 2024-04-30
+
+ask a01_without_2023: joint_tax[2023], together_joint[2023] with scenario no_cut as known 2024-04-30

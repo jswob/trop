@@ -1,0 +1,37 @@
+# L §4.2 table.  age: "completed years from birth date b to date d. The anniversary of 29 February in a common year
+# is 1 March. Before b it is none."  age_months: "the largest n with add_months(b, n) ≤ d".  add_months: "the same
+# day number, clamped to the last day of the target month"; add_years(d, n) is add_months(d, 12n).
+# days_between(a, b): b − a in days.  overlap_days(a, b, k): the days x with a ≤ x ≤ b in period k: 2026-02-01
+# through 2026-02-10 is 10 days.  weekday: 1 for Monday to 7 for Sunday (2026-01-01 is a Thursday: 4).
+# start_of(k), end_of(k): "the first day of period k; the first day after it".
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+input leap: date
+input n31: int
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  leap = 2000-02-29
+  n31 = 31
+
+ask q1: age(leap, 2001-02-28), age(leap, 2001-03-01), age(leap, 1999-12-31)
+ask q2: age_months(2026-01-31, 2026-02-28), add_months(2026-01-31, 1), add_years(2024-02-29, 1), day_of(2026-02, n31)
+ask q3: days_between(2026-01-01, 2026-03-01), overlap_days(2026-01-20, 2026-02-10, 2026-02), weekday(2026-01-01)
+ask q4: start_of(2026-02), end_of(2026-02), start_of(quarter_of(2026-05-10)), year_of(2026-05-10), month_of(2026-05-10)
+=== expect
+q1: (0, 1, none)
+  cut 2026-12-31
+q2: (1, 2026-02-28, 2025-02-28, 2026-02-28)
+  cut 2026-12-31
+q3: (59, 10, 4)
+  cut 2026-12-31
+q4: (2026-02-01, 2026-03-01, 2026-04-01, 2026, 2026-05)
+  cut 2026-12-31

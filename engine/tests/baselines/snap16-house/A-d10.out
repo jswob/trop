@@ -1,0 +1,22 @@
+mca_a10_bal [px_round = *]: (?"date within window(2026-01-01, 2026-01-31) not precise enough for a balance" (cards[2026-01]) ?"date within window(2026-01-01, 2026-01-31) not precise enough for the booking cut of cards[2026-01]" (cards[2026-01]), refused: RUN-ORDER decisions hr1_take and zosia_save read each other on 2026-01-15)
+  assumed: the records end on 2025-12-31 (story); the walk books the model's own movements from the next day (walk_from)
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2026-01-15
+  anchor: joint 2025-12-31 end, stated 11 579.98 DUK, difference 0.00 DUK
+  unfulfilled: so_pay[nursery, 2026-01]
+  unfulfilled: so_pay[rent, 2026-01]
+  law date 2026-01-15, cut 2026-01-15
+mca_a10_explain [px_round = *]: ?"date within window(2026-01-01, 2026-01-31) not precise enough for a balance" (cards[2026-01]) ?"date within window(2026-01-01, 2026-01-31) not precise enough for the booking cut of cards[2026-01]" (cards[2026-01])
+  balance of joint (DUK) at the end of 2026-01-14
+  from: anchor wrz_joint_2025_12:stated[joint] = 11 579.98 DUK, 2025-12-31 end (version wrz_joint_2025_12, source wrz_joint, locator "wrz-joint-2025-12.csv line 45: balance after"), gap role anchor, gap 0.00 DUK
+  2026-01-01:
+    cards[2026-01] (past): its window window(2026-01-01, 2026-01-31) opens: ?"date within window(2026-01-01, 2026-01-31) not precise enough for a balance" (cards[2026-01]) ?"date within window(2026-01-01, 2026-01-31) not precise enough for the booking cut of cards[2026-01]" (cards[2026-01])
+  2026-01-02:
+    so_pay[rent, 2026-01].cash (past): -3 350.00 DUK
+  2026-01-05:
+    so_pay[nursery, 2026-01].cash (past): -1 250.00 DUK
+  assumed: the records end on 2025-12-31 (story); the walk books the model's own movements from the next day (walk_from)
+  anchor: joint 2025-12-31 end, stated 11 579.98 DUK, difference 0.00 DUK
+  unfulfilled: so_pay[nursery, 2026-01]
+  unfulfilled: so_pay[rent, 2026-01]
+  law date 2026-01-15, cut 2026-01-15
+

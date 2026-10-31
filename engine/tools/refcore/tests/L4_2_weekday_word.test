@@ -1,0 +1,21 @@
+# L §4.2: calendar(weekends [...]) lists "the weekdays (mon tue wed thu fri sat sun, ISO 8601's days 1 to 7; another
+# word is refused, LOAD-PARSE)". sobota is no weekday word. (Writer 6.)
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+input len: calendar
+
+version v
+  cite s
+  governs 2026
+  known 2025-12-01
+  len = calendar(weekends [sobota, sun])
+
+ask q1: is_business(2026-03-02, len)
+=== expect
+refused: LOAD-PARSE ...

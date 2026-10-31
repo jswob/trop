@@ -1,0 +1,111 @@
+model scen02
+  tally 2
+  on 2026-10-25
+  start 2024-09-01
+  end 2024-12-31
+
+source credit_terms "SCEN-02 card: the car credit, 400.00 on the 20th of each month"
+
+source insurer "SCEN-02 card: the insurance refund of 20 September 2024"
+
+source parking_notice "SCEN-02 card: notice given on the parking, paid for the last time on 1 October 2024"
+
+source parking_terms "SCEN-02 card: the parking, 150.00 on the 1st of each month"
+
+source sale_contract "SCEN-02 card: the car sold on 15 September 2024, 23 050.00 after the credit's payoff"
+
+source what_if "SCEN-02 card: had they kept the car"
+
+unit DUK: currency minor 0.01
+
+index mon = month 2024-09..2024-12
+
+place konto: accounts DUK lives 2024-09-01..
+
+place world: outside lives 2024-09-01..
+
+input credit_day: int
+
+input credit_from: month
+
+input credit_inst: money DUK
+
+input park_fee: money DUK
+
+input park_last: month
+
+input refund_amt: money DUK
+
+input refund_day: date
+
+input sale_day: date
+
+input sale_net: money DUK
+
+input sold: bool
+
+move credit[m in mon]: transfers
+  on day_of(m, credit_day)
+  at day_of(m, credit_day)
+  when m >= credit_from and not sold
+  leg cash from konto to world amount credit_inst
+
+move parking[m in mon]: transfers
+  on start_of(m)
+  at start_of(m)
+  when m <= park_last or not sold
+  leg cash from konto to world amount park_fee
+
+move refund: transfers
+  on refund_day
+  at refund_day
+  when sold
+  leg cash from world to konto amount refund_amt
+
+move sale: transfers
+  on sale_day
+  at sale_day
+  when sold
+  leg cash from world to konto amount sale_net
+
+ask flows_base: x.cash.amount for x in transfers over 2024-09-15..2024-12-31
+
+ask flows_kept: x.cash.amount for x in transfers over 2024-09-15..2024-12-31 with scenario kept
+
+ask facts: diff(x.cash.amount for x in transfers over 2024-09-15..2024-12-31) in kept against scen02
+
+version car_sold
+  cite sale_contract
+  governs always
+  known 2024-09-01
+  sale_day = 2024-09-15 "sold 15 September 2024"
+  sale_net = 23050.00 "received after the credit's payoff"
+  sold = false governs ..2024-09-14 "before the sale"
+  sold = true governs 2024-09-15.. "sold"
+
+version credit_v
+  cite credit_terms
+  governs always
+  known 2024-09-01
+  credit_day = 20 "on the 20th of each month"
+  credit_from = 2024-09 "kept, the instalments run on from the 20 September instalment"
+  credit_inst = 400.00 "400.00 a month"
+
+version notice_v
+  cite parking_notice
+  governs always
+  known 2024-09-01
+  park_last = 2024-10 "paid for the last time on 1 October 2024"
+
+version park_v
+  cite parking_terms
+  governs always
+  known 2024-09-01
+  park_fee = 150.00 "150.00 on the 1st of each month"
+
+version refund_v
+  cite insurer
+  governs always
+  known 2024-09-01
+  refund_amt = 350.82 "insurance refund"
+  refund_day = 2024-09-20 "paid 20 September 2024"

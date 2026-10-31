@@ -1,0 +1,26 @@
+q1_half (c = stefan_ewa, y = 2022): 75 000 PLN
+  assumed: the example names no deductions from income (art. 26 ust. 1, such as social insurance contributions); the 150 000 zł dochód is taken as the base (deductions[ewa, 2022], deductions[stefan, 2022])
+  law date 2026-10-18, cut 2026-10-18
+q2_base (c = stefan_ewa, y = 2022): 75 000.00 PLN
+  assumed: the example names no deductions from income (art. 26 ust. 1, such as social insurance contributions); the 150 000 zł dochód is taken as the base (deductions[ewa, 2022], deductions[stefan, 2022])
+  law date 2026-10-18, cut 2026-10-18
+q3_tax_joint (c = stefan_ewa, y = 2022): 10 800.00 PLN
+  assumed: the example names no deductions from income (art. 26 ust. 1, such as social insurance contributions); the 150 000 zł dochód is taken as the base (deductions[ewa, 2022], deductions[stefan, 2022])
+  law date 2026-10-18, cut 2026-10-18
+q4_tax_single (p = stefan, y = 2022): 20 400.00 PLN
+  assumed: the example names no deductions from income (art. 26 ust. 1, such as social insurance contributions); the 150 000 zł dochód is taken as the base (deductions[stefan, 2022])
+  law date 2026-10-18, cut 2026-10-18
+q4_tax_single (p = ewa, y = 2022): 0.00 PLN
+  assumed: the example names no deductions from income (art. 26 ust. 1, such as social insurance contributions); the 150 000 zł dochód is taken as the base (deductions[ewa, 2022])
+  law date 2026-10-18, cut 2026-10-18
+q5_household (c = stefan_ewa, y = 2022) [ul10_filing = joint]: ?"Przykład 2 does not say whether Stefan and Ewa had wspólność majątkowa from the wedding to 31 December 2022 (art. 6 ust. 2)." (joint_property[stefan_ewa, 2022]) ?"Was this spouse subject to unlimited tax liability in Poland (art. 3 ust. 1) in this year?" (resident[ewa, 2022], resident[stefan, 2022])
+  reading: ul10_filing = joint
+  law date 2026-10-18, cut 2026-10-18
+q5_household (c = stefan_ewa, y = 2022) [ul10_filing = separate]: 20 400.00 PLN
+  assumed: the example names no deductions from income (art. 26 ust. 1, such as social insurance contributions); the 150 000 zł dochód is taken as the base (deductions[ewa, 2022], deductions[stefan, 2022])
+  reading: ul10_filing = separate
+  law date 2026-10-18, cut 2026-10-18
+q6_marriage_ok: (?"Przykład 2 does not say whether Stefan and Ewa had wspólność majątkowa from the wedding to 31 December 2022 (art. 6 ust. 2)." (joint_property[stefan_ewa, 2022]), true)
+  law date 2026-10-18, cut 2026-10-18
+q7_eligible: (?"Przykład 2 does not say whether Stefan and Ewa had wspólność majątkowa from the wedding to 31 December 2022 (art. 6 ust. 2)." (joint_property[stefan_ewa, 2022]) ?"Was this spouse subject to unlimited tax liability in Poland (art. 3 ust. 1) in this year?" (resident[ewa, 2022], resident[stefan, 2022]), ?"Was this spouse subject to unlimited tax liability in Poland (art. 3 ust. 1) in this year?" (resident[magdalena, 2023], resident[marcin, 2023]))
+  law date 2026-10-18, cut 2026-10-18

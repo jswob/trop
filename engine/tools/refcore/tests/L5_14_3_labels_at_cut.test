@@ -1,0 +1,70 @@
+# Writer 11 (tally 2.1, 2.1-14, R-3, RC-1, G1 Q-4). L §5.14.3: "Labels are walk state: the walk at cut K labels every
+# movement, planned or observed, by the arrival rule read at K ... So a later ruling about whose past money was applies
+# under every cut that sees it, ... and as known D shows the labels before it"; "The one exception: parts ... a past
+# decision that no observation fulfils, and whose amount or when reads parts (bal(x) of p ...), follows a later version
+# that changes whose past money was ... under every cut that sees that version ... Its law and its other facts stay
+# those known on its day." The ruling (known 2026-06-01) makes a1's 100.00 tomek's: under the model's cut the sweep of
+# tomek's parts on 2026-04-01 takes 100.00 times frac as known on its day (1, not the ruling's 0.5); as known
+# 2026-05-01, ania's, and the sweep takes 0.00 (figures carried: a1's 100.00).
+=== m.tally
+model t
+  tally 2
+  on 2026-10-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+kind persons: parties
+kind couples: parties
+kind savings: place PLN min 0
+  owned by arrive
+  step minor(PLN)
+  takes k for w order if k.owner == ania then 0 else 1
+place konto: savings lives 2026-01-01..
+place world: outside lives 1900-01-01..
+place shop: outside lives 1900-01-01..
+input a1_day: date
+input a1_amt: money PLN
+def arrive[m in events, p in parties]: num at m.day
+  rule base = if p == ania then 1 else 0
+input sweep_day: date
+input frac: num
+move sweep: transfers
+  on sweep_day
+  reads konto
+  leg cash from konto to shop amount round((bal(konto) of tomek) * frac, minor(PLN), half-even)
+move a1: transfers
+  on a1_day
+  leg cash from world to konto amount a1_amt
+ask q1: bal(konto, 2026-03-31) of ania, bal(konto, 2026-03-31) of tomek, flows(sweep, 2026-04), bal(konto, 2026-04-30)
+ask q2: bal(konto, 2026-03-31) of ania, bal(konto, 2026-03-31) of tomek, flows(sweep, 2026-04), bal(konto, 2026-04-30) as known 2026-05-01
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  persons + [ania] lives 1980-01-01..
+  persons + [tomek] lives 1981-01-01..
+  couples + [ania_tomek] lives 2010-06-01..
+  opening[konto] = 0 PLN at 2026-01-01 start
+  a1_day = 2026-02-01
+  a1_amt = 100.00 PLN
+  sweep_day = 2026-04-01
+  frac = 1
+
+version ruling
+  cite s
+  governs always
+  known 2026-06-01
+  replace rule arrive.base = if p == tomek then 1 else 0
+  replace frac = 0.5
+=== expect
+q1: (0.00 PLN, 100.00 PLN, 100.00 PLN, 0.00 PLN)
+  unfulfilled: a1
+  unfulfilled: sweep
+  cut 2026-10-01
+q2: (100.00 PLN, 0.00 PLN, 0.00 PLN, 100.00 PLN)
+  unfulfilled: a1
+  unfulfilled: sweep
+  cut 2026-05-01

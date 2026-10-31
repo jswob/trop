@@ -1,0 +1,68 @@
+# E §5 step 5 (round 12) for a planned settlement: claw[j] pays -j.change = 500.00 PLN from konto to zus a month after
+# the adjustment (2026-06-01), fulfilling it: out of the adjusted leg's `to`, so -500.00; the remainder at the cut is 0
+# (the settlement exists at the cut, though dated after 2026-05-31): no HOLE-CHANGED on konto (a) nor on flows (d).
+# p: the same leg from savings, touching neither konto nor world: RUN-RECORD (L §8.4). (Was REFCORE-UNSPECIFIED
+# §5.14.3, writer 5's T-67.)
+=== m.tally
+model hh
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source plan "plan"
+source act "act"
+source bank_export "bank"
+unit PLN: currency minor 0.01
+kind wages: event certain
+  leg cash: PLN
+place konto: accounts PLN lives 2019-05-01..
+place world: outside lives 1900-01-01..
+place zus: outside lives 1900-01-01..
+place savings: accounts PLN lives 2019-05-01..
+input wage_amt: money PLN
+input wage_dom: int
+input bank: observed
+def net[m in months]: money PLN = wage_amt at start_of(m)
+
+move claw[j in adjustments over .. where j.adjusts in wages]: transfers
+  on add_months(j.day, 1)
+  fulfils j
+  leg cash from konto to zus amount -j.change
+
+move wage[m in months]: wages
+  on day_of(m, wage_dom)
+  at start_of(m)
+  leg cash from world to konto amount net[m]
+
+version plan_2026
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  wage_amt = 5 000.00 PLN "umowa"
+  wage_dom = 10 "umowa"
+  opening[konto] = 0 PLN at 2026-01-01 start "wyciąg"
+
+version raise_2026
+  cite act
+  governs 2026-03
+  known 2026-05-01
+  replace wage_amt = 4 500.00 PLN "aneks"
+
+
+ask a: bal(konto, 2026-05-31)
+ask c: count(x in adjustments over 2026), sum(x.change for x in adjustments over 2026)
+ask d: flows(konto, 2026-05)
+=== expect
+a: 25 000.00 PLN
+  unfulfilled: wage[2026-01]
+  unfulfilled: wage[2026-02]
+  unfulfilled: wage[2026-03]
+  unfulfilled: wage[2026-04]
+  unfulfilled: wage[2026-05]
+  cut 2026-10-20
+c: (1, -500.00 PLN)
+  cut 2026-10-20
+d: 5 000.00 PLN
+  unfulfilled: wage[2026-05]
+  cut 2026-10-20

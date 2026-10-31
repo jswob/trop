@@ -1,0 +1,19 @@
+scenario e1_reported over family
+  tally 2
+  from 2024-11-03
+  note "The case 'reported by 2025-05-05', the world of E1-02's known parts: Anna, Piotr and Jakub each reported the inheritance to the Revenue Office on 2025-05-05, the last day IGT-4 .2 allows (d.report_by). Nothing in the family's papers says whether any heir but Halina reported (story.md 2025-05-05), so it is a hypothetical fact (L §5.5, §6.4), and the scenario states D's rows under D's prefix (L §6.1). It diverges on the day the tax arose (d.igt_arises), the law date of d.igt_tax."
+  note "E1-02's known parts are asked here: in this world Piotr owes no inheritance tax, and the Lazur rate from 2025-07-01 is pinned at 0 %/year as A-11 does, so every line is linear in what is still missing (L §5.18)."
+
+source e1_case_reported "The family's question E1-03, its case 'reported by 2025-05-05' (tmp/cases/E1/questions.md; story.md 2025-05-05: nothing says whether any other heir reported)"
+
+version e1_heirs_reported
+  cite e1_case_reported
+  governs 2024-11-03..
+  known 2025-05-05
+  d.reported_on[anna] = 2025-05-05 "the case: Anna reported on the last day of IGT-4 .2's six months"
+  d.reported_on[piotr] = 2025-05-05 "the case: Piotr reported on the last day of IGT-4 .2's six months"
+  d.reported_on[jakub] = 2025-05-05 "the case: Jakub reported on the last day of IGT-4 .2's six months"
+
+ask e1_02_family_known: e1_family in e1_reported with a.laz_rate = 0 %/year law 2025-12-31 as known 2026-01-15 partial
+
+ask e1_02_people_known: e1_worth[p] for p in e1_person in e1_reported with a.laz_rate = 0 %/year law 2025-12-31 as known 2026-01-15 partial

@@ -1,0 +1,18 @@
+# L §5.7 defines `x in K` for kinds; L §5.18/§2.3 for key lists.  A membership test in an index has no stated
+# meaning: LOAD-UNIT at load (L §8.4).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+index ks = [a, b]
+def c[k in ks]: bool = k in ks at reader
+
+ask q: c[a] law 2026-06-30
+=== expect
+refused: LOAD-UNIT ...

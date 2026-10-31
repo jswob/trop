@@ -1,0 +1,34 @@
+# L §4.2: "A day in added may be a hole (HOLE-CALENDAR where it decides a result) or a window (one_of([…]),
+# window(a, b)): every day known but one. Such a window is one the line meets, so a result that depends on its day is
+# HOLE-IMPRECISE unless the line states windows each (§4.4)"; L §8.1 HOLE-IMPRECISE: "a read depends on where in a
+# window the day falls and the line states no windows each: ... a window in a calendar's added list", message "date
+# within <window> not precise enough for <comparison or use>". 2026-03-03 (a Tuesday) lies in the window: that hole;
+# 2026-03-05 (a Thursday) lies outside it: a business day; 2026-03-07 is a Saturday: no business day whatever the added
+# day is; one_of likewise for 2026-03-10. (Writer 6: was REFCORE-UNSPECIFIED §4.2. Writer 8, fifth pass, W-B-Q1: the
+# question was L §8.1 HOLE-CALENDAR's "calendar <c> adds a day within <window>: is it <d>?", a row L §8.1 no longer
+# has.)
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+input len: calendar
+input len2: calendar
+
+version v
+  cite s
+  governs 2026
+  known 2025-12-01
+  len = calendar(weekends [sat, sun], added [window(2026-03-02, 2026-03-04)])
+  len2 = calendar(weekends [sat, sun], added [one_of([2026-03-10, 2026-03-12])])
+
+ask q1: is_business(2026-03-03, len), is_business(2026-03-05, len), is_business(2026-03-07, len)
+ask q2: is_business(2026-03-10, len2), is_business(2026-03-11, len2)
+=== expect
+q1: (?"date within window(2026-03-02, 2026-03-04) not precise enough for is_business(2026-03-03, len)" (len), true, false)
+  cut 2026-12-31
+q2: (?"date within one_of([2026-03-10, 2026-03-12]) not precise enough for is_business(2026-03-10, len2)" (len2), true)
+  cut 2026-12-31

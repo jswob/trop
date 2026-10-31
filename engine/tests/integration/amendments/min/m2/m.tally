@@ -1,0 +1,12 @@
+model m
+  tally 2
+  on 2027-01-01
+  start 2027-01-01
+  end 2028-12-31
+source s "s"
+kind jobs
+version v1
+  cite s
+  known 2027-01-01
+  jobs + [beta_job] lives 2027-08-01..
+ask n: count(j in jobs on 2028-06-01)

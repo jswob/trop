@@ -1,0 +1,48 @@
+# L §8.4: "A refusal propagates like a hole and outranks it."  normal(mu[k2], sd) with sd = -5 is RUN-PARAM (L §5.16)
+# though mu[k2] is a hole (no row: HOLE-UNGOVERNED with the input's question, L §4.6 step 5): q and q2 are refused.
+# none in arithmetic, max or an ordering is RUN-NONE (L §3.1) whatever the hole beside it holds (y1, y2, y3, y5);
+# sqrt(-1) is RUN-DOMAIN beside a hole (y4); pow(hole, -1) may be anything, a division by zero included, so it stays
+# the hole (y6).
+=== m.tally
+model p12
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+
+source s "synthetic"
+
+index ks = [k1, k2]
+
+input mu[k in ks]: num question "what is mu?"
+input sd: num
+input nn: num
+input z: num
+
+def x[k in ks]: dist = normal(mu[k], sd) to 1e-6
+def y1[k in ks]: num = mu[k] + nn
+def y2[k in ks]: num = nn * mu[k]
+def y3[k in ks]: num = max(mu[k], nn)
+def y4[k in ks]: num = sqrt(mu[k]) to 1e-6 + sqrt(z) to 1e-6
+def y5[k in ks]: bool = mu[k] < nn
+def y6[k in ks]: num = pow(mu[k], z) to 1e-6
+
+ask q: mean(x[k2])
+ask q2: cdf(x[k2], z)
+ask q3: y1[k2], y2[k2], y3[k2], y4[k2], y5[k2], y6[k2]
+
+version v1
+  cite s
+  governs always
+  known 2026-01-01
+  mu[k1] = 1
+  sd = -5
+  nn = none
+  z = -1
+=== expect
+q: refused: RUN-PARAM normal parameter s = -5 is invalid
+  cut 2026-10-18
+q2: refused: RUN-PARAM normal parameter s = -5 is invalid
+  cut 2026-10-18
+q3: (refused: RUN-NONE a value is none here: arithmetic, refused: RUN-NONE a value is none here: arithmetic, refused: RUN-NONE a value is none here: max, refused: RUN-DOMAIN sqrt(-1) outside its domain, refused: RUN-NONE a value is none here: an ordering, ?"what is mu?" (mu[k2]))
+  cut 2026-10-18

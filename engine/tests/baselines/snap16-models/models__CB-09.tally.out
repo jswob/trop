@@ -1,0 +1,51 @@
+analysis (n = income): 10 000 XXX
+  law date 2026-10-18, cut 2026-10-18
+analysis (n = gains): 6 750 XXX
+  assumed: the page doesn't say whether the share gain was subject to a foreign tax, which decides s. 809Q(4)(e) or (h); the transfer covers both in full either way, as the ask gain_tax_either_way checks (gain_taxed_abroad)
+  law date 2026-10-18, cut 2026-10-18
+analysis (n = capital): 8 250 XXX
+  assumed: the page doesn't say whether the share gain was subject to a foreign tax, which decides s. 809Q(4)(e) or (h); the transfer covers both in full either way, as the ask gain_tax_either_way checks (gain_taxed_abroad)
+  law date 2026-10-18, cut 2026-10-18
+analysis_subtotal: 16 750 XXX
+  assumed: the page doesn't say whether the share gain was subject to a foreign tax, which decides s. 809Q(4)(e) or (h); the transfer covers both in full either way, as the ask gain_tax_either_way checks (gain_taxed_abroad)
+  law date 2026-10-18, cut 2026-10-18
+analysis_total: 25 000 XXX
+  assumed: the page doesn't say whether the share gain was subject to a foreign tax, which decides s. 809Q(4)(e) or (h); the transfer covers both in full either way, as the ask gain_tax_either_way checks (gain_taxed_abroad)
+  law date 2026-10-18, cut 2026-10-18
+cost_in_gbp: 4 800 GBP
+  law date 2026-10-18, cut 2026-10-18
+gain_in_f: 6 750 XXX
+  law date 2026-10-18, cut 2026-10-18
+gain_in_gbp: 2 700 GBP
+  law date 2026-10-18, cut 2026-10-18
+gain_tax_either_way (n = income): ok
+  assumed: the page doesn't say whether the share gain was subject to a foreign tax, which decides s. 809Q(4)(e) or (h); the transfer covers both in full either way, as the ask gain_tax_either_way checks (gain_taxed_abroad)
+  law date 2026-10-18, cut 2026-10-18
+gain_tax_either_way (n = gains): ok
+  assumed: the page doesn't say whether the share gain was subject to a foreign tax, which decides s. 809Q(4)(e) or (h); the transfer covers both in full either way, as the ask gain_tax_either_way checks (gain_taxed_abroad)
+  pinned: gain_taxed_abroad = true
+  law date 2026-10-18, cut 2026-10-18
+gain_tax_either_way (n = capital): ok
+  assumed: the page doesn't say whether the share gain was subject to a foreign tax, which decides s. 809Q(4)(e) or (h); the transfer covers both in full either way, as the ask gain_tax_either_way checks (gain_taxed_abroad)
+  pinned: gain_taxed_abroad = true
+  law date 2026-10-18, cut 2026-10-18
+proceeds_in_gbp: 7 500 GBP
+  law date 2026-10-18, cut 2026-10-18
+remit_split (n = income): (10 000 XXX, 4 000 GBP)
+  assumed: the page doesn't say whether the share gain was subject to a foreign tax, which decides s. 809Q(4)(e) or (h); the transfer covers both in full either way, as the ask gain_tax_either_way checks (gain_taxed_abroad)
+  law date 2026-10-18, cut 2026-10-18
+remit_split (n = gains): (6 750 XXX, 2 700 GBP)
+  assumed: the page doesn't say whether the share gain was subject to a foreign tax, which decides s. 809Q(4)(e) or (h); the transfer covers both in full either way, as the ask gain_tax_either_way checks (gain_taxed_abroad)
+  law date 2026-10-18, cut 2026-10-18
+remit_split (n = capital): (3 250 XXX, 1 300 GBP)
+  assumed: the page doesn't say whether the share gain was subject to a foreign tax, which decides s. 809Q(4)(e) or (h); the transfer covers both in full either way, as the ask gain_tax_either_way checks (gain_taxed_abroad)
+  law date 2026-10-18, cut 2026-10-18
+taxable_remitted (n = income): (true, 10 000 XXX)
+  assumed: the page doesn't say whether the share gain was subject to a foreign tax, which decides s. 809Q(4)(e) or (h); the transfer covers both in full either way, as the ask gain_tax_either_way checks (gain_taxed_abroad)
+  law date 2026-10-18, cut 2026-10-18
+taxable_remitted (n = gains): (true, 6 750 XXX)
+  assumed: the page doesn't say whether the share gain was subject to a foreign tax, which decides s. 809Q(4)(e) or (h); the transfer covers both in full either way, as the ask gain_tax_either_way checks (gain_taxed_abroad)
+  law date 2026-10-18, cut 2026-10-18
+taxable_remitted (n = capital): (false, 3 250 XXX)
+  assumed: the page doesn't say whether the share gain was subject to a foreign tax, which decides s. 809Q(4)(e) or (h); the transfer covers both in full either way, as the ask gain_tax_either_way checks (gain_taxed_abroad)
+  law date 2026-10-18, cut 2026-10-18

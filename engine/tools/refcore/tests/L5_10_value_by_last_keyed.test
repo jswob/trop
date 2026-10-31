@@ -1,0 +1,71 @@
+# Writer 12 (session 7c, A1). L §2.3: `valuex = "value" "(" ref "," expr ")" "in" CUR ["by" (ref | "last" "(" ref
+# ")")]`, a ref with its keys (as `price = ref | "last" "(" ref ")"`); L §5.10 Value: "an expression of that type written
+# with its keys ... a price that is a reading is read through its carry, `by last(px)` (§4.6)". kp[k] is priced
+# nowhere; `by last(kval[k1])` reads the keyed reading kval[k1] through its carry on the value's day: q6 = 1 x 7 = 7,
+# q7 = 7 + 5 = 12 (writer 12's scratch/exp_a1.py). q8: on 2026-02-15 kp[k1] holds 1 property and kval[k1] has no
+# reading on or before that day: L §4.6 "With no reading on or before d, both are holes (HOLE-NOREADING)", L §8.1
+# "<x>[k] has no reading on or before <d>". q9: by last(pv[x]) over a binding of props: pv[cot] has no reading, so
+# the sum is that hole (L §8.1 "It propagates"). refcore had refused the reality at load, LOAD-UNIT value by
+# last(kval[k1]): last reads an input (L §4.6) (triage scratch a1/a1_by.tally).
+=== m.tally
+model t
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+unit property "one property"
+
+kind props: place property min 0
+kind props2: place property min 0
+kind buys: event certain
+  leg units: property
+
+input flat_val: num PLN/property reading
+input cot_val: num PLN/property reading
+index ks = [k1, k2]
+input kval[k in ks]: num PLN/property reading
+input day: date
+input pv[x in props]: num PLN/property reading
+
+place flat: props priced last(flat_val) lives 2026-01-01..
+place cot: props priced last(cot_val) lives 2026-01-01..
+place kp[k in ks]: props2 lives 2026-01-01..
+place market: outside lives 1900-01-01..
+
+move b1: buys
+  on day
+  leg units from market to flat amount 1 property
+move b2: buys
+  on day
+  leg units from market to cot amount 1 property
+move b3[k in ks]: buys
+  on day
+  leg units from market to kp[k] amount 1 property
+
+ask q6: value(kp[k1], 2026-06-30) in PLN by last(kval[k1])
+ask q7: sum(value(kp[k], 2026-06-30) in PLN by last(kval[k]) for k in ks)
+ask q8: value(kp[k1], 2026-02-15) in PLN by last(kval[k1])
+ask q9: sum(value(x, 2026-06-30) in PLN by last(pv[x]) for x in props on 2026-06-30)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  day = 2026-02-02
+  flat_val = 100 PLN/property at 2026-03-01 "v"
+  cot_val = 30 PLN/property at 2026-03-01 "v"
+  kval[k1] = 7 PLN/property at 2026-03-01 "v"
+  kval[k2] = 5 PLN/property at 2026-03-01 "v"
+  pv[flat] = 1 PLN/property at 2026-03-01 "v"
+=== expect
+q6: 7 PLN
+...
+q7: 12 PLN
+...
+q8: ?"kval[k1] has no reading on or before 2026-02-15" (kval[k1])
+...
+q9: ?"pv[cot] has no reading on or before 2026-06-30" (pv[cot])
+...

@@ -1,0 +1,392 @@
+model lh17mclight
+  tally 2
+  on 2026-10-19
+  start 2026-10-19
+  end 2026-10-19
+  note "LH-17 with its randomness drawn (DONE gate 7, part 1). Milevsky and Robinson's setting: wealth w = 20 per $1 a year of real spending, spent as a continuous flow; the log of wealth's growth X_t = (mu - sigma^2/2) t + sigma W_t with mu = 0.05 and sigma = 0.12 (Table 3, the balanced portfolio); the remaining lifetime T exponential with rate lam = 0.05 (p. 93). Ruin is the event that the SPV, the integral of exp(-X_t) from 0 to T, reaches w: wealth is exp(X_t) (w - the integral up to t), so it hits 0 before T exactly then."
+  note "The oracle is the exact law, not Eq. 8. With lam = mu, Yor (1992) gives SPV = 2 U / (sigma^2 G), with U uniform on (0, 1) and G gamma of shape b = 2 mu / sigma^2 and scale 1, independent. So P(SPV >= w) = E[(1 - c G)+] with c = sigma^2 w / 2, which is F_b(z) - mu w F_b+1(z) with z = 2 / (sigma^2 w), F_k the gamma(k, 1) CDF. The key derives it and checks that it solves the ruin equation. Eq. 8 is a moment match for lam > 0: here it gives 0.1057 against the exact 0.1496, and it is asked beside it."
+  note "The scheme. Steps of dt = 1/9 year. Step k draws its log return y ~ N((mu - sigma^2/2) dt, sigma sqrt(dt)) and the step's average log level ybar = y/2 + N(0, sigma sqrt(dt/12)): the exact joint law of the step's end and its average. It adds dt exp(-(X_k + ybar)). By Jensen that term is at most the step's own integral, so the drawn SPV is at most the true one on every path, and the ruin share is biased low only: the key bounds the bias by 0.0019. The last, partial step draws its own average. Paths stop at 300 years (2700 steps), which drops P(T > 300) = e^-15. The model has no parameter draw: the closed form takes mu and sigma as known."
+  note "Light cut of montecarlo/LH-17-mc.tally (regress/light). Only the number of paths changes: 256 instead of 10 000 on the oracle checks and q_life (version light_sizes: npaths, and the median's bias at 256 paths), 100 instead of 1 000 on q_ruin_pinned; q_ruin is left out, its two statistics being asserted by chk_ruin and chk_spv_mean. The scheme (rdt, 2700 steps), the oracles and every section, rule, built-in and distribution of LH-17-mc stay."
+
+source lifted_1_0_1 "Figures tally 1.0.1 allowed inline in rules"
+
+source light_cut "The light cut-down's own sizes (regress/light/LH-17-mc-light.md): the path count and what follows from it"
+
+source mc_key "LH-17-mc.md, the answer key written with this model (montecarlo/): the oracle's digits, the step bias, the statistics' own biases and the oracles' rounding errors, each derived there"
+
+source modeller "The model's own choices, each stated with its reason"
+
+source mr2005 "Milevsky and Robinson, A Sustainable Spending Rate without Simulation, Financial Analysts Journal 61(6), 2005, pp. 89-100 (QWeMA reprint, Internet Archive capture 2016-08-03)" at "http://web.archive.org/web/20160803142333/http://www.qwema.ca:80/pdf_research/2007SEPT_SustSpending.pdf"
+
+source yor1992 "M. Yor, Sur certaines fonctionnelles exponentielles du mouvement brownien réel, Journal of Applied Probability 29(1), 1992, pp. 202-208"
+
+index step = int 0..2700
+  note "Steps of dt = 1/9 year: 2700 steps are 300 years. Key k is the step that starts at k dt."
+
+input bias_life: num
+
+input bias_median: num
+
+input bias_ruin: num
+
+input bias_spv: num
+
+input bias_surv: num
+
+input bsd_12: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input bsd_2: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input eq8_alpha_2: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input eq8_alpha_4: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input eq8_beta_2: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input err_median: num
+
+input err_ruin: num
+
+input err_spv: num
+
+input err_surv: num
+
+input gdrift_2: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input gq_2: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input hand_u: num
+
+input hand_v: num
+
+input hd_2: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input hd_6: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input lam: num
+
+input med_oracle_2: num
+  note "lifted from an inline figure of tally 1.0.1"
+
+input mu: num
+
+input npaths: int
+
+input oracle_key: num
+
+input pa_2: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input pa_6: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input pj_2: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input psd_2: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input psd_3: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input rdt: num
+
+input s25: num
+
+input se_spv_2: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input shape_b_2: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input sigma: num
+
+input spend: num
+
+input spv_m2_2: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input spv_m2_3: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input spv_mean_c_2: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input tol_life_4: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input tol_median_4: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input tol_ruin_4: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input tol_spv_4: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input tol_surv_4: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input trunc_2: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input wealth: num
+
+input ybar_2: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input ypart_2: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input zarg_2: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+def acc[k in step]: num at reader
+  note "The SPV of the first k full steps of the path."
+  rule base = acc[k - 1] + term[k - 1]
+  rule first beats base = 0 when k == 0
+
+def bsd: num = sqrt(pow(sdt, bsd_2) / bsd_12) to 1e-15 at reader
+
+def delta: num = life - kfull * dt at reader
+
+def dt: num = rdt * rdt at reader
+
+def e_life: num = 1 / lam at reader
+
+def eq8: num at reader
+  note "Eq. 8, as LH-17 reads it (scale_beta): a moment match for lam > 0, asked beside the exact oracle to show the gap."
+  rule base v mr2005_v = cdf(gamma(eq8_alpha, eq8_beta), 1 / wmult) to 1e-12
+
+def eq8_alpha: num = (eq8_alpha_2 * mu + eq8_alpha_4 * lam) / (pow(sigma, eq8_alpha_2) + lam) - 1 at reader
+
+def eq8_beta: num = (pow(sigma, eq8_beta_2) + lam) / eq8_beta_2 at reader
+
+def gdrift: num = mu - pow(sigma, gdrift_2) / gdrift_2 at reader
+
+def gq: num = exp(-((lam + gdrift - pow(sigma, gq_2) / gq_2) * dt)) to 1e-15 at reader
+
+def hd: num = exp(-(gdrift * dt / hd_2 - pow(sigma, hd_2) * dt / hd_6)) to 1e-15 at reader
+
+def kfull: int = round(life / dt, 1, floor) at reader
+
+def kmax: int = count(k in step) - 1 at reader
+
+def ksum: int = min(kfull, kmax) at reader
+
+def life: dist = exponential(lam) to 1e-9 at reader
+
+def mdt: num = gdrift * dt at reader
+
+def med_oracle: num = (ln(med_oracle_2) to 1e-12) / lam at reader
+
+def p_oracle: num at reader
+  note "The exact ruin probability, Yor (1992) with lam = mu: F_b(z) - mu w F_b+1(z). Its own error is the two roundings, 1e-12 in all, since mu w = 1 here."
+  rule base v yor1992_v = (cdf(gamma(shape_b, 1), zarg) to 1e-12) - mu * wmult * (cdf(gamma(shape_b + 1, 1), zarg) to 1e-12)
+
+def p_oracle_pdf: num = pdf(gamma(shape_b + 1, 1), zarg) to 1e-12 at reader
+
+def pa: num = gdrift / pa_2 - pow(sigma, pa_2) / pa_6 + lam at reader
+
+def pj: num = (1 - (exp(-(pa * dt)) to 1e-15) * (1 + pa * dt)) / pow(pa, pj_2) at reader
+
+def psd: num = sqrt(pow(sigma, psd_2) * delta / psd_3) to 1e-15 at reader
+
+def qd: num = exp(-(lam * dt)) to 1e-15 at reader
+
+def ruined: bool = spend * spv >= wealth at reader
+
+def sdt: num = sigma * rdt at reader
+
+def se_life: num = 1 / (lam * (sqrt(npaths) to 1e-9)) at reader
+
+def se_ruin: num = sqrt(p_oracle * (1 - p_oracle) / npaths) to 1e-9 at reader
+
+def se_spv: num = sqrt((spv_m2 - pow(spv_mean_d, se_spv_2)) / npaths) to 1e-9 at reader
+
+def se_surv: num = sqrt(surv_oracle * (1 - surv_oracle) / npaths) to 1e-9 at reader
+
+def shape_b: num = shape_b_2 * mu / pow(sigma, shape_b_2) at reader
+
+def spv: num = acc[ksum] + tailterm at reader
+
+def spv_m2: num = spv_m2_2 / ((lam + mu - pow(sigma, spv_m2_2)) * (lam + spv_m2_2 * mu - spv_m2_3 * pow(sigma, spv_m2_2))) at reader
+
+def spv_mean_c: num = 1 / (lam + mu - pow(sigma, spv_mean_c_2)) at reader
+
+def spv_mean_d: num = (dt * hd * qd + lam * pj) * trunc / (1 - gq) at reader
+
+def surv_oracle: num = exp(-(lam * s25)) to 1e-12 at reader
+
+def tailterm: num at reader
+  note "The partial last step, of length delta, with its own average log level; none once the path is cut at 300 years."
+  rule base = delta * (exp(-(xs[kfull] + ypart)) to 1e-12)
+  rule cut beats base = 0 when kfull >= kmax
+
+def term[k in step]: num = dt * (exp(-(xs[k] + ybar[k])) to 1e-12) at reader
+
+def tol_life: num = tol_life_4 * se_life + bias_life at reader
+
+def tol_median: num = tol_median_4 * se_life + bias_median + err_median at reader
+
+def tol_ruin: num = tol_ruin_4 * se_ruin + bias_ruin + err_ruin at reader
+
+def tol_spv: num = tol_spv_4 * se_spv + bias_spv + err_spv at reader
+
+def tol_surv: num = tol_surv_4 * se_surv + bias_surv + err_surv at reader
+
+def trunc: num = 1 - (exp(-(kmax * (lam + gdrift - pow(sigma, trunc_2) / trunc_2) * dt)) to 1e-15) at reader
+
+def wmult: num = wealth / spend at reader
+
+def xs[k in step]: num at reader
+  note "X at the start of step k: the sum of the drawn log returns before it."
+  rule base = xs[k - 1] + y[k - 1]
+  rule first beats base = 0 when k == 0
+
+def y[k in step]: dist = normal(mdt, sdt) to 1e-12 at reader
+
+def ybar[k in step]: num = y[k] / ybar_2 + bsd * zeta[k] at reader
+
+def ypart: num = gdrift * delta / ypart_2 + psd * zp at reader
+
+def zarg: num = zarg_2 / (pow(sigma, zarg_2) * wmult) at reader
+
+def zeta[k in step]: dist = normal(0, 1) to 1e-12 at reader
+
+def zp: dist = normal(0, 1) to 1e-12 at reader
+
+ask chk_hand_u: check spv == hand_u with sample life = 0.25, sample y[0].u = 0.5, sample y[1].u = 0.5, sample zeta[0].u = 0.5, sample zeta[1].u = 0.5, sample zp.u = 0.5 law 2026-10-19 paths 1 seed 2026 path 1
+
+ask chk_hand_u_seed7: check spv == hand_u with sample life = 0.25, sample y[0].u = 0.5, sample y[1].u = 0.5, sample zeta[0].u = 0.5, sample zeta[1].u = 0.5, sample zp.u = 0.5 law 2026-10-19 paths 1 seed 7 path 1
+
+ask chk_hand_v: check spv == hand_v with sample life = 0.25, sample y[0] = 0, sample y[1] = 0, sample zeta[0] = 0, sample zeta[1] = 0, sample zp = 0 law 2026-10-19 paths 1 seed 2026 path 1
+
+ask chk_lam_mu: check lam == mu law 2026-10-19
+
+ask chk_life_mean: check (abs(mean(life) - e_life) <= tol_life) == true law 2026-10-19 paths 256 seed 2026
+
+ask chk_median: check (abs(quantile(life, 0.5) - med_oracle) <= tol_median) == true law 2026-10-19 paths 256 seed 2026
+
+ask chk_mw: check mu * wmult == 1 law 2026-10-19
+
+ask chk_oracle_key: check (abs(p_oracle - oracle_key) <= err_ruin) == true law 2026-10-19
+
+ask chk_ruin: check (abs(share(ruined) - p_oracle) <= tol_ruin) == true law 2026-10-19 paths 256 seed 2026
+
+ask chk_spv_mean: check (abs(mean(spv) - spv_mean_d) <= tol_spv) == true law 2026-10-19 paths 256 seed 2026
+
+ask chk_surv: check (abs(share(life > s25) - surv_oracle) <= tol_surv) == true law 2026-10-19 paths 256 seed 2026
+
+ask q_distinct: y[0] == y[1], life, spv law 2026-10-19 paths 2 seed 2026 path 1
+
+ask q_distinct_2: life, spv law 2026-10-19 paths 2 seed 2026 path 2
+
+ask q_life: quantile(life, 0.5), mean(life), share(life > s25) law 2026-10-19 paths 256 seed 2026
+
+ask q_oracle: p_oracle, p_oracle_pdf, eq8, eq8 - p_oracle, spv_mean_c, spv_mean_d, spv_mean_c - spv_mean_d law 2026-10-19 orient higher
+
+ask q_path7: life, spv, ruined law 2026-10-19 paths 7 seed 2026 path 7
+
+ask q_path7_wide: life, spv, ruined law 2026-10-19 paths 100 seed 2026 path 7
+
+ask q_ruin_100: share(ruined) law 2026-10-19 paths 100 seed 2026
+
+ask q_ruin_head: share(ruined) law 2026-10-19 paths 100 seed 2026
+
+ask q_ruin_pinned: share(ruined) with sample life.u = 0.5 law 2026-10-19 paths 100 seed 2026
+
+ask q_tol: se_ruin, tol_ruin, se_surv, tol_surv, se_life, tol_median, tol_life, se_spv, tol_spv law 2026-10-19
+
+version lifted_figures
+  cite lifted_1_0_1
+  governs always
+  known 1992-03-31
+  bsd_12 = 12 "inline in tally 1.0.1: bsd line 66, factor"
+  bsd_2 = 2 "inline in tally 1.0.1: bsd line 66, argument 2 of pow"
+  eq8_alpha_2 = 2 "inline in tally 1.0.1: eq8_alpha line 78, factor; eq8_alpha line 78, argument 2 of pow"
+  eq8_alpha_4 = 4 "inline in tally 1.0.1: eq8_alpha line 78, factor"
+  eq8_beta_2 = 2 "inline in tally 1.0.1: eq8_beta line 80, argument 2 of pow; eq8_beta line 80, factor"
+  gdrift_2 = 2 "inline in tally 1.0.1: gdrift line 82, argument 2 of pow; gdrift line 82, factor"
+  gq_2 = 2 "inline in tally 1.0.1: gq line 84, argument 2 of pow; gq line 84, factor"
+  hd_2 = 2 "inline in tally 1.0.1: hd line 86, factor; hd line 86, argument 2 of pow"
+  hd_6 = 6 "inline in tally 1.0.1: hd line 86, factor"
+  med_oracle_2 = 2 "inline in tally 1.0.1: med_oracle line 96, argument 1 of ln"
+  pa_2 = 2 "inline in tally 1.0.1: pa line 104, factor; pa line 104, argument 2 of pow"
+  pa_6 = 6 "inline in tally 1.0.1: pa line 104, factor"
+  pj_2 = 2 "inline in tally 1.0.1: pj line 106, argument 2 of pow"
+  psd_2 = 2 "inline in tally 1.0.1: psd line 108, argument 2 of pow"
+  psd_3 = 3 "inline in tally 1.0.1: psd line 108, factor"
+  se_spv_2 = 2 "inline in tally 1.0.1: se_spv line 120, argument 2 of pow"
+  shape_b_2 = 2 "inline in tally 1.0.1: shape_b line 124, factor; shape_b line 124, argument 2 of pow"
+  spv_m2_2 = 2 "inline in tally 1.0.1: spv_m2 line 128, factor; spv_m2 line 128, argument 2 of pow"
+  spv_m2_3 = 3 "inline in tally 1.0.1: spv_m2 line 128, factor"
+  spv_mean_c_2 = 2 "inline in tally 1.0.1: spv_mean_c line 130, argument 2 of pow"
+  tol_life_4 = 4 "inline in tally 1.0.1: tol_life line 143, factor"
+  tol_median_4 = 4 "inline in tally 1.0.1: tol_median line 145, factor"
+  tol_ruin_4 = 4 "inline in tally 1.0.1: tol_ruin line 147, factor"
+  tol_spv_4 = 4 "inline in tally 1.0.1: tol_spv line 149, factor"
+  tol_surv_4 = 4 "inline in tally 1.0.1: tol_surv line 151, factor"
+  trunc_2 = 2 "inline in tally 1.0.1: trunc line 153, argument 2 of pow; trunc line 153, factor"
+  ybar_2 = 2 "inline in tally 1.0.1: ybar line 162, factor"
+  ypart_2 = 2 "inline in tally 1.0.1: ypart line 164, factor"
+  zarg_2 = 2 "inline in tally 1.0.1: zarg line 166, factor; zarg line 166, argument 2 of pow"
+
+version yor1992_v
+  cite yor1992
+  governs always
+  known 1992-03-31
+  note "Dated by its issue, Journal of Applied Probability 29(1), March 1992, so known on the month's last day (LANGUAGE §4.5). It states the law of the integral of exp(2(B_s + nu s)) up to an independent exponential time as a beta variable over twice a gamma one; with lam = mu the beta one is uniform. It holds no rows: p_oracle's rule points at it."
+
+version mr2005_v
+  cite mr2005
+  governs always
+  known 2005-11-01
+  note "The figures LH-17 takes from the article (models/LH-17.tally, version mr2005_v), with the same locators: the Table 3 balanced portfolio, the p. 93 lifetime, the p. 94 wealth."
+  lam = 0.05 "p. 93, after Eq. 4c: lambda = 0.05"
+  mu = 0.05 "Table 3 note: mean arithmetic portfolio return 5 percent"
+  s25 = 25 "p. 93, after Eq. 4c: living at least 25 more years"
+  sigma = 0.12 "Table 3 note: s.d. 12 percent"
+  spend = 1 "p. 94: intends to consume $1 after inflation a year"
+  wealth = 20 "p. 94: w = 20, $20 per $1 of consumption"
+
+version light_sizes
+  cite light_cut
+  governs always
+  known 2026-10-19
+  note "known: the model's on. The path count is the cut-down's size, chosen so that the reference interpreter runs it in minutes; LH-17-mc's own rows (scheme: npaths = 10000; mc_key_v: bias_median = 0.0011, for 10 000 paths) are not in this file"
+  bias_median = 0.04 "LH-17-mc-light.md, part b: the type-1 median of 256 paths is the 128th order statistic, whose mean lies 0.038986 below ln 2 / lam (script C's expression at N = 256)"
+  npaths = 256 "the paths of every oracle ask, written again in each ask's paths clause; 256 = 16^2, so sqrt(npaths) is exact"
+
+version mc_key_v
+  cite mc_key
+  governs always
+  known 2026-10-19
+  note "The statistics' tolerances (ENGINE §8): 4 SE, defs at the oracle, plus these bias and error rows, each derived in the key."
+  bias_life = 0.000000001 "§ The lifetime statistics: the 1e-9 rounding of the lifetime draw moves its mean by at most 5e-10"
+  bias_ruin = 0.0019 "§ The step bias: 1.894e-3 from the Jensen gap, 3.1e-7 from the 300-year cut, under 1e-9 from the roundings"
+  bias_spv = 0.0000001 "§ The step bias, the mean of the SPV: the roundings move it by at most 1.7e-8; its oracle is the scheme's own mean"
+  bias_surv = 0.00000000001 "§ The lifetime statistics: the 1e-9 rounding of the lifetime draw moves P(T > 25) by at most 7.2e-12"
+  err_median = 0.00000000001 "§ The oracles: ln(2) rounded to 1e-12, divided by lam"
+  err_ruin = 0.000000000001 "§ The oracle: two gamma CDFs rounded to 1e-12, with mu w = 1"
+  err_spv = 0.00000000001 "§ The oracles: the scheme's mean from six exponentials rounded to 1e-15, at most 2e-12"
+  err_surv = 0.0000000000005 "§ The oracles: exp rounded to 1e-12"
+  hand_u = 8952013715587/36000000000000 "§ What is asserted exactly, path 1 with its uniforms pinned to 1/2 and T = 0.25"
+  hand_v = 8999405732203/36000000000000 "§ What is asserted exactly, path 1 with its normal draws pinned to 0 and T = 0.25"
+  oracle_key = 0.149583385828427231 "§ The oracle, script A: p* to 18 decimals"
+
+version scheme
+  cite modeller
+  governs always
+  known 2026-10-19
+  note "The numerical choices: the step and the paths. Neither changes the closed form; the key bounds what they leave."
+  rdt = 1/3 assumed "the root of the step: steps of 1/9 year, whose normal sd sigma / 3 = 0.04 is exact; the key bounds the bias such a step leaves at 0.0019"

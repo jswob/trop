@@ -1,10 +1,14 @@
 model ul15
-  tally 1
+  tally 2
   on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
   note "Polish PIT 2022 for a person with two employments, or a pension and an employment (Ministerstwo Finansów, Rozliczenie PIT: zwroty i dopłaty podatku za 2022 r., 'Dopłaty podatku'; the same figures on slides 16 and 17 of the attached presentation of 9 February 2023)."
   note "The payment due in the return (dopłata) is the tax due for 2022 less the advances the payers collected. The advances are counted per payer, month by month. January to June ran under the 'rolowanie' rules, July to December at 12% (Dz.U. 2022 poz. 1265 art. 23 ust. 1)."
   note "The page gives neither the advances nor the annual tax, and several facts and rules they rest on are not in the sources: the January-June rolowanie regulation, the social insurance rate, which payer applied the 1/12 reduction, the scale and the ulga dla pracowników in their wording of 30 June 2022 (Dz.U. 2021 poz. 2105) that the hypothetical tax of art. 26 reads through a wording pin, and the 2021 rules. Each is a hole with its question, and the steps around it are written, so the dopłata and the gain against 2021 are holes until they are given."
   note "Not modelled: the health contribution (not deductible from tax in 2022), the annual cap on social insurance contributions (no example reaches it), and the ulga dla pracowników in January-June advances, which sits inside the rolowanie hole."
+
+source lifted_1_0_1 "Figures tally 1.0.1 allowed inline in rules"
 
 source mf_page "Ministerstwo Finansów, Rozliczenie PIT: zwroty i dopłaty podatku za 2022 r. (14.02.2023)" at "https://www.gov.pl/web/finanse/rozliczenie-pit-zwroty-i-doplaty-podatku-za-2022-r"
 
@@ -17,6 +21,8 @@ source ustawa_2011_1707 "Ustawa z dnia 22 grudnia 2011 r. o zmianie niektórych 
 source ustawa_2019_1835 "Ustawa z dnia 30 sierpnia 2019 r. o zmianie ustawy o podatku dochodowym od osób fizycznych oraz ustawy o zmianie ustawy o podatku dochodowym od osób fizycznych oraz niektórych innych ustaw, Dz.U. 2019 poz. 1835 (Warszawa, dnia 26 września 2019 r.), art. 1 pkt 1: new wording of art. 22 ust. 2 of the PIT act; the wording is the same in the tekst jednolity, Dz.U. 2022 poz. 2647 (p. 78)" at "https://api.sejm.gov.pl/eli/acts/DU/2019/1835/text.pdf"
 
 source ustawa_2021_2105 "Ustawa z dnia 29 października 2021 r. o zmianie ustawy o podatku dochodowym od osób fizycznych, ustawy o podatku dochodowym od osób prawnych oraz niektórych innych ustaw, Dz.U. 2021 poz. 2105 (Warszawa, dnia 23 listopada 2021 r.); not one of the case's sources" at "https://api.sejm.gov.pl/eli/acts/DU/2021/2105/text.pdf"
+
+unit PLN: currency minor 0.01
 
 axis ul15_hypo
   apart "the dopłata is the return's own figure; a refund under art. 26 of Dz.U. 2022 poz. 1265 is paid by the tax office apart from it"
@@ -41,6 +47,9 @@ input cost_cap2: money PLN
 
 input cost_m: money PLN
 
+input costs_y_2: int
+  note "lifted from an inline figure of tally 1.0.1"
+
 input full_year[e in ex, s in srcs]: bool question "Was this source paid at the same amount in each of the twelve months of 2022?"
 
 input gross[e in ex]: bool question "Are the example's monthly amounts gross (brutto) pay?"
@@ -59,127 +68,137 @@ input pit_r2: num
 
 input pit_t2: money PLN
 
+input reduction_12: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input wording_day: date
 input zus_rate: num question "What share of the gross pay are the employee's social insurance contributions (emerytalne, rentowe, chorobowe) that the employer deducts (art. 26 ust. 1 pkt 2; art. 32 ust. 2)?"
 
 band pit_scale(x: money PLN): num PLN
   note "Art. 27 ust. 1, the scale. Dz.U. 2022 poz. 1265 gives it for income from 1 January 2022 (art. 18 ust. 1). Its wording of 30 June 2022, from Dz.U. 2021 poz. 2105, is read only by the hypothetical tax, through the wording pin of hypo_tax."
 
-def adv[e in ex, s in srcs, m in mon]: money PLN
+def adv[e in ex, s in srcs, m in mon]: money PLN at start_of(m)
   note "The advance collected by this payer for the month, rounded to whole złoty (Ordynacja podatkowa art. 63 § 1)."
   rule base v op63 = round(adv_raw[e, s, m], 1, half-up)
 
-def adv_base[e in ex, s in srcs, m in mon]: money PLN
+def adv_base[e in ex, s in srcs, m in mon]: money PLN at start_of(m)
   note "The month's income at this payer, the base of the advance, rounded to whole złoty (art. 63 § 1)."
   rule base v op63 = round(inc_m[e, s, m], 1, half-up)
 
-def adv_raw[e in ex, s in srcs, m in mon]: num PLN
+def adv_raw[e in ex, s in srcs, m in mon]: num PLN at start_of(m)
   note "January-June: the payer computed the advance under the 2022 and the 2021 rules and collected the lower ('rolowanie'). July-December: art. 32 ust. 1 in its wording before Dz.U. 2022 poz. 1265, at 12% instead of 17%, less the monthly reduction (art. 32 ust. 3; Dz.U. 2022 poz. 1265 art. 23 ust. 1 and 4). An advance doesn't go below zero."
   note "Art. 32 ust. 1 changes the rate once the income from the start of the year at one payer passes the upper end of the scale's first row, read here as band_hi(pit_scale, 0). The rule tests the revenue, which is never below the income, so it raises its hole whenever the income could pass."
-  rule h1 v mf_rolowanie = ? "What advance did this payer collect in this month of January-June 2022? The rolowanie regulation (the lower of the advance under the 2022 and the 2021 rules) is not in the sources."
+  rule h1 v mf_rolowanie = ?"What advance did this payer collect in this month of January-June 2022? The rolowanie regulation (the lower of the advance under the 2022 and the 2021 rules) is not in the sources."
   rule h2 v law_1265_h2 = max(0, adv_r_h2 * adv_base[e, s, m] - reduction[e, s, m])
-  rule upper excepts h1, h2 when cum_rev[e, s, m] > band_hi(pit_scale, 0) = ? "Above the upper end of the scale's first row (120 000 zł) of income at one payer, the advance is 32% of the excess (art. 32 ust. 1). That part is not written, and no example reaches it."
+  rule upper beats h1, h2 = ?"Above the upper end of the scale's first row (120 000 zł) of income at one payer, the advance is 32% of the excess (art. 32 ust. 1). That part is not written, and no example reaches it." when cum_rev[e, s, m] > band_hi(pit_scale, 0)
 
-def adv_total[e in ex]: num PLN = sum(s in srcs where amount_m[e, s] != -: sum(m in mon: adv[e, s, m]))
+def adv_total[e in ex]: num PLN = sum(sum(adv[e, s, m] for m in mon) for s in srcs where amount_m[e, s] != none) at reader
 
-def cost_month[e in ex, s in srcs, m in mon]: num PLN
+def cost_month[e in ex, s in srcs, m in mon]: num PLN at start_of(m)
   note "Art. 22 ust. 2 pkt 1: 250 zł a month for each employment; a pension has none."
   rule base = cost_m
-  rule far excepts base when s != pension and commuter[e, s] = ? "The costs of a commuting employee (300 zł a month, art. 22 ust. 2 pkt 3-4) are not written."
-  rule pension excepts base when s = pension = 0
+  rule far beats base = ?"The costs of a commuting employee (300 zł a month, art. 22 ust. 2 pkt 3-4) are not written." when s != pension and commuter[e, s]
+  rule pension beats base = 0 when s == pension
 
-def costs_y[e in ex]: num PLN
+def costs_y[e in ex]: num PLN at reader
   note "The annual employment costs in the return: art. 22 ust. 2 pkt 1 caps one employment at 3000 zł; pkt 2 caps several employments together at 4500 zł."
-  rule far excepts one, several when any(s in srcs where s != pension and amount_m[e, s] != -: commuter[e, s]) = ? "The annual cap for commuting employees (3600 zł or 5400 zł, art. 22 ust. 2 pkt 3-4) is not written."
-  rule nojob when n_jobs[e] = 0 = 0
-  rule one when n_jobs[e] = 1 = min(cost_cap1, job_costs[e])
-  rule several when n_jobs[e] >= 2 = min(cost_cap2, job_costs[e])
+  rule far beats one, several = ?"The annual cap for commuting employees (3600 zł or 5400 zł, art. 22 ust. 2 pkt 3-4) is not written." when any(commuter[e, s] for s in srcs where s != pension and amount_m[e, s] != none)
+  rule nojob = 0 when n_jobs[e] == 0
+  rule one = min(cost_cap1, job_costs[e]) when n_jobs[e] == 1
+  rule several = min(cost_cap2, job_costs[e]) when n_jobs[e] >= costs_y_2
 
-def cum_rev[e in ex, s in srcs, m in mon]: num PLN = sum(k in mon where k <= m: rev_m[e, s, k])
+def cum_rev[e in ex, s in srcs, m in mon]: num PLN = sum(rev_m[e, s, k] for k in mon where k <= m) at start_of(m)
 
-def doplata[e in ex]: num PLN
+def doplata[e in ex]: num PLN at reader
   note "The payment due in the return: the tax due less the advances. A negative value would be a refund."
-  rule apart when ul15_hypo = apart = tax_due[e] - adv_total[e]
-  rule netted when ul15_hypo = netted = tax_due[e] - adv_total[e] - hypo_refund[e]
+  rule apart = tax_due[e] - adv_total[e] when ul15_hypo == apart
+  rule netted = tax_due[e] - adv_total[e] - hypo_refund[e] when ul15_hypo == netted
 
-def gain[e in ex]: num PLN
+def gain[e in ex]: num PLN at reader
   note "The page's 'roczna korzyść w stosunku do 2021 r.' and 'podatek niższy niż w 2021 r.': the 2021 tax less the 2022 tax."
   rule base = tax_2021[e] - tax_due[e]
 
-def hypo_refund[e in ex]: num PLN
+def hypo_refund[e in ex]: num PLN at reader
   note "Dz.U. 2022 poz. 1265 art. 26 ust. 1-2: for employment or business revenue from 68 412 zł to 133 692 zł, the tax office refunds the excess of the 2022 tax over the hypothetical tax."
   rule base = 0
-  rule inband excepts base v law_1265_a26 when in_band[e] = max(0, tax_due[e] - hypo_tax[e])
+  rule inband beats base v law_1265_a26 = max(0, tax_due[e] - hypo_tax[e]) when in_band[e]
 
-def hypo_tax[e in ex]: num PLN
+def hypo_tax[e in ex]: num PLN at reader
   note "Art. 26 ust. 3 of Dz.U. 2022 poz. 1265: the tax for 2022 on the same revenue under the PIT act as that act amended it, but with the ulga dla pracowników (art. 26 ust. 1 pkt 2aa) and the scale (art. 27 ust. 1) in their wording of 30 June 2022. So it is tax_due with the items that hold the relief and the scale read in the wording in force on that day. Poz. 1265 enters into force on 1 July 2022, so the pin passes over it to Dz.U. 2021 poz. 2105, whose scale row and relief rule are holes here; every law date stays 2022's."
-  rule base v law_1265_a26 = tax_due[e] as if {wording 2022-06-30 for [pit_kz, pit_r1, pit_r2, pit_scale, pit_t2, ulga_prac]}
+  rule base v law_1265_a26 = tax_due[e] as if {wording wording_day for [pit_kz, pit_r1, pit_r2, pit_scale, pit_t2, ulga_prac]}
 
-def in_band[e in ex]: bool = job_rev[e] >= hypo_lo and job_rev[e] <= hypo_hi
+def in_band[e in ex]: bool = job_rev[e] >= hypo_lo and job_rev[e] <= hypo_hi at reader
 
-def inc_m[e in ex, s in srcs, m in mon]: num PLN
+def inc_m[e in ex, s in srcs, m in mon]: num PLN at start_of(m)
   note "Art. 32 ust. 2: the month's revenue at this payer less the employment costs and the social insurance contributions deducted that month."
   rule base = rev_m[e, s, m] - cost_month[e, s, m] - zus_m[e, s, m]
 
-def income_y[e in ex]: num PLN
+def income_y[e in ex]: num PLN at reader
   note "The annual income on the scale: revenue less employment costs (art. 22 ust. 2) and less the social insurance contributions (art. 26 ust. 1 pkt 2)."
-  rule base = sum(s in srcs where amount_m[e, s] != -: rev_y[e, s] - zus_y[e, s]) - costs_y[e]
+  rule base = sum(rev_y[e, s] - zus_y[e, s] for s in srcs where amount_m[e, s] != none) - costs_y[e]
 
-def job_costs[e in ex]: num PLN = sum(s in srcs where s != pension and amount_m[e, s] != -: sum(m in mon: cost_month[e, s, m]))
+def job_costs[e in ex]: num PLN = sum(sum(cost_month[e, s, m] for m in mon) for s in srcs where s != pension and amount_m[e, s] != none) at reader
 
-def job_rev[e in ex]: money PLN
+def job_rev[e in ex]: money PLN at reader
   note "Art. 26 ust. 2 of Dz.U. 2022 poz. 1265 counts employment and business revenue, not pensions."
-  rule base = sum(s in srcs where s != pension and amount_m[e, s] != -: rev_y[e, s])
+  rule base = sum(rev_y[e, s] for s in srcs where s != pension and amount_m[e, s] != none)
 
-def n_jobs[e in ex]: int = count(s in srcs where s != pension and amount_m[e, s] != -)
+def n_jobs[e in ex]: int = count(s in srcs where s != pension and amount_m[e, s] != none) at reader
 
-def reduction[e in ex, s in srcs, m in mon]: num PLN
+def reduction[e in ex, s in srcs, m in mon]: num PLN at start_of(m)
   note "Art. 32 ust. 3: 1/12 of the kwota zmniejszająca podatek, at the payer named in the PIT-2 statement."
   rule base = 0
-  rule pit2 excepts base when pit2[e, s] = pit_kz / 12
+  rule pit2 beats base = pit_kz / reduction_12 when pit2[e, s]
 
-def rev_m[e in ex, s in srcs, m in mon]: money PLN
+def rev_m[e in ex, s in srcs, m in mon]: money PLN at start_of(m)
   note "The month's gross revenue from this source."
   rule base = amount_m[e, s]
-  rule netpay excepts base when not gross[e] = ? "The monthly amounts are not gross pay; the gross is not given."
-  rule partyear excepts base, netpay when not full_year[e, s] = ? "Which months of 2022 was this source paid, and at what amount?"
+  rule netpay beats base = ?"The monthly amounts are not gross pay; the gross is not given." when not gross[e]
+  rule partyear beats base, netpay = ?"Which months of 2022 was this source paid, and at what amount?" when not full_year[e, s]
 
-def rev_y[e in ex, s in srcs]: money PLN = sum(m in mon: rev_m[e, s, m])
+def rev_y[e in ex, s in srcs]: money PLN = sum(rev_m[e, s, m] for m in mon) at reader
 
-def tax_2021[e in ex]: num PLN
+def tax_2021[e in ex]: num PLN at reader
   note "The tax for 2021 that the page compares with."
-  rule base = ? "What would this person's tax for 2021 have been on the same pay? The 2021 rules and the assumptions behind the page's comparison are not in the sources."
+  rule base = ?"What would this person's tax for 2021 have been on the same pay? The 2021 rules and the assumptions behind the page's comparison are not in the sources."
 
-def tax_base[e in ex]: money PLN
+def tax_base[e in ex]: money PLN at reader
   note "The annual income less the ulga dla pracowników (art. 26 ust. 1 pkt 2aa; none in the return for 2022, see ulga_prac), rounded to whole złoty (Ordynacja podatkowa art. 63 § 1)."
   rule base v op63 = round(income_y[e] - ulga_prac[e], 1, half-up)
 
-def tax_due[e in ex]: money PLN
+def tax_due[e in ex]: money PLN at reader
   note "The scale on the base, rounded to whole złoty (art. 63 § 1); the scale gives no negative tax."
   rule base v op63 = round(max(0, pit_scale(tax_base[e])), 1, half-up)
 
-def ulga_prac[e in ex]: num PLN
+def ulga_prac[e in ex]: num PLN at reader
   note "Art. 26 ust. 1 pkt 2aa and ust. 4a-4c: the ulga dla pracowników, deducted from income. Dz.U. 2021 poz. 2105 added it for income from 2022. Dz.U. 2022 poz. 1265 repealed it (art. 1 pkt 10 lit. a, p. 4) and doesn't apply it to income from 1 January 2022 (art. 18 ust. 2, p. 21), so the return for 2022 has none. The hypothetical tax reads it in its wording of 30 June 2022 (hypo_tax)."
-  rule base v law_2105 = ? "What is the ulga dla pracowników of art. 26 ust. 1 pkt 2aa and ust. 4a-4c, in the wording of Dz.U. 2021 poz. 2105 in force on 30 June 2022, on this person's 2022 employment revenue? That text is not among the case's sources."
-  rule base v law_1265 = 0
+  rule base v law_2105 = ?"What is the ulga dla pracowników of art. 26 ust. 1 pkt 2aa and ust. 4a-4c, in the wording of Dz.U. 2021 poz. 2105 in force on 30 June 2022, on this person's 2022 employment revenue? That text is not among the case's sources."
 
-def zus_m[e in ex, s in srcs, m in mon]: num PLN
+def zus_m[e in ex, s in srcs, m in mon]: num PLN at start_of(m)
   note "The employee's social insurance contributions deducted by the employer; none on a pension."
   rule base = zus_rate * rev_m[e, s, m]
-  rule pension excepts base when s = pension = 0
+  rule pension beats base = 0 when s == pension
 
-def zus_y[e in ex, s in srcs]: num PLN = sum(m in mon: zus_m[e, s, m])
+def zus_y[e in ex, s in srcs]: num PLN = sum(zus_m[e, s, m] for m in mon) at reader
 
-ask q01_doplata: doplata[e] for e in ex with law 2022-12-31
+ask q01_doplata: doplata[e] for e in ex law 2022-12-31
 
-ask q02_gain: gain[e] for e in ex with law 2022-12-31
+ask q02_gain: gain[e] for e in ex law 2022-12-31
 
-ask q03_job_rev: job_rev[e] for e in ex with law 2022-12-31
+ask q03_job_rev: job_rev[e] for e in ex law 2022-12-31
 
-ask q04_in_band: in_band[e] for e in ex with law 2022-12-31
+ask q04_in_band: in_band[e] for e in ex law 2022-12-31
 
-ask q05_costs: costs_y[e] for e in ex with law 2022-12-31
+ask q05_costs: costs_y[e] for e in ex law 2022-12-31
 
-ask q06_adv_july: adv[e, s, m] for e in ex, s in srcs where amount_m[e, s] != -, m in [2022-07]
+ask q06_adv_july: adv[e, s, m] for e in ex, s in srcs where amount_m[e, s] != none, m in [2022-07] law 2026-10-18
+
+version lifted_figures
+  cite lifted_1_0_1
+  governs always
+  known 2011-12-30
+  costs_y_2 = 2 "inline in tally 1.0.1: costs_y line 95, operand"
+  reduction_12 = 12 "inline in tally 1.0.1: reduction line 138, factor"
 
 version op63
   cite ustawa_2011_1707
@@ -205,7 +224,7 @@ version law_2105
   note "Known from the act's publication in the Dziennik Ustaw, 23 November 2021 (its header 'Warszawa, dnia 23 listopada 2021 r.'; ELI record https://api.sejm.gov.pl/eli/acts/DU/2021/2105: promulgation 2021-11-23). Art. 1 pkt 40 and 47 enter into force on 1 January 2022 (art. 89, p. 140, not among its exceptions), the default enters, and art. 70 (p. 137) applies them to income from 1 January 2022, so the version governs from 2022."
   note "This is the wording of 30 June 2022 that Dz.U. 2022 poz. 1265 art. 26 ust. 3 names: art. 1 pkt 47 lit. a (p. 28) gave art. 27 ust. 1 its scale, and art. 1 pkt 40 lit. a and b (p. 19) added art. 26 ust. 1 pkt 2aa and ust. 4a-4c. It is the latest amendment of those provisions before that day that I found. I did not check each act of the first half of 2022 that amended the PIT act (poz. 1265, footnote 2), so the version takes this one as the latest amendment found."
   note "The act is not among the case's sources, so the model takes no figure from it; it was read only for its dates and locators. Its scale row is a hole, as is the rule ulga_prac.base that points here. Poz. 1265, known later, beats both for every reader of 2022; only the wording pin of hypo_tax reaches them."
-  pit_scale: [0, inf) = ? "What is the scale of art. 27 ust. 1 in its wording of 30 June 2022 (Dz.U. 2021 poz. 2105, art. 1 pkt 47 lit. a)? The hypothetical tax of Dz.U. 2022 poz. 1265 art. 26 ust. 3 pkt 2 uses it, and that text is not among the case's sources." "art. 1 pkt 47 lit. a (p. 28), art. 27 ust. 1"
+  pit_scale: [0, inf) = ?"What is the scale of art. 27 ust. 1 in its wording of 30 June 2022 (Dz.U. 2021 poz. 2105, art. 1 pkt 47 lit. a)? The hypothetical tax of Dz.U. 2022 poz. 1265 art. 26 ust. 3 pkt 2 uses it, and that text is not among the case's sources." "art. 1 pkt 47 lit. a (p. 28), art. 27 ust. 1"
 
 version law_1265
   cite ustawa_1265
@@ -214,12 +233,14 @@ version law_1265
   enters 2022-07-01
   note "Known from the act's publication in the Dziennik Ustaw, 15 June 2022 (its header 'Warszawa, dnia 15 czerwca 2022 r.'). It enters into force on 1 July 2022 (art. 40, p. 26; ELI record https://api.sejm.gov.pl/eli/acts/DU/2022/1265: entryIntoForce 2022-07-01). None of art. 40's exceptions covers what this version holds (art. 1 pkt 10 lit. a and pkt 13 lit. a, art. 18 ust. 1 and 2), so enters is 1 July 2022, not the default of 15 June."
   note "Art. 18 ust. 1 (p. 21): the new art. 27 ust. 1 applies to income from 1 January 2022, so the version governs from 2022. Art. 18 ust. 2 (p. 21): art. 26 ust. 1 pkt 2aa in its earlier wording does not apply to income from 1 January 2022; the rule ulga_prac.base points here."
+  wording_day = 2022-06-30 governs always "art. 26 ust. 3: the wording of 30 June 2022"
   pit_kz = 3600 "art. 1 pkt 13 lit. a (p. 5), art. 27 ust. 1, tabela, wiersz 1: 'minus kwota zmniejszająca podatek 3600 zł'"
   pit_r1 = 0.12 "art. 1 pkt 13 lit. a (p. 5), art. 27 ust. 1, tabela, wiersz 1: '12%'"
   pit_r2 = 0.32 "art. 1 pkt 13 lit. a (p. 5), art. 27 ust. 1, tabela, wiersz 2: '32% nadwyżki ponad 120 000 zł'"
-  pit_scale: [0, 120000] = x * pit_r1 - pit_kz "art. 1 pkt 13 lit. a (p. 5), art. 27 ust. 1, tabela, wiersz 1 'do 120 000'"
-  pit_scale: (120000, inf) = pit_t2 + (x - band_lo(pit_scale, x)) * pit_r2 "art. 1 pkt 13 lit. a (p. 5), art. 27 ust. 1, tabela, wiersz 2 'ponad 120 000': '10 800 zł + 32% nadwyżki ponad 120 000 zł'"
+  replace pit_scale: [0, 120000] = x * pit_r1 - pit_kz "art. 1 pkt 13 lit. a (p. 5), art. 27 ust. 1, tabela, wiersz 1 'do 120 000'"
+  replace pit_scale: (120000, inf) = pit_t2 + (x - band_lo(pit_scale, x)) * pit_r2 "art. 1 pkt 13 lit. a (p. 5), art. 27 ust. 1, tabela, wiersz 2 'ponad 120 000': '10 800 zł + 32% nadwyżki ponad 120 000 zł'"
   pit_t2 = 10800 "art. 1 pkt 13 lit. a (p. 5), art. 27 ust. 1, tabela, wiersz 2: '10 800 zł'"
+  replace rule ulga_prac.base v law_1265 = 0
 
 version law_1265_a26
   cite ustawa_1265
@@ -247,10 +268,11 @@ version mf_rolowanie
 
 version facts_mf
   cite mf_page
+  governs always
   known 2026-10-18
   note "The page's examples are hypothetical cases: their stipulations are known from the model's on (it has no start), not from the page's date."
   note "Section 'Dopłaty podatku'. The two-jobs examples are A to E, the working pensioners P1 to P4; slides 16 and 17 of the presentation give the same amounts."
-  amount_m = - "the examples name only the sources below"
+  amount_m = none "the examples name only the sources below"
   amount_m[ex_a, job1] = 3000 "two-jobs paragraph: 'na jednym zarabia 3 tys. zł i na drugim też 3 tys. zł'"
   amount_m[ex_a, job2] = 3000 "two-jobs paragraph: 'na jednym zarabia 3 tys. zł i na drugim też 3 tys. zł'"
   amount_m[ex_b, job1] = 3000 "two-jobs paragraph: 'na jednym zarabia 3 tys. zł, a na drugim 4 tys. zł'"
@@ -272,6 +294,7 @@ version facts_mf
 
 version model_assume
   cite modeller
+  governs always
   known 2026-10-18
   note "The assumptions stand for the examples' own facts, so they are known from the model's on, like the stipulations."
   commuter = false assumed "the page names no commuting, so each employer is taken to apply the basic costs"

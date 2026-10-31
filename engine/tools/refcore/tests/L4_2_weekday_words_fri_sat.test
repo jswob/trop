@@ -1,0 +1,27 @@
+# L §4.2 (round 12) calendar(weekends [...]) lists "the weekdays that are never business days (mon tue wed thu fri
+# sat sun, ISO 8601's days 1 to 7 ...)". A Friday-Saturday weekend: 2026-03-05 is a Thursday, 2026-03-06 a Friday,
+# 2026-03-08 a Sunday (`weekday`, L §4.2: 1 for Monday to 7 for Sunday); add_business(d, 1, cal) is the first business
+# day after d.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+input len: calendar
+
+version v
+  cite s
+  governs 2026
+  known 2025-12-01
+  len = calendar(weekends [fri, sat])
+
+ask q1: weekday(2026-03-06), is_business(2026-03-06, len), is_business(2026-03-08, len)
+ask q2: add_business(2026-03-05, 1, len)
+=== expect
+q1: (5, false, true)
+  cut 2026-12-31
+q2: 2026-03-08
+  cut 2026-12-31

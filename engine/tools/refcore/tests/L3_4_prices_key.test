@@ -1,0 +1,18 @@
+# L §3.4: "a prices Y by idx input needs an index with a key for the year Y (LOAD-KEY otherwise)".
+# The built-in years index meets [S, E] = 2026..2027, which has no key 2015.
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2027-12-31
+
+source s "a source"
+unit PLN: currency minor 0.01
+
+input cpi[y in years]: num
+input rent_wish: money PLN prices 2015 by cpi
+
+ask q1: rent_wish law 2027-03-01
+=== expect
+refused: LOAD-KEY ...

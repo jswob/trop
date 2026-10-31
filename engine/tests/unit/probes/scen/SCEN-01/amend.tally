@@ -1,0 +1,60 @@
+scenario amend over scen01
+  tally 2
+  from 2025-01-01
+  note "The amendment: a 10 000.00 DUK loan at 0 %, received 15 January 2025, repaid 1 000.00 on the 15th of each month from February, with 2 000.00 overpaid after April's instalment, which shortens the term."
+
+input inst_day: int
+
+input instal: money DUK
+
+input loan_amt: money DUK
+
+input loan_day: date
+
+input overpay[m in mon]: money DUK
+
+def inst_amt[m in mon]: money DUK at start_of(m)
+  rule base = min(instal, owed_after[m - 1])
+  rule first beats base = 0 when pos(m) == 1
+
+def owed_after[m in mon]: money DUK at start_of(m)
+  rule base = owed_after[m - 1] - inst_amt[m] - overpay[m]
+  rule first beats base = loan_amt when pos(m) == 1
+
+move extra[m in mon]: transfers
+  on day_of(m, inst_day)
+  at start_of(m)
+  leg cash from konto to loan amount overpay[m]
+
+move inst[m in mon]: transfers
+  on day_of(m, inst_day)
+  at start_of(m)
+  leg cash from konto to loan amount inst_amt[m]
+
+move loan_in: transfers
+  on loan_day
+  leg cash from loan to konto amount loan_amt
+
+ask cash_diff: flows(konto, 2025-01-01..2025-06-30) as if {scenario amend} - flows(konto, 2025-01-01..2025-06-30) in scen01
+
+ask debt_left: -bal(loan, 2025-06-30) in amend
+
+ask net_worth_diff: net_worth[2025-06-30] as if {scenario amend} - net_worth[2025-06-30] in scen01
+
+version amend_terms
+  cite loan_offer
+  governs 2025-01-01..
+  known 2025-01-01
+  debts + [loan] DUK lives 2025-01-01..
+  inst_day = 15 "repaid on the 15th of each month"
+  instal = 1000.00 "1 000.00 a month from February"
+  overpay[2025-01..2025-03] = 0 "no overpayment"
+  overpay[2025-04] = 2000.00 "2 000.00 after April's instalment, shortening the term"
+  overpay[2025-05..2025-12] = 0 "no overpayment"
+
+version amend_loan
+  cite loan_offer
+  governs always
+  known 2025-01-01
+  loan_amt = 10000.00 "10 000.00 at 0 %"
+  loan_day = 2025-01-15 "received 15 January 2025"

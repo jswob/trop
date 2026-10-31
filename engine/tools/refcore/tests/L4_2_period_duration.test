@@ -1,0 +1,45 @@
+# L §4.2 Date arithmetic: "A period moves by an int of its own periods ... or by a duration that is a whole number
+# of them (`y + 5 years` is `y + 5`, `m + 1 year` is `m + 12`)".  So 2026-03 + 1 month is 2026-04, 2026-03 + 1 year
+# is 2027-03, 2026 + 5 years is 2031, 2026-03 - 2 years is 2024-03, and the quarter holding 2026-02 plus 6 months
+# is two quarters on, the quarter holding 2026-08-01 (the figures are rows, L §7.1).  `y + n` with n = 6 months is not a whole number of years: the count shows only at
+# the key, so it is refused there (L §8.4: RUN-DOMAIN).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+input n: num month
+input five: num year
+input two: num year
+input six: num month
+
+def a[m in months]: month = m + 1 month
+def b[m in months]: month = m + 1 year
+def c[y in years]: year = y + five
+def d[m in months]: month = m - two
+def e[m in months]: quarter = quarter_of(m) + six
+def f[y in years]: year = y + n
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  n = 6 month
+  five = 5 year
+  two = 2 year
+  six = 6 month
+
+ask q1: a[2026-03], b[2026-03], c[2026], d[2026-03]
+ask q2: e[2026-02] == quarter_of(2026-08-01)
+ask q3: f[2026]
+=== expect
+q1: (2026-04, 2027-03, 2031, 2024-03)
+  cut 2026-12-31
+q2: true
+  cut 2026-12-31
+q3: refused: RUN-DOMAIN ...
+  cut 2026-12-31

@@ -1,0 +1,57 @@
+# L §5.5, E §3.1 step 5 and E §3.3: the cone of an ask follows the item graph; a place's flows and a balance read the
+# timeline, whose axis options are those of the axes the moves reach. pay books amt into konto, and amt reads the axis
+# mode (L §5.11: alt beats base when mode == b), so flows(konto, 2026) is amt_a = 10.00 PLN under a and amt_b =
+# 20.00 PLN under b (L §5.18 Lines: one line per distinct result across the axes reached); bal(konto, 2026-12-31)
+# likewise, from the opening 0.00 PLN. (Was REFCORE-UNSPECIFIED §5.5: axis mode read outside the axes the ask
+# reaches; a fault found by running a text.)
+=== m.tally
+model p12
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+
+source s "synthetic"
+
+unit PLN: currency minor 0.01
+
+axis mode
+  a "first reading"
+  b "second reading"
+
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+
+input amt_a: money PLN
+input amt_b: money PLN
+input pay_day: date
+
+def amt: money PLN at reader
+  rule base = amt_a
+  rule alt beats base = amt_b when mode == b
+
+move pay: transfers
+  on pay_day
+  at pay_day
+  leg cash from world to konto amount amt
+
+ask q: flows(konto, 2026) law 2026-06-30
+ask bl: bal(konto, 2026-12-31) law 2026-06-30
+
+version v1
+  cite s
+  governs always
+  known 2026-01-01
+  amt_a = 10.00 PLN
+  amt_b = 20.00 PLN
+  pay_day = 2026-03-01
+  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
+=== expect
+bl [mode = a]: 10.00 PLN
+...
+bl [mode = b]: 20.00 PLN
+...
+q [mode = a]: 10.00 PLN
+...
+q [mode = b]: 20.00 PLN
+...

@@ -1,0 +1,16 @@
+# L §5.11 step 6: "Two candidates: refused, RUN-CONFLICT ..., even when their values are equal".
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+def x: int
+  rule a = 1
+  rule b = 1
+
+ask q1: x
+=== expect
+q1: refused: RUN-CONFLICT ...
+  cut 2026-01-01

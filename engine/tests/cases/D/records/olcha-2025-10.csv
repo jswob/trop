@@ -1,0 +1,29 @@
+Bank Olcha S.A.|account statement
+Account|LN73 4400 2011 0000 8817 2264 0001
+Holder|HALINA SOWA
+Period|20251001|20251031
+Opening balance|9 897,19
+Date|Type|Counterparty|Title|Amount|Balance after
+20251003|CREDIT|Social Insurance Office|survivor pension 10/2025|4 227,07|14 124,26
+20251003|CASH|ATM Olcha Brzezie|cash withdrawal|-500,00|13 624,26
+20251004|CARD|Market Brzezie|card ...2264|-257,66|13 366,60
+20251006|STANDING ORDER|WM Ogrodowa 2|fee Ogrodowa 2/11 10/2025|-445,00|12 921,60
+20251007|CARD|Apteka Rumianek|card ...2264|-178,55|12 743,05
+20251008|CREDIT|Oskar Wilczek|rent 10/2025 Ogrodowa 2/11|1 900,00|14 643,05
+20251008|CARD|Stacja Olcha-Paliwa|card ...2264|-85,45|14 557,60
+20251009|CARD|Market Brzezie|card ...2264|-188,81|14 368,79
+20251010|TRANSFER|Jakub Sowa|Ogrodowa 2025-Q3 3/16|-818,44|13 550,35
+20251010|CARD|Sklep Pod Lipą|card ...2264|-52,32|13 498,03
+20251011|CARD|Stacja Olcha-Paliwa|card ...2264|-38,88|13 459,15
+20251012|CARD|Sklep Pod Lipą|card ...2264|-111,40|13 347,75
+20251015|STANDING ORDER|Volta Energia|Leśna 4 energy 10/2025|-385,00|12 962,75
+20251017|CASH|ATM Olcha Brzezie|cash withdrawal|-500,00|12 462,75
+20251019|CARD|Stacja Olcha-Paliwa|card ...2264|-204,68|12 258,07
+20251020|TRANSFER|Revenue Office Kłodzin|PIT-13 advance 09/2025 H. SOWA|-132,00|12 126,07
+20251020|STANDING ORDER|Telekom Lenia|phone 10/2025|-59,00|12 067,07
+20251021|CARD|Apteka Rumianek|card ...2264|-45,79|12 021,28
+20251027|TRANSFER|Opieka Dom sp.|home help 10/2025|-2 150,00|9 871,28
+20251029|CARD|Market Brzezie|card ...2264|-202,84|9 668,44
+20251031|CARD|Stacja Olcha-Paliwa|card ...2264|-81,29|9 587,15
+20251031|CARD|Warzywniak u Janka|card ...2264|-60,16|9 526,99
+Closing balance|9 526,99

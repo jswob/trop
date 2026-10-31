@@ -1,0 +1,32 @@
+cash_diff: 3 000.00 DUK
+  world: amend
+  world: scen01
+  unfulfilled: extra[2025-04]
+  unfulfilled: inst[2025-02]
+  unfulfilled: inst[2025-03]
+  unfulfilled: inst[2025-04]
+  unfulfilled: inst[2025-05]
+  unfulfilled: inst[2025-06]
+  unfulfilled: loan_in
+  cut 2026-10-25
+debt_left: 3 000.00 DUK
+  world: amend
+  unfulfilled: extra[2025-04]
+  unfulfilled: inst[2025-02]
+  unfulfilled: inst[2025-03]
+  unfulfilled: inst[2025-04]
+  unfulfilled: inst[2025-05]
+  unfulfilled: inst[2025-06]
+  unfulfilled: loan_in
+  cut 2026-10-25
+net_worth_diff: 0 DUK
+  world: amend
+  world: scen01
+  unfulfilled: extra[2025-04]
+  unfulfilled: inst[2025-02]
+  unfulfilled: inst[2025-03]
+  unfulfilled: inst[2025-04]
+  unfulfilled: inst[2025-05]
+  unfulfilled: inst[2025-06]
+  unfulfilled: loan_in
+  cut 2026-10-25

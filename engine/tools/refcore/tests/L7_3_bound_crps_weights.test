@@ -1,0 +1,35 @@
+# Fault approx_bound (writer 6): crps(gx[i] weight gw[i] for i in g, y0), each gw[i] a `pdf(...) to 1e-30`, printed an
+# exact fraction. L §7.3 The error bound: "A printed result that rests on rounded transcendentals, with no round after
+# them, prints ≈ and a bound on its distance from the true real-number value"; L §5.18 Output: "A value that rests on a
+# correctly rounded transcendental prints ≈ and its error bound". The line asserts the ≈ form only (its digits are the
+# interpreter's interval arithmetic over L §5.15's formula).
+=== p18.tally
+model p18
+  tally 2
+  on 2026-01-31
+  start 2026-01-01
+  end 2026-01-31
+
+source s "synthetic"
+
+index g = int 1..3
+
+input gx[i in g]: num
+input y0: num
+
+def gw[i in g]: num = pdf(normal(0, 1), gx[i]) to 1e-30
+
+ask q: crps(gx[i] weight gw[i] for i in g, y0) law 2026-01-31 orient lower
+
+version v1
+  cite s
+  governs always
+  known 2026-01-01
+  gx[1] = -1 "row"
+  gx[2] = 0 "row"
+  gx[3] = 1 "row"
+  y0 = 0.5 "row"
+=== expect
+q: ≈ ...
+  law date 2026-01-31, cut 2026-01-31
+  orient lower

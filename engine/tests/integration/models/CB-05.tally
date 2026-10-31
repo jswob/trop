@@ -1,0 +1,263 @@
+model cb05
+  tally 2
+  on 2026-10-19
+  start 2026-01-01
+  end 2026-12-31
+  note "IRS Publication 514 (2025): the foreign tax credit carryback (1 year) and carryover (10 years). Example 1, Example 2, the deduction-year example and Table 5 (spouses H and W), with the Schedule B (Form 1116) Line 4 example (Bob)."
+  note "Every amount is general category income, so one category is modelled (IRC § 904(d)(1) applies (c) per category)."
+  note "The years run on past each example's last year to the end of its 10-year carryover window. The source gives no limits, taxes or returns for those years, so they are holes, and what is absorbed there is a hole too; what each example works stays known, because a fill's later hole takes never spoil earlier ones (LANGUAGE 5.11)."
+
+source i1116sb_2022 "Instructions for Schedule B (Form 1116) (Revised 12/2022)" at "https://www.irs.gov/instructions/i1116sb"
+
+source lifted_1_0_1 "Figures tally 1.0.1 allowed inline in rules"
+
+source pub514_2025 "IRS Publication 514 (2025), Foreign Tax Credit for Individuals, Cat. No. 15018A (PDF dated Jan 30, 2026)" at "https://www.irs.gov/publications/p514"
+
+source usc_904 "26 U.S. Code § 904(c), Carryback and carryover of excess tax paid, as amended by the American Jobs Creation Act of 2004, Pub. L. 108-357, § 417(a)" at "https://www.law.cornell.edu/uscode/text/26/904"
+
+unit USD: currency minor 0.01
+
+axis election_2025
+  credit "you choose to credit foreign taxes for 2025"
+  deduction "you choose to deduct foreign taxes for 2025"
+
+index bob_col = [col_i, col_ii, col_iii]
+  v schedb_text
+  note "Schedule B's carryover columns, taken in the form's order (Line 4: Starting with column (i))"
+
+index example = [ex1, ex2]
+
+index spouse = [h, w]
+
+index t5_yr = year 2021..2034
+
+index yr = year 2020..2036
+
+input bob_carry[c in bob_col]: money USD
+
+input bob_excess: money USD
+
+input carry_10: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input dy_carry_in: money USD
+
+input dy_limit: money USD
+
+input dy_paid: money USD
+
+input first_year[e in example]: key yr
+
+input joint[t in t5_yr]: bool question "Did H and W file a joint return for this year? Table 5 ends in 2025."
+
+input last_year[e in example]: key yr
+
+input limit[e in example, y in yr]: money USD question "What is the foreign tax credit limit (general category) in this example for this year? The example gives none after its last year."
+
+input spouses_10: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input t5_fsti[sp in spouse, y in t5_yr]: money USD question "What was this spouse's foreign-source taxable income in the general category for this year? Table 5 gives only the allocated results."
+
+input t5_joint_limit[y in t5_yr]: money USD question "What was H and W's joint foreign tax credit limit (general category) for this joint year? Table 5 gives only the allocated results."
+
+input t5_last: key t5_yr
+
+input t5_net[sp in spouse, y in t5_yr]: money USD question "What is this spouse's unused foreign tax (positive) or excess limit (negative) for this year? Table 5 ends in 2025."
+  note "Table 5: a spouse's allocated unused foreign tax, positive, or excess limit, negative (printed in parentheses)"
+
+input t5_taxes[sp in spouse, y in t5_yr]: money USD question "What foreign taxes (general category) did this spouse pay or accrue for this year? Table 5 gives only the allocated results."
+
+input tax_paid[e in example, y in yr]: money USD question "What qualified foreign taxes (general category) were paid in this example for this year? The example gives none after its last year."
+
+def absorbed_after[e in example, o in yr]: money USD = sum(carry.taken[e, o, e, t] for t in yr where t > last_year[e]) at start_of(o)
+
+def diff_[e in example, y in yr]: money USD = tax_paid[e, y] - limit[e, y] at start_of(y)
+
+def dy_absorbed: money USD = min(dy_carry_in, dy_excess) at reader
+
+def dy_carry_out: money USD = dy_carry_in - dy_absorbed at reader
+
+def dy_credit: money USD at reader
+  note "Pub 514 p. 38: the carryover deemed paid may be used only as a credit (IRC § 904(c))"
+  rule credit = dy_paid + dy_absorbed when election_2025 == credit
+  rule deduction = 0 when election_2025 == deduction
+
+def dy_deduction: money USD at reader
+  rule credit = 0 when election_2025 == credit
+  rule deduction = dy_paid when election_2025 == deduction
+
+def dy_excess: money USD at reader
+  note "Pub 514 p. 38: the excess limit of a deduction year is figured as if you had chosen to credit foreign taxes for that year"
+  rule base v pub514_text = max(0, dy_limit - dy_paid)
+
+def excess[e in example, y in yr]: money USD = max(0, limit[e, y] - tax_paid[e, y]) at start_of(y)
+
+def in_span[e in example, y in yr]: bool = y >= first_year[e] and y <= last_year[e] at start_of(y)
+
+def remaining[e in example, o in yr]: money USD = unused[e, o] - sum(carry.taken[e, o, e, t] for t in yr where in_span[e, t]) at start_of(o)
+
+def t5_absorbed_after[sp in spouse, o in t5_yr]: money USD = sum(spouses.taken[sp, o, ds, t] for ds in spouse, t in t5_yr where t > t5_last) at start_of(o)
+
+def t5_alloc_limit[sp in spouse, y in t5_yr]: num USD at start_of(y)
+  note "Pub 514 pp. 38-39, Method of allocation, step 1: the joint limit is shared in proportion to each spouse's foreign-source taxable income in the category (26 CFR § 1.904-3(f)(1))"
+  rule base v pub514_text = t5_joint_limit[y] * t5_fsti[sp, y] / sum(t5_fsti[s, y] for s in spouse)
+
+def t5_alloc_net[sp in spouse, y in t5_yr]: num USD at start_of(y)
+  note "Method of allocation, step 2: each spouse's share of the limit is compared with that spouse's foreign taxes; positive is unused tax and negative excess limit, as Table 5 prints them"
+  rule base v pub514_text = t5_taxes[sp, y] - t5_alloc_limit[sp, y]
+
+def t5_excess[sp in spouse, y in t5_yr]: money USD = max(0, -t5_net[sp, y]) at start_of(y)
+
+def t5_remaining[sp in spouse, o in t5_yr]: money USD = t5_unused[sp, o] - sum(spouses.taken[sp, o, ds, t] for ds in spouse, t in t5_yr where t <= t5_last) at start_of(o)
+
+def t5_unused[sp in spouse, y in t5_yr]: money USD = max(0, t5_net[sp, y]) at start_of(y)
+
+def unused[e in example, y in yr]: money USD = max(0, tax_paid[e, y] - limit[e, y]) at start_of(y)
+
+fill bob
+  v schedb_text
+  note "Line 4: starting with column (i), each column takes its line 3 amount up to the current year excess limitation less what earlier columns took"
+  supply bob_carry[c] for c in bob_col
+  demand bob_excess
+  arc true
+  order c ties by pos(c)
+
+fill carry
+  v usc904
+  note "§ 904(c): the excess is deemed paid in the first preceding taxable year and in any of the first 10 succeeding taxable years, in that order, up to each year's limitation less its taxes and the taxes of earlier years already deemed paid in it"
+  supply unused[se, o] for se in example, o in yr where in_span[se, o]
+  demand excess[de, t] for de in example, t in yr where t >= first_year[de]
+  arc se == de and (t - o == -1 or t - o >= 1 and t - o <= carry_10)
+  order o, t ties by (pos(se), pos(o), pos(de), pos(t))
+
+fill spouses
+  v pub514_text
+  note "Pub 514 pp. 38-39 and the text after Table 5 (p. 39): in a joint year each spouse's part of the excess limit absorbs that spouse's own carryovers first, then the other spouse's; in a separate year only the spouse's own. The years go as in § 904(c)."
+  supply t5_unused[ss, o] for ss in spouse, o in t5_yr where o <= t5_last
+  demand t5_excess[ds, t] for ds in spouse, t in t5_yr
+  arc (ss == ds or joint[t]) and (t - o == -1 or t - o >= 1 and t - o <= spouses_10)
+  order o, t, ss != ds ties by (pos(ss), pos(o), pos(ds), pos(t))
+
+ask q_beyond: absorbed_after[ex1, 2025], t5_absorbed_after[h, 2024], t5_absorbed_after[w, 2024] law 2026-10-19
+
+ask q_bob: bob.taken[c] for c in bob_col law 2026-10-19
+
+ask q_bob_total: sum(bob.taken[c] for c in bob_col) law 2026-10-19
+
+ask q_dy_absorbed: dy_absorbed law 2026-10-19
+
+ask q_dy_carry_out: dy_carry_out law 2026-10-19
+
+ask q_dy_credit: dy_credit law 2026-10-19
+
+ask q_dy_deduction: dy_deduction law 2026-10-19
+
+ask q_ex1_back: carry.taken[ex1, 2025, ex1, 2024] law 2026-10-19
+
+ask q_ex1_diff: diff_[ex1, y] for y in yr where in_span[ex1, y] law 2026-10-19
+
+ask q_ex1_left: remaining[ex1, 2025] law 2026-10-19
+
+ask q_ex2_2021: carry.taken[ex2, 2021, ex2, t] for t in yr where in_span[ex2, t] law 2026-10-19
+
+ask q_ex2_2021_left: remaining[ex2, 2021] law 2026-10-19
+
+ask q_ex2_diff: diff_[ex2, y] for y in yr where in_span[ex2, y] and y != 2020 law 2026-10-19
+
+ask q_t5_allocation: check t5_net[sp, y] == t5_alloc_net[sp, y] for sp in spouse, y in t5_yr where y <= t5_last and joint[y] law 2026-10-19
+
+ask q_t5_h2021: spouses.taken[h, 2021, ds, t] for ds in spouse, t in t5_yr where t <= t5_last law 2026-10-19
+
+ask q_t5_h2022: spouses.taken[h, 2022, ds, t] for ds in spouse, t in t5_yr where t <= t5_last law 2026-10-19
+
+ask q_t5_h2024: spouses.taken[h, 2024, ds, t] for ds in spouse, t in t5_yr where t <= t5_last law 2026-10-19
+
+ask q_t5_remaining: t5_remaining[sp, 2024] for sp in spouse law 2026-10-19
+
+ask q_t5_w2021: spouses.taken[w, 2021, ds, t] for ds in spouse, t in t5_yr where t <= t5_last law 2026-10-19
+
+ask q_t5_w2024: spouses.taken[w, 2024, ds, t] for ds in spouse, t in t5_yr where t <= t5_last law 2026-10-19
+
+version lifted_figures
+  cite lifted_1_0_1
+  governs always
+  known 2004-10-22
+  carry_10 = 10 "inline in tally 1.0.1: carry line 119, operand"
+  spouses_10 = 10 "inline in tally 1.0.1: spouses line 127, operand"
+
+version usc904
+  cite usc_904
+  governs always
+  known 2004-10-22
+  note "The 1-year carryback and the 10-year carryover were enacted by the American Jobs Creation Act of 2004, Pub. L. 108-357, § 417(a) (the statutory history note the case cites), dated Oct. 22, 2004 in the public law text (https://www.govinfo.gov/content/pkg/PLAW-108publ357/html/PLAW-108publ357.htm); that is the day it is known. The current text on Cornell LII (retrieved 2026-10-18) is the locator. No governs span is stated."
+
+version schedb_text
+  cite i1116sb_2022
+  governs always
+  known 2022-12-31
+  note "The revision is dated 12/2022 with no day; the last day of that month is taken (LANGUAGE 4.5)."
+
+version pub514_text
+  cite pub514_2025
+  governs always
+  known 2026-01-30
+  note "The PDF is dated Jan 30, 2026."
+
+version pub514
+  cite pub514_2025
+  governs always
+  known 2026-10-19
+  note "The facts of Examples 1 and 2, the deduction-year example and Table 5 are a hypothetical case's stipulations, known from the model's on date (LANGUAGE 4.5; the model has no start), as is the assumption that stands for Example 2's 2020."
+  note "Table 5 years before 2021 are left out: Neither H nor W had any unused foreign tax or excess limit for any year before 2021 (p. 39)."
+  dy_carry_in = 200 "p. 38, Unused taxes carried to deduction year, Example: a foreign tax credit carryover of $200 from the same category from 2024"
+  dy_limit = 700 "p. 38, same Example: For 2025, your foreign tax credit limit is $700."
+  dy_paid = 600 "p. 38, same Example: In 2025, you paid foreign taxes of $600 on general category income."
+  first_year[ex1] = 2024 "p. 37, Example 1 table, first row"
+  first_year[ex2] = 2020 "p. 37, Example 2 text: you had no foreign income in 2020"
+  joint[2021] = true "p. 40, Table 5, row Return: 2021 Joint"
+  joint[2022] = false "p. 40, Table 5, row Return: 2022 Separate"
+  joint[2023] = true "p. 40, Table 5, row Return: 2023 Joint"
+  joint[2024] = true "p. 40, Table 5, row Return: 2024 Joint"
+  joint[2025] = false "p. 40, Table 5, row Return: 2025 Separate"
+  last_year[ex1] = 2025 "p. 37, Example 1 table, last row"
+  last_year[ex2] = 2026 "p. 37, Example 2 table, last row"
+  limit[ex1, 2024] = 200 "p. 37, Example 1 table, row 2024: $200"
+  limit[ex1, 2025] = 300 "p. 37, Example 1 table, row 2025: $300"
+  limit[ex2, 2020] = 0 "p. 37, Example 2 text: you had no foreign income in 2020"
+  limit[ex2, 2021] = 600 "p. 37, Example 2 table, row 2021: $600"
+  limit[ex2, 2022] = 600 "p. 37, Example 2 table, row 2022: $600"
+  limit[ex2, 2023] = 500 "p. 37, Example 2 table, row 2023: $500"
+  limit[ex2, 2024] = 550 "p. 37, Example 2 table, row 2024: $550"
+  limit[ex2, 2025] = 800 "p. 37, Example 2 table, row 2025: $800"
+  limit[ex2, 2026] = 500 "p. 37, Example 2 table, row 2026: $500"
+  t5_last = 2025 "p. 40, Table 5: columns 2021 to 2025"
+  t5_net[h, 2021] = 50 "p. 40, Table 5, H row, 2021: $50"
+  t5_net[h, 2022] = 25 "p. 40, Table 5, H row, 2022: $25"
+  t5_net[h, 2023] = -65 "p. 40, Table 5, H row, 2023: ($65)"
+  t5_net[h, 2024] = 104 "p. 40, Table 5, H row, 2024: $104"
+  t5_net[h, 2025] = -50 "p. 40, Table 5, H row, 2025: ($50)"
+  t5_net[w, 2021] = 30 "p. 40, Table 5, W row, 2021: $30"
+  t5_net[w, 2022] = -20 "p. 40, Table 5, W row, 2022: ($20)"
+  t5_net[w, 2023] = -20 "p. 40, Table 5, W row, 2023: ($20)"
+  t5_net[w, 2024] = 69 "p. 40, Table 5, W row, 2024: $69"
+  t5_net[w, 2025] = -10 "p. 40, Table 5, W row, 2025: ($10)"
+  tax_paid[ex1, 2024] = 100 "p. 37, Example 1 table, row 2024: $100"
+  tax_paid[ex1, 2025] = 500 "p. 37, Example 1 table, row 2025: $500"
+  tax_paid[ex2, 2020] = 0 assumed "no foreign income in 2020, so no foreign tax for that year is taken" "p. 37, Example 2 text"
+  tax_paid[ex2, 2021] = 800 "p. 37, Example 2 table, row 2021: $800"
+  tax_paid[ex2, 2022] = 700 "p. 37, Example 2 table, row 2022: $700"
+  tax_paid[ex2, 2023] = 700 "p. 37, Example 2 table, row 2023: $700"
+  tax_paid[ex2, 2024] = 400 "p. 37, Example 2 table, row 2024: $400"
+  tax_paid[ex2, 2025] = 700 "p. 37, Example 2 table, row 2025: $700"
+  tax_paid[ex2, 2026] = 550 "p. 37, Example 2 table, row 2026: $550"
+
+version schedb
+  cite i1116sb_2022
+  governs always
+  known 2026-10-19
+  note "Bob's facts are a hypothetical case's stipulations, known from the model's on date (LANGUAGE 4.5)."
+  bob_carry[col_i] = 80 "Line 4, Example: carryover of $80 in column (i)"
+  bob_carry[col_ii] = 60 "Line 4, Example: carryover of $60 in column (ii)"
+  bob_carry[col_iii] = 130 "Line 4, Example: carryover of $130 in column (iii)"
+  bob_excess = 250 "Line 4, Example: excess limitation of $250"

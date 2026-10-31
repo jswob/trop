@@ -1,0 +1,310 @@
+model mp06
+  tally 2
+  on 2026-10-19
+  start 2026-01-01
+  end 2026-12-31
+  note "German gift and inheritance tax: the ten-year cumulation of acquisitions from one person (§ 14 ErbStG), with the rate table and hardship relief of § 19."
+  note "Each acquisition is taxed three ways, keyed by calc: total (§ 14 (1) sentence 1), fict (the earlier acquisitions under the last one's circumstances, sentence 2) and alone (the acquisition by itself, sentence 4)."
+  note "No def has a time key or at, so each runs at the ask's cut, the model's on date (§4.3). C and D have no dates, so an at acq_date[q] would be a hole for them, which §4.3 doesn't define. For the dated acquisitions it would change nothing: every version read governs 2015 to 2023, and its rows haven't changed since."
+
+source erbstrg "Erbschaftsteuerreformgesetz (ErbStRG) vom 24. Dezember 2008, BGBl. I 2008 Nr. 66 S. 3018, ausgegeben am 31. Dezember 2008: Art. 1, which restates ErbStG § 16, inserts § 14 (1) sentence 4 and amends § 14 (3) and § 19 (3), from 1 January 2009. Read in the ErbStG at gesetze-im-internet.de (zuletzt geändert durch Art. 10 G v. 22.6.2026 I Nr. 192), whose sections the locators cite, with the version histories of §§ 14, 16 and 19 at buzer.de" at "https://www.gesetze-im-internet.de/erbstg_1974/"
+
+source jstg2010 "Jahressteuergesetz 2010 (JStG 2010) vom 8. Dezember 2010, BGBl. I 2010 Nr. 62 S. 1768, ausgegeben am 13. Dezember 2010: Art. 14, which rewrites ErbStG § 16 (1) Nr. 1 from 14 December 2010. Read in the ErbStG at gesetze-im-internet.de, with the § 16 version history at buzer.de" at "https://www.gesetze-im-internet.de/erbstg_1974/__16.html"
+
+source juhn "Die 10-Jahres-Frist bei Erbschaften und Schenkungen (Nico Flegel, JUHN Partner GmbH; dated 17 November 2023, dateModified 2026-08-18)" at "https://www.juhn.com/fachwissen/erbschaftsteuer-schenkungsteuer/die-10-jahres-frist-bei-erbschaften-und-schenkungen/"
+
+source smartsteuer "Erbschaftsteuer: Berücksichtigung früherer Erwerbe (smartsteuer Lexikon, Stand: 25. August 2025)" at "https://www.smartsteuer.de/online/lexikon/e/erbschaftsteuer-beruecksichtigung-frueherer-erwerbe/"
+
+source wachsbg "Wachstumsbeschleunigungsgesetz vom 22. Dezember 2009, BGBl. I 2009 Nr. 81 S. 3950, ausgegeben am 30. Dezember 2009: Art. 6, which restates ErbStG § 19 (1) with its rate table from 1 January 2010 ('§ 19 Absatz 1 wird wie folgt gefasst'). Read in the ErbStG at gesetze-im-internet.de, and the amending instruction at buzer.de" at "https://www.gesetze-im-internet.de/erbstg_1974/__19.html"
+
+unit EUR: currency minor 0.01
+
+axis mp06_total_hardship
+  relieved "§ 19 (3) applies to the cumulated total, as the law reads and as Juhn's example 1.3 applies it to the same amount"
+  unrelieved "the cumulated total is taxed at the plain § 19 (1) rate, as Juhn's printed working in 2.5"
+
+index acq = [a2015, a2018, b2015, b2020, c_earlier, c_later, d_single, e2021, e2023, f2018, f2023]
+
+index allowance_kind = [spouse, child, other_iii, unstated]
+
+index calc = [total, fict, alone]
+
+index chain = [ch_a, ch_b, ch_c, ch_d, ch_e, ch_f]
+
+index tax_class = [kl1, kl2, kl3]
+
+input acq_date[q in acq]: date
+
+input allowance[k in allowance_kind]: money EUR
+
+input cap_share: num
+
+input chain_of[q in acq]: key chain
+  note "The giver and recipient pair: acquisitions of one chain are from the same person to the same person."
+
+input class_of[q in acq]: key tax_class
+
+input hardship_high: num
+
+input hardship_low: num
+
+input hardship_rate_limit: num
+
+input kind_of[q in acq]: key allowance_kind
+
+input value[q in acq]: money EUR
+  note "The value of the acquisition when it arose (§ 14 (1): the earlier acquisitions at their earlier value)."
+
+input window_years: int
+
+band rate_band[t in tax_class](x: money EUR): num
+  note "§ 19 (1): the rate on the taxable acquisition, up to and including each Wertgrenze, by tax class. A row's lower end is the previous Wertgrenze of § 19 (3)."
+
+def actual_tax[q in acq]: num EUR = sum(assessed[e] for e in acq where earlier[e, q]) at reader
+
+def after_credit[q in acq]: num EUR = tax_used[q, total] - credit[q] at reader
+
+def applied_rate[q in acq, c in calc]: num = rate_band[class_of[q]](taxable[q, c]) at reader
+
+def assessed[q in acq]: num EUR at reader
+  note "The tax actually payable on an acquisition: its due, which reads the tax on its own earlier acquisitions in turn, at the keys earlier finds (§5.10, a read at a computed key)."
+  rule base = due[q]
+
+def base_value[q in acq, c in calc]: money EUR at reader
+  rule alone = value[q] when c == alone
+  rule fict v erbstrg_2008 = earlier_value[q] when c == fict
+  rule total v erbstrg_2008 = value[q] + earlier_value[q] when c == total
+
+def cap_amount[q in acq]: num EUR = value[q] * cap_share at reader
+
+def capped_extra[q in acq, c in calc]: num EUR = min(extra_tax[q, c], hardship_cover[q, c]) at reader
+
+def credit[q in acq]: num EUR at reader
+  note "§ 14 (1) sentences 2-3: the fictitious tax on the earlier acquisitions, or the tax actually payable on them if higher; at most the tax on the total, as smartsteuer's Lösung 4 deducts it."
+  rule base v erbstrg_2008 = min(max(fict_tax[q], actual_tax[q]), tax_used[q, total])
+
+def deduction[q in acq, c in calc]: money EUR at reader
+  note "§ 16 (1): the allowance of the recipient's circumstances at the last acquisition. For the fictitious tax it is limited to the allowance the earlier acquisitions used."
+  rule base v erbstrg_2008 = allowance[kind_of[q]]
+  rule fict beats base v smartsteuer_method = min(allowance[kind_of[q]], earlier_allowance_used[q]) when c == fict
+
+def due[q in acq]: num EUR at reader
+  note "§ 14 (1) sentence 4: not below the tax on the last acquisition alone; § 14 (3): not more than half of that acquisition."
+  rule base v erbstrg_2008 = min(max(after_credit[q], tax_used[q, alone]), cap_amount[q])
+
+def earlier[e in acq, q in acq]: bool at reader
+  note "§ 14 (1): an acquisition from the same person within the ten years before the last one."
+  rule base v erbstrg_2008 = chain_of[e] == chain_of[q] and acq_date[e] < acq_date[q] and acq_date[e] > add_years(acq_date[q], -window_years)
+  rule itself beats base = false when e == q
+
+def earlier_allowance_used[q in acq]: money EUR = sum(own_allowance[e] for e in acq where earlier[e, q]) at reader
+
+def earlier_value[q in acq]: money EUR = sum(value[e] for e in acq where earlier[e, q]) at reader
+
+def extra_tax[q in acq, c in calc]: num EUR = tax_plain[q, c] - tax_at_limit[q, c] at reader
+
+def fict_tax[q in acq]: num EUR = tax_used[q, fict] at reader
+
+def hardship_cover[q in acq, c in calc]: num EUR at reader
+  note "§ 19 (3): the part of the amount above the previous Wertgrenze that may cover the extra tax: half at a rate up to 30 per cent, three quarters above."
+  rule base v erbstrg_2008 = (taxable[q, c] - prev_limit[q, c]) * (if applied_rate[q, c] <= hardship_rate_limit then hardship_low else hardship_high)
+
+def hardship_relief[q in acq, c in calc]: num EUR = tax_plain[q, c] - tax_relieved[q, c] at reader
+
+def has_earlier[q in acq]: bool = any(earlier[e, q] for e in acq) at reader
+
+def own_allowance[q in acq]: money EUR at reader
+  note "The allowance an acquisition used when it was taxed by itself."
+  rule base = min(allowance[kind_of[q]], value[q])
+
+def prev_limit[q in acq, c in calc]: money EUR at reader
+  note "§ 19 (3): the Wertgrenze the taxable amount last exceeded, the lower end of its row of the rate table; 0 in the first row, which exceeds none."
+  rule base v erbstrg_2008 = band_lo(rate_band[class_of[q]], taxable[q, c])
+
+def tax_at_limit[q in acq, c in calc]: num EUR at reader
+  note "§ 19 (3): the tax that would arise if the acquisition had not exceeded the previous Wertgrenze, at the rate of the row that ends there."
+  rule base v erbstrg_2008 = prev_limit[q, c] * rate_band[class_of[q]](prev_limit[q, c])
+
+def tax_plain[q in acq, c in calc]: num EUR = taxable[q, c] * applied_rate[q, c] at reader
+
+def tax_relieved[q in acq, c in calc]: num EUR at reader
+  note "§ 19 (3): the tax at the previous Wertgrenze plus the extra tax as far as the cover reaches."
+  rule base v erbstrg_2008 = tax_at_limit[q, c] + capped_extra[q, c]
+  rule lowest beats base = tax_plain[q, c] when prev_limit[q, c] == 0
+
+def tax_used[q in acq, c in calc]: num EUR at reader
+  rule base = tax_relieved[q, c]
+  rule plain_total beats base v juhn_method = tax_plain[q, c] when mp06_total_hardship == unrelieved and c == total and has_earlier[q]
+
+def taxable[q in acq, c in calc]: money EUR = max(0, base_value[q, c] - deduction[q, c]) at reader
+
+ask a_total: base_value[a2018, total] law 2026-10-19
+
+ask b_credit: fict_tax[b2020], actual_tax[b2020], credit[b2020], after_credit[b2020] law 2026-10-19
+
+ask b_hardship: hardship_relief[b2020, total] law 2026-10-19
+
+ask b_minimum: tax_used[b2020, alone], due[b2020] law 2026-10-19
+
+ask b_total: base_value[b2020, total], deduction[b2020, total], taxable[b2020, total], applied_rate[b2020, total], tax_used[b2020, total] law 2026-10-19
+
+ask c_assessed: credit[c_later] + due[c_later] law 2026-10-19
+
+ask c_credit: fict_tax[c_later], credit[c_later], after_credit[c_later], cap_amount[c_later], due[c_later] law 2026-10-19
+
+ask c_total: base_value[c_later, total], deduction[c_later, total], taxable[c_later, total], applied_rate[c_later, total], tax_used[c_later, total] law 2026-10-19
+
+ask d_hardship: taxable[d_single, alone], applied_rate[d_single, alone], tax_plain[d_single, alone], tax_at_limit[d_single, alone], extra_tax[d_single, alone], capped_extra[d_single, alone], tax_relieved[d_single, alone] law 2026-10-19
+
+ask e_first: taxable[e2021, alone], applied_rate[e2021, alone], tax_used[e2021, alone] law 2026-10-19
+
+ask e_increase: due[e2023] - (tax_used[e2021, alone] + tax_used[e2023, alone]) law 2026-10-19
+
+ask e_second: base_value[e2023, total], taxable[e2023, total], applied_rate[e2023, total], tax_used[e2023, total], credit[e2023], due[e2023] law 2026-10-19
+
+ask e_separate: tax_used[e2021, alone] + tax_used[e2023, alone] law 2026-10-19
+
+ask f_credit: actual_tax[f2023], credit[f2023], after_credit[f2023] law 2026-10-19
+
+ask f_fict: deduction[f2023, fict], taxable[f2023, fict], applied_rate[f2023, fict], fict_tax[f2023] law 2026-10-19
+
+ask f_first: taxable[f2018, alone], applied_rate[f2018, alone], assessed[f2018] law 2026-10-19
+
+ask f_minimum: taxable[f2023, alone], applied_rate[f2023, alone], tax_used[f2023, alone], due[f2023] law 2026-10-19
+
+ask f_total: base_value[f2023, total], deduction[f2023, total], taxable[f2023, total], applied_rate[f2023, total], tax_used[f2023, total] law 2026-10-19
+
+version erbstrg_2008
+  cite erbstrg
+  governs 2009-01-01..
+  known 2008-12-31
+  note "Known 2008-12-31, the day BGBl. I 2008 Nr. 66 was issued (ausgegeben), which carries the act of 24 December 2008 at S. 3018; it governs from 1 January 2009."
+  note "Which act (§4.5), from the version histories at buzer.de (§§ 14, 16 and 19, read 2026-10-19) and the NWB editorial notes as of 22.6.2026 (datenbank.nwb.de, read 2026-10-19). This act restated § 16, so Nr. 2 and Nr. 7 have their wording from it; Nr. 1 has its wording from the JStG 2010 (jstg_2010). It inserted § 14 (1) sentence 4 and amended § 14 (3) and § 19 (3) a) and b), which no later act has changed. Which act worded § 14 (1) sentences 1 to 3 isn't established: of § 14's later amendments the JStG 2020 rewrote only Abs. 2, so this act is the latest amendment of Abs. 1, and the window row and the credit rule sit with it."
+  note "Not modelled, as no row reads them: § 14 (2) as the JStG 2020 (G v. 21.12.2020) rewrote it, and the lead-in to § 16 (1) as the BeitrRLUmsG (G v. 7.12.2011) and the StUmgBG (G v. 23.6.2017) changed it. The § 19 (1) table this act set for 2009 was not fetched; the rows read are the WachsBG's (wachsbg_2009)."
+  note "The rules base_value.fict, base_value.total, credit.base, deduction.base, due.base and earlier.base (§§ 14, 16) and hardship_cover.base, prev_limit.base, tax_at_limit.base and tax_relieved.base (§ 19) point at this version."
+  allowance[child] = 400000 "§ 16 (1) Nr. 2: der Kinder ... in Höhe von 400 000 Euro"
+  allowance[other_iii] = 20000 "§ 16 (1) Nr. 7: der übrigen Personen der Steuerklasse III in Höhe von 20 000 Euro"
+  cap_share = 0.5 "§ 14 (3): nicht mehr betragen als 50 Prozent dieses Erwerbs"
+  hardship_high = 0.75 "§ 19 (3) b): bei einem Steuersatz über 30 Prozent aus drei Vierteln"
+  hardship_low = 0.5 "§ 19 (3) a): bei einem Steuersatz bis zu 30 Prozent aus der Hälfte"
+  hardship_rate_limit = 0.3 "§ 19 (3) a): bis zu 30 Prozent"
+  window_years = 10 "§ 14 (1): innerhalb von zehn Jahren"
+
+version wachsbg_2009
+  cite wachsbg
+  governs 2010-01-01..
+  known 2009-12-30
+  note "Known 2009-12-30, the day BGBl. I 2009 Nr. 81 was issued, which carries the act of 22 December 2009 at S. 3950; it governs from 1 January 2010 (NWB editorial note to § 19, read 2026-10-19: Abs. 1 last amended by this act, in force 1.1.2010)."
+  note "Art. 6 restates § 19 (1) as a whole ('§ 19 Absatz 1 wird wie folgt gefasst', buzer.de, read 2026-10-19), so the table rows of all three classes cite it (§4.5, Which act: a restatement as a whole counts), though it changed only the class II rates. The ErbStRG's own table for 2009 was not fetched, so an acquisition read at a 2009 date has no table; every acquisition here is from 2015 on, and none is in class II."
+  rate_band[kl1]: [0, 75000] = 0.07 "§ 19 (1) table, Steuerklasse I: bis einschließlich 75 000 Euro, 7 Prozent"
+  rate_band[kl1]: (75000, 300000] = 0.11 "§ 19 (1) table, Steuerklasse I: 300 000, 11"
+  rate_band[kl1]: (300000, 600000] = 0.15 "§ 19 (1) table, Steuerklasse I: 600 000, 15"
+  rate_band[kl1]: (600000, 6000000] = 0.19 "§ 19 (1) table, Steuerklasse I: 6 000 000, 19"
+  rate_band[kl1]: (6000000, 13000000] = 0.23 "§ 19 (1) table, Steuerklasse I: 13 000 000, 23"
+  rate_band[kl1]: (13000000, 26000000] = 0.27 "§ 19 (1) table, Steuerklasse I: 26 000 000, 27"
+  rate_band[kl1]: (26000000, inf) = 0.3 "§ 19 (1) table, Steuerklasse I: über 26 000 000, 30"
+  rate_band[kl2]: [0, 75000] = 0.15 "§ 19 (1) table, Steuerklasse II: bis einschließlich 75 000 Euro, 15 Prozent"
+  rate_band[kl2]: (75000, 300000] = 0.2 "§ 19 (1) table, Steuerklasse II: 300 000, 20"
+  rate_band[kl2]: (300000, 600000] = 0.25 "§ 19 (1) table, Steuerklasse II: 600 000, 25"
+  rate_band[kl2]: (600000, 6000000] = 0.3 "§ 19 (1) table, Steuerklasse II: 6 000 000, 30"
+  rate_band[kl2]: (6000000, 13000000] = 0.35 "§ 19 (1) table, Steuerklasse II: 13 000 000, 35"
+  rate_band[kl2]: (13000000, 26000000] = 0.4 "§ 19 (1) table, Steuerklasse II: 26 000 000, 40"
+  rate_band[kl2]: (26000000, inf) = 0.43 "§ 19 (1) table, Steuerklasse II: über 26 000 000, 43"
+  rate_band[kl3]: [0, 75000] = 0.3 "§ 19 (1) table, Steuerklasse III: bis einschließlich 75 000 Euro, 30 Prozent"
+  rate_band[kl3]: (75000, 300000] = 0.3 "§ 19 (1) table, Steuerklasse III: 300 000, 30"
+  rate_band[kl3]: (300000, 600000] = 0.3 "§ 19 (1) table, Steuerklasse III: 600 000, 30"
+  rate_band[kl3]: (600000, 6000000] = 0.3 "§ 19 (1) table, Steuerklasse III: 6 000 000, 30"
+  rate_band[kl3]: (6000000, 13000000] = 0.5 "§ 19 (1) table, Steuerklasse III: 13 000 000, 50"
+  rate_band[kl3]: (13000000, 26000000] = 0.5 "§ 19 (1) table, Steuerklasse III: 26 000 000, 50"
+  rate_band[kl3]: (26000000, inf) = 0.5 "§ 19 (1) table, Steuerklasse III: über 26 000 000, 50"
+
+version jstg_2010
+  cite jstg2010
+  governs 2010-12-14..
+  known 2010-12-13
+  note "Known 2010-12-13, the day BGBl. I 2010 Nr. 62 was issued, which carries the act of 8 December 2010 at S. 1768 (dejure.org, read 2026-10-19). Its Art. 14 rewrites § 16 (1) Nr. 1 with effect from 14 December 2010 (buzer.de, § 16 version history, read 2026-10-19), so it governs from then, and the spouse's row cites it (§4.5, Which act)."
+  note "The ErbStRG's own Nr. 1 for 2009 and 2010 was not fetched, so a spouse's acquisition read before 14 December 2010 has no allowance row. F's 2023 gift is the only spouse's acquisition here."
+  allowance[spouse] = 500000 "§ 16 (1) Nr. 1: des Ehegatten und des Lebenspartners in Höhe von 500 000 Euro"
+
+version juhn_method
+  cite juhn
+  governs always
+  known 2023-11-17
+  note "No items: the rule tax_used.plain_total points at it, for the printed working of example 2.5."
+  note "Known 2023-11-17, the date the page shows under its title (juhn.com, read 2026-10-19). Its metadata gives dateModified 2026-08-18, a record that no printed stamp beats, so the page would take it (§4.5); but the rows read are known to predate the update, so its own date applies. Wayback captures of 2023-12-03, 2024-07-25, 2025-02-08 and 2025-12-09 (read 2026-10-19) print 2.5's working as the case reads it. The update changed 1.3's printed total, not 2.5."
+
+version smartsteuer_method
+  cite smartsteuer
+  governs always
+  known 2025-08-25
+  note "No items: the rule deduction.fict points at it, for H E 14.1 ErbStH and BFH II R 43/03 as the lexicon reports them (not fetched). Known 2025-08-25, the page's own 'Stand: 25. August 2025'."
+
+version juhn_examples
+  cite juhn
+  governs always
+  known 2026-10-19
+  note "Examples 2.1 (A), 2.2 (B), 2.5 (C) and 1.3 (D)."
+  note "Known 2026-10-19: the examples are hypothetical, so their stipulations, and the assumption that stands for D's unstated allowance, are known from the model's on date, as the model has no start (§4.5)."
+  acq_date[a2015] = window(2015-01-01, 2015-12-31) "2.1 Beispiel: share portfolio in 2015"
+  acq_date[a2018] = window(2018-01-01, 2018-12-31) "2.1 Beispiel: two rental properties in 2018"
+  acq_date[b2015] = window(2015-01-01, 2015-12-31) "2.2 Beispiel: share portfolio in 2015"
+  acq_date[b2020] = window(2020-01-01, 2020-12-31) "2.2 Beispiel: two let apartment buildings in 2020"
+  allowance[unstated] = 0 assumed "the example taxes the whole EUR 6.100.000 and deducts no allowance" "1.3, Erweiterung des Beispiels"
+  given assessed[b2015] = 22000 "2.2 Beispiel: Die gezahlte Steuer lag bei EUR 22.000"
+  chain_of[a2015] = ch_a "2.1 Beispiel: father V to daughter T"
+  chain_of[a2018] = ch_a "2.1 Beispiel: father V to daughter T"
+  chain_of[b2015] = ch_b "2.2 Beispiel: father V to daughter T"
+  chain_of[b2020] = ch_b "2.2 Beispiel: father V to daughter T"
+  chain_of[c_earlier] = ch_c "2.5: father V to son S"
+  chain_of[c_later] = ch_c "2.5: father V to son S"
+  chain_of[d_single] = ch_d "1.3: A, from his father"
+  class_of[a2015] = kl1 "2.1 Beispiel: daughter, Steuerklasse I"
+  class_of[a2018] = kl1 "2.1 Beispiel: daughter, Steuerklasse I"
+  class_of[b2015] = kl1 "2.2 Beispiel: daughter"
+  class_of[b2020] = kl1 "2.2 table: Steuerklasse I"
+  class_of[c_earlier] = kl1 "2.5: son"
+  class_of[c_later] = kl1 "2.5: son"
+  class_of[d_single] = kl1 "1.3: from his father"
+  given earlier[c_earlier, c_later] = true "2.5: vor sieben Jahren; no dates are given"
+  given earlier[c_later, c_earlier] = false "2.5: the later gift follows the earlier one"
+  kind_of[a2015] = child "2.1 Beispiel: daughter"
+  kind_of[a2018] = child "2.1 Beispiel: daughter"
+  kind_of[b2015] = child "2.2 Beispiel: Freibeträge wurden in voller Höhe abgezogen"
+  kind_of[b2020] = child "2.2 table: Freibetrag nach § 16 ErbStG"
+  kind_of[c_earlier] = child "2.5 table: Freibetrag EUR 400.000"
+  kind_of[c_later] = child "2.5 table: bereits abgezogener Freibetrag"
+  kind_of[d_single] = unstated "1.3: no allowance is deducted"
+  value[a2015] = 200000 "2.1 Beispiel: Es hatte einen Wert von EUR 200.000"
+  value[a2018] = 1800000 "2.1 Beispiel: taxable value after the § 13d exemption"
+  value[b2015] = 600000 "2.2 Beispiel: share portfolio"
+  value[b2020] = 1800000 "2.2 Beispiel: two let apartment buildings"
+  value[c_earlier] = 6000000 "2.5: earlier gift"
+  value[c_later] = 500000 "2.5: later gift"
+  value[d_single] = 6100000 "1.3: Vermögenswerte im Umfang von EUR 6.100.000"
+
+version smartsteuer_examples
+  cite smartsteuer
+  governs always
+  known 2026-10-19
+  note "Beispiel 1 / Lösung 1 (section 1) and Beispiel 4 / Lösung 4 (section 3.2.1)."
+  note "Known 2026-10-19: the examples are hypothetical, so their stipulations are known from the model's on date (§4.5)."
+  acq_date[e2021] = 2021-06-29 "Beispiel 1: 29.6.2021"
+  acq_date[e2023] = 2023-07-31 "Beispiel 1: 31.7.2023"
+  acq_date[f2018] = 2018-12-24 "Beispiel 4: 24.12.2018 (one heading says 'Vorerwerb aus 2019')"
+  acq_date[f2023] = 2023-10-31 "Beispiel 4: 31.10.2023, two months after the marriage on 31.8.2023"
+  chain_of[e2021] = ch_e "Beispiel 1: father V to daughter T"
+  chain_of[e2023] = ch_e "Beispiel 1: father V to daughter T"
+  chain_of[f2018] = ch_f "Beispiel 4: A to B"
+  chain_of[f2023] = ch_f "Beispiel 4: A to B"
+  class_of[e2021] = kl1 "Beispiel 1: daughter"
+  class_of[e2023] = kl1 "Beispiel 1: daughter"
+  class_of[f2018] = kl3 "Lösung 4, first table: Lebensgefährtin, StKl. III"
+  class_of[f2023] = kl1 "Lösung 4, second table: spouse"
+  kind_of[e2021] = child "Lösung 1: § 16 Abs. 1 Nr. 2"
+  kind_of[e2023] = child "Lösung 1: § 16 Abs. 1 Nr. 2"
+  kind_of[f2018] = other_iii "Lösung 4: § 16 Abs. 1 Nr. 7"
+  kind_of[f2023] = spouse "Lösung 4: § 16 Abs. 1 Nr. 1"
+  value[e2021] = 700000 "Beispiel 1: cash"
+  value[e2023] = 700000 "Beispiel 1: second cash gift"
+  value[f2018] = 200000 "Beispiel 4: Bargeld"
+  value[f2023] = 650000 "Beispiel 4: Bargeldschenkung aus 2023"

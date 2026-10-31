@@ -1,0 +1,43 @@
+argv: run cut11/b_r1/asks/cut.tally cut11/b_r1/facts/2026.tally cut11/b_r1/law/pl/benefits.tally cut11/b_r1/law/pl/business.tally cut11/b_r1/law/pl/common.tally cut11/b_r1/law/pl/employment.tally cut11/b_r1/law/pl/wrappers.tally cut11/b_r1/loans.tally cut11/b_r1/pays.tally cut11/b_r1/people.tally cut11/b_r1/places.tally cut11/b_r1/reality.tally cut11/b_r1/records/mbank/2026-09.tally --ask replay_septemb
+cwd: /Users/jswob/projects/trop/engine/tests/integration/amendments
+seconds: 88.0 PARTIAL (limit hit)
+fast layer: True
+
+act:decday                             37
+act:leg                               991
+act:mark                               68
+act:obs                                19
+act:read                               10
+acts                                 1125
+arith:*                             45289
+arith:+                             53895
+arith:-                           2183476
+arith:/                             22326
+decision_instances                    109
+def_cell                          4547783
+def_hit                           2273527
+def_miss                          2274256
+engines                                 2
+ev                               32624646
+legs_booked                          1196
+log_entries                          2108
+money_made                        2367434
+num_den1                         12542296
+num_den_decimal6                    93327
+num_made                         12644303
+parts_entries                        2108
+parts_flush                          2609
+read_def                          4547783
+read_input                        1628843
+walk_days                             834
+walk_days_nonempty                    816
+walks                                  20
+walks_proj                             19
+read_input_distinct                808194
+def_items_evaluated                    57
+
+def misses by item (top 8): [('debt_before', 719247), ('principal_part', 716176), ('overpay_paid', 716175), ('spend_month', 34872), ('interest_part', 27787), ('instalment', 27780), ('spend_day', 8718), ('annuity', 3136)]
+memo entries at end, all engines: 2266435 by kind {'def': 2266435}
+walk spans (days): n 20, min 30, median 183, max 317, sum 3627
+decision strata per day with decisions: {1: 37}
+Num results by max bit length: {'<=63': 12644375}; max 25 bits

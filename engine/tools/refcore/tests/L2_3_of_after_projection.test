@@ -1,0 +1,17 @@
+# Writer 11 (tally 2.1, 2.1-3). L §2.3 parse rule 7: "An of belongs to the read its production gives it: a balance's
+# comes before its projection clauses (bal(x, d) of p from t)"; balx = ... ["of" ofq] [proj | "modelled"], so an of after
+# the projection's from term isn't the grammar's: LOAD-PARSE.
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+def x: money PLN = bal(konto, 2026-06-30) from 2026-01-31 of ania at 2026-01-01
+ask q: x
+=== expect
+refused: LOAD-PARSE ...

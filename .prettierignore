@@ -10,8 +10,11 @@ skills-lock.json
 .claude/skills/frontend-design/
 .claude/skills/grill-me/
 .claude/skills/skill-creator/
-# The frozen engine spec: its bytes are checksummed, never reformatted
+# The frozen engine spec and its reference interpreter: their bytes are checksummed, never reformatted
 engine/spec/
+engine/tools/refcore/
+# The test suite: keys hashed in MANIFEST.sha256, baselines, texts; exact records, never reformatted
+engine/tests/
 # The engine's build and mutation-testing output
 engine/target/
 engine/fuzz/target/

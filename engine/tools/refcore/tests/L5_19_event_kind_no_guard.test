@@ -1,0 +1,45 @@
+# L §5.19 covered (round 7): "A def that aggregates an observed input's rows over a span (not a binding over an event
+# kind, whose plan instances stand on the days no statement covers) must guard the aggregate".  The same def as
+# L5_19_load_covered over the event kind transfers needs no guard: it loads, and February holds the one observation,
+# 100.00 PLN (bindings over a kind include its observations, L §5.19).
+=== m.tally
+model hh
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source plan "plan"
+source bank "bank"
+unit PLN: currency minor 0.01
+input bank_rows: observed
+input amt: money PLN
+input dom: int
+place konto: accounts PLN lives 2019-05-01..
+place savings: accounts PLN lives 2019-05-01..
+place world: outside lives 1900-01-01..
+place unexplained: outside lives 1900-01-01..
+
+def spent[m in months]: money PLN = sum(o.cash.amount for o in transfers over m)
+
+version stmt
+  cite bank
+  governs 2026-02
+  known 2026-03-02
+  covers konto
+  pad konto from unexplained
+  bank_rows[r1] = (on: 2026-02-05, kind: transfers, leg cash from konto to world amount 100.00 PLN) "line 1"
+
+ask q: spent[2026-02]
+
+version plan_2026
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  amt = 1 000.00 PLN "own"
+  dom = 5 "own"
+  opening[konto] = 5 000.00 PLN at 2026-01-01 start "wyciąg"
+  opening[savings] = 0 PLN at 2026-01-01 start "wyciąg"
+=== expect
+q: 100.00 PLN
+...

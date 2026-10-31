@@ -1,0 +1,40 @@
+# L §2.5: "Its kind is not a field: membership, subkinds included, is tested with m in K (§5.7)". shop is a move of
+# groceries (a subkind of transfers), gift of transfers: x in groceries holds shop only.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+kind groceries: transfers
+input amt: money PLN
+input d1: date
+input d2: date
+
+move shop: groceries
+  on d1
+  leg cash from konto to world amount amt
+
+move gift: transfers
+  on d2
+  leg cash from world to konto amount amt
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 10.00 PLN
+  d1 = 2026-03-01
+  d2 = 2026-04-01
+  opening[konto] = 0 PLN at 2026-01-01 start "s"
+
+ask q2: count(x in transfers over 2026 where x in groceries)
+=== expect
+q2: 1
+  unfulfilled: shop
+  cut 2026-12-31

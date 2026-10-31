@@ -1,0 +1,35 @@
+# L §8.2 `pinned:` row (round 11b): "Pins formed per binding tuple print once, as written, with their binding
+# (`pinned: gross = g for g in gross_lo .. gross_hi step minor(DUK)`), never one line per tuple". The pin {gross = g}
+# is formed once per g of the max's binding.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+input gross: money PLN
+input gross_lo: money PLN
+input gross_hi: money PLN
+input rate_: num
+
+def net: money PLN
+  rule r = round(gross * rate_, minor(PLN), half-up)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  gross = 100 PLN "s"
+  gross_lo = 100 PLN "s"
+  gross_hi = 100.02 PLN "s"
+  rate_ = 0.5 "s"
+
+ask q: max(net as if {gross = g} for g in gross_lo .. gross_hi step minor(PLN))
+=== expect
+q: ...
+  pinned: gross = g for g in gross_lo .. gross_hi step minor(PLN)
+  cut 2026-12-31

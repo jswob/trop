@@ -1,0 +1,33 @@
+model law01
+  tally 1
+  on 2026-10-25
+  note "Probe LAW-01: a benefit set by yearly income in a table, read one minor unit below, at and above each edge."
+
+source card "Probe card LAW-01 (tmp/cases/probes/law/LAW-01.md): story, rule 1 and question"
+
+index probe = [p1, p2, p3, p4, p5, p6]
+
+input income[t in probe]: money DUK question "What is the yearly income in this probe?"
+
+band benefit(x: money DUK): money DUK
+  note "rule 1: the benefit by yearly income; 50 000.00 closes the first row, 80 000.00 opens the last"
+
+ask benefit_at_edges: income[t], benefit(income[t]) for t in probe
+
+version card_law
+  cite card
+  known 2026-10-25
+  note "the card's own rule, a stipulation known from on, since the model has no start (L 4.5)"
+  benefit: (-inf, 50000] = 200 "rule 1: income not more than 50 000.00: 200.00"
+  benefit: (50000, 80000) = 100 "rule 1: more than 50 000.00 and less than 80 000.00: 100.00"
+  benefit: [80000, inf) = 0 "rule 1: not less than 80 000.00: 0.00"
+
+version card_question
+  cite card
+  known 2026-10-25
+  income[p1] = 49999.99 "question: 49 999.99"
+  income[p2] = 50000 "question: 50 000.00"
+  income[p3] = 50000.01 "question: 50 000.01"
+  income[p4] = 79999.99 "question: 79 999.99"
+  income[p5] = 80000 "question: 80 000.00"
+  income[p6] = 80000.01 "question: 80 000.01"

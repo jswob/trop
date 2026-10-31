@@ -1,0 +1,26 @@
+# L §3.2 Period units: "1 year = 4 quarters = 12 months exactly ... So annual[y] * (1 month / 1 year) is a twelfth".
+# 1 200.00 PLN × (1 month / 1 year) = 100 PLN (a num PLN: money × num, L §3.2 table).
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "a source"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+unit hour "godzina"
+
+input annual: money PLN
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  annual = 1 200.00 PLN
+
+ask q1: annual * (1 month / 1 year)
+=== expect
+q1: 100 PLN
+  cut 2026-01-01

@@ -1,0 +1,15 @@
+part igt_4
+  tally 1
+  law
+  note "IGT-4 · The close family's exemption: a spouse, descendant, ascendant, stepchild, sibling or step-parent is exempt (.1), only if the acquisition is reported within 6 months of the day the tax arose, otherwise taxed as Group I (.2); no report is needed where the added-up acquisition is not above IGT-FREE-I (.3); a gift of money is exempt only if credited to the acquirer's payment account, which point 3 doesn't lift (.4)."
+
+source igt_4 "Inheritance and Gift Tax Act, IGT-4 The close family's exemption (tmp/cases/law/acts.md)"
+
+input igt4_report_months: int question "Within how many months of the day the tax arose must the acquisition be reported (IGT-4 .2)?"
+
+version igt4_v1
+  cite igt_4
+  governs 2018-01-01..
+  known 2017-09-01
+  note "IGT-4 v1, in force 2018-01-01 until replaced, published 2017-09-01; governs acquisitions from 2018-01-01."
+  igt4_report_months = 6 "IGT-4 v1 .2"

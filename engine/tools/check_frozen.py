@@ -6,8 +6,11 @@
 
 It verifies:
   - engine/spec/SHA256SUMS: every file's checksum, and that it lists every file;
+  - engine/tools/SHA256SUMS the same way over the reference interpreter (refcore/);
   - engine/tests/TESTS.sha256 the same way, once T has written it;
-  - that engine/spec/ matches the git tag named in engine/spec/VERSION;
+  - that engine/spec/ and the oracle (refcore/, refcore_fast/, tools/SHA256SUMS) match
+    the commit tools/frozen.toml pins: the tag named in engine/spec/VERSION, or an
+    approved amendment after it that kept the version;
   - engine/tools/RULES.sha256 over every rule file (the set the guard protects).
 """
 
@@ -15,6 +18,7 @@ import hashlib
 import os
 import subprocess
 import sys
+import tomllib
 
 TOOLS = os.path.dirname(os.path.realpath(__file__))
 ENGINE = os.path.dirname(TOOLS)
@@ -23,6 +27,11 @@ sys.path.insert(0, TOOLS)
 import guard  # noqa: E402  the guard's list of rule files is the one list
 
 RULES = os.path.join(TOOLS, "RULES.sha256")
+FROZEN = os.path.join(TOOLS, "frozen.toml")
+# what the pin holds: the spec and the oracle, repo-relative
+PINNED = ["engine/spec", "engine/tools/refcore", "engine/tools/refcore_fast", "engine/tools/SHA256SUMS"]
+# the suite's run output (engine/tests/.gitignore), never checksummed
+TESTS_OUTPUT = ("cache/", "out/", "results/")
 SKIP_DIRS = {"__pycache__", "target", "corpus", "artifacts", "coverage", ".git"}
 SKIP_FILES = {".DS_Store"}
 OUTSIDE = [".github/workflows/engine.yml", ".claude/settings.json"]
@@ -61,15 +70,21 @@ def read_sums(path):
     return sums
 
 
-def verify_sums(top, sums_name, label):
-    """Problems with `top`/`sums_name`: a changed, missing or unlisted file."""
+def verify_sums(top, sums_name, label, within=None, skip=()):
+    """Problems with `top`/`sums_name`: a changed, missing or unlisted file. With
+    `within`, only the files under those folders of `top` must be listed; names that
+    start with one of `skip` needn't be."""
     path = os.path.join(top, sums_name)
     try:
         sums = read_sums(path)
     except (OSError, ValueError) as e:
         return [f"{label}: {e}"]
     problems = []
-    present = set(files_under(top)) - {sums_name}
+    if within is None:
+        present = set(files_under(top)) - {sums_name}
+    else:
+        present = {f"{w}/{n}" for w in within for n in files_under(os.path.join(top, w))}
+    present = {n for n in present if not n.startswith(skip)}
     for name, digest in sorted(sums.items()):
         full = os.path.join(top, name)
         if not os.path.isfile(full):
@@ -85,24 +100,40 @@ def git(*args):
     return subprocess.run(["git", "-C", ROOT, *args], capture_output=True, text=True, check=False)
 
 
-def verify_tag():
+def verify_pin():
+    """The spec and the oracle match the commit tools/frozen.toml pins, which is the
+    tag spec/VERSION names or descends from it."""
     version = os.path.join(ENGINE, "spec", "VERSION")
     tag = "tally-1.0"
     if os.path.exists(version):
         with open(version, encoding="utf-8") as f:
             tag = f.read().strip()
+    try:
+        with open(FROZEN, "rb") as f:
+            frozen = tomllib.load(f)
+    except (OSError, tomllib.TOMLDecodeError) as e:
+        return [f"spec: engine/tools/frozen.toml: {e}"]
+    if frozen.get("tag") != tag:
+        return [f"spec: spec/VERSION names {tag} but tools/frozen.toml pins {frozen.get('tag')}; a new version moves the pin through R-112"]
     if git("rev-parse", "--verify", "--quiet", f"refs/tags/{tag}").returncode != 0:
         return [f"spec: the tag {tag} (from spec/VERSION) isn't in this clone; fetch the tags"]
+    pin = frozen.get("pin", tag)
+    if git("rev-parse", "--verify", "--quiet", f"{pin}^{{commit}}").returncode != 0:
+        return [f"spec: the pinned commit {pin} (tools/frozen.toml) isn't in this clone; fetch the history"]
+    if pin != tag and git("merge-base", "--is-ancestor", tag, pin).returncode != 0:
+        return [f"spec: the pinned commit {pin} doesn't descend from the tag {tag}"]
+    name = tag if pin == tag else f"{tag}'s amendment {pin[:7]}"
     problems = []
-    diff = git("diff", "--name-status", tag, "--", "engine/spec")
+    diff = git("diff", "--name-status", pin, "--", *PINNED)
     if diff.returncode != 0:
-        return [f"spec: git diff against {tag} failed: {diff.stderr.strip()}"]
+        return [f"spec: git diff against {name} failed: {diff.stderr.strip()}"]
     for line in diff.stdout.splitlines():
-        problems.append(f"spec: differs from {tag}: {line}")
-    extra = git("ls-files", "--others", "--", "engine/spec")
+        problems.append(f"spec: differs from {name}: {line}")
+    extra = git("ls-files", "--others", "--", *PINNED)
     for line in extra.stdout.splitlines():
-        if os.path.basename(line) not in SKIP_FILES and "__pycache__" not in line.split("/"):
-            problems.append(f"spec: {line} isn't in {tag}")
+        parts = line.split("/")
+        if parts[-1] not in SKIP_FILES and "__pycache__" not in parts and not line.endswith(".pyc"):
+            problems.append(f"spec: {line} isn't in {name}")
     return problems
 
 
@@ -154,19 +185,20 @@ def main():
         print("usage: engine/tools/check-frozen [--write-rules]", file=sys.stderr)
         return 64
     problems = verify_sums(os.path.join(ENGINE, "spec"), "SHA256SUMS", "spec")
+    problems += verify_sums(TOOLS, "SHA256SUMS", "refcore", within=["refcore"])
     tests = os.path.join(ENGINE, "tests")
     if os.path.exists(os.path.join(tests, "TESTS.sha256")):
-        problems += verify_sums(tests, "TESTS.sha256", "tests")
+        problems += verify_sums(tests, "TESTS.sha256", "tests", skip=TESTS_OUTPUT)
     else:
         print("check-frozen: notice: engine/tests/TESTS.sha256 isn't written yet (T writes it); skipped")
-    problems += verify_tag()
+    problems += verify_pin()
     problems += verify_rules()
     for p in problems:
         print(f"FAIL {p}")
     if problems:
         print(f"check-frozen: {len(problems)} problem{'' if len(problems) == 1 else 's'}")
         return 1
-    print("check-frozen: spec, tag and rules unchanged")
+    print("check-frozen: spec, oracle, pin and rules unchanged")
     return 0
 
 

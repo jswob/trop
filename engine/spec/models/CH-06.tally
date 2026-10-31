@@ -1,15 +1,24 @@
 model ch06
-  tally 1
+  tally 2
   on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
   note "Compound Poisson aggregate losses: the variance of payments under a per-loss deductible (SOA STAM 164), the expected payment under a deductible of 3 (STAM 165), the probability that aggregate claims are exactly 600 (STAM 289), and the compound Poisson variance of Loss Data Analytics Example 5.3.1."
   note "The distribution of S is built by enumerating how many losses of each amount occur. A vector of counts (n1, n2, ...) has probability e^-λ λ^n / (n1! n2! ...) × Π p^nk: the Poisson count times the multinomial split. The count index reaches 10, and the check asks show that it reaches every total asked."
   note "Amounts are in XXX: no question states a currency. An answer key is the choice nearest the computed value."
   note "Exam FAM sample questions 41 and 42 reprint STAM 164 and 165 word for word, from the same publisher; they add no version, and their keys and results are the STAM asks."
 
 source lda_ch5 "Loss Data Analytics, Chapter 5 Aggregate Loss Models (Version 1.1, August 2020, edited by E. W. Frees and P. Johnson; online, dated 01 September 2022)" at "https://openacttexts.github.io/Loss-Data-Analytics/ChapAggLossModels.html"
+
+source lifted_1_0_1 "Figures tally 1.0.1 allowed inline in rules"
+
 source modeller "The model's own choices, each stated with its reason"
+
 source stam_questions "Society of Actuaries, Exam STAM Short-Term Actuarial Mathematics Sample Questions (footer STAM-09-18; April 2018 update, December 2018 update)" at "https://www.soa.org/globalassets/assets/Files/Edu/2018/2018-04-exam-stam-questions.pdf"
+
 source stam_solutions "Society of Actuaries, April 2018 Short-Term Actuarial Mathematics Sample Solutions (footer STAM-09-18)" at "https://www.soa.org/globalassets/assets/Files/Edu/2018/2018-04-exam-stam-solutions.pdf"
+
+unit XXX: currency minor 0.01
 
 unit claimant "a person who makes a claim (Loss Data Analytics Example 5.3.1)"
 
@@ -23,9 +32,9 @@ axis disp
 
 index choice = [a, b, c, d, e]
 
-index cnt = 0..10
+index cnt = int 0..10
 
-index lat = 0..10
+index lat = int 0..10
 
 index sv165 = [x1, x2]
 
@@ -63,6 +72,9 @@ input lam289: num
 
 input lam531: num
 
+input m2pay164_2: int
+  note "lifted from an inline figure of tally 1.0.1"
+
 input p165[k in sv165]: num
 
 input p289[k in sv289]: num
@@ -75,88 +87,97 @@ input t289: num XXX
 
 input x531[k in sv531]: num claimant
 
-def e165: num = exp(-lam165) to 1e-15
+def e165: num = exp(-lam165) to 1e-15 at reader
 
-def e289: num = exp(-lam289) to 1e-15
+def e289: num = exp(-lam289) to 1e-15 at reader
 
-def es165: num XXX
-  rule base v lda_2022 = lam165 * sum(k in sv165: amt165[k] * p165[k])
+def es165: num XXX at reader
+  rule base v lda_2022 = lam165 * sum(amt165[k] * p165[k] for k in sv165)
 
-def fact[n in cnt]: int
-  rule later when n > 0 = n * fact[n - 1]
-  rule zero when n = 0 = 1
+def fact[n in cnt]: int at reader
+  rule later = n * fact[n - 1] when n > 0
+  rule zero = 1 when n == 0
 
-def fs165[s in lat]: num = g165[s] * e165
+def fs165[s in lat]: num = g165[s] * e165 at reader
 
-def g165[s in lat]: num = sum(n1 in cnt, n2 in cnt where n1 * amt165[x1] + n2 * amt165[x2] = h165 * s: w165[n1, n2])
+def g165[s in lat]: num = sum(w165[n1, n2] for n1 in cnt, n2 in cnt where n1 * amt165[x1] + n2 * amt165[x2] == h165 * s) at reader
 
-def lamstar164: num
+def lamstar164: num at reader
   rule base v stam_s_2018 = pover164 * lam164
 
-def m2pay164: num XXX^2
-  rule base v stam_s_2018 = ex2over164 - 2 * ded164 * (ex164 - exlim164) / pover164 - ded164 * ded164
+def m2pay164: num XXX^2 at reader
+  rule base v stam_s_2018 = ex2over164 - m2pay164_2 * ded164 * (ex164 - exlim164) / pover164 - ded164 * ded164
 
-def p289_total: num = sum(n1 in cnt, n2 in cnt, n3 in cnt where n1 * amt289[x100] + n2 * amt289[x500] + n3 * amt289[x1000] = t289: way289[n1, n2, n3])
+def p289_total: num = sum(way289[n1, n2, n3] for n1 in cnt, n2 in cnt, n3 in cnt where n1 * amt289[x100] + n2 * amt289[x500] + n3 * amt289[x1000] == t289) at reader
 
-def pay165: num XXX
-  rule aggregate v stam_s_2018 when ded_basis = aggregate = es165 - ded165 + sum(s in lat where h165 * s < ded165: (ded165 - h165 * s) * fs165[s])
-  rule per_loss when ded_basis = per_loss = lam165 * sum(k in sv165 where amt165[k] > ded165: (amt165[k] - ded165) * p165[k])
+def pay165: num XXX at reader
+  rule aggregate v stam_s_2018 = es165 - ded165 + sum((ded165 - h165 * s) * fs165[s] for s in lat where h165 * s < ded165) when ded_basis == aggregate
+  rule per_loss = lam165 * sum((amt165[k] - ded165) * p165[k] for k in sv165 where amt165[k] > ded165) when ded_basis == per_loss
 
-def var164: num XXX^2
+def var164: num XXX^2 at reader
   rule base v lda_2022 = lamstar164 * m2pay164
 
-def var531: num claimant^2
-  rule base v lda_2022 = lam531 * sum(k in sv531: x531[k] * x531[k] * p531[k])
+def var531: num claimant^2 at reader
+  rule base v lda_2022 = lam531 * sum(x531[k] * x531[k] * p531[k] for k in sv531)
 
-def w165[n1 in cnt, n2 in cnt]: num = pow(lam165, n1 + n2) / (fact[n1] * fact[n2]) * pow(p165[x1], n1) * pow(p165[x2], n2)
+def w165[n1 in cnt, n2 in cnt]: num = pow(lam165, n1 + n2) / (fact[n1] * fact[n2]) * pow(p165[x1], n1) * pow(p165[x2], n2) at reader
 
-def w289[n1 in cnt, n2 in cnt, n3 in cnt]: num = pow(lam289, n1 + n2 + n3) / (fact[n1] * fact[n2] * fact[n3]) * pow(p289[x100], n1) * pow(p289[x500], n2) * pow(p289[x1000], n3)
+def w289[n1 in cnt, n2 in cnt, n3 in cnt]: num = pow(lam289, n1 + n2 + n3) / (fact[n1] * fact[n2] * fact[n3]) * pow(p289[x100], n1) * pow(p289[x500], n2) * pow(p289[x1000], n3) at reader
 
-def way289[n1 in cnt, n2 in cnt, n3 in cnt]: num = w289[n1, n2, n3] * e289
+def way289[n1 in cnt, n2 in cnt, n3 in cnt]: num = w289[n1, n2, n3] * e289 at reader
 
-ask chk_165: check (all(k in sv165: round(amt165[k] / h165, 1, down) = amt165[k] / h165) and min(k in sv165: amt165[k]) * (count(n in cnt) - 1) >= ded165 and h165 * (count(s in lat) - 1) >= ded165) = true
+ask chk_165: check (all(round(amt165[k] / h165, 1, down) == amt165[k] / h165 for k in sv165) and min(amt165[k] for k in sv165) * (count(n in cnt) - 1) >= ded165 and h165 * (count(s in lat) - 1) >= ded165) == true law 2026-10-18
 
-ask chk_289: check (min(k in sv289: amt289[k]) * (count(n in cnt) - 1) >= t289) = true
+ask chk_289: check (min(amt289[k] for k in sv289) * (count(n in cnt) - 1) >= t289) == true law 2026-10-18
 
-ask q164_key: argmin(ch in choice: abs(ch164[ch] - var164))
+ask q164_key: argmin(abs(ch164[ch] - var164) for ch in choice) ties by pos(ch) law 2026-10-18
 
-ask q164_lamstar: lamstar164
+ask q164_lamstar: lamstar164 law 2026-10-18
 
-ask q164_m2: m2pay164
+ask q164_m2: m2pay164 law 2026-10-18
 
-ask q164_var: var164
+ask q164_var: var164 law 2026-10-18
 
-ask q165_es: es165
+ask q165_es: es165 law 2026-10-18
 
-ask q165_fs: g165[s], fs165[s] for s in lat where h165 * s < ded165
+ask q165_fs: g165[s], fs165[s] for s in lat where h165 * s < ded165 law 2026-10-18
 
-ask q165_key: argmin(ch in choice: abs(ch165[ch] - pay165))
+ask q165_key: argmin(abs(ch165[ch] - pay165) for ch in choice) ties by pos(ch) law 2026-10-18
 
-ask q165_pay: pay165, round(pay165, 0.0001, disp)
+ask q165_pay: pay165, round(pay165, 0.0001, disp) law 2026-10-18
 
-ask q289_key: argmin(ch in choice: abs(ch289[ch] - p289_total))
+ask q289_key: argmin(abs(ch289[ch] - p289_total) for ch in choice) ties by pos(ch) law 2026-10-18
 
-ask q289_six: way289[6, 0, 0], round(way289[6, 0, 0], 0.00001, disp)
+ask q289_six: way289[6, 0, 0], round(way289[6, 0, 0], 0.00001, disp) law 2026-10-18
 
-ask q289_total: p289_total, round(100 * p289_total, 0.01, disp)
+ask q289_total: p289_total, round(p289_total / 1 %, 0.01, disp) law 2026-10-18
 
-ask q289_two: way289[1, 1, 0], round(way289[1, 1, 0], 0.00001, disp)
+ask q289_two: way289[1, 1, 0], round(way289[1, 1, 0], 0.00001, disp) law 2026-10-18
 
-ask q531_var: var531
+ask q531_var: var531 law 2026-10-18
+
+version lifted_figures
+  cite lifted_1_0_1
+  governs always
+  known 2018-09-30
+  m2pay164_2 = 2 "inline in tally 1.0.1: m2pay164 line 97, factor"
 
 version stam_s_2018
   cite stam_solutions
+  governs always
   known 2018-09-30
   note "Dated only by months: titled April 2018, with the footer STAM-09-18 (September 2018). It takes the later month's last day, so no view sees it too early (LANGUAGE §4.5). It gives the methods of questions 164 and 165, which rules cite, and no rows."
 
 version lda_2022
   cite lda_ch5
+  governs always
   known 2020-08-31
   note "Known from publication (LANGUAGE §4.5): the text is Version 1.1, August 2020, dated only by its month, so it is known on the month's last day. The page read is dated 01 September 2022 and calls itself Version 1.1, August 2020 (front page https://openacttexts.github.io/Loss-Data-Analytics/index.html, looked up 2026-10-19), so it is a later build that restates the version and is only its locator (LANGUAGE §5.3)."
   note "Section 5.3.1 gives E(S_N) = λ E(X) and Var(S_N) = λ E(X²) for Poisson frequency, which rules cite. It holds no rows: Example 5.3.1's figures are in lda_example."
 
 version lda_example
   cite lda_ch5
+  governs always
   known 2026-10-18
   note "Example 5.3.1's Poisson mean and claimant distribution are a worked example's stipulations, known from the model's on, since it has no start (LANGUAGE §4.5)."
   lam531 = 12 "Section 5.3.1, Example 5.3.1: Poisson mean 12"
@@ -169,11 +190,13 @@ version lda_example
 
 version model_lattice
   cite modeller
+  governs always
   known 2026-10-18
   h165 = 1 assumed "the step on which the distribution of S in question 165 is read: both loss amounts and the deductible are whole numbers, and any step that divides them gives the same result"
 
 version stam_q_2018
   cite stam_questions
+  governs always
   known 2026-10-18
   note "Each question's data and answer choices are a composed case's stipulations, known from the model's on, since it has no start (LANGUAGE §4.5). The file read is the December 2018 update (footer STAM-09-18); its corrections touch questions 322, 323 and 325 only."
   amt165[x1] = 1 "Question 165 (p. 86), (ii): x = 1"

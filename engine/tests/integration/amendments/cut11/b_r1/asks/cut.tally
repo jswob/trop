@@ -1,0 +1,6 @@
+part asks_core
+  tally 2
+
+ask konto_balance: bal(konto, d) with uncertain, bal(konto, d) with uncertain - vat_owed[d] for d in [2026-10-31] law cut
+
+ask replay_september: residuals konto 2026-09 law cut

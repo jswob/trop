@@ -1,0 +1,50 @@
+part asks_a13
+  tally 2
+  note "A-13 · Had Ania stopped working (questions.md): as of 2024-12-31, known as of 2025-04-30. (a) is the scenario a13_jul, (c) a13_apr, both over a13_calc, the control layer that computes Kalina's and the SIO's 2023 from the payroll; (b) is a13_jul_sale, over a13_jul, whose lots are asked in its own file. A result is the tax less the advances: positive is payable, negative a refund. differs by: the figure in the scenario less the actual one (the world lis)."
+  note "why: the diff lines (payroll by payer and payment month, 2023) show what the stop changes, against the control a13_calc; the control lines (a13_calc less lis) show what computing the payer years from the payroll changes by itself, which is 0 where the payroll gives the yearly information's figures."
+
+ask a13_a: joint_tax[2023], res_joint[ania, 2023], res_joint[tomek, 2023], together_joint[2023], relief[2023] with scenario a13_jul law 2025-04-30 as known 2025-04-30
+
+ask a13_a_differs: joint_tax[2023] as if {scenario a13_jul} - joint_tax[2023], res_joint[ania, 2023] as if {scenario a13_jul} - res_joint[ania, 2023], res_joint[tomek, 2023] as if {scenario a13_jul} - res_joint[tomek, 2023], together_joint[2023] as if {scenario a13_jul} - together_joint[2023], relief[2023] as if {scenario a13_jul} - relief[2023] law 2025-04-30 as known 2025-04-30
+
+ask a13_a_differs_ania: sum(y_inc[e, 2023] for e in payer where earner[e, 2023] != none and earner[e, 2023] == ania) as if {scenario a13_jul} - sum(y_inc[e, 2023] for e in payer where earner[e, 2023] != none and earner[e, 2023] == ania), base_p[ania, 2023] as if {scenario a13_jul} - base_p[ania, 2023], parents_income[2023] as if {scenario a13_jul} - parents_income[2023], adv_p[ania, 2023] as if {scenario a13_jul} - adv_p[ania, 2023] law 2025-04-30 as known 2025-04-30
+
+ask a13_a_why_paid: diff(g_paid[e, m] for e in payer, m in month where year_of(m) == 2023) in a13_jul against a13_calc law 2025-04-30 as known 2025-04-30
+
+ask a13_a_why_income: diff(inc[e, m] for e in payer, m in month where year_of(m) == 2023) in a13_jul against a13_calc law 2025-04-30 as known 2025-04-30
+
+ask a13_a_why_advances: diff(adv[e, m] for e in payer, m in month where year_of(m) == 2023) in a13_jul against a13_calc law 2025-04-30 as known 2025-04-30
+
+ask a13_c: joint_tax[2023], res_joint[ania, 2023], res_joint[tomek, 2023], together_joint[2023], relief[2023] with scenario a13_apr law 2025-04-30 as known 2025-04-30
+
+ask a13_c_differs: joint_tax[2023] as if {scenario a13_apr} - joint_tax[2023], res_joint[ania, 2023] as if {scenario a13_apr} - res_joint[ania, 2023], res_joint[tomek, 2023] as if {scenario a13_apr} - res_joint[tomek, 2023], together_joint[2023] as if {scenario a13_apr} - together_joint[2023], relief[2023] as if {scenario a13_apr} - relief[2023] law 2025-04-30 as known 2025-04-30
+
+ask a13_c_differs_ania: sum(y_inc[e, 2023] for e in payer where earner[e, 2023] != none and earner[e, 2023] == ania) as if {scenario a13_apr} - sum(y_inc[e, 2023] for e in payer where earner[e, 2023] != none and earner[e, 2023] == ania), base_p[ania, 2023] as if {scenario a13_apr} - base_p[ania, 2023], parents_income[2023] as if {scenario a13_apr} - parents_income[2023], adv_p[ania, 2023] as if {scenario a13_apr} - adv_p[ania, 2023] law 2025-04-30 as known 2025-04-30
+
+ask a13_c_why_paid: diff(g_paid[e, m] for e in payer, m in month where year_of(m) == 2023) in a13_apr against a13_calc law 2025-04-30 as known 2025-04-30
+
+ask a13_c_why_income: diff(inc[e, m] for e in payer, m in month where year_of(m) == 2023) in a13_apr against a13_calc law 2025-04-30 as known 2025-04-30
+
+ask a13_c_why_advances: diff(adv[e, m] for e in payer, m in month where year_of(m) == 2023) in a13_apr against a13_calc law 2025-04-30 as known 2025-04-30
+
+ask a13_control: diff(y_inc[e, 2023] for e in payer) in a13_calc against lis law 2025-04-30 as known 2025-04-30
+
+ask a13_control_costs: diff(y_costs[e, 2023] for e in payer) in a13_calc against lis law 2025-04-30 as known 2025-04-30
+
+ask a13_control_soc: diff(y_soc[e, 2023] for e in payer) in a13_calc against lis law 2025-04-30 as known 2025-04-30
+
+ask a13_control_advances: diff(y_adv[e, 2023] for e in payer) in a13_calc against lis law 2025-04-30 as known 2025-04-30
+
+ask a13_why_kalina_due: p, g_due[kalina, p], g_due[kalina, p] as if {scenario a13_jul}, g_due[kalina, p] as if {scenario a13_apr} for p in month where year_of(p) == 2023 law 2025-04-30 as known 2025-04-30
+
+ask a13_a_why_parental: explain g_paid[sio, 2023-06] with scenario a13_jul law 2025-04-30 as known 2025-04-30
+
+ask a13_c_why_parental: explain g_paid[sio, 2023-06] with scenario a13_apr law 2025-04-30 as known 2025-04-30
+
+ask a13_b_tax: cg_tax[ania, 2023], cg_tax[ania, 2024] with scenario a13_jul_sale law 2025-04-30 as known 2025-04-30
+
+ask a13_b_differs_2023: cg_tax[ania, 2023] as if {scenario a13_jul_sale} - cg_tax[ania, 2023] law 2025-04-30 as known 2025-04-30
+
+ask a13_b_differs_2024: cg_tax[ania, 2024] as if {scenario a13_jul_sale} - cg_tax[ania, 2024] law 2025-04-30 as known 2025-04-30 windows each
+
+ask a13_b_differs_2024_plain: cg_tax[ania, 2024] as if {scenario a13_jul_sale} - cg_tax[ania, 2024] law 2025-04-30 as known 2025-04-30

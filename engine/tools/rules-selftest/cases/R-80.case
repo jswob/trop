@@ -115,3 +115,35 @@ expect: differs from the frozen copy (R-80)
 "engine:check": "cd engine && tools/check fast",
 --- run
 tools/check-rules
+
+case: oracle-byte
+tool: run
+expect: refcore: refcore/HANDOVER.md changed
+--- append tools/refcore/HANDOVER.md
+planted
+--- run
+tools/check-frozen
+
+case: oracle-new-file
+tool: run
+expect: refcore: refcore/planted.py is not listed
+--- write tools/refcore/planted.py
+# planted
+--- run
+tools/check-frozen
+
+case: oracle-off-the-pin
+tool: run
+expect: engine/tools/refcore_fast/layer.py
+--- append tools/refcore_fast/layer.py
+# planted
+--- run
+tools/check-frozen
+
+case: version-off-the-pin
+tool: run
+expect: but tools/frozen.toml pins
+--- append spec/VERSION
+tally-9.9
+--- run
+tools/check-frozen

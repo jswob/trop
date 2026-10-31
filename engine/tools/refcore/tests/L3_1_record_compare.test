@@ -1,0 +1,18 @@
+# L §3.1 (round 12): "Two records are never compared: ==, != and orders on them are refused (§8.4), and their fields
+# are compared instead; a test against none stays" (L §8.4: LOAD-UNIT where the types show it). (Was
+# REFCORE-UNSPECIFIED §3.1, writer 5's T-7.)
+=== m.tally
+model t
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+input a: (x int, y int)
+input b: (x int, y int)
+def same: bool = a == b
+ask q: same
+=== expect
+refused: LOAD-UNIT a comparison of two records (compare their fields) (m.tally:11)

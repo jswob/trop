@@ -1,0 +1,7 @@
+# The running-balance breaks the writers planted (notes/B.md, notes/D.md); check.py --hidden finds
+# exactly these and no others. Household C's exports chain without a break.
+B/cis-5521-3380-0001-2025-10.csv row 22  # October's card row listed twice with the same balance after (REC-02)
+B/cis-5521-3380-0001-2025-12.csv opening  # November's export stops at 11-13; December's opening carries the gap's net
+B/cis-5521-3380-0001-2025-12.csv row 11  # December's export drops a fee row: the balance after jumps
+D/olcha-2026-02.csv row 5  # February 2026 repeats the rent row; the balance after doesn't move
+D/olcha-2026-03.csv row 6  # March 2026 drops the 03-05 fee; the balance after jumps by −468

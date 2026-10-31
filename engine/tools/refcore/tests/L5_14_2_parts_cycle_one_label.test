@@ -1,0 +1,78 @@
+# L §5.14.2 Takes in the first batch: "each take is tried with the cycle's arrivals as parts of unknown labels, and a
+# take whose outcome is the same under every reading of them ... is decided, which breaks the cycle"; L §5.14 (the
+# take of L5_14_parts_take_hole_one_label).  On 2025-04-01 the sale j3 takes 5 units from ix, whose cash arrives at acc
+# labelled by the leg read; the buys j4 and j5 take 100.00 each from acc, whose units arrive at ix and iy so labelled.
+# ix's take is decided (its batch of 2025-03-01 ranks first by day and covers 5), which breaks the cycle; then acc's
+# two parts, both the couple's, cover both buys under every reading of rank.  acc keeps 600.00 of the couple's, ix 7,
+# iy 1 (scratch/exp_r3.py).  (Was: acc's take undecided; the migrator's t8.)
+=== m.tally
+model t
+  tally 2
+  on 2026-01-15
+  start 2021-01-01
+  end 2026-12-31
+
+source src "test"
+unit DUK: currency minor 0.01
+kind funds: unit
+kind couples: parties
+kind persons: parties
+kind invests: transfers
+kind buys: event certain
+  leg units: funds
+  leg cash: DUK
+kind sales: event certain
+  leg units: funds
+  leg cash: DUK
+kind cash_accounts: place one min 0
+  owned by arrive
+  step minor(DUK)
+  takes k for w order rank[k.owner]
+kind lots: holdings
+  owned by arrive
+  batched
+  step 0.0001
+  takes k for w order k.batch.day, rank[k.owner]
+place acc: cash_accounts DUK lives 2021-01-01..
+place ix: lots idx lives 2021-01-01..
+place iy: lots idx lives 2021-01-01..
+place world: outside lives 2000-01-01..
+place market: outside lives 2000-01-01..
+input jb: observed
+def rank[p in parties]: int = ?"which money leaves first?" at reader
+def arrive[m in events, p in parties]: num at m.day
+  rule community = (if p == ania_tomek then 1 else 0)
+  rule bought beats community = m.cash.amount of p / m.cash.amount when m in buys
+  rule sold beats community = m.units.amount of p / m.units.amount when m in sales
+
+ask q: bal(acc, 2025-12-31) of ania_tomek, bal(ix, 2025-12-31) of ania_tomek, bal(iy, 2025-12-31) of ania_tomek
+
+version cast
+  cite src
+  known 2021-01-01
+  funds + [idx] lives 2018-01-01..
+  persons + [ania] lives 1991-03-14..
+  persons + [tomek] lives 1989-07-02..
+  couples + [ania_tomek] lives 2016-09-10..
+
+version open
+  cite src
+  governs always
+  known 2021-01-01
+  opening[acc] = 0 at 2021-01-01 start
+  opening[ix] = 0 at 2021-01-01 start
+  opening[iy] = 0 at 2021-01-01 start
+
+version j
+  cite src
+  governs 2025-01..2025-12
+  known 2025-01-01
+  covers acc, ix, iy
+  jb[j1] = (on: 2025-02-01, kind: invests, leg cash from world to acc amount 1000.00 DUK) "j1"
+  jb[j2] = (on: 2025-03-01, kind: buys, leg units from market to ix amount 10 idx, leg cash from acc to market amount 500.00 DUK) "j2"
+  jb[j3] = (on: 2025-04-01, kind: sales, leg units from ix to market amount 5 idx, leg cash from market to acc amount 300.00 DUK) "j3"
+  jb[j4] = (on: 2025-04-01, kind: buys, leg units from market to ix amount 2 idx, leg cash from acc to market amount 100.00 DUK) "j4"
+  jb[j5] = (on: 2025-04-01, kind: buys, leg units from market to iy amount 1 idx, leg cash from acc to market amount 100.00 DUK) "j5"
+=== expect
+q: (600.00 DUK, 7 idx, 1 idx)
+...

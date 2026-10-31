@@ -1,0 +1,25 @@
+part pit_10
+  tally 2
+  law
+  note "PIT-10 · Business income. One form a year: (a) the scale on profit, (b) 19 % of profit, (c) a flat rate on revenue (.1); elected by notice, holding until a new one (.2). Under (a) and (b) profit is revenue less costs less the social contributions paid in the period (.3). Under (c) a month's base is its revenue less the social contributions paid in it, the rest carried within the year; IT services 12 %, other services 8.5 %, a business asset's sale 10 %; base and tax rounded (.4). Advances by the 20th of the next month (.5); a separate return for (b) and (c) by 30 April (.6)."
+
+source pit_10 "Personal Income Tax Act, PIT-10 Business income (tmp/cases/law/acts.md)"
+
+index pit10_form = [scale, profit, flat]
+
+index pit10_supply = [it, services, asset_sale]
+
+input pit10_flat_rate[s in pit10_supply]: num question "What is the flat rate on this kind of revenue (PIT-10 .4)?"
+
+input pit10_profit_rate: num question "What is the rate of form (b) on profit (PIT-10 .1)?"
+
+version pit10_v1
+  cite pit_10
+  governs 2018-01-01..
+  known 2017-09-01
+  enters 2018-01-01
+  note "PIT-10 v1, in force 2018-01-01 until replaced, published 2017-09-01; governs tax years from 2018 and advances for months from January 2018."
+  pit10_flat_rate[it] = 0.12 "PIT-10 v1 .4: IT services 12 %"
+  pit10_flat_rate[services] = 0.085 "PIT-10 v1 .4: other services 8.5 %"
+  pit10_flat_rate[asset_sale] = 0.10 "PIT-10 v1 .4: the sale of a business asset 10 %"
+  pit10_profit_rate = 0.19 "PIT-10 v1 .1 (b): 19 % of profit"

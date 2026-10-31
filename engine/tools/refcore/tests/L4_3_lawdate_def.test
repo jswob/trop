@@ -1,0 +1,21 @@
+# L §4.3 rule 3: a def that reads anything law-dated and states no at "is refused at load (LOAD-LAWDATE)".
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+input rate: int
+
+def y: int = rate
+
+version v
+  cite s
+  governs 2026..
+  known 2026-01-01
+  rate = 1
+=== expect
+refused: LOAD-LAWDATE ...

@@ -1,0 +1,29 @@
+# L §5.10 Value: the price `by p` names is "an input or def of type `num CUR/u`"; read through its carry, `by
+# last(px)`.  val is an unkeyed `money PLN reading`, a value and not a price per unit, so `by last(val)` is refused at
+# load as a price of the wrong type (LOAD-UNIT), as a price written as an expression of the wrong type is.
+=== m.tally
+model t
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+unit etf "fund unit"
+
+kind funds: place etf min 0
+
+input val: money PLN reading
+
+place fund: funds lives 2026-01-01..
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  val = 12.00 PLN at 2026-03-01 "kurs"
+
+ask q1: value(fund, 2026-06-30) in PLN by last(val)
+=== expect
+refused: LOAD-UNIT value by last(val): the price is money PLN, not num PLN/u (m.tally:23)

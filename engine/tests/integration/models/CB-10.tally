@@ -1,0 +1,225 @@
+model cb10
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+  note "Rawlings v HMRC [2022] UKFTT 32 (TC): the UK gain on a flat in Zermatt, bought on 23 August 2006 for Swiss francs (partly with a franc mortgage) and sold in December 2016."
+  note "The taxpayers' table and computation (para 8(7)) and HMRC's computation (para 13) both use the taxpayers' exchange rates, which HMRC accepted (para 8(8)) and the tribunal kept (para 43)."
+  note "The disposal falls in the tax year ended 5 April 2017. The exact completion date isn't given ('no later than 15 December 2016')."
+  note "The case note's figures (Charles Russell Speechlys, LexisNexis PSL) are rounded presentations, asked as roundings of the decision's figures."
+
+source fa2016 "Finance Act 2016 (c. 24) s. 83, as enacted (legislation.gov.uk)" at "https://www.legislation.gov.uk/ukpga/2016/24/section/83/enacted"
+
+source rawlings "Howard Rawlings and Monique Rawlings v HMRC [2022] UKFTT 32 (TC), TC 08384 (BAILII PDF, Internet Archive copy of 12 February 2022)" at "http://web.archive.org/web/20220212172542/http://www.bailii.org/uk/cases/UKFTT/TC/2022/TC08384.pdf"
+
+source tcga1992 "Taxation of Chargeable Gains Act 1992 (c. 12) s. 38 and s. 4, point in time 15/12/2016 (legislation.gov.uk)" at "https://www.legislation.gov.uk/ukpga/1992/12/section/38/2016-12-15"
+
+unit CHF: currency minor 0.01
+
+unit GBP: currency minor 0.01
+
+axis gain_cut
+  down "HMRC's gain is cut to whole pounds"
+  half-up "HMRC's gain is rounded to the nearest pound"
+
+axis note_cut
+  half-up "the case note rounds to the nearest unit it shows, with ties away from zero"
+  half-even "the case note rounds to the nearest unit it shows, with ties to even"
+
+axis pct_cut
+  down "the taxpayers cut the effective rate to two decimals of a percent"
+  half-up "the taxpayers round the effective rate to two decimals of a percent"
+
+axis pen_cut
+  down "the penalty is cut to the penny"
+  half-up "the penalty is rounded to the nearest penny"
+
+axis tp_cut
+  half-up "the taxpayers round each sterling line to the nearest pound, with ties away from zero"
+  half-even "the taxpayers round each sterling line to the nearest pound, with ties to even"
+
+index fxref = [aug2006, dec2016, avg2015_16]
+
+index gainclass = [upper_rate_gain, other_gain]
+
+index line = [sale, mortgage_aug16, deposit, fees_buy, repaid_1516, mortgage_on_sale, fees_sale, price]
+
+index owner = [hr, mr]
+
+index taxband = [basic_band, higher_band]
+
+index taxyear = year 2016..2016 from 04-06
+
+input cgt_rate[g in gainclass, b in taxband]: num
+
+input chattels: money GBP
+
+input chf[l in line]: money CHF
+
+input disposal_ty: key taxyear
+
+input fc_band_left: money GBP
+
+input fc_deductions: money GBP
+
+input fc_relief: money GBP
+
+input gbp_per_chf[r in fxref]: num GBP/CHF
+
+input investment: money GBP
+
+input is_dwelling: bool
+
+input line_rate[l in line]: key fxref
+
+input owner_share[o in owner]: num
+
+input penalty_rate: num
+
+input return_total: money GBP
+
+def applicable_rate[b in taxband]: num = cgt_rate[gain_class, b] at start_of(disposal_ty)
+
+def effective_rate: num at reader
+  note "Para 21: the taxpayers' own measure, the tax charged on both owners over their 'real' joint gain."
+  rule base v facts2022 = sum(tax_charged[o] for o in owner) / real_gain
+
+def fc_gain: num GBP at reader
+  note "Para 8(9): HR's half of HMRC's gain, less whatever HMRC deducted before applying the rates in the first closure notice. The decision doesn't say what that was."
+  rule base = owner_gain[hr] - fc_deductions
+
+def first_closure_tax: num GBP at start_of(disposal_ty)
+  note "Para 8(9): HMRC's first closure notice for HR charged his gain as one that isn't an upper rate gain, at 10% on the first £3,200 and 20% on the rest (s. 4(2)(b), (5)), and gave Foreign Tax Credit Relief on some of the gain. Para 8(12) corrected the rates to 18% and 28%."
+  rule base v facts2022 = cgt_rate[other_gain, basic_band] * min(fc_band_left, fc_gain) + cgt_rate[other_gain, higher_band] * max(0, fc_gain - fc_band_left) - fc_relief
+
+def gain_class: key gainclass at start_of(disposal_ty)
+  note "s. 4(2A)(a), inserted by FA 2016 s. 83(4): residential property gains are upper rate gains. s. 4BB, which defines residential property gains, was not fetched."
+  rule dwelling v fa2016_s83 = upper_rate_gain when is_dwelling
+  rule not_dwelling v fa2016_s83 = ?"Is the gain an upper rate gain? s. 4BB was not fetched." when not is_dwelling
+
+def gbp_line[l in line]: num GBP = chf[l] * gbp_per_chf[line_rate[l]] at reader
+
+def hmrc_gain: money GBP = round(hmrc_gain_exact, 1, gain_cut) at reader
+
+def hmrc_gain_exact: num GBP at start_of(disposal_ty)
+  note "s. 38(1)(a) and (c), as HMRC applied them (para 13): the 2016 sterling value of the price after deducting the chattels, less the 2016 sterling value of the costs of sale, less the 2006 sterling value of the purchase price and of the purchase costs. Nothing is deducted for the mortgages (para 8(8))."
+  rule base v tcga_1992 = gbp_line[sale] - chattels - gbp_line[fees_sale] - gbp_line[price] - gbp_line[fees_buy]
+
+def owner_gain[o in owner]: num GBP = hmrc_gain * owner_share[o] at reader
+
+def penalty[o in owner]: money GBP at reader
+  note "Para 8(11): carelessness penalties at a rate of the tax charged, after full mitigation (FA 2007 Sch. 24, not fetched). The rounding isn't stated."
+  rule base v facts2022 = round(tax_charged[o] * penalty_rate, minor(GBP), pen_cut)
+
+def real_gain: money GBP at reader
+  note "Para 21: the taxpayers' return (the equity released by the remortgage plus the net proceeds of sale) less their investment."
+  rule base v facts2022 = return_total - investment
+
+def tax_charged[o in owner]: money GBP at start_of(disposal_ty)
+  note "Para 2: each owner's additional tax on the gain, charged at the residential rates of s. 4 (para 8(12)) after Foreign Tax Credit Relief. The decision states the charges, which are givens of this def, but not how they were reached."
+  rule base v fa2016_s83 = ?"What is this owner's additional tax on the gain? The Foreign Tax Credit Relief, the Swiss tax, the owner's other income, annual exempt amount and use of the basic rate band aren't given."
+
+def tp_costs: money GBP at reader
+  note "Para 8(7): the taxpayers deduct the mortgage repaid on sale, the mortgage paid off in 2015 and 2016, the deposit, the fees on purchase and the fees on sale."
+  rule base v facts2022 = tp_line[mortgage_on_sale] + tp_line[repaid_1516] + tp_line[deposit] + tp_line[fees_buy] + tp_line[fees_sale]
+
+def tp_gain: money GBP = tp_proceeds_net - tp_costs at reader
+
+def tp_line[l in line]: money GBP at reader
+  note "Para 8(7), table: each franc line at the taxpayers' rate, shown in whole pounds."
+  rule base v facts2022 = round(gbp_line[l], 1, tp_cut)
+
+def tp_proceeds_net: money GBP at reader
+  note "Para 8(7): the sales proceeds less the chattels."
+  rule base v facts2022 = tp_line[sale] - chattels
+
+ask case_note_deposit: round(gbp_line[deposit], 1000, note_cut) law 2026-10-18
+
+ask case_note_effective_rate: round(effective_rate, 0.01, note_cut) law 2026-10-18
+
+ask case_note_hmrc_gain: round(hmrc_gain, 1000, note_cut) law 2026-10-18
+
+ask case_note_mortgage: round(gbp_line[mortgage_aug16], 1000, note_cut) law 2026-10-18
+
+ask case_note_proceeds: round(gbp_line[sale] - chattels, 10000, note_cut) law 2026-10-18
+
+ask case_note_rates: round(gbp_per_chf[aug2006], 0.01, note_cut), round(gbp_per_chf[dec2016], 0.01, note_cut) law 2026-10-18
+
+ask case_note_tp_gain: round(tp_gain, 1000, note_cut) law 2026-10-18
+
+ask effective_tax_rate: effective_rate, round(effective_rate, 0.0001, pct_cut) law 2026-10-18
+
+ask first_closure: first_closure_tax law 2026-10-18
+
+ask gain_split: owner_share[o], owner_gain[o] for o in owner law 2026-10-18
+
+ask hmrc_total_gain: hmrc_gain_exact, hmrc_gain law 2026-10-18
+
+ask penalties: penalty[o] for o in owner law 2026-10-18
+
+ask rates_applied: gain_class, applicable_rate[b] for b in taxband law 2026-10-18
+
+ask tax_charge: tax_charged[o] for o in owner law 2026-10-18
+
+ask taxpayers_measure: investment, return_total, real_gain law 2026-10-18
+
+ask tp_computation: tp_proceeds_net, tp_costs, tp_gain law 2026-10-18
+
+ask tp_table: gbp_line[l], tp_line[l] for l in line where l != price law 2026-10-18
+
+version tcga_1992
+  cite tcga1992
+  governs always
+  known 1992-03-06
+  note "s. 38(1)(a) and (c) as enacted: the Act received Royal Assent on 6 March 1992 (legislation.gov.uk, enactment date). The point-in-time text of 15/12/2016 shows no amendment to (1)(a) or (c), and is the locator."
+
+version fa2016_s83
+  cite fa2016
+  governs 2016-04-06..
+  known 2016-09-15
+  note "Known from the Royal Assent of the Finance Act 2016, 15 September 2016 (legislation.gov.uk, enactment date). s. 83(17): the amendments 'have effect in relation to gains accruing on or after 6 April 2016'."
+  note "s. 83(3), (4), (6) and (7) set the rates of s. 4(2), (4) and (5) and inserted s. 4(2A). The point-in-time text of s. 4 of 15/12/2016 is the locator. The decision quotes the rates as 'Section 1H', a section substituted later by Finance Act 2019."
+  cgt_rate[upper_rate_gain, basic_band] = 0.18 "TCGA s. 4(2)(a), as substituted by s. 83(3)"
+  cgt_rate[upper_rate_gain, higher_band] = 0.28 "TCGA s. 4(4)(a), as substituted by s. 83(6)"
+  cgt_rate[other_gain, basic_band] = 0.1 "TCGA s. 4(2)(b), as substituted by s. 83(3)"
+  cgt_rate[other_gain, higher_band] = 0.2 "TCGA s. 4(4)(b) and (5), as amended by s. 83(6) and (7)"
+
+version facts2022
+  cite rawlings
+  governs always
+  known 2022-02-01
+  note "Facts as found and figures as printed in the decision. The taxpayers' exchange rates were accepted by HMRC (para 8(8)) and kept by the tribunal (para 43)."
+  note "Known from the decision's release date, 1 February 2022 (p. 10 of the archived PDF, 'Release date: 01 FEBRUARY 2022')."
+  note "The tax charged in para 2 is given as rows of the def tax_charged: the decision states the charges but not how they were reached, and the penalties and para 21's rate are computed from them."
+  chattels = 7500 "para 8(7), table and computation"
+  chf[sale] = 730000 "para 8(7), table, row 'Sale Dec 2016'"
+  chf[mortgage_aug16] = 450000 "para 8(7), table, row 'Mortgage Aug 16 repaid Dec 16'"
+  chf[deposit] = 280000 "para 8(7), table, row 'Deposit Aug 06'"
+  chf[fees_buy] = 17049 "para 8(7), table, row 'Fees Aug 06'"
+  chf[repaid_1516] = 23000 "para 8(7), table, row 'Repaid Mortgage ave rate 15 and 16'"
+  chf[mortgage_on_sale] = 427000 "para 8(7), table, row 'Mortgage repaid on sale'"
+  chf[fees_sale] = 58644 "para 8(7), table, row 'Sales fees'"
+  chf[price] = 563000 "para 8(2)"
+  disposal_ty = 2016 "para 2(1): the tax year ended 5 April 2017"
+  fc_band_left = 3200 "para 8(9): 'at 10% for the first £3,200 of the gain'"
+  fc_deductions = ?"What did HMRC deduct from HR's half of the gain before applying the rates in the first closure notice (the annual exempt amount, any losses)? The decision doesn't say." "para 8(9)"
+  fc_relief = ?"How much Foreign Tax Credit Relief did HMRC give in the first closure notice? Para 8(9) says only that it was given on some of the gain." "para 8(9)"
+  gbp_per_chf[aug2006] = 0.4278 "para 8(7), table; para 24(1)"
+  gbp_per_chf[dec2016] = 0.7788 "para 8(7), table; para 23"
+  gbp_per_chf[avg2015_16] = 0.7085 "para 8(7), table"
+  investment = 116000 "para 21"
+  is_dwelling = true "paras 8(2), 8(4): the dwelling Casa Colinetta"
+  line_rate[sale] = dec2016 "para 8(7), table"
+  line_rate[mortgage_aug16] = dec2016 "para 8(7), table"
+  line_rate[deposit] = aug2006 "para 8(7), table"
+  line_rate[fees_buy] = aug2006 "para 8(7), table"
+  line_rate[repaid_1516] = avg2015_16 "para 8(7), table"
+  line_rate[mortgage_on_sale] = dec2016 "para 8(7), table"
+  line_rate[fees_sale] = dec2016 "para 8(7), table"
+  line_rate[price] = aug2006 "para 13: the 2006 sterling equivalent of the purchase price; para 24(1)"
+  owner_share[hr] = 0.5 "para 8(6): each declared 50%"
+  owner_share[mr] = 0.5 "para 8(6): each declared 50%"
+  penalty_rate = 0.15 "para 8(11)"
+  return_total = 203000 "para 21"
+  given tax_charged[hr] = 28849.84 "para 2(1): 'HR was charged an additional sum of £28,849.84 income tax'"
+  given tax_charged[mr] = 29110.84 "para 2(2): 'MR was charged an additional sum of £29,110.84 income tax'"

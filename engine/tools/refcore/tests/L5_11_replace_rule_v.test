@@ -1,0 +1,29 @@
+# L §5.11 step 2: "A `replace rule` item belongs to the version that holds it; a `v` on it may name only that
+# version and adds nothing (`LOAD-VERSION` otherwise)."  Here v names v1 from inside v2: LOAD-VERSION, L §8.3
+# `replace rule <d>.<r> in <V> names version <W>`.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+def x: int at reader
+  rule base = 0
+
+version v1
+  cite s
+  governs 2026-01..
+  known 2025-12-01
+
+version v2
+  cite s
+  governs 2026-07..
+  known 2026-06-01
+  replace rule x.base v v1 = 1
+
+ask q1: x law 2026-08-01
+=== expect
+refused: LOAD-VERSION replace rule x.base in v2 names version v1 ...

@@ -1,0 +1,18 @@
+# L §3.2: "day is a dimension of its own, so 1 day / 1 year is refused (LOAD-UNIT)".
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "a source"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+unit hour "godzina"
+
+input annual: money PLN
+
+ask q1: annual * (1 day / 1 year)
+=== expect
+refused: LOAD-UNIT ...

@@ -1,0 +1,100 @@
+part gen_4
+  tally 2
+  law
+  note "GEN-4 · Amounts in a foreign currency. An amount in florens is converted at the Central Bank's mid rate FX-FLR of the last business day before the event's day (.1), each amount alone, rounded to whole orts half up (.2); a bank's own rate is never used under the law (.3)."
+  note "fx_mid holds the gazette's FX-FLR rows, each in its own version known on its publication day and governing that one day (gazette from = to); the households read it at prev_business(add_days(d, -1), holidays) through a def's at (L §4.3). A day with no row is a hole (GEN-6 .2)."
+
+source gen_4 "General Provisions Act, GEN-4 Amounts in a foreign currency (tmp/cases/law/acts.md)"
+
+input fx_mid: num DUK/FLR question "What is the Central Bank's mid rate FX-FLR for this day (GEN-4 .1, gazette FX-FLR)?"
+
+version gen4_v1
+  cite gen_4
+  governs 2018-01-01..
+  known 2017-06-01
+  enters 2018-01-01
+  note "GEN-4 v1, in force 2018-01-01 until replaced, published 2017-06-01; governs every conversion the law requires."
+
+version fx_2025_01_30
+  cite gazette
+  governs 2025-01-30
+  known 2025-01-30
+  fx_mid = 4.1991 "gazette.csv line 1164 FX-FLR"
+
+version fx_2025_02_27
+  cite gazette
+  governs 2025-02-27
+  known 2025-02-27
+  fx_mid = 4.2141 "gazette.csv line 1184 FX-FLR"
+
+version fx_2025_03_28
+  cite gazette
+  governs 2025-03-28
+  known 2025-03-28
+  fx_mid = 4.1910 "gazette.csv line 1205 FX-FLR"
+
+version fx_2025_04_29
+  cite gazette
+  governs 2025-04-29
+  known 2025-04-29
+  fx_mid = 4.2224 "gazette.csv line 1226 FX-FLR"
+
+version fx_2025_05_29
+  cite gazette
+  governs 2025-05-29
+  known 2025-05-29
+  fx_mid = 4.1912 "gazette.csv line 1247 FX-FLR"
+
+version fx_2025_06_27
+  cite gazette
+  governs 2025-06-27
+  known 2025-06-27
+  fx_mid = 4.2472 "gazette.csv line 1267 FX-FLR"
+
+version fx_2025_07_30
+  cite gazette
+  governs 2025-07-30
+  known 2025-07-30
+  fx_mid = 4.2190 "gazette.csv line 1290 FX-FLR"
+
+version fx_2025_08_28
+  cite gazette
+  governs 2025-08-28
+  known 2025-08-28
+  fx_mid = 4.2483 "gazette.csv line 1310 FX-FLR"
+
+version fx_2025_09_29
+  cite gazette
+  governs 2025-09-29
+  known 2025-09-29
+  fx_mid = 4.2444 "gazette.csv line 1332 FX-FLR"
+
+version fx_2025_10_30
+  cite gazette
+  governs 2025-10-30
+  known 2025-10-30
+  fx_mid = 4.2342 "gazette.csv line 1355 FX-FLR"
+
+version fx_2025_11_27
+  cite gazette
+  governs 2025-11-27
+  known 2025-11-27
+  fx_mid = 4.2259 "gazette.csv line 1374 FX-FLR"
+
+version fx_2025_11_28
+  cite gazette
+  governs 2025-11-28
+  known 2025-11-28
+  fx_mid = 4.2332 "gazette.csv line 1375 FX-FLR"
+
+version fx_2025_12_30
+  cite gazette
+  governs 2025-12-30
+  known 2025-12-30
+  fx_mid = 4.2242 "gazette.csv line 1395 FX-FLR"
+
+version fx_2025_12_31
+  cite gazette
+  governs 2025-12-31
+  known 2025-12-31
+  fx_mid = 4.2307 "gazette.csv line 1396 FX-FLR"

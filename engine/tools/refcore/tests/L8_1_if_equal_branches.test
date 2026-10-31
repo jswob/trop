@@ -1,0 +1,26 @@
+# L §5.11 Logic: "`if c then a else b` evaluates only the branch c takes; with a hole c it evaluates both, and
+# is a hole unless they are equal."  L §8.1: a hole stops propagating at "an `if` whose branches are equal".
+# h has no row (a hole); m = 0, so both branches are 0 (the bare 0 takes the type of the whole, L §3.2 Inline
+# figures): z = 0, and the hole is not printed.  (Found by the lead: the core printed ?"Is it?".)
+=== m.tally
+model t
+  tally 2
+  on 2027-01-01
+  start 2026-01-01
+  end 2027-12-31
+
+source s "s"
+input h: bool question "Is it?"
+input m: num
+def z: num = if h then 0 else m at reader
+
+version v1
+  cite s
+  governs always
+  known 2025-12-01
+  m = 0
+
+ask qz: z law 2026-12-31
+=== expect
+qz: 0
+  law date 2026-12-31, cut 2027-01-01

@@ -1,0 +1,31 @@
+# Fault W-B-2: a `partial` sum with one hole term dropped its known terms (`sum(…) partial` printed `?x[b]`).
+# L §5.18 Partial answers: "A line marked `partial` prints, when its value is a hole, its known part and the named holes
+# it is linear in, each with its coefficient: sums, differences ..." x[a] = 5 is known, x[b] is the hole: the sum is
+# 5 + 1 × the hole (s), and less 1 it is 4 + 1 × the hole (t).
+=== m.tally
+model m
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source src "a source"
+
+index ks = [a, b]
+
+input x[k in ks]: int question "x?"
+
+version v
+  cite src
+  governs always
+  known 2026-01-01
+  x[a] = 5 "row"
+
+ask s: sum(x[k] for k in ks) partial
+
+ask t: sum(x[k] for k in ks) - 1 partial
+=== expect
+s: 5 + 1 × ?"x?" (x[b])
+  cut 2026-01-01
+t: 4 + 1 × ?"x?" (x[b])
+  cut 2026-01-01

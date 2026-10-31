@@ -1,0 +1,53 @@
+id,value,unit,published,from,to,rule,note
+RWT-ALLOW1-2024/25,950.00,FLR/month,2024-02-15,2024-04-01,2025-03-31,RWT-4,class 1 allowance
+RWT-ALLOW2-2024/25,1700.00,FLR/month,2024-02-15,2024-04-01,2025-03-31,RWT-4,class 2 allowance
+RWT-EDGE1-2024/25,1200.00,FLR/month,2024-02-15,2024-04-01,2025-03-31,RWT-3,upper edge of the 10 % band
+RWT-EDGE2-2024/25,4000.00,FLR/month,2024-02-15,2024-04-01,2025-03-31,RWT-3,upper edge of the 24 % band
+RWT-ALLOW1-2025/26,980.00,FLR/month,2025-02-14,2025-04-01,2026-03-31,RWT-4,class 1 allowance
+RWT-ALLOW2-2025/26,1750.00,FLR/month,2025-02-14,2025-04-01,2026-03-31,RWT-4,class 2 allowance
+RWT-EDGE1-2025/26,1250.00,FLR/month,2025-02-14,2025-04-01,2026-03-31,RWT-3,upper edge of the 10 % band
+RWT-EDGE2-2025/26,4100.00,FLR/month,2025-02-14,2025-04-01,2026-03-31,RWT-3,upper edge of the 24 % band
+RWT-ALLOW1-2026/27,1000.00,FLR/month,2026-02-13,2026-04-01,2027-03-31,RWT-4,class 1 allowance
+RWT-ALLOW2-2026/27,1790.00,FLR/month,2026-02-13,2026-04-01,2027-03-31,RWT-4,class 2 allowance
+RWT-EDGE1-2026/27,1280.00,FLR/month,2026-02-13,2026-04-01,2027-03-31,RWT-3,upper edge of the 10 % band
+RWT-EDGE2-2026/27,4200.00,FLR/month,2026-02-13,2026-04-01,2027-03-31,RWT-3,upper edge of the 24 % band
+RSI-CEIL-2024,7500.00,FLR/month,2023-12-14,2024-01-01,2024-12-31,RSI-2,monthly contribution ceiling
+RSI-CEIL-2025,7700.00,FLR/month,2024-12-12,2025-01-01,2025-12-31,RSI-2,monthly contribution ceiling
+RSI-CEIL-2026,7900.00,FLR/month,2025-12-11,2026-01-01,2026-12-31,RSI-2,monthly contribution ceiling
+RFF-CHILD-2024,210.00,FLR/month,2023-11-30,2024-01-01,2024-12-31,RFF-1,child benefit per child
+RFF-CHILD-2025,220.00,FLR/month,2024-11-28,2025-01-01,2025-12-31,RFF-1,child benefit per child
+RFF-CHILD-2026,230.00,FLR/month,2025-11-27,2026-01-01,2026-12-31,RFF-1,child benefit per child
+RNB-DUK-202401,22.7173,FLR/100 DUK,2023-12-29,2024-01-01,2024-01-31,RGP-3,RNB reference rate of the dukat for the month
+RNB-DUK-202402,22.7462,FLR/100 DUK,2024-01-31,2024-02-01,2024-02-29,RGP-3,RNB reference rate of the dukat for the month
+RNB-DUK-202403,22.9854,FLR/100 DUK,2024-02-29,2024-03-01,2024-03-31,RGP-3,RNB reference rate of the dukat for the month
+RNB-DUK-202404,22.8597,FLR/100 DUK,2024-03-29,2024-04-01,2024-04-30,RGP-3,RNB reference rate of the dukat for the month
+RNB-DUK-202405,23.0613,FLR/100 DUK,2024-04-30,2024-05-01,2024-05-31,RGP-3,RNB reference rate of the dukat for the month
+RNB-DUK-202406,22.9870,FLR/100 DUK,2024-05-31,2024-06-01,2024-06-30,RGP-3,RNB reference rate of the dukat for the month
+RNB-DUK-202407,23.1029,FLR/100 DUK,2024-06-28,2024-07-01,2024-07-31,RGP-3,RNB reference rate of the dukat for the month
+RNB-DUK-202408,23.1562,FLR/100 DUK,2024-07-31,2024-08-01,2024-08-31,RGP-3,RNB reference rate of the dukat for the month
+RNB-DUK-202409,23.3120,FLR/100 DUK,2024-08-30,2024-09-01,2024-09-30,RGP-3,RNB reference rate of the dukat for the month
+RNB-DUK-202410,23.8018,FLR/100 DUK,2024-09-30,2024-10-01,2024-10-31,RGP-3,RNB reference rate of the dukat for the month
+RNB-DUK-202411,23.8183,FLR/100 DUK,2024-10-31,2024-11-01,2024-11-30,RGP-3,RNB reference rate of the dukat for the month
+RNB-DUK-202412,23.6648,FLR/100 DUK,2024-11-29,2024-12-01,2024-12-31,RGP-3,RNB reference rate of the dukat for the month
+RNB-DUK-202501,23.7095,FLR/100 DUK,2024-12-30,2025-01-01,2025-01-31,RGP-3,RNB reference rate of the dukat for the month
+RNB-DUK-202502,23.8003,FLR/100 DUK,2025-01-31,2025-02-01,2025-02-28,RGP-3,RNB reference rate of the dukat for the month
+RNB-DUK-202503,23.7512,FLR/100 DUK,2025-02-28,2025-03-01,2025-03-31,RGP-3,RNB reference rate of the dukat for the month
+RNB-DUK-202504,23.8535,FLR/100 DUK,2025-03-31,2025-04-01,2025-04-30,RGP-3,RNB reference rate of the dukat for the month
+RNB-DUK-202505,23.6998,FLR/100 DUK,2025-04-30,2025-05-01,2025-05-31,RGP-3,RNB reference rate of the dukat for the month
+RNB-DUK-202506,23.8404,FLR/100 DUK,2025-05-30,2025-06-01,2025-06-30,RGP-3,RNB reference rate of the dukat for the month
+RNB-DUK-202507,23.5543,FLR/100 DUK,2025-06-30,2025-07-01,2025-07-31,RGP-3,RNB reference rate of the dukat for the month
+RNB-DUK-202508,23.6881,FLR/100 DUK,2025-07-31,2025-08-01,2025-08-31,RGP-3,RNB reference rate of the dukat for the month
+RNB-DUK-202509,23.5600,FLR/100 DUK,2025-08-29,2025-09-01,2025-09-30,RGP-3,RNB reference rate of the dukat for the month
+RNB-DUK-202510,23.5534,FLR/100 DUK,2025-09-30,2025-10-01,2025-10-31,RGP-3,RNB reference rate of the dukat for the month
+RNB-DUK-202511,23.6337,FLR/100 DUK,2025-10-31,2025-11-01,2025-11-30,RGP-3,RNB reference rate of the dukat for the month
+RNB-DUK-202512,23.6447,FLR/100 DUK,2025-11-28,2025-12-01,2025-12-31,RGP-3,RNB reference rate of the dukat for the month
+RNB-DUK-202601,23.6255,FLR/100 DUK,2025-12-30,2026-01-01,2026-01-31,RGP-3,RNB reference rate of the dukat for the month
+RNB-DUK-202602,23.6886,FLR/100 DUK,2026-01-30,2026-02-01,2026-02-28,RGP-3,RNB reference rate of the dukat for the month
+RNB-DUK-202603,23.6810,FLR/100 DUK,2026-02-27,2026-03-01,2026-03-31,RGP-3,RNB reference rate of the dukat for the month
+RNB-DUK-202604,23.6336,FLR/100 DUK,2026-03-31,2026-04-01,2026-04-30,RGP-3,RNB reference rate of the dukat for the month
+RNB-DUK-202605,23.5011,FLR/100 DUK,2026-04-30,2026-05-01,2026-05-31,RGP-3,RNB reference rate of the dukat for the month
+RNB-DUK-202606,23.5172,FLR/100 DUK,2026-05-29,2026-06-01,2026-06-30,RGP-3,RNB reference rate of the dukat for the month
+RNB-DUK-202607,23.4979,FLR/100 DUK,2026-06-30,2026-07-01,2026-07-31,RGP-3,RNB reference rate of the dukat for the month
+RNB-DUK-202608,23.6813,FLR/100 DUK,2026-07-31,2026-08-01,2026-08-31,RGP-3,RNB reference rate of the dukat for the month
+RNB-DUK-202609,23.6117,FLR/100 DUK,2026-08-31,2026-09-01,2026-09-30,RGP-3,RNB reference rate of the dukat for the month
+RNB-DUK-202610,23.5312,FLR/100 DUK,2026-09-30,2026-10-01,2026-10-31,RGP-3,RNB reference rate of the dukat for the month

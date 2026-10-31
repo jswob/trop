@@ -1,0 +1,97 @@
+# L §6.1 Consolidation: ana's gift (300.00 PLN from a.konto to her outside place to_ben) and ben's gift_in_m (from his
+# outside place from_ana into b.konto). "a member's outside place stated same as another member's place contributes only
+# its legs to that place": a.to_ben's leg lands in b.konto, so a.gift "crosses between members through places stated
+# same" and is internal; "the joint model links it to its counterpart on the other side by a written same", and "a
+# movement listed twice counts once" (b.gift_in_m's end in b.konto is a.gift's). L §6.1 Kinds across members: a binding
+# over the prelude's accounts ranges over a.konto and b.konto. By L §5.10's bal (opening plus legs): a.konto 500.00 +
+# 12 x 1 000.00 - 300.00 = 12 200.00 PLN; b.konto 200.00 + 300.00 = 500.00 PLN; t = 12 700.00 PLN. The member asks a.q and
+# b.q are answered by each member alone (L §6.1), and agree. Pins over the files' bytes (pin=bytes, E §3.1 step 1).
+=== options pin=bytes
+=== joint.tally
+model family
+  tally 2
+  on 2026-01-05
+  start 2026-01-01
+  end 2026-12-31
+  use a = "ana.tally" sha256 "0b0615a67a4ae71646df39a5edbd8b0a4fe46b72c4f53654cfa7eaa10b6a9a81"
+  use b = "ben.tally" sha256 "4f927bb0b7b8b6a1acfc3c6b41ae7af8e9f8b78b4e5a331024f351ac66548a01"
+  same a.to_ben = b.konto
+  same a.gift = b.gift_in_m
+
+ask t: sum(bal(p, 2026-12-31) for p in accounts on 2026-12-31)
+ask ka: bal(a.konto, 2026-12-31)
+ask kb: bal(b.konto, 2026-12-31)
+=== ana.tally
+model ana
+  tally 2
+  on 2026-01-05
+  start 2026-01-01
+  end 2026-12-31
+
+source s "umowa"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2019-01-01..
+place world: outside lives 1900-01-01..
+place to_ben: outside lives 1900-01-01..
+input wage_amt: money PLN
+input pay_dom: int
+input gift_amt: money PLN
+input gift_day: date
+
+move wage[m in months]: transfers
+  on day_of(m, pay_dom)
+  leg cash from world to konto amount wage_amt
+
+move gift: transfers
+  on gift_day
+  leg cash from konto to to_ben amount gift_amt
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  wage_amt = 1 000.00 PLN "umowa"
+  pay_dom = 10 "umowa"
+  gift_amt = 300.00 PLN "plan"
+  gift_day = 2026-03-15 "plan"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "wyciąg"
+
+ask q: bal(konto, 2026-12-31)
+=== ben.tally
+model ben
+  tally 2
+  on 2026-01-05
+  start 2026-01-01
+  end 2026-12-31
+
+source s "umowa"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2019-01-01..
+place from_ana: outside lives 1900-01-01..
+input gift_in: money PLN
+input gift_day: date
+
+move gift_in_m: transfers
+  on gift_day
+  leg cash from from_ana to konto amount gift_in
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  gift_in = 300.00 PLN "plan"
+  gift_day = 2026-03-15 "plan"
+  opening[konto] = 200.00 PLN at 2026-01-01 start "wyciąg"
+
+ask q: bal(konto, 2026-12-31)
+=== expect t ka kb a.q b.q
+t: 12 700.00 PLN
+  cut 2026-01-05
+ka: 12 200.00 PLN
+  cut 2026-01-05
+kb: 500.00 PLN
+  cut 2026-01-05
+a.q: 12 200.00 PLN
+  cut 2026-01-05
+b.q: 500.00 PLN
+  cut 2026-01-05

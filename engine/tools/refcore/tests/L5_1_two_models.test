@@ -1,0 +1,15 @@
+# L §8.3 LOAD-HEADER: "<n> files have a model header; exactly one does".
+=== a.tally
+model a
+  tally 2
+  on 2016-03-01
+  start 2015-11-01
+  end 2016-10-31
+=== b.tally
+model b
+  tally 2
+  on 2016-03-01
+  start 2015-11-01
+  end 2016-10-31
+=== expect
+refused: LOAD-HEADER ...

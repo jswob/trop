@@ -1,0 +1,12 @@
+q_buyouts (h = ewa): 180 000 DUK
+  assumed: illustrative figures: the card's rule gives none (advance[ewa], heir_share[ewa], value_at_death, value_at_division)
+  law date 2025-01-01, cut 2025-01-01
+q_buyouts (h = jan): none
+  assumed: illustrative figures: the card's rule gives none (heir_share[jan])
+  law date 2025-01-01, cut 2025-01-01
+q_buyouts (h = olek): -20 000 DUK
+  assumed: illustrative figures: the card's rule gives none (advance[olek], heir_share[olek], value_at_death, value_at_division)
+  law date 2025-01-01, cut 2025-01-01
+q_keeper: 160 000 DUK
+  assumed: illustrative figures: the card's rule gives none (advance[ewa], advance[olek], heir_share[ewa], heir_share[jan], heir_share[olek], value_at_death, value_at_division)
+  law date 2025-01-01, cut 2025-01-01

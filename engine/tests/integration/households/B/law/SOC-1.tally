@@ -1,0 +1,78 @@
+part soc_1
+  tally 2
+  law
+  note "SOC-1 · An employee's social contributions: pension 9.50 %, disability 1.50 %, sickness 2.45 % of gross pay (.1); pension and disability only on the year's gross from one employer up to SOC-CAP, in the crossing month on the part up to it (.2); each contribution of a month rounded to the ort, half up (.3, GEN-5 .3). Parental pay and pensions bear none."
+
+source soc_1 "Social Insurance Act, SOC-1 An employee's social contributions (tmp/cases/law/acts.md)"
+
+index soc1_part = [pension, disability, sickness]
+
+input soc1_er_pension: num question "What is the employer's own pension contribution rate (SOC-1 .4)?"
+
+input soc1_rate[c in soc1_part]: num question "What is the employee's rate of this contribution (SOC-1 .1)?"
+
+input soc_cap: money DUK question "What is this year's SOC-CAP (SOC-1 .2)?"
+
+version soc1_v1
+  cite soc_1
+  governs 2018-01-01..
+  known 2017-09-01
+  note "SOC-1 v1, in force 2018-01-01 until replaced, published 2017-09-01; governs pay paid from 2018-01-01."
+  soc1_er_pension = 0.10 "SOC-1 v1 .4"
+  soc1_rate[pension] = 0.095 "SOC-1 v1 .1"
+  soc1_rate[disability] = 0.015 "SOC-1 v1 .1"
+  soc1_rate[sickness] = 0.0245 "SOC-1 v1 .1"
+
+version soc_cap_2018
+  cite gazette
+  governs 2018-01-01..2018-12-31
+  known 2017-12-19
+  soc_cap = 132000.00 "gazette.csv line 1931 SOC-CAP"
+
+version soc_cap_2019
+  cite gazette
+  governs 2019-01-01..2019-12-31
+  known 2018-12-18
+  soc_cap = 142500.00 "gazette.csv line 1932 SOC-CAP"
+
+version soc_cap_2020
+  cite gazette
+  governs 2020-01-01..2020-12-31
+  known 2019-12-19
+  soc_cap = 155400.00 "gazette.csv line 1933 SOC-CAP"
+
+version soc_cap_2021
+  cite gazette
+  governs 2021-01-01..2021-12-31
+  known 2020-12-18
+  soc_cap = 162000.00 "gazette.csv line 1934 SOC-CAP"
+
+version soc_cap_2022
+  cite gazette
+  governs 2022-01-01..2022-12-31
+  known 2021-12-19
+  soc_cap = 178500.00 "gazette.csv line 1935 SOC-CAP"
+
+version soc_cap_2023
+  cite gazette
+  governs 2023-01-01..2023-12-31
+  known 2022-12-18
+  soc_cap = 207000.00 "gazette.csv line 1936 SOC-CAP"
+
+version soc_cap_2024
+  cite gazette
+  governs 2024-01-01..2024-12-31
+  known 2023-12-19
+  soc_cap = 234000.00 "gazette.csv line 1937 SOC-CAP"
+
+version soc_cap_2025
+  cite gazette
+  governs 2025-01-01..2025-12-31
+  known 2024-12-18
+  soc_cap = 258000.00 "gazette.csv line 1938 SOC-CAP"
+
+version soc_cap_2026
+  cite gazette
+  governs 2026-01-01..2026-12-31
+  known 2025-12-19
+  soc_cap = 279000.00 "gazette.csv line 1939 SOC-CAP"

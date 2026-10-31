@@ -1,0 +1,17 @@
+# L §8.5 WARN-UNREAD: "<source, input, def, place or regime item> is read by nothing ... Decided on the item graph
+# (ENGINE.md §3.1), so it doesn't depend on what the asks reach."  lone is read by no item.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+def lone: int = 0
+def used: int = 1
+
+ask q1: used
+=== expect
+q1: 1
+  cut 2026-12-31
+warning: WARN-UNREAD def lone is read by nothing

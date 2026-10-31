@@ -1,0 +1,30 @@
+a_todd: (168.00 USD, 84.00 USD, 0.00 USD)
+  law date 1986-09-01, cut 2026-10-18
+b_henry_child: (51 USD, 31 USD, true)
+  law date 1992-01-01, cut 2026-10-18
+b_henry_parent: (154.00 USD, 134.00 USD, 1 100.00 USD, 550 USD, 684 USD, 51 USD)
+  law date 1992-01-01, cut 2026-10-18
+c_jt_children (k = james): (50 USD, 30 USD, true)
+  assumed: Example 2 names only the mother's unearned income (p_earned[ex_jt])
+  law date 1992-01-01, cut 2026-10-18
+c_jt_children (k = tony): (50 USD, 30 USD, true)
+  assumed: Example 2 names only the mother's unearned income (p_earned[ex_jt])
+  law date 1992-01-01, cut 2026-10-18
+c_jt_parent: (522.00 USD, 100 USD)
+  assumed: Example 2 names only the mother's unearned income (p_earned[ex_jt])
+  law date 1992-01-01, cut 2026-10-18
+d_bl_children (k = beth): (135.5 USD, 115.5 USD, true)
+  assumed: Example 3 names only the mother's unearned income (p_earned[ex_bl])
+  law date 1992-01-01, cut 2026-10-18
+d_bl_children (k = linda): (135.5 USD, 115.5 USD, true)
+  assumed: Example 3 names only the mother's unearned income (p_earned[ex_bl])
+  law date 1992-01-01, cut 2026-10-18
+d_bl_parent: (713.00 USD, 693.00 USD, 271 USD)
+  assumed: Example 3 names only the mother's unearned income (p_earned[ex_bl])
+  law date 1992-01-01, cut 2026-10-18
+e_jack_child: (51 USD, 31 USD, true)
+  assumed: the brothers' income is not stated; the example allocates the full $422, so neither allocation is reduced (ich_income[jack_bro1], ich_income[jack_bro2])
+  law date 1992-01-01, cut 2026-10-18
+e_jack_parent: (422.00 USD, 72.00 USD, 1 453.00 USD, 1 368.00 USD, 684 USD, 51 USD)
+  assumed: the brothers' income is not stated; the example allocates the full $422, so neither allocation is reduced (ich_income[jack_bro1], ich_income[jack_bro2])
+  law date 1992-01-01, cut 2026-10-18

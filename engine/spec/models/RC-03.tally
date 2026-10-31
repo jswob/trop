@@ -1,6 +1,8 @@
 model rc03
-  tally 1
+  tally 2
   on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
   note "US SSI deeming: from an ineligible spouse (20 CFR 416.1163, Todd) and from ineligible parents to disabled children (20 CFR 416.1165(h) Examples 1-4)."
   note "The Federal benefit rates are dated rows; each ask pins the law date its example names (September 1986; the rates effective January 1, 1992). No rounding is stated, so amounts after a halving or a division are exact num USD."
   note "The rules transcribe the current CFR wording, so they cite the last amendment of their section, by which that wording was complete; the examples' facts and rates are the regulation's own worked examples, stipulations known from the model's on date."
@@ -16,6 +18,8 @@ source fr1999_31974 "SSA, final rule at 64 FR 31974 (June 15, 1999), the last am
 source fr2008_28036 "SSA, final rule at 73 FR 28036 (May 15, 2008), the last amendment the CFR's source note gives for § 416.1165"
 
 source modeller "The model's own assumptions, each stated with its reason"
+
+unit USD: currency minor 0.01
 
 index alien = [sean]
 
@@ -51,102 +55,103 @@ input p_earned[e in case]: money USD question "What is the ineligible spouse's o
 
 input p_unearned[e in case]: money USD question "What is the ineligible spouse's or parents' combined unearned income for the month?"
 
-def alloc_total[e in case]: money USD
+def alloc_total[e in case]: money USD at reader
   note "allocations for ineligible children (§ 416.1163(b)) and sponsored eligible aliens (§ 416.1163(c), § 416.1165(c))"
-  rule base v fr64_31974 = sum(c in ich where ich_case[c] = e: ich_alloc[c]) + sum(a in alien where alien_case[a] = e: fbr_diff)
+  rule base v fr64_31974 = sum(ich_alloc[c] for c in ich where ich_case[c] == e) + sum(fbr_diff for a in alien where alien_case[a] == e)
 
-def child_countable[k in elig]: num USD
+def child_countable[k in elig]: num USD at reader
   note "deemed income plus the child's own unearned income, less the $20 general exclusion, § 416.1165(e)(1), § 416.1124(c)(12); the children have no earned income"
   rule base v fr73_28036 = max(0, child_deemed[k] + elig_unearned[k] - gie)
 
-def child_deemed[k in elig]: num USD
+def child_deemed[k in elig]: num USD at reader
   note "the parental income to be deemed, divided equally among the eligible children, § 416.1165(e)(2)"
   rule base v fr73_28036 = deem_total[elig_case[k]] / n_elig[elig_case[k]]
 
-def child_eligible[k in elig]: bool
+def child_eligible[k in elig]: bool at reader
   note "countable income below the Federal benefit rate for an individual, § 416.1165(e)(1); only the income test is modelled"
   rule base v fr73_28036 = child_countable[k] < fbr_ind
 
-def deem_total[e in case]: num USD
+def deem_total[e in case]: num USD at reader
   note "remaining parental income less the parental living allowance, § 416.1165(d)(3); nothing is deemed below zero"
   rule base v fr73_28036 = max(0, p_total[e] - pla[e])
 
-def earned_count[e in case]: num USD
+def earned_count[e in case]: num USD at reader
   note "one-half of the remaining earned income is excluded, § 416.1165(d)(2), § 416.1112(c)(7)"
   rule base v fr45_65547 = earned_rem[e] - earned_rem[e] * earned_half
 
-def earned_left[e in case]: money USD
+def earned_left[e in case]: money USD at reader
   note "earned income less the allocations unearned income couldn't cover, § 416.1163(b)(3)"
   rule base v fr64_31974 = max(0, p_earned[e] - excess_alloc[e])
 
-def earned_rem[e in case]: money USD
+def earned_rem[e in case]: money USD at reader
   note "earned income less the unused part of the $20 and then $65, § 416.1165(d)(1)-(2), § 416.1112(c)(4)-(5)"
   rule base v fr73_28036 = max(0, earned_left[e] - gie_left[e] - eie)
 
-def excess_alloc[e in case]: money USD
+def excess_alloc[e in case]: money USD at reader
   note "allocations beyond the unearned income, § 416.1163(b)(3)"
   rule base v fr64_31974 = max(0, alloc_total[e] - p_unearned[e])
 
-def fbr_diff: money USD
+def fbr_diff: money USD at reader
   note "the Federal benefit rate for an eligible couple less that for an eligible individual, § 416.1163(b)(1), (c)(1), (d)(1)"
   rule base v fr64_31974 = fbr_couple - fbr_ind
 
-def gie_left[e in case]: money USD
+def gie_left[e in case]: money USD at reader
   note "the part of the $20 general exclusion unearned income didn't use, § 416.1165(d)(1)"
   rule base v fr73_28036 = max(0, gie - unearned_left[e])
 
-def ich_alloc[c in ich]: money USD
+def ich_alloc[c in ich]: money USD at reader
   note "§ 416.1163(b)(1)-(2): the allocation for each ineligible child, reduced by the child's own income"
   rule base v fr64_31974 = max(0, fbr_diff - ich_income[c])
 
-def n_elig[e in case]: int = count(k in elig where elig_case[k] = e)
+def n_elig[e in case]: int = count(k in elig where elig_case[k] == e) at reader
 
-def p_total[e in case]: num USD
+def p_total[e in case]: num USD at reader
   note "remaining unearned plus remaining earned income, § 416.1165(d)(3)"
   rule base v fr73_28036 = p_unearned_net[e] + earned_count[e]
 
-def p_unearned_net[e in case]: money USD
+def p_unearned_net[e in case]: money USD at reader
   note "unearned income after allocations, less the $20 general exclusion, § 416.1165(d)(1)"
   rule base v fr73_28036 = max(0, unearned_left[e] - gie)
 
-def pla[e in case]: money USD
+def pla[e in case]: money USD at reader
   note "parental living allowance, § 416.1165(d)(3)(i)-(ii)"
   rule base v fr73_28036 = fbr_ind
-  rule both excepts base v fr73_28036 when both_parents[e] = fbr_couple
+  rule both beats base v fr73_28036 = fbr_couple when both_parents[e]
 
-def sp_deemed[e in case]: money USD
+def sp_deemed[e in case]: money USD at reader
   note "income deemed from the ineligible spouse, § 416.1163(d)"
-  rule couple v fr64_31974 when sp_remaining[e] > fbr_diff = ? "§ 416.1163(d)(2) treats the claimant and spouse as an eligible couple; that computation is not transcribed"
-  rule no_deem v fr64_31974 when sp_remaining[e] <= fbr_diff = 0
+  rule couple v fr64_31974 = ?"§ 416.1163(d)(2) treats the claimant and spouse as an eligible couple; that computation is not transcribed" when sp_remaining[e] > fbr_diff
+  rule no_deem v fr64_31974 = 0 when sp_remaining[e] <= fbr_diff
 
-def sp_remaining[e in case]: money USD
+def sp_remaining[e in case]: money USD at reader
   note "the ineligible spouse's income remaining after allocations, § 416.1163(b)(3), (d)(1)"
   rule base v fr64_31974 = unearned_left[e] + earned_left[e]
 
-def unearned_left[e in case]: money USD
+def unearned_left[e in case]: money USD at reader
   note "unearned income less the allocations, deducted from unearned income first, § 416.1163(b)(3)"
   rule base v fr64_31974 = max(0, p_unearned[e] - alloc_total[e])
 
-ask a_todd: alloc_total[ex_todd], sp_remaining[ex_todd], sp_deemed[ex_todd] with law 1986-09-01
+ask a_todd: alloc_total[ex_todd], sp_remaining[ex_todd], sp_deemed[ex_todd] law 1986-09-01
 
-ask b_henry_child: child_deemed[henry], child_countable[henry], child_eligible[henry] with law 1992-01-01
+ask b_henry_child: child_deemed[henry], child_countable[henry], child_eligible[henry] law 1992-01-01
 
-ask b_henry_parent: unearned_left[ex_henry], p_unearned_net[ex_henry], earned_rem[ex_henry], earned_count[ex_henry], p_total[ex_henry], deem_total[ex_henry] with law 1992-01-01
+ask b_henry_parent: unearned_left[ex_henry], p_unearned_net[ex_henry], earned_rem[ex_henry], earned_count[ex_henry], p_total[ex_henry], deem_total[ex_henry] law 1992-01-01
 
-ask c_jt_children: child_deemed[k], child_countable[k], child_eligible[k] for k in [james, tony] with law 1992-01-01
+ask c_jt_children: child_deemed[k], child_countable[k], child_eligible[k] for k in [james, tony] law 1992-01-01
 
-ask c_jt_parent: p_unearned_net[ex_jt], deem_total[ex_jt] with law 1992-01-01
+ask c_jt_parent: p_unearned_net[ex_jt], deem_total[ex_jt] law 1992-01-01
 
-ask d_bl_children: child_deemed[k], child_countable[k], child_eligible[k] for k in [beth, linda] with law 1992-01-01
+ask d_bl_children: child_deemed[k], child_countable[k], child_eligible[k] for k in [beth, linda] law 1992-01-01
 
-ask d_bl_parent: unearned_left[ex_bl], p_unearned_net[ex_bl], deem_total[ex_bl] with law 1992-01-01
+ask d_bl_parent: unearned_left[ex_bl], p_unearned_net[ex_bl], deem_total[ex_bl] law 1992-01-01
 
-ask e_jack_child: child_deemed[jack], child_countable[jack], child_eligible[jack] with law 1992-01-01
+ask e_jack_child: child_deemed[jack], child_countable[jack], child_eligible[jack] law 1992-01-01
 
-ask e_jack_parent: alloc_total[ex_jack], excess_alloc[ex_jack], earned_left[ex_jack], earned_rem[ex_jack], earned_count[ex_jack], deem_total[ex_jack] with law 1992-01-01
+ask e_jack_parent: alloc_total[ex_jack], excess_alloc[ex_jack], earned_left[ex_jack], earned_rem[ex_jack], earned_count[ex_jack], deem_total[ex_jack] law 1992-01-01
 
 version fr45_65547
   cite fr1980_65547
+  governs always
   known 1980-10-03
   note "the exclusions as republished in 1980; the locators give today's paragraph numbers. Both §§ 416.1112 and 416.1124 were last amended at 75 FR 54287 (September 7, 2010), which is not shown to change these figures. Source notes read on Cornell LII, since eCFR redirects"
   earned_half = 0.5 "§ 416.1112(c)(7): one-half of remaining earned income in a month"
@@ -155,16 +160,19 @@ version fr45_65547
 
 version fr64_31974
   cite fr1999_31974
+  governs always
   known 1999-06-15
   note "no items: the version the § 416.1163 rules cite. The section's notes list 45 FR 65547 (1980), 50 FR 48576 (1985), 52 FR 8883 (1987), 53 FR 25151 (1988), 54 FR 19164 (1989) and 64 FR 31974 (1999); which of them enacted each paragraph is not established. No governs, so it applies at the examples' law dates"
 
 version fr73_28036
   cite fr2008_28036
+  governs always
   known 2008-05-15
   note "no items: the version the § 416.1165 rules cite. The section's notes list 52 FR 8885 (1987), 54 FR 19164 (1989), 57 FR 48562 (1992), 60 FR 361 (1995), 62 FR 1056 (1997), 64 FR 31974 (1999), 72 FR 50874 (2007) and 73 FR 28036 (2008); which of them enacted each paragraph is not established. No governs, so it applies at the examples' law dates"
 
 version cfr1163_examples
   cite cfr1163
+  governs always
   known 2026-10-18
   note "§ 416.1163(g), Mr. Todd: the example's facts, a hypothetical case's stipulations known from the model's on date since it has no start (§4.5); the Federal benefit rates used are those effective January 1, 1986; the income, the income exclusions, and the allocations are monthly amounts"
   fbr_couple = 504 governs 1986 "(g) Example 2: $504 September Federal benefit rate for a couple"
@@ -176,6 +184,7 @@ version cfr1163_examples
 
 version cfr1165_examples
   cite cfr1165
+  governs always
   known 2026-10-18
   note "§ 416.1165(h), Examples 1-4: the examples' facts, a hypothetical case's stipulations known from the model's on date since it has no start (§4.5); the Federal benefit rates are those effective January 1, 1992"
   alien_case[sean] = ex_bl "(h) Example 3: has sponsored an eligible alien, Mr. Sean"
@@ -210,6 +219,7 @@ version cfr1165_examples
 
 version model_assumptions
   cite modeller
+  governs always
   known 2026-10-18
   note "assumptions that stand for the examples' own facts, known from the model's on date (§4.5)"
   ich_income[jack_bro1] = 0 assumed "the brothers' income is not stated; the example allocates the full $422, so neither allocation is reduced"

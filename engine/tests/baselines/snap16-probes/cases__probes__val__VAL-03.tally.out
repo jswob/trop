@@ -1,0 +1,12 @@
+known_aug: 88 000.00 DUK
+  law date 2022-12-31, cut 2022-08-01
+known_may: 85 000.00 DUK
+  law date 2022-12-31, cut 2022-05-31
+src_aug: 88 000.00 DUK
+  [1] row v_final:lim = 88 000.00 DUK
+      version v_final, source lim_final, "VAL-03 card: the 2022 income limit LIM, final, published 15 July 2022", locator "final: in force for all of 2022", governs 2022-01-01..2022-12-31, known 2022-07-15
+  law date 2022-12-31, cut 2022-08-01
+src_may: 85 000.00 DUK
+  [1] row v_draft:lim = 85 000.00 DUK
+      version v_draft, source lim_draft, "VAL-03 card: the 2022 income limit LIM, draft, published 20 May 2022", locator "draft: in force for all of 2022", governs 2022-01-01..2022-12-31, known 2022-05-20
+  law date 2022-12-31, cut 2022-05-31

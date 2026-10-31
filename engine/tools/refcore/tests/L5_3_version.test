@@ -1,0 +1,40 @@
+# L §5.3 example version, copied whole (rows of money inputs: "a row's bare literal takes its target's declared
+# type", 89 PLN is 89.00 PLN, L §3.2, §5.18 Output).  It governs 2015-11.. (L §4.1: from 2015-11-01): read at
+# 2016-01-01 the row governs; read at 2015-10-01 no row governs, so HOLE-UNGOVERNED with the question
+# "x at k: no value at <law date>" (no time key, L §4.6 step 5).  inputs-of prints the rows read with their
+# sources (L §5.18); a row's stable id is version:target[keys] (L §2.5).
+=== m.tally
+model t
+  tally 2
+  on 2016-03-01
+  start 2015-11-01
+  end 2016-10-31
+
+source rm1238 "Rozporządzenie"
+
+unit PLN: currency minor 0.01
+
+index age_groups = [u5, u18]
+
+input allowance[g in age_groups]: money PLN
+input criterion: money PLN
+
+version rm2015
+  cite rm1238
+  governs 2015-11..
+  known 2015-09-07
+  allowance[u5] = 89 PLN "§ 2 ust. 1 pkt 1 lit. a"
+  allowance[u18] = 118 PLN "§ 2 ust. 1 pkt 1 lit. b"
+  criterion = 674 PLN "§ 1 ust. 1 pkt 1"
+
+ask q1: allowance[u5], allowance[u18], criterion law 2016-01-01
+ask q2: allowance[u5] law 2015-10-01
+ask q3: inputs-of allowance[u18] law 2016-01-01
+=== expect
+q1: (89.00 PLN, 118.00 PLN, 674.00 PLN)
+  law date 2016-01-01, cut 2016-03-01
+q2: ?"allowance at u5: no value at 2015-10-01" (allowance[u5])
+  law date 2015-10-01, cut 2016-03-01
+q3:
+  rm2015:allowance[u18] (source rm1238 "Rozporządzenie", locator "§ 2 ust. 1 pkt 1 lit. b")
+  law date 2016-01-01, cut 2016-03-01

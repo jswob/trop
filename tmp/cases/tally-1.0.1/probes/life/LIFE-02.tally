@@ -1,0 +1,81 @@
+model life02
+  tally 1
+  on 2026-10-25
+  start 2024-01-01
+  note "Probe LIFE-02: a car sold, and each thing tied to it ending with its money: an insurance refunded pro rata, a credit repaid, a parking contract ended on notice, a car tax not refunded."
+  note "No money is moved between places: each end is a date and each amount a def."
+
+source card "Probe card LIFE-02 (tmp/cases/probes/life/LIFE-02.md): story, rules 1-4 and question"
+
+index mo = month 2024-01..2024-12
+
+input credit_owed: money DUK question "How much of the credit is still owed at the sale?"
+
+input parking_fee: money DUK question "What does the parking contract cost a month?"
+
+input policy_end: date question "On what day does the insurance's policy year end?"
+
+input policy_start: date question "On what day does the insurance's policy year start?"
+
+input premium: money DUK question "What is the insurance premium for the policy year?"
+
+input sold: date question "On what day is the car sold?"
+
+def car_tax_end: date
+  note "rule 4: the car tax ends with the sale"
+  rule base v card_law = sold
+
+def car_tax_refund: money DUK
+  note "rule 4: and is not refunded"
+  rule base v card_law = 0
+
+def credit_end: date
+  note "rule 2: repaid in full from the price on the day of sale"
+  rule base v card_law = sold
+
+def credit_repaid: money DUK
+  note "rule 2: the whole of what is still owed"
+  rule base v card_law = credit_owed
+
+def ins_days: int = days(policy_start, add_days(policy_end, 1))
+
+def ins_end: date
+  note "rule 1: the insurance ends with the sale"
+  rule base v card_law = sold
+
+def ins_refund: money DUK
+  note "rule 1: the unused days from the next day to the end of the policy year, over the policy year's days, rounded half up to 0.01"
+  rule base v card_law = round(premium * ins_unused / ins_days, 0.01, half-up)
+
+def ins_unused: int = days(sold, policy_end)
+
+def notice: date
+  note "rule 3: notice is given on the day of sale"
+  rule base v card_law = sold
+
+def parking_end: date
+  note "rule 3: the end of the month after the notice"
+  rule base v card_law = add_days(end_of(month_of(notice) + 1), -1)
+
+def parking_paid_after: money DUK
+  note "rule 3: the months after the sale's month up to the end are still paid"
+  rule base v card_law = sum(m in mo where m > month_of(sold) and m <= month_of(parking_end): parking_fee)
+
+ask ends: ins_end, credit_end, parking_end, car_tax_end
+
+ask amounts: ins_unused, ins_days, ins_refund, credit_repaid, parking_paid_after, car_tax_refund
+
+version card_law
+  cite card
+  known 2024-01-01
+  note "the card's own rules, stipulations known from start (L 4.5); no items, the rules point at it"
+
+version card_facts
+  cite card
+  known 2024-01-01
+  credit_owed = 8000 "story: a credit with 8 000.00 still owed"
+  parking_fee = 150 "story: a parking contract, 150.00 a month"
+  policy_end = 2024-12-31 "story: the insurance, 1 200.00 for 2024"
+  policy_start = 2024-01-01 "story: the insurance, 1 200.00 for 2024"
+  premium = 1200 "story: an insurance, 1 200.00 DUK for 2024 paid in January"
+  sold = 2024-09-15 "story: Ania and Tomek sell their car on 15 September 2024"

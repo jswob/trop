@@ -1,0 +1,15 @@
+part asks_d04
+  tally 1
+  note "D-04 · Her 2025 return, as of 2026-04-30, as known 2026-04-13."
+
+ask d04_pensions: pen_income[2025], pen_base[2025], pen_tax[2025], pen_adv_year[2025], pen_due[2025] as known 2026-04-13
+
+ask d04_rent: rent_rcv[2025], rent_share[2025], rent_tax[2025], rent_adv_year[2025], rent_due[2025] as known 2026-04-13
+
+ask d04_total: bond_interest_stated, pen_due[2025] + rent_due[2025], return_due[2025] as known 2026-04-13
+
+ask d04_check_advances: check pen_adv_year[2025] = sio_adv_stated[2025] as known 2026-04-13
+
+ask d04_check_paid: check pen_income[2025] = sio_paid_stated[2025] as known 2026-04-13
+
+ask d04_without: pen_income[2025], pen_base[2025], pen_tax[2025], pen_adv_year[2025], pen_due[2025], rent_rcv[2025], rent_share[2025], rent_tax[2025], rent_adv_year[2025], rent_due[2025], pen_due[2025] + rent_due[2025] with surv_from = 2064-12-01, v2_effective = 2064-12-01, lease_from = 2064-12 as known 2026-04-13

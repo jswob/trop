@@ -1,0 +1,44 @@
+s5_01 (p = ivo): 51 142.30 DUK
+  cut 2026-05-05
+s5_01 (p = sanna): 48 007.70 DUK
+  cut 2026-05-05
+s5_02 (p = ivo, d = 2026-12-31): 61 123.17 DUK
+  held: plot_val = 118 500.00 DUK (plot_appraisals), read for 2026-12-31
+  cut 2027-07-10
+s5_02 (p = ivo, d = 2027-06-30): 73 244.65 DUK
+  held: plot_val = 142 000.00 DUK (plot_appraisals), read for 2027-06-30
+  cut 2027-07-10
+s5_02 (p = sanna, d = 2026-12-31): 57 376.83 DUK
+  held: plot_val = 118 500.00 DUK (plot_appraisals), read for 2026-12-31
+  cut 2027-07-10
+s5_02 (p = sanna, d = 2027-06-30): 68 755.35 DUK
+  held: plot_val = 142 000.00 DUK (plot_appraisals), read for 2027-06-30
+  cut 2027-07-10
+s5_03 (p = ivo, d = 2026-03-31): 66 641.94 DUK
+  anchor: own_i 2026-03-31 end, stated 47 300.00 DUK, difference ?"own_i has no balance before 2026-03-31" (own_i)
+  anchor: own_s 2026-03-31 end, stated 41 850.00 DUK, difference ?"own_s has no balance before 2026-03-31" (own_s)
+  cut 2027-07-10
+s5_03 (p = ivo, d = 2026-12-31): 88 530.34 DUK
+  anchor: own_i 2026-12-31 end, stated 21 760.25 DUK, difference 8 460.25 DUK
+  anchor: own_s 2026-12-31 end, stated 17 420.60 DUK, difference 7 570.60 DUK
+  held: plot_val = 118 500.00 DUK (plot_appraisals), read for 2026-12-31
+  cut 2027-07-10
+s5_03 (p = ivo, d = 2027-06-30): 112 026.23 DUK
+  anchor: own_i 2027-06-30 end, stated 33 118.40 DUK, difference 11 358.15 DUK
+  anchor: own_s 2027-06-30 end, stated 26 905.10 DUK, difference 9 484.50 DUK
+  held: plot_val = 142 000.00 DUK (plot_appraisals), read for 2027-06-30
+  cut 2027-07-10
+s5_03 (p = sanna, d = 2026-03-31): 56 039.46 DUK
+  anchor: own_i 2026-03-31 end, stated 47 300.00 DUK, difference ?"own_i has no balance before 2026-03-31" (own_i)
+  anchor: own_s 2026-03-31 end, stated 41 850.00 DUK, difference ?"own_s has no balance before 2026-03-31" (own_s)
+  cut 2027-07-10
+s5_03 (p = sanna, d = 2026-12-31): 75 559.74 DUK
+  anchor: own_i 2026-12-31 end, stated 21 760.25 DUK, difference 8 460.25 DUK
+  anchor: own_s 2026-12-31 end, stated 17 420.60 DUK, difference 7 570.60 DUK
+  held: plot_val = 118 500.00 DUK (plot_appraisals), read for 2026-12-31
+  cut 2027-07-10
+s5_03 (p = sanna, d = 2027-06-30): 96 424.95 DUK
+  anchor: own_i 2027-06-30 end, stated 33 118.40 DUK, difference 11 358.15 DUK
+  anchor: own_s 2027-06-30 end, stated 26 905.10 DUK, difference 9 484.50 DUK
+  held: plot_val = 142 000.00 DUK (plot_appraisals), read for 2027-06-30
+  cut 2027-07-10

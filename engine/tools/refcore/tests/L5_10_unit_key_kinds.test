@@ -1,0 +1,38 @@
+# L §5.10 (round 7c) `unit(x) == PLN` compares two keys: konto (PLN), k_eur (EUR) and h (etf, a key of the unit kind
+# funds) are not outside; q1 counts the places whose unit is the key PLN: konto, 1; q2 the key EUR: k_eur, 1. q3 reads
+# unit(world), a place of unit any: "a place of unit any has no one unit, and unit(x) of it is refused (§8.4)".
+=== uk.tally
+model uk
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "synthetic"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+kind funds: unit
+
+place konto: accounts PLN lives 2026-01-01..
+place k_eur: accounts EUR lives 2026-01-01..
+place h: holdings etf lives 2026-01-01..
+place world: outside lives 2026-01-01..
+
+ask q1: count(x in places over .. where not x in outside and unit(x) == PLN)
+ask q2: count(x in places over .. where not x in outside and unit(x) == EUR)
+ask q3: count(x in places over .. where unit(x) == PLN)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  funds + [etf] lives 2026-01-01..
+  opening[konto] = 0 PLN at 2026-01-01 start
+  opening[k_eur] = 0 EUR at 2026-01-01 start
+=== expect
+q1: 1
+  cut 2026-12-31
+q2: 1
+  cut 2026-12-31
+q3: refused: RUN-DOMAIN unit(world) of a place of unit any: it has no one unit
+  cut 2026-12-31

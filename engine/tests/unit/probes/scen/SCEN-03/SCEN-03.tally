@@ -1,0 +1,54 @@
+model scen03
+  tally 2
+  on 2026-10-25
+  start 2025-01-01
+  end 2029-12-31
+
+source forecast "SCEN-03 card: the price index's base path, 3 % a year"
+
+source lease "SCEN-03 card: Halina's rent, 2 000.00 a month in 2025, raised each January by the previous year's price-index change, rounded half up to 0.01"
+
+source what_if "SCEN-03 card: the override, 8 % for 2025-2027"
+
+unit DUK: currency minor 0.01
+
+input bond_margin: num question "The card gives no bond formula: what does the bond pay over the index?"
+
+input cpi_change[y in years]: num
+
+input mortgage_margin: num question "The card gives no mortgage formula: what is its margin over the reference rate?"
+
+input pension_amt[y in years]: money DUK question "The card gives no pension formula: what is the pension before indexation?"
+
+input ref_rate[y in years]: num question "The card gives no reference rate REF."
+
+input rent_2025: money DUK
+
+def bond_rate[y in years]: num = cpi_change[y] + bond_margin at start_of(y)
+
+def mortgage_rate[y in years]: num = ref_rate[y] + mortgage_margin at start_of(y)
+
+def pension[y in years]: num DUK = pension_amt[y] * (1 + cpi_change[y]) at start_of(y)
+
+def rent[y in years]: money DUK at start_of(y)
+  rule first beats next = rent_2025 when pos(y) == 1
+  rule next v lease_v = round(rent[y - 1] * (1 + cpi_change[y - 1]), minor(DUK), half-up)
+
+ask moved: readers-of cpi_change
+
+ask rent_base: rent[2029]
+
+ask rent_over: rent[2029] with scenario infl8
+
+version base_path
+  cite forecast
+  governs always
+  known 2025-01-01
+  assumed "the price index's base path: 3 % a year"
+  cpi_change[*] = 0.03 "base path: every year"
+
+version lease_v
+  cite lease
+  governs always
+  known 2025-01-01
+  rent_2025 = 2000.00 "2 000.00 a month in 2025"

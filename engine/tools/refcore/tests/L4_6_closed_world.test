@@ -1,0 +1,30 @@
+# L §4.6 step 1: "a key it leaves unstated, or covers with *, is one its index or kind had on the row's known date.
+# A default row stated before a key was added doesn't cover that key (§6.2)."  ks gains c in a version known
+# 2026-06-01; the default row x[*] = 1 is known 2026-01-01: x[c] is a hole (no value at the law date), x[a] is 1.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+index ks = [a, b]
+input x[k in ks]: int
+
+version v1
+  cite s
+  governs always
+  known 2026-01-01
+  x[*] = 1
+
+version v2
+  cite s
+  known 2026-06-01
+  ks + [c]
+
+ask q1: x[a], x[c] law 2026-07-01
+=== expect
+q1: (1, ?"x at c: no value at 2026-07-01" (x[c]))
+  law date 2026-07-01, cut 2026-12-31

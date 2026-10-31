@@ -1,0 +1,33 @@
+wife_net (m = 2026-10): 5 101.67 PLN
+  law date 2029-05-01, cut 2029-05-01
+wife_net (m = 2027-01): 5 101.67 PLN
+  assumed: indeks płac +4% rocznie, założenie prototypu (wage_growth)
+  missing record counted by wage_fc_2026
+  law date 2029-05-01, cut 2029-05-01
+social_and_health (m = 2026-10): (456.18 PLN, 830.58 PLN)
+  law date 2029-05-01, cut 2029-05-01
+social_and_health (m = 2027-01): (474.44 PLN, 518.28 PLN)
+  assumed: indeks płac +4% rocznie, założenie prototypu (wage_growth)
+  missing record counted by wage_fc_2026
+  law date 2029-05-01, cut 2029-05-01
+social_and_health (m = 2028-09): (2 083.99 PLN, 898.35 PLN)
+  assumed: indeks płac +4% rocznie, założenie prototypu (wage_growth)
+  missing record counted by wage_fc_2026
+  law date 2029-05-01, cut 2029-05-01
+pit37 (p = me, y = 2026): 0.00 PLN
+  law date 2029-05-01, cut 2029-05-01
+pit37 (p = me, y = 2027): 0.00 PLN
+  law date 2029-05-01, cut 2029-05-01
+pit37 (p = me, y = 2028): 0.00 PLN
+  law date 2029-05-01, cut 2029-05-01
+pit37 (p = wife, y = 2026): -2.00 PLN
+  law date 2029-05-01, cut 2029-05-01
+pit37 (p = wife, y = 2027): -2.00 PLN
+  assumed: indeks płac +4% rocznie, założenie prototypu (wage_growth)
+  missing record counted by wage_fc_2026
+  law date 2029-05-01, cut 2029-05-01
+pit37 (p = wife, y = 2028): -2.00 PLN
+  assumed: indeks płac +4% rocznie, założenie prototypu (wage_growth)
+  missing record counted by wage_fc_2026
+  law date 2029-05-01, cut 2029-05-01
+

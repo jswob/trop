@@ -1,0 +1,71 @@
+part e2c
+  tally 2
+  note "Household E2 (tmp/cases-holdout/E2/story.md), its side in household C. C (tmp/cases-holdout/tally-2.0/C/full, by H1) is no member of E2's joint model (../joint): it can be pinned (hrun --reprint), but with C a member every cell of the join that reaches D's day walk runs past the 90 s limit (W-E2-4). So what E2 reads of C is asked here, in a run of C's own files, unchanged and read only, with this part beside them. The part changes none of C's items and states no row of them: it reads C's items bare (C's ids) and adds its own, every id prefixed e2c_, so C's own answers are what they are without it."
+  note "E2-01: Marta's payout as the export of her own Bank Jodła account shows it (C's rows mo, records/jodla-marta.csv line 19) against C-D30. E2-02: what Jan acquired from Marta (C's loan.tally: the gift of 2024-07-01 and the release of 2026-09-17, IGT-2 .4; its tax turns on C's axis release_money and, on the reading not_money, on whether Jan reports the release within 6 months (IGT-4 .2), C's hole row jan_reported, so it is asked plain and with that row pinned true and false) and Staś from Irena (C's stas.tally), each with its tax as C derives it. E2-03: what Marta was paid, whether it is hers alone (CIV-1 .3), what she lent the community (C-HR7, C's loan_principal and her account's row), what the community owed her when she forgave the loan (C's owed_forgiven) and what that gave Jan (C's release_gift, in whole dukats)."
+
+source e2c_c_d30 "C-D30 · Notary's notice of payment from the deposit (tmp/cases-holdout/C/docs/C-D30.md)"
+
+source e2c_d_d04 "D-D04 · Certificate of inheritance (extract) (engine/tests/cases/D/docs/D-D04.md)"
+
+input e2c_notice_paid: money DUK question "How much does the notary's notice C-D30 say was paid to Marta from the deposit?"
+
+input e2c_notice_on: date question "On which day does C-D30 say the notary paid Marta?"
+
+input e2c_by_inheritance: bool question "Did Marta acquire what the notary paid her as an heir, for the share she inherited (C-D30, D-D07 .4)?"
+
+input e2c_for_both: bool question "Did the deceased state that what Marta inherits is for both spouses (CIV-1 .3)?"
+
+def e2c_estate_in[d in day]: money DUK
+  note "what the rows of Marta's own account on day d that C classes as the estate's payout (m_estate_in) credit"
+  rule base = sum(mo[d, s].cr for s in seq where mo[d, s] != none and mo[d, s].k == m_estate_in)
+
+def e2c_marta_arrived: date
+  note "the first day, from the notary's payment (C-D30) to the cut, on which the export of Marta's own account shows the estate's payout arriving"
+  rule base = first(x in day where x >= e2c_notice_on and x <= cut and e2c_estate_in[x] > 0 DUK)
+
+def e2c_marta_paid: money DUK
+  note "all that the export of Marta's own account shows arriving from the estate, to the cut"
+  rule base = sum(e2c_estate_in[x] for x in day where x <= cut)
+
+def e2c_lent_out: money DUK
+  note "what the export of Marta's own account shows going out as the loan to the community (C classes the row m_loan_out: jodla-marta.csv line 20), to the cut"
+  rule base = sum(mo[x, s].dr for x in day, s in seq where x <= cut and mo[x, s] != none and mo[x, s].k == m_loan_out)
+
+def e2c_hers_alone: bool
+  note "CIV-1 .3: what a spouse acquires by inheritance is her separate property, unless the giver states it is for both; what is acquired in exchange for separate assets is separate too, so the payout for the share she inherited and gave up (D-D07 .4) is hers alone"
+  rule base = e2c_by_inheritance and not e2c_for_both
+
+def e2c_gift_jan: money DUK
+  note "what the forgiveness gave Jan (IGT-2 .4: half the amount released, C's release_gift[jan], carried exactly), in whole dukats as the question asks, rounded as IGT-2 .3 rounds a base (GEN-5 .1: under 50 orts down, 50 orts and over up)"
+  rule base = round(release_gift[jan], 1, half-up)
+
+version e2c_no_will
+  cite e2c_d_d04
+  governs always
+  known 2024-10-21
+  e2c_for_both = false "D-D04: the estate of Zbigniew Sowa, who left no will, is inherited by law (CIV-3): no statement of his makes Marta's share for both spouses"
+
+version e2c_notice_c_d30
+  cite e2c_c_d30
+  governs always
+  known 2025-06-16
+  note "C-D30 is issued on 2025-06-16 and states no received date; the stories (E2 and C, 2025-06-16) know the payout that day"
+  e2c_by_inheritance = true "C-D30: to Marta Wrona (née Sowa), heir of 3/16: her payout"
+  e2c_notice_on = 2025-06-16 "C-D30: was paid today from the deposit (issued 2025-06-16)"
+  e2c_notice_paid = 38750.00 DUK "C-D30: her payout of 38 750.00 DUK was paid today from the deposit to her account LN53 6100 3001 0000 2209 5148 0001"
+
+ask e2c_01_marta: e2c_marta_paid, e2c_marta_arrived law 2025-06-30 as known 2026-09-30
+
+ask e2c_01_marta_stated: check e2c_marta_paid == e2c_notice_paid law 2025-06-30 as known 2026-09-30
+
+ask e2c_02_jan_from_marta: marta_gift_day, marta_gift_to_jan, forgiven_on, release_gift[jan], jan_added_up, jan_report_needed, jan_report_by, jan_exempt, jan_gift_tax law 2026-09-30 as known 2026-09-30
+
+ask e2c_02_jan_from_marta_reported: marta_gift_day, marta_gift_to_jan, forgiven_on, release_gift[jan], jan_added_up, jan_report_needed, jan_report_by, jan_exempt, jan_gift_tax with jan_reported = true law 2026-09-30 as known 2026-09-30
+
+ask e2c_02_jan_from_marta_unreported: marta_gift_day, marta_gift_to_jan, forgiven_on, release_gift[jan], jan_added_up, jan_report_needed, jan_report_by, jan_exempt, jan_gift_tax with jan_reported = false law 2026-09-30 as known 2026-09-30
+
+ask e2c_02_stas_from_irena: gift_from, gifts_5y[2026-09], gift_tax[2026-09] law 2026-09-30 as known 2026-09-30
+
+ask e2c_03_loan: loan_principal, e2c_lent_out, owed_forgiven, forgiven_on, release_gift[jan], e2c_gift_jan law 2026-09-30 as known 2026-09-30
+
+ask e2c_03_paid: e2c_marta_paid, e2c_hers_alone law 2026-09-30 as known 2026-09-30

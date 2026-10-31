@@ -1,0 +1,41 @@
+# Round 18, C2-1 (fixed). E §4.2 step 5: "in step 4, the closing pads at the place" are refused (RUN-PLACE) where the
+# closing readings together break the sign rule. As L5_10_sign_rule_close with b's reading at 80.00 PLN: the pads take
+# 30.00 PLN out of y and put 20.00 PLN in, y -10.00 PLN: both pads at y are refused, and the places they touch from
+# there (as E4_2_refused_leg_reads f4; the message lists the pads, L §8.4 `<movement> takes <claim> below 0`).
+=== m.tally
+model t
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+source bk "bank"
+unit PLN: currency minor 0.01
+place a: accounts PLN lives 2026-01-01..
+place b: accounts PLN lives 2026-01-01..
+place y: claims PLN lives 2026-01-01..
+
+ask q: bal(y, 2026-03-31), bal(a, 2026-03-31), bal(b, 2026-03-31)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[a] = 100.00 PLN at 2026-01-01 start
+  opening[b] = 100.00 PLN at 2026-01-01 start
+  opening[y] = 0 PLN at 2026-01-01 start
+
+version st
+  cite bk
+  governs 2026-03
+  known 2026-04-02
+  pad a from y
+  pad b from y
+  stated[a] = 130.00 PLN at 2026-03-31 end
+  stated[b] = 80.00 PLN at 2026-03-31 end
+=== expect
+q: (refused: RUN-PLACE pads:st:a@2026-03-31 end, pads:st:b@2026-03-31 end takes y below 0, refused: RUN-PLACE pads:st:a@2026-03-31 end, pads:st:b@2026-03-31 end takes y below 0, refused: RUN-PLACE pads:st:a@2026-03-31 end, pads:st:b@2026-03-31 end takes y below 0)
+  pad: a 2026-03-31 end, pads:st:a@2026-03-31 end of 30.00 PLN
+  pad: b 2026-03-31 end, pads:st:b@2026-03-31 end of -20.00 PLN
+  cut 2026-06-30

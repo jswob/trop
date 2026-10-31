@@ -1,0 +1,11 @@
+part asks_d05
+  tally 2
+  note "D-05 · Kuba's share, as of and as known 2026-09-30. The exports' problems are found only among the rows records.tally writes: finding them in a whole export needs its import (O:D-1)."
+
+ask d05_duplicate: o.day, o.cash.amount, o.fulfils for o in bank over 2026-02-09 law 2026-09-30
+
+ask d05_missing_fee: fee_out[m].day, fee_out[m].cash.amount for m in fee_month where m >= 2025-07 and m <= 2026-09 and observed(fee_out[m]) == none law 2026-09-30
+
+ask d05_owed: owed_kuba[2026-09-30] law 2026-09-30
+
+ask d05_quarters: q_rent[q], q_costs[q], q_share[q], q_carry[q], q_send[q], q_due[q], (if observed(kuba_send[q]) == none then none else observed(kuba_send[q]).day) for q in quarter law 2026-09-30

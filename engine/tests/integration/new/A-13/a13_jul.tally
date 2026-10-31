@@ -1,0 +1,10 @@
+scenario a13_jul over a13_calc
+  tally 2
+  from 2023-01-01
+  note "A-13 (a): Ania stops working for Kalina from 1 July 2023: no pay for any time from that day, and no plan contributions on it; everything else as it was, unless the law makes it follow (questions.md A-13). The rules are a13_calc's; this layer states the day."
+
+version a13_jul_stop
+  cite questions
+  governs 2023-01-01..
+  known 2023-01-01
+  replace a13_stop = 2023-07-01 "questions.md A-13 (a): from 1 July 2023"

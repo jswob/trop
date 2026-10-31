@@ -1,0 +1,43 @@
+# L §2.1 ("A four-digit literal is a year where a period is expected"), §2.5 (a key-list variable takes its index from
+# its key positions; here it has none) and §4.1: y over [2026, 2027] as a span end is the year.  pay books 10.00 PLN on
+# day 5 of every month into world: flows(world, y) is 12 x 10.00 = 120.00 PLN each year (L §5.14.3), as the literal
+# form q2 gives.  The binding prints its key as written.
+# (Writer 8: L §5.10 refuses a unit stated on a place whose kind isn't of unit one, so `outside PLN` is gone; the place
+# read by flows is now a thing of its own outside kind of one unit, `kind payees: place PLN signed outside`, since
+# flows of a place of unit any is refused, L §5.14.3.)
+=== m.tally
+model m
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2027-12-31
+
+source s "x"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2020-01-01..
+kind payees: place PLN signed outside
+place world: payees lives 1900-01-01..
+input amt: money PLN
+input dom: int
+
+move pay[m in months]: transfers
+  on day_of(m, dom)
+  leg cash from konto to world amount amt
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 10.00 PLN
+  dom = 5
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start
+
+ask q: flows(world, y) for y in [2026, 2027]
+ask q2: flows(world, 2026), flows(world, 2027)
+=== expect
+q (y = 2026): 120.00 PLN
+...
+q (y = 2027): 120.00 PLN
+  cut 2026-10-18
+q2: (120.00 PLN, 120.00 PLN)
+...

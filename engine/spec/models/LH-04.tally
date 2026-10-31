@@ -1,6 +1,8 @@
 model lh04
-  tally 1
+  tally 2
   on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
   note "Polish loss carry-forward, art. 9 ust. 3 ustawy o PIT: up to 50% of a loss in each of the next five tax years, or once up to 5 000 000 zł with the rest capped at 50% a year."
   note "Each loss is a key of lcase, owned by a taxpayer of tp. A year's deduction follows the taxpayer's election for that loss and year (how_el): nothing, a fixed amount, the most under the 50% cap, or the one-off."
   note "A deduction is limited by the income from the same source. The keyed fill use matches, in each year, what each loss's election allows (want) with its taxpayer's income that year, so several losses of one taxpayer share that income. What a loss has left goes to the next year through avail, which reads use[y - 1] by way of left and ded."
@@ -16,6 +18,8 @@ source modeller "The modeller's readings of facts the sources leave open, each s
 source podatnik "Podatnik.info, Rozliczenie straty z giełdy w PIT-38 (datePublished 2024-02-01, dateModified 2025-03-17)" at "https://www.podatnik.info/publikacje/rozliczenie-straty-z-gieldy-w-pit-38,30518b"
 
 source taxmachine "taxmachine.pl, Strata podatkowa: jak odliczyć stratę z lat ubiegłych (datePublished 2026-05-25)" at "https://taxmachine.pl/podatki/strata-podatkowa"
+
+unit PLN: currency minor 0.01
 
 axis c25
   m1 "case C's 60 000 zł in 2025 was deducted under the 50% method, so the one-off is still unused in 2026"
@@ -55,82 +59,82 @@ input src_ok[s in srck]: bool
 
 input window_yrs: int
 
-def avail[l in lcase, y in tyr]: num PLN
-  rule first when pos(y) = 1 = loss_amt[l]
-  rule next when pos(y) > 1 = left[l, y - 1]
+def avail[l in lcase, y in tyr]: num PLN at start_of(y)
+  rule first = loss_amt[l] when pos(y) == 1
+  rule next = left[l, y - 1] when pos(y) > 1
 
-def cap50[l in lcase]: num PLN = loss_amt[l] * half_share
+def cap50[l in lcase]: num PLN = loss_amt[l] * half_share at reader
 
-def ded[l in lcase, y in tyr]: num PLN = sum(t in tp: use[y].taken[l, t])
+def ded[l in lcase, y in tyr]: num PLN = sum(use[y].taken[l, t] for t in tp) at start_of(y)
 
-def how[l in lcase, y in tyr]: key howk
-  rule alt excepts base when how_alt[l, y] != - and c25 = m2 = how_alt[l, y]
+def how[l in lcase, y in tyr]: key howk at start_of(y)
+  rule alt beats base = how_alt[l, y] when how_alt[l, y] != none and c25 == m2
   rule base = how_el[l, y]
 
-def in_window[l in lcase, y in tyr]: bool = y > loss_yr[l] and y <= loss_yr[l] + window_yrs
+def in_window[l in lcase, y in tyr]: bool = y > loss_yr[l] and y <= loss_yr[l] + window_yrs at start_of(y)
 
-def left[l in lcase, y in tyr]: num PLN = avail[l, y] - ded[l, y]
+def left[l in lcase, y in tyr]: num PLN = avail[l, y] - ded[l, y] at start_of(y)
 
-def limit[l in lcase, y in tyr]: num PLN
+def limit[l in lcase, y in tyr]: num PLN at start_of(y)
   rule base = min(avail[l, y], cap50[l])
-  rule oneoff excepts base when how[l, y] = oneoff and not oneoff_before[l, y] = min(avail[l, y], oneoff_cap)
+  rule oneoff beats base = min(avail[l, y], oneoff_cap) when how[l, y] == oneoff and not oneoff_before[l, y]
 
-def oneoff_before[l in lcase, y in tyr]: bool = any(y2 in tyr where y2 < y and in_window[l, y2]: how[l, y2] = oneoff)
+def oneoff_before[l in lcase, y in tyr]: bool = any(how[l, y2] == oneoff for y2 in tyr where y2 < y and in_window[l, y2]) at start_of(y)
 
-def taxable[t in tp, y in tyr]: num PLN = income[t, y] - sum(l in lcase where payer[l] = t: ded[l, y])
+def taxable[t in tp, y in tyr]: num PLN = income[t, y] - sum(ded[l, y] for l in lcase where payer[l] == t) at start_of(y)
 
-def want[l in lcase, y in tyr]: num PLN
+def want[l in lcase, y in tyr]: num PLN at start_of(y)
   rule base = 0
-  rule fixed excepts base, most when in_window[l, y] and how[l, y] = fixed = fixed_amt[l, y]
-  rule most excepts base when in_window[l, y] and how[l, y] != nothing = limit[l, y]
-  rule too_much excepts base, fixed, most when in_window[l, y] and how[l, y] = fixed and fixed_amt[l, y] > limit[l, y] = ? "The elected amount is more than art. 9 ust. 3 allows this year."
+  rule fixed beats base, most = fixed_amt[l, y] when in_window[l, y] and how[l, y] == fixed
+  rule most beats base = limit[l, y] when in_window[l, y] and how[l, y] != nothing
+  rule too_much beats base, fixed, most = ?"The elected amount is more than art. 9 ust. 3 allows this year." when in_window[l, y] and how[l, y] == fixed and fixed_amt[l, y] > limit[l, y]
 
 fill use[y in tyr]
   note "No law states an order among the losses of one taxpayer in one year, so the order is the losses' key order. No asked figure depends on it: only case B has two losses, and its 2026 income covers both."
   supply want[l, y] for l in lcase
   demand income[t, y] for t in tp
-  arc payer[l] = t and in_window[l, y]
-  order l
+  arc payer[l] == t and in_window[l, y]
+  order l ties by (pos(l), pos(t))
 
-ask a_cap50: cap50[la]
+ask a_cap50: cap50[la] law 2026-10-18
 
-ask a_oneoff_2023: ded[la, 2023] with income[ta, 2023] = 10000, how_el[la, 2023] = oneoff
+ask a_oneoff_2023: ded[la, 2023] with income[ta, 2023] = 10000, how_el[la, 2023] = oneoff law 2026-10-18
 
-ask b_from_lb24: max(limit[lb24, 2026] as if {how_el[lb24, 2026] = oneoff}, limit[lb24, 2026] as if {how_el[lb24, 2026] = max50})
+ask b_from_lb24: max(limit[lb24, 2026] as if {how_el[lb24, 2026] = oneoff}, limit[lb24, 2026] as if {how_el[lb24, 2026] = max50}) law 2026-10-18
 
-ask b_from_lb25: max(limit[lb25, 2026] as if {how_el[lb25, 2026] = oneoff}, limit[lb25, 2026] as if {how_el[lb25, 2026] = max50})
+ask b_from_lb25: max(limit[lb25, 2026] as if {how_el[lb25, 2026] = oneoff}, limit[lb25, 2026] as if {how_el[lb25, 2026] = max50}) law 2026-10-18
 
-ask b_total: max((ded[lb24, 2026] + ded[lb25, 2026]) as if {how_el[lb24, 2026] = oneoff, how_el[lb25, 2026] = oneoff}, (ded[lb24, 2026] + ded[lb25, 2026]) as if {how_el[lb24, 2026] = oneoff, how_el[lb25, 2026] = max50}, (ded[lb24, 2026] + ded[lb25, 2026]) as if {how_el[lb24, 2026] = max50, how_el[lb25, 2026] = oneoff}, (ded[lb24, 2026] + ded[lb25, 2026]) as if {how_el[lb24, 2026] = max50, how_el[lb25, 2026] = max50})
+ask b_total: max((ded[lb24, 2026] + ded[lb25, 2026]) as if {how_el[lb24, 2026] = oneoff, how_el[lb25, 2026] = oneoff}, (ded[lb24, 2026] + ded[lb25, 2026]) as if {how_el[lb24, 2026] = oneoff, how_el[lb25, 2026] = max50}, (ded[lb24, 2026] + ded[lb25, 2026]) as if {how_el[lb24, 2026] = max50, how_el[lb25, 2026] = oneoff}, (ded[lb24, 2026] + ded[lb25, 2026]) as if {how_el[lb24, 2026] = max50, how_el[lb25, 2026] = max50}) law 2026-10-18
 
-ask c_oneoff_2026: limit[lc, 2026]
+ask c_oneoff_2026: limit[lc, 2026] law 2026-10-18
 
-ask d_deductible: src_ok[loss_src[ld]] and in_window[ld, 2026]
+ask d_deductible: src_ok[loss_src[ld]] and in_window[ld, 2026] law 2026-10-18
 
-ask d_oneoff_2026: limit[ld, 2026] with how_el[ld, 2026] = oneoff
+ask d_oneoff_2026: limit[ld, 2026] with how_el[ld, 2026] = oneoff law 2026-10-18
 
-ask e_ded: ded[le, y] for y in [2025, 2026, 2027, 2028, 2029]
+ask e_ded: ded[le, y] for y in [2025, 2026, 2027, 2028, 2029] law 2026-10-18
 
-ask e_left: left[le, y] for y in [2025, 2026, 2027, 2028, 2029]
+ask e_left: left[le, y] for y in [2025, 2026, 2027, 2028, 2029] law 2026-10-18
 
-ask e_taxable: taxable[te, y] for y in [2025, 2026, 2027, 2028, 2029]
+ask e_taxable: taxable[te, y] for y in [2025, 2026, 2027, 2028, 2029] law 2026-10-18
 
-ask f_ded: ded[lf, y] for y in [2025, 2026, 2027, 2028]
+ask f_ded: ded[lf, y] for y in [2025, 2026, 2027, 2028] law 2026-10-18
 
-ask f_left: left[lf, y] for y in [2025, 2026, 2027, 2028]
+ask f_left: left[lf, y] for y in [2025, 2026, 2027, 2028] law 2026-10-18
 
-ask f_taxable: taxable[tf, y] for y in [2025, 2026, 2027, 2028]
+ask f_taxable: taxable[tf, y] for y in [2025, 2026, 2027, 2028] law 2026-10-18
 
-ask g_ded: ded[lg, y] for y in [2025, 2026, 2027]
+ask g_ded: ded[lg, y] for y in [2025, 2026, 2027] law 2026-10-18
 
-ask g_left: left[lg, y] for y in [2025, 2026, 2027]
+ask g_left: left[lg, y] for y in [2025, 2026, 2027] law 2026-10-18
 
-ask g_taxable: taxable[tg, y] for y in [2025, 2026, 2027]
+ask g_taxable: taxable[tg, y] for y in [2025, 2026, 2027] law 2026-10-18
 
-ask h_ded: ded[lh, y] for y in [2025, 2026]
+ask h_ded: ded[lh, y] for y in [2025, 2026] law 2026-10-18
 
-ask h_left: left[lh, y] for y in [2025, 2026]
+ask h_left: left[lh, y] for y in [2025, 2026] law 2026-10-18
 
-ask h_taxable: taxable[th, y] for y in [2025, 2026]
+ask h_taxable: taxable[th, y] for y in [2025, 2026] law 2026-10-18
 
 version pit_2018_2244
   cite du2018_2244
@@ -153,6 +157,7 @@ version pit_2023_1059
 
 version mf_strata_2026
   cite mf_strata
+  governs always
   known 2026-10-18
   note "Questions 1 and 2 are about business income (działalność gospodarcza); the fund-units question is about PIT-38 capital income."
   note "The questions are hypothetical: their figures are stipulations, known from the model's on (LANGUAGE §4.5). The page's own dates (published 15.12.2025, updated 16.10.2026) aren't used."
@@ -182,6 +187,7 @@ version mf_strata_2026
 
 version podatnik_2025
   cite podatnik
+  governs always
   known 2026-10-18
   note "Case A: a share loss on the exchange. The source gives no incomes for 2023-2027; its one-off statement is conditional on 2023 income of at least 10 000 zł."
   note "The example is hypothetical: its figures are stipulations, known from the model's on (LANGUAGE §4.5). The page's own dates (published 2024-02-01, modified 2025-03-17) aren't used."
@@ -192,13 +198,15 @@ version podatnik_2025
 
 version readings
   cite modeller
+  governs always
   known 2026-10-18
   note "Readings that stand for the cases' own facts, so they take the stipulations' known date, the model's on (LANGUAGE §4.5)."
-  how_alt = - "an alternative election exists only where a source leaves the method open"
+  how_alt = none "an alternative election exists only where a source leaves the method open"
   how_alt[lc, 2025] = oneoff "reading m2 of question 2 (mf_strata), which doesn't say under which method the 60 000 zł of 2025 was deducted"
 
 version taxmachine_2026
   cite taxmachine
+  governs always
   known 2026-10-18
   note "Cases E to H are business losses (działalność). H is the same Pan Filip as G, with other incomes."
   note "The examples are hypothetical: their figures are stipulations, known from the model's on (LANGUAGE §4.5), and so are the assumed elections of G. The page's own date (published 2026-05-25) isn't used."

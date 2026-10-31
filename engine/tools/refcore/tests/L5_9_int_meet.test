@@ -1,0 +1,27 @@
+# L §5.9: "int arguments are checked over the integers": [0, 4] and [5, 18) meet over the integers.
+# b(4) is the first row, b(5) the second.
+=== m.tally
+model t
+  tally 2
+  on 2016-03-01
+  start 2015-11-01
+  end 2016-10-31
+
+source s "s"
+band b(n: int): int
+input four: int
+input five: int
+
+version v
+  cite s
+  governs 2015-11..
+  known 2015-09-07
+  b: [0, 4] = 1
+  b: [5, 18) = 2
+  four = 4
+  five = 5
+
+ask q1: b(four), b(five) law 2016-01-01
+=== expect
+q1: (1, 2)
+  law date 2016-01-01, cut 2016-03-01

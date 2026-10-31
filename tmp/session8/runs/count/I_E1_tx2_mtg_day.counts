@@ -1,0 +1,45 @@
+argv: run asks/B-01.tally asks/B-02.tally asks/B-03.tally asks/B-04.tally asks/B-05.tally asks/B-06.tally asks/B-07.tally asks/B-08.tally asks/B-09.tally asks/B-10.tally asks/B-11.tally business.tally flat.tally lawrows.tally market.tally ola.tally people.tally places.tally reality.tally records/cis-2025.tally records/lazur-2025.tally records/savings-2025.tally records/wrzos.tally registers.tally rules.
+cwd: /Users/jswob/projects/trop/engine/tests/integration/households/B
+seconds: 82.9
+fast layer: False
+
+act:decday                           5077
+act:imp_on                              3
+act:leg                               572
+act:legq                               58
+act:mark                                6
+act:obs                               485
+act:placehole                           2
+act:read                              263
+acts                                 6466
+arith:*                            105168
+arith:+                            278087
+arith:-                            178530
+arith:/                              2478
+decision_instances                   5077
+def_cell                          1369192
+def_hit                            750591
+def_miss                           618601
+engines                                 2
+ev                               36732758
+legs_booked                          1191
+log_entries                          2589
+money_made                         890835
+num_den1                          1597616
+num_den_decimal6                   419499
+num_made                          2081275
+parts_entries                        2589
+parts_flush                         12571
+read_def                          1370410
+read_input                        3899184
+walk_days                            2498
+walk_days_nonempty                   2498
+walks                                   1
+read_input_distinct               1069201
+def_items_evaluated                    78
+
+def misses by item (top 8): [('ov_on', 42350), ('mtg_bal', 37504), ('principal_on', 37459), ('ov_fee', 37459), ('mtg_cum_int', 35907), ('mtg_day_int', 35865), ('last_event', 32735), ('period_of', 28609)]
+memo entries at end, all engines: 623980 by kind {'def': 618601, 'fill': 5379}
+walk spans (days): n 1, min 2497, median 2497, max 2497, sum 2497
+decision strata per day with decisions: {2: 2417, 3: 81}
+Num results by max bit length: {'<=63': 2079582, '>4096': 1109, '<=4096': 584}; max 5049 bits

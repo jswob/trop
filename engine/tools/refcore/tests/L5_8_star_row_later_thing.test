@@ -1,0 +1,33 @@
+# Round 17, L §5.8: "A row x[*] = v states every key of x that exists at its version's known (§5.6). A key that a
+# later version brings needs its own row, since a version speaks as of its known". A thing entering persons in v2
+# (known 2026-06-01) isn't covered by v1's x[*] = 1 (known 2026-01-01): x[jan] has no row, a hole by the gap rule
+# (L §4.6); x[ola] is 1. L4_6_closed_world checks the same for an index's key.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+kind persons
+input x[p in persons]: int
+
+version v1
+  cite s
+  governs always
+  known 2026-01-01
+  persons + [ola] lives 1990-01-01..
+  x[*] = 1
+
+version v2
+  cite s
+  governs always
+  known 2026-06-01
+  persons + [jan] lives 1990-01-01..
+
+ask q1: x[ola], x[jan] law 2026-07-01
+=== expect
+q1: (1, ?"x at jan: no value at 2026-07-01" (x[jan]))
+  law date 2026-07-01, cut 2026-12-31

@@ -1,0 +1,55 @@
+# L §5.14.3: "Settlements are never measured. A move that binds over adjustments settles a change; a later version
+# reaches what it settles through a new adjustment of the original instance, never by measuring the settlement, so
+# the instance graph stays acyclic (P-8; ENGINE.md §5 step 2)". arr settles pay's adjustment by v2 (100.00 PLN); v3,
+# known after arr's day, changes arr's amount (extra), yet no adjustment of arr is made: one adjustment, of pay, with
+# change 100.00 PLN (the reality of L5_14_3_settle_adjusts_ends with extra added).
+=== m.tally
+model m
+  tally 2
+  on 2026-02-28
+  start 2026-01-01
+  end 2026-03-31
+unit PLN: currency minor 0.01
+kind pays: event certain
+  leg cash: PLN
+place konto: accounts PLN lives 2026-01-01..
+place zus: outside lives 2026-01-01..
+input amt: money PLN
+input extra: money PLN
+input ok: bool
+input d1: date
+input d2: date
+move pay: pays
+  on d1
+  when ok
+  leg cash from zus to konto amount amt
+move arr[a in adjustments on d2 where a.adjusts in pays]: pays
+  on d2
+  at a.day
+  leg cash from a.adjusts.cash.from to a.adjusts.cash.to amount max(a.change, 0) + extra
+  fulfils a
+source s "x"
+version v1
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 100
+  extra = 0
+  ok = false
+  d1 = 2026-01-05
+  d2 = 2026-02-10
+  opening[konto] = 0 at 2026-01-01 start
+version v2
+  cite s
+  governs always
+  known 2026-02-10
+  replace ok = true
+version v3
+  cite s
+  governs always
+  known 2026-02-20
+  replace extra = 5
+ask n: count(true for a in adjustments over 2026), sum(a.change for a in adjustments over 2026) law cut
+=== expect
+n: (1, 100.00 PLN)
+  law date 2026-02-28, cut 2026-02-28

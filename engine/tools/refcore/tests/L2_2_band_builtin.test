@@ -1,0 +1,11 @@
+# L §2.2: a band "may not" take a built-in name, "since it is also called with (" (LOAD-DUP); L §8.3 "band <b> has a built-in's name".
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+band round(n: int): int
+=== expect
+refused: LOAD-DUP ...

@@ -1,0 +1,64 @@
+# L §6.1 The joint model's own movements (SF-32): "it is booked there only where same or fulfils links it to the member's
+# own movement there. Otherwise it is not booked there. A read of that place in the joint model from the movement's
+# day until the member's next reading of the place, a balance included, is a hole naming it ...; from that reading
+# on, the reading states the balance ... Every result that reads the place on or after the movement's day lists it
+# under left out:".  The migrator's F-j (t9/J against t9/K): the joint's own row fb[f1], of the same amount as the member's own row (100.00 DUK), goes into a.sav,
+# which the member's version covers and anchors (100.00 DUK at 2025-12-31 end), with no same and no fulfils.  As K
+# (the member only pads): 2025-10-01 is the hole naming fb[f1], 2025-12-31 the reading's 100.00 DUK, fb[f1] listed.
+# Before: fb[f1] dropped in silence (an end at a place another version covers is not booked from it, and the SF-32
+# hole went with it): both reads 100.00 DUK and no left out: line.
+=== J/j.tally
+model fam
+  tally 2
+  on 2026-01-15
+  start 2025-01-01
+  end 2026-12-31
+  use a = "../M" sha256 "c13cc94599f2578b0203d1f70e0ce736f2b692e2ff8f7932c1734f58e702b146"
+
+source fsrc "test"
+
+input fb: observed
+
+ask j1: bal(a.sav, 2025-12-31), bal(a.sav, 2025-10-01) law 2026-01-15 as known 2026-01-15
+
+version f
+  cite fsrc
+  governs 2025-06..2025-12
+  known 2026-01-15
+  fb[f1] = (on: 2025-06-16, kind: transfers, leg cash from a.world to a.sav amount 100.00 DUK) "f1"
+=== M/m.tally
+model m
+  tally 2
+  on 2026-01-15
+  start 2025-01-01
+  end 2026-12-31
+
+source src "test"
+
+unit DUK: currency minor 0.01
+
+place sav: accounts DUK lives 2025-01-01..
+
+place world: outside lives 2000-01-01..
+
+input sb: observed
+
+version open
+  cite src
+  governs always
+  known 2025-01-01
+  opening[sav] = 0 at 2025-01-01 start
+
+version s
+  cite src
+  governs 2025-06..2025-12
+  known 2026-01-15
+  covers sav
+  anchor sav
+  sb[s1] = (on: 2025-06-16, kind: transfers, leg cash from world to sav amount 100.00 DUK) "s1"
+  stated[sav] = 100.00 DUK at 2025-12-31 end "last"
+=== expect
+j1: (100.00 DUK, ?"fb[f1] crosses to a with no link" (fb[f1]))
+  anchor: a.sav 2025-12-31 end, stated 100.00 DUK, difference ?"fb[f1] crosses to a with no link" (fb[f1])
+  left out: fb[f1], 1 instances, first 2025-06-16
+  law date 2026-01-15, cut 2026-01-15

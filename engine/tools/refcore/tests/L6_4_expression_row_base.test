@@ -1,0 +1,25 @@
+# L §2.3 (round 8) `row = qid [rowkeys] "=" (value | expr) rowmeta`, "expr: only in a scenario's version, §6.4,
+# LOAD-SCENARIO otherwise"; L §6.4 "A scenario row may be an expression over the base's facts". In the base's
+# version it is refused LOAD-SCENARIO, with L §8.3's message (round 9) "an expression row outside a scenario".
+=== m.tally
+model m
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+input a: num PLN
+input b: num PLN
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  a = 1.00 PLN
+  b = a * 2
+
+ask q: b
+=== expect
+refused: LOAD-SCENARIO an expression row outside a scenario (m.tally:17)

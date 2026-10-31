@@ -1,0 +1,42 @@
+# MC-X-F12 (writer 9): a move with no at reads a band whose rows govern always (L §4.3: not law-dated; "A
+# movement's law date is its at, required whenever the move reads anything law-dated"). pay books rate(3) =
+# 400.00 PLN on 2027-02-01 into konto, from 0 PLN at the opening.
+=== m.tally
+model p
+  tally 2
+  on 2027-12-31
+  start 2027-01-01
+  end 2027-12-31
+
+unit PLN: currency minor 0.01
+source act "the act"
+place konto: accounts PLN lives 2020-01-01..
+place world: outside lives 1900-01-01..
+
+input age3: int
+input pay_day: date
+band rate(a: int): money PLN
+
+move pay: transfers
+  on pay_day
+  leg cash from world to konto amount rate(age3)
+
+ask q: bal(konto, 2027-12-31)
+
+version v_act
+  cite act
+  governs always
+  known 2026-12-01
+  rate: [0, 6) = 400.00 PLN "under 6"
+  rate: [6, 18) = 250.00 PLN "6 to 17"
+
+version v_f
+  cite act
+  governs always
+  known 2026-12-01
+  age3 = 3 "the age"
+  pay_day = 2027-02-01
+  opening[konto] = 0 PLN at 2027-01-01 start
+=== expect
+q: 400.00 PLN
+...

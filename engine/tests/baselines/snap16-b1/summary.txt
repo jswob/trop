@@ -1,0 +1,5 @@
+hardset/modeller-b1/I-6/model.tally rc=0 sec=110 lines=83 notyet=0 unspec=0 refused=0
+hardset/modeller-b1/I-7/model.tally rc=0 sec=4 lines=124 notyet=0 unspec=0 refused=0
+hardset/modeller-b1/I-8/model.tally rc=0 sec=0 lines=256 notyet=0 unspec=0 refused=0
+hardset/modeller-b1/I-9/model.tally rc=0 sec=0 lines=111 notyet=0 unspec=0 refused=0
+hardset/modeller-b1/I-10/model.tally rc=0 sec=0 lines=13 notyet=0 unspec=0 refused=1
