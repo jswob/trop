@@ -1,9 +1,0 @@
-part asks_b11
-  tally 1
-  note "Question B-11 (tmp/cases/B/questions.md)."
-
-ask b11_flat: flat_costs[2025], flat_costs[2025] - ola_paid_flat[2025], ola_paid_flat[2025], flat_costs[2025] - ola_share_flat[2025], ola_share_flat[2025], ola_owes_piotr[2025] with law 2025-12-31 as known 2026-01-07
-
-ask b11_worth: worth_piotr[2025-12-31], worth_ola[2025-12-31], worth_piotr[2025-12-31] + worth_ola[2025-12-31] with law 2025-12-31 as known 2026-01-07
-
-ask b11_worth_known: worth_piotr[2025-12-31], worth_ola[2025-12-31] - bal(wrzos, 2025-12-31) with law 2025-12-31 as known 2026-01-07

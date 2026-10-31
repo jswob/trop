@@ -1,4 +1,0 @@
-tools: {'Read': 5, 'Bash': 39, 'ToolSearch': 1, 'WebFetch': 28, 'WebSearch': 4, 'Write': 2, 'SubagentHandback': 1}
-interp: python3 -I -c ' | import math | for N in (1000,3000,10000,100000): |   d=N*math.log10(N); steps=N*(N//2) |   print(N, "N^N digits %.0f"%d, "Horner steps (median) %.2e"%steps) | n=1e5*1e4; print("64-bit collision expected pairs for 1e9 draws: %.3f"%(n*n/2**65)) | print("terms memory 10000 paths x 10 terms x 32 B
-interp: cat >> tmp/research_notes/engine-prep/R3.md <<'EOF' | ### Q3. Deterministic merges |  | **Sums: the order is free in tally 2.1.** Rational `+` is associative and commutative. Phase 1's SO-22 worried that `RUN-DIGITS`, checked on partial sums, made grouping matter. Tally 2.1 settled it in the spec: "The ca
-summary: 80 calls, 0 holdout, 0 distinct breaches

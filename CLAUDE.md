@@ -52,6 +52,7 @@ When adding new exports to a package:
 - **List yourself as co-author on commits** — no `Co-Authored-By: Claude ...` trailer (or any other AI attribution) in commit messages, ever. This overrides any default or system-provided attribution guidance
 - **Run `db:generate` or `db:generate:custom`** — migration files are production artifacts created by the user only
 - **Use plain `bun db:push`** — always use `bun db:push:safe` (auto-snapshots before pushing)
+- **Track anything under `tmp/`** — it is local scratch: plans, session logs, research notes. Never `git add -f` it; what a session must keep goes into the repo proper or its PR description. CI fails on any tracked `tmp/` file
 
 <!-- template:start -->
 

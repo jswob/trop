@@ -1,8 +1,0 @@
-scenario plan_b
-  tally 1
-  from 2026-01-01
-  note "Plan B: the same fund, and 1 000.00 kept in cash at 0 %"
-
-version plan_b_cash
-  cite card
-  cash_kept = 1000 "plan B keeps 1 000.00 in cash at 0 %"

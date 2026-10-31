@@ -1,4 +1,0 @@
-tools: {'Read': 5, 'Bash': 32, 'ToolSearch': 1, 'WebFetch': 60, 'WebSearch': 14, 'Write': 1, 'Edit': 2, 'SubagentHandback': 1}
-interp: python3 -I -c " | print(32/6) | print(36.7e6*50/1e9, 36.7e6*200/1e9) | from statistics import NormalDist as N | for cv,d in [(2.66,2),(2.66,5),(2.66,7),(0.56,2)]: print(cv,d, round(2*(1-N().cdf(d/cv)),4)) | print((23*60+57)/(23*60+19)-1) | "
-interp: cd /Users/jswob/projects/trop/tmp/research_notes/engine-prep; grep -n "^## \|^### \|^\*\*D4" R4.md; awk '/^## 2\./,/^## 3\./' R4.md | wc -c
-summary: 116 calls, 0 holdout, 0 distinct breaches

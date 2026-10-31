@@ -1,8 +1,0 @@
-scenario inpath
-  tally 1
-  from 2025-01-01
-  note "RULE-09 part b: D-3 written inside one path's run. share over path outside an ask is LOAD-ASKONLY, so this scenario is refused at load and the reality still runs."
-
-def stop_in_path[p in path]: bool = share(q in path: ruined[q]) > limit
-
-ask q_b: stop_in_path[1] with scenario inpath paths 5 seed 1

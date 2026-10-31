@@ -1,6 +1,0 @@
-candidates   calls   1578076 distinct      649
-read_input   calls   1578076 distinct   514933
-
-read_input callers:
-   1578086 ok
-   1578086 ri:126

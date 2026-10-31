@@ -1,8 +1,0 @@
-DIFFER pypy+fast I:E1:tx2_cis_explain: blocks differ: tx2_cis_explain | inputs older than the baseline
-| layer | runtime | checks | same | differ | over | killed | known fault | fixed | ran (J marks) | cached | not run | wall s | pypy≠cpython |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| interpreter | pypy+fast | 1 | 1 | 0 | 0 | 0 | 0 | 0 | 0 | 1 | 0 | 0 |  |
-| unit | pypy+fast | 116 | 115 | 0 | 0 | 0 | 0 | 0 | 1 | 116 | 0 | 0 |  |
-| integration | pypy+fast | 452 | 359 | 1 | 6 | 0 | 1 | 0 | 0 | 300 | 85 | 240 |  |
-
-total wall 240 s, 2026-10-29 18:35, budget 60 s, jobs 3

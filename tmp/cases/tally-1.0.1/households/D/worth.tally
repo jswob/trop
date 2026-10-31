@@ -1,5 +1,0 @@
-part worth
-  tally 1
-  note "D-08: what Halina has, as D-HR4 counts it. The house ul. Leśna 4 counts once valued (D-HR4 .4); it never has been, so its value has no row."
-
-input house_value: money DUK question "What is the house ul. Leśna 4 worth? It has never been valued (D-HR4 .4)."

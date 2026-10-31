@@ -1,7 +1,0 @@
-part asks_a11
-  tally 1
-  note "A-11 · What we're worth (questions.md): at the end of 2025, as known 2026-01-15, counting by A-HR5 (worth.tally). The Lazur rate from 2025-07-01 is a hole, so the plain ask is a hole; the second ask pins it at 0 to show the rest (a partial value, the interest left out)."
-
-ask a11: nw_person[ania], nw_person[tomek], nw_household as known 2026-01-15
-
-ask a11_no_lazur_interest: nw_person[ania], nw_person[tomek], nw_household with laz_rate = 0 as known 2026-01-15

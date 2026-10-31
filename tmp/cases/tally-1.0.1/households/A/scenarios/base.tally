@@ -1,9 +1,0 @@
-scenario base
-  tally 1
-  from 2026-01-01
-  over forecast
-  note "Path base: every fund's price +0.40 % a month (story § The forecast, item 3)."
-
-version path_base
-  cite story
-  path_rate[2026-01..2035-12] = 0.004 "story § The forecast, item 3: base +0.40 % a month"

@@ -334,7 +334,7 @@ The four files Prettier still flags are outside `engine/` and fail on `master` t
 
 ## 3. The user's answers at both gates, and after
 
-**Gate 1, the rulebook (2026-10-22).** The user answered group by group. Each of the 113 rows holds its answer, dated, in `tmp/research_notes/engine-rust-strictness/RULEBOOK.md`. Their words:
+**Gate 1, the rulebook (2026-10-22).** The user answered group by group. Each of the 113 rows holds its answer, dated, in `engine/RULEBOOK.md`. Their words:
 
 - Group 1 (panics): "keep all, ban debug_assert, abort on crash". R-4 also bans the `debug_assert*` macros, and R-9 aborts on a crash, with no catching.
 - Group 2 (numbers): first a question: how is an exchange rate handled when floats are forbidden? Answer: it is entered as a decimal and held exactly as a rational number, since the spec has no float. Then: "keep all of group 2".

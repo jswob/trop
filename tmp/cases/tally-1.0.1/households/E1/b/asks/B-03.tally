@@ -1,9 +1,0 @@
-part asks_b03
-  tally 1
-  note "Question B-03 (tmp/cases/B/questions.md)."
-
-ask b03_invoices: rev_flr[j], vat_flr[j], fate[j], duk_got[j], credited[j] for j in inv_flr where year_of(sale_flr[j].issued) = 2025 with law 2025-12-31 as known 2026-01-07
-
-ask b03_lazur: bal(b_lazur, 2025-12-31), round(bal(b_lazur, 2025-12-31) * hr4_fx[2025-12-31], 0.01, half-up) with law 2025-12-31 as known 2026-01-07
-
-ask b03_november: bal(inv_owed_flr[fv_026_2025], 2025-11-30), round(bal(inv_owed_flr[fv_026_2025], 2025-11-30) * hr4_fx[2025-11-30], 0.01, half-up), bal(inv_owed_flr[fv_026_2025], 2025-12-31), round(bal(inv_owed_flr[fv_026_2025], 2025-12-31) * hr4_fx[2025-12-31], 0.01, half-up) with law 2025-12-31 as known 2026-01-07

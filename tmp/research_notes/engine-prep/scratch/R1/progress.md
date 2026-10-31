@@ -1,7 +1,0 @@
-# R1 progress
-- 21:41 started; read common, brief, shape, PERF §1-4,7,8,10, ENGINE §2-5,7,9, LANGUAGE §1,4.6,5.14.1-2,6.1,6.4, BUILD-NOTES, BUILDER §3-5, NOTE §1,§3, RULEBOOK grep (R-1,R-16,R-36,R-37,R-42,R-52,R-58), HANDOVER layout, datalog-incremental §3-5.
-- Key constraints: R-36 no HashMap (BTreeMap or insertion-ordered w/ reason); R-37 bans hashbrown/ahash/rustc-hash/fxhash/foldhash/dashmap in shipped lib; R-42 threads only std::thread::scope; R-52 allow-list; R-16 counted depth, no stacker; BUILDER §4 explicit work stack.
-- Next: web: salsa (version, deps, docs), r-a memory, DD/DDlog/ascent, IronCalc, Excel recalc, cedar evaluator, interpreter forms.
-- 21:5x web done (~38 calls): salsa 0.28.5 (2026-09-24) deps hashbrown, rustc-hash, parking_lot, crossbeam, boxcar...; Memo 5 usize, header 4 usize; LRU keeps deps; r-a durability saves ~300ms; r-a GC vs interning 648MB; hackmd LRU churn note; DDlog archived banner "Jul 13, 2026"?; ascent 0.8.1 macros; DD 0.25.1 230us/update 15.5s load; IronCalc 0.9.1 full recalc, recursive, depth 64 + 256KB stack measure + replay; Excel dirty+calc chain; cedar-policy-core 4.14.0 recursive tree walk, stacker::remaining_stack 100KB; Mitchell 2020 AST 2.1s/closures 1.4s/bytecode 1.5s; Larose OOPSLA'23 AST~bytecode; Time Warp checkpoint interval lit.
-- Next: arithmetic, then write R1.md sections.
-- 21:51 R1.md complete,    33010 bytes; handback next

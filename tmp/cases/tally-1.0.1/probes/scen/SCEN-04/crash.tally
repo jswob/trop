@@ -1,8 +1,0 @@
-scenario crash
-  tally 1
-  from 2026-10-25
-  note "The named path 'crash': -50 % in year 2, the base 5 % in every other year."
-
-version crash_rows
-  cite paths
-  ret[2] = -0.5 "-50 % in year 2"

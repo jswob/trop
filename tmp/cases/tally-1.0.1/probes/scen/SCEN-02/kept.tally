@@ -1,8 +1,0 @@
-scenario kept
-  tally 1
-  from 2024-09-15
-  note "Had they kept the car: a branch from the sale's day."
-
-version kept_car
-  cite what_if
-  sold = false "the car is kept: no sale, and none of what needs the sale"

@@ -1,9 +1,0 @@
-part asks_d08
-  tally 1
-  note "D-08 · What Halina has, as of 2025-12-31, as known 2026-01-07. The house has no value, so the total is a hole; the second ask is the part that is known."
-
-ask d08_parts: bal(konto, 2025-12-31), bonds_net[2025-12-31], keep_value, sio_owes[2025-12-31], -owed_kuba[2025-12-31], -rent_adv[2025-12], -pen_due[2025], house_value as known 2026-01-07
-
-ask d08_net_worth: bal(konto, 2025-12-31) + bonds_net[2025-12-31] + keep_value + sio_owes[2025-12-31] - owed_kuba[2025-12-31] - rent_adv[2025-12] - pen_due[2025] + house_value as known 2026-01-07
-
-ask d08_known_part: bal(konto, 2025-12-31) + bonds_net[2025-12-31] + keep_value + sio_owes[2025-12-31] - owed_kuba[2025-12-31] - rent_adv[2025-12] - pen_due[2025] as known 2026-01-07

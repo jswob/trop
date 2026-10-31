@@ -1,5 +1,0 @@
-part asks_a02
-  tally 1
-  note "A-02 · 2022 as it looked in May (questions.md): as of 2022-12-31, known as of 2022-05-31. No yearly information has arrived, so each payer's year is computed from the payroll; PIT-3 v3 (known 2022-06-14) isn't known, so v2 governs the year. result: positive payable, negative a refund."
-
-ask a02: joint_tax[2022], adv_p[ania, 2022] + adv_p[tomek, 2022], together_joint[2022] as known 2022-05-31

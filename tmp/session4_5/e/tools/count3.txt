@@ -1,7 +1,0 @@
-candidates   calls    436700 distinct     9321
-read_def     calls   1446803 distinct   690582
-read_input   calls    442676 distinct     9345
-row_matches  calls  12321932 distinct   165616
-
-read_input callers:
-    442676 read:755

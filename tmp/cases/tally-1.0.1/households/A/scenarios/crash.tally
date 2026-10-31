@@ -1,9 +1,0 @@
-scenario crash
-  tally 1
-  from 2026-01-01
-  over base
-  note "Path crash: the base, but −50 % on 2027-03-31 (story § The forecast, item 3)."
-
-version path_crash
-  cite story
-  path_rate[2027-03] = -0.50 "story § The forecast, item 3: crash, −50 % on 2027-03-31"

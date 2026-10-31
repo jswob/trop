@@ -1,9 +1,0 @@
-scenario no_overpay
-  tally 1
-  from 2026-01-26
-  note "B-HR3: nothing overpaid from 2026-01-26; all of the surplus to savings."
-
-version stopped
-  cite b_house_rules
-  known 2026-01-02
-  hr2_cap = 0.00 governs 2026-01-26..2028-12-31 "B-HR3"

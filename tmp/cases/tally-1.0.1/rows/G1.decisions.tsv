@@ -1,6 +1,0 @@
-O:TIME-02-1	can't express		supervisor (status set: W-G1 gave none)
-O:TIME-03-1	awkward		supervisor (status set: W-G1 gave none)
-O:ASK-03-1	awkward		supervisor (status set: W-G1 gave none)
-O:ASK-04-1	awkward		supervisor (status set: W-G1 gave none)
-S:101	breaks		supervisor (status set; checked L:218, L:268)
-S:102	breaks		supervisor (status set; checked L:1040, L §2.4)

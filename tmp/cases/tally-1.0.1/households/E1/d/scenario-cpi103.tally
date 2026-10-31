@@ -1,8 +1,0 @@
-scenario cpi103
-  tally 1
-  from 2026-09-01
-  note "D-11's own assumption: each CPI-YY not published by 2026-09-30 is taken as 103."
-
-version cpi103_rows
-  cite d_modeller
-  cpi_yy = 103 assumed "D-11: a CPI-YY not published by 2026-09-30 taken as 103" governs 2026-09..2064-12

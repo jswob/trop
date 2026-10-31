@@ -1,5 +1,0 @@
-# REC-05 · step map (text: probes/rec/REC-05.tally)
-
-step 1 · gross giving the net: every cent within 50.00 of 6500.00 = [6500.00] · lines 23–34, 36, 40, 45, 50, 55–58 · L §5.16 (`solve`: grid bisection; also allowed in a rule with `v`), L §5.10 (`missing()` in a cited rule; `as if` pins; `count`), L §7.2 · same: `gross_in` is a `?` row, so rule `inferred` applies and solves net_calc = 5148.00 on [6000, 7000] by 0.01; F(6000) = −396, F(7000) = +396, and the first midpoint 6500.00 gives F = 0, so the answer is 6500.00; `unique` counts the cents 6450.00–6550.00 whose net is 5148.00: 1
-ask returns: value with a register entry, plus a hole · `q` prints 6500.00 DUK with `missing record counted by card_rules` (the "inferred" mark and the missing payslip); `payslip` prints the hole with the payslip's question. The key's partial is split over two asks (no partial kind, L §8; lesson 5). The card's rule 2 names no method, and L §5.16 allows `solve` in a rule whose source names one
-checks: parsecheck ok · loadcheck ok

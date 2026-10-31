@@ -1,6 +1,6 @@
 # The engine's scaffold
 
-What the scaffold sets up around the engine, before a line of it is written: the Cargo workspace and its stubs, the lints and bans, the guard, the checks, and CI. It was built in phase 1 from the brief `tmp/active/engine-scaffold.md` (C, revised at gate 2 on 2026-10-22) and the rulebook the user approved at gate 1 (`tmp/research_notes/engine-rust-strictness/RULEBOOK.md`). `SCAFFOLD-REPORT.md` holds the checks and their output.
+What the scaffold sets up around the engine, before a line of it is written: the Cargo workspace and its stubs, the lints and bans, the guard, the checks, and CI. It was built in phase 1 from the brief `tmp/active/engine-scaffold.md` (C, revised at gate 2 on 2026-10-22) and the rulebook the user approved at gate 1 (`engine/RULEBOOK.md`). `SCAFFOLD-REPORT.md` holds the checks and their output.
 
 Every crate is a stub: `parse` and every CLI command answer "not implemented". Nothing here reads Tally's syntax. The scaffold encodes principles and gates: exact numbers, determinism, no crash, the DONE gates, the guard.
 
