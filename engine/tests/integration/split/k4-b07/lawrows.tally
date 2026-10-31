@@ -1,0 +1,80 @@
+part law_rows
+  tally 2
+  note "Figures the shared law parts state only in their notes, as literals tally 1.0.1 allowed inline: days of the month, months and stage lengths. Under tally 2's literal rule (L §7.1) each is a row with its source; they are written here, citing each act's own source and known on the act's day, so the shared law files stay as other households load them. They belong in the law parts."
+
+input mot2_months: int question "Into how many parts is the yearly road tax refunded by month (MOT-2 .3: 1/12 a month)?"
+
+input pit10_adv_dom: int question "By which day of the next month is a month's advance paid (PIT-10 .5)?"
+
+input pit11_months: int question "Into how many monthly parts is a year's depreciation split (PIT-11 .2: 1/12 of it for each month)?"
+
+input pit4_months: int question "Into how many parts is the yearly reducing amount split for each month's advance (PIT-4 .2: 1/12)?"
+
+input soc3_pay_dom: int question "By which day of the next month are a month's social contributions paid (SOC-3 .6)?"
+
+input soc3_stage1_months: int question "For how many months after the starting month does stage 1 run (SOC-3 .1)?"
+
+input soc3_stage2_months: int question "How many months does stage 2 run (SOC-3 .2)?"
+
+input soc4_pay_dom: int question "By which day of the next month is a month's health contribution paid (SOC-4 .4)?"
+
+input soc4_settle_dom: int question "By which day of the settlement month is the year's health contribution settled (SOC-4 .5)?"
+
+input soc4_settle_month: int question "In which month of the next year is the year's health contribution settled (SOC-4 .5)?"
+
+input vat4_dom: int question "By which day of the next month is a month's VAT return filed and paid (VAT-4 .1)?"
+
+version soc3_figures
+  cite soc_3
+  governs 2018-01-01..
+  known 2017-09-01
+  soc3_pay_dom = 20 "SOC-3 v1 .6: paid by the 20th of the next month"
+  soc3_stage1_months = 6 "SOC-3 v1 .1: to the end of the 6th month after the starting month"
+  soc3_stage2_months = 24 "SOC-3 v1 .2: the next 24 months"
+
+version soc4_figures
+  cite soc_4
+  governs 2022-01-01..
+  known 2021-11-15
+  soc4_pay_dom = 20 "SOC-4 v1 .4: paid by the 20th of the next month"
+  soc4_settle_dom = 20 "SOC-4 v1 .5: settled by 20 April of the next year"
+  soc4_settle_month = 4 "SOC-4 v1 .5: settled by 20 April of the next year"
+
+version pit10_figures
+  cite pit_10
+  governs 2018-01-01..
+  known 2017-09-01
+  pit10_adv_dom = 20 "PIT-10 v1 .5: advances by the 20th of the next month"
+
+version pit11_figures
+  cite pit_11
+  governs 2018-01-01..
+  known 2017-09-01
+  pit11_months = 12 "PIT-11 v1 .2: 1/12 of it for each month"
+
+version pit4_figures
+  cite pit_4
+  governs 2018-01-01..
+  known 2017-09-01
+  pit4_months = 12 "PIT-4 v1 .2: less 1/12 of the reducing amount"
+
+version mot2_figures
+  cite mot_2
+  governs 2018-01-01..
+  known 2017-09-01
+  mot2_months = 12 "MOT-2 v1 .3: 1/12 of the yearly tax for each whole month"
+
+version vat4_figures
+  cite vat_4
+  governs 2018-01-01..
+  known 2017-09-01
+  vat4_dom = 25 "VAT-4 v1 .1: by the 25th of the next month"
+
+version holidays_2027_2029
+  cite gen_1
+  governs 2027..2029
+  known 2024-06-18
+  note "GEN-1 v2 .2 fixes the holidays every year (with 23 June from 2025); Spring Day is a Monday in April set by each year's notice (GEN-1 .3), not yet published for 2027 and 2028, so it is one of that April's Mondays (L §4.2: an added day may be a window). The forecast (B-12) reads 2027 and 2028; payments for December 2028 fall in 2029."
+  holidays = calendar(weekends [sat, sun], yearly [01-01, 01-06, 05-01, 05-03, 06-23, 08-15, 11-01, 11-11, 12-25, 12-26], added [one_of([2027-04-05, 2027-04-12, 2027-04-19, 2027-04-26])]) governs 2027 "GEN-1 v2 .2, .3"
+  holidays = calendar(weekends [sat, sun], yearly [01-01, 01-06, 05-01, 05-03, 06-23, 08-15, 11-01, 11-11, 12-25, 12-26], added [one_of([2028-04-03, 2028-04-10, 2028-04-17, 2028-04-24])]) governs 2028 "GEN-1 v2 .2, .3"
+  holidays = calendar(weekends [sat, sun], yearly [01-01, 01-06, 05-01, 05-03, 06-23, 08-15, 11-01, 11-11, 12-25, 12-26], added [one_of([2029-04-02, 2029-04-09, 2029-04-16, 2029-04-23, 2029-04-30])]) governs 2029 "GEN-1 v2 .2, .3"

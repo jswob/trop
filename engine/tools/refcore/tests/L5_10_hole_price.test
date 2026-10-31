@@ -1,0 +1,49 @@
+# L §5.10 Value: "A position with no price on d is a hole naming it and the price (HOLE-PRICE), never left in
+# its own unit."  broker (a brokerage, unit any) receives 100.00 EUR on 2026-03-02; the price input states
+# pxp[EUR] = none, so value(broker, 2026-06-30) in PLN by pxp is a hole; question from the L §8.1 table:
+# `<unit> has no price in <CUR> on <d>`.
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+
+kind brokerages: place any min 0
+kind fx_buys: event certain
+  leg eur: EUR
+  leg cash: PLN
+
+input pxp[u in currencies]: num PLN/u
+input buy_day: date
+input eur_amt: money EUR
+input pln_amt: money PLN
+
+place konto: accounts PLN lives 2026-01-01..
+place eurkonto: accounts EUR lives 2026-01-01..
+place market: outside lives 1900-01-01..
+
+move buy: fx_buys
+  on buy_day
+  leg eur from market to broker amount eur_amt
+  leg cash from konto to market amount pln_amt
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  brokerages + [broker] lives 2026-01-01..
+  pxp[EUR] = none
+  buy_day = 2026-03-02
+  eur_amt = 100.00 EUR
+  pln_amt = 425.00 PLN
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "wyciąg"
+
+ask hp: value(broker, 2026-06-30) in PLN by pxp
+=== expect
+hp: ?"EUR has no price in PLN on 2026-06-30" (pxp[EUR])
+  cut 2026-01-01

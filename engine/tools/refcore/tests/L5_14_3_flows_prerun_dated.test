@@ -1,0 +1,41 @@
+# GD-5 (round 19, writer 10): E §2 "`flows` over days before S is a hole whatever is dated there (HOLE-PRERUN,
+# above)"; E §4.1 step 3 "dated outside [S, E]: kept for bindings, and after E for `flows` (`flows` over days before S
+# is HOLE-PRERUN, §2)". gift[2025-12] is dated 2025-12-10, before S: flows over December 2025, and over a span from
+# then into the run, are the hole `before the run's start`.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+kind gifts: event certain
+  leg cash: PLN
+index mm = month 2025-11..2026-02
+place konto: accounts PLN lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input dom: int
+
+move gift[m in mm]: gifts
+  on day_of(m, dom)
+  at start_of(m)
+  leg cash from world to konto amount amt
+
+version v
+  cite s
+  governs always
+  known 2025-01-01
+  amt = 100.00 PLN
+  dom = 10
+  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
+
+ask pre: flows(konto, 2025-12-01 .. 2025-12-31)
+ask mix: flows(konto, 2025-12-01 .. 2026-01-31)
+=== expect
+mix: ?"before the run's start" (konto)
+  cut 2026-12-31
+pre: ?"before the run's start" (konto)
+  cut 2026-12-31

@@ -1,0 +1,54 @@
+a13_b_sale (s = a13b_sale) [px_round = *]: (2023-12-15, 200 glb, 37 546.00 DUK, 0.00 DUK)
+  assumed: the question states no rounding of price times units; a price to 2 places times whole units is a whole number of orts, so no mode changes it (a13b_round)
+  world: a13_jul_sale
+  law date 2025-04-30, cut 2025-04-30
+a13_b_lots (s = a13b_sale, g = kbank[k20230912_03]) [px_round = *]: (2018-11, 90 glb, 1 019.7 DUK, false)
+  assumed: the question states no rounding of price times units; a price to 2 places times whole units is a whole number of orts, so no mode changes it (a13b_round)
+  world: a13_jul_sale
+  law date 2025-04-30, cut 2025-04-30
+a13_b_lots (s = a13b_sale, g = kbank[k20230912_04]) [px_round = *]: (2019-03, 60 glb, 679.8 DUK, true)
+  assumed: the question states no rounding of price times units; a price to 2 places times whole units is a whole number of orts, so no mode changes it (a13b_round)
+  world: a13_jul_sale
+  law date 2025-04-30, cut 2025-04-30
+a13_b_lots (s = a13b_sale, g = kbank[k20230912_05]) [px_round = *]: (2019-08, 50 glb, 566.5 DUK, true)
+  assumed: the question states no rounding of price times units; a price to 2 places times whole units is a whole number of orts, so no mode changes it (a13b_round)
+  world: a13_jul_sale
+  law date 2025-04-30, cut 2025-04-30
+a13_b_tax [px_round = *]: (237.00 DUK, 0.00 DUK)
+  assumed: the question states no rounding of price times units; a price to 2 places times whole units is a whole number of orts, so no mode changes it (a13b_round)
+  world: a13_jul_sale
+  unfulfilled: a13b_sale
+  law date 2025-04-30, cut 2025-04-30
+a13_b_differs_2023 [px_round = *]: 237.00 DUK
+  assumed: the question states no rounding of price times units; a price to 2 places times whole units is a whole number of orts, so no mode changes it (a13b_round)
+  world: a13_jul_sale
+  unfulfilled: a13b_sale
+  law date 2025-04-30, cut 2025-04-30
+a13_b_differs_2024_plain [px_round = *]: ?"date within window(2019-03-01, 2019-03-31) not precise enough for s.day > add_years(giver_bought[t], pit8_exempt_years)"
+  assumed: the question states no rounding of price times units; a price to 2 places times whole units is a whole number of orts, so no mode changes it (a13b_round)
+  world: a13_jul_sale
+  unfulfilled: a13b_sale
+  law date 2025-04-30, cut 2025-04-30
+warning: WARN-UNREAD source a_d11 is read by nothing
+warning: WARN-UNREAD source a_d13_kalina_2021 is read by nothing
+warning: WARN-UNREAD source a_d13_kalina_2022 is read by nothing
+warning: WARN-UNREAD source a_d13_kalina_2023 is read by nothing
+warning: WARN-UNREAD source a_d17 is read by nothing
+warning: WARN-UNREAD source a_d22 is read by nothing
+warning: WARN-UNREAD source a_d30 is read by nothing
+warning: WARN-UNREAD source a_d34 is read by nothing
+warning: WARN-UNREAD source a_d35 is read by nothing
+warning: WARN-UNREAD source a_d38 is read by nothing
+warning: WARN-UNREAD input pit5_refund_days is read by nothing
+warning: WARN-UNREAD input soc1_er_pension is read by nothing
+warning: WARN-UNREAD input soc8_base_cut is read by nothing
+warning: WARN-UNREAD input soc8_elect_days is read by nothing
+warning: WARN-UNREAD input soc8_pay_by is read by nothing
+warning: WARN-UNREAD input soc8_rate_elected is read by nothing
+warning: WARN-UNREAD input soc8_rate_first is read by nothing
+warning: WARN-UNREAD input soc8_rate_rest is read by nothing
+warning: WARN-UNREAD input soc8_weeks is read by nothing
+warning: WARN-UNREAD input soc8_weeks_first is read by nothing
+warning: WARN-UNREAD input wcp1_ee_extra_max is read by nothing
+warning: WARN-UNREAD input wcp1_er_topup_max is read by nothing
+warning: WARN-UNREAD input cc1_settle_days is read by nothing

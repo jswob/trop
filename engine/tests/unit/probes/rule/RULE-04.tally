@@ -1,0 +1,37 @@
+model rule04
+  tally 2
+  on 2025-06-30
+  start 2025-01-01
+  end 2025-12-31
+  note "RULE-04: R-X reads R-Y and R-Y reads R-X at the same key, and no law names a solver; the loader refuses the reality (LOAD-CYCLE), naming invest_x -> reserve_y -> invest_x."
+
+source card "Probe card RULE-04: rules R-X and R-Y"
+
+unit DUK: currency minor 0.01
+
+input available: money DUK
+
+input gain_rate: num
+
+input invest_share: num
+
+input reserve_share: num
+
+def invest_x: num DUK
+  note "R-X: invest half of what is left after the tax reserve"
+  rule rx = invest_share * (available - reserve_y)
+
+def reserve_y: num DUK
+  note "R-Y: the tax reserve is 20 % of the expected gains on what R-X invests this month"
+  rule ry = reserve_share * gain_rate * invest_x
+
+ask q: invest_x
+
+version card_rules
+  cite card
+  governs always
+  known 2025-01-01
+  available = ?"How much is there before the tax reserve? The card doesn't say."
+  gain_rate = ?"What gain does R-Y expect on what R-X invests this month? The card doesn't say."
+  invest_share = 50 % "R-X: half"
+  reserve_share = 20 % "R-Y: 20 %"

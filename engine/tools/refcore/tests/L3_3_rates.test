@@ -1,0 +1,34 @@
+# L §3.3: "Allowed: rate ± rate of one period (a reference rate plus a margin), rate × num, and comparisons
+# within one period."  5.85 %/year + 1 %/year = 6.85 %/year; L §5.18: "A rate prints as a decimal with its
+# period (0.076 /year) ... never as %": 0.0685 /year.  rate × num: 5.85 %/year × 2 = 0.117 /year.
+# L §3.2: "21 %/year * 1 month is 1.75 %", i.e. the num 0.0175.
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "a source"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+unit hour "godzina"
+
+input wibor: rate
+input margin: rate
+input x: num
+input r21: rate
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  wibor = 5.85 %/year
+  margin = 1 %/year
+  x = 2
+  r21 = 21 %/year
+
+ask q1: wibor + margin, wibor * x, wibor > margin, r21 * 1 month
+=== expect
+q1: (0.0685 /year, 0.117 /year, true, 0.0175)
+  cut 2026-01-01

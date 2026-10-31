@@ -1,0 +1,16 @@
+# Writer 11 (tally 2.1, 2.1-1). L §2.2: "a bound variable with one's name [a built-in id's] is LOAD-SHADOW"; parties
+# is one (the prelude's kinds, §5.7).
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+index ks = [a, b]
+def x[parties in ks]: num = 1 at 2026-01-01
+ask q: x[a]
+=== expect
+refused: LOAD-SHADOW ...

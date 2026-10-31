@@ -1,0 +1,40 @@
+# L §2.3 (writer 8): rulebody = ["beats" ...] ["v" ID] ["governs" lspan] "=" (expr | hole | solvex) ["when" expr]:
+# a rule needs its = value; the defeater (a rule with beats and no value) is gone, so `rule minor beats late when ...`
+# doesn't parse: LOAD-PARSE.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+index hs = 1..3
+input late_[h in hs]: bool
+input minor_[h in hs]: bool
+input fine: money PLN
+input base_: money PLN
+
+def penalty[h in hs]: money PLN
+  rule base = base_
+  rule late beats base = fine when late_[h]
+  rule minor beats late when minor_[h]
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  late_[1] = true "s"
+  late_[2] = true "s"
+  late_[3] = false "s"
+  minor_[1] = false "s"
+  minor_[2] = true "s"
+  minor_[3] = true "s"
+  fine = 50 PLN "s"
+  base_ = 10 PLN "s"
+
+ask q: penalty[h] for h in hs
+=== expect
+refused: LOAD-PARSE ...

@@ -1,0 +1,36 @@
+# Fault J-A-1: `unit(t.units.to)` as a key of the unit kind `funds` was refused `LOAD-KEY ... (unitkey) is not a key
+# of funds`. L §5.10 Kind and unit: "a price keyed by unit is read at a leg's own key ... Where load can't see the key
+# (a leg declared with a unit kind), it is read per value (§3.2)"; `unit(x)` of a one-unit place is its unit as a key.
+# The buy's units go to h, of unit glb, and p[glb] = 2: both reads are 2 DUK/glb (q).
+=== m.tally
+model f
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+unit DUK: currency minor 0.01
+kind funds: unit
+kind lots_in: event certain
+  leg units: funds
+source s "synthetic"
+place h: holdings glb lives 2026-01-01..
+place market: outside lives 2026-01-01..
+input p[u in funds]: num DUK/u
+input bday: date
+input n: num
+move buy: lots_in
+  on bday
+  leg units from market to h amount n * 1 glb
+def jz[t in lots_in]: num DUK/glb = p[unit(t.units.to)]
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  funds + [glb] lives 2018-01-01..
+  p[glb] = 2
+  bday = 2026-02-01
+  n = 3
+ask q: p[unit(h)], jz[t] for t in lots_in over 2026
+=== expect
+q (t = buy): (2 DUK/glb, 2 DUK/glb)
+  cut 2026-01-01

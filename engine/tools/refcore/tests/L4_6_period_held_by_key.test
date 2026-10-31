@@ -1,0 +1,26 @@
+# GD-27 (C4-9, the user, 2026-10-28; writer 10): L §4.6 Reading at a date "A period no longer than the keys that no
+# key's period holds (it lies across two keys, as a calendar month across the months of an anchored index) is refused at
+# load where load sees the period and the keys (LOAD-KEY, §8.3), and otherwise at that value (RUN-DOMAIN)"; L §8.3
+# LOAD-KEY `<period> lies across keys <a> and <b> of <index>`. A period one key's period holds is read at that key (L §4.6 "reads the key whose
+# period holds it"): the calendar month 2022-06 inside tyear's 2022 (2022-04-06 to 2023-04-05); unchanged.
+=== m.tally
+model f1
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+
+source s "minimal text"
+index tyear = year 2022..2023 from 04-06
+
+def yfirst[y in tyear]: date = start_of(y)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+
+ask held: yfirst[2022-06] law 2026-10-18
+=== expect
+held: 2022-04-06
+  law date 2026-10-18, cut 2026-10-18

@@ -1,0 +1,30 @@
+# L §4.6 step 3.2 (round 11b): "of two rows neither of which is narrower (`[2025..2027]` and `[2026..2029]` ...),
+# neither wins here"; both always, so step 3.3 doesn't order them either: step 4, LOAD-OVERLAP at load.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+index ns = 1..10
+input x[n in ns]: int
+
+version v1
+  cite s
+  governs always
+  known 2025-12-01
+  x[1..5] = 2
+
+version v2
+  cite s
+  governs always
+  known 2026-02-01
+  x[4..8] = 1
+
+ask q3: x[3]
+ask q4: x[4]
+=== expect
+refused: LOAD-OVERLAP ...

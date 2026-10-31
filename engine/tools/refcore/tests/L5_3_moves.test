@@ -1,0 +1,33 @@
+# L §5.3 moves: "Under cuts K ≥ this version's known, V's governs span is SPAN ...; under earlier cuts V keeps
+# its own."  V governs 2016-06.. (known 2016-01-01); W (known 2016-02-01) moves V to 2016-01..  Read at
+# 2016-03-01: as known 2016-01-15, V governs from 2016-06-01, so no row governs (a hole, L §4.6 step 5);
+# under the model's cut (2016-03-01 ≥ W's known) V governs from 2016-01-01 and its row is read.
+=== m.tally
+model t
+  tally 2
+  on 2016-03-01
+  start 2015-11-01
+  end 2016-10-31
+
+source s "s"
+
+input n: int
+
+version v1
+  cite s
+  governs 2016-06..
+  known 2016-01-01
+  n = 7
+
+version w
+  cite s
+  known 2016-02-01
+  moves v1 to 2016-01..
+
+ask q1: n law 2016-03-01 as known 2016-01-15
+ask q2: n law 2016-03-01
+=== expect
+q1: ?"n: no value at 2016-03-01" (n)
+  law date 2016-03-01, cut 2016-01-15
+q2: 7
+  law date 2016-03-01, cut 2016-03-01

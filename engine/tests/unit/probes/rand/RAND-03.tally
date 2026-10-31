@@ -1,0 +1,38 @@
+model rand03
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+  note "RAND-03: each month of 2026 the client pays with chance 1/2, independently; the regime law is applied on every path."
+
+source card "Probe card RAND-03: Piotr's client and the higher tax regime"
+
+unit DUK: currency minor 0.01
+
+index month = month 2026-01..2026-12
+
+input chance: num
+
+input fee: money DUK
+
+input threshold: money DUK
+
+def higher: bool at reader
+  note "rule 1: a year's revenue of more than the threshold moves Piotr into the higher regime"
+  rule base = revenue > threshold
+
+def paid[m in month]: dist = binomial(1, chance) at reader
+
+def revenue: num DUK = sum(fee * paid[m] for m in month) at reader
+
+ask q_exact: 1 - cdf(binomial(count(m in month), chance), threshold / fee) law 2026-01-01
+
+ask q_share: share(higher) law 2026-01-01 paths 40000 seed 7
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  chance = 0.5 "each month, with chance 1/2"
+  fee = 10000 "the client pays 10 000.00"
+  threshold = 80000 "rule 1: more than 80 000.00"

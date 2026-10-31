@@ -1,0 +1,56 @@
+kowalska_amounts: (1 049.71 PLN, 1 148.54 PLN)
+  given: independent[kowalska] = 1 049.71 PLN (ministry_page)
+  given: theoretical[kowalska] = 1 148.54 PLN (ministry_page)
+  law date 2026-10-18, cut 2026-10-18
+kowalska_fraction: (24, 28, 6/7 (0.857142857142857))
+  assumed: no insurance periods other than those the examples name (ins_years[kowalska, be], ins_years[kowalska, dk], ins_years[kowalska, fr], ins_years[kowalska, no], ins_years[kowalska, se])
+  law date 2026-10-18, cut 2026-10-18
+kowalska_paid [zl_cut = *]: 1 049.71 PLN
+  assumed: no insurance periods other than those the examples name (ins_years[kowalska, be], ins_years[kowalska, dk], ins_years[kowalska, fr], ins_years[kowalska, no], ins_years[kowalska, se])
+  given: independent[kowalska] = 1 049.71 PLN (ministry_page)
+  given: theoretical[kowalska] = 1 148.54 PLN (ministry_page)
+  law date 2026-10-18, cut 2026-10-18
+kowalska_pro_rata [zl_cut = *]: 984.46 PLN
+  assumed: no insurance periods other than those the examples name (ins_years[kowalska, be], ins_years[kowalska, dk], ins_years[kowalska, fr], ins_years[kowalska, no], ins_years[kowalska, se])
+  given: theoretical[kowalska] = 1 148.54 PLN (ministry_page)
+  law date 2026-10-18, cut 2026-10-18
+kowalska_spanish_share: 1/7 (0.142857142857143)
+  assumed: no insurance periods other than those the examples name (ins_years[kowalska, be], ins_years[kowalska, dk], ins_years[kowalska, fr], ins_years[kowalska, no], ins_years[kowalska, se])
+  law date 2026-10-18, cut 2026-10-18
+leaflet_fraction: 0.6
+  assumed: no insurance periods other than those the examples name (ins_years[leaflet_ex, dk], ins_years[leaflet_ex, es], ins_years[leaflet_ex, fr], ins_years[leaflet_ex, no], ins_years[leaflet_ex, se])
+  law date 2026-10-18, cut 2026-10-18
+nowak_fractions (c = pl): 0.32
+  assumed: no insurance periods other than those the examples name (ins_years[nowak, be], ins_years[nowak, es], ins_years[nowak, fr])
+  law date 2026-10-18, cut 2026-10-18
+nowak_fractions (c = no): 0.32
+  assumed: no insurance periods other than those the examples name (ins_years[nowak, be], ins_years[nowak, es], ins_years[nowak, fr])
+  law date 2026-10-18, cut 2026-10-18
+nowak_fractions (c = se): 0.24
+  assumed: no insurance periods other than those the examples name (ins_years[nowak, be], ins_years[nowak, es], ins_years[nowak, fr])
+  law date 2026-10-18, cut 2026-10-18
+nowak_fractions (c = dk): 0.12
+  assumed: no insurance periods other than those the examples name (ins_years[nowak, be], ins_years[nowak, es], ins_years[nowak, fr])
+  law date 2026-10-18, cut 2026-10-18
+nowak_total: 25
+  assumed: no insurance periods other than those the examples name (ins_years[nowak, be], ins_years[nowak, es], ins_years[nowak, fr])
+  law date 2026-10-18, cut 2026-10-18
+piotrowski_amount: 1 216.57 PLN
+  given: theoretical[piotrowski] = 1 216.57 PLN (ministry_page)
+  law date 2026-10-18, cut 2026-10-18
+piotrowski_fractions (c = pl): 15/31 (0.483870967741935)
+  assumed: no insurance periods other than those the examples name (ins_years[piotrowski, dk], ins_years[piotrowski, es], ins_years[piotrowski, no], ins_years[piotrowski, se])
+  law date 2026-10-18, cut 2026-10-18
+piotrowski_fractions (c = fr): 3/31 (0.0967741935483871)
+  assumed: no insurance periods other than those the examples name (ins_years[piotrowski, dk], ins_years[piotrowski, es], ins_years[piotrowski, no], ins_years[piotrowski, se])
+  law date 2026-10-18, cut 2026-10-18
+piotrowski_fractions (c = be): 13/31 (0.419354838709677)
+  assumed: no insurance periods other than those the examples name (ins_years[piotrowski, dk], ins_years[piotrowski, es], ins_years[piotrowski, no], ins_years[piotrowski, se])
+  law date 2026-10-18, cut 2026-10-18
+piotrowski_paid [zl_cut = *]: 588.66 PLN
+  assumed: no insurance periods other than those the examples name (ins_years[piotrowski, dk], ins_years[piotrowski, es], ins_years[piotrowski, no], ins_years[piotrowski, se])
+  given: theoretical[piotrowski] = 1 216.57 PLN (ministry_page)
+  law date 2026-10-18, cut 2026-10-18
+piotrowski_total: 31
+  assumed: no insurance periods other than those the examples name (ins_years[piotrowski, dk], ins_years[piotrowski, es], ins_years[piotrowski, no], ins_years[piotrowski, se])
+  law date 2026-10-18, cut 2026-10-18

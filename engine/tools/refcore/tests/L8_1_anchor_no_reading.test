@@ -1,0 +1,19 @@
+# L §8.1 HOLE-ANCHOR: "a balance of a place alive before S, read before its first opening or stated reading",
+# question "<place> has no balance before <d>, d its first reading's instant; with no reading at all, <place> has no
+# opening or stated reading". konto lives from 2019 and has no reading. (Was REFCORE-UNSPECIFIED §8.1, the day of the
+# question with no reading.)
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2019-01-01..
+
+ask q: bal(konto, 2026-06-30)
+=== expect
+q: ?"konto has no opening or stated reading" (konto)
+  cut 2026-12-31

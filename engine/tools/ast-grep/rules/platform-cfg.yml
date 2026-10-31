@@ -1,0 +1,12 @@
+id: platform-cfg
+language: rust
+severity: warning
+message: 'R-50 (report): platform-specific code, listed for review'
+rule:
+  any:
+    - kind: attribute_item
+      regex: "cfg(_attr)?\\s*\\([^\\]]*\\b(windows|unix|target_os|target_arch|target_family|target_env|target_endian|target_pointer_width|target_vendor|target_has_atomic)\\b"
+    - kind: inner_attribute_item
+      regex: "cfg(_attr)?\\s*\\([^\\]]*\\b(windows|unix|target_os|target_arch|target_family|target_env|target_endian|target_pointer_width|target_vendor|target_has_atomic)\\b"
+    - kind: macro_invocation
+      regex: "^(::)?(std::|core::)?cfg\\s*!\\s*\\(.*\\b(windows|unix|target_os|target_arch|target_family|target_env|target_endian|target_pointer_width|target_vendor|target_has_atomic)\\b"

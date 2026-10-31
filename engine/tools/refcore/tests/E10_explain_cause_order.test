@@ -1,0 +1,46 @@
+# L §5.18 Explanation order and E §10: rules print in canonical order (§2.4) and each cause prints once, a cause met
+# again referenced by its line. Rules are evaluated beaters first (z, then a), so big is first evaluated under z's
+# when but first printed under a: it prints in full there and as a reference under z. f = r = 2 (lim 1 > r 2 is
+# false, so z is not applicable and a wins). (Was: REFCORE-NOT-YET ... KeyError, the printer referencing a cause
+# not yet printed; the household's explain_room crash had this signature.)
+=== m.tally
+model m
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+
+source s "synthetic"
+unit PLN: currency minor 0.01
+
+input lim: int
+input r: int
+
+def big: bool = lim > r
+
+def f: int
+  rule a = r when not big
+  rule z beats a = lim when big
+
+ask e: explain f
+
+version v1
+  cite s
+  governs always
+  known 2026-01-01
+  lim = 1
+  r = 2
+=== expect
+e: 2
+  [1] f = 2
+      rule a: won
+        [2] big = false
+            rule base: won
+              [3] row v1:lim = 1
+                  version v1, source s, "synthetic", governs always, known 2026-01-01
+              [4] row v1:r = 2
+                  version v1, source s, "synthetic", governs always, known 2026-01-01
+        (v1:r: see [4])
+      rule z: not applicable
+        (big: see [2])
+  cut 2026-10-18

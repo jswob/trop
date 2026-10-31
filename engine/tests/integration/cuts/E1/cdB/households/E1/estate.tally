@@ -1,0 +1,52 @@
+part e1_estate
+  tally 2
+  note "E1-01: Zbigniew's estate, paid out. D derives the shares and the payouts (d.payout, D/estate.tally:74-82) and what the notary paid out of the deposit (d.deposit, D/estate.tally:41), and holds Halina's payment into the deposit (d.bank[r20250612a], D/records.tally:25). D-D07 .5 names the accounts. B states Piotr's payout (B-D27) and its Cis savings export shows it arriving (b.savr[s20250616a], B/records/savings-2025.tally:16); A states Ania's (a.estate_paid, A-D36: the payout A's copy of her Wrzos export books, A/worth.tally, A/records.tally) and her Wrzos export shows it arriving, in the one row of that export E1 writes as its own (e1_wrz, O:E1-5)."
+
+index e1_payee = [piotr, anna, marta, jakub]
+  note "the heirs the notary paid out of the deposit (D-D07 .5), by D's keys of heir; Halina, who paid in, takes no payout"
+
+input e1_paid_to[h in e1_payee]: text question "To which account did the notary pay this heir (D-D07 .5)?"
+
+input e1_piotr_notice: money DUK question "How much does the notary's notice B-D27 say was paid to Piotr?"
+
+input e1_wrz: observed
+  note "the rows of Ania's Wrzos savings export (tmp/cases/A/records/wrz-ania-savings-2025.csv) that a question of the family reads; A books that export row by row (A/records.tally, sbank), and the family writes the one row it reads as its own observation, stated same as A's row of it (L §6.1)"
+
+def e1_arrived[h in e1_payee]: date
+  note "the day the payout reached the heir's account, as that account's own record shows it: Piotr's in B's Cis savings export, Ania's in her Wrzos export. No record of Marta's or Jakub's account is among the family's papers (story.md 2025-06-16), so their days are holes."
+  rule rec_anna beats unrecorded = e1_wrz[w20250616a].day when h == anna
+  rule rec_piotr beats unrecorded = b.savr[s20250616a].day when h == piotr
+  rule unrecorded = ?"On which day did this payout reach the heir's account? No record of that account is among the family's papers; D-D07 .5 says only where the notary sent it"
+
+def e1_deposit_left: money DUK at reader
+  note "what the deposit held once the notary had paid out: what Halina paid in, less the payouts as D derives them (d.deposit: the payout to every heir but Halina)"
+  rule base = e1_paid_in - d.deposit
+
+def e1_paid_in: money DUK
+  note "what Halina paid into the notary's deposit when the estate was divided (D-D07 .5): the leg of her account's row of 2025-06-12 (olcha-2025-06.csv line 13), which runs from konto to the world"
+  rule base = d.bank[r20250612a].cash.amount
+
+version e1_division
+  cite e1_d_d07
+  governs always
+  known 2025-06-12
+  note "D-D07 .5: the notary pays out on 16 June 2025, to each heir's account"
+  e1_paid_to[piotr] = "LN45 2090 0017 5521 3380 0002" "D-D07 .5: to Piotr Sowa to LN45 2090 0017 5521 3380 0002"
+  e1_paid_to[anna] = "LN61 1140 2004 0000 3402 9921 5503" "D-D07 .5: to Anna Lis to LN61 1140 2004 0000 3402 9921 5503"
+  e1_paid_to[marta] = ?"Which account is Marta's? D-D07 .5 says only that the notary pays her to her account, and no other paper of the family names it" "D-D07 .5: to Marta to her account"
+  e1_paid_to[jakub] = "LN52 2090 0017 4471 0098 0001" "D-D07 .5: to Jakub Sowa to LN52 2090 0017 4471 0098 0001"
+
+version e1_notice_b_d27
+  cite e1_b_d27
+  governs always
+  known 2025-06-16
+  e1_piotr_notice = 38750.00 DUK "B-D27: 38 750.00 DUK paid to Piotr Sowa, an heir, on 16.06.2025, to account LN45 2090 0017 5521 3380 0002"
+
+version e1_wrz_2025
+  cite e1_wrz_ania
+  governs 2025-06..2025-12
+  known 2026-01-15
+  note "One row of the export, the one E1-01 reads: the payout reaching Ania's savings account. The version covers nothing: A's own version covers the account and books every row of the export (A/records.tally). The export is known with A's other records, on 2026-01-15 (story.md) (O:E1-5)."
+  note "e1_wrz[w20250616a] is the row A books as a.sbank[s20250616_07] (A/records.tally, wrz_ania_2025): both are line 7 of wrz-ania-savings-2025.csv, the one transfer of 16 June 2025 of 38 750.00 DUK from the notary's escrow into LN61 … 5503, so they are stated same, with A's kind (inheritances, heir Ania: A-D36) (L §5.19, §6.1)"
+  same e1_wrz[w20250616a] = a.sbank[s20250616_07]
+  e1_wrz[w20250616a] = (on: 2025-06-16, kind: a.inheritances, leg cash from a.world to a.ania_sav amount 38750.00 DUK, heir: a.ania) "wrz-ania-savings-2025.csv line 7: 16.06.2025;INCOMING TRANSFER;Kancelaria Notarialna Brzoza – escrow;payout, division of the estate of Zbigniew Sowa, A. Lis;38750,00;38750,00"

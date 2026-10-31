@@ -1,0 +1,18 @@
+# L §5.3: "LOAD-KNOWN: a version with no known".
+=== m.tally
+model t
+  tally 2
+  on 2016-03-01
+  start 2015-11-01
+  end 2016-10-31
+
+source s "s"
+
+input n: int
+
+version v
+  cite s
+  governs always
+  n = 1
+=== expect
+refused: LOAD-KNOWN ...

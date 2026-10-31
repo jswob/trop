@@ -1,0 +1,48 @@
+part facts_2028
+  tally 2
+
+source birth_ola "Akt urodzenia Oli, USC Kraków"
+
+version ola_born
+  cite birth_ola
+  governs always
+  known 2028-05-14
+  person + [ola] lives 2028-05-12..
+  born[ola] = 2028-05-12
+  replace parent = false "brak innych relacji rodzicielskich"
+  parent[ola, me] = true
+  parent[ola, wife] = true
+
+version ola_home
+  cite household
+  governs always
+  known 2028-05-14
+  claim_800[ola] = none "wniosek jeszcze nie złożony"
+  relief_parent[ola] = wife "ulgę na dziecko odlicza żona"
+  residence[ola] = pl governs 2028-05.. "mieszka z rodzicami w Krakowie"
+
+source zus_pue "Potwierdzenie złożenia wniosku o 800+ w PUE ZUS"
+
+kind arrears_settlements: event certain
+  leg more: any
+  leg less: any
+
+input b800_pay_arrears_day: date
+  note "dzień wyrównania zaległych świadczeń 800+ (w tally 1.0.1 linia arrears wersji ola_800)"
+
+input b800_arrears_on: date
+
+move b800_pay_arrears_ola_800[a in adjustments on b800_arrears_on where a.adjusts in b800_pay_pays]: arrears_settlements
+  on b800_pay_arrears_day
+  at a.day
+  leg more from a.adjusts.cash.from to a.adjusts.cash.to amount max(a.change, 0)
+  leg less from a.adjusts.cash.to to a.adjusts.cash.from amount max(-a.change, 0)
+  fulfils a
+
+version ola_800
+  cite zus_pue
+  governs always
+  known 2028-06-02
+  b800_pay_arrears_day = 2028-06-20 "wyrównanie za maj wypłacone z pierwszym świadczeniem"
+  b800_arrears_on = 2028-06-02 "dzień wniosku, który daje wyrównanie"
+  replace claim_800[ola] = 2028-06-01 "data złożenia wniosku"

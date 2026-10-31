@@ -1,0 +1,67 @@
+# MC-D-F1, the order of asks. E §3.2 (demand-driven cells, the memo maps cells to results): an answer never depends
+# on what was asked first. As E3_2_demand_driven_walk, with b asked before a in one run: snap8 refused q_carry[q]
+# RUN-CYCLE in b (a cell cut short while the walk was built was kept in the memo). q_rent = 3.00 DUK, q_carry = 0 for
+# every quarter; a as when asked alone.
+=== m.tally
+model m
+  tally 2
+  on 2026-09-30
+  start 2026-01-01
+  end 2026-12-31
+unit DUK: currency minor 0.01
+index quarter = month 2026-01..2026-07 by 3
+kind rents: transfers
+place konto: accounts DUK lives 2026-01-01..
+place world: outside lives 1900-01-01..
+def q_rent[q in quarter]: money DUK = sum(t.cash.amount for t in rents over quarter_of(start_of(q))) at start_of(q)
+def q_carry[q in quarter]: money DUK = if pos(q) == 1 then 0 else min(0, q_rent[q - 1] + q_carry[q - 1]) at start_of(q)
+move rent_in[m in months]: rents
+  on start_of(m)
+  leg cash from world to konto amount 1.00 DUK
+move send[q in quarter]: transfers
+  on end_of(quarter_of(start_of(q)))
+  leg cash from konto to world amount max(0, q_rent[q] + q_carry[q])
+ask a: q_carry[q] for q in quarter law 2026-09-30
+ask b: q_rent[q], q_carry[q] for q in quarter law 2026-09-30
+ask c: readers-of q_rent
+=== expect b a c
+b (q = 2026-01): (3.00 DUK, 0.00 DUK)
+  unfulfilled: rent_in[2026-01]
+  unfulfilled: rent_in[2026-02]
+  unfulfilled: rent_in[2026-03]
+  law date 2026-09-30, cut 2026-09-30
+b (q = 2026-04): (3.00 DUK, 0.00 DUK)
+  unfulfilled: rent_in[2026-01]
+  unfulfilled: rent_in[2026-02]
+  unfulfilled: rent_in[2026-03]
+  unfulfilled: rent_in[2026-04]
+  unfulfilled: rent_in[2026-05]
+  unfulfilled: rent_in[2026-06]
+  law date 2026-09-30, cut 2026-09-30
+b (q = 2026-07): (3.00 DUK, 0.00 DUK)
+  unfulfilled: rent_in[2026-01]
+  unfulfilled: rent_in[2026-02]
+  unfulfilled: rent_in[2026-03]
+  unfulfilled: rent_in[2026-04]
+  unfulfilled: rent_in[2026-05]
+  unfulfilled: rent_in[2026-06]
+  unfulfilled: rent_in[2026-07]
+  unfulfilled: rent_in[2026-08]
+  unfulfilled: rent_in[2026-09]
+  law date 2026-09-30, cut 2026-09-30
+a (q = 2026-01): 0.00 DUK
+  law date 2026-09-30, cut 2026-09-30
+a (q = 2026-04): 0.00 DUK
+  unfulfilled: rent_in[2026-01]
+  unfulfilled: rent_in[2026-02]
+  unfulfilled: rent_in[2026-03]
+  law date 2026-09-30, cut 2026-09-30
+a (q = 2026-07): 0.00 DUK
+  unfulfilled: rent_in[2026-01]
+  unfulfilled: rent_in[2026-02]
+  unfulfilled: rent_in[2026-03]
+  unfulfilled: rent_in[2026-04]
+  unfulfilled: rent_in[2026-05]
+  unfulfilled: rent_in[2026-06]
+  law date 2026-09-30, cut 2026-09-30
+c: b, q_carry, send, a

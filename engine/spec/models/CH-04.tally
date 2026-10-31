@@ -1,0 +1,180 @@
+model ch04
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+  note "US real GDP for 2019:Q4 as known at each monthly vintage of the Philadelphia Fed Real-Time Data Set (ROUTPUT), its quarter-over-quarter annualized growth on first, second, third and most recent release, and the three BEA news releases that checked it."
+  note "Each vintage is a version known on the last day of its month: the documentation dates a vintage only by its month, collected in the middle of the month (ROUTPUT notes item 7; General Notes p. 12), and a source dated only by a month takes the month's last day (LANGUAGE §4.5). Each vintage ask is cut on that same day. ROUTPUT26M10's month ends after the model's on; the workbook that holds it is stamped 09-30-2026, so it is known that day."
+  note "A revised estimate of a past quarter is a correction (LANGUAGE §4.5): BEA's second and third estimates, and the vintages that revise 2019:Q3 or 2019:Q4."
+  note "The growth formula is the Philadelphia Fed's Step 1 (First/Second/Third documentation, PDF p. 3). It is model wiring with no v: that document was last updated 2026-05-21, so a rule cited to it would not exist as known in 2020."
+
+source bea_20_04 "BEA News Release BEA 20-04, Gross Domestic Product, Fourth Quarter and Year 2019 (Advance Estimate), January 30, 2020" at "https://www.bea.gov/sites/default/files/2020-01/gdp4q19_adv_0.pdf"
+
+source bea_20_07 "BEA News Release BEA 20-07, Gross Domestic Product, Fourth Quarter and Year 2019 (Second Estimate), February 27, 2020" at "https://www.bea.gov/sites/default/files/2020-02/gdp4q19_2nd_0.pdf"
+
+source bea_20_13 "BEA News Release BEA 20-13, Gross Domestic Product (Third Estimate), Fourth Quarter and Year 2019, March 26, 2020" at "https://www.bea.gov/sites/default/files/2020-03/gdp4q19_3rd_0.pdf"
+
+source lifted_1_0_1 "Figures tally 1.0.1 allowed inline in rules"
+
+source philly_routput "Philadelphia Fed Real-Time Data Set for Macroeconomists, ROUTPUT monthly vintages, routputMvQd.xlsx (internal timestamps 09-30-2026; downloaded 2026-10-18)" at "https://www.philadelphiafed.org/surveys-and-data/real-time-data-research/routput"
+
+unit bn "billions of real dollars, seasonally adjusted at annual rates"
+
+axis disp
+  half-up "printed figures are rounded to the nearest, a tie away from zero"
+  down "printed figures are truncated"
+
+index obs = [y2019q3, y2019q4, y2020q1]
+
+input bea_growth19q4_4: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input bea_level[q in obs]: num bn question "What level of real GDP did this BEA release print for the quarter?"
+
+input growth19q4_4: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input routput[q in obs]: num bn question "What was real GDP for this quarter in the vintage as known on this day?"
+
+def bea_change19q4: num bn = bea_level[y2019q4] - bea_level[y2019q3] at reader
+
+def bea_growth19q4: num = (pow(bea_level[y2019q4] / bea_level[y2019q3], bea_growth19q4_4) - 1) / 1 % at reader
+
+def growth19q4: num = (pow(routput[y2019q4] / routput[y2019q3], growth19q4_4) - 1) / 1 % at reader
+
+ask bea_adv: bea_level[y2019q3], bea_level[y2019q4], bea_change19q4, round(bea_growth19q4, 0.1, disp) law 2020-01-30 as known 2020-01-30
+
+ask bea_second: bea_level[y2019q3], bea_level[y2019q4], bea_change19q4, round(bea_growth19q4, 0.1, disp) law 2020-02-27 as known 2020-02-27
+
+ask bea_third: bea_level[y2019q3], bea_level[y2019q4], bea_change19q4, round(bea_growth19q4, 0.1, disp) law 2020-03-26 as known 2020-03-26
+
+ask chk_adv_20m2: check bea_level[y2019q4] as if {known 2020-01-30} == routput[y2019q4] as if {known 2020-02-29} law 2026-10-18
+
+ask chk_second_20m3: check bea_level[y2019q4] as if {known 2020-02-27} == routput[y2019q4] as if {known 2020-03-31} law 2026-10-18
+
+ask chk_third_20m4: check bea_level[y2019q4] as if {known 2020-03-26} == routput[y2019q4] as if {known 2020-04-30} law 2026-10-18
+
+ask growth_first: round(growth19q4, 0.0001, disp) law 2020-02-29 as known 2020-02-29
+
+ask growth_recent: round(growth19q4, 0.0001, disp) law 2026-09-30 as known 2026-09-30
+
+ask growth_second: round(growth19q4, 0.0001, disp) law 2020-03-31 as known 2020-03-31
+
+ask growth_third: round(growth19q4, 0.0001, disp) law 2020-04-30 as known 2020-04-30
+
+ask v20m1: routput[q] for q in obs law 2020-01-31 as known 2020-01-31
+
+ask v20m2: routput[q] for q in obs law 2020-02-29 as known 2020-02-29
+
+ask v20m3: routput[q] for q in obs law 2020-03-31 as known 2020-03-31
+
+ask v20m4: routput[q] for q in obs law 2020-04-30 as known 2020-04-30
+
+ask v20m5: routput[q] for q in obs law 2020-05-31 as known 2020-05-31
+
+ask v20m8: routput[q] for q in obs law 2020-08-31 as known 2020-08-31
+
+ask v23m10: routput[q] for q in obs law 2023-10-31 as known 2023-10-31
+
+ask v26m10: routput[q] for q in obs law 2026-09-30 as known 2026-09-30
+
+version bea_adv_v
+  cite bea_20_04
+  governs always
+  known 2020-01-30
+  bea_level[y2019q3] = 19121.1 "Table 3, line 1, 2019 Q3, billions of chained (2012) dollars"
+  bea_level[y2019q4] = 19219.8 "Table 3, line 1, 2019 Q4, billions of chained (2012) dollars"
+
+version lifted_figures
+  cite lifted_1_0_1
+  governs always
+  known 2020-01-30
+  bea_growth19q4_4 = 4 "inline in tally 1.0.1: bea_growth19q4 line 28, argument 2 of pow"
+  growth19q4_4 = 4 "inline in tally 1.0.1: growth19q4 line 30, argument 2 of pow"
+
+version rtdsm_20m1
+  cite philly_routput
+  governs always
+  known 2020-01-31
+  note "ROUTPUT20M1, collected in the middle of January 2020; dated only by its month, so known on the month's last day (LANGUAGE §4.5)."
+  routput[y2019q3] = 19121.1 "row 2019:Q3, column ROUTPUT20M1"
+  routput[y2019q4] = ?"row 2019:Q4, column ROUTPUT20M1 is #N/A: not yet published"
+
+version bea_second_v
+  cite bea_20_07
+  governs always
+  known 2020-02-27
+  note "The second estimate revises the advance estimate of the same quarter: a revised measurement of a past quantity (LANGUAGE §4.5)."
+  replace bea_level[y2019q3] = 19121.1 "Table 3, line 1, 2019 Q3, billions of chained (2012) dollars"
+  replace bea_level[y2019q4] = 19220.5 "Table 3, line 1, 2019 Q4, billions of chained (2012) dollars"
+
+version rtdsm_20m2
+  cite philly_routput
+  governs always
+  known 2020-02-29
+  note "ROUTPUT20M2, collected in the middle of February 2020; known on the month's last day (LANGUAGE §4.5)."
+  replace routput[y2019q3] = 19121.1 "row 2019:Q3, column ROUTPUT20M2"
+  replace routput[y2019q4] = 19219.8 "row 2019:Q4, column ROUTPUT20M2"
+  routput[y2020q1] = ?"row 2020:Q1, column ROUTPUT20M2 is #N/A: not yet published"
+
+version bea_third_v
+  cite bea_20_13
+  governs always
+  known 2020-03-26
+  note "The third estimate revises the second estimate of the same quarter: a revised measurement of a past quantity (LANGUAGE §4.5)."
+  replace bea_level[y2019q3] = 19121.1 "Table 3, line 1, 2019 Q3, billions of chained (2012) dollars"
+  replace bea_level[y2019q4] = 19222 "Table 3, line 1, 2019 Q4, billions of chained (2012) dollars"
+
+version rtdsm_20m3
+  cite philly_routput
+  governs always
+  known 2020-03-31
+  note "ROUTPUT20M3, collected in the middle of March 2020; known on the month's last day (LANGUAGE §4.5). It revises 2019:Q4."
+  replace routput[y2019q3] = 19121.1 "row 2019:Q3, column ROUTPUT20M3"
+  replace routput[y2019q4] = 19220.5 "row 2019:Q4, column ROUTPUT20M3"
+  replace routput[y2020q1] = ?"row 2020:Q1, column ROUTPUT20M3 is #N/A: not yet published"
+
+version rtdsm_20m4
+  cite philly_routput
+  governs always
+  known 2020-04-30
+  note "ROUTPUT20M4, collected in the middle of April 2020; known on the month's last day (LANGUAGE §4.5). It revises 2019:Q4."
+  replace routput[y2019q3] = 19121.1 "row 2019:Q3, column ROUTPUT20M4"
+  replace routput[y2019q4] = 19222 "row 2019:Q4, column ROUTPUT20M4"
+  replace routput[y2020q1] = ?"row 2020:Q1, column ROUTPUT20M4 is #N/A: not yet published"
+
+version rtdsm_20m5
+  cite philly_routput
+  governs always
+  known 2020-05-31
+  note "ROUTPUT20M5, collected in the middle of May 2020; known on the month's last day (LANGUAGE §4.5). 2020:Q1 first appears."
+  replace routput[y2019q3] = 19121.1 "row 2019:Q3, column ROUTPUT20M5"
+  replace routput[y2019q4] = 19222 "row 2019:Q4, column ROUTPUT20M5"
+  replace routput[y2020q1] = 18987.9 "row 2020:Q1, column ROUTPUT20M5"
+
+version rtdsm_20m8
+  cite philly_routput
+  governs always
+  known 2020-08-31
+  note "ROUTPUT20M8, collected in the middle of August 2020; known on the month's last day (LANGUAGE §4.5). It revises 2019:Q3 and 2019:Q4."
+  replace routput[y2019q3] = 19141.7 "row 2019:Q3, column ROUTPUT20M8"
+  replace routput[y2019q4] = 19254 "row 2019:Q4, column ROUTPUT20M8"
+  replace routput[y2020q1] = ?"the case does not transcribe 2020:Q1 in ROUTPUT20M8"
+
+version rtdsm_23m10
+  cite philly_routput
+  governs always
+  known 2023-10-31
+  note "ROUTPUT23M10, collected in the middle of October 2023; known on the month's last day (LANGUAGE §4.5). The base year of its levels is not stated."
+  replace routput[y2019q3] = 20817.6 "row 2019:Q3, column ROUTPUT23M10"
+  replace routput[y2019q4] = 20951.1 "row 2019:Q4, column ROUTPUT23M10"
+  replace routput[y2020q1] = ?"the case does not transcribe 2020:Q1 in ROUTPUT23M10"
+
+version rtdsm_26m10
+  cite philly_routput
+  governs always
+  known 2026-09-30
+  note "ROUTPUT26M10, the vintage of mid-October 2026. Its month's last day is after the model's on (2026-10-18), and a version known after on is refused; the workbook that holds it carries the internal timestamp 09-30-2026, its updated stamp (LANGUAGE §4.5), so it is known that day. The base year of its levels is not stated."
+  replace routput[y2019q3] = 20843.3 "row 2019:Q3, column ROUTPUT26M10"
+  replace routput[y2019q4] = 20985.4 "row 2019:Q4, column ROUTPUT26M10"
+  replace routput[y2020q1] = ?"the case does not transcribe 2020:Q1 in ROUTPUT26M10"

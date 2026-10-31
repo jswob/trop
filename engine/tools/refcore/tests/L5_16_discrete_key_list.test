@@ -1,0 +1,25 @@
+# Round 19 (writer 10): settled; was REFCORE-UNSPECIFIED §5.16. GD-24, C4-11: L §5.16's table "over a key list or a stepped range it is refused (LOAD-DOMAIN)"; L §8.3
+# `discrete over a key list or a stepped range`. The old comment:
+# L §5.16 The closed list: `discrete(w for k in IDX)`, "its values are the keys of IDX, in index order". A binding over
+# a key list (or a stepped range) is no index: what such a draw's values are, and their order, the spec doesn't state,
+# so refcore keeps REFCORE-UNSPECIFIED §5.16 here (the one site left, UNSPECIFIED.md).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+input w: num
+def g: dist = discrete(w for k in [a, b])
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  w = 1
+
+ask q: quantile(g, 50 %)
+=== expect
+refused: LOAD-DOMAIN discrete over a key list or a stepped range (m.tally:9)

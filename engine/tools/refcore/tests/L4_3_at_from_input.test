@@ -1,0 +1,35 @@
+# L §4.3: a def's written `at e` sets its law date (tally 1's rule that a time key sets it is gone), and L §5.11 step
+# 2: a rule with v V "exists only where V governs", among "the versions of one rule that exist at d and K".  g[2015]
+# is read at gifts_from[2015] = 2015-07-01, where gv governs: 5.00 USD.  (The reads inside e are made at the reader's
+# law date; gifts_from governs always.)
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2014-01-01
+  end 2026-12-31
+
+unit USD: currency minor 0.01
+source s "s"
+index yr = year 2014..2016
+input gifts_from[y in yr]: date
+input amt: money USD
+def g[y in yr]: money USD at gifts_from[y]
+  rule base v gv = amt
+
+version gv
+  cite s
+  governs 2015-07-01..
+  known 2014-01-01
+
+version facts
+  cite s
+  governs always
+  known 2014-01-01
+  gifts_from[2015] = 2015-07-01
+  amt = 5 USD
+
+ask q: g[2015]
+=== expect
+q: 5.00 USD
+  cut 2026-12-31

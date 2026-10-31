@@ -1,0 +1,19 @@
+# The standard-library items the CLI's sanctioned file (crates/tally-cli/src/main.rs) may
+# name from std::fs, std::env, std::io, std::process and std::net (R-39, R-108; audit F-19).
+# A rule file: the list changes only through R-112. One #[expect] covers a whole function,
+# so the list, not the exception counter, keeps the CLI's three exceptions honest:
+# the arguments, the reality's files (a file, a directory walked, a joint model's members;
+# refcore never reads standard input, audit C1), and the output. std::process and std::net
+# give nothing but the exit code.
+allowed = [
+  "std::env::args_os",
+  "std::fs::metadata",
+  "std::fs::read",
+  "std::fs::read_dir",
+  "std::io::Error",
+  "std::io::Result",
+  "std::io::Write",
+  "std::io::stderr",
+  "std::io::stdout",
+  "std::process::ExitCode",
+]

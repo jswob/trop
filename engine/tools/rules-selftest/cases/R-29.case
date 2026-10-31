@@ -1,0 +1,24 @@
+# R-29: only the number kernel names the big-integer types; only tally depends on
+# num-bigint.
+
+case: num-bigint-outside-tally
+tool: run
+expect: num-bigint is a dependency of
+--- replace crates/tally-cli/Cargo.toml
+tally = { workspace = true }
+--- with
+tally = { workspace = true }
+num-bigint = { workspace = true }
+--- run
+cargo metadata --offline --format-version 1 >/dev/null
+tools/check-rules
+
+case: bigint-type
+tool: clippy
+expect: clippy::disallowed_types
+text: R-29
+--- module
+/// Planted.
+pub fn planted(v: num_bigint::BigUint) -> num_bigint::BigUint {
+    v
+}

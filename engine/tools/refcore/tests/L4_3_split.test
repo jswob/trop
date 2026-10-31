@@ -1,0 +1,31 @@
+# L §2.3 (writer 8): lawdate = expr | "reader"; the law date `each day of m split by days` is gone, so it doesn't
+# parse: LOAD-PARSE. (A day-weighted value over a period is written as a sum over its days, L §4.3.)
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+input rate: num
+
+def avg[m in months]: num at each day of m split by days
+  rule base = rate
+
+version v1
+  cite s
+  governs 2026-01-01..2026-03-15
+  known 2025-12-01
+  rate = 30
+
+version v2
+  cite s
+  governs 2026-03-16..
+  known 2026-03-01
+  rate = 60
+
+ask q1: avg[2026-03]
+=== expect
+refused: LOAD-PARSE ...

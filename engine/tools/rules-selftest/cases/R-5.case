@@ -1,0 +1,66 @@
+# R-5: no indexing or slicing; use get. Tests may index. Clippy's indexing_slicing
+# skips maps; the ast-grep rule no-index sees every index expression, maps included.
+
+case: index
+tool: clippy
+expect: clippy::indexing_slicing
+--- module
+/// Planted.
+pub fn planted(v: &[u8]) -> u8 {
+    v[0]
+}
+
+case: slice
+tool: clippy
+expect: clippy::indexing_slicing
+--- module
+/// Planted.
+pub fn planted(v: &[u8]) -> &[u8] {
+    &v[1..]
+}
+
+case: tests-may-index
+tool: clippy-tests
+expect: pass
+--- module
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn planted() {
+        let v = core::hint::black_box([1_u8, 2]);
+        assert_eq!(v[0], 1, "planted");
+        assert_eq!(v[1..].len(), 1, "planted");
+    }
+}
+
+case: map-index
+tool: ast-grep
+expect: no-index
+--- module
+/// Planted.
+pub fn planted(m: &std::collections::BTreeMap<u8, u8>, k: u8) -> u8 {
+    m[&k]
+}
+
+case: index-ast-grep
+tool: ast-grep
+expect: no-index
+--- module
+/// Planted.
+pub fn planted(v: &[u8]) -> &[u8] {
+    &v[1..]
+}
+
+case: tests-may-index-ast-grep
+tool: ast-grep
+expect: pass
+--- module
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn planted() {
+        let v = core::hint::black_box([1_u8, 2]);
+        assert_eq!(v[0], 1, "planted");
+        assert_eq!(v[1..].len(), 1, "planted");
+    }
+}

@@ -1,0 +1,6 @@
+# session 7b: snap16-house/A-d05.out with the blocks of mca05_plain from refcore 900c6fe (tally 2.1), judged (tmp/session7b/diff.md)
+mca05_bal [px_round = *]: (200 glb, ?"calendar holidays doesn't cover 2026" (holidays), 0 glb)
+  anchor: joint 2025-04-01 start, stated 12 430.70 DUK, difference ?"calendar holidays doesn't cover 2026" (holidays)
+  law date 2025-04-30, cut 2025-04-30
+mca05_plain [px_round = *]: (?"date within window(2019-03-01, 2019-03-31) not precise enough for s.day > add_years(held_from[b], pit8_exempt_years)", ?"date within window(2019-03-01, 2019-03-31) not precise enough for s.day > add_years(held_from[b], pit8_exempt_years)", ?"date within window(2019-03-01, 2019-03-31) not precise enough for s.day > add_years(held_from[b], pit8_exempt_years)")
+  law date 2025-04-30, cut 2025-04-30

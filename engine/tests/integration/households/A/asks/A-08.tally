@@ -1,0 +1,7 @@
+part asks_a08
+  tally 2
+  note "A-08 · Had we kept the car (questions.md), as known 2025-05-14. The car kept is a set of defs (car.tally: kept_cost, sold_in) beside the statements' rows of the sale's settlements (kind car_settlements): the joint account is covered by its statements from 2024-08, so a scenario can't take back what they booked (L §5.19), and the costs of keeping the car were never paid (awkward)."
+
+ask a08: kept_less law 2025-05-14 as known 2025-05-14
+
+ask a08_steps: sold_in, kept_cost law 2025-05-14 as known 2025-05-14

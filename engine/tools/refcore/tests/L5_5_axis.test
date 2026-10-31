@@ -1,0 +1,40 @@
+# L §5.5 example axis, copied whole; "A rule may test it: when ul05_cut == floor."  Fan-out: "An ask evaluates
+# every combination of the axes its evaluation reads ... It prints one line per distinct result"; on a line an
+# axis prints the options that give it, and the line's reading: entry names them (§8.2).  Lines are ordered by
+# the axes' options in declaration order (L §5.18 Output).  Under floor the rule gives round(x, 1, floor) of
+# 10.5 = 10 (L §7.2 floor: toward −∞); under exact the value 10.5 itself.
+=== m.tally
+model t
+  tally 2
+  on 2016-03-01
+  start 2015-11-01
+  end 2016-10-31
+
+source s "s"
+
+axis ul05_cut
+  floor "the cut rounds down to whole złoty"
+  exact "no rounding is stated"
+
+input x: num
+input one: num
+
+def cut_x: num at reader
+  rule base = x
+  rule floored beats base = round(x, one, floor) when ul05_cut == floor
+
+version v
+  cite s
+  governs always
+  known 2016-01-01
+  x = 10.5
+  one = 1
+
+ask q1: cut_x law 2016-03-01
+=== expect
+q1 [ul05_cut = floor]: 10
+  reading: ul05_cut = floor
+  law date 2016-03-01, cut 2016-03-01
+q1 [ul05_cut = exact]: 10.5
+  reading: ul05_cut = exact
+  law date 2016-03-01, cut 2016-03-01

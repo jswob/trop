@@ -1,0 +1,80 @@
+# L §5.14.2 Takes in the first batch: "A cycle of observed rows only is an unknown fact, which transfer went first and so
+# whose money each carried: ... the takes it reaches are undecided, each place holds a hole part with its total known";
+# L §8.1 its question `which of <movements> went first on <d>?`.  The cycle runs through two-leg movements: the sale
+# j3 takes units at ix and its cash arrives at acc labelled by that take; the buy j4 takes cash at acc and its units
+# arrive at ix so labelled.  Both places hold Ania's and Tomek's parts and rank them by rank, a hole, so no try breaks
+# the cycle.  acc holds 450.00 and ix 17 (scratch/exp_r3.py), each one hole part whose questions name j3 and j4.
+# (Was `which of  went first`: the cycle's links were only legs between two of its places; the migrator's A,
+# rzt_cash.)
+=== m.tally
+model t
+  tally 2
+  on 2026-01-15
+  start 2021-01-01
+  end 2026-12-31
+
+source src "test"
+unit DUK: currency minor 0.01
+kind funds: unit
+kind persons: parties
+kind ins: transfers
+  attr heir: key persons
+kind units_in: event certain
+  leg units: funds
+  attr owner: key persons
+kind buys: event certain
+  leg units: funds
+  leg cash: DUK
+kind sales: event certain
+  leg units: funds
+  leg cash: DUK
+kind cash_accounts: place one min 0
+  owned by arrive
+  step minor(DUK)
+  takes k for w order rank[k.owner]
+kind lots1: holdings
+  owned by arrive
+  step 1
+  takes k for w order rank[k.owner]
+place acc: cash_accounts DUK lives 2021-01-01..
+place ix: lots1 idx lives 2021-01-01..
+place world: outside lives 2000-01-01..
+place market: outside lives 2000-01-01..
+input jb: observed
+def rank[p in parties]: int = ?"which money leaves first?" at reader
+def arrive[m in events, p in parties]: num at m.day
+  rule given = (if p == m.heir then 1 else 0) when m in ins
+  rule units beats given = (if p == m.owner then 1 else 0) when m in units_in
+  rule bought beats given = m.cash.amount of p / m.cash.amount when m in buys
+  rule sold beats given = m.units.amount of p / m.units.amount when m in sales
+
+ask q: bal(acc, 2025-12-31), bal(acc, 2025-12-31) of ania, bal(ix, 2025-12-31), bal(ix, 2025-12-31) of tomek
+
+version cast
+  cite src
+  known 2021-01-01
+  funds + [idx] lives 2018-01-01..
+  persons + [ania] lives 1991-03-14..
+  persons + [tomek] lives 1989-07-02..
+
+version open
+  cite src
+  governs always
+  known 2021-01-01
+  opening[acc] = 0 at 2021-01-01 start
+  opening[ix] = 0 at 2021-01-01 start
+
+version j
+  cite src
+  governs 2025-01..2025-12
+  known 2025-01-01
+  covers acc, ix
+  jb[a1] = (on: 2025-02-01, kind: ins, leg cash from world to acc amount 100.00 DUK, heir: ania) "a1"
+  jb[a2] = (on: 2025-02-01, kind: ins, leg cash from world to acc amount 100.00 DUK, heir: tomek) "a2"
+  jb[u1] = (on: 2025-02-01, kind: units_in, leg units from world to ix amount 10 idx, owner: ania) "u1"
+  jb[u2] = (on: 2025-02-01, kind: units_in, leg units from world to ix amount 10 idx, owner: tomek) "u2"
+  jb[j3] = (on: 2025-04-01, kind: sales, leg units from ix to market amount 5 idx, leg cash from market to acc amount 300.00 DUK) "j3"
+  jb[j4] = (on: 2025-04-01, kind: buys, leg units from market to ix amount 2 idx, leg cash from acc to market amount 50.00 DUK) "j4"
+=== expect
+q: (450.00 DUK, ?"acc: 450.00 DUK may be ania's: which money leaves first?; which of jb[j3], jb[j4] went first on 2025-04-01?" (acc), 17 idx, ?"ix: 17 idx may be tomek's: which money leaves first?; which of jb[j3], jb[j4] went first on 2025-04-01?" (ix))
+...

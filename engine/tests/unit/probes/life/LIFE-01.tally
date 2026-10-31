@@ -1,0 +1,49 @@
+model life01
+  tally 2
+  on 2026-10-25
+  start 2024-01-01
+  end 2026-12-31
+  note "Probe LIFE-01: a job contract written once: a pay from a date, a raise on a date, and an indexation clause from each January from 2026."
+  note "The contract's terms and the index figure are the card's stipulations, known from start (L 4.5)."
+
+source card "Probe card LIFE-01 (tmp/cases/probes/life/LIFE-01.md): story, rule 1 and question"
+
+unit DUK: currency minor 0.01
+
+index mo = month 2024-01..2026-12
+
+index yr = year 2024..2026
+
+input cpi_change[y in yr]: num question "By how much did the price index change in this year?"
+
+input pay_term[m in mo]: money DUK question "What monthly pay does the contract state for this month?"
+
+def wage[m in mo]: money DUK at start_of(m)
+  note "rule 1: the contract is written once; its terms change on their dates. From 2026 the indexation clause carries the pay forward and raises it each January by the previous year's index change, rounded half up to whole DUK"
+  rule base v contract_2024 = pay_term[m]
+  rule carried beats base v contract_index = wage[m - 1] when pos(m) > 1
+  rule indexed beats base, carried v contract_index = round(wage[m - 1] * (1 + cpi_change[year_of(m) - 1]), 1, half-up) when pos(m) > 1 and start_of(m) == start_of(year_of(m))
+
+ask jan_2026: wage[2026-01] law 2026-10-25
+
+ask total_2025: sum(wage[m] for m in mo where year_of(m) == 2025) law 2026-10-25
+
+version contract_2024
+  cite card
+  governs 2024-01..
+  known 2024-01-01
+  note "the contract's pay terms, from January 2024"
+  pay_term = 6000 governs 2024-01..2025-03 "story: 6 000.00 DUK a month from January 2024"
+  pay_term = 6600 governs 2025-04.. "story: a raise to 6 600.00 from 1 April 2025"
+
+version contract_index
+  cite card
+  governs 2026-01..
+  known 2024-01-01
+  note "the contract's indexation clause, in force from January 2026: no items; the rules of wage that carry and index it point at it (an act with several commencement dates is one version per date, L 5.3)"
+
+version index_figures
+  cite card
+  governs always
+  known 2024-01-01
+  cpi_change[2025] = 0.034 "story: the 2025 change is 3.4 %"

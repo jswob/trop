@@ -1,0 +1,33 @@
+# R-55: one version of each crate; no wildcard versions.
+
+case: wildcard
+tool: deny
+expect: wildcard
+--- replace crates/tally/Cargo.toml
+[dependencies]
+--- with
+[dependencies]
+itoa = "*"
+
+case: two-versions
+tool: deny
+expect: duplicate
+text: itoa
+--- fake itoa 0.0.1
+--- replace crates/tally/Cargo.toml
+[dependencies]
+--- with
+[dependencies]
+itoa = { path = "@FAKES@/itoa-0.0.1", version = "0.0.1" }
+
+case: path-outside-engine
+tool: run
+expect: is a path dependency outside engine/
+--- fake zz-outside 0.0.1
+--- replace crates/tally/Cargo.toml
+[dependencies]
+--- with
+[dependencies]
+zz-outside = { path = "@FAKES@/zz-outside-0.0.1", version = "0.0.1" }
+--- run
+tools/check-rules

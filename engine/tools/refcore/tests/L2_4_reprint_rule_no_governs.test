@@ -1,0 +1,28 @@
+# GD-24 (round 19, writer 10): settled; was REFCORE-UNSPECIFIED §2.4. L §2.4: rules "then by their own governs as a version's rows are": a rule with no span of its own first.
+# The old comment:
+# L §2.4 sorts rules "by label, then by the known date of their v, a rule without v first, then by the start of their
+# own governs"; where a rule with no governs of its own sorts against one of its label with one is not stated (the
+# version items' "a row with no span of its own first" is said of version items only): REFCORE-UNSPECIFIED.
+=== options reprint
+=== m.tally
+model m
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+def f: int
+  rule a governs 2027.. = 2
+  rule a = 1
+=== expect
+--- m.tally
+model m
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+def f: int
+  rule a = 1
+  rule a governs 2027.. = 2
+sha256 ...

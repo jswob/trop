@@ -1,0 +1,83 @@
+{
+  "id": "01-month",
+  "says_pl": "Nasz miesiąc: czynsz 1., moja pensja 3–7., pensja żony ok. 10., codzienne wydatki jak w ostatnim roku.",
+  "places": [
+    { "id": "konto", "kind": "account", "label_pl": "Konto wspólne", "owner": "joint" },
+    { "id": "ike", "kind": "holding", "label_pl": "IKE (ETF)", "owner": "me", "price": "price.etf" },
+    { "id": "maklerskie", "kind": "holding", "label_pl": "Rachunek maklerski (ETF)", "owner": "joint", "price": "price.etf" },
+    { "id": "pracodawca", "kind": "outside", "label_pl": "Mój pracodawca" },
+    { "id": "pracodawca_zony", "kind": "outside", "label_pl": "Pracodawca żony" },
+    { "id": "wynajmujacy", "kind": "outside", "label_pl": "Wynajmujący" },
+    { "id": "sklepy", "kind": "outside", "label_pl": "Sklepy i usługi" },
+    { "id": "urzad_skarbowy", "kind": "outside", "label_pl": "Urząd skarbowy" },
+    { "id": "zus", "kind": "outside", "label_pl": "ZUS" },
+    { "id": "otwarcie", "kind": "outside", "label_pl": "Stan na początek historii" }
+  ],
+  "values": [
+    { "id": "assume.inflation", "kind": "assumption", "unit": "1", "says_pl": "Inflacja rocznie (cel NBP 2,5% ± 1)", "entries": [{ "from": "2027-01-01", "value": 0.03 }] },
+    { "id": "assume.wage_growth", "kind": "assumption", "unit": "1", "says_pl": "Wzrost płac rocznie", "entries": [{ "from": "2027-01-01", "value": 0.04 }] },
+    { "id": "index.prices", "kind": "assumption", "unit": "1", "says_pl": "Poziom cen względem dziś (1 = dziś)", "entries": [
+      { "from": "2000-01-01", "value": 1 },
+      { "from": "2027-01-01", "expr": "before * (1 + p.assume.inflation)", "repeat": "year" }] },
+    { "id": "index.wage", "kind": "assumption", "unit": "1", "says_pl": "Poziom płac względem dziś (1 = dziś)", "entries": [
+      { "from": "2000-01-01", "value": 1 },
+      { "from": "2027-01-01", "expr": "before * (1 + p.assume.wage_growth)", "repeat": "year" }] },
+    { "id": "assume.etf_return", "kind": "assumption", "unit": "1", "says_pl": "Roczny wzrost ceny ETF na świat, nominalnie", "entries": [{ "from": "2026-10-17", "value": 0.06 }] },
+    { "id": "price.etf", "kind": "assumption", "unit": "PLN", "says_pl": "Cena jednostki ETF (historia, potem założony wzrost co miesiąc)", "entries": [
+      { "from": "2024-01-01", "value": 100, "source": "syntetyczne" },
+      { "from": "2024-07-01", "value": 108, "source": "syntetyczne" },
+      { "from": "2025-01-01", "value": 113, "source": "syntetyczne" },
+      { "from": "2025-07-01", "value": 110, "source": "syntetyczne" },
+      { "from": "2026-01-01", "value": 121, "source": "syntetyczne" },
+      { "from": "2026-07-01", "value": 126, "source": "syntetyczne" },
+      { "from": "2026-11-01", "expr": "before * pow(1 + p.assume.etf_return, 1 / 12)", "repeat": "month" }] }
+  ],
+  "templates": [
+    {
+      "id": "job_pl@1", "kind": "earner", "title_pl": "Praca na etacie", "status": "confirmed",
+      "says": "A job: its gross pay each month, growing with wages unless a raise says otherwise.",
+      "params": {
+        "gross": { "type": "money", "unit": "PLN", "ask_pl": "Ile brutto miesięcznie?" },
+        "person": { "type": "enum", "values": ["me", "wife"], "ask_pl": "Czyja to praca?" }
+      },
+      "lines": [
+        { "id": "gross", "says_pl": "Wynagrodzenie brutto", "every": "month", "unit": "PLN", "value": "in.gross * p.index.wage" }
+      ]
+    },
+    {
+      "id": "najem@1", "kind": "contract", "title_pl": "Najem mieszkania", "status": "confirmed",
+      "says": "Rent paid every month on a fixed day, following prices.",
+      "provides": ["housing"],
+      "params": {
+        "rent": { "type": "money", "unit": "PLN", "ask_pl": "Ile czynszu miesięcznie?" },
+        "account": { "type": "place", "unit": "PLN", "ask_pl": "Z którego konta?" },
+        "on": { "type": "text", "default": "day:1", "says_pl": "dzień płatności" }
+      },
+      "lines": [
+        { "id": "rent", "says_pl": "Czynsz", "every": "month", "on": "in.on", "unit": "PLN", "value": "in.rent * p.index.prices",
+          "pay": { "from": "in.account", "to": "wynajmujacy", "match": "czynsz" } }
+      ]
+    },
+    {
+      "id": "wydatki@1", "kind": "plain", "title_pl": "Codzienne wydatki z historii", "status": "confirmed",
+      "says": "Every day, the average daily spending of a category over the last N days of the bank history, following prices.",
+      "params": {
+        "category": { "type": "text", "ask_pl": "Która kategoria?" },
+        "days": { "type": "number", "default": 365, "says_pl": "ile dni historii" },
+        "account": { "type": "place", "unit": "PLN", "ask_pl": "Z którego konta?" }
+      },
+      "lines": [
+        { "id": "spend", "says_pl": "Wydatki dnia", "every": "day", "unit": "PLN", "value": "hist_daily(in.category, in.days) * p.index.prices",
+          "pay": { "from": "in.account", "to": "sklepy" } }
+      ]
+    }
+  ],
+  "instances": [
+    { "id": "my_job", "template": "job_pl@1", "label_pl": "Moja praca", "args": { "gross": 12000, "person": "me" } },
+    { "id": "my_tax", "template": "employment_pl@2022", "label_pl": "Moja umowa o pracę", "args": { "job": "my_job", "account": "konto", "pay_on": "next_month:3-7" } },
+    { "id": "wife_job", "template": "job_pl@1", "label_pl": "Praca żony", "args": { "gross": 7000, "person": "wife" } },
+    { "id": "wife_tax", "template": "employment_pl@2022", "label_pl": "Umowa o pracę żony", "args": { "job": "wife_job", "account": "konto", "employer": "pracodawca_zony", "pay_on": "next_month:10" } },
+    { "id": "rent", "template": "najem@1", "label_pl": "Najem", "args": { "rent": 3200, "account": "konto" } },
+    { "id": "spending", "template": "wydatki@1", "label_pl": "Codzienne wydatki", "from": "2026-10-17", "args": { "category": "codzienne", "account": "konto" } }
+  ]
+}

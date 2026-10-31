@@ -1,0 +1,31 @@
+model rand01
+  tally 2
+  on 2025-10-24
+  start 2025-10-24
+  end 2029-10-24
+  note "RAND-01: Halina's lifetime drawn year by year from her stated life table; it counts the whole years lived before the year of death. The model date is not on the card; the draws don't read it."
+
+source card "Probe card RAND-01: Halina's stated life table"
+
+index yr_age = int 85..88
+
+input q_die[a in yr_age]: num
+
+def death_age: key yr_age = first(a in yr_age where die[a] == 1) at reader
+
+def die[a in yr_age]: dist = binomial(1, q_die[a]) at reader
+
+def lifetime: int = pos(death_age) - 1 at reader
+
+ask q_mean: mean(lifetime) law 2025-10-24 paths 60000 seed 20251024
+
+ask q_mean_again: mean(lifetime) law 2025-10-24 paths 60000 seed 20251024
+
+version life_table
+  cite card
+  governs always
+  known 2025-10-24
+  q_die[85] = 0.2 "the chance of dying within the year at 85"
+  q_die[86] = 0.3 "at 86"
+  q_die[87] = 0.5 "at 87"
+  q_die[88] = 1 "at 88"

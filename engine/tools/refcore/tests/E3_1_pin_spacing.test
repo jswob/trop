@@ -1,0 +1,49 @@
+# E §3.1 step 1: the hash is of the canonical text, "so spacing never changes a hash"; L §2.4 "The loader accepts any
+# spacing that the grammar allows. It then reprints the model as follows, so equal models print identically". Member
+# b is member a's text with its sections in another order, other spacing, a redundant pair of parentheses and the
+# number written 0.120: both are pinned by one hash (a's canonical text), and both load.
+=== joint.tally
+model family
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+  use a = "ana.tally" sha256 "2d61ff780d5901933b42389a451da2ceaa7f3ab91f1506e12f0eb5b4b546304e"
+  use b = "ben.tally" sha256 "2d61ff780d5901933b42389a451da2ceaa7f3ab91f1506e12f0eb5b4b546304e"
+
+ask r: a.rate + b.rate
+=== ana.tally
+model ana
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source s "umowa"
+
+input rate: num
+
+def twice: num = rate + rate
+
+version v
+  cite s
+  governs always
+  known 2025-01-01
+  rate = 0.12 "umowa"
+=== ben.tally
+model ana
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+version v
+  cite s
+  governs always
+  known 2025-01-01
+  rate = 0.120   "umowa"
+def twice : num = (rate+rate)
+input rate:   num
+source s "umowa"
+=== expect
+r: 0.24
+  cut 2026-10-20

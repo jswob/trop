@@ -1,0 +1,4 @@
+q: (inv_12, 1 200.00 DUK, 800.00 DUK, promised, 0.75)
+  law date 2026-10-25, cut 2026-10-25
+rest_asked: ?"When does the rest of the invoice come?" (rest_on[inv_12])
+  law date 2026-10-25, cut 2026-10-25

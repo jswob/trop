@@ -1,0 +1,171 @@
+model ul10
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+  note "Polish PIT 2022: joint filing by spouses (art. 6 ust. 2) for Stefan, with business income on the scale, and Ewa, with none; and whether a couple married in March 2023 may file jointly (Przykład 1)."
+  note "Joint or separate filing is the spouses' choice, so it is an axis; the engine never picks the cheaper one."
+  note "Not modelled: advances and the health contribution, which the example doesn't give, and the 2022 refund of the excess over the 'hipotetyczny podatek' (Dz.U. 2022 poz. 1265 art. 26), which depends on revenue the example doesn't give."
+
+source lifted_1_0_1 "Figures tally 1.0.1 allowed inline in rules"
+
+source mf_pit36 "Ministerstwo Finansów, Broszura informacyjna do zeznania PIT-36 za 2025 rok (no date printed; PDF modified 2025-12-30, server Last-Modified 31 Dec 2025)" at "https://www.podatki.gov.pl/media/i11o5dtk/broszura-do-pit-36-za-2025-r.pdf"
+
+source modeller "The model's own readings and assumptions, each stated with its reason"
+
+source poradnik "Kinga Jańczak, Kiedy możliwe jest wspólne rozliczenie małżonków?, poradnikprzedsiebiorcy.pl (datePublished 2023-02-01)" at "https://poradnikprzedsiebiorcy.pl/-kiedy-mozliwe-jest-wspolne-rozliczenie-malzonkow"
+
+source ustawa_1265 "Ustawa z dnia 9 czerwca 2022 r. o zmianie ustawy o podatku dochodowym od osób fizycznych oraz niektórych innych ustaw, Dz.U. 2022 poz. 1265, ogłoszona 15 czerwca 2022 r.: art. 1 pkt 1 lit. b (the opening words of art. 6 ust. 8), art. 1 pkt 13 lit. a (art. 27 ust. 1), art. 18 ust. 1 (both applied to income from 1 January 2022); the wording is read in the tekst jednolity, Dz.U. 2022 poz. 2647, https://api.sejm.gov.pl/eli/acts/DU/2022/2647/text.pdf" at "https://api.sejm.gov.pl/eli/acts/DU/2022/1265"
+
+source ustawa_2105 "Ustawa z dnia 29 października 2021 r. o zmianie ustawy o podatku dochodowym od osób fizycznych, ustawy o podatku dochodowym od osób prawnych oraz niektórych innych ustaw (Polski Ład), Dz.U. 2021 poz. 2105, ogłoszona 23 listopada 2021 r., w życie 1 stycznia 2022 r.: art. 1 pkt 2 lit. a (art. 6 ust. 2, 'od dnia zawarcia związku małżeńskiego do ostatniego dnia roku podatkowego') and lit. d (art. 6 ust. 8); the wording is read in the tekst jednolity, Dz.U. 2022 poz. 2647" at "https://api.sejm.gov.pl/eli/acts/DU/2021/2105"
+
+unit PLN: currency minor 0.01
+
+axis ul10_filing
+  joint "the spouses ask in the return to be taxed jointly: twice the tax on half their combined income (art. 6 ust. 2)"
+  separate "each spouse is taxed on their own income (art. 6 ust. 1)"
+
+index couple = [stefan_ewa, magdalena_marcin]
+
+index person = [stefan, ewa, magdalena, marcin]
+
+index ty = year 2022..2023
+
+input deductions[p in person, y in ty]: money PLN question "Which deductions from income (art. 26 ust. 1, such as social insurance contributions) does this spouse make?"
+
+input excl_regime[p in person, y in ty]: bool question "Does this spouse use art. 30c, the lump-sum act (other than its art. 6 ust. 1a), the tonnage tax or the shipbuilding act in this year (art. 6 ust. 8)?"
+
+input half_joint_2: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input income[p in person, y in ty]: money PLN question "What is this spouse's dochód taxed on the scale in this year?"
+
+input joint_property[c in couple, y in ty]: bool question "Did the spouses have wspólność majątkowa for the whole year, or from the wedding to the last day of the year (art. 6 ust. 2)?"
+
+input pit_kz: money PLN
+
+input pit_r1: num
+
+input pit_r2: num
+
+input pit_t2: money PLN
+
+input resident[p in person, y in ty]: bool question "Was this spouse subject to unlimited tax liability in Poland (art. 3 ust. 1) in this year?"
+
+input spouse1[c in couple]: key person
+
+input spouse2[c in couple]: key person
+
+input tax_joint_2: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input wedding[c in couple]: date
+
+band pit_scale(x: money PLN): num PLN
+  note "Art. 27 ust. 1: the scale on income from 1 January 2022, in the wording of Dz.U. 2022 poz. 1265."
+
+def base_joint[c in couple, y in ty]: money PLN at start_of(y)
+  note "Joint filers' tax base: half the combined income, rounded to the whole złoty, under 50 groszy dropped, 50 groszy or more up."
+  rule base v mf_rounding = round(half_joint[c, y], 1, half-up)
+
+def dochod[p in person, y in ty]: money PLN = income[p, y] - deductions[p, y] at start_of(y)
+
+def eligible[c in couple, y in ty]: bool at start_of(y)
+  note "Art. 6 ust. 2: both spouses with unlimited tax liability, married with joint property for the year or from the wedding to its end; art. 6 ust. 8: neither uses an excluded regime. Art. 6 ust. 3: a spouse with no income doesn't bar it. The rule points at Dz.U. 2022 poz. 1265, which gave ust. 8 its opening words; its list of regimes is Polski Ład's."
+  rule base v law_1265 = marriage_ok[c, y] and resident[spouse1[c], y] and resident[spouse2[c], y] and not excl_regime[spouse1[c], y] and not excl_regime[spouse2[c], y]
+
+def half_joint[c in couple, y in ty]: num PLN at start_of(y)
+  note "Art. 6 ust. 2: half of the spouses' combined income, each after their own deductions."
+  rule base v law_2105 = (dochod[spouse1[c], y] + dochod[spouse2[c], y]) / half_joint_2
+
+def household_tax[c in couple, y in ty]: money PLN at start_of(y)
+  note "The couple's tax on the scale under the filing chosen."
+  rule joint = tax_joint[c, y] when ul10_filing == joint
+  rule notallowed beats joint = ?"Joint filing is not open to this couple: art. 6 ust. 2 or ust. 8 is not met." when ul10_filing == joint and not eligible[c, y]
+  rule separate = tax_single[spouse1[c], y] + tax_single[spouse2[c], y] when ul10_filing == separate
+
+def marriage_ok[c in couple, y in ty]: bool at start_of(y)
+  note "Art. 6 ust. 2 pkt 1-2: married by the end of the year, with joint property for the whole year or from the wedding to the last day of the year."
+  rule base v law_2105 = wedding[c] < end_of(y) and joint_property[c, y]
+
+def tax_joint[c in couple, y in ty]: money PLN at start_of(y)
+  note "Art. 6 ust. 2: twice the tax computed on half the combined income; the scale gives no negative tax. Tax due is rounded to the whole złoty (PIT-36 brochure STR. 33)."
+  rule base v law_2105 = round(tax_joint_2 * max(0, pit_scale(base_joint[c, y])), 1, half-up)
+
+def tax_single[p in person, y in ty]: money PLN at start_of(y)
+  note "The tax on the spouse's own income on the scale: the base rounded to the whole złoty (STR. 30), the tax due rounded to the whole złoty (STR. 33); the scale gives no negative tax."
+  rule base v law_1265 = round(max(0, pit_scale(round(dochod[p, y], 1, half-up))), 1, half-up)
+
+ask q1_half: half_joint[c, y] for c in [stefan_ewa], y in [2022] law 2026-10-18
+
+ask q2_base: base_joint[c, y] for c in [stefan_ewa], y in [2022] law 2026-10-18
+
+ask q3_tax_joint: tax_joint[c, y] for c in [stefan_ewa], y in [2022] law 2026-10-18
+
+ask q4_tax_single: tax_single[p, y] for p in [stefan, ewa], y in [2022] law 2026-10-18
+
+ask q5_household: household_tax[c, y] for c in [stefan_ewa], y in [2022] law 2026-10-18
+
+ask q6_marriage_ok: marriage_ok[stefan_ewa, 2022], marriage_ok[magdalena_marcin, 2023] law 2026-10-18
+
+ask q7_eligible: eligible[stefan_ewa, 2022], eligible[magdalena_marcin, 2023] law 2026-10-18
+
+version law_2105
+  cite ustawa_2105
+  governs 2022..
+  known 2021-11-23
+  note "Known from the publication of Dz.U. 2021 poz. 2105, 23 November 2021 (api.sejm.gov.pl/eli 'promulgation'; dziennikustaw.gov.pl 'data ogłoszenia'), in force 1 January 2022. Art. 6 ust. 2 in its current wording, joint filing from the wedding to the end of the year included, is this act's (art. 1 pkt 2 lit. a). No rows: half_joint, marriage_ok and tax_joint point at it."
+  note "The act also set a 17% scale for 2022; Dz.U. 2022 poz. 1265 replaced it for the whole of 2022, and the model reads only the later scale."
+
+version lifted_figures
+  cite lifted_1_0_1
+  governs always
+  known 2021-11-23
+  half_joint_2 = 2 "inline in tally 1.0.1: half_joint line 67, factor"
+  tax_joint_2 = 2 "inline in tally 1.0.1: tax_joint line 81, factor"
+
+version law_1265
+  cite ustawa_1265
+  governs 2022..
+  known 2022-06-15
+  note "Known from the publication of Dz.U. 2022 poz. 1265, 15 June 2022 (api.sejm.gov.pl/eli 'promulgation'; dziennikustaw.gov.pl). Art. 18 ust. 1: the new wording of art. 27 ust. 1 and art. 6 ust. 8 'stosuje się do dochodów (przychodów) uzyskanych od dnia 1 stycznia 2022 r.' The tekst jednolity Dz.U. 2022 poz. 2647 (published 16 December 2022) is the locator, not the version."
+  pit_kz = 3600 "art. 27 ust. 1, tabela, wiersz 1 'minus kwota zmniejszająca podatek 3600 zł' (t.j. Dz.U. 2022 poz. 2647)"
+  pit_r1 = 0.12 "art. 27 ust. 1, tabela, wiersz 1 '12%'"
+  pit_r2 = 0.32 "art. 27 ust. 1, tabela, wiersz 2 '32% nadwyżki'"
+  pit_scale: [0, 120000] = x * pit_r1 - pit_kz "art. 27 ust. 1, tabela, wiersz 1 'do 120 000'"
+  pit_scale: (120000, inf) = pit_t2 + (x - band_lo(pit_scale, x)) * pit_r2 "art. 27 ust. 1, tabela, wiersz 2 'ponad 120 000', '10 800 zł + 32% nadwyżki ponad 120 000 zł'"
+  pit_t2 = 10800 "art. 27 ust. 1, tabela, wiersz 2 '10 800 zł'"
+
+version mf_rounding
+  cite mf_pit36
+  governs always
+  known 2025-12-31
+  note "The brochure prints no date: known from its updated stamp, the server's Last-Modified of the PDF, 31 December 2025 (the PDF's own metadata: created 2025-12-03, modified 2025-12-30) (§4.5)."
+  note "The rounding of the tax base and of the tax due to whole złoty: 'Podstawę obliczenia podatku zaokrągla się do pełnych złotych' (STR. 30, poz. 295; for joint filers 'połowa kwoty z poz. 292 (po zaokrągleniu do pełnych złotych)') and 'PODATEK NALEŻNY ... po zaokrągleniu do pełnych złotych' (STR. 33). The brochure is for 2025; this version states no governs span, so it reads for 2022 too."
+
+version facts_poradnik
+  cite poradnik
+  governs always
+  known 2026-10-18
+  note "Przykład 1 and Przykład 2 are hypothetical cases: their stipulations are known from the model's on (§4.5), not from the article's datePublished (2023-02-01)."
+  excl_regime[stefan, 2022] = false "Przykład 2: 'jednoosobową działalność gospodarczą na zasadach ogólnych'"
+  excl_regime[ewa, 2022] = false "Przykład 2: 'nie uzyskiwała dochodów'"
+  excl_regime[magdalena, 2023] = false "Przykład 1: działalność 'na zasadach ogólnych'"
+  excl_regime[marcin, 2023] = false "Przykład 1: Marcin bezrobotny przez cały rok"
+  income[stefan, 2022] = 150000 "Przykład 2: 'Osiągnął z tego tytułu w 2022 roku dochód w kwocie 150 000 zł.'"
+  income[ewa, 2022] = 0 "Przykład 2: 'nie uzyskiwała dochodów'"
+  joint_property[stefan_ewa, 2022] = ?"Przykład 2 does not say whether Stefan and Ewa had wspólność majątkowa from the wedding to 31 December 2022 (art. 6 ust. 2)." "Przykład 2"
+  joint_property[magdalena_marcin, 2023] = true "Przykład 1: 'wspólność majątkowa'"
+  spouse1[stefan_ewa] = stefan "Przykład 2"
+  spouse1[magdalena_marcin] = magdalena "Przykład 1"
+  spouse2[stefan_ewa] = ewa "Przykład 2"
+  spouse2[magdalena_marcin] = marcin "Przykład 1"
+  wedding[stefan_ewa] = window(2022-08-01, 2022-08-31) "Przykład 2: 'W sierpniu 2022 roku'"
+  wedding[magdalena_marcin] = window(2023-03-01, 2023-03-31) "Przykład 1: married in March 2023"
+
+version model_assume
+  cite modeller
+  governs always
+  known 2026-10-18
+  note "An assumption standing for the example's own fact: known from the model's on, as the example (§4.5)."
+  deductions = 0 assumed "the example names no deductions from income (art. 26 ust. 1, such as social insurance contributions); the 150 000 zł dochód is taken as the base"

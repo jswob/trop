@@ -1,0 +1,54 @@
+# MC-X-F10: a fill whose demand is an adjustment's -a.change. The prelude kind adjustments has the attribute change,
+# "δ, signed, of the leg's type" (L §5.14.3): its unit is the adjusted leg's, per value (a transfers leg is `cash:
+# any`), so load can't see it. L §5.12: "A fill's supply and demand share one unit, which may be any"; L §3.2: "The run
+# checks the keys load couldn't see, as load checks two currencies"; L §8.4: refused at load where the types show it,
+# otherwise at the key. v2 (known 2027-03-15) lowers amt from 100 to 90 for the three months booked before it: three
+# adjustments of -10.00 PLN (L §5.14.3), dated 2027-03-15, each taken from 2027-04, the first month after it in
+# `order m` (L §5.12 Take). snap11 refused the fill at load: LOAD-UNIT supply (money PLN) and demand (dyn).
+# L5_12_fill_dynamic_unit_run: the same fill over a leg in EUR is refused at the take (RUN-DOMAIN).
+=== m.tally
+model m
+  tally 2
+  on 2027-06-30
+  start 2027-01-01
+  end 2027-06-30
+source src "s"
+unit PLN: currency minor 0.01
+place acct: accounts PLN lives 2027-01-01..
+place office: outside lives 2027-01-01..
+input amt: money PLN
+move pay[m in months]: transfers
+  on start_of(m)
+  leg cash from office to acct amount amt
+fill wh
+  supply amt for m in months
+  demand -a.change for a in adjustments over .. where a.adjusts in transfers and a.change < 0
+  arc a.day < start_of(m)
+  order m
+version v
+  cite src
+  governs always
+  known 2026-12-31
+  amt = 100
+ask t: wh.taken[m, a] for m in months, a in adjustments over .. where m == month_of(a.day) + 1 or m == month_of(a.day)
+ask d: sum(-a.change for a in adjustments over ..)
+version v2
+  cite src
+  governs always
+  known 2027-03-15
+  replace amt = 90
+=== expect
+d: 30.00 PLN
+  cut 2027-06-30
+t (m = 2027-03, a = adjustments[pay[2027-01].cash, v2]): 0.00 PLN
+  cut 2027-06-30
+t (m = 2027-03, a = adjustments[pay[2027-02].cash, v2]): 0.00 PLN
+  cut 2027-06-30
+t (m = 2027-03, a = adjustments[pay[2027-03].cash, v2]): 0.00 PLN
+  cut 2027-06-30
+t (m = 2027-04, a = adjustments[pay[2027-01].cash, v2]): 10.00 PLN
+  cut 2027-06-30
+t (m = 2027-04, a = adjustments[pay[2027-02].cash, v2]): 10.00 PLN
+  cut 2027-06-30
+t (m = 2027-04, a = adjustments[pay[2027-03].cash, v2]): 10.00 PLN
+  cut 2027-06-30

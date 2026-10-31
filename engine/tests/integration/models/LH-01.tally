@@ -1,0 +1,348 @@
+model lh01
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+  note "US wash sales, IRC 1091: Publication 550 (2025) situations A to E, and the examples of 26 CFR 1.1091-1(h) and 26 CFR 1.1091-2(a)."
+  note "Each worked situation is a key of sit. Its purchases are keys of lot, in order of acquisition; its sales are keys of sale, in order of disposition."
+  note "A loss is matched with replacement lots of the same situation bought within the window, earliest acquisition first (26 CFR 1.1091-1(c), (d)), by the fill wash, which cites that order (version cfr1091_1_order)."
+
+source cfr1091_1 "26 CFR 1.1091-1, Losses from wash sales of stock or securities (eCFR), retrieved 2026-10-18" at "https://www.ecfr.gov/current/title-26/section-1.1091-1"
+
+source cfr1091_2 "26 CFR 1.1091-2, Basis of stock or securities acquired in wash sales (eCFR), retrieved 2026-10-18" at "https://www.ecfr.gov/current/title-26/section-1.1091-2"
+
+source modeller "The modeller's wiring: not-applicable defaults for the per-share and stated-figure inputs, which no source states"
+
+source pub550 "IRS Publication 550 (2025), Investment Income and Expenses, chapter 4, Wash Sales" at "https://www.irs.gov/pub/irs-pdf/p550.pdf"
+
+source usc1091 "26 U.S. Code 1091, Loss from wash sales of stock or securities (LII), retrieved 2026-10-18" at "https://www.law.cornell.edu/uscode/text/26/1091"
+
+unit USD: currency minor 0.01
+
+unit shr "share of stock"
+
+index lot = [a_old, a_new, b_sep, b_dec13, b_dec20, c_sep, c_feb3, c_feb4, c_feb5, c_feb6, d_b1, d_b2, d_b3, d_jan10, e_jun4, e_oct16, x1_dec1, x1_dec15, x2_sep21, x2_dec21, x2_dec27, x3_sep15, x3_feb15, x3_feb16, x3_feb17, x3_feb18, y1_old, y1_new, y2_old, y2_new]
+
+index sale = [a_s, b_s, c_s, d_s1, d_s2, d_s3, e_s, x1_s, x2_s, x3_s, y1_s, y2_s]
+
+index sit = [pa, pb, pc, pd, pe, x1, x2, x3, y1, y2]
+
+input acq_on[l in lot]: date
+
+input lot_cost[l in lot]: money USD
+
+input lot_px[l in lot]: num USD/shr
+
+input lot_sh[l in lot]: num shr
+
+input lot_sit[l in lot]: key sit
+
+input sale_amt[s in sale]: money USD
+
+input sale_on[s in sale]: date
+
+input sale_px[s in sale]: num USD/shr
+
+input sale_sh[s in sale]: num shr
+
+input sold_lot[s in sale]: key lot
+
+input stated_loss[s in sale]: money USD
+
+input stated_within[s in sale, l in lot]: bool
+
+input window_days: int
+
+def added[l in lot]: num USD = sum(wash.taken[s, l] * loss_ps[s] for s in sale where lot_sit[sold_lot[s]] == lot_sit[l]) at reader
+
+def basis[l in lot]: num USD = cost[l] + added[l] at reader
+
+def basis_d[l in lot]: num USD = cost[l] + sum(wash.taken[s, l] * (sold_cost[s] - proceeds[s]) / sale_sh[s] for s in sale where lot_sit[sold_lot[s]] == lot_sit[l]) at reader
+
+def cost[l in lot]: num USD at reader
+  rule base = lot_cost[l]
+  rule per_share beats base = lot_px[l] * lot_sh[l] when lot_px[l] != none
+
+def deductible[s in sale]: num USD = loss[s] - disallowed[s] at reader
+
+def disallowed[s in sale]: num USD = loss_ps[s] * sum(wash.taken[s, l] for l in lot) at reader
+
+def in_window[s in sale, l in lot]: bool at reader
+  rule base = days_between(acq_on[l], sale_on[s]) <= window_days and days_between(sale_on[s], acq_on[l]) <= window_days
+  rule stated beats base = stated_within[s, l] when stated_within[s, l] != none
+
+def loss[s in sale]: num USD at reader
+  rule base = max(0, sold_cost[s] - proceeds[s])
+  rule stated beats base = stated_loss[s] when stated_loss[s] != none
+
+def loss_ps[s in sale]: num USD/shr = loss[s] / sale_sh[s] at reader
+
+def proceeds[s in sale]: num USD at reader
+  rule base = sale_amt[s]
+  rule per_share beats base = sale_px[s] * sale_sh[s] when sale_px[s] != none
+
+def sold_cost[s in sale]: num USD = cost[sold_lot[s]] * sale_sh[s] / lot_sh[sold_lot[s]] at reader
+
+fill wash
+  v cfr1091_1_order
+  supply sale_sh[s] for s in sale
+  demand lot_sh[l] for l in lot
+  arc lot_sit[l] == lot_sit[sold_lot[s]] and l != sold_lot[s] and loss[s] > 0 and in_window[s, l]
+  order s, l ties by (pos(s), pos(l))
+
+ask a_basis_new: basis[a_new] law 2026-10-18
+
+ask a_disallowed: disallowed[a_s] law 2026-10-18
+
+ask b_added_dec13: added[b_dec13] law 2026-10-18
+
+ask b_basis_dec13: basis[b_dec13] law 2026-10-18
+
+ask b_basis_dec20: basis[b_dec20] law 2026-10-18
+
+ask b_deductible: deductible[b_s] law 2026-10-18
+
+ask b_disallowed: disallowed[b_s] law 2026-10-18
+
+ask b_loss: loss[b_s] law 2026-10-18
+
+ask c_added_feb3: added[c_feb3] law 2026-10-18
+
+ask c_added_feb4: added[c_feb4] law 2026-10-18
+
+ask c_disallowed: disallowed[c_s] law 2026-10-18
+
+ask d_disallowed_ps: disallowed[d_s1] / sale_sh[d_s1] law 2026-10-18
+
+ask e_disallowed: disallowed[e_s] law 2026-10-18
+
+ask x1_deductible: deductible[x1_s] law 2026-10-18
+
+ask x2_basis_dec21: basis_d[x2_dec21] law 2026-10-18
+
+ask x2_basis_dec27: basis_d[x2_dec27] law 2026-10-18
+
+ask x2_deductible: deductible[x2_s] law 2026-10-18
+
+ask x2_disallowed: disallowed[x2_s] law 2026-10-18
+
+ask x3_matched: wash.taken[x3_s, l] for l in lot where lot_sit[l] == x3 law 2026-10-18
+
+ask y1_basis_new: basis_d[y1_new] law 2026-10-18
+
+ask y2_basis_new: basis_d[y2_new] law 2026-10-18
+
+version usc1091_a
+  cite usc1091
+  governs always
+  known 1954-08-16
+  note "Law is known from its enactment (LANGUAGE §4.5). The 30-day window of subsection (a) is in the Internal Revenue Code of 1954 (Aug. 16, 1954, ch. 736, 68A Stat. 319), as the section's history on LII gives it; the later amendments of (a) listed there (Pub. L. 98-369, 1984; Pub. L. 100-647, 1988) don't change the window."
+  window_days = 30 "subsection (a): a period beginning 30 days before the date of such sale and ending 30 days after such date"
+
+version cfr1091_1_order
+  cite cfr1091_1
+  governs always
+  known 1967-08-09
+  note "Paragraphs (b) to (d): losses are taken in order of disposition, and shares are matched in order of acquisition, beginning with the earliest acquisition. The fill wash cites this version; it has no rows."
+  note "The section's source note on eCFR: T.D. 6500, 25 FR 11910, Nov. 26, 1960, as amended by T.D. 6926, 32 FR 11468, Aug. 9, 1967. Which paragraphs T.D. 6926 changed wasn't checked, so the later publication is taken as the known date, and no view sees the rule too early."
+
+version cfr1091_1_h
+  cite cfr1091_1
+  governs always
+  known 2026-10-18
+  note "Paragraph (h), Examples 1 to 3. Example 2 repeats Pub situation B with 1954-55 dates; Example 3 prices Pub situation C."
+  note "The examples are hypothetical: their figures are stipulations, known from the model's on (LANGUAGE §4.5)."
+  acq_on[x1_dec1] = 1954-12-01 "(h) Example 1"
+  acq_on[x1_dec15] = 1954-12-15 "(h) Example 1"
+  acq_on[x2_sep21] = 1954-09-21 "(h) Example 2"
+  acq_on[x2_dec21] = 1954-12-21 "(h) Example 2"
+  acq_on[x2_dec27] = 1954-12-27 "(h) Example 2"
+  acq_on[x3_sep15] = 1954-09-15 "(h) Example 3"
+  acq_on[x3_feb15] = 1956-02-15 "(h) Example 3"
+  acq_on[x3_feb16] = 1956-02-16 "(h) Example 3"
+  acq_on[x3_feb17] = 1956-02-17 "(h) Example 3"
+  acq_on[x3_feb18] = 1956-02-18 "(h) Example 3"
+  lot_cost[x1_dec1] = 10000 "(h) Example 1"
+  lot_cost[x1_dec15] = 9000 "(h) Example 1"
+  lot_cost[x2_sep21] = 5000 "(h) Example 2"
+  lot_cost[x2_dec21] = 2750 "(h) Example 2"
+  lot_cost[x2_dec27] = 1125 "(h) Example 2"
+  lot_cost[x3_sep15] = 5000 "(h) Example 3"
+  lot_cost[x3_feb15] = 2000 "(h) Example 3: 50 shares on each of February 15 to 18, 1956, for $2,000"
+  lot_cost[x3_feb16] = 2000 "(h) Example 3: 50 shares on each of February 15 to 18, 1956, for $2,000"
+  lot_cost[x3_feb17] = 2000 "(h) Example 3: 50 shares on each of February 15 to 18, 1956, for $2,000"
+  lot_cost[x3_feb18] = 2000 "(h) Example 3: 50 shares on each of February 15 to 18, 1956, for $2,000"
+  lot_sh[x1_dec1] = 100 "(h) Example 1"
+  lot_sh[x1_dec15] = 100 "(h) Example 1"
+  lot_sh[x2_sep21] = 100 "(h) Example 2"
+  lot_sh[x2_dec21] = 50 "(h) Example 2"
+  lot_sh[x2_dec27] = 25 "(h) Example 2"
+  lot_sh[x3_sep15] = 100 "(h) Example 3"
+  lot_sh[x3_feb15] = 50 "(h) Example 3"
+  lot_sh[x3_feb16] = 50 "(h) Example 3"
+  lot_sh[x3_feb17] = 50 "(h) Example 3"
+  lot_sh[x3_feb18] = 50 "(h) Example 3"
+  lot_sit[x1_dec1] = x1
+  lot_sit[x1_dec15] = x1
+  lot_sit[x2_sep21] = x2
+  lot_sit[x2_dec21] = x2
+  lot_sit[x2_dec27] = x2
+  lot_sit[x3_sep15] = x3
+  lot_sit[x3_feb15] = x3
+  lot_sit[x3_feb16] = x3
+  lot_sit[x3_feb17] = x3
+  lot_sit[x3_feb18] = x3
+  sale_amt[x1_s] = 9000 "(h) Example 1"
+  sale_amt[x2_s] = 4000 "(h) Example 2"
+  sale_amt[x3_s] = 4000 "(h) Example 3"
+  sale_on[x1_s] = 1955-01-03 "(h) Example 1"
+  sale_on[x2_s] = 1955-01-03 "(h) Example 2"
+  sale_on[x3_s] = 1956-02-01 "(h) Example 3"
+  sale_sh[x1_s] = 100 "(h) Example 1: the first 100 shares"
+  sale_sh[x2_s] = 100 "(h) Example 2"
+  sale_sh[x3_s] = 100 "(h) Example 3"
+  sold_lot[x1_s] = x1_dec1 "(h) Example 1: the first 100 shares"
+  sold_lot[x2_s] = x2_sep21 "(h) Example 2"
+  sold_lot[x3_s] = x3_sep15 "(h) Example 3"
+
+version cfr1091_2_a
+  cite cfr1091_2
+  governs always
+  known 2026-10-18
+  note "Paragraph (a), Examples 1 and 2: one old share bought in 1935, sold January 15, 1955; one new share bought February 1, 1955."
+  note "The examples are hypothetical: their figures are stipulations, known from the model's on (LANGUAGE §4.5)."
+  acq_on[y1_old] = window(1935-01-01, 1935-12-31) "(a) Example 1: in 1935"
+  acq_on[y1_new] = 1955-02-01 "(a) Example 1"
+  acq_on[y2_old] = window(1935-01-01, 1935-12-31) "(a) Example 2: in 1935"
+  acq_on[y2_new] = 1955-02-01 "(a) Example 2"
+  lot_cost[y1_old] = 100 "(a) Example 1"
+  lot_cost[y1_new] = 90 "(a) Example 1"
+  lot_cost[y2_old] = 100 "(a) Example 2"
+  lot_cost[y2_new] = 70 "(a) Example 2"
+  lot_sh[y1_old] = 1 "(a) Example 1"
+  lot_sh[y1_new] = 1 "(a) Example 1"
+  lot_sh[y2_old] = 1 "(a) Example 2"
+  lot_sh[y2_new] = 1 "(a) Example 2"
+  lot_sit[y1_old] = y1
+  lot_sit[y1_new] = y1
+  lot_sit[y2_old] = y2
+  lot_sit[y2_new] = y2
+  sale_amt[y1_s] = 80 "(a) Example 1"
+  sale_amt[y2_s] = 80 "(a) Example 2"
+  sale_on[y1_s] = 1955-01-15 "(a) Example 1"
+  sale_on[y2_s] = 1955-01-15 "(a) Example 2"
+  sale_sh[y1_s] = 1 "(a) Example 1"
+  sale_sh[y2_s] = 1 "(a) Example 2"
+  sold_lot[y1_s] = y1_old "(a) Example 1"
+  sold_lot[y2_s] = y2_old "(a) Example 2"
+
+version pub550_2025
+  cite pub550
+  governs always
+  known 2026-10-18
+  note "The Pub's situations are worked examples: their figures are stipulations, known from the model's on (LANGUAGE §4.5), and so are the assumed years of E. The PDF's own date (created 2026-03-06) isn't used."
+  note "Its printed page numbers equal the PDF page numbers."
+  note "A gives no dates, only that the replacement was bought within 30 days from the sale; stated_within carries that fact."
+  note "D: all 300 shares were sold on one day; they are three sales of one block each, in the order the Pub lists the blocks (first, second, third)."
+  note "E: the short sale is closed on November 19 by delivering the shares bought June 4; the Pub dates the sale at the short sale, October 15. No year is given."
+  acq_on[b_sep] = 2024-09-20 "p. 87, More or less stock bought than sold, Example 1"
+  acq_on[b_dec13] = 2024-12-13 "p. 87, More or less stock bought than sold, Example 1"
+  acq_on[b_dec20] = 2024-12-20 "p. 87, More or less stock bought than sold, Example 1"
+  acq_on[c_sep] = 2024-09-16 "p. 87, More or less stock bought than sold, Example 2"
+  acq_on[c_feb3] = 2025-02-03 "p. 87, More or less stock bought than sold, Example 2"
+  acq_on[c_feb4] = 2025-02-04 "p. 87, More or less stock bought than sold, Example 2"
+  acq_on[c_feb5] = 2025-02-05 "p. 87, More or less stock bought than sold, Example 2"
+  acq_on[c_feb6] = 2025-02-06 "p. 87, More or less stock bought than sold, Example 2"
+  acq_on[d_b1] = window(2019-01-01, 2019-12-31) "p. 87, Loss and gain on same day, Example: During 2019"
+  acq_on[d_b2] = window(2019-01-01, 2019-12-31) "p. 87, Loss and gain on same day, Example: During 2019"
+  acq_on[d_b3] = window(2019-01-01, 2019-12-31) "p. 87, Loss and gain on same day, Example: During 2019"
+  acq_on[d_jan10] = 2025-01-10 "p. 87, Loss and gain on same day, Example"
+  acq_on[e_jun4] = 2025-06-04 assumed "the Pub gives June 4 with no year; the year of the 2025 edition is taken" "p. 87, Short sales, Example"
+  acq_on[e_oct16] = 2025-10-16 assumed "the Pub gives October 16 with no year; the year of the 2025 edition is taken" "p. 87, Short sales, Example"
+  lot_cost[a_old] = 1000 "p. 86, Wash Sales, Example 1"
+  lot_cost[a_new] = 800 "p. 86, Wash Sales, Example 1"
+  lot_cost[b_sep] = 5000 "p. 87, More or less stock bought than sold, Example 1"
+  lot_cost[b_dec13] = 2750 "p. 87, More or less stock bought than sold, Example 1"
+  lot_cost[b_dec20] = 1125 "p. 87, More or less stock bought than sold, Example 1"
+  lot_cost[c_sep] = ?"What did the 100 shares bought September 16, 2024 cost? The Pub states only the loss." "p. 87, More or less stock bought than sold, Example 2"
+  lot_cost[c_feb3] = ?"What did the 50 shares bought February 3, 2025 cost? The Pub gives no price." "p. 87, More or less stock bought than sold, Example 2"
+  lot_cost[c_feb4] = ?"What did the 50 shares bought February 4, 2025 cost? The Pub gives no price." "p. 87, More or less stock bought than sold, Example 2"
+  lot_cost[c_feb5] = ?"What did the 50 shares bought February 5, 2025 cost? The Pub gives no price." "p. 87, More or less stock bought than sold, Example 2"
+  lot_cost[c_feb6] = ?"What did the 50 shares bought February 6, 2025 cost? The Pub gives no price." "p. 87, More or less stock bought than sold, Example 2"
+  lot_cost[d_jan10] = ?"What did the 250 shares bought January 10, 2025 cost? The Pub gives no price." "p. 87, Loss and gain on same day, Example"
+  lot_cost[e_jun4] = 1000 "p. 87, Short sales, Example"
+  lot_cost[e_oct16] = 750 "p. 87, Short sales, Example"
+  lot_px[d_b1] = 158 "p. 87, Loss and gain on same day, Example: first block"
+  lot_px[d_b2] = 100 "p. 87, Loss and gain on same day, Example: second block"
+  lot_px[d_b3] = 95 "p. 87, Loss and gain on same day, Example: third block"
+  lot_sh[a_old] = 100 "p. 86, Wash Sales, Example 1"
+  lot_sh[a_new] = 100 "p. 86, Wash Sales, Example 1"
+  lot_sh[b_sep] = 100 "p. 87, More or less stock bought than sold, Example 1"
+  lot_sh[b_dec13] = 50 "p. 87, More or less stock bought than sold, Example 1"
+  lot_sh[b_dec20] = 25 "p. 87, More or less stock bought than sold, Example 1"
+  lot_sh[c_sep] = 100 "p. 87, More or less stock bought than sold, Example 2"
+  lot_sh[c_feb3] = 50 "p. 87, More or less stock bought than sold, Example 2"
+  lot_sh[c_feb4] = 50 "p. 87, More or less stock bought than sold, Example 2"
+  lot_sh[c_feb5] = 50 "p. 87, More or less stock bought than sold, Example 2"
+  lot_sh[c_feb6] = 50 "p. 87, More or less stock bought than sold, Example 2"
+  lot_sh[d_b1] = 100 "p. 87, Loss and gain on same day, Example"
+  lot_sh[d_b2] = 100 "p. 87, Loss and gain on same day, Example"
+  lot_sh[d_b3] = 100 "p. 87, Loss and gain on same day, Example"
+  lot_sh[d_jan10] = 250 "p. 87, Loss and gain on same day, Example"
+  lot_sh[e_jun4] = 100 "p. 87, Short sales, Example"
+  lot_sh[e_oct16] = 100 "p. 87, Short sales, Example"
+  lot_sit[a_old] = pa
+  lot_sit[a_new] = pa
+  lot_sit[b_sep] = pb
+  lot_sit[b_dec13] = pb
+  lot_sit[b_dec20] = pb
+  lot_sit[c_sep] = pc
+  lot_sit[c_feb3] = pc
+  lot_sit[c_feb4] = pc
+  lot_sit[c_feb5] = pc
+  lot_sit[c_feb6] = pc
+  lot_sit[d_b1] = pd
+  lot_sit[d_b2] = pd
+  lot_sit[d_b3] = pd
+  lot_sit[d_jan10] = pd
+  lot_sit[e_jun4] = pe
+  lot_sit[e_oct16] = pe
+  sale_amt[a_s] = 750 "p. 86, Wash Sales, Example 1"
+  sale_amt[b_s] = 4000 "p. 87, More or less stock bought than sold, Example 1"
+  sale_amt[c_s] = ?"What were the proceeds of the January 29, 2025 sale? The Pub states only the loss." "p. 87, More or less stock bought than sold, Example 2"
+  sale_amt[e_s] = 750 "p. 87, Short sales, Example: sold short for $750"
+  sale_on[b_s] = 2025-01-03 "p. 87, More or less stock bought than sold, Example 1"
+  sale_on[c_s] = 2025-01-29 "p. 87, More or less stock bought than sold, Example 2"
+  sale_on[d_s1] = 2024-12-27 "p. 87, Loss and gain on same day, Example"
+  sale_on[d_s2] = 2024-12-27 "p. 87, Loss and gain on same day, Example"
+  sale_on[d_s3] = 2024-12-27 "p. 87, Loss and gain on same day, Example"
+  sale_on[e_s] = 2025-10-15 assumed "the Pub gives October 15 with no year; the year of the 2025 edition is taken" "p. 87, Short sales, Example: the date of entering into the short sale is the date of sale"
+  sale_px[d_s1] = 125 "p. 87, Loss and gain on same day, Example: 300 shares at $125"
+  sale_px[d_s2] = 125 "p. 87, Loss and gain on same day, Example: 300 shares at $125"
+  sale_px[d_s3] = 125 "p. 87, Loss and gain on same day, Example: 300 shares at $125"
+  sale_sh[a_s] = 100 "p. 86, Wash Sales, Example 1"
+  sale_sh[b_s] = 100 "p. 87, More or less stock bought than sold, Example 1"
+  sale_sh[c_s] = 100 "p. 87, More or less stock bought than sold, Example 2"
+  sale_sh[d_s1] = 100 "p. 87, Loss and gain on same day, Example"
+  sale_sh[d_s2] = 100 "p. 87, Loss and gain on same day, Example"
+  sale_sh[d_s3] = 100 "p. 87, Loss and gain on same day, Example"
+  sale_sh[e_s] = 100 "p. 87, Short sales, Example"
+  sold_lot[a_s] = a_old "p. 86, Wash Sales, Example 1"
+  sold_lot[b_s] = b_sep "p. 87, More or less stock bought than sold, Example 1: the 100 shares bought in September"
+  sold_lot[c_s] = c_sep "p. 87, More or less stock bought than sold, Example 2"
+  sold_lot[d_s1] = d_b1 "p. 87, Loss and gain on same day, Example: first block"
+  sold_lot[d_s2] = d_b2 "p. 87, Loss and gain on same day, Example: second block"
+  sold_lot[d_s3] = d_b3 "p. 87, Loss and gain on same day, Example: third block"
+  sold_lot[e_s] = e_jun4 "p. 87, Short sales, Example: closed by delivering the shares bought June 4"
+  stated_loss[c_s] = 1000 "p. 87, More or less stock bought than sold, Example 2: at a $1,000 loss"
+  stated_within[a_s, a_new] = true "p. 86, Wash Sales, Example 1: within 30 days from the sale"
+
+version wiring
+  cite modeller
+  governs always
+  known 2026-10-18
+  note "Not-applicable defaults that stand for the cases' own facts, so they take the stipulations' known date, the model's on (LANGUAGE §4.5)."
+  lot_px = none "a lot has a per-share price only where the source gives one"
+  sale_px = none "a sale has a per-share price only where the source gives one"
+  stated_loss = none "a loss is stated as a fact only where the source gives no prices"
+  stated_within = none "the window is stated as a fact only where the source gives no dates"

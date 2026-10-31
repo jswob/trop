@@ -1,0 +1,80 @@
+q_all_in_r: 35 000 XXX
+  law date 2026-10-19, cut 2026-10-19
+q_deduction (m = full_credit, c = i): 4 000 XXX
+  law date 2026-10-19, cut 2026-10-19
+q_deduction (m = full_credit, c = ii): 8 000 XXX
+  law date 2026-10-19, cut 2026-10-19
+q_deduction (m = ordinary_credit, c = i): 4 000 XXX
+  law date 2026-10-19, cut 2026-10-19
+q_deduction (m = ordinary_credit, c = ii): 7 000 XXX
+  law date 2026-10-19, cut 2026-10-19
+q_income_split: ok
+  law date 2026-10-19, cut 2026-10-19
+q_rate_cut: 4 000 XXX
+  law date 2026-10-19, cut 2026-10-19
+q_relief (m = no_convention, c = i): 0 XXX
+  law date 2026-10-19, cut 2026-10-19
+q_relief (m = no_convention, c = ii): 0 XXX
+  law date 2026-10-19, cut 2026-10-19
+q_relief (m = exempt, c = i): 11 000 XXX
+  law date 2026-10-19, cut 2026-10-19
+q_relief (m = exempt, c = ii): 11 000 XXX
+  law date 2026-10-19, cut 2026-10-19
+q_relief (m = progression, c = i): 7 000 XXX
+  law date 2026-10-19, cut 2026-10-19
+q_relief (m = progression, c = ii): 7 000 XXX
+  law date 2026-10-19, cut 2026-10-19
+q_relief (m = full_credit, c = i): 4 000 XXX
+  law date 2026-10-19, cut 2026-10-19
+q_relief (m = full_credit, c = ii): 8 000 XXX
+  law date 2026-10-19, cut 2026-10-19
+q_relief (m = ordinary_credit, c = i): 4 000 XXX
+  law date 2026-10-19, cut 2026-10-19
+q_relief (m = ordinary_credit, c = ii): 7 000 XXX
+  law date 2026-10-19, cut 2026-10-19
+q_s_tax (c = i): ok
+  law date 2026-10-19, cut 2026-10-19
+q_s_tax (c = ii): ok
+  law date 2026-10-19, cut 2026-10-19
+q_tax_on_s: 7 000 XXX
+  law date 2026-10-19, cut 2026-10-19
+q_tax_r (m = no_convention, c = i): 35 000 XXX
+  law date 2026-10-19, cut 2026-10-19
+q_tax_r (m = no_convention, c = ii): 35 000 XXX
+  law date 2026-10-19, cut 2026-10-19
+q_tax_r (m = exempt, c = i): 24 000 XXX
+  law date 2026-10-19, cut 2026-10-19
+q_tax_r (m = exempt, c = ii): 24 000 XXX
+  law date 2026-10-19, cut 2026-10-19
+q_tax_r (m = progression, c = i): 28 000 XXX
+  law date 2026-10-19, cut 2026-10-19
+q_tax_r (m = progression, c = ii): 28 000 XXX
+  law date 2026-10-19, cut 2026-10-19
+q_tax_r (m = full_credit, c = i): 31 000 XXX
+  law date 2026-10-19, cut 2026-10-19
+q_tax_r (m = full_credit, c = ii): 27 000 XXX
+  law date 2026-10-19, cut 2026-10-19
+q_tax_r (m = ordinary_credit, c = i): 31 000 XXX
+  law date 2026-10-19, cut 2026-10-19
+q_tax_r (m = ordinary_credit, c = ii): 28 000 XXX
+  law date 2026-10-19, cut 2026-10-19
+q_total (m = no_convention, c = i): 39 000 XXX
+  law date 2026-10-19, cut 2026-10-19
+q_total (m = no_convention, c = ii): 43 000 XXX
+  law date 2026-10-19, cut 2026-10-19
+q_total (m = exempt, c = i): 28 000 XXX
+  law date 2026-10-19, cut 2026-10-19
+q_total (m = exempt, c = ii): 32 000 XXX
+  law date 2026-10-19, cut 2026-10-19
+q_total (m = progression, c = i): 32 000 XXX
+  law date 2026-10-19, cut 2026-10-19
+q_total (m = progression, c = ii): 36 000 XXX
+  law date 2026-10-19, cut 2026-10-19
+q_total (m = full_credit, c = i): 35 000 XXX
+  law date 2026-10-19, cut 2026-10-19
+q_total (m = full_credit, c = ii): 35 000 XXX
+  law date 2026-10-19, cut 2026-10-19
+q_total (m = ordinary_credit, c = i): 35 000 XXX
+  law date 2026-10-19, cut 2026-10-19
+q_total (m = ordinary_credit, c = ii): 36 000 XXX
+  law date 2026-10-19, cut 2026-10-19

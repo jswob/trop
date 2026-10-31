@@ -1,0 +1,40 @@
+ex_a_average: 180 USD
+  law date 2026-10-18, cut 2026-10-18
+ex_a_threshold: 225 USD
+  law date 2026-10-18, cut 2026-10-18
+ex_b_apportioned (d = apr): (0.4, 10 USD, 90 USD)
+  assumed: the example finds an excess distribution, so the current year is taken not to be the first year of the holding period (s. 1291(b)(2)(B)); the case doesn't say (first_year_of_holding[ex_b])
+  given: prior_average[ex_b] = 180 USD (hodgen_examples)
+  law date 2026-10-18, cut 2026-10-18
+ex_b_apportioned (d = oct): (0.6, 15 USD, 135 USD)
+  assumed: the example finds an excess distribution, so the current year is taken not to be the first year of the holding period (s. 1291(b)(2)(B)); the case doesn't say (first_year_of_holding[ex_b])
+  given: prior_average[ex_b] = 180 USD (hodgen_examples)
+  law date 2026-10-18, cut 2026-10-18
+ex_b_daily (d = apr) [hold_edge = *]: ?"On what day did the shareholder acquire the shares? The article gives no acquisition date." (acquired_on[ex_b]) ?"On what day was the April distribution received? The article gives the month only, and no year." (paid_on[ex_b, apr])
+  assumed: the example finds an excess distribution, so the current year is taken not to be the first year of the holding period (s. 1291(b)(2)(B)); the case doesn't say (first_year_of_holding[ex_b])
+  given: prior_average[ex_b] = 180 USD (hodgen_examples)
+  law date 2026-10-18, cut 2026-10-18
+ex_b_daily (d = oct) [hold_edge = *]: ?"On what day did the shareholder acquire the shares? The article gives no acquisition date." (acquired_on[ex_b]) ?"On what day was the October distribution received? The article gives the month only, and no year." (paid_on[ex_b, oct])
+  assumed: the example finds an excess distribution, so the current year is taken not to be the first year of the holding period (s. 1291(b)(2)(B)); the case doesn't say (first_year_of_holding[ex_b])
+  given: prior_average[ex_b] = 180 USD (hodgen_examples)
+  law date 2026-10-18, cut 2026-10-18
+ex_b_deferred_tax [hold_edge = *]: ?"On what day did the shareholder acquire the shares? The article gives no acquisition date." (acquired_on[ex_b]) ?"On what day was the April distribution received? The article gives the month only, and no year." (paid_on[ex_b, apr]) ?"On what day was the October distribution received? The article gives the month only, and no year." (paid_on[ex_b, oct]) ?"Which was the first taxable year of the holding period in which the fund was a PFIC? The years before it are pre-PFIC years (s. 1291(a)(1)(B)(ii)). The article doesn't say." (first_pfic_year[ex_b])
+  assumed: pyear: the case gives no tax year for the shareholder, so its taxable years are taken as calendar years, with no fiscal anchor: the years of Line 16c's table, which is 'based on calendar year taxpayer'
+  assumed: the article points to Form 1040, so the shareholder is taken to be an individual; the case doesn't say (is_individual[ex_b])
+  assumed: the example finds an excess distribution, so the current year is taken not to be the first year of the holding period (s. 1291(b)(2)(B)); the case doesn't say (first_year_of_holding[ex_b])
+  given: prior_average[ex_b] = 180 USD (hodgen_examples)
+  law date 2026-10-18, cut 2026-10-18
+ex_b_interest: ?"On what day was the April distribution received? The article gives the month only, and no year." (paid_on[ex_b, apr]) ?"On what day was the October distribution received? The article gives the month only, and no year." (paid_on[ex_b, oct]) ?"What is the interest under s. 6621 on this increase in tax, from the due date of that year's return to the due date for the distribution's year? The underpayment rates, the compounding method and the due dates aren't given." (interest_on[ex_b, apr, 1987], interest_on[ex_b, apr, 1988], interest_on[ex_b, apr, 1989], interest_on[ex_b, apr, 1990], interest_on[ex_b, apr, 1991], interest_on[ex_b, apr, 1992], interest_on[ex_b, apr, 1993], interest_on[ex_b, apr, 1994], interest_on[ex_b, apr, 1995], interest_on[ex_b, apr, 1996], interest_on[ex_b, apr, 1997], interest_on[ex_b, apr, 1998], interest_on[ex_b, apr, 1999], interest_on[ex_b, apr, 2000], interest_on[ex_b, apr, 2001], interest_on[ex_b, apr, 2002], interest_on[ex_b, apr, 2003], interest_on[ex_b, apr, 2004], interest_on[ex_b, apr, 2005], interest_on[ex_b, apr, 2006], interest_on[ex_b, apr, 2007], interest_on[ex_b, apr, 2008], interest_on[ex_b, apr, 2009], interest_on[ex_b, apr, 2010], interest_on[ex_b, apr, 2011], interest_on[ex_b, apr, 2012], interest_on[ex_b, apr, 2013], interest_on[ex_b, apr, 2014], interest_on[ex_b, apr, 2015], interest_on[ex_b, apr, 2016], interest_on[ex_b, apr, 2017], interest_on[ex_b, apr, 2018], interest_on[ex_b, apr, 2019], interest_on[ex_b, apr, 2020], interest_on[ex_b, apr, 2021], interest_on[ex_b, apr, 2022], interest_on[ex_b, apr, 2023], interest_on[ex_b, apr, 2024], interest_on[ex_b, apr, 2025], interest_on[ex_b, oct, 1987], interest_on[ex_b, oct, 1988], interest_on[ex_b, oct, 1989], interest_on[ex_b, oct, 1990], interest_on[ex_b, oct, 1991], interest_on[ex_b, oct, 1992], interest_on[ex_b, oct, 1993], interest_on[ex_b, oct, 1994], interest_on[ex_b, oct, 1995], interest_on[ex_b, oct, 1996], interest_on[ex_b, oct, 1997], interest_on[ex_b, oct, 1998], interest_on[ex_b, oct, 1999], interest_on[ex_b, oct, 2000], interest_on[ex_b, oct, 2001], interest_on[ex_b, oct, 2002], interest_on[ex_b, oct, 2003], interest_on[ex_b, oct, 2004], interest_on[ex_b, oct, 2005], interest_on[ex_b, oct, 2006], interest_on[ex_b, oct, 2007], interest_on[ex_b, oct, 2008], interest_on[ex_b, oct, 2009], interest_on[ex_b, oct, 2010], interest_on[ex_b, oct, 2011], interest_on[ex_b, oct, 2012], interest_on[ex_b, oct, 2013], interest_on[ex_b, oct, 2014], interest_on[ex_b, oct, 2015], interest_on[ex_b, oct, 2016], interest_on[ex_b, oct, 2017], interest_on[ex_b, oct, 2018], interest_on[ex_b, oct, 2019], interest_on[ex_b, oct, 2020], interest_on[ex_b, oct, 2021], interest_on[ex_b, oct, 2022], interest_on[ex_b, oct, 2023], interest_on[ex_b, oct, 2024], interest_on[ex_b, oct, 2025]) ?"Which was the first taxable year of the holding period in which the fund was a PFIC? The years before it are pre-PFIC years (s. 1291(a)(1)(B)(ii)). The article doesn't say." (first_pfic_year[ex_b])
+  assumed: pyear: the case gives no tax year for the shareholder, so its taxable years are taken as calendar years, with no fiscal anchor: the years of Line 16c's table, which is 'based on calendar year taxpayer'
+  law date 2026-10-18, cut 2026-10-18
+ex_b_threshold: 225 USD
+  given: prior_average[ex_b] = 180 USD (hodgen_examples)
+  law date 2026-10-18, cut 2026-10-18
+ex_b_total: 250.00 USD
+  law date 2026-10-18, cut 2026-10-18
+ex_b_total_excess: 25 USD
+  assumed: the example finds an excess distribution, so the current year is taken not to be the first year of the holding period (s. 1291(b)(2)(B)); the case doesn't say (first_year_of_holding[ex_b])
+  given: prior_average[ex_b] = 180 USD (hodgen_examples)
+  law date 2026-10-18, cut 2026-10-18
+tam_share: 1/6 (0.166666666666667)
+  law date 2026-10-18, cut 2026-10-18

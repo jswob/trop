@@ -1,0 +1,31 @@
+# L §4.3 rule 1 (round 14): a def states at when it "reads anything law-dated (an input, band, def or rule whose value
+# can change with the law date: one with a row or version whose span isn't always, other than an input keyed by one
+# period index, which is read at its key's period, §4.6 step 1)". pay is keyed by months, its row in a version governing
+# 2026..: double reads it with no at and loads; pay[2026-03] = 100.00 PLN, double = 200.00 PLN. (Writer 6's exemption,
+# round 14's U-7, now stated for defs too.)
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+input pay[m in months]: money PLN
+
+def double[m in months]: money PLN = pay[m] + pay[m]
+
+version v
+  cite s
+  governs 2026..
+  known 2026-01-01
+  pay[*] = 100.00 PLN
+
+ask q1: pay[2026-03]
+ask q2: double[2026-03]
+=== expect
+q1: 100.00 PLN
+  cut 2026-12-31
+q2: 200.00 PLN
+  cut 2026-12-31

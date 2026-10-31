@@ -1,0 +1,6 @@
+cause_check: ok
+  law date 2026-10-25, cut 2026-10-25
+gain_check: differs: stmt_gain = 4 200.00 DUK, law_gain = 2 900.00 DUK, difference 1 300.00 DUK
+  law date 2026-10-25, cut 2026-10-25
+q: (4 200.00 DUK, 2 900.00 DUK, 1 300.00 DUK, 4 700.00 DUK, 6 000.00 DUK)
+  law date 2026-10-25, cut 2026-10-25

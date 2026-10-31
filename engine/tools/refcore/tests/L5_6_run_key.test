@@ -1,0 +1,30 @@
+# L §5.6: "RUN-KEY for key arithmetic outside the index"; L §4.2 "A result outside the index is refused at that
+# key (RUN-KEY) where it stands in a key position."  x[k + 1] at the last key of ks.
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+index ks = [a, b]
+input x[k in ks]: int
+
+def nxt[k in ks]: int at reader
+  rule base = x[k + 1]
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  x[a] = 1
+  x[b] = 2
+
+ask q1: nxt[k] for k in ks law 2026-06-30
+=== expect
+q1 (k = a): 2
+  law date 2026-06-30, cut 2026-01-01
+q1 (k = b): refused: RUN-KEY ...
+  law date 2026-06-30, cut 2026-01-01

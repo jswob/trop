@@ -1,0 +1,71 @@
+# L §5.14 The take is a fill over arcs: "Ties between arcs whose order changes a take are refused"; "Two outflows never
+# share a part: two outflows tied for one part that can't cover both are refused"; A hole in a term: "Only the parts
+# the take could reach under some reading of the holes merge".  a1's order is rank[k.owner], rank a hole.  It holds one
+# part, the couple's 1 000.00; two buys of one day take 300.00 and 200.00.  Under every reading of rank each buy takes
+# its amount from that part, which covers both, so the take is decided: a1 keeps 500.00 of the couple's
+# (scratch/exp_r3.py) and the units the buys bring to u1 and u2 are the couple's by the leg read (10 and 5, carried
+# through).  (Was: the take undecided, a1's rest and both arrivals hole parts; the migrator's t7_qa_qb, ask qa.)
+=== m.tally
+model t
+  tally 2
+  on 2026-01-15
+  start 2021-01-01
+  end 2026-12-31
+
+source src "test"
+unit DUK: currency minor 0.01
+kind funds: unit
+kind couples: parties
+kind persons: parties
+kind invests: transfers
+kind buys: event certain
+  leg units: funds
+  leg cash: DUK
+kind cash_accounts: place one min 0
+  owned by arrive
+  step minor(DUK)
+  takes k for w order rank[k.owner]
+kind lots1: holdings
+  owned by arrive
+  step 0.0001
+  takes k for w order rank[k.owner]
+place a1: cash_accounts DUK lives 2021-01-01..
+place u1: lots1 idx lives 2021-01-01..
+place u2: lots1 idx lives 2021-01-01..
+place world: outside lives 2000-01-01..
+place market: outside lives 2000-01-01..
+input jb: observed
+def rank[p in parties]: int = ?"which money leaves first?" at reader
+def arrive[m in events, p in parties]: num at m.day
+  rule community = (if p == ania_tomek then 1 else 0)
+  rule bought beats community = m.cash.amount of p / m.cash.amount when m in buys
+
+ask qa: bal(a1, 2025-12-31) of ania_tomek, bal(u1, 2025-12-31) of ania_tomek, bal(u2, 2025-12-31) of ania_tomek, bal(a1, 2025-12-31) of ania
+
+version cast
+  cite src
+  known 2021-01-01
+  funds + [idx] lives 2018-01-01..
+  persons + [ania] lives 1991-03-14..
+  persons + [tomek] lives 1989-07-02..
+  couples + [ania_tomek] lives 2016-09-10..
+
+version open
+  cite src
+  governs always
+  known 2021-01-01
+  opening[a1] = 0 at 2021-01-01 start
+  opening[u1] = 0 at 2021-01-01 start
+  opening[u2] = 0 at 2021-01-01 start
+
+version j
+  cite src
+  governs 2025-01..2025-12
+  known 2025-01-01
+  covers a1, u1, u2
+  jb[j1] = (on: 2025-02-01, kind: invests, leg cash from world to a1 amount 1000.00 DUK) "j1"
+  jb[j2] = (on: 2025-03-01, kind: buys, leg units from market to u1 amount 10 idx, leg cash from a1 to market amount 300.00 DUK) "j2"
+  jb[j3] = (on: 2025-03-01, kind: buys, leg units from market to u2 amount 5 idx, leg cash from a1 to market amount 200.00 DUK) "j3"
+=== expect
+qa: (500.00 DUK, 10 idx, 5 idx, 0.00 DUK)
+...

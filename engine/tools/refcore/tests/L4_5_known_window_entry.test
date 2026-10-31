@@ -1,0 +1,49 @@
+# L §4.5 (round 12): "an as-known read on a day inside the window then states a windows clause or is HOLE-IMPRECISE
+# (windows earliest takes the version as known on the window's first day, windows latest on its last). This holds for
+# everything the version or row brings: ... and its entries, whose things are unknown members of every binding over
+# their kinds, as keys whose where is a hole (§5.11)"; L §5.11: "A key whose where is a hole is an unknown member: count
+# is a hole". bob enters persons in v2, known in window(2026-03-01, 2026-04-01). As known 2026-03-15: count is a hole
+# (q1); windows earliest counts ana and bob, 2 (q2); windows latest only ana, 1 (q3); as known 2026-04-15, after the
+# window, 2 (q4). (Was REFCORE-UNSPECIFIED §4.5, writer 5's T-32.)
+# (Writer 8: windows earliest and latest are gone; windows each splits the line at the day the version becomes
+# known, the window's days up to the cut (seen) and after it (unseen), L §4.4 "That holds for every window ...: a
+# version's known (§4.5)". The earliest line is the first part, the latest the second.)
+=== m.tally
+model t
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+kind persons
+
+input d: date
+
+version v1
+  cite s
+  governs always
+  known 2026-01-01
+  d = 2026-06-01
+  persons + [ana] lives 1990-01-01..
+
+version v2
+  cite s
+  governs always
+  known window(2026-03-01, 2026-04-01)
+  persons + [bob] lives 1990-01-01..
+
+ask q1: count(p in persons on d) as known 2026-03-15
+ask q2: count(p in persons on d) as known 2026-03-15 windows each
+ask q4: count(p in persons on d) as known 2026-04-15
+=== expect
+q1: ? ...
+  cut 2026-03-15
+q2 [known of v2 = 2026-03-01 .. 2026-03-15]: 2
+  cut 2026-03-15
+q2 [known of v2 = 2026-03-16 .. 2026-04-01]: 1
+  cut 2026-03-15
+q4: 2
+  cut 2026-04-15

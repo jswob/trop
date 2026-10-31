@@ -1,0 +1,33 @@
+# L §2.2 rulebody: ["beats" LABEL {"," LABEL}] ["v" ID] ["governs" lspan] "=" …; L §5.11: a rule may state its own
+# governs (`rule base governs 2028.. = …`), and applies at the law dates in it. The rule later governs from 2027 with no
+# end: at law date 2026-06-30 base gives one = 1 (a), at 2027-06-30 later beats it, two = 2 (b). (A span with no end
+# right before `=` was refused LOAD-PARSE before writer 8's second pass.)
+=== m.tally
+model m
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2027-12-31
+
+source s "s"
+input one: int
+input two: int
+
+def f: int at reader
+  rule base = one
+  rule later beats base governs 2027.. = two
+
+version v
+  cite s
+  governs always
+  known 2025-01-01
+  one = 1
+  two = 2
+
+ask a: f law 2026-06-30
+ask b: f law 2027-06-30
+=== expect
+a: 1
+  law date 2026-06-30, cut 2026-10-20
+b: 2
+  law date 2027-06-30, cut 2026-10-20

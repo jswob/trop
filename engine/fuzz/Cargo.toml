@@ -1,0 +1,27 @@
+# The fuzz workspace (R-92), apart from the engine's: cargo-fuzz runs it on
+# nightly-2026-10-21. A protected instrument: the lead writes real targets on the
+# builder's request (R-91). Crashes found are kept in regressions/<target>/ and
+# replayed on every pull request.
+
+[package]
+name = "tally-fuzz"
+version = "0.0.0"
+edition = "2024"
+publish = false
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "=0.4.13"
+tally = { path = "../crates/tally" }
+
+[[bin]]
+name = "parse"
+path = "fuzz_targets/parse.rs"
+test = false
+doc = false
+bench = false
+
+[workspace]
+members = ["."]

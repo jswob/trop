@@ -1,0 +1,28 @@
+# L §8.3 LOAD-BAND (round 9): "band <b> in <version>: rows unordered, overlapping or with a gap at <x>", "x is the
+# lower end of the first row, in the table's order, that doesn't start where the row before it ends: an overlap, a
+# gap or a row out of order"; L §5.9: rows "meet without a gap, closed against open; int arguments are checked over
+# the integers".
+# int rows [0, 4], [5, 10) and (9, inf) meet over the integers (5 follows 4; 10 follows 9): no refusal.
+=== m.tally
+model t
+  tally 2
+  on 2016-03-01
+  start 2015-11-01
+  end 2016-10-31
+
+source s "s"
+band b(n: int): int
+input x: int
+
+version v
+  cite s
+  governs 2015-11..
+  known 2015-09-07
+  b: [0, 4] = 1
+  b: [5, 10) = 2
+  b: (9, inf) = 3
+  x = 12
+ask q: b(x) law 2016-01-01
+=== expect
+q: 3
+  law date 2016-01-01, cut 2016-03-01

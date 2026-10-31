@@ -1,0 +1,67 @@
+# E §4.2 step 5 (round 10): a leg that takes a debt above 0 is refused (RUN-PLACE); "the refused leg isn't booked ...
+# the place's balance is refused from that point, so everything that reads it later is refused too, and so is every
+# read of the refused leg itself (flows of its move over a span that holds it)". pay moves 100.00 PLN from konto into
+# the debt loan (opening 0) on 2026-03-10: refused. f1 flows(pay, 2026-03) holds it: refused. f2 flows(pay, 2026-04)
+# doesn't: 0.00 PLN. f3 pay.cash.amount reads the leg: refused. f4 flows(konto, 2026-03): konto's balance is refused
+# from that point. f5 another move's flows stand: 100.00 PLN. f6 a sum over transfers in March reads pay's leg:
+# refused. (Writer 8: pay is a plan, in the day's first batch, whose sign rule is checked together, L §5.10 point 1,
+# with L §8.4's message `<place> is <b> after the day's observations and plans of <d>`.)
+=== rl.tally
+model rl
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "synthetic"
+unit PLN: currency minor 0.01
+
+place loan: debts PLN lives 2026-01-01..
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 2026-01-01..
+
+input amt: money PLN
+input day: date
+input day2: date
+
+move pay: transfers
+  on day
+  leg cash from konto to loan amount amt
+
+move other: transfers
+  on day2
+  leg cash from world to konto amount amt
+
+ask f1: flows(pay, 2026-03) law 2026-06-30
+ask f2: flows(pay, 2026-04) law 2026-06-30
+ask f3: pay.cash.amount law 2026-06-30
+ask f4: flows(konto, 2026-03) law 2026-06-30
+ask f5: flows(other, 2026-03) law 2026-06-30
+ask f6: sum(t.cash.amount for t in transfers over 2026-03) law 2026-06-30
+
+version v1
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "own"
+  day = 2026-03-10 "own"
+  day2 = 2026-03-12 "own"
+  opening[konto] = 0 PLN at 2026-01-01 start "own"
+  opening[loan] = 0 PLN at 2026-01-01 start "own"
+=== expect
+f1: refused: RUN-PLACE loan is 100.00 PLN after the day's observations and plans of 2026-03-10
+  unfulfilled: pay
+  law date 2026-06-30, cut 2026-06-30
+f2: 0.00 PLN
+  law date 2026-06-30, cut 2026-06-30
+f3: refused: RUN-PLACE loan is 100.00 PLN after the day's observations and plans of 2026-03-10
+  law date 2026-06-30, cut 2026-06-30
+f4: refused: RUN-PLACE loan is 100.00 PLN after the day's observations and plans of 2026-03-10
+  law date 2026-06-30, cut 2026-06-30
+f5: 100.00 PLN
+  unfulfilled: other
+  law date 2026-06-30, cut 2026-06-30
+f6: refused: RUN-PLACE loan is 100.00 PLN after the day's observations and plans of 2026-03-10
+  unfulfilled: other
+  unfulfilled: pay
+  law date 2026-06-30, cut 2026-06-30

@@ -1,0 +1,15 @@
+# L §2.5: a bound variable "with the spelling of a key of the index or kind it ranges over, is refused (LOAD-SHADOW)".
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "a source"
+
+index ks = [a, b]
+
+def n: int = count(a in ks)
+=== expect
+refused: LOAD-SHADOW ...

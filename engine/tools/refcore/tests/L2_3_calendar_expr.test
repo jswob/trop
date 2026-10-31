@@ -1,0 +1,17 @@
+# L §2.3: calval is a `value` (a row value), not an `atom`: calendar(...) inside an expression doesn't parse
+# (LOAD-PARSE).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+input d: date
+
+ask q: is_business(d, calendar(weekends [sat, sun]))
+=== expect
+refused: LOAD-PARSE ...

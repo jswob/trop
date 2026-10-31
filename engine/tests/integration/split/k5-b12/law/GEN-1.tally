@@ -1,0 +1,75 @@
+part gen_1
+  tally 2
+  law
+  note "GEN-1 · Business days and public holidays. holidays is the calendar next_business and prev_business read (L §4.2): one row per year, the fixed days of GEN-1 .2 plus that year's Spring Day from its notice (HOL-SPRING-<yyyy>)."
+  note "A year's row sits in the version of its Spring Day notice, known on the notice's publication day: a dates value is one list, so the fixed days, settled since 2017-06-01 (2024-06-18 for 23 June), can't be known before the notice that completes the list (observation O:A-3). A year with no notice has no row (GEN-1 .3)."
+
+source gen_1 "General Provisions Act, GEN-1 Business days and public holidays (tmp/cases/law/acts.md)"
+
+input holidays: calendar question "Which days of this year are public holidays (GEN-1 .2, and the Spring Day notice of GEN-1 .3)?"
+
+version gen1_v1
+  cite gen_1
+  governs 2018-01-01..2024-12-31
+  known 2017-06-01
+  note "GEN-1 v1, in force 2018-01-01 – 2024-12-31, published 2017-06-01."
+
+version hol_2018
+  cite gazette
+  governs 2018
+  known 2017-10-12
+  holidays = calendar(weekends [sat, sun], added [2018-01-01, 2018-01-06, 2018-04-02, 2018-05-01, 2018-05-03, 2018-08-15, 2018-11-01, 2018-11-11, 2018-12-25, 2018-12-26]) governs 2018 "GEN-1 v1 .2; Spring Day: gazette.csv line 1587 HOL-SPRING-2018"
+
+version hol_2019
+  cite gazette
+  governs 2019
+  known 2018-10-11
+  holidays = calendar(weekends [sat, sun], added [2019-01-01, 2019-01-06, 2019-04-22, 2019-05-01, 2019-05-03, 2019-08-15, 2019-11-01, 2019-11-11, 2019-12-25, 2019-12-26]) governs 2019 "GEN-1 v1 .2; Spring Day: gazette.csv line 1588 HOL-SPRING-2019"
+
+version hol_2020
+  cite gazette
+  governs 2020
+  known 2019-10-10
+  holidays = calendar(weekends [sat, sun], added [2020-01-01, 2020-01-06, 2020-04-13, 2020-05-01, 2020-05-03, 2020-08-15, 2020-11-01, 2020-11-11, 2020-12-25, 2020-12-26]) governs 2020 "GEN-1 v1 .2; Spring Day: gazette.csv line 1589 HOL-SPRING-2020"
+
+version hol_2021
+  cite gazette
+  governs 2021
+  known 2020-10-15
+  holidays = calendar(weekends [sat, sun], added [2021-01-01, 2021-01-06, 2021-04-05, 2021-05-01, 2021-05-03, 2021-08-15, 2021-11-01, 2021-11-11, 2021-12-25, 2021-12-26]) governs 2021 "GEN-1 v1 .2; Spring Day: gazette.csv line 1590 HOL-SPRING-2021"
+
+version hol_2022
+  cite gazette
+  governs 2022
+  known 2021-10-14
+  holidays = calendar(weekends [sat, sun], added [2022-01-01, 2022-01-06, 2022-04-18, 2022-05-01, 2022-05-03, 2022-08-15, 2022-11-01, 2022-11-11, 2022-12-25, 2022-12-26]) governs 2022 "GEN-1 v1 .2; Spring Day: gazette.csv line 1591 HOL-SPRING-2022"
+
+version hol_2023
+  cite gazette
+  governs 2023
+  known 2022-10-13
+  holidays = calendar(weekends [sat, sun], added [2023-01-01, 2023-01-06, 2023-04-10, 2023-05-01, 2023-05-03, 2023-08-15, 2023-11-01, 2023-11-11, 2023-12-25, 2023-12-26]) governs 2023 "GEN-1 v1 .2; Spring Day: gazette.csv line 1592 HOL-SPRING-2023"
+
+version hol_2024
+  cite gazette
+  governs 2024
+  known 2023-10-12
+  holidays = calendar(weekends [sat, sun], added [2024-01-01, 2024-01-06, 2024-04-01, 2024-05-01, 2024-05-03, 2024-08-15, 2024-11-01, 2024-11-11, 2024-12-25, 2024-12-26]) governs 2024 "GEN-1 v1 .2; Spring Day: gazette.csv line 1593 HOL-SPRING-2024"
+
+version gen1_v2
+  cite gen_1
+  governs 2025-01-01..
+  known 2024-06-18
+  note "GEN-1 v2, in force 2025-01-01 until replaced, published 2024-06-18: adds 23 June (Midsummer Day)."
+
+version hol_2025
+  cite gazette
+  governs 2025
+  known 2024-10-10
+  holidays = calendar(weekends [sat, sun], added [2025-01-01, 2025-01-06, 2025-04-21, 2025-05-01, 2025-05-03, 2025-06-23, 2025-08-15, 2025-11-01, 2025-11-11, 2025-12-25, 2025-12-26]) governs 2025 "GEN-1 v2 .2 (v1 .2 and 23 June); Spring Day: gazette.csv line 1594 HOL-SPRING-2025"
+
+version hol_2026
+  cite gazette
+  governs 2026
+  known 2025-10-16
+  holidays = calendar(weekends [sat, sun], added [2026-01-01, 2026-01-06, 2026-04-06, 2026-05-01, 2026-05-03, 2026-06-23, 2026-08-15, 2026-11-01, 2026-11-11, 2026-12-25, 2026-12-26]) governs 2026 "GEN-1 v2 .2 (v1 .2 and 23 June); Spring Day: gazette.csv line 1595 HOL-SPRING-2026"

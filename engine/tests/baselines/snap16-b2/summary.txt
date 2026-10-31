@@ -1,0 +1,5 @@
+hardset/modeller-b2/I-11/budget.tally rc=0 sec=5 lines=819 notyet=0 unspec=0 refused=0
+hardset/modeller-b2/I-12/division.tally rc=0 sec=0 lines=59 notyet=0 unspec=0 refused=0
+hardset/modeller-b2/I-13/claim.tally rc=0 sec=28 lines=559 notyet=0 unspec=0 refused=0
+hardset/modeller-b2/I-14/homes.tally rc=0 sec=1 lines=4428 notyet=0 unspec=0 refused=0
+hardset/modeller-b2/I-15/gold.tally rc=0 sec=7 lines=656 notyet=0 unspec=0 refused=0

@@ -1,0 +1,31 @@
+# L §7.3: "correctly rounded to u, ties half-even": sqrt(2.25) = 1.5 exactly, a tie between 1 and 2 on the step 1,
+# goes to the even 2.  1.5 is not on a cell edge of the step 1, so the value is widened to [r - u/2, r + u/2] =
+# [1.5, 2.5]: bound 0.5.  "Composites are exact" on the rounded values and the bound "comes from interval
+# arithmetic ... over the expression as written": 2 + 2 = 4 with [1.5, 2.5] + [1.5, 2.5] = [3, 5], bound 1.  "A
+# printed result that rests on rounded transcendentals, with no round after them, prints ≈": round(2, 1, down) = 2
+# prints plain.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+input x225: num
+def r: num = sqrt(x225) to 1 at reader
+def r2: num = sqrt(x225) to 1 + sqrt(x225) to 1 at reader
+def rr: num = round(sqrt(x225) to 1, 1, down) at reader
+
+version v
+  cite s
+  governs 2026..
+  known 2026-01-01
+  x225 = 2.25
+
+ask a: r, r2, rr law 2026-06-30
+=== expect
+a: (≈ 2 ± 0.5, ≈ 4 ± 1, 2)
+  law date 2026-06-30, cut 2026-12-31

@@ -1,0 +1,56 @@
+ex1_y [ul08_agent = *, ul08_excess = portion, ul08_route = optional]: (400 000.00 USD, 1 900 000.00 USD, 100 000 USD, 665 000 USD, 765 000 USD)
+  reading: ul08_excess = portion
+  reading: ul08_route = optional
+  law date 2026-10-18, cut 2026-10-18
+ex1_y [ul08_agent = *, ul08_excess = portion, ul08_route = aggregate]: (400 000.00 USD, 1 900 000.00 USD, ?"What do the employee's regular wages, Form W-4 and payroll period give under the aggregate procedure of (a)(6)?" (wh_rest[e1_y]), 665 000 USD, ?"What do the employee's regular wages, Form W-4 and payroll period give under the aggregate procedure of (a)(6)?" (wh_rest[e1_y]))
+  reading: ul08_excess = portion
+  reading: ul08_route = aggregate
+  law date 2026-10-18, cut 2026-10-18
+ex1_y [ul08_agent = *, ul08_excess = entire, ul08_route = *]: (400 000.00 USD, 1 900 000.00 USD, 0 USD, 805 000 USD, 805 000 USD)
+  reading: ul08_excess = entire
+  law date 2026-10-18, cut 2026-10-18
+ex1_z [ul08_agent = *, ul08_excess = *, ul08_route = *]: (2 900 000.00 USD, 10 000.00 USD, 3 500 USD)
+  law date 2026-10-18, cut 2026-10-18
+ex3_r [ul08_agent = *, ul08_excess = portion, ul08_route = optional]: (1 000 000.00 USD, 250 000 USD, 2 000 000.00 USD)
+  reading: ul08_excess = portion
+  reading: ul08_route = optional
+  law date 2026-10-18, cut 2026-10-18
+ex3_r [ul08_agent = *, ul08_excess = portion, ul08_route = aggregate]: (1 000 000.00 USD, ?"What do the employee's regular wages, Form W-4 and payroll period give under the aggregate procedure of (a)(6)?" (wh_rest[e3_r]), 2 000 000.00 USD)
+  reading: ul08_excess = portion
+  reading: ul08_route = aggregate
+  law date 2026-10-18, cut 2026-10-18
+ex3_r [ul08_agent = *, ul08_excess = entire, ul08_route = *]: (1 000 000.00 USD, 0 USD, 3 000 000.00 USD)
+  reading: ul08_excess = entire
+  law date 2026-10-18, cut 2026-10-18
+ex3_t [ul08_agent = *, ul08_excess = *]: 100 000.00 USD
+  law date 2026-10-18, cut 2026-10-18
+ex3_u [ul08_agent = disregard, ul08_excess = *, ul08_route = optional]: (0.00 USD, 12 500 USD)
+  reading: ul08_agent = disregard
+  reading: ul08_route = optional
+  law date 2026-10-18, cut 2026-10-18
+ex3_u [ul08_agent = disregard, ul08_excess = *, ul08_route = aggregate]: (0.00 USD, ?"What do the employee's regular wages, Form W-4 and payroll period give under the aggregate procedure of (a)(6)?" (wh_rest[e3_u]))
+  reading: ul08_agent = disregard
+  reading: ul08_route = aggregate
+  law date 2026-10-18, cut 2026-10-18
+ex3_u [ul08_agent = include, ul08_excess = *, ul08_route = *]: (3 000 000.00 USD, 17 500 USD)
+  reading: ul08_agent = include
+  law date 2026-10-18, cut 2026-10-18
+ex4 [ul08_cents = half-up | down]: (250 000 USD, 384 615.38 USD, 1 384 615.38 USD, 384 615.38 USD)
+  reading: ul08_cents = half-up | down
+  law date 2026-10-18, cut 2026-10-18
+ex4 [ul08_cents = up]: (250 000 USD, 384 615.39 USD, 1 384 615.39 USD, 384 615.39 USD)
+  reading: ul08_cents = up
+  law date 2026-10-18, cut 2026-10-18
+ex4_net [ul08_cents = *]: ok
+  law date 2026-10-18, cut 2026-10-18
+ex4_solve [ul08_agent = *, ul08_excess = *, ul08_route = aggregate]: ?"What do the employee's regular wages, Form W-4 and payroll period give under the aggregate procedure of (a)(6)?" (wh_rest[e4_j])
+  reading: ul08_route = aggregate
+  law date 2026-10-18, cut 2026-10-18
+ex4_solve [ul08_agent = *, ul08_excess = portion, ul08_route = optional]: 1 384 615.38 USD
+  reading: ul08_excess = portion
+  reading: ul08_route = optional
+  law date 2026-10-18, cut 2026-10-18
+ex4_solve [ul08_agent = *, ul08_excess = entire, ul08_route = optional]: 1 538 461.54 USD
+  reading: ul08_excess = entire
+  reading: ul08_route = optional
+  law date 2026-10-18, cut 2026-10-18

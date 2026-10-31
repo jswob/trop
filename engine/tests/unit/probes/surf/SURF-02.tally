@@ -1,0 +1,52 @@
+model surf02
+  tally 2
+  on 2025-01-01
+  start 2025-01-01
+  end 2025-12-31
+  note "SURF-02: an estate's buyout rule. The condition compares two amounts (>, a question); the rule's own = states the value. An heir with no share gets none (does not apply), apart from a negative buyout (he pays in). The keeper's total is one aggregate over the heirs."
+
+source estate "The estate's division rule (card SURF-02)"
+
+source modeller "Illustrative figures; the card's rule gives none"
+
+unit DUK: currency minor 0.01
+
+index heir = [ewa, jan, olek]
+
+input advance[h in heir]: money DUK
+
+input heir_share[h in heir]: num
+
+input value_at_death: money DUK
+
+input value_at_division: money DUK
+
+def buyout[h in heir]: num DUK at reader
+  rule no_share beats not_risen, risen v division_rule = none when heir_share[h] == none
+  rule not_risen v division_rule = ?"What is an heir's buyout when the flat's value did not rise? The rule doesn't say." when value_at_division <= value_at_death
+  rule risen v division_rule = heir_share[h] * value_at_division - advance[h] when value_at_division > value_at_death
+
+def keeper_pays: num DUK = sum(buyout[h] for h in heir where buyout[h] != none) at reader
+
+ask q_buyouts: buyout[h] for h in heir law 2025-01-01
+
+ask q_keeper: keeper_pays law 2025-01-01
+
+version division_rule
+  cite estate
+  governs 2025-01-01..
+  known 2025-01-01
+  note "the division rule the buyout rules cite with v; it holds no rows"
+
+version illustration
+  cite modeller
+  governs always
+  known 2025-01-01
+  assumed "illustrative figures: the card's rule gives none"
+  advance = 0 "no advance"
+  advance[olek] = 200000 "an advance larger than his part"
+  heir_share[ewa] = 0.5 "half"
+  heir_share[jan] = none "no share: the buyout does not apply"
+  heir_share[olek] = 0.5 "half"
+  value_at_death = 300000 "the flat at the death"
+  value_at_division = 360000 "the flat at the division"

@@ -1,0 +1,197 @@
+part returns
+  tally 2
+  note "Our joint returns for 2024 and 2025 (PIT-5, PIT-6, PIT-7, and the supplement's PIT-5 .3, PIT-6 .4, PIT-16, PIT-17, PIT-18): Marta's bases from her payers' yearly statements (C-D04, C-D05, C-D08); Jan's from the workshop's profit (2024, PIT-10 form (a)) and his Rosvald pay (PIT-18 .1, each payment converted at FX-FLR of the last business day before its day). For 2024 Part I of the agreement has no effect (T-20 .2, protocol 2): the pay is taxed with the foreign tax credit (PIT-16 .3, PIT-18 .5). The 2024 return as corrected (C-D34) takes the RTB's refund of 2025-09-24 (C-D19) off the foreign tax, shared among the tax year's payments by their gross (PIT-18 .3). For 2025 the return as filed states the pay from 2025-01-03 on exempt with progression (C-D34, T-7, PIT-18 .4)."
+  note "The tenth (C-HR6 .2): the least whole-dukat amount t with t at least a tenth of both bases before the gift less the tax due the return would show with t as the gift: a min over a stepped range of whole dukats (L §5.11), each candidate read with the gift pinned (as if). Its range runs from a tenth of the bases less the due with no gift (no t below it can meet the test, since a larger gift never raises the due) to a tenth of the bases."
+
+index filing = [f_filed, f_corrected]
+
+index lpayer = [przychodnia, sio_pay]
+
+input stmt[p in lpayer, y in year]: (base money DUK, adv money DUK) question "What does this payer's yearly statement say for Marta for this year (C-D04, C-D05, C-D08)?"
+
+input gift_paid[y in year]: money DUK question "What did we give Fundacja Pod Dębem in this year, by transfer from the joint account (C-D32)?"
+
+input exempt_from: date question "From which payment on does our return state Jan's Rosvald pay exempt (C-D34)?"
+
+input given_estimate[y in year]: money DUK question "What does the story call our estimate of this year's tenth, given in December?"
+
+input next_gift_day[y in year]: date question "On which day was the December gift after this year given (C-D32)?"
+
+input filed_on[y in year, f in filing]: date question "On which day was this return filed (C-D34)?"
+
+input rv_refund_day[y in rv_year]: date question "On which day did the RTB's refund for this tax year come in (the Lazur row)?"
+
+input refund_amt[y in rv_year]: money FLR question "What did the RTB refund for this tax year (C-D19, the Lazur row)?"
+
+version statements_2024
+  cite c_d05
+  governs always
+  known 2025-01-24
+  stmt[przychodnia, 2024] = (base: 59882.97, adv: 4530.00) known 2025-01-28 "C-D05: 2024 base 59 882.97; advances withheld 4 530.00 DUK"
+  stmt[sio_pay, 2024] = (base: 15622.82, adv: 2031.00) "C-D04: 2024 base 15 622.82; advances withheld 2 031.00 DUK"
+
+version statements_2025
+  cite c_d08
+  governs always
+  known 2026-01-27
+  stmt[przychodnia, 2025] = (base: 51314.80, adv: 4072.00) "C-D08: 2025 base 51 314.80; advances withheld 4 072.00 DUK"
+  stmt[sio_pay, 2025] = (base: 0.00, adv: 0.00) "C-D03, C-D04: the parental pay ended on 2024-03-06; the SIO paid nothing in 2025"
+
+version gifts_fund
+  cite c_d32
+  governs always
+  known 2024-12-17
+  gift_paid[2024] = 21300.00 "C-D32 2024-12-17: received by transfer from LN27 … 0001 on 2024-12-16, 21 300.00 DUK; on the RO's list for 2024"
+  gift_paid[2025] = 5200.00 known 2025-12-16 "C-D32 2025-12-16: received by transfer on 2025-12-15, 5 200.00 DUK; on the RO's list for 2025"
+  given_estimate[2024] = 21300.00 "story 2024-12-16: 21 300.00 to Fundacja Pod Dębem: our estimate of 2024's tenth"
+  given_estimate[2025] = none known 2025-12-16 "story 2025-12-15: 5 200.00 is our estimate of 2025's tenth less what 2024's return as last filed left over: the estimate is derived (C-HR6 .3)"
+  next_gift_day[2024] = 2025-12-15 known 2025-12-16 "C-D32 2025-12-16: the gift of 2025-12-15, the December after 2024"
+  next_gift_day[2025] = never known 2026-04-27 "no gift after 2025's return was filed by the end of the dossier"
+
+version rtb_refund
+  cite lazur_export
+  governs always
+  known 2025-09-24
+  rv_refund_day[2024] = 2025-09-24 "lazur-jan.csv: 2025-09-24 FLR; PRZELEW PRZYCH.; Rosvald Tax Board; Erstattung Steuerjahr 2024/25, 2294.00"
+  refund_amt[2024] = 2294.00 "C-D19: refund 2 294.00 FLR; lazur-jan.csv 2025-09-24"
+
+version returns_filed
+  cite c_d34
+  governs always
+  known 2025-04-28
+  filed_on[2024, f_filed] = 2025-04-28 "C-D34 2025-04-28: received the joint return for 2024"
+  filed_on[2024, f_corrected] = 2025-10-20 known 2025-10-20 "C-D34 2025-10-20: received their corrected joint return for 2024"
+  filed_on[2025, f_filed] = 2026-04-27 known 2026-04-27 "C-D34 2026-04-27: received their joint return for 2025"
+  filed_on[2025, f_corrected] = none known 2026-04-27 "no corrected return for 2025 in the dossier"
+
+version return_2025
+  cite c_d34
+  governs always
+  known 2026-04-27
+  exempt_from = 2025-01-03 "C-D34 2026-04-27: Jan Wrona's Rosvald pay paid from 2025-01-03 on is stated as exempt under the treaty, with progression"
+
+def rv_m_in[m in month, y in year]: bool
+  note "the pay of month m is paid in calendar year y (C-D14 .2: in the next month), from Jan's first month in Ostrel"
+  rule base = m >= month_of(log_from) and year_of(start_of(m + 1)) == y
+
+def fx_pay[m in month]: num DUK/FLR = fx_mid[add_business(pay_day[m], -1, holidays)]
+
+def inc_pay[m in month]: money DUK
+  note "PIT-18 .1, PIT-16 .1, GEN-4: the gross converted at FX-FLR of the last business day before the payment day, to the ort, half up"
+  rule base = round(pay_gross[m] * fx_pay[m], minor(DUK), half-up)
+
+def rsi_pay[m in month]: money DUK = round(pay_rsi[m] * fx_pay[m], minor(DUK), half-up)
+
+def tax_pay[m in month]: money DUK
+  note "PIT-18 .2: the foreign tax withheld, converted the same way"
+  rule base = round(pay_tax[m] * fx_pay[m], minor(DUK), half-up)
+
+def base_pay_m[m in month]: money DUK at pay_day[m]
+  note "PIT-18 .1: a payment's base, its income less its contribution less the costs of PIT-2 .2 for its month, never below 0"
+  rule base = max(0 DUK, inc_pay[m] - rsi_pay[m] - pit2_costs_month)
+
+def is_exempt[m in month]: bool
+  note "T-7 .1, T-20 .2: pay derived from 2025-01-01 on is exempt in Lenia; the return as filed states it from the payment of 2025-01-03 (C-D34)"
+  rule base = pay_day[m] >= part1_from and pay_day[m] >= exempt_from
+
+def refund_share[m in month, y in rv_year]: money FLR
+  note "PIT-18 .3: the refund on Rosvald's tax year y shared among that year's payments in proportion to their gross, each share to the cent, half up"
+  rule base = round(refund_amt[y] * pay_gross[m] / yr_gross[y], minor(FLR), half-up) when paid_in[m, y]
+  rule other = 0 FLR when not paid_in[m, y]
+
+def ftax_m[m in month, f in filing]: money DUK
+  note "PIT-18 .2, .3: the foreign tax on payment m; as corrected, less its share of the refund converted at FX-FLR of the last business day before the day the refund came in"
+  rule filed = tax_pay[m]
+  rule corrected beats filed = tax_pay[m] - round(refund_share[m, rvy[pay_day[m]]] * fx_mid[add_business(rv_refund_day[rvy[pay_day[m]]], -1, holidays)], minor(DUK), half-up) when f == f_corrected
+
+def credited_base[y in year]: money DUK = sum(base_pay_m[m] for m in month where rv_m_in[m, y] and not is_exempt[m])
+
+def exempt_base[y in year]: money DUK
+  note "PIT-18 .4: the sum of the exempt payments' bases under point 1, rounded (GEN-5 .1)"
+  rule base = round(sum(base_pay_m[m] for m in month where rv_m_in[m, y] and is_exempt[m]), 1, half-up)
+
+def ftax[y in year, f in filing]: money DUK = sum(ftax_m[m, f] for m in month where rv_m_in[m, y] and not is_exempt[m])
+
+def biz_profit[y in year]: money DUK
+  rule none_ = 0 DUK
+  rule closed beats none_ = profit_2024 when y == year_of(biz_end)
+
+def tax_base[s in spouse, y in year]: money DUK
+  note "PIT-5 .2: the sum of the person's PIT-2 bases from every payer (PIT-18 .1 for the pay from abroad that isn't exempt), plus business profit under PIT-10 form (a), rounded (GEN-5 .1); the exempt pay is in no base (PIT-18 .4)"
+  rule marta_ = round(sum(stmt[p, y].base for p in lpayer), 1, half-up) when s == marta
+  rule jan_ = round(biz_profit[y] + credited_base[y], 1, half-up) when s == jan
+
+def gift_used[y in year]: money DUK = gift_paid[y]
+
+def gift_ded[s in spouse, y in year]: num DUK
+  note "PIT-17 .1 – .4: a gift from community property is each spouse's for half; each giver's deduction at most 10 % of that giver's base before it; carried exactly"
+  rule base = min(gift_used[y] / lifted[two], pit17_cap * tax_base[s, y])
+
+def comb_base[y in year]: money DUK
+  note "PIT-6 .3: the combined base, after PIT-17, rounded"
+  rule base = round(sum(tax_base[s, y] - gift_ded[s, y] for s in spouse), 1, half-up)
+
+def joint_tax[y in year]: money DUK at start_of(y)
+  note "PIT-6 .3: twice the PIT-3 tax (scale less the reducing amount, never below 0) on half the combined base, rounded; PIT-18 .4: with exempt pay, the joint tax on the combined base plus the exempt base, times the combined base over that sum"
+  rule plain = round(lifted[two] * max(0 DUK, marginal(pit3_rate, comb_base[y] / lifted[two]) - pit3_reducing), 1, half-up) when exempt_base[y] == 0 DUK
+  rule progression = round(lifted[two] * max(0 DUK, marginal(pit3_rate, (comb_base[y] + exempt_base[y]) / lifted[two]) - pit3_reducing) * comb_base[y] / (comb_base[y] + exempt_base[y]), 1, half-up) when exempt_base[y] > 0 DUK
+
+def parents_income[y in year]: money DUK = sum(tax_base[s, y] for s in spouse)
+
+def relief_months[y in year]: int at start_of(y)
+  note "PIT-7 .1: the months of the year in which Staś was alive and under 18 on at least one day"
+  rule base = count(k in month where year_of(start_of(k)) == y and born_stas < end_of(k) and (born_stas >= start_of(k) or age(born_stas, start_of(k)) < pit7_age))
+
+def relief[y in year]: money DUK at start_of(y)
+  note "PIT-7 .1, .3: 125.00 DUK a month, less the parents' income above 112 000.00 DUK (before PIT-17, PIT-17 .4), never below 0"
+  rule base = max(0 DUK, pit7_relief_month * relief_months[y] - max(0 DUK, parents_income[y] - pit7_income_limit))
+
+def tax_after_relief[y in year]: money DUK = max(0 DUK, joint_tax[y] - relief[y])
+
+def credit[y in year, f in filing]: money DUK
+  note "PIT-16 .3, PIT-18 .5: the foreign tax, up to the part of the tax after the child relief that falls on the credited payments' bases over the combined base after PIT-17; rounded; what it doesn't deduct is lost"
+  rule none_ = 0 DUK when credited_base[y] == 0 DUK
+  rule base = round(min(ftax[y, f], tax_after_relief[y] * credited_base[y] / comb_base[y]), 1, half-up) when credited_base[y] > 0 DUK
+
+def due[y in year, f in filing]: money DUK
+  note "PIT-6 .4 (supplement): both reliefs and foreign tax credits off the joint tax, never below 0"
+  rule base = max(0 DUK, joint_tax[y] - relief[y] - credit[y, f])
+
+def advances[y in year]: money DUK = sum(stmt[p, y].adv for p in lpayer) + adv_paid_year[y]
+
+def difference[y in year, f in filing]: money DUK
+  note "PIT-5 .4, PIT-6 .4: the tax due less both spouses' advances: positive payable, negative refunded"
+  rule base = due[y, f] - advances[y]
+
+def paid_with_correction[y in year]: money DUK = difference[y, f_corrected] - difference[y, f_filed]
+
+def bases_before[y in year]: money DUK = sum(tax_base[s, y] for s in spouse)
+
+def tl0[y in year, f in filing]: money DUK = round((bases_before[y] - due[y, f] as if {gift_used[y] = 0 DUK}) / lifted[ten], 1, ceil)
+
+def tl1[y in year, f in filing]: money DUK = round((bases_before[y] - due[y, f] as if {gift_used[y] = tl0[y, f]}) / lifted[ten], 1, ceil)
+
+def tl2[y in year, f in filing]: money DUK = round((bases_before[y] - due[y, f] as if {gift_used[y] = tl1[y, f]}) / lifted[ten], 1, ceil)
+
+def tu0[y in year]: money DUK = round(bases_before[y] / lifted[ten], 1, ceil)
+
+def tu1[y in year, f in filing]: money DUK = round((bases_before[y] - due[y, f] as if {gift_used[y] = tu0[y]}) / lifted[ten], 1, ceil)
+
+def tu2[y in year, f in filing]: money DUK = round((bases_before[y] - due[y, f] as if {gift_used[y] = tu1[y, f]}) / lifted[ten], 1, ceil)
+
+def tenth[y in year, f in filing]: money DUK
+  note "C-HR6 .2: the smallest whole-dukat amount at least a tenth of both bases before the gift, less the tax due the return would show with that amount as the gift. Its range: a larger gift never raises the due, so no amount below tl2 meets the test (each tl a tenth of the bases less the due at the one before) and tu2 meets it (each tu a tenth of the bases less the due at the one before, from a tenth of the bases)"
+  rule base = min(t for t in tl2[y, f] .. tu2[y, f] step 1 DUK where t * lifted[ten] >= bases_before[y] - due[y, f] as if {gift_used[y] = t})
+
+def carry[y in year, f in filing]: money DUK
+  note "C-HR6 .3: what next December's gift adds (positive) or takes off (negative): the year's tenth by the return as last filed before that gift, less the year's estimate"
+  rule base = tenth[y, f] - estimate[y]
+
+def estimate[y in year]: money DUK
+  note "C-HR6 .3: what the estimate was: what we gave, less what the year before added or plus what it took off; for 2024 the story names it"
+  rule given = given_estimate[y] when given_estimate[y] != none
+  rule later = gift_paid[y] - carry[y - 1, last_filing[y - 1]] when given_estimate[y] == none and pos(y) > 1
+
+def last_filing[y in year]: key filing
+  note "C-HR6 .3: the year's return as last filed before the next December's gift"
+  rule base = last(f in filing where filed_on[y, f] != none and filed_on[y, f] <= next_gift_day[y])

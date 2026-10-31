@@ -1,0 +1,10 @@
+scenario kitchen over household_b
+  tally 2
+  from 2022-07-31
+  note "B-04's second case: the kitchen of B-D35 is ordered and Ola pays her 40 % of it by 2024-12-31 (PIT-12 .4). A hypothetical fact, so a scenario (L §5.5, §6.4), known on the question's day."
+
+version kitchen_ordered_v
+  cite questions
+  governs 2022-07-31..
+  known 2022-07-31
+  replace kitchen_ordered = true governs 2022-07-31.. "B-04: her 40 % of the kitchen if we order it"

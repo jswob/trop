@@ -1,0 +1,24 @@
+{
+ "id": "11-wife-works",
+ "says_pl": "Żona zaczyna pracować.",
+ "scenarios": [
+  {
+   "id": "zona_bez_pracy",
+   "says_pl": "Punkt wyjścia: żona nie pracuje od dziś (w rzeczywistości z przypadku 1 pracuje; to pytanie zakłada, że nie).",
+   "base": "reality",
+   "from": "2026-10-17",
+   "ops": [{ "op": "end", "id": "wife_job" }]
+  },
+  {
+   "id": "zona_zaczyna",
+   "says_pl": "Żona zaczyna pracę na etacie od 1 kwietnia 2027, 6 000 zł brutto, wypłata do 10. następnego miesiąca; nadal rozliczamy się wspólnie.",
+   "base": "zona_bez_pracy",
+   "from": "2027-04-01",
+   "ops": [
+    { "op": "add", "instance": { "id": "wife_job2", "template": "job_pl@1", "label_pl": "Nowa praca żony", "args": { "gross": 6000, "person": "wife" } } },
+    { "op": "add", "instance": { "id": "wife_tax2", "template": "employment_pl@2022", "label_pl": "Umowa o pracę żony (nowa)", "args": { "job": "wife_job2", "account": "konto", "employer": "pracodawca_zony", "pay_on": "next_month:10" } } },
+    { "op": "set_arg", "id": "pit_joint", "arg": "b", "entry": { "value": ["wife_tax", "wife_tax2"] } }
+   ]
+  }
+ ]
+}

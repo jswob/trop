@@ -1,0 +1,45 @@
+# L §5.14.3: flows(m[keys], span) — "On a day a statement covers, the observations that fulfil the move's instances
+# stand in for them (§5.19)."  st_01 covers konto in 2026-01 and its row r1 fulfils rent[2026-01] at 2 850.00 PLN
+# (planned 2 800.00): flows(rent, 2026-01) is 2 850.00 PLN; February, not covered, counts the plan, 2 800.00 PLN.
+# (Was REFCORE-UNSPECIFIED §5.14.3: flows over a modelled-past instance.)
+=== m.tally
+model t
+  tally 2
+  on 2026-03-15
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+input bank: observed
+input rent_amt: money PLN
+input rent_dom: int
+
+place konto: accounts PLN lives 2020-01-01..
+place landlord: outside lives 1900-01-01..
+
+move rent[m in months]: transfers
+  on day_of(m, rent_dom)
+  leg cash from konto to landlord amount rent_amt
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  rent_amt = 2 800.00 PLN
+  rent_dom = 3
+  opening[konto] = 10 000.00 PLN at 2026-01-01 start
+
+version st_01
+  cite s
+  governs 2026-01
+  known 2026-02-02
+  covers konto
+  anchor konto
+  bank[r1] = (on: 2026-01-03, kind: transfers, leg cash from konto to landlord amount 2 850.00 PLN, fulfils: rent[2026-01])
+
+ask q: flows(rent, 2026-01), flows(rent, 2026-02)
+=== expect
+q: (2 850.00 PLN, 2 800.00 PLN)
+...

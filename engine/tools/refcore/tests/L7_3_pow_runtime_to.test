@@ -1,0 +1,25 @@
+# L §7.3: pow(x, q) with a non-integer q needs to u (LOAD-TO, a load refusal: printed once, L §8.3).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+input two: num
+input half: num
+def p: num = pow(two, half) at reader
+
+version v
+  cite s
+  governs 2026..
+  known 2026-01-01
+  two = 2
+  half = 0.5
+
+ask a: p law 2026-06-30
+=== expect
+refused: LOAD-TO ...

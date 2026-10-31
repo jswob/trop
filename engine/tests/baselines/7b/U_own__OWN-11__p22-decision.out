@@ -1,0 +1,16 @@
+q_parts (x = acc2, p = ania): 400.00 DUK
+  unfulfilled: back
+  unfulfilled: out
+  cut 2026-10-30
+q_parts (x = acc2, p = tomek): 800.00 DUK
+  unfulfilled: back
+  unfulfilled: out
+  cut 2026-10-30
+q_parts (x = sav, p = ania): 600.00 DUK
+  unfulfilled: back
+  unfulfilled: out
+  cut 2026-10-30
+q_parts (x = sav, p = tomek): 200.00 DUK
+  unfulfilled: back
+  unfulfilled: out
+  cut 2026-10-30

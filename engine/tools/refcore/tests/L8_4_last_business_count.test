@@ -1,0 +1,35 @@
+# L §4.2 last_business(p, n, cal) is "the n-th last business day of period p"; L §8.4 "a step or a count that isn't
+# positive" is refused, here at the key (RUN-DOMAIN). Also a period with fewer business days than n (2026-03 under
+# weekends [sat, sun] has 22): "a built-in's argument outside the domain its row states", RUN-DOMAIN. (Writer 8: was
+# first_business's test; first_business is gone, L §2.2.)
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+input len: calendar
+input n0: int
+input n1: int
+def c[m in months]: date = last_business(m, n0, len) at reader
+def d[m in months]: date = last_business(m, n1, len) at reader
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  len = calendar(weekends [sat, sun])
+  n0 = 0
+  n1 = 23
+
+ask q1: c[2026-03] law 2026-06-30
+ask q2: d[2026-03] law 2026-06-30
+=== expect
+q1: refused: RUN-DOMAIN ...
+  law date 2026-06-30, cut 2026-12-31
+q2: refused: RUN-DOMAIN ...
+  law date 2026-06-30, cut 2026-12-31

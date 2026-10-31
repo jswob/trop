@@ -1,0 +1,30 @@
+# L §5.16 A random number of items: a draw past the last slot "is refused on that path (RUN-KEY)"; L §8.4 `draw <n> of
+# <x> passes the last slot of <index>`. n = binomial(trials, 0.99) with trials a row (5): load doesn't see the support
+# (it rests on a fact); a path that draws more than 3 reads a slot outside slots (q; which path and draw is the
+# paths', the message's form is the spec's).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source src "s"
+index slots = int 1..3
+input trials: int
+input cost[k in slots]: num
+input n: dist
+def total: num = sum(cost[k] for k in 1 .. n step 1)
+
+ask q: mean(total) paths 20 seed 1
+
+version v
+  cite src
+  governs always
+  known 2026-01-01
+  trials = 5
+  cost[*] = 2
+  n = binomial(trials, 0.99)
+=== expect
+q: refused: RUN-KEY draw ...
+  cut 2026-12-31

@@ -1,0 +1,60 @@
+model law12
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+  note "Probe LAW-12: an exemption, its exception, and an exception to that exception, with the middle rule inapplicable for one heir."
+  note "Rule 3 says a minor needn't report, so it is written on the duty to report (must_report), which rule 2 reads. Written on exempt, rule 3 would need a rule that only defeats rule 2 and gives no value of its own; every rule of a def gives a value (L 5.11 steps 4 and 6), so a rule minors beats late = true wins beside close for Kuba and beside base for Leon (RUN-CONFLICT: late, beaten, has its when skipped, L 5.11 step 3)."
+
+source card "Probe card LAW-12 (tmp/cases/probes/law/LAW-12.md): story, rules 1-4 and question"
+
+unit DUK: currency minor 0.01
+
+index heir = [kuba, leon]
+
+index relation = [spouse, child, grandchild, nephew]
+
+input amount[h in heir]: money DUK question "How much does the heir inherit?"
+
+input free: money DUK question "Above what amount is a taxed inheritance taxed?"
+
+input minor[h in heir]: bool question "Is the heir a minor?"
+
+input rate: num question "At what rate is a taxed inheritance taxed?"
+
+input rel[h in heir]: key relation question "How is the heir related to the deceased?"
+
+input unreported[h in heir]: bool question "Did the heir fail to report the inheritance within 6 months?"
+
+def exempt[h in heir]: bool at reader
+  rule base v card_law = false
+  rule close beats base v card_law = true when rel[h] in [spouse, child, grandchild]
+  rule late beats base, close v card_law = false when must_report[h] and unreported[h]
+
+def must_report[h in heir]: bool at reader
+  rule base v card_law = true
+  rule minors beats base v card_law = false when minor[h]
+
+def tax[h in heir]: num DUK at reader
+  note "rule 4: a taxed inheritance pays 12 % above 5 000.00; the card states no rounding"
+  rule base v card_law = if exempt[h] then 0 else rate * max(0, amount[h] - free)
+
+ask each_heir: exempt[h], tax[h] for h in heir law 2026-10-25
+
+version card_facts
+  cite card
+  governs always
+  known 2026-01-01
+  amount = 50000 "story: two heirs each inherit 50 000.00 DUK"
+  minor = true "story: both are aged 15, minors"
+  rel[kuba] = grandchild "story: Kuba is the deceased's grandson"
+  rel[leon] = nephew "story: Leon is his nephew"
+  unreported = true "story: neither reports it within 6 months"
+
+version card_law
+  cite card
+  governs always
+  known 2026-01-01
+  note "the card's own rules, stipulations known from the model's start (L 4.5). Rule 1 is exempt.close, rule 2 exempt.late, rule 3 must_report.minors, rule 4 tax"
+  free = 5000 "rule 4: above 5 000.00"
+  rate = 0.12 "rule 4: 12 %"

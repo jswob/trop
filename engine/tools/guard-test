@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# Tests for the guard and the Stop hook: engine/tools/guard-test
+d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)" || exit 1
+exec python3 -I -B "$d/guard_test.py" "$@"

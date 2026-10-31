@@ -1,0 +1,17 @@
+# L §7.1 (round 12): "pow(x, n) with an integer n is exact; where x has a unit, n is a literal, so the result's unit is
+# known at load (LOAD-UNIT otherwise)". (Was REFCORE-UNSPECIFIED §7.1, writer 5's T-98.)
+=== m.tally
+model t
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+input n: int
+input x: money PLN
+def a: num PLN = pow(x, n)
+ask q: a
+=== expect
+refused: LOAD-UNIT pow of money PLN to a power that is not a literal (m.tally:11)

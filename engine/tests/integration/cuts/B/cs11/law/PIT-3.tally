@@ -1,0 +1,52 @@
+part pit_3
+  tally 2
+  law
+  note "PIT-3 · The tax scale. pit3_rate holds the scale's marginal rates, read by marginal(pit3_rate, base) (L §5.8); pit3_reducing is the yearly reducing amount. The tax is the scale less the reducing amount, never below 0 (.3, the households' defs)."
+  note "v2 governs 2022 (advances paid 2022-01-01 – 2022-06-30, the PIT-4 v2 .4 comparison, and the tax for 2022 until v3 was published); v3, published 2022-06-14 and in force 2022-07-01 (enters), governs the tax for 2022 on and advances paid from 2022-07-01. Under a cut from 2022-06-14 the later-known v3 wins the year 2022 (L §4.6); an advance reads the wording in force on its payment day (PIT-4 .2) through the pin wording <payday> for [pit3_rate, pit3_reducing] (L §4.3)."
+
+source pit_3 "Personal Income Tax Act, PIT-3 The tax scale (tmp/cases/law/acts.md)"
+
+input pit3_reducing: money DUK question "What is the yearly reducing amount (PIT-3 .2)?"
+
+band pit3_rate(x: num DUK): num
+  note "marginal rates of the scale (PIT-3 .1), by base"
+
+version pit3_v1
+  cite pit_3
+  governs 2018-01-01..2021-12-31
+  known 2017-09-01
+  enters 2018-01-01
+  note "PIT-3 v1, in force 2018-01-01 – 2021-12-31, published 2017-09-01; governs the tax for 2018–2021 and advances paid 2018-01-01 – 2021-12-31."
+  pit3_rate: [0, 90000] = 0.18 "PIT-3 v1 .1: 18 % of the base up to 90 000.00 DUK"
+  pit3_rate: (90000, inf) = 0.33 "PIT-3 v1 .1: 33 % of the part above 90 000.00 DUK"
+  pit3_reducing = 1530.00 "PIT-3 v1 .2"
+
+version pit3_v2
+  cite pit_3
+  governs 2022-01-01..2022-12-31
+  known 2021-11-15
+  enters 2022-01-01
+  note "PIT-3 v2, in force 2022-01-01 – 2022-06-30, published 2021-11-15; governs advances paid 2022-01-01 – 2022-06-30, in PIT-4 v2 .4 advances paid 2022-07-01 – 2022-12-31, and the tax for 2022 until v3 was published."
+  pit3_rate: [0, 120000] = 0.18 "PIT-3 v2 .1: 18 % of the base up to 120 000.00 DUK"
+  pit3_rate: (120000, inf) = 0.33 "PIT-3 v2 .1: 33 % of the part above 120 000.00 DUK"
+  pit3_reducing = 5400.00 "PIT-3 v2 .2"
+
+version pit3_v3
+  cite pit_3
+  governs 2022-01-01..2022-12-31
+  known 2022-06-14
+  enters 2022-07-01
+  note "PIT-3 v3, in force 2022-07-01 until replaced, published 2022-06-14; governs the tax for tax years from 2022, the whole of 2022 included, and advances paid from 2022-07-01. This version holds its rows for 2022, where they replace v2's; pit3_v3_on holds the same rows from 2023 (one act, two versions: a band table's replace rows with no earlier table on part of their span are refused by the reference interpreter, W-A fault F6)."
+  replace pit3_rate: [0, 120000] = 0.13 "PIT-3 v3 .1: 13 % of the base up to 120 000.00 DUK"
+  replace pit3_rate: (120000, inf) = 0.33 "PIT-3 v3 .1: 33 % of the part above 120 000.00 DUK"
+  replace pit3_reducing = 3900.00 "PIT-3 v3 .2"
+
+version pit3_v3_on
+  cite pit_3
+  governs 2023-01-01..
+  known 2022-06-14
+  enters 2022-07-01
+  note "PIT-3 v3 from tax year 2023 on (see pit3_v3)."
+  pit3_rate: [0, 120000] = 0.13 "PIT-3 v3 .1: 13 % of the base up to 120 000.00 DUK"
+  pit3_rate: (120000, inf) = 0.33 "PIT-3 v3 .1: 33 % of the part above 120 000.00 DUK"
+  pit3_reducing = 3900.00 "PIT-3 v3 .2"

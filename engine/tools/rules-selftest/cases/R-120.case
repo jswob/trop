@@ -1,0 +1,44 @@
+# R-120: every .rs file starts with its //! header: a purpose sentence, then Spec:, Twin:
+# and Invariants:, in that order.
+
+case: no-header
+tool: run
+expect: no //! header: a purpose sentence, then Spec:, Twin: and Invariants: lines (R-120)
+--- module
+/// Planted.
+pub fn planted() -> u8 {
+    1
+}
+--- run
+tools/headers
+
+case: header-without-twin
+tool: run
+expect: no Twin: line: the header is the purpose, then Spec:, Twin:, Invariants: (R-120)
+--- module
+//! A planted module whose header names its spec but not its refcore twin.
+//! Spec: none, planted.
+//! Invariants: none, planted.
+
+/// Planted.
+pub fn planted() -> u8 {
+    1
+}
+--- run
+tools/headers
+
+case: purpose-not-one-sentence
+tool: run
+expect: the purpose isn't one sentence ending in a full stop (R-120)
+--- module
+//! A planted module. Its purpose takes two sentences, which the header forbids.
+//! Spec: none, planted.
+//! Twin: none, planted.
+//! Invariants: none, planted.
+
+/// Planted.
+pub fn planted() -> u8 {
+    1
+}
+--- run
+tools/headers

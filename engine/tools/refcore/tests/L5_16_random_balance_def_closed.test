@@ -1,0 +1,30 @@
+# MC-B-F5. L §5.16: "A query that has no closed form is a statistic over paths: it stands only in an ask line that
+# states paths N seed S"; low_w is random through w's balances (E §3.1 step 10), and no fact is read in it directly
+# in an affine form, so mean(low_w) on a line without paths has no closed form (LOAD-RANDOM, E §3.1 step 10). snap8
+# called low_w not random (a query is asked of a random value).
+=== m.tally
+model m
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+unit DUK: currency minor 0.01
+source s "s"
+index delays = 1..10
+place w: accounts DUK lives 2026-01-01..
+place world: outside lives 2026-01-01..
+input amt: money DUK question "amount?"
+version o
+  cite s
+  known 2026-01-01
+  opening[w] = 0.00 DUK at 2026-01-01 start
+  amt = 100.00 DUK governs always "a"
+def delay[m in months]: dist = discrete(1 for k in delays)
+def low_w: money DUK = min(bal(w, end_of(m) - 1) for m in months)
+move pay[m in months]: transfers
+  on add_days(start_of(m), delay[m])
+  at start_of(m)
+  leg cash from world to w amount amt
+ask q5: mean(low_w) law 2026-12-31
+=== expect
+refused: LOAD-RANDOM mean(low_w) has no closed form; state paths N seed S ...

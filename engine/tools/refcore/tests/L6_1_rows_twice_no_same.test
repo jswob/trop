@@ -1,0 +1,33 @@
+# L §6.1: "Identities are written, never inferred" (L §5.19: "the engine never infers one"). Without the same line the
+# two rows are two movements: 1 000.00 - 2 x 100.00 = 800.00 PLN.
+=== m.tally
+model hh
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source bank_export "wyciąg"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2019-01-01..
+place world: outside lives 1900-01-01..
+input bank: observed
+
+version opening_2026
+  cite bank_export
+  governs always
+  known 2026-01-01
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "saldo"
+
+version statement_01
+  cite bank_export
+  governs 2026-01
+  known 2026-02-01
+  covers konto
+  bank[r31] = (on: 2026-01-12, kind: transfers, leg cash from konto to world amount 100.00 PLN) "line 31"
+  bank[r32] = (on: 2026-01-12, kind: transfers, leg cash from konto to world amount 100.00 PLN) "line 32"
+
+ask b: bal(konto, 2026-01-31)
+=== expect
+b: 800.00 PLN
+  cut 2026-03-01

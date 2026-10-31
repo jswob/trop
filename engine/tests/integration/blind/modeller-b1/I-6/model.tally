@@ -1,0 +1,296 @@
+model i6
+  tally 2
+  on 2027-01-01
+  start 2027-01-01
+  end 2028-12-31
+  note "Card I-6: a joint mortgage with rate resets, two overpayments with two elections, and a relief split between the borrowers."
+  note "The 2028 REF6 values are unknown in the base (holes); the two named paths are the scenarios ref6_low and ref6_high."
+
+source story "Card I-6, story"
+
+source contract "Card I-6, loan contract of Bank Orla, rules 1 to 6"
+
+source relief_act "Card I-6, Home Loan Relief Act, rule 7"
+
+source modeller "The modeller's own assumptions, each with its reason"
+
+unit PLN: currency minor 0.01
+
+kind persons
+
+kind homes
+
+kind loans
+
+kind loan_payments: event certain
+  leg principal: PLN
+  leg interest: PLN
+  attr loan: key loans
+  note "an instalment: principal repaid and interest paid, one day"
+
+kind overpayments: event certain
+  leg cash: PLN
+  attr loan: key loans
+  attr election: key elections
+  note "an overpayment, with the election made with it"
+
+kind fees: event certain
+  leg cash: PLN
+
+axis fee_mode
+  half-up "the fee is rounded to whole minor units half up"
+  down "the fee is rounded down to whole minor units"
+
+axis relief_order
+  own_first "a year's own credit is counted first, within the cap and against the tax"
+  carry_first "the credit carried in is counted first, within the cap and against the tax"
+
+index elections = [lower_inst, shorter_term]
+
+index overpay_ids = [op1, op2]
+
+index probes = [day_before, on_day]
+  note "helper keys: a period is looked up for the day before a step and for the step's own day (no user functions, L 10)"
+
+index ref6_months = month 2027-01..2052-12
+  note "months in which a REF6 value is published, over the loan's life"
+
+index steps = int 0..480
+  note "step 0 is the drawdown day; step k > 0 is instalment k's due day"
+
+place joint: accounts PLN lives 2027-01-01..
+
+place loan_debt[l in loans]: debts PLN lives 2027-01-01..
+
+place unapplied[l in loans]: claims PLN lives 2027-01-01..
+
+place banks: outside lives 2027-01-01..
+
+place world: outside lives 2027-01-01..
+
+input borrower[p in persons, l in loans]: bool
+
+input cal: calendar
+
+input carry_before[p in persons]: num PLN
+
+input home_of[l in loans]: key homes
+
+input lives_in[p in persons, h in homes]: bool
+
+input loan_terms[l in loans]: (principal money PLN, n int, drawn date, first_month month, due_dom int, rate_anchor date, rate_months int, margin rate, cy_anchor date, free_share num, fee_rate num)
+
+input op_terms[o in overpay_ids]: (loan key loans, paid_on date, amt money PLN, election key elections)
+
+input owns[p in persons, h in homes]: num
+
+input ref6[m in ref6_months]: rate question "Jaka wartość REF6 została opublikowana w tym miesiącu? (prognoza banku: od 4,50 % do 6,50 %)"
+
+input ref6_pub_nth: int
+
+input tax_due[p in persons, y in years]: money PLN question "Ile wynosi podatek dochodowy tej osoby za ten rok przed ulgą?"
+
+def annuity[l in loans, k in steps]: money PLN
+  note "rule 3: P x r / (1 - (1 + r)^-n), rounded up to whole minor units, at step k's state"
+  rule base = round(p_close[l, k] * periodic(recalc_rate[l, k], month, nominal 12) * factor(recalc_rate[l, k], n_after[l, k], month, nominal 12) / (factor(recalc_rate[l, k], n_after[l, k], month, nominal 12) - 1), minor(PLN), up)
+
+def cy_start[o in overpayments]: date = add_years(loan_terms[o.loan].cy_anchor, age(loan_terms[o.loan].cy_anchor, o.day))
+
+def fee_amt[o in overpayments]: money PLN
+  note "rule 6: 2 % of the excess over the line that this overpayment adds"
+  rule base = round(loan_terms[o.loan].fee_rate * (max(0, op_before[o] + o.cash.amount - fee_line[o.loan]) - max(0, op_before[o] - fee_line[o.loan])), minor(PLN), fee_mode)
+
+def fee_line[l in loans]: num PLN = loan_terms[l].principal * loan_terms[l].free_share
+
+def inst_amt[l in loans, k in steps]: money PLN
+  note "the instalment in force for instalment k"
+  rule base = inst_next[l, k - 1] when k > 0
+
+def inst_next[l in loans, k in steps]: money PLN
+  note "rules 4 and 5: the instalment in force from the step after k"
+  rule keep = inst_amt[l, k] when k > 0
+  rule recalc beats keep = annuity[l, k] when period_starts[l, k] or lower_at[l, k]
+
+def interest[l in loans, k in steps]: money PLN
+  note "rule 2: principal after the previous step times the rate of the period on the day before, over 12, half up"
+  rule base = round(p_close[l, k - 1] * periodic(rate_now[l, k], month, nominal 12), minor(PLN), half-up) when k > 0
+
+def lower_at[l in loans, k in steps]: bool = k > 0 and any(o.election == lower_inst for o in overpayments over step_day[l, k - 1] .. add_days(step_day[l, k], -1) where o.loan == l)
+
+def n_after[l in loans, k in steps]: int
+  note "rules 3 and 5: instalments remaining after step k"
+  note "shorter term: 'the fewest that repay the loan' is read as the fewest j whose instalments, discounted at the current rate, cover the principal; a month-by-month reading with rounded interest is not written"
+  rule drawn = loan_terms[l].n when k == 0
+  rule paid = n_after[l, k - 1] - 1 when k > 0
+  rule shorter beats paid = min(j for j in 1 .. n_after[l, k - 1] - 1 where p_close[l, k] * periodic(rate_now[l, k], month, nominal 12) <= inst_amt[l, k] * (1 - 1 / factor(rate_now[l, k], j, month, nominal 12))) when k > 0 and shorter_at[l, k]
+
+def op_applied[l in loans, k in steps]: money PLN
+  note "rule 5: overpayments made since the previous step are applied after this step's instalment"
+  rule at_draw = 0 when k == 0
+  rule applied = sum(o.cash.amount for o in overpayments over step_day[l, k - 1] .. add_days(step_day[l, k], -1) where o.loan == l) when k > 0
+
+def op_before[o in overpayments]: money PLN = sum(x.cash.amount for x in overpayments over cy_start[o] .. add_days(o.day, -1) where x.loan == o.loan)
+
+def p_close[l in loans, k in steps]: money PLN
+  note "principal outstanding after step k: after its instalment, then its overpayments"
+  rule drawn = loan_terms[l].principal when k == 0
+  rule step = p_close[l, k - 1] - principal_paid[l, k] - op_applied[l, k] when k > 0
+
+def period_from[l in loans, k in steps, w in probes]: date
+  note "rule 1: the first day of the rate period that holds the probe day"
+  rule base = add_months(loan_terms[l].rate_anchor, loan_terms[l].rate_months * round(age_months(loan_terms[l].rate_anchor, probe_day[l, k, w]) / loan_terms[l].rate_months, 1, floor))
+
+def period_rate[l in loans, k in steps, w in probes]: rate
+  note "rule 1: the REF6 value published last before the period starts, plus the margin"
+  rule base = ref6[last(m in ref6_months where pub_day[m] < period_from[l, k, w])] + loan_terms[l].margin
+
+def period_starts[l in loans, k in steps]: bool = period_from[l, k, on_day] == step_day[l, k]
+
+def principal_paid[l in loans, k in steps]: money PLN
+  note "rules 2 and 3: the instalment less its interest; the last instalment repays the loan"
+  rule base = min(p_close[l, k - 1], inst_amt[l, k] - interest[l, k]) when k > 0
+  rule last beats base = p_close[l, k - 1] when k > 0 and n_after[l, k - 1] == 1
+
+def probe_day[l in loans, k in steps, w in probes]: date
+  rule before = add_days(step_day[l, k], -1) when w == day_before
+  rule own = step_day[l, k] when w == on_day
+
+def pub_day[m in ref6_months]: date = last_business(m, ref6_pub_nth, cal)
+
+def rate_now[l in loans, k in steps]: rate = period_rate[l, k, day_before]
+
+def recalc_rate[l in loans, k in steps]: rate
+  rule now = rate_now[l, k] when k > 0
+  rule new beats now = period_rate[l, k, on_day] when period_starts[l, k]
+
+def shorter_at[l in loans, k in steps]: bool = k > 0 and any(o.election == shorter_term for o in overpayments over step_day[l, k - 1] .. add_days(step_day[l, k], -1) where o.loan == l)
+
+def step_day[l in loans, k in steps]: date
+  rule drawn = loan_terms[l].drawn when k == 0
+  rule due = day_of(loan_terms[l].first_month + (k - 1), loan_terms[l].due_dom) when k > 0
+
+move apply_op[l in loans over .., k in steps]: transfers
+  on step_day[l, k]
+  when k > 0 and op_applied[l, k] > 0
+  leg cash from unapplied[l] to loan_debt[l] amount op_applied[l, k]
+
+move draw[l in loans over ..]: transfers
+  on loan_terms[l].drawn
+  leg cash from loan_debt[l] to world amount loan_terms[l].principal
+
+move fee[o in overpayments over ..]: fees
+  on o.day
+  when fee_amt[o] > 0
+  leg cash from o.cash.from to banks amount fee_amt[o]
+
+move overpay[o in overpay_ids]: overpayments
+  on op_terms[o].paid_on
+  attr loan = op_terms[o].loan
+  attr election = op_terms[o].election
+  leg cash from joint to unapplied[op_terms[o].loan] amount op_terms[o].amt
+
+move pay[l in loans over .., k in steps]: loan_payments
+  on step_day[l, k]
+  when k > 0 and p_close[l, k - 1] > 0
+  attr loan = l
+  leg principal from joint to loan_debt[l] amount principal_paid[l, k]
+  leg interest from joint to banks amount interest[l, k]
+
+input cap: money PLN
+input rate: num
+def carry_in[p in persons, y in years]: num PLN
+  rule first = carry_before[p] when pos(y) == 1
+  rule later = carry_out[p, y - 1] when pos(y) > 1
+def carry_in_cap[p in persons, y in years]: num PLN = min(carry_in[p, y], cap - own_in_cap[p, y])
+def carry_out[p in persons, y in years]: num PLN
+  note "a credit above the tax is carried to the next year only: only the year's own credit carries"
+  rule base = own_in_cap[p, y] - used_own[p, y]
+def credited[p in persons, y in years]: num PLN = used_own[p, y] + used_carry[p, y]
+def interest_paid[p in persons, y in years]: num PLN
+  note "joint borrowers split the interest paid by their shares in the home"
+  rule base = sum(x.interest.amount * owns[p, home_of[x.loan]] for x in loan_payments over y where borrower[p, x.loan] and lives_in[p, home_of[x.loan]])
+def own[p in persons, y in years]: num PLN = rate * interest_paid[p, y]
+def own_in_cap[p in persons, y in years]: num PLN
+  rule own_first = min(own[p, y], cap) when relief_order == own_first
+  rule carry_first = min(own[p, y], cap - min(carry_in[p, y], cap)) when relief_order == carry_first
+def used_carry[p in persons, y in years]: num PLN = min(carry_in_cap[p, y], tax_due[p, y] - used_own[p, y])
+def used_own[p in persons, y in years]: num PLN
+  rule own_first = min(own_in_cap[p, y], tax_due[p, y]) when relief_order == own_first
+  rule carry_first = min(own_in_cap[p, y], max(0, tax_due[p, y] - carry_in_cap[p, y])) when relief_order == carry_first
+
+ask fee_paid: fee_amt[o] for o in overpayments over ..
+
+ask instalments_2027: inst_amt[orla_loan, first(k in steps where k > 0 and step_day[orla_loan, k] == d)] for d in [2027-04-15, 2027-10-15, 2028-01-15]
+
+ask interest_2027: flows(pay.interest, 2027)
+
+ask pub_feb: check pub_day[2027-02] == 2027-02-26
+
+ask pub_aug: check pub_day[2027-08] == 2027-08-31
+
+ask relief_2027: credited[p, 2027], carry_out[p, 2027] for p in persons over ..
+
+version card_things
+  cite story
+  known 2027-01-01
+  assumed "the card gives no birth or purchase dates; the lifespans start early"
+  homes + [flat] lives 2000-01-01..
+  persons + [hania] lives 1950-01-01..
+  persons + [igor] lives 1950-01-01..
+
+version card_contract
+  cite contract
+  governs always
+  known 2027-01-01
+  loans + [orla_loan] lives 2027-03-15..
+  loan_terms[orla_loan] = (principal: 480000.00 PLN, n: 300, drawn: 2027-03-15, first_month: 2027-04, due_dom: 15, rate_anchor: 2027-03-15, rate_months: 6, margin: 2.10 %/year, cy_anchor: 2027-03-15, free_share: 10 %, fee_rate: 2 %) "story; rules 1, 6"
+
+version card_facts
+  cite story
+  governs always
+  known 2027-01-01
+  borrower[hania, orla_loan] = true "lends to them jointly"
+  borrower[igor, orla_loan] = true "lends to them jointly"
+  home_of[orla_loan] = flat "for the flat"
+  lives_in[hania, flat] = true "the flat they live in"
+  lives_in[igor, flat] = true "the flat they live in"
+  op_terms[op1] = (loan: orla_loan, paid_on: 2027-12-01, amt: 30000.00 PLN, election: lower_inst) "overpayment, lower instalment"
+  op_terms[op2] = (loan: orla_loan, paid_on: 2028-03-01, amt: 25000.00 PLN, election: shorter_term) "overpayment, shorter term"
+  owns[hania, flat] = 50 % "each owns half"
+  owns[igor, flat] = 50 % "each owns half"
+  ref6_pub_nth = 1 "published on the last business day of each month"
+
+version card_carry
+  cite modeller
+  governs always
+  known 2027-01-01
+  carry_before = 0 PLN assumed "the loan starts in 2027; no relief is carried into 2027"
+
+version card_calendar
+  cite modeller
+  governs always
+  known 2027-01-01
+  cal = calendar(weekends [sat, sun]) assumed "the card names no holidays; business days are Monday to Friday"
+
+version card_ref6
+  cite story
+  governs 2027-02..2027-08
+  known 2027-01-01
+  ref6[2027-02] = 5.40 %/year "Fri 26 Feb 2027"
+  ref6[2027-08] = 5.90 %/year "Tue 31 Aug 2027"
+
+version card_taxes
+  cite story
+  governs 2027..2028
+  known 2027-01-01
+  tax_due[hania, 2027] = 14000.00 PLN "income tax before any relief"
+  tax_due[hania, 2028] = 15000.00 PLN "income tax before any relief"
+  tax_due[igor, 2027] = 600.00 PLN "income tax before any relief"
+  tax_due[igor, 2028] = 1100.00 PLN "income tax before any relief"
+
+version card_relief_act
+  cite relief_act
+  governs always
+  known 2027-01-01
+  cap = 1500.00 PLN "rule 7: at most 1 500.00 a year"
+  rate = 20 % "rule 7: 20 % of the interest paid"

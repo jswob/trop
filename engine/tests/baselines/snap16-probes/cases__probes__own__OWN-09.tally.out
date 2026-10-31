@@ -1,0 +1,8 @@
+q_bonds: (15.57 DUK, 2.00 DUK, 129.00 DUK, 5 549.50 DUK)
+  law date 2025-09-01, cut 2026-10-25
+q_years (k = 1): (0.068 /year, 6.80 DUK)
+  law date 2025-09-01, cut 2026-10-25
+q_years (k = 2): (0.0495 /year, 5.29 DUK)
+  law date 2025-09-01, cut 2026-10-25
+q_years (k = 3): (0.0615 /year, 3.48 DUK)
+  law date 2025-09-01, cut 2026-10-25

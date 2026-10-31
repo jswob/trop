@@ -1,0 +1,79 @@
+# L §5.14 Legs at a place that keeps parts: "Two observed rows stated `same` are one movement (§5.19), so its take at
+# the `from` end and its arrival at the `to` end belong together, and 'keep the labels' reads that take."  kop's
+# statement covers kop and books kb[k06]'s end there (its take); rza's covers rza and books ab[a03]'s end there (its
+# arrival), `same kb[k06] = ab[a03]`.  kop holds batch kb[k03] (90, of 2023-09-12) and kb[k04] (60, of 2023-10-02),
+# both Ania's (rule gift); the transfer of 90 takes the oldest batch whole (order k.batch.day).  The arrival at rza
+# keeps the batch (rza is batched, kop too) and the owners by the leg read (rule moved).  q1 on 2024-02-29: kop keeps
+# kb[k04]'s 60; rza holds kb[k03]'s 90, Ania's (figures carried through).  q2: the sale ab[a06] of 90 takes rza's
+# part, so rza is empty.  (Was REFCORE-UNSPECIFIED "the take of ab[a03].units, a leg the walk didn't book at kop", then
+# RUN-PLACE at the sale; the migrator.)
+=== m.tally
+model t
+  tally 2
+  on 2024-06-30
+  start 2023-01-01
+  end 2024-12-31
+
+source src "test"
+kind funds: unit
+kind persons: parties
+kind gifts_in: event certain
+  leg units: funds
+  attr donee: key persons
+kind lot_transfers: event certain
+  leg units: funds
+kind sales: event certain
+  leg units: funds
+kind lot_holdings: holdings
+  owned by arrive
+  batched
+  step 1
+  takes k for w order k.batch.day
+place kop: lot_holdings glb lives 2023-01-01..
+place rza: lot_holdings glb lives 2023-01-01..
+place world: outside lives 2000-01-01..
+place market: outside lives 2000-01-01..
+input kb: observed
+input ab: observed
+def arrive[m in events, p in parties]: num at m.day
+  rule gift = (if p == m.donee then 1 else 0) when m in gifts_in
+  rule moved beats gift = m.units.amount of p / m.units.amount when m in lot_transfers
+
+ask q1: bal(kop, 2024-02-29) of kb[k04], bal(kop, 2024-02-29) of kb[k03], bal(rza, 2024-02-29) of kb[k03], bal(rza, 2024-02-29) of ania
+ask q2: bal(rza, 2024-03-31)
+
+version cast
+  cite src
+  known 2023-01-01
+  funds + [glb] lives 2018-01-01..
+  persons + [ania] lives 1991-03-14..
+
+version open
+  cite src
+  governs always
+  known 2023-01-01
+  opening[kop] = 0 at 2023-01-01 start
+  opening[rza] = 0 at 2023-01-01 start
+
+version kops
+  cite src
+  governs 2023-01..2024-12
+  known 2023-01-01
+  covers kop
+  kb[k03] = (on: 2023-09-12, kind: gifts_in, leg units from world to kop amount 90 glb, donee: ania) "l3"
+  kb[k04] = (on: 2023-10-02, kind: gifts_in, leg units from world to kop amount 60 glb, donee: ania) "l4"
+  kb[k06] = (on: 2024-02-12, kind: lot_transfers, leg units from kop to rza amount 90 glb) "l6"
+
+version rzas
+  cite src
+  governs 2023-01..2024-12
+  known 2023-01-01
+  covers rza
+  same kb[k06] = ab[a03]
+  ab[a03] = (on: 2024-02-12, kind: lot_transfers, leg units from kop to rza amount 90 glb) "a3"
+  ab[a06] = (on: 2024-03-07, kind: sales, leg units from rza to market amount 90 glb) "a6"
+=== expect
+q1: (60 glb, 0 glb, 90 glb, 90 glb)
+...
+q2: 0 glb
+...

@@ -1,0 +1,57 @@
+# R-128: a spec citation in the code (L §n, E §n, P §n, l.N) that doesn't exist in the
+# spec is an error everywhere, in or out of the kernel.
+
+case: unknown-section
+tool: run
+expect: L §99.1 isn't a numbered heading of LANGUAGE.md (R-128)
+--- module
+/// Planted: reads a row by the read rule (L §99.1).
+pub fn planted() -> u8 {
+    1
+}
+--- run
+tools/trace
+
+case: line-past-the-end
+tool: run
+expect: L §4.6 l.99999: the line is past the end of LANGUAGE.md (2435 lines) (R-128)
+--- module
+/// Planted: reads a row by the read rule (L §4.6 l.99999).
+pub fn planted() -> u8 {
+    1
+}
+--- run
+tools/trace
+
+case: list-item-is-a-section
+tool: run
+exit: any
+expect: every citation is in the spec
+--- module
+//! A planted module that cites a list item, as the spec's own DONE.md does.
+//! Spec: E §9.1.
+//! Twin: engine/tools/refcore/evaluate.py.
+//! Invariants: none.
+
+/// Planted: money is conserved per batch (E §9.1, the first item of E §9's list).
+pub fn planted() -> u8 {
+    1
+}
+--- run
+tools/trace
+
+case: list-item-past-the-list
+tool: run
+expect: E §9.99 isn't a numbered heading of ENGINE.md (R-128)
+--- module
+//! A planted module that cites a list item E §9 doesn't have.
+//! Spec: E §9.99.
+//! Twin: engine/tools/refcore/evaluate.py.
+//! Invariants: none.
+
+/// Planted (E §9.99).
+pub fn planted() -> u8 {
+    1
+}
+--- run
+tools/trace

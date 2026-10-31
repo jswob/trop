@@ -1,0 +1,20 @@
+# L §2.5: "A bound variable over a key list takes its index from the key positions it is used in; two
+# different indexes there are LOAD-KEY."
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "a source"
+
+index ks = [a, b]
+index js = [a, b]
+input x[k in ks]: int
+input y[j in js]: int
+
+def n: int at reader
+  rule base = sum(x[k] + y[k] for k in [a, b])
+=== expect
+refused: LOAD-KEY ...

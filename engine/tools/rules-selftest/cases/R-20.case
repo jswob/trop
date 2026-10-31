@@ -1,0 +1,24 @@
+# R-20: no operator written as a method call.
+
+case: add-method
+tool: clippy
+expect: clippy::disallowed_methods
+text: R-20
+--- module
+use core::ops::Add;
+
+/// Planted.
+pub fn planted(a: u8, b: u8) -> u8 {
+    a.add(b)
+}
+
+case: shl-assign-path
+tool: clippy
+expect: clippy::disallowed_methods
+text: R-20
+--- module
+/// Planted.
+pub fn planted(mut a: u8) -> u8 {
+    core::ops::ShlAssign::shl_assign(&mut a, 1_u32);
+    a
+}

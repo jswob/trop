@@ -1,0 +1,49 @@
+part abroad
+  tally 2
+  note "Praca żony w Niemczech od lipca 2029: konto w euro, pensja w euro, wymiana na złote 28. dnia miesiąca."
+
+unit EUR: currency minor 0.01
+
+kind exchanges: event certain
+  leg eur: EUR
+  leg pln: PLN
+
+place kantor_eur: outside lives 2026-01-01..
+
+place kantor_pln: outside lives 2026-01-01..
+
+place konto_eur: accounts EUR lives 2029-05-01..
+
+place pracodawcy_de: outside lives 2026-01-01..
+
+input fx_dom: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input fx_eur: num PLN/EUR question "Po jakim kursie wymieniamy euro na złote?"
+
+input salary_eur[j in job, m in month]: money EUR question "Ile wynosi pensja brutto w euro z tej pracy w tym miesiącu?"
+
+input wage_eur_25: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+move fx[m in month]: exchanges
+  on day_of(m, fx_dom)
+  at start_of(m)
+  when bal(konto_eur) > 0
+  reads konto_eur
+  leg eur from konto_eur to kantor_eur amount bal(konto_eur)
+  leg pln from kantor_pln to konto amount round(bal(konto_eur) * fx_eur, minor(PLN), down)
+
+move wage_eur[j in job over .., m in month]: transfers
+  on day_of(m, wage_eur_25)
+  at start_of(m)
+  for m
+  when salary_eur[j, m] > 0
+  leg cash from pracodawcy_de to konto_eur amount net_wage_eur[j, m]
+
+version lifted_figures_5_job_abroad
+  cite lifted_1_0_1
+  governs always
+  known 2029-05-01
+  fx_dom = 28 "inline in tally 1.0.1: fx_in line 21 and fx_out line 29, argument 2 of day_of; one fact, the exchange day"
+  wage_eur_25 = 25 "inline in tally 1.0.1: wage_eur line 37, argument 2 of day_of"

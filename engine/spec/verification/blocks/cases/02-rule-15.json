@@ -1,0 +1,24 @@
+{
+  "id": "02-rule-15",
+  "says_pl": "15. każdego miesiąca inwestuj wszystko ponad to, co trzyma nas na 1 000 zł do następnej wypłaty.",
+  "templates": [
+    {
+      "id": "nadwyzka@1", "kind": "rule", "title_pl": "Nadwyżka do inwestycji", "status": "confirmed",
+      "says": "On the 15th, move everything above the floor that the account can spare until the next pay, counting every planned bill before it.",
+      "params": {
+        "from": { "type": "place", "unit": "PLN", "ask_pl": "Z którego konta?" },
+        "floor": { "type": "money", "unit": "PLN", "ask_pl": "Ile ma zostać na koncie w najniższym punkcie?" },
+        "until": { "type": "line", "ask_pl": "Do której wypłaty liczymy?" },
+        "to": { "type": "place", "unit": "PLN", "ask_pl": "Dokąd inwestujemy?" }
+      },
+      "lines": [
+        { "id": "invest", "says_pl": "Do zainwestowania", "every": "month", "on": "day:15", "unit": "PLN",
+          "value": "max(0, low_point(in.from, next_date(in.until)) - in.floor)",
+          "pay": { "from": "in.from", "to": "in.to" } }
+      ]
+    }
+  ],
+  "instances": [
+    { "id": "invest_15", "template": "nadwyzka@1", "label_pl": "Reguła 15.", "args": { "from": "konto", "floor": 1000, "until": "my_tax/net", "to": "maklerskie" } }
+  ]
+}

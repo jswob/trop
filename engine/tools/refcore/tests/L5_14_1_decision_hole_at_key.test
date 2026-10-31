@@ -1,0 +1,46 @@
+# Writer 12 (session 7c, A2). L §5.14 `on d`: "A day that is a hole and not a window has no bound, so that is every
+# span, earlier ones included, whatever the instance's `when` says: its booking cut min(t, K) is a hole with it
+# (§5.14.3)." L §5.14.3: "An amount, or a `when`, that was a hole at its cut stays a hole movement until a version
+# answers it." A keyed decision `g[j in ks]` (`reads acct`) whose day and `at` are the hole hday, at places that keep
+# no parts, is a hole movement: the balance it reaches is a hole naming hday, as its plan twin's is (writer 12's
+# scratch a2/np_plan.tally, amount wage_amt and no `reads`, prints these three lines). refcore had crashed with
+# KeyError: 'j' (triage scratch a2/v23, here without parts: writer 12's a2/np_dec.tally).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+kind savings: place PLN min 0
+index ks = [a, b]
+place acct[j in ks]: savings lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input wage_day: date
+input wage_amt: money PLN
+input hday: date
+move w1[x in savings on wage_day]: transfers
+  on wage_day
+  leg cash from world to x amount wage_amt
+move g[j in ks]: transfers
+  on hday
+  at hday
+  reads acct
+  leg cash from acct[j] to world amount bal(acct[j])
+ask q: bal(acct[a], 2026-12-31)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[acct[a]] = 0 PLN at 2026-01-01 start
+  opening[acct[b]] = 0 PLN at 2026-01-01 start
+  wage_day = 2026-02-01
+  wage_amt = 100.00 PLN
+  hday = ?"not yet"
+=== expect
+q: ?"not yet" (hday)
+  unfulfilled: w1[acct[a]]
+  cut 2026-12-31

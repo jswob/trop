@@ -1,0 +1,61 @@
+# R-18: no floating point anywhere: arithmetic, types, literals, suffixes, in macros and
+# in code compiled only on some machines.
+
+case: float-arithmetic
+tool: clippy
+expect: clippy::float_arithmetic
+--- module
+/// Planted.
+pub fn planted(v: f64) -> f64 {
+    v * core::hint::black_box(2.0)
+}
+
+case: float-type
+tool: clippy
+expect: clippy::disallowed_types
+text: R-18
+--- module
+/// Planted.
+pub fn planted(v: f32) -> f32 {
+    v
+}
+
+case: float-literal
+tool: ast-grep
+expect: no-float
+--- module
+/// Planted.
+pub fn planted() -> bool {
+    core::hint::black_box(1.5) > 1.0
+}
+
+case: float-suffix
+tool: ast-grep
+expect: no-float
+--- module
+/// Planted.
+pub fn planted() -> usize {
+    core::mem::size_of_val(&1f64)
+}
+
+case: float-in-cfgd-off-code
+tool: ast-grep
+expect: no-float
+--- module
+#[cfg(target_os = "windows")]
+/// Planted.
+pub fn planted() -> u8 {
+    let v = 2.5;
+    core::hint::black_box(v);
+    1
+}
+
+case: float-in-macro
+tool: ast-grep
+expect: no-float
+--- module
+macro_rules! planted {
+    () => {
+        0.5
+    };
+}

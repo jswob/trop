@@ -1,0 +1,20 @@
+# L §2.3 (writer 8): `within` is gone with HOLE-STALE; lastx = "last" "(" ref "," expr ")" and a price is
+# `ref | "last" "(" ref ")"`. A bound on a reading's age is a rule that tests since (L §4.6). `within` after a
+# last(...) read is no clause of it: LOAD-PARSE.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+
+input px[u in currencies]: num PLN/u reading
+input max_age: int
+
+ask q4: last(px[EUR], 2026-03-10) within max_age
+=== expect
+refused: LOAD-PARSE ...

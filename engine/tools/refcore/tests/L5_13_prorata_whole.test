@@ -1,0 +1,36 @@
+# L §5.13 rest largest: "A total that isn't a whole number of u is refused (RUN-PRORATA)": 100.50 PLN in whole
+# złoty.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+index parts = [a1, a2, a3]
+input tot: money PLN
+input w[j in parts]: num
+input hm: rounding
+def sn[j in parts]: money PLN = prorata(tot, w[i] for i in parts, j, minor(PLN), hm, rest none) at reader
+def sl[j in parts]: money PLN = prorata(tot, w[i] for i in parts, j, minor(PLN), hm, rest last) at reader
+def sg[j in parts]: money PLN = prorata(tot, w[i] for i in parts, j, minor(PLN), rest largest ties by pos(i)) at reader
+def sx[j in parts]: money PLN = prorata(tot, w[i] for i in parts, j, minor(PLN), rest largest) at reader
+def sw[j in parts]: money PLN = prorata(tot, w[i] for i in parts, j, 1 PLN, rest largest) at reader
+
+version v
+  cite s
+  governs 2026..
+  known 2026-01-01
+  tot = 100.50 PLN
+  w[a1] = 1
+  w[a2] = 1
+  w[a3] = 2
+  hm = half-even
+
+ask b: sw[a1] law 2026-06-30
+=== expect
+b: refused: RUN-PRORATA ...
+  law date 2026-06-30, cut 2026-12-31

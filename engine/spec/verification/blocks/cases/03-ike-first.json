@@ -1,0 +1,377 @@
+{
+ "id": "03-ike-first",
+ "says_pl": "Najpierw IKE do rocznego limitu, reszta na zwykły rachunek maklerski (z podatkiem Belki przy sprzedaży).",
+ "values": [
+  {
+   "id": "ike.limit",
+   "kind": "law",
+   "unit": "PLN",
+   "says_pl": "Roczny limit wpłat na IKE",
+   "entries": [
+    {
+     "from": "2024-01-01",
+     "value": 23472,
+     "source": "ustawa o IKE art. 13: 3 × prognozowane przeciętne wynagrodzenie (7 824 zł); komunikat MRiPS"
+    },
+    {
+     "from": "2025-01-01",
+     "value": 26019,
+     "source": "3 × 8 673 zł"
+    },
+    {
+     "from": "2026-01-01",
+     "value": 28260,
+     "source": "3 × 9 420 zł (M.P. 2025 poz. 1206)"
+    }
+   ]
+  },
+  {
+   "id": "belka.rate",
+   "kind": "law",
+   "unit": "1",
+   "says_pl": "Podatek od zysków kapitałowych",
+   "entries": [
+    {
+     "from": "2004-01-01",
+     "value": 0.19,
+     "source": "ustawa o PIT art. 30b ust. 1"
+    }
+   ]
+  }
+ ],
+ "templates": [
+  {
+   "id": "nadwyzka_ike@1",
+   "kind": "rule",
+   "title_pl": "Nadwyżka: najpierw IKE, reszta dalej",
+   "status": "confirmed",
+   "says": "On the 15th, the surplus above the floor until the next pay goes to the IKE up to this year's limit; the rest to the other place.",
+   "params": {
+    "from": {
+     "type": "place",
+     "unit": "PLN",
+     "ask_pl": "Z którego konta?"
+    },
+    "floor": {
+     "type": "money",
+     "unit": "PLN",
+     "ask_pl": "Ile ma zostać na koncie w najniższym punkcie?"
+    },
+    "until": {
+     "type": "line",
+     "ask_pl": "Do której wypłaty liczymy?"
+    },
+    "ike": {
+     "type": "place",
+     "unit": "PLN",
+     "ask_pl": "Które IKE?"
+    },
+    "rest": {
+     "type": "place",
+     "unit": "PLN",
+     "ask_pl": "Dokąd reszta?"
+    }
+   },
+   "lines": [
+    {
+     "id": "surplus",
+     "says_pl": "Nadwyżka",
+     "every": "month",
+     "on": "day:15",
+     "unit": "PLN",
+     "value": "max(0, low_point(in.from, next_date(in.until)) - in.floor)"
+    },
+    {
+     "id": "to_ike",
+     "says_pl": "Na IKE",
+     "every": "month",
+     "on": "day:15",
+     "order": 1,
+     "unit": "PLN",
+     "value": "min(v('surplus'), max(0, p.ike.limit - in_year(in.ike)))",
+     "pay": {
+      "from": "in.from",
+      "to": "in.ike"
+     }
+    },
+    {
+     "id": "to_rest",
+     "says_pl": "Reszta",
+     "every": "month",
+     "on": "day:15",
+     "order": 2,
+     "unit": "PLN",
+     "value": "v('surplus') - v('to_ike')",
+     "pay": {
+      "from": "in.from",
+      "to": "in.rest"
+     }
+    }
+   ]
+  },
+  {
+   "id": "belka_pl@2004",
+   "kind": "law",
+   "title_pl": "Podatek Belki od sprzedaży (PIT-38)",
+   "status": "tested",
+   "says": "Gains realised in the year on a holding (FIFO per account), less its losses, taxed at 19%, paid with PIT-38 by 30 April.",
+   "sources": [
+    "ustawa o PIT art. 30b ust. 1, art. 24 ust. 10 (FIFO odrębnie dla każdego rachunku), art. 45 ust. 1"
+   ],
+   "params": {
+    "holding": {
+     "type": "place",
+     "unit": "PLN",
+     "ask_pl": "Który rachunek?"
+    },
+    "account": {
+     "type": "place",
+     "unit": "PLN",
+     "ask_pl": "Z którego konta płacimy podatek?"
+    }
+   },
+   "lines": [
+    {
+     "id": "tax",
+     "says_pl": "Podatek od zysku w roku",
+     "every": "year",
+     "on": "next_year:04-30",
+     "unit": "PLN",
+     "value": "zl(zl(max(0, gain(in.holding))) * p.belka.rate)",
+     "pay": {
+      "from": "in.account",
+      "to": "urzad_skarbowy",
+      "match": "pit38"
+     },
+     "bd": "next"
+    }
+   ],
+   "tests": [
+    {
+     "id": "one_lot",
+     "says": "Kupno 10 000 po 121, sprzedaż 6 000 po 126: zysk 238, podatek 45 do 30.04",
+     "source": "ustawa o PIT art. 30b ust. 1–2 (wyliczenie)",
+     "collected_by": "author",
+     "args": {
+      "holding": "t_hold",
+      "account": "konto"
+     },
+     "places": [
+      {
+       "id": "t_hold",
+       "kind": "holding",
+       "label_pl": "rachunek testowy",
+       "price": "price.etf"
+      }
+     ],
+     "others": [
+      {
+       "id": "t_buy",
+       "template": "przelew@1",
+       "args": {
+        "amount": 10000,
+        "from": "konto",
+        "to": "t_hold",
+        "date": "2026-02-02"
+       }
+      },
+      {
+       "id": "t_sell",
+       "template": "przelew@1",
+       "args": {
+        "amount": 6000,
+        "from": "t_hold",
+        "to": "konto",
+        "date": "2026-09-01"
+       }
+      }
+     ],
+     "year": 2026,
+     "expect": [
+      {
+       "line": "tax",
+       "period": "2026",
+       "value": 45
+      },
+      {
+       "line": "tax",
+       "period": "2026",
+       "date": "2027-04-30"
+      }
+     ]
+    },
+    {
+     "id": "fifo",
+     "says": "Dwa zakupy po 5 000 (po 121 i po 126), sprzedaż 6 000: FIFO bierze najpierw starsze: zysk 206, podatek 39 (LIFO dałoby 8)",
+     "source": "ustawa o PIT art. 24 ust. 10, art. 30b ust. 7 (FIFO odrębnie dla rachunku)",
+     "collected_by": "author",
+     "args": {
+      "holding": "t_hold",
+      "account": "konto"
+     },
+     "places": [
+      {
+       "id": "t_hold",
+       "kind": "holding",
+       "label_pl": "rachunek testowy",
+       "price": "price.etf"
+      }
+     ],
+     "others": [
+      {
+       "id": "t_buy1",
+       "template": "przelew@1",
+       "args": {
+        "amount": 5000,
+        "from": "konto",
+        "to": "t_hold",
+        "date": "2026-01-10"
+       }
+      },
+      {
+       "id": "t_buy2",
+       "template": "przelew@1",
+       "args": {
+        "amount": 5000,
+        "from": "konto",
+        "to": "t_hold",
+        "date": "2026-07-10"
+       }
+      },
+      {
+       "id": "t_sell",
+       "template": "przelew@1",
+       "args": {
+        "amount": 6000,
+        "from": "t_hold",
+        "to": "konto",
+        "date": "2026-09-01"
+       }
+      }
+     ],
+     "year": 2026,
+     "expect": [
+      {
+       "line": "tax",
+       "period": "2026",
+       "value": 39
+      }
+     ]
+    },
+    {
+     "id": "loss",
+     "says": "Kupno 10 000 po 113 (luty 2025), sprzedaż 5 000 po 110 (sierpień): strata 136,36, podatek 0 (strata nie daje ujemnego podatku)",
+     "source": "ustawa o PIT art. 30b ust. 1 (wyliczenie)",
+     "collected_by": "author",
+     "args": {
+      "holding": "t_hold",
+      "account": "konto"
+     },
+     "places": [
+      {
+       "id": "t_hold",
+       "kind": "holding",
+       "label_pl": "rachunek testowy",
+       "price": "price.etf"
+      }
+     ],
+     "others": [
+      {
+       "id": "t_buy",
+       "template": "przelew@1",
+       "args": {
+        "amount": 10000,
+        "from": "konto",
+        "to": "t_hold",
+        "date": "2025-02-03"
+       }
+      },
+      {
+       "id": "t_sell",
+       "template": "przelew@1",
+       "args": {
+        "amount": 5000,
+        "from": "t_hold",
+        "to": "konto",
+        "date": "2025-08-01"
+       }
+      }
+     ],
+     "year": 2025,
+     "expect": [
+      {
+       "line": "tax",
+       "period": "2025",
+       "value": 0
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "przelew@1",
+   "kind": "plain",
+   "title_pl": "Jednorazowy przelew",
+   "status": "confirmed",
+   "says": "One movement of a fixed amount on a date: a purchase, a sale, a repayment.",
+   "params": {
+    "amount": {
+     "type": "money",
+     "unit": "PLN",
+     "ask_pl": "Ile?"
+    },
+    "from": {
+     "type": "place",
+     "unit": "PLN",
+     "ask_pl": "Skąd?"
+    },
+    "to": {
+     "type": "place",
+     "unit": "PLN",
+     "ask_pl": "Dokąd?"
+    },
+    "date": {
+     "type": "date",
+     "ask_pl": "Kiedy?"
+    }
+   },
+   "lines": [
+    {
+     "id": "move",
+     "says_pl": "Przelew",
+     "every": "once",
+     "on": "at:date",
+     "unit": "PLN",
+     "value": "in.amount",
+     "pay": {
+      "from": "in.from",
+      "to": "in.to"
+     }
+    }
+   ]
+  }
+ ],
+ "instances": [
+  {
+   "id": "invest_15",
+   "template": "nadwyzka_ike@1",
+   "label_pl": "Reguła 15.",
+   "args": {
+    "from": "konto",
+    "floor": 1000,
+    "until": "my_tax/net",
+    "ike": "ike",
+    "rest": "maklerskie"
+   }
+  },
+  {
+   "id": "belka_mak",
+   "template": "belka_pl@2004",
+   "label_pl": "Belka na rachunku maklerskim",
+   "args": {
+    "holding": "maklerskie",
+    "account": "konto"
+   }
+  }
+ ]
+}

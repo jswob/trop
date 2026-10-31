@@ -1,0 +1,20 @@
+part people
+  tally 2
+  note "The cast's facts the law reads (story.md, The cast; B-D04)."
+
+input born[p in persons]: date question "When was this person born?"
+
+input spouses: bool question "Are Piotr and Ola married to each other (PIT-6 .1)?"
+
+version deed_parties
+  cite b_d04
+  governs always
+  known 2022-03-18
+  spouses = false "B-D04: buyers not married to each other"
+
+version cast_births
+  cite story
+  governs always
+  known 2022-03-01
+  born[piotr] = 1987-11-03 "story.md line 9; B-D01"
+  born[ola] = 1990-06-21 "story.md line 10"

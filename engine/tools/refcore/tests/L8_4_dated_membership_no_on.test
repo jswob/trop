@@ -1,0 +1,32 @@
+# L §5.7: "`x in K` tests membership of a kind whose memberships aren't dated (a base kind and its parents);
+# `x in K on d` tests membership on day d, for any kind, plain kinds with dated memberships included."  broker is
+# a member of the plain kind wrapped from 2024 (a dated membership): `broker in wrapped` without `on` has no
+# meaning, found at the key (RUN-DOMAIN, L §8.4); `broker in wrapped on 2026-06-30` is true.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+kind brokerages: place PLN min 0
+kind wrapped
+
+def w[x in brokerages]: bool = x in wrapped at reader
+
+version v
+  cite s
+  known 2026-01-01
+  brokerages + [broker] lives 2021-03-01..
+  wrapped + [broker] lives 2024-01-01..
+
+ask q1: w[broker] law 2026-06-30
+ask q2: (broker in wrapped on 2026-06-30)
+=== expect
+q1: refused: RUN-DOMAIN ...
+  law date 2026-06-30, cut 2026-12-31
+q2: true
+  cut 2026-12-31

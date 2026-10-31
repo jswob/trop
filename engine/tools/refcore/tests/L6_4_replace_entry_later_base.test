@@ -1,0 +1,35 @@
+# MC-X-F2, a later base replace. L §6.4 as in L6_4_replace_entry_same_known: the scenario's replace (known 2027-01-01)
+# stands in leave over the base's own replace known later (v3, 2027-06-01, lifespan to 2028-12-31), "whatever the two
+# rows' known dates": the base counts beta_job on 2028-06-01 (v3), leave doesn't.
+=== m.tally
+model m
+  tally 2
+  on 2027-07-01
+  start 2027-01-01
+  end 2028-12-31
+source s "s"
+kind jobs
+version v1
+  cite s
+  known 2027-01-01
+  jobs + [beta_job] lives 2027-08-01..
+version v3
+  cite s
+  known 2027-06-01
+  replace jobs + [beta_job] lives 2027-08-01..2028-12-31
+ask n: count(j in jobs on 2028-06-01)
+=== s.tally
+scenario leave over m
+  tally 2
+  from 2028-03-01
+version v2
+  cite s
+  known 2027-01-01
+  replace jobs + [beta_job] lives 2027-08-01..2028-02-29
+ask n2: count(j in jobs on 2028-06-01) in leave
+=== expect
+n: 1
+  cut 2027-07-01
+n2: 0
+  world: leave
+  cut 2027-07-01

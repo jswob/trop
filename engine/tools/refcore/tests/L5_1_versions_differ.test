@@ -1,0 +1,12 @@
+# L §8.3 LOAD-VERSION: "files declare different tally versions".
+=== a.tally
+model a
+  tally 2
+  on 2016-03-01
+  start 2015-11-01
+  end 2016-10-31
+=== b.tally
+part b
+  tally 1
+=== expect
+refused: LOAD-VERSION ...

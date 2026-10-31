@@ -1,0 +1,17 @@
+part asks_b05
+  tally 2
+  note "B-05 · The mortgage (questions.md): as of 2026-01-05, known as of 2026-01-05. Without the holidays is a what-if: every held month pinned false (L §5.11 as if), the same overpayments on the same days. b05_*_k07 repeat the asks known as of 2026-01-07, when Bank Jodła's list B-D28 is known (O:B-6)."
+
+ask b05_as_was: mtg_interest_year[y], mtg_interest_year[y] as if {held[*] = false}, mtg_interest_year[y] as if {held[*] = false} - mtg_interest_year[y] for y in [2022, 2023, 2024, 2025] law 2026-01-05 as known 2026-01-05
+
+ask b05_balance: mtg_bal[2025-12-31], mtg_bal[2025-12-31] as if {held[*] = false}, mtg_bal[2025-12-31] as if {held[*] = false} - mtg_bal[2025-12-31] law 2026-01-05 as known 2026-01-05
+
+ask b05_instalment: mtg_inst[2026-01], mtg_inst[2026-01] as if {held[*] = false}, mtg_inst[2026-01] as if {held[*] = false} - mtg_inst[2026-01] law 2026-01-05 as known 2026-01-05
+
+ask b05_last: mtg_last, mtg_last as if {held[*] = false}, 0 - count(k in loan_months where bdays_due[k] > mtg_last as if {held[*] = false} and bdays_due[k] <= mtg_last) law 2026-01-05 as known 2026-01-05
+
+ask b05_as_was_k07: mtg_interest_year[y], mtg_interest_year[y] as if {held[*] = false}, mtg_interest_year[y] as if {held[*] = false} - mtg_interest_year[y] for y in [2022, 2023, 2024, 2025] law 2026-01-05 as known 2026-01-07
+
+ask b05_balance_k07: mtg_bal[2025-12-31], mtg_bal[2025-12-31] as if {held[*] = false}, mtg_bal[2025-12-31] as if {held[*] = false} - mtg_bal[2025-12-31] law 2026-01-05 as known 2026-01-07
+
+ask b05_instalment_k07: mtg_inst[2026-01], mtg_inst[2026-01] as if {held[*] = false}, mtg_inst[2026-01] as if {held[*] = false} - mtg_inst[2026-01] law 2026-01-05 as known 2026-01-07

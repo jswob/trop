@@ -1,0 +1,29 @@
+# R-19: integer + - * / % only through checked operations; no type is exempt.
+
+case: integer-add
+tool: clippy
+expect: clippy::arithmetic_side_effects
+--- module
+/// Planted.
+pub fn planted(a: u8, b: u8) -> u8 {
+    a + b
+}
+
+case: integer-mul-assign
+tool: clippy
+expect: clippy::arithmetic_side_effects
+--- module
+/// Planted.
+pub fn planted(mut a: i64, b: i64) -> i64 {
+    a *= b;
+    a
+}
+
+case: bigint-add
+tool: clippy
+expect: clippy::arithmetic_side_effects
+--- module
+/// Planted.
+pub fn planted(a: &num_bigint::BigInt, b: &num_bigint::BigInt) -> num_bigint::BigInt {
+    a + b
+}

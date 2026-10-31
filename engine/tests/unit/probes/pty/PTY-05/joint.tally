@@ -1,0 +1,19 @@
+model pty05
+  tally 2
+  on 2026-10-25
+  start 2024-01-01
+  end 2024-12-31
+  use a = "ania.tally" sha256 "2f4086edb81617b1730cee2367bc9a44967148c6257ce7d378a442cae416c827"
+  use d = "halina.tally" sha256 "4b2b9dc038ba79400d5cbaadb4edb213fbe94fe9f4c62a2fe24a4e721e0166f4"
+  same a.a_stmt[a_g1] = d.gift
+  same a.halina = d.acc_halina
+  same d.ania = a.acc_ania
+  note "PTY-05: the union of two households' statements of one gift, as a joint model (LANGUAGE 6.1). D derives the gift (move gift); A states it as an outside fact, the observed row a_stmt[a_g1] of its own statement. The joint model states that the two are one movement and that each side's outside counterpart is the other's account (same lines); nothing is matched by day and amount."
+  note "Rule 2 is the language's own: imports are pinned and never changed, so a member's asks, asked here as a.q, give its own answers (6.1)."
+
+ask q_transfer: count(m in transfers over 2024)
+
+ask q_people: flows(a.acc_ania, 2024), flows(d.acc_halina, 2024)
+
+ask q_family: sum(flows(x, 2024) for x in accounts over 2024)
+

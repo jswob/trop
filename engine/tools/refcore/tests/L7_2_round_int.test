@@ -1,0 +1,30 @@
+# L §7.2 (round 6): "round(x, 1, mode) of a dimensionless num is an int, so premium * round(months / 12, 1, up) is
+# money × int, money".  mons = 14, twelve = 12, premium = 100.00 PLN: 14/12 rounded up to whole units is 2, an int;
+# money × int is money (L §3.2): 200.00 PLN, assigned to a money def without round.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+input mons: int
+input twelve: int
+input premium: money PLN
+def yrs: int = round(mons / twelve, 1, up) at reader
+def cost: money PLN = premium * round(mons / twelve, 1, up) at reader
+
+version v
+  cite s
+  governs 2026..
+  known 2026-01-01
+  mons = 14
+  twelve = 12
+  premium = 100.00 PLN
+
+ask a: yrs, cost law 2026-06-30
+=== expect
+a: (2, 200.00 PLN)
+  law date 2026-06-30, cut 2026-12-31

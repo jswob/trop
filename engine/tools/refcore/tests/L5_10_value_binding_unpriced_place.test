@@ -1,0 +1,59 @@
+# Writer 12 (session 7c, A1), the twin of L5_10_value_binding_priced_places. L §5.10 Value: "`by p` is required when
+# some position of a place that isn't priced (below) is in another unit (`LOAD-PRICE`)". Here cot, of kind props, is
+# priced nowhere (not on its kind, its section or an entry), so the binding `x in props` can give a place that isn't
+# priced, whose position is in property: value(x, d) in PLN with no `by` is still refused at load, which refuses the
+# reality (L §8.3).
+=== m.tally
+model t
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+unit property "one property"
+
+kind props: place property min 0
+kind props2: place property min 0
+kind buys: event certain
+  leg units: property
+
+input flat_val: num PLN/property reading
+input cot_val: num PLN/property reading
+index ks = [k1, k2]
+input kval[k in ks]: num PLN/property reading
+input day: date
+
+place flat: props priced last(flat_val) lives 2026-01-01..
+place cot: props lives 2026-01-01..
+place kp[k in ks]: props2 priced last(kval[k]) lives 2026-01-01..
+place market: outside lives 1900-01-01..
+
+move b1: buys
+  on day
+  leg units from market to flat amount 1 property
+move b2: buys
+  on day
+  leg units from market to cot amount 1 property
+move b3[k in ks]: buys
+  on day
+  leg units from market to kp[k] amount 1 property
+
+ask q1: value(flat, 2026-06-30) in PLN
+ask q2: sum(value(x, 2026-06-30) in PLN for x in props on 2026-06-30)
+ask q3: value(kp[k1], 2026-06-30) in PLN
+ask q4: sum(value(kp[k], 2026-06-30) in PLN for k in ks)
+ask q5: sum(value(x, 2026-06-30) in PLN for x in props2 on 2026-06-30)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  day = 2026-02-02
+  flat_val = 100 PLN/property at 2026-03-01 "v"
+  cot_val = 30 PLN/property at 2026-03-01 "v"
+  kval[k1] = 7 PLN/property at 2026-03-01 "v"
+  kval[k2] = 5 PLN/property at 2026-03-01 "v"
+=== expect
+refused: LOAD-PRICE value(x) in PLN holds units in property and states no by ...

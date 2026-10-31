@@ -1,0 +1,18 @@
+model m
+  tally 2
+  on 2027-01-01
+  start 2027-01-01
+  end 2028-12-31
+unit PLN: currency minor 0.01
+kind ovs: event certain
+  leg cash: PLN
+place acct: accounts PLN lives 2027-01-01..
+place bank: outside lives 2027-01-01..
+def p[m in months]: money PLN = if pos(m) == 1 then 0 else p[m - 1] - sum(o.cash.amount for o in ovs over m)
+move pay[m in months]: transfers
+  on start_of(m)
+  leg cash from acct to bank amount p[m]
+move op[m in months]: ovs
+  on start_of(m)
+  leg cash from acct to bank amount 0
+ask t: p[m] for m in [2028-01, 2028-07]

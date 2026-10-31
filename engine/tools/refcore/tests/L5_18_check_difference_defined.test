@@ -1,0 +1,35 @@
+# L §5.18 (round 12) `check e == f`: "ok, or differs: e = …, f = … and, where e - f is defined (§3.2, §4.2), the
+# difference e − f". Two texts have no difference (c1); two keys of one index differ by an int, "the difference of their
+# positions (for an integer or period index, of the integers or periods)" (L §4.2): 2026-03 − 2026-01 = 2 (c2); two
+# dates have none, date - date is undefined (L §4.2: days_between) (c3). (Was REFCORE-UNSPECIFIED §5.18, writer 5's
+# T-86.)
+=== m.tally
+model t
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+input a: text
+input m1: key months
+input d1: date
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  a = "x"
+  m1 = 2026-01
+  d1 = 2026-01-05
+
+ask c1: check a == "y"
+ask c2: check 2026-03 == m1
+ask c3: check d1 == 2026-01-06
+=== expect
+c1: differs: a = "x", "y" = "y"
+  cut 2026-10-18
+c2: differs: 2026-03 = 2026-03, m1 = 2026-01, difference 2
+  cut 2026-10-18
+c3: differs: d1 = 2026-01-05, 2026-01-06 = 2026-01-06
+  cut 2026-10-18

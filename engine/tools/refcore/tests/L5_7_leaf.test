@@ -1,0 +1,20 @@
+# L §5.7: "A key enters only at a kind with no subkinds (LOAD-LEAF)".
+=== m.tally
+model hh
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+kind brokerages: place any min 0
+kind ordinary: brokerages
+
+version v
+  cite s
+  known 2019-05-01
+  brokerages + [broker] lives 2021-03-01..
+=== expect
+refused: LOAD-LEAF ...

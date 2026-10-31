@@ -1,0 +1,15 @@
+# R-14: a From conversion never crashes inside.
+
+case: fallible-from
+tool: clippy
+expect: clippy::fallible_impl_from
+--- module
+/// Planted.
+#[derive(Debug)]
+pub struct Planted(u8);
+
+impl From<Option<u8>> for Planted {
+    fn from(v: Option<u8>) -> Self {
+        Self(v.unwrap())
+    }
+}

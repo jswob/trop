@@ -1,0 +1,24 @@
+# L §2.2 (writer 8): in_force is gone from the built-ins; L §4.3 "A commencement that rules test ... is a row of its
+# own, and every rule that tests it reads that row". A call takes a built-in's name or a band's id (L §2.3 Calls):
+# in_force(...) names no band, LOAD-NAME.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+def relief: int at reader
+  rule base = 0
+
+version v
+  cite s
+  governs 2026-07..
+  known 2026-06-01
+  replace rule relief.extra beats base = 1
+
+ask q1: in_force(relief.extra, 2026-03-01), in_force(relief.extra, 2026-08-01), in_force(relief.base, 2026-03-01)
+=== expect
+refused: LOAD-NAME ...

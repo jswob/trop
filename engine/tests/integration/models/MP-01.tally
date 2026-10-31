@@ -1,0 +1,134 @@
+model mp01
+  tally 2
+  on 2026-10-19
+  start 2026-01-01
+  end 2026-12-31
+  note "Jones v Kernott [2011] UKSC 53: the beneficial shares in 39 Badger Hall Avenue after the couple separated."
+  note "Money is in pounds. Only months are given for the dates, and no figure here needs a day."
+
+source lifted_1_0_1 "Figures tally 1.0.1 allowed inline in rules"
+
+source uksc53 "Jones v Kernott [2011] UKSC 53 (judgment given 9 November 2011), Lord Walker and Lady Hale paras 37-54, Lord Wilson para 89" at "https://caselaw.nationalarchives.gov.uk/uksc/2011/53"
+
+unit GBP: currency minor 0.01
+
+axis mp01_pound
+  down "each share but the last is rounded down to the pound; the last party takes the rest"
+  half-up "each share but the last is rounded half up to the pound; the last party takes the rest"
+
+index court = [county, appeal, supreme]
+
+index crystal = [late1993, late1995]
+
+index party = [jones, kernott]
+
+input direct_contribution[p in party]: money GBP
+  note "Para 44: each party's direct contributions to the property, from which the High Court stated a ratio."
+
+input endowment_2008: money GBP
+
+input him_rough_2: int
+  note "lifted from an inline figure of tally 1.0.1"
+
+input mortgage_2008: money GBP
+
+input portion[c in court, p in party]: num
+  note "The share of the beneficial interest that a court declared."
+
+input stanley_mortgage: money GBP
+
+input stanley_value: money GBP
+
+input taken_value[m in crystal]: money GBP
+  note "The value of 39 Badger Hall Avenue that the Supreme Court takes at the moment Mr Kernott's interest crystallises."
+
+input value_2008: money GBP
+
+def badger_net: money GBP = value_2008 - mortgage_2008 + endowment_2008 at reader
+
+def contribution_ratio: num = direct_contribution[jones] / direct_contribution[kernott] at reader
+
+def endow_jones: money GBP = endowment_2008 - endow_kernott at reader
+
+def endow_kernott: money GBP at reader
+  note "Para 41: Mr Kernott's part of the endowment policy's value; Ms Jones keeps the rest (endow_jones)."
+  rule base v uksc53_facts = ?"Para 41 splits the endowment policy on the basis that the parties contributed jointly for eight years and five months and Ms Jones alone for fourteen and a half years, but states no method, and neither time-proportion of those periods reproduces the split: how was Mr Kernott's part computed?"
+
+def held[c in court, p in party]: num at reader
+  note "The beneficial share each court arrived at."
+  rule base = portion[c, p]
+  rule restore beats base v uksc53_order = portion[county, p] when c == supreme
+
+def her_pct[m in crystal]: num = her_rough[m] / value_2008 at reader
+
+def her_rough[m in crystal]: num GBP = value_2008 - him_rough[m] at reader
+
+def him_pct[m in crystal]: num = him_rough[m] / value_2008 at reader
+
+def him_rough[m in crystal]: num GBP at reader
+  note "Para 49: the value at crystallisation is shared equally, and the balance up to the 2008 value goes to Ms Jones. The calculation ignores the mortgage."
+  rule base = taken_value[m] / him_rough_2
+
+def kernott_total: money GBP = sale_pounds[kernott] + stanley_net at reader
+
+def sale_exact[p in party]: num GBP = badger_net * held[county, p] at reader
+
+def sale_pounds[p in party]: money GBP at reader
+  note "Para 43: the net worth divided on the judge's shares, in whole pounds. The judgment states no rounding, so the mode is the axis mp01_pound."
+  rule base = prorata(badger_net, held[county, j] for j in party, p, 1, mp01_pound, rest last)
+
+def stanley_net: money GBP = stanley_value - stanley_mortgage at reader
+
+ask p41_badger_net: badger_net law 2026-10-19
+
+ask p41_endowment_split: endow_kernott, endow_jones law 2026-10-19
+
+ask p41_stanley_net: stanley_net law 2026-10-19
+
+ask p43_court_shares: held[county, p] for p in party law 2026-10-19
+
+ask p43_kernott_total: kernott_total law 2026-10-19
+
+ask p43_sale_exact: sale_exact[p] for p in party law 2026-10-19
+
+ask p43_sale_pounds: sale_pounds[p] for p in party law 2026-10-19
+
+ask p44_contribution_ratio: contribution_ratio law 2026-10-19
+
+ask p45_appeal_shares: held[appeal, p] for p in party law 2026-10-19
+
+ask p49_rough: him_rough[m], her_rough[m], him_pct[m], her_pct[m] for m in crystal law 2026-10-19
+
+ask p54_supreme_shares: held[supreme, p] for p in party law 2026-10-19
+
+version lifted_figures
+  cite lifted_1_0_1
+  governs always
+  known 2011-11-09
+  him_rough_2 = 2 "inline in tally 1.0.1: him_rough line 61, factor"
+
+version uksc53_facts
+  cite uksc53
+  governs always
+  known 2011-11-09
+  note "The facts as the Supreme Court restates them from the trial judge's findings, at the hearing in April 2008."
+  note "Known 2011-11-09: a real case, known from the day the judgment was given and published (its own date, §4.5)."
+  direct_contribution = ?"Para 44 reports the High Court's ratio of the parties' direct contributions, but no court states the contributions themselves: what did each party contribute directly?"
+  endowment_2008 = 25209 "para 41: value of the endowment policy supporting the mortgage"
+  mortgage_2008 = 26664 "para 41: outstanding mortgage debt on 39 Badger Hall Avenue"
+  portion[county, jones] = 0.9 "para 43: 90% for Ms Jones"
+  portion[county, kernott] = 0.1 "para 43: 10% for Mr Kernott"
+  portion[appeal, jones] = 0.5 "para 45: tenants in common in equal shares"
+  portion[appeal, kernott] = 0.5 "para 45: tenants in common in equal shares"
+  stanley_mortgage = 37968 "para 41: outstanding mortgage on 114 Stanley Road"
+  stanley_value = 205000 "para 41: value of 114 Stanley Road"
+  taken_value[late1993] = 60000 "para 49: if we take the value of the property as £60,000 in late 1993"
+  taken_value[late1995] = 70000 "para 49: or £70,000 in late 1995"
+  value_2008 = 245000 "para 41: value of 39 Badger Hall Avenue at the hearing; para 49 uses the same value for 2008"
+
+version uksc53_order
+  cite uksc53
+  governs always
+  known 2011-11-09
+  note "Para 54: we would allow this appeal and restore the order of the judge. Lord Wilson, para 89, restates the result as the proportions the judge ruled."
+  note "No items: the rule held.restore points at it. Known 2011-11-09, the day the judgment was given."

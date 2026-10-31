@@ -1,0 +1,81 @@
+# R-71: the consistency set.
+
+case: non-ascii-ident
+tool: clippy
+expect: non_ascii_idents
+--- module
+/// Planted.
+pub fn zażółć() -> u8 {
+    1
+}
+
+case: ambiguous-negative-literal
+tool: clippy
+expect: ambiguous_negative_literals
+--- module
+/// Planted.
+pub fn planted() -> i32 {
+    -1_i32.rotate_left(1)
+}
+
+case: shadow-unrelated
+tool: clippy
+expect: clippy::shadow_unrelated
+--- module
+/// Planted.
+pub fn planted(v: u8, w: u8) -> u8 {
+    core::hint::black_box(v);
+    let v = w;
+    v
+}
+
+case: bool-parameter
+tool: clippy
+expect: clippy::fn_params_excessive_bools
+--- module
+/// Planted.
+pub fn planted(v: bool) -> u8 {
+    u8::from(v)
+}
+
+case: unreachable-pub
+tool: clippy
+expect: unreachable_pub
+--- module
+mod inner {
+    pub fn planted() -> u8 {
+        1
+    }
+}
+
+/// Planted.
+pub fn planted() -> u8 {
+    inner::planted()
+}
+
+case: assert-without-message
+tool: run
+expect: assert! without a message (R-71)
+--- module
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn planted() {
+        assert!(core::hint::black_box(true));
+    }
+}
+--- run
+tools/check-rules
+
+case: assert-eq-without-message
+tool: run
+expect: assert_eq! without a message (R-71)
+--- write tests/runner/tests/zz_assert.rs
+//! Planted.
+
+#[test]
+fn planted() {
+    assert_eq!(core::hint::black_box(1_u8), 1);
+}
+--- run
+tools/check-rules

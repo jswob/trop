@@ -1,0 +1,92 @@
+# L §5.14 A hole in a term "makes the arcs it ranks undecided"; the order is lexicographic (§5.12), so a hole term ranks
+# only arcs tied on every earlier term, and two arcs whose hole terms read one cell the same way (here rank[ania]) tie
+# on it under every reading: a take is undecided only where some reading of the holes changes it.  The migrator's F-i
+# (fi_trailing_hole against fi_norank): three lot_transfers out of kop, each naming its lot, order (lot first),
+# k.batch.day, rank[k.owner]; every batch is ania's, so the trailing term is rank[ania] for every arc.  Each take is
+# decided as without the trailing term: fi_norank's output (90, 60, 50 glb, the lots' amounts carried through).
+# Before: every take undecided (HOLE-PART naming rank).
+=== m.tally
+model t11
+  tally 2
+  on 2026-01-15
+  start 2021-01-01
+  end 2026-12-31
+
+source src "test"
+
+unit DUK: currency minor 0.01
+
+kind funds: unit
+
+kind couples: parties
+
+kind persons: parties
+
+kind lots_in: event certain
+  leg units: funds
+
+kind gifts_in: lots_in
+  attr donee: key persons
+
+kind lot_transfers: event certain
+  leg units: funds
+  attr lot: key lots_in
+
+kind lot_holdings: holdings
+  owned by arrive
+  batched
+  step 0.0001
+  takes k for w order (if w in lot_transfers and k.batch == w.lot then 0 else 1), k.batch.day, rank[k.owner]
+
+place kop: lot_holdings glb lives 2023-09-12..
+place rza: lot_holdings glb lives 2024-02-12..
+
+place world: outside lives 2000-01-01..
+
+input kb: observed
+
+input ab: observed
+
+def rank[p in parties]: int = ?"which money leaves first?" at reader
+
+def arrive[m in events, p in parties]: num at m.day
+  rule community = (if p == ania_tomek then 1 else 0)
+  rule gifted beats community = (if p == m.donee then 1 else 0) when m in gifts_in
+  rule moved beats community = m.units.amount of p / m.units.amount when m in lot_transfers
+
+ask q1: t, t.lot, t.units.amount of t.lot for t in lot_transfers over ..
+
+ask q2: b, bal(rza, 2024-02-12) of b for b in gifts_in over ..
+
+version cast
+  cite src
+  known 2021-01-01
+  funds + [glb] lives 2018-01-01..
+  persons + [ania] lives 1991-03-14..
+  persons + [tomek] lives 1989-07-02..
+  couples + [ania_tomek] lives 2016-09-10..
+
+version kv
+  cite src
+  governs 2023-09-12..2024-02-29
+  known 2023-09-12
+  covers kop
+  kb[k03] = (on: 2023-09-12, kind: gifts_in, leg units from world to kop amount 90 glb, donee: ania) "l3"
+  kb[k04] = (on: 2023-09-12, kind: gifts_in, leg units from world to kop amount 60 glb, donee: ania) "l4"
+  kb[k05] = (on: 2023-09-12, kind: gifts_in, leg units from world to kop amount 50 glb, donee: ania) "l5"
+  kb[k06] = (on: 2024-02-12, kind: lot_transfers, leg units from kop to rza amount 90 glb, lot: kb[k03]) "l6"
+  kb[k07] = (on: 2024-02-12, kind: lot_transfers, leg units from kop to rza amount 60 glb, lot: kb[k04]) "l7"
+  kb[k08] = (on: 2024-02-12, kind: lot_transfers, leg units from kop to rza amount 50 glb, lot: kb[k05]) "l8"
+=== expect
+q1 (t = kb[k06]): (kb[k06], kb[k03], 90 glb)
+  cut 2026-01-15
+q1 (t = kb[k07]): (kb[k07], kb[k04], 60 glb)
+  cut 2026-01-15
+q1 (t = kb[k08]): (kb[k08], kb[k05], 50 glb)
+  cut 2026-01-15
+q2 (b = kb[k03]): (kb[k03], 90 glb)
+  cut 2026-01-15
+q2 (b = kb[k04]): (kb[k04], 60 glb)
+  cut 2026-01-15
+q2 (b = kb[k05]): (kb[k05], 50 glb)
+  cut 2026-01-15

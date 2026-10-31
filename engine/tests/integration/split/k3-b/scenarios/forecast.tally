@@ -1,0 +1,245 @@
+scenario forecast over household_b
+  tally 2
+  from 2026-01-01
+  note "The story's forecast for 2026 – 2028 as we see it on 2026-01-02 (story.md, The forecast, points 1 – 9), which B-HR3 runs. Every figure is an assumption of the story, known 2026-01-02. Random facts are Tally's (L §5.16): their samples come from SHA-256 of their addresses, not from the story's Python stream, so the key's random figures are matched within their standard errors, not draw for draw."
+  note "A month's project invoices are a Poisson count; each one's net and delay are random facts keyed by the month and a slot, and only the slots up to the month's count exist. Tally has no list of random length, so the slots are an index of six (proj_slots): a month with more than six projects (a chance near 1 in 1.6 million at mean 0.5) is cut to six."
+  note "A scenario, not the base: the forecast is what the story assumes on 2026-01-02 about 2026 – 2028 (L §6.4), and its random facts must not make the base's own figures random (LOAD-RANDOM). Its rules join the base's defs through the version forecast_rules (replace rule with a new label, L §5.11 step 2)."
+  note "fc_kessel_026, F5: Kessel pays the November invoice into the Lazur account by 2026-01-19; its due-day instance (2025-12-29) lies in the Lazur export's covered days with no row, so the base books no payment of it. The December invoice moves by a rule the version forecast_rules adds to the base's kessel_day."
+
+index arnika_delays = 10..40
+
+index living_slots = [first, second, third, fourth]
+
+index proj_delays = 14..60
+
+index proj_slots = 1..6
+
+place fc_owed: claims DUK lives 2026-01-01..
+
+input fc_arnika_back: (on date, inv key invoices, amount money DUK) question "When does Arnika-Delta pay the recalled invoice, and how much (F5)?"
+
+input fc_arnika_net: money DUK question "What does Arnika-Delta pay net a month in 2026 – 2028 (F1)?"
+
+input fc_bez_day: date question "When does Studio Bez pay the rest of its June invoice (F5)?"
+
+input fc_bez_inv: key invoices question "Which invoice's rest does Studio Bez pay (F5)?"
+
+input fc_fee: money DUK question "What is the building fee a month in the forecast (F3)?"
+
+input fc_fee_dom: int question "On which day of the month is the building fee paid (F3)?"
+
+input fc_flr_credit_day: date question "When are the sold florens credited to Cis (F5)?"
+
+input fc_flr_rate: num DUK/FLR question "At what rate are the florens sold in January 2026 (F5)?"
+
+input fc_flr_sell_day: date question "When are all the florens in the Lazur account sold (F5)?"
+
+input fc_from: date question "From which day does the forecast run (story: 2026 to 2028)?"
+
+input fc_it_hi: num question "What is the IT rate of PIT-10 (c) if the law changes (F7)?"
+
+input fc_kessel_026_on: date question "When does Kessel pay the November invoice into the Lazur account (F5)?"
+
+input fc_kessel_028_on: date question "When does Kessel pay the December invoice into the Lazur account (F5)?"
+
+input fc_law_from: date question "From when would the IT rate change (F7)?"
+
+input fc_law_odds: num question "With what odds is the IT rate 15 % from 2027, once for each path (F7)?"
+
+input fc_living: money DUK question "How much living money leaves Cis each time (F3)?"
+
+input fc_living_dom[w in living_slots]: int question "On which days of the month does living money leave Cis (F3)?"
+
+input fc_plot: money DUK question "What does the building plot cost (F4)?"
+
+input fc_plot_day: date question "When does the plot's money leave Cis (F4)?"
+
+input fc_power: money DUK question "What is electricity a month (F3)?"
+
+input fc_power_dom: int question "On which day of the month is electricity paid (F3)?"
+
+input fc_proj_dom: int question "On which day of the month are project invoices issued (F2)?"
+
+input fc_proj_mean: num question "What is the mean number of project invoices a month (F2)?"
+
+input fc_proj_median: num question "What is a project's median net, in dukats (F2)?"
+
+input fc_proj_sigma: num question "What is the sigma of a project net's logarithm (F2)?"
+
+input hr3_line: money DUK question "Below what liquid money does B-HR3 count a path?"
+
+input hr3_share: num question "Above what share of paths does B-HR3 stop the overpayments?"
+
+input hr5_step: money DUK question "To which step is B-HR5's transfer rounded up?"
+
+input hr5_target: money DUK question "To what does B-HR5 bring Cis at the end of the day?"
+
+def fc_arnika_delay[m in months]: dist = discrete(1 for k in arnika_delays)
+
+def fc_arnika_issue[m in months]: date = last_business(m, 1, holidays) at start_of(m)
+
+def fc_law: dist = binomial(1, fc_law_odds)
+
+def fc_live[m in months]: bool = start_of(m) >= fc_from
+
+def fc_nproj[m in months]: dist = poisson(fc_proj_mean)
+
+def fc_out_vat[m in months]: money DUK at start_of(m)
+  rule none_r = 0 DUK
+  rule fc beats none_r = round(fc_arnika_net * vat_rate, minor(DUK), half-up) + sum(round(fc_pnet_duk[m, s] * vat_rate, minor(DUK), half-up) for s in proj_slots where s <= fc_nproj[m]) when fc_live[m]
+
+def fc_pdelay[m in months, s in proj_slots]: dist = discrete(1 for k in proj_delays)
+
+def fc_pissue[m in months]: date = schedule(m, fc_proj_dom, following, holidays) at start_of(m)
+
+def fc_pnet[m in months, s in proj_slots]: dist = lognormal(ln(fc_proj_median) to 1e-12, fc_proj_sigma) to 1
+
+def fc_pnet_duk[m in months, s in proj_slots]: money DUK = round(fc_pnet[m, s] * 1 DUK, minor(DUK), half-up)
+
+def fc_rev_part[m in months, s in pit10_supply]: money DUK
+  rule none_r = 0 DUK
+  rule fc beats none_r = fc_arnika_net + sum(fc_pnet_duk[m, k] for k in proj_slots where k <= fc_nproj[m]) when fc_live[m] and s == it
+
+def liquid_low: money DUK = min(bal(cis, end_of(m) - 1) + bal(savings, end_of(m) - 1) for m in months where fc_live[m])
+
+move fc_arnika_back_pay: transfers
+  on fc_arnika_back.on
+  leg cash from inv_owed[fc_arnika_back.inv] to cis amount fc_arnika_back.amount
+
+move fc_arnika_inv[m in months]: transfers
+  on fc_arnika_issue[m]
+  at start_of(m)
+  when fc_live[m]
+  leg cash from world to fc_owed amount fc_arnika_net + round(fc_arnika_net * vat_rate, minor(DUK), half-up)
+
+move fc_arnika_pay[m in months]: transfers
+  on if is_business(add_days(fc_arnika_issue[m], fc_arnika_delay[m]), holidays) then add_days(fc_arnika_issue[m], fc_arnika_delay[m]) else add_business(add_days(fc_arnika_issue[m], fc_arnika_delay[m]), 1, holidays)
+  at start_of(m)
+  when fc_live[m]
+  leg cash from fc_owed to cis amount fc_arnika_net + round(fc_arnika_net * vat_rate, minor(DUK), half-up)
+
+move fc_bez_pay: transfers
+  on fc_bez_day
+  leg cash from inv_owed[fc_bez_inv] to cis amount sale[fc_bez_inv].net + sale[fc_bez_inv].vat - observed(client_pay[fc_bez_inv]).cash.amount
+
+move fc_fee_pay[m in months]: transfers
+  on schedule(m, fc_fee_dom, following, holidays)
+  at start_of(m)
+  when fc_live[m]
+  leg cash from cis to world amount fc_fee
+
+move fc_flr_credit: transfers
+  on fc_flr_credit_day
+  reads fc_flr_sell
+  leg cash from world to cis amount round(fc_flr_sell.cash.amount * fc_flr_rate, minor(DUK), half-up)
+
+move fc_flr_sell: transfers
+  on fc_flr_sell_day
+  reads lazur
+  leg cash from lazur to world amount bal(lazur)
+
+move fc_kessel_026: transfers
+  on fc_kessel_026_on
+  leg cash from inv_owed_flr[fv_026_2025] to lazur amount sale_flr[fv_026_2025].net + sale_flr[fv_026_2025].vat
+
+move fc_living_pay[m in months, w in living_slots]: transfers
+  on schedule(m, fc_living_dom[w], following, holidays)
+  at start_of(m)
+  when fc_live[m]
+  leg cash from cis to shops amount fc_living
+
+move fc_plot_pay: transfers
+  on fc_plot_day
+  leg cash from cis to world amount fc_plot
+
+move fc_power_pay[m in months]: transfers
+  on schedule(m, fc_power_dom, following, holidays)
+  at start_of(m)
+  when fc_live[m]
+  leg cash from cis to world amount fc_power
+
+move fc_proj_inv[m in months, s in proj_slots]: transfers
+  on fc_pissue[m]
+  at start_of(m)
+  when fc_live[m] and s <= fc_nproj[m]
+  leg cash from world to fc_owed amount fc_pnet_duk[m, s] + round(fc_pnet_duk[m, s] * vat_rate, minor(DUK), half-up)
+
+move fc_proj_pay[m in months, s in proj_slots]: transfers
+  on if is_business(add_days(fc_pissue[m], fc_pdelay[m, s]), holidays) then add_days(fc_pissue[m], fc_pdelay[m, s]) else add_business(add_days(fc_pissue[m], fc_pdelay[m, s]), 1, holidays)
+  at start_of(m)
+  when fc_live[m] and s <= fc_nproj[m]
+  leg cash from fc_owed to cis amount fc_pnet_duk[m, s] + round(fc_pnet_duk[m, s] * vat_rate, minor(DUK), half-up)
+
+move hr5_topup[d in days]: transfers
+  on d
+  at d
+  when start_of(d) >= hr4_from and bal(cis) < 0 DUK
+  reads cis
+  after hr2_overpay
+  after hr2_save
+  leg cash from savings to cis amount round(hr5_target - bal(cis), hr5_step, up)
+
+version story_forecast
+  cite story
+  governs always
+  known 2026-01-02
+  assumed "the story's forecast for 2026 – 2028, as seen on 2026-01-02 (story.md, The forecast)"
+  fc_arnika_back = (on: 2026-01-08, inv: fv_023_2025, amount: 19520.00 DUK) "F5: Arnika-Delta's 19 520.00 DUK on 2026-01-08 (B-D19)"
+  fc_arnika_net = 16000.00 DUK "F1: 16 000.00 DUK net a month, VAT added, invoiced on the last business day"
+  fc_bez_day = 2026-01-15 "F5: Studio Bez's rest on 2026-01-15"
+  fc_bez_inv = fv_011_2025 "F5: the rest of its June invoice (B-D20)"
+  fc_fee = 690.00 DUK "F3: the building fee 690.00 DUK on the 10th"
+  fc_fee_dom = 10 "F3: on the 10th"
+  fc_flr_credit_day = 2026-01-21 "F5: credited to Cis on 2026-01-21"
+  fc_flr_rate = 4.15 DUK/FLR "F5: every floren sold at 4.15 DUK"
+  fc_flr_sell_day = 2026-01-20 "F5: on 2026-01-20 every floren there is sold"
+  fc_from = 2026-01-01 "story: for 2026 to 2028"
+  fc_it_hi = 0.15 "F7: the IT rate of PIT-10 (c) is 15 % from January 2027"
+  fc_kessel_026_on = 2026-01-19 "F5: Kessel pays the November and December invoices into the Lazur account by 2026-01-19"
+  fc_kessel_028_on = 2026-01-19 "F5: Kessel pays the November and December invoices into the Lazur account by 2026-01-19"
+  fc_law_from = 2027-01-01 "F7: from January 2027 on"
+  fc_law_odds = 0.30 "F7: once for each path, with odds of 0.30"
+  fc_living = 2375.00 DUK "F3: 2 375.00 DUK on the 1st, 8th, 15th and 22nd"
+  fc_living_dom[first] = 1 "F3: the 1st"
+  fc_living_dom[second] = 8 "F3: the 8th"
+  fc_living_dom[third] = 15 "F3: the 15th"
+  fc_living_dom[fourth] = 22 "F3: the 22nd"
+  fc_plot = 180000.00 DUK "F4: the building plot, 180 000.00 DUK"
+  fc_plot_day = 2026-09-15 "F4: leaves Cis on 2026-09-15"
+  fc_power = 175.00 DUK "F3: electricity 175.00 DUK on the 12th"
+  fc_power_dom = 12 "F3: on the 12th"
+  fc_proj_dom = 15 "F2: issued on the 15th (or the next business day)"
+  fc_proj_mean = 0.5 "F2: a Poisson number of project invoices, mean 0.5"
+  fc_proj_median = 8000 "F2: each one's net lognormal, median 8 000.00 DUK"
+  fc_proj_sigma = 0.5 "F2: sigma 0.5 of its logarithm"
+  hr3_line = 60000.00 DUK "B-HR3: below 60 000.00 DUK"
+  hr3_share = 0.20 "B-HR3: more than one path in five"
+
+version hr5_rule
+  cite house_rules
+  governs always
+  known 2025-01-01
+  note "B-HR5 is a house rule from 2025-01-01, not a figure of the story's forecast: its rows are known from then, before the scenario's from (2026-01-01)"
+  hr5_step = 100.00 DUK "B-HR5: rounded up to the next 100.00 DUK"
+  hr5_target = 1000.00 DUK "B-HR5: to bring Cis to 1 000.00 DUK at the end of the day"
+
+version forecast_figures
+  cite story
+  governs 2026-01-01..
+  known 2026-01-02
+  assumed "F6: the forecast's own figures, where no notice is published yet"
+  avg_wage_proj = 9900.00 DUK governs 2027-01-01..2027-12-31 "F6: AVG-WAGE-PROJ 9 900.00 DUK for 2027"
+  avg_wage_proj = 10500.00 DUK governs 2028-01-01..2028-12-31 "F6: AVG-WAGE-PROJ 10 500.00 DUK for 2028"
+  avg_wage_q4 = 9200.00 DUK governs 2026-02-01..2027-01-31 "F6: AVG-WAGE-Q4 9 200.00 DUK from February 2026"
+  avg_wage_q4 = 9800.00 DUK governs 2027-02-01..2028-01-31 "F6: AVG-WAGE-Q4 9 800.00 DUK from February 2027"
+  avg_wage_q4 = 10400.00 DUK governs 2028-02-01..2029-01-31 "F6: AVG-WAGE-Q4 10 400.00 DUK from February 2028"
+
+version forecast_rules
+  cite story
+  governs 2026-01-01..
+  known 2026-01-02
+  assumed "the story's forecast joins the base's defs: its revenue and VAT (F1, F2), F7's law draw"
+  replace rule flat_rate.drawn beats elected = (if fc_law == 1 then fc_it_hi else pit10_flat_rate[s]) when s == it and start_of(m) >= fc_law_from and biz_form == flat
+  replace rule out_vat.fc beats booked = sum(round(sale[i].net * vat_rate, minor(DUK), half-up) for i in invoices where month_of(sale[i].issued) == m and vat_on[sale[i].issued]) + sum(vat_flr[j] for j in flr_invoices where month_of(sale_flr[j].issued) == m and vat_on[sale_flr[j].issued]) + fc_out_vat[m] when fc_live[m]
+  replace rule rev_part.fc beats booked = sum(sale[i].net for i in invoices where month_of(sale[i].issued) == m and sale[i].sup == s) + sum(rev_flr[j] for j in flr_invoices where month_of(sale_flr[j].issued) == m and sale_flr[j].sup == s) + fc_rev_part[m, s] when fc_live[m]
+  replace rule kessel_day.f5 beats due = fc_kessel_028_on when j == fv_028_2025

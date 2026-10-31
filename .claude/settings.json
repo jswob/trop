@@ -14,6 +14,15 @@
 						"command": "t=\"$CLAUDE_PROJECT_DIR/node_modules/.bin/toolkit\"; [ -x \"$t\" ] || exit 0; exec \"$t\" guard"
 					}
 				]
+			},
+			{
+				"matcher": "Edit|Write|MultiEdit|NotebookEdit|Bash",
+				"hooks": [
+					{
+						"type": "command",
+						"command": "g=\"$CLAUDE_PROJECT_DIR/engine/tools/guard\"; if [ -x \"$g\" ]; then /bin/bash \"$g\"; c=$?; [ \"$c\" -eq 0 ] || exit 2; elif [ -e \"$g\" ]; then echo \"engine guard: engine/tools/guard isn't executable; refusing the call (fails closed, R-79)\" >&2; exit 2; elif [ -e \"$CLAUDE_PROJECT_DIR/engine\" ]; then echo \"engine guard: engine/tools/guard is missing; refusing the call (fails closed, R-79)\" >&2; exit 2; else exit 0; fi"
+					}
+				]
 			}
 		],
 		"SessionStart": [
@@ -25,7 +34,40 @@
 						"command": "t=\"$CLAUDE_PROJECT_DIR/node_modules/.bin/toolkit\"; [ -x \"$t\" ] || exit 0; exec \"$t\" notice"
 					}
 				]
+			},
+			{
+				"matcher": "startup|compact",
+				"hooks": [
+					{
+						"type": "command",
+						"command": "s=\"$CLAUDE_PROJECT_DIR/engine/tools/session-start\"; if [ -x \"$s\" ]; then /bin/bash \"$s\"; elif [ \"${TALLY_ROLE:-}\" = build ]; then echo \"engine: engine/tools/session-start is missing; read engine/CLAUDE.md first (D6-2)\"; fi"
+					}
+				]
+			}
+		],
+		"ConfigChange": [
+			{
+				"hooks": [
+					{
+						"type": "command",
+						"command": "g=\"$CLAUDE_PROJECT_DIR/engine/tools/guard\"; if [ -x \"$g\" ]; then /bin/bash \"$g\" --config-change; c=$?; [ \"$c\" -eq 0 ] || exit 2; elif [ -e \"$g\" ]; then echo \"engine guard: engine/tools/guard isn't executable; refusing the call (fails closed, R-79)\" >&2; exit 2; elif [ -e \"$CLAUDE_PROJECT_DIR/engine\" ]; then echo \"engine guard: engine/tools/guard is missing; refusing the call (fails closed, R-79)\" >&2; exit 2; else exit 0; fi"
+					}
+				]
+			}
+		],
+		"Stop": [
+			{
+				"hooks": [
+					{
+						"type": "command",
+						"timeout": 600,
+						"command": "s=\"$CLAUDE_PROJECT_DIR/engine/tools/stop-check\"; if [ -x \"$s\" ]; then /bin/bash \"$s\"; c=$?; [ \"$c\" -eq 0 ] || exit 2; elif [ -e \"$s\" ]; then echo \"engine stop hook: engine/tools/stop-check isn't executable; the turn can't end (fails closed, R-83)\" >&2; exit 2; elif [ -e \"$CLAUDE_PROJECT_DIR/engine\" ]; then echo \"engine stop hook: engine/tools/stop-check is missing; the turn can't end (fails closed, R-83)\" >&2; exit 2; else exit 0; fi"
+					}
+				]
 			}
 		]
+	},
+	"enabledPlugins": {
+		"rust-analyzer-lsp@claude-plugins-official": true
 	}
 }

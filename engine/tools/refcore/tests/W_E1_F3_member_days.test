@@ -1,0 +1,31 @@
+# Fault W-E1-F3: a member's built-in `days` was read as the joint model's (`LOAD-KEY 2026-06-30 is not a key of days`
+# under the joint model's shorter end). L §2.2: the built-in ids are "top-level ids of every reality", and the built-in
+# period indexes are the calendar periods that meet that reality's [S, E] (L §4.1); L §6.1 A member is closed: "A
+# member's items mean what they mean alone", "joining changes no member's answer". The member runs to 2026-12-31, so
+# a.w[2026-06-30] and a.mm[2026-06] are 1 in the joint model too (q), as the member's own q0 gives alone.
+=== options pin=bytes
+=== f3j.tally
+model j
+  tally 2
+  on 2026-01-31
+  start 2026-01-01
+  end 2026-01-31
+  use a = "f3m.tally" sha256 "c0fbfa9143af3ced73c0ae6076ee1448ff3ad4205a97e32a2e27aca67a5ad773"
+
+ask q: a.w[2026-06-30], a.mm[2026-06]
+=== f3m.tally
+model m
+  tally 2
+  on 2026-01-31
+  start 2026-01-01
+  end 2026-12-31
+
+unit DUK: currency minor 0.01
+
+def w[d in days]: int = 1
+def mm[m in months]: int = 1
+
+ask q0: w[2026-06-30], mm[2026-06]
+=== expect
+q: (1, 1)
+  cut 2026-01-31

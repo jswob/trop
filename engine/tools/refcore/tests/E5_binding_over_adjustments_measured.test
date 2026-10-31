@@ -1,0 +1,72 @@
+# GD-17 (round 19, writer 10): E §5 step 2 "A movement whose fulfils names an adjustment (a settlement) isn't measured
+# either"; L §5.14.3 "Settlements are never measured. A movement whose fulfils names an adjustment settles a change".
+# L5_7_bind_hole_day_w_on without `fulfils a`: w binds over adjustments but fulfils none, so it is no settlement and is
+# measured, and measuring it reads the adjustments it would itself make: refcore refuses RUN-CYCLE (snap14 took every
+# move binding over adjustments as a settlement and answered).
+=== m.tally
+model hh
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source plan "plan"
+source act "act"
+unit PLN: currency minor 0.01
+kind wages: event certain
+  leg cash: PLN
+place konto: accounts PLN lives 2019-05-01..
+place savings: accounts PLN lives 2019-05-01..
+place world: outside lives 1900-01-01..
+input wage_amt: money PLN
+input wage_dom: int
+input w_on: date
+input keep: money PLN
+input sweep_dom: int
+def net[m in months]: money PLN = wage_amt at start_of(m)
+
+move wage[m in months]: wages
+  on day_of(m, wage_dom)
+  at start_of(m)
+  leg cash from world to konto amount net[m]
+
+move w[a in adjustments on w_on where a.adjusts in wages]: transfers
+  on w_on
+  leg cash from world to konto amount a.change
+
+move sweep[m in months]: transfers
+  on day_of(m, sweep_dom)
+  at start_of(m)
+  reads konto
+  leg cash from konto to savings amount max(0 PLN, bal(konto, end_of(m) - 1 day) from day_of(m, sweep_dom) - keep)
+
+version plan_2026
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  wage_amt = 5 000.00 PLN "umowa"
+  wage_dom = 10 "umowa"
+  sweep_dom = 20 "own"
+  keep = 1 000.00 PLN "own"
+  opening[konto] = 0 PLN at 2026-01-01 start "wyciąg"
+  opening[savings] = 0 PLN at 2026-01-01 start "wyciąg"
+
+version raise_2026
+  cite act
+  governs 2026-03
+  known 2026-05-01
+  replace wage_amt = 5 500.00 PLN "aneks"
+
+version back_pay_day
+  cite act
+  governs always
+  known 2026-09-01
+  w_on = 2026-09-15 "aneks"
+
+ask q5: count(a in adjustments on w_on) as known 2026-06-30
+ask q6: count(a in adjustments on w_on) as known 2026-04-30
+=== expect q5 q6
+q5: refused: RUN-CYCLE the adjustments read themselves (a measured move reads adjustments)
+  cut 2026-06-30
+q6: refused: RUN-CYCLE the adjustments read themselves (a measured move reads adjustments)
+  cut 2026-04-30

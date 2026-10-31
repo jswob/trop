@@ -1,0 +1,10 @@
+id: no-panic-in-macro-body
+language: rust
+severity: error
+message: 'R-13: no unwrap, expect, crash macro or assert inside a macro definition'
+rule:
+  kind: identifier
+  regex: '^(unwrap|expect|unwrap_unchecked|panic|todo|unimplemented|unreachable|assert|assert_eq|assert_ne|debug_assert|debug_assert_eq|debug_assert_ne)$'
+  inside:
+    kind: macro_definition
+    stopBy: end

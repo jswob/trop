@@ -1,0 +1,32 @@
+# L §3.4 example: `input rent_wish: money PLN prices 2026 by cpi`.  "Reading it at law date d gives num PLN =
+# value × cpi[d] / cpi[2026], exactly. cpi is keyed by one time index, so cpi[d] reads the key whose period
+# holds d, and cpi[2026] the key that is the price year itself".  2 000.00 × 105 / 100 = 2 100 PLN read in
+# 2027; read in 2026, 2 000.00 × 100 / 100 = 2 000 PLN (a num PLN, printed grouped, L §2.4).
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2027-12-31
+
+source s "a source"
+unit PLN: currency minor 0.01
+
+input cpi[y in years]: num
+input rent_wish: money PLN prices 2026 by cpi
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  cpi[2026] = 100
+  cpi[2027] = 105
+  rent_wish = 2 000.00 PLN
+
+ask q1: rent_wish law 2027-03-01
+ask q2: rent_wish law 2026-03-01
+=== expect
+q1: 2 100 PLN
+  law date 2027-03-01, cut 2026-01-01
+q2: 2 000 PLN
+  law date 2026-03-01, cut 2026-01-01

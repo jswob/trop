@@ -1,0 +1,27 @@
+Bank Olcha S.A.|account statement
+Account|LN73 4400 2011 0000 8817 2264 0001
+Holder|HALINA SOWA
+Period|20250901|20250930
+Opening balance|9 493,20
+Date|Type|Counterparty|Title|Amount|Balance after
+20250903|CASH|ATM Olcha Brzezie|cash withdrawal|-500,00|8 993,20
+20250904|CARD|Apteka Rumianek|card ...2264|-144,45|8 848,75
+20250904|CARD|Apteka Rumianek|card ...2264|-72,52|8 776,23
+20250905|CREDIT|Social Insurance Office|survivor pension 09/2025|4 227,07|13 003,30
+20250905|STANDING ORDER|WM Ogrodowa 2|fee Ogrodowa 2/11 09/2025|-445,00|12 558,30
+20250908|CREDIT|Oskar Wilczek|rent 09/2025 Ogrodowa 2/11|1 900,00|14 458,30
+20250912|CARD|Piekarnia Złoty Kłos|card ...2264|-197,01|14 261,29
+20250913|CARD|Apteka Rumianek|card ...2264|-67,97|14 193,32
+20250915|STANDING ORDER|Volta Energia|Leśna 4 energy 09/2025|-385,00|13 808,32
+20250917|CASH|ATM Olcha Brzezie|cash withdrawal|-500,00|13 308,32
+20250917|CARD|Market Brzezie|card ...2264|-197,67|13 110,65
+20250921|CARD|Piekarnia Złoty Kłos|card ...2264|-47,41|13 063,24
+20250921|CARD|Stacja Olcha-Paliwa|card ...2264|-245,47|12 817,77
+20250922|TRANSFER|Revenue Office Kłodzin|PIT-13 advance 08/2025 H. SOWA|-131,00|12 686,77
+20250922|STANDING ORDER|Telekom Lenia|phone 09/2025|-59,00|12 627,77
+20250922|CARD|Apteka Rumianek|card ...2264|-217,22|12 410,55
+20250923|CARD|Stacja Olcha-Paliwa|card ...2264|-117,20|12 293,35
+20250924|CARD|Drogeria Konwalia|card ...2264|-115,52|12 177,83
+20250925|TRANSFER|Opieka Dom sp.|home help 09/2025|-2 150,00|10 027,83
+20250926|CARD|Sklep Pod Lipą|card ...2264|-130,64|9 897,19
+Closing balance|9 897,19

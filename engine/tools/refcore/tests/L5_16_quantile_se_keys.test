@@ -1,0 +1,44 @@
+# L §5.16 (round 19, GD-3; E §7 step 4): "`quantile(e, q)` ... prints the value with its standard error by the
+# Maritz-Jarrett method: with the N samples sorted x(1) <= ... <= x(N) and m = ceil(q·N), the rank of the type-1 value,
+# the weights are W_i = I(i/N) - I((i - 1)/N), where I is the distribution function of Beta(m, N - m + 1), equivalently
+# the chance that a binomial of N trials with success chance x has at least m successes (exact for whole N); with C_k =
+# sum W_i·x(i)^k, the standard error is sqrt(C2 - C1^2), correctly rounded to 1e-6, as mean's; with N = 1 it is none".
+# A quantile over paths of a discrete draw over keys: its value is type 1 in index order, but x(i)^k has no meaning for
+# a key and L §5.16 gives no other standard error: REFCORE-UNSPECIFIED (UNSPECIFIED.md).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+index ks = [ka, kb, kc]
+input w[k in ks]: num
+input vals[k in ks]: num
+input flat[k in ks]: num
+def draw: dist = discrete(w[k] for k in ks) at reader
+def ev: num = vals[draw] at reader
+def eq3: num = flat[draw] at reader
+
+version v
+  cite s
+  governs 2026..
+  known 2026-01-01
+  w[ka] = 1
+  w[kb] = 1
+  w[kc] = 1
+  vals[ka] = 0
+  vals[kb] = 2
+  vals[kc] = 5
+  flat[ka] = 3
+  flat[kb] = 3
+  flat[kc] = 3
+
+ask a6: quantile(draw, 50 %) law 2026-06-30 paths 4 seed 1
+=== expect
+a6: refused: REFCORE-UNSPECIFIED §5.16: the Maritz-Jarrett standard error of a quantile over paths whose samples are no numbers (ka): C_k = sum W_i x(i)^k has no meaning for them, and L §5.16 states no other
+  law date 2026-06-30, cut 2026-12-31
+warning: WARN-UNREAD def ev is read by nothing
+warning: WARN-UNREAD def eq3 is read by nothing

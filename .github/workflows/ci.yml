@@ -21,6 +21,15 @@ jobs:
       packages: ${{ steps.filter.outputs.packages }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      # tmp/ is local scratch: nothing under it is ever tracked
+      - name: Nothing under tmp/ is tracked
+        run: |
+          tracked="$(git ls-files -- tmp)"
+          if [ -n "$tracked" ]; then
+            echo "::error::tmp/ is local scratch and is never tracked; untrack these:"
+            echo "$tracked" | head -20
+            exit 1
+          fi
       - uses: dorny/paths-filter@ce10459c8b92cd8901166c0a222fbb033ef39365
         id: filter
         with:

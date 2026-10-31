@@ -1,0 +1,16 @@
+closes: ok
+  law date 2026-10-25, cut 2026-10-25
+issues (r = 1): (false, -200.00 DUK)
+  law date 2026-10-25, cut 2026-10-25
+issues (r = 2): (false, 500.00 DUK)
+  law date 2026-10-25, cut 2026-10-25
+issues (r = 3): (true, 500.00 DUK)
+  law date 2026-10-25, cut 2026-10-25
+issues (r = 4): (false, -100.00 DUK)
+  law date 2026-10-25, cut 2026-10-25
+issues (r = 5): (false, -50.00 DUK)
+  law date 2026-10-25, cut 2026-10-25
+moves_exactly: ok
+  law date 2026-10-25, cut 2026-10-25
+q: (1 150.00 DUK, 1 650.00 DUK, 1 150.00 DUK)
+  law date 2026-10-25, cut 2026-10-25

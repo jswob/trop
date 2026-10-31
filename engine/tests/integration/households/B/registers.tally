@@ -1,0 +1,591 @@
+part registers
+  tally 2
+  note "Faktura+ sales and purchase registers (records/faktura-*.csv): every row, each in a version known on its issue (sales) or receipt (purchases) day. The files are semicolon CSVs no text loads (O:B-1); the rows are written out, each citing its file and line."
+
+version register_2022_04_29
+  cite faktura
+  governs always
+  known 2022-04-29
+  sale[fv_001_2022] = (issued: 2022-04-29, due: 2022-05-13, cl: arnika, sup: it, net: 9000.00 DUK, vat: 0.00 DUK) "faktura-sales-2022-2025.csv line 3 FV 001/2022"
+
+version register_2022_05_31
+  cite faktura
+  governs always
+  known 2022-05-31
+  sale[fv_002_2022] = (issued: 2022-05-31, due: 2022-06-14, cl: arnika, sup: it, net: 18000.00 DUK, vat: 0.00 DUK) "faktura-sales-2022-2025.csv line 4 FV 002/2022"
+
+version register_2022_06_30
+  cite faktura
+  governs always
+  known 2022-06-30
+  sale[fv_003_2022] = (issued: 2022-06-30, due: 2022-07-14, cl: arnika, sup: it, net: 18000.00 DUK, vat: 0.00 DUK) "faktura-sales-2022-2025.csv line 5 FV 003/2022"
+
+version register_2022_07_15
+  cite faktura
+  governs always
+  known 2022-07-15
+  sale[fv_004_2022] = (issued: 2022-07-15, due: 2022-07-29, cl: studio_bez, sup: it, net: 12000.00 DUK, vat: 0.00 DUK) "faktura-sales-2022-2025.csv line 6 FV 004/2022"
+
+version register_2022_07_29
+  cite faktura
+  governs always
+  known 2022-07-29
+  sale[fv_005_2022] = (issued: 2022-07-29, due: 2022-08-12, cl: arnika, sup: it, net: 18000.00 DUK, vat: 0.00 DUK) "faktura-sales-2022-2025.csv line 7 FV 005/2022"
+
+version register_2022_08_31
+  cite faktura
+  governs always
+  known 2022-08-31
+  sale[fv_006_2022] = (issued: 2022-08-31, due: 2022-09-14, cl: arnika, sup: it, net: 18000.00 DUK, vat: 0.00 DUK) "faktura-sales-2022-2025.csv line 8 FV 006/2022"
+
+version register_2022_09_09
+  cite faktura
+  governs always
+  known 2022-09-09
+  sale[fv_007_2022] = (issued: 2022-09-09, due: 2022-09-23, cl: pracownia_ul, sup: it, net: 15000.00 DUK, vat: 0.00 DUK) "faktura-sales-2022-2025.csv line 9 FV 007/2022"
+
+version register_2022_09_30
+  cite faktura
+  governs always
+  known 2022-09-30
+  sale[fv_008_2022] = (issued: 2022-09-30, due: 2022-10-14, cl: arnika, sup: it, net: 18000.00 DUK, vat: 0.00 DUK) "faktura-sales-2022-2025.csv line 10 FV 008/2022"
+
+version register_2022_10_14
+  cite faktura
+  governs always
+  known 2022-10-14
+  sale[fv_009_2022] = (issued: 2022-10-14, due: 2022-10-28, cl: studio_bez, sup: it, net: 1300.00 DUK, vat: 0.00 DUK) "faktura-sales-2022-2025.csv line 11 FV 009/2022"
+
+version register_2022_10_31
+  cite faktura
+  governs always
+  known 2022-10-31
+  sale[fv_010_2022] = (issued: 2022-10-31, due: 2022-11-14, cl: arnika, sup: it, net: 18000.00 DUK, vat: 3960.00 DUK) "faktura-sales-2022-2025.csv line 12 FV 010/2022"
+
+version register_2022_11_08
+  cite faktura
+  governs always
+  known 2022-11-08
+  buy[p001] = (received: 2022-11-08, bk: laptop, net: 7000.00 DUK, vat: 1540.00 DUK) "faktura-purchases-2022-2025.csv line 3 P001 laptop"
+
+version register_2022_11_30
+  cite faktura
+  governs always
+  known 2022-11-30
+  sale[fv_011_2022] = (issued: 2022-11-30, due: 2022-12-14, cl: arnika, sup: it, net: 18000.00 DUK, vat: 3960.00 DUK) "faktura-sales-2022-2025.csv line 13 FV 011/2022"
+
+version register_2022_12_30
+  cite faktura
+  governs always
+  known 2022-12-30
+  sale[fv_012_2022] = (issued: 2022-12-30, due: 2023-01-13, cl: arnika, sup: it, net: 18000.00 DUK, vat: 3960.00 DUK) "faktura-sales-2022-2025.csv line 14 FV 012/2022"
+
+version register_2023_01_31
+  cite faktura
+  governs always
+  known 2023-01-31
+  sale[fv_001_2023] = (issued: 2023-01-31, due: 2023-02-14, cl: arnika, sup: it, net: 20000.00 DUK, vat: 4400.00 DUK) "faktura-sales-2022-2025.csv line 15 FV 001/2023"
+
+version register_2023_02_28
+  cite faktura
+  governs always
+  known 2023-02-28
+  sale[fv_002_2023] = (issued: 2023-02-28, due: 2023-03-14, cl: arnika, sup: it, net: 20000.00 DUK, vat: 4400.00 DUK) "faktura-sales-2022-2025.csv line 16 FV 002/2023"
+
+version register_2023_03_15
+  cite faktura
+  governs always
+  known 2023-03-15
+  buy[p002] = (received: 2023-03-15, bk: car, net: 80000.00 DUK, vat: 17600.00 DUK) "faktura-purchases-2022-2025.csv line 4 P002 car LN 4471K"
+
+version register_2023_03_31
+  cite faktura
+  governs always
+  known 2023-03-31
+  sale[fv_003_2023] = (issued: 2023-03-31, due: 2023-04-14, cl: arnika, sup: it, net: 20000.00 DUK, vat: 4400.00 DUK) "faktura-sales-2022-2025.csv line 17 FV 003/2023"
+
+version register_2023_04_28
+  cite faktura
+  governs always
+  known 2023-04-28
+  sale[fv_004_2023] = (issued: 2023-04-28, due: 2023-05-12, cl: arnika, sup: it, net: 20000.00 DUK, vat: 4400.00 DUK) "faktura-sales-2022-2025.csv line 18 FV 004/2023"
+
+version register_2023_05_04
+  cite faktura
+  governs always
+  known 2023-05-04
+  buy[p003] = (received: 2023-05-04, bk: fuel, net: 655.66 DUK, vat: 144.25 DUK) "faktura-purchases-2022-2025.csv line 5 P003 fuel 2023-04"
+  fuel_month[p003] = 2023-04 "faktura-purchases-2022-2025.csv line 5 P003 fuel 2023-04"
+
+version register_2023_05_12
+  cite faktura
+  governs always
+  known 2023-05-12
+  sale[fv_005_2023] = (issued: 2023-05-12, due: 2023-05-26, cl: studio_bez, sup: it, net: 9500.00 DUK, vat: 2090.00 DUK) "faktura-sales-2022-2025.csv line 19 FV 005/2023"
+
+version register_2023_05_31
+  cite faktura
+  governs always
+  known 2023-05-31
+  sale[fv_006_2023] = (issued: 2023-05-31, due: 2023-06-14, cl: arnika, sup: it, net: 20000.00 DUK, vat: 4400.00 DUK) "faktura-sales-2022-2025.csv line 20 FV 006/2023"
+
+version register_2023_06_02
+  cite faktura
+  governs always
+  known 2023-06-02
+  buy[p004] = (received: 2023-06-02, bk: fuel, net: 729.19 DUK, vat: 160.42 DUK) "faktura-purchases-2022-2025.csv line 6 P004 fuel 2023-05"
+  fuel_month[p004] = 2023-05 "faktura-purchases-2022-2025.csv line 6 P004 fuel 2023-05"
+
+version register_2023_06_30
+  cite faktura
+  governs always
+  known 2023-06-30
+  sale[fv_007_2023] = (issued: 2023-06-30, due: 2023-07-14, cl: arnika, sup: it, net: 20000.00 DUK, vat: 4400.00 DUK) "faktura-sales-2022-2025.csv line 21 FV 007/2023"
+
+version register_2023_07_04
+  cite faktura
+  governs always
+  known 2023-07-04
+  buy[p005] = (received: 2023-07-04, bk: fuel, net: 650.30 DUK, vat: 143.07 DUK) "faktura-purchases-2022-2025.csv line 7 P005 fuel 2023-06"
+  fuel_month[p005] = 2023-06 "faktura-purchases-2022-2025.csv line 7 P005 fuel 2023-06"
+
+version register_2023_07_31
+  cite faktura
+  governs always
+  known 2023-07-31
+  sale[fv_008_2023] = (issued: 2023-07-31, due: 2023-08-14, cl: arnika, sup: it, net: 20000.00 DUK, vat: 4400.00 DUK) "faktura-sales-2022-2025.csv line 22 FV 008/2023"
+
+version register_2023_08_02
+  cite faktura
+  governs always
+  known 2023-08-02
+  buy[p006] = (received: 2023-08-02, bk: fuel, net: 575.95 DUK, vat: 126.71 DUK) "faktura-purchases-2022-2025.csv line 8 P006 fuel 2023-07"
+  fuel_month[p006] = 2023-07 "faktura-purchases-2022-2025.csv line 8 P006 fuel 2023-07"
+
+version register_2023_08_31
+  cite faktura
+  governs always
+  known 2023-08-31
+  sale[fv_009_2023] = (issued: 2023-08-31, due: 2023-09-14, cl: arnika, sup: it, net: 20000.00 DUK, vat: 4400.00 DUK) "faktura-sales-2022-2025.csv line 23 FV 009/2023"
+
+version register_2023_09_04
+  cite faktura
+  governs always
+  known 2023-09-04
+  buy[p007] = (received: 2023-09-04, bk: fuel, net: 717.49 DUK, vat: 157.85 DUK) "faktura-purchases-2022-2025.csv line 9 P007 fuel 2023-08"
+  fuel_month[p007] = 2023-08 "faktura-purchases-2022-2025.csv line 9 P007 fuel 2023-08"
+
+version register_2023_09_29
+  cite faktura
+  governs always
+  known 2023-09-29
+  sale[fv_010_2023] = (issued: 2023-09-29, due: 2023-10-13, cl: arnika, sup: it, net: 20000.00 DUK, vat: 4400.00 DUK) "faktura-sales-2022-2025.csv line 24 FV 010/2023"
+
+version register_2023_10_03
+  cite faktura
+  governs always
+  known 2023-10-03
+  buy[p008] = (received: 2023-10-03, bk: fuel, net: 610.60 DUK, vat: 134.33 DUK) "faktura-purchases-2022-2025.csv line 10 P008 fuel 2023-09"
+  fuel_month[p008] = 2023-09 "faktura-purchases-2022-2025.csv line 10 P008 fuel 2023-09"
+
+version register_2023_10_13
+  cite faktura
+  governs always
+  known 2023-10-13
+  sale[fv_011_2023] = (issued: 2023-10-13, due: 2023-10-27, cl: pracownia_ul, sup: it, net: 14200.00 DUK, vat: 3124.00 DUK) "faktura-sales-2022-2025.csv line 25 FV 011/2023"
+
+version register_2023_10_31
+  cite faktura
+  governs always
+  known 2023-10-31
+  sale[fv_012_2023] = (issued: 2023-10-31, due: 2023-11-14, cl: arnika, sup: it, net: 20000.00 DUK, vat: 4400.00 DUK) "faktura-sales-2022-2025.csv line 26 FV 012/2023"
+
+version register_2023_11_03
+  cite faktura
+  governs always
+  known 2023-11-03
+  buy[p009] = (received: 2023-11-03, bk: fuel, net: 498.27 DUK, vat: 109.62 DUK) "faktura-purchases-2022-2025.csv line 11 P009 fuel 2023-10"
+  fuel_month[p009] = 2023-10 "faktura-purchases-2022-2025.csv line 11 P009 fuel 2023-10"
+
+version register_2023_11_30
+  cite faktura
+  governs always
+  known 2023-11-30
+  sale[fv_013_2023] = (issued: 2023-11-30, due: 2023-12-14, cl: arnika, sup: it, net: 20000.00 DUK, vat: 4400.00 DUK) "faktura-sales-2022-2025.csv line 27 FV 013/2023"
+
+version register_2023_12_04
+  cite faktura
+  governs always
+  known 2023-12-04
+  buy[p010] = (received: 2023-12-04, bk: fuel, net: 735.43 DUK, vat: 161.79 DUK) "faktura-purchases-2022-2025.csv line 12 P010 fuel 2023-11"
+  fuel_month[p010] = 2023-11 "faktura-purchases-2022-2025.csv line 12 P010 fuel 2023-11"
+
+version register_2023_12_29
+  cite faktura
+  governs always
+  known 2023-12-29
+  sale[fv_014_2023] = (issued: 2023-12-29, due: 2024-01-12, cl: arnika, sup: it, net: 20000.00 DUK, vat: 4400.00 DUK) "faktura-sales-2022-2025.csv line 28 FV 014/2023"
+
+version register_2024_01_03
+  cite faktura
+  governs always
+  known 2024-01-03
+  buy[p011] = (received: 2024-01-03, bk: fuel, net: 716.77 DUK, vat: 157.69 DUK) "faktura-purchases-2022-2025.csv line 13 P011 fuel 2023-12"
+  fuel_month[p011] = 2023-12 "faktura-purchases-2022-2025.csv line 13 P011 fuel 2023-12"
+
+version register_2024_01_31
+  cite faktura
+  governs always
+  known 2024-01-31
+  sale[fv_001_2024] = (issued: 2024-01-31, due: 2024-02-14, cl: arnika, sup: it, net: 22000.00 DUK, vat: 4840.00 DUK) "faktura-sales-2022-2025.csv line 29 FV 001/2024"
+
+version register_2024_02_02
+  cite faktura
+  governs always
+  known 2024-02-02
+  buy[p012] = (received: 2024-02-02, bk: fuel, net: 500.17 DUK, vat: 110.04 DUK) "faktura-purchases-2022-2025.csv line 14 P012 fuel 2024-01"
+  fuel_month[p012] = 2024-01 "faktura-purchases-2022-2025.csv line 14 P012 fuel 2024-01"
+
+version register_2024_02_29
+  cite faktura
+  governs always
+  known 2024-02-29
+  sale[fv_002_2024] = (issued: 2024-02-29, due: 2024-03-14, cl: arnika, sup: it, net: 22000.00 DUK, vat: 4840.00 DUK) "faktura-sales-2022-2025.csv line 30 FV 002/2024"
+
+version register_2024_03_04
+  cite faktura
+  governs always
+  known 2024-03-04
+  buy[p013] = (received: 2024-03-04, bk: fuel, net: 661.20 DUK, vat: 145.46 DUK) "faktura-purchases-2022-2025.csv line 15 P013 fuel 2024-02"
+  fuel_month[p013] = 2024-02 "faktura-purchases-2022-2025.csv line 15 P013 fuel 2024-02"
+
+version register_2024_03_15
+  cite faktura
+  governs always
+  known 2024-03-15
+  sale[fv_003_2024] = (issued: 2024-03-15, due: 2024-03-29, cl: studio_bez, sup: it, net: 12000.00 DUK, vat: 2640.00 DUK) "faktura-sales-2022-2025.csv line 31 FV 003/2024"
+
+version register_2024_03_29
+  cite faktura
+  governs always
+  known 2024-03-29
+  sale[fv_004_2024] = (issued: 2024-03-29, due: 2024-04-12, cl: arnika, sup: it, net: 22000.00 DUK, vat: 4840.00 DUK) "faktura-sales-2022-2025.csv line 32 FV 004/2024"
+
+version register_2024_04_03
+  cite faktura
+  governs always
+  known 2024-04-03
+  buy[p014] = (received: 2024-04-03, bk: fuel, net: 530.90 DUK, vat: 116.80 DUK) "faktura-purchases-2022-2025.csv line 16 P014 fuel 2024-03"
+  fuel_month[p014] = 2024-03 "faktura-purchases-2022-2025.csv line 16 P014 fuel 2024-03"
+
+version register_2024_04_30
+  cite faktura
+  governs always
+  known 2024-04-30
+  sale[fv_005_2024] = (issued: 2024-04-30, due: 2024-05-14, cl: arnika, sup: it, net: 22000.00 DUK, vat: 4840.00 DUK) "faktura-sales-2022-2025.csv line 33 FV 005/2024"
+
+version register_2024_05_06
+  cite faktura
+  governs always
+  known 2024-05-06
+  buy[p015] = (received: 2024-05-06, bk: fuel, net: 517.53 DUK, vat: 113.86 DUK) "faktura-purchases-2022-2025.csv line 17 P015 fuel 2024-04"
+  fuel_month[p015] = 2024-04 "faktura-purchases-2022-2025.csv line 17 P015 fuel 2024-04"
+
+version register_2024_05_21
+  cite faktura
+  governs always
+  known 2024-05-21
+  buy[p016] = (received: 2024-05-21, bk: monitor, net: 1800.00 DUK, vat: 396.00 DUK) "faktura-purchases-2022-2025.csv line 18 P016 monitor"
+
+version register_2024_05_31
+  cite faktura
+  governs always
+  known 2024-05-31
+  sale[fv_006_2024] = (issued: 2024-05-31, due: 2024-06-14, cl: arnika, sup: it, net: 22000.00 DUK, vat: 4840.00 DUK) "faktura-sales-2022-2025.csv line 34 FV 006/2024"
+
+version register_2024_06_04
+  cite faktura
+  governs always
+  known 2024-06-04
+  buy[p017] = (received: 2024-06-04, bk: fuel, net: 602.88 DUK, vat: 132.63 DUK) "faktura-purchases-2022-2025.csv line 19 P017 fuel 2024-05"
+  fuel_month[p017] = 2024-05 "faktura-purchases-2022-2025.csv line 19 P017 fuel 2024-05"
+
+version register_2024_06_14
+  cite faktura
+  governs always
+  known 2024-06-14
+  sale[fv_007_2024] = (issued: 2024-06-14, due: 2024-06-28, cl: pracownia_ul, sup: it, net: 9800.00 DUK, vat: 2156.00 DUK) "faktura-sales-2022-2025.csv line 35 FV 007/2024"
+
+version register_2024_06_28
+  cite faktura
+  governs always
+  known 2024-06-28
+  sale[fv_008_2024] = (issued: 2024-06-28, due: 2024-07-12, cl: arnika, sup: it, net: 22000.00 DUK, vat: 4840.00 DUK) "faktura-sales-2022-2025.csv line 36 FV 008/2024"
+
+version register_2024_07_02
+  cite faktura
+  governs always
+  known 2024-07-02
+  buy[p018] = (received: 2024-07-02, bk: fuel, net: 680.03 DUK, vat: 149.61 DUK) "faktura-purchases-2022-2025.csv line 20 P018 fuel 2024-06"
+  fuel_month[p018] = 2024-06 "faktura-purchases-2022-2025.csv line 20 P018 fuel 2024-06"
+
+version register_2024_07_31
+  cite faktura
+  governs always
+  known 2024-07-31
+  sale[fv_009_2024] = (issued: 2024-07-31, due: 2024-08-14, cl: arnika, sup: it, net: 22000.00 DUK, vat: 4840.00 DUK) "faktura-sales-2022-2025.csv line 37 FV 009/2024"
+
+version register_2024_08_02
+  cite faktura
+  governs always
+  known 2024-08-02
+  buy[p019] = (received: 2024-08-02, bk: fuel, net: 647.33 DUK, vat: 142.41 DUK) "faktura-purchases-2022-2025.csv line 21 P019 fuel 2024-07"
+  fuel_month[p019] = 2024-07 "faktura-purchases-2022-2025.csv line 21 P019 fuel 2024-07"
+
+version register_2024_08_30
+  cite faktura
+  governs always
+  known 2024-08-30
+  sale[fv_010_2024] = (issued: 2024-08-30, due: 2024-09-13, cl: arnika, sup: it, net: 22000.00 DUK, vat: 4840.00 DUK) "faktura-sales-2022-2025.csv line 38 FV 010/2024"
+
+version register_2024_09_03
+  cite faktura
+  governs always
+  known 2024-09-03
+  buy[p020] = (received: 2024-09-03, bk: fuel, net: 741.44 DUK, vat: 163.12 DUK) "faktura-purchases-2022-2025.csv line 22 P020 fuel 2024-08"
+  fuel_month[p020] = 2024-08 "faktura-purchases-2022-2025.csv line 22 P020 fuel 2024-08"
+
+version register_2024_09_13
+  cite faktura
+  governs always
+  known 2024-09-13
+  sale[fv_011_2024] = (issued: 2024-09-13, due: 2024-09-27, cl: studio_bez, sup: it, net: 8650.00 DUK, vat: 1903.00 DUK) "faktura-sales-2022-2025.csv line 39 FV 011/2024"
+
+version register_2024_09_30
+  cite faktura
+  governs always
+  known 2024-09-30
+  sale[fv_012_2024] = (issued: 2024-09-30, due: 2024-10-14, cl: arnika, sup: it, net: 22000.00 DUK, vat: 4840.00 DUK) "faktura-sales-2022-2025.csv line 40 FV 012/2024"
+
+version register_2024_10_02
+  cite faktura
+  governs always
+  known 2024-10-02
+  buy[p021] = (received: 2024-10-02, bk: fuel, net: 557.53 DUK, vat: 122.66 DUK) "faktura-purchases-2022-2025.csv line 23 P021 fuel 2024-09"
+  fuel_month[p021] = 2024-09 "faktura-purchases-2022-2025.csv line 23 P021 fuel 2024-09"
+
+version register_2024_10_31
+  cite faktura
+  governs always
+  known 2024-10-31
+  sale[fv_013_2024] = (issued: 2024-10-31, due: 2024-11-14, cl: arnika, sup: it, net: 22000.00 DUK, vat: 4840.00 DUK) "faktura-sales-2022-2025.csv line 41 FV 013/2024"
+
+version register_2024_11_05
+  cite faktura
+  governs always
+  known 2024-11-05
+  buy[p022] = (received: 2024-11-05, bk: fuel, net: 730.88 DUK, vat: 160.79 DUK) "faktura-purchases-2022-2025.csv line 24 P022 fuel 2024-10"
+  fuel_month[p022] = 2024-10 "faktura-purchases-2022-2025.csv line 24 P022 fuel 2024-10"
+
+version register_2024_11_29
+  cite faktura
+  governs always
+  known 2024-11-29
+  sale[fv_014_2024] = (issued: 2024-11-29, due: 2024-12-13, cl: arnika, sup: it, net: 22000.00 DUK, vat: 4840.00 DUK) "faktura-sales-2022-2025.csv line 42 FV 014/2024"
+
+version register_2024_12_03
+  cite faktura
+  governs always
+  known 2024-12-03
+  buy[p023] = (received: 2024-12-03, bk: fuel, net: 645.90 DUK, vat: 142.10 DUK) "faktura-purchases-2022-2025.csv line 25 P023 fuel 2024-11"
+  fuel_month[p023] = 2024-11 "faktura-purchases-2022-2025.csv line 25 P023 fuel 2024-11"
+
+version register_2024_12_06
+  cite faktura
+  governs always
+  known 2024-12-06
+  sale[fv_015_2024] = (issued: 2024-12-06, due: 2024-12-20, cl: kawiarnia_ziarno, sup: it, net: 6000.00 DUK, vat: 1320.00 DUK) "faktura-sales-2022-2025.csv line 43 FV 015/2024"
+
+version register_2024_12_31
+  cite faktura
+  governs always
+  known 2024-12-31
+  sale[fv_016_2024] = (issued: 2024-12-31, due: 2025-01-14, cl: arnika, sup: it, net: 22000.00 DUK, vat: 4840.00 DUK) "faktura-sales-2022-2025.csv line 44 FV 016/2024"
+
+version register_2025_01_03
+  cite faktura
+  governs always
+  known 2025-01-03
+  buy[p024] = (received: 2025-01-03, bk: fuel, net: 741.02 DUK, vat: 163.02 DUK) "faktura-purchases-2022-2025.csv line 26 P024 fuel 2024-12"
+  fuel_month[p024] = 2024-12 "faktura-purchases-2022-2025.csv line 26 P024 fuel 2024-12"
+
+version register_2025_01_31
+  cite faktura
+  governs always
+  known 2025-01-31
+  sale[fv_001_2025] = (issued: 2025-01-31, due: 2025-02-14, cl: arnika, sup: it, net: 16000.00 DUK, vat: 3520.00 DUK) "faktura-sales-2022-2025.csv line 45 FV 001/2025"
+  sale_flr[fv_002_2025] = (issued: 2025-01-31, due: 2025-03-02, cl: kessel, sup: it, net: 1600.00 FLR, vat: 352.00 FLR) "faktura-sales-2022-2025.csv line 46 FV 002/2025"
+
+version register_2025_02_04
+  cite faktura
+  governs always
+  known 2025-02-04
+  buy[p025] = (received: 2025-02-04, bk: fuel, net: 602.77 DUK, vat: 132.61 DUK) "faktura-purchases-2022-2025.csv line 27 P025 fuel 2025-01"
+  fuel_month[p025] = 2025-01 "faktura-purchases-2022-2025.csv line 27 P025 fuel 2025-01"
+
+version register_2025_02_28
+  cite faktura
+  governs always
+  known 2025-02-28
+  sale[fv_003_2025] = (issued: 2025-02-28, due: 2025-03-14, cl: arnika, sup: it, net: 16000.00 DUK, vat: 3520.00 DUK) "faktura-sales-2022-2025.csv line 47 FV 003/2025"
+  sale_flr[fv_004_2025] = (issued: 2025-02-28, due: 2025-03-30, cl: kessel, sup: it, net: 1600.00 FLR, vat: 352.00 FLR) "faktura-sales-2022-2025.csv line 48 FV 004/2025"
+
+version register_2025_03_04
+  cite faktura
+  governs always
+  known 2025-03-04
+  buy[p026] = (received: 2025-03-04, bk: fuel, net: 520.41 DUK, vat: 114.49 DUK) "faktura-purchases-2022-2025.csv line 28 P026 fuel 2025-02"
+  fuel_month[p026] = 2025-02 "faktura-purchases-2022-2025.csv line 28 P026 fuel 2025-02"
+
+version register_2025_03_31
+  cite faktura
+  governs always
+  known 2025-03-31
+  sale[fv_005_2025] = (issued: 2025-03-31, due: 2025-04-14, cl: arnika, sup: it, net: 16000.00 DUK, vat: 3520.00 DUK) "faktura-sales-2022-2025.csv line 49 FV 005/2025"
+  sale_flr[fv_006_2025] = (issued: 2025-03-31, due: 2025-04-30, cl: kessel, sup: it, net: 1600.00 FLR, vat: 352.00 FLR) "faktura-sales-2022-2025.csv line 50 FV 006/2025"
+
+version register_2025_04_02
+  cite faktura
+  governs always
+  known 2025-04-02
+  buy[p027] = (received: 2025-04-02, bk: fuel, net: 613.73 DUK, vat: 135.02 DUK) "faktura-purchases-2022-2025.csv line 29 P027 fuel 2025-03"
+  fuel_month[p027] = 2025-03 "faktura-purchases-2022-2025.csv line 29 P027 fuel 2025-03"
+
+version register_2025_04_30
+  cite faktura
+  governs always
+  known 2025-04-30
+  sale[fv_007_2025] = (issued: 2025-04-30, due: 2025-05-14, cl: arnika, sup: it, net: 16000.00 DUK, vat: 3520.00 DUK) "faktura-sales-2022-2025.csv line 51 FV 007/2025"
+  sale_flr[fv_008_2025] = (issued: 2025-04-30, due: 2025-05-30, cl: kessel, sup: it, net: 1600.00 FLR, vat: 352.00 FLR) "faktura-sales-2022-2025.csv line 52 FV 008/2025"
+
+version register_2025_05_05
+  cite faktura
+  governs always
+  known 2025-05-05
+  buy[p028] = (received: 2025-05-05, bk: fuel, net: 593.62 DUK, vat: 130.60 DUK) "faktura-purchases-2022-2025.csv line 30 P028 fuel 2025-04"
+  fuel_month[p028] = 2025-04 "faktura-purchases-2022-2025.csv line 30 P028 fuel 2025-04"
+
+version register_2025_05_30
+  cite faktura
+  governs always
+  known 2025-05-30
+  sale[fv_009_2025] = (issued: 2025-05-30, due: 2025-06-13, cl: arnika_delta, sup: it, net: 16000.00 DUK, vat: 3520.00 DUK) "faktura-sales-2022-2025.csv line 53 FV 009/2025"
+  sale_flr[fv_010_2025] = (issued: 2025-05-30, due: 2025-06-29, cl: kessel, sup: it, net: 1600.00 FLR, vat: 352.00 FLR) "faktura-sales-2022-2025.csv line 54 FV 010/2025"
+
+version register_2025_06_03
+  cite faktura
+  governs always
+  known 2025-06-03
+  buy[p029] = (received: 2025-06-03, bk: fuel, net: 578.01 DUK, vat: 127.16 DUK) "faktura-purchases-2022-2025.csv line 31 P029 fuel 2025-05"
+  fuel_month[p029] = 2025-05 "faktura-purchases-2022-2025.csv line 31 P029 fuel 2025-05"
+
+version register_2025_06_13
+  cite faktura
+  governs always
+  known 2025-06-13
+  sale[fv_011_2025] = (issued: 2025-06-13, due: 2025-06-27, cl: studio_bez, sup: it, net: 8000.00 DUK, vat: 1760.00 DUK) "faktura-sales-2022-2025.csv line 55 FV 011/2025"
+
+version register_2025_06_30
+  cite faktura
+  governs always
+  known 2025-06-30
+  sale[fv_012_2025] = (issued: 2025-06-30, due: 2025-07-14, cl: arnika_delta, sup: it, net: 16000.00 DUK, vat: 3520.00 DUK) "faktura-sales-2022-2025.csv line 56 FV 012/2025"
+  sale_flr[fv_013_2025] = (issued: 2025-06-30, due: 2025-07-30, cl: kessel, sup: it, net: 1600.00 FLR, vat: 352.00 FLR) "faktura-sales-2022-2025.csv line 57 FV 013/2025"
+
+version register_2025_07_02
+  cite faktura
+  governs always
+  known 2025-07-02
+  buy[p030] = (received: 2025-07-02, bk: fuel, net: 671.65 DUK, vat: 147.76 DUK) "faktura-purchases-2022-2025.csv line 32 P030 fuel 2025-06"
+  fuel_month[p030] = 2025-06 "faktura-purchases-2022-2025.csv line 32 P030 fuel 2025-06"
+
+version register_2025_07_31
+  cite faktura
+  governs always
+  known 2025-07-31
+  sale[fv_014_2025] = (issued: 2025-07-31, due: 2025-08-14, cl: arnika_delta, sup: it, net: 16000.00 DUK, vat: 3520.00 DUK) "faktura-sales-2022-2025.csv line 58 FV 014/2025"
+  sale_flr[fv_015_2025] = (issued: 2025-07-31, due: 2025-08-30, cl: kessel, sup: it, net: 1600.00 FLR, vat: 352.00 FLR) "faktura-sales-2022-2025.csv line 59 FV 015/2025"
+
+version register_2025_08_04
+  cite faktura
+  governs always
+  known 2025-08-04
+  buy[p031] = (received: 2025-08-04, bk: fuel, net: 495.61 DUK, vat: 109.03 DUK) "faktura-purchases-2022-2025.csv line 33 P031 fuel 2025-07"
+  fuel_month[p031] = 2025-07 "faktura-purchases-2022-2025.csv line 33 P031 fuel 2025-07"
+
+version register_2025_08_14
+  cite faktura
+  governs always
+  known 2025-08-14
+  sale[fv_016_2025] = (issued: 2025-08-14, due: 2025-08-28, cl: kawiarnia_ziarno, sup: it, net: 3500.00 DUK, vat: 770.00 DUK) "faktura-sales-2022-2025.csv line 60 FV 016/2025"
+
+version register_2025_08_29
+  cite faktura
+  governs always
+  known 2025-08-29
+  sale[fv_017_2025] = (issued: 2025-08-29, due: 2025-09-12, cl: arnika_delta, sup: it, net: 16000.00 DUK, vat: 3520.00 DUK) "faktura-sales-2022-2025.csv line 61 FV 017/2025"
+  sale_flr[fv_018_2025] = (issued: 2025-08-29, due: 2025-09-28, cl: kessel, sup: it, net: 1600.00 FLR, vat: 352.00 FLR) "faktura-sales-2022-2025.csv line 62 FV 018/2025"
+
+version register_2025_09_02
+  cite faktura
+  governs always
+  known 2025-09-02
+  buy[p032] = (received: 2025-09-02, bk: fuel, net: 637.02 DUK, vat: 140.14 DUK) "faktura-purchases-2022-2025.csv line 34 P032 fuel 2025-08"
+  fuel_month[p032] = 2025-08 "faktura-purchases-2022-2025.csv line 34 P032 fuel 2025-08"
+
+version register_2025_09_12
+  cite faktura
+  governs always
+  known 2025-09-12
+  sale[fv_019_2025] = (issued: 2025-09-12, due: 2025-09-12, cl: auto_mlecz, sup: asset_sale, net: 50400.00 DUK, vat: 11088.00 DUK) "faktura-sales-2022-2025.csv line 63 FV 019/2025"
+
+version register_2025_09_30
+  cite faktura
+  governs always
+  known 2025-09-30
+  sale[fv_020_2025] = (issued: 2025-09-30, due: 2025-10-14, cl: arnika_delta, sup: it, net: 16000.00 DUK, vat: 3520.00 DUK) "faktura-sales-2022-2025.csv line 64 FV 020/2025"
+  sale_flr[fv_021_2025] = (issued: 2025-09-30, due: 2025-10-30, cl: kessel, sup: it, net: 1600.00 FLR, vat: 352.00 FLR) "faktura-sales-2022-2025.csv line 65 FV 021/2025"
+
+version register_2025_10_02
+  cite faktura
+  governs always
+  known 2025-10-02
+  buy[p033] = (received: 2025-10-02, bk: fuel, net: 214.60 DUK, vat: 47.21 DUK) "faktura-purchases-2022-2025.csv line 35 P033 fuel 2025-09"
+  fuel_month[p033] = 2025-09 "faktura-purchases-2022-2025.csv line 35 P033 fuel 2025-09"
+
+version register_2025_10_10
+  cite faktura
+  governs always
+  known 2025-10-10
+  sale[fv_022_2025] = (issued: 2025-10-10, due: 2025-10-24, cl: pracownia_ul, sup: it, net: 2400.00 DUK, vat: 528.00 DUK) "faktura-sales-2022-2025.csv line 66 FV 022/2025"
+
+version register_2025_10_31
+  cite faktura
+  governs always
+  known 2025-10-31
+  sale[fv_023_2025] = (issued: 2025-10-31, due: 2025-11-14, cl: arnika_delta, sup: it, net: 16000.00 DUK, vat: 3520.00 DUK) "faktura-sales-2022-2025.csv line 67 FV 023/2025"
+  sale_flr[fv_024_2025] = (issued: 2025-10-31, due: 2025-11-30, cl: kessel, sup: it, net: 1600.00 FLR, vat: 352.00 FLR) "faktura-sales-2022-2025.csv line 68 FV 024/2025"
+
+version register_2025_11_28
+  cite faktura
+  governs always
+  known 2025-11-28
+  sale[fv_025_2025] = (issued: 2025-11-28, due: 2025-12-12, cl: arnika_delta, sup: it, net: 16000.00 DUK, vat: 3520.00 DUK) "faktura-sales-2022-2025.csv line 69 FV 025/2025"
+  sale_flr[fv_026_2025] = (issued: 2025-11-28, due: 2025-12-28, cl: kessel, sup: it, net: 1600.00 FLR, vat: 352.00 FLR) "faktura-sales-2022-2025.csv line 70 FV 026/2025"
+
+version register_2025_12_31
+  cite faktura
+  governs always
+  known 2025-12-31
+  sale[fv_027_2025] = (issued: 2025-12-31, due: 2026-01-14, cl: arnika_delta, sup: it, net: 16000.00 DUK, vat: 3520.00 DUK) "faktura-sales-2022-2025.csv line 71 FV 027/2025"
+  sale_flr[fv_028_2025] = (issued: 2025-12-31, due: 2026-01-30, cl: kessel, sup: it, net: 1600.00 FLR, vat: 352.00 FLR) "faktura-sales-2022-2025.csv line 72 FV 028/2025"

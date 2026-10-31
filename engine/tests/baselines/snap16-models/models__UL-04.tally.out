@@ -1,0 +1,12 @@
+cb_ex2_weeks: ok
+  law date 2026-10-18, cut 2026-10-18
+q_ex1: (40, 700.00 GBP)
+  assumed: the example gives no partner's income and treats the individual as the one liable (higher_earner[ex1])
+  assumed: the example names no year, only up to and including 2023 to 2024; the last such year is taken (example_year[ex1])
+  assumed: the example says income; it is read as adjusted net income (s. 681H(2)) (ani[ex1])
+  law date 2026-10-18, cut 2026-10-18
+q_ex2: (40, 532.00 GBP)
+  assumed: the example gives no partner's income and treats the individual as the one liable (higher_earner[ex2])
+  assumed: the example says from 2024 to 2025 onwards; £1,331.20 is a full year at the 2024-25 eldest-child rate (example_year[ex2])
+  assumed: the example says income; it is read as adjusted net income (s. 681H(2)) (ani[ex2])
+  law date 2026-10-18, cut 2026-10-18

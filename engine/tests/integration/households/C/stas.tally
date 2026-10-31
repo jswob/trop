@@ -1,0 +1,96 @@
+part stas
+  tally 2
+  note "Staś's money (C-HR5, C-D36): what Irena sent 'dla Stasia', what the joint account held for him at each day's end (all he had been sent, up to the balance), the days it was short; and the gift tax on Irena's gifts (IGT-1 – IGT-5): Staś is her grandson (Group I, a descendant), but he has no account of his own, so a gift of money credited to his parents' joint account is not exempt (IGT-4 .4), and each gift needs a return within 1 month (IGT-5 .1)."
+  note "The joint account's balance at a day's end is the balance after the day's last row (rec_joint), or the day before's where the day has none; on 2024-01-01 the story's opening."
+
+input stas_has_account: bool question "Does Staś have a payment account of his own (story 2023-04-03)?"
+
+input gift_amount: money DUK question "How much does Irena send each month (C-D36)?"
+
+input gift_from: month question "From which month does Irena send it (C-D36, story 2023-04-03)?"
+
+input records_from: date question "From which day do the joint account's rows run (records/jodla-wspolny.csv)?"
+
+version irena_letter
+  cite c_d36
+  governs always
+  known 2023-04-01
+  gift_amount = 300.00 "C-D36: From April I'll send 300 every month, on the 3rd"
+  gift_from = 2023-04 "C-D36: From April; story 2023-04-03: Irena's first 300.00"
+
+version stas_facts
+  cite story
+  governs always
+  known 2024-01-01
+  stas_has_account = false "story 2023-04-03: Staś has no account of his own"
+  records_from = 2024-01-01 "records/jodla-wspolny.csv: Okres 01.01.2024 – 30.09.2026"
+
+def jw_rows[d in day]: int = count(s in seq where jw[d, s] != none)
+
+def jw_end[d in day]: money DUK
+  note "the joint account's balance at the end of day d"
+  rule carry = jw_end[d - 1] when pos(d) > 1
+  rule opening beats carry = open_bal[joint] when pos(d) == 1 and jw_rows[d] == 0
+  rule seen beats carry, opening = jw[d, last(s in seq where jw[d, s] != none)].bal when jw_rows[d] > 0
+
+def irena_in[d in day]: money DUK = sum(jw[d, s].cr for s in seq where jw[d, s] != none and jw[d, s].k == j_irena)
+
+def sent_to[d in day]: money DUK
+  note "C-HR5 .2: all Staś has been sent by the end of day d: what he had on 2024-01-01 (C-HR5 .3, story § What we had) and Irena's rows since"
+  rule carry = sent_to[d - 1] + irena_in[d] when pos(d) > 1
+  rule opening beats carry = stas_open + irena_in[d] when pos(d) == 1
+
+def stas_held[d in day]: money DUK
+  note "C-HR5 .2: at each day's end the joint account holds Staś's money first, up to all he has been sent"
+  rule base = min(sent_to[d], jw_end[d])
+
+def stas_short[d in day]: money DUK
+  note "C-HR5 .2: the shortfall, ours to put back, where the balance is below all he has been sent"
+  rule base = max(0 DUK, sent_to[d] - jw_end[d])
+
+def days_short[d in day]: int
+  note "the days from 2024-01-01 to d on whose end the account was short"
+  rule base = count(x in day where x <= d and stas_short[x] > 0 DUK)
+
+def short_max[d in day]: money DUK = max(stas_short[x] for x in day where x <= d)
+
+def short_max_on[d in day]: date
+  note "the first day, to d, on which the shortfall was the largest"
+  rule base = first(x in day where x <= d and stas_short[x] == short_max[d])
+
+def gift_day[m in month]: date
+  note "the day Irena's gift of month m was credited: the joint account's row from 2024 on; before the rows run, the 3rd or the next business day (story 2023-04-03, C-D36)"
+  rule letter = schedule(m, lifted[gift_dom], following, holidays)
+  rule seen beats letter = first(d in day where month_of(d) == m and irena_in[d] > 0 DUK) when start_of(m) >= records_from
+
+def gift_amt[m in month]: money DUK
+  rule letter = gift_amount
+  rule seen beats letter = sum(irena_in[d] for d in day where month_of(d) == m) when start_of(m) >= records_from
+
+def gift_m[m in month]: bool = m >= gift_from and start_of(m) <= cut
+
+def gift_exempt[m in month]: bool
+  note "IGT-4 .1 exempts a descendant's acquisition, but a gift of money only where it was credited to the acquirer's payment account (IGT-4 .4); point 3 doesn't lift that"
+  rule base = stas_has_account
+
+def gift_return_due[m in month]: date at gift_day[m]
+  note "IGT-5 .1: a return within 1 month of the day the tax arose (IGT-2 .1: the day the money was credited), GEN-3 .1; a deadline on a day that is no business day moves to the next one (GEN-2 .2)"
+  rule base = if is_business(add_months(gift_day[m], igt5_return_months), holidays) then add_months(gift_day[m], igt5_return_months) else add_business(add_months(gift_day[m], igt5_return_months), 1, holidays) when not gift_exempt[m]
+  rule exempt beats base = none when gift_exempt[m]
+
+def returns_overdue[d in day]: int
+  note "the gifts whose return was due before day d (none was filed: story 2023-04-03)"
+  rule base = count(m in month where gift_m[m] and gift_return_due[m] != none and gift_return_due[m] < d)
+
+def next_return[d in day]: date
+  note "the first return due on or after day d"
+  rule base = min(gift_return_due[m] for m in month where gift_m[m] and gift_return_due[m] != none and gift_return_due[m] >= d)
+
+def gifts_5y[m in month]: money DUK at gift_day[m]
+  note "IGT-3 .1: what Staś acquired from Irena in the 5 years before the last acquisition (the gift of month m), added to it"
+  rule base = sum(gift_amt[k] for k in month where gift_m[k] and k <= m and gift_day[k] > add_years(gift_day[m], -igt3_years))
+
+def gift_tax[m in month]: money DUK at gift_day[m]
+  note "IGT-3: the Group I scale on what the added-up acquisitions exceed the free amount in force on the day the last one's tax arose, rounded (GEN-5 .1), less the tax already paid on the earlier ones (none was paid)"
+  rule base = round(igt3_scale[group_1](max(0 DUK, gifts_5y[m] - igt_free[group_1])), 1, half-up) when not gift_exempt[m]
+  rule exempt beats base = 0 DUK when gift_exempt[m]

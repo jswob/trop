@@ -1,0 +1,19 @@
+# L §4.6 step 2: "a replace with no earlier row to replace (LOAD-REPLACE)".
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+input n: int
+
+version v2
+  cite s
+  governs 2026-07..
+  known 2026-06-01
+  replace n = 2
+=== expect
+refused: LOAD-REPLACE ...

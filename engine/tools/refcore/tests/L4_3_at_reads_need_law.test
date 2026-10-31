@@ -1,0 +1,27 @@
+# L §4.3: the reads inside `at e` are made at the law date of the def's reader, "or the ask's `law`"; L §4.3
+# `at reader`: "the loader checks that every chain of readers ends where a law date is written, at an ask's
+# `law D` ... (`LOAD-LAWDATE` otherwise)".  pay's `at` reads the versioned input dom, and the ask states no
+# law: LOAD-LAWDATE.
+=== m.tally
+model t
+  tally 2
+  on 2027-01-01
+  start 2026-01-01
+  end 2027-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+input dom: int
+input base: money PLN
+def pay[m in months]: money PLN = base at day_of(m, dom)
+
+version v1
+  cite s
+  governs 2026-01-01..
+  known 2025-12-01
+  dom = 10
+  base = 100.00
+
+ask q1: pay[2027-03]
+=== expect
+refused: LOAD-LAWDATE ...

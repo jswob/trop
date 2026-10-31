@@ -1,0 +1,10 @@
+# R-123: no `impl Trait` arguments; a function names the concrete type it takes (G1, 2026-10-30).
+
+case: impl-trait-argument
+tool: clippy
+expect: clippy::impl_trait_in_params
+--- module
+/// Planted.
+pub fn planted(items: impl Iterator<Item = u8>) -> usize {
+    items.count()
+}

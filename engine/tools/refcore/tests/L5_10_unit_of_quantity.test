@@ -1,0 +1,44 @@
+# L §5.10 Kind and unit: "unit(x) of a one-unit place, and unit(q) of a quantity, a leg's amount included, are the unit
+# as a key of the unit kind that holds it (currencies for a currency, §5.7)"; "Where load can't see the key (a leg
+# declared with a unit kind), it is read per value". buy's cash leg is in PLN, its units leg in fund_x, a key of notes;
+# konto is a PLN place. (Writer 8, sixth pass: refcore read unit(x) of a place only, found with C3-13's example arc.)
+=== m.tally
+model t
+  tally 2
+  on 2024-12-31
+  start 2024-01-01
+  end 2024-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+kind notes: unit
+kind brokerages: place any min 0
+kind trades: event certain
+  leg units: notes
+  leg cash: PLN
+place konto: accounts PLN lives 2019-01-01..
+place market: outside lives 1900-01-01..
+input n_units: num
+input amt: money PLN
+input day: date
+
+move buy: trades
+  on day
+  leg units from market to mbank amount n_units * 1 fund_x
+  leg cash from konto to market amount amt
+
+version v
+  cite s
+  governs always
+  known 2024-01-01
+  notes + [fund_x] lives 2000-01-01..
+  brokerages + [mbank] lives 2010-01-01..
+  n_units = 10
+  amt = 1 000.00 PLN
+  day = 2024-03-01
+  opening[konto] = 5 000.00 PLN at 2024-01-01 start
+
+ask q: unit(buy.cash.amount), unit(buy.units.amount), unit(buy.units.amount) == fund_x, unit(konto)
+=== expect
+q: (PLN, fund_x, true, PLN)
+  cut 2024-12-31

@@ -1,0 +1,102 @@
+# L §5.19 example observations, copied whole, with the places, the move rent and the rows they name completed.
+# Expected from the stated rules: konto (alive before S, no opening) has no balance before its first reading
+# (HOLE-ANCHOR, L §5.10, §8.1); "pad x from y: ... x's balance after the instant is the reading": 4 150.00 PLN at
+# 2025-11-30 end, and the gap (the reading less a booked balance that is a hole) is a hole, so the pad's amount is
+# one (L §5.19 Holes); after it, "a balance means what the statement states at the last reading, plus what is booked
+# since": rent[2025-12] (uncovered day, booked, unfulfilled) gives 1 350.00 PLN.  On the covered day the observation
+# books the landlord's end from itself (E §6.1) and rent[2025-11] is modelled past, never booked: flows(landlord,
+# 2025-11) = 2 800.00 PLN.  observed(m[k]) sums the legs of the observations that fulfil it, `none` when none does.
+# covered(x, span) is true when versions cover x on every day of the span.  fund[r3] books both its legs (ike is
+# covered; the other ends from the observation).
+# (Writer 8: L §5.10 refuses a unit stated on a place whose kind isn't of unit one, so `outside PLN` is gone; the place
+# read by flows is now a thing of its own outside kind of one unit, `kind payees: place PLN signed outside`, since
+# flows of a place of unit any is refused, L §5.14.3.)
+=== m.tally
+model hh
+  tally 2
+  on 2026-10-20
+  start 2025-10-01
+  end 2026-12-31
+
+source bank_export_2025_11 "bank"
+source fund_register "fund"
+unit PLN: currency minor 0.01
+kind funds: unit
+
+kind groceries: transfers
+kind fund_buys: event certain
+  leg units: funds
+  leg cash: PLN
+
+input bank: observed
+input fund: observed
+input rent_amt: money PLN
+input rent_off: int
+
+place konto: accounts PLN lives 2019-05-01..
+kind payees: place PLN signed outside
+place landlord: payees lives 1900-01-01..
+place world: outside lives 1900-01-01..
+place unexplained: outside lives 1900-01-01..
+place market: outside lives 1900-01-01..
+place ike: holdings etf lives 2026-01-01..
+place ike_cash: accounts PLN lives 2026-01-01..
+
+move rent[m in months]: transfers
+  on add_days(start_of(m), rent_off)
+  leg cash from konto to landlord amount rent_amt
+
+version units
+  cite fund_register
+  governs always
+  known 2025-01-01
+  funds + [etf] lives 2020-01-01..
+  rent_amt = 2 800.00 PLN
+  rent_off = 2
+
+version statement_11
+  cite bank_export_2025_11
+  governs 2025-11
+  known 2025-12-01
+  covers konto
+  pad konto from unexplained
+  bank[r17] = (on: 2025-11-03, kind: transfers, leg cash from konto to landlord amount 2 800.00 PLN, fulfils: rent[2025-11]) "line 17"
+  bank[r18] = (on: 2025-11-04, kind: groceries, leg cash from konto to world amount 234.22 PLN) "BIEDRONKA 1234"
+  stated[konto] = 4 150.00 PLN at 2025-11-30 end "saldo końcowe"
+
+version register_2026_02
+  cite fund_register
+  governs 2026-02
+  known 2026-03-05
+  covers ike
+  fund[r3] = (on: 2026-02-02, kind: fund_buys, leg units from market to ike amount 4.2167 etf, leg cash from ike_cash to market amount 500.00 PLN) "register line 3"
+
+ask before: bal(konto, 2025-10-31)
+ask nov: bal(konto, 2025-11-30)
+ask dec: bal(konto, 2025-12-31)
+ask land: flows(landlord, 2025-11)
+ask obs: observed(rent[2025-11]).cash.amount, observed(rent[2025-12]) == none
+ask cov: covered(konto, 2025-11), covered(konto, 2025-10-15 .. 2025-11-15)
+ask ike_: bal(ike, 2026-02-28), bal(ike_cash, 2026-02-28)
+ask n: count(o in bank over 2025-11)
+=== expect
+before: ?"konto has no balance before 2025-11-30" (konto)
+  unfulfilled: rent[2025-10]
+  cut 2026-10-20
+cov: (true, false)
+  cut 2026-10-20
+dec: 1 350.00 PLN
+  pad: konto 2025-11-30 end, pads:statement_11:konto@2025-11-30 end of ?"konto has no balance before 2025-11-30" (konto)
+  unfulfilled: rent[2025-12]
+  cut 2026-10-20
+ike_: (4.2167 etf, -500.00 PLN)
+  cut 2026-10-20
+land: 2 800.00 PLN
+  cut 2026-10-20
+n: 2
+  cut 2026-10-20
+nov: 4 150.00 PLN
+  pad: konto 2025-11-30 end, pads:statement_11:konto@2025-11-30 end of ?"konto has no balance before 2025-11-30" (konto)
+  cut 2026-10-20
+obs: (2 800.00 PLN, true)
+  cut 2026-10-20

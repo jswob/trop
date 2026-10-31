@@ -1,0 +1,34 @@
+# MC-M-F1. L §2.5 Bare names: "A bound variable over a key list (k in [1, 12, 13]) takes its index from the key
+# positions it is used in"; Keys: "A key literal is resolved by its position"; L §4.1 Anchored periods: "A key prints
+# as the year or month in which its period starts". Over tmonth (months from the 6th), 2022-06 in the list is the key
+# whose period starts on 2022-06-06, as the literal first_day[2022-06] and the binding over tmonth give; snap8 read
+# the list's months as calendar months and refused RUN-DOMAIN "lies across two keys", a message no row of L §8.4 has.
+=== m.tally
+model f1
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+
+source s "minimal text"
+
+unit PLN: currency minor 0.01
+
+index tmonth = month 2022-04..2023-03 from 6
+
+def first_day[t in tmonth]: date = start_of(t)
+
+ask by_list: first_day[t] for t in [2022-06, 2022-07] law 2026-10-18
+
+ask by_literal: first_day[2022-06], first_day[2022-07] law 2026-10-18
+
+ask by_index: first_day[t] for t in tmonth where t == 2022-06 law 2026-10-18
+=== expect
+by_index (t = 2022-06): 2022-06-06
+  law date 2026-10-18, cut 2026-10-18
+by_list (t = 2022-06): 2022-06-06
+  law date 2026-10-18, cut 2026-10-18
+by_list (t = 2022-07): 2022-07-06
+  law date 2026-10-18, cut 2026-10-18
+by_literal: (2022-06-06, 2022-07-06)
+  law date 2026-10-18, cut 2026-10-18

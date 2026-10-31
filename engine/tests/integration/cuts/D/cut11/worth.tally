@@ -1,0 +1,7 @@
+part worth
+  tally 2
+  note "D-08: what Halina has, as D-HR4 counts it. The house ul. Leśna 4 counts at its latest valuation (D-HR4 .4); it has never been valued, so it has no reading."
+
+input house_value: money DUK reading question "What did an agent or a bank value the house ul. Leśna 4 at (D-HR4 .4)? It has never been valued."
+
+def house_at[d in day]: money DUK = last(house_value, d) at d

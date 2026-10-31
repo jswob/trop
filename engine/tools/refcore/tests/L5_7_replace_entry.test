@@ -1,0 +1,30 @@
+# L §5.7: "A later version states a new lifespan with replace K + [k] lives span: a death, a closed account."
+# Under a cut before the replacing version ana is alive on 2025-08-01; under the model's cut she is not.
+=== m.tally
+model hh
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+kind persons
+
+version a
+  cite s
+  known 2020-01-01
+  persons + [ana] lives 1990-01-01..
+
+version b
+  cite s
+  known 2025-09-01
+  replace persons + [ana] lives 1990-01-01..2025-06-30
+
+ask q1: ana in persons on 2025-08-01 as known 2025-08-15
+ask q2: ana in persons on 2025-08-01
+=== expect
+q1: true
+  cut 2025-08-15
+q2: false
+  cut 2026-01-01

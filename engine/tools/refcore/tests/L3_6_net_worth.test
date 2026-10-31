@@ -1,0 +1,67 @@
+# L §3.6 net worth example, copied whole, over a minimal reality.  value(x, d) in PLN by p: "a position already in
+# CUR counts at its amount; a position in another unit u counts at u's price p", the price "read with its carry, by
+# last(px)" (L §5.10, §4.6; writer 8: `within max_age` is gone, L §2.3).  ola owns konto wholly and half of broker; konto gets 5 000.00 PLN and
+# pays 425.00 PLN for 100 EUR that land in broker; px[EUR] = 4.25 PLN/EUR (read 2026-06-20, carried).
+# Outside places are left out by the where.  net_worth = round(4 575.00 × 1 + 100 × 4.25 × 0.5) = 4 787.50 PLN.
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+
+kind persons
+kind brokerages: place any min 0
+kind fx_buys: event certain
+  leg eur: EUR
+  leg cash: PLN
+
+input owns[p in persons, x in places]: num
+input px[u in currencies]: num PLN/u reading
+input max_age: int
+input pay_day: date
+input buy_day: date
+input pay_amt: money PLN
+input eur_amt: money EUR
+input pln_amt: money PLN
+
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+place market: outside lives 1900-01-01..
+
+def net_worth[o in persons, d in days]: money PLN = round(sum((value(x, d) in PLN by last(px)) * owns[o, x] for x in places on d where not x in outside), minor(PLN), half-even) at d
+
+move pay: transfers
+  on pay_day
+  leg cash from world to konto amount pay_amt
+
+move buy: fx_buys
+  on buy_day
+  leg eur from market to broker amount eur_amt
+  leg cash from konto to market amount pln_amt
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  persons + [ola] lives 1990-01-01..
+  brokerages + [broker] lives 2026-01-01..
+  owns = 0
+  owns[ola, konto] = 1
+  owns[ola, broker] = 0.5
+  px[EUR] = 4.25 PLN/EUR at 2026-06-20
+  max_age = 30
+  pay_day = 2026-02-02
+  buy_day = 2026-03-02
+  pay_amt = 5 000.00 PLN
+  eur_amt = 100.00 EUR
+  pln_amt = 425.00 PLN
+
+ask nw: net_worth[ola, 2026-06-30]
+=== expect
+nw: 4 787.50 PLN
+  cut 2026-01-01

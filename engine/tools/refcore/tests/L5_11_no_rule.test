@@ -1,0 +1,24 @@
+# L §5.11 step 6: "None: refused, RUN-NO-RULE."
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+input f: bool
+
+def x: int at reader
+  rule a = 1 when f
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  f = false
+
+ask q1: x law 2026-06-30
+=== expect
+q1: refused: RUN-NO-RULE ...
+  law date 2026-06-30, cut 2026-01-01

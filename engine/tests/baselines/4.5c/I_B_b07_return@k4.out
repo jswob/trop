@@ -1,0 +1,24 @@
+b07_return: (89 560.00 DUK, 74 514.00 DUK, 5 787.00 DUK, 5 791.00 DUK, 4.00 DUK)
+  assumed: October's gross is B-D25's 7 200.00 or more (the net is above B-D25's) (gross_lo)
+  assumed: a bonus month's gross searched up to 20 000.00 DUK (gross_hi)
+  pinned: ola_gross[2024-10] = 10 360.00 DUK
+  pinned: ola_gross[m] = g for g in gross_lo .. gross_hi step minor(DUK) where ola_net[m] as if {ola_gross[m] = g} >= observed(mewa_pay[m]).cash.amount, m in months
+  law date 2025-04-30, cut 2025-04-30
+warning: WARN-UNREAD source b_d06 is read by nothing
+warning: WARN-UNREAD source b_d14 is read by nothing
+warning: WARN-UNREAD source b_d17 is read by nothing
+warning: WARN-UNREAD source b_d18 is read by nothing
+warning: WARN-UNREAD source b_d21 is read by nothing
+warning: WARN-UNREAD source b_d23 is read by nothing
+warning: WARN-UNREAD source b_d27 is read by nothing
+warning: WARN-UNREAD source b_d30 is read by nothing
+warning: WARN-UNREAD input born is read by nothing
+warning: WARN-UNREAD input cc1_settle_days is read by nothing
+warning: WARN-UNREAD input pit4_lower_wording is read by nothing
+warning: WARN-UNREAD input pit5_refund_days is read by nothing
+warning: WARN-UNREAD input soc1_er_pension is read by nothing
+warning: WARN-UNREAD input soc_cap is read by nothing
+warning: WARN-UNREAD input soc2_deductible is read by nothing
+warning: WARN-UNREAD input soc4_rate_b is read by nothing
+warning: WARN-UNREAD input tt2_lookback_years is read by nothing
+warning: WARN-UNREAD input vat5_late_months is read by nothing

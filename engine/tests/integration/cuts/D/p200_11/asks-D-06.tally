@@ -1,0 +1,12 @@
+part asks_d06
+  tally 2
+  note "D-06 · The bonds, as of 2025-12-31, as known 2026-09-30. The end of 2026 reads CPI-YY of 2026-09 and 2026-10, not published by the cut: the line is partial."
+  note "The known part (L §8 gap table: a sum whose terms meet a rounding with an unknown is a plain hole, L §5.18): the bonds still held on 2026-12-31, with the value of each series whose interest year from 2026-11 or 2026-12 reads one of those two CPI-YY pinned to 0, so its term drops out. The pins are the series the key names as missing; a series fully redeemed by then is left out by the where, not pinned."
+
+ask d06_all_redeemed: all_fees[2025-12-31], all_tax[2025-12-31], bonds_net[2025-12-31] law 2026-09-30
+
+ask d06_end_2025: sum(held[s, 2025-12-31] for s in isb_series), bonds_value[2025-12-31], bonds_accrued[2025-12-31] law 2026-09-30
+
+ask d06_end_2026: sum(held[s, 2026-12-31] for s in isb_series), sum(held[s, 2026-12-31] * bond_value[s, 2026-12-31] for s in isb_series) law 2026-09-30 partial
+
+ask d06_end_2026_known: sum(held[s, 2026-12-31] * bond_value[s, 2026-12-31] for s in isb_series where held[s, 2026-12-31] > 0) with bond_value[isb2011, 2026-12-31] = 0.00 DUK, bond_value[isb2111, 2026-12-31] = 0.00 DUK, bond_value[isb2211, 2026-12-31] = 0.00 DUK, bond_value[isb2311, 2026-12-31] = 0.00 DUK, bond_value[isb2012, 2026-12-31] = 0.00 DUK, bond_value[isb2112, 2026-12-31] = 0.00 DUK, bond_value[isb2212, 2026-12-31] = 0.00 DUK, bond_value[isb2312, 2026-12-31] = 0.00 DUK law 2026-09-30

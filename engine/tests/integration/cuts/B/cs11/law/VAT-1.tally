@@ -1,0 +1,16 @@
+part vat_1
+  tally 2
+  law
+  note "VAT-1 · Taxable supplies and the rate: 22 % of the net price on supplies by a taxpayer in Lenia (.1); letting a dwelling for living in is exempt (.2)."
+
+source vat_1 "Value Added Tax Act, VAT-1 Taxable supplies and the rate (tmp/cases/law/acts.md)"
+
+input vat_rate: num question "What is the VAT rate (VAT-1 .1)?"
+
+version vat1_v1
+  cite vat_1
+  governs 2018-01-01..
+  known 2017-09-01
+  enters 2018-01-01
+  note "VAT-1 v1, in force 2018-01-01 until replaced, published 2017-09-01; governs supplies from 2018-01-01."
+  vat_rate = 0.22 "VAT-1 v1 .1"

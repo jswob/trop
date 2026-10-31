@@ -1,0 +1,26 @@
+# GD-2 (round 19): L §3.1 `monthday`: "A day of the year without its year (13 April). `02-29` is no month-day ...
+# (refused, `LOAD-PARSE`). Month-days compare with `==` and `!=` only; any order or arithmetic on them is refused (§8.4)."
+# A row stating 02-29 for a monthday input.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+index yrs = year 2026..2027
+input file_by: monthday
+input other: monthday
+
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  file_by = 02-29
+  other = 04-30
+ask q: file_by
+=== expect
+refused: LOAD-PARSE cannot parse: 02-29 is not a month-day every year has (m.tally:18)

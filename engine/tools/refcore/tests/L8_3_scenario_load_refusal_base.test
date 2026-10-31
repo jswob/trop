@@ -1,0 +1,21 @@
+# L §8 and §8.3: a load refusal in a scenario file refuses only that scenario; the base's asks are answered as the
+# base alone answers them (fault, writer 7: the base ask was refused with an internal KeyError after the scenario's
+# load reset the currency table). `minor(DUK)` is DUK's declared minor unit, 0.01 DUK (L §5.4).
+=== m.tally
+model f
+  tally 2
+  on 2025-01-01
+  start 2025-01-01
+  end 2025-12-31
+source s "synthetic"
+unit DUK: currency minor 0.01
+ask q: minor(DUK)
+=== bad.tally
+scenario bad over f
+  tally 2
+  from 2025-01-01
+def q: int = 1
+=== expect
+scenario bad: refused: LOAD-DUP q is declared twice (bad.tally:4)
+q: 0.01 DUK
+  cut 2025-01-01

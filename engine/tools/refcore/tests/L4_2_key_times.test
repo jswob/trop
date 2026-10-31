@@ -1,0 +1,47 @@
+# L §4.2 Keys as values: "A key of an integer index is also an `int`", and L §7.1: `*`, `/`, `+`, `-` are exact.  So
+# `n * fact[n - 1]` is a product: fact[n] = n! for n = 0..6 (1, 1, 2, 6, 24, 120, 720), never key arithmetic, which
+# moves a key only by + or - an int (L §4.2 Key arithmetic).  Every operator with a key operand of an integer index:
+# 3 * 3 = 9, 3 / 4 = 0.75, 3 + 3 = 6, 3 - 3 = 0, fact[2] * 3 = 6, 3 - fact[3] = -3, fact[3] - 3 = 3, 3 + fact[3] = 9.
+=== m.tally
+model p11
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+
+source s "synthetic"
+
+index cnt = int 0..6
+
+def fact[n in cnt]: int
+  rule first = 1 when n == 0
+  rule later = n * fact[n - 1] when n > 0
+
+def b[n in cnt]: int = n * n
+def c[n in cnt]: num = n / (n + 1)
+def d[n in cnt]: int = n + n
+def e[n in cnt]: int = n - n
+def f[n in cnt]: int = fact[n - 1] * n
+def g[n in cnt]: int = n - fact[n]
+def h[n in cnt]: int = fact[n] - n
+def i[n in cnt]: int = n + fact[n]
+
+ask q: fact[n] for n in cnt
+ask q2: b[3], c[3], d[3], e[3], f[3], g[3], h[3], i[3]
+=== expect
+q (n = 0): 1
+  cut 2026-10-18
+q (n = 1): 1
+  cut 2026-10-18
+q (n = 2): 2
+  cut 2026-10-18
+q (n = 3): 6
+  cut 2026-10-18
+q (n = 4): 24
+  cut 2026-10-18
+q (n = 5): 120
+  cut 2026-10-18
+q (n = 6): 720
+  cut 2026-10-18
+q2: (9, 0.75, 6, 0, 6, -3, 3, 9)
+  cut 2026-10-18

@@ -1,0 +1,63 @@
+# L §5.14 A hole in a term: "(an attribute that is a hole ...) makes the arcs it ranks undecided. Only the parts the
+# take could reach under some reading of the holes merge, into one hole part with the total known"; "A hole in such a
+# field is an undecided take".  The withdrawal's `paid_from: key persons` is a hole, so a reading of it is a person.
+# sav's order is (if w in withdrawals and k.owner == w.paid_from then 0 else 1), (if k.owner == ania_tomek then 0 else
+# 1).  Parts: Ania's 300.00, the couple's 700.00, Tomek's 200.00, Kuba's 400.00 (Kuba a child).  The withdrawal of
+# 600.00: paid by Ania it takes her 300.00 and 300.00 of the couple's; by Tomek, his 200.00 and 400.00 of the couple's;
+# Kuba's part ranks last under both readings and is never reached.  So Ania's, the couple's and Tomek's parts merge
+# into one hole part of 600.00, Kuba's 400.00 stays known, the total 1 000.00 known (scratch/exp_hattr.py).  q2: the
+# leg read: the withdrawal took nothing of Kuba's.  (Was LOAD-UNIT "ania and ('hole', ...) compared", the probe
+# writer's p20; then, with the row's hole read as a hole, one hole part of the whole balance.)
+=== m.tally
+model t
+  tally 2
+  on 2026-02-10
+  start 2026-01-01
+  end 2026-01-31
+
+source src "test"
+unit DUK: currency minor 0.01
+kind children: parties
+kind couples: parties
+kind persons: parties
+kind inheritances: transfers
+  attr heir: key parties
+kind withdrawals: transfers
+  attr paid_from: key persons
+kind savings: place DUK min 0
+  owned by arrive
+  step minor(DUK)
+  takes k for w order (if w in withdrawals and k.owner == w.paid_from then 0 else 1), (if k.owner == ania_tomek then 0 else 1)
+place sav: savings lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input bank_rows: observed
+def arrive[m in events, p in parties]: num at m.day
+  rule community = (if p == ania_tomek then 1 else 0)
+  rule inherited beats community = (if p == m.heir then 1 else 0) when m in inheritances
+
+ask q1: bal(sav, 2026-01-31), bal(sav, 2026-01-31) of kuba, bal(sav, 2026-01-31) of ania
+ask q2: o.cash.amount of kuba for o in withdrawals over 2026-01-25..2026-01-25
+
+version cast
+  cite src
+  known 2026-01-01
+  children + [kuba] lives 2010-02-14..
+  couples + [ania_tomek] lives 2015-06-20..
+  persons + [ania] lives 1988-04-12..
+  persons + [tomek] lives 1986-09-03..
+
+version rows
+  cite src
+  governs 2026-01
+  known 2026-02-03
+  opening[sav] = 0 at 2026-01-01 start
+  bank_rows[r1] = (on: 2026-01-05, kind: inheritances, leg cash from world to sav amount 300.00 DUK, heir: ania) "line 1"
+  bank_rows[r2] = (on: 2026-01-06, kind: transfers, leg cash from world to sav amount 700.00 DUK) "line 2"
+  bank_rows[r3] = (on: 2026-01-07, kind: inheritances, leg cash from world to sav amount 200.00 DUK, heir: tomek) "line 3"
+  bank_rows[r4] = (on: 2026-01-08, kind: inheritances, leg cash from world to sav amount 400.00 DUK, heir: kuba) "line 4"
+  bank_rows[r6] = (on: 2026-01-25, kind: withdrawals, leg cash from sav to world amount 600.00 DUK, paid_from: ?"whose money paid?") "line 6"
+=== expect
+q1: (1 000.00 DUK, 400.00 DUK, ?"sav: 600.00 DUK may be ania's: whose money paid?" (sav))
+...
+q2 (o = bank_rows[r6]): 0.00 DUK
+...

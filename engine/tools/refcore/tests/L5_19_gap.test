@@ -1,0 +1,55 @@
+# L §5.19 gap(x, d): "the gap at the last stated reading of x on day d ... with no reading that day it is
+# HOLE-NOREADING" (question from the L §8.1 table, `<x>[k] has no reading at <instant>`).  "The gap at a stated
+# reading is the reading less the booked balance at its instant": konto opens at 0 (its lifespan starts at S, L
+# §5.10), the observation r1 fulfils pay and books 500.00 PLN on 2026-02-02 (E §6.1), the reading states 520.00
+# PLN at 2026-02-28 end, so the gap is 20.00 PLN; with anchor konto "x's balance after the instant is the
+# reading", listed under anchor: (L §8.2).
+=== m.tally
+model g
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+source bank_export "bank"
+unit PLN: currency minor 0.01
+
+input bank: observed
+input pay_day: date
+input pay_amt: money PLN
+
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on pay_day
+  leg cash from world to konto amount pay_amt
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  pay_day = 2026-02-02
+  pay_amt = 500.00 PLN
+
+version stmt_02
+  cite bank_export
+  governs 2026-02
+  known 2026-03-01
+  covers konto
+  anchor konto
+  bank[r1] = (on: 2026-02-02, kind: transfers, leg cash from world to konto amount 500.00 PLN, fulfils: pay) "line 1"
+  stated[konto] = 520.00 PLN at 2026-02-28 end "saldo końcowe"
+
+ask g28: gap(konto, 2026-02-28)
+ask g27: gap(konto, 2026-02-27)
+ask b28: bal(konto, 2026-02-28)
+=== expect
+b28: 520.00 PLN
+  anchor: konto 2026-02-28 end ...
+  cut 2026-10-20
+g27: ?"stated[konto] has no reading at 2026-02-27" (stated[konto])
+  cut 2026-10-20
+g28: 20.00 PLN
+...

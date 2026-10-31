@@ -1,0 +1,46 @@
+# L §5.17 Lots: lots held before the run whose sum agrees with the opening reading (4 + 6 = 10 glb): no hole. The fill
+# matches first in, first out by acquisition day (its order, L §5.12): s1's 5 glb takes 4 from p1, then 1 from p2 (t1);
+# the balance is 10 - 5 = 5 glb (t2).
+=== m.tally
+model t
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+kind funds: unit
+kind purchases: event certain
+  leg units: funds
+kind sales: event certain
+  leg units: funds
+place h: holdings glb lives 2020-01-01..
+place mk: outside lives 2000-01-01..
+input bank: observed
+
+fill matched
+  supply b.units.amount for b in purchases over ..
+  demand x.units.amount for x in sales over ..
+  arc b.day <= x.day
+  order b.day
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  funds + [glb] lives 2018-01-01..
+  opening[h] = 10 glb at 2026-01-01 start "o"
+  bank[p1] = (on: 2024-03-01, kind: purchases, leg units from mk to h amount 4 glb) "p1"
+  bank[p2] = (on: 2025-03-01, kind: purchases, leg units from mk to h amount 6 glb) "p2"
+  bank[s1] = (on: 2026-02-01, kind: sales, leg units from h to mk amount 5 glb) "s1"
+
+ask t1: matched.taken[b, x] for b in purchases over .., x in sales over ..
+ask t2: bal(h, 2026-03-01)
+=== expect
+t1 (b = bank[p1], x = bank[s1]): 4 glb
+  cut 2026-06-30
+t1 (b = bank[p2], x = bank[s1]): 1 glb
+  cut 2026-06-30
+t2: 5 glb
+  cut 2026-06-30

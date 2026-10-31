@@ -1,0 +1,39 @@
+# MC-X-F10, the run's check: L5_12_fill_dynamic_unit's fill over adjustments of a leg in EUR against a supply in PLN.
+# Their units meet in the take, value by value: refused there, RUN-DOMAIN (L §3.2, §5.12, §8.4).
+=== m.tally
+model m
+  tally 2
+  on 2027-06-30
+  start 2027-01-01
+  end 2027-06-30
+source src "s"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+place acct: accounts PLN lives 2027-01-01..
+place eacct: accounts EUR lives 2027-01-01..
+place office: outside lives 2027-01-01..
+input amt: money PLN
+input eamt: money EUR
+move pay[m in months]: transfers
+  on start_of(m)
+  leg cash from office to eacct amount eamt
+fill wh
+  supply amt for m in months
+  demand -a.change for a in adjustments over .. where a.adjusts in transfers and a.change < 0
+  arc a.day < start_of(m)
+  order m
+version v
+  cite src
+  governs always
+  known 2026-12-31
+  amt = 100
+  eamt = 100
+version v2
+  cite src
+  governs always
+  known 2027-03-15
+  replace eamt = 90
+ask t: wh.taken[2027-04, a] for a in adjustments over .. where a.adjusts == pay[2027-01]
+=== expect
+t (a = adjustments[pay[2027-01].cash, v2]): refused: RUN-DOMAIN fill wh: the supply 100.00 PLN and the demand 10.00 EUR of the arc (2027-04; adjustments[pay[2027-01].cash, v2]) have different units
+  cut 2027-06-30

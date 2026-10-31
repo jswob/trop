@@ -1,0 +1,15 @@
+part pinned_s4
+  tally 2
+  note "S4's pinned twin (cases 1.4.0, G2 Q-1): the judge's pinned asks of tmp/session7b/blind-run/judge/S4check/s4_pinned.tally, copied unchanged, run with s4.tally unchanged; the court's ruling on the will's reason pinned by with (L §5.18). Keys: engine/tests/cases/keys/S4/S4-03P.md, S4-04P.md; Ruta on 2027-12-31 as known 2028-01-01 (j5), S4-04P step 13."
+
+ask j3_true: claim_from[e, lea, ruta], claim_from[e, lea, pavo] for e in estates over .. with reason_true[edvin_estate, lea] = true as known 2027-12-31
+
+ask j3_untrue: claim_from[e, lea, ruta], claim_from[e, lea, pavo] for e in estates over .. with reason_true[edvin_estate, lea] = false as known 2027-12-31
+
+ask j4_true: worth[p, d] for p in persons over .., d in [2027-06-30, 2027-12-31] where p != edvin with reason_true[edvin_estate, lea] = true as known 2027-12-31
+
+ask j4_untrue: worth[p, d] for p in persons over .., d in [2027-06-30, 2027-12-31] where p != edvin with reason_true[edvin_estate, lea] = false as known 2027-12-31
+
+ask j5_true: worth[p, 2027-12-31] for p in persons over .. where p != edvin with reason_true[edvin_estate, lea] = true as known 2028-01-01
+
+ask j5_untrue: worth[p, 2027-12-31] for p in persons over .. where p != edvin with reason_true[edvin_estate, lea] = false as known 2028-01-01

@@ -1,0 +1,68 @@
+# L §5.14 `at e` (round 7): "An `at` that gives a window evaluates the instance once per law-date class, as for a def
+# (§4.3): its `when`, legs and attributes are read in each class, and they give one value where all classes agree,
+# otherwise HOLE-IMPRECISE unless the line states windows each (L §4.4)."  pay's law date is window(2026-03-01, 2026-03-31); amt
+# is 10.00 PLN to 2026-03-14 and 20.00 PLN from 2026-03-15: two classes that disagree, so konto's balance after
+# pay's day is a hole (q1); `windows each` splits at the class edge: law date 03-01..03-14 pays 10.00 PLN, plus
+# keep's 10.00 (20.00 PLN), 03-15..03-31 pays 20.00 PLN (30.00 PLN) (q2; writer 8: windows latest is gone).  keep's window (2026-01-05 .. 2026-01-20) lies in one class: 10.00 PLN (q3, before pay's day).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2020-01-01..
+place world: outside lives 1900-01-01..
+
+input amt: money PLN
+input pay_win: date
+input keep_win: date
+input pay_day: date
+input keep_day: date
+
+move pay: transfers
+  on pay_day
+  at pay_win
+  leg cash from world to konto amount amt
+
+move keep: transfers
+  on keep_day
+  at keep_win
+  leg cash from world to konto amount amt
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  pay_win = window(2026-03-01, 2026-03-31)
+  keep_win = window(2026-01-05, 2026-01-20)
+  pay_day = 2026-04-10
+  keep_day = 2026-02-10
+  opening[konto] = 0 PLN at 2026-01-01 start
+
+version a1
+  cite s
+  governs 2026-01-01..2026-03-14
+  known 2026-01-01
+  amt = 10.00 PLN
+
+version a2
+  cite s
+  governs 2026-03-15..
+  known 2026-01-01
+  amt = 20.00 PLN
+
+ask q1: bal(konto, 2026-12-31)
+ask q2: bal(konto, 2026-12-31) windows each
+ask q3: bal(konto, 2026-03-31)
+=== expect
+q1: ?"date within window(2026-03-01, 2026-03-31) not precise enough for the law date of pay" (pay)
+...
+q2 [keep_win = 2026-01-05 .. 2026-01-20, pay_win = 2026-03-01 .. 2026-03-14]: 20.00 PLN
+...
+q2 [keep_win = 2026-01-05 .. 2026-01-20, pay_win = 2026-03-15 .. 2026-03-31]: 30.00 PLN
+...
+q3: 10.00 PLN
+...

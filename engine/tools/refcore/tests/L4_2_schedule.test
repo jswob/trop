@@ -1,0 +1,28 @@
+# L §4.2 schedule(p, e, roll, cal): "the day of period p given by e (an int day of the month ...), moved by the roll
+# code when it isn't a business day ... A day that doesn't exist in p (31 February) gives none".  2026-05-01 is a
+# holiday (a Friday): following gives Monday 2026-05-04.  2026-05-31 is a Sunday: following would leave May, so
+# modified_following goes back to Friday 2026-05-29; unadjusted keeps the day.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+input len: calendar
+input d1: int
+input d31: int
+
+version v
+  cite s
+  governs 2026
+  known 2025-12-01
+  len = calendar(weekends [sat, sun], yearly [01-01, 01-06, 05-01, 05-03, 08-15, 11-01, 11-11, 12-25, 12-26])
+  d1 = 1
+  d31 = 31
+
+ask q1: schedule(2026-05, d1, following, len), schedule(2026-05, d31, modified_following, len), schedule(2026-05, d31, unadjusted, len), schedule(2026-02, d31, following, len) law 2026-06-30
+=== expect
+q1: (2026-05-04, 2026-05-29, 2026-05-31, none)
+  law date 2026-06-30, cut 2026-12-31

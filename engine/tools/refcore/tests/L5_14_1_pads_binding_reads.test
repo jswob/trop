@@ -1,0 +1,31 @@
+# Round 18, C2-14 (follows). L §5.14.1: a binding over pads is a running read, allowed in a decision that declares
+# reads pads. No reading pads konto, so no pad is dated in February: the sum over none is 0 (L §5.11), 0.00 PLN.
+=== m.tally
+model t
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 2026-01-01..
+input day: date
+
+move fix: transfers
+  on day
+  reads pads
+  leg cash from world to konto amount sum(p.cash.amount for p in pads over month_of(day) - 1)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  day = 2026-03-10
+  opening[konto] = 0 PLN at 2026-01-01 start
+
+ask q: bal(konto, 2026-03-31)
+=== expect
+q: 0.00 PLN
+  cut 2026-06-30

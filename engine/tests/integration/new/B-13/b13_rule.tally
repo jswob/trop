@@ -1,0 +1,56 @@
+scenario b13_rule over b13_fx
+  tally 2
+  from 2025-07-01
+  note "B-13 (b): the rates of b13_fx, and B-13 rule 1, for this question only (questions.md B-13): from 2025-07-01, on the 1st of each month (the next business day where the 1st isn't one), Piotr sells the florens in the Lazur account above 2 000.00 FLR to his Cis account, counting them at the end of that day with everything else booked that day."
+  note "Awkward: the rule is a decision (it reads the Lazur balance), but the Lazur and Cis exports cover every day of the second half of 2025, so a decision of this layer on those days is modelled past: computed against the booked balances, never booked (L 5.19 Coverage), and a second sale would not see the first. The rule is therefore written as defs over the booked Lazur balance, which no rate changes (Kessel pays in florens, and every other sale of florens is the story's own), less what the rule sold before: the sales are figures, not movements, so nothing they would move on (Cis, B-HR2's count of the Lazur florens on the 26th) sees them."
+  note "A sale: the florens at Bank Lazur's buy rate of the day of the order, the dukats rounded to the ort, half up, credited to Cis on the next business day (B-D23 §4). Its currency gain or loss, counting as we count (B-HR4 .5): the dukats got less what the florens sold were worth on the sale's day, at the CBL mid rate published for that day, or the last one before it, to the ort (hr4_round)."
+
+index b13_months = month 2025-07..2025-12
+  note "the rule's months the question asks about: the second half of 2025"
+
+input b13_dom: int question "On which day of the month does B-13 rule 1 sell (questions.md B-13)?"
+
+input b13_keep: money FLR question "How many florens does B-13 rule 1 keep in the Lazur account (questions.md B-13)?"
+
+def b13_credited[k in b13_months]: date = add_business(b13_day[k], 1, holidays)
+
+def b13_cum[k in b13_months]: money FLR
+  note "the florens the rule has sold to the end of month k"
+  rule first = b13_sold[k] when pos(k) == 1
+  rule later beats first = b13_cum[k - 1] + b13_sold[k] when pos(k) > 1
+
+def b13_day[k in b13_months]: date = schedule(k, b13_dom, following, holidays)
+
+def b13_duk[k in b13_months]: money DUK at b13_day[k]
+  note "B-D23 §4: the florens sold at Bank Lazur's buy rate of the day of the order, the dukats rounded to the ort, half up; no sale reads no rate"
+  rule base = if b13_sold[k] == 0 FLR then 0 DUK else round(b13_sold[k] * lazur_buy[b13_day[k]], minor(DUK), half-up)
+
+def b13_gain: money DUK = sum(b13_duk[k] - b13_worth[k] for k in b13_months)
+
+def b13_lazur_end: money FLR = bal(lazur, end_of(last(k in b13_months)) - 1 day) - b13_cum[last(k in b13_months)]
+
+def b13_lazur_end_duk: money DUK = round(b13_lazur_end * hr4_fx[end_of(last(k in b13_months)) - 1 day], minor(DUK), hr4_round)
+
+def b13_sold[k in b13_months]: money FLR
+  note "B-13 rule 1: the florens in the Lazur account at the end of the rule's day above the florens kept, the booked balance less what the rule sold in earlier months"
+  rule base = max(0 FLR, bal(lazur, b13_day[k]) - (if pos(k) == 1 then 0 FLR else b13_cum[k - 1]) - b13_keep)
+
+def b13_worth[k in b13_months]: money DUK
+  note "B-HR4 .5: what the florens sold were worth on the sale's day, at the CBL mid rate published for that day or the last before it, to the ort"
+  rule base = if b13_sold[k] == 0 FLR then 0 DUK else round(b13_sold[k] * hr4_fx[b13_day[k]], minor(DUK), hr4_round)
+
+ask b13_b_sales: b13_day[k], b13_sold[k], b13_duk[k], b13_credited[k] for k in b13_months where b13_sold[k] > 0 FLR in b13_rule law 2025-12-31 as known 2026-01-07
+
+ask b13_b_days: k, b13_day[k], bal(lazur, b13_day[k]), b13_sold[k] for k in b13_months in b13_rule law 2025-12-31 as known 2026-01-07
+
+ask b13_b_lazur: b13_lazur_end, b13_lazur_end_duk in b13_rule law 2025-12-31 as known 2026-01-07
+
+ask b13_b_gain: b13_gain in b13_rule law 2025-12-31 as known 2026-01-07
+
+version b13_rule_1
+  cite questions
+  governs always
+  known 2025-06-30
+  note "B-13 rule 1, the question's own rule, as if known before its first day (L 6.4)"
+  b13_dom = 1 "B-13 rule 1: on the 1st of each month (the next business day where the 1st isn't one)"
+  b13_keep = 2000.00 "B-13 rule 1: the florens above 2 000.00 FLR"

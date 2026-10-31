@@ -1,0 +1,30 @@
+# Round 18, C1-35 with C1-18 (follows). L §4.6 step 5: none outside a lifespan holds for a thing "other than a movement
+# (whose facts hold on every read day, §5.7)": tag has no row for pay[2026-03], so its read is HOLE-UNGOVERNED on its
+# day and after it, never none.
+=== m.tally
+model m
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+source s "s"
+unit PLN: currency minor 0.01
+kind contribs: event certain
+  leg cash: PLN
+place acct: accounts PLN lives 2026-01-01..
+place world: outside lives 2026-01-01..
+input amt: money PLN
+input tag[c in contribs]: int
+move pay[m in months]: contribs
+  on start_of(m)
+  leg cash from world to acct amount amt
+def tag_at[c in contribs, d in days]: int = tag[c] at d
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  amt = 1
+ask q: tag_at[pay[2026-03], 2026-06-01], tag_at[pay[2026-03], 2026-03-01]
+=== expect
+q: (?"tag at pay[2026-03]: no value at 2026-06-01" (tag[pay[2026-03]]), ?"tag at pay[2026-03]: no value at 2026-03-01" (tag[pay[2026-03]]))
+  cut 2026-12-31

@@ -1,0 +1,44 @@
+# Fault scen_move_on (writer 6): a scenario move whose `on` reads the scenario's own input dom was refused
+# LOAD-SCENARIO ("dom of scenario sc is read outside it (by gift)"). L §6.4: a read of an item declared in a scenario file
+# is allowed "inside that scenario and the scenarios over it"; the move is the scenario's own. gift moves 5.00 DUK into
+# konto on day 15 of each month of 2025: flows(konto, 2025) = 12 x 5.00 = 60.00 DUK.
+=== base.tally
+model base
+  tally 2
+  on 2026-10-25
+  start 2025-01-01
+  end 2025-12-31
+
+source s "s"
+
+unit DUK: currency minor 0.01
+
+place konto: accounts DUK lives 2025-01-01..
+
+place world: outside lives 2025-01-01..
+=== sc.tally
+scenario sc over base
+  tally 2
+  from 2025-01-01
+
+input amt: money DUK
+
+input dom: int
+
+move gift[m in months]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  leg cash from world to konto amount amt
+
+ask q: flows(konto, 2025) in sc
+
+version v
+  cite s
+  governs 2025-01-01..
+  known 2025-01-01
+  amt = 5.00 "amt"
+  dom = 15 "dom"
+=== expect
+q: 60.00 DUK
+  world: sc
+...

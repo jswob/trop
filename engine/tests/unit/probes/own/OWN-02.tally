@@ -1,0 +1,50 @@
+model own02
+  tally 2
+  on 2026-10-25
+  start 2025-05-15
+  end 2025-06-30
+  note "OWN-02: a loan to a friend, partly repaid, the rest promised; net worth counts the claim, the look-ahead doesn't count the promise."
+  note "The promise is a movement of an uncertain kind (LANGUAGE 5.7, 5.14): no balance counts it until an observation fulfils it, and a projection counts it only with `with uncertain`, which the look-ahead doesn't state (5.14.1)."
+
+source card "Probe card OWN-02 (made up): story and rules"
+
+unit DUK: currency minor 0.01
+
+kind promised_repayments: transfers uncertain
+
+place friend_loan: claims DUK lives 2025-05-15..
+
+place konto: accounts DUK lives 2025-05-15..
+
+place landlord: outside lives 2025-05-15..
+
+input promise_amount: money DUK
+
+input promise_day: date
+
+input rent_amount: money DUK
+
+input rent_day: date
+
+move rent: transfers
+  on rent_day
+  leg cash from konto to landlord amount rent_amount
+
+move repay_rest: promised_repayments
+  on promise_day
+  leg cash from friend_loan to konto amount promise_amount
+
+ask q_lowest_ahead: low(konto, 2025-05-15 .. 2025-06-30) from 2025-05-15, first(d in 2025-05-15 .. 2025-06-30 step 1 day where bal(konto, d) from 2025-05-15 == low(konto, 2025-05-15 .. 2025-06-30) from 2025-05-15)
+
+ask q_net_worth: sum(bal(x, 2025-05-15) for x in places on 2025-05-15 where not x in outside)
+
+version card_facts
+  cite card
+  governs always
+  known 2025-05-15
+  opening[friend_loan] = 800.00 at 2025-05-15 start "story: 2 000.00 lent, 1 200.00 came back"
+  opening[konto] = 5000.00 at 2025-05-15 start "story: holds 5 000.00 on 15 May 2025"
+  promise_amount = 800.00 "story: the other 800.00 promised"
+  promise_day = 2025-06-30 "story: by the end of June"
+  rent_amount = 3000.00 "story: rent 3 000.00"
+  rent_day = 2025-06-01 "story: planned for 1 June"

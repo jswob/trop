@@ -1,0 +1,316 @@
+model ul07
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+  note "Pub 974 (2025), Carla Birch: the self-employed health insurance deduction and the premium tax credit by the Simplified Calculation Method (Steps 1-4)."
+  note "The model has no time key; the 2025 tables carry no governs span, so every ask reads them at the model's on date."
+  note "The interim (Step 2) and final (Step 4) Forms 8962 are separate defs: the final one depends on the interim one through the Step 3 Worksheet."
+  note "Worksheet W line 11 (S corporation Medicare wages) is blank and not modelled; Worksheet X Part II (lines 9-13) is omitted in the example."
+
+source i8962 "IRS, Instructions for Form 8962 (2025) (page last reviewed or updated 30-Apr-2026)" at "https://www.irs.gov/instructions/i8962"
+
+source pub974 "IRS Publication 974 (2025), Premium Tax Credit (PTC), dated Jan 12, 2026" at "https://www.irs.gov/pub/irs-pdf/p974.pdf"
+
+unit USD: currency minor 0.01
+
+axis ul07_tie
+  half-up "Form 8962 line 8a, to the nearest whole dollar; a tie away from zero"
+  half-even "line 8a to the nearest whole dollar; a tie to even"
+
+index captier = [c200, c300, c400]
+
+index famsize = int 1..8
+
+index fstatus = [single, other]
+
+index t2row = [le150, r312, r331, ge400]
+
+input applicable[r in t2row]: num
+
+input aptc: money USD
+
+input enroll_premium: money USD
+
+input family_size: key famsize
+
+input form2555: money USD
+
+input fpl[n in famsize]: money USD
+
+input interest: money USD
+
+input magi_adds: money USD
+
+input months_enrolled: int
+
+input months_specified: int
+
+input net_profit: money USD
+
+input nonspecified_ded: money USD
+
+input repay_cap[s in fstatus, c in captier]: money USD
+
+input retirement_ded: money USD
+
+input salary: money USD
+
+input se_tax_ded: money USD
+
+input slcsp_premium: money USD
+
+input specified_premiums: money USD
+
+input status: key fstatus
+
+input x_cut[c in captier]: int
+
+band table2(pct: int): num
+  note "Form 8962 instructions, Table 2: the applicable figure for the line 5 percentage; only the rows the case transcribes are given"
+
+def agi_step1: num USD = total_income - se_tax_ded - retirement_ded - x31 at reader
+
+def agi_step4: num USD = total_income - se_tax_ded - retirement_ded - s11 at reader
+
+def final_l11d: num USD = max(0, slcsp_premium - final_l8a) at reader
+
+def final_l11e: num USD = min(enroll_premium, final_l11d) at reader
+
+def final_l24: num USD = final_l11e at reader
+
+def final_l25: num USD = aptc at reader
+
+def final_l26: num USD at reader
+  note "line 26: if line 24 is greater than line 25, line 24 less line 25 (the net PTC); otherwise line 27 applies, which is not modelled"
+  rule base = final_l24 - final_l25
+  rule no_net beats base = none when final_l24 <= final_l25
+
+def final_l5: num = round(hi_step4 / fpl[family_size] / 1 %, 1, down) at reader
+
+def final_l7: num = table2(final_l5) at reader
+
+def final_l8a: money USD = round(hi_step4 * final_l7, 1, ul07_tie) at reader
+
+def hi_step1: num USD = agi_step1 + magi_adds + form2555 at reader
+
+def hi_step4: num USD = agi_step4 + magi_adds + form2555 at reader
+
+def interim_l11d: num USD = max(0, slcsp_premium - interim_l8a) at reader
+
+def interim_l11e: num USD = min(enroll_premium, interim_l11d) at reader
+
+def interim_l24: num USD = interim_l11e at reader
+
+def interim_l5: num = round(hi_step1 / fpl[family_size] / 1 %, 1, down) at reader
+
+def interim_l7: num = table2(interim_l5) at reader
+
+def interim_l8a: money USD = round(hi_step1 * interim_l7, 1, ul07_tie) at reader
+
+def s1: num USD = w1 at reader
+
+def s10: num USD at reader
+  note "Step 3 Worksheet line 10 (Pub 974 p. 55): Enter the amount from Worksheet W, line 14"
+  rule base = w14
+
+def s11: num USD = s9 + s10 at reader
+
+def s2: num USD = interim_l24 at reader
+
+def s3: int = months_specified at reader
+
+def s4: int = months_enrolled at reader
+
+def s5: num = s3 / s4 at reader
+
+def s6: num USD = s5 * s2 at reader
+
+def s7: num USD = s1 - s6 at reader
+
+def s8: num USD = x30 at reader
+
+def s9: num USD = min(s7, s8) at reader
+
+def total_income: num USD = salary + interest + net_profit at reader
+
+def w1: num USD = specified_premiums at reader
+
+def w10: num USD = w8 - w9 at reader
+
+def w12: num USD = form2555 at reader
+
+def w13: num USD = w10 - w12 at reader
+
+def w14: num USD = nonspecified_ded at reader
+
+def w15: num USD = w13 - w14 at reader
+
+def w16: num USD = min(w3, w15) at reader
+
+def w17: num USD = w14 + w16 at reader
+
+def w18: bool = w2 == 0 at reader
+
+def w19: num USD = w15 - w16 at reader
+
+def w2: num USD = aptc at reader
+
+def w3: num USD = w1 - w2 at reader
+
+def w4: num USD = net_profit at reader
+
+def w5: num USD at reader
+  note "line 5, the total of all net profits: Carla has one business, so it is her net profit"
+  rule base = net_profit
+
+def w6: num = w4 / w5 at reader
+
+def w7: num USD = se_tax_ded * w6 at reader
+
+def w8: num USD = w4 - w7 at reader
+
+def w9: num USD = retirement_ded at reader
+
+def x1: num USD = total_income + magi_adds at reader
+
+def x14: num USD at reader
+  note "line 14 adds lines 8 and 13; Part II (lines 9-13) is omitted because the children need not file"
+  rule base = x8
+
+def x15: num USD = min(w19, repay_cap[status, c200]) at reader
+
+def x16: num USD = max(0, x14 - x15) at reader
+
+def x17a: key famsize = family_size at reader
+
+def x17b: num USD = fpl[family_size] at reader
+
+def x18: num = round(x16 / x17b / 1 %, 1, down) at reader
+
+def x19: num USD = min(w19, repay_cap[status, c300]) at reader
+
+def x2: num USD = form2555 at reader
+
+def x20: num USD = x14 - x19 at reader
+
+def x21: num = round(x20 / x17b / 1 %, 1, down) at reader
+
+def x22: num USD = min(w19, repay_cap[status, c400]) at reader
+
+def x23: num USD = x14 - x22 at reader
+
+def x24: num = round(x23 / x17b / 1 %, 1, down) at reader
+
+def x25: num USD at reader
+  note "lines 18, 21 and 24: the first test that holds gives line 25; at 400 or more, Worksheet W line 2"
+  rule base = w2
+  rule under200 beats base, under300, under400 = repay_cap[status, c200] when x18 < x_cut[c200]
+  rule under300 beats base, under400 = repay_cap[status, c300] when x21 < x_cut[c300]
+  rule under400 beats base = repay_cap[status, c400] when x24 < x_cut[c400]
+
+def x26: num USD = x6 + x25 at reader
+
+def x27: num USD = w1 at reader
+
+def x28: num USD = min(x26, x27) at reader
+
+def x29: num USD = w15 at reader
+
+def x3: num USD = x1 + x2 at reader
+
+def x30: num USD = min(x28, x29) at reader
+
+def x31: num USD = x5 + x30 at reader
+
+def x4: num USD at reader
+  note "Schedule 1 lines 11-16, 18 and 19a; the facts give only line 15 (deductible part of SE tax) and line 16 (retirement plan)"
+  rule base = se_tax_ded + retirement_ded
+
+def x5: num USD = w14 at reader
+
+def x6: num USD = w16 at reader
+
+def x7: num USD = x4 + x5 + x6 at reader
+
+def x8: num USD = x3 - x7 at reader
+
+ask condition: s11 + final_l24 <= w1 law 2026-10-18
+
+ask form8962_final: family_size, hi_step4, fpl[family_size], final_l5, final_l7, final_l8a, enroll_premium, slcsp_premium, final_l11d, final_l11e, aptc, final_l24, final_l25, final_l26 law 2026-10-18
+
+ask form8962_interim: family_size, hi_step1, fpl[family_size], interim_l5, interim_l7, interim_l8a, enroll_premium, slcsp_premium, interim_l11d, interim_l11e, interim_l24 law 2026-10-18
+
+ask step1: agi_step1, hi_step1 law 2026-10-18
+
+ask step3_worksheet: s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11 law 2026-10-18
+
+ask step4: agi_step4, hi_step4 law 2026-10-18
+
+ask total_income_line9: total_income law 2026-10-18
+
+ask worksheet_w: w1, w2, w3, w4, w5, w6, w7, w8, w9, w10, w12, w13, w14, w15, w16, w17, w18, w19 law 2026-10-18
+
+ask worksheet_x: x1, x2, x3, x4, x5, x6, x7, x8, x14, x15, x16, x17a, x17b, x18, x19, x20, x21, x22, x23, x24, x25, x26, x27, x28, x29, x30, x31 law 2026-10-18
+
+version pub974_2025
+  cite pub974
+  governs always
+  known 2026-01-12
+  note "the publication's own date, Jan 12, 2026; it holds the worksheets' own cut-offs, and Carla's facts are in pub974_carla"
+  x_cut[c200] = 200 "p. 62, Worksheet X line 18: If the result is less than 200"
+  x_cut[c300] = 300 "p. 62, Worksheet X line 21: If the result is less than 300"
+  x_cut[c400] = 400 "p. 62, Worksheet X line 24: If the result is less than 400"
+
+version i8962_2025
+  cite i8962
+  governs always
+  known 2026-04-30
+  note "an HTML page with no date of its own, so its Page Last Reviewed or Updated stamp, 30-Apr-2026, is its known date (§4.5); its tables restate HHS poverty guidelines and Revenue Procedures the case does not cite, so the page is their source"
+  applicable[le150] = 0 "Line 7, Table 2: 150 or less, 0.0000"
+  applicable[r312] = 0.063 "Table 2, row 312: 0.0630"
+  applicable[r331] = 0.0678 "Table 2, row 331: 0.0678"
+  applicable[ge400] = 0.085 "Table 2: 400 or more, 0.0850"
+  fpl[1] = 15060 "Line 4, Table 1-1 (48 contiguous states and DC), family size 1"
+  fpl[2] = 20440 "Table 1-1, 2"
+  fpl[3] = 25820 "Table 1-1, 3"
+  fpl[4] = 31200 "Table 1-1, 4"
+  fpl[5] = 36580 "Table 1-1, 5"
+  fpl[6] = 41960 "Table 1-1, 6"
+  fpl[7] = 47340 "Table 1-1, 7"
+  fpl[8] = 52720 "Table 1-1, 8"
+  repay_cap[single, c200] = 375 "Line 28, Table 5: less than 200, single"
+  repay_cap[single, c300] = 975 "Table 5: at least 200 but less than 300, single"
+  repay_cap[single, c400] = 1625 "Table 5: at least 300 but less than 400, single"
+  repay_cap[other, c200] = 750 "Table 5: less than 200, any other filing status"
+  repay_cap[other, c300] = 1950 "Table 5: at least 200 but less than 300, any other filing status"
+  repay_cap[other, c400] = 3250 "Table 5: at least 300 but less than 400, any other filing status"
+  table2: (-inf, 150] = applicable[le150] "Table 2: 150 or less"
+  table2: [151, 311] = ?"What is the Table 2 applicable figure for this line 5 percentage?" "Line 7, Table 2: rows 151 to 311, not transcribed in the case"
+  table2: [312, 312] = applicable[r312] "Table 2, row 312"
+  table2: [313, 330] = ?"What is the Table 2 applicable figure for this line 5 percentage?" "Line 7, Table 2: rows 313 to 330, not transcribed in the case"
+  table2: [331, 331] = applicable[r331] "Table 2, row 331"
+  table2: [332, 399] = ?"What is the Table 2 applicable figure for this line 5 percentage?" "Line 7, Table 2: rows 332 to 399, not transcribed in the case"
+  table2: [400, inf) = applicable[ge400] "Table 2: 400 or more"
+
+version pub974_carla
+  cite pub974
+  governs always
+  known 2026-10-18
+  note "the Illustrated Example's stipulations (Carla Birch, pp. 60-63): the model has no start, so they are known from its on (§4.5)"
+  aptc = 4200 "p. 60, Illustrated Example of the Simplified Calculation Method: APTC of $4,200"
+  enroll_premium = 13000 "p. 60: the annual premium, $13,000"
+  family_size = 4 "p. 60: Carla, Jim and their two dependent children; p. 62, Worksheet X line 17a"
+  form2555 = 0 "p. 61, Carla's Worksheet W line 12: -0-"
+  interest = 419 "p. 60: taxable interest (Form 1040, line 2b)"
+  magi_adds = 0 "p. 61, Step 1: modified AGI and household income are each the same as her AGI"
+  months_enrolled = 12 "p. 63, Carla's Step 3 Worksheet line 4"
+  months_specified = 12 "p. 63, Carla's Step 3 Worksheet line 3"
+  net_profit = 30000 "p. 60: Carla's net profit (Schedule 1, line 3)"
+  nonspecified_ded = 0 "p. 61, Carla's Worksheet W line 14: blank"
+  retirement_ded = 2500 "p. 60: qualified retirement plan deduction (Schedule 1, line 16)"
+  salary = 83675 "p. 60: Jim's salary (Form 1040, line 1)"
+  se_tax_ded = 2119 "p. 60: deductible part of Carla's self-employment tax (Schedule 1, line 15)"
+  slcsp_premium = 13000 "p. 60: enrolled in the applicable SLCSP through the Marketplace"
+  specified_premiums = 13000 "p. 60: All of the premiums are specified premiums"
+  status = other "p. 60: Carla and Jim are filing a joint Form 1040"

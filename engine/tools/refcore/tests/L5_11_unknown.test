@@ -1,0 +1,35 @@
+# L §5.11 step 5: "If a rule of unknown applicability could change the outcome, the result is a hole that carries
+# that when's questions. It could change the outcome when it would beat a candidate, be a candidate beside the
+# winner, or be the only rule left."  k1: rule exc (hole when) would beat base: a hole.  k2: exc is beaten by
+# the applicable rule top, so it can't change the outcome: top wins (value 1).
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+index ks = [k1, k2]
+input f: bool
+input g[k in ks]: bool
+
+def x[k in ks]: int at reader
+  rule base = 0
+  rule exc beats base = -1 when f
+  rule top beats exc, base = 1 when g[k]
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  f = ?"does the exception hold?"
+  g[k1] = false
+  g[k2] = true
+
+ask q1: x[k] for k in ks law 2026-06-30
+=== expect
+q1 (k = k1): ?"does the exception hold?" (f)
+  law date 2026-06-30, cut 2026-01-01
+q1 (k = k2): 1
+  law date 2026-06-30, cut 2026-01-01

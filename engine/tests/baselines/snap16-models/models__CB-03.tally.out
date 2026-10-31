@@ -1,0 +1,57 @@
+q_ftcr (y = 2024) [psa_reading = *]: ?"How far does the starting rate for savings reach in the tax year?" (sr_band) ?"How much foreign interest does the 2025 edition's Example 2 give Zoë for 2024 to 2025? The case doesn't transcribe it." (interest[zoe, 2024]) ?"What foreign tax was paid on Zoë's interest in the 2025 edition's Example 2 (2024 to 2025)? The case doesn't transcribe it." (foreign_tax[zoe, 2024]) ?"What is the income limit for the Personal Allowance in the tax year?" (pa_limit) ?"What is the rate of income tax of this band in the tax year?" (band_rate[additional], band_rate[basic], band_rate[higher]) ?"What is the starting rate for savings in the tax year?" (sr_rate) ?"What self-employment income does the 2025 edition's Example 2 give Zoë for 2024 to 2025? The case doesn't transcribe it." (se_income[zoe, 2024]) ?"What total income does the 2025 edition's Example 2 give Zoë for 2024 to 2025? The case doesn't transcribe it." (total_income[zoe, 2024])
+  assumed: Scottish or Welsh status is not stated; the England, Northern Ireland and Wales bands are used (ruk_taxpayer[zoe, 2024])
+  pinned: interest[p, y] = 0 for p in person, y in ty
+  law date 2026-10-19, cut 2026-10-19
+q_ftcr (y = 2025) [psa_reading = *]: 300 GBP
+  assumed: Scottish or Welsh status is not stated; the England, Northern Ireland and Wales bands are used (ruk_taxpayer[zoe, 2025])
+  pinned: interest[p, y] = 0 for p in person, y in ty
+  law date 2026-10-19, cut 2026-10-19
+q_income_check: ok
+  law date 2026-10-19, cut 2026-10-19
+q_tax_all (y = 2024) [psa_reading = *]: ?"How far does the starting rate for savings reach in the tax year?" (sr_band) ?"How much foreign interest does the 2025 edition's Example 2 give Zoë for 2024 to 2025? The case doesn't transcribe it." (interest[zoe, 2024]) ?"What is the income limit for the Personal Allowance in the tax year?" (pa_limit) ?"What is the rate of income tax of this band in the tax year?" (band_rate[additional], band_rate[basic], band_rate[higher]) ?"What is the starting rate for savings in the tax year?" (sr_rate) ?"What self-employment income does the 2025 edition's Example 2 give Zoë for 2024 to 2025? The case doesn't transcribe it." (se_income[zoe, 2024]) ?"What total income does the 2025 edition's Example 2 give Zoë for 2024 to 2025? The case doesn't transcribe it." (total_income[zoe, 2024])
+  assumed: Scottish or Welsh status is not stated; the England, Northern Ireland and Wales bands are used (ruk_taxpayer[zoe, 2024])
+  law date 2026-10-19, cut 2026-10-19
+q_tax_all (y = 2025) [psa_reading = non_savings]: 8 032 GBP
+  assumed: Scottish or Welsh status is not stated; the England, Northern Ireland and Wales bands are used (ruk_taxpayer[zoe, 2025])
+  reading: psa_reading = non_savings
+  law date 2026-10-19, cut 2026-10-19
+q_tax_all (y = 2025) [psa_reading = statute]: 8 132 GBP
+  assumed: Scottish or Welsh status is not stated; the England, Northern Ireland and Wales bands are used (ruk_taxpayer[zoe, 2025])
+  reading: psa_reading = statute
+  law date 2026-10-19, cut 2026-10-19
+q_tax_left (y = 2024) [psa_reading = *]: ?"How far does the starting rate for savings reach in the tax year?" (sr_band) ?"How much foreign interest does the 2025 edition's Example 2 give Zoë for 2024 to 2025? The case doesn't transcribe it." (interest[zoe, 2024]) ?"What foreign tax was paid on Zoë's interest in the 2025 edition's Example 2 (2024 to 2025)? The case doesn't transcribe it." (foreign_tax[zoe, 2024]) ?"What is the income limit for the Personal Allowance in the tax year?" (pa_limit) ?"What is the rate of income tax of this band in the tax year?" (band_rate[additional], band_rate[basic], band_rate[higher]) ?"What is the starting rate for savings in the tax year?" (sr_rate) ?"What self-employment income does the 2025 edition's Example 2 give Zoë for 2024 to 2025? The case doesn't transcribe it." (se_income[zoe, 2024]) ?"What total income does the 2025 edition's Example 2 give Zoë for 2024 to 2025? The case doesn't transcribe it." (total_income[zoe, 2024])
+  assumed: Scottish or Welsh status is not stated; the England, Northern Ireland and Wales bands are used (ruk_taxpayer[zoe, 2024])
+  pinned: interest[p, y] = 0 for p in person, y in ty
+  law date 2026-10-19, cut 2026-10-19
+q_tax_left (y = 2025) [psa_reading = non_savings]: 7 732 GBP
+  assumed: Scottish or Welsh status is not stated; the England, Northern Ireland and Wales bands are used (ruk_taxpayer[zoe, 2025])
+  pinned: interest[p, y] = 0 for p in person, y in ty
+  reading: psa_reading = non_savings
+  law date 2026-10-19, cut 2026-10-19
+q_tax_left (y = 2025) [psa_reading = statute]: 7 832 GBP
+  assumed: Scottish or Welsh status is not stated; the England, Northern Ireland and Wales bands are used (ruk_taxpayer[zoe, 2025])
+  pinned: interest[p, y] = 0 for p in person, y in ty
+  reading: psa_reading = statute
+  law date 2026-10-19, cut 2026-10-19
+q_tax_on_item (y = 2024) [psa_reading = *]: ?"How far does the starting rate for savings reach in the tax year?" (sr_band) ?"How much foreign interest does the 2025 edition's Example 2 give Zoë for 2024 to 2025? The case doesn't transcribe it." (interest[zoe, 2024]) ?"What is the income limit for the Personal Allowance in the tax year?" (pa_limit) ?"What is the rate of income tax of this band in the tax year?" (band_rate[additional], band_rate[basic], band_rate[higher]) ?"What is the starting rate for savings in the tax year?" (sr_rate) ?"What self-employment income does the 2025 edition's Example 2 give Zoë for 2024 to 2025? The case doesn't transcribe it." (se_income[zoe, 2024]) ?"What total income does the 2025 edition's Example 2 give Zoë for 2024 to 2025? The case doesn't transcribe it." (total_income[zoe, 2024])
+  assumed: Scottish or Welsh status is not stated; the England, Northern Ireland and Wales bands are used (ruk_taxpayer[zoe, 2024])
+  pinned: interest[p, y] = 0 for p in person, y in ty
+  law date 2026-10-19, cut 2026-10-19
+q_tax_on_item (y = 2025) [psa_reading = non_savings]: 946 GBP
+  assumed: Scottish or Welsh status is not stated; the England, Northern Ireland and Wales bands are used (ruk_taxpayer[zoe, 2025])
+  pinned: interest[p, y] = 0 for p in person, y in ty
+  reading: psa_reading = non_savings
+  law date 2026-10-19, cut 2026-10-19
+q_tax_on_item (y = 2025) [psa_reading = statute]: 1 046 GBP
+  assumed: Scottish or Welsh status is not stated; the England, Northern Ireland and Wales bands are used (ruk_taxpayer[zoe, 2025])
+  pinned: interest[p, y] = 0 for p in person, y in ty
+  reading: psa_reading = statute
+  law date 2026-10-19, cut 2026-10-19
+q_tax_without (y = 2024) [psa_reading = *]: ?"How far does the starting rate for savings reach in the tax year?" (sr_band) ?"What is the income limit for the Personal Allowance in the tax year?" (pa_limit) ?"What is the rate of income tax of this band in the tax year?" (band_rate[additional], band_rate[basic], band_rate[higher]) ?"What is the starting rate for savings in the tax year?" (sr_rate) ?"What self-employment income does the 2025 edition's Example 2 give Zoë for 2024 to 2025? The case doesn't transcribe it." (se_income[zoe, 2024]) ?"What total income does the 2025 edition's Example 2 give Zoë for 2024 to 2025? The case doesn't transcribe it." (total_income[zoe, 2024])
+  assumed: Scottish or Welsh status is not stated; the England, Northern Ireland and Wales bands are used (ruk_taxpayer[zoe, 2024])
+  pinned: interest[zoe, y] = 0 for y in ty
+  law date 2026-10-19, cut 2026-10-19
+q_tax_without (y = 2025) [psa_reading = *]: 7 086 GBP
+  assumed: Scottish or Welsh status is not stated; the England, Northern Ireland and Wales bands are used (ruk_taxpayer[zoe, 2025])
+  pinned: interest[zoe, y] = 0 for y in ty
+  law date 2026-10-19, cut 2026-10-19

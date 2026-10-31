@@ -1,0 +1,46 @@
+Bank Jodła S.A. — historia rachunku
+Rachunek: LN53 6100 3001 0000 2209 5148 0001
+Posiadacz: MARTA WRONA
+Okres: 01.01.2024 - 30.09.2026
+Saldo początkowe: 47350,00
+
+Data operacji;Typ;Kontrahent;Tytuł;Kwota;Saldo po operacji
+31.03.2024;ODSETKI;Bank Jodła;kapitalizacja odsetek;141,66;47491,66
+31.03.2024;PODATEK;Bank Jodła;podatek od odsetek;-27,00;47464,66
+30.06.2024;ODSETKI;Bank Jodła;kapitalizacja odsetek;142,00;47606,66
+30.06.2024;PODATEK;Bank Jodła;podatek od odsetek;-27,00;47579,66
+01.07.2024;PRZELEW WYCH.;Jan Wrona LN88 1020 0044 9172;darowizna;-40000,00;7579,66
+30.09.2024;ODSETKI;Bank Jodła;kapitalizacja odsetek;22,93;7602,59
+30.09.2024;PODATEK;Bank Jodła;podatek od odsetek;-4,00;7598,59
+31.12.2024;ODSETKI;Bank Jodła;kapitalizacja odsetek;22,98;7621,57
+31.12.2024;PODATEK;Bank Jodła;podatek od odsetek;-4,00;7617,57
+31.03.2025;ODSETKI;Bank Jodła;kapitalizacja odsetek;22,54;7640,11
+31.03.2025;PODATEK;Bank Jodła;podatek od odsetek;-4,00;7636,11
+16.06.2025;PRZELEW PRZYCH.;Kancelaria Notarialna Ewa Brzoza — depozyt;wypłata z depozytu notarialnego;38750,00;46386,11
+20.06.2025;PRZELEW WYCH.;Marta i Jan Wrona;pożyczka wg umowy z 2025-06-20;-30000,00;16386,11
+30.06.2025;ODSETKI;Bank Jodła;kapitalizacja odsetek;31,11;16417,22
+30.06.2025;PODATEK;Bank Jodła;podatek od odsetek;-6,00;16411,22
+11.08.2025;PRZELEW PRZYCH.;Marta i Jan Wrona;spłata pożyczki;1000,00;17411,22
+10.09.2025;PRZELEW PRZYCH.;Marta i Jan Wrona;spłata pożyczki;1000,00;18411,22
+30.09.2025;ODSETKI;Bank Jodła;kapitalizacja odsetek;52,01;18463,23
+30.09.2025;PODATEK;Bank Jodła;podatek od odsetek;-10,00;18453,23
+10.10.2025;PRZELEW PRZYCH.;Marta i Jan Wrona;spłata pożyczki;1000,00;19453,23
+10.11.2025;PRZELEW PRZYCH.;Marta i Jan Wrona;spłata pożyczki;1000,00;20453,23
+10.12.2025;PRZELEW PRZYCH.;Marta i Jan Wrona;spłata pożyczki;1000,00;21453,23
+31.12.2025;ODSETKI;Bank Jodła;kapitalizacja odsetek;60,98;21514,21
+31.12.2025;PODATEK;Bank Jodła;podatek od odsetek;-12,00;21502,21
+12.01.2026;PRZELEW PRZYCH.;Marta i Jan Wrona;spłata pożyczki;1000,00;22502,21
+10.02.2026;PRZELEW PRZYCH.;Marta i Jan Wrona;spłata pożyczki;1000,00;23502,21
+10.03.2026;PRZELEW PRZYCH.;Marta i Jan Wrona;spłata pożyczki;1000,00;24502,21
+31.03.2026;ODSETKI;Bank Jodła;kapitalizacja odsetek;68,59;24570,80
+31.03.2026;PODATEK;Bank Jodła;podatek od odsetek;-13,00;24557,80
+10.04.2026;PRZELEW PRZYCH.;Marta i Jan Wrona;spłata pożyczki;1000,00;25557,80
+11.05.2026;PRZELEW PRZYCH.;Marta i Jan Wrona;spłata pożyczki;1000,00;26557,80
+10.06.2026;PRZELEW PRZYCH.;Marta i Jan Wrona;spłata pożyczki;1000,00;27557,80
+30.06.2026;ODSETKI;Bank Jodła;kapitalizacja odsetek;78,53;27636,33
+30.06.2026;PODATEK;Bank Jodła;podatek od odsetek;-15,00;27621,33
+10.07.2026;PRZELEW PRZYCH.;Marta i Jan Wrona;spłata pożyczki;1000,00;28621,33
+10.08.2026;PRZELEW PRZYCH.;Marta i Jan Wrona;spłata pożyczki;1000,00;29621,33
+10.09.2026;PRZELEW PRZYCH.;Marta i Jan Wrona;spłata pożyczki;1000,00;30621,33
+30.09.2026;ODSETKI;Bank Jodła;kapitalizacja odsetek;88,67;30710,00
+30.09.2026;PODATEK;Bank Jodła;podatek od odsetek;-17,00;30693,00

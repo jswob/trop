@@ -1,0 +1,44 @@
+# L §5.9 One row replaced: "A later version may replace one row of a table ... from its governs; the table it
+# gives is the earlier table with that row's value replaced, and its interval must be one of the earlier
+# table's".  Written in the grammar's form (L §2.3 vitem: "replace" bandrow).  From 2027 the row (10, inf)
+# gives 3; the row [0, 10] still gives 1; in 2026 the earlier table's row gives 2.
+# held: (L §8.2) "a row whose span has a start and no end ..., band rows included, read at a law date after the
+# cut K": the law date is after the model's on, so every open-ended row read is listed.
+=== m.tally
+model t
+  tally 2
+  on 2027-01-01
+  start 2026-01-01
+  end 2027-12-31
+
+source s "s"
+band b(n: int): int
+input lo: int
+input hi: int
+
+version v1
+  cite s
+  governs 2026..
+  known 2025-12-01
+  b: [0, 10] = 1
+  b: (10, inf) = 2
+  lo = 5
+  hi = 50
+
+version v2
+  cite s
+  governs 2027..
+  known 2026-12-01
+  replace b: (10, inf) = 3
+
+ask q1: b(lo), b(hi) law 2027-06-30
+ask q2: b(hi) law 2026-06-30
+=== expect
+q1: (1, 3)
+  held: b row (10, inf) (v2), read for 2027-06-30
+  held: b row [0, 10] (v1), read for 2027-06-30
+  held: hi = 50 (v1), read for 2027-06-30
+  held: lo = 5 (v1), read for 2027-06-30
+  law date 2027-06-30, cut 2027-01-01
+q2: 2
+  law date 2026-06-30, cut 2027-01-01

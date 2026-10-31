@@ -1,0 +1,353 @@
+d11_follows: d11_register, grow, factor, fee_lvl, min_lvl, own_lvl, rent_lvl, surv_lvl, d11_pairs, lv_month_gross, lv_month_rent, ogr_year, part_at, spend_year, lv_gross, lv_health, lv_money, rent_year, lv_pit, p_pre, zv_pre, exp_tax, p_acct, p_fund, p_tax, zv_acct, zv_fund, d10_closed, d10_paths, p_dry, p_fpre, p_nw, zv_dry_year, zv_fpre, d10_bands, p_zv_dry, zv_share
+d11_follows_bonds: cpi_known, iy_rate, bond_value, iy_value, basis, bonds_accrued, bonds_all, bonds_value, cum_net, d06_end_2026, d06_end_2026_known, d11_isb, fee_per, hr2_n, paid_per, acq_base, all_fees, bonds_net, d01_division, d06_end_2025, d07_check_hr2, estate_divided, hr2_last, red_net, series_tax, all_tax, d06_all_redeemed, d07_check_credits, d07_check_net, d07_redemptions, d08_net_worth, d08_parts, igt_tax, keeper_base, payout_exact, red_tax, redeem_pay, d02_halina, d02_jakub_not_reported, d02_jakub_reported, d07_check_tax, kept_by_rounding, payout, sale_income_inh, d01_paid, d01_payouts, deposit, sale_income, d01_deposit_row, sale_base, sale_tax, d09_all_spent, d09_nothing_spent, sale_net
+d11_isb: (135.78 DUK, 153.68 DUK)
+  assumed: D-11: CPI-YY 108 for the months of 2027-2029, with the 8 % years (cpi_yy[2027-03], cpi_yy[2028-03], cpi_yy[2029-03])
+  assumed: D-11: a CPI-YY not published by 2026-09-30 taken as 103 (cpi_yy[2027-03], cpi_yy[2028-03], cpi_yy[2029-03])
+  pinned: known d = 2025-05-10, 2026-05-10, 2026-09-30
+  world: cpi103
+  world: infl8
+  law date 2026-09-30, cut 2026-09-30
+d11_pairs [hh_round = *]: (2 290.73 DUK, 2 640.79 DUK, 6 083.74 DUK, 7 013.42 DUK, 62 600.80 DUK, 72 167.14 DUK, 6 736.00 DUK, 8 361.00 DUK, 2055, 2052)
+  assumed: D-11: prices rise 8 % a year in 2027, 2028 and 2029 (lv_infl)
+  assumed: point 1: a round figure taken as given (lv_acct0, lv_fund0)
+  assumed: point 3: 3 % a year from 2026 on (lv_infl)
+  assumed: point 4, MIN-PENSION from March 2026 (gazette.csv line 1910) (min_2026)
+  assumed: point 4, from March 2026 (own_2026, surv_2026)
+  assumed: point 5, 2026 (fee_2026)
+  assumed: point 5, from March 2026 (rent_2026)
+  assumed: point 6, in 2026 money (care_2026, spend_2026)
+  assumed: point 6: from the year she turns 80 (2039) (care_age)
+  assumed: point 7 (fund_mu)
+  assumed: point 8 (sweep)
+  assumed: points 4 and 5: on each 1 March from 2027 (lv_index_month)
+  world: infl8
+  held: lv_infl = 0.03 (long_view), read for 2027-01-01
+  held: lv_infl = 0.03 (long_view), read for 2028-01-01
+  held: lv_infl = 0.03 (long_view), read for 2029-01-01
+  held: lv_infl = 0.03 (long_view), read for 2030-01-01
+  held: lv_infl = 0.03 (long_view), read for 2031-01-01
+  held: lv_infl = 0.03 (long_view), read for 2032-01-01
+  held: lv_infl = 0.03 (long_view), read for 2033-01-01
+  held: lv_infl = 0.03 (long_view), read for 2034-01-01
+  held: lv_infl = 0.03 (long_view), read for 2035-01-01
+  held: lv_infl = 0.03 (long_view), read for 2036-01-01
+  held: lv_infl = 0.03 (long_view), read for 2037-01-01
+  held: lv_infl = 0.03 (long_view), read for 2038-01-01
+  held: lv_infl = 0.03 (long_view), read for 2039-01-01
+  held: lv_infl = 0.03 (long_view), read for 2040-01-01
+  held: lv_infl = 0.03 (long_view), read for 2041-01-01
+  held: lv_infl = 0.03 (long_view), read for 2042-01-01
+  held: lv_infl = 0.03 (long_view), read for 2043-01-01
+  held: lv_infl = 0.03 (long_view), read for 2044-01-01
+  held: lv_infl = 0.03 (long_view), read for 2045-01-01
+  held: lv_infl = 0.03 (long_view), read for 2046-01-01
+  held: lv_infl = 0.03 (long_view), read for 2047-01-01
+  held: lv_infl = 0.03 (long_view), read for 2048-01-01
+  held: lv_infl = 0.03 (long_view), read for 2049-01-01
+  held: lv_infl = 0.03 (long_view), read for 2050-01-01
+  held: lv_infl = 0.03 (long_view), read for 2051-01-01
+  held: lv_infl = 0.03 (long_view), read for 2052-01-01
+  held: lv_infl = 0.03 (long_view), read for 2053-01-01
+  held: lv_infl = 0.03 (long_view), read for 2054-01-01
+  held: lv_infl = 0.03 (long_view), read for 2055-01-01
+  held: lv_infl = 0.03 (long_view), read for 2056-01-01
+  held: lv_infl = 0.03 (long_view), read for 2057-01-01
+  held: lv_infl = 0.03 (long_view), read for 2058-01-01
+  held: lv_infl = 0.03 (long_view), read for 2059-01-01
+  held: lv_infl = 0.03 (long_view), read for 2060-01-01
+  held: lv_infl = 0.03 (long_view), read for 2061-01-01
+  held: lv_infl = 0.03 (long_view), read for 2062-01-01
+  held: lv_infl = 0.03 (long_view), read for 2063-01-01
+  held: lv_infl = 0.03 (long_view), read for 2064-01-01
+  held: pit13_rate row [0, 100 000] (pit13_v1), read for 2027-01-01
+  held: pit13_rate row [0, 100 000] (pit13_v1), read for 2028-01-01
+  held: pit13_rate row [0, 100 000] (pit13_v1), read for 2029-01-01
+  held: pit13_rate row [0, 100 000] (pit13_v1), read for 2030-01-01
+  held: pit13_rate row [0, 100 000] (pit13_v1), read for 2031-01-01
+  held: pit13_rate row [0, 100 000] (pit13_v1), read for 2032-01-01
+  held: pit13_rate row [0, 100 000] (pit13_v1), read for 2033-01-01
+  held: pit13_rate row [0, 100 000] (pit13_v1), read for 2034-01-01
+  held: pit13_rate row [0, 100 000] (pit13_v1), read for 2035-01-01
+  held: pit13_rate row [0, 100 000] (pit13_v1), read for 2036-01-01
+  held: pit13_rate row [0, 100 000] (pit13_v1), read for 2037-01-01
+  held: pit13_rate row [0, 100 000] (pit13_v1), read for 2038-01-01
+  held: pit13_rate row [0, 100 000] (pit13_v1), read for 2039-01-01
+  held: pit13_rate row [0, 100 000] (pit13_v1), read for 2040-01-01
+  held: pit13_rate row [0, 100 000] (pit13_v1), read for 2041-01-01
+  held: pit13_rate row [0, 100 000] (pit13_v1), read for 2042-01-01
+  held: pit13_rate row [0, 100 000] (pit13_v1), read for 2043-01-01
+  held: pit13_rate row [0, 100 000] (pit13_v1), read for 2044-01-01
+  held: pit13_rate row [0, 100 000] (pit13_v1), read for 2045-01-01
+  held: pit13_rate row [0, 100 000] (pit13_v1), read for 2046-01-01
+  held: pit13_rate row [0, 100 000] (pit13_v1), read for 2047-01-01
+  held: pit13_rate row [0, 100 000] (pit13_v1), read for 2048-01-01
+  held: pit13_rate row [0, 100 000] (pit13_v1), read for 2049-01-01
+  held: pit13_rate row [0, 100 000] (pit13_v1), read for 2050-01-01
+  held: pit13_rate row [0, 100 000] (pit13_v1), read for 2051-01-01
+  held: pit13_rate row [0, 100 000] (pit13_v1), read for 2052-01-01
+  held: pit13_rate row [0, 100 000] (pit13_v1), read for 2053-01-01
+  held: pit13_rate row [0, 100 000] (pit13_v1), read for 2054-01-01
+  held: pit13_rate row [0, 100 000] (pit13_v1), read for 2055-01-01
+  held: pit13_rate row [0, 100 000] (pit13_v1), read for 2056-01-01
+  held: pit13_rate row [0, 100 000] (pit13_v1), read for 2057-01-01
+  held: pit13_rate row [0, 100 000] (pit13_v1), read for 2058-01-01
+  held: pit13_rate row [0, 100 000] (pit13_v1), read for 2059-01-01
+  held: pit13_rate row [0, 100 000] (pit13_v1), read for 2060-01-01
+  held: pit13_rate row [0, 100 000] (pit13_v1), read for 2061-01-01
+  held: pit13_rate row [0, 100 000] (pit13_v1), read for 2062-01-01
+  held: pit13_rate row [0, 100 000] (pit13_v1), read for 2063-01-01
+  held: pit13_rate row [0, 100 000] (pit13_v1), read for 2064-01-01
+  held: pit3_rate row (120 000, inf) (pit3_v3_on), read for 2040-01-01
+  held: pit3_rate row (120 000, inf) (pit3_v3_on), read for 2041-01-01
+  held: pit3_rate row (120 000, inf) (pit3_v3_on), read for 2042-01-01
+  held: pit3_rate row (120 000, inf) (pit3_v3_on), read for 2043-01-01
+  held: pit3_rate row (120 000, inf) (pit3_v3_on), read for 2044-01-01
+  held: pit3_rate row (120 000, inf) (pit3_v3_on), read for 2045-01-01
+  held: pit3_rate row (120 000, inf) (pit3_v3_on), read for 2046-01-01
+  held: pit3_rate row (120 000, inf) (pit3_v3_on), read for 2047-01-01
+  held: pit3_rate row (120 000, inf) (pit3_v3_on), read for 2048-01-01
+  held: pit3_rate row (120 000, inf) (pit3_v3_on), read for 2049-01-01
+  held: pit3_rate row (120 000, inf) (pit3_v3_on), read for 2050-01-01
+  held: pit3_rate row (120 000, inf) (pit3_v3_on), read for 2051-01-01
+  held: pit3_rate row (120 000, inf) (pit3_v3_on), read for 2052-01-01
+  held: pit3_rate row (120 000, inf) (pit3_v3_on), read for 2053-01-01
+  held: pit3_rate row (120 000, inf) (pit3_v3_on), read for 2054-01-01
+  held: pit3_rate row (120 000, inf) (pit3_v3_on), read for 2055-01-01
+  held: pit3_rate row (120 000, inf) (pit3_v3_on), read for 2056-01-01
+  held: pit3_rate row (120 000, inf) (pit3_v3_on), read for 2057-01-01
+  held: pit3_rate row (120 000, inf) (pit3_v3_on), read for 2058-01-01
+  held: pit3_rate row (120 000, inf) (pit3_v3_on), read for 2059-01-01
+  held: pit3_rate row (120 000, inf) (pit3_v3_on), read for 2060-01-01
+  held: pit3_rate row (120 000, inf) (pit3_v3_on), read for 2061-01-01
+  held: pit3_rate row (120 000, inf) (pit3_v3_on), read for 2062-01-01
+  held: pit3_rate row (120 000, inf) (pit3_v3_on), read for 2063-01-01
+  held: pit3_rate row (120 000, inf) (pit3_v3_on), read for 2064-01-01
+  held: pit3_rate row [0, 120 000] (pit3_v3_on), read for 2027-01-01
+  held: pit3_rate row [0, 120 000] (pit3_v3_on), read for 2028-01-01
+  held: pit3_rate row [0, 120 000] (pit3_v3_on), read for 2029-01-01
+  held: pit3_rate row [0, 120 000] (pit3_v3_on), read for 2030-01-01
+  held: pit3_rate row [0, 120 000] (pit3_v3_on), read for 2031-01-01
+  held: pit3_rate row [0, 120 000] (pit3_v3_on), read for 2032-01-01
+  held: pit3_rate row [0, 120 000] (pit3_v3_on), read for 2033-01-01
+  held: pit3_rate row [0, 120 000] (pit3_v3_on), read for 2034-01-01
+  held: pit3_rate row [0, 120 000] (pit3_v3_on), read for 2035-01-01
+  held: pit3_rate row [0, 120 000] (pit3_v3_on), read for 2036-01-01
+  held: pit3_rate row [0, 120 000] (pit3_v3_on), read for 2037-01-01
+  held: pit3_rate row [0, 120 000] (pit3_v3_on), read for 2038-01-01
+  held: pit3_rate row [0, 120 000] (pit3_v3_on), read for 2039-01-01
+  held: pit3_rate row [0, 120 000] (pit3_v3_on), read for 2040-01-01
+  held: pit3_rate row [0, 120 000] (pit3_v3_on), read for 2041-01-01
+  held: pit3_rate row [0, 120 000] (pit3_v3_on), read for 2042-01-01
+  held: pit3_rate row [0, 120 000] (pit3_v3_on), read for 2043-01-01
+  held: pit3_rate row [0, 120 000] (pit3_v3_on), read for 2044-01-01
+  held: pit3_rate row [0, 120 000] (pit3_v3_on), read for 2045-01-01
+  held: pit3_rate row [0, 120 000] (pit3_v3_on), read for 2046-01-01
+  held: pit3_rate row [0, 120 000] (pit3_v3_on), read for 2047-01-01
+  held: pit3_rate row [0, 120 000] (pit3_v3_on), read for 2048-01-01
+  held: pit3_rate row [0, 120 000] (pit3_v3_on), read for 2049-01-01
+  held: pit3_rate row [0, 120 000] (pit3_v3_on), read for 2050-01-01
+  held: pit3_rate row [0, 120 000] (pit3_v3_on), read for 2051-01-01
+  held: pit3_rate row [0, 120 000] (pit3_v3_on), read for 2052-01-01
+  held: pit3_rate row [0, 120 000] (pit3_v3_on), read for 2053-01-01
+  held: pit3_rate row [0, 120 000] (pit3_v3_on), read for 2054-01-01
+  held: pit3_rate row [0, 120 000] (pit3_v3_on), read for 2055-01-01
+  held: pit3_rate row [0, 120 000] (pit3_v3_on), read for 2056-01-01
+  held: pit3_rate row [0, 120 000] (pit3_v3_on), read for 2057-01-01
+  held: pit3_rate row [0, 120 000] (pit3_v3_on), read for 2058-01-01
+  held: pit3_rate row [0, 120 000] (pit3_v3_on), read for 2059-01-01
+  held: pit3_rate row [0, 120 000] (pit3_v3_on), read for 2060-01-01
+  held: pit3_rate row [0, 120 000] (pit3_v3_on), read for 2061-01-01
+  held: pit3_rate row [0, 120 000] (pit3_v3_on), read for 2062-01-01
+  held: pit3_rate row [0, 120 000] (pit3_v3_on), read for 2063-01-01
+  held: pit3_rate row [0, 120 000] (pit3_v3_on), read for 2064-01-01
+  held: pit3_reducing = 3 900.00 DUK (pit3_v3_on), read for 2027-01-01
+  held: pit3_reducing = 3 900.00 DUK (pit3_v3_on), read for 2028-01-01
+  held: pit3_reducing = 3 900.00 DUK (pit3_v3_on), read for 2029-01-01
+  held: pit3_reducing = 3 900.00 DUK (pit3_v3_on), read for 2030-01-01
+  held: pit3_reducing = 3 900.00 DUK (pit3_v3_on), read for 2031-01-01
+  held: pit3_reducing = 3 900.00 DUK (pit3_v3_on), read for 2032-01-01
+  held: pit3_reducing = 3 900.00 DUK (pit3_v3_on), read for 2033-01-01
+  held: pit3_reducing = 3 900.00 DUK (pit3_v3_on), read for 2034-01-01
+  held: pit3_reducing = 3 900.00 DUK (pit3_v3_on), read for 2035-01-01
+  held: pit3_reducing = 3 900.00 DUK (pit3_v3_on), read for 2036-01-01
+  held: pit3_reducing = 3 900.00 DUK (pit3_v3_on), read for 2037-01-01
+  held: pit3_reducing = 3 900.00 DUK (pit3_v3_on), read for 2038-01-01
+  held: pit3_reducing = 3 900.00 DUK (pit3_v3_on), read for 2039-01-01
+  held: pit3_reducing = 3 900.00 DUK (pit3_v3_on), read for 2040-01-01
+  held: pit3_reducing = 3 900.00 DUK (pit3_v3_on), read for 2041-01-01
+  held: pit3_reducing = 3 900.00 DUK (pit3_v3_on), read for 2042-01-01
+  held: pit3_reducing = 3 900.00 DUK (pit3_v3_on), read for 2043-01-01
+  held: pit3_reducing = 3 900.00 DUK (pit3_v3_on), read for 2044-01-01
+  held: pit3_reducing = 3 900.00 DUK (pit3_v3_on), read for 2045-01-01
+  held: pit3_reducing = 3 900.00 DUK (pit3_v3_on), read for 2046-01-01
+  held: pit3_reducing = 3 900.00 DUK (pit3_v3_on), read for 2047-01-01
+  held: pit3_reducing = 3 900.00 DUK (pit3_v3_on), read for 2048-01-01
+  held: pit3_reducing = 3 900.00 DUK (pit3_v3_on), read for 2049-01-01
+  held: pit3_reducing = 3 900.00 DUK (pit3_v3_on), read for 2050-01-01
+  held: pit3_reducing = 3 900.00 DUK (pit3_v3_on), read for 2051-01-01
+  held: pit3_reducing = 3 900.00 DUK (pit3_v3_on), read for 2052-01-01
+  held: pit3_reducing = 3 900.00 DUK (pit3_v3_on), read for 2053-01-01
+  held: pit3_reducing = 3 900.00 DUK (pit3_v3_on), read for 2054-01-01
+  held: pit3_reducing = 3 900.00 DUK (pit3_v3_on), read for 2055-01-01
+  held: pit3_reducing = 3 900.00 DUK (pit3_v3_on), read for 2056-01-01
+  held: pit3_reducing = 3 900.00 DUK (pit3_v3_on), read for 2057-01-01
+  held: pit3_reducing = 3 900.00 DUK (pit3_v3_on), read for 2058-01-01
+  held: pit3_reducing = 3 900.00 DUK (pit3_v3_on), read for 2059-01-01
+  held: pit3_reducing = 3 900.00 DUK (pit3_v3_on), read for 2060-01-01
+  held: pit3_reducing = 3 900.00 DUK (pit3_v3_on), read for 2061-01-01
+  held: pit3_reducing = 3 900.00 DUK (pit3_v3_on), read for 2062-01-01
+  held: pit3_reducing = 3 900.00 DUK (pit3_v3_on), read for 2063-01-01
+  held: pit3_reducing = 3 900.00 DUK (pit3_v3_on), read for 2064-01-01
+  held: soc2_rate = 0.09 (soc2_v2), read for 2027-01-01
+  held: soc2_rate = 0.09 (soc2_v2), read for 2028-01-01
+  held: soc2_rate = 0.09 (soc2_v2), read for 2029-01-01
+  held: soc2_rate = 0.09 (soc2_v2), read for 2030-01-01
+  held: soc2_rate = 0.09 (soc2_v2), read for 2031-01-01
+  held: soc2_rate = 0.09 (soc2_v2), read for 2032-01-01
+  held: soc2_rate = 0.09 (soc2_v2), read for 2033-01-01
+  held: soc2_rate = 0.09 (soc2_v2), read for 2034-01-01
+  held: soc2_rate = 0.09 (soc2_v2), read for 2035-01-01
+  held: soc2_rate = 0.09 (soc2_v2), read for 2036-01-01
+  held: soc2_rate = 0.09 (soc2_v2), read for 2037-01-01
+  held: soc2_rate = 0.09 (soc2_v2), read for 2038-01-01
+  held: soc2_rate = 0.09 (soc2_v2), read for 2039-01-01
+  held: soc2_rate = 0.09 (soc2_v2), read for 2040-01-01
+  held: soc2_rate = 0.09 (soc2_v2), read for 2041-01-01
+  held: soc2_rate = 0.09 (soc2_v2), read for 2042-01-01
+  held: soc2_rate = 0.09 (soc2_v2), read for 2043-01-01
+  held: soc2_rate = 0.09 (soc2_v2), read for 2044-01-01
+  held: soc2_rate = 0.09 (soc2_v2), read for 2045-01-01
+  held: soc2_rate = 0.09 (soc2_v2), read for 2046-01-01
+  held: soc2_rate = 0.09 (soc2_v2), read for 2047-01-01
+  held: soc2_rate = 0.09 (soc2_v2), read for 2048-01-01
+  held: soc2_rate = 0.09 (soc2_v2), read for 2049-01-01
+  held: soc2_rate = 0.09 (soc2_v2), read for 2050-01-01
+  held: soc2_rate = 0.09 (soc2_v2), read for 2051-01-01
+  held: soc2_rate = 0.09 (soc2_v2), read for 2052-01-01
+  held: soc2_rate = 0.09 (soc2_v2), read for 2053-01-01
+  held: soc2_rate = 0.09 (soc2_v2), read for 2054-01-01
+  held: soc2_rate = 0.09 (soc2_v2), read for 2055-01-01
+  held: soc2_rate = 0.09 (soc2_v2), read for 2056-01-01
+  held: soc2_rate = 0.09 (soc2_v2), read for 2057-01-01
+  held: soc2_rate = 0.09 (soc2_v2), read for 2058-01-01
+  held: soc2_rate = 0.09 (soc2_v2), read for 2059-01-01
+  held: soc2_rate = 0.09 (soc2_v2), read for 2060-01-01
+  held: soc2_rate = 0.09 (soc2_v2), read for 2061-01-01
+  held: soc2_rate = 0.09 (soc2_v2), read for 2062-01-01
+  held: soc2_rate = 0.09 (soc2_v2), read for 2063-01-01
+  held: soc2_rate = 0.09 (soc2_v2), read for 2064-01-01
+  held: soc7_cap_mult = 3 (soc7_v2), read for 2027-01-01
+  held: soc7_cap_mult = 3 (soc7_v2), read for 2028-01-01
+  held: soc7_cap_mult = 3 (soc7_v2), read for 2029-01-01
+  held: soc7_cap_mult = 3 (soc7_v2), read for 2030-01-01
+  held: soc7_cap_mult = 3 (soc7_v2), read for 2031-01-01
+  held: soc7_cap_mult = 3 (soc7_v2), read for 2032-01-01
+  held: soc7_cap_mult = 3 (soc7_v2), read for 2033-01-01
+  held: soc7_cap_mult = 3 (soc7_v2), read for 2034-01-01
+  held: soc7_cap_mult = 3 (soc7_v2), read for 2035-01-01
+  held: soc7_cap_mult = 3 (soc7_v2), read for 2036-01-01
+  held: soc7_cap_mult = 3 (soc7_v2), read for 2037-01-01
+  held: soc7_cap_mult = 3 (soc7_v2), read for 2038-01-01
+  held: soc7_cap_mult = 3 (soc7_v2), read for 2039-01-01
+  held: soc7_cap_mult = 3 (soc7_v2), read for 2040-01-01
+  held: soc7_cap_mult = 3 (soc7_v2), read for 2041-01-01
+  held: soc7_cap_mult = 3 (soc7_v2), read for 2042-01-01
+  held: soc7_cap_mult = 3 (soc7_v2), read for 2043-01-01
+  held: soc7_cap_mult = 3 (soc7_v2), read for 2044-01-01
+  held: soc7_cap_mult = 3 (soc7_v2), read for 2045-01-01
+  held: soc7_cap_mult = 3 (soc7_v2), read for 2046-01-01
+  held: soc7_cap_mult = 3 (soc7_v2), read for 2047-01-01
+  held: soc7_cap_mult = 3 (soc7_v2), read for 2048-01-01
+  held: soc7_cap_mult = 3 (soc7_v2), read for 2049-01-01
+  held: soc7_cap_mult = 3 (soc7_v2), read for 2050-01-01
+  held: soc7_cap_mult = 3 (soc7_v2), read for 2051-01-01
+  held: soc7_cap_mult = 3 (soc7_v2), read for 2052-01-01
+  held: soc7_cap_mult = 3 (soc7_v2), read for 2053-01-01
+  held: soc7_cap_mult = 3 (soc7_v2), read for 2054-01-01
+  held: soc7_cap_mult = 3 (soc7_v2), read for 2055-01-01
+  held: soc7_cap_mult = 3 (soc7_v2), read for 2056-01-01
+  held: soc7_cap_mult = 3 (soc7_v2), read for 2057-01-01
+  held: soc7_cap_mult = 3 (soc7_v2), read for 2058-01-01
+  held: soc7_cap_mult = 3 (soc7_v2), read for 2059-01-01
+  held: soc7_cap_mult = 3 (soc7_v2), read for 2060-01-01
+  held: soc7_cap_mult = 3 (soc7_v2), read for 2061-01-01
+  held: soc7_cap_mult = 3 (soc7_v2), read for 2062-01-01
+  held: soc7_cap_mult = 3 (soc7_v2), read for 2063-01-01
+  held: soc7_cap_mult = 3 (soc7_v2), read for 2064-01-01
+  held: soc7_part = 0.25 (soc7_v2), read for 2027-01-01
+  held: soc7_part = 0.25 (soc7_v2), read for 2028-01-01
+  held: soc7_part = 0.25 (soc7_v2), read for 2029-01-01
+  held: soc7_part = 0.25 (soc7_v2), read for 2030-01-01
+  held: soc7_part = 0.25 (soc7_v2), read for 2031-01-01
+  held: soc7_part = 0.25 (soc7_v2), read for 2032-01-01
+  held: soc7_part = 0.25 (soc7_v2), read for 2033-01-01
+  held: soc7_part = 0.25 (soc7_v2), read for 2034-01-01
+  held: soc7_part = 0.25 (soc7_v2), read for 2035-01-01
+  held: soc7_part = 0.25 (soc7_v2), read for 2036-01-01
+  held: soc7_part = 0.25 (soc7_v2), read for 2037-01-01
+  held: soc7_part = 0.25 (soc7_v2), read for 2038-01-01
+  held: soc7_part = 0.25 (soc7_v2), read for 2039-01-01
+  held: soc7_part = 0.25 (soc7_v2), read for 2040-01-01
+  held: soc7_part = 0.25 (soc7_v2), read for 2041-01-01
+  held: soc7_part = 0.25 (soc7_v2), read for 2042-01-01
+  held: soc7_part = 0.25 (soc7_v2), read for 2043-01-01
+  held: soc7_part = 0.25 (soc7_v2), read for 2044-01-01
+  held: soc7_part = 0.25 (soc7_v2), read for 2045-01-01
+  held: soc7_part = 0.25 (soc7_v2), read for 2046-01-01
+  held: soc7_part = 0.25 (soc7_v2), read for 2047-01-01
+  held: soc7_part = 0.25 (soc7_v2), read for 2048-01-01
+  held: soc7_part = 0.25 (soc7_v2), read for 2049-01-01
+  held: soc7_part = 0.25 (soc7_v2), read for 2050-01-01
+  held: soc7_part = 0.25 (soc7_v2), read for 2051-01-01
+  held: soc7_part = 0.25 (soc7_v2), read for 2052-01-01
+  held: soc7_part = 0.25 (soc7_v2), read for 2053-01-01
+  held: soc7_part = 0.25 (soc7_v2), read for 2054-01-01
+  held: soc7_part = 0.25 (soc7_v2), read for 2055-01-01
+  held: soc7_part = 0.25 (soc7_v2), read for 2056-01-01
+  held: soc7_part = 0.25 (soc7_v2), read for 2057-01-01
+  held: soc7_part = 0.25 (soc7_v2), read for 2058-01-01
+  held: soc7_part = 0.25 (soc7_v2), read for 2059-01-01
+  held: soc7_part = 0.25 (soc7_v2), read for 2060-01-01
+  held: soc7_part = 0.25 (soc7_v2), read for 2061-01-01
+  held: soc7_part = 0.25 (soc7_v2), read for 2062-01-01
+  held: soc7_part = 0.25 (soc7_v2), read for 2063-01-01
+  held: soc7_part = 0.25 (soc7_v2), read for 2064-01-01
+  law date 2026-09-30, cut 2026-09-30
+d11_register: (0.03, 0.05, 0.16, 4, 0.012, 1.105, 54 000.00 DUK, 36 000.00 DUK, 80, 15 000.00 DUK, 10 000.00 DUK, 45 000.00 DUK)
+  assumed: point 1: a round figure taken as given (lv_acct0, lv_fund0)
+  assumed: point 2 (q_base, q_growth)
+  assumed: point 3: 3 % a year from 2026 on (lv_infl)
+  assumed: point 6, in 2026 money (care_2026, spend_2026)
+  assumed: point 6: from the year she turns 80 (2039) (care_age)
+  assumed: point 7 (fund_df, fund_mu, fund_sd)
+  assumed: point 8 (sweep)
+  law date 2026-09-30, cut 2026-09-30
+d11_not_follows_life [hh_round = *]:
+  long_view:q_base (source story "Household D's story, tmp/cases/D/story.md")
+  long_view:q_growth (source story "Household D's story, tmp/cases/D/story.md")
+  long_view:q_last_age (source story "Household D's story, tmp/cases/D/story.md")
+  long_view:q_step (source story "Household D's story, tmp/cases/D/story.md")
+  assumed: point 2 (q_base, q_growth)
+  assumed: point 2: at 105 it is 1 (q_last_age)
+  assumed: point 2: rounded to 4 decimal places (q_step)
+  law date 2026-09-30, cut 2026-09-30
+d11_not_follows_fund [hh_round = *]:
+  long_view:fund_df (source story "Household D's story, tmp/cases/D/story.md")
+  long_view:fund_mu (source story "Household D's story, tmp/cases/D/story.md")
+  long_view:fund_sd (source story "Household D's story, tmp/cases/D/story.md")
+  long_view:r_floor_loss (source story "Household D's story, tmp/cases/D/story.md")
+  long_view:r_scale_root (source story "Household D's story, tmp/cases/D/story.md")
+  long_view:r_step (source story "Household D's story, tmp/cases/D/story.md")
+  long_view:zr (source story "Household D's story, tmp/cases/D/story.md")
+  assumed: point 7 (fund_df, fund_mu, fund_sd)
+  assumed: point 7: R rounded to 6 decimal places (r_step)
+  assumed: point 7: T / sqrt 2 (r_scale_root)
+  assumed: point 7: Z and the four normals of V, standard normal (zr[2031, 1], zr[2031, 2], zr[2031, 3], zr[2031, 4], zr[2031, 5])
+  assumed: point 7: never below -95 % (r_floor_loss)
+  sample: zr[2031, 1] = -1.121661240121 (u = 0.13100325127205186969575091693318569241455406881868839263916015625 (0.131003251272052))
+  sample: zr[2031, 2] = -0.060355089811 (u = 0.47593641327536138362660871059528489013246144168078899383544921875 (0.475936413275361))
+  sample: zr[2031, 3] = 0.791027665197 (u = 0.78553607612651454647077937931687330319618922658264636993408203125 (0.785536076126515))
+  sample: zr[2031, 4] = -0.83852001386 (u = 0.20086935607284951891648820676561371101342956535518169403076171875 (0.20086935607285))
+  sample: zr[2031, 5] = -0.060608496582 (u = 0.47583550333622080886542861366539369782913126982748508453369140625 (0.475835503336221))
+  law date 2026-09-30, cut 2026-09-30
+

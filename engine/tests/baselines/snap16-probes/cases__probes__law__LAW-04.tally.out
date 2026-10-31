@@ -1,0 +1,77 @@
+months_kept (m = 2022-01): 1 360.00 DUK
+  assumed: the card gives no day for the monthly pay and its advance; a pay needs a date (L 5.10, Places need dates), so the 28th stands for it; no figure asked depends on the day while June's advance falls before the act is known (adv_day)
+  assumed: the card states no rounding; every advance and the tax due are whole numbers of minor units, so the mode changes nothing (round_mode)
+  unfulfilled: advance[2022-01]
+  cut 2026-10-25
+months_kept (m = 2022-02): 1 360.00 DUK
+  assumed: the card gives no day for the monthly pay and its advance; a pay needs a date (L 5.10, Places need dates), so the 28th stands for it; no figure asked depends on the day while June's advance falls before the act is known (adv_day)
+  assumed: the card states no rounding; every advance and the tax due are whole numbers of minor units, so the mode changes nothing (round_mode)
+  unfulfilled: advance[2022-02]
+  cut 2026-10-25
+months_kept (m = 2022-03): 1 360.00 DUK
+  assumed: the card gives no day for the monthly pay and its advance; a pay needs a date (L 5.10, Places need dates), so the 28th stands for it; no figure asked depends on the day while June's advance falls before the act is known (adv_day)
+  assumed: the card states no rounding; every advance and the tax due are whole numbers of minor units, so the mode changes nothing (round_mode)
+  unfulfilled: advance[2022-03]
+  cut 2026-10-25
+months_kept (m = 2022-04): 1 360.00 DUK
+  assumed: the card gives no day for the monthly pay and its advance; a pay needs a date (L 5.10, Places need dates), so the 28th stands for it; no figure asked depends on the day while June's advance falls before the act is known (adv_day)
+  assumed: the card states no rounding; every advance and the tax due are whole numbers of minor units, so the mode changes nothing (round_mode)
+  unfulfilled: advance[2022-04]
+  cut 2026-10-25
+months_kept (m = 2022-05): 1 360.00 DUK
+  assumed: the card gives no day for the monthly pay and its advance; a pay needs a date (L 5.10, Places need dates), so the 28th stands for it; no figure asked depends on the day while June's advance falls before the act is known (adv_day)
+  assumed: the card states no rounding; every advance and the tax due are whole numbers of minor units, so the mode changes nothing (round_mode)
+  unfulfilled: advance[2022-05]
+  cut 2026-10-25
+months_kept (m = 2022-06): 1 360.00 DUK
+  assumed: the card gives no day for the monthly pay and its advance; a pay needs a date (L 5.10, Places need dates), so the 28th stands for it; no figure asked depends on the day while June's advance falls before the act is known (adv_day)
+  assumed: the card states no rounding; every advance and the tax due are whole numbers of minor units, so the mode changes nothing (round_mode)
+  unfulfilled: advance[2022-06]
+  cut 2026-10-25
+months_kept (m = 2022-07): 960.00 DUK
+  assumed: the card gives no day for the monthly pay and its advance; a pay needs a date (L 5.10, Places need dates), so the 28th stands for it; no figure asked depends on the day while June's advance falls before the act is known (adv_day)
+  assumed: the card states no rounding; every advance and the tax due are whole numbers of minor units, so the mode changes nothing (round_mode)
+  unfulfilled: advance[2022-07]
+  cut 2026-10-25
+months_kept (m = 2022-08): 960.00 DUK
+  assumed: the card gives no day for the monthly pay and its advance; a pay needs a date (L 5.10, Places need dates), so the 28th stands for it; no figure asked depends on the day while June's advance falls before the act is known (adv_day)
+  assumed: the card states no rounding; every advance and the tax due are whole numbers of minor units, so the mode changes nothing (round_mode)
+  unfulfilled: advance[2022-08]
+  cut 2026-10-25
+months_kept (m = 2022-09): 960.00 DUK
+  assumed: the card gives no day for the monthly pay and its advance; a pay needs a date (L 5.10, Places need dates), so the 28th stands for it; no figure asked depends on the day while June's advance falls before the act is known (adv_day)
+  assumed: the card states no rounding; every advance and the tax due are whole numbers of minor units, so the mode changes nothing (round_mode)
+  unfulfilled: advance[2022-09]
+  cut 2026-10-25
+months_kept (m = 2022-10): 960.00 DUK
+  assumed: the card gives no day for the monthly pay and its advance; a pay needs a date (L 5.10, Places need dates), so the 28th stands for it; no figure asked depends on the day while June's advance falls before the act is known (adv_day)
+  assumed: the card states no rounding; every advance and the tax due are whole numbers of minor units, so the mode changes nothing (round_mode)
+  unfulfilled: advance[2022-10]
+  cut 2026-10-25
+months_kept (m = 2022-11): 960.00 DUK
+  assumed: the card gives no day for the monthly pay and its advance; a pay needs a date (L 5.10, Places need dates), so the 28th stands for it; no figure asked depends on the day while June's advance falls before the act is known (adv_day)
+  assumed: the card states no rounding; every advance and the tax due are whole numbers of minor units, so the mode changes nothing (round_mode)
+  unfulfilled: advance[2022-11]
+  cut 2026-10-25
+months_kept (m = 2022-12): 960.00 DUK
+  assumed: the card gives no day for the monthly pay and its advance; a pay needs a date (L 5.10, Places need dates), so the 28th stands for it; no figure asked depends on the day while June's advance falls before the act is known (adv_day)
+  assumed: the card states no rounding; every advance and the tax due are whole numbers of minor units, so the mode changes nothing (round_mode)
+  unfulfilled: advance[2022-12]
+  cut 2026-10-25
+settlement: (13 920.00 DUK, 11 520.00 DUK, 2 400.00 DUK, 0.00 DUK, 2 400.00 DUK, 2023-04-30)
+  assumed: the card gives no day for the monthly pay and its advance; a pay needs a date (L 5.10, Places need dates), so the 28th stands for it; no figure asked depends on the day while June's advance falls before the act is known (adv_day)
+  assumed: the card states no rounding; every advance and the tax due are whole numbers of minor units, so the mode changes nothing (round_mode)
+  unfulfilled: advance[2022-01]
+  unfulfilled: advance[2022-02]
+  unfulfilled: advance[2022-03]
+  unfulfilled: advance[2022-04]
+  unfulfilled: advance[2022-05]
+  unfulfilled: advance[2022-06]
+  unfulfilled: advance[2022-07]
+  unfulfilled: advance[2022-08]
+  unfulfilled: advance[2022-09]
+  unfulfilled: advance[2022-10]
+  unfulfilled: advance[2022-11]
+  unfulfilled: advance[2022-12]
+  unfulfilled: refund[2022]
+  cut 2026-10-25

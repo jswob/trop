@@ -1,0 +1,33 @@
+# E §3.1 step 1: "The reality's hash is the sha256 of the UTF-8 bytes of its canonical text, its files reprinted and
+# taken in the order of their paths in its directory tree ..., so spacing never changes a hash ... A joint model's use
+# line pins a member by this hash"; L §6.1 "A file that doesn't match its hash is refused (LOAD-PIN)". The member is
+# pinned by its canonical text's sha256 (refcore's reprint, L §2.4), so the joint model loads and reads a.rate (the
+# member's row, 0.12).
+=== joint.tally
+model family
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+  use a = "ana.tally" sha256 "da53b6ff6a096d47b9af5e16e8276735e72b3c343160d17d841c6ba432df1720"
+
+ask r: a.rate
+=== ana.tally
+model ana
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source s "umowa"
+
+input rate: num
+
+version v
+  cite s
+  governs always
+  known 2025-01-01
+  rate = 0.12 "umowa"
+=== expect
+r: 0.12
+  cut 2026-10-20

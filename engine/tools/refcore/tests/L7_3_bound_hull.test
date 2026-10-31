@@ -1,0 +1,28 @@
+# L §7.3 The error bound: "a transcendental whose argument is itself an interval takes the hull of its exact
+# values over that interval, then its own ± u/2"; "The bound prints to two significant digits, rounded up".
+# r = exp(2) to 1e-9 lies within 5e-10 of e^2 (7.389...), so ln over [r - 5e-10, r + 5e-10] lies within
+# (5e-10 + |r - e^2|)/7.38 < 1.4e-10 of 2; ln(r) itself is within 1e-10 of 2, so it rounds to 2 on 1e-6.  The
+# bound is 5e-7 plus that hull's half-width, more than 5.0e-7 and less than 5.1e-7: printed 0.00000051.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+input two: num
+def l2: num = ln(exp(two) to 1e-9) to 1e-6 at reader
+
+version v
+  cite s
+  governs 2026..
+  known 2026-01-01
+  two = 2
+
+ask a: l2 law 2026-06-30
+=== expect
+a: ≈ 2 ± 0.00000051
+  law date 2026-06-30, cut 2026-12-31

@@ -1,0 +1,19 @@
+part asks_d11
+  tally 2
+  note "D-11 · Prices rising 8 %, as of 2031-12-31, as known 2026-09-30: each figure in the reality (3 % throughout) and as if in scenario infl8; the bond under cpi103 (103 where unpublished) and infl8. What follows the index is what reads it."
+  note "The register's seed 20261001 is no value: a seed is an ask's literal (L §7.4), stated on D-10's path asks; no expression prints it."
+  note "Does not follow the index: the life table by inputs-of q_die, and the fund's returns by inputs-of r_path replayed on one path (L §5.16), their rows read with no lv_infl row among them. Only the tax scale and its reducing amount, inputs (pit3_rate, pit3_reducing) read as their rows stand, rest on their absence from readers-of lv_infl: readers-of lists only readers."
+
+ask d11_follows: readers-of lv_infl
+
+ask d11_follows_bonds: readers-of cpi_yy
+
+ask d11_isb: bond_value[isb2405, 2029-12-31] as if {scenario cpi103}, bond_value[isb2405, 2029-12-31] as if {scenario infl8} law 2026-09-30
+
+ask d11_pairs: rent_lvl[2031], rent_lvl[2031] as if {scenario infl8}, surv_lvl[2031], surv_lvl[2031] as if {scenario infl8}, spend_year[2031], spend_year[2031] as if {scenario infl8}, lv_pit[2031], lv_pit[2031] as if {scenario infl8}, zv_dry_year, zv_dry_year as if {scenario infl8} law 2026-09-30
+
+ask d11_register: lv_infl, fund_mu, fund_sd, fund_df, q_base, q_growth, spend_2026, care_2026, care_age, sweep, lv_acct0, lv_fund0 law 2026-09-30
+
+ask d11_not_follows_life: inputs-of q_die[80] law 2026-09-30
+
+ask d11_not_follows_fund: inputs-of r_path[2031] law 2026-09-30 paths 1 seed 20261001 path 1

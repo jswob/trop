@@ -1,0 +1,22 @@
+# Writer 11 (tally 2.1). L §5.7 LOAD-LEAF "<k> enters <kind>, which has subkinds": with a subkind of the prelude's
+# parties declared, a thing entered at parties itself is refused (L §3.5: "enters its parties at parties itself when it
+# declares none").
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+kind persons: parties
+ask q: count(p in parties on 2026-06-30)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  parties + [ania] lives 1980-01-01..
+=== expect
+refused: LOAD-LEAF ...

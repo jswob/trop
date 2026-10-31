@@ -1,0 +1,28 @@
+# Fault J-A-2: a balance resting on a move with a window day and a hole amount printed only the window's question,
+# not the amount's. L §8.1: a hole "prints every question it carries, sorted by code point and without duplicates".
+# The January card spending is a hole on a day within January: the balance on 2026-01-14 carries both questions (q).
+# (The fault's text stated `outside DUK`; an outside place states no unit now (L §5.10), so it is dropped here.)
+=== m.tally
+model f
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+unit DUK: currency minor 0.01
+source s "synthetic"
+place konto: accounts DUK lives 2026-01-01..
+place world: outside lives 2026-01-01..
+input spend[m in months]: money DUK
+move cards[m in months]: transfers
+  on window(start_of(m), end_of(m) - 1 day)
+  leg cash from konto to world amount spend[m]
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 0 at 2026-01-01 start
+  spend[*] = ?"card spending"
+ask q: bal(konto, 2026-01-14)
+=== expect
+q: ?"card spending" (spend[2026-01]) ?"date within window(2026-01-01, 2026-01-31) not precise enough for a balance" (cards[2026-01])
+  cut 2026-01-01

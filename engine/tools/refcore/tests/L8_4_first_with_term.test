@@ -1,0 +1,25 @@
+# L §5.11: "`first(s in sales over y where c)` and `last(…)` return the key (one bind) or the tuple; they take no term
+# (LOAD-PARSE)". (Writer 6: was LOAD-DOMAIN, L §8.4, before the spec named the code.)
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+index ks = [a, b]
+input x[k in ks]: int
+def c: int = first(x[k] for k in ks) at reader
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  x = 1
+
+ask q: c law 2026-06-30
+=== expect
+refused: LOAD-PARSE ...

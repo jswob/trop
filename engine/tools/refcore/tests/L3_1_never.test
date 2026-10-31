@@ -1,0 +1,28 @@
+# L §3.1: never "a value of type date: later than every date. Ordering against it is allowed (d < never holds);
+# arithmetic and aggregation on it are refused (RUN-NONE). A deadline that doesn't exist is a row never."
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "a source"
+
+input deadline: date
+input d: date
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  deadline = never
+  d = 2026-05-01
+
+ask q1: d < deadline, deadline == never, deadline < d
+ask q2: add_days(deadline, 1)
+=== expect
+q1: (true, true, false)
+  cut 2026-01-01
+q2: refused: RUN-NONE ...
+  cut 2026-01-01

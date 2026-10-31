@@ -1,0 +1,163 @@
+a13_control: diff in a13_calc against lis: 0 changed, 0 added, 0 removed, 3 unchanged
+  world: a13_calc
+  world: lis
+  law date 2025-04-30, cut 2025-04-30
+a13_control_costs: diff in a13_calc against lis: 0 changed, 0 added, 0 removed, 3 unchanged
+  world: a13_calc
+  world: lis
+  law date 2025-04-30, cut 2025-04-30
+a13_control_soc: diff in a13_calc against lis: 0 changed, 0 added, 0 removed, 3 unchanged
+  world: a13_calc
+  world: lis
+  law date 2025-04-30, cut 2025-04-30
+a13_control_advances: diff in a13_calc against lis: 0 changed, 0 added, 0 removed, 3 unchanged
+  assumed: A-D15 says by the 10th, not the day; the 10th is taken, on the last business day before it where it isn't one (payday_dom[sio, 2023-01], payday_dom[sio, 2023-02], payday_dom[sio, 2023-03], payday_dom[sio, 2023-04], payday_dom[sio, 2023-05], payday_dom[sio, 2023-06], payday_dom[sio, 2023-07], payday_dom[sio, 2023-08], payday_dom[sio, 2023-09], payday_dom[sio, 2023-10], payday_dom[sio, 2023-11], payday_dom[sio, 2023-12])
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-01-10
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-01-31
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-02-10
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-02-28
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-03-10
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-03-31
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-04-07
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-04-28
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-05-10
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-05-31
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-06-09
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-06-30
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-07-10
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-07-31
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-08-10
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-08-31
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-09-08
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-09-29
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-10-10
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-10-31
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-11-10
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-11-30
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-12-08
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2023-12-29
+  world: a13_calc
+  world: lis
+  law date 2025-04-30, cut 2025-04-30
+a13_why_kalina_due (p = 2023-01): (2023-01, 5 400.00 DUK, 5 400.00 DUK, 5 400.00 DUK)
+  world: a13_apr
+  world: a13_jul
+  law date 2025-04-30, cut 2025-04-30
+a13_why_kalina_due (p = 2023-02): (2023-02, 5 400.00 DUK, 5 400.00 DUK, 5 400.00 DUK)
+  world: a13_apr
+  world: a13_jul
+  law date 2025-04-30, cut 2025-04-30
+a13_why_kalina_due (p = 2023-03): (2023-03, 5 400.00 DUK, 5 400.00 DUK, 5 400.00 DUK)
+  world: a13_apr
+  world: a13_jul
+  law date 2025-04-30, cut 2025-04-30
+a13_why_kalina_due (p = 2023-04): (2023-04, 4 680.00 DUK, 4 680.00 DUK, 0.00 DUK)
+  world: a13_apr
+  world: a13_jul
+  law date 2025-04-30, cut 2025-04-30
+a13_why_kalina_due (p = 2023-05): (2023-05, 0.00 DUK, 0.00 DUK, 0.00 DUK)
+  world: a13_apr
+  world: a13_jul
+  law date 2025-04-30, cut 2025-04-30
+a13_why_kalina_due (p = 2023-06): (2023-06, 0.00 DUK, 0.00 DUK, 0.00 DUK)
+  world: a13_apr
+  world: a13_jul
+  law date 2025-04-30, cut 2025-04-30
+a13_why_kalina_due (p = 2023-07): (2023-07, 0.00 DUK, 0.00 DUK, 0.00 DUK)
+  world: a13_apr
+  world: a13_jul
+  law date 2025-04-30, cut 2025-04-30
+a13_why_kalina_due (p = 2023-08): (2023-08, 0.00 DUK, 0.00 DUK, 0.00 DUK)
+  world: a13_apr
+  world: a13_jul
+  law date 2025-04-30, cut 2025-04-30
+a13_why_kalina_due (p = 2023-09): (2023-09, 0.00 DUK, 0.00 DUK, 0.00 DUK)
+  world: a13_apr
+  world: a13_jul
+  law date 2025-04-30, cut 2025-04-30
+a13_why_kalina_due (p = 2023-10): (2023-10, 0.00 DUK, 0.00 DUK, 0.00 DUK)
+  world: a13_apr
+  world: a13_jul
+  law date 2025-04-30, cut 2025-04-30
+a13_why_kalina_due (p = 2023-11): (2023-11, 0.00 DUK, 0.00 DUK, 0.00 DUK)
+  world: a13_apr
+  world: a13_jul
+  law date 2025-04-30, cut 2025-04-30
+a13_why_kalina_due (p = 2023-12): (2023-12, 0.00 DUK, 0.00 DUK, 0.00 DUK)
+  world: a13_apr
+  world: a13_jul
+  law date 2025-04-30, cut 2025-04-30
+a13_a_why_parental: 3 826.64 DUK
+  [1] the pins, evaluated outside them
+    [2] pin scenario a13_jul
+  [3] inside the pins: 3 826.64 DUK
+    [4] g_paid[sio, 2023-06] = 3 826.64 DUK, law date 2023-06-01
+        rule a13_uninsured: not applicable
+          [5] row a13_jul_stop:a13_stop = 2023-07-01
+              version a13_jul_stop, source questions, "Household A, questions (tmp/cases/A/questions.md)", locator "questions.md A-13 (a): from 1 July 2023", governs 2023-01-01.., known 2023-01-01
+          [6] row zosia_born:born[zosia] = 2023-04-27
+              version zosia_born, source story, "Household A, story (tmp/cases/A/story.md)", locator "story: 2023-04-27 · known 2023-04-27 — Zosia is born", governs always, known 2023-04-27
+        rule parental: won
+          [7] row sio_terms:leave_from = 2023-04-27
+              version sio_terms, source a_d15, "A-D15 SIO, decision on parental pay (tmp/cases/A/docs/A-D15.md)", locator "A-D15: 27 April 2023 – 24 April 2024", governs always, known 2023-05-11
+          [8] row sio_terms:leave_to = 2024-04-24
+              version sio_terms, source a_d15, "A-D15 SIO, decision on parental pay (tmp/cases/A/docs/A-D15.md)", locator "A-D15: 27 April 2023 – 24 April 2024", governs always, known 2023-05-11
+          [9] row sio_terms:sio_day_pay = 123.44 DUK
+              version sio_terms, source a_d15, "A-D15 SIO, decision on parental pay (tmp/cases/A/docs/A-D15.md)", locator "A-D15: a day's pay", governs always, known 2023-05-11
+        rule work: beaten by parental
+  [10] outside the pins: 3 826.64 DUK
+    [11] g_paid[sio, 2023-06] = 3 826.64 DUK, law date 2023-06-01
+        rule parental: won
+          (sio_terms:leave_from: see [7])
+          (sio_terms:leave_to: see [8])
+          (sio_terms:sio_day_pay: see [9])
+        rule work: beaten by parental
+  world: a13_jul
+  law date 2025-04-30, cut 2025-04-30
+a13_c_why_parental: 0.00 DUK
+  [1] the pins, evaluated outside them
+    [2] pin scenario a13_apr
+  [3] inside the pins: 0.00 DUK
+    [4] g_paid[sio, 2023-06] = 0.00 DUK, law date 2023-06-01
+        rule a13_uninsured: won (version a13_calc_rules, source questions)
+          [5] row a13_apr_stop:a13_stop = 2023-04-01
+              version a13_apr_stop, source questions, "Household A, questions (tmp/cases/A/questions.md)", locator "questions.md A-13 (c): from 1 April 2023", governs 2023-01-01.., known 2023-01-01
+          [6] row zosia_born:born[zosia] = 2023-04-27
+              version zosia_born, source story, "Household A, story (tmp/cases/A/story.md)", locator "story: 2023-04-27 · known 2023-04-27 — Zosia is born", governs always, known 2023-04-27
+        rule parental: beaten by a13_uninsured
+        rule work: beaten by a13_uninsured
+  [7] outside the pins: 3 826.64 DUK
+    [8] g_paid[sio, 2023-06] = 3 826.64 DUK, law date 2023-06-01
+        rule parental: won
+          [9] row sio_terms:leave_from = 2023-04-27
+              version sio_terms, source a_d15, "A-D15 SIO, decision on parental pay (tmp/cases/A/docs/A-D15.md)", locator "A-D15: 27 April 2023 – 24 April 2024", governs always, known 2023-05-11
+          [10] row sio_terms:leave_to = 2024-04-24
+              version sio_terms, source a_d15, "A-D15 SIO, decision on parental pay (tmp/cases/A/docs/A-D15.md)", locator "A-D15: 27 April 2023 – 24 April 2024", governs always, known 2023-05-11
+          [11] row sio_terms:sio_day_pay = 123.44 DUK
+              version sio_terms, source a_d15, "A-D15 SIO, decision on parental pay (tmp/cases/A/docs/A-D15.md)", locator "A-D15: a day's pay", governs always, known 2023-05-11
+        rule work: beaten by parental
+  world: a13_apr
+  law date 2025-04-30, cut 2025-04-30
+warning: WARN-UNREAD source a_d11 is read by nothing
+warning: WARN-UNREAD source a_d13_kalina_2021 is read by nothing
+warning: WARN-UNREAD source a_d13_kalina_2022 is read by nothing
+warning: WARN-UNREAD source a_d13_kalina_2023 is read by nothing
+warning: WARN-UNREAD source a_d17 is read by nothing
+warning: WARN-UNREAD source a_d22 is read by nothing
+warning: WARN-UNREAD source a_d30 is read by nothing
+warning: WARN-UNREAD source a_d34 is read by nothing
+warning: WARN-UNREAD source a_d35 is read by nothing
+warning: WARN-UNREAD source a_d38 is read by nothing
+warning: WARN-UNREAD input pit5_refund_days is read by nothing
+warning: WARN-UNREAD input soc1_er_pension is read by nothing
+warning: WARN-UNREAD input soc8_base_cut is read by nothing
+warning: WARN-UNREAD input soc8_elect_days is read by nothing
+warning: WARN-UNREAD input soc8_pay_by is read by nothing
+warning: WARN-UNREAD input soc8_rate_elected is read by nothing
+warning: WARN-UNREAD input soc8_rate_first is read by nothing
+warning: WARN-UNREAD input soc8_rate_rest is read by nothing
+warning: WARN-UNREAD input soc8_weeks is read by nothing
+warning: WARN-UNREAD input soc8_weeks_first is read by nothing
+warning: WARN-UNREAD input wcp1_ee_extra_max is read by nothing
+warning: WARN-UNREAD input wcp1_er_topup_max is read by nothing
+warning: WARN-UNREAD input cc1_settle_days is read by nothing

@@ -1,0 +1,26 @@
+# L §5.18: "A hole in F at any point the solver evaluates makes the result a hole carrying F's questions".
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+input xv: num
+input target: num
+def sq: num = xv * xv at reader
+
+version v
+  cite s
+  governs 2026..
+  known 2026-01-01
+  xv = 1
+  target = ?"target?"
+
+ask a: solve sq == target for xv in [0, 4] to 1 law 2026-06-30
+=== expect
+a: ?"target?" (target)
+  law date 2026-06-30, cut 2026-12-31

@@ -1,0 +1,13 @@
+# L §5.7: "LOAD-ALIVE (a binding over a kind, in an aggregate, a listing or a move's keys, without on or over)".
+=== m.tally
+model hh
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+kind persons
+
+ask q1: count(p in persons)
+=== expect
+refused: LOAD-ALIVE ...

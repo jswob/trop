@@ -1,0 +1,98 @@
+# L §2.4 Expressions: "one space around binary operators and after commas, none inside brackets. Parentheses appear
+# only where precedence needs them, except that a `... to u` call used as an operand and a converted flows or value
+# inside a comparison (parse rule 4) are always parenthesised" (h, i, j: added or kept; a, b, c, d, e, g: the pairs
+# precedence doesn't need go, x - (y - z) and (if ...) + 1 keep theirs). Numbers: "the shortest exact decimal, with a
+# leading 0 before the point (0.05) and thousands grouped by a space (96 000, 1 190.05), or as a reduced a/b when the
+# value doesn't terminate (round 17 settled the example: 96000.00 prints 96 000). A value of the unit % prints with it" (f, n, o, p, q; the fraction 5/900 is 1/180). L §2.1:
+# units "written without spaces inside them: 8 PLN/hour", "binary minus is written with a space on each side (a - b),
+# as the canonical form prints it", a span `a .. b` in an expression (m) and a version's `2026..` touching.
+=== options reprint
+=== m.tally
+model m
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+def a: num = ((x + y)) * z
+def b: num = x - (y - z)
+def c: num = x - (y*z)
+def d: num = (x * y) + z
+def e: bool = not (p and q) or (r)
+def f: num PLN = 1190.050 PLN+x*2
+def g: num = -(x) + (- y)
+def h: bool = (x to 0.01) > y
+def i: num = - x to 0.01 + y
+def j: bool = flows(k, 2026-01..2026-03) in PLN at fx half-up>3 PLN
+def k: num PLN/hour = 8 PLN/hour*2
+def l: num = sum(v[t] for t in ks where t != aa)
+def m: num = flows(p , 2026-01-01..2026-03-31)
+def n: rate = 19 %
+def o: num = 96000.00
+def p: num = 1000000.5
+def q: num = 0.050
+def r: num = (if c then a else b) + 1
+def s: num = ?"why"
+def t: bool = (x[k1 , k2].f) == (min(a,b))
+
+version v
+  cite src
+  governs 2026..
+  known 2026-01-01
+  w = 5/900
+  w2 = -0.50 "art. 1"
+=== expect
+--- m.tally
+model m
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+def a: num = (x + y) * z
+
+def b: num = x - (y - z)
+
+def c: num = x - y * z
+
+def d: num = x * y + z
+
+def e: bool = not (p and q) or r
+
+def f: num PLN = 1 190.05 PLN + x * 2
+
+def g: num = -x + -y
+
+def h: bool = (x to 0.01) > y
+
+def i: num = -(x to 0.01) + y
+
+def j: bool = (flows(k, 2026-01 .. 2026-03) in PLN at fx half-up) > 3 PLN
+
+def k: num PLN/hour = 8 PLN/hour * 2
+
+def l: num = sum(v[t] for t in ks where t != aa)
+
+def m: num = flows(p, 2026-01-01 .. 2026-03-31)
+
+def n: rate = 19 %
+
+def o: num = 96 000
+
+def p: num = 1 000 000.5
+
+def q: num = 0.05
+
+def r: num = (if c then a else b) + 1
+
+def s: num = ?"why"
+
+def t: bool = x[k1, k2].f == min(a, b)
+
+version v
+  cite src
+  governs 2026..
+  known 2026-01-01
+  w = 1/180
+  w2 = -0.5 "art. 1"
+sha256 ...

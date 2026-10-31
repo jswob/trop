@@ -1,0 +1,23 @@
+# GD-1 (round 19): a version row `R.x = v` (L §2.3 row, whose qid no longer names a regime's input) names an unknown
+# id (L §8.3 LOAD-NAME).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+input rate: num
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  gains.rate = 2
+
+ask q: rate
+=== expect
+refused: LOAD-NAME unknown id gains.rate (m.tally:16)

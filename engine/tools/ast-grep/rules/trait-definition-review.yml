@@ -1,0 +1,24 @@
+id: trait-definition-review
+language: rust
+severity: warning
+message: 'R-124 (report): a trait definition, listed for review: no new trait without two implementations today'
+files:
+  - 'crates/*/src/**/*.rs'
+utils:
+  in-test-module:
+    inside:
+      kind: mod_item
+      stopBy: end
+      follows:
+        kind: attribute_item
+        regex: '^#\[cfg\(test\)\]$'
+        stopBy:
+          not:
+            any:
+              - kind: attribute_item
+              - kind: line_comment
+              - kind: block_comment
+rule:
+  kind: trait_item
+  not:
+    matches: in-test-module

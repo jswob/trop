@@ -1,0 +1,56 @@
+# L §5.14.3 (round 12): "for k: the period the amount is for ... flows(x, span, for k) reads only instances for period
+# k. A movement with no for (of a move without one, a pad, an observation that fulfils nothing) is for no period, and ,
+# for k leaves it out; an observation that fulfils an instance is for the instance's period." Over Jan-Apr: wage[m] is
+# for m (100.00 PLN each), bonus has no for, April is covered by a statement: bank[r1] (110.00) fulfils wage[2026-04],
+# bank[r2] (7.00) fulfils nothing. for 2026-03: 100.00; for 2026-04: 110.00; all: 3 x 100 + 100 + 110 + 7 = 517.00.
+# (Was REFCORE-UNSPECIFIED §5.14.3, writer 5's T-69.)
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input bank: observed
+input amt: money PLN
+input dom: int
+input bday: date
+
+move wage[m in months]: transfers
+  on day_of(m, dom)
+  for m
+  leg cash from world to konto amount amt
+
+move bonus: transfers
+  on bday
+  leg cash from world to konto amount amt
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN
+  dom = 10
+  bday = 2026-03-15
+  opening[konto] = 0 PLN at 2026-01-01 start "s"
+
+version st
+  cite s
+  governs 2026-04
+  known 2026-05-01
+  covers konto
+  bank[r1] = (on: 2026-04-10, kind: transfers, leg cash from world to konto amount 110.00 PLN, fulfils: wage[2026-04]) "l1"
+  bank[r2] = (on: 2026-04-20, kind: transfers, leg cash from world to konto amount 7.00 PLN) "l2"
+
+ask q: flows(konto, 2026-01-01 .. 2026-04-30, for 2026-03), flows(konto, 2026-01-01 .. 2026-04-30, for 2026-04), flows(konto, 2026-01-01 .. 2026-04-30)
+=== expect
+q: (100.00 PLN, 110.00 PLN, 517.00 PLN)
+  unfulfilled: bonus
+  unfulfilled: wage[2026-01]
+  unfulfilled: wage[2026-02]
+  unfulfilled: wage[2026-03]
+  cut 2026-12-31

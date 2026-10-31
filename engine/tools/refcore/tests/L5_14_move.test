@@ -1,0 +1,91 @@
+# L §5.14 example moves, copied whole, with the places and rows they name completed minimally (konto, landlord,
+# employer, kredyt; rent_dom, len, rent_amt, pay_amt, limit; openings).  Expected values from the stated rules:
+# schedule(m, 1, following, len) rolls a non-business 1st to the next business day (L §4.2: 2026-01-01 a holiday,
+# 02-01 and 03-01 Sundays: 01-02, 02-02, 03-02); the salary's day is the window of the 3rd- to last business days,
+# and the month-end balances don't depend on which day of it the salary lands: `windows each` prints one plain line
+# (L §4.4); the decision `draw` reads the running
+# balance after the day's plans (L §5.14.1: "the start of the day, plus the day's observations and plans") and
+# draws min(max(0, -bal(konto)), limit + bal(kredyt)).  So konto 1 000 - 3 000 = -2 000 on 01-02, draw 2 000
+# (kredyt -2 000); salary +2 000 (konto 2 000); 02-02: -1 000, draw 1 000 (kredyt -3 000); 03-02: draw 1 000
+# (kredyt -4 000); salary 03-31: konto 2 000.  Without a windows clause the salary's window makes konto's balance a
+# hole inside it (E §4.1 step 2: HOLE-IMPRECISE).  All on or after the cut 2026-01-01: plans, nothing unfulfilled.
+# Round 7's example writes the salary's lead as a row, last_business(m, pay_lead, len) (L §7.1); here pay_lead = 3.
+# (Writer 8: windows latest is gone; landlord, read by flows, is a thing of its own outside kind of unit PLN, since
+# L §5.10 refuses a unit on an outside place and flows of a place of unit any is refused, L §5.14.3.)
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-03-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+input rent_dom: int
+input len: calendar
+input rent_amt[m in months]: money PLN
+input pay_amt: money PLN
+input limit: money PLN
+input pay_lead: int
+
+kind wages: event certain
+  leg cash: PLN
+kind shortfalls: event certain
+  leg cash: PLN
+
+place konto: accounts PLN lives 2019-05-01..
+kind payees: place PLN signed outside
+place landlord: payees lives 1900-01-01..
+place employer: outside lives 1900-01-01..
+place kredyt: debts PLN lives 2020-01-01..
+
+move rent[m in months]: transfers
+  on schedule(m, rent_dom, following, len)
+  at start_of(m)
+  for m
+  leg cash from konto to landlord amount rent_amt[m]
+
+move salary[m in months]: wages
+  on window(last_business(m, pay_lead, len), last_business(m, 1, len))
+  at start_of(m)
+  leg cash from employer to konto amount pay_amt
+
+move draw[d in days]: shortfalls
+  on d
+  at d
+  reads konto, kredyt
+  leg cash from kredyt to konto amount min(max(0 PLN, -bal(konto)), limit + bal(kredyt))
+
+version v
+  cite s
+  governs 2026
+  known 2025-12-01
+  rent_dom = 1
+  len = calendar(weekends [sat, sun], yearly [01-01])
+  rent_amt = 3 000.00 PLN
+  pay_amt = 2 000.00 PLN
+  limit = 5 000.00 PLN
+  pay_lead = 3
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start
+  opening[kredyt] = 0 PLN at 2026-01-01 start
+
+ask jan: bal(konto, 2026-01-31), bal(kredyt, 2026-01-31) law 2026-01-31 windows each
+ask feb: bal(konto, 2026-02-28), bal(kredyt, 2026-02-28) law 2026-02-28 windows each
+ask mar: bal(konto, 2026-03-31), bal(kredyt, 2026-03-31) law 2026-03-31 windows each
+ask open_: bal(konto, 2026-01-29)
+ask when_: rent[2026-01].day, rent[2026-02].day, salary[2026-01].day
+ask rents: flows(rent, 2026-01-01 .. 2026-03-31, for 2026-02), flows(landlord, 2026-01-01 .. 2026-03-31)
+=== expect
+feb: (2 000.00 PLN, -3 000.00 PLN)
+  law date 2026-02-28, cut 2026-01-01
+jan: (2 000.00 PLN, -2 000.00 PLN)
+  law date 2026-01-31, cut 2026-01-01
+mar: (2 000.00 PLN, -4 000.00 PLN)
+  law date 2026-03-31, cut 2026-01-01
+open_: ?"date within window(2026-01-28, 2026-01-30) not precise enough for ...
+  cut 2026-01-01
+rents: (3 000.00 PLN, 9 000.00 PLN)
+  cut 2026-01-01
+when_: (2026-01-02, 2026-02-02, window(2026-01-28, 2026-01-30))
+  cut 2026-01-01

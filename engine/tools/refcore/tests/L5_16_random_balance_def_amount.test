@@ -1,0 +1,34 @@
+# MC-B-F5, a random amount. E §3.1 step 10, E §7 step 2, L §5.16 as in L5_16_random_balance_def: pay's amount reads
+# a sample, so w's balances and low_w are random and each path evaluates low_w on its own walk. Expected values from
+# the stated rules: January's balance is one bonus, uniform(0 DUK, amt) rounded down to the cent, so it is at least
+# 0.00 DUK and below amt = 100.00 DUK on every path, and low_w is at most January's: 3 of 3 for both lines.
+=== m.tally
+model m
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+unit DUK: currency minor 0.01
+source s "s"
+index delays = 1..10
+place w: accounts DUK lives 2026-01-01..
+place world: outside lives 2026-01-01..
+input amt: money DUK question "amount?"
+version o
+  cite s
+  known 2026-01-01
+  opening[w] = 0.00 DUK at 2026-01-01 start
+  amt = 100.00 DUK governs always "a"
+def bonus[m in months]: dist DUK = uniform(0 DUK, amt) to 0.01
+def low_w: money DUK = min(bal(w, end_of(m) - 1) for m in months)
+move pay[m in months]: transfers
+  on add_days(start_of(m), 1)
+  at start_of(m)
+  leg cash from world to w amount round(bonus[m], minor(DUK), down)
+ask q1: share(low_w < amt) law 2026-12-31 paths 3 seed 1
+ask q2: share(low_w >= 0.00 DUK) law 2026-12-31 paths 3 seed 1
+=== expect
+q1: 3 of 3, 1 (standard error 0; 3 paths; horizon none)
+  law date 2026-12-31, cut 2026-01-01
+q2: 3 of 3, 1 (standard error 0; 3 paths; horizon none)
+  law date 2026-12-31, cut 2026-01-01

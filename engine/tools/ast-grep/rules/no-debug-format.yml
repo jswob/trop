@@ -1,0 +1,23 @@
+id: no-debug-format
+language: rust
+severity: error
+message: "R-45: no debug formatting ({:?}) in library code: Debug's output is unstable; write the value's own form"
+note: "clippy's use_debug sees only print! and write!; this rule covers format!, format_args!, panic messages and the rest. Tests may debug-format: crates/*/tests/, benches, and a module right after #[cfg(test)]."
+files:
+  - 'crates/**/*.rs'
+ignores:
+  - 'crates/*/tests/**'
+  - 'crates/*/benches/**'
+rule:
+  kind: string_literal
+  regex: "\\{[^{}]*:[^{}]*\\?\\}"
+  inside:
+    kind: macro_invocation
+    stopBy: end
+  not:
+    inside:
+      kind: mod_item
+      stopBy: end
+      follows:
+        kind: attribute_item
+        regex: "^#\\[cfg\\(test\\)\\]$"

@@ -1,0 +1,121 @@
+# L §6.4 scenarios with their own items and a stack: the base pays a gift of 100.00 PLN on day 5 of each month to
+# each person (ana only) into konto (opening 0 PLN at 2026-01-01).  Scenario child (from 2027-01-01) enters a
+# hypothetical child ola living from 2027-03-01 ("Its file may hold versions, entries of things (a hypothetical
+# child), and new sections") and a new input and move: a benefit of 50.00 PLN on day 5 for ola.  Scenario twins over
+# child (from 2028-01-01) enters ela living from 2028-02-01 and replaces the benefit with 80.00 PLN from 2028.
+# "Every rule of §4.5 and §4.6 applies to them": twins' replace is known after child's row (2026-10-20 > 2026-10-15).
+# c1: base: 24 gifts to 2027-12-31: 2 400.00 PLN; one person on 2027-06-01.
+# c2: in child: + 10 gifts to ola (2027-03..12) + 10 benefits = 2 400 + 1 000 + 500 = 3 900.00 PLN; two persons.
+# c3: base to 2028-12-31: 36 gifts, 3 600.00 PLN.  c3b: child: 3 600 + 22 gifts to ola (2 200) + benefits 2027
+# (10 * 50) and 2028 (12 * 50) = 6 900.00 PLN.
+# c4: one line per person alive on 2028-06-01: ana in both worlds (unchanged, counted), ola and ela only in twins
+# (added) (L §5.18 diff).
+# c5, t1: twins: 3 600 + ola's gifts 2 200 + ela's 11 gifts (2028-02..12) 1 100 + benefits 2027 500 and 2028
+# 12 * 80 = 960: 8 360.00 PLN; as if {scenario child} gives child's 6 900.00 PLN (L §6.4 Asking); the world:
+# register lists the ask's in and the scenario it reached (L §8.2).  Rows read after the cut: held; the instances
+# before the cut no observation fulfils: unfulfilled (L §8.2), not asserted line by line.
+# (Writer 8: c4's lines go in binding order, the text order of the stable ids persons:ela < persons:ola, L §2.5,
+# §5.18 Lines; things no longer go by entry day.)
+=== household.tally
+model household
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2030-12-31
+
+source plan "plan"
+unit PLN: currency minor 0.01
+kind persons
+kind gifts: event certain
+  leg cash: PLN
+place konto: accounts PLN lives 2019-05-01..
+place world: outside lives 1900-01-01..
+input gift_amt: money PLN
+input gift_dom: int
+
+move gift[m in months, p in persons on day_of(m, gift_dom)]: gifts
+  on day_of(m, gift_dom)
+  at start_of(m)
+  leg cash from world to konto amount gift_amt
+
+version plan_2026
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  persons + [ana] lives 1990-04-02..
+  gift_amt = 100.00 PLN "own"
+  gift_dom = 5 "own"
+  opening[konto] = 0 PLN at 2026-01-01 start "wyciąg"
+
+ask c1: bal(konto, 2027-12-31), count(p in persons on 2027-06-01)
+ask c2: bal(konto, 2027-12-31), count(p in persons on 2027-06-01) in child
+ask c3: bal(konto, 2028-12-31) in household
+ask c3b: bal(konto, 2028-12-31) in child
+ask c4: diff(gift_amt for p in persons on 2028-06-01) in twins against household law 2028-06-01
+ask c5: diff(bal(konto, 2028-12-31)) in twins against child
+=== child.tally
+scenario child over household
+  tally 2
+  from 2027-01-01
+  note "a child in March 2027"
+
+input benefit_amt: money PLN
+move benefit[m in months, p in persons on day_of(m, gift_dom)]: gifts
+  on day_of(m, gift_dom)
+  at start_of(m)
+  when p == ola
+  leg cash from world to konto amount benefit_amt
+
+version ola_born
+  cite plan
+  governs 2027..
+  known 2026-10-15
+  persons + [ola] lives 2027-03-01..
+  benefit_amt = 50.00 PLN "benefit act"
+=== twins.tally
+scenario twins over child
+  tally 2
+  from 2028-01-01
+
+version ela_born
+  cite plan
+  governs 2028..
+  known 2026-10-20
+  persons + [ela] lives 2028-02-01..
+  replace benefit_amt = 80.00 PLN "benefit act, two children"
+
+ask t1: bal(konto, 2028-12-31), bal(konto, 2028-12-31) as if {scenario child} in twins
+=== expect
+c1: (2 400.00 PLN, 1)
+...
+  cut 2026-10-20
+c2: (3 900.00 PLN, 2)
+  world: child
+...
+  cut 2026-10-20
+c3: 3 600.00 PLN
+  world: household
+...
+  cut 2026-10-20
+c3b: 6 900.00 PLN
+  world: child
+...
+  cut 2026-10-20
+c4: diff in twins against household: 0 changed, 2 added, 0 removed, 1 unchanged
+  added (p = ela): 100.00 PLN
+  added (p = ola): 100.00 PLN
+  world: household
+  world: twins
+...
+  law date 2028-06-01, cut 2026-10-20
+c5: diff in twins against child: 1 changed, 0 added, 0 removed, 0 unchanged
+  changed bal(konto, 2028-12-31): 8 360.00 PLN against 6 900.00 PLN
+  world: child
+  world: twins
+...
+  cut 2026-10-20
+t1: (8 360.00 PLN, 6 900.00 PLN)
+  world: child
+  world: twins
+...
+  cut 2026-10-20

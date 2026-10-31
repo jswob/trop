@@ -1,0 +1,22 @@
+# Round 18, C1-17 (follows). L §4.1 `by n` no longer gives a key a law date ("Its law date is its first day" is gone);
+# L §4.3: "A period is not a law date. at m with m a month is refused (LOAD-LAWPERIOD)". A key of a month range by 3
+# (a quarter, L §4.1) is a month: `at q` is refused.
+=== m.tally
+model m
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+source s "s"
+unit PLN: currency minor 0.01
+index qs = month 2026-01..2026-12 by 3
+input fee: money PLN
+def f[q in qs]: money PLN = fee at q
+version v1
+  cite s
+  governs 2026..
+  known 2025-12-01
+  fee = 5
+ask a: f[2026-04]
+=== expect
+refused: LOAD-LAWPERIOD at q: a period is not a law date (m.tally:10)

@@ -1,0 +1,23 @@
+o3_feb: 9 200.00 DUK
+  assumed: F6: the forecast's own figures, where no notice is published yet (avg_wage_q4)
+  world: forecast
+  law date 2026-02-15, cut 2026-01-02
+warning: WARN-UNREAD source b_d06 is read by nothing
+warning: WARN-UNREAD source b_d14 is read by nothing
+warning: WARN-UNREAD source b_d17 is read by nothing
+warning: WARN-UNREAD source b_d18 is read by nothing
+warning: WARN-UNREAD source b_d21 is read by nothing
+warning: WARN-UNREAD source b_d23 is read by nothing
+warning: WARN-UNREAD source b_d27 is read by nothing
+warning: WARN-UNREAD source b_d30 is read by nothing
+warning: WARN-UNREAD input born is read by nothing
+warning: WARN-UNREAD input cc1_settle_days is read by nothing
+warning: WARN-UNREAD input pit4_lower_wording is read by nothing
+warning: WARN-UNREAD input pit5_refund_days is read by nothing
+warning: WARN-UNREAD input soc1_er_pension is read by nothing
+warning: WARN-UNREAD input soc_cap is read by nothing
+warning: WARN-UNREAD input soc2_deductible is read by nothing
+warning: WARN-UNREAD input soc4_rate_b is read by nothing
+warning: WARN-UNREAD input tt2_lookback_years is read by nothing
+warning: WARN-UNREAD input vat5_late_months is read by nothing
+warning: WARN-UNREAD input hr3_share is read by nothing

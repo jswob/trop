@@ -1,0 +1,18 @@
+# L §5.3: "LOAD-KIND: an addition to a range or an open index."
+=== m.tally
+model t
+  tally 2
+  on 2016-03-01
+  start 2015-11-01
+  end 2016-10-31
+
+source s "s"
+
+index ks = 1..3
+
+version v
+  cite s
+  known 2016-01-01
+  ks + [4]
+=== expect
+refused: LOAD-KIND ...

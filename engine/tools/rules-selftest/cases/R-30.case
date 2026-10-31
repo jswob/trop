@@ -1,0 +1,53 @@
+# R-30: one number stack, pinned exactly, default features off; every alternative and
+# the float and randomness features banned.
+
+case: pin-loosened
+tool: run
+expect: the four pins
+--- replace Cargo.toml
+num-integer = { version = "=0.1.47", default-features = false }
+--- with
+num-integer = { version = "0.1.47", default-features = false }
+--- run
+tools/check-rules
+
+case: default-features-on
+tool: run
+expect: the four pins
+--- replace Cargo.toml
+num-traits = { version = "=0.2.19", default-features = false }
+--- with
+num-traits = { version = "=0.2.19" }
+--- run
+tools/check-rules
+
+case: num-traits-std
+tool: deny-tally
+expect: feature-banned
+text: std
+--- replace Cargo.toml
+num-traits = { version = "=0.2.19", default-features = false }
+--- with
+num-traits = { version = "=0.2.19", default-features = false, features = ["std"] }
+
+case: num-rational
+tool: deny
+expect: banned
+text: num-rational
+--- fake num-rational 0.0.1
+--- replace crates/tally/Cargo.toml
+[dependencies]
+--- with
+[dependencies]
+num-rational = { path = "@FAKES@/num-rational-0.0.1", version = "0.0.1" }
+
+case: second-big-integer
+tool: deny
+expect: banned
+text: ibig
+--- fake ibig 0.0.1
+--- replace crates/tally/Cargo.toml
+[dependencies]
+--- with
+[dependencies]
+ibig = { path = "@FAKES@/ibig-0.0.1", version = "0.0.1" }

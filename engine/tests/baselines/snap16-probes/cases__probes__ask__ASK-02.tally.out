@@ -1,0 +1,4 @@
+q_net_worth (p = piotr): 220 000 DUK
+  law date 2025-06-30, cut 2025-06-30
+q_net_worth (p = ola): 200 000 DUK + 1 × ?"What is Ola's car worth on 2025-06-30? Nobody has valued it." (car_value)
+  law date 2025-06-30, cut 2025-06-30

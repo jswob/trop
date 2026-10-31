@@ -1,0 +1,21 @@
+# R-43: no unstable sorts.
+
+case: sort-unstable
+tool: clippy
+expect: clippy::disallowed_methods
+text: R-43
+--- module
+/// Planted.
+pub fn planted(v: &mut [u8]) {
+    v.sort_unstable();
+}
+
+case: sort-unstable-by-key
+tool: clippy
+expect: clippy::disallowed_methods
+text: R-43
+--- module
+/// Planted.
+pub fn planted(v: &mut [u8]) {
+    v.sort_unstable_by_key(|x| core::cmp::Reverse(*x));
+}

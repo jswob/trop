@@ -1,0 +1,40 @@
+# L §8.3 item 10 (round 19, GD-4): "The random cone (step 10): every item that reaches a dist fact through the item graph,
+# in each world, and through every place a random movement books into: a balance or a projection of such a place is in
+# the cone, so a line that reads it without a query is refused at load, as any random line is (LOAD-RANDOM, §5.16)";
+# E §3.1 step 10. buy (amount round(spend[m]), a dist) books konto. flows(konto, 2026-03) on an ask line reads the movements booked at konto: in
+# the cone, refused at load.
+=== m.tally
+model r
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source own "own"
+unit PLN: currency minor 0.01
+kind spends: event certain
+  leg cash: PLN
+place konto: accounts PLN lives 2020-01-01..
+place shop: outside lives 1900-01-01..
+input spend_mu: money PLN
+input spend_sd: money PLN
+input spend_dom: int
+def spend[m in months]: dist PLN = normal(spend_mu, spend_sd) to 1e-9 at end_of(m)
+
+move buy[m in months]: spends
+  on day_of(m, spend_dom)
+  at end_of(m)
+  leg cash from konto to shop amount round(spend[m], minor(PLN), half-even)
+
+version v
+  cite own
+  governs 2026..
+  known 2026-01-01
+  spend_mu = 1 000.00 PLN "own"
+  spend_sd = 100.00 PLN "own"
+  spend_dom = 15 "own"
+  opening[konto] = 10 000.00 PLN at 2026-01-01 start "statement"
+
+ask f1: flows(konto, 2026-03)
+=== expect
+refused: LOAD-RANDOM ask f1: flows(konto, 2026-03) is random; apply a query (m.tally:32)

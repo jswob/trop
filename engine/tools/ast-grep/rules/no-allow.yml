@@ -1,0 +1,15 @@
+id: no-allow
+language: rust
+severity: error
+message: 'R-103: an exception is #[expect(lint, reason = "R-n: ...")], never #[allow]: not outer, inner, in cfg_attr or in a macro body'
+rule:
+  any:
+    - kind: attribute_item
+      regex: "\\ballow\\s*\\("
+    - kind: inner_attribute_item
+      regex: "\\ballow\\s*\\("
+    - kind: token_tree
+      regex: "^\\[\\s*allow\\s*\\("
+      inside:
+        kind: macro_definition
+        stopBy: end

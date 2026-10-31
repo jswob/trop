@@ -1,0 +1,396 @@
+part flat
+  tally 2
+  note "The flat ul. Wrzosowa 12/5 (B-D04), its mortgage 7710-22 at Bank Jodła (B-D07, B-D08, B-D28), the lease it replaced (B-D31, B-D32), Ola's studio (B-D33, B-D34), the kitchen quote (B-D35) and the flat's costs under B-HR1 (B-D09, B-D10)."
+  note "The mortgage's schedule runs over the loan's own days and months (reality.tally: loan_days, loan_months), past the run's end, as defs: the balance at the end of each day, interest accrued daily on it at the rate in force and summed per instalment, instalments recomputed after each reset and overpayment (B-D07 .2-.5). Balances are reduced on the instalment's own day (the 5th, B-D07 .1: the interest is counted to the 5th); the payment moves Cis on the business day."
+
+input deed_day: date question "On which day was the deed signed (B-D04)?"
+
+input deposit: money DUK question "What deposit was paid on the lease (B-D31 .2)?"
+
+input deposit_back: money DUK question "What came back of the deposit (B-D32)?"
+
+input deposit_back_on: date question "On which day was the deposit returned (B-D32)?"
+
+input flat_fee: money DUK question "What is the building's monthly fee (B-D09)?"
+
+input flat_ins_paid: date question "On which day was the flat's insurance paid (B-D10)?"
+
+input flat_insurance: money DUK question "What was the flat insurance's premium (B-D10)?"
+
+input flat_market: money DUK question "What market value do the parties state for the flat (B-D04 .1)?"
+
+input flat_price: money DUK question "What was the flat's price (B-D04 .1)?"
+
+input flat_value: money DUK question "What is the flat's latest valuation (B-D29)?"
+
+input held[m in loan_months]: bool question "Was this month's instalment suspended under MTG-1 (B-D08)?"
+
+input insurance_payer: key persons question "Who paid the flat's insurance (B-D10)?"
+
+input jodla_paid[r in jodla_rows]: (booked date, what key jodla_kinds, amount money DUK, fee money DUK) question "What does this row of Bank Jodła's 2025 list say (B-D28)?"
+
+input kitchen_ordered: bool question "Will we order the kitchen of B-D35, and Ola pay her 40 % of it, by the end of the third year after the studio's sale (PIT-12 .4)?"
+
+input kitchen_price: money DUK question "What does the fitted kitchen cost (B-D35)?"
+
+input kitchen_split[p in persons]: num question "What part of the fitted kitchen would this person pay (story)?"
+
+input lease_end: date question "On which day did the lease end (B-D32)?"
+
+input mtg_amount: money DUK question "What was the mortgage's amount (B-D07 .1)?"
+
+input mtg_dom: int question "On which day of the month are instalments due (B-D07 .1)?"
+
+input mtg_fee: num question "What fee is charged on an overpayment within the fee months (B-D07 .5)?"
+
+input mtg_first: month question "In which month is the first instalment (B-D07 .1)?"
+
+input mtg_margin: rate question "What is the margin over DUKOR 6M, a yearly rate (B-D07 .2)?"
+
+input mtg_reset_gap: int question "How many months apart are the rate's resets, from 1 January (B-D07 .2)?"
+
+input mtg_round: rounding question "How are the instalment and the interest rounded to the ort (B-D07 .3, .4)?"
+
+input mtg_terms: int question "How many monthly instalments (B-D07 .1)?"
+
+input notary_paid[p in persons]: money DUK question "What did this buyer pay of the notary's fee (B-D04 .4)?"
+
+input order_rejected[m in months]: bool question "Was Ola's standing order of this month rejected (her Wrzos statement)?"
+
+input own_paid[p in persons]: money DUK question "What did this buyer pay of the price from their own money (B-D04 .2)?"
+
+input own_share[p in persons]: num question "What share of the flat does this person own (B-D04)?"
+
+input rent: money DUK question "What was the monthly rent of ul. Lipowa 4/7 (B-D31 .1)?"
+
+input seller_vat_payer: bool question "Is the flat's seller a VAT taxpayer (B-D04)?"
+
+input studio_bought: date question "When did Ola buy the studio (B-D33)?"
+
+input studio_buy_notary: money DUK question "What notary's fee did the studio's buyer pay (B-D33)?"
+
+input studio_buy_price: money DUK question "What price did the studio's buyer pay (B-D33)?"
+
+input studio_buy_tt: money DUK question "What transfer tax was collected on the studio's purchase (B-D33)?"
+
+input studio_owner: key persons question "Who bought the studio, and so sold it (B-D33, B-D34)?"
+
+input studio_price: money DUK question "What did the studio sell for (B-D34)?"
+
+input studio_sale_cost: money DUK question "What did selling the studio cost (B-D34: the agent's invoice)?"
+
+input studio_sold: date question "When was the studio sold (B-D34)?"
+
+input ord_dom: int question "On which day of the month does Ola's standing order to Piotr go (B-HR1 .2)?"
+
+input ord_amount: money DUK question "What does Ola send Piotr each month for the flat (B-HR1 .2)?"
+
+input overpay_from: date question "From which day may the mortgage have been overpaid (the dossier names no overpayment before the 26th rule)?"
+
+def bdays_due[m in loan_months]: date = day_of(m, mtg_dom)
+
+def flat_costs[y in years]: money DUK
+  note "B-HR1 .1: the instalments and overpayments (fees included) as Bank Jodła lists them (B-D28), the building fee (B-D09) and the flat's insurance (B-D10)"
+  rule listed = sum(jodla_paid[r].amount for r in jodla_rows where year_of(jodla_paid[r].booked) == y) + sum(fee_month[k] for k in months where year_of(k) == y) + (if year_of(flat_ins_paid) == y then flat_insurance else 0 DUK)
+
+def fee_month[m in months]: money DUK = flat_fee at start_of(m)
+
+def flat_part[p in persons]: money DUK
+  rule ola_r = round(flat_value * own_share[p], minor(DUK), half-up) when p == ola
+  rule piotr_r beats ola_r = flat_value - flat_part[ola] when p == piotr
+
+def is_reset[d in loan_days]: bool = d == start_of(year_of(d)) or d == add_months(start_of(year_of(d)), mtg_reset_gap)
+
+def last_event[d in loan_days]: date
+  note "the latest reset or overpayment day up to d, for B-D07 .4's recomputation"
+  rule before = deed_day
+  rule later beats before = (if is_reset[d] or ov_on[d] > 0 DUK then start_of(d) else last_event[d - 1]) when pos(d) > 1 and d > deed_day
+
+def last_live_due[m in loan_months]: date
+  rule first = deed_day
+  rule later beats first = (if mtg_live[m - 1] then bdays_due[m - 1] else last_live_due[m - 1]) when pos(m) > 1
+
+def mtg_bal[d in loan_days]: money DUK
+  note "the balance at the end of day d: paid out on the deed's day (B-D04 .2), reduced by each instalment's principal on its day and by each overpayment less its fee (B-D07 .5)"
+  rule before = 0 DUK
+  rule paid_out beats before = mtg_amount when d == deed_day
+  rule later beats before, paid_out = mtg_bal[d - 1] - principal_on[d] - (ov_on[d] - ov_fee[d]) when pos(d) > 1 and d > deed_day
+
+def mtg_cum_int[d in loan_days]: num DUK
+  note "interest accrued from the payment day to the end of day d (B-D07 .3): each day on its end-of-day balance at the rate in force, over 365 days; nothing in a suspended month (MTG-1 .3)"
+  rule before = 0 DUK
+  rule later beats before = mtg_cum_int[d - 1] + mtg_day_int[d] when pos(d) > 1 and d > deed_day
+  rule first beats before = mtg_day_int[d] when d == deed_day
+
+def mtg_day_int[d in loan_days]: num DUK = if held[period_of[d]] then 0 DUK else accrue(mtg_bal[d], mtg_rate[d], d, d + 1, act365, simple)
+
+def mtg_inst[m in loan_months]: money DUK
+  note "B-D07 .4: equal instalments, set again at the first instalment after each reset and after each overpayment, for the instalments left; the last settles the rest. The periodic rate is the yearly rate over 12 months, nominal 12: an assumption, stated by the version annuity_monthly the rule points at (O:B-5)"
+  rule carry = mtg_inst[m - 1] when pos(m) > 1
+  rule reset beats carry v annuity_monthly = round(mtg_bal[bdays_due[m] - 1] * periodic(mtg_rate[bdays_due[m]], month, nominal 12) * factor(mtg_rate[bdays_due[m]], mtg_terms - n_before[m], month, nominal 12) / (factor(mtg_rate[bdays_due[m]], mtg_terms - n_before[m], month, nominal 12) - 1), minor(DUK), mtg_round) when n_before[m] == 0 or last_event[bdays_due[m]] > last_live_due[m]
+  rule last beats reset, carry = mtg_bal[bdays_due[m] - 1] + mtg_interest[m] when n_before[m] == mtg_terms - 1
+
+def mtg_interest[m in loan_months]: money DUK = if mtg_live[m] then round(mtg_cum_int[bdays_due[m] - 1] - mtg_cum_int[last_live_due[m] - 1], minor(DUK), mtg_round) else 0 DUK
+
+def mtg_interest_year[y in years]: money DUK = sum(mtg_interest[k] for k in loan_months where year_of(k) == y and mtg_live[k])
+
+def mtg_last: date = max(bdays_due[k] for k in loan_months where mtg_live[k])
+
+def mtg_live[m in loan_months]: bool = start_of(m) >= start_of(mtg_first) and not held[m] and n_before[m] < mtg_terms
+
+def mtg_part[p in persons, d in loan_days]: money DUK
+  note "B-HR4 .1: the mortgage split by the shares, Ola's part to the ort, half up, Piotr's the rest"
+  rule ola_r = round(mtg_bal[d] * own_share[p], minor(DUK), half-up) when p == ola
+  rule piotr_r beats ola_r = mtg_bal[d] - mtg_part[ola, d] when p == piotr
+
+def mtg_rate[d in loan_days]: rate = dukor_6m[rate_fix[d]] + mtg_margin
+
+def n_before[m in loan_months]: int
+  rule first = 0
+  rule later beats first = n_before[m - 1] + (if mtg_live[m - 1] then 1 else 0) when pos(m) > 1
+
+def ola_flat_paid[y in years]: money DUK
+  note "B-HR1 .2: what Ola sent Piotr by standing order in the year (her orders as Cis records them, the plan where no export covers the day), and the insurance if she paid it"
+  rule base = flows(ola_order, y) + (if insurance_payer == ola and year_of(flat_ins_paid) == y then flat_insurance else 0 DUK)
+
+def ola_owes_piotr[y in years]: money DUK = ola_share_flat[y] - ola_flat_paid[y]
+
+def ola_share_flat[y in years]: money DUK = round(flat_costs[y] * own_share[ola], minor(DUK), half-up)
+
+def ov_fee[d in loan_days]: money DUK = if d < add_months(deed_day, mtg2_free_months) then round(ov_on[d] * min(mtg_fee, mtg2_fee_cap), minor(DUK), half-up) else 0 DUK at d
+
+def ov_on[d in loan_days]: money DUK
+  note "what was overpaid on day d: Bank Jodła's list where it covers the year (B-D28), else the Cis export's overpayment rows (records), none before the rule and none on a day it doesn't run; on a day of the 26th rule that no export covers, what the rule decides (B-HR2: its projection, a hole where its balances are). mtg_pay reads hr2_overpay through this, so it is a decision (L §5.14.1)."
+  rule unknown = ?"Was the mortgage overpaid on this day? No export or bank list covers it"
+  rule none_before beats unknown = 0 DUK when d < overpay_from
+  rule off_day beats unknown = 0 DUK when d >= overpay_from and not hr2_runs[d]
+  rule decided beats unknown, off_day = (if hr2_runs[d] then hr2_overpay[d].cash.amount else 0 DUK) when d >= overpay_from and not covered(cis, d)
+  rule seen beats unknown, off_day = sum(o.cash.amount for o in cisr over d where o.cash.to == jodla_over) when d >= overpay_from and covered(cis, d)
+  rule listed beats unknown, none_before, off_day, seen, decided = sum(jodla_paid[r].amount for r in jodla_rows where jodla_paid[r].booked == d and jodla_paid[r].what == overpayment) when any(year_of(jodla_paid[r].booked) == year_of(d) for r in jodla_rows)
+
+def period_of[d in loan_days]: month = if d >= day_of(month_of(d), mtg_dom) then month_of(d) + 1 else month_of(d)
+
+def principal_on[d in loan_days]: money DUK = if d == bdays_due[month_of(d)] and mtg_live[month_of(d)] then mtg_inst[month_of(d)] - mtg_interest[month_of(d)] else 0 DUK
+
+def rate_fix[d in loan_days]: date = add_business(reset_day[d], -1, holidays) at reset_day[d]
+
+def ord_day[m in months]: date at start_of(m)
+  note "B-HR1 .2: Ola's standing order goes on the 5th, or the next business day where the 5th isn't one. Where no row of the calendar governs the month yet (2026's, at a cut before the gazette's hol_2026, known 2025-10-16), the rule still bounds the day: a day of that month, not before the 5th"
+  rule hr1 = schedule(m, ord_dom, following, holidays)
+  rule no_calendar beats hr1 v hr1 = window(day_of(m, ord_dom), end_of(m)) when missing(holidays)
+
+def rent_owned: money DUK = sum(round(rent * overlap_days(deed_day, lease_end, k) / days_between(start_of(k), end_of(k)), minor(DUK), answer_round) for k in months where start_of(k) <= lease_end and end_of(k) > deed_day)
+
+def reset_day[d in loan_days]: date = max(deed_day, if d >= add_months(start_of(year_of(d)), mtg_reset_gap) then add_months(start_of(year_of(d)), mtg_reset_gap) else start_of(year_of(d)))
+
+def studio_cost: money DUK
+  note "PIT-12 .1: the acquisition cost, the price with the purchase's costs (B-D33's three figures)"
+  rule only = studio_buy_price + studio_buy_tt + studio_buy_notary
+
+def studio_exempt[p in persons]: num DUK at studio_sold
+  rule not_seller = none
+  rule share beats not_seller = studio_income * min(studio_price, studio_spent[p]) / studio_price when p == studio_owner
+
+def studio_income: money DUK = studio_price - studio_sale_cost - studio_cost
+
+def studio_spent[p in persons]: num DUK at studio_sold
+  note "PIT-12 .4: what the seller spent on her own housing within 3 years after the end of the sale's year: at the deed her part of the price, its transfer tax and her part of the notary's fee (B-D04), and her share of the kitchen if it is ordered by then (the question counts nothing else: B-04)"
+  rule not_seller = none
+  rule deed beats not_seller = own_paid[p] + tt_due[p] + notary_paid[p] when p == studio_owner
+  rule kitchen beats not_seller, deed = own_paid[p] + tt_due[p] + notary_paid[p] + kitchen_price * kitchen_split[p] when p == studio_owner and kitchen_by_deadline
+
+def studio_tax_return[p in persons]: money DUK at studio_sold
+  note "PIT-12 .2-.4: taxed when sold before the end of the 5th year after the year of acquisition; 19 % of the income less the exempt part, base and tax rounded (GEN-5 .1); in the 2021 return only what was spent by then counts"
+  rule not_seller = none
+  rule untaxed beats not_seller = 0 DUK when p == studio_owner
+  rule taxed beats not_seller, untaxed = round(round(studio_income - studio_income * min(studio_price, own_paid[p] + tt_due[p] + notary_paid[p]) / studio_price, 1 DUK, half-up) * pit12_rate, 1 DUK, half-up) when p == studio_owner and year_of(studio_sold) <= year_of(studio_bought) + pit12_taxed_years
+
+def kitchen_by_deadline: bool = kitchen_ordered at add_years(end_of(year_of(studio_sold)), pit12_spend_years) - 1
+
+def studio_tax_end[p in persons]: money DUK at studio_sold
+  rule not_seller = none
+  rule untaxed beats not_seller = 0 DUK when p == studio_owner
+  rule taxed beats not_seller, untaxed = round(round(studio_income - studio_exempt[p], 1 DUK, half-up) * pit12_rate, 1 DUK, half-up) when p == studio_owner and year_of(studio_sold) <= year_of(studio_bought) + pit12_taxed_years
+
+def tt_due[p in persons]: money DUK at deed_day
+  note "TT-1 .1-.3: 2 % of the market value (the price unless below it) on each buyer's share, from a seller who is not a VAT taxpayer, rounded (GEN-5 .1)"
+  rule none_r = 0 DUK
+  rule tt1 beats none_r = round(tt1_rate * max(flat_price, flat_market) * own_share[p], 1 DUK, half-up) when not seller_vat_payer
+
+move mtg_pay[m in months]: transfers
+  on schedule(m, mtg_dom, following, holidays)
+  at bdays_due[m]
+  when mtg_live[m]
+  reads hr2_overpay
+  leg cash from cis to jodla amount mtg_inst[m]
+
+move ola_order[m in months]: transfers
+  on ord_day[m]
+  at start_of(m)
+  when not order_rejected[m] and start_of(m) > deed_day
+  leg cash from wrzos to cis amount ord_amount
+
+version studio_purchase
+  cite b_d33
+  governs always
+  known 2019-06-14
+  studio_bought = 2019-06-14 "B-D33: the deed of 14 June 2019"
+  studio_buy_notary = 2100.00 DUK "B-D33: the notary's fee 2 100.00 DUK, paid by the buyer"
+  studio_buy_price = 250000.00 DUK "B-D33: Price 250 000.00 DUK"
+  studio_buy_tt = 5000.00 DUK "B-D33: Transfer tax collected 5 000.00 DUK"
+  studio_owner = ola "B-D33: Buyer: Aleksandra Wilk, alone"
+
+version lease
+  cite b_d31
+  governs always
+  known 2019-08-26
+  deposit = 6400.00 DUK "B-D31 .2"
+  rent = 3200.00 DUK "B-D31 .1"
+
+version studio_sale
+  cite b_d34
+  governs always
+  known 2021-11-22
+  studio_price = 312000.00 DUK "B-D34"
+  studio_sale_cost = 7800.00 DUK "B-D34: the agent's invoice 2021/11/88"
+  studio_sold = 2021-11-22 "B-D34"
+
+version mortgage_terms
+  cite b_d07
+  governs always
+  known 2022-03-10
+  held[*] = false "B-D07 .1: an instalment every month; only a notice under MTG-1 suspends one (B-D07 .6)"
+  mtg_amount = 420000.00 DUK "B-D07 .1"
+  mtg_dom = 5 "B-D07 .1: on the 5th of each month"
+  mtg_fee = 0.02 "B-D07 .5: 2 % of the amount overpaid within 36 months of the payment day"
+  mtg_first = 2022-04 "B-D07 .1: the first on 5 April 2022"
+  mtg_margin = 2.10 %/year "B-D07 .2: a margin of 2.10 percentage points, a year"
+  mtg_reset_gap = 6 "B-D07 .2: reset on 1 January and 1 July"
+  mtg_round = half-up assumed "B-D07 .3 rounds the interest to the ort and names no mode; the instalment's rounding isn't stated: half up for both" "B-D07 .3, .4"
+  mtg_terms = 300 "B-D07 .1: 300 monthly instalments"
+
+version annuity_monthly
+  cite modeller
+  governs always
+  known 2022-03-10
+  assumed "B-D07 .4 says equal instalments (annuity) but names no periodic rate: the yearly rate over 12 months, nominal 12 (O:B-5)"
+  note "The rule mtg_inst.reset points at this version, so every instalment it sets lists the assumption."
+
+version deed
+  cite b_d04
+  governs always
+  known 2022-03-18
+  deed_day = 2022-03-18 "B-D04"
+  flat_market = 600000.00 DUK "B-D04 .1: which the parties state is its market value"
+  flat_price = 600000.00 DUK "B-D04 .1"
+  notary_paid[piotr] = 2952.00 DUK "B-D04 .4"
+  notary_paid[ola] = 1968.00 DUK "B-D04 .4"
+  own_paid[piotr] = 108000.00 DUK "B-D04 .2"
+  own_paid[ola] = 72000.00 DUK "B-D04 .2"
+  own_share[piotr] = 0.60 "B-D04: a 60 % share"
+  own_share[ola] = 0.40 "B-D04: a 40 % share"
+  seller_vat_payer = false "B-D04: Jan Nowik, a private person, not a VAT taxpayer"
+
+version hr1
+  cite house_rules
+  governs always
+  known 2022-03-18
+  ord_amount = 1700.00 DUK "B-HR1 .2"
+  ord_dom = 5 "B-HR1 .2: on the 5th of each month, the next business day where the 5th isn't one"
+  order_rejected[*] = false "B-HR1 .2: a standing order each month; only a statement shows one rejected"
+
+version kitchen_quote
+  cite b_d35
+  governs always
+  known 2022-04-20
+  kitchen_price = 45000.00 DUK "B-D35: 45 000.00 DUK gross"
+
+version kitchen_shares
+  cite story
+  governs always
+  known 2022-04-20
+  kitchen_split[piotr] = 0.60 "story, 2022-04-20: We would share it 60/40"
+  kitchen_split[ola] = 0.40 "story, 2022-04-20: We would share it 60/40"
+
+version kitchen_open
+  cite b_d35
+  governs always
+  known 2022-04-20
+  kitchen_ordered = ?"Will we order the fitted kitchen of B-D35 (not ordered yet), and will Ola pay her 40 % of it by 2024-12-31 (PIT-12 .4)?" "B-D35; story: 2022-04-20, we haven't ordered it"
+
+version lease_settled
+  cite b_d32
+  governs always
+  known 2022-07-15
+  deposit_back = 6050.00 DUK "B-D32: I return 6 050.00 DUK today"
+  deposit_back_on = 2022-07-15 "B-D32: today, 15.07.2022"
+  lease_end = 2022-06-30 "B-D32: the lease ended on 30.06.2022"
+
+version holidays_granted
+  cite b_d08
+  governs always
+  known 2022-08-01
+  note "B-D08 (issued 2023-01-24) lists five suspensions; the story knows each on its notice's day, so each row is known then."
+  held[2022-08] = true known 2022-08-01 "B-D08: notice of 01.08.2022"
+  held[2022-09] = true known 2022-08-22 "B-D08: notice of 22.08.2022"
+  held[2022-11] = true known 2022-10-24 "B-D08: notice of 24.10.2022"
+  held[2022-12] = true known 2022-11-21 "B-D08: notice of 21.11.2022"
+  held[2023-02] = true known 2023-01-23 "B-D08: notice of 23.01.2023"
+
+version valuation
+  cite b_d29
+  governs always
+  known 2024-11-08
+  flat_value = 640000.00 DUK "B-D29: valued on 05.11.2024 at 640 000.00 DUK"
+
+version building_fee_2025
+  cite b_d09
+  governs always
+  known 2024-12-12
+  flat_fee = 690.00 DUK governs 2025-01-01..2025-12-31 "B-D09: the monthly fee for 2025"
+
+version overpay_none_before
+  cite story
+  governs always
+  known 2022-03-10
+  overpay_from = 2025-01-26 assumed "the dossier names no overpayment before the 26th rule starts (story, B-HR2 v1; B-D28 lists 2025 only)" "story: 2025-01-26, house rule B-HR2 v1"
+
+version flat_policy
+  cite b_d10
+  governs always
+  known 2025-03-10
+  flat_ins_paid = 2025-03-10 "B-D10: paid on 10.03.2025"
+  flat_insurance = 520.00 DUK "B-D10: premium 520.00 DUK"
+  insurance_payer = ola "B-D10: paid on 10.03.2025 by Aleksandra Wilk"
+
+version wrzos_march
+  cite wrzos_export
+  governs always
+  known 2025-03-05
+  order_rejected[2025-03] = true "wrz-ola-2025-03.csv line 8 STANDING ORDER REJECTED flat share - insufficient funds"
+
+version jodla_2025
+  cite b_d28
+  governs always
+  known 2026-01-07
+  jodla_paid[j01] = (booked: 2025-01-07, what: instalment, amount: 3215.19 DUK, fee: 0.00 DUK) "B-D28: 07.01.2025 instalment of 05.01.2025"
+  jodla_paid[j02] = (booked: 2025-01-27, what: overpayment, amount: 3000.00 DUK, fee: 60.00 DUK) "B-D28: 27.01.2025 overpayment"
+  jodla_paid[j03] = (booked: 2025-02-05, what: instalment, amount: 3192.32 DUK, fee: 0.00 DUK) "B-D28: 05.02.2025 instalment of 05.02.2025"
+  jodla_paid[j04] = (booked: 2025-02-26, what: overpayment, amount: 1992.12 DUK, fee: 39.84 DUK) "B-D28: 26.02.2025 overpayment"
+  jodla_paid[j05] = (booked: 2025-03-05, what: instalment, amount: 3177.33 DUK, fee: 0.00 DUK) "B-D28: 05.03.2025 instalment of 05.03.2025"
+  jodla_paid[j06] = (booked: 2025-03-26, what: overpayment, amount: 3000.00 DUK, fee: 0.00 DUK) "B-D28: 26.03.2025 overpayment"
+  jodla_paid[j07] = (booked: 2025-04-07, what: instalment, amount: 3151.86 DUK, fee: 0.00 DUK) "B-D28: 07.04.2025 instalment of 05.04.2025"
+  jodla_paid[j08] = (booked: 2025-05-05, what: instalment, amount: 3151.86 DUK, fee: 0.00 DUK) "B-D28: 05.05.2025 instalment of 05.05.2025"
+  jodla_paid[j09] = (booked: 2025-05-26, what: overpayment, amount: 3000.00 DUK, fee: 0.00 DUK) "B-D28: 26.05.2025 overpayment"
+  jodla_paid[j10] = (booked: 2025-06-05, what: instalment, amount: 3128.16 DUK, fee: 0.00 DUK) "B-D28: 05.06.2025 instalment of 05.06.2025"
+  jodla_paid[j11] = (booked: 2025-06-26, what: overpayment, amount: 3000.00 DUK, fee: 0.00 DUK) "B-D28: 26.06.2025 overpayment"
+  jodla_paid[j12] = (booked: 2025-07-07, what: instalment, amount: 2921.08 DUK, fee: 0.00 DUK) "B-D28: 07.07.2025 instalment of 05.07.2025"
+  jodla_paid[j13] = (booked: 2025-07-28, what: overpayment, amount: 3000.00 DUK, fee: 0.00 DUK) "B-D28: 28.07.2025 overpayment"
+  jodla_paid[j14] = (booked: 2025-08-05, what: instalment, amount: 2899.92 DUK, fee: 0.00 DUK) "B-D28: 05.08.2025 instalment of 05.08.2025"
+  jodla_paid[j15] = (booked: 2025-09-05, what: instalment, amount: 2899.92 DUK, fee: 0.00 DUK) "B-D28: 05.09.2025 instalment of 05.09.2025"
+  jodla_paid[j16] = (booked: 2025-09-26, what: overpayment, amount: 3000.00 DUK, fee: 0.00 DUK) "B-D28: 26.09.2025 overpayment"
+  jodla_paid[j17] = (booked: 2025-10-06, what: instalment, amount: 2878.04 DUK, fee: 0.00 DUK) "B-D28: 06.10.2025 instalment of 05.10.2025"
+  jodla_paid[j18] = (booked: 2025-10-27, what: overpayment, amount: 3000.00 DUK, fee: 0.00 DUK) "B-D28: 27.10.2025 overpayment"
+  jodla_paid[j19] = (booked: 2025-11-05, what: instalment, amount: 2855.21 DUK, fee: 0.00 DUK) "B-D28: 05.11.2025 instalment of 05.11.2025"
+  jodla_paid[j20] = (booked: 2025-12-05, what: instalment, amount: 2855.21 DUK, fee: 0.00 DUK) "B-D28: 05.12.2025 instalment of 05.12.2025"
+  jodla_paid[j21] = (booked: 2025-12-29, what: overpayment, amount: 3000.00 DUK, fee: 0.00 DUK) "B-D28: 29.12.2025 overpayment"

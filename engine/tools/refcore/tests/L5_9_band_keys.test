@@ -1,0 +1,53 @@
+# L §5.9 a band is a function of one argument over intervals; L §4.2 "Keys compare in index order", and a key of a
+# year index is a year.  allowance over the list index grades: [g1, g3) holds g1 and g2 (100.00 PLN), [g3, inf) g3..g5
+# (250.00 PLN); levy over the year index: (-inf, 2025] holds 2024 and 2025 (0.1), (2025, inf) 2026 (0.2);
+# band_lo(allowance, g4) is the lower end of g4's row, g3 (L §5.9).
+=== m.tally
+model bk
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source s "ustawa"
+unit PLN: currency minor 0.01
+index grades = [g1, g2, g3, g4, g5]
+index yrs = year 2020..2030
+
+band allowance(g: key grades): money PLN
+band levy(y: key yrs): num
+
+def a[g in grades]: money PLN = allowance(g) at reader
+def l[y in yrs]: num = levy(y) at reader
+
+version v
+  cite s
+  governs 2026..
+  known 2026-01-01
+  allowance: [g1, g3) = 100.00 PLN "tab. 1"
+  allowance: [g3, inf) = 250.00 PLN "tab. 1"
+  levy: (-inf, 2025] = 0.1 "tab. 2"
+  levy: (2025, inf) = 0.2 "tab. 2"
+
+ask q1: a[g] for g in grades law 2026-06-30
+ask q2: l[y] for y in [2024, 2025, 2026] law 2026-06-30
+ask q3: band_lo(allowance, g4) law 2026-06-30
+=== expect
+q1 (g = g1): 100.00 PLN
+  law date 2026-06-30, cut 2026-10-20
+q1 (g = g2): 100.00 PLN
+  law date 2026-06-30, cut 2026-10-20
+q1 (g = g3): 250.00 PLN
+  law date 2026-06-30, cut 2026-10-20
+q1 (g = g4): 250.00 PLN
+  law date 2026-06-30, cut 2026-10-20
+q1 (g = g5): 250.00 PLN
+  law date 2026-06-30, cut 2026-10-20
+q2 (y = 2024): 0.1
+  law date 2026-06-30, cut 2026-10-20
+q2 (y = 2025): 0.1
+  law date 2026-06-30, cut 2026-10-20
+q2 (y = 2026): 0.2
+  law date 2026-06-30, cut 2026-10-20
+q3: g3
+  law date 2026-06-30, cut 2026-10-20

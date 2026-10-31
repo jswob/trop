@@ -1,0 +1,24 @@
+# L §3.3 periodic: "A power that isn't an integer needs to u": the effective rate of 12 %/year per month is
+# 1.12^(1/12) - 1 (LOAD-TO; the period is in the rate's value, so it is found at run and refuses the reality, L §8.3).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+input r: rate
+def p: num = periodic(r, month, effective) at reader
+
+version v
+  cite s
+  governs 2026..
+  known 2026-01-01
+  r = 12 %/year
+
+ask a: p law 2026-06-30
+=== expect
+refused: LOAD-TO ...

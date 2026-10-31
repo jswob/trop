@@ -1,0 +1,47 @@
+# L §5.13 rest largest: "each raw_j is rounded toward zero to u (down). The |total − Σ|/u leftover units, each of the
+# total's sign, go one each to the keys with the largest remainders |raw_j − share_j|, so a negative total's shares are
+# the negatives of its absolute value's". -100.00 PLN by 1:1:1: 100.00 splits 33.33 each and the one leftover unit
+# goes to a1 by ties by pos(i) (all three tie): -33.34, -33.33, -33.33. Step 1: "A key k that the binding leaves out
+# (its where false) has share 0": inc[a3] is false, so a3's share is 0 and a1, a2 split 100.00 PLN 1:1, 50.00 each.
+# (Writer 6: both were REFCORE-UNSPECIFIED §5.13.)
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+index parts = [a1, a2, a3]
+input tot: money PLN
+input neg: money PLN
+input w[j in parts]: num
+input inc[j in parts]: bool
+input hm: rounding
+def sg[j in parts]: money PLN = prorata(neg, w[i] for i in parts, j, minor(PLN), rest largest ties by pos(i)) at reader
+def so[j in parts]: money PLN = prorata(tot, w[i] for i in parts where inc[i], j, minor(PLN), hm, rest none) at reader
+
+version v
+  cite s
+  governs 2026..
+  known 2026-01-01
+  tot = 100.00 PLN
+  neg = -100.00 PLN
+  w[a1] = 1
+  w[a2] = 1
+  w[a3] = 1
+  inc[a1] = true
+  inc[a2] = true
+  inc[a3] = false
+  hm = half-even
+
+ask a: sg[j], so[j] for j in parts law 2026-06-30
+=== expect
+a (j = a1): (-33.34 PLN, 50.00 PLN)
+  law date 2026-06-30, cut 2026-12-31
+a (j = a2): (-33.33 PLN, 50.00 PLN)
+  law date 2026-06-30, cut 2026-12-31
+a (j = a3): (-33.33 PLN, 0.00 PLN)
+  law date 2026-06-30, cut 2026-12-31

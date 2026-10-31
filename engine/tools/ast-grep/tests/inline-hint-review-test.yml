@@ -1,0 +1,12 @@
+id: inline-hint-review
+valid:
+  - '#[inline] fn f() {}'
+  - '#[inline(never)] fn f() {}'
+  - '#[doc = "cold"] fn f() {}'
+  - '#[cfg(test)] mod tests { #[inline(always)] fn f() {} }'
+invalid:
+  - '#[inline(always)] fn f() {}'
+  - '#[cold] fn f() {}'
+  - '#[inline( always )] pub(crate) fn f() {}'
+  - '#[cfg_attr(feature = "x", inline(always))] fn f() {}'
+  - 'impl S { #[cold] fn refuse(&self) {} }'

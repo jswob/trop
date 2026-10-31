@@ -1,0 +1,53 @@
+part market
+  tally 2
+  note "Market data the asks read (tmp/cases/market): DUKOR 6M fixings (yearly rates), for the mortgage's resets (B-D07 .2), and Bank Lazur's exchange table, the buy rate for florens (B-D23 §4). The files are CSVs with a title line, ';' and decimal commas (O:B-1), so only the days read are written out. Each figure is published on its own day, so each row is known on its day."
+
+input dukor_6m[d in days]: rate question "What is the DUKOR 6M fixing of this day, a yearly rate (B-D07 .2)?"
+
+input lazur_buy[d in days]: num DUK/FLR question "What is Bank Lazur's buy rate for florens on this day (B-D23 §4)?"
+
+version dukor_6m_rows
+  cite market
+  governs always
+  known 2022-03-17
+  dukor_6m[2022-03-17] = 4.52 %/year known 2022-03-17 "dukor.csv line 309"
+  dukor_6m[2022-06-30] = 7.01 %/year known 2022-06-30 "dukor.csv line 382"
+  dukor_6m[2022-12-30] = 7.22 %/year known 2022-12-30 "dukor.csv line 509"
+  dukor_6m[2023-06-30] = 6.96 %/year known 2023-06-30 "dukor.csv line 635"
+  dukor_6m[2023-12-29] = 5.86 %/year known 2023-12-29 "dukor.csv line 761"
+  dukor_6m[2024-06-28] = 5.84 %/year known 2024-06-28 "dukor.csv line 887"
+  dukor_6m[2024-12-31] = 5.82 %/year known 2024-12-31 "dukor.csv line 1014"
+  dukor_6m[2025-06-30] = 5.07 %/year known 2025-06-30 "dukor.csv line 1138"
+  dukor_6m[2025-12-31] = 4.28 %/year known 2025-12-31 "dukor.csv line 1266"
+
+version lazur_buy_rows
+  cite market
+  governs always
+  known 2025-01-27
+  lazur_buy[2025-01-27] = 4.0995 DUK/FLR known 2025-01-27 "lazur-fx-flr.csv line 1032"
+  lazur_buy[2025-02-26] = 4.1053 DUK/FLR known 2025-02-26 "lazur-fx-flr.csv line 1054"
+  lazur_buy[2025-03-03] = 4.1187 DUK/FLR known 2025-03-03 "lazur-fx-flr.csv line 1057"
+  lazur_buy[2025-03-26] = 4.0847 DUK/FLR known 2025-03-26 "lazur-fx-flr.csv line 1074"
+  lazur_buy[2025-03-28] = 4.0895 DUK/FLR known 2025-03-28 "lazur-fx-flr.csv line 1076"
+  lazur_buy[2025-04-28] = 4.1208 DUK/FLR known 2025-04-28 "lazur-fx-flr.csv line 1096"
+  lazur_buy[2025-04-30] = 4.1215 DUK/FLR known 2025-04-30 "lazur-fx-flr.csv line 1098"
+  lazur_buy[2025-05-26] = 4.0998 DUK/FLR known 2025-05-26 "lazur-fx-flr.csv line 1115"
+  lazur_buy[2025-05-29] = 4.0939 DUK/FLR known 2025-05-29 "lazur-fx-flr.csv line 1118"
+  lazur_buy[2025-06-26] = 4.1262 DUK/FLR known 2025-06-26 "lazur-fx-flr.csv line 1137"
+  lazur_buy[2025-06-30] = 4.1429 DUK/FLR known 2025-06-30 "lazur-fx-flr.csv line 1139"
+  lazur_buy[2025-07-28] = 4.1110 DUK/FLR known 2025-07-28 "lazur-fx-flr.csv line 1159"
+  lazur_buy[2025-07-30] = 4.1077 DUK/FLR known 2025-07-30 "lazur-fx-flr.csv line 1161"
+  lazur_buy[2025-08-26] = 4.1461 DUK/FLR known 2025-08-26 "lazur-fx-flr.csv line 1179"
+  lazur_buy[2025-09-26] = 4.1285 DUK/FLR known 2025-09-26 "lazur-fx-flr.csv line 1202"
+  lazur_buy[2025-10-27] = 4.1248 DUK/FLR known 2025-10-27 "lazur-fx-flr.csv line 1223"
+  lazur_buy[2025-10-30] = 4.1233 DUK/FLR known 2025-10-30 "lazur-fx-flr.csv line 1226"
+  lazur_buy[2025-11-26] = 4.1192 DUK/FLR known 2025-11-26 "lazur-fx-flr.csv line 1244"
+  lazur_buy[2025-12-01] = 4.1367 DUK/FLR known 2025-12-01 "lazur-fx-flr.csv line 1247"
+  lazur_buy[2025-12-29] = 4.1311 DUK/FLR known 2025-12-29 "lazur-fx-flr.csv line 1265"
+
+version dukor_forecast
+  cite story
+  governs always
+  known 2026-01-02
+  assumed "F8: the story's forecast keeps DUKOR 6M at the fixing of 2025-12-31 for 2026 – 2028; a row of the base (not of the scenario forecast), since a scenario row of a base item governs only from the scenario's from, which would make the mortgage's days law-dated (LOAD-LAWDATE)"
+  dukor_6m[2026-01-01..2026-01-31] = 4.28 %/year known 2026-01-02 "F8: DUKOR 6M stays at the fixing of 2025-12-31"

@@ -1,0 +1,13 @@
+# Round 18, C1-24 (follows). L §2.3: kspec = … "place" [CUR | ID | "any" | "one"] [sign] … "(unit and sign: required,
+# LOAD-PLACEKIND, not LOAD-PARSE, §5.7)"; L §8.3 LOAD-PLACEKIND "place kind <K> has no unit or sign rule". wallets
+# states a unit and no sign rule. (L5_7_placekind_sign: one with a sign rule and no unit.)
+=== m.tally
+model m
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+kind wallets: place PLN
+ask q: 1
+=== expect
+refused: LOAD-PLACEKIND place kind wallets has no unit or sign rule (m.tally:6)

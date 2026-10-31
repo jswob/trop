@@ -1,0 +1,56 @@
+# R-103: an exception is #[expect], never #[allow]: outer, inner, in cfg_attr, in a
+# macro body.
+
+case: allow-attribute
+tool: clippy
+expect: clippy::allow_attributes
+--- module
+/// Planted.
+#[allow(clippy::needless_return, reason = "R-103: a planted allow with a proper reason")]
+pub fn planted() -> u8 {
+    return 1;
+}
+
+case: allow-outer
+tool: ast-grep
+expect: no-allow
+--- module
+/// Planted.
+#[allow(clippy::needless_return, reason = "R-103: a planted allow with a proper reason")]
+pub fn planted() -> u8 {
+    return 1;
+}
+
+case: allow-inner
+tool: ast-grep
+expect: no-allow
+--- module
+#![allow(clippy::needless_return, reason = "R-103: a planted allow with a proper reason")]
+
+/// Planted.
+pub fn planted() -> u8 {
+    1
+}
+
+case: allow-in-cfg-attr
+tool: ast-grep
+expect: no-allow
+--- module
+/// Planted.
+#[cfg_attr(test, allow(clippy::needless_return, reason = "R-103: a planted allow in cfg_attr"))]
+pub fn planted() -> u8 {
+    1
+}
+
+case: allow-in-macro-body
+tool: ast-grep
+expect: no-allow
+--- module
+macro_rules! planted {
+    () => {
+        #[allow(clippy::needless_return, reason = "R-103: a planted allow in a macro body")]
+        fn planted() -> u8 {
+            return 1;
+        }
+    };
+}

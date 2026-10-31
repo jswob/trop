@@ -1,0 +1,84 @@
+ex1_parts [art26_count = after_20]: (0.26, 442 PLN, 0.92, 1 564 PLN)
+  reading: art26_count = after_20
+  law date 2026-10-18, cut 2026-10-18
+ex1_parts [art26_count = from_20]: (0.26, 442 PLN, 0.915, 1 555.5 PLN)
+  reading: art26_count = from_20
+  law date 2026-10-18, cut 2026-10-18
+ex1_pro_rata [art26_count = after_20, krus_ratio = exact_ratio]: 20060/13 (1 543.07692307692) PLN
+  reading: art26_count = after_20
+  reading: krus_ratio = exact_ratio
+  law date 2026-10-18, cut 2026-10-18
+ex1_pro_rata [art26_count = after_20, krus_ratio = ratio_2dp]: 1 544.62 PLN
+  reading: art26_count = after_20
+  reading: krus_ratio = ratio_2dp
+  law date 2026-10-18, cut 2026-10-18
+ex1_pro_rata [art26_count = from_20, krus_ratio = exact_ratio]: 19975/13 (1 536.53846153846) PLN
+  reading: art26_count = from_20
+  reading: krus_ratio = exact_ratio
+  law date 2026-10-18, cut 2026-10-18
+ex1_pro_rata [art26_count = from_20, krus_ratio = ratio_2dp]: 1 538.075 PLN
+  reading: art26_count = from_20
+  reading: krus_ratio = ratio_2dp
+  law date 2026-10-18, cut 2026-10-18
+ex1_ratio [krus_ratio = exact_ratio]: 10/13 (0.769230769230769)
+  reading: krus_ratio = exact_ratio
+  law date 2026-10-18, cut 2026-10-18
+ex1_ratio [krus_ratio = ratio_2dp]: 0.77
+  reading: krus_ratio = ratio_2dp
+  law date 2026-10-18, cut 2026-10-18
+ex1_theoretical [art26_count = after_20]: 2 006 PLN
+  reading: art26_count = after_20
+  law date 2026-10-18, cut 2026-10-18
+ex1_theoretical [art26_count = from_20]: 1 997.5 PLN
+  reading: art26_count = from_20
+  law date 2026-10-18, cut 2026-10-18
+ex2_national [art26_count = after_20]: (0.26, 442 PLN, 0.92, 1 564 PLN, 2 006 PLN)
+  reading: art26_count = after_20
+  law date 2026-10-18, cut 2026-10-18
+ex2_national [art26_count = from_20]: (0.26, 442 PLN, 0.915, 1 555.5 PLN, 1 997.5 PLN)
+  reading: art26_count = from_20
+  law date 2026-10-18, cut 2026-10-18
+ex2_paid [art26_count = after_20, krus_ratio = *]: (independent, 2 006 PLN)
+  assumed: the page computes an old-age pension, so the farmer is taken to have reached pension age (art. 19 ust. 1 pkt 1); no age or sex is given (pension_age_reached[ex2])
+  reading: art26_count = after_20
+  law date 2026-10-18, cut 2026-10-18
+ex2_paid [art26_count = from_20, krus_ratio = *]: (independent, 1 997.5 PLN)
+  assumed: the page computes an old-age pension, so the farmer is taken to have reached pension age (art. 19 ust. 1 pkt 1); no age or sex is given (pension_age_reached[ex2])
+  reading: art26_count = from_20
+  law date 2026-10-18, cut 2026-10-18
+ex2_pro_rata [art26_count = after_20, krus_ratio = exact_ratio]: 1 768 PLN
+  reading: art26_count = after_20
+  reading: krus_ratio = exact_ratio
+  law date 2026-10-18, cut 2026-10-18
+ex2_pro_rata [art26_count = after_20, krus_ratio = ratio_2dp]: 1 774.8 PLN
+  reading: art26_count = after_20
+  reading: krus_ratio = ratio_2dp
+  law date 2026-10-18, cut 2026-10-18
+ex2_pro_rata [art26_count = from_20, krus_ratio = exact_ratio]: 52819/30 (1 760.63333333333) PLN
+  reading: art26_count = from_20
+  reading: krus_ratio = exact_ratio
+  law date 2026-10-18, cut 2026-10-18
+ex2_pro_rata [art26_count = from_20, krus_ratio = ratio_2dp]: 1 767.405 PLN
+  reading: art26_count = from_20
+  reading: krus_ratio = ratio_2dp
+  law date 2026-10-18, cut 2026-10-18
+ex2_ratio [krus_ratio = exact_ratio]: 13/15 (0.866666666666667)
+  reading: krus_ratio = exact_ratio
+  law date 2026-10-18, cut 2026-10-18
+ex2_ratio [krus_ratio = ratio_2dp]: 0.87
+  reading: krus_ratio = ratio_2dp
+  law date 2026-10-18, cut 2026-10-18
+ex2_theoretical [art26_count = after_20]: (0.3, 510 PLN, 0.9, 1 530 PLN, 2 040 PLN)
+  reading: art26_count = after_20
+  law date 2026-10-18, cut 2026-10-18
+ex2_theoretical [art26_count = from_20]: (0.3, 510 PLN, 0.895, 1 521.5 PLN, 2 031.5 PLN)
+  reading: art26_count = from_20
+  law date 2026-10-18, cut 2026-10-18
+ex3_pro_rata [art26_count = *, krus_ratio = exact_ratio]: 400.42 PLN
+  given: pension_amount[ex3, theoretical] = 600.63 PLN (krus_eu_example)
+  reading: krus_ratio = exact_ratio
+  law date 2026-10-18, cut 2026-10-18
+ex3_pro_rata [art26_count = *, krus_ratio = ratio_2dp]: 402.4221 PLN
+  given: pension_amount[ex3, theoretical] = 600.63 PLN (krus_eu_example)
+  reading: krus_ratio = ratio_2dp
+  law date 2026-10-18, cut 2026-10-18

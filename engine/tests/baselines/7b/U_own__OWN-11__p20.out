@@ -1,0 +1,26 @@
+q_parts (p = kuba): 500.00 DUK
+  cut 2026-10-30
+q_parts (p = ania_tomek): ?"sav: 1 050.00 DUK may be ania_tomek's: whose money paid the withdrawal of 900.00 on 2026-01-25?" (sav)
+  cut 2026-10-30
+q_parts (p = ania): ?"sav: 1 050.00 DUK may be ania's: whose money paid the withdrawal of 900.00 on 2026-01-25?" (sav)
+  cut 2026-10-30
+q_parts (p = tomek): ?"sav: 1 050.00 DUK may be tomek's: whose money paid the withdrawal of 900.00 on 2026-01-25?" (sav)
+  cut 2026-10-30
+q_took (o = bank_rows[r5], p = kuba): 0.00 DUK
+  cut 2026-10-30
+q_took (o = bank_rows[r5], p = ania_tomek): 50.00 DUK
+  cut 2026-10-30
+q_took (o = bank_rows[r5], p = ania): 0.00 DUK
+  cut 2026-10-30
+q_took (o = bank_rows[r5], p = tomek): 0.00 DUK
+  cut 2026-10-30
+q_took (o = bank_rows[r6], p = kuba): 0.00 DUK
+  cut 2026-10-30
+q_took (o = bank_rows[r6], p = ania_tomek): ?"sav: 900.00 DUK may be ania_tomek's: whose money paid the withdrawal of 900.00 on 2026-01-25?" (sav)
+  cut 2026-10-30
+q_took (o = bank_rows[r6], p = ania): ?"sav: 900.00 DUK may be ania's: whose money paid the withdrawal of 900.00 on 2026-01-25?" (sav)
+  cut 2026-10-30
+q_took (o = bank_rows[r6], p = tomek): ?"sav: 900.00 DUK may be tomek's: whose money paid the withdrawal of 900.00 on 2026-01-25?" (sav)
+  cut 2026-10-30
+q_total: 1 550.00 DUK
+  cut 2026-10-30

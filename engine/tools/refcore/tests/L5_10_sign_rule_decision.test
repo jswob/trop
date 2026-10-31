@@ -1,0 +1,49 @@
+# Round 18, C2-1 (fixed). L §5.10 The sign rule: checked "2. after each decision's legs, or the observations booked at its
+# point, ... as they are booked"; E §4.2 step 5: "in step 3, each decision's legs together ...; in step 3, that
+# decision's legs at the place". c is a claim (min 0) at 50.00 PLN; the decision d takes bal(c) + 50 = 100.00 PLN out of
+# it and puts back 100.00 PLN, which leaves c at 50.00 PLN and konto at 100.00 PLN: no refusal (q; snap11 refused the
+# first leg, as E's old "the leg just booked"). With back = 40.00 PLN the legs leave c at -10.00 PLN: refused, with d's
+# legs at c, both (flows of each), and the balances they touch from there (q2; L §8.4 `<movement> takes <claim> below 0`).
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+place c: claims PLN lives 2026-01-01..
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 2026-01-01..
+kind shifts: event certain
+  leg out: PLN
+  leg back_in: PLN
+input extra: money PLN
+input back: money PLN
+input day: date
+
+move d: shifts
+  on day
+  reads c
+  leg out from c to konto amount bal(c) + extra
+  leg back_in from world to c amount back
+
+ask q: bal(c, 2026-03-31), bal(konto, 2026-03-31)
+ask q2: bal(c, 2026-03-31), flows(d.out, 2026-03), flows(d.back_in, 2026-03), bal(konto, 2026-03-31) with back = 40.00 PLN
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  extra = 50.00 PLN
+  back = 100.00 PLN
+  day = 2026-03-10
+  opening[c] = 50.00 PLN at 2026-01-01 start
+  opening[konto] = 0 PLN at 2026-01-01 start
+=== expect
+q: (50.00 PLN, 100.00 PLN)
+  cut 2026-01-01
+q2: (refused: RUN-PLACE d takes c below 0, refused: RUN-PLACE d takes c below 0, refused: RUN-PLACE d takes c below 0, refused: RUN-PLACE d takes c below 0)
+  pinned: back = 40.00 PLN
+  cut 2026-01-01

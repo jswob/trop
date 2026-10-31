@@ -1,0 +1,8 @@
+q_balances (p = halina): 1 600 DUK
+  cut 2026-10-25
+q_balances (p = ania): 200 DUK
+  cut 2026-10-25
+q_balances (p = kuba): -1 800 DUK
+  cut 2026-10-25
+q_sum: ok
+  cut 2026-10-25

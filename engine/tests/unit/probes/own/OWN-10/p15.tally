@@ -1,0 +1,104 @@
+model own10_p15
+  tally 2
+  on 2026-10-30
+  start 2026-01-01
+  end 2026-03-31
+  note "OWN-10 P-15: a later ruling changes past labels: labels are walk state at the ask's cut (LANGUAGE 5.14.3), so the ruling known on 15 April relabels the gift of 10 January under every cut that sees it, and as known on 1 April shows the old labels."
+  note "The sweep of 15 February is a past decision no record fulfils whose amount reads parts, so it follows the ruling (the one exception to decision 22)."
+
+source card "Probe card OWN-10 (made up): story and rules"
+
+source bank "The couple's bank: its January 2026 rows (made up)"
+
+source court "The court's ruling on deed d1 (made up)"
+
+unit DUK: currency minor 0.01
+
+kind couples: parties
+
+kind persons: parties
+
+kind family_gifts: transfers
+  attr deed: key deeds
+  attr recipient: key persons
+
+kind inheritances: transfers
+  attr heir: key parties
+
+kind savings: place DUK min 0
+  owned by arrive
+  step minor(DUK)
+  takes k for w order (if w in sweeps and k.owner == w.for_whom then 0 else 1), (if k.owner == ania_tomek then 0 else 1)
+
+kind sweeps: transfers
+  attr for_whom: key persons
+
+index deeds = [d1]
+
+place acc_ania: savings lives 2026-01-01..
+
+place sav: savings lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input bank_rows: observed
+
+input separate[d in deeds]: bool
+
+input sweep_day: date
+
+input sweep_for: key persons
+
+def arrive[m in events, p in parties]: num at m.day
+  note "R1: an inheritance the heir's, any other arrival the couple's; rule 1: a family gift the recipient's when its deed is separate property; R2: money moved keeps its labels"
+  rule community v card_rules = (if p == ania_tomek then 1 else 0)
+  rule inherited beats community v card_rules = (if p == m.heir then 1 else 0) when m in inheritances
+  rule moved beats community, inherited, separate_gift v card_rules = m.cash.amount of p / m.cash.amount when m in transfers and m.cash.from in savings
+  rule separate_gift beats community v card_rules = (if p == m.recipient then 1 else 0) when m in family_gifts and separate[m.deed]
+
+move sweep: sweeps
+  on sweep_day
+  at sweep_day
+  reads sav
+  attr for_whom = sweep_for
+  leg cash from sav to acc_ania amount bal(sav) of sweep_for
+  note "rule 2: all of Ania's part of sav to her own account"
+
+ask q_before: bal(x, 2026-03-31) of p for x in savings on 2026-03-31, p in parties on 2026-03-31 as known 2026-04-01
+
+ask q_now: bal(x, 2026-03-31) of p for x in savings on 2026-03-31, p in parties on 2026-03-31
+
+version card_cast
+  cite card
+  known 2026-01-01
+  note "the parties: things of the prelude kind parties, of the model's own subkinds"
+  couples + [ania_tomek] lives 2015-06-20..
+  persons + [ania] lives 1988-04-12..
+  persons + [tomek] lives 1986-09-03..
+
+version card_rules
+  cite card
+  governs always
+  known 2026-01-01
+
+version facts
+  cite card
+  governs always
+  known 2026-01-10
+  separate[d1] = false "the bank's reading of deed d1: a gift to both"
+  sweep_day = 2026-02-15 "rule 2"
+  sweep_for = ania "rule 2"
+
+version records_2026_01
+  cite bank
+  governs 2026-01
+  known 2026-02-03
+  bank_rows[r1] = (on: 2026-01-03, kind: inheritances, leg cash from world to sav amount 500.00 DUK, heir: ania) "line 1"
+  bank_rows[r2] = (on: 2026-01-05, kind: transfers, leg cash from world to sav amount 1000.00 DUK) "line 2"
+  bank_rows[r3] = (on: 2026-01-10, kind: family_gifts, leg cash from world to sav amount 2000.00 DUK, recipient: ania, deed: d1) "line 3"
+
+version ruling
+  cite court
+  governs always
+  known 2026-04-15
+  replace separate[d1] = true "the ruling: deed d1 was a gift to Ania alone"

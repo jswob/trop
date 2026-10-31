@@ -1,0 +1,73 @@
+{
+ "id": "06-pit-2022",
+ "says_pl": "Od lipca 2022 PIT 12% zamiast 17% (i kwota zmniejszająca 3 600 zamiast 5 100); w zeznaniu za 2022 nowa skala liczy się za cały rok.",
+ "value_entries": {
+  "pit.scale": [
+   {
+    "from": "2022-01-01",
+    "value": [
+     [
+      0,
+      0.17
+     ],
+     [
+      120000,
+      0.32
+     ]
+    ],
+    "source": "Polski Ład, Dz.U. 2021 poz. 2105, art. 27 ust. 1 w brzmieniu od 1.01.2022"
+   }
+  ],
+  "pit.reduction": [
+   {
+    "from": "2022-01-01",
+    "value": 5100,
+    "source": "Dz.U. 2021 poz. 2105, art. 27 ust. 1 (kwota zmniejszająca 5 100 zł)"
+   }
+  ],
+  "price.etf": [
+   {
+    "from": "2022-01-01",
+    "value": 90,
+    "source": "ilustracyjnie: model 2022 sięga przed historię cen z importu (od 2024)"
+   }
+  ]
+ },
+ "example": {
+  "says_pl": "Przykład: praca 5 000 zł brutto w 2022 (poza progiem ulgi dla klasy średniej 5 701–11 141 zł), osobne zeznanie.",
+  "base": {
+   "today": "2022-01-01",
+   "start": "2022-01-01",
+   "end": "2023-12-31"
+  },
+  "instances": [
+   {
+    "id": "y22_job",
+    "template": "job_pl@1",
+    "label_pl": "Praca w 2022 (przykład)",
+    "args": {
+     "gross": 5000,
+     "person": "me"
+    }
+   },
+   {
+    "id": "y22_tax",
+    "template": "employment_pl@2022",
+    "args": {
+     "job": "y22_job",
+     "account": "konto"
+    }
+   },
+   {
+    "id": "y22_return",
+    "template": "pit_return@2022",
+    "args": {
+     "a": [
+      "y22_tax"
+     ],
+     "account": "konto"
+    }
+   }
+  ]
+ }
+}

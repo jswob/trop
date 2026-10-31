@@ -1,0 +1,160 @@
+part estate
+  tally 2
+  note "D-01 and D-02: who inherits Zbigniew's estate (CIV-3), the division of 12 June 2025 (CIV-5, D-D07), and the inheritance tax (IGT-2, IGT-3, IGT-4)."
+
+input buyout_flat_part[h in heir]: money DUK question "Of the payment to this heir, how much is for the share in the flat (D-D07 .4)?"
+
+input cert_final: date question "On what day did the certificate of inheritance become final (D-D04)?"
+
+input civ2_share: num question "What share of a community asset does the deceased's estate hold (CIV-2 .2)?"
+
+input div_day: date question "On what day was the estate divided (D-D07)?"
+
+input div_flat_value: money DUK question "What value does the division agreement give the flat (D-D07 .2)?"
+
+input div_paid_on: date question "On what day were the heirs paid (D-D07 .5)?"
+
+input div_setoff: money DUK question "What set-off for the flat's fees does the agreement make (D-D07 .3)?"
+
+input flat_keeper[h in heir]: bool question "Does this heir keep a share of the flat after the division (D-D07 .1)?"
+
+input flat_own: bool question "Was the flat Zbigniew's own property, outside the community (CIV-1, D-D06)?"
+
+input flat_value_at_tax: money DUK question "What was the flat worth on the day the tax arose (IGT-2 .2)? The agreement's value is a price the heirs agreed, not a valuation."
+
+input life_to_estate: bool question "Was the group life benefit paid into the estate rather than to a named beneficiary (D-D21)?"
+
+input loan_at_division: money DUK question "What did the community still owe on the Bank Buk loan on the day of the division (D-D20)?"
+
+input refund_2024: money DUK question "What did Zbigniew's 2024 return refund to the estate (D-D31)?"
+
+input reported_on[h in heir]: date question "On what day did this heir report the inheritance to the RO (IGT-4 .2)?"
+
+def acct_at_death: money DUK = bal(konto, death_day)
+
+def acq_base[h in heir]: money DUK at igt_arises
+  note "IGT-2 .2, .3: the market value on the day the tax arose of what the heir acquired, rounded to whole dukats (GEN-5 .1); no debt is taken over (D-D20)"
+  rule base = round(share[h] * (flat_value_at_tax + bonds_all[igt_arises] * estate_half + acct_at_death * estate_half + refund_2024), 1, half-up)
+
+def bonds_all[d in day]: money DUK = sum(lot[s] * bond_value[s, d] for s in isb_series) at start_of(d)
+
+def deposit: money DUK = sum(payout[h] for h in heir where h != halina) at reader
+
+def estate_divided: money DUK at reader
+  note "D-D07 .1, .2, .3: the flat at the agreed value, the estate's half of the bonds and of the account (community, CIV-2 .2, TSB-7 .1), the refund, less the estate's half of what the community still owed, less the set-off; no rounding is stated, the ort is the money's own"
+  rule base = round(div_flat_value + bonds_all[div_day] * estate_half + acct_at_death * estate_half + refund_2024 - loan_at_division * estate_half - div_setoff, minor(DUK), hh_round)
+
+def estate_half: num at death_day
+  note "CIV-2 .2: the share of a community asset the estate holds, under the CIV-2 that governs the community's end, the death"
+  rule base = civ2_share
+
+def flat_after[h in heir]: num at reader
+  note "D-D07 .1: Halina takes the shares given up; a keeper keeps hers"
+  rule keeps beats none = share[h] when flat_keeper[h]
+  rule none = 0
+  rule taker beats keeps, none = share[h] + sum(share[g] for g in heir where g != halina and flat_keeper[g] == false) when h == halina
+
+def heirs_in[k in stock]: int = count(h in heir where heir_stock[h] != none and heir_stock[h] == k) at reader
+
+def igt_arises: date = cert_final
+
+def igt_tax[h in heir]: money DUK at igt_arises
+  note "IGT-4: the close family exempt if reported within 6 months (.2), or if not above IGT-FREE-I (.3); otherwise taxed as Group I (IGT-4 .2, IGT-3 .2, .3); no other group is written, since every heir is close family"
+  rule exempt beats taxed, small = 0 when close_family[h] and reported_on[h] != none and reported_on[h] <= report_by
+  rule small beats taxed = 0 when close_family[h] and acq_base[h] <= igt_free[group_1]
+  rule taxed = round(igt3_scale[group_1](max(0, acq_base[h] - igt_free[group_1])), 1, half-up) when close_family[h]
+  rule other_group beats taxed = ?"the tax of an heir outside the close family (groups II and III) is not written" when not close_family[h]
+
+def keeper_base: money DUK = estate_divided - div_flat_value at reader
+
+def kept_by_rounding: num DUK = sum(payout_exact[h] for h in heir where h != halina) - deposit at reader
+
+def life_igt_taxed: bool = life_to_estate at reader
+
+def payout[h in heir]: money DUK at reader
+  note "D-D07 .4: rounded down to whole dukats"
+  rule base = round(payout_exact[h], 1, down)
+
+def payout_exact[h in heir]: num DUK at reader
+  note "CIV-5 .2, D-D07 .3, .4: the value of what the heir gives up; the set-off for the fees is in estate_divided"
+  rule giver = share[h] * estate_divided
+  rule keeper beats giver = share[h] * keeper_base when flat_keeper[h]
+  rule taker beats giver, keeper = 0 when h == halina
+
+def report_by: date at report_due
+  note "IGT-4 .2 within 6 months (GEN-3 .1), a deadline on a day that isn't a business day moving to the next (GEN-2 .2)"
+  rule base = if is_business(report_due, holidays) then report_due else add_business(report_due, 1, holidays)
+
+def report_due: date = add_months(igt_arises, igt4_report_months) at igt_arises
+
+def share[h in heir]: num at death_day
+  note "CIV-3 .1: the spouse equal to a child, never below 1/4; the children share the rest; .2: a child who died before is replaced by its children in equal parts"
+  rule child = if stock_counts[heir_stock[h]] then (1 - spouse_share) / stocks / heirs_in[heir_stock[h]] else 0
+  rule spouse beats child = spouse_share when h == halina
+
+def spouse_share: num = if married then max(1 / (stocks + 1), civ3_spouse_min) else 0 at death_day
+
+def stock_alive[k in stock]: bool = stock_died[k] == none or stock_died[k] != none and stock_died[k] > death_day at reader
+
+def stock_counts[k in stock]: bool = stock_alive[k] or stock_issue[k] > 0 at reader
+
+def stocks: int = count(k in stock where stock_counts[k]) at reader
+
+version group_life
+  cite d_d21
+  governs always
+  known 2024-06-29
+  life_to_estate = false "D-D21: paid to the named beneficiary, Halina Sowa"
+
+version land_register
+  cite d_d06
+  governs always
+  known 2024-07-02
+  flat_own = true "D-D06: owner Zbigniew Sowa alone, by inheritance from his mother"
+
+version loan_repaid
+  cite d_d20
+  governs always
+  known 2024-07-18
+  loan_at_division = 0.00 "D-D20: TU Opoka paid the principal outstanding on 17 May 2024; the loan is repaid in full"
+
+version inheritance_cert
+  cite d_d04
+  governs always
+  known 2024-10-21
+  cert_final = 2024-11-03 "D-D04: final on 3 November 2024"
+
+version halina_report
+  cite d_d08
+  governs always
+  known 2025-05-05
+  reported_on[halina] = 2025-05-05 "D-D08: filed on 5 May 2025"
+
+version estate_refund
+  cite d_d31
+  governs always
+  known 2025-05-22
+  refund_2024 = 1844.00 "D-D31: advances 1 844.00 less tax 0.00, paid 2025-05-21"
+
+version community_half
+  cite civ_2
+  governs 2018-01-01..
+  known 2017-03-01
+  civ2_share = 0.5 "CIV-2 v1 .2: the deceased's estate holds half of every community asset"
+
+version division
+  cite d_d07
+  governs always
+  known 2025-06-12
+  buyout_flat_part[anna] = 30937.50 "D-D07 .4"
+  buyout_flat_part[marta] = 30937.50 "D-D07 .4"
+  buyout_flat_part[piotr] = 30937.50 "D-D07 .4"
+  div_day = 2025-06-12 "D-D07, date of the agreement"
+  div_flat_value = 165000.00 "D-D07 .2: the flat valued at 165 000.00 DUK for the division"
+  div_paid_on = 2025-06-16 "D-D07 .5: payouts from the notary's deposit on 16 June 2025"
+  div_setoff = 5610.00 "D-D07 .3: the flat's fees Halina paid, 13 payments"
+  flat_keeper[halina] = false "D-D07 .1: Halina takes the shares given up"
+  flat_keeper[piotr] = false "D-D07 .1: Piotr gives up his share for a payout"
+  flat_keeper[anna] = false "D-D07 .1: Anna gives up her share for a payout"
+  flat_keeper[marta] = false "D-D07 .1: Marta gives up her share for a payout"
+  flat_keeper[jakub] = true "D-D07 .1: Jakub keeps his 3/16"

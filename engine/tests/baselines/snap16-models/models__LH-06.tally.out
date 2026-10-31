@@ -1,0 +1,81 @@
+p57_cf (pv = normal) [p57_mpaa = *]: 26 000.00 GBP
+  law date 2026-10-18, cut 2026-10-18
+p57_cf (pv = tapered) [p57_mpaa = *]: 21 000.00 GBP
+  law date 2026-10-18, cut 2026-10-18
+p57_cf (pv = mpaa) [p57_mpaa = example]: 16 000.00 GBP
+  reading: p57_mpaa = example
+  law date 2026-10-18, cut 2026-10-18
+p57_cf (pv = mpaa) [p57_mpaa = statute]: 22 000.00 GBP
+  reading: p57_mpaa = statute
+  law date 2026-10-18, cut 2026-10-18
+p57_cf (pv = mpaa_tapered) [p57_mpaa = example]: 11 000.00 GBP
+  reading: p57_mpaa = example
+  law date 2026-10-18, cut 2026-10-18
+p57_cf (pv = mpaa_tapered) [p57_mpaa = statute]: 17 000.00 GBP
+  reading: p57_mpaa = statute
+  law date 2026-10-18, cut 2026-10-18
+s10_capacity_1415: 45 000.00 GBP
+  law date 2026-10-18, cut 2026-10-18
+s10_cf_1415: 5 000.00 GBP
+  law date 2026-10-18, cut 2026-10-18
+s10_charge_1415: 0.00 GBP
+  law date 2026-10-18, cut 2026-10-18
+s10_excess_1314: 4 000.00 GBP
+  law date 2026-10-18, cut 2026-10-18
+s10_excess_1415: 2 000.00 GBP
+  law date 2026-10-18, cut 2026-10-18
+s10_to_pre_1213: 3 000.00 GBP
+  law date 2026-10-18, cut 2026-10-18
+s10_unused (y = ty2011-12): 1 000.00 GBP
+  law date 2026-10-18, cut 2026-10-18
+s10_unused (y = ty2012-13): 6 000.00 GBP
+  law date 2026-10-18, cut 2026-10-18
+s10_used_by_1314 (s = ty2010-11): 2 000.00 GBP
+  law date 2026-10-18, cut 2026-10-18
+s10_used_by_1314 (s = ty2011-12): 1 000.00 GBP
+  law date 2026-10-18, cut 2026-10-18
+s10_used_by_1314 (s = ty2012-13): 1 000.00 GBP
+  law date 2026-10-18, cut 2026-10-18
+s10n_capacity_1415: 43 000.00 GBP
+  pinned: pia[sam, ty2010-11] = 50 000.00 GBP
+  law date 2026-10-18, cut 2026-10-18
+s10n_cf_1415: 3 000.00 GBP
+  pinned: pia[sam, ty2010-11] = 50 000.00 GBP
+  law date 2026-10-18, cut 2026-10-18
+s10n_to_pre_1213: 1 000.00 GBP
+  pinned: pia[sam, ty2010-11] = 50 000.00 GBP
+  law date 2026-10-18, cut 2026-10-18
+s9_capacity_1415: 102 000.00 GBP
+  law date 2026-10-18, cut 2026-10-18
+s9_cf_1415: 62 000.00 GBP
+  law date 2026-10-18, cut 2026-10-18
+s9_cf_1617: 20 000.00 GBP
+  law date 2026-10-18, cut 2026-10-18
+s9_cf_1617_parts (s = ty2013-14): 15 000.00 GBP
+  law date 2026-10-18, cut 2026-10-18
+s9_cf_1617_parts (s = ty2014-15): 0.00 GBP
+  law date 2026-10-18, cut 2026-10-18
+s9_cf_1617_parts (s = ty2015-pre): 5 000.00 GBP
+  law date 2026-10-18, cut 2026-10-18
+s9_cf_1617_parts (s = ty2015-post): 0.00 GBP
+  law date 2026-10-18, cut 2026-10-18
+s9_cf_pre: 35 000.00 GBP
+  law date 2026-10-18, cut 2026-10-18
+s9_charge_1415: 0.00 GBP
+  law date 2026-10-18, cut 2026-10-18
+s9_lapse_1112: 2 000.00 GBP
+  law date 2026-10-18, cut 2026-10-18
+s9_pre_left_post: 5 000.00 GBP
+  law date 2026-10-18, cut 2026-10-18
+s9_unused (y = ty2011-12): 27 000.00 GBP
+  law date 2026-10-18, cut 2026-10-18
+s9_unused (y = ty2012-13): 20 000.00 GBP
+  law date 2026-10-18, cut 2026-10-18
+s9_unused (y = ty2013-14): 15 000.00 GBP
+  law date 2026-10-18, cut 2026-10-18
+s9_unused_pre: 20 000.00 GBP
+  law date 2026-10-18, cut 2026-10-18
+s9_used_1112: 25 000.00 GBP
+  law date 2026-10-18, cut 2026-10-18
+s9_used_current: 40 000.00 GBP
+  law date 2026-10-18, cut 2026-10-18

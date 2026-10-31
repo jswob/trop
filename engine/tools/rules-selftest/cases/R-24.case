@@ -1,0 +1,21 @@
+# R-24: no Iterator::sum or product.
+
+case: sum
+tool: clippy
+expect: clippy::disallowed_methods
+text: R-24
+--- module
+/// Planted.
+pub fn planted(v: &[u8]) -> u8 {
+    v.iter().copied().sum()
+}
+
+case: product
+tool: clippy
+expect: clippy::disallowed_methods
+text: R-24
+--- module
+/// Planted.
+pub fn planted(v: &[u8]) -> u8 {
+    v.iter().product()
+}

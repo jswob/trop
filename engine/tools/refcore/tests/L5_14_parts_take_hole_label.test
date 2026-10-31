@@ -1,0 +1,55 @@
+# L §5.14 A hole in a term, with L5_14_parts_take_hole_lex's clause: the tax of 15.00 on 2025-07-31 meets two parts of
+# the couple's, 30.00 from 2025-06-30 and 40.00 that arrives in its own batch ("The batch's arrivals are supplies").
+# Their terms are equal, holes included, since they share a label, and their order changes no take, so the tax takes
+# the couple's under every reading of rank: 55.00 left (scratch/exp_lex.py), Ania's and Tomek's known.  (Was a hole
+# part of 55.00 that may be only the couple's: the migrator's same_and_reach, its interest and tax of 2025-07-31.)
+=== m.tally
+model t
+  tally 2
+  on 2025-12-31
+  start 2025-01-01
+  end 2025-12-31
+
+source src "test"
+unit DUK: currency minor 0.01
+kind couples: parties
+kind persons: parties
+kind inheritances: transfers
+  attr heir: key persons
+kind interests: transfers
+kind taxes: transfers
+kind savings: place DUK min 0
+  owned by arrive
+  step minor(DUK)
+  takes k for w order (if w in taxes and k.owner == ania_tomek then 0 else 1), rank[k.owner]
+place sav: savings lives 2025-01-01..
+place world: outside lives 2000-01-01..
+input wz: observed
+def rank[p in parties]: int = ?"which money leaves the savings first?" at reader
+def arrive[m in events, p in parties]: num at m.day
+  rule community = (if p == ania_tomek then 1 else 0)
+  rule inherited beats community = (if p == m.heir then 1 else 0) when m in inheritances
+
+ask q1: bal(sav, 2025-07-31) of ania_tomek, bal(sav, 2025-07-31) of ania, bal(sav, 2025-07-31) of tomek
+
+version cast
+  cite src
+  known 2025-01-01
+  persons + [ania] lives 1991-03-14..
+  persons + [tomek] lives 1989-07-02..
+  couples + [ania_tomek] lives 2016-09-10..
+
+version stmt
+  cite src
+  governs 2025-01..2025-12
+  known 2025-01-01
+  covers sav
+  opening[sav] = 0 at 2025-01-01 start
+  wz[w1] = (on: 2025-06-16, kind: inheritances, leg cash from world to sav amount 1000.00 DUK, heir: ania) "l1"
+  wz[w2] = (on: 2025-06-16, kind: inheritances, leg cash from world to sav amount 500.00 DUK, heir: tomek) "l2"
+  wz[w3] = (on: 2025-06-30, kind: interests, leg cash from world to sav amount 30.00 DUK) "l3"
+  wz[w4] = (on: 2025-07-31, kind: interests, leg cash from world to sav amount 40.00 DUK) "l4"
+  wz[w5] = (on: 2025-07-31, kind: taxes, leg cash from sav to world amount 15.00 DUK) "l5"
+=== expect
+q1: (55.00 DUK, 1 000.00 DUK, 500.00 DUK)
+...

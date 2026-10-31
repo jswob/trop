@@ -1,0 +1,204 @@
+b10_2025 (d = 2025-01-27): (3 000.00 DUK, 20 231.12 DUK)
+  assumed: B-HR2 .2 says 12 % of the net to the ort and names no mode (hr2_tax_round)
+  anchor: cis 2025-01-24 end, stated 38 763.68 DUK, difference 0.00 DUK
+  anchor: lazur 2025-01-02 start, stated 0.00 FLR, difference 0.00 FLR
+  left out: health_pay, 1 instances, first 2027-01-20
+  left out: health_settle_pay, 1 instances, first 2027-04-20
+  left out: pit_pay, 1 instances, first 2027-01-20
+  left out: social_pay, 1 instances, first 2027-01-20
+  left out: vat_pay, 1 instances, first 2027-01-25
+  law date 2026-01-26, cut 2026-01-07
+b10_2025 (d = 2025-02-26): (1 992.12 DUK, 0.00 DUK)
+  assumed: B-HR2 .2 says 12 % of the net to the ort and names no mode (hr2_tax_round)
+  anchor: cis 2025-02-25 end, stated 10 992.12 DUK, difference 0.00 DUK
+  anchor: lazur 2025-01-02 start, stated 0.00 FLR, difference 0.00 FLR
+  left out: health_pay, 1 instances, first 2027-01-20
+  left out: health_settle_pay, 1 instances, first 2027-04-20
+  left out: pit_pay, 1 instances, first 2027-01-20
+  left out: social_pay, 1 instances, first 2027-01-20
+  left out: vat_pay, 1 instances, first 2027-01-25
+  law date 2026-01-26, cut 2026-01-07
+b10_2025 (d = 2025-03-26): (3 000.00 DUK, 2 430.29 DUK)
+  assumed: B-HR2 .2 says 12 % of the net to the ort and names no mode (hr2_tax_round)
+  anchor: cis 2025-03-25 end, stated 14 430.29 DUK, difference 0.00 DUK
+  anchor: lazur 2025-03-03 end, stated 0.00 FLR, difference 0.00 FLR
+  left out: health_pay, 1 instances, first 2027-01-20
+  left out: health_settle_pay, 1 instances, first 2027-04-20
+  left out: pit_pay, 1 instances, first 2027-01-20
+  left out: social_pay, 1 instances, first 2027-01-20
+  left out: vat_pay, 1 instances, first 2027-01-25
+  law date 2026-01-26, cut 2026-01-07
+b10_2025 (d = 2025-04-28): (0.00 DUK, 0.00 DUK)
+  assumed: B-HR2 .2 says 12 % of the net to the ort and names no mode (hr2_tax_round)
+  anchor: cis 2025-04-25 end, stated 11 512.98 DUK, difference 0.00 DUK
+  anchor: lazur 2025-03-28 end, stated 0.00 FLR, difference 0.00 FLR
+  left out: health_pay, 1 instances, first 2027-01-20
+  left out: health_settle_pay, 1 instances, first 2027-04-20
+  left out: pit_pay, 1 instances, first 2027-01-20
+  left out: social_pay, 1 instances, first 2027-01-20
+  left out: vat_pay, 1 instances, first 2027-01-25
+  law date 2026-01-26, cut 2026-01-07
+b10_2025 (d = 2025-05-26): (3 000.00 DUK, 5 472.60 DUK)
+  assumed: B-HR2 .2 says 12 % of the net to the ort and names no mode (hr2_tax_round)
+  anchor: cis 2025-05-21 end, stated 25 909.54 DUK, difference 0.00 DUK
+  anchor: lazur 2025-04-30 end, stated 0.00 FLR, difference 0.00 FLR
+  left out: health_pay, 1 instances, first 2027-01-20
+  left out: health_settle_pay, 1 instances, first 2027-04-20
+  left out: pit_pay, 1 instances, first 2027-01-20
+  left out: social_pay, 1 instances, first 2027-01-20
+  left out: vat_pay, 1 instances, first 2027-01-25
+  law date 2026-01-26, cut 2026-01-07
+b10_2025 (d = 2025-06-26): (3 000.00 DUK, 3 029.37 DUK)
+  assumed: B-HR2 .2 says 12 % of the net to the ort and names no mode (hr2_tax_round)
+  anchor: cis 2025-06-25 end, stated 20 749.37 DUK, difference 0.00 DUK
+  anchor: lazur 2025-05-29 end, stated 0.00 FLR, difference 0.00 FLR
+  left out: health_pay, 1 instances, first 2027-01-20
+  left out: health_settle_pay, 1 instances, first 2027-04-20
+  left out: pit_pay, 1 instances, first 2027-01-20
+  left out: social_pay, 1 instances, first 2027-01-20
+  left out: vat_pay, 1 instances, first 2027-01-25
+  law date 2026-01-26, cut 2026-01-07
+b10_2025 (d = 2025-07-28): (3 000.00 DUK, 15 938.57 DUK)
+  assumed: B-HR2 .2 says 12 % of the net to the ort and names no mode (hr2_tax_round)
+  anchor: cis 2025-07-25 end, stated 31 509.87 DUK, difference 0.00 DUK
+  anchor: lazur 2025-06-30 end, stated 0.00 FLR, difference 0.00 FLR
+  left out: health_pay, 1 instances, first 2027-01-20
+  left out: health_settle_pay, 1 instances, first 2027-04-20
+  left out: pit_pay, 1 instances, first 2027-01-20
+  left out: social_pay, 1 instances, first 2027-01-20
+  left out: vat_pay, 1 instances, first 2027-01-25
+  law date 2026-01-26, cut 2026-01-07
+b10_2025 (d = 2025-08-26): (0.00 DUK, 0.00 DUK)
+  assumed: B-HR2 .2 says 12 % of the net to the ort and names no mode (hr2_tax_round)
+  anchor: cis 2025-08-25 end, stated 2 523.62 DUK, difference 0.00 DUK
+  anchor: lazur 2025-07-30 end, stated 0.00 FLR, difference 0.00 FLR
+  left out: health_pay, 1 instances, first 2027-01-20
+  left out: health_settle_pay, 1 instances, first 2027-04-20
+  left out: pit_pay, 1 instances, first 2027-01-20
+  left out: social_pay, 1 instances, first 2027-01-20
+  left out: vat_pay, 1 instances, first 2027-01-25
+  law date 2026-01-26, cut 2026-01-07
+b10_2025 (d = 2025-09-26): (3 000.00 DUK, 48 026.07 DUK)
+  assumed: B-HR2 .2 says 12 % of the net to the ort and names no mode (hr2_tax_round)
+  anchor: cis 2025-09-25 end, stated 72 228.19 DUK, difference 0.00 DUK
+  anchor: lazur 2025-09-01 end, stated 1 952.00 FLR, difference 0.00 FLR
+  left out: health_pay, 1 instances, first 2027-01-20
+  left out: health_settle_pay, 1 instances, first 2027-04-20
+  left out: pit_pay, 1 instances, first 2027-01-20
+  left out: social_pay, 1 instances, first 2027-01-20
+  left out: vat_pay, 1 instances, first 2027-01-25
+  law date 2026-01-26, cut 2026-01-07
+b10_2025 (d = 2025-10-27): (3 000.00 DUK, 9 540.78 DUK)
+  assumed: B-HR2 .2 says 12 % of the net to the ort and names no mode (hr2_tax_round)
+  anchor: cis 2025-10-24 end, stated 29 572.78 DUK, difference 0.00 DUK
+  anchor: lazur 2025-09-29 end, stated 3 904.00 FLR, difference 0.00 FLR
+  left out: health_pay, 1 instances, first 2027-01-20
+  left out: health_settle_pay, 1 instances, first 2027-04-20
+  left out: pit_pay, 1 instances, first 2027-01-20
+  left out: social_pay, 1 instances, first 2027-01-20
+  left out: vat_pay, 1 instances, first 2027-01-25
+  law date 2026-01-26, cut 2026-01-07
+b10_2025 (d = 2025-11-26): (?"Did Kawiarnia Ziarno pay its invoice on the days the November Cis export lacks?" (gap_ziarno) ?"What did Piotr pay by card on the days the November Cis export lacks?" (gap_cards) ?"date within window(2025-11-14, 2025-11-30) not precise enough for a balance" (gap_card_pays), ?"Did Kawiarnia Ziarno pay its invoice on the days the November Cis export lacks?" (gap_ziarno) ?"What did Piotr pay by card on the days the November Cis export lacks?" (gap_cards) ?"date within window(2025-11-14, 2025-11-30) not precise enough for a balance" (gap_card_pays))
+  assumed: B-HR2 .2 says 12 % of the net to the ort and names no mode (hr2_tax_round)
+  assumed: the November export's day is not stated: the 2nd of the next month (story) (gap_from, gap_to)
+  anchor: cis 2025-11-13 end, stated 5 621.14 DUK, difference 0.00 DUK
+  anchor: lazur 2025-10-30 end, stated 3 904.00 FLR, difference 0.00 FLR
+  unfulfilled: health_pay[2025-10]
+  unfulfilled: hr2_overpay[2025-11-26]
+  unfulfilled: pit_pay[2025-10]
+  unfulfilled: social_pay[2025-10]
+  unfulfilled: vat_pay[2025-10]
+  left out: health_pay, 1 instances, first 2027-01-20
+  left out: health_settle_pay, 1 instances, first 2027-04-20
+  left out: pit_pay, 1 instances, first 2027-01-20
+  left out: social_pay, 1 instances, first 2027-01-20
+  left out: vat_pay, 1 instances, first 2027-01-25
+  law date 2026-01-26, cut 2026-01-07
+b10_2025 (d = 2025-12-29): (3 000.00 DUK, 8 847.11 DUK)
+  assumed: B-HR2 .2 says 12 % of the net to the ort and names no mode (hr2_tax_round)
+  anchor: cis 2025-12-24 end, stated 18 228.37 DUK, difference 0.00 DUK
+  anchor: lazur 2025-12-01 end, stated 3 904.00 FLR, difference 0.00 FLR
+  open: kessel_pay[fv_026_2025]
+  left out: health_pay, 1 instances, first 2027-01-20
+  left out: health_settle_pay, 1 instances, first 2027-04-20
+  left out: pit_pay, 1 instances, first 2027-01-20
+  left out: social_pay, 1 instances, first 2027-01-20
+  left out: vat_pay, 1 instances, first 2027-01-25
+  law date 2026-01-26, cut 2026-01-07
+b10_v2 (d = 2025-01-27): (3 000.00 DUK, 17 231.12 DUK)
+  assumed: B-HR2 .2 says 12 % of the net to the ort and names no mode (hr2_tax_round)
+  anchor: cis 2025-01-27 end, stated 9 000.00 DUK, difference 0.00 DUK
+  anchor: lazur 2025-01-02 start, stated 0.00 FLR, difference 0.00 FLR
+  left out: health_pay, 1 instances, first 2027-01-20
+  left out: health_settle_pay, 1 instances, first 2027-04-20
+  left out: pit_pay, 1 instances, first 2027-01-20
+  left out: social_pay, 1 instances, first 2027-01-20
+  left out: vat_pay, 1 instances, first 2027-01-25
+  law date 2026-01-26, cut 2026-01-07
+b10_v2 (d = 2025-02-26): (1 992.12 DUK, 0.00 DUK)
+  assumed: B-HR2 .2 says 12 % of the net to the ort and names no mode (hr2_tax_round)
+  anchor: cis 2025-01-27 end, stated 9 000.00 DUK, difference 0.00 DUK
+  anchor: cis 2025-02-26 end, stated 9 000.00 DUK, difference 0.00 DUK
+  anchor: lazur 2025-01-02 start, stated 0.00 FLR, difference 0.00 FLR
+  open: hr2_save[2025-02-26]
+  left out: health_pay, 1 instances, first 2027-01-20
+  left out: health_settle_pay, 1 instances, first 2027-04-20
+  left out: pit_pay, 1 instances, first 2027-01-20
+  left out: social_pay, 1 instances, first 2027-01-20
+  left out: vat_pay, 1 instances, first 2027-01-25
+  law date 2026-01-26, cut 2026-01-07
+b10_v2 (d = 2025-03-26): (3 000.00 DUK, 2 430.29 DUK)
+  assumed: B-HR2 .2 says 12 % of the net to the ort and names no mode (hr2_tax_round)
+  anchor: cis 2025-01-27 end, stated 9 000.00 DUK, difference 0.00 DUK
+  anchor: cis 2025-02-26 end, stated 9 000.00 DUK, difference 0.00 DUK
+  anchor: cis 2025-03-26 end, stated 9 000.00 DUK, difference 0.00 DUK
+  anchor: lazur 2025-01-02 start, stated 0.00 FLR, difference 0.00 FLR
+  anchor: lazur 2025-03-03 end, stated 0.00 FLR, difference 0.00 FLR
+  open: hr2_save[2025-02-26]
+  left out: health_pay, 1 instances, first 2027-01-20
+  left out: health_settle_pay, 1 instances, first 2027-04-20
+  left out: pit_pay, 1 instances, first 2027-01-20
+  left out: social_pay, 1 instances, first 2027-01-20
+  left out: vat_pay, 1 instances, first 2027-01-25
+  law date 2026-01-26, cut 2026-01-07
+b10_short: 3 000.00 DUK
+  assumed: B-HR2 .2 says 12 % of the net to the ort and names no mode (hr2_tax_round)
+  anchor: cis 2025-01-27 end, stated 9 000.00 DUK, difference 0.00 DUK
+  anchor: cis 2025-02-26 end, stated 9 000.00 DUK, difference 0.00 DUK
+  anchor: cis 2025-03-26 end, stated 9 000.00 DUK, difference 0.00 DUK
+  anchor: lazur 2025-01-02 start, stated 0.00 FLR, difference 0.00 FLR
+  anchor: lazur 2025-03-03 end, stated 0.00 FLR, difference 0.00 FLR
+  open: hr2_save[2025-02-26]
+  left out: health_pay, 1 instances, first 2027-01-20
+  left out: health_settle_pay, 1 instances, first 2027-04-20
+  left out: pit_pay, 1 instances, first 2027-01-20
+  left out: social_pay, 1 instances, first 2027-01-20
+  left out: vat_pay, 1 instances, first 2027-01-25
+  law date 2026-01-26, cut 2026-01-07
+b11x_wrzos: 45 023.30 DUK + -1 × ?"What did Ola spend from Wrzos from April 2025 on? She kept no statement after March 2025" (ola_spend[2025-04]) + -1 × ?"What did Ola spend from Wrzos from April 2025 on? She kept no statement after March 2025" (ola_spend[2025-05]) + -1 × ?"What did Ola spend from Wrzos from April 2025 on? She kept no statement after March 2025" (ola_spend[2025-06]) + -1 × ?"What did Ola spend from Wrzos from April 2025 on? She kept no statement after March 2025" (ola_spend[2025-07]) + -1 × ?"What did Ola spend from Wrzos from April 2025 on? She kept no statement after March 2025" (ola_spend[2025-08]) + -1 × ?"What did Ola spend from Wrzos from April 2025 on? She kept no statement after March 2025" (ola_spend[2025-09]) + -1 × ?"What did Ola spend from Wrzos from April 2025 on? She kept no statement after March 2025" (ola_spend[2025-10]) + -1 × ?"What did Ola spend from Wrzos from April 2025 on? She kept no statement after March 2025" (ola_spend[2025-11]) + -1 × ?"What did Ola spend from Wrzos from April 2025 on? She kept no statement after March 2025" (ola_spend[2025-12])
+  anchor: wrzos 2025-03-31 end, stated 10 933.10 DUK, difference 0.00 DUK
+  unfulfilled: mewa_pay[2025-04]
+  unfulfilled: mewa_pay[2025-05]
+  unfulfilled: mewa_pay[2025-06]
+  unfulfilled: mewa_pay[2025-07]
+  unfulfilled: mewa_pay[2025-08]
+  unfulfilled: mewa_pay[2025-09]
+  unfulfilled: mewa_pay[2025-10]
+  unfulfilled: mewa_pay[2025-11]
+  unfulfilled: mewa_pay[2025-12]
+  unfulfilled: ola_spent[2025-04]
+  unfulfilled: ola_spent[2025-05]
+  unfulfilled: ola_spent[2025-06]
+  unfulfilled: ola_spent[2025-07]
+  unfulfilled: ola_spent[2025-08]
+  unfulfilled: ola_spent[2025-09]
+  unfulfilled: ola_spent[2025-10]
+  unfulfilled: ola_spent[2025-11]
+  unfulfilled: ola_spent[2025-12]
+  law date 2025-12-31, cut 2026-01-07
+b11x_ola_rest: 97 763.03 DUK
+  assumed: B-D07 .3 rounds the interest to the ort and names no mode; the instalment's rounding isn't stated: half up for both (mtg_round)
+  assumed: B-D07 .4 says equal instalments (annuity) but names no periodic rate: the yearly rate over 12 months, nominal 12 (O:B-5) (mtg_inst.reset)
+  assumed: the dossier names no overpayment before the 26th rule starts (story, B-HR2 v1; B-D28 lists 2025 only) (overpay_from)
+  law date 2025-12-31, cut 2026-01-07
+

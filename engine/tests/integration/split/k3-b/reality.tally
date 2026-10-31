@@ -1,0 +1,176 @@
+model household_b
+  tally 2
+  on 2026-01-07
+  start 2022-03-01
+  end 2026-01-31
+  note "Household B (tmp/cases/B): Piotr Sowa, a sole trader from 2022-04-11, and Aleksandra (Ola) Wilk, employed by Mewa; not married. One reality (L §6.1): each document is a source, its facts in versions known on the document's day (L §4.5); the record exports are observations (L §5.19)."
+  note "The run is 2022-03-01 .. 2028-12-31, the days the questions reach; the mortgage's schedule to its end (2047) is a recurrence over the loan's own months and days (flat.tally). The law parts loaded with it: CC-1, CC-2, GEN-1 .. GEN-6, MOT-1, MOT-2, MTG-1, MTG-2, PIT-2 .. PIT-6, PIT-10, PIT-11, PIT-12, PIT-15, SOC-1 .. SOC-4, TT-1, TT-2, VAT-1 .. VAT-6 (tmp/design2/cases/law)."
+
+source b_d01 "B-D01 Business register entry: Piotr Sowa (tmp/cases/B/docs/B-D01.md)"
+
+source b_d02 "B-D02 Notice to the Revenue Office: form of business tax (tmp/cases/B/docs/B-D02.md)"
+
+source b_d03 "B-D03 SIO: sickness insurance from 1 November 2022 (tmp/cases/B/docs/B-D03.md)"
+
+source b_d04 "B-D04 Deed of sale: the flat ul. Wrzosowa 12/5 (extract) (tmp/cases/B/docs/B-D04.md)"
+
+source b_d05 "B-D05 Notice to the Revenue Office: VAT (tmp/cases/B/docs/B-D05.md)"
+
+source b_d06 "B-D06 Arnika Soft · contract for IT services (extract, with its annexes) (tmp/cases/B/docs/B-D06.md)"
+
+source b_d07 "B-D07 Bank Jodła · mortgage loan agreement 7710-22 (extract) (tmp/cases/B/docs/B-D07.md)"
+
+source b_d08 "B-D08 Bank Jodła · payment holidays granted on loan 7710-22 (tmp/cases/B/docs/B-D08.md)"
+
+source b_d09 "B-D09 WM Wrzosowa 12 · the building fee for 2025 (tmp/cases/B/docs/B-D09.md)"
+
+source b_d10 "B-D10 TU Bocian · flat insurance policy WRZ-12/5 2025/26 (tmp/cases/B/docs/B-D10.md)"
+
+source b_d11 "B-D11 Auto Grab · invoice FA/2023/0311: the car LN 4471K (tmp/cases/B/docs/B-D11.md)"
+
+source b_d12 "B-D12 Bank Cis · car loan agreement 5521-K (extract) (tmp/cases/B/docs/B-D12.md)"
+
+source b_d13 "B-D13 TU Bocian · car liability policy MTPL 88-4471 2025/26 (tmp/cases/B/docs/B-D13.md)"
+
+source b_d14 "B-D14 Gmina Kłodzin · road tax 2025, car LN 4471K (tmp/cases/B/docs/B-D14.md)"
+
+source b_d15 "B-D15 Invoice FV of the car sale (tmp/cases/B/docs/B-D15.md)"
+
+source b_d16 "B-D16 Bank Cis · loan 5521-K repaid early (tmp/cases/B/docs/B-D16.md)"
+
+source b_d17 "B-D17 TU Bocian · policy MTPL 88-4471 ended (tmp/cases/B/docs/B-D17.md)"
+
+source b_d18 "B-D18 Arnika-Delta · merger notice (tmp/cases/B/docs/B-D18.md)"
+
+source b_d19 "B-D19 Arnika-Delta · the recalled payment (tmp/cases/B/docs/B-D19.md)"
+
+source b_d20 "B-D20 Studio Bez · the rest of the June invoice (tmp/cases/B/docs/B-D20.md)"
+
+source b_d21 "B-D21 Kessel Lenia · contract for IT services (extract) (tmp/cases/B/docs/B-D21.md)"
+
+source b_d22 "B-D22 Kessel · the November invoice (tmp/cases/B/docs/B-D22.md)"
+
+source b_d23 "B-D23 Bank Lazur · floren account LN88 1020 0044 8813 FLR: terms (extract) (tmp/cases/B/docs/B-D23.md)"
+
+source b_d24 "B-D24 Note from Bartek (tmp/cases/B/docs/B-D24.md)"
+
+source b_d25 "B-D25 Mewa Logistyka · pay from January 2024 (tmp/cases/B/docs/B-D25.md)"
+
+source b_d25b "B-D25b Mewa Logistyka · pay from January 2025 (tmp/cases/B/docs/B-D25b.md)"
+
+source b_d26 "B-D26 Mewa Logistyka · February's pay is late (tmp/cases/B/docs/B-D26.md)"
+
+source b_d27 "B-D27 Notary · estate of Zbigniew Sowa: payout to Piotr Sowa (tmp/cases/B/docs/B-D27.md)"
+
+source b_d28 "B-D28 Bank Jodła · loan 7710-22: payments received in 2025 (tmp/cases/B/docs/B-D28.md)"
+
+source b_d29 "B-D29 Bank Jodła · valuation of the flat ul. Wrzosowa 12/5 (tmp/cases/B/docs/B-D29.md)"
+
+source b_d30 "B-D30 Our note: the flat's costs settled to the end of 2024 (tmp/cases/B/docs/B-D30.md)"
+
+source b_d31 "B-D31 Lease of the flat ul. Lipowa 4/7, Kłodzin (extract) (tmp/cases/B/docs/B-D31.md)"
+
+source b_d32 "B-D32 Ul. Lipowa 4/7 · the lease ended, the deposit settled (tmp/cases/B/docs/B-D32.md)"
+
+source b_d33 "B-D33 Deed of sale: the studio ul. Polna 3/14, Dębowo (extract) (tmp/cases/B/docs/B-D33.md)"
+
+source b_d34 "B-D34 Deed of sale: the studio ul. Polna 3/14 sold (extract), with the agent's invoice (tmp/cases/B/docs/B-D34.md)"
+
+source b_d35 "B-D35 Kuchnie Buk · quote for a fitted kitchen, ul. Wrzosowa 12/5 (tmp/cases/B/docs/B-D35.md)"
+
+source b_d36 "B-D36 Bank Cis · fees for account LN45 2090 0017 5521 3380 0001 from 2025 (tmp/cases/B/docs/B-D36.md)"
+
+source cis_export "Bank Cis exports, current account LN45 2090 0017 5521 3380 0001 (tmp/cases/B/records/cis-5521-3380-0001-2025-*.csv)"
+
+source cis_savings_export "Bank Cis export, savings account LN45 2090 0017 5521 3380 0002 (tmp/cases/B/records/cis-5521-3380-0002-2025.csv)"
+
+source faktura "Faktura+ sales and purchase registers (tmp/cases/B/records/faktura-*.csv)"
+
+source house_rules "Household B's house rules B-HR1 – B-HR6 (tmp/cases/B/house-rules.md)"
+
+source lazur_export "Bank Lazur export, floren account LN88 1020 0044 8813 FLR (tmp/cases/B/records/laz-8813-flr-2025.csv)"
+
+source market "Market data: Bank Lazur's exchange table and DUKOR 6M fixings (tmp/cases/market/lazur-fx-flr.csv, dukor.csv)"
+
+source modeller "Assumptions of this model, each with its reason"
+
+source questions "Household B's questions and their answer rules (tmp/cases/B/questions.md)"
+
+source story "Household B's own account, with known dates (tmp/cases/B/story.md)"
+
+source wrzos_export "Bank Wrzos statements of Ola's account LN27 1140 2004 0000 3402 8830 1177 (tmp/cases/B/records/wrz-ola-*.csv)"
+
+kind persons
+
+kind cars
+
+kind owed: place DUK signed
+  note "what a client owes on one invoice. Signed, not claims (min 0): an invoice issued and paid on one day (FV 019/2025) books the observed payment and the planned invoice with no order between them (L §5.14.2: observations and plans come first), and claims refuses the leg that takes it below 0 within the day (RUN-PLACE); S:321"
+
+kind card_pays: transfers
+  note "a card payment on a statement"
+
+kind card_refunds: transfers
+  note "a card payment given back by the shop"
+
+kind friend_backs: transfers
+  note "a friend's half of a shared bill, paid back"
+
+kind reversals: transfers
+  note "a payment taken back by the payer's bank"
+
+kind fx_credits: transfers
+  note "dukats credited from a sale of florens at another bank"
+
+kind fx_sales: transfers
+  attr inv: key flr_invoices
+  note "a sale of florens from the floren account, Piotr's own order; inv names the invoice whose florens it sells"
+
+kind promises: transfers uncertain
+  note "money promised to us on a day, not yet paid"
+
+index bartek_parts: open
+
+index buy_kinds = [laptop, car, fuel, monitor]
+
+index buys: open
+
+index car_uses = [business_only, mixed]
+
+index clients = [arnika, arnika_delta, studio_bez, pracownia_ul, kawiarnia_ziarno, kessel, auto_mlecz]
+  note "the clients named in the sales register; nothing about them is modelled but their names"
+
+index flr_fates = [sold, kept, unpaid]
+
+index flr_invoices: open
+
+index invoices: open
+
+index jodla_kinds = [instalment, overpayment]
+
+index jodla_rows: open
+
+index loan_days = day 2022-03-01..2048-12-31
+  note "the mortgage's days, past the run's end, for its schedule (B-D07)"
+
+index loan_months = month 2022-03..2048-12
+  note "the mortgage's months, past the run's end, for its schedule (B-D07)"
+
+index owed_statuses = [not_yet_due, promised, expected, missed]
+
+version cast
+  cite story
+  known 2022-03-01
+  note "The cast table (story.md lines 7-12), stated from the model's start (L §4.5: the case's own stipulations)."
+  persons + [piotr] lives 1987-11-03..
+  persons + [ola] lives 1990-06-21..
+
+version car_bought
+  cite b_d11
+  known 2023-03-15
+  cars + [ln4471k] lives 2023-03-15..
+
+version car_sold
+  cite b_d15
+  known 2025-09-12
+  replace cars + [ln4471k] lives 2023-03-15..2025-09-12

@@ -1,0 +1,38 @@
+# Writer 11 (tally 2.1, 2.1-16, R-6, RC-5; L §5.19 Readings at a place that keeps parts). L §2.3 row: "of: only on a row of opening or stated, §5.19, LOAD-PARTS otherwise"; L §8.3
+# LOAD-PARTS `of on a row of <input>`.
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+kind persons: parties
+kind couples: parties
+kind savings: place PLN min 0
+  owned by arrive
+  step minor(PLN)
+  takes k for w order if k.owner == ania then 0 else 1
+kind tomeks: transfers
+input rate: num
+place konto: savings lives 2026-01-01..
+place world: outside lives 1900-01-01..
+place shop: outside lives 1900-01-01..
+def arrive[m in events, p in parties]: num at m.day
+  rule base = if p == ania then 1 else 0
+  rule t beats base = if p == tomek then 1 else 0 when m in tomeks
+ask q: bal(konto, 2026-01-31), bal(konto, 2026-01-31) of ania, bal(konto, 2026-01-31) of tomek
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  persons + [ania] lives 1980-01-01..
+  persons + [tomek] lives 1981-01-01..
+  couples + [ania_tomek] lives 2010-06-01..
+  opening[konto] = 0 PLN at 2026-01-01 start
+  rate of ania = 0.5
+=== expect
+refused: LOAD-PARTS of on a row of rate (m.tally:33)

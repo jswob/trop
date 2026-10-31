@@ -1,0 +1,76 @@
+# L §6.4: a scenario's expression row "reads inputs, bands and defs, never a place or a movement (a balance, flows, a
+# move's instance), directly or through a def (LOAD-SCENARIO)". s1's row reads the base def held, which reads
+# bal(konto, ...): through a def, refused. s2's row reads bal(household.konto, ...) directly: refused. s3's row reads
+# the band fee: allowed (fee's one row gives 10 PLN). The base runs. (Was REFCORE-UNSPECIFIED §6.4, a prefixed place,
+# band or move in an expression row.)
+=== household.tally
+model household
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2040-12-31
+
+source plan "plan"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2019-05-01..
+input cap: num PLN
+input day0: date
+band fee(x: num PLN): num PLN
+
+def held: num PLN
+  rule r = bal(konto, day0)
+
+version base_2026
+  cite plan
+  governs always
+  known 2026-01-01
+  cap = 1 000.00 PLN "own"
+  day0 = 2026-06-30 "own"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "wyciąg"
+  fee: [0 PLN, inf) = 10.00 PLN "own"
+
+ask c: cap law 2031-06-30
+=== s1.tally
+scenario s1 over household
+  tally 2
+  from 2031-01-01
+
+version v1
+  cite plan
+  governs 2031-01-01..
+  known 2026-10-20
+  replace cap = household.held "z def"
+
+ask a: cap in s1 law 2031-06-30
+=== s2.tally
+scenario s2 over household
+  tally 2
+  from 2031-01-01
+
+version v2
+  cite plan
+  governs 2031-01-01..
+  known 2026-10-20
+  replace cap = bal(household.konto, household.day0) "z salda"
+
+ask a: cap in s2 law 2031-06-30
+=== s3.tally
+scenario s3 over household
+  tally 2
+  from 2031-01-01
+
+version v3
+  cite plan
+  governs 2031-01-01..
+  known 2026-10-20
+  replace cap = fee(household.cap) "z pasma"
+
+ask a: cap in s3 law 2031-06-30
+=== expect
+scenario s1: refused: LOAD-SCENARIO the expression row of cap in s1 reads the place konto through held ...
+scenario s2: refused: LOAD-SCENARIO household.konto: an expression row reads inputs, bands and defs, never a place ...
+a: 10 PLN
+  world: s3
+...
+c: 1 000 PLN
+...

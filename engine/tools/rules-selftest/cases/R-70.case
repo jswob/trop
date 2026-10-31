@@ -1,0 +1,21 @@
+# R-70: no code hidden from clippy.
+
+case: cfg-not-clippy
+tool: ast-grep
+expect: no-cfg-clippy
+--- module
+/// Planted.
+#[cfg(not(clippy))]
+pub fn planted() -> u8 {
+    1
+}
+
+case: cfg-attr-clippy
+tool: ast-grep
+expect: no-cfg-clippy
+--- module
+/// Planted.
+#[cfg_attr(clippy, expect(clippy::needless_return, reason = "R-70: a planted hidden exception"))]
+pub fn planted() -> u8 {
+    1
+}

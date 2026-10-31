@@ -1,0 +1,201 @@
+model ch05
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+  note "USDA's yearly spending on a child by age group and category (Table 1: married-couple families, overall United States, younger child of two, 2015 dollars), its total from birth through age 17, Figure 2's shares, Table 10's projection at 2.2 percent inflation, and CPAG's UK minimum cost of a child in 2025."
+  note "USDA Release No. 0004.17 (January 9, 2017) restates Table 1's figures and supplies no input of its own; its figures are asked through the same asks as the report's."
+  note "Every USDA figure is in 2015 dollars and the report gives no index, so its inputs are declared prices 2015 (LANGUAGE §3.4): read at a law date outside 2015 they are holes. The USDA asks are read with law 2015-12-31."
+  note "CPAG builds its totals from Minimum Income Standard budgets by age and birth order that it doesn't print; those rows are holes."
+
+source cpag_report "Child Poverty Action Group, The Cost of a Child in 2025 (October 2025), calculations by J Stone and E Robinson, CRSP, Loughborough University (Wayback Machine copy captured 2025-11-03)" at "https://web.archive.org/web/20251103032632id_/https://cpag.org.uk/sites/default/files/2025-10/CPAG-Cost-of-a-Child-2025.pdf"
+
+source lifted_1_0_1 "Figures tally 1.0.1 allowed inline in rules"
+
+source usda_report "USDA CNPP, Expenditures on Children by Families, 2015, Miscellaneous Report No. 1528-2015, January 2017, Revised March 2017 (Lino, Kuczynski, Rodriguez, Schap)" at "https://fns-prod.azureedge.us/sites/default/files/crc2015_March2017.pdf"
+
+unit GBP: currency minor 0.01
+
+unit USD: currency minor 0.01
+
+axis cp_basis
+  group "Cp of an age is the Table 1 average of its age group"
+  single "Cp of an age is the single-year expense, which the report doesn't print"
+
+axis disp
+  half-up "printed figures are rounded to the nearest, a tie away from zero"
+  down "printed figures are truncated"
+
+axis share_fit
+  plain "each share is rounded on its own"
+  to_100 "each share is rounded, and the largest takes the difference so the shares sum to 100"
+
+index cage = int 0..17
+
+index cat = [housing, food, transport, clothing, health, childcare, misc]
+
+index costkind = [basic, full]
+
+index fam = [couple, lone]
+
+index grp = [g0_2, g3_5, g6_8, g9_11, g12_14, g15_17]
+
+index inc = [low, mid, high]
+
+index order2 = [child1, child2]
+
+index work = [not_working, min_wage, median_wage]
+
+input cf_10: money USD
+  note "lifted from an inline figure of tally 1.0.1"
+
+input cp_single[i in inc, a in cage]: money USD prices 2015 question "What was Cp, the 2015 yearly expense on a child of this single age, in this income group?"
+
+input cpag_cost[k in costkind, f in fam, b in order2, a in cage]: money GBP question "What does this child add to this family's minimum budget in this year of childhood, under this cost?"
+
+input cpag_min[f in fam]: money GBP question "What are the minimum costs, after rent, childcare and council tax, of this family with two children aged 3 and 7?"
+
+input cpag_net[f in fam, w in work]: money GBP question "What is this family's net income, after rent, childcare and council tax, in this work status?"
+
+input infl: rate
+
+input spend[i in inc, g in grp, c in cat]: money USD prices 2015 question "What is the 2015 yearly expense on a child of this age group in this category, for this income group (USDA Table 1)?"
+
+input spend_total[i in inc, g in grp]: money USD prices 2015 question "What is the 2015 yearly total expense on a child of this age group, for this income group (USDA Table 1)?"
+
+band grp_of(yrs: int): key grp
+
+def cf[i in inc, a in cage]: money USD = round(cp[i, a] * factor(infl, a, year, effective), cf_10, disp) at reader
+
+def cf_total[i in inc]: money USD = sum(cf[i, a] for a in cage) at reader
+
+def cp[i in inc, a in cage]: money USD at reader
+  rule group = spend_total[i, grp_of(a)] when cp_basis == group
+  rule single = cp_single[i, a] when cp_basis == single
+
+def cpag_pct[f in fam, w in work]: num = round(cpag_net[f, w] / cpag_min[f] / 1 %, 1, disp) at reader
+
+def cpag_total[k in costkind, f in fam]: money GBP = round(sum(cpag_cost[k, f, b, a] for b in order2, a in cage) / count(b in order2), 1, disp) at reader
+
+def grp_sum[i in inc, g in grp]: money USD = sum(spend[i, g, c] for c in cat) at reader
+
+def share_near[i in inc, c in cat]: num = round(share_raw[i, c] / 1 %, 1, disp) at reader
+
+def share_pct[i in inc, c in cat]: num at reader
+  rule plain = share_near[i, c] when share_fit == plain
+  rule to_100 = share_near[i, c] + (if c == argmax(share_raw[i, k] for k in cat) ties by pos(k) then 100 % / 1 % - sum(share_near[i, k] for k in cat) else 0) when share_fit == to_100
+
+def share_raw[i in inc, c in cat]: num = t1_cat[i, c] / t1_total[i] at reader
+
+def t1_cat[i in inc, c in cat]: money USD = sum(spend[i, grp_of(a), c] for a in cage) at reader
+
+def t1_total[i in inc]: money USD = sum(spend_total[i, grp_of(a)] for a in cage) at reader
+
+ask chk_t1_rows: check grp_sum[mid, g] == spend_total[mid, g] for g in grp law 2015-12-31
+
+ask cpag_row1: cpag_total[basic, f] for f in fam law 2025-12-31
+
+ask cpag_row2: cpag_total[full, f] for f in fam law 2025-12-31
+
+ask cpag_rows3_5: cpag_pct[f, w] for w in work, f in fam law 2025-12-31
+
+ask es_ranges: min(spend_total[i, g] for g in grp), max(spend_total[i, g] for g in grp) for i in inc law 2015-12-31
+
+ask fig2_shares: share_pct[mid, c] for c in cat law 2015-12-31
+
+ask t10_mid: cf[mid, a] for a in cage law 2015-12-31
+
+ask t10_totals: cf_total[i] for i in inc law 2015-12-31
+
+ask t1_cats_mid: t1_cat[mid, c] for c in cat law 2015-12-31
+
+ask t1_totals: t1_total[i] for i in inc law 2015-12-31
+
+version lifted_figures
+  cite lifted_1_0_1
+  governs always
+  known 2017-01-09
+  cf_10 = 10 "inline in tally 1.0.1: cf line 56, round step"
+
+version usda_2015
+  cite usda_report
+  governs always
+  known 2017-01-09
+  note "Known from publication (LANGUAGE §4.5): the report is dated January 2017, and USDA Release No. 0004.17 announced it on January 9, 2017, which gives the day. The copy read is the revised edition; its Editor's Note of March 8, 2017 revises only the regional tables 2-5, so for Table 1, Table 10 and the Executive Summary it restates and changes nothing and is only their locator (LANGUAGE §5.3)."
+  note "The figures are in 2015 dollars (Executive Summary, PDF p. 4); the 2011-14 survey data were brought to 2015 dollars by CPI-U components (PDF p. 10), which the report doesn't give."
+  cp_single = ?"Table 10 applies Cp, the 2015 expense on a child of a particular age; the report prints only the age-group averages of Table 1" "PDF p. 25, future cost formula"
+  grp_of: [0, 2] = g0_2 "Table 1, age category 0 - 2; note: the estimate applies to each age in the category"
+  grp_of: [3, 5] = g3_5 "Table 1, age category 3 - 5"
+  grp_of: [6, 8] = g6_8 "Table 1, age category 6 - 8"
+  grp_of: [9, 11] = g9_11 "Table 1, age category 9 - 11"
+  grp_of: [12, 14] = g12_14 "Table 1, age category 12 - 14"
+  grp_of: [15, 17] = g15_17 "Table 1, age category 15 - 17"
+  spend[low] = ?"Table 1, lowest income block: its age-group rows are not transcribed" "Table 1, before-tax income less than $59,200 (PDF p. 30)"
+  spend[mid, g0_2, housing] = 3680 "Table 1, $59,200 to $107,400, 0 - 2, Housing"
+  spend[mid, g0_2, food] = 1580 "Table 1, $59,200 to $107,400, 0 - 2, Food"
+  spend[mid, g0_2, transport] = 1790 "Table 1, $59,200 to $107,400, 0 - 2, Transportation"
+  spend[mid, g0_2, clothing] = 750 "Table 1, $59,200 to $107,400, 0 - 2, Clothing"
+  spend[mid, g0_2, health] = 1180 "Table 1, $59,200 to $107,400, 0 - 2, Health care"
+  spend[mid, g0_2, childcare] = 2870 "Table 1, $59,200 to $107,400, 0 - 2, Child care and education"
+  spend[mid, g0_2, misc] = 830 "Table 1, $59,200 to $107,400, 0 - 2, Miscellaneous"
+  spend[mid, g3_5, housing] = 3680 "Table 1, $59,200 to $107,400, 3 - 5, Housing"
+  spend[mid, g3_5, food] = 1690 "Table 1, $59,200 to $107,400, 3 - 5, Food"
+  spend[mid, g3_5, transport] = 1840 "Table 1, $59,200 to $107,400, 3 - 5, Transportation"
+  spend[mid, g3_5, clothing] = 600 "Table 1, $59,200 to $107,400, 3 - 5, Clothing"
+  spend[mid, g3_5, health] = 1110 "Table 1, $59,200 to $107,400, 3 - 5, Health care"
+  spend[mid, g3_5, childcare] = 2870 "Table 1, $59,200 to $107,400, 3 - 5, Child care and education"
+  spend[mid, g3_5, misc] = 940 "Table 1, $59,200 to $107,400, 3 - 5, Miscellaneous"
+  spend[mid, g6_8, housing] = 3680 "Table 1, $59,200 to $107,400, 6 - 8, Housing"
+  spend[mid, g6_8, food] = 2280 "Table 1, $59,200 to $107,400, 6 - 8, Food"
+  spend[mid, g6_8, transport] = 1900 "Table 1, $59,200 to $107,400, 6 - 8, Transportation"
+  spend[mid, g6_8, clothing] = 600 "Table 1, $59,200 to $107,400, 6 - 8, Clothing"
+  spend[mid, g6_8, health] = 1130 "Table 1, $59,200 to $107,400, 6 - 8, Health care"
+  spend[mid, g6_8, childcare] = 1710 "Table 1, $59,200 to $107,400, 6 - 8, Child care and education"
+  spend[mid, g6_8, misc] = 1050 "Table 1, $59,200 to $107,400, 6 - 8, Miscellaneous"
+  spend[mid, g9_11, housing] = 3680 "Table 1, $59,200 to $107,400, 9 - 11, Housing"
+  spend[mid, g9_11, food] = 2680 "Table 1, $59,200 to $107,400, 9 - 11, Food"
+  spend[mid, g9_11, transport] = 1940 "Table 1, $59,200 to $107,400, 9 - 11, Transportation"
+  spend[mid, g9_11, clothing] = 780 "Table 1, $59,200 to $107,400, 9 - 11, Clothing"
+  spend[mid, g9_11, health] = 1280 "Table 1, $59,200 to $107,400, 9 - 11, Health care"
+  spend[mid, g9_11, childcare] = 1710 "Table 1, $59,200 to $107,400, 9 - 11, Child care and education"
+  spend[mid, g9_11, misc] = 1110 "Table 1, $59,200 to $107,400, 9 - 11, Miscellaneous"
+  spend[mid, g12_14, housing] = 3680 "Table 1, $59,200 to $107,400, 12 - 14, Housing"
+  spend[mid, g12_14, food] = 2780 "Table 1, $59,200 to $107,400, 12 - 14, Food"
+  spend[mid, g12_14, transport] = 2090 "Table 1, $59,200 to $107,400, 12 - 14, Transportation"
+  spend[mid, g12_14, clothing] = 860 "Table 1, $59,200 to $107,400, 12 - 14, Clothing"
+  spend[mid, g12_14, health] = 1240 "Table 1, $59,200 to $107,400, 12 - 14, Health care"
+  spend[mid, g12_14, childcare] = 1430 "Table 1, $59,200 to $107,400, 12 - 14, Child care and education"
+  spend[mid, g12_14, misc] = 950 "Table 1, $59,200 to $107,400, 12 - 14, Miscellaneous"
+  spend[mid, g15_17, housing] = 3680 "Table 1, $59,200 to $107,400, 15 - 17, Housing"
+  spend[mid, g15_17, food] = 2790 "Table 1, $59,200 to $107,400, 15 - 17, Food"
+  spend[mid, g15_17, transport] = 2270 "Table 1, $59,200 to $107,400, 15 - 17, Transportation"
+  spend[mid, g15_17, clothing] = 830 "Table 1, $59,200 to $107,400, 15 - 17, Clothing"
+  spend[mid, g15_17, health] = 1300 "Table 1, $59,200 to $107,400, 15 - 17, Health care"
+  spend[mid, g15_17, childcare] = 2090 "Table 1, $59,200 to $107,400, 15 - 17, Child care and education"
+  spend[mid, g15_17, misc] = 940 "Table 1, $59,200 to $107,400, 15 - 17, Miscellaneous"
+  spend[high] = ?"Table 1, highest income block: its age-group rows are not transcribed" "Table 1, before-tax income more than $107,400 (PDF p. 30)"
+  spend_total[low] = ?"Table 1, lowest income block: its age-group rows are not transcribed" "Table 1, before-tax income less than $59,200 (PDF p. 30)"
+  spend_total[mid, g0_2] = 12680 "Table 1, $59,200 to $107,400, 0 - 2, Total"
+  spend_total[mid, g3_5] = 12730 "Table 1, $59,200 to $107,400, 3 - 5, Total"
+  spend_total[mid, g6_8] = 12350 "Table 1, $59,200 to $107,400, 6 - 8, Total"
+  spend_total[mid, g9_11] = 13180 "Table 1, $59,200 to $107,400, 9 - 11, Total"
+  spend_total[mid, g12_14] = 13030 "Table 1, $59,200 to $107,400, 12 - 14, Total"
+  spend_total[mid, g15_17] = 13900 "Table 1, $59,200 to $107,400, 15 - 17, Total"
+  spend_total[high] = ?"Table 1, highest income block: its age-group rows are not transcribed" "Table 1, before-tax income more than $107,400 (PDF p. 30)"
+
+version cpag_2025
+  cite cpag_report
+  governs 2025
+  known 2025-10-31
+  note "The report is dated only by its month, October 2025, so it is known on the month's last day (LANGUAGE §4.5). A web lookup (2026-10-19) gave no day: the PDF sits under /2025-10/ on CPAG's site, CPAG's news page for it (https://cpag.org.uk/news/cost-child-2025) refused the request (HTTP 403), and the PDF's creation stamp (2025-10-21, case transcription notes) is not a publication date. Entitlements are updated to April 2025 (p. 3, Note)."
+  note "Basic cost leaves out rent, childcare and council tax (p. 3, Note); the report doesn't say what else Full cost holds."
+  cpag_cost = ?"CPAG adds up the cost of each year of childhood by birth order (p. 2) but prints no yearly costs" "p. 2, Introduction; p. 3, Scorecard rows 1-2"
+  cpag_min = ?"CPAG doesn't print the minimum family costs behind its percentages" "p. 3, Scorecard rows 3-5 and Note"
+  cpag_net = ?"CPAG doesn't print the net incomes behind its percentages" "p. 3, Scorecard rows 3-5 and Note"
+
+version usda_example
+  cite usda_report
+  governs always
+  known 2026-10-18
+  note "Table 10's example assumes a child born in 2015 who reaches age 17 in 2032, at 2.2 percent average annual inflation: a worked example's stipulation, known from the model's on, since it has no start (LANGUAGE §4.5)."
+  infl = 0.022 1/year governs 2015..2032 "PDF p. 25: a child born in 2015 reaches age 17 in 2032, and the average annual inflation rate over this time is 2.2 percent"

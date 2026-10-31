@@ -1,0 +1,13 @@
+# L §5.18 Literals: "An ask allows every literal a def allows, plus its own: paths, seed, path, pins, a solve
+# bracket and step, a quantile level, and date and period literals and spans" — an integer 31 is none of these
+# (L §7.1, LOAD-LITERAL).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+ask q1: day_of(2026-02, 31)
+=== expect
+refused: LOAD-LITERAL ...

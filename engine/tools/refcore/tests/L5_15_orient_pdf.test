@@ -1,0 +1,23 @@
+# L §5.15: an ask that reaches pdf states orient (LOAD-ORIENT).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+input u4: dist
+def p: num = pdf(u4, 1) at reader
+
+version v
+  cite s
+  governs 2026..
+  known 2026-01-01
+  u4 = uniform(0, 4) to 0.001
+
+ask a: p law 2026-06-30
+=== expect
+refused: LOAD-ORIENT ...

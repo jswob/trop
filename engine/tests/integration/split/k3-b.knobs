@@ -1,0 +1,5 @@
+# K3/K6 (knobs.md): household B cut to 2026-01-31, from scratch/mc-b/cs11 (end 2026-12-31)
+reality.tally	5	run end 2026-12-31 -> 2026-01-31 (K3)
+market.tally	53	the F8 row names days past the end: shortened to the run end (K3, rows/B.check.md line 9)
+ola.tally	122	ola_spend row names months past the end: shortened to 2026-01 (K3)
+ola.tally	125	ola_spends row names months past the end: shortened to 2026-01 (K3)

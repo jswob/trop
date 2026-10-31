@@ -1,0 +1,41 @@
+# L §4.2 schedule(p, e, roll, cal): "A day that doesn't exist in p (31 February) gives none ... a move whose day is
+# none has no instance at that key".  Day 31 of 2026-01..2026-03: instances on 2026-01-31 and 2026-03-31 only, so
+# two movements of 100.00 PLN (200.00 PLN, L §5.14.3 flows of a move).
+=== m.tally
+model sch
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "umowa"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2020-01-01..
+place world: outside lives 1900-01-01..
+index qm = month 2026-01..2026-03
+input dom: int
+input amt: money PLN
+input cal: calendar
+
+move pay[m in qm]: transfers
+  on schedule(m, dom, unadjusted, cal)
+  leg cash from konto to world amount amt
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  dom = 31
+  amt = 100.00 PLN
+  cal = calendar(weekends [sat, sun])
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start
+
+ask q1: count(x in transfers over 2026), flows(pay, 2026)
+ask q2: x.day for x in transfers over 2026
+=== expect
+q1: (2, 200.00 PLN)
+  cut 2026-01-01
+q2 (x = pay[2026-01]): 2026-01-31
+  cut 2026-01-01
+q2 (x = pay[2026-03]): 2026-03-31
+  cut 2026-01-01

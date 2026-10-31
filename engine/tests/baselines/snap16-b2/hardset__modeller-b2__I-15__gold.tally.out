@@ -1,0 +1,656 @@
+after_events_2027 (d = 2027-01-05) [gram_cost_mode = *, price_path = *]: (71.838 gram, 17 400.00 DUK, 0.12 SOL)
+  held: gold_px[p_high] = 130 SOL/gram (facts), read for 2027-01-05
+  held: gold_px[p_low] = 130 SOL/gram (facts), read for 2027-01-05
+  held: rate_px[p_high] = 1.92 DUK/SOL (facts), read for 2027-01-05
+  held: rate_px[p_low] = 1.92 DUK/SOL (facts), read for 2027-01-05
+  cut 2027-01-01
+after_events_2027 (d = 2027-03-31) [gram_cost_mode = *, price_path = *]: (71.751 gram, 17 378.93 DUK, 0.12 SOL)
+  held: gold_px[p_high] = 130 SOL/gram (facts), read for 2027-01-05
+  held: gold_px[p_low] = 130 SOL/gram (facts), read for 2027-01-05
+  held: rate_px[p_high] = 1.92 DUK/SOL (facts), read for 2027-01-05
+  held: rate_px[p_low] = 1.92 DUK/SOL (facts), read for 2027-01-05
+  cut 2027-01-01
+after_events_2027 (d = 2027-04-05) [gram_cost_mode = down | half-up, price_path = *]: (83.636 gram, 20 378.93 DUK, 0.03 SOL)
+  reading: gram_cost_mode = down | half-up
+  held: gold_px[p_high] = 128.5 SOL/gram (facts), read for 2027-04-05
+  held: gold_px[p_high] = 130 SOL/gram (facts), read for 2027-01-05
+  held: gold_px[p_low] = 128.5 SOL/gram (facts), read for 2027-04-05
+  held: gold_px[p_low] = 130 SOL/gram (facts), read for 2027-01-05
+  held: rate_px[p_high] = 1.92 DUK/SOL (facts), read for 2027-01-05
+  held: rate_px[p_high] = 1.935 DUK/SOL (facts), read for 2027-04-05
+  held: rate_px[p_low] = 1.92 DUK/SOL (facts), read for 2027-01-05
+  held: rate_px[p_low] = 1.935 DUK/SOL (facts), read for 2027-04-05
+  cut 2027-01-01
+after_events_2027 (d = 2027-04-05) [gram_cost_mode = up, price_path = *]: (83.636 gram, 20 378.93 DUK, 0.02 SOL)
+  reading: gram_cost_mode = up
+  held: gold_px[p_high] = 128.5 SOL/gram (facts), read for 2027-04-05
+  held: gold_px[p_high] = 130 SOL/gram (facts), read for 2027-01-05
+  held: gold_px[p_low] = 128.5 SOL/gram (facts), read for 2027-04-05
+  held: gold_px[p_low] = 130 SOL/gram (facts), read for 2027-01-05
+  held: rate_px[p_high] = 1.92 DUK/SOL (facts), read for 2027-01-05
+  held: rate_px[p_high] = 1.935 DUK/SOL (facts), read for 2027-04-05
+  held: rate_px[p_low] = 1.92 DUK/SOL (facts), read for 2027-01-05
+  held: rate_px[p_low] = 1.935 DUK/SOL (facts), read for 2027-04-05
+  cut 2027-01-01
+after_events_2027 (d = 2027-06-30) [gram_cost_mode = down | half-up, price_path = *]: (83.535 gram, 20 354.32 DUK, 0.03 SOL)
+  reading: gram_cost_mode = down | half-up
+  held: gold_px[p_high] = 128.5 SOL/gram (facts), read for 2027-04-05
+  held: gold_px[p_high] = 130 SOL/gram (facts), read for 2027-01-05
+  held: gold_px[p_low] = 128.5 SOL/gram (facts), read for 2027-04-05
+  held: gold_px[p_low] = 130 SOL/gram (facts), read for 2027-01-05
+  held: rate_px[p_high] = 1.92 DUK/SOL (facts), read for 2027-01-05
+  held: rate_px[p_high] = 1.935 DUK/SOL (facts), read for 2027-04-05
+  held: rate_px[p_low] = 1.92 DUK/SOL (facts), read for 2027-01-05
+  held: rate_px[p_low] = 1.935 DUK/SOL (facts), read for 2027-04-05
+  cut 2027-01-01
+after_events_2027 (d = 2027-06-30) [gram_cost_mode = up, price_path = *]: (83.535 gram, 20 354.32 DUK, 0.02 SOL)
+  reading: gram_cost_mode = up
+  held: gold_px[p_high] = 128.5 SOL/gram (facts), read for 2027-04-05
+  held: gold_px[p_high] = 130 SOL/gram (facts), read for 2027-01-05
+  held: gold_px[p_low] = 128.5 SOL/gram (facts), read for 2027-04-05
+  held: gold_px[p_low] = 130 SOL/gram (facts), read for 2027-01-05
+  held: rate_px[p_high] = 1.92 DUK/SOL (facts), read for 2027-01-05
+  held: rate_px[p_high] = 1.935 DUK/SOL (facts), read for 2027-04-05
+  held: rate_px[p_low] = 1.92 DUK/SOL (facts), read for 2027-01-05
+  held: rate_px[p_low] = 1.935 DUK/SOL (facts), read for 2027-04-05
+  cut 2027-01-01
+after_events_2027 (d = 2027-07-05) [gram_cost_mode = down | half-up, price_path = *]: (94.769 gram, 23 354.32 DUK, 0.08 SOL)
+  reading: gram_cost_mode = down | half-up
+  held: gold_px[p_high] = 128.5 SOL/gram (facts), read for 2027-04-05
+  held: gold_px[p_high] = 130 SOL/gram (facts), read for 2027-01-05
+  held: gold_px[p_high] = 134.2 SOL/gram (facts), read for 2027-07-05
+  held: gold_px[p_low] = 128.5 SOL/gram (facts), read for 2027-04-05
+  held: gold_px[p_low] = 130 SOL/gram (facts), read for 2027-01-05
+  held: gold_px[p_low] = 134.2 SOL/gram (facts), read for 2027-07-05
+  held: rate_px[p_high] = 1.92 DUK/SOL (facts), read for 2027-01-05
+  held: rate_px[p_high] = 1.935 DUK/SOL (facts), read for 2027-04-05
+  held: rate_px[p_high] = 1.96 DUK/SOL (facts), read for 2027-07-05
+  held: rate_px[p_low] = 1.92 DUK/SOL (facts), read for 2027-01-05
+  held: rate_px[p_low] = 1.935 DUK/SOL (facts), read for 2027-04-05
+  held: rate_px[p_low] = 1.96 DUK/SOL (facts), read for 2027-07-05
+  cut 2027-01-01
+after_events_2027 (d = 2027-07-05) [gram_cost_mode = up, price_path = *]: (94.769 gram, 23 354.32 DUK, 0.06 SOL)
+  reading: gram_cost_mode = up
+  held: gold_px[p_high] = 128.5 SOL/gram (facts), read for 2027-04-05
+  held: gold_px[p_high] = 130 SOL/gram (facts), read for 2027-01-05
+  held: gold_px[p_high] = 134.2 SOL/gram (facts), read for 2027-07-05
+  held: gold_px[p_low] = 128.5 SOL/gram (facts), read for 2027-04-05
+  held: gold_px[p_low] = 130 SOL/gram (facts), read for 2027-01-05
+  held: gold_px[p_low] = 134.2 SOL/gram (facts), read for 2027-07-05
+  held: rate_px[p_high] = 1.92 DUK/SOL (facts), read for 2027-01-05
+  held: rate_px[p_high] = 1.935 DUK/SOL (facts), read for 2027-04-05
+  held: rate_px[p_high] = 1.96 DUK/SOL (facts), read for 2027-07-05
+  held: rate_px[p_low] = 1.92 DUK/SOL (facts), read for 2027-01-05
+  held: rate_px[p_low] = 1.935 DUK/SOL (facts), read for 2027-04-05
+  held: rate_px[p_low] = 1.96 DUK/SOL (facts), read for 2027-07-05
+  cut 2027-01-01
+after_events_2027 (d = 2027-09-30) [gram_cost_mode = down | half-up, price_path = *]: (94.655 gram, 23 326.23 DUK, 0.08 SOL)
+  reading: gram_cost_mode = down | half-up
+  held: gold_px[p_high] = 128.5 SOL/gram (facts), read for 2027-04-05
+  held: gold_px[p_high] = 130 SOL/gram (facts), read for 2027-01-05
+  held: gold_px[p_high] = 134.2 SOL/gram (facts), read for 2027-07-05
+  held: gold_px[p_low] = 128.5 SOL/gram (facts), read for 2027-04-05
+  held: gold_px[p_low] = 130 SOL/gram (facts), read for 2027-01-05
+  held: gold_px[p_low] = 134.2 SOL/gram (facts), read for 2027-07-05
+  held: rate_px[p_high] = 1.92 DUK/SOL (facts), read for 2027-01-05
+  held: rate_px[p_high] = 1.935 DUK/SOL (facts), read for 2027-04-05
+  held: rate_px[p_high] = 1.96 DUK/SOL (facts), read for 2027-07-05
+  held: rate_px[p_low] = 1.92 DUK/SOL (facts), read for 2027-01-05
+  held: rate_px[p_low] = 1.935 DUK/SOL (facts), read for 2027-04-05
+  held: rate_px[p_low] = 1.96 DUK/SOL (facts), read for 2027-07-05
+  cut 2027-01-01
+after_events_2027 (d = 2027-09-30) [gram_cost_mode = up, price_path = *]: (94.655 gram, 23 326.23 DUK, 0.06 SOL)
+  reading: gram_cost_mode = up
+  held: gold_px[p_high] = 128.5 SOL/gram (facts), read for 2027-04-05
+  held: gold_px[p_high] = 130 SOL/gram (facts), read for 2027-01-05
+  held: gold_px[p_high] = 134.2 SOL/gram (facts), read for 2027-07-05
+  held: gold_px[p_low] = 128.5 SOL/gram (facts), read for 2027-04-05
+  held: gold_px[p_low] = 130 SOL/gram (facts), read for 2027-01-05
+  held: gold_px[p_low] = 134.2 SOL/gram (facts), read for 2027-07-05
+  held: rate_px[p_high] = 1.92 DUK/SOL (facts), read for 2027-01-05
+  held: rate_px[p_high] = 1.935 DUK/SOL (facts), read for 2027-04-05
+  held: rate_px[p_high] = 1.96 DUK/SOL (facts), read for 2027-07-05
+  held: rate_px[p_low] = 1.92 DUK/SOL (facts), read for 2027-01-05
+  held: rate_px[p_low] = 1.935 DUK/SOL (facts), read for 2027-04-05
+  held: rate_px[p_low] = 1.96 DUK/SOL (facts), read for 2027-07-05
+  cut 2027-01-01
+after_events_2027 (d = 2027-10-05) [gram_cost_mode = down | half-up, price_path = *]: (105.47 gram, 26 326.23 DUK, 0.03 SOL)
+  reading: gram_cost_mode = down | half-up
+  held: gold_px[p_high] = 128.5 SOL/gram (facts), read for 2027-04-05
+  held: gold_px[p_high] = 130 SOL/gram (facts), read for 2027-01-05
+  held: gold_px[p_high] = 134.2 SOL/gram (facts), read for 2027-07-05
+  held: gold_px[p_high] = 138 SOL/gram (facts), read for 2027-10-05
+  held: gold_px[p_low] = 128.5 SOL/gram (facts), read for 2027-04-05
+  held: gold_px[p_low] = 130 SOL/gram (facts), read for 2027-01-05
+  held: gold_px[p_low] = 134.2 SOL/gram (facts), read for 2027-07-05
+  held: gold_px[p_low] = 138 SOL/gram (facts), read for 2027-10-05
+  held: rate_px[p_high] = 1.92 DUK/SOL (facts), read for 2027-01-05
+  held: rate_px[p_high] = 1.935 DUK/SOL (facts), read for 2027-04-05
+  held: rate_px[p_high] = 1.96 DUK/SOL (facts), read for 2027-07-05
+  held: rate_px[p_high] = 1.98 DUK/SOL (facts), read for 2027-10-05
+  held: rate_px[p_low] = 1.92 DUK/SOL (facts), read for 2027-01-05
+  held: rate_px[p_low] = 1.935 DUK/SOL (facts), read for 2027-04-05
+  held: rate_px[p_low] = 1.96 DUK/SOL (facts), read for 2027-07-05
+  held: rate_px[p_low] = 1.98 DUK/SOL (facts), read for 2027-10-05
+  cut 2027-01-01
+after_events_2027 (d = 2027-10-05) [gram_cost_mode = up, price_path = *]: (105.47 gram, 26 326.23 DUK, 0.01 SOL)
+  reading: gram_cost_mode = up
+  held: gold_px[p_high] = 128.5 SOL/gram (facts), read for 2027-04-05
+  held: gold_px[p_high] = 130 SOL/gram (facts), read for 2027-01-05
+  held: gold_px[p_high] = 134.2 SOL/gram (facts), read for 2027-07-05
+  held: gold_px[p_high] = 138 SOL/gram (facts), read for 2027-10-05
+  held: gold_px[p_low] = 128.5 SOL/gram (facts), read for 2027-04-05
+  held: gold_px[p_low] = 130 SOL/gram (facts), read for 2027-01-05
+  held: gold_px[p_low] = 134.2 SOL/gram (facts), read for 2027-07-05
+  held: gold_px[p_low] = 138 SOL/gram (facts), read for 2027-10-05
+  held: rate_px[p_high] = 1.92 DUK/SOL (facts), read for 2027-01-05
+  held: rate_px[p_high] = 1.935 DUK/SOL (facts), read for 2027-04-05
+  held: rate_px[p_high] = 1.96 DUK/SOL (facts), read for 2027-07-05
+  held: rate_px[p_high] = 1.98 DUK/SOL (facts), read for 2027-10-05
+  held: rate_px[p_low] = 1.92 DUK/SOL (facts), read for 2027-01-05
+  held: rate_px[p_low] = 1.935 DUK/SOL (facts), read for 2027-04-05
+  held: rate_px[p_low] = 1.96 DUK/SOL (facts), read for 2027-07-05
+  held: rate_px[p_low] = 1.98 DUK/SOL (facts), read for 2027-10-05
+  cut 2027-01-01
+after_events_2027 (d = 2027-10-10) [gram_cost_mode = down | half-up, price_path = *]: (75.47 gram, 18 837.97 DUK, 0.03 SOL)
+  reading: gram_cost_mode = down | half-up
+  held: gold_px[p_high] = 128.5 SOL/gram (facts), read for 2027-04-05
+  held: gold_px[p_high] = 130 SOL/gram (facts), read for 2027-01-05
+  held: gold_px[p_high] = 134.2 SOL/gram (facts), read for 2027-07-05
+  held: gold_px[p_high] = 138 SOL/gram (facts), read for 2027-10-05
+  held: gold_px[p_high] = 139.1 SOL/gram (facts), read for 2027-10-10
+  held: gold_px[p_low] = 128.5 SOL/gram (facts), read for 2027-04-05
+  held: gold_px[p_low] = 130 SOL/gram (facts), read for 2027-01-05
+  held: gold_px[p_low] = 134.2 SOL/gram (facts), read for 2027-07-05
+  held: gold_px[p_low] = 138 SOL/gram (facts), read for 2027-10-05
+  held: gold_px[p_low] = 139.1 SOL/gram (facts), read for 2027-10-10
+  held: rate_px[p_high] = 1.92 DUK/SOL (facts), read for 2027-01-05
+  held: rate_px[p_high] = 1.935 DUK/SOL (facts), read for 2027-04-05
+  held: rate_px[p_high] = 1.96 DUK/SOL (facts), read for 2027-07-05
+  held: rate_px[p_high] = 1.98 DUK/SOL (facts), read for 2027-10-05
+  held: rate_px[p_high] = 1.982 DUK/SOL (facts), read for 2027-10-10
+  held: rate_px[p_low] = 1.92 DUK/SOL (facts), read for 2027-01-05
+  held: rate_px[p_low] = 1.935 DUK/SOL (facts), read for 2027-04-05
+  held: rate_px[p_low] = 1.96 DUK/SOL (facts), read for 2027-07-05
+  held: rate_px[p_low] = 1.98 DUK/SOL (facts), read for 2027-10-05
+  held: rate_px[p_low] = 1.982 DUK/SOL (facts), read for 2027-10-10
+  cut 2027-01-01
+after_events_2027 (d = 2027-10-10) [gram_cost_mode = up, price_path = *]: (75.47 gram, 18 837.97 DUK, 0.01 SOL)
+  reading: gram_cost_mode = up
+  held: gold_px[p_high] = 128.5 SOL/gram (facts), read for 2027-04-05
+  held: gold_px[p_high] = 130 SOL/gram (facts), read for 2027-01-05
+  held: gold_px[p_high] = 134.2 SOL/gram (facts), read for 2027-07-05
+  held: gold_px[p_high] = 138 SOL/gram (facts), read for 2027-10-05
+  held: gold_px[p_high] = 139.1 SOL/gram (facts), read for 2027-10-10
+  held: gold_px[p_low] = 128.5 SOL/gram (facts), read for 2027-04-05
+  held: gold_px[p_low] = 130 SOL/gram (facts), read for 2027-01-05
+  held: gold_px[p_low] = 134.2 SOL/gram (facts), read for 2027-07-05
+  held: gold_px[p_low] = 138 SOL/gram (facts), read for 2027-10-05
+  held: gold_px[p_low] = 139.1 SOL/gram (facts), read for 2027-10-10
+  held: rate_px[p_high] = 1.92 DUK/SOL (facts), read for 2027-01-05
+  held: rate_px[p_high] = 1.935 DUK/SOL (facts), read for 2027-04-05
+  held: rate_px[p_high] = 1.96 DUK/SOL (facts), read for 2027-07-05
+  held: rate_px[p_high] = 1.98 DUK/SOL (facts), read for 2027-10-05
+  held: rate_px[p_high] = 1.982 DUK/SOL (facts), read for 2027-10-10
+  held: rate_px[p_low] = 1.92 DUK/SOL (facts), read for 2027-01-05
+  held: rate_px[p_low] = 1.935 DUK/SOL (facts), read for 2027-04-05
+  held: rate_px[p_low] = 1.96 DUK/SOL (facts), read for 2027-07-05
+  held: rate_px[p_low] = 1.98 DUK/SOL (facts), read for 2027-10-05
+  held: rate_px[p_low] = 1.982 DUK/SOL (facts), read for 2027-10-10
+  cut 2027-01-01
+after_events_2027 (d = 2027-12-31) [gram_cost_mode = down | half-up, price_path = *]: (75.379 gram, 18 815.26 DUK, 0.03 SOL)
+  reading: gram_cost_mode = down | half-up
+  held: gold_px[p_high] = 128.5 SOL/gram (facts), read for 2027-04-05
+  held: gold_px[p_high] = 130 SOL/gram (facts), read for 2027-01-05
+  held: gold_px[p_high] = 134.2 SOL/gram (facts), read for 2027-07-05
+  held: gold_px[p_high] = 138 SOL/gram (facts), read for 2027-10-05
+  held: gold_px[p_high] = 139.1 SOL/gram (facts), read for 2027-10-10
+  held: gold_px[p_low] = 128.5 SOL/gram (facts), read for 2027-04-05
+  held: gold_px[p_low] = 130 SOL/gram (facts), read for 2027-01-05
+  held: gold_px[p_low] = 134.2 SOL/gram (facts), read for 2027-07-05
+  held: gold_px[p_low] = 138 SOL/gram (facts), read for 2027-10-05
+  held: gold_px[p_low] = 139.1 SOL/gram (facts), read for 2027-10-10
+  held: rate_px[p_high] = 1.92 DUK/SOL (facts), read for 2027-01-05
+  held: rate_px[p_high] = 1.935 DUK/SOL (facts), read for 2027-04-05
+  held: rate_px[p_high] = 1.96 DUK/SOL (facts), read for 2027-07-05
+  held: rate_px[p_high] = 1.98 DUK/SOL (facts), read for 2027-10-05
+  held: rate_px[p_high] = 1.982 DUK/SOL (facts), read for 2027-10-10
+  held: rate_px[p_low] = 1.92 DUK/SOL (facts), read for 2027-01-05
+  held: rate_px[p_low] = 1.935 DUK/SOL (facts), read for 2027-04-05
+  held: rate_px[p_low] = 1.96 DUK/SOL (facts), read for 2027-07-05
+  held: rate_px[p_low] = 1.98 DUK/SOL (facts), read for 2027-10-05
+  held: rate_px[p_low] = 1.982 DUK/SOL (facts), read for 2027-10-10
+  cut 2027-01-01
+after_events_2027 (d = 2027-12-31) [gram_cost_mode = up, price_path = *]: (75.379 gram, 18 815.26 DUK, 0.01 SOL)
+  reading: gram_cost_mode = up
+  held: gold_px[p_high] = 128.5 SOL/gram (facts), read for 2027-04-05
+  held: gold_px[p_high] = 130 SOL/gram (facts), read for 2027-01-05
+  held: gold_px[p_high] = 134.2 SOL/gram (facts), read for 2027-07-05
+  held: gold_px[p_high] = 138 SOL/gram (facts), read for 2027-10-05
+  held: gold_px[p_high] = 139.1 SOL/gram (facts), read for 2027-10-10
+  held: gold_px[p_low] = 128.5 SOL/gram (facts), read for 2027-04-05
+  held: gold_px[p_low] = 130 SOL/gram (facts), read for 2027-01-05
+  held: gold_px[p_low] = 134.2 SOL/gram (facts), read for 2027-07-05
+  held: gold_px[p_low] = 138 SOL/gram (facts), read for 2027-10-05
+  held: gold_px[p_low] = 139.1 SOL/gram (facts), read for 2027-10-10
+  held: rate_px[p_high] = 1.92 DUK/SOL (facts), read for 2027-01-05
+  held: rate_px[p_high] = 1.935 DUK/SOL (facts), read for 2027-04-05
+  held: rate_px[p_high] = 1.96 DUK/SOL (facts), read for 2027-07-05
+  held: rate_px[p_high] = 1.98 DUK/SOL (facts), read for 2027-10-05
+  held: rate_px[p_high] = 1.982 DUK/SOL (facts), read for 2027-10-10
+  held: rate_px[p_low] = 1.92 DUK/SOL (facts), read for 2027-01-05
+  held: rate_px[p_low] = 1.935 DUK/SOL (facts), read for 2027-04-05
+  held: rate_px[p_low] = 1.96 DUK/SOL (facts), read for 2027-07-05
+  held: rate_px[p_low] = 1.98 DUK/SOL (facts), read for 2027-10-05
+  held: rate_px[p_low] = 1.982 DUK/SOL (facts), read for 2027-10-10
+  cut 2027-01-01
+coin_levy_cost (k = d20271010) [gram_cost_mode = *, price_path = *]: (1 911.50 DUK, 9 439.76 DUK)
+  held: gold_px[p_high] = 128.5 SOL/gram (facts), read for 2027-04-05
+  held: gold_px[p_high] = 130 SOL/gram (facts), read for 2027-01-05
+  held: gold_px[p_high] = 134.2 SOL/gram (facts), read for 2027-07-05
+  held: gold_px[p_high] = 138 SOL/gram (facts), read for 2027-10-05
+  held: gold_px[p_high] = 139.1 SOL/gram (facts), read for 2027-10-10
+  held: gold_px[p_low] = 128.5 SOL/gram (facts), read for 2027-04-05
+  held: gold_px[p_low] = 130 SOL/gram (facts), read for 2027-01-05
+  held: gold_px[p_low] = 134.2 SOL/gram (facts), read for 2027-07-05
+  held: gold_px[p_low] = 138 SOL/gram (facts), read for 2027-10-05
+  held: gold_px[p_low] = 139.1 SOL/gram (facts), read for 2027-10-10
+  held: rate_px[p_high] = 1.92 DUK/SOL (facts), read for 2027-01-05
+  held: rate_px[p_high] = 1.935 DUK/SOL (facts), read for 2027-04-05
+  held: rate_px[p_high] = 1.96 DUK/SOL (facts), read for 2027-07-05
+  held: rate_px[p_high] = 1.98 DUK/SOL (facts), read for 2027-10-05
+  held: rate_px[p_high] = 1.982 DUK/SOL (facts), read for 2027-10-10
+  held: rate_px[p_low] = 1.92 DUK/SOL (facts), read for 2027-01-05
+  held: rate_px[p_low] = 1.935 DUK/SOL (facts), read for 2027-04-05
+  held: rate_px[p_low] = 1.96 DUK/SOL (facts), read for 2027-07-05
+  held: rate_px[p_low] = 1.98 DUK/SOL (facts), read for 2027-10-05
+  held: rate_px[p_low] = 1.982 DUK/SOL (facts), read for 2027-10-10
+  cut 2027-01-01
+fees (o = storage[2027-03-31, vault_acct]) [gram_cost_mode = *, price_path = *]: (2027-03-31, 0.087 gram, 21.66 DUK, 21.07 DUK, 0.59 DUK)
+  held: gold_px[p_high] = 129 SOL/gram (facts), read for 2027-03-31
+  held: gold_px[p_high] = 130 SOL/gram (facts), read for 2027-01-05
+  held: gold_px[p_low] = 129 SOL/gram (facts), read for 2027-03-31
+  held: gold_px[p_low] = 130 SOL/gram (facts), read for 2027-01-05
+  held: rate_px[p_high] = 1.92 DUK/SOL (facts), read for 2027-01-05
+  held: rate_px[p_high] = 1.93 DUK/SOL (facts), read for 2027-03-31
+  held: rate_px[p_low] = 1.92 DUK/SOL (facts), read for 2027-01-05
+  held: rate_px[p_low] = 1.93 DUK/SOL (facts), read for 2027-03-31
+  cut 2027-01-01
+fees (o = storage[2027-06-30, vault_acct]) [gram_cost_mode = *, price_path = *]: (2027-06-30, 0.101 gram, 26.19 DUK, 24.61 DUK, 1.58 DUK)
+  held: gold_px[p_high] = 128.5 SOL/gram (facts), read for 2027-04-05
+  held: gold_px[p_high] = 130 SOL/gram (facts), read for 2027-01-05
+  held: gold_px[p_high] = 133 SOL/gram (facts), read for 2027-06-30
+  held: gold_px[p_low] = 128.5 SOL/gram (facts), read for 2027-04-05
+  held: gold_px[p_low] = 130 SOL/gram (facts), read for 2027-01-05
+  held: gold_px[p_low] = 133 SOL/gram (facts), read for 2027-06-30
+  held: rate_px[p_high] = 1.92 DUK/SOL (facts), read for 2027-01-05
+  held: rate_px[p_high] = 1.935 DUK/SOL (facts), read for 2027-04-05
+  held: rate_px[p_high] = 1.95 DUK/SOL (facts), read for 2027-06-30
+  held: rate_px[p_low] = 1.92 DUK/SOL (facts), read for 2027-01-05
+  held: rate_px[p_low] = 1.935 DUK/SOL (facts), read for 2027-04-05
+  held: rate_px[p_low] = 1.95 DUK/SOL (facts), read for 2027-06-30
+  cut 2027-01-01
+fees (o = storage[2027-09-30, vault_acct]) [gram_cost_mode = *, price_path = *]: (2027-09-30, 0.114 gram, 30.94 DUK, 28.09 DUK, 2.85 DUK)
+  held: gold_px[p_high] = 128.5 SOL/gram (facts), read for 2027-04-05
+  held: gold_px[p_high] = 130 SOL/gram (facts), read for 2027-01-05
+  held: gold_px[p_high] = 134.2 SOL/gram (facts), read for 2027-07-05
+  held: gold_px[p_high] = 137.4 SOL/gram (facts), read for 2027-09-30
+  held: gold_px[p_low] = 128.5 SOL/gram (facts), read for 2027-04-05
+  held: gold_px[p_low] = 130 SOL/gram (facts), read for 2027-01-05
+  held: gold_px[p_low] = 134.2 SOL/gram (facts), read for 2027-07-05
+  held: gold_px[p_low] = 137.4 SOL/gram (facts), read for 2027-09-30
+  held: rate_px[p_high] = 1.92 DUK/SOL (facts), read for 2027-01-05
+  held: rate_px[p_high] = 1.935 DUK/SOL (facts), read for 2027-04-05
+  held: rate_px[p_high] = 1.96 DUK/SOL (facts), read for 2027-07-05
+  held: rate_px[p_high] = 1.975 DUK/SOL (facts), read for 2027-09-30
+  held: rate_px[p_low] = 1.92 DUK/SOL (facts), read for 2027-01-05
+  held: rate_px[p_low] = 1.935 DUK/SOL (facts), read for 2027-04-05
+  held: rate_px[p_low] = 1.96 DUK/SOL (facts), read for 2027-07-05
+  held: rate_px[p_low] = 1.975 DUK/SOL (facts), read for 2027-09-30
+  cut 2027-01-01
+fees (o = storage[2027-12-31, vault_acct]) [gram_cost_mode = *, price_path = *]: (2027-12-31, 0.091 gram, 25.53 DUK, 22.71 DUK, 2.82 DUK)
+  held: gold_px[p_high] = 128.5 SOL/gram (facts), read for 2027-04-05
+  held: gold_px[p_high] = 130 SOL/gram (facts), read for 2027-01-05
+  held: gold_px[p_high] = 134.2 SOL/gram (facts), read for 2027-07-05
+  held: gold_px[p_high] = 138 SOL/gram (facts), read for 2027-10-05
+  held: gold_px[p_high] = 139.1 SOL/gram (facts), read for 2027-10-10
+  held: gold_px[p_high] = 141 SOL/gram (facts), read for 2027-12-31
+  held: gold_px[p_low] = 128.5 SOL/gram (facts), read for 2027-04-05
+  held: gold_px[p_low] = 130 SOL/gram (facts), read for 2027-01-05
+  held: gold_px[p_low] = 134.2 SOL/gram (facts), read for 2027-07-05
+  held: gold_px[p_low] = 138 SOL/gram (facts), read for 2027-10-05
+  held: gold_px[p_low] = 139.1 SOL/gram (facts), read for 2027-10-10
+  held: gold_px[p_low] = 141 SOL/gram (facts), read for 2027-12-31
+  held: rate_px[p_high] = 1.92 DUK/SOL (facts), read for 2027-01-05
+  held: rate_px[p_high] = 1.935 DUK/SOL (facts), read for 2027-04-05
+  held: rate_px[p_high] = 1.96 DUK/SOL (facts), read for 2027-07-05
+  held: rate_px[p_high] = 1.98 DUK/SOL (facts), read for 2027-10-05
+  held: rate_px[p_high] = 1.982 DUK/SOL (facts), read for 2027-10-10
+  held: rate_px[p_high] = 1.99 DUK/SOL (facts), read for 2027-12-31
+  held: rate_px[p_low] = 1.92 DUK/SOL (facts), read for 2027-01-05
+  held: rate_px[p_low] = 1.935 DUK/SOL (facts), read for 2027-04-05
+  held: rate_px[p_low] = 1.96 DUK/SOL (facts), read for 2027-07-05
+  held: rate_px[p_low] = 1.98 DUK/SOL (facts), read for 2027-10-05
+  held: rate_px[p_low] = 1.982 DUK/SOL (facts), read for 2027-10-10
+  held: rate_px[p_low] = 1.99 DUK/SOL (facts), read for 2027-12-31
+  cut 2027-01-01
+fees (o = storage[2028-03-31, vault_acct]) [gram_cost_mode = *, price_path = p_low]: (2028-03-31, 0.091 gram, 20.75 DUK, 22.71 DUK, -1.96 DUK)
+  reading: price_path = p_low
+  held: gold_px[p_low] = 120 SOL/gram (facts), read for 2028-03-31
+  held: gold_px[p_low] = 128.5 SOL/gram (facts), read for 2027-04-05
+  held: gold_px[p_low] = 130 SOL/gram (facts), read for 2027-01-05
+  held: gold_px[p_low] = 134.2 SOL/gram (facts), read for 2027-07-05
+  held: gold_px[p_low] = 138 SOL/gram (facts), read for 2027-10-05
+  held: gold_px[p_low] = 139.1 SOL/gram (facts), read for 2027-10-10
+  held: rate_px[p_low] = 1.9 DUK/SOL (facts), read for 2028-03-31
+  held: rate_px[p_low] = 1.92 DUK/SOL (facts), read for 2027-01-05
+  held: rate_px[p_low] = 1.935 DUK/SOL (facts), read for 2027-04-05
+  held: rate_px[p_low] = 1.96 DUK/SOL (facts), read for 2027-07-05
+  held: rate_px[p_low] = 1.98 DUK/SOL (facts), read for 2027-10-05
+  held: rate_px[p_low] = 1.982 DUK/SOL (facts), read for 2027-10-10
+  cut 2027-01-01
+fees (o = storage[2028-03-31, vault_acct]) [gram_cost_mode = *, price_path = p_high]: (2028-03-31, 0.091 gram, 27.98 DUK, 22.71 DUK, 5.27 DUK)
+  reading: price_path = p_high
+  held: gold_px[p_high] = 128.5 SOL/gram (facts), read for 2027-04-05
+  held: gold_px[p_high] = 130 SOL/gram (facts), read for 2027-01-05
+  held: gold_px[p_high] = 134.2 SOL/gram (facts), read for 2027-07-05
+  held: gold_px[p_high] = 138 SOL/gram (facts), read for 2027-10-05
+  held: gold_px[p_high] = 139.1 SOL/gram (facts), read for 2027-10-10
+  held: gold_px[p_high] = 150 SOL/gram (facts), read for 2028-03-31
+  held: gold_px[p_low] = 128.5 SOL/gram (facts), read for 2027-04-05
+  held: gold_px[p_low] = 130 SOL/gram (facts), read for 2027-01-05
+  held: gold_px[p_low] = 134.2 SOL/gram (facts), read for 2027-07-05
+  held: gold_px[p_low] = 138 SOL/gram (facts), read for 2027-10-05
+  held: gold_px[p_low] = 139.1 SOL/gram (facts), read for 2027-10-10
+  held: rate_px[p_high] = 1.92 DUK/SOL (facts), read for 2027-01-05
+  held: rate_px[p_high] = 1.935 DUK/SOL (facts), read for 2027-04-05
+  held: rate_px[p_high] = 1.96 DUK/SOL (facts), read for 2027-07-05
+  held: rate_px[p_high] = 1.98 DUK/SOL (facts), read for 2027-10-05
+  held: rate_px[p_high] = 1.982 DUK/SOL (facts), read for 2027-10-10
+  held: rate_px[p_high] = 2.05 DUK/SOL (facts), read for 2028-03-31
+  held: rate_px[p_low] = 1.92 DUK/SOL (facts), read for 2027-01-05
+  held: rate_px[p_low] = 1.935 DUK/SOL (facts), read for 2027-04-05
+  held: rate_px[p_low] = 1.96 DUK/SOL (facts), read for 2027-07-05
+  held: rate_px[p_low] = 1.98 DUK/SOL (facts), read for 2027-10-05
+  held: rate_px[p_low] = 1.982 DUK/SOL (facts), read for 2027-10-10
+  cut 2027-01-01
+fees (o = storage[2028-06-30, vault_acct]) [gram_cost_mode = *, price_path = p_low]: (2028-06-30, 0.091 gram, 20.75 DUK, 22.71 DUK, -1.96 DUK)
+  reading: price_path = p_low
+  held: gold_px[p_low] = 120 SOL/gram (facts), read for 2028-06-30
+  held: gold_px[p_low] = 128.5 SOL/gram (facts), read for 2027-04-05
+  held: gold_px[p_low] = 130 SOL/gram (facts), read for 2027-01-05
+  held: gold_px[p_low] = 134.2 SOL/gram (facts), read for 2027-07-05
+  held: gold_px[p_low] = 138 SOL/gram (facts), read for 2027-10-05
+  held: gold_px[p_low] = 139.1 SOL/gram (facts), read for 2027-10-10
+  held: rate_px[p_low] = 1.9 DUK/SOL (facts), read for 2028-06-30
+  held: rate_px[p_low] = 1.92 DUK/SOL (facts), read for 2027-01-05
+  held: rate_px[p_low] = 1.935 DUK/SOL (facts), read for 2027-04-05
+  held: rate_px[p_low] = 1.96 DUK/SOL (facts), read for 2027-07-05
+  held: rate_px[p_low] = 1.98 DUK/SOL (facts), read for 2027-10-05
+  held: rate_px[p_low] = 1.982 DUK/SOL (facts), read for 2027-10-10
+  cut 2027-01-01
+fees (o = storage[2028-06-30, vault_acct]) [gram_cost_mode = *, price_path = p_high]: (2028-06-30, 0.091 gram, 27.98 DUK, 22.71 DUK, 5.27 DUK)
+  reading: price_path = p_high
+  held: gold_px[p_high] = 128.5 SOL/gram (facts), read for 2027-04-05
+  held: gold_px[p_high] = 130 SOL/gram (facts), read for 2027-01-05
+  held: gold_px[p_high] = 134.2 SOL/gram (facts), read for 2027-07-05
+  held: gold_px[p_high] = 138 SOL/gram (facts), read for 2027-10-05
+  held: gold_px[p_high] = 139.1 SOL/gram (facts), read for 2027-10-10
+  held: gold_px[p_high] = 150 SOL/gram (facts), read for 2028-06-30
+  held: gold_px[p_low] = 128.5 SOL/gram (facts), read for 2027-04-05
+  held: gold_px[p_low] = 130 SOL/gram (facts), read for 2027-01-05
+  held: gold_px[p_low] = 134.2 SOL/gram (facts), read for 2027-07-05
+  held: gold_px[p_low] = 138 SOL/gram (facts), read for 2027-10-05
+  held: gold_px[p_low] = 139.1 SOL/gram (facts), read for 2027-10-10
+  held: rate_px[p_high] = 1.92 DUK/SOL (facts), read for 2027-01-05
+  held: rate_px[p_high] = 1.935 DUK/SOL (facts), read for 2027-04-05
+  held: rate_px[p_high] = 1.96 DUK/SOL (facts), read for 2027-07-05
+  held: rate_px[p_high] = 1.98 DUK/SOL (facts), read for 2027-10-05
+  held: rate_px[p_high] = 1.982 DUK/SOL (facts), read for 2027-10-10
+  held: rate_px[p_high] = 2.05 DUK/SOL (facts), read for 2028-06-30
+  held: rate_px[p_low] = 1.92 DUK/SOL (facts), read for 2027-01-05
+  held: rate_px[p_low] = 1.935 DUK/SOL (facts), read for 2027-04-05
+  held: rate_px[p_low] = 1.96 DUK/SOL (facts), read for 2027-07-05
+  held: rate_px[p_low] = 1.98 DUK/SOL (facts), read for 2027-10-05
+  held: rate_px[p_low] = 1.982 DUK/SOL (facts), read for 2027-10-10
+  cut 2027-01-01
+fees (o = storage[2028-09-30, vault_acct]) [gram_cost_mode = *, price_path = p_low]: (2028-09-30, 0.043 gram, 9.80 DUK, 10.73 DUK, -0.93 DUK)
+  reading: price_path = p_low
+  held: gold_px[p_low] = 120 SOL/gram (facts), read for 2028-07-01
+  held: gold_px[p_low] = 120 SOL/gram (facts), read for 2028-09-30
+  held: gold_px[p_low] = 128.5 SOL/gram (facts), read for 2027-04-05
+  held: gold_px[p_low] = 130 SOL/gram (facts), read for 2027-01-05
+  held: gold_px[p_low] = 134.2 SOL/gram (facts), read for 2027-07-05
+  held: gold_px[p_low] = 138 SOL/gram (facts), read for 2027-10-05
+  held: gold_px[p_low] = 139.1 SOL/gram (facts), read for 2027-10-10
+  held: rate_px[p_low] = 1.9 DUK/SOL (facts), read for 2028-07-01
+  held: rate_px[p_low] = 1.9 DUK/SOL (facts), read for 2028-09-30
+  held: rate_px[p_low] = 1.92 DUK/SOL (facts), read for 2027-01-05
+  held: rate_px[p_low] = 1.935 DUK/SOL (facts), read for 2027-04-05
+  held: rate_px[p_low] = 1.96 DUK/SOL (facts), read for 2027-07-05
+  held: rate_px[p_low] = 1.98 DUK/SOL (facts), read for 2027-10-05
+  held: rate_px[p_low] = 1.982 DUK/SOL (facts), read for 2027-10-10
+  cut 2027-01-01
+fees (o = storage[2028-09-30, vault_acct]) [gram_cost_mode = *, price_path = p_high]: (2028-09-30, 0.043 gram, 13.22 DUK, 10.73 DUK, 2.49 DUK)
+  reading: price_path = p_high
+  held: gold_px[p_high] = 128.5 SOL/gram (facts), read for 2027-04-05
+  held: gold_px[p_high] = 130 SOL/gram (facts), read for 2027-01-05
+  held: gold_px[p_high] = 134.2 SOL/gram (facts), read for 2027-07-05
+  held: gold_px[p_high] = 138 SOL/gram (facts), read for 2027-10-05
+  held: gold_px[p_high] = 139.1 SOL/gram (facts), read for 2027-10-10
+  held: gold_px[p_high] = 150 SOL/gram (facts), read for 2028-07-01
+  held: gold_px[p_high] = 150 SOL/gram (facts), read for 2028-09-30
+  held: gold_px[p_low] = 120 SOL/gram (facts), read for 2028-07-01
+  held: gold_px[p_low] = 128.5 SOL/gram (facts), read for 2027-04-05
+  held: gold_px[p_low] = 130 SOL/gram (facts), read for 2027-01-05
+  held: gold_px[p_low] = 134.2 SOL/gram (facts), read for 2027-07-05
+  held: gold_px[p_low] = 138 SOL/gram (facts), read for 2027-10-05
+  held: gold_px[p_low] = 139.1 SOL/gram (facts), read for 2027-10-10
+  held: rate_px[p_high] = 1.92 DUK/SOL (facts), read for 2027-01-05
+  held: rate_px[p_high] = 1.935 DUK/SOL (facts), read for 2027-04-05
+  held: rate_px[p_high] = 1.96 DUK/SOL (facts), read for 2027-07-05
+  held: rate_px[p_high] = 1.98 DUK/SOL (facts), read for 2027-10-05
+  held: rate_px[p_high] = 1.982 DUK/SOL (facts), read for 2027-10-10
+  held: rate_px[p_high] = 2.05 DUK/SOL (facts), read for 2028-07-01
+  held: rate_px[p_high] = 2.05 DUK/SOL (facts), read for 2028-09-30
+  held: rate_px[p_low] = 1.9 DUK/SOL (facts), read for 2028-07-01
+  held: rate_px[p_low] = 1.92 DUK/SOL (facts), read for 2027-01-05
+  held: rate_px[p_low] = 1.935 DUK/SOL (facts), read for 2027-04-05
+  held: rate_px[p_low] = 1.96 DUK/SOL (facts), read for 2027-07-05
+  held: rate_px[p_low] = 1.98 DUK/SOL (facts), read for 2027-10-05
+  held: rate_px[p_low] = 1.982 DUK/SOL (facts), read for 2027-10-10
+  cut 2027-01-01
+fees (o = storage[2028-12-31, vault_acct]) [gram_cost_mode = *, price_path = p_low]: (2028-12-31, 0.043 gram, 9.80 DUK, 10.73 DUK, -0.93 DUK)
+  reading: price_path = p_low
+  held: gold_px[p_low] = 120 SOL/gram (facts), read for 2028-07-01
+  held: gold_px[p_low] = 120 SOL/gram (facts), read for 2028-12-31
+  held: gold_px[p_low] = 128.5 SOL/gram (facts), read for 2027-04-05
+  held: gold_px[p_low] = 130 SOL/gram (facts), read for 2027-01-05
+  held: gold_px[p_low] = 134.2 SOL/gram (facts), read for 2027-07-05
+  held: gold_px[p_low] = 138 SOL/gram (facts), read for 2027-10-05
+  held: gold_px[p_low] = 139.1 SOL/gram (facts), read for 2027-10-10
+  held: rate_px[p_low] = 1.9 DUK/SOL (facts), read for 2028-07-01
+  held: rate_px[p_low] = 1.9 DUK/SOL (facts), read for 2028-12-31
+  held: rate_px[p_low] = 1.92 DUK/SOL (facts), read for 2027-01-05
+  held: rate_px[p_low] = 1.935 DUK/SOL (facts), read for 2027-04-05
+  held: rate_px[p_low] = 1.96 DUK/SOL (facts), read for 2027-07-05
+  held: rate_px[p_low] = 1.98 DUK/SOL (facts), read for 2027-10-05
+  held: rate_px[p_low] = 1.982 DUK/SOL (facts), read for 2027-10-10
+  cut 2027-01-01
+fees (o = storage[2028-12-31, vault_acct]) [gram_cost_mode = *, price_path = p_high]: (2028-12-31, 0.043 gram, 13.22 DUK, 10.73 DUK, 2.49 DUK)
+  reading: price_path = p_high
+  held: gold_px[p_high] = 128.5 SOL/gram (facts), read for 2027-04-05
+  held: gold_px[p_high] = 130 SOL/gram (facts), read for 2027-01-05
+  held: gold_px[p_high] = 134.2 SOL/gram (facts), read for 2027-07-05
+  held: gold_px[p_high] = 138 SOL/gram (facts), read for 2027-10-05
+  held: gold_px[p_high] = 139.1 SOL/gram (facts), read for 2027-10-10
+  held: gold_px[p_high] = 150 SOL/gram (facts), read for 2028-07-01
+  held: gold_px[p_high] = 150 SOL/gram (facts), read for 2028-12-31
+  held: gold_px[p_low] = 120 SOL/gram (facts), read for 2028-07-01
+  held: gold_px[p_low] = 128.5 SOL/gram (facts), read for 2027-04-05
+  held: gold_px[p_low] = 130 SOL/gram (facts), read for 2027-01-05
+  held: gold_px[p_low] = 134.2 SOL/gram (facts), read for 2027-07-05
+  held: gold_px[p_low] = 138 SOL/gram (facts), read for 2027-10-05
+  held: gold_px[p_low] = 139.1 SOL/gram (facts), read for 2027-10-10
+  held: rate_px[p_high] = 1.92 DUK/SOL (facts), read for 2027-01-05
+  held: rate_px[p_high] = 1.935 DUK/SOL (facts), read for 2027-04-05
+  held: rate_px[p_high] = 1.96 DUK/SOL (facts), read for 2027-07-05
+  held: rate_px[p_high] = 1.98 DUK/SOL (facts), read for 2027-10-05
+  held: rate_px[p_high] = 1.982 DUK/SOL (facts), read for 2027-10-10
+  held: rate_px[p_high] = 2.05 DUK/SOL (facts), read for 2028-07-01
+  held: rate_px[p_high] = 2.05 DUK/SOL (facts), read for 2028-12-31
+  held: rate_px[p_low] = 1.9 DUK/SOL (facts), read for 2028-07-01
+  held: rate_px[p_low] = 1.92 DUK/SOL (facts), read for 2027-01-05
+  held: rate_px[p_low] = 1.935 DUK/SOL (facts), read for 2027-04-05
+  held: rate_px[p_low] = 1.96 DUK/SOL (facts), read for 2027-07-05
+  held: rate_px[p_low] = 1.98 DUK/SOL (facts), read for 2027-10-05
+  held: rate_px[p_low] = 1.982 DUK/SOL (facts), read for 2027-10-10
+  cut 2027-01-01
+sales_2028 (o = sell_coins[c20280303]) [gram_cost_mode = *, price_path = *]: (2028-03-03, 7 300.00 DUK, 9 439.76 DUK, -2 139.76 DUK, 0.00 DUK)
+  assumed: the card does not say whether Adam is registered under the Levy Act; a private holder is taken as not registered (registered)
+  held: gold_px[p_high] = 128.5 SOL/gram (facts), read for 2027-04-05
+  held: gold_px[p_high] = 130 SOL/gram (facts), read for 2027-01-05
+  held: gold_px[p_high] = 134.2 SOL/gram (facts), read for 2027-07-05
+  held: gold_px[p_high] = 138 SOL/gram (facts), read for 2027-10-05
+  held: gold_px[p_high] = 139.1 SOL/gram (facts), read for 2027-10-10
+  held: gold_px[p_low] = 128.5 SOL/gram (facts), read for 2027-04-05
+  held: gold_px[p_low] = 130 SOL/gram (facts), read for 2027-01-05
+  held: gold_px[p_low] = 134.2 SOL/gram (facts), read for 2027-07-05
+  held: gold_px[p_low] = 138 SOL/gram (facts), read for 2027-10-05
+  held: gold_px[p_low] = 139.1 SOL/gram (facts), read for 2027-10-10
+  held: rate_px[p_high] = 1.92 DUK/SOL (facts), read for 2027-01-05
+  held: rate_px[p_high] = 1.935 DUK/SOL (facts), read for 2027-04-05
+  held: rate_px[p_high] = 1.96 DUK/SOL (facts), read for 2027-07-05
+  held: rate_px[p_high] = 1.98 DUK/SOL (facts), read for 2027-10-05
+  held: rate_px[p_high] = 1.982 DUK/SOL (facts), read for 2027-10-10
+  held: rate_px[p_low] = 1.92 DUK/SOL (facts), read for 2027-01-05
+  held: rate_px[p_low] = 1.935 DUK/SOL (facts), read for 2027-04-05
+  held: rate_px[p_low] = 1.96 DUK/SOL (facts), read for 2027-07-05
+  held: rate_px[p_low] = 1.98 DUK/SOL (facts), read for 2027-10-05
+  held: rate_px[p_low] = 1.982 DUK/SOL (facts), read for 2027-10-10
+  cut 2027-01-01
+sales_2028 (o = sell_gold[s20280701]) [gram_cost_mode = *, price_path = *]: (2028-07-01, 9 120.00 DUK, 9 984.36 DUK, -864.36 DUK, 0.00 DUK)
+  assumed: the card does not say whether Adam is registered under the Levy Act; a private holder is taken as not registered (registered)
+  held: gold_px[p_high] = 128.5 SOL/gram (facts), read for 2027-04-05
+  held: gold_px[p_high] = 130 SOL/gram (facts), read for 2027-01-05
+  held: gold_px[p_high] = 134.2 SOL/gram (facts), read for 2027-07-05
+  held: gold_px[p_high] = 138 SOL/gram (facts), read for 2027-10-05
+  held: gold_px[p_high] = 139.1 SOL/gram (facts), read for 2027-10-10
+  held: gold_px[p_low] = 120 SOL/gram (facts), read for 2028-07-01
+  held: gold_px[p_low] = 128.5 SOL/gram (facts), read for 2027-04-05
+  held: gold_px[p_low] = 130 SOL/gram (facts), read for 2027-01-05
+  held: gold_px[p_low] = 134.2 SOL/gram (facts), read for 2027-07-05
+  held: gold_px[p_low] = 138 SOL/gram (facts), read for 2027-10-05
+  held: gold_px[p_low] = 139.1 SOL/gram (facts), read for 2027-10-10
+  held: rate_px[p_high] = 1.92 DUK/SOL (facts), read for 2027-01-05
+  held: rate_px[p_high] = 1.935 DUK/SOL (facts), read for 2027-04-05
+  held: rate_px[p_high] = 1.96 DUK/SOL (facts), read for 2027-07-05
+  held: rate_px[p_high] = 1.98 DUK/SOL (facts), read for 2027-10-05
+  held: rate_px[p_high] = 1.982 DUK/SOL (facts), read for 2027-10-10
+  held: rate_px[p_low] = 1.9 DUK/SOL (facts), read for 2028-07-01
+  held: rate_px[p_low] = 1.92 DUK/SOL (facts), read for 2027-01-05
+  held: rate_px[p_low] = 1.935 DUK/SOL (facts), read for 2027-04-05
+  held: rate_px[p_low] = 1.96 DUK/SOL (facts), read for 2027-07-05
+  held: rate_px[p_low] = 1.98 DUK/SOL (facts), read for 2027-10-05
+  held: rate_px[p_low] = 1.982 DUK/SOL (facts), read for 2027-10-10
+  cut 2027-01-01
+tax (y = 2027) [gram_cost_mode = *, price_path = *]: (-96.48 DUK, 0.00 DUK, 2028-04-30)
+  held: gold_px[p_high] = 128.5 SOL/gram (facts), read for 2027-04-05
+  held: gold_px[p_high] = 129 SOL/gram (facts), read for 2027-03-31
+  held: gold_px[p_high] = 130 SOL/gram (facts), read for 2027-01-05
+  held: gold_px[p_high] = 133 SOL/gram (facts), read for 2027-06-30
+  held: gold_px[p_high] = 134.2 SOL/gram (facts), read for 2027-07-05
+  held: gold_px[p_high] = 137.4 SOL/gram (facts), read for 2027-09-30
+  held: gold_px[p_high] = 138 SOL/gram (facts), read for 2027-10-05
+  held: gold_px[p_high] = 139.1 SOL/gram (facts), read for 2027-10-10
+  held: gold_px[p_high] = 141 SOL/gram (facts), read for 2027-12-31
+  held: gold_px[p_low] = 128.5 SOL/gram (facts), read for 2027-04-05
+  held: gold_px[p_low] = 129 SOL/gram (facts), read for 2027-03-31
+  held: gold_px[p_low] = 130 SOL/gram (facts), read for 2027-01-05
+  held: gold_px[p_low] = 133 SOL/gram (facts), read for 2027-06-30
+  held: gold_px[p_low] = 134.2 SOL/gram (facts), read for 2027-07-05
+  held: gold_px[p_low] = 137.4 SOL/gram (facts), read for 2027-09-30
+  held: gold_px[p_low] = 138 SOL/gram (facts), read for 2027-10-05
+  held: gold_px[p_low] = 139.1 SOL/gram (facts), read for 2027-10-10
+  held: gold_px[p_low] = 141 SOL/gram (facts), read for 2027-12-31
+  held: rate_px[p_high] = 1.92 DUK/SOL (facts), read for 2027-01-05
+  held: rate_px[p_high] = 1.93 DUK/SOL (facts), read for 2027-03-31
+  held: rate_px[p_high] = 1.935 DUK/SOL (facts), read for 2027-04-05
+  held: rate_px[p_high] = 1.95 DUK/SOL (facts), read for 2027-06-30
+  held: rate_px[p_high] = 1.96 DUK/SOL (facts), read for 2027-07-05
+  held: rate_px[p_high] = 1.975 DUK/SOL (facts), read for 2027-09-30
+  held: rate_px[p_high] = 1.98 DUK/SOL (facts), read for 2027-10-05
+  held: rate_px[p_high] = 1.982 DUK/SOL (facts), read for 2027-10-10
+  held: rate_px[p_high] = 1.99 DUK/SOL (facts), read for 2027-12-31
+  held: rate_px[p_low] = 1.92 DUK/SOL (facts), read for 2027-01-05
+  held: rate_px[p_low] = 1.93 DUK/SOL (facts), read for 2027-03-31
+  held: rate_px[p_low] = 1.935 DUK/SOL (facts), read for 2027-04-05
+  held: rate_px[p_low] = 1.95 DUK/SOL (facts), read for 2027-06-30
+  held: rate_px[p_low] = 1.96 DUK/SOL (facts), read for 2027-07-05
+  held: rate_px[p_low] = 1.975 DUK/SOL (facts), read for 2027-09-30
+  held: rate_px[p_low] = 1.98 DUK/SOL (facts), read for 2027-10-05
+  held: rate_px[p_low] = 1.982 DUK/SOL (facts), read for 2027-10-10
+  held: rate_px[p_low] = 1.99 DUK/SOL (facts), read for 2027-12-31
+  cut 2027-01-01
+tax (y = 2028) [gram_cost_mode = *, price_path = p_low]: (-3 167.48 DUK, 0.00 DUK, 2029-04-30)
+  reading: price_path = p_low
+  held: gold_px[p_low] = 120 SOL/gram (facts), read for 2028-03-31
+  held: gold_px[p_low] = 120 SOL/gram (facts), read for 2028-06-30
+  held: gold_px[p_low] = 120 SOL/gram (facts), read for 2028-07-01
+  held: gold_px[p_low] = 120 SOL/gram (facts), read for 2028-09-30
+  held: gold_px[p_low] = 120 SOL/gram (facts), read for 2028-12-31
+  held: gold_px[p_low] = 128.5 SOL/gram (facts), read for 2027-04-05
+  held: gold_px[p_low] = 129 SOL/gram (facts), read for 2027-03-31
+  held: gold_px[p_low] = 130 SOL/gram (facts), read for 2027-01-05
+  held: gold_px[p_low] = 133 SOL/gram (facts), read for 2027-06-30
+  held: gold_px[p_low] = 134.2 SOL/gram (facts), read for 2027-07-05
+  held: gold_px[p_low] = 137.4 SOL/gram (facts), read for 2027-09-30
+  held: gold_px[p_low] = 138 SOL/gram (facts), read for 2027-10-05
+  held: gold_px[p_low] = 139.1 SOL/gram (facts), read for 2027-10-10
+  held: gold_px[p_low] = 141 SOL/gram (facts), read for 2027-12-31
+  held: rate_px[p_low] = 1.9 DUK/SOL (facts), read for 2028-03-31
+  held: rate_px[p_low] = 1.9 DUK/SOL (facts), read for 2028-06-30
+  held: rate_px[p_low] = 1.9 DUK/SOL (facts), read for 2028-07-01
+  held: rate_px[p_low] = 1.9 DUK/SOL (facts), read for 2028-09-30
+  held: rate_px[p_low] = 1.9 DUK/SOL (facts), read for 2028-12-31
+  held: rate_px[p_low] = 1.92 DUK/SOL (facts), read for 2027-01-05
+  held: rate_px[p_low] = 1.93 DUK/SOL (facts), read for 2027-03-31
+  held: rate_px[p_low] = 1.935 DUK/SOL (facts), read for 2027-04-05
+  held: rate_px[p_low] = 1.95 DUK/SOL (facts), read for 2027-06-30
+  held: rate_px[p_low] = 1.96 DUK/SOL (facts), read for 2027-07-05
+  held: rate_px[p_low] = 1.975 DUK/SOL (facts), read for 2027-09-30
+  held: rate_px[p_low] = 1.98 DUK/SOL (facts), read for 2027-10-05
+  held: rate_px[p_low] = 1.982 DUK/SOL (facts), read for 2027-10-10
+  held: rate_px[p_low] = 1.99 DUK/SOL (facts), read for 2027-12-31
+  cut 2027-01-01
+tax (y = 2028) [gram_cost_mode = *, price_path = p_high]: (12.52 DUK, 2.00 DUK, 2029-04-30)
+  reading: price_path = p_high
+  held: gold_px[p_high] = 128.5 SOL/gram (facts), read for 2027-04-05
+  held: gold_px[p_high] = 129 SOL/gram (facts), read for 2027-03-31
+  held: gold_px[p_high] = 130 SOL/gram (facts), read for 2027-01-05
+  held: gold_px[p_high] = 133 SOL/gram (facts), read for 2027-06-30
+  held: gold_px[p_high] = 134.2 SOL/gram (facts), read for 2027-07-05
+  held: gold_px[p_high] = 137.4 SOL/gram (facts), read for 2027-09-30
+  held: gold_px[p_high] = 138 SOL/gram (facts), read for 2027-10-05
+  held: gold_px[p_high] = 139.1 SOL/gram (facts), read for 2027-10-10
+  held: gold_px[p_high] = 141 SOL/gram (facts), read for 2027-12-31
+  held: gold_px[p_high] = 150 SOL/gram (facts), read for 2028-03-31
+  held: gold_px[p_high] = 150 SOL/gram (facts), read for 2028-06-30
+  held: gold_px[p_high] = 150 SOL/gram (facts), read for 2028-07-01
+  held: gold_px[p_high] = 150 SOL/gram (facts), read for 2028-09-30
+  held: gold_px[p_high] = 150 SOL/gram (facts), read for 2028-12-31
+  held: rate_px[p_high] = 1.92 DUK/SOL (facts), read for 2027-01-05
+  held: rate_px[p_high] = 1.93 DUK/SOL (facts), read for 2027-03-31
+  held: rate_px[p_high] = 1.935 DUK/SOL (facts), read for 2027-04-05
+  held: rate_px[p_high] = 1.95 DUK/SOL (facts), read for 2027-06-30
+  held: rate_px[p_high] = 1.96 DUK/SOL (facts), read for 2027-07-05
+  held: rate_px[p_high] = 1.975 DUK/SOL (facts), read for 2027-09-30
+  held: rate_px[p_high] = 1.98 DUK/SOL (facts), read for 2027-10-05
+  held: rate_px[p_high] = 1.982 DUK/SOL (facts), read for 2027-10-10
+  held: rate_px[p_high] = 1.99 DUK/SOL (facts), read for 2027-12-31
+  held: rate_px[p_high] = 2.05 DUK/SOL (facts), read for 2028-03-31
+  held: rate_px[p_high] = 2.05 DUK/SOL (facts), read for 2028-06-30
+  held: rate_px[p_high] = 2.05 DUK/SOL (facts), read for 2028-07-01
+  held: rate_px[p_high] = 2.05 DUK/SOL (facts), read for 2028-09-30
+  held: rate_px[p_high] = 2.05 DUK/SOL (facts), read for 2028-12-31
+  cut 2027-01-01

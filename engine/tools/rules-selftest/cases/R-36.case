@@ -1,0 +1,32 @@
+# R-36: no hash maps or sets, no random or std hasher; iter_over_hash_type as a backup.
+
+case: hashmap-type
+tool: clippy
+expect: clippy::disallowed_types
+text: R-36
+--- module
+/// Planted.
+pub fn planted(m: &std::collections::HashMap<u8, u8>) -> usize {
+    m.len()
+}
+
+case: iterate-a-hash-map
+tool: clippy
+expect: clippy::iter_over_hash_type
+--- module
+/// Planted.
+pub fn planted(m: &std::collections::HashSet<u8>) {
+    for v in m {
+        core::hint::black_box(v);
+    }
+}
+
+case: default-hasher
+tool: clippy
+expect: clippy::disallowed_types
+text: R-36
+--- module
+/// Planted.
+pub fn planted() -> std::hash::DefaultHasher {
+    std::hash::DefaultHasher::new()
+}

@@ -1,0 +1,40 @@
+# L §4.6 Readings / §8.3: a reading of a balance states start, end or after; `at D` alone is refused (LOAD-INSTANT).
+# Own reality: konto opens at 5 000.00 PLN, savings at 0; amt = 1 000.00 PLN, dom = 5.
+=== m.tally
+model hh
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source plan "plan"
+source bank "bank"
+unit PLN: currency minor 0.01
+input bank_rows: observed
+input amt: money PLN
+input dom: int
+place konto: accounts PLN lives 2019-05-01..
+place savings: accounts PLN lives 2019-05-01..
+place world: outside lives 1900-01-01..
+place unexplained: outside lives 1900-01-01..
+
+version stmt
+  cite bank
+  governs 2026-02
+  known 2026-03-02
+  covers konto
+  pad konto from unexplained
+  stated[konto] = 3 000.00 PLN at 2026-02-28 "saldo"
+
+ask q: bal(konto, 2026-03-31)
+
+version plan_2026
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  amt = 1 000.00 PLN "own"
+  dom = 5 "own"
+  opening[konto] = 5 000.00 PLN at 2026-01-01 start "wyciąg"
+  opening[savings] = 0 PLN at 2026-01-01 start "wyciąg"
+=== expect
+refused: LOAD-INSTANT ...

@@ -1,0 +1,168 @@
+model cb03
+  tally 2
+  on 2026-10-19
+  start 2026-01-01
+  end 2026-12-31
+  note "HMRC HS263 2026, section 2.1, Example 2 (Zoë): foreign tax credit relief on foreign interest, 2025 to 2026. The 2025 edition prints the same results for 2024 to 2025; the case doesn't transcribe its inputs, so that year's facts are holes."
+  note "Income tax only; Class 4 National Insurance is not part of the tax here. Whether the 4,000 of interest is gross of the foreign tax is not stated; it is used as given."
+
+source fa_2016 "Finance Act 2016 (c. 24), section 4 (inserting Income Tax Act 2007 ss.12A and 12B, the savings allowance)" at "https://www.legislation.gov.uk/ukpga/2016/24/section/4"
+
+source gov_rates "Income Tax rates and allowances for current and previous tax years (GOV.UK, updated 6 April 2026)" at "https://www.gov.uk/government/publications/rates-and-allowances-income-tax/income-tax-rates-and-allowances-current-and-past"
+
+source gov_savings "Tax on savings interest: How much is tax free (GOV.UK)" at "https://www.gov.uk/apply-tax-free-interest-on-savings/how-much-is-tax-free"
+
+source hs263_2025_src "HMRC, Relief for Foreign Tax Paid 2025 (HS263), updated 6 April 2026" at "https://www.gov.uk/government/publications/calculating-foreign-tax-credit-relief-on-income-hs263-self-assessment-helpsheet/relief-for-foreign-tax-paid-2025-hs263"
+
+source hs263_2026 "HMRC, Relief for Foreign Tax Paid 2026 (HS263), updated 6 April 2026" at "https://www.gov.uk/government/publications/calculating-foreign-tax-credit-relief-on-income-hs263-self-assessment-helpsheet/relief-for-foreign-tax-paid-2026-hs263"
+
+source tiopa_2010 "Taxation (International and Other Provisions) Act 2010 (c. 8), sections 18 and 36" at "https://www.legislation.gov.uk/ukpga/2010/8/section/36"
+
+unit GBP: currency minor 0.01
+
+axis psa_reading
+  non_savings "Zoë's band for the savings allowance is read on her income without the interest, so it is basic and the allowance is 1,000; the printed figures fit this"
+  statute "s.12B(3) with (8)(b)(ii): income that would be higher-rate but for the savings nil rate counts, so the band is read on all her income"
+
+index person = [zoe]
+
+index rate_band = [basic, higher, additional]
+
+index ty = year 2024..2025 from 04-06
+
+input band_rate[b in rate_band]: num question "What is the rate of income tax of this band in the tax year?"
+
+input foreign_tax[p in person, y in ty]: money GBP
+
+input interest[p in person, y in ty]: money GBP
+
+input pa: money GBP
+
+input pa_limit: money GBP question "What is the income limit for the Personal Allowance in the tax year?"
+
+input psa[b in rate_band]: money GBP
+
+input ruk_taxpayer[p in person, y in ty]: bool
+
+input se_income[p in person, y in ty]: money GBP
+
+input sr_band: money GBP question "How far does the starting rate for savings reach in the tax year?"
+
+input sr_rate: num question "What is the starting rate for savings in the tax year?"
+
+input total_income[p in person, y in ty]: money GBP
+
+band main_rate(x: money GBP): num
+  note "the main rate of income tax on each slice of taxable income (income after allowances)"
+
+def ftcr[p in person, y in ty]: num GBP at start_of(y)
+  note "HS263 section 2: the lower of the foreign tax paid and the UK tax on the item"
+  rule base v tiopa = min(foreign_tax[p, y], uk_tax_on_item[p, y])
+
+def income_tax[p in person, y in ty]: num GBP at start_of(y)
+  note "Non-savings income first, then savings: the starting rate and the savings nil rate take their slice of the bands, and the rest of the savings is taxed at the main rates"
+  rule base = marginal(main_rate, ns_taxable[p, y]) + sr_rate * sr_used[p, y] + marginal(main_rate, top[p, y]) - marginal(main_rate, ns_taxable[p, y] + sr_used[p, y] + psa_used[p, y])
+  rule scotland beats base = ?"Scottish rates for non-savings income are not in the case." when not ruk_taxpayer[p, y]
+
+def ns_taxable[p in person, y in ty]: money GBP = max(0, se_income[p, y] - pa_avail[p, y]) at start_of(y)
+
+def pa_avail[p in person, y in ty]: money GBP at start_of(y)
+  rule base = pa
+  rule taper beats base = ?"The reduction of the Personal Allowance above the 100,000 income limit is not in the case." when total_income[p, y] > pa_limit
+
+def pa_left[p in person, y in ty]: money GBP = max(0, pa_avail[p, y] - se_income[p, y]) at start_of(y)
+
+def psa_band[p in person, y in ty]: key rate_band at start_of(y)
+  note "ITA 2007 s.12B(2)-(4): the savings allowance follows the highest band the income reaches, the band whose rate the top slice of the income bears"
+  rule base v fa2016_s4 = first(b in rate_band where band_rate[b] == main_rate(top[p, y]))
+  rule non_savings beats base = first(b in rate_band where band_rate[b] == main_rate(ns_taxable[p, y])) when psa_reading == non_savings
+
+def psa_used[p in person, y in ty]: money GBP = min(psa[psa_band[p, y]], sav_taxable[p, y] - sr_used[p, y]) at start_of(y)
+
+def sav_taxable[p in person, y in ty]: money GBP = max(0, interest[p, y] - pa_left[p, y]) at start_of(y)
+
+def sr_used[p in person, y in ty]: money GBP at start_of(y)
+  note "Every 1 of other income above the Personal Allowance reduces the starting rate for savings by 1"
+  rule base v savings_page = max(0, min(top[p, y], sr_band) - ns_taxable[p, y])
+
+def tax_left[p in person, y in ty]: num GBP at start_of(y)
+  note "TIOPA 2010 s.18(2): the tax chargeable is reduced by the credit"
+  rule base v tiopa = income_tax[p, y] - ftcr[p, y]
+
+def top[p in person, y in ty]: money GBP = ns_taxable[p, y] + sav_taxable[p, y] at start_of(y)
+
+def uk_tax_on_item[p in person, y in ty]: num GBP at start_of(y)
+  note "TIOPA 2010 s.36(2) with X = 0: tax on TI less tax on TI - C"
+  rule base v tiopa = income_tax[p, y] - income_tax[p, y] as if {interest[p, y] = 0}
+
+ask q_ftcr: ftcr[zoe, y] for y in ty law 2026-10-19
+
+ask q_income_check: check total_income[zoe, 2025] == se_income[zoe, 2025] + interest[zoe, 2025] law 2026-10-19
+
+ask q_tax_all: income_tax[zoe, y] for y in ty law 2026-10-19
+
+ask q_tax_left: tax_left[zoe, y] for y in ty law 2026-10-19
+
+ask q_tax_on_item: uk_tax_on_item[zoe, y] for y in ty law 2026-10-19
+
+ask q_tax_without: income_tax[zoe, y] as if {interest[zoe, y] = 0} for y in ty law 2026-10-19
+
+version tiopa
+  cite tiopa_2010
+  governs always
+  known 2010-03-18
+  note "s.18(1)-(2) and s.36(2), (4), read in the revised text on legislation.gov.uk (retrieved 2026-10-18). Known from Royal Assent: the Act's introductory text is dated 18th March 2010 (https://www.legislation.gov.uk/ukpga/2010/8/introduction). Later amendments to these sections are not traced, and no governs span is stated."
+
+version fa2016_s4
+  cite fa_2016
+  governs 2016-04-06..
+  known 2016-09-15
+  note "s.4(5) inserts ITA 2007 s.12B with effect for the tax year 2016-17 and subsequent years (annotation F1 on https://www.legislation.gov.uk/ukpga/2007/3/section/12B, the revised text the case quotes, which is the rows' locator). Known from Royal Assent, 15 September 2016 (bills.parliament.uk/bills/1760: Finance Act 2016 c.24, 15 September 2016)."
+  psa[basic] = 1000 "ITA 2007 s.12B(4): If none of the individual's income for the year is higher-rate income, the individual's savings allowance for the year is £1,000."
+  psa[higher] = 500 "ITA 2007 s.12B(3): some higher-rate income and no additional-rate income, £500"
+  psa[additional] = 0 "ITA 2007 s.12B(2): some additional-rate income, nil"
+
+version rates_2025
+  cite gov_rates
+  governs 2024-04-06..2026-04-05
+  known 2026-04-06
+  note "The publication is a guide to rates set elsewhere, with no date of its own; its updated stamp, 6 April 2026, is taken as the day it was known (LANGUAGE 4.5)."
+  note "The case gives the 2024 to 2025 figures only as the same bands and allowance as 2025 to 2026 (£12,570; £37,700; £37,701 to £125,140, case Transcription notes, Earlier edition). The table and the Personal Allowance govern both years; the rates, the starting rate for savings and the income limit are given for 2025 to 2026 only."
+  band_rate[basic] = 0.2 governs 2025-04-06..2026-04-05 "Tax rates and bands, England, Northern Ireland and Wales, 2025 to 2026: Basic rate 20%"
+  band_rate[higher] = 0.4 governs 2025-04-06..2026-04-05 "Tax rates and bands, 2025 to 2026: Higher rate 40%"
+  band_rate[additional] = 0.45 governs 2025-04-06..2026-04-05 "Tax rates and bands, 2025 to 2026: Additional rate 45%"
+  main_rate: [0, 37700] = band_rate[basic] "Tax rates and bands, 2025 to 2026: Basic rate up to £37,700"
+  main_rate: (37700, 125140] = band_rate[higher] "Tax rates and bands, 2025 to 2026: Higher rate £37,701 to £125,140"
+  main_rate: (125140, inf) = band_rate[additional] "Tax rates and bands, 2025 to 2026: Additional rate over £125,141"
+  pa = 12570 "Personal Allowances, 2025 to 2026: Personal Allowance £12,570"
+  pa_limit = 100000 governs 2025-04-06..2026-04-05 "Personal Allowances, 2025 to 2026: Income limit for Personal Allowance £100,000"
+  sr_band = 5000 governs 2025-04-06..2026-04-05 "Tax rates and bands, 2025 to 2026: Starting rate for savings, up to £5,000"
+  sr_rate = 0 governs 2025-04-06..2026-04-05 "Tax rates and bands, 2025 to 2026: Starting rate for savings 0%"
+
+version savings_page
+  cite gov_savings
+  governs always
+  known 2026-10-18
+  note "Starting rate for savings: Every £1 of other income above your Personal Allowance reduces your starting rate for savings by £1. The page states no tax year, no date and no updated stamp, so the day it was retrieved is taken (LANGUAGE 4.5)."
+
+version hs263
+  cite hs263_2026
+  governs always
+  known 2026-10-19
+  note "Example 2's facts are a hypothetical case's stipulations, known from the model's on date (LANGUAGE 4.5; the model has no start), as is the assumption that stands for its unstated residence."
+  foreign_tax[zoe, 2025] = 300 "section 2.1, Example 2: as tax of £300 was paid on this item overseas"
+  interest[zoe, 2025] = 4000 "section 2.1, Example 2: and £4,000 of foreign interest"
+  ruk_taxpayer[zoe, 2025] = true assumed "Scottish or Welsh status is not stated; the England, Northern Ireland and Wales bands are used" "section 2.1, Example 2"
+  se_income[zoe, 2025] = 48000 "section 2.1, Example 2: comprising self-employment income of £48,000"
+  total_income[zoe, 2025] = 52000 "section 2.1, Example 2: Zoë's total income is £52,000"
+
+version hs263_2025
+  cite hs263_2025_src
+  governs always
+  known 2026-10-19
+  note "The 2025 edition's Example 2 works the same example for 2024 to 2025. The case transcribes only its five results, so its facts are holes; its stipulations would be known from the model's on date (LANGUAGE 4.5)."
+  foreign_tax[zoe, 2024] = ?"What foreign tax was paid on Zoë's interest in the 2025 edition's Example 2 (2024 to 2025)? The case doesn't transcribe it." "section 2.1, Example 2"
+  interest[zoe, 2024] = ?"How much foreign interest does the 2025 edition's Example 2 give Zoë for 2024 to 2025? The case doesn't transcribe it." "section 2.1, Example 2"
+  ruk_taxpayer[zoe, 2024] = true assumed "Scottish or Welsh status is not stated; the England, Northern Ireland and Wales bands are used" "section 2.1, Example 2"
+  se_income[zoe, 2024] = ?"What self-employment income does the 2025 edition's Example 2 give Zoë for 2024 to 2025? The case doesn't transcribe it." "section 2.1, Example 2"
+  total_income[zoe, 2024] = ?"What total income does the 2025 edition's Example 2 give Zoë for 2024 to 2025? The case doesn't transcribe it." "section 2.1, Example 2"

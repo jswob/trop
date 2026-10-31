@@ -1,0 +1,29 @@
+Bank Olcha S.A.|account statement
+Account|LN73 4400 2011 0000 8817 2264 0001
+Holder|HALINA SOWA
+Period|20250501|20250531
+Opening balance|122 818,63
+Date|Type|Counterparty|Title|Amount|Balance after
+20250501|CARD|Piekarnia Złoty Kłos|card ...2264|-192,45|122 626,18
+20250501|CARD|Stacja Olcha-Paliwa|card ...2264|-239,19|122 386,99
+20250503|CARD|Stacja Olcha-Paliwa|card ...2264|-211,11|122 175,88
+20250505|CREDIT|Social Insurance Office|survivor pension 05/2025|4 227,07|126 402,95
+20250505|STANDING ORDER|WM Ogrodowa 2|fee Ogrodowa 2/11 05/2025|-445,00|125 957,95
+20250505|CASH|ATM Olcha Brzezie|cash withdrawal|-500,00|125 457,95
+20250507|CARD|Sklep Pod Lipą|card ...2264|-184,55|125 273,40
+20250510|CARD|Sklep Pod Lipą|card ...2264|-252,07|125 021,33
+20250512|CREDIT|Revenue Office Kłodzin|PIT 2024 refund H. SOWA|10,00|125 031,33
+20250515|STANDING ORDER|Volta Energia|Leśna 4 energy 05/2025|-385,00|124 646,33
+20250516|CARD|Market Brzezie|card ...2264|-191,37|124 454,96
+20250516|CARD|Drogeria Konwalia|card ...2264|-24,95|124 430,01
+20250518|CARD|Warzywniak u Janka|card ...2264|-117,17|124 312,84
+20250518|CARD|Drogeria Konwalia|card ...2264|-131,04|124 181,80
+20250518|CARD|Apteka Rumianek|card ...2264|-217,44|123 964,36
+20250519|CASH|ATM Olcha Brzezie|cash withdrawal|-500,00|123 464,36
+20250519|CARD|Sklep Pod Lipą|card ...2264|-211,61|123 252,75
+20250520|STANDING ORDER|Telekom Lenia|phone 05/2025|-59,00|123 193,75
+20250520|CARD|Drogeria Konwalia|card ...2264|-251,54|122 942,21
+20250521|CREDIT|Revenue Office Kłodzin|PIT 2024 refund Z. SOWA (estate)|1 844,00|124 786,21
+20250526|CARD|Piekarnia Złoty Kłos|card ...2264|-161,09|124 625,12
+20250526|TRANSFER|Opieka Dom sp.|home help 05/2025|-1 100,00|123 525,12
+Closing balance|123 525,12

@@ -1,0 +1,30 @@
+# L §5.16 The closed list: a dist fact's distribution is one the list holds, and "A distribution the list doesn't hold
+# is written from one it does" (a draw by lot, e[discrete(...)]); in a dist def's rule d1 is the distribution (it is
+# not sampled there), and no arithmetic makes a distribution value: d1 + sh is refused at load (L §8.4 What isn't
+# defined is refused; LOAD-UNIT, a type error). (Writer 8: was REFCORE-NOT-YET.)
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+input mu: money PLN
+input sd: money PLN
+input sh: money PLN
+def d1: dist PLN = normal(mu, sd) to 0.01 PLN
+def d2: dist PLN = d1 + sh
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  mu = 10.00 PLN
+  sd = 2.00 PLN
+  sh = 1.00 PLN
+
+ask q: mean(d2)
+=== expect
+refused: LOAD-UNIT dist PLN and money PLN in arithmetic: a distribution value is no number ...

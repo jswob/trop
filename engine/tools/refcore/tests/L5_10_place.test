@@ -1,0 +1,60 @@
+# L §5.10 example place sections, copied whole, with persons entered and readings added.  "declares one place of the
+# kind per binding tuple ... A place keyed by things lives on the overlap of that span and its key things'
+# lifespans: wcash[oki] lives from the day oki enters": owed[oki] lives from oki's 2026-03-01.  "A place's balance is
+# zero at its lifespan's start"; "A place alive before S needs an anchor reading ... else the read is a hole naming
+# the place (HOLE-ANCHOR)": owed[ewa] (alive from 2024-01-01, before S) has no balance before its opening on
+# 2026-02-01 (L §8.1 `<place> has no balance before <d>`).  debts are `place one max 0`: "a leg that would take it
+# above 0 is refused at that day (RUN-PLACE)": paying 150 into a debt of -100 is refused, and the balance with it
+# from that point (E §4.2 step 5); a plan is in the day's first batch, checked together (L §5.10 point 1; L §8.4
+# `<place> is <b> after the day's observations and plans of <d>`, writer 8).  `x in debts on d` ranges over the places alive on d (L §5.7).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+kind persons
+
+place owed[p in persons]: debts PLN lives 2024-01-01..
+place world: outside lives 1900-01-01..
+
+input over_amt: money PLN
+input pay_day: date
+
+move overpay: transfers
+  on pay_day
+  leg cash from world to owed[ewa] amount over_amt
+
+version people
+  cite s
+  governs always
+  known 2025-01-01
+  persons + [ewa] lives 1980-01-01..
+  persons + [oki] lives 2026-03-01..
+  opening[owed[ewa]] = -100.00 PLN at 2026-02-01 start
+  over_amt = 150.00 PLN
+  pay_day = 2026-05-04
+
+ask life: lifespan(owed[oki]).from, lifespan(owed[ewa]).from
+ask zero: bal(owed[oki], 2026-06-30)
+ask anch: bal(owed[ewa], 2026-01-15)
+ask open_: bal(owed[ewa], 2026-04-30)
+ask over: bal(owed[ewa], 2026-05-04)
+ask n: count(x in debts on 2026-02-15), count(x in debts on 2026-06-30)
+=== expect
+anch: ?"owed[ewa] has no balance before 2026-02-01" (owed[ewa])
+  cut 2026-12-31
+life: (2026-03-01, 2024-01-01)
+  cut 2026-12-31
+n: (1, 2)
+  cut 2026-12-31
+open_: -100.00 PLN
+  cut 2026-12-31
+over: refused: RUN-PLACE owed[ewa] is 50.00 PLN after the day's observations and plans of 2026-05-04
+  cut 2026-12-31
+zero: 0.00 PLN
+  cut 2026-12-31

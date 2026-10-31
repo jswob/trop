@@ -1,0 +1,14 @@
+part vat_4
+  tally 2
+  law
+  note "VAT-4 · The monthly return, by the 25th of the next month: the VAT on the month's invoices issued, less the input VAT deducted in the month, less the excess carried from the month before (.1); a positive result paid by the same day, a negative one carried into the next month or refunded on request within 60 days (.2); amounts rounded (.3, GEN-5 .2)."
+  note "No figure: the 25th is a literal the literal rule allows (L §7.1). The households' defs apply it."
+
+source vat_4 "Value Added Tax Act, VAT-4 The monthly return (tmp/cases/law/acts.md)"
+
+version vat4_v1
+  cite vat_4
+  governs 2018-01-01..
+  known 2017-09-01
+  enters 2018-01-01
+  note "VAT-4 v1, in force 2018-01-01 until replaced, published 2017-09-01; governs months from January 2018."

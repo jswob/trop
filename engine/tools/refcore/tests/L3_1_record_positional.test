@@ -1,0 +1,20 @@
+# L §3.1: "a positional record is refused (LOAD-FIELD)".
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "a source"
+unit PLN: currency minor 0.01
+
+input r: (share num, base money PLN)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  r = (60 %, 12 000.00 PLN)
+=== expect
+refused: LOAD-FIELD ...

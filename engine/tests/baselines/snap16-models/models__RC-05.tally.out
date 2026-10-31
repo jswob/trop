@@ -1,0 +1,220 @@
+q01_l: 408.16 EUR
+  law date 2021-01-01, cut 2026-10-18
+q02_c: 78.47 EUR
+  law date 2021-01-01, cut 2026-10-18
+q03_p0 [al_inter = cent_round]: 41.36 EUR
+  reading: al_inter = cent_round
+  law date 2021-01-01, cut 2026-10-18
+q03_p0 [al_inter = no_round]: 41.36355 EUR
+  reading: al_inter = no_round
+  law date 2021-01-01, cut 2026-10-18
+q04_r0: 8 015.00 EUR
+  law date 2021-01-01, cut 2026-10-18
+q05_rp: 3 485.00 EUR
+  law date 2021-01-01, cut 2026-10-18
+q06_tf: 0.0238
+  law date 2021-01-01, cut 2026-10-18
+q07_tl [al_pct_mode = *, al_tl = tl3]: 0.00305
+  reading: al_tl = tl3
+  law date 2021-01-01, cut 2026-10-18
+q07_tl [al_pct_mode = down, al_tl = tl2]: 0.003
+  reading: al_pct_mode = down
+  reading: al_tl = tl2
+  law date 2021-01-01, cut 2026-10-18
+q07_tl [al_pct_mode = half-up, al_tl = tl2]: 0.0031
+  reading: al_pct_mode = half-up
+  reading: al_tl = tl2
+  law date 2021-01-01, cut 2026-10-18
+q08_tp [al_pct_mode = *, al_tl = tl3]: 0.02685
+  reading: al_tl = tl3
+  law date 2021-01-01, cut 2026-10-18
+q08_tp [al_pct_mode = down, al_tl = tl2]: 0.0268
+  reading: al_pct_mode = down
+  reading: al_tl = tl2
+  law date 2021-01-01, cut 2026-10-18
+q08_tp [al_pct_mode = half-up, al_tl = tl2]: 0.0269
+  reading: al_pct_mode = half-up
+  reading: al_tl = tl2
+  law date 2021-01-01, cut 2026-10-18
+q09_p1 [al_inter = cent_round, al_pct_mode = *, al_tl = tl3]: 93.57 EUR
+  reading: al_inter = cent_round
+  reading: al_tl = tl3
+  law date 2021-01-01, cut 2026-10-18
+q09_p1 [al_inter = cent_round, al_pct_mode = down, al_tl = tl2]: 93.4 EUR
+  reading: al_inter = cent_round
+  reading: al_pct_mode = down
+  reading: al_tl = tl2
+  law date 2021-01-01, cut 2026-10-18
+q09_p1 [al_inter = cent_round, al_pct_mode = half-up, al_tl = tl2]: 93.75 EUR
+  reading: al_inter = cent_round
+  reading: al_pct_mode = half-up
+  reading: al_tl = tl2
+  law date 2021-01-01, cut 2026-10-18
+q09_p1 [al_inter = no_round, al_pct_mode = *, al_tl = tl3]: 93.57225 EUR
+  reading: al_inter = no_round
+  reading: al_tl = tl3
+  law date 2021-01-01, cut 2026-10-18
+q09_p1 [al_inter = no_round, al_pct_mode = down, al_tl = tl2]: 93.398 EUR
+  reading: al_inter = no_round
+  reading: al_pct_mode = down
+  reading: al_tl = tl2
+  law date 2021-01-01, cut 2026-10-18
+q09_p1 [al_inter = no_round, al_pct_mode = half-up, al_tl = tl2]: 93.7465 EUR
+  reading: al_inter = no_round
+  reading: al_pct_mode = half-up
+  reading: al_tl = tl2
+  law date 2021-01-01, cut 2026-10-18
+q10_pp [al_inter = cent_round, al_pct_mode = *, al_tl = tl3]: 134.93 EUR
+  reading: al_inter = cent_round
+  reading: al_tl = tl3
+  law date 2021-01-01, cut 2026-10-18
+q10_pp [al_inter = cent_round, al_pct_mode = down, al_tl = tl2]: 134.76 EUR
+  reading: al_inter = cent_round
+  reading: al_pct_mode = down
+  reading: al_tl = tl2
+  law date 2021-01-01, cut 2026-10-18
+q10_pp [al_inter = cent_round, al_pct_mode = half-up, al_tl = tl2]: 135.11 EUR
+  reading: al_inter = cent_round
+  reading: al_pct_mode = half-up
+  reading: al_tl = tl2
+  law date 2021-01-01, cut 2026-10-18
+q10_pp [al_inter = no_round, al_pct_mode = *, al_tl = tl3]: 134.9358 EUR
+  reading: al_inter = no_round
+  reading: al_tl = tl3
+  law date 2021-01-01, cut 2026-10-18
+q10_pp [al_inter = no_round, al_pct_mode = down, al_tl = tl2]: 134.76155 EUR
+  reading: al_inter = no_round
+  reading: al_pct_mode = down
+  reading: al_tl = tl2
+  law date 2021-01-01, cut 2026-10-18
+q10_pp [al_inter = no_round, al_pct_mode = half-up, al_tl = tl2]: 135.11005 EUR
+  reading: al_inter = no_round
+  reading: al_pct_mode = half-up
+  reading: al_tl = tl2
+  law date 2021-01-01, cut 2026-10-18
+q11_af [al_inter = cent_round, al_pct_mode = *, al_tl = tl3]: 351.7 EUR
+  reading: al_inter = cent_round
+  reading: al_tl = tl3
+  law date 2021-01-01, cut 2026-10-18
+q11_af [al_inter = cent_round, al_pct_mode = down, al_tl = tl2]: 351.87 EUR
+  reading: al_inter = cent_round
+  reading: al_pct_mode = down
+  reading: al_tl = tl2
+  law date 2021-01-01, cut 2026-10-18
+q11_af [al_inter = cent_round, al_pct_mode = half-up, al_tl = tl2]: 351.52 EUR
+  reading: al_inter = cent_round
+  reading: al_pct_mode = half-up
+  reading: al_tl = tl2
+  law date 2021-01-01, cut 2026-10-18
+q11_af [al_inter = no_round, al_pct_mode = *, al_tl = tl3]: 351.6942 EUR
+  reading: al_inter = no_round
+  reading: al_tl = tl3
+  law date 2021-01-01, cut 2026-10-18
+q11_af [al_inter = no_round, al_pct_mode = down, al_tl = tl2]: 351.86845 EUR
+  reading: al_inter = no_round
+  reading: al_pct_mode = down
+  reading: al_tl = tl2
+  law date 2021-01-01, cut 2026-10-18
+q11_af [al_inter = no_round, al_pct_mode = half-up, al_tl = tl2]: 351.51995 EUR
+  reading: al_inter = no_round
+  reading: al_pct_mode = half-up
+  reading: al_tl = tl2
+  law date 2021-01-01, cut 2026-10-18
+q12_brute [al_inter = cent_round, al_pct_mode = *, al_tl = tl3]: 346.7 EUR
+  assumed: no réduction de loyer de solidarité is stated and the example applies none; Catala's test sets 0 € (rls)
+  reading: al_inter = cent_round
+  reading: al_tl = tl3
+  law date 2021-01-01, cut 2026-10-18
+q12_brute [al_inter = cent_round, al_pct_mode = down, al_tl = tl2]: 346.87 EUR
+  assumed: no réduction de loyer de solidarité is stated and the example applies none; Catala's test sets 0 € (rls)
+  reading: al_inter = cent_round
+  reading: al_pct_mode = down
+  reading: al_tl = tl2
+  law date 2021-01-01, cut 2026-10-18
+q12_brute [al_inter = cent_round, al_pct_mode = half-up, al_tl = tl2]: 346.52 EUR
+  assumed: no réduction de loyer de solidarité is stated and the example applies none; Catala's test sets 0 € (rls)
+  reading: al_inter = cent_round
+  reading: al_pct_mode = half-up
+  reading: al_tl = tl2
+  law date 2021-01-01, cut 2026-10-18
+q12_brute [al_inter = no_round, al_pct_mode = *, al_tl = tl3]: 346.6942 EUR
+  assumed: no réduction de loyer de solidarité is stated and the example applies none; Catala's test sets 0 € (rls)
+  reading: al_inter = no_round
+  reading: al_tl = tl3
+  law date 2021-01-01, cut 2026-10-18
+q12_brute [al_inter = no_round, al_pct_mode = down, al_tl = tl2]: 346.86845 EUR
+  assumed: no réduction de loyer de solidarité is stated and the example applies none; Catala's test sets 0 € (rls)
+  reading: al_inter = no_round
+  reading: al_pct_mode = down
+  reading: al_tl = tl2
+  law date 2021-01-01, cut 2026-10-18
+q12_brute [al_inter = no_round, al_pct_mode = half-up, al_tl = tl2]: 346.51995 EUR
+  assumed: no réduction de loyer de solidarité is stated and the example applies none; Catala's test sets 0 € (rls)
+  reading: al_inter = no_round
+  reading: al_pct_mode = half-up
+  reading: al_tl = tl2
+  law date 2021-01-01, cut 2026-10-18
+q12_degr: false
+  law date 2021-01-01, cut 2026-10-18
+q13_nette [al_inter = cent_round, al_pct_mode = *, al_tl = tl3]: 346.7 EUR
+  assumed: no réduction de loyer de solidarité is stated and the example applies none; Catala's test sets 0 € (rls)
+  reading: al_inter = cent_round
+  reading: al_tl = tl3
+  law date 2021-01-01, cut 2026-10-18
+q13_nette [al_inter = cent_round, al_pct_mode = down, al_tl = tl2]: 346.87 EUR
+  assumed: no réduction de loyer de solidarité is stated and the example applies none; Catala's test sets 0 € (rls)
+  reading: al_inter = cent_round
+  reading: al_pct_mode = down
+  reading: al_tl = tl2
+  law date 2021-01-01, cut 2026-10-18
+q13_nette [al_inter = cent_round, al_pct_mode = half-up, al_tl = tl2]: 346.52 EUR
+  assumed: no réduction de loyer de solidarité is stated and the example applies none; Catala's test sets 0 € (rls)
+  reading: al_inter = cent_round
+  reading: al_pct_mode = half-up
+  reading: al_tl = tl2
+  law date 2021-01-01, cut 2026-10-18
+q13_nette [al_inter = no_round, al_pct_mode = *, al_tl = tl3]: 346.6942 EUR
+  assumed: no réduction de loyer de solidarité is stated and the example applies none; Catala's test sets 0 € (rls)
+  reading: al_inter = no_round
+  reading: al_tl = tl3
+  law date 2021-01-01, cut 2026-10-18
+q13_nette [al_inter = no_round, al_pct_mode = down, al_tl = tl2]: 346.86845 EUR
+  assumed: no réduction de loyer de solidarité is stated and the example applies none; Catala's test sets 0 € (rls)
+  reading: al_inter = no_round
+  reading: al_pct_mode = down
+  reading: al_tl = tl2
+  law date 2021-01-01, cut 2026-10-18
+q13_nette [al_inter = no_round, al_pct_mode = half-up, al_tl = tl2]: 346.51995 EUR
+  assumed: no réduction de loyer de solidarité is stated and the example applies none; Catala's test sets 0 € (rls)
+  reading: al_inter = no_round
+  reading: al_pct_mode = half-up
+  reading: al_tl = tl2
+  law date 2021-01-01, cut 2026-10-18
+q14_versee [al_inter = *, al_pct_mode = down, al_tl = tl2]: 345.00 EUR
+  assumed: no réduction de loyer de solidarité is stated and the example applies none; Catala's test sets 0 € (rls)
+  reading: al_pct_mode = down
+  reading: al_tl = tl2
+  law date 2021-01-01, cut 2026-10-18
+q14_versee [al_inter = *, al_pct_mode = down, al_tl = tl3]: 344.00 EUR
+  assumed: no réduction de loyer de solidarité is stated and the example applies none; Catala's test sets 0 € (rls)
+  reading: al_pct_mode = down
+  reading: al_tl = tl3
+  law date 2021-01-01, cut 2026-10-18
+q14_versee [al_inter = *, al_pct_mode = half-up, al_tl = *]: 344.00 EUR
+  assumed: no réduction de loyer de solidarité is stated and the example applies none; Catala's test sets 0 € (rls)
+  reading: al_pct_mode = half-up
+  law date 2021-01-01, cut 2026-10-18
+q15_catala [al_inter = *, al_pct_mode = down, al_tl = tl2]: 346.73 EUR
+  assumed: no réduction de loyer de solidarité is stated and the example applies none; Catala's test sets 0 € (rls)
+  reading: al_pct_mode = down
+  reading: al_tl = tl2
+  law date 2021-01-01, cut 2026-10-18
+q15_catala [al_inter = *, al_pct_mode = down, al_tl = tl3]: 345.73 EUR
+  assumed: no réduction de loyer de solidarité is stated and the example applies none; Catala's test sets 0 € (rls)
+  reading: al_pct_mode = down
+  reading: al_tl = tl3
+  law date 2021-01-01, cut 2026-10-18
+q15_catala [al_inter = *, al_pct_mode = half-up, al_tl = *]: 345.73 EUR
+  assumed: no réduction de loyer de solidarité is stated and the example applies none; Catala's test sets 0 € (rls)
+  reading: al_pct_mode = half-up
+  law date 2021-01-01, cut 2026-10-18

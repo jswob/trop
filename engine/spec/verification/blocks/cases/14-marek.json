@@ -1,0 +1,51 @@
+{
+ "id": "14-marek",
+ "says_pl": "Marek jest nam winien 2 000 zł, oddał już 1 200.",
+ "places": [
+  {
+   "id": "marek",
+   "kind": "claim",
+   "label_pl": "Marek (pożyczka)",
+   "owner": "joint"
+  }
+ ],
+ "ledger": [
+  {
+   "date": "2026-03-12",
+   "from": "konto",
+   "to": "marek",
+   "amount": 2000,
+   "category": "pozyczka",
+   "why": "bank"
+  },
+  {
+   "date": "2026-06-30",
+   "from": "marek",
+   "to": "konto",
+   "amount": 700,
+   "category": "pozyczka",
+   "why": "bank"
+  },
+  {
+   "date": "2026-09-15",
+   "from": "marek",
+   "to": "konto",
+   "amount": 500,
+   "category": "pozyczka",
+   "why": "bank"
+  }
+ ],
+ "instances": [
+  {
+   "id": "marek_zwrot",
+   "template": "przelew@1",
+   "label_pl": "Marek oddaje resztę (odpowiedź na pytanie; data ilustracyjna)",
+   "args": {
+    "amount": 800,
+    "from": "marek",
+    "to": "konto",
+    "date": "2026-12-31"
+   }
+  }
+ ]
+}

@@ -1,0 +1,28 @@
+# Round 18, C1-1 (follows). L §4.3: "Write `at start_of(m)`, `at end_of(m) - 1 day` (m's last day, §4.2) or another
+# day of m"; L §4.2: end_of(k) is "the first day after it". r_last reads March's law (v1, 100), r_next April's (v2,
+# 200).
+=== m.tally
+model m
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+source s "s"
+unit PLN: currency minor 0.01
+input rate: money PLN
+def r_last[m in months]: money PLN = rate at end_of(m) - 1 day
+def r_next[m in months]: money PLN = rate at end_of(m)
+version v1
+  cite s
+  governs 2026-01..2026-03
+  known 2025-12-01
+  rate = 100
+version v2
+  cite s
+  governs 2026-04..
+  known 2025-12-01
+  rate = 200
+ask q: r_last[2026-03], r_next[2026-03], end_of(2026-03)
+=== expect
+q: (100.00 PLN, 200.00 PLN, 2026-04-01)
+  cut 2026-12-31

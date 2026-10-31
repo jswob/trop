@@ -1,0 +1,36 @@
+# L §5.11 as if: "input[keys] = value: replaces every read of that input at those keys"; "A pin's value is any
+# expression ... evaluated first, in the context without that as if (its own pins excluded), then pinned as a
+# value. So a pin that reads its own target reads the unpinned value, and there is no cycle."  x = 1:
+# x as if {x = x + one} reads the pin's value 1 + 1 = 2.  "The pins of one as if apply only inside it; nested pins
+# don't leak to their siblings": (x as if {x = ten}) + x is 10 + 1 = 11.  L §8.2: "A pin given by an expression
+# prints its value, pinned: <pin> = v".
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+input x: int
+input one: int
+input ten: int
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  x = 1
+  one = 1
+  ten = 10
+
+ask q1: x as if {x = x + one}
+ask q2: (x as if {x = ten}) + x
+=== expect
+q1: 2
+  pinned: x = 2
+  cut 2026-12-31
+q2: 11
+  pinned: x = 10
+  cut 2026-12-31

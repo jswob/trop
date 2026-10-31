@@ -1,0 +1,44 @@
+# L §5.16 Closed forms, without paths: quantile(z, 50 %) of normal(0, 1) is its median, detected exactly (L §7.3
+# "the median of a symmetric distribution"): 0.  mean of normal(m, s) is m = 0; of uniform(a, b) (a + b)/2 = 0.5.
+# share(u01 <= 0.25) is cdf of uniform(0, 1) at 0.25, exact: 0.25.  share(cnt >= 2) for binomial(4, 1/2) is
+# 1 - cdf(1) = 1 - 5/16 = 0.6875 (exact, "for a discrete D, the mass at the point counts exactly").  quantile(cnt,
+# 50 %) is type 1, the smallest x with cdf(x) >= 1/2: cdf(1) = 5/16, cdf(2) = 11/16, so 2.  mean(2 × u01 + 1) =
+# 2 × 0.5 + 1 = 2.  quantile(a × X + b, q) with a = -1 < 0 is a × quantile(D, 1 - q) + b = -0.75.  Every query
+# prints the horizon, the law date at which the line reads its random fact: the ask's 2026-06-30.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+input z: dist
+input u01: dist
+input u4: dist
+input cnt: dist
+input q25: num
+input two: num
+input lvl: num
+
+version v
+  cite s
+  governs 2026..
+  known 2026-01-01
+  z = normal(0, 1) to 1e-9
+  u01 = uniform(0, 1) to 0.001
+  u4 = uniform(0, 4) to 0.001
+  cnt = binomial(4, 0.5)
+  q25 = 0.25
+  two = 2
+  lvl = 0.5
+
+ask c1: quantile(z, 50 %), mean(z), mean(u01), share(u01 <= q25), share(cnt >= two), quantile(cnt, 50 %) law 2026-06-30
+ask c2: mean(two * u01 + 1), quantile(-u01, 25 %) law 2026-06-30
+=== expect
+c1: (0 (horizon 2026-06-30), 0 (horizon 2026-06-30), 0.5 (horizon 2026-06-30), 0.25 (horizon 2026-06-30), 0.6875 (horizon 2026-06-30), 2 (horizon 2026-06-30))
+  law date 2026-06-30, cut 2026-12-31
+c2: (2 (horizon 2026-06-30), -0.75 (horizon 2026-06-30))
+  law date 2026-06-30, cut 2026-12-31

@@ -1,0 +1,11 @@
+part asks_d10
+  tally 2
+  note "D-10 · Her lifetime, as of 2064-12-31, as known 2026-09-30: the long view in closed form, with zero volatility, and on 10 000 paths."
+
+ask d10_bands: quantile(p_nw[2035] where alive[2035], 10 %), quantile(p_nw[2035] where alive[2035], 50 %), quantile(p_nw[2035] where alive[2035], 90 %), quantile(p_nw[2045] where alive[2045], 10 %), quantile(p_nw[2045] where alive[2045], 50 %), quantile(p_nw[2045] where alive[2045], 90 %) law 2026-09-30 paths 200 seed 20261001
+
+ask d10_closed: round(exp_years, 0.0001, hh_round), round(exp_tax, 0.01, hh_round), zv_dry_year, round(zv_share, 0.000001, hh_round) law 2026-09-30
+
+ask d10_paths: mean(p_years), mean(p_tax), share(p_dry), share(p_zv_dry) law 2026-09-30 paths 200 seed 20261001
+
+ask d10_stream: py_stream law 2026-09-30

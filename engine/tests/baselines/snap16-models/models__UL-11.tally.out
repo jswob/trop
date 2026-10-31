@@ -1,0 +1,66 @@
+q01_improd [ul11_cent = *]: 3 511.07 EUR
+  law date 2025-12-31, cut 2026-10-18
+q02_susc [ul11_cent = *]: 108 843.30 EUR
+  law date 2025-12-31, cut 2026-10-18
+q03_ahorro: 190 EUR
+  assumed: the example applies Regla 1ª with 2.000, the whole savings base, in place of casilla [0424], as if the savings base were all gains (c0424)
+  assumed: the example subtracts no loss or negative-yield offsets ([0436], [0439]-[0445], [0447]) (offsets)
+  law date 2025-12-31, cut 2026-10-18
+q04_irpf_sum: 12 597 EUR
+  assumed: the example applies Regla 1ª with 2.000, the whole savings base, in place of casilla [0424], as if the savings base were all gains (c0424)
+  assumed: the example subtracts no loss or negative-yield offsets ([0436], [0439]-[0445], [0447]) (offsets)
+  law date 2025-12-31, cut 2026-10-18
+q05_total [ul11_cent = *]: 121 440.3 EUR
+  assumed: the example applies Regla 1ª with 2.000, the whole savings base, in place of casilla [0424], as if the savings base were all gains (c0424)
+  assumed: the example subtracts no loss or negative-yield offsets ([0436], [0439]-[0445], [0447]) (offsets)
+  law date 2025-12-31, cut 2026-10-18
+q06_kept_base: 1 000 EUR
+  assumed: the example applies Regla 1ª with 2.000, the whole savings base, in place of casilla [0424], as if the savings base were all gains (c0424)
+  assumed: the example subtracts no loss or negative-yield offsets ([0436], [0439]-[0445], [0447]) (offsets)
+  law date 2025-12-31, cut 2026-10-18
+q07_limit: 30 600 EUR
+  assumed: the example applies Regla 1ª with 2.000, the whole savings base, in place of casilla [0424], as if the savings base were all gains (c0424)
+  assumed: the example subtracts no loss or negative-yield offsets ([0436], [0439]-[0445], [0447]) (offsets)
+  law date 2025-12-31, cut 2026-10-18
+q08_red_theory [ul11_cent = *]: 90 840.3 EUR
+  assumed: the example applies Regla 1ª with 2.000, the whole savings base, in place of casilla [0424], as if the savings base were all gains (c0424)
+  assumed: the example subtracts no loss or negative-yield offsets ([0436], [0439]-[0445], [0447]) (offsets)
+  law date 2025-12-31, cut 2026-10-18
+q09_red_max [ul11_cent = down]: 89 883.49 EUR
+  reading: ul11_cent = down
+  law date 2025-12-31, cut 2026-10-18
+q09_red_max [ul11_cent = half-up]: 89 883.50 EUR
+  reading: ul11_cent = half-up
+  law date 2025-12-31, cut 2026-10-18
+q10_ingresar [ul11_cent = down]: 22 470.88 EUR
+  assumed: the example applies Regla 1ª with 2.000, the whole savings base, in place of casilla [0424], as if the savings base were all gains (c0424)
+  assumed: the example subtracts no loss or negative-yield offsets ([0436], [0439]-[0445], [0447]) (offsets)
+  reading: ul11_cent = down
+  law date 2025-12-31, cut 2026-10-18
+q10_ingresar [ul11_cent = half-up]: 22 470.87 EUR
+  assumed: the example applies Regla 1ª with 2.000, the whole savings base, in place of casilla [0424], as if the savings base were all gains (c0424)
+  assumed: the example subtracts no loss or negative-yield offsets ([0436], [0439]-[0445], [0447]) (offsets)
+  reading: ul11_cent = half-up
+  law date 2025-12-31, cut 2026-10-18
+q11_min [ul11_cent = *]: 22 470.87 EUR
+  law date 2025-12-31, cut 2026-10-18
+q12_excess [ul11_cent = down]: 956.81 EUR
+  assumed: the example applies Regla 1ª with 2.000, the whole savings base, in place of casilla [0424], as if the savings base were all gains (c0424)
+  assumed: the example subtracts no loss or negative-yield offsets ([0436], [0439]-[0445], [0447]) (offsets)
+  reading: ul11_cent = down
+  law date 2025-12-31, cut 2026-10-18
+q12_excess [ul11_cent = half-up]: 956.8 EUR
+  assumed: the example applies Regla 1ª with 2.000, the whole savings base, in place of casilla [0424], as if the savings base were all gains (c0424)
+  assumed: the example subtracts no loss or negative-yield offsets ([0436], [0439]-[0445], [0447]) (offsets)
+  reading: ul11_cent = half-up
+  law date 2025-12-31, cut 2026-10-18
+q13_coincide [ul11_cent = down]: differs: cuota_ingresar = 22 470.88 EUR, cuota_min = 22 470.87 EUR, difference 0.01 EUR
+  assumed: the example applies Regla 1ª with 2.000, the whole savings base, in place of casilla [0424], as if the savings base were all gains (c0424)
+  assumed: the example subtracts no loss or negative-yield offsets ([0436], [0439]-[0445], [0447]) (offsets)
+  reading: ul11_cent = down
+  law date 2025-12-31, cut 2026-10-18
+q13_coincide [ul11_cent = half-up]: ok
+  assumed: the example applies Regla 1ª with 2.000, the whole savings base, in place of casilla [0424], as if the savings base were all gains (c0424)
+  assumed: the example subtracts no loss or negative-yield offsets ([0436], [0439]-[0445], [0447]) (offsets)
+  reading: ul11_cent = half-up
+  law date 2025-12-31, cut 2026-10-18

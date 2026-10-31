@@ -1,0 +1,27 @@
+# L §5.9 Rows replaced: "A version ... whose `replace` rows do neither [match the earlier table's intervals, nor form
+# a whole table] is refused (LOAD-BAND)".  (20, 30] and (40, inf) match no interval of v1's table and leave a gap.
+=== m.tally
+model t
+  tally 2
+  on 2027-01-01
+  start 2026-01-01
+  end 2027-12-31
+
+source s "s"
+band b(n: int): int
+
+version v1
+  cite s
+  governs 2026..
+  known 2025-12-01
+  b: [0, 10] = 1
+  b: (10, inf) = 2
+
+version v2
+  cite s
+  governs 2027..
+  known 2026-12-01
+  replace b: (20, 30] = 3
+  replace b: (40, inf) = 4
+=== expect
+refused: LOAD-BAND ...

@@ -1,0 +1,12 @@
+id: no-debug-format
+valid:
+  - 'fn f(x: u8) -> String { format!("{x}") }'
+  - 'fn f(x: u8) -> String { format!("{x:>4}") }'
+  - 'fn f() -> &''static str { "{:?} outside a macro is only text" }'
+  - '#[cfg(test)] mod tests { fn f(x: u8) -> String { format!("{x:?}") } }'
+invalid:
+  - 'fn f(x: u8) -> String { format!("{x:?}") }'
+  - 'fn f(x: u8) -> String { format!("{:?}", x) }'
+  - 'fn f(x: u8) -> String { format!("{:#?}", x) }'
+  - 'fn f(w: &mut String, x: u8) { let _ = write!(w, "{x:?}"); }'
+  - '#[cfg(feature = "x")] mod m { fn f(x: u8) -> String { format!("{x:?}") } }'

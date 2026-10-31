@@ -1,0 +1,21 @@
+# R-12: the arguments are read once, in main, through args_os.
+
+case: args
+tool: clippy
+expect: clippy::disallowed_methods
+text: R-12
+--- module
+/// Planted.
+pub fn planted() -> usize {
+    std::env::args().count()
+}
+
+case: args-os-outside-main
+tool: clippy
+expect: clippy::disallowed_methods
+text: R-12
+--- module tally-cli
+/// Planted.
+pub fn planted() -> usize {
+    std::env::args_os().count()
+}

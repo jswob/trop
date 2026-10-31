@@ -1,0 +1,10 @@
+# R-72: code formatted by rustfmt's defaults.
+
+case: unformatted
+tool: run
+expect: Diff in
+--- module
+/// Planted.
+pub fn planted( ) -> u8 { 1 }
+--- run
+cargo fmt --all --check

@@ -1,0 +1,11 @@
+# What check-frozen holds the spec and its reference interpreter to (R-80). A rule file:
+# it changes only through R-112.
+#
+# `tag` must be the version engine/spec/VERSION names. `pin` is the commit whose
+# engine/spec/ and oracle (engine/tools/refcore/, refcore_fast/ and SHA256SUMS) the tree
+# must match: the tag itself when `pin` is left out, or an approved amendment after the
+# tag that kept the version. A new version or amendment moves both lines.
+
+tag = "tally-2.1"
+pin = "c62550a1567a4bc3e956c28dd77141e26e5f4469"
+approved = "G2a, 2026-10-30: session 8b's PERFORMANCE, BOUNDS, BUILD-ORDER, STALE and DONE, VERSION kept"

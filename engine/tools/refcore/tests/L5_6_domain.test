@@ -1,0 +1,16 @@
+# L §5.6: "a range of quantities without step is refused (LOAD-DOMAIN, D-15)".
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+unit PLN: currency minor 0.01
+
+input cap: money PLN
+
+def n: int at reader
+  rule base = count(g in 0 PLN .. cap)
+=== expect
+refused: LOAD-DOMAIN ...

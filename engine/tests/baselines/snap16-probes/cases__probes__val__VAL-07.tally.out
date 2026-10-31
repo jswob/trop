@@ -1,0 +1,4 @@
+q: 2 163.20 DUK
+  assumed: A-CPI: the price index rises 3 % a year from 2026 (cpi_change[2026], cpi_change[2027])
+  assumed: A-RENT: the rent rises each January by the price index + 1 point (rent.next, rent_margin)
+  law date 2026-10-25, cut 2026-10-25

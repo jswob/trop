@@ -1,0 +1,7 @@
+part asks_b13
+  tally 2
+  note "B-13 · Had the floren been 5 % cheaper (questions.md): as of 2025-12-31, known as of 2026-01-07. (a) is the scenario b13_fx; (b) is b13_rule, over it, whose sales, Lazur balance and currency gain or loss are asked in its own file. The Lazur florens are worth what B-03 counts them at: the CBL mid rate of the day, or the last before it (B-HR4 .5, hr4_fx), to the ort."
+
+ask b13_a_invoices: rev_flr[j], vat_flr[j] for j in flr_invoices where sale_flr[j].issued >= 2025-07-01 with scenario b13_fx law 2025-12-31 as known 2026-01-07
+
+ask b13_a_lazur: bal(lazur, 2025-12-31), round(bal(lazur, 2025-12-31) * hr4_fx[2025-12-31], minor(DUK), hr4_round) with scenario b13_fx law 2025-12-31 as known 2026-01-07

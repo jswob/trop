@@ -1,0 +1,88 @@
+# OQ-4, L §5.18 The world of an ask: "In a joint model a value pin or an as if may name a member's row (§6.1); like
+# every pin, it sets that ask's world only and changes no member's file". The joint model of L6_1_joint: with
+# a.rate = 0.2 ana's tax[2026] is 120 000 * 0.2 = 24 000 PLN (k3), as if {a.rate = 0.25} 30 000 PLN (k4); a.q still
+# gives 14 400 PLN. k1/k2 bind over the member's index a.yrs (L §2.3 bind takes a member's index).
+=== options pin=bytes
+=== joint.tally
+model family
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+  use a = "ana.tally" sha256 "26a08dc22b514dc0b6eb7c1263103f06b216244b4ed980752bbc810412d05e45"
+  use b = "ben.tally" sha256 "a8bf3b260e60f625766da425a660f922557f525c28dcf8ed70567ec64d600ccc"
+
+unit PLN: currency minor 0.01
+index jy = year 2025..2027
+
+def income_sum[y in jy]: num PLN = a.income[y] + b.income at reader
+
+ask j1: income_sum[y] for y in jy law 2026-12-31
+ask j2: a.tax[2026] law 2026-12-31
+ask j3: a.rate law 2026-12-31
+ask k1: a.income[y] for y in a.yrs law 2026-12-31
+ask k2: sum(a.income[y] for y in a.yrs) law 2026-12-31
+ask k3: a.tax[2026] with a.rate = 0.2 law 2026-12-31
+ask k4: a.tax[2026] as if {a.rate = 0.25} law 2026-12-31
+=== ana.tally
+model ana
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source s "umowa"
+unit PLN: currency minor 0.01
+index yrs = year 2025..2027
+input income[y in yrs]: money PLN
+input rate: num
+def tax[y in yrs]: num PLN = income[y] * rate at reader
+
+version v
+  cite s
+  governs 2025..
+  known 2025-01-01
+  income[2025] = 100 000.00 PLN
+  income[2026] = 120 000.00 PLN
+  income[2027] = 130 000.00 PLN
+  rate = 0.12
+
+ask q: tax[2026] law 2026-12-31
+=== ben.tally
+model ben
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source s "umowa"
+unit PLN: currency minor 0.01
+input income: money PLN
+
+version v
+  cite s
+  governs 2025..
+  known 2025-01-01
+  income = 80 000.00 PLN
+
+ask q: income law 2026-12-31
+=== expect k1 k2 k3 k4 a.q
+k1 (y = 2025): 100 000.00 PLN
+  law date 2026-12-31, cut 2026-10-20
+k1 (y = 2026): 120 000.00 PLN
+  law date 2026-12-31, cut 2026-10-20
+k1 (y = 2027): 130 000.00 PLN
+  held: a.income[2027] = 130 000.00 PLN (a.v), read for 2027
+  law date 2026-12-31, cut 2026-10-20
+k2: 350 000.00 PLN
+  held: a.income[2027] = 130 000.00 PLN (a.v), read for 2027
+  law date 2026-12-31, cut 2026-10-20
+k3: 24 000 PLN
+  pinned: a.rate = 0.2
+  law date 2026-12-31, cut 2026-10-20
+k4: 30 000 PLN
+  pinned: a.rate = 0.25
+  law date 2026-12-31, cut 2026-10-20
+a.q: 14 400 PLN
+  held: rate = 0.12 (v), read for 2026-12-31
+  law date 2026-12-31, cut 2026-10-20

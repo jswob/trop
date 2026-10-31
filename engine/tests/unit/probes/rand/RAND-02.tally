@@ -1,0 +1,30 @@
+model rand02
+  tally 2
+  on 2025-10-24
+  start 2025-01-01
+  end 2025-12-31
+  note "RAND-02: Halina's expected remaining lifetime, exactly: the sum over coming years of the chance of being alive at the year's end."
+
+source card "Probe card RAND-02: the life table of RAND-01"
+
+index yr_age = int 85..88
+
+input q_die[a in yr_age]: num
+
+def alive_end[a in yr_age]: num at reader
+  note "the chance of being alive at the end of the year of age a"
+  rule base = alive_end[a - 1] * (1 - q_die[a])
+  rule first beats base = 1 - q_die[a] when pos(a) == 1
+
+def expected_years: num = sum(alive_end[a] for a in yr_age) at reader
+
+ask q: expected_years law 2025-10-24
+
+version life_table
+  cite card
+  governs always
+  known 2025-01-01
+  q_die[85] = 0.2 "the chance of dying within the year at 85"
+  q_die[86] = 0.3 "at 86"
+  q_die[87] = 0.5 "at 87"
+  q_die[88] = 1 "at 88"

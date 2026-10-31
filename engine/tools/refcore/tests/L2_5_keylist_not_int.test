@@ -1,0 +1,27 @@
+# L §2.5: a key-list variable takes its index from its key positions; x[k] makes k a key of ns, whose keys are
+# names, not ints, so `k <= n_max` compares a key of ns with an int: refused at load (L §8.4, LOAD-UNIT).
+=== m.tally
+model t
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+
+source s "synthetic"
+
+index ns = [a1, a2]
+
+input n_max: int
+input x[k in ns]: int
+
+ask q: x[k] for k in [a1, a2] where k <= n_max
+
+version v1
+  cite s
+  governs always
+  known 2026-01-01
+  n_max = 12
+  x[a1] = 1
+  x[a2] = 2
+=== expect
+refused: LOAD-UNIT ...

@@ -1,0 +1,31 @@
+# L §5.18 check: "Sides read at different law dates list each"; L §8.2 the `law date <d>, cut <K>` entry: "a check
+# whose sides are read at different law dates lists each".  rate is 0.1 under 2025's law and 0.12 under 2026's; the
+# left side pins law 2025-06-30 (L §4.3 Pins), the right side is read at the ask's law 2026-06-30.  Difference
+# 0.1 - 0.12 = -0.02.  Layout of the two dates: this interpreter's.
+=== m.tally
+model c
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source s "ustawa"
+input rate: num
+
+version v2025
+  cite s
+  governs 2025
+  known 2025-01-01
+  rate = 0.1
+
+version v2026
+  cite s
+  governs 2026..
+  known 2026-01-01
+  rate = 0.12
+
+ask q: check rate as if {law 2025-06-30} == rate law 2026-06-30
+=== expect
+q: differs: rate as if {...} = 0.1, rate = 0.12, difference -0.02
+...
+  law date 2025-06-30 (left), 2026-06-30 (right), cut 2026-10-20

@@ -1,0 +1,46 @@
+# E §4.2 step 5: "the legs of steps 0-2 ... together, against the balance they leave"; L §5.10: refused "with the legs
+# at the place that brought it there: the batch's". p1 moves 10.00 PLN from the claim x (5.00) to the claim y (0), p2
+# 20.00 PLN from y out: the batch leaves x at -5.00 PLN and y at -10.00 PLN, both broken, so p1 (at x) and p2 (at y)
+# are refused. snap11 tested the places one by one in name order: x refused p1, whose refusal marked y, so p2 printed
+# 20.00 PLN, and with the names swapped it would not have (writer 8, sixth pass, beside C2-1).
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+place x: claims PLN lives 2026-01-01..
+place y: claims PLN lives 2026-01-01..
+place z: outside lives 2026-01-01..
+input amt: money PLN
+input amt2: money PLN
+input day: date
+
+move p1: transfers
+  on day
+  leg cash from x to y amount amt
+
+move p2: transfers
+  on day
+  leg cash from y to z amount amt2
+
+ask q: flows(p1, 2026-03)
+ask q2: flows(p2, 2026-03)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 10.00 PLN
+  amt2 = 20.00 PLN
+  day = 2026-03-10
+  opening[x] = 5.00 PLN at 2026-01-01 start
+  opening[y] = 0 PLN at 2026-01-01 start
+=== expect
+q: refused: RUN-PLACE x is -5.00 PLN after the day's observations and plans of 2026-03-10
+  cut 2026-01-01
+q2: refused: RUN-PLACE y is -10.00 PLN after the day's observations and plans of 2026-03-10
+  cut 2026-01-01

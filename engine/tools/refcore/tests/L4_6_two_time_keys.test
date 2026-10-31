@@ -1,0 +1,53 @@
+# L §4.6 step 1 (round 8b): a row's span is tested at the period of x's time key only when x is an input keyed by one
+# period index; a rule, a band, and an input keyed by no period index or by more than one, are tested at the law date
+# d (§4.3). wscale, a def keyed by two month indexes, is read at its law date start_of(c): w1 = 1 (rule fixed, d ==
+# fixed); w2 = cpi_used[2026] / cpi_used[2025] = 104 / 100 = 1.04 (rule rebased). r, an input keyed by a month and
+# a year index, is tested at the law date: its row governs 2026, so it gives 7 at law 2026-06-30 and has no
+# candidate at 2027-06-30, HOLE-UNGOVERNED with the no-time-key question 'x at k: no value at <law date>' (step 5).
+# (Was REFCORE-UNSPECIFIED §4.6: keyed by more than one time index.)
+=== m.tally
+model p15
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2027-12-31
+
+source s "synthetic"
+
+index mon = month 2026-01..2027-12
+index yrs = year 2025..2027
+index wd = [fixed, indexed]
+
+input cpi_used[y in yrs]: num
+input r[m in mon, y in yrs]: int
+
+def wscale[c in mon, d in wd, m in mon]: num at start_of(c)
+  rule fixed = 1 when d == fixed
+  rule rebased = cpi_used[year_of(m) - 1] / cpi_used[year_of(c) - 1] when d == indexed
+
+ask w1: wscale[2026-03, fixed, 2027-02]
+ask w2: wscale[2026-03, indexed, 2027-02]
+ask r1: r[2026-01, 2026] law 2026-06-30
+ask r2: r[2026-01, 2026] law 2027-06-30
+
+version v1
+  cite s
+  governs always
+  known 2026-01-01
+  cpi_used[2025] = 100
+  cpi_used[2026] = 104
+
+version v2
+  cite s
+  governs 2026
+  known 2026-01-01
+  r[2026-01, 2026] = 7
+=== expect
+r1: 7
+  law date 2026-06-30, cut 2026-10-18
+r2: ?"r at 2026-01, 2026: no value at 2027-06-30" (r[2026-01, 2026])
+  law date 2027-06-30, cut 2026-10-18
+w1: 1
+  cut 2026-10-18
+w2: 1.04
+  cut 2026-10-18

@@ -1,0 +1,122 @@
+model mp10
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+  note "Stadt Hanau's one-page copy of the Düsseldorfer Tabelle 2026, transcribed as printed and used as a lookup table."
+  note "The income bands are whole euros as printed, so the band's argument is an int. The copy prints the lower ends of groups 11 to 15 below the upper end of the group before."
+
+source hanau_dt2026 "Düsseldorfer Tabelle 2026 (Düsseldorfer Tabelle in € Stand 01. Januar 2026 (Kindergeld Stand 01. Januar 2026)), Stadt Hanau" at "https://gude.hanau.de/mam/formulare/merkblaetter/düsseldorfer_tabelle_2026.pdf"
+
+unit EUR: currency minor 0.01
+
+index agegroup = [a0_5, a6_11, a12_17, a18]
+
+index incgroup = [g1, g2, g3, g4, g5, g6, g7, g8, g9, g10, g11, g12, g13, g14, g15]
+
+input hanau_amount[g in incgroup, a in agegroup]: money EUR
+  note "the columns headed Mindestunterhalt (0-5, 6 - 11, 12 - 17) and the column ab 18"
+
+input kg_half: money EUR
+  note "the copy prints only the half Kindergeld, in every row and age band"
+
+input probe: int question "Welches Nettoeinkommen (volle Euro) wird in der Tabelle nachgeschlagen?"
+
+band hanau_group(income: int): key incgroup
+  note "Nettoeinkommen des Unterhaltspflichtigen, table rows 1-15, bounds as printed"
+
+def zahlbetrag[g in incgroup, a in agegroup]: money EUR at reader
+  note "Zahlbetrag = Mindestunterhalt abzüglich Kindergeld, as the copy computes it per row"
+  rule adult beats base = ?"Die Hanauer Kopie zieht in der Spalte ab 18 kein Kindergeld ab und nennt keinen Zahlbetrag." when a == a18
+  rule base v hanau2026 = hanau_amount[g, a] - kg_half
+
+ask q_group_in_overlap: hanau_group(probe) with probe = 5501 law 2026-10-18
+
+ask q_group_outside_overlap: hanau_group(probe) with probe = 2100 law 2026-10-18
+
+ask q_kg_half: kg_half law 2026-10-18
+
+ask q_zahlbetrag: zahlbetrag[g, a] for g in incgroup, a in [a0_5, a6_11, a12_17] law 2026-10-18
+
+version hanau2026
+  cite hanau_dt2026
+  governs 2026-01..
+  known 2026-01-02
+  note "Known date: the copy prints no date of its own (Stand 01. Januar 2026 is the date of the figures), so it is known from its earliest public stamp, the server's Last-Modified, Fri, 02 Jan 2026 12:15:32 GMT (LANGUAGE §4.5). Earlier rounds took the PDF's own stamps (author Stadt Hanau, created 2 Jan 2026 10:17, modified 2 Jan 2026 13:13), the same day; they don't count, since a public stamp exists (D8)"
+  hanau_amount[g1, a0_5] = 486 "table row 1, 0-5 Mindestunterhalt"
+  hanau_amount[g1, a6_11] = 558 "table row 1, 6 - 11 Mindestunterhalt"
+  hanau_amount[g1, a12_17] = 653 "table row 1, 12 - 17 Mindestunterhalt"
+  hanau_amount[g1, a18] = 698 "table row 1, ab 18"
+  hanau_amount[g2, a0_5] = 511 "table row 2, 0-5 Mindestunterhalt"
+  hanau_amount[g2, a6_11] = 586 "table row 2, 6 - 11 Mindestunterhalt"
+  hanau_amount[g2, a12_17] = 686 "table row 2, 12 - 17 Mindestunterhalt"
+  hanau_amount[g2, a18] = 733 "table row 2, ab 18"
+  hanau_amount[g3, a0_5] = 535 "table row 3, 0-5 Mindestunterhalt"
+  hanau_amount[g3, a6_11] = 614 "table row 3, 6 - 11 Mindestunterhalt"
+  hanau_amount[g3, a12_17] = 719 "table row 3, 12 - 17 Mindestunterhalt"
+  hanau_amount[g3, a18] = 768 "table row 3, ab 18"
+  hanau_amount[g4, a0_5] = 559 "table row 4, 0-5 Mindestunterhalt"
+  hanau_amount[g4, a6_11] = 642 "table row 4, 6 - 11 Mindestunterhalt"
+  hanau_amount[g4, a12_17] = 751 "table row 4, 12 - 17 Mindestunterhalt"
+  hanau_amount[g4, a18] = 803 "table row 4, ab 18"
+  hanau_amount[g5, a0_5] = 584 "table row 5, 0-5 Mindestunterhalt"
+  hanau_amount[g5, a6_11] = 670 "table row 5, 6 - 11 Mindestunterhalt"
+  hanau_amount[g5, a12_17] = 784 "table row 5, 12 - 17 Mindestunterhalt"
+  hanau_amount[g5, a18] = 838 "table row 5, ab 18"
+  hanau_amount[g6, a0_5] = 623 "table row 6, 0-5 Mindestunterhalt"
+  hanau_amount[g6, a6_11] = 715 "table row 6, 6 - 11 Mindestunterhalt"
+  hanau_amount[g6, a12_17] = 836 "table row 6, 12 - 17 Mindestunterhalt"
+  hanau_amount[g6, a18] = 894 "table row 6, ab 18"
+  hanau_amount[g7, a0_5] = 661 "table row 7, 0-5 Mindestunterhalt"
+  hanau_amount[g7, a6_11] = 759 "table row 7, 6 - 11 Mindestunterhalt"
+  hanau_amount[g7, a12_17] = 889 "table row 7, 12 - 17 Mindestunterhalt"
+  hanau_amount[g7, a18] = 950 "table row 7, ab 18"
+  hanau_amount[g8, a0_5] = 700 "table row 8, 0-5 Mindestunterhalt"
+  hanau_amount[g8, a6_11] = 804 "table row 8, 6 - 11 Mindestunterhalt"
+  hanau_amount[g8, a12_17] = 941 "table row 8, 12 - 17 Mindestunterhalt"
+  hanau_amount[g8, a18] = 1006 "table row 8, ab 18"
+  hanau_amount[g9, a0_5] = 739 "table row 9, 0-5 Mindestunterhalt"
+  hanau_amount[g9, a6_11] = 849 "table row 9, 6 - 11 Mindestunterhalt"
+  hanau_amount[g9, a12_17] = 993 "table row 9, 12 - 17 Mindestunterhalt"
+  hanau_amount[g9, a18] = 1061 "table row 9, ab 18"
+  hanau_amount[g10, a0_5] = 778 "table row 10, 0-5 Mindestunterhalt"
+  hanau_amount[g10, a6_11] = 893 "table row 10, 6 - 11 Mindestunterhalt"
+  hanau_amount[g10, a12_17] = 1045 "table row 10, 12 - 17 Mindestunterhalt"
+  hanau_amount[g10, a18] = 1117 "table row 10, ab 18"
+  hanau_amount[g11, a0_5] = 817 "table row 11, 0-5 Mindestunterhalt"
+  hanau_amount[g11, a6_11] = 938 "table row 11, 6 - 11 Mindestunterhalt"
+  hanau_amount[g11, a12_17] = 1098 "table row 11, 12 - 17 Mindestunterhalt"
+  hanau_amount[g11, a18] = 1173 "table row 11, ab 18"
+  hanau_amount[g12, a0_5] = 856 "table row 12, 0-5 Mindestunterhalt"
+  hanau_amount[g12, a6_11] = 983 "table row 12, 6 - 11 Mindestunterhalt"
+  hanau_amount[g12, a12_17] = 1150 "table row 12, 12 - 17 Mindestunterhalt"
+  hanau_amount[g12, a18] = 1229 "table row 12, ab 18"
+  hanau_amount[g13, a0_5] = 895 "table row 13, 0-5 Mindestunterhalt"
+  hanau_amount[g13, a6_11] = 1027 "table row 13, 6 - 11 Mindestunterhalt"
+  hanau_amount[g13, a12_17] = 1202 "table row 13, 12 - 17 Mindestunterhalt"
+  hanau_amount[g13, a18] = 1285 "table row 13, ab 18"
+  hanau_amount[g14, a0_5] = 934 "table row 14, 0-5 Mindestunterhalt"
+  hanau_amount[g14, a6_11] = 1072 "table row 14, 6 - 11 Mindestunterhalt"
+  hanau_amount[g14, a12_17] = 1254 "table row 14, 12 - 17 Mindestunterhalt"
+  hanau_amount[g14, a18] = 1341 "table row 14, ab 18"
+  hanau_amount[g15, a0_5] = 972 "table row 15, 0-5 Mindestunterhalt"
+  hanau_amount[g15, a6_11] = 1116 "table row 15, 6 - 11 Mindestunterhalt"
+  hanau_amount[g15, a12_17] = 1306 "table row 15, 12 - 17 Mindestunterhalt"
+  hanau_amount[g15, a18] = 1396 "table row 15, ab 18"
+  hanau_group: [0, 2100] = g1 "table row 1, Nettoeinkommen - 2.100"
+  hanau_group: [2101, 2500] = g2 "table row 2, Nettoeinkommen 2.101 - 2.500"
+  hanau_group: [2501, 2900] = g3 "table row 3, Nettoeinkommen 2.501 - 2.900"
+  hanau_group: [2901, 3300] = g4 "table row 4, Nettoeinkommen 2.901 - 3.300"
+  hanau_group: [3301, 3700] = g5 "table row 5, Nettoeinkommen 3.301 - 3.700"
+  hanau_group: [3701, 4100] = g6 "table row 6, Nettoeinkommen 3.701 - 4.100"
+  hanau_group: [4101, 4500] = g7 "table row 7, Nettoeinkommen 4.101 - 4.500"
+  hanau_group: [4501, 4900] = g8 "table row 8, Nettoeinkommen 4.501 - 4.900"
+  hanau_group: [4901, 5300] = g9 "table row 9, Nettoeinkommen 4.901 - 5.300"
+  hanau_group: [5301, 5700] = g10 "table row 10, Nettoeinkommen 5.301 - 5.700"
+  hanau_group: [5501, 6400] = g11 "table row 11, Nettoeinkommen 5.501 - 6.400"
+  hanau_group: [6201, 7200] = g12 "table row 12, Nettoeinkommen 6.201 - 7.200"
+  hanau_group: [7001, 8200] = g13 "table row 13, Nettoeinkommen 7.001 - 8.200"
+  hanau_group: [8001, 9700] = g14 "table row 14, Nettoeinkommen 8.001 - 9.700"
+  hanau_group: [9501, 11200] = g15 "table row 15, Nettoeinkommen 9.501 - 11.200"
+  hanau_group: (11200, inf) = ?"Das Einkommen liegt über der 15. Einkommensgruppe; die Kopie nennt dafür keinen Betrag." "below table row 15"
+  kg_half = 129.5 "table, column abzüglich Kindergeld, rows 1-15; footer: Das ausgewiesene Kindergeld ist der hälftige Betrag für ein gemeinsames Kind der Eltern."

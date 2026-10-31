@@ -1,0 +1,361 @@
+{
+ "id": "07-oki",
+ "says_pl": "Od 2027 reszta nadwyżki idzie na OKI zamiast na zwykły rachunek; OKI płaci co roku podatek od średniej wartości ponad kwotę wolną.",
+ "places": [
+  {
+   "id": "oki",
+   "kind": "holding",
+   "label_pl": "OKI (ETF)",
+   "owner": "me",
+   "price": "price.etf"
+  }
+ ],
+ "values": [
+  {
+   "id": "nbp.ref_rate",
+   "kind": "assumption",
+   "unit": "1",
+   "says_pl": "Stopa referencyjna NBP (dalej bez zmian)",
+   "entries": [
+    {
+     "from": "2026-03-05",
+     "value": 0.0375,
+     "source": "RPP, decyzja z 4.03.2026, utrzymana 6–7.10.2026"
+    }
+   ]
+  },
+  {
+   "id": "oki.rate",
+   "kind": "law",
+   "unit": "1",
+   "says_pl": "Podatek od średniej wartości OKI",
+   "entries": [
+    {
+     "from": "2027-01-01",
+     "value": 0.0085,
+     "source": "ustawa o OKI, Dz.U. 2026 poz. 1098, art. 43"
+    },
+    {
+     "from": "2028-01-01",
+     "expr": "max(0.001, floor_to(0.19 * p.nbp.ref_rate, 0.0001))",
+     "repeat": "year",
+     "source": "ustawa o OKI art. 25: 19% stopy referencyjnej NBP z 31 października poprzedniego roku, w dół do 0,01 pp, co najmniej 0,1%"
+    }
+   ]
+  },
+  {
+   "id": "oki.exempt_total",
+   "kind": "law",
+   "unit": "PLN",
+   "says_pl": "Kwota wolna OKI dla aktywów w PLN (fundusze, akcje spółek z kapitałem w PLN, gotówka PLN)",
+   "entries": [
+    {
+     "from": "2027-01-01",
+     "value": 100000,
+     "source": "ustawa o OKI art. 26"
+    }
+   ]
+  },
+  {
+   "id": "oki.exempt_deposits",
+   "kind": "law",
+   "unit": "PLN",
+   "says_pl": "Kwota wolna OKI dla lokat i obligacji skarbowych w PLN",
+   "entries": [
+    {
+     "from": "2027-01-01",
+     "value": 25000,
+     "source": "ustawa o OKI art. 26"
+    }
+   ]
+  }
+ ],
+ "templates": [
+  {
+   "id": "oki_pl@2027",
+   "kind": "law",
+   "title_pl": "OKI: podatek od średniej wartości",
+   "status": "tested",
+   "says": "Each year: the average of the account's end-of-day values (over the days it existed), less the exemption for what it holds, times the year's rate; filed and paid by 31 May. No Belka on what is inside.",
+   "sources": [
+    "ustawa o OKI, Dz.U. 2026 poz. 1098, art. 23 (podstawa), art. 24 (wycena), art. 25 i 43 (stawka), art. 26 (zwolnienia), art. 29 (termin)"
+   ],
+   "params": {
+    "oki": {
+     "type": "place",
+     "unit": "PLN",
+     "ask_pl": "Które OKI?"
+    },
+    "account": {
+     "type": "place",
+     "unit": "PLN",
+     "ask_pl": "Z którego konta płacimy podatek?"
+    },
+    "holds": {
+     "type": "enum",
+     "values": [
+      "pln_funds",
+      "deposits_bonds",
+      "foreign"
+     ],
+     "ask_pl": "Co będzie na OKI: fundusze i akcje w PLN (wolne do 100 000 zł), lokaty i obligacje skarbowe (do 25 000 zł) czy ETF zagraniczny (bez kwoty wolnej)?"
+    }
+   },
+   "lines": [
+    {
+     "id": "avg",
+     "says_pl": "Średnia wartość w roku",
+     "every": "year",
+     "unit": "PLN",
+     "value": "avg_balance(in.oki)"
+    },
+    {
+     "id": "exempt",
+     "says_pl": "Kwota wolna",
+     "every": "year",
+     "unit": "PLN",
+     "value": "case(in.holds, 'pln_funds', p.oki.exempt_total, 'deposits_bonds', p.oki.exempt_deposits, 'foreign', 0)"
+    },
+    {
+     "id": "tax",
+     "says_pl": "Podatek OKI do 31 maja",
+     "every": "year",
+     "on": "next_year:05-31",
+     "unit": "PLN",
+     "value": "zl(max(0, v('avg') - v('exempt')) * p.oki.rate)",
+     "pay": {
+      "from": "in.account",
+      "to": "urzad_skarbowy",
+      "match": "oki"
+     },
+     "bd": "next"
+    }
+   ],
+   "tests": [
+    {
+     "id": "below_exempt",
+     "says": "Średnio 80 000 zł w funduszach PLN: podatek 0",
+     "source": "ustawa o OKI art. 26 (wyliczenie)",
+     "args": {
+      "oki": "t_oki",
+      "account": "konto",
+      "holds": "pln_funds"
+     },
+     "year": 2027,
+     "seed": [
+      {
+       "date": "2026-12-31",
+       "from": "otwarcie",
+       "to": "t_oki",
+       "amount": 80000
+      }
+     ],
+     "expect": [
+      {
+       "line": "tax",
+       "period": "2027",
+       "value": 0
+      }
+     ],
+     "places": [
+      {
+       "id": "t_oki",
+       "kind": "account",
+       "label_pl": "OKI testowe (bez zmiany ceny)"
+      }
+     ],
+     "collected_by": "author"
+    },
+    {
+     "id": "foreign_150k",
+     "says": "Średnio 150 000 zł w ETF zagranicznym, 2027: 0,85% × 150 000 = 1 275",
+     "source": "ustawa o OKI art. 23, 26, 43 (wyliczenie)",
+     "args": {
+      "oki": "t_oki",
+      "account": "konto",
+      "holds": "foreign"
+     },
+     "year": 2027,
+     "seed": [
+      {
+       "date": "2026-12-31",
+       "from": "otwarcie",
+       "to": "t_oki",
+       "amount": 150000
+      }
+     ],
+     "expect": [
+      {
+       "line": "tax",
+       "period": "2027",
+       "value": 1275
+      },
+      {
+       "line": "tax",
+       "period": "2027",
+       "date": "2028-05-31"
+      }
+     ],
+     "places": [
+      {
+       "id": "t_oki",
+       "kind": "account",
+       "label_pl": "OKI testowe (bez zmiany ceny)"
+      }
+     ],
+     "collected_by": "author"
+    },
+    {
+     "id": "pln_150k",
+     "says": "Średnio 150 000 zł w funduszach PLN: 0,85% × 50 000 = 425",
+     "source": "ustawa o OKI art. 23, 26, 43 (wyliczenie)",
+     "args": {
+      "oki": "t_oki",
+      "account": "konto",
+      "holds": "pln_funds"
+     },
+     "year": 2027,
+     "seed": [
+      {
+       "date": "2026-12-31",
+       "from": "otwarcie",
+       "to": "t_oki",
+       "amount": 150000
+      }
+     ],
+     "expect": [
+      {
+       "line": "tax",
+       "period": "2027",
+       "value": 425
+      }
+     ],
+     "places": [
+      {
+       "id": "t_oki",
+       "kind": "account",
+       "label_pl": "OKI testowe (bez zmiany ceny)"
+      }
+     ],
+     "collected_by": "author"
+    },
+    {
+     "id": "half_year",
+     "says": "200 000 wpłacone 1 lipca 2027, fundusze PLN, OKI od 1 stycznia: średnia 100 821,92; 0,85% × 821,92 = 6,99 → 7 zł",
+     "source": "ustawa o OKI art. 23 ust. 1–2 (średnia z dni w roku; wyliczenie)",
+     "collected_by": "author",
+     "args": {
+      "oki": "t_oki",
+      "account": "konto",
+      "holds": "pln_funds"
+     },
+     "places": [
+      {
+       "id": "t_oki",
+       "kind": "account",
+       "label_pl": "OKI testowe"
+      }
+     ],
+     "others": [
+      {
+       "id": "t_in",
+       "template": "przelew@1",
+       "args": {
+        "amount": 200000,
+        "from": "otwarcie",
+        "to": "t_oki",
+        "date": "2027-07-01"
+       }
+      }
+     ],
+     "year": 2027,
+     "expect": [
+      {
+       "line": "avg",
+       "period": "2027",
+       "value": 100821.92
+      },
+      {
+       "line": "tax",
+       "period": "2027",
+       "value": 7
+      }
+     ]
+    },
+    {
+     "id": "deposits",
+     "says": "Średnio 60 000 zł na lokatach: kwota wolna 25 000; 0,85% × 35 000 = 297,50 → 298",
+     "source": "ustawa o OKI art. 26, 43; Ordynacja podatkowa art. 63 § 1 (zaokrąglenie)",
+     "collected_by": "author",
+     "args": {
+      "oki": "t_oki",
+      "account": "konto",
+      "holds": "deposits_bonds"
+     },
+     "places": [
+      {
+       "id": "t_oki",
+       "kind": "account",
+       "label_pl": "OKI testowe"
+      }
+     ],
+     "year": 2027,
+     "seed": [
+      {
+       "date": "2026-12-31",
+       "from": "otwarcie",
+       "to": "t_oki",
+       "amount": 60000
+      }
+     ],
+     "expect": [
+      {
+       "line": "tax",
+       "period": "2027",
+       "value": 298
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "instances": [
+  {
+   "id": "invest_15",
+   "template": "nadwyzka_ike@1",
+   "label_pl": "Reguła 15. (do końca 2026)",
+   "until": "2027-01-01",
+   "args": {
+    "from": "konto",
+    "floor": 1000,
+    "until": "my_tax/net",
+    "ike": "ike",
+    "rest": "maklerskie"
+   }
+  },
+  {
+   "id": "invest_15_oki",
+   "template": "nadwyzka_ike@1",
+   "label_pl": "Reguła 15. (od 2027 reszta na OKI)",
+   "from": "2027-01-01",
+   "args": {
+    "from": "konto",
+    "floor": 1000,
+    "until": "my_tax/net",
+    "ike": "ike",
+    "rest": "oki"
+   }
+  },
+  {
+   "id": "oki_tax",
+   "template": "oki_pl@2027",
+   "label_pl": "Podatek OKI",
+   "from": "2027-01-01",
+   "args": {
+    "oki": "oki",
+    "account": "konto",
+    "holds": "foreign"
+   }
+  }
+ ]
+}

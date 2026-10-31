@@ -1,0 +1,20 @@
+# L §5.16 step 4: "A continuous distribution without to, in a row or a rule, is refused (LOAD-TO)".
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+input z: dist
+
+version v
+  cite s
+  governs 2026..
+  known 2026-01-01
+  z = normal(0, 1)
+=== expect
+refused: LOAD-TO ...

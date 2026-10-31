@@ -1,0 +1,111 @@
+added_2028_early: (0.00 DUK, 2029-04-30)
+  assumed: Varnia's rounding of the tax it withholds isn't stated (varnia_mode)
+  world: refund_early
+  held: refund_day = 2028-03-20 (refund_on_early), read for 2028-01-15
+  cut 2027-01-01
+added_2028_late: (854.00 DUK, 2029-04-30)
+  assumed: Varnia's rounding of the tax it withholds isn't stated (varnia_mode)
+  assumed: no day in this card is a holiday; business days are Monday to Friday (cal)
+  world: refund_late
+  held: refund_day = 2028-07-17 (refund_on_late), read for 2028-01-15
+  cut 2027-01-01
+added_2028_refused: (0.00 DUK, 2029-04-30)
+  world: refund_refused
+  cut 2027-01-01
+credits_early (r = receive[div_mar]): 1 264.5 DUK
+  assumed: Varnia's rounding of the tax it withholds isn't stated (varnia_mode)
+  assumed: no day in this card is a holiday; business days are Monday to Friday (cal)
+  world: refund_early
+  held: refund_day = 2028-03-20 (refund_on_early), read for 2028-01-15
+  cut 2027-01-01
+credits_early (r = receive[int_jun]): 0 DUK
+  assumed: Varnia's rounding of the tax it withholds isn't stated (varnia_mode)
+  assumed: no day in this card is a holiday; business days are Monday to Friday (cal)
+  world: refund_early
+  held: refund_day = 2028-03-20 (refund_on_early), read for 2028-01-15
+  cut 2027-01-01
+credits_early (r = receive[div_sep]): 1 938.38 DUK
+  assumed: Varnia's rounding of the tax it withholds isn't stated (varnia_mode)
+  assumed: no day in this card is a holiday; business days are Monday to Friday (cal)
+  world: refund_early
+  held: refund_day = 2028-03-20 (refund_on_early), read for 2028-01-15
+  cut 2027-01-01
+credits_late (r = receive[div_mar]): 1 601.7 DUK
+  assumed: Varnia's rounding of the tax it withholds isn't stated (varnia_mode)
+  assumed: no day in this card is a holiday; business days are Monday to Friday (cal)
+  world: refund_late
+  held: refund_day = 2028-07-17 (refund_on_late), read for 2028-01-15
+  cut 2027-01-01
+credits_late (r = receive[int_jun]): 0 DUK
+  assumed: Varnia's rounding of the tax it withholds isn't stated (varnia_mode)
+  assumed: no day in this card is a holiday; business days are Monday to Friday (cal)
+  world: refund_late
+  held: refund_day = 2028-07-17 (refund_on_late), read for 2028-01-15
+  cut 2027-01-01
+credits_late (r = receive[div_sep]): 2 455.275 DUK
+  assumed: Varnia's rounding of the tax it withholds isn't stated (varnia_mode)
+  assumed: no day in this card is a holiday; business days are Monday to Friday (cal)
+  world: refund_late
+  held: refund_day = 2028-07-17 (refund_on_late), read for 2028-01-15
+  cut 2027-01-01
+credits_refused (r = receive[div_mar]): 1 601.7 DUK
+  assumed: Varnia's rounding of the tax it withholds isn't stated (varnia_mode)
+  assumed: no day in this card is a holiday; business days are Monday to Friday (cal)
+  world: refund_refused
+  cut 2027-01-01
+credits_refused (r = receive[int_jun]): 0 DUK
+  assumed: Varnia's rounding of the tax it withholds isn't stated (varnia_mode)
+  assumed: no day in this card is a holiday; business days are Monday to Friday (cal)
+  world: refund_refused
+  cut 2027-01-01
+credits_refused (r = receive[div_sep]): 2 455.275 DUK
+  assumed: Varnia's rounding of the tax it withholds isn't stated (varnia_mode)
+  assumed: no day in this card is a holiday; business days are Monday to Friday (cal)
+  world: refund_refused
+  cut 2027-01-01
+gain_2027 (c = convert[cv1]): ?"lot_terms at lot0: no value" (lot_terms[lot0])
+  assumed: Varnia's rounding of the tax it withholds isn't stated (varnia_mode)
+  assumed: no day in this card is a holiday; business days are Monday to Friday (cal)
+  assumed: the bank's rounding of the converted dukats isn't stated (bank_mode)
+  assumed: the lot's acquisition day isn't given: some day before 2027, from the account's assumed opening (lot_terms[lot0])
+  cut 2027-01-01
+items_2027 (r = receive[div_mar]): (2027-03-11, 8 430.00 DUK, 1 601.7 DUK)
+  assumed: Varnia's rounding of the tax it withholds isn't stated (varnia_mode)
+  assumed: no day in this card is a holiday; business days are Monday to Friday (cal)
+  cut 2027-01-01
+items_2027 (r = receive[int_jun]): (2027-06-25, 492.24 DUK, 93.5256 DUK)
+  assumed: Varnia's rounding of the tax it withholds isn't stated (varnia_mode)
+  assumed: no day in this card is a holiday; business days are Monday to Friday (cal)
+  cut 2027-01-01
+items_2027 (r = receive[div_sep]): (2027-09-29, 12 922.50 DUK, 2 455.275 DUK)
+  assumed: Varnia's rounding of the tax it withholds isn't stated (varnia_mode)
+  assumed: no day in this card is a holiday; business days are Monday to Friday (cal)
+  cut 2027-01-01
+lots_used (c = convert[cv1], l = opening_lot[lot0]): ?"lot_terms at lot0: no value" (lot_terms[lot0])
+lots_used (c = convert[cv1], l = lot_in[receive[div_mar]]): ?"lot_terms at lot0: no value" (lot_terms[lot0])
+lots_used (c = convert[cv1], l = lot_in[receive[int_jun]]): ?"lot_terms at lot0: no value" (lot_terms[lot0])
+lots_used (c = convert[cv1], l = lot_in[receive[div_sep]]): ?"lot_terms at lot0: no value" (lot_terms[lot0])
+tax_2027_early: (948.00 DUK, ?"lot_terms at lot0: no value" (lot_terms[lot0]), ?"lot_terms at lot0: no value" (lot_terms[lot0]), 2028-04-30)
+  assumed: Varnia's rounding of the tax it withholds isn't stated (varnia_mode)
+  assumed: no day in this card is a holiday; business days are Monday to Friday (cal)
+  assumed: the bank's rounding of the converted dukats isn't stated (bank_mode)
+  assumed: the lot's acquisition day isn't given: some day before 2027, from the account's assumed opening (lot_terms[lot0])
+  world: refund_early
+  held: refund_day = 2028-03-20 (refund_on_early), read for 2028-01-15
+  cut 2027-01-01
+tax_2027_late: (94.00 DUK, ?"lot_terms at lot0: no value" (lot_terms[lot0]), ?"lot_terms at lot0: no value" (lot_terms[lot0]), 2028-04-30)
+  assumed: Varnia's rounding of the tax it withholds isn't stated (varnia_mode)
+  assumed: no day in this card is a holiday; business days are Monday to Friday (cal)
+  assumed: the bank's rounding of the converted dukats isn't stated (bank_mode)
+  assumed: the lot's acquisition day isn't given: some day before 2027, from the account's assumed opening (lot_terms[lot0])
+  world: refund_late
+  held: refund_day = 2028-07-17 (refund_on_late), read for 2028-01-15
+  cut 2027-01-01
+tax_2027_refused: (94.00 DUK, ?"lot_terms at lot0: no value" (lot_terms[lot0]), ?"lot_terms at lot0: no value" (lot_terms[lot0]), 2028-04-30)
+  assumed: Varnia's rounding of the tax it withholds isn't stated (varnia_mode)
+  assumed: no day in this card is a holiday; business days are Monday to Friday (cal)
+  assumed: the bank's rounding of the converted dukats isn't stated (bank_mode)
+  assumed: the lot's acquisition day isn't given: some day before 2027, from the account's assumed opening (lot_terms[lot0])
+  world: refund_refused
+  cut 2027-01-01
+warning: WARN-UNREAD source credit_act is read by nothing

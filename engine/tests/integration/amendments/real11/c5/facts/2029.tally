@@ -1,0 +1,28 @@
+part facts_2029
+  tally 2
+
+source berlin_contract "Arbeitsvertrag żony, Berlin, 2029-04-28"
+
+version berlin_job
+  cite berlin_contract
+  governs always
+  known 2029-05-01
+  job + [wife_berlin] lives 2029-07-01..
+  opening[konto_eur] = 0 at 2029-05-01 start "nowe konto, saldo zerowe"
+  salary[wife_berlin] = 0 governs 2026-01.. "pensja w euro, nie w złotych"
+  salary_eur = 0 governs 2026-01.. "brak pensji w euro"
+  salary_eur[wife_berlin] = 5200 governs 2029-07.. "§ 4"
+  works_for[wife_berlin] = wife
+
+version fx_2029
+  cite modeller
+  governs always
+  known 2029-05-01
+  fx_eur = 4.3 assumed "kurs przykładowy; do zastąpienia kursem z wymiany" governs 2029-07..
+
+version wife_moves
+  cite household
+  governs always
+  known 2029-05-01
+  residence[wife] = de governs 2029-07.. "wymeldowanie; umowa najmu w Berlinie"
+  replace salary[wife_acme] = 0 governs 2029-07.. "wypowiedzenie; ostatnia pensja za czerwiec"

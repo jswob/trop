@@ -1,0 +1,7 @@
+part asks_mca_a10
+  tally 2
+  note "MC-A diagnostic, not a household text: the joint balance around 2026-01-15 at A-10's cut, to see the second missing fact of A-10's key under the refusal."
+
+ask mca_a10_bal: bal(joint, 2026-01-14), bal(joint, 2026-01-15) law 2026-01-15 as known 2026-01-15
+
+ask mca_a10_explain: explain bal(joint, 2026-01-14) law 2026-01-15 as known 2026-01-15

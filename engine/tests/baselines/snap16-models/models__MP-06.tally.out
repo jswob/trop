@@ -1,0 +1,61 @@
+a_total: 2 000 000.00 EUR
+  law date 2026-10-19, cut 2026-10-19
+b_credit [mp06_total_hardship = *]: (22 000 EUR, 22 000 EUR, 22 000 EUR, 358 000 EUR)
+  given: assessed[b2015] = 22 000 EUR (juhn_examples)
+  law date 2026-10-19, cut 2026-10-19
+b_hardship: 0 EUR
+  law date 2026-10-19, cut 2026-10-19
+b_minimum [mp06_total_hardship = *]: (266 000 EUR, 358 000 EUR)
+  given: assessed[b2015] = 22 000 EUR (juhn_examples)
+  law date 2026-10-19, cut 2026-10-19
+b_total [mp06_total_hardship = *]: (2 400 000.00 EUR, 400 000.00 EUR, 2 000 000.00 EUR, 0.19, 380 000 EUR)
+  law date 2026-10-19, cut 2026-10-19
+c_assessed [mp06_total_hardship = relieved]: 1 190 000 EUR
+  given: earlier[c_earlier, c_later] = true (juhn_examples)
+  given: earlier[c_later, c_earlier] = false (juhn_examples)
+  reading: mp06_total_hardship = relieved
+  law date 2026-10-19, cut 2026-10-19
+c_assessed [mp06_total_hardship = unrelieved]: 1 314 000 EUR
+  given: earlier[c_earlier, c_later] = true (juhn_examples)
+  given: earlier[c_later, c_earlier] = false (juhn_examples)
+  reading: mp06_total_hardship = unrelieved
+  law date 2026-10-19, cut 2026-10-19
+c_credit [mp06_total_hardship = relieved]: (1 064 000 EUR, 1 064 000 EUR, 126 000 EUR, 250 000 EUR, 126 000 EUR)
+  given: earlier[c_earlier, c_later] = true (juhn_examples)
+  given: earlier[c_later, c_earlier] = false (juhn_examples)
+  reading: mp06_total_hardship = relieved
+  law date 2026-10-19, cut 2026-10-19
+c_credit [mp06_total_hardship = unrelieved]: (1 064 000 EUR, 1 064 000 EUR, 339 000 EUR, 250 000 EUR, 250 000 EUR)
+  given: earlier[c_earlier, c_later] = true (juhn_examples)
+  given: earlier[c_later, c_earlier] = false (juhn_examples)
+  reading: mp06_total_hardship = unrelieved
+  law date 2026-10-19, cut 2026-10-19
+c_total [mp06_total_hardship = relieved]: (6 500 000.00 EUR, 400 000.00 EUR, 6 100 000.00 EUR, 0.23, 1 190 000 EUR)
+  given: earlier[c_earlier, c_later] = true (juhn_examples)
+  reading: mp06_total_hardship = relieved
+  law date 2026-10-19, cut 2026-10-19
+c_total [mp06_total_hardship = unrelieved]: (6 500 000.00 EUR, 400 000.00 EUR, 6 100 000.00 EUR, 0.23, 1 403 000 EUR)
+  given: earlier[c_earlier, c_later] = true (juhn_examples)
+  reading: mp06_total_hardship = unrelieved
+  law date 2026-10-19, cut 2026-10-19
+d_hardship: (6 100 000.00 EUR, 0.23, 1 403 000 EUR, 1 140 000 EUR, 263 000 EUR, 50 000 EUR, 1 190 000 EUR)
+  assumed: the example taxes the whole EUR 6.100.000 and deducts no allowance (allowance[unstated])
+  law date 2026-10-19, cut 2026-10-19
+e_first [mp06_total_hardship = *]: (300 000.00 EUR, 0.11, 33 000 EUR)
+  law date 2026-10-19, cut 2026-10-19
+e_increase [mp06_total_hardship = *]: 91 000 EUR
+  law date 2026-10-19, cut 2026-10-19
+e_second [mp06_total_hardship = *]: (1 400 000.00 EUR, 1 000 000.00 EUR, 0.19, 190 000 EUR, 33 000 EUR, 157 000 EUR)
+  law date 2026-10-19, cut 2026-10-19
+e_separate [mp06_total_hardship = *]: 66 000 EUR
+  law date 2026-10-19, cut 2026-10-19
+f_credit [mp06_total_hardship = *]: (54 000 EUR, 52 500 EUR, 0 EUR)
+  law date 2026-10-19, cut 2026-10-19
+f_fict [mp06_total_hardship = *]: (20 000.00 EUR, 180 000.00 EUR, 0.11, 19 800 EUR)
+  law date 2026-10-19, cut 2026-10-19
+f_first [mp06_total_hardship = *]: (180 000.00 EUR, 0.3, 54 000 EUR)
+  law date 2026-10-19, cut 2026-10-19
+f_minimum [mp06_total_hardship = *]: (150 000.00 EUR, 0.11, 16 500 EUR, 16 500 EUR)
+  law date 2026-10-19, cut 2026-10-19
+f_total [mp06_total_hardship = *]: (850 000.00 EUR, 500 000.00 EUR, 350 000.00 EUR, 0.15, 52 500 EUR)
+  law date 2026-10-19, cut 2026-10-19

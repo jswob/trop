@@ -1,0 +1,47 @@
+# L §5.16 Closed forms: "X is one random fact, read directly"; y reads emp through a def, so mean(y) has no
+# closed form (LOAD-RANDOM: the ask states paths N seed S).
+# (Writer 8: empirical is gone (L §2.3); emp is now discrete(eq[k] for k in ks), eq = 1 at both keys, and its
+# value is read as ev = vals[emp], the form L §5.16 gives for "one of n known values drawn with equal weight",
+# e[discrete(1 for k in IDX)]: the same uniforms, and the samples 0 and 2 as before, emp itself now ka or kb.)
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+index ks = [ka, kb]
+input w[k in ks]: num
+input vals[k in ks]: num
+input eq[k in ks]: num
+input lvl: num
+input hz: dist
+input g[k in ks]: dist
+input two: num
+def draw: dist = discrete(w[k] for k in ks) at reader
+def emp: dist = discrete(eq[k] for k in ks) at reader
+def ev: num = vals[emp] at reader
+def y: num = ev * two at reader
+def cd: num = cdf(draw, ka) at reader
+def pd: num = pmf(draw, kb) at reader
+
+version v
+  cite s
+  governs 2026..
+  known 2026-01-01
+  w[ka] = 1
+  w[kb] = 3
+  vals[ka] = 0
+  vals[kb] = 2
+  eq[*] = 1
+  lvl = 0.5
+  hz = ?"which distribution?"
+  g[*] = uniform(0, 1) to 0.01
+  two = 2
+
+ask a: mean(y) law 2026-06-30
+=== expect
+refused: LOAD-RANDOM ...

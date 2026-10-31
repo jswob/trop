@@ -1,0 +1,22 @@
+# L §2.3 (writer 8): wchoice = "each" (§4.4); windows latest and windows earliest are gone, so `windows latest` on an
+# ask line doesn't parse: LOAD-PARSE.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+input d: date
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  d = window(2020-07-01, 2020-07-31)
+
+ask q1: d windows latest
+=== expect
+refused: LOAD-PARSE ...

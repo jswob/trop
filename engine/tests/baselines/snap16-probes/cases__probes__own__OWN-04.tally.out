@@ -1,0 +1,20 @@
+q_co_owned (p = piotr): 180 000 DUK
+  law date 2026-01-01, cut 2026-10-25
+q_co_owned (p = ola): 120 000 DUK
+  law date 2026-01-01, cut 2026-10-25
+q_community (p = ania): 150 000 DUK
+  law date 2026-01-01, cut 2026-10-25
+q_community (p = tomek): 150 000 DUK
+  law date 2026-01-01, cut 2026-10-25
+q_estate (p = halina): 75 000 DUK
+  law date 2026-01-01, cut 2026-10-25
+q_estate (p = ania): 56 250 DUK
+  law date 2026-01-01, cut 2026-10-25
+q_estate (p = piotr): 56 250 DUK
+  law date 2026-01-01, cut 2026-10-25
+q_estate (p = marta): 56 250 DUK
+  law date 2026-01-01, cut 2026-10-25
+q_estate (p = kuba): 56 250 DUK
+  law date 2026-01-01, cut 2026-10-25
+q_separate (p = ania): 300 000 DUK
+  law date 2026-01-01, cut 2026-10-25

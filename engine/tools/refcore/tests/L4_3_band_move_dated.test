@@ -1,0 +1,40 @@
+# MC-X-F12 (writer 9): the move of L4_3_band_move, rate's table governing 2027..: law-dated, so pay states at
+# (L §4.3, §5.14: LOAD-LAWDATE).
+=== m.tally
+model p
+  tally 2
+  on 2027-12-31
+  start 2027-01-01
+  end 2027-12-31
+
+unit PLN: currency minor 0.01
+source act "the act"
+place konto: accounts PLN lives 2020-01-01..
+place world: outside lives 1900-01-01..
+
+input age3: int
+input pay_day: date
+band rate(a: int): money PLN
+
+move pay: transfers
+  on pay_day
+  leg cash from world to konto amount rate(age3)
+
+ask q: bal(konto, 2027-12-31)
+
+version v_act
+  cite act
+  governs 2027..
+  known 2026-12-01
+  rate: [0, 6) = 400.00 PLN "under 6"
+  rate: [6, 18) = 250.00 PLN "6 to 17"
+
+version v_f
+  cite act
+  governs always
+  known 2026-12-01
+  age3 = 3 "the age"
+  pay_day = 2027-02-01
+  opening[konto] = 0 PLN at 2027-01-01 start
+=== expect
+refused: LOAD-LAWDATE pay reads law-dated facts and states no at (m.tally:16)

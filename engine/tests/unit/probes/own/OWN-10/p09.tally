@@ -1,0 +1,96 @@
+model own10_p09
+  tally 2
+  on 2026-10-30
+  start 2026-01-01
+  end 2026-05-31
+  note "OWN-10 P-09: a divorce: a posting relabels all the couple's parts to each spouse by stake (LANGUAGE 3.6, 5.14)."
+  note "The odd step whose remainders tie goes by the owned clause's ties by, here a stated rank of the parties."
+
+source card "Probe card OWN-10 (made up): story and rules"
+
+source bank "The couple's bank: its January 2026 rows (made up)"
+
+unit DUK: currency minor 0.01
+
+kind couples: parties
+
+kind persons: parties
+
+kind divorces: event certain
+  leg what: DUK
+  attr couple: key couples
+
+kind inheritances: transfers
+  attr heir: key parties
+
+kind savings: place DUK min 0
+  owned by arrive ties by odd_step_rank[p]
+  step minor(DUK)
+  takes k for w order (if w in divorces and k.owner == w.couple then 0 else 1)
+
+place sav: savings lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input bank_rows: observed
+
+input divorce_day: date
+
+input odd_step_rank[p in parties]: int
+
+input stake[p in parties, e in parties]: num
+
+input the_couple: key couples
+
+def arrive[m in events, p in parties]: num at m.day
+  note "R1: an inheritance the heir's, any other arrival the couple's; rule 1: a divorce's relabel each spouse's by stake"
+  rule community v card_rules = (if p == ania_tomek then 1 else 0)
+  rule inherited beats community v card_rules = (if p == m.heir then 1 else 0) when m in inheritances
+  rule split_up beats community v card_rules = stake[p, m.couple] when m in divorces
+
+move divorce_sav: divorces
+  on divorce_day
+  at divorce_day
+  reads sav
+  attr couple = the_couple
+  leg what from sav to sav amount bal(sav) of the_couple
+  note "rule 1: on the divorce day, all the couple's parts to the spouses"
+
+ask q_parts: bal(sav, 2026-05-31) of p for p in parties over 2026
+
+ask q_total: bal(sav, 2026-05-31)
+
+version card_cast
+  cite card
+  known 2026-01-01
+  note "the parties: things of the prelude kind parties, of the model's own subkinds"
+  couples + [ania_tomek] lives 2015-06-20..
+  persons + [ania] lives 1988-04-12..
+  persons + [tomek] lives 1986-09-03..
+
+version card_rules
+  cite card
+  governs always
+  known 2026-01-01
+  odd_step_rank[ania] = 1 "rule 2"
+  odd_step_rank[ania_tomek] = 3 "rule 2"
+  odd_step_rank[tomek] = 2 "rule 2"
+  stake = 0 "a party holds no stake in another"
+  stake[ania, ania_tomek] = 0.5 "rule 1: half each"
+  stake[tomek, ania_tomek] = 0.5 "rule 1: half each"
+
+version records_2026_01
+  cite bank
+  governs 2026-01
+  known 2026-02-03
+  bank_rows[r1] = (on: 2026-01-05, kind: transfers, leg cash from world to sav amount 5000.01 DUK) "line 1"
+  bank_rows[r2] = (on: 2026-01-08, kind: inheritances, leg cash from world to sav amount 300.00 DUK, heir: ania) "line 2"
+
+version divorce
+  cite card
+  governs always
+  known 2026-05-20
+  note "the divorce decree: the couple ends on 2026-05-20"
+  replace couples + [ania_tomek] lives 2015-06-20..2026-05-20
+  divorce_day = 2026-05-20 "decree"
+  the_couple = ania_tomek "decree"

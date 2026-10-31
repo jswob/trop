@@ -1,0 +1,334 @@
+model mp04
+  tally 2
+  on 2026-10-19
+  start 2026-01-01
+  end 2026-12-31
+  note "German Zugewinnausgleich: the equalisation of accrued gains at divorce (BGB §§ 1373-1378, 1384) and at death (§§ 1371, 1931)."
+  note "No source gives a date of marriage, divorce or death, so every def runs at the ask's cut, the model's on date. The BGB rows and rules sit in the versions of the acts that enacted them, each read in today's text."
+
+source bgb1896 "Bürgerliches Gesetzbuch vom 18. August 1896, RGBl. 1896 Nr. 21 S. 195, promulgated 24 August 1896: § 1931 (1), § 2303 (1) S. 2. Read in the current text (Stand: zuletzt geändert durch Art. 6 G v. 23.7.2026 I Nr. 226) and in lexetius.com's dated versions" at "https://www.gesetze-im-internet.de/bgb/"
+
+source finanztip "Zugewinnausgleich bei Scheidung: Erklärung & Berechnung (Dr. Britta Beate Schön, Finanztip, Stand: 15. Mai 2026)" at "https://www.finanztip.de/zugewinnausgleich/"
+
+source finanztip_eheerb "Gesetzliche Erbfolge: Ehegatten (Dr. Britta Beate Schön, Finanztip, Stand: 14. Mai 2025)" at "https://www.finanztip.de/ehegattenerbrecht/"
+
+source gleichberg "Gesetz über die Gleichberechtigung von Mann und Frau auf dem Gebiete des bürgerlichen Rechts vom 18. Juni 1957, BGBl. I Nr. 26 S. 609, ausgegeben 21. Juni 1957: BGB §§ 1371, 1373, 1378 (1). Read in the current BGB text" at "https://www.gesetze-im-internet.de/bgb/"
+
+source modeller "The model's own assumptions, each stated with its reason"
+
+source nehelg "Gesetz über die rechtliche Stellung der nichtehelichen Kinder vom 19. August 1969, BGBl. I Nr. 80 S. 1243, ausgegeben 22. August 1969: BGB § 1931 (4). Read in the current BGB text" at "https://www.gesetze-im-internet.de/bgb/"
+
+source sparkasse "Zugewinnausgleich bei Scheidung: Was bleibt nach der Trennung? (sparkasse.de, undated page)" at "https://www.sparkasse.de/pk/ratgeber/familie/ehe-und-partnerschaft/scheidung/zugewinnausgleich.html"
+
+source zugewinnrefg "Gesetz zur Änderung des Zugewinnausgleichs- und Vormundschaftsrechts vom 6. Juli 2009, BGBl. I Nr. 39 S. 1696, ausgegeben 10. Juli 2009: BGB §§ 1374 (1), (3), 1375 (1), 1384. Read in the current BGB text" at "https://www.gesetze-im-internet.de/bgb/"
+
+unit EUR: currency minor 0.01
+
+axis mp04_gain
+  statute "§ 1373: the gain is the amount by which final assets exceed initial assets, so never below zero"
+  negative "Sparkasse, 'Sonderfälle': a negative gain reduces the other spouse's claim"
+
+axis mp04_round
+  half-up "whole euros, rounded half up"
+  down "whole euros, cut"
+
+index couple = [cpl_a, cpl_b1, cpl_b3, cpl_b5]
+
+index death = [c1, c2, c3, c4]
+
+index regime_kind = [zugewinn, trennung]
+
+index spouse = [husband, wife, arndt, betty, carolin, daniel, eva, franka, gero, heike]
+
+index vy = year 1999..2025
+
+input acquired[s in spouse]: money EUR
+  note "Assets acquired during the marriage by inheritance or gift, net of liabilities (§ 1374 (2)), valued when acquired (§ 1376 (1))."
+
+input children_n[d in death]: int
+
+input deceased_gain[d in death]: money EUR
+
+input disclaims[d in death]: bool
+
+input end_year[s in spouse]: key vy
+
+input estate_value[d in death]: money EUR
+
+input final_assets[s in spouse]: money EUR
+
+input final_debts[s in spouse]: money EUR
+
+input indexed[s in spouse]: bool
+  note "Whether the example converts the initial assets by the consumer price index."
+
+input initial_assets[s in spouse]: money EUR
+  note "Assets less liabilities when the regime began; may be negative (§ 1374 (1), (3))."
+
+input parents_n[d in death]: int
+
+input pflichtteil_part: num
+
+input regime_[d in death]: key regime_kind
+
+input spouse_first_order: num
+
+input spouse_one[c in couple]: key spouse
+
+input spouse_second_order: num
+
+input spouse_two[c in couple]: key spouse
+
+input start_year[s in spouse]: key vy
+
+input surplus_part: num
+
+input survivor_gain[d in death]: money EUR
+
+input trennung_max_children: int
+
+input vpi[y in vy]: num
+  note "Verbraucherpreisindex, Statistisches Bundesamt, 2020 = 100."
+
+input zugewinn_quarter: num
+
+def child_amount[d in death]: money EUR at reader
+  note "Whole euros, as the source prints them; the mode is the axis mp04_round."
+  rule base = round(estate_value[d] * child_share[d], 1, mp04_round)
+
+def child_share[d in death]: num = (1 - spouse_share[d]) / children_n[d] at reader
+
+def death_equalisation[d in death]: num EUR at reader
+  note "§ 1371 (2)-(3): a surviving spouse who disclaims claims the equalisation under §§ 1373-1383."
+  rule base v gleichberg_1957 = max(0, deceased_gain[d] - survivor_gain[d]) * surplus_part
+
+def equalisation[c in couple]: num EUR at reader
+  note "§ 1378 (2) S. 1: the claim is limited to the payer's net assets at the end of the regime, which § 1384 as amended in 2009 fixes at the service of the divorce petition."
+  rule base v zugewinn_2009 = max(0, min(equalisation_raw[c], final_net[payer[c]]))
+
+def equalisation_raw[c in couple]: num EUR at reader
+  note "§ 1378 (1): half the surplus of the larger gain over the smaller."
+  rule base v gleichberg_1957 = surplus[c] * surplus_part
+
+def final_net[s in spouse]: money EUR at reader
+  note "§ 1375 (1) with § 1384: assets less liabilities when the divorce petition is served, which may be negative since 2009 (§ 1375 (1) S. 2)."
+  rule base v zugewinn_2009 = final_assets[s] - final_debts[s]
+
+def gain[s in spouse]: money EUR at reader
+  note "§ 1373. Rule negative is the Sparkasse page's 'negativer Zugewinn', which the wording of § 1373 doesn't give."
+  rule base v gleichberg_1957 = max(0, final_net[s] - initial_indexed[s])
+  rule negative beats base v sparkasse_method = final_net[s] - initial_indexed[s] when mp04_gain == negative
+
+def initial_indexed[s in spouse]: money EUR at reader
+  note "Kaufkraftausgleich, from case law the sources don't cite: the initial assets in money of the end year by the consumer price index, in whole euros; the mode is the axis mp04_round."
+  rule base = initial_total[s]
+  rule kaufkraft beats base v finanztip_method = round(initial_total[s] * vpi[end_year[s]] / vpi[start_year[s]], 1, mp04_round) when indexed[s]
+
+def initial_total[s in spouse]: money EUR at reader
+  note "§ 1374 (1)-(3): net assets at the start, which may be negative since 2009 (§ 1374 (3)), plus what was inherited or given during the marriage (§ 1374 (2))."
+  rule base v zugewinn_2009 = initial_assets[s] + acquired[s]
+
+def net_gain_plain[s in spouse]: money EUR = final_net[s] - initial_total[s] at reader
+
+def parent_share[d in death]: num = (1 - spouse_share[d]) / parents_n[d] at reader
+
+def payee[c in couple]: key spouse = if payer[c] == spouse_one[c] then spouse_two[c] else spouse_one[c] at reader
+
+def payer[c in couple]: key spouse = if gain[spouse_one[c]] >= gain[spouse_two[c]] then spouse_one[c] else spouse_two[c] at reader
+
+def small_pflichtteil[d in death]: num EUR at reader
+  note "§ 1371 (2): the compulsory share follows the spouse's unincreased intestate share. It is half that share (§ 2303, as the source states it), taken of the estate after the equalisation claim."
+  rule base v finanztip_eheerb_method = (estate_value[d] - death_equalisation[d]) * spouse_base[d] * pflichtteil_part
+
+def spouse_amount[d in death]: money EUR at reader
+  note "Whole euros, as the source prints them; the mode is the axis mp04_round."
+  rule base = round(estate_value[d] * spouse_share[d], 1, mp04_round)
+
+def spouse_base[d in death]: num at reader
+  note "§ 1931 (1) and (4): the spouse's intestate share before § 1371."
+  rule first_order v bgb_1896 = spouse_first_order when children_n[d] > 0
+  rule second_order v bgb_1896 = spouse_second_order when children_n[d] == 0 and parents_n[d] > 0
+  rule separation beats first_order v nehelg_1969 = 1 / (children_n[d] + 1) when regime_[d] == trennung and children_n[d] <= trennung_max_children
+
+def spouse_share[d in death]: num at reader
+  note "§ 1371 (1): under Zugewinngemeinschaft the intestate share rises by a quarter of the estate."
+  rule base = spouse_base[d]
+  rule increased beats base v gleichberg_1957 = spouse_base[d] + zugewinn_quarter when regime_[d] == zugewinn
+
+def surplus[c in couple]: money EUR = abs(gain[spouse_one[c]] - gain[spouse_two[c]]) at reader
+
+def survivor_gets[d in death]: num EUR at reader
+  note "What the surviving spouse receives: the heir's share, or, on disclaiming under Zugewinngemeinschaft, the equalisation and the small compulsory share (§ 1371 (2)-(3))."
+  rule base = spouse_amount[d]
+  rule disclaimed beats base v gleichberg_1957 = death_equalisation[d] + small_pflichtteil[d] when disclaims[d] and regime_[d] == zugewinn
+  rule disclaimed_sep beats base = ?"A disclaimer under Gütertrennung is not modelled." when disclaims[d] and regime_[d] == trennung
+
+ask a1_gains: gain[husband], gain[wife] law 2026-10-19
+
+ask a2_difference: surplus[cpl_a] law 2026-10-19
+
+ask a3_equalisation: equalisation[cpl_a] law 2026-10-19
+
+ask a4_who_pays: payer[cpl_a], payee[cpl_a] law 2026-10-19
+
+ask b1_arndt_betty: gain[arndt], gain[betty], surplus[cpl_b1], equalisation[cpl_b1] law 2026-10-19
+
+ask b2_carolin: initial_total[carolin] law 2026-10-19
+
+ask b3_daniel_eva: initial_total[daniel], gain[daniel], gain[eva], surplus[cpl_b3], equalisation[cpl_b3] law 2026-10-19
+
+ask b4_franka: net_gain_plain[franka], initial_indexed[franka], gain[franka] law 2026-10-19
+
+ask b5_gero_heike: gain[gero], equalisation_raw[cpl_b5], equalisation[cpl_b5] law 2026-10-19
+
+ask c1_children: spouse_share[c1], child_share[c1] law 2026-10-19
+
+ask c2_parents: spouse_share[c2], parent_share[c2] law 2026-10-19
+
+ask c3_compare: spouse_share[c3], spouse_amount[c3], child_share[c3], child_amount[c3] with regime_[c3] = zugewinn law 2026-10-19
+
+ask c3_separation: spouse_share[c3], spouse_amount[c3], child_share[c3], child_amount[c3] law 2026-10-19
+
+ask c4_accepts: spouse_share[c4], survivor_gets[c4] law 2026-10-19
+
+ask c4_disclaims: death_equalisation[c4], small_pflichtteil[c4], survivor_gets[c4] with disclaims[c4] = true law 2026-10-19
+
+version bgb_1896
+  cite bgb1896
+  governs 1900-01-01..
+  known 1896-08-24
+  note "Known 1896-08-24, the promulgation in the Reichs-Gesetzblatt (de.wikisource.org, Bürgerliches Gesetzbuch: RGBl. 1896 Nr. 21, S. 195-603, Bekanntmachung 24 August 1896; read 2026-10-19). It governs from 1 January 1900, the entry into force."
+  note "§ 1931 (1) and § 2303 (1) S. 2 keep their 1896 wording (lexetius.com, BGB § 1931 in the versions from 1900, 1958 and 1970, and § 2303), so the rows are this act's. The rules spouse_base.first_order and second_order point at this version."
+  pflichtteil_part = 0.5 "§ 2303 (1) S. 2: Der Pflichttheil besteht in der Hälfte des Werthes des gesetzlichen Erbtheils (lexetius.com); Finanztip states the same half"
+  spouse_first_order = 0.25 "§ 1931 (1): neben Verwandten der ersten Ordnung zu einem Viertel"
+  spouse_second_order = 0.5 "§ 1931 (1): neben Verwandten der zweiten Ordnung oder neben Großeltern zur Hälfte"
+
+version gleichberg_1957
+  cite gleichberg
+  governs 1958-07-01..
+  known 1957-06-21
+  note "Known 1957-06-21, the Ausgabetag of BGBl. I 1957 Nr. 26 (dejure.org, BGBl. I 1957, 609; read 2026-10-19). It governs from 1 July 1958, the entry into force; §§ 1371 and 1373-1390 take their Zugewinngemeinschaft wording from it."
+  note "The wording of § 1378 (1) and (2) S. 1 is unchanged from 1958 (lexetius.com, BGB § 1378). The rules gain.base, equalisation_raw.base, death_equalisation.base, spouse_share.increased and survivor_gets.disclaimed point at this version."
+  surplus_part = 0.5 "§ 1378 (1): die Hälfte des Überschusses"
+  zugewinn_quarter = 0.25 "§ 1371 (1): um ein Viertel der Erbschaft"
+
+version nehelg_1969
+  cite nehelg
+  governs 1970-07-01..
+  known 1969-08-22
+  note "Known 1969-08-22, the Ausgabetag of BGBl. I 1969 Nr. 80 (dejure.org, BGBl. I 1969, 1243; read 2026-10-19). It governs from 1 July 1970, when § 1931 (4) first appears (lexetius.com, BGB § 1931, version 1970-2002). The rule spouse_base.separation points at this version."
+  trennung_max_children = 2 "§ 1931 (4): ein oder zwei Kinder"
+
+version zugewinn_2009
+  cite zugewinnrefg
+  governs 2009-09-01..
+  known 2009-07-10
+  note "Known 2009-07-10, the Ausgabetag of BGBl. I 2009 Nr. 39 (dejure.org, BGBl. I 2009, 1696; read 2026-10-19). It governs from 1 September 2009, the date lexetius.com gives for the new wording of §§ 1374, 1375 and 1384."
+  note "No items: the rules initial_total.base (§ 1374 (3)), final_net.base (§ 1375 (1) S. 2, § 1384) and equalisation.base (§ 1378 (2) with § 1384) point at it."
+
+version finanztip_eheerb_method
+  cite finanztip_eheerb
+  governs always
+  known 2025-05-14
+  note "No items: the rule small_pflichtteil.base points at it, for the page's working of the small compulsory share after a disclaimer. Known 2025-05-14, the page's 'Stand: 14. Mai 2025'."
+
+version finanztip_method
+  cite finanztip
+  governs always
+  known 2026-05-15
+  note "The rule initial_indexed.kaufkraft points at this version, for the price-index method of the 'Beispiel Franka', and its VPI table is a published series, not a stipulation. Known 2026-05-15, the page's 'Stand: 15. Mai 2026'."
+  vpi[1999] = 74.5 "VPI table (2020 = 100, Stand: Mai 2026): 1999"
+  vpi[2025] = 121.9 "VPI table (2020 = 100, Stand: Mai 2026): 2025"
+
+version sparkasse_method
+  cite sparkasse
+  governs always
+  known 2026-10-18
+  note "No items: the rule gain.negative points at it, for 'Sonderfälle: Negative Zugewinne'. The page has no date and no updated stamp, so known is the day it was retrieved (§4.5)."
+
+version finanztip_eheerb_examples
+  cite finanztip_eheerb
+  governs always
+  known 2026-10-19
+  note "Examples of a spouse's intestate share at death. Every example dies intestate; none gives a date."
+  note "Known 2026-10-19: the examples are hypothetical, so their stipulations are known from the model's on date, as the model has no start (§4.5)."
+  children_n[c1] = 2 "Beispiel Anton/Berta (Kinder): Christoph und Dagmar"
+  children_n[c2] = 0 "Beispiel Anton/Berta (kinderlos)"
+  children_n[c3] = 3 "Beispiel Gregor/Heike: drei Töchter"
+  children_n[c4] = 2 "Beispielrechnung Elke/Frank: zwei Kinder"
+  deceased_gain[c4] = 200000 "Beispielrechnung Elke/Frank: Elke's gain"
+  disclaims[c1] = false "Beispiel Anton/Berta (Kinder): Berta inherits"
+  disclaims[c2] = false "Beispiel Anton/Berta (kinderlos): Berta inherits"
+  disclaims[c3] = false "Beispiel Gregor/Heike: Heike inherits"
+  disclaims[c4] = false "Beispielrechnung Elke/Frank: Nimmt Frank die Erbschaft an"
+  estate_value[c3] = 1000000 "Beispiel Gregor/Heike: Nachlass 1.000.000 Euro"
+  estate_value[c4] = 200000 assumed "the estate value is not stated; the example implies it from the spouse's half" "Beispielrechnung Elke/Frank"
+  parents_n[c2] = 2 "Beispiel Anton/Berta (kinderlos): both of Anton's parents, Carsten and Doris"
+  regime_[c1] = zugewinn "Beispiel Anton/Berta (Kinder): Zugewinngemeinschaft"
+  regime_[c2] = zugewinn "Beispiel Anton/Berta (kinderlos): Zugewinngemeinschaft"
+  regime_[c3] = trennung "Beispiel Gregor/Heike: Gütertrennung"
+  regime_[c4] = zugewinn "Beispielrechnung Elke/Frank: Zugewinngemeinschaft"
+  survivor_gain[c4] = 0 "Beispielrechnung Elke/Frank: Frank's gain"
+
+version finanztip_examples
+  cite finanztip
+  governs always
+  known 2026-10-19
+  note "Divorce examples."
+  note "Known 2026-10-19: the examples are hypothetical, so their stipulations, the given gain[heike] included, are known from the model's on date (§4.5)."
+  acquired[carolin] = 150000 "Beispiel Carolin: inheritance from her mother during the marriage"
+  acquired[daniel] = 150000 "Beispiel Daniel/Eva: inherited house, value then (2005)"
+  end_year[franka] = 2025 "Beispiel Franka: end of the marriage"
+  final_assets[arndt] = 25000 "Beispiel Arndt/Betty: at the end"
+  final_assets[betty] = 6000 "Beispiel Arndt/Betty: at divorce"
+  final_assets[daniel] = 220000 "Beispiel Daniel/Eva: house value 20 Jahre später"
+  final_assets[eva] = 30000 "Beispiel Daniel/Eva: at the end"
+  final_assets[franka] = 220000 "Beispiel Franka: at the end of the marriage"
+  final_assets[gero] = 20000 "Beispiel Gero/Heike: Endvermögen von 20.000 Euro"
+  final_debts[daniel] = 40000 "Beispiel Daniel/Eva: renovation loan outstanding when the petition arrived (Gesamtschulden von 40.000 Euro)"
+  given gain[heike] = 0 "Beispiel Gero/Heike: Hat Heike keinen Zugewinn erwirtschaftet"
+  indexed[arndt] = false "Beispiel Arndt/Betty: no indexation shown"
+  indexed[betty] = false "Beispiel Arndt/Betty: no indexation shown"
+  indexed[carolin] = false "Beispiel Carolin: no indexation shown"
+  indexed[daniel] = false "Beispiel Daniel/Eva: the example indexes neither the debt nor the inheritance"
+  indexed[eva] = false "Beispiel Daniel/Eva: no indexation shown"
+  indexed[franka] = true "Beispiel Franka: Kaufkraftausgleich"
+  indexed[gero] = false "Beispiel Gero/Heike: no indexation shown"
+  initial_assets[arndt] = 10000 "Beispiel Arndt/Betty: at marriage"
+  initial_assets[betty] = 5000 "Beispiel Arndt/Betty: at marriage"
+  initial_assets[carolin] = 30000 "Beispiel Carolin: at marriage"
+  initial_assets[daniel] = -10000 "Beispiel Daniel/Eva: debts of 10.000 Euro at marriage"
+  initial_assets[eva] = 20000 "Beispiel Daniel/Eva: at marriage"
+  initial_assets[franka] = 20000 "Beispiel Franka: assets at marriage (1999)"
+  initial_assets[gero] = -100000 "Beispiel Gero/Heike: debts of 100.000 Euro at marriage"
+  spouse_one[cpl_b1] = arndt "Beispiel Arndt/Betty"
+  spouse_one[cpl_b3] = daniel "Beispiel Daniel/Eva"
+  spouse_one[cpl_b5] = gero "Beispiel Gero/Heike"
+  spouse_two[cpl_b1] = betty "Beispiel Arndt/Betty"
+  spouse_two[cpl_b3] = eva "Beispiel Daniel/Eva"
+  spouse_two[cpl_b5] = heike "Beispiel Gero/Heike"
+  start_year[franka] = 1999 "Beispiel Franka: year of marriage"
+
+version modeller_defaults
+  cite modeller
+  governs always
+  known 2026-10-19
+  note "Defaults the sources leave unstated. A row a source states for a spouse wins over these, because it states more keys."
+  note "Known 2026-10-19: assumptions that stand for the examples' own facts take the stipulations' date (§4.5)."
+  acquired = 0 assumed "no inheritance or gift during the marriage is mentioned"
+  final_debts = 0 assumed "no liabilities at the end are mentioned"
+
+version sparkasse_example
+  cite sparkasse
+  governs always
+  known 2026-10-19
+  note "Schritt 3 'Beispiel' and Schritt 4."
+  note "Known 2026-10-19: the example is hypothetical, so its stipulations are known from the model's on date (§4.5)."
+  final_assets[husband] = 50000 "Schritt 3, Beispiel: Endvermögen des Ehemanns"
+  final_assets[wife] = 20000 "Schritt 3, Beispiel: Endvermögen der Ehefrau"
+  indexed[husband] = false "Schritt 3, Beispiel: the initial assets are given already indexed ('(indexiert)')"
+  indexed[wife] = false "Schritt 3, Beispiel: the initial assets are given already indexed ('(indexiert)')"
+  initial_assets[husband] = 10000 "Schritt 3, Beispiel: Anfangsvermögen (indexiert)"
+  initial_assets[wife] = 5000 "Schritt 3, Beispiel: Anfangsvermögen (indexiert)"
+  spouse_one[cpl_a] = husband "Schritt 3, Beispiel"
+  spouse_two[cpl_a] = wife "Schritt 3, Beispiel"

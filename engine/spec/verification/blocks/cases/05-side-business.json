@@ -1,0 +1,3162 @@
+{
+ "id": "05-side-business",
+ "says_pl": "Moja działalność poboczna na ryczałcie 12% z VAT, od marca 2026; ZUS społeczny nie, bo mam etat (zbieg tytułów), zdrowotna tak.",
+ "places": [
+  {
+   "id": "klienci",
+   "kind": "outside",
+   "label_pl": "Klienci działalności"
+  },
+  {
+   "id": "dostawcy",
+   "kind": "outside",
+   "label_pl": "Dostawcy działalności"
+  }
+ ],
+ "values": [
+  {
+   "id": "zus.base_full",
+   "kind": "law",
+   "unit": "PLN",
+   "says_pl": "Pełna podstawa ZUS przedsiębiorcy",
+   "entries": [
+    {
+     "from": "2005-01-01",
+     "expr": "grosze(0.6 * p.wage.projected_average)",
+     "source": "ustawa o sus art. 18 ust. 8: 60% prognozowanego przeciętnego wynagrodzenia"
+    }
+   ]
+  },
+  {
+   "id": "zus.base_preferential",
+   "kind": "law",
+   "unit": "PLN",
+   "says_pl": "Preferencyjna podstawa ZUS",
+   "entries": [
+    {
+     "from": "2005-01-01",
+     "expr": "grosze(0.3 * p.wage.minimum)",
+     "source": "ustawa o sus art. 18a: 30% minimalnego wynagrodzenia"
+    }
+   ]
+  },
+  {
+   "id": "zus.rate.pension",
+   "kind": "law",
+   "unit": "1",
+   "says_pl": "Emerytalna",
+   "entries": [
+    {
+     "from": "1999-01-01",
+     "value": 0.1952,
+     "source": "ustawa o sus art. 22 ust. 1 pkt 1"
+    }
+   ]
+  },
+  {
+   "id": "zus.rate.disability",
+   "kind": "law",
+   "unit": "1",
+   "says_pl": "Rentowa",
+   "entries": [
+    {
+     "from": "2012-02-01",
+     "value": 0.08,
+     "source": "ustawa o sus art. 22 ust. 1 pkt 2"
+    }
+   ]
+  },
+  {
+   "id": "zus.rate.sickness",
+   "kind": "law",
+   "unit": "1",
+   "says_pl": "Chorobowa",
+   "entries": [
+    {
+     "from": "1999-01-01",
+     "value": 0.0245,
+     "source": "ustawa o sus art. 22 ust. 1 pkt 3"
+    }
+   ]
+  },
+  {
+   "id": "zus.rate.accident",
+   "kind": "law",
+   "unit": "1",
+   "says_pl": "Wypadkowa (do 9 ubezpieczonych)",
+   "entries": [
+    {
+     "from": "2023-04-01",
+     "value": 0.0167,
+     "source": "ZUS, Działalność gospodarcza 2026"
+    }
+   ]
+  },
+  {
+   "id": "zus.rate.fp",
+   "kind": "law",
+   "unit": "1",
+   "says_pl": "Fundusz Pracy z Funduszem Solidarnościowym",
+   "entries": [
+    {
+     "from": "2019-01-01",
+     "value": 0.0245,
+     "source": "ustawa o promocji zatrudnienia art. 104"
+    }
+   ]
+  },
+  {
+   "id": "zus.maly_plus_share",
+   "kind": "law",
+   "unit": "1",
+   "says_pl": "Mały ZUS Plus: udział przeciętnego dochodu",
+   "entries": [
+    {
+     "from": "2019-01-01",
+     "value": 0.5,
+     "source": "ustawa o sus art. 18c"
+    }
+   ]
+  },
+  {
+   "id": "health.ryczalt_wage",
+   "kind": "law",
+   "unit": "PLN",
+   "says_pl": "Przeciętne wynagrodzenie do zdrowotnej na ryczałcie",
+   "entries": [
+    {
+     "from": "2025-01-01",
+     "value": 8549.18,
+     "source": "GUS, IV kw. 2024 z nagrodami z zysku"
+    },
+    {
+     "from": "2026-01-01",
+     "value": 9228.64,
+     "source": "GUS, IV kw. 2025 z nagrodami z zysku, M.P. 2026 poz. 117"
+    }
+   ]
+  },
+  {
+   "id": "health.minimum_base_share",
+   "kind": "law",
+   "unit": "1",
+   "says_pl": "Minimalna podstawa zdrowotnej jako część płacy minimalnej",
+   "entries": [
+    {
+     "from": "2022-01-01",
+     "value": 1.0,
+     "source": "ustawa o świadczeniach art. 81 ust. 2"
+    },
+    {
+     "from": "2025-01-01",
+     "value": 0.75,
+     "source": "nowelizacja z 2024: 75% w 2025"
+    },
+    {
+     "from": "2026-01-01",
+     "value": 1.0,
+     "source": "100% w 2026 (weto 6 maja 2025)"
+    }
+   ]
+  },
+  {
+   "id": "health.minimum",
+   "kind": "law",
+   "unit": "PLN",
+   "says_pl": "Minimalna składka zdrowotna",
+   "entries": [
+    {
+     "from": "2022-01-01",
+     "expr": "grosze(grosze(p.health.minimum_base_share * p.wage.minimum) * p.health.rate)",
+     "source": "ustawa o świadczeniach art. 81 ust. 2"
+    }
+   ]
+  },
+  {
+   "id": "health.rate_linear",
+   "kind": "law",
+   "unit": "1",
+   "says_pl": "Zdrowotna na liniowym",
+   "entries": [
+    {
+     "from": "2022-01-01",
+     "value": 0.049,
+     "source": "ustawa o świadczeniach art. 79 ust. 1a"
+    }
+   ]
+  },
+  {
+   "id": "health.linear_limit",
+   "kind": "law",
+   "unit": "PLN",
+   "says_pl": "Limit odliczenia zdrowotnej na liniowym",
+   "entries": [
+    {
+     "from": "2025-01-01",
+     "value": 12900,
+     "source": "M.P. 2024 poz. 1084"
+    },
+    {
+     "from": "2026-01-01",
+     "value": 14100,
+     "source": "M.P. 2025 poz. 1274"
+    }
+   ]
+  },
+  {
+   "id": "health.ryczalt_tiers",
+   "kind": "law",
+   "unit": "table:PLN",
+   "says_pl": "Progi zdrowotnej na ryczałcie",
+   "entries": [
+    {
+     "from": "2022-01-01",
+     "value": [
+      [
+       0,
+       0.6
+      ],
+      [
+       60000,
+       1.0
+      ],
+      [
+       300000,
+       1.8
+      ]
+     ],
+     "source": "ustawa o świadczeniach art. 81 ust. 2h"
+    }
+   ]
+  },
+  {
+   "id": "pit.linear_rate",
+   "kind": "law",
+   "unit": "1",
+   "says_pl": "Podatek liniowy",
+   "entries": [
+    {
+     "from": "2004-01-01",
+     "value": 0.19,
+     "source": "ustawa o PIT art. 30c"
+    }
+   ]
+  },
+  {
+   "id": "pit.ryczalt_health_share",
+   "kind": "law",
+   "unit": "1",
+   "says_pl": "Ryczałt: odliczenie połowy zdrowotnej",
+   "entries": [
+    {
+     "from": "2022-01-01",
+     "value": 0.5,
+     "source": "ustawa o ryczałcie art. 11 ust. 1a"
+    }
+   ]
+  },
+  {
+   "id": "pit.car_mixed_share",
+   "kind": "law",
+   "unit": "1",
+   "says_pl": "Samochód mieszany: część kosztów",
+   "entries": [
+    {
+     "from": "2019-01-01",
+     "value": 0.75,
+     "source": "ustawa o PIT art. 23 ust. 1 pkt 46a"
+    }
+   ]
+  },
+  {
+   "id": "vat.rate",
+   "kind": "law",
+   "unit": "1",
+   "says_pl": "Podstawowa stawka VAT",
+   "entries": [
+    {
+     "from": "2011-01-01",
+     "value": 0.23,
+     "source": "ustawa o VAT art. 146ef"
+    }
+   ]
+  },
+  {
+   "id": "vat.car_mixed_share",
+   "kind": "law",
+   "unit": "1",
+   "says_pl": "Samochód mieszany: odliczenie VAT",
+   "entries": [
+    {
+     "from": "2014-04-01",
+     "value": 0.5,
+     "source": "ustawa o VAT art. 86a ust. 1"
+    }
+   ]
+  }
+ ],
+ "templates": [
+  {
+   "id": "dzialalnosc@1",
+   "kind": "earner",
+   "title_pl": "Działalność gospodarcza",
+   "status": "confirmed",
+   "says": "A sole trader's invoices and costs each month; clients pay the net amount by the 10th of the next month.",
+   "params": {
+    "revenue": {
+     "type": "money",
+     "unit": "PLN",
+     "ask_pl": "Ile netto z faktur miesięcznie?"
+    },
+    "costs": {
+     "type": "money",
+     "unit": "PLN",
+     "default": 0,
+     "ask_pl": "Koszty netto miesięcznie?"
+    },
+    "costs_vat": {
+     "type": "money",
+     "unit": "PLN",
+     "default": 0,
+     "ask_pl": "VAT od tych kosztów?"
+    },
+    "car_net": {
+     "type": "money",
+     "unit": "PLN",
+     "default": 0,
+     "ask_pl": "Wydatki na samochód używany też prywatnie, netto?"
+    },
+    "car_vat": {
+     "type": "money",
+     "unit": "PLN",
+     "default": 0,
+     "ask_pl": "VAT od wydatków na samochód?"
+    },
+    "account": {
+     "type": "place",
+     "unit": "PLN",
+     "ask_pl": "Na które konto wpływają faktury?"
+    }
+   },
+   "lines": [
+    {
+     "id": "revenue",
+     "says_pl": "Przychód netto",
+     "every": "month",
+     "unit": "PLN",
+     "value": "in.revenue"
+    },
+    {
+     "id": "costs",
+     "says_pl": "Koszty netto",
+     "every": "month",
+     "unit": "PLN",
+     "value": "in.costs"
+    },
+    {
+     "id": "costs_vat",
+     "says_pl": "VAT od kosztów",
+     "every": "month",
+     "unit": "PLN",
+     "value": "in.costs_vat"
+    },
+    {
+     "id": "car_net",
+     "says_pl": "Samochód netto",
+     "every": "month",
+     "unit": "PLN",
+     "value": "in.car_net"
+    },
+    {
+     "id": "car_vat",
+     "says_pl": "VAT od samochodu",
+     "every": "month",
+     "unit": "PLN",
+     "value": "in.car_vat"
+    },
+    {
+     "id": "active",
+     "says_pl": "Miesiąc działalności",
+     "every": "month",
+     "unit": "1",
+     "value": "1"
+    },
+    {
+     "id": "revenue.cash",
+     "says_pl": "Klient płaci fakturę netto",
+     "every": "month",
+     "on": "next_month:10",
+     "unit": "PLN",
+     "value": "v('revenue')",
+     "pay": {
+      "from": "klienci",
+      "to": "in.account",
+      "match": "faktury"
+     }
+    },
+    {
+     "id": "costs.cash",
+     "says_pl": "Płacimy za zakupy z VAT",
+     "every": "month",
+     "on": "day:15",
+     "unit": "PLN",
+     "value": "v('costs') + v('costs_vat') + v('car_net') + v('car_vat')",
+     "pay": {
+      "from": "in.account",
+      "to": "dostawcy"
+     }
+    }
+   ]
+  },
+  {
+   "id": "jdg_pl@2026",
+   "kind": "law",
+   "title_pl": "Działalność (JDG): ZUS, zdrowotna i PIT",
+   "status": "tested",
+   "says": "Each month the business pays ZUS and health and an income-tax advance worked out from the year so far; liniowy and ryczałt settle the year by 30 April, the scale goes into the annual return.",
+   "sources": [
+    "ustawa o sus art. 18, 18a, 18c, 22",
+    "ustawa o świadczeniach art. 79, 81",
+    "ustawa o PIT art. 27, 30c, 44",
+    "ustawa o ryczałcie art. 11, 12, 21"
+   ],
+   "params": {
+    "business": {
+     "type": "instance",
+     "attach": true,
+     "needs": {
+      "revenue": "PLN",
+      "costs": "PLN",
+      "costs_vat": "PLN",
+      "car_net": "PLN",
+      "car_vat": "PLN",
+      "active": "1"
+     },
+     "ask_pl": "Która działalność?"
+    },
+    "account": {
+     "type": "place",
+     "unit": "PLN",
+     "ask_pl": "Z którego konta płacimy?"
+    },
+    "form": {
+     "type": "enum",
+     "values": [
+      "skala",
+      "liniowy",
+      "ryczalt"
+     ],
+     "ask_pl": "Forma opodatkowania: skala, liniowy czy ryczałt?"
+    },
+    "ryczalt_rate": {
+     "type": "number",
+     "default": 0.12,
+     "ask_pl": "Stawka ryczałtu? (programowanie: 12%)"
+    },
+    "zus_stage": {
+     "type": "enum",
+     "values": [
+      "zbieg",
+      "start",
+      "preferential",
+      "maly_plus",
+      "full"
+     ],
+     "ask_pl": "Etap ZUS: zbieg z etatem (tylko zdrowotna), ulga na start, preferencyjny, Mały ZUS Plus czy pełny?"
+    },
+    "maly_plus_income": {
+     "type": "money",
+     "unit": "PLN",
+     "default": 0,
+     "ask_pl": "Mały ZUS Plus: dochód z zeszłego roku?"
+    },
+    "maly_plus_days": {
+     "type": "number",
+     "default": 365,
+     "ask_pl": "Ile dni działalności w zeszłym roku?"
+    },
+    "ryczalt_tier": {
+     "type": "enum",
+     "values": [
+      "so_far",
+      "last_year"
+     ],
+     "default": "so_far",
+     "ask_pl": "Zdrowotna na ryczałcie: według przychodu od początku roku czy zeszłorocznego?"
+    },
+    "last_year_revenue": {
+     "type": "money",
+     "unit": "PLN",
+     "default": 0,
+     "ask_pl": "Zeszłoroczny przychód pomniejszony o składki społeczne?"
+    },
+    "sickness": {
+     "type": "bool",
+     "default": true,
+     "ask_pl": "Czy płacisz dobrowolne chorobowe?"
+    },
+    "vat_payer": {
+     "type": "bool",
+     "default": true,
+     "ask_pl": "Czy jesteś czynnym podatnikiem VAT?"
+    }
+   },
+   "lines": [
+    {
+     "id": "zus.base",
+     "says_pl": "Podstawa ZUS",
+     "every": "month",
+     "unit": "PLN",
+     "value": "case(in.zus_stage, 'zbieg', 0, 'start', 0, 'preferential', p.zus.base_preferential, 'maly_plus', min(p.zus.base_full, max(p.zus.base_preferential, grosze(p.zus.maly_plus_share * in.maly_plus_income / in.maly_plus_days * 30))), 'full', p.zus.base_full)"
+    },
+    {
+     "id": "zus.pension",
+     "says_pl": "Emerytalna",
+     "every": "month",
+     "unit": "PLN",
+     "value": "grosze(v('zus.base') * p.zus.rate.pension)"
+    },
+    {
+     "id": "zus.disability",
+     "says_pl": "Rentowa",
+     "every": "month",
+     "unit": "PLN",
+     "value": "grosze(v('zus.base') * p.zus.rate.disability)"
+    },
+    {
+     "id": "zus.sickness",
+     "says_pl": "Chorobowa (dobrowolna)",
+     "every": "month",
+     "unit": "PLN",
+     "value": "if(in.sickness, grosze(v('zus.base') * p.zus.rate.sickness), 0)"
+    },
+    {
+     "id": "zus.accident",
+     "says_pl": "Wypadkowa",
+     "every": "month",
+     "unit": "PLN",
+     "value": "grosze(v('zus.base') * p.zus.rate.accident)"
+    },
+    {
+     "id": "zus.social",
+     "says_pl": "Społeczne razem",
+     "every": "month",
+     "unit": "PLN",
+     "value": "grosze(v('zus.pension') + v('zus.disability') + v('zus.sickness') + v('zus.accident'))"
+    },
+    {
+     "id": "zus.fp",
+     "says_pl": "Fundusz Pracy",
+     "every": "month",
+     "unit": "PLN",
+     "value": "if(v('zus.base') >= p.wage.minimum, grosze(v('zus.base') * p.zus.rate.fp), 0)"
+    },
+    {
+     "id": "zus.pay",
+     "says_pl": "Do ZUS: społeczne i FP",
+     "every": "month",
+     "on": "next_month:20",
+     "unit": "PLN",
+     "value": "v('zus.social') + v('zus.fp')",
+     "pay": {
+      "from": "in.account",
+      "to": "zus",
+      "match": "zus"
+     },
+     "bd": "next"
+    },
+    {
+     "id": "car.pit",
+     "says_pl": "Samochód w kosztach (75%)",
+     "every": "month",
+     "unit": "PLN",
+     "value": "grosze(p.pit.car_mixed_share * (v('car_net', in.business) + v('car_vat', in.business) - if(in.vat_payer, grosze(p.vat.car_mixed_share * v('car_vat', in.business)), 0)))"
+    },
+    {
+     "id": "costs",
+     "says_pl": "Koszty podatkowe",
+     "every": "month",
+     "unit": "PLN",
+     "value": "v('costs', in.business) + if(in.vat_payer, 0, v('costs_vat', in.business)) + v('car.pit')"
+    },
+    {
+     "id": "income",
+     "says_pl": "Dochód",
+     "every": "month",
+     "unit": "PLN",
+     "value": "v('revenue', in.business) - v('costs') - v('zus.fp') - v('zus.social')"
+    },
+    {
+     "id": "health.base",
+     "says_pl": "Podstawa zdrowotnej (skala, liniowy)",
+     "every": "month",
+     "gate": "in.form != 'ryczalt'",
+     "unit": "PLN",
+     "value": "max(0, ytd('income') - ytd_before('health.base'))"
+    },
+    {
+     "id": "health",
+     "says_pl": "Zdrowotna",
+     "every": "month",
+     "unit": "PLN",
+     "value": "case(in.form, 'skala', grosze(max(p.health.minimum, v('health.base') * p.health.rate)), 'liniowy', grosze(max(p.health.minimum, v('health.base') * p.health.rate_linear)), 'ryczalt', grosze(grosze(p.health.ryczalt_wage * band(p.health.ryczalt_tiers, if(in.ryczalt_tier = 'last_year', in.last_year_revenue, ytd('revenue', in.business) - ytd('zus.social')))) * p.health.rate))"
+    },
+    {
+     "id": "health.pay",
+     "says_pl": "Zdrowotna na ryczałcie do 20. następnego miesiąca",
+     "every": "month",
+     "gate": "in.form = 'ryczalt'",
+     "on": "next_month:20",
+     "unit": "PLN",
+     "value": "v('health')",
+     "pay": {
+      "from": "in.account",
+      "to": "zus",
+      "match": "zus"
+     },
+     "bd": "next"
+    },
+    {
+     "id": "health.pay_later",
+     "says_pl": "Zdrowotna na skali i liniowym miesiąc później",
+     "every": "month",
+     "gate": "in.form != 'ryczalt'",
+     "on": "month_after_next:20",
+     "unit": "PLN",
+     "value": "v('health')",
+     "pay": {
+      "from": "in.account",
+      "to": "zus",
+      "match": "zus"
+     },
+     "bd": "next"
+    },
+    {
+     "id": "tax.base",
+     "says_pl": "Podstawa podatku od początku roku",
+     "every": "month",
+     "unit": "PLN",
+     "value": "case(in.form, 'skala', zl(max(0, ytd('income'))), 'liniowy', zl(max(0, ytd('income') - min(ytd('health'), p.health.linear_limit))), 'ryczalt', zl(max(0, ytd('revenue', in.business) - ytd('zus.social') - p.pit.ryczalt_health_share * ytd('health'))))"
+    },
+    {
+     "id": "tax.ytd",
+     "says_pl": "Podatek od początku roku",
+     "every": "month",
+     "unit": "PLN",
+     "value": "case(in.form, 'skala', max(0, brackets(p.pit.scale, v('tax.base')) - p.pit.reduction), 'liniowy', p.pit.linear_rate * v('tax.base'), 'ryczalt', in.ryczalt_rate * v('tax.base'))"
+    },
+    {
+     "id": "pit.advance",
+     "says_pl": "Zaliczka PIT",
+     "every": "month",
+     "on": "next_month:20",
+     "unit": "PLN",
+     "value": "max(0, zl(v('tax.ytd')) - ytd_before('pit.advance'))",
+     "pay": {
+      "from": "in.account",
+      "to": "urzad_skarbowy",
+      "match": "pit_firma"
+     },
+     "bd": "next"
+    },
+    {
+     "id": "pit.settle",
+     "says_pl": "Rozliczenie roku (liniowy, ryczałt) do 30 kwietnia",
+     "every": "year",
+     "gate": "in.form != 'skala'",
+     "on": "next_year:04-30",
+     "unit": "PLN",
+     "value": "zl(last('tax.ytd')) - total('pit.advance')",
+     "pay": {
+      "from": "in.account",
+      "to": "urzad_skarbowy",
+      "reverse": true,
+      "match": "pit_firma"
+     },
+     "bd": "next"
+    },
+    {
+     "id": "health.settle",
+     "says_pl": "Ryczałt: zdrowotna za rok według progu całego roku, do 20 maja",
+     "every": "year",
+     "gate": "in.form = 'ryczalt'",
+     "on": "next_year:05-20",
+     "unit": "PLN",
+     "value": "total('active', in.business) * grosze(grosze(p.health.ryczalt_wage * band(p.health.ryczalt_tiers, total('revenue', in.business) - total('zus.social'))) * p.health.rate) - total('health')",
+     "pay": {
+      "from": "in.account",
+      "to": "zus",
+      "reverse": true,
+      "match": "zus"
+     },
+     "bd": "next"
+    }
+   ],
+   "tests": [
+    {
+     "id": "zus_full",
+     "says": "Pełny ZUS z chorobowym: społeczne 1 788,29, z FP 1 926,76",
+     "source": "ZUS, Składki przedsiębiorców w 2026 roku",
+     "args": {
+      "business": "t_biz",
+      "account": "konto",
+      "form": "liniowy",
+      "zus_stage": "full"
+     },
+     "others": [
+      {
+       "id": "t_biz",
+       "template": "dzialalnosc@1",
+       "args": {
+        "revenue": 20000,
+        "account": "konto"
+       }
+      }
+     ],
+     "year": 2026,
+     "expect": [
+      {
+       "line": "zus.social",
+       "period": "2026-01",
+       "value": 1788.29
+      },
+      {
+       "line": "zus.pay",
+       "period": "2026-01",
+       "value": 1926.76
+      }
+     ],
+     "collected_by": "research agent (tax prototype)"
+    },
+    {
+     "id": "zus_pref",
+     "says": "Preferencyjny ZUS bez chorobowego: 420,86",
+     "source": "ZUS, Składki przedsiębiorców w 2026 roku",
+     "args": {
+      "business": "t_biz",
+      "account": "konto",
+      "form": "liniowy",
+      "zus_stage": "preferential",
+      "sickness": false
+     },
+     "others": [
+      {
+       "id": "t_biz",
+       "template": "dzialalnosc@1",
+       "args": {
+        "revenue": 20000,
+        "account": "konto"
+       }
+      }
+     ],
+     "year": 2026,
+     "expect": [
+      {
+       "line": "zus.pay",
+       "period": "2026-01",
+       "value": 420.86
+      }
+     ],
+     "collected_by": "research agent (tax prototype)"
+    },
+    {
+     "id": "maly_plus",
+     "says": "Mały ZUS Plus przy dochodzie 80 000: 1 040,21",
+     "source": "ifirma, składki ZUS 2026",
+     "args": {
+      "business": "t_biz",
+      "account": "konto",
+      "form": "liniowy",
+      "zus_stage": "maly_plus",
+      "maly_plus_income": 80000
+     },
+     "others": [
+      {
+       "id": "t_biz",
+       "template": "dzialalnosc@1",
+       "args": {
+        "revenue": 20000,
+        "account": "konto"
+       }
+      }
+     ],
+     "year": 2026,
+     "expect": [
+      {
+       "line": "zus.pay",
+       "period": "2026-01",
+       "value": 1040.21
+      }
+     ],
+     "collected_by": "research agent (tax prototype)"
+    },
+    {
+     "id": "health_min",
+     "says": "Minimalna zdrowotna na skali: 432,54",
+     "source": "ZUS, minimalna składka zdrowotna 2026",
+     "args": {
+      "business": "t_biz",
+      "account": "konto",
+      "form": "skala",
+      "zus_stage": "start"
+     },
+     "others": [
+      {
+       "id": "t_biz",
+       "template": "dzialalnosc@1",
+       "args": {
+        "revenue": 1000,
+        "account": "konto"
+       }
+      }
+     ],
+     "year": 2026,
+     "expect": [
+      {
+       "line": "health",
+       "period": "2026-01",
+       "value": 432.54
+      }
+     ],
+     "collected_by": "research agent (tax prototype)"
+    },
+    {
+     "id": "health_scale_lin",
+     "says": "Zdrowotna przy dochodzie 10 000: skala 900, liniowy 490",
+     "source": "ZUS, Składki przedsiębiorców w 2026 roku",
+     "args": {
+      "business": "t_biz",
+      "account": "konto",
+      "form": "liniowy",
+      "zus_stage": "start"
+     },
+     "others": [
+      {
+       "id": "t_biz",
+       "template": "dzialalnosc@1",
+       "args": {
+        "revenue": 10000,
+        "account": "konto"
+       }
+      }
+     ],
+     "year": 2026,
+     "expect": [
+      {
+       "line": "health",
+       "period": "2026-01",
+       "value": 490
+      }
+     ],
+     "collected_by": "research agent (tax prototype)"
+    },
+    {
+     "id": "ryczalt_tiers",
+     "says": "Ryczałt: zdrowotna 498,35 / 830,58 / 1 495,04",
+     "source": "ZUS, Składki przedsiębiorców w 2026 roku",
+     "args": {
+      "business": "t_biz",
+      "account": "konto",
+      "form": "ryczalt",
+      "zus_stage": "full"
+     },
+     "others": [
+      {
+       "id": "t_biz",
+       "template": "dzialalnosc@1",
+       "args": {
+        "revenue": 20000,
+        "account": "konto"
+       }
+      }
+     ],
+     "year": 2026,
+     "expect": [
+      {
+       "line": "health",
+       "period": "2026-01",
+       "value": 498.35
+      },
+      {
+       "line": "health",
+       "period": "2026-12",
+       "value": 830.58
+      }
+     ],
+     "collected_by": "research agent (tax prototype)"
+    },
+    {
+     "id": "ryczalt_june",
+     "says": "Ryczałt 13 000/mies.: próg 60 000 przekroczony w czerwcu, dopłata za styczeń–maj 1 661,15",
+     "source": "poradnikprzedsiebiorcy.pl, zdrowotna na ryczałcie 2026",
+     "args": {
+      "business": "t_biz",
+      "account": "konto",
+      "form": "ryczalt",
+      "zus_stage": "full"
+     },
+     "others": [
+      {
+       "id": "t_biz",
+       "template": "dzialalnosc@1",
+       "args": {
+        "revenue": 13000,
+        "account": "konto"
+       }
+      }
+     ],
+     "year": 2026,
+     "expect": [
+      {
+       "line": "health.settle",
+       "period": "2026",
+       "value": 1661.15
+      }
+     ],
+     "collected_by": "research agent (tax prototype)"
+    },
+    {
+     "id": "ryczalt_tax",
+     "says": "Ryczałt 12%, 15 000/mies., pełny ZUS: zaliczka w grudniu 1 535,57",
+     "source": "Fakturownia, kalkulator zysku 2026 (bez zaokrąglenia do zł)",
+     "args": {
+      "business": "t_biz",
+      "account": "konto",
+      "form": "ryczalt",
+      "zus_stage": "full"
+     },
+     "others": [
+      {
+       "id": "t_biz",
+       "template": "dzialalnosc@1",
+       "args": {
+        "revenue": 15000,
+        "account": "konto"
+       }
+      }
+     ],
+     "year": 2026,
+     "expect": [
+      {
+       "line": "pit.advance",
+       "period": "2026-12",
+       "value": 1535.57,
+       "tol": 1
+      }
+     ],
+     "collected_by": "research agent (tax prototype)"
+    },
+    {
+     "id": "dates_ryczalt",
+     "says": "Ryczałt: ZUS, zdrowotna i zaliczka do 20. następnego miesiąca; rozliczenie roku do 30 kwietnia, zdrowotna roczna do 20 maja",
+     "source": "ustawa o sus art. 47 ust. 1 pkt 3; ustawa o ryczałcie art. 21 ust. 1 i 1a; ustawa o świadczeniach art. 81 ust. 2h; Ordynacja podatkowa art. 12 § 5: termin w dzień wolny przesuwa się na następny dzień roboczy",
+     "collected_by": "author",
+     "args": {
+      "business": "t_biz",
+      "account": "konto",
+      "form": "ryczalt",
+      "zus_stage": "full"
+     },
+     "others": [
+      {
+       "id": "t_biz",
+       "template": "dzialalnosc@1",
+       "args": {
+        "revenue": 13000,
+        "account": "konto"
+       }
+      }
+     ],
+     "year": 2026,
+     "expect": [
+      {
+       "line": "zus.pay",
+       "period": "2026-01",
+       "date": "2026-02-20"
+      },
+      {
+       "line": "health.pay",
+       "period": "2026-01",
+       "date": "2026-02-20"
+      },
+      {
+       "line": "pit.advance",
+       "period": "2026-02",
+       "date": "2026-03-20"
+      },
+      {
+       "line": "health.settle",
+       "period": "2026",
+       "date": "2027-05-20"
+      },
+      {
+       "line": "pit.settle",
+       "period": "2026",
+       "value": 0
+      }
+     ]
+    },
+    {
+     "id": "skala_health_later",
+     "says": "Skala, dochód 10 000: zdrowotna 900 płacona miesiąc później (za styczeń do 20 marca)",
+     "source": "ZUS, Składki przedsiębiorców w 2026 roku; ustawa o świadczeniach art. 81 ust. 2b",
+     "collected_by": "research agent (tax prototype)",
+     "args": {
+      "business": "t_biz",
+      "account": "konto",
+      "form": "skala",
+      "zus_stage": "start"
+     },
+     "others": [
+      {
+       "id": "t_biz",
+       "template": "dzialalnosc@1",
+       "args": {
+        "revenue": 10000,
+        "account": "konto"
+       }
+      }
+     ],
+     "year": 2026,
+     "expect": [
+      {
+       "line": "health",
+       "period": "2026-01",
+       "value": 900
+      },
+      {
+       "line": "health.pay_later",
+       "period": "2026-01",
+       "date": "2026-03-20"
+      }
+     ]
+    },
+    {
+     "id": "zbieg_no_vat",
+     "says": "Zbieg z etatem, bez VAT, liniowy: społeczne 0, VAT od kosztów w kosztach, zdrowotna nie niższa niż minimalna 432,54",
+     "source": "ustawa o sus art. 9 ust. 1 (zbieg tytułów); ustawa o PIT art. 23 ust. 1 pkt 43",
+     "collected_by": "author",
+     "args": {
+      "business": "t_biz",
+      "account": "konto",
+      "form": "liniowy",
+      "zus_stage": "zbieg",
+      "vat_payer": false
+     },
+     "others": [
+      {
+       "id": "t_biz",
+       "template": "dzialalnosc@1",
+       "args": {
+        "revenue": 8000,
+        "costs": 1000,
+        "costs_vat": 230,
+        "account": "konto"
+       }
+      }
+     ],
+     "year": 2026,
+     "expect": [
+      {
+       "line": "zus.pay",
+       "period": "2026-01",
+       "value": 0
+      },
+      {
+       "line": "costs",
+       "period": "2026-01",
+       "value": 1230
+      },
+      {
+       "line": "health",
+       "period": "2026-01",
+       "value": 432.54
+      }
+     ]
+    },
+    {
+     "id": "ryczalt_last_year",
+     "says": "Ryczałt, próg zdrowotnej z zeszłorocznego przychodu 218 540,52: 830,58 od stycznia",
+     "source": "tax prototype: przypadek policzony przez agenta badawczego (nieopublikowany), zgodny z reference.ts",
+     "collected_by": "research agent (tax prototype)",
+     "args": {
+      "business": "t_biz",
+      "account": "konto",
+      "form": "ryczalt",
+      "zus_stage": "full",
+      "ryczalt_tier": "last_year",
+      "last_year_revenue": 218540.52
+     },
+     "others": [
+      {
+       "id": "t_biz",
+       "template": "dzialalnosc@1",
+       "args": {
+        "revenue": 20000,
+        "costs": 1000,
+        "account": "konto"
+       }
+      }
+     ],
+     "year": 2026,
+     "expect": [
+      {
+       "line": "health",
+       "period": "2026-01",
+       "value": 830.58
+      }
+     ]
+    },
+    {
+     "id": "oracle_lumpy_skala_full",
+     "says": "Nierówny rok z miesiącem straty i autem mieszanym: skala, full, VAT",
+     "source": "reference.ts z prototypu podatkowego: niezależna implementacja pętlami, pisana bez wglądu w szablony",
+     "collected_by": "oracle",
+     "args": {
+      "business": "t_biz",
+      "account": "konto",
+      "form": "skala",
+      "zus_stage": "full",
+      "sickness": true,
+      "vat_payer": true
+     },
+     "others": [
+      {
+       "id": "t_biz",
+       "template": "dzialalnosc@1",
+       "args": {
+        "revenue": {
+         "dated": [
+          {
+           "from": "2026-01-01",
+           "value": 5000
+          },
+          {
+           "from": "2026-02-01",
+           "value": 30000
+          },
+          {
+           "from": "2026-03-01",
+           "value": 0
+          },
+          {
+           "from": "2026-04-01",
+           "value": 12000
+          },
+          {
+           "from": "2026-05-01",
+           "value": 25000
+          },
+          {
+           "from": "2026-06-01",
+           "value": 3000
+          },
+          {
+           "from": "2026-07-01",
+           "value": 40000
+          },
+          {
+           "from": "2026-08-01",
+           "value": 8000
+          },
+          {
+           "from": "2026-09-01",
+           "value": 0
+          },
+          {
+           "from": "2026-10-01",
+           "value": 15000
+          },
+          {
+           "from": "2026-11-01",
+           "value": 60000
+          },
+          {
+           "from": "2026-12-01",
+           "value": 2000
+          }
+         ]
+        },
+        "costs": {
+         "dated": [
+          {
+           "from": "2026-01-01",
+           "value": 800
+          },
+          {
+           "from": "2026-02-01",
+           "value": 1200
+          },
+          {
+           "from": "2026-03-01",
+           "value": 9000
+          },
+          {
+           "from": "2026-04-01",
+           "value": 600
+          },
+          {
+           "from": "2026-05-01",
+           "value": 700
+          },
+          {
+           "from": "2026-06-01",
+           "value": 400
+          },
+          {
+           "from": "2026-07-01",
+           "value": 2500
+          },
+          {
+           "from": "2026-08-01",
+           "value": 300
+          },
+          {
+           "from": "2026-09-01",
+           "value": 300
+          },
+          {
+           "from": "2026-10-01",
+           "value": 500
+          },
+          {
+           "from": "2026-11-01",
+           "value": 6000
+          },
+          {
+           "from": "2026-12-01",
+           "value": 200
+          }
+         ]
+        },
+        "costs_vat": {
+         "dated": [
+          {
+           "from": "2026-01-01",
+           "value": 184
+          },
+          {
+           "from": "2026-02-01",
+           "value": 276
+          },
+          {
+           "from": "2026-03-01",
+           "value": 2070
+          },
+          {
+           "from": "2026-04-01",
+           "value": 138
+          },
+          {
+           "from": "2026-05-01",
+           "value": 161
+          },
+          {
+           "from": "2026-06-01",
+           "value": 92
+          },
+          {
+           "from": "2026-07-01",
+           "value": 575
+          },
+          {
+           "from": "2026-08-01",
+           "value": 69
+          },
+          {
+           "from": "2026-09-01",
+           "value": 69
+          },
+          {
+           "from": "2026-10-01",
+           "value": 115
+          },
+          {
+           "from": "2026-11-01",
+           "value": 1380
+          },
+          {
+           "from": "2026-12-01",
+           "value": 46
+          }
+         ]
+        },
+        "car_net": {
+         "dated": [
+          {
+           "from": "2026-01-01",
+           "value": 700
+          },
+          {
+           "from": "2026-02-01",
+           "value": 0
+          },
+          {
+           "from": "2026-03-01",
+           "value": 0
+          },
+          {
+           "from": "2026-04-01",
+           "value": 700
+          },
+          {
+           "from": "2026-05-01",
+           "value": 0
+          },
+          {
+           "from": "2026-06-01",
+           "value": 0
+          },
+          {
+           "from": "2026-07-01",
+           "value": 700
+          },
+          {
+           "from": "2026-08-01",
+           "value": 0
+          },
+          {
+           "from": "2026-09-01",
+           "value": 0
+          },
+          {
+           "from": "2026-10-01",
+           "value": 700
+          },
+          {
+           "from": "2026-11-01",
+           "value": 0
+          },
+          {
+           "from": "2026-12-01",
+           "value": 0
+          }
+         ]
+        },
+        "car_vat": {
+         "dated": [
+          {
+           "from": "2026-01-01",
+           "value": 161
+          },
+          {
+           "from": "2026-02-01",
+           "value": 0
+          },
+          {
+           "from": "2026-03-01",
+           "value": 0
+          },
+          {
+           "from": "2026-04-01",
+           "value": 161
+          },
+          {
+           "from": "2026-05-01",
+           "value": 0
+          },
+          {
+           "from": "2026-06-01",
+           "value": 0
+          },
+          {
+           "from": "2026-07-01",
+           "value": 161
+          },
+          {
+           "from": "2026-08-01",
+           "value": 0
+          },
+          {
+           "from": "2026-09-01",
+           "value": 0
+          },
+          {
+           "from": "2026-10-01",
+           "value": 161
+          },
+          {
+           "from": "2026-11-01",
+           "value": 0
+          },
+          {
+           "from": "2026-12-01",
+           "value": 0
+          }
+         ]
+        },
+        "account": "konto"
+       }
+      }
+     ],
+     "year": 2026,
+     "expect": [
+      {
+       "line": "income",
+       "period": "2026-01",
+       "value": 1687.86
+      },
+      {
+       "line": "health",
+       "period": "2026-01",
+       "value": 432.54
+      },
+      {
+       "line": "tax.base",
+       "period": "2026-01",
+       "value": 1688
+      },
+      {
+       "line": "pit.advance",
+       "period": "2026-01",
+       "value": 0
+      },
+      {
+       "line": "income",
+       "period": "2026-03",
+       "value": -10926.76
+      },
+      {
+       "line": "health",
+       "period": "2026-03",
+       "value": 432.54
+      },
+      {
+       "line": "tax.base",
+       "period": "2026-03",
+       "value": 17634
+      },
+      {
+       "line": "pit.advance",
+       "period": "2026-03",
+       "value": 0
+      },
+      {
+       "line": "income",
+       "period": "2026-07",
+       "value": 34987.86
+      },
+      {
+       "line": "health",
+       "period": "2026-07",
+       "value": 3148.91
+      },
+      {
+       "line": "tax.base",
+       "period": "2026-07",
+       "value": 84557
+      },
+      {
+       "line": "pit.advance",
+       "period": "2026-07",
+       "value": 4199
+      },
+      {
+       "line": "income",
+       "period": "2026-11",
+       "value": 52073.24
+      },
+      {
+       "line": "health",
+       "period": "2026-11",
+       "value": 4686.59
+      },
+      {
+       "line": "tax.base",
+       "period": "2026-11",
+       "value": 152164
+      },
+      {
+       "line": "pit.advance",
+       "period": "2026-11",
+       "value": 12681
+      },
+      {
+       "line": "income",
+       "period": "2026-12",
+       "value": -126.76
+      },
+      {
+       "line": "health",
+       "period": "2026-12",
+       "value": 432.54
+      },
+      {
+       "line": "tax.base",
+       "period": "2026-12",
+       "value": 152037
+      },
+      {
+       "line": "pit.advance",
+       "period": "2026-12",
+       "value": 0
+      },
+      {
+       "line": "costs",
+       "period": "2026-01",
+       "value": 1385.38
+      },
+      {
+       "line": "zus.fp",
+       "period": "2026-01",
+       "value": 138.47
+      }
+     ]
+    },
+    {
+     "id": "oracle_lumpy_liniowy_full",
+     "says": "Nierówny rok z miesiącem straty i autem mieszanym: liniowy, full, VAT",
+     "source": "reference.ts z prototypu podatkowego: niezależna implementacja pętlami, pisana bez wglądu w szablony",
+     "collected_by": "oracle",
+     "args": {
+      "business": "t_biz",
+      "account": "konto",
+      "form": "liniowy",
+      "zus_stage": "full",
+      "sickness": true,
+      "vat_payer": true
+     },
+     "others": [
+      {
+       "id": "t_biz",
+       "template": "dzialalnosc@1",
+       "args": {
+        "revenue": {
+         "dated": [
+          {
+           "from": "2026-01-01",
+           "value": 5000
+          },
+          {
+           "from": "2026-02-01",
+           "value": 30000
+          },
+          {
+           "from": "2026-03-01",
+           "value": 0
+          },
+          {
+           "from": "2026-04-01",
+           "value": 12000
+          },
+          {
+           "from": "2026-05-01",
+           "value": 25000
+          },
+          {
+           "from": "2026-06-01",
+           "value": 3000
+          },
+          {
+           "from": "2026-07-01",
+           "value": 40000
+          },
+          {
+           "from": "2026-08-01",
+           "value": 8000
+          },
+          {
+           "from": "2026-09-01",
+           "value": 0
+          },
+          {
+           "from": "2026-10-01",
+           "value": 15000
+          },
+          {
+           "from": "2026-11-01",
+           "value": 60000
+          },
+          {
+           "from": "2026-12-01",
+           "value": 2000
+          }
+         ]
+        },
+        "costs": {
+         "dated": [
+          {
+           "from": "2026-01-01",
+           "value": 800
+          },
+          {
+           "from": "2026-02-01",
+           "value": 1200
+          },
+          {
+           "from": "2026-03-01",
+           "value": 9000
+          },
+          {
+           "from": "2026-04-01",
+           "value": 600
+          },
+          {
+           "from": "2026-05-01",
+           "value": 700
+          },
+          {
+           "from": "2026-06-01",
+           "value": 400
+          },
+          {
+           "from": "2026-07-01",
+           "value": 2500
+          },
+          {
+           "from": "2026-08-01",
+           "value": 300
+          },
+          {
+           "from": "2026-09-01",
+           "value": 300
+          },
+          {
+           "from": "2026-10-01",
+           "value": 500
+          },
+          {
+           "from": "2026-11-01",
+           "value": 6000
+          },
+          {
+           "from": "2026-12-01",
+           "value": 200
+          }
+         ]
+        },
+        "costs_vat": {
+         "dated": [
+          {
+           "from": "2026-01-01",
+           "value": 184
+          },
+          {
+           "from": "2026-02-01",
+           "value": 276
+          },
+          {
+           "from": "2026-03-01",
+           "value": 2070
+          },
+          {
+           "from": "2026-04-01",
+           "value": 138
+          },
+          {
+           "from": "2026-05-01",
+           "value": 161
+          },
+          {
+           "from": "2026-06-01",
+           "value": 92
+          },
+          {
+           "from": "2026-07-01",
+           "value": 575
+          },
+          {
+           "from": "2026-08-01",
+           "value": 69
+          },
+          {
+           "from": "2026-09-01",
+           "value": 69
+          },
+          {
+           "from": "2026-10-01",
+           "value": 115
+          },
+          {
+           "from": "2026-11-01",
+           "value": 1380
+          },
+          {
+           "from": "2026-12-01",
+           "value": 46
+          }
+         ]
+        },
+        "car_net": {
+         "dated": [
+          {
+           "from": "2026-01-01",
+           "value": 700
+          },
+          {
+           "from": "2026-02-01",
+           "value": 0
+          },
+          {
+           "from": "2026-03-01",
+           "value": 0
+          },
+          {
+           "from": "2026-04-01",
+           "value": 700
+          },
+          {
+           "from": "2026-05-01",
+           "value": 0
+          },
+          {
+           "from": "2026-06-01",
+           "value": 0
+          },
+          {
+           "from": "2026-07-01",
+           "value": 700
+          },
+          {
+           "from": "2026-08-01",
+           "value": 0
+          },
+          {
+           "from": "2026-09-01",
+           "value": 0
+          },
+          {
+           "from": "2026-10-01",
+           "value": 700
+          },
+          {
+           "from": "2026-11-01",
+           "value": 0
+          },
+          {
+           "from": "2026-12-01",
+           "value": 0
+          }
+         ]
+        },
+        "car_vat": {
+         "dated": [
+          {
+           "from": "2026-01-01",
+           "value": 161
+          },
+          {
+           "from": "2026-02-01",
+           "value": 0
+          },
+          {
+           "from": "2026-03-01",
+           "value": 0
+          },
+          {
+           "from": "2026-04-01",
+           "value": 161
+          },
+          {
+           "from": "2026-05-01",
+           "value": 0
+          },
+          {
+           "from": "2026-06-01",
+           "value": 0
+          },
+          {
+           "from": "2026-07-01",
+           "value": 161
+          },
+          {
+           "from": "2026-08-01",
+           "value": 0
+          },
+          {
+           "from": "2026-09-01",
+           "value": 0
+          },
+          {
+           "from": "2026-10-01",
+           "value": 161
+          },
+          {
+           "from": "2026-11-01",
+           "value": 0
+          },
+          {
+           "from": "2026-12-01",
+           "value": 0
+          }
+         ]
+        },
+        "account": "konto"
+       }
+      }
+     ],
+     "year": 2026,
+     "expect": [
+      {
+       "line": "income",
+       "period": "2026-01",
+       "value": 1687.86
+      },
+      {
+       "line": "health",
+       "period": "2026-01",
+       "value": 432.54
+      },
+      {
+       "line": "tax.base",
+       "period": "2026-01",
+       "value": 1255
+      },
+      {
+       "line": "pit.advance",
+       "period": "2026-01",
+       "value": 238
+      },
+      {
+       "line": "income",
+       "period": "2026-03",
+       "value": -10926.76
+      },
+      {
+       "line": "health",
+       "period": "2026-03",
+       "value": 432.54
+      },
+      {
+       "line": "tax.base",
+       "period": "2026-03",
+       "value": 15452
+      },
+      {
+       "line": "pit.advance",
+       "period": "2026-03",
+       "value": 0
+      },
+      {
+       "line": "income",
+       "period": "2026-07",
+       "value": 34987.86
+      },
+      {
+       "line": "health",
+       "period": "2026-07",
+       "value": 1714.41
+      },
+      {
+       "line": "tax.base",
+       "period": "2026-07",
+       "value": 78799
+      },
+      {
+       "line": "pit.advance",
+       "period": "2026-07",
+       "value": 6322
+      },
+      {
+       "line": "income",
+       "period": "2026-11",
+       "value": 52073.24
+      },
+      {
+       "line": "health",
+       "period": "2026-11",
+       "value": 2551.59
+      },
+      {
+       "line": "tax.base",
+       "period": "2026-11",
+       "value": 142511
+      },
+      {
+       "line": "pit.advance",
+       "period": "2026-11",
+       "value": 9409
+      },
+      {
+       "line": "income",
+       "period": "2026-12",
+       "value": -126.76
+      },
+      {
+       "line": "health",
+       "period": "2026-12",
+       "value": 432.54
+      },
+      {
+       "line": "tax.base",
+       "period": "2026-12",
+       "value": 141952
+      },
+      {
+       "line": "pit.advance",
+       "period": "2026-12",
+       "value": 0
+      },
+      {
+       "line": "costs",
+       "period": "2026-01",
+       "value": 1385.38
+      },
+      {
+       "line": "zus.fp",
+       "period": "2026-01",
+       "value": 138.47
+      },
+      {
+       "line": "pit.settle",
+       "period": "2026",
+       "value": -106
+      }
+     ]
+    },
+    {
+     "id": "oracle_lumpy_ryczalt_full",
+     "says": "Nierówny rok z miesiącem straty i autem mieszanym: ryczalt, full, VAT",
+     "source": "reference.ts z prototypu podatkowego: niezależna implementacja pętlami, pisana bez wglądu w szablony",
+     "collected_by": "oracle",
+     "args": {
+      "business": "t_biz",
+      "account": "konto",
+      "form": "ryczalt",
+      "zus_stage": "full",
+      "sickness": true,
+      "vat_payer": true
+     },
+     "others": [
+      {
+       "id": "t_biz",
+       "template": "dzialalnosc@1",
+       "args": {
+        "revenue": {
+         "dated": [
+          {
+           "from": "2026-01-01",
+           "value": 5000
+          },
+          {
+           "from": "2026-02-01",
+           "value": 30000
+          },
+          {
+           "from": "2026-03-01",
+           "value": 0
+          },
+          {
+           "from": "2026-04-01",
+           "value": 12000
+          },
+          {
+           "from": "2026-05-01",
+           "value": 25000
+          },
+          {
+           "from": "2026-06-01",
+           "value": 3000
+          },
+          {
+           "from": "2026-07-01",
+           "value": 40000
+          },
+          {
+           "from": "2026-08-01",
+           "value": 8000
+          },
+          {
+           "from": "2026-09-01",
+           "value": 0
+          },
+          {
+           "from": "2026-10-01",
+           "value": 15000
+          },
+          {
+           "from": "2026-11-01",
+           "value": 60000
+          },
+          {
+           "from": "2026-12-01",
+           "value": 2000
+          }
+         ]
+        },
+        "costs": {
+         "dated": [
+          {
+           "from": "2026-01-01",
+           "value": 800
+          },
+          {
+           "from": "2026-02-01",
+           "value": 1200
+          },
+          {
+           "from": "2026-03-01",
+           "value": 9000
+          },
+          {
+           "from": "2026-04-01",
+           "value": 600
+          },
+          {
+           "from": "2026-05-01",
+           "value": 700
+          },
+          {
+           "from": "2026-06-01",
+           "value": 400
+          },
+          {
+           "from": "2026-07-01",
+           "value": 2500
+          },
+          {
+           "from": "2026-08-01",
+           "value": 300
+          },
+          {
+           "from": "2026-09-01",
+           "value": 300
+          },
+          {
+           "from": "2026-10-01",
+           "value": 500
+          },
+          {
+           "from": "2026-11-01",
+           "value": 6000
+          },
+          {
+           "from": "2026-12-01",
+           "value": 200
+          }
+         ]
+        },
+        "costs_vat": {
+         "dated": [
+          {
+           "from": "2026-01-01",
+           "value": 184
+          },
+          {
+           "from": "2026-02-01",
+           "value": 276
+          },
+          {
+           "from": "2026-03-01",
+           "value": 2070
+          },
+          {
+           "from": "2026-04-01",
+           "value": 138
+          },
+          {
+           "from": "2026-05-01",
+           "value": 161
+          },
+          {
+           "from": "2026-06-01",
+           "value": 92
+          },
+          {
+           "from": "2026-07-01",
+           "value": 575
+          },
+          {
+           "from": "2026-08-01",
+           "value": 69
+          },
+          {
+           "from": "2026-09-01",
+           "value": 69
+          },
+          {
+           "from": "2026-10-01",
+           "value": 115
+          },
+          {
+           "from": "2026-11-01",
+           "value": 1380
+          },
+          {
+           "from": "2026-12-01",
+           "value": 46
+          }
+         ]
+        },
+        "car_net": {
+         "dated": [
+          {
+           "from": "2026-01-01",
+           "value": 700
+          },
+          {
+           "from": "2026-02-01",
+           "value": 0
+          },
+          {
+           "from": "2026-03-01",
+           "value": 0
+          },
+          {
+           "from": "2026-04-01",
+           "value": 700
+          },
+          {
+           "from": "2026-05-01",
+           "value": 0
+          },
+          {
+           "from": "2026-06-01",
+           "value": 0
+          },
+          {
+           "from": "2026-07-01",
+           "value": 700
+          },
+          {
+           "from": "2026-08-01",
+           "value": 0
+          },
+          {
+           "from": "2026-09-01",
+           "value": 0
+          },
+          {
+           "from": "2026-10-01",
+           "value": 700
+          },
+          {
+           "from": "2026-11-01",
+           "value": 0
+          },
+          {
+           "from": "2026-12-01",
+           "value": 0
+          }
+         ]
+        },
+        "car_vat": {
+         "dated": [
+          {
+           "from": "2026-01-01",
+           "value": 161
+          },
+          {
+           "from": "2026-02-01",
+           "value": 0
+          },
+          {
+           "from": "2026-03-01",
+           "value": 0
+          },
+          {
+           "from": "2026-04-01",
+           "value": 161
+          },
+          {
+           "from": "2026-05-01",
+           "value": 0
+          },
+          {
+           "from": "2026-06-01",
+           "value": 0
+          },
+          {
+           "from": "2026-07-01",
+           "value": 161
+          },
+          {
+           "from": "2026-08-01",
+           "value": 0
+          },
+          {
+           "from": "2026-09-01",
+           "value": 0
+          },
+          {
+           "from": "2026-10-01",
+           "value": 161
+          },
+          {
+           "from": "2026-11-01",
+           "value": 0
+          },
+          {
+           "from": "2026-12-01",
+           "value": 0
+          }
+         ]
+        },
+        "account": "konto"
+       }
+      }
+     ],
+     "year": 2026,
+     "expect": [
+      {
+       "line": "income",
+       "period": "2026-01",
+       "value": 1687.86
+      },
+      {
+       "line": "health",
+       "period": "2026-01",
+       "value": 498.35
+      },
+      {
+       "line": "tax.base",
+       "period": "2026-01",
+       "value": 2963
+      },
+      {
+       "line": "pit.advance",
+       "period": "2026-01",
+       "value": 356
+      },
+      {
+       "line": "income",
+       "period": "2026-03",
+       "value": -10926.76
+      },
+      {
+       "line": "health",
+       "period": "2026-03",
+       "value": 498.35
+      },
+      {
+       "line": "tax.base",
+       "period": "2026-03",
+       "value": 28888
+      },
+      {
+       "line": "pit.advance",
+       "period": "2026-03",
+       "value": 0
+      },
+      {
+       "line": "income",
+       "period": "2026-07",
+       "value": 34987.86
+      },
+      {
+       "line": "health",
+       "period": "2026-07",
+       "value": 830.58
+      },
+      {
+       "line": "tax.base",
+       "period": "2026-07",
+       "value": 100239
+      },
+      {
+       "line": "pit.advance",
+       "period": "2026-07",
+       "value": 4536
+      },
+      {
+       "line": "income",
+       "period": "2026-11",
+       "value": 52073.24
+      },
+      {
+       "line": "health",
+       "period": "2026-11",
+       "value": 830.58
+      },
+      {
+       "line": "tax.base",
+       "period": "2026-11",
+       "value": 174425
+      },
+      {
+       "line": "pit.advance",
+       "period": "2026-11",
+       "value": 6936
+      },
+      {
+       "line": "income",
+       "period": "2026-12",
+       "value": -126.76
+      },
+      {
+       "line": "health",
+       "period": "2026-12",
+       "value": 830.58
+      },
+      {
+       "line": "tax.base",
+       "period": "2026-12",
+       "value": 174222
+      },
+      {
+       "line": "pit.advance",
+       "period": "2026-12",
+       "value": 0
+      },
+      {
+       "line": "costs",
+       "period": "2026-01",
+       "value": 1385.38
+      },
+      {
+       "line": "zus.fp",
+       "period": "2026-01",
+       "value": 138.47
+      },
+      {
+       "line": "pit.settle",
+       "period": "2026",
+       "value": -24
+      },
+      {
+       "line": "health.settle",
+       "period": "2026",
+       "value": 1328.92
+      }
+     ]
+    },
+    {
+     "id": "oracle_lumpy_liniowy_novat_preferential",
+     "says": "Nierówny rok z miesiącem straty i autem mieszanym: liniowy, preferential, bez VAT",
+     "source": "reference.ts z prototypu podatkowego: niezależna implementacja pętlami, pisana bez wglądu w szablony",
+     "collected_by": "oracle",
+     "args": {
+      "business": "t_biz",
+      "account": "konto",
+      "form": "liniowy",
+      "zus_stage": "preferential",
+      "sickness": true,
+      "vat_payer": false
+     },
+     "others": [
+      {
+       "id": "t_biz",
+       "template": "dzialalnosc@1",
+       "args": {
+        "revenue": {
+         "dated": [
+          {
+           "from": "2026-01-01",
+           "value": 5000
+          },
+          {
+           "from": "2026-02-01",
+           "value": 30000
+          },
+          {
+           "from": "2026-03-01",
+           "value": 0
+          },
+          {
+           "from": "2026-04-01",
+           "value": 12000
+          },
+          {
+           "from": "2026-05-01",
+           "value": 25000
+          },
+          {
+           "from": "2026-06-01",
+           "value": 3000
+          },
+          {
+           "from": "2026-07-01",
+           "value": 40000
+          },
+          {
+           "from": "2026-08-01",
+           "value": 8000
+          },
+          {
+           "from": "2026-09-01",
+           "value": 0
+          },
+          {
+           "from": "2026-10-01",
+           "value": 15000
+          },
+          {
+           "from": "2026-11-01",
+           "value": 60000
+          },
+          {
+           "from": "2026-12-01",
+           "value": 2000
+          }
+         ]
+        },
+        "costs": {
+         "dated": [
+          {
+           "from": "2026-01-01",
+           "value": 800
+          },
+          {
+           "from": "2026-02-01",
+           "value": 1200
+          },
+          {
+           "from": "2026-03-01",
+           "value": 9000
+          },
+          {
+           "from": "2026-04-01",
+           "value": 600
+          },
+          {
+           "from": "2026-05-01",
+           "value": 700
+          },
+          {
+           "from": "2026-06-01",
+           "value": 400
+          },
+          {
+           "from": "2026-07-01",
+           "value": 2500
+          },
+          {
+           "from": "2026-08-01",
+           "value": 300
+          },
+          {
+           "from": "2026-09-01",
+           "value": 300
+          },
+          {
+           "from": "2026-10-01",
+           "value": 500
+          },
+          {
+           "from": "2026-11-01",
+           "value": 6000
+          },
+          {
+           "from": "2026-12-01",
+           "value": 200
+          }
+         ]
+        },
+        "costs_vat": {
+         "dated": [
+          {
+           "from": "2026-01-01",
+           "value": 184
+          },
+          {
+           "from": "2026-02-01",
+           "value": 276
+          },
+          {
+           "from": "2026-03-01",
+           "value": 2070
+          },
+          {
+           "from": "2026-04-01",
+           "value": 138
+          },
+          {
+           "from": "2026-05-01",
+           "value": 161
+          },
+          {
+           "from": "2026-06-01",
+           "value": 92
+          },
+          {
+           "from": "2026-07-01",
+           "value": 575
+          },
+          {
+           "from": "2026-08-01",
+           "value": 69
+          },
+          {
+           "from": "2026-09-01",
+           "value": 69
+          },
+          {
+           "from": "2026-10-01",
+           "value": 115
+          },
+          {
+           "from": "2026-11-01",
+           "value": 1380
+          },
+          {
+           "from": "2026-12-01",
+           "value": 46
+          }
+         ]
+        },
+        "car_net": {
+         "dated": [
+          {
+           "from": "2026-01-01",
+           "value": 700
+          },
+          {
+           "from": "2026-02-01",
+           "value": 0
+          },
+          {
+           "from": "2026-03-01",
+           "value": 0
+          },
+          {
+           "from": "2026-04-01",
+           "value": 700
+          },
+          {
+           "from": "2026-05-01",
+           "value": 0
+          },
+          {
+           "from": "2026-06-01",
+           "value": 0
+          },
+          {
+           "from": "2026-07-01",
+           "value": 700
+          },
+          {
+           "from": "2026-08-01",
+           "value": 0
+          },
+          {
+           "from": "2026-09-01",
+           "value": 0
+          },
+          {
+           "from": "2026-10-01",
+           "value": 700
+          },
+          {
+           "from": "2026-11-01",
+           "value": 0
+          },
+          {
+           "from": "2026-12-01",
+           "value": 0
+          }
+         ]
+        },
+        "car_vat": {
+         "dated": [
+          {
+           "from": "2026-01-01",
+           "value": 161
+          },
+          {
+           "from": "2026-02-01",
+           "value": 0
+          },
+          {
+           "from": "2026-03-01",
+           "value": 0
+          },
+          {
+           "from": "2026-04-01",
+           "value": 161
+          },
+          {
+           "from": "2026-05-01",
+           "value": 0
+          },
+          {
+           "from": "2026-06-01",
+           "value": 0
+          },
+          {
+           "from": "2026-07-01",
+           "value": 161
+          },
+          {
+           "from": "2026-08-01",
+           "value": 0
+          },
+          {
+           "from": "2026-09-01",
+           "value": 0
+          },
+          {
+           "from": "2026-10-01",
+           "value": 161
+          },
+          {
+           "from": "2026-11-01",
+           "value": 0
+          },
+          {
+           "from": "2026-12-01",
+           "value": 0
+          }
+         ]
+        },
+        "account": "konto"
+       }
+      }
+     ],
+     "year": 2026,
+     "expect": [
+      {
+       "line": "income",
+       "period": "2026-01",
+       "value": 2914.07
+      },
+      {
+       "line": "health",
+       "period": "2026-01",
+       "value": 432.54
+      },
+      {
+       "line": "tax.base",
+       "period": "2026-01",
+       "value": 2482
+      },
+      {
+       "line": "pit.advance",
+       "period": "2026-01",
+       "value": 472
+      },
+      {
+       "line": "income",
+       "period": "2026-03",
+       "value": -11526.18
+      },
+      {
+       "line": "health",
+       "period": "2026-03",
+       "value": 432.54
+      },
+      {
+       "line": "tax.base",
+       "period": "2026-03",
+       "value": 17215
+      },
+      {
+       "line": "pit.advance",
+       "period": "2026-03",
+       "value": 0
+      },
+      {
+       "line": "income",
+       "period": "2026-07",
+       "value": 35823.07
+      },
+      {
+       "line": "health",
+       "period": "2026-07",
+       "value": 1755.33
+      },
+      {
+       "line": "tax.base",
+       "period": "2026-07",
+       "value": 85219
+      },
+      {
+       "line": "pit.advance",
+       "period": "2026-07",
+       "value": 6473
+      },
+      {
+       "line": "income",
+       "period": "2026-11",
+       "value": 52163.82
+      },
+      {
+       "line": "health",
+       "period": "2026-11",
+       "value": 2556.03
+      },
+      {
+       "line": "tax.base",
+       "period": "2026-11",
+       "value": 152984
+      },
+      {
+       "line": "pit.advance",
+       "period": "2026-11",
+       "value": 9426
+      },
+      {
+       "line": "income",
+       "period": "2026-12",
+       "value": 1297.82
+      },
+      {
+       "line": "health",
+       "period": "2026-12",
+       "value": 432.54
+      },
+      {
+       "line": "tax.base",
+       "period": "2026-12",
+       "value": 153849
+      },
+      {
+       "line": "pit.advance",
+       "period": "2026-12",
+       "value": 164
+      },
+      {
+       "line": "costs",
+       "period": "2026-01",
+       "value": 1629.75
+      },
+      {
+       "line": "zus.fp",
+       "period": "2026-01",
+       "value": 0
+      },
+      {
+       "line": "pit.settle",
+       "period": "2026",
+       "value": 0
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "vat_pl@2026",
+   "kind": "law",
+   "title_pl": "VAT czynnego podatnika, miesięcznie",
+   "status": "tested",
+   "says": "VAT on the month's invoices less the VAT on its purchases (half for a car also used privately), paid by the 25th of the next month.",
+   "sources": [
+    "ustawa o VAT art. 86, 86a, 99, 103, 146ef"
+   ],
+   "params": {
+    "business": {
+     "type": "instance",
+     "attach": true,
+     "needs": {
+      "revenue": "PLN",
+      "costs_vat": "PLN",
+      "car_vat": "PLN"
+     },
+     "ask_pl": "Której działalności faktury?"
+    },
+    "account": {
+     "type": "place",
+     "unit": "PLN",
+     "ask_pl": "Z którego konta?"
+    }
+   },
+   "lines": [
+    {
+     "id": "vat.out",
+     "says_pl": "VAT na fakturach; klient płaci go z fakturą",
+     "every": "month",
+     "on": "next_month:10",
+     "unit": "PLN",
+     "value": "grosze(v('revenue', in.business) * p.vat.rate)",
+     "pay": {
+      "from": "klienci",
+      "to": "in.account",
+      "match": "faktury"
+     }
+    },
+    {
+     "id": "vat.in",
+     "says_pl": "VAT do odliczenia",
+     "every": "month",
+     "unit": "PLN",
+     "value": "v('costs_vat', in.business) + grosze(p.vat.car_mixed_share * v('car_vat', in.business))"
+    },
+    {
+     "id": "vat.due",
+     "says_pl": "VAT do zapłaty",
+     "every": "month",
+     "on": "next_month:25",
+     "unit": "PLN",
+     "value": "v('vat.out') - v('vat.in')",
+     "pay": {
+      "from": "in.account",
+      "to": "urzad_skarbowy",
+      "reverse": true,
+      "match": "vat"
+     },
+     "bd": "next"
+    }
+   ],
+   "tests": [
+    {
+     "id": "car_laptop",
+     "says": "Faktura 20 000, laptop 5 000 (VAT 1 150), paliwo 700 (VAT 161) do auta mieszanego → 3 369,50",
+     "source": "prototyp podatkowy, przykład z ustawy art. 86a; termin: ustawa o VAT art. 103 ust. 1; VAT z faktury wpływa razem z fakturą (dzialalnosc@1 revenue.cash: next_month:10)",
+     "args": {
+      "business": "t_biz",
+      "account": "konto"
+     },
+     "others": [
+      {
+       "id": "t_biz",
+       "template": "dzialalnosc@1",
+       "args": {
+        "revenue": 20000,
+        "costs": 5000,
+        "costs_vat": 1150,
+        "car_net": 700,
+        "car_vat": 161,
+        "account": "konto"
+       }
+      }
+     ],
+     "year": 2026,
+     "expect": [
+      {
+       "line": "vat.due",
+       "period": "2026-01",
+       "value": 3369.5
+      },
+      {
+       "line": "vat.due",
+       "period": "2026-01",
+       "date": "2026-02-25"
+      },
+      {
+       "line": "vat.out",
+       "period": "2026-01",
+       "date": "2026-02-10"
+      }
+     ],
+     "collected_by": "research agent (tax prototype)"
+    },
+    {
+     "id": "oracle_lumpy",
+     "says": "Nierówny rok z autem mieszanym: VAT w miesiącach 1, 3, 7, 11",
+     "source": "reference.ts z prototypu podatkowego: niezależna implementacja pętlami, pisana bez wglądu w szablony",
+     "collected_by": "oracle",
+     "args": {
+      "business": "t_biz",
+      "account": "konto"
+     },
+     "others": [
+      {
+       "id": "t_biz",
+       "template": "dzialalnosc@1",
+       "args": {
+        "revenue": {
+         "dated": [
+          {
+           "from": "2026-01-01",
+           "value": 5000
+          },
+          {
+           "from": "2026-02-01",
+           "value": 30000
+          },
+          {
+           "from": "2026-03-01",
+           "value": 0
+          },
+          {
+           "from": "2026-04-01",
+           "value": 12000
+          },
+          {
+           "from": "2026-05-01",
+           "value": 25000
+          },
+          {
+           "from": "2026-06-01",
+           "value": 3000
+          },
+          {
+           "from": "2026-07-01",
+           "value": 40000
+          },
+          {
+           "from": "2026-08-01",
+           "value": 8000
+          },
+          {
+           "from": "2026-09-01",
+           "value": 0
+          },
+          {
+           "from": "2026-10-01",
+           "value": 15000
+          },
+          {
+           "from": "2026-11-01",
+           "value": 60000
+          },
+          {
+           "from": "2026-12-01",
+           "value": 2000
+          }
+         ]
+        },
+        "costs": {
+         "dated": [
+          {
+           "from": "2026-01-01",
+           "value": 800
+          },
+          {
+           "from": "2026-02-01",
+           "value": 1200
+          },
+          {
+           "from": "2026-03-01",
+           "value": 9000
+          },
+          {
+           "from": "2026-04-01",
+           "value": 600
+          },
+          {
+           "from": "2026-05-01",
+           "value": 700
+          },
+          {
+           "from": "2026-06-01",
+           "value": 400
+          },
+          {
+           "from": "2026-07-01",
+           "value": 2500
+          },
+          {
+           "from": "2026-08-01",
+           "value": 300
+          },
+          {
+           "from": "2026-09-01",
+           "value": 300
+          },
+          {
+           "from": "2026-10-01",
+           "value": 500
+          },
+          {
+           "from": "2026-11-01",
+           "value": 6000
+          },
+          {
+           "from": "2026-12-01",
+           "value": 200
+          }
+         ]
+        },
+        "costs_vat": {
+         "dated": [
+          {
+           "from": "2026-01-01",
+           "value": 184
+          },
+          {
+           "from": "2026-02-01",
+           "value": 276
+          },
+          {
+           "from": "2026-03-01",
+           "value": 2070
+          },
+          {
+           "from": "2026-04-01",
+           "value": 138
+          },
+          {
+           "from": "2026-05-01",
+           "value": 161
+          },
+          {
+           "from": "2026-06-01",
+           "value": 92
+          },
+          {
+           "from": "2026-07-01",
+           "value": 575
+          },
+          {
+           "from": "2026-08-01",
+           "value": 69
+          },
+          {
+           "from": "2026-09-01",
+           "value": 69
+          },
+          {
+           "from": "2026-10-01",
+           "value": 115
+          },
+          {
+           "from": "2026-11-01",
+           "value": 1380
+          },
+          {
+           "from": "2026-12-01",
+           "value": 46
+          }
+         ]
+        },
+        "car_net": {
+         "dated": [
+          {
+           "from": "2026-01-01",
+           "value": 700
+          },
+          {
+           "from": "2026-02-01",
+           "value": 0
+          },
+          {
+           "from": "2026-03-01",
+           "value": 0
+          },
+          {
+           "from": "2026-04-01",
+           "value": 700
+          },
+          {
+           "from": "2026-05-01",
+           "value": 0
+          },
+          {
+           "from": "2026-06-01",
+           "value": 0
+          },
+          {
+           "from": "2026-07-01",
+           "value": 700
+          },
+          {
+           "from": "2026-08-01",
+           "value": 0
+          },
+          {
+           "from": "2026-09-01",
+           "value": 0
+          },
+          {
+           "from": "2026-10-01",
+           "value": 700
+          },
+          {
+           "from": "2026-11-01",
+           "value": 0
+          },
+          {
+           "from": "2026-12-01",
+           "value": 0
+          }
+         ]
+        },
+        "car_vat": {
+         "dated": [
+          {
+           "from": "2026-01-01",
+           "value": 161
+          },
+          {
+           "from": "2026-02-01",
+           "value": 0
+          },
+          {
+           "from": "2026-03-01",
+           "value": 0
+          },
+          {
+           "from": "2026-04-01",
+           "value": 161
+          },
+          {
+           "from": "2026-05-01",
+           "value": 0
+          },
+          {
+           "from": "2026-06-01",
+           "value": 0
+          },
+          {
+           "from": "2026-07-01",
+           "value": 161
+          },
+          {
+           "from": "2026-08-01",
+           "value": 0
+          },
+          {
+           "from": "2026-09-01",
+           "value": 0
+          },
+          {
+           "from": "2026-10-01",
+           "value": 161
+          },
+          {
+           "from": "2026-11-01",
+           "value": 0
+          },
+          {
+           "from": "2026-12-01",
+           "value": 0
+          }
+         ]
+        },
+        "account": "konto"
+       }
+      }
+     ],
+     "year": 2026,
+     "expect": [
+      {
+       "line": "vat.due",
+       "period": "2026-01",
+       "value": 885.5
+      },
+      {
+       "line": "vat.due",
+       "period": "2026-03",
+       "value": -2070
+      },
+      {
+       "line": "vat.due",
+       "period": "2026-07",
+       "value": 8544.5
+      },
+      {
+       "line": "vat.due",
+       "period": "2026-11",
+       "value": 12420
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "instances": [
+  {
+   "id": "business",
+   "template": "dzialalnosc@1",
+   "label_pl": "Moja działalność",
+   "from": "2026-03-01",
+   "args": {
+    "revenue": 6000,
+    "costs": 400,
+    "costs_vat": 92,
+    "account": "konto"
+   }
+  },
+  {
+   "id": "business_tax",
+   "template": "jdg_pl@2026",
+   "label_pl": "Ryczałt i ZUS działalności",
+   "args": {
+    "business": "business",
+    "account": "konto",
+    "form": "ryczalt",
+    "zus_stage": "zbieg",
+    "sickness": false
+   }
+  },
+  {
+   "id": "business_vat",
+   "template": "vat_pl@2026",
+   "label_pl": "VAT działalności",
+   "args": {
+    "business": "business",
+    "account": "konto"
+   }
+  }
+ ]
+}

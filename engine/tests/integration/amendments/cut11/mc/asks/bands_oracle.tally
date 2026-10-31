@@ -1,0 +1,119 @@
+part bands_oracle
+  tally 2
+  note "Wartości wyroczni i tolerancje testu pasm gospodarstwa (DONE, bramka 7, część 2). Czytają je tylko scenarios/surprises i scenarios/costly_repairs: wyrocznie pytania check, próg dwóch czynszów także below_two_rents, dzień niespodzianek ruchy i losowania surprises."
+  note "Tolerancja = 4·SE + błąd kroku + własny błąd wyroczni (ENGINE §8), zaokrąglona w górę; wyprowadzenie w household-bands.md."
+
+source bands_key "Klucz odpowiedzi pasm gospodarstwa: montecarlo/household-bands.md, wartości w formie zamkniętej"
+
+index band_level = [q05, q25, q50, q75, q95]
+
+index oracle_stat = [nw_1231_mean, paired_mean, paired_median, tm_konto_1231, tm_net_worth_1231, tm_room_11]
+
+index share_stat = [no_repair, two_rents, zero_dip]
+
+input oracle_konto[d in day, l in band_level]: num PLN
+
+input oracle_konto_tol[d in day, l in band_level]: num PLN
+
+input oracle_net_worth[d in day, l in band_level]: num PLN
+
+input oracle_net_worth_tol[d in day, l in band_level]: num PLN
+
+input oracle_room[m in month, l in band_level]: num PLN
+
+input oracle_room_tol[m in month, l in band_level]: num PLN
+
+input oracle_share[k in share_stat]: num
+
+input oracle_share_tol[k in share_stat]: num
+
+input oracle_value[k in oracle_stat]: num PLN
+
+input oracle_value_tol[k in oracle_stat]: num PLN
+
+input surprise_dom: int
+  note "dzień miesiąca, w którym w scenariuszu surprises przychodzą niespodzianki (naprawa i odchylenie wydatków); od niego też liczy się data prawa obu losowań"
+
+input threshold_rents: int
+  note "lifted from an inline figure of tally 1.0.1"
+  note "próg pytań below_two_rents i check_two_rents w czynszach: konto poniżej tylu czynszów na koniec 2027"
+
+version bands_oracle_rows
+  cite bands_key
+  governs always
+  known 2026-10-19
+  oracle_konto[2027-06-30, q05] = 3760.19 "§4.1"
+  oracle_konto[2027-06-30, q25] = 6373.22 "§4.1"
+  oracle_konto[2027-06-30, q50] = 6704.31 "§4.1"
+  oracle_konto[2027-06-30, q75] = 6995.97 "§4.1"
+  oracle_konto[2027-06-30, q95] = 7397.48 "§4.1"
+  oracle_konto[2027-12-31, q05] = 3656.75 "§4.1"
+  oracle_konto[2027-12-31, q25] = 6269.78 "§4.1"
+  oracle_konto[2027-12-31, q50] = 6600.87 "§4.1"
+  oracle_konto[2027-12-31, q75] = 6892.53 "§4.1"
+  oracle_konto[2027-12-31, q95] = 7294.04 "§4.1"
+  oracle_konto_tol[*, q05] = 276.43 "§4.1"
+  oracle_konto_tol[*, q25] = 97.45 "§4.1"
+  oracle_konto_tol[*, q50] = 71.17 "§4.1"
+  oracle_konto_tol[*, q75] = 72.62 "§4.1"
+  oracle_konto_tol[*, q95] = 109.29 "§4.1"
+  oracle_net_worth[2027-06-30, q05] = 243614.80 "§4.2"
+  oracle_net_worth[2027-06-30, q25] = 246710.62 "§4.2"
+  oracle_net_worth[2027-06-30, q50] = 248677.03 "§4.2"
+  oracle_net_worth[2027-06-30, q75] = 250075.52 "§4.2"
+  oracle_net_worth[2027-06-30, q95] = 251290.85 "§4.2"
+  oracle_net_worth[2027-12-31, q05] = 310186.69 "§4.2"
+  oracle_net_worth[2027-12-31, q25] = 314196.26 "§4.2"
+  oracle_net_worth[2027-12-31, q50] = 316705.70 "§4.2"
+  oracle_net_worth[2027-12-31, q75] = 318893.59 "§4.2"
+  oracle_net_worth[2027-12-31, q95] = 321243.30 "§4.2"
+  oracle_net_worth_tol[2027-06-30, q05] = 733.10 "§4.2"
+  oracle_net_worth_tol[2027-06-30, q25] = 392.15 "§4.2"
+  oracle_net_worth_tol[2027-06-30, q50] = 526.14 "§4.2"
+  oracle_net_worth_tol[2027-06-30, q75] = 252.66 "§4.2"
+  oracle_net_worth_tol[2027-06-30, q95] = 302.89 "§4.2"
+  oracle_net_worth_tol[2027-12-31, q05] = 1130.39 "§4.2"
+  oracle_net_worth_tol[2027-12-31, q25] = 669.37 "§4.2"
+  oracle_net_worth_tol[2027-12-31, q50] = 522.13 "§4.2"
+  oracle_net_worth_tol[2027-12-31, q75] = 539.82 "§4.2"
+  oracle_net_worth_tol[2027-12-31, q95] = 514.63 "§4.2"
+  oracle_room[2027-08, q05] = 1409.93 "§4.3"
+  oracle_room[2027-08, q25] = 4022.96 "§4.3"
+  oracle_room[2027-08, q50] = 4354.05 "§4.3"
+  oracle_room[2027-08, q75] = 4645.71 "§4.3"
+  oracle_room[2027-08, q95] = 5047.22 "§4.3"
+  oracle_room[2027-11, q05] = 10938.05 "§4.3"
+  oracle_room[2027-11, q25] = 13551.08 "§4.3"
+  oracle_room[2027-11, q50] = 13882.17 "§4.3"
+  oracle_room[2027-11, q75] = 14173.83 "§4.3"
+  oracle_room[2027-11, q95] = 14575.34 "§4.3"
+  oracle_room_tol[*, q05] = 276.43 "§4.3"
+  oracle_room_tol[*, q25] = 97.45 "§4.3"
+  oracle_room_tol[*, q50] = 71.17 "§4.3"
+  oracle_room_tol[*, q75] = 72.62 "§4.3"
+  oracle_room_tol[*, q95] = 109.29 "§4.3"
+  oracle_share[no_repair] = 0.282429536481 "§4.6"
+  oracle_share[two_rents] = 0.334426 "§4.5"
+  oracle_share[zero_dip] = 0.661666 "§4.4"
+  oracle_share_tol[no_repair] = 0.056944 "§4.6"
+  oracle_share_tol[two_rents] = 0.059679 "§4.5"
+  oracle_share_tol[zero_dip] = 0.059850 "§4.4"
+  oracle_value[nw_1231_mean] = 316352.22 "§4.7"
+  oracle_value[paired_mean] = -3600 "§4.6"
+  oracle_value[paired_median] = -3000 "§4.6"
+  oracle_value[tm_konto_1231] = 6656.75 "§4.8, HH4-b konto_balance"
+  oracle_value[tm_net_worth_1231] = 319952.22 "§2.3"
+  oracle_value[tm_room_11] = 13938.05 "§4.8, HH4-b room 2027-11"
+  oracle_value_tol[nw_1231_mean] = 431.56 "§4.7"
+  oracle_value_tol[paired_mean] = 394.37 "§4.6"
+  oracle_value_tol[paired_median] = 0 "§4.6"
+  oracle_value_tol[tm_konto_1231] = 0 "§4.8"
+  oracle_value_tol[tm_net_worth_1231] = 0 "§4.8"
+  oracle_value_tol[tm_room_11] = 0 "§4.8"
+
+version lifted_figures_household_bands
+  cite lifted_1_0_1
+  governs always
+  known 2026-10-19
+  surprise_dom = 25 "inline in tally 1.0.1: repair line 41, spend_over line 49 and spend_under line 57, argument 2 of day_of; one fact, every surprise lands on the 25th (household-bands.md §1)"
+  threshold_rents = 2 "inline in tally 1.0.1: asks below_two_rents line 69 and check_two_rents line 113, factor of rent; one fact, the two-rents threshold (household-bands.md §1, §4.5)"

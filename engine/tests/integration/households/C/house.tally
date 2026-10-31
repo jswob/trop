@@ -1,0 +1,109 @@
+part house
+  tally 2
+  note "Jan's part of the house (C-HR3, C-HR1): for each month from July 2024, half the month's house costs times the nights he slept at home (his log: dom) over the month's nights, to the ort, half up; paid by the 10th of the next month; settle-ups on the last day of February and of August compare what he owed for the six months before the settle-up's month with what he paid for them, the difference paid within 7 days. v2 (more food, the internet bill) names its start, January 2025, but reaches back only to the first month no settle-up had closed when it started (C-HR1 .2): the settle-up of 2025-02-28 had closed August 2024 – January 2025."
+  note "What he paid for a month: the joint account's rows from Bank Lazur titled 'udział MM/YYYY' (story: the Lazur rows of his sales name the month and the dukats)."
+
+index hr3_ver = [hr3_v1, hr3_v2]
+
+input hr3_food[v in hr3_ver]: money DUK question "What does this version count for food each month (C-HR3 .2)?"
+
+input hr3_internet[v in hr3_ver]: bool question "Does this version count the internet bill (C-HR3 .2)?"
+
+input hr3_v1_from: month question "From which month does C-HR3 v1 count Jan's part (C-HR3 v1 .1)?"
+
+input hr3_v2_named: month question "Which start does C-HR3 v2 name (C-HR3 v2)?"
+
+input hr3_v2_signed: date question "On which day did the second of us sign C-HR3 v2?"
+
+input settle_off[k in settle_kind]: int question "Which month of the year, counted from January as 0, holds this settle-up (C-HR3 .5)?"
+
+index settle_kind = [feb, aug]
+
+input settle_paid[m in month]: money DUK question "What was transferred at the settle-up held at the end of this month (story)?"
+
+version hr3_text
+  cite house_rules
+  governs always
+  known 2024-06-24
+  hr3_food[hr3_v1] = 2400.00 "C-HR3 v1 .2: 2 400.00 for food"
+  hr3_internet[hr3_v1] = false "C-HR3 v1 .2: the water, electricity and gas bills"
+  hr3_v1_from = 2024-07 "C-HR3 v1 .1: for each month from July 2024"
+  settle_off[feb] = 1 "C-HR3 .5: on the last day of February"
+  settle_off[aug] = 7 "C-HR3 .5: and of August"
+
+version hr3_v2_text
+  cite house_rules
+  governs always
+  known 2025-04-02
+  hr3_food[hr3_v2] = 2800.00 "C-HR3 v2 .2: 2 800.00 for food"
+  hr3_internet[hr3_v2] = true "C-HR3 v2 .2: the water, electricity, gas and internet bills"
+  hr3_v2_named = 2025-01 "C-HR3 v2: it names its start, from January 2025"
+  hr3_v2_signed = 2025-04-02 "C-HR3 v2: signed by Jan on 2025-03-20, by Marta on 2025-04-02"
+
+version settle_ups
+  cite story
+  governs always
+  known 2025-02-28
+  settle_paid[2025-02] = 0.00 "story 2025-08-31: the same (nothing transferred) at the settle-up of 2025-02-28"
+  settle_paid[2025-08] = 0.00 known 2025-08-31 "story 2025-08-31: settle-up: we looked at the sums and transferred nothing"
+  settle_paid[2026-02] = 0.00 known 2026-02-28 "story 2025-08-31: the same at the settle-up of 2026-02-28"
+
+def is_settle[m in month]: bool
+  note "C-HR3 .5: the months that end in a settle-up: February and August"
+  rule base = any(m - month_of(start_of(year_of(m))) == settle_off[k] for k in settle_kind)
+
+def settle_day[m in month]: date = end_of(m) - 1 day
+
+def next_settle[d in day]: date
+  note "the first settle-up day on or after day d (C-HR3 .5)"
+  rule base = min(settle_day[m] for m in month where is_settle[m] and settle_day[m] >= d)
+
+def v2_from: month
+  note "C-HR1 .2: v2 names its start, January 2025, and reaches back to it, but never to a month a settle-up has already closed: it starts at the first month no settle-up had closed when the second of us signed it (a settle-up closes the six months before its month, C-HR3 .5)"
+  rule base = max(hr3_v2_named, max(month_of(start_of(m)) for m in month where is_settle[m] and settle_day[m] <= hr3_v2_signed))
+
+def hr3_v[m in month]: key hr3_ver
+  rule v1 = hr3_v1
+  rule v2 beats v1 = hr3_v2 when m >= v2_from
+
+def instal_in[m in month]: money DUK = sum(jw[d, s].dr for d in day, s in seq where month_of(d) == m and jw[d, s] != none and jw[d, s].k == j_instal)
+
+def bills_in[m in month]: money DUK
+  note "C-HR3 .2: the water, electricity and gas bills (v2: and internet) paid from the joint account in the month"
+  rule base = sum(jw[d, s].dr for d in day, s in seq where month_of(d) == m and jw[d, s] != none and (jw[d, s].k == j_water or jw[d, s].k == j_power or jw[d, s].k == j_gas or (jw[d, s].k == j_internet and hr3_internet[hr3_v[m]])))
+
+def house_costs[m in month]: money DUK = instal_in[m] + bills_in[m] + hr3_food[hr3_v[m]]
+
+def nights_home[m in month]: int = count(d in day where month_of(d) == m and night[d].sl == dom)
+
+def nights_in[m in month]: int = count(d in day where month_of(d) == m)
+
+def jan_part[m in month]: money DUK
+  note "C-HR3 .1: half of the month's house costs, times the nights at home over the month's nights, to the ort, half up"
+  rule base = round(house_costs[m] / lifted[two] * nights_home[m] / nights_in[m], minor(DUK), half-up)
+
+def jan_paid[m in month]: money DUK
+  note "what Jan paid for month m: the joint account's rows titled 'udział' naming the month"
+  rule base = sum(jw[d, s].cr for d in day, s in seq where d >= start_of(m) and d <= cut and jw[d, s] != none and jw[d, s].k == j_jan_part and jw[d, s].m == m)
+
+def part_due[m in month]: date
+  note "C-HR3 .4: by the 10th of the next month, the next business day where the 10th isn't one"
+  rule base = schedule(m + 1, lifted[hr3_pay_dom], following, holidays)
+
+def settle_diff[m in month]: money DUK
+  note "C-HR3 .5: at the settle-up at the end of month m, what Jan owed for the six months before m less what he paid for them (positive: Jan pays the joint account)"
+  rule base = sum(jan_part[k] - jan_paid[k] for k in month where k >= m - lifted[six_months] and k < m and k >= hr3_v1_from)
+
+def settle_due[m in month]: date = settle_day[m] + lifted[seven_days]
+
+def owed_hr3[d in day]: money DUK
+  note "what Jan owed the joint account under C-HR3 at the end of day d: each settle-up held by then, less what was transferred at it, and each month after the last settle-up's six whose part was due by then, less what he paid for it"
+  rule base = sum((if settle_diff[m] == 0 DUK then 0 DUK else settle_diff[m] - settle_paid[m]) for m in month where is_settle[m] and m > hr3_v1_from and settle_day[m] <= d) + sum(jan_part[k] - jan_paid[k] for k in month where start_of(k) <= d and k >= hr3_v1_from and k >= last_settle[d] and part_due[k] <= d)
+
+def last_settle[d in day]: month
+  note "the month of the last settle-up held on or before day d"
+  rule base = max(month_of(start_of(m)) for m in month where is_settle[m] and settle_day[m] <= d)
+
+def part_not_due[d in day]: money DUK
+  note "parts of months whose payment wasn't due yet on day d (C-HR3 .4)"
+  rule base = sum(jan_part[k] - jan_paid[k] for k in month where start_of(k) <= d and k >= hr3_v1_from and k >= last_settle[d] and part_due[k] > d)

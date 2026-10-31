@@ -1,0 +1,73 @@
+# L §6.1 What same does: a thing's entries are facts read from both sides together; "on a day on which the two sides'
+# entries into one kind disagree, whatever depends on the thing being alive there is a HOLE-SAME hole". a enters ola
+# and later ends its life on 2026-06-30 (a replace, L §6.2 "something that ends"); b's entry stands open. On
+# 2026-03-01 both sides hold ola (1); on 2026-08-01 they disagree (an unknown member, a hole naming both); lifespan(),
+# which depends on the entries, is that hole too, first differing on 2026-07-01 (L §5.7, §8.1).
+=== joint.tally
+model family
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+  use a = "a.tally" sha256 "bb56824a5aca7f9185dfc1255e11d4da6c4b8b3b044fb180ca5d639d13f30922"
+  use b = "b.tally" sha256 "847931b0631c7765e9218d2ba25e87830008e77ebc206f92a3fe563bae5c188f"
+  same a.persons = b.persons
+  same a.ola = b.ola
+
+source s "ustalenia"
+
+input d1: date
+input d2: date
+
+version v
+  cite s
+  governs always
+  known 2025-01-01
+  d1 = 2026-03-01
+  d2 = 2026-08-01
+
+ask mar: count(p in a.persons on d1)
+ask aug: count(p in a.persons on d2)
+ask life: lifespan(a.ola).from
+=== a.tally
+model a
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source s "umowa"
+
+kind persons
+
+version v1
+  cite s
+  known 2025-01-01
+  persons + [ola] lives 2026-01-01..
+
+version v2
+  cite s
+  known 2025-02-01
+  replace persons + [ola] lives 2026-01-01..2026-06-30
+=== b.tally
+model b
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source s "umowa"
+
+kind persons
+
+version v
+  cite s
+  known 2025-01-01
+  persons + [ola] lives 2026-01-01..
+=== expect
+aug: ?"a.ola and b.ola are one, but the entry into a.persons differs on 2026-08-01: 2026-01-01..2026-06-30 (a.v2) and 2026-01-01.. (b.v)" (a.ola, b.ola)
+  cut 2026-10-20
+life: ?"a.ola and b.ola are one, but the entry into a.persons differs on 2026-07-01: 2026-01-01..2026-06-30 (a.v2) and 2026-01-01.. (b.v)" (a.ola, b.ola)
+  cut 2026-10-20
+mar: 1
+  cut 2026-10-20

@@ -1,0 +1,56 @@
+# E §5 example (synthetic), written out: "A benefit is paid monthly through 2027. A version known 2028-03-01 governs
+# 2027 and cuts the benefit to 0": 500.00 PLN on day 15 of each month of 2027 (0 PLN from 2028, so nothing books).
+# n: "The new version changes each 2027 instance by δ = -amount, recorded as twelve adjustments dated 2028-03-01":
+# 12, and 12 * -500.00 = -6 000.00 PLN.
+# f: "Had it written neither, every flows over the benefit's account from 2028-03-01 on would be a hole asking
+# whether repayment is due" (HOLE-CHANGED, L §8.1 wording); konto's balance before 2028-03-01 stands: 6 000.00 PLN.
+=== m.tally
+model b
+  tally 2
+  on 2028-06-30
+  start 2027-01-01
+  end 2028-12-31
+
+source act "benefit act"
+source cut_act "the act that cuts it"
+unit PLN: currency minor 0.01
+kind benefits: event certain
+  leg cash: PLN
+kind waivers: event certain
+place konto: accounts PLN lives 2019-05-01..
+place payer: outside lives 1900-01-01..
+input benefit: money PLN
+input pay_dom: int
+
+move pay[m in months]: benefits
+  on day_of(m, pay_dom)
+  at start_of(m)
+  leg cash from payer to konto amount benefit
+
+version act_2027
+  cite act
+  governs 2027..
+  known 2026-12-01
+  benefit = 500.00 PLN governs 2027 "art. 1"
+  benefit = 0 PLN governs 2028.. "art. 3: paid through 2027"
+  pay_dom = 15 "art. 2"
+  opening[konto] = 0 PLN at 2027-01-01 start "wyciąg"
+
+version cut_2027
+  cite cut_act
+  governs 2027
+  known 2028-03-01
+  replace benefit = 0 PLN "art. 1"
+
+ask n: count(a in adjustments over 2028-03-01), sum(a.change for a in adjustments over 2028-03-01 where a.adjusts in benefits)
+ask f: flows(konto, 2028-03)
+ask g: bal(konto, 2028-02-29)
+=== expect
+f: ?"pay[2027-01] on 2027-01-15 changed after it was paid ...
+...
+  cut 2028-06-30
+g: 6 000.00 PLN
+...
+  cut 2028-06-30
+n: (12, -6 000.00 PLN)
+  cut 2028-06-30

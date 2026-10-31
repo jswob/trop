@@ -1,0 +1,61 @@
+# R-4: no assert! family outside tests, debug_assert! included; panic_in_result_fn as a
+# backup. Tests may assert.
+
+case: assert
+tool: clippy
+expect: clippy::disallowed_macros
+text: R-4
+--- module
+/// Planted.
+pub fn planted(v: u8) -> u8 {
+    assert!(v > 0, "planted");
+    v
+}
+
+case: assert-eq
+tool: clippy
+expect: clippy::disallowed_macros
+text: R-4
+--- module
+/// Planted.
+pub fn planted(v: u8) -> u8 {
+    assert_eq!(v, 1, "planted");
+    v
+}
+
+case: debug-assert
+tool: clippy
+expect: clippy::disallowed_macros
+text: R-4
+--- module
+/// Planted.
+pub fn planted(v: u8) -> u8 {
+    debug_assert!(v > 0, "planted");
+    v
+}
+
+case: assert-in-result-fn
+tool: clippy
+expect: clippy::panic_in_result_fn
+--- module
+/// Planted.
+pub fn planted(v: u8) -> Result<u8, crate::NotImplemented> {
+    assert!(v > 0, "planted");
+    Ok(v)
+}
+
+case: tests-may-assert
+tool: clippy-tests
+expect: pass
+--- module
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn planted() {
+        let v = core::hint::black_box(1_u8);
+        assert!(v > 0, "planted");
+        assert_eq!(v, 1, "planted");
+        assert_ne!(v, 2, "planted");
+        debug_assert!(v > 0, "planted");
+    }
+}

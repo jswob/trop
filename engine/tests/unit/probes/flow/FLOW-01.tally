@@ -1,0 +1,44 @@
+model flow01
+  tally 2
+  on 2026-10-25
+  start 2025-01-01
+  end 2025-01-31
+  note "FLOW-01: a wallet counted twice; the balancing flow between the counts."
+  note "The first count opens the wallet (opening, LANGUAGE 4.6, 5.19). The second is a stated balance whose gap is padded from an outside place: the pad is the one balancing flow, booked at the reading (5.19), and gap(wallet, d) is its signed size."
+
+source card "Probe card FLOW-01 (made up): story and rules"
+
+unit DUK: currency minor 0.01
+
+place bank: outside lives 2025-01-01..
+
+kind spending: place DUK signed outside
+
+place spent: spending lives 2025-01-01..
+
+place wallet: cash DUK lives 2025-01-01..
+
+input atm_amount: money DUK
+
+input atm_day: date
+
+move atm: transfers
+  on atm_day
+  leg cash from bank to wallet amount atm_amount
+  note "the cash machine draws on Halina's bank account, which the card doesn't record: an outside place"
+
+ask q_balancing: gap(wallet, 2025-01-31), flows(spent, 2025-01)
+
+ask q_holds: check bal(wallet, 2025-01-01) + flows(atm, 2025-01-02 .. 2025-01-31) + gap(wallet, 2025-01-31) == bal(wallet, 2025-01-31)
+
+ask q_flows: flows(wallet, 2025-01-02 .. 2025-01-31)
+
+version card_facts
+  cite card
+  governs always
+  known 2025-01-01
+  pad wallet from spent
+  atm_amount = 300.00 "story: 300.00 from the cash machine"
+  atm_day = 2025-01-10 "story: on 10 January"
+  opening[wallet] = 400.00 at 2025-01-01 start "story: counted 400.00 on 1 January 2025"
+  stated[wallet] = 250.00 at 2025-01-31 end "story: counted 250.00 on 31 January"

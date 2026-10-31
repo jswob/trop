@@ -1,0 +1,37 @@
+# R-97: the budgets. engine/tools/perf times the rows from the protected budget table
+# (tools/perf-budgets.toml); after S a miss fails, a counted run with no counters' line
+# fails, and a bench's hard limit reaches gungraun's command line (D4-2, BUILDER §13.3).
+
+case: wall-over-budget-after-s
+tool: run
+expect: BUDGET P8-10 wall(1w)
+--- replace tools/kernel.toml
+set_at_s = false
+--- with
+set_at_s = true
+--- replace tools/perf-budgets.toml
+recipe = "check:I:A:a05_ania@c05-ania"
+wall_s = 1.0
+--- with
+recipe = "check:I:A:a05_ania@c05-ania"
+wall_s = 0.0000001
+--- run
+tools/perf row P8-10 --runs 1 --warmups 0 --bin /usr/bin/true
+
+case: counted-run-without-stats
+tool: run
+expect: no `stats:` line
+--- run
+tools/perf counts P8-15 --bin /usr/bin/true
+
+case: limit-reaches-the-command-line
+tool: run
+exit: any
+expect: --callgrind-limits=ir=1000
+--- replace tools/perf-budgets.toml
+recipe = "bench:stub_instructions"
+--- with
+recipe = "bench:stub_instructions"
+instructions = 1000
+--- run
+tools/perf limits stub_instructions

@@ -1,0 +1,24 @@
+Bank Olcha S.A.|account statement
+Account|LN73 4400 2011 0000 8817 2264 0001
+Holder|HALINA SOWA
+Period|20250201|20250228
+Opening balance|123 425,40
+Date|Type|Counterparty|Title|Amount|Balance after
+20250201|CARD|Apteka Rumianek|card ...2264|-186,70|123 238,70
+20250203|CASH|ATM Olcha Brzezie|cash withdrawal|-500,00|122 738,70
+20250205|CREDIT|Social Insurance Office|survivor pension 02/2025|4 022,53|126 761,23
+20250205|STANDING ORDER|WM Ogrodowa 2|fee Ogrodowa 2/11 02/2025|-445,00|126 316,23
+20250210|CARD|Drogeria Konwalia|card ...2264|-94,26|126 221,97
+20250210|CARD|Sklep Pod Lipą|card ...2264|-143,73|126 078,24
+20250213|CARD|Piekarnia Złoty Kłos|card ...2264|-147,72|125 930,52
+20250217|STANDING ORDER|Volta Energia|Leśna 4 energy 02/2025|-385,00|125 545,52
+20250217|CASH|ATM Olcha Brzezie|cash withdrawal|-500,00|125 045,52
+20250218|CARD|Apteka Rumianek|card ...2264|-176,38|124 869,14
+20250219|CARD|Market Brzezie|card ...2264|-79,47|124 789,67
+20250220|STANDING ORDER|Telekom Lenia|phone 02/2025|-59,00|124 730,67
+20250223|CARD|Stacja Olcha-Paliwa|card ...2264|-111,49|124 619,18
+20250223|CARD|Piekarnia Złoty Kłos|card ...2264|-237,55|124 381,63
+20250225|CARD|Warzywniak u Janka|card ...2264|-170,21|124 211,42
+20250225|TRANSFER|Opieka Dom sp.|home help 02/2025|-1 100,00|123 111,42
+20250227|CARD|Stacja Olcha-Paliwa|card ...2264|-256,40|122 855,02
+Closing balance|122 855,02

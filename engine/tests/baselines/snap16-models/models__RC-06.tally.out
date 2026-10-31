@@ -1,0 +1,57 @@
+a_land_co: 13 000 USD
+  assumed: every gift is said to be given to the organization; none is 'for the use of' it (use_of[a_cash], use_of[a_found], use_of[a_land])
+  assumed: no gift is said to be a qualified conservation contribution, and none is implied (qcc[a_cash], qcc[a_found], qcc[a_land])
+  law date 2025-12-31, cut 2026-10-18
+a_total: 17 000 USD
+  assumed: every gift is said to be given to the organization; none is 'for the use of' it (use_of[a_cash], use_of[a_found], use_of[a_land])
+  assumed: no gift is said to be a qualified conservation contribution, and none is implied (qcc[a_cash], qcc[a_found], qcc[a_land])
+  assumed: the examples don't say; Worksheet 2 is read as the publication runs the examples, with no earlier carryover (has_carryover[ex_a])
+  law date 2025-12-31, cut 2026-10-18
+b_found_co: 4 000 USD
+  assumed: every gift is said to be given to the organization; none is 'for the use of' it (use_of[b_cash], use_of[b_found], use_of[b_land])
+  assumed: no gift is said to be a qualified conservation contribution, and none is implied (qcc[b_cash], qcc[b_found], qcc[b_land])
+  law date 2025-12-31, cut 2026-10-18
+b_total: (2 000 USD, 22 000 USD, 1 000 USD, 25 000 USD)
+  assumed: every gift is said to be given to the organization; none is 'for the use of' it (use_of[b_cash], use_of[b_found], use_of[b_land])
+  assumed: no gift is said to be a qualified conservation contribution, and none is implied (qcc[b_cash], qcc[b_found], qcc[b_land])
+  assumed: the examples don't say; Worksheet 2 is read as the publication runs the examples, with no earlier carryover (has_carryover[ex_b])
+  law date 2025-12-31, cut 2026-10-18
+c_lines: (10 000.00 USD, 15 000.00 USD)
+  assumed: every gift is said to be given to the organization; none is 'for the use of' it (use_of[c_cash], use_of[c_cgp])
+  assumed: no gift is said to be a qualified conservation contribution, and none is implied (qcc[c_cash], qcc[c_cgp])
+  law date 2025-12-31, cut 2026-10-18
+c_total: (25 000 USD, 25 000 USD)
+  assumed: every gift is said to be given to the organization; none is 'for the use of' it (use_of[c_cash], use_of[c_cgp])
+  assumed: no gift is said to be a qualified conservation contribution, and none is implied (qcc[c_cash], qcc[c_cgp])
+  assumed: the examples don't say; Worksheet 2 is read as the publication runs the examples, with no earlier carryover (has_carryover[ex_c])
+  law date 2025-12-31, cut 2026-10-18
+q_a_cash: (2 000 USD, 0 USD)
+  assumed: every gift is said to be given to the organization; none is 'for the use of' it (use_of[a_cash], use_of[a_found], use_of[a_land])
+  assumed: no gift is said to be a qualified conservation contribution, and none is implied (qcc[a_cash], qcc[a_found], qcc[a_land])
+  law date 2025-12-31, cut 2026-10-18
+q_a_found: (25 000 USD, 30 000 USD, 0 USD, 0 USD, 5 000 USD)
+  assumed: every gift is said to be given to the organization; none is 'for the use of' it (use_of[a_cash], use_of[a_found], use_of[a_land])
+  assumed: no gift is said to be a qualified conservation contribution, and none is implied (qcc[a_cash], qcc[a_found], qcc[a_land])
+  law date 2025-12-31, cut 2026-10-18
+q_a_land: (15 000 USD, 15 000 USD)
+  assumed: every gift is said to be given to the organization; none is 'for the use of' it (use_of[a_cash], use_of[a_found], use_of[a_land])
+  assumed: no gift is said to be a qualified conservation contribution, and none is implied (qcc[a_cash], qcc[a_found], qcc[a_land])
+  law date 2025-12-31, cut 2026-10-18
+q_b_found: (1 000 USD, 1 000 USD)
+  assumed: every gift is said to be given to the organization; none is 'for the use of' it (use_of[b_cash], use_of[b_found], use_of[b_land])
+  assumed: no gift is said to be a qualified conservation contribution, and none is implied (qcc[b_cash], qcc[b_found], qcc[b_land])
+  law date 2025-12-31, cut 2026-10-18
+q_b_land: (22 000.00 USD, 0.00 USD, 22 000.00 USD, 24 000 USD)
+  assumed: every gift is said to be given to the organization; none is 'for the use of' it (use_of[b_cash], use_of[b_found], use_of[b_land])
+  assumed: no gift is said to be a qualified conservation contribution, and none is implied (qcc[b_cash], qcc[b_found], qcc[b_land])
+  law date 2025-12-31, cut 2026-10-18
+q_c_cash: (10 000 USD, 15 000 USD, 10 000 USD)
+  assumed: every gift is said to be given to the organization; none is 'for the use of' it (use_of[c_cash], use_of[c_cgp])
+  assumed: no gift is said to be a qualified conservation contribution, and none is implied (qcc[c_cash], qcc[c_cgp])
+  law date 2025-12-31, cut 2026-10-18
+q_c_cgp: (25 000 USD, 15 000 USD, 15 000 USD)
+  assumed: every gift is said to be given to the organization; none is 'for the use of' it (use_of[c_cash], use_of[c_cgp])
+  assumed: no gift is said to be a qualified conservation contribution, and none is implied (qcc[c_cash], qcc[c_cgp])
+  law date 2025-12-31, cut 2026-10-18
+warning: WARN-UNREAD def w18 is read by nothing
+warning: WARN-UNREAD def w41 is read by nothing

@@ -1,0 +1,19 @@
+part e1_asks_01
+  tally 2
+  note "E1-01 · Zbigniew's estate, paid out (tmp/cases/E1/questions.md): as of 2025-06-30, known 2026-01-15. The payouts are D's derivation; e1_01_payouts gives D's amounts and day, e1_01_payouts_to the accounts and arrivals (two asks: one bound variable keys one index, L §2.5); the four checks hold Piotr's and Ania's against what their households state (B-D27, A-D36) and what their accounts show (B's Cis savings export, Ania's Wrzos export), and the deposit against what went in."
+
+ask e1_01_anna_shown: check d.payout[anna] == e1_wrz[w20250616a].cash.amount law 2025-06-30 as known 2026-01-15
+
+ask e1_01_anna_stated: check d.payout[anna] == a.estate_paid law 2025-06-30 as known 2026-01-15
+
+ask e1_01_deposit: e1_paid_in, d.deposit, e1_deposit_left law 2025-06-30 as known 2026-01-15
+
+ask e1_01_in_is_out: check e1_paid_in == d.deposit law 2025-06-30 as known 2026-01-15
+
+ask e1_01_payouts: d.payout[h], d.div_paid_on for h in [piotr, anna, marta, jakub] law 2025-06-30 as known 2026-01-15
+
+ask e1_01_payouts_to: e1_paid_to[h], e1_arrived[h] for h in e1_payee law 2025-06-30 as known 2026-01-15
+
+ask e1_01_piotr_shown: check d.payout[piotr] == b.savr[s20250616a].cash.amount law 2025-06-30 as known 2026-01-15
+
+ask e1_01_piotr_stated: check d.payout[piotr] == e1_piotr_notice law 2025-06-30 as known 2026-01-15

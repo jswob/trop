@@ -1,0 +1,26 @@
+Bank Olcha S.A.|account statement
+Account|LN73 4400 2011 0000 8817 2264 0001
+Holder|HALINA SOWA
+Period|20251201|20251231
+Opening balance|9 916,59
+Date|Type|Counterparty|Title|Amount|Balance after
+20251203|CASH|ATM Olcha Brzezie|cash withdrawal|-500,00|9 416,59
+20251203|CARD|Drogeria Konwalia|card ...2264|-240,40|9 176,19
+20251203|CARD|Warzywniak u Janka|card ...2264|-182,43|8 993,76
+20251205|CREDIT|Social Insurance Office|survivor pension 12/2025 + arrears 07-11/2025 (decision 2025-11-20)|5 820,80|14 814,56
+20251205|STANDING ORDER|WM Ogrodowa 2|fee Ogrodowa 2/11 12/2025|-445,00|14 369,56
+20251205|CARD|Stacja Olcha-Paliwa|card ...2264|-62,72|14 306,84
+20251206|CARD|Stacja Olcha-Paliwa|card ...2264|-94,60|14 212,24
+20251208|CREDIT|Oskar Wilczek|rent 12/2025 Ogrodowa 2/11|1 900,00|16 112,24
+20251215|STANDING ORDER|Volta Energia|Leśna 4 energy 12/2025|-385,00|15 727,24
+20251217|CASH|ATM Olcha Brzezie|cash withdrawal|-500,00|15 227,24
+20251217|CARD|Warzywniak u Janka|card ...2264|-85,13|15 142,11
+20251220|CARD|Sklep Pod Lipą|card ...2264|-106,53|15 035,58
+20251222|TRANSFER|Revenue Office Kłodzin|PIT-13 advance 11/2025 H. SOWA|-131,00|14 904,58
+20251222|STANDING ORDER|Telekom Lenia|phone 12/2025|-59,00|14 845,58
+20251229|TRANSFER|Opieka Dom sp.|home help 12/2025|-2 150,00|12 695,58
+20251230|CREDIT|Oskar Wilczek|rent 01/2026 Ogrodowa 2/11|1 900,00|14 595,58
+20251230|CARD|Apteka Rumianek|card ...2264|-226,15|14 369,43
+20251230|CARD|Apteka Rumianek|card ...2264|-202,58|14 166,85
+20251230|CARD|Market Brzezie|card ...2264|-86,10|14 080,75
+Closing balance|14 080,75

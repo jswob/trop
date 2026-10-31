@@ -1,0 +1,26 @@
+# L §5.18 solve: "The grid is lo + i·u, and lo and hi must lie on it": [0, 3] with u = 2 leaves 3 off the grid, refused
+# at load where the literals show it (L §8.4: LOAD-DOMAIN).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+input xv: num
+input target: num
+def sq: num = xv * xv at reader
+
+version v
+  cite s
+  governs 2026..
+  known 2026-01-01
+  xv = 1
+  target = 2
+
+ask a: solve sq == target for xv in [0, 3] to 2 law 2026-06-30
+=== expect
+refused: LOAD-DOMAIN ...

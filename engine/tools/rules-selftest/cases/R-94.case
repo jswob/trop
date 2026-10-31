@@ -1,0 +1,58 @@
+# R-94: T's case and check ids, ask texts and long expected values, searched for in the
+# engine's code. A report, so its hits exit 0; it fails only when the suite exists and
+# gives it nothing to search for.
+
+case: case-id-in-a-string
+tool: run
+expect: case id A-01 in a string (R-94)
+exit: any
+--- module
+/// Planted.
+pub fn planted() -> &'static str {
+    "A-01"
+}
+--- run
+tools/special-casing
+
+case: ask-text-in-a-string
+tool: run
+expect: an ask text in a string: '-bal(loan, 2025-06-30) in amend' (R-94)
+exit: any
+--- module
+/// Planted.
+pub fn planted(ask: &str) -> bool {
+    ask == "-bal(loan, 2025-06-30) in amend"
+}
+--- run
+tools/special-casing
+
+case: ask-name-in-a-string
+tool: run
+expect: the ask name q_primitives in a string (R-94)
+exit: any
+--- module
+/// Planted.
+pub fn planted(ask: &str) -> bool {
+    ask == "q_primitives"
+}
+--- run
+tools/special-casing
+
+case: value-as-a-literal
+tool: run
+expect: the value 1437 as the literal 143_700 (R-94)
+exit: any
+--- module
+/// Planted: 1 437.00 in minor units, a stored answer.
+pub fn planted() -> u64 {
+    143_700
+}
+--- run
+tools/special-casing
+
+case: suite-gives-nothing-to-search
+tool: run
+expect: the scan would be silently off; see engine/tests/README.md for where they moved (R-94)
+--- delete tests/checks.tsv
+--- run
+tools/special-casing

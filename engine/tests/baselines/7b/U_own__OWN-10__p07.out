@@ -1,0 +1,18 @@
+q_parts (p = ania, b = fund_rows[r1]): 20 fz_units
+  cut 2026-10-30
+q_parts (p = ania, b = fund_rows[r2]): 10 fz_units
+  cut 2026-10-30
+q_parts (p = ania, b = fund_rows[r3]): 15 fz_units
+  cut 2026-10-30
+q_parts (p = tomek, b = fund_rows[r1]): 0 fz_units
+  cut 2026-10-30
+q_parts (p = tomek, b = fund_rows[r2]): 15 fz_units
+  cut 2026-10-30
+q_parts (p = tomek, b = fund_rows[r3]): 0 fz_units
+  cut 2026-10-30
+q_tax (g = fund_rows[r4], p = ania): 0.00 DUK
+  cut 2026-10-30
+q_tax (g = fund_rows[r4], p = tomek): 40.04 DUK
+  cut 2026-10-30
+q_total: 60 fz_units
+  cut 2026-10-30

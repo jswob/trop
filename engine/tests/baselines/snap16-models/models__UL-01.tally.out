@@ -1,0 +1,118 @@
+band_above_300000: r180
+  pinned: revenue_ytd = 300 000.01 PLN
+  pinned: social_not_deducted = 0.00 PLN
+  law date 2026-10-18, cut 2026-10-18
+band_above_60000: r100
+  pinned: revenue_ytd = 60 000.01 PLN
+  pinned: social_not_deducted = 0.00 PLN
+  law date 2026-10-18, cut 2026-10-18
+band_at_300000: r100
+  pinned: revenue_ytd = 300 000.00 PLN
+  pinned: social_not_deducted = 0.00 PLN
+  law date 2026-10-18, cut 2026-10-18
+band_at_60000: r60
+  pinned: revenue_ytd = 60 000.00 PLN
+  pinned: social_not_deducted = 0.00 PLN
+  law date 2026-10-18, cut 2026-10-18
+base_2025 (g = r60) [ul01_mode = down]: 5 129.50 PLN
+  reading: ul01_mode = down
+  law date 2026-10-18, cut 2026-10-18
+base_2025 (g = r60) [ul01_mode = half-even | half-up]: 5 129.51 PLN
+  reading: ul01_mode = half-even | half-up
+  law date 2026-10-18, cut 2026-10-18
+base_2025 (g = r180) [ul01_mode = *]: 15 388.52 PLN
+  law date 2026-10-18, cut 2026-10-18
+base_2025 (g = collab) [ul01_mode = down | half-even]: 6 411.88 PLN
+  reading: ul01_mode = down | half-even
+  law date 2026-10-18, cut 2026-10-18
+base_2025 (g = collab) [ul01_mode = half-up]: 6 411.89 PLN
+  reading: ul01_mode = half-up
+  law date 2026-10-18, cut 2026-10-18
+base_2026 (g = r60) [ul01_mode = *]: 5 537.18 PLN
+  law date 2026-10-18, cut 2026-10-18
+base_2026 (g = r100) [ul01_mode = *]: 9 228.64 PLN
+  law date 2026-10-18, cut 2026-10-18
+base_2026 (g = r180) [ul01_mode = *]: 16 611.55 PLN
+  law date 2026-10-18, cut 2026-10-18
+base_2026 (g = nobiz) [ul01_mode = *]: 9 228.64 PLN
+  law date 2026-10-18, cut 2026-10-18
+base_2026 (g = collab) [ul01_mode = *]: 6 921.48 PLN
+  law date 2026-10-18, cut 2026-10-18
+base_2026 (g = karta) [ul01_mode = *]: 4 806.00 PLN
+  law date 2026-10-18, cut 2026-10-18
+contribution_2025 (g = r60) [ul01_base9 = *, ul01_mode = down]: 461.65 PLN
+  reading: ul01_mode = down
+  law date 2026-10-18, cut 2026-10-18
+contribution_2025 (g = r60) [ul01_base9 = *, ul01_mode = half-even | half-up]: 461.66 PLN
+  reading: ul01_mode = half-even | half-up
+  law date 2026-10-18, cut 2026-10-18
+contribution_2025 (g = r100) [ul01_base9 = *, ul01_mode = down]: 769.42 PLN
+  reading: ul01_mode = down
+  law date 2026-10-18, cut 2026-10-18
+contribution_2025 (g = r100) [ul01_base9 = *, ul01_mode = half-even | half-up]: 769.43 PLN
+  reading: ul01_mode = half-even | half-up
+  law date 2026-10-18, cut 2026-10-18
+contribution_2025 (g = r180) [ul01_base9 = *, ul01_mode = down]: 1 384.96 PLN
+  reading: ul01_mode = down
+  law date 2026-10-18, cut 2026-10-18
+contribution_2025 (g = r180) [ul01_base9 = *, ul01_mode = half-even | half-up]: 1 384.97 PLN
+  reading: ul01_mode = half-even | half-up
+  law date 2026-10-18, cut 2026-10-18
+contribution_2025 (g = nobiz) [ul01_base9 = *, ul01_mode = down]: 769.42 PLN
+  reading: ul01_mode = down
+  law date 2026-10-18, cut 2026-10-18
+contribution_2025 (g = nobiz) [ul01_base9 = *, ul01_mode = half-even | half-up]: 769.43 PLN
+  reading: ul01_mode = half-even | half-up
+  law date 2026-10-18, cut 2026-10-18
+contribution_2025 (g = collab) [ul01_base9 = *, ul01_mode = down]: 577.06 PLN
+  reading: ul01_mode = down
+  law date 2026-10-18, cut 2026-10-18
+contribution_2025 (g = collab) [ul01_base9 = *, ul01_mode = half-even | half-up]: 577.07 PLN
+  reading: ul01_mode = half-even | half-up
+  law date 2026-10-18, cut 2026-10-18
+contribution_2025 (g = karta) [ul01_base9 = *, ul01_mode = *]: ?"Jaki procent minimalnego wynagrodzenia stanowi podstawę składki dla karty podatkowej w tym roku?" (karta_share[2025])
+  law date 2026-10-18, cut 2026-10-18
+contribution_2026 (g = r60) [ul01_base9 = *, ul01_mode = down]: 498.34 PLN
+  reading: ul01_mode = down
+  law date 2026-10-18, cut 2026-10-18
+contribution_2026 (g = r60) [ul01_base9 = *, ul01_mode = half-even | half-up]: 498.35 PLN
+  reading: ul01_mode = half-even | half-up
+  law date 2026-10-18, cut 2026-10-18
+contribution_2026 (g = r100) [ul01_base9 = *, ul01_mode = down]: 830.57 PLN
+  reading: ul01_mode = down
+  law date 2026-10-18, cut 2026-10-18
+contribution_2026 (g = r100) [ul01_base9 = *, ul01_mode = half-even | half-up]: 830.58 PLN
+  reading: ul01_mode = half-even | half-up
+  law date 2026-10-18, cut 2026-10-18
+contribution_2026 (g = r180) [ul01_base9 = *, ul01_mode = down]: 1 495.03 PLN
+  reading: ul01_mode = down
+  law date 2026-10-18, cut 2026-10-18
+contribution_2026 (g = r180) [ul01_base9 = *, ul01_mode = half-even | half-up]: 1 495.04 PLN
+  reading: ul01_mode = half-even | half-up
+  law date 2026-10-18, cut 2026-10-18
+contribution_2026 (g = nobiz) [ul01_base9 = *, ul01_mode = down]: 830.57 PLN
+  reading: ul01_mode = down
+  law date 2026-10-18, cut 2026-10-18
+contribution_2026 (g = nobiz) [ul01_base9 = *, ul01_mode = half-even | half-up]: 830.58 PLN
+  reading: ul01_mode = half-even | half-up
+  law date 2026-10-18, cut 2026-10-18
+contribution_2026 (g = collab) [ul01_base9 = *, ul01_mode = *]: 622.93 PLN
+  law date 2026-10-18, cut 2026-10-18
+contribution_2026 (g = karta) [ul01_base9 = *, ul01_mode = *]: 432.54 PLN
+  law date 2026-10-18, cut 2026-10-18
+mw75_column (y = 2025) [ul01_mode = *]: 3 499.50 PLN
+  law date 2026-10-18, cut 2026-10-18
+mw75_column (y = 2026) [ul01_mode = *]: 3 604.50 PLN
+  law date 2026-10-18, cut 2026-10-18
+yoy (g = r60) [ul01_base9 = *, ul01_mode = *]: 0.079
+  law date 2026-10-18, cut 2026-10-18
+yoy (g = r100) [ul01_base9 = *, ul01_mode = *]: 0.079
+  law date 2026-10-18, cut 2026-10-18
+yoy (g = r180) [ul01_base9 = *, ul01_mode = *]: 0.079
+  law date 2026-10-18, cut 2026-10-18
+yoy (g = nobiz) [ul01_base9 = *, ul01_mode = *]: 0.079
+  law date 2026-10-18, cut 2026-10-18
+yoy (g = collab) [ul01_base9 = *, ul01_mode = *]: 0.079
+  law date 2026-10-18, cut 2026-10-18
+yoy (g = karta) [ul01_base9 = *, ul01_mode = *]: ?"Jaki procent minimalnego wynagrodzenia stanowi podstawę składki dla karty podatkowej w tym roku?" (karta_share[2025])
+  law date 2026-10-18, cut 2026-10-18

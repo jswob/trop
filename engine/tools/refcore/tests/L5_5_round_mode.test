@@ -1,0 +1,33 @@
+# L §5.5: "round(x, u, a) ... may take it as the mode when every option is a rounding code (§2.2)".
+# round(2.5, 1, down) = 2, round(2.5, 1, half-up) = 3 (L §7.2).
+=== m.tally
+model t
+  tally 2
+  on 2016-03-01
+  start 2015-11-01
+  end 2016-10-31
+
+source s "s"
+
+axis rm
+  down "rounds down"
+  half-up "rounds half up"
+
+input x: num
+input one: num
+
+version v
+  cite s
+  governs always
+  known 2016-01-01
+  x = 2.5
+  one = 1
+
+ask q1: round(x, one, rm)
+=== expect
+q1 [rm = down]: 2
+  reading: rm = down
+  cut 2016-03-01
+q1 [rm = half-up]: 3
+  reading: rm = half-up
+  cut 2016-03-01

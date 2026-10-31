@@ -1,0 +1,36 @@
+# L §3.4 (round 7c): "`cpi` is an input or a def keyed by one time index (a level built from an inflation row is a
+# def)".  Reading rent (2 000.00 PLN in 2026 prices) at law date d gives `num PLN` = value x cpi[d] / cpi[2026]: in
+# 2026, 2 000 PLN; in 2027, with cpi[2027] = cpi[2026] x (1 + 5 %), 2 000 x 1.05 = 2 100 PLN.
+=== m.tally
+model t
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2028-12-31
+
+source s "synthetic"
+unit PLN: currency minor 0.01
+
+index ty = year 2026..2028
+
+input inflation: num
+input rent: money PLN prices 2026 by cpi
+
+def cpi[y in ty]: num at start_of(y)
+  rule initial = 1 when pos(y) == 1
+  rule next = cpi[y - 1] * (1 + inflation) when pos(y) > 1
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  inflation = 5 %
+  rent = 2 000.00 PLN
+
+ask q1: rent law 2026-06-30
+ask q2: rent law 2027-06-30
+=== expect
+q1: 2 000 PLN
+  law date 2026-06-30, cut 2026-10-18
+q2: 2 100 PLN
+  law date 2027-06-30, cut 2026-10-18

@@ -1,0 +1,10 @@
+# R-21: no `as` casts between number types.
+
+case: as-cast
+tool: clippy
+expect: clippy::as_conversions
+--- module
+/// Planted.
+pub fn planted(v: u16) -> u8 {
+    v as u8
+}

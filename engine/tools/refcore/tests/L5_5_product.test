@@ -1,0 +1,51 @@
+# L §5.5 A set that isn't a product: "(x1, y1) and (x2, y2) give A, the cross pairs B), the set is split by the
+# axes in id order: the first axis's options are grouped by the set of the other axes' combinations they give the
+# result with, each group is a line ... Every line then names a product."  "The axis id in a key position reads
+# the input at the current option": vx[ax] == vy[ay] is true exactly on the pairs (x1, y1) and (x2, y2).
+# Lines sort by the axes' options in declaration order, axes in id order (L §5.18 Output).
+=== m.tally
+model t
+  tally 2
+  on 2016-03-01
+  start 2015-11-01
+  end 2016-10-31
+
+source s "s"
+
+axis ax
+  x1 "first"
+  x2 "second"
+axis ay
+  y1 "first"
+  y2 "second"
+
+input vx[a in ax]: int
+input vy[b in ay]: int
+
+version v
+  cite s
+  governs always
+  known 2016-01-01
+  vx[x1] = 1
+  vx[x2] = 2
+  vy[y1] = 1
+  vy[y2] = 2
+
+ask q1: vx[ax] == vy[ay]
+=== expect
+q1 [ax = x1, ay = y1]: true
+  reading: ax = x1
+  reading: ay = y1
+  cut 2016-03-01
+q1 [ax = x1, ay = y2]: false
+  reading: ax = x1
+  reading: ay = y2
+  cut 2016-03-01
+q1 [ax = x2, ay = y1]: false
+  reading: ax = x2
+  reading: ay = y1
+  cut 2016-03-01
+q1 [ax = x2, ay = y2]: true
+  reading: ax = x2
+  reading: ay = y2
+  cut 2016-03-01

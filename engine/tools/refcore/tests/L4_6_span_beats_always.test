@@ -1,0 +1,35 @@
+# L §4.6 step 3.3: among candidates still tied after 3.2, prefer "a row with a span over one with always".  Rows at
+# the same keys overlapping without replace are refused (step 2), so the preference meets rows that state as many
+# keys at different positions: x[a, *] (always) and x[*, b] (2026) both state one key and both match (a, b).
+# In 2026 the spanned row gives 5; in 2025 only the always row matches: 0.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+index ks = [a, c]
+index js = [b, d]
+input x[k in ks, j in js]: int
+
+version v1
+  cite s
+  governs always
+  known 2025-12-01
+  x[a, *] = 0
+
+version v2
+  cite s
+  governs 2026
+  known 2025-12-15
+  x[*, b] = 5
+
+ask q1: x[a, b] law 2026-03-01
+ask q2: x[a, b] law 2025-03-01
+=== expect
+q1: 5
+  law date 2026-03-01, cut 2026-12-31
+q2: 0
+  law date 2025-03-01, cut 2026-12-31

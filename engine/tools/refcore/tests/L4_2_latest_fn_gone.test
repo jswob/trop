@@ -1,0 +1,22 @@
+# L §2.2 (writer 8): the built-ins latest and earliest are gone (the list names neither), and a call takes a built-in's
+# name or a band's id (L §2.3 Calls): latest(d) names no band, LOAD-NAME.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+input d: date
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  d = window(2020-07-01, 2020-07-31)
+
+ask q1: latest(d)
+=== expect
+refused: LOAD-NAME ...

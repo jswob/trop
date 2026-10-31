@@ -1,0 +1,58 @@
+# L §5.14.3 How a settlement leg counts: "A version that turns a leg round, a place its `from` on one side and its `to`
+# on the other, gives settlement legs no sign: they are refused (RUN-RECORD), and only a waiver settles it"; L §8.4
+# `settlement <m> of <adjustment>: the leg is turned round`. turn swaps t[2026-03]'s places (konto -> konto2 becomes
+# konto2 -> konto); bank[r1] settling it is refused, and konto's balance with it (b).
+=== m.tally
+model hh
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source plan "plan"
+source act "act"
+source bank_export "bank"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2019-05-01..
+place konto2: accounts PLN lives 2019-05-01..
+input amt: money PLN
+input dom: int
+input src: key accounts
+input dst: key accounts
+input bank: observed
+def s_[m in months]: key accounts = src at start_of(m)
+def d_[m in months]: key accounts = dst at start_of(m)
+
+move t[m in months]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  leg cash from s_[m] to d_[m] amount amt
+
+version plan_2026
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  amt = 100.00 PLN "umowa"
+  dom = 10 "umowa"
+  src = konto "umowa"
+  dst = konto2 "umowa"
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "wyciąg"
+  opening[konto2] = 0 PLN at 2026-01-01 start "wyciąg"
+
+version turn
+  cite act
+  governs 2026-03
+  known 2026-05-01
+  replace src = konto2 "aneks"
+  replace dst = konto "aneks"
+
+version settle
+  cite bank_export
+  governs 2026-05
+  known 2026-05-20
+  bank[r1] = (on: 2026-05-15, kind: transfers, leg cash from konto2 to konto amount 100.00 PLN, fulfils: adjustments[t[2026-03].cash, turn]) "line 1"
+
+ask b: bal(konto, 2026-05-31)
+=== expect
+b: refused: RUN-RECORD settlement bank[r1] of adjustments[t[2026-03].cash, turn]: the leg is turned round
+  cut 2026-10-20

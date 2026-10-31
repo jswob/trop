@@ -1,0 +1,20 @@
+# L §8.4 names `window(a, b)` with a after b as undefined: in a row, where the values show it at load, LOAD-DOMAIN.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+input w: date
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  w = window(2026-03-10, 2026-03-01)
+=== expect
+refused: LOAD-DOMAIN ...

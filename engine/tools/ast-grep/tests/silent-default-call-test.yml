@@ -1,0 +1,7 @@
+id: silent-default-call
+valid:
+  - 'fn f(x: Option<i64>) -> Result<i64, E> { x.ok_or(E::Hole) }'
+invalid:
+  - 'fn f(x: Option<Num>) -> Num { x.unwrap_or_else(Num::default) }'
+  - 'fn f(x: Option<Num>) -> Num { x.unwrap_or(Default::default()) }'
+  - 'fn f(m: &mut Map) { m.entry(k).or_default(); }'

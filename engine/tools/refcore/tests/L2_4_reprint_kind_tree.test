@@ -1,0 +1,44 @@
+# GD-9 (round 19, writer 10): L §2.4 "`kind` sections print in tree order: each kind is followed by its subkinds
+# (and theirs, depth first), kinds with the same parent (or no parent) sorted by id (ASCII)". Roots a, b; a's subkinds
+# c, z; z's subkind y; b's subkind q: a, c, z, y, b, q (snap14 printed them by a topological order).
+=== options reprint
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+kind b
+kind z: a
+kind a
+kind y: z
+kind c: a
+kind q: b
+=== expect
+--- m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+unit PLN: currency minor 0.01
+
+kind a
+
+kind c: a
+
+kind z: a
+
+kind y: z
+
+kind b
+
+kind q: b
+sha256 b81c8f0e84322ed8cfe7ca386853d837ca14bf2cba74e3b350a7578f8e65212c

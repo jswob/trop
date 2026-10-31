@@ -1,0 +1,16 @@
+# L §2.5: "A bound variable with the same name as a top-level id ... is refused (LOAD-SHADOW)."
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "a source"
+
+index ks = [a, b]
+input x: int
+
+def n: int = count(x in ks)
+=== expect
+refused: LOAD-SHADOW ...

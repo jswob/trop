@@ -1,0 +1,41 @@
+# L §5.18 solve, steps 1-3, F(v) = v^2 - target on [0, 4], u = 1.  target 2: F(0) = -2, F(4) = 14; m = 0 + 1 ×
+# floor(4/2) = 2, F(2) = 2 > 0, b = 2; m = 1, F(1) = -1, a = 1; b = a + u: c = 1.5, F(1.5) = 0.25, not F(a)'s sign:
+# the answer is a = 1 (the grid point nearest sqrt 2).  target 2.25: ... a = 1, b = 2, F(1.5) = 0: the answer is b =
+# 2 ("a tie going up").  target 100: F(0) and F(4) both negative: RUN-SOLVE.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+input xv: num
+input target: num
+def sq: num = xv * xv at reader
+input t2: num
+input t3: num
+def sq2: num = xv * xv - t2 at reader
+def sq3: num = xv * xv - t3 at reader
+
+version v
+  cite s
+  governs 2026..
+  known 2026-01-01
+  xv = 1
+  target = 2
+  t2 = 2.25
+  t3 = 100
+
+ask a: solve sq == target for xv in [0, 4] to 1 law 2026-06-30
+ask b: solve sq2 == 0 for xv in [0, 4] to 1 law 2026-06-30
+ask c: solve sq3 == 0 for xv in [0, 4] to 1 law 2026-06-30
+=== expect
+a: 1
+  law date 2026-06-30, cut 2026-12-31
+b: 2
+  law date 2026-06-30, cut 2026-12-31
+c: refused: RUN-SOLVE ...
+  law date 2026-06-30, cut 2026-12-31

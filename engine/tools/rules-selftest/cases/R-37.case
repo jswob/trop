@@ -1,0 +1,23 @@
+# R-37: no hash-map look-alike crates in what ships.
+
+case: hashbrown
+tool: deny-tally
+expect: banned
+text: hashbrown
+--- fake hashbrown 0.0.1
+--- replace crates/tally/Cargo.toml
+[dependencies]
+--- with
+[dependencies]
+hashbrown = { path = "@FAKES@/hashbrown-0.0.1", version = "0.0.1" }
+
+case: ahash
+tool: deny-tally
+expect: banned
+text: ahash
+--- fake ahash 0.0.1
+--- replace crates/tally/Cargo.toml
+[dependencies]
+--- with
+[dependencies]
+ahash = { path = "@FAKES@/ahash-0.0.1", version = "0.0.1" }

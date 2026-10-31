@@ -1,0 +1,42 @@
+# R-52: every dependency is on an allow-list; both runs keep one.
+
+case: unlisted-crate
+tool: deny
+expect: not-allowed
+text: zz-unlisted
+--- fake zz-unlisted 0.0.1
+--- replace crates/tally/Cargo.toml
+[dependencies]
+--- with
+[dependencies]
+zz-unlisted = { path = "@FAKES@/zz-unlisted-0.0.1", version = "0.0.1" }
+
+case: unlisted-crate-shipped
+tool: deny-tally
+expect: not-allowed
+text: zz-unlisted
+--- fake zz-unlisted 0.0.1
+--- replace crates/tally/Cargo.toml
+[dependencies]
+--- with
+[dependencies]
+zz-unlisted = { path = "@FAKES@/zz-unlisted-0.0.1", version = "0.0.1" }
+
+case: dev-tool-not-in-what-ships
+tool: deny-tally
+expect: not-allowed
+text: itoa
+--- replace crates/tally/Cargo.toml
+[dependencies]
+--- with
+[dependencies]
+itoa = "1"
+
+case: target-only-dependency
+tool: run
+expect: a dependency for some targets only
+--- append crates/tally/Cargo.toml
+[target.'cfg(target_pointer_width = "32")'.dependencies]
+num-traits = { workspace = true }
+--- run
+tools/check-rules

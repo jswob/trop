@@ -1,0 +1,25 @@
+# Round 18, C1-47 (fixed). L §5.16 The closed list: "mean(d) of a distribution value is refused (LOAD-RANDOM, A-42),
+# and the table's mean is the one a closed form and random at mean read"; in a def (here) as in an ask
+# (L5_16_mean_of_dist_value_ask). The table's means are read of random facts in L5_16_mean_table_random_facts.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+input a2: num
+input b4: num
+def um: num = mean(uniform(a2, b4))
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  a2 = 2
+  b4 = 4
+
+ask q2: um
+=== expect
+refused: LOAD-RANDOM ...

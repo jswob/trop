@@ -1,0 +1,8 @@
+code,house,name,kind,currency,first_valuation,file,distributions
+BRZ-GLB-A,BRZ,Brzask Global Equity,accumulating,DUK,2018-01-02,brz-glb-a.csv,
+BRZ-BND-A,BRZ,Brzask Treasury Bond,accumulating,DUK,2018-01-02,brz-bnd-a.csv,
+BRZ-DIV-D,BRZ,Brzask Dividend Equity,distributing,DUK,2018-01-02,brz-div-d.csv,"3.0 % of NAV, ex-day the 15th (or next business day) of month(s) 5"
+BRZ-MM-A,BRZ,Brzask Money Market,accumulating,DUK,2018-01-02,brz-mm-a.csv,
+WEK-EM-A,WEK,Wektor Emerging Markets,accumulating,DUK,2018-01-02,wek-em-a.csv,
+WEK-IDX-D,WEK,Wektor Lenia Index,distributing,DUK,2018-01-02,wek-idx-d.csv,"1.6 % of NAV, ex-day the 15th (or next business day) of month(s) 3,9"
+WEK-WCP-2055,WEK,Wektor Workplace Plan 2055,accumulating,DUK,2019-07-01,wek-wcp-2055.csv,

@@ -1,0 +1,80 @@
+a10 [px_round = *]: (refused: RUN-ORDER decisions hr1_take and zosia_save read each other on 2026-01-15, refused: RUN-ORDER decisions hr1_take and zosia_save read each other on 2026-01-15)
+  law date 2026-01-15, cut 2026-01-15
+a11 [pit6_health = *, px_round = *]: (?"the Bank Lazur savings rate from 2025-07-01: no statement after 2025-06-30 was downloaded" (laz_rate), ?"the Bank Lazur savings rate from 2025-07-01: no statement after 2025-06-30 was downloaded" (laz_rate), ?"the Bank Lazur savings rate from 2025-07-01: no statement after 2025-06-30 was downloaded" (laz_rate))
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-01-15
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-01-31
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-02-14
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-02-28
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-03-14
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-03-31
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-04-15
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-04-30
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-05-15
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-05-30
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-06-13
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-06-30
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-07-15
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-07-31
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-08-14
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-08-29
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-09-15
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-09-30
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-10-15
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-10-31
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-11-14
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-11-28
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-12-15
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-12-31
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2026-01-15
+  anchor: ania_sav 2025-12-31 end, stated 39 162.33 DUK, difference 39 162.33 DUK
+  anchor: joint 2025-12-31 end, stated 11 579.98 DUK, difference 0.00 DUK
+  anchor: lazur 2025-06-30 end, stated 24 223.47 DUK, difference 22 223.47 DUK
+  anchor: wcp_a 2025-12-31 end, stated 124.6286 wcp, difference 93.5829 wcp
+  anchor: wcp_t 2025-12-31 end, stated 336.6349 wcp, difference 279.8037 wcp
+  unfulfilled: laz_interest[2025-07]
+  unfulfilled: laz_interest[2025-10]
+  law date 2026-01-15, cut 2026-01-15
+a11_known_part [pit6_health = *, px_round = *]: (209 642.97 DUK, 130 205.73 DUK, 339 848.70 DUK)
+  pinned: laz_rate = 0 /year
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-01-15
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-01-31
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-02-14
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-02-28
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-03-14
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-03-31
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-04-15
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-04-30
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-05-15
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-05-30
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-06-13
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-06-30
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-07-15
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-07-31
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-08-14
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-08-29
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-09-15
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-09-30
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-10-15
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-10-31
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-11-14
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-11-28
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-12-15
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-12-31
+  pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2026-01-15
+  anchor: ania_sav 2025-12-31 end, stated 39 162.33 DUK, difference 39 162.33 DUK
+  anchor: joint 2025-12-31 end, stated 11 579.98 DUK, difference 0.00 DUK
+  anchor: lazur 2025-06-30 end, stated 24 223.47 DUK, difference 22 223.47 DUK
+  anchor: wcp_a 2025-12-31 end, stated 124.6286 wcp, difference 93.5829 wcp
+  anchor: wcp_t 2025-12-31 end, stated 336.6349 wcp, difference 279.8037 wcp
+  law date 2026-01-15, cut 2026-01-15
+a05_tomek (y = 2022) [px_round = *]: (2022, 0.00 DUK, 0 DUK, 1 056.42 DUK)
+  law date 2025-04-30, cut 2025-04-30
+a05_tomek (y = 2023) [px_round = *]: (2023, 0.00 DUK, 390.73 DUK, 0 DUK)
+  law date 2025-04-30, cut 2025-04-30
+a05_tomek (y = 2024) [px_round = *]: (2024, 145.00 DUK, 528.21 DUK, 0 DUK)
+  law date 2025-04-30, cut 2025-04-30
+a05_tomek_2024 [px_round = *]: (0.00 DUK, 137.48 DUK)
+  law date 2025-04-30, cut 2025-04-30
+a05_wrapped (w = wbank[w20240307_075]): (wbank[w20240307_075], 0.00 DUK)
+  law date 2025-04-30, cut 2025-04-30
+

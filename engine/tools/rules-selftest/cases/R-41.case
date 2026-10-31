@@ -1,0 +1,36 @@
+# R-41: no random-number crates in what ships: cargo-deny and the tree probe.
+
+case: rand-deny
+tool: deny-tally
+expect: banned
+text: rand
+--- fake rand 0.0.1
+--- replace crates/tally/Cargo.toml
+[dependencies]
+--- with
+[dependencies]
+rand = { path = "@FAKES@/rand-0.0.1", version = "0.0.1" }
+
+case: rand-tree-probe
+tool: run
+expect: tally depends on rand
+--- fake rand 0.0.1
+--- replace crates/tally/Cargo.toml
+[dependencies]
+--- with
+[dependencies]
+rand = { path = "@FAKES@/rand-0.0.1", version = "0.0.1" }
+--- run
+cargo metadata --offline --format-version 1 >/dev/null
+tools/check step tree-probe
+
+case: getrandom
+tool: deny-tally
+expect: banned
+text: getrandom
+--- fake getrandom 0.0.1
+--- replace crates/tally/Cargo.toml
+[dependencies]
+--- with
+[dependencies]
+getrandom = { path = "@FAKES@/getrandom-0.0.1", version = "0.0.1" }

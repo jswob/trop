@@ -1,0 +1,29 @@
+# L §5.11 step 3: "A rule already beaten by an applicable rule (step 4) has its when skipped, so a read guarded by
+# an exception is never reached"; step 6: "Only the winner's value is evaluated: a beaten rule's division by zero
+# ... never happens."  zero = 0: the beaten rule's when and value would divide by it.
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+input zero: int
+input one: int
+
+def x: num at reader
+  rule a beats b = one
+  rule b = one / zero when one / zero > 0
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  zero = 0
+  one = 1
+
+ask q1: x law 2026-06-30
+=== expect
+q1: 1
+  law date 2026-06-30, cut 2026-01-01

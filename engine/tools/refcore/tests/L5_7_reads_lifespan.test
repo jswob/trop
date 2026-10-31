@@ -1,0 +1,33 @@
+# L §5.7 Reads and lifespans: "a governing row is read even outside a lifespan; with none, a read outside the
+# lifespan is none, inside it HOLE-UNGOVERNED" (L §4.6 step 5).  ana lives 2000-01-01..2020-12-31; x has a row
+# for ana only from 2023 (after her life): read in 2025 it is the row, in 2021 none, in 2010 a hole.
+=== m.tally
+model hh
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+kind persons
+
+input x[p in persons]: int
+
+version v
+  cite s
+  governs 2023..
+  known 2025-01-01
+  persons + [ana] lives 2000-01-01..2020-12-31
+  x[ana] = 5
+
+ask q1: x[ana] law 2025-01-01
+ask q2: x[ana] law 2021-01-01
+ask q3: x[ana] law 2010-01-01
+=== expect
+q1: 5
+  law date 2025-01-01, cut 2026-01-01
+q2: none
+  law date 2021-01-01, cut 2026-01-01
+q3: ?"x at ana: no value at 2010-01-01" (x[ana])
+  law date 2010-01-01, cut 2026-01-01

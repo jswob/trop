@@ -1,0 +1,95 @@
+ex1_holding: 12 000 shr
+  law date 2026-10-18, cut 2026-10-18
+ex2_bnb: 500 shr
+  assumed: HS284 doesn't state Mr Schneider's residence on 11 September 2024; the example applies the 30-day rule, which needs UK residence at the acquisition (res_uk[sep11])
+  law date 2026-10-18, cut 2026-10-18
+ex2_cost: 850 GBP
+  assumed: HS284 doesn't state Mr Schneider's residence on 11 September 2024; the example applies the 30-day rule, which needs UK residence at the acquisition (res_uk[sep11])
+  law date 2026-10-18, cut 2026-10-18
+ex2_loss: 100 GBP
+  assumed: HS284 doesn't state Mr Schneider's residence on 11 September 2024; the example applies the 30-day rule, which needs UK residence at the acquisition (res_uk[sep11])
+  law date 2026-10-18, cut 2026-10-18
+ex2_pool: 3 500 shr
+  assumed: HS284 doesn't state Mr Schneider's residence on 11 September 2024; the example applies the 30-day rule, which needs UK residence at the acquisition (res_uk[sep11])
+  law date 2026-10-18, cut 2026-10-18
+ex2_proceeds: 750 GBP
+  assumed: HS284 doesn't state Mr Schneider's residence on 11 September 2024; the example applies the 30-day rule, which needs UK residence at the acquisition (res_uk[sep11])
+  law date 2026-10-18, cut 2026-10-18
+ex3_added: 2 130 GBP
+  law date 2026-10-18, cut 2026-10-18
+ex3_cost (k = 3) [cg_round = exact]: 8792/3 (2 930.66666666667) GBP
+  reading: cg_round = exact
+  law date 2026-10-18, cut 2026-10-18
+ex3_cost (k = 3) [cg_round = ceil | half-up | half-even]: 2 931 GBP
+  reading: cg_round = ceil | half-up | half-even
+  law date 2026-10-18, cut 2026-10-18
+ex3_cost (k = 4) [cg_round = exact]: 5024/3 (1 674.66666666667) GBP
+  reading: cg_round = exact
+  law date 2026-10-18, cut 2026-10-18
+ex3_cost (k = 4) [cg_round = ceil | half-up]: 1 675 GBP
+  reading: cg_round = ceil | half-up
+  law date 2026-10-18, cut 2026-10-18
+ex3_cost (k = 4) [cg_round = half-even]: 1 674 GBP
+  reading: cg_round = half-even
+  law date 2026-10-18, cut 2026-10-18
+ex3_cost_plus (k = 3) [cg_round = exact]: 9092/3 (3 030.66666666667) GBP
+  reading: cg_round = exact
+  law date 2026-10-18, cut 2026-10-18
+ex3_cost_plus (k = 3) [cg_round = ceil | half-up | half-even]: 3 031 GBP
+  reading: cg_round = ceil | half-up | half-even
+  law date 2026-10-18, cut 2026-10-18
+ex3_cost_plus (k = 4) [cg_round = exact]: 5339/3 (1 779.66666666667) GBP
+  reading: cg_round = exact
+  law date 2026-10-18, cut 2026-10-18
+ex3_cost_plus (k = 4) [cg_round = ceil | half-up]: 1 780 GBP
+  reading: cg_round = ceil | half-up
+  law date 2026-10-18, cut 2026-10-18
+ex3_cost_plus (k = 4) [cg_round = half-even]: 1 779 GBP
+  reading: cg_round = half-even
+  law date 2026-10-18, cut 2026-10-18
+ex3_gain (k = 3) [cg_round = exact]: 988/3 (329.333333333333) GBP
+  reading: cg_round = exact
+  law date 2026-10-18, cut 2026-10-18
+ex3_gain (k = 3) [cg_round = ceil | half-up | half-even]: 329 GBP
+  reading: cg_round = ceil | half-up | half-even
+  law date 2026-10-18, cut 2026-10-18
+ex3_gain (k = 4) [cg_round = exact]: 901/3 (300.333333333333) GBP
+  reading: cg_round = exact
+  law date 2026-10-18, cut 2026-10-18
+ex3_gain (k = 4) [cg_round = ceil | half-up]: 300 GBP
+  reading: cg_round = ceil | half-up
+  law date 2026-10-18, cut 2026-10-18
+ex3_gain (k = 4) [cg_round = half-even]: 301 GBP
+  reading: cg_round = half-even
+  law date 2026-10-18, cut 2026-10-18
+ex3_pool_cost (k = 1) [cg_round = *]: 4 150 GBP
+  law date 2026-10-18, cut 2026-10-18
+ex3_pool_cost (k = 2) [cg_round = *]: 6 280 GBP
+  law date 2026-10-18, cut 2026-10-18
+ex3_pool_cost (k = 3) [cg_round = exact]: 10048/3 (3 349.33333333333) GBP
+  reading: cg_round = exact
+  law date 2026-10-18, cut 2026-10-18
+ex3_pool_cost (k = 3) [cg_round = ceil | half-up | half-even]: 3 349 GBP
+  reading: cg_round = ceil | half-up | half-even
+  law date 2026-10-18, cut 2026-10-18
+ex3_pool_cost (k = 4) [cg_round = exact]: 5024/3 (1 674.66666666667) GBP
+  reading: cg_round = exact
+  law date 2026-10-18, cut 2026-10-18
+ex3_pool_cost (k = 4) [cg_round = ceil | half-up]: 1 674 GBP
+  reading: cg_round = ceil | half-up
+  law date 2026-10-18, cut 2026-10-18
+ex3_pool_cost (k = 4) [cg_round = half-even]: 1 675 GBP
+  reading: cg_round = half-even
+  law date 2026-10-18, cut 2026-10-18
+ex3_pool_sh (k = 1): 1 000 shr
+  law date 2026-10-18, cut 2026-10-18
+ex3_pool_sh (k = 2): 1 500 shr
+  law date 2026-10-18, cut 2026-10-18
+ex3_pool_sh (k = 3): 800 shr
+  law date 2026-10-18, cut 2026-10-18
+ex3_pool_sh (k = 4): 400 shr
+  law date 2026-10-18, cut 2026-10-18
+ex3_proceeds (k = 3): 3 360 GBP
+  law date 2026-10-18, cut 2026-10-18
+ex3_proceeds (k = 4): 2 080 GBP
+  law date 2026-10-18, cut 2026-10-18

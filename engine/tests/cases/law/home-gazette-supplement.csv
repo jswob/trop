@@ -1,0 +1,5 @@
+id,value,unit,published,from,to,rule,note
+CBL-REF,5.75,%/year,2023-10-04,2023-10-05,2025-03-05,,CBL reference rate
+CBL-REF,5.25,%/year,2025-03-05,2025-03-06,2025-10-01,,CBL reference rate
+CBL-REF,4.75,%/year,2025-10-01,2025-10-02,2026-05-06,,CBL reference rate
+CBL-REF,4.50,%/year,2026-05-06,2026-05-07,,,CBL reference rate

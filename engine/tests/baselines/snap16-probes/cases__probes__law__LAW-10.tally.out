@@ -1,0 +1,10 @@
+settles: 2027-12-31
+  law date 2026-10-25, cut 2026-10-25
+tax_200k_more: 0 DUK
+  pinned: spent_more = 200 000.00 DUK
+  law date 2026-10-25, cut 2026-10-25
+tax_no_more: 7 600 DUK
+  pinned: spent_more = 0.00 DUK
+  law date 2026-10-25, cut 2026-10-25
+tax_pending: ?"How much more of the proceeds does Halina spend on her own home by 31 December 2027, besides the 300 000.00 of 2025?" (spent_more)
+  law date 2026-10-25, cut 2026-10-25

@@ -1,0 +1,35 @@
+# MC-E1-F1. L §6.1: "A model is one or more .tally files in one directory tree"; "A member's asks are asked by name in
+# a run of the joint model, as a.q, and answered by the member alone"; "each member stays reproducible alone". L §6.4:
+# an ask that names a scenario loads with that scenario's file, and L §5.18 checks a line only in the worlds it is
+# evaluated in. The member's base ask q pins its own scenario s1 (in its tree): the joint model loads (jq), and m.q is
+# answered by the member alone, s1 loaded (world: s1). snap9 refused every joint model over the member (member m:
+# LOAD-SCENARIO ask q names s1, neither the model nor a loaded scenario).
+=== j/joint.tally
+model j
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+  use m = "../m" sha256 "fd36f989d72da462c1799e54895808d975e256f427a999abe300da4dd81165cb"
+
+ask jq: m.x law 2026-06-30
+=== m/model.tally
+model m
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+input x: int question "x?"
+
+ask q: x with scenario s1 law 2026-06-30
+=== m/scenarios/s1.tally
+scenario s1 over m
+  tally 2
+  from 2026-03-01
+=== expect jq m.q
+jq: ?"x?" (m.x)
+  law date 2026-06-30, cut 2026-01-01
+m.q: ?"x?" (x)
+  world: s1
+  law date 2026-06-30, cut 2026-01-01

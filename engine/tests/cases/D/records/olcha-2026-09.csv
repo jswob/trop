@@ -1,0 +1,29 @@
+Bank Olcha S.A.|account statement
+Account|LN73 4400 2011 0000 8817 2264 0001
+Holder|HALINA SOWA
+Period|20260901|20260930
+Opening balance|8 158,60
+Date|Type|Counterparty|Title|Amount|Balance after
+20260902|CARD|Apteka Rumianek|card ...2264|-162,86|7 995,74
+20260902|CARD|Apteka Rumianek|card ...2264|-127,72|7 868,02
+20260903|CASH|ATM Olcha Brzezie|cash withdrawal|-500,00|7 368,02
+20260903|CARD|Sklep Pod Lipą|card ...2264|-26,83|7 341,19
+20260904|CREDIT|Social Insurance Office|survivor pension 09/2026|4 492,02|11 833,21
+20260907|STANDING ORDER|WM Ogrodowa 2|fee Ogrodowa 2/11 09/2026|-468,00|11 365,21
+20260907|CREDIT|Oskar Wilczek|rent 09/2026 Ogrodowa 2/11|1 976,00|13 341,21
+20260907|CARD|Drogeria Konwalia|card ...2264|-142,98|13 198,23
+20260908|CARD|Warzywniak u Janka|card ...2264|-84,49|13 113,74
+20260909|CARD|Stacja Olcha-Paliwa|card ...2264|-189,18|12 924,56
+20260913|CARD|Warzywniak u Janka|card ...2264|-57,12|12 867,44
+20260914|CARD|Sklep Pod Lipą|card ...2264|-135,18|12 732,26
+20260915|STANDING ORDER|Volta Energia|Leśna 4 energy 09/2026|-385,00|12 347,26
+20260917|CASH|ATM Olcha Brzezie|cash withdrawal|-500,00|11 847,26
+20260920|CARD|Piekarnia Złoty Kłos|card ...2264|-109,74|11 737,52
+20260921|TRANSFER|Revenue Office Kłodzin|PIT-13 advance 08/2026 H. SOWA|-136,00|11 601,52
+20260921|STANDING ORDER|Telekom Lenia|phone 09/2026|-59,00|11 542,52
+20260925|CARD|Drogeria Konwalia|card ...2264|-205,56|11 336,96
+20260925|CARD|Sklep Pod Lipą|card ...2264|-135,51|11 201,45
+20260925|TRANSFER|Opieka Dom sp.|home help 09/2026|-2 150,00|9 051,45
+20260927|CARD|Sklep Pod Lipą|card ...2264|-193,31|8 858,14
+20260927|CARD|Sklep Pod Lipą|card ...2264|-206,97|8 651,17
+Closing balance|8 651,17

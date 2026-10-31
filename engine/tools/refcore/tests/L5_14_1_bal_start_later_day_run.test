@@ -1,0 +1,37 @@
+# L §5.14.1's table (round 19, writer 10): `bal(x, d start)` "x's balance before day d's movements (d start, §4.6). On
+# the decision's day it reads none of that day's movements, its own result included, so it is no cycle; for d after
+# that day it is the decision's future, refused as bal(x, d) is" (LOAD-CYCLE where load sees the day, §8.3,
+# RUN-FUTURE otherwise). The same read by a decision on day_of(m, dom), a row: load doesn't see the
+# day, so the read is refused at the run (RUN-FUTURE).
+=== m.tally
+model r
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source own "own"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2020-01-01..
+place savings: accounts PLN lives 2020-01-01..
+input floor: money PLN
+input dom: int
+
+move save[m in months]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  reads konto
+  leg cash from konto to savings amount max(0 PLN, bal(konto, end_of(m) start) - floor)
+
+version v
+  cite own
+  governs 2026..
+  known 2026-01-01
+  floor = 100.00 PLN "own"
+  dom = 5 "own"
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "statement"
+
+ask s1: bal(savings, 2026-01-31)
+=== expect
+s1: refused: RUN-FUTURE a decision on 2026-01-05 reads konto at 2026-02-01 after its day
+  cut 2026-01-01

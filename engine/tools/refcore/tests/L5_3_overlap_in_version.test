@@ -1,0 +1,19 @@
+# L §5.3: "Two items of one label or target with overlapping spans in one version are refused (LOAD-OVERLAP)."
+=== m.tally
+model t
+  tally 2
+  on 2016-03-01
+  start 2015-11-01
+  end 2016-10-31
+
+source s "s"
+
+input n: int
+
+version v
+  cite s
+  known 2016-01-01
+  n = 1 governs 2015-11..2016-05
+  n = 2 governs 2016-03..
+=== expect
+refused: LOAD-OVERLAP ...

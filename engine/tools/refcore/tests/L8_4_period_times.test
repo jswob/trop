@@ -1,0 +1,16 @@
+# L §4.2 Date arithmetic moves a period by + or - only; a period times an int has no meaning: refused at load where
+# the types show it (L §8.4, LOAD-UNIT).
+=== m.tally
+model t
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+
+source s "synthetic"
+
+def g[m in months]: month = m * 1
+
+ask q: g[2026-03]
+=== expect
+refused: LOAD-UNIT ...

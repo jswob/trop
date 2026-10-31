@@ -1,0 +1,26 @@
+a_rule3: (4 800.00 DUK, 5 040.00 DUK)
+  law date 2025-12-31, cut 2026-10-29
+a_closed_form_agrees: ok
+  law date 2025-12-31, cut 2026-10-29
+a_closed_form_deduction: ok
+  law date 2025-12-31, cut 2026-10-29
+b_rule4: (7, 3 750.07 DUK, 5 249.99 DUK)
+  law date 2025-12-31, cut 2026-10-29
+b_rounds (k = 0): (9 000.00 DUK, 4 200.00 DUK)
+  law date 2025-12-31, cut 2026-10-29
+b_rounds (k = 1): (4 800.00 DUK, 5 040.00 DUK)
+  law date 2025-12-31, cut 2026-10-29
+b_rounds (k = 2): (3 960.00 DUK, 5 208.00 DUK)
+  law date 2025-12-31, cut 2026-10-29
+b_rounds (k = 3): (3 792.00 DUK, 5 241.60 DUK)
+  law date 2025-12-31, cut 2026-10-29
+b_rounds (k = 4): (3 758.40 DUK, 5 248.32 DUK)
+  law date 2025-12-31, cut 2026-10-29
+b_rounds (k = 5): (3 751.68 DUK, 5 249.66 DUK)
+  law date 2025-12-31, cut 2026-10-29
+b_rounds (k = 6): (3 750.34 DUK, 5 249.93 DUK)
+  law date 2025-12-31, cut 2026-10-29
+b_rounds (k = 7): (3 750.07 DUK, 5 249.99 DUK)
+  law date 2025-12-31, cut 2026-10-29
+b_fixed_point: (3 750 DUK, 5 250 DUK, true)
+  law date 2025-12-31, cut 2026-10-29

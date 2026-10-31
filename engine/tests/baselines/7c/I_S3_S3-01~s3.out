@@ -1,0 +1,20 @@
+s3_01: (1 112.00 DUK, 1 228.59 DUK, 211.00 DUK)
+  cut 2027-01-20
+s3_02 (b = trades_r[r3]): (2025-09-18, 30 lgf_a, 1 770 DUK)
+  cut 2027-01-20
+s3_02 (b = trades_r[r6]): (2026-06-01, 50 lgf_a, 3 185 DUK)
+  cut 2027-01-20
+s3_03 (p = emil, d = 2026-06-30): 6 303.6 DUK
+  cut 2027-01-20
+s3_03 (p = emil, d = 2026-09-30): 6 332.1 DUK
+  cut 2027-01-20
+s3_03 (p = emil, d = 2026-12-31): 6 074.4 DUK
+  anchor: n_cash 2026-12-31 end, stated 10 791.00 DUK, difference 0.00 DUK
+  cut 2027-01-20
+s3_03 (p = nadia, d = 2026-06-30): 16 485 DUK
+  cut 2027-01-20
+s3_03 (p = nadia, d = 2026-09-30): 16 575.2 DUK
+  cut 2027-01-20
+s3_03 (p = nadia, d = 2026-12-31): 15 098.4 DUK
+  anchor: n_cash 2026-12-31 end, stated 10 791.00 DUK, difference 0.00 DUK
+  cut 2027-01-20

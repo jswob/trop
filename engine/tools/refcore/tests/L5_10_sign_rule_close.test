@@ -1,0 +1,41 @@
+# Round 18, C2-1 (fixed). L §5.10 The sign rule: "3. at the close, after the readings at the day's end"; E §4.2 step 5:
+# "then, in step 4, the closing readings together". a and b open at 100.00 PLN and pad from the claim y (min 0, at 0):
+# a's closing reading 130.00 pads 30.00 PLN out of y, b's 70.00 pads 30.00 PLN into it, which leave y at 0.00 PLN
+# together: no refusal (snap11 tested the pads one by one, refused a's, and then broke conservation, ENGINE-INVARIANT).
+=== m.tally
+model t
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+source bk "bank"
+unit PLN: currency minor 0.01
+place a: accounts PLN lives 2026-01-01..
+place b: accounts PLN lives 2026-01-01..
+place y: claims PLN lives 2026-01-01..
+
+ask q: bal(y, 2026-03-31), bal(a, 2026-03-31), bal(b, 2026-03-31)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[a] = 100.00 PLN at 2026-01-01 start
+  opening[b] = 100.00 PLN at 2026-01-01 start
+  opening[y] = 0 PLN at 2026-01-01 start
+
+version st
+  cite bk
+  governs 2026-03
+  known 2026-04-02
+  pad a from y
+  pad b from y
+  stated[a] = 130.00 PLN at 2026-03-31 end
+  stated[b] = 70.00 PLN at 2026-03-31 end
+=== expect
+q: (0.00 PLN, 130.00 PLN, 70.00 PLN)
+  pad: a 2026-03-31 end, pads:st:a@2026-03-31 end of 30.00 PLN
+  pad: b 2026-03-31 end, pads:st:b@2026-03-31 end of -30.00 PLN
+  cut 2026-06-30

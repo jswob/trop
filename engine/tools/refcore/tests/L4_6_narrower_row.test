@@ -1,0 +1,35 @@
+# L §4.6 step 3.2 (round 11b): "the narrower row: at every key position its key is the other's or lies inside it (a
+# literal inside a range that holds it ...), and at one position strictly inside. So ... `[2026]` beats `[2025..2029]`".
+# x[3] is the narrower row at key 3, so it wins there; at key 4 only x[1..5] is a candidate. The rows state their keys
+# differently, so they are not "at the same keys" (step 2) and v2 needs no replace.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+index ns = 1..10
+input x[n in ns]: int
+
+version v1
+  cite s
+  governs always
+  known 2025-12-01
+  x[1..5] = 2
+
+version v2
+  cite s
+  governs always
+  known 2026-02-01
+  x[3] = 1
+
+ask q3: x[3]
+ask q4: x[4]
+=== expect
+q3: 1
+  cut 2026-12-31
+q4: 2
+  cut 2026-12-31

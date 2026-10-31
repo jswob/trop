@@ -1,0 +1,26 @@
+# L §2.5: a key at a position keyed by a stepped range "must be one of the range's values ... (LOAD-KEY for a
+# literal, RUN-KEY at run)". dbl is keyed by 0 .. ci (ci = 10); the written key 11 is not one. Round 14 (L §2.5):
+# LOAD-KEY only "where the range's ends and step are literals, which load sees; otherwise RUN-KEY where the key is
+# read": ci is a row, so the read is refused, RUN-KEY. (Writer 6's LOAD-KEY, round 14's U-8.)
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+input ci: int
+
+def dbl[g in 0 .. ci]: int = g + g
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  ci = 10 "s"
+
+ask q3: dbl[11]
+=== expect
+q3: refused: RUN-KEY 11 is not a value of 0 .. 10
+...

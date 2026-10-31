@@ -1,0 +1,43 @@
+b13_a_invoices (j = fv_015_2025): (6 412.96 DUK, 1 410.85 DUK)
+  world: b13_fx
+  law date 2025-12-31, cut 2026-01-07
+b13_a_invoices (j = fv_018_2025): (6 457.44 DUK, 1 420.64 DUK)
+  world: b13_fx
+  law date 2025-12-31, cut 2026-01-07
+b13_a_invoices (j = fv_021_2025): (6 451.52 DUK, 1 419.33 DUK)
+  world: b13_fx
+  law date 2025-12-31, cut 2026-01-07
+b13_a_invoices (j = fv_024_2025): (6 436.00 DUK, 1 415.92 DUK)
+  world: b13_fx
+  law date 2025-12-31, cut 2026-01-07
+b13_a_invoices (j = fv_026_2025): (6 423.36 DUK, 1 413.14 DUK)
+  world: b13_fx
+  law date 2025-12-31, cut 2026-01-07
+b13_a_invoices (j = fv_028_2025): (6 420.80 DUK, 1 412.58 DUK)
+  world: b13_fx
+  law date 2025-12-31, cut 2026-01-07
+b13_a_lazur: (3 904.00 FLR, 15 690.96 DUK)
+  assumed: B-HR4 .5 says each amount to the ort and names no mode (hr4_round)
+  world: b13_fx
+  anchor: lazur 2025-12-01 end, stated 3 904.00 FLR, difference 0.00 FLR
+  open: kessel_pay[fv_026_2025]
+  held: fx_mid = 4.0192 DUK/FLR (b13_rates), read for 2025-12-31
+  law date 2025-12-31, cut 2026-01-07
+warning: WARN-UNREAD source b_d06 is read by nothing
+warning: WARN-UNREAD source b_d14 is read by nothing
+warning: WARN-UNREAD source b_d17 is read by nothing
+warning: WARN-UNREAD source b_d18 is read by nothing
+warning: WARN-UNREAD source b_d21 is read by nothing
+warning: WARN-UNREAD source b_d23 is read by nothing
+warning: WARN-UNREAD source b_d27 is read by nothing
+warning: WARN-UNREAD source b_d30 is read by nothing
+warning: WARN-UNREAD input born is read by nothing
+warning: WARN-UNREAD input cc1_settle_days is read by nothing
+warning: WARN-UNREAD input pit4_lower_wording is read by nothing
+warning: WARN-UNREAD input pit5_refund_days is read by nothing
+warning: WARN-UNREAD input soc1_er_pension is read by nothing
+warning: WARN-UNREAD input soc_cap is read by nothing
+warning: WARN-UNREAD input soc2_deductible is read by nothing
+warning: WARN-UNREAD input soc4_rate_b is read by nothing
+warning: WARN-UNREAD input tt2_lookback_years is read by nothing
+warning: WARN-UNREAD input vat5_late_months is read by nothing

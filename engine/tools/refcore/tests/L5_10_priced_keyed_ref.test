@@ -1,0 +1,30 @@
+# L §2.3 `price = ref | "last" "(" ref ")"`, a ref with its keys; L §5.10 A priced place: "A place of a priced kind is
+# valued at that kind's price input ... its kind, or the place itself (its place section or its entry)"; L §5.7 assets:
+# "value = v at d". house[k] is priced by val[k], its section's own key variable: house[p1] is worth val[p1] =
+# 500 000, house[p2] 300 000; the entry flat names val[p2] by a literal key: 300 000 (whole mode, num PLN as unkeyed
+# prices print). (Writer 8: was REFCORE-NOT-YET, a priced reference with keys.)
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+index props = [p1, p2]
+input val[k in props]: money PLN
+place house[k in props]: assets PLN priced val[k] lives 2020-01-01..
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  val[p1] = 500 000.00 PLN
+  val[p2] = 300 000.00 PLN
+  assets + [flat] PLN priced val[p2] lives 2020-01-01..
+
+ask a: value(house[p1], 2026-06-30) in PLN, value(house[p2], 2026-06-30) in PLN, value(flat, 2026-06-30) in PLN
+=== expect
+a: (500 000 PLN, 300 000 PLN, 300 000 PLN)
+  cut 2026-12-31

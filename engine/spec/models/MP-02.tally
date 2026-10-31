@@ -1,0 +1,108 @@
+model mp02
+  tally 2
+  on 2026-10-19
+  start 2026-01-01
+  end 2026-12-31
+  note "California Moore/Marsden: the community and separate interests in a home bought before marriage, from the CalCPA hypothetical."
+  note "The example gives no dates, so no figure here depends on one."
+
+source calcpa "Dividing Homes in Divorce: Why Your Pre-marriage Home Isn't 100% Yours After Divorce (JB Rizzo, California CPA magazine, Sept. 14, 2025)" at "https://www.calcpa.org/whats-happening/california-cpa-magazine/dividing-homes-in-divorce"
+
+source underwood "A Guide to Dividing Property Appreciation (Marriage of Marsden (1982) 130 Cal.App.3d 426), Underwood Law Firm blog, December 11, 2024" at "https://underwood.law/blog/a-guide-to-dividing-property-appreciation-marriage-of-marsden-1982/"
+
+unit USD: currency minor 0.01
+
+axis mp02_appreciation
+  purchase "basic/original formula: appreciation from the purchase price to the value at trial, as the example computes it"
+  marriage "Marsden adjustment: appreciation from the value at the date of marriage, pre-marital appreciation going to the separate estate"
+
+input balance_marriage: money USD
+
+input balance_separation: money USD
+
+input balance_trial: money USD
+
+input down_payment: money USD
+
+input loan: money USD
+
+input principal_paid: money USD
+
+input purchase_price: money USD
+
+input value_marriage: money USD
+
+input value_trial: money USD
+
+def appreciation: money USD at reader
+  rule base v calcpa_formula = value_trial - purchase_price when mp02_appreciation == purchase
+  rule marsden v underwood_marsden = value_trial - value_marriage when mp02_appreciation == marriage
+
+def community_app: num USD at reader
+  note "Basic Formula: community share of appreciation = (principal paid during marriage from community funds / original purchase price) x appreciation. The exact ratio is used."
+  rule base v calcpa_formula = community_ratio * appreciation
+
+def community_interest: num USD at reader
+  note "Basic Formula: total community interest = community share of appreciation + principal paid during marriage from community funds."
+  rule base v calcpa_formula = community_app + principal_reduction
+
+def community_ratio: num at reader
+  rule base v calcpa_formula = principal_reduction / purchase_price
+
+def equity: money USD = value_trial - balance_trial at reader
+
+def principal_reduction: money USD at reader
+  note "Calculations, line 1: the loan balance at marriage less the balance at separation."
+  rule base v calcpa_formula = balance_marriage - balance_separation
+
+def separate_interest: num USD at reader
+  note "Calculations, line 6: the value at trial less the community interest and the loan outstanding at trial."
+  rule base v calcpa_formula = value_trial - community_interest - balance_trial
+
+ask check_loan: check down_payment + loan == purchase_price law 2026-10-19
+
+ask check_principal: check principal_reduction == principal_paid law 2026-10-19
+
+ask line1_principal: principal_reduction law 2026-10-19
+
+ask line2_ratio: community_ratio law 2026-10-19
+
+ask line3_appreciation: appreciation law 2026-10-19
+
+ask line4_community_app: community_app law 2026-10-19
+
+ask line5_community_interest: community_interest law 2026-10-19
+
+ask line6_separate: separate_interest law 2026-10-19
+
+ask line7_equity: equity, community_interest, separate_interest law 2026-10-19
+
+version underwood_marsden
+  cite underwood
+  governs always
+  known 2024-12-11
+  note "Marsden, 130 Cal.App.3d 438-439, as the blog summarises it: the increase in value is calculated from the value at the time of marriage, not the purchase value. The opinion itself was not fetched."
+  note "No items: the rule appreciation.marsden points at it. Known 2024-12-11, the post's byline date (looked up on the page itself, underwood.law, 2026-10-19); the page shows no updated stamp."
+
+version calcpa_formula
+  cite calcpa
+  governs always
+  known 2025-09-14
+  note "The article's 'Basic Formula' and its 'Calculations:' list, which the rules that point at this version follow."
+  note "No items. Known 2025-09-14, the article's own date (Sept. 14, 2025)."
+
+version calcpa_example
+  cite calcpa
+  governs always
+  known 2026-10-19
+  note "The article's hypothetical, section 'Mechanics of the Basic/Original Moore/Marsden Formula': its 'assume' list."
+  note "Known 2026-10-19: a hypothetical case's stipulations are known from the model's on date, as the model has no start (§4.5)."
+  balance_marriage = 220000 "example, 'assume' list: loan balance at marriage"
+  balance_separation = 120000 "example, 'assume' list: loan balance at separation"
+  balance_trial = 118000 "example, 'assume' list: loan balance at trial"
+  down_payment = 60000 "example, 'assume' list: down payment, separate property"
+  loan = 240000 "example, 'assume' list: loan"
+  principal_paid = 100000 "example, 'assume' list: principal paid during marriage"
+  purchase_price = 300000 "example, 'assume' list: original purchase price, before marriage"
+  value_marriage = ?"What was the home worth on the date of marriage? The example gives no value at marriage." "example, 'assume' list (no such figure)"
+  value_trial = 600000 "example, 'assume' list: market value at date of trial"

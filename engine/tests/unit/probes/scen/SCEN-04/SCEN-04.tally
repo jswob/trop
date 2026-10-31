@@ -1,0 +1,50 @@
+model scen04
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source card "SCEN-04 card: its rules"
+
+source paths "SCEN-04 card: the base return and the named path 'crash'"
+
+source plan "SCEN-04 card: Ania's plan, 100 000.00 invested and 12 000.00 at the start of each year for 10 years"
+
+unit DUK: currency minor 0.01
+
+index yr = int 1..10
+
+input contrib: money DUK
+
+input floor_amt: money DUK
+
+input ret[y in yr]: num
+
+input start_amt: money DUK
+
+def bal_end[y in yr]: money DUK at reader
+  rule first beats year v card_rules = round((start_amt + contrib) * (1 + ret[y]), minor(DUK), half-up) when pos(y) == 1
+  rule year v card_rules = round((bal_end[y - 1] + contrib) * (1 + ret[y]), minor(DUK), half-up)
+
+ask base_path: bal_end[10] law 2026-10-25
+
+ask crash_path: bal_end[10], first(y in yr where bal_end[y] < floor_amt) with scenario crash law 2026-10-25
+
+version base_ret
+  cite paths
+  governs always
+  known 2026-01-01
+  ret = 0.05 "the base return, 5 % a year"
+
+version card_rules
+  cite card
+  governs always
+  known 2026-01-01
+
+version plan_v
+  cite plan
+  governs always
+  known 2026-01-01
+  contrib = 12000.00 "12 000.00 at the start of each year"
+  floor_amt = 100000.00 "the floor she watches, at the end of a year"
+  start_amt = 100000.00 "100 000.00 invested"

@@ -1,0 +1,27 @@
+# L §7.1: "Division by zero is refused at that key (RUN-DIV)"; "There is no floating point anywhere": 1 / 3 is the
+# exact 1/3 (printed a/b with a 15-digit display, L §5.18).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+input three: int
+input zero: int
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  three = 3
+  zero = 0
+
+ask q1: 1 / three
+ask q2: 1 / zero
+=== expect
+q1: 1/3 (0.333333333333333)
+  cut 2026-12-31
+q2: refused: RUN-DIV ...
+  cut 2026-12-31

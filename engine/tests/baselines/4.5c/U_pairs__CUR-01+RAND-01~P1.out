@@ -1,0 +1,6 @@
+q_days: (2026-02-27, 2026-04-01)
+  law date 2026-04-01, cut 2026-02-20
+q_python_stream: ?"Rule 4 draws with Python's random.Random(20260301), one random() per business day per path; a foreign program's stream is no row a text can give (L 5.16), so the draws are the engine's own samples under the same seed and number of paths." (python_stream)
+  cut 2026-02-20
+q_means: (4 249.856 DUK (standard error 0.473003; 20000 paths; horizon 2026-04-01), 4 398.506 DUK (standard error 1.118186; 20000 paths; horizon 2026-04-01))
+  law date 2026-04-01, cut 2026-02-20

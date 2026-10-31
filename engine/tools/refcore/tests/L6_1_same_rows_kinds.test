@@ -1,0 +1,42 @@
+# OQ-2 (L §6.1 What same does): "One movement has one base kind (P-2), so rows that state different kinds disagree:
+# a binding over either kind that meets the movement is a HOLE-SAME hole naming both rows". r1 states groceries, r2
+# rent, and they are stated same: a binding over groceries or over rent meets an unknown member (§5.11), so its count
+# and its sum are holes naming both rows (L §8.1 HOLE-SAME `<p> and <q> are one, but <x> differs on <d>: <a> (<row>)
+# and <b> (<row>)`); the binding over the input still ranges over its three rows (L §5.19 Bindings). A binding over
+# spending, which holds both kinds, meets it once (round 17: "A binding over a kind that holds both kinds meets the
+# one movement once, whatever its kind").
+=== m.tally
+model hh
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+source bank "bank"
+unit PLN: currency minor 0.01
+kind spending: transfers
+kind groceries: spending
+kind rent: spending
+input bank_rows: observed
+place konto: accounts PLN lives 2019-05-01..
+place world: outside lives 1900-01-01..
+version stmt
+  cite bank
+  governs 2026-02
+  known 2026-03-02
+  bank_rows[r1] = (on: 2026-02-20, kind: groceries, leg cash from konto to world amount 400.00 PLN) "line 1"
+  bank_rows[r2] = (on: 2026-02-20, kind: rent, leg cash from konto to world amount 400.00 PLN) "line 2"
+  bank_rows[r3] = (on: 2026-02-21, kind: groceries, leg cash from konto to world amount 50.00 PLN) "line 3"
+  same bank_rows[r2] = bank_rows[r1]
+ask b: count(true for t in groceries over 2026-02)
+ask c: sum(t.cash.amount for t in rent over 2026-02)
+ask d: count(true for o in bank_rows over 2026-02)
+ask e: count(true for t in spending over 2026-02)
+=== expect
+b: ?"bank_rows[r2] and bank_rows[r1] are one, but the kind differs on 2026-02-20: rent (bank_rows[r2]) and groceries (bank_rows[r1])" (bank_rows[r2], bank_rows[r1])
+  cut 2026-10-20
+c: ?"bank_rows[r2] and bank_rows[r1] are one, but the kind differs on 2026-02-20: rent (bank_rows[r2]) and groceries (bank_rows[r1])" (bank_rows[r2], bank_rows[r1])
+  cut 2026-10-20
+d: 3
+  cut 2026-10-20
+e: 2
+  cut 2026-10-20

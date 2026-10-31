@@ -1,0 +1,24 @@
+# R-107: no exception covers a whole module, file or crate.
+
+case: inner-expect
+tool: ast-grep
+expect: no-module-expect
+--- module
+#![expect(clippy::needless_return, reason = "R-107: a planted exception for the whole module")]
+
+/// Planted.
+pub fn planted() -> u8 {
+    return 1;
+}
+
+case: expect-on-mod
+tool: ast-grep
+expect: no-module-expect
+--- module
+/// Planted.
+#[expect(clippy::needless_return, reason = "R-107: a planted exception for the whole module")]
+mod inner {
+    fn planted() -> u8 {
+        return 1;
+    }
+}

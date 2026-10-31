@@ -1,0 +1,19 @@
+# Round 18, C1-6 (follows). L §3.3 defines factor(r, n, P, c) with the compounding required (P-14: nothing defaults
+# it); L §2.3's example is now factor(i, 1, year, effective). A call with three arguments is refused.
+=== m.tally
+model m
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+source s "s"
+input i: rate
+def f3: num = factor(i, 1, year)
+version v1
+  cite s
+  governs always
+  known 2025-12-01
+  i = 5 %/year
+ask q: f3
+=== expect
+refused: LOAD-PARSE cannot parse: factor takes 4 arguments ...

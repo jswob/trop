@@ -1,0 +1,25 @@
+# L §5.7 (round 12): "A key enters at most one kind that isn't plain, which is its base ... Two kinds that aren't
+# plain ... are refused (LOAD-DUP: a key entered twice)". x enters the unit kinds car and boat. (Was
+# REFCORE-UNSPECIFIED §5.7, writer 5's T-45.)
+=== m.tally
+model t
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+kind car: unit
+kind boat: unit
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  car + [x] lives 2026-01-01..
+  boat + [x] lives 2026-01-01..
+
+ask q: count(k in car on 2026-06-01)
+=== expect
+refused: LOAD-DUP a key entered twice: x (boat, car) ...

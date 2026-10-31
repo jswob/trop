@@ -1,0 +1,45 @@
+# L §5.16 Decisions and projections: "On a path, a decision reads a random fact by its sample on that path, and only
+# at a law date on or before its own day".  Own reality: konto opens at 5 000.00 PLN; save, a decision on day 5,
+# moves to savings what exceeds round(spend[m]), spend[m] = normal(1 000 PLN, 100 PLN) read at start_of(m), before
+# the decision's day.  The samples for January to March are pinned to 1 000.00 PLN (L §5.16 sample pins): January
+# moves 5 000 - 1 000 = 4 000.00 PLN, February and March nothing (konto holds 1 000).
+=== m.tally
+model r
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source own "own"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2020-01-01..
+place savings: accounts PLN lives 2020-01-01..
+input spend_mu: money PLN
+input spend_sd: money PLN
+input dom: int
+def spend[m in months]: dist PLN = normal(spend_mu, spend_sd) to 1e-9 at start_of(m)
+def spend_late[m in months]: dist PLN = normal(spend_mu, spend_sd) to 1e-9 at end_of(m)
+
+move save[m in months]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  reads konto
+  leg cash from konto to savings amount max(0 PLN, bal(konto) - round(spend[m], minor(PLN), half-even))
+
+version v
+  cite own
+  governs 2026..
+  known 2026-01-01
+  spend_mu = 1 000.00 PLN "own"
+  spend_sd = 100.00 PLN "own"
+  dom = 5 "own"
+  opening[konto] = 5 000.00 PLN at 2026-01-01 start "statement"
+  opening[savings] = 0 PLN at 2026-01-01 start "statement"
+
+ask p1: bal(savings, 2026-03-31) with sample spend[2026-01] = 1 000.00 PLN, sample spend[2026-02] = 1 000.00 PLN, sample spend[2026-03] = 1 000.00 PLN paths 10 seed 1 path 1
+=== expect
+p1: 4 000.00 PLN
+  pinned sample: spend[2026-01] = 1 000.00 PLN
+  pinned sample: spend[2026-02] = 1 000.00 PLN
+  pinned sample: spend[2026-03] = 1 000.00 PLN
+  cut 2026-01-01

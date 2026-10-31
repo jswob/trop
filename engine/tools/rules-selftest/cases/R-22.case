@@ -1,0 +1,19 @@
+# R-22: no integer / or % operators.
+
+case: integer-division
+tool: clippy
+expect: clippy::integer_division
+--- module
+/// Planted.
+pub fn planted(a: u8, b: u8) -> u8 {
+    a / b
+}
+
+case: modulo
+tool: clippy
+expect: clippy::modulo_arithmetic
+--- module
+/// Planted.
+pub fn planted(a: i8, b: i8) -> i8 {
+    a % b
+}

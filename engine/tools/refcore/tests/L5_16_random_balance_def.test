@@ -1,0 +1,41 @@
+# MC-B-F5. E §3.1 step 10: "Every item that reaches a dist fact in a world is random"; E §7 step 2: on each path "the
+# random-dependent plan instances are recomputed; the day walk runs if any balance or decision depends on a sample ...
+# law defs in the random cone are cells of the path's layer"; L §5.16: a random value is read by a query, on each path
+# by its sample. low_w reads w's balances, which pay books on a random day, so low_w is random and each path evaluates
+# it on that path's walk. snap8 left low_w out of the cone and refused the load (LOAD-RANDOM ... apply a query).
+# Expected values, from the stated rules: every path pays January's 100.00 DUK on 2026-01-11 at the latest (delay is
+# 1..10 days), before end_of(2026-01) - 1, and nothing leaves w, so low_w is 100.00 DUK on every path: share 0 of 3,
+# mean 100 DUK, standard error 0. q2 writes low_w's expression in the query itself and gives the same.
+=== m.tally
+model m
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+unit DUK: currency minor 0.01
+source s "s"
+index delays = 1..10
+place w: accounts DUK lives 2026-01-01..
+place world: outside lives 2026-01-01..
+input amt: money DUK question "amount?"
+version o
+  cite s
+  known 2026-01-01
+  opening[w] = 0.00 DUK at 2026-01-01 start
+  amt = 100.00 DUK governs always "a"
+def delay[m in months]: dist = discrete(1 for k in delays)
+def low_w: money DUK = min(bal(w, end_of(m) - 1) for m in months)
+move pay[m in months]: transfers
+  on add_days(start_of(m), delay[m])
+  at start_of(m)
+  leg cash from world to w amount amt
+ask q1: share(low_w < amt) law 2026-12-31 paths 3 seed 1
+ask q2: share(min(bal(w, end_of(m) - 1) for m in months) < amt) law 2026-12-31 paths 3 seed 1
+ask q3: mean(low_w) law 2026-12-31 paths 3 seed 1
+=== expect
+q1: 0 of 3, 0 (standard error 0; 3 paths; horizon none)
+  law date 2026-12-31, cut 2026-01-01
+q2: 0 of 3, 0 (standard error 0; 3 paths; horizon none)
+  law date 2026-12-31, cut 2026-01-01
+q3: 100 DUK (standard error 0; 3 paths; horizon none)
+  law date 2026-12-31, cut 2026-01-01

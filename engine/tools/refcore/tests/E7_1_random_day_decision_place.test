@@ -1,0 +1,36 @@
+# GD-4 (round 19, writer 10): L §8.3 item 10, "the random cone ... through every place a random movement books
+# into: a balance or a projection of such a place is in the cone, so a line that reads it without a query is refused
+# at load". top books w, so q7 is refused at load (LOAD-RANDOM `<line> is random; apply a query`). The old comment:
+# E §3.1 step 10, L §8.3 LOAD-RANDOM: a balance of w, which top (a decision on a random day) books, read by a line with
+# no query and no path, is random; refcore finds it at the read and stops the reality (errors.RandomLine). The
+# refusal stays at the places top books (E7_1_shared_line_random_day_decision reads v).
+=== m.tally
+model m
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+unit DUK: currency minor 0.01
+source s "s"
+index delays = 1..10
+place w: accounts DUK lives 2026-01-01..
+place v: accounts DUK lives 2026-01-01..
+place world: outside lives 2026-01-01..
+input amt: money DUK question "amount?"
+version o
+  cite s
+  known 2026-01-01
+  opening[w] = 0.00 DUK at 2026-01-01 start
+  opening[v] = 0.00 DUK at 2026-01-01 start
+  amt = 100.00 DUK governs always "a"
+def delay[m in months]: dist = discrete(1 for k in delays)
+move top[m in months]: transfers
+  on add_days(start_of(m), delay[m])
+  reads w
+  leg cash from world to w amount max(0.00 DUK, amt - bal(w, start_of(m)))
+move fee[m in months]: transfers
+  on start_of(m)
+  leg cash from world to v amount amt
+ask q7: bal(w, 2026-03-31) law 2026-12-31
+=== expect
+refused: LOAD-RANDOM ask q7: bal(w, 2026-03-31) is random; apply a query (m.tally:27)

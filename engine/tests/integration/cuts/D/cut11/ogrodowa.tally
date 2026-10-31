@@ -1,0 +1,141 @@
+part ogrodowa
+  tally 2
+  note "The flat's money: the rent from July 2025 (D-D25), the building fee (D-D27), the boiler (D-D28), and Kuba's 3/16 under D-HR1 (D-05). The rent, the fees and Kuba's transfers are planned here; the export rows records.tally writes fulfil them."
+
+kind flat_costs: transfers
+  note "the flat's costs Halina pays: the building fee and repairs (D-HR1 .1)"
+
+kind kuba_payments: transfers
+  note "Kuba's share sent to him (D-HR1 .3)"
+
+kind rent_payments: transfers
+  note "the tenant's rent into Halina's account (D-HR1 .1)"
+
+index fee_month = month 2025-07..2027-09
+  note "the months of D-D27's fee plan from July 2025, whose export rows records.tally writes up to the cut; the fees paid before July 2025 are inside the balances the exports state (anchor readings), as the no_repair version's note says"
+  note "to 2027-09, the last month of the last key of the index quarter (reality.tally), so every quarter D-05 asks counts its fees; D-D27 states no fee for 2027, so its months' amounts are a hole (version fees)"
+
+input boiler_amt: money DUK question "What did the boiler cost (D-D28)?"
+
+input boiler_day: date question "On what day was the boiler paid (D-D28)?"
+
+input cpi_avg[y in year]: num question "What is the CPI average of this year, the year before = 100 (CPI-AVG, read by the lease)?"
+
+input fee_amt[y in year]: money DUK question "What is the monthly building fee in this year (D-D27)?"
+
+input fee_dom: int question "On what day of the month is the fee collected (D-D27)?"
+
+input kuba_dom: int question "By what day of the month after the quarter is Kuba's part sent (D-HR1 .3)?"
+
+input kuba_part: num question "What part of the rent less the costs goes to Kuba (D-HR1 .2)?"
+
+input lease_from: month question "From what month is the flat let (D-D25)?"
+
+input lease_index_month: int question "In which month of the year is the rent indexed, from its first day (D-D25)?"
+
+input lease_rent: money DUK question "What is the rent at the lease's start (D-D25)?"
+
+input rent_due_dom: int question "By what day of the month is the rent due (D-D25)?"
+
+def cq[q in quarter]: quarter
+  note "the calendar quarter a key of the index quarter stands for"
+  rule base = quarter_of(start_of(q))
+
+def owed_kuba[d in day]: money DUK at start_of(d)
+  note "D-HR4 .3: what Halina owes Kuba on day d: the parts of the quarters ended by d that haven't reached him by d"
+  rule base = sum(if observed(kuba_send[q]) == none or observed(kuba_send[q]).day > d then q_send[q] else 0 for q in quarter where add_days(end_of(cq[q]), -1) <= d)
+
+def q_carry[q in quarter]: money DUK at start_of(q)
+  note "D-HR1 .3: a sum below 0 is carried into the next quarter"
+  rule first = 0 when pos(q) == 1
+  rule later = min(0, q_share[q - 1] + q_carry[q - 1]) when pos(q) > 1
+
+def q_costs[q in quarter]: money DUK at start_of(q)
+  note "D-HR1 .2: the flat's costs paid in the quarter, each counted on the day the money moved"
+  rule base = sum(t.cash.amount for t in flat_costs over cq[q])
+
+def q_due[q in quarter]: date at start_of(q)
+  note "D-HR1 .3: by the 10th of the month after the quarter, the next business day where the 10th isn't one"
+  rule base = schedule(month_of(end_of(cq[q])), kuba_dom, following, holidays)
+
+def q_rent[q in quarter]: money DUK at start_of(q)
+  note "D-HR1 .2: the rent received in the quarter, counted on the day the money moved"
+  rule base = sum(t.cash.amount for t in rent_payments over cq[q])
+
+def q_send[q in quarter]: money DUK = max(0, q_share[q] + q_carry[q]) at start_of(q)
+
+def q_share[q in quarter]: money DUK at start_of(q)
+  note "D-HR1 .2: 3/16 of the rent less the costs, to the ort, half up"
+  rule base = round((q_rent[q] - q_costs[q]) * kuba_part, minor(DUK), half-up)
+
+def rent_amt[m in month]: money DUK at start_of(m)
+  note "D-D25: 1 900.00 from July 2025; on 1 March of each year from 2026 times CPI-AVG of the year before over 100, to the ort (no mode named)"
+  rule first = lease_rent when m == lease_from
+  rule later = if start_of(m) == start_of(month_of(start_of(year_of(m))) + lease_index_month - 1) then round(rent_amt[m - 1] * cpi_avg[year_of(m) - 1] * 1 %, minor(DUK), hh_round) else rent_amt[m - 1] when m > lease_from
+
+move boiler_out: flat_costs
+  on boiler_day
+  leg cash from konto to world amount boiler_amt
+
+move fee_out[m in fee_month where fee_dom != none]: flat_costs
+  on schedule(m, fee_dom, following, holidays)
+  at start_of(m)
+  leg cash from konto to world amount fee_amt[year_of(m)]
+
+move kuba_send[q in quarter where kuba_dom != none]: kuba_payments
+  on q_due[q]
+  at start_of(q)
+  leg cash from konto to jakub_acct amount q_send[q]
+
+move rent_in[m in month where lease_from != none and m >= lease_from]: rent_payments
+  on day_of(m, rent_due_dom)
+  at start_of(m)
+  leg cash from world to konto amount rent_amt[m]
+
+version kuba_rule
+  cite house_rules
+  governs always
+  known 2025-06-24
+  replace kuba_dom = 10 "D-HR1 .3: by the 10th of the month after the quarter, or the next business day"
+  kuba_part = 0.1875 "D-HR1 .2: Kuba's 3/16"
+
+version lease
+  cite d_d25
+  governs always
+  known 2025-06-24
+  replace lease_from = 2025-07 "D-D25: from 1 July 2025"
+  lease_index_month = 3 "D-D25: on 1 March of each year from 2026"
+  lease_rent = 1900.00 "D-D25: 1 900.00 DUK a month"
+  rent_due_dom = 10 "D-D25: due by the 10th of the month"
+
+version fees
+  cite d_d27
+  governs always
+  known 2025-12-11
+  fee_amt[2024] = 420.00 "D-D27"
+  fee_amt[2025] = 445.00 "D-D27"
+  fee_amt[2026] = 468.00 "D-D27"
+  fee_amt[2027] = ?"What is the monthly building fee in 2027? D-D27 states the fees of 2024 to 2026 only"
+  replace fee_dom = 5 "D-D27: collected on the 5th, or the next business day"
+
+version cpi_avg_2025
+  cite gazette
+  governs 2025
+  known 2026-01-15
+  cpi_avg[2025] = 104.0 "gazette.csv line 24 CPI-AVG-2025"
+
+version no_repair
+  cite modeller
+  governs always
+  known 2024-01-01
+  boiler_day = none assumed "a repair no invoice shows has not been paid; D-D28 states its own day"
+  fee_dom = none assumed "no fee is planned before D-D27 states it; the fees paid before July 2025 are in the balances the exports state"
+  kuba_dom = none assumed "nothing is sent to Kuba before D-HR1"
+  lease_from = none assumed "the flat isn't let before D-D25"
+
+version boiler_invoice
+  cite d_d28
+  governs always
+  known 2026-02-16
+  boiler_amt = 6840.00 "D-D28"
+  replace boiler_day = 2026-02-18 "D-D28: paid by transfer on 18 February 2026"

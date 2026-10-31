@@ -1,0 +1,43 @@
+model ask01
+  tally 2
+  on 2025-04-01
+  start 2025-03-01
+  end 2025-03-31
+  note "Probe ASK-01: the first date a balance is below a floor; the month's minimum and its date."
+
+source probe_card "Probe card ASK-01 (made-up story and rules)"
+
+unit DUK: currency minor 0.01
+
+index mday = day 2025-03-01..2025-03-31
+
+place konto: accounts DUK lives 2025-03-01..
+
+place world: outside lives 2025-03-01..
+
+input bank: observed
+
+input low_mark: money DUK
+
+ask q_primitives: first(d in mday where bal(konto, d) < low_mark), min(bal(konto, d) for d in mday), argmin(bal(konto, d) for d in mday) ties by d law 2025-04-01
+
+version card
+  cite probe_card
+  governs always
+  known 2025-03-01
+  note "Stipulations, known from the model's start (L §4.5). Rule 1, the balance after each day's rows is the day's balance, is bal(x, d) (L §5.10). The balance stays at its minimum from 25 to 27 March; the card dates the minimum on the day it is reached (25 March), so the argmin ties go to the earliest day."
+  low_mark = 2000.00 "question: below 2 000.00"
+  opening[konto] = 5000.00 at 2025-03-01 start "story: 5 000.00 on 1 March 2025"
+
+version march_rows
+  cite probe_card
+  governs 2025-03
+  known 2025-04-01
+  covers konto
+  note "The story's March rows, complete for the account over March."
+  bank[r0305] = (on: 2025-03-05, kind: transfers, leg cash from konto to world amount 1500.00 DUK) "story: 5th, -1 500.00"
+  bank[r0310] = (on: 2025-03-10, kind: transfers, leg cash from world to konto amount 4000.00 DUK) "story: 10th, +4 000.00"
+  bank[r0312] = (on: 2025-03-12, kind: transfers, leg cash from konto to world amount 3000.00 DUK) "story: 12th, -3 000.00"
+  bank[r0320] = (on: 2025-03-20, kind: transfers, leg cash from konto to world amount 2600.00 DUK) "story: 20th, -2 600.00"
+  bank[r0325] = (on: 2025-03-25, kind: transfers, leg cash from konto to world amount 500.00 DUK) "story: 25th, -500.00"
+  bank[r0328] = (on: 2025-03-28, kind: transfers, leg cash from world to konto amount 6000.00 DUK) "story: 28th, +6 000.00"

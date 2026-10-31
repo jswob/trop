@@ -1,0 +1,15 @@
+# L §2.3 parse rule 1: "Comparisons don't chain. a < b < c is refused (LOAD-PARSE)."
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "a source"
+
+index ks = 1..3
+
+def x[k in ks]: bool = k < k < k
+=== expect
+refused: LOAD-PARSE ...

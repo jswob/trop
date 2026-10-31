@@ -1,0 +1,50 @@
+# L §5.19 Realised amounts: observed(m[k]) is "a record whose legs are the sums of the legs of the observations that
+# fulfil it (a leg's from or to is none where their legs name different places), known at the cut, and whose day is
+# the latest of their days". r1 pays 1 000.00 from konto, r2 1 800.00 from savings, both to landlord: 2 800.00 PLN,
+# from none, to landlord, day 2026-03-05. (Writer 6: differing places were REFCORE-UNSPECIFIED §5.19.)
+=== m.tally
+model hh
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source plan "plan"
+source bank "bank"
+unit PLN: currency minor 0.01
+
+input rows: observed
+input rent_amt: money PLN
+input rent_off: int
+
+place konto: accounts PLN lives 2019-05-01..
+place savings: accounts PLN lives 2019-05-01..
+place landlord: outside lives 1900-01-01..
+
+move rent[m in months]: transfers
+  on add_days(start_of(m), rent_off)
+  leg cash from konto to landlord amount rent_amt
+
+version p
+  cite plan
+  governs always
+  known 2026-01-01
+  rent_amt = 2 800.00 PLN
+  rent_off = 2
+  opening[konto] = 10 000.00 PLN at 2026-01-01 start "wyciąg"
+  opening[savings] = 10 000.00 PLN at 2026-01-01 start "wyciąg"
+
+version stmt
+  cite bank
+  governs 2026-03
+  known 2026-04-01
+  rows[r1] = (on: 2026-03-03, kind: transfers, leg cash from konto to landlord amount 1 000.00 PLN, fulfils: rent[2026-03]) "line 1"
+  rows[r2] = (on: 2026-03-05, kind: transfers, leg cash from savings to landlord amount 1 800.00 PLN, fulfils: rent[2026-03]) "line 2"
+
+ask q1: observed(rent[2026-03]).cash.amount, observed(rent[2026-03]).cash.from == none
+ask q2: observed(rent[2026-03]).cash.to, observed(rent[2026-03]).day
+=== expect
+q1: (2 800.00 PLN, true)
+  cut 2026-10-20
+q2: (landlord, 2026-03-05)
+  cut 2026-10-20

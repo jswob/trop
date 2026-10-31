@@ -1,0 +1,37 @@
+# L §4.2: a calendar's added window "is one the line meets, so a result that depends on its day is HOLE-IMPRECISE
+# unless the line states windows each (§4.4)" (L4_2_added_window.test). L §4.4: "That holds for every
+# window, wherever the line meets it: ... a day in a calendar's added list (§4.2)"; windows each splits the line per
+# sub-window. len adds a day in window(2026-03-02, 2026-03-04): 03-03 is no business day only where the added day is
+# 03-03 (q3); len2's one_of([03-10, 03-12]): 03-10 is no business day only where the added day is 03-10 (q4).
+# (Writer 8: windows earliest and latest are gone, q1 and q2 with them.) The each label is this interpreter's. (Writer 6's reading, "§8.1 only", reversed: round 14's U-6.)
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+input len: calendar
+input len2: calendar
+
+version v
+  cite s
+  governs 2026
+  known 2025-12-01
+  len = calendar(weekends [sat, sun], added [window(2026-03-02, 2026-03-04)])
+  len2 = calendar(weekends [sat, sun], added [one_of([2026-03-10, 2026-03-12])])
+
+ask q3: is_business(2026-03-03, len) windows each
+ask q4: is_business(2026-03-10, len2) windows each
+=== expect
+q3 [added window(2026-03-02, 2026-03-04) = 2026-03-02]: true
+  cut 2026-12-31
+q3 [added window(2026-03-02, 2026-03-04) = 2026-03-03]: false
+  cut 2026-12-31
+q3 [added window(2026-03-02, 2026-03-04) = 2026-03-04]: true
+  cut 2026-12-31
+q4 [added one_of([2026-03-10, 2026-03-12]) = 2026-03-10]: false
+  cut 2026-12-31
+q4 [added one_of([2026-03-10, 2026-03-12]) = 2026-03-12]: true
+  cut 2026-12-31

@@ -1,0 +1,65 @@
+# L §2.3 parse rule 4 (round 8): after `value(...) in CUR by p`, "keys or fields after its by p belong to p". eurkonto
+# holds 100.00 EUR on 2026-06-30 (bought 2026-03-02); quote[2026-06] = (close: 4.5, open: 4.1 PLN/EUR). f1: by the
+# field close of the keyed read, 100 x 4.5 = 450 PLN (L §5.10 Value: value multiplies exactly). f2: the field open
+# belongs to p and the comparison to the whole value: 100 x 4.1 = 410 PLN > lim (400 PLN), true.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+
+kind fx_buys: event certain
+  leg eur: EUR
+  leg cash: PLN
+
+input eur_px[m in months]: num PLN/EUR
+input base_px: num PLN/EUR
+input lim: num PLN
+input quote[m in months]: (close num PLN/EUR, open num PLN/EUR)
+input buy_day: date
+input eur_amt: money EUR
+input pln_amt: money PLN
+
+place konto: accounts PLN lives 2026-01-01..
+place eurkonto: accounts EUR lives 2026-01-01..
+place market: outside lives 1900-01-01..
+
+def worth[d in days]: num PLN = value(eurkonto, d) in PLN by eur_px[month_of(d)] at d
+def px_def[u in currencies]: num PLN/u = base_px
+
+move buy: fx_buys
+  on buy_day
+  leg eur from market to eurkonto amount eur_amt
+  leg cash from konto to market amount pln_amt
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  base_px = 4 PLN/EUR
+  lim = 400 PLN
+  buy_day = 2026-03-02
+  eur_amt = 100.00 EUR
+  pln_amt = 425.00 PLN
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "wyciąg"
+  opening[eurkonto] = 0 EUR at 2026-01-01 start "wyciąg"
+
+version px
+  cite s
+  governs 2026..
+  known 2025-12-01
+  eur_px[2026-06] = 4.25 PLN/EUR
+  quote[2026-06] = (close: 4.5 PLN/EUR, open: 4.1 PLN/EUR)
+
+ask f1: value(eurkonto, 2026-06-30) in PLN by quote[2026-06].close
+ask f2: value(eurkonto, 2026-06-30) in PLN by quote[2026-06].open > lim
+=== expect
+f1: 450 PLN
+...
+f2: true
+...

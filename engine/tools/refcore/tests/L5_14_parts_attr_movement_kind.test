@@ -1,0 +1,47 @@
+# L §3.1 `key K`: "a key of index K, or a thing of kind K (§5.7)".  An observed row's attribute `lot: key lots_in` that
+# names an observed row of another kind (kb[k05], a lot_transfers row) is no key of lots_in: LOAD-KEY, as a thing of
+# another kind is (writer 11, with L5_14_parts_attr_movement).
+=== m.tally
+model t
+  tally 2
+  on 2024-06-30
+  start 2023-01-01
+  end 2024-12-31
+
+source s "test"
+kind funds: unit
+kind lots_in: event certain
+  leg units: funds
+kind lot_transfers: event certain
+  leg units: funds
+  attr lot: key lots_in
+kind lot_holdings: holdings
+  batched
+  step 1
+  takes k for w order (if w in lot_transfers and k.batch == w.lot then 0 else 1), k.batch.day
+place kop: lot_holdings glb lives 2023-01-01..
+place rza: lot_holdings glb lives 2023-01-01..
+place world: outside lives 2000-01-01..
+input kb: observed
+
+ask q1: bal(kop, 2024-03-31) of kb[k03], bal(kop, 2024-03-31) of kb[k04], bal(rza, 2024-03-31) of kb[k04]
+ask q2: o.lot, o.lot.day for o in lot_transfers over 2024-02-12..2024-02-12
+
+version cast
+  cite s
+  known 2023-01-01
+  funds + [glb] lives 2018-01-01..
+
+version stmt
+  cite s
+  governs 2023-01..2024-12
+  known 2023-01-01
+  covers kop, rza
+  opening[kop] = 0 at 2023-01-01 start
+  opening[rza] = 0 at 2023-01-01 start
+  kb[k03] = (on: 2023-09-12, kind: lots_in, leg units from world to kop amount 90 glb) "l3"
+  kb[k04] = (on: 2023-09-12, kind: lots_in, leg units from world to kop amount 60 glb) "l4"
+  kb[k05] = (on: 2024-02-01, kind: lot_transfers, leg units from kop to rza amount 10 glb, lot: kb[k04]) "l5"
+  kb[k06] = (on: 2024-02-12, kind: lot_transfers, leg units from kop to rza amount 60 glb, lot: kb[k05]) "l6"
+=== expect
+refused: LOAD-KEY kb[k05] is not a key of lots_in (m.tally:41)

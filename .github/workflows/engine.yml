@@ -1,0 +1,378 @@
+# The Tally engine's CI (engine/SCAFFOLD.md; rulebook R-77, R-87, R-92 to R-98). A rule
+# file: only the `rules` role edits it, and engine/tools/RULES.sha256 holds its checksum.
+# Every pull request runs `engine/tools/check full`, the same command the builder runs;
+# the nightly jobs write reports, and only mutants and the benchmarks are evidence that
+# can fail.
+name: Engine
+
+on:
+  pull_request:
+    branches: [master, engine]
+    paths:
+      - 'engine/**'
+      - '.github/workflows/engine.yml'
+      - '.claude/settings.json'
+  schedule:
+    # nightly: reports, mutants, benchmarks, other machines, advisories
+    - cron: '17 2 * * *'
+    # weekly: clippy on the next Rust release
+    - cron: '41 3 * * 1'
+  workflow_dispatch:
+    inputs:
+      long-fuzz:
+        description: 'Run the long fuzz on the self-hosted Mac (gate 9)'
+        type: boolean
+        default: false
+      fuzz-hours:
+        description: 'Hours per fuzz target for the long fuzz'
+        type: string
+        default: '8'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: engine-${{ github.ref }}-${{ github.event_name }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: never
+  NIGHTLY: nightly-2026-10-21
+  # the cargo tools, at the versions the scaffold was built with
+  TOOLS: cargo-nextest@0.9.149 cargo-deny@0.20.2 ast-grep@0.51.0 cargo-fuzz@0.13.2 cargo-mutants@27.1.0 cargo-llvm-cov@0.9.1
+
+jobs:
+  check:
+    name: check full
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          # check-frozen compares engine/spec with the tag engine/spec/VERSION names
+          fetch-depth: 0
+          fetch-tags: true
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cargo-tools
+          key: engine-tools-${{ runner.os }}-${{ hashFiles('.github/workflows/engine.yml') }}
+      - name: Install the toolchains and the cargo tools
+        working-directory: engine
+        run: &install |
+          rustup toolchain install
+          rustup toolchain install "$NIGHTLY" --profile minimal
+          for tool in $TOOLS; do
+            if [ ! -x "$HOME/.cargo-tools/bin/${tool%@*}" ]; then
+              cargo install --locked --root "$HOME/.cargo-tools" "${tool%@*}" --version "${tool#*@}"
+            fi
+          done
+          echo "$HOME/.cargo-tools/bin" >> "$GITHUB_PATH"
+      - name: engine/tools/check full
+        run: engine/tools/check full
+      # the commits themselves: attribution lines (R-100) and rule changes' trailers (R-112)
+      - name: engine/tools/commit-check
+        if: github.event_name == 'pull_request'
+        run: engine/tools/commit-check "origin/${{ github.base_ref }}"
+      - if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: check-logs
+          path: |
+            engine/target/check-logs/
+            engine/target/rules-selftest/logs/
+
+  # the budgets that block a pull request (D4-2, BUILDER §13.3): the counters' counts and
+  # gungraun's instruction hard limits, on Linux; wall time and footprint are the Mac's
+  instructions:
+    name: counts and instructions (gate 12, Linux)
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    # every number is proposed until S, and no limit is set yet: the gate session drops this
+    # line at S, with the first limits in engine/tools/perf-budgets.toml
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        id: valgrind
+        with:
+          path: ~/valgrind
+          key: valgrind-3.28.0-${{ runner.os }}
+      - name: Build Valgrind 3.28.0
+        if: steps.valgrind.outputs.cache-hit != 'true'
+        run: |
+          curl -fsSL -o /tmp/valgrind.tar.bz2 https://sourceware.org/pub/valgrind/valgrind-3.28.0.tar.bz2
+          echo "9f7a18d128f05d3a80fea53e6953f34aad7200a425ceaee46099a8a798a7dd9c  /tmp/valgrind.tar.bz2" | sha256sum -c -
+          tar -xjf /tmp/valgrind.tar.bz2 -C /tmp
+          cd /tmp/valgrind-3.28.0
+          ./configure --prefix="$HOME/valgrind"
+          make -j"$(nproc)"
+          make install
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.gungraun-tools
+          key: gungraun-runner-0.20.0-${{ runner.os }}
+      - name: Install the toolchain and gungraun-runner 0.20.0
+        working-directory: engine
+        run: |
+          rustup toolchain install
+          if [ ! -x "$HOME/.gungraun-tools/bin/gungraun-runner" ]; then
+            cargo install --locked --root "$HOME/.gungraun-tools" gungraun-runner --version 0.20.0
+          fi
+          echo "$HOME/.gungraun-tools/bin" >> "$GITHUB_PATH"
+          echo "$HOME/valgrind/bin" >> "$GITHUB_PATH"
+      - name: The counts of the six checks (P8-10 to P8-15)
+        run: engine/tools/perf counts P8-10 P8-11 P8-12 P8-13 P8-14 P8-15
+      - name: The instruction benches, with their hard limits from the budget table
+        working-directory: engine
+        run: |
+          valgrind --version
+          for bench in tools/gungraun/benches/*.rs; do
+            name="$(basename "$bench" .rs)"
+            # shellcheck disable=SC2046 # the limits are zero or one argument
+            cargo bench --manifest-path tools/gungraun/Cargo.toml --bench "$name" -- $(tools/perf limits "$name")
+          done
+      - if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: instructions
+          path: |
+            engine/tools/gungraun/Cargo.lock
+            engine/tools/gungraun/target/gungraun/
+          retention-days: 90
+
+  # --- nightly and on demand ---
+
+  mutants-baseline:
+    name: mutants baseline
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cargo-tools
+          key: engine-tools-${{ runner.os }}-${{ hashFiles('.github/workflows/engine.yml') }}
+      - name: Install the toolchains and the cargo tools
+        working-directory: engine
+        run: *install
+      # T's tests must pass unmutated before the shards skip the baseline (R-88)
+      - name: The tests pass unmutated, fresh
+        working-directory: engine
+        run: cargo nextest run --locked -p tally-runner --cargo-profile mutants --profile mutants
+      - name: The mutants
+        working-directory: engine
+        run: cargo mutants --list -C=--locked
+
+  mutants:
+    name: mutants ${{ matrix.shard }}/4
+    needs: mutants-baseline
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cargo-tools
+          key: engine-tools-${{ runner.os }}-${{ hashFiles('.github/workflows/engine.yml') }}
+      - name: Install the toolchains and the cargo tools
+        working-directory: engine
+        run: *install
+      # the gate run is fresh (R-88): no cached outcomes, a fixed proptest seed, no retries
+      - name: cargo mutants, shard ${{ matrix.shard }} of 4
+        working-directory: engine
+        env:
+          PROPTEST_RNG_SEED: '20261022'
+          PROPTEST_DISABLE_FAILURE_PERSISTENCE: '1'
+        # exit 2 (missed) and 3 (timed out) are judged by the survivors job, not here
+        run: |
+          code=0
+          cargo mutants -C=--locked --no-shuffle --shard ${{ matrix.shard }}/4 --baseline skip --timeout 300 --build-timeout 600 --output shard-${{ matrix.shard }} || code=$?
+          [ "$code" -eq 0 ] || [ "$code" -eq 2 ] || [ "$code" -eq 3 ]
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: mutants-shard-${{ matrix.shard }}
+          path: engine/shard-${{ matrix.shard }}/mutants.out/
+
+  mutants-survivors:
+    name: mutants survivors (gate 8)
+    needs: mutants
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: mutants-shard-*
+          path: engine/target/mutants
+      - name: Every survivor is listed with its reason, and no listed one is caught now (R-87)
+        run: engine/tools/mutants-survivors engine/target/mutants/mutants-shard-*
+
+  coverage:
+    name: coverage report
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cargo-tools
+          key: engine-tools-${{ runner.os }}-${{ hashFiles('.github/workflows/engine.yml') }}
+      - name: Install the toolchains and the cargo tools
+        working-directory: engine
+        run: *install
+      # a report with no threshold (R-96)
+      - name: cargo llvm-cov
+        working-directory: engine
+        run: cargo llvm-cov nextest --locked --workspace --all-features --profile ci --html --output-dir target/coverage
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: coverage
+          path: engine/target/coverage/
+
+  bench:
+    name: benchmarks (gate 12)
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Install the toolchain
+        working-directory: engine
+        run: rustup toolchain install
+      - name: cargo bench
+        working-directory: engine
+        run: cargo bench --locked -p tally
+      # the reports are gate 12's evidence (R-97)
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: criterion
+          path: engine/target/criterion/
+          retention-days: 90
+
+  reports:
+    name: advisory and special-casing reports
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Install the toolchain
+        working-directory: engine
+        run: rustup toolchain install
+      # clone density, function length, nesting depth, uncited kernel functions (R-74, R-75)
+      - name: engine/tools/advisory
+        run: engine/tools/advisory
+      # T's case ids, ask texts and precise expected values, searched in the engine's code (R-94)
+      - name: engine/tools/special-casing
+        run: engine/tools/special-casing
+
+  other-machines:
+    name: tests on ${{ matrix.name }}
+    if: github.event_name != 'pull_request'
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 90
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: macOS
+            os: macos-latest
+            target: ''
+          - name: 32-bit Linux
+            os: ubuntu-latest
+            target: i686-unknown-linux-gnu
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Install the toolchain
+        working-directory: engine
+        run: |
+          rustup toolchain install
+          if [ -n "${{ matrix.target }}" ]; then
+            rustup target add "${{ matrix.target }}"
+            sudo apt-get update && sudo apt-get install -y gcc-multilib
+          fi
+      # determinism across machines (R-95): the same answers on another OS and word size
+      - name: cargo test
+        working-directory: engine
+        run: cargo test --locked --workspace --all-features ${{ matrix.target && format('--target {0}', matrix.target) || '' }}
+
+  advisories:
+    name: advisories (daily)
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cargo-tools
+          key: engine-tools-${{ runner.os }}-${{ hashFiles('.github/workflows/engine.yml') }}
+      - name: Install the toolchains and the cargo tools
+        working-directory: engine
+        run: *install
+      # R-53, R-98: vulnerable, yanked, unmaintained or unsound crates
+      - name: cargo deny check advisories
+        working-directory: engine
+        run: cargo deny --locked check advisories
+
+  beta-clippy:
+    name: clippy on beta (weekly)
+    if: github.event_name == 'workflow_dispatch' || github.event.schedule == '41 3 * * 1'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      # the next Rust release's lints, a week ahead of a toolchain bump (R-98)
+      - name: Both clippy passes on beta
+        working-directory: engine
+        run: |
+          rustup toolchain install beta --profile minimal --component clippy
+          cargo +beta clippy --workspace --all-features --locked --lib --bins -- -D warnings
+          cargo +beta clippy --workspace --all-features --locked --tests --benches -- -D warnings -A clippy::disallowed_macros -A clippy::use_debug
+
+  long-fuzz:
+    name: long fuzz (gate 9)
+    # the user's Mac, registered as a self-hosted runner; until it is, nothing triggers this
+    if: github.event_name == 'workflow_dispatch' && inputs.long-fuzz
+    runs-on: [self-hosted, macOS]
+    timeout-minutes: 4320
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Fuzz each target, logging its hours (R-92)
+        working-directory: engine
+        env:
+          HOURS: ${{ inputs.fuzz-hours }}
+        run: |
+          rustup toolchain install "$NIGHTLY" --profile minimal
+          mkdir -p target/fuzz-log
+          for target in $(cargo +"$NIGHTLY" fuzz list); do
+            mkdir -p "fuzz/corpus/$target"
+            started=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+            seconds=$(( HOURS * 3600 ))
+            status=0
+            cargo +"$NIGHTLY" fuzz run "$target" "fuzz/corpus/$target" "fuzz/regressions/$target" -- \
+              -max_total_time="$seconds" 2>&1 | tail -n 200 > "target/fuzz-log/$target.log" || status=$?
+            echo "$target started=$started hours=$HOURS status=$status commit=$GITHUB_SHA" >> target/fuzz-log/hours.txt
+          done
+          cat target/fuzz-log/hours.txt
+      # the hours toward gate 9's 8 per target, and any crash, are the evidence
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: long-fuzz
+          path: |
+            engine/target/fuzz-log/
+            engine/fuzz/artifacts/
+          retention-days: 90

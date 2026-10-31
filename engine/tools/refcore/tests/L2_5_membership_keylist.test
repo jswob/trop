@@ -1,0 +1,26 @@
+# L §2.5 Keys: "A bare key used elsewhere (`k == u5`, `a == vpi`) takes the index, kind or axis of the other
+# operand."  In `q in [c, s]` the keys c and s take q's index, cat; the rule nil beats base where q is c or s,
+# so r is 1 for a and b and 0 for c and s.  (Found by the lead: the core printed LOAD-KEY ambiguous key c per
+# value.)
+=== m.tally
+model t
+  tally 2
+  on 2027-01-01
+  start 2026-01-01
+  end 2027-12-31
+
+index cat = [a, b, c, s]
+def r[q in cat]: num at reader
+  rule base = 1
+  rule nil beats base = 0 when q in [c, s]
+
+ask qb: r[q] for q in cat law 2026-12-31
+=== expect
+qb (q = a): 1
+  law date 2026-12-31, cut 2027-01-01
+qb (q = b): 1
+  law date 2026-12-31, cut 2027-01-01
+qb (q = c): 0
+  law date 2026-12-31, cut 2027-01-01
+qb (q = s): 0
+  law date 2026-12-31, cut 2027-01-01

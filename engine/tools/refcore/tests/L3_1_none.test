@@ -1,0 +1,38 @@
+# L §3.1: none "can only be tested, with x == none or x != none; any other comparison, arithmetic, ordering
+# or aggregation of it is refused (RUN-NONE). A row, a field or a rule may give none ... A def whose winning
+# rule gives none ... prints none (D-7)."
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "a source"
+
+input x: int
+input y: int
+
+def z: int at reader
+  rule base = none
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  x = none
+  y = 2
+
+ask q1: x == none, x != none, y == none
+ask q2: x + y
+ask q3: x < y
+ask q4: z law 2026-06-30
+=== expect
+q1: (true, false, false)
+  cut 2026-01-01
+q2: refused: RUN-NONE ...
+  cut 2026-01-01
+q3: refused: RUN-NONE ...
+  cut 2026-01-01
+q4: none
+  law date 2026-06-30, cut 2026-01-01

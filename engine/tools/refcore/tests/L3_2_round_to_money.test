@@ -1,0 +1,31 @@
+# L §3.2: "A num CUR becomes money only through round(x, u, mode) with u a whole number of minor units
+# (minor(PLN), §7.2)".  10.00 PLN × 0.123 = 1.23 PLN exactly; × 0.1234 = 1.234 → half-even to 0.01: 1.23 PLN.
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "a source"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+unit hour "godzina"
+
+input a: money PLN
+input x: num
+
+def b: money PLN at reader
+  rule base = round(a * x, minor(PLN), half-even)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  a = 10.00 PLN
+  x = 0.1234
+
+ask q1: b law 2026-06-30
+=== expect
+q1: 1.23 PLN
+  law date 2026-06-30, cut 2026-01-01

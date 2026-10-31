@@ -1,0 +1,27 @@
+# GD-24 (round 19, writer 10): settled; was REFCORE-UNSPECIFIED §2.4. L §2.4: rules by their own governs as rows are: a span with no start before one with a start.
+# The old comment:
+# L §2.4 sorts rules "then by the start of their own governs"; a rule governing `..2026` has no start, and where it sorts
+# against one of its label that has one is not stated for rules: REFCORE-UNSPECIFIED.
+=== options reprint
+=== m.tally
+model m
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+def f: int
+  rule a governs 2027.. = 2
+  rule a governs ..2026 = 1
+=== expect
+--- m.tally
+model m
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+def f: int
+  rule a governs ..2026 = 1
+  rule a governs 2027.. = 2
+sha256 ...

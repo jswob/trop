@@ -1,0 +1,62 @@
+# E §6.3 (round 12): "A place of unit any gives one ledger per unit, in the order of the units' ids". shop is an
+# outside place of unit any; pay (100.00 PLN) and epay (20.00 EUR) run into it on the 5th; the statement covering shop
+# in February has pay's row at 110.00 PLN and epay's at 20.00 EUR on the 6th: ledger EUR first (difference 0.00, timing
+# +1 days), then PLN (110.00 - 100.00 = +10.00). The layout is this interpreter's. (Writer 5's T-101.)
+=== m.tally
+model hh
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source plan "plan"
+source wyciag "bank"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+input bank: observed
+input pln_amt: money PLN
+input eur_amt: money EUR
+input dom: int
+place konto: accounts PLN lives 2019-05-01..
+place ekonto: accounts EUR lives 2019-05-01..
+place shop: outside lives 1900-01-01..
+
+move pay[m in months]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  leg cash from konto to shop amount pln_amt
+
+move epay[m in months]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  leg cash from ekonto to shop amount eur_amt
+
+version plan_2026
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  pln_amt = 100.00 PLN "umowa"
+  eur_amt = 20.00 EUR "umowa"
+  dom = 5 "umowa"
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "s"
+  opening[ekonto] = 1 000.00 EUR at 2026-01-01 start "s"
+
+version st
+  cite wyciag
+  governs 2026-02
+  known 2026-03-02
+  covers shop
+  bank[r1] = (on: 2026-02-05, kind: transfers, leg cash from konto to shop amount 110.00 PLN, fulfils: pay[2026-02]) "l1"
+  bank[r2] = (on: 2026-02-06, kind: transfers, leg cash from ekonto to shop amount 20.00 EUR, fulfils: epay[2026-02]) "l2"
+
+ask led: residuals shop 2026-02
+=== expect
+led: residuals shop 2026-02
+  ledger EUR:
+    2026-02 move epay: model 20.00 EUR, observed 20.00 EUR, difference 0.00 EUR
+      matched epay[2026-02] on 2026-02-05: model 20.00 EUR, observed 20.00 EUR, difference 0.00 EUR, timing +1 days
+  ledger PLN:
+    2026-02 move pay: model 100.00 PLN, observed 110.00 PLN, difference 10.00 PLN
+      matched pay[2026-02] on 2026-02-05: model 100.00 PLN, observed 110.00 PLN, difference 10.00 PLN, timing +0 days
+  cut 2026-10-20
+...

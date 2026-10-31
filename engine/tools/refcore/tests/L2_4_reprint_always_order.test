@@ -1,0 +1,39 @@
+# GD-24 (round 19, writer 10): settled; was REFCORE-UNSPECIFIED §2.4. L §2.4: "a span with no start, a row governing always among them, then by start": the always row first.
+# The old comment:
+# L §2.4 sorts version items "then by the start of their own governs span or their instant (a row with no span of its
+# own first, then a span with no start)"; `governs always` is no span of the grammar (rowmeta: "governs" (lspan |
+# "always"), L §2.2), so where a row governing always sorts among rows of one target and keys with spans is not stated:
+# REFCORE-UNSPECIFIED (it decides the canonical text, so the hash).
+=== options reprint
+=== m.tally
+model m
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+input y: int
+
+version v
+  cite s
+  governs 2026..
+  known 2026-01-01
+  y = 1 governs 2027..
+  replace y = 2 governs always
+=== expect
+--- m.tally
+model m
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+input y: int
+
+version v
+  cite s
+  governs 2026..
+  known 2026-01-01
+  replace y = 2 governs always
+  y = 1 governs 2027..
+sha256 ...

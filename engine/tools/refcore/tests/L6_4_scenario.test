@@ -1,0 +1,68 @@
+# L §6.4 example scenario file, copied whole, over a minimal base: one job ben_bolt paid salary[ben_bolt] =
+# 7 000.00 PLN (row governs 2026.., known 2026-01-01) on day 10 of each month from world into konto (opening 0 PLN at
+# 2026-01-01 start); net_worth[d] = bal(konto, d).
+# net_2040: in the base, 180 monthly wages 2026-01..2040-12 (L §4.1 months of the run): 1 260 000.00 PLN; in
+# ben_stops the replace row gives 0 PLN from 2031-01-01 (L §6.4 "Its versions are ordinary versions", §4.6 step 2),
+# so 60 wages 2026-01..2030-12: 420 000.00 PLN.  diff prints the line as changed with both values (L §5.18; the
+# layout is this interpreter's).  Its known 2026-10-20 is before every changed day, so no adjustment arises (L §6.4).
+# s1: the same in an ask of the scenario file, `in ben_stops` and `in household` (L §6.4 Asking, L §8.2 world:).
+=== household.tally
+model household
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2040-12-31
+
+source household_plan "plan"
+unit PLN: currency minor 0.01
+index jobs = [ben_bolt]
+kind wages: event certain
+  leg cash: PLN
+place konto: accounts PLN lives 2019-05-01..
+place world: outside lives 1900-01-01..
+input salary[j in jobs]: money PLN
+input pay_dom: int
+def net_worth[d in days]: money PLN = bal(konto, d)
+
+move wage[m in months]: wages
+  on day_of(m, pay_dom)
+  at start_of(m)
+  leg cash from world to konto amount salary[ben_bolt]
+
+version plan_2026
+  cite household_plan
+  governs 2026..
+  known 2026-01-01
+  salary[ben_bolt] = 7 000.00 PLN "umowa"
+  pay_dom = 10 "umowa"
+  opening[konto] = 0 PLN at 2026-01-01 start "wyciąg"
+=== ben_stops.tally
+scenario ben_stops over household
+  tally 2
+  from 2031-01-01
+  note "Co jeśli Ben przestanie pracować od stycznia 2031 roku?"
+
+version ben_stops_salary
+  cite household_plan
+  governs 2031-01-01..
+  known 2026-10-20
+  replace salary[ben_bolt] = 0 PLN "założenie scenariusza"
+
+ask net_2040: diff(net_worth[2040-12-31]) in ben_stops against household law 2040-12-31
+ask s1: net_worth[2040-12-31] in ben_stops
+ask s2: net_worth[2040-12-31] in household
+=== expect
+net_2040: diff in ben_stops against household: 1 changed, 0 added, 0 removed, 0 unchanged
+  changed net_worth[2040-12-31]: 420 000.00 PLN against 1 260 000.00 PLN
+  world: ben_stops
+  world: household
+...
+  law date 2040-12-31, cut 2026-10-20
+s1: 420 000.00 PLN
+  world: ben_stops
+...
+  cut 2026-10-20
+s2: 1 260 000.00 PLN
+  world: household
+...
+  cut 2026-10-20

@@ -1,0 +1,114 @@
+# TX2-F1, TX2-F2 (W-TX2 on snap15; writer 10). L §5.14 on d: "A movement whose day is a hole makes every flows and binding over a span it might fall in a hole
+# (G-MP-2). A day that is a hole and not a window has no bound, so that is every span, earlier ones included, whatever
+# the instance's `when` says: its booking cut min(t, K) is a hole with it"; E §4.2 Holes in the walk: "from the first
+# day it may fall on (every day, for a day that is a hole and not a window)".
+# by_hand_when[2027-04]'s day is a hole (is_business over a one_of Spring Day) and its when is false: flows(by_hand_when,
+# 2025) and bal(konto2, 2025-12-31) are that hole (snap15: 0.00, 0.00). plain_when, the same when on a known day, has
+# no instance: 0.00. dec2, a decision whose 2027-04 day is the same hole and which reads a place nothing else books:
+# flows(dec2, 2025) is the hole as bal(konto6) is (snap15 counted its 2025 instances, 1 200.00, the fault of household
+# B's mtg_pay, TX2-F2).
+=== m.tally
+model holiday2027
+  tally 2
+  on 2026-01-15
+  start 2025-01-01
+  end 2027-12-31
+
+source card "card"
+
+unit DUK: currency minor 0.01
+
+place payer: outside lives 2025-01-01..
+
+place konto2: accounts DUK lives 2025-01-01..
+
+place konto5: accounts DUK lives 2025-01-01..
+
+place konto6: accounts DUK lives 2025-01-01..
+
+place konto7: accounts DUK lives 2025-01-01..
+
+input amt: money DUK
+
+input cal: calendar
+
+input dom: int
+
+input live: bool
+
+move by_hand_when[m in months]: transfers
+  on if is_business(day_of(m, dom), cal) then day_of(m, dom) else add_business(day_of(m, dom), 1, cal)
+  at start_of(m)
+  when live
+  leg cash from payer to konto2 amount amt
+
+move plain_when[m in months]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  when live
+  leg cash from payer to konto7 amount amt
+
+move dec2[m in months]: transfers
+  on if is_business(day_of(m, dom), cal) then day_of(m, dom) else add_business(day_of(m, dom), 1, cal)
+  at start_of(m)
+  reads konto5
+  leg cash from payer to konto6 amount min(amt, max(amt, bal(konto5)))
+
+ask q_hand_when_2025: flows(by_hand_when, 2025) law 2025-12-31
+
+ask q_konto2_2025: bal(konto2, 2025-12-31) law 2025-12-31
+
+ask q_plain_when_2025: flows(plain_when, 2025), bal(konto7, 2025-12-31) law 2025-12-31
+
+ask q_dec2_2025: flows(dec2, 2025) law 2025-12-31
+
+ask q_konto6_2025: bal(konto6, 2025-12-31) law 2025-12-31
+
+version card_rows
+  cite card
+  governs 2025..2027
+  known 2025-01-01
+  amt = 100.00 "card"
+  cal = calendar(weekends [sat, sun]) governs 2025..2026 "card"
+  cal = calendar(weekends [sat, sun], added [one_of([2027-04-05, 2027-04-12])]) governs 2027 "card: Spring Day 2027 not yet set"
+  dom = 5 "card"
+  live = false "card: the payment never runs"
+  opening[konto2] = 0.00 DUK at 2025-01-01 start "card"
+  opening[konto5] = 0.00 DUK at 2025-01-01 start "card"
+  opening[konto6] = 0.00 DUK at 2025-01-01 start "card"
+  opening[konto7] = 0.00 DUK at 2025-01-01 start "card"
+=== expect
+q_dec2_2025: ?"date within one_of([2027-04-05, 2027-04-12]) not precise enough for is_business(day_of(m, dom), cal)" (cal)
+  unfulfilled: dec2[2025-01]
+  unfulfilled: dec2[2025-02]
+  unfulfilled: dec2[2025-03]
+  unfulfilled: dec2[2025-04]
+  unfulfilled: dec2[2025-05]
+  unfulfilled: dec2[2025-06]
+  unfulfilled: dec2[2025-07]
+  unfulfilled: dec2[2025-08]
+  unfulfilled: dec2[2025-09]
+  unfulfilled: dec2[2025-10]
+  unfulfilled: dec2[2025-11]
+  unfulfilled: dec2[2025-12]
+  law date 2025-12-31, cut 2026-01-15
+q_hand_when_2025: ?"date within one_of([2027-04-05, 2027-04-12]) not precise enough for is_business(day_of(m, dom), cal)" (cal)
+  law date 2025-12-31, cut 2026-01-15
+q_konto2_2025: ?"date within one_of([2027-04-05, 2027-04-12]) not precise enough for is_business(day_of(m, dom), cal)" (cal)
+  law date 2025-12-31, cut 2026-01-15
+q_konto6_2025: ?"date within one_of([2027-04-05, 2027-04-12]) not precise enough for is_business(day_of(m, dom), cal)" (cal)
+  unfulfilled: dec2[2025-01]
+  unfulfilled: dec2[2025-02]
+  unfulfilled: dec2[2025-03]
+  unfulfilled: dec2[2025-04]
+  unfulfilled: dec2[2025-05]
+  unfulfilled: dec2[2025-06]
+  unfulfilled: dec2[2025-07]
+  unfulfilled: dec2[2025-08]
+  unfulfilled: dec2[2025-09]
+  unfulfilled: dec2[2025-10]
+  unfulfilled: dec2[2025-11]
+  unfulfilled: dec2[2025-12]
+  law date 2025-12-31, cut 2026-01-15
+q_plain_when_2025: (0.00 DUK, 0.00 DUK)
+  law date 2025-12-31, cut 2026-01-15

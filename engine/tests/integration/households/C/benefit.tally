@@ -1,0 +1,87 @@
+part benefit
+  tally 2
+  note "Staś's child benefit from Lenia (FAM-1 v2: 650.00 DUK a month; FAM-1 .6: only as the agreement provides where it coordinates) and from Rosvald (RFF-1: RFF-CHILD a month for each month Jan is insured there; RFF-1 .2). Part II of the agreement has effect from 2024-12-01 (T-20 .2); before, each state pays its own in full (protocol 3: it stays paid). From then T-12 .1: (a) where a parent works in Lenia, where Staś lives, Lenia pays first and Rosvald the difference where its own is higher; (b) otherwise Rosvald, where Jan works, pays first and Lenia the difference. T-12 .2: the first state's benefit converted at the paying state's central bank rate last published on or before the month's first day (RNB-DUK for Rosvald, FX-FLR for Lenia), to the cent (ort), half up. T-11: a parent works in a state in a month for which they are paid for work done there; a month of unpaid leave is not. T-13 .1: a change applies from the month it happens."
+  note "Paid: the joint account's FBO rows (świadczenie, the month they name) and the repayments (zwrot … rata); the Lazur floren side's RFF rows (Kindergeld, the quarter or month they name)."
+
+input marta_works_le[m in month]: bool question "Is Marta paid for work done in Lenia for this month (T-11 .1; C-D06, C-D07)?"
+
+input jan_works_rv[m in month]: bool question "Is Jan employed and insured in Rosvald for this month (RSI-1, C-D14)?"
+
+input stas_in_lenia: bool question "Does Staś live in Lenia with his parents (C-D02, C-D22)?"
+
+version marta_work
+  cite c_d07
+  governs always
+  known 2024-02-26
+  marta_works_le[2024-03..2025-08] = true "C-D06: back at work on 2024-03-07, paid monthly; C-D07: unpaid leave from 2025-09-01"
+  marta_works_le[2025-09..2026-08] = false known 2025-07-30 "C-D07 2025-07-30: unpaid leave 2025-09-01 – 2026-08-31, no pay for those months (T-11 .1: not a month of work)"
+  marta_works_le[2026-09..2029-12] = true known 2026-08-20 "C-D07 2026-08-20: returns on 2026-09-01 at 7 900.00 DUK a month"
+
+version jan_work
+  cite c_d14
+  governs always
+  known 2024-06-10
+  jan_works_rv[2024-01..2024-06] = false "story 2024-07-01: Jan starts in Ostrel; until June 2024 he ran the workshop in Zabór"
+  jan_works_rv[2024-07..2029-12] = true "C-D14: assembly fitter at Ostrel from 2024-07-01, without end date (RSI-1 .1: insured for the months of that employment)"
+  stas_in_lenia = true "C-D02: he lives with both parents at ul. Graniczna 12, Zabór; C-D22: who lives in Lenia"
+
+def ben_m[m in month]: bool = start_of(m) >= records_from and start_of(m) <= cut
+
+def part2_on[m in month]: bool = start_of(m) >= part2_from
+
+def lenia_first[m in month]: bool
+  note "T-12 .1 (a): a parent works in Lenia, where the child lives"
+  rule base = marta_works_le[m]
+
+def rff_own[m in month]: money FLR
+  note "RFF-1 .1: the child benefit of the calendar year, for a month Jan is insured in Rosvald"
+  rule base = rff_child[year_of(start_of(m))] when jan_works_rv[m]
+  rule none_ = 0 FLR when not jan_works_rv[m]
+
+def rnb_rate[m in month]: num FLR/DUK
+  note "T-12 .2: the RNB's reference rate of the dukat last published on or before the month's first day: RNB-DUK for the month, published on the last business day of the month before (RGP-3), in florens for 100 dukats"
+  rule base = rnb_duk100[m] / lifted[hundred]
+
+def cbl_day[m in month]: date
+  note "T-12 .2: the day of the CBL's FX-FLR last published on or before the month's first day"
+  rule base = last(d in day where d <= start_of(m) and fx_mid[d] != none)
+
+def lenia_due[m in month]: money DUK at start_of(m)
+  note "Lenia's child benefit due for month m: in full before Part II has effect; first under T-12 .1 (a); under (b) the difference between its own and Rosvald's converted at FX-FLR, where its own is higher"
+  rule full = fam1_amount
+  rule second beats full = max(0 DUK, fam1_amount - round(rff_own[m] * fx_mid[cbl_day[m]], minor(DUK), half-up)) when part2_on[m] and not lenia_first[m] and rff_own[m] > 0 FLR
+
+def rosvald_due[m in month]: money FLR at start_of(m)
+  note "Rosvald's child benefit due for month m: in full before Part II has effect and under T-12 .1 (b); under (a) the difference between its own and Lenia's converted at RNB-DUK, where its own is higher"
+  rule full = rff_own[m]
+  rule second beats full = max(0 FLR, rff_own[m] - round(fam1_amount * rnb_rate[m], minor(FLR), half-up)) when part2_on[m] and lenia_first[m]
+
+def lenia_paid_for[m in month]: money DUK
+  note "the FBO rows of the joint account naming month m, paid by the cut"
+  rule base = sum(jw[d, s].cr for d in day, s in seq where d <= cut and d >= start_of(m) and jw[d, s] != none and jw[d, s].k == j_fbo_ben and jw[d, s].m == m)
+
+def lenia_repaid: money DUK = sum(jw[d, s].dr for d in day, s in seq where d <= cut and jw[d, s] != none and jw[d, s].k == j_fbo_rep)
+
+def lenia_last_rep: date = last(d in day where d <= cut and any(jw[d, s] != none and jw[d, s].k == j_fbo_rep for s in seq))
+
+def lenia_overpaid: money DUK
+  note "FAM-2 .2: what Lenia paid for months for which it was not due"
+  rule base = sum(max(0 DUK, lenia_paid_for[m] - lenia_due[m]) for m in month where ben_m[m])
+
+def lenia_owed: money DUK
+  note "what Lenia still owed us at the cut: what was due for the months to the cut, less what it paid for them, plus what we repaid"
+  rule base = sum(lenia_due[m] - lenia_paid_for[m] for m in month where ben_m[m] and start_of(m) <= cut) + lenia_repaid
+
+def rff_paid_q[q in month]: money FLR
+  note "what the RFF paid by the cut for the quarter starting with month q (its rows name the quarter), and the corrections naming a month of it"
+  rule base = sum(lf[d, s].cr for d in day, s in seq where d <= cut and d >= start_of(q) and lf[d, s] != none and lf[d, s].k == l_rff and ((lf[d, s].q != none and lf[d, s].q == quarter_of(start_of(q))) or (lf[d, s].m != none and quarter_of(start_of(lf[d, s].m)) == quarter_of(start_of(q)))))
+
+def is_q_start[m in month]: bool = quarter_of(start_of(m)) != quarter_of(start_of(m - 1))
+
+def rff_due_q[q in month]: money FLR = sum(rosvald_due[k] for k in month where ben_m[k] and quarter_of(start_of(k)) == quarter_of(start_of(q)))
+
+def rff_q_by[q in month]: date
+  note "RFF-2 .2: a quarter's benefit by the last business day of the month after the quarter (Rosvald's business days, RGP-1)"
+  rule base = last_business(q + 3, 1, rv_holidays)
+
+def rff_owed_q[q in month]: money FLR = rff_due_q[q] - rff_paid_q[q]

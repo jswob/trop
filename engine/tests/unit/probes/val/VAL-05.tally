@@ -1,0 +1,69 @@
+model val05
+  tally 2
+  on 2026-10-25
+  start 2024-12-01
+  end 2027-12-31
+
+source card "VAL-05 card: its rules"
+
+source fc_file "VAL-05 card: the forecast's price file for F"
+
+source holdings_ "VAL-05 card: Ania's holding and the planned sale"
+
+source price_file "VAL-05 card: fund F's price file"
+
+unit DUK: currency minor 0.01
+
+unit f_unit "a unit of fund F"
+
+index fmon = month 2027-01..2027-12
+
+input asked_day: date
+
+input f_fc[m in fmon]: num DUK/f_unit
+
+input f_px: num DUK/f_unit reading
+
+input sale_day: date
+
+input sale_units: num f_unit
+
+input units_held: num f_unit
+
+def price_date: date = add_days(asked_day, -since(f_px, asked_day)) at reader
+
+def value_a: num DUK at reader
+  rule last_price v card_rules = units_held * last(f_px, asked_day)
+
+def value_b: num DUK at reader
+  rule month_price v card_rules = sale_units * f_fc[sale_day]
+
+ask a: price_date, value_a law 2024-12-31
+
+ask b: value_b law 2027-03-15
+
+version card_rules
+  cite card
+  governs always
+  known 2024-12-01
+
+version fc_rows
+  cite fc_file
+  governs always
+  known 2024-12-01
+  f_fc[2027-03] = 63.40 "March 2027"
+
+version holding_v
+  cite holdings_
+  governs always
+  known 2024-12-01
+  asked_day = 2024-12-31 "the holding valued on 31 December 2024"
+  sale_day = 2027-03-15 "a forecast sale on 15 March 2027"
+  sale_units = 50 "50 units sold"
+  units_held = 120 "120 units held"
+
+version px_rows
+  cite price_file
+  known 2024-12-01
+  f_px = 50.80 at 2024-12-23 "23 December 2024"
+  f_px = 51.20 at 2024-12-27 "27 December 2024; nothing more until January"

@@ -1,0 +1,56 @@
+model rule01
+  tally 2
+  on 2025-06-15
+  start 2025-06-15
+  end 2025-06-15
+  note "RULE-01: house rule A-1 on the 15th, read on the real balance after pay. The run starts on 15 June 2025 with the balance after pay; the pay itself is not modelled."
+  note "Both sweeps are decisions on konto; each reads what the other changes, so the order the rule states (wrapped first) is written: to_broker runs after to_wrapped (L 5.14.2)."
+
+source card "Probe card RULE-01: Ania's story and house rule A-1"
+
+unit DUK: currency minor 0.01
+
+place broker: accounts DUK lives 2025-06-15..
+
+place konto: accounts DUK lives 2025-06-15..
+
+place wrapped: accounts DUK lives 2025-06-15..
+
+input keep_floor: money DUK
+
+input rule_dom: int
+
+input wrapped_limit: money DUK
+
+input wrapped_used: money DUK
+
+def surplus: money DUK at reader
+  note "A-1: what is above the floor at this point of the walk; each decision that reads it sees konto as it stands when it runs (L 5.14.1)"
+  rule base = max(0, bal(konto) - keep_floor)
+
+def wrapped_room: money DUK = max(0, wrapped_limit - wrapped_used) at reader
+
+move to_broker[m in months]: transfers
+  on day_of(m, rule_dom)
+  at start_of(m)
+  reads konto
+  after to_wrapped
+  leg cash from konto to broker amount surplus
+
+move to_wrapped[m in months]: transfers
+  on day_of(m, rule_dom)
+  at start_of(m)
+  reads konto
+  leg cash from konto to wrapped amount min(surplus, wrapped_room)
+
+ask q: flows(wrapped, 2025-06-15), flows(broker, 2025-06-15), bal(konto, 2025-06-15) law 2025-06-15
+
+version card_2025
+  cite card
+  governs always
+  known 2025-06-15
+  keep_floor = 3000 "A-1: keep 3 000.00"
+  opening[konto] = 9400 at 2025-06-15 start "story: the account on 15 June 2025, after pay"
+  rule_dom = 15 "A-1: on the 15th"
+  wrapped_limit = 10000 "story: the wrapped account's yearly limit"
+  wrapped_used = 8500 "story: already put in this year"

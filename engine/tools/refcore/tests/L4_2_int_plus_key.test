@@ -1,0 +1,16 @@
+# L §4.2 Keys as values: "A key of an integer index is also an int", so an int plus a key of an integer index is int
+# arithmetic: c[1, 2, 3] = 1 + 2 + 3 = 6.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+index cnt = int 0..3
+def c[n1 in cnt, n2 in cnt, n3 in cnt]: int = n1 + n2 + n3 at reader
+
+ask q: c[1, 2, 3] law 2026-01-01
+=== expect
+q: 6
+  law date 2026-01-01, cut 2026-12-31

@@ -1,0 +1,25 @@
+# L §5.2 example sources, copied whole.  "a source that no version cites gets WARN-UNREAD" (L §8.5 message
+# "<source ...> is read by nothing").  rm1238 is cited, modeller is not.
+=== m.tally
+model t
+  tally 2
+  on 2016-03-01
+  start 2015-11-01
+  end 2016-10-31
+
+source rm1238 "Rozporządzenie Rady Ministrów, Dz.U. 2015 poz. 1238" at "https://isap.sejm.gov.pl/..."
+source modeller "The model's own assumptions, each stated with its reason"
+
+input n: int
+
+version v
+  cite rm1238
+  governs always
+  known 2015-09-07
+  n = 1
+
+ask q1: n
+=== expect
+q1: 1
+  cut 2016-03-01
+warning: WARN-UNREAD source modeller is read by nothing

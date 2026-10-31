@@ -1,0 +1,17 @@
+# L §2.1: "A quarter, which ISO 8601 doesn't write, is 2026-Q1 to 2026-Q4 ... (calendar quarters, from January)";
+# L §2.4 prints "a quarter as 2026-Q1 (§2.1)". 2026-05-14 falls in April-June, 2026-Q2. (Writer 6; writer 8: the
+# built-in index quarters is gone, L §2.2 lists the built-in indexes days months years bank_account, so a binding
+# over quarters names no index: LOAD-NAME.)
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+ask q1: quarter_of(2026-05-14)
+=== expect
+q1: 2026-Q2
+  cut 2026-12-31

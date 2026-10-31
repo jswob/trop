@@ -1,0 +1,171 @@
+a1_derek1_ap1_result: -1 750.00 GBP
+  law date 2026-10-18, cut 2026-10-18
+a2_derek1_ap1_earnings: (0.00 GBP, true, 1 750.00 GBP)
+  assumed: no unused loss before AP 1 is mentioned; the guide carries forward exactly AP 1's loss (opening_loss[derek1])
+  law date 2026-10-18, cut 2026-10-18
+a3_derek1_ap2_result: -1 650.00 GBP
+  assumed: no relievable pension contributions are mentioned in any example (reg 57(2) Step 4) (pension[derek1, 2])
+  assumed: no unused loss before AP 1 is mentioned; the guide carries forward exactly AP 1's loss (opening_loss[derek1])
+  law date 2026-10-18, cut 2026-10-18
+a4_derek1_ap2_earnings: (0.00 GBP, true, 1 650.00 GBP)
+  assumed: no relievable pension contributions are mentioned in any example (reg 57(2) Step 4) (pension[derek1, 2])
+  assumed: no unused loss before AP 1 is mentioned; the guide carries forward exactly AP 1's loss (opening_loss[derek1])
+  law date 2026-10-18, cut 2026-10-18
+a5_derek1_ap8_losses: 1 050.00 GBP
+  assumed: no relievable pension contributions are mentioned in any example (reg 57(2) Step 4) (pension[derek1, 2], pension[derek1, 3], pension[derek1, 4], pension[derek1, 5], pension[derek1, 6], pension[derek1, 7], pension[derek1, 8])
+  assumed: no unused loss before AP 1 is mentioned; the guide carries forward exactly AP 1's loss (opening_loss[derek1])
+  given: s13[derek1, 3..8] = 100.00 GBP (h4_examples)
+  law date 2026-10-18, cut 2026-10-18
+a5_derek1_steady_nil (k = 3): (0.00 GBP, true)
+  assumed: no relievable pension contributions are mentioned in any example (reg 57(2) Step 4) (pension[derek1, 2], pension[derek1, 3])
+  assumed: no unused loss before AP 1 is mentioned; the guide carries forward exactly AP 1's loss (opening_loss[derek1])
+  given: s13[derek1, 3..8] = 100.00 GBP (h4_examples)
+  law date 2026-10-18, cut 2026-10-18
+a5_derek1_steady_nil (k = 4): (0.00 GBP, true)
+  assumed: no relievable pension contributions are mentioned in any example (reg 57(2) Step 4) (pension[derek1, 2], pension[derek1, 3], pension[derek1, 4])
+  assumed: no unused loss before AP 1 is mentioned; the guide carries forward exactly AP 1's loss (opening_loss[derek1])
+  given: s13[derek1, 3..8] = 100.00 GBP (h4_examples)
+  law date 2026-10-18, cut 2026-10-18
+a5_derek1_steady_nil (k = 5): (0.00 GBP, true)
+  assumed: no relievable pension contributions are mentioned in any example (reg 57(2) Step 4) (pension[derek1, 2], pension[derek1, 3], pension[derek1, 4], pension[derek1, 5])
+  assumed: no unused loss before AP 1 is mentioned; the guide carries forward exactly AP 1's loss (opening_loss[derek1])
+  given: s13[derek1, 3..8] = 100.00 GBP (h4_examples)
+  law date 2026-10-18, cut 2026-10-18
+a5_derek1_steady_nil (k = 6): (0.00 GBP, true)
+  assumed: no relievable pension contributions are mentioned in any example (reg 57(2) Step 4) (pension[derek1, 2], pension[derek1, 3], pension[derek1, 4], pension[derek1, 5], pension[derek1, 6])
+  assumed: no unused loss before AP 1 is mentioned; the guide carries forward exactly AP 1's loss (opening_loss[derek1])
+  given: s13[derek1, 3..8] = 100.00 GBP (h4_examples)
+  law date 2026-10-18, cut 2026-10-18
+a5_derek1_steady_nil (k = 7): (0.00 GBP, true)
+  assumed: no relievable pension contributions are mentioned in any example (reg 57(2) Step 4) (pension[derek1, 2], pension[derek1, 3], pension[derek1, 4], pension[derek1, 5], pension[derek1, 6], pension[derek1, 7])
+  assumed: no unused loss before AP 1 is mentioned; the guide carries forward exactly AP 1's loss (opening_loss[derek1])
+  given: s13[derek1, 3..8] = 100.00 GBP (h4_examples)
+  law date 2026-10-18, cut 2026-10-18
+a5_derek1_steady_nil (k = 8): (0.00 GBP, true)
+  assumed: no relievable pension contributions are mentioned in any example (reg 57(2) Step 4) (pension[derek1, 2], pension[derek1, 3], pension[derek1, 4], pension[derek1, 5], pension[derek1, 6], pension[derek1, 7], pension[derek1, 8])
+  assumed: no unused loss before AP 1 is mentioned; the guide carries forward exactly AP 1's loss (opening_loss[derek1])
+  given: s13[derek1, 3..8] = 100.00 GBP (h4_examples)
+  law date 2026-10-18, cut 2026-10-18
+a6_derek1_ap9_result: 250.00 GBP
+  assumed: no relievable pension contributions are mentioned in any example (reg 57(2) Step 4) (pension[derek1, 2], pension[derek1, 3], pension[derek1, 4], pension[derek1, 5], pension[derek1, 6], pension[derek1, 7], pension[derek1, 8], pension[derek1, 9])
+  assumed: no unused loss before AP 1 is mentioned; the guide carries forward exactly AP 1's loss (opening_loss[derek1])
+  given: s13[derek1, 3..8] = 100.00 GBP (h4_examples)
+  law date 2026-10-18, cut 2026-10-18
+a7_derek1_ap9_mif: (250.00 GBP, true)
+  assumed: no relievable pension contributions are mentioned in any example (reg 57(2) Step 4) (pension[derek1, 2], pension[derek1, 3], pension[derek1, 4], pension[derek1, 5], pension[derek1, 6], pension[derek1, 7], pension[derek1, 8], pension[derek1, 9])
+  assumed: no unused loss before AP 1 is mentioned; the guide carries forward exactly AP 1's loss (opening_loss[derek1])
+  given: s13[derek1, 3..8] = 100.00 GBP (h4_examples)
+  law date 2026-10-18, cut 2026-10-18
+b1_derek2_ap1_result: -150.00 GBP
+  law date 2026-10-18, cut 2026-10-18
+b2_derek2_ap1_earnings: (0.00 GBP, true, 150.00 GBP)
+  assumed: no unused loss before AP1 is mentioned; the guide carries forward exactly AP1's loss (opening_loss[derek2])
+  law date 2026-10-18, cut 2026-10-18
+b3_derek2_ap2_earnings: (1 000.00 GBP, 1 000.00 GBP)
+  assumed: no relievable pension contributions are mentioned in any example (reg 57(2) Step 4) (pension[derek2, 2])
+  assumed: no unused loss before AP1 is mentioned; the guide carries forward exactly AP1's loss (opening_loss[derek2])
+  law date 2026-10-18, cut 2026-10-18
+b4_derek2_ap2_mif: (false, 1 000.00 GBP)
+  assumed: no relievable pension contributions are mentioned in any example (reg 57(2) Step 4) (pension[derek2, 2])
+  assumed: no unused loss before AP1 is mentioned; the guide carries forward exactly AP1's loss (opening_loss[derek2])
+  law date 2026-10-18, cut 2026-10-18
+c1_rodney_results (k = 1): (-1 250.00 GBP, 0.00 GBP, true)
+  assumed: no relievable pension contributions are mentioned in any example (reg 57(2) Step 4) (pension[rodney, 1])
+  law date 2026-10-18, cut 2026-10-18
+c1_rodney_results (k = 2): (-700.00 GBP, 0.00 GBP, true)
+  assumed: no relievable pension contributions are mentioned in any example (reg 57(2) Step 4) (pension[rodney, 1], pension[rodney, 2])
+  law date 2026-10-18, cut 2026-10-18
+c1_rodney_results (k = 3): (-150.00 GBP, 0.00 GBP, true)
+  assumed: no relievable pension contributions are mentioned in any example (reg 57(2) Step 4) (pension[rodney, 1], pension[rodney, 2], pension[rodney, 3])
+  law date 2026-10-18, cut 2026-10-18
+c1_rodney_results (k = 4): (400.00 GBP, 400.00 GBP, true)
+  assumed: no relievable pension contributions are mentioned in any example (reg 57(2) Step 4) (pension[rodney, 1], pension[rodney, 2], pension[rodney, 3], pension[rodney, 4])
+  law date 2026-10-18, cut 2026-10-18
+c2_rodney_carried (k = 1): 1 250.00 GBP
+  assumed: no relievable pension contributions are mentioned in any example (reg 57(2) Step 4) (pension[rodney, 1])
+  law date 2026-10-18, cut 2026-10-18
+c2_rodney_carried (k = 2): 700.00 GBP
+  assumed: no relievable pension contributions are mentioned in any example (reg 57(2) Step 4) (pension[rodney, 1], pension[rodney, 2])
+  law date 2026-10-18, cut 2026-10-18
+c2_rodney_carried (k = 3): 150.00 GBP
+  assumed: no relievable pension contributions are mentioned in any example (reg 57(2) Step 4) (pension[rodney, 1], pension[rodney, 2], pension[rodney, 3])
+  law date 2026-10-18, cut 2026-10-18
+d1_tiana_max_uc: 1 105.62 GBP
+  law date 2026-10-18, cut 2026-10-18
+d2_tiana_earned_used (t = t_typical) [uc_de_minimis = *, uc_taper = *]: (1 048.17 GBP, true)
+  law date 2026-10-18, cut 2026-10-18
+d2_tiana_earned_used (t = t_ap2) [uc_de_minimis = *, uc_taper = *]: (1 048.17 GBP, true)
+  law date 2026-10-18, cut 2026-10-18
+d3_tiana_taper (t = t_typical) [uc_de_minimis = *, uc_taper = ex063]: 660.35 GBP
+  reading: uc_taper = ex063
+  law date 2026-10-18, cut 2026-10-18
+d3_tiana_taper (t = t_typical) [uc_de_minimis = *, uc_taper = reg22]: 576.49 GBP
+  reading: uc_taper = reg22
+  law date 2026-10-18, cut 2026-10-18
+d3_tiana_taper (t = t_ap1) [uc_de_minimis = *, uc_taper = ex063]: 1 804.74 GBP
+  reading: uc_taper = ex063
+  law date 2026-10-18, cut 2026-10-18
+d3_tiana_taper (t = t_ap1) [uc_de_minimis = *, uc_taper = reg22]: 1 575.57 GBP
+  reading: uc_taper = reg22
+  law date 2026-10-18, cut 2026-10-18
+d3_tiana_taper (t = t_ap2) [uc_de_minimis = *, uc_taper = ex063]: 660.35 GBP
+  reading: uc_taper = ex063
+  law date 2026-10-18, cut 2026-10-18
+d3_tiana_taper (t = t_ap2) [uc_de_minimis = *, uc_taper = reg22]: 576.49 GBP
+  reading: uc_taper = reg22
+  law date 2026-10-18, cut 2026-10-18
+d4_tiana_award (t = t_typical) [uc_de_minimis = *, uc_taper = ex063]: 445.27 GBP
+  reading: uc_taper = ex063
+  law date 2026-10-18, cut 2026-10-18
+d4_tiana_award (t = t_typical) [uc_de_minimis = *, uc_taper = reg22]: 529.13 GBP
+  reading: uc_taper = reg22
+  law date 2026-10-18, cut 2026-10-18
+d4_tiana_award (t = t_ap1) [uc_de_minimis = *, uc_taper = ex063]: -699.12 GBP
+  reading: uc_taper = ex063
+  law date 2026-10-18, cut 2026-10-18
+d4_tiana_award (t = t_ap1) [uc_de_minimis = *, uc_taper = reg22]: -469.95 GBP
+  reading: uc_taper = reg22
+  law date 2026-10-18, cut 2026-10-18
+d4_tiana_award (t = t_ap2) [uc_de_minimis = *, uc_taper = ex063]: 445.27 GBP
+  reading: uc_taper = ex063
+  law date 2026-10-18, cut 2026-10-18
+d4_tiana_award (t = t_ap2) [uc_de_minimis = *, uc_taper = reg22]: 529.13 GBP
+  reading: uc_taper = reg22
+  law date 2026-10-18, cut 2026-10-18
+d5_tiana_nil_threshold [uc_taper = ex063]: 1 754.95 GBP
+  reading: uc_taper = ex063
+  law date 2026-10-18, cut 2026-10-18
+d5_tiana_nil_threshold [uc_taper = reg22]: 2 010.22 GBP
+  reading: uc_taper = reg22
+  law date 2026-10-18, cut 2026-10-18
+d6_tiana_relevant_threshold [uc_de_minimis = dm300, uc_taper = ex063]: 2 054.95 GBP
+  reading: uc_de_minimis = dm300
+  reading: uc_taper = ex063
+  law date 2026-10-18, cut 2026-10-18
+d6_tiana_relevant_threshold [uc_de_minimis = dm300, uc_taper = reg22]: 2 310.22 GBP
+  reading: uc_de_minimis = dm300
+  reading: uc_taper = reg22
+  law date 2026-10-18, cut 2026-10-18
+d6_tiana_relevant_threshold [uc_de_minimis = dm2500, uc_taper = ex063]: 4 254.95 GBP
+  reading: uc_de_minimis = dm2500
+  reading: uc_taper = ex063
+  law date 2026-10-18, cut 2026-10-18
+d6_tiana_relevant_threshold [uc_de_minimis = dm2500, uc_taper = reg22]: 4 510.22 GBP
+  reading: uc_de_minimis = dm2500
+  reading: uc_taper = reg22
+  law date 2026-10-18, cut 2026-10-18
+d7_tiana_original_surplus [uc_de_minimis = dm300, uc_taper = ex063]: 809.72 GBP
+  reading: uc_de_minimis = dm300
+  reading: uc_taper = ex063
+  law date 2026-10-18, cut 2026-10-18
+d7_tiana_original_surplus [uc_de_minimis = dm300, uc_taper = reg22]: 554.45 GBP
+  reading: uc_de_minimis = dm300
+  reading: uc_taper = reg22
+  law date 2026-10-18, cut 2026-10-18
+d7_tiana_original_surplus [uc_de_minimis = dm2500, uc_taper = *]: 0.00 GBP
+  reading: uc_de_minimis = dm2500
+  law date 2026-10-18, cut 2026-10-18
+d8_tiana_ap2_exceeds [uc_de_minimis = *, uc_taper = *]: false
+  law date 2026-10-18, cut 2026-10-18
+d9_tiana_ap2_loss_carried: 350.00 GBP
+  law date 2026-10-18, cut 2026-10-18

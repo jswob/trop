@@ -1,0 +1,22 @@
+# L §5.10, §5.7 (round 10): `priced p` names a price input (L §5.10's `by p`: "an input or def"); a band is neither:
+# LOAD-UNIT.
+=== pr.tally
+model pr
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "synthetic"
+unit PLN: currency minor 0.01
+band val(x: int): money PLN
+place flat: assets PLN priced val lives 2026-01-01..
+
+ask q: value(flat, 2026-03-01) in PLN law 2026-06-30
+
+version v1
+  cite s
+  governs always
+  known 2026-01-01
+=== expect
+refused: LOAD-UNIT ...

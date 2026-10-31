@@ -1,0 +1,40 @@
+# C4-5 (round 19, writer 10): L §4.2 "A schedule that gives no date in the run is refused at load where load sees it
+# (LOAD-SCHEDULE, §8.3); where it doesn't, each period whose day doesn't exist gives none": dom is a row, so load
+# doesn't see the day; 2026-02 has no day 31, so pay has no instance (L §5.14): no movement, flows 0.00. The old comment:
+# L §4.2: "A schedule that gives no date in the run is refused at load (LOAD-SCHEDULE)": day 31 of February 2026
+# alone gives none at every key of the move.  (A schedule outside a move's on is not checked: what its run is isn't
+# stated, HANDOVER.md.)
+=== m.tally
+model sch
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "umowa"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2020-01-01..
+place world: outside lives 1900-01-01..
+index qm = month 2026-02..2026-02
+input dom: int
+input amt: money PLN
+input cal: calendar
+
+move pay[m in qm]: transfers
+  on schedule(m, dom, unadjusted, cal)
+  leg cash from konto to world amount amt
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  dom = 31
+  amt = 100.00 PLN
+  cal = calendar(weekends [sat, sun])
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start
+
+ask q1: count(x in transfers over 2026), flows(pay, 2026)
+ask q2: x.day for x in transfers over 2026
+=== expect
+q1: (0, 0.00 PLN)
+  cut 2026-01-01

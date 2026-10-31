@@ -1,0 +1,29 @@
+# L §6.1 "A file that doesn't match its hash is refused (LOAD-PIN)"; L §8.3 LOAD-PIN "<file> doesn't match its sha256 in
+# use <a>". Run with pin=bytes; the hash stated is of other bytes (one digit changed).
+=== options pin=bytes
+=== joint.tally
+model family
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+  use a = "ana.tally" sha256 "caf5f7622e7fa75fe10974cb18199597c91e70a92e887654d54870c36f543c68"
+
+ask r: a.rate
+=== ana.tally
+model ana
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source s "umowa"
+input rate: num
+
+version v
+  cite s
+  governs always
+  known 2025-01-01
+  rate = 0.12 "umowa"
+=== expect
+refused: LOAD-PIN ana.tally doesn't match its sha256 in use a

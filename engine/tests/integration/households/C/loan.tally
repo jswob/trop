@@ -1,0 +1,120 @@
+part loan
+  tally 2
+  note "Marta's loan to the community (C-HR7, C-D31): 30 000.00 paid out on 2025-06-20; each day CBL-REF in force that day over 365 of what is owed at the start of the day, added at each month's end and on the loan's last day (2026-09-16), to the ort, half up; 1 000.00 repaid from the joint account on the 10th of each month from August 2025 (the joint account's rows); forgiven at the start of 2026-09-17. The forgiveness is a gift to Jan of half the amount released (IGT-2 .4)."
+  note "Whether a released debt is a gift of money that IGT-4 .4 reaches (exempt only where credited to the acquirer's payment account, and a release credits no account) is read two ways: the axis release_money. Whether Jan reports the release to the RO within 6 months (IGT-4 .2) no paper says: jan_reported is a hole, and the asks print each case."
+
+axis release_money
+  money "a released debt of money is a gift of money: credited to no account of Jan's, it is not exempt (IGT-4 .4), so a return is due within 1 month (IGT-5 .1)"
+  not_money "a release is not a gift of money: IGT-4 .4 doesn't reach it, so it is exempt if reported within 6 months (IGT-4 .1, .2)"
+
+input loan_principal: money DUK question "How much did Marta lend the community (C-HR7 .1)?"
+
+input loan_paid_out: date question "On which day was the loan paid out (C-HR7 .1)?"
+
+input loan_last_day: date question "Which is the loan's last day (C-HR7 .4)?"
+
+input forgiven_on: date question "On which day does Marta forgive what is then owed (C-HR7 .4)?"
+
+input jan_reported: bool question "Does Jan report the release to the RO within 6 months of it (IGT-4 .2)?"
+
+input marta_gift_to_jan: money DUK question "How much did Marta give Jan from her own money on 2024-07-01 (story, the Lazur row)?"
+
+input marta_gift_day: date question "On which day was Marta's gift to Jan credited to his account (the Lazur row)?"
+
+version loan_agreement
+  cite c_d31
+  governs always
+  known 2025-06-20
+  loan_principal = 30000.00 "C-HR7 .1, C-D31: 30 000.00 from her own money, paid out on 2025-06-20"
+  loan_paid_out = 2025-06-20 "C-HR7 .1: paid out on 2025-06-20; jodla-wspolny.csv line 525"
+  loan_last_day = 2026-09-16 "C-HR7 .4: the loan's last day is 2026-09-16"
+  forgiven_on = 2026-09-17 "C-HR7 .4: at the start of our tenth wedding anniversary, 2026-09-17"
+
+version release_report
+  cite story
+  governs always
+  known 2026-09-17
+  jan_reported = ?"does Jan report Marta's release of the loan to the RO within 6 months of 2026-09-17 (IGT-4 .2)? no paper says" "story: nothing about a report of the release"
+
+version gift_2024
+  cite lazur_export
+  governs always
+  known 2024-07-01
+  marta_gift_to_jan = 40000.00 "lazur-jan.csv line 5: DUK; PRZELEW PRZYCH.; Marta Wrona LN53 …; darowizna 40000.00; story 2024-07-01"
+  marta_gift_day = 2024-07-01 "lazur-jan.csv line 5: 2024-07-01"
+
+def loan_rate[d in day]: rate = cbl_ref at d
+
+def loan_repaid_on[d in day]: money DUK = sum(jw[d, s].dr for s in seq where jw[d, s] != none and jw[d, s].k == j_loan_rep)
+
+def loan_on[d in day]: bool = d >= loan_paid_out and d <= loan_last_day
+
+def owed_start[d in day]: money DUK
+  note "C-HR7 .2: what we owe at the start of day d: on the first day the 30 000.00, then what we owed at the end of the day before"
+  rule first = loan_principal when d == loan_paid_out
+  rule carry = owed_end[d - 1] when pos(d) > 1 and d > loan_paid_out and d <= loan_last_day
+
+def day_interest[d in day]: num DUK
+  note "C-HR7 .2: CBL-REF in force that day, over 365, of what we owe at the start of the day, exact"
+  rule base = accrue(owed_start[d], loan_rate[d], d, d + 1, act365, simple)
+
+def accrued[d in day]: num DUK
+  note "the interest run since it was last added: added at each month's end and on the loan's last day (C-HR7 .2)"
+  rule first = day_interest[d] when d == loan_paid_out
+  rule fresh = day_interest[d] when d > loan_paid_out and month_of(d) != month_of(d - 1)
+  rule carry = accrued[d - 1] + day_interest[d] when d > loan_paid_out and month_of(d) == month_of(d - 1)
+
+def added[d in day]: money DUK
+  note "C-HR7 .2: at each month's end and on the loan's last day, the interest run is added, to the ort, half up"
+  rule none_today = 0 DUK
+  rule add beats none_today = round(accrued[d], minor(DUK), half-up) when d == end_of(month_of(d)) - 1 day or d == loan_last_day
+
+def owed_end[d in day]: money DUK
+  note "what we owe at the end of day d: at its start, less the day's repayment, plus the interest added that day"
+  rule base = owed_start[d] - loan_repaid_on[d] + added[d]
+
+def loan_interest: money DUK = sum(added[d] for d in day where loan_on[d])
+
+def loan_repaid: money DUK = sum(loan_repaid_on[d] for d in day where loan_on[d])
+
+def owed_forgiven: money DUK
+  note "C-HR7 .4: what we owe at the start of 2026-09-17, the end of the loan's last day"
+  rule base = owed_end[loan_last_day]
+
+def release_gift[s in spouse]: num DUK
+  note "IGT-2 .4: the release is a gift of the amount released, on the day of the release; a debt the community owes one spouse released is a gift to the other spouse of half of it; the releasing spouse acquires nothing"
+  rule other = owed_forgiven / lifted[two] when s == jan
+  rule releaser = 0 DUK when s == marta
+
+def jan_added_up: num DUK at forgiven_on
+  note "IGT-3 .1: what Jan acquired from Marta in the 5 years before the release, added to it: the gift of 2024-07-01"
+  rule base = release_gift[jan] + (if marta_gift_day > add_years(forgiven_on, -igt3_years) then marta_gift_to_jan else 0 DUK)
+
+def jan_report_needed: bool at forgiven_on
+  note "IGT-4 .2, .3: the report is what makes a close family's acquisition exempt; it is not required where the acquisition, added up under IGT-3 .1, is not above IGT-FREE-I; on reading money no report can make the release exempt (IGT-4 .4: a gift of money credited to no account of his), so none is needed for it"
+  rule base = jan_added_up > igt_free[group_1] when release_money == not_money
+  rule money_ = false when release_money == money
+
+def jan_exempt: bool at forgiven_on
+  note "IGT-4 .1 – .4: on reading money not exempt (.4); on reading not_money exempt where no report is required (.3) or Jan reports within 6 months (.2), a fact no paper gives"
+  rule money_ = false when release_money == money
+  rule not_money_ = not jan_report_needed or jan_reported when release_money == not_money
+
+def roll_next[d in day]: date
+  note "GEN-2 .2: a deadline on a day that is no business day moves to the next business day"
+  rule base = if is_business(d, holidays) then start_of(d) else add_business(d, 1, holidays)
+
+def jan_report_by: date at forgiven_on
+  note "IGT-4 .2: within 6 months of the day the tax arose (IGT-2 .4: the day of the release), GEN-3 .1, GEN-2 .2"
+  rule needed = roll_next[add_months(forgiven_on, igt4_report_months)] when jan_report_needed
+  rule not_needed = none when not jan_report_needed
+
+def jan_return_by: date at forgiven_on
+  note "IGT-5 .1: a return within 1 month of the release where the acquisition is not exempt"
+  rule exempt_ = none
+  rule due beats exempt_ = roll_next[add_months(forgiven_on, igt5_return_months)] when not jan_exempt
+
+def jan_gift_tax: money DUK at forgiven_on
+  note "IGT-3: the Group I scale on what the added-up acquisitions exceed IGT-FREE-I, the base rounded (IGT-2 .3), the tax rounded (IGT-3 .4); none was paid on the earlier gift (exempt: not above the free amount, credited to his account, IGT-4 .3, .4)"
+  rule exempt_ = 0 DUK
+  rule taxed beats exempt_ = round(igt3_scale[group_1](max(0 DUK, round(jan_added_up, 1, half-up) - igt_free[group_1])), 1, half-up) when not jan_exempt

@@ -1,0 +1,31 @@
+# L §2.5: "At a position keyed by a stepped range (§5.6), a key is a value of the range's type, written or computed,
+# and must be one of the range's values, a + i·s ≤ b for a whole number i ≥ 0 (LOAD-KEY for a literal, RUN-KEY at
+# run)." dbl is keyed by 0 .. ci (ci = 10): the written key 4 gives 4 + 4 = 8; the computed key x2 = 12 is outside:
+# RUN-KEY. (Writer 6: the written key was REFCORE-UNSPECIFIED §2.5, and no read checked the range.)
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+input ci: int
+input x2: int
+
+def dbl[g in 0 .. ci]: int = g + g
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  ci = 10 "s"
+  x2 = 12 "s"
+
+ask q3: dbl[4]
+ask q6: dbl[x2]
+=== expect
+q3: 8
+  cut 2026-12-31
+q6: refused: RUN-KEY 12 is not a value of 0 .. 10
+  cut 2026-12-31

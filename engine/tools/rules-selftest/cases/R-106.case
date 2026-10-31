@@ -1,0 +1,23 @@
+# R-106: rules with no exception at all: forbid rejects the attribute that tries.
+
+case: expect-on-a-forbidden-lint
+tool: clippy
+expect: E0453
+solo: yes
+--- module
+/// Planted.
+#[expect(clippy::unwrap_used, reason = "R-106: a planted exception to a forbidden lint")]
+pub fn planted(v: Option<u8>) -> u8 {
+    v.unwrap()
+}
+
+case: expect-on-float-arithmetic
+tool: clippy
+expect: E0453
+solo: yes
+--- module
+/// Planted.
+#[expect(clippy::float_arithmetic, reason = "R-106: a planted exception to a forbidden lint")]
+pub fn planted() -> bool {
+    core::hint::black_box(1_u8) > 0
+}

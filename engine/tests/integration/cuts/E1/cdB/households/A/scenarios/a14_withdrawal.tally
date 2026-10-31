@@ -1,0 +1,39 @@
+scenario a14_withdrawal over lis
+  tally 2
+  from 2026-03-01
+  note "A-14 · Ania's withdrawal (questions.md): Ania withdraws 10 000.00 DUK from her savings account in March 2026: whose money left, and what is left of each? Her savings hold two parts (records.tally): her estate payout, hers (CIV-1 .3), and the interest it earned net of its tax, the couple's (CIV-1 .2). None of our papers states which money a withdrawal takes (leave_rank, places.tally), so the scenario states each reading the question names as an assumption, an option of the axis a14_rule, and the ask prints one line per option (L §5.5)."
+  note "The question gives the month, not the day, so the withdrawal's day is a window over March 2026 (L §4.4), and what is left is read at the end of 2026-04-01, after it. Nothing else moves Ania's savings in the walk (plan.tally books nothing there after the export's last row)."
+
+axis a14_rule
+  couple_first "assumed: a withdrawal takes the couple's money first, then Ania's"
+  ania_first "assumed: a withdrawal takes Ania's own money first, then the couple's"
+  in_proportion "assumed: a withdrawal takes Ania's and the couple's money in proportion to what each has"
+
+input a14_month: month question "In which month does Ania withdraw from her savings account (questions.md A-14)?"
+
+input a14_amount: money DUK question "How much does Ania withdraw from her savings account (questions.md A-14)?"
+
+move a14_withdraw[m in month where m == a14_month]: transfers
+  on window(start_of(m), end_of(m) - 1 day)
+  at start_of(m)
+  leg cash from ania_sav to world amount a14_amount
+  note "questions.md A-14: Ania withdraws from her savings account in March 2026"
+
+ask a14: a14_withdraw[2026-03].cash.amount of ania, a14_withdraw[2026-03].cash.amount of ania_tomek, bal(ania_sav, 2026-03-31) of ania, bal(ania_sav, 2026-03-31) of ania_tomek in a14_withdrawal law 2026-03-31 as known 2026-01-15
+
+version a14_withdrawal
+  cite questions
+  governs always
+  known 2026-01-15
+  note "the question's withdrawal: its month and amount, inputs of this scenario alone (L §6.4: only a base item's rows govern from the scenario's from), stated as known when the question is asked"
+  a14_month = 2026-03 "questions.md A-14: in March 2026"
+  a14_amount = 10000.00 "questions.md A-14: 10 000.00 from her savings account"
+
+version a14_question
+  cite questions
+  governs 2026-03-01..
+  known 2026-01-15
+  note "the question's withdrawal, and the three readings it names of which money a withdrawal takes, each an assumption of this scenario, since none of our papers states one (house-rules.md, CIV-1)"
+  replace rule leave_rank.ania_first beats base = (if p == ania then 0 else 1) when a14_rule == ania_first
+  replace rule leave_rank.couple_first beats base = (if p == ania_tomek then 0 else 1) when a14_rule == couple_first
+  replace rule leave_rank.in_proportion beats base = 0 when a14_rule == in_proportion

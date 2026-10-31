@@ -1,0 +1,29 @@
+# L §2.5 Keys: "A key literal is resolved by its position: in allowance[u5] it must be a key of allowance's
+# first index or kind"; "A bare key used elsewhere (k == u5) takes the index, kind or axis of the other operand."
+# x[b] reads the row for b (2); count of k in ks where k == b is 1.  The same spelling b is a key of js too.
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "a source"
+
+index ks = [a, b]
+index js = [b, c]
+input x[k in ks]: int
+
+def n: int = count(k in ks where k == b)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  x[a] = 1
+  x[b] = 2
+
+ask q1: x[b], n
+=== expect
+q1: (2, 1)
+  cut 2026-01-01

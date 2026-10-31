@@ -1,0 +1,20 @@
+model surf06
+  tally 2
+  on 2026-10-30
+  start 2026-01-01
+  end 2026-03-31
+  note "SURF-06: a record row with a negative field (LANGUAGE 2.3: a field holds a signed literal; CHANGES.md 2.1-27). The ask reads both fields back as written."
+
+source bank_letter "The bank's letter of 12 February 2026: a correction of the fees (made up)"
+
+unit DUK: currency minor 0.01
+
+input correction: (amount money DUK, months int)
+
+ask q_fields: correction.amount, correction.months
+
+version letter
+  cite bank_letter
+  governs always
+  known 2026-02-12
+  correction = (amount: -250.00 DUK, months: 3) "the letter: a correction of -250.00 over 3 months"

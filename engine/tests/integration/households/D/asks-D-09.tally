@@ -1,0 +1,15 @@
+part asks_d09
+  tally 2
+  note "D-09 · Selling her share of Ogrodowa, as of and as known 2026-09-30. The tax turns on what she will spend on her own housing by 2029-12-31, a fact the dossier doesn't hold: one ask per case."
+
+ask d09_advice: advice law 2026-09-30
+
+ask d09_all_spent: sale_tax, sale_net, round(sale_net / net_rent_year[2026-09], 0.01, hh_round) with sale_spent = offer_price law 2026-09-30
+
+ask d09_keep: keep_value[2026-09-30], net_rent_year[2026-09] law 2026-09-30
+
+ask d09_nothing_spent: sale_tax, sale_net, round(sale_net / net_rent_year[2026-09], 0.01, hh_round) with sale_spent = 0 law 2026-09-30
+
+ask d09_sell: offer_price, offer_price * share[halina] / flat_after[halina], offer_price * bought_part / flat_after[halina], sale_fee, inherited_taxed, bought_taxed, sale_income_bought law 2026-09-30
+
+ask d09_parts: check offer_price * share[halina] / flat_after[halina] + offer_price * bought_part / flat_after[halina] == offer_price law 2026-09-30

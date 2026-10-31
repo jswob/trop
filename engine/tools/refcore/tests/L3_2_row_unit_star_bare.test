@@ -1,0 +1,23 @@
+# L §3.2 (round 12): a bare literal at `*` "takes each key's unit": amt2[*] = 5 is 5 PLN at PLN and 5 EUR at EUR.
+=== m.tally
+model t
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+input amt2[c in currencies]: num c
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt2[*] = 5
+
+ask q: amt2[PLN], amt2[EUR]
+=== expect
+q: (5 PLN, 5 EUR)
+  cut 2026-10-18

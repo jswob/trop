@@ -1,0 +1,32 @@
+# L §3.1: a code position takes an expression of the code's type; "one of another family is refused" — here load sees
+# it: the input md holds a roll, read where prorata takes a rounding mode (LOAD-UNIT, the type of the value; L §8.3).
+=== m.tally
+model pr
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source s "umowa"
+unit PLN: currency minor 0.01
+index parts = [a, b, c]
+input total: money PLN
+input w[p in parts]: num
+input md: roll
+
+def share_list[p in parts]: money PLN = prorata(total, w[j] for j in [a, b], p, minor(PLN), md, rest none)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  total = 100.00 PLN
+  w[a] = 1
+  w[b] = 2
+  w[c] = 3
+  md = following
+
+ask q1: share_list[p] for p in [a, b]
+
+=== expect
+refused: LOAD-UNIT prorata: the mode is roll, not a rounding code ...

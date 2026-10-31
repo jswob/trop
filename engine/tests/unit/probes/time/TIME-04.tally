@@ -1,0 +1,37 @@
+model time04
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+  note "Probe TIME-04: a June-May benefit period split by a birth in October."
+
+source probe_card "Probe card TIME-04 (made-up story and rules)"
+
+unit DUK: currency minor 0.01
+
+index bmonth = month 2023-06..2024-05
+  v card
+  note "the benefit period, June 2023 to May 2024"
+
+index child = [zosia]
+
+input born[c in child]: date
+
+input monthly_amt: money DUK
+
+def monthly_benefit[c in child, m in bmonth]: money DUK at start_of(m)
+  note "rule 1: for each month of the period in which the child lives; rule 2: the month of birth pro-rated by its own days"
+  rule birth_month beats full v card = round(monthly_amt * overlap_days(born[c], add_days(end_of(m), -1), m) / days_between(start_of(m), end_of(m)), minor(DUK), half-up) when month_of(born[c]) == m
+  rule full v card = monthly_amt
+  rule unborn beats full v card = 0 when born[c] >= end_of(m)
+
+def period_total[c in child]: money DUK = sum(monthly_benefit[c, m] for m in bmonth) at reader
+
+ask q_benefit: monthly_benefit[zosia, 2023-10], period_total[zosia] law 2026-10-25
+
+version card
+  cite probe_card
+  governs always
+  known 2026-10-25
+  born[zosia] = 2023-10-17 "story: born on 17 October 2023"
+  monthly_amt = 100.00 "rule 1"

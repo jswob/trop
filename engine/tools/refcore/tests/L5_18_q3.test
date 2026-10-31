@@ -1,0 +1,23 @@
+# L §5.18 example ask q3, copied (npv a def of 0 PLN, rate an input): F(v) = npv - 0 PLN = 0 at lo, and step 1 says
+# "If F(lo) = 0 the answer is lo": 0 %/year, which prints as a decimal with its period (L §5.18 Output: "never as
+# %").  The pin of v isn't in the register.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+kind accounts_pl: place PLN signed
+input rec_total[x in accounts_pl, m in months]: money PLN
+input rate: rate
+def npv: money PLN = 0 PLN
+def free_cash[m in months]: money PLN = 0 PLN
+
+ask q3: solve npv == 0 PLN for rate in [0 %/year, 20 %/year] to 0.0001 %/year law 2026-06-30
+=== expect
+q3: 0 /year
+  law date 2026-06-30, cut 2026-12-31

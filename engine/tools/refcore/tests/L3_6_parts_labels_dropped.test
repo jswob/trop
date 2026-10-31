@@ -1,0 +1,65 @@
+# Writer 11 (tally 2.1, 2.1-7, 2.1-19). L §3.6 Labels that leave the books: "A leg from an owned place to a place of the
+# model that keeps no parts, and isn't outside, drops its labels. That is the opt-in's meaning, and it is listed:
+# WARN-LABELS, in the register of every answer whose reads reach the receiving place from that leg on (§8.2)"; L §8.5
+# `labels dropped at <place> from <d>: <movements>`. acc (accounts) gets 30.00 of the couple's: q and q4 read acc from
+# 03-01 on, q2 before it; konto's parts keep 70.00 (scratch/exp4.py), and its read lists nothing.
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+kind persons: parties
+kind couples: parties
+kind savings: place PLN min 0
+  owned by arrive
+  step minor(PLN)
+  takes k for w order if k.owner == ania_tomek then 0 else 1
+place konto: savings lives 2026-01-01..
+place acc: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+place shop: outside lives 1900-01-01..
+input wage_day: date
+input wage_amt: money PLN
+input out_day: date
+input out_amt: money PLN
+def arrive[m in events, p in parties]: num at m.day
+  rule community = if p == ania_tomek then 1 else 0
+move wage: transfers
+  on wage_day
+  leg cash from world to konto amount wage_amt
+move out: transfers
+  on out_day
+  leg cash from konto to acc amount out_amt
+ask q: bal(acc, 2026-03-31)
+ask q2: bal(acc, 2026-02-28)
+ask q3: bal(konto, 2026-03-31) of ania_tomek
+ask q4: bal(konto, 2026-03-31) + bal(acc, 2026-03-31)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  persons + [ania] lives 1980-01-01..
+  persons + [tomek] lives 1981-01-01..
+  couples + [ania_tomek] lives 2010-06-01..
+  opening[konto] = 0 PLN at 2026-01-01 start
+  opening[acc] = 0 PLN at 2026-01-01 start
+  wage_day = 2026-02-01
+  wage_amt = 100.00 PLN
+  out_day = 2026-03-01
+  out_amt = 30.00 PLN
+=== expect
+q: 30.00 PLN
+  WARN-LABELS labels dropped at acc from 2026-03-01: out
+  cut 2026-01-01
+q2: 0.00 PLN
+  cut 2026-01-01
+q3: 70.00 PLN
+  cut 2026-01-01
+q4: 100.00 PLN
+  WARN-LABELS labels dropped at acc from 2026-03-01: out
+  cut 2026-01-01

@@ -1,0 +1,21 @@
+# L §8.4 What isn't defined is refused: "key arithmetic on things" has no meaning; the types show it, so LOAD-UNIT
+# at load.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+kind persons
+def nxt[p in persons]: key persons = p + 1
+
+version v
+  cite s
+  known 2026-01-01
+  persons + [ana] lives 1990-01-01..
+=== expect
+refused: LOAD-UNIT ...

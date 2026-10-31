@@ -1,0 +1,14 @@
+# L §5.11: "A def whose only rule is a hole is a stub: a law not yet written ..., which prints its question."
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+def relief: int = ?"the relief law is not written yet"
+
+ask q1: relief
+=== expect
+q1: ?"the relief law is not written yet" (relief)
+  cut 2026-01-01

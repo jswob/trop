@@ -1,0 +1,37 @@
+# L §5.16 Closed forms: "mean(e), e a sum of known multiples of random facts plus a known constant: the same sum of
+# their means"; the table's mean is the one a closed form reads (round 18, C1-47). The table: normal(m, s) mean m = 5;
+# uniform(a, b) (a + b)/2 = 3; exponential(rate) 1/rate = 4; gamma(shape, scale) shape · scale = 6; poisson(mean) = 3;
+# binomial(n, p) n·p = 10 × 0.3 = 3; negbin(mean, size) = 2.5. (Was L5_16_mean_of_dist_value's q1, on distribution
+# values, now refused.)
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+input gn: dist
+input gu: dist
+input ge: dist
+input gg: dist
+input gp: dist
+input gb: dist
+input gnb: dist
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  gn = normal(5, 2) to 0.01
+  gu = uniform(2, 4) to 0.01
+  ge = exponential(0.25) to 0.01
+  gg = gamma(2, 3) to 0.01
+  gp = poisson(3)
+  gb = binomial(10, 0.3)
+  gnb = negbin(2.5, 3)
+
+ask q1: mean(gn), mean(gu), mean(ge), mean(gg), mean(gp), mean(gb), mean(gnb)
+=== expect
+q1: (5 (horizon none), 3 (horizon none), 4 (horizon none), 6 (horizon none), 3 (horizon none), 3 (horizon none), 2.5 (horizon none))
+  cut 2026-12-31

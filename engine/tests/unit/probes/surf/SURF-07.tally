@@ -1,0 +1,24 @@
+model surf07
+  tally 2
+  on 2026-10-30
+  start 2026-03-01
+  end 2026-03-31
+  note "SURF-07: a day key where a date is expected means start_of(k) (LANGUAGE 3.1, tally 2.1). The same figure is asked both ways, max(opens, k) and max(opens, start_of(k)), over an index of days."
+
+source fund_notice "The fund's notice: subscriptions open on 10 March 2026 (made up)"
+
+index ds = day 2026-03-09..2026-03-11
+
+input opens: date
+
+def first_day[k in ds]: date = max(opens, k)
+
+ask q_both: max(opens, k), max(opens, start_of(k)) for k in ds
+
+ask q_def: first_day[k] for k in ds
+
+version notice
+  cite fund_notice
+  governs always
+  known 2026-03-01
+  opens = 2026-03-10 "the notice"

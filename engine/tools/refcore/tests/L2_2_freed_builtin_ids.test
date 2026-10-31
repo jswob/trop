@@ -1,0 +1,31 @@
+# L §2.2 Built-in ids (writer 8): "the built-in inputs opening stated account_place, the built-in indexes days months
+# years bank_account"; party_place, match_days, match_amount, bank_party and quarters are gone, and "A removed word is no
+# longer reserved", so a model may declare inputs of those names: 1 + 2 + 3 + 4 + 5 = 15.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+input bank_party: int
+input match_days: int
+input party_place: int
+input match_amount: int
+input quarters: int
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  bank_party = 1
+  match_days = 2
+  party_place = 3
+  match_amount = 4
+  quarters = 5
+
+ask q: bank_party + match_days + party_place + match_amount + quarters
+=== expect
+q: 15
+  cut 2026-12-31

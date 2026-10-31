@@ -1,0 +1,35 @@
+model surf03
+  tally 2
+  on 2025-10-24
+  start 2025-10-24
+  end 2029-12-31
+  note "SURF-03: Halina's lifetime as a household model writes it. The life table is a fixed input with rows; the yearly death is a random fact (type dist), sampled on every path of an ask at its own address; what reads it is random by lifting. The seed, the path count and the mean across paths live in the ask, outside any one path; path p replays one path."
+
+source life_table "Halina's stated life table"
+
+index age_year = int 85..88
+
+index person = [halina]
+
+input q_die[k in person, a in age_year]: num question "What is the chance of dying within this year of age?"
+
+def death_age[k in person]: key age_year = first(a in age_year where die[k, a] == 1) at reader
+
+def die[k in person, a in age_year]: dist = binomial(1, q_die[k, a]) at reader
+
+def years_lived[k in person]: int at reader
+  note "the whole years lived before the year of death"
+  rule base = pos(death_age[k]) - 1
+
+ask lifetime_mean: mean(years_lived[halina]) law 2025-10-24 paths 60000 seed 20251024
+
+ask one_path: years_lived[halina] law 2025-10-24 paths 60000 seed 20251024 path 1
+
+version halina_table
+  cite life_table
+  governs always
+  known 2025-10-24
+  q_die[halina, 85] = 0.2 "at 85"
+  q_die[halina, 86] = 0.3 "at 86"
+  q_die[halina, 87] = 0.5 "at 87"
+  q_die[halina, 88] = 1 "at 88"

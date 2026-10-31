@@ -1,0 +1,8 @@
+id: trait-definition-review
+valid:
+  - "impl core::fmt::Display for S { fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result { Ok(()) } }"
+  - '#[cfg(test)] mod tests { trait T {} }'
+invalid:
+  - 'trait Shape { fn area(&self) -> u64; }'
+  - 'pub trait Marker {}'
+  - 'mod m { pub(crate) trait Walk: Sized { fn step(self) -> Self; } }'

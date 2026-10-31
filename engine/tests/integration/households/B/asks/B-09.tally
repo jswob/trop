@@ -1,0 +1,11 @@
+part asks_b09
+  tally 2
+  note "B-09 · Who owes us (questions.md): as of 2025-12-31, known as of 2026-01-07."
+
+ask b09_invoices: sale[i].cl, owed_open[i, 2025-12-31], owed_status[i, 2025-12-31] for i in invoices where sale[i].issued <= 2025-12-31 and owed_open[i, 2025-12-31] != 0 DUK law 2025-12-31 as known 2026-01-07
+
+ask b09_florens: sale_flr[j].cl, bal(inv_owed_flr[j], 2025-12-31), owed_status_flr[j, 2025-12-31] for j in flr_invoices where sale_flr[j].issued <= 2025-12-31 and bal(inv_owed_flr[j], 2025-12-31) != 0 FLR law 2025-12-31 as known 2026-01-07
+
+ask b09_bartek: bal(bartek, 2025-12-31), bartek_status law 2025-12-31 as known 2026-01-07
+
+ask b09_total: owed_total[2025-12-31] law 2025-12-31 as known 2026-01-07 partial

@@ -1,0 +1,14 @@
+# L §2.3: "Expressions nest at most 8 deep (LOAD-DEPTH). The depth ... is the number of brackets open there".
+# Nine parentheses around 1.
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "a source"
+
+def x: int = (((((((((1)))))))))
+=== expect
+refused: LOAD-DEPTH ...
