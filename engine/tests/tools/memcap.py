@@ -1,5 +1,6 @@
 """Memory cap for interpreter jobs (the user's rule, 2026-10-27 12:05): any interpreter run, `refcore run` or
-`refcore_fast [--verify N] run` (4.5f: one watchdog for both), whose memory footprint passes 8 GB is stopped, and logged
+`refcore_fast [--verify N] run` (4.5f: one watchdog for both), or the engine's `target/release/tally run` (T1, run.py
+--interp engine), whose memory footprint passes 8 GB is stopped, and logged
 to engine/tests/out/memcap.log with its command, so the run goes on the benchmark list for the engine build instead of
 being run here. The footprint is top's MEM column (resident plus compressed and swapped pages); RSS alone misses
 swapped memory. run.py refuses to start a run unless this script is running.
@@ -13,7 +14,7 @@ import sys
 import time
 
 LOG = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'out', 'memcap.log')
-JOB = re.compile(r'/refcore(?:_fast)?(?: --\S+(?: \d+)?)* run ')  # refcore run …, refcore_fast --verify 50 run …
+JOB = re.compile(r'(?:/refcore(?:_fast)?(?: --\S+(?: \d+)?)*|/target/release/tally) run ')  # refcore run …, refcore_fast --verify 50 run …, the engine's binary (T1)
 UNIT = {'B': 1 / 1024 ** 3, 'K': 1 / 1024 ** 2, 'M': 1 / 1024, 'G': 1.0, 'T': 1024.0}
 
 
@@ -46,9 +47,11 @@ def log(line):
 def self_test():
     py = '/u/pypy3.11 -I -B '
     yes = [py + '/r/engine/tools/refcore run unit/probes/a.tally', py + '/r/engine/tools/refcore_fast run a.tally --ask x',
-           py + '/r/engine/tools/refcore_fast --verify 50 run a.tally', py + '/r/engine/tools/refcore_fast --plant run a.tally']
+           py + '/r/engine/tools/refcore_fast --verify 50 run a.tally', py + '/r/engine/tools/refcore_fast --plant run a.tally',
+           '/r/engine/target/release/tally run a.tally --ask x']
     no = [py + '/r/engine/tools/refcore test', 'python3 -I -B engine/tests/run.py --interp fast',
-          'python3 -I -B engine/tests/tools/memcap.py 8 5']
+          'python3 -I -B engine/tests/tools/memcap.py 8 5', 'python3 -I -B engine/tests/run.py --interp engine',
+          '/r/engine/target/release/tally-runner run a.tally']
     bad = [c for c in yes if not JOB.search(c)] + [c for c in no if JOB.search(c)]
     print('memcap self-test %s%s' % ('PASSED' if not bad else 'FAILED: ', '; '.join(bad)))
     return not bad
