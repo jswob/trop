@@ -62,6 +62,25 @@ disallowed-types = [
   # R-46: output is written from typed structs and ordered lists
   { path = "serde_json::Value", reason = "R-46: output comes from typed structs, never a generic JSON value" },
   { path = "serde_json::Map", reason = "R-46: output comes from typed structs and ordered lists" },
+  # R-42 (amended 2026-10-30): channels, locks and atomics only in the thread module (R-108)
+  { path = "std::sync::Mutex", reason = "R-42: a lock only in the thread module; workers fill numbered slots" },
+  { path = "std::sync::RwLock", reason = "R-42: a lock only in the thread module; workers fill numbered slots" },
+  { path = "std::sync::Condvar", reason = "R-42: a lock only in the thread module; workers fill numbered slots" },
+  { path = "std::sync::mpsc::Sender", reason = "R-42: a channel only in the thread module; workers fill numbered slots" },
+  { path = "std::sync::mpsc::SyncSender", reason = "R-42: a channel only in the thread module; workers fill numbered slots" },
+  { path = "std::sync::mpsc::Receiver", reason = "R-42: a channel only in the thread module; workers fill numbered slots" },
+  { path = "std::sync::atomic::AtomicBool", reason = "R-42: an atomic only in the thread module; workers fill numbered slots" },
+  { path = "std::sync::atomic::AtomicI8", reason = "R-42: an atomic only in the thread module; workers fill numbered slots" },
+  { path = "std::sync::atomic::AtomicI16", reason = "R-42: an atomic only in the thread module; workers fill numbered slots" },
+  { path = "std::sync::atomic::AtomicI32", reason = "R-42: an atomic only in the thread module; workers fill numbered slots" },
+  { path = "std::sync::atomic::AtomicI64", reason = "R-42: an atomic only in the thread module; workers fill numbered slots" },
+  { path = "std::sync::atomic::AtomicIsize", reason = "R-42: an atomic only in the thread module; workers fill numbered slots" },
+  { path = "std::sync::atomic::AtomicU8", reason = "R-42: an atomic only in the thread module; workers fill numbered slots" },
+  { path = "std::sync::atomic::AtomicU16", reason = "R-42: an atomic only in the thread module; workers fill numbered slots" },
+  { path = "std::sync::atomic::AtomicU32", reason = "R-42: an atomic only in the thread module; workers fill numbered slots" },
+  { path = "std::sync::atomic::AtomicU64", reason = "R-42: an atomic only in the thread module; workers fill numbered slots" },
+  { path = "std::sync::atomic::AtomicUsize", reason = "R-42: an atomic only in the thread module; workers fill numbered slots" },
+  { path = "std::sync::atomic::AtomicPtr", reason = "R-42: an atomic only in the thread module; workers fill numbered slots" },
 ]
 
 disallowed-methods = [
@@ -219,6 +238,11 @@ disallowed-methods = [
   { path = "std::thread::Builder::spawn", reason = "R-42: threads only in the sanctioned module, through thread::scope" },
   { path = "std::thread::Builder::spawn_scoped", reason = "R-42: threads only in the sanctioned module (R-108)" },
   { path = "std::thread::available_parallelism", reason = "R-42: the worker count is passed in, never read from the machine" },
+  # R-42 (amended 2026-10-30): a thread starts only through Builder::spawn_scoped with a stack size;
+  # Scope::spawn reads RUST_MIN_STACK and gets 2 MiB, so it is banned even in the thread module
+  { path = "std::thread::Scope::spawn", reason = "R-42: spawn through Builder::spawn_scoped with the stack size passed in" },
+  { path = "std::sync::mpsc::channel", reason = "R-42: no channels outside the thread module (R-108)" },
+  { path = "std::sync::mpsc::sync_channel", reason = "R-42: no channels outside the thread module (R-108)" },
   # R-43: no unstable sorts
   { path = "slice::sort_unstable", reason = "R-43: may reorder equal items; use sort" },
   { path = "slice::sort_unstable_by", reason = "R-43: may reorder equal items; use sort_by" },

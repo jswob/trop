@@ -541,6 +541,7 @@ OWNERS = {
     "std::time::Instant": "std::time::Instant::{m}",
     "std::thread": "std::thread::{m}",
     "std::thread::Builder": "std::thread::Builder::{m}",
+    "std::sync::mpsc": "std::sync::mpsc::{m}",
     "std::fs": "std::fs::{m}",
     "std::fs::File": "std::fs::File::{m}",
     "std::path::Path": "std::path::Path::{m}",
@@ -561,6 +562,7 @@ TURBOFISH = {
     "std::thread::spawn": "::<fn() -> u8, u8>", "std::thread::Builder::spawn": "::<fn() -> u8, u8>",
     "std::fs::write": "::<&str, &[u8]>", "std::fs::copy": "::<&str, &str>", "std::fs::rename": "::<&str, &str>",
     "num_traits::pow": "::<u8>",
+    "std::sync::mpsc::channel": "::<u8>", "std::sync::mpsc::sync_channel": "::<u8>",
     **{f"std::fs::{m}": "::<&str>" for m in (
         "read", "read_to_string", "read_dir", "metadata", "symlink_metadata", "canonicalize", "create_dir",
         "create_dir_all", "remove_file", "remove_dir", "remove_dir_all", "read_link", "exists")},
@@ -571,11 +573,15 @@ CALLS = {
     "std::thread::scope": "pub fn planted_scope() { std::thread::scope(|_scope| {}); }",
     "std::thread::Builder::spawn_scoped":
         "pub fn planted_spawn_scoped<'scope>(scope: &'scope std::thread::Scope<'scope, '_>) { let _handle = std::thread::Builder::new().spawn_scoped(scope, || {}); }",
+    "std::thread::Scope::spawn":
+        "pub fn planted_scope_spawn<'scope>(scope: &'scope std::thread::Scope<'scope, '_>) { let _handle = scope.spawn(|| {}); }",
 }
 TYPE_ARGS = {
     "std::collections::HashMap": "<u8, u8>", "std::collections::HashSet": "<u8>",
     "std::num::Wrapping": "<u8>", "std::num::Saturating": "<u8>",
     "serde_json::Map": "<String, serde_json::Value>",
+    "std::sync::Mutex": "<u8>", "std::sync::RwLock": "<u8>", "std::sync::mpsc::Sender": "<u8>",
+    "std::sync::mpsc::SyncSender": "<u8>", "std::sync::mpsc::Receiver": "<u8>", "std::sync::atomic::AtomicPtr": "<u8>",
 }
 MACRO_ARGS = {"assert": '(core::hint::black_box(true), "planted")', "debug_assert": '(core::hint::black_box(true), "planted")'}
 EQ_ARGS = '(core::hint::black_box(1_u8), 1, "planted")'
