@@ -92,6 +92,7 @@ def steps(mode):
         ("check-rules", tool("check-rules"), {}),
         ("headers", tool("headers"), {}),
         ("trace", tool("trace"), {}),
+        ("ast-grep-scan", ["ast-grep", "scan"], {}),
     ]
     if mode == "fast":
         return fast
@@ -109,7 +110,6 @@ def steps(mode):
                         "--config", "deny-tally.toml", "check", "bans"], {}),
         ("tree-probe", tree_probe, {}),
         ("ast-grep-test", ["ast-grep", "test", "--skip-snapshot-tests"], {}),
-        ("ast-grep-scan", ["ast-grep", "scan"], {}),
         ("guard-test", tool("guard-test"), {}),
         ("rules-selftest", tool("rules-selftest/run"), {}),
         ("special-casing", tool("special-casing"), {}),
