@@ -118,3 +118,7 @@ The runner is `run.py --interp engine` (B4.2) for byte comparison, plus the scaf
 - **The toolchain stays at Rust 1.99.1** through Part B. 1.100.0 (due 2026-11-12) stabilises `[lints.cargo]`; a bump is a rules-role change with re-baselined counts.
 - **Seal:** Part B never opens `tmp/holdout/`. `engine/tests/cases/` holds files named `*-hidden.md`. Session 8 didn't open them; 8b's brief should say whether the build role may.
 - **Rules every agent prompt carries:** no sub-agents, closed scopes, the seal rule word for word, saved finals and transcript audits, as in this session.
+
+## Addendum (2026-10-30, after G1): the briefs
+
+The user asked session 8's lead to write the briefs: `tmp/active/session8b-brief.md` (8b-docs: B1, B3.1–B3.2, gate G2a, landing) and `tmp/active/session8c-brief.md` (8b-build, named 8c: B2, B3.3, G2). One change from §1: B4's suite-side work (`engine/tests/INTERFACE.md`, `run.py --interp engine`, `TESTS.sha256`, the stub shown red) moves to T. The scaffold's guard gives `engine/tests/` to the `tests` role only (SCAFFOLD §3), and 8c runs as `rules`. 8c drafts the contract (`tmp/session8c/INTERFACE-draft.md`) and does the guard's side. 8b also drafts `engine/CLAUDE.md`'s text and the eval's design, so 8c only places them. The eval's runs are headless build-role sessions (`TALLY_ROLE=build claude -p`), not agents, so the guard binds them as it will bind the builder.
