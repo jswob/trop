@@ -29,10 +29,24 @@ DEP_TABLES = ("dependencies", "dev-dependencies", "build-dependencies")
 # the assert family and the arguments each needs before its message (R-71)
 ASSERT = re.compile(r"\b(debug_assert_eq|debug_assert_ne|debug_assert|assert_eq|assert_ne|assert)\s*!\s*([(\[{])")
 ASSERT_ARGS = {"assert": 1, "debug_assert": 1}
-GUARD = (
-    '#[cfg(all(feature = "fault-injection", not(debug_assertions)))]\n'
-    'compile_error!("the fault-injection feature exists only in builds with debug assertions (R-51)");'
-)
+# R-51: the features that exist only in builds with debug assertions, each with its
+# compile_error! guard in tally's lib.rs: gate 5's fault injection, the counters behind
+# --stats (BUILDER §13.2) and gate 6's reversed completion order (D3-6)
+TEST_ONLY = ("fault-injection", "counters", "reverse-order")
+
+
+def guard_text(feature):
+    return (f'#[cfg(all(feature = "{feature}", not(debug_assertions)))]\n'
+            f'compile_error!("the {feature} feature exists only in builds with debug assertions (R-51)");')
+
+
+def declared_test_only():
+    """The test-only features tally's manifest declares; fault-injection always counts."""
+    try:
+        features = load(os.path.join(ENGINE, "crates", "tally", "Cargo.toml")).get("features", {})
+    except (OSError, ValueError):
+        features = {}
+    return [f for f in TEST_ONLY if f in features or f == "fault-injection"]
 # the only config files that may change how the engine is built or linted
 EXPECTED_CONFIG = {"engine/clippy.toml", "engine/.cargo/mutants.toml", "engine/rust-toolchain.toml"}
 CONFIG_NAMES = {"clippy.toml", ".clippy.toml", "rustfmt.toml", ".rustfmt.toml", "rust-toolchain", "rust-toolchain.toml"}
@@ -395,7 +409,10 @@ def check_code_text(problems):
     for path in rust_files(lib):
         text = open(path, encoding="utf-8").read()
         r = rel(path)
-        code, strings = lex(text.replace(GUARD, "") if r == "engine/crates/tally/src/lib.rs" else text)
+        if r == "engine/crates/tally/src/lib.rs":
+            for feature in TEST_ONLY:
+                text = text.replace(guard_text(feature), "")
+        code, strings = lex(text)
         for pattern, why in FORBIDDEN_TEXT:
             if pattern.search(code):
                 problems.append(f"{r}: {why}")
@@ -403,8 +420,10 @@ def check_code_text(problems):
             if PATH_STRING.search(literal):
                 problems.append(f"{r}:{line}: a path string into the tests, the answer keys or the spec (R-93)")
     lib_rs = os.path.join(lib, "lib.rs")
-    if not os.path.isfile(lib_rs) or GUARD not in open(lib_rs, encoding="utf-8").read():
-        problems.append("engine/crates/tally/src/lib.rs: the fault-injection compile_error! guard is missing or changed (R-51)")
+    lib_text = open(lib_rs, encoding="utf-8").read() if os.path.isfile(lib_rs) else ""
+    for feature in declared_test_only():
+        if guard_text(feature) not in lib_text:
+            problems.append(f"engine/crates/tally/src/lib.rs: the {feature} compile_error! guard is missing or changed (R-51)")
 
 
 def known_crates():

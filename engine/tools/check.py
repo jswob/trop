@@ -126,16 +126,21 @@ def run(argv, env, log, cwd=ENGINE):
 
 
 def fault_injection_probe(env, log):
-    """R-51: the fault-injection feature can't reach a release build, and the CLI
-    never turns it on."""
-    code, out = run(["cargo", "build", "--release", "--locked", "-p", "tally", "--features", "fault-injection"], env, log)
-    if code == 0 or "fault-injection" not in out or "debug assertions" not in out:
-        return "a release build with the fault-injection feature compiled; the compile_error! guard is missing"
+    """R-51: no test-only feature (fault injection, the counters, the reversed order)
+    can reach a release build, and the CLI never turns one on."""
+    sys.path.insert(0, TOOLS)
+    import check_rules  # the list of test-only features and which tally declares
+
+    for feature in check_rules.declared_test_only():
+        code, out = run(["cargo", "build", "--release", "--locked", "-p", "tally", "--features", feature], env, log)
+        if code == 0 or feature not in out or "debug assertions" not in out:
+            return f"a release build with the {feature} feature compiled; the compile_error! guard is missing"
     code, out = run(["cargo", "tree", "--locked", "-p", "tally-cli", "-e", "features"], env, log)
     if code != 0:
         return "cargo tree failed"
-    if "fault-injection" in out:
-        return "tally-cli turns on tally's fault-injection feature"
+    for feature in check_rules.TEST_ONLY:
+        if f'feature "{feature}"' in out:
+            return f"tally-cli turns on tally's {feature} feature"
     return None
 
 

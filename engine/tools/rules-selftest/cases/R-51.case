@@ -27,3 +27,25 @@ tally = { workspace = true }
 tally = { workspace = true, features = ["fault-injection"] }
 --- run
 tools/check step fault-injection-probe
+
+case: counters-without-guard
+tool: run
+expect: the counters compile_error! guard is missing
+--- replace crates/tally/Cargo.toml
+fault-injection = []
+--- with
+fault-injection = []
+counters = []
+--- run
+tools/check-rules
+
+case: reverse-order-in-a-release-build
+tool: run
+expect: a release build with the reverse-order feature compiled
+--- replace crates/tally/Cargo.toml
+fault-injection = []
+--- with
+fault-injection = []
+reverse-order = []
+--- run
+tools/check step fault-injection-probe
