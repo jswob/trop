@@ -1,0 +1,12 @@
+//! The engine's exact number: a ratio of two integers, small while it fits, big past that.
+//! Spec: none, an eval fixture.
+//! Twin: none, an eval fixture.
+//! Invariants: the denominator is positive and the ratio is in lowest terms.
+
+/// An exact rational: `Small` while numerator and denominator fit an `i64`, `Big`
+/// past that, as BUILDER §2 plans (`Num`, Small `i64/i64` or Big).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Num {
+    /// The numerator and the denominator, each an `i64`.
+    Small(i64, i64),
+}

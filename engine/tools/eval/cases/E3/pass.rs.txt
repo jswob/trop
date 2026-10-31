@@ -1,0 +1,16 @@
+//! The length of a period in days, in the width the calendar stores it.
+//! Spec: none, an eval fixture.
+//! Twin: none, an eval fixture.
+//! Invariants: a stored length equals the period's true length.
+
+/// Why a period was refused, by its catalogue code.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PeriodError {
+    /// `RUN-DIGITS`: the length doesn't fit the calendar's width.
+    Digits,
+}
+
+/// The number of days in a period of `days` listed days, as the calendar stores it.
+pub fn period_len(days: &[u32]) -> Result<u32, PeriodError> {
+    u32::try_from(days.len()).map_err(|_| PeriodError::Digits)
+}

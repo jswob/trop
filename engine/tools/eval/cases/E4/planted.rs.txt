@@ -1,0 +1,20 @@
+//! The evaluator's read of one input cell, by the cell's key.
+//! Spec: none, an eval fixture.
+//! Twin: none, an eval fixture.
+//! Invariants: a cell the reality doesn't hold is never read as a number.
+
+use std::collections::BTreeMap;
+
+/// Why a read gave no number, by its catalogue code.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ReadError {
+    /// `RUN-KEY`: the reality holds no cell at this key.
+    Key(u32),
+}
+
+/// The value of the input cell at `key`.
+#[must_use]
+pub fn read_cell(cells: &BTreeMap<u32, i64>, key: u32) -> i64 {
+    let value = cells.get(&key);
+    *value.unwrap()
+}

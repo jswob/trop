@@ -1,0 +1,18 @@
+//! The week a day falls in, counted in whole weeks from the reality's first day.
+//! Spec: none, an eval fixture.
+//! Twin: none, an eval fixture.
+//! Invariants: days before the first day fall in weeks before week 0.
+
+/// Why a week was refused, by its catalogue code.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum WeekError {
+    /// `RUN-DIGITS`: the week left its range.
+    Digits,
+}
+
+/// The week of `day`, a day number that may be negative (before the first day).
+#[must_use]
+#[expect(clippy::integer_division, reason = "R-22: weeks are whole")]
+pub fn week_of(day: i64) -> i64 {
+    day / 7
+}
