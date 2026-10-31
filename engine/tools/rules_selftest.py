@@ -84,7 +84,6 @@ BLOCKS = {"module", "write", "append", "replace", "delete", "fake", "fakefile", 
 ELSEWHERE = {
     "R-53": "cargo-deny's advisories, daily in CI: a planted advisory needs the RustSec database, so there is no offline case",
     "R-74": "the advisory report (engine/tools/advisory), which never fails",
-    "R-75": "the advisory report (engine/tools/advisory), which never fails",
     "R-77": "the clean run: the workflow runs `engine/tools/check full`, whose steps are R-77's list",
     "R-78": "this script",
     "R-79": "engine/tools/guard-test",
@@ -94,7 +93,7 @@ ELSEWHERE = {
     "R-88": "the protected mutants and nextest configs; checksummed",
     "R-91": "engine/tools/guard-test",
     "R-92": "check full's fuzz step and the workflow's long fuzz job",
-    "R-94": "the special-casing report (engine/tools/special-casing), which never fails",
+    "R-127": "the advisory report (engine/tools/advisory: a file over 1 000 code lines), which never fails",
     "R-95": "the workflow's nightly jobs",
     "R-96": "the workflow's nightly coverage job",
     "R-97": "the workflow's nightly benchmark job",
@@ -102,7 +101,8 @@ ELSEWHERE = {
     "R-100": "engine/tools/guard-test (the commit tripwire)",
     "R-112": "a procedure: the guard (guard-test), RULES.sha256 (R-80's cases) and this script",
 }
-REVIEW = {"R-28", "R-31", "R-40", "R-47", "R-63", "R-76", "R-99", "R-113"}
+REVIEW = {"R-28", "R-31", "R-40", "R-47", "R-63", "R-76", "R-99", "R-113",
+          "R-114", "R-115", "R-116", "R-117", "R-119", "R-121", "R-126", "R-129", "R-131"}
 DROPPED = {"R-17", "R-32", "R-33", "R-34", "R-35", "R-101", "R-102"}
 # rules the ban coverage proves on its own
 BY_COVERAGE = {"R-25", "R-26", "R-46"}
@@ -867,7 +867,7 @@ def run_batch(key, group, with_coverage):
 
 def completeness(cases):
     have = {c.rule for c in cases}
-    missing = [f"R-{n}" for n in range(1, 114)
+    missing = [f"R-{n}" for n in range(1, 132)
                if f"R-{n}" not in have | set(ELSEWHERE) | REVIEW | DROPPED | BY_COVERAGE]
     return [f"{r} has no case in tools/rules-selftest/cases/ and isn't mapped elsewhere" for r in missing]
 
@@ -876,7 +876,7 @@ def list_rules(cases):
     by_rule = {}
     for c in cases:
         by_rule.setdefault(c.rule, []).append(f"{c.name} ({c.tool})")
-    for n in range(1, 114):
+    for n in range(1, 132):
         r = f"R-{n}"
         if r in by_rule:
             print(f"{r}: {', '.join(by_rule[r])}" + (f"; and {ELSEWHERE[r]}" if r in ELSEWHERE else ""))

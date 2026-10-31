@@ -7,7 +7,7 @@
 # without `budget` is counted and listed, not capped.
 
 # the highest rule id an exception's reason may name
-rules = 113
+rules = 131
 
 [[area]]
 name = "tests"

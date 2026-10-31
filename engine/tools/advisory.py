@@ -91,6 +91,16 @@ def clone_density():
         print(f"  {r}: {density:.1f} ({clones} in {lines} lines)")
 
 
+def long_files():
+    """R-127: a library file over 1 000 code lines, reported (re-judged at S with R-74)."""
+    print("advisory: files over 1 000 code lines (R-127):")
+    for path in library_files():
+        code, _ = check_rules.lex(open(path, encoding="utf-8").read())
+        lines = sum(1 for line in code.splitlines() if line.strip())
+        if lines > 1000:
+            print(f"  {check_rules.rel(path)}: {lines} code lines")
+
+
 def uncited():
     print("advisory: kernel functions without a spec citation (R-75):")
     try:
@@ -125,6 +135,7 @@ def uncited():
 def main():
     clippy_report()
     clone_density()
+    long_files()
     uncited()
     return 0
 
