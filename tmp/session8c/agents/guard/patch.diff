@@ -1,0 +1,1458 @@
+diff --git a/.claude/settings.json b/.claude/settings.json
+index 34571bc..0800551 100644
+--- a/.claude/settings.json
++++ b/.claude/settings.json
+@@ -20,7 +20,7 @@
+ 				"hooks": [
+ 					{
+ 						"type": "command",
+-						"command": "g=\"$CLAUDE_PROJECT_DIR/engine/tools/guard\"; if [ -x \"$g\" ]; then exec \"$g\"; elif [ -e \"$CLAUDE_PROJECT_DIR/engine\" ]; then echo \"engine guard: engine/tools/guard is missing; refusing the call (fails closed, R-79)\" >&2; exit 2; else exit 0; fi"
++						"command": "g=\"$CLAUDE_PROJECT_DIR/engine/tools/guard\"; if [ -x \"$g\" ]; then /bin/bash \"$g\"; c=$?; [ \"$c\" -eq 0 ] || exit 2; elif [ -e \"$g\" ]; then echo \"engine guard: engine/tools/guard isn't executable; refusing the call (fails closed, R-79)\" >&2; exit 2; elif [ -e \"$CLAUDE_PROJECT_DIR/engine\" ]; then echo \"engine guard: engine/tools/guard is missing; refusing the call (fails closed, R-79)\" >&2; exit 2; else exit 0; fi"
+ 					}
+ 				]
+ 			}
+@@ -41,7 +41,7 @@
+ 				"hooks": [
+ 					{
+ 						"type": "command",
+-						"command": "g=\"$CLAUDE_PROJECT_DIR/engine/tools/guard\"; if [ -x \"$g\" ]; then exec \"$g\" --config-change; elif [ -e \"$CLAUDE_PROJECT_DIR/engine\" ]; then echo \"engine guard: engine/tools/guard is missing; refusing the call (fails closed, R-79)\" >&2; exit 2; else exit 0; fi"
++						"command": "g=\"$CLAUDE_PROJECT_DIR/engine/tools/guard\"; if [ -x \"$g\" ]; then /bin/bash \"$g\" --config-change; c=$?; [ \"$c\" -eq 0 ] || exit 2; elif [ -e \"$g\" ]; then echo \"engine guard: engine/tools/guard isn't executable; refusing the call (fails closed, R-79)\" >&2; exit 2; elif [ -e \"$CLAUDE_PROJECT_DIR/engine\" ]; then echo \"engine guard: engine/tools/guard is missing; refusing the call (fails closed, R-79)\" >&2; exit 2; else exit 0; fi"
+ 					}
+ 				]
+ 			}
+diff --git a/engine/tools/RULES.sha256 b/engine/tools/RULES.sha256
+index 4ce1347..747c938 100644
+--- a/engine/tools/RULES.sha256
++++ b/engine/tools/RULES.sha256
+@@ -1,4 +1,13 @@
+-a7c9a8bbd66d5dfc574b9881f30d3ebf6cdf6b1abdea53a635bcb0c64cf87dfd  .claude/settings.json
++a547d1799ae6f5c692abf0d1bf5ede397904947f5cf4dd89f9de8c04add492ab  .claude/agents/engine-reviewer.md
++9c7bc04926169570360afeeed485713796684889415ddb8a4d3b8cd1344e4055  .claude/settings.json
++e59199418ef8dbd04ad34f34125b3bd5c2e5b9f6af235aa7758d4da6072d6902  .claude/skills/engine-rust/SKILL.md
++6e54b68835ba812dba032a9c57f12a3b4839dbe71c2dab27fb4ed416677cd8ee  .claude/skills/engine-rust/references/data-layout.md
++249525a88df403d8ad3a19c76d2c884b7271feb0b0abecd60f310bee4aa8511f  .claude/skills/engine-rust/references/evaluator-and-memo.md
++bd58c50deb94a8c140c9022b217ce8199aa869eb1ad0223668bdc7b01a55a2fe  .claude/skills/engine-rust/references/numbers.md
++24688b2f63d80b732e33458f42634bcdcf0af18d7c5e60762966273f167250a9  .claude/skills/engine-rust/references/parallelism.md
++a27e71df34234b1301fbb5e76cb1df6767f320314a254f5007abe97ff4a7eb93  .claude/skills/engine-rust/references/performance.md
++b290550462ec9ade5d295eb5c80a6ea862bdda97be679b091bf765debc73c3bd  .claude/skills/engine-rust/references/readability.md
++76a078bc48e4efcb3961bb582f22295ff31e308546bf78473bfa607afbf06d7b  .claude/skills/engine-rust/references/seams.md
+ 311b7e4f03474bc0943b43d17ad9f0a1e83657b8d11a2217c4d94d29dd2c6199  .github/workflows/engine.yml
+ 816bcf63fc37c1382df30d9e0fc2a2f357a16654476d74b1e2eb53cc65c49d34  engine/.cargo/mutants.toml
+ 21b8628e520a5b04a20a500d1c85f472520de3aaaabb678b385733d558dd9423  engine/.config/nextest.toml
+@@ -50,7 +59,7 @@ f1c50fc3f4d8ba79c6634e42a444090637bbaf482cc1ea57571fc592c2183ffb  engine/tools/c
+ e3af9e319929969c2a7eff7d8f334a3ae52b3334e6b03d05809cd5d8432866a9  engine/tools/check-frozen
+ 927f9e3a095ff9982910c137929948ad4d67b34949da7d2dadb079060fe0157d  engine/tools/check-rules
+ 4c2cf7c450b137bf34eb07c01ab7d747062dd491cf7483564bd9c49e61f8f17f  engine/tools/check.py
+-71e725140d2b4c626d734c79252107c73d7e6068233552dfbee467e195f8c09a  engine/tools/check_frozen.py
++264dd58b31ccfcef09fc5ca3378b00d1eb949680abb888d9fe4113bed76fa7dd  engine/tools/check_frozen.py
+ 7dc05d63c7bba67840067c0a99aae17a1bb25d692f261adc6c5f929b75214e39  engine/tools/check_rules.py
+ fa9414cfbcf8cef32bc8888fde4136d974b7556150b6aa4a93ee63d64d6d95ad  engine/tools/exceptions
+ 74acc17e4fde06e0e36c7d6023a934972fc668e6b94a7193b03a471601bc224b  engine/tools/exceptions-budget.toml
+@@ -60,8 +69,8 @@ a88b1ee43321139595ddb3bd591c831a2ac54b1c75ce166ebc22dd53bee48796  engine/tools/f
+ 40cc8acc71e88efb44190ddcb2c45834fdf1d95932796fc9b62b6f0e84e6b283  engine/tools/gen-clippy-ints.py
+ 117693855b7124c75bf51f3234cf98ac181649579b89498fe48b2981250eeaaa  engine/tools/guard
+ b998862cc0f5e6d11342981b779ea2baa508158b964f435c94ba196e2d829236  engine/tools/guard-test
+-58ab4fb4cfc0c0beb5bd563c1d239d147922aeab26c8dfecb33334df8eab95b9  engine/tools/guard.py
+-50da99f18fa489895cf5152a9450e3d186159f2729170b9c653cfd6b2723c051  engine/tools/guard_test.py
++6086adbdbc1918711a101541fd252ddfc0d7e5438d14f975eb663c9a6aba9613  engine/tools/guard.py
++ead49ccefce822450869e8ae7bf9fd12794476ce6b614fca689e8d49592266d4  engine/tools/guard_test.py
+ d74f5134cff34f7df8db241671658baf2e072481008cb32f9f1d45785767b0e7  engine/tools/kernel.toml
+ fff1fe1c355eec9e6a0265ce08765776182ddcb117e1a72a607a424b89130207  engine/tools/mutants-survivors
+ 2b7795ff45efbc5183ff3aaba6edbfd4498ab2f11bf2f136bb69b138e163a828  engine/tools/mutants_survivors.py
+@@ -133,7 +142,8 @@ d9ce905ac35ca7eb42567a82754ba59728c62032eb41dbd17bb358b7a1014dc7  engine/tools/r
+ 4cb5f0192b256f2ce62eb0a295db132d925fa8a6c3469595b7572643a2529a0f  engine/tools/rules-selftest/cases/R-73.case
+ e0a70f2414fdad29c21274bcbf83fa168707c11d4125d667fd85d3a1379518d1  engine/tools/rules-selftest/cases/R-78.case
+ afd3888f12076ed2b53b63489bb24391fed513769bb0b4eaf1fd063fdb843e04  engine/tools/rules-selftest/cases/R-8.case
+-ee4d1ec9e48200ba1ce9a82177397fb538067babe74ae3055ef98eb0f4601906  engine/tools/rules-selftest/cases/R-80.case
++2d0f50ec65c6dc839702119ea8441ec87d5a7caef69951afbeff27fb479726fb  engine/tools/rules-selftest/cases/R-80.case
++ecadaf7b33fe9cadeb76b14e8a6925346b2c8273e027f3f874b4aeb40f2f4dad  engine/tools/rules-selftest/cases/R-81.case
+ 03621cdffc5c1fb0eb2fd59624895f81b1eca2bbbe8d008a113a2837623e898b  engine/tools/rules-selftest/cases/R-82.case
+ 83a403814b63cfabe00e380f5a8c0290fc8053838dd8d0902abbac11167d6671  engine/tools/rules-selftest/cases/R-85.case
+ 0c7256ef67429a2071f3bc9cc50fe65db645abacfbe5b227ee31913b11fcf1c8  engine/tools/rules-selftest/cases/R-86.case
+@@ -143,7 +153,7 @@ caee4b83f4b948e5952877435d085e86e3b20e5ac3b369a17f79196da62f4746  engine/tools/r
+ 269cd27d0ade7ea45713b6b4b4da6c4e3cc0a2f0b2e8466a50f4208827e43f26  engine/tools/rules-selftest/cases/R-90.case
+ 24596787a0ddbb8714e436adcf5c84d5da60302c3a82ab5cb728e01e02bc566b  engine/tools/rules-selftest/cases/R-93.case
+ 0bc4fd5c466245c485b5ab36bc4c9629d7a1c76febb615fd4a31bee79291d7b4  engine/tools/rules-selftest/run
+-2210f39c278c026c748bb316981c338a59b58d97bdd26e31ca59a7a90274f04a  engine/tools/rules_selftest.py
++35752780f0d22c0fa2ed2f6f67f25838aaa08bcdae0c0d405add27d7656cbe0a  engine/tools/rules_selftest.py
+ ab247297fd8c3d1d5d973b900be925d082f29aa90e773b851ec3de823593b24f  engine/tools/special-casing
+ c632eee3236e00516946b3a9dacf447adabdc3b35c405413b1b784390765a7ad  engine/tools/special_casing.py
+ 190d1612f7308eb2c9c120bc16b9ce322837ea3ce5cd5e2f2e23d6bef6c4afcf  engine/tools/stop-check
+diff --git a/engine/tools/check_frozen.py b/engine/tools/check_frozen.py
+index 6a09bee..8fdc44a 100644
+--- a/engine/tools/check_frozen.py
++++ b/engine/tools/check_frozen.py
+@@ -11,10 +11,14 @@ It verifies:
+   - that engine/spec/ and the oracle (refcore/, refcore_fast/, tools/SHA256SUMS) match
+     the commit tools/frozen.toml pins: the tag named in engine/spec/VERSION, or an
+     approved amendment after it that kept the version;
+-  - engine/tools/RULES.sha256 over every rule file (the set the guard protects).
++  - engine/tools/RULES.sha256 over every rule file (the set the guard protects);
++  - that .claude/settings.local.json (git-ignored, so no checksum covers it) doesn't
++    switch off the hooks or the permission prompts: no disableAllHooks, no hooks, no
++    bypassPermissions mode (R-81).
+ """
+ 
+ import hashlib
++import json
+ import os
+ import subprocess
+ import sys
+@@ -34,7 +38,14 @@ PINNED = ["engine/spec", "engine/tools/refcore", "engine/tools/refcore_fast", "e
+ TESTS_OUTPUT = ("cache/", "out/", "results/")
+ SKIP_DIRS = {"__pycache__", "target", "corpus", "artifacts", "coverage", ".git"}
+ SKIP_FILES = {".DS_Store"}
+-OUTSIDE = [".github/workflows/engine.yml", ".claude/settings.json"]
++# rule files outside engine/ (a folder stands for every file under it)
++OUTSIDE = [
++    ".github/workflows/engine.yml",
++    ".claude/settings.json",
++    ".claude/skills/engine-rust",
++    ".claude/agents/engine-reviewer.md",
++]
++LOCAL_SETTINGS = ".claude/settings.local.json"
+ 
+ 
+ def sha256(path):
+@@ -146,7 +157,12 @@ def rule_files():
+             continue
+         if guard.is_rule(rel.casefold()):
+             found.append(rel)
+-    found += [p for p in OUTSIDE if os.path.isfile(os.path.join(ROOT, p))]
++    for p in OUTSIDE:
++        full = os.path.join(ROOT, p)
++        if os.path.isdir(full):
++            found += [f"{p}/{n}" for n in files_under(full)]
++        elif os.path.isfile(full):
++            found.append(p)
+     return sorted(found)
+ 
+ 
+@@ -169,6 +185,31 @@ def verify_rules():
+     return problems
+ 
+ 
++def verify_local_settings():
++    """The git-ignored local settings can't switch off the next session's hooks or its
++    permission prompts (R-81): a build-role script could write them, and no checksum
++    or clean CI runner sees the file."""
++    path = os.path.join(ROOT, LOCAL_SETTINGS)
++    if not os.path.lexists(path):
++        return []
++    try:
++        with open(path, encoding="utf-8") as f:
++            data = json.load(f)
++    except (OSError, ValueError) as e:
++        return [f"settings: {LOCAL_SETTINGS} can't be read as JSON ({e}); it must not switch off the hooks (R-81)"]
++    if not isinstance(data, dict):
++        return [f"settings: {LOCAL_SETTINGS} isn't a JSON object (R-81)"]
++    problems = []
++    if "disableAllHooks" in data:
++        problems.append(f"settings: {LOCAL_SETTINGS} sets disableAllHooks (R-81)")
++    if "hooks" in data:
++        problems.append(f"settings: {LOCAL_SETTINGS} sets hooks, which belong in .claude/settings.json (R-81)")
++    permissions = data.get("permissions")
++    if isinstance(permissions, dict) and permissions.get("defaultMode") == "bypassPermissions":
++        problems.append(f"settings: {LOCAL_SETTINGS} sets the bypassPermissions mode (R-81)")
++    return problems
++
++
+ def write_rules():
+     with open(RULES, "w", encoding="utf-8") as f:
+         for name in rule_files():
+@@ -193,6 +234,7 @@ def main():
+         print("check-frozen: notice: engine/tests/TESTS.sha256 isn't written yet (T writes it); skipped")
+     problems += verify_pin()
+     problems += verify_rules()
++    problems += verify_local_settings()
+     for p in problems:
+         print(f"FAIL {p}")
+     if problems:
+diff --git a/engine/tools/guard.py b/engine/tools/guard.py
+index 70c25a4..b7f0e26 100644
+--- a/engine/tools/guard.py
++++ b/engine/tools/guard.py
+@@ -17,6 +17,9 @@ The role comes from TALLY_ROLE (R-79):
+ The oracle is the spec's reference interpreter: engine/tools/refcore/, refcore_fast/
+ and engine/tools/SHA256SUMS (refcore's checksums). It is frozen with the spec.
+ 
++Every checkout of the repo is judged alike: the main checkout and each linked worktree,
++found from the git files, so a session in one can't write another's spec (F-1).
++
+ The Bash check is a tripwire, not a wall: it refuses a command that names a protected
+ path together with a form that writes. The checksums (check-frozen) and a clean CI
+ runner are the wall.
+@@ -24,11 +27,14 @@ runner are the wall.
+ 
+ import datetime
+ import fnmatch
++import glob
+ import json
+ import os
+ import re
+ import shlex
+ import sys
++import tomllib
++import urllib.parse
+ 
+ TOOLS = os.path.dirname(os.path.realpath(__file__))
+ ENGINE = os.path.dirname(TOOLS)
+@@ -55,6 +61,10 @@ RULE_GLOBS = [
+     "engine/crates/*/benches/*",
+     ".github/workflows/engine.yml",
+     ".claude/settings.json",
++    # the builder's instructions (D6-3, F-23); the rest of .claude/ is the toolkit's
++    "engine/CLAUDE.md",
++    ".claude/skills/engine-rust/*",
++    ".claude/agents/engine-reviewer.md",
+ ]
+ CONFIG_NAMES = {"clippy.toml", ".clippy.toml", "rustfmt.toml", ".rustfmt.toml"}
+ # The oracle: the spec's reference interpreter, frozen with it and written only in the
+@@ -78,36 +88,126 @@ BUILD_FILES = {
+ WRITERS = {
+     "cp", "mv", "rm", "rmdir", "touch", "ln", "install", "rsync", "dd", "truncate",
+     "chmod", "chown", "chgrp", "unlink", "mkdir", "tee", "shred", "patch", "cargo-fmt",
++    "ditto", "rustfmt", "vim", "vi", "nvim", "ex", "ed", "uniq",
+ }
++# writers whose only target is their destination (the last operand, or -t)
++COPIERS = {"cp", "install", "ln", "rsync", "ditto"}
++EDITORS = {"vim", "vi", "nvim", "ex", "ed"}
+ INTERPRETERS = {
+     "python", "python3", "perl", "ruby", "node", "bun", "deno", "awk", "gawk", "php",
+     "lua", "osascript", "tclsh", "pwsh",
+ }
+ SHELLS = {"bash", "sh", "zsh", "dash", "ksh", "fish"}
+-PREFIXES = {"sudo", "env", "command", "exec", "nohup", "time", "nice", "xargs", "builtin", "doas"}
++# commands that run the rest of their words as a command: (their options that take a
++# value, the operands they take before the command) (F-2)
++PREFIXES = {
++    "sudo": ({"-u", "-g", "-U", "-C", "-D", "-h", "-p", "-r", "-t", "-T", "--user", "--group",
++              "--other-user", "--chdir", "--prompt", "--role", "--type", "--host", "--close-from"}, 0),
++    "doas": ({"-u", "-C"}, 0),
++    "env": ({"-u", "-C", "-S", "-P", "--unset", "--chdir", "--split-string"}, 0),
++    "command": (set(), 0),
++    "exec": ({"-a"}, 0),
++    "nohup": (set(), 0),
++    "time": ({"-f", "-o", "--format", "--output"}, 0),
++    "nice": ({"-n", "--adjustment"}, 0),
++    "ionice": ({"-c", "-n", "-p", "-P", "-u", "--class", "--classdata", "--pid", "--pgid", "--uid"}, 0),
++    "xargs": ({"-n", "-I", "-L", "-P", "-s", "-E", "-d", "-a", "-J", "-R", "-S", "--max-args",
++               "--replace", "--max-lines", "--max-procs", "--max-chars", "--eof", "--delimiter",
++               "--arg-file", "--process-slot-var"}, 0),
++    "builtin": (set(), 0),
++    "timeout": ({"-s", "-k", "--signal", "--kill-after"}, 1),  # the duration
++    "stdbuf": ({"-i", "-o", "-e", "--input", "--output", "--error"}, 0),
++    "flock": ({"-w", "-E", "--timeout", "--conflict-exit-code"}, 1),  # the lock file
++    "caffeinate": ({"-t", "-w"}, 0),
++    "unbuffer": (set(), 0),
++}
++# shell words that open or close a compound command; the command follows them (F-2)
++RESERVED = {"if", "then", "else", "elif", "fi", "do", "done", "while", "until", "{", "}", "!", "esac"}
++ASSIGNMENT = re.compile(r"[A-Za-z_][A-Za-z0-9_]*=.*")
+ GIT_WRITES = {
+     "checkout", "restore", "reset", "rm", "mv", "apply", "stash", "clean", "switch", "am",
+     "cherry-pick", "revert", "merge", "rebase", "pull", "update-index", "read-tree",
+     "checkout-index", "filter-branch", "filter-repo", "worktree", "commit",
+ }
++# git commands that take a message (R-100)
++GIT_MESSAGES = {"commit", "merge", "tag", "notes", "commit-tree"}
+ FIND_WRITES = {"-delete", "-exec", "-execdir", "-ok", "-okdir", "-fprint", "-fprintf", "-fls"}
+ ATTRIBUTION = ("co-authored-by", "noreply@anthropic.com", "generated with [claude", "generated with claude")
++# cargo commands that write sources or manifests: judged by the manifests they act on
++CARGO_WRITES = {"fmt", "fix", "add", "remove", "rm"}
+ 
+ 
+ class Refused(Exception):
+     """A refusal, with the message the session sees."""
+ 
+ 
+-def rel(path):
+-    """The path relative to the repo root, casefolded ('' for the root), or None if outside."""
+-    p = os.path.realpath(path)
+-    folded, root = p.casefold(), ROOT.casefold()
++def read_line(path):
++    with open(path, encoding="utf-8") as f:
++        return f.read().strip()
++
++
++def find_roots():
++    """Every checkout of the repo, realpaths, longest first: this one, the main checkout
++    and each linked worktree. Read from the git files, without running git (F-1):
++    ROOT/.git is a folder (the main checkout) or a `gitdir:` file (a linked worktree),
++    whose `commondir` names the common folder; its worktrees/*/gitdir name the others."""
++    dotgit = os.path.join(ROOT, ".git")
++    try:
++        if os.path.isdir(dotgit):
++            gitdir = dotgit
++        else:
++            line = read_line(dotgit)
++            if not line.startswith("gitdir:"):
++                raise ValueError(f"{dotgit} has no gitdir line")
++            gitdir = os.path.join(ROOT, line[len("gitdir:") :].strip())
++        if not os.path.isdir(gitdir):
++            raise ValueError(f"{gitdir} isn't a folder")
++        common = gitdir
++        if os.path.lexists(os.path.join(gitdir, "commondir")):
++            common = os.path.join(gitdir, read_line(os.path.join(gitdir, "commondir")))
++        common = os.path.realpath(common)
++        roots = {ROOT}
++        if os.path.basename(common) == ".git":
++            roots.add(os.path.dirname(common))
++        trees = os.path.join(common, "worktrees")
++        if os.path.isdir(trees):
++            for name in sorted(os.listdir(trees)):
++                entry = os.path.join(trees, name)
++                if os.path.isdir(entry):
++                    roots.add(os.path.dirname(os.path.join(entry, read_line(os.path.join(entry, "gitdir")))))
++    except (OSError, ValueError) as e:
++        raise Refused(f"engine guard: can't read the repo's git files to find its checkouts ({e}); refusing (fails closed, R-79).") from e
++    return sorted({os.path.realpath(r) for r in roots}, key=len, reverse=True)
++
++
++_ROOTS = []
++
++
++def roots():
++    if not _ROOTS:
++        _ROOTS.extend(find_roots())
++    return _ROOTS
++
++
++def locate(path):
++    """(the checkout holding `path`, the path relative to it casefolded, '' for its root),
++    or (None, None) outside every checkout. The longest root holding it wins, so a
++    worktree inside another checkout is judged as itself."""
++    p = os.path.realpath(path).casefold()
+     # casefolded: macOS's file system ignores case, so engine/SPEC is engine/spec
+-    if folded == root:
+-        return ""
+-    if folded.startswith(root + os.sep):
+-        return folded[len(root) + 1 :].replace(os.sep, "/")
+-    return None
++    for root in roots():
++        folded = root.casefold()
++        if p == folded:
++            return root, ""
++        if p.startswith(folded + os.sep):
++            return root, p[len(folded) + 1 :].replace(os.sep, "/")
++    return None, None
++
++
++def rel(path):
++    """The path relative to the checkout holding it, casefolded ('' for its root), or None
++    if outside every checkout."""
++    return locate(path)[1]
+ 
+ 
+ def matches(r, globs):
+@@ -146,13 +246,13 @@ def build_allowed(r):
+ 
+ def verdict(path, role):
+     """None if `role` may write `path`, else the reason it may not."""
+-    r = rel(path)
++    root, r = locate(path)
+     spec = r is not None and (r == "engine/spec" or r.startswith("engine/spec/"))
+     tests = r is not None and (r == "engine/tests" or r.startswith("engine/tests/"))
+     oracle = r is not None and is_oracle(r)
+     rule = r is not None and is_rule(r)
+     if role == "build":
+-        if r is not None and build_allowed(r):
++        if r is not None and root == ROOT and build_allowed(r):
+             return None
+         if spec:
+             return "the spec is frozen and checksummed (R-80)"
+@@ -164,6 +264,8 @@ def verdict(path, role):
+             return "a rule file, protected and checksummed (R-80, R-81, R-91)"
+         if r is None:
+             return "outside the repo, which the build role never writes (R-79)"
++        if root != ROOT:
++            return "in another checkout of the repo, which the build role never writes (R-79)"
+         return "not on the build role's allow-list (R-79)"
+     if role == "rules":
+         if spec:
+@@ -189,17 +291,35 @@ def verdict(path, role):
+     return None
+ 
+ 
++def outside_watched():
++    """The places outside the checkouts the build role never writes, realpaths casefolded:
++    Claude Code's settings by name (~/.claude, ~/.claude.json, $CLAUDE_CONFIG_DIR; R-81,
++    F-22), and every cargo config folder cargo reads: each `.cargo/` from a checkout up
++    to `/`, ~/.cargo and $CARGO_HOME (F-9)."""
++    found = [os.path.join(HOME, ".claude"), os.path.join(HOME, ".claude.json"), os.path.join(HOME, ".cargo")]
++    found += [os.environ[k] for k in ("CLAUDE_CONFIG_DIR", "CARGO_HOME") if os.environ.get(k)]
++    for root in roots():
++        d = os.path.dirname(root)
++        while True:
++            found.append(os.path.join(d, ".cargo"))
++            if os.path.dirname(d) == d:
++                break
++            d = os.path.dirname(d)
++    return {os.path.realpath(os.path.expanduser(p)).casefold() for p in found}
++
++
+ def watched(path, role):
+-    """Whether a Bash command naming `path` is checked at all: the repo, and in the
+-    build role also ~/.claude and ~/.cargo (R-81). Scratch space elsewhere is free."""
++    """Whether a Bash command naming `path` is checked at all: every checkout of the
++    repo, and in the build role also the places outside_watched() names. Scratch space
++    elsewhere is free."""
+     r = rel(path)
+     if r == "":
+         return True
+     if r is None:
+         if role != "build":
+             return False
+-        p = os.path.realpath(path)
+-        return p.startswith(os.path.join(HOME, ".claude")) or p.startswith(os.path.join(HOME, ".cargo"))
++        p = os.path.realpath(path).casefold()
++        return any(p == d or p.startswith(d + os.sep) for d in outside_watched())
+     if role != "build":
+         return True
+     return r.startswith(("engine", ".claude", ".github")) or os.path.basename(r) in CONFIG_NAMES or "/.cargo/" in "/" + r + "/"
+@@ -220,6 +340,8 @@ ANCHORS = [
+     ".github/workflows/engine.yml",
+     ".claude/settings.json",
+     ".claude/settings.local.json",
++    ".claude/skills/engine-rust/SKILL.md",
++    ".claude/agents/engine-reviewer.md",
+ ]
+ 
+ 
+@@ -231,24 +353,25 @@ def bash_protected(path, role):
+     reason = verdict(path, role)
+     if reason:
+         return reason
+-    r = rel(path)
++    root, r = locate(path)
+     if r is None:
+         return None
+     anchors = list(ANCHORS)
+-    crates = os.path.join(ENGINE, "crates")
++    crates = os.path.join(root, "engine", "crates")
+     if os.path.isdir(crates):
+         anchors += [f"engine/crates/{c.casefold()}/benches/x" for c in sorted(os.listdir(crates))]
+     for anchor in anchors:
+         if r == "" or anchor.startswith(r.rstrip("/") + "/"):
+-            inner = verdict(os.path.join(ROOT, anchor), role)
++            inner = verdict(os.path.join(root, anchor), role)
+             if inner:
+                 return f"it holds {anchor}, and {inner}"
+     return None
+ 
+ 
+ def say(role, what, target, reason):
+-    shown = rel(target)
+-    shown = target if shown is None else (shown or ".")
++    root, r = locate(target)
++    # another checkout's path is shown whole
++    shown = target if r is None else os.path.realpath(target) if root != ROOT else (r or ".")
+     return f"engine guard (role {role}): refused {what} of {shown}: {reason}. {REPORT}"
+ 
+ 
+@@ -304,15 +427,94 @@ def tokens_of(command, role):
+     lexer.whitespace_split = True
+     lexer.commenters = ""
+     try:
+-        return list(lexer)
++        found = list(lexer)
+     except ValueError:
+         if role == "build":
+-            raise Refused(f"engine guard (role build): refused a Bash command it can't parse (unbalanced quotes). {REPORT}")
++            raise Refused(f"engine guard (role build): refused a Bash command it can't parse (unbalanced quotes). {REPORT}") from None
+         return command.split()
++    return [part for tok in found for part in split_operators(tok)]
+ 
+ 
+-SEPARATORS = {";", "&&", "||", "|", "&", "(", ")", "|&", ";;"}
++SEPARATORS = {";", "&&", "||", "|", "&", "(", ")", "|&", ";;", ">(", "<("}
+ REDIRECTS = {">", ">>", ">|", "&>", "&>>", ">&", "<>"}
++OPERATORS = sorted(SEPARATORS | REDIRECTS | {"<", "<<", "<<<"}, key=len, reverse=True)
++
++
++def split_operators(tok):
++    """A run of operator characters the lexer kept as one token (`);`, `>(`), split into
++    its operators, so a process substitution or a closing paren still separates (F-2)."""
++    if not tok or any(c not in ";&|()<>" for c in tok):
++        return [tok]
++    out, i = [], 0
++    while i < len(tok):
++        op = next((o for o in OPERATORS if tok.startswith(o, i)), tok[i])
++        out.append(op)
++        i += len(op)
++    return out
++
++
++def substitutions(command):
++    """The commands inside `$(…)` and backticks, outside single quotes and inside double
++    ones: they run as commands of their own (F-2)."""
++    found, i, n, quote = [], 0, len(command), None
++    while i < n:
++        c = command[i]
++        if c == "\\" and quote != "'":
++            i += 2
++        elif quote == "'":
++            quote = None if c == "'" else quote
++            i += 1
++        elif c == "'" and quote is None:
++            quote = "'"
++            i += 1
++        elif c == '"':
++            quote = None if quote == '"' else '"'
++            i += 1
++        elif c == "`":
++            j = command.find("`", i + 1)
++            j = n if j < 0 else j
++            found.append(command[i + 1 : j])
++            i = j + 1
++        elif command.startswith("$(", i) and not command.startswith("$((", i):
++            j, depth, inner = i + 2, 1, None
++            while j < n and depth:
++                d = command[j]
++                if d == "\\" and inner != "'":
++                    j += 1
++                elif inner:
++                    inner = None if d == inner else inner
++                elif d in ("'", '"'):
++                    inner = d
++                elif d == "(":
++                    depth += 1
++                elif d == ")":
++                    depth -= 1
++                j += 1
++            found.append(command[i + 2 : j - 1 if not depth else j])
++            i = j
++        else:
++            i += 1
++    return found
++
++
++def expands(command):
++    """Whether the shell expands anything in `command`: a `$` or a backtick outside
++    single quotes."""
++    quote, escape = None, False
++    for c in command:
++        if escape:
++            escape = False
++        elif c == "\\" and quote != "'":
++            escape = True
++        elif quote == "'":
++            quote = None if c == "'" else quote
++        elif c == "'" and quote is None:
++            quote = "'"
++        elif c == '"':
++            quote = None if quote == '"' else '"'
++        elif c in "$`":
++            return True
++    return False
+ 
+ 
+ def resolve(token, cwd):
+@@ -324,9 +526,20 @@ def dynamic(token):
+     return "$" in token or "`" in token
+ 
+ 
+-def check_target(token, cwd, role, what):
++# the words of each `for NAME in WORDS` in the command being checked, by NAME (F-2)
++LOOPS = {}
++
++
++def check_target(token, cwd, role, what, loops=True):
+     if not token:
+         return
++    for name, words in LOOPS.items() if loops else ():
++        for form in (f"${name}", f"${{{name}}}"):
++            if form in token:
++                # a loop variable stands for each of its words (one level deep)
++                for w in words:
++                    check_target(token.replace(form, w), cwd, role, what, loops=False)
++                return
+     if dynamic(os.path.expandvars(token)):
+         # a computed path: the build role can't be trusted with one; for the others it
+         # names nothing the guard can check
+@@ -365,17 +578,61 @@ def code_like(arg):
+     return re.search(r"[\s()'\";{}=,]", arg) is not None
+ 
+ 
+-def interpreter_paths(args):
++def code_letters(name):
++    """The short options after which an interpreter takes inline code, and the long ones."""
++    if name.startswith("python"):
++        return "c", {"-c"}
++    if name.startswith("perl"):
++        return "eE", set()
++    if name.startswith(("ruby", "lua", "osascript")):
++        return "e", set()
++    if name.startswith(("node", "bun", "deno")):
++        return "ep", {"--eval", "--print"}
++    if name == "php":
++        return "r", set()
++    if name == "pwsh":
++        return "c", {"-command", "--command"}
++    return "", set()
++
++
++# python's options whose value is neither code nor the script
++PYTHON_VALUED = {"-W", "-X"}
++
++
++def interpreter_paths(name, args):
+     """The paths an interpreter's arguments name: inside inline code, the strings that
+-    look like paths; as a plain argument, one with a slash or an extension. The first
+-    plain operand is the script it runs, which it only reads (a tripwire can't see what
+-    a script then writes; check-frozen does)."""
+-    found, script_seen = [], False
++    look like paths; as a plain argument, one with a slash or an extension. The script
++    it runs, it only reads: inline code (`-e '…'`, `-c "…"`, `-es/a/b/`, or a word that
++    looks like code), or else the first plain operand (a tripwire can't see what a
++    script then writes; check-frozen does). Every operand after it is checked (F-3)."""
++    letters, long_code = code_letters(name)
++    found, script_seen, code_next, skip = [], False, False, False
+     for a in args:
+-        if a.startswith("-"):
++        if skip:
++            skip = False
++            continue
++        if code_next:
++            found += path_like(a)
++            script_seen, code_next = True, False
++            continue
++        if a.startswith("-") and len(a) > 1:
++            if a.casefold() in long_code:
++                code_next = True
++            elif a.startswith("--"):
++                if "=" in a and a.split("=", 1)[0] in long_code:
++                    found += path_like(a.split("=", 1)[1])
++                    script_seen = True
++            elif a in PYTHON_VALUED and name.startswith("python"):
++                skip = True
++            elif a[-1] in letters:
++                code_next = True  # -e, -ne, -lne, -Bc: the code is the next word
++            elif a[1] in letters:
++                found += path_like(a[2:])  # -es/a/b/: the code is attached
++                script_seen = True
+             continue
+         if code_like(a):
+             found += path_like(a)
++            script_seen = True
+         elif not script_seen:
+             script_seen = True
+         elif path_ish(a):
+@@ -395,10 +652,133 @@ VALUED = {
+     "rsync": {"-e", "--rsh", "--exclude", "--include", "--filter", "-f", "--files-from", "-T", "--temp-dir"},
+     "patch": {"-p", "-d", "-D", "-F", "-B", "-z", "-V", "-Y", "-i", "-o", "-r"},
+     "shred": {"-n", "-s", "--iterations", "--size"},
++    "rustfmt": {"--edition", "--config", "--config-path", "--emit", "--color", "--style-edition", "--print-config"},
++    "uniq": {"-f", "-s", "-w"},
++    **{e: {"-c", "--cmd", "-S", "-u", "-U", "-i", "-T", "-w", "-W", "-t", "-q"} for e in EDITORS},
+ }
+ # options whose value is the place written
+ DEST = {"-t", "--target-directory"}
+ TARGET_OPTIONS = {"cp": DEST, "mv": DEST, "ln": DEST, "install": DEST, "patch": {"-o", "--output"}}
++
++
++def short_value(opt, letters):
++    """For a short-option word like `-sSo` or `-ofile`: whether one of `letters` (options
++    that take a value) is in it, and the value attached after it ('' when it's the next
++    word). None when it holds none of them."""
++    if opt.startswith("--") or len(opt) < 2:
++        return None
++    for k, ch in enumerate(opt[1:], 1):
++        if ch in letters:
++            return ch, opt[k + 1 :]
++    return None
++
++
++def option_targets(args, short, long):
++    """The values of the options that name the place written: short letters (`-o f`,
++    `-of`, `-sSo f`) and long names (`--output f`, `--output=f`)."""
++    found, it = [], iter(args)
++    for a in it:
++        if a.startswith("--"):
++            key, eq, value = a.partition("=")
++            if key in long:
++                found.append(value if eq else next(it, ""))
++            continue
++        if a.startswith("-"):
++            hit = short_value(a, short)
++            if hit:
++                found.append(hit[1] or next(it, ""))
++    return found
++
++
++def tar_targets(args, cwd):
++    """Where tar writes: with -x, the -C folder (or the cwd); with -c, -r or -u, the
++    archive (-f) (F-4)."""
++    mode, first = "", args[0] if args else ""
++    if first and not first.startswith("-") and re.fullmatch(r"[A-Za-z]+", first):
++        mode += first  # the old bundled form: tar xzf a.tgz
++        args = ["-" + first, *args[1:]]
++    for a in args:
++        if a in ("--extract", "--get"):
++            mode += "x"
++        elif a in ("--create", "--append", "--update"):
++            mode += "c"
++        elif re.fullmatch(r"-[A-Za-z]+", a):
++            mode += a[1:]
++    found = []
++    if "x" in mode:
++        found += option_targets(args, "C", {"--directory"}) or ["."]
++    if any(m in mode for m in "cru"):
++        found += [f for f in option_targets(args, "f", {"--file"}) if f != "-"]
++    return found
++
++
++def download_targets(name, args):
++    """Where curl or wget writes: its output options, and with curl -O (or wget by
++    default) the URL's last name, in the output folder or the cwd (F-4)."""
++    urls = [a for a in args if "://" in a]
++    if name == "curl":
++        found = option_targets(args, "oDc", {"--output", "--dump-header", "--cookie-jar", "--trace",
++                                             "--trace-ascii", "--stderr", "--libcurl", "--etag-save"})
++        folder = (option_targets(args, "", {"--output-dir"}) or ["."])[-1]
++        remote = any(a in ("-O", "--remote-name", "--remote-name-all", "-J", "--remote-header-name")
++                     or (re.fullmatch(r"-[A-Za-z]+", a) and "O" in a) for a in args)
++    else:
++        found = [f for f in option_targets(args, "Ooa", {"--output-document", "--output-file", "--append-output"}) if f != "-"]
++        folder = (option_targets(args, "P", {"--directory-prefix"}) or ["."])[-1]
++        remote = not option_targets(args, "O", {"--output-document"})
++    if remote:
++        for u in urls:
++            last = os.path.basename(urllib.parse.urlsplit(u).path) or "index.html"
++            found.append(os.path.join(folder, last))
++    return [f for f in found if f not in ("-", "/dev/null")]
++
++
++def cargo_targets(args, cwd):
++    """The manifests a cargo command that writes sources or manifests acts on: the
++    -p packages', or --manifest-path, or the cwd's package; every member's for --all,
++    --workspace or a workspace with no package of its own (F-4). Judging the manifest
++    stands for the package's files: its benches go with it (the checksums cover them)."""
++    manifest = (option_targets(args, "", {"--manifest-path"}) or [None])[-1]
++    packages = option_targets(args, "p", {"--package"})
++    if manifest is None:
++        d = cwd
++        while not os.path.isfile(os.path.join(d, "Cargo.toml")):
++            if os.path.dirname(d) == d or rel(d) == "":
++                return [os.path.join(cwd, "Cargo.toml")]
++            d = os.path.dirname(d)
++        manifest = os.path.join(d, "Cargo.toml")
++    start = manifest if os.path.isabs(manifest) else os.path.join(cwd, manifest)
++
++    def load(path):
++        try:
++            with open(path, "rb") as f:
++                return tomllib.load(f)
++        except (OSError, tomllib.TOMLDecodeError):
++            return {}
++
++    top, data = start, load(start)
++    if not data:
++        return [start]
++    if "workspace" not in data:
++        d = os.path.dirname(os.path.dirname(start))
++        while rel(d) is not None:
++            if "workspace" in load(os.path.join(d, "Cargo.toml")):
++                top = os.path.join(d, "Cargo.toml")
++                break
++            if rel(d) == "":
++                break
++            d = os.path.dirname(d)
++    ws = load(top).get("workspace", {})
++    members = {}
++    for pattern in ws.get("members", []) if isinstance(ws, dict) else []:
++        for m in sorted(glob.glob(os.path.join(os.path.dirname(top), str(pattern)))):
++            name = load(os.path.join(m, "Cargo.toml")).get("package", {}).get("name")
++            members[name or m] = os.path.join(m, "Cargo.toml")
++    if packages:
++        return [members.get(p, start) for p in packages]
++    if "--all" in args or "--workspace" in args or ("package" not in data and members):
++        return sorted(set(members.values()))
++    return [start]
+ # git commands that change the working tree, refused to the build role unless they
+ # name only paths it may write (R-79): a ref or a patch can carry any file
+ GIT_WHOLE_TREE = {
+@@ -431,7 +811,47 @@ def operands(name, args):
+     return found, targets
+ 
+ 
+-def check_git(args, cwd, role):
++def check_message(sub, rest, cwd, role, state):
++    """R-100 beyond the command's text: the file `-F` names is read and scanned; a
++    message computed by the shell (`-m "$(…)"`, `-m "$M"`) or piped in (`-F -` without a
++    here-document) can't be checked, so it is refused (F-8)."""
++    it = iter(rest)
++    for a in it:
++        kind = value = None
++        if a in ("-m", "--message", "-F", "--file"):
++            kind, value = a.lstrip("-")[0].casefold(), next(it, None)
++        elif a.startswith(("--message=", "--file=")):
++            kind, value = a[2], a.split("=", 1)[1]
++        elif not a.startswith("--") and a.startswith("-"):
++            hit = short_value(a, "mF")
++            if hit:
++                kind, value = hit[0].casefold(), hit[1] or next(it, None)
++        if kind is None:
++            continue
++        what = f"engine guard (role {role}): refused `git {sub}`"
++        if kind == "m":
++            if value is not None and state.get("stdin_text") and re.fullmatch(r"\$\(\s*cat\s+<<-?\s*['\"]?\w+['\"]?\s*\)", value):
++                continue  # -m "$(cat <<'EOF' … EOF)": the here-document is in the text, scanned already
++            # a `$` or backtick the shell expands (not one inside single quotes)
++            if value is not None and dynamic(value) and state.get("expands"):
++                raise Refused(f"{what} with a computed message, which can't be checked for an AI co-author or attribution line (R-100); write the message to a file and use -F.")
++            continue
++        if value == "-":
++            if not state.get("stdin_text"):
++                raise Refused(f"{what} -F - without a here-document: a piped message can't be checked for an AI co-author or attribution line (R-100).")
++            continue  # the here-document is in the command's text, scanned already
++        if value is None or dynamic(value):
++            raise Refused(f"{what} with a message file it can't read (R-100).")
++        try:
++            with open(resolve(value, cwd), encoding="utf-8", errors="replace") as f:
++                text = f.read().casefold()
++        except OSError:
++            raise Refused(f"{what}: can't read the message file {value} to check it for an AI co-author or attribution line (R-100).") from None
++        if any(m in text for m in ATTRIBUTION):
++            raise Refused(f"{what}: the message file {value} has an AI co-author or attribution line (R-100).")
++
++
++def check_git(args, cwd, role, state):
+     sub, rest = None, list(args)
+     while rest:
+         a = rest.pop(0)
+@@ -445,6 +865,8 @@ def check_git(args, cwd, role):
+             continue
+         sub = a
+         break
++    if role != "unset" and sub in GIT_MESSAGES:
++        check_message(sub, rest, cwd, role, state)
+     if sub not in GIT_WRITES or sub == "commit":
+         return
+     if "--" in rest:
+@@ -467,6 +889,57 @@ def check_git(args, cwd, role):
+         check_target(a, cwd, role, f"`git {sub}`")
+ 
+ 
++def prefix_option(opt, valued):
++    """(the option, its attached value or None) when `opt` is one of `valued`, including a
++    short one in a bundle (`-n5`, `-iu`) or a long one with `=`; (None, None) otherwise."""
++    if opt in valued:
++        return opt, None
++    if opt.startswith("--"):
++        key, eq, value = opt.partition("=")
++        return (key, value) if eq and key in valued else (None, None)
++    hit = short_value(opt, "".join(v[1] for v in valued if len(v) == 2))
++    return ("-" + hit[0], hit[1] or None) if hit else (None, None)
++
++
++def strip_prefixes(words, cwd, role, depth, state):
++    """Drops the words before the command: reserved words, assignments and the prefixes
++    with their options and operands. Returns (words, cwd), or (None, cwd) when the
++    command is done with (a `flock -c` checked as its own command, `command -v`)."""
++    while words:
++        w = words[0]
++        if w in RESERVED or ASSIGNMENT.fullmatch(w):
++            words = words[1:]
++            continue
++        name = os.path.basename(w)
++        if name not in PREFIXES:
++            break
++        if name == "xargs":
++            state["xargs"] = True
++        valued, operands_before = PREFIXES[name]
++        words = words[1:]
++        while words and words[0].startswith("-") and words[0] != "--":
++            opt = words.pop(0)
++            if name == "command" and opt in ("-v", "-V"):
++                return None, cwd
++            key, value = prefix_option(opt, valued)
++            if key is None:
++                continue
++            if value is None:
++                value = words.pop(0) if words else ""
++            if name == "env" and key in ("-S", "--split-string"):
++                words = tokens_of(value, role) + words  # the string is the command
++            elif name == "env" and key in ("-C", "--chdir"):
++                cwd = os.path.realpath(resolve(value, cwd))
++        if words and words[0] == "--":
++            words = words[1:]
++        words = words[operands_before:]
++        if name == "flock" and words and words[0] in ("-c", "--command"):
++            if len(words) > 1:
++                check_command(words[1], cwd, role, depth + 1)
++            return None, cwd
++    return words, cwd
++
++
+ def check_segment(argv, cwd, role, depth, state):
+     """Checks one simple command; returns the cwd after it (cd)."""
+     # redirections first, wherever they sit
+@@ -492,18 +965,11 @@ def check_segment(argv, cwd, role, depth, state):
+             continue
+         words.append(tok)
+         i += 1
+-    # leading assignments and prefixes
+-    while words and re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*=.*", words[0]):
+-        words = words[1:]
+-    while words and os.path.basename(words[0]) in PREFIXES:
+-        name = os.path.basename(words[0])
+-        if name == "xargs":
+-            state["xargs"] = True
+-        words = words[1:]
+-        while words and (words[0].startswith("-") or re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*=.*", words[0])):
+-            if name == "command" and words[0] == "-v":
+-                return cwd
+-            words = words[1:]
++    if len(words) >= 3 and words[0] == "for" and words[2] == "in":
++        LOOPS[words[1]] = words[3:]  # `for f in a b`: $f stands for a and b
++        return cwd
++    # reserved words, leading assignments and prefixes
++    words, cwd = strip_prefixes(words, cwd, role, depth, state)
+     if not words:
+         return cwd
+     name = os.path.basename(words[0])
+@@ -526,9 +992,6 @@ def check_segment(argv, cwd, role, depth, state):
+     if name == "eval":
+         check_command(" ".join(args), cwd, role, depth + 1)
+         return cwd
+-    if name == "timeout":
+-        rest = [a for a in args if not a.startswith("-")]
+-        return check_segment(rest[1:], cwd, role, depth, state) if len(rest) > 1 else cwd
+     writes = name in WRITERS or name in INTERPRETERS or re.fullmatch(r"python3?(\.\d+)?|perl\d*|ruby\d*|node\d*", name)
+     if state.get("xargs") and writes:
+         state["blind"] = name
+@@ -539,28 +1002,70 @@ def check_segment(argv, cwd, role, depth, state):
+         return cwd
+     if name in WRITERS:
+         found, targets = operands(name, args)
+-        if name in ("cp", "install", "ln", "rsync"):
+-            # these write only their destination
+-            found = targets or found[-1:]
++        if name == "rustfmt" and ("--check" in args or "stdout" in args or "--emit=stdout" in args):
++            return cwd
++        if name in EDITORS:
++            # the files it opens, and the paths its commands (-c, --cmd, +cmd) name
++            code = [args[k + 1] for k, a in enumerate(args[:-1]) if a in ("-c", "--cmd")]
++            code += [a[1:] for a in args if a.startswith("+")]
++            found = [a for a in found if not a.startswith("+")] + [p for c in code for p in path_like(c)]
++        elif name == "uniq":
++            found = found[1:2]  # uniq IN OUT writes OUT
++        elif name in COPIERS:
++            linking = (name == "ln" and not any(a == "--symbolic" or re.fullmatch(r"-[A-Za-z]*s[A-Za-z]*", a) for a in args)) or (
++                name == "cp" and any(a == "--link" or re.fullmatch(r"-[A-Za-z]*l[A-Za-z]*", a) for a in args)
++            )
++            # a hard link is a second name for its source, so the source counts too (F-5)
++            found = found + targets if linking else (targets or found[-1:])
+         else:
+             found += targets
++        if name == "patch" and role == "build" and not found:
++            raise Refused(f"engine guard (role build): refused `patch` without a file, which can change any file in the tree (R-79). {REPORT}")
+         for a in found:
+             check_target(a, cwd, role, f"`{name}`")
+         return cwd
+     if name in ("sed", "gsed") and any(a.startswith("--in-place") or re.fullmatch(r"-[a-zA-Z]*i.*", a) for a in args):
+         files = [a for a in args if a and not a.startswith("-")]
+-        if not any(a in ("-e", "-f", "--expression", "--file") for a in args):
+-            files = files[1:]  # the first operand is the script
++        # the script is given by an option (-e, -f, -es/a/b/, --expression=…), or it is
++        # the first operand (F-3)
++        if not any(a in ("-e", "-f", "--expression", "--file") or a.startswith(("--expression=", "--file="))
++                   or re.fullmatch(r"-[a-zA-Z]*[ef].*", a) for a in args):
++            files = files[1:]
+         for a in files:
+             check_target(a, cwd, role, "`sed -i`")
+         return cwd
+     if writes:
+         state["interpreter"] = (name, cwd)
+-        for s in interpreter_paths(args):
++        for s in interpreter_paths(name, args):
+             check_target(s, cwd, role, f"an interpreter (`{name}`) naming it")
+         return cwd
++    if name in ("tar", "bsdtar", "gtar"):
++        for a in tar_targets(args, cwd):
++            check_target(a, cwd, role, "`tar`")
++        return cwd
++    if name == "unzip":
++        if not any(re.fullmatch(r"-[A-Za-z]*[lptvzZc][A-Za-z]*", a) for a in args):
++            for a in option_targets(args, "d", set()) or ["."]:
++                check_target(a, cwd, role, "`unzip`")
++        return cwd
++    if name in ("curl", "wget"):
++        for a in download_targets(name, args):
++            check_target(a, cwd, role, f"`{name}`")
++        return cwd
++    if name in ("sort", "gsort"):
++        for a in option_targets(args, "o", {"--output"}):
++            check_target(a, cwd, role, "`sort -o`")
++        return cwd
++    if name == "cargo":
++        k = next((k for k, a in enumerate(args) if not a.startswith(("-", "+"))), len(args))
++        sub, rest = (args[k], args[k + 1 :]) if k < len(args) else (None, [])
++        own = rest[: rest.index("--")] if "--" in rest else rest
++        if sub == "clippy" and "--fix" in own or sub in CARGO_WRITES and "--check" not in rest:
++            for m in cargo_targets(own, cwd):
++                check_target(m, cwd, role, f"`cargo {sub}` (it acts on each package's files: name yours with -p)")
++        return cwd
+     if name == "git":
+-        check_git(args, cwd, role)
++        check_git(args, cwd, role, state)
+         return cwd
+     if name == "find" and any(a in FIND_WRITES for a in args):
+         roots = []
+@@ -583,12 +1088,15 @@ def check_command(command, cwd, role, depth=0):
+             raise Refused(f"engine guard (role build): refused a command naming disableAllHooks (R-81). {REPORT}")
+         if "tally_role" in folded:
+             raise Refused(f"engine guard (role build): refused a command naming TALLY_ROLE (R-79). {REPORT}")
+-    if role != "unset" and re.search(r"\bgit\b", command) and re.search(r"\bcommit\b", command):
++    if role != "unset" and re.search(r"\bgit\b", command) and re.search(r"\b(commit|merge|tag|notes|commit-tree)\b", command):
+         if any(m in command.casefold() for m in ATTRIBUTION):
+             raise Refused(f"engine guard (role {role}): refused a commit with an AI co-author or attribution line (R-100).")
+-    state = {}
+-    start = cwd
+     command, bodies = strip_heredocs(command)
++    state = {"stdin_text": bool(bodies) or "<<<" in command, "expands": expands(command)}
++    start = cwd
++    # `$(…)` and backticks run as commands of their own, quoted or not (F-2)
++    for inner in substitutions(command):
++        check_command(inner, cwd, role, depth + 1)
+     tokens = tokens_of(command, role)
+     segment = []
+     for tok in tokens + [";"]:
+@@ -641,6 +1149,7 @@ def pre_tool_use(event, role):
+         command = data.get("command")
+         if not isinstance(command, str):
+             raise Refused("engine guard: Bash without a command; refusing (R-79).")
++        LOOPS.clear()
+         check_command(command, os.path.realpath(cwd), role)
+         return
+     raise Refused(f"engine guard: unknown tool {tool!r}; refusing (R-79).")
+diff --git a/engine/tools/guard_test.py b/engine/tools/guard_test.py
+index 5254f1f..b2edadf 100644
+--- a/engine/tools/guard_test.py
++++ b/engine/tools/guard_test.py
+@@ -16,6 +16,7 @@ import sys
+ import tempfile
+ 
+ TOOLS = os.path.dirname(os.path.realpath(__file__))
++REPO = os.path.dirname(os.path.dirname(TOOLS))
+ ROLES = ("build", "rules", "tests", "spec", "unset")
+ HOME = os.path.expanduser("~")
+ 
+@@ -64,6 +65,12 @@ EDITS = [
+     ("engine/crates/tally/benches/stub.rs", RULES),
+     (".github/workflows/engine.yml", RULES),
+     (".claude/settings.json", RULES),
++    # the builder's instructions (F-23)
++    ("engine/CLAUDE.md", RULES),
++    (".claude/skills/engine-rust/SKILL.md", RULES),
++    (".claude/skills/engine-rust/references/numbers.md", RULES),
++    (".claude/agents/engine-reviewer.md", RULES),
++    (".claude/skills/design/SKILL.md", APP),
+     ("engine/crates/tally/build.rs", APP),
+     ("engine/crates/tally-cli/build.rs", APP),
+     (".claude/settings.local.json", APP),
+@@ -184,12 +191,131 @@ BASH = [
+     ("echo x > \"$TALLY_GUARD_UNDEFINED_VAR\"", NOT_BUILD, ""),
+     ("echo \"unbalanced", NOT_BUILD, ""),
+     ("echo x > ~/.cargo/config.toml", NOT_BUILD, ""),
++    ("echo x > ~/.claude.json", NOT_BUILD, ""),
++    ("mkdir -p ../.cargo && cp /tmp/x ../.cargo/config.toml", NOT_BUILD, ""),  # F-9
++    ("echo x > ../../.cargo/config.toml", NOT_BUILD, "engine"),
++    ("echo x > /tmp/tally-guard-test-scratch.txt", ALL, ""),
++    # F-2: shell syntax around the command word
++    ("{ cp /tmp/x engine/spec/DONE.md; }", SPEC, ""),
++    ("if true; then cp /tmp/x engine/spec/DONE.md; fi", SPEC, ""),
++    ("if false; then :; else rm engine/tests/x; fi", TESTS, ""),
++    ("for f in engine/spec/*.md; do rm \"$f\"; done", SPEC, ""),
++    ("while true; do rm engine/tests/x; done", TESTS, ""),
++    ("! rm engine/tests/x", TESTS, ""),
++    ("echo `cp /tmp/x engine/spec/DONE.md`", SPEC, ""),
++    ("echo \"$(cp /tmp/x engine/spec/DONE.md)\"", SPEC, ""),
++    ("x=$(rm engine/clippy.toml);", RULES, ""),
++    ("echo x > >(tee engine/spec/DONE.md)", SPEC, ""),
++    ("diff <(rm engine/tests/x) /dev/null", TESTS, ""),
++    ("nice -n 5 rm engine/spec/DONE.md", SPEC, ""),
++    ("env -u HOME rm engine/spec/DONE.md", SPEC, ""),
++    ("env -S 'rm engine/spec/DONE.md'", SPEC, ""),
++    ("env -C engine rm spec/DONE.md", SPEC, ""),
++    ("timeout -s KILL 5 rm engine/spec/DONE.md", SPEC, ""),
++    ("timeout --signal=KILL 5 rm engine/tests/x", TESTS, ""),
++    ("ls engine/spec | xargs -n 1 rm", SPEC, ""),
++    ("xargs -I {} cp {} engine/spec/DONE.md < /dev/null", SPEC, ""),
++    ("stdbuf -o0 cp /tmp/x engine/spec/DONE.md", SPEC, ""),
++    ("sudo -u root rm engine/spec/DONE.md", SPEC, ""),
++    ("flock /tmp/tally-guard-lock rm engine/spec/DONE.md", SPEC, ""),
++    ("flock -n /tmp/tally-guard-lock -c 'rm engine/tests/x'", TESTS, ""),
++    ("ionice -c 3 rm engine/tests/x", TESTS, ""),
++    ("caffeinate -i rm engine/tests/x", TESTS, ""),
++    ("unbuffer rm engine/tests/x", TESTS, ""),
++    ("echo `date` > /tmp/tally-guard-date.txt", ALL, ""),
++    ("echo \"$(cat engine/spec/DONE.md)\" | head", ALL, ""),
++    # F-3: inline code is the script, so the operands after it are checked
++    ("perl -pi -e 's/a/b/; s/c/d/' engine/spec/DONE.md", SPEC, ""),
++    ("perl -i -ne 'print' engine/deny.toml", RULES, ""),
++    ("perl -pi -es/a/b/ engine/deny.toml", RULES, ""),
++    ("ruby -i -pe 'gsub(/a/, \"b\")' engine/tests/x", TESTS, ""),
++    ("python3 -c \"import sys; open(sys.argv[1], 'w')\" engine/clippy.toml", RULES, ""),
++    ("node -e \"require('fs').writeFileSync(process.argv[1], '')\" engine/spec/DONE.md", SPEC, ""),
++    ("sed -i --expression='s/a/b/' engine/spec/DONE.md", SPEC, ""),
++    ("sed -i -es/a/b/ engine/spec/DONE.md", SPEC, ""),
++    ("python3 -c 'print(1)'", ALL, ""),
++    ("perl -ne 'print' /tmp/tally-guard-x.txt", ALL, ""),
++    # F-4: writers and their targets
++    ("rustfmt engine/fuzz/fuzz_targets/parse.rs", RULES, ""),
++    ("rustfmt --edition 2024 engine/crates/tally/src/lib.rs", BUILD, ""),
++    ("rustfmt --check engine/fuzz/fuzz_targets/parse.rs", ALL, ""),
++    ("cargo fmt --manifest-path fuzz/Cargo.toml", RULES, "engine"),
++    ("cargo fmt", set(), "engine"),  # the workspace holds T's runner
++    ("cargo fmt --all", set(), "engine"),
++    ("cargo fmt -p tally -p tally-cli", BUILD, "engine"),
++    ("cargo fmt", BUILD, "engine/crates/tally"),
++    ("cargo fmt -p tally-runner", TESTS, "engine"),
++    ("cargo fmt --all --check", ALL, "engine"),
++    ("cargo fmt -- --check", ALL, "engine"),
++    ("cargo clippy --fix --allow-dirty --all-targets", set(), "engine"),
++    ("cargo clippy --fix --allow-dirty -p tally", BUILD, "engine"),
++    ("cargo clippy --all-targets -- -D warnings", ALL, "engine"),
++    ("cargo fix --allow-dirty -p tally-cli", BUILD, "engine"),
++    ("cargo add serde --manifest-path crates/tally/Cargo.toml", BUILD, "engine"),
++    ("cargo add serde -p tally-runner", TESTS, "engine"),
++    ("cargo remove serde", BUILD, "engine/crates/tally"),
++    ("cargo +nightly fmt --manifest-path engine/fuzz/Cargo.toml", RULES, ""),
++    ("tar -xf /tmp/x.tar -C engine/spec", SPEC, ""),
++    ("tar xzf /tmp/x.tgz --directory=engine/tests", TESTS, ""),
++    ("tar -xf /tmp/x.tar", SPEC, "engine/spec"),
++    ("tar -czf engine/spec/x.tgz /tmp/y", SPEC, ""),
++    ("tar -tf /tmp/x.tar", ALL, ""),
++    ("tar -cf /tmp/tally-guard.tar engine/spec", ALL, ""),
++    ("unzip -o /tmp/x.zip -d engine/tests", TESTS, ""),
++    ("unzip /tmp/x.zip", TESTS, "engine/tests"),
++    ("unzip -l /tmp/x.zip", ALL, ""),
++    ("curl -sSo engine/spec/DONE.md https://example.invalid/x", SPEC, ""),
++    ("curl --output engine/tests/x https://example.invalid/x", TESTS, ""),
++    ("curl -O https://example.invalid/DONE.md", SPEC, "engine/spec"),
++    ("curl -s https://example.invalid/x > /tmp/tally-guard-x.txt", ALL, ""),
++    ("wget -O engine/spec/DONE.md https://example.invalid/x", SPEC, ""),
++    ("wget https://example.invalid/x", TESTS, "engine/tests"),
++    ("sort -o engine/spec/DONE.md /tmp/x", SPEC, ""),
++    ("sort -uo engine/tests/x /tmp/x", TESTS, ""),
++    ("sort --output=engine/clippy.toml /tmp/x", RULES, ""),
++    ("sort engine/spec/DONE.md | head", ALL, ""),
++    ("uniq /tmp/x engine/tests/x", TESTS, ""),
++    ("uniq engine/spec/DONE.md", ALL, ""),
++    ("ditto /tmp/x engine/spec/DONE.md", SPEC, ""),
++    ("vim -es -c '%s/a/b/' -c 'wq' engine/spec/DONE.md", SPEC, ""),
++    ("ex -sc '%s/a/b/|x' engine/clippy.toml", RULES, ""),
++    ("vim -es -c 'w engine/spec/DONE.md' -c 'q' /tmp/x", SPEC, ""),
++    ("ed -s engine/tests/x < /tmp/x.ed", TESTS, ""),
++    ("patch -p1 < /tmp/x.diff", NOT_BUILD, ""),
++    ("patch -i /tmp/x.diff", NOT_BUILD, ""),
++    ("patch engine/crates/tally/src/lib.rs /tmp/x.diff", BUILD, ""),
++    # F-5: a hard link is a second name for its source
++    ("ln engine/spec/DONE.md engine/crates/tally/src/h.md", set(), ""),
++    ("ln engine/spec/DONE.md /tmp/tally-guard-h", SPEC, ""),
++    ("cp -l engine/spec/DONE.md /tmp/tally-guard-h", SPEC, ""),
++    ("cp --link engine/tests/x /tmp/tally-guard-h", TESTS, ""),
++    ("ln -s engine/spec/DONE.md /tmp/tally-guard-h", ALL, ""),
++    ("ln -sf engine/spec/DONE.md /tmp/tally-guard-h", ALL, ""),
++    # F-8: R-100 reads the message file and refuses a computed message
++    ("git commit -F engine/target/msg-ai.txt", {"unset"}, ""),
++    ("git commit -aF engine/target/msg-ai.txt", {"unset"}, ""),
++    ("git commit --file=engine/target/msg-ai.txt", {"unset"}, ""),
++    ("git commit -F msg-ai.txt", {"unset"}, "engine/target"),
++    ("git commit -F engine/target/msg-ok.txt", ALL, ""),
++    ("git commit -F engine/target/missing.txt", {"unset"}, ""),
++    ("git commit -m \"$(cat engine/target/msg-ok.txt)\"", {"unset"}, ""),
++    ("M=$(cat engine/target/msg-ok.txt); git commit -m \"$M\"", {"unset"}, ""),
++    ("git commit -m 'Rename `parse` to `read`; costs $0'", ALL, ""),
++    ("cat engine/target/msg-ok.txt | git commit -F -", {"unset"}, ""),
++    ("git commit -F - <<'EOF'\nAdd the parser\nEOF", ALL, ""),
++    ("git commit -m \"$(cat <<'EOF'\nAdd the parser\nEOF\n)\"", ALL, ""),
++    ("git commit -m \"$(cat <<'EOF'\nAdd the parser\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\"", {"unset"}, ""),
++    ("git merge -m 'Merge\n\nCo-Authored-By: Claude <noreply@anthropic.com>' feature", {"unset"}, ""),
++    ("git merge --no-ff -m 'Merge feature' feature", NOT_BUILD, ""),
++    ("git tag -a v1 -F engine/target/msg-ai.txt", {"unset"}, ""),
++    ("git tag -a v1 -m 'Release'", ALL, ""),
++    ("git notes add -m 'Generated with Claude Code' HEAD", {"unset"}, ""),
+ ]
+ 
+ 
+ def setup(root):
+-    for d in ("engine/tools", "engine/spec", "engine/tests", "engine/crates/tally/src",
+-              "engine/crates/tally/benches", "engine/crates/tally-cli/src", ".claude"):
++    for d in ("engine/tools", "engine/spec", "engine/tests/runner", "engine/crates/tally/src",
++              "engine/crates/tally/benches", "engine/crates/tally-cli/src", "engine/fuzz", "engine/target", ".claude"):
+         os.makedirs(os.path.join(root, d), exist_ok=True)
+     for name in ("guard", "guard.py", "stop-check", "stop_check.py"):
+         shutil.copy2(os.path.join(TOOLS, name), os.path.join(root, "engine/tools", name))
+@@ -200,6 +326,15 @@ def setup(root):
+         "engine/crates/tally/benches/stub.rs": "//! bench\n",
+         "engine/BUILD-LOG.md": "# Build log\n",
+         ".claude/settings.json": "{}\n",
++        # a cargo workspace like the engine's, for the cargo writers (F-4)
++        "engine/Cargo.toml": '[workspace]\nmembers = ["crates/tally", "crates/tally-cli", "tests/runner"]\nexclude = ["fuzz"]\n',
++        "engine/crates/tally/Cargo.toml": '[package]\nname = "tally"\n',
++        "engine/crates/tally-cli/Cargo.toml": '[package]\nname = "tally-cli"\n',
++        "engine/tests/runner/Cargo.toml": '[package]\nname = "tally-runner"\n',
++        "engine/fuzz/Cargo.toml": '[package]\nname = "tally-fuzz"\n\n[workspace]\nmembers = ["."]\n',
++        # commit messages for R-100 (F-8)
++        "engine/target/msg-ai.txt": "Add the parser\n\nCo-Authored-By: Claude <noreply@anthropic.com>\n",
++        "engine/target/msg-ok.txt": "Add the parser\n",
+     }
+     for path, text in files.items():
+         with open(os.path.join(root, path), "w", encoding="utf-8") as f:
+@@ -230,6 +365,30 @@ def call(root, args, payload, role, extra_env=None, raw=None):
+     return r.returncode, r.stderr
+ 
+ 
++def hook_command(event):
++    """The command of the engine guard's hook for `event`, from the real settings.json."""
++    with open(os.path.join(REPO, ".claude", "settings.json"), encoding="utf-8") as f:
++        settings = json.load(f)
++    for entry in settings.get("hooks", {}).get(event, []):
++        for hook in entry.get("hooks", []):
++            if "engine/tools/guard" in hook.get("command", ""):
++                return hook["command"]
++    return None
++
++
++def run_hook(command, project, payload, role, path=None):
++    """The hook string run the way Claude Code runs it: a shell, with the project's dir."""
++    env = {k: v for k, v in os.environ.items() if k not in ("TALLY_ROLE", "TALLY_GUARD_SELFTEST_CRASH")}
++    env["CLAUDE_PROJECT_DIR"] = project
++    if role != "unset":
++        env["TALLY_ROLE"] = role
++    if path is not None:
++        env["PATH"] = path
++    r = subprocess.run(["/bin/sh", "-c", command], input=json.dumps(payload), capture_output=True,
++                       text=True, env=env, check=False)
++    return r.returncode, r.stderr
++
++
+ def main():
+     failures = []
+     total = 0
+@@ -263,6 +422,104 @@ def main():
+                 code, err = call(root, ["guard"], {"tool_name": "Bash", "tool_input": {"command": command},
+                                                    "cwd": os.path.join(root, cwd)}, role)
+                 expect(f"Bash `{command}` as {role}", code, 0 if role in allowed else 2, err)
++        # every checkout of the repo is judged alike (F-1): a linked worktree beside the
++        # throwaway and one inside it, the way Claude Code makes them
++        git = ["git", "-C", root, "-c", "user.name=guard-test", "-c", "user.email=guard-test@example.invalid"]
++        linked = os.path.realpath(tempfile.mkdtemp(prefix="tally-guard-test-linked-"))
++        os.rmdir(linked)
++        nested = os.path.join(root, ".claude", "worktrees", "nested")
++        for tree in (linked, nested):
++            subprocess.run([*git, "worktree", "add", "-q", "--detach", tree, "HEAD"], check=True)
++        try:
++            crossing = [
++                (linked, root, "engine/spec/DONE.md", SPEC),
++                (linked, root, "engine/tests/x", TESTS),
++                (linked, root, "engine/tools/refcore/walk.py", SPEC),
++                (linked, root, "engine/clippy.toml", RULES),
++                (linked, root, ".claude/settings.json", RULES),
++                (linked, root, ".claude/skills/engine-rust/SKILL.md", RULES),
++                (linked, root, "engine/crates/tally/src/lib.rs", APP),  # the build role keeps to its own
++                (root, linked, "engine/spec/DONE.md", SPEC),
++                (root, linked, "engine/tools/guard.py", RULES),
++                (root, nested, "engine/spec/DONE.md", SPEC),
++                (nested, root, "engine/tests/x", TESTS),
++            ]
++            for here, there, path, allowed in crossing:
++                full = os.path.join(there, path)
++                for role in ROLES:
++                    code, err = call(here, ["guard"], {"tool_name": "Edit", "tool_input": {"file_path": full}, "cwd": here}, role)
++                    expect(f"Edit of {path} in another checkout as {role}", code, 0 if role in allowed else 2, err)
++                    code, err = call(here, ["guard"], {"tool_name": "Bash", "tool_input": {"command": f"cp /tmp/x {full}"}, "cwd": here}, role)
++                    expect(f"Bash cp onto {path} in another checkout as {role}", code, 0 if role in allowed else 2, err)
++        finally:
++            for tree in (linked, nested):
++                subprocess.run([*git, "worktree", "remove", "--force", tree], check=False)
++        # it fails closed when the git files can't be read
++        with tempfile.TemporaryDirectory(prefix="tally-guard-test-nogit-") as bare:
++            os.makedirs(os.path.join(bare, "engine/tools"))
++            for name in ("guard", "guard.py"):
++                shutil.copy2(os.path.join(TOOLS, name), os.path.join(bare, "engine/tools", name))
++            harmless = {"tool_name": "Edit", "tool_input": {"file_path": os.path.join(bare, "x.txt")}, "cwd": bare}
++            code, err = call(bare, ["guard"], harmless, "unset")
++            expect("no .git: refuses", code, 2, err)
++            with open(os.path.join(bare, ".git"), "w", encoding="utf-8") as f:
++                f.write("not a gitdir line\n")
++            code, err = call(bare, ["guard"], harmless, "unset")
++            expect("an unreadable .git file: refuses", code, 2, err)
++        # places named by the environment, watched in the build role by name (F-9, F-22)
++        with tempfile.TemporaryDirectory(prefix="tally-guard-test-env-") as elsewhere:
++            elsewhere = os.path.realpath(elsewhere)
++            named = [
++                ({"CLAUDE_CONFIG_DIR": os.path.join(elsewhere, "claude-config")}, "claude-config/settings.json", NOT_BUILD),
++                ({"CARGO_HOME": os.path.join(elsewhere, "cargo-home")}, "cargo-home/config.toml", NOT_BUILD),
++                ({}, "claude-config/settings.json", ALL),
++            ]
++            for extra, path, allowed in named:
++                for role in ROLES:
++                    command = f"echo x > {os.path.join(elsewhere, path)}"
++                    code, err = call(root, ["guard"], {"tool_name": "Bash", "tool_input": {"command": command}, "cwd": root}, role,
++                                     {"CLAUDE_CONFIG_DIR": "", "CARGO_HOME": "", **extra})
++                    expect(f"Bash `{command}` with {extra or 'neither set'} as {role}", code, 0 if role in allowed else 2, err)
++        # the real hook strings (F-10, F-22): they refuse when bash or python is missing
++        # from PATH, and say why when the guard isn't executable or is missing
++        pre, change = hook_command("PreToolUse"), hook_command("ConfigChange")
++        if pre is None or change is None:
++            failures.append("settings.json: no PreToolUse or ConfigChange hook runs engine/tools/guard")
++        else:
++            lib = {"tool_name": "Edit", "tool_input": {"file_path": os.path.join(root, "engine/crates/tally/src/lib.rs")}, "cwd": root}
++            spec = {"tool_name": "Edit", "tool_input": {"file_path": os.path.join(root, "engine/spec/DONE.md")}, "cwd": root}
++            event = {"hook_event_name": "ConfigChange", "source": "local_settings"}
++            rows = [
++                ("PreToolUse hook, a harmless edit", pre, lib, "build", None, 0, ""),
++                ("PreToolUse hook, the spec as build", pre, spec, "build", None, 2, "the spec is frozen"),
++                ("PreToolUse hook, PATH without bash or python", pre, lib, "build", "/nonexistent", 2, ""),
++                ("ConfigChange hook as rules", change, event, "rules", None, 0, ""),
++                ("ConfigChange hook as build", change, event, "build", None, 2, "R-81"),
++                ("ConfigChange hook, PATH without bash or python", change, event, "rules", "/nonexistent", 2, ""),
++            ]
++            for label, command, payload, role, path, want, says in rows:
++                code, err = run_hook(command, root, payload, role, path)
++                expect(label, code, want, err)
++                if says not in err:
++                    failures.append(f"{label}: stderr lacks {says!r}: {err.strip()[:200]}")
++            shim = os.path.join(root, "engine/tools/guard")
++            os.chmod(shim, 0o644)
++            for label, command, payload in (("PreToolUse", pre, lib), ("ConfigChange", change, event)):
++                code, err = run_hook(command, root, payload, "rules")
++                expect(f"{label} hook, guard not executable", code, 2, err)
++                if "isn't executable" not in err:
++                    failures.append(f"{label} hook, guard not executable: says {err.strip()[:200]!r}")
++            os.rename(shim, shim + ".away")
++            for label, command, payload in (("PreToolUse", pre, lib), ("ConfigChange", change, event)):
++                code, err = run_hook(command, root, payload, "rules")
++                expect(f"{label} hook, guard missing", code, 2, err)
++                if "missing" not in err:
++                    failures.append(f"{label} hook, guard missing: says {err.strip()[:200]!r}")
++            os.rename(shim + ".away", shim)
++            os.chmod(shim, 0o755)
++            with tempfile.TemporaryDirectory(prefix="tally-guard-test-app-") as app:
++                code, err = run_hook(pre, app, lib, "build")
++                expect("PreToolUse hook in a project without engine/", code, 0, err)
+         # malformed input, unknown roles and tools, and a forced crash: all refuse
+         edit = {"tool_name": "Edit", "tool_input": {"file_path": os.path.join(root, "engine/crates/tally/src/lib.rs")}, "cwd": root}
+         code, err = call(root, ["guard"], edit, "unset", {"TALLY_ROLE": "bulid"})
+diff --git a/engine/tools/rules-selftest/cases/R-80.case b/engine/tools/rules-selftest/cases/R-80.case
+index 83c63ae..09647dd 100644
+--- a/engine/tools/rules-selftest/cases/R-80.case
++++ b/engine/tools/rules-selftest/cases/R-80.case
+@@ -147,3 +147,19 @@ expect: but tools/frozen.toml pins
+ tally-9.9
+ --- run
+ tools/check-frozen
++
++case: builder-skill-byte
++tool: run
++expect: rules: .claude/skills/engine-rust/references/numbers.md changed
++--- append ../.claude/skills/engine-rust/references/numbers.md
++planted
++--- run
++tools/check-frozen
++
++case: reviewer-agent-byte
++tool: run
++expect: rules: .claude/agents/engine-reviewer.md changed
++--- append ../.claude/agents/engine-reviewer.md
++planted
++--- run
++tools/check-frozen
+diff --git a/engine/tools/rules-selftest/cases/R-81.case b/engine/tools/rules-selftest/cases/R-81.case
+new file mode 100644
+index 0000000..1e20b27
+--- /dev/null
++++ b/engine/tools/rules-selftest/cases/R-81.case
+@@ -0,0 +1,45 @@
++# R-81: hooks can't be switched off from a build session. The guard's side is proven by
++# engine/tools/guard-test; these cases prove check-frozen's: the git-ignored
++# .claude/settings.local.json, which no checksum covers, can't switch off the next
++# session's hooks or its permission prompts (F-11).
++
++case: local-settings-disable-all-hooks
++tool: run
++expect: settings: .claude/settings.local.json sets disableAllHooks (R-81)
++--- write ../.claude/settings.local.json
++{"disableAllHooks": true}
++--- run
++tools/check-frozen
++
++case: local-settings-hooks
++tool: run
++expect: settings: .claude/settings.local.json sets hooks
++--- write ../.claude/settings.local.json
++{"hooks": {"PreToolUse": []}}
++--- run
++tools/check-frozen
++
++case: local-settings-bypass-permissions
++tool: run
++expect: settings: .claude/settings.local.json sets the bypassPermissions mode (R-81)
++--- write ../.claude/settings.local.json
++{"permissions": {"defaultMode": "bypassPermissions"}}
++--- run
++tools/check-frozen
++
++case: local-settings-unreadable
++tool: run
++expect: settings: .claude/settings.local.json can't be read as JSON
++--- write ../.claude/settings.local.json
++{"disableAllHooks": true,
++--- run
++tools/check-frozen
++
++case: local-settings-allowed
++tool: run
++expect: check-frozen: spec, oracle, pin and rules unchanged
++exit: any
++--- write ../.claude/settings.local.json
++{"permissions": {"allow": ["Bash(cargo test:*)"], "defaultMode": "acceptEdits"}}
++--- run
++tools/check-frozen
+diff --git a/engine/tools/rules_selftest.py b/engine/tools/rules_selftest.py
+index b282894..9df08e9 100644
+--- a/engine/tools/rules_selftest.py
++++ b/engine/tools/rules_selftest.py
+@@ -74,7 +74,8 @@ TARGET = os.path.join(SCRATCH, "target")
+ GIT_HOME = os.path.join(SCRATCH, "cargo-home")
+ LOGS = os.path.join(SCRATCH, "logs")
+ COPY_SKIP = {"target", "__pycache__", ".DS_Store", "corpus", "artifacts", "coverage", "mutants.out"}
+-OUTSIDE = ["package.json", ".github/workflows/engine.yml", ".claude/settings.json"]
++OUTSIDE = ["package.json", ".github/workflows/engine.yml", ".claude/settings.json",
++           ".claude/skills/engine-rust", ".claude/agents/engine-reviewer.md"]
+ COVERAGE_FILE = "crates/tally/src/zz_ban_coverage.rs"
+ TOOL_NAMES = {"clippy", "clippy-tests", "rustdoc", "ast-grep", "deny", "deny-tally", "run"}
+ BLOCKS = {"module", "write", "append", "replace", "delete", "fake", "fakefile", "fakebinary", "gitfake", "run"}
+@@ -87,7 +88,7 @@ ELSEWHERE = {
+     "R-77": "the clean run: the workflow runs `engine/tools/check full`, whose steps are R-77's list",
+     "R-78": "this script",
+     "R-79": "engine/tools/guard-test",
+-    "R-81": "engine/tools/guard-test",
++    "R-81": "engine/tools/guard-test (the guard and the hook strings)",
+     "R-83": "engine/tools/guard-test (the Stop hook)",
+     "R-84": "the protected mutants config (test_package); checksummed",
+     "R-88": "the protected mutants and nextest configs; checksummed",
+@@ -276,7 +277,9 @@ def build_scratch():
+     shutil.copytree(ENGINE, WS, ignore=copy_ignore, symlinks=True)
+     pin_the_tag()
+     for p in OUTSIDE:
+-        if os.path.isfile(os.path.join(ROOT, p)):
++        if os.path.isdir(os.path.join(ROOT, p)):
++            shutil.copytree(os.path.join(ROOT, p), os.path.join(REPO, p), ignore=copy_ignore)
++        elif os.path.isfile(os.path.join(ROOT, p)):
+             os.makedirs(os.path.dirname(os.path.join(REPO, p)) or REPO, exist_ok=True)
+             shutil.copy2(os.path.join(ROOT, p), os.path.join(REPO, p))
+     git("init", "-q")
+@@ -864,7 +867,7 @@ def list_rules(cases):
+     for n in range(1, 114):
+         r = f"R-{n}"
+         if r in by_rule:
+-            print(f"{r}: {', '.join(by_rule[r])}")
++            print(f"{r}: {', '.join(by_rule[r])}" + (f"; and {ELSEWHERE[r]}" if r in ELSEWHERE else ""))
+         elif r in BY_COVERAGE:
+             print(f"{r}: the ban coverage")
+         elif r in ELSEWHERE:
