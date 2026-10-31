@@ -365,13 +365,13 @@ def call(root, args, payload, role, extra_env=None, raw=None):
     return r.returncode, r.stderr
 
 
-def hook_command(event):
-    """The command of the engine guard's hook for `event`, from the real settings.json."""
+def hook_command(event, tool="guard"):
+    """The command of the engine's hook for `event` that runs engine/tools/<tool>, from the real settings.json."""
     with open(os.path.join(REPO, ".claude", "settings.json"), encoding="utf-8") as f:
         settings = json.load(f)
     for entry in settings.get("hooks", {}).get(event, []):
         for hook in entry.get("hooks", []):
-            if "engine/tools/guard" in hook.get("command", ""):
+            if f"engine/tools/{tool}" in hook.get("command", ""):
                 return hook["command"]
     return None
 
@@ -520,6 +520,33 @@ def main():
             with tempfile.TemporaryDirectory(prefix="tally-guard-test-app-") as app:
                 code, err = run_hook(pre, app, lib, "build")
                 expect("PreToolUse hook in a project without engine/", code, 0, err)
+        # the Stop hook's string fails closed too (the rest of F-10, G2-5): a stop-check that
+        # can't run holds the turn, and says why
+        stop = hook_command("Stop", "stop-check")
+        if stop is None:
+            failures.append("settings.json: no Stop hook runs engine/tools/stop-check")
+        else:
+            event = {"hook_event_name": "Stop", "stop_hook_active": False}
+            for label, role, path, want in (("Stop hook as rules", "rules", None, 0),
+                                            ("Stop hook as build, PATH without bash or python", "build", "/nonexistent", 2)):
+                code, err = run_hook(stop, root, event, role, path)
+                expect(label, code, want, err)
+            shim = os.path.join(root, "engine/tools/stop-check")
+            os.chmod(shim, 0o644)
+            code, err = run_hook(stop, root, event, "rules")
+            expect("Stop hook, stop-check not executable", code, 2, err)
+            if "isn't executable" not in err:
+                failures.append(f"Stop hook, stop-check not executable: says {err.strip()[:200]!r}")
+            os.rename(shim, shim + ".away")
+            code, err = run_hook(stop, root, event, "rules")
+            expect("Stop hook, stop-check missing", code, 2, err)
+            if "missing" not in err:
+                failures.append(f"Stop hook, stop-check missing: says {err.strip()[:200]!r}")
+            os.rename(shim + ".away", shim)
+            os.chmod(shim, 0o755)
+            with tempfile.TemporaryDirectory(prefix="tally-guard-test-app-") as app:
+                code, err = run_hook(stop, app, event, "build")
+                expect("Stop hook in a project without engine/", code, 0, err)
         # malformed input, unknown roles and tools, and a forced crash: all refuse
         edit = {"tool_name": "Edit", "tool_input": {"file_path": os.path.join(root, "engine/crates/tally/src/lib.rs")}, "cwd": root}
         code, err = call(root, ["guard"], edit, "unset", {"TALLY_ROLE": "bulid"})
