@@ -3,7 +3,7 @@
 #   cargo deny --locked --manifest-path crates/tally/Cargo.toml --config deny-tally.toml check bans
 
 [graph]
-targets = ["aarch64-apple-darwin", "x86_64-unknown-linux-gnu"]
+targets = ["aarch64-apple-darwin", "x86_64-unknown-linux-gnu", "i686-unknown-linux-gnu"]
 all-features = true
 exclude-dev = true
 

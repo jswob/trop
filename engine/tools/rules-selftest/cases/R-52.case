@@ -31,3 +31,12 @@ text: itoa
 --- with
 [dependencies]
 itoa = "1"
+
+case: target-only-dependency
+tool: run
+expect: a dependency for some targets only
+--- append crates/tally/Cargo.toml
+[target.'cfg(target_pointer_width = "32")'.dependencies]
+num-traits = { workspace = true }
+--- run
+tools/check-rules

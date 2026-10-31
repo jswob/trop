@@ -214,6 +214,11 @@ def check_manifests(problems):
         tables = [m.get(t, {}) for t in DEP_TABLES]
         tables += [t.get(k, {}) for t in m.get("target", {}).values() for k in DEP_TABLES]
         if r.startswith("engine/crates/"):
+            for t, v in m.get("target", {}).items():
+                for k in DEP_TABLES:
+                    if isinstance(v, dict) and v.get(k):
+                        problems.append(f"{r}: [target.{t}.{k}]: a dependency for some targets only, which "
+                                        "cargo-deny may not see; declare it for every target (R-52)")
             for table in tables:
                 for name, spec in table.items():
                     if not (isinstance(spec, dict) and spec.get("workspace") is True):
