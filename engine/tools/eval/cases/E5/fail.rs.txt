@@ -1,0 +1,27 @@
+//! The total per account, one output line each, for an ask's report.
+//! Spec: none, an eval fixture.
+//! Twin: none, an eval fixture.
+//! Invariants: the same rows always give the same lines in the same order.
+
+use std::collections::HashMap;
+
+/// Why a total was refused, by its catalogue code.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum TotalError {
+    /// `RUN-DIGITS`: a total left the range of an `i64`.
+    Digits,
+}
+
+/// One line `<account> <total>` per account named in `rows`.
+pub fn total_lines(rows: &[(String, i64)]) -> Result<Vec<String>, TotalError> {
+    let mut totals: HashMap<&str, i64> = HashMap::new();
+    for (account, amount) in rows {
+        let total = totals.entry(account.as_str()).or_insert(0);
+        *total = total.checked_add(*amount).ok_or(TotalError::Digits)?;
+    }
+    #[expect(clippy::iter_over_hash_type, reason = "R-36: sorted later, for now")]
+    Ok(totals
+        .iter()
+        .map(|(account, total)| format!("{account} {total}"))
+        .collect())
+}

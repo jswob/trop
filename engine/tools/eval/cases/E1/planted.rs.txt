@@ -1,0 +1,16 @@
+//! The lexer's byte cursor: one byte of the source text at a position.
+//! Spec: L §2.1.
+//! Twin: none, an eval fixture.
+//! Invariants: a position past the end of the source is never read.
+
+/// Why the lexer stopped, by its catalogue code.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum LexError {
+    /// `LOAD-PARSE`: the source ended inside a token.
+    Parse,
+}
+
+/// The byte at position `at` of the source, the lexer's lookahead.
+pub fn byte_at(source: &[u8], at: usize) -> u8 {
+    source[at]
+}

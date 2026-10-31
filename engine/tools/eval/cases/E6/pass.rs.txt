@@ -1,0 +1,11 @@
+//! One result line of an ask, appended to the output text.
+//! Spec: none, an eval fixture.
+//! Twin: none, an eval fixture.
+//! Invariants: every line asked for is in the output, in the order asked.
+
+use std::fmt::Write;
+
+/// Appends the line `<name> <total>` to the output text.
+pub fn push_line(out: &mut String, name: &str, total: i64) -> std::fmt::Result {
+    writeln!(out, "{name} {total}")
+}

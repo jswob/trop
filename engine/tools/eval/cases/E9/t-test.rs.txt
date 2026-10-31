@@ -1,0 +1,11 @@
+
+    /// L §7.2: "`half-even` | the nearest; a tie goes to the even multiple, k·u with k
+    /// even". 125 / 50 is 2.5, a tie between 2 and 3.
+    #[test]
+    fn half_even_rounds_a_tie() {
+        assert_eq!(
+            tally_cli::round(125, 50, tally_cli::Mode::HalfEven),
+            Ok(3),
+            "round(125 / 50, 1, half-even)"
+        );
+    }

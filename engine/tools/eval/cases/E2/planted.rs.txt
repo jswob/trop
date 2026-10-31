@@ -1,0 +1,23 @@
+//! A day number on the reality's calendar, counted from its first day.
+//! Spec: none, an eval fixture.
+//! Twin: none, an eval fixture.
+//! Invariants: a day number is never past the calendar's last day.
+
+/// Why a step on the calendar was refused, by its catalogue code.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum DayError {
+    /// `RUN-DIGITS`: the day number left its range.
+    Digits,
+}
+
+/// A day, as its number counted from the reality's first day.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Day(pub u32);
+
+impl Day {
+    /// The day after this one, the day walk's step.
+    #[must_use]
+    pub fn next(self) -> Self {
+        Self(self.0 + 1)
+    }
+}
