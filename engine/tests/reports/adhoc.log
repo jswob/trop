@@ -484,3 +484,35 @@
 2026-10-30 20:01:59	/Users/jswob/projects/trop/tmp/session7b/blind-run/S4	run s4.tally	rc 0, 0.8 s
 2026-10-30 20:02:00	/Users/jswob/projects/trop/tmp/session7b/blind-run/S5	run s5.tally	rc 0, 0.7 s
 2026-10-30 20:02:01	/Users/jswob/projects/trop/tmp/session7b/blind-run/S6	run s6.tally	rc 0, 0.8 s
+2026-10-31 22:23:00	/Users/jswob/projects/trop/tmp/t1/syn	run a.tally b.tally	rc 1, 0.2 s
+2026-10-31 22:23:00	/Users/jswob/projects/trop/tmp/t1/syn	run b.tally a.tally	rc 1, 0.2 s
+2026-10-31 22:23:06	/Users/jswob/projects/trop/tmp/t1/syn	run a.tally b.tally	rc 1, 0.3 s
+2026-10-31 22:23:06	/Users/jswob/projects/trop/tmp/t1/syn	run b.tally a.tally	rc 1, 0.3 s
+2026-10-31 22:23:11	/Users/jswob/projects/trop/tmp/t1/syn	run a.tally b.tally	rc 1, 0.3 s
+2026-10-31 22:23:12	/Users/jswob/projects/trop/tmp/t1/syn	run b.tally a.tally	rc 1, 0.4 s
+2026-10-31 22:34:02	/Users/jswob/projects/trop/tmp/t1/proto	run p.tally	rc 1, 0.5 s
+2026-10-31 22:34:13	/Users/jswob/projects/trop/tmp/t1/proto	run p.tally	rc 1, 0.4 s
+2026-10-31 22:34:24	/Users/jswob/projects/trop/tmp/t1/proto	run p.tally	rc 1, 0.4 s
+2026-10-31 22:34:36	/Users/jswob/projects/trop/tmp/t1/proto	run p.tally	rc 0, 0.5 s
+2026-10-31 22:38:04	/Users/jswob/projects/trop/engine/tests/out/properties/hole-00/dropped	run reality.tally	rc 0, 0.5 s
+2026-10-31 22:42:20	/Users/jswob/projects/trop/engine/tests/out/properties/determinism-00/split	run model.tally part_1.tally	rc 0, 0.5 s
+2026-10-31 22:42:20	/Users/jswob/projects/trop/engine/tests/out/properties/determinism-01/split	run model.tally part_1.tally	rc 0, 0.4 s
+2026-10-31 22:42:21	/Users/jswob/projects/trop/engine/tests/out/properties/determinism-02/split	run model.tally part_1.tally part_2.tally	rc 0, 0.4 s
+2026-10-31 22:42:23	/Users/jswob/projects/trop/engine/tests/out/properties/determinism-03/split	run model.tally part_1.tally	rc 0, 2.0 s
+2026-10-31 22:42:24	/Users/jswob/projects/trop/engine/tests/out/properties/determinism-04/split	run model.tally part_1.tally part_2.tally	rc 0, 0.4 s
+2026-10-31 22:42:24	/Users/jswob/projects/trop/engine/tests/out/properties/determinism-05/split	run model.tally part_1.tally part_2.tally	rc 0, 0.4 s
+2026-10-31 22:42:25	/Users/jswob/projects/trop/engine/tests/out/properties/determinism-06/split	run model.tally part_1.tally	rc 0, 0.4 s
+2026-10-31 22:42:25	/Users/jswob/projects/trop/engine/tests/out/properties/determinism-07/split	run model.tally part_1.tally	rc 0, 0.4 s
+2026-10-31 22:42:26	/Users/jswob/projects/trop/engine/tests/out/properties/determinism-08/split	run model.tally part_1.tally	rc 0, 0.4 s
+2026-10-31 22:42:26	/Users/jswob/projects/trop/engine/tests/out/properties/determinism-09/split	run model.tally part_1.tally	rc 0, 0.4 s
+2026-10-31 22:42:34	/Users/jswob/projects/trop/engine/tests/out/properties/determinism-00/split	run model.tally part_1.tally	rc 0, 0.4 s
+2026-10-31 22:42:34	/Users/jswob/projects/trop/engine/tests/out/properties/determinism-01/split	run model.tally part_1.tally	rc 0, 0.5 s
+2026-10-31 22:42:35	/Users/jswob/projects/trop/engine/tests/out/properties/determinism-02/split	run model.tally part_1.tally part_2.tally	rc 0, 0.4 s
+2026-10-31 22:42:35	/Users/jswob/projects/trop/engine/tests/out/properties/determinism-03/split	run model.tally part_1.tally	rc 0, 0.4 s
+2026-10-31 22:42:36	/Users/jswob/projects/trop/engine/tests/out/properties/determinism-04/split	run model.tally part_1.tally part_2.tally	rc 0, 0.4 s
+2026-10-31 22:42:36	/Users/jswob/projects/trop/engine/tests/out/properties/determinism-05/split	run model.tally part_1.tally part_2.tally	rc 0, 0.4 s
+2026-10-31 22:42:37	/Users/jswob/projects/trop/engine/tests/out/properties/determinism-06/split	run model.tally part_1.tally	rc 0, 0.4 s
+2026-10-31 22:42:37	/Users/jswob/projects/trop/engine/tests/out/properties/determinism-07/split	run model.tally part_1.tally	rc 0, 0.5 s
+2026-10-31 22:42:38	/Users/jswob/projects/trop/engine/tests/out/properties/determinism-08/split	run model.tally part_1.tally	rc 0, 0.4 s
+2026-10-31 22:42:39	/Users/jswob/projects/trop/engine/tests/out/properties/determinism-09/split	run model.tally part_1.tally	rc 0, 0.4 s
+2026-10-31 22:45:00	/Users/jswob/projects/trop/tmp/t1/proto	run q.tally	rc 0, 0.7 s

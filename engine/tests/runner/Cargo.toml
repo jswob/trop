@@ -1,6 +1,6 @@
 [package]
 name = "tally-runner"
-description = "The test runner. A stub: T's content replaces it, and on merge T's wins"
+description = "T's test runner: the engine run in process against T's vectors and properties"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -11,3 +11,11 @@ tally-cli = { workspace = true }
 
 [lints]
 workspace = true
+
+# Milestone S's tests on the engine: red until S is built, so not run by default
+# (`test = false`) until a protected marker gates tests by milestone (MILESTONE-S.md,
+# "Keeping master green"). Run: cargo nextest run -p tally-runner --test s_properties
+[[test]]
+name = "s_properties"
+path = "milestone/s_properties.rs"
+test = false

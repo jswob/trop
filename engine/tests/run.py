@@ -4,7 +4,7 @@ Runs the checks of engine/tests/checks.tsv on the frozen engine/tools/refcore, u
 with its stored baseline. Form only: it runs and compares; it never explains a difference.
 
     python3 -I -B engine/tests/run.py [ID_GLOB ...] [--layer L[,L]] [--runtime pypy|cpython|both] [--jobs N<=4]
-                                      [--budget S] [--force] [--list] [--interp refcore|fast|both] [--verify N]
+                                      [--budget S] [--force] [--list] [--interp refcore|fast|both|engine] [--verify N]
     python3 -I -B engine/tests/run.py --self-test
     python3 -I -B engine/tests/run.py --tables     -> reports/before-after.md, over-budget.md (from results/pypy.tsv)
     python3 -I -B engine/tests/run.py --adhoc [--cwd DIR] -- run <files> [--ask a ...]   one 90 s PyPy run, logged
@@ -37,6 +37,12 @@ with its stored baseline. Form only: it runs and compares; it never explains a d
   (it caps every refcore and refcore_fast run at 8 GB). A run is a
   variant `<runtime>[+fast[+v<N>]]`: --verify N runs the fast side with `--verify N`. The fast variants' cache keys add
   the variant and the hash of refcore_fast's files; the plain runtimes' keys are unchanged.
+- --interp engine (T1, issue #5; INTERFACE.md): the engine's release binary engine/target/release/tally, with the same
+  argv (argv_of), from the check's cwd, under the same budget and watchdog. Its cache key is the binary's sha256 instead
+  of the runtime's and refcore's. An engine output never becomes a baseline: a check with no stored baseline is
+  compared with refcore's own run of it from the cache (an error until refcore has run it), never `ran`. An exit code
+  other than INTERFACE §3's (1 when the first line is a refusal, else 0) is an `error`, whatever the output. R:all
+  (refcore's own tests) and the key scripts run no engine: they are listed as not run, with the load rows.
 - Results: results/<runtime>.tsv (the latest result per id); a differing output is kept in out/<runtime>/.
 """
 import csv
@@ -57,6 +63,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 T = ROOT + 'engine/tests/'
 RC = ROOT + 'engine/tools/refcore'
 FAST = ROOT + 'engine/tools/refcore_fast'
+ENGINE = [ROOT + 'engine/target/release/tally']  # a list, so the self-test can put a stand-in in its place
 SUMS = ROOT + 'engine/tools/SHA256SUMS'
 PY = {'pypy': os.path.expanduser('~/.local/share/uv/python/pypy-3.11.13-macos-aarch64-none/bin/pypy3.11'),
       'cpython': ROOT + 'engine/tools/parsecheck/.venv/bin/python'}  # the python the snap16 baselines ran on
@@ -155,18 +162,38 @@ def fast_hash(d=FAST):
     return h.hexdigest()
 
 
+_ENGINE_HASH = {}
+
+
+def engine_hash():
+    """sha256 of the engine's binary, read once per path and size and mtime (the cache key's interpreter part)."""
+    p = ENGINE[0]
+    if not os.path.isfile(p):
+        sys.exit('%s is not built: the build role builds it (engine/tools/check, or cargo build --release '
+                 '-p tally-cli), then run again' % os.path.relpath(p, ROOT))
+    st = os.stat(p)
+    k = (p, st.st_size, st.st_mtime_ns)
+    if k not in _ENGINE_HASH:
+        _ENGINE_HASH[k] = hashlib.sha256(open(p, 'rb').read()).hexdigest()
+    return _ENGINE_HASH[k]
+
+
 def cache_key(c, v, rc_hash):
     h = hashlib.sha256()
-    rt, interp = variant(v)
 
     def part(b):
         b = b if isinstance(b, bytes) else b.encode('utf-8')
         h.update(b'%d:' % len(b))
         h.update(b)
-    part(rt)
-    part(version(rt))
-    part(rc_hash)
-    if interp != [RC]:
+    if v == 'engine':
+        part('engine')
+        part(engine_hash())
+    else:
+        rt, interp = variant(v)
+        part(rt)
+        part(version(rt))
+        part(rc_hash)
+    if v != 'engine' and interp != [RC]:
         part(v)
         part(fast_hash())
         part(' '.join(interp))
@@ -189,9 +216,13 @@ def text(b):
 
 def execute(c, v, budget):
     env = {k: x for k, x in os.environ.items() if k != 'REFCORE_DEBUG'}
-    rt, interp = variant(v)
+    if v == 'engine':
+        cmd = ENGINE + argv_of(c)
+    else:
+        rt, interp = variant(v)
+        cmd = [PY[rt], '-I', '-B'] + ([] if script(c) else interp) + argv_of(c)
     t0 = time.time()
-    p = subprocess.Popen([PY[rt], '-I', '-B'] + ([] if script(c) else interp) + argv_of(c), cwd=ROOT + c['cwd'], stdout=subprocess.PIPE,
+    p = subprocess.Popen(cmd, cwd=ROOT + c['cwd'], stdout=subprocess.PIPE,
                          stderr=subprocess.PIPE, env=env, start_new_session=True)
     try:
         out, err = p.communicate(timeout=budget)
@@ -214,7 +245,8 @@ def run_one(c, rt, budget, force, rc_hash, cache_dir):
             e['cached'] = True
             return e
     e = execute(c, rt, budget)
-    e.update(id=c['id'], runtime=rt, version=version(variant(rt)[0]), key=key, budget=budget, when=time.strftime('%Y-%m-%d %H:%M:%S'))
+    e.update(id=c['id'], runtime=rt, version=engine_hash() if rt == 'engine' else version(variant(rt)[0]), key=key,
+             budget=budget, when=time.strftime('%Y-%m-%d %H:%M:%S'))
     os.makedirs(os.path.dirname(path), exist_ok=True)
     tmp = path + '.tmp%d' % os.getpid()
     with open(tmp, 'w', encoding='utf-8') as f:
@@ -363,11 +395,56 @@ def save_results(rt, rows):
     return old
 
 
-def verdict_of(c, e, checks):
+def engine_exit(e):
+    """INTERFACE §3: exit 1 when the first line starts `refused: `, else 0. Anything else (the stub's 69, a crash's 101
+    or 134) is an error, '' when the exit is right."""
+    want = 1 if e['out'].startswith('refused: ') else 0
+    if e['rc'] == want:
+        return ''
+    first = e['out'].split('\n', 1)[0][:70]
+    return 'exit %s, not %d: %r' % (e['rc'], want, first)
+
+
+def refcore_output(c, cache_dir):
+    """refcore's own run of a check from the cache (the comparator for an engine run of a check with no baseline):
+    the plain refcore variant first, as own_variant runs such checks; None when neither is cached."""
+    rc_hash = refcore_hash()
+    for v in ('pypy', 'pypy+fast'):
+        k = cache_key(c, v, rc_hash)
+        p = os.path.join(cache_dir, k[:2], k + '.json')
+        if os.path.exists(p):
+            e = json.load(open(p, encoding='utf-8'))
+            if not e['over'] and (e['rc'] is None or e['rc'] >= 0):
+                return e['out']
+    return None
+
+
+def not_run(c, v):
+    """Why a check isn't run on this variant, or ''."""
+    if c['note'].startswith('not-run'):
+        return 'a load row (not-run:)'
+    if v == 'engine' and c['layer'] == 'interpreter':
+        return "refcore's own tests: the engine runs nothing in them"
+    if v == 'engine' and script(c):
+        return 'a key script: it runs no engine'
+    return ''
+
+
+def verdict_of(c, e, checks, cache_dir=None):
     if e['over']:
         return 'over', 'past %g s' % e['budget']
     if e['rc'] is not None and e['rc'] < 0:
         return 'killed', 'signal %d (the memory watchdog?)' % -e['rc']
+    if e.get('runtime') == 'engine':
+        bad = engine_exit(e)
+        if bad:
+            return 'error', bad
+        if not c['baseline']:  # never `ran`: an engine output never becomes a baseline; refcore's own run judges it
+            ref = refcore_output(c, cache_dir or T + 'cache')
+            if ref is None:
+                return 'error', 'no stored baseline, and refcore\'s run of it is not in the cache: run it on refcore first'
+            return ('same', 'equal to refcore\'s run (no stored baseline)') if e['out'] == ref else (
+                'differ', 'refcore\'s run (no stored baseline): ' + first_diff(ref, e['out']))
     if not c['baseline']:  # a capability check with no byte-equal judged twin (4.5c): J marks its kept output
         return 'ran', 'no twin: marked by J against the key'
     v, d = compare(c, e['out'], checks)
@@ -384,12 +461,15 @@ def session(sel, checks, runtimes, jobs, budget, force, cache_dir=T + 'cache', o
     rows_by_rt = {rt: [] for rt in runtimes}
     table = []
     t_all = time.time()
+    why_not = {}
     for layer in LAYERS:
         cs = [c for c in sel if c['layer'] == layer]
         if not cs:
             continue
-        todo = [c for c in cs if not c['note'].startswith('not-run')]
-        skipped = [c for c in cs if c['note'].startswith('not-run')]
+        todo = [c for c in cs if not not_run(c, runtimes[0])]
+        skipped = [c for c in cs if not_run(c, runtimes[0])]
+        for c in skipped:
+            why_not.setdefault((layer, not_run(c, runtimes[0])), []).append(c['id'])
         # the slow ones first, so the tail of the pool is short
         todo.sort(key=lambda c: -stored_s(c))
         t0 = time.time()
@@ -401,7 +481,7 @@ def session(sel, checks, runtimes, jobs, budget, force, cache_dir=T + 'cache', o
         counts = {rt: dict.fromkeys(VERDICTS + ('cached', 'both-differ', 'slow'), 0) for rt in runtimes}
         outs = {}
         for c, rt, e in res:
-            v, d = verdict_of(c, e, checks)
+            v, d = verdict_of(c, e, checks, cache_dir)
             counts[rt][v] += 1
             counts[rt]['cached'] += e['cached']
             counts[rt]['slow'] += v not in ('over', 'killed') and e['seconds'] > SLOW
@@ -427,7 +507,7 @@ def session(sel, checks, runtimes, jobs, budget, force, cache_dir=T + 'cache', o
                         print('BOTH-DIFFER %s: %s' % (c['id'], first_diff(a['out'], b['out'])))
         for rt in runtimes:
             k = counts[rt]
-            table.append((layer, rt, len(cs), k['same'], k['differ'], k['over'], k['slow'], k['killed'], k['known'], k['fixed'],
+            table.append((layer, rt, len(cs), k['same'], k['differ'], k['error'], k['over'], k['slow'], k['killed'], k['known'], k['fixed'],
                           k['ran'], k['cached'], len(skipped),
                           wall, k['both-differ'] if len(runtimes) == 2 and rt == runtimes[0] else ''))
     candidates = []
@@ -435,17 +515,19 @@ def session(sel, checks, runtimes, jobs, budget, force, cache_dir=T + 'cache', o
         for rt in runtimes:
             allr = save_results(rt, rows_by_rt[rt])
             candidates += ['%s (%s)' % (i, rt) for i, r in sorted(allr.items()) if int(r.get('slow_runs') or 0) >= SLOW_RUNS]
-    lines = ['| layer | runtime | checks | same | differ | over | slow (> %g s) | killed | known fault | fixed | ran (J marks) '
+    lines = ['| layer | runtime | checks | same | differ | error | over | slow (> %g s) | killed | known fault | fixed | ran (J marks) '
              '| cached | not run | wall s | %s |' % (SLOW, '≠'.join(runtimes if len(runtimes) == 2 else ['pypy', 'cpython'])),
-             '|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|']
+             '|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|']
     for r in table:
-        lines.append('| %s | %s | %d | %d | %d | %d | %d | %d | %d | %d | %d | %d | %d | %.0f | %s |' % r)
+        lines.append('| %s | %s | %d | %d | %d | %d | %d | %d | %d | %d | %d | %d | %d | %d | %.0f | %s |' % r)
     lines.append('')
     lines.append('total wall %.0f s, %s, budget %g s, jobs %d' % (time.time() - t_all, time.strftime('%Y-%m-%d %H:%M'),
                                                                    budget, jobs))
     if candidates:
         lines.append('candidates for load or reduction (over %g s in %d uncached runs in a row): %s' % (
             SLOW, SLOW_RUNS, ' '.join(candidates)))
+    for (layer, why), ids in sorted(why_not.items()):
+        lines.append('not run (%s, %d): %s' % (layer, len(ids), why) + (': ' + ' '.join(ids) if len(ids) <= 3 else ''))
     if not quiet:
         print('\n'.join(lines))
     return table, rows_by_rt, lines
@@ -556,6 +638,12 @@ def self_test(checks):
         # 8. the examples' lint (4.5f, TESTING.md §9)
         p = subprocess.run([sys.executable, '-I', '-B', T + 'map/examples.py'], capture_output=True, text=True)
         say(p.returncode == 0, 'examples.tsv: ' + (p.stdout.strip().split('\n')[-1] if p.stdout.strip() else p.stderr[-200:]))
+        # 8b. the placement (T1): every check in one milestone, BUILD-ORDER's globs and counts agree
+        p = subprocess.run([sys.executable, '-I', '-B', T + 'map/placement.py'], capture_output=True, text=True)
+        say(p.returncode == 0, 'map/placement.tsv against BUILD-ORDER: ' + ' '.join(p.stdout.split('\n')[1:2]).strip())
+        # 8c. the kernel's property corpus (T1, PROPERTIES.md) is what gen.py's seeds give
+        p = subprocess.run([sys.executable, '-I', '-B', T + 'properties/gen.py', '--check'], capture_output=True, text=True)
+        say(p.returncode == 0, p.stdout.strip() or p.stderr[-200:])
         # 9. U2 (4.5f): under fast, a check with no baseline runs on refcore (its cache entry is refcore's)
         nb = dict(fast, baseline='')
         _, r, _ = session([nb], checks, **dict(kw, runtimes=['pypy+fast']))
@@ -569,11 +657,64 @@ def self_test(checks):
             watchdog('  13 python3 -I -B tmp/session5/tools/memcap.py 8 5\n') is None and watchdog() is not None,
             'the watchdog is recognised (engine/tests/tools/memcap.py), an old copy is not, and one is running')
         p = subprocess.run([sys.executable, '-I', '-B', T + 'tools/memcap.py', '--self-test'], capture_output=True, text=True)
-        say(p.returncode == 0, 'memcap.py matches refcore and refcore_fast runs: ' + p.stdout.strip())
+        say(p.returncode == 0, 'memcap.py matches refcore, refcore_fast and engine runs: ' + p.stdout.strip())
+        # 11. --interp engine (T1), on a stand-in for the binary: a shell script that prints given bytes and exits
+        engine_self_test(say, checks, by, fast, tmp, cache, kw)
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
     print('self-test %s' % ('PASSED' if ok else 'FAILED'))
     return ok
+
+
+def engine_self_test(say, checks, by, fast, tmp, cache, kw):
+    """--interp engine's wiring, proven on a stand-in binary (no engine needed): same, error on a wrong exit, the
+    binary's hash in the cache key, never `ran`, and R:all and the key scripts not run."""
+    real = ENGINE[0]
+    stand = os.path.join(tmp, 'tally')
+    base = open(ROOT + fast['baseline'], 'rb').read()
+
+    def stand_in(out, rc):
+        with open(stand, 'wb') as f:
+            f.write(b"#!/bin/sh\ncat <<'TALLY_EOF'\n" + out + b"TALLY_EOF\nexit %d\n" % rc)
+        os.chmod(stand, 0o755)
+    ekw = dict(kw, runtimes=['engine'])
+    try:
+        ENGINE[0] = stand
+        rc = 1 if base.startswith(b'refused: ') else 0
+        stand_in(base, rc)
+        _, r, _ = session([fast], checks, **ekw)
+        say(r['engine'][0]['verdict'] == 'same' and not r['engine'][0]['cached'],
+            '--interp engine: a stand-in printing NUM-02\'s baseline, exit %d, is same' % rc)
+        _, r, _ = session([fast], checks, **ekw)
+        say(r['engine'][0]['cached'] == 'cached', '--interp engine: a second run is a cache hit')
+        stand_in(base, 69)
+        _, r, _ = session([fast], checks, **ekw)
+        say(r['engine'][0]['verdict'] == 'error' and not r['engine'][0]['cached'],
+            '--interp engine: a changed binary misses the cache, and the right bytes with exit 69 are an error (%s)'
+            % r['engine'][0]['detail'])
+        stand_in(b'refused: LOAD-PARSE planted\n', 0)
+        _, r, _ = session([fast], checks, **ekw)
+        say(r['engine'][0]['verdict'] == 'error', '--interp engine: a refusal with exit 0 is an error')
+        stand_in(b'tally run: not implemented\n', 69)
+        _, r, _ = session([fast, by['I:D:d01_flat']], checks, **ekw)
+        say([x['verdict'] for x in r['engine']] == ['error', 'error'],
+            '--interp engine: the stub\'s answer (exit 69) is an error on a unit and a household check')
+        # never `ran`: a check with no baseline is judged against refcore's own run from the cache (test 9 made it)
+        nb = dict(fast, baseline='')
+        stand_in(base, rc)
+        _, r, _ = session([nb], checks, **ekw)
+        _, r2, _ = session([nb], checks, **dict(ekw, cache_dir=os.path.join(tmp, 'empty-cache')))
+        say(r['engine'][0]['verdict'] == 'same' and r2['engine'][0]['verdict'] == 'error',
+            '--interp engine: no baseline is never `ran`: same against refcore\'s cached run, an error without one '
+            '(%s; %s)' % (r['engine'][0]['detail'], r2['engine'][0]['detail'][:40]))
+        say(all(x['verdict'] != 'ran' for x in r['engine'] + r2['engine']) and 'ran' not in str(
+            [verdict_of(nb, dict(out=base.decode(), rc=rc, over=False, runtime='engine', budget=BUDGET), checks, cache)]),
+            '--interp engine: no verdict of an engine run is `ran`')
+        say(not_run(by['R:all'], 'engine') and not_run(by['I:M:LH-11~key'], 'engine') and not not_run(by['R:all'], 'pypy+fast')
+            and not_run(next(c for c in checks if c['note'].startswith('not-run')), 'engine'),
+            '--interp engine: R:all, the key scripts and the load rows are not run; R:all still runs on refcore')
+    finally:
+        ENGINE[0] = real
 
 
 # -- the tables ------------------------------------------------------------------------------------------------------
@@ -719,7 +860,7 @@ def tables(checks):
 
 def adhoc(argv):
     """--adhoc [--cwd DIR] -- <refcore args>: one run of the frozen refcore on PyPy, 90 s, for a writer or the judge
-    (4.5c). Prints the output and a '# ' line with rc and seconds (or 'over 60 s'); appends a line to adhoc.log.
+    (4.5c). Prints the output and a '# ' line with rc and seconds (or 'over 60 s'); appends a line to out/adhoc.log.
     Nothing is cached or recorded in results/."""
     cwd = os.getcwd()
     if '--cwd' in argv:
@@ -747,7 +888,8 @@ def adhoc(argv):
         p.communicate()
         res = 'over %g s (killed, nothing printed)' % BUDGET
     print('# ' + res)
-    with open(T + 'reports/adhoc.log', 'a', encoding='utf-8') as f:
+    os.makedirs(T + 'out', exist_ok=True)
+    with open(T + 'out/adhoc.log', 'a', encoding='utf-8') as f:  # run output (T1): reports/adhoc.log keeps the log to 2026-10-31
         f.write('%s\t%s\t%s\t%s\n' % (time.strftime('%Y-%m-%d %H:%M:%S'), cwd, ' '.join(args), res))
     return 0
 
@@ -757,6 +899,8 @@ def main_variants(argv):
     rt = argv[argv.index('--runtime') + 1] if '--runtime' in argv else 'pypy'
     interp = argv[argv.index('--interp') + 1] if '--interp' in argv else 'fast'
     verify = int(argv[argv.index('--verify') + 1]) if '--verify' in argv else 0
+    if interp == 'engine':
+        return ['engine']
     rts = ['pypy', 'cpython'] if rt == 'both' else [rt]
     fast = lambda r: r + '+fast' + ('+v%d' % verify if verify else '')
     return rts if interp == 'refcore' else [fast(r) for r in rts] if interp == 'fast' else [rts[0], fast(rts[0])]
@@ -766,6 +910,8 @@ def main(argv):
     if '--adhoc' in argv:
         need_watchdog()
         return adhoc(argv)
+    # `--opt=value` is `--opt value`: at the repository root the guard reads a bare `engine` as the folder (T1)
+    argv = [x for a in argv for x in (a.split('=', 1) if a.startswith('--') and '=' in a else [a])]
     checks = load_checks()
     if '--self-test' in argv:
         need_watchdog()
@@ -806,10 +952,12 @@ def main(argv):
         sys.exit('--jobs is 1..%d' % MAX_JOBS)
     if rt not in ('pypy', 'cpython', 'both'):
         sys.exit('--runtime is pypy, cpython or both')
-    if interp not in ('refcore', 'fast', 'both') or (rt == 'both' and interp == 'both'):
-        sys.exit('--interp is refcore, fast or both (not with --runtime both)')
-    if verify and interp == 'refcore':
+    if interp not in ('refcore', 'fast', 'both', 'engine') or (rt == 'both' and interp == 'both'):
+        sys.exit('--interp is refcore, fast, both (not with --runtime both) or engine')
+    if verify and interp in ('refcore', 'engine'):
         sys.exit('--verify N is for --interp fast or both')
+    if interp == 'engine' and '--runtime' in argv:
+        sys.exit('--runtime is for refcore; the engine is its own binary')
     sel = select(checks, globs, layers)
     if '--list' in argv:
         for c in sel:
@@ -819,6 +967,8 @@ def main(argv):
     if not sel:
         sys.exit('no check selected')
     need_watchdog()
+    if interp == 'engine':
+        engine_hash()  # stops here, with how to build it, when the binary is missing
     session(sel, checks, main_variants(argv), jobs, budget, '--force' in argv)
     return 0
 
