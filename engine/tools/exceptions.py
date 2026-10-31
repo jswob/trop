@@ -28,9 +28,12 @@ LOCK = os.path.join(ENGINE, "EXCEPTIONS.lock")
 BUDGET = os.path.join(TOOLS, "exceptions-budget.toml")
 KERNEL = os.path.join(TOOLS, "kernel.toml")
 SCANNED = ["crates", "tests", "fuzz/fuzz_targets"]
+# R-104's phrases, matched as stems (a word that starts with one) in the reason with its
+# case folded and every run of hyphens, underscores and spaces made one space
 BANNED = (
-    "for now", "temporary", "temporarily", "todo", "fixme", "make the test pass", "make the tests pass",
-    "backward compat", "clippy is wrong", "silence", "shut up",
+    "for now", "for the moment", "for the time being", "temporar", "todo", "to do", "fixme", "fix me",
+    "make the test pass", "make the tests pass", "make tests pass", "backward compat", "backwards compat",
+    "clippy is wrong", "silenc", "shut up",
 )
 ITEM_KINDS = [
     "function_item", "impl_item", "struct_item", "enum_item", "union_item", "trait_item", "mod_item",
@@ -103,9 +106,9 @@ def reason_problem(reason, max_rule):
         return f"its reason names R-{m.group(1)}, which isn't a rule"
     if len(m.group(2).strip()) < 20:
         return "its reason is under 20 characters after the rule id"
-    low = reason.casefold()
+    low = re.sub(r"[\s_-]+", " ", reason.casefold())
     for phrase in BANNED:
-        if re.search(r"\b" + re.escape(phrase) + r"\b", low):
+        if re.search(r"\b" + re.escape(phrase), low):
             return f"its reason says {phrase!r}"
     if "false positive" in low and "because" not in low:
         return "its reason says 'false positive' without saying why (no 'because')"

@@ -67,3 +67,27 @@ skip = [
   { crate = "itoa@1" },
 --- run
 tools/exceptions --check
+
+case: banned-phrase-variant
+tool: run
+expect: its reason says 'backwards compat'
+--- append tests/runner/src/lib.rs
+/// Planted.
+#[expect(clippy::needless_return, reason = "R-66: kept for Backwards-Compatibility with the old runner")]
+pub fn planted() -> u8 {
+    return 1;
+}
+--- run
+tools/exceptions --check
+
+case: false-positive-hyphenated
+tool: run
+expect: without saying why
+--- append tests/runner/src/lib.rs
+/// Planted.
+#[expect(clippy::needless_return, reason = "R-66: a false-positive of the lint on this planted form")]
+pub fn planted() -> u8 {
+    return 1;
+}
+--- run
+tools/exceptions --check
