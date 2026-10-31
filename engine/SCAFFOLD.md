@@ -297,6 +297,10 @@ Where the scaffold differs from `tmp/active/engine-scaffold.md`, and why.
 26. **CI:** the workflow runs on pull requests into `master` and into `engine`, the long-lived branch the engine's work merges into (the user's go, 2026-10-23). It uses a YAML anchor for the install step, which actionlint accepts. It fetches tags, because check-frozen compares the spec with its tag. Its nightly jobs write reports, and only mutants and the benchmarks can fail.
 27. **`engine/.gitignore`** also ignores `mutants.out/`.
 
+**Changes at session 8c (2026-10-31)**
+
+28. **`.claude/settings.json` enables the `rust-analyzer-lsp` plugin** (`enabledPlugins`). The user installed it on 2026-10-30, as G1's D6-5 approved. The install rewrote the file in two-space indents, which turned check-frozen red; the commit keeps the plugin, restores the repo's tabs and rewrites `tools/RULES.sha256`. Any project-scope settings change made in Claude Code's UI does the same, by design: the file is a rule file, so it lands only through a `rules` commit.
+
 ## 9. Open questions
 
 - **The CLI's exception budget (3) is full at the scaffold.** The builder will need a fourth only if the CLI does more I/O, which C's design doesn't foresee.
