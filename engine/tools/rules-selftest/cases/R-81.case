@@ -43,3 +43,10 @@ exit: any
 {"permissions": {"allow": ["Bash(cargo test:*)"], "defaultMode": "acceptEdits"}}
 --- run
 tools/check-frozen
+
+case: build-session-start-prints-the-rules
+tool: run
+exit: any
+expect: # The Tally engine: rules for the build session
+--- run
+TALLY_ROLE=build tools/session-start

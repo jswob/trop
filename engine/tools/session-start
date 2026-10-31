@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# The build role's SessionStart hook, at startup and after each compaction (D6-2, BUILDER §11):
+# prints engine/CLAUDE.md, which Claude Code adds to the session's context, since a nested
+# CLAUDE.md isn't loaded at the start nor after a compaction. Other roles get nothing.
+d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)" || exit 0
+[ "${TALLY_ROLE:-}" = build ] || exit 0
+cat "$d/../CLAUDE.md" || echo "engine: engine/CLAUDE.md is missing; the build session has no rules to read (D6-2)"
