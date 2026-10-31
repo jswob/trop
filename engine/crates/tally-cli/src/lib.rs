@@ -34,8 +34,27 @@ pub const EXIT_IO: u8 = 74;
 const COMMANDS: [&str; 5] = ["load", "ask", "run", "project", "format"];
 
 /// Runs one command. `args` are the arguments after the program name; `stdin` is
-/// standard input's bytes (empty when it is a terminal).
-pub fn run(args: &[OsString], _stdin: &[u8]) -> Output {
+/// standard input's bytes (empty when it is a terminal). With the `counters` feature, a
+/// `--stats` argument is taken out and the counters' line follows standard error (D4-8).
+pub fn run(args: &[OsString], stdin: &[u8]) -> Output {
+    #[cfg(feature = "counters")]
+    if args.iter().any(|arg| arg.to_str() == Some("--stats")) {
+        let rest: Vec<OsString> = args
+            .iter()
+            .filter(|arg| arg.to_str() != Some("--stats"))
+            .cloned()
+            .collect();
+        let mut output = command(&rest, stdin);
+        output
+            .stderr
+            .extend_from_slice(tally::Counters::default().line().as_bytes());
+        return output;
+    }
+    command(args, stdin)
+}
+
+/// One command of the test interface, answered by the stub.
+fn command(args: &[OsString], _stdin: &[u8]) -> Output {
     match args.first().and_then(|first| first.to_str()) {
         Some(command) if COMMANDS.contains(&command) => Output {
             stdout: Vec::new(),
@@ -61,6 +80,20 @@ mod tests {
             let output = run(&[OsString::from(command)], b"");
             assert_eq!(output.code, EXIT_NOT_IMPLEMENTED, "{command}");
         }
+    }
+
+    #[cfg(feature = "counters")]
+    #[test]
+    fn stats_adds_the_counters_line() {
+        let output = run(&[OsString::from("run"), OsString::from("--stats")], b"");
+        assert_eq!(output.code, EXIT_NOT_IMPLEMENTED, "run --stats");
+        assert!(
+            output
+                .stderr
+                .ends_with(b"recomputed_locally=0 num_results=0\n"),
+            "{:?}",
+            output.stderr
+        );
     }
 
     #[test]

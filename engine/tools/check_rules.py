@@ -205,7 +205,8 @@ def check_manifests(problems):
         if os.path.basename(path) != "Cargo.toml" or path == ws_path:
             continue
         r = rel(path)
-        if r.startswith(("engine/fuzz/", "engine/spec/")):
+        # the fuzz and gungraun instruments are workspaces of their own, the lead's (R-91, R-92, R-97)
+        if r.startswith(("engine/fuzz/", "engine/spec/", "engine/tools/gungraun/")):
             continue
         m = load(path)
         for key in ("patch", "replace", "profile", "workspace", "cargo-features"):

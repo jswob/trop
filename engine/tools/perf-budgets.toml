@@ -1,0 +1,350 @@
+# The budget table: PERFORMANCE §8's P8 rows, machine-readable (BUILDER §13.3; plan B2.3).
+# engine/tools/perf reads it for wall time, footprint and instruction limits; T's runner
+# reads it for the count budgets. A protected file: the rules role writes it, from the
+# spec's rows only, and every number is proposed until S (PERFORMANCE §8). A number set
+# at S changes only through a logged row; an instruction limit is only lowered, except a
+# re-baseline at a toolchain bump (D4-2, R-97).
+#
+# Each [[row]]:
+#   id, group (I, C, L, M), what: PERFORMANCE §8's row, shortened
+#   recipe: how perf runs it
+#     "check:<id>"   one row of engine/tests/checks.tsv, run as run.py runs it
+#     "bench:<name>" a gungraun bench in engine/tools/gungraun/benches/ (Linux CI)
+#     "waits: ..."   nothing runs it yet; the text says what it waits for
+#   wall_s, footprint_mb, workers: the Mac's budget (absent: the row sets none)
+#   counts: the count budgets T's runner checks at 1 worker (absent: reported only)
+#   instructions: the gungraun hard limit on Ir, set at S (absent until then)
+#   blocks: "pr" (counts and instructions, Linux CI) or "tag" (wall and footprint, the Mac)
+
+# 8.1 Group I: the interactive targets kept
+[[row]]
+id = "P8-1"
+group = "I"
+what = "a conversation turn: validate a patch, run the reality and one scenario, compare"
+recipe = "waits: T's generator (SO8-10) and OPERATIONS.md's rewrite"
+wall_s = 2.0
+footprint_mb = 1024
+blocks = "tag"
+
+[[row]]
+id = "P8-2"
+group = "I"
+what = "a deterministic run, cold: 33 years daily at 10x the household"
+recipe = "waits: T's generator (SO8-10); its 1x twin from M1"
+wall_s = 1.0
+footprint_mb = 1024
+blocks = "tag"
+
+[[row]]
+id = "P8-3"
+group = "I"
+what = "a deterministic run, warm: as P8-2, memo kept"
+recipe = "waits: T's generator (SO8-10); its 1x twin from M1"
+wall_s = 0.05
+footprint_mb = 1024
+counts = { def_misses = 0 }
+blocks = "tag"
+
+[[row]]
+id = "P8-4"
+group = "I"
+what = "Monte Carlo: 1 000 paths x 30 years daily"
+recipe = "waits: the Monte Carlo milestone"
+wall_s = 1.0
+footprint_mb = 1024
+workers = 6
+blocks = "tag"
+
+[[row]]
+id = "P8-5"
+group = "I"
+what = "one look-ahead decision: one read of a written projection (micro form P8-M4)"
+recipe = "waits: its micro form P8-M4"
+blocks = "pr"
+
+[[row]]
+id = "P8-6"
+group = "I"
+what = "one path replayed for an explanation"
+recipe = "waits: the Monte Carlo milestone"
+wall_s = 0.02
+footprint_mb = 1024
+blocks = "tag"
+
+[[row]]
+id = "P8-7"
+group = "I"
+what = "the gate on one law part: its check asks and the threshold table"
+recipe = "waits: OPERATIONS.md §3's rewrite"
+wall_s = 1.0
+footprint_mb = 1024
+blocks = "tag"
+
+[[row]]
+id = "P8-8"
+group = "I"
+what = "one fitting step: pin, replay, residuals, two years of history"
+recipe = "waits: M8, the fitting loop"
+wall_s = 0.02
+footprint_mb = 1024
+blocks = "tag"
+
+[[row]]
+id = "P8-9"
+group = "I"
+what = "determinism: equal result hashes with W in {1, 2, 3, 5, 6, 7}, Mac and Linux"
+recipe = "waits: T's runner (gate 6)"
+blocks = "pr"
+
+# 8.2 Group C: the six measured checks at 1x, cold, 1 worker
+[[row]]
+id = "P8-10"
+group = "C"
+what = "I:A:a05_ania@c05-ania"
+recipe = "check:I:A:a05_ania@c05-ania"
+wall_s = 1.0
+footprint_mb = 512
+counts = { def_misses = 150000, days_stepped = 18929 }
+blocks = "pr"
+
+[[row]]
+id = "P8-11"
+group = "C"
+what = "I:E1:tx2_mtg_day"
+recipe = "check:I:E1:tx2_mtg_day"
+wall_s = 1.0
+footprint_mb = 512
+counts = { def_misses = 619000, days_stepped = 2498 }
+blocks = "pr"
+
+[[row]]
+id = "P8-12"
+group = "C"
+what = "I:E2:E2-01~e2_01a"
+recipe = "check:I:E2:E2-01~e2_01a"
+wall_s = 1.0
+footprint_mb = 512
+counts = { def_misses = 161000, days_stepped = 8614 }
+blocks = "pr"
+
+[[row]]
+id = "P8-13"
+group = "C"
+what = "I:E2:E2-01~e2_01b"
+recipe = "check:I:E2:E2-01~e2_01b"
+wall_s = 1.0
+footprint_mb = 512
+counts = { def_misses = 547000, days_stepped = 12920 }
+blocks = "pr"
+
+[[row]]
+id = "P8-14"
+group = "C"
+what = "I:X:replay_september@b_r1 (days stepped reported: refcore's share isn't measured)"
+recipe = "check:I:X:replay_september@b_r1"
+wall_s = 1.0
+footprint_mb = 512
+counts = { def_misses = 2270000 }
+blocks = "pr"
+
+[[row]]
+id = "P8-15"
+group = "C"
+what = "U:set/pairs/PTY-05+OWN-12/ania"
+recipe = "check:U:set/pairs/PTY-05+OWN-12/ania"
+wall_s = 1.0
+footprint_mb = 512
+counts = { def_misses = 74, days_stepped = 12 }
+blocks = "pr"
+
+# 8.3 Group L: the load rows at full size; a Monte Carlo row's wall is its deterministic part
+[[row]]
+id = "P8-L1"
+group = "L"
+what = "household D, D-10 at 10 000 paths"
+recipe = "waits: T's load runner (load.tsv L:1)"
+wall_s = 10.0
+footprint_mb = 4096
+blocks = "tag"
+
+[[row]]
+id = "P8-L2"
+group = "L"
+what = "household D, D-11's zero-volatility pair to the dry year"
+recipe = "waits: T's load runner (load.tsv L:2)"
+wall_s = 10.0
+footprint_mb = 4096
+blocks = "tag"
+
+[[row]]
+id = "P8-L3"
+group = "L"
+what = "household B as one run over its full span"
+recipe = "waits: T's load runner (load.tsv L:3)"
+wall_s = 10.0
+footprint_mb = 4096
+blocks = "tag"
+
+[[row]]
+id = "P8-L4"
+group = "L"
+what = "household B, B-07 on its own span (a search of 4 001 steps)"
+recipe = "waits: T's load runner (load.tsv L:4)"
+wall_s = 10.0
+footprint_mb = 4096
+blocks = "tag"
+
+[[row]]
+id = "P8-L5"
+group = "L"
+what = "household B, B-12 at 3 000 paths to 2028-12-31"
+recipe = "waits: T's load runner (load.tsv L:5)"
+wall_s = 10.0
+footprint_mb = 4096
+blocks = "tag"
+
+[[row]]
+id = "P8-L6"
+group = "L"
+what = "household B, the balance rows past 2026-12-31"
+recipe = "waits: T's load runner (load.tsv L:6)"
+wall_s = 10.0
+footprint_mb = 4096
+blocks = "tag"
+
+[[row]]
+id = "P8-L8"
+group = "L"
+what = "household E1, the full joint model's walks"
+recipe = "waits: T's load runner (load.tsv L:8)"
+wall_s = 10.0
+footprint_mb = 4096
+blocks = "tag"
+
+[[row]]
+id = "P8-L9"
+group = "L"
+what = "household A, A-05's windows each asks for Ania on the full text"
+recipe = "waits: T's load runner (load.tsv L:9)"
+wall_s = 10.0
+footprint_mb = 4096
+blocks = "tag"
+
+[[row]]
+id = "P8-L10"
+group = "L"
+what = "the amendments household's long-horizon walk cells, c1_r2, v5_r2"
+recipe = "waits: T's load runner (load.tsv L:10)"
+wall_s = 10.0
+footprint_mb = 4096
+blocks = "tag"
+
+[[row]]
+id = "P8-L11"
+group = "L"
+what = "household-bands at 1 000 paths, and its cut-down"
+recipe = "waits: T's load runner (load.tsv L:11)"
+wall_s = 10.0
+footprint_mb = 4096
+blocks = "tag"
+
+[[row]]
+id = "P8-L12"
+group = "L"
+what = "LH-15, LH-16, LH-17-mc at their full axes, cohorts, paths and span"
+recipe = "waits: T's load runner (load.tsv L:12)"
+wall_s = 10.0
+footprint_mb = 4096
+blocks = "tag"
+
+[[row]]
+id = "P8-L13"
+group = "L"
+what = "the household's explain_room, M2's cut-downs at full span, F2's windows each"
+recipe = "waits: T's load runner (load.tsv L:13)"
+wall_s = 10.0
+footprint_mb = 4096
+blocks = "tag"
+
+[[row]]
+id = "P8-L14"
+group = "L"
+what = "session 4's snap11 runs past 8 GB: b12_det, b12_p3, cut11/mc, c1_r2"
+recipe = "waits: T's load runner (load.tsv L:14)"
+wall_s = 10.0
+footprint_mb = 4096
+blocks = "tag"
+
+[[row]]
+id = "P8-L15"
+group = "L"
+what = "O:A-3's run: A's q12 asks with the one_of forecast copy"
+recipe = "waits: T's load runner (load.tsv L:15)"
+wall_s = 10.0
+footprint_mb = 4096
+blocks = "tag"
+
+[[row]]
+id = "P8-L16"
+group = "L"
+what = "household B, B-05's three asks known 2026-01-05"
+recipe = "waits: T's load runner (load.tsv L:16)"
+wall_s = 10.0
+footprint_mb = 4096
+blocks = "tag"
+
+[[row]]
+id = "P8-L17"
+group = "L"
+what = "household A, A-13 (b)'s 2024 difference with windows each"
+recipe = "waits: T's load runner (load.tsv L:17)"
+wall_s = 10.0
+footprint_mb = 4096
+blocks = "tag"
+
+[[row]]
+id = "P8-L18"
+group = "L"
+what = "a joint model reading one row of a member whose walk is long; the three-member E2"
+recipe = "waits: T's load runner (load.tsv L:18)"
+wall_s = 10.0
+footprint_mb = 4096
+blocks = "tag"
+
+# 8.4 Group M: micro rows; each instruction limit is the first measurement x 1.2, set at S
+[[row]]
+id = "P8-M1"
+group = "M"
+what = "Num add and multiply on the small tier"
+recipe = "waits: S, the numbers (the lead writes its bench on request, R-91)"
+blocks = "pr"
+
+[[row]]
+id = "P8-M2"
+group = "M"
+what = "gcd of a 5 049-bit and a 64-bit value"
+recipe = "waits: S, the numbers (the lead writes its bench on request, R-91)"
+blocks = "pr"
+
+[[row]]
+id = "P8-M3"
+group = "M"
+what = "one big operation at 5 049 bits: a multiply and its reduction"
+recipe = "waits: S, the numbers (the lead writes its bench on request, R-91)"
+blocks = "pr"
+
+[[row]]
+id = "P8-M4"
+group = "M"
+what = "one read of a written projection, E §4.3's common case (P8-5's micro form)"
+recipe = "waits: S, the projection reads (the lead writes its bench on request, R-91)"
+wall_s = 0.0000003
+blocks = "pr"
+
+# The scaffold's own bench, proving the form on the stub; not a P8 row, never a budget.
+[[row]]
+id = "stub"
+group = "M"
+what = "tally::parse on empty input, the stub's only entry point"
+recipe = "bench:stub_instructions"
+blocks = "pr"

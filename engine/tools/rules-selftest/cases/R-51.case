@@ -31,11 +31,11 @@ tools/check step fault-injection-probe
 case: counters-without-guard
 tool: run
 expect: the counters compile_error! guard is missing
---- replace crates/tally/Cargo.toml
-fault-injection = []
+--- replace crates/tally/src/lib.rs
+#[cfg(all(feature = "counters", not(debug_assertions)))]
+compile_error!("the counters feature exists only in builds with debug assertions (R-51)");
 --- with
-fault-injection = []
-counters = []
+// planted: the stub declares counters (D4-8), and its guard is gone
 --- run
 tools/check-rules
 

@@ -10,6 +10,9 @@ publish.workspace = true
 # Breaks one invariant on demand, for DONE gate 5's ENGINE-INVARIANT test. It refuses
 # to compile without debug assertions, so no release build can hold it (R-51).
 fault-injection = []
+# The work counters behind the CLI's --stats (D4-8, BUILDER §13.2): a build-side
+# instrument, never in the shipped CLI. Off in release, guarded like fault-injection (R-51).
+counters = []
 
 [dependencies]
 # Declared for the builder, unused by the stub (C §2 rule 6)
