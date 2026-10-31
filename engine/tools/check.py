@@ -111,6 +111,7 @@ def steps(mode):
         ("ast-grep-scan", ["ast-grep", "scan"], {}),
         ("guard-test", tool("guard-test"), {}),
         ("rules-selftest", tool("rules-selftest/run"), {}),
+        ("special-casing", tool("special-casing"), {}),
         ("spec-loadcheck-selftest", ["python3", "-I", "-B", "spec/tools/loadcheck.py", "--selftest"], {}),
         ("spec-loadcheck", ["python3", "-I", "-B", "spec/tools/loadcheck.py", *spec_realities()], {}),
         ("fuzz", fuzz, {}),
