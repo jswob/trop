@@ -25,6 +25,8 @@ TESTS = {"tests"}
 RULES = {"rules"}
 APP = {"rules", "unset"}
 BUILD = {"build", "rules", "unset"}
+EVERY = set(ROLES)
+MASTER = {"unset"}  # app work, which the master session is
 
 # path (relative to the throwaway root, or absolute) -> the roles that may write it
 EDITS = [
@@ -100,6 +102,30 @@ EDITS = [
     ("engine/EXCEPTIONS.lock", BUILD),
     ("engine/target/debug/x", BUILD),
     ("engine/crates/tally/src/link-to-spec.rs", SPEC),
+    # tmp/ is scratch for every role (issue #11), but the sealed exam, its record and
+    # the master's briefs, which only app work (the master) writes
+    ("tmp/t1/notes.md", EVERY),
+    ("tmp/i11/x.md", EVERY),
+    ("tmp/x.md", EVERY),
+    ("tmp/T1/Notes.md", EVERY),
+    ("tmp/holdout-notes/x.md", EVERY),
+    ("tmp/active-notes/x.md", EVERY),
+    ("tmp/holdout/x.md", MASTER),
+    ("tmp/holdout", MASTER),
+    ("tmp/HOLDOUT/x.md", MASTER),
+    ("tmp/cases-holdout/x.md", MASTER),
+    ("tmp/Cases-Holdout/x.md", MASTER),
+    ("tmp/active/issue5-brief.md", MASTER),
+    ("tmp/active", MASTER),
+    ("tmp/Active/x.md", MASTER),
+    ("tmp/t1/../active/x.md", MASTER),
+    # the real path counts: a symlink in tmp/ reaches no protected file
+    ("tmp/notes/link-to-active/x.md", MASTER),
+    ("tmp/notes/link-to-holdout/x.md", MASTER),
+    ("tmp/notes/link-to-brief.md", MASTER),
+    ("tmp/notes/link-to-spec.md", SPEC),
+    ("tmp/notes/link-to-tests/x", TESTS),
+    ("tmp/notes/link-to-tools/guard.py", RULES),
 ]
 
 ALL = set(ROLES)
@@ -372,6 +398,34 @@ BASH = [
     ("gh api repos/jswob/trop/pulls/3", ALL, ""),
     ("git log origin/master..HEAD", ALL, ""),
     ("echo 'git push origin master'", ALL, ""),
+    # tmp/ is scratch for every role (issue #11)
+    ("mkdir tmp/t1", ALL, ""),
+    ("mkdir -p tmp/t1/deep", ALL, ""),
+    ("echo ok > tmp/t1/x.md", ALL, ""),
+    ("echo ok >> tmp/x.md", ALL, ""),
+    ("cat > tmp/i11/log.md <<'EOF'\nnotes\nEOF", ALL, ""),
+    ("touch tmp/i11/x.md && rm tmp/i11/x.md", ALL, ""),
+    ("cp engine/spec/DONE.md tmp/t1/spec-copy.md", ALL, ""),
+    ("rm -rf tmp/t1", ALL, ""),
+    ("cd tmp && mkdir t1 && echo ok > t1/x.md", ALL, ""),
+    ("echo ok > x.md", ALL, "tmp/t1"),
+    ("cat tmp/active/issue5-brief.md", ALL, ""),
+    # but not the sealed exam, its record or the master's briefs
+    ("echo x > tmp/active/x.md", {"unset"}, ""),
+    ("mkdir -p tmp/active/sub", {"unset"}, ""),
+    ("cp /tmp/x tmp/Active/issue5-brief.md", {"unset"}, ""),
+    ("sed -i '' 's/a/b/' tmp/active/issue5-brief.md", {"unset"}, ""),
+    ("mkdir -p tmp/holdout/x", {"unset"}, ""),
+    ("echo x > tmp/HOLDOUT/x.md", {"unset"}, ""),
+    ("rm -rf tmp/cases-holdout", {"unset"}, ""),
+    ("touch tmp/cases-holdout/x", {"unset"}, ""),
+    ("python3 -c \"open('tmp/holdout/x','w')\"", {"unset"}, ""),
+    ("rm -rf tmp", {"unset"}, ""),  # it holds all three
+    ("cd tmp && rm -rf active", {"unset"}, ""),
+    ("echo x > x.md", {"unset"}, "tmp/active"),
+    ("echo x > tmp/notes/link-to-active/x.md", {"unset"}, ""),
+    ("echo x > tmp/notes/link-to-holdout/x.md", {"unset"}, ""),
+    ("echo x > tmp/notes/link-to-spec.md", SPEC, ""),
 ]
 
 
@@ -402,6 +456,16 @@ def setup(root):
         with open(os.path.join(root, path), "w", encoding="utf-8") as f:
             f.write(text)
     os.symlink("../../../spec/DONE.md", os.path.join(root, "engine/crates/tally/src/link-to-spec.rs"))
+    # the throwaway's own tmp/: a brief, and a notes folder of symlinks out of it (issue
+    # #11); its holdout is only named by a dangling link, never made
+    os.makedirs(os.path.join(root, "tmp/active"))
+    os.makedirs(os.path.join(root, "tmp/notes"))
+    with open(os.path.join(root, "tmp/active/issue5-brief.md"), "w", encoding="utf-8") as f:
+        f.write("a brief\n")
+    for name, target in (("link-to-active", "../active"), ("link-to-holdout", "../holdout"),
+                         ("link-to-brief.md", "../active/issue5-brief.md"), ("link-to-spec.md", "../../engine/spec/DONE.md"),
+                         ("link-to-tests", "../../engine/tests"), ("link-to-tools", "../../engine/tools")):
+        os.symlink(target, os.path.join(root, "tmp/notes", name))
     with open(os.path.join(root, "engine/tools/check"), "w", encoding="utf-8") as f:
         f.write('#!/usr/bin/env bash\n'
                 'case "${FAKE_CHECK:-green}" in\n'
@@ -515,6 +579,9 @@ def main():
                 (root, linked, "engine/tools/guard.py", RULES),
                 (root, nested, "engine/spec/DONE.md", SPEC),
                 (nested, root, "engine/tests/x", TESTS),
+                (linked, root, "tmp/t1/x.md", EVERY),  # scratch in any checkout (issue #11)
+                (linked, root, "tmp/active/x.md", MASTER),
+                (root, linked, "tmp/holdout/x.md", MASTER),
             ]
             for here, there, path, allowed in crossing:
                 full = os.path.join(there, path)
