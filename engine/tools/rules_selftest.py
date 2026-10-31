@@ -573,6 +573,12 @@ CALLS = {
     "std::thread::scope": "pub fn planted_scope() { std::thread::scope(|_scope| {}); }",
     "std::thread::Builder::spawn_scoped":
         "pub fn planted_spawn_scoped<'scope>(scope: &'scope std::thread::Scope<'scope, '_>) { let _handle = std::thread::Builder::new().spawn_scoped(scope, || {}); }",
+    "std::iter::Sum::sum": "pub fn planted_sum() -> u8 { <u8 as std::iter::Sum>::sum(core::iter::empty::<u8>()) }",
+    "std::iter::Product::product": "pub fn planted_product() -> u8 { <u8 as std::iter::Product>::product(core::iter::empty::<u8>()) }",
+    "std::ops::Index::index": "pub fn planted_index(v: &[u8]) -> &u8 { std::ops::Index::index(v, 0) }",
+    "std::ops::IndexMut::index_mut": "pub fn planted_index_mut(v: &mut [u8]) -> &mut u8 { std::ops::IndexMut::index_mut(v, 0) }",
+    "std::fmt::Debug::fmt":
+        "pub fn planted_debug_fmt(v: &u8, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result { std::fmt::Debug::fmt(v, f) }",
     "std::thread::Scope::spawn":
         "pub fn planted_scope_spawn<'scope>(scope: &'scope std::thread::Scope<'scope, '_>) { let _handle = scope.spawn(|| {}); }",
 }

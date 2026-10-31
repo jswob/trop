@@ -156,6 +156,14 @@ disallowed-methods = [
   { path = "std::ops::ShrAssign::shr_assign", reason = "R-20: use checked_shr" },
   # R-24: no one-call sums
   { path = "std::iter::Iterator::sum", reason = "R-24: overflows unseen; use try_fold with checked_add" },
+  # the same through the trait itself (audit F-12)
+  { path = "std::iter::Sum::sum", reason = "R-24: overflows unseen; use try_fold with checked_add" },
+  { path = "std::iter::Product::product", reason = "R-24: overflows unseen; use try_fold with checked_mul" },
+  # R-5 through the operator's trait (audit F-12): v[i] written as a call
+  { path = "std::ops::Index::index", reason = "R-5: crashes on a missing index or key; use get and handle the miss" },
+  { path = "std::ops::IndexMut::index_mut", reason = "R-5: crashes on a missing index or key; use get_mut and handle the miss" },
+  # R-45: Debug output never reaches the user, not even inside a Display impl (audit F-13)
+  { path = "std::fmt::Debug::fmt", reason = "R-45: Debug is for developers; write the Display form" },
   { path = "std::iter::Iterator::product", reason = "R-24: overflows unseen; use try_fold with checked_mul" },
   # R-25: no conversion to or from a float
   { path = "std::time::Duration::as_secs_f64", reason = "R-25: no floating point" },

@@ -1,0 +1,17 @@
+id: no-index
+valid:
+  - 'fn f(v: &[u8]) -> Option<&u8> { v.get(0) }'
+  - 'fn f(m: &BTreeMap<u8, u8>, k: u8) -> Option<&u8> { m.get(&k) }'
+  - 'fn f(a: [u8; 2]) -> [u8; 2] { let [x, y] = a; [y, x] }'
+  - 'fn f(v: &[u8]) -> u8 { match v { [x, ..] => *x, [] => 0 } }'
+  - '#[cfg(test)] mod tests { fn f(v: &[u8]) -> u8 { v[0] } }'
+  - "#[cfg(test)]\n#[expect(clippy::x, reason = \"R-1: planted\")]\nmod tests { fn f(v: &[u8]) -> &[u8] { &v[1..] } }"
+invalid:
+  - 'fn f(v: &[u8]) -> u8 { v[0] }'
+  - 'fn f(v: &[u8]) -> &[u8] { &v[1..] }'
+  - 'fn f(v: &[u8]) -> &[u8] { &v[..=2] }'
+  - 'fn f(m: &BTreeMap<u8, u8>, k: u8) -> u8 { m[&k] }'
+  - 'fn f(v: &mut Vec<u8>) { v[0] = 1; }'
+  - 'fn f(t: &Table) -> u8 { t.rows[2].cells[1] }'
+  - '#[cfg(feature = "x")] mod m { fn f(v: &[u8]) -> u8 { v[0] } }'
+  - '#[cfg(test)] fn f(v: &[u8]) -> u8 { v[0] }'

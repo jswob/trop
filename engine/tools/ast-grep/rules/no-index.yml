@@ -1,0 +1,28 @@
+id: no-index
+language: rust
+severity: error
+message: 'R-5: no indexing or slicing (v[i], v[a..], m[&k]) outside tests, maps included: use get and handle the miss'
+note: "Every index expression on any type. clippy's indexing_slicing skips maps (BTreeMap's Index) and types with their own Index. Tests may index: crates/*/tests/, benches, and a module right after #[cfg(test)]."
+files:
+  - 'crates/**/*.rs'
+ignores:
+  - 'crates/*/tests/**'
+  - 'crates/*/benches/**'
+utils:
+  in-test-module:
+    inside:
+      kind: mod_item
+      stopBy: end
+      follows:
+        kind: attribute_item
+        regex: '^#\[cfg\(test\)\]$'
+        stopBy:
+          not:
+            any:
+              - kind: attribute_item
+              - kind: line_comment
+              - kind: block_comment
+rule:
+  kind: index_expression
+  not:
+    matches: in-test-module
