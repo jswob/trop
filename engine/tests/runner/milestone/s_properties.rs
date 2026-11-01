@@ -1,7 +1,8 @@
 //! Milestone S's property tests on the engine (`engine/tests/PROPERTIES.md`, the kernel's
 //! part; DONE gate 6). Each corpus case is run on the engine in process and held to its law,
 //! the same law `tally-runner`'s own tests prove on refcore's outputs. Red on the stub (exit
-//! 69, "not implemented"), so this target has `test = false` until milestones are gated.
+//! 69, "not implemented"), so this target has `test = false`; it gates once S is tagged
+//! (`engine/tools/milestones.toml`).
 
 #![forbid(unsafe_code)]
 

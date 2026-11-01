@@ -1,0 +1,48 @@
+konto_balance (d = 2026-10-31): (6 064.17 PLN, 6 064.17 PLN)
+  assumed: budżet gospodarstwa na 2026, przed pierwszym wyciągiem (spend_budget[groceries], spend_budget[health_care], spend_budget[other], spend_budget[transport])
+  anchor: konto 2026-09-30 end, stated 41 386.27 PLN, difference 32 097.23 PLN
+  unfulfilled: client_pay[client_a, 2026-09]
+  unfulfilled: costs_pay[2026-10]
+  unfulfilled: health_pay[2026-07]
+  unfulfilled: invest[mak, 2026-10]
+  unfulfilled: loan_instalment[laptop, 5]
+  unfulfilled: rent_pay[2026-10]
+  unfulfilled: spend[2026-10-01]
+  unfulfilled: spend[2026-10-02]
+  unfulfilled: spend[2026-10-03]
+  unfulfilled: spend[2026-10-04]
+  unfulfilled: spend[2026-10-05]
+  unfulfilled: spend[2026-10-06]
+  unfulfilled: spend[2026-10-07]
+  unfulfilled: spend[2026-10-08]
+  unfulfilled: spend[2026-10-09]
+  unfulfilled: spend[2026-10-10]
+  unfulfilled: spend[2026-10-11]
+  unfulfilled: spend[2026-10-12]
+  unfulfilled: spend[2026-10-13]
+  unfulfilled: spend[2026-10-14]
+  unfulfilled: spend[2026-10-15]
+  unfulfilled: spend[2026-10-16]
+  unfulfilled: spend[2026-10-17]
+  unfulfilled: spend[2026-10-18]
+  unfulfilled: wage[wife_acme, 2026-09]
+  left out: client_pay, 4 instances, first 2026-11-16
+  left out: health_pay, 2 instances, first 2026-11-20
+  left out: health_settle_pay, 1 instances, first 2027-05-20
+  left out: invest, 3 instances, first 2026-10-15
+  left out: loan_instalment, 4 instances, first 2026-12-05
+  left out: marek_last, 1 instances, first 2026-12-31
+  left out: pit28_refund, 1 instances, first 2027-06-14
+  left out: pit37_refund, 1 instances, first 2027-06-14
+  left out: ryczalt_pay, 2 instances, first 2026-11-20
+  left out: vat_pay, 2 instances, first 2026-11-25
+  left out: wage, 1 instances, first 2026-12-10
+  left out: zus_social_pay, 2 instances, first 2026-11-20
+  held: cost_net[2026-11] = 400.00 PLN (dg_2026), read for 2026-11
+  held: cost_vat[2026-11] = 92.00 PLN (dg_2026), read for 2026-11
+  held: fee_net[client_a, 2026-11] = 14 000.00 PLN (dg_2026), read for 2026-11
+  held: fee_net[client_b, 2026-11] = 3 000.00 PLN (dg_2026), read for 2026-11
+  held: rent = 3 200.00 PLN (home_2026), read for 2026-11-01
+  law date 2026-10-19, cut 2026-10-19
+warning: WARN-NEGATIVE konto is below zero from 2026-03-01
+warning: WARN-NEGATIVE konto is below zero from 2026-03-17

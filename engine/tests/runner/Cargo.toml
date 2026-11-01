@@ -12,10 +12,27 @@ tally-cli = { workspace = true }
 [lints]
 workspace = true
 
-# Milestone S's tests on the engine: red until S is built, so not run by default
-# (`test = false`) until a protected marker gates tests by milestone (MILESTONE-S.md,
-# "Keeping master green"). Run: cargo nextest run -p tally-runner --test s_properties
+# Each milestone's tests on the engine are test targets named for it, red until the
+# milestone is built, so not run by default (`test = false`). The marker
+# engine/tools/milestones.toml (R-77, R-84) gates a milestone's targets once its gate session
+# tags it; until then `check` runs the next milestone's as a report that never fails
+# (MILESTONE-S.md, "Keeping master green"). Run one by name, e.g.
+# cargo nextest run -p tally-runner --test s_household
+
+# S: the kernel's properties (PROPERTIES.md; MILESTONE-S.md row 3)
 [[test]]
 name = "s_properties"
 path = "milestone/s_properties.rs"
+test = false
+
+# S: X's base asks against HH4's hand-checked vectors (hh4/vectors.tsv; MILESTONE-S.md row 4)
+[[test]]
+name = "s_household"
+path = "milestone/s_household.rs"
+test = false
+
+# M0: the fixtures of the codes no check prints, LOAD-PATH first (codes/fixtures.tsv; gate 5)
+[[test]]
+name = "m0_codes"
+path = "milestone/m0_codes.rs"
 test = false

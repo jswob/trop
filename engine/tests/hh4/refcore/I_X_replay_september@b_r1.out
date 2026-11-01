@@ -1,0 +1,70 @@
+replay_september: residuals konto 2026-09
+  2026-09 balance: model 9 289.04 PLN, observed 41 386.27 PLN, difference 32 097.23 PLN
+    balance konto 2026-09-30 end (anchored): booked 9 289.04 PLN, stated 41 386.27 PLN, gap 32 097.23 PLN
+  2026-09 move spend: model -4 599.90 PLN, observed 0.00 PLN, difference 4 599.90 PLN
+    expected but missing spend[2026-09-01] on 2026-09-01: model -153.33 PLN
+    expected but missing spend[2026-09-02] on 2026-09-02: model -153.33 PLN
+    expected but missing spend[2026-09-03] on 2026-09-03: model -153.33 PLN
+    expected but missing spend[2026-09-04] on 2026-09-04: model -153.33 PLN
+    expected but missing spend[2026-09-05] on 2026-09-05: model -153.33 PLN
+    expected but missing spend[2026-09-06] on 2026-09-06: model -153.33 PLN
+    expected but missing spend[2026-09-07] on 2026-09-07: model -153.33 PLN
+    expected but missing spend[2026-09-08] on 2026-09-08: model -153.33 PLN
+    expected but missing spend[2026-09-09] on 2026-09-09: model -153.33 PLN
+    expected but missing spend[2026-09-10] on 2026-09-10: model -153.33 PLN
+    expected but missing spend[2026-09-11] on 2026-09-11: model -153.33 PLN
+    expected but missing spend[2026-09-12] on 2026-09-12: model -153.33 PLN
+    expected but missing spend[2026-09-13] on 2026-09-13: model -153.33 PLN
+    expected but missing spend[2026-09-14] on 2026-09-14: model -153.33 PLN
+    expected but missing spend[2026-09-15] on 2026-09-15: model -153.33 PLN
+    expected but missing spend[2026-09-16] on 2026-09-16: model -153.33 PLN
+    expected but missing spend[2026-09-17] on 2026-09-17: model -153.33 PLN
+    expected but missing spend[2026-09-18] on 2026-09-18: model -153.33 PLN
+    expected but missing spend[2026-09-19] on 2026-09-19: model -153.33 PLN
+    expected but missing spend[2026-09-20] on 2026-09-20: model -153.33 PLN
+    expected but missing spend[2026-09-21] on 2026-09-21: model -153.33 PLN
+    expected but missing spend[2026-09-22] on 2026-09-22: model -153.33 PLN
+    expected but missing spend[2026-09-23] on 2026-09-23: model -153.33 PLN
+    expected but missing spend[2026-09-24] on 2026-09-24: model -153.33 PLN
+    expected but missing spend[2026-09-25] on 2026-09-25: model -153.33 PLN
+    expected but missing spend[2026-09-26] on 2026-09-26: model -153.33 PLN
+    expected but missing spend[2026-09-27] on 2026-09-27: model -153.33 PLN
+    expected but missing spend[2026-09-28] on 2026-09-28: model -153.33 PLN
+    expected but missing spend[2026-09-29] on 2026-09-29: model -153.33 PLN
+    expected but missing spend[2026-09-30] on 2026-09-30: model -153.33 PLN
+  2026-09 move client_pay: model 20 910.00 PLN, observed 17 220.00 PLN, difference -3 690.00 PLN
+    expected but missing client_pay[client_b, 2026-08] on 2026-09-30: model 3 690.00 PLN
+    matched client_pay[client_a, 2026-08] on 2026-09-14: model 17 220.00 PLN, observed 17 220.00 PLN, difference 0.00 PLN, timing +0 days
+  2026-09 unexplained: model 0.00 PLN, observed -3 574.02 PLN, difference -3 574.02 PLN
+    unexplained bank[r20260919a] on 2026-09-19: observed -899.99 PLN
+    unexplained bank[r20260916a] on 2026-09-16: observed -530.80 PLN
+    unexplained bank[r20260902a] on 2026-09-02: observed -412.37 PLN
+    unexplained bank[r20260929a] on 2026-09-29: observed -401.09 PLN
+    unexplained bank[r20260923a] on 2026-09-23: observed -348.62 PLN
+    unexplained bank[r20260909a] on 2026-09-09: observed -286.15 PLN
+    unexplained bank[r20260903a] on 2026-09-03: observed -250.00 PLN
+    unexplained bank[r20260918a] on 2026-09-18: observed -180.00 PLN
+    unexplained bank[r20260911a] on 2026-09-11: observed -145.00 PLN
+    unexplained bank[r20260926a] on 2026-09-26: observed -120.00 PLN
+  2026-09 move invest: model -6 535.30 PLN, observed -6 000.00 PLN, difference 535.30 PLN
+    expected but missing invest[mak, 2026-09] on 2026-09-15: model -6 535.30 PLN
+    matched invest[ike, 2026-09] on 2026-09-15: model 0.00 PLN, observed -6 000.00 PLN, difference -6 000.00 PLN, timing +0 days
+  2026-09 move loan_instalment: model -300.00 PLN, observed 0.00 PLN, difference 300.00 PLN
+    expected but missing loan_instalment[laptop, 4] on 2026-09-05: model -300.00 PLN
+  2026-09 move costs_pay: model -492.00 PLN, observed -492.00 PLN, difference 0.00 PLN
+    matched costs_pay[2026-09] on 2026-09-07: model -492.00 PLN, observed -492.00 PLN, difference 0.00 PLN, timing +0 days
+  2026-09 move health_pay: model -830.58 PLN, observed -830.58 PLN, difference 0.00 PLN
+    matched health_pay[2026-08] on 2026-09-21: model -830.58 PLN, observed -830.58 PLN, difference 0.00 PLN, timing +0 days
+  2026-09 move marek_back: model 500.00 PLN, observed 500.00 PLN, difference 0.00 PLN
+    matched marek_back[back2] on 2026-09-15: model 500.00 PLN, observed 500.00 PLN, difference 0.00 PLN, timing +0 days
+  2026-09 move rent_pay: model -3 200.00 PLN, observed -3 200.00 PLN, difference 0.00 PLN
+    matched rent_pay[2026-09] on 2026-09-01: model -3 200.00 PLN, observed -3 200.00 PLN, difference 0.00 PLN, timing +0 days
+  2026-09 move ryczalt_pay: model -1 990.00 PLN, observed -1 990.00 PLN, difference 0.00 PLN
+    matched ryczalt_pay[2026-08] on 2026-09-21: model -1 990.00 PLN, observed -1 990.00 PLN, difference 0.00 PLN, timing +0 days
+  2026-09 move vat_pay: model -3 818.00 PLN, observed -3 818.00 PLN, difference 0.00 PLN
+    matched vat_pay[2026-08] on 2026-09-25: model -3 818.00 PLN, observed -3 818.00 PLN, difference 0.00 PLN, timing +0 days
+  2026-09 move wage: model 5 101.67 PLN, observed 5 101.67 PLN, difference 0.00 PLN
+    matched wage[wife_acme, 2026-08] on 2026-09-10: model 5 101.67 PLN, observed 5 101.67 PLN, difference 0.00 PLN, timing +0 days
+  law date 2026-10-19, cut 2026-10-19
+warning: WARN-NEGATIVE konto is below zero from 2026-03-01
+warning: WARN-NEGATIVE konto is below zero from 2026-03-17

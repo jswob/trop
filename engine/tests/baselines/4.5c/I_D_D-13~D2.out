@@ -796,18 +796,22 @@ d13_zero [hh_round = half-even]: (2039, 134 048.50 DUK, 0.00 DUK, 34082962531173
   law date 2026-09-30, cut 2026-09-30
 d13_stream: ?"a foreign program's random stream (Python's random.Random(20261001 + path)) can't be held: tally's samples are SHA-256 inversions of the same distributions (L §5.16), so path figures agree with the key within their standard errors, not digit for digit" (py_stream)
   law date 2026-09-30, cut 2026-09-30
-warning: WARN-UNREAD source d_d32 is read by nothing
-warning: WARN-UNREAD source d_d33 is read by nothing
+warning: WARN-UNREAD def fam1_file_by is read by nothing
+warning: WARN-UNREAD input avg_wage_proj is read by nothing
+warning: WARN-UNREAD input avg_wage_q4 is read by nothing
 warning: WARN-UNREAD input cc1_settle_days is read by nothing
 warning: WARN-UNREAD input cc2_fee_long is read by nothing
 warning: WARN-UNREAD input cc2_fee_short is read by nothing
 warning: WARN-UNREAD input fam1_age is read by nothing
 warning: WARN-UNREAD input fam1_amount is read by nothing
 warning: WARN-UNREAD input fam1_birth_months is read by nothing
+warning: WARN-UNREAD input flat_own is read by nothing
 warning: WARN-UNREAD input fx_mid is read by nothing
+warning: WARN-UNREAD input hr2_floor is read by nothing
 warning: WARN-UNREAD input igt3_years is read by nothing
 warning: WARN-UNREAD input igt5_pay_days is read by nothing
 warning: WARN-UNREAD input igt5_return_months is read by nothing
+warning: WARN-UNREAD input min_wage is read by nothing
 warning: WARN-UNREAD input mtg2_fee_cap is read by nothing
 warning: WARN-UNREAD input mtg2_free_months is read by nothing
 warning: WARN-UNREAD input pit10_flat_rate is read by nothing
@@ -826,17 +830,12 @@ warning: WARN-UNREAD input pit7_relief_month is read by nothing
 warning: WARN-UNREAD input pit9_age is read by nothing
 warning: WARN-UNREAD input pit9_rate is read by nothing
 warning: WARN-UNREAD input pit9_years is read by nothing
-warning: WARN-UNREAD input wrap_limit is read by nothing
 warning: WARN-UNREAD input soc1_er_pension is read by nothing
 warning: WARN-UNREAD input soc1_rate is read by nothing
-warning: WARN-UNREAD input soc_cap is read by nothing
 warning: WARN-UNREAD input soc2_deductible is read by nothing
-warning: WARN-UNREAD input avg_wage_proj is read by nothing
-warning: WARN-UNREAD input min_wage is read by nothing
 warning: WARN-UNREAD input soc3_rate is read by nothing
 warning: WARN-UNREAD input soc3_stage2_share is read by nothing
 warning: WARN-UNREAD input soc3_stage3_share is read by nothing
-warning: WARN-UNREAD input avg_wage_q4 is read by nothing
 warning: WARN-UNREAD input soc4_rate is read by nothing
 warning: WARN-UNREAD input soc4_rate_b is read by nothing
 warning: WARN-UNREAD input soc5_age_men is read by nothing
@@ -849,17 +848,18 @@ warning: WARN-UNREAD input soc8_rate_first is read by nothing
 warning: WARN-UNREAD input soc8_rate_rest is read by nothing
 warning: WARN-UNREAD input soc8_weeks is read by nothing
 warning: WARN-UNREAD input soc8_weeks_first is read by nothing
+warning: WARN-UNREAD input soc_cap is read by nothing
 warning: WARN-UNREAD input tsb1_years is read by nothing
 warning: WARN-UNREAD input tt1_rate is read by nothing
 warning: WARN-UNREAD input tt2_lookback_years is read by nothing
-warning: WARN-UNREAD input vat_rate is read by nothing
 warning: WARN-UNREAD input vat2_limit is read by nothing
 warning: WARN-UNREAD input vat5_car_share is read by nothing
 warning: WARN-UNREAD input vat5_late_months is read by nothing
+warning: WARN-UNREAD input vat_rate is read by nothing
 warning: WARN-UNREAD input wcp1_ee_basic is read by nothing
 warning: WARN-UNREAD input wcp1_ee_extra_max is read by nothing
 warning: WARN-UNREAD input wcp1_er_basic is read by nothing
 warning: WARN-UNREAD input wcp1_er_topup_max is read by nothing
-warning: WARN-UNREAD input hr2_floor is read by nothing
-warning: WARN-UNREAD input flat_own is read by nothing
-warning: WARN-UNREAD def fam1_file_by is read by nothing
+warning: WARN-UNREAD input wrap_limit is read by nothing
+warning: WARN-UNREAD source d_d32 is read by nothing
+warning: WARN-UNREAD source d_d33 is read by nothing
