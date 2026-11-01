@@ -4,7 +4,7 @@ Printed by the build role's SessionStart hook at the start and after each compac
 
 ## 1. What this is
 
-- The spec is `engine/spec/` (tally 2.1, frozen, read-only): `LANGUAGE.md` says what a construct means, `ENGINE.md` how it is computed; `PERFORMANCE.md` and `BUILD-ORDER.md` plan the build.
+- The spec is `engine/spec/` (tally 2.1.1, frozen, read-only): `LANGUAGE.md` says what a construct means, `ENGINE.md` how it is computed; `PERFORMANCE.md` and `BUILD-ORDER.md` plan the build.
 - T's tests are `engine/tests/` (read-only). They decide "done"; refcore (`engine/tools/refcore/`) is the oracle, byte for byte.
 - You write `engine/crates/**` and `engine/BUILD-LOG.md`; `engine/EXCEPTIONS.lock` only through `engine/tools/exceptions --write`; a surviving mutant's row in `engine/MUTANTS-SURVIVORS.md` (§9). Nothing else.
 
