@@ -341,11 +341,3 @@ what = "one read of a written projection, E §4.3's common case (P8-5's micro fo
 recipe = "waits: S, the projection reads (the lead writes its bench on request, R-91)"
 wall_s = 0.0000003
 blocks = "pr"
-
-# The scaffold's own bench, proving the form on the stub; not a P8 row, never a budget.
-[[row]]
-id = "stub"
-group = "M"
-what = "tally::parse on empty input, the stub's only entry point"
-recipe = "bench:stub_instructions"
-blocks = "pr"

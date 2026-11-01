@@ -24,10 +24,6 @@ sha2 = { workspace = true }
 [dev-dependencies]
 criterion = { workspace = true }
 
-[[bench]]
-name = "stub"
-harness = false
-
 # The micro rows' wall time on the reference Mac (P8-M1 to P8-M3, R-91); engine/tools/perf
 # runs each by its row's `bench:` recipe
 [[bench]]
