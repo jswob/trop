@@ -5,10 +5,6 @@
 case: wall-over-budget-after-s
 tool: run
 expect: BUDGET P8-10 wall(1w)
---- replace tools/kernel.toml
-set_at_s = false
---- with
-set_at_s = true
 --- replace tools/perf-budgets.toml
 recipe = "check:I:A:a05_ania@c05-ania"
 wall_s = 1.0

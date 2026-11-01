@@ -4,29 +4,20 @@
 case: unlisted-library-file
 tool: run
 expect: in neither the kernel nor the protected non-kernel list (R-85)
---- replace tools/kernel.toml
-set_at_s = false
---- with
-set_at_s = true
+--- module
+/// Planted: a library file outside both lists.
+pub fn planted() -> u8 {
+    1
+}
 --- run
 tools/check-rules
 
 case: mutants-config-differs
 tool: run
 expect: examine_globs differs from tools/kernel.toml's kernel (R-85)
---- replace tools/kernel.toml
-set_at_s = false
---- with
-set_at_s = true
---- replace tools/kernel.toml
-kernel = []
-protected_non_kernel = []
---- with
-kernel = ["crates/tally/src/lib.rs"]
-protected_non_kernel = ["crates/tally/src/zz_*.rs"]
 --- replace .cargo/mutants.toml
-examine_globs = ["crates/tally/src/lib.rs"]
+  "crates/tally/src/hole/**",
 --- with
-examine_globs = ["crates/tally/src/**"]
+  "crates/tally/src/hole/*.rs",
 --- run
 tools/check-rules

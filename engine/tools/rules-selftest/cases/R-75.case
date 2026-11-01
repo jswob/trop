@@ -5,11 +5,10 @@ case: uncited-kernel-function
 tool: run
 expect: fn planted: its doc comment cites no spec section, and the file is in the kernel (R-75)
 --- replace tools/kernel.toml
-kernel = []
-protected_non_kernel = []
+  "crates/tally/src/hole/**",
 --- with
-kernel = ["crates/tally/src/zz_*.rs"]
-protected_non_kernel = []
+  "crates/tally/src/hole/**",
+  "crates/tally/src/zz_*.rs",
 --- module
 /// Planted: a kernel function that names no section.
 pub fn planted() -> u8 {
