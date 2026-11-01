@@ -133,15 +133,13 @@ jobs:
           for bench in tools/gungraun/benches/*.rs; do
             name="$(basename "$bench" .rs)"
             # shellcheck disable=SC2046 # the limits are zero or one argument
-            cargo bench --manifest-path tools/gungraun/Cargo.toml --bench "$name" -- $(tools/perf limits "$name")
+            cargo bench --locked --manifest-path tools/gungraun/Cargo.toml --bench "$name" -- $(tools/perf limits "$name")
           done
       - if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: instructions
-          path: |
-            engine/tools/gungraun/Cargo.lock
-            engine/tools/gungraun/target/gungraun/
+          path: engine/tools/gungraun/target/gungraun/
           retention-days: 90
 
   # --- nightly and on demand ---

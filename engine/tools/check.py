@@ -116,6 +116,10 @@ def steps(mode):
     return fast + [
         ("doc", ["cargo", "doc", "--workspace", "--no-deps", "--all-features", "--locked"], {"RUSTDOCFLAGS": "-D warnings"}),
         ("build", ["cargo", "build", "--workspace", "--all-targets", "--locked"], {}),
+        # the gungraun instruments compile against today's library, so a bench can't break
+        # unseen; compile only, no Valgrind (they run on Linux CI)
+        ("gungraun-build", ["cargo", "check", "--locked", "--manifest-path", "tools/gungraun/Cargo.toml",
+                            "--benches"], {}),
         ("test-dev", ["cargo", "nextest", "run", "--workspace", "--all-features", "--locked", "--profile", "ci"], {}),
         ("test-release", ["cargo", "nextest", "run", "--workspace", "--all-features", "--locked", "--profile", "ci",
                           "--cargo-profile", "release-test"], {}),

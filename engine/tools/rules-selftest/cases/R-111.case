@@ -13,18 +13,33 @@ pub fn planted() -> u8 {
 tools/exceptions --check
 
 case: cli-over-budget
+# Four planted exceptions put the CLI over its budget of 3 from any count it may hold
+# (0 to 3), so the case never names the live count (issue #28). "area cli has" is
+# printed only for the CLI over its budget; the second line pins that budget at 3,
+# which no other area has.
 tool: run
-expect: area cli has 4 exceptions, over its budget of 3 (R-111)
+expect: area cli has
+expect: exceptions, over its budget of 3 (R-111)
 --- module tally-cli
 /// Planted.
 #[expect(clippy::needless_return, reason = "R-66: a planted exception with a proper reason")]
 pub fn planted() -> u8 {
     return 1;
 }
-/// Planted too: the CLI holds two since its stdin read went (audit C1).
+/// Planted, the second.
 #[expect(clippy::needless_return, reason = "R-66: a second planted exception with a proper reason")]
-pub fn planted_too() -> u8 {
+pub fn planted_two() -> u8 {
     return 2;
+}
+/// Planted, the third.
+#[expect(clippy::needless_return, reason = "R-66: a third planted exception with a proper reason")]
+pub fn planted_three() -> u8 {
+    return 3;
+}
+/// Planted, the fourth.
+#[expect(clippy::needless_return, reason = "R-66: a fourth planted exception with a proper reason")]
+pub fn planted_four() -> u8 {
+    return 4;
 }
 --- run
 tools/exceptions --check

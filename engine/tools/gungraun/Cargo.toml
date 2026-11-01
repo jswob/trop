@@ -3,7 +3,8 @@
 # compiles gungraun (session 8c, rule 3). A protected instrument: the lead writes the benches
 # on the builder's request (R-91), and their hard limits come from tools/perf-budgets.toml
 # through `engine/tools/perf limits`, on the command line, so a bench file can't loosen
-# them. CI resolves the lock on its first run and uploads it; the lead commits it at S.
+# them. Its lock is committed (seeded from the engine's, issue #26), so `check full` compiles
+# the benches `--locked` on any machine, without Valgrind (`gungraun-build`).
 
 [package]
 name = "tally-gungraun"
@@ -17,8 +18,21 @@ tally = { path = "../../crates/tally" }
 [dev-dependencies]
 gungraun = "=0.20.0"
 
+# The micro rows' instruction counts (P8-M1 to P8-M4), each limited by its row
 [[bench]]
-name = "stub_instructions"
+name = "p8_m1"
+harness = false
+
+[[bench]]
+name = "p8_m2"
+harness = false
+
+[[bench]]
+name = "p8_m3"
+harness = false
+
+[[bench]]
+name = "p8_m4"
 harness = false
 
 # its own workspace, apart from the engine's

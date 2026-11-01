@@ -74,7 +74,7 @@ EDITS = [
     ("engine/tools/ast-grep/rules/no-float.yml", RULES),
     ("engine/fuzz/fuzz_targets/parse.rs", RULES),
     ("engine/fuzz/regressions/parse/crash-1", RULES),
-    ("engine/crates/tally/benches/stub.rs", RULES),
+    ("engine/crates/tally/benches/p8_m1.rs", RULES),
     (".github/workflows/engine.yml", RULES),
     (".claude/settings.json", RULES),
     # the builder's instructions (F-23)
@@ -821,7 +821,7 @@ def setup(root):
         "engine/spec/DONE.md": "the contract\n",
         "engine/tests/x": "a test\n",
         "engine/crates/tally/src/lib.rs": "//! stub\n",
-        "engine/crates/tally/benches/stub.rs": "//! bench\n",
+        "engine/crates/tally/benches/p8_m1.rs": "//! bench\n",
         "engine/BUILD-LOG.md": "# Build log\n",
         ".claude/settings.json": "{}\n",
         # a cargo workspace like the engine's, for the cargo writers (F-4)

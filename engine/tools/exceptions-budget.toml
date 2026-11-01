@@ -24,14 +24,13 @@ name = "kernel"
 budget = 20
 globs = "kernel.toml"
 
-# The lexer and the parser: the lead names their files at S, with the kernel's. Until
-# then they are the rest of the library, whose budget is also 0.
+# The lexer and the parser, named at S with the kernel's files (R-85)
 [[area]]
 name = "lexer-parser"
 budget = 0
-globs = []
+globs = ["crates/tally/src/syntax/**"]
 
-# The one sanctioned thread module (R-42), named when the builder writes it
+# The one sanctioned thread module (R-42), named when the builder writes it (none at S)
 [[area]]
 name = "thread"
 budget = 1

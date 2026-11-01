@@ -2,11 +2,12 @@ id: disallowed-exception-outside-sanctioned-file
 language: rust
 severity: error
 message: 'R-108: exceptions to the ban lists (I/O, environment, threads, big-integer types) live only in the files the lead sanctions'
-note: 'Sanctioned at the scaffold: crates/tally-cli/src/main.rs. The lead adds the thread module and the kernel files at S.'
+note: 'Sanctioned: crates/tally-cli/src/main.rs (the scaffold) and crates/tally/src/num/big.rs, the one file that names the big-integer types (S, R-29). The lead adds the thread module when the builder writes it.'
 files:
   - 'crates/**/*.rs'
 ignores:
   - 'crates/tally-cli/src/main.rs'
+  - 'crates/tally/src/num/big.rs'
 rule:
   any:
     - kind: attribute_item
