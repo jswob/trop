@@ -1,12 +1,30 @@
 //! The Tally engine: a reality goes in as bytes, a result comes out (ENGINE §1).
-//! Spec: none, a stub.
-//! Twin: none, a stub.
-//! Invariants: none yet; every entry point answers `NotImplemented`.
+//! Spec: E §1 (the run function); the modules name their own sections.
+//! Twin: engine/tools/refcore/cli.py.
+//! Invariants: the library reads no clock, environment or file (R-38, R-39); `parse` still
+//! answers `NotImplemented` until the parser lands (milestone S, group G3).
 //!
-//! A stub. Every entry point answers [`NotImplemented`], and the build session
-//! replaces it. Nothing here is a design choice the spec owns.
+//! Milestone S is built in groups (`engine/BUILD-LOG.md`, the S plan). So far: the exact
+//! numbers, [`num`].
 
 #![forbid(unsafe_code)]
+
+/// Exact numbers (L §7.1, §7.2): `Num`, a reduced fraction held small or big; `Money`, a
+/// whole number of a currency's minor units; rounding by the seven modes. The module's
+/// code is its files under `num/`, the kernel's (gate 8); this block only names them.
+pub mod num {
+    mod big;
+    mod gcd;
+    mod money;
+    mod rational;
+    mod round;
+    mod small;
+    mod text;
+
+    pub use money::{Currency, Money};
+    pub use rational::{Num, NumError};
+    pub use round::Mode;
+}
 
 #[cfg(all(feature = "fault-injection", not(debug_assertions)))]
 compile_error!("the fault-injection feature exists only in builds with debug assertions (R-51)");
