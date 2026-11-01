@@ -11,7 +11,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use crate::Days;
 use crate::base::{Code, Refusal, Run, Warn};
-use crate::book::Adjustment;
+use crate::book::{Adjustment, Coverage, Linked, Obs};
 use crate::model::{Domain, KeyVal, Node, NodeKind, Reality, Value};
 use crate::num::NumError;
 use crate::syntax::{Ask, Stop};
@@ -255,6 +255,25 @@ pub struct Engine {
     /// Whether the ask's line states `with uncertain`, which every projection it reaches
     /// takes (L §5.14.1, §5.18).
     pub(crate) uncertain: bool,
+    /// The observations each cut sees (L §5.19).
+    pub(crate) observed: BTreeMap<Day, Vec<Obs>>,
+    /// The versions each cut sees that cover each place (L §5.19 Coverage).
+    pub(crate) covered: BTreeMap<Day, Coverage>,
+    /// Each instance's links, judged per cut (L §5.19 Links).
+    pub(crate) links: BTreeMap<(Day, String), Linked>,
+    /// The links being judged (`RUN-CYCLE`).
+    pub(crate) link_active: BTreeSet<(Day, String)>,
+    /// The refusals of observations' records, per cut, by observation (L §5.19 Links).
+    pub(crate) obs_errs: BTreeMap<(Day, String), Refusal>,
+    /// The adjustments a settlement move's binding over adjustments is held to while its
+    /// candidates are made (refcore's `_adj_restrict`, E §5 step 5).
+    pub(crate) adj_restrict: Option<Vec<Adjustment>>,
+    /// Each plan move's adjustments per cut with their settlements linked (E §5 step 5).
+    pub(crate) settled: BTreeMap<(String, Day), Vec<Adjustment>>,
+    /// Every adjustment per cut, unsettled: what a binding over adjustments ranges over (E §5).
+    pub(crate) unsettled: BTreeMap<Day, Vec<Adjustment>>,
+    /// The cuts whose adjustments are being measured (RUN-CYCLE).
+    pub(crate) adjust_all_active: BTreeSet<Day>,
 }
 
 impl Engine {
@@ -282,6 +301,15 @@ impl Engine {
             proj_walks: BTreeMap::new(),
             holder: None,
             uncertain: false,
+            observed: BTreeMap::new(),
+            covered: BTreeMap::new(),
+            links: BTreeMap::new(),
+            link_active: BTreeSet::new(),
+            obs_errs: BTreeMap::new(),
+            adj_restrict: None,
+            settled: BTreeMap::new(),
+            unsettled: BTreeMap::new(),
+            adjust_all_active: BTreeSet::new(),
         }
     }
 

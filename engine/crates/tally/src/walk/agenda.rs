@@ -3,8 +3,11 @@
 //! steps; a hole movement; a decision's day), §4.3 (a projection's walk: the movements dated t
 //! through d, those that depend on its holder left out and counted, no reading, observation or
 //! adjustment; read at a decision's point, only the decisions after it that day), §5 step 5
-//! (`HOLE-CHANGED` from an adjustment's day); L §5.19 (readings: an `opening` at `t start`
-//! anchors with t before K or t = S); P §2.2 (the event-driven walk steps only days that hold
+//! (`HOLE-CHANGED` from the day of an adjustment nothing settles); §6.1 (each observed leg on
+//! its day before K, in the day's first batch; `WARN-LEGS`); L §5.19 (readings: an `opening`
+//! at `t start` anchors with t before K or t = S, a `stated` one before K anchors or pads;
+//! the modelled past: an instance on a covered day before K, or one an observation fulfils, is
+//! not booked, and one nothing fulfils marks its places `open`); P §2.2 (the event-driven walk steps only days that hold
 //! an act, N-1 to N-14; the oracle steps every day).
 //! Twin: engine/tools/refcore/walk.py (`Walk.prepare`, `sched_leg`, `sched_hole`,
 //! `sched_leg_hole`, `sched_refused`, `sched_adj`, `note_leftout`, `count_leftout`,
@@ -18,14 +21,14 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use super::plan::{Amount, Dated, End, Exists, Inst, Status};
 use super::point::{At, Step};
-use super::state::{Progress, Walk};
+use super::state::{Progress, Walk, WalkObs};
 use crate::Days;
 use crate::base::Refusal;
+use crate::book::Seen;
 use crate::eval::{Collected, Engine, Entry};
 use crate::hole::Hole;
-use crate::model::{Reality, RowInstant, Ty, Unit};
+use crate::model::Reality;
 use crate::num::Num;
-use crate::read::row_known;
 use crate::syntax::{Edge, Stop};
 use crate::time::Day;
 
@@ -42,7 +45,7 @@ pub enum Mv {
 /// A reading the cut sees, as the walk applies it (refcore's `readings` entries). L §5.19.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Reading {
-    /// The input: `opening`.
+    /// The input: `opening` or `stated`.
     pub input: String,
     /// The place.
     pub place: String,
@@ -52,6 +55,10 @@ pub struct Reading {
     pub value: Result<Num, Hole>,
     /// What reading it met: its version, its `assumed`.
     pub coll: Collected,
+    /// The version that states it.
+    pub version: String,
+    /// Its instant as text, `2026-09-30 end` (refcore's `instant_text`).
+    pub instant: String,
 }
 
 /// One act of the walk on a day (refcore's scheduled acts).
@@ -75,6 +82,12 @@ pub enum Act {
     GlobalBad(Refusal),
     /// The decisions of a move due that day (E §4.2 step 3).
     Decide(String, Day),
+    /// An observed leg, by the observation's place in the walk's list and the leg's (E §4.2
+    /// step 1).
+    Obs(usize, usize),
+    /// A register entry at a place, with what its movement met: a modelled-past instance
+    /// nothing fulfils is `open` (L §5.19).
+    Mark(String, String, Entry, Collected),
 }
 
 impl Walk {
@@ -127,15 +140,32 @@ impl Engine {
     ///
     /// # Errors
     ///
-    /// The refusals the plan pass meets; `NotBuilt` for observations, coverage and `stated`
-    /// readings (G8) and for a written order with a plan.
+    /// The refusals the plan pass meets; `NotBuilt` for a reading after a movement or at a
+    /// day with no edge, and for a written order with a plan.
     pub(crate) fn plan_walk(&mut self, m: &Reality, id: usize) -> Result<(), Stop> {
         let (cut, main) = {
             let walk = self.walk(id)?;
             (walk.cut, walk.proj.is_none())
         };
         not_yet(m)?;
-        let readings = if main { readings(m, cut)? } else { Vec::new() };
+        let readings = if main {
+            crate::book::readings(m, cut)?
+        } else {
+            Vec::new()
+        };
+        let mut observed = Vec::new();
+        let mut legs_warned = Vec::new();
+        if main {
+            legs_warned = self.disagreeing_links(m, cut)?;
+            for obs in self.observations(m, cut)?.to_vec() {
+                let decision_day = self.decision_fulfilled(m, &obs, cut)?;
+                observed.push(WalkObs {
+                    obs,
+                    err: None,
+                    decision_day,
+                });
+            }
+        }
         let mut plans = Vec::new();
         let mut decisions = Vec::new();
         for mv in sorted_moves(m) {
@@ -147,17 +177,24 @@ impl Engine {
             }
         }
         plans.sort_by(|a, b| a.order.cmp(&b.order));
-        let mut adjustments = Vec::new();
-        for mv in sorted_moves(m)
-            .into_iter()
-            .filter(|mv| main && !mv.decision)
-        {
-            adjustments.extend(self.adjust_move(m, mv, cut)?);
+        let adjustments = if main {
+            self.all_adjustments(m, cut)?
+        } else {
+            Vec::new()
+        };
+        for wo in &mut observed {
+            wo.err = self.obs_err(m, &wo.obs, cut)?;
         }
         let walk = self.walk_mut(id)?;
         let texts: BTreeSet<String> = plans.iter().map(|i| i.order.text()).collect();
         walk.order_texts = texts.into_iter().collect();
+        for w in legs_warned {
+            if !walk.warnings.contains(&w) {
+                walk.warnings.push(w);
+            }
+        }
         schedule_readings(walk, &readings)?;
+        schedule_observations(walk, observed)?;
         for inst in plans {
             if left_out_of(walk, &inst.move_id) {
                 if inst.status != Status::None {
@@ -227,17 +264,8 @@ fn after_the_point(walk: &mut Walk) {
     }
 }
 
-/// What S doesn't walk yet: observations, coverage and `stated` readings (G8). E §4.1.
+/// What S doesn't walk: a written order with a plan. E §4.1.
 fn not_yet(m: &Reality) -> Result<(), Stop> {
-    if m.inputs.entries().any(|(_, i)| !i.observations.is_empty()) {
-        return Err(Stop::NotBuilt("observations in the walk (G8)"));
-    }
-    if m.versions.entries().any(|(_, v)| !v.covers.is_empty()) {
-        return Err(Stop::NotBuilt("coverage in the walk (G8)"));
-    }
-    if m.inputs.get("stated").is_some_and(|i| !i.rows.is_empty()) {
-        return Err(Stop::NotBuilt("stated readings in the walk (G8)"));
-    }
     if m.graph
         .written_order
         .iter()
@@ -261,101 +289,10 @@ fn ranked3(mut decisions: Vec<(String, u32, Vec<Inst>)>) -> Vec<(String, u32, Ve
     decisions
 }
 
-/// A reading the cut sees: its day, its edge, its place, and what it states (none for a row
-/// whose value is `none`).
-type Seen = (Day, Edge, String, Option<Reading>);
-
-/// The readings the cut sees: each `opening` row known by the cut, a restated one replaced
-/// by the latest, sorted by place, instant and input (refcore's `readings`). L §5.19, §4.6.
-fn readings(m: &Reality, cut: Day) -> Result<Vec<Seen>, Stop> {
-    let Some(input) = m.inputs.get("opening") else {
-        return Ok(Vec::new());
-    };
-    let mut keep: BTreeMap<(String, Day, bool), (Day, &crate::model::Row)> = BTreeMap::new();
-    for row in &input.rows {
-        let known = row_known(m, row)?;
-        if known > cut {
-            continue;
-        }
-        let Some(crate::model::Pat::Key(crate::model::KeyVal::Thing(place))) = row.pattern.first()
-        else {
-            return Err(Stop::NotBuilt("a reading of a place not named"));
-        };
-        let Some(RowInstant::At(day, Some(edge))) = &row.instant else {
-            return Err(Stop::NotBuilt(
-                "a reading at an instant other than a day's start or end",
-            ));
-        };
-        let key = (place.clone(), *day, *edge == Edge::End);
-        if keep.get(&key).is_none_or(|(k, _)| known > *k) {
-            keep.insert(key, (known, row));
-        }
-    }
-    let mut out = Vec::new();
-    for ((place, day, end), (_, row)) in keep {
-        let reading = reading_of(m, &place, row)?;
-        out.push((
-            day,
-            if end { Edge::End } else { Edge::Start },
-            place,
-            reading,
-        ));
-    }
-    Ok(out)
-}
-
-/// Each place's first reading day among the readings cut `cut` sees, for `HOLE-ANCHOR`
-/// (refcore's `anchor_question`, its days). L §8.1.
-pub(super) fn first_readings(m: &Reality, cut: Day) -> Result<BTreeMap<String, Day>, Stop> {
-    let mut out: BTreeMap<String, Day> = BTreeMap::new();
-    for (day, _, place, _) in readings(m, cut)? {
-        let first = out.entry(place).or_insert(day);
-        *first = (*first).min(day);
-    }
-    Ok(out)
-}
-
-/// A reading's row as the walk applies it: its value in the place's unit, a stated hole, or
-/// none for a row whose value is `none` (refcore's `apply_reading`, its value). L §5.19.
-fn reading_of(m: &Reality, place: &str, row: &crate::model::Row) -> Result<Option<Reading>, Stop> {
-    let unit = m
-        .things
-        .get(place)
-        .and_then(|t| m.place_unit(t))
-        .ok_or(Stop::NotBuilt("a reading of a place of unit any"))?;
-    let ty = if m.currencies.contains_key(&unit) {
-        Ty::Money(unit.clone())
-    } else {
-        let u = Unit::make(vec![(unit.clone(), 1)]).map_err(crate::eval::num_stop)?;
-        Ty::Num(u, crate::model::Shown::Plain)
-    };
-    let mut coll = Collected::default();
-    coll.versions.insert(row.version.clone());
-    if let Some(reason) = &row.assumed {
-        coll.entries.insert(Entry {
-            word: "assumed",
-            text: reason.clone(),
-            figure: String::new(),
-        });
-    }
-    let figure = format!("opening[{place}]");
-    let value = match crate::eval::convert_row(m, &row.value, &ty)? {
-        Err(text) => Err(Hole::asked(&text, &figure)),
-        Ok(crate::model::Value::None) => return Ok(None),
-        Ok(v) => Ok(super::plan::quantity(m, &v)?.0),
-    };
-    Ok(Some(Reading {
-        input: "opening".to_owned(),
-        place: place.to_owned(),
-        unit,
-        value,
-        coll,
-    }))
-}
-
 /// Puts each reading on its day: an opening at the run's start, or before it and before the
 /// cut, at the start of the walk; one at another start or end only before the cut (refcore's
-/// `prepare`, its readings). E §4.2 step 0, L §5.19.
+/// `prepare`, its readings; a `stated` one at or after the cut changes nothing, so it isn't
+/// put on the walk). E §4.2 step 0, L §5.19.
 fn schedule_readings(walk: &mut Walk, readings: &[Seen]) -> Result<(), Stop> {
     let (start, end, cut) = (walk.start, walk.end, walk.cut);
     for (rank, (day, edge, place, reading)) in readings.iter().enumerate() {
@@ -365,14 +302,15 @@ fn schedule_readings(walk: &mut Walk, readings: &[Seen]) -> Result<(), Stop> {
             continue;
         };
         let rank = u32::try_from(rank).map_err(|_| super::plan::invariant("a reading's rank"))?;
+        let opening = reading.input == "opening";
         if *day < start || *day > end {
-            if *day < start && *day < cut {
+            if opening && *day < start && *day < cut {
                 walk.at(At::before(start), Act::Read(Box::new(reading.clone())));
             }
             continue;
         }
         let at_start = *edge == Edge::Start;
-        if !(*day == start && at_start) && *day >= cut {
+        if !(opening && *day == start && at_start) && *day >= cut {
             continue;
         }
         let step = if at_start { Step::Start } else { Step::End };
@@ -386,8 +324,81 @@ fn schedule_readings(walk: &mut Walk, readings: &[Seen]) -> Result<(), Stop> {
     Ok(())
 }
 
+/// Puts each observed leg dated before the cut on its day, in the day's first batch, ordered
+/// by `<id> <leg>` (refcore's `prepare`, its observations; one dated at or after the cut books
+/// nothing, so it isn't put on the walk). E §4.2 step 1, L §5.19.
+fn schedule_observations(walk: &mut Walk, observed: Vec<WalkObs>) -> Result<(), Stop> {
+    let mut texts: BTreeSet<String> = BTreeSet::new();
+    for wo in &observed {
+        texts.extend(wo.obs.legs.iter().map(|lg| leg_text(&wo.obs.id, &lg.name)));
+    }
+    walk.obs_texts = texts.into_iter().collect();
+    for wo in observed {
+        let ix = walk.obs.len();
+        for (li, lg) in wo.obs.legs.iter().enumerate() {
+            let Some(d) = lg.day.day() else {
+                continue;
+            };
+            if d < walk.start || d > walk.end || d >= walk.cut {
+                continue;
+            }
+            let rank = walk.obs_rank(&leg_text(&wo.obs.id, &lg.name))?;
+            let at = At {
+                rank,
+                ..At::of(d, Step::Observations)
+            };
+            walk.at(at, Act::Obs(ix, li));
+        }
+        walk.obs.push(wo);
+    }
+    Ok(())
+}
+
+/// An observed leg's text among a day's observations, `<id> <leg>` (refcore's walk key).
+/// E §4.2 step 1.
+fn leg_text(id: &str, leg: &str) -> String {
+    format!("{id} {leg}")
+}
+
+/// A modelled-past instance: kept for the ledger, and one nothing fulfils marks its places
+/// `open` from its legs' days (refcore's `prepare`, its modelled plans). E §4.1 step 3, L §5.19.
+fn schedule_modelled(walk: &mut Walk, inst: Inst) -> Result<(), Stop> {
+    if inst.obs.is_empty() {
+        let rank = walk.text_rank(&inst.id)?;
+        for lg in &inst.legs {
+            let Dated::Day(d) = lg.day else {
+                continue;
+            };
+            if d < walk.start {
+                continue;
+            }
+            let unit = lg
+                .unit
+                .clone()
+                .unwrap_or_else(|| super::state::ALL.to_owned());
+            for place in [&lg.from, &lg.to].into_iter().filter_map(End::place) {
+                let entry = Entry {
+                    word: "open",
+                    text: inst.id.clone(),
+                    figure: String::new(),
+                };
+                let act = Act::Mark(place.to_owned(), unit.clone(), entry, inst.coll.clone());
+                walk.at(
+                    At {
+                        rank,
+                        ..At::of(d, Step::Plans)
+                    },
+                    act,
+                );
+            }
+        }
+    }
+    walk.modelled.push(inst);
+    Ok(())
+}
+
 /// Puts a plan instance's legs on their days by its status: left out, uncertain, refused, a
-/// hole, or booked (refcore's `prepare`, its plans). E §4.1 step 3, §4.2.
+/// hole, modelled past, or booked (refcore's `prepare`, its plans). E §4.1 step 3, §4.2.
 fn schedule_plan(walk: &mut Walk, inst: Inst) -> Result<(), Stop> {
     let rank = if inst.status == Status::Refused {
         walk.text_rank(&inst.move_id)?
@@ -396,6 +407,7 @@ fn schedule_plan(walk: &mut Walk, inst: Inst) -> Result<(), Stop> {
     };
     match inst.status {
         Status::LeftOut => return note_left_out(walk, &inst),
+        Status::Modelled => return schedule_modelled(walk, inst),
         Status::None | Status::Decision | Status::Open => return Ok(()),
         Status::Uncertain => {
             walk.uncertain.push(inst);
@@ -472,7 +484,12 @@ fn schedule_plan(walk: &mut Walk, inst: Inst) -> Result<(), Stop> {
                 }
             }
         }
-        Status::LeftOut | Status::None | Status::Decision | Status::Open | Status::Uncertain => {}
+        Status::LeftOut
+        | Status::None
+        | Status::Decision
+        | Status::Open
+        | Status::Uncertain
+        | Status::Modelled => {}
     }
     Ok(())
 }
@@ -548,7 +565,7 @@ fn schedule_adjustment(
         .unit
         .clone()
         .unwrap_or_else(|| super::state::ALL.to_owned());
-    for place in &places {
+    for place in places.iter().filter(|_| adj.settled.is_empty()) {
         let act = Act::Changed(
             (*place).to_owned(),
             unit.clone(),

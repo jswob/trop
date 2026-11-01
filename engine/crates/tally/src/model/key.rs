@@ -26,6 +26,8 @@ pub enum KeyVal {
     Period(Period),
     /// A key of an integer index.
     Int(i64),
+    /// A movement, the key of a binding over an event kind (L §5.14.3).
+    Mv(Box<super::value::MvRef>),
 }
 
 impl KeyVal {
@@ -37,6 +39,7 @@ impl KeyVal {
             KeyVal::Day(day) => day.text(),
             KeyVal::Period(period) => period.label(),
             KeyVal::Int(n) => n.to_string(),
+            KeyVal::Mv(mv) => mv.id.clone(),
         }
     }
 
@@ -46,7 +49,7 @@ impl KeyVal {
         match self {
             KeyVal::Day(day) => Some(*day),
             KeyVal::Period(period) => Some(period.start()),
-            KeyVal::Key { .. } | KeyVal::Thing(_) | KeyVal::Int(_) => None,
+            KeyVal::Key { .. } | KeyVal::Thing(_) | KeyVal::Int(_) | KeyVal::Mv(_) => None,
         }
     }
 }

@@ -120,6 +120,9 @@ pub enum Status {
     Decision,
     /// Of an uncertain kind, no observation fulfilling it.
     Uncertain,
+    /// The modelled past: fulfilled by an observation the cut sees, or on a covered day
+    /// before the cut; kept for the ledger, never booked (E §4.1 step 3, §6.2).
+    Modelled,
     /// Booked, before the cut.
     Past,
     /// Booked, from the cut on.
@@ -165,6 +168,15 @@ impl PartialOrd for Order {
 }
 
 impl Order {
+    /// The order as a binding's members sort it on their day: the order's tuple written past
+    /// its day, `<stratum>, '<move>', <keys>)` (refcore's `str(order)`). L §5.19 Bindings.
+    #[must_use]
+    pub fn member_text(&self) -> String {
+        let text = self.text();
+        let keys = text.split_once('|').map_or("()", |(_, k)| k);
+        format!("{}, {}, {keys})", self.stratum, quoted(&self.move_id))
+    }
+
     /// The movement's text among a day's plans, `<move>|<keys>`, the keys' places written as
     /// a tuple (refcore's `osort`, the walk key's text). E §4.1, §4.2.
     #[must_use]
@@ -186,7 +198,7 @@ impl Order {
 /// A text quoted as the walk key's tuple writes it: in single quotes, double ones when it
 /// holds a single quote and no double one, with backslashes, line ends, tabs and the quote
 /// escaped. E §4.1.
-fn quoted(s: &str) -> String {
+pub(crate) fn quoted(s: &str) -> String {
     let quote = if s.contains('\'') && !s.contains('"') {
         '"'
     } else {
@@ -242,6 +254,12 @@ pub struct Inst {
     pub coll: Collected,
     /// Its status at the timeline's cut.
     pub status: Status,
+    /// The observations that fulfil it at the timeline's cut, by id (L §5.19).
+    pub obs: Vec<String>,
+    /// What its `fulfils` names: an adjustment it settles, or none (L §5.14.3).
+    pub fulfils: Option<Value>,
+    /// What reading its day met (refcore's `day_coll`): what a read of its `day` brings.
+    pub day_coll: Collected,
     /// Its place in the movement order.
     pub order: Order,
 }
@@ -270,6 +288,9 @@ impl Inst {
             err: None,
             coll: Collected::default(),
             status: Status::Open,
+            obs: Vec::new(),
+            fulfils: None,
+            day_coll: Collected::default(),
             order: Order {
                 day: None,
                 stratum: mv.stratum,
@@ -317,6 +338,8 @@ pub(super) struct Body {
     pub(super) attrs: Vec<(String, Value)>,
     /// The period it is for.
     pub(super) for_period: Option<Value>,
+    /// What its `fulfils` names.
+    pub(super) fulfils: Option<Value>,
 }
 
 impl Engine {
@@ -348,16 +371,66 @@ impl Engine {
         let made = self.make_instances(m, mv, cut);
         self.plan_active.remove(&key);
         let mut out = made?;
+        // refcore computes a status when it is first read, after the instances are kept
+        self.plans.insert(key.clone(), out.clone());
         for inst in &mut out {
-            inst.status = status(m, mv, inst, cut);
+            inst.status = self.status(m, mv, inst, cut)?;
         }
         self.plans.insert(key, out.clone());
         Ok(out)
     }
 
+    /// An instance's status at cut `cut`, the observations that fulfil it judged first
+    /// (refcore's `status`). E §4.1 step 3, L §5.19.
+    fn status(
+        &mut self,
+        m: &Reality,
+        mv: &MoveInfo,
+        inst: &mut Inst,
+        cut: Day,
+    ) -> Result<Status, Stop> {
+        inst.obs = self.obs_links_for(m, &inst.id, cut)?;
+        let day = inst.day.as_ref().and_then(Dated::day);
+        if inst.exists == Exists::No {
+            return Ok(Status::None);
+        }
+        if let Some(d) = day
+            && (d < m.start || d > m.end)
+        {
+            return Ok(Status::LeftOut);
+        }
+        if inst.err.is_some() {
+            return Ok(Status::Refused);
+        }
+        if !inst.obs.is_empty() && !mv.decision {
+            return Ok(Status::Modelled);
+        }
+        let Some(d) = day else {
+            return Ok(Status::Hole);
+        };
+        if matches!(inst.exists, Exists::Unknown(_)) {
+            return Ok(Status::Hole);
+        }
+        if mv.decision {
+            return Ok(Status::Decision);
+        }
+        if kind_certainty(m, &mv.kind) == Some(Certainty::Uncertain) && inst.obs.is_empty() {
+            return Ok(Status::Uncertain);
+        }
+        if d < cut && self.touches_covered(m, inst, cut) {
+            return Ok(Status::Modelled);
+        }
+        Ok(if d < cut { Status::Past } else { Status::Plan })
+    }
+
     /// Every instance of a move at its binding tuples, sorted (refcore's `insts_of_tuples`).
     /// E §4.1 steps 1–2.
-    fn make_instances(&mut self, m: &Reality, mv: &MoveInfo, cut: Day) -> Result<Vec<Inst>, Stop> {
+    pub(crate) fn make_instances(
+        &mut self,
+        m: &Reality,
+        mv: &MoveInfo,
+        cut: Day,
+    ) -> Result<Vec<Inst>, Stop> {
         let tctx = Ctx::new(None, cut);
         let mut out = Vec::new();
         for tuple in self.move_tuples(m, mv, tctx)? {
@@ -462,6 +535,104 @@ impl Engine {
         Ok(Law::Day(date_of(&v)?))
     }
 
+    /// The binding tuple of `mv` at `keys` under cut `cut`, its `when` read at the cut: none
+    /// when no tuple has those keys or its `when` is false; a `when` that is a hole or refused
+    /// is taken as existing, its link judged where its instance is (refcore's `link_tuple`).
+    /// L §5.19 Links, E §4.1 step 2.
+    ///
+    /// # Errors
+    ///
+    /// The refusals the binding tuples meet; a load refusal met at run.
+    pub(crate) fn link_tuple(
+        &mut self,
+        m: &Reality,
+        mv: &MoveInfo,
+        keys: &[KeyVal],
+        cut: Day,
+    ) -> Result<Option<Env>, Stop> {
+        let tctx = Ctx::new(None, cut);
+        for tuple in self.move_tuples(m, mv, tctx)? {
+            if tuple.keys != keys {
+                continue;
+            }
+            if tuple.exists == Exists::No {
+                return Ok(None);
+            }
+            if let (Some(when), Exists::Yes, None) =
+                (&mv.decl.when, &tuple.exists, &tuple.domain_hole)
+            {
+                match self.when_at_cut(m, mv, when, &tuple.env, tctx) {
+                    Ok(false) => return Ok(None),
+                    Ok(true) => {}
+                    Err(Stop::Refused(r)) if !matches!(r.code(), Code::Load(_)) => {}
+                    Err(stop) => return Err(stop),
+                }
+            }
+            return Ok(Some(tuple.env));
+        }
+        Ok(None)
+    }
+
+    /// Whether a link's instance may exist by its `when` at the ask's cut: false only for a
+    /// `when` that is false (refcore's `link_tuple`, its `when`). L §5.19.
+    fn when_at_cut(
+        &mut self,
+        m: &Reality,
+        mv: &MoveInfo,
+        when: &crate::syntax::Expr,
+        env: &Env,
+        tctx: Ctx,
+    ) -> Result<bool, Stop> {
+        let law = match self.move_law(m, mv, env, tctx)? {
+            Law::Hole(_) => return Ok(true),
+            Law::Day(d) => Some(d),
+            Law::None => None,
+        };
+        let w = self.ev(m, when, env, tctx.at_law(law))?;
+        Ok(w != Value::Bool(false))
+    }
+
+    /// The places the legs of `mv`'s instance at `env` give at the cut, no amount read; none
+    /// where a place can't be read here, so the link is judged by its keys alone (refcore's
+    /// `link_places`). L §5.19 Links.
+    ///
+    /// # Errors
+    ///
+    /// A load refusal met at run.
+    pub(crate) fn link_places(
+        &mut self,
+        m: &Reality,
+        mv: &MoveInfo,
+        env: &Env,
+        cut: Day,
+    ) -> Result<std::collections::BTreeSet<String>, Stop> {
+        let tctx = Ctx::new(None, cut);
+        let none = std::collections::BTreeSet::new();
+        let law = match self.move_law(m, mv, env, tctx) {
+            Ok(Law::Hole(_)) => return Ok(none),
+            Ok(Law::Day(d)) => Some(d),
+            Ok(Law::None) => None,
+            Err(Stop::Refused(r)) if !matches!(r.code(), Code::Load(_)) => return Ok(none),
+            Err(stop) => return Err(stop),
+        };
+        let mut places = std::collections::BTreeSet::new();
+        for leg in &mv.decl.legs {
+            for e in [&leg.from, &leg.to] {
+                match self.ev(m, e, env, tctx.at_law(law)) {
+                    Ok(Value::Key(KeyVal::Thing(name))) => {
+                        places.insert(name);
+                    }
+                    Ok(_) => return Ok(none),
+                    Err(Stop::Refused(r)) if !matches!(r.code(), Code::Load(_)) => {
+                        return Ok(none);
+                    }
+                    Err(stop) => return Err(stop),
+                }
+            }
+        }
+        Ok(places)
+    }
+
     /// One instance: its day at the cut K, then, for a plan, its body at its booking cut
     /// min(t, K) or at the seed's cut; none when its day is `never` or `none` (refcore's
     /// `eval_inst`). E §5 steps 0–1, E §4.1 step 2.
@@ -513,7 +684,12 @@ impl Engine {
             Law::None => None,
         };
         inst.law = law;
-        let v = self.ev(m, &mv.decl.on, &inst.env, tctx.at_law(law))?;
+        self.push();
+        let v = self.ev(m, &mv.decl.on, &inst.env, tctx.at_law(law));
+        let day_coll = self.pop_alone();
+        self.absorb(&day_coll);
+        inst.day_coll = day_coll;
+        let v = v?;
         if matches!(v, Value::Never | Value::None) {
             return Ok(false);
         }
@@ -534,6 +710,7 @@ impl Engine {
             | Value::None
             | Value::Never
             | Value::Word(_)
+            | Value::Mv(_)
             | Value::OutKey { .. } => Dated::Day(date_of(&v)?),
         };
         inst.day = Some(day.clone());
@@ -556,6 +733,7 @@ impl Engine {
         inst.legs = body.legs;
         inst.attrs = body.attrs;
         inst.for_period = body.for_period;
+        inst.fulfils = body.fulfils;
         Ok(true)
     }
 
@@ -592,7 +770,7 @@ impl Engine {
     ) -> Result<Body, Stop> {
         let mut ex = exists;
         if mv.decl.fulfils.is_some() {
-            return Err(Stop::NotBuilt("a move that fulfils (settlements, G8)"));
+            crate::book::settlement_move(m, mv)?;
         }
         if let Some(when) = &mv.decl.when {
             let w = self.ev(m, when, &inst.env, ctx)?;
@@ -609,6 +787,7 @@ impl Engine {
                         legs: Vec::new(),
                         attrs: Vec::new(),
                         for_period: None,
+                        fulfils: None,
                     });
                 };
                 ex = join(ex, h);
@@ -641,11 +820,16 @@ impl Engine {
         for (name, e) in &mv.decl.attrs {
             attrs.push((name.clone(), self.ev(m, e, &inst.env, ctx)?));
         }
+        let fulfils = match &mv.decl.fulfils {
+            Some(e) => Some(self.ev(m, e, &inst.env, ctx)?),
+            None => None,
+        };
         Ok(Body {
             exists: ex,
             legs,
             attrs,
             for_period,
+            fulfils,
         })
     }
 
@@ -813,6 +997,8 @@ fn extend(
     let listed = matches!(domain, Domain::List(_) | Domain::Range);
     let key = if let Value::Key(k) = &value {
         k.clone()
+    } else if let Value::Mv(r) = &value {
+        KeyVal::Mv(r.clone())
     } else if let (Value::Number(n), true) = (&value, listed) {
         KeyVal::Int(
             n.q.to_i64()
@@ -878,36 +1064,6 @@ fn keys_seen(m: &Reality, mv: &MoveInfo, keys: &[KeyVal], cut: Day) -> bool {
     true
 }
 
-/// An instance's status at cut `cut` (refcore's `status`; observations and coverage are
-/// G8's). E §4.1 step 3.
-fn status(m: &Reality, mv: &MoveInfo, inst: &Inst, cut: Day) -> Status {
-    let day = inst.day.as_ref().and_then(Dated::day);
-    if inst.exists == Exists::No {
-        return Status::None;
-    }
-    if let Some(d) = day
-        && (d < m.start || d > m.end)
-    {
-        return Status::LeftOut;
-    }
-    if inst.err.is_some() {
-        return Status::Refused;
-    }
-    let Some(d) = day else {
-        return Status::Hole;
-    };
-    if matches!(inst.exists, Exists::Unknown(_)) {
-        return Status::Hole;
-    }
-    if mv.decision {
-        return Status::Decision;
-    }
-    if kind_certainty(m, &mv.kind) == Some(Certainty::Uncertain) {
-        return Status::Uncertain;
-    }
-    if d < cut { Status::Past } else { Status::Plan }
-}
-
 /// An event kind's certainty, its own or its nearest parent's (refcore's `kind_certainty`).
 /// L §5.7.
 #[must_use]
@@ -930,6 +1086,9 @@ fn inst_order(m: &Reality, mv: &MoveInfo, inst: &Inst) -> Order {
             };
         } else if let (Domain::Kind(_), KeyVal::Thing(name)) = (&bind.domain, key) {
             place = m.things.get(name).map(|t| (0, 0, order_text(t)));
+        } else if let KeyVal::Mv(r) = key {
+            let day = r.day.map_or_else(String::new, Day::text);
+            place = Some((0, 0, format!("{day} {}", r.id)));
         }
         keys.push(place.unwrap_or_else(|| (1, 0, key.text())));
     }
@@ -1051,7 +1210,7 @@ fn place_units(m: &Reality, from: &End, to: &End) -> std::collections::BTreeSet<
 
 /// A number or money as a quantity, with its unit where it is one unit to the first power
 /// (refcore's `unit_of_value`). L §3.2.
-pub(super) fn quantity(m: &Reality, v: &Value) -> Result<(Num, Option<String>), Stop> {
+pub(crate) fn quantity(m: &Reality, v: &Value) -> Result<(Num, Option<String>), Stop> {
     if let Value::Money(money) = v {
         let q = money_num(m, money).map_err(num_err)?;
         let (name, _) = crate::model::currency(m, money.currency()).map_err(num_err)?;

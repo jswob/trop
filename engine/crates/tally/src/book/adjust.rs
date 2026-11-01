@@ -6,8 +6,9 @@
 //! Twin: engine/tools/refcore/moves.py (`AdjMv`, `remainder`, `known_dates`, `adjust_move`,
 //! `adjust_move_compute`, `step_versions`).
 //! Invariants: a move's adjustments are computed once per cut, in the order of their day,
-//! move, instance and leg; settlements (G8) aren't built, so every adjustment stays unsettled
-//! and its remainder is its change.
+//! move, instance and leg; the versions known on a day are the versions', rows' and
+//! observations' own; an adjustment's remainder is its change less its settlements, none once
+//! waived (the links are `book/settle.rs`'s).
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -22,8 +23,13 @@ use crate::walk::{Amount, End, Exists, Inst, LegVal, Seed, Status, invariant, qt
 /// One adjustment: an instance's leg changed by a later version (refcore's `AdjMv`).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Adjustment {
+    /// Its name, `adjustments[<inst>.<leg>, <version>]`, the first of the step's versions in
+    /// text order (L §5.14.3, E §5 step 4).
+    pub id: String,
     /// The adjusted instance's id.
     pub inst_id: String,
+    /// The adjusted instance's keys.
+    pub inst_keys: Vec<crate::model::KeyVal>,
     /// Its move.
     pub move_id: String,
     /// Its day.
@@ -32,6 +38,9 @@ pub struct Adjustment {
     pub leg: LegVal,
     /// The places the step gives the leg, when it changes them (L §5.14.3).
     pub new_ends: Vec<End>,
+    /// The places the leg had before the step, when it changes them (L §5.14.3 How a
+    /// settlement leg counts).
+    pub before_ends: Vec<End>,
     /// The change δ: a quantity of the leg's unit, or a hole.
     pub delta: Amount,
     /// The step's day c, when the version became known.
@@ -40,9 +49,60 @@ pub struct Adjustment {
     pub vids: Vec<String>,
     /// What the step's evaluation met.
     pub coll: Collected,
+    /// The movements that settle it, each leg with its sign (E §5 step 5).
+    pub settled: Vec<Settled>,
+    /// Whether a movement of a kind with no legs waives it (L §5.14.3).
+    pub waived: bool,
+}
+
+/// A leg that settles an adjustment, or a waiver (refcore's `AdjMv.settled`). E §5 step 5.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Settled {
+    /// The settling movement's id.
+    pub by: String,
+    /// Its day.
+    pub day: Option<Day>,
+    /// +1 when the leg runs the adjusted leg's way, −1 the other way, 0 for a waiver or a leg
+    /// that runs both ways.
+    pub sign: i64,
+    /// The leg's amount; 0 for a waiver.
+    pub amount: Amount,
 }
 
 impl Adjustment {
+    /// What remains of the change: δ less the settlements; none once waived (refcore's
+    /// `AdjMv.remainder`). E §5 step 5.
+    ///
+    /// # Errors
+    ///
+    /// A settlement's refusal; a number error.
+    pub fn remainder(&self) -> Result<Option<Amount>, Stop> {
+        if self.waived {
+            return Ok(None);
+        }
+        let mut r = self.delta.clone();
+        for s in &self.settled {
+            r = match (r, &s.amount) {
+                (Amount::Hole(a), Amount::Hole(b)) => Amount::Hole(
+                    spread(&[Some(&a), Some(b)]).ok_or_else(|| invariant("a hole remainder"))?,
+                ),
+                (Amount::Hole(a), Amount::Qty(_) | Amount::Refused(_)) => Amount::Hole(a),
+                (Amount::Qty(_) | Amount::Refused(_), Amount::Hole(b)) => Amount::Hole(b.clone()),
+                (Amount::Qty(_) | Amount::Refused(_), Amount::Refused(e)) => {
+                    return Err(Stop::Refused(e.clone()));
+                }
+                (Amount::Refused(e), Amount::Qty(_)) => return Err(Stop::Refused(e)),
+                (Amount::Qty(q), Amount::Qty(x)) => {
+                    let part = x
+                        .checked_mul(&crate::num::Num::int(s.sign))
+                        .map_err(crate::eval::num_stop)?;
+                    Amount::Qty(q.checked_sub(&part).map_err(crate::eval::num_stop)?)
+                }
+            };
+        }
+        Ok(Some(r))
+    }
+
     /// `HOLE-CHANGED`'s hole: the instance changed after it was paid (L §8.1, E §5 step 5).
     #[must_use]
     pub fn question(&self) -> Hole {
@@ -64,8 +124,27 @@ impl Adjustment {
     ///
     /// A number error printing the change.
     pub fn remainder_text(&self, m: &Reality) -> Result<Option<String>, Stop> {
-        let shown = match &self.delta {
-            Amount::Qty(q) if q.is_zero() => return Ok(None),
+        let Some(left) = self.remainder()? else {
+            return Ok(None);
+        };
+        if let Amount::Qty(q) = &left
+            && q.is_zero()
+        {
+            return Ok(None);
+        }
+        Ok(Some(format!(
+            "{} by {} on {} (version {}), remaining {}",
+            self.inst_id,
+            self.amount_text(m, &self.delta)?,
+            self.day.text(),
+            self.vids.join(", "),
+            self.amount_text(m, &left)?
+        )))
+    }
+
+    /// An amount of the adjusted leg's unit as the register prints it (L §8.2).
+    fn amount_text(&self, m: &Reality, a: &Amount) -> Result<String, Stop> {
+        match a {
             Amount::Qty(q) => {
                 let unit = self
                     .leg
@@ -74,17 +153,11 @@ impl Adjustment {
                     .ok_or_else(|| invariant("an adjustment with no unit"))?;
                 qty_value(m, q, unit)?
                     .text(m)
-                    .map_err(crate::eval::num_stop)?
+                    .map_err(crate::eval::num_stop)
             }
-            Amount::Hole(h) => h.text(),
-            Amount::Refused(r) => return Err(Stop::Refused(r.clone())),
-        };
-        Ok(Some(format!(
-            "{} by {shown} on {} (version {}), remaining {shown}",
-            self.inst_id,
-            self.day.text(),
-            self.vids.join(", ")
-        )))
+            Amount::Hole(h) => Ok(h.text()),
+            Amount::Refused(r) => Err(Stop::Refused(r.clone())),
+        }
     }
 }
 
@@ -106,7 +179,7 @@ impl Engine {
         if let Some(hit) = self.adjustments.get(&key) {
             return Ok(hit.clone());
         }
-        if mv.decl.fulfils.is_some() {
+        if super::settle::settlement_move(m, mv)? {
             self.adjustments.insert(key, Vec::new());
             return Ok(Vec::new());
         }
@@ -232,6 +305,7 @@ impl Engine {
             let pool: Vec<&LegVal> = base.iter().chain(before.values().copied()).collect();
             let step = Step {
                 inst_id: inst.id.clone(),
+                inst_keys: inst.keys.clone(),
                 move_id: inst.move_id.clone(),
                 inst_day: t,
                 day: c,
@@ -261,6 +335,8 @@ impl Engine {
 struct Step {
     /// The instance measured, by id.
     inst_id: String,
+    /// Its keys.
+    inst_keys: Vec<crate::model::KeyVal>,
     /// Its move.
     move_id: String,
     /// Its day.
@@ -300,7 +376,12 @@ fn leg_change(
     let hb = qb.and_then(hole_of);
     if ha.is_some() || hb.is_some() {
         let h = spread(&[ha, hb]).ok_or_else(|| invariant("a hole change"))?;
-        return Ok(Some(make(step, leg, Amount::Hole(h), Vec::new())));
+        return Ok(Some(make(
+            step,
+            leg,
+            Amount::Hole(h),
+            (Vec::new(), Vec::new()),
+        )));
     }
     if either.unit.is_none() {
         return Ok(None);
@@ -315,19 +396,35 @@ fn leg_change(
         return Ok(None);
     }
     let delta = db.checked_sub(&da).map_err(crate::eval::num_stop)?;
-    let new_ends = match (moved, b) {
-        (true, Some(y)) => vec![y.from.clone(), y.to.clone()],
-        (true, None) | (false, Some(_) | None) => Vec::new(),
+    let ends = match (moved, a, b) {
+        (true, Some(x), Some(y)) => (
+            vec![y.from.clone(), y.to.clone()],
+            vec![x.from.clone(), x.to.clone()],
+        ),
+        (true, _, None | Some(_)) | (false, _, _) => (Vec::new(), Vec::new()),
     };
     let mut leg = leg;
     leg.unit.clone_from(&either.unit);
-    Ok(Some(make(step, leg, Amount::Qty(delta), new_ends)))
+    Ok(Some(make(step, leg, Amount::Qty(delta), ends)))
 }
 
-/// An adjustment of `leg` by `delta` at a step, named by the step's versions (E §5 step 4).
-fn make(step: &Step, leg: LegVal, delta: Amount, new_ends: Vec<End>) -> Adjustment {
+/// An adjustment of `leg` by `delta` at a step, named by the step's versions, the first in
+/// text order (E §5 step 4, L §5.14.3); for a change of places, the places the step gives the
+/// leg and those it had before.
+fn make(
+    step: &Step,
+    leg: LegVal,
+    delta: Amount,
+    (new_ends, before_ends): (Vec<End>, Vec<End>),
+) -> Adjustment {
+    let first = step.vids.first().map_or("", String::as_str);
     Adjustment {
+        id: format!("adjustments[{}.{}, {first}]", step.inst_id, leg.name),
         inst_id: step.inst_id.clone(),
+        inst_keys: step.inst_keys.clone(),
+        before_ends,
+        settled: Vec::new(),
+        waived: false,
         move_id: step.move_id.clone(),
         inst_day: step.inst_day,
         leg,
@@ -376,6 +473,13 @@ fn known_dates(m: &Reality) -> Vec<(Day, BTreeSet<String>)> {
                 by.entry(k)
                     .or_insert_with(BTreeSet::new)
                     .insert(row.version.clone());
+            }
+        }
+        for o in &input.observations {
+            if let Some(k) = o.own_known {
+                by.entry(k)
+                    .or_insert_with(BTreeSet::new)
+                    .insert(o.version.clone());
             }
         }
     }

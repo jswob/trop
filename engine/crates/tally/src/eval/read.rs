@@ -377,7 +377,8 @@ fn period_key(m: &Reality, item: &str, ix: &IndexInfo, v: &Value) -> Result<KeyV
                 | KeyVal::Period(_)
                 | KeyVal::Key { .. }
                 | KeyVal::Thing(_)
-                | KeyVal::Int(_) => {}
+                | KeyVal::Int(_)
+                | KeyVal::Mv(_) => {}
             }
         }
         return Err(outside(p.label()));

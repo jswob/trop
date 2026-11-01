@@ -1,9 +1,12 @@
 //! The evaluator's walk over an expression: one arm per node kind, each calling the step that computes it.
 //! Spec: E §3.2 (a tree-walk over the resolved tree); L §2.5 (names: a bound variable, an item,
 //! a key literal), §3.1 (the absences), §3.2 (inline figures), §5.11 (logic under Kleene
-//! rules, `if` with a hole condition), §8.1 (holes spread), §8.4 (`RUN-NONE`).
+//! rules, `if` with a hole condition), §5.14 (a movement's fields and kind, `in` over a
+//! movement kind, movements equal by identity), §5.19 (`covered`), §4.1 (a keyed place
+//! `name[keys]`), §8.1 (holes spread), §8.4 (`RUN-NONE`).
 //! Twin: engine/tools/refcore/evaluate.py (`ev`, `e_num`, `e_name`, `e_index`, `e_field`,
-//! `read`, `binop`, `e_not`, `e_and`, `e_or`, `e_if`, `e_cmp`, `compare`, `e_in`, `e_record`).
+//! `read`, `binop`, `e_not`, `e_and`, `e_or`, `e_if`, `e_cmp`, `compare`, `e_in`, `e_record`)
+//! and mreads.py (`m_mv_field`, `m_mv_kind_in`, `m_c_covered`).
 //! Invariants: an operation that meets a hole is the hole of its operands' questions (the hole
 //! module's one rule); `none` only compares; every node kind S doesn't build stops `NotBuilt`.
 
@@ -59,7 +62,7 @@ impl Engine {
             Expr::Last(..) => Err(Stop::NotBuilt("`last(x, d)`")),
             Expr::Bal(b) => self.bal(m, b, env, ctx),
             Expr::Flows(f) => self.flows(m, f, env, ctx),
-            Expr::Covered(..) => Err(Stop::NotBuilt("covered (observations)")),
+            Expr::Covered(c) => self.covered_call(m, (&c.0, &c.1), env, ctx),
             Expr::Calendar(..) => Err(Stop::NotBuilt("a calendar written in a rule")),
             Expr::Value(..) => Err(Stop::NotBuilt("value (the walk)")),
         }
@@ -114,6 +117,41 @@ impl Engine {
             Err(hole) => Ok(Value::Hole(hole)),
             Ok(made) => self.read_def_at(m, def, &made, ctx),
         }
+    }
+
+    /// A keyed place at the keys written: its thing; a hole key makes it that hole;
+    /// `RUN-KEY` for keys that name none of its places (refcore's `e_place`). L §5.10.
+    fn place_at(
+        &mut self,
+        m: &Reality,
+        id: &str,
+        keys: &[Key],
+        env: &Env,
+        ctx: Ctx,
+    ) -> Result<Value, Stop> {
+        let place = m
+            .places
+            .get(id)
+            .ok_or_else(|| invariant("a place load didn't build"))?;
+        let mut given = Vec::with_capacity(keys.len());
+        for key in keys {
+            let Key::Expr(e) = key else {
+                return Err(Stop::NotBuilt("`*` in a place's keys"));
+            };
+            given.push(self.given_key(m, e, env, ctx)?);
+        }
+        let made = match make_keys(m, id, &place.binds, given, ctx.cut)? {
+            Err(hole) => return Ok(Value::Hole(hole)),
+            Ok(made) => made,
+        };
+        if let Some((_, name)) = place.things.iter().find(|(k, _)| *k == made) {
+            return Ok(Value::Key(KeyVal::Thing(name.clone())));
+        }
+        let texts: Vec<String> = made.iter().map(KeyVal::text).collect();
+        Err(refuse(
+            Run::Key,
+            format!("{id}[{}] is not a place", texts.join(", ")),
+        ))
     }
 
     /// A key as written: a literal or a name no variable or item holds is a key literal its
@@ -190,6 +228,11 @@ impl Engine {
             {
                 (self.read_item(m, name, keys, env, ctx)?, rest)
             }
+            (Expr::Name(name), [Postfix::Keys(keys), rest @ ..])
+                if env.get(name).is_none() && m.places.get(name).is_some() =>
+            {
+                (self.place_at(m, name, keys, env, ctx)?, rest)
+            }
             (Expr::Name(name), [Postfix::Keys(_), ..]) if env.get(name).is_none() => {
                 return Err(Stop::NotBuilt("keys of a place, a move or a member"));
             }
@@ -197,7 +240,13 @@ impl Engine {
         };
         for post in rest {
             value = match post {
-                Postfix::Field(name) => field(m, value, name)?,
+                Postfix::Field(name) => {
+                    if let Value::Mv(mv) = &value {
+                        self.mv_field(m, mv, name, ctx)?
+                    } else {
+                        field(m, value, name)?
+                    }
+                }
                 Postfix::Keys(_) => return Err(Stop::NotBuilt("keys after a value")),
             };
         }
@@ -329,8 +378,11 @@ impl Engine {
         if m.kinds.get(kind).is_none() {
             return Err(Stop::NotBuilt("membership in a value"));
         }
+        if let Value::Mv(mv) = &member {
+            return Ok(Value::Bool(self.mv_kind_in(m, mv, kind, ctx)?));
+        }
         let Value::Key(KeyVal::Thing(name)) = &member else {
-            return Err(Stop::NotBuilt("membership of a movement in a kind"));
+            return Err(Stop::NotBuilt("membership of a value in a kind"));
         };
         let Some(thing) = m.things.get(name) else {
             return Ok(Value::Bool(false));
@@ -601,6 +653,9 @@ pub(super) fn compare_values(m: &Reality, op: CmpOp, a: &Value, b: &Value) -> Re
     }
     if let (Value::Word(x), Value::Word(y)) = (a, b) {
         return Ok(holds(x == y));
+    }
+    if let (Value::Mv(x), Value::Mv(y), true) = (a, b, eq) {
+        return Ok(holds(x.id == y.id));
     }
     let test = if eq { Test::Equality } else { Test::Order };
     let order = compare(m, a, b, test)?;
