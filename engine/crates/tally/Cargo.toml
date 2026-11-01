@@ -24,7 +24,7 @@ sha2 = { workspace = true }
 [dev-dependencies]
 criterion = { workspace = true }
 
-# The micro rows' wall time on the reference Mac (P8-M1 to P8-M3, R-91); engine/tools/perf
+# The micro rows' wall time on the reference Mac (P8-M1 to P8-M4, R-91); engine/tools/perf
 # runs each by its row's `bench:` recipe
 [[bench]]
 name = "p8_m1"
@@ -36,6 +36,10 @@ harness = false
 
 [[bench]]
 name = "p8_m3"
+harness = false
+
+[[bench]]
+name = "p8_m4"
 harness = false
 
 [lints]

@@ -18,7 +18,7 @@ tally = { path = "../../crates/tally" }
 [dev-dependencies]
 gungraun = "=0.20.0"
 
-# The micro rows' instruction counts (P8-M1 to P8-M3), each limited by its row
+# The micro rows' instruction counts (P8-M1 to P8-M4), each limited by its row
 [[bench]]
 name = "p8_m1"
 harness = false
@@ -29,6 +29,10 @@ harness = false
 
 [[bench]]
 name = "p8_m3"
+harness = false
+
+[[bench]]
+name = "p8_m4"
 harness = false
 
 # its own workspace, apart from the engine's

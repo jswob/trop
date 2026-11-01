@@ -338,6 +338,6 @@ blocks = "pr"
 id = "P8-M4"
 group = "M"
 what = "one read of a written projection, E §4.3's common case (P8-5's micro form)"
-recipe = "waits: S, the projection reads (the lead writes its bench on request, R-91)"
+recipe = "bench:p8_m4"
 wall_s = 0.0000003
 blocks = "pr"
