@@ -27,6 +27,19 @@ pub fn weekday_number(word: &str) -> Option<u8> {
     }
 }
 
+/// The word of weekday number `n`, 1 Monday to 7 Sunday (refcore's `WEEKDAYS`). L §4.2.
+fn weekday_word(n: u8) -> &'static str {
+    match n {
+        1 => "mon",
+        2 => "tue",
+        3 => "wed",
+        4 => "thu",
+        5 => "fri",
+        6 => "sat",
+        _ => "sun",
+    }
+}
+
 /// A business calendar whose days off are all fixed.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Calendar {
@@ -89,6 +102,26 @@ impl Calendar {
             }
         }
         Some(current)
+    }
+
+    /// The calendar as it prints, `calendar(weekends [sat, sun], yearly [12-25] from 2027)`
+    /// (refcore's `fmt` of a `Cal`). L §5.18.
+    #[must_use]
+    pub fn text(&self) -> String {
+        let words: Vec<&str> = self.weekends.iter().map(|n| weekday_word(*n)).collect();
+        let mut parts = vec![format!("weekends [{}]", words.join(", "))];
+        if !self.yearly.is_empty() {
+            let days: Vec<String> = self
+                .yearly
+                .iter()
+                .map(|(m, d)| format!("{m:02}-{d:02}"))
+                .collect();
+            let from = self
+                .yearly_from
+                .map_or_else(String::new, |from| format!(" from {from}"));
+            parts.push(format!("yearly [{}]{from}", days.join(", ")));
+        }
+        format!("calendar({})", parts.join(", "))
     }
 
     /// The `n`-th last business day of `period`, counting back from its last day; `None` when

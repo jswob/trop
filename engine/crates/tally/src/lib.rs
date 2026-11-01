@@ -74,6 +74,7 @@ pub mod model {
     mod reality;
     mod ty;
     mod unit;
+    mod value;
 
     pub use decl::{
         BandEnd, BandInfo, BandRow, BindInfo, DefInfo, Domain, Fulfils, InputInfo, MoveInfo,
@@ -86,6 +87,35 @@ pub mod model {
     pub use reality::{BUILTIN_INDEXES, BUILTIN_INPUTS, NameKind, Reality};
     pub use ty::{CodeKind, PeriodWord, Shown, Ty};
     pub use unit::{PERIODS, Scaled, Unit, is_currency_code};
+    pub use value::{
+        Class, Code, Number, Value, currency, currency_id, currency_unit, money_num, num_money,
+    };
+}
+
+/// Holes (L §8.1): a missing fact and the questions it carries, built only here (R-116), with
+/// the one rule every operator applies to them. The kernel's (gate 8); the module's code is
+/// its files under `hole/`.
+pub mod hole {
+    mod questions;
+
+    pub use questions::{Hole, spread};
+}
+
+/// The evaluator (E §3.2): expressions over the reality, def cells in the memo, rules, bands,
+/// aggregates and built-ins. The module's code is its files under `eval/`.
+pub mod eval {
+    mod aggregate;
+    mod arith;
+    mod band;
+    mod builtin;
+    mod expr;
+    mod read;
+    mod rules;
+    mod state;
+    mod ty;
+
+    pub use arith::{Op, Test, arith, compare, currency_of, int_of, negate, same_value};
+    pub use state::{Collected, Ctx, Engine, Entry, Env};
 }
 
 /// Load (E §3.1 steps 1–4): the parsed files become the reality, constructively; the load
