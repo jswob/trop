@@ -14,7 +14,7 @@ tools/trace
 
 case: line-past-the-end
 tool: run
-expect: L §4.6 l.99999: the line is past the end of LANGUAGE.md (2435 lines) (R-128)
+expect: L §4.6 l.99999: the line is past the end of LANGUAGE.md (2438 lines) (R-128)
 --- module
 /// Planted: reads a row by the read rule (L §4.6 l.99999).
 pub fn planted() -> u8 {

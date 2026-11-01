@@ -1,0 +1,21 @@
+# L §8.3 Which refusal prints (tally 2.1.1): load takes the files in the order of their full paths, compared by code
+# point, whatever order they are given in, and prints the first refusal it meets. b.tally and a.tally, given in that
+# order, each have a tab on line 4 (LOAD-PARSE): a.tally's prints (issue #13, T1's synthetic pair, INTERFACE §5).
+=== z.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+=== b.tally
+part pb
+  tally 2
+
+	def x: int = 1
+=== a.tally
+part pa
+  tally 2
+
+	def y: int = 1
+=== expect
+refused: LOAD-PARSE cannot parse: tab (a.tally:4)

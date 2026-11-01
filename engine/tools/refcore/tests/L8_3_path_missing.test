@@ -1,0 +1,22 @@
+# L §8.3 LOAD-PATH (tally 2.1.1): "<path> doesn't exist", a path the run is given that names no file or folder.
+# The run is given m.tally, which loads, and nope.tally, which doesn't exist (issue #13, T1's gap I-1: refcore crashed).
+=== options disk missing=nope.tally
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "own"
+input x: int
+
+version v
+  cite s
+  governs 2026..
+  known 2026-01-01
+  x = 1 "own"
+
+ask q: x
+=== expect
+refused: LOAD-PATH nope.tally doesn't exist

@@ -151,6 +151,6 @@ default-features = false
 "engine:check" = "cd engine && tools/check full"
 "engine:cov" = "cd engine && cargo llvm-cov nextest --workspace --all-features --locked --html"
 "engine:fuzz" = "cd engine && mkdir -p fuzz/corpus/parse && cargo +nightly-2026-10-21 fuzz run parse fuzz/corpus/parse fuzz/regressions/parse --"
-"engine:mutants" = "cd engine && cargo nextest run --locked -p tally-runner --cargo-profile mutants --profile mutants && { cargo mutants -C=--locked --baseline skip --timeout 300 --build-timeout 600; c=$?; [ $c -eq 0 ] || [ $c -eq 2 ] || [ $c -eq 3 ]; } && tools/mutants-survivors ."
+"engine:mutants" = "cd engine && args=$(tools/milestones args) && targets=$(tools/milestones args --mutants) && cargo nextest run --locked -p tally-runner --cargo-profile mutants --profile mutants $args && { cargo mutants -C=--locked $targets --baseline skip --timeout 300 --build-timeout 600; c=$?; [ $c -eq 0 ] || [ $c -eq 2 ] || [ $c -eq 3 ]; } && tools/mutants-survivors ."
 "engine:spec-check" = "cd engine && tools/check step spec-loadcheck-selftest && tools/check step spec-loadcheck && tools/check-frozen"
 "engine:test" = "cd engine && cargo nextest run --workspace --all-features --locked && cargo test --doc --workspace --all-features --locked"

@@ -89,7 +89,7 @@ ELSEWHERE = {
     "R-79": "engine/tools/guard-test",
     "R-81": "engine/tools/guard-test (the guard and the hook strings)",
     "R-83": "engine/tools/guard-test (the Stop hook)",
-    "R-84": "the protected mutants config (test_package); checksummed",
+    "R-84": "the protected mutants config (test_package), checksummed; the clean run: the workflow's mutants jobs run the gating milestones' tests",
     "R-88": "the protected mutants and nextest configs; checksummed",
     "R-91": "engine/tools/guard-test",
     "R-92": "check full's fuzz step and the workflow's long fuzz job",
@@ -114,6 +114,8 @@ PR_STEPS = [
     "fmt", "clippy-lib", "clippy-tests", "doc", "build", "test-dev", "test-release", "deny", "deny-tally",
     "check-frozen", "spec-loadcheck", "guard-test", "rules-selftest", "check-rules", "exceptions",
     "ast-grep-test", "ast-grep-scan", "fuzz", "fault-injection-probe",
+    # T's tests of every gating milestone, in both profiles (tools/milestones.toml, issue #14)
+    "gating", "gating-release",
 ]
 
 
@@ -798,6 +800,15 @@ def ci_problems():
         if not re.search(r"\n  pull_request:\n    branches: \[master, engine\]\n", text):
             problems.append(
                 "R-77: .github/workflows/engine.yml doesn't run on pull requests into master and engine"
+            )
+        # R-84: the mutants baseline and shards run the gating milestones' tests too
+        if not re.search(r'args="\$\(tools/milestones args\)"\n.*cargo nextest run [^\n]*--profile mutants \$args\n',
+                         text, re.S):
+            problems.append("R-84: .github/workflows/engine.yml's mutants baseline doesn't run `tools/milestones args`'s targets")
+        if not re.search(r'targets="\$\(tools/milestones args --mutants\)"\n.*cargo mutants -C=--locked \$targets ',
+                         text, re.S):
+            problems.append(
+                "R-84: .github/workflows/engine.yml's mutants shards don't run `tools/milestones args --mutants`'s targets"
             )
     return problems
 

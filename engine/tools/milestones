@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# The milestone marker (R-77, R-84): engine/tools/milestones [args [--mutants]]
+d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)" || exit 1
+exec python3 -I -B "$d/milestones.py" "$@"

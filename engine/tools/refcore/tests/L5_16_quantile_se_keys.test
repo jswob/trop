@@ -4,7 +4,8 @@
 # the chance that a binomial of N trials with success chance x has at least m successes (exact for whole N); with C_k =
 # sum W_i·x(i)^k, the standard error is sqrt(C2 - C1^2), correctly rounded to 1e-6, as mean's; with N = 1 it is none".
 # A quantile over paths of a discrete draw over keys: its value is type 1 in index order, but x(i)^k has no meaning for
-# a key and L §5.16 gives no other standard error: REFCORE-UNSPECIFIED (UNSPECIFIED.md).
+# a key and L §5.16 gives no other standard error: REFCORE-UNSPECIFIED (UNSPECIFIED.md). The warnings print sorted by
+# their text, eq3 before ev (L §8.5, tally 2.1.1).
 === m.tally
 model t
   tally 2
@@ -40,5 +41,5 @@ ask a6: quantile(draw, 50 %) law 2026-06-30 paths 4 seed 1
 === expect
 a6: refused: REFCORE-UNSPECIFIED §5.16: the Maritz-Jarrett standard error of a quantile over paths whose samples are no numbers (ka): C_k = sum W_i x(i)^k has no meaning for them, and L §5.16 states no other
   law date 2026-06-30, cut 2026-12-31
-warning: WARN-UNREAD def ev is read by nothing
 warning: WARN-UNREAD def eq3 is read by nothing
+warning: WARN-UNREAD def ev is read by nothing

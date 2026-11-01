@@ -92,6 +92,20 @@ pub fn pack(files: &[(&str, &str)]) -> Vec<u8> {
     out
 }
 
+/// The paths of a file table (`INTERFACE.md` §4), in its order: every other netstring,
+/// from the first.
+pub fn paths(table: &[u8]) -> Result<Vec<String>, String> {
+    let mut out = Vec::new();
+    let mut is_path = true;
+    for part in netstrings(table)? {
+        if is_path {
+            out.push(text(part)?);
+        }
+        is_path = !is_path;
+    }
+    Ok(out)
+}
+
 /// Groups `items` in fours or fives: a record's netstrings, never a partial one.
 fn groups<'a>(items: &[&'a [u8]], size: usize) -> Result<Vec<Vec<&'a [u8]>>, String> {
     let mut out = Vec::new();

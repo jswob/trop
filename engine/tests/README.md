@@ -17,7 +17,8 @@ The suite lives here, travelling with the engine, and runs from any checkout: ev
 | `load/` | `load.tsv` and `benchmarks.md`, the full-size runs for the engine, never run on refcore |
 | `baselines/` | the stored outputs: `snap16-*/`, `e1-02-B16.out`, `4.5c/`, and `session5-visible/` (session 5's runs, a second witness) |
 | `defs/` | the run lists `build_checks.py` reads |
-| `reports/` | the measured tables of 4.5a, 4.5c and 4.5e, `adhoc.log` |
+| `hh4/` | household X's hand-checked vectors (`spec/smoke/HH4-*`) restated for milestone S: `vectors.tsv`, written and checked by the key script `hh4.py` from refcore's runs in `refcore/` (issue #16; `MILESTONE-S.md` row 4) |
+| `codes/` | the fixtures of the codes no check prints (DONE gate 5): `fixtures.tsv`, written by `codes.py` from refcore's runs, and their texts; `LOAD-PATH` first (issue #16) || `reports/` | the measured tables of 4.5a, 4.5c and 4.5e, `adhoc.log` |
 
 ## How to run
 

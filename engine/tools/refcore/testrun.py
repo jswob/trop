@@ -19,11 +19,15 @@ doesn't assert).  Warning lines are compared only when the expect block holds
 one.  `=== expect ask1 ask2` answers only those asks.  `=== options pin=bytes` (before the files) runs the reality
 with those options (cli.run_texts): a joint model's pins taken over the member files' bytes.  `=== options reprint`
 prints each file's canonical text (L §2.4) and the files' sha256 (E §3.1 step 1) instead of running them.
+`=== options disk` writes the files into a fresh folder and runs them as the command line does (cli.command_lines,
+`run`, or `reprint` with `reprint`), given by their names in the test's order and then the names in `missing=a,b`,
+which are never written; a file named in `latin1=a,b` is written in Latin-1, so a letter past ASCII isn't UTF-8.
 """
 import os
+import tempfile
 os.environ.setdefault("REFCORE_DEBUG", "1")
 
-from .cli import run_texts
+from .cli import run_texts, command_lines
 
 HERE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'tests')
 
@@ -92,6 +96,27 @@ def _cmp(ex, i, got, j):
     return j == len(got)
 
 
+def run_on_disk(texts, ids, options):
+    """`=== options disk`: the files in a fresh folder, run from it as the command line runs paths."""
+    latin = set(n for n in options.get('latin1', '').split(',') if n)
+    missing = [n for n in options.get('missing', '').split(',') if n]
+    here = os.getcwd()
+    with tempfile.TemporaryDirectory() as d:
+        for n, t in texts:
+            p = os.path.join(d, n)
+            os.makedirs(os.path.dirname(p), exist_ok=True)
+            with open(p, 'wb') as fh:
+                fh.write(t.encode('latin-1' if n in latin else 'utf-8'))
+        argv = ['reprint' if 'reprint' in options else 'run'] + [n for n, t in texts] + missing
+        if ids:
+            argv += ['--ask'] + ids
+        os.chdir(d)
+        try:
+            return command_lines(argv)
+        finally:
+            os.chdir(here)
+
+
 def run_tests(names):
     files = sorted(f for f in os.listdir(HERE) if f.endswith('.test'))
     if names:
@@ -100,7 +125,7 @@ def run_tests(names):
     for f in files:
         texts, expect, ids, options = parse_test(os.path.join(HERE, f), with_options=True)
         try:
-            got = run_texts(texts, ids, options)
+            got = run_on_disk(texts, ids, options) if 'disk' in options else run_texts(texts, ids, options)
         except Exception as e:  # an interpreter bug
             import traceback
             got = ['CRASH %s: %s' % (type(e).__name__, e)] + traceback.format_exc().split('\n')

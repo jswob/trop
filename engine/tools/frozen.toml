@@ -6,6 +6,5 @@
 # must match: the tag itself when `pin` is left out, or an approved amendment after the
 # tag that kept the version. A new version or amendment moves both lines.
 
-tag = "tally-2.1"
-pin = "c62550a1567a4bc3e956c28dd77141e26e5f4469"
-approved = "G2a, 2026-10-30: session 8b's PERFORMANCE, BOUNDS, BUILD-ORDER, STALE and DONE, VERSION kept"
+tag = "tally-2.1.1"
+approved = "issue #13: G-T \"Sort warnings\" (2026-10-31); the scope \"Yes, within scope (Recommended)\" (2026-10-31); \"Accept narrower (Recommended)\" (2026-11-01), the load-refusal order for reading, splitting and parsing, E §3.1's later checks left open (issue #23)"

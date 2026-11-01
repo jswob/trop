@@ -1,0 +1,53 @@
+# R-84: gate 8's mutation score counts T's tests only, a gating milestone's among them
+# (tools/milestones.toml, issue #14): the mutants baseline and every shard select the
+# runner's default targets and each gating milestone's, and no other milestone's.
+
+case: mutants-select-gating-targets
+tool: run
+exit: any
+expect: -C=--lib
+expect: -C=--test=s_planted
+--- write tools/milestones.toml
+milestones = ["S", "M0", "M1", "M2", "M3", "M4", "M5a", "M5b", "M5c", "M6", "M7", "M8", "M9"]
+gating = ["S"]
+--- append tests/runner/Cargo.toml
+
+[[test]]
+name = "s_planted"
+path = "milestone/s_planted.rs"
+test = false
+--- write tests/runner/milestone/s_planted.rs
+//! Planted: a test of milestone S.
+
+#[test]
+fn planted_green() {
+    assert!(core::hint::black_box(true), "planted");
+}
+--- run
+tools/milestones args --mutants
+
+case: mutants-leave-later-milestones-out
+tool: run
+exit: any
+expect: -C=--lib
+expect: m0_planted is left out
+--- write tools/milestones.toml
+milestones = ["S", "M0", "M1", "M2", "M3", "M4", "M5a", "M5b", "M5c", "M6", "M7", "M8", "M9"]
+gating = ["S"]
+--- append tests/runner/Cargo.toml
+
+[[test]]
+name = "m0_planted"
+path = "milestone/m0_planted.rs"
+test = false
+--- write tests/runner/milestone/m0_planted.rs
+//! Planted: a test of milestone M0, which doesn't gate.
+
+#[test]
+fn planted_red() {
+    assert!(core::hint::black_box(false), "planted");
+}
+--- run
+args="$(tools/milestones args --mutants)"
+echo "$args"
+case "$args" in *m0_planted*) echo "m0_planted is selected" ;; *) echo "m0_planted is left out" ;; esac

@@ -1,0 +1,108 @@
+# R-77: every pull request runs the full check, with the tests of every gating milestone
+# (tools/milestones.toml, issue #14). Each case writes its own marker and plants its own
+# red test, so none depends on how far the engine is built.
+
+case: gating-milestone-red
+tool: run
+expect: FAIL gating: S gates
+--- write tools/milestones.toml
+milestones = ["S", "M0", "M1", "M2", "M3", "M4", "M5a", "M5b", "M5c", "M6", "M7", "M8", "M9"]
+gating = ["S"]
+--- append tests/runner/Cargo.toml
+
+[[test]]
+name = "s_planted"
+path = "milestone/s_planted.rs"
+test = false
+--- write tests/runner/milestone/s_planted.rs
+//! Planted: a red test of milestone S.
+
+#[test]
+fn planted_red() {
+    assert!(core::hint::black_box(false), "planted");
+}
+--- run
+tools/check step gating
+
+case: gating-milestone-red-release
+tool: run
+expect: FAIL gating-release: S gates
+--- write tools/milestones.toml
+milestones = ["S", "M0", "M1", "M2", "M3", "M4", "M5a", "M5b", "M5c", "M6", "M7", "M8", "M9"]
+gating = ["S"]
+--- append tests/runner/Cargo.toml
+
+[[test]]
+name = "s_planted"
+path = "milestone/s_planted.rs"
+test = false
+--- write tests/runner/milestone/s_planted.rs
+//! Planted: a red test of milestone S.
+
+#[test]
+fn planted_red() {
+    assert!(core::hint::black_box(false), "planted");
+}
+--- run
+tools/check step gating-release
+
+case: next-milestone-reported-not-failing
+tool: run
+exit: any
+expect: milestone-report: S:
+expect: the report step passed
+--- write tools/milestones.toml
+milestones = ["S", "M0", "M1", "M2", "M3", "M4", "M5a", "M5b", "M5c", "M6", "M7", "M8", "M9"]
+gating = []
+--- append tests/runner/Cargo.toml
+
+[[test]]
+name = "s_planted"
+path = "milestone/s_planted.rs"
+test = false
+--- write tests/runner/milestone/s_planted.rs
+//! Planted: a red test of milestone S.
+
+#[test]
+fn planted_red() {
+    assert!(core::hint::black_box(false), "planted");
+}
+--- run
+tools/check step milestone-report && echo "the report step passed"
+
+case: gating-unknown-milestone
+tool: run
+expect: FAIL gating: tools/milestones.toml: gating names S1, which isn't a milestone
+--- write tools/milestones.toml
+milestones = ["S", "M0", "M1", "M2", "M3", "M4", "M5a", "M5b", "M5c", "M6", "M7", "M8", "M9"]
+gating = ["S1"]
+--- run
+tools/check step gating
+
+case: gating-out-of-order
+tool: run
+expect: FAIL gating: tools/milestones.toml: gating must be the first milestones in build order
+--- write tools/milestones.toml
+milestones = ["S", "M0", "M1", "M2", "M3", "M4", "M5a", "M5b", "M5c", "M6", "M7", "M8", "M9"]
+gating = ["M0"]
+--- run
+tools/check step gating
+
+case: test-target-in-no-milestone
+tool: run
+expect: FAIL gating: tally-runner's test target planted has test = false but names no milestone
+--- append tests/runner/Cargo.toml
+
+[[test]]
+name = "planted"
+path = "milestone/planted.rs"
+test = false
+--- write tests/runner/milestone/planted.rs
+//! Planted: a test hidden from every run.
+
+#[test]
+fn planted_hidden() {
+    assert!(core::hint::black_box(false), "planted");
+}
+--- run
+tools/check step gating

@@ -1,0 +1,4 @@
+id	code	cwd	args	rc	out	rule
+LOAD-PATH/alone	LOAD-PATH	engine/tests/codes	run LOAD-PATH/nope.tally	1	refused: LOAD-PATH LOAD-PATH/nope.tally doesn't exist\n	L §8.3 LOAD-PATH: a path the run is given names no file or folder; named as given
+LOAD-PATH/before-parse	LOAD-PATH	engine/tests/codes	run LOAD-PATH/m.tally LOAD-PATH/a.tally LOAD-PATH/z.tally	1	refused: LOAD-PATH LOAD-PATH/z.tally doesn't exist\n	L §8.3 Which refusal prints: every file is read before any is split or parsed, so a missing path is refused before a.tally, first by full path, fails to parse
+LOAD-PATH/control	LOAD-PARSE	engine/tests/codes	run LOAD-PATH/m.tally LOAD-PATH/a.tally	1	refused: LOAD-PARSE cannot parse: expected ":", got int (LOAD-PATH/a.tally:4)\n	L §8.3 LOAD-PARSE: the control of before-parse: without the missing path, a.tally is refused

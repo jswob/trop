@@ -4,7 +4,7 @@ Printed by the build role's SessionStart hook at the start and after each compac
 
 ## 1. What this is
 
-- The spec is `engine/spec/` (tally 2.1, frozen, read-only): `LANGUAGE.md` says what a construct means, `ENGINE.md` how it is computed; `PERFORMANCE.md` and `BUILD-ORDER.md` plan the build.
+- The spec is `engine/spec/` (tally 2.1.1, frozen, read-only): `LANGUAGE.md` says what a construct means, `ENGINE.md` how it is computed; `PERFORMANCE.md` and `BUILD-ORDER.md` plan the build.
 - T's tests are `engine/tests/` (read-only). They decide "done"; refcore (`engine/tools/refcore/`) is the oracle, byte for byte.
 - You write `engine/crates/**` and `engine/BUILD-LOG.md`; `engine/EXCEPTIONS.lock` only through `engine/tools/exceptions --write`; a surviving mutant's row in `engine/MUTANTS-SURVIVORS.md` (§9). Nothing else.
 
@@ -27,6 +27,7 @@ Printed by the build role's SessionStart hook at the start and after each compac
 ## 3. The loop
 
 - Start: read the last `engine/BUILD-LOG.md` entries, the milestone's section of `engine/spec/BUILD-ORDER.md`, the plan's traceability table; run `engine/tools/check fast`; note the red vector ids.
+- `check` prints a line such as `milestone-report: S: 3/7 green`: T's Rust tests of the next milestone, your work list, never failing. Once the gate session tags a milestone, its tests gate like any other (`engine/tools/milestones.toml`), so they can't go red again.
 - Work: the next group of red vectors in plan order; implement; `engine/tools/check fast`; commit when green.
 - Before each commit: `engine/tools/check full`. Never commit red.
 - Only `engine/tools/check`, never raw `cargo` with your own flags. Read the one-line failures; open a log only when needed. A failure that doesn't reproduce is reported, not "fixed".

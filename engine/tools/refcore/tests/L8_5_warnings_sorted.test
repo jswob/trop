@@ -1,0 +1,47 @@
+# L §8.5 (tally 2.1.1): "A run's warnings print sorted by code, then by their text, compared by code point, whatever
+# the order of the reality's files." The files are given z.tally first: WARN-NEGATIVE (konto: 2 500.00 less 1 000.00
+# on each 5th, below zero from 2026-03-05) sorts before WARN-UNREAD, and the unread items sort by their text, def aa,
+# def zz, input bb, wherever they are declared and in whatever order load finds them (issue #13, T1's gap I-5).
+=== z.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source plan "plan"
+unit PLN: currency minor 0.01
+input save_amt: money PLN
+input save_dom: int
+place konto: accounts PLN lives 2019-05-01..
+place savings: accounts PLN lives 2019-05-01..
+def zz: int = 0
+
+move save[m in months]: transfers
+  on day_of(m, save_dom)
+  at start_of(m)
+  leg cash from konto to savings amount save_amt
+
+version plan_2026
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  save_amt = 1 000.00 PLN "own"
+  save_dom = 5 "own"
+  opening[konto] = 2 500.00 PLN at 2026-01-01 start "statement"
+  opening[savings] = 0 PLN at 2026-01-01 start "statement"
+
+ask k: bal(konto, 2026-03-31), bal(savings, 2026-03-31)
+=== a.tally
+part extra
+  tally 2
+
+def aa: int = 1
+input bb: int
+=== expect
+k: (-500.00 PLN, 3 000.00 PLN)
+...
+warning: WARN-NEGATIVE konto is below zero from 2026-03-05
+warning: WARN-UNREAD def aa is read by nothing
+warning: WARN-UNREAD def zz is read by nothing
+warning: WARN-UNREAD input bb is read by nothing

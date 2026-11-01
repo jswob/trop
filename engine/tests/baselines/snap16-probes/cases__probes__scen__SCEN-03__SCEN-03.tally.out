@@ -3,7 +3,7 @@ rent_base: 2 251.01 DUK
   assumed: the price index's base path: 3 % a year (cpi_change[2025], cpi_change[2026], cpi_change[2027], cpi_change[2028])
   cut 2026-10-25
 rent_over: refused: LOAD-SCENARIO ask rent_over names infl8, neither the model nor a loaded scenario (unit/probes/scen/SCEN-03/SCEN-03.tally:41)
-warning: WARN-UNREAD source what_if is read by nothing
 warning: WARN-UNREAD def bond_rate is read by nothing
 warning: WARN-UNREAD def mortgage_rate is read by nothing
 warning: WARN-UNREAD def pension is read by nothing
+warning: WARN-UNREAD source what_if is read by nothing

@@ -1,0 +1,16 @@
+# L §8.3 Which refusal prints (tally 2.1.1): load reads every file before it splits any into tokens. a.tally comes
+# first by its path and its grammar fails; z.tally doesn't exist: LOAD-PATH prints, since reading comes first.
+=== options disk missing=z.tally
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+=== a.tally
+part pa
+  tally 2
+
+def y int 1
+=== expect
+refused: LOAD-PATH z.tally doesn't exist
