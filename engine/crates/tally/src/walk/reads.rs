@@ -4,10 +4,11 @@
 //! `RUN-FUTURE`, a plain read of its own day `RUN-CYCLE`), §5.14.3 (`flows(x, span)`,
 //! `flows(m, span)`: their units, holes and refusals); §8.2 (the register: `unfulfilled:`,
 //! `left out:`, `adjustment:`, `uncertain:`); E §4.2 (a refused leg refuses every read of it;
-//! holes in the walk), E §3.3 (the main walk of a timeline).
+//! holes in the walk), E §4.3 (a read of a projection's walk rests on the walks it continues),
+//! E §3.3 (the main walk of a timeline).
 //! Twin: engine/tools/refcore/mreads.py (`place_arg`, `bal_unit`, `read_state`,
-//! `merge_cum`, `e_bal`, `note_read`, `bal_day`, `with_uncertain`, `e_flows`,
-//! `flows_place`, `flows_move`, `leg_refused`) and walk.py (`m_main_walk`).
+//! `merge_cum`, `e_bal`, `note_read`, `bal_day`, `with_uncertain`, `proj_uncertain`,
+//! `e_flows`, `flows_place`, `flows_move`, `leg_refused`) and walk.py (`m_main_walk`).
 //! Invariants: a read inside a decision sees the walk only up to its point; a read at the cut
 //! sees the whole main walk; a hole a read meets is printed with every question it rests on.
 
@@ -44,8 +45,11 @@ impl Engine {
         if b.of.is_some() {
             return Err(Stop::NotBuilt("bal of a party or a batch (G9)"));
         }
-        if b.modelled || b.proj.from.is_some() || b.proj.windows_each {
-            return Err(Stop::NotBuilt("a projection or a modelled balance (G7)"));
+        if b.modelled {
+            return Err(Stop::NotBuilt("a modelled balance (G8)"));
+        }
+        if b.proj.windows_each {
+            return Err(Stop::NotBuilt("`windows each` on a balance read"));
         }
         let Some(day_arg) = b.args.last() else {
             let Some(at) = ctx.at else {
@@ -62,6 +66,9 @@ impl Engine {
             return Ok(d);
         }
         let d = crate::ask::date_of(&d, "the day of bal")?;
+        if b.proj.from.is_some() {
+            return self.projection(m, b, (&place, &unit), d, (env, ctx));
+        }
         let key = if b.start { At::start(d) } else { At::end(d) };
         let v = self.bal_day(m, (&place, &unit), d, key, ctx)?;
         if b.proj.uncertain {
@@ -208,7 +215,7 @@ impl Engine {
 
     /// Notes a running decision's read of a place: where it sees the place at its point, for
     /// the order of the day's decisions (refcore's `note_read`). L §5.14.2.
-    fn note_live(&mut self, id: usize, place: &str) -> Result<(), Stop> {
+    pub(super) fn note_live(&mut self, id: usize, place: &str) -> Result<(), Stop> {
         let walk = self.walk_mut(id)?;
         if let Some(set) = &mut walk.live {
             set.insert(place.to_owned());
@@ -217,9 +224,11 @@ impl Engine {
     }
 
     /// A place's balance at a point of a walk, with its register: the entries since its last
-    /// reading, the adjustments with a remainder there, the moves left out that touch it
-    /// (refcore's `read_state`, `merge_cum`, `st_value`). L §5.10, §8.2.
-    fn read_state(
+    /// reading, in a projection's walk those of the walks it continues before its point, the
+    /// adjustments with a remainder there, the moves left out that touch it, in this walk and
+    /// those it continues (refcore's `read_state`, `merge_cum`, `st_value`). L §5.10, §8.2;
+    /// E §4.3.
+    pub(super) fn read_state(
         &mut self,
         m: &Reality,
         id: usize,
@@ -229,13 +238,38 @@ impl Engine {
     ) -> Result<Value, Stop> {
         let walk = self.walk(id)?;
         let st = walk.pstate(m, place, unit, at);
-        let (_, last) = walk.state(m, place, unit, at);
+        let anchor = walk.anchor_question(place);
         let mut met = Collected::default();
         for (day, entry) in walk.adj_regs.get(place).into_iter().flatten() {
             if *day <= at.day {
                 met.entries.insert(entry.clone());
             }
         }
+        let mut next = Some((id, at));
+        let mut links = 0_usize;
+        while let Some((wid, point)) = next {
+            links = links
+                .checked_add(1)
+                .filter(|n| *n <= self.walks.len())
+                .ok_or_else(|| invariant("a chain of walks that loops"))?;
+            next = self.chain_link(m, (wid, point), (place, unit), &mut met)?;
+        }
+        self.absorb(&met);
+        state_value(m, &st, unit, &anchor)
+    }
+
+    /// One walk of a read's chain: the moves left out there that touch the place, the register
+    /// of its entries since the last reset through `at`; the walk it continues and the point,
+    /// when no reset was seen (refcore's `read_state`, its chain, and `merge_cum`). L §8.2,
+    /// E §4.3 step 1.
+    fn chain_link(
+        &mut self,
+        m: &Reality,
+        (id, at): (usize, At),
+        (place, unit): (&str, &str),
+        met: &mut Collected,
+    ) -> Result<Option<(usize, At)>, Stop> {
+        let walk = self.walk(id)?;
         for mid in walk.left_out_at.get(place).into_iter().flatten() {
             let (n, first) = walk
                 .left_out
@@ -248,13 +282,14 @@ impl Engine {
                 figure: String::new(),
             });
         }
-        let anchor = walk.anchor_question(place);
+        let (st, last) = walk.state(m, place, unit, at);
+        let reset_seen = last.is_some() && st.rst.is_some();
+        let continued = walk.proj.as_ref().map(|p| (p.base, p.point));
         if let Some(i) = last {
             let cum = self.walk_mut(id)?.cum(place, unit, i);
-            self.absorb(&cum);
+            met.merge(&cum);
         }
-        self.absorb(&met);
-        state_value(m, &st, unit, &anchor)
+        Ok(continued.filter(|_| !reset_seen))
     }
 
     /// `bal(x, d) with uncertain`: the balance plus the movements of uncertain kinds dated
@@ -274,6 +309,37 @@ impl Engine {
             .rst
             .and_then(|r| walk.entries(place, unit).get(r))
             .map(|e| e.at);
+        let window = Window::SinceReading { day, since };
+        self.uncertain_sum(m, id, (place, unit), read, window)
+    }
+
+    /// A projection's balance `with uncertain`: plus the movements of uncertain kinds its
+    /// walk keeps, dated t through d (refcore's `proj_uncertain`). L §5.14.1, E §4.3 step 2.
+    pub(super) fn proj_uncertain(
+        &mut self,
+        m: &Reality,
+        id: usize,
+        (place, unit): (&str, &str),
+        day: Day,
+        read: &Value,
+    ) -> Result<Value, Stop> {
+        let start = self.walk(id)?.start;
+        let window = Window::Projected { start, day };
+        self.uncertain_sum(m, id, (place, unit), read, window)
+    }
+
+    /// A balance plus the uncertain movements walk `id` keeps at the place inside `window`,
+    /// with `uncertain:` in the register; a hole where an amount is one (refcore's
+    /// `with_uncertain`, `proj_uncertain`). L §5.14.
+    fn uncertain_sum(
+        &mut self,
+        m: &Reality,
+        id: usize,
+        (place, unit): (&str, &str),
+        read: &Value,
+        window: Window,
+    ) -> Result<Value, Stop> {
+        let walk = self.walk(id)?;
         let mut acc = Uncertain {
             add: Num::zero(),
             holes: Vec::new(),
@@ -285,7 +351,7 @@ impl Engine {
                     .day
                     .day()
                     .or_else(|| movement.day.as_ref().and_then(Dated::day));
-                if counted(dated, day, since) {
+                if counted(dated, window) {
                     acc.leg(place, movement, leg)?;
                 }
             }
@@ -947,14 +1013,38 @@ fn wanted(leg: Option<&str>, name: &str) -> bool {
     }
 }
 
-/// Whether an uncertain movement dated `dated` counts in a balance through `day`: dated by
-/// then, and after the place's last reading (refcore's `with_uncertain`). L §5.14.
-fn counted(dated: Option<Day>, day: Day, since: Option<At>) -> bool {
+/// Which uncertain movements a balance read `with uncertain` counts (L §5.14).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Window {
+    /// A plain balance through `day`: those dated by then and after the place's last
+    /// reading, `since`.
+    SinceReading {
+        /// The day read.
+        day: Day,
+        /// The point of the place's last reading.
+        since: Option<At>,
+    },
+    /// A projection's from `start` through `day` (L §5.14.1).
+    Projected {
+        /// The projection's first day, t.
+        start: Day,
+        /// The day read.
+        day: Day,
+    },
+}
+
+/// Whether an uncertain movement dated `dated` counts in a balance read with `window`
+/// (refcore's `with_uncertain`, `proj_uncertain`). L §5.14, §5.14.1.
+fn counted(dated: Option<Day>, window: Window) -> bool {
     let Some(d) = dated else {
         return false;
     };
-    match since {
-        None => d <= day,
-        Some(s) => d <= day && At::end(d) > s,
+    match window {
+        Window::SinceReading { day, since: None } => d <= day,
+        Window::SinceReading {
+            day,
+            since: Some(s),
+        } => d <= day && At::end(d) > s,
+        Window::Projected { start, day } => start <= d && d <= day,
     }
 }

@@ -44,12 +44,29 @@ impl Engine {
     ///
     /// The refusal the walk met; `Deep` while a cell it needs waits on the work stack.
     pub(crate) fn advance(&mut self, m: &Reality, id: usize) -> Result<(), Stop> {
+        self.advance_to(m, id, None)
+    }
+
+    /// Walks timeline `id` through day `last`, or to its last day for none: a later day is
+    /// left until a read needs it, so a refusal past `last` refuses no read of it (refcore's
+    /// `run_to`). E §4.2, §4.3, P §2.2.
+    ///
+    /// # Errors
+    ///
+    /// The refusal the walk met; `Deep` while a cell it needs waits on the work stack.
+    pub(crate) fn advance_to(
+        &mut self,
+        m: &Reality,
+        id: usize,
+        last: Option<Day>,
+    ) -> Result<(), Stop> {
         loop {
             let walk = self.walk(id)?;
             let step = match &walk.progress {
                 Progress::Done => return Ok(()),
                 Progress::Failed(stop) => return Err(stop.clone()),
-                Progress::Planning => self.plan_walk(m, id),
+                Progress::Planning => self.plan_alone(m, id),
+                Progress::Walking if walk.paused_after(self.days, last) => return Ok(()),
                 Progress::Walking => self.step_day(m, id),
             };
             match step {
@@ -64,6 +81,15 @@ impl Engine {
                 self.gather_warnings(id)?;
             }
         }
+    }
+
+    /// A walk's plan pass, what its evaluation met kept apart from the read that started it
+    /// (refcore's `prepare`, in its own collector). E §4.1.
+    fn plan_alone(&mut self, m: &Reality, id: usize) -> Result<(), Stop> {
+        self.push();
+        let planned = self.plan_walk(m, id);
+        self.pop_alone();
+        planned
     }
 
     /// A walk's warnings, once it is done, joined to the engine's, each once (refcore's
@@ -466,7 +492,11 @@ impl Engine {
             Some(t) => t.touched.clone(),
             None => BTreeSet::new(),
         };
-        let money = accounts_and_cash(m);
+        let money = if walk.proj.is_none() {
+            accounts_and_cash(m)
+        } else {
+            BTreeSet::new()
+        };
         for place in &touched {
             let Some(thing) = m.things.get(place) else {
                 continue;

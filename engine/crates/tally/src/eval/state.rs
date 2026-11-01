@@ -12,11 +12,11 @@ use std::collections::{BTreeMap, BTreeSet};
 use crate::Days;
 use crate::base::{Code, Refusal, Run, Warn};
 use crate::book::Adjustment;
-use crate::model::{Domain, KeyVal, Reality, Value};
+use crate::model::{Domain, KeyVal, Node, NodeKind, Reality, Value};
 use crate::num::NumError;
-use crate::syntax::Stop;
+use crate::syntax::{Ask, Stop};
 use crate::time::Day;
-use crate::walk::{Inst, Walk, WalkAt};
+use crate::walk::{Inst, ProjKey, Walk, WalkAt};
 
 /// The deepest chain of def cells computed by plain calls; past it the cell demanded waits on
 /// the work stack (R-16, BUILDER §4). U-15, measured at S: a debug build uses about 19 KB of
@@ -247,6 +247,14 @@ pub struct Engine {
     pub(crate) guarded: Option<BTreeSet<String>>,
     /// The warnings of the walks done, in the order met (L §8.5).
     pub(crate) walk_warnings: Vec<(Warn, String)>,
+    /// The projections' walks, by what makes each (E §4.3).
+    pub(crate) proj_walks: BTreeMap<ProjKey, usize>,
+    /// The item whose expression is evaluated now: a projection's holder, whose dependents
+    /// it leaves out (L §5.14.1).
+    pub(crate) holder: Option<Node>,
+    /// Whether the ask's line states `with uncertain`, which every projection it reaches
+    /// takes (L §5.14.1, §5.18).
+    pub(crate) uncertain: bool,
 }
 
 impl Engine {
@@ -271,6 +279,9 @@ impl Engine {
             adjust_active: BTreeSet::new(),
             guarded: None,
             walk_warnings: Vec::new(),
+            proj_walks: BTreeMap::new(),
+            holder: None,
+            uncertain: false,
         }
     }
 
@@ -278,6 +289,23 @@ impl Engine {
     #[must_use]
     pub fn with_days(self, days: Days) -> Engine {
         Engine { days, ..self }
+    }
+
+    /// The engine answering `ask`: the holder of the projections its lines write, each `with
+    /// uncertain` when its line states it (L §5.14.1, §5.18).
+    #[must_use]
+    pub fn for_ask(self, ask: &Ask) -> Engine {
+        Engine {
+            holder: Some(Node::new(NodeKind::Ask, &ask.id)),
+            uncertain: ask.uncertain,
+            ..self
+        }
+    }
+
+    /// Evaluates with `item` as the holder of the projections met, the outer holder back
+    /// after (L §5.14.1: a projection leaves out what depends on the item holding it).
+    pub(crate) fn holding(&mut self, item: Node) -> Option<Node> {
+        self.holder.replace(item)
     }
 
     /// The warnings the walks met, in the order met (L §8.5).

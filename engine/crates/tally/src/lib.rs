@@ -128,15 +128,16 @@ pub mod eval {
 }
 
 /// The walk (E §4): the plan pass's instances and their order (E §4.1), the day walk's
-/// agenda, days, place states and the sign rule (E §4.2), the decisions at their points, and
-/// the balance and flows reads. The kernel's (gate 8); the module's code is its files under
-/// `walk/`.
+/// agenda, days, place states and the sign rule (E §4.2), the decisions at their points, the
+/// balance and flows reads, and the written projection's own walk (E §4.3). The kernel's
+/// (gate 8); the module's code is its files under `walk/`.
 pub mod walk {
     mod agenda;
     mod day;
     mod order;
     mod plan;
     mod point;
+    mod projection;
     mod reads;
     mod state;
 
@@ -148,7 +149,8 @@ pub mod walk {
         Amount, Dated, End, Exists, Inst, LegVal, Order, Seed, Status, kind_certainty, qty_value,
     };
     pub use point::{At, Step};
-    pub use state::{ALL, Change, Ent, Group, Log, Progress, St, Taken, Today, Walk};
+    pub use projection::ProjKey;
+    pub use state::{ALL, Change, Ent, Group, Log, Progress, Projected, St, Taken, Today, Walk};
 }
 
 /// The book's adjustments (E §5): a booked instance measured again at each later version's

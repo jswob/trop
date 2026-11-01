@@ -1,10 +1,10 @@
 //! The walk oracle on the kernel corpus: every record answered by the event walk and by the step-every-day walk, the same bytes.
 //! Spec: P §2.2 (the oracle: a step-every-day walk beside the event-driven one, built from the
 //! same step functions, prints the same bytes; a property test compares them on every case);
-//! E §4.2 (the day walk).
+//! E §4.2 (the day walk), §4.3 (a projection's walk).
 //! Twin: engine/tools/refcore/walk.py (`run_to`, which steps every day).
 //! Invariants: reads the corpus's realities only, never its answer key (R-93); every record
-//! but a projection's (G7) answers, and both walks print each alike (SQ-3).
+//! answers, and both walks print each alike (SQ-3).
 
 #![forbid(unsafe_code)]
 
@@ -94,15 +94,13 @@ mod tests {
             let events = answer(record, Days::Events);
             let every = answer(record, Days::Every);
             assert_eq!(events, every, "{} {}", record.case, record.variant);
-            // projections (L §5.14.1) are G7's: until then their records aren't built
-            if record.law != "foresight-projection" {
-                assert!(
-                    events.is_some(),
-                    "{} {} is answered",
-                    record.case,
-                    record.variant
-                );
-            }
+            assert!(
+                events.is_some(),
+                "{} {} ({}) is answered",
+                record.case,
+                record.variant,
+                record.law
+            );
         }
     }
 }

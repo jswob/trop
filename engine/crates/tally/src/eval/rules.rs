@@ -14,7 +14,8 @@ use super::state::{
 use crate::base::{Load, Run};
 use crate::hole::{Hole, spread};
 use crate::model::{
-    Class, DefInfo, KeyVal, Number, Reality, RuleVer, Shown, Ty, Unit, Value, pattern_text,
+    Class, DefInfo, KeyVal, Node, NodeKind, Number, Reality, RuleVer, Shown, Ty, Unit, Value,
+    pattern_text,
 };
 use crate::read::{Test, candidates, choose, origin, rule_in_force};
 use crate::syntax::{LawDate, RuleValue, Stop};
@@ -123,9 +124,11 @@ impl Engine {
             .checked_add(1)
             .ok_or_else(|| invariant("the depth count"))?;
         self.push();
+        let outer = self.holding(Node::new(NodeKind::Def, &def.id));
         let result = self
             .rules(m, def, keys, env, ctx)
             .and_then(|v| coerce_def(m, def, v));
+        self.holder = outer;
         let met = self.pop_alone();
         self.depth = self
             .depth

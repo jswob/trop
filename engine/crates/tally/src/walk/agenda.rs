@@ -1,15 +1,18 @@
 //! The walk's agenda: the acts the plan pass hands the day walk, each at its point, and the days the walk steps through.
 //! Spec: E §4.1 (what the plan pass hands the walk; the movement order), §4.2 (the day walk's
-//! steps; a hole movement; a decision's day), §5 step 5 (`HOLE-CHANGED` from an adjustment's
-//! day); L §5.19 (readings: an `opening` at `t start` anchors with t before K or t = S);
-//! P §2.2 (the event-driven walk steps only days that hold an act, N-1 to N-14; the oracle
-//! steps every day).
+//! steps; a hole movement; a decision's day), §4.3 (a projection's walk: the movements dated t
+//! through d, those that depend on its holder left out and counted, no reading, observation or
+//! adjustment; read at a decision's point, only the decisions after it that day), §5 step 5
+//! (`HOLE-CHANGED` from an adjustment's day); L §5.19 (readings: an `opening` at `t start`
+//! anchors with t before K or t = S); P §2.2 (the event-driven walk steps only days that hold
+//! an act, N-1 to N-14; the oracle steps every day).
 //! Twin: engine/tools/refcore/walk.py (`Walk.prepare`, `sched_leg`, `sched_hole`,
-//! `sched_leg_hole`, `sched_refused`, `sched_adj`, `note_leftout`, `dec_hole`, `ending`) and
-//! moves.py (`readings`).
+//! `sched_leg_hole`, `sched_refused`, `sched_adj`, `note_leftout`, `count_leftout`,
+//! `dec_hole`, `ending`, and `proj_walk`'s first day) and moves.py (`readings`).
 //! Invariants: every act is scheduled on its day at its point before the walk reaches that
 //! day; the event walk steps the days with an act, the run's first day and each lifespan's
-//! last; the oracle steps every day from S to E through the same steps.
+//! last; the oracle steps every day from S to E through the same steps; a projection's walk
+//! books nothing of a move its holder's dependents hold.
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -105,6 +108,16 @@ impl Walk {
         };
         (next <= self.end).then_some(next)
     }
+
+    /// Whether the walk has walked every day through `last` that holds an act: no day is
+    /// open and its next day is later (refcore's `run_to`, which stops at its day). E §4.3.
+    #[must_use]
+    pub fn paused_after(&self, days: Days, last: Option<Day>) -> bool {
+        let Some(last) = last else {
+            return false;
+        };
+        self.today.is_none() && self.next_day(days, &self.endings).is_some_and(|d| d > last)
+    }
 }
 
 impl Engine {
@@ -117,9 +130,12 @@ impl Engine {
     /// The refusals the plan pass meets; `NotBuilt` for observations, coverage and `stated`
     /// readings (G8) and for a written order with a plan.
     pub(crate) fn plan_walk(&mut self, m: &Reality, id: usize) -> Result<(), Stop> {
-        let cut = self.walk(id)?.cut;
+        let (cut, main) = {
+            let walk = self.walk(id)?;
+            (walk.cut, walk.proj.is_none())
+        };
         not_yet(m)?;
-        let readings = readings(m, cut)?;
+        let readings = if main { readings(m, cut)? } else { Vec::new() };
         let mut plans = Vec::new();
         let mut decisions = Vec::new();
         for mv in sorted_moves(m) {
@@ -132,7 +148,10 @@ impl Engine {
         }
         plans.sort_by(|a, b| a.order.cmp(&b.order));
         let mut adjustments = Vec::new();
-        for mv in sorted_moves(m).into_iter().filter(|mv| !mv.decision) {
+        for mv in sorted_moves(m)
+            .into_iter()
+            .filter(|mv| main && !mv.decision)
+        {
             adjustments.extend(self.adjust_move(m, mv, cut)?);
         }
         let walk = self.walk_mut(id)?;
@@ -140,10 +159,20 @@ impl Engine {
         walk.order_texts = texts.into_iter().collect();
         schedule_readings(walk, &readings)?;
         for inst in plans {
+            if left_out_of(walk, &inst.move_id) {
+                if inst.status != Status::None {
+                    count_left_out(walk, &inst)?;
+                }
+                continue;
+            }
             schedule_plan(walk, inst)?;
         }
         for (rank, (move_id, stratum, insts)) in ranked3(decisions).into_iter().enumerate() {
             for inst in insts {
+                if left_out_of(walk, &move_id) {
+                    count_left_out(walk, &inst)?;
+                    continue;
+                }
                 schedule_decision(m, walk, (&move_id, stratum, rank), inst)?;
             }
         }
@@ -151,8 +180,50 @@ impl Engine {
             schedule_adjustment(m, walk, &adj)?;
         }
         walk.endings = endings(m, walk);
+        after_the_point(walk);
         walk.progress = Progress::Walking;
         Ok(())
+    }
+}
+
+/// Whether a projection's walk leaves out the movements of move `move_id`: they depend on
+/// the projection's holder (L §5.14.1); a main walk leaves out none. E §4.3 step 3.
+fn left_out_of(walk: &Walk, move_id: &str) -> bool {
+    walk.proj
+        .as_ref()
+        .is_some_and(|p| p.left_out.contains(move_id))
+}
+
+/// An instance a projection's walk leaves out, kept by its day for the `left out:` line of
+/// a read whose window holds it (refcore's `count_leftout`). E §4.3 step 3, L §8.2.
+fn count_left_out(walk: &mut Walk, inst: &Inst) -> Result<(), Stop> {
+    let Some(day) = inst.day.as_ref().and_then(Dated::day) else {
+        return Ok(());
+    };
+    let p = walk
+        .proj
+        .as_mut()
+        .ok_or_else(|| super::plan::invariant("an instance left out of a main walk"))?;
+    p.counted
+        .entry(inst.move_id.clone())
+        .or_insert_with(Vec::new)
+        .push(day);
+    Ok(())
+}
+
+/// A projection's walk read at a decision's point: on its first day only the decisions after
+/// that point are left, since what the day booked before it is in the start (refcore's
+/// `proj_walk`). L §5.14.1, E §4.3 step 1.
+fn after_the_point(walk: &mut Walk) {
+    let Some(p) = &walk.proj else {
+        return;
+    };
+    let (point, first) = (p.point, walk.start);
+    if point <= At::start(first) {
+        return;
+    }
+    if let Some(acts) = walk.agenda.get_mut(&first) {
+        acts.retain(|(at, act)| matches!(act, Act::Decide(..)) && *at > point);
     }
 }
 
@@ -229,6 +300,17 @@ fn readings(m: &Reality, cut: Day) -> Result<Vec<Seen>, Stop> {
             place,
             reading,
         ));
+    }
+    Ok(out)
+}
+
+/// Each place's first reading day among the readings cut `cut` sees, for `HOLE-ANCHOR`
+/// (refcore's `anchor_question`, its days). L §8.1.
+pub(super) fn first_readings(m: &Reality, cut: Day) -> Result<BTreeMap<String, Day>, Stop> {
+    let mut out: BTreeMap<String, Day> = BTreeMap::new();
+    for (day, _, place, _) in readings(m, cut)? {
+        let first = out.entry(place).or_insert(day);
+        *first = (*first).min(day);
     }
     Ok(out)
 }
@@ -321,6 +403,11 @@ fn schedule_plan(walk: &mut Walk, inst: Inst) -> Result<(), Stop> {
         }
         Status::Refused | Status::Hole | Status::Past | Status::Plan => {}
     }
+    let first = inst.day.as_ref().and_then(Dated::day);
+    if walk.proj.is_some() && first.is_some_and(|d| d < walk.start) {
+        // a projection counts the movements dated t through d (E §4.3 step 2)
+        return Ok(());
+    }
     let ix = walk.insts.len();
     let status = inst.status;
     walk.insts.push(inst.clone());
@@ -406,7 +493,7 @@ fn schedule_decision(
     match inst.day.clone() {
         Some(Dated::Day(d)) => {
             if d < walk.start || d > walk.end {
-                if d < m.start || d > m.end {
+                if walk.proj.is_none() && (d < m.start || d > m.end) {
                     note_left_out(walk, &inst)?;
                 }
                 return Ok(());

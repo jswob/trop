@@ -16,8 +16,8 @@ use super::state::{Ctx, Engine, Env, invariant, num_stop, refuse, refuse_load, w
 use crate::base::{Load, Run};
 use crate::hole::Hole;
 use crate::model::{
-    BandEnd, BandInfo, BandRow, BandTable, Class, KeyVal, Number, Reality, Ty, Value, currency_id,
-    money_num,
+    BandEnd, BandInfo, BandRow, BandTable, Class, KeyVal, Node, NodeKind, Number, Reality, Ty,
+    Value, currency_id, money_num,
 };
 use crate::num::{Money, Num};
 use crate::read::{BandAt, band_no_row, band_no_table, band_origin, band_rows, table_held};
@@ -131,8 +131,10 @@ impl Engine {
             RuleValue::Hole(text) => return Ok(Value::Hole(Hole::asked(text, figure))),
             RuleValue::Expr(e) => e,
         };
-        let v = self.ev(m, expr, &Env::band(&band.arg, x), ctx)?;
-        band_typed(m, band, expr, v)
+        let outer = self.holding(Node::new(NodeKind::Band, &band.id));
+        let v = self.ev(m, expr, &Env::band(&band.arg, x), ctx);
+        self.holder = outer;
+        band_typed(m, band, expr, v?)
     }
 }
 

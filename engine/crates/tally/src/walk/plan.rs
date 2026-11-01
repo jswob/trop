@@ -16,7 +16,8 @@ use crate::base::{Code, Load, Refusal, Run};
 use crate::eval::{Collected, Ctx, Engine, Env, Member, order_text, reads_name, thing_seen};
 use crate::hole::{Hole, spread};
 use crate::model::{
-    Domain, KeyVal, MoveInfo, Number, Reality, Value, currency_id, money_num, num_money,
+    Domain, KeyVal, MoveInfo, Node, NodeKind, Number, Reality, Value, currency_id, money_num,
+    num_money,
 };
 use crate::num::Num;
 use crate::syntax::{Certainty, Leg, Stop};
@@ -559,12 +560,29 @@ impl Engine {
     }
 
     /// An instance's body in context `ctx`, its law date and cut set: its `when`, period,
-    /// legs and attributes (refcore's `body_over_law`, `inst_body`). L §5.14, E §5 step 1.
+    /// legs and attributes, with its move the holder of the projections met (refcore's
+    /// `body_over_law`, `inst_body`). L §5.14, §5.14.1, E §5 step 1.
     ///
     /// # Errors
     ///
     /// `RUN-NONE` for a `when` that is none; the refusals of its parts.
     pub(super) fn inst_body(
+        &mut self,
+        m: &Reality,
+        mv: &MoveInfo,
+        inst: &Inst,
+        ctx: Ctx,
+        exists: Exists,
+    ) -> Result<Body, Stop> {
+        let outer = self.holding(Node::new(NodeKind::Move, &mv.id));
+        let body = self.move_body(m, mv, inst, ctx, exists);
+        self.holder = outer;
+        body
+    }
+
+    /// An instance's body: its `when`, period, legs and attributes (refcore's
+    /// `body_over_law`, `inst_body`). L §5.14, E §5 step 1.
+    fn move_body(
         &mut self,
         m: &Reality,
         mv: &MoveInfo,

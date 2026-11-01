@@ -91,7 +91,7 @@ fn ask_lines(
     }
     let mut cut = m.on;
     if let Some(known) = &ask.known {
-        let mut engine = Engine::new(m.on).with_days(days);
+        let mut engine = Engine::new(m.on).with_days(days).for_ask(ask);
         let v = engine.value(m, known, &Env::empty(), Ctx::new(None, cut));
         gather(warnings, &engine);
         let v = v?;
@@ -100,7 +100,7 @@ fn ask_lines(
         }
         cut = date_of(&v, "as known")?;
     }
-    let mut engine = Engine::new(cut).with_days(days);
+    let mut engine = Engine::new(cut).with_days(days).for_ask(ask);
     let out = ask_body(m, ask, &mut engine, cut);
     gather(warnings, &engine);
     out
