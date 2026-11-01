@@ -154,14 +154,7 @@ mod tests {
         met.entries.insert(entry("given", "g = 2 (v)", ""));
         let day = Day::from_ymd(2026, 3, 1).expect("a day");
         let law = Day::from_ymd(2026, 2, 1).expect("a day");
-        let lines = register_lines(
-            &met,
-            Ctx {
-                law: Some(law),
-                cut: day,
-            },
-        )
-        .expect("lines");
+        let lines = register_lines(&met, Ctx::new(Some(law), day)).expect("lines");
         assert_eq!(
             lines,
             [
@@ -174,13 +167,7 @@ mod tests {
             ],
             "refcore's order"
         );
-        let bare = register_lines(
-            &Collected::default(),
-            Ctx {
-                law: None,
-                cut: day,
-            },
-        );
+        let bare = register_lines(&Collected::default(), Ctx::new(None, day));
         assert_eq!(bare.expect("lines"), ["cut 2026-03-01"], "no law date");
     }
 
@@ -190,14 +177,7 @@ mod tests {
         met.entries.insert(entry("sample", "x", ""));
         let day = Day::from_ymd(2026, 3, 1).expect("a day");
         assert!(
-            register_lines(
-                &met,
-                Ctx {
-                    law: None,
-                    cut: day
-                }
-            )
-            .is_err(),
+            register_lines(&met, Ctx::new(None, day)).is_err(),
             "never dropped"
         );
     }

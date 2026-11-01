@@ -11,7 +11,7 @@
 
 #[cfg(test)]
 mod tests {
-    use tally::{Asks, Given, Pin, Request, run};
+    use tally::{Asks, Days, Given, Pin, Request, run};
 
     /// Inputs with rows from a version with an `assumed` reason, a row governing from a later
     /// day, a row known after an `as known` cut, holes, a division by zero.
@@ -129,6 +129,7 @@ some (m = 2026-06): ?"pay at 2026-06: no value for 2026-06" (pay[2026-06])"#;
         let request = Request {
             asks,
             pin: Pin::Canonical,
+            days: Days::Events,
         };
         let answer = run(given, &request).expect("an answer");
         answer.lines().to_vec()

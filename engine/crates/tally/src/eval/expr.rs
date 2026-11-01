@@ -31,7 +31,7 @@ impl Engine {
     /// # Errors
     ///
     /// The refusals of L §8.4 the expression meets; `NotBuilt` for a node S doesn't build.
-    pub(super) fn ev(&mut self, m: &Reality, e: &Expr, env: &Env, ctx: Ctx) -> Result<Value, Stop> {
+    pub(crate) fn ev(&mut self, m: &Reality, e: &Expr, env: &Env, ctx: Ctx) -> Result<Value, Stop> {
         match e {
             Expr::Lit(lit) => literal(m, lit, env.figures),
             Expr::Str(s) => Ok(Value::Text(s.clone())),
@@ -57,8 +57,8 @@ impl Engine {
             Expr::LegOf(..) => Err(Stop::NotBuilt("a leg's amount of a party or a batch")),
             Expr::To(..) => Err(Stop::NotBuilt("`to u`, a transcendental value")),
             Expr::Last(..) => Err(Stop::NotBuilt("`last(x, d)`")),
-            Expr::Bal(..) => Err(Stop::NotBuilt("a balance read (the walk)")),
-            Expr::Flows(..) => Err(Stop::NotBuilt("flows (the walk)")),
+            Expr::Bal(b) => self.bal(m, b, env, ctx),
+            Expr::Flows(f) => self.flows(m, f, env, ctx),
             Expr::Covered(..) => Err(Stop::NotBuilt("covered (observations)")),
             Expr::Calendar(..) => Err(Stop::NotBuilt("a calendar written in a rule")),
             Expr::Value(..) => Err(Stop::NotBuilt("value (the walk)")),
@@ -118,7 +118,7 @@ impl Engine {
 
     /// A key as written: a literal or a name no variable or item holds is a key literal its
     /// position resolves; anything else is evaluated (L §2.5).
-    pub(super) fn given_key(
+    pub(crate) fn given_key(
         &mut self,
         m: &Reality,
         e: &Expr,

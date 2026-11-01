@@ -9,11 +9,14 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use crate::base::{Code, Refusal, Run};
+use crate::Days;
+use crate::base::{Code, Refusal, Run, Warn};
+use crate::book::Adjustment;
 use crate::model::{Domain, KeyVal, Reality, Value};
 use crate::num::NumError;
 use crate::syntax::Stop;
 use crate::time::Day;
+use crate::walk::{Inst, Walk, WalkAt};
 
 /// The deepest chain of def cells computed by plain calls; past it the cell demanded waits on
 /// the work stack (R-16, BUILDER §4). U-15, measured at S: a debug build uses about 19 KB of
@@ -28,19 +31,31 @@ pub struct Ctx {
     pub law: Option<Day>,
     /// The cut K: what the read sees (L §4.5).
     pub cut: Day,
+    /// The walk point of a running read, inside a decision (L §5.14.1); none at the cut.
+    pub at: Option<WalkAt>,
 }
 
 impl Ctx {
+    /// The context of law date `law` and cut `cut`, at no walk point.
+    #[must_use]
+    pub fn new(law: Option<Day>, cut: Day) -> Ctx {
+        Ctx { law, cut, at: None }
+    }
+
     /// The context with law date `law`.
     #[must_use]
     pub fn at_law(self, law: Option<Day>) -> Ctx {
         Ctx { law, ..self }
     }
 
-    /// The context as a memo key's text.
+    /// The context as a memo key's text: a running read's cells are kept per walk point
+    /// (E §3.2).
     pub(super) fn key(self) -> String {
         let law = self.law.map_or_else(|| "-".to_owned(), Day::text);
-        format!("{law}|{}", self.cut.text())
+        match self.at {
+            None => format!("{law}|{}", self.cut.text()),
+            Some(at) => format!("{law}|{}|{}@{}", self.cut.text(), at.walk, at.point.text()),
+        }
     }
 }
 
@@ -158,12 +173,16 @@ pub struct Collected {
     pub entries: BTreeSet<Entry>,
     /// Whether a `missing(r)` evaluated in this collector, not in a cell below it, was true.
     pub missing: bool,
+    /// The versions of the rows read (refcore's `Coll.rows`, their versions): which versions
+    /// a later step's adjustment names (E §5 step 4).
+    pub versions: BTreeSet<String>,
 }
 
 impl Collected {
-    /// Adds the register entries `other` met (its `missing` stays its own).
+    /// Adds the register entries and versions `other` met (its `missing` stays its own).
     pub fn merge(&mut self, other: &Collected) {
         self.entries.extend(other.entries.iter().cloned());
+        self.versions.extend(other.versions.iter().cloned());
     }
 }
 
@@ -197,7 +216,7 @@ pub struct Engine {
     /// The memo: a cell's key to its result.
     pub(super) memo: BTreeMap<String, Cell>,
     /// The cells being computed.
-    pub(super) active: BTreeSet<String>,
+    pub(crate) active: BTreeSet<String>,
     /// The collectors, the innermost last; never empty.
     pub(super) stack: Vec<Collected>,
     /// The def cells open now.
@@ -205,11 +224,34 @@ pub struct Engine {
     /// The cells demanded past the counted depth, the latest last (R-16).
     pub(super) work: Vec<Task>,
     /// The ask's cut, past which a row read for a later day is `held` (L §8.2).
-    pub(super) ask_cut: Day,
+    pub(crate) ask_cut: Day,
+    /// The walks, by their place in the list (E §3.3).
+    pub(crate) walks: Vec<Walk>,
+    /// The main walk of each cut's timeline, by its place in `walks`.
+    pub(crate) main_walks: BTreeMap<Day, usize>,
+    /// The walks being walked now: a read of one of them is a read of a walk under
+    /// construction.
+    pub(crate) walking: BTreeSet<usize>,
+    /// The day source: the event walk, or the oracle's every day (P §2.2).
+    pub(crate) days: Days,
+    /// Each move's instances per cut (E §4.1).
+    pub(crate) plans: BTreeMap<(String, Day), Vec<Inst>>,
+    /// The moves whose instances are being computed (RUN-CYCLE).
+    pub(crate) plan_active: BTreeSet<(String, Day)>,
+    /// Each plan move's adjustments per cut (E §5).
+    pub(crate) adjustments: BTreeMap<(String, Day), Vec<Adjustment>>,
+    /// The moves whose adjustments are being computed (RUN-CYCLE).
+    pub(crate) adjust_active: BTreeSet<(String, Day)>,
+    /// The cells in progress when a leg's read started its walk: a walk that needs one of them
+    /// is refcore's guarded walk, not built.
+    pub(crate) guarded: Option<BTreeSet<String>>,
+    /// The warnings of the walks done, in the order met (L §8.5).
+    pub(crate) walk_warnings: Vec<(Warn, String)>,
 }
 
 impl Engine {
-    /// An engine with an empty memo, for an ask whose cut is `ask_cut`.
+    /// An engine with an empty memo, for an ask whose cut is `ask_cut`, walking the event
+    /// walk's days.
     #[must_use]
     pub fn new(ask_cut: Day) -> Engine {
         Engine {
@@ -219,13 +261,57 @@ impl Engine {
             depth: 0,
             work: Vec::new(),
             ask_cut,
+            walks: Vec::new(),
+            main_walks: BTreeMap::new(),
+            walking: BTreeSet::new(),
+            days: Days::Events,
+            plans: BTreeMap::new(),
+            plan_active: BTreeSet::new(),
+            adjustments: BTreeMap::new(),
+            adjust_active: BTreeSet::new(),
+            guarded: None,
+            walk_warnings: Vec::new(),
         }
     }
 
+    /// The engine walking the days of `days`.
+    #[must_use]
+    pub fn with_days(self, days: Days) -> Engine {
+        Engine { days, ..self }
+    }
+
+    /// The warnings the walks met, in the order met (L §8.5).
+    #[must_use]
+    pub fn walk_warnings(&self) -> &[(Warn, String)] {
+        &self.walk_warnings
+    }
+
+    /// Walk `id`.
+    pub(crate) fn walk(&self, id: usize) -> Result<&Walk, Stop> {
+        self.walks
+            .get(id)
+            .ok_or_else(|| invariant("a walk the engine lacks"))
+    }
+
+    /// Walk `id`, to change.
+    pub(crate) fn walk_mut(&mut self, id: usize) -> Result<&mut Walk, Stop> {
+        self.walks
+            .get_mut(id)
+            .ok_or_else(|| invariant("a walk the engine lacks"))
+    }
+
     /// Records a register entry in the innermost collector (L §8.2).
-    pub(super) fn note(&mut self, word: &'static str, text: String, figure: String) {
+    pub(crate) fn note(&mut self, word: &'static str, text: String, figure: String) {
         if let Some(top) = self.stack.last_mut() {
             top.entries.insert(Entry { word, text, figure });
+        }
+    }
+
+    /// Records that a row of version `version` was read, in the innermost collector (E §5
+    /// step 4: the versions an adjustment names).
+    pub(super) fn note_version(&mut self, version: &str) {
+        if let Some(top) = self.stack.last_mut() {
+            top.versions.insert(version.to_owned());
         }
     }
 
@@ -237,13 +323,13 @@ impl Engine {
     }
 
     /// Opens a collector.
-    pub(super) fn push(&mut self) {
+    pub(crate) fn push(&mut self) {
         self.stack.push(Collected::default());
     }
 
     /// Closes the innermost collector and returns what it met, without adding it to the one
     /// outside.
-    pub(super) fn pop_alone(&mut self) -> Collected {
+    pub(crate) fn pop_alone(&mut self) -> Collected {
         if self.stack.len() > 1
             && let Some(top) = self.stack.pop()
         {
@@ -253,7 +339,7 @@ impl Engine {
     }
 
     /// Adds what a closed collector met to the innermost one.
-    pub(super) fn absorb(&mut self, met: &Collected) {
+    pub(crate) fn absorb(&mut self, met: &Collected) {
         if let Some(top) = self.stack.last_mut() {
             top.merge(met);
         }

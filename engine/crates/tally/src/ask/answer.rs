@@ -10,12 +10,12 @@
 //! `NotBuilt`, never a guessed line.
 
 use super::register::{register_lines, warning_lines};
-use crate::Asks;
-use crate::base::{Code, Load, Refusal, Run};
+use crate::base::{Code, Load, Refusal, Run, Warn};
 use crate::eval::{Collected, Ctx, Engine, Entry, Env, Item, Member, num_stop};
 use crate::model::{Reality, Value};
 use crate::syntax::{Ask, AskBody, Bind, Domain, Stop};
 use crate::time::{Day, PeriodKind};
+use crate::{Asks, Days};
 
 /// The lines a run prints for its asks: each ask's lines, the asks in id order or in the order
 /// the run names them, then the run's warnings (refcore's `Asker.run`). L §5.18, §8.5.
@@ -24,7 +24,7 @@ use crate::time::{Day, PeriodKind};
 ///
 /// `LOAD-NAME` for an ask the run names that the reality lacks; `NotBuilt` for a load refusal
 /// met at run and for a construct S doesn't build.
-pub fn answer(m: &Reality, asks: &Asks) -> Result<Vec<String>, Stop> {
+pub fn answer(m: &Reality, asks: &Asks, days: Days) -> Result<Vec<String>, Stop> {
     let order: Vec<&Ask> = match asks {
         Asks::Every => {
             let mut all: Vec<&Ask> = m.asks.iter().collect();
@@ -43,17 +43,23 @@ pub fn answer(m: &Reality, asks: &Asks) -> Result<Vec<String>, Stop> {
         }
     };
     let mut out = Vec::new();
+    let mut warnings = m.warnings.clone();
     for ask in order {
-        out.extend(answer_one(m, ask)?);
+        out.extend(answer_one(m, ask, days, &mut warnings)?);
     }
-    out.extend(warning_lines(&m.warnings));
+    out.extend(warning_lines(&warnings));
     Ok(out)
 }
 
 /// One ask's lines; a run-time refusal its reading meets outside a line's values is its one
 /// line (refcore's `answer`). L §8.4.
-fn answer_one(m: &Reality, ask: &Ask) -> Result<Vec<String>, Stop> {
-    match ask_lines(m, ask) {
+fn answer_one(
+    m: &Reality,
+    ask: &Ask,
+    days: Days,
+    warnings: &mut Vec<(Warn, String)>,
+) -> Result<Vec<String>, Stop> {
+    match ask_lines(m, ask, days, warnings) {
         Err(Stop::Refused(r)) if matches!(r.code(), Code::Load(_)) => Err(load_at_run()),
         Err(Stop::Refused(r)) => Ok(vec![format!("{}: refused: {}", ask.id, r.text())]),
         other => other,
@@ -68,29 +74,57 @@ fn load_at_run() -> Stop {
 
 /// One ask's lines: its cut by `as known`, its law date by `law`, then one line per binding
 /// tuple with the register under it (refcore's `_answer`, `_answer_in`). L §5.18.
-fn ask_lines(m: &Reality, ask: &Ask) -> Result<Vec<String>, Stop> {
+fn ask_lines(
+    m: &Reality,
+    ask: &Ask,
+    days: Days,
+    warnings: &mut Vec<(Warn, String)>,
+) -> Result<Vec<String>, Stop> {
     if ask.windows_each {
         return Err(Stop::NotBuilt("an ask's `windows each`"));
     }
     if ask.partial {
         return Err(Stop::NotBuilt("a partial answer"));
     }
-    let AskBody::Exprs(exprs) = &ask.body else {
+    if !matches!(ask.body, AskBody::Exprs(_)) {
         return Err(Stop::NotBuilt("residuals (the ledger)"));
-    };
+    }
     let mut cut = m.on;
     if let Some(known) = &ask.known {
-        let mut engine = Engine::new(m.on);
-        let v = engine.value(m, known, &Env::empty(), Ctx { law: None, cut })?;
+        let mut engine = Engine::new(m.on).with_days(days);
+        let v = engine.value(m, known, &Env::empty(), Ctx::new(None, cut));
+        gather(warnings, &engine);
+        let v = v?;
         if let Value::Hole(_) = v {
             return Ok(vec![format!("{}: {}", ask.id, shown(m, &v)?)]);
         }
         cut = date_of(&v, "as known")?;
     }
-    let mut engine = Engine::new(cut);
+    let mut engine = Engine::new(cut).with_days(days);
+    let out = ask_body(m, ask, &mut engine, cut);
+    gather(warnings, &engine);
+    out
+}
+
+/// The walk warnings an ask's engine met, each once, in the order met (refcore's
+/// `Asker.walk_warnings`). L §8.5.
+fn gather(warnings: &mut Vec<(Warn, String)>, engine: &Engine) {
+    for w in engine.walk_warnings() {
+        if !warnings.contains(w) {
+            warnings.push(w.clone());
+        }
+    }
+}
+
+/// One ask's lines from its cut on: its law date, then a line per binding tuple with the
+/// register under it (refcore's `_answer`, `_answer_in`). L §5.18.
+fn ask_body(m: &Reality, ask: &Ask, engine: &mut Engine, cut: Day) -> Result<Vec<String>, Stop> {
+    let AskBody::Exprs(exprs) = &ask.body else {
+        return Err(Stop::NotBuilt("residuals (the ledger)"));
+    };
     let mut law = None;
     if let Some(e) = &ask.law {
-        let v = engine.value(m, e, &Env::empty(), Ctx { law: None, cut })?;
+        let v = engine.value(m, e, &Env::empty(), Ctx::new(None, cut))?;
         if let Value::Hole(_) = v {
             return Ok(vec![format!("{}: {}", ask.id, shown(m, &v)?)]);
         }
@@ -107,7 +141,7 @@ fn ask_lines(m: &Reality, ask: &Ask) -> Result<Vec<String>, Stop> {
             figure: String::new(),
         });
     }
-    let ctx = Ctx { law, cut };
+    let ctx = Ctx::new(law, cut);
     let tuples = if ask.binds.is_empty() {
         vec![Member {
             env: Env::empty(),
@@ -204,7 +238,7 @@ fn bound_text(m: &Reality, bind: &Bind, v: &Value) -> Result<String, Stop> {
 }
 
 /// The day a value names, for an ask's `law` or `as known` (refcore's `date_of`). L §4.3, §4.5.
-fn date_of(v: &Value, what: &str) -> Result<Day, Stop> {
+pub(crate) fn date_of(v: &Value, what: &str) -> Result<Day, Stop> {
     if let Value::Day(day) = v {
         return Ok(*day);
     }

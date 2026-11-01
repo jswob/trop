@@ -36,6 +36,11 @@ impl Engine {
         keys: &[KeyVal],
         ctx: Ctx,
     ) -> Result<Value, Stop> {
+        let ctx = if m.graph.walk_bound.contains(&def.id) {
+            ctx
+        } else {
+            Ctx { at: None, ..ctx }
+        };
         self.index_assumed(m, &def.binds);
         let env = key_env(def, keys);
         for bind in &def.binds {
@@ -93,6 +98,11 @@ impl Engine {
             return result;
         }
         if self.active.contains(&key) {
+            if self.guarded.as_ref().is_some_and(|g| g.contains(&key)) {
+                return Err(Stop::NotBuilt(
+                    "a leg's read whose walk needs a cell still being computed (a prefix walk)",
+                ));
+            }
             return Err(refuse(
                 Run::Cycle,
                 format!("{figure} reads itself through a computed key"),
@@ -289,6 +299,7 @@ impl Engine {
             .get(at)
             .ok_or_else(|| invariant("the read rule took a given the def lacks"))?;
         let figure = origin(&def.id, keys);
+        self.note_version(&row.version);
         let value = match convert(m, &row.value, &def.ty, &def.unit_factor)? {
             Converted::Hole(text) => Value::Hole(Hole::asked(&text, &figure)),
             Converted::Value(v) => v,

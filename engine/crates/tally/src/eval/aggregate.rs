@@ -193,7 +193,7 @@ impl Engine {
 
     /// The binding tuples in binding order, depth first; the first domain that is a hole
     /// makes the aggregate that hole (refcore's `members`). L §5.11.
-    pub(super) fn members(
+    pub(crate) fn members(
         &mut self,
         m: &Reality,
         binds: &[Bind],
@@ -381,7 +381,7 @@ impl Engine {
 
     /// A span as written, `a..b`, `a..`, `..`, or one period or day (refcore's `span_value`).
     /// L §5.7.
-    fn span_value(
+    pub(crate) fn span_value(
         &mut self,
         m: &Reality,
         sp: &SpanText,
@@ -757,13 +757,13 @@ fn is_alive(m: &Reality, thing: &Thing, kind: &str, when: &When, cut: Day) -> Re
 
 /// A thing's place in binding order: the text of its stable id `kind:key`, by code point
 /// (refcore's `kind_order_key`). L §2.5.
-fn order_text(t: &Thing) -> String {
+pub(crate) fn order_text(t: &Thing) -> String {
     format!("{}:{}", t.base.as_deref().map_or("None", |b| b), t.name)
 }
 
 /// Whether expression `e` may read the name `name`: the parts an aggregate's day or span
 /// writes are walked; a part S doesn't build counts as a read.
-fn reads_name(e: &Expr, name: &str) -> bool {
+pub(crate) fn reads_name(e: &Expr, name: &str) -> bool {
     let mut work: Vec<&Expr> = vec![e];
     while let Some(x) = work.pop() {
         match x {

@@ -11,6 +11,7 @@ use crate::NotImplemented;
 use crate::ask::answer;
 use crate::base::Refusal;
 use crate::load::load;
+use crate::oracle::Days;
 use crate::syntax::{Stop, parse_reality};
 
 /// One file the run is given: its path as the run names it, and its bytes, or none when the
@@ -57,6 +58,8 @@ pub struct Request {
     pub asks: Asks,
     /// How a `use` line's pin is taken.
     pub pin: Pin,
+    /// Which days the walk steps: the event walk, or the oracle's every day (P §2.2).
+    pub days: Days,
 }
 
 /// The printed answer of a run: its lines, without their line ends.
@@ -110,7 +113,7 @@ pub fn run(given: Vec<Given>, request: &Request) -> Result<Answer, NotImplemente
     let Ok(reality) = load(files) else {
         return Err(NotImplemented);
     };
-    match answer(&reality, &request.asks) {
+    match answer(&reality, &request.asks, request.days) {
         Ok(lines) => Ok(Answer { lines }),
         Err(Stop::Refused(refusal)) => Ok(Answer::refused(&refusal)),
         Err(Stop::NotBuilt(_) | Stop::Deep) => Err(NotImplemented),
@@ -145,6 +148,7 @@ mod tests {
         Request {
             asks: Asks::Every,
             pin: Pin::Canonical,
+            days: crate::Days::Events,
         }
     }
 
@@ -241,6 +245,7 @@ mod tests {
         let named = Request {
             asks: Asks::Named(vec!["b".to_owned()]),
             pin: Pin::Canonical,
+            days: crate::Days::Events,
         };
         assert_eq!(
             lines(files(), &named),
@@ -250,6 +255,7 @@ mod tests {
         let missing = Request {
             asks: Asks::Named(vec!["b".to_owned(), "c".to_owned()]),
             pin: Pin::Canonical,
+            days: crate::Days::Events,
         };
         assert_eq!(
             lines(files(), &missing),

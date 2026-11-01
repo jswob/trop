@@ -199,7 +199,11 @@ fn run_line(words: &[&str]) -> Command {
     };
     Command::Run {
         paths,
-        request: tally::Request { asks, pin },
+        request: tally::Request {
+            asks,
+            pin,
+            days: tally::Days::Events,
+        },
     }
 }
 

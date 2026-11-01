@@ -26,7 +26,7 @@ use crate::time::{Calendar, Day, Period, PeriodKind, weekday_number};
 
 /// A key a read is given: a value, or a key literal its position resolves (L §2.5).
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub(super) enum Given {
+pub(crate) enum Given {
     /// A value.
     Value(Value),
     /// A key literal, resolved in the position's domain.
@@ -99,6 +99,7 @@ impl Engine {
         ctx: Ctx,
     ) -> Result<Value, Stop> {
         let figure = origin(&input.id, keys);
+        self.note_version(&row.version);
         if let Some(reason) = &row.assumed {
             self.note("assumed", reason.clone(), figure.clone());
         }
@@ -241,7 +242,7 @@ impl Engine {
 /// # Errors
 ///
 /// `RUN-KEY`, `RUN-NONE` and the conversions' refusals.
-pub(super) fn make_keys(
+pub(crate) fn make_keys(
     m: &Reality,
     item: &str,
     binds: &[BindInfo],
@@ -295,7 +296,7 @@ fn plain_unit(v: &Value) -> Unit {
 /// # Errors
 ///
 /// `RUN-NONE` for `none`, `RUN-KEY` for a value the domain doesn't hold.
-pub(super) fn to_key(m: &Reality, item: &str, v: &Value, domain: &Domain) -> Result<KeyVal, Stop> {
+pub(crate) fn to_key(m: &Reality, item: &str, v: &Value, domain: &Domain) -> Result<KeyVal, Stop> {
     if *v == Value::None {
         return Err(refuse(Run::None, "a key is none here: a key".to_owned()));
     }
@@ -479,7 +480,7 @@ pub(super) fn check_key(m: &Reality, key: &KeyVal, domain: &Domain, cut: Day) ->
 /// Whether the cut sees an entry of `thing`: one with no version, or whose version is known by
 /// the cut (refcore's `thing_seen`). L §4.5, §5.7.
 #[must_use]
-pub(super) fn thing_seen(m: &Reality, thing: &crate::model::Thing, cut: Day) -> bool {
+pub(crate) fn thing_seen(m: &Reality, thing: &crate::model::Thing, cut: Day) -> bool {
     if let Some(keys) = &thing.place {
         return keys
             .key_things
@@ -506,6 +507,23 @@ pub(super) enum Converted {
     Value(Value),
     /// `?"…"`: the hole's question, built with its figure where it is read.
     Hole(String),
+}
+
+/// A reading's row value as a runtime value of type `ty`: the value, or a stated hole's text
+/// (refcore's `convert_value`, for the walk's readings). L §5.19, §5.8.
+///
+/// # Errors
+///
+/// The unit refusals load makes; `NotBuilt` for a window.
+pub(crate) fn convert_row(
+    m: &Reality,
+    value: &Written,
+    ty: &Ty,
+) -> Result<Result<Value, String>, Stop> {
+    match convert(m, value, ty, &Num::int(1))? {
+        Converted::Value(v) => Ok(Ok(v)),
+        Converted::Hole(text) => Ok(Err(text)),
+    }
 }
 
 /// A row's literal value as a runtime value of type `ty`; `factor` is the `%` the input's

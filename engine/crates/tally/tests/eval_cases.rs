@@ -188,10 +188,7 @@ whole = 2
         let def = m.defs.get(id).expect("a def");
         let law = Day::from_ymd(2026, 2, 1).expect("a day");
         let mut engine = Engine::new(m.on);
-        let ctx = Ctx {
-            law: Some(law),
-            cut: m.on,
-        };
+        let ctx = Ctx::new(Some(law), m.on);
         let label = if keys.is_empty() {
             id.to_owned()
         } else {
@@ -257,10 +254,7 @@ whole = 2
     fn a_cell_is_computed_once_and_keeps_what_it_met() {
         let m = reality();
         let law = Day::from_ymd(2026, 2, 1).expect("a day");
-        let ctx = Ctx {
-            law: Some(law),
-            cut: m.on,
-        };
+        let ctx = Ctx::new(Some(law), m.on);
         let def = m.defs.get("asked").expect("a def");
         let mut engine = Engine::new(m.on);
         let first = engine.read_def(&m, def, &[], ctx);

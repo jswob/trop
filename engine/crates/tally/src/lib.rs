@@ -13,8 +13,10 @@
 #![forbid(unsafe_code)]
 
 mod api;
+mod oracle;
 
 pub use api::{Answer, Asks, Given, Pin, Request, Source, run};
+pub use oracle::Days;
 
 /// The foundations every other module stands on: the catalogue of codes (L §8, E §11) and
 /// the refusal that carries one. The module's code is its files under `base/`.
@@ -117,10 +119,44 @@ pub mod eval {
     mod ty;
 
     pub use aggregate::Member;
+    pub(crate) use aggregate::{order_text, reads_name};
     pub use arith::{Op, Test, arith, compare, currency_of, int_of, negate, same_value};
+    pub(crate) use read::{convert_row, make_keys, thing_seen, to_key};
     pub use stack::Item;
     pub(crate) use state::num_stop;
     pub use state::{Collected, Ctx, Engine, Entry, Env};
+}
+
+/// The walk (E §4): the plan pass's instances and their order (E §4.1), the day walk's
+/// agenda, days, place states and the sign rule (E §4.2), the decisions at their points, and
+/// the balance and flows reads. The kernel's (gate 8); the module's code is its files under
+/// `walk/`.
+pub mod walk {
+    mod agenda;
+    mod day;
+    mod order;
+    mod plan;
+    mod point;
+    mod reads;
+    mod state;
+
+    pub use agenda::{Act, Mv, Reading, endings, qty_of};
+    pub use day::Broke;
+    pub use order::{Run, WalkAt};
+    pub(crate) use plan::invariant;
+    pub use plan::{
+        Amount, Dated, End, Exists, Inst, LegVal, Order, Seed, Status, kind_certainty, qty_value,
+    };
+    pub use point::{At, Step};
+    pub use state::{ALL, Change, Ent, Group, Log, Progress, St, Taken, Today, Walk};
+}
+
+/// The book's adjustments (E §5): a booked instance measured again at each later version's
+/// cut. The kernel's (gate 8); the module's code is its files under `book/`.
+pub mod book {
+    mod adjust;
+
+    pub use adjust::Adjustment;
 }
 
 /// The asks (L §5.18): each ask's lines with the register under them (L §8.2), then the
@@ -130,6 +166,7 @@ pub mod ask {
     mod register;
 
     pub use answer::answer;
+    pub(crate) use answer::date_of;
     pub use register::{register_lines, warning_lines};
 }
 
