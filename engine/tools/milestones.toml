@@ -1,0 +1,19 @@
+# The milestone marker (R-77, R-84; engine/tests/MILESTONE-S.md, "Keeping master green";
+# issue #14). A rule file: only the `rules` role edits it, through R-112.
+#
+# Each milestone's Rust tests are a `tally-runner` test target named for it (`s_properties`,
+# then `m0_…`, `m5a_…`) with `test = false`: red until the milestone is built, so a plain
+# run leaves them out. A milestone in `gating` has its tests run as failing steps by
+# `check fast`, `check full`, CI and the mutants run; the first milestone not in it is
+# reported (`S: 3/7 green`), never failing.
+#
+# The rules role adds a milestone to `gating` in the commit right after the gate session
+# tags it ("marker at the tag", the user's choice at T1's gate G-T, 2026-10-31): within a
+# milestone the builder's pull requests land while its tests are partly red, and once it
+# is tagged they never go red again. `gating` is always the first milestones in build
+# order.
+
+# BUILD-ORDER's milestones, in build order (as engine/tests/map/placement.py's ORDER)
+milestones = ["S", "M0", "M1", "M2", "M3", "M4", "M5a", "M5b", "M5c", "M6", "M7", "M8", "M9"]
+# the milestones whose tests gate: none until S is tagged
+gating = []

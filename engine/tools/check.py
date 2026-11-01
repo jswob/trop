@@ -1,14 +1,18 @@
 """The engine's checks, the way CI runs them (R-82).
 
-    engine/tools/check fast    fmt, both clippy passes, the runner, the counter, and the
-                               two cheap rule checks (check-frozen, check-rules)
+    engine/tools/check fast    fmt, both clippy passes, the runner with the gating
+                               milestones' tests, the next milestone's report, the
+                               counter, and the two cheap rule checks (check-frozen,
+                               check-rules)
     engine/tools/check full    everything CI runs on a pull request (C §6)
     engine/tools/check list    the steps of each
     engine/tools/check step S  one step of `full` alone (rules-selftest runs probes this way)
 
 It runs from engine/ with a clean environment: nothing from the caller's shell changes
 the flags, the compiler, the profiles or the test seeds. It prints one line per failed
-step and keeps each step's full output in target/check-logs/<step>.log.
+step and keeps each step's full output in target/check-logs/<step>.log. A report step
+prints its one line and never fails: `milestone-report`, the next milestone's tests
+(tools/milestones.py).
 """
 
 import os
@@ -20,6 +24,9 @@ import time
 
 TOOLS = os.path.dirname(os.path.realpath(__file__))
 ENGINE = os.path.dirname(TOOLS)
+sys.path.insert(0, TOOLS)
+import milestones  # noqa: E402  the marker: which milestones' tests gate (issue #14)
+
 LOGS = os.path.join(ENGINE, "target", "check-logs")
 NIGHTLY = "nightly-2026-10-21"
 FUZZ_SECONDS = 60
@@ -68,6 +75,14 @@ CLIPPY_LIB = [*CLIPPY, "--lib", "--bins", "--", "-D", "warnings"]
 CLIPPY_TESTS = [*CLIPPY, "--tests", "--benches", "--", "-D", "warnings", "-A", "clippy::disallowed_macros", "-A", "clippy::use_debug"]
 
 
+# T's runner, the way every step that runs it runs it
+RUNNER = ["cargo", "nextest", "run", "--locked", "-p", "tally-runner", "--all-features"]
+
+
+class Report(str):
+    """A report step's line: printed, never a failure."""
+
+
 def tool(name, *args):
     return [os.path.join(TOOLS, name), *args]
 
@@ -86,7 +101,9 @@ def steps(mode):
         ("fmt", ["cargo", "fmt", "--all", "--check"], {}),
         ("clippy-lib", CLIPPY_LIB, {}),
         ("clippy-tests", CLIPPY_TESTS, {}),
-        ("runner", ["cargo", "nextest", "run", "--locked", "-p", "tally-runner", "--all-features"], {}),
+        ("runner", RUNNER, {}),
+        ("gating", gating([]), {}),
+        ("milestone-report", milestone_report, {}),
         ("exceptions", tool("exceptions", "--check"), {}),
         ("check-frozen", tool("check-frozen"), {}),
         ("check-rules", tool("check-rules"), {}),
@@ -102,6 +119,7 @@ def steps(mode):
         ("test-dev", ["cargo", "nextest", "run", "--workspace", "--all-features", "--locked", "--profile", "ci"], {}),
         ("test-release", ["cargo", "nextest", "run", "--workspace", "--all-features", "--locked", "--profile", "ci",
                           "--cargo-profile", "release-test"], {}),
+        ("gating-release", gating(["--profile", "ci", "--cargo-profile", "release-test"]), {}),
         ("doctest", ["cargo", "test", "--doc", "--workspace", "--all-features", "--locked"], {}),
         ("release-binary", ["cargo", "build", "--release", "--locked", "-p", "tally-cli"], {}),
         ("fault-injection-probe", fault_injection_probe, {}),
@@ -125,10 +143,55 @@ def run(argv, env, log, cwd=ENGINE):
     return r.returncode, r.stdout
 
 
+def gating(profile):
+    """R-77: every gating milestone's tests (tools/milestones.toml) fail the check like the
+    default targets, beside them; while none gates, the marker and the targets' names are
+    still checked."""
+
+    def step(env, log):
+        try:
+            gates, names = milestones.gating_targets(env)
+        except milestones.MilestoneError as e:
+            return str(e)
+        if not names:
+            log.write(f"no gating milestone has a test target (gating = {gates})\n")
+            return None
+        code, out = run([*RUNNER, *profile, *(f"--test={t}" for t in names)], env, log)
+        if code == 0:
+            return None
+        who = f"{', '.join(gates)} gate{'s' if len(gates) == 1 else ''}"
+        their = "its" if len(gates) == 1 else "their"
+        counted = milestones.tally(out)
+        if counted is None:
+            return f"{who}, and {their} tests don't run: {first_error(out)}"
+        total, passed = counted
+        return f"{who}, and {total - passed} of {their} {total} tests are red"
+
+    return step
+
+
+def milestone_report(env, log):
+    """The next milestone's tests, the builder's work list: a line such as `S: 3/7 green`,
+    never a failure (issue #14)."""
+    try:
+        m, names = milestones.next_milestone(env)
+    except milestones.MilestoneError as e:
+        return Report(f"no report: {e}")
+    if m is None:
+        return Report("every milestone gates")
+    if not names:
+        return Report(f"{m}: no test target (gates once {m} is tagged)")
+    _, out = run([*RUNNER, *(f"--test={t}" for t in names)], env, log)
+    counted = milestones.tally(out)
+    if counted is None:
+        return Report(f"{m}: its tests don't run: {first_error(out)} (gates once {m} is tagged)")
+    total, passed = counted
+    return Report(f"{m}: {passed}/{total} green (gates once {m} is tagged)")
+
+
 def fault_injection_probe(env, log):
     """R-51: no test-only feature (fault injection, the counters, the reversed order)
     can reach a release build, and the CLI never turns one on."""
-    sys.path.insert(0, TOOLS)
     import check_rules  # the list of test-only features and which tally declares
 
     for feature in check_rules.declared_test_only():
@@ -215,6 +278,9 @@ def main():
             step_env = {**env, **extra}
             if callable(what):
                 problem = what(step_env, log)
+                if isinstance(problem, Report):
+                    print(f"{name}: {problem}")
+                    problem = None
             else:
                 code, out = run(what, step_env, log)
                 problem = None if code == 0 else first_error(out)

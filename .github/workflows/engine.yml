@@ -1,6 +1,7 @@
 # The Tally engine's CI (engine/SCAFFOLD.md; rulebook R-77, R-87, R-92 to R-98). A rule
 # file: only the `rules` role edits it, and engine/tools/RULES.sha256 holds its checksum.
-# Every pull request runs `engine/tools/check full`, the same command the builder runs;
+# Every pull request runs `engine/tools/check full`, the same command the builder runs,
+# with T's tests of every milestone engine/tools/milestones.toml says gates (issue #14);
 # the nightly jobs write reports, and only mutants and the benchmarks are evidence that
 # can fail.
 name: Engine
@@ -68,6 +69,8 @@ jobs:
             fi
           done
           echo "$HOME/.cargo-tools/bin" >> "$GITHUB_PATH"
+      # the gating milestones' tests fail it (`gating`, `gating-release`); the next one's
+      # are reported in a line such as `milestone-report: S: 3/7 green`, never failing
       - name: engine/tools/check full
         run: engine/tools/check full
       # the commits themselves: attribution lines (R-100) and rule changes' trailers (R-112)
@@ -157,10 +160,14 @@ jobs:
       - name: Install the toolchains and the cargo tools
         working-directory: engine
         run: *install
-      # T's tests must pass unmutated before the shards skip the baseline (R-88)
+      # T's tests must pass unmutated before the shards skip the baseline (R-88): the
+      # runner's default targets and every gating milestone's (R-84, tools/milestones)
       - name: The tests pass unmutated, fresh
         working-directory: engine
-        run: cargo nextest run --locked -p tally-runner --cargo-profile mutants --profile mutants
+        run: |
+          args="$(tools/milestones args)"
+          # shellcheck disable=SC2086 # one word per target
+          cargo nextest run --locked -p tally-runner --cargo-profile mutants --profile mutants $args
       - name: The mutants
         working-directory: engine
         run: cargo mutants --list -C=--locked
@@ -189,10 +196,13 @@ jobs:
         env:
           PROPTEST_RNG_SEED: '20261022'
           PROPTEST_DISABLE_FAILURE_PERSISTENCE: '1'
-        # exit 2 (missed) and 3 (timed out) are judged by the survivors job, not here
+        # exit 2 (missed) and 3 (timed out) are judged by the survivors job, not here; the
+        # tests are the baseline's, every gating milestone's with the default ones (R-84)
         run: |
+          targets="$(tools/milestones args --mutants)"
           code=0
-          cargo mutants -C=--locked --no-shuffle --shard ${{ matrix.shard }}/4 --baseline skip --timeout 300 --build-timeout 600 --output shard-${{ matrix.shard }} || code=$?
+          # shellcheck disable=SC2086 # one word per target
+          cargo mutants -C=--locked $targets --no-shuffle --shard ${{ matrix.shard }}/4 --baseline skip --timeout 300 --build-timeout 600 --output shard-${{ matrix.shard }} || code=$?
           [ "$code" -eq 0 ] || [ "$code" -eq 2 ] || [ "$code" -eq 3 ]
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:

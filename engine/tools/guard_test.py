@@ -59,6 +59,10 @@ EDITS = [
     ("engine/.cargo/mutants.toml", RULES),
     ("engine/.cargo/config.toml", RULES),
     ("engine/.config/nextest.toml", RULES),
+    # the milestone marker: which milestones' tests gate (issue #14); the build role can't
+    # gate or ungate its own milestone, nor T
+    ("engine/tools/milestones.toml", RULES),
+    ("engine/tools/milestones.py", RULES),
     ("engine/tools/guard.py", RULES),
     # the lead's tools are rule files: the lead runs them, never edits them (issue #18)
     ("engine/tools/merge-pr", RULES),
