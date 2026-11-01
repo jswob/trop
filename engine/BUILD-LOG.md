@@ -78,3 +78,27 @@ indent keeps the template itself from counting as a report):
 **For the lead.** `tools/trace.py`'s `P8_ID` is `P8-\d+[a-z]?`, so a fence's `PERF:` line can't name P8-M1..P8-M4; F4 (`num/**`) would name a micro row. No fence is open at G1.
 
 **Next:** G2, foundations and the CLI's way in. **STOP-REPORTs:** none. **Exceptions:** +1, kernel `num/big.rs` `struct Big`, `clippy::disallowed_types` (R-29); count 5, report-only 0. **Check:** `check full: green, 30 steps (320s)`.
+
+## STOP-REPORT 2026-11-01: rules-selftest's R-111/cli-over-budget assumes the CLI holds 2 exceptions; its sanctioned third makes it count 5
+
+- **Kind:** a rule blocks correct code (the rule is right; its selftest case is stale)
+- **Where:** `tools/rules-selftest/cases/R-111.case`, case `cli-over-budget` (last changed in 045355d); the code that trips it, `crates/tally-cli/src/main.rs` `fn read_reality`
+- **Rule or gate:** R-111 (area budgets), R-39 and R-108 (the CLI's sanctioned I/O file); `tools/cli-io.toml` names the three CLI exceptions: "the arguments, the reality's files …, and the output"
+- **What happens:** `engine/tools/check full` → `check full: red, 1 of 30 steps failed (317s)`, the one failure `FAIL R-111/cli-over-budget: the output lacks 'area cli has 4 exceptions, over its budget of 3 (R-111)'`. The case plants two exceptions in `tally-cli` ("Planted too: the CLI holds two since its stdin read went (audit C1)") and expects the count 4. G2 adds the CLI's third, the reading of the reality's files that INTERFACE §4 gives the binary (`#[expect(clippy::disallowed_methods, reason = "R-39: the reality's files are read here, once, before the pure run takes them")]`, lock written, `exceptions: … cli 3/3`), so the planted run counts 5 and prints `area cli has 5 exceptions, over its budget of 3 (R-111)`. The budget check itself works.
+- **What I tried:** nothing that changes the count honestly. Folding the reading into `arguments` or `write_output` would hide an I/O call under another exception's reason; leaving the binary to pass an empty table would make it refuse every real path `LOAD-PATH`. Both are workarounds, so neither is done.
+- **What I ask:** a rules-role fix to the case: plant one exception (the CLI now holds its three) and expect `area cli has 4 exceptions`, or keep two and expect 5. Then G2 commits as it stands.
+- **State:** last green commit 5c29cf0. Uncommitted, all green but this step (`check fast` green, 12 steps; `check full` 29 of 30): G2, foundations and the way in: `crates/tally/src/base/code.rs` (the catalogue, 99 codes), `base/refusal.rs`, `api.rs` (the read step, `run`), `lib.rs`; `crates/tally/tests/catalogue.rs` (the builder's test against L §8 and E §11); `crates/tally-cli/src/lib.rs` (arguments, the file table, paths and directories, exits 0/1/2/74, usage), `main.rs` (reads the files); `EXCEPTIONS.lock` (+1, cli). The release binary prints M0's fixtures `LOAD-PATH/alone` and `LOAD-PATH/before-parse` byte for byte, exit 1.
+
+**Resolved** 2026-11-01 by `eb91a56` (rules role, issue #28; the user: "Rules commit on build/s (Recommended)"): `R-111/cli-over-budget` now plants 4 and holds from any live CLI count. G2 commits as it stood.
+
+## 2026-11-01 S, G2: foundations and the way in (issue #26)
+
+**Built.** `crates/tally/src/base/` (non-kernel): `code.rs`, the catalogue, one enum per family (`Hole`, `Load`, `Run`, `Warn`, `Req`, and `ENGINE-INVARIANT`), 99 codes: L §8's tables hold 95 (R-76's recount), E §11 adds `REQ-ASK`, `REQ-CLOCK`, `REQ-PATHS`, `ENGINE-INVARIANT`; `Code::ALL` in the tables' order; `refusal.rs`, a refusal with its code, message and place, printed as refcore's `TallyError.text`. `api.rs`: `run(files, request)` and its read step (every file by full path, the first `LOAD-PATH` or not-UTF-8 `LOAD-PARSE` in that order, L §8.3); past the read step it answers `NotImplemented` until G3. `crates/tally/tests/catalogue.rs`: the builder's test, `Code::ALL` against L §8.1, §8.3–§8.5 and E §11 (R-76). `crates/tally-cli/src/lib.rs`: the arguments as refcore's `command_lines` reads them, the netstring file table, a path as a key or a directory prefix of `.tally` keys, exits 0, 1, 2, 74 (69 while a run passes the part built), the usage text; `reprint` answers "not implemented" until its milestone. `main.rs`: reads every path into the table, walking directories as `os.walk` does (no links followed); a path it can't read is left out, so it is refused `LOAD-PATH`.
+
+**Deferred, accepted by the coordinator:** `Table<I, T>`, the interner and `Span` land in G3 and G4, where they are first used.
+
+**Green.** No T id. The release binary prints M0's fixtures `LOAD-PATH/alone` and `LOAD-PATH/before-parse` byte for byte, exit 1; `LOAD-PATH/control` needs the parser (G3).
+
+**Gap noted:** a directory given with no `.tally` file under it can't be told from a missing path in the file table, so the engine refuses it `LOAD-PATH` where refcore reads no files; no check reaches it.
+
+**Next:** G3, the lexer and parser. **STOP-REPORTs:** the one above, resolved. **Exceptions:** +1, cli `main.rs` `fn read_reality`, `clippy::disallowed_methods` (R-39); cli 3/3, count 6, report-only 0.  **Check:** `check full: green, 30 steps (310s)`.

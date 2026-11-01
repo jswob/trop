@@ -1,13 +1,29 @@
 //! The Tally engine: a reality goes in as bytes, a result comes out (ENGINE §1).
 //! Spec: E §1 (the run function); the modules name their own sections.
 //! Twin: engine/tools/refcore/cli.py.
-//! Invariants: the library reads no clock, environment or file (R-38, R-39); `parse` still
-//! answers `NotImplemented` until the parser lands (milestone S, group G3).
+//! Invariants: the library reads no clock, environment or file (R-38, R-39); `parse` and
+//! [`run`] still answer `NotImplemented` past the read step until the parser lands (milestone
+//! S, group G3).
 //!
 //! Milestone S is built in groups (`engine/BUILD-LOG.md`, the S plan). So far: the exact
-//! numbers, [`num`].
+//! numbers, [`num`]; the code catalogue and refusals, [`base`]; the entry and its read step,
+//! [`run`].
 
 #![forbid(unsafe_code)]
+
+mod api;
+
+pub use api::{Answer, Asks, Given, Pin, Request, Source, run};
+
+/// The foundations every other module stands on: the catalogue of codes (L §8, E §11) and
+/// the refusal that carries one. The module's code is its files under `base/`.
+pub mod base {
+    mod code;
+    mod refusal;
+
+    pub use code::{Code, Hole, Load, Req, Run, Warn};
+    pub use refusal::{Place, Refusal};
+}
 
 /// Exact numbers (L §7.1, §7.2): `Num`, a reduced fraction held small or big; `Money`, a
 /// whole number of a currency's minor units; rounding by the seven modes. The module's
@@ -31,7 +47,7 @@ compile_error!("the fault-injection feature exists only in builds with debug ass
 #[cfg(all(feature = "counters", not(debug_assertions)))]
 compile_error!("the counters feature exists only in builds with debug assertions (R-51)");
 
-/// The answer of every entry point until the engine is built.
+/// The answer of an entry point past the part of the engine built so far.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct NotImplemented;
 
