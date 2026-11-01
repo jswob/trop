@@ -1,0 +1,38 @@
+# L §8.3 Which refusal prints (tally 2.1.1), with L §6.4: a refusal in a scenario file refuses that scenario and those
+# over it. s2 (a_s2.tally) is over s1 (z_s1.tally), and each file's grammar fails on line 5. s1 is refused by its own
+# file; s2's reality holds both files, and load parses them in the order of their full paths, so a_s2.tally's refusal
+# is the one s2 prints. The base's ask is answered.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "own"
+input x: int
+
+version v
+  cite s
+  governs 2026..
+  known 2026-01-01
+  x = 1 "own"
+
+ask q: x law 2026-12-31
+=== z_s1.tally
+scenario s1 over t
+  tally 2
+  from 2026-06-01
+
+def y int 1
+=== a_s2.tally
+scenario s2 over s1
+  tally 2
+  from 2026-06-01
+
+def w int 2
+=== expect
+scenario s1: refused: LOAD-PARSE cannot parse: expected ":", got int (z_s1.tally:5)
+scenario s2: refused: LOAD-PARSE cannot parse: expected ":", got int (a_s2.tally:5)
+q: 1
+  law date 2026-12-31, cut 2026-12-31

@@ -1,0 +1,21 @@
+# L §8.3 Which refusal prints (tally 2.1.1): load parses the files in the order of their full paths, compared by code
+# point, whatever order they are given in. b.tally and a.tally, given in that order, each hold a line whose tokens
+# are fine but whose grammar fails: a.tally's prints.
+=== z.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+=== b.tally
+part pb
+  tally 2
+
+def x int 1
+=== a.tally
+part pa
+  tally 2
+
+def y int 1
+=== expect
+refused: LOAD-PARSE cannot parse: expected ":", got int (a.tally:4)

@@ -64,20 +64,31 @@ def scenario_header(fname, src):
 def load_texts(texts, worlds=None, members=None):
     """texts: [(file name, source)] -> Reality.  worlds: every scenario id of the reality's files, for the asks
     that name one this reality doesn't load (L §6.4)."""
-    all_lines = []
-    for fname, src in texts:
-        all_lines.append((fname, split_lines(src, fname)))
-    return load_lines(all_lines, worlds, members)
+    split = {}
+    for i in by_path(texts):
+        fname, src = texts[i]
+        split[i] = (fname, split_lines(src, fname))
+    return load_lines([split[i] for i in range(len(texts))], worlds, members)
+
+
+def by_path(files):
+    """The indexes of [(file name, ...)] in the order of their full paths, compared by code point: load splits and
+    parses the files in that order, so the first refusal it meets doesn't depend on the order they are given in (L
+    §8.3 Which refusal prints, tally 2.1.1). Everything else keeps the order they are given in: a scenario's reality
+    lists the base's files first (cli.run_worlds)."""
+    return sorted(range(len(files)), key=lambda i: files[i][0])
 
 
 def load_lines(all_lines, worlds=None, members=None, joint=None):
     """[(file name, lines)] -> Reality; joint: a joint model's JointInfo (joint.py), its members' lines merged in."""
     units = prescan_units([ls for _, ls in all_lines])
-    trees = []
-    for fname, lines in all_lines:
+    parsed = {}
+    for i in by_path(all_lines):
+        fname, lines = all_lines[i]
         if not lines:
             raise LoadError('LOAD-HEADER', 'file has no header', fname)
-        trees.append((fname, parse_file(lines, units)))
+        parsed[i] = (fname, parse_file(lines, units))
+    trees = [parsed[i] for i in range(len(all_lines))]
     ld = Loader(trees, worlds, members)
     ld.joint = joint
     return ld.build()

@@ -19,10 +19,17 @@ def run_texts(texts, ids=None, options=None):
         eval2.MJ_CHECK[0] = False
 
 
+def by_path(texts):
+    """L §8.3 Which refusal prints (tally 2.1.1): a reality's files are taken in the order of their full paths, compared
+    by code point (as E §3.1 step 1 takes them), whatever order they are given in."""
+    return sorted(texts, key=lambda t: t[0])
+
+
 def _run_texts(texts, ids=None, options=None):
     from .loader import scenario_header
     if (options or {}).get('reprint') is not None:
         return reprint_lines(texts)
+    texts = by_path(texts)
     try:
         heads = [(f, src, scenario_header(f, src)) for f, src in texts]
     except TallyError as e:
@@ -183,7 +190,7 @@ def run_worlds(heads, ids=None, loader=None, srcs=None):
     answered in the deepest world it names (its file's scenario, its `in`, diff's worlds, its scenario pins); the
     worlds below it are evaluated in the same reality with the higher layers hidden."""
     from .loader import load_texts
-    from .ask import Asker, LoadAtRun
+    from .ask import Asker, LoadAtRun, warning_lines
     from .errors import LoadError, Unspecified
     base = [(f, src) for f, src, h in heads if h is None]
     scen = {}
@@ -351,21 +358,22 @@ def run_worlds(heads, ids=None, loader=None, srcs=None):
             if iid in table and ('WARN-UNREAD', msg) not in r.warnings:
                 return False
         return True
+    warned = []
     for x in [None] + sorted(k for k in realities if k is not None):
         for code, msg in realities[x].warnings:
             if code == 'WARN-UNREAD' and not unread_everywhere(msg):
                 continue
             if (code, msg) not in seen:
                 seen.add((code, msg))
-                out.append('warning: %s %s' % (code, msg))
+                warned.append((code, msg))
     for x in [None] + sorted(k for k in askers if k is not None):
         if x not in askers:
             continue
         for code, msg in askers[x].walk_warnings:
             if (code, msg) not in seen:
                 seen.add((code, msg))
-                out.append('warning: %s %s' % (code, msg))
-    return out
+                warned.append((code, msg))
+    return out + warning_lines(warned)
 
 
 def make_cross(aid, sf, realities, chains):
@@ -497,17 +505,64 @@ def run_one(texts, ids=None, members=None):
         return ['refused: REFCORE-NOT-YET an input this interpreter can\'t handle (%s: %s)' % (type(e).__name__, e)]
 
 
-def run_paths(paths, ids=None, options=None):
-    from .loader import collect
+def read_files(pairs):
+    """[(path, name)] -> ([(name, source)], None), or (None, the refusal's line).  L §8.3 Which refusal prints (tally
+    2.1.1): load reads every file before it splits any into tokens, the files in the order of their full paths
+    (code point); the first path that doesn't exist is refused (LOAD-PATH), as the first file that isn't UTF-8 is
+    (LOAD-PARSE), each named as the run is given it."""
     texts = []
-    for f in collect(paths):
+    for f, name in sorted(pairs):
+        if not os.path.exists(f):
+            return None, 'refused: LOAD-PATH %s doesn\'t exist' % f
         with open(f, 'rb') as fh:
             raw = fh.read()
         try:
-            texts.append((f, raw.decode('utf-8')))
+            texts.append((name, raw.decode('utf-8')))
         except UnicodeDecodeError:
-            return ['refused: LOAD-PARSE cannot parse: file is not UTF-8 (%s)' % f]
+            return None, 'refused: LOAD-PARSE cannot parse: file is not UTF-8 (%s)' % f
+    return texts, None
+
+
+def run_paths(paths, ids=None, options=None):
+    from .loader import collect
+    texts, refused = read_files([(f, f) for f in collect(paths)])
+    if refused is not None:
+        return [refused]
     return run_texts(texts, ids, options)
+
+
+def reprint_paths(paths):
+    """`reprint`: each file named relative to the directory given, else by its base name (INTERFACE gap I-3)."""
+    from .loader import collect
+    pairs = []
+    for a in paths:
+        for f in collect([a]):
+            pairs.append((f, os.path.relpath(f, a).replace(os.sep, '/') if os.path.isdir(a) else os.path.basename(f)))
+    texts, refused = read_files(pairs)
+    if refused is not None:
+        return [refused]
+    return reprint_lines(texts)
+
+
+def command_lines(argv):
+    """The lines `run` or `reprint` prints (argv as main takes it; testrun's `=== options disk` calls it too)."""
+    if argv[0] == 'reprint':
+        return reprint_paths(argv[1:])
+    paths = []
+    ids = []
+    mode = 'paths'
+    options = {}
+    for a in argv[1:]:
+        if a == '--ask':
+            mode = 'ask'
+        elif a.startswith('--pin='):
+            # --pin=bytes: a use line's sha256 over the member's bytes, not its canonical text (E §3.1 step 1)
+            options['pin'] = a[len('--pin='):]
+        elif mode == 'ask':
+            ids.append(a)
+        else:
+            paths.append(a)
+    return run_paths(paths, ids or None, options)
 
 
 def big_stack(fn):
@@ -533,39 +588,10 @@ def main(argv):
     if not argv or argv[0] not in ('run', 'test', 'reprint'):
         print(__doc__)
         return 2
-    if argv[0] == 'reprint':
-        from .loader import collect
-        texts = []
-        for a in argv[1:]:
-            for f in collect([a]):
-                rel = os.path.relpath(f, a).replace(os.sep, '/') if os.path.isdir(a) else os.path.basename(f)
-                with open(f, 'rb') as fh:
-                    texts.append((rel, fh.read().decode('utf-8')))
-        lines = reprint_lines(texts)
-        for l in lines:
-            print(l)
-        return 1 if lines and lines[0].startswith('refused: ') else 0
-    if argv[0] == 'run':
-        paths = []
-        ids = []
-        i = 1
-        mode = 'paths'
-        options = {}
-        while i < len(argv):
-            a = argv[i]
-            if a == '--ask':
-                mode = 'ask'
-            elif a.startswith('--pin='):
-                # --pin=bytes: a use line's sha256 over the member's bytes, not its canonical text (E §3.1 step 1)
-                options['pin'] = a[len('--pin='):]
-            elif mode == 'ask':
-                ids.append(a)
-            else:
-                paths.append(a)
-            i += 1
-        lines = big_stack(lambda: run_paths(paths, ids or None, options))
-        for l in lines:
-            print(l)
-        return 1 if lines and lines[0].startswith('refused: ') else 0
-    from .testrun import run_tests
-    return big_stack(lambda: run_tests(argv[1:]))
+    if argv[0] == 'test':
+        from .testrun import run_tests
+        return big_stack(lambda: run_tests(argv[1:]))
+    lines = big_stack(lambda: command_lines(argv)) if argv[0] == 'run' else command_lines(argv)
+    for l in lines:
+        print(l)
+    return 1 if lines and lines[0].startswith('refused: ') else 0

@@ -1,0 +1,22 @@
+# L §8.3 Which refusal prints (tally 2.1.1): load splits every file into lines and tokens before it parses any. a.tally
+# comes first by its path and its grammar fails on line 4; b.tally's line 5 holds a tab, which the split refuses: the
+# tab prints, since the split of every file comes before the parse of any.
+=== z.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+=== a.tally
+part pa
+  tally 2
+
+def y int 1
+=== b.tally
+part pb
+  tally 2
+
+def x: int = 1
+	def w: int = 2
+=== expect
+refused: LOAD-PARSE cannot parse: tab (b.tally:5)

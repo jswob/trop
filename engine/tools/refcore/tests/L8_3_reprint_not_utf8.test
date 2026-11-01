@@ -1,0 +1,14 @@
+# L §8.3 LOAD-PARSE: a file that isn't UTF-8 can't be parsed. `reprint` refuses it as `run` does, the path as the run
+# is given it (issue #13, T1's gap I-2: refcore's reprint crashed). m.tally is written in Latin-1, so its é is no
+# UTF-8.
+=== options disk reprint latin1=m.tally
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "café"
+=== expect
+refused: LOAD-PARSE cannot parse: file is not UTF-8 (m.tally)

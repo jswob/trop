@@ -7,6 +7,25 @@ or unclear it refuses `REFCORE-UNSPECIFIED <section>: <what>` (the list is `UNSP
 interpreter doesn't build refuses `REFCORE-NOT-YET <construct>`. Nothing may crash: an internal error becomes
 `REFCORE-NOT-YET an input this interpreter can't handle (...)` unless `REFCORE_DEBUG` is set.
 
+## tally 2.1.1 (issue #13)
+
+The spec patch tally 2.1.1 (`spec/CHANGES.md` 2.1.1-1 to 2.1.1-5), from T1's gaps I-1, I-2 and I-5 (`engine/tests/
+INTERFACE.md` §5, §8). **1124 tests, all pass** (1115, one changed, and 9 new); through `refcore_fast` too.
+
+- **Warnings sorted (L §8.5).** `ask.warning_lines`: by code, then by the text as it prints (a joint member's prefix as
+  `.`), in `Asker.run` and `cli.run_worlds`; they printed in the order load and the walk found them.
+  `L5_16_quantile_se_keys` changed (`eq3` before `ev`); new `L8_5_warnings_sorted`.
+- **Which refusal prints (L §8.3).** The files are taken in the order of their full paths: `cli.by_path` at
+  `_run_texts`, `cli.read_files` (run and reprint read every file in that order before anything is split),
+  `loader.by_path` (split and parse in that order, in a scenario's reality too, whose files list the base's first),
+  and a joint member's files from the disk (`joint.member_texts`). Past parsing, the first refusal load's checks meet,
+  as before (CHANGES' "Left open"). New: `L8_3_first_refusal_by_path`, `_grammar_first_by_path`,
+  `_tokens_before_grammar`, `_path_missing_before_parse`, `_scenario_first_refusal_by_path`.
+- **`LOAD-PATH` (I-1) and `reprint`'s UTF-8 (I-2).** `cli.read_files`: a path that doesn't exist is `LOAD-PATH <path>
+  doesn't exist`, and `reprint` refuses a file that isn't UTF-8 as `run` does; both crashed. `cli.command_lines` is
+  what `main` prints for `run` and `reprint`; the test option `=== options disk` runs a test through it. New:
+  `L8_3_path_missing`, `L8_3_reprint_not_utf8`, `L8_3_run_not_utf8`.
+
 ## Writer 12
 
 Session 7c's triage (`tmp/session7c/triage.md`), on tally 2.1 as frozen (no spec change). Running log, the A4 proposal
@@ -981,6 +1000,10 @@ refusal matching a text; `inv_probe.py`: shows invariant 2 firing on a simulated
     === options pin=bytes        (optional, before the files: run as with --pin=bytes)
     === options reprint          (optional: print the files' canonical text, `--- path` before each, then
                                   `sha256 <hex>`, instead of answering asks)
+    === options disk [missing=a,b] [latin1=c]
+                                 (optional: the files written into a fresh folder and run from it as the command
+                                  line runs paths, `cli.command_lines`; `missing` names paths given but never
+                                  written, `latin1` files written in Latin-1; with `reprint`, reprinted)
     === name.tally
     <file text>
     === expect [ask ids]
@@ -1000,6 +1023,7 @@ hashes).
   `sample`, `world`, `reading`, `anchor`, `pad`, `adjustment`, `unfulfilled`, `open`, `left out`, `uncertain`, `held`;
   then `law date D, cut K` (a `check` with a law per side: `law date L (left), R (right), cut K`), then `orient`. A
   joint model's register names a member's items `a.item`.
+- `warning: CODE text` lines after the asks, sorted by code, then by their printed text (L §8.5, tally 2.1.1).
 - `≈ <value> ± <bound>`; queries over paths as in writer 2's notes.
 - `diff`, `residuals`: as writer 3 left them.
 - `explain` of a movement instance (E §10): class, day, booking cut, status, legs, attributes, derivation,

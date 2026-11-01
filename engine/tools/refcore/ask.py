@@ -220,6 +220,14 @@ class Line:
         self.trace = trace
 
 
+def warning_lines(warnings):
+    """L §8.5 (tally 2.1.1): a run's warnings [(code, text)] print sorted by code, then by their text (code point),
+    whatever the order of the reality's files.  A joint model's member prefix prints as '.' (cli.joint), so the text
+    is compared as it prints."""
+    from .joint import SEP
+    return ['warning: %s %s' % w for w in sorted(warnings, key=lambda w: (w[0], w[1].replace(SEP, '.')))]
+
+
 class Asker:
     def __init__(self, m):
         self.m = m
@@ -250,11 +258,7 @@ class Asker:
                 out.extend(self.answer(a))
         except LoadAtRun as x:
             return ['refused: %s' % x.err.text()]
-        for code, msg in m.warnings:
-            out.append('warning: %s %s' % (code, msg))
-        for code, msg in self.walk_warnings:
-            out.append('warning: %s %s' % (code, msg))
-        return out
+        return out + warning_lines(list(m.warnings) + list(self.walk_warnings))
 
     def member_alone(self, qid, alias, aid, mm):
         """The member alone, all its files loaded (its scenarios included), answers its ask aid (L §6.1)."""

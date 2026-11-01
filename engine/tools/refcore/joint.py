@@ -179,7 +179,8 @@ def member_texts(alias, fname, p, pool, on_disk):
             got[n] = (f, src)
     if on_disk and os.path.isdir(p):
         from .loader import collect
-        for f in collect([p]):
+        # read in the order of their full paths, so the first that isn't UTF-8 is the one refused (L §8.3, 2.1.1)
+        for f in sorted(collect([p])):
             n = os.path.normpath(f)
             if n not in got:
                 got[n] = (f, _read(f))

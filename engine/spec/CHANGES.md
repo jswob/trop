@@ -1,3 +1,19 @@
+# Changes: tally 2.1 → tally 2.1.1
+
+tally 2.1.1 is the first patch of the frozen `tally 2.1` (`DONE.md` rule 1, `engine/README.md` § Changing it). It corrects the definition of `tally 2`, and files still state `tally 2` (`LANGUAGE.md` §9). Its gaps were logged by the tests' session T1 (issue #5, `engine/tests/INTERFACE.md` §5 and §8), measured on refcore, and are issue #13. The user decided the order at T1's gate G-T on 2026-10-31 ("Sort warnings") and approved the patch's scope the same day ("Yes, within scope (Recommended)"). refcore follows, with 9 new tests and one changed (1 124 tests). Every gate is re-run on it. No value, hole or register line changes. What prints changes only in the order of warnings (in one file too: by code, then by text, not as load finds them), in which load refusal prints and the place it names when the files are given in another order than their full paths, and where refcore crashed.
+
+| # | Where | The gap | The change | Found by |
+|---|---|---|---|---|
+| 2.1.1-1 | L §8.5 | warnings printed in the order the files were read: of the suite's 133 multi-file checks given in another order than their full paths, 124 print their `WARN-UNREAD` lines in another order, 24 of them in a whole output that is compared; L §9 says the order of files changes nothing, and §8.5 said no order | a run's warnings print sorted by code, then by their text (code point), whatever the order of the reality's files | T1 (INTERFACE §5, gap I-5); G-T "Sort warnings" |
+| 2.1.1-2 | L §8.3 | with two files that each fail to load, the refusal printed was that of the file given first | Which refusal prints: load takes the files in the order of their full paths (code point, E §3.1 step 1), reads every file before it splits any into tokens and splits every file before it parses any, and prints the first refusal it meets; so of several files refused at one of these steps, the first by full path prints, with the first refusal the step meets in it, from its first line down | T1 (INTERFACE §5, gap I-5, its synthetic pair); G-T "Sort warnings" |
+| 2.1.1-3 | L §8.3 | a path the run is given that doesn't exist had no code, and refcore crashed (a traceback, exit 1) | `LOAD-PATH`: `<path> doesn't exist` | T1 (INTERFACE §8, gap I-1) |
+| 2.1.1-4 | (none) | `reprint` of a file that isn't UTF-8 crashed refcore (`main` decoded without `run`'s catch) | none in the spec: `LOAD-PARSE`'s row covers bytes that don't parse; refcore's `reprint` refuses the file as `run` does, `LOAD-PARSE cannot parse: file is not UTF-8 (<path>)` | T1 (INTERFACE §8, gap I-2) |
+| 2.1.1-5 | `VERSION`, `SHA256SUMS`; `DONE.md` approvals | — | `tally-2.1.1`; the approval logged | — |
+
+**Left open.** Past parsing, load still prints the first refusal its checks meet, and the spec doesn't order those checks: `ENGINE.md` §3.1 lists its steps, and refcore runs its own order, some checks by id. So the user's rule ("the first in full-path order, then by line") is the spec's at reading, splitting and parsing only. Ordering the later checks needs E §3.1, which this patch doesn't touch.
+
+---
+
 # Changes: tally 2.0 → tally 2.1
 
 tally 2.1 adds owners and batches as labels on amounts, from session 6's decided items, designed in session 7 and written in session 7b (2026-10-30). It is **opt-in**: a text with no `owned` or `batched` kind, and none of the small items' forms (notes after a one-line def or a place, a negative record field, a day key where a date is expected), means and prints what it did on 2.0, except as the rows of `MIGRATION.md` § 2.0 → 2.1 say (a declared `parties`, a kind named by a clause word, a kind test that now narrows). The reasons are `DECISIONS.md`'s "tally 2.1 records" (R-1 to R-17, G1, the four picks); the round's files are `tmp/session7/` and `tmp/session7b/`. One row per change:

@@ -1,0 +1,14 @@
+# L §8.3 LOAD-PARSE: a file that isn't UTF-8 can't be parsed; `run` refuses it, the path as the run is given it. The
+# twin of L8_3_reprint_not_utf8, which refuses it the same way (issue #13, T1's gap I-2). m.tally is written in
+# Latin-1, so its é is no UTF-8.
+=== options disk latin1=m.tally
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "café"
+=== expect
+refused: LOAD-PARSE cannot parse: file is not UTF-8 (m.tally)

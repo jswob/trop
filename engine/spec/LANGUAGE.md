@@ -2264,6 +2264,8 @@ Every result lists, under it, the things it rests on that aren't plain sourced f
 
 What load can see that isn't defined is refused here, before anything runs (R-load); a refusal in a scenario file refuses only that scenario and the scenarios over it, and an ask's `LOAD-SCENARIO` for a scenario whose file isn't loaded refuses only that ask (§6.4) (`ENGINE.md` §11). Each refusal names its file, line and item.
 
+**Which refusal prints** (tally 2.1.1). Load prints the first refusal it meets, and the order a reality's files are given in never changes which (§9): it takes them in the order of their full paths, compared by code point, as `ENGINE.md` §3.1 step 1 does. It reads every file it is given (`LOAD-PATH`; `LOAD-PARSE` for bytes that aren't UTF-8) before it splits any into lines and tokens, and splits every file before it parses any; each of these steps takes the files in that order, and each file from its first line down. So when several files are refused at one of these steps, the first in that order prints, with the first refusal the step meets in it.
+
 **What load sees.** Load sees these, and nothing else (the steps are `ENGINE.md` §3.1's):
 1. **The text.** Every file's tokens and lines, and its canonical reprint (step 1), and every `use` pin.
 2. **Every declaration and name.** Ids and their sections, kinds and subkinds, indexes, units, axes and their options, sources, versions with their `cite`, `governs`, `known`, `moves` and `enters` lines (steps 2, 4, 9).
@@ -2281,6 +2283,7 @@ Load never sees: a value read from a row, or computed from one; which row a read
 
 | Code | Message | What the writer does |
 |---|---|---|
+| `LOAD-PATH` | `<path> doesn't exist`: a path the run is given names no file or folder (tally 2.1.1) | fixes the path |
 | `LOAD-PARSE` | `cannot parse: <what was expected>`; also tabs, bad indentation, chained comparisons | fixes the text |
 | `LOAD-HEADER` | `missing tally version`, `missing on date`, `missing start or end`, `missing from date` (a scenario's header), `start after end`; `<n> files have a model header; exactly one does` | completes the header, or keeps one model header |
 | `LOAD-VERSION` | `files declare different tally versions`; `replace rule <d>.<r> in <V> names version <W>` (a `replace rule` belongs to the version that holds it, §5.11) | migrates the old files (§9), or drops the `v` |
@@ -2369,7 +2372,7 @@ Printed as `refused: CODE message` at that key. A refusal propagates like a hole
 
 ### 8.5 Warnings
 
-A warning leaves the value as it is and prints beside it.
+A warning leaves the value as it is and prints beside it. A run's warnings print sorted by code, then by their text, compared by code point, whatever the order of the reality's files (tally 2.1.1).
 
 | Code | Message | Means |
 |---|---|---|
