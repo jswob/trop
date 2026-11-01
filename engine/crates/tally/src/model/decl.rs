@@ -6,6 +6,7 @@
 //! Invariants: a row's pattern has one position per key bind of its target; a rule's
 //! versions are kept in the order versions state them.
 
+use super::graph::Target;
 use super::key::{KeyVal, Pat, Span};
 use super::ty::Ty;
 use crate::num::Num;
@@ -278,8 +279,14 @@ pub struct MoveInfo {
     pub binds: Vec<BindInfo>,
     /// Whether it is a decision (it states `reads`).
     pub decision: bool,
-    /// Its stratum (E §3.1 step 8).
+    /// Its stratum (E §3.1 step 8): 0 for a plan, from 1 for a decision.
     pub stratum: u32,
+    /// What its `reads` declares, in the order written (L §5.14.1).
+    pub read_targets: Vec<Target>,
+    /// The places its legs change, as load sees them (L §5.14.2).
+    pub changes: Vec<Target>,
+    /// Whether it is a decision that reads a place it changes itself.
+    pub self_reads: bool,
     /// The section as written.
     pub decl: Move,
 }

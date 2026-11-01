@@ -9,8 +9,8 @@
 
 use crate::base::{Code, Load, Place as At, Refusal, Run, Table, Warn};
 use crate::model::{
-    BUILTIN_INDEXES, BUILTIN_INPUTS, BindInfo, Domain, InputInfo, NameKind, PERIODS, PRELUDE_KINDS,
-    Reality, Ty,
+    BUILTIN_INDEXES, BUILTIN_INPUTS, BindInfo, Domain, Graph, InputInfo, NameKind, PERIODS,
+    PRELUDE_KINDS, Reality, Ty,
 };
 use crate::num::{Num, NumError};
 use crate::syntax::{Bind, Domain as BindDomain, File, HeaderKind, Lit, Section, Stop, UnitForm};
@@ -67,6 +67,7 @@ pub fn load(files: Vec<File>) -> Result<Reality, Stop> {
     loader.build_items()?;
     loader.finish_rows();
     loader.collect_asks();
+    loader.build_graph()?;
     Ok(loader.m)
 }
 
@@ -131,6 +132,7 @@ impl Loader {
                 moves: Table::new(),
                 asks: Vec::new(),
                 warnings: Vec::new(),
+                graph: Graph::default(),
             },
             sections,
             currency_order: Vec::new(),

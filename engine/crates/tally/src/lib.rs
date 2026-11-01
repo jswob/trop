@@ -47,7 +47,7 @@ pub mod syntax {
         Instant, Interval, Item, ItemForm, Key, KindDecl, KindSpec, Known, LSpan, LawDate, Leg,
         Lit, Move, MulOp, Number, OfQ, Order, Place, Postfix, Price, Proj, Residuals, Row, RowKey,
         Rule, RuleValue, Section, Sign, Source, Span, Step, Type, TypedInput, Unit, UnitDecl,
-        UnitForm, UnitTerm, Value, Version,
+        UnitForm, UnitTerm, Valuation, Value, Version,
     };
 }
 
@@ -67,6 +67,7 @@ pub mod time {
 /// `model/`.
 pub mod model {
     mod decl;
+    mod graph;
     mod index;
     mod key;
     mod kind;
@@ -78,6 +79,7 @@ pub mod model {
         BandEnd, BandInfo, BandRow, BindInfo, DefInfo, Domain, Fulfils, InputInfo, MoveInfo,
         ObsLeg, Observation, PlaceInfo, Row, RowInstant, RuleVer, Table as BandTable, TimePos,
     };
+    pub use graph::{Graph, Mark, Node, NodeKind, Rel, Shift, Target};
     pub use index::{GapRole, IndexForm, IndexInfo, OwnTime, VersionInfo};
     pub use key::{KeyVal, Pat, Span, pattern_text};
     pub use kind::{Entry, KindInfo, KindSpec, PRELUDE_KINDS, PlaceKeys, Thing, prelude};
@@ -90,6 +92,7 @@ pub mod model {
 /// refusals S makes are those construction meets, the rest are M0's.
 pub mod load {
     mod decls;
+    mod graph;
     mod indexes;
     mod keys;
     mod kinds;
@@ -98,6 +101,7 @@ pub mod load {
     mod rows;
     mod spans;
     mod steps;
+    mod strata;
 
     pub use steps::load;
 }

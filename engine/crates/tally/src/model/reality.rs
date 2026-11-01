@@ -7,6 +7,7 @@
 //! lifespan under a cut is its latest entry the cut sees, a `replace` line winning.
 
 use super::decl::{BandInfo, DefInfo, InputInfo, MoveInfo, PlaceInfo};
+use super::graph::Graph;
 use super::index::{IndexInfo, VersionInfo};
 use super::key::Span;
 use super::kind::{Entry, KindInfo, KindSpec, Thing};
@@ -98,6 +99,8 @@ pub struct Reality {
     pub asks: Vec<Ask>,
     /// The warnings load decided.
     pub warnings: Vec<(Warn, String)>,
+    /// The item graph and the classes and strata load decides from it.
+    pub graph: Graph,
 }
 
 impl Reality {

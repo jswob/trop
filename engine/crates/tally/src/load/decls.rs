@@ -241,6 +241,9 @@ impl Loader {
             binds,
             decision: !decl.reads.is_empty(),
             stratum: 0,
+            read_targets: Vec::new(),
+            changes: Vec::new(),
+            self_reads: false,
             decl: decl.clone(),
         };
         self.m.moves.push(&decl.id, info);

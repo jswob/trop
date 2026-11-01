@@ -150,3 +150,19 @@ indent keeps the template itself from counting as a report):
 - Cut classes come with the memo (G5), where they trim cells: an item's class is per its cone, which the item graph (G4d) gives. The calendar built-ins are `time/`'s (G4a); the evaluator binds them (G5).
 
 **Next:** G4d, the item graph. **STOP-REPORTs:** none. **Exceptions:** +0; count 6; report-only 5.  **Check:** `check full: green, 30 steps (450s)`.
+
+## 2026-11-01 S, G4d: the item graph (issue #26)
+
+**Built.** The item graph, E §3.1 step 6 and L §8.5, refcore's checker its twin (`check.py`'s edges, reads, relations, binds, aggregates, band calls and cycles; `check3.py`'s move checks, flows, balances, the move graph and the strata), messages word for word. `model/graph.rs`: nodes (a kind word and an id, ordered by the word, then the id, as refcore sorts them), the relation of a read (`same`, `shift:<var>:-/+`, `computed`, `any`, `bind`, `named`, `flows`, `bal`, `explicit`, `calendar`, `next`, `observed`), marks (`balnow`, `bal`, `proj`, `flows`, `legs`, `legof`) and their targets, and the `Graph`: edges, marks, the projection holders and what each leaves out, the items read from decisions, the walk-bound defs, the strata's `after`, the written order and the order groups. `load/graph.rs`: the walk over every item in refcore's order (price clauses, inputs' ranges, moves by id, defs, bands, asks, `prices … by`), a variable's range and the keys of the item it sits in deciding each read's relation; recursion counted to 512 (`ENGINE-INVARIANT` past it). `load/strata.rs`: the graph built last in load: same-key cycles (`LOAD-CYCLE`), `WARN-UNREAD`, the decisions' reads and changes, `after` from what a decision reads that another changes, the written `before`/`after` (`LOAD-NAME`, `LOAD-ORDER`), cycles among decisions merged into order groups or refused (`LOAD-ORDER` when every one is on a known day), the levels and `self_reads`; every search an explicit stack. `MoveInfo` gains `read_targets`, `changes`, `self_reads`; `Reality` gains `graph`. `crates/tally/tests/graph_cases.rs`: the builder's test, a small reality's graph as refcore's 62 lines (three decisions in strata 1–3 by a written `after` and a read of legs, a projection in a def and in an ask, a recurrence, `next`, two unread items), what a projection leaves out, and 5 refusals with refcore's text.
+
+**Green.** No T id. Checked once against refcore with a temporary local test, not committed (R-93): X (`b_r1`), 401 normalized graph lines identical (edges, marks, holders, left-out sets, items from decisions, walk-bound defs, strata, warnings); all 312 realities of the kernel corpus, 14 058 lines identical, none refused on either side.
+
+**Deviations to review.**
+- The graph's refusals are those building it meets: a same-key `LOAD-CYCLE`, `LOAD-ORDER`, and `LOAD-NAME` for an unknown move in an order line. `LOAD-READS`, `LOAD-GUARD`, a cycle through `beats`, and the checker's type and unit refusals are M0's.
+- A leg's place written as an `if` gives an unknown target, where refcore's checker unifies the branches' types.
+- A membership test's list reads no item; a key that doesn't resolve names no literal place (M0 refuses it, `LOAD-KEY`).
+- The parser bounds expression depth; the walk counts its own to 512 as an invariant.
+
+**Spec gap for the lead.** L §8.5 and E §3.1 step 6 name places nothing reads among `WARN-UNREAD`'s items; refcore warns only inputs and defs. The engine follows refcore.
+
+**Next:** G5, the evaluator, the memo and holes. **STOP-REPORTs:** none. **Exceptions:** +0; count 6; report-only 5.  **Check:** `check full: green, 30 steps (476s)`.
