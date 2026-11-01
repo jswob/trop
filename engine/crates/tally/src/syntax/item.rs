@@ -19,7 +19,6 @@ use crate::api::Source as Text;
 use crate::base::{Code, Load, Place as At, Refusal};
 use crate::num::Num;
 use crate::time::Day;
-use core::cmp::Ordering;
 use std::collections::BTreeSet;
 
 /// Splits every file, then finds the unit names, then parses every file, in the order given
@@ -189,7 +188,7 @@ fn parse_header(p: &P<'_>, head: &Line, body: &[Line]) -> Result<Header, Stop> {
     };
     header_lines(p, &mut header, body)?;
     if let (HeaderKind::Model, Some(start), Some(stop)) = (kind, header.start, header.end)
-        && start.order(stop) == Ordering::Greater
+        && start > stop
     {
         return Err(refuse("start after end"));
     }

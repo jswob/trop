@@ -20,9 +20,11 @@ pub use api::{Answer, Asks, Given, Pin, Request, Source, run};
 pub mod base {
     mod code;
     mod refusal;
+    mod table;
 
     pub use code::{Code, Hole, Load, Req, Run, Warn};
     pub use refusal::{Place, Refusal};
+    pub use table::Table;
 }
 
 /// The text of a reality (L §2): its lines and tokens, and the tree the parser makes of
@@ -51,9 +53,37 @@ pub mod syntax {
 
 /// Days, periods and the calendar (L §4). The module's code is its files under `time/`.
 pub mod time {
+    mod calendar;
     mod day;
+    mod period;
 
+    pub use calendar::{Calendar, weekday_number};
     pub use day::Day;
+    pub use period::{Period, PeriodKind, Step, age, age_months, overlap_days};
+}
+
+/// The resolved reality load builds (E §3.1): units and types, kinds and things, indexes,
+/// versions and their rows, and the declarations. The module's code is its files under
+/// `model/`.
+pub mod model {
+    mod decl;
+    mod index;
+    mod key;
+    mod kind;
+    mod reality;
+    mod ty;
+    mod unit;
+
+    pub use decl::{
+        BandEnd, BandInfo, BandRow, BindInfo, DefInfo, Domain, Fulfils, InputInfo, MoveInfo,
+        ObsLeg, Observation, PlaceInfo, Row, RowInstant, RuleVer, Table as BandTable, TimePos,
+    };
+    pub use index::{GapRole, IndexForm, IndexInfo, OwnTime, VersionInfo};
+    pub use key::{KeyVal, Pat, Span, pattern_text};
+    pub use kind::{Entry, KindInfo, KindSpec, PRELUDE_KINDS, PlaceKeys, Thing, prelude};
+    pub use reality::{BUILTIN_INDEXES, BUILTIN_INPUTS, NameKind, Reality};
+    pub use ty::{CodeKind, PeriodWord, Shown, Ty};
+    pub use unit::{PERIODS, Scaled, Unit, is_currency_code};
 }
 
 /// Exact numbers (L §7.1, §7.2): `Num`, a reduced fraction held small or big; `Money`, a
