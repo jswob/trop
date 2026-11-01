@@ -12,7 +12,7 @@ use super::key::Span;
 use super::kind::{Entry, KindInfo, KindSpec, Thing};
 use crate::base::{Table, Warn};
 use crate::num::Num;
-use crate::syntax::{Ask, Header, Price, Sign, Source};
+use crate::syntax::{Ask, Header, Price, Sign, Source, Type};
 use crate::time::Day;
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -180,6 +180,17 @@ impl Reality {
             for (name, unit) in &kind.legs {
                 out.push((name.clone(), unit.clone(), kind.id.clone()));
             }
+        }
+        out
+    }
+
+    /// An event kind's attributes, its parents' first: (name, written type; none for the
+    /// prelude's) (refcore's `kind_attrs`). L §5.7.
+    #[must_use]
+    pub fn kind_attrs(&self, id: &str) -> Vec<(String, Option<Type>)> {
+        let mut out = Vec::new();
+        for kind in self.chain(id).into_iter().rev() {
+            out.extend(kind.attrs.iter().cloned());
         }
         out
     }

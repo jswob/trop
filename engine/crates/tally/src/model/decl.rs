@@ -88,6 +88,8 @@ pub struct Row {
     pub replace: bool,
     /// Its line.
     pub line: u32,
+    /// Its stable id, `v1:rent[2026-03]` (L §2.5), set once its target's rows are all read.
+    pub sid: String,
 }
 
 /// An input (refcore's `InputInfo`).
@@ -121,6 +123,29 @@ pub struct InputInfo {
     pub observations: Vec<Observation>,
     /// Its line.
     pub line: Option<u32>,
+}
+
+impl InputInfo {
+    /// An input with no key, type or row yet.
+    #[must_use]
+    pub fn new(id: &str, line: Option<u32>) -> InputInfo {
+        InputInfo {
+            id: id.to_owned(),
+            binds: Vec::new(),
+            ty: None,
+            unit_factor: Num::int(1),
+            reading: false,
+            observed: false,
+            question: None,
+            rows: Vec::new(),
+            time_pos: TimePos::None,
+            builtin: line.is_none(),
+            prices: None,
+            prices_by: None,
+            observations: Vec::new(),
+            line,
+        }
+    }
 }
 
 /// A rule of a def as one version states it (refcore's `RuleVer`).

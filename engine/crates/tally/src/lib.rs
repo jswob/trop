@@ -86,6 +86,22 @@ pub mod model {
     pub use unit::{PERIODS, Scaled, Unit, is_currency_code};
 }
 
+/// Load (E §3.1 steps 1–4): the parsed files become the reality, constructively; the load
+/// refusals S makes are those construction meets, the rest are M0's.
+pub mod load {
+    mod decls;
+    mod indexes;
+    mod keys;
+    mod kinds;
+    mod observed;
+    mod places;
+    mod rows;
+    mod spans;
+    mod steps;
+
+    pub use steps::load;
+}
+
 /// Exact numbers (L §7.1, §7.2): `Num`, a reduced fraction held small or big; `Money`, a
 /// whole number of a currency's minor units; rounding by the seven modes. The module's
 /// code is its files under `num/`, the kernel's (gate 8); this block only names them.
