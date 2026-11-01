@@ -72,6 +72,25 @@ pub enum Lit {
     Name(String),
 }
 
+impl Lit {
+    /// The literal's text as a key's source text compares it (refcore's `resolve_text`).
+    /// L §2.5.
+    #[must_use]
+    pub fn text(&self) -> String {
+        match self {
+            Lit::Num(n) => n.text.clone(),
+            Lit::Day(day) => day.text(),
+            Lit::Month(year, month) => format!("{year:04}-{month:02}"),
+            Lit::Quarter(year, quarter) => format!("{year:04}-Q{quarter}"),
+            Lit::MonthDay(month, day) => format!("{month:02}-{day:02}"),
+            Lit::Key(text) | Lit::Cur(text) | Lit::Name(text) => text.clone(),
+            Lit::Bool(value) => value.to_string(),
+            Lit::Inf { neg } => if *neg { "-inf" } else { "inf" }.to_owned(),
+            Lit::Nominal(_) => "nominal".to_owned(),
+        }
+    }
+}
+
 /// A key position in brackets: an expression, or `*` for every key there.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Key {

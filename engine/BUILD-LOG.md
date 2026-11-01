@@ -136,3 +136,17 @@ indent keeps the template itself from counting as a report):
 - `Stop::NotBuilt`, never a guessed refusal: scenarios, joint models, known windows, axes, a member's prefix, `same` lines, ranges of quarters (or any word but int, day, month, year), a band over values that aren't numbers or keyed by more than one key, a computed key of a move instance, a keyed place's key that isn't a literal; calendar arithmetic past 9999-12-31.
 
 **Next:** G4c, the read rule (`read/`). **STOP-REPORTs:** none. **Exceptions:** +0; count 6; report-only 5.  **Check:** `check full: green, 30 steps (433s)`.
+
+## 2026-11-01 S, G4c: the read rule (issue #26)
+
+**Built.** `crates/tally/src/read/` (the kernel's, a plain scan; the row index is fence F3, opened when a budget row asks), refcore's `evaluate.py` its twin, messages word for word: `rows.rs` (the time point, a read with no law date, candidates: keys stated, `*` and ranges in index order, keys unstated that were there when the row was known, known by the cut, the span or instant; the choice: `replace` at the same keys, the narrower row, a span over `always`, ties `LOAD-OVERLAP`; `held`), `gap.rs` (no candidate: `none` outside a lifespan by the thing's membership hull, else `HOLE-UNGOVERNED`'s questions: the input's `question`, `no value for <period>`, `at <d>`, with no law date `no value`, a calendar's; a reading's plain read and `HOLE-NOREADING`; `read_input`), `rules.rs` (the version of a rule in force: `LOAD-OVERLAP`, `LOAD-LABEL`), `bands.rs` (the table a band read takes, refcore's recursion through earlier tables as a loop, `replace` rows patched in; the band's `held` mark and questions). A read returns the row, `none` or the question; the hole itself is built in the hole module (G5, R-116). `Lit::text` moved into the syntax tree (load's `lit_text` calls it). `crates/tally/tests/read_cases.rs`: 29 reads of a small reality and 5 tie refusals, each refcore's line from the same text (the refusals from the same change to refcore's loaded model, since its load refuses them first); a local probe, `tmp/s/refread.py`, prints refcore's lines.
+
+**Green.** No T id.
+
+**Deviations to review.**
+- `last` and `since` are left for the evaluator: neither X nor the corpus reads them.
+- A band `replace` table that stands as a whole table (no table under it, or rows that don't match the earlier intervals) is `NotBuilt`: telling it needs load's band checks (`whole_ok`), which are M0's.
+- A dated read with no law date is `NotBuilt` (`LOAD-LAWDATE`, M0's), where refcore's interpreter guard raises.
+- Cut classes come with the memo (G5), where they trim cells: an item's class is per its cone, which the item graph (G4d) gives. The calendar built-ins are `time/`'s (G4a); the evaluator binds them (G5).
+
+**Next:** G4d, the item graph. **STOP-REPORTs:** none. **Exceptions:** +0; count 6; report-only 5.  **Check:** `check full: green, 30 steps (450s)`.

@@ -78,17 +78,7 @@ pub(super) fn lit_of_expr(expr: &Expr) -> Option<Lit> {
 
 /// A literal's text, as a message names it (refcore's `_lit_text`, `resolve_text`).
 pub(super) fn lit_text(lit: &Lit) -> String {
-    match lit {
-        Lit::Num(n) => n.text.clone(),
-        Lit::Day(day) => day.text(),
-        Lit::Month(year, month) => format!("{year:04}-{month:02}"),
-        Lit::Quarter(year, quarter) => format!("{year:04}-Q{quarter}"),
-        Lit::MonthDay(month, day) => format!("{month:02}-{day:02}"),
-        Lit::Key(text) | Lit::Cur(text) | Lit::Name(text) => text.clone(),
-        Lit::Bool(value) => value.to_string(),
-        Lit::Inf { neg } => if *neg { "-inf" } else { "inf" }.to_owned(),
-        Lit::Nominal(_) => "nominal".to_owned(),
-    }
+    lit.text()
 }
 
 /// A key's source text: the text that names it in its index (refcore's `key_source_text`).

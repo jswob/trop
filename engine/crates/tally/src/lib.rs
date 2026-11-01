@@ -102,6 +102,25 @@ pub mod load {
     pub use steps::load;
 }
 
+/// The read rule (L §4.6): which row a read of an input, a def's givens, a dated rule or a
+/// band takes, and what a read with none gives. The kernel's (gate 8); the module's code
+/// is its files under `read/`, a plain scan (the row index is fence F3, opened when a
+/// budget row asks).
+pub mod read {
+    mod bands;
+    mod gap;
+    mod rows;
+    mod rules;
+
+    pub use bands::{BandAt, band_no_row, band_no_table, band_origin, band_rows, table_held};
+    pub use gap::{Asked, Found, Question, member_span, no_candidate, origin, read_input};
+    pub use rows::{
+        Clocks, Point, Test, candidates, choose, held, lawless, need_law, row_known, row_place,
+        row_span, time_point,
+    };
+    pub use rules::rule_in_force;
+}
+
 /// Exact numbers (L §7.1, §7.2): `Num`, a reduced fraction held small or big; `Money`, a
 /// whole number of a currency's minor units; rounding by the seven modes. The module's
 /// code is its files under `num/`, the kernel's (gate 8); this block only names them.
