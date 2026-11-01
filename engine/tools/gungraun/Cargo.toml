@@ -21,5 +21,18 @@ gungraun = "=0.20.0"
 name = "stub_instructions"
 harness = false
 
+# The micro rows' instruction counts (P8-M1 to P8-M3), each limited by its row
+[[bench]]
+name = "p8_m1"
+harness = false
+
+[[bench]]
+name = "p8_m2"
+harness = false
+
+[[bench]]
+name = "p8_m3"
+harness = false
+
 # its own workspace, apart from the engine's
 [workspace]

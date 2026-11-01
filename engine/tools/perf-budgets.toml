@@ -9,7 +9,8 @@
 #   id, group (I, C, L, M), what: PERFORMANCE §8's row, shortened
 #   recipe: how perf runs it
 #     "check:<id>"   one row of engine/tests/checks.tsv, run as run.py runs it
-#     "bench:<name>" a gungraun bench in engine/tools/gungraun/benches/ (Linux CI)
+#     "bench:<name>" a gungraun bench in engine/tools/gungraun/benches/ (Linux CI), and its
+#                    criterion twin in crates/tally/benches/ for the Mac's wall time, if any
 #     "waits: ..."   nothing runs it yet; the text says what it waits for
 #   wall_s, footprint_mb, workers: the Mac's budget (absent: the row sets none)
 #   counts: the count budgets T's runner checks at 1 worker (absent: reported only)
@@ -316,21 +317,21 @@ blocks = "tag"
 id = "P8-M1"
 group = "M"
 what = "Num add and multiply on the small tier"
-recipe = "waits: S, the numbers (the lead writes its bench on request, R-91)"
+recipe = "bench:p8_m1"
 blocks = "pr"
 
 [[row]]
 id = "P8-M2"
 group = "M"
 what = "gcd of a 5 049-bit and a 64-bit value"
-recipe = "waits: S, the numbers (the lead writes its bench on request, R-91)"
+recipe = "bench:p8_m2"
 blocks = "pr"
 
 [[row]]
 id = "P8-M3"
 group = "M"
 what = "one big operation at 5 049 bits: a multiply and its reduction"
-recipe = "waits: S, the numbers (the lead writes its bench on request, R-91)"
+recipe = "bench:p8_m3"
 blocks = "pr"
 
 [[row]]
