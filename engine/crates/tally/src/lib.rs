@@ -1,13 +1,13 @@
 //! The Tally engine: a reality goes in as bytes, a result comes out (ENGINE §1).
 //! Spec: E §1 (the run function); the modules name their own sections.
 //! Twin: engine/tools/refcore/cli.py.
-//! Invariants: the library reads no clock, environment or file (R-38, R-39); `parse` and
-//! [`run`] still answer `NotImplemented` past the read step until the parser lands (milestone
-//! S, group G3).
+//! Invariants: the library reads no clock, environment or file (R-38, R-39); [`run`] answers
+//! a read or parse refusal, and `NotImplemented` past the parse until the checks and the
+//! evaluator land (milestone S, groups G4 on).
 //!
 //! Milestone S is built in groups (`engine/BUILD-LOG.md`, the S plan). So far: the exact
 //! numbers, [`num`]; the code catalogue and refusals, [`base`]; the entry and its read step,
-//! [`run`].
+//! [`run`]; days, [`time`]; the lexer and the parser, [`syntax`].
 
 #![forbid(unsafe_code)]
 
@@ -23,6 +23,37 @@ pub mod base {
 
     pub use code::{Code, Hole, Load, Req, Run, Warn};
     pub use refusal::{Place, Refusal};
+}
+
+/// The text of a reality (L §2): its lines and tokens, and the tree the parser makes of
+/// them. The lexer and the parser are the `lexer-parser` area. The module's code is its
+/// files under `syntax/`.
+pub mod syntax {
+    mod expr;
+    mod item;
+    mod lex;
+    mod parse;
+    mod tree;
+
+    pub use item::parse_reality;
+    pub use lex::{Kind, Line, Tok, split_lines};
+    pub use parse::Stop;
+    pub use tree::{
+        AddOp, Agg, AggFn, Ask, AskBody, Bal, Band, BandRow, Bind, Calendar, CalendarDay, Call,
+        Certainty, CmpOp, DaySet, Def, Domain, Edge, Enter, Expr, Field, FieldValue, File, Flows,
+        Gap, Governs, Header, HeaderKind, In, Index, IndexForm, IndexFrom, Input, InputForm,
+        Instant, Interval, Item, ItemForm, Key, KindDecl, KindSpec, Known, LSpan, LawDate, Leg,
+        Lit, Move, MulOp, Number, OfQ, Order, Place, Postfix, Price, Proj, Residuals, Row, RowKey,
+        Rule, RuleValue, Section, Sign, Source, Span, Step, Type, TypedInput, Unit, UnitDecl,
+        UnitForm, UnitTerm, Value, Version,
+    };
+}
+
+/// Days, periods and the calendar (L §4). The module's code is its files under `time/`.
+pub mod time {
+    mod day;
+
+    pub use day::Day;
 }
 
 /// Exact numbers (L §7.1, §7.2): `Num`, a reduced fraction held small or big; `Money`, a
@@ -51,10 +82,20 @@ compile_error!("the counters feature exists only in builds with debug assertions
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct NotImplemented;
 
-/// Takes a source text as bytes (the library reads no files, R-39) and answers
-/// [`NotImplemented`]. The fuzz target `parse` calls it.
-pub fn parse(_source: &[u8]) -> Result<(), NotImplemented> {
-    Err(NotImplemented)
+/// Splits and parses one file's bytes as a reality of that one file, named `input` (L §2.3,
+/// §8.3); the library reads no files (R-39). The fuzz target `parse` calls it.
+///
+/// # Errors
+///
+/// The refusal met (bytes that aren't UTF-8 are `LOAD-PARSE`), or the first construct the
+/// engine doesn't build yet.
+pub fn parse(source: &[u8]) -> Result<Vec<syntax::File>, syntax::Stop> {
+    let name = "input";
+    let text = String::from_utf8(source.to_vec()).map_err(|_| base::Refusal::not_utf8(name))?;
+    syntax::parse_reality(&[Source {
+        path: name.to_owned(),
+        text,
+    }])
 }
 
 /// The work units PERFORMANCE §1.1 counts, behind the `counters` feature (D4-8,

@@ -102,3 +102,18 @@ indent keeps the template itself from counting as a report):
 **Gap noted:** a directory given with no `.tally` file under it can't be told from a missing path in the file table, so the engine refuses it `LOAD-PATH` where refcore reads no files; no check reaches it.
 
 **Next:** G3, the lexer and parser. **STOP-REPORTs:** the one above, resolved. **Exceptions:** +1, cli `main.rs` `fn read_reality`, `clippy::disallowed_methods` (R-39); cli 3/3, count 6, report-only 0.  **Check:** `check full: green, 30 steps (310s)`.
+
+## 2026-11-01 S, G3: the lexer and the parser (issue #26)
+
+**Built.** `crates/tally/src/syntax/` (the lexer-parser area, budget 0), each file the twin of a part of refcore's `lexer.py` and `parser.py`, its error texts word for word: `lex.rs` (lines and their indentation, tokens: grouped numbers, dates, months, quarters, month-days, keys, currency codes, strings, operators); `tree.rs` (the tree: one enum per choice of the grammar, every node with its line); `parse.rs` (the cursor over one line's tokens, units, literals, spans, the depth count); `expr.rs` (expressions as flat chains, postfixes, atoms, binds, `bal`, `value`, `flows`, `covered`, aggregates, calendars, types); `item.rs` (the header and its checks, the sections, a version's lines, items and rows, the units prescan, `parse_reality`). `time/day.rs`: `Day`, a checked calendar day. `api::run` now splits every file, then parses every file (L §8.3), answers a parse refusal, and answers `NotImplemented` past the parse; `tally::parse`, the fuzz target's entry, runs the parser on one file.
+
+**Green.** No T id of S's list. M0's fixture `LOAD-PATH/control` now prints byte for byte, exit 1 (with `alone` and `before-parse`, all three of M0's `LOAD-PATH` rows). X's 13 files (`b_r1`, and `b_r1s`'s asks) and all 312 realities of the kernel corpus parse, checked once with a temporary local test, not committed: the builder's committed tests read no T file (R-93). `crates/tally/tests/parse_cases.rs`: a reality in the corpus's forms parses to the expected sections, rows and asks; seven refusals print refcore's text (`LOAD-HEADER`, `LOAD-PARSE`, `LOAD-KNOWN`, `LOAD-RESERVED`, `LOAD-PLACEKIND`); a form built later is `NotImplemented`.
+
+**Deviations to review.**
+- Nodes carry their line number, not a byte span (BUILDER: a span on each node): refcore's messages name lines only. The interner and `Table<I, T>` come with the names they key, in G4.
+- A construct the engine doesn't build yet stops the parse with `Stop::NotBuilt`, exit 69, never a guessed refusal: axes, fills, queries (`mean`, `share`, `quantile`), `low`, `crps`, `cdf`/`pdf`/`pmf`, distributions, `prorata`, `as if` (so `LOAD-ASIF` too), pins (`with` other than `with uncertain`), random asks and `random at`, the asks `explain`, `check`, `solve`, `diff`, `inputs-of`, `readers-of`, a version's `moves`, a kind's parts clauses, parts in a reading's row.
+- `tally::parse` returns `Result<Vec<File>, Stop>` (it was `Result<(), NotImplemented>`); the fuzz target asks only `is_err()`, the stub bench only calls it.
+
+**Spec gap, for the lead:** L §2.3's depth limit (`LOAD-DEPTH`, 8) counts brackets and `if`s; a read chained by `from` or `ties by` nests without either, so the grammar's recursion has no bound. The parser counts its own recursion there and stops at 64 with `NotBuilt` (R-16), not a refusal the spec doesn't name.
+
+**Next:** G4, load and the read rule. **STOP-REPORTs:** none. **Exceptions:** +0; count 6; report-only 2, `lifetime-review` on the parser's cursor `P<'a>` (`syntax/parse.rs`, the struct and its `impl`): R-124's own case, a cursor over a text. **Check:** `check full: green, 30 steps (371s)`.

@@ -1,6 +1,6 @@
 //! The engine's entry: the files a run is given and its request go in, the printed answer comes out.
 //! Spec: E §1 (the run function); E §3.1 step 1 (files by full path); L §8.3 (which refusal
-//! prints: every file is read before any is split or parsed).
+//! prints: every file is read before any is split, and split before any is parsed).
 //! Twin: engine/tools/refcore/cli.py (`read_files`, `run_texts`, `by_path`).
 //! Invariants: reads no clock, environment or file (R-38, R-39); takes the files in the order
 //! of their full paths by code point, whatever order they come in (R-40); never decodes lossily
@@ -8,6 +8,7 @@
 
 use crate::NotImplemented;
 use crate::base::Refusal;
+use crate::syntax::{Stop, parse_reality};
 
 /// One file the run is given: its path as the run names it, and its bytes, or none when the
 /// path names no file or folder.
@@ -87,15 +88,21 @@ impl Answer {
 }
 
 /// Runs a reality's files on a request and answers with the printed lines. So far it reads
-/// the files (L §8.3); the parser lands next (milestone S, group G3).
+/// the files, then splits and parses them all (L §8.3); the checks land next (milestone S,
+/// group G4).
 ///
 /// # Errors
 ///
-/// [`NotImplemented`] once the files are read, until the parser and the rest land.
+/// [`NotImplemented`] for a construct the parser doesn't build yet, and once the files are
+/// parsed, until the checks and the rest land.
 pub fn run(given: Vec<Given>, _request: &Request) -> Result<Answer, NotImplemented> {
-    match read(given) {
-        Err(refusal) => Ok(Answer::refused(&refusal)),
-        Ok(_sources) => Err(NotImplemented),
+    let sources = match read(given) {
+        Err(refusal) => return Ok(Answer::refused(&refusal)),
+        Ok(sources) => sources,
+    };
+    match parse_reality(&sources) {
+        Err(Stop::Refused(refusal)) => Ok(Answer::refused(&refusal)),
+        Err(Stop::NotBuilt(_)) | Ok(_) => Err(NotImplemented),
     }
 }
 
@@ -178,8 +185,22 @@ mod tests {
     }
 
     #[test]
-    fn a_reality_that_reads_goes_on_to_the_parser() {
-        let files = given(&[("m.tally", Some(b"model m"))]);
-        assert_eq!(run(files, &every()), Err(NotImplemented), "G3 next");
+    fn every_file_is_split_before_any_is_parsed() {
+        let files = given(&[
+            ("a.tally", Some(b"model m\n")),
+            ("b.tally", Some(b"model b\n\ttally 2\n")),
+        ]);
+        assert_eq!(
+            line(run(files, &every())),
+            "refused: LOAD-PARSE cannot parse: tab (b.tally:2)",
+            "b's tab is met when it is split, before a's header is parsed"
+        );
+    }
+
+    #[test]
+    fn a_reality_that_parses_goes_on_to_the_checks() {
+        let model = b"model m\n  tally 2\n  on 2026-01-01\n  start 2026-01-01\n  end 2026-12-31\n";
+        let files = given(&[("m.tally", Some(model))]);
+        assert_eq!(run(files, &every()), Err(NotImplemented), "G4 next");
     }
 }

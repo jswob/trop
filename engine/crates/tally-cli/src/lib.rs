@@ -335,6 +335,10 @@ mod tests {
     };
     use std::ffi::OsString;
 
+    /// The smallest model the parser takes.
+    const MODEL: &[u8] =
+        b"model m\n  tally 2\n  on 2026-01-01\n  start 2026-01-01\n  end 2026-12-31\n";
+
     fn args(words: &[&str]) -> Vec<OsString> {
         words.iter().map(OsString::from).collect()
     }
@@ -426,7 +430,7 @@ mod tests {
         let table = [
             ("r/a.tally", &b"\xff"[..]),
             ("r/notes.txt", b"\xff"),
-            ("r/sub/b.tally", b"model b"),
+            ("r/sub/b.tally", MODEL),
             ("rx.tally", b"\xff"),
         ];
         assert_eq!(
@@ -445,7 +449,15 @@ mod tests {
                 "tally run: not implemented\n".to_owned(),
                 EXIT_NOT_IMPLEMENTED
             ),
-            "read; the parser is next"
+            "read and parsed; the checks are next"
+        );
+        assert_eq!(
+            out(&["run", "m.tally"], &[("m.tally", b"model m")]),
+            (
+                "refused: LOAD-HEADER missing tally version (m.tally:1)\n".to_owned(),
+                EXIT_REFUSED
+            ),
+            "a parse refusal"
         );
     }
 
@@ -483,7 +495,7 @@ mod tests {
     fn stats_adds_the_counters_line() {
         let output = run(
             &args(&["run", "--stats", "a.tally"]),
-            &files(&[("a.tally", b"m")]),
+            &files(&[("a.tally", MODEL)]),
         );
         assert_eq!(output.code, EXIT_NOT_IMPLEMENTED, "run --stats");
         assert!(
