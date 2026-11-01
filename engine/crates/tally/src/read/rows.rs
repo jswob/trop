@@ -236,7 +236,7 @@ fn rank(m: &Reality, domain: &Domain, key: &KeyVal) -> Option<Rank> {
             KeyVal::Int(n) => Some(Rank::Int(*n)),
             KeyVal::Day(day) => Some(Rank::Day(*day)),
             KeyVal::Period(period) => Some(Rank::Day(period.start())),
-            KeyVal::Key { .. } | KeyVal::Thing(_) => None,
+            KeyVal::Key { .. } | KeyVal::Thing(_) | KeyVal::Mv(_) => None,
         },
         Domain::Axis(_) => None,
     }

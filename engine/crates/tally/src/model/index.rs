@@ -101,7 +101,7 @@ impl IndexInfo {
         self.keys.iter().find(|k| match k {
             KeyVal::Day(d) => *d == day,
             KeyVal::Period(p) => p.contains(day),
-            KeyVal::Key { .. } | KeyVal::Thing(_) | KeyVal::Int(_) => false,
+            KeyVal::Key { .. } | KeyVal::Thing(_) | KeyVal::Int(_) | KeyVal::Mv(_) => false,
         })
     }
 }

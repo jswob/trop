@@ -8,8 +8,9 @@
 //! `alive_over`, `kind_order_key`).
 //! Invariants: tuples come in binding order, depth first as refcore's generator; an unknown
 //! member's term counts only as its questions, except a 0 in a sum; a domain that is a hole
-//! makes the aggregate that hole. Bindings over movements or observations need the walk and
-//! stop `NotBuilt`.
+//! makes the aggregate that hole; a binding over movements or an observed input takes its
+//! members from the book (`book/members.rs`), and a member's register reaches the reader only
+//! when the member passes the `where`.
 
 use core::cmp::Ordering;
 use std::collections::BTreeSet;
@@ -48,6 +49,32 @@ enum Values {
     Known(Vec<(Value, Option<Hole>)>),
     /// The domain is a hole.
     Unknown(Hole),
+    /// Movements, each with what it brings to a reader that keeps it.
+    Moves(Vec<crate::book::MvMember>),
+}
+
+/// The frame of a binding over movements: each member's value and hole, and what it
+/// brings, kept by position (refcore's `members`, `_colls`). L §5.19 Bindings.
+fn moves_frame(
+    level: usize,
+    env: Env,
+    unknown: Option<Hole>,
+    moves: Vec<crate::book::MvMember>,
+) -> Frame {
+    let mut values = Vec::with_capacity(moves.len());
+    let mut colls = Vec::with_capacity(moves.len());
+    for mv in moves {
+        values.push((mv.value, mv.unknown));
+        colls.push(mv.coll);
+    }
+    Frame {
+        level,
+        env,
+        unknown,
+        values,
+        next: 0,
+        colls,
+    }
 }
 
 /// A frame of the walk over the bindings: the binding's values and the next one to take.
@@ -63,6 +90,8 @@ struct Frame {
     values: Vec<(Value, Option<Hole>)>,
     /// The next value's position.
     next: usize,
+    /// What each value brings to a reader that keeps it: a movement's register.
+    colls: Vec<crate::eval::Collected>,
 }
 
 impl Engine {
@@ -214,13 +243,16 @@ impl Engine {
                 unknown: None,
                 values,
                 next: 0,
+                colls: Vec::new(),
             }),
+            Values::Moves(moves) => frames.push(moves_frame(0, env.clone(), None, moves)),
         }
         while let Some(frame) = frames.last_mut() {
             let Some((value, own)) = frame.values.get(frame.next).cloned() else {
                 frames.pop();
                 continue;
             };
+            let brings = frame.colls.get(frame.next).cloned();
             frame.next = frame
                 .next
                 .checked_add(1)
@@ -234,6 +266,9 @@ impl Engine {
             else {
                 continue;
             };
+            if let Some(c) = &brings {
+                self.absorb(c);
+            }
             let next = level
                 .checked_add(1)
                 .ok_or_else(|| invariant("a binding's position"))?;
@@ -256,7 +291,9 @@ impl Engine {
                     unknown,
                     values,
                     next: 0,
+                    colls: Vec::new(),
                 }),
+                Values::Moves(moves) => frames.push(moves_frame(next, inner, unknown, moves)),
             }
         }
         Ok(domain_hole.map_or(Ok(out), Err))
@@ -316,9 +353,17 @@ impl Engine {
                 {
                     return self.kind_values(m, bind, id, env, ctx);
                 }
-                Err(Stop::NotBuilt(
-                    "a binding over movements or observations (the walk)",
-                ))
+                let dom = if m.inputs.get(id).is_some_and(|i| i.observed) {
+                    (crate::book::MvDom::Obs, id.as_str())
+                } else if m.kinds.get(id).is_some() {
+                    (crate::book::MvDom::Event, id.as_str())
+                } else {
+                    return Err(invariant("a binding over a name load didn't resolve"));
+                };
+                Ok(match self.movement_members(m, bind, dom, env, ctx)? {
+                    Err(h) => Values::Unknown(h),
+                    Ok(moves) => Values::Moves(moves),
+                })
             }
             Over::List(lits) => Ok(Values::Known(list_values(lits))),
             Over::Range(parts) => self.range_values(m, parts, env, ctx),

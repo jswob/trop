@@ -48,6 +48,8 @@ pub enum Change {
     Perm(Hole),
     /// A refusal that holds from here (E §4.2 step 5).
     Bad(Refusal),
+    /// A register entry and nothing else: a modelled-past instance nothing fulfils (L §5.19).
+    Mark,
 }
 
 /// A place's state after an entry (refcore's `St`).
@@ -228,6 +230,33 @@ pub struct Walk {
     pub(crate) order_texts: Vec<String>,
     /// A projection's walk: what it continues and what it leaves out; none for a main walk.
     pub(crate) proj: Option<Box<Projected>>,
+    /// The observations a main walk books, by their place in the list (E §4.2 step 1).
+    pub(crate) obs: Vec<WalkObs>,
+    /// The observed legs' texts, `<id> <leg>`, sorted by code point: a leg's rank among the
+    /// day's observations (refcore's walk key).
+    pub(crate) obs_texts: Vec<String>,
+    /// The modelled-past instances, kept for the ledger (E §4.1 step 3, §6.2).
+    pub(crate) modelled: Vec<Inst>,
+    /// The pads booked (E §6.1).
+    pub(crate) pads: Vec<crate::book::Pad>,
+    /// Every stated reading's gap, in walk order (E §6.1).
+    pub(crate) gaps: Vec<crate::book::Gap>,
+    /// While a modelled-past decision runs, the legs of its own observations booked on their
+    /// days before its own, which its running reads take back out (E §4.2 step 3).
+    pub(crate) less_obs: Option<Vec<LegVal>>,
+}
+
+/// An observation a main walk books, judged at its cut: its record's refusal, and the day of
+/// the decision instance it fulfils, at whose point it is booked that day (refcore's
+/// `ObsMv.err`, `.target`). E §4.2 steps 1 and 3, L §5.19.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct WalkObs {
+    /// The observation.
+    pub obs: crate::book::Obs,
+    /// Its record's refusal.
+    pub err: Option<Refusal>,
+    /// The day of the decision instance it fulfils.
+    pub decision_day: Option<Day>,
 }
 
 /// What a projection's walk continues and what it leaves out (refcore's `Walk.base`,
@@ -326,7 +355,24 @@ impl Walk {
             group: None,
             order_texts: Vec::new(),
             proj: None,
+            obs: Vec::new(),
+            obs_texts: Vec::new(),
+            modelled: Vec::new(),
+            pads: Vec::new(),
+            gaps: Vec::new(),
+            less_obs: None,
         }
+    }
+
+    /// The rank of an observed leg's text among the walk's (refcore's walk key compares the
+    /// text). E §4.2 step 1.
+    ///
+    /// # Errors
+    ///
+    /// `ENGINE-INVARIANT` past four billion observed legs.
+    pub fn obs_rank(&self, text: &str) -> Result<u32, Stop> {
+        let at = self.obs_texts.partition_point(|t| t.as_str() < text);
+        u32::try_from(at).map_err(|_| invariant("an observed leg's rank"))
     }
 
     /// The rank of order text `text` among the plans' (refcore's walk keys compare the text):
@@ -596,6 +642,7 @@ fn apply(prev: &St, change: &Change, at: usize) -> Result<St, Stop> {
                 st.bad = Some(r.clone());
             }
         }
+        Change::Mark => {}
     }
     Ok(st)
 }

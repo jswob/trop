@@ -189,6 +189,8 @@ fn add_sub(m: &Reality, op: Op, lhs: Operand, rhs: Operand) -> Result<Value, Sto
             currency_unit(m, *cur).map_err(num_stop)?,
             Shown::Plain,
         )),
+        (Kind::Money(cur), Kind::Plain(Class::Int)) if rhs.q.is_zero() => Kind::Money(*cur),
+        (Kind::Plain(Class::Int), Kind::Money(cur)) if lhs.q.is_zero() => Kind::Money(*cur),
         (Kind::Money(_), Kind::Plain(Class::Int)) | (Kind::Plain(Class::Int), Kind::Money(_)) => {
             return Err(refuse_load(
                 Load::Unit,

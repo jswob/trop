@@ -91,7 +91,8 @@ pub mod model {
     pub use ty::{CodeKind, PeriodWord, Shown, Ty};
     pub use unit::{PERIODS, Scaled, Unit, is_currency_code};
     pub use value::{
-        Class, Code, Number, Value, currency, currency_id, currency_unit, money_num, num_money,
+        Class, Code, MvRef, MvSrc, Number, Value, currency, currency_id, currency_unit, money_num,
+        num_money,
     };
 }
 
@@ -142,23 +143,35 @@ pub mod walk {
     mod state;
 
     pub use agenda::{Act, Mv, Reading, endings, qty_of};
-    pub use day::Broke;
+    pub use day::{Broke, Ends};
     pub use order::{Run, WalkAt};
-    pub(crate) use plan::invariant;
     pub use plan::{
         Amount, Dated, End, Exists, Inst, LegVal, Order, Seed, Status, kind_certainty, qty_value,
     };
+    pub(crate) use plan::{invariant, quantity, quoted};
     pub use point::{At, Step};
     pub use projection::ProjKey;
-    pub use state::{ALL, Change, Ent, Group, Log, Progress, Projected, St, Taken, Today, Walk};
+    pub use state::{
+        ALL, Change, Ent, Group, Log, Progress, Projected, St, Taken, Today, Walk, WalkObs,
+    };
 }
 
-/// The book's adjustments (E §5): a booked instance measured again at each later version's
-/// cut. The kernel's (gate 8); the module's code is its files under `book/`.
+/// The book (E §5, §6.1): observations the cut sees, the places versions cover and the links
+/// to the instances observations fulfil; a booked instance measured again at each later
+/// version's cut, its adjustments and their settlements. The kernel's (gate 8); the module's
+/// code is its files under `book/`.
 pub mod book {
     mod adjust;
+    mod members;
+    mod observe;
+    mod reading;
+    mod settle;
 
-    pub use adjust::Adjustment;
+    pub use adjust::{Adjustment, Settled};
+    pub(crate) use members::{MvDom, MvMember};
+    pub use observe::{Coverage, Linked, Obs, inst_id};
+    pub use reading::{Gap, Pad, Seen, first_readings, readings};
+    pub(crate) use settle::settlement_move;
 }
 
 /// The asks (L §5.18): each ask's lines with the register under them (L §8.2), then the

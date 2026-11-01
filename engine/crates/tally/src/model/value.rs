@@ -2,7 +2,8 @@
 //! Spec: L §3.1 (the types and the three absences: a hole, `none`, `never`), §3.2 (units, money
 //! as a subtype of `num CUR`, inline figures), §3.3 (rates), §2.4 and §5.18 (how values print).
 //! Twin: engine/tools/refcore/values.py (`Num` with its `money`, `isint` and `rate` marks,
-//! `Key`, `Thing`, `Code`, `Rec`, `Lst`, `Special`, `Cal`, `fmt`, `fmt_typed`, `same_value`)
+//! `Key`, `Thing`, `Mv`, `Code`, `Rec`, `Lst`, `Special`, `Cal`, `fmt`, `fmt_typed`,
+//! `same_value`)
 //! and evaluate.py (`OutKey`).
 //! Invariants: a number's class is the static type refcore's checker gives the expression that
 //! made it (check.py `_arith`), so the arithmetic decides it from its operands' classes; money
@@ -120,6 +121,46 @@ pub enum Value {
         /// The arithmetic as written, `low + 3`.
         text: String,
     },
+    /// A movement: a move's instance, an observation, an adjustment, by its stable id; a
+    /// movement is a thing of its event kind (L §5.14, §2.5).
+    Mv(Box<MvRef>),
+}
+
+/// A movement as a value: its stable id and what it is (refcore's `Mv`). L §5.14, §2.5.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct MvRef {
+    /// Its stable id: `rent_pay[2026-09]`, `bank[r17]`, `adjustments[spend[2026-03-01].cash, v2]`.
+    pub id: String,
+    /// Its day in the movement order, which places it as a key (refcore's `key_sort`).
+    pub day: Option<Day>,
+    /// What it is.
+    pub src: MvSrc,
+}
+
+/// What a movement value is, found again at the reader's cut (refcore's `Mv.src`). L §5.14.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum MvSrc {
+    /// A move's instance: the move and its keys.
+    Inst(String, Vec<KeyVal>),
+    /// An observation, by its row's id.
+    Obs,
+    /// An adjustment: the adjusted instance's id and its move, the leg, the step's versions.
+    Adj {
+        /// The adjusted instance's id.
+        inst: String,
+        /// Its move.
+        move_id: String,
+        /// Its keys.
+        keys: Vec<KeyVal>,
+        /// The adjusted leg.
+        leg: String,
+        /// The step's versions.
+        vids: Vec<String>,
+    },
+    /// A move's instance no binding tuple gives at the cut.
+    Missing,
+    /// A movement of an event kind as the type sampler sees one: never a run's value.
+    Kind(String),
 }
 
 impl Value {
@@ -138,6 +179,7 @@ impl Value {
             KeyVal::Day(d) => Value::Day(*d),
             KeyVal::Period(p) => Value::Period(*p),
             KeyVal::Key { .. } | KeyVal::Thing(_) => Value::Key(key.clone()),
+            KeyVal::Mv(mv) => Value::Mv(mv.clone()),
         }
     }
 
@@ -184,6 +226,7 @@ impl Value {
             Value::Hole(h) => Ok(h.text()),
             Value::OutKey { text, .. } => Ok(text.clone()),
             Value::Word(word) => Ok(word.clone()),
+            Value::Mv(mv) => Ok(mv.id.clone()),
         }
     }
 

@@ -6,15 +6,17 @@
 //! `adj_ref`, `move_keys`).
 //! Invariants: an observation's legs are its kind's, in the kind's order, each between places
 //! that hold its unit, its amount exact and, in a currency, whole minor units; its attributes are
-//! its kind's, kept as written for the evaluator to type.
+//! its kind's, each a value of its written type (a stated hole naming the row).
 
 use super::keys::{KeyLit, lit_text, resolve_key};
 use super::places::Written;
 use super::steps::{Loader, num_stop, refuse};
 use crate::base::Load;
-use crate::model::{Fulfils, KeyVal, KindSpec, NameKind, ObsLeg, Observation, Unit};
+use crate::model::{
+    Fulfils, KeyVal, KindSpec, NameKind, ObsLeg, Observation, Unit, Value as ModelValue,
+};
 use crate::syntax::{
-    Certainty, Expr, Field, FieldValue, Key, Known, Leg, Lit, Postfix, Row, Stop, Value,
+    Certainty, Expr, Field, FieldValue, Key, Known, Leg, Lit, Postfix, Row, Stop, Type, Value,
 };
 use crate::time::Day;
 
@@ -105,6 +107,7 @@ impl Loader {
             kind: None,
             legs: Vec::new(),
             attrs: Vec::new(),
+            values: Vec::new(),
             fulfils: None,
             line,
         };
@@ -232,7 +235,7 @@ impl Loader {
                 ));
             }
         }
-        for (name, _) in &attrs {
+        for (name, written_ty) in &attrs {
             let Some((_, value)) = fields.iter().find(|(n, _)| n == name) else {
                 return Err(at.refuse(
                     Load::Leg,
@@ -240,9 +243,35 @@ impl Loader {
                 ));
             };
             observation.attrs.push((name.clone(), value.clone()));
+            let ty = written_ty
+                .as_ref()
+                .ok_or_else(|| crate::walk::invariant("an observed attribute with no type"))?;
+            let typed = self.attr_value(value, ty, at)?;
+            observation.values.push((name.clone(), typed));
         }
         observation.kind = Some(kind);
         Ok(())
+    }
+
+    /// An observed row's attribute as a value of its type; a stated hole names the row
+    /// (refcore's `convert_value`, `_obs_attr`). L §5.19, §3.1.
+    fn attr_value(&self, value: &FieldValue, ty: &Type, at: &At) -> Result<ModelValue, Stop> {
+        let (ty, _) = self.decl_type(ty, &[], &at.file, at.line)?;
+        let written = match value {
+            FieldValue::Lit(lit) | FieldValue::Expr(Expr::Lit(lit)) => Value::Lit(lit.clone()),
+            FieldValue::Expr(Expr::Name(word)) => Value::Lit(Lit::Name(word.clone())),
+            FieldValue::Hole(text) => Value::Hole(text.clone()),
+            FieldValue::None | FieldValue::Expr(Expr::None) => Value::None,
+            FieldValue::Expr(_) => {
+                return Err(Stop::NotBuilt(
+                    "an observed attribute written as an expression",
+                ));
+            }
+        };
+        match crate::eval::convert_row(&self.m, &written, &ty)? {
+            Ok(v) => Ok(v),
+            Err(text) => Ok(ModelValue::Hole(crate::hole::Hole::asked(&text, &at.sid))),
+        }
     }
 
     /// An observation's event kind: declared, certain, never `adjustments`. L §5.19, §5.14.3.

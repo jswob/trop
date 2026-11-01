@@ -13,8 +13,8 @@ use super::expr::{literal, typed};
 use super::state::{Ctx, Env, num_stop, refuse};
 use crate::base::Run;
 use crate::model::{
-    Class, Code, IndexInfo, KeyVal, Number, Reality, Ty, Unit, Value, currency_id, currency_unit,
-    num_money,
+    Class, Code, IndexInfo, KeyVal, MvRef, MvSrc, Number, Reality, Ty, Unit, Value, currency_id,
+    currency_unit, num_money,
 };
 use crate::num::{Money, Num};
 use crate::syntax::{AddOp, Agg, AggFn, Bind, Call, Domain as Over, Expr, MulOp, Postfix, Stop};
@@ -250,6 +250,12 @@ fn post_sample(
         _ => (sample(m, base, env, ctx)?, posts),
     };
     for post in rest {
+        if let (Some(Value::Mv(mv)), Postfix::Field(name)) = (&value, post)
+            && let MvSrc::Kind(kind) = &mv.src
+        {
+            value = mv_field_sample(m, kind, name)?;
+            continue;
+        }
         let (Some(Value::Record(fields)), Postfix::Field(name)) = (&value, post) else {
             return Ok(None);
         };
@@ -345,12 +351,101 @@ fn bind_sample(m: &Reality, bind: &Bind) -> Option<Value> {
             if let Some(ix) = m.indexes.get(id) {
                 return first_key(ix);
             }
-            m.kinds
+            if let Some(k) = m.kinds.get(id) {
+                if k.spec == crate::model::KindSpec::Event {
+                    return Some(mv_sample(id));
+                }
+                return Some(Value::Key(KeyVal::Thing(String::new())));
+            }
+            m.inputs
                 .get(id)
-                .map(|_| Value::Key(KeyVal::Thing(String::new())))
+                .filter(|i| i.observed)
+                .map(|_| mv_sample("events"))
         }
         Over::Name { qual: Some(_), .. } | Over::List(_) | Over::Range(_) => None,
     }
+}
+
+/// A movement of event kind `kind` as a sample.
+fn mv_sample(kind: &str) -> Value {
+    Value::Mv(Box::new(MvRef {
+        id: String::new(),
+        day: None,
+        src: MvSrc::Kind(kind.to_owned()),
+    }))
+}
+
+/// A sample of field `name` of a movement of event kind `kind`: a leg as a record with an
+/// amount of its unit, `day`, `fulfils`; a field of a movement whose kind isn't known statically
+/// (`events`) read by name, its amount's unit known only at run (check3.py's
+/// `movement_field`). L §5.14, §2.2.
+fn mv_field_sample(m: &Reality, kind: &str, name: &str) -> Result<Option<Value>, Stop> {
+    for (leg, unit, _) in m.kind_legs(kind) {
+        if leg == name {
+            return Ok(Some(leg_sample(unit_sample(m, &unit)?)));
+        }
+    }
+    if m.kind_attrs(kind).iter().any(|(a, _)| a == name) {
+        return Ok(None);
+    }
+    match name {
+        "day" => {
+            return Ok(Some(Value::Day(
+                Day::from_ymd(2000, 1, 1).ok_or_else(unseen)?,
+            )));
+        }
+        "fulfils" => return Ok(Some(mv_sample("events"))),
+        _ => {}
+    }
+    if kind != "events" {
+        return Ok(None);
+    }
+    for (id, k) in m.kinds.entries() {
+        if k.spec == crate::model::KindSpec::Event && has_leg(m, id, name) {
+            return Ok(Some(leg_sample(dyn_sample())));
+        }
+    }
+    Ok(None)
+}
+
+/// Whether event kind `kind` has a leg named `name`. L §5.14.
+fn has_leg(m: &Reality, kind: &str, name: &str) -> bool {
+    m.kind_legs(kind).iter().any(|(leg, _, _)| leg == name)
+}
+
+/// A leg's record as a sample, its amount `amount`. L §5.14.
+fn leg_sample(amount: Value) -> Value {
+    let place = Value::Key(KeyVal::Thing(String::new()));
+    Value::Record(vec![
+        ("from".to_owned(), place.clone()),
+        ("to".to_owned(), place),
+        ("amount".to_owned(), amount),
+        ("day".to_owned(), Value::None),
+    ])
+}
+
+/// A sample of a quantity of `unit`: money of a currency, a number of a unit; one whose unit
+/// is known only at run is a bare figure, which takes the unit of what it meets.
+fn unit_sample(m: &Reality, unit: &str) -> Result<Value, Stop> {
+    if m.currencies.contains_key(unit) {
+        let id = currency_id(m, unit).map_err(num_stop)?;
+        return Ok(Value::Money(
+            num_money(m, &Num::int(1), id).map_err(num_stop)?,
+        ));
+    }
+    if m.units.contains(unit) {
+        let u = Unit::make(vec![(unit.to_owned(), 1)]).map_err(num_stop)?;
+        return Ok(Value::Number(Number::plain(Num::int(1), u)));
+    }
+    Ok(dyn_sample())
+}
+
+/// A value whose unit is known only at run: a bare figure (check.py's `DYN`).
+fn dyn_sample() -> Value {
+    Value::Number(Number {
+        q: Num::int(1),
+        class: Class::Flex,
+    })
 }
 
 /// An index's first key as a value.

@@ -2,9 +2,13 @@
 //! Spec: E §4.2 (steps 0–5: readings, plans, decisions, the close, the checks of the places;
 //! holes in the walk), §9 (items 1 and 6: conservation, things hold nothing outside their
 //! lifespans); L §5.10 (the sign rule and the points it is checked at; `WARN-NEGATIVE`),
-//! §5.14 (a leg of 0 books nothing; a leg outside a lifespan is `RUN-LIFESPAN`), §8.5.
+//! §5.14 (a leg of 0 books nothing; a leg outside a lifespan is `RUN-LIFESPAN`), §5.19 (an
+//! observed leg before K, each end from the observation of the version that covers its place
+//! that day, or from this one where none does; one that fulfils a decision dated its day at
+//! the decision's point; a record refused refuses its places), §8.5; E §6.1.
 //! Twin: engine/tools/refcore/walk.py (`run_to`, `walk_day`, `check_batch`, `check_group`,
-//! `act`, `leg_bad`, `book_leg`, `apply_reading`, `alive_day`, `close_day`).
+//! `act`, `leg_bad`, `book_leg`, `book_obs_leg`, `book_obs_now`, `apply_reading`,
+//! `alive_day`, `close_day`).
 //! Invariants: a leg is booked at both its ends or refused at both; a refused leg is taken back
 //! and refuses its places from that point; the legs booked on a day sum to zero per unit; a
 //! day's acts run in walk order, and a day cut short past the counted depth resumes at the act
@@ -15,7 +19,7 @@ use std::collections::BTreeSet;
 use super::agenda::{Act, Mv, Reading};
 use super::plan::{Amount, End, Inst, LegVal, Status, invariant, qty_value};
 use super::point::At;
-use super::state::{ALL, Change, Ent, Group, Progress, Taken, Today, Walk};
+use super::state::{ALL, Change, Ent, Group, Progress, Taken, Today, Walk, WalkObs};
 use crate::base::{Code, Refusal, Run, Warn};
 use crate::eval::{Collected, Engine, Entry};
 use crate::hole::{Hole, spread};
@@ -23,6 +27,31 @@ use crate::model::Reality;
 use crate::num::Num;
 use crate::syntax::{Sign, Stop};
 use crate::time::Day;
+
+/// Which ends of a leg a booking books, and whether the leg counts whole for conservation
+/// (refcore's `book_leg` `ends`, and its pads). E §6.1, E §9 item 1.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Ends {
+    /// Whether its `from` end is booked.
+    pub from: bool,
+    /// Whether its `to` end is booked.
+    pub to: bool,
+    /// Whether the leg counts whole even with one end booked: a pad, whose other end is its
+    /// reading's reset.
+    pub whole: bool,
+}
+
+impl Ends {
+    /// Both ends (E §4.2 step 2).
+    #[must_use]
+    pub fn both() -> Ends {
+        Ends {
+            from: true,
+            to: true,
+            whole: false,
+        }
+    }
+}
 
 /// How a refusal of the sign rule names what broke it (refcore's `check_group` messages).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -243,7 +272,17 @@ impl Engine {
     /// One act of the day (refcore's `act`). E §4.2 steps 0–2, Holes in the walk, E §5 step 5.
     fn act(&mut self, m: &Reality, id: usize, at: At, act: Act) -> Result<(), Stop> {
         match act {
-            Act::Read(reading) => self.walk_mut(id)?.apply_opening(m, at, &reading),
+            Act::Read(reading) if reading.input == "opening" => {
+                self.walk_mut(id)?.apply_opening(m, at, &reading)
+            }
+            Act::Read(reading) => self.apply_stated(m, id, at, &reading),
+            Act::Obs(ix, leg) => self.book_obs_leg(m, id, ix, leg, at),
+            Act::Mark(place, unit, entry, coll) => {
+                let mut ent = Ent::new(at, Change::Mark);
+                ent.reg = vec![entry];
+                ent.coll = Some(coll);
+                self.walk_mut(id)?.add(m, &place, &unit, ent)
+            }
             Act::Leg(mv, leg) => {
                 let (movement, lg) = self.movement_leg(id, mv, leg)?;
                 let mut reg = Vec::new();
@@ -334,12 +373,31 @@ impl Engine {
         reg: &[Entry],
         coll: &Collected,
     ) -> Result<(), Stop> {
+        self.book_leg_ends(m, id, (movement, lg), at, (reg, coll), Ends::both())
+    }
+
+    /// Books the ends of a leg `ends` names, as [`Engine::book_leg`] books both: an
+    /// observation books an end only where its own version covers the place, or none does; a
+    /// pad books its other end, its reading's end being the reset (refcore's `book_leg`,
+    /// `ends`). E §6.1, §4.2 step 2, step 5.
+    pub(crate) fn book_leg_ends(
+        &mut self,
+        m: &Reality,
+        id: usize,
+        (movement, lg): (&str, &LegVal),
+        at: At,
+        (reg, coll): (&[Entry], &Collected),
+        mask: Ends,
+    ) -> Result<(), Stop> {
         let q = match &lg.amount {
             Amount::Refused(r) => return self.walk_mut(id)?.leg_bad(m, movement, lg, r, at),
             Amount::Hole(h) => {
                 let walk = self.walk_mut(id)?;
                 let unit = lg.unit.clone().unwrap_or_else(|| ALL.to_owned());
-                for p in ends(lg) {
+                for (end, on_end) in [(&lg.from, mask.from), (&lg.to, mask.to)] {
+                    let Some(p) = end.place().filter(|_| on_end) else {
+                        continue;
+                    };
                     let mut ent = Ent::new(at, Change::Hole(h.clone()));
                     ent.mv = Some(movement.to_owned());
                     ent.leg = Some(lg.name.clone());
@@ -359,11 +417,14 @@ impl Engine {
             .clone()
             .ok_or_else(|| invariant("a booked leg with no unit"))?;
         let cut = self.walk(id)?.cut;
-        let sides = [(&lg.from, -1_i64), (&lg.to, 1_i64)];
+        let sides = [(&lg.from, -1_i64, mask.from), (&lg.to, 1_i64, mask.to)];
         let mut on: Vec<(String, i64)> = Vec::new();
         let mut err = None;
-        let (mut kept, mut dropped) = (false, false);
-        for (end, sign) in sides {
+        let (mut kept, mut dropped) = (false, !(mask.from && mask.to));
+        for (end, sign, on_end) in sides {
+            if !on_end {
+                continue;
+            }
             let End::Place(p) = end else {
                 kept = true;
                 continue;
@@ -404,7 +465,7 @@ impl Engine {
         }
         if err.is_none() && !on.is_empty() && !self.group_legs(id, at, movement, lg, &on, &unit)? {
             return Err(Stop::NotBuilt(
-                "a leg booked outside every group of the sign rule (pads, G8)",
+                "a leg booked outside every group of the sign rule (a reading after a movement)",
             ));
         }
         let walk = self.walk_mut(id)?;
@@ -420,7 +481,7 @@ impl Engine {
         }
         for (p, sign) in &on {
             let f = signed(&q, *sign)?;
-            if !dropped {
+            if !dropped || mask.whole {
                 let sum = walk.conserved.entry(unit.clone()).or_insert_with(Num::zero);
                 *sum = sum.checked_add(&f).map_err(crate::eval::num_stop)?;
             }
@@ -432,6 +493,73 @@ impl Engine {
             walk.add(m, p, &unit, ent)?;
         }
         Ok(())
+    }
+
+    /// An observed leg on its own day before the cut, unless its observation fulfils a decision
+    /// instance dated that day, which books it at the instance's point (refcore's
+    /// `book_obs_leg`). E §4.2 step 1, L §5.19 Booking an observation.
+    fn book_obs_leg(
+        &mut self,
+        m: &Reality,
+        id: usize,
+        ix: usize,
+        leg: usize,
+        at: At,
+    ) -> Result<(), Stop> {
+        let walk = self.walk(id)?;
+        let wo = walk
+            .obs
+            .get(ix)
+            .cloned()
+            .ok_or_else(|| invariant("an act of an observation the walk lacks"))?;
+        let lg = wo
+            .obs
+            .legs
+            .get(leg)
+            .cloned()
+            .ok_or_else(|| invariant("an act of a leg the observation lacks"))?;
+        let day = lg
+            .day
+            .day()
+            .ok_or_else(|| invariant("an observed leg with no day"))?;
+        if day >= walk.cut || wo.decision_day == Some(day) {
+            return Ok(());
+        }
+        self.book_obs_now(m, id, &wo, &lg, at)
+    }
+
+    /// Books an observed leg now: refused at both ends when its record is; else each end from
+    /// the observation of the version that covers its place that day, an end no version
+    /// covers from this one (refcore's `book_obs_now`). E §6.1, L §5.19, §8.4.
+    pub(super) fn book_obs_now(
+        &mut self,
+        m: &Reality,
+        id: usize,
+        wo: &WalkObs,
+        lg: &LegVal,
+        at: At,
+    ) -> Result<(), Stop> {
+        if let Some(err) = &wo.err {
+            return self.walk_mut(id)?.leg_bad(m, &wo.obs.id, lg, err, at);
+        }
+        let cut = self.walk(id)?.cut;
+        let day = lg
+            .day
+            .day()
+            .ok_or_else(|| invariant("an observed leg with no day"))?;
+        let mut on = [true, true];
+        for (end, slot) in [&lg.from, &lg.to].into_iter().zip(on.iter_mut()) {
+            if let Some(p) = end.place() {
+                *slot = self.obs_end_on(m, &wo.obs, p, day, cut);
+            }
+        }
+        let [from, to] = on;
+        let mask = Ends {
+            from,
+            to,
+            whole: false,
+        };
+        self.book_leg_ends(m, id, (&wo.obs.id, lg), at, (&[], &wo.obs.coll), mask)
     }
 
     /// Puts a leg's booked ends in the group of the sign rule it waits for: the day's first

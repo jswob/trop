@@ -270,7 +270,7 @@ fn period_key(keys: &[KeyVal], lit: &Lit) -> Option<KeyVal> {
         .find(|k| match k {
             KeyVal::Day(day) => kind == PeriodKind::Day && day.text() == label,
             KeyVal::Period(p) => p.kind() == kind && p.label() == label,
-            KeyVal::Key { .. } | KeyVal::Thing(_) | KeyVal::Int(_) => false,
+            KeyVal::Key { .. } | KeyVal::Thing(_) | KeyVal::Int(_) | KeyVal::Mv(_) => false,
         })
         .cloned()
 }

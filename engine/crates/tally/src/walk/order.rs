@@ -2,9 +2,12 @@
 //! Spec: E §4.2 step 3 (decisions by stratum, each at its point, computed at min(t, K) with
 //! running reads; the legs it books from its point are one group of the sign rule), step 5;
 //! L §5.14.1 (running reads), §5.14.2 (the order of a day's decisions: `ties by`, `RUN-TIE`),
-//! §5.10 (the sign rule's point 2).
+//! §5.10 (the sign rule's point 2); E §4.2 step 3 and L §5.19 (a decision on a covered day
+//! before K, or one an observation fulfils, is modelled past: its own observations booked at
+//! its point, its legs not; it computes against the balances less its own observations
+//! booked before its day).
 //! Twin: engine/tools/refcore/walk.py (`run_decisions`, `tie_order`, `run_one`,
-//! `run_one_body`).
+//! `run_one_body`, `book_own_obs`).
 //! Invariants: a decision reads the walk as it stands at its point, never a later point; a
 //! run is recorded once, after its body is computed, so a run cut short past the counted depth
 //! is run again from its start; the instances of one move run in the order of its `ties by`.
@@ -14,9 +17,9 @@ use std::collections::BTreeSet;
 
 use super::agenda::{Act, Mv};
 use super::day::{Broke, ends};
-use super::plan::{Amount, Dated, Exists, Inst, Status, invariant, kind_certainty};
+use super::plan::{Amount, Dated, Exists, Inst, LegVal, Status, invariant, kind_certainty};
 use super::point::{At, Step};
-use super::state::{ALL, Change, Ent, Group, Taken};
+use super::state::{ALL, Change, Ent, Group, Taken, WalkObs};
 use crate::base::{Code, Refusal, Run as RunCode};
 use crate::eval::{Ctx, Engine, Entry};
 use crate::hole::spread;
@@ -266,13 +269,17 @@ impl Engine {
             }),
             ..Ctx::new(inst.law, t.min(cut))
         };
+        let own = self.own_earlier_obs(m, id, &inst, t)?;
+        let prev_less = core::mem::replace(&mut self.walk_mut(id)?.less_obs, own);
         let prev_live = self.walk_mut(id)?.live.replace(BTreeSet::new());
         self.push();
         let body = self.inst_body(m, mv, &inst, ctx, inst.exists.clone());
         let met = self.pop_alone();
+        self.walk_mut(id)?.less_obs = prev_less;
         let Some(live) = core::mem::replace(&mut self.walk_mut(id)?.live, prev_live) else {
             return Err(invariant("a run's live reads taken"));
         };
+        let linked = self.obs_links_for(m, &inst.id, cut)?;
         let mut run = Run {
             inst,
             point: key,
@@ -280,12 +287,14 @@ impl Engine {
             changed: BTreeSet::new(),
         };
         run.inst.coll.merge(&met);
+        run.inst.obs = linked;
         match body {
             Ok(b) => {
                 run.inst.exists = b.exists;
                 run.inst.legs = b.legs;
                 run.inst.attrs = b.attrs;
                 run.inst.for_period = b.for_period;
+                run.inst.fulfils = b.fulfils;
             }
             Err(Stop::Refused(r)) if !matches!(r.code(), Code::Load(_)) => run.inst.err = Some(r),
             Err(stop) => return Err(stop),
@@ -298,7 +307,12 @@ impl Engine {
     /// E §4.2 step 3, Holes in the walk.
     fn book_run(&mut self, m: &Reality, id: usize, mut run: Run, t: Day) -> Result<usize, Stop> {
         let key = run.point;
-        let cut = self.walk(id)?.cut;
+        let (cut, main) = {
+            let walk = self.walk(id)?;
+            (walk.cut, walk.proj.is_none())
+        };
+        let modelled = main
+            && ((t < cut && self.touches_covered(m, &run.inst, cut)) || !run.inst.obs.is_empty());
         let walk = self.walk_mut(id)?;
         let ix = walk.runs.len();
         if let Some(err) = run.inst.err.clone() {
@@ -322,13 +336,23 @@ impl Engine {
         }
         if run.inst.exists == Exists::No {
             run.inst.status = Status::None;
+            let inst = run.inst.clone();
             walk.record(run);
+            self.book_own_obs(m, id, &inst, key)?;
             return Ok(ix);
         }
         for lg in &run.inst.legs {
             for p in ends(lg) {
                 run.changed.insert(p.to_owned());
             }
+        }
+        if modelled {
+            run.inst.status = Status::Modelled;
+            let inst = run.inst.clone();
+            walk.modelled.push(inst.clone());
+            walk.record(run);
+            self.book_own_obs(m, id, &inst, key)?;
+            return Ok(ix);
         }
         if let Exists::Unknown(h) = run.inst.exists.clone() {
             run.inst.status = Status::Hole;
@@ -352,7 +376,9 @@ impl Engine {
             return Ok(ix);
         }
         let kind = m.moves.get(&run.inst.move_id).map(|mv| mv.kind.clone());
-        if kind.is_some_and(|k| kind_certainty(m, &k) == Some(Certainty::Uncertain)) {
+        if kind.is_some_and(|k| kind_certainty(m, &k) == Some(Certainty::Uncertain))
+            && run.inst.obs.is_empty()
+        {
             run.inst.status = Status::Uncertain;
             walk.uncertain.push(run.inst.clone());
             walk.record(run);
@@ -360,7 +386,7 @@ impl Engine {
         }
         run.inst.status = if t < cut { Status::Past } else { Status::Plan };
         let mut reg = Vec::new();
-        if t < cut {
+        if t < cut && run.inst.obs.is_empty() {
             reg.push(Entry {
                 word: "unfulfilled",
                 text: run.inst.id.clone(),
@@ -370,6 +396,7 @@ impl Engine {
         let legs = run.inst.legs.clone();
         let (mv_id, coll) = (run.inst.id.clone(), run.inst.coll.clone());
         let later_rank = walk.text_rank(&mv_id)?;
+        let inst = run.inst.clone();
         walk.record(run);
         for (li, lg) in legs.iter().enumerate() {
             if let Dated::Day(ld) = lg.day
@@ -384,7 +411,66 @@ impl Engine {
             }
             self.book_leg(m, id, (&mv_id, lg), key, &reg, &coll)?;
         }
+        self.book_own_obs(m, id, &inst, key)?;
         Ok(ix)
+    }
+
+    /// The legs of a decision's own observations booked on their days before its day, the
+    /// cut and after the walk's start: its computation reads the balances less them (refcore's
+    /// `run_one_body`, `less_obs`). E §4.2 step 3, L §5.19.
+    fn own_earlier_obs(
+        &mut self,
+        m: &Reality,
+        id: usize,
+        inst: &Inst,
+        t: Day,
+    ) -> Result<Option<Vec<LegVal>>, Stop> {
+        let walk = self.walk(id)?;
+        if walk.proj.is_some() {
+            return Ok(None);
+        }
+        let (cut, start) = (walk.cut, walk.start);
+        let mut out = Vec::new();
+        for o in self.standing_in(m, inst, cut)? {
+            if self.obs_err(m, &o, cut)?.is_some() {
+                continue;
+            }
+            out.extend(
+                o.legs
+                    .into_iter()
+                    .filter(|lg| matches!(lg.day, Dated::Day(d) if d < t && d < cut && d >= start)),
+            );
+        }
+        Ok((!out.is_empty()).then_some(out))
+    }
+
+    /// A decision's own observations dated its day before the cut, booked just after its
+    /// point, in its group of the sign rule (refcore's `book_own_obs`). E §4.2 steps 1 and 3,
+    /// L §5.19.
+    fn book_own_obs(&mut self, m: &Reality, id: usize, inst: &Inst, key: At) -> Result<(), Stop> {
+        let walk = self.walk(id)?;
+        let Some(Dated::Day(t)) = inst.day else {
+            return Ok(());
+        };
+        if walk.proj.is_some() || t >= walk.cut {
+            return Ok(());
+        }
+        let own: Vec<WalkObs> = walk
+            .obs
+            .iter()
+            .filter(|wo| inst.obs.contains(&wo.obs.id))
+            .cloned()
+            .collect();
+        let sub = key
+            .sub
+            .checked_add(1)
+            .ok_or_else(|| invariant("a point past the counted subpoints"))?;
+        for wo in &own {
+            for lg in wo.obs.legs.iter().filter(|lg| lg.day.day() == Some(t)) {
+                self.book_obs_now(m, id, wo, lg, key.with_sub(sub))?;
+            }
+        }
+        Ok(())
     }
 }
 

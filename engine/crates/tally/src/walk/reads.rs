@@ -2,13 +2,18 @@
 //! Spec: L §5.10 (`bal(x)`, `bal(x, d)`, `bal(x, d start)`, `bal(x, u, d)`; `HOLE-ANCHOR`),
 //! §5.14 (`with uncertain`), §5.14.1 (running reads: a decision reads the walk at its point;
 //! `RUN-FUTURE`, a plain read of its own day `RUN-CYCLE`), §5.14.3 (`flows(x, span)`,
-//! `flows(m, span)`: their units, holes and refusals); §8.2 (the register: `unfulfilled:`,
-//! `left out:`, `adjustment:`, `uncertain:`); E §4.2 (a refused leg refuses every read of it;
+//! `flows(m, span)`: their units, holes and refusals; a move's flows at some of its keys; a
+//! modelled instance counted by the observations that stand in for it, `open:` when none
+//! does; settlements dated in the span, `HOLE-CHANGED` where nothing settles); §5.19 (a
+//! modelled decision reads the balances less its own observations booked before its day);
+//! §8.2 (the register: `unfulfilled:`, `left out:`, `adjustment:`, `uncertain:`,
+//! `open:`); E §4.2 (a refused leg refuses every read of it;
 //! holes in the walk), E §4.3 (a read of a projection's walk rests on the walks it continues),
 //! E §3.3 (the main walk of a timeline).
 //! Twin: engine/tools/refcore/mreads.py (`place_arg`, `bal_unit`, `read_state`,
 //! `merge_cum`, `e_bal`, `note_read`, `bal_day`, `with_uncertain`, `proj_uncertain`,
-//! `e_flows`, `flows_place`, `flows_move`, `leg_refused`) and walk.py (`m_main_walk`).
+//! `e_flows`, `flows_place`, `flows_move`, `leg_refused`, `less_own_obs`) and walk.py
+//! (`m_main_walk`).
 //! Invariants: a read inside a decision sees the walk only up to its point; a read at the cut
 //! sees the whole main walk; a hole a read meets is printed with every question it rests on.
 
@@ -46,7 +51,7 @@ impl Engine {
             return Err(Stop::NotBuilt("bal of a party or a batch (G9)"));
         }
         if b.modelled {
-            return Err(Stop::NotBuilt("a modelled balance (G8)"));
+            return Err(Stop::NotBuilt("a modelled balance (the ledger)"));
         }
         if b.proj.windows_each {
             return Err(Stop::NotBuilt("`windows each` on a balance read"));
@@ -59,7 +64,8 @@ impl Engine {
                 )));
             };
             self.note_live(at.walk, &place)?;
-            return self.read_state(m, at.walk, &place, &unit, at.point);
+            let v = self.read_state(m, at.walk, &place, &unit, at.point)?;
+            return self.less_own_obs(m, at.walk, (&place, &unit), at.point, v);
         };
         let d = self.ev(m, day_arg, env, ctx)?;
         if let Value::Hole(_) = d {
@@ -141,6 +147,7 @@ impl Engine {
                 | Value::Never
                 | Value::Word(_)
                 | Value::Hole(_)
+                | Value::Mv(_)
                 | Value::OutKey { .. } => u.text(m).map_err(crate::eval::num_stop)?,
             };
             if let Some(pu) = &own
@@ -194,10 +201,54 @@ impl Engine {
                     ),
                 ));
             }
-            return self.read_state(m, at.walk, place, unit, key);
+            let v = self.read_state(m, at.walk, place, unit, key)?;
+            return self.less_own_obs(m, at.walk, (place, unit), key, v);
         }
         let id = self.main_walk(m, ctx.cut)?;
         self.read_state(m, id, place, unit, key)
+    }
+
+    /// A running read of a modelled decision, against the booked balance less its own
+    /// observations booked on their days before its day (refcore's `less_own_obs`).
+    /// E §4.2 step 3, L §5.19.
+    fn less_own_obs(
+        &self,
+        m: &Reality,
+        id: usize,
+        (place, unit): (&str, &str),
+        key: At,
+        v: Value,
+    ) -> Result<Value, Stop> {
+        let Some(legs) = &self.walk(id)?.less_obs else {
+            return Ok(v);
+        };
+        if !matches!(v, Value::Money(_) | Value::Number(_)) {
+            return Ok(v);
+        }
+        let mut delta = Num::zero();
+        for lg in legs {
+            let Some(o) = lg.day.day() else {
+                continue;
+            };
+            let (Amount::Qty(q), true) = (&lg.amount, key >= At::of(o, super::point::Step::Plans))
+            else {
+                continue;
+            };
+            if unit != ALL && lg.unit.as_deref().is_some_and(|u| u != ALL && u != unit) {
+                continue;
+            }
+            if lg.from.place() == Some(place) {
+                delta = delta.checked_add(q).map_err(crate::eval::num_stop)?;
+            }
+            if lg.to.place() == Some(place) {
+                delta = delta.checked_sub(q).map_err(crate::eval::num_stop)?;
+            }
+        }
+        if delta.is_zero() {
+            return Ok(v);
+        }
+        let d = qty_value(m, &delta, unit)?;
+        crate::eval::arith(m, crate::eval::Op::Add, &v, &d)
     }
 
     /// The move of the decision running in walk `id`. L §5.14.1.
@@ -505,10 +556,7 @@ impl Engine {
         } else {
             self.move_instances(m, mv, ctx.cut)?
         };
-        let mut holes: Vec<Hole> = Vec::new();
-        let mut total: Option<Num> = None;
-        let mut units: BTreeSet<String> = BTreeSet::new();
-        let mut met = Collected::default();
+        let mut acc = Counted::default();
         for i in &insts {
             if !i.keys.starts_with(&want) {
                 continue;
@@ -518,7 +566,7 @@ impl Engine {
             }
             let day = match &i.day {
                 Some(Dated::Hole(h)) => {
-                    holes.push(h.clone());
+                    acc.holes.push(h.clone());
                     continue;
                 }
                 Some(Dated::Day(d)) => *d,
@@ -532,16 +580,20 @@ impl Engine {
             if !sp.contains(day) {
                 continue;
             }
+            if i.status == Status::Modelled {
+                self.count_standing_in(m, i, leg, ctx.cut, &mut acc)?;
+                continue;
+            }
             if let Some(err) = &i.err {
                 return Err(Stop::Refused(err.clone()));
             }
-            met.merge(&i.coll);
+            acc.met.merge(&i.coll);
             if let Exists::Unknown(h) = &i.exists {
-                holes.push(h.clone());
+                acc.holes.push(h.clone());
                 continue;
             }
             if i.status == Status::Past {
-                met.entries.insert(Entry {
+                acc.met.entries.insert(Entry {
                     word: "unfulfilled",
                     text: i.id.clone(),
                     figure: String::new(),
@@ -551,7 +603,7 @@ impl Engine {
                 let q = match &lg.amount {
                     Amount::Refused(r) => return Err(Stop::Refused(r.clone())),
                     Amount::Hole(h) => {
-                        holes.push(h.clone());
+                        acc.holes.push(h.clone());
                         continue;
                     }
                     Amount::Qty(q) => q,
@@ -561,28 +613,27 @@ impl Engine {
                 {
                     return Err(Stop::Refused(err));
                 }
-                total = Some(match total {
-                    None => q.clone(),
-                    Some(t) => t.checked_add(q).map_err(crate::eval::num_stop)?,
-                });
-                if let Some(u) = &lg.unit {
-                    units.insert(u.clone());
-                }
+                acc.add(q, lg.unit.as_ref())?;
             }
         }
         if !mv.decision {
-            for adj in self.adjust_move(m, mv, ctx.cut)? {
-                if leg.is_some_and(|l| l != adj.leg.name) {
-                    continue;
-                }
-                let adjusted = insts.iter().find(|i| i.id == adj.inst_id);
-                if adjusted.is_some_and(|i| !i.keys.starts_with(&want)) {
-                    continue;
-                }
-                if last >= adj.day {
-                    holes.push(adj.question());
+            for adj in self.settled_move(m, mv, ctx.cut)? {
+                if leg.is_none_or(|l| l == adj.leg.name) && adj.inst_keys.starts_with(&want) {
+                    count_adjustment(m, &adj, sp, last, &mut acc)?;
                 }
             }
+        }
+        let Counted {
+            total,
+            mut units,
+            holes,
+            met,
+            settle_unit,
+        } = acc;
+        if units.is_empty()
+            && let Some(u) = settle_unit
+        {
+            units.insert(u);
         }
         self.absorb(&met);
         if let Some(h) = spread(&holes.iter().map(Some).collect::<Vec<_>>()) {
@@ -614,6 +665,37 @@ impl Engine {
         }
     }
 
+    /// A modelled instance's flows: the observations that stand in for it on its covered
+    /// day, `open:` when none does (refcore's `flows_move`, its modelled past). L §5.14.3,
+    /// §5.19.
+    fn count_standing_in(
+        &mut self,
+        m: &Reality,
+        i: &Inst,
+        leg: Option<&str>,
+        cut: Day,
+        acc: &mut Counted,
+    ) -> Result<(), Stop> {
+        let obs = self.standing_in(m, i, cut)?;
+        if obs.is_empty() {
+            acc.met.entries.insert(Entry {
+                word: "open",
+                text: i.id.clone(),
+                figure: String::new(),
+            });
+        }
+        for o in &obs {
+            acc.met.merge(&o.coll);
+            for lg in o.legs.iter().filter(|lg| wanted(leg, &lg.name)) {
+                let Amount::Qty(q) = &lg.amount else {
+                    return Err(invariant("an observed leg with no amount"));
+                };
+                acc.add(q, lg.unit.as_ref())?;
+            }
+        }
+        Ok(())
+    }
+
     /// A move's keys as written in a flows read: all of them, or none (refcore's
     /// `flows_move`, its keys). L §5.14.3.
     fn move_keys(
@@ -627,9 +709,9 @@ impl Engine {
         if keys.is_empty() {
             return Ok(Ok(Vec::new()));
         }
-        if keys.len() != mv.binds.len() {
-            return Err(Stop::NotBuilt("flows of a move at some of its keys"));
-        }
+        let Some(binds) = mv.binds.get(..keys.len()) else {
+            return Err(Stop::NotBuilt("flows of a move at more keys than it binds"));
+        };
         let mut given = Vec::with_capacity(keys.len());
         for key in keys {
             let Key::Expr(e) = key else {
@@ -637,7 +719,7 @@ impl Engine {
             };
             given.push(self.given_key(m, e, env, ctx)?);
         }
-        crate::eval::make_keys(m, &mv.id, &mv.binds, given, ctx.cut)
+        crate::eval::make_keys(m, &mv.id, binds, given, ctx.cut)
     }
 
     /// A decision move's runs a flows read counts: the main walk's, or inside a decision the
@@ -687,7 +769,7 @@ impl Engine {
 
     /// The refusal of a leg the walk refused: inside a decision, what its walk refused so far;
     /// at the ask's cut, the main walk's (refcore's `leg_refused`). E §4.2 step 5.
-    fn leg_refused(
+    pub(crate) fn leg_refused(
         &mut self,
         m: &Reality,
         key: (&str, &str),
@@ -750,6 +832,88 @@ impl Engine {
         self.walking.remove(&id);
         walked?;
         Ok(id)
+    }
+}
+
+/// What a move's flows gather: the total, the units its legs are in, the holes, the
+/// register, the unit of the first settlement counted.
+#[derive(Default)]
+struct Counted {
+    /// The total, once a leg is counted.
+    total: Option<Num>,
+    /// The units of the legs counted.
+    units: BTreeSet<String>,
+    /// The holes met.
+    holes: Vec<Hole>,
+    /// The register met.
+    met: Collected,
+    /// The unit of the first settlement leg counted.
+    settle_unit: Option<String>,
+}
+
+impl Counted {
+    /// A leg's amount counted, its unit noted. L §5.14.3.
+    fn add(&mut self, q: &Num, unit: Option<&String>) -> Result<(), Stop> {
+        self.total = Some(add_to(self.total.take(), q)?);
+        if let Some(u) = unit {
+            self.units.insert(u.clone());
+        }
+        Ok(())
+    }
+}
+
+/// One adjustment of a move's flows: `HOLE-CHANGED` from its day when nothing settles it;
+/// else its remainder in the register and its settlements dated in the span, each signed by
+/// the way it runs (refcore's `flows_move`, its adjustments). E §5 steps 5–6, L §5.14.3.
+fn count_adjustment(
+    m: &Reality,
+    adj: &crate::book::Adjustment,
+    sp: &Span,
+    last: Day,
+    acc: &mut Counted,
+) -> Result<(), Stop> {
+    if adj.settled.is_empty() {
+        if last >= adj.day {
+            acc.holes.push(adj.question());
+        }
+        return Ok(());
+    }
+    if last >= adj.day
+        && let Some(text) = adj.remainder_text(m)?
+    {
+        acc.met.entries.insert(Entry {
+            word: "adjustment",
+            text,
+            figure: String::new(),
+        });
+    }
+    for s in &adj.settled {
+        if s.sign == 0 || !s.day.is_some_and(|d| sp.contains(d)) {
+            continue;
+        }
+        let q = match &s.amount {
+            Amount::Refused(r) => return Err(Stop::Refused(r.clone())),
+            Amount::Hole(h) => {
+                acc.holes.push(h.clone());
+                continue;
+            }
+            Amount::Qty(q) => q
+                .checked_mul(&Num::int(s.sign))
+                .map_err(crate::eval::num_stop)?,
+        };
+        acc.total = Some(add_to(acc.total.take(), &q)?);
+        if acc.settle_unit.is_none() {
+            acc.settle_unit.clone_from(&adj.leg.unit);
+        }
+    }
+    Ok(())
+}
+
+/// A running total with `q` added. L §5.14.3.
+fn add_to(total: Option<Num>, q: &Num) -> Result<Num, Stop> {
+    match total {
+        None => Ok(q.clone()),
+        Some(t) => t.checked_add(q).map_err(crate::eval::num_stop),
     }
 }
 
@@ -831,7 +995,7 @@ impl Sums {
                         self.met.merge(c);
                     }
                 }
-                Change::Bad(_) | Change::Reset { .. } | Change::Delta(_) => {}
+                Change::Bad(_) | Change::Reset { .. } | Change::Delta(_) | Change::Mark => {}
             }
         }
         Ok(())
@@ -874,7 +1038,7 @@ impl Sums {
                     let sum = self.totals.entry(unit.to_owned()).or_insert_with(Num::zero);
                     *sum = sum.checked_add(f).map_err(crate::eval::num_stop)?;
                 }
-                Change::Reset { .. } => {}
+                Change::Reset { .. } | Change::Mark => {}
             }
         }
         Ok(())

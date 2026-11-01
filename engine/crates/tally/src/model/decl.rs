@@ -342,8 +342,11 @@ pub struct Observation {
     pub kind: Option<String>,
     /// Its legs, in the kind's order.
     pub legs: Vec<ObsLeg>,
-    /// Its attributes, as written; the evaluator converts them to their types.
+    /// Its attributes, as written.
     pub attrs: Vec<(String, FieldValue)>,
+    /// Its attributes as values of their types, a stated hole naming the row (refcore's
+    /// `convert_value`, `_obs_attr`).
+    pub values: Vec<(String, super::value::Value)>,
     /// What it fulfils.
     pub fulfils: Option<Fulfils>,
     /// Its line.

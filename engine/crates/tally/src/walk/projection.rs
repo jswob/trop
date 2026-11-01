@@ -157,7 +157,7 @@ impl Engine {
                 p.root
             }
         };
-        let mut first_reading = super::agenda::first_readings(m, c)?;
+        let mut first_reading = crate::book::first_readings(m, c)?;
         for (place, day) in &from.first_reading {
             first_reading.entry(place.clone()).or_insert(*day);
         }
