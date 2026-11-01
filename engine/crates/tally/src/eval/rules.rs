@@ -8,7 +8,9 @@
 //! Invariants: every result a cell computes is kept, with the register entries it met; the
 //! entries reach every reader of the cell; recursion through cells is counted (R-16).
 
-use super::state::{Cell, Ctx, DEPTH_LIMIT, Engine, Env, invariant, num_stop, refuse, refuse_load};
+use super::state::{
+    Cell, Ctx, DEPTH_LIMIT, Engine, Env, Task, invariant, num_stop, refuse, refuse_load,
+};
 use crate::base::{Load, Run};
 use crate::hole::{Hole, spread};
 use crate::model::{
@@ -27,7 +29,7 @@ impl Engine {
     /// # Errors
     ///
     /// The refusals of the def's evaluation.
-    pub fn read_def_at(
+    pub(super) fn read_def_at(
         &mut self,
         m: &Reality,
         def: &DefInfo,
@@ -35,10 +37,7 @@ impl Engine {
         ctx: Ctx,
     ) -> Result<Value, Stop> {
         self.index_assumed(m, &def.binds);
-        let mut env = Env::empty();
-        for (bind, key) in def.binds.iter().zip(keys) {
-            env.bind(&bind.var, Value::of_key(key), Some(bind.domain.clone()));
-        }
+        let env = key_env(def, keys);
         for bind in &def.binds {
             let Some(filter) = &bind.node.filter else {
                 continue;
@@ -75,8 +74,9 @@ impl Engine {
     }
 
     /// A def's cell: the memo's result, or the rules evaluated now and kept (refcore's
-    /// `def_cell`). E §3.2.
-    fn def_cell(
+    /// `def_cell`); past the counted depth the cell waits on the work stack and the read
+    /// unwinds (R-16). E §3.2.
+    pub(super) fn def_cell(
         &mut self,
         m: &Reality,
         def: &DefInfo,
@@ -85,7 +85,7 @@ impl Engine {
         ctx: Ctx,
     ) -> Result<Value, Stop> {
         let figure = origin(&def.id, keys);
-        let key = format!("{figure}|{}", ctx.key());
+        let key = cell_key(&figure, ctx);
         if let Some(cell) = self.memo.get(&key) {
             let result = cell.result.clone();
             let met = cell.met.clone();
@@ -99,9 +99,13 @@ impl Engine {
             ));
         }
         if self.depth >= DEPTH_LIMIT {
-            return Err(Stop::NotBuilt(
-                "a chain of def cells deeper than the counted limit (U-15)",
-            ));
+            self.work.push(Task {
+                def: def.id.clone(),
+                keys: keys.to_vec(),
+                ctx,
+                unwound: Vec::new(),
+            });
+            return Err(Stop::Deep);
         }
         self.active.insert(key.clone());
         self.depth = self
@@ -117,6 +121,10 @@ impl Engine {
             .depth
             .checked_sub(1)
             .ok_or_else(|| invariant("the depth count"))?;
+        if result == Err(Stop::Deep) {
+            self.suspend(key)?;
+            return result;
+        }
         self.active.remove(&key);
         self.absorb(&met);
         self.memo.insert(
@@ -441,6 +449,22 @@ fn coerce_def(m: &Reality, def: &DefInfo, v: Value) -> Result<Value, Stop> {
         }
         (_, v) => Ok(v),
     }
+}
+
+/// A def's scope at its keys: each key variable bound to its key, with its domain (refcore's
+/// `read_def`, the env it builds). L §5.11.
+pub(super) fn key_env(def: &DefInfo, keys: &[KeyVal]) -> Env {
+    let mut env = Env::empty();
+    for (bind, key) in def.binds.iter().zip(keys) {
+        env.bind(&bind.var, Value::of_key(key), Some(bind.domain.clone()));
+    }
+    env
+}
+
+/// The memo's key of a cell: the def at its keys as the register names it, and the context
+/// (E §3.2).
+pub(super) fn cell_key(figure: &str, ctx: Ctx) -> String {
+    format!("{figure}|{}", ctx.key())
 }
 
 /// The refusal of an `at` whose value is no day (refcore's `law_value`). L §4.3.

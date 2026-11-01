@@ -2,12 +2,13 @@
 //! Spec: E §1 (the run function); the modules name their own sections.
 //! Twin: engine/tools/refcore/cli.py.
 //! Invariants: the library reads no clock, environment or file (R-38, R-39); [`run`] answers
-//! a read or parse refusal, and `NotImplemented` past the parse until the checks and the
-//! evaluator land (milestone S, groups G4 on).
+//! a read or parse refusal and the asks a loaded reality's evaluator can read, and
+//! `NotImplemented` for a load refusal and anything past the part built (milestone S).
 //!
 //! Milestone S is built in groups (`engine/BUILD-LOG.md`, the S plan). So far: the exact
 //! numbers, [`num`]; the code catalogue and refusals, [`base`]; the entry and its read step,
-//! [`run`]; days, [`time`]; the lexer and the parser, [`syntax`].
+//! [`run`]; days, [`time`]; the lexer and the parser, [`syntax`]; load, [`load`]; the read
+//! rule, [`read`]; the evaluator, [`eval`]; holes, [`hole`]; the asks, [`ask`].
 
 #![forbid(unsafe_code)]
 
@@ -111,11 +112,25 @@ pub mod eval {
     mod expr;
     mod read;
     mod rules;
+    mod stack;
     mod state;
     mod ty;
 
+    pub use aggregate::Member;
     pub use arith::{Op, Test, arith, compare, currency_of, int_of, negate, same_value};
+    pub use stack::Item;
+    pub(crate) use state::num_stop;
     pub use state::{Collected, Ctx, Engine, Entry, Env};
+}
+
+/// The asks (L §5.18): each ask's lines with the register under them (L §8.2), then the
+/// run's warnings (L §8.5). The module's code is its files under `ask/`.
+pub mod ask {
+    mod answer;
+    mod register;
+
+    pub use answer::answer;
+    pub use register::{register_lines, warning_lines};
 }
 
 /// Load (E §3.1 steps 1–4): the parsed files become the reality, constructively; the load
@@ -133,6 +148,7 @@ pub mod load {
     mod steps;
     mod strata;
 
+    pub use keys::index_key_of;
     pub use steps::load;
 }
 

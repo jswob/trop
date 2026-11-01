@@ -12,6 +12,7 @@ use super::arith::{Op, arith, int_of};
 use super::state::{Ctx, Engine, invariant, num_stop, refuse, refuse_load};
 use crate::base::{Load, Run};
 use crate::hole::Hole;
+use crate::load::index_key_of;
 use crate::model::{
     BindInfo, Class, Code, CodeKind, Domain, IndexInfo, InputInfo, KeyVal, Number, PeriodWord,
     Reality, Row, Ty, Unit, Value, currency_id, num_money,
@@ -29,7 +30,7 @@ pub(super) enum Given {
     /// A value.
     Value(Value),
     /// A key literal, resolved in the position's domain.
-    Literal(String),
+    Literal(Lit),
 }
 
 impl Engine {
@@ -259,7 +260,7 @@ pub(super) fn make_keys(
                 continue;
             }
             Given::Value(v) => to_key(m, item, &v, &bind.domain)?,
-            Given::Literal(text) => literal_key(m, &text, &bind.domain)?,
+            Given::Literal(lit) => literal_key(m, &lit, &bind.domain)?,
         };
         check_key(m, &key, &bind.domain, cut)?;
         keys.push(key);
@@ -391,31 +392,32 @@ pub(super) fn shown(m: &Reality, v: &Value) -> Result<String, Stop> {
     v.text(m).map_err(num_stop)
 }
 
-/// A key literal resolved in `domain`: a key of an index by its source text, a thing of a
-/// kind by its name (refcore's `resolve_key_literal`). L §2.5.
+/// A key literal resolved in `domain`: a key of an index, an integer or a period by its
+/// label or a key by its text, a thing of a kind by its name (refcore's
+/// `resolve_key_literal`). L §2.5.
 ///
 /// # Errors
 ///
-/// `RUN-KEY` (`LOAD-KEY` where load sees it) for a literal the domain doesn't hold.
-pub(super) fn literal_key(m: &Reality, text: &str, domain: &Domain) -> Result<KeyVal, Stop> {
+/// `LOAD-KEY`, where load sees it, for a literal the domain doesn't hold.
+pub(super) fn literal_key(m: &Reality, lit: &Lit, domain: &Domain) -> Result<KeyVal, Stop> {
+    let text = lit.text();
     match domain {
         Domain::Index(id) => {
             let ix = m
                 .indexes
                 .get(id)
                 .ok_or_else(|| invariant("a bind over an index load didn't build"))?;
-            ix.by_text(text)
-                .cloned()
+            index_key_of(ix, lit)
                 .ok_or_else(|| refuse_load(Load::Key, format!("{text} is not a key of {id}")))
         }
         Domain::Kind(kind) => {
-            if !m.thing_in(text, kind) {
+            if !m.thing_in(&text, kind) {
                 return Err(refuse_load(
                     Load::Key,
                     format!("{text} is not a thing of {kind}"),
                 ));
             }
-            Ok(KeyVal::Thing(text.to_owned()))
+            Ok(KeyVal::Thing(text))
         }
         Domain::List(_) | Domain::Range | Domain::Axis(_) => Err(Stop::NotBuilt(
             "a key literal of a key list, a range or an axis",
@@ -625,14 +627,14 @@ fn convert_lit(m: &Reality, lit: &Lit, ty: &Ty, factor: &Num) -> Result<Value, S
             let Ty::Key(ix) = ty else {
                 return Err(wrong());
             };
-            key_value(m, &lit.text(), ix)
+            key_value(m, lit, ix)
         }
     }
 }
 
 /// A key literal of `key ix` as a value: an index's key, or a thing of a kind; a key of an
 /// integer index is an int (refcore's `key_value`). L §4.2.
-pub(super) fn key_value(m: &Reality, text: &str, ix: &str) -> Result<Value, Stop> {
+pub(super) fn key_value(m: &Reality, lit: &Lit, ix: &str) -> Result<Value, Stop> {
     let domain = if m.indexes.get(ix).is_some() {
         Domain::Index(ix.to_owned())
     } else if m.kinds.get(ix).is_some() {
@@ -640,7 +642,7 @@ pub(super) fn key_value(m: &Reality, text: &str, ix: &str) -> Result<Value, Stop
     } else {
         return Err(refuse_load(Load::Name, format!("unknown id {ix}")));
     };
-    Ok(Value::of_key(&literal_key(m, text, &domain)?))
+    Ok(Value::of_key(&literal_key(m, lit, &domain)?))
 }
 
 /// A number literal of a row as a value of type `ty` (refcore's `convert_value`). L §3.2.
@@ -724,7 +726,7 @@ fn convert_number(
                 .map(Value::Period)
                 .ok_or_else(different)
         }
-        Ty::Key(ix) => key_value(m, &n.text, ix),
+        Ty::Key(ix) => key_value(m, &Lit::Num(n.clone()), ix),
         Ty::Int
         | Ty::Period(_)
         | Ty::Bool

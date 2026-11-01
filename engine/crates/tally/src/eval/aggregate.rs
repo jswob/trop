@@ -33,11 +33,11 @@ const RANGE_LIMIT: usize = 1_000_000;
 
 /// A binding tuple: its scope, and the questions that make it an unknown member.
 #[derive(Debug, Clone, PartialEq, Eq)]
-struct Member {
+pub struct Member {
     /// The scope with the tuple's variables bound.
-    env: Env,
+    pub env: Env,
     /// None for a member; the hole of a `where` (or a membership) that is one.
-    unknown: Option<Hole>,
+    pub unknown: Option<Hole>,
 }
 
 /// One binding's values, each with its own unknown-member hole, or the hole of a domain that
@@ -193,7 +193,7 @@ impl Engine {
 
     /// The binding tuples in binding order, depth first; the first domain that is a hole
     /// makes the aggregate that hole (refcore's `members`). L §5.11.
-    fn members(
+    pub(super) fn members(
         &mut self,
         m: &Reality,
         binds: &[Bind],

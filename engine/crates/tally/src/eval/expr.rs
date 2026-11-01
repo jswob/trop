@@ -31,7 +31,7 @@ impl Engine {
     /// # Errors
     ///
     /// The refusals of L §8.4 the expression meets; `NotBuilt` for a node S doesn't build.
-    pub fn ev(&mut self, m: &Reality, e: &Expr, env: &Env, ctx: Ctx) -> Result<Value, Stop> {
+    pub(super) fn ev(&mut self, m: &Reality, e: &Expr, env: &Env, ctx: Ctx) -> Result<Value, Stop> {
         match e {
             Expr::Lit(lit) => literal(m, lit, env.figures),
             Expr::Str(s) => Ok(Value::Text(s.clone())),
@@ -135,7 +135,7 @@ impl Engine {
                 | Lit::Key(_)
                 | Lit::Name(_)
                 | Lit::Cur(_)),
-            ) => Ok(Given::Literal(lit.text())),
+            ) => Ok(Given::Literal(lit.clone())),
             Expr::Lit(Lit::Bool(_) | Lit::Nominal(_) | Lit::Inf { .. })
             | Expr::Str(_)
             | Expr::Name(_)
@@ -167,7 +167,7 @@ impl Engine {
             | Expr::Value(_) => {
                 let v = self.ev(m, e, env, ctx)?;
                 if let Value::Word(word) = v {
-                    return Ok(Given::Literal(word));
+                    return Ok(Given::Literal(Lit::Name(word)));
                 }
                 Ok(Given::Value(v))
             }
@@ -550,7 +550,11 @@ pub(super) fn resolve_pair(m: &Reality, lhs: Value, rhs: Value) -> Result<(Value
 /// Key literal `word` as a key of the index or kind of value `other`, or a code beside a code.
 fn resolve_word(m: &Reality, word: &str, other: &Value) -> Result<Value, Stop> {
     if let Value::Key(KeyVal::Key { index, .. }) = other {
-        let key = literal_key(m, word, &Domain::Index(index.clone()))?;
+        let key = literal_key(
+            m,
+            &Lit::Name(word.to_owned()),
+            &Domain::Index(index.clone()),
+        )?;
         return Ok(Value::of_key(&key));
     }
     if let Value::Key(KeyVal::Thing(_)) = other {

@@ -445,11 +445,8 @@ mod tests {
         );
         assert_eq!(
             out(&["run", "r/sub"], &table),
-            (
-                "tally run: not implemented\n".to_owned(),
-                EXIT_NOT_IMPLEMENTED
-            ),
-            "read and parsed; the checks are next"
+            (String::new(), super::EXIT_ANSWERED),
+            "read, parsed and loaded: no ask, nothing printed"
         );
         assert_eq!(
             out(&["run", "m.tally"], &[("m.tally", b"model m")]),
@@ -458,6 +455,15 @@ mod tests {
                 EXIT_REFUSED
             ),
             "a parse refusal"
+        );
+        let later = [MODEL, b"\nask x: explain y\n"].concat();
+        assert_eq!(
+            out(&["run", "m.tally"], &[("m.tally", &later)]),
+            (
+                "tally run: not implemented\n".to_owned(),
+                EXIT_NOT_IMPLEMENTED
+            ),
+            "explain is built later"
         );
     }
 
@@ -497,7 +503,7 @@ mod tests {
             &args(&["run", "--stats", "a.tally"]),
             &files(&[("a.tally", MODEL)]),
         );
-        assert_eq!(output.code, EXIT_NOT_IMPLEMENTED, "run --stats");
+        assert_eq!(output.code, super::EXIT_ANSWERED, "run --stats");
         assert!(
             output
                 .stderr

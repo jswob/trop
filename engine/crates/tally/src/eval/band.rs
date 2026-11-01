@@ -212,7 +212,7 @@ fn band_typed(m: &Reality, band: &BandInfo, expr: &Expr, v: Value) -> Result<Val
         return Ok(typed(m, q, &band.ty)?.unwrap_or(v));
     }
     if let (Ty::Key(ix), Value::Word(word)) = (&band.ty, &v) {
-        return key_value(m, word, ix);
+        return key_value(m, &Lit::Name(word.clone()), ix);
     }
     if let (Ty::Money(cur), Value::Number(n)) = (&band.ty, &v) {
         if matches!(n.class, Class::Int | Class::Flex) && n.q.is_zero() {

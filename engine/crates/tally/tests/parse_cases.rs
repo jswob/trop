@@ -200,6 +200,6 @@ ask early: flows(out_0, 2025-01-01 .. 2025-03-31), bal(acc_0, 2025-03-31) as kno
             Err(NotImplemented),
             "explain is built later"
         );
-        assert_eq!(run_one(HEADER), Err(NotImplemented), "the checks are next");
+        assert_eq!(run_one(HEADER), Ok(Vec::new()), "no ask, nothing printed");
     }
 }

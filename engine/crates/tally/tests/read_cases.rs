@@ -206,6 +206,7 @@ band|scale||2025-06-01|2026-03-01|rows v2 [0, 100]; v1 (100, inf)
             Ok(line) => line,
             Err(Stop::NotBuilt(what)) if what.contains("LOAD-LAWDATE") => "lawdate".to_owned(),
             Err(Stop::NotBuilt(what)) => format!("not built: {what}"),
+            Err(Stop::Deep) => "deep".to_owned(),
             Err(Stop::Refused(r)) => format!("refused {}", r.text()),
         }
     }

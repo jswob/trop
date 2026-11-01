@@ -15,13 +15,18 @@ use crate::num::Num;
 use crate::time::Day;
 use std::collections::BTreeSet;
 
-/// Why parsing stopped: a refusal of the spec, or a construct the engine doesn't build yet.
+/// Why parsing or a read stopped: a refusal of the spec, a construct the engine doesn't build
+/// yet, or a chain of def cells past the evaluator's counted depth.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Stop {
     /// A refusal with its code (L §8.3).
     Refused(Refusal),
     /// A construct of the language the engine doesn't build yet, named.
     NotBuilt(&'static str),
+    /// A read reached a def cell past the counted depth: the cell waits on the evaluator's
+    /// work stack and the outermost read replays once it is computed (R-16, E §3.2). The
+    /// parser never stops so; no read's answer is ever this.
+    Deep,
 }
 
 impl From<Refusal> for Stop {

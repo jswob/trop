@@ -1,13 +1,16 @@
 //! The engine's entry: the files a run is given and its request go in, the printed answer comes out.
 //! Spec: E §1 (the run function); E §3.1 step 1 (files by full path); L §8.3 (which refusal
-//! prints: every file is read before any is split, and split before any is parsed).
-//! Twin: engine/tools/refcore/cli.py (`read_files`, `run_texts`, `by_path`).
+//! prints: every file is read before any is split, and split before any is parsed); L §5.18
+//! (the asks answered once the reality loads).
+//! Twin: engine/tools/refcore/cli.py (`read_files`, `run_texts`, `run_one`, `by_path`).
 //! Invariants: reads no clock, environment or file (R-38, R-39); takes the files in the order
 //! of their full paths by code point, whatever order they come in (R-40); never decodes lossily
 //! (R-49).
 
 use crate::NotImplemented;
+use crate::ask::answer;
 use crate::base::Refusal;
+use crate::load::load;
 use crate::syntax::{Stop, parse_reality};
 
 /// One file the run is given: its path as the run names it, and its bytes, or none when the
@@ -87,22 +90,30 @@ impl Answer {
     }
 }
 
-/// Runs a reality's files on a request and answers with the printed lines. So far it reads
-/// the files, then splits and parses them all (L §8.3); the checks land next (milestone S,
-/// group G4).
+/// Runs a reality's files on a request and answers with the printed lines: it reads the
+/// files, splits and parses them all (L §8.3), loads them, then answers the asks (L §5.18).
 ///
 /// # Errors
 ///
-/// [`NotImplemented`] for a construct the parser doesn't build yet, and once the files are
-/// parsed, until the checks and the rest land.
-pub fn run(given: Vec<Given>, _request: &Request) -> Result<Answer, NotImplemented> {
+/// [`NotImplemented`] for a construct the engine doesn't build yet, and for a load refusal:
+/// load's checks are M0's, so a refusal load meets may not be the one refcore prints first.
+pub fn run(given: Vec<Given>, request: &Request) -> Result<Answer, NotImplemented> {
     let sources = match read(given) {
         Err(refusal) => return Ok(Answer::refused(&refusal)),
         Ok(sources) => sources,
     };
-    match parse_reality(&sources) {
+    let files = match parse_reality(&sources) {
+        Err(Stop::Refused(refusal)) => return Ok(Answer::refused(&refusal)),
+        Err(Stop::NotBuilt(_) | Stop::Deep) => return Err(NotImplemented),
+        Ok(files) => files,
+    };
+    let Ok(reality) = load(files) else {
+        return Err(NotImplemented);
+    };
+    match answer(&reality, &request.asks) {
+        Ok(lines) => Ok(Answer { lines }),
         Err(Stop::Refused(refusal)) => Ok(Answer::refused(&refusal)),
-        Err(Stop::NotBuilt(_)) | Ok(_) => Err(NotImplemented),
+        Err(Stop::NotBuilt(_) | Stop::Deep) => Err(NotImplemented),
     }
 }
 
@@ -197,10 +208,64 @@ mod tests {
         );
     }
 
+    const MODEL: &str =
+        "model m\n  tally 2\n  on 2026-01-01\n  start 2026-01-01\n  end 2026-12-31\n";
+
+    fn lines(files: Vec<Given>, request: &Request) -> Vec<String> {
+        let answer = run(files, request).expect("an answer");
+        answer.lines().to_vec()
+    }
+
     #[test]
-    fn a_reality_that_parses_goes_on_to_the_checks() {
-        let model = b"model m\n  tally 2\n  on 2026-01-01\n  start 2026-01-01\n  end 2026-12-31\n";
-        let files = given(&[("m.tally", Some(model))]);
-        assert_eq!(run(files, &every()), Err(NotImplemented), "G4 next");
+    fn a_reality_with_no_asks_prints_nothing() {
+        let files = given(&[("m.tally", Some(MODEL.as_bytes()))]);
+        assert!(lines(files, &every()).is_empty(), "no ask, no warning");
+    }
+
+    #[test]
+    fn asks_print_in_id_order_or_as_named() {
+        let text = format!(
+            "{MODEL}\nsource card \"a card\"\n\nunit PLN: currency minor 0.01\n\ninput fee: money PLN\n\nversion v\n  cite card\n  governs always\n  known 2026-01-01\n  fee = 12.50\n\nask b: fee, fee + fee\n\nask a: fee + fee law 2026-03-01\n"
+        );
+        let files = || given(&[("m.tally", Some(text.as_bytes()))]);
+        assert_eq!(
+            lines(files(), &every()),
+            [
+                "a: 25.00 PLN",
+                "  law date 2026-03-01, cut 2026-01-01",
+                "b: (12.50 PLN, 25.00 PLN)",
+                "  cut 2026-01-01",
+            ],
+            "by id"
+        );
+        let named = Request {
+            asks: Asks::Named(vec!["b".to_owned()]),
+            pin: Pin::Canonical,
+        };
+        assert_eq!(
+            lines(files(), &named),
+            ["b: (12.50 PLN, 25.00 PLN)", "  cut 2026-01-01"],
+            "named"
+        );
+        let missing = Request {
+            asks: Asks::Named(vec!["b".to_owned(), "c".to_owned()]),
+            pin: Pin::Canonical,
+        };
+        assert_eq!(
+            lines(files(), &missing),
+            ["refused: LOAD-NAME no ask c"],
+            "the run refused"
+        );
+    }
+
+    #[test]
+    fn a_load_refusal_waits_for_load_checks() {
+        let text = format!("{MODEL}\ninput x: num\n\ninput x: num\n");
+        let files = given(&[("m.tally", Some(text.as_bytes()))]);
+        assert_eq!(
+            run(files, &every()),
+            Err(NotImplemented),
+            "M0's checks come first"
+        );
     }
 }

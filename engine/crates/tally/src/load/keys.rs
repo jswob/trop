@@ -9,7 +9,7 @@
 
 use super::steps::{Loader, refuse};
 use crate::base::Load;
-use crate::model::{BindInfo, Domain, IndexForm, KeyVal, NameKind, Reality};
+use crate::model::{BindInfo, Domain, IndexForm, IndexInfo, KeyVal, NameKind, Reality};
 use crate::syntax::{Expr, Key, Lit, Postfix, RowKey, Stop};
 use crate::time::{Day, Period, PeriodKind};
 
@@ -219,20 +219,10 @@ fn resolve_index_key(
             line,
         )
     };
-    if index.is_int {
-        let value = lit.and_then(int_of).map(KeyVal::Int);
-        return value
-            .filter(|v| index.pos(v).is_some())
-            .ok_or_else(not_a_key);
+    if let Some(found) = lit.and_then(|l| index_key_of(index, l)) {
+        return Ok(found);
     }
-    if index.period.is_some() {
-        let found = lit.and_then(|l| period_key(&index.keys, l));
-        return found.ok_or_else(not_a_key);
-    }
-    if let Some(found) = lit.and_then(index_text).and_then(|t| index.by_text(&t)) {
-        return Ok(found.clone());
-    }
-    if index.form == IndexForm::Open {
+    if !index.is_int && index.period.is_none() && index.form == IndexForm::Open {
         return Err(refuse(
             Load::Key,
             format!("{text} is not a key of {id}: no row brings it"),
@@ -241,6 +231,22 @@ fn resolve_index_key(
         ));
     }
     Err(not_a_key())
+}
+
+/// The key literal `lit` names in `index`: an integer of an integer index, a period of a
+/// period index by its label, else a key by its text; none when the index lacks it (refcore's
+/// `resolve_key_literal`, an index's position). L §2.5.
+#[must_use]
+pub fn index_key_of(index: &IndexInfo, lit: &Lit) -> Option<KeyVal> {
+    if index.is_int {
+        return int_of(lit)
+            .map(KeyVal::Int)
+            .filter(|v| index.pos(v).is_some());
+    }
+    if index.period.is_some() {
+        return period_key(&index.keys, lit);
+    }
+    index_text(lit).and_then(|t| index.by_text(&t)).cloned()
 }
 
 /// The key of a period index a written date or period names (refcore's label match and

@@ -5,18 +5,21 @@
 //! Twin: engine/tools/refcore/evaluate.py (`Ctx`, `Coll`, `Engine` and its collector stack).
 //! Invariants: a cell is computed once per context and its result, refusal included, is kept;
 //! a cell read while it is being computed is `RUN-CYCLE`; recursion through def cells is
-//! counted, and past its limit the read stops `NotBuilt` (U-15 measures what S needs).
+//! counted, and past its limit the cell demanded waits on the work stack (R-16).
 
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::base::{Code, Refusal, Run};
-use crate::model::{Domain, Reality, Value};
+use crate::model::{Domain, KeyVal, Reality, Value};
 use crate::num::NumError;
 use crate::syntax::Stop;
 use crate::time::Day;
 
-/// The deepest chain of def cells one read may open (R-16; U-15 measures what S needs).
-pub(super) const DEPTH_LIMIT: u32 = 400;
+/// The deepest chain of def cells computed by plain calls; past it the cell demanded waits on
+/// the work stack (R-16, BUILDER §4). U-15, measured at S: a debug build uses about 19 KB of
+/// stack per def cell, so 32 cells take about 0.6 MB of the 2 MiB thread T's runner gives a
+/// run, leaving the rest for expressions between cells and the walk's frames.
+pub(super) const DEPTH_LIMIT: u32 = 32;
 
 /// A read's context (refcore's `Ctx`, the parts S builds).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -173,7 +176,22 @@ pub(super) struct Cell {
     pub met: Collected,
 }
 
-/// The evaluator: the memo and the collector stack (refcore's `Engine`).
+/// A def cell waiting on the work stack: demanded past the counted depth, it is computed from
+/// the outermost read, with the cells that were being computed above it still in progress.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(super) struct Task {
+    /// The def.
+    pub def: String,
+    /// Its keys.
+    pub keys: Vec<KeyVal>,
+    /// The cell's context, its law date set by the def's `at`.
+    pub ctx: Ctx,
+    /// The cells in progress that unwound so it could be computed from depth 0: they stay in
+    /// progress until it is, then the read waiting on it replays them.
+    pub unwound: Vec<String>,
+}
+
+/// The evaluator: the memo, the collector stack and the work stack (refcore's `Engine`).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Engine {
     /// The memo: a cell's key to its result.
@@ -184,6 +202,8 @@ pub struct Engine {
     pub(super) stack: Vec<Collected>,
     /// The def cells open now.
     pub(super) depth: u32,
+    /// The cells demanded past the counted depth, the latest last (R-16).
+    pub(super) work: Vec<Task>,
     /// The ask's cut, past which a row read for a later day is `held` (L §8.2).
     pub(super) ask_cut: Day,
 }
@@ -197,6 +217,7 @@ impl Engine {
             active: BTreeSet::new(),
             stack: vec![Collected::default()],
             depth: 0,
+            work: Vec::new(),
             ask_cut,
         }
     }
@@ -273,7 +294,7 @@ pub(super) fn invariant(what: &str) -> Stop {
 }
 
 /// A number error as the refusal refcore raises (L §7.1, §8.4).
-pub(super) fn num_stop(error: NumError) -> Stop {
+pub(crate) fn num_stop(error: NumError) -> Stop {
     match error {
         NumError::Div => refuse(Run::Div, "division by zero".to_owned()),
         NumError::Digits => refuse(

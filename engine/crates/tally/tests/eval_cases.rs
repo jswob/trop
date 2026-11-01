@@ -198,11 +198,12 @@ whole = 2
             let texts: Vec<String> = keys.iter().map(KeyVal::text).collect();
             format!("{id}[{}]", texts.join(", "))
         };
-        let shown = match engine.read_def_at(m, def, keys, ctx) {
+        let shown = match engine.read_def(m, def, keys, ctx) {
             Ok(v @ Value::Hole(_)) => format!("= {}", v.text(m).expect("a text")),
             Ok(v) => format!("= {}", v.typed_text(m).expect("a text")),
             Err(Stop::Refused(r)) => format!("! {}", r.text()),
             Err(Stop::NotBuilt(what)) => format!("~ {what}"),
+            Err(Stop::Deep) => "~ deep".to_owned(),
         };
         let mut out = vec![format!("{label} {shown}")];
         let mut entries: Vec<String> = engine
@@ -262,9 +263,9 @@ whole = 2
         };
         let def = m.defs.get("asked").expect("a def");
         let mut engine = Engine::new(m.on);
-        let first = engine.read_def_at(&m, def, &[], ctx);
+        let first = engine.read_def(&m, def, &[], ctx);
         let met = engine.collected();
-        let second = engine.read_def_at(&m, def, &[], ctx);
+        let second = engine.read_def(&m, def, &[], ctx);
         assert_eq!(first, second, "the memo gives the same result");
         assert_eq!(engine.collected(), met, "the register is the same set");
         assert_eq!(met.entries.len(), 1, "one missing entry");
