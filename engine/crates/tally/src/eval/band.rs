@@ -11,7 +11,7 @@
 use core::cmp::Ordering;
 
 use super::expr::{hole_of, typed};
-use super::memo::{LawClass, may_hold, tables_class};
+use super::memo::{LawClass, Read, may_hold, tables_class};
 use super::read::{Given, key_value, make_keys};
 use super::state::{Ctx, Engine, Env, invariant, num_stop, refuse, refuse_load, wrong_type};
 use crate::base::{Load, Run};
@@ -56,6 +56,10 @@ impl Engine {
             ));
         }
         let figure = band_origin(&band.id, key.as_ref());
+        self.read(Read::Band {
+            id: band.id.clone(),
+            key: key.clone(),
+        });
         if let Some(day) = ctx.law {
             let class = tables_class(m, band, ctx.cut, day)?;
             self.narrow(ctx.law, class);
@@ -69,6 +73,11 @@ impl Engine {
         for at in rows {
             let (_, row) = band_row(band, at)?;
             if holds(row, &point)? {
+                self.read(Read::BandRow {
+                    band: band.id.clone(),
+                    table: at.table,
+                    row: at.row,
+                });
                 return self.band_value(m, band, &figure, at, x, ctx);
             }
         }

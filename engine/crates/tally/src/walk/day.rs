@@ -78,7 +78,8 @@ impl Engine {
 
     /// Walks timeline `id` through day `last`, or to its last day for none: a later day is
     /// left until a read needs it, so a refusal past `last` refuses no read of it (refcore's
-    /// `run_to`). E §4.2, §4.3, P §2.2.
+    /// `run_to`); a main walk's signature is kept once it is done (refcore's `w.sig`). E §4.2,
+    /// §4.3, §9 item 4, P §2.2.
     ///
     /// # Errors
     ///
@@ -89,6 +90,15 @@ impl Engine {
         id: usize,
         last: Option<Day>,
     ) -> Result<(), Stop> {
+        let mark = self.reads_apart();
+        let walked = self.walk_through(m, id, last);
+        self.reads_back(mark);
+        walked
+    }
+
+    /// [`Engine::advance_to`], what it reads the walk's own, not the reading cell's: every
+    /// cell that reads the walk shares it (E §3.2, §3.3). E §4.2, §4.3, §9 item 4.
+    fn walk_through(&mut self, m: &Reality, id: usize, last: Option<Day>) -> Result<(), Stop> {
         loop {
             let walk = self.walk(id)?;
             let step = match &walk.progress {
@@ -108,6 +118,7 @@ impl Engine {
             }
             if self.walk(id)?.progress == Progress::Done {
                 self.gather_warnings(id)?;
+                self.keep_signature(id)?;
             }
         }
     }

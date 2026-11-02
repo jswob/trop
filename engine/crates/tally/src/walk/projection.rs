@@ -74,7 +74,8 @@ impl Engine {
         self.walk_projection(m, id, day)?;
         let value = self.read_state(m, id, place, unit, At::end(day))?;
         self.proj_regs(id, start, day)?;
-        if (read.proj.uncertain || self.uncertain) && !matches!(value, Value::Hole(_)) {
+        // the read's own clause, else the ask line's, which no decision's context carries
+        if (read.proj.uncertain || ctx.unc) && !matches!(value, Value::Hole(_)) {
             return self.proj_uncertain(m, id, (place, unit), day, &value);
         }
         Ok(value)

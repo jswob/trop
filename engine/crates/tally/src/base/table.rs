@@ -1,5 +1,7 @@
-//! The one id-keyed store: items in the order they were added, found by their name, never by indexing.
-//! Spec: BUILDER §3 (`Table<I, T>`: `push`, `get`, `iter`, no `Index` impl; D2-4).
+//! The name-keyed store: items in the order they were added, found by their name as text, never by indexing.
+//! Spec: BUILDER §3 (an id-keyed store: `push`, `get`, `iter`, no `Index` impl; D2-4). This is
+//! `Table<T>`, keyed by the name's text: BUILDER §3's `Table<I, T>`, keyed by an interned id,
+//! and the interner (D2-3) are deferred to M1 (the user, 2026-11-02, G-S2).
 //! Twin: engine/tools/refcore/model.py (`Reality`'s dicts, which keep insertion order).
 //! Invariants: each name is in the table once; iteration is in insertion order, which is
 //! the reality's section order, as refcore's dicts iterate; there is no `Index` impl.

@@ -9,7 +9,7 @@
 //! has its input's declared type; a hole is built in the hole module.
 
 use super::arith::{Op, arith, int_of};
-use super::memo::{LawClass, may_hold, rows_class};
+use super::memo::{LawClass, Read, may_hold, rows_class};
 use super::state::{Ctx, Engine, invariant, num_stop, refuse, refuse_load};
 use crate::base::{Load, Run};
 use crate::hole::Hole;
@@ -77,6 +77,10 @@ impl Engine {
         #[cfg(feature = "counters")]
         self.counts
             .read(format!("{}|{}", origin(&input.id, keys), ctx.key()));
+        self.read(Read::Input {
+            id: input.id.clone(),
+            keys: keys.to_vec(),
+        });
         let by_law = self.read_class(m, input, ctx, asked)?;
         let found = read_input(m, input, keys, clocks, asked)?;
         if by_law && !matches!(found, Found::Row(_)) {
@@ -89,6 +93,10 @@ impl Engine {
                     .rows
                     .get(at)
                     .ok_or_else(|| invariant("the read rule took a row the input lacks"))?;
+                self.read(Read::Row {
+                    version: row.version.clone(),
+                    sid: row.sid.clone(),
+                });
                 let value = self.row_value(m, input, row, keys, ctx)?;
                 self.priced(m, input, keys, ctx, value)
             }

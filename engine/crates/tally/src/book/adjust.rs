@@ -191,7 +191,10 @@ impl Engine {
             )));
         }
         self.adjust_active.insert(key.clone());
+        // what the measuring reads is the adjustments', shared by every reader (E §3.2)
+        let mark = self.reads_apart();
         let made = self.measure_move(m, mv, cut);
+        self.reads_back(mark);
         self.adjust_active.remove(&key);
         let out = made?;
         self.adjustments.insert(key, out.clone());

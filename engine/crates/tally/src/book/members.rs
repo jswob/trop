@@ -377,7 +377,7 @@ impl Engine {
         for mv in moves {
             for i in self.move_instances(m, mv, cut)?.iter() {
                 match i.status {
-                    Status::None | Status::Modelled | Status::Uncertain if !self.uncertain => {}
+                    Status::None | Status::Modelled | Status::Uncertain if !ctx.unc => {}
                     Status::Uncertain => {
                         return Err(Stop::NotBuilt(
                             "a binding over uncertain movements under `with uncertain`",

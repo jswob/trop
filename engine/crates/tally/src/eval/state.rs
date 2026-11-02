@@ -1,7 +1,8 @@
 //! The evaluator's state: a read's context, the variables in scope, the register entries a cell collects, and the engine that holds the memo.
 //! Spec: E §3.2 (every value is a cell: an item, its keys and a context; the memo maps cells to
-//! results, a value or a refusal, with the register entries the cell met); L §4.3 (the law
-//! date), §4.5 (the cut), §8.2 (the register).
+//! results, a value or a refusal, with the register entries the cell met and its read set);
+//! L §4.3 (the law date), §4.5 (the cut), §5.18 (the ask line's `with uncertain`, in its own
+//! reads' context only), §8.2 (the register).
 //! Twin: engine/tools/refcore/evaluate.py (`Ctx`, `Coll`, `Engine` and its collector stack).
 //! Invariants: a cell is computed once per context and its result, refusal included, is kept;
 //! a cell read while it is being computed is `RUN-CYCLE`; recursion through def cells is
@@ -18,7 +19,7 @@ use crate::syntax::{Ask, Stop};
 use crate::time::Day;
 use crate::walk::{Inst, ProjKey, Walk, WalkAt};
 
-use super::memo::{CellId, Cells, Frame, Memo};
+use super::memo::{CellId, Cells, Frame, Memo, Open, Reads};
 
 /// The deepest chain of def cells computed by plain calls; past it the cell demanded waits on
 /// the work stack (R-16, BUILDER §4). U-15, measured at S: a debug build uses about 19 KB of
@@ -35,13 +36,29 @@ pub struct Ctx {
     pub cut: Day,
     /// The walk point of a running read, inside a decision (L §5.14.1); none at the cut.
     pub at: Option<WalkAt>,
+    /// The ask line's `with uncertain`, which every projection and binding the line's own
+    /// reads reach takes (L §5.18). A timeline's and a decision's contexts are made anew
+    /// without it, so no decision sees it (L §5.14: "the clause is the read's").
+    pub unc: bool,
 }
 
 impl Ctx {
-    /// The context of law date `law` and cut `cut`, at no walk point.
+    /// The context of law date `law` and cut `cut`, at no walk point, without `with
+    /// uncertain`: a timeline's and a decision's context (L §5.14).
     #[must_use]
     pub fn new(law: Option<Day>, cut: Day) -> Ctx {
-        Ctx { law, cut, at: None }
+        Ctx {
+            law,
+            cut,
+            at: None,
+            unc: false,
+        }
+    }
+
+    /// The context under the ask line's `with uncertain` (L §5.18).
+    #[must_use]
+    pub fn with_uncertain(self) -> Ctx {
+        Ctx { unc: true, ..self }
     }
 
     /// The context with law date `law`.
@@ -55,9 +72,15 @@ impl Ctx {
     #[cfg(feature = "counters")]
     pub(super) fn key(self) -> String {
         let law = self.law.map_or_else(|| "-".to_owned(), Day::text);
+        let unc = if self.unc { "|uncertain" } else { "" };
         match self.at {
-            None => format!("{law}|{}", self.cut.text()),
-            Some(at) => format!("{law}|{}|{}@{}", self.cut.text(), at.walk, at.point.text()),
+            None => format!("{law}|{}{unc}", self.cut.text()),
+            Some(at) => format!(
+                "{law}|{}|{}@{}{unc}",
+                self.cut.text(),
+                at.walk,
+                at.point.text()
+            ),
         }
     }
 }
@@ -189,13 +212,16 @@ impl Collected {
     }
 }
 
-/// A memo cell: the result of a def at its keys in one context, with what it met.
+/// A memo cell: the result of a def at its keys in one context, with what it met and what it
+/// read (E §3.2).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Cell {
     /// The value, or the refusal.
     pub result: Result<Value, Stop>,
     /// What its evaluation met.
     pub met: Collected,
+    /// Its read set: the inputs, rows, band rows and cells it read.
+    pub reads: Reads,
 }
 
 /// A def cell waiting on the work stack: demanded past the counted depth, it is computed from
@@ -220,6 +246,9 @@ pub struct Engine {
     pub(super) cells: Cells,
     /// The classes of the def cells open now, the innermost last (E §3.2).
     pub(super) frames: Vec<Frame>,
+    /// The read sets open now, the innermost last: each open def cell's, and a shared
+    /// structure's whose reads are its own (E §3.2).
+    pub(super) reads: Vec<Open>,
     /// The cells being computed.
     pub(crate) active: BTreeSet<CellId>,
     /// The collectors, the innermost last; never empty.
@@ -257,9 +286,6 @@ pub struct Engine {
     /// The item whose expression is evaluated now: a projection's holder, whose dependents
     /// it leaves out (L §5.14.1).
     pub(crate) holder: Option<Node>,
-    /// Whether the ask's line states `with uncertain`, which every projection it reaches
-    /// takes (L §5.14.1, §5.18).
-    pub(crate) uncertain: bool,
     /// The observations each cut sees (L §5.19).
     pub(crate) observed: BTreeMap<Day, Vec<Obs>>,
     /// The versions each cut sees that cover each place (L §5.19 Coverage).
@@ -282,6 +308,8 @@ pub struct Engine {
     /// Each booked plan instance's amount A₀ by (instance, booking cut), kept across a run's
     /// asks (E §9 item 5).
     pub(crate) booked: BTreeMap<(String, Day), crate::walk::Booked>,
+    /// Each main walk's signature once it is done, by its place in `walks` (E §9 item 4).
+    pub(crate) signatures: BTreeMap<usize, crate::invariant::Signature>,
     /// What this engine did, in P §1.1's units: the `counters` build only (BUILDER §13.2).
     #[cfg(feature = "counters")]
     pub(crate) counts: crate::Counters,
@@ -295,6 +323,7 @@ impl Engine {
         Engine {
             cells: Cells::new(Memo::Classes),
             frames: Vec::new(),
+            reads: Vec::new(),
             active: BTreeSet::new(),
             stack: vec![Collected::default()],
             depth: 0,
@@ -312,7 +341,6 @@ impl Engine {
             walk_warnings: Vec::new(),
             proj_walks: BTreeMap::new(),
             holder: None,
-            uncertain: false,
             observed: BTreeMap::new(),
             covered: BTreeMap::new(),
             links: BTreeMap::new(),
@@ -323,6 +351,7 @@ impl Engine {
             unsettled: BTreeMap::new(),
             adjust_all_active: BTreeSet::new(),
             booked: BTreeMap::new(),
+            signatures: BTreeMap::new(),
             #[cfg(feature = "counters")]
             counts: crate::Counters::default(),
         }
@@ -364,13 +393,12 @@ impl Engine {
         }
     }
 
-    /// The engine answering `ask`: the holder of the projections its lines write, each `with
-    /// uncertain` when its line states it (L §5.14.1, §5.18).
+    /// The engine answering `ask`: the holder of the projections its lines write (L §5.14.1).
+    /// Its `with uncertain` is in the line's context, not here (L §5.18, [`Ctx::with_uncertain`]).
     #[must_use]
     pub fn for_ask(self, ask: &Ask) -> Engine {
         Engine {
             holder: Some(Node::new(NodeKind::Ask, &ask.id)),
-            uncertain: ask.uncertain,
             ..self
         }
     }

@@ -199,7 +199,7 @@ impl Engine {
                 }
                 continue;
             }
-            let kept = CellKey::new(&id, &keys, ctx.cut, ctx.at);
+            let kept = CellKey::new(&id, &keys, ctx);
             if self.cells.get(&kept, ctx.law).is_none() {
                 return Err(invariant("a task finished with no cell in the memo"));
             }

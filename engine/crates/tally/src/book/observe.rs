@@ -232,7 +232,10 @@ impl Engine {
         }
         self.link_active.insert(key.clone());
         self.push();
+        // what the judging reads is the links', shared by every reader (E §3.2)
+        let mark = self.reads_apart();
         let judged = self.judge_links(m, tid, cut);
+        self.reads_back(mark);
         let coll = self.pop_alone();
         self.link_active.remove(&key);
         let (obs, errs) = judged?;

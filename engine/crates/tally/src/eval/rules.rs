@@ -21,17 +21,34 @@ use crate::read::{Test, candidates, choose, origin, rule_in_force};
 use crate::syntax::{LawDate, RuleValue, Stop};
 use crate::time::Day;
 
-use super::memo::{CellId, CellKey, LawClass, rows_class, rules_class};
+use super::memo::{CellId, CellKey, LawClass, Read, rows_class, rules_class};
 use super::read::{Converted, convert, shown};
 
 impl Engine {
     /// A read of def `def` at keys already made keys (refcore's `read_def`): its law date by
-    /// its `at`, then its cell. L §5.11, §4.3.
+    /// its `at`, then its cell. Its key binds' `where` and its `at` are the def's own, so the
+    /// def holds the projections they write (L §5.14.1: "the item holding the read: in a def";
+    /// "the def that holds it, never … who reads the def"). L §5.11, §4.3.
     ///
     /// # Errors
     ///
     /// The refusals of the def's evaluation.
     pub(super) fn read_def_at(
+        &mut self,
+        m: &Reality,
+        def: &DefInfo,
+        keys: &[KeyVal],
+        ctx: Ctx,
+    ) -> Result<Value, Stop> {
+        let outer = self.holding(Node::new(NodeKind::Def, &def.id));
+        let read = self.read_def_held(m, def, keys, ctx);
+        self.holder = outer;
+        read
+    }
+
+    /// [`Engine::read_def_at`] with the def holding what its `where` and `at` read. L §5.11,
+    /// §5.14.1.
+    fn read_def_held(
         &mut self,
         m: &Reality,
         def: &DefInfo,
@@ -91,12 +108,13 @@ impl Engine {
         env: &Env,
         ctx: Ctx,
     ) -> Result<Value, Stop> {
-        let key = CellKey::new(&def.id, keys, ctx.cut, ctx.at);
+        let key = CellKey::new(&def.id, keys, ctx);
         if let Some((cell, class)) = self.cells.get(&key, ctx.law) {
             let result = cell.result.clone();
             let met = cell.met.clone();
             self.absorb(&met);
             self.narrow(ctx.law, class);
+            self.read(Read::Cell(CellId::new(key, ctx.law)));
             #[cfg(feature = "counters")]
             self.counts.add(crate::Unit::DefHit);
             return result;
@@ -104,6 +122,7 @@ impl Engine {
         let id = CellId::new(key, ctx.law);
         if self.active.contains(&id) {
             self.narrow_open_to_days();
+            self.read(Read::Cell(id.clone()));
             if self.guarded.as_ref().is_some_and(|g| g.contains(&id)) {
                 return Err(Stop::NotBuilt(
                     "a leg's read whose walk needs a cell still being computed (a prefix walk)",
@@ -133,11 +152,13 @@ impl Engine {
             .ok_or_else(|| invariant("the depth count"))?;
         self.push();
         self.open_class(ctx.law);
+        self.open_reads();
         let outer = self.holding(Node::new(NodeKind::Def, &def.id));
         let result = self
             .rules(m, def, keys, env, ctx)
             .and_then(|v| coerce_def(m, def, v));
         self.holder = outer;
+        let reads = self.close_reads();
         let class = self.close_class();
         let met = self.pop_alone();
         self.depth = self
@@ -145,6 +166,7 @@ impl Engine {
             .checked_sub(1)
             .ok_or_else(|| invariant("the depth count"))?;
         let class = class?;
+        let reads = reads?;
         if result == Err(Stop::Deep) {
             self.suspend(id)?;
             #[cfg(feature = "counters")]
@@ -163,9 +185,12 @@ impl Engine {
         let cell = Cell {
             result: result.clone(),
             met,
+            reads,
         };
+        let read = Read::Cell(id.clone());
         let kept = self.cells.keep(id.key, ctx.law, class, cell)?;
         self.narrow(ctx.law, kept);
+        self.read(read);
         result
     }
 
@@ -332,6 +357,10 @@ impl Engine {
             .ok_or_else(|| invariant("the read rule took a given the def lacks"))?;
         let figure = origin(&def.id, keys);
         self.note_version(&row.version);
+        self.read(Read::Row {
+            version: row.version.clone(),
+            sid: row.sid.clone(),
+        });
         let value = match convert(m, &row.value, &def.ty, &def.unit_factor)? {
             Converted::Hole(text) => Value::Hole(Hole::asked(&text, &figure)),
             Converted::Value(v) => v,

@@ -263,4 +263,124 @@ unc: 740.00 DUK
         let want: Vec<&str> = LINES.lines().collect();
         assert_eq!(lines(Days::Every), want, "the oracle's lines");
     }
+
+    /// A sweep decision reading a def's projection, and an uncertain bonus after the sweep's
+    /// day: the line's `with uncertain` reaches the def and the projection the line reads
+    /// itself, never the decision, which books the same sweep under every ask (L §5.14.1,
+    /// §5.18: "the clause is the read's, so no decision sees it").
+    const UNCERTAIN: &str = r#"model wu
+  tally 2
+  on 2025-01-05
+  start 2025-01-01
+  end 2025-03-31
+
+source card "a card"
+
+unit DUK: currency minor 0.01
+
+kind ext: place DUK signed outside
+
+kind promises: transfers uncertain
+
+place out: ext lives 2025-01-01..
+
+place bank: accounts DUK lives 2025-01-01..
+
+place save: accounts DUK lives 2025-01-01..
+
+input bonus_amt: money DUK
+
+input bonus_day: date
+
+input sweep_day: date
+
+input floor: money DUK
+
+input reach: date
+
+move bonus: promises
+  on bonus_day
+  leg cash from out to bank amount bonus_amt
+
+def room: money DUK at sweep_day
+  rule base = bal(bank, reach) from sweep_day
+
+move sweep: transfers
+  on sweep_day
+  reads bank
+  leg cash from bank to save amount max(0, room - floor)
+
+version facts
+  cite card
+  governs always
+  known 2025-01-01
+  bonus_amt = 500.00
+  bonus_day = 2025-02-15
+  sweep_day = 2025-01-20
+  floor = 100.00
+  reach = 2025-03-31
+  opening[bank] = 1000.00 at 2025-01-01 start
+  opening[save] = 0.00 at 2025-01-01 start
+
+ask room_plain: room
+
+ask room_unc: room with uncertain
+
+ask swept: flows(sweep, 2025-01-01 .. 2025-03-31)
+
+ask swept_unc: flows(sweep, 2025-01-01 .. 2025-03-31) with uncertain
+
+ask saved: bal(save, 2025-03-31) law 2025-03-31
+
+ask saved_unc: bal(save, 2025-03-31) law 2025-03-31 with uncertain
+
+ask bank_unc: bal(bank, 2025-03-31) from 2025-01-20 law 2025-03-31 with uncertain
+"#;
+
+    /// refcore's lines for [`UNCERTAIN`], every ask, in id order.
+    const UNCERTAIN_LINES: &str = r"bank_unc: 600.00 DUK
+  left out: sweep, 1 instances, first 2025-01-20
+  uncertain: bonus
+  law date 2025-03-31, cut 2025-01-05
+room_plain: 1 000.00 DUK
+  left out: sweep, 1 instances, first 2025-01-20
+  cut 2025-01-05
+room_unc: 1 500.00 DUK
+  left out: sweep, 1 instances, first 2025-01-20
+  uncertain: bonus
+  cut 2025-01-05
+saved: 900.00 DUK
+  left out: sweep, 1 instances, first 2025-01-20
+  law date 2025-03-31, cut 2025-01-05
+saved_unc: 900.00 DUK
+  left out: sweep, 1 instances, first 2025-01-20
+  law date 2025-03-31, cut 2025-01-05
+swept: 900.00 DUK
+  left out: sweep, 1 instances, first 2025-01-20
+  cut 2025-01-05
+swept_unc: 900.00 DUK
+  left out: sweep, 1 instances, first 2025-01-20
+  cut 2025-01-05";
+
+    /// The lines a run of `text` prints, the walk stepping `days`.
+    fn lines_of(text: &str, days: Days) -> Vec<String> {
+        let given = vec![Given {
+            path: "u.tally".to_owned(),
+            bytes: Some(text.as_bytes().to_vec()),
+        }];
+        let request = Request {
+            asks: Asks::Every,
+            pin: Pin::Canonical,
+            days,
+        };
+        let answer = run(given, &request).expect("an answer");
+        answer.lines().to_vec()
+    }
+
+    #[test]
+    fn no_decision_sees_the_lines_with_uncertain() {
+        let want: Vec<&str> = UNCERTAIN_LINES.lines().collect();
+        assert_eq!(lines_of(UNCERTAIN, Days::Events), want, "refcore's lines");
+        assert_eq!(lines_of(UNCERTAIN, Days::Every), want, "the oracle's lines");
+    }
 }

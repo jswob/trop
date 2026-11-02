@@ -7,7 +7,7 @@
 //! Invariants: a label's versions are scanned in the order versions state them; two
 //! `replace` versions known the same day both in force are refused, never broken by order.
 
-use super::rows::{no_law_date, version_known, version_span};
+use super::rows::{invariant, no_law_date, version_known, version_span};
 use crate::base::{Code, Load, Refusal};
 use crate::model::{Reality, RuleVer, Span};
 use crate::syntax::Stop;
@@ -101,7 +101,7 @@ pub fn rule_in_force(
             .map(|(at, _)| *at)
             .collect();
         if let [_, _, ..] = same.as_slice() {
-            return Err(overlap(def, label, versions, &same));
+            return Err(overlap(def, label, versions, &same)?);
         }
         return Ok(same.first().copied());
     }
@@ -117,13 +117,18 @@ pub fn rule_in_force(
 
 /// `LOAD-OVERLAP` for `replace` versions of one rule known the same day, their versions
 /// named in text order (L §4.6 steps 2 and 4).
-fn overlap(def: &str, label: &str, versions: &[RuleVer], same: &[usize]) -> Stop {
+///
+/// # Errors
+///
+/// `ENGINE-INVARIANT` for a position `versions` lacks, or a `replace rule` with no version:
+/// load puts every `replace rule` item in the version that holds it (L §5.11 step 2).
+fn overlap(def: &str, label: &str, versions: &[RuleVer], same: &[usize]) -> Result<Stop, Stop> {
     let mut ids: Vec<String> = Vec::new();
     for &at in same {
         let id = versions
             .get(at)
             .and_then(|rule| rule.version.clone())
-            .unwrap_or_else(|| "?".to_owned());
+            .ok_or_else(|| invariant("a replace rule with no version"))?;
         ids.push(id);
     }
     ids.sort();
@@ -131,5 +136,8 @@ fn overlap(def: &str, label: &str, versions: &[RuleVer], same: &[usize]) -> Stop
         "rules {def}.{label} of {} overlap, neither replacing the other",
         ids.join(" and ")
     );
-    Stop::Refused(Refusal::new(Code::Load(Load::Overlap), message))
+    Ok(Stop::Refused(Refusal::new(
+        Code::Load(Load::Overlap),
+        message,
+    )))
 }

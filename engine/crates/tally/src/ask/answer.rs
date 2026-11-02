@@ -109,7 +109,8 @@ fn load_at_run() -> Stop {
 }
 
 /// One ask's lines: its cut by `as known`, its law date by `law`, then one line per binding
-/// tuple with the register under it (refcore's `_answer`, `_answer_in`). L §5.18.
+/// tuple with the register under it; once answered, the timelines its engines walked are
+/// checked unchanged (refcore's `_answer`, `_answer_in`). L §5.18, E §9 item 4.
 fn ask_lines(m: &Reality, ask: &Ask, days: Days, seen: &mut Seen) -> Result<Vec<String>, Stop> {
     if ask.windows_each {
         return Err(Stop::NotBuilt("an ask's `windows each`"));
@@ -118,6 +119,7 @@ fn ask_lines(m: &Reality, ask: &Ask, days: Days, seen: &mut Seen) -> Result<Vec<
         return Err(Stop::NotBuilt("a partial answer"));
     }
     let mut cut = m.on;
+    let mut known_engine = None;
     if let Some(known) = &ask.known {
         let mut engine = Engine::new(m.on)
             .with_days(days)
@@ -131,6 +133,7 @@ fn ask_lines(m: &Reality, ask: &Ask, days: Days, seen: &mut Seen) -> Result<Vec<
             return Ok(vec![format!("{}: {}", ask.id, shown(m, &v)?)]);
         }
         cut = date_of(&v, "as known")?;
+        known_engine = Some(engine);
     }
     let mut engine = Engine::new(cut)
         .with_days(days)
@@ -139,7 +142,13 @@ fn ask_lines(m: &Reality, ask: &Ask, days: Days, seen: &mut Seen) -> Result<Vec<
         .with_booked(core::mem::take(&mut seen.booked));
     let out = ask_body(m, ask, &mut engine, cut);
     gather(seen, &mut engine);
-    out
+    let lines = out?;
+    // E §9 item 4: asks move no money; the walks the ask made are as they were when walked
+    if let Some(first) = &known_engine {
+        first.asks_moved_no_money()?;
+    }
+    engine.asks_moved_no_money()?;
+    Ok(lines)
 }
 
 /// The walk warnings an ask's engine met, each once, in the order met (refcore's
@@ -179,7 +188,13 @@ fn ask_body(m: &Reality, ask: &Ask, engine: &mut Engine, cut: Day) -> Result<Vec
             figure: String::new(),
         });
     }
-    let ctx = Ctx::new(law, cut);
+    // the line's own reads take its `with uncertain`; `as known` and `law` don't (L §5.18)
+    let plain = Ctx::new(law, cut);
+    let ctx = if ask.uncertain {
+        plain.with_uncertain()
+    } else {
+        plain
+    };
     match &ask.body {
         AskBody::Exprs(exprs) => expr_lines(m, ask, exprs, engine, (ctx, &pinned)),
         AskBody::Residuals(r) => residual_lines(m, ask, r, engine, (ctx, &pinned)),

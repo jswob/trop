@@ -478,6 +478,23 @@ impl Engine {
         mv: &MoveInfo,
         cut: Day,
     ) -> Result<Vec<Inst>, Stop> {
+        let outer = self.holding(Node::new(NodeKind::Move, &mv.id));
+        let mark = self.reads_apart();
+        let made = self.make_instances_held(m, mv, cut);
+        self.reads_back(mark);
+        self.holder = outer;
+        made
+    }
+
+    /// [`Engine::make_instances`] with the move holding the projections its `at`, its
+    /// bindings' `where` and its body read, which are the move's own (L §5.14.1: "the item
+    /// holding the read"); what it reads is the plan's, shared by every reader (E §3.2, §4.1).
+    fn make_instances_held(
+        &mut self,
+        m: &Reality,
+        mv: &MoveInfo,
+        cut: Day,
+    ) -> Result<Vec<Inst>, Stop> {
         let tctx = Ctx::new(None, cut);
         let mut out = Vec::new();
         for tuple in self.move_tuples(m, mv, tctx)? {

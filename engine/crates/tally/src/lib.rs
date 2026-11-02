@@ -10,14 +10,15 @@
 //! days, [`time`]; the lexer and the parser, [`syntax`]; load, [`load`], into the model,
 //! [`model`]; the read rule, [`read`]; the evaluator and the memo, [`eval`]; holes, [`hole`];
 //! the walk, its checkpoints and the written projection, [`walk`]; observations, readings,
-//! adjustments and the residual ledger, [`book`]; the asks, [`ask`]. `engine/ARCHITECTURE.md`
-//! is the map.
+//! adjustments and the residual ledger, [`book`]; the asks, [`ask`]; E §9 invariant 4, asks
+//! move no money, `invariant.rs`. `engine/ARCHITECTURE.md` is the map.
 
 #![forbid(unsafe_code)]
 
 mod api;
 #[cfg(feature = "counters")]
 mod counters;
+mod invariant;
 mod oracle;
 
 pub use api::{Answer, Asks, Given, Pin, Request, Source, run, run_with_memo};
