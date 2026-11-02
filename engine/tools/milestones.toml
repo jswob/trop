@@ -11,9 +11,11 @@
 # tags it ("marker at the tag", the user's choice at T1's gate G-T, 2026-10-31): within a
 # milestone the builder's pull requests land while its tests are partly red, and once it
 # is tagged they never go red again. `gating` is always the first milestones in build
-# order.
+# order. S is the exception (issue #26, 2026-11-02, "S in gating, last commit"): it joins
+# `gating` in the last commit of build/s, so it gates from its merge and S's mutants run
+# counts its tests.
 
 # BUILD-ORDER's milestones, in build order (as engine/tests/map/placement.py's ORDER)
 milestones = ["S", "M0", "M1", "M2", "M3", "M4", "M5a", "M5b", "M5c", "M6", "M7", "M8", "M9"]
-# the milestones whose tests gate: none until S is tagged
-gating = []
+# the milestones whose tests gate
+gating = ["S"]
