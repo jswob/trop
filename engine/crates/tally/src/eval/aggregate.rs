@@ -17,7 +17,7 @@ use std::collections::BTreeSet;
 
 use super::arith::{Op, Test, arith, compare, int_of};
 use super::expr::hole_of;
-use super::state::{Ctx, Engine, Env, invariant, refuse, refuse_load, wrong_type};
+use super::state::{Collected, Ctx, Engine, Env, invariant, refuse, refuse_load, wrong_type};
 use super::ty::zero_of;
 use crate::base::{Load, Run};
 use crate::hole::{Hole, spread};
@@ -40,6 +40,10 @@ pub struct Member {
     /// None for a member; the hole of a `where` (or a membership) that is one.
     pub unknown: Option<Hole>,
 }
+
+/// One binding's members, each with what deciding it read; or the hole of a domain that is
+/// one, with what reading it read (refcore's `move_tuples`, its `cd` and `cw`). E §4.1 step 1.
+pub(crate) type Decided = Result<Vec<(Member, Collected)>, (Hole, Collected)>;
 
 /// One binding's values, each with its own unknown-member hole, or the hole of a domain that
 /// is unknown.
@@ -91,7 +95,7 @@ struct Frame {
     /// The next value's position.
     next: usize,
     /// What each value brings to a reader that keeps it: a movement's register.
-    colls: Vec<crate::eval::Collected>,
+    colls: Vec<Collected>,
 }
 
 impl Engine {
@@ -297,6 +301,54 @@ impl Engine {
             }
         }
         Ok(domain_hole.map_or(Ok(out), Err))
+    }
+
+    /// One binding's members, each with what deciding it read, kept apart from the reader:
+    /// the domain's reads, the member's own register and its `where`'s reads; or the hole of
+    /// a domain that is one, with what reading it read (refcore's `move_tuples`, its `cd` and
+    /// `cw`). L §5.11, E §4.1 step 1.
+    ///
+    /// # Errors
+    ///
+    /// The refusals the domain and the `where`s meet.
+    pub(crate) fn binding_members(
+        &mut self,
+        m: &Reality,
+        bind: &Bind,
+        env: &Env,
+        ctx: Ctx,
+    ) -> Result<Decided, Stop> {
+        self.push();
+        let values = self.bind_values(m, bind, env, ctx);
+        let domain = self.pop_alone();
+        let (values, brings) = match values? {
+            Values::Unknown(h) => return Ok(Err((h, domain))),
+            Values::Known(values) => (values, Vec::new()),
+            Values::Moves(moves) => {
+                let frame = moves_frame(0, env.clone(), None, moves);
+                (frame.values, frame.colls)
+            }
+        };
+        let mut out = Vec::with_capacity(values.len());
+        for (i, (value, own)) in values.into_iter().enumerate() {
+            let mut read = domain.clone();
+            if let Some(c) = brings.get(i) {
+                read.merge(c);
+            }
+            self.push();
+            let taken = self.take_value(m, bind, env, value, own, ctx);
+            read.merge(&self.pop_alone());
+            if let Some((inner, unknown)) = taken? {
+                out.push((
+                    Member {
+                        env: inner,
+                        unknown,
+                    },
+                    read,
+                ));
+            }
+        }
+        Ok(Ok(out))
     }
 
     /// A value of binding `bind` bound, its `where` tested: none when the `where` is false

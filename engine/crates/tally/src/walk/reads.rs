@@ -84,7 +84,7 @@ impl Engine {
     }
 
     /// A read's place: a place, or the hole it is (refcore's `place_arg`). L §5.10.
-    fn place_arg(
+    pub(crate) fn place_arg(
         &mut self,
         m: &Reality,
         e: &Expr,

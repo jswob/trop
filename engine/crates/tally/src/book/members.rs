@@ -708,7 +708,7 @@ fn inst_ref(i: &Inst) -> MvRef {
 }
 
 /// An observation's row key, its id without the input's name and brackets. L §5.19.
-fn row_key(o: &Obs) -> &str {
+pub(super) fn row_key(o: &Obs) -> &str {
     o.id.strip_prefix(o.input.as_str())
         .and_then(|r| r.strip_prefix('['))
         .and_then(|r| r.strip_suffix(']'))

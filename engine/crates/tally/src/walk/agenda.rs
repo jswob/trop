@@ -295,10 +295,11 @@ fn ranked3(mut decisions: Vec<(String, u32, Vec<Inst>)>) -> Vec<(String, u32, Ve
 /// put on the walk). E §4.2 step 0, L §5.19.
 fn schedule_readings(walk: &mut Walk, readings: &[Seen]) -> Result<(), Stop> {
     let (start, end, cut) = (walk.start, walk.end, walk.cut);
-    for (rank, (day, edge, place, reading)) in readings.iter().enumerate() {
-        let first = walk.first_reading.entry(place.clone()).or_insert(*day);
+    for (rank, seen) in readings.iter().enumerate() {
+        let (day, edge) = (&seen.day, &seen.edge);
+        let first = walk.first_reading.entry(seen.place.clone()).or_insert(*day);
         *first = (*first).min(*day);
-        let Some(reading) = reading else {
+        let Some(reading) = &seen.reading else {
             continue;
         };
         let rank = u32::try_from(rank).map_err(|_| super::plan::invariant("a reading's rank"))?;
@@ -313,15 +314,27 @@ fn schedule_readings(walk: &mut Walk, readings: &[Seen]) -> Result<(), Stop> {
         if !(opening && *day == start && at_start) && *day >= cut {
             continue;
         }
-        let step = if at_start { Step::Start } else { Step::End };
-        let at = At {
-            stratum: 1,
-            rank,
-            ..At::of(*day, step)
-        };
-        walk.at(at, Act::Read(Box::new(reading.clone())));
+        walk.at(
+            reading_point(*day, *edge, rank),
+            Act::Read(Box::new(reading.clone())),
+        );
     }
     Ok(())
+}
+
+/// The point of a reading at the start or the end of `day`, `rank` its place among the
+/// readings the cut sees (refcore's walk key of a reading). E §4.2 steps 0 and 4.
+#[must_use]
+pub fn reading_point(day: Day, edge: Edge, rank: u32) -> At {
+    let step = match edge {
+        Edge::Start => Step::Start,
+        Edge::End => Step::End,
+    };
+    At {
+        stratum: 1,
+        rank,
+        ..At::of(day, step)
+    }
 }
 
 /// Puts each observed leg dated before the cut on its day, in the day's first batch, ordered

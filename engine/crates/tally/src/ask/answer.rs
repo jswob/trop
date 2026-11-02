@@ -10,10 +10,11 @@
 //! `NotBuilt`, never a guessed line.
 
 use super::register::{register_lines, warning_lines};
+use super::residuals::residual_lines;
 use crate::base::{Code, Load, Refusal, Run, Warn};
 use crate::eval::{Collected, Ctx, Engine, Entry, Env, Item, Member, num_stop};
 use crate::model::{Reality, Value};
-use crate::syntax::{Ask, AskBody, Bind, Domain, Stop};
+use crate::syntax::{Ask, AskBody, Bind, Domain, Expr, Stop};
 use crate::time::{Day, PeriodKind};
 use crate::{Asks, Days};
 
@@ -86,9 +87,6 @@ fn ask_lines(
     if ask.partial {
         return Err(Stop::NotBuilt("a partial answer"));
     }
-    if !matches!(ask.body, AskBody::Exprs(_)) {
-        return Err(Stop::NotBuilt("residuals (the ledger)"));
-    }
     let mut cut = m.on;
     if let Some(known) = &ask.known {
         let mut engine = Engine::new(m.on).with_days(days).for_ask(ask);
@@ -117,11 +115,9 @@ fn gather(warnings: &mut Vec<(Warn, String)>, engine: &Engine) {
 }
 
 /// One ask's lines from its cut on: its law date, then a line per binding tuple with the
-/// register under it (refcore's `_answer`, `_answer_in`). L §5.18.
+/// register under it, or the residual ledger (refcore's `_answer`, `_answer_in`). L §5.18,
+/// E §6.3.
 fn ask_body(m: &Reality, ask: &Ask, engine: &mut Engine, cut: Day) -> Result<Vec<String>, Stop> {
-    let AskBody::Exprs(exprs) = &ask.body else {
-        return Err(Stop::NotBuilt("residuals (the ledger)"));
-    };
     let mut law = None;
     if let Some(e) = &ask.law {
         let v = engine.value(m, e, &Env::empty(), Ctx::new(None, cut))?;
@@ -142,6 +138,21 @@ fn ask_body(m: &Reality, ask: &Ask, engine: &mut Engine, cut: Day) -> Result<Vec
         });
     }
     let ctx = Ctx::new(law, cut);
+    match &ask.body {
+        AskBody::Exprs(exprs) => expr_lines(m, ask, exprs, engine, (ctx, &pinned)),
+        AskBody::Residuals(r) => residual_lines(m, ask, r, engine, (ctx, &pinned)),
+    }
+}
+
+/// An ask's lines of values: a line per binding tuple with the register under it (refcore's
+/// `_answer_in`). L §5.18.
+fn expr_lines(
+    m: &Reality,
+    ask: &Ask,
+    exprs: &[Expr],
+    engine: &mut Engine,
+    (ctx, pinned): (Ctx, &Collected),
+) -> Result<Vec<String>, Stop> {
     let tuples = if ask.binds.is_empty() {
         vec![Member {
             env: Env::empty(),
@@ -162,7 +173,7 @@ fn ask_body(m: &Reality, ask: &Ask, engine: &mut Engine, cut: Day) -> Result<Vec
         }
         let (items, mut met) = engine.line(m, exprs, &tuple.env, ctx)?;
         out.push(format!("{head}: {}", line_values(m, &items)?));
-        met.merge(&pinned);
+        met.merge(pinned);
         out.extend(
             register_lines(&met, ctx)?
                 .into_iter()

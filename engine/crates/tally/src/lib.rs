@@ -142,11 +142,12 @@ pub mod walk {
     mod reads;
     mod state;
 
-    pub use agenda::{Act, Mv, Reading, endings, qty_of};
+    pub use agenda::{Act, Mv, Reading, endings, qty_of, reading_point};
     pub use day::{Broke, Ends};
     pub use order::{Run, WalkAt};
     pub use plan::{
-        Amount, Dated, End, Exists, Inst, LegVal, Order, Seed, Status, kind_certainty, qty_value,
+        Amount, Dated, End, Exists, Inst, LegVal, Order, Seed, Status, day_repr, kind_certainty,
+        qty_value,
     };
     pub(crate) use plan::{invariant, quantity, quoted};
     pub use point::{At, Step};
@@ -156,21 +157,23 @@ pub mod walk {
     };
 }
 
-/// The book (E §5, §6.1): observations the cut sees, the places versions cover and the links
-/// to the instances observations fulfil; a booked instance measured again at each later
-/// version's cut, its adjustments and their settlements. The kernel's (gate 8); the module's
-/// code is its files under `book/`.
+/// The book (E §5, §6.1, §6.3): observations the cut sees, the places versions cover and the
+/// links to the instances observations fulfil; a booked instance measured again at each later
+/// version's cut, its adjustments and their settlements; the residual ledger. The kernel's
+/// (gate 8); the module's code is its files under `book/`.
 pub mod book {
     mod adjust;
+    mod ledger;
     mod members;
     mod observe;
     mod reading;
     mod settle;
 
     pub use adjust::{Adjustment, Settled};
+    pub use ledger::{Fig, Group, GroupKey, Ledger, Line, fig_text};
     pub(crate) use members::{MvDom, MvMember};
     pub use observe::{Coverage, Linked, Obs, inst_id};
-    pub use reading::{Gap, Pad, Seen, first_readings, readings};
+    pub use reading::{Gap, Pad, Seen, first_readings, reading_rank, readings};
     pub(crate) use settle::settlement_move;
 }
 
@@ -179,6 +182,7 @@ pub mod book {
 pub mod ask {
     mod answer;
     mod register;
+    mod residuals;
 
     pub use answer::answer;
     pub(crate) use answer::date_of;

@@ -24,9 +24,21 @@ use crate::walk::{
     Amount, At, Change, Dated, End, Ends, Ent, LegVal, Reading, St, invariant, qty_value,
 };
 
-/// A reading the cut sees: its day, its edge, its place, and what it states (none for a row
-/// whose value is `none`).
-pub type Seen = (Day, Edge, String, Option<Reading>);
+/// A reading the cut sees: its day, its edge, its place, its input, and what it states (none
+/// for a row whose value is `none`).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Seen {
+    /// Its day.
+    pub day: Day,
+    /// Its edge: the day's start or end.
+    pub edge: Edge,
+    /// The place.
+    pub place: String,
+    /// The input: `opening` or `stated`.
+    pub input: String,
+    /// What it states; none for a row whose value is `none`.
+    pub reading: Option<Reading>,
+}
 
 /// A pad: a movement of `pads` that takes up a statement's gap (refcore's `PadMv`). E §6.1.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -103,9 +115,45 @@ pub fn readings(m: &Reality, cut: Day) -> Result<Vec<Seen>, Stop> {
     let mut out = Vec::with_capacity(keep.len());
     for ((place, instant, input), (_, day, edge, row)) in keep {
         let reading = reading_of(m, &input, &place, &instant, &row)?;
-        out.push((day, edge, place, reading));
+        out.push(Seen {
+            day,
+            edge,
+            place,
+            input,
+            reading,
+        });
     }
     Ok(out)
+}
+
+/// A reading's place among the readings `walked` a walk's cut sees, as the walk ranks them on
+/// their day: how many come before it by place, instant and input (refcore's walk key, its
+/// text). The reading needn't be one of them: one only a later cut sees takes the place it
+/// would have. E §4.2 step 0, §6.3.
+///
+/// # Errors
+///
+/// `ENGINE-INVARIANT` past four billion readings.
+pub fn reading_rank(walked: &[Seen], seen: &Seen) -> Result<u32, Stop> {
+    let key = (
+        seen.place.as_str(),
+        instant_text(seen.day, seen.edge),
+        seen.input.as_str(),
+    );
+    let mut before: u32 = 0;
+    for other in walked {
+        let theirs = (
+            other.place.as_str(),
+            instant_text(other.day, other.edge),
+            other.input.as_str(),
+        );
+        if theirs < key {
+            before = before
+                .checked_add(1)
+                .ok_or_else(|| invariant("a reading's rank"))?;
+        }
+    }
+    Ok(before)
 }
 
 /// Each place's first reading day among the readings cut `cut` sees, for `HOLE-ANCHOR`
@@ -116,9 +164,9 @@ pub fn readings(m: &Reality, cut: Day) -> Result<Vec<Seen>, Stop> {
 /// As [`readings`].
 pub fn first_readings(m: &Reality, cut: Day) -> Result<BTreeMap<String, Day>, Stop> {
     let mut out: BTreeMap<String, Day> = BTreeMap::new();
-    for (day, _, place, _) in readings(m, cut)? {
-        let first = out.entry(place).or_insert(day);
-        *first = (*first).min(day);
+    for seen in readings(m, cut)? {
+        let first = out.entry(seen.place).or_insert(seen.day);
+        *first = (*first).min(seen.day);
     }
     Ok(out)
 }
@@ -360,7 +408,7 @@ fn make_pad(r: &Reading, other: &str, gap: &Amount, coll: Collected, at: At) -> 
 /// A state's value as an amount: the refusal it holds, a hole with every question it rests
 /// on (`HOLE-ANCHOR` before the place's first reading), or the balance (refcore's
 /// `st_value`). L §5.10, §8.1.
-fn booked_amount(st: &St, anchor: &Hole) -> Amount {
+pub(super) fn booked_amount(st: &St, anchor: &Hole) -> Amount {
     if let Some(r) = &st.bad {
         return Amount::Refused(r.clone());
     }

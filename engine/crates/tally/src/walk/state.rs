@@ -461,6 +461,30 @@ impl Walk {
         fold(st, any, all)
     }
 
+    /// A place's state just before point `at`: every entry before it, none at it, with what
+    /// holds for all its units and for the whole walk (refcore's `pstate` at the key less
+    /// one, raw), the booked balance a reading at `at` is compared with. E §6.1, §6.3.
+    #[must_use]
+    pub fn pstate_before(&self, m: &Reality, place: &str, unit: &str, at: At) -> St {
+        let st = self.state_before(m, place, unit, at);
+        let any = self.state_before(m, place, ALL, at);
+        let all = self.state_before(m, ALL, ALL, at);
+        fold(st, any, all)
+    }
+
+    /// A place's state in one unit just before point `at` (refcore's `state` at the key less
+    /// one). E §6.3.
+    fn state_before(&self, m: &Reality, place: &str, unit: &str, at: At) -> St {
+        let Some(log) = self.logs.get(&(place.to_owned(), unit.to_owned())) else {
+            return self.default_state(m, place, unit);
+        };
+        let n = log.ents.partition_point(|e| e.at < at);
+        match n.checked_sub(1).and_then(|i| log.ents.get(i)) {
+            Some(e) => e.st.clone(),
+            None => self.default_state(m, place, unit),
+        }
+    }
+
     /// The register of a place's log through entry `i`: every entry's since the last reset,
     /// the movement's evaluation and the entry's own (refcore's `cum`). L §8.2.
     pub fn cum(&mut self, place: &str, unit: &str, i: usize) -> Collected {

@@ -13,10 +13,11 @@ use super::aggregate::Member;
 use super::rules::{cell_key, key_env};
 use super::state::{Collected, Ctx, Engine, Env, invariant};
 use crate::base::{Code, Refusal};
+use crate::book::Ledger;
 use crate::hole::Hole;
 use crate::model::{DefInfo, KeyVal, Reality, Value};
 use crate::read::origin;
-use crate::syntax::{Bind, Expr, Stop};
+use crate::syntax::{Bind, Expr, Residuals, Stop};
 
 /// One value of an ask's line: a value, or the run-time refusal it met, which the line prints
 /// in its place (refcore's `one`). L §5.18.
@@ -94,6 +95,23 @@ impl Engine {
         let mark = self.mark();
         loop {
             match self.members(m, binds, &Env::empty(), ctx) {
+                Err(Stop::Deep) if mark.outermost => self.replay(m, &mark)?,
+                result => return result,
+            }
+        }
+    }
+
+    /// A `residuals` ask's ledger, read from outside the evaluator: as [`Engine::value`], for
+    /// its place, its span and the ledger's lines (refcore's `answer_residuals`, its reads).
+    /// E §6.3, §3.2.
+    ///
+    /// # Errors
+    ///
+    /// The refusals reading them meets; `NotBuilt` past what S builds.
+    pub fn residuals(&mut self, m: &Reality, r: &Residuals, ctx: Ctx) -> Result<Ledger, Stop> {
+        let mark = self.mark();
+        loop {
+            match self.ledger_of(m, r, ctx) {
                 Err(Stop::Deep) if mark.outermost => self.replay(m, &mark)?,
                 result => return result,
             }

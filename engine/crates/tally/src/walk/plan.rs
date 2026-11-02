@@ -177,6 +177,15 @@ impl Order {
         format!("{}, {}, {keys})", self.stratum, quoted(&self.move_id))
     }
 
+    /// The order as refcore's `str(order)` writes the whole tuple: its day, the last day of
+    /// the calendar for a hole day, then `member_text`'s part. E §4.1, §6.3 (the ledger's
+    /// remaining ties go by the movement order).
+    #[must_use]
+    pub fn repr(&self) -> String {
+        let day = self.day.map_or_else(day_max_repr, day_repr);
+        format!("({day}, {}", self.member_text())
+    }
+
     /// The movement's text among a day's plans, `<move>|<keys>`, the keys' places written as
     /// a tuple (refcore's `osort`, the walk key's text). E §4.1, §4.2.
     #[must_use]
@@ -193,6 +202,23 @@ impl Order {
         };
         format!("{}|{tuple}", self.move_id)
     }
+}
+
+/// A day as refcore's tuples write it, `datetime.date(2026, 9, 1)` (Python's `repr`). E §4.1.
+#[must_use]
+pub fn day_repr(day: Day) -> String {
+    format!(
+        "datetime.date({}, {}, {})",
+        day.year(),
+        day.month(),
+        day.day()
+    )
+}
+
+/// The last day of the calendar as refcore's tuples write it, where a hole day sorts
+/// (Python's `date.max`). E §4.1.
+fn day_max_repr() -> String {
+    "datetime.date(9999, 12, 31)".to_owned()
 }
 
 /// A text quoted as the walk key's tuple writes it: in single quotes, double ones when it
@@ -316,7 +342,8 @@ pub struct Seed {
 }
 
 /// A binding tuple of a move: its scope, keys, and the hole of a `where` that is one, or of a
-/// domain or law date that is one (refcore's `move_tuples` statuses).
+/// domain or law date that is one, and what deciding it read (refcore's `move_tuples`
+/// statuses and colls).
 struct Tuple {
     /// The scope.
     env: Env,
@@ -326,6 +353,9 @@ struct Tuple {
     exists: Exists,
     /// The hole of a domain or of a law date: the instance's day and existence are that hole.
     domain_hole: Option<Hole>,
+    /// What deciding it read: its law dates, domains, members and `where`s, which go with its
+    /// instance, not to the reader of the move's instances.
+    coll: Collected,
 }
 
 /// What an instance's body gives: whether it exists, its legs, attributes and period.
@@ -438,6 +468,7 @@ impl Engine {
                 let mut inst = Inst::new(mv, tuple.keys, tuple.env);
                 inst.day = Some(Dated::Hole(hole.clone()));
                 inst.exists = Exists::Unknown(hole);
+                inst.coll = tuple.coll;
                 out.push(inst);
                 continue;
             }
@@ -447,7 +478,8 @@ impl Engine {
                 exists: tuple.exists,
                 at_cut: None,
             };
-            if let Some(inst) = self.eval_inst(m, mv, &seed, tctx)? {
+            if let Some(mut inst) = self.eval_inst(m, mv, &seed, tctx)? {
+                inst.coll.merge(&tuple.coll);
                 out.push(inst);
             }
         }
@@ -459,8 +491,8 @@ impl Engine {
     }
 
     /// A move's binding tuples at the cut, depth first in binding order, each binding read at
-    /// the move's law date with the keys bound before it (refcore's `move_tuples`). E §4.1
-    /// step 1, L §5.14.
+    /// the move's law date with the keys bound before it, each tuple with what deciding it
+    /// read, kept from the reader (refcore's `move_tuples`). E §4.1 step 1, L §5.14.
     fn move_tuples(&mut self, m: &Reality, mv: &MoveInfo, ctx: Ctx) -> Result<Vec<Tuple>, Stop> {
         let mut out = Vec::new();
         let mut work = vec![Tuple {
@@ -468,16 +500,22 @@ impl Engine {
             keys: Vec::new(),
             exists: Exists::Yes,
             domain_hole: None,
+            coll: Collected::default(),
         }];
         while let Some(tuple) = work.pop() {
             let Some(bind) = mv.binds.get(tuple.keys.len()) else {
                 out.push(tuple);
                 continue;
             };
-            let law = match self.move_law(m, mv, &tuple.env, ctx)? {
+            self.push();
+            let law = self.move_law(m, mv, &tuple.env, ctx);
+            let mut decided = tuple.coll.clone();
+            decided.merge(&self.pop_alone());
+            let law = match law? {
                 Law::Hole(h) => {
                     out.push(Tuple {
                         domain_hole: Some(h),
+                        coll: decided,
                         ..tuple
                     });
                     continue;
@@ -485,15 +523,12 @@ impl Engine {
                 Law::Day(d) => Some(d),
                 Law::None => None,
             };
-            let members = match self.members(
-                m,
-                core::slice::from_ref(&bind.node),
-                &tuple.env,
-                ctx.at_law(law),
-            )? {
-                Err(h) => {
+            let members = match self.binding_members(m, &bind.node, &tuple.env, ctx.at_law(law))? {
+                Err((h, read)) => {
+                    decided.merge(&read);
                     out.push(Tuple {
                         domain_hole: Some(h),
+                        coll: decided,
                         ..tuple
                     });
                     continue;
@@ -501,8 +536,11 @@ impl Engine {
                 Ok(members) => members,
             };
             let mut next = Vec::with_capacity(members.len());
-            for member in members {
-                next.push(extend(m, mv, &tuple, &bind.var, &bind.domain, member)?);
+            for (member, read) in members {
+                let mut extended = extend(m, mv, &tuple, &bind.var, &bind.domain, member)?;
+                extended.coll = decided.clone();
+                extended.coll.merge(&read);
+                next.push(extended);
             }
             work.extend(next.into_iter().rev());
         }
@@ -1020,6 +1058,7 @@ fn extend(
         keys,
         exists,
         domain_hole: None,
+        coll: tuple.coll.clone(),
     })
 }
 
