@@ -5,16 +5,28 @@
                                counter, and the two cheap rule checks (check-frozen,
                                check-rules)
     engine/tools/check full    everything CI runs on a pull request (C §6)
+    engine/tools/check full --fresh   the same; the walls' self-tests always run (nightly, on demand)
     engine/tools/check list    the steps of each
     engine/tools/check step S  one step of `full` alone (rules-selftest runs probes this way)
+    engine/tools/check walls-key   the hash of the walls' self-tests' inputs (CI's cache key)
 
 It runs from engine/ with a clean environment: nothing from the caller's shell changes
 the flags, the compiler, the profiles or the test seeds. It prints one line per failed
 step and keeps each step's full output in target/check-logs/<step>.log. A report step
 prints its one line and never fails: `milestone-report`, the next milestone's tests
 (tools/milestones.py).
+
+The walls' self-tests, `guard-test` and `rules-selftest` (R-77, R-78, issue #6), are
+skipped when every input they read is byte for byte as in a run of theirs that passed:
+the hash of their inputs (walls_inputs) is kept in target/walls-green/<step> when they
+pass, and in CI in a cache entry keyed on it. A skip prints one line with the hash. What
+they read of the engine's own code, beyond the files their cases plant into, is what
+check full's own steps check in the same run (fmt, clippy, ast-grep, check-rules,
+check-frozen, exceptions, deny, the probes); a fresh run (nightly, on demand) runs them
+whatever the hash says.
 """
 
+import hashlib
 import os
 import re
 import shutil
@@ -26,8 +38,11 @@ TOOLS = os.path.dirname(os.path.realpath(__file__))
 ENGINE = os.path.dirname(TOOLS)
 sys.path.insert(0, TOOLS)
 import milestones  # noqa: E402  the marker: which milestones' tests gate (issue #14)
+import check_frozen  # noqa: E402  the rule files, the set the guard protects (R-80)
 
 LOGS = os.path.join(ENGINE, "target", "check-logs")
+WALLS_GREEN = os.path.join(ENGINE, "target", "walls-green")
+FRESH = False  # `--fresh`: the walls' self-tests run whatever their inputs' hash says
 NIGHTLY = "nightly-2026-10-21"
 FUZZ_SECONDS = 60
 
@@ -132,8 +147,8 @@ def steps(mode):
                         "--config", "deny-tally.toml", "check", "bans"], {}),
         ("tree-probe", tree_probe, {}),
         ("ast-grep-test", ["ast-grep", "test", "--skip-snapshot-tests"], {}),
-        ("guard-test", tool("guard-test"), {}),
-        ("rules-selftest", tool("rules-selftest/run"), {}),
+        ("guard-test", walls("guard-test", tool("guard-test")), {}),
+        ("rules-selftest", walls("rules-selftest", tool("rules-selftest/run")), {}),
         ("special-casing", tool("special-casing"), {}),
         ("spec-loadcheck-selftest", ["python3", "-I", "-B", "spec/tools/loadcheck.py", "--selftest"], {}),
         ("spec-loadcheck", ["python3", "-I", "-B", "spec/tools/loadcheck.py", *spec_realities()], {}),
@@ -170,6 +185,91 @@ def gating(profile):
             return f"{who}, and {their} tests don't run: {first_error(out)}"
         total, passed = counted
         return f"{who}, and {total - passed} of {their} {total} tests are red"
+
+    return step
+
+
+# --- the walls' self-tests' inputs (issue #6) -------------------------------------------
+
+# guard-test copies these into a throwaway repository and reads settings.json's hooks
+GUARD_TEST_FILES = ["engine/tools/guard-test", "engine/tools/guard_test.py", "engine/tools/guard", "engine/tools/guard.py",
+                    "engine/tools/stop-check", "engine/tools/stop_check.py", "engine/tools/merge-pr",
+                    "engine/tools/merge_pr.py", "engine/tools/worktree-done", "engine/tools/worktree_done.py",
+                    ".claude/settings.json", "engine/tools/check", "engine/tools/check.py"]
+GUARD_TEST_VERSIONS = [["python3", "--version"], ["git", "--version"]]
+# rules-selftest builds, lints and plants into a copy of the engine with these tools
+SELFTEST_VERSIONS = [*GUARD_TEST_VERSIONS, ["rustc", "-vV"], ["cargo", "-V"], ["cargo", "clippy", "-V"],
+                     ["rustfmt", "--version"], ["rustdoc", "-V"], ["cargo", "deny", "--version"],
+                     ["cargo", "nextest", "--version"], ["ast-grep", "--version"]]
+# beyond the rule files: the manifests and lock, the module list the ban coverage plants
+# into, the spec's and the oracle's checksums (the copy's pin), and the root package.json
+# the copy holds; the cases' own targets are added from the case files
+SELFTEST_FILES = ["engine/Cargo.lock", "engine/Cargo.toml", "engine/crates/tally/Cargo.toml",
+                  "engine/crates/tally-cli/Cargo.toml", "engine/tests/runner/Cargo.toml",
+                  "engine/crates/tally/src/lib.rs", "engine/spec/VERSION", "engine/spec/SHA256SUMS",
+                  "engine/tools/SHA256SUMS", "package.json"]
+PLANTS = re.compile(r"^--- (?:replace|append|delete|write) (\S+)", re.M)
+
+
+def case_targets():
+    """The real files the selftest's cases plant into, repo-relative."""
+    cases = os.path.join(TOOLS, "rules-selftest", "cases")
+    found = set()
+    for name in sorted(os.listdir(cases)):
+        with open(os.path.join(cases, name), encoding="utf-8") as f:
+            for rel in PLANTS.findall(f.read()):
+                path = os.path.normpath(os.path.join(ENGINE, rel))
+                if os.path.isfile(path):
+                    found.add(os.path.relpath(path, os.path.dirname(ENGINE)))
+    return found
+
+
+def walls_inputs(step):
+    """(files, version commands) that decide `step`'s verdict, beyond the engine code
+    check full's own steps check in the same run."""
+    if step == "guard-test":
+        return sorted(GUARD_TEST_FILES), GUARD_TEST_VERSIONS
+    return sorted(set(check_frozen.rule_files()) | set(SELFTEST_FILES) | case_targets()), SELFTEST_VERSIONS
+
+
+def walls_hash(step, env):
+    files, versions = walls_inputs(step)
+    h = hashlib.sha256(f"{step}\n{sys.platform}\n".encode())
+    root = os.path.dirname(ENGINE)
+    for rel in files:
+        try:
+            with open(os.path.join(root, rel), "rb") as f:
+                h.update(f"{rel}\t{hashlib.sha256(f.read()).hexdigest()}\n".encode())
+        except OSError:
+            h.update(f"{rel}\tmissing\n".encode())
+    for argv in versions:
+        r = subprocess.run(argv, cwd=ENGINE, env=env, capture_output=True, text=True, check=False)
+        h.update(f"{' '.join(argv)}\t{r.returncode}\t{r.stdout}{r.stderr}\n".encode())
+    return h.hexdigest(), len(files), len(versions)
+
+
+def walls(name, argv):
+    """A wall's self-test, skipped when its inputs are those of a green run of it."""
+
+    def step(env, log):
+        key, files, versions = walls_hash(name, env)
+        green = os.path.join(WALLS_GREEN, name)
+        try:
+            with open(green, encoding="ascii") as f:
+                last = f.read().strip()
+        except OSError:
+            last = ""
+        log.write(f"inputs: sha256 {key} ({files} files, {versions} tool versions); last green: {last or 'none'}\n")
+        if not FRESH and last == key:
+            return Report(f"skipped: its {files} input files and {versions} tool versions (sha256 {key[:16]}) are "
+                          f"those of a green run; `check full --fresh` runs it")
+        code, out = run(argv, env, log)
+        if code != 0:
+            return first_error(out)
+        os.makedirs(WALLS_GREEN, exist_ok=True)
+        with open(green, "w", encoding="ascii") as f:
+            f.write(key + "\n")
+        return None
 
     return step
 
@@ -256,7 +356,16 @@ def first_error(out):
 
 
 def main():
+    global FRESH  # one flag for the whole run
     args = sys.argv[1:]
+    if "--fresh" in args:
+        FRESH = True
+        args = [a for a in args if a != "--fresh"]
+    if args == ["walls-key"]:
+        env = clean_env()
+        keys = "".join(walls_hash(s, env)[0] for s in ("guard-test", "rules-selftest"))
+        print(hashlib.sha256(keys.encode()).hexdigest())
+        return 0
     if args == ["list"]:
         for m in ("fast", "full"):
             print(f"{m}: {' '.join(name for name, _, _ in steps(m))}")
@@ -266,7 +375,7 @@ def main():
     elif len(args) == 2 and args[0] == "step" and any(s[0] == args[1] for s in steps("full")):
         mode, chosen = f"step {args[1]}", [s for s in steps("full") if s[0] == args[1]]
     else:
-        print("usage: engine/tools/check fast|full|list|step <name>", file=sys.stderr)
+        print("usage: engine/tools/check fast|full|list|step <name>|walls-key [--fresh]", file=sys.stderr)
         return 64
     for needed in ("cargo", "python3"):
         if shutil.which(needed) is None:

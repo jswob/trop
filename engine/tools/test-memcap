@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# The memory cap on each mutant's tests (R-88, issue #40): engine/tools/test-memcap CAP_MB <test> [args…]
+d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)" || exit 1
+exec python3 -I -B "$d/test_memcap.py" "$@"

@@ -1,0 +1,22 @@
+# R-88: a mutant's tests run under the memory cap (issue #40). The mutants profile runs
+# every test through tools/test-memcap, which ends a test past 2048 MB and says so, so a
+# mutant that allocates without bound can't take the machine down. The planted test
+# grows by 64 MB at a time, for ever.
+
+case: runaway-test-memory
+tool: run
+expect: test-memcap: ended at
+--- append tests/runner/src/lib.rs
+
+#[cfg(test)]
+mod planted_runaway {
+    #[test]
+    fn grows_for_ever() {
+        let mut held: Vec<Vec<u8>> = Vec::new();
+        loop {
+            held.push(vec![1_u8; 64 << 20]);
+        }
+    }
+}
+--- run
+cargo nextest run --locked -p tally-runner --cargo-profile mutants --profile mutants --lib -E 'test(=planted_runaway::grows_for_ever)'

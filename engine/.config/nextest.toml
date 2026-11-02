@@ -1,6 +1,9 @@
 # cargo-nextest (R-88, R-90). A rule file: only the `rules` role edits it. No retries
 # and no filters; a hung test is ended and fails.
 
+# the wrapper below (the mutants profile's memory cap) needs it at nextest 0.9.149
+experimental = ["wrapper-scripts"]
+
 [profile.default]
 retries = 0
 fail-fast = false
@@ -16,3 +19,14 @@ failure-output = "immediate-final"
 retries = 0
 fail-fast = true
 slow-timeout = { period = "30s", terminate-after = 4 }
+
+# Each mutant's test process runs under a memory cap (R-88, issue #40): past 2048 MB it is
+# killed, exits 86 and says so on stderr, so a mutant that allocates without bound ends
+# there instead of taking the machine down. T's tests peak near 160 MB unmutated; four run
+# at once on a 16 GB GitHub runner. The tests only: cargo and rustc run outside it.
+[scripts.wrapper.memcap]
+command = { command-line = "tools/test-memcap 2048", relative-to = "workspace-root" }
+
+[[profile.mutants.scripts]]
+filter = "all()"
+run-wrapper = "memcap"
