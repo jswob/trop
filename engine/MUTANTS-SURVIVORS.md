@@ -14,3 +14,4 @@ reads every one.
 
 | file | function | mutation | reason |
 | ---- | -------- | -------- | ------ |
+| crates/tally/src/walk/day.rs | Engine::book_leg_ends | replace < with <= in Engine::book_leg_ends | R-87: equivalent: a booked end's sign is -1 for the leg's from end and 1 for its to end, never 0, so `< 0` and `<= 0` pick the same other end |

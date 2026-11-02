@@ -5,10 +5,13 @@
 //! a read or parse refusal and the asks a loaded reality's evaluator can read, and
 //! `NotImplemented` for a load refusal and anything past the part built (milestone S).
 //!
-//! Milestone S is built in groups (`engine/BUILD-LOG.md`, the S plan). So far: the exact
-//! numbers, [`num`]; the code catalogue and refusals, [`base`]; the entry and its read step,
-//! [`run`]; days, [`time`]; the lexer and the parser, [`syntax`]; load, [`load`]; the read
-//! rule, [`read`]; the evaluator, [`eval`]; holes, [`hole`]; the asks, [`ask`].
+//! Milestone S built it in groups (`engine/BUILD-LOG.md`, the S plan): the exact numbers,
+//! [`num`]; the code catalogue and refusals, [`base`]; the entry and its read step, [`run`];
+//! days, [`time`]; the lexer and the parser, [`syntax`]; load, [`load`], into the model,
+//! [`model`]; the read rule, [`read`]; the evaluator and the memo, [`eval`]; holes, [`hole`];
+//! the walk, its checkpoints and the written projection, [`walk`]; observations, readings,
+//! adjustments and the residual ledger, [`book`]; the asks, [`ask`]. `engine/ARCHITECTURE.md`
+//! is the map.
 
 #![forbid(unsafe_code)]
 
