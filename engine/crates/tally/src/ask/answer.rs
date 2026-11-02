@@ -9,6 +9,8 @@
 //! and memo; a load refusal met at run and every construct S doesn't build stop the run
 //! `NotBuilt`, never a guessed line.
 
+use std::collections::BTreeMap;
+
 use super::register::{register_lines, warning_lines};
 use super::residuals::residual_lines;
 use crate::base::{Code, Load, Refusal, Run, Warn};
@@ -16,7 +18,32 @@ use crate::eval::{Collected, Ctx, Engine, Entry, Env, Item, Member, num_stop};
 use crate::model::{Reality, Value};
 use crate::syntax::{Ask, AskBody, Bind, Domain, Expr, Stop};
 use crate::time::{Day, PeriodKind};
+use crate::walk::Booked;
 use crate::{Asks, Days};
+
+/// What a run's asks print, and, in the `counters` build, what their engines did.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Answered {
+    /// The lines: each ask's, then the run's warnings.
+    pub lines: Vec<String>,
+    /// The asks' engines' counts together (BUILDER §13.2).
+    #[cfg(feature = "counters")]
+    pub counts: crate::Counters,
+}
+
+/// What the asks gather across their engines: the warnings, each once, in the order met, and,
+/// in the `counters` build, the engines' counts.
+#[derive(Debug)]
+struct Seen {
+    /// The warnings, in the order met (L §8.5).
+    warnings: Vec<(Warn, String)>,
+    /// The booked plan amounts the asks met, each ask's engine checked against the earlier
+    /// asks' (E §9 item 5).
+    booked: BTreeMap<(String, Day), Booked>,
+    /// The engines' counts together.
+    #[cfg(feature = "counters")]
+    counts: crate::Counters,
+}
 
 /// The lines a run prints for its asks: each ask's lines, the asks in id order or in the order
 /// the run names them, then the run's warnings (refcore's `Asker.run`). L §5.18, §8.5.
@@ -25,7 +52,7 @@ use crate::{Asks, Days};
 ///
 /// `LOAD-NAME` for an ask the run names that the reality lacks; `NotBuilt` for a load refusal
 /// met at run and for a construct S doesn't build.
-pub fn answer(m: &Reality, asks: &Asks, days: Days) -> Result<Vec<String>, Stop> {
+pub fn answer(m: &Reality, asks: &Asks, days: Days) -> Result<Answered, Stop> {
     let order: Vec<&Ask> = match asks {
         Asks::Every => {
             let mut all: Vec<&Ask> = m.asks.iter().collect();
@@ -44,23 +71,27 @@ pub fn answer(m: &Reality, asks: &Asks, days: Days) -> Result<Vec<String>, Stop>
         }
     };
     let mut out = Vec::new();
-    let mut warnings = m.warnings.clone();
+    let mut seen = Seen {
+        warnings: m.warnings.clone(),
+        booked: BTreeMap::new(),
+        #[cfg(feature = "counters")]
+        counts: crate::Counters::default(),
+    };
     for ask in order {
-        out.extend(answer_one(m, ask, days, &mut warnings)?);
+        out.extend(answer_one(m, ask, days, &mut seen)?);
     }
-    out.extend(warning_lines(&warnings));
-    Ok(out)
+    out.extend(warning_lines(&seen.warnings));
+    Ok(Answered {
+        lines: out,
+        #[cfg(feature = "counters")]
+        counts: seen.counts,
+    })
 }
 
 /// One ask's lines; a run-time refusal its reading meets outside a line's values is its one
 /// line (refcore's `answer`). L §8.4.
-fn answer_one(
-    m: &Reality,
-    ask: &Ask,
-    days: Days,
-    warnings: &mut Vec<(Warn, String)>,
-) -> Result<Vec<String>, Stop> {
-    match ask_lines(m, ask, days, warnings) {
+fn answer_one(m: &Reality, ask: &Ask, days: Days, seen: &mut Seen) -> Result<Vec<String>, Stop> {
+    match ask_lines(m, ask, days, seen) {
         Err(Stop::Refused(r)) if matches!(r.code(), Code::Load(_)) => Err(load_at_run()),
         Err(Stop::Refused(r)) => Ok(vec![format!("{}: refused: {}", ask.id, r.text())]),
         other => other,
@@ -75,12 +106,7 @@ fn load_at_run() -> Stop {
 
 /// One ask's lines: its cut by `as known`, its law date by `law`, then one line per binding
 /// tuple with the register under it (refcore's `_answer`, `_answer_in`). L §5.18.
-fn ask_lines(
-    m: &Reality,
-    ask: &Ask,
-    days: Days,
-    warnings: &mut Vec<(Warn, String)>,
-) -> Result<Vec<String>, Stop> {
+fn ask_lines(m: &Reality, ask: &Ask, days: Days, seen: &mut Seen) -> Result<Vec<String>, Stop> {
     if ask.windows_each {
         return Err(Stop::NotBuilt("an ask's `windows each`"));
     }
@@ -89,29 +115,39 @@ fn ask_lines(
     }
     let mut cut = m.on;
     if let Some(known) = &ask.known {
-        let mut engine = Engine::new(m.on).with_days(days).for_ask(ask);
+        let mut engine = Engine::new(m.on)
+            .with_days(days)
+            .for_ask(ask)
+            .with_booked(core::mem::take(&mut seen.booked));
         let v = engine.value(m, known, &Env::empty(), Ctx::new(None, cut));
-        gather(warnings, &engine);
+        gather(seen, &mut engine);
         let v = v?;
         if let Value::Hole(_) = v {
             return Ok(vec![format!("{}: {}", ask.id, shown(m, &v)?)]);
         }
         cut = date_of(&v, "as known")?;
     }
-    let mut engine = Engine::new(cut).with_days(days).for_ask(ask);
+    let mut engine = Engine::new(cut)
+        .with_days(days)
+        .for_ask(ask)
+        .with_booked(core::mem::take(&mut seen.booked));
     let out = ask_body(m, ask, &mut engine, cut);
-    gather(warnings, &engine);
+    gather(seen, &mut engine);
     out
 }
 
 /// The walk warnings an ask's engine met, each once, in the order met (refcore's
-/// `Asker.walk_warnings`). L §8.5.
-fn gather(warnings: &mut Vec<(Warn, String)>, engine: &Engine) {
+/// `Asker.walk_warnings`); the booked plan amounts, for the next ask (E §9 item 5); and, in
+/// the `counters` build, its counts. L §8.5.
+fn gather(seen: &mut Seen, engine: &mut Engine) {
     for w in engine.walk_warnings() {
-        if !warnings.contains(w) {
-            warnings.push(w.clone());
+        if !seen.warnings.contains(w) {
+            seen.warnings.push(w.clone());
         }
     }
+    seen.booked = engine.take_booked();
+    #[cfg(feature = "counters")]
+    seen.counts.merge(engine.counters());
 }
 
 /// One ask's lines from its cut on: its law date, then a line per binding tuple with the

@@ -128,6 +128,8 @@ impl Engine {
         let walk = self.continued(m, (base, point), (c, t), key.3.clone())?;
         let id = self.walks.len();
         self.walks.push(walk);
+        #[cfg(feature = "counters")]
+        self.counts.add(crate::Unit::Walk);
         self.proj_walks.insert(key, id);
         Ok(id)
     }

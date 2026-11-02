@@ -271,7 +271,8 @@ impl Engine {
         let mut bc = self.booked_coll(m, id, &r.place, &r.unit, at)?;
         bc.merge(&r.coll);
         let anchor = role == GapRole::Anchor;
-        self.walk_mut(id)?.gaps.push(Gap {
+        let read = self.walk_mut(id)?;
+        read.gaps.push(Gap {
             place: r.place.clone(),
             point: at,
             amount: gap.clone(),
@@ -279,6 +280,21 @@ impl Engine {
             anchor,
             coll: bc.clone(),
         });
+        // E §9 item 2: an anchor's gap, or a pad's from outside, moves worth; a pad from an
+        // inside place moves it between two inside places
+        if read.inside(m, &r.place) {
+            let moves = match &role {
+                GapRole::Anchor => true,
+                GapRole::Pad(other) => !read.inside(m, other),
+            };
+            if moves {
+                let q = match &gap {
+                    Amount::Qty(g) => Some(g),
+                    Amount::Hole(_) | Amount::Refused(_) => None,
+                };
+                read.worth_add(&r.unit, q)?;
+            }
+        }
         let (val, qs) = match &r.value {
             Ok(v) => (v.clone(), None),
             Err(h) => (Num::zero(), Some(h.clone())),

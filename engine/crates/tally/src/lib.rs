@@ -13,9 +13,15 @@
 #![forbid(unsafe_code)]
 
 mod api;
+#[cfg(feature = "counters")]
+mod counters;
 mod oracle;
 
 pub use api::{Answer, Asks, Given, Pin, Request, Source, run};
+#[cfg(feature = "counters")]
+pub use counters::Counters;
+#[cfg(feature = "counters")]
+pub(crate) use counters::Unit;
 pub use oracle::Days;
 
 /// The foundations every other module stands on: the catalogue of codes (L §8, E §11) and
@@ -146,8 +152,8 @@ pub mod walk {
     pub use day::{Broke, Ends};
     pub use order::{Run, WalkAt};
     pub use plan::{
-        Amount, Dated, End, Exists, Inst, LegVal, Order, Seed, Status, day_repr, kind_certainty,
-        qty_value,
+        Amount, Booked, Dated, End, Exists, Inst, LegVal, Order, Seed, Status, day_repr,
+        kind_certainty, qty_value,
     };
     pub(crate) use plan::{invariant, quantity, quoted};
     pub use point::{At, Step};
@@ -184,8 +190,8 @@ pub mod ask {
     mod register;
     mod residuals;
 
-    pub use answer::answer;
     pub(crate) use answer::date_of;
+    pub use answer::{Answered, answer};
     pub use register::{register_lines, warning_lines};
 }
 
@@ -267,61 +273,4 @@ pub fn parse(source: &[u8]) -> Result<Vec<syntax::File>, syntax::Stop> {
         path: name.to_owned(),
         text,
     }])
-}
-
-/// The work units PERFORMANCE §1.1 counts, behind the `counters` feature (D4-8,
-/// BUILDER §13.2). The stub counts nothing, so every count is 0.
-#[cfg(feature = "counters")]
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
-pub struct Counters {
-    /// Expression nodes evaluated (ev).
-    pub ev: u64,
-    /// Def cell reads that found the memo's value.
-    pub def_hits: u64,
-    /// Def cell reads that computed it.
-    pub def_misses: u64,
-    /// Input reads by the read rule.
-    pub reads: u64,
-    /// Distinct input reads.
-    pub distinct_reads: u64,
-    /// Days the day walk stepped through (walk days).
-    pub days_stepped: u64,
-    /// Stepped days with at least one act.
-    pub nonempty_days: u64,
-    /// Movement legs written to a place's log.
-    pub legs_booked: u64,
-    /// Groups of parts work at places that keep parts.
-    pub parts_groups: u64,
-    /// Timeline prefixes taken from a checkpoint instead of walked again.
-    pub walks_shared: u64,
-    /// Shared-layer cells a worker computed for itself.
-    pub recomputed_locally: u64,
-    /// Exact values made.
-    pub num_results: u64,
-}
-
-#[cfg(feature = "counters")]
-impl Counters {
-    /// The `--stats` line on standard error: `stats: ` then `key=value` pairs, the form
-    /// `engine/tools/perf counts` reads.
-    #[must_use]
-    pub fn line(&self) -> String {
-        format!(
-            "stats: ev={} def_hits={} def_misses={} reads={} distinct_reads={} days_stepped={} \
-             nonempty_days={} legs_booked={} parts_groups={} walks_shared={} recomputed_locally={} \
-             num_results={}\n",
-            self.ev,
-            self.def_hits,
-            self.def_misses,
-            self.reads,
-            self.distinct_reads,
-            self.days_stepped,
-            self.nonempty_days,
-            self.legs_booked,
-            self.parts_groups,
-            self.walks_shared,
-            self.recomputed_locally,
-            self.num_results,
-        )
-    }
 }

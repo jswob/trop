@@ -217,6 +217,13 @@ pub struct Walk {
     pub(crate) negative: BTreeMap<(String, String), bool>,
     /// The day's booked flows per unit, summed over every place (E §9 item 1).
     pub(crate) conserved: BTreeMap<String, Num>,
+    /// The day's expected change in the worth of the places that aren't outside, per unit:
+    /// the legs across the boundary and those booked by their ends, the pads from outside,
+    /// the openings and the anchors' gaps; none where a hole makes it unknown that day
+    /// (E §9 item 2).
+    pub(crate) worth: BTreeMap<String, Option<Num>>,
+    /// Whether each place counts in the household's worth, once judged (E §9 item 2).
+    pub(crate) inside: BTreeMap<String, bool>,
     /// The uncertain instances no observation fulfils (E §4.1 step 3).
     pub(crate) uncertain: Vec<Inst>,
     /// Each place's first reading day, for `HOLE-ANCHOR` (L §8.1).
@@ -349,6 +356,8 @@ impl Walk {
             warnings: Vec::new(),
             negative: BTreeMap::new(),
             conserved: BTreeMap::new(),
+            worth: BTreeMap::new(),
+            inside: BTreeMap::new(),
             uncertain: Vec::new(),
             first_reading: BTreeMap::new(),
             endings: BTreeMap::new(),
@@ -517,7 +526,8 @@ impl Walk {
     }
 
     /// Takes back a leg the sign rule refuses: its entries at `place` that `holds` matches are
-    /// dropped, and the states after them made again (refcore's `unbook`). E §4.2 step 5.
+    /// dropped, and the states after them made again (refcore's `unbook`); the flows dropped,
+    /// summed. E §4.2 step 5.
     ///
     /// # Errors
     ///
@@ -529,11 +539,11 @@ impl Walk {
         unit: &str,
         movement: (&str, &str),
         holds: Taken,
-    ) -> Result<(), Stop> {
+    ) -> Result<Num, Stop> {
         let key = (place.to_owned(), unit.to_owned());
         let start = self.default_state(m, place, unit);
         let Some(log) = self.logs.get_mut(&key) else {
-            return Ok(());
+            return Ok(Num::zero());
         };
         let drop = |e: &Ent| {
             matches!(e.change, Change::Delta(_))
@@ -542,8 +552,14 @@ impl Walk {
                 && holds.holds(e.at)
         };
         let Some(first) = log.ents.iter().position(drop) else {
-            return Ok(());
+            return Ok(Num::zero());
         };
+        let mut dropped = Num::zero();
+        for e in log.ents.iter().filter(|e| drop(e)) {
+            if let Change::Delta(f) = &e.change {
+                dropped = dropped.checked_add(f).map_err(crate::eval::num_stop)?;
+            }
+        }
         let all = core::mem::take(&mut log.ents);
         log.ents = all.into_iter().filter(|e| !drop(e)).collect();
         log.cum.truncate(first);
@@ -555,6 +571,41 @@ impl Walk {
             e.st = apply(&prev, &e.change, j)?;
             prev = e.st.clone();
         }
+        Ok(dropped)
+    }
+
+    /// Whether `place` counts in the household's worth: a thing whose base kind isn't
+    /// outside (refcore's `inside`). E §9 item 2.
+    pub fn inside(&mut self, m: &Reality, place: &str) -> bool {
+        if let Some(hit) = self.inside.get(place) {
+            return *hit;
+        }
+        let hit = match m.things.get(place) {
+            None => false,
+            Some(thing) => match &thing.base {
+                None => true,
+                Some(base) => !m.subtree("outside").contains(base),
+            },
+        };
+        self.inside.insert(place.to_owned(), hit);
+        hit
+    }
+
+    /// Adds `expected` to the day's expected change in worth in `unit`; none makes it unknown
+    /// that day (refcore's `inv2_add`). E §9 item 2.
+    ///
+    /// # Errors
+    ///
+    /// A number error adding it.
+    pub fn worth_add(&mut self, unit: &str, expected: Option<&Num>) -> Result<(), Stop> {
+        let slot = self
+            .worth
+            .entry(unit.to_owned())
+            .or_insert_with(|| Some(Num::zero()));
+        *slot = match (slot.take(), expected) {
+            (Some(sum), Some(e)) => Some(sum.checked_add(e).map_err(crate::eval::num_stop)?),
+            (None, _) | (_, None) => None,
+        };
         Ok(())
     }
 

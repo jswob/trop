@@ -375,7 +375,7 @@ impl Engine {
         moves.sort_by(|a, b| a.id.cmp(&b.id));
         let mut out = Vec::new();
         for mv in moves {
-            for i in self.move_instances(m, mv, cut)? {
+            for i in self.move_instances(m, mv, cut)?.iter() {
                 match i.status {
                     Status::None | Status::Modelled | Status::Uncertain if !self.uncertain => {}
                     Status::Uncertain => {
@@ -390,7 +390,7 @@ impl Engine {
                     | Status::Hole
                     | Status::Decision
                     | Status::Past
-                    | Status::Plan => out.push(Moving::Plan(i)),
+                    | Status::Plan => out.push(Moving::Plan(i.clone())),
                 }
             }
         }
@@ -454,7 +454,7 @@ impl Engine {
             return Err(Stop::NotBuilt("a read of a decision's movement (the walk)"));
         }
         let insts = self.move_instances(m, mv, cut)?;
-        Ok(insts.into_iter().find(|i| i.id == id).map(Moving::Plan))
+        Ok(insts.iter().find(|i| i.id == id).cloned().map(Moving::Plan))
     }
 
     /// An observation by id at the cut (refcore's `mv_by_id`, an observation). L §5.19.
@@ -548,9 +548,9 @@ impl Engine {
                     .ok_or_else(|| invariant("a link to a move load didn't build"))?;
                 let insts = self.move_instances(m, mv, cut)?;
                 Ok(insts
-                    .into_iter()
+                    .iter()
                     .find(|i| i.keys == keys)
-                    .map_or(Value::None, |i| Moving::Plan(i).value()))
+                    .map_or(Value::None, |i| Moving::Plan(i.clone()).value()))
             }
         }
     }

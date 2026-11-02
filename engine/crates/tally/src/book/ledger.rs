@@ -279,7 +279,7 @@ impl Engine {
         moves.sort_by(|a, b| a.id.cmp(&b.id));
         let mut insts = Vec::new();
         for mv in moves {
-            insts.extend(self.move_instances(m, mv, cut)?);
+            insts.extend(self.move_instances(m, mv, cut)?.iter().cloned());
         }
         for inst in insts {
             let day = match model_day(&inst)? {

@@ -35,6 +35,18 @@ impl Engine {
     ///
     /// The refusals of L §8.4 the expression meets; `NotBuilt` for a node S doesn't build.
     pub(crate) fn ev(&mut self, m: &Reality, e: &Expr, env: &Env, ctx: Ctx) -> Result<Value, Stop> {
+        #[cfg(feature = "counters")]
+        self.counts.add(crate::Unit::Ev);
+        let v = self.node(m, e, env, ctx);
+        #[cfg(feature = "counters")]
+        if let Ok(Value::Number(_) | Value::Money(_)) = &v {
+            self.counts.add(crate::Unit::NumResult);
+        }
+        v
+    }
+
+    /// One node's value, by its kind (refcore's `ev`). E §3.2.
+    fn node(&mut self, m: &Reality, e: &Expr, env: &Env, ctx: Ctx) -> Result<Value, Stop> {
         match e {
             Expr::Lit(lit) => literal(m, lit, env.figures),
             Expr::Str(s) => Ok(Value::Text(s.clone())),

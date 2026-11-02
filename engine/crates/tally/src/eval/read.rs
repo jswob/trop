@@ -73,6 +73,9 @@ impl Engine {
     ) -> Result<Value, Stop> {
         self.index_assumed(m, &input.binds);
         let clocks = self.clocks(ctx);
+        #[cfg(feature = "counters")]
+        self.counts
+            .read(format!("{}|{}", origin(&input.id, keys), ctx.key()));
         match read_input(m, input, keys, clocks, asked)? {
             Found::Row(at) => {
                 let row = input

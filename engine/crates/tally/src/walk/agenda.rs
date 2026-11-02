@@ -169,7 +169,7 @@ impl Engine {
         let mut plans = Vec::new();
         let mut decisions = Vec::new();
         for mv in sorted_moves(m) {
-            let insts = self.move_instances(m, mv, cut)?;
+            let insts = self.move_instances(m, mv, cut)?.to_vec();
             if mv.decision {
                 decisions.push((mv.id.clone(), mv.stratum, insts));
             } else {

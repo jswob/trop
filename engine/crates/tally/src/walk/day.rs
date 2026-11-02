@@ -14,7 +14,7 @@
 //! day's acts run in walk order, and a day cut short past the counted depth resumes at the act
 //! it stopped at.
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 
 use super::agenda::{Act, Mv, Reading};
 use super::plan::{Amount, End, Inst, LegVal, Status, invariant, qty_value};
@@ -145,6 +145,12 @@ impl Engine {
             };
             let mut acts = walk.agenda.remove(&day).unwrap_or_else(Vec::new);
             acts.sort_by_key(|a| a.0);
+            #[cfg(feature = "counters")]
+            let unit = if acts.is_empty() {
+                crate::Unit::Day
+            } else {
+                crate::Unit::NonEmptyDay
+            };
             walk.today = Some(Today {
                 day,
                 acts,
@@ -155,6 +161,8 @@ impl Engine {
                 closing: None,
                 touched: BTreeSet::new(),
             });
+            #[cfg(feature = "counters")]
+            self.counts.add(unit);
         }
         self.walk_today(m, id)
     }
@@ -257,7 +265,7 @@ impl Engine {
                 }
                 walk.bad_legs.insert(key, err.clone());
                 for p in ends(leg) {
-                    walk.unbook(m, p, &unit, (mv, &leg.name), taken)?;
+                    walk.take_back(m, p, &unit, (mv, leg), taken)?;
                 }
                 for p in ends(leg) {
                     let mut ent = Ent::new(at, Change::Bad(err.clone()));
@@ -392,8 +400,11 @@ impl Engine {
         let q = match &lg.amount {
             Amount::Refused(r) => return self.walk_mut(id)?.leg_bad(m, movement, lg, r, at),
             Amount::Hole(h) => {
+                #[cfg(feature = "counters")]
+                self.counts.add(crate::Unit::Leg);
                 let walk = self.walk_mut(id)?;
                 let unit = lg.unit.clone().unwrap_or_else(|| ALL.to_owned());
+                walk.worth_add(&unit, None)?;
                 for (end, on_end) in [(&lg.from, mask.from), (&lg.to, mask.to)] {
                     let Some(p) = end.place().filter(|_| on_end) else {
                         continue;
@@ -443,7 +454,9 @@ impl Engine {
                 ent.leg = Some(lg.name.clone());
                 ent.reg = reg.to_vec();
                 ent.coll = Some(coll.clone());
-                self.walk_mut(id)?.add(m, p, &unit, ent)?;
+                let walk = self.walk_mut(id)?;
+                walk.worth_add(&unit, None)?;
+                walk.add(m, p, &unit, ent)?;
                 dropped = true;
                 continue;
             }
@@ -468,6 +481,10 @@ impl Engine {
                 "a leg booked outside every group of the sign rule (a reading after a movement)",
             ));
         }
+        #[cfg(feature = "counters")]
+        if err.is_none() {
+            self.counts.add(crate::Unit::Leg);
+        }
         let walk = self.walk_mut(id)?;
         if let Some(e) = err {
             walk.bad_legs
@@ -479,11 +496,19 @@ impl Engine {
             }
             return Ok(());
         }
+        let whole = !dropped || mask.whole;
         for (p, sign) in &on {
             let f = signed(&q, *sign)?;
-            if !dropped || mask.whole {
+            if whole {
                 let sum = walk.conserved.entry(unit.clone()).or_insert_with(Num::zero);
                 *sum = sum.checked_add(&f).map_err(crate::eval::num_stop)?;
+            }
+            // E §9 item 2: a whole leg changes worth only across the boundary; one booked by
+            // its ends is left out of the boundary's account, as from item 1
+            let other = if *sign < 0 { &lg.to } else { &lg.from };
+            let crosses = matches!(other, End::Place(o) if !walk.inside(m, o));
+            if walk.inside(m, p) && (crosses || !whole) {
+                walk.worth_add(&unit, Some(&f))?;
             }
             let mut ent = Ent::new(at, Change::Delta(f));
             ent.mv = Some(movement.to_owned());
@@ -620,6 +645,7 @@ impl Engine {
             Some(t) => t.touched.clone(),
             None => BTreeSet::new(),
         };
+        check_worth(m, walk, day, &touched)?;
         let money = if walk.proj.is_none() {
             accounts_and_cash(m)
         } else {
@@ -692,6 +718,23 @@ impl Walk {
     /// An opening reading: its place's balance set to it, the holes since answered, a stated
     /// hole's questions kept (refcore's `apply_reading`, an opening). L §5.19, E §4.2 step 0.
     fn apply_opening(&mut self, m: &Reality, at: At, reading: &Reading) -> Result<(), Stop> {
+        if self.inside(m, &reading.place) {
+            // E §9 item 2: an opening states the place's worth; its change counts as stated
+            let expected = match &reading.value {
+                Ok(v) => {
+                    let prev = self.pstate(m, &reading.place, &reading.unit, at);
+                    match (&prev.val, prev.known()) {
+                        (None, _) => Some(v.clone()),
+                        (Some(_), Some(p)) => {
+                            Some(v.checked_sub(p).map_err(crate::eval::num_stop)?)
+                        }
+                        (Some(_), None) => None,
+                    }
+                }
+                Err(_) => None,
+            };
+            self.worth_add(&reading.unit, expected.as_ref())?;
+        }
         let change = match &reading.value {
             Ok(v) => Change::Reset {
                 val: v.clone(),
@@ -705,6 +748,30 @@ impl Walk {
         let mut ent = Ent::new(at, change);
         ent.coll = Some(reading.coll.clone());
         self.add(m, &reading.place, &reading.unit, ent)
+    }
+
+    /// Takes back a refused leg's entries at its end `p` (refcore's `unbook`); what came back
+    /// across the boundary leaves the day's worth (E §9 item 2). E §4.2 step 5.
+    fn take_back(
+        &mut self,
+        m: &Reality,
+        p: &str,
+        unit: &str,
+        (movement, leg): (&str, &LegVal),
+        taken: Taken,
+    ) -> Result<(), Stop> {
+        let back = self.unbook(m, p, unit, (movement, &leg.name), taken)?;
+        let other = if leg.from.place() == Some(p) {
+            &leg.to
+        } else {
+            &leg.from
+        };
+        let within = matches!(other, End::Place(o) if self.inside(m, o));
+        if self.inside(m, p) && !within {
+            let undone = back.checked_neg().map_err(crate::eval::num_stop)?;
+            self.worth_add(unit, Some(&undone))?;
+        }
+        Ok(())
     }
 
     /// A refused leg: its places refused from here (refcore's `leg_bad`). E §4.2 step 5.
@@ -744,6 +811,76 @@ impl Walk {
         }
         Ok(())
     }
+}
+
+/// Net worth moves only at the boundary or at an anchor, per unit so no price is needed: the
+/// day's change in the balances of the places that aren't outside equals the legs across the
+/// boundary and those booked by their ends, the pads from outside, the openings and the
+/// anchors' gaps; a unit some hole leaves unknown that day is not compared, and a projection's
+/// walk is not checked (refcore's `inv2_check`). E §9 item 2.
+fn check_worth(
+    m: &Reality,
+    walk: &mut Walk,
+    day: Day,
+    touched: &BTreeSet<String>,
+) -> Result<(), Stop> {
+    let expected = core::mem::take(&mut walk.worth);
+    if walk.proj.is_some() {
+        return Ok(());
+    }
+    let before = At::end(
+        day.previous()
+            .ok_or_else(|| invariant("a walked day with no day before it"))?,
+    );
+    let mut actual: BTreeMap<String, Option<Num>> = BTreeMap::new();
+    for place in touched {
+        if !walk.inside(m, place) {
+            continue;
+        }
+        for unit in walk.units_of(place) {
+            let now = walk.pstate(m, place, &unit, At::end(day));
+            let then = walk.pstate(m, place, &unit, before);
+            let slot = actual.entry(unit).or_insert_with(|| Some(Num::zero()));
+            *slot = match (slot.take(), now.known(), then.known()) {
+                (Some(sum), Some(a), Some(b)) => {
+                    let change = a.checked_sub(b).map_err(crate::eval::num_stop)?;
+                    Some(sum.checked_add(&change).map_err(crate::eval::num_stop)?)
+                }
+                _ => None,
+            };
+        }
+    }
+    let units: BTreeSet<&String> = actual.keys().chain(expected.keys()).collect();
+    // a unit on one side only moved by nothing on the other: a sum over no entries is 0
+    let nothing = Some(Num::zero());
+    for unit in units {
+        let x = match actual.get(unit) {
+            Some(x) => x,
+            None => &nothing,
+        };
+        let y = match expected.get(unit) {
+            Some(y) => y,
+            None => &nothing,
+        };
+        let (Some(x), Some(y)) = (x, y) else {
+            continue;
+        };
+        if x != y {
+            let shown = |q: &Num| -> Result<String, Stop> {
+                qty_value(m, q, unit)?
+                    .text(m)
+                    .map_err(crate::eval::num_stop)
+            };
+            return Err(invariant(&format!(
+                "net worth: the places that aren't outside change by {} in {unit} on {}, and the \
+                 boundary, pads and gaps by {} (E §9 invariant 2)",
+                shown(x)?,
+                day.text(),
+                shown(y)?
+            )));
+        }
+    }
+    Ok(())
 }
 
 /// The places a leg names. L §5.14.

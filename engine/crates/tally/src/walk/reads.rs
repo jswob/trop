@@ -552,12 +552,12 @@ impl Engine {
         };
         let last = span_last(m, sp)?;
         let insts = if mv.decision {
-            self.decision_runs(m, mv, last, ctx)?
+            std::rc::Rc::new(self.decision_runs(m, mv, last, ctx)?)
         } else {
             self.move_instances(m, mv, ctx.cut)?
         };
         let mut acc = Counted::default();
-        for i in &insts {
+        for i in insts.iter() {
             if !i.keys.starts_with(&want) {
                 continue;
             }
@@ -751,11 +751,11 @@ impl Engine {
             None => (self.main_walk(m, ctx.cut)?, None),
         };
         let mut out = Vec::new();
-        for i in self.move_instances(m, mv, ctx.cut)? {
+        for i in self.move_instances(m, mv, ctx.cut)?.iter() {
             let walk = self.walk(id)?;
             let Some(run) = walk.run_ids.get(&i.id).and_then(|ix| walk.runs.get(*ix)) else {
                 if matches!(i.day, Some(Dated::Hole(_))) && i.exists != Exists::No {
-                    out.push(i);
+                    out.push(i.clone());
                 }
                 continue;
             };
@@ -819,6 +819,8 @@ impl Engine {
         } else {
             let id = self.walks.len();
             self.walks.push(Walk::new(cut, m.start, m.end));
+            #[cfg(feature = "counters")]
+            self.counts.add(crate::Unit::Walk);
             self.main_walks.insert(cut, id);
             id
         };

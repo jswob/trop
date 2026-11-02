@@ -207,7 +207,7 @@ impl Engine {
     ) -> Result<Vec<Adjustment>, Stop> {
         let steps_all = known_dates(m);
         let mut out = Vec::new();
-        for inst in self.move_instances(m, mv, cut)? {
+        for inst in self.move_instances(m, mv, cut)?.iter() {
             if !matches!(inst.status, Status::Past | Status::Hole | Status::None) {
                 continue;
             }
@@ -224,7 +224,7 @@ impl Engine {
             if steps.is_empty() {
                 continue;
             }
-            out.extend(self.measure_inst(m, mv, (&inst, t), &steps, cut)?);
+            out.extend(self.measure_inst(m, mv, (inst, t), &steps, cut)?);
         }
         out.sort_by(|a, b| {
             (a.day, &a.move_id, &a.inst_id, &a.leg.name).cmp(&(

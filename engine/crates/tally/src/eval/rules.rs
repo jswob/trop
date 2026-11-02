@@ -96,6 +96,8 @@ impl Engine {
             let result = cell.result.clone();
             let met = cell.met.clone();
             self.absorb(&met);
+            #[cfg(feature = "counters")]
+            self.counts.add(crate::Unit::DefHit);
             return result;
         }
         if self.active.contains(&key) {
@@ -136,10 +138,14 @@ impl Engine {
             .ok_or_else(|| invariant("the depth count"))?;
         if result == Err(Stop::Deep) {
             self.suspend(key)?;
+            #[cfg(feature = "counters")]
+            self.counts.add(crate::Unit::DefUnwound);
             return result;
         }
         self.active.remove(&key);
         self.absorb(&met);
+        #[cfg(feature = "counters")]
+        self.counts.miss(&def.id);
         self.memo.insert(
             key,
             Cell {

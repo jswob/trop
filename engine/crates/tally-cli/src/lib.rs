@@ -87,13 +87,31 @@ pub fn run(args: &[OsString], files: &[u8]) -> Output {
             .filter(|arg| arg.to_str() != Some("--stats"))
             .cloned()
             .collect();
-        let mut output = command(&rest, files);
+        return counted(&rest, files);
+    }
+    command(args, files)
+}
+
+/// A command with the counters' line after its output on standard error: the run's counts,
+/// or all 0 for a command that runs no engine (D4-8).
+#[cfg(feature = "counters")]
+fn counted(args: &[OsString], files: &[u8]) -> Output {
+    let Some(Command::Run { paths, request }) = parse(args) else {
+        let mut output = command(args, files);
         output
             .stderr
             .extend_from_slice(tally::Counters::default().line().as_bytes());
         return output;
-    }
-    command(args, files)
+    };
+    let (mut output, counts) = match engine_run(&paths, &request, files) {
+        Ok(answer) => {
+            let c = answer.counters();
+            (answered(&answer), format!("{}{}", c.line(), c.defs_line()))
+        }
+        Err(output) => (output, tally::Counters::default().line()),
+    };
+    output.stderr.extend_from_slice(counts.as_bytes());
+    output
 }
 
 /// The paths the command line names, in the order given: what the binary reads into the file
@@ -209,19 +227,29 @@ fn run_line(words: &[&str]) -> Command {
 
 /// `run`: the paths resolved against the table, then the engine.
 fn run_paths(paths: &[String], request: &tally::Request, files: &[u8]) -> Output {
+    match engine_run(paths, request, files) {
+        Ok(answer) => answered(&answer),
+        Err(output) => output,
+    }
+}
+
+/// The engine's answer for `run`, or the output of a run that gives none: a file table that
+/// isn't netstrings, or a construct the engine doesn't build yet.
+fn engine_run(
+    paths: &[String],
+    request: &tally::Request,
+    files: &[u8],
+) -> Result<tally::Answer, Output> {
     let Ok(table) = table(files) else {
-        return Output {
+        return Err(Output {
             stdout: b"tally: the file table is not netstring pairs of a path and its bytes\n"
                 .to_vec(),
             stderr: Vec::new(),
             code: EXIT_USAGE,
-        };
+        });
     };
     let given = resolve(paths, &table);
-    match tally::run(given, request) {
-        Ok(answer) => answered(&answer),
-        Err(tally::NotImplemented) => not_implemented("run"),
-    }
+    tally::run(given, request).map_err(|tally::NotImplemented| not_implemented("run"))
 }
 
 /// The file table read into a map from path to bytes.
@@ -508,12 +536,11 @@ mod tests {
             &files(&[("a.tally", MODEL)]),
         );
         assert_eq!(output.code, super::EXIT_ANSWERED, "run --stats");
+        let line = String::from_utf8(output.stderr).expect("UTF-8");
+        assert!(line.starts_with("stats: ev="), "{line}");
         assert!(
-            output
-                .stderr
-                .ends_with(b"recomputed_locally=0 num_results=0\n"),
-            "{:?}",
-            output.stderr
+            line.ends_with(" walks_shared=0 recomputed_locally=0 num_results=0\nstats-defs: \n"),
+            "{line}"
         );
     }
 }

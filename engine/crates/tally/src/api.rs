@@ -67,6 +67,9 @@ pub struct Request {
 pub struct Answer {
     /// The lines, in the order printed.
     lines: Vec<String>,
+    /// What the run did, in P §1.1's units: the `counters` build only (BUILDER §13.2).
+    #[cfg(feature = "counters")]
+    counters: crate::Counters,
 }
 
 impl Answer {
@@ -75,7 +78,16 @@ impl Answer {
     pub fn refused(refusal: &Refusal) -> Answer {
         Answer {
             lines: vec![format!("refused: {}", refusal.text())],
+            #[cfg(feature = "counters")]
+            counters: crate::Counters::default(),
         }
+    }
+
+    /// What the run did, in P §1.1's units: the `counters` build only (BUILDER §13.2).
+    #[cfg(feature = "counters")]
+    #[must_use]
+    pub fn counters(&self) -> &crate::Counters {
+        &self.counters
     }
 
     /// Whether the run was refused: its first line starts `refused: ` (INTERFACE §3).
@@ -114,7 +126,11 @@ pub fn run(given: Vec<Given>, request: &Request) -> Result<Answer, NotImplemente
         return Err(NotImplemented);
     };
     match answer(&reality, &request.asks, request.days) {
-        Ok(lines) => Ok(Answer { lines }),
+        Ok(answered) => Ok(Answer {
+            lines: answered.lines,
+            #[cfg(feature = "counters")]
+            counters: answered.counts,
+        }),
         Err(Stop::Refused(refusal)) => Ok(Answer::refused(&refusal)),
         Err(Stop::NotBuilt(_) | Stop::Deep) => Err(NotImplemented),
     }

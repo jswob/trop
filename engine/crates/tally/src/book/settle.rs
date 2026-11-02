@@ -173,7 +173,7 @@ impl Engine {
         cut: Day,
     ) -> Result<Vec<Inst>, Stop> {
         if !bound_to_adjustments(m, mv) {
-            return self.move_instances(m, mv, cut);
+            return Ok(self.move_instances(m, mv, cut)?.to_vec());
         }
         let key = (format!("{}, its settlements", mv.id), cut);
         if self.plan_active.contains(&key) {

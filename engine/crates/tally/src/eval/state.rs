@@ -235,7 +235,7 @@ pub struct Engine {
     /// The day source: the event walk, or the oracle's every day (P §2.2).
     pub(crate) days: Days,
     /// Each move's instances per cut (E §4.1).
-    pub(crate) plans: BTreeMap<(String, Day), Vec<Inst>>,
+    pub(crate) plans: BTreeMap<(String, Day), std::rc::Rc<Vec<Inst>>>,
     /// The moves whose instances are being computed (RUN-CYCLE).
     pub(crate) plan_active: BTreeSet<(String, Day)>,
     /// Each plan move's adjustments per cut (E §5).
@@ -274,6 +274,12 @@ pub struct Engine {
     pub(crate) unsettled: BTreeMap<Day, Vec<Adjustment>>,
     /// The cuts whose adjustments are being measured (RUN-CYCLE).
     pub(crate) adjust_all_active: BTreeSet<Day>,
+    /// Each booked plan instance's amount A₀ by (instance, booking cut), kept across a run's
+    /// asks (E §9 item 5).
+    pub(crate) booked: BTreeMap<(String, Day), crate::walk::Booked>,
+    /// What this engine did, in P §1.1's units: the `counters` build only (BUILDER §13.2).
+    #[cfg(feature = "counters")]
+    pub(crate) counts: crate::Counters,
 }
 
 impl Engine {
@@ -310,7 +316,30 @@ impl Engine {
             settled: BTreeMap::new(),
             unsettled: BTreeMap::new(),
             adjust_all_active: BTreeSet::new(),
+            booked: BTreeMap::new(),
+            #[cfg(feature = "counters")]
+            counts: crate::Counters::default(),
         }
+    }
+
+    /// The engine holding the booked plan amounts a run's earlier asks met, so a later ask's
+    /// cut is checked against them (E §9 item 5).
+    #[must_use]
+    pub fn with_booked(self, booked: BTreeMap<(String, Day), crate::walk::Booked>) -> Engine {
+        Engine { booked, ..self }
+    }
+
+    /// The booked plan amounts this engine met and those it was given, handed on to the run's
+    /// next ask (E §9 item 5).
+    pub fn take_booked(&mut self) -> BTreeMap<(String, Day), crate::walk::Booked> {
+        core::mem::take(&mut self.booked)
+    }
+
+    /// What this engine did, in P §1.1's units: the `counters` build only (BUILDER §13.2).
+    #[cfg(feature = "counters")]
+    #[must_use]
+    pub fn counters(&self) -> &crate::Counters {
+        &self.counts
     }
 
     /// The engine walking the days of `days`.

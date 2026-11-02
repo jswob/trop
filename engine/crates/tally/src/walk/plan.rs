@@ -11,6 +11,7 @@
 //! instances are computed once per cut, and a move that reads its own instances is `RUN-CYCLE`.
 
 use core::cmp::Ordering;
+use std::rc::Rc;
 
 use crate::base::{Code, Load, Refusal, Run};
 use crate::eval::{Collected, Ctx, Engine, Env, Member, order_text, reads_name, thing_seen};
@@ -90,6 +91,19 @@ pub struct LegVal {
     pub unit: Option<String>,
     /// Its day.
     pub day: Dated,
+}
+
+/// A booked plan instance's amount A₀, its existence and legs, with the cut that first booked
+/// it: what every later cut that books it at the same booking cut must give again (E §9
+/// item 5).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Booked {
+    /// Whether it exists.
+    pub exists: Exists,
+    /// Its legs.
+    pub legs: Vec<LegVal>,
+    /// The cut that first booked it.
+    pub cut: Day,
 }
 
 /// Whether an instance exists: its `when` and its binding tuple's (L §5.14 `when`).
@@ -375,7 +389,8 @@ pub(super) struct Body {
 impl Engine {
     /// A move's instances at cut `cut`, each dated at the cut and evaluated at its booking
     /// cut, sorted in the movement order, with their status (refcore's `move_instances`,
-    /// `decision_instances`, `status`). E §4.1, §5 steps 0–1.
+    /// `decision_instances`, `status`), shared with every other read of the same plan.
+    /// E §4.1, §5 steps 0–1.
     ///
     /// # Errors
     ///
@@ -386,10 +401,10 @@ impl Engine {
         m: &Reality,
         mv: &MoveInfo,
         cut: Day,
-    ) -> Result<Vec<Inst>, Stop> {
+    ) -> Result<Rc<Vec<Inst>>, Stop> {
         let key = (mv.id.clone(), cut);
         if let Some(hit) = self.plans.get(&key) {
-            return Ok(hit.clone());
+            return Ok(Rc::clone(hit));
         }
         if self.plan_active.contains(&key) {
             return Err(Stop::Refused(Refusal::new(
@@ -402,12 +417,13 @@ impl Engine {
         self.plan_active.remove(&key);
         let mut out = made?;
         // refcore computes a status when it is first read, after the instances are kept
-        self.plans.insert(key.clone(), out.clone());
+        self.plans.insert(key.clone(), Rc::new(out.clone()));
         for inst in &mut out {
             inst.status = self.status(m, mv, inst, cut)?;
         }
-        self.plans.insert(key, out.clone());
-        Ok(out)
+        let shared = Rc::new(out);
+        self.plans.insert(key, Rc::clone(&shared));
+        Ok(shared)
     }
 
     /// An instance's status at cut `cut`, the observations that fulfil it judged first
@@ -479,6 +495,12 @@ impl Engine {
                 at_cut: None,
             };
             if let Some(mut inst) = self.eval_inst(m, mv, &seed, tctx)? {
+                if !mv.decision
+                    && inst.err.is_none()
+                    && let Some(booking) = inst.cut
+                {
+                    self.check_booked(&inst, booking, cut)?;
+                }
                 inst.coll.merge(&tuple.coll);
                 out.push(inst);
             }
@@ -488,6 +510,33 @@ impl Engine {
         }
         out.sort_by(|a, b| a.order.cmp(&b.order));
         Ok(out)
+    }
+
+    /// A booked plan amount never changes: an instance's A₀, its existence and legs, is the
+    /// same under every cut that books it at booking cut `booking`, across the asks of a run
+    /// (refcore's `inv5`). E §9 item 5.
+    fn check_booked(&mut self, inst: &Inst, booking: Day, cut: Day) -> Result<(), Stop> {
+        let key = (inst.id.clone(), booking);
+        let Some(old) = self.booked.get(&key) else {
+            let first = Booked {
+                exists: inst.exists.clone(),
+                legs: inst.legs.clone(),
+                cut,
+            };
+            self.booked.insert(key, first);
+            return Ok(());
+        };
+        if old.exists == inst.exists && old.legs == inst.legs {
+            return Ok(());
+        }
+        Err(invariant(&format!(
+            "a booked plan amount changed: {} booked at {} differs between the cuts {} and {} \
+             (E §9 invariant 5)",
+            inst.id,
+            booking.text(),
+            old.cut.text(),
+            cut.text()
+        )))
     }
 
     /// A move's binding tuples at the cut, depth first in binding order, each binding read at
