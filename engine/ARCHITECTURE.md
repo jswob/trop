@@ -127,8 +127,8 @@ ask's groups and lines.
   answer can't differ, found from the spans of the rows and rules the cell actually read
   (E §3.2). A text that names the day (a hole's question, a `held` entry) keeps the cell at
   its own day.
-- **Read sets.** Each def cell records what it read: the inputs, rows, bands, band rows and
-  cells (E §3.2, P §4). What a walk, a plan, an adjustment or a link reads is shared by
+- **Read sets.** Each def cell records what it read: the inputs, rows, a def's givens at its
+  keys, bands, band rows and cells (E §3.2, P §4). What a walk, a plan, an adjustment or a link reads is shared by
   every reader and is not in a cell's set. At S nothing skips work by them yet; they are the
   seam for `explain`, `inputs-of`, `readers-of` and the change-cost work.
 - **The walk is a fold over days,** stepped only on days with an act (P §2.2). One main
