@@ -4,7 +4,8 @@
 //! `law` that is a hole makes its line that hole), §5.7 (`x in K on d`: a hole `d` is that
 //! hole; §8.4 `RUN-NONE` for `none` and `never`), §5.19 Bindings (movements by day, a hole
 //! day last), §8.2 (the register: `assumed`, `held`, `world`, the law date and the cut; a
-//! tuple's `unfulfilled:` on its own line), §8.4 (a run-time refusal stands as its value).
+//! tuple's `unfulfilled:` on its own line), §8.4 (a run-time refusal stands as its value,
+//! with the register met before it; L §5.14.3 a refused `flows`, L §5.14 `with uncertain`).
 //! Twin: engine/tools/refcore/ask.py (`Asker`); the expected lines are refcore's run of the
 //! same text (`python3 -m refcore run`).
 //! Invariants: reads no test, vector or answer key (R-93); the text is written here, small.
@@ -320,6 +321,214 @@ none_day: refused: RUN-NONE a value is none here: the day of a membership test
     fn a_membership_tested_on_a_value_that_is_no_day_is_refused() {
         let want: Vec<&str> = MEMBERSHIP_LINES.lines().collect();
         assert_eq!(lines_of(MEMBERSHIP, Days::Events), want, "refcore's lines");
+    }
+
+    /// A payment into a place whose lifespan has ended is refused on 2025-02-05; decisions
+    /// read its flows, so their amounts are refused from then on: `match` on 2025-02-20, and
+    /// `split[b]` on 2025-02-25 after `split[a]` on 2025-01-20 moved 0.
+    const REFUSED_FLOWS: &str = r#"model rf
+  tally 2
+  on 2025-03-10
+  start 2025-01-01
+  end 2025-03-31
+
+source card "a card"
+
+unit DUK: currency minor 0.01
+
+kind ext: place DUK signed outside
+
+place out: ext lives 2025-01-01..
+
+place bank: accounts DUK lives 2025-01-01..
+
+place save: accounts DUK lives 2025-01-01..
+
+place old: accounts DUK lives 2025-01-01..2025-01-31
+
+input pay_amt: money DUK
+
+input pay_day: date
+
+input match_day: date
+
+index who = [a, b]
+
+input split_day[k in who]: date
+
+input from_day: date
+
+input feb_start: date
+
+input feb_end: date
+
+move pay: transfers
+  on pay_day
+  leg cash from bank to old amount pay_amt
+
+move match: transfers
+  on match_day
+  reads bank
+  leg cash from bank to save amount min(bal(bank), flows(pay, feb_start .. feb_end))
+
+move split[k in who]: transfers
+  on split_day[k]
+  reads bank
+  leg cash from bank to save amount min(bal(bank), flows(pay, from_day .. split_day[k]))
+
+version facts
+  cite card
+  governs always
+  known 2025-01-01
+  pay_amt = 50.00
+  pay_day = 2025-02-05
+  match_day = 2025-02-20
+  split_day[a] = 2025-01-20
+  split_day[b] = 2025-02-25
+  from_day = 2025-01-01
+  feb_start = 2025-02-01
+  feb_end = 2025-02-28
+  opening[bank] = 1000.00 at 2025-01-01 start
+  opening[save] = 0.00 at 2025-01-01 start
+  opening[old] = 0.00 at 2025-01-01 start
+
+ask matched: flows(match, 2025-02-01 .. 2025-03-31)
+
+ask splits: flows(split, 2025-01-01 .. 2025-03-31)
+
+ask early: flows(split, 2025-01-01 .. 2025-01-31)
+"#;
+
+    /// refcore's lines for [`REFUSED_FLOWS`]: a refused `flows` of a move keeps the register it
+    /// met before the refusal, the refused run's `unfulfilled:` and every earlier one's.
+    const REFUSED_FLOWS_LINES: &str = r"early: 0.00 DUK
+  unfulfilled: split[a]
+  cut 2025-03-10
+matched: refused: RUN-LIFESPAN pay.cash moves into or out of old outside its lifespan
+  unfulfilled: match
+  cut 2025-03-10
+splits: refused: RUN-LIFESPAN pay.cash moves into or out of old outside its lifespan
+  unfulfilled: split[a]
+  unfulfilled: split[b]
+  cut 2025-03-10";
+
+    #[test]
+    fn a_refused_flows_of_a_move_keeps_what_it_met_before() {
+        let want: Vec<&str> = REFUSED_FLOWS_LINES.lines().collect();
+        assert_eq!(
+            lines_of(REFUSED_FLOWS, Days::Events),
+            want,
+            "refcore's lines"
+        );
+        assert_eq!(
+            lines_of(REFUSED_FLOWS, Days::Every),
+            want,
+            "the every-day walk's lines"
+        );
+    }
+
+    /// A place's flows over a span that holds a booked rent, then a payment refused for a
+    /// lifespan; a balance `with uncertain` over two uncertain gifts, the second's amount a
+    /// division by zero.
+    const REFUSED_SUMS: &str = r#"model rp
+  tally 2
+  on 2025-03-10
+  start 2025-01-01
+  end 2025-03-31
+
+source card "a card"
+
+unit DUK: currency minor 0.01
+
+kind ext: place DUK signed outside
+
+kind promises: transfers uncertain
+
+place out: ext lives 2025-01-01..
+
+place bank: accounts DUK lives 2025-01-01..
+
+place old: accounts DUK lives 2025-01-01..2025-01-31
+
+input pay_amt: money DUK
+
+input rent_amt: money DUK
+
+input gift_amt: money DUK
+
+input none_amt: int
+
+input cent: money DUK
+
+input pay_day: date
+
+input rent_day: date
+
+input gift_day: date
+
+input late_day: date
+
+move rent: transfers
+  on rent_day
+  leg cash from bank to out amount rent_amt
+
+move pay: transfers
+  on pay_day
+  leg cash from bank to old amount pay_amt
+
+move gift: promises
+  on gift_day
+  leg cash from out to bank amount gift_amt
+
+move late: promises
+  on late_day
+  leg cash from out to bank amount round(gift_amt / none_amt, cent, half-up)
+
+version facts
+  cite card
+  governs always
+  known 2025-01-01
+  pay_amt = 50.00
+  rent_amt = 100.00
+  gift_amt = 40.00
+  none_amt = 0
+  cent = 0.01
+  rent_day = 2025-01-10
+  pay_day = 2025-02-05
+  gift_day = 2025-01-12
+  late_day = 2025-01-14
+  opening[bank] = 1000.00 at 2025-01-01 start
+  opening[old] = 0.00 at 2025-01-01 start
+
+ask bank_flows: flows(bank, 2025-01-01 .. 2025-03-31)
+
+ask with_gifts: bal(bank, 2025-01-31) with uncertain
+"#;
+
+    /// refcore's lines for [`REFUSED_SUMS`]: each refused line keeps the register met before
+    /// the refusal, the rent's `unfulfilled:` and both gifts' `uncertain:`.
+    const REFUSED_SUMS_LINES: &str = r"bank_flows: refused: RUN-LIFESPAN pay.cash moves into or out of old outside its lifespan
+  unfulfilled: rent
+  cut 2025-03-10
+with_gifts: refused: RUN-DIV division by zero
+  unfulfilled: rent
+  uncertain: gift
+  uncertain: late
+  cut 2025-03-10";
+
+    #[test]
+    fn a_refused_flows_of_a_place_or_with_uncertain_keeps_what_it_met_before() {
+        let want: Vec<&str> = REFUSED_SUMS_LINES.lines().collect();
+        assert_eq!(
+            lines_of(REFUSED_SUMS, Days::Events),
+            want,
+            "refcore's lines"
+        );
+        assert_eq!(
+            lines_of(REFUSED_SUMS, Days::Every),
+            want,
+            "the every-day walk's lines"
+        );
     }
 
     #[test]

@@ -401,3 +401,18 @@ G11 is split in three: G11a (this entry), G11b the fences P8-14 asks for, G11c c
 **Green.** No new T id; S gates since 060451c. Checked with the release binary, not committed (R-93): C1–C3 equal `tests/hh4/refcore/I_X_*.out` byte for byte; all 312 corpus records equal `kernel.refcore`; the three realities above equal refcore's lines.
 
 **Next:** the gate's re-check. **STOP-REPORTs:** none new. **Exceptions:** +0; count 6; report-only 5. **Check:** `check full: green, 31 steps (1216s)`, `milestone-report: M0: 2/2 green (gates once M0 is tagged)`.
+
+## 2026-11-02 S, G13b: N6, a refused read keeps the register it met before the refusal (issue #26)
+
+**The coordinator's word** (2026-11-02): N6 is inside S's scope and differs from refcore, so it is fixed now. T's gap goes into issue #37.
+
+**Fixed** (L §8.2, §8.4; E §4.2 step 5). refcore registers into the line's collector while it counts (`self.reg`, `self.cur.merge`), so a refusal met partway keeps what came before it. Three of the walk's reads gathered their register first and handed it to the reader only at the end, so a refusal dropped it:
+- **N6, `flows` of a move** (L §5.14.3; refcore `mreads.py` `m_flows_move`). `walk/reads.rs` `flows_move` now counts in `count_move`, and the register is handed over before the count's refusal propagates. A refused run's `unfulfilled:` and every earlier run's now print under the refused line.
+- **The same divergence in two other reads, found while fixing N6:** `flows` of a place (L §5.14.3; `m_flows_place`). `Sums::logs` reads the global log and the place's logs, and on a refusal what they met is kept; the adjustment entries still come only after the logs, as in refcore. And `bal(x, d) with uncertain` (L §5.14; `m_with_uncertain`): `Uncertain::movements`, so a refusal keeps the `uncertain:` entries before it. `walk/reads.rs`'s header says so.
+- Looked at and left: `book/observe.rs` `obs_links_for`, whose refcore twin pushes its own collector and drops it on a refusal, as the engine does; a def cell keeps and passes on what it met with a refusal already (`eval/rules.rs` `def_cell`).
+
+**Tests** (the builder's; refcore's lines; both day sources; the realities in the worktree's `tmp/s/g13/`): `tests/ask_cases.rs` `a_refused_flows_of_a_move_keeps_what_it_met_before` (n6.tally: a decision run refused alone, and a keyed decision whose second run is refused after the first moved 0) and `a_refused_flows_of_a_place_or_with_uncertain_keeps_what_it_met_before` (n7.tally). Each was reproduced before the fix: G13's binary prints the refused lines with only `cut`.
+
+**Green.** No new T id. Checked with the release binary, not committed (R-93): C1–C3 equal `tests/hh4/refcore/I_X_*.out` byte for byte; all 312 corpus records equal `kernel.refcore`; n1, n2, n3, n6 and n7 equal refcore's lines.
+
+**Next:** the gate's re-check. **STOP-REPORTs:** none new. **Exceptions:** +0; count 6; report-only 5. **Check:** `check full: green, 31 steps (1196s)`, `milestone-report: M0: 2/2 green (gates once M0 is tagged)`.

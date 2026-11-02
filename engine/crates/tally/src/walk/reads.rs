@@ -15,7 +15,10 @@
 //! `e_flows`, `flows_place`, `flows_move`, `leg_refused`, `less_own_obs`) and walk.py
 //! (`m_main_walk`).
 //! Invariants: a read inside a decision sees the walk only up to its point; a read at the cut
-//! sees the whole main walk; a hole a read meets is printed with every question it rests on.
+//! sees the whole main walk; a hole a read meets is printed with every question it rests on;
+//! a refused `flows` or `with uncertain` keeps the register it met before the refusal, as
+//! refcore registers while it counts; a leg refused by a walk a projection's walk continues
+//! is refused in it too.
 
 use std::collections::BTreeSet;
 
@@ -396,18 +399,10 @@ impl Engine {
             holes: Vec::new(),
             met: Collected::default(),
         };
-        for movement in &walk.uncertain {
-            for leg in &movement.legs {
-                let dated = leg
-                    .day
-                    .day()
-                    .or_else(|| movement.day.as_ref().and_then(Dated::day));
-                if counted(dated, window) {
-                    acc.leg(place, movement, leg)?;
-                }
-            }
-        }
+        let added = acc.movements(&walk.uncertain, place, window);
+        // refcore registers as it adds: a refusal keeps the `uncertain:` entries before it
         self.absorb(&acc.met);
+        added?;
         let mut all: Vec<Option<&Hole>> = acc.holes.iter().map(Some).collect();
         if let Value::Hole(h) = read {
             all.push(Some(h));
@@ -514,9 +509,10 @@ impl Engine {
             vec![pu.clone()]
         };
         let mut sums = Sums::default();
-        sums.global(walk, lo, limit)?;
-        for unit in units.iter().map(String::as_str).chain([ALL]) {
-            sums.place_log(walk, place, unit, (lo, limit))?;
+        if let Err(stop) = sums.logs(walk, place, &units, (lo, limit)) {
+            // refcore registers as it reads the logs: a refusal keeps what came before it
+            self.absorb(&sums.met);
+            return Err(stop);
         }
         for (day, entry) in walk.adj_regs.get(place).into_iter().flatten() {
             if *day <= last {
@@ -537,7 +533,9 @@ impl Engine {
     }
 
     /// A move's flows over a span: its movements dated in it, a decision's as the walk ran
-    /// them, the adjustments nothing settles a hole (refcore's `flows_move`). L §5.14.3, E §5.
+    /// them, the adjustments nothing settles a hole (refcore's `flows_move`). What the count
+    /// met reaches the reader even when the count is refused, as refcore registers while it
+    /// counts. L §5.14.3, E §5, L §8.2.
     fn flows_move(
         &mut self,
         m: &Reality,
@@ -557,8 +555,70 @@ impl Engine {
             self.move_instances(m, mv, ctx.cut)?
         };
         let mut acc = Counted::default();
-        for i in insts.iter() {
-            if !i.keys.starts_with(&want) {
+        let counted = self.count_move(
+            m,
+            (mv, &want, leg),
+            (insts.as_slice(), sp, last),
+            ctx,
+            &mut acc,
+        );
+        self.absorb(&acc.met);
+        counted?;
+        let Counted {
+            total,
+            mut units,
+            holes,
+            settle_unit,
+            ..
+        } = acc;
+        if units.is_empty()
+            && let Some(u) = settle_unit
+        {
+            units.insert(u);
+        }
+        if let Some(h) = spread(&holes.iter().map(Some).collect::<Vec<_>>()) {
+            return Ok(Value::Hole(h));
+        }
+        if units.len() > 1 {
+            let all: Vec<&str> = units.iter().map(String::as_str).collect();
+            return Err(refuse(
+                Run::Domain,
+                format!("flows of {}: movements in {}", mv.id, all.join(" and ")),
+            ));
+        }
+        let sum = match total {
+            Some(t) => t,
+            None => Num::zero(),
+        };
+        if let Some(u) = units.into_iter().next() {
+            return qty_value(m, &sum, &u);
+        }
+        match static_unit(m, mv, leg) {
+            Some(u) => qty_value(m, &sum, &u),
+            None => Err(refuse(
+                Run::Domain,
+                format!(
+                    "flows of {} over a span with no movement: its unit is unknown",
+                    mv.id
+                ),
+            )),
+        }
+    }
+
+    /// A move's movements and adjustments counted into `acc`, in refcore's order: each
+    /// instance's register and `unfulfilled:` before its legs, so a refusal that stops the
+    /// count leaves in `acc` what it met before (refcore's `flows_move`, its loop, which
+    /// registers as it goes). L §5.14.3, E §5 steps 5–6, L §8.2.
+    fn count_move(
+        &mut self,
+        m: &Reality,
+        (mv, want, leg): (&MoveInfo, &[KeyVal], Option<&str>),
+        (insts, sp, last): (&[Inst], &Span, Day),
+        ctx: Ctx,
+        acc: &mut Counted,
+    ) -> Result<(), Stop> {
+        for i in insts {
+            if !i.keys.starts_with(want) {
                 continue;
             }
             if matches!(i.status, Status::None | Status::Uncertain) {
@@ -581,7 +641,7 @@ impl Engine {
                 continue;
             }
             if i.status == Status::Modelled {
-                self.count_standing_in(m, i, leg, ctx.cut, &mut acc)?;
+                self.count_standing_in(m, i, leg, ctx.cut, acc)?;
                 continue;
             }
             if let Some(err) = &i.err {
@@ -618,51 +678,12 @@ impl Engine {
         }
         if !mv.decision {
             for adj in self.settled_move(m, mv, ctx.cut)? {
-                if leg.is_none_or(|l| l == adj.leg.name) && adj.inst_keys.starts_with(&want) {
-                    count_adjustment(m, &adj, sp, last, &mut acc)?;
+                if leg.is_none_or(|l| l == adj.leg.name) && adj.inst_keys.starts_with(want) {
+                    count_adjustment(m, &adj, sp, last, acc)?;
                 }
             }
         }
-        let Counted {
-            total,
-            mut units,
-            holes,
-            met,
-            settle_unit,
-        } = acc;
-        if units.is_empty()
-            && let Some(u) = settle_unit
-        {
-            units.insert(u);
-        }
-        self.absorb(&met);
-        if let Some(h) = spread(&holes.iter().map(Some).collect::<Vec<_>>()) {
-            return Ok(Value::Hole(h));
-        }
-        if units.len() > 1 {
-            let all: Vec<&str> = units.iter().map(String::as_str).collect();
-            return Err(refuse(
-                Run::Domain,
-                format!("flows of {}: movements in {}", mv.id, all.join(" and ")),
-            ));
-        }
-        let sum = match total {
-            Some(t) => t,
-            None => Num::zero(),
-        };
-        if let Some(u) = units.into_iter().next() {
-            return qty_value(m, &sum, &u);
-        }
-        match static_unit(m, mv, leg) {
-            Some(u) => qty_value(m, &sum, &u),
-            None => Err(refuse(
-                Run::Domain,
-                format!(
-                    "flows of {} over a span with no movement: its unit is unknown",
-                    mv.id
-                ),
-            )),
-        }
+        Ok(())
     }
 
     /// A modelled instance's flows: the observations that stand in for it on its covered
@@ -952,6 +973,24 @@ struct Uncertain {
 }
 
 impl Uncertain {
+    /// The legs at `place` of the uncertain movements dated inside `window`, each added; a
+    /// refusal stops the sum, what it met before kept here (refcore's `with_uncertain`, its
+    /// loop). L §5.14, §8.2.
+    fn movements(&mut self, movements: &[Inst], place: &str, window: Window) -> Result<(), Stop> {
+        for movement in movements {
+            for leg in &movement.legs {
+                let dated = leg
+                    .day
+                    .day()
+                    .or_else(|| movement.day.as_ref().and_then(Dated::day));
+                if counted(dated, window) {
+                    self.leg(place, movement, leg)?;
+                }
+            }
+        }
+        Ok(())
+    }
+
     /// One uncertain movement's leg at `place`: `uncertain:` in the register, its amount
     /// signed by its direction (refcore's `with_uncertain`, a leg). L §5.14.
     fn leg(&mut self, place: &str, movement: &Inst, leg: &super::plan::LegVal) -> Result<(), Stop> {
@@ -1000,6 +1039,23 @@ struct Sums {
 }
 
 impl Sums {
+    /// The walk's global log, then the place's log of each unit and of every unit, over the
+    /// span; a refusal stops the reading, what it met before kept here (refcore's
+    /// `flows_place`, its logs, which register as they go). L §5.14.3, §8.2.
+    fn logs(
+        &mut self,
+        walk: &Walk,
+        place: &str,
+        units: &[String],
+        (lo, limit): (At, At),
+    ) -> Result<(), Stop> {
+        self.global(walk, lo, limit)?;
+        for unit in units.iter().map(String::as_str).chain([ALL]) {
+            self.place_log(walk, place, unit, (lo, limit))?;
+        }
+        Ok(())
+    }
+
     /// What holds for the whole walk up to the span's end: a refusal from inside the span or
     /// from the walk's start, every hole (refcore's `flows_place`, its global log). L §5.14.3.
     fn global(&mut self, walk: &Walk, lo: At, limit: At) -> Result<(), Stop> {
