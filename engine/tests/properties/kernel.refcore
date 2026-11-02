@@ -47,8 +47,8 @@ flows_all: (0.00 DUK, -1 050.44 DUK, -18.14 DUK, -1 385.03 DUK, 2 453.61 DUK)
   unfulfilled: mv_4
   cut 2025-03-10
 warning: WARN-NEGATIVE acc_0 is below zero from 2025-01-02
-warning: WARN-NEGATIVE acc_2 is below zero from 2025-01-28
 warning: WARN-NEGATIVE acc_0 is below zero from 2025-03-26
+warning: WARN-NEGATIVE acc_2 is below zero from 2025-01-28
 ,14:determinism-01,5:split,1:0,510:bals: (-151.63 DUK, 3 934.37 DUK, -939.80 DUK, 3 296.73 DUK)
   unfulfilled: mv_0
   unfulfilled: mv_1
@@ -62,8 +62,8 @@ flows_all: (0.00 DUK, -1 050.44 DUK, -18.14 DUK, -1 385.03 DUK, 2 453.61 DUK)
   unfulfilled: mv_4
   cut 2025-03-10
 warning: WARN-NEGATIVE acc_0 is below zero from 2025-01-02
-warning: WARN-NEGATIVE acc_2 is below zero from 2025-01-28
 warning: WARN-NEGATIVE acc_0 is below zero from 2025-03-26
+warning: WARN-NEGATIVE acc_2 is below zero from 2025-01-28
 ,14:determinism-02,3:one,1:0,359:bals: (2 978.00 DUK, 1 298.13 DUK)
   unfulfilled: mv_0
   unfulfilled: mv_1
@@ -860,8 +860,8 @@ early: (3 678.54 DUK, -3 969.56 DUK, 291.02 DUK, -1 617.70 DUK, 1 385.57 DUK)
   unfulfilled: mv_0
   unfulfilled: mv_1
   cut 2025-01-30
-warning: WARN-NEGATIVE acc_1 is below zero from 2025-01-23
 warning: WARN-NEGATIVE acc_0 is below zero from 2025-03-28
+warning: WARN-NEGATIVE acc_1 is below zero from 2025-01-23
 ,18:foresight-known-12,5:later,1:0,774:at_on: (?"mv_2 on 2025-02-10 changed after it was paid (version late); is back pay due, and when?" (mv_2), -3 969.56 DUK, ?"mv_2 on 2025-02-10 changed after it was paid (version late); is back pay due, and when?" (mv_2), -1 617.70 DUK, ?"mv_2 on 2025-02-10 changed after it was paid (version late); is back pay due, and when?" (mv_2))
   adjustment: mv_2 by 1 092.84 DUK on 2025-03-11 (version late), remaining 1 092.84 DUK
   unfulfilled: mv_0
@@ -873,8 +873,8 @@ early: (3 678.54 DUK, -3 969.56 DUK, 291.02 DUK, -1 617.70 DUK, 1 385.57 DUK)
   unfulfilled: mv_0
   unfulfilled: mv_1
   cut 2025-01-30
-warning: WARN-NEGATIVE acc_1 is below zero from 2025-01-23
 warning: WARN-NEGATIVE acc_0 is below zero from 2025-03-28
+warning: WARN-NEGATIVE acc_1 is below zero from 2025-01-23
 ,18:foresight-known-13,4:base,1:0,264:at_on: (0.00 DUK, 0.00 DUK, 328.21 DUK, -328.21 DUK, 1 838.04 DUK, 4 855.35 DUK, 3 998.92 DUK)
   unfulfilled: mv_0
   cut 2025-03-01
@@ -1263,26 +1263,26 @@ warning: WARN-NEGATIVE acc_1 is below zero from 2025-02-12
   unfulfilled: mv_2
   unfulfilled: sweep
   cut 2025-03-23
-warning: WARN-NEGATIVE acc_2 is below zero from 2025-01-23
 warning: WARN-NEGATIVE acc_0 is below zero from 2025-02-10
 warning: WARN-NEGATIVE acc_1 is below zero from 2025-03-11
+warning: WARN-NEGATIVE acc_2 is below zero from 2025-01-23
 ,21:foresight-decision-17,5:later,1:0,275:swept: 4 069.09 DUK
   unfulfilled: mv_1
   unfulfilled: mv_2
   unfulfilled: sweep
   cut 2025-03-23
-warning: WARN-NEGATIVE acc_2 is below zero from 2025-01-23
 warning: WARN-NEGATIVE acc_0 is below zero from 2025-02-10
 warning: WARN-NEGATIVE acc_1 is below zero from 2025-03-11
+warning: WARN-NEGATIVE acc_2 is below zero from 2025-01-23
 ,21:foresight-decision-17,7:control,1:0,295:swept: 4 504.90 DUK
   unfulfilled: mv_1
   unfulfilled: mv_2
   unfulfilled: mv_x
   unfulfilled: sweep
   cut 2025-03-23
-warning: WARN-NEGATIVE acc_2 is below zero from 2025-01-23
 warning: WARN-NEGATIVE acc_0 is below zero from 2025-02-10
 warning: WARN-NEGATIVE acc_1 is below zero from 2025-03-11
+warning: WARN-NEGATIVE acc_2 is below zero from 2025-01-23
 ,21:foresight-decision-18,4:base,1:0,117:swept: 1 553.25 DUK
   unfulfilled: sweep
   cut 2025-02-10
@@ -1360,8 +1360,8 @@ warning: WARN-NEGATIVE acc_3 is below zero from 2025-01-16
   unfulfilled: sweep
   left out: sweep, 1 instances, first 2025-01-20
   cut 2025-02-06
-warning: WARN-NEGATIVE acc_3 is below zero from 2025-01-16
 warning: WARN-NEGATIVE acc_2 is below zero from 2025-02-16
+warning: WARN-NEGATIVE acc_3 is below zero from 2025-01-16
 ,23:foresight-projection-00,7:control,1:0,167:swept: 71 230.33 DUK
   unfulfilled: sweep
   left out: sweep, 1 instances, first 2025-01-20
@@ -1557,8 +1557,8 @@ warning: WARN-NEGATIVE acc_1 is below zero from 2025-02-09
   unfulfilled: mv_4
   left out: sweep, 1 instances, first 2025-02-24
   cut 2025-02-21
-warning: WARN-NEGATIVE acc_1 is below zero from 2025-02-09
 warning: WARN-NEGATIVE acc_0 is below zero from 2025-03-26
+warning: WARN-NEGATIVE acc_1 is below zero from 2025-02-09
 ,23:foresight-projection-12,7:control,1:0,186:swept: 76 040.13 DUK
   unfulfilled: mv_1
   unfulfilled: mv_4
@@ -1681,8 +1681,8 @@ warning: WARN-NEGATIVE acc_1 is below zero from 2025-02-09
   unfulfilled: sweep
   left out: sweep, 1 instances, first 2025-02-16
   cut 2025-03-26
-warning: WARN-NEGATIVE acc_1 is below zero from 2025-02-09
 warning: WARN-NEGATIVE acc_0 is below zero from 2025-03-06
+warning: WARN-NEGATIVE acc_1 is below zero from 2025-02-09
 ,23:foresight-projection-20,7:control,1:0,227:swept: 54 982.60 DUK
   unfulfilled: mv_1
   unfulfilled: mv_3

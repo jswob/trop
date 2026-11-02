@@ -31,6 +31,13 @@ name = "s_household"
 path = "milestone/s_household.rs"
 test = false
 
+# S: the kernel's vectors and the corpus, whole output against refcore's bytes (kernel/vectors.refcore;
+# MILESTONE-S.md row 5, issue #41)
+[[test]]
+name = "s_kernel"
+path = "milestone/s_kernel.rs"
+test = false
+
 # M0: the fixtures of the codes no check prints, LOAD-PATH first (codes/fixtures.tsv; gate 5)
 [[test]]
 name = "m0_codes"
