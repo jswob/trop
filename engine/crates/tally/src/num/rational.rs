@@ -310,6 +310,84 @@ mod tests {
         }
     }
 
+    /// xorshift64, a fixed-seed generator of 64-bit words, so the cases repeat.
+    struct Rng(u64);
+
+    impl Rng {
+        fn next(&mut self) -> u64 {
+            self.0 ^= self.0.checked_shl(13).expect("shift");
+            self.0 ^= self.0.checked_shr(7).expect("shift");
+            self.0 ^= self.0.checked_shl(17).expect("shift");
+            self.0
+        }
+
+        /// A small value whose numerator and denominator have at most `bits` bits each: short
+        /// decimals and whole numbers at 20 bits, values near the tier's edge at 63.
+        fn small(&mut self, bits: u32) -> Num {
+            let shift = 64_u32.checked_sub(bits).expect("at most 64 bits");
+            let mask = u64::MAX.checked_shr(shift).expect("a mask");
+            let top = i64::try_from(self.next() & mask).expect("at most 63 bits");
+            let n = if self.next() & 1 == 1 {
+                top.checked_neg().expect("negated")
+            } else {
+                top
+            };
+            let whole = self.next().checked_rem_euclid(3) == Some(0);
+            let d = if whole {
+                1
+            } else {
+                i64::try_from((self.next() & mask).max(1)).expect("at most 63 bits")
+            };
+            Num::ratio(n, d).expect("a small value")
+        }
+    }
+
+    #[test]
+    fn the_tiers_agree_on_fixed_seed_values() {
+        // P §6, the F4 fence's equivalence test: each operation on two small values, directly
+        // and through the big tier (scaled by 2^70 and back), gives one answer
+        let k = power_of_two(71);
+        let mut rng = Rng(0x5EED_2026_1102);
+        for case in 0..600_u32 {
+            let bits = [20, 40, 63]
+                .get(usize::try_from(case.checked_rem_euclid(3).expect("3")).expect("an index"))
+                .copied()
+                .expect("bits");
+            let x = rng.small(bits);
+            let y = rng.small(bits);
+            let product = x.checked_mul(&y).expect("x × y");
+            let through = x
+                .checked_mul(&k)
+                .and_then(|v| v.checked_mul(&y))
+                .and_then(|v| v.checked_div(&k))
+                .expect("x × 2^70 × y / 2^70");
+            assert_eq!(product, through, "multiply, case {case}");
+            let sum = x.checked_add(&y).expect("x + y");
+            let sum_big = x
+                .checked_add(&k)
+                .and_then(|v| v.checked_add(&y))
+                .and_then(|v| v.checked_sub(&k))
+                .expect("x + 2^70 + y - 2^70");
+            assert_eq!(sum, sum_big, "add, case {case}");
+            if !y.is_zero() {
+                let quotient = x.checked_div(&y).expect("x / y");
+                let quotient_big = x
+                    .checked_mul(&k)
+                    .and_then(|v| v.checked_div(&y))
+                    .and_then(|v| v.checked_div(&k))
+                    .expect("x × 2^70 / y / 2^70");
+                assert_eq!(quotient, quotient_big, "divide, case {case}");
+            }
+            let scaled_x = x.checked_mul(&k).expect("x × 2^70");
+            let scaled_y = y.checked_mul(&k).expect("y × 2^70");
+            assert_eq!(
+                x.compare(&y).expect("small"),
+                scaled_x.compare(&scaled_y).expect("big"),
+                "compare, case {case}"
+            );
+        }
+    }
+
     #[test]
     fn the_cap_is_4096_digits() {
         // BUILDER §10: fixtures at 13 606, 13 607 and 13 608 bits; 10^4096 - 1 passes,

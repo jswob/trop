@@ -1,12 +1,14 @@
-//! Twins on the kernel corpus: the event walk against the every-day walk, cells shared by law date class against cells at each law date.
+//! Twins on the kernel corpus and on X's three S checks: the event walk against the every-day walk, cells shared by law date class against cells at each law date.
 //! Spec: P §2.2 (the oracle: a step-every-day walk beside the event-driven one, built from the
 //! same step functions, prints the same bytes; a property test compares them on every case);
 //! E §4.2 (the day walk), §4.3 (a projection's walk); E §3.2 (the law date is a class), P §3.3
-//! (the trimming's check: every case run with it on and off, the bytes compared).
+//! (the trimming's check: every case run with it on and off, the bytes compared);
+//! BUILD-ORDER § S, Green ("the event walk equals the step-every-day walk on every S check").
 //! Twin: engine/tools/refcore/walk.py (`run_to`, which steps every day), evaluate.py
 //! (`def_cell`, its memo keyed by the exact law date).
-//! Invariants: reads the corpus's realities only, never its answer key (R-93); every record
-//! answers, both walks print each alike (SQ-3), and so do both memos.
+//! Invariants: reads the corpus's realities and X's files only, never an answer key or a
+//! baseline (R-93); every record and every check answers, both walks print each alike (SQ-3),
+//! and so do both memos on the corpus.
 
 #![forbid(unsafe_code)]
 
@@ -105,6 +107,168 @@ mod tests {
                 record.variant,
                 record.law
             );
+        }
+    }
+
+    /// X's files: each path, relative to the amendments folder, with its text.
+    type XFiles = [(&'static str, &'static str); 13];
+
+    /// X's base files at cut 11 of revision 1, as the S checks' recipes name them, relative to
+    /// the amendments folder (`checks.tsv`'s cwd), with their text.
+    const X_B_R1: XFiles = [
+        (
+            "cut11/b_r1/asks/cut.tally",
+            include_str!("../../../tests/integration/amendments/cut11/b_r1/asks/cut.tally"),
+        ),
+        (
+            "cut11/b_r1/facts/2026.tally",
+            include_str!("../../../tests/integration/amendments/cut11/b_r1/facts/2026.tally"),
+        ),
+        (
+            "cut11/b_r1/law/pl/benefits.tally",
+            include_str!("../../../tests/integration/amendments/cut11/b_r1/law/pl/benefits.tally"),
+        ),
+        (
+            "cut11/b_r1/law/pl/business.tally",
+            include_str!("../../../tests/integration/amendments/cut11/b_r1/law/pl/business.tally"),
+        ),
+        (
+            "cut11/b_r1/law/pl/common.tally",
+            include_str!("../../../tests/integration/amendments/cut11/b_r1/law/pl/common.tally"),
+        ),
+        (
+            "cut11/b_r1/law/pl/employment.tally",
+            include_str!(
+                "../../../tests/integration/amendments/cut11/b_r1/law/pl/employment.tally"
+            ),
+        ),
+        (
+            "cut11/b_r1/law/pl/wrappers.tally",
+            include_str!("../../../tests/integration/amendments/cut11/b_r1/law/pl/wrappers.tally"),
+        ),
+        (
+            "cut11/b_r1/loans.tally",
+            include_str!("../../../tests/integration/amendments/cut11/b_r1/loans.tally"),
+        ),
+        (
+            "cut11/b_r1/pays.tally",
+            include_str!("../../../tests/integration/amendments/cut11/b_r1/pays.tally"),
+        ),
+        (
+            "cut11/b_r1/people.tally",
+            include_str!("../../../tests/integration/amendments/cut11/b_r1/people.tally"),
+        ),
+        (
+            "cut11/b_r1/places.tally",
+            include_str!("../../../tests/integration/amendments/cut11/b_r1/places.tally"),
+        ),
+        (
+            "cut11/b_r1/reality.tally",
+            include_str!("../../../tests/integration/amendments/cut11/b_r1/reality.tally"),
+        ),
+        (
+            "cut11/b_r1/records/mbank/2026-09.tally",
+            include_str!(
+                "../../../tests/integration/amendments/cut11/b_r1/records/mbank/2026-09.tally"
+            ),
+        ),
+    ];
+
+    /// The same files of the revision `b_r1s`.
+    const X_B_R1S: XFiles = [
+        (
+            "cut11/b_r1s/asks/cut.tally",
+            include_str!("../../../tests/integration/amendments/cut11/b_r1s/asks/cut.tally"),
+        ),
+        (
+            "cut11/b_r1s/facts/2026.tally",
+            include_str!("../../../tests/integration/amendments/cut11/b_r1s/facts/2026.tally"),
+        ),
+        (
+            "cut11/b_r1s/law/pl/benefits.tally",
+            include_str!("../../../tests/integration/amendments/cut11/b_r1s/law/pl/benefits.tally"),
+        ),
+        (
+            "cut11/b_r1s/law/pl/business.tally",
+            include_str!("../../../tests/integration/amendments/cut11/b_r1s/law/pl/business.tally"),
+        ),
+        (
+            "cut11/b_r1s/law/pl/common.tally",
+            include_str!("../../../tests/integration/amendments/cut11/b_r1s/law/pl/common.tally"),
+        ),
+        (
+            "cut11/b_r1s/law/pl/employment.tally",
+            include_str!(
+                "../../../tests/integration/amendments/cut11/b_r1s/law/pl/employment.tally"
+            ),
+        ),
+        (
+            "cut11/b_r1s/law/pl/wrappers.tally",
+            include_str!("../../../tests/integration/amendments/cut11/b_r1s/law/pl/wrappers.tally"),
+        ),
+        (
+            "cut11/b_r1s/loans.tally",
+            include_str!("../../../tests/integration/amendments/cut11/b_r1s/loans.tally"),
+        ),
+        (
+            "cut11/b_r1s/pays.tally",
+            include_str!("../../../tests/integration/amendments/cut11/b_r1s/pays.tally"),
+        ),
+        (
+            "cut11/b_r1s/people.tally",
+            include_str!("../../../tests/integration/amendments/cut11/b_r1s/people.tally"),
+        ),
+        (
+            "cut11/b_r1s/places.tally",
+            include_str!("../../../tests/integration/amendments/cut11/b_r1s/places.tally"),
+        ),
+        (
+            "cut11/b_r1s/reality.tally",
+            include_str!("../../../tests/integration/amendments/cut11/b_r1s/reality.tally"),
+        ),
+        (
+            "cut11/b_r1s/records/mbank/2026-09.tally",
+            include_str!(
+                "../../../tests/integration/amendments/cut11/b_r1s/records/mbank/2026-09.tally"
+            ),
+        ),
+    ];
+
+    /// One of X's checks answered with the walk stepping `days`: the files as the check's
+    /// recipe names them, the one ask.
+    fn x_answer(files: &[(&str, &str)], ask: &str, days: Days) -> Option<Vec<String>> {
+        let given = files
+            .iter()
+            .map(|(path, text)| Given {
+                path: (*path).to_owned(),
+                bytes: Some(text.as_bytes().to_vec()),
+            })
+            .collect();
+        let request = Request {
+            asks: Asks::Named(vec![ask.to_owned()]),
+            pin: Pin::Canonical,
+            days,
+        };
+        match run_with_memo(given, &request, Memo::Classes) {
+            Ok(out) => Some(out.lines().to_vec()),
+            Err(NotImplemented) => None,
+        }
+    }
+
+    #[test]
+    fn the_event_walk_prints_what_the_every_day_walk_prints_on_xs_checks() {
+        // C1–C3 (BUILD-ORDER § S, Green): konto_balance and replay_september at b_r1,
+        // replay_september at b_r1s.
+        let checks: [(&XFiles, &str, &str); 3] = [
+            (&X_B_R1, "b_r1", "konto_balance"),
+            (&X_B_R1, "b_r1", "replay_september"),
+            (&X_B_R1S, "b_r1s", "replay_september"),
+        ];
+        for (files, cut, ask) in checks {
+            let events = x_answer(files, ask, Days::Events);
+            let every = x_answer(files, ask, Days::Every);
+            assert!(events.is_some(), "{ask}@{cut} is answered");
+            assert_eq!(events, every, "{ask}@{cut}");
         }
     }
 

@@ -3,6 +3,10 @@
 //! Twin: engine/tools/refcore/values.py (Python's `math.gcd`, inside `Fraction`).
 //! Invariants: every result is the gcd of the absolute values, gcd(0, 0) = 0; no step can
 //! crash or wrap: each division is a checked call.
+//! PERF: P8-M2 (the gcd of a 5 049-bit and a 64-bit value: one big-by-small remainder, then
+//! machine words; Lehmer's steps for balanced big values); plain twin: refcore (Python's
+//! `math.gcd`), and in this file's tests a plain Euclid on the big values; the equivalence
+//! test: `lehmer_agrees_with_euclid`, 200 fixed-seed cases.
 //!
 //! Lehmer's algorithm is Knuth, TAOCP vol. 2, 4.5.2, Algorithm L, with 64-bit leading parts
 //! and `i128` cofactors. Collins's test (the two quotients agree) keeps every quotient

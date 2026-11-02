@@ -133,13 +133,16 @@ impl Engine {
         Ok(())
     }
 
-    /// The next day of the walk, opened and walked; the walk done when the day source has no
-    /// day left (refcore's `run_to`). E §4.2, P §2.2.
+    /// The next day of the walk, opened and walked, the checkpoints of the months it enters
+    /// kept before it; the walk done when the day source has no day left (refcore's `run_to`).
+    /// E §4.2, P §2.2, §2.4.
     fn step_day(&mut self, m: &Reality, id: usize) -> Result<(), Stop> {
         if self.walk(id)?.today.is_none() {
             let days = self.days;
             let walk = self.walk_mut(id)?;
-            let Some(day) = walk.next_day(days, &walk.endings) else {
+            let next = walk.next_day(days, &walk.endings);
+            walk.keep_checkpoints(next)?;
+            let Some(day) = next else {
                 walk.progress = Progress::Done;
                 return Ok(());
             };

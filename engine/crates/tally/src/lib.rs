@@ -161,7 +161,8 @@ pub mod walk {
     pub use point::{At, Step};
     pub use projection::ProjKey;
     pub use state::{
-        ALL, Change, Ent, Group, Log, Progress, Projected, St, Taken, Today, Walk, WalkObs,
+        ALL, Change, Checkpoint, Ent, Group, Log, Progress, Projected, St, Taken, Today, Walk,
+        WalkObs,
     };
 }
 

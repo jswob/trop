@@ -16,6 +16,12 @@
 //! day; the event walk steps the days with an act, the run's first day and each lifespan's
 //! last; the oracle steps every day from S to E through the same steps; a projection's walk
 //! books nothing of a move its holder's dependents hold.
+//! PERF: P8-14 (days stepped: the event walk opens only the run's first day, the days with an
+//! act and each lifespan's last, where refcore steps every day; X's replay steps 926 days in
+//! 21 walks); plain twin: crates/tally/src/oracle.rs (`Days::Every`, every day from S to E
+//! through the same step functions); the equivalence test: the walk oracle in the CLI's
+//! tests, `crates/tally-cli/tests/walk_oracle.rs` (the kernel corpus and X's three S checks,
+//! the same bytes under both).
 
 use std::collections::{BTreeMap, BTreeSet};
 

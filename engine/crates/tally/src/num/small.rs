@@ -3,6 +3,10 @@
 //! Twin: engine/tools/refcore/values.py (Python's `Fraction`).
 //! Invariants: reduced; `0 < d ≤ i64::MAX`; `n ≠ i64::MIN`; every result is computed exactly in
 //! 128 bits, and one that doesn't fit the small tier is handed back as a 128-bit pair.
+//! PERF: P8-M1 (`Num` add and multiply on whole and short-decimal values: two machine words,
+//! 128-bit intermediates, the whole-number shortcut, no allocation); plain twin: big.rs (the
+//! big tier alone, which holds every value); the equivalence test: rational.rs's tests, the
+//! same operations on fixed-seed values directly and through the big tier.
 //!
 //! The intermediates can't overflow 128 bits: each product of two values under 2^63 is under
 //! 2^126, and a sum of two such is under 2^127. The checked calls stay anyway (R-19).
