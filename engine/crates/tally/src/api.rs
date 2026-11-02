@@ -10,6 +10,7 @@
 use crate::NotImplemented;
 use crate::ask::answer;
 use crate::base::Refusal;
+use crate::eval::Memo;
 use crate::load::load;
 use crate::oracle::Days;
 use crate::syntax::{Stop, parse_reality};
@@ -113,6 +114,21 @@ impl Answer {
 /// [`NotImplemented`] for a construct the engine doesn't build yet, and for a load refusal:
 /// load's checks are M0's, so a refusal load meets may not be the one refcore prints first.
 pub fn run(given: Vec<Given>, request: &Request) -> Result<Answer, NotImplemented> {
+    run_with_memo(given, request, Memo::Classes)
+}
+
+/// [`run`] with each ask's memo keeping its cells as `memo` says: shared by a law date class,
+/// as [`run`] keeps them, or at each exact law date, the plain twin the equivalence test
+/// compares it with (E §3.2, P §3.3).
+///
+/// # Errors
+///
+/// As [`run`].
+pub fn run_with_memo(
+    given: Vec<Given>,
+    request: &Request,
+    memo: Memo,
+) -> Result<Answer, NotImplemented> {
     let sources = match read(given) {
         Err(refusal) => return Ok(Answer::refused(&refusal)),
         Ok(sources) => sources,
@@ -125,7 +141,7 @@ pub fn run(given: Vec<Given>, request: &Request) -> Result<Answer, NotImplemente
     let Ok(reality) = load(files) else {
         return Err(NotImplemented);
     };
-    match answer(&reality, &request.asks, request.days) {
+    match answer(&reality, &request.asks, request.days, memo) {
         Ok(answered) => Ok(Answer {
             lines: answered.lines,
             #[cfg(feature = "counters")]

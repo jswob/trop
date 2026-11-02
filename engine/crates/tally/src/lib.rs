@@ -17,7 +17,7 @@ mod api;
 mod counters;
 mod oracle;
 
-pub use api::{Answer, Asks, Given, Pin, Request, Source, run};
+pub use api::{Answer, Asks, Given, Pin, Request, Source, run, run_with_memo};
 #[cfg(feature = "counters")]
 pub use counters::Counters;
 #[cfg(feature = "counters")]
@@ -119,6 +119,7 @@ pub mod eval {
     mod band;
     mod builtin;
     mod expr;
+    mod memo;
     mod read;
     mod rules;
     mod stack;
@@ -128,6 +129,7 @@ pub mod eval {
     pub use aggregate::Member;
     pub(crate) use aggregate::{order_text, reads_name};
     pub use arith::{Op, Test, arith, compare, currency_of, int_of, negate, same_value};
+    pub use memo::Memo;
     pub(crate) use read::{convert_row, make_keys, thing_seen, to_key};
     pub use stack::Item;
     pub(crate) use state::num_stop;

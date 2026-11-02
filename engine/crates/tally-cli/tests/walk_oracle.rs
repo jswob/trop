@@ -1,16 +1,19 @@
-//! The walk oracle on the kernel corpus: every record answered by the event walk and by the step-every-day walk, the same bytes.
+//! Twins on the kernel corpus: the event walk against the every-day walk, cells shared by law date class against cells at each law date.
 //! Spec: P §2.2 (the oracle: a step-every-day walk beside the event-driven one, built from the
 //! same step functions, prints the same bytes; a property test compares them on every case);
-//! E §4.2 (the day walk), §4.3 (a projection's walk).
-//! Twin: engine/tools/refcore/walk.py (`run_to`, which steps every day).
+//! E §4.2 (the day walk), §4.3 (a projection's walk); E §3.2 (the law date is a class), P §3.3
+//! (the trimming's check: every case run with it on and off, the bytes compared).
+//! Twin: engine/tools/refcore/walk.py (`run_to`, which steps every day), evaluate.py
+//! (`def_cell`, its memo keyed by the exact law date).
 //! Invariants: reads the corpus's realities only, never its answer key (R-93); every record
-//! answers, and both walks print each alike (SQ-3).
+//! answers, both walks print each alike (SQ-3), and so do both memos.
 
 #![forbid(unsafe_code)]
 
 #[cfg(test)]
 mod tests {
-    use tally::{Asks, Days, Given, NotImplemented, Pin, Request, run};
+    use tally::eval::Memo;
+    use tally::{Asks, Days, Given, NotImplemented, Pin, Request, run_with_memo};
 
     /// T's generated realities: netstring records of law, case, variant, arguments, files.
     const CORPUS: &str = include_str!("../../../tests/properties/kernel.corpus");
@@ -65,8 +68,9 @@ mod tests {
         }
     }
 
-    /// A record's answer with the walk stepping `days`; none past what the engine builds.
-    fn answer(record: &Record, days: Days) -> Option<Vec<String>> {
+    /// A record's answer with the walk stepping `days` and the memo keeping cells as `memo`
+    /// says; none past what the engine builds.
+    fn answer(record: &Record, days: Days, memo: Memo) -> Option<Vec<String>> {
         let given = record
             .files
             .iter()
@@ -80,7 +84,7 @@ mod tests {
             pin: Pin::Canonical,
             days,
         };
-        match run(given, &request) {
+        match run_with_memo(given, &request, memo) {
             Ok(out) => Some(out.lines().to_vec()),
             Err(NotImplemented) => None,
         }
@@ -91,11 +95,29 @@ mod tests {
         let all = records(CORPUS);
         assert_eq!(all.len(), 312, "the corpus's records");
         for record in &all {
-            let events = answer(record, Days::Events);
-            let every = answer(record, Days::Every);
+            let events = answer(record, Days::Events, Memo::Classes);
+            let every = answer(record, Days::Every, Memo::Classes);
             assert_eq!(events, every, "{} {}", record.case, record.variant);
             assert!(
                 events.is_some(),
+                "{} {} ({}) is answered",
+                record.case,
+                record.variant,
+                record.law
+            );
+        }
+    }
+
+    #[test]
+    fn cells_shared_by_law_date_class_print_what_cells_at_each_law_date_print() {
+        let all = records(CORPUS);
+        assert_eq!(all.len(), 312, "the corpus's records");
+        for record in &all {
+            let shared = answer(record, Days::Events, Memo::Classes);
+            let exact = answer(record, Days::Events, Memo::Exact);
+            assert_eq!(shared, exact, "{} {}", record.case, record.variant);
+            assert!(
+                shared.is_some(),
                 "{} {} ({}) is answered",
                 record.case,
                 record.variant,

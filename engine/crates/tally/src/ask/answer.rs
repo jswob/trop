@@ -14,7 +14,7 @@ use std::collections::BTreeMap;
 use super::register::{register_lines, warning_lines};
 use super::residuals::residual_lines;
 use crate::base::{Code, Load, Refusal, Run, Warn};
-use crate::eval::{Collected, Ctx, Engine, Entry, Env, Item, Member, num_stop};
+use crate::eval::{Collected, Ctx, Engine, Entry, Env, Item, Member, Memo, num_stop};
 use crate::model::{Reality, Value};
 use crate::syntax::{Ask, AskBody, Bind, Domain, Expr, Stop};
 use crate::time::{Day, PeriodKind};
@@ -40,19 +40,22 @@ struct Seen {
     /// The booked plan amounts the asks met, each ask's engine checked against the earlier
     /// asks' (E §9 item 5).
     booked: BTreeMap<(String, Day), Booked>,
+    /// How each ask's engine keeps its cells across law dates (E §3.2).
+    memo: Memo,
     /// The engines' counts together.
     #[cfg(feature = "counters")]
     counts: crate::Counters,
 }
 
 /// The lines a run prints for its asks: each ask's lines, the asks in id order or in the order
-/// the run names them, then the run's warnings (refcore's `Asker.run`). L §5.18, §8.5.
+/// the run names them, then the run's warnings (refcore's `Asker.run`), each ask's engine
+/// walking `days` and keeping its cells as `memo` says. L §5.18, §8.5.
 ///
 /// # Errors
 ///
 /// `LOAD-NAME` for an ask the run names that the reality lacks; `NotBuilt` for a load refusal
 /// met at run and for a construct S doesn't build.
-pub fn answer(m: &Reality, asks: &Asks, days: Days) -> Result<Answered, Stop> {
+pub fn answer(m: &Reality, asks: &Asks, days: Days, memo: Memo) -> Result<Answered, Stop> {
     let order: Vec<&Ask> = match asks {
         Asks::Every => {
             let mut all: Vec<&Ask> = m.asks.iter().collect();
@@ -74,6 +77,7 @@ pub fn answer(m: &Reality, asks: &Asks, days: Days) -> Result<Answered, Stop> {
     let mut seen = Seen {
         warnings: m.warnings.clone(),
         booked: BTreeMap::new(),
+        memo,
         #[cfg(feature = "counters")]
         counts: crate::Counters::default(),
     };
@@ -117,6 +121,7 @@ fn ask_lines(m: &Reality, ask: &Ask, days: Days, seen: &mut Seen) -> Result<Vec<
     if let Some(known) = &ask.known {
         let mut engine = Engine::new(m.on)
             .with_days(days)
+            .with_memo(seen.memo)
             .for_ask(ask)
             .with_booked(core::mem::take(&mut seen.booked));
         let v = engine.value(m, known, &Env::empty(), Ctx::new(None, cut));
@@ -129,6 +134,7 @@ fn ask_lines(m: &Reality, ask: &Ask, days: Days, seen: &mut Seen) -> Result<Vec<
     }
     let mut engine = Engine::new(cut)
         .with_days(days)
+        .with_memo(seen.memo)
         .for_ask(ask)
         .with_booked(core::mem::take(&mut seen.booked));
     let out = ask_body(m, ask, &mut engine, cut);

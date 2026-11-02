@@ -407,6 +407,7 @@ impl Engine {
             return Ok(Rc::clone(hit));
         }
         if self.plan_active.contains(&key) {
+            self.narrow_open_to_days();
             return Err(Stop::Refused(Refusal::new(
                 Code::Run(Run::Cycle),
                 format!("{} reads its own instances", mv.id),

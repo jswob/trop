@@ -9,13 +9,14 @@
 //! has its input's declared type; a hole is built in the hole module.
 
 use super::arith::{Op, arith, int_of};
+use super::memo::{LawClass, may_hold, rows_class};
 use super::state::{Ctx, Engine, invariant, num_stop, refuse, refuse_load};
 use crate::base::{Load, Run};
 use crate::hole::Hole;
 use crate::load::index_key_of;
 use crate::model::{
     BindInfo, Class, Code, CodeKind, Domain, IndexInfo, InputInfo, KeyVal, Number, PeriodWord,
-    Reality, Row, Ty, Unit, Value, currency_id, num_money,
+    Reality, Row, TimePos, Ty, Unit, Value, currency_id, num_money,
 };
 use crate::num::Num;
 use crate::read::{Asked, Clocks, Found, held, origin, read_input, time_point};
@@ -76,7 +77,13 @@ impl Engine {
         #[cfg(feature = "counters")]
         self.counts
             .read(format!("{}|{}", origin(&input.id, keys), ctx.key()));
-        match read_input(m, input, keys, clocks, asked)? {
+        let by_law = self.read_class(m, input, ctx, asked)?;
+        let found = read_input(m, input, keys, clocks, asked)?;
+        if by_law && !matches!(found, Found::Row(_)) {
+            // a thing's lifespan or the question's text: the day itself (L §4.6 step 5)
+            self.narrow_to_day(ctx.law);
+        }
+        match found {
             Found::Row(at) => {
                 let row = input
                     .rows
@@ -88,6 +95,32 @@ impl Engine {
             Found::None => Ok(Value::None),
             Found::Hole(q) => Ok(Value::Hole(Hole::asked(&q.text, &q.origin))),
         }
+    }
+
+    /// Narrows the reading cell's law date class by what a read of `input` tests its law
+    /// date against: every row's span, or the day itself for a reading, a calendar's days and
+    /// a priced figure; true when the read's day is the law date, not a time key's (E §3.2,
+    /// L §4.6 step 1).
+    fn read_class(
+        &mut self,
+        m: &Reality,
+        input: &InputInfo,
+        ctx: Ctx,
+        asked: Asked,
+    ) -> Result<bool, Stop> {
+        let Some(day) = ctx.law else {
+            return Ok(false);
+        };
+        if input.reading || asked == Asked::Calendar || input.prices.is_some() {
+            self.narrow_to_day(ctx.law);
+            return Ok(true);
+        }
+        if matches!(input.time_pos, TimePos::At(_)) {
+            return Ok(false);
+        }
+        let class = rows_class(m, &input.rows, ctx.cut, day)?;
+        self.narrow(ctx.law, class);
+        Ok(true)
     }
 
     /// A chosen row's value with the register entries it makes: `assumed` (its own and its
@@ -123,7 +156,16 @@ impl Engine {
             Converted::Value(v) => v,
         };
         let point = time_point(input, keys, ctx.law)?;
-        if held(m, row, point.day, self.clocks(ctx))? {
+        let is_held = held(m, row, point.day, self.clocks(ctx))?;
+        if let (Some(day), false) = (ctx.law, matches!(input.time_pos, TimePos::At(_))) {
+            if is_held {
+                // the `held` entry names the day (L §8.2)
+                self.narrow_to_day(ctx.law);
+            } else {
+                self.unheld_class(m, row, ctx, day)?;
+            }
+        }
+        if is_held {
             let shown = shown(m, &value)?;
             let read_for = match (&point.period, point.day) {
                 (Some(period), _) => Value::of_key(period).text(m).map_err(num_stop)?,
@@ -137,6 +179,20 @@ impl Engine {
             );
         }
         Ok(value)
+    }
+
+    /// Narrows the reading cell's law date class, for a row read for law date `day` and not
+    /// `held`, to the day's side of the ask's cut where a later day would hold it (L §8.2,
+    /// E §3.2).
+    fn unheld_class(&mut self, m: &Reality, row: &Row, ctx: Ctx, day: Day) -> Result<(), Stop> {
+        if row.instant.is_none()
+            && let Some(span) = crate::read::row_span(m, row, ctx.cut)?
+            && may_hold(&span)
+        {
+            let class = LawClass::all().by_ask_cut(day, self.ask_cut);
+            self.narrow(ctx.law, class);
+        }
+        Ok(())
     }
 
     /// A figure in Y prices moved to its read's day by the index it names: `x × idx[d] /

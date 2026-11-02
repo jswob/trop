@@ -40,6 +40,7 @@ impl Engine {
             return Ok(hit.clone());
         }
         if self.adjust_all_active.contains(&cut) {
+            self.narrow_open_to_days();
             return Err(Stop::Refused(Refusal::new(
                 Code::Run(Run::Cycle),
                 "the adjustments read themselves (a measured move reads adjustments)".to_owned(),
@@ -177,6 +178,7 @@ impl Engine {
         }
         let key = (format!("{}, its settlements", mv.id), cut);
         if self.plan_active.contains(&key) {
+            self.narrow_open_to_days();
             return Err(Stop::Refused(Refusal::new(
                 Code::Run(Run::Cycle),
                 format!("{} reads its own instances", mv.id),

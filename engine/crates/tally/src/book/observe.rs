@@ -224,6 +224,7 @@ impl Engine {
             return Ok(obs);
         }
         if self.link_active.contains(&key) {
+            self.narrow_open_to_days();
             return Err(Stop::Refused(Refusal::new(
                 Code::Run(Run::Cycle),
                 format!("the link to {tid} reads its own observations"),

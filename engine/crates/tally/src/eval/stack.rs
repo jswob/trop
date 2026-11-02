@@ -10,13 +10,13 @@
 //! does, and ends with no cell in progress.
 
 use super::aggregate::Member;
-use super::rules::{cell_key, key_env};
+use super::memo::{CellId, CellKey};
+use super::rules::key_env;
 use super::state::{Collected, Ctx, Engine, Env, invariant};
 use crate::base::{Code, Refusal};
 use crate::book::Ledger;
 use crate::hole::Hole;
 use crate::model::{DefInfo, KeyVal, Reality, Value};
-use crate::read::origin;
 use crate::syntax::{Bind, Expr, Residuals, Stop};
 
 /// One value of an ask's line: a value, or the run-time refusal it met, which the line prints
@@ -164,7 +164,7 @@ impl Engine {
 
     /// Keeps cell `key`, which unwound past the counted depth, in progress under the task
     /// that its read waits on (R-16).
-    pub(super) fn suspend(&mut self, key: String) -> Result<(), Stop> {
+    pub(super) fn suspend(&mut self, key: CellId) -> Result<(), Stop> {
         let task = self
             .work
             .last_mut()
@@ -199,7 +199,8 @@ impl Engine {
                 }
                 continue;
             }
-            if !self.memo.contains_key(&cell_key(&origin(&id, &keys), ctx)) {
+            let kept = CellKey::new(&id, &keys, ctx.cut, ctx.at);
+            if self.cells.get(&kept, ctx.law).is_none() {
                 return Err(invariant("a task finished with no cell in the memo"));
             }
             let done = self

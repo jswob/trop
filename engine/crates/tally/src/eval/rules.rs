@@ -21,6 +21,7 @@ use crate::read::{Test, candidates, choose, origin, rule_in_force};
 use crate::syntax::{LawDate, RuleValue, Stop};
 use crate::time::Day;
 
+use super::memo::{CellId, CellKey, LawClass, rows_class, rules_class};
 use super::read::{Converted, convert, shown};
 
 impl Engine {
@@ -90,25 +91,30 @@ impl Engine {
         env: &Env,
         ctx: Ctx,
     ) -> Result<Value, Stop> {
-        let figure = origin(&def.id, keys);
-        let key = cell_key(&figure, ctx);
-        if let Some(cell) = self.memo.get(&key) {
+        let key = CellKey::new(&def.id, keys, ctx.cut, ctx.at);
+        if let Some((cell, class)) = self.cells.get(&key, ctx.law) {
             let result = cell.result.clone();
             let met = cell.met.clone();
             self.absorb(&met);
+            self.narrow(ctx.law, class);
             #[cfg(feature = "counters")]
             self.counts.add(crate::Unit::DefHit);
             return result;
         }
-        if self.active.contains(&key) {
-            if self.guarded.as_ref().is_some_and(|g| g.contains(&key)) {
+        let id = CellId::new(key, ctx.law);
+        if self.active.contains(&id) {
+            self.narrow_open_to_days();
+            if self.guarded.as_ref().is_some_and(|g| g.contains(&id)) {
                 return Err(Stop::NotBuilt(
                     "a leg's read whose walk needs a cell still being computed (a prefix walk)",
                 ));
             }
             return Err(refuse(
                 Run::Cycle,
-                format!("{figure} reads itself through a computed key"),
+                format!(
+                    "{} reads itself through a computed key",
+                    origin(&def.id, keys)
+                ),
             ));
         }
         if self.depth >= DEPTH_LIMIT {
@@ -120,39 +126,46 @@ impl Engine {
             });
             return Err(Stop::Deep);
         }
-        self.active.insert(key.clone());
+        self.active.insert(id.clone());
         self.depth = self
             .depth
             .checked_add(1)
             .ok_or_else(|| invariant("the depth count"))?;
         self.push();
+        self.open_class(ctx.law);
         let outer = self.holding(Node::new(NodeKind::Def, &def.id));
         let result = self
             .rules(m, def, keys, env, ctx)
             .and_then(|v| coerce_def(m, def, v));
         self.holder = outer;
+        let class = self.close_class();
         let met = self.pop_alone();
         self.depth = self
             .depth
             .checked_sub(1)
             .ok_or_else(|| invariant("the depth count"))?;
+        let class = class?;
         if result == Err(Stop::Deep) {
-            self.suspend(key)?;
+            self.suspend(id)?;
             #[cfg(feature = "counters")]
             self.counts.add(crate::Unit::DefUnwound);
             return result;
         }
-        self.active.remove(&key);
+        self.active.remove(&id);
         self.absorb(&met);
         #[cfg(feature = "counters")]
         self.counts.miss(&def.id);
-        self.memo.insert(
-            key,
-            Cell {
-                result: result.clone(),
-                met,
-            },
-        );
+        // a walk-bound cell is kept at its own point and law date (E §3.2)
+        let class = match (ctx.at, ctx.law) {
+            (Some(_), Some(day)) => LawClass::day(day),
+            _ => class,
+        };
+        let cell = Cell {
+            result: result.clone(),
+            met,
+        };
+        let kept = self.cells.keep(id.key, ctx.law, class, cell)?;
+        self.narrow(ctx.law, kept);
         result
     }
 
@@ -169,6 +182,10 @@ impl Engine {
         let figure = origin(&def.id, keys);
         if let Some(given) = self.given(m, def, keys, ctx)? {
             return Ok(given);
+        }
+        if let Some(day) = ctx.law {
+            let class = rules_class(m, def, ctx.cut, day)?;
+            self.narrow(ctx.law, class);
         }
         let live = in_force(m, def, ctx)?;
         let order = beats_order(def, &live)?;
@@ -219,6 +236,7 @@ impl Engine {
             .collect();
         let law_text = ctx.law.map_or_else(|| "no law date".to_owned(), Day::text);
         if let [first, second, ..] = cands.as_slice() {
+            self.narrow_to_day(ctx.law);
             return Err(refuse(
                 Run::Conflict,
                 format!(
@@ -240,6 +258,7 @@ impl Engine {
             return Ok(Value::Hole(hole));
         }
         let Some(win) = cands.first().copied() else {
+            self.narrow_to_day(ctx.law);
             return Err(refuse(
                 Run::NoRule,
                 format!("no rule applies to {figure} on {law_text}"),
@@ -298,6 +317,10 @@ impl Engine {
     ) -> Result<Option<Value>, Stop> {
         if def.givens.is_empty() {
             return Ok(None);
+        }
+        if let Some(day) = ctx.law {
+            let class = rows_class(m, &def.givens, ctx.cut, day)?;
+            self.narrow(ctx.law, class);
         }
         let cands = candidates(m, &def.givens, &def.binds, keys, Test::At(ctx.law), ctx.cut)?;
         let Some(at) = choose(m, &def.givens, &def.binds, &cands, ctx.cut, &def.id)? else {
@@ -479,12 +502,6 @@ pub(super) fn key_env(def: &DefInfo, keys: &[KeyVal]) -> Env {
         env.bind(&bind.var, Value::of_key(key), Some(bind.domain.clone()));
     }
     env
-}
-
-/// The memo's key of a cell: the def at its keys as the register names it, and the context
-/// (E §3.2).
-pub(super) fn cell_key(figure: &str, ctx: Ctx) -> String {
-    format!("{figure}|{}", ctx.key())
 }
 
 /// The refusal of an `at` whose value is no day (refcore's `law_value`). L §4.3.

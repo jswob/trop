@@ -18,6 +18,8 @@ use crate::syntax::{Ask, Stop};
 use crate::time::Day;
 use crate::walk::{Inst, ProjKey, Walk, WalkAt};
 
+use super::memo::{CellId, Cells, Frame, Memo};
+
 /// The deepest chain of def cells computed by plain calls; past it the cell demanded waits on
 /// the work stack (R-16, BUILDER §4). U-15, measured at S: a debug build uses about 19 KB of
 /// stack per def cell, so 32 cells take about 0.6 MB of the 2 MiB thread T's runner gives a
@@ -48,8 +50,9 @@ impl Ctx {
         Ctx { law, ..self }
     }
 
-    /// The context as a memo key's text: a running read's cells are kept per walk point
-    /// (E §3.2).
+    /// The context as a read's text in the counted build's distinct reads (P §1.1): a running
+    /// read's cells are kept per walk point (E §3.2).
+    #[cfg(feature = "counters")]
     pub(super) fn key(self) -> String {
         let law = self.law.map_or_else(|| "-".to_owned(), Day::text);
         match self.at {
@@ -207,16 +210,18 @@ pub(super) struct Task {
     pub ctx: Ctx,
     /// The cells in progress that unwound so it could be computed from depth 0: they stay in
     /// progress until it is, then the read waiting on it replays them.
-    pub unwound: Vec<String>,
+    pub unwound: Vec<CellId>,
 }
 
 /// The evaluator: the memo, the collector stack and the work stack (refcore's `Engine`).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Engine {
-    /// The memo: a cell's key to its result.
-    pub(super) memo: BTreeMap<String, Cell>,
+    /// The memo: each cell's result, kept for the law dates of its class (E §3.2).
+    pub(super) cells: Cells,
+    /// The classes of the def cells open now, the innermost last (E §3.2).
+    pub(super) frames: Vec<Frame>,
     /// The cells being computed.
-    pub(crate) active: BTreeSet<String>,
+    pub(crate) active: BTreeSet<CellId>,
     /// The collectors, the innermost last; never empty.
     pub(super) stack: Vec<Collected>,
     /// The def cells open now.
@@ -244,7 +249,7 @@ pub struct Engine {
     pub(crate) adjust_active: BTreeSet<(String, Day)>,
     /// The cells in progress when a leg's read started its walk: a walk that needs one of them
     /// is refcore's guarded walk, not built.
-    pub(crate) guarded: Option<BTreeSet<String>>,
+    pub(crate) guarded: Option<BTreeSet<CellId>>,
     /// The warnings of the walks done, in the order met (L §8.5).
     pub(crate) walk_warnings: Vec<(Warn, String)>,
     /// The projections' walks, by what makes each (E §4.3).
@@ -288,7 +293,8 @@ impl Engine {
     #[must_use]
     pub fn new(ask_cut: Day) -> Engine {
         Engine {
-            memo: BTreeMap::new(),
+            cells: Cells::new(Memo::Classes),
+            frames: Vec::new(),
             active: BTreeSet::new(),
             stack: vec![Collected::default()],
             depth: 0,
@@ -346,6 +352,16 @@ impl Engine {
     #[must_use]
     pub fn with_days(self, days: Days) -> Engine {
         Engine { days, ..self }
+    }
+
+    /// The engine keeping its cells as `memo` says: shared by a law date class, or at each
+    /// exact law date, the plain twin (E §3.2, P §3.3).
+    #[must_use]
+    pub fn with_memo(self, memo: Memo) -> Engine {
+        Engine {
+            cells: Cells::new(memo),
+            ..self
+        }
     }
 
     /// The engine answering `ask`: the holder of the projections its lines write, each `with

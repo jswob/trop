@@ -11,6 +11,7 @@
 use core::cmp::Ordering;
 
 use super::expr::{hole_of, typed};
+use super::memo::{LawClass, may_hold, tables_class};
 use super::read::{Given, key_value, make_keys};
 use super::state::{Ctx, Engine, Env, invariant, num_stop, refuse, refuse_load, wrong_type};
 use crate::base::{Load, Run};
@@ -55,7 +56,12 @@ impl Engine {
             ));
         }
         let figure = band_origin(&band.id, key.as_ref());
+        if let Some(day) = ctx.law {
+            let class = tables_class(m, band, ctx.cut, day)?;
+            self.narrow(ctx.law, class);
+        }
         let Some(rows) = band_rows(m, band, key.as_ref(), self.clocks(ctx))? else {
+            self.narrow_to_day(ctx.law);
             let q = band_no_table(&band.id, key.as_ref(), ctx.law);
             return Ok(Value::Hole(Hole::asked(&q.text, &figure)));
         };
@@ -66,6 +72,7 @@ impl Engine {
                 return self.band_value(m, band, &figure, at, x, ctx);
             }
         }
+        self.narrow_to_day(ctx.law);
         let q = band_no_row(
             &band.id,
             key.as_ref(),
@@ -96,6 +103,24 @@ impl Engine {
             .map(|keys| keys.into_iter().next()))
     }
 
+    /// Narrows the reading cell's law date class, for a band table not `held`, to the law
+    /// date's side of the ask's cut where a later one would hold it (L §8.2, E §3.2).
+    fn unheld_table_class(&mut self, m: &Reality, table: &BandTable, ctx: Ctx) -> Result<(), Stop> {
+        let Some(day) = ctx.law else {
+            return Ok(());
+        };
+        let span = m
+            .versions
+            .get(&table.version)
+            .ok_or_else(|| invariant("a band table of a version load didn't build"))?
+            .span_at(ctx.cut);
+        if span.is_some_and(may_hold) {
+            let class = LawClass::all().by_ask_cut(day, self.ask_cut);
+            self.narrow(ctx.law, class);
+        }
+        Ok(())
+    }
+
     /// The row's value with the band's argument bound, and its register entries (refcore's
     /// `band_value`). L §5.9, §8.2.
     fn band_value(
@@ -116,6 +141,8 @@ impl Engine {
             self.note("assumed", reason.clone(), figure.to_owned());
         }
         if table_held(m, table, self.clocks(ctx))? {
+            // the `held` entry names the law date (L §8.2)
+            self.narrow_to_day(ctx.law);
             let law = ctx.law.map_or_else(String::new, Day::text);
             self.note(
                 "held",
@@ -126,6 +153,8 @@ impl Engine {
                 ),
                 String::new(),
             );
+        } else {
+            self.unheld_table_class(m, table, ctx)?;
         }
         let expr = match &row.value {
             RuleValue::Hole(text) => return Ok(Value::Hole(Hole::asked(text, figure))),
