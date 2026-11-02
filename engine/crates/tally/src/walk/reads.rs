@@ -18,7 +18,7 @@
 //! sees the whole main walk; a hole a read meets is printed with every question it rests on;
 //! a refused `flows` or `with uncertain` keeps the register it met before the refusal, as
 //! refcore registers while it counts; a leg refused by a walk a projection's walk continues
-//! is refused in it too.
+//! is refused in it too, and a decision run there counts in its `flows`.
 
 use std::collections::BTreeSet;
 
@@ -744,8 +744,9 @@ impl Engine {
     }
 
     /// A decision move's runs a flows read counts: the main walk's, or inside a decision the
-    /// running walk's before its point; an instance whose day is a hole counted as that hole
-    /// (refcore's `flows_move`, its decisions). L §5.14.1, §5.14.3.
+    /// running walk's and the walks' it continues, before its point; an instance whose day is
+    /// a hole counted as that hole (refcore's `flows_move`, its decisions). L §5.14.1,
+    /// §5.14.3, E §4.3.
     fn decision_runs(
         &mut self,
         m: &Reality,
@@ -773,8 +774,7 @@ impl Engine {
         };
         let mut out = Vec::new();
         for i in self.move_instances(m, mv, ctx.cut)?.iter() {
-            let walk = self.walk(id)?;
-            let Some(run) = walk.run_ids.get(&i.id).and_then(|ix| walk.runs.get(*ix)) else {
+            let Some(run) = self.chain_run(id, &i.id)? else {
                 if matches!(i.day, Some(Dated::Hole(_))) && i.exists != Exists::No {
                     out.push(i.clone());
                 }
@@ -786,6 +786,26 @@ impl Engine {
             out.push(run.inst.clone());
         }
         Ok(out)
+    }
+
+    /// The run of decision instance `inst` in walk `id` or in a walk it continues, the
+    /// nearest first: a projection's walk counts the runs the walks it continues made
+    /// (refcore's `flows_move`, its loop over `ww.base`). L §5.14.1, E §4.3 step 1.
+    fn chain_run(&self, id: usize, inst: &str) -> Result<Option<&super::order::Run>, Stop> {
+        let mut next = Some(id);
+        let mut links = 0_usize;
+        while let Some(wid) = next {
+            links = links
+                .checked_add(1)
+                .filter(|n| *n <= self.walks.len())
+                .ok_or_else(|| invariant("a chain of walks that loops"))?;
+            let walk = self.walk(wid)?;
+            if let Some(run) = walk.run_ids.get(inst).and_then(|ix| walk.runs.get(*ix)) {
+                return Ok(Some(run));
+            }
+            next = walk.proj.as_ref().map(|p| p.base);
+        }
+        Ok(None)
     }
 
     /// The refusal of a leg the walk refused: inside a decision, what its walk and the walks

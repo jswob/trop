@@ -3,7 +3,8 @@
 //! decision's walk at its point or at the start of an earlier t; the movements counted as known
 //! on t; those that depend on the holder left out and listed; `with uncertain`; `HOLE-PRERUN`;
 //! `RUN-FUTURE`), E §4.3 (decisions in the window run in the projection's own walk; nesting;
-//! a leg the walk it continues refused stays refused, E §4.2 step 5),
+//! a leg the walk it continues refused stays refused, E §4.2 step 5; its decisions' runs count
+//! in `flows` of a decision move),
 //! L §8.2 (`left out:`), §8.5 (a projection's walk prints no warning); P §2.2 (the oracle).
 //! Twin: engine/tools/refcore/mreads.py (`proj_bal`) and walk.py (`proj_walk`); the expected
 //! lines are refcore's run of the same text (`python3 -m refcore run`).
@@ -462,5 +463,97 @@ saved: refused: RUN-LIFESPAN pay.cash moves into or out of old outside its lifes
         let want: Vec<&str> = REFUSED_LINES.lines().collect();
         assert_eq!(lines_of(REFUSED, Days::Events), want, "refcore's lines");
         assert_eq!(lines_of(REFUSED, Days::Every), want, "the oracle's lines");
+    }
+
+    /// A sweep decision `first` runs on 2025-01-20; a decision `second` on 2025-02-20 reads
+    /// `flows(first, …)` over January. A projection from 2025-02-10 continues the main walk,
+    /// which ran `first`; one from 2025-01-10 runs both in its own walk.
+    const DECISION_FLOWS: &str = r#"model dc
+  tally 2
+  on 2025-03-10
+  start 2025-01-01
+  end 2025-03-31
+
+source card "a card"
+
+unit DUK: currency minor 0.01
+
+kind ext: place DUK signed outside
+
+place out: ext lives 2025-01-01..
+
+place bank: accounts DUK lives 2025-01-01..
+
+place save: accounts DUK lives 2025-01-01..
+
+input floor: money DUK
+
+input first_day: date
+
+input second_day: date
+
+input jan_start: date
+
+input jan_end: date
+
+move first: transfers
+  on first_day
+  reads bank
+  leg cash from bank to save amount max(0, bal(bank) - floor)
+
+move second: transfers
+  on second_day
+  reads first
+  leg cash from bank to save amount flows(first, jan_start .. jan_end)
+
+version facts
+  cite card
+  governs always
+  known 2025-01-01
+  floor = 600.00
+  first_day = 2025-01-20
+  second_day = 2025-02-20
+  jan_start = 2025-01-01
+  jan_end = 2025-01-31
+  opening[bank] = 1000.00 at 2025-01-01 start
+  opening[save] = 0.00 at 2025-01-01 start
+
+ask saved: bal(save, 2025-03-31)
+
+ask projected: bal(save, 2025-03-31) from 2025-02-10
+
+ask own: bal(save, 2025-03-31) from 2025-01-10
+
+ask firsts: flows(first, 2025-01-01 .. 2025-03-31)
+"#;
+
+    /// refcore's lines for [`DECISION_FLOWS`], every ask, in id order: inside each
+    /// projection's walk, `second` counts January's run of `first`.
+    const DECISION_FLOWS_LINES: &str = r"firsts: 400.00 DUK
+  unfulfilled: first
+  cut 2025-03-10
+own: 800.00 DUK
+  cut 2025-03-10
+projected: 800.00 DUK
+  unfulfilled: first
+  cut 2025-03-10
+saved: 800.00 DUK
+  unfulfilled: first
+  unfulfilled: second
+  cut 2025-03-10";
+
+    #[test]
+    fn a_projection_counts_the_decision_runs_of_the_walk_it_continues() {
+        let want: Vec<&str> = DECISION_FLOWS_LINES.lines().collect();
+        assert_eq!(
+            lines_of(DECISION_FLOWS, Days::Events),
+            want,
+            "refcore's lines"
+        );
+        assert_eq!(
+            lines_of(DECISION_FLOWS, Days::Every),
+            want,
+            "the oracle's lines"
+        );
     }
 }
