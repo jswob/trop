@@ -40,6 +40,8 @@ code DONE gate 8's mutation score covers (`tools/kernel.toml`).
   refusal prints first).
 - `oracle.rs`: the walk's day source: the event walk, or every day (the test oracle).
 - `counters.rs`: the `--stats` counts, in the `counters` build only (BUILDER §13.2).
+- `invariant.rs`: E §9 item 4, asks move no money: each main walk's signature, kept
+  once it is walked and checked again after each ask.
 - `crates/tally-cli/src/lib.rs`: the `tally` command as a function, `run(args, files)`:
   arguments, paths, exit codes 0/1/2 (INTERFACE §1–§4).
 - `crates/tally-cli/src/main.rs`: the binary; the one file that reads files and writes
@@ -63,11 +65,13 @@ kinds and things (`kind.rs`), indexes and versions (`index.rs`), keys and spans
 static types (`ty.rs`), runtime values (`value.rs`), and the item graph (`graph.rs`: who
 reads what, the running reads, what each projection leaves out, the decisions' strata).
 
-**Load** (`load/`, E §3.1). `steps.rs` runs the steps in refcore's order: declarations
-(`decls.rs`), kinds and things (`kinds.rs`), indexes (`indexes.rs`), keys (`keys.rs`),
-places (`places.rs`), spans and versions (`spans.rs`), rows and givens (`rows.rs`),
-observations as movements (`observed.rs`), the item graph (`graph.rs`) and what is decided
-from it (`strata.rs`: cycles, unread items, walk-bound defs, strata).
+**Load** (`load/`, E §3.1). `steps.rs` runs the steps in refcore's order: the built-ins,
+names and units (`steps.rs`), kinds (`kinds.rs`), indexes (`indexes.rs`), versions and their
+spans (`spans.rs`), the sources no version reads, things (`kinds.rs`), declarations
+(`decls.rs`), open keys (`indexes.rs`, `keys.rs`), places (`places.rs`), the version items:
+rows, givens and observations as movements (`rows.rs`, `observed.rs`), the asks, then the
+item graph (`graph.rs`) and what is decided from it (`strata.rs`: cycles, unread items,
+walk-bound defs, strata).
 
 **The read rule** (`read/`, K, L §4.6). `rows.rs`: the candidate rows of a read and the one
 it takes. `gap.rs`: the gap rule, `none` outside a lifespan, the hole's question. `rules.rs`:
@@ -121,6 +125,10 @@ ask's groups and lines.
   keeps one cell per law-date class: the law dates whose answer can't differ, found from
   the spans of the rows and rules the cell actually read (E §3.2). A text that names the
   day (a hole's question, a `held` entry) keeps the cell at its own day.
+- **Read sets.** Each def cell records what it read: the inputs, rows, bands, band rows and
+  cells (E §3.2, P §4). What a walk, a plan, an adjustment or a link reads is shared by
+  every reader and is not in a cell's set. At S nothing skips work by them yet; they are the
+  seam for `explain`, `inputs-of`, `readers-of` and the change-cost work.
 - **The walk is a fold over days,** stepped only on days with an act (P §2.2). One main
   walk per cut; a projection walks its own window from the state of the walk it continues.
   Balances are logs of change points, so `bal(x, d)` is a binary search.
@@ -143,14 +151,18 @@ ask's groups and lines.
 - **Never a crash.** No `unsafe`, `unwrap`, `expect`, `panic!`, indexing or slicing in
   the library; `ENGINE-INVARIANT` where the engine finds itself wrong. Checked after each
   day: money conserved (E §9 item 1), net worth explained (item 2), nothing held outside a
-  lifespan (item 6); a plan instance the same under every cut that books it (item 5).
+  lifespan (item 6); a plan instance the same under every cut that books it (item 5); asks
+  move no money (item 4, `invariant.rs`, after each ask).
 - **A small Rust.** No `dyn`, no `impl Trait` arguments, no macros of our own, no own
   generics, nesting at most 5 (R-122 to R-125, R-73, R-74). Enums and exhaustive `match`.
 - **No threads at S.** The run happens on the caller's thread. The thread module comes
   with Monte Carlo (M7): scoped threads, explicit stack size, merge in task order.
 - **Absent at S, on purpose:** `explain`, `low` and `next` (M1); parts and labels (M5b);
-  joint members (M5c); paths and timelines (M7); read sets per cell and the walk restart
-  (seams for the change-cost work, P §4); fences F3 and F5, opened when a budget row asks.
+  joint members (M5c); paths and timelines (M7); the walk restart (the change-cost work,
+  P §4). Deferred to M1 by the user (G-S2, 2026-11-02): the interner of names, the
+  id-keyed `Table<I, T>` (today `Table<T>` keyed by name) and the context's layer slots.
+  Fences F2's dense columns, F3 (the read index) and F5 stay closed until a budget row
+  asks (R-130).
   A construct S doesn't build answers `NotImplemented`, never a guess.
 
 ## Boundaries
@@ -179,8 +191,9 @@ ask's groups and lines.
   household vectors, the kernel's properties. The engine never reads them (R-93).
 - **The builder's tests** make the internals easy to get right and count toward no gate:
   inline `tests` modules, `crates/tally/tests/*_cases.rs` (small realities, refcore's lines),
-  and `crates/tally-cli/tests/walk_oracle.rs`, the twins compared on the kernel corpus and
-  on X's three S checks: event walk against every day, memo classes against exact days.
+  `crates/tally/tests/catalogue.rs` (the codes against the spec's tables), and
+  `crates/tally-cli/tests/walk_oracle.rs`, the twins compared on the kernel corpus and on
+  X's three S checks: event walk against every day, memo classes against exact days.
 - **refcore** (`engine/tools/refcore/`) is the oracle of last resort, byte for byte.
 
 ## Where the engine does X
