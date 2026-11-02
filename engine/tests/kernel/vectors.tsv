@@ -42,3 +42,7 @@ U:time/TIME-07.reverse	checks	U:time/TIME-07.reverse
 U:val/VAL-02	checks	U:val/VAL-02				
 U:val/VAL-06	checks	U:val/VAL-06				
 U:val/VAL-07	checks	U:val/VAL-07				
+g1/round	g1		engine/tests/kernel/	engine/tests/kernel/g1/round.tally		
+g1/text	g1		engine/tests/kernel/	engine/tests/kernel/g1/text.tally		
+g1/cap	g1		engine/tests/kernel/	engine/tests/kernel/g1/cap.tally		
+g1/step	g1		engine/tests/kernel/	engine/tests/kernel/g1/step.tally		

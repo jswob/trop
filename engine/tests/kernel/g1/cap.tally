@@ -1,0 +1,47 @@
+model g1_cap
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+  note "T, issue #41, G1: the cap of 4 096 decimal digits (L §7.1, RUN-DIGITS): 10^4096 and 10^4097 refused, 10^4096 - 1 answered beside them, by squaring 10 twelve times."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+index n = 1..12
+
+input ten: num
+
+input one: num
+
+def p[i in n]: num at reader
+  note "10^(2^i): 10^2, 10^4, ..., 10^4096"
+  rule base v card = if pos(i) == 1 then ten * ten else p[i - 1] * p[i - 1]
+
+def near: num at reader
+  note "(10^2048 - 1)(10^2048 + 1) = 10^4096 - 1: 4 096 digits, under the cap"
+  rule base v card = (p[11] - one) * (p[11] + one)
+
+def under: num at reader
+  note "1 when 10^4096 - 1 is past 10^1024, as it is"
+  rule base v card = if near > p[10] then one else ten
+
+def edge: num at reader
+  note "10^4096 - 1, by way of 10^4096: refused where it passes the cap"
+  rule base v card = p[11] * p[11] - one
+
+def over: num at reader
+  note "10^4097"
+  rule base v card = p[11] * ten * p[11]
+
+def small: num at reader
+  note "10^1024 / 10^1024 = 1: big parts that reduce"
+  rule base v card = p[10] / p[10]
+
+ask q_cap: p[12], under, edge, over, small, p[3] law 2026-10-25
+
+version card
+  cite fixture
+  governs always
+  known 2026-10-25
+  ten = 10 "ten"
+  one = 1 "one"

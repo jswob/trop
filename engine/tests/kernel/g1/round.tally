@@ -1,0 +1,95 @@
+model g1_round
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+  note "T, issue #41, G1: each rounding mode at a tie, off a tie and at zero, both signs; whole steps, minor units and a step of 0.2; the half-even tie in the big tier (L §7.2)."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit DUK: currency minor 0.01
+
+index v = [p25, n25, p35, n35, p24, n26, zero, p7, n05, p15]
+
+input x[k in v]: num
+
+input y[k in v]: num DUK
+
+input step: num
+
+input huge_even: num
+
+input huge_odd: num
+
+def r_down[k in v]: num at reader
+  rule base v card = round(x[k], 1, down)
+
+def r_up[k in v]: num at reader
+  rule base v card = round(x[k], 1, up)
+
+def r_floor[k in v]: num at reader
+  rule base v card = round(x[k], 1, floor)
+
+def r_ceil[k in v]: num at reader
+  rule base v card = round(x[k], 1, ceil)
+
+def r_hup[k in v]: num at reader
+  rule base v card = round(x[k], 1, half-up)
+
+def r_hdown[k in v]: num at reader
+  rule base v card = round(x[k], 1, half-down)
+
+def r_heven[k in v]: num at reader
+  rule base v card = round(x[k], 1, half-even)
+
+def cents_even[k in v]: money DUK at reader
+  rule base v card = round(y[k], minor(DUK), half-even)
+
+def cents_down[k in v]: money DUK at reader
+  rule base v card = round(y[k], minor(DUK), half-down)
+
+def by_step[k in v]: num at reader
+  rule base v card = round(x[k], step, half-up)
+
+def big_even: num at reader
+  rule base v card = round(huge_even, 1, half-even)
+
+def big_odd: num at reader
+  rule base v card = round(huge_odd, 1, half-even)
+
+def big_up: num at reader
+  rule base v card = round(huge_odd, 1, half-up)
+
+ask q_modes: r_down[k], r_up[k], r_floor[k], r_ceil[k], r_hup[k], r_hdown[k], r_heven[k] for k in v law 2026-10-25
+
+ask q_cents: cents_even[k], cents_down[k], by_step[k] for k in v law 2026-10-25
+
+ask q_big: big_even, big_odd, big_up law 2026-10-25
+
+version card
+  cite fixture
+  governs always
+  known 2026-10-25
+  x[p25] = 2.5 "a tie"
+  x[n25] = -2.5 "a tie below zero"
+  x[p35] = 3.5 "a tie on an odd whole"
+  x[n35] = -3.5 "a tie on an odd whole below zero"
+  x[p24] = 2.4 "under a tie"
+  x[n26] = -2.6 "past a tie below zero"
+  x[zero] = 0 "zero"
+  x[p7] = 7 "a whole number"
+  x[n05] = -0.5 "a tie at zero"
+  x[p15] = 1.5 "a tie on an odd whole"
+  y[p25] = 0.125 "a tie in minor units"
+  y[n25] = -0.125 "a tie in minor units below zero"
+  y[p35] = 0.135 "a tie on an odd minor unit"
+  y[n35] = -0.135 "a tie on an odd minor unit below zero"
+  y[p24] = 1.234 "under a tie"
+  y[n26] = -1.236 "past a tie below zero"
+  y[zero] = 0 "zero"
+  y[p7] = 7 "whole"
+  y[n05] = -0.005 "a tie at zero"
+  y[p15] = 0.015 "a tie on an odd minor unit"
+  step = 0.2 "a step that isn't a power of ten"
+  huge_even = 123456789012345678901234567890.5 "a tie past the machine word, on an even whole"
+  huge_odd = 123456789012345678901234567891.5 "a tie past the machine word, on an odd whole"

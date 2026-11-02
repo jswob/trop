@@ -14,7 +14,7 @@ mod tests {
     use tally_runner::kernel::{VECTORS, difference, vectors};
 
     /// The groups this target tests, one `#[test]` each.
-    const GROUPS: [&str; 1] = ["checks"];
+    const GROUPS: [&str; 2] = ["checks", "g1"];
 
     /// Runs every vector of `group` on the engine and holds it to refcore's run.
     fn group_holds(group: &str) {
@@ -82,5 +82,14 @@ mod tests {
     #[test]
     fn s_kernel_checks_whole_output() {
         group_holds("checks");
+    }
+
+    /// G1, exact numbers, their text and rounding (L §7.1, §7.2, §5.18): every rounding mode
+    /// at ties and off them, both signs, in the big tier too; a/b and the reading aid; money
+    /// past the machine word; the 4 096-digit cap and a step that isn't positive, each refused
+    /// beside an answered twin (`kernel/g1/`).
+    #[test]
+    fn s_kernel_g1_numbers() {
+        group_holds("g1");
     }
 }

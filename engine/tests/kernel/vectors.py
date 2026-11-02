@@ -20,8 +20,10 @@ holds the engine's whole output to it, byte for byte. Every expected byte is ref
     python3 -I -B engine/tests/kernel/vectors.py --engine     -> the release binary's whole output against refcore's,
                                                                  one line per vector that differs (a look before the
                                                                  Rust test; never a baseline)
+    python3 -I -B engine/tests/kernel/vectors.py --show GLOB  -> refcore's output for the vectors whose id matches
 """
 import csv
+import fnmatch
 import os
 import sys
 from concurrent.futures import ThreadPoolExecutor
@@ -119,6 +121,12 @@ def engine_look(pairs, res):
 def main(argv):
     R.need_watchdog()
     pairs = checks_of(rows())
+    if '--show' in argv:
+        glob = argv[argv.index('--show') + 1] if argv.index('--show') + 1 < len(argv) else '*'
+        pairs = [p for p in pairs if fnmatch.fnmatchcase(p[0]['id'], glob)]
+        for (v, _), e in zip(pairs, refcore_runs(pairs)):
+            print('=== %s (exit %s)\n%s' % (v['id'], e['rc'], e['out']), end='')
+        return 0
     res = refcore_runs(pairs)
     if '--engine' in argv:
         return engine_look(pairs, res)

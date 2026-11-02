@@ -1,0 +1,110 @@
+model g1_text
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+  note "T, issue #41, G1: how a num and money print (L §5.18, §2.4): the shortest exact decimal, a/b with its reading aid, the aid beside more than 15 significant digits, ties at the 15th digit, magnitudes from tiny to past the machine word, both signs, signed divisors."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit DUK: currency minor 0.01
+
+index w = [third, neg_seventh, big_third, tiny, sig16_up, sig16_even, int19, int21, trim, carry, neg_tiny, zero, plain, neg_divisor, both_big, half, wide, square]
+
+input top[k in w]: num
+
+input bottom[k in w]: num
+
+input money_in[k in w]: money DUK
+
+def t_q[k in w]: num at reader
+  note "the quotient: a/b when it doesn't terminate"
+  rule base v card = top[k] / bottom[k]
+
+def t_prod[k in w]: num at reader
+  rule base v card = top[k] * bottom[k]
+
+def t_diff[k in w]: num at reader
+  rule base v card = top[k] - bottom[k]
+
+def t_sq[k in w]: num at reader
+  note "the quotient squared: a small denominator squared past 2^63"
+  rule base v card = t_q[k] * t_q[k]
+
+def t_inv[k in w]: num at reader
+  note "the top over the square: a division by it (a zero square refuses, RUN-DIV)"
+  rule base v card = top[k] / t_sq[k]
+
+def t_net[k in w]: money DUK at reader
+  rule base v card = money_in[k] - money_in[half]
+
+def t_sign[k in w]: num DUK at reader
+  note "the money's sign rule by cases: below 0 itself, 0 itself, above 0 its double"
+  rule below v card = money_in[k] when money_in[k] < 0
+  rule nothing v card = 0 when money_in[k] == 0
+  rule above v card = money_in[k] + money_in[k] when money_in[k] > 0
+
+ask q_values: top[k], t_q[k] for k in w law 2026-10-25
+
+ask q_more: t_prod[k], t_diff[k], t_sq[k], t_inv[k] for k in w law 2026-10-25
+
+ask q_money: money_in[k], t_net[k], t_sign[k] for k in w law 2026-10-25
+
+version card
+  cite fixture
+  governs always
+  known 2026-10-25
+  top[third] = 1 "1/3"
+  bottom[third] = 3 "1/3"
+  top[neg_seventh] = -22 "a negative a/b"
+  bottom[neg_seventh] = 7 "a negative a/b"
+  top[big_third] = 10000000000000000000 "10^19 / 3: an aid whose exponent is past 15"
+  bottom[big_third] = 3 "10^19 / 3"
+  top[tiny] = 1 "a small a/b"
+  bottom[tiny] = 70000000 "a small a/b"
+  top[sig16_up] = 1.234567890123455 "16 significant digits, a tie on an odd 15th"
+  bottom[sig16_up] = 1 "itself"
+  top[sig16_even] = 1.234567890123445 "16 significant digits, a tie on an even 15th"
+  bottom[sig16_even] = 1 "itself"
+  top[int19] = 1234567890123456789 "a whole number of 19 digits"
+  bottom[int19] = 1 "itself"
+  top[int21] = 100000000000000000000 "10^20: one significant digit"
+  bottom[int21] = 1 "itself"
+  top[trim] = 1.000000000000000001 "an aid that trims to 1"
+  bottom[trim] = 1 "itself"
+  top[carry] = 9.9999999999999999 "an aid that carries to 10"
+  bottom[carry] = 1 "itself"
+  top[neg_tiny] = -0.0000000000000001234567890123456 "a tiny negative of 16 significant digits"
+  bottom[neg_tiny] = 1 "itself"
+  top[zero] = 0 "zero"
+  bottom[zero] = 5 "zero over five"
+  top[plain] = 1190.05 "a grouped decimal"
+  bottom[plain] = 1 "itself"
+  top[neg_divisor] = 22 "a negative divisor"
+  bottom[neg_divisor] = -7 "a negative divisor"
+  top[both_big] = 123456789012345678901234567 "both parts past 2^64"
+  bottom[both_big] = 987654321098765432109876543 "both parts past 2^64"
+  top[half] = 0.5 "a half"
+  bottom[half] = -0.25 "a negative quarter"
+  money_in[third] = 1500.00 "positive"
+  money_in[neg_seventh] = -2300.00 "negative"
+  money_in[big_third] = 123456789012345678901.23 "money past the machine word"
+  money_in[tiny] = 0.01 "one minor unit"
+  money_in[sig16_up] = -0.01 "minus one minor unit"
+  money_in[sig16_even] = 0 "zero"
+  money_in[int19] = -123456789012345678901.23 "negative money past the machine word"
+  money_in[int21] = 92233720368547758.07 "the largest machine word of minor units"
+  money_in[trim] = -92233720368547758.08 "the smallest machine word of minor units"
+  money_in[carry] = 92233720368547758.08 "one past the largest machine word"
+  money_in[neg_tiny] = 999.99 "under a thousand"
+  money_in[zero] = 1000.00 "a thousand"
+  money_in[plain] = 1234567.89 "grouped twice"
+  money_in[neg_divisor] = -0.50 "a negative half"
+  money_in[both_big] = 0.10 "ten minor units"
+  money_in[half] = 0.50 "a half"
+  top[wide] = 1 "a denominator one past 2^63"
+  bottom[wide] = 9223372036854775809 "2^63 + 1"
+  money_in[wide] = 0.01 "one minor unit"
+  top[square] = 1 "1 / 3037000500, whose square's denominator passes 2^63"
+  bottom[square] = 3037000500 "just past the square root of 2^63"
+  money_in[square] = -0.01 "minus one minor unit"

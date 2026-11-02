@@ -6814,4 +6814,446 @@ version rent_fact
   assumed: A-CPI: the price index rises 3 % a year from 2026 (cpi_change[2026], cpi_change[2027])
   assumed: A-RENT: the rent rises each January by the price index + 1 point (rent.next, rent_margin)
   law date 2026-10-25, cut 2026-10-25
+,8:g1/round,2:g1,18:run g1/round.tally,2903:14:g1/round.tally,2879:model g1_round
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+  note "T, issue #41, G1: each rounding mode at a tie, off a tie and at zero, both signs; whole steps, minor units and a step of 0.2; the half-even tie in the big tier (L §7.2)."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit DUK: currency minor 0.01
+
+index v = [p25, n25, p35, n35, p24, n26, zero, p7, n05, p15]
+
+input x[k in v]: num
+
+input y[k in v]: num DUK
+
+input step: num
+
+input huge_even: num
+
+input huge_odd: num
+
+def r_down[k in v]: num at reader
+  rule base v card = round(x[k], 1, down)
+
+def r_up[k in v]: num at reader
+  rule base v card = round(x[k], 1, up)
+
+def r_floor[k in v]: num at reader
+  rule base v card = round(x[k], 1, floor)
+
+def r_ceil[k in v]: num at reader
+  rule base v card = round(x[k], 1, ceil)
+
+def r_hup[k in v]: num at reader
+  rule base v card = round(x[k], 1, half-up)
+
+def r_hdown[k in v]: num at reader
+  rule base v card = round(x[k], 1, half-down)
+
+def r_heven[k in v]: num at reader
+  rule base v card = round(x[k], 1, half-even)
+
+def cents_even[k in v]: money DUK at reader
+  rule base v card = round(y[k], minor(DUK), half-even)
+
+def cents_down[k in v]: money DUK at reader
+  rule base v card = round(y[k], minor(DUK), half-down)
+
+def by_step[k in v]: num at reader
+  rule base v card = round(x[k], step, half-up)
+
+def big_even: num at reader
+  rule base v card = round(huge_even, 1, half-even)
+
+def big_odd: num at reader
+  rule base v card = round(huge_odd, 1, half-even)
+
+def big_up: num at reader
+  rule base v card = round(huge_odd, 1, half-up)
+
+ask q_modes: r_down[k], r_up[k], r_floor[k], r_ceil[k], r_hup[k], r_hdown[k], r_heven[k] for k in v law 2026-10-25
+
+ask q_cents: cents_even[k], cents_down[k], by_step[k] for k in v law 2026-10-25
+
+ask q_big: big_even, big_odd, big_up law 2026-10-25
+
+version card
+  cite fixture
+  governs always
+  known 2026-10-25
+  x[p25] = 2.5 "a tie"
+  x[n25] = -2.5 "a tie below zero"
+  x[p35] = 3.5 "a tie on an odd whole"
+  x[n35] = -3.5 "a tie on an odd whole below zero"
+  x[p24] = 2.4 "under a tie"
+  x[n26] = -2.6 "past a tie below zero"
+  x[zero] = 0 "zero"
+  x[p7] = 7 "a whole number"
+  x[n05] = -0.5 "a tie at zero"
+  x[p15] = 1.5 "a tie on an odd whole"
+  y[p25] = 0.125 "a tie in minor units"
+  y[n25] = -0.125 "a tie in minor units below zero"
+  y[p35] = 0.135 "a tie on an odd minor unit"
+  y[n35] = -0.135 "a tie on an odd minor unit below zero"
+  y[p24] = 1.234 "under a tie"
+  y[n26] = -1.236 "past a tie below zero"
+  y[zero] = 0 "zero"
+  y[p7] = 7 "whole"
+  y[n05] = -0.005 "a tie at zero"
+  y[p15] = 0.015 "a tie on an odd minor unit"
+  step = 0.2 "a step that isn't a power of ten"
+  huge_even = 123456789012345678901234567890.5 "a tie past the machine word, on an even whole"
+  huge_odd = 123456789012345678901234567891.5 "a tie past the machine word, on an odd whole"
+,,1:0,1945:q_big: (123 456 789 012 345 678 901 234 567 890 (123 456 789 012 346 000 000 000 000 000), 123 456 789 012 345 678 901 234 567 892 (123 456 789 012 346 000 000 000 000 000), 123 456 789 012 345 678 901 234 567 892 (123 456 789 012 346 000 000 000 000 000))
+  law date 2026-10-25, cut 2026-10-25
+q_cents (k = p25): (0.12 DUK, 0.12 DUK, 2.6)
+  law date 2026-10-25, cut 2026-10-25
+q_cents (k = n25): (-0.12 DUK, -0.12 DUK, -2.6)
+  law date 2026-10-25, cut 2026-10-25
+q_cents (k = p35): (0.14 DUK, 0.13 DUK, 3.6)
+  law date 2026-10-25, cut 2026-10-25
+q_cents (k = n35): (-0.14 DUK, -0.13 DUK, -3.6)
+  law date 2026-10-25, cut 2026-10-25
+q_cents (k = p24): (1.23 DUK, 1.23 DUK, 2.4)
+  law date 2026-10-25, cut 2026-10-25
+q_cents (k = n26): (-1.24 DUK, -1.24 DUK, -2.6)
+  law date 2026-10-25, cut 2026-10-25
+q_cents (k = zero): (0.00 DUK, 0.00 DUK, 0)
+  law date 2026-10-25, cut 2026-10-25
+q_cents (k = p7): (7.00 DUK, 7.00 DUK, 7)
+  law date 2026-10-25, cut 2026-10-25
+q_cents (k = n05): (0.00 DUK, 0.00 DUK, -0.6)
+  law date 2026-10-25, cut 2026-10-25
+q_cents (k = p15): (0.02 DUK, 0.01 DUK, 1.6)
+  law date 2026-10-25, cut 2026-10-25
+q_modes (k = p25): (2, 3, 2, 3, 3, 2, 2)
+  law date 2026-10-25, cut 2026-10-25
+q_modes (k = n25): (-2, -3, -3, -2, -3, -2, -2)
+  law date 2026-10-25, cut 2026-10-25
+q_modes (k = p35): (3, 4, 3, 4, 4, 3, 4)
+  law date 2026-10-25, cut 2026-10-25
+q_modes (k = n35): (-3, -4, -4, -3, -4, -3, -4)
+  law date 2026-10-25, cut 2026-10-25
+q_modes (k = p24): (2, 3, 2, 3, 2, 2, 2)
+  law date 2026-10-25, cut 2026-10-25
+q_modes (k = n26): (-2, -3, -3, -2, -3, -3, -3)
+  law date 2026-10-25, cut 2026-10-25
+q_modes (k = zero): (0, 0, 0, 0, 0, 0, 0)
+  law date 2026-10-25, cut 2026-10-25
+q_modes (k = p7): (7, 7, 7, 7, 7, 7, 7)
+  law date 2026-10-25, cut 2026-10-25
+q_modes (k = n05): (0, -1, -1, 0, -1, 0, 0)
+  law date 2026-10-25, cut 2026-10-25
+q_modes (k = p15): (1, 2, 1, 2, 2, 1, 2)
+  law date 2026-10-25, cut 2026-10-25
+,7:g1/text,2:g1,17:run g1/text.tally,4657:13:g1/text.tally,4634:model g1_text
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+  note "T, issue #41, G1: how a num and money print (L §5.18, §2.4): the shortest exact decimal, a/b with its reading aid, the aid beside more than 15 significant digits, ties at the 15th digit, magnitudes from tiny to past the machine word, both signs, signed divisors."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit DUK: currency minor 0.01
+
+index w = [third, neg_seventh, big_third, tiny, sig16_up, sig16_even, int19, int21, trim, carry, neg_tiny, zero, plain, neg_divisor, both_big, half, wide, square]
+
+input top[k in w]: num
+
+input bottom[k in w]: num
+
+input money_in[k in w]: money DUK
+
+def t_q[k in w]: num at reader
+  note "the quotient: a/b when it doesn't terminate"
+  rule base v card = top[k] / bottom[k]
+
+def t_prod[k in w]: num at reader
+  rule base v card = top[k] * bottom[k]
+
+def t_diff[k in w]: num at reader
+  rule base v card = top[k] - bottom[k]
+
+def t_sq[k in w]: num at reader
+  note "the quotient squared: a small denominator squared past 2^63"
+  rule base v card = t_q[k] * t_q[k]
+
+def t_inv[k in w]: num at reader
+  note "the top over the square: a division by it (a zero square refuses, RUN-DIV)"
+  rule base v card = top[k] / t_sq[k]
+
+def t_net[k in w]: money DUK at reader
+  rule base v card = money_in[k] - money_in[half]
+
+def t_sign[k in w]: num DUK at reader
+  note "the money's sign rule by cases: below 0 itself, 0 itself, above 0 its double"
+  rule below v card = money_in[k] when money_in[k] < 0
+  rule nothing v card = 0 when money_in[k] == 0
+  rule above v card = money_in[k] + money_in[k] when money_in[k] > 0
+
+ask q_values: top[k], t_q[k] for k in w law 2026-10-25
+
+ask q_more: t_prod[k], t_diff[k], t_sq[k], t_inv[k] for k in w law 2026-10-25
+
+ask q_money: money_in[k], t_net[k], t_sign[k] for k in w law 2026-10-25
+
+version card
+  cite fixture
+  governs always
+  known 2026-10-25
+  top[third] = 1 "1/3"
+  bottom[third] = 3 "1/3"
+  top[neg_seventh] = -22 "a negative a/b"
+  bottom[neg_seventh] = 7 "a negative a/b"
+  top[big_third] = 10000000000000000000 "10^19 / 3: an aid whose exponent is past 15"
+  bottom[big_third] = 3 "10^19 / 3"
+  top[tiny] = 1 "a small a/b"
+  bottom[tiny] = 70000000 "a small a/b"
+  top[sig16_up] = 1.234567890123455 "16 significant digits, a tie on an odd 15th"
+  bottom[sig16_up] = 1 "itself"
+  top[sig16_even] = 1.234567890123445 "16 significant digits, a tie on an even 15th"
+  bottom[sig16_even] = 1 "itself"
+  top[int19] = 1234567890123456789 "a whole number of 19 digits"
+  bottom[int19] = 1 "itself"
+  top[int21] = 100000000000000000000 "10^20: one significant digit"
+  bottom[int21] = 1 "itself"
+  top[trim] = 1.000000000000000001 "an aid that trims to 1"
+  bottom[trim] = 1 "itself"
+  top[carry] = 9.9999999999999999 "an aid that carries to 10"
+  bottom[carry] = 1 "itself"
+  top[neg_tiny] = -0.0000000000000001234567890123456 "a tiny negative of 16 significant digits"
+  bottom[neg_tiny] = 1 "itself"
+  top[zero] = 0 "zero"
+  bottom[zero] = 5 "zero over five"
+  top[plain] = 1190.05 "a grouped decimal"
+  bottom[plain] = 1 "itself"
+  top[neg_divisor] = 22 "a negative divisor"
+  bottom[neg_divisor] = -7 "a negative divisor"
+  top[both_big] = 123456789012345678901234567 "both parts past 2^64"
+  bottom[both_big] = 987654321098765432109876543 "both parts past 2^64"
+  top[half] = 0.5 "a half"
+  bottom[half] = -0.25 "a negative quarter"
+  money_in[third] = 1500.00 "positive"
+  money_in[neg_seventh] = -2300.00 "negative"
+  money_in[big_third] = 123456789012345678901.23 "money past the machine word"
+  money_in[tiny] = 0.01 "one minor unit"
+  money_in[sig16_up] = -0.01 "minus one minor unit"
+  money_in[sig16_even] = 0 "zero"
+  money_in[int19] = -123456789012345678901.23 "negative money past the machine word"
+  money_in[int21] = 92233720368547758.07 "the largest machine word of minor units"
+  money_in[trim] = -92233720368547758.08 "the smallest machine word of minor units"
+  money_in[carry] = 92233720368547758.08 "one past the largest machine word"
+  money_in[neg_tiny] = 999.99 "under a thousand"
+  money_in[zero] = 1000.00 "a thousand"
+  money_in[plain] = 1234567.89 "grouped twice"
+  money_in[neg_divisor] = -0.50 "a negative half"
+  money_in[both_big] = 0.10 "ten minor units"
+  money_in[half] = 0.50 "a half"
+  top[wide] = 1 "a denominator one past 2^63"
+  bottom[wide] = 9223372036854775809 "2^63 + 1"
+  money_in[wide] = 0.01 "one minor unit"
+  top[square] = 1 "1 / 3037000500, whose square's denominator passes 2^63"
+  bottom[square] = 3037000500 "just past the square root of 2^63"
+  money_in[square] = -0.01 "minus one minor unit"
+,,1:0,8349:q_money (k = third): (1 500.00 DUK, 1 499.50 DUK, 3 000 DUK)
+  law date 2026-10-25, cut 2026-10-25
+q_money (k = neg_seventh): (-2 300.00 DUK, -2 300.50 DUK, -2 300 DUK)
+  law date 2026-10-25, cut 2026-10-25
+q_money (k = big_third): (123 456 789 012 345 678 901.23 DUK, 123 456 789 012 345 678 900.73 DUK, 246 913 578 024 691 357 802.46 (246 913 578 024 691 000 000) DUK)
+  law date 2026-10-25, cut 2026-10-25
+q_money (k = tiny): (0.01 DUK, -0.49 DUK, 0.02 DUK)
+  law date 2026-10-25, cut 2026-10-25
+q_money (k = sig16_up): (-0.01 DUK, -0.51 DUK, -0.01 DUK)
+  law date 2026-10-25, cut 2026-10-25
+q_money (k = sig16_even): (0.00 DUK, -0.50 DUK, 0 DUK)
+  law date 2026-10-25, cut 2026-10-25
+q_money (k = int19): (-123 456 789 012 345 678 901.23 DUK, -123 456 789 012 345 678 901.73 DUK, -123 456 789 012 345 678 901.23 (-123 456 789 012 346 000 000) DUK)
+  law date 2026-10-25, cut 2026-10-25
+q_money (k = int21): (92 233 720 368 547 758.07 DUK, 92 233 720 368 547 757.57 DUK, 184 467 440 737 095 516.14 (184 467 440 737 096 000) DUK)
+  law date 2026-10-25, cut 2026-10-25
+q_money (k = trim): (-92 233 720 368 547 758.08 DUK, -92 233 720 368 547 758.58 DUK, -92 233 720 368 547 758.08 (-92 233 720 368 547 800) DUK)
+  law date 2026-10-25, cut 2026-10-25
+q_money (k = carry): (92 233 720 368 547 758.08 DUK, 92 233 720 368 547 757.58 DUK, 184 467 440 737 095 516.16 (184 467 440 737 096 000) DUK)
+  law date 2026-10-25, cut 2026-10-25
+q_money (k = neg_tiny): (999.99 DUK, 999.49 DUK, 1 999.98 DUK)
+  law date 2026-10-25, cut 2026-10-25
+q_money (k = zero): (1 000.00 DUK, 999.50 DUK, 2 000 DUK)
+  law date 2026-10-25, cut 2026-10-25
+q_money (k = plain): (1 234 567.89 DUK, 1 234 567.39 DUK, 2 469 135.78 DUK)
+  law date 2026-10-25, cut 2026-10-25
+q_money (k = neg_divisor): (-0.50 DUK, -1.00 DUK, -0.5 DUK)
+  law date 2026-10-25, cut 2026-10-25
+q_money (k = both_big): (0.10 DUK, -0.40 DUK, 0.2 DUK)
+  law date 2026-10-25, cut 2026-10-25
+q_money (k = half): (0.50 DUK, 0.00 DUK, 1 DUK)
+  law date 2026-10-25, cut 2026-10-25
+q_money (k = wide): (0.01 DUK, -0.49 DUK, 0.02 DUK)
+  law date 2026-10-25, cut 2026-10-25
+q_money (k = square): (-0.01 DUK, -0.51 DUK, -0.01 DUK)
+  law date 2026-10-25, cut 2026-10-25
+q_more (k = third): (3, -2, 1/9 (0.111111111111111), 9)
+  law date 2026-10-25, cut 2026-10-25
+q_more (k = neg_seventh): (-154, -29, 484/49 (9.87755102040816), -49/22 (-2.22727272727273))
+  law date 2026-10-25, cut 2026-10-25
+q_more (k = big_third): (30 000 000 000 000 000 000, 9 999 999 999 999 999 997 (10 000 000 000 000 000 000), 100000000000000000000000000000000000000/9 (11 111 111 111 111 100 000 000 000 000 000 000 000), 0.0000000000000000009)
+  law date 2026-10-25, cut 2026-10-25
+q_more (k = tiny): (70 000 000, -69 999 999, 1/4900000000000000 (0.000000000000000204081632653061), 4 900 000 000 000 000)
+  law date 2026-10-25, cut 2026-10-25
+q_more (k = sig16_up): (1.234567890123455 (1.23456789012346), 0.234567890123455, 1.524157875323879257735141137025 (1.52415787532388), 200000000000000/246913578024691 (0.810000007290001))
+  law date 2026-10-25, cut 2026-10-25
+q_more (k = sig16_even): (1.234567890123445 (1.23456789012344), 0.234567890123445, 1.524157875323854566377338668025 (1.52415787532385), 200000000000000/246913578024689 (0.810000007290008))
+  law date 2026-10-25, cut 2026-10-25
+q_more (k = int19): (1 234 567 890 123 456 789 (1 234 567 890 123 460 000), 1 234 567 890 123 456 788 (1 234 567 890 123 460 000), 1 524 157 875 323 883 675 019 051 998 750 190 521 (1 524 157 875 323 880 000 000 000 000 000 000 000), 1/1234567890123456789 (0.00000000000000000081000000729))
+  law date 2026-10-25, cut 2026-10-25
+q_more (k = int21): (100 000 000 000 000 000 000, 99 999 999 999 999 999 999 (100 000 000 000 000 000 000), 10 000 000 000 000 000 000 000 000 000 000 000 000 000, 0.00000000000000000001)
+  law date 2026-10-25, cut 2026-10-25
+q_more (k = trim): (1.000000000000000001 (1), 0.000000000000000001, 1.000000000000000002000000000000000001 (1), 1000000000000000000/1000000000000000001 (1))
+  law date 2026-10-25, cut 2026-10-25
+q_more (k = carry): (9.9999999999999999 (10), 8.9999999999999999 (9), 99.99999999999999800000000000000001 (100), 10000000000000000/99999999999999999 (0.1))
+  law date 2026-10-25, cut 2026-10-25
+q_more (k = neg_tiny): (-0.0000000000000001234567890123456 (-0.000000000000000123456789012346), -1.0000000000000001234567890123456 (-1), 0.00000000000000000000000000000001524157875323881726870921383936 (0.0000000000000000000000000000000152415787532388), -156250000000000000000000000000/19290123283179 (-8 100 000 072 900 010))
+  law date 2026-10-25, cut 2026-10-25
+q_more (k = zero): (0, -5, 0, refused: RUN-DIV division by zero)
+  law date 2026-10-25, cut 2026-10-25
+q_more (k = plain): (1 190.05, 1 189.05, 1 416 219.0025, 20/23801 (0.000840300827696315))
+  law date 2026-10-25, cut 2026-10-25
+q_more (k = neg_divisor): (-154, 29, 484/49 (9.87755102040816), 49/22 (2.22727272727273))
+  law date 2026-10-25, cut 2026-10-25
+q_more (k = both_big): (121 932 631 137 021 795 226 185 031 828 684 651 861 743 636 654 061 881 (121 932 631 137 022 000 000 000 000 000 000 000 000 000 000 000 000 000), -864 197 532 086 419 753 208 641 976 (-864 197 532 086 420 000 000 000 000), 15241578753238836750495351342783114345526596755677489/975461057985063252587258039520835238484196006701630849 (0.0156249997152344), 975461057985063252587258039520835238484196006701630849/123456789012345678901234567 (7 901 234 640 790 120 000 000 000 000))
+  law date 2026-10-25, cut 2026-10-25
+q_more (k = half): (-0.125, 0.75, 4, 0.125)
+  law date 2026-10-25, cut 2026-10-25
+q_more (k = wide): (9 223 372 036 854 775 809 (9 223 372 036 854 780 000), -9 223 372 036 854 775 808 (-9 223 372 036 854 780 000), 1/85070591730234615884290395931651604481 (0.0000000000000000000000000000000000000117549435082229), 85 070 591 730 234 615 884 290 395 931 651 604 481 (85 070 591 730 234 600 000 000 000 000 000 000 000))
+  law date 2026-10-25, cut 2026-10-25
+q_more (k = square): (3 037 000 500, -3 037 000 499, 1/9223372037000250000 (0.00000000000000000010842021724684), 9 223 372 037 000 250 000)
+  law date 2026-10-25, cut 2026-10-25
+q_values (k = third): (1, 1/3 (0.333333333333333))
+  law date 2026-10-25, cut 2026-10-25
+q_values (k = neg_seventh): (-22, -22/7 (-3.14285714285714))
+  law date 2026-10-25, cut 2026-10-25
+q_values (k = big_third): (10 000 000 000 000 000 000, 10000000000000000000/3 (3 333 333 333 333 330 000))
+  law date 2026-10-25, cut 2026-10-25
+q_values (k = tiny): (1, 1/70000000 (0.0000000142857142857143))
+  law date 2026-10-25, cut 2026-10-25
+q_values (k = sig16_up): (1.234567890123455 (1.23456789012346), 1.234567890123455 (1.23456789012346))
+  law date 2026-10-25, cut 2026-10-25
+q_values (k = sig16_even): (1.234567890123445 (1.23456789012344), 1.234567890123445 (1.23456789012344))
+  law date 2026-10-25, cut 2026-10-25
+q_values (k = int19): (1 234 567 890 123 456 789 (1 234 567 890 123 460 000), 1 234 567 890 123 456 789 (1 234 567 890 123 460 000))
+  law date 2026-10-25, cut 2026-10-25
+q_values (k = int21): (100 000 000 000 000 000 000, 100 000 000 000 000 000 000)
+  law date 2026-10-25, cut 2026-10-25
+q_values (k = trim): (1.000000000000000001 (1), 1.000000000000000001 (1))
+  law date 2026-10-25, cut 2026-10-25
+q_values (k = carry): (9.9999999999999999 (10), 9.9999999999999999 (10))
+  law date 2026-10-25, cut 2026-10-25
+q_values (k = neg_tiny): (-0.0000000000000001234567890123456 (-0.000000000000000123456789012346), -0.0000000000000001234567890123456 (-0.000000000000000123456789012346))
+  law date 2026-10-25, cut 2026-10-25
+q_values (k = zero): (0, 0)
+  law date 2026-10-25, cut 2026-10-25
+q_values (k = plain): (1 190.05, 1 190.05)
+  law date 2026-10-25, cut 2026-10-25
+q_values (k = neg_divisor): (22, -22/7 (-3.14285714285714))
+  law date 2026-10-25, cut 2026-10-25
+q_values (k = both_big): (123 456 789 012 345 678 901 234 567 (123 456 789 012 346 000 000 000 000), 123456789012345678901234567/987654321098765432109876543 (0.124999998860938))
+  law date 2026-10-25, cut 2026-10-25
+q_values (k = half): (0.5, -2)
+  law date 2026-10-25, cut 2026-10-25
+q_values (k = wide): (1, 1/9223372036854775809 (0.00000000000000000010842021724855))
+  law date 2026-10-25, cut 2026-10-25
+q_values (k = square): (1, 1/3037000500 (0.000000000329272253988763))
+  law date 2026-10-25, cut 2026-10-25
+,6:g1/cap,2:g1,16:run g1/cap.tally,1329:12:g1/cap.tally,1307:model g1_cap
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+  note "T, issue #41, G1: the cap of 4 096 decimal digits (L §7.1, RUN-DIGITS): 10^4096 and 10^4097 refused, 10^4096 - 1 answered beside them, by squaring 10 twelve times."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+index n = 1..12
+
+input ten: num
+
+input one: num
+
+def p[i in n]: num at reader
+  note "10^(2^i): 10^2, 10^4, ..., 10^4096"
+  rule base v card = if pos(i) == 1 then ten * ten else p[i - 1] * p[i - 1]
+
+def near: num at reader
+  note "(10^2048 - 1)(10^2048 + 1) = 10^4096 - 1: 4 096 digits, under the cap"
+  rule base v card = (p[11] - one) * (p[11] + one)
+
+def under: num at reader
+  note "1 when 10^4096 - 1 is past 10^1024, as it is"
+  rule base v card = if near > p[10] then one else ten
+
+def edge: num at reader
+  note "10^4096 - 1, by way of 10^4096: refused where it passes the cap"
+  rule base v card = p[11] * p[11] - one
+
+def over: num at reader
+  note "10^4097"
+  rule base v card = p[11] * ten * p[11]
+
+def small: num at reader
+  note "10^1024 / 10^1024 = 1: big parts that reduce"
+  rule base v card = p[10] / p[10]
+
+ask q_cap: p[12], under, edge, over, small, p[3] law 2026-10-25
+
+version card
+  cite fixture
+  governs always
+  known 2026-10-25
+  ten = 10 "ten"
+  one = 1 "one"
+,,1:0,296:q_cap: (refused: RUN-DIGITS a value passes 4 096 digits; round where the law rounds, 1, refused: RUN-DIGITS a value passes 4 096 digits; round where the law rounds, refused: RUN-DIGITS a value passes 4 096 digits; round where the law rounds, 1, 100 000 000)
+  law date 2026-10-25, cut 2026-10-25
+,7:g1/step,2:g1,17:run g1/step.tally,861:13:g1/step.tally,839:model g1_step
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+  note "T, issue #41, G1: round's step must be positive (L §7.2): a negative step and a zero step refused, a positive step answered beside them."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+input x: num
+
+input step_pos: num
+
+input step_neg: num
+
+input step_zero: num
+
+def by_pos: num at reader
+  rule base v card = round(x, step_pos, half-up)
+
+def by_neg: num at reader
+  rule base v card = round(x, step_neg, half-up)
+
+def by_zero: num at reader
+  rule base v card = round(x, step_zero, half-up)
+
+ask q_steps: by_pos, by_neg, by_zero law 2026-10-25
+
+version card
+  cite fixture
+  governs always
+  known 2026-10-25
+  x = 2.5 "a value"
+  step_pos = 0.2 "a positive step"
+  step_neg = -0.2 "a negative step"
+  step_zero = 0 "a zero step"
+,,1:0,180:q_steps: (2.6, refused: RUN-DOMAIN round with a step -0.2 that is not positive, refused: RUN-DOMAIN round with a step 0 that is not positive)
+  law date 2026-10-25, cut 2026-10-25
 ,
