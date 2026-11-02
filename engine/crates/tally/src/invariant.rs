@@ -2,8 +2,8 @@
 //! Spec: E §9 item 4 ("Asks move no money. The timeline's hash is the same before and after
 //! the asks are answered"); E §9's opening (a failure refuses with `ENGINE-INVARIANT`, never an
 //! answer). Items 1 and 2 are checked at each day's close (`walk/day.rs`), item 5 where a plan
-//! instance is booked (`walk/plan.rs`); item 3 is scenarios' and item 6 parts', neither built
-//! at S.
+//! instance is booked (`walk/plan.rs`); item 6 holds by the walk's `RUN-LIFESPAN` refusals
+//! (`walk/day.rs`); item 3 is scenarios', not built at S.
 //! Twin: engine/tools/refcore/walk.py (`Walk.signature`; `m_main_walk` keeps `w.sig` once the
 //! walk is done) and ask.py (`Asker._answer`'s last step, its text).
 //! Invariants: a signature is every entry of every place's log, (place, unit) in text order and

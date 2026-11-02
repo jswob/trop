@@ -9,7 +9,7 @@
 //! to the memo, so the replay ends; a read inside another read never replays, the outermost
 //! does, and ends with no cell in progress.
 
-use super::aggregate::Member;
+use super::aggregate::{Brings, Member};
 use super::memo::{CellId, CellKey};
 use super::rules::key_env;
 use super::state::{Collected, Ctx, Engine, Env, invariant};
@@ -80,8 +80,9 @@ impl Engine {
     }
 
     /// The binding tuples of an ask's `for`, read from outside the evaluator: each tuple's
-    /// scope with the hole of a `where` that is one, or the hole of the first domain that is
-    /// one (refcore's `members` as `_answer_in` reads it). L §5.18, §5.11.
+    /// scope with the hole of a `where` that is one and the registers of the movements it
+    /// binds, kept for its own line; or the hole of the first domain that is one (refcore's
+    /// `members` with `regs`, as `_answer_in` reads it). L §5.18, §5.11, §8.2.
     ///
     /// # Errors
     ///
@@ -94,7 +95,7 @@ impl Engine {
     ) -> Result<Result<Vec<Member>, Hole>, Stop> {
         let mark = self.mark();
         loop {
-            match self.members(m, binds, &Env::empty(), ctx) {
+            match self.members(m, binds, &Env::empty(), ctx, Brings::ToTuple) {
                 Err(Stop::Deep) if mark.outermost => self.replay(m, &mark)?,
                 result => return result,
             }

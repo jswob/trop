@@ -343,6 +343,10 @@ impl Engine {
         if def.givens.is_empty() {
             return Ok(None);
         }
+        self.read(Read::Givens {
+            def: def.id.clone(),
+            keys: keys.to_vec(),
+        });
         if let Some(day) = ctx.law {
             let class = rows_class(m, &def.givens, ctx.cut, day)?;
             self.narrow(ctx.law, class);

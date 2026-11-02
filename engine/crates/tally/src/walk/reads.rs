@@ -767,8 +767,9 @@ impl Engine {
         Ok(out)
     }
 
-    /// The refusal of a leg the walk refused: inside a decision, what its walk refused so far;
-    /// at the ask's cut, the main walk's (refcore's `leg_refused`). E §4.2 step 5.
+    /// The refusal of a leg the walk refused: inside a decision, what its walk and the walks
+    /// it continues refused so far; at the ask's cut, the main walk's (refcore's
+    /// `leg_refused`). E §4.2 step 5, §4.3.
     pub(crate) fn leg_refused(
         &mut self,
         m: &Reality,
@@ -777,7 +778,7 @@ impl Engine {
     ) -> Result<Option<Refusal>, Stop> {
         let wanted = (key.0.to_owned(), key.1.to_owned());
         if let Some(WalkAt { walk, .. }) = ctx.at {
-            return Ok(self.walk(walk)?.bad_legs.get(&wanted).cloned());
+            return self.chain_refusal(walk, &wanted);
         }
         let mut id = self.main_walks.get(&ctx.cut).copied();
         let busy = !self.plan_active.is_empty()
@@ -803,7 +804,27 @@ impl Engine {
         let Some(w) = id else {
             return Ok(None);
         };
-        Ok(self.walk(w)?.bad_legs.get(&wanted).cloned())
+        self.chain_refusal(w, &wanted)
+    }
+
+    /// The refusal of leg `wanted` in walk `id` or in a walk it continues, the nearest first:
+    /// a projection's walk keeps what the walks it continues have refused so far (refcore's
+    /// `leg_refused`, its loop over `w.base`). E §4.2 step 5, §4.3 step 1.
+    fn chain_refusal(&self, id: usize, wanted: &(String, String)) -> Result<Option<Refusal>, Stop> {
+        let mut next = Some(id);
+        let mut links = 0_usize;
+        while let Some(wid) = next {
+            links = links
+                .checked_add(1)
+                .filter(|n| *n <= self.walks.len())
+                .ok_or_else(|| invariant("a chain of walks that loops"))?;
+            let walk = self.walk(wid)?;
+            if let Some(refusal) = walk.bad_legs.get(wanted) {
+                return Ok(Some(refusal.clone()));
+            }
+            next = walk.proj.as_ref().map(|p| p.base);
+        }
+        Ok(None)
     }
 
     /// The main walk of the timeline of cut `cut`, from S to E, walked to its end (refcore's

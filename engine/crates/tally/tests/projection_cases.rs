@@ -2,7 +2,8 @@
 //! Spec: L §5.14.1 (The projection is written: from the main walk at the start of t, or from a
 //! decision's walk at its point or at the start of an earlier t; the movements counted as known
 //! on t; those that depend on the holder left out and listed; `with uncertain`; `HOLE-PRERUN`;
-//! `RUN-FUTURE`), E §4.3 (decisions in the window run in the projection's own walk; nesting),
+//! `RUN-FUTURE`), E §4.3 (decisions in the window run in the projection's own walk; nesting;
+//! a leg the walk it continues refused stays refused, E §4.2 step 5),
 //! L §8.2 (`left out:`), §8.5 (a projection's walk prints no warning); P §2.2 (the oracle).
 //! Twin: engine/tools/refcore/mreads.py (`proj_bal`) and walk.py (`proj_walk`); the expected
 //! lines are refcore's run of the same text (`python3 -m refcore run`).
@@ -382,5 +383,84 @@ swept_unc: 900.00 DUK
         let want: Vec<&str> = UNCERTAIN_LINES.lines().collect();
         assert_eq!(lines_of(UNCERTAIN, Days::Events), want, "refcore's lines");
         assert_eq!(lines_of(UNCERTAIN, Days::Every), want, "the oracle's lines");
+    }
+
+    /// A payment into a place whose lifespan has ended is refused on 2025-02-05; a matching
+    /// decision on 2025-02-20 reads that payment's flows. A projection from 2025-02-10
+    /// continues the main walk, which refused the leg before the projection starts; one from
+    /// 2025-02-01 refuses it in its own walk.
+    const REFUSED: &str = r#"model rf
+  tally 2
+  on 2025-03-10
+  start 2025-01-01
+  end 2025-03-31
+
+source card "a card"
+
+unit DUK: currency minor 0.01
+
+kind ext: place DUK signed outside
+
+place out: ext lives 2025-01-01..
+
+place bank: accounts DUK lives 2025-01-01..
+
+place save: accounts DUK lives 2025-01-01..
+
+place old: accounts DUK lives 2025-01-01..2025-01-31
+
+input pay_amt: money DUK
+
+input pay_day: date
+
+input match_day: date
+
+input feb_start: date
+
+input feb_end: date
+
+move pay: transfers
+  on pay_day
+  leg cash from bank to old amount pay_amt
+
+move match: transfers
+  on match_day
+  reads save
+  leg cash from bank to save amount max(bal(save), flows(pay, feb_start .. feb_end))
+
+version facts
+  cite card
+  governs always
+  known 2025-01-01
+  pay_amt = 50.00
+  pay_day = 2025-02-05
+  match_day = 2025-02-20
+  feb_start = 2025-02-01
+  feb_end = 2025-02-28
+  opening[bank] = 1000.00 at 2025-01-01 start
+  opening[save] = 0.00 at 2025-01-01 start
+  opening[old] = 0.00 at 2025-01-01 start
+
+ask saved: bal(save, 2025-03-31)
+
+ask projected: bal(save, 2025-03-31) from 2025-02-10
+
+ask before: bal(save, 2025-03-31) from 2025-02-01
+"#;
+
+    /// refcore's lines for [`REFUSED`], every ask, in id order: the decision run in each
+    /// projection's walk reads the refused leg as refused.
+    const REFUSED_LINES: &str = r"before: refused: RUN-LIFESPAN pay.cash moves into or out of old outside its lifespan
+  cut 2025-03-10
+projected: refused: RUN-LIFESPAN pay.cash moves into or out of old outside its lifespan
+  cut 2025-03-10
+saved: refused: RUN-LIFESPAN pay.cash moves into or out of old outside its lifespan
+  cut 2025-03-10";
+
+    #[test]
+    fn a_projection_keeps_the_legs_the_walk_it_continues_refused() {
+        let want: Vec<&str> = REFUSED_LINES.lines().collect();
+        assert_eq!(lines_of(REFUSED, Days::Events), want, "refcore's lines");
+        assert_eq!(lines_of(REFUSED, Days::Every), want, "the oracle's lines");
     }
 }

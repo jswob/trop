@@ -10,7 +10,8 @@
 //! member's term counts only as its questions, except a 0 in a sum; a domain that is a hole
 //! makes the aggregate that hole; a binding over movements or an observed input takes its
 //! members from the book (`book/members.rs`), and a member's register reaches the reader only
-//! when the member passes the `where`.
+//! when the member passes the `where`: an aggregate's reader, or an ask's line for that
+//! tuple alone.
 
 use core::cmp::Ordering;
 use std::collections::BTreeSet;
@@ -32,13 +33,28 @@ use crate::time::{Day, Period};
 /// L §5.6 sets no cap).
 const RANGE_LIMIT: usize = 1_000_000;
 
-/// A binding tuple: its scope, and the questions that make it an unknown member.
+/// A binding tuple: its scope, the questions that make it an unknown member, and what its
+/// movements brought when it keeps them for its own line.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Member {
     /// The scope with the tuple's variables bound.
     pub env: Env,
     /// None for a member; the hole of a `where` (or a membership) that is one.
     pub unknown: Option<Hole>,
+    /// The registers of the movements it binds, kept for an ask's line (`Brings::ToTuple`);
+    /// empty when they went to the reader (`Brings::ToReader`).
+    pub brought: Collected,
+}
+
+/// Where the register a bound movement brings goes (refcore's `members`, its `regs`).
+/// L §5.19 Bindings, §8.2.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum Brings {
+    /// To the reader's collector: an aggregate's terms all reach one value.
+    ToReader,
+    /// To the tuple's own line: an ask's `for` prints a line per tuple, each with the
+    /// register of what it binds.
+    ToTuple,
 }
 
 /// One binding's members, each with what deciding it read; or the hole of a domain that is
@@ -61,8 +77,7 @@ enum Values {
 /// brings, kept by position (refcore's `members`, `_colls`). L §5.19 Bindings.
 fn moves_frame(
     level: usize,
-    env: Env,
-    unknown: Option<Hole>,
+    (env, unknown, brought): (Env, Option<Hole>, Collected),
     moves: Vec<crate::book::MvMember>,
 ) -> Frame {
     let mut values = Vec::with_capacity(moves.len());
@@ -75,6 +90,7 @@ fn moves_frame(
         level,
         env,
         unknown,
+        brought,
         values,
         next: 0,
         colls,
@@ -90,6 +106,8 @@ struct Frame {
     env: Env,
     /// The unknown-member hole so far.
     unknown: Option<Hole>,
+    /// What the movements bound so far brought, for the tuple's own line.
+    brought: Collected,
     /// The values.
     values: Vec<(Value, Option<Hole>)>,
     /// The next value's position.
@@ -113,7 +131,7 @@ impl Engine {
             }
             AggFn::Sum | AggFn::Count | AggFn::Min | AggFn::Max | AggFn::Any | AggFn::All => {}
         }
-        let members = match self.members(m, &agg.binds, env, ctx)? {
+        let members = match self.members(m, &agg.binds, env, ctx, Brings::ToReader)? {
             Err(hole) => return Ok(Value::Hole(hole)),
             Ok(members) => members,
         };
@@ -225,13 +243,16 @@ impl Engine {
     }
 
     /// The binding tuples in binding order, depth first; the first domain that is a hole
-    /// makes the aggregate that hole (refcore's `members`). L §5.11.
+    /// makes the aggregate that hole (refcore's `members`). A bound movement's register goes
+    /// where `brings` says: to the reader, or kept for the tuple (refcore's `regs`, an ask's
+    /// `for`). L §5.11, §5.19 Bindings, §8.2.
     pub(crate) fn members(
         &mut self,
         m: &Reality,
         binds: &[Bind],
         env: &Env,
         ctx: Ctx,
+        brings: Brings,
     ) -> Result<Result<Vec<Member>, Hole>, Stop> {
         let Some(first) = binds.first() else {
             return Err(invariant("an aggregate with no binding"));
@@ -245,23 +266,29 @@ impl Engine {
                 level: 0,
                 env: env.clone(),
                 unknown: None,
+                brought: Collected::default(),
                 values,
                 next: 0,
                 colls: Vec::new(),
             }),
-            Values::Moves(moves) => frames.push(moves_frame(0, env.clone(), None, moves)),
+            Values::Moves(moves) => frames.push(moves_frame(
+                0,
+                (env.clone(), None, Collected::default()),
+                moves,
+            )),
         }
         while let Some(frame) = frames.last_mut() {
             let Some((value, own)) = frame.values.get(frame.next).cloned() else {
                 frames.pop();
                 continue;
             };
-            let brings = frame.colls.get(frame.next).cloned();
+            let brought = frame.colls.get(frame.next).cloned();
             frame.next = frame
                 .next
                 .checked_add(1)
                 .ok_or_else(|| invariant("a binding's position"))?;
             let (level, scope, unknown) = (frame.level, frame.env.clone(), frame.unknown.clone());
+            let mut path = frame.brought.clone();
             let bind = binds
                 .get(level)
                 .ok_or_else(|| invariant("a binding past the list"))?;
@@ -270,8 +297,8 @@ impl Engine {
             else {
                 continue;
             };
-            if let Some(c) = &brings {
-                self.absorb(c);
+            if let Some(c) = &brought {
+                self.bring(brings, &mut path, c);
             }
             let next = level
                 .checked_add(1)
@@ -280,6 +307,7 @@ impl Engine {
                 out.push(Member {
                     env: inner,
                     unknown,
+                    brought: path,
                 });
                 continue;
             };
@@ -293,14 +321,26 @@ impl Engine {
                     level: next,
                     env: inner,
                     unknown,
+                    brought: path,
                     values,
                     next: 0,
                     colls: Vec::new(),
                 }),
-                Values::Moves(moves) => frames.push(moves_frame(next, inner, unknown, moves)),
+                Values::Moves(moves) => {
+                    frames.push(moves_frame(next, (inner, unknown, path), moves));
+                }
             }
         }
         Ok(domain_hole.map_or(Ok(out), Err))
+    }
+
+    /// A bound movement's register `met`, to the reader's collector or to the tuple's `path`
+    /// (refcore's `self.cur.merge(mc)` or `regs + [mc]`). L §5.19 Bindings, §8.2.
+    fn bring(&mut self, brings: Brings, path: &mut Collected, met: &Collected) {
+        match brings {
+            Brings::ToReader => self.absorb(met),
+            Brings::ToTuple => path.merge(met),
+        }
     }
 
     /// One binding's members, each with what deciding it read, kept apart from the reader:
@@ -325,7 +365,7 @@ impl Engine {
             Values::Unknown(h) => return Ok(Err((h, domain))),
             Values::Known(values) => (values, Vec::new()),
             Values::Moves(moves) => {
-                let frame = moves_frame(0, env.clone(), None, moves);
+                let frame = moves_frame(0, (env.clone(), None, Collected::default()), moves);
                 (frame.values, frame.colls)
             }
         };
@@ -343,6 +383,7 @@ impl Engine {
                     Member {
                         env: inner,
                         unknown,
+                        brought: Collected::default(),
                     },
                     read,
                 ));

@@ -214,6 +214,7 @@ fn expr_lines(
         vec![Member {
             env: Env::empty(),
             unknown: None,
+            brought: Collected::default(),
         }]
     } else {
         match engine.tuples(m, &ask.binds, ctx)? {
@@ -230,6 +231,7 @@ fn expr_lines(
         }
         let (items, mut met) = engine.line(m, exprs, &tuple.env, ctx)?;
         out.push(format!("{head}: {}", line_values(m, &items)?));
+        met.merge(&tuple.brought);
         met.merge(pinned);
         out.extend(
             register_lines(&met, ctx)?

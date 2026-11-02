@@ -43,6 +43,14 @@ impl PartialOrd for Day {
 }
 
 impl Day {
+    /// 9999-12-31, the last day there is (Python's `datetime.date.max`). L §2.1.
+    pub const LAST: Day = Day {
+        number: LAST,
+        year: 9999,
+        month: 12,
+        dom: 31,
+    };
+
     /// The day `year-month-day`, or `None` when no such day exists (as `datetime.date`
     /// refuses it). L §2.1.
     #[must_use]
@@ -249,6 +257,17 @@ mod tests {
         assert!(Day::from_ymd(2026, 13, 1).is_none(), "no month 13");
         assert!(Day::from_ymd(0, 1, 1).is_none(), "no year 0");
         assert!(Day::from_ymd(2026, 1, 0).is_none(), "no day 0");
+    }
+
+    #[test]
+    fn the_last_day_is_9999_12_31_and_has_no_next() {
+        assert_eq!(Day::LAST, day(9999, 12, 31), "the day itself");
+        assert_eq!(
+            Day::from_number(Day::LAST.number()),
+            Some(Day::LAST),
+            "its number"
+        );
+        assert_eq!(Day::LAST.next(), None, "no day after it");
     }
 
     #[test]

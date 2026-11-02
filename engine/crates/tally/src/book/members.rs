@@ -8,9 +8,10 @@
 //! `change` and day), §8.2 (`unfulfilled:`, `uncertain:`), §8.4 (`RUN-RECORD`).
 //! Twin: engine/tools/refcore/mreads.py (`movements_of`, `movement_members`, `span_members`,
 //! `obs_booked`, `mv_field`, `mv_record`, `mv_by_id`, `mv_kind_in`).
-//! Invariants: members come in movement order, by day, then by the text of their order; a
-//! member's register reaches its reader only when the member passes the binding's `where`; the
-//! walk's own movements (pads, decisions) and `with uncertain` members stop `NotBuilt`.
+//! Invariants: members come in movement order, by day (a hole day after every day), then by
+//! the text of their order; a member's register reaches its reader only when the member
+//! passes the binding's `where`; the walk's own movements (pads, decisions) and `with
+//! uncertain` members stop `NotBuilt`.
 
 use std::collections::BTreeSet;
 
@@ -76,10 +77,14 @@ impl Moving {
         }
     }
 
-    /// Its place among a binding's members: its day, a hole day last, then its order's text
-    /// past the day (refcore's `(day_lo(x.day), str(x.order))`). L §5.19 Bindings.
-    fn sort_key(&self) -> (Option<Day>, String) {
-        let day = self.day().as_ref().and_then(Dated::day);
+    /// Its place among a binding's members: its day, a hole day as the last day there is, so
+    /// after every day, then its order's text past the day (refcore's `(day_lo(x.day) or
+    /// datetime.date.max, str(x.order))`). L §5.19 Bindings.
+    fn sort_key(&self) -> (Day, String) {
+        let day = match self.day() {
+            Some(Dated::Day(d)) => d,
+            Some(Dated::Hole(_)) | None => Day::LAST,
+        };
         let text = match self {
             Moving::Plan(i) => i.order.member_text(),
             Moving::Obs(o) => {

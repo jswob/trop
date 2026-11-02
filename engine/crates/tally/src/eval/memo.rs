@@ -303,6 +303,14 @@ pub(crate) enum Read {
         /// The keys read.
         keys: Vec<KeyVal>,
     },
+    /// A def's `given` rows read at its keys, whether or not one was chosen: a new given row
+    /// there is what can change the cell (L §5.11 step 1, P §4.1 step 2).
+    Givens {
+        /// The def.
+        def: String,
+        /// The keys read.
+        keys: Vec<KeyVal>,
+    },
     /// A row the read rule chose, an input's or a def's given: its version, its stable id
     /// (L §2.5).
     Row {
@@ -336,10 +344,11 @@ impl Read {
     fn rank(&self) -> u8 {
         match self {
             Read::Input { .. } => 0,
-            Read::Row { .. } => 1,
-            Read::Band { .. } => 2,
-            Read::BandRow { .. } => 3,
-            Read::Cell(_) => 4,
+            Read::Givens { .. } => 1,
+            Read::Row { .. } => 2,
+            Read::Band { .. } => 3,
+            Read::BandRow { .. } => 4,
+            Read::Cell(_) => 5,
         }
     }
 }
@@ -359,7 +368,8 @@ impl Ord for Read {
     /// output is ordered by it (R-47).
     fn cmp(&self, other: &Read) -> Ordering {
         match (self, other) {
-            (Read::Input { id: a, keys: x }, Read::Input { id: b, keys: y }) => {
+            (Read::Input { id: a, keys: x }, Read::Input { id: b, keys: y })
+            | (Read::Givens { def: a, keys: x }, Read::Givens { def: b, keys: y }) => {
                 a.cmp(b).then_with(|| keys_order(x, y))
             }
             (
@@ -939,5 +949,97 @@ ask t: total law 2026-03-01
         assert!(of_total.contains(&tax_row), "and its row");
         assert_eq!(of_total.len(), 3, "base read once, at one law date");
         assert!(!of_total.contains(&fee), "what base read is base's");
+    }
+
+    /// A def keyed by tenant with a given row for one tenant only.
+    const GIVENS: &str = r#"model gv
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source card "a card"
+
+unit PLN: currency minor 0.01
+
+index tenant = [a, b]
+
+input fee: money PLN
+
+def cap[t in tenant]: money PLN at reader
+  rule base = fee
+
+version v26
+  cite card
+  governs 2026
+  known 2026-01-01
+  fee = 10.00
+  given cap[a] = 3.00
+
+ask a: cap[a] law 2026-03-01
+
+ask b: cap[b] law 2026-03-01
+"#;
+
+    #[test]
+    fn a_defs_givens_are_in_its_read_set_whether_or_not_one_is_chosen() {
+        let files = crate::syntax::parse_reality(&[crate::api::Source {
+            path: "gv.tally".to_owned(),
+            text: GIVENS.to_owned(),
+        }])
+        .expect("parses");
+        let m = crate::load::load(files).expect("loads");
+        let law = day(2026, 3, 1);
+        let ctx = Ctx::new(Some(law), m.on);
+        let mut engine = crate::eval::Engine::new(m.on);
+        let mut values = Vec::new();
+        for ask in &m.asks {
+            let crate::syntax::AskBody::Exprs(exprs) = &ask.body else {
+                panic!("an ask of values");
+            };
+            let e = exprs.first().expect("an expression");
+            let v = engine
+                .value(&m, e, &crate::eval::Env::empty(), ctx)
+                .expect("a value");
+            values.push(v.text(&m).expect("prints"));
+        }
+        assert_eq!(values, ["3.00 PLN", "10.00 PLN"], "a's given, b's rule");
+        let tenant = |name: &str| KeyVal::Key {
+            index: "tenant".to_owned(),
+            name: name.to_owned(),
+        };
+        let reads_of = |key: &KeyVal| {
+            let key = CellKey::new("cap", core::slice::from_ref(key), ctx);
+            let (cell, _) = engine.cells.get(&key, Some(law)).expect("a kept cell");
+            cell.reads.list.clone()
+        };
+        let givens = |key: KeyVal| Read::Givens {
+            def: "cap".to_owned(),
+            keys: vec![key],
+        };
+        let fee = Read::Input {
+            id: "fee".to_owned(),
+            keys: Vec::new(),
+        };
+        let given_row = m
+            .defs
+            .get("cap")
+            .and_then(|d| d.givens.first())
+            .map(|row| Read::Row {
+                version: "v26".to_owned(),
+                sid: row.sid.clone(),
+            })
+            .expect("cap's given row");
+        let of_a = reads_of(&tenant("a"));
+        assert!(of_a.contains(&givens(tenant("a"))), "a's givens");
+        assert!(of_a.contains(&given_row), "and the given row chosen");
+        assert!(!of_a.contains(&fee), "the rule isn't read past a given");
+        let of_b = reads_of(&tenant("b"));
+        assert!(
+            of_b.contains(&givens(tenant("b"))),
+            "b's givens, though none was chosen"
+        );
+        assert!(!of_b.contains(&given_row), "a's row isn't b's");
+        assert!(of_b.contains(&fee), "then the rule read fee");
     }
 }

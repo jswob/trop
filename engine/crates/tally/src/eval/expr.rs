@@ -368,7 +368,9 @@ impl Engine {
     }
 
     /// `x in K [on d]`: a thing's membership of a kind; `x in [a, b]`: a list's (refcore's
-    /// `e_in`). L §5.7.
+    /// `e_in`). A `d` that is a hole makes the test that hole; one that is `none`, `never` or
+    /// no day is refused as `date_of` refuses it, and a day period stands for its first day.
+    /// L §5.7, §8.4.
     fn membership(&mut self, m: &Reality, x: &In, env: &Env, ctx: Ctx) -> Result<Value, Stop> {
         let member = self.ev(m, &x.member, env, ctx)?;
         if let Value::Hole(_) = member {
@@ -401,9 +403,10 @@ impl Engine {
         };
         if let Some(on) = &x.on {
             let day = self.ev(m, on, env, ctx)?;
-            let Value::Day(day) = day else {
-                return Ok(day);
-            };
+            if let Value::Hole(h) = day {
+                return Ok(Value::Hole(h));
+            }
+            let day = crate::ask::date_of(&day, "the day of a membership test")?;
             let alive = member_span(m, thing, kind, ctx.cut).is_some_and(|s| s.contains(day));
             return Ok(Value::Bool(alive));
         }
