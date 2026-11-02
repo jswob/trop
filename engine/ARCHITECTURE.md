@@ -82,9 +82,9 @@ the row index (fence F3) is opened when a budget row asks.
 cell, its law date set by `at`, its value from a given or the winning rule. `memo.rs`: the
 memo (fence F2). `stack.rs`: the outermost reads; past the counted depth a cell waits on the
 work stack and the read is replayed. `read.rs`: an input read's keys and value. `state.rs`:
-the context (law date, cut, walk point), scopes, the register a cell collects, the `Engine`
-of one ask. `arith.rs`, `aggregate.rs`, `band.rs`, `builtin.rs`, `ty.rs`: arithmetic,
-aggregates, bands, built-ins, sample values.
+the context (law date, cut, walk point, the line's `with uncertain`), scopes, the register
+a cell collects, the `Engine` of one ask. `arith.rs`, `aggregate.rs`, `band.rs`,
+`builtin.rs`, `ty.rs`: arithmetic, aggregates, bands, built-ins, sample values.
 
 **Holes** (`hole/`, K, L §8.1). `questions.rs`: a hole is its set of questions; the one
 per-operator rule. Holes are built only here (R-116).
@@ -121,10 +121,12 @@ ask's groups and lines.
 ## Cross-cutting ideas
 
 - **Contexts.** Every value is computed in a context: a law date, a cut, and inside the
-  walk a walk and a point. The memo keys a def cell by (def, keys, cut, walk point) and
-  keeps one cell per law-date class: the law dates whose answer can't differ, found from
-  the spans of the rows and rules the cell actually read (E §3.2). A text that names the
-  day (a hole's question, a `held` entry) keeps the cell at its own day.
+  walk a walk and a point; an ask line's own reads also carry its `with uncertain`, which
+  no decision or timeline sees (L §5.14). The memo keys a def cell by (def, keys, cut, walk
+  point, `with uncertain`) and keeps one cell per law-date class: the law dates whose
+  answer can't differ, found from the spans of the rows and rules the cell actually read
+  (E §3.2). A text that names the day (a hole's question, a `held` entry) keeps the cell at
+  its own day.
 - **Read sets.** Each def cell records what it read: the inputs, rows, bands, band rows and
   cells (E §3.2, P §4). What a walk, a plan, an adjustment or a link reads is shared by
   every reader and is not in a cell's set. At S nothing skips work by them yet; they are the
