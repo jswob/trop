@@ -28,6 +28,7 @@ ENGINE = os.path.dirname(TOOLS)
 sys.path.insert(0, TOOLS)
 import check  # noqa: E402  the cleaned environment
 import check_rules  # noqa: E402  the lexer and the file walk
+import trace  # noqa: E402  the lines inside #[cfg(test)] modules
 
 OUT = os.path.join(ENGINE, "target", "advisory")
 LINTS = ["clippy::too_many_lines", "clippy::cognitive_complexity"]
@@ -65,7 +66,7 @@ def clippy_report():
         span = next((s for s in m.get("spans", []) if s.get("is_primary")), None)
         where = f"engine/{span['file_name']}:{span['line_start']}" if span else "?"
         hits.add(f"{where}: {code.removeprefix('clippy::')}: {m.get('message')}")
-    print(f"advisory: function length and nesting ({', '.join(l.removeprefix('clippy::') for l in LINTS)}):")
+    print(f"advisory: function length and cognitive complexity ({', '.join(l.removeprefix('clippy::') for l in LINTS)}):")
     if r.returncode != 0 and not hits:
         print("  the clippy pass failed; see the strict passes")
     for h in sorted(hits):
@@ -117,13 +118,17 @@ def uncited():
         if not any(fnmatch.fnmatchcase(r, g) for g in kernel.get("kernel", [])):
             continue
         doc = []
-        for n, line in enumerate(open(path, encoding="utf-8").read().splitlines(), 1):
+        text = open(path, encoding="utf-8").read()
+        tests = trace.test_lines(check_rules.lex(text)[0])  # inline test modules aren't the kernel's functions
+        for n, line in enumerate(text.splitlines(), 1):
+            if n in tests:
+                continue
             stripped = line.strip()
             if stripped.startswith("///"):
                 doc.append(stripped)
                 continue
             m = FN.match(line)
-            if m and not any(CITATION.search(d) for d in doc):
+            if m and not CITATION.search(" ".join(d.lstrip("/").strip() for d in doc)):  # a citation may wrap
                 print(f"  engine/{r}:{n}: {m.group(1)}")
                 missing += 1
             if not stripped.startswith("#["):
