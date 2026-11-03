@@ -42,19 +42,6 @@ impl Mode {
             _ => None,
         }
     }
-
-    /// The word of the language for the mode. L §7.2.
-    pub fn word(self) -> &'static str {
-        match self {
-            Mode::Down => "down",
-            Mode::Up => "up",
-            Mode::Floor => "floor",
-            Mode::Ceil => "ceil",
-            Mode::HalfUp => "half-up",
-            Mode::HalfDown => "half-down",
-            Mode::HalfEven => "half-even",
-        }
-    }
 }
 
 /// Where a value lies between two whole numbers: its floor, how the rest compares with one
@@ -202,8 +189,7 @@ mod tests {
                 assert_eq!(
                     n(value).round(&Num::int(1), *mode).expect("rounds"),
                     n(want),
-                    "{value} {}",
-                    mode.word()
+                    "{value} {mode:?}"
                 );
             }
         }
@@ -273,8 +259,17 @@ mod tests {
 
     #[test]
     fn words_name_the_modes() {
-        for mode in MODES {
-            assert_eq!(Mode::from_word(mode.word()), Some(mode), "{}", mode.word());
+        let words = [
+            "down",
+            "up",
+            "floor",
+            "ceil",
+            "half-up",
+            "half-down",
+            "half-even",
+        ];
+        for (word, mode) in words.into_iter().zip(MODES) {
+            assert_eq!(Mode::from_word(word), Some(mode), "{word}");
         }
         assert_eq!(Mode::from_word("exact"), None, "not a mode");
     }

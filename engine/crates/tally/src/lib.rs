@@ -154,7 +154,7 @@ pub mod walk {
     mod reads;
     mod state;
 
-    pub use agenda::{Act, Mv, Reading, endings, qty_of, reading_point};
+    pub use agenda::{Act, Mv, Reading, endings, reading_point};
     pub use day::{Broke, Ends};
     pub use order::{Run, WalkAt};
     pub use plan::{

@@ -64,8 +64,6 @@ pub struct Gap {
     pub amount: Amount,
     /// The reading.
     pub reading: Reading,
-    /// Whether the version anchors the place (else it pads it).
-    pub anchor: bool,
     /// What the gap rests on.
     pub coll: Collected,
 }
@@ -270,14 +268,12 @@ impl Engine {
         let gap = gap_of(&r.value, &booked)?;
         let mut bc = self.booked_coll(m, id, &r.place, &r.unit, at)?;
         bc.merge(&r.coll);
-        let anchor = role == GapRole::Anchor;
         let read = self.walk_mut(id)?;
         read.gaps.push(Gap {
             place: r.place.clone(),
             point: at,
             amount: gap.clone(),
             reading: r.clone(),
-            anchor,
             coll: bc.clone(),
         });
         // E §9 item 2: an anchor's gap, or a pad's from outside, moves worth; a pad from an

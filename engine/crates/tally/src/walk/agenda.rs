@@ -25,7 +25,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use super::plan::{Amount, Dated, End, Exists, Inst, Status};
+use super::plan::{Dated, End, Exists, Inst, Status};
 use super::point::{At, Step};
 use super::state::{Progress, Walk, WalkObs};
 use crate::Days;
@@ -658,15 +658,6 @@ pub fn endings(m: &Reality, walk: &Walk) -> BTreeMap<Day, Vec<String>> {
         names.sort();
     }
     out
-}
-
-/// A leg's amount as a quantity, when it is one. L §5.14.
-#[must_use]
-pub fn qty_of(amount: &Amount) -> Option<&Num> {
-    match amount {
-        Amount::Qty(q) => Some(q),
-        Amount::Hole(_) | Amount::Refused(_) => None,
-    }
 }
 
 /// Whether `id` names a plan move (L §5.14.2: a written order with a plan). L §5.14.2.

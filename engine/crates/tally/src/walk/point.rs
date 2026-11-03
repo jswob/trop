@@ -163,7 +163,9 @@ impl At {
         }
     }
 
-    /// The point as a memo key's text: a running read's cells are kept per point (E §3.2).
+    /// The point as text, for the counted build's distinct reads (P §1.1): a running read's
+    /// cells are kept per point (E §3.2). Only the `counters` build has it.
+    #[cfg(feature = "counters")]
     #[must_use]
     pub fn text(self) -> String {
         format!(

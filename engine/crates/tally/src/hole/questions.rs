@@ -104,27 +104,12 @@ impl Hole {
         out.join(" ")
     }
 
-    /// Whether two holes carry the same questions (L §8.1; an `if` whose branches are equal
-    /// holes, an `at` window's classes, E §3.2).
-    #[must_use]
-    pub fn same_questions(&self, other: &Hole) -> bool {
-        self.questions == other.questions
-    }
-
     /// The question texts, sorted, for a register line or a test (L §8.2).
     #[must_use]
     pub fn question_texts(&self) -> Vec<String> {
         let mut out: Vec<String> = self.questions.iter().map(|a| a.text.clone()).collect();
         out.dedup();
         out
-    }
-
-    /// Whether a bound is known: never at S (seam U, L §8.1).
-    #[must_use]
-    pub fn is_bounded(&self) -> bool {
-        match self.bound {
-            Bound::Unbounded => false,
-        }
     }
 }
 
@@ -169,14 +154,13 @@ mod tests {
             "sorted by code point, figures listed once"
         );
         assert!(spread(&[None, None]).is_none(), "no operand is a hole");
-        assert!(!all.is_bounded(), "no bound at S");
     }
 
     #[test]
     fn a_question_with_no_figure_prints_alone_escaped() {
         let h = Hole::asked("say \"why\"", "");
         assert_eq!(h.text(), "?\"say \\\"why\\\"\"", "escaped, no brackets");
-        assert!(h.same_questions(&Hole::asked("say \"why\"", "")), "same");
+        assert_eq!(h, Hole::asked("say \"why\"", ""), "same");
         assert_eq!(h.question_texts(), vec!["say \"why\"".to_owned()], "texts");
     }
 }

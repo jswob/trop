@@ -992,7 +992,7 @@ mod tests {
         let b = Hole::asked("b?", "y");
         let both = joined(Some(a.clone()), Some(b.clone())).expect("a hole");
         let other_way = joined(Some(b), Some(a.clone())).expect("a hole");
-        assert!(both.same_questions(&other_way), "joined in either order");
+        assert_eq!(both, other_way, "joined in either order");
         assert_eq!(
             both.question_texts(),
             vec!["a?".to_owned(), "b?".to_owned()],
