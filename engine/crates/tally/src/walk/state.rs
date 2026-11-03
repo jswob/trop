@@ -180,6 +180,9 @@ pub struct Today {
     pub batch: Option<Group>,
     /// The closing readings' legs, once the day's end is reached.
     pub closing: Option<Group>,
+    /// The instant of each anchored reading (an opening included) that joined a group of the
+    /// sign rule with no leg, by place and unit (L §5.10, tally 2.1.2).
+    pub anchors: BTreeMap<(String, String), String>,
     /// The places the day touched.
     pub touched: BTreeSet<String>,
 }

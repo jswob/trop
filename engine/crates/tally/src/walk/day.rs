@@ -173,6 +173,7 @@ impl Engine {
                 runs: Vec::new(),
                 batch: Some(Group::new()),
                 closing: None,
+                anchors: BTreeMap::new(),
                 touched: BTreeSet::new(),
             });
             #[cfg(feature = "counters")]
@@ -243,7 +244,8 @@ impl Engine {
 
     /// The sign rule at one of its points: each place tested against the balance the group
     /// leaves, and a place that breaks its kind's rule refused from there with the group's
-    /// legs at it, which are taken back (refcore's `check_group`). L §5.10, E §4.2 step 5.
+    /// legs at it, which are taken back; an anchored place with no leg there is refused with
+    /// its reading's message (refcore's `check_group`). L §5.10, §8.4, E §4.2 step 5.
     pub(super) fn check_group(
         &mut self,
         m: &Reality,
@@ -267,6 +269,23 @@ impl Engine {
             let shown = qty_value(m, &nv, &unit)?
                 .text(m)
                 .map_err(crate::eval::num_stop)?;
+            if legs.is_empty() {
+                // an anchored place with no leg of the group at it: refused from here, with
+                // its reading's message (L §8.4; tally 2.1.2)
+                let instant = self
+                    .today(id)?
+                    .anchors
+                    .get(&(place.clone(), unit.clone()))
+                    .cloned()
+                    .ok_or_else(|| invariant("a place in a group with no leg and no anchor"))?;
+                let err = Refusal::new(
+                    Code::Run(Run::Place),
+                    format!("{place} is {shown} after its reading at {instant}"),
+                );
+                self.walk_mut(id)?
+                    .add(m, &place, &unit, Ent::new(at, Change::Bad(err)))?;
+                continue;
+            }
             let err = Refusal::new(
                 Code::Run(Run::Place),
                 broke_text(m, broke, &place, &shown, &legs),
@@ -616,19 +635,7 @@ impl Engine {
         on: &[(String, i64)],
         unit: &str,
     ) -> Result<bool, Stop> {
-        let walk = self.walk_mut(id)?;
-        let in_batch =
-            at.in_first_batch() && walk.today.as_ref().is_some_and(|t| t.batch.is_some());
-        let group = if in_batch {
-            walk.today.as_mut().and_then(|t| t.batch.as_mut())
-        } else if walk.group.is_some() {
-            walk.group.as_mut()
-        } else if at.at_or_after_end() {
-            walk.today.as_mut().and_then(|t| t.closing.as_mut())
-        } else {
-            None
-        };
-        let Some(group) = group else {
+        let Some(group) = self.walk_mut(id)?.open_group(at) else {
             return Ok(false);
         };
         for (p, _) in on {
@@ -732,8 +739,55 @@ impl Engine {
 }
 
 impl Walk {
+    /// The group of the sign rule a booking at `at` waits for: the day's first batch, the
+    /// running decision's legs, or the closing readings; none when none is open (refcore's
+    /// `reading_group`, `book_leg`'s groups). L §5.10, E §4.2 step 5.
+    pub(crate) fn open_group(&mut self, at: At) -> Option<&mut Group> {
+        let in_batch =
+            at.in_first_batch() && self.today.as_ref().is_some_and(|t| t.batch.is_some());
+        if in_batch {
+            return self.today.as_mut().and_then(|t| t.batch.as_mut());
+        }
+        if self.group.is_some() {
+            return self.group.as_mut();
+        }
+        if at.at_or_after_end() {
+            return self.today.as_mut().and_then(|t| t.closing.as_mut());
+        }
+        None
+    }
+
+    /// An anchored reading's place, an opening's included, tested at the reading's point by
+    /// its kind's sign rule: a number at a `min 0` or `max 0` place joins the point's group
+    /// with no leg, and the group's test refuses it there when it breaks the rule (refcore's
+    /// `sign_anchor`; tally 2.1.2). L §5.10, §5.19; E §4.2 step 5.
+    ///
+    /// # Errors
+    ///
+    /// `NotBuilt` for a reading after a decision, where no group is open (M2).
+    pub(crate) fn sign_anchor(&mut self, m: &Reality, at: At, r: &Reading) -> Result<(), Stop> {
+        let ruled = matches!(place_sign(m, &r.place), Some(Sign::Min0 | Sign::Max0));
+        if r.value.is_err() || !ruled {
+            return Ok(());
+        }
+        let key = (r.place.clone(), r.unit.clone());
+        let Some(group) = self.open_group(at) else {
+            return Err(Stop::NotBuilt(
+                "a reading after a decision (the sign rule's point 2)",
+            ));
+        };
+        group.entry(key.clone()).or_insert_with(Vec::new);
+        self.today
+            .as_mut()
+            .ok_or_else(|| invariant("a reading with no day open"))?
+            .anchors
+            .insert(key, r.instant.clone());
+        Ok(())
+    }
+
     /// An opening reading: its place's balance set to it, the holes since answered, a stated
-    /// hole's questions kept (refcore's `apply_reading`, an opening). L §5.19, E §4.2 step 0.
+    /// hole's questions kept; it always anchors, so its place is tested at its point (refcore's
+    /// `apply_reading`, an opening). L §5.19, §5.10, E §4.2 step 0.
     fn apply_opening(&mut self, m: &Reality, at: At, reading: &Reading) -> Result<(), Stop> {
         if self.inside(m, &reading.place) {
             // E §9 item 2: an opening states the place's worth; its change counts as stated
@@ -764,7 +818,8 @@ impl Walk {
         };
         let mut ent = Ent::new(at, change);
         ent.coll = Some(reading.coll.clone());
-        self.add(m, &reading.place, &reading.unit, ent)
+        self.add(m, &reading.place, &reading.unit, ent)?;
+        self.sign_anchor(m, at, reading)
     }
 
     /// Takes back a refused leg's entries at its end `p` (refcore's `unbook`); what came back
