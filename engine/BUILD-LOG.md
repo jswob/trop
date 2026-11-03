@@ -493,3 +493,27 @@ G11 is split in three: G11a (this entry), G11b the fences P8-14 asks for, G11c c
 - **What I tried:** the key is cargo-mutants' description, so it can't be reworded. A raw `|` breaks the table too. No row form that both renders as Markdown and passes this parse holds a pipe.
 - **What I ask:** the rules role amends the parse to split cells only at unescaped pipes, `re.split(r"(?<!\\)\|", …)`, and unescape `\|` to `|` in each cell. The docstring and the file's header should say so.
 - **State:** the last green commit is this entry's, with the listing. Nothing uncommitted.
+
+## 2026-11-03 S, row 5: the gate re-check's finding and its 3 rejected equivalents (issue #41)
+
+**Closed:** the STOP-REPORT above, by the rules step 13f97e3: the scorer now reads a mutation holding an escaped pipe.
+
+**The reviewer's finding** (`tmp/s/gate-close-review.md`, not blocking). With `Gap::anchor` gone, `Walk::gaps` was written by `apply_stated` and read by nothing: the ledger's balance lines come from the readings themselves (`book/ledger.rs`, `booked_amount`). No later milestone in BUILD-ORDER reads it either. So these are deleted:
+- the `Gap` record (`book/reading.rs`) and its re-export in `lib.rs`;
+- the `Walk::gaps` field (`walk/state.rs`) and its one push.
+
+`Walk::pads` was the same: pushed once in `apply_stated`, never read. It is deleted too, with `Pad::point`, which only that list kept. `Pad` itself stays, since it carries the pad's leg to booking. CI's run 41606310136 made no mutant at these sites (cargo-mutants deletes a field only in a struct expression with a `..` base), so no row is added or dropped.
+
+**`MUTANTS-SURVIVORS.md`** (the gate's three rejections):
+- `book/adjust.rs` `Engine::measure_move` `<` → `<=`: the row is removed. T's `g11/where_hole` (e233838) catches it.
+- `walk/plan.rs` `day_repr` → `String::new()` and `day_max_repr` → `"xyzzy"`: moved from equivalent to `R-87: missed: not built at S: …, #48`, with T's recipe (notes, issue #48). The recipe is a residual ledger tie in year 9999, months 2 to 9, where the day texts compare as text, not as days: `datetime.date(9999, 2, 10)` sorts after `datetime.date(9999, 12, 31)`. A year-9999 run is REFCORE-NOT-YET on refcore and "not implemented" on the engine at S. My review last turn missed that comparison.
+
+**Rows:** 195, 99 `R-87: equivalent:` and 96 `R-87: missed:`.
+
+**The local scorer** (`engine/tools/mutants-survivors tmp/mutants/41606310136/mutants-shard-*`, CI's run at 13f97e3): `mutants-survivors: score 91.7% = caught 1203 / (caught 1203 + missed 215 + timed out 0 - equivalent 106); unviable 353, not counted`, exit 1.
+- Equivalent is 106: CI's 109 less `measure_move`'s 1 and the 2 moved to missed.
+- The one problem is the expected one: `book/adjust.rs: replace < with <= in Engine::measure_move (missed) is not in MUTANTS-SURVIVORS.md`. That is 1 key and 1 mutant (`adjust.rs:226:36`), missed at 13f97e3 and caught since by e233838.
+- Nothing is listed but caught, and nothing else is not listed.
+- On a run at e233838 or later, that mutant is caught: the score's caught count gains 1 and its missed count loses 1.
+
+**Green.** No new T id; no test changed. **STOP-REPORTs:** none open. **Exceptions:** +0; count 6; report-only 5. **Check:** `check full: green, 31 steps (803s)`.

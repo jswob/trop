@@ -186,7 +186,7 @@ pub mod book {
     pub use ledger::{Fig, Group, GroupKey, Ledger, Line, fig_text};
     pub(crate) use members::{MvDom, MvMember};
     pub use observe::{Coverage, Linked, Obs, inst_id};
-    pub use reading::{Gap, Pad, Seen, first_readings, reading_rank, readings};
+    pub use reading::{Pad, Seen, first_readings, reading_rank, readings};
     pub(crate) use settle::settlement_move;
 }
 

@@ -254,10 +254,6 @@ pub struct Walk {
     pub(crate) obs_texts: Vec<String>,
     /// The modelled-past instances, kept for the ledger (E §4.1 step 3, §6.2).
     pub(crate) modelled: Vec<Inst>,
-    /// The pads booked (E §6.1).
-    pub(crate) pads: Vec<crate::book::Pad>,
-    /// Every stated reading's gap, in walk order (E §6.1).
-    pub(crate) gaps: Vec<crate::book::Gap>,
     /// While a modelled-past decision runs, the legs of its own observations booked on their
     /// days before its own, which its running reads take back out (E §4.2 step 3).
     pub(crate) less_obs: Option<Vec<LegVal>>,
@@ -395,8 +391,6 @@ impl Walk {
             obs: Vec::new(),
             obs_texts: Vec::new(),
             modelled: Vec::new(),
-            pads: Vec::new(),
-            gaps: Vec::new(),
             less_obs: None,
             checkpoints: Vec::new(),
         }

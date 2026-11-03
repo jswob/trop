@@ -49,23 +49,6 @@ pub struct Pad {
     pub leg: LegVal,
     /// What its amount rests on: the booked balance's register and the reading's.
     pub coll: Collected,
-    /// Its point in the walk.
-    pub point: At,
-}
-
-/// A reading's gap, kept for the ledger's balance line (refcore's `Walk.gaps`). E §6.1, §6.3.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Gap {
-    /// The place.
-    pub place: String,
-    /// The reading's point.
-    pub point: At,
-    /// The gap: the reading less the booked balance, a hole, or the refusal the balance is.
-    pub amount: Amount,
-    /// The reading.
-    pub reading: Reading,
-    /// What the gap rests on.
-    pub coll: Collected,
 }
 
 /// A reading row kept as the latest of its key: when it became known, its day and edge, the
@@ -269,13 +252,6 @@ impl Engine {
         let mut bc = self.booked_coll(m, id, &r.place, &r.unit, at)?;
         bc.merge(&r.coll);
         let read = self.walk_mut(id)?;
-        read.gaps.push(Gap {
-            place: r.place.clone(),
-            point: at,
-            amount: gap.clone(),
-            reading: r.clone(),
-            coll: bc.clone(),
-        });
         // E §9 item 2: an anchor's gap, or a pad's from outside, moves worth; a pad from an
         // inside place moves it between two inside places
         if read.inside(m, &r.place) {
@@ -354,7 +330,6 @@ impl Engine {
                 ent.coll = Some(r.coll.clone());
                 ent.reg = reg;
                 ent.mv = Some(pad.id.clone());
-                padded.pads.push(pad);
                 padded.add(m, &r.place, &r.unit, ent)
             }
         }
@@ -413,7 +388,6 @@ fn make_pad(r: &Reading, other: &str, gap: &Amount, coll: Collected, at: At) -> 
             day: Dated::Day(at.day),
         },
         coll,
-        point: at,
     })
 }
 
