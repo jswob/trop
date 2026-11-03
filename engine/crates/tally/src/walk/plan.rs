@@ -182,22 +182,34 @@ impl PartialOrd for Order {
 }
 
 impl Order {
-    /// The order as a binding's members sort it on their day: the order's tuple written past
-    /// its day, `<stratum>, '<move>', <keys>)` (refcore's `str(order)`). L §5.19 Bindings.
-    #[must_use]
-    pub fn member_text(&self) -> String {
-        let text = self.text();
-        let keys = text.split_once('|').map_or("()", |(_, k)| k);
-        format!("{}, {}, {keys})", self.stratum, quoted(&self.move_id))
-    }
-
-    /// The order as refcore's `str(order)` writes the whole tuple: its day, the last day of
-    /// the calendar for a hole day, then `member_text`'s part. E §4.1, §6.3 (the ledger's
-    /// remaining ties go by the movement order).
-    #[must_use]
-    pub fn repr(&self) -> String {
-        let day = self.day.map_or_else(day_max_repr, day_repr);
-        format!("({day}, {}", self.member_text())
+    /// The order as one typed term, `(day, stratum, move, ((kind, place, id), …))`, the last
+    /// day there is for a hole day, so a binding's members and the residual ledger's last ties
+    /// compare it term by term (refcore's `inst_order` under `order_key`; tally 2.1.2). E §4.1,
+    /// §6.3 Order; L §2.5, §5.19 Bindings.
+    ///
+    /// # Errors
+    ///
+    /// `ENGINE-INVARIANT` for a key's place past `i64`.
+    pub fn term(&self) -> Result<Term, Stop> {
+        let mut keys = Vec::with_capacity(self.keys.len());
+        for (kind, place, id) in &self.keys {
+            let place = i64::try_from(*place).map_err(|_| invariant("a key's place past i64"))?;
+            keys.push(Term::Tuple(vec![
+                Term::Int(i64::from(*kind)),
+                Term::Int(place),
+                Term::text(id),
+            ]));
+        }
+        let day = match self.day {
+            Some(d) => d,
+            None => Day::LAST,
+        };
+        Ok(Term::Tuple(vec![
+            Term::Day(day),
+            Term::Int(i64::from(self.stratum)),
+            Term::text(&self.move_id),
+            Term::Tuple(keys),
+        ]))
     }
 
     /// The movement's text among a day's plans, `<move>|<keys>`, the keys' places written as
@@ -218,27 +230,78 @@ impl Order {
     }
 }
 
-/// A day as refcore's tuples write it, `datetime.date(2026, 9, 1)` (Python's `repr`). E §4.1.
-#[must_use]
-pub fn day_repr(day: Day) -> String {
-    format!(
-        "datetime.date({}, {}, {})",
-        day.year(),
-        day.month(),
-        day.day()
-    )
+/// One term of a movement order, typed as refcore's `order_key` types it: a day, a number, a
+/// text, or a tuple of terms. Two orders compare term by term: days as dates, strata and key
+/// places as numbers, ids and stable ids by code point, a tuple term by term with a shorter
+/// one first where it begins the other, and two terms of different types by their type, in
+/// that order (tally 2.1.2: 2.1.1 compared the order's text, so 10 sorted before 2). E §4.1,
+/// §6.3 Order; L §2.5.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Term {
+    /// A day.
+    Day(Day),
+    /// A number: a stratum, a key's place in its index.
+    Int(i64),
+    /// A text: an id or a stable id.
+    Text(String),
+    /// A tuple of terms.
+    Tuple(Vec<Term>),
 }
 
-/// The last day of the calendar as refcore's tuples write it, where a hole day sorts
-/// (Python's `date.max`). E §4.1.
-fn day_max_repr() -> String {
-    "datetime.date(9999, 12, 31)".to_owned()
+impl Term {
+    /// A text term. E §4.1.
+    #[must_use]
+    pub fn text(s: &str) -> Term {
+        Term::Text(s.to_owned())
+    }
+
+    /// An observation's or an adjustment's order, `(day, -1, id, …)`: before every plan of
+    /// its day, then by its ids (refcore's `ObsMv.order`, `AdjMv.order`). E §4.1, §6.3 Order.
+    #[must_use]
+    pub fn booked(day: Day, ids: &[&str]) -> Term {
+        let mut terms = vec![Term::Day(day), Term::Int(-1)];
+        terms.extend(ids.iter().map(|id| Term::text(id)));
+        Term::Tuple(terms)
+    }
+
+    /// The term's type, as refcore's `order_key` ranks it: a day, a number, a text, a tuple.
+    /// E §4.1.
+    fn rank(&self) -> u8 {
+        match self {
+            Term::Day(_) => 1,
+            Term::Int(_) => 2,
+            Term::Text(_) => 3,
+            Term::Tuple(_) => 4,
+        }
+    }
+}
+
+impl Ord for Term {
+    /// Term by term as its type (refcore's `order_key`). E §4.1, §6.3 Order.
+    fn cmp(&self, other: &Term) -> Ordering {
+        match (self, other) {
+            (Term::Day(a), Term::Day(b)) => a.cmp(b),
+            (Term::Int(a), Term::Int(b)) => a.cmp(b),
+            (Term::Text(a), Term::Text(b)) => a.cmp(b),
+            (Term::Tuple(a), Term::Tuple(b)) => a.cmp(b),
+            (Term::Day(_) | Term::Int(_) | Term::Text(_) | Term::Tuple(_), _) => {
+                self.rank().cmp(&other.rank())
+            }
+        }
+    }
+}
+
+impl PartialOrd for Term {
+    /// As [`Ord`] (E §4.1).
+    fn partial_cmp(&self, other: &Term) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
 }
 
 /// A text quoted as the walk key's tuple writes it: in single quotes, double ones when it
 /// holds a single quote and no double one, with backslashes, line ends, tabs and the quote
 /// escaped. E §4.1.
-pub(crate) fn quoted(s: &str) -> String {
+fn quoted(s: &str) -> String {
     let quote = if s.contains('\'') && !s.contains('"') {
         '"'
     } else {

@@ -9,7 +9,7 @@
 //! Twin: engine/tools/refcore/mreads.py (`movements_of`, `movement_members`, `span_members`,
 //! `obs_booked`, `mv_field`, `mv_record`, `mv_by_id`, `mv_kind_in`).
 //! Invariants: members come in movement order, by day (a hole day after every day), then by
-//! the text of their order; a member's register reaches its reader only when the member
+//! their order compared term by term as its types (E §4.1); a member's register reaches its reader only when the member
 //! passes the binding's `where`; the walk's own movements (pads, decisions) and `with
 //! uncertain` members stop `NotBuilt`.
 
@@ -23,7 +23,7 @@ use crate::hole::{Hole, spread};
 use crate::model::{Fulfils, KeyVal, MvRef, MvSrc, Reality, Span, Value};
 use crate::syntax::{Bind, Stop};
 use crate::time::Day;
-use crate::walk::{Amount, Dated, End, Exists, Inst, LegVal, Status, invariant, qty_value};
+use crate::walk::{Amount, Dated, End, Exists, Inst, LegVal, Status, Term, invariant, qty_value};
 
 /// What a binding over movements ranges over (refcore's `_dom`, `event` or `obs`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -78,27 +78,19 @@ impl Moving {
     }
 
     /// Its place among a binding's members: its day, a hole day as the last day there is, so
-    /// after every day, then its order's text past the day (refcore's `(day_lo(x.day) or
-    /// datetime.date.max, str(x.order))`). L §5.19 Bindings.
-    fn sort_key(&self) -> (Day, String) {
+    /// after every day, then its movement order, typed (refcore's `(day_lo(x.day) or
+    /// datetime.date.max, order_key(x.order))`; tally 2.1.2). L §5.19 Bindings, §2.5; E §4.1.
+    fn sort_key(&self) -> Result<(Day, Term), Stop> {
         let day = match self.day() {
             Some(Dated::Day(d)) => d,
             Some(Dated::Hole(_)) | None => Day::LAST,
         };
-        let text = match self {
-            Moving::Plan(i) => i.order.member_text(),
-            Moving::Obs(o) => {
-                let key = row_key(o);
-                format!("-1, {}, {})", quoted(&o.input), quoted(key))
-            }
-            Moving::Adj(a) => format!(
-                "-1, {}, {}, {})",
-                quoted(&a.move_id),
-                quoted(&a.inst_id),
-                quoted(&a.leg.name)
-            ),
+        let order = match self {
+            Moving::Plan(i) => i.order.term()?,
+            Moving::Obs(o) => o.order(),
+            Moving::Adj(a) => a.order(),
         };
-        (day, text)
+        Ok((day, order))
     }
 
     /// The movement as a value (refcore's `mv()`). L §5.14.
@@ -358,9 +350,7 @@ impl Engine {
         if let Some(adjs) = &self.adj_restrict
             && sub.contains("adjustments")
         {
-            let mut out: Vec<Moving> = adjs.iter().cloned().map(Moving::Adj).collect();
-            out.sort_by_key(Moving::sort_key);
-            return Ok(out);
+            return in_order(adjs.iter().cloned().map(Moving::Adj).collect());
         }
         let decided = m
             .moves
@@ -411,8 +401,7 @@ impl Engine {
                     .map(Moving::Adj),
             );
         }
-        out.sort_by_key(Moving::sort_key);
-        Ok(out)
+        in_order(out)
     }
 
     /// The record behind a movement value at the reader's cut: an instance, an observation or
@@ -729,7 +718,14 @@ fn entry(word: &'static str, text: &str) -> Entry {
     }
 }
 
-/// A text as the order's tuple writes it (E §4.1).
-fn quoted(s: &str) -> String {
-    crate::walk::quoted(s)
+/// Movements in movement order: by day, then by their typed order, ties as they came (refcore's
+/// stable `sort` by `(day_lo(x.day) or datetime.date.max, order_key(x.order))`). L §5.19
+/// Bindings; E §4.1.
+fn in_order(movements: Vec<Moving>) -> Result<Vec<Moving>, Stop> {
+    let mut keyed = Vec::with_capacity(movements.len());
+    for mv in movements {
+        keyed.push((mv.sort_key()?, mv));
+    }
+    keyed.sort_by(|a, b| a.0.cmp(&b.0));
+    Ok(keyed.into_iter().map(|(_, mv)| mv).collect())
 }

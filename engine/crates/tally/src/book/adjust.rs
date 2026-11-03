@@ -18,7 +18,7 @@ use crate::hole::{Hole, spread};
 use crate::model::{MoveInfo, Reality};
 use crate::syntax::Stop;
 use crate::time::Day;
-use crate::walk::{Amount, End, Exists, Inst, LegVal, Seed, Status, invariant, qty_value};
+use crate::walk::{Amount, End, Exists, Inst, LegVal, Seed, Status, Term, invariant, qty_value};
 
 /// One adjustment: an instance's leg changed by a later version (refcore's `AdjMv`).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -70,6 +70,13 @@ pub struct Settled {
 }
 
 impl Adjustment {
+    /// Its movement order, `(day, -1, move, instance, leg)` (refcore's `AdjMv.order`; tally
+    /// 2.1.2). E §4.1, §6.3 Order; L §5.19 Bindings.
+    #[must_use]
+    pub fn order(&self) -> Term {
+        Term::booked(self.day, &[&self.move_id, &self.inst_id, &self.leg.name])
+    }
+
     /// What remains of the change: δ less the settlements; none once waived (refcore's
     /// `AdjMv.remainder`). E §5 step 5.
     ///
