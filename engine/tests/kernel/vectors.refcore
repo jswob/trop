@@ -12447,4 +12447,296 @@ total: (?"When does the law apply?" (law_day) ?"When is the check?" (check_day) 
   unfulfilled: rent
   unfulfilled: rentx[s1]
   cut 2025-03-10
+,8:g5/sweep,2:g5,18:run g5/sweep.tally,2756:14:g5/sweep.tally,2732:model g5_sweep
+  tally 2
+  on 2026-03-15
+  start 2026-01-01
+  end 2026-03-31
+  note "T, issue #41, G5 (the sweep): openings before the start read under a cut before the start, one dated before the cut and one dated on it (E §4.2 step 0: a reading at or after the cut changes nothing), and read again under the model's own cut; a place below zero whose balance is a hole, so not warned (E §4.2 step 5: a warning is tested only where the balance is known), beside one below zero and known; a num that isn't whole where an int is needed (RUN-NOT-INT, L §3.2), beside one that is; a leg with its own later day, and a move on the keys of a day index (L §5.14)."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit PLN: currency minor 0.01
+
+index dd = day 2026-02-01..2026-02-03
+
+place konto: accounts PLN lives 2025-01-01..
+
+place konto2: accounts PLN lives 2025-01-01..
+
+place konto5: accounts PLN lives 2025-01-01..
+
+place konto6: accounts PLN lives 2025-01-01..
+
+place konto7: accounts PLN lives 2025-01-01..
+
+place konto8: accounts PLN lives 2025-01-01..
+
+place world: outside lives 2025-01-01..
+
+input pay_day: date
+
+input hole_amt: money PLN question "How much went out?"
+
+input known_amt: money PLN
+
+input leg_day: date
+
+input half_dom: num
+
+input whole_dom: num
+
+move gone: transfers
+  on pay_day
+  leg cash from konto5 to world amount hole_amt
+
+move paid: transfers
+  on pay_day
+  leg cash from konto5 to world amount known_amt
+
+move paid2: transfers
+  on pay_day
+  leg cash from konto6 to world amount known_amt
+
+move late_leg: transfers
+  on pay_day
+  leg cash from world to konto7 amount known_amt on leg_day
+
+move daily[k in dd]: transfers
+  on k
+  leg cash from world to konto8 amount known_amt
+
+ask q_legday: bal(konto7, 2026-02-15), bal(konto7, 2026-02-28), bal(konto8, 2026-02-02), bal(konto8, 2026-02-28) law cut
+
+ask q_early: bal(konto, 2026-01-10), bal(konto2, 2026-01-10) law cut as known 2025-12-15
+
+ask q_neg: bal(konto5, 2026-02-28), bal(konto6, 2026-02-28) law cut
+
+ask q_notint: day_of(2026-02, half_dom), day_of(2026-02, whole_dom) law cut
+
+ask q_now: bal(konto, 2026-01-10), bal(konto2, 2026-01-10) law cut
+
+version facts
+  cite fixture
+  governs always
+  known 2025-12-01
+  pay_day = 2026-02-10
+  known_amt = 50.00
+  leg_day = 2026-02-20 "a leg on a later day than its movement"
+  half_dom = 5.5 "a day of the month that isn't whole"
+  whole_dom = 5
+  opening[konto5] = 0 at 2026-01-01 start
+  opening[konto7] = 0 at 2026-01-01 start
+  opening[konto8] = 0 at 2026-01-01 start
+  opening[konto6] = 0 at 2026-01-01 start
+  opening[konto] = 100 at 2025-12-10 start "an opening dated before the early cut"
+  opening[konto2] = 200 at 2025-12-15 start "an opening dated on the early cut"
+,,1:0,718:q_early: (100.00 PLN, ?"konto2 has no balance before 2025-12-15" (konto2))
+  law date 2025-12-15, cut 2025-12-15
+q_legday: (0.00 PLN, 50.00 PLN, 100.00 PLN, 150.00 PLN)
+  unfulfilled: daily[2026-02-01]
+  unfulfilled: daily[2026-02-02]
+  unfulfilled: daily[2026-02-03]
+  unfulfilled: late_leg
+  law date 2026-03-15, cut 2026-03-15
+q_neg: (?"How much went out?" (hole_amt), -50.00 PLN)
+  unfulfilled: gone
+  unfulfilled: paid
+  unfulfilled: paid2
+  law date 2026-03-15, cut 2026-03-15
+q_notint: (refused: RUN-NOT-INT 5.5 is not an integer, 2026-02-05)
+  law date 2026-03-15, cut 2026-03-15
+q_now: (100.00 PLN, 200.00 PLN)
+  law date 2026-03-15, cut 2026-03-15
+warning: WARN-NEGATIVE konto6 is below zero from 2026-02-10
+,8:g3/sweep,2:g3,18:run g3/sweep.tally,1347:14:g3/sweep.tally,1323:model g3_sweep
+  tally 2
+  on 2026-10-25
+  start 2024-01-01
+  end 2026-12-31
+  note "T, issue #41, G3 (the sweep): a band of three rows whose ends are alike, closed below and open above, and a later version that replaces the middle one only (L §5.9 Rows replaced); each row read before and after it; a band with a point row [5, 5] beside (5, 10), the second replaced."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+index pts = [p0, p1, p2, p5, p6]
+
+input xs[k in pts]: num
+
+band tier(x: num): num
+
+band pt(x: num): num
+
+ask q_pt_before: pt(xs[p5]) law 2025-06-30 as known 2025-01-01
+
+ask q_pt_after: pt(xs[p5]), pt(xs[p6]) law 2025-06-30
+
+ask q_before: tier(xs[k]) for k in pts law 2025-06-30 as known 2025-01-01
+
+ask q_after: tier(xs[k]) for k in pts law 2025-06-30
+
+version v_tiers
+  cite fixture
+  governs 2024-01-01..
+  known 2024-01-01
+  tier: [0, 10) = 0.1 "the first tier"
+  tier: [10, 50) = 0.2 "the second tier"
+  tier: [50, 100) = 0.3 "the third tier"
+  xs[p0] = 5
+  xs[p1] = 20
+  xs[p2] = 60
+  xs[p5] = 5
+  xs[p6] = 7
+  pt: [0, 5) = 1 "below five"
+  pt: [5, 5] = 2 "five itself"
+  pt: (5, 10) = 3 "above five"
+
+version v_tier2
+  cite fixture
+  governs 2025-01-01..
+  known 2025-03-01
+  replace tier: [10, 50) = 0.25 "the second tier raised"
+  replace pt: (5, 10) = 4 "above five raised"
+,,1:0,1354:q_after (k = p0): 0.1
+  law date 2025-06-30, cut 2026-10-25
+q_after (k = p1): 0.25
+  law date 2025-06-30, cut 2026-10-25
+q_after (k = p2): 0.3
+  law date 2025-06-30, cut 2026-10-25
+q_after (k = p5): 0.1
+  law date 2025-06-30, cut 2026-10-25
+q_after (k = p6): 0.1
+  law date 2025-06-30, cut 2026-10-25
+q_before (k = p0): 0.1
+  held: tier row [0, 10) (v_tiers), read for 2025-06-30
+  held: xs[p0] = 5 (v_tiers), read for 2025-06-30
+  law date 2025-06-30, cut 2025-01-01
+q_before (k = p1): 0.2
+  held: tier row [10, 50) (v_tiers), read for 2025-06-30
+  held: xs[p1] = 20 (v_tiers), read for 2025-06-30
+  law date 2025-06-30, cut 2025-01-01
+q_before (k = p2): 0.3
+  held: tier row [50, 100) (v_tiers), read for 2025-06-30
+  held: xs[p2] = 60 (v_tiers), read for 2025-06-30
+  law date 2025-06-30, cut 2025-01-01
+q_before (k = p5): 0.1
+  held: tier row [0, 10) (v_tiers), read for 2025-06-30
+  held: xs[p5] = 5 (v_tiers), read for 2025-06-30
+  law date 2025-06-30, cut 2025-01-01
+q_before (k = p6): 0.1
+  held: tier row [0, 10) (v_tiers), read for 2025-06-30
+  held: xs[p6] = 7 (v_tiers), read for 2025-06-30
+  law date 2025-06-30, cut 2025-01-01
+q_pt_after: (2, 4)
+  law date 2025-06-30, cut 2026-10-25
+q_pt_before: 2
+  held: pt row [5, 5] (v_tiers), read for 2025-06-30
+  held: xs[p5] = 5 (v_tiers), read for 2025-06-30
+  law date 2025-06-30, cut 2025-01-01
+,8:g9/sweep,2:g9,18:run g9/sweep.tally,2867:14:g9/sweep.tally,2843:model g9_sweep
+  tally 2
+  on 2026-03-25
+  start 2026-01-01
+  end 2026-03-31
+  note "T, issue #41, G9 (the sweep): the closing readings' sign rule (L §5.10 item 3, E §4.2 step 4): two readings at one day's end padded from one claim, which the two pads together take below zero, so both are refused (RUN-PLACE), beside a twin whose two pads take its claim to 0; read on the day before, on that day and the day after. An account below zero whose balance a refused leg refuses that day, so not warned (E §4.2 step 5: a warning is tested only where the balance is known), beside its twin, below zero and warned."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit PLN: currency minor 0.01
+
+place acct: accounts PLN lives 2026-01-01..
+
+place zacct: accounts PLN lives 2026-01-01..
+
+place lent: claims PLN lives 2026-01-01..
+
+place acct2: accounts PLN lives 2026-01-01..
+
+place zacct2: accounts PLN lives 2026-01-01..
+
+place lent2: claims PLN lives 2026-01-01..
+
+place konto9: accounts PLN lives 2026-01-01..
+
+place konto10: accounts PLN lives 2026-01-01..
+
+place lent9: claims PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input day9: date
+
+input out9: money PLN
+
+input in9: money PLN
+
+move spend9: transfers
+  on day9
+  leg cash from konto9 to world amount out9
+
+move repay9: transfers
+  on day9
+  leg cash from lent9 to konto9 amount in9
+
+move spend10: transfers
+  on day9
+  leg cash from konto10 to world amount out9
+
+ask q_close: bal(acct, d), bal(zacct, d), bal(lent, d), bal(acct2, d), bal(zacct2, d), bal(lent2, d) for d in [2026-01-30, 2026-01-31, 2026-02-01] law cut
+
+ask q_refused: bal(konto9, d), bal(lent9, d), bal(konto10, d) for d in [2026-01-19, 2026-01-20, 2026-01-21] law cut
+
+version facts
+  cite fixture
+  governs always
+  known 2025-12-01
+  opening[acct] = 0 at 2026-01-01 start
+  opening[zacct] = 0 at 2026-01-01 start
+  opening[lent] = 20 at 2026-01-01 start
+  opening[acct2] = 0 at 2026-01-01 start
+  opening[zacct2] = 0 at 2026-01-01 start
+  opening[lent2] = 40 at 2026-01-01 start
+  opening[konto9] = 0 at 2026-01-01 start
+  opening[konto10] = 0 at 2026-01-01 start
+  opening[lent9] = 0 at 2026-01-01 start
+  day9 = 2026-01-20 "the batch's day"
+  out9 = 20.00 "konto9 and konto10 go to -20"
+  in9 = 5.00 "out of lent9, at 0: refused, so konto9 is refused from that day"
+
+version stmts
+  cite fixture
+  governs 2026-01
+  known 2026-02-02
+  pad acct from lent
+  pad zacct from lent
+  pad acct2 from lent2
+  pad zacct2 from lent2
+  stated[acct] = 10.00 at 2026-01-31 end "a pad of 10 out of lent"
+  stated[zacct] = 30.00 at 2026-01-31 end "a pad of 30 out of lent: together they take it to -20, refused"
+  stated[acct2] = 10.00 at 2026-01-31 end "the twin: a pad of 10 out of lent2"
+  stated[zacct2] = 30.00 at 2026-01-31 end "the twin: a pad of 30 out of lent2, which ends at 0"
+,,1:0,2305:q_close (d = 2026-01-30): (0.00 PLN, 0.00 PLN, 20.00 PLN, 0.00 PLN, 0.00 PLN, 40.00 PLN)
+  law date 2026-03-25, cut 2026-03-25
+q_close (d = 2026-01-31): (refused: RUN-PLACE pads:stmts:acct@2026-01-31 end, pads:stmts:zacct@2026-01-31 end takes lent below 0, refused: RUN-PLACE pads:stmts:acct@2026-01-31 end, pads:stmts:zacct@2026-01-31 end takes lent below 0, refused: RUN-PLACE pads:stmts:acct@2026-01-31 end, pads:stmts:zacct@2026-01-31 end takes lent below 0, 10.00 PLN, 30.00 PLN, 0.00 PLN)
+  pad: acct 2026-01-31 end, pads:stmts:acct@2026-01-31 end of 10.00 PLN
+  pad: acct2 2026-01-31 end, pads:stmts:acct2@2026-01-31 end of 10.00 PLN
+  pad: zacct 2026-01-31 end, pads:stmts:zacct@2026-01-31 end of 30.00 PLN
+  pad: zacct2 2026-01-31 end, pads:stmts:zacct2@2026-01-31 end of 30.00 PLN
+  law date 2026-03-25, cut 2026-03-25
+q_close (d = 2026-02-01): (refused: RUN-PLACE pads:stmts:acct@2026-01-31 end, pads:stmts:zacct@2026-01-31 end takes lent below 0, refused: RUN-PLACE pads:stmts:acct@2026-01-31 end, pads:stmts:zacct@2026-01-31 end takes lent below 0, refused: RUN-PLACE pads:stmts:acct@2026-01-31 end, pads:stmts:zacct@2026-01-31 end takes lent below 0, 10.00 PLN, 30.00 PLN, 0.00 PLN)
+  pad: acct 2026-01-31 end, pads:stmts:acct@2026-01-31 end of 10.00 PLN
+  pad: acct2 2026-01-31 end, pads:stmts:acct2@2026-01-31 end of 10.00 PLN
+  pad: zacct 2026-01-31 end, pads:stmts:zacct@2026-01-31 end of 30.00 PLN
+  pad: zacct2 2026-01-31 end, pads:stmts:zacct2@2026-01-31 end of 30.00 PLN
+  law date 2026-03-25, cut 2026-03-25
+q_refused (d = 2026-01-19): (0.00 PLN, 0.00 PLN, 0.00 PLN)
+  law date 2026-03-25, cut 2026-03-25
+q_refused (d = 2026-01-20): (refused: RUN-PLACE lent9 is -5.00 PLN after the day's observations and plans of 2026-01-20, refused: RUN-PLACE lent9 is -5.00 PLN after the day's observations and plans of 2026-01-20, -20.00 PLN)
+  unfulfilled: spend10
+  unfulfilled: spend9
+  law date 2026-03-25, cut 2026-03-25
+q_refused (d = 2026-01-21): (refused: RUN-PLACE lent9 is -5.00 PLN after the day's observations and plans of 2026-01-20, refused: RUN-PLACE lent9 is -5.00 PLN after the day's observations and plans of 2026-01-20, -20.00 PLN)
+  unfulfilled: spend10
+  unfulfilled: spend9
+  law date 2026-03-25, cut 2026-03-25
+warning: WARN-NEGATIVE konto10 is below zero from 2026-01-20
 ,

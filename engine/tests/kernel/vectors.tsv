@@ -70,3 +70,6 @@ g10/firsts	g10		engine/tests/kernel/	engine/tests/kernel/g10/firsts.tally
 g11/adjust	g11		engine/tests/kernel/	engine/tests/kernel/g11/adjust.tally		
 g11/refused	g11		engine/tests/kernel/	engine/tests/kernel/g11/refused.tally		
 g12/members	g12		engine/tests/kernel/	engine/tests/kernel/g12/members.tally		
+g5/sweep	g5		engine/tests/kernel/	engine/tests/kernel/g5/sweep.tally		
+g3/sweep	g3		engine/tests/kernel/	engine/tests/kernel/g3/sweep.tally		
+g9/sweep	g9		engine/tests/kernel/	engine/tests/kernel/g9/sweep.tally		
