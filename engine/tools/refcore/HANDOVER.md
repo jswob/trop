@@ -25,6 +25,11 @@ fix's new tests were seen failing on tally 2.1.1's refcore first.
   reality warns it, as for the other sorts (`L5_2_source_cited_by_scenario` holds it). New: `L8_5_unread_place` (seen
   failing), `L8_5_unread_place_named` (each route, dropped alone, warns); `L5_14_1_run_cycle_own_day` gains its two
   stray outside places' lines.
+- **The movement order, typed (E §4.1, §6.3, L §2.5; #33, #39).** `moves.order_key` turns a movement's `order` tuple
+  into a typed key (dates, numbers, then text; `None` first); `resid` sorts a group's tied lines by it and
+  `mreads` a binding's movements (both sites), where they compared `str(order)`. A pad's stratum is `PADS_STRATUM`,
+  above every decision's (it was 9). `walk.py`'s own `osort` keys are left: the walk's order inside a stratum changes
+  no balance (E §4.1). New: `E6_3_residuals_ties_typed`, `L2_5_binding_movements_typed` (both seen failing).
 
 ## tally 2.1.1 (issue #13)
 

@@ -191,7 +191,7 @@ For each plan move m, in the dependency order of the item graph:
    - otherwise booked, as `past` before K and `plan` from K.
 4. **Adjustments.** Apply later versions to a booked instance (§5).
 
-Plans read other plans through `flows(m[keys], span)`, their legs and attributes, and `next`; never a place's running balance (`LOAD-READS`). The instance graph is acyclic, by the item graph's check plus the guard on time keys. Movements are sorted by (day, stratum, move id, keys in index order, things and an open index's keys in the text order of their stable ids, LANGUAGE §2.5); the order changes no balance and no refusal, since a day's plans read nothing running and a place's sign rule is checked after them all (§4.2 step 5).
+Plans read other plans through `flows(m[keys], span)`, their legs and attributes, and `next`; never a place's running balance (`LOAD-READS`). The instance graph is acyclic, by the item graph's check plus the guard on time keys. Movements are sorted by (day, stratum, move id, keys in index order, things and an open index's keys in the text order of their stable ids, LANGUAGE §2.5), each term compared as its own type, never as text: a day as a date (a window's first day; a hole day last), a stratum and a key position as numbers (tally 2.1.2). A day's observations and adjustments come before its plans, by their input's or move's id and then their row's id or the adjusted instance and leg, and its pads after its decisions; the order changes no balance and no refusal, since a day's plans read nothing running and a place's sign rule is checked after them all (§4.2 step 5).
 
 ### 4.2 The day walk
 
@@ -342,7 +342,7 @@ Each line of the ledger is one of:
 - **Zero lines.** A matched line and a balance line print whatever their difference, 0.00 included. An instance of amount 0 with no observation moves nothing and prints no line, though it exists (LANGUAGE §5.14).
 - **Signs.** Every amount is signed as a flow into x: in +, out −. A matched or partly fulfilled line's difference is observed − model; an expected but missing line's is − model; an unexplained line's is the observation; a balance line's is stated − booked. A hole on either side makes the difference a hole; a hole day or amount of an instance that observations fulfil is answered by them (LANGUAGE §5.19).
 - **Totals.** Each group gives the model's total, the observations' total and the difference, so the prototype's "pay in December 2025: model 13 611.54, bank 16 611.54" is one group line. A balance group gives the booked balances as its model total and the stated ones as its observed total.
-- **Order.** Groups are sorted by the absolute value of their total difference, and lines in a group by their own, biggest first (N-1223). Holes come first, since a hole may be any size, among themselves by their first question (LANGUAGE §8.1). Remaining ties go by month, then group name, then the movement order of §4.1.
+- **Order.** Groups are sorted by the absolute value of their total difference, and lines in a group by their own, biggest first (N-1223). Holes come first, since a hole may be any size, among themselves by their first question (LANGUAGE §8.1). Remaining ties go by month, then group name, then the movement order of §4.1, each term compared as its own type (tally 2.1.2).
 - **Cost.** It is computed from the timeline and the modelled past, with no re-evaluation.
 
 ### 6.4 The fitting loop

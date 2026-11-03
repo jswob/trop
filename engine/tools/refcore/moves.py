@@ -14,6 +14,10 @@ from .errors import TallyError, Refusal, LoadError, Unspecified, NotYet, load_no
 from .model import visible, row_known_sid, known_first, PlaceThing, _kv, key_text, in_world, _WSET
 from .values import Num, Money, Hole, Thing, Mv, Iv, Rec, Text, NONE, NEVER, CURRENCIES, fmt, vkey
 
+# the stratum a pad takes in the movement order: above every decision's, as observations and adjustments take -1,
+# below every plan's 0 (E §4.1, tally 2.1.2; tally 2.1.1 wrote 9, which only text compare put after stratum 10)
+PADS_STRATUM = 1 << 62
+
 
 def install(E):
     orig = E.__init__
@@ -236,7 +240,8 @@ class PadMv(Movement):
         self.err = None
         self.exists = True
         self.coll = None
-        self.order = (day, 9, 'pads', self.id)
+        # E §4.1 (tally 2.1.2, issue #39): a day's pads come after its plans and decisions, whatever the strata
+        self.order = (day, PADS_STRATUM, 'pads', self.id)
         self._mv = None
 
 
@@ -310,6 +315,24 @@ def m_inst_order(self, inst):
     d = day_lo(inst.day) or datetime.date.max
     ks = tuple(self.key_sort(k, b) for k, b in zip(inst.keys, inst.move.binds))
     return (d, inst.move.stratum, inst.move.id, ks)
+
+
+def order_key(o):
+    """The movement order (E §4.1) as a typed sort key, for the movements of a binding (L §2.5) and the residual
+    ledger's last ties (E §6.3): days as dates, strata and key positions as numbers, ids and stable ids by code point;
+    no order (a balance line) first. tally 2.1.2 (issues #33, #39): tally 2.1.1 compared the order's text, so a
+    stratum or a key position of 10 sorted before 2."""
+    if o is None:
+        return (0,)
+    if isinstance(o, datetime.date):
+        return (1, o)
+    if isinstance(o, int) and not isinstance(o, bool):
+        return (2, o)
+    if isinstance(o, str):
+        return (3, o)
+    if isinstance(o, tuple):
+        return (4, tuple(order_key(x) for x in o))
+    return (3, str(o))
 
 
 # -- worlds, coverage, observations, readings (L §5.19, §6.4) ----------------------------------------------------------

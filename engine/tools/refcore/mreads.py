@@ -13,7 +13,7 @@ from .evaluate import member_owns, member_moves, move_owner
 from .model import Span, _kv, key_text, WindowUndecided
 from .values import (Num, Money, Int, Hole, Thing, Mv, Iv, Rec, Text, Code, Key, NONE, CURRENCIES, fmt,
                      fmt_hole, vkey)
-from .moves import item_in_world, Inst, ObsMv, AdjMv, PadMv, qty, unit_of_value, day_lo, day_hi, merge
+from .moves import item_in_world, Inst, ObsMv, AdjMv, PadMv, qty, unit_of_value, day_lo, day_hi, merge, order_key
 from .walk import K_end, K_start, K_before, kday, add_q, St
 
 
@@ -438,7 +438,7 @@ def m_movements_of(self, dom, ctx, owner=None):
     if restrict is not None and dom[0] == 'event' and 'adjustments' in m.kinds[dom[1]].subtree(m):
         # a settlement move's instances bound to the adjustments being settled (moves.settle_candidates)
         out = [a for a in restrict if a.kind in m.kinds[dom[1]].subtree(m)]
-        out.sort(key=lambda x: (day_lo(x.day) or datetime.date.max, str(x.order)))
+        out.sort(key=lambda x: (day_lo(x.day) or datetime.date.max, order_key(x.order)))
         return out
     key = ('mvs', dom, self.wkey(ctx), ctx.unc, id(ctx.walk) if ctx.walk is not None else None, ctx.wp, owner)
     hit = self.run_cache.get(key)
@@ -510,7 +510,7 @@ def m_movements_of(self, dom, ctx, owner=None):
         from .joint import owns
         out = [x for x in out if owns(owner, move_owner(x))]
     out = once_by_same(m, out, owner)
-    out.sort(key=lambda x: (day_lo(x.day) or datetime.date.max, str(x.order)))
+    out.sort(key=lambda x: (day_lo(x.day) or datetime.date.max, order_key(x.order)))
     self.run_cache[key] = out
     return out
 

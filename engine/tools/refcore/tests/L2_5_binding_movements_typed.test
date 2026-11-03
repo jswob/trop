@@ -1,0 +1,51 @@
+# L §2.5 binding order, E §4.1 the movement order (tally 2.1.2, issue #39, the user's "B: by day, then typed order"): an
+# ask's binding over movements runs by day, then the movement order compared typed: keys of a list index in index
+# order, so rent[f3] before rent[f11] (tally 2.1.1 compared the order's text, and key position 10 sorted before 2).
+# zfee, on an earlier day, comes first whatever its id.
+=== m.tally
+model t
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+index flats = [f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11]
+input rent_amt: money PLN
+input fee_amt: money PLN
+input rent_day: date
+input fee_day: date
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+
+move rent[f in flats]: transfers
+  on rent_day
+  when pos(f) == 3 or pos(f) == 11
+  leg cash from konto to world amount rent_amt
+
+move zfee: transfers
+  on fee_day
+  leg cash from konto to world amount fee_amt
+
+ask q: x.cash.amount for x in transfers over 2026-02
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  rent_amt = 10.00 PLN
+  fee_amt = 1.00 PLN
+  rent_day = 2026-02-03
+  fee_day = 2026-02-01
+  opening[konto] = 100.00 PLN at 2026-01-01 start
+=== expect
+q (x = zfee): 1.00 PLN
+  unfulfilled: zfee
+  cut 2026-06-30
+q (x = rent[f3]): 10.00 PLN
+  unfulfilled: rent[f3]
+  cut 2026-06-30
+q (x = rent[f11]): 10.00 PLN
+  unfulfilled: rent[f11]
+  cut 2026-06-30
