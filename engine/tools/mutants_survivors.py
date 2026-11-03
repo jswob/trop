@@ -9,8 +9,9 @@ missed or times out (R-88). Every survivor must be a row of engine/MUTANTS-SURVI
     | crates/tally/src/x.rs | parse | replace parse -> bool with true | R-87: equivalent: why |
 
 by file, function and mutation (cargo-mutants' description, without the line and
-column, which move), with its reason in one of two forms, each with at least 20
-characters after it (R-87, approved 2026-11-03):
+column, which move; a pipe in it is written `\\|`, as Markdown asks), with its reason
+in one of two forms, each with at least 20 characters after it (R-87, approved
+2026-11-03):
 
     R-87: equivalent: <why>   a proven equivalent: no valid input tells it from the code
     R-87: missed: <why>       a test could tell it apart but can't yet (an input the
@@ -38,6 +39,7 @@ ENGINE = os.path.dirname(TOOLS)
 SURVIVORS = os.path.join(ENGINE, "MUTANTS-SURVIVORS.md")
 KERNEL = os.path.join(TOOLS, "kernel.toml")
 REASON = re.compile(r"^R-87: (?P<form>equivalent|missed): \S.{19,}$")
+CELL = re.compile(r"(?<!\\)\|")  # a cell ends at a pipe; `\|` is a pipe inside one, as in `replace || with &&`
 POSITION = re.compile(r"^(?P<file>[^:]+):[0-9]+:[0-9]+: (?P<mutation>.+)$")
 SURVIVED = {"MissedMutant": "missed", "Timeout": "timed out"}
 GATE = 90  # DONE gate 8: at least 90 % of the kernel's mutants killed
@@ -87,7 +89,8 @@ def listed(problems):
         return rows
     with open(SURVIVORS, encoding="utf-8") as f:
         for n, line in enumerate(f, 1):
-            cells = [c.strip() for c in line.strip().strip("|").split("|")]
+            inner = line.strip().removeprefix("|").removesuffix("|")
+            cells = [c.strip().replace("\\|", "|") for c in CELL.split(inner)]
             if not line.startswith("|") or len(cells) != 4 or cells[0] in ("file", "") or set(cells[0]) <= set("-: "):
                 continue
             file, function, mutation, reason = cells

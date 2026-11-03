@@ -222,3 +222,25 @@ expect: is listed in MUTANTS-SURVIVORS.md and is now caught
 ]}
 --- run
 tools/mutants-survivors zz-mutants
+
+# A mutation holding a pipe is written `\|` in its row, as Markdown asks, and is read whole.
+case: escaped-pipe-in-mutation
+tool: run
+exit: any
+expect: score 100.0% = caught 1 / (caught 1 + missed 1 + timed out 0 - equivalent 1)
+expect: every survivor is listed, with its reason
+expect: r87-pipe-passed
+--- write MUTANTS-SURVIVORS.md
+| file | function | mutation | reason |
+| ---- | -------- | -------- | ------ |
+| crates/tally/src/lib.rs | f | replace \|\| with && in f | R-87: equivalent: a planted row whose mutation holds two escaped pipes |
+--- write zz-mutants/mutants.out/outcomes.json
+{"outcomes": [
+ {"scenario": "Baseline", "summary": "Success"},
+ {"scenario": {"Mutant": {"name": "crates/tally/src/lib.rs:12:9: replace || with && in f",
+  "file": "crates/tally/src/lib.rs", "function": {"function_name": "f"}}}, "summary": "MissedMutant"},
+ {"scenario": {"Mutant": {"name": "crates/tally/src/lib.rs:9:1: replace planted -> u8 with 0",
+  "file": "crates/tally/src/lib.rs", "function": {"function_name": "planted"}}}, "summary": "CaughtMutant"}
+]}
+--- run
+tools/mutants-survivors zz-mutants && echo r87-pipe-passed
