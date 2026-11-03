@@ -959,9 +959,10 @@ impl Counted {
     }
 }
 
-/// One adjustment of a move's flows: `HOLE-CHANGED` from its day when nothing settles it;
-/// else its remainder in the register and its settlements dated in the span, each signed by
-/// the way it runs (refcore's `flows_move`, its adjustments). E §5 steps 5–6, L §5.14.3.
+/// One adjustment of a move's flows: refused over a span reaching its day when its change
+/// is; `HOLE-CHANGED` from its day when nothing settles it; else its remainder in the
+/// register and its settlements dated in the span, each signed by the way it runs
+/// (refcore's `flows_move`, its adjustments). E §5 steps 5–6, L §5.14.3.
 fn count_adjustment(
     m: &Reality,
     adj: &crate::book::Adjustment,
@@ -969,6 +970,13 @@ fn count_adjustment(
     last: Day,
     acc: &mut Counted,
 ) -> Result<(), Stop> {
+    if let Amount::Refused(err) = &adj.delta {
+        // tally 2.1.2: settled or not, as an unsettled one is the HOLE-CHANGED hole
+        if last >= adj.day {
+            return Err(Stop::Refused(err.clone()));
+        }
+        return Ok(());
+    }
     if adj.settled.is_empty() {
         if last >= adj.day {
             acc.holes.push(adj.question());

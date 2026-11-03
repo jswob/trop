@@ -503,7 +503,15 @@ impl Engine {
                     return Err(Stop::Refused(e));
                 }
             }
-            Moving::Adj(_) => {}
+            // a refused adjustment refuses its change and every field but its identity, so a
+            // binding's `where` reading `a.adjusts` or `a.day` decides (E §5 step 5, tally 2.1.2)
+            Moving::Adj(a) => {
+                if let Amount::Refused(e) = &a.delta
+                    && !matches!(name, "day" | "adjusts")
+                {
+                    return Err(Stop::Refused(e.clone()));
+                }
+            }
         }
         match name {
             "day" => Ok(match src.day() {

@@ -41,7 +41,8 @@ pub struct Adjustment {
     /// The places the leg had before the step, when it changes them (L §5.14.3 How a
     /// settlement leg counts).
     pub before_ends: Vec<End>,
-    /// The change δ: a quantity of the leg's unit, or a hole.
+    /// The change δ: a quantity of the leg's unit, a hole, or refused, when the step or the
+    /// state it is measured against was (E §5 step 3, tally 2.1.2).
     pub delta: Amount,
     /// The step's day c, when the version became known.
     pub day: Day,
@@ -77,13 +78,16 @@ impl Adjustment {
         Term::booked(self.day, &[&self.move_id, &self.inst_id, &self.leg.name])
     }
 
-    /// What remains of the change: δ less the settlements; none once waived (refcore's
-    /// `AdjMv.remainder`). E §5 step 5.
+    /// What remains of the change: δ less the settlements; none once waived; a refused
+    /// change refuses, settled or not (refcore's `AdjMv.remainder`; tally 2.1.2). E §5 step 5.
     ///
     /// # Errors
     ///
-    /// A settlement's refusal; a number error.
+    /// The change's refusal; a settlement's refusal; a number error.
     pub fn remainder(&self) -> Result<Option<Amount>, Stop> {
+        if let Amount::Refused(err) = &self.delta {
+            return Err(Stop::Refused(err.clone()));
+        }
         if self.waived {
             return Ok(None);
         }
@@ -248,8 +252,11 @@ impl Engine {
         Ok(out)
     }
 
-    /// One instance measured at each step: δ per leg against the step before (refcore's
-    /// `adjust_move_compute`, its steps). E §5 steps 1–4.
+    /// One instance measured at each step: δ per leg against the state before (refcore's
+    /// `adjust_move_compute`, its steps). A booking refused at κ₀ stays refused and records
+    /// nothing; a refused step makes each leg's adjustment refused, a step whose `when` is a
+    /// hole makes each a hole, and the step after either is measured against it (tally
+    /// 2.1.2). E §5 steps 1–4.
     fn measure_inst(
         &mut self,
         m: &Reality,
@@ -259,8 +266,15 @@ impl Engine {
         cut: Day,
     ) -> Result<Vec<Adjustment>, Stop> {
         let mut out = Vec::new();
-        let mut prev_legs = inst.legs.clone();
-        let mut prev_ex = inst.exists == Exists::Yes;
+        // E §5 step 1 (tally 2.1.2, "refused stays refused"): its re-measurements record nothing
+        if inst.legs.iter().any(is_refused_leg) {
+            return Ok(out);
+        }
+        let mut prev = Prev {
+            legs: inst.legs.clone(),
+            exists: inst.exists == Exists::Yes,
+            unknown: None,
+        };
         let hole0 = matches!(inst.exists, Exists::Unknown(_)) || inst.legs.iter().any(is_hole_leg);
         for (c, vids) in steps.iter().map(|s| (s.0, &s.1)) {
             let seed = Seed {
@@ -272,7 +286,35 @@ impl Engine {
             let Some(j) = self.eval_inst(m, mv, &seed, Ctx::new(None, cut))? else {
                 continue;
             };
-            if j.err.is_some() {
+            let step = Step {
+                inst_id: inst.id.clone(),
+                inst_keys: inst.keys.clone(),
+                move_id: inst.move_id.clone(),
+                inst_day: t,
+                day: c,
+                vids: step_versions(&j.coll, vids),
+                coll: j.coll.clone(),
+            };
+            if let Some(err) = &j.err {
+                // a refused version doesn't answer a hole movement, which stays the hole it
+                // is (E §5 step 1); otherwise each leg's adjustment is refused (step 3)
+                if !hole0 {
+                    let refused = Amount::Refused(err.clone());
+                    out.extend(each_leg(&step, inst, &prev.legs, &j.legs, &refused));
+                    prev.unknown = Some(Unknown::Refused(err.clone()));
+                }
+                continue;
+            }
+            if let Some(was) = prev.unknown.take() {
+                let made = match &was {
+                    Unknown::Refused(err) => {
+                        let refused = Amount::Refused(err.clone());
+                        each_leg(&step, inst, &prev.legs, &j.legs, &refused)
+                    }
+                    Unknown::Hole(h) => against_hole(&step, inst, &prev.legs, &j, h)?,
+                };
+                out.extend(made);
+                prev = Prev::after(&j);
                 continue;
             }
             if hole0 {
@@ -283,62 +325,146 @@ impl Engine {
                     "a version that answers a hole movement (E §5 step 1)",
                 ));
             }
-            if matches!(j.exists, Exists::Unknown(_)) {
+            if let Exists::Unknown(h) = &j.exists {
+                // tally 2.1.2: a `when` that is a hole makes each leg's adjustment that hole
+                let hole = Amount::Hole(h.clone());
+                out.extend(each_leg(&step, inst, &prev.legs, &j.legs, &hole));
+                prev = Prev::after(&j);
                 continue;
             }
-            let ex = j.exists == Exists::Yes;
-            let before: BTreeMap<&str, &LegVal> = if prev_ex {
-                prev_legs.iter().map(|lg| (lg.name.as_str(), lg)).collect()
-            } else {
-                BTreeMap::new()
-            };
-            let after: BTreeMap<&str, &LegVal> = if ex {
-                j.legs.iter().map(|lg| (lg.name.as_str(), lg)).collect()
-            } else {
-                BTreeMap::new()
-            };
-            let mut names: Vec<&str> = Vec::new();
-            let all = inst
-                .legs
-                .iter()
-                .chain(before.values().copied())
-                .chain(after.values().copied());
-            for lg in all {
-                if !names.contains(&lg.name.as_str()) {
-                    names.push(lg.name.as_str());
-                }
-            }
-            let base = if inst.legs.is_empty() {
-                &j.legs
-            } else {
-                &inst.legs
-            };
-            let pool: Vec<&LegVal> = base.iter().chain(before.values().copied()).collect();
-            let step = Step {
-                inst_id: inst.id.clone(),
-                inst_keys: inst.keys.clone(),
-                move_id: inst.move_id.clone(),
-                inst_day: t,
-                day: c,
-                vids: step_versions(&j.coll, vids),
-                coll: j.coll.clone(),
-            };
-            for ln in names {
-                if let Some(adj) = leg_change(
-                    &step,
-                    &pool,
-                    before.get(ln).copied(),
-                    after.get(ln).copied(),
-                    ln,
-                )? {
-                    out.push(adj);
-                }
-            }
-            prev_legs.clone_from(&j.legs);
-            prev_ex = ex;
+            out.extend(measured(&step, inst, &prev, &j)?);
+            prev = Prev::after(&j);
         }
         Ok(out)
     }
+}
+
+/// The state the next step of a measuring is measured against: the legs and existence of
+/// the last state measured, and whether it was refused or its existence a hole (refcore's
+/// `prev`, `prev_ex`, `prev_bad`, `prev_hole`). E §5 step 3.
+struct Prev {
+    /// Its legs.
+    legs: Vec<LegVal>,
+    /// Whether it existed.
+    exists: bool,
+    /// Its refusal, or the hole its existence is.
+    unknown: Option<Unknown>,
+}
+
+impl Prev {
+    /// The state a step leaves: its legs, whether it exists, and its existence's hole. E §5
+    /// step 3.
+    fn after(j: &Inst) -> Prev {
+        Prev {
+            legs: j.legs.clone(),
+            exists: j.exists == Exists::Yes,
+            unknown: match &j.exists {
+                Exists::Unknown(h) => Some(Unknown::Hole(h.clone())),
+                Exists::Yes | Exists::No => None,
+            },
+        }
+    }
+}
+
+/// What a step measured against an unknown state finds: a refusal, or a hole (tally 2.1.2).
+/// E §5 step 3.
+enum Unknown {
+    /// The state was refused.
+    Refused(Refusal),
+    /// The state's existence is a hole.
+    Hole(Hole),
+}
+
+/// Each leg's adjustment at a step whose δ is unknown, refused or a hole, the same for every
+/// leg (refcore's `adjust_made` over `step_legs`; tally 2.1.2). E §5 steps 3–4.
+fn each_leg(
+    step: &Step,
+    inst: &Inst,
+    prev: &[LegVal],
+    now: &[LegVal],
+    delta: &Amount,
+) -> Vec<Adjustment> {
+    step_legs(inst, prev, now)
+        .into_iter()
+        .map(|lg| make(step, lg, delta.clone(), (Vec::new(), Vec::new())))
+        .collect()
+}
+
+/// A step measured against a state whose existence is a hole: each leg's adjustment a hole
+/// holding that hole, this step's hole amount at the leg and its own existence's hole
+/// (refcore's `adjust_move_compute`, `prev_hole`; tally 2.1.2). E §5 steps 3–4.
+fn against_hole(
+    step: &Step,
+    inst: &Inst,
+    prev: &[LegVal],
+    j: &Inst,
+    was: &Hole,
+) -> Result<Vec<Adjustment>, Stop> {
+    let mut out = Vec::new();
+    for lg in step_legs(inst, prev, &j.legs) {
+        let mut holes = vec![Some(was)];
+        let now = j.legs.iter().filter(|x| x.name == lg.name);
+        holes.extend(now.map(|x| hole_of(&x.amount)));
+        if let Exists::Unknown(own) = &j.exists {
+            holes.push(Some(own));
+        }
+        let delta = Amount::Hole(spread(&holes).ok_or_else(|| invariant("a hole change"))?);
+        out.push(make(step, lg, delta, (Vec::new(), Vec::new())));
+    }
+    Ok(out)
+}
+
+/// The legs a step measures again, one per name: the booked instance's, the previous
+/// state's and this step's, each where it is first met (refcore's `step_legs`). E §5 step 3.
+fn step_legs(inst: &Inst, prev: &[LegVal], now: &[LegVal]) -> Vec<LegVal> {
+    let mut out: Vec<LegVal> = Vec::new();
+    for lg in inst.legs.iter().chain(prev).chain(now) {
+        if !out.iter().any(|o| o.name == lg.name) {
+            out.push(lg.clone());
+        }
+    }
+    out
+}
+
+/// A step measured against a known state: δ per leg of the two states compared, the
+/// previous state's legs when it existed and this step's when it exists (refcore's
+/// `adjust_move_compute`, its legs). E §5 steps 3–4.
+fn measured(step: &Step, inst: &Inst, prev: &Prev, j: &Inst) -> Result<Vec<Adjustment>, Stop> {
+    let before: BTreeMap<&str, &LegVal> = if prev.exists {
+        prev.legs.iter().map(|lg| (lg.name.as_str(), lg)).collect()
+    } else {
+        BTreeMap::new()
+    };
+    let after: BTreeMap<&str, &LegVal> = if j.exists == Exists::Yes {
+        j.legs.iter().map(|lg| (lg.name.as_str(), lg)).collect()
+    } else {
+        BTreeMap::new()
+    };
+    let mut names: Vec<&str> = Vec::new();
+    let all = inst
+        .legs
+        .iter()
+        .chain(before.values().copied())
+        .chain(after.values().copied());
+    for lg in all {
+        if !names.contains(&lg.name.as_str()) {
+            names.push(lg.name.as_str());
+        }
+    }
+    let base = if inst.legs.is_empty() {
+        &j.legs
+    } else {
+        &inst.legs
+    };
+    let pool: Vec<&LegVal> = base.iter().chain(before.values().copied()).collect();
+    let mut out = Vec::new();
+    for ln in names {
+        let (a, b) = (before.get(ln).copied(), after.get(ln).copied());
+        if let Some(adj) = leg_change(step, &pool, a, b, ln)? {
+            out.push(adj);
+        }
+    }
+    Ok(out)
 }
 
 /// One step of an instance's measuring: the instance, the step's day and versions, what its
@@ -372,17 +498,17 @@ fn leg_change(
 ) -> Result<Option<Adjustment>, Stop> {
     let qa = a.map(|lg| &lg.amount);
     let qb = b.map(|lg| &lg.amount);
-    if matches!(qa, Some(Amount::Refused(_))) || matches!(qb, Some(Amount::Refused(_))) {
-        return Ok(None);
+    if let Some(err) = refusal_of(qb).or_else(|| refusal_of(qa)) {
+        // tally 2.1.2: a leg's amount refused on either side refuses its adjustment, and the
+        // next step, measured against this state, is refused too
+        let leg = pool_leg(pool, name)?;
+        let delta = Amount::Refused(err.clone());
+        return Ok(Some(make(step, leg, delta, (Vec::new(), Vec::new()))));
     }
     let Some(either) = b.or(a) else {
         return Ok(None);
     };
-    let leg = pool
-        .iter()
-        .find(|lg| lg.name == name)
-        .map(|lg| (*lg).clone())
-        .ok_or_else(|| invariant("an adjusted leg in no pool"))?;
+    let leg = pool_leg(pool, name)?;
     let ha = qa.and_then(hole_of);
     let hb = qb.and_then(hole_of);
     if ha.is_some() || hb.is_some() {
@@ -464,9 +590,31 @@ fn hole_of(a: &Amount) -> Option<&Hole> {
     }
 }
 
+/// A leg amount's refusal, when it is one. E §5 step 3.
+fn refusal_of(a: Option<&Amount>) -> Option<&Refusal> {
+    match a {
+        Some(Amount::Refused(r)) => Some(r),
+        Some(Amount::Qty(_) | Amount::Hole(_)) | None => None,
+    }
+}
+
+/// The leg of name `name` among the legs a step compares, as the adjustment names it. E §5
+/// step 4.
+fn pool_leg(pool: &[&LegVal], name: &str) -> Result<LegVal, Stop> {
+    pool.iter()
+        .find(|lg| lg.name == name)
+        .map(|lg| (*lg).clone())
+        .ok_or_else(|| invariant("an adjusted leg in no pool"))
+}
+
 /// Whether a leg's amount is a hole. E §5 step 1.
 fn is_hole_leg(lg: &LegVal) -> bool {
     matches!(lg.amount, Amount::Hole(_))
+}
+
+/// Whether a leg's amount is refused. E §5 step 1.
+fn is_refused_leg(lg: &LegVal) -> bool {
+    matches!(lg.amount, Amount::Refused(_))
 }
 
 /// The days versions became known, each with the versions known then: versions' `known`,
