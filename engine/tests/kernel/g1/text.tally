@@ -3,13 +3,13 @@ model g1_text
   on 2026-10-25
   start 2026-01-01
   end 2026-12-31
-  note "T, issue #41, G1: how a num and money print (L §5.18, §2.4): the shortest exact decimal, a/b with its reading aid, the aid beside more than 15 significant digits, ties at the 15th digit, magnitudes from tiny to past the machine word, both signs, signed divisors."
+  note "T, issue #41, G1: how a num and money print (L §5.18, §2.4): the shortest exact decimal, a/b with its reading aid, the aid beside more than 15 significant digits, ties at the 15th digit, magnitudes from tiny to past the machine word, both signs, signed divisors, the machine word's least value and its negation."
 
 source fixture "T's fixture for S's kernel tests (invented values)"
 
 unit DUK: currency minor 0.01
 
-index w = [third, neg_seventh, big_third, tiny, sig16_up, sig16_even, int19, int21, trim, carry, neg_tiny, zero, plain, neg_divisor, both_big, half, wide, square]
+index w = [third, neg_seventh, big_third, tiny, sig16_up, sig16_even, int19, int21, trim, carry, neg_tiny, zero, plain, neg_divisor, both_big, half, wide, square, minword]
 
 input top[k in w]: num
 
@@ -35,6 +35,10 @@ def t_inv[k in w]: num at reader
   note "the top over the square: a division by it (a zero square refuses, RUN-DIV)"
   rule base v card = top[k] / t_sq[k]
 
+def t_rev[k in w]: num at reader
+  note "the top negated: the machine word's least value turned past its greatest"
+  rule base v card = -top[k]
+
 def t_net[k in w]: money DUK at reader
   rule base v card = money_in[k] - money_in[half]
 
@@ -46,7 +50,7 @@ def t_sign[k in w]: num DUK at reader
 
 ask q_values: top[k], t_q[k] for k in w law 2026-10-25
 
-ask q_more: t_prod[k], t_diff[k], t_sq[k], t_inv[k] for k in w law 2026-10-25
+ask q_more: t_prod[k], t_diff[k], t_sq[k], t_inv[k], t_rev[k] for k in w law 2026-10-25
 
 ask q_money: money_in[k], t_net[k], t_sign[k] for k in w law 2026-10-25
 
@@ -86,6 +90,8 @@ version card
   bottom[both_big] = 987654321098765432109876543 "both parts past 2^64"
   top[half] = 0.5 "a half"
   bottom[half] = -0.25 "a negative quarter"
+  top[minword] = -9223372036854775808 "-2^63, the machine word's least value"
+  bottom[minword] = 1 "itself"
   money_in[third] = 1500.00 "positive"
   money_in[neg_seventh] = -2300.00 "negative"
   money_in[big_third] = 123456789012345678901.23 "money past the machine word"

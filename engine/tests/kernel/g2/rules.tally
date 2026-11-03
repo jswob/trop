@@ -1,0 +1,65 @@
+model g2_rules
+  tally 2
+  on 2026-10-25
+  start 2024-01-01
+  end 2026-12-31
+  note "T, issue #41, G2: rules in force (L §5.11, §4.6): a rule with its own span, rules a later version replaces and replaces again, each read under cuts before and after its version is known, on a version's known day itself, and a rule governing always, read with a law date and, in a def with no at, with none."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+input base_amt: num
+
+input two: num
+
+def r_own: num at reader
+  rule base v v_a = base_amt
+  rule own beats base v v_a governs 2025-01-01.. = base_amt * two
+
+def r_rep: num at reader
+  rule base v v_a = base_amt
+
+def r_always: num at reader
+  rule base v v_a = base_amt + two
+
+def r_none: num
+  note "no at: it reads nothing law-dated, so it needs no law date"
+  rule base v v_a = base_amt - two
+
+ask q_none: r_none
+
+ask q_own_24: r_own law 2024-06-30
+
+ask q_own_25: r_own law 2025-06-30
+
+ask q_rep_24: r_rep law 2024-06-30
+
+ask q_rep_25: r_rep law 2025-06-30
+
+ask q_rep_25_old: r_rep law 2025-06-30 as known 2025-02-01
+
+ask q_rep_25_day: r_rep law 2025-06-30 as known 2025-03-01
+
+ask q_rep_26: r_rep law 2026-06-30
+
+ask q_rep_26_mid: r_rep law 2026-06-30 as known 2025-06-01
+
+ask q_always: r_always law 2026-10-25
+
+version v_a
+  cite fixture
+  governs always
+  known 2024-01-01
+  base_amt = 3 "the base amount"
+  two = 2 "two"
+
+version v_b
+  cite fixture
+  governs 2025-01-01..
+  known 2025-03-01
+  replace rule r_rep.base = base_amt * two
+
+version v_c
+  cite fixture
+  governs 2026-01-01..
+  known 2025-09-01
+  replace rule r_rep.base = base_amt * two * two

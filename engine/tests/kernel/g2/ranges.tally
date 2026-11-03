@@ -1,0 +1,66 @@
+model g2_ranges
+  tally 2
+  on 2026-10-25
+  start 2024-01-01
+  end 2026-12-31
+  note "T, issue #41, G2: the read rule's precedence (L §4.6 steps 1 and 3): a row with a span over one with always where neither is narrower, read before and after the span starts; * over a kind's things; a thing entered after a row for every key; two ranges overlapping by one key, neither inside the other, one with a span, beside a single key inside the later one. (Inputs keyed by a stepped range or a key list aren't built at S; ranges over them are refcore gaps, T's notes; a range over a kind is LOAD-UNIT.)"
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit DUK: currency minor 0.01
+
+index opt = [a, b]
+
+index n = 1..10
+
+index yr = year 2024..2026
+
+kind boxes: place DUK signed
+
+input lid[x in boxes]: num
+
+input x2[o in opt, k in n]: num
+
+input across[x in boxes]: num
+
+input ov[y in yr]: num
+
+ask q_lid: lid[box_a], lid[box_b] law 2026-10-25
+
+ask q_x2_24: x2[a, 5], x2[a, 6], x2[b, 5] law 2024-06-30
+
+ask q_x2_25: x2[a, 5], x2[a, 6], x2[b, 5] law 2025-06-30
+
+ask q_ov_24: ov[2024], ov[2025], ov[2026] law 2024-06-30
+
+ask q_ov_25: ov[2024], ov[2025], ov[2026] law 2025-06-30
+
+ask q_across: across[box_a], across[late_box] law 2026-10-25
+
+version v_things
+  cite fixture
+  known 2024-01-01
+  boxes + [box_a] lives 2024-01-01..
+  boxes + [box_b] lives 2024-01-01..
+
+version v_rows
+  cite fixture
+  governs always
+  known 2024-01-01
+  lid[*] = 0 "every box"
+  x2[a, *] = 1 "a at every key, for all time"
+  across[*] = 5 "every box there on 2024-01-01"
+  ov[2026] = 9 "one year, for all time"
+  ov[2024..2025] = 1 "two years, for all time"
+
+version v_x2
+  cite fixture
+  governs 2025-01-01..
+  known 2024-01-01
+  x2[*, 5] = 2 "key 5 for every option, from 2025"
+  ov[2025..2026] = 2 "two years overlapping the first two by one, from 2025"
+
+version v_late
+  cite fixture
+  known 2025-02-01
+  boxes + [late_box] lives 2025-02-01..

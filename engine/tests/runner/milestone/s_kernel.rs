@@ -14,7 +14,7 @@ mod tests {
     use tally_runner::kernel::{VECTORS, difference, vectors};
 
     /// The groups this target tests, one `#[test]` each.
-    const GROUPS: [&str; 2] = ["checks", "g1"];
+    const GROUPS: [&str; 5] = ["checks", "g1", "g2", "g3", "g4"];
 
     /// Runs every vector of `group` on the engine and holds it to refcore's run.
     fn group_holds(group: &str) {
@@ -91,5 +91,28 @@ mod tests {
     #[test]
     fn s_kernel_g1_numbers() {
         group_holds("g1");
+    }
+
+    /// G2, the read rule (L §4.6, §4.5, §5.3, §5.11): rows by literal, range, `*` and a
+    /// left-out key; known dates under `as known` cuts; spans; `replace`; precedence; keys and
+    /// things a later version adds; dated rules; `held` past the cut (`kernel/g2/`).
+    #[test]
+    fn s_kernel_g2_read_rule() {
+        group_holds("g2");
+    }
+
+    /// G3, bands (L §5.9): open, closed and infinite ends, a hole row, patches chained by
+    /// known date, an argument no row holds, a band governing always (`kernel/g3/`).
+    #[test]
+    fn s_kernel_g3_bands() {
+        group_holds("g3");
+    }
+
+    /// G4, holes in the answer (L §8.1, §4.6 step 5): one question at two figures, two
+    /// questions sorted, a stated hole, the no-value texts, keys in brackets, a thing outside
+    /// its lifespan read as none (`kernel/g4/`).
+    #[test]
+    fn s_kernel_g4_holes() {
+        group_holds("g4");
     }
 }

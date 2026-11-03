@@ -46,3 +46,8 @@ g1/round	g1		engine/tests/kernel/	engine/tests/kernel/g1/round.tally
 g1/text	g1		engine/tests/kernel/	engine/tests/kernel/g1/text.tally		
 g1/cap	g1		engine/tests/kernel/	engine/tests/kernel/g1/cap.tally		
 g1/step	g1		engine/tests/kernel/	engine/tests/kernel/g1/step.tally		
+g2/read	g2		engine/tests/kernel/	engine/tests/kernel/g2/read.tally		
+g3/band	g3		engine/tests/kernel/	engine/tests/kernel/g3/band.tally		
+g4/holes	g4		engine/tests/kernel/	engine/tests/kernel/g4/holes.tally		
+g2/ranges	g2		engine/tests/kernel/	engine/tests/kernel/g2/ranges.tally		
+g2/rules	g2		engine/tests/kernel/	engine/tests/kernel/g2/rules.tally		

@@ -1,0 +1,90 @@
+model g3_band
+  tally 2
+  on 2026-10-25
+  start 2024-01-01
+  end 2026-12-31
+  note "T, issue #41, G3: bands (L §5.9): a table with open, closed and infinite ends and a hole row; two later versions patching rows of the same intervals, chained by known date (the first written last, so order in the file decides nothing) and read under cuts before, on and after each known day; a law date on the ask's cut; an argument no row holds; a band governing always. (marginal and a row's ends aren't built at S.)"
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit DUK: currency minor 0.01
+
+index pts = [p0, p1, p2, p3, p4, p5, p6]
+
+input low_amt: money DUK
+
+input mid_amt: money DUK
+
+input high_amt: money DUK
+
+input xs[k in pts]: num
+
+band scale(x: num): money DUK
+
+band rate(x: num): num
+
+band flat(x: num): num
+
+ask q_scale_24: scale(xs[k]) for k in pts law 2024-06-30
+
+ask q_scale_25: scale(xs[k]) for k in pts law 2025-06-30
+
+ask q_scale_25_old: scale(xs[k]) for k in pts law 2025-06-30 as known 2025-03-01
+
+ask q_scale_26: scale(xs[k]) for k in pts law 2026-06-30
+
+ask q_scale_26_mid: scale(xs[k]) for k in pts law 2026-06-30 as known 2025-07-01
+
+ask q_rate: rate(xs[k]) for k in pts law 2025-06-30
+
+ask q_flat: flat(xs[p3]), flat(xs[p6])
+
+ask q_scale_day: scale(xs[p3]) law 2025-06-30 as known 2025-06-01
+
+ask q_scale_same: scale(xs[p3]) law 2025-06-30 as known 2025-06-30
+
+version v_amounts
+  cite fixture
+  governs always
+  known 2024-01-01
+  low_amt = 100.00 "the low amount"
+  mid_amt = 200.00 "the middle amount"
+  high_amt = 300.00 "the high amount"
+  xs[p0] = -5 "below zero"
+  xs[p1] = 0 "the first row's closed end"
+  xs[p2] = 9.99 "under the first row's open end"
+  xs[p3] = 10 "the second row's closed start"
+  xs[p4] = 20 "the second row's closed end"
+  xs[p5] = 20.5 "past it"
+  xs[p6] = 100 "far past it"
+
+version v_flat
+  cite fixture
+  governs always
+  known 2024-01-01
+  flat: (-inf, 50) = 1 "below 50"
+  flat: [50, inf) = 2 "from 50"
+
+version v_scale2
+  cite fixture
+  governs 2025-01-01..
+  known 2025-06-01
+  replace scale: [10, 20] = high_amt "the middle row raised from 2025"
+
+version v_scale3
+  cite fixture
+  governs 2026-01-01..
+  known 2025-12-01
+  replace scale: [0, 10) = mid_amt "the low row raised from 2026"
+
+version v_scale1
+  cite fixture
+  governs 2024-01-01..
+  known 2024-01-01
+  scale: (-inf, 0) = ?"no scale below zero"
+  scale: [0, 10) = low_amt "the low row"
+  scale: [10, 20] = mid_amt "the middle row"
+  scale: (20, inf) = high_amt "the high row"
+  rate: [0, 10) = 0.1 "the first tier"
+  rate: [10, 50) = 0.2 "the second tier"
+  rate: [50, inf) = 0.3 "the third tier"

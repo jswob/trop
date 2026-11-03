@@ -6951,18 +6951,18 @@ q_modes (k = n05): (0, -1, -1, 0, -1, 0, 0)
   law date 2026-10-25, cut 2026-10-25
 q_modes (k = p15): (1, 2, 1, 2, 2, 1, 2)
   law date 2026-10-25, cut 2026-10-25
-,7:g1/text,2:g1,17:run g1/text.tally,4657:13:g1/text.tally,4634:model g1_text
+,7:g1/text,2:g1,17:run g1/text.tally,4979:13:g1/text.tally,4956:model g1_text
   tally 2
   on 2026-10-25
   start 2026-01-01
   end 2026-12-31
-  note "T, issue #41, G1: how a num and money print (L §5.18, §2.4): the shortest exact decimal, a/b with its reading aid, the aid beside more than 15 significant digits, ties at the 15th digit, magnitudes from tiny to past the machine word, both signs, signed divisors."
+  note "T, issue #41, G1: how a num and money print (L §5.18, §2.4): the shortest exact decimal, a/b with its reading aid, the aid beside more than 15 significant digits, ties at the 15th digit, magnitudes from tiny to past the machine word, both signs, signed divisors, the machine word's least value and its negation."
 
 source fixture "T's fixture for S's kernel tests (invented values)"
 
 unit DUK: currency minor 0.01
 
-index w = [third, neg_seventh, big_third, tiny, sig16_up, sig16_even, int19, int21, trim, carry, neg_tiny, zero, plain, neg_divisor, both_big, half, wide, square]
+index w = [third, neg_seventh, big_third, tiny, sig16_up, sig16_even, int19, int21, trim, carry, neg_tiny, zero, plain, neg_divisor, both_big, half, wide, square, minword]
 
 input top[k in w]: num
 
@@ -6988,6 +6988,10 @@ def t_inv[k in w]: num at reader
   note "the top over the square: a division by it (a zero square refuses, RUN-DIV)"
   rule base v card = top[k] / t_sq[k]
 
+def t_rev[k in w]: num at reader
+  note "the top negated: the machine word's least value turned past its greatest"
+  rule base v card = -top[k]
+
 def t_net[k in w]: money DUK at reader
   rule base v card = money_in[k] - money_in[half]
 
@@ -6999,7 +7003,7 @@ def t_sign[k in w]: num DUK at reader
 
 ask q_values: top[k], t_q[k] for k in w law 2026-10-25
 
-ask q_more: t_prod[k], t_diff[k], t_sq[k], t_inv[k] for k in w law 2026-10-25
+ask q_more: t_prod[k], t_diff[k], t_sq[k], t_inv[k], t_rev[k] for k in w law 2026-10-25
 
 ask q_money: money_in[k], t_net[k], t_sign[k] for k in w law 2026-10-25
 
@@ -7039,6 +7043,8 @@ version card
   bottom[both_big] = 987654321098765432109876543 "both parts past 2^64"
   top[half] = 0.5 "a half"
   bottom[half] = -0.25 "a negative quarter"
+  top[minword] = -9223372036854775808 "-2^63, the machine word's least value"
+  bottom[minword] = 1 "itself"
   money_in[third] = 1500.00 "positive"
   money_in[neg_seventh] = -2300.00 "negative"
   money_in[big_third] = 123456789012345678901.23 "money past the machine word"
@@ -7061,7 +7067,7 @@ version card
   top[square] = 1 "1 / 3037000500, whose square's denominator passes 2^63"
   bottom[square] = 3037000500 "just past the square root of 2^63"
   money_in[square] = -0.01 "minus one minor unit"
-,,1:0,8349:q_money (k = third): (1 500.00 DUK, 1 499.50 DUK, 3 000 DUK)
+,,1:0,9676:q_money (k = third): (1 500.00 DUK, 1 499.50 DUK, 3 000 DUK)
   law date 2026-10-25, cut 2026-10-25
 q_money (k = neg_seventh): (-2 300.00 DUK, -2 300.50 DUK, -2 300 DUK)
   law date 2026-10-25, cut 2026-10-25
@@ -7097,41 +7103,45 @@ q_money (k = wide): (0.01 DUK, -0.49 DUK, 0.02 DUK)
   law date 2026-10-25, cut 2026-10-25
 q_money (k = square): (-0.01 DUK, -0.51 DUK, -0.01 DUK)
   law date 2026-10-25, cut 2026-10-25
-q_more (k = third): (3, -2, 1/9 (0.111111111111111), 9)
+q_money (k = minword): (?"money_in at minword: no value at 2026-10-25" (money_in[minword]), ?"money_in at minword: no value at 2026-10-25" (money_in[minword]), ?"money_in at minword: no value at 2026-10-25" (money_in[minword]))
   law date 2026-10-25, cut 2026-10-25
-q_more (k = neg_seventh): (-154, -29, 484/49 (9.87755102040816), -49/22 (-2.22727272727273))
+q_more (k = third): (3, -2, 1/9 (0.111111111111111), 9, -1)
   law date 2026-10-25, cut 2026-10-25
-q_more (k = big_third): (30 000 000 000 000 000 000, 9 999 999 999 999 999 997 (10 000 000 000 000 000 000), 100000000000000000000000000000000000000/9 (11 111 111 111 111 100 000 000 000 000 000 000 000), 0.0000000000000000009)
+q_more (k = neg_seventh): (-154, -29, 484/49 (9.87755102040816), -49/22 (-2.22727272727273), 22)
   law date 2026-10-25, cut 2026-10-25
-q_more (k = tiny): (70 000 000, -69 999 999, 1/4900000000000000 (0.000000000000000204081632653061), 4 900 000 000 000 000)
+q_more (k = big_third): (30 000 000 000 000 000 000, 9 999 999 999 999 999 997 (10 000 000 000 000 000 000), 100000000000000000000000000000000000000/9 (11 111 111 111 111 100 000 000 000 000 000 000 000), 0.0000000000000000009, -10 000 000 000 000 000 000)
   law date 2026-10-25, cut 2026-10-25
-q_more (k = sig16_up): (1.234567890123455 (1.23456789012346), 0.234567890123455, 1.524157875323879257735141137025 (1.52415787532388), 200000000000000/246913578024691 (0.810000007290001))
+q_more (k = tiny): (70 000 000, -69 999 999, 1/4900000000000000 (0.000000000000000204081632653061), 4 900 000 000 000 000, -1)
   law date 2026-10-25, cut 2026-10-25
-q_more (k = sig16_even): (1.234567890123445 (1.23456789012344), 0.234567890123445, 1.524157875323854566377338668025 (1.52415787532385), 200000000000000/246913578024689 (0.810000007290008))
+q_more (k = sig16_up): (1.234567890123455 (1.23456789012346), 0.234567890123455, 1.524157875323879257735141137025 (1.52415787532388), 200000000000000/246913578024691 (0.810000007290001), -1.234567890123455 (-1.23456789012346))
   law date 2026-10-25, cut 2026-10-25
-q_more (k = int19): (1 234 567 890 123 456 789 (1 234 567 890 123 460 000), 1 234 567 890 123 456 788 (1 234 567 890 123 460 000), 1 524 157 875 323 883 675 019 051 998 750 190 521 (1 524 157 875 323 880 000 000 000 000 000 000 000), 1/1234567890123456789 (0.00000000000000000081000000729))
+q_more (k = sig16_even): (1.234567890123445 (1.23456789012344), 0.234567890123445, 1.524157875323854566377338668025 (1.52415787532385), 200000000000000/246913578024689 (0.810000007290008), -1.234567890123445 (-1.23456789012344))
   law date 2026-10-25, cut 2026-10-25
-q_more (k = int21): (100 000 000 000 000 000 000, 99 999 999 999 999 999 999 (100 000 000 000 000 000 000), 10 000 000 000 000 000 000 000 000 000 000 000 000 000, 0.00000000000000000001)
+q_more (k = int19): (1 234 567 890 123 456 789 (1 234 567 890 123 460 000), 1 234 567 890 123 456 788 (1 234 567 890 123 460 000), 1 524 157 875 323 883 675 019 051 998 750 190 521 (1 524 157 875 323 880 000 000 000 000 000 000 000), 1/1234567890123456789 (0.00000000000000000081000000729), -1 234 567 890 123 456 789 (-1 234 567 890 123 460 000))
   law date 2026-10-25, cut 2026-10-25
-q_more (k = trim): (1.000000000000000001 (1), 0.000000000000000001, 1.000000000000000002000000000000000001 (1), 1000000000000000000/1000000000000000001 (1))
+q_more (k = int21): (100 000 000 000 000 000 000, 99 999 999 999 999 999 999 (100 000 000 000 000 000 000), 10 000 000 000 000 000 000 000 000 000 000 000 000 000, 0.00000000000000000001, -100 000 000 000 000 000 000)
   law date 2026-10-25, cut 2026-10-25
-q_more (k = carry): (9.9999999999999999 (10), 8.9999999999999999 (9), 99.99999999999999800000000000000001 (100), 10000000000000000/99999999999999999 (0.1))
+q_more (k = trim): (1.000000000000000001 (1), 0.000000000000000001, 1.000000000000000002000000000000000001 (1), 1000000000000000000/1000000000000000001 (1), -1.000000000000000001 (-1))
   law date 2026-10-25, cut 2026-10-25
-q_more (k = neg_tiny): (-0.0000000000000001234567890123456 (-0.000000000000000123456789012346), -1.0000000000000001234567890123456 (-1), 0.00000000000000000000000000000001524157875323881726870921383936 (0.0000000000000000000000000000000152415787532388), -156250000000000000000000000000/19290123283179 (-8 100 000 072 900 010))
+q_more (k = carry): (9.9999999999999999 (10), 8.9999999999999999 (9), 99.99999999999999800000000000000001 (100), 10000000000000000/99999999999999999 (0.1), -9.9999999999999999 (-10))
   law date 2026-10-25, cut 2026-10-25
-q_more (k = zero): (0, -5, 0, refused: RUN-DIV division by zero)
+q_more (k = neg_tiny): (-0.0000000000000001234567890123456 (-0.000000000000000123456789012346), -1.0000000000000001234567890123456 (-1), 0.00000000000000000000000000000001524157875323881726870921383936 (0.0000000000000000000000000000000152415787532388), -156250000000000000000000000000/19290123283179 (-8 100 000 072 900 010), 0.0000000000000001234567890123456 (0.000000000000000123456789012346))
   law date 2026-10-25, cut 2026-10-25
-q_more (k = plain): (1 190.05, 1 189.05, 1 416 219.0025, 20/23801 (0.000840300827696315))
+q_more (k = zero): (0, -5, 0, refused: RUN-DIV division by zero, 0)
   law date 2026-10-25, cut 2026-10-25
-q_more (k = neg_divisor): (-154, 29, 484/49 (9.87755102040816), 49/22 (2.22727272727273))
+q_more (k = plain): (1 190.05, 1 189.05, 1 416 219.0025, 20/23801 (0.000840300827696315), -1 190.05)
   law date 2026-10-25, cut 2026-10-25
-q_more (k = both_big): (121 932 631 137 021 795 226 185 031 828 684 651 861 743 636 654 061 881 (121 932 631 137 022 000 000 000 000 000 000 000 000 000 000 000 000 000), -864 197 532 086 419 753 208 641 976 (-864 197 532 086 420 000 000 000 000), 15241578753238836750495351342783114345526596755677489/975461057985063252587258039520835238484196006701630849 (0.0156249997152344), 975461057985063252587258039520835238484196006701630849/123456789012345678901234567 (7 901 234 640 790 120 000 000 000 000))
+q_more (k = neg_divisor): (-154, 29, 484/49 (9.87755102040816), 49/22 (2.22727272727273), -22)
   law date 2026-10-25, cut 2026-10-25
-q_more (k = half): (-0.125, 0.75, 4, 0.125)
+q_more (k = both_big): (121 932 631 137 021 795 226 185 031 828 684 651 861 743 636 654 061 881 (121 932 631 137 022 000 000 000 000 000 000 000 000 000 000 000 000 000), -864 197 532 086 419 753 208 641 976 (-864 197 532 086 420 000 000 000 000), 15241578753238836750495351342783114345526596755677489/975461057985063252587258039520835238484196006701630849 (0.0156249997152344), 975461057985063252587258039520835238484196006701630849/123456789012345678901234567 (7 901 234 640 790 120 000 000 000 000), -123 456 789 012 345 678 901 234 567 (-123 456 789 012 346 000 000 000 000))
   law date 2026-10-25, cut 2026-10-25
-q_more (k = wide): (9 223 372 036 854 775 809 (9 223 372 036 854 780 000), -9 223 372 036 854 775 808 (-9 223 372 036 854 780 000), 1/85070591730234615884290395931651604481 (0.0000000000000000000000000000000000000117549435082229), 85 070 591 730 234 615 884 290 395 931 651 604 481 (85 070 591 730 234 600 000 000 000 000 000 000 000))
+q_more (k = half): (-0.125, 0.75, 4, 0.125, -0.5)
   law date 2026-10-25, cut 2026-10-25
-q_more (k = square): (3 037 000 500, -3 037 000 499, 1/9223372037000250000 (0.00000000000000000010842021724684), 9 223 372 037 000 250 000)
+q_more (k = wide): (9 223 372 036 854 775 809 (9 223 372 036 854 780 000), -9 223 372 036 854 775 808 (-9 223 372 036 854 780 000), 1/85070591730234615884290395931651604481 (0.0000000000000000000000000000000000000117549435082229), 85 070 591 730 234 615 884 290 395 931 651 604 481 (85 070 591 730 234 600 000 000 000 000 000 000 000), -1)
+  law date 2026-10-25, cut 2026-10-25
+q_more (k = square): (3 037 000 500, -3 037 000 499, 1/9223372037000250000 (0.00000000000000000010842021724684), 9 223 372 037 000 250 000, -1)
+  law date 2026-10-25, cut 2026-10-25
+q_more (k = minword): (-9 223 372 036 854 775 808 (-9 223 372 036 854 780 000), -9 223 372 036 854 775 809 (-9 223 372 036 854 780 000), 85 070 591 730 234 615 865 843 651 857 942 052 864 (85 070 591 730 234 600 000 000 000 000 000 000 000), -0.000000000000000000108420217248550443400745280086994171142578125 (-0.00000000000000000010842021724855), 9 223 372 036 854 775 808 (9 223 372 036 854 780 000))
   law date 2026-10-25, cut 2026-10-25
 q_values (k = third): (1, 1/3 (0.333333333333333))
   law date 2026-10-25, cut 2026-10-25
@@ -7169,12 +7179,14 @@ q_values (k = wide): (1, 1/9223372036854775809 (0.000000000000000000108420217248
   law date 2026-10-25, cut 2026-10-25
 q_values (k = square): (1, 1/3037000500 (0.000000000329272253988763))
   law date 2026-10-25, cut 2026-10-25
-,6:g1/cap,2:g1,16:run g1/cap.tally,1329:12:g1/cap.tally,1307:model g1_cap
+q_values (k = minword): (-9 223 372 036 854 775 808 (-9 223 372 036 854 780 000), -9 223 372 036 854 775 808 (-9 223 372 036 854 780 000))
+  law date 2026-10-25, cut 2026-10-25
+,6:g1/cap,2:g1,16:run g1/cap.tally,1510:12:g1/cap.tally,1488:model g1_cap
   tally 2
   on 2026-10-25
   start 2026-01-01
   end 2026-12-31
-  note "T, issue #41, G1: the cap of 4 096 decimal digits (L §7.1, RUN-DIGITS): 10^4096 and 10^4097 refused, 10^4096 - 1 answered beside them, by squaring 10 twelve times."
+  note "T, issue #41, G1: the cap of 4 096 decimal digits (L §7.1, RUN-DIGITS): 10^4096 and 10^4097 refused, 10^4096 - 1 answered beside them, by squaring 10 twelve times; a key read at a value reduced from big parts."
 
 source fixture "T's fixture for S's kernel tests (invented values)"
 
@@ -7208,7 +7220,11 @@ def small: num at reader
   note "10^1024 / 10^1024 = 1: big parts that reduce"
   rule base v card = p[10] / p[10]
 
-ask q_cap: p[12], under, edge, over, small, p[3] law 2026-10-25
+def at_small: num at reader
+  note "p read at a key computed by way of big parts: 1, so 10^2"
+  rule base v card = p[small]
+
+ask q_cap: p[12], under, edge, over, small, p[3], at_small law 2026-10-25
 
 version card
   cite fixture
@@ -7216,7 +7232,7 @@ version card
   known 2026-10-25
   ten = 10 "ten"
   one = 1 "one"
-,,1:0,296:q_cap: (refused: RUN-DIGITS a value passes 4 096 digits; round where the law rounds, 1, refused: RUN-DIGITS a value passes 4 096 digits; round where the law rounds, refused: RUN-DIGITS a value passes 4 096 digits; round where the law rounds, 1, 100 000 000)
+,,1:0,301:q_cap: (refused: RUN-DIGITS a value passes 4 096 digits; round where the law rounds, 1, refused: RUN-DIGITS a value passes 4 096 digits; round where the law rounds, refused: RUN-DIGITS a value passes 4 096 digits; round where the law rounds, 1, 100 000 000, 100)
   law date 2026-10-25, cut 2026-10-25
 ,7:g1/step,2:g1,17:run g1/step.tally,861:13:g1/step.tally,839:model g1_step
   tally 2
@@ -7256,4 +7272,642 @@ version card
   step_zero = 0 "a zero step"
 ,,1:0,180:q_steps: (2.6, refused: RUN-DOMAIN round with a step -0.2 that is not positive, refused: RUN-DOMAIN round with a step 0 that is not positive)
   law date 2026-10-25, cut 2026-10-25
+,7:g2/read,2:g2,17:run g2/read.tally,3448:13:g2/read.tally,3425:model g2_read
+  tally 2
+  on 2026-10-25
+  start 2024-01-01
+  end 2026-12-31
+  note "T, issue #41, G2: the read rule (L §4.6): candidates by key (a literal, a range, *, a trailing key left out), by known date and by span; replace; precedence by narrowness and by a span over always; keys and things a later version adds; no candidate a hole; held past the cut; rules in force by their versions (L §5.11)."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit DUK: currency minor 0.01
+
+index yr = year 2024..2026
+
+index n = 1..10
+
+index opt = [a, b, c]
+
+index late = [x1, x2]
+
+kind boxes: place DUK signed
+
+input rate[y in yr]: num question "What is the rate for the year?"
+
+input fee[o in opt, k in n]: money DUK
+
+input level: num
+
+input fixed_base: num
+
+input tag[l in late]: num
+
+input limit[x in boxes]: money DUK
+
+input two: num
+
+def pay[y in yr]: num at start_of(y)
+  note "an early rule for 2024, a later one from 2025 known in January 2025"
+  rule early v v_rules_a = rate[y]
+  rule later beats early v v_rules_b = rate[y] * two
+
+def lvl: num at reader
+  rule base v v_level1 = level
+
+ask q_rate: rate[2024], rate[2025], rate[2026] law 2026-10-25
+
+ask q_rate_old: rate[2024], rate[2025], rate[2026] law 2026-10-25 as known 2024-06-30
+
+ask q_fee_a: fee[a, 1], fee[a, 3], fee[a, 4], fee[a, 5], fee[a, 6] law 2026-10-25
+
+ask q_fee_bc: fee[b, 1], fee[b, 10], fee[c, 2], fee[c, 9] law 2026-10-25
+
+ask q_level: level law 2024-06-30
+
+ask q_level_before_fix: level law 2024-06-30 as known 2025-04-30
+
+ask q_level_gap: level law 2025-08-01 as known 2025-02-01
+
+ask q_level_late: level law 2025-08-01
+
+ask q_level_held: level law 2026-06-30 as known 2025-10-01
+
+ask q_base: fixed_base
+
+ask q_tag: tag[x1], tag[x3] law 2026-10-25
+
+ask q_tag_old: tag[x1] law 2026-10-25 as known 2024-06-30
+
+ask q_limit: limit[first_box], limit[second_box] law 2026-10-25
+
+ask q_pay: pay[2024], pay[2025], pay[2026]
+
+ask q_pay_old: pay[2024], pay[2025] as known 2024-12-31
+
+ask q_lvl: lvl law 2024-06-30
+
+version v_keys
+  cite fixture
+  governs always
+  known 2024-01-01
+  fixed_base = 5 "a fact for all time"
+  two = 2 "two"
+  fee[*, *] = 1.00 "every key"
+  fee[a, *] = 2.00 "a's keys"
+  fee[a, 3..5] = 3.00 "a's keys 3 to 5"
+  fee[a, 4] = 4.00 "a at 4"
+  fee[b, 1..10] = 5.00 "b's keys by a range"
+  fee[c] = 6.00 "c, its second key left out"
+  tag[*] = 7 "every key the index had on 2024-01-01"
+  boxes + [first_box] lives 2024-01-01..
+  limit[*] = 100.00 "every box there on 2024-01-01"
+
+version v_rates
+  cite fixture
+  governs 2024..2026
+  known 2024-01-01
+  rate[2024] = 0.10 "2024's rate"
+  rate[2025..2026] = 0.20 "2025 and 2026 by a range"
+
+version v_rates_late
+  cite fixture
+  governs 2026
+  known 2025-11-01
+  replace rate[2025..2026] = 0.25 "2026 restated in November 2025"
+
+version v_level1
+  cite fixture
+  governs 2024-01-01..2025-06-30
+  known 2024-01-01
+  level = 1 "the level through June 2025"
+
+version v_level2
+  cite fixture
+  governs 2025-07-01..
+  known 2025-03-01
+  level = 2 "the level from July 2025, open-ended"
+
+version v_fix
+  cite fixture
+  governs 2024-01-01..2024-12-31
+  known 2025-05-01
+  replace level = 1.5 "2024's level, fixed in May 2025"
+
+version v_added
+  cite fixture
+  known 2025-02-01
+  late + [x3]
+  boxes + [second_box] lives 2025-02-01..
+
+version v_rules_a
+  cite fixture
+  governs 2024
+  known 2024-01-01
+
+version v_rules_b
+  cite fixture
+  governs 2025..
+  known 2025-01-15
+,,1:0,1168:q_base: 5
+  cut 2026-10-25
+q_fee_a: (2.00 DUK, 3.00 DUK, 4.00 DUK, 3.00 DUK, 2.00 DUK)
+  law date 2026-10-25, cut 2026-10-25
+q_fee_bc: (5.00 DUK, 5.00 DUK, 6.00 DUK, 6.00 DUK)
+  law date 2026-10-25, cut 2026-10-25
+q_level: 1.5
+  law date 2024-06-30, cut 2026-10-25
+q_level_before_fix: 1
+  law date 2024-06-30, cut 2025-04-30
+q_level_gap: ?"level: no value at 2025-08-01" (level)
+  law date 2025-08-01, cut 2025-02-01
+q_level_held: 2
+  held: level = 2 (v_level2), read for 2026-06-30
+  law date 2026-06-30, cut 2025-10-01
+q_level_late: 2
+  law date 2025-08-01, cut 2026-10-25
+q_limit: (100.00 DUK, ?"limit at second_box: no value at 2026-10-25" (limit[second_box]))
+  law date 2026-10-25, cut 2026-10-25
+q_lvl: 1.5
+  law date 2024-06-30, cut 2026-10-25
+q_pay: (0.1, 0.4, 0.5)
+  cut 2026-10-25
+q_pay_old: (0.1, refused: RUN-NO-RULE no rule applies to pay[2025] on 2025-01-01)
+  cut 2024-12-31
+q_rate: (0.1, 0.2, 0.25)
+  law date 2026-10-25, cut 2026-10-25
+q_rate_old: (0.1, 0.2, 0.2)
+  law date 2026-10-25, cut 2024-06-30
+q_tag: (7, ?"tag at x3: no value at 2026-10-25" (tag[x3]))
+  law date 2026-10-25, cut 2026-10-25
+q_tag_old: 7
+  law date 2026-10-25, cut 2024-06-30
+,7:g3/band,2:g3,17:run g3/band.tally,2656:13:g3/band.tally,2633:model g3_band
+  tally 2
+  on 2026-10-25
+  start 2024-01-01
+  end 2026-12-31
+  note "T, issue #41, G3: bands (L §5.9): a table with open, closed and infinite ends and a hole row; two later versions patching rows of the same intervals, chained by known date (the first written last, so order in the file decides nothing) and read under cuts before, on and after each known day; a law date on the ask's cut; an argument no row holds; a band governing always. (marginal and a row's ends aren't built at S.)"
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit DUK: currency minor 0.01
+
+index pts = [p0, p1, p2, p3, p4, p5, p6]
+
+input low_amt: money DUK
+
+input mid_amt: money DUK
+
+input high_amt: money DUK
+
+input xs[k in pts]: num
+
+band scale(x: num): money DUK
+
+band rate(x: num): num
+
+band flat(x: num): num
+
+ask q_scale_24: scale(xs[k]) for k in pts law 2024-06-30
+
+ask q_scale_25: scale(xs[k]) for k in pts law 2025-06-30
+
+ask q_scale_25_old: scale(xs[k]) for k in pts law 2025-06-30 as known 2025-03-01
+
+ask q_scale_26: scale(xs[k]) for k in pts law 2026-06-30
+
+ask q_scale_26_mid: scale(xs[k]) for k in pts law 2026-06-30 as known 2025-07-01
+
+ask q_rate: rate(xs[k]) for k in pts law 2025-06-30
+
+ask q_flat: flat(xs[p3]), flat(xs[p6])
+
+ask q_scale_day: scale(xs[p3]) law 2025-06-30 as known 2025-06-01
+
+ask q_scale_same: scale(xs[p3]) law 2025-06-30 as known 2025-06-30
+
+version v_amounts
+  cite fixture
+  governs always
+  known 2024-01-01
+  low_amt = 100.00 "the low amount"
+  mid_amt = 200.00 "the middle amount"
+  high_amt = 300.00 "the high amount"
+  xs[p0] = -5 "below zero"
+  xs[p1] = 0 "the first row's closed end"
+  xs[p2] = 9.99 "under the first row's open end"
+  xs[p3] = 10 "the second row's closed start"
+  xs[p4] = 20 "the second row's closed end"
+  xs[p5] = 20.5 "past it"
+  xs[p6] = 100 "far past it"
+
+version v_flat
+  cite fixture
+  governs always
+  known 2024-01-01
+  flat: (-inf, 50) = 1 "below 50"
+  flat: [50, inf) = 2 "from 50"
+
+version v_scale2
+  cite fixture
+  governs 2025-01-01..
+  known 2025-06-01
+  replace scale: [10, 20] = high_amt "the middle row raised from 2025"
+
+version v_scale3
+  cite fixture
+  governs 2026-01-01..
+  known 2025-12-01
+  replace scale: [0, 10) = mid_amt "the low row raised from 2026"
+
+version v_scale1
+  cite fixture
+  governs 2024-01-01..
+  known 2024-01-01
+  scale: (-inf, 0) = ?"no scale below zero"
+  scale: [0, 10) = low_amt "the low row"
+  scale: [10, 20] = mid_amt "the middle row"
+  scale: (20, inf) = high_amt "the high row"
+  rate: [0, 10) = 0.1 "the first tier"
+  rate: [10, 50) = 0.2 "the second tier"
+  rate: [50, inf) = 0.3 "the third tier"
+,,1:0,4105:q_flat: (1, 2)
+  cut 2026-10-25
+q_rate (k = p0): ?"rate: no row holds -5 at 2025-06-30" (rate)
+  law date 2025-06-30, cut 2026-10-25
+q_rate (k = p1): 0.1
+  law date 2025-06-30, cut 2026-10-25
+q_rate (k = p2): 0.1
+  law date 2025-06-30, cut 2026-10-25
+q_rate (k = p3): 0.2
+  law date 2025-06-30, cut 2026-10-25
+q_rate (k = p4): 0.2
+  law date 2025-06-30, cut 2026-10-25
+q_rate (k = p5): 0.2
+  law date 2025-06-30, cut 2026-10-25
+q_rate (k = p6): 0.3
+  law date 2025-06-30, cut 2026-10-25
+q_scale_24 (k = p0): ?"no scale below zero" (scale)
+  law date 2024-06-30, cut 2026-10-25
+q_scale_24 (k = p1): 100.00 DUK
+  law date 2024-06-30, cut 2026-10-25
+q_scale_24 (k = p2): 100.00 DUK
+  law date 2024-06-30, cut 2026-10-25
+q_scale_24 (k = p3): 200.00 DUK
+  law date 2024-06-30, cut 2026-10-25
+q_scale_24 (k = p4): 200.00 DUK
+  law date 2024-06-30, cut 2026-10-25
+q_scale_24 (k = p5): 300.00 DUK
+  law date 2024-06-30, cut 2026-10-25
+q_scale_24 (k = p6): 300.00 DUK
+  law date 2024-06-30, cut 2026-10-25
+q_scale_25 (k = p0): ?"no scale below zero" (scale)
+  law date 2025-06-30, cut 2026-10-25
+q_scale_25 (k = p1): 100.00 DUK
+  law date 2025-06-30, cut 2026-10-25
+q_scale_25 (k = p2): 100.00 DUK
+  law date 2025-06-30, cut 2026-10-25
+q_scale_25 (k = p3): 300.00 DUK
+  law date 2025-06-30, cut 2026-10-25
+q_scale_25 (k = p4): 300.00 DUK
+  law date 2025-06-30, cut 2026-10-25
+q_scale_25 (k = p5): 300.00 DUK
+  law date 2025-06-30, cut 2026-10-25
+q_scale_25 (k = p6): 300.00 DUK
+  law date 2025-06-30, cut 2026-10-25
+q_scale_25_old (k = p0): ?"no scale below zero" (scale)
+  held: scale row (-inf, 0) (v_scale1), read for 2025-06-30
+  law date 2025-06-30, cut 2025-03-01
+q_scale_25_old (k = p1): 100.00 DUK
+  held: scale row [0, 10) (v_scale1), read for 2025-06-30
+  law date 2025-06-30, cut 2025-03-01
+q_scale_25_old (k = p2): 100.00 DUK
+  held: scale row [0, 10) (v_scale1), read for 2025-06-30
+  law date 2025-06-30, cut 2025-03-01
+q_scale_25_old (k = p3): 200.00 DUK
+  held: scale row [10, 20] (v_scale1), read for 2025-06-30
+  law date 2025-06-30, cut 2025-03-01
+q_scale_25_old (k = p4): 200.00 DUK
+  held: scale row [10, 20] (v_scale1), read for 2025-06-30
+  law date 2025-06-30, cut 2025-03-01
+q_scale_25_old (k = p5): 300.00 DUK
+  held: scale row (20, inf) (v_scale1), read for 2025-06-30
+  law date 2025-06-30, cut 2025-03-01
+q_scale_25_old (k = p6): 300.00 DUK
+  held: scale row (20, inf) (v_scale1), read for 2025-06-30
+  law date 2025-06-30, cut 2025-03-01
+q_scale_26 (k = p0): ?"no scale below zero" (scale)
+  law date 2026-06-30, cut 2026-10-25
+q_scale_26 (k = p1): 200.00 DUK
+  law date 2026-06-30, cut 2026-10-25
+q_scale_26 (k = p2): 200.00 DUK
+  law date 2026-06-30, cut 2026-10-25
+q_scale_26 (k = p3): 300.00 DUK
+  law date 2026-06-30, cut 2026-10-25
+q_scale_26 (k = p4): 300.00 DUK
+  law date 2026-06-30, cut 2026-10-25
+q_scale_26 (k = p5): 300.00 DUK
+  law date 2026-06-30, cut 2026-10-25
+q_scale_26 (k = p6): 300.00 DUK
+  law date 2026-06-30, cut 2026-10-25
+q_scale_26_mid (k = p0): ?"no scale below zero" (scale)
+  held: scale row (-inf, 0) (v_scale1), read for 2026-06-30
+  law date 2026-06-30, cut 2025-07-01
+q_scale_26_mid (k = p1): 100.00 DUK
+  held: scale row [0, 10) (v_scale1), read for 2026-06-30
+  law date 2026-06-30, cut 2025-07-01
+q_scale_26_mid (k = p2): 100.00 DUK
+  held: scale row [0, 10) (v_scale1), read for 2026-06-30
+  law date 2026-06-30, cut 2025-07-01
+q_scale_26_mid (k = p3): 300.00 DUK
+  held: scale row [10, 20] (v_scale2), read for 2026-06-30
+  law date 2026-06-30, cut 2025-07-01
+q_scale_26_mid (k = p4): 300.00 DUK
+  held: scale row [10, 20] (v_scale2), read for 2026-06-30
+  law date 2026-06-30, cut 2025-07-01
+q_scale_26_mid (k = p5): 300.00 DUK
+  held: scale row (20, inf) (v_scale1), read for 2026-06-30
+  law date 2026-06-30, cut 2025-07-01
+q_scale_26_mid (k = p6): 300.00 DUK
+  held: scale row (20, inf) (v_scale1), read for 2026-06-30
+  law date 2026-06-30, cut 2025-07-01
+q_scale_day: 300.00 DUK
+  held: scale row [10, 20] (v_scale2), read for 2025-06-30
+  law date 2025-06-30, cut 2025-06-01
+q_scale_same: 300.00 DUK
+  law date 2025-06-30, cut 2025-06-30
+,8:g4/holes,2:g4,18:run g4/holes.tally,2446:14:g4/holes.tally,2422:model g4_holes
+  tally 2
+  on 2026-10-25
+  start 2024-01-01
+  end 2026-12-31
+  note "T, issue #41, G4: holes in the answer (L §8.1, §4.6 step 5): one question reached at two figures, two questions sorted, a stated hole, the no-value texts for a period key, a law date and no law date, keys named in brackets, and a thing outside its lifespan read as none, with the rows that do govern read beside them."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit DUK: currency minor 0.01
+
+index opt = [left, right]
+
+index yr = year 2024..2026
+
+kind boxes: place DUK signed
+
+input a_amt: money DUK question "What is the amount?"
+
+input b_amt: money DUK question "What is the amount?"
+
+input c_amt: money DUK question "Which amount applies?"
+
+input plain: money DUK
+
+input forever: num
+
+input by_year[y in yr]: num
+
+input by_two[o in opt, y in yr]: num
+
+input lim[x in boxes]: money DUK
+
+input timeless[o in opt]: num
+
+input given_amt: money DUK
+
+def told: money DUK at reader
+  rule base v card = ?"a stated reason"
+
+def same_twice: money DUK at reader
+  rule base v card = a_amt + b_amt
+
+def two_questions: money DUK at reader
+  rule base v card = c_amt + a_amt
+
+def with_stated: money DUK at reader
+  rule base v card = told + c_amt + given_amt
+
+ask q_merge: same_twice, two_questions, with_stated, given_amt law 2026-10-25
+
+ask q_plain: plain law 2026-10-25
+
+ask q_forever: forever
+
+ask q_timeless: timeless[left], timeless[right]
+
+ask q_keys: by_year[2025], by_two[left, 2025], by_two[right, 2024] law 2026-10-25
+
+ask q_life_in: lim[short_box], lim[long_box] law 2025-03-01
+
+ask q_life_out: lim[short_box], lim[long_box] law 2025-09-01
+
+ask q_life_old: lim[short_box] law 2025-09-01 as known 2025-03-01
+
+version card
+  cite fixture
+  governs always
+  known 2024-01-01
+  given_amt = 10.00 "the one amount given"
+  by_two[right, 2024] = 4 "right's 2024 value"
+  timeless[left] = 1 "left's value for all time"
+
+version v_forever
+  cite fixture
+  known 2024-01-01
+  forever = 3 governs always "a fact for all time, on its own row"
+
+version v_boxes
+  cite fixture
+  known 2024-01-01
+  boxes + [short_box] lives 2025-01-01..
+  boxes + [long_box] lives 2024-01-01..
+
+version v_close
+  cite fixture
+  known 2025-06-01
+  replace boxes + [short_box] lives 2025-01-01..2025-06-30
+
+version v_lim
+  cite fixture
+  governs 2025-08-01..
+  known 2024-01-01
+  lim[long_box] = 50.00 "long_box's limit from August 2025"
+,,1:0,945:q_forever: 3
+  cut 2026-10-25
+q_keys: (?"by_year at 2025: no value for 2025" (by_year[2025]), ?"by_two at left, 2025: no value for 2025" (by_two[left, 2025]), 4)
+  law date 2026-10-25, cut 2026-10-25
+q_life_in: (?"lim at short_box: no value at 2025-03-01" (lim[short_box]), ?"lim at long_box: no value at 2025-03-01" (lim[long_box]))
+  law date 2025-03-01, cut 2026-10-25
+q_life_old: ?"lim at short_box: no value at 2025-09-01" (lim[short_box])
+  law date 2025-09-01, cut 2025-03-01
+q_life_out: (none, 50.00 DUK)
+  law date 2025-09-01, cut 2026-10-25
+q_merge: (?"What is the amount?" (a_amt, b_amt), ?"What is the amount?" (a_amt) ?"Which amount applies?" (c_amt), ?"Which amount applies?" (c_amt) ?"a stated reason" (told), 10.00 DUK)
+  law date 2026-10-25, cut 2026-10-25
+q_plain: ?"plain: no value at 2026-10-25" (plain)
+  law date 2026-10-25, cut 2026-10-25
+q_timeless: (1, ?"timeless at right: no value" (timeless[right]))
+  cut 2026-10-25
+,9:g2/ranges,2:g2,19:run g2/ranges.tally,1964:15:g2/ranges.tally,1939:model g2_ranges
+  tally 2
+  on 2026-10-25
+  start 2024-01-01
+  end 2026-12-31
+  note "T, issue #41, G2: the read rule's precedence (L §4.6 steps 1 and 3): a row with a span over one with always where neither is narrower, read before and after the span starts; * over a kind's things; a thing entered after a row for every key; two ranges overlapping by one key, neither inside the other, one with a span, beside a single key inside the later one. (Inputs keyed by a stepped range or a key list aren't built at S; ranges over them are refcore gaps, T's notes; a range over a kind is LOAD-UNIT.)"
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit DUK: currency minor 0.01
+
+index opt = [a, b]
+
+index n = 1..10
+
+index yr = year 2024..2026
+
+kind boxes: place DUK signed
+
+input lid[x in boxes]: num
+
+input x2[o in opt, k in n]: num
+
+input across[x in boxes]: num
+
+input ov[y in yr]: num
+
+ask q_lid: lid[box_a], lid[box_b] law 2026-10-25
+
+ask q_x2_24: x2[a, 5], x2[a, 6], x2[b, 5] law 2024-06-30
+
+ask q_x2_25: x2[a, 5], x2[a, 6], x2[b, 5] law 2025-06-30
+
+ask q_ov_24: ov[2024], ov[2025], ov[2026] law 2024-06-30
+
+ask q_ov_25: ov[2024], ov[2025], ov[2026] law 2025-06-30
+
+ask q_across: across[box_a], across[late_box] law 2026-10-25
+
+version v_things
+  cite fixture
+  known 2024-01-01
+  boxes + [box_a] lives 2024-01-01..
+  boxes + [box_b] lives 2024-01-01..
+
+version v_rows
+  cite fixture
+  governs always
+  known 2024-01-01
+  lid[*] = 0 "every box"
+  x2[a, *] = 1 "a at every key, for all time"
+  across[*] = 5 "every box there on 2024-01-01"
+  ov[2026] = 9 "one year, for all time"
+  ov[2024..2025] = 1 "two years, for all time"
+
+version v_x2
+  cite fixture
+  governs 2025-01-01..
+  known 2024-01-01
+  x2[*, 5] = 2 "key 5 for every option, from 2025"
+  ov[2025..2026] = 2 "two years overlapping the first two by one, from 2025"
+
+version v_late
+  cite fixture
+  known 2025-02-01
+  boxes + [late_box] lives 2025-02-01..
+,,1:0,445:q_across: (5, ?"across at late_box: no value at 2026-10-25" (across[late_box]))
+  law date 2026-10-25, cut 2026-10-25
+q_lid: (0, 0)
+  law date 2026-10-25, cut 2026-10-25
+q_ov_24: (1, 2, 9)
+  law date 2024-06-30, cut 2026-10-25
+q_ov_25: (1, 2, 9)
+  law date 2025-06-30, cut 2026-10-25
+q_x2_24: (1, 1, ?"x2 at b, 5: no value at 2024-06-30" (x2[b, 5]))
+  law date 2024-06-30, cut 2026-10-25
+q_x2_25: (2, 1, 2)
+  law date 2025-06-30, cut 2026-10-25
+,8:g2/rules,2:g2,18:run g2/rules.tally,1649:14:g2/rules.tally,1625:model g2_rules
+  tally 2
+  on 2026-10-25
+  start 2024-01-01
+  end 2026-12-31
+  note "T, issue #41, G2: rules in force (L §5.11, §4.6): a rule with its own span, rules a later version replaces and replaces again, each read under cuts before and after its version is known, on a version's known day itself, and a rule governing always, read with a law date and, in a def with no at, with none."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+input base_amt: num
+
+input two: num
+
+def r_own: num at reader
+  rule base v v_a = base_amt
+  rule own beats base v v_a governs 2025-01-01.. = base_amt * two
+
+def r_rep: num at reader
+  rule base v v_a = base_amt
+
+def r_always: num at reader
+  rule base v v_a = base_amt + two
+
+def r_none: num
+  note "no at: it reads nothing law-dated, so it needs no law date"
+  rule base v v_a = base_amt - two
+
+ask q_none: r_none
+
+ask q_own_24: r_own law 2024-06-30
+
+ask q_own_25: r_own law 2025-06-30
+
+ask q_rep_24: r_rep law 2024-06-30
+
+ask q_rep_25: r_rep law 2025-06-30
+
+ask q_rep_25_old: r_rep law 2025-06-30 as known 2025-02-01
+
+ask q_rep_25_day: r_rep law 2025-06-30 as known 2025-03-01
+
+ask q_rep_26: r_rep law 2026-06-30
+
+ask q_rep_26_mid: r_rep law 2026-06-30 as known 2025-06-01
+
+ask q_always: r_always law 2026-10-25
+
+version v_a
+  cite fixture
+  governs always
+  known 2024-01-01
+  base_amt = 3 "the base amount"
+  two = 2 "two"
+
+version v_b
+  cite fixture
+  governs 2025-01-01..
+  known 2025-03-01
+  replace rule r_rep.base = base_amt * two
+
+version v_c
+  cite fixture
+  governs 2026-01-01..
+  known 2025-09-01
+  replace rule r_rep.base = base_amt * two * two
+,,1:0,490:q_always: 5
+  law date 2026-10-25, cut 2026-10-25
+q_none: 1
+  cut 2026-10-25
+q_own_24: 3
+  law date 2024-06-30, cut 2026-10-25
+q_own_25: 6
+  law date 2025-06-30, cut 2026-10-25
+q_rep_24: 3
+  law date 2024-06-30, cut 2026-10-25
+q_rep_25: 6
+  law date 2025-06-30, cut 2026-10-25
+q_rep_25_day: 6
+  law date 2025-06-30, cut 2025-03-01
+q_rep_25_old: 3
+  law date 2025-06-30, cut 2025-02-01
+q_rep_26: 12
+  law date 2026-06-30, cut 2026-10-25
+q_rep_26_mid: 6
+  law date 2026-06-30, cut 2025-06-01
 ,
