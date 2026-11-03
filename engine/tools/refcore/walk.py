@@ -1230,8 +1230,10 @@ class Walk:
                     self.add(p.name, u, Ent(key, 'bad', err=err, mv=mv))
             return
         # conservation (E §9 invariant 1): a leg booked whole adds its two ends; a pad's other end is its reading's
-        # reset; an observed leg booked end by end from two statements is the WARN-LEGS case (E §6.1), left out
-        whole = all(on for p, s, on in sides) or isinstance(mv, PadMv)
+        # reset; an observed leg booked end by end from two statements is the WARN-LEGS case (E §6.1), left out; so is
+        # a leg whose place is a hole, which books its known side only (L §5.14; tally 2.1.2, issue #31: a hole end
+        # counted as booked, and the run refused ENGINE-INVARIANT)
+        whole = all(on and isinstance(p, Thing) for p, s, on in sides) or isinstance(mv, PadMv)
         drop = self.labels_drop(lg)
         for i_, (p, s, on) in enumerate(sides):
             if on and isinstance(p, Thing):

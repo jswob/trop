@@ -40,6 +40,9 @@ fix's new tests were seen failing on tally 2.1.1's refcore first.
 - **Money on a `currencies` leg (L §5.4, §5.7, #43).** `check3.m_check_leg` accepts money in a declared currency on a
   leg of unit kind `currencies`, as `moves.leg_amount` did at run. New: `L5_14_leg_currencies_money` (seen failing),
   `L5_14_leg_currencies_not_money` (an int is still `LOAD-UNIT`).
+- **A leg whose place is a hole (L §5.14, E §9 invariant 1, #31).** `Walk.book_leg` counts a leg whole only when both
+  its ends are places; a leg with a hole end books its known side and is left out of invariant 1 (invariant 2 counts the
+  known end, as for a leg booked by its ends). New: `L5_14_leg_hole_place` (seen failing: `ENGINE-INVARIANT`).
 
 ## tally 2.1.1 (issue #13)
 
