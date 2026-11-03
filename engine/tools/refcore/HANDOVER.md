@@ -9,8 +9,9 @@ interpreter doesn't build refuses `REFCORE-NOT-YET <construct>`. Nothing may cra
 
 ## tally 2.1.2 (the spec round: issues #23, #29–#34, #38, #39, #43, #44, #46, #47)
 
-The spec patch tally 2.1.2 (`spec/CHANGES.md` 2.1.2-1 onward), the user's rulings at gate G-SP1 (2026-11-03). Each
-fix's new tests were seen failing on tally 2.1.1's refcore first.
+The spec patch tally 2.1.2 (`spec/CHANGES.md` 2.1.2-1 to 2.1.2-14), the user's rulings at gate G-SP1 (2026-11-03).
+Each fix's new tests were seen failing on tally 2.1.1's refcore first (their twins pass on both). **1150 tests, all
+pass** (1124, two changed, 26 new); through `refcore_fast` too.
 
 - **`LOAD-DEPTH` counts `from` and `ties by` terms (L §2.3, #29).** `parser.P.proj` and `P.tieby` open one level
   around the term, so a chain of reads is bounded; 300 links crashed refcore with a `RecursionError`. New:
