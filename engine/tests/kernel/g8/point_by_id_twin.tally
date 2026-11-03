@@ -1,0 +1,64 @@
+model g8_point_by_id_twin
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.2 (issue #32), G8: the twin of g8/point_by_id, dividing by one (zero = 1): sw_b moves 1.00 PLN from pot to sink, which sw's projection of konto counts and which leaves konto as it is, so sw books max(0, 100.00 - 1.00) = 99.00 PLN (q), the balance before the day stands (r) and sw_b books 1.00 PLN (u)."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit PLN: currency minor 0.01
+
+kind pots: place PLN signed
+
+kind sinks: place PLN signed outside
+
+input day: date
+
+input zero: int
+
+input ahead: int
+
+input amt: money PLN
+
+place konto: accounts PLN lives 2026-01-01..
+
+place savings: accounts PLN lives 2026-01-01..
+
+place pot: pots lives 2026-01-01..
+
+place sink: sinks lives 1900-01-01..
+
+place world: outside lives 1900-01-01..
+
+def src: key pots = if zero / zero > 0 then pot else pot
+
+def snk: key sinks = if zero / zero > 0 then sink else sink
+
+move sw: transfers
+  on day
+  reads konto
+  leg cash from konto to world amount max(0 PLN, bal(konto, add_days(day, ahead)) from day - amt)
+
+move sw_b: transfers
+  on day
+  reads savings
+  leg cash from src to snk amount amt + 0 * bal(savings)
+
+ask q: flows(sw, 2026-01-01 .. 2026-01-31)
+
+ask r: bal(konto, 2026-01-09)
+
+ask u: flows(sw_b, 2026-01-01 .. 2026-01-31)
+
+version facts
+  cite fixture
+  governs always
+  known 2026-01-01
+  day = 2026-01-10
+  zero = 1
+  ahead = 5
+  amt = 1.00 PLN
+  opening[konto] = 100.00 PLN at 2026-01-01 start
+  opening[savings] = 50.00 PLN at 2026-01-01 start
+  opening[pot] = 0 PLN at 2026-01-01 start

@@ -1,0 +1,15 @@
+model order_passes
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "T's fixture for the order of load's checks (invented)"
+
+unit PLN: currency minor 0.01
+
+def fee: money PLN = rate
+
+ask q: fee
+
+unit PLN: currency minor 0.01

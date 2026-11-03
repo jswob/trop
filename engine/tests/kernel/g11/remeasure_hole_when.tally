@@ -1,0 +1,74 @@
+model g11_remeasure_hole_when
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.2 (issue #34, the hole-when sibling), G11: E §5 step 3: late (known 2026-05-01) makes the March instances' when a hole (seats unknown), so whether each was due is unknown: a hole adjustment, as a hole amount makes one. Unsettled, rent_l[2026-03]'s makes its reads reaching 2026-05-01 the HOLE-CHANGED hole, and the register lists it (q_l); before 2026-05-01 they stand (before_l, early_l). ended (known 2026-07-01) makes rent_e[2026-03]'s when false, ending the instance, measured against the hole state, so a second hole adjustment (n, l), and the reads reaching 2026-07-01 hold both questions (q_e). tally 2.1.1 skipped late's step: q_l was (500.00 PLN, 7 000.00 PLN), and ended's was measured against the booking, one adjustment of 500.00 PLN."
+
+source plan "T's invented plan"
+
+source act "T's invented act"
+
+unit PLN: currency minor 0.01
+
+place konto_l: accounts PLN lives 2026-01-01..
+
+place konto_e: accounts PLN lives 2026-01-01..
+
+place landlord: outside lives 1900-01-01..
+
+input total: money PLN
+
+input dom: int
+
+input seats_l[m in months]: int
+
+input seats_e[m in months]: int
+
+move rent_l[m in months]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  when seats_l[m] > 0
+  leg cash from konto_l to landlord amount total
+
+move rent_e[m in months]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  when seats_e[m] > 0
+  leg cash from konto_e to landlord amount total
+
+version plan_2026
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  total = 500.00 PLN
+  dom = 10
+  seats_l[*] = 1
+  seats_e[*] = 1
+  opening[konto_l] = 10 000.00 PLN at 2026-01-01 start
+  opening[konto_e] = 10 000.00 PLN at 2026-01-01 start
+
+version late
+  cite act
+  governs 2026-03
+  known 2026-05-01
+  replace seats_l[*] = ?"how many seats in March?"
+  replace seats_e[*] = ?"how many seats in March?"
+
+version ended
+  cite act
+  governs 2026-03
+  known 2026-07-01
+  replace seats_e[*] = 0
+
+ask before_l: bal(konto_l, 2026-04-30)
+
+ask early_l: flows(rent_l, 2026-03-01 .. 2026-04-30)
+
+ask q_l: flows(rent_l, 2026-05-01 .. 2026-05-31), bal(konto_l, 2026-06-30)
+
+ask q_e: flows(rent_e, 2026-07-01 .. 2026-07-31)
+
+ask n: count(a in adjustments over ..)
+
+ask l: a.change for a in adjustments over ..

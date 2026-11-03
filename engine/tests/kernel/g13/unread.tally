@@ -1,0 +1,75 @@
+model g13_unread
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.2 (issue #30), G13: L §8.5 WARN-UNREAD, place <x> is read by nothing, for a place no line names. Named, so no warning: konto by a read, savings by a movement's leg, lokata by a binding over its kind, konto3 by a row whose value it is (the input spare_to, read by nothing, warns as an input), karta by an observed row's leg, unexplained by a pad, world by legs. Not named, so each warns: idle (only its opening row), anch (its opening, a covers line, an anchor and a stated reading), shop (an outside place no leg names). tally 2.1.1 warned inputs, defs and sources only."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+source bank_feed "T's invented bank feed"
+
+unit PLN: currency minor 0.01
+
+kind deposits: place PLN min 0
+
+input bank: observed
+
+input wage: money PLN
+
+input pay_day: date
+
+input spare_to: key accounts
+
+place konto: accounts PLN lives 2026-01-01..
+
+place savings: accounts PLN lives 2026-01-01..
+
+place lokata: deposits lives 2026-01-01..
+
+place konto3: accounts PLN lives 2026-01-01..
+
+place karta: accounts PLN lives 2026-01-01..
+
+place idle: accounts PLN lives 2026-01-01..
+
+place anch: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+place unexplained: outside lives 1900-01-01..
+
+place shop: outside lives 1900-01-01..
+
+def deps[d in days]: money PLN = sum(bal(x, d) for x in deposits on d)
+
+move pay: transfers
+  on pay_day
+  leg cash from world to savings amount wage
+
+ask q: bal(konto, 2026-03-31), deps[2026-03-31]
+
+version facts
+  cite fixture
+  governs always
+  known 2026-01-01
+  wage = 10.00 PLN
+  pay_day = 2026-02-10
+  spare_to = konto3
+  opening[konto] = 5.00 PLN at 2026-01-01 start
+  opening[savings] = 0 PLN at 2026-01-01 start
+  opening[lokata] = 7.00 PLN at 2026-01-01 start
+  opening[konto3] = 0 PLN at 2026-01-01 start
+  opening[karta] = 0 PLN at 2026-01-01 start
+  opening[idle] = 0 PLN at 2026-01-01 start
+  opening[anch] = 0 PLN at 2026-01-01 start
+
+version statement_02
+  cite bank_feed
+  governs 2026-02
+  known 2026-03-02
+  covers konto, anch
+  pad konto from unexplained
+  anchor anch
+  bank[r1] = (on: 2026-02-05, kind: transfers, leg cash from world to karta amount 3.00 PLN) "line 1"
+  stated[anch] = 0 PLN at 2026-02-28 end "saldo"

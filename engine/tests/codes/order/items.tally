@@ -1,0 +1,27 @@
+model order_items
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "T's fixture for the order of load's checks (invented)"
+
+unit PLN: currency minor 0.01
+
+input day: date
+
+input amt: money PLN
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move zz: transfers
+  on 2026-01-10
+  leg cash from konto to world amount amt
+
+move aa: transfers
+  on 2026-02-10
+  leg cash from konto to world amount amt
+
+ask q: bal(konto, 2026-12-31)

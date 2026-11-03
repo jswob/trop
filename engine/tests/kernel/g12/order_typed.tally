@@ -1,0 +1,45 @@
+model g12_order_typed
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.2 (issue #39), G12: L §2.5 binding order, E §4.1: a binding over movements runs in the movement order, by day, then that order's other terms, each compared as its own type. zfee, a day earlier, comes first whatever its id; then rent[f2], rent[f3] and rent[f11], keys of a list index in index order. The twin pair rent[f2] and rent[f3] sorts the same as text; tally 2.1.1 compared the order's text and put rent[f11] between rent[f2] and rent[f3]. Strata of 10 or more are not here: S builds no binding over decisions (M1)."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit PLN: currency minor 0.01
+
+index flats = [f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11]
+
+input rent_amt: money PLN
+
+input fee_amt: money PLN
+
+input rent_day: date
+
+input fee_day: date
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move rent[f in flats]: transfers
+  on rent_day
+  when pos(f) == 2 or pos(f) == 3 or pos(f) == 11
+  leg cash from konto to world amount rent_amt
+
+move zfee: transfers
+  on fee_day
+  leg cash from konto to world amount fee_amt
+
+ask q_keys: m.cash.amount for m in transfers over 2026-02
+
+version facts
+  cite fixture
+  governs always
+  known 2026-01-01
+  rent_amt = 10.00 PLN
+  fee_amt = 1.00 PLN
+  rent_day = 2026-02-03
+  fee_day = 2026-02-01
+  opening[konto] = 100.00 PLN at 2026-01-01 start

@@ -1,0 +1,59 @@
+model g6_currencies
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.2 (issue #43), G6: L §5.4, §5.7, §5.14: a declared currency is a key of the prelude's currencies, so a leg of unit kind currencies carries money in any declared currency: in_pln moves 25.00 PLN into konto and in_eur 7.00 EUR into konto_eur. The twin in_fixed carries PLN on a leg of a kind whose unit is PLN itself. tally 2.1.1's refcore refused the load (LOAD-UNIT the amount of leg cash of in_eur is money EUR, not a unit of currencies), though its run took it."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit PLN: currency minor 0.01
+
+unit EUR: currency minor 0.01
+
+kind curs: event certain
+  leg cash: currencies
+
+kind plns: event certain
+  leg cash: PLN
+
+input pln_amt: money PLN
+
+input eur_amt: money EUR
+
+input day: date
+
+place konto: accounts PLN lives 2026-01-01..
+
+place konto_eur: accounts EUR lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move in_pln: curs
+  on day
+  at day
+  leg cash from world to konto amount pln_amt
+
+move in_eur: curs
+  on day
+  at day
+  leg cash from world to konto_eur amount eur_amt
+
+move in_fixed: plns
+  on day
+  at day
+  leg cash from world to konto amount pln_amt
+
+ask q: bal(konto, 2026-01-31), bal(konto, 2026-03-31), bal(konto_eur, 2026-03-31)
+
+ask f: flows(in_pln, 2026-01-01 .. 2026-12-31), flows(in_eur, 2026-01-01 .. 2026-12-31), flows(in_fixed, 2026-01-01 .. 2026-12-31)
+
+version facts
+  cite fixture
+  governs always
+  known 2026-01-01
+  pln_amt = 25.00 PLN
+  eur_amt = 7.00 EUR
+  day = 2026-02-01
+  opening[konto] = 100.00 PLN at 2026-01-01 start
+  opening[konto_eur] = 0 EUR at 2026-01-01 start

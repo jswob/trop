@@ -1,0 +1,64 @@
+model g8_point_by_id
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.2 (issue #32), G8: L §5.14.1, E §4.1: read at a point of the walk on day t, a projection counts only the movements not yet booked. sw and sw_b are decisions of one stratum on 2026-01-10 (sw reads konto, sw_b reads savings; neither changes what the other reads), so sw runs first, by move id. sw_b's leg runs between places its defs give, each refused (RUN-DIV), so its refusal holds for every place; sw's projection at its point counts sw_b's act, so sw's amount is refused, and its flows with it (q), and so are sw_b's (u); a balance before the day stands (r). The twin g8/point_by_id_twin divides by one: q is 99.00 PLN. tally 2.1.1's refcore compared the point sw|000000 with sw_b as one text (_ sorts before |), left sw_b's act out and printed q: 99.00 PLN here. The amounts are read as flows of the moves: S builds no read of a leg's fields."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit PLN: currency minor 0.01
+
+kind pots: place PLN signed
+
+kind sinks: place PLN signed outside
+
+input day: date
+
+input zero: int
+
+input ahead: int
+
+input amt: money PLN
+
+place konto: accounts PLN lives 2026-01-01..
+
+place savings: accounts PLN lives 2026-01-01..
+
+place pot: pots lives 2026-01-01..
+
+place sink: sinks lives 1900-01-01..
+
+place world: outside lives 1900-01-01..
+
+def src: key pots = if zero / zero > 0 then pot else pot
+
+def snk: key sinks = if zero / zero > 0 then sink else sink
+
+move sw: transfers
+  on day
+  reads konto
+  leg cash from konto to world amount max(0 PLN, bal(konto, add_days(day, ahead)) from day - amt)
+
+move sw_b: transfers
+  on day
+  reads savings
+  leg cash from src to snk amount amt + 0 * bal(savings)
+
+ask q: flows(sw, 2026-01-01 .. 2026-01-31)
+
+ask r: bal(konto, 2026-01-09)
+
+ask u: flows(sw_b, 2026-01-01 .. 2026-01-31)
+
+version facts
+  cite fixture
+  governs always
+  known 2026-01-01
+  day = 2026-01-10
+  zero = 0
+  ahead = 5
+  amt = 1.00 PLN
+  opening[konto] = 100.00 PLN at 2026-01-01 start
+  opening[savings] = 50.00 PLN at 2026-01-01 start
+  opening[pot] = 0 PLN at 2026-01-01 start
