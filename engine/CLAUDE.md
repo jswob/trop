@@ -29,7 +29,8 @@ Printed by the build role's SessionStart hook at the start and after each compac
 - Start: read the last `engine/BUILD-LOG.md` entries, the milestone's section of `engine/spec/BUILD-ORDER.md`, the plan's traceability table; run `engine/tools/check fast`; note the red vector ids.
 - `check` prints a line such as `milestone-report: S: 3/7 green`: T's Rust tests of the next milestone, your work list, never failing. Once the gate session tags a milestone, its tests gate like any other (`engine/tools/milestones.toml`), so they can't go red again.
 - Work: the next group of red vectors in plan order; implement; `engine/tools/check fast`; commit when green.
-- Before each commit: `engine/tools/check full`. Never commit red.
+- Before each commit: `engine/tools/check full`. Never commit red. (T's re-run commit after a spec ruling may be red on the ids its `Logged-Red:` lines name; your commits then turn them green, R-77.)
+- When a group turns green: `engine/tools/mutants-local -F '<regex of the functions you changed or added>' <their kernel files>`; caught and missed go into the group's BUILD-LOG entry, the missed ones for T. Advisory, never blocking (R-88).
 - Only `engine/tools/check`, never raw `cargo` with your own flags. Read the one-line failures; open a log only when needed. A failure that doesn't reproduce is reported, not "fixed".
 - To format: `cargo fmt -p tally -p tally-cli`. A plain `cargo fmt` is refused, since the workspace also holds T's runner.
 - The Stop hook runs `check fast` at the end of every turn.

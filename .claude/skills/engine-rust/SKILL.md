@@ -83,7 +83,8 @@ Each line: the workaround that tempts, what to write instead, and the rule that 
 
 - **Start:** the SessionStart hook prints `engine/CLAUDE.md`; invoke this skill; read the last entries of `engine/BUILD-LOG.md`, the milestone's section of `engine/spec/BUILD-ORDER.md` and the plan's traceability table; run `engine/tools/check fast` and note the red vector ids.
 - **Work:** take the next group of red vectors in plan order; read the spec sections they cite; implement; `engine/tools/check fast`; commit when green, one green step per commit.
-- **Before each commit:** `engine/tools/check full`. Never commit red.
+- **Before each commit:** `engine/tools/check full`. Never commit red. The one exception is T's, not yours: its re-run commit after a spec ruling may be red on the ids its `Logged-Red:` lines name, and your commits on the same branch turn them green (R-77).
+- **When a group turns green:** `engine/tools/mutants-local -F '<regex of the kernel functions the group changed or added>' <their files>`, niced, while you write the BUILD-LOG entry. Write caught and missed into it; the missed ones go to T while the code is fresh. Advisory: it never blocks a commit, and CI's run stays the score (R-88).
 - **Always** through `engine/tools/check`, never raw `cargo` with your own flags. Read the one-line failures; open a log only when needed. If a failure doesn't reproduce, report it; don't "fix" it.
 - **Budgets:** count budgets and instruction limits are red on every PR, like a failing test; wall time and peak footprint are judged on the reference Mac at the milestone tag (PERFORMANCE §8, BUILDER §13). A miss is one line, e.g. `COUNT E1/tx2_mtg_day def_miss: 701 203 > 619 000`.
 - **End:** append to `engine/BUILD-LOG.md` what turned green, what's next, open STOP-REPORTs, the exception delta and the check's last line. When compacting, keep the milestone, the red vector ids, the open STOP-REPORTs and the files modified.

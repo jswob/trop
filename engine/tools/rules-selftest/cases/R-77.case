@@ -116,3 +116,59 @@ expect: FAIL gungraun-build: error[E0308]
 const PLANTED: u8 = "a mismatched type";
 --- run
 tools/check step gungraun-build
+
+# The logged red (the review after S, 2026-11-03, issue #8): commit-check takes a
+# commit's `Logged-Red:` lines only from T's re-run commit, followed on the branch by a
+# commit to engine/crates/. Each case commits in the scratch and takes the commits back.
+
+case: logged-red-outside-tests
+tool: run
+exit: any
+expect: outside engine/tests/: only T's re-run commit may be red (R-77)
+--- write crates/tally/src/planted.txt
+planted
+--- run
+git add -A && git -c user.name=rules-selftest -c user.email=rules-selftest@invalid commit -q -m "planted: a red commit outside the tests" -m "Logged-Red: g1/planted"
+git -c user.name=rules-selftest -c user.email=rules-selftest@invalid commit -q --allow-empty -m "planted: nothing"
+tools/commit-check HEAD~2
+git reset -q --hard HEAD~2
+
+case: logged-red-without-the-builder
+tool: run
+exit: any
+expect: a logged red with no later commit changing engine/crates/ on the branch (R-77)
+--- write tests/planted.txt
+planted
+--- run
+git add -A && git -c user.name=rules-selftest -c user.email=rules-selftest@invalid commit -q -m "planted: T's re-run, red" -m "Logged-Red: g1/planted"
+tools/commit-check HEAD~1
+git reset -q --hard HEAD~1
+
+case: logged-red-without-ids
+tool: run
+exit: any
+expect: a Logged-Red line names no vector id (R-77)
+--- write tests/planted.txt
+planted
+--- write crates/tally/src/planted.txt
+planted
+--- run
+git add tests/planted.txt && git -c user.name=rules-selftest -c user.email=rules-selftest@invalid commit -q -m "planted: T's re-run, red" -m "Logged-Red:"
+git add -A && git -c user.name=rules-selftest -c user.email=rules-selftest@invalid commit -q -m "planted: the builder's fix"
+tools/commit-check HEAD~2
+git reset -q --hard HEAD~2
+
+case: logged-red-then-the-builder
+tool: run
+exit: any
+expect: commit-check: logged red:
+expect: commit-check: 0 rule-changing commits, no attribution line
+--- write tests/planted.txt
+planted
+--- write crates/tally/src/planted.txt
+planted
+--- run
+git add tests/planted.txt && git -c user.name=rules-selftest -c user.email=rules-selftest@invalid commit -q -m "planted: T's re-run, red" -m "Logged-Red: g1/planted"
+git add -A && git -c user.name=rules-selftest -c user.email=rules-selftest@invalid commit -q -m "planted: the builder's fix"
+tools/commit-check HEAD~2
+git reset -q --hard HEAD~2

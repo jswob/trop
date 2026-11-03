@@ -11,9 +11,14 @@ It fails on:
     without changing tools/RULES.sha256 and a proof (a selftest case or guard-test) in
     the same commit (R-112). A rule change with no proof to change says so in its
     trailer: `Rule-Change: R-<n> approved <date>; no case: <why>`.
+  - a logged red (R-77, the review after S, 2026-11-03): a commit with `Logged-Red:`
+    lines, each naming one red vector or check id, may be red in `check full`, but only
+    as T's re-run commit after a spec ruling: it changes nothing outside engine/tests/,
+    and a later commit in BASE..HEAD changes engine/crates/ (the builder's, which turns
+    those ids green). CI's `check full` on the pull request's head is the rest: green.
 
-It always prints every rule-changing commit with its trailer, for the audit to read
-(R-113). A commit made before this check existed (its parent has no
+It always prints every rule-changing commit with its trailer, and every logged red
+with its ids, for the audit to read (R-113). A commit made before this check existed (its parent has no
 tools/commit_check.py) is listed, never failed.
 """
 
@@ -32,6 +37,7 @@ import guard  # noqa: E402  the one list of rule files
 ATTRIBUTION = re.compile(r"co-authored-by:|noreply@anthropic\.com|generated with \[?claude", re.IGNORECASE)
 TRAILER = re.compile(r"^Rule-Change: R-([1-9][0-9]*) approved (\d{4}-\d{2}-\d{2})\b(?P<rest>.*)$", re.MULTILINE)
 SELF = "engine/tools/commit_check.py"
+LOGGED_RED = re.compile(r"^Logged-Red:[ \t]*(?P<ids>.*)$", re.MULTILINE)
 PROOFS = ("engine/tools/rules-selftest/cases/", "engine/tools/guard_test.py")
 
 
@@ -48,16 +54,35 @@ def is_rule(path):
     return path.startswith("engine/") and guard.is_rule(path.casefold())
 
 
+def logged_red(short, message, changed, later, problems, reds):
+    """A commit's `Logged-Red:` lines (R-77): only T's re-run commit, its red ids listed,
+    the builder's commit after it on the same branch."""
+    ids = [m.group("ids").strip() for m in LOGGED_RED.finditer(message)]
+    if not ids:
+        return
+    reds.append(f"{short}: {', '.join(i or '(none)' for i in ids)}")
+    if any(not i for i in ids):
+        problems.append(f"{short}: a Logged-Red line names no vector id (R-77)")
+    outside = sorted(p for p in changed if p and not p.startswith("engine/tests/"))
+    if outside:
+        problems.append(f"{short}: a logged red changes {outside[0]}, outside engine/tests/: only T's re-run commit may be red (R-77)")
+    if not any(p.startswith("engine/crates/") for c in later for p in c):
+        problems.append(f"{short}: a logged red with no later commit changing engine/crates/ on the branch (R-77)")
+
+
 def check(base):
-    problems, listed = [], []
-    for sha in git("rev-list", "--no-merges", "--reverse", f"{base}..HEAD").split():
+    problems, listed, reds = [], [], []
+    shas = git("rev-list", "--no-merges", "--reverse", f"{base}..HEAD").split()
+    files = {sha: git("show", "--format=", "--name-only", "--no-renames", sha).split("\n") for sha in shas}
+    for k, sha in enumerate(shas):
         message = git("show", "-s", "--format=%B", sha)
         title = message.splitlines()[0] if message else ""
         short = f"{sha[:7]} {title}"
         for line in message.splitlines():
             if ATTRIBUTION.search(line):
                 problems.append(f"{short}: an AI co-author or attribution line: {line.strip()!r} (R-100)")
-        changed = git("show", "--format=", "--name-only", "--no-renames", sha).split("\n")
+        changed = files[sha]
+        logged_red(short, message, changed, [files[s] for s in shas[k + 1:]], problems, reds)
         rules = sorted(p for p in changed if p and is_rule(p))
         if not rules:
             continue
@@ -75,7 +100,7 @@ def check(base):
         no_case = any("no case:" in rest for _, _, rest in trailers)
         if not no_case and not any(p.startswith(PROOFS) for p in changed):
             problems.append(f"{short}: changes rule files with no selftest case or guard-test row, and its trailer gives no 'no case:' reason (R-112)")
-    return problems, listed
+    return problems, listed, reds
 
 
 def main():
@@ -83,12 +108,14 @@ def main():
         print("usage: engine/tools/commit-check BASE", file=sys.stderr)
         return 64
     try:
-        problems, listed = check(sys.argv[1])
+        problems, listed, reds = check(sys.argv[1])
     except RuntimeError as e:
         print(f"FAIL commit-check: {e}")
         return 1
     for line in listed:
         print(f"commit-check: rule change: {line}")
+    for line in reds:
+        print(f"commit-check: logged red: {line}")
     for p in problems:
         print(f"FAIL {p}")
     if problems:
