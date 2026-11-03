@@ -537,3 +537,32 @@ No change in behaviour.
 - The one problem is still the expected `measure_move` `<` → `<=` (missed at 13f97e3, caught since by e233838).
 
 **STOP-REPORTs:** none. **Exceptions:** +0; count 6; report-only 5. **Check:** `check full: green, 31 steps (807s)`.
+
+## 2026-11-03 S, tally 2.1.2: the engine follows the round's rulings (spec round, phase 3 item 4)
+
+**Start.** From T's 12b0a86 (one logged red, allowed by the user): 20 vectors and 48 corpus records red, exactly those a ruling moved. One commit per issue or close group; each had `check full` red only on the rest of T's logged red (`gating`, `gating-release`), the last green.
+
+**Green, per commit:**
+- 44ea4b7 #29 (`syntax/expr.rs`): a `from` term and a `ties by` term each count one depth level. g13/depth_from.
+- fef7650 #30 (`load/strata.rs`): WARN-UNREAD for a place no line names: not an edge target, not the owner of a thing a row or a given names, not an observed leg's end, not a pad's. g13/unread, X's three runs, g7/deep_plan, g10/firsts, 48 corpus records. 4 builder tests (`ask_cases`, `load_cases`, `projection_cases` ×2) gain refcore's warning line, each input run on refcore first.
+- 97ecd62 #31 (`walk/day.rs` `book_leg_ends`): a leg whose place is a hole books its known side and is left out of conservation (L §5.14, E §9 item 1). g9/leg_hole. **Closes the STOP-REPORT of 2026-11-01** ("a leg whose place is a hole refuses ENGINE-INVARIANT in refcore").
+- 0e84582 #33 #39 (`walk/plan.rs` `Term`, `book/ledger.rs`, `book/members.rs`, `observe.rs`, `adjust.rs`): one typed movement order, compared term by term as refcore's `order_key` (a day, an int, a text, a tuple), with no text form. `repr`, `member_text`, `day_repr` and `day_max_repr` are deleted, and with them the 2 survivor rows of #48. g10/ledger, g10/ties_typed, g12/order_typed.
+- 718cff0 #38 (`walk/reads.rs`): flows of a place inside a projection's walk sums the chain of walks it continues, each read up to where the next one starts. g8/flows_before.
+- cf5690d #46 (`walk/day.rs`, `state.rs`, `book/reading.rs`): an anchored reading's place, an opening's included, is tested by its sign rule at its point (`Walk::sign_anchor`, `Walk::open_group`). A place with no leg in the group is refused with its reading's message. A reading after a decision is M2's (NotBuilt). g9/sign, g9/reading_close, g9/reading_start.
+- 2308144 #34 (`book/adjust.rs`, `walk/agenda.rs`, `walk/day.rs`, `walk/reads.rs`, `book/members.rs`): a refused re-measurement makes a refused adjustment, and a hole `when` makes a hole one. A step after it is measured against that unknown state. A refused adjustment's `adjusts` and `day` stay readable (41e619f), its change and remainder refuse, and its places refuse from its day. g11/adjust, g11/remeasure_refused, _refused_when, _refused_booking, _hole_when. `vectors.py --engine`: 0 of 93 differ.
+- #23, #32, #43, #44 needed no engine change. T's vectors were green from the start: g8/point_by_id and its twin, g6/currencies, g11/settle_order and its twin; #23's codes are M0's.
+
+**Size:** net +484 lines in `crates/tally/src` (673 +, 189 −), about 143 of the added lines comments. That is above the plan's ~140–230, mostly `adjust.rs` (+155, the known path split from the unknown ones) and `strata.rs` (+116). Per module: adjust +155, strata +116, plan +63, day +63, reads +41, agenda +15, expr +15, reading +13, observe +7, members +4, state +3, lib 0, ledger −11. Tests +4 lines.
+
+**Mutants** (`tools/mutants-local` on the 10 kernel files changed, `-F`: every mutant in the 45 functions changed or added, plus every listed survivor of those files): 314 mutants in 58 min, 151 caught, 130 missed, 0 timed out, 33 unviable.
+- The 45 functions: 163 mutants, 121 caught, 11 missed, 31 unviable. 10 of the 11 are equivalent, so 121 of 122 scored mutants are caught.
+- Listed rows now caught: 0. The `leg_amount` rows still survive T's g6/currencies.
+- Gone: `Engine::group_legs` `&&` → `||`. Its code moved to `Walk::open_group`, where the same mutant survives; that row takes its key, with the reason reworded.
+- New rows: 6 equivalent. `Walk::sign_anchor` `||` → `&&`; `<impl PartialOrd for Term>::partial_cmp` → None; `Term::rank` → 0 and → 1; `Engine::walk_chain` `>` → `==` and → `>=`.
+- New row, **missed, for T:** `against_hole` `==` → `!=`. It gives a leg's hole adjustment the other legs' hole amounts. The row has the recipe, and refcore and the engine agree on it byte for byte (the builder's probe).
+- Rows: 200, 104 `R-87: equivalent:` and 96 `R-87: missed:` (was 195: 98 and 97, less the 2 #48 rows of 0e84582).
+- Row 5: on CI's 91.6 % (caught 1203, missed 215, equivalent 104), missed is down 1 net (the 2 #48 rows gone, against_hole new). The new equivalents subtract as many mutants as they add, so the score stays at about 91.6 % or above before the new code's caught mutants. The nightly gives the figure. Survivors in files I didn't change (`settle.rs`, `order.rs`, `point.rs`) may be caught by T's new vectors; the nightly shows them.
+
+**Next:** explain over adjustments at M1, and readings after a decision (the sign rule's point 2) at M2. As the spec has it, #30 warns about a place that only rows keyed by it name (`opening`, a reading), an `anchor` or a `covers` line (L §8.5, refcore's `values_naming`).
+
+**STOP-REPORTs:** none open. **Exceptions:** +0; count 6; report-only 5. **Check:** `check full: green, 31 steps (535s)`.
