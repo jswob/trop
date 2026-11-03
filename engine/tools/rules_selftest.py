@@ -799,6 +799,12 @@ def ci_problems():
             problems.append("R-77: .github/workflows/engine.yml doesn't run `engine/tools/check full`")
         if not re.search(r"\n  pull_request:\n    branches: \[master\]\n", text):
             problems.append("R-77: .github/workflows/engine.yml doesn't run on pull requests into master")
+        # issue #6 (2026-11-03): every pull request runs the workflow, and `engine gate`
+        # always reports, so it can be required
+        if re.search(r"\n  pull_request:\n(    [^\n]*\n)*?    paths(-ignore)?:", text):
+            problems.append("R-77: .github/workflows/engine.yml filters pull requests by path, so `engine gate` can't be required")
+        if not re.search(r"\n  gate:\n    name: engine gate\n    needs: \[changes, check, instructions\]\n    if: always\(\)\n", text):
+            problems.append("R-77: .github/workflows/engine.yml has no `engine gate` job that needs check full and always runs")
         # R-84: the mutants baseline and shards run the gating milestones' tests too
         if not re.search(r'args="\$\(tools/milestones args\)"\n.*cargo nextest run [^\n]*--profile mutants \$args\n',
                          text, re.S):
