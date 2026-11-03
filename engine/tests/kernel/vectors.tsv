@@ -64,3 +64,6 @@ g7/flows	g7		engine/tests/kernel/	engine/tests/kernel/g7/flows.tally
 g7/deep	g7		engine/tests/kernel/	engine/tests/kernel/g7/deep.tally		
 g7/deep_plan	g7		engine/tests/kernel/	engine/tests/kernel/g7/deep_plan.tally		
 g8/after	g8		engine/tests/kernel/	engine/tests/kernel/g8/after.tally		
+g10/observe	g10		engine/tests/kernel/	engine/tests/kernel/g10/observe.tally		
+g10/ledger	g10		engine/tests/kernel/	engine/tests/kernel/g10/ledger.tally		
+g10/firsts	g10		engine/tests/kernel/	engine/tests/kernel/g10/firsts.tally		

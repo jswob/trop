@@ -10439,4 +10439,657 @@ version openings
   opening[z_box] = 10 at 2026-01-01 start
 ,,1:0,107:q_after: (refused: RUN-DIV division by zero, 1 000.00 PLN, 0.00 PLN)
   law date 2026-02-15, cut 2026-02-15
+,11:g10/observe,3:g10,21:run g10/observe.tally,6987:17:g10/observe.tally,6960:model g10_observe
+  tally 2
+  on 2026-03-15
+  start 2026-01-01
+  end 2026-03-31
+  note "T, issue #41, G10: observations (L §5.19, E §6.1): a transfer between two places two statements cover, one row in each, each booking its own end; a link to an instance that doesn't touch the row's places and one that lacks a leg (RUN-RECORD), each at a place of its own; two rows of different versions that fulfil one instance and disagree (WARN-LEGS) beside two that agree, two of one version that disagree, and two-leg rows that agree; a row a later version restates, read before and after; covered over two versions in turn, over a span half covered, and at a cut on a version's known day; a link whose instance's when reads an assumed row, the register of judging it carried by the row that names it."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit PLN: currency minor 0.01
+
+unit etf_unit "a fund unit"
+
+kind buys: event certain
+  leg cash: PLN
+  leg units: etf_unit
+
+index month = month 2026-01..2026-02
+
+place konto: accounts PLN lives 2026-01-01..
+
+place save: accounts PLN lives 2026-01-01..
+
+place k2: accounts PLN lives 2026-01-01..
+
+place k3: accounts PLN lives 2026-01-01..
+
+place k6: accounts PLN lives 2026-01-01..
+
+place fund: holdings etf_unit priced fund_price lives 2026-01-01..
+
+place fund2: holdings etf_unit priced fund_price lives 2026-01-01..
+
+place shop: outside lives 2026-01-01..
+
+place market: outside lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input bank: observed
+
+input fund_price[m in month]: num PLN/etf_unit
+
+input rent_amt: money PLN
+
+input rent_dom: int
+
+input fee_day: date
+
+input fee_amt: money PLN
+
+input buy_dom: int
+
+input buy_units[m in month]: num etf_unit
+
+input gift_day: date
+
+input gift_amt: money PLN
+
+input rare_day: date
+
+input rare_ok: bool
+
+input rare_amt: money PLN
+
+move rent[m in month]: transfers
+  on day_of(m, rent_dom)
+  leg cash from konto to shop amount rent_amt
+
+move fee: transfers
+  on fee_day
+  leg cash from konto to shop amount fee_amt
+
+move buy[m in month]: buys
+  on day_of(m, buy_dom)
+  leg cash from konto to market amount round(buy_units[m] * fund_price[m], minor(PLN), half-up)
+  leg units from market to fund amount buy_units[m]
+
+move buy2[m in month]: buys
+  on day_of(m, buy_dom)
+  leg cash from k2 to market amount round(buy_units[m] * fund_price[m], minor(PLN), half-up)
+  leg units from market to fund2 amount buy_units[m]
+
+move gift: transfers
+  on gift_day
+  leg cash from world to save amount gift_amt
+
+move rare: transfers
+  on rare_day
+  when rare_ok
+  leg cash from k6 to shop amount rare_amt
+
+ask q_rare_k6: bal(k6, 2026-02-28) law cut
+
+ask q_rare_konto: bal(konto, 2026-02-28) law cut
+
+ask q_bal: bal(konto, d), bal(save, d), bal(k2, d), bal(k3, d), bal(fund, d) for d in [2026-01-04, 2026-01-10, 2026-01-31, 2026-02-28] law cut
+
+ask q_early: bal(konto, d), bal(save, d) for d in [2026-01-10, 2026-01-31] law cut as known 2026-02-10
+
+ask q_cov: covered(konto, 2026-01-01 .. 2026-02-28), covered(save, 2026-01-01 .. 2026-02-28), covered(save, 2026-01-01 .. 2026-01-31) law cut
+
+ask q_cov_before: covered(konto, 2026-01-01 .. 2026-02-28) law cut as known 2026-03-01
+
+ask q_cov_on: covered(konto, 2026-01-01 .. 2026-02-28) law cut as known 2026-03-02
+
+version facts
+  cite fixture
+  governs always
+  known 2025-12-01
+  fund_price[2026-01] = 10 "a unit's price"
+  fund_price[2026-02] = 10
+  rent_amt = 600.00
+  rent_dom = 5 "rent on the 5th"
+  fee_day = 2026-01-20 "a fee two rows of one version disagree on"
+  fee_amt = 5.00
+  buy_dom = 18 "buys on the 18th"
+  buy_units[2026-01] = 2 "two units"
+  buy_units[2026-02] = 1
+  gift_day = 2026-01-15 "a gift into save"
+  gift_amt = 9.00
+  rare_day = 2026-02-03
+  rare_ok = true assumed "the rare payment runs this year"
+  rare_amt = 12.00
+
+version openings
+  cite fixture
+  governs always
+  known 2025-12-31
+  opening[konto] = 3000 at 2026-01-01 start
+  opening[save] = 100 at 2026-01-01 start
+  opening[k2] = 500 at 2026-01-01 start
+  opening[k3] = 500 at 2026-01-01 start
+  opening[k6] = 100 at 2026-01-01 start
+  opening[fund] = 0 at 2026-01-01 start
+  opening[fund2] = 0 at 2026-01-01 start
+
+version bank_k
+  cite fixture
+  governs 2026-01
+  known 2026-02-05
+  covers konto
+  bank[k_rent] = (on: 2026-01-05, kind: transfers, leg cash from konto to shop amount 600.00 PLN, fulfils: rent[2026-01]) "the rent"
+  bank[k_move] = (on: 2026-01-10, kind: transfers, leg cash from konto to save amount 50.00 PLN) "to savings, as konto's statement shows it"
+  bank[k_buy] = (on: 2026-01-18, kind: buys, leg cash from konto to market amount 20.00 PLN, leg units from market to fund amount 2 etf_unit, fulfils: buy[2026-01]) "a purchase, both legs"
+
+version bank_k2
+  cite fixture
+  governs 2026-02
+  known 2026-03-02
+  covers konto
+  bank[k_rent2] = (on: 2026-02-05, kind: transfers, leg cash from konto to shop amount 600.00 PLN, fulfils: rent[2026-02]) "February's rent"
+
+version bank_s
+  cite fixture
+  governs 2026-01
+  known 2026-02-06
+  covers save
+  bank[s_move] = (on: 2026-01-10, kind: transfers, leg cash from konto to save amount 50.00 PLN) "to savings, as save's statement shows it"
+
+version bank_x
+  cite fixture
+  governs 2026-01..2026-02
+  known 2026-02-07
+  bank[x_rent] = (on: 2026-01-06, kind: transfers, leg cash from konto to shop amount 610.00 PLN, fulfils: rent[2026-01]) "the rent, as the landlord's book has it"
+  bank[x_rent2] = (on: 2026-02-05, kind: transfers, leg cash from konto to shop amount 600.00 PLN, fulfils: rent[2026-02]) "February's, agreeing"
+  bank[x_fee_a] = (on: 2026-01-20, kind: transfers, leg cash from konto to shop amount 5.00 PLN, fulfils: fee) "the fee"
+  bank[x_fee_b] = (on: 2026-01-21, kind: transfers, leg cash from konto to shop amount 6.00 PLN, fulfils: fee) "the fee again, one more"
+  bank[x_buy] = (on: 2026-01-18, kind: buys, leg cash from konto to market amount 20.00 PLN, leg units from market to fund amount 2 etf_unit, fulfils: buy[2026-01]) "the purchase, agreeing"
+
+version bank_fix
+  cite fixture
+  governs 2026-01
+  known 2026-02-20
+  replace bank[x_rent] = (on: 2026-01-06, kind: transfers, leg cash from konto to shop amount 620.00 PLN, fulfils: rent[2026-01]) "the landlord's book, corrected"
+
+version bank_2
+  cite fixture
+  governs 2026-01
+  known 2026-02-05
+  covers k2
+  bank[k2_buy] = (on: 2026-01-18, kind: transfers, leg cash from k2 to market amount 20.00 PLN, fulfils: buy2[2026-01]) "a purchase recorded as a transfer: no units leg"
+
+version bank_6
+  cite fixture
+  governs 2026-02
+  known 2026-03-02
+  covers k6
+  bank[k6_rare] = (on: 2026-02-03, kind: transfers, leg cash from k6 to shop amount 12.00 PLN, fulfils: rare) "the rare payment, whose when reads an assumed row"
+
+version bank_3
+  cite fixture
+  governs 2026-01
+  known 2026-02-05
+  covers k3
+  bank[k3_gift] = (on: 2026-01-15, kind: transfers, leg cash from k3 to shop amount 9.00 PLN, fulfils: gift) "names the gift into save, which doesn't touch k3 or shop"
+,,1:0,1789:q_bal (d = 2026-01-04): (3 000.00 PLN, 100.00 PLN, 500.00 PLN, 500.00 PLN, 0 etf_unit)
+  law date 2026-03-15, cut 2026-03-15
+q_bal (d = 2026-01-10): (2 350.00 PLN, 150.00 PLN, 500.00 PLN, 500.00 PLN, 0 etf_unit)
+  law date 2026-03-15, cut 2026-03-15
+q_bal (d = 2026-01-31): (2 330.00 PLN, 150.00 PLN, refused: RUN-RECORD observation bank[k2_buy] fulfils buy2[2026-01] and lacks its leg units, refused: RUN-RECORD observation bank[k3_gift] fulfils gift, which doesn't exist or doesn't touch its places, 4 etf_unit)
+  open: buy2[2026-01]
+  open: gift
+  law date 2026-03-15, cut 2026-03-15
+q_bal (d = 2026-02-28): (1 730.00 PLN, 150.00 PLN, refused: RUN-RECORD observation bank[k2_buy] fulfils buy2[2026-01] and lacks its leg units, refused: RUN-RECORD observation bank[k3_gift] fulfils gift, which doesn't exist or doesn't touch its places, 4 etf_unit)
+  unfulfilled: buy2[2026-02]
+  open: buy2[2026-01]
+  open: buy[2026-02]
+  open: gift
+  law date 2026-03-15, cut 2026-03-15
+q_cov: (true, false, true)
+  law date 2026-03-15, cut 2026-03-15
+q_cov_before: false
+  law date 2026-03-01, cut 2026-03-01
+q_cov_on: true
+  law date 2026-03-02, cut 2026-03-02
+q_early (d = 2026-01-10): (2 350.00 PLN, 150.00 PLN)
+  law date 2026-02-10, cut 2026-02-10
+q_early (d = 2026-01-31): (2 330.00 PLN, 150.00 PLN)
+  open: gift
+  law date 2026-02-10, cut 2026-02-10
+q_rare_k6: 88.00 PLN
+  assumed: the rare payment runs this year (rare_ok)
+  law date 2026-03-15, cut 2026-03-15
+q_rare_konto: 1 730.00 PLN
+  open: buy[2026-02]
+  law date 2026-03-15, cut 2026-03-15
+warning: WARN-LEGS the two observations of rent[2026-01] disagree: bank[k_rent] (600.00 PLN) and bank[x_rent] (610.00 PLN)
+warning: WARN-LEGS the two observations of rent[2026-01] disagree: bank[k_rent] (600.00 PLN) and bank[x_rent] (620.00 PLN)
+,10:g10/ledger,3:g10,20:run g10/ledger.tally,7794:16:g10/ledger.tally,7768:model g10_ledger
+  tally 2
+  on 2026-03-15
+  start 2026-01-01
+  end 2026-03-31
+  note "T, issue #41, G10: stated readings and the residual ledger (L §5.19, E §6.1–§6.3): konto padded from buffer up, by nothing and down, a later version restating the middle reading, read before and after it is known; buffer padded from konto at the instant of konto's last pad, so the readings' rank on that day decides what each sees; save anchored; matched lines, a certain instance observed short, uncertain ones partly and fully fulfilled, expected but missing ones, twelve of one move on one day ordered by the movement order, an observation paid a month early, one that fulfils nothing, two whose links are refused, one beside an instance of its move that exists, decisions on covered days in the span and after it; on k4, instances whose day is a hole, matched and missing; on k5, two moves whose amounts are holes, their questions sorting against their names."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit PLN: currency minor 0.01
+
+kind maybe: transfers uncertain
+
+index month = month 2026-01..2026-02
+
+index tips = [t01, t02, t03, t04, t05, t06, t07, t08, t09, t10, t11, t12]
+
+index ab = [a, b]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place buffer: accounts PLN lives 2026-01-01..
+
+place save: accounts PLN lives 2026-01-01..
+
+place k4: accounts PLN lives 2026-01-01..
+
+place k5: accounts PLN lives 2026-01-01..
+
+place shop: outside lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input bank: observed
+
+input rent_amt: money PLN
+
+input rent_dom: int
+
+input fee_day: date
+
+input fee_amt: money PLN
+
+input part_day: date
+
+input part_amt: money PLN
+
+input prom_day: date
+
+input prom_amt: money PLN
+
+input prom2_day: date
+
+input prom2_amt: money PLN
+
+input flag: bool
+
+input flag_day: date
+
+input flag_amt: money PLN
+
+input flag2[m in month]: bool
+
+input flag2_dom: int
+
+input tip_day: date
+
+input tip_amt: money PLN
+
+input sweep_dom: int
+
+input small: money PLN
+
+input big: money PLN
+
+input odd_day[k in ab]: date question "When does the odd payment go out?"
+
+input odd_amt: money PLN
+
+input odd2_day: date question "When does the second odd payment go out?"
+
+input odd2_amt: money PLN
+
+input odd0_day: date question "When does nothing go out?"
+
+input hz_day: date
+
+input hz_amt: money PLN question "Aa: how much is the first repair?"
+
+input ha_day: date
+
+input ha_amt: money PLN question "Zz: how much is the second repair?"
+
+move rent[m in month]: transfers
+  on day_of(m, rent_dom)
+  leg cash from konto to shop amount rent_amt
+
+move fee: transfers
+  on fee_day
+  leg cash from konto to shop amount fee_amt
+
+move short: transfers
+  on part_day
+  leg cash from konto to shop amount part_amt
+
+move promise: maybe
+  on prom_day
+  leg cash from world to konto amount prom_amt
+
+move promise2: maybe
+  on prom2_day
+  leg cash from world to konto amount prom2_amt
+
+move flagged: transfers
+  on flag_day
+  when flag
+  leg cash from konto to shop amount flag_amt
+
+move flagged2[m in month]: transfers
+  on day_of(m, flag2_dom)
+  when flag2[m]
+  leg cash from konto to shop amount flag_amt
+
+move tip[t in tips]: transfers
+  on tip_day
+  leg cash from konto to shop amount tip_amt
+
+move sweep[m in month]: transfers
+  on day_of(m, sweep_dom)
+  reads konto
+  leg cash from konto to save amount if bal(konto) > 0 then small else big
+
+move odd[k in ab]: transfers
+  on odd_day[k]
+  leg cash from k4 to shop amount odd_amt
+
+move odd2: transfers
+  on odd2_day
+  leg cash from k4 to shop amount odd2_amt
+
+move odd0: transfers
+  on odd0_day
+  leg cash from k4 to shop amount 0
+
+move hz: transfers
+  on hz_day
+  leg cash from k5 to shop amount hz_amt
+
+move ha: transfers
+  on ha_day
+  leg cash from k5 to shop amount ha_amt
+
+ask q_res: residuals konto 2026-01 law cut
+
+ask q_res_feb: residuals konto 2026-02 law cut
+
+ask q_res4: residuals k4 2026-01 law cut
+
+ask q_res5: residuals k5 2026-01 law cut
+
+ask q_bal: bal(konto, d), bal(buffer, d), bal(save, d) for d in [2026-01-09, 2026-01-20, 2026-01-28] law cut
+
+ask q_buf: bal(buffer, 2026-01-09) law cut
+
+ask q_bal_early: bal(konto, 2026-01-20), bal(buffer, 2026-01-20) law cut as known 2026-02-10
+
+ask q_res_buf: residuals buffer 2026-01 law cut
+
+ask q_res_save: residuals save 2026-01 law cut
+
+version facts
+  cite fixture
+  governs always
+  known 2025-12-01
+  rent_amt = 600.00
+  rent_dom = 5 "rent on the 5th"
+  fee_day = 2026-01-12 "a fee nobody paid"
+  fee_amt = 5.00
+  part_day = 2026-01-14 "a certain payment observed short"
+  part_amt = 100.00
+  prom_day = 2026-01-22 "an uncertain one, partly fulfilled"
+  prom_amt = 100.00
+  prom2_day = 2026-01-23 "an uncertain one, fully fulfilled"
+  prom2_amt = 50.00
+  flag = false "flagged doesn't exist"
+  flag_day = 2026-01-29
+  flag_amt = 8.00
+  flag2[2026-01] = false "January's doesn't exist"
+  flag2[2026-02] = true "February's does"
+  flag2_dom = 27
+  tip_day = 2026-01-08 "twelve tips on one day"
+  tip_amt = 1.00
+  sweep_dom = 25 "a decision on the 25th"
+  small = 10.00
+  big = 100.00
+  odd_day[b] = 2026-01-25 "odd[a]'s day is a hole"
+  odd_amt = 7.00
+  odd2_amt = 4.00
+  hz_day = 2026-01-10
+  ha_day = 2026-01-12
+
+version openings
+  cite fixture
+  governs always
+  known 2025-12-31
+  opening[konto] = 3000 at 2026-01-01 start
+  opening[buffer] = 1000 at 2026-01-01 start
+  opening[save] = 0 at 2026-01-01 start
+  opening[k4] = 500 at 2026-01-01 start
+  opening[k5] = 500 at 2026-01-01 start
+
+version bank_k
+  cite fixture
+  governs 2026-01
+  known 2026-02-05
+  covers konto
+  pad konto from buffer
+  pad buffer from konto
+  anchor save
+  bank[k_rent] = (on: 2026-01-05, kind: transfers, leg cash from konto to shop amount 600.00 PLN, fulfils: rent[2026-01]) "the rent"
+  bank[k_part] = (on: 2026-01-14, kind: transfers, leg cash from konto to shop amount 90.00 PLN, fulfils: short) "ten short"
+  bank[k_prom] = (on: 2026-01-22, kind: transfers, leg cash from world to konto amount 60.00 PLN, fulfils: promise) "short of the promise"
+  bank[k_prom2] = (on: 2026-01-23, kind: transfers, leg cash from world to konto amount 50.00 PLN, fulfils: promise2) "all of it"
+  bank[k_int] = (on: 2026-01-27, kind: transfers, leg cash from world to konto amount 3.00 PLN) "interest nobody planned"
+  bank[k_early] = (on: 2026-01-30, kind: transfers, leg cash from konto to shop amount 600.00 PLN, fulfils: rent[2026-02]) "February's rent, paid early"
+  bank[k_flag] = (on: 2026-01-31, kind: transfers, leg cash from konto to shop amount 8.00 PLN, fulfils: flagged) "names flagged, which doesn't exist"
+  bank[k_flag2] = (on: 2026-01-31, kind: transfers, leg cash from konto to shop amount 8.00 PLN, fulfils: flagged2[2026-01]) "names January's flagged2, which doesn't exist while February's does"
+  stated[konto] = 2430.00 at 2026-01-09 end "thirty above the booked balance"
+  stated[konto] = 2340.00 at 2026-01-20 end "as booked"
+  stated[konto] = 2433.00 at 2026-01-28 end "twenty below"
+  stated[buffer] = 990.00 at 2026-01-28 end "the buffer counted at the instant of konto's last statement"
+  stated[save] = 15.00 at 2026-01-28 end "save counted"
+
+version bank_kfix
+  cite fixture
+  governs 2026-01
+  known 2026-02-20
+  pad konto from buffer
+  replace stated[konto] = 2345.00 at 2026-01-20 end "the statement corrected: five above"
+
+version bank_k2
+  cite fixture
+  governs 2026-02
+  known 2026-03-02
+  covers konto
+
+version bank_4
+  cite fixture
+  governs 2026-01
+  known 2026-02-05
+  covers k4
+  bank[o_a] = (on: 2026-01-25, kind: transfers, leg cash from k4 to shop amount 7.00 PLN, fulfils: odd[a]) "the undated one, paid"
+  bank[o_b] = (on: 2026-01-25, kind: transfers, leg cash from k4 to shop amount 7.00 PLN, fulfils: odd[b]) "the dated one, paid"
+
+version bank_5
+  cite fixture
+  governs 2026-01
+  known 2026-02-05
+  covers k5
+,,1:0,6343:q_bal (d = 2026-01-09): (2 430.00 PLN, 970.00 PLN, 0.00 PLN)
+  pad: konto 2026-01-09 end, pads:bank_k:konto@2026-01-09 end of 30.00 PLN
+  open: tip[t01]
+  open: tip[t02]
+  open: tip[t03]
+  open: tip[t04]
+  open: tip[t05]
+  open: tip[t06]
+  open: tip[t07]
+  open: tip[t08]
+  open: tip[t09]
+  open: tip[t10]
+  open: tip[t11]
+  open: tip[t12]
+  law date 2026-03-15, cut 2026-03-15
+q_bal (d = 2026-01-20): (2 345.00 PLN, 965.00 PLN, 0.00 PLN)
+  pad: konto 2026-01-09 end, pads:bank_k:konto@2026-01-09 end of 30.00 PLN
+  pad: konto 2026-01-20 end, pads:bank_kfix:konto@2026-01-20 end of 5.00 PLN
+  open: fee
+  open: tip[t01]
+  open: tip[t02]
+  open: tip[t03]
+  open: tip[t04]
+  open: tip[t05]
+  open: tip[t06]
+  open: tip[t07]
+  open: tip[t08]
+  open: tip[t09]
+  open: tip[t10]
+  open: tip[t11]
+  open: tip[t12]
+  law date 2026-03-15, cut 2026-03-15
+q_bal (d = 2026-01-28): (2 433.00 PLN, 990.00 PLN, 15.00 PLN)
+  anchor: save 2026-01-28 end, stated 15.00 PLN, difference 15.00 PLN
+  pad: buffer 2026-01-28 end, pads:bank_k:buffer@2026-01-28 end of 25.00 PLN
+  pad: konto 2026-01-28 end, pads:bank_k:konto@2026-01-28 end of 0.00 PLN
+  law date 2026-03-15, cut 2026-03-15
+q_bal_early: (2 340.00 PLN, 970.00 PLN)
+  pad: konto 2026-01-09 end, pads:bank_k:konto@2026-01-09 end of 30.00 PLN
+  pad: konto 2026-01-20 end, pads:bank_k:konto@2026-01-20 end of 0.00 PLN
+  open: tip[t01]
+  open: tip[t02]
+  open: tip[t03]
+  open: tip[t04]
+  open: tip[t05]
+  open: tip[t06]
+  open: tip[t07]
+  open: tip[t08]
+  open: tip[t09]
+  open: tip[t10]
+  open: tip[t11]
+  open: tip[t12]
+  law date 2026-02-10, cut 2026-02-10
+q_buf: 970.00 PLN
+  pad: konto 2026-01-09 end, pads:bank_k:konto@2026-01-09 end of 30.00 PLN
+  open: tip[t01]
+  open: tip[t02]
+  open: tip[t03]
+  open: tip[t04]
+  open: tip[t05]
+  open: tip[t06]
+  open: tip[t07]
+  open: tip[t08]
+  open: tip[t09]
+  open: tip[t10]
+  open: tip[t11]
+  open: tip[t12]
+  law date 2026-03-15, cut 2026-03-15
+q_res: residuals konto 2026-01
+  2026-01 move promise: model 100.00 PLN, observed 60.00 PLN, difference -40.00 PLN
+    partly fulfilled promise on 2026-01-22: model 100.00 PLN, observed 60.00 PLN, difference -40.00 PLN, remainder 40.00 PLN: when does the rest arrive, or is it written off?
+  2026-01 balance: model 7 173.00 PLN, observed 7 208.00 PLN, difference 35.00 PLN
+    balance konto 2026-01-09 end (padded): booked 2 400.00 PLN, stated 2 430.00 PLN, gap 30.00 PLN
+    balance konto 2026-01-20 end (padded): booked 2 340.00 PLN, stated 2 345.00 PLN, gap 5.00 PLN
+    balance konto 2026-01-28 end (padded): booked 2 433.00 PLN, stated 2 433.00 PLN, gap 0.00 PLN
+  2026-01 unexplained: model 0.00 PLN, observed -13.00 PLN, difference -13.00 PLN
+    unexplained bank[k_flag] on 2026-01-31: observed -8.00 PLN
+    unexplained bank[k_flag2] on 2026-01-31: observed -8.00 PLN
+    unexplained bank[k_int] on 2026-01-27: observed 3.00 PLN
+  2026-01 move tip: model -12.00 PLN, observed 0.00 PLN, difference 12.00 PLN
+    expected but missing tip[t01] on 2026-01-08: model -1.00 PLN
+    expected but missing tip[t02] on 2026-01-08: model -1.00 PLN
+    expected but missing tip[t11] on 2026-01-08: model -1.00 PLN
+    expected but missing tip[t12] on 2026-01-08: model -1.00 PLN
+    expected but missing tip[t03] on 2026-01-08: model -1.00 PLN
+    expected but missing tip[t04] on 2026-01-08: model -1.00 PLN
+    expected but missing tip[t05] on 2026-01-08: model -1.00 PLN
+    expected but missing tip[t06] on 2026-01-08: model -1.00 PLN
+    expected but missing tip[t07] on 2026-01-08: model -1.00 PLN
+    expected but missing tip[t08] on 2026-01-08: model -1.00 PLN
+    expected but missing tip[t09] on 2026-01-08: model -1.00 PLN
+    expected but missing tip[t10] on 2026-01-08: model -1.00 PLN
+  2026-01 move short: model -100.00 PLN, observed -90.00 PLN, difference 10.00 PLN
+    matched short on 2026-01-14: model -100.00 PLN, observed -90.00 PLN, difference 10.00 PLN, timing +0 days
+  2026-01 move sweep: model -10.00 PLN, observed 0.00 PLN, difference 10.00 PLN
+    expected but missing sweep[2026-01] on 2026-01-25: model -10.00 PLN
+  2026-01 move fee: model -5.00 PLN, observed 0.00 PLN, difference 5.00 PLN
+    expected but missing fee on 2026-01-12: model -5.00 PLN
+  2026-01 move promise2: model 50.00 PLN, observed 50.00 PLN, difference 0.00 PLN
+    matched promise2 on 2026-01-23: model 50.00 PLN, observed 50.00 PLN, difference 0.00 PLN, timing +0 days
+  2026-01 move rent: model -600.00 PLN, observed -600.00 PLN, difference 0.00 PLN
+    matched rent[2026-01] on 2026-01-05: model -600.00 PLN, observed -600.00 PLN, difference 0.00 PLN, timing +0 days
+  law date 2026-03-15, cut 2026-03-15
+q_res4: residuals k4 2026-01
+  ?: model -4.00 PLN, observed 0.00 PLN, difference 4.00 PLN
+    expected but missing odd2 on ?"When does the second odd payment go out?" (odd2_day): model -4.00 PLN
+  2026-01 move odd: model -14.00 PLN, observed -14.00 PLN, difference 0.00 PLN
+    matched odd[b] on 2026-01-25: model -7.00 PLN, observed -7.00 PLN, difference 0.00 PLN, timing +0 days
+    matched odd[a] on 2026-01-25: model -7.00 PLN, observed -7.00 PLN, difference 0.00 PLN, timing +0 days
+  law date 2026-03-15, cut 2026-03-15
+q_res5: residuals k5 2026-01
+  2026-01 move hz: model ?"Aa: how much is the first repair?" (hz_amt), observed 0.00 PLN, difference ?"Aa: how much is the first repair?" (hz_amt)
+    expected but missing hz on 2026-01-10: model ?"Aa: how much is the first repair?" (hz_amt)
+  2026-01 move ha: model ?"Zz: how much is the second repair?" (ha_amt), observed 0.00 PLN, difference ?"Zz: how much is the second repair?" (ha_amt)
+    expected but missing ha on 2026-01-12: model ?"Zz: how much is the second repair?" (ha_amt)
+  law date 2026-03-15, cut 2026-03-15
+q_res_buf: residuals buffer 2026-01
+  2026-01 balance: model 965.00 PLN, observed 990.00 PLN, difference 25.00 PLN
+    balance buffer 2026-01-28 end (padded): booked 965.00 PLN, stated 990.00 PLN, gap 25.00 PLN
+  law date 2026-03-15, cut 2026-03-15
+q_res_feb: refused: RUN-RECORD observation bank[k_flag2] fulfils flagged2[2026-01], which doesn't exist or doesn't touch its places
+q_res_save: residuals save 2026-01
+  2026-01 balance: model 0.00 PLN, observed 15.00 PLN, difference 15.00 PLN
+    balance save 2026-01-28 end (anchored): booked 0.00 PLN, stated 15.00 PLN, gap 15.00 PLN
+  law date 2026-03-15, cut 2026-03-15
+,10:g10/firsts,3:g10,20:run g10/firsts.tally,1208:16:g10/firsts.tally,1182:model g10_firsts
+  tally 2
+  on 2026-02-15
+  start 2026-01-01
+  end 2026-03-31
+  note "T, issue #41, G10: a place's first reading as a cut sees it (L §8.1 HOLE-ANCHOR, E §4.3 step 1): late lives before the run with no opening; its reading on 11 February is known on the 13th, the one on the 12th since January; a projection from the 10th, whose cut sees only the later reading, asks of the 11th, and so does the main walk."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit PLN: currency minor 0.01
+
+place late: accounts PLN lives 2025-06-01..
+
+place konto: accounts PLN lives 2026-01-01..
+
+ask q_first: bal(late, 2026-02-11) from 2026-02-10, bal(late, 2026-02-10), bal(late, 2026-02-11), bal(late, 2026-02-12) law cut
+
+version openings
+  cite fixture
+  governs always
+  known 2025-12-31
+  opening[konto] = 100 at 2026-01-01 start
+
+version early_v
+  cite fixture
+  governs always
+  known 2026-01-05
+  anchor late
+  stated[late] = 50.00 at 2026-02-12 end "the reading known since January"
+
+version late_v
+  cite fixture
+  governs always
+  known 2026-02-13
+  anchor late
+  stated[late] = 40.00 at 2026-02-11 end "an earlier reading, known only on the 13th"
+,,1:0,346:q_first: (?"late has no balance before 2026-02-12" (late), ?"late has no balance before 2026-02-11" (late), 40.00 PLN, 50.00 PLN)
+  anchor: late 2026-02-11 end, stated 40.00 PLN, difference ?"late has no balance before 2026-02-11" (late)
+  anchor: late 2026-02-12 end, stated 50.00 PLN, difference 10.00 PLN
+  law date 2026-02-15, cut 2026-02-15
 ,

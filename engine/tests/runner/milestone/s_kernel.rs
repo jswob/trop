@@ -14,8 +14,8 @@ mod tests {
     use tally_runner::kernel::{VECTORS, difference, vectors};
 
     /// The groups this target tests, one `#[test]` each.
-    const GROUPS: [&str; 10] = [
-        "checks", "g1", "g2", "g3", "g4", "g5", "g6", "g7", "g8", "g9",
+    const GROUPS: [&str; 11] = [
+        "checks", "g1", "g2", "g3", "g4", "g5", "g6", "g7", "g8", "g9", "g10",
     ];
 
     /// Runs every vector of `group` on the engine and holds it to refcore's run.
@@ -176,5 +176,19 @@ mod tests {
     #[test]
     fn s_kernel_g9_sign_rule() {
         group_holds("g9");
+    }
+
+    /// G10, observations, readings and the residual ledger (L §5.19, E §6.1–§6.3): a transfer
+    /// two statements cover, each booking its own end; links refused (RUN-RECORD); rows that
+    /// disagree (WARN-LEGS) beside rows that agree; a restated row and a restated reading;
+    /// `covered` over versions in turn and at a cut on a version's known day; a link whose
+    /// instance's `when` reads an assumed row; pads up, by nothing and down, two places padding
+    /// each other at one instant, an anchor; a place's first reading as a cut sees it; ledgers
+    /// with matched, partly fulfilled, missing, undated, unexplained and balance lines, a link
+    /// to an instance that doesn't exist beside one of its move that does, ties broken by the
+    /// movement order (`kernel/g10/`).
+    #[test]
+    fn s_kernel_g10_observations() {
+        group_holds("g10");
     }
 }
