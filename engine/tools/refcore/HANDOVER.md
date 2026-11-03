@@ -10,8 +10,8 @@ interpreter doesn't build refuses `REFCORE-NOT-YET <construct>`. Nothing may cra
 ## tally 2.1.2 (the spec round: issues #23, #29–#34, #38, #39, #43, #44, #46, #47)
 
 The spec patch tally 2.1.2 (`spec/CHANGES.md` 2.1.2-1 to 2.1.2-14), the user's rulings at gate G-SP1 (2026-11-03).
-Each fix's new tests were seen failing on tally 2.1.1's refcore first (their twins pass on both). **1150 tests, all
-pass** (1124, two changed, 26 new); through `refcore_fast` too.
+Each fix's new tests were seen failing on tally 2.1.1's refcore first (their twins pass on both). **1152 tests, all
+pass** (1124, two changed, 28 new); through `refcore_fast` too.
 
 - **`LOAD-DEPTH` counts `from` and `ties by` terms (L §2.3, #29).** `parser.P.proj` and `P.tieby` open one level
   around the term, so a chain of reads is bounded; 300 links crashed refcore with a `RecursionError`. New:
@@ -53,7 +53,13 @@ pass** (1124, two changed, 26 new); through `refcore_fast` too.
   `AdjMv.remainder`, `a.change` (`mreads.m_mv_field`), `flows` of the move (`m_flows_move`), the leg's places from
   V.known (`Walk.sched_adj`, a `placebad`), and `explain` prints `change refused: …`. `L6_5_change5`'s `e1` is now the
   `HOLE-CHANGED` holes (four hole adjustments). New: `E5_adjust_refused_amount`, `_refused_when`, `_refused_booking`,
-  `_hole_when_later`, `_hole_when_ended` (all seen failing).
+  `_hole_when_later`, `_hole_when_ended` (all seen failing). After the tag, from T's STOP-REPORT on `g11/adjust`:
+  `mreads.m_mv_field` refused every field read of a refused movement, so a refused adjustment's identity (`a.adjusts`,
+  `a.day`) refused too, and any move bound over `adjustments` refused the whole walk from the run's start through its
+  `where`, places and days E §5 step 5 doesn't name included; the identity is now read, only `change` (and the
+  remainder) refuse. New: `E5_adjust_refused_binding_left` (a waiver whose `where` leaves it out), `_binding_all` (one
+  that waives it), both seen failing on the tagged refcore. A `where` that reads the refused `a.change` still refuses
+  the whole walk, as any refused `where` of a move's binding does (tally 2.1.1 too).
 - **A refused settlement links nothing (E §5 step 5, #44).** `m_settle` computes every link and sign first
   (`m_settle_links`) and applies them only if none is refused; on a refusal it unmarks the adjustments, and
   `m_adjustments` forgets its `settled` cache entry, so every read settles again and meets the same refusal. New:

@@ -263,13 +263,17 @@ def m_mv_field(self, n, env, ctx):
         raise refuse('RUN-RECORD', '%s doesn\'t exist' % v.id)
     what = n._r[1]
     name = n.name
-    if isinstance(src, AdjMv) and (what == 'day' or (what == 'attr' and name == 'adjusts')):
+    identity = isinstance(src, AdjMv) and (what == 'day' or (what == 'attr' and name == 'adjusts'))
+    if identity:
         pass    # fixed by the adjustment's identity: V.known, the instance and its leg (E §5 step 4)
     elif what == 'day' and getattr(src, 'day_coll', None) is not None:
         self.cur.merge(src.day_coll)
     elif src.coll is not None:
         self.cur.merge(src.coll)
-    if getattr(src, 'err', None) is not None:
+    if getattr(src, 'err', None) is not None and not identity:
+        # a refused adjustment refuses its change and its remainder, never its identity, so a binding's `where` that
+        # reads `a.adjusts` or `a.day` takes it or leaves it out (E §5 step 5; tally 2.1.2, issue #34, T's
+        # STOP-REPORT on g11/adjust: the identity read refused, and with it every move bound over adjustments)
         raise src.err
     if what == 'day':
         return src.day
