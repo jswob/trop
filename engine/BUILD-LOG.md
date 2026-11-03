@@ -443,3 +443,53 @@ G11 is split in three: G11a (this entry), G11b the fences P8-14 asks for, G11c c
 **Score.** The 9 deleted mutants leave the denominator. T's counts assumed the plan's 5 deleted as well, and those 5 stay. The 7 kept become rows of `MUTANTS-SURVIVORS.md` in the listing step, from the final CI run's list. `MUTANTS-SURVIVORS.md` is not edited here.
 
 **Green.** No new T id; every test is unchanged except the unit tests named above. **Next:** T's next chunk, or the listing step. **STOP-REPORTs:** none. **Exceptions:** +0; count 6; report-only 5. **Check:** `check full: green, 31 steps (742s)` (clippy with `--all-features` builds the gated `At::text`; `stats_adds_the_counters_line` passes).
+
+## 2026-11-03 S, row 5: every survivor listed in `MUTANTS-SURVIVORS.md` (issue #41)
+
+**What.** `engine/MUTANTS-SURVIVORS.md` lists every kernel survivor under R-87 as amended in f64b940. The source is T's `tmp/t-close/final-survivors.tsv`: 215 mutants, 132 equivalent and 83 missed. Each row's function is the one in CI run 41584287870 (at 6e6adae). One row per key (file, function, mutation): **196 rows, 102 `R-87: equivalent:` (109 mutants) and 94 `R-87: missed:` (106 mutants)**. Same-key lines were merged: the same mutation at two columns, or in one function on two lines. The 7 I kept in c3b4769 (`keep_checkpoints` ×4, `checkpoint`, `At::text` ×2) are T's rows already, not doubled. The file's one earlier row (`book_leg_ends`, `<` → `<=`) is T's `day.rs` 522 key and is listed once. Missed rows read `not built at S: …`, `blocked: refcore disagrees with the spec, #43: …` or `open: <the recipe>`.
+
+**Every equivalent read against 6e6adae's code.** I accept 109 of T's 132. Claims checked at the code, with the code behind each:
+- Lehmer's gcd (8): every mutant gives u and v the same leading bits or none, so the quotient bounds disagree and the step falls back to one Euclidean division. The mask on line 151 keeps `limb` → 1 and `&` → `|` in a word.
+- `Big::pow`'s extra squaring: uncapped, same value.
+- `check_cap` `>` → `<`: the exact comparison with 10^4096 refuses what the screen would.
+- The tiers in `money.rs` and `rational.rs`: the big forms compute the same exact values and demote on return.
+- `parse_decimal` and `from_decimal_digits`: the lexer's `number` and `grouped` hand them only digits with an optional point and a digit after it.
+- `Num::round`: eval refuses a step that isn't positive first (RUN-DOMAIN).
+- `Num::ratio`: its one library caller passes 10^k.
+- `covered_call`: each step is a holding span's end, so any choice advances and the answer is the same.
+- `sort_adjustments`: register entries are a `BTreeSet`; hole questions merge as a set; `adjustment_line`'s last match is within one move's list, which comes in order.
+- `self_tie` over one run: a day's runs are cleared per act, so there is no pair.
+- `schedule_decision` 532 (8): the per-move left-out count is read only through a place's legs.
+- The invariant checks (`check_worth`, `check_booked`): the user's decision (b).
+
+**Moved from equivalent to missed (23 mutants), for T:**
+- **`run_decisions` 85, `>` → `>=` and `&&` → `||`.** With one due instance of a move whose `ties by` is a hole, refcore runs it (it orders only more than one instance, `walk.py` `tie_order`'s caller), and the mutant refuses RUN-TIE. Line 99's `>` → `>=` shares the first key, so it is counted with it, though alone it would be equivalent.
+- **`make_pad` 397 (2), not built at S.** A converted `flows` of a place over a pad (L §5.14.3) rounds each movement's amount, at least 0, before its direction. The mutant writes the pad the other way with a negative amount, which rounds to another minor unit under `floor` or `ceil`. S answers a converted `flows` "not implemented".
+- **The rank family (17).** T's reason ("ranks only order acts inside one step … booked together") misses that a place keeps the **first** refusal booked at it (`walk/state.rs` `apply`, `Change::Bad`). So the order of two refused movements at one place in one step shows in `bal`. Two more facts make the order differ:
+  - An order text is `move|keys`, and `ab|…` sorts before `a|…`, while move `a` comes before `ab`.
+  - Observations come sorted by (day, id), but their legs carry their own days.
+
+  The mutants: `schedule_observations`' rank, `leg_text` ×2, and `obs_rank` `==`, `>`, `Ok(0)`, `Ok(1)`; `schedule_plan`'s `==` → `!=` and its rank; `book_run`'s later-leg rank; `text_rank` ×7. Each row gives its recipe, e.g. plan moves `a` and `ab` with legs at P on one day whose amounts refuse with different codes, then `bal(P)` that day.
+
+  Kept as equivalent in that family: `obs_rank`'s `<` → `<=`, which moves every rank by 1, since every text is in the list. `schedule_modelled`'s rank, which only orders marks into a register set. `reading_point`'s stratum. `batch_end`'s and `closing_end`'s fields.
+- **`rank_le` `<=` → `>`.** Its key covers line 212 (equivalent, T's reason) and lines 213–214 (not built at S), so the row is `missed`.
+
+**The local scorer** (`engine/tools/mutants-survivors tmp/mutants/41584287870/mutants-shard-*`, at 6e6adae): `mutants-survivors: score 89.4% = caught 1195 / (caught 1195 + missed 232 + timed out 0 - equivalent 90); unviable 354, not counted`, exit 1.
+- **Listed but caught:** 0. **Listed but no run produced it:** 0.
+- **Not listed:** 45.
+  - 9 deleted in c3b4769 (expected).
+  - 6 T's sweep has caught since (expected): `Num::is_integer`, `Engine::eval_leg`, `At::closing_end`'s stratum, `same_interval`, `Engine::walk_today`, `St::known`.
+  - 30 that **are** listed but the scorer can't read: their mutation holds a `|`, the STOP-REPORT below.
+- **With cells split only at unescaped pipes** (a local copy of the parse, `tmp/b-close/score_escaped.py`; the tool is unchanged): `score 90.7% = caught 1195 / (caught 1195 + missed 232 + timed out 0 - equivalent 110)`. Equivalent is 110 because one equivalent key covers a second column. Not listed: 15, the expected 9 + 6.
+
+**STOP-REPORTs:** one, below. **Exceptions:** +0; count 6; report-only 5. **Check:** `check full: green, 31 steps (539s)`.
+
+## STOP-REPORT 2026-11-03: the survivors scorer can't read a row whose mutation holds a `|`
+
+- **Kind:** other: a tool (rules-owned) can't parse a valid row.
+- **Where:** `engine/tools/mutants_survivors.py` line 90, `cells = [c.strip() for c in line.strip().strip("|").split("|")]`. 30 of `engine/MUTANTS-SURVIVORS.md`'s 196 rows hold a `|` in cargo-mutants' description, such as `replace || with && in Num::parse_decimal` or `replace | with ^ in leading_bits`. They are written in Markdown's escaped form, `replace \|\| with && in Num::parse_decimal`.
+- **Rule or gate:** R-87, DONE gate 8.
+- **What happens:** `engine/tools/mutants-survivors tmp/mutants/41584287870/mutants-shard-*` exits 1. Each such row splits into more than 4 cells and is skipped, so its survivors are reported "not in MUTANTS-SURVIVORS.md" and its equivalents aren't subtracted. The line is `score 89.4% … - equivalent 90`, against 90.7 % and equivalent 110 when cells split only at unescaped pipes. The same holds for the CI job.
+- **What I tried:** the key is cargo-mutants' description, so it can't be reworded. A raw `|` breaks the table too. No row form that both renders as Markdown and passes this parse holds a pipe.
+- **What I ask:** the rules role amends the parse to split cells only at unescaped pipes, `re.split(r"(?<!\\)\|", …)`, and unescape `\|` to `|` in each cell. The docstring and the file's header should say so.
+- **State:** the last green commit is this entry's, with the listing. Nothing uncommitted.
