@@ -1,0 +1,34 @@
+# L §5.14 (tally 2.1.2, issue #43): the twin of L5_14_leg_currencies_money. A leg of unit kind `currencies` takes
+# money in a declared currency, and nothing else: an int amount is still refused at load (LOAD-UNIT).
+=== m.tally
+model t
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+kind curs: event certain
+  leg cash: currencies
+input flag_amt: int
+input day: date
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+
+move in_cur: curs
+  on day
+  at day
+  leg cash from world to konto amount flag_amt
+
+ask q: bal(konto, 2026-03-31), in_cur.cash.amount
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  flag_amt = 25
+  day = 2026-02-01
+  opening[konto] = 100.00 PLN at 2026-01-01 start
+=== expect
+refused: LOAD-UNIT the amount of leg cash of in_cur is int, not a unit of currencies (m.tally:19)

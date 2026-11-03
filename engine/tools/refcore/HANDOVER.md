@@ -37,6 +37,9 @@ fix's new tests were seen failing on tally 2.1.1's refcore first.
 - **`flows` of a place in a projection's walk (E §4.3 step 1, #38).** `m_flows_place` sums the chain of walks, each
   up to the point the walk after it starts after (`m_flows_place_walk`, one walk's part), as `Walk.default` and
   `m_flows_move` already did. New: `E4_3_projection_flows_before_start` (seen failing: 3 000.00 PLN for 2 100.00).
+- **Money on a `currencies` leg (L §5.4, §5.7, #43).** `check3.m_check_leg` accepts money in a declared currency on a
+  leg of unit kind `currencies`, as `moves.leg_amount` did at run. New: `L5_14_leg_currencies_money` (seen failing),
+  `L5_14_leg_currencies_not_money` (an int is still `LOAD-UNIT`).
 
 ## tally 2.1.1 (issue #13)
 
