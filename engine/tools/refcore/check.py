@@ -120,9 +120,12 @@ class Checker:
                 sc = Scope(self, ('input', qid), getattr(inf, 'regime', None), 'decl', [b.var for b in inf.binds])
                 for b in inf.binds:
                     sc.vars[b.var] = Var(b.var, self.dom_type(b.dom, b.node, sc), b.dom, b.node)
-        for qid in sorted(m.moves):
+        # E §3.1 The order of the checks (tally 2.1.2, issue #23): the items' own checks take one sort at a time (moves,
+        # fills, defs, bands, asks), each in the order of its sections, by full path and line (tally 2.1.1 took moves
+        # and fills by id)
+        for qid in list(m.moves):
             self.check_move(m.moves[qid])
-        for qid in sorted(m.fills):
+        for qid in list(m.fills):
             self.check_fill(qid)
         for qid, d in m.defs.items():
             self.check_def(d)

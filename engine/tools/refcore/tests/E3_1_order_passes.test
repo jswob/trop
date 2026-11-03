@@ -1,0 +1,21 @@
+# E §3.1 The order of the checks (tally 2.1.2, issue #23): the passes run in order, and the first pass that refuses
+# prints, whatever the lines. The def's value at line 11 is no id (LOAD-KEY, pass 4, the items' own checks); the unit
+# declared again at line 15 is LOAD-DUP (pass 2, the declarations), which prints.
+=== m.tally
+model t
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "a source"
+
+unit PLN: currency minor 0.01
+
+def fee: money PLN = rate
+
+ask q: fee
+
+unit PLN: currency minor 0.01
+=== expect
+refused: LOAD-DUP ...

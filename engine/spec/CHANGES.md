@@ -5,6 +5,7 @@ tally 2.1.2 is the second patch of the frozen `tally 2.1` (`DONE.md` rule 1, `en
 | # | Issue | Where | The gap | The change | The ruling | Found by |
 |---|---|---|---|---|---|---|
 | 2.1.2-1 | #29 | L §2.3 | `LOAD-DEPTH` counted brackets and `if`s only, so a read chained by `from` or `ties by` (`bal(x, d) from bal(y, e) from …`) nested with no bound the spec named; refcore counted no link (9 links parsed, 300 crashed it with a `RecursionError`), the engine stopped at its own counter (64) with an internal `NotBuilt` | the depth at a point also counts the `from` and `ties by` terms it is inside, one each, as an `if` counts | "A: each link counts one (Recommended)", 2026-11-03 | the S builder at G3 (issue #26) |
+| 2.1.2-2 | #23 | E §3.1; L §8.3 | past parsing, load printed the first refusal its checks met, and nothing ordered those checks (2.1.1's "Left open"): refcore ran its own passes and took moves and fills by id, so of a def at line 9 and a move at line 16 that both refuse, refcore printed the move's | E §3.1 "The order of the checks": the members of a joint model first, then five passes (headers; declarations; rows; the items' own checks, one sort at a time: moves, fills, defs, bands, asks; the checks across items), each walking its sections or items by full path and line; L §8.3 points to it. The residual is written: two refusals in one item, and those of a pass that walks the rows of an input or a graph, print in the order the check meets them | "C: write refcore's order (Recommended)", 2026-11-03 | issue #13's patch (tally 2.1.1) |
 
 ---
 

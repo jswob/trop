@@ -15,6 +15,10 @@ fix's new tests were seen failing on tally 2.1.1's refcore first.
 - **`LOAD-DEPTH` counts `from` and `ties by` terms (L §2.3, #29).** `parser.P.proj` and `P.tieby` open one level
   around the term, so a chain of reads is bounded; 300 links crashed refcore with a `RecursionError`. New:
   `L2_3_depth_from_chain`, `_from_chain_ok`, `_ties_chain`.
+- **The order of load's checks (E §3.1, #23).** E §3.1 now writes refcore's order: `Loader.build`'s passes (headers,
+  declarations, rows), then `Checker.run`'s (the items' own checks, the checks across items). `Checker.run` takes the
+  moves and the fills in the order of their sections, by full path and line, as it took defs, bands and asks (it took
+  moves and fills by id). New: `E3_1_order_items_by_line` (seen failing), `_passes`, `_moves_before_defs`.
 
 ## tally 2.1.1 (issue #13)
 
