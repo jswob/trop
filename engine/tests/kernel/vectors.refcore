@@ -12739,4 +12739,60 @@ q_refused (d = 2026-01-21): (refused: RUN-PLACE lent9 is -5.00 PLN after the day
   unfulfilled: spend9
   law date 2026-03-25, cut 2026-03-25
 warning: WARN-NEGATIVE konto10 is below zero from 2026-01-20
+,14:g11/where_hole,3:g11,24:run g11/where_hole.tally,1468:20:g11/where_hole.tally,1438:model g11_where_hole
+  tally 2
+  on 2026-03-15
+  start 2026-01-01
+  end 2026-03-31
+  note "T, issue #41, G11: the steps an adjustment is measured at (E §5 steps 1-4) are the versions known after the instance's day and by the cut: a move bound over a kind of things whose where is a hole for one member (bob), known for another (ana) and false for a third (cid), with a version known exactly on the instances' day and none after it, so no step measures them."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit PLN: currency minor 0.01
+
+kind member
+
+place konto: accounts PLN lives 2025-01-01..
+
+place world: outside lives 2025-01-01..
+
+input active[p in member]: bool question "Is the member active?"
+
+input pay_day: date
+
+input fee: money PLN
+
+input late: money PLN
+
+move dues[p in member on pay_day where active[p]]: transfers
+  on pay_day
+  leg cash from konto to world amount fee
+
+ask q_bal: bal(konto, 2026-02-09), bal(konto, 2026-02-28) law cut
+
+ask q_flows: flows(dues, 2026-02-01 .. 2026-02-28) law cut
+
+version facts
+  cite fixture
+  governs always
+  known 2025-12-01
+  member + [ana, bob, cid] lives 2025-01-01..
+  active[ana] = true "ana pays"
+  active[cid] = false "cid doesn't; bob's is a hole"
+  pay_day = 2026-02-10
+  fee = 10.00
+  opening[konto] = 100 at 2026-01-01 start
+
+version on_the_day
+  cite fixture
+  governs always
+  known 2026-02-10
+  late = 1.00 "a version known on the instances' day"
+,,1:0,285:q_bal: (100.00 PLN, ?"Is the member active?" (active[bob]))
+  unfulfilled: dues[ana]
+  law date 2026-03-15, cut 2026-03-15
+q_flows: ?"Is the member active?" (active[bob])
+  unfulfilled: dues[ana]
+  law date 2026-03-15, cut 2026-03-15
+warning: WARN-UNREAD input late is read by nothing
 ,

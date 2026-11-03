@@ -73,3 +73,4 @@ g12/members	g12		engine/tests/kernel/	engine/tests/kernel/g12/members.tally
 g5/sweep	g5		engine/tests/kernel/	engine/tests/kernel/g5/sweep.tally		
 g3/sweep	g3		engine/tests/kernel/	engine/tests/kernel/g3/sweep.tally		
 g9/sweep	g9		engine/tests/kernel/	engine/tests/kernel/g9/sweep.tally		
+g11/where_hole	g11		engine/tests/kernel/	engine/tests/kernel/g11/where_hole.tally		
