@@ -1289,12 +1289,50 @@ def m_flows_place(self, place, sp, conv, env, ctx, fk=None):
     else:
         w = self.main_walk(ctx)
     lo = K_before(sp.start)
-    units = sorted(set(u for (p, u) in w.logs if p == place and u != '*'))
+    # E §4.3 step 1 (tally 2.1.2, issue #38): a projection's walk continues the walk it starts from, so the days up to
+    # its start point are that walk's, as a balance reads them (Walk.default) and flows of a decision move do
+    # (m_flows_move): each walk of the chain gives its entries up to the point the walk after it starts after
+    chain = [(w, limit)]
+    while chain[-1][0].base is not None:
+        ww, cut = chain[-1]
+        chain.append((ww.base, min(cut, ww.point)))
+    units = sorted(set(u for ww, cut in chain for (p, u) in ww.logs if p == place and u != '*'))
     pu = m.place_unit(m.things[place])
     if pu not in (None, 'any'):
         units = [pu]
     totals = {}
     holes = []
+    for w, limit in chain:
+        self.flows_place_walk(w, limit, place, units, lo, sp, last, conv, env, ctx, fk, other_for, totals, holes)
+    w, limit = chain[0]
+    for (ad, e) in w.adj_regs.get(place, ()):
+        if ad <= last:
+            self.reg(e)
+    # the joint model's own unlinked movements into the place on or before the span's last day (L §6.1, round 17b)
+    self.joint_left_out(w, place, limit)
+    if holes:
+        return merge(*holes)
+    if conv is not None:
+        return Money(totals.get(conv[0], 0), conv[0])
+    # L §5.14.3 (round 12): "Its unit is that of the places it reads ...; a place of unit any, movements in two
+    # units, or an empty span whose unit load can't see is refused (LOAD-UNIT where load sees it, RUN-DOMAIN
+    # otherwise), unless the flows converts"
+    if pu == 'any':
+        raise refuse('RUN-DOMAIN', 'flows of %s, a place of unit any: it sums no one unit' % place)
+    if len(totals) > 1:
+        raise refuse('RUN-DOMAIN', 'flows of %s: movements in %s' % (place, ' and '.join(sorted(totals))))
+    if not totals:
+        if len(units) == 1:
+            return qty(0, units[0])
+        if pu not in (None, 'any'):
+            return qty(0, pu)
+        raise refuse('RUN-DOMAIN', 'flows of %s over a span with no movement: its unit is unknown' % place)
+    u, q = list(totals.items())[0]
+    return qty(q, u)
+
+
+def m_flows_place_walk(self, w, limit, place, units, lo, sp, last, conv, env, ctx, fk, other_for, totals, holes):
+    """One walk's part of flows of a place: its entries in (lo, limit], added to totals and holes."""
     # what holds for the whole walk (a refused movement whose places aren't known, a decision refused, a movement
     # whose day is a hole): a balance reads it (Walk.pstate), and so does a place's flows, which could count it
     # (L §8.4, L §5.14 `on d`: "a movement whose day is a hole makes every flows ... over a span it might fall in a
@@ -1368,30 +1406,6 @@ def m_flows_place(self, place, sp, conv, env, ctx, fk=None):
                     continue
             uu = conv[0] if conv is not None else u
             totals[uu] = totals.get(uu, Fraction(0)) + f.q
-    for (ad, e) in w.adj_regs.get(place, ()):
-        if ad <= last:
-            self.reg(e)
-    # the joint model's own unlinked movements into the place on or before the span's last day (L §6.1, round 17b)
-    self.joint_left_out(w, place, limit)
-    if holes:
-        return merge(*holes)
-    if conv is not None:
-        return Money(totals.get(conv[0], 0), conv[0])
-    # L §5.14.3 (round 12): "Its unit is that of the places it reads ...; a place of unit any, movements in two
-    # units, or an empty span whose unit load can't see is refused (LOAD-UNIT where load sees it, RUN-DOMAIN
-    # otherwise), unless the flows converts"
-    if pu == 'any':
-        raise refuse('RUN-DOMAIN', 'flows of %s, a place of unit any: it sums no one unit' % place)
-    if len(totals) > 1:
-        raise refuse('RUN-DOMAIN', 'flows of %s: movements in %s' % (place, ' and '.join(sorted(totals))))
-    if not totals:
-        if len(units) == 1:
-            return qty(0, units[0])
-        if pu not in (None, 'any'):
-            return qty(0, pu)
-        raise refuse('RUN-DOMAIN', 'flows of %s over a span with no movement: its unit is unknown' % place)
-    u, q = list(totals.items())[0]
-    return qty(q, u)
 
 
 def m_convert(self, f, day, conv, env, ctx):

@@ -30,6 +30,13 @@ fix's new tests were seen failing on tally 2.1.1's refcore first.
   `mreads` a binding's movements (both sites), where they compared `str(order)`. A pad's stratum is `PADS_STRATUM`,
   above every decision's (it was 9). `walk.py`'s own `osort` keys are left: the walk's order inside a stratum changes
   no balance (E §4.1). New: `E6_3_residuals_ties_typed`, `L2_5_binding_movements_typed` (both seen failing).
+- **A projection's first day, cut at a decision's point (L §5.14.1, #32).** `walk._act_after` compares a decision act's
+  key with the point's, the point's move id taken apart from its `|instance` number (they were one text, so `sw_b`
+  sorted before `sw|000000`). Reproduced first: `sw_b`'s every-place refusal was missing from `sw`'s projection; named
+  `sx`, refused. New: `L5_14_1_projection_point_by_id` (seen failing).
+- **`flows` of a place in a projection's walk (E §4.3 step 1, #38).** `m_flows_place` sums the chain of walks, each
+  up to the point the walk after it starts after (`m_flows_place_walk`, one walk's part), as `Walk.default` and
+  `m_flows_move` already did. New: `E4_3_projection_flows_before_start` (seen failing: 3 000.00 PLN for 2 100.00).
 
 ## tally 2.1.1 (issue #13)
 

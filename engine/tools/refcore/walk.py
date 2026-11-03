@@ -2031,13 +2031,23 @@ def m_proj_walk(self, ctx, t, leftout, clauses):
                 # read at a point of the walk: what that day has booked so far is in the start; only what follows
                 # it counts (L §5.14.1)
                 acts = w.sched.get(t.toordinal(), [])
-                w.sched[t.toordinal()] = [a for a in acts if a[0] > point and a[1] in ('decday',)]
+                w.sched[t.toordinal()] = [a for a in acts if _act_after(a[0], point) and a[1] in ('decday',)]
         except TallyError as e:
             w.failed = e
             raise
         finally:
             self.stack.pop()
     return w
+
+
+def _act_after(k, point):
+    """Whether a day's decision act, keyed (day, 3, stratum, move id, 0), runs after a walk point: by (day, step,
+    stratum), then by move id (E §4.1), the point's own move id taken apart from its instance number (`sw|000000`).
+    tally 2.1.2 (issue #32): the two were compared as one text, so `sw_b`, whose `_` sorts before `|`, counted as
+    booked at sw's point and a projection read there left its act out (L §5.14.1: "counts only the movements not yet
+    booked")."""
+    head = point[3].split('|', 1)[0] if isinstance(point[3], str) else point[3]
+    return (k[:3], k[3]) > (tuple(point[:3]), head)
 
 
 from . import partswalk as _partswalk  # noqa: E402

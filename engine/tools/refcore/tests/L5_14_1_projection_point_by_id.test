@@ -1,0 +1,63 @@
+# L §5.14.1 (tally 2.1.2, issue #32, the standing ruling "the engine follows the spec, refcore is fixed"): read at a
+# point of the walk on day t, a projection "counts only the movements not yet booked". sw and sw_b are decisions of one
+# stratum on 2026-01-10 (sw reads konto, sw_b reads savings; neither changes what the other reads), so sw runs first, by
+# move id (E §4.1). sw_b's legs run between places its defs give, both refused (RUN-DIV), so its refusal holds for
+# every place. sw's projection at its point counts sw_b's act, so sw's amount is refused. tally 2.1.1's refcore compared
+# the point `sw|000000` with `sw_b` as one text (`_` before `|`), left sw_b's act out and printed q: 99.00 PLN; with
+# sw_b named sx it refused, as here.
+=== m.tally
+model t
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+kind pots: place PLN signed
+kind sinks: place PLN signed outside
+input day: date
+input zero: int
+input ahead: int
+input amt: money PLN
+place konto: accounts PLN lives 2026-01-01..
+place savings: accounts PLN lives 2026-01-01..
+place pot: pots lives 2026-01-01..
+place sink: sinks lives 1900-01-01..
+place world: outside lives 1900-01-01..
+
+def src: key pots = if zero / zero > 0 then pot else pot
+def snk: key sinks = if zero / zero > 0 then sink else sink
+
+move sw: transfers
+  on day
+  reads konto
+  leg cash from konto to world amount max(0 PLN, bal(konto, add_days(day, ahead)) from day - amt)
+
+move sw_b: transfers
+  on day
+  reads savings
+  leg cash from src to snk amount amt + 0 * bal(savings)
+
+ask q: sw.cash.amount
+ask r: bal(konto, 2026-01-09)
+ask u: sw_b.cash.amount
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  day = 2026-01-10
+  zero = 0
+  ahead = 5
+  amt = 1.00 PLN
+  opening[konto] = 100.00 PLN at 2026-01-01 start
+  opening[savings] = 50.00 PLN at 2026-01-01 start
+  opening[pot] = 0 PLN at 2026-01-01 start
+=== expect
+q: refused: RUN-DIV division by zero
+  cut 2026-06-30
+r: 100.00 PLN
+  cut 2026-06-30
+u: refused: RUN-DIV division by zero
+  cut 2026-06-30
