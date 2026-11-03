@@ -1,6 +1,6 @@
 # Milestone S, the tracer slice: the gate's report
 
-Issue #26, branch `build/s` at **51ed737**, 2026-11-02. Written by the S gate session (R-129, BUILDER §13.3). The review's rows are in the worktree's `tmp/s/gate-review.md`, and the raw timing output is in `tmp/s/timing/`. **Not committed:** the coordinator decides where it lands.
+Issue #26, branch `build/s` at **51ed737**, 2026-11-02. Row 5 and the re-check are at **b2f1705**, 2026-11-03 (issue #41). Written by the S gate sessions (R-129, BUILDER §13.3). The review's rows are in the worktree's `tmp/s/gate-review.md` and `tmp/s/gate-close-review.md`, and the raw timing output is in `tmp/s/timing/`.
 
 ## MILESTONE-S's six rows
 
@@ -10,7 +10,7 @@ Issue #26, branch `build/s` at **51ed737**, 2026-11-02. Written by the S gate se
 | 2 | `R:all`, refcore's own tests | **green, unchanged** | `git diff origin/master..HEAD -- engine/tools/refcore engine/tools/refcore_fast` is empty, so master's green run stands |
 | 3 | the kernel's seven properties (`s_properties`) | **green, 7/7, gating** | S has been in `gating` since 060451c (the user's row-5 choice). The builder's `check full` at 51ed737 is green (31 steps, 1 173 s) with `s_properties` as a failing step |
 | 4 | the 75 household vectors (`s_household`) | **green, 3/3, gating** | the same `check full` |
-| 5 | mutation ≥ 90 % on the kernel | **open, blocks the merge** | CI run 41467061452 at 060451c: about **44 %** on shards 0, 2 and 3 (477 caught, 608 missed, 245 unviable); shard 1 was cut off by a runner shutdown. The user, 2026-11-02: "Hold merge; T fills gap". A tests-role session writes kernel tests from the survivor list, then the mutants run again. Run 41492324014 at f76ca07 is the coordinator's to read |
+| 5 | mutation ≥ 90 % on the kernel | **green, 91.6 %** | **The final run:** CI run 41626579138 at b2f1705, all 8 shards under R-88's memory cap (f7c4cef), every job green: `mutants-survivors: score 91.6% = caught 1204 / (caught 1204 + missed 214 + timed out 0 - equivalent 104); unviable 353, not counted` and `every survivor is listed, with its reason`. The gate re-ran `tools/mutants-survivors` over the run's shard outputs and got the same two lines.<br>**The rule:** `MUTANTS-SURVIVORS.md` lists every survivor, 98 rows `R-87: equivalent:` (104 mutants) and 97 `R-87: missed:`. Under the user's ruling of 2026-11-03 (R-87, f64b940), a proven equivalent leaves the count and a listed missed one stays in.<br>**The run before it:** 41606310136 at 13f97e3, 91.9 % = 1203 / (1203 + 215 − 109).<br>**The gate's re-check** (`tmp/s/gate-close-review.md` §3–§4) rejected 3 equivalent rows:<br>• `measure_move` `<`→`<=` is now caught by T's `g11/where_hole` (e233838);<br>• `day_repr` and `day_max_repr` moved to missed, not built at S (#48): a year-9999 ledger tie tells them apart, but refcore can't load a 9999 run and the engine refuses a ledger past the run's end.<br>It then matched each equivalent row's survivors by line and column to the site its reason argues. That questioned `same_act`, `delete field sub` (192:39), and the builder found an input that tells it apart, so the row moved to `R-87: missed: open` (b2f1705).<br>**The tests behind it:** T's `s_kernel` (issue #41), the engine's whole output against refcore's bytes for the kernel corpus, 43 checks and 32 invented fixtures (groups G1–G12 and a sweep).<br>**The way there:** 44 % at 060451c (3 shards); the user, 2026-11-02: "Hold merge; T fills gap" |
 | 6 | the budget rows S measures | **measured below**; P8-14 meets its proposed budgets; **P8-M4 misses** its proposed budget | `tools/perf row` on the reference Mac, un-niced (the user's ruling for this run only) |
 
 ## The timing run (row 6)
@@ -72,6 +72,18 @@ Issue #26, branch `build/s` at **51ed737**, 2026-11-02. Written by the S gate se
   - F4, the number tiers (`num/small.rs` for P8-M1, `num/gcd.rs` for P8-M2).
   
   Each has a plain twin and an equivalence test. Closed: F2's dense columns and F3, since no row asks. **F5 is now asked for by P8-M4.**
+- **Since cf55c5a (closing row 5, issue #41):**
+  - **Code:** three commits, deleting dead kernel code and tidying after it.
+    - c3b4769 deletes `Hole::same_questions`, `Hole::is_bounded`, `Mode::word`, `walk::qty_of` and the field `Gap::anchor` (+19/−51 lines in 7 files). It also gates `At::text` to the `counters` build, which is where its only caller is.
+    - 58270b7, for the re-check's finding, deletes the `Gap` record, `Walk::gaps`, `Walk::pads` and `Pad::point`, which nothing read; `Pad` stays (+1/−33 lines in 3 files).
+    - b2f1705, for the second review, corrects `book/reading.rs`'s comments on a reading's gap and builds `booked_coll` only for a pad (+8/−6 lines).
+    - No module was added or removed and no purpose line changed, so `ARCHITECTURE.md` is unchanged. Behaviour is unchanged: `check full` green.
+  - **Spec coverage:** still **70 of 257 sections**, now 1 805 citations and 1 469 functions (the four deleted functions and the `Gap` record's citations).
+  - **Exceptions:** no change (`EXCEPTIONS.lock` untouched).
+  - **Size, nesting, clones:** only deletions; the advisory wasn't re-run.
+  - **Benchmarks, fences:** not re-run, since no behaviour changed; the fences are unchanged.
+  - **Tests (T's, not the builder's):** the `s_kernel` target (`runner/src/kernel.rs`, `runner/milestone/s_kernel.rs`), and `kernel/`'s 32 invented fixtures with `vectors.py`, whose `--check` runs in `run.py --self-test`.
+  - **Rules:** R-88 (a memory cap on the mutants' tests, 8 shards, `mutants-local`), R-77 and R-78 (the walls' self-tests skipped on unchanged inputs), and R-87's score definition (the user, 2026-11-03).
 
 ## The review
 
@@ -91,4 +103,17 @@ A fresh `engine-reviewer` made three passes, and the gate checked each blocking 
   - #39, the binding order of movements (spec).
 - **Not issues:** O5 and T5, ten files over 1 000 lines (a note); G-S2's deferrals to M1 (the interner, `Table<I, T>`, the layer slots).
 
-**`ARCHITECTURE.md`** matches the code at f76ca07. **T2**, line 130's list of what a read set holds leaving out "a def's givens at its keys" (G13's `Read::Givens`), is fixed by the lead in the commit that adds this report.
+**The re-check, 13f97e3 to b2f1705** (2026-11-03, a fresh gate session; `tmp/s/gate-close-review.md`):
+- **The reviewer, first pass (`cf55c5a..13f97e3`):** 0 blocking, 1 other. R1: with `Gap::anchor` gone, `Gap` and `Walk::gaps` were written and never read, so their comments were false. Fixed by 58270b7's deletions.
+- **The reviewer, second pass (`e233838..58270b7`, those deletions):** 0 blocking, 3 other. Nothing deleted had a reader. Its three findings, all fixed by b2f1705 with no change in behaviour:
+  - R2: two comments in `book/reading.rs` said the gap is kept for the ledger;
+  - R3: `booked_coll` was built for an anchor, which no longer reads it;
+  - R4: the build log said no later milestone reads the gaps or pads, but M2 does (`BUILD-ORDER.md:162`; L §5.19 `gap(x, d)`, pads in bindings). The log now says what M2 rebuilds.
+- **T's tests:** they match the spec. One vector is questioned: `g9/sign`'s claim anchored below zero, which refcore and the engine leave unrefused (issue #46, for the spec round).
+- **`MUTANTS-SURVIVORS.md`:**
+  - All 102 equivalent rows at 13f97e3 were read, and the 72 in `walk/` and `book/` checked at their sites. 3 were rejected, and all 3 are settled (row 5).
+  - The 99 rows left were matched against run 41606310136's survivors by line and column (106 mutants). Every matched site is the one T listed.
+  - One reason held for only one of its two columns: `walk/point.rs` `At::same_act`, `delete field sub`, at 192:39. A decision's own observation is booked at the decision's point with sub-step 1 (`book_own_obs`), so taking back by the sub-step finds no entry, not the same ones.
+  - The builder found an input that tells this mutant apart: the own observation's register still prints under a refused `bal`. The row moved to `R-87: missed: open` with that recipe (b2f1705), which leaves 98 equivalent rows and 104 equivalent mutants.
+
+**`ARCHITECTURE.md`** matches the code at f76ca07, and still at b2f1705: none of c3b4769, 58270b7 and b2f1705 changes a module, and the codemap names none of the deleted items. **T2**, line 130's list of what a read set holds leaving out "a def's givens at its keys" (G13's `Read::Givens`), is fixed by the lead in the commit that adds this report.
