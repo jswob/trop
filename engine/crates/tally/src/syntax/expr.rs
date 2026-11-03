@@ -700,10 +700,20 @@ impl P<'_> {
         Ok(out)
     }
 
-    /// `ties by (post | "(" e "," e {"," e} ")")` (L §2.3 `tieby`).
+    /// `ties by (post | "(" e "," e {"," e} ")")` (L §2.3 `tieby`). The term counts one
+    /// depth level, as an `if` does, so a chain of reads each with its own `ties by` is
+    /// bounded by `LOAD-DEPTH` (L §2.3, tally 2.1.2).
     pub(super) fn ties(&mut self) -> Result<Vec<Expr>, Stop> {
         self.expect("ties")?;
         self.expect("by")?;
+        self.open()?;
+        let items = self.tie_term()?;
+        self.close()?;
+        Ok(items)
+    }
+
+    /// The term after `ties by`: one postfix expression, or a bracketed list of two or more.
+    fn tie_term(&mut self) -> Result<Vec<Expr>, Stop> {
         if self.at("(", 0) {
             let save = self.i;
             self.skip(1)?;
@@ -739,10 +749,15 @@ impl P<'_> {
         Ok(OfQ::Pair(a, b))
     }
 
-    /// A projection's clauses: `from`, `windows`, `random at`, `with uncertain`.
+    /// A projection's clauses: `from`, `windows`, `random at`, `with uncertain`. The `from`
+    /// term counts one depth level, so `bal(x, d) from bal(y, e) from …` is bounded by
+    /// `LOAD-DEPTH` (L §2.3, tally 2.1.2).
     fn proj(&mut self) -> Result<Proj, Stop> {
         let from = if self.accept("from")? {
-            Some(self.post(Ends::Free)?)
+            self.open()?;
+            let term = self.post(Ends::Free)?;
+            self.close()?;
+            Some(term)
         } else {
             None
         };
