@@ -84,7 +84,7 @@ Printed by the build role's SessionStart hook at the start and after each compac
 - Fixed seeds; no snapshots; no `cfg(test)` behaviour in engine code (R-93).
 - Reproduce a failure before you fix it.
 - Keep unit tests inline, in a `#[cfg(test)] mod tests { … }` at the end of their file: the report rules exempt an inline test module, not one in its own file.
-- A surviving mutant you can't kill is a STOP-REPORT, unless no test can tell it from the code: then its row's reason is `R-87: equivalent: ` and at least 20 characters saying why (DONE gate 8).
+- A surviving mutant you can't kill is a STOP-REPORT, unless no test can tell it from the code: then its row's reason is `R-87: equivalent: ` and at least 20 characters saying why, and it leaves the score's count (DONE gate 8). One a test could tell apart but can't yet (an input S refuses as not built; refcore and the spec disagree) is listed `R-87: missed: ` with its reason and stays counted (R-87, 2026-11-03).
 
 ## 10. Code shape
 
