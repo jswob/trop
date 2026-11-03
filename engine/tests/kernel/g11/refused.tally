@@ -1,0 +1,107 @@
+model g11_refused
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+  note "T, issue #41, G11: settlement legs refused (L §5.14.3 How a settlement leg counts): a version turns a leg round and a row settles it (RUN-RECORD), beside a version that moves only the leg's from place and a row from the new one (+); a row that touches neither place of an amount's leg (RUN-RECORD), beside one out of its to place only, the other way (−). One read per ask: a refused settlement poisons the reads of every place, and refcore reads a second read of an ask as if nothing settled (tmp/t-close STOP-REPORT, settle order)."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit PLN: currency minor 0.01
+
+kind pays: event certain
+  leg cash: PLN
+
+place ka: accounts PLN lives 2026-01-01..
+
+place kb: accounts PLN lives 2026-01-01..
+
+place kc: accounts PLN lives 2026-01-01..
+
+place kd: accounts PLN lives 2026-01-01..
+
+place ke: accounts PLN lives 2026-01-01..
+
+place kf: accounts PLN lives 2026-01-01..
+
+place kg: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+place zus: outside lives 2026-01-01..
+
+input bank: observed
+
+input t_from: key accounts
+
+input t_to: key accounts
+
+input u_from: key accounts
+
+input day: date
+
+input amt: money PLN
+
+input n_amt: money PLN
+
+move t: pays
+  on day
+  leg cash from t_from to t_to amount amt
+
+move u: pays
+  on day
+  leg cash from u_from to kd amount amt
+
+move n: pays
+  on day
+  leg cash from world to kf amount n_amt
+
+move n2: pays
+  on day
+  leg cash from world to kg amount n_amt
+
+ask q_t_bal: bal(ka, 2026-06-30) law cut
+
+ask q_t_flows: flows(t, 2026-05-01 .. 2026-05-31) law cut
+
+ask q_u_flows: flows(u, 2026-05-01 .. 2026-05-31) law cut
+
+ask q_n_flows: flows(n, 2026-05-01 .. 2026-05-31) law cut
+
+ask q_n2_flows: flows(n2, 2026-05-01 .. 2026-05-31) law cut
+
+version plan
+  cite fixture
+  governs always
+  known 2025-12-01
+  t_from = ka
+  t_to = kb
+  u_from = kc
+  day = 2026-03-10
+  amt = 100.00
+  n_amt = 500.00
+  opening[ka] = 1 000 at 2026-01-01 start
+  opening[kb] = 1 000 at 2026-01-01 start
+  opening[kc] = 1 000 at 2026-01-01 start
+  opening[kd] = 1 000 at 2026-01-01 start
+  opening[ke] = 1 000 at 2026-01-01 start
+  opening[kf] = 1 000 at 2026-01-01 start
+  opening[kg] = 1 000 at 2026-01-01 start
+
+version turn
+  cite fixture
+  governs always
+  known 2026-05-01
+  replace t_from = kb "the leg turned round"
+  replace t_to = ka
+  replace u_from = ke "u's from place moved"
+  replace n_amt = 400.00 "the amount cut"
+
+version settle
+  cite fixture
+  governs 2026-05
+  known 2026-06-01
+  bank[r_t] = (on: 2026-05-15, kind: pays, leg cash from kb to ka amount 100.00 PLN, fulfils: adjustments[t.cash, turn]) "settles a leg turned round"
+  bank[r_u] = (on: 2026-05-16, kind: pays, leg cash from ke to kd amount 100.00 PLN, fulfils: adjustments[u.cash, turn]) "from u's new from place"
+  bank[r_n] = (on: 2026-05-17, kind: pays, leg cash from kc to zus amount 100.00 PLN, fulfils: adjustments[n.cash, turn]) "touches neither of n's places"
+  bank[r_n2] = (on: 2026-05-18, kind: pays, leg cash from kg to zus amount 100.00 PLN, fulfils: adjustments[n2.cash, turn]) "out of n2's to place, the other way"

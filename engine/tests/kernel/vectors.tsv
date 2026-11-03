@@ -67,3 +67,6 @@ g8/after	g8		engine/tests/kernel/	engine/tests/kernel/g8/after.tally
 g10/observe	g10		engine/tests/kernel/	engine/tests/kernel/g10/observe.tally		
 g10/ledger	g10		engine/tests/kernel/	engine/tests/kernel/g10/ledger.tally		
 g10/firsts	g10		engine/tests/kernel/	engine/tests/kernel/g10/firsts.tally		
+g11/adjust	g11		engine/tests/kernel/	engine/tests/kernel/g11/adjust.tally		
+g11/refused	g11		engine/tests/kernel/	engine/tests/kernel/g11/refused.tally		
+g12/members	g12		engine/tests/kernel/	engine/tests/kernel/g12/members.tally		

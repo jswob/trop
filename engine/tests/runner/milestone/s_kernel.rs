@@ -14,8 +14,8 @@ mod tests {
     use tally_runner::kernel::{VECTORS, difference, vectors};
 
     /// The groups this target tests, one `#[test]` each.
-    const GROUPS: [&str; 11] = [
-        "checks", "g1", "g2", "g3", "g4", "g5", "g6", "g7", "g8", "g9", "g10",
+    const GROUPS: [&str; 13] = [
+        "checks", "g1", "g2", "g3", "g4", "g5", "g6", "g7", "g8", "g9", "g10", "g11", "g12",
     ];
 
     /// Runs every vector of `group` on the engine and holds it to refcore's run.
@@ -190,5 +190,29 @@ mod tests {
     #[test]
     fn s_kernel_g10_observations() {
         group_holds("g10");
+    }
+
+    /// G11, adjustments and their settlement (L §5.14.3, E §5): a version's change measured on
+    /// instances by amount, by places, from a hole, into a hole, into a refusal and by a key it
+    /// adds; settlements that run the leg's way, the other way, both and with one end, inside
+    /// and outside a span; one nothing settles (HOLE-CHANGED) before and after its day; a
+    /// waiver and a settlement written as moves bound over adjustments; rows naming
+    /// adjustments no version made; a leg turned round and a leg touching neither place
+    /// (RUN-RECORD) beside twins that settle (`kernel/g11/`).
+    #[test]
+    fn s_kernel_g11_adjustments() {
+        group_holds("g11");
+    }
+
+    /// G12, bindings over movements and things (L §5.19 Bindings, §5.7, §8.4): a `for` over an
+    /// event kind with members on several days and one on a hole day, which sorts last (#37
+    /// N1); pairs of two spans; a `where` over a leg's field; an instance and the rows that
+    /// fulfil it counted once, by the row where it is booked, else by the instance; an
+    /// uncertain instance left out; a binding whose day is a hole; attributes; what rows
+    /// fulfil; `x in K on d` with d known, before a lifespan, a hole and never (#37 N3); moves
+    /// bound over things on an assumed day and on a hole day (`kernel/g12/`).
+    #[test]
+    fn s_kernel_g12_members() {
+        group_holds("g12");
     }
 }
