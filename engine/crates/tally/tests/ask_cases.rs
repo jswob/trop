@@ -410,7 +410,8 @@ matched: refused: RUN-LIFESPAN pay.cash moves into or out of old outside its lif
 splits: refused: RUN-LIFESPAN pay.cash moves into or out of old outside its lifespan
   unfulfilled: split[a]
   unfulfilled: split[b]
-  cut 2025-03-10";
+  cut 2025-03-10
+warning: WARN-UNREAD place out is read by nothing";
 
     #[test]
     fn a_refused_flows_of_a_move_keeps_what_it_met_before() {

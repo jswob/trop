@@ -456,7 +456,8 @@ ask before: bal(save, 2025-03-31) from 2025-02-01
 projected: refused: RUN-LIFESPAN pay.cash moves into or out of old outside its lifespan
   cut 2025-03-10
 saved: refused: RUN-LIFESPAN pay.cash moves into or out of old outside its lifespan
-  cut 2025-03-10";
+  cut 2025-03-10
+warning: WARN-UNREAD place out is read by nothing";
 
     #[test]
     fn a_projection_keeps_the_legs_the_walk_it_continues_refused() {
@@ -540,7 +541,8 @@ projected: 800.00 DUK
 saved: 800.00 DUK
   unfulfilled: first
   unfulfilled: second
-  cut 2025-03-10";
+  cut 2025-03-10
+warning: WARN-UNREAD place out is read by nothing";
 
     #[test]
     fn a_projection_counts_the_decision_runs_of_the_walk_it_continues() {
