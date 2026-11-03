@@ -285,13 +285,23 @@ BASH = [
     ("perl -ne 'print' /tmp/tally-guard-x.txt", ALL, ""),
     # issue #15, kept: a bare word that names a protected folder from the cwd is that
     # folder, whatever it means to the program (`fix.py engine` may write there); an
-    # option's attached value isn't read, so T's runner takes `--interp=engine`
+    # option's attached value that is a bare word isn't read, so T's runner takes
+    # `--interp=engine`
     ("python3 -I -B engine/tests/run.py --interp engine", set(), ""),
     ("python3 -I -B tmp/t1/fix.py engine", set(), ""),
     ("python3 -I -B fix.py tests", TESTS, "engine"),
     ("python3 -I -B run.py --interp engine", TESTS, "engine/tests"),
     ("python3 -I -B engine/tests/run.py --interp=engine", ALL, ""),
     ("python3 -I -B engine/tests/run.py --interp refcore", ALL, ""),
+    # issue #20: an attached value with a slash or a file extension is read like an
+    # operand, a number or a bare word isn't
+    ("python3 -I -B tmp/t1/x.py --out=engine/spec/DONE.md", SPEC, ""),
+    ("python3 -I -B tmp/t1/x.py -oengine/spec/DONE.md", SPEC, ""),
+    ("python3 -I -B tmp/t1/x.py -o=engine/deny.toml", RULES, ""),
+    ("node tmp/t1/x.js --out=engine/spec/DONE.md", SPEC, ""),
+    ("python3 -I -B x.py --out=DONE.md", SPEC, "engine/spec"),
+    ("python3 -I -B engine/tests/run.py --jobs=2 --ratio=1.5", ALL, ""),
+    ("python3 -I -B -Wignore -Xutf8 tmp/t1/read.py", ALL, ""),
     # and inline code, a here-document's too, can't tell a read from a write: naming a
     # path the role can't write refuses it; a script in a file isn't opened
     ("python3 - <<'EOF'\nprint(open('engine/spec/BUILD-ORDER.md').read())\nEOF", SPEC, ""),
