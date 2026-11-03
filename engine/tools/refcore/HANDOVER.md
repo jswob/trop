@@ -43,6 +43,20 @@ fix's new tests were seen failing on tally 2.1.1's refcore first.
 - **A leg whose place is a hole (L §5.14, E §9 invariant 1, #31).** `Walk.book_leg` counts a leg whole only when both
   its ends are places; a leg with a hole end books its known side and is left out of invariant 1 (invariant 2 counts the
   known end, as for a leg booked by its ends). New: `L5_14_leg_hole_place` (seen failing: `ENGINE-INVARIANT`).
+- **A refused or hole re-measurement (E §5 steps 1, 3–5, L §5.14.3, #34).** `m_adjust_move_compute` no longer skips a
+  step: a refused re-measurement (`j.err`, or a leg's amount on either side) makes refused `AdjMv`s (`adjust_made(…,
+  err=…)` over `step_legs`, the legs of the booking, the previous state and this one), a hole `when` hole ones, and
+  `prev_bad` / `prev_hole` carry the state to the next step, the one that ends the instance included. A booking whose
+  amount is refused at κ₀ is skipped whole ("refused stays refused"), as a `when` refused at κ₀ was (status
+  `refused`); a hole booking's refused step stays skipped (E §5 step 1). A refused adjustment's readers refuse:
+  `AdjMv.remainder`, `a.change` (`mreads.m_mv_field`), `flows` of the move (`m_flows_move`), the leg's places from
+  V.known (`Walk.sched_adj`, a `placebad`), and `explain` prints `change refused: …`. `L6_5_change5`'s `e1` is now the
+  `HOLE-CHANGED` holes (four hole adjustments). New: `E5_adjust_refused_amount`, `_refused_when`, `_refused_booking`,
+  `_hole_when_later`, `_hole_when_ended` (all seen failing).
+- **A refused settlement links nothing (E §5 step 5, #44).** `m_settle` computes every link and sign first
+  (`m_settle_links`) and applies them only if none is refused; on a refusal it unmarks the adjustments, and
+  `m_adjustments` forgets its `settled` cache entry, so every read settles again and meets the same refusal. New:
+  `L5_14_3_settle_refused_every_read` (seen failing: in each ask one read refused, the other `HOLE-CHANGED`).
 
 ## tally 2.1.1 (issue #13)
 

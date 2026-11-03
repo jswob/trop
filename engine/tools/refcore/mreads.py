@@ -311,6 +311,9 @@ def m_mv_field(self, n, env, ctx):
         raise refuse('LOAD-FIELD', '%s is not a field of %s' % (name, v.id))
     if what == 'attr':
         if name in src.attrs:
+            if isinstance(src.attrs[name], TallyError):
+                # a refused adjustment's change (tally 2.1.2, issue #34)
+                raise src.attrs[name]
             return src.attrs[name]
         h = _body_hole(src)
         if h is not None:
@@ -1587,6 +1590,12 @@ def m_flows_move(self, n, sp, fk, conv, env, ctx):
             if leg is not None and a.leg.name != leg:
                 continue
             if keys and tuple(vkey(k) for k in a.inst.keys[:len(keys)]) != tuple(keys):
+                continue
+            if a.err is not None:
+                # tally 2.1.2 (issue #34): a refused adjustment refuses flows over a span reaching V.known, where an
+                # unsettled one is the HOLE-CHANGED hole
+                if last >= a.day:
+                    raise a.err
                 continue
             if not a.settled and last >= a.day:
                 holes.append(Hole([('%s on %s changed after it was paid (version %s); is back pay due, and when?' % (

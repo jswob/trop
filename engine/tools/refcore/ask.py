@@ -1147,6 +1147,11 @@ class Asker:
             for adj in eng.adjustments(ctx):
                 if adj.inst.id != inst.id:
                     continue
+                if adj.err is not None:
+                    # tally 2.1.2 (issue #34): a refused re-measurement's adjustment
+                    out.append('adjustment %s: change refused: %s on %s (version %s)' % (
+                        adj.id, adj.err.text(), adj.day, ', '.join(adj.vids)))
+                    continue
                 rem = adj.remainder()
                 by = ', '.join(sorted(s.id for s, sign, amt in adj.settled if amt is not None)) or 'nothing'
                 out.append('adjustment %s: change %s on %s (version %s), %s; remaining %s' % (

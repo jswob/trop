@@ -663,6 +663,13 @@ class Walk:
             self.at(K_before(d), 'global_bad', i.err)
 
     def sched_adj(self, a):
+        if a.err is not None:
+            # tally 2.1.2 (issue #34): a refused adjustment refuses the adjusted leg's places from V.known, where an
+            # unsettled one makes them the HOLE-CHANGED hole (L §5.14.3 Detection, L §8.4 a refusal outranks a hole)
+            for p in (a.leg.frm, a.leg.to):
+                if isinstance(p, Thing):
+                    self.at(K_before(max(a.day, self.start)), 'placebad', (p.name, a.err, a))
+            return
         r = a.remainder()
         txt = None
         if r is not None and not (isinstance(r, Num) and r.q == 0):
