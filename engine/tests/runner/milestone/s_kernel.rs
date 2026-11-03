@@ -14,7 +14,7 @@ mod tests {
     use tally_runner::kernel::{VECTORS, difference, vectors};
 
     /// The groups this target tests, one `#[test]` each.
-    const GROUPS: [&str; 5] = ["checks", "g1", "g2", "g3", "g4"];
+    const GROUPS: [&str; 6] = ["checks", "g1", "g2", "g3", "g4", "g5"];
 
     /// Runs every vector of `group` on the engine and holds it to refcore's run.
     fn group_holds(group: &str) {
@@ -114,5 +114,20 @@ mod tests {
     #[test]
     fn s_kernel_g4_holes() {
         group_holds("g4");
+    }
+
+    /// G5, the day walk's agenda and the order within a day (E §4.2 steps 0–4, L §5.10,
+    /// §5.14.2, §5.19): openings before the start and on it; readings at a day's start and end
+    /// around the cut; observations before, inside and after the run, two on a day; a covered
+    /// month; plans outside the run; decisions in strata, one due twice with `ties by` a
+    /// position and one by a money value; a decision computed less its own earlier
+    /// observation; decisions on the cut's day; a walk-bound def read at two points; ties with
+    /// no `ties by` (RUN-TIE) beside an untied twin; a decision refused in its `when`; a
+    /// projection read by a decision on its own day and by an ask, from a day with a reading
+    /// at its start; lifespans that end inside the run; a cut after the run's end
+    /// (`kernel/g5/`).
+    #[test]
+    fn s_kernel_g5_agenda() {
+        group_holds("g5");
     }
 }

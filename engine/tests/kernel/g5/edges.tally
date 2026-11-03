@@ -1,0 +1,70 @@
+model g5_edges
+  tally 2
+  on 2026-04-10
+  start 2026-01-01
+  end 2026-03-31
+  note "T, issue #41, G5: a run whose cut falls after its end (E §4.2, L §5.19): an observation, a plan and a decision on the end day, all before the cut; an opening dated after the end and before the cut, of a place that starts then."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place pocket: cash PLN lives 2026-01-01..
+
+place later: accounts PLN lives 2026-04-01..
+
+place world: outside lives 2026-01-01..
+
+place shop: outside lives 2026-01-01..
+
+input bank: observed
+
+input last_day: date
+
+input fee_amt: money PLN
+
+input big_put: money PLN
+
+input small_put: money PLN
+
+move last_fee: transfers
+  on last_day
+  at last_day
+  leg cash from konto to shop amount fee_amt
+
+move last_dec: transfers
+  on last_day
+  at last_day
+  reads pocket
+  leg cash from world to pocket amount if bal(pocket) > big_put then small_put else fee_amt
+
+ask q_end: bal(konto, d), bal(pocket, d) for d in [2026-03-30, 2026-03-31] law cut
+
+ask q_later: bal(later, 2026-03-31) law cut
+
+ask q_res: residuals konto 2026-03 law cut
+
+version facts
+  cite fixture
+  governs always
+  known 2025-12-01
+  last_day = 2026-03-31 "the run's last day"
+  fee_amt = 3.00 "a fee"
+  big_put = 100.00 "a big amount"
+  small_put = 1.00 "a small amount"
+
+version openings
+  cite fixture
+  governs always
+  known 2025-12-31
+  opening[konto] = 500 at 2026-01-01 start
+  opening[pocket] = 20 at 2026-01-01 start
+  opening[later] = 5 at 2026-04-01 start "a place that starts after the end"
+
+version bank_mar
+  cite fixture
+  governs 2026-03
+  known 2026-04-02
+  bank[b20260331] = (on: 2026-03-31, kind: transfers, leg cash from konto to shop amount 7.00 PLN) "on the end day"

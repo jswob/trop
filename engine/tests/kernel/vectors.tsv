@@ -51,3 +51,7 @@ g3/band	g3		engine/tests/kernel/	engine/tests/kernel/g3/band.tally
 g4/holes	g4		engine/tests/kernel/	engine/tests/kernel/g4/holes.tally		
 g2/ranges	g2		engine/tests/kernel/	engine/tests/kernel/g2/ranges.tally		
 g2/rules	g2		engine/tests/kernel/	engine/tests/kernel/g2/rules.tally		
+g5/agenda	g5		engine/tests/kernel/	engine/tests/kernel/g5/agenda.tally		
+g5/order	g5		engine/tests/kernel/	engine/tests/kernel/g5/order.tally		
+g5/edges	g5		engine/tests/kernel/	engine/tests/kernel/g5/edges.tally		
+g5/refused	g5		engine/tests/kernel/	engine/tests/kernel/g5/refused.tally		
