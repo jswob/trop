@@ -460,7 +460,9 @@ impl Engine {
     }
 
     /// A place's flows over a span: every movement booked there in it, holes and refusals
-    /// included (refcore's `flows_place`). L §5.14.3, E §4.2.
+    /// included; inside a projection's walk, each walk of its chain gives its entries up to
+    /// the point the walk after it starts after (refcore's `flows_place`). L §5.14.3, E §4.2,
+    /// E §4.3 step 1 (tally 2.1.2).
     fn flows_place(
         &mut self,
         m: &Reality,
@@ -502,18 +504,25 @@ impl Engine {
             .get(place)
             .and_then(|t| m.place_unit(t))
             .ok_or_else(|| invariant("a place with no unit"))?;
-        let walk = self.walk(id)?;
+        let chain = self.walk_chain(id, limit)?;
         let units = if pu == "any" {
-            walk.units_of(place)
+            let mut all = BTreeSet::new();
+            for (wid, _) in &chain {
+                all.extend(self.walk(*wid)?.units_of(place));
+            }
+            all.into_iter().collect()
         } else {
             vec![pu.clone()]
         };
         let mut sums = Sums::default();
-        if let Err(stop) = sums.logs(walk, place, &units, (lo, limit)) {
-            // refcore registers as it reads the logs: a refusal keeps what came before it
-            self.absorb(&sums.met);
-            return Err(stop);
+        for (wid, cut) in &chain {
+            if let Err(stop) = sums.logs(self.walk(*wid)?, place, &units, (lo, *cut)) {
+                // refcore registers as it reads the logs: a refusal keeps what came before it
+                self.absorb(&sums.met);
+                return Err(stop);
+            }
         }
+        let walk = self.walk(id)?;
         for (day, entry) in walk.adj_regs.get(place).into_iter().flatten() {
             if *day <= last {
                 sums.met.entries.insert(entry.clone());
@@ -806,6 +815,30 @@ impl Engine {
             next = walk.proj.as_ref().map(|p| p.base);
         }
         Ok(None)
+    }
+
+    /// Walk `id` read through `limit`, then each walk it continues read through the point
+    /// the walk after it starts after, the nearest first (refcore's `flows_place`, its
+    /// chain). E §4.3 step 1, L §5.14.1.
+    fn walk_chain(&self, id: usize, limit: At) -> Result<Vec<(usize, At)>, Stop> {
+        let mut chain = vec![(id, limit)];
+        let mut next = self
+            .walk(id)?
+            .proj
+            .as_ref()
+            .map(|p| (p.base, p.point.min(limit)));
+        while let Some((wid, cut)) = next {
+            if chain.len() > self.walks.len() {
+                return Err(invariant("a chain of walks that loops"));
+            }
+            chain.push((wid, cut));
+            next = self
+                .walk(wid)?
+                .proj
+                .as_ref()
+                .map(|p| (p.base, p.point.min(cut)));
+        }
+        Ok(chain)
     }
 
     /// The refusal of a leg the walk refused: inside a decision, what its walk and the walks
