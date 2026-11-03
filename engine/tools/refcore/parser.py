@@ -744,6 +744,14 @@ class P:
     def tieby(self):
         self.expect('ties')
         self.expect('by')
+        # L §2.3 (tally 2.1.2, issue #29): a `ties by` term counts one level toward LOAD-DEPTH, as an `if` does, so a
+        # chain of reads each with its own `ties by` is bounded
+        self.open()
+        items = self.tieby_term()
+        self.close()
+        return items
+
+    def tieby_term(self):
         if self.at('('):
             save = self.i
             self.i += 1
@@ -806,7 +814,11 @@ class P:
     def proj(self):
         out = {}
         if self.accept('from'):
+            # L §2.3 (tally 2.1.2, issue #29): a `from` term counts one level toward LOAD-DEPTH, so `bal(x, d) from
+            # bal(y, e) from …` is bounded
+            self.open()
             out['frm'] = self.post()
+            self.close()
         if self.at('windows'):
             self.i += 1
             out['windows'] = self.wchoice()

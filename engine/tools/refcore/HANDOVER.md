@@ -7,6 +7,15 @@ or unclear it refuses `REFCORE-UNSPECIFIED <section>: <what>` (the list is `UNSP
 interpreter doesn't build refuses `REFCORE-NOT-YET <construct>`. Nothing may crash: an internal error becomes
 `REFCORE-NOT-YET an input this interpreter can't handle (...)` unless `REFCORE_DEBUG` is set.
 
+## tally 2.1.2 (the spec round: issues #23, #29–#34, #38, #39, #43, #44, #46, #47)
+
+The spec patch tally 2.1.2 (`spec/CHANGES.md` 2.1.2-1 onward), the user's rulings at gate G-SP1 (2026-11-03). Each
+fix's new tests were seen failing on tally 2.1.1's refcore first.
+
+- **`LOAD-DEPTH` counts `from` and `ties by` terms (L §2.3, #29).** `parser.P.proj` and `P.tieby` open one level
+  around the term, so a chain of reads is bounded; 300 links crashed refcore with a `RecursionError`. New:
+  `L2_3_depth_from_chain`, `_from_chain_ok`, `_ties_chain`.
+
 ## tally 2.1.1 (issue #13)
 
 The spec patch tally 2.1.1 (`spec/CHANGES.md` 2.1.1-1 to 2.1.1-5), from T1's gaps I-1, I-2 and I-5 (`engine/tests/

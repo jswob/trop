@@ -1,3 +1,13 @@
+# Changes: tally 2.1.1 → tally 2.1.2
+
+tally 2.1.2 is the second patch of the frozen `tally 2.1` (`DONE.md` rule 1, `engine/README.md` § Changing it): it corrects the definition of `tally 2`, and files still state `tally 2` (`LANGUAGE.md` §9). Its gaps are the Amendments issues found while milestone S was built and gated (#23 by #13; #29, #30, #31, #32 by the S builder; #33, #34, #38, #39 by the S gate's review; #43, #44, #46 by T's STOP-REPORTs) and S's fixed budgets (#47). The user ruled them at the spec round's gate G-SP1 on 2026-11-03 (#31 on 2026-11-01, #33 and the budgets on 2026-11-02); each row quotes the ruling. Where refcore differed from the text it now follows it, with its tests.
+
+| # | Issue | Where | The gap | The change | The ruling | Found by |
+|---|---|---|---|---|---|---|
+| 2.1.2-1 | #29 | L §2.3 | `LOAD-DEPTH` counted brackets and `if`s only, so a read chained by `from` or `ties by` (`bal(x, d) from bal(y, e) from …`) nested with no bound the spec named; refcore counted no link (9 links parsed, 300 crashed it with a `RecursionError`), the engine stopped at its own counter (64) with an internal `NotBuilt` | the depth at a point also counts the `from` and `ties by` terms it is inside, one each, as an `if` counts | "A: each link counts one (Recommended)", 2026-11-03 | the S builder at G3 (issue #26) |
+
+---
+
 # Changes: tally 2.1 → tally 2.1.1
 
 tally 2.1.1 is the first patch of the frozen `tally 2.1` (`DONE.md` rule 1, `engine/README.md` § Changing it). It corrects the definition of `tally 2`, and files still state `tally 2` (`LANGUAGE.md` §9). Its gaps were logged by the tests' session T1 (issue #5, `engine/tests/INTERFACE.md` §5 and §8), measured on refcore, and are issue #13. The user decided the order at T1's gate G-T on 2026-10-31 ("Sort warnings") and approved the patch's scope the same day ("Yes, within scope (Recommended)"). refcore follows, with 9 new tests and one changed (1 124 tests). Every gate is re-run on it. No value, hole or register line changes. What prints changes only in the order of warnings (in one file too: by code, then by text, not as load finds them), in which load refusal prints and the place it names when the files are given in another order than their full paths, and where refcore crashed.

@@ -322,7 +322,7 @@ LABEL     = a word of the id pattern; keywords allowed (§2.2)
 
 **Value first** (D-14). A construct that gives a value states the value first, then its bindings (`for`), filters (`where`), condition (`when`) and dates (`at`). The forms that give no value keep their order: a bare binding (`count(p in persons on d where c)`, `first(s in sales over y)`), `if c then a else b`, and headers, which are fields.
 
-Expressions nest at most **8** deep (`LOAD-DEPTH`). The depth at a point is the number of brackets `( )`, `[ ]` and `{ }` open there (calls, keys and `as if` included) plus the `if`s it is inside; a chain of operators at one level (`a + b + … + j`) adds none. `as if` nests at most **4** deep (`LOAD-ASIF`).
+Expressions nest at most **8** deep (`LOAD-DEPTH`). The depth at a point is the number of brackets `( )`, `[ ]` and `{ }` open there (calls, keys and `as if` included) plus the `if`s and the `from` and `ties by` terms it is inside, so a read chained by `from` or `ties by` (`bal(x, d) from bal(y, e) from t`) is bounded like a bracket (tally 2.1.2); a chain of operators at one level (`a + b + … + j`) adds none. `as if` nests at most **4** deep (`LOAD-ASIF`).
 
 ### 2.4 Canonical format
 
