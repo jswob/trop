@@ -498,7 +498,7 @@ G11 is split in three: G11a (this entry), G11b the fences P8-14 asks for, G11c c
 
 **Closed:** the STOP-REPORT above, by the rules step 13f97e3: the scorer now reads a mutation holding an escaped pipe.
 
-**The reviewer's finding** (`tmp/s/gate-close-review.md`, not blocking). With `Gap::anchor` gone, `Walk::gaps` was written by `apply_stated` and read by nothing: the ledger's balance lines come from the readings themselves (`book/ledger.rs`, `booked_amount`). No later milestone in BUILD-ORDER reads it either. So these are deleted:
+**The reviewer's finding** (`tmp/s/gate-close-review.md`, not blocking). With `Gap::anchor` gone, `Walk::gaps` was written by `apply_stated` and read by nothing: the ledger's balance lines come from the readings themselves (`book/ledger.rs`, `booked_amount`). Nothing at S reads it. *(Corrected in the next entry: this said no later milestone does. But M2 builds "statements with their anchors, pads and gaps" and the residual ledger in full, BUILD-ORDER.md:162, and rebuilds the records it needs then.)* So these are deleted:
 - the `Gap` record (`book/reading.rs`) and its re-export in `lib.rs`;
 - the `Walk::gaps` field (`walk/state.rs`) and its one push.
 
@@ -517,3 +517,23 @@ G11 is split in three: G11a (this entry), G11b the fences P8-14 asks for, G11c c
 - On a run at e233838 or later, that mutant is caught: the score's caught count gains 1 and its missed count loses 1.
 
 **Green.** No new T id; no test changed. **STOP-REPORTs:** none open. **Exceptions:** +0; count 6; report-only 5. **Check:** `check full: green, 31 steps (803s)`.
+
+## 2026-11-03 S, row 5: the gate's review of 58270b7, items 4.1 and 4.2 (issue #41)
+
+No change in behaviour.
+
+1. **`book/reading.rs`'s comments:** the header's invariant and `apply_stated`'s doc no longer say the gap is kept for the ledger. A gap is used where it is met (worth, the register, a pad's amount), and the ledger's balance line computes its own from the reading.
+2. **`booked_coll`:** now built only in the pad arm, the one place that reads it. It can't refuse there (`self.walk(id)?` already passed), and `Walk::cum` only extends a cached prefix. Between the old call and the pad arm, only worth and the `inside` cache change, so the pad's register is the same.
+3. **The last entry's claim about later milestones:** corrected there. M2 builds "statements with their anchors, pads and gaps" and the residual ledger in full (BUILD-ORDER.md:162). At M2 it rebuilds what it needs: a reading's gap per statement, and the pads as movements of `pads` that the ledger's lines and bindings over pads can read.
+4. **`walk/point.rs` `At::same_act`, "delete field `sub`"** (CI 192:39 and 192:14): moved from equivalent to `R-87: missed: open`.
+   - A decision's own observation is booked at sub-step 1 (`book_obs_now`), in the decision's group. When the sign rule refuses that group at sub-step 2, the code takes back the observation's entry and its register (`unbook`). The mutant at column 39 matches only sub-step 0, so the entry stays.
+   - Both ends are refused from sub-step 2 either way, as the gate saw. But a refused `bal` still takes in the register met before the refusal (`reads.rs`, `absorb` before `state_value`, the N6 rule). An observation's register holds what judging its link met (`observe.rs`, `pop_alone`, e.g. `assumed`). So with the mutant, `bal(Q)` can print a line the code doesn't.
+   - The row gives the recipe. Column 14 alone would be equivalent (the take-back's point is at sub-step 0), but it shares the key.
+
+**Rows:** 195, 98 equivalent and 97 missed.
+
+**The local scorer** (`engine/tools/mutants-survivors tmp/mutants/41606310136/mutants-shard-*`): `mutants-survivors: score 91.6% = caught 1203 / (caught 1203 + missed 215 + timed out 0 - equivalent 104); unviable 353, not counted`, exit 1.
+- Equivalent is 2 lower than last turn: the `same_act` key's two columns.
+- The one problem is still the expected `measure_move` `<` → `<=` (missed at 13f97e3, caught since by e233838).
+
+**STOP-REPORTs:** none. **Exceptions:** +0; count 6; report-only 5. **Check:** `check full: green, 31 steps (807s)`.

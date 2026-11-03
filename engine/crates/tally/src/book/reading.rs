@@ -8,7 +8,8 @@
 //! (`apply_reading`, `booked_coll`, `sub`, `st_value`, `gtext`).
 //! Invariants: a reading applies only before the cut but an opening at the run's start; after
 //! a reading the place's balance is the reading; a pad books only its other end, the reading's
-//! end is the reset; every gap is kept for the ledger.
+//! end is the reset; a gap is used where it is met (worth, the register, a pad's amount) and
+//! not kept: the ledger's balance line computes its own from the reading (`book/ledger.rs`).
 
 use std::collections::BTreeMap;
 
@@ -209,9 +210,9 @@ fn reading_of(
 }
 
 impl Engine {
-    /// A `stated` reading at its point: its gap against the booked balance kept for the
-    /// ledger, then, by its version's gap role, an anchor that sets the balance or a pad that
-    /// books the gap from the other place (refcore's `apply_reading`). E §6.1, L §5.19.
+    /// A `stated` reading at its point: its gap against the booked balance, then, by its
+    /// version's gap role, an anchor that sets the balance or a pad that books the gap from
+    /// the other place (refcore's `apply_reading`). E §6.1, L §5.19.
     ///
     /// # Errors
     ///
@@ -249,8 +250,6 @@ impl Engine {
         let before = walk.pstate(m, &r.place, &r.unit, at);
         let booked = booked_amount(&before, &walk.anchor_question(&r.place));
         let gap = gap_of(&r.value, &booked)?;
-        let mut bc = self.booked_coll(m, id, &r.place, &r.unit, at)?;
-        bc.merge(&r.coll);
         let read = self.walk_mut(id)?;
         // E §9 item 2: an anchor's gap, or a pad's from outside, moves worth; a pad from an
         // inside place moves it between two inside places
@@ -293,6 +292,9 @@ impl Engine {
                 self.walk_mut(id)?.add(m, &r.place, &r.unit, ent)
             }
             GapRole::Pad(other) => {
+                // the pad's amount rests on the booked balance's register and the reading's
+                let mut bc = self.booked_coll(m, id, &r.place, &r.unit, at)?;
+                bc.merge(&r.coll);
                 let pad = make_pad(r, &other, &gap, bc, at)?;
                 let text = format!(
                     "{} {}, {} of {}",
