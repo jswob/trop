@@ -39,6 +39,10 @@ def t_rev[k in w]: num at reader
   note "the top negated: the machine word's least value turned past its greatest"
   rule base v card = -top[k]
 
+def t_abs[k in w]: money DUK at reader
+  note "money's absolute value: negative, zero, positive, and the machine word's least value of minor units"
+  rule base v card = abs(money_in[k])
+
 def t_net[k in w]: money DUK at reader
   rule base v card = money_in[k] - money_in[half]
 
@@ -52,7 +56,7 @@ ask q_values: top[k], t_q[k] for k in w law 2026-10-25
 
 ask q_more: t_prod[k], t_diff[k], t_sq[k], t_inv[k], t_rev[k] for k in w law 2026-10-25
 
-ask q_money: money_in[k], t_net[k], t_sign[k] for k in w law 2026-10-25
+ask q_money: money_in[k], t_net[k], t_sign[k], t_abs[k] for k in w law 2026-10-25
 
 version card
   cite fixture

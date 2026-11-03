@@ -14,7 +14,7 @@ mod tests {
     use tally_runner::kernel::{VECTORS, difference, vectors};
 
     /// The groups this target tests, one `#[test]` each.
-    const GROUPS: [&str; 6] = ["checks", "g1", "g2", "g3", "g4", "g5"];
+    const GROUPS: [&str; 8] = ["checks", "g1", "g2", "g3", "g4", "g5", "g6", "g9"];
 
     /// Runs every vector of `group` on the engine and holds it to refcore's run.
     fn group_holds(group: &str) {
@@ -129,5 +129,24 @@ mod tests {
     #[test]
     fn s_kernel_g5_agenda() {
         group_holds("g5");
+    }
+
+    /// G6, the plan pass (E §4.1, L §5.14): a daily move's ledger lines in a covered month; a
+    /// `when` that holds, fails, is a hole and is refused; an attribute refused; an uncertain
+    /// kind with and without `with uncertain`; legs in money and units, of a kind of unit
+    /// `any`, and of 0 (`kernel/g6/`).
+    #[test]
+    fn s_kernel_g6_plan_pass() {
+        group_holds("g6");
+    }
+
+    /// G9, booking a leg and the sign rule (L §5.10, §5.14, E §4.2 steps 4–5): claims, debts
+    /// and a holding broken by a first-batch plan and by a decision (RUN-PLACE), each beside a
+    /// twin that stays at 0 or nets in its batch; a claim stated below zero at a close; legs
+    /// out of and into places outside their lifespans (RUN-LIFESPAN) beside a leg of 0;
+    /// `WARN-NEGATIVE` twice; a hole amount and a hole day (`kernel/g9/`).
+    #[test]
+    fn s_kernel_g9_sign_rule() {
+        group_holds("g9");
     }
 }

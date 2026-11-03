@@ -6951,7 +6951,7 @@ q_modes (k = n05): (0, -1, -1, 0, -1, 0, 0)
   law date 2026-10-25, cut 2026-10-25
 q_modes (k = p15): (1, 2, 1, 2, 2, 1, 2)
   law date 2026-10-25, cut 2026-10-25
-,7:g1/text,2:g1,17:run g1/text.tally,4979:13:g1/text.tally,4956:model g1_text
+,7:g1/text,2:g1,17:run g1/text.tally,5176:13:g1/text.tally,5153:model g1_text
   tally 2
   on 2026-10-25
   start 2026-01-01
@@ -6992,6 +6992,10 @@ def t_rev[k in w]: num at reader
   note "the top negated: the machine word's least value turned past its greatest"
   rule base v card = -top[k]
 
+def t_abs[k in w]: money DUK at reader
+  note "money's absolute value: negative, zero, positive, and the machine word's least value of minor units"
+  rule base v card = abs(money_in[k])
+
 def t_net[k in w]: money DUK at reader
   rule base v card = money_in[k] - money_in[half]
 
@@ -7005,7 +7009,7 @@ ask q_values: top[k], t_q[k] for k in w law 2026-10-25
 
 ask q_more: t_prod[k], t_diff[k], t_sq[k], t_inv[k], t_rev[k] for k in w law 2026-10-25
 
-ask q_money: money_in[k], t_net[k], t_sign[k] for k in w law 2026-10-25
+ask q_money: money_in[k], t_net[k], t_sign[k], t_abs[k] for k in w law 2026-10-25
 
 version card
   cite fixture
@@ -7067,43 +7071,43 @@ version card
   top[square] = 1 "1 / 3037000500, whose square's denominator passes 2^63"
   bottom[square] = 3037000500 "just past the square root of 2^63"
   money_in[square] = -0.01 "minus one minor unit"
-,,1:0,9676:q_money (k = third): (1 500.00 DUK, 1 499.50 DUK, 3 000 DUK)
+,,1:0,10061:q_money (k = third): (1 500.00 DUK, 1 499.50 DUK, 3 000 DUK, 1 500.00 DUK)
   law date 2026-10-25, cut 2026-10-25
-q_money (k = neg_seventh): (-2 300.00 DUK, -2 300.50 DUK, -2 300 DUK)
+q_money (k = neg_seventh): (-2 300.00 DUK, -2 300.50 DUK, -2 300 DUK, 2 300.00 DUK)
   law date 2026-10-25, cut 2026-10-25
-q_money (k = big_third): (123 456 789 012 345 678 901.23 DUK, 123 456 789 012 345 678 900.73 DUK, 246 913 578 024 691 357 802.46 (246 913 578 024 691 000 000) DUK)
+q_money (k = big_third): (123 456 789 012 345 678 901.23 DUK, 123 456 789 012 345 678 900.73 DUK, 246 913 578 024 691 357 802.46 (246 913 578 024 691 000 000) DUK, 123 456 789 012 345 678 901.23 DUK)
   law date 2026-10-25, cut 2026-10-25
-q_money (k = tiny): (0.01 DUK, -0.49 DUK, 0.02 DUK)
+q_money (k = tiny): (0.01 DUK, -0.49 DUK, 0.02 DUK, 0.01 DUK)
   law date 2026-10-25, cut 2026-10-25
-q_money (k = sig16_up): (-0.01 DUK, -0.51 DUK, -0.01 DUK)
+q_money (k = sig16_up): (-0.01 DUK, -0.51 DUK, -0.01 DUK, 0.01 DUK)
   law date 2026-10-25, cut 2026-10-25
-q_money (k = sig16_even): (0.00 DUK, -0.50 DUK, 0 DUK)
+q_money (k = sig16_even): (0.00 DUK, -0.50 DUK, 0 DUK, 0.00 DUK)
   law date 2026-10-25, cut 2026-10-25
-q_money (k = int19): (-123 456 789 012 345 678 901.23 DUK, -123 456 789 012 345 678 901.73 DUK, -123 456 789 012 345 678 901.23 (-123 456 789 012 346 000 000) DUK)
+q_money (k = int19): (-123 456 789 012 345 678 901.23 DUK, -123 456 789 012 345 678 901.73 DUK, -123 456 789 012 345 678 901.23 (-123 456 789 012 346 000 000) DUK, 123 456 789 012 345 678 901.23 DUK)
   law date 2026-10-25, cut 2026-10-25
-q_money (k = int21): (92 233 720 368 547 758.07 DUK, 92 233 720 368 547 757.57 DUK, 184 467 440 737 095 516.14 (184 467 440 737 096 000) DUK)
+q_money (k = int21): (92 233 720 368 547 758.07 DUK, 92 233 720 368 547 757.57 DUK, 184 467 440 737 095 516.14 (184 467 440 737 096 000) DUK, 92 233 720 368 547 758.07 DUK)
   law date 2026-10-25, cut 2026-10-25
-q_money (k = trim): (-92 233 720 368 547 758.08 DUK, -92 233 720 368 547 758.58 DUK, -92 233 720 368 547 758.08 (-92 233 720 368 547 800) DUK)
+q_money (k = trim): (-92 233 720 368 547 758.08 DUK, -92 233 720 368 547 758.58 DUK, -92 233 720 368 547 758.08 (-92 233 720 368 547 800) DUK, 92 233 720 368 547 758.08 DUK)
   law date 2026-10-25, cut 2026-10-25
-q_money (k = carry): (92 233 720 368 547 758.08 DUK, 92 233 720 368 547 757.58 DUK, 184 467 440 737 095 516.16 (184 467 440 737 096 000) DUK)
+q_money (k = carry): (92 233 720 368 547 758.08 DUK, 92 233 720 368 547 757.58 DUK, 184 467 440 737 095 516.16 (184 467 440 737 096 000) DUK, 92 233 720 368 547 758.08 DUK)
   law date 2026-10-25, cut 2026-10-25
-q_money (k = neg_tiny): (999.99 DUK, 999.49 DUK, 1 999.98 DUK)
+q_money (k = neg_tiny): (999.99 DUK, 999.49 DUK, 1 999.98 DUK, 999.99 DUK)
   law date 2026-10-25, cut 2026-10-25
-q_money (k = zero): (1 000.00 DUK, 999.50 DUK, 2 000 DUK)
+q_money (k = zero): (1 000.00 DUK, 999.50 DUK, 2 000 DUK, 1 000.00 DUK)
   law date 2026-10-25, cut 2026-10-25
-q_money (k = plain): (1 234 567.89 DUK, 1 234 567.39 DUK, 2 469 135.78 DUK)
+q_money (k = plain): (1 234 567.89 DUK, 1 234 567.39 DUK, 2 469 135.78 DUK, 1 234 567.89 DUK)
   law date 2026-10-25, cut 2026-10-25
-q_money (k = neg_divisor): (-0.50 DUK, -1.00 DUK, -0.5 DUK)
+q_money (k = neg_divisor): (-0.50 DUK, -1.00 DUK, -0.5 DUK, 0.50 DUK)
   law date 2026-10-25, cut 2026-10-25
-q_money (k = both_big): (0.10 DUK, -0.40 DUK, 0.2 DUK)
+q_money (k = both_big): (0.10 DUK, -0.40 DUK, 0.2 DUK, 0.10 DUK)
   law date 2026-10-25, cut 2026-10-25
-q_money (k = half): (0.50 DUK, 0.00 DUK, 1 DUK)
+q_money (k = half): (0.50 DUK, 0.00 DUK, 1 DUK, 0.50 DUK)
   law date 2026-10-25, cut 2026-10-25
-q_money (k = wide): (0.01 DUK, -0.49 DUK, 0.02 DUK)
+q_money (k = wide): (0.01 DUK, -0.49 DUK, 0.02 DUK, 0.01 DUK)
   law date 2026-10-25, cut 2026-10-25
-q_money (k = square): (-0.01 DUK, -0.51 DUK, -0.01 DUK)
+q_money (k = square): (-0.01 DUK, -0.51 DUK, -0.01 DUK, 0.01 DUK)
   law date 2026-10-25, cut 2026-10-25
-q_money (k = minword): (?"money_in at minword: no value at 2026-10-25" (money_in[minword]), ?"money_in at minword: no value at 2026-10-25" (money_in[minword]), ?"money_in at minword: no value at 2026-10-25" (money_in[minword]))
+q_money (k = minword): (?"money_in at minword: no value at 2026-10-25" (money_in[minword]), ?"money_in at minword: no value at 2026-10-25" (money_in[minword]), ?"money_in at minword: no value at 2026-10-25" (money_in[minword]), ?"money_in at minword: no value at 2026-10-25" (money_in[minword]))
   law date 2026-10-25, cut 2026-10-25
 q_more (k = third): (3, -2, 1/9 (0.111111111111111), 9, -1)
   law date 2026-10-25, cut 2026-10-25
@@ -8740,5 +8744,700 @@ q_bal (d = 2026-02-20): (refused: RUN-DIV division by zero, refused: RUN-DIV div
   law date 2026-02-15, cut 2026-02-15
 q_bal (d = 2026-03-20): (refused: RUN-DIV division by zero, refused: RUN-DIV division by zero)
   unfulfilled: split[2026-01]
+  law date 2026-02-15, cut 2026-02-15
+,7:g9/sign,2:g9,17:run g9/sign.tally,7341:13:g9/sign.tally,7318:model g9_sign
+  tally 2
+  on 2026-03-25
+  start 2026-01-01
+  end 2026-03-31
+  note "T, issue #41, G9: booking a leg and the sign rule (L §5.10, §5.14, E §4.2 steps 4-5): claims, debts and a holding broken by a first-batch plan, by a decision's legs and by a closing reading, each refused (RUN-PLACE) beside a twin that stays at 0 or nets to 0 in its batch; a leg out of a place outside its lifespan (RUN-LIFESPAN) beside a leg of 0 that books nothing; cash below zero in two stretches (WARN-NEGATIVE twice); a hole amount and a hole day, each on places of their own."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit PLN: currency minor 0.01
+
+unit etf_unit "a fund unit"
+
+index month = month 2026-01..2026-03
+
+place konto: accounts PLN lives 2026-01-01..
+
+place wallet: cash PLN lives 2026-01-01..
+
+place lent: claims PLN lives 2026-01-01..
+
+place lent2: claims PLN lives 2026-01-01..
+
+place lent3: claims PLN lives 2026-01-01..
+
+place lent4: claims PLN lives 2026-01-01..
+
+place owed: debts PLN lives 2026-01-01..
+
+place fund: holdings etf_unit priced fund_price lives 2026-01-01..
+
+place fund2: holdings etf_unit priced fund_price lives 2026-01-01..
+
+place gone: accounts PLN lives 2026-01-01..2026-02-27
+
+place gone2: accounts PLN lives 2026-01-01..2026-02-27
+
+place box_h: accounts PLN lives 2026-01-01..
+
+place box_d: accounts PLN lives 2026-01-01..
+
+place market: outside lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input fund_price[m in month]: num PLN/etf_unit
+
+input back_amt[m in month]: money PLN
+
+input lend_amt[m in month]: money PLN
+
+input swing_amt[m in month]: money PLN
+
+input gone2_amt[m in month]: money PLN
+
+input over_amt: money PLN
+
+input payoff_amt[m in month]: money PLN
+
+input sell_units[m in month]: num etf_unit
+
+input spend_amt[m in month]: money PLN
+
+input refill_amt: money PLN
+
+input gone_amt[m in month]: money PLN
+
+input hole_amt: money PLN question "How much came in?"
+
+input hole_day: date question "When does it come?"
+
+input small_amt: money PLN
+
+input mystery_day: date
+
+input first_day: date
+
+input pay_dom: int
+
+input dec_dom: int
+
+input spend_dom: int
+
+input refill_dom: int
+
+move back[m in month]: transfers
+  on day_of(m, pay_dom)
+  at start_of(m)
+  leg cash from lent to konto amount back_amt[m]
+
+move swing_out[m in month]: transfers
+  on day_of(m, pay_dom)
+  at start_of(m)
+  leg cash from lent2 to konto amount swing_amt[m]
+
+move swing_in[m in month]: transfers
+  on day_of(m, pay_dom)
+  at start_of(m)
+  leg cash from konto to lent2 amount lend_amt[m]
+
+move repay[m in month]: transfers
+  on day_of(m, dec_dom)
+  at start_of(m)
+  reads lent3
+  leg cash from lent3 to world amount if bal(lent3) > small_amt then bal(lent3) + over_amt else bal(lent3)
+
+move payoff[m in month]: transfers
+  on day_of(m, pay_dom)
+  at start_of(m)
+  leg cash from konto to owed amount payoff_amt[m]
+
+move sell[m in month]: etf_sells
+  on day_of(m, pay_dom)
+  at start_of(m)
+  leg units from fund to market amount sell_units[m]
+
+move spend[m in month]: transfers
+  on day_of(m, spend_dom)
+  at start_of(m)
+  leg cash from wallet to world amount spend_amt[m]
+
+move refill[m in month]: transfers
+  on day_of(m, refill_dom)
+  at start_of(m)
+  leg cash from world to wallet amount refill_amt
+
+move into_gone[m in month]: transfers
+  on day_of(m, pay_dom)
+  at start_of(m)
+  leg cash from gone to world amount gone_amt[m]
+
+move into_gone2[m in month]: transfers
+  on day_of(m, pay_dom)
+  at start_of(m)
+  leg cash from world to gone2 amount gone2_amt[m]
+
+move dump[m in month]: etf_sells
+  on day_of(m, dec_dom)
+  at start_of(m)
+  reads fund2
+  leg units from fund2 to market amount if bal(fund2) > sell_units[m] then sell_units[m] else bal(fund2) + sell_units[m]
+
+move mystery: transfers
+  on mystery_day
+  at mystery_day
+  leg cash from world to box_h amount hole_amt
+
+move vague: transfers
+  on hole_day
+  at first_day
+  leg cash from world to box_d amount small_amt
+
+kind etf_sells: event certain
+  leg units: etf_unit
+
+ask q_claims: bal(lent, d), bal(lent2, d), bal(lent3, d), bal(lent4, d) for d in [2026-01-31, 2026-02-28, 2026-03-10, 2026-03-20, 2026-03-31] law cut
+
+ask q_more: bal(owed, d), bal(fund, d), bal(gone, d), bal(gone2, d), bal(konto, d), bal(fund2, d) for d in [2026-01-31, 2026-02-28, 2026-03-31] law cut
+
+ask q_wallet: bal(wallet, d) for d in [2026-01-14, 2026-01-15, 2026-01-25, 2026-02-15, 2026-02-25, 2026-03-15] law cut
+
+ask q_holes: bal(box_h, d), bal(box_d, d) for d in [2026-01-10, 2026-01-31, 2026-02-01, 2026-03-31] law cut
+
+version facts
+  cite fixture
+  governs always
+  known 2025-12-01
+  fund_price[2026-01] = 10 "a unit's price"
+  fund_price[2026-02] = 10
+  fund_price[2026-03] = 10
+  back_amt[2026-01] = 50.00 "lent: 100 to 50"
+  back_amt[2026-02] = 50.00 "lent: 50 to 0, the twin that stays at 0"
+  back_amt[2026-03] = 30.00 "lent: 0 to -30, refused"
+  lend_amt[2026-01] = 0.00 "nothing lent"
+  lend_amt[2026-02] = 0.00
+  lend_amt[2026-03] = 40.00 "lent2 nets -30 + 40 in its batch"
+  swing_amt[2026-01] = 0.00 "nothing back"
+  swing_amt[2026-02] = 0.00
+  swing_amt[2026-03] = 30.00 "lent2: 0 - 30 + 40, never checked between"
+  over_amt = 10.00 "repay takes 10 more than lent3 holds"
+  payoff_amt[2026-01] = 40.00 "owed: -100 to -60"
+  payoff_amt[2026-02] = 60.00 "owed: -60 to 0, the twin"
+  payoff_amt[2026-03] = 20.00 "owed: 0 to 20, refused"
+  sell_units[2026-01] = 4 "fund: 10 to 6 units"
+  sell_units[2026-02] = 6 "fund: 6 to 0 units, the twin"
+  sell_units[2026-03] = 2 "fund: 0 to -2 units, refused"
+  spend_amt[2026-01] = 80.00 "wallet 50 to -30"
+  spend_amt[2026-02] = 100.00 "wallet 70 to -30 again"
+  spend_amt[2026-03] = 10.00
+  refill_amt = 100.00 "back above zero"
+  gone_amt[2026-01] = 5.00 "out of gone while it lives"
+  gone_amt[2026-02] = 5.00 "gone ends empty"
+  gone_amt[2026-03] = 0.00 "a leg of 0 out of gone after its lifespan: it books nothing"
+  gone2_amt[2026-01] = 0.00
+  gone2_amt[2026-02] = 0.00
+  gone2_amt[2026-03] = 5.00 "into gone2 after its lifespan, refused"
+  small_amt = 1.00 "a small amount"
+  mystery_day = 2026-02-01 "the hole amount's day"
+  first_day = 2026-01-01 "the law date of the hole day's move"
+  pay_dom = 10 "the plans' day"
+  dec_dom = 20 "the decisions' day"
+  spend_dom = 15 "the spending's day"
+  refill_dom = 25 "the refill's day"
+
+version openings
+  cite fixture
+  governs always
+  known 2025-12-31
+  opening[konto] = 1000 at 2026-01-01 start
+  opening[wallet] = 50 at 2026-01-01 start
+  opening[lent] = 100 at 2026-01-01 start
+  opening[lent2] = 0 at 2026-01-01 start
+  opening[lent3] = 30 at 2026-01-01 start "repay takes it to -10 on 2026-01-20, refused"
+  opening[lent4] = 20 at 2026-01-01 start
+  opening[owed] = -100 at 2026-01-01 start
+  opening[fund] = 10 at 2026-01-01 start
+  opening[gone] = 10 at 2026-01-01 start
+  opening[gone2] = 0 at 2026-01-01 start
+  opening[fund2] = 5 at 2026-01-01 start "dump sells 4, then 1 + 6 of 1 held"
+  opening[box_h] = 0 at 2026-01-01 start
+  opening[box_d] = 0 at 2026-01-01 start
+
+version lent4_jan
+  cite fixture
+  governs 2026-01
+  known 2026-02-02
+  anchor lent4
+  stated[lent4] = -5.00 at 2026-01-31 end "a claim stated below zero at the close"
+
+version lent4_feb
+  cite fixture
+  governs 2026-02
+  known 2026-03-02
+  anchor lent4
+  stated[lent4] = 0.00 at 2026-02-28 end "the twin: a claim stated at 0"
+,,1:0,5018:q_claims (d = 2026-01-31): (50.00 PLN, 0.00 PLN, refused: RUN-PLACE repay[2026-01] takes lent3 below 0, -5.00 PLN)
+  anchor: lent4 2026-01-31 end, stated -5.00 PLN, difference -25.00 PLN
+  unfulfilled: back[2026-01]
+  law date 2026-03-25, cut 2026-03-25
+q_claims (d = 2026-02-28): (0.00 PLN, 0.00 PLN, refused: RUN-PLACE repay[2026-01] takes lent3 below 0, 0.00 PLN)
+  anchor: lent4 2026-02-28 end, stated 0.00 PLN, difference 5.00 PLN
+  unfulfilled: back[2026-01]
+  unfulfilled: back[2026-02]
+  law date 2026-03-25, cut 2026-03-25
+q_claims (d = 2026-03-10): (refused: RUN-PLACE lent is -30.00 PLN after the day's observations and plans of 2026-03-10, 10.00 PLN, refused: RUN-PLACE repay[2026-01] takes lent3 below 0, 0.00 PLN)
+  anchor: lent4 2026-02-28 end, stated 0.00 PLN, difference 5.00 PLN
+  unfulfilled: back[2026-01]
+  unfulfilled: back[2026-02]
+  unfulfilled: swing_in[2026-03]
+  unfulfilled: swing_out[2026-03]
+  law date 2026-03-25, cut 2026-03-25
+q_claims (d = 2026-03-20): (refused: RUN-PLACE lent is -30.00 PLN after the day's observations and plans of 2026-03-10, 10.00 PLN, refused: RUN-PLACE repay[2026-01] takes lent3 below 0, 0.00 PLN)
+  anchor: lent4 2026-02-28 end, stated 0.00 PLN, difference 5.00 PLN
+  unfulfilled: back[2026-01]
+  unfulfilled: back[2026-02]
+  unfulfilled: swing_in[2026-03]
+  unfulfilled: swing_out[2026-03]
+  law date 2026-03-25, cut 2026-03-25
+q_claims (d = 2026-03-31): (refused: RUN-PLACE lent is -30.00 PLN after the day's observations and plans of 2026-03-10, 10.00 PLN, refused: RUN-PLACE repay[2026-01] takes lent3 below 0, 0.00 PLN)
+  anchor: lent4 2026-02-28 end, stated 0.00 PLN, difference 5.00 PLN
+  unfulfilled: back[2026-01]
+  unfulfilled: back[2026-02]
+  unfulfilled: swing_in[2026-03]
+  unfulfilled: swing_out[2026-03]
+  law date 2026-03-25, cut 2026-03-25
+q_holes (d = 2026-01-10): (0.00 PLN, ?"When does it come?" (hole_day))
+  law date 2026-03-25, cut 2026-03-25
+q_holes (d = 2026-01-31): (0.00 PLN, ?"When does it come?" (hole_day))
+  law date 2026-03-25, cut 2026-03-25
+q_holes (d = 2026-02-01): (?"How much came in?" (hole_amt), ?"When does it come?" (hole_day))
+  unfulfilled: mystery
+  law date 2026-03-25, cut 2026-03-25
+q_holes (d = 2026-03-31): (?"How much came in?" (hole_amt), ?"When does it come?" (hole_day))
+  unfulfilled: mystery
+  law date 2026-03-25, cut 2026-03-25
+q_more (d = 2026-01-31): (-60.00 PLN, 6 etf_unit, 5.00 PLN, 0.00 PLN, 1 010.00 PLN, 1 etf_unit)
+  unfulfilled: back[2026-01]
+  unfulfilled: dump[2026-01]
+  unfulfilled: into_gone[2026-01]
+  unfulfilled: payoff[2026-01]
+  unfulfilled: sell[2026-01]
+  law date 2026-03-25, cut 2026-03-25
+q_more (d = 2026-02-28): (0.00 PLN, 0 etf_unit, 0.00 PLN, 0.00 PLN, 1 000.00 PLN, refused: RUN-PLACE dump[2026-02] takes fund2 below 0 units)
+  unfulfilled: back[2026-01]
+  unfulfilled: back[2026-02]
+  unfulfilled: dump[2026-01]
+  unfulfilled: into_gone[2026-01]
+  unfulfilled: into_gone[2026-02]
+  unfulfilled: payoff[2026-01]
+  unfulfilled: payoff[2026-02]
+  unfulfilled: sell[2026-01]
+  unfulfilled: sell[2026-02]
+  law date 2026-03-25, cut 2026-03-25
+q_more (d = 2026-03-31): (refused: RUN-PLACE owed is 20.00 PLN after the day's observations and plans of 2026-03-10, refused: RUN-PLACE fund is -2 etf_unit after the day's observations and plans of 2026-03-10, 0.00 PLN, refused: RUN-LIFESPAN into_gone2[2026-03].cash moves into or out of gone2 outside its lifespan, refused: RUN-PLACE lent is -30.00 PLN after the day's observations and plans of 2026-03-10, refused: RUN-PLACE dump[2026-02] takes fund2 below 0 units)
+  unfulfilled: back[2026-01]
+  unfulfilled: back[2026-02]
+  unfulfilled: dump[2026-01]
+  unfulfilled: into_gone[2026-01]
+  unfulfilled: into_gone[2026-02]
+  unfulfilled: payoff[2026-01]
+  unfulfilled: payoff[2026-02]
+  unfulfilled: sell[2026-01]
+  unfulfilled: sell[2026-02]
+  unfulfilled: swing_in[2026-03]
+  unfulfilled: swing_out[2026-03]
+  law date 2026-03-25, cut 2026-03-25
+q_wallet (d = 2026-01-14): 50.00 PLN
+  law date 2026-03-25, cut 2026-03-25
+q_wallet (d = 2026-01-15): -30.00 PLN
+  unfulfilled: spend[2026-01]
+  law date 2026-03-25, cut 2026-03-25
+q_wallet (d = 2026-01-25): 70.00 PLN
+  unfulfilled: refill[2026-01]
+  unfulfilled: spend[2026-01]
+  law date 2026-03-25, cut 2026-03-25
+q_wallet (d = 2026-02-15): -30.00 PLN
+  unfulfilled: refill[2026-01]
+  unfulfilled: spend[2026-01]
+  unfulfilled: spend[2026-02]
+  law date 2026-03-25, cut 2026-03-25
+q_wallet (d = 2026-02-25): 70.00 PLN
+  unfulfilled: refill[2026-01]
+  unfulfilled: refill[2026-02]
+  unfulfilled: spend[2026-01]
+  unfulfilled: spend[2026-02]
+  law date 2026-03-25, cut 2026-03-25
+q_wallet (d = 2026-03-15): 60.00 PLN
+  unfulfilled: refill[2026-01]
+  unfulfilled: refill[2026-02]
+  unfulfilled: spend[2026-01]
+  unfulfilled: spend[2026-02]
+  unfulfilled: spend[2026-03]
+  law date 2026-03-25, cut 2026-03-25
+warning: WARN-NEGATIVE wallet is below zero from 2026-01-15
+warning: WARN-NEGATIVE wallet is below zero from 2026-02-15
+warning: WARN-UNREAD input fund_price is read by nothing
+,7:g6/plan,2:g6,17:run g6/plan.tally,4770:13:g6/plan.tally,4747:model g6_plan
+  tally 2
+  on 2026-02-15
+  start 2026-01-01
+  end 2026-03-31
+  note "T, issue #41, G6: the plan pass (E §4.1, L §5.14): a daily move missing on eight days of a covered month, its ledger lines tied and ordered by the movement order; a when that holds in one month and fails in another; a hole when; an uncertain kind read with and without with uncertain; a move of two legs, money and units; a leg of a kind whose unit is any; a leg of 0."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit PLN: currency minor 0.01
+
+unit etf_unit "a fund unit"
+
+index month = month 2026-01..2026-03
+
+index day = day 2026-01-05..2026-01-12
+
+kind maybe: transfers uncertain
+
+kind buys: event certain
+  leg cash: PLN
+  leg units: etf_unit
+
+kind anys: event certain
+  leg cash: any
+
+place konto: accounts PLN lives 2026-01-01..
+
+place fund: holdings etf_unit priced fund_price lives 2026-01-01..
+
+place shop: outside lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+place market: outside lives 2026-01-01..
+
+input bank: observed
+
+input fund_price[m in month]: num PLN/etf_unit
+
+input chip_amt: money PLN
+
+input cost[m in month]: money PLN
+
+input cost_dom: int
+
+input bonus_day: date
+
+input bonus_amt: money PLN
+
+input buy_units[m in month]: num etf_unit
+
+input any_amt[m in month]: money PLN
+
+input maybe_flag[m in month]: bool question "Is it paid this month?"
+
+input flag_amt: money PLN
+
+input fee_amt[m in month]: money PLN
+
+input fee_dom: int
+
+input cut_day: date
+
+move chip[d in day]: transfers
+  on d
+  at start_of(d)
+  leg cash from konto to shop amount chip_amt
+
+move costs[m in month]: transfers
+  on day_of(m, cost_dom)
+  at start_of(m)
+  when cost[m] > chip_amt - chip_amt
+  leg cash from konto to shop amount cost[m]
+
+move bonus: maybe
+  on bonus_day
+  at bonus_day
+  leg cash from world to konto amount bonus_amt
+
+move buy[m in month]: buys
+  on day_of(m, cost_dom)
+  at start_of(m)
+  leg cash from konto to market amount round(buy_units[m] * fund_price[m], minor(PLN), half-up)
+  leg units from market to fund amount buy_units[m]
+
+move anyway[m in month]: anys
+  on day_of(m, cost_dom)
+  at start_of(m)
+  leg cash from konto to shop amount any_amt[m]
+
+move flagged[m in month]: transfers
+  on day_of(m, cost_dom)
+  at start_of(m)
+  when maybe_flag[m]
+  leg cash from world to konto amount flag_amt
+
+move fee[m in month]: transfers
+  on day_of(m, fee_dom)
+  at start_of(m)
+  leg cash from konto to shop amount fee_amt[m]
+
+move on_cut: transfers
+  on cut_day
+  at cut_day
+  leg cash from konto to shop amount flag_amt
+
+move outside_only[m in month]: transfers
+  on day_of(m, fee_dom)
+  at start_of(m)
+  leg cash from world to shop amount flag_amt
+
+move nothing: anys
+  on cut_day
+  at cut_day
+  leg cash from konto to shop amount 0
+
+ask q_res: residuals konto 2026-01 law cut
+
+ask q_bal: bal(konto, d), bal(konto, d) with uncertain, bal(fund, d) for d in [2026-02-08, 2026-02-10, 2026-02-14, 2026-02-15, 2026-02-20, 2026-03-20] law cut
+
+version facts
+  cite fixture
+  governs always
+  known 2025-12-01
+  fund_price[2026-01] = 10 "a unit's price"
+  fund_price[2026-02] = 10
+  fund_price[2026-03] = 12
+  chip_amt = 2.00 "a daily chip"
+  cost[2026-01] = 30.00 "a cost: when holds"
+  cost[2026-02] = 0.00 "no cost: when fails"
+  cost[2026-03] = 45.00
+  cost_dom = 18 "the monthly day"
+  bonus_day = 2026-02-20 "an uncertain bonus"
+  bonus_amt = 500.00
+  buy_units[2026-01] = 2 "two units"
+  buy_units[2026-02] = 0 "none: legs of 0"
+  buy_units[2026-03] = 3 "three units"
+  any_amt[2026-01] = 4.00 "a leg of a kind of unit any"
+  any_amt[2026-02] = 0.00 "a leg of 0"
+  any_amt[2026-03] = 6.00
+  maybe_flag[2026-01] = true "paid in January"
+  maybe_flag[2026-02] = false "not in February"
+  flag_amt = 7.00 "a flagged amount; March's flag is a hole"
+  fee_amt[2026-01] = 5.00 "a fee"
+  fee_amt[2026-02] = 5.00 "February's fee, paid as observed at an uncovered place"
+  fee_amt[2026-03] = -5.00 "a negative amount, refused (RUN-NEG)"
+  fee_dom = 8 "the fee's day"
+  cut_day = 2026-02-15 "the cut's day"
+
+version openings
+  cite fixture
+  governs always
+  known 2025-12-31
+  opening[konto] = 1000 at 2026-01-01 start
+  opening[fund] = 0 at 2026-01-01 start
+
+version bank_jan
+  cite fixture
+  governs 2026-01
+  known 2026-02-02
+  covers konto
+  bank[b20260109] = (on: 2026-01-09, kind: transfers, leg cash from konto to shop amount 2.00 PLN, fulfils: chip[2026-01-09]) "one chip paid"
+
+version bank_feb
+  cite fixture
+  governs 2026-02
+  known 2026-02-10
+  bank[b20260208] = (on: 2026-02-08, kind: transfers, leg cash from konto to shop amount 5.00 PLN, fulfils: fee[2026-02]) "the fee, observed with no cover"
+
+version cover_cut
+  cite fixture
+  governs 2026-02-15..2026-02-28
+  known 2026-02-15
+  covers konto
+,,1:0,3996:q_bal (d = 2026-02-08): (993.00 PLN, 993.00 PLN, 0 etf_unit)
+  open: anyway[2026-01]
+  open: buy[2026-01]
+  open: chip[2026-01-05]
+  open: chip[2026-01-06]
+  open: chip[2026-01-07]
+  open: chip[2026-01-08]
+  open: chip[2026-01-10]
+  open: chip[2026-01-11]
+  open: chip[2026-01-12]
+  open: costs[2026-01]
+  open: fee[2026-01]
+  open: flagged[2026-01]
+  law date 2026-02-15, cut 2026-02-15
+q_bal (d = 2026-02-10): (993.00 PLN, 993.00 PLN, 0 etf_unit)
+  open: anyway[2026-01]
+  open: buy[2026-01]
+  open: chip[2026-01-05]
+  open: chip[2026-01-06]
+  open: chip[2026-01-07]
+  open: chip[2026-01-08]
+  open: chip[2026-01-10]
+  open: chip[2026-01-11]
+  open: chip[2026-01-12]
+  open: costs[2026-01]
+  open: fee[2026-01]
+  open: flagged[2026-01]
+  law date 2026-02-15, cut 2026-02-15
+q_bal (d = 2026-02-14): (993.00 PLN, 993.00 PLN, 0 etf_unit)
+  open: anyway[2026-01]
+  open: buy[2026-01]
+  open: chip[2026-01-05]
+  open: chip[2026-01-06]
+  open: chip[2026-01-07]
+  open: chip[2026-01-08]
+  open: chip[2026-01-10]
+  open: chip[2026-01-11]
+  open: chip[2026-01-12]
+  open: costs[2026-01]
+  open: fee[2026-01]
+  open: flagged[2026-01]
+  law date 2026-02-15, cut 2026-02-15
+q_bal (d = 2026-02-15): (986.00 PLN, 986.00 PLN, 0 etf_unit)
+  open: anyway[2026-01]
+  open: buy[2026-01]
+  open: chip[2026-01-05]
+  open: chip[2026-01-06]
+  open: chip[2026-01-07]
+  open: chip[2026-01-08]
+  open: chip[2026-01-10]
+  open: chip[2026-01-11]
+  open: chip[2026-01-12]
+  open: costs[2026-01]
+  open: fee[2026-01]
+  open: flagged[2026-01]
+  law date 2026-02-15, cut 2026-02-15
+q_bal (d = 2026-02-20): (986.00 PLN, 1 486.00 PLN, 0 etf_unit)
+  open: anyway[2026-01]
+  open: buy[2026-01]
+  open: chip[2026-01-05]
+  open: chip[2026-01-06]
+  open: chip[2026-01-07]
+  open: chip[2026-01-08]
+  open: chip[2026-01-10]
+  open: chip[2026-01-11]
+  open: chip[2026-01-12]
+  open: costs[2026-01]
+  open: fee[2026-01]
+  open: flagged[2026-01]
+  uncertain: bonus
+  law date 2026-02-15, cut 2026-02-15
+q_bal (d = 2026-03-20): (refused: RUN-NEG negative amount -5.00 PLN for leg cash of fee[2026-03], refused: RUN-NEG negative amount -5.00 PLN for leg cash of fee[2026-03], 3 etf_unit)
+  open: anyway[2026-01]
+  open: buy[2026-01]
+  open: chip[2026-01-05]
+  open: chip[2026-01-06]
+  open: chip[2026-01-07]
+  open: chip[2026-01-08]
+  open: chip[2026-01-10]
+  open: chip[2026-01-11]
+  open: chip[2026-01-12]
+  open: costs[2026-01]
+  open: fee[2026-01]
+  open: flagged[2026-01]
+  law date 2026-02-15, cut 2026-02-15
+q_res: residuals konto 2026-01
+  2026-01 move costs: model -30.00 PLN, observed 0.00 PLN, difference 30.00 PLN
+    expected but missing costs[2026-01] on 2026-01-18: model -30.00 PLN
+  2026-01 move buy: model -20.00 PLN, observed 0.00 PLN, difference 20.00 PLN
+    expected but missing buy[2026-01] on 2026-01-18: model -20.00 PLN
+  2026-01 move chip: model -16.00 PLN, observed -2.00 PLN, difference 14.00 PLN
+    expected but missing chip[2026-01-05] on 2026-01-05: model -2.00 PLN
+    expected but missing chip[2026-01-06] on 2026-01-06: model -2.00 PLN
+    expected but missing chip[2026-01-07] on 2026-01-07: model -2.00 PLN
+    expected but missing chip[2026-01-08] on 2026-01-08: model -2.00 PLN
+    expected but missing chip[2026-01-10] on 2026-01-10: model -2.00 PLN
+    expected but missing chip[2026-01-11] on 2026-01-11: model -2.00 PLN
+    expected but missing chip[2026-01-12] on 2026-01-12: model -2.00 PLN
+    matched chip[2026-01-09] on 2026-01-09: model -2.00 PLN, observed -2.00 PLN, difference 0.00 PLN, timing +0 days
+  2026-01 move flagged: model 7.00 PLN, observed 0.00 PLN, difference -7.00 PLN
+    expected but missing flagged[2026-01] on 2026-01-18: model 7.00 PLN
+  2026-01 move fee: model -5.00 PLN, observed 0.00 PLN, difference 5.00 PLN
+    expected but missing fee[2026-01] on 2026-01-08: model -5.00 PLN
+  2026-01 move anyway: model -4.00 PLN, observed 0.00 PLN, difference 4.00 PLN
+    expected but missing anyway[2026-01] on 2026-01-18: model -4.00 PLN
+  law date 2026-02-15, cut 2026-02-15
+,7:g6/when,2:g6,17:run g6/when.tally,1810:13:g6/when.tally,1787:model g6_when
+  tally 2
+  on 2026-02-15
+  start 2026-01-01
+  end 2026-03-31
+  note "T, issue #41, G6: plans refused in the plan pass (E §4.1 step 2, L §5.14): one whose attribute divides by zero in February, after its legs are known, refused at its places only; one whose when divides by zero in March, before its legs, refusing every place from its day; January answered for both."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-03
+
+kind tagged: event certain
+  leg cash: PLN
+  attr size: num
+
+place konto: accounts PLN lives 2026-01-01..
+
+place box: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input pay_dom: int
+
+input fee_amt: money PLN
+
+input div_attr[m in month]: num
+
+input div_when[m in month]: num
+
+move tag[m in month]: tagged
+  on day_of(m, pay_dom)
+  at start_of(m)
+  attr size = div_attr[m] * div_attr[m] / div_attr[m]
+  leg cash from world to box amount fee_amt
+
+move gate[m in month]: transfers
+  on day_of(m, pay_dom)
+  at start_of(m)
+  when div_when[m] * div_when[m] / div_when[m] > 0
+  leg cash from world to konto amount fee_amt
+
+ask q_bal: bal(konto, d), bal(box, d) for d in [2026-01-20, 2026-02-20, 2026-03-20] law cut
+
+version facts
+  cite fixture
+  governs always
+  known 2025-12-01
+  pay_dom = 5 "the day of the month"
+  fee_amt = 3.00 "a fee"
+  div_attr[2026-01] = 1 "answered"
+  div_attr[2026-02] = 0 "the attribute divides by zero"
+  div_attr[2026-03] = 2 "answered"
+  div_when[2026-01] = 1 "answered"
+  div_when[2026-02] = 1 "answered"
+  div_when[2026-03] = 0 "the when divides by zero"
+
+version openings
+  cite fixture
+  governs always
+  known 2025-12-31
+  opening[konto] = 100 at 2026-01-01 start
+  opening[box] = 0 at 2026-01-01 start
+,,1:0,580:q_bal (d = 2026-01-20): (103.00 PLN, 3.00 PLN)
+  unfulfilled: gate[2026-01]
+  unfulfilled: tag[2026-01]
+  law date 2026-02-15, cut 2026-02-15
+q_bal (d = 2026-02-20): (refused: RUN-DIV division by zero, refused: RUN-DIV division by zero)
+  unfulfilled: gate[2026-01]
+  unfulfilled: gate[2026-02]
+  unfulfilled: tag[2026-01]
+  law date 2026-02-15, cut 2026-02-15
+q_bal (d = 2026-03-20): (refused: RUN-DIV division by zero, refused: RUN-DIV division by zero)
+  unfulfilled: gate[2026-01]
+  unfulfilled: gate[2026-02]
+  unfulfilled: tag[2026-01]
   law date 2026-02-15, cut 2026-02-15
 ,
