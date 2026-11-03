@@ -1,0 +1,54 @@
+# L §5.10, E §4.2 step 5 (tally 2.1.2, issue #46): L5_10_sign_rule_reading_close's twin at 0. A reading's own place
+# is tested at the close, and 0 keeps a claim's rule (min 0): y's pad of -20.00 PLN and z's anchor stand, and world
+# takes the pad's 20.00 PLN less top's 10.00 PLN. Unchanged from tally 2.1.1.
+=== m.tally
+model t
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+source bk "bank"
+unit PLN: currency minor 0.01
+place y: claims PLN lives 2026-01-01..
+place z: claims PLN lives 2026-01-01..
+place world: outside lives 2026-01-01..
+input amt: money PLN
+input day: date
+input day2: date
+
+move top: transfers
+  on day2
+  leg cash from world to z amount amt
+
+move p: transfers
+  on day
+  reads y, z
+  leg cash from world to y amount amt + 0 * bal(y) + 0 * bal(z)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 10.00 PLN
+  day = 2026-02-10
+  day2 = 2026-01-15
+  opening[y] = 20.00 PLN at 2026-01-01 start
+  opening[z] = 20.00 PLN at 2026-01-01 start
+
+version st
+  cite bk
+  governs 2026-01
+  known 2026-03-02
+  pad y from world
+  anchor z
+  stated[y] = 0 PLN at 2026-01-31 end
+  stated[z] = 0 PLN at 2026-01-31 end
+ask q: bal(y, 2026-01-31), bal(z, 2026-01-31), bal(world, PLN, 2026-01-31)
+=== expect
+q: (0.00 PLN, 0.00 PLN, 10.00 PLN)
+  anchor: z 2026-01-31 end, stated 0.00 PLN, difference -30.00 PLN
+  pad: y 2026-01-31 end, pads:st:y@2026-01-31 end of -20.00 PLN
+  unfulfilled: top
+  cut 2026-06-30

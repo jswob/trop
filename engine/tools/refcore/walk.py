@@ -786,6 +786,13 @@ class Walk:
         places = sorted(bl, key=str)
         bad = [(pu, nv) for pu in places for nv in [broken(*pu)] if nv is not None]
         for (place, u), nv in bad:
+            if not bl[(place, u)]:
+                # an anchored place (an opening included) with no leg of the group at it: refused from here, with the
+                # reading's own message (L §8.4; tally 2.1.2, issue #46)
+                at = self.__dict__.get('anchor_at', {}).get((place, u))
+                self.add(place, u, Ent(key, 'bad', err=refuse('RUN-PLACE', '%s is %s after its reading at %s' % (
+                    place, fmt(qty(nv, u)), at))))
+                continue
             err = refuse('RUN-PLACE', msg(place, fmt(qty(nv, u)), bl[(place, u)]))
             for mv, lg in bl[(place, u)]:
                 if (mv.id, lg.name) in self.bad_legs:
@@ -797,6 +804,33 @@ class Walk:
                 for p in (lg.frm, lg.to):
                     if isinstance(p, Thing):
                         self.add(p.name, u, Ent(key, 'bad', err=err, mv=mv))
+
+    def reading_group(self, key):
+        """The sign rule's group a reading at key joins (L §5.10), as book_leg picks it for the reading's pad: the
+        day's first batch (point 1), the closing readings' (point 3), or none, for a reading after a decision, tested
+        as it is booked (point 2)."""
+        if key[1] <= 2 and getattr(self, 'batch_legs', None) is not None:
+            return self.batch_legs
+        return getattr(self, 'grp_legs', None)
+
+    def sign_breaks(self, place, nv):
+        sign = self.m.kind_sign(self.m.things[place].base)
+        return (sign == 'min0' and nv < 0) or (sign == 'max0' and nv > 0)
+
+    def sign_anchor(self, key, place, unit, rv, it):
+        """L §5.10, E §4.2 step 5 (tally 2.1.2, issue #46, the user's "2: spec wins, refused"): an anchor, an opening
+        included, books no leg; its place is tested at the reading's point like any balance, and one beyond its kind's
+        sign rule is refused from there (RUN-PLACE `<place> is <b> after its reading at <instant>`). tally 2.1.1 tested
+        a reading's other place only."""
+        if not isinstance(rv, Num) or self.m.kind_sign(self.m.things[place].base) not in ('min0', 'max0'):
+            return
+        grp = self.reading_group(key)
+        if grp is not None:
+            grp.setdefault((place, unit), [])
+            self.__dict__.setdefault('anchor_at', {})[(place, unit)] = it
+        elif self.sign_breaks(place, rv.q):
+            self.add(place, unit, Ent(key, 'bad', err=refuse('RUN-PLACE', '%s is %s after its reading at %s' % (
+                place, fmt(rv), it))))
 
     def unbook(self, place, u, mv, lg, match):
         """Take back a leg the sign rule refuses at a check of a group: "A refused leg isn't booked" (E §4.2 step 5);
@@ -1334,6 +1368,8 @@ class Walk:
                                           note='opening', row=r))
             else:
                 self.add(place, unit, Ent(key, 'reset', val=rv, coll=c, note='opening', row=r))
+                # an opening always anchors (L §5.19): its place is tested at its point (tally 2.1.2, issue #46)
+                self.sign_anchor(key, place, unit, rv, it)
             return
         day = kday(key)
         if not day < self.K:
@@ -1361,6 +1397,7 @@ class Walk:
             self.add(place, unit, Ent(key, 'reset', val=rv if not isinstance(rv, Hole) else qty(0, unit),
                                       qs=frozenset(rv.qs) if isinstance(rv, Hole) else EMPTY, coll=c,
                                       reg=(('anchor', txt[len('anchor: '):]),), note='anchor', row=r))
+            self.sign_anchor(key, place, unit, rv, it)
             return
         y = role[1]
         if isinstance(gap, TallyError):
@@ -1382,7 +1419,22 @@ class Walk:
         # the other side: an ordinary leg
         yi = 0 if frm.name == y.name else 1
         ends = (yi == 0, yi == 1)
-        self.book_leg(pad, lg, key, reg=reg, coll=bc, ends=ends)
+        # the reading's own place is tested at its point too, against the balance it states (L §5.10, E §4.2 step 5;
+        # tally 2.1.2, issue #46, the user's "2: spec wins, refused"): in its point's group with the pad, or, after a
+        # decision, as it is booked, the pad refused before anything is booked, as book_leg refuses; tally 2.1.1
+        # tested the pad's other place only
+        grp = self.reading_group(key)
+        if grp is None and isinstance(gap, Num) and isinstance(rv, Num) and self.sign_breaks(place, rv.q):
+            hold = m.things[place].base in m.kinds['holdings'].subtree(m)
+            err = refuse('RUN-PLACE', '%s takes %s %s' % (pad.id, place, 'above 0' if m.kind_sign(
+                m.things[place].base) == 'max0' else 'below 0' + (' units' if hold else '')))
+            self.bad_legs[(pad.id, lg.name)] = err
+            for p in (frm, to):
+                self.add(p.name, unit, Ent(key, 'bad', err=err, mv=pad))
+        else:
+            self.book_leg(pad, lg, key, reg=reg, coll=bc, ends=ends)
+            if grp is not None and isinstance(gap, Num) and (pad.id, lg.name) not in self.bad_legs:
+                grp.setdefault((place, unit), []).append((pad, lg))
         # x's balance after the instant is the reading
         flow = gap if not isinstance(gap, TallyError) else None
         if isinstance(gap, Num) and (pad.id, lg.name) not in self.bad_legs:

@@ -57,6 +57,13 @@ fix's new tests were seen failing on tally 2.1.1's refcore first.
   (`m_settle_links`) and applies them only if none is refused; on a refusal it unmarks the adjustments, and
   `m_adjustments` forgets its `settled` cache entry, so every read settles again and meets the same refusal. New:
   `L5_14_3_settle_refused_every_read` (seen failing: in each ask one read refused, the other `HOLE-CHANGED`).
+- **A reading's own place and the sign rule (L §5.10, E §4.2 step 5, #46).** `Walk.apply_reading` puts a pad's
+  reading place in its point's group beside the pad (`reading_group`: the day's first batch, the closing group), or,
+  after a decision (no group), tests it at once and refuses the pad before anything is booked; `sign_anchor` puts an
+  anchor's place, and an opening's, in the group with no leg, or refuses it at once after a decision. `check_group`
+  refuses a broken place with no leg from the group's point with the reading's message (`anchor_at` holds its
+  instant). New: `L5_10_sign_rule_reading_close`, `_reading_start`, `_reading_after`, `L5_10_sign_rule_opening` (all
+  seen failing), `_reading_zero` (the twin at 0).
 
 ## tally 2.1.1 (issue #13)
 
