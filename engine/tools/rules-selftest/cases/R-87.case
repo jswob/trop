@@ -4,10 +4,6 @@
 case: unlisted-survivor
 tool: run
 expect: (missed) is not in MUTANTS-SURVIVORS.md (R-87)
---- replace tools/kernel.toml
-set_at_s = false
---- with
-set_at_s = true
 --- write zz-mutants/mutants.out/outcomes.json
 {"outcomes": [
  {"scenario": "Baseline", "summary": "Success"},
@@ -22,10 +18,6 @@ tools/mutants-survivors zz-mutants
 case: listed-but-caught
 tool: run
 expect: is listed in MUTANTS-SURVIVORS.md and is now caught
---- replace tools/kernel.toml
-set_at_s = false
---- with
-set_at_s = true
 --- append MUTANTS-SURVIVORS.md
 | crates/tally/src/lib.rs | parse | replace parse -> Result<(), NotImplemented> with Ok(()) | R-87: equivalent: a planted row whose mutant is caught |
 --- write zz-mutants/mutants.out/outcomes.json
@@ -39,10 +31,6 @@ tools/mutants-survivors zz-mutants
 case: listed-but-gone
 tool: run
 expect: no run produced it
---- replace tools/kernel.toml
-set_at_s = false
---- with
-set_at_s = true
 --- append MUTANTS-SURVIVORS.md
 | crates/tally/src/lib.rs | gone | replace gone -> u8 with 1 | R-87: equivalent: a planted row whose mutant no longer exists |
 --- write zz-mutants/mutants.out/outcomes.json
@@ -53,10 +41,6 @@ tools/mutants-survivors zz-mutants
 case: row-without-reason
 tool: run
 expect: the reason must say why the mutant is equivalent
---- replace tools/kernel.toml
-set_at_s = false
---- with
-set_at_s = true
 --- append MUTANTS-SURVIVORS.md
 | crates/tally/src/lib.rs | parse | replace parse -> Result<(), NotImplemented> with Ok(()) | equivalent |
 --- write zz-mutants/mutants.out/outcomes.json
@@ -70,10 +54,6 @@ tools/mutants-survivors zz-mutants
 case: timeout-counts-as-survivor
 tool: run
 expect: (timed out) is not in MUTANTS-SURVIVORS.md (R-87)
---- replace tools/kernel.toml
-set_at_s = false
---- with
-set_at_s = true
 --- write zz-mutants/mutants.out/outcomes.json
 {"outcomes": [
  {"scenario": {"Mutant": {"name": "crates/tally/src/lib.rs:18:5: replace parse -> Result<(), NotImplemented> with Ok(())",
@@ -85,12 +65,8 @@ tools/mutants-survivors zz-mutants
 case: score-under-gate-8
 tool: run
 expect: is under DONE gate 8's 90 %
---- replace tools/kernel.toml
-set_at_s = false
---- with
-set_at_s = true
 --- append MUTANTS-SURVIVORS.md
-| crates/tally/src/lib.rs | parse | replace parse -> Result<(), NotImplemented> with Ok(()) | R-87: equivalent: a planted row; one survivor in two is a score of 50 % |
+| crates/tally/src/lib.rs | parse | replace parse -> Result<(), NotImplemented> with Ok(()) | R-87: missed: a planted row; one survivor in two is a score of 50 % |
 --- write zz-mutants/mutants.out/outcomes.json
 {"outcomes": [
  {"scenario": {"Mutant": {"name": "crates/tally/src/lib.rs:18:5: replace parse -> Result<(), NotImplemented> with Ok(())",
@@ -104,10 +80,6 @@ tools/mutants-survivors zz-mutants
 case: survivor-not-equivalent
 tool: run
 expect: the reason must say why the mutant is equivalent
---- replace tools/kernel.toml
-set_at_s = false
---- with
-set_at_s = true
 --- append MUTANTS-SURVIVORS.md
 | crates/tally/src/lib.rs | parse | replace parse -> Result<(), NotImplemented> with Ok(()) | R-28: the tests don't reach this planted branch yet |
 --- write zz-mutants/mutants.out/outcomes.json
@@ -118,3 +90,157 @@ set_at_s = true
 ]}
 --- run
 tools/mutants-survivors zz-mutants
+
+# 2026-11-03 (issue #41): a survivor listed `R-87: equivalent:` leaves the scored count,
+# one per mutant, not per row; one listed `R-87: missed:` stays counted.
+
+case: equivalents-leave-the-count
+tool: run
+exit: any
+expect: score 90.0% = caught 9 / (caught 9 + missed 3 + timed out 0 - equivalent 2)
+expect: every survivor is listed, with its reason
+expect: r87-score-passed
+--- write MUTANTS-SURVIVORS.md
+| file | function | mutation | reason |
+| ---- | -------- | -------- | ------ |
+| crates/tally/src/lib.rs | parse | replace parse -> Result<(), NotImplemented> with Ok(()) | R-87: equivalent: a planted row; both columns' mutants leave the count |
+| crates/tally/src/lib.rs | other | replace other -> bool with true | R-87: missed: a planted row; a test could tell it apart, none does yet |
+--- write zz-mutants/mutants.out/outcomes.json
+{"outcomes": [
+ {"scenario": "Baseline", "summary": "Success"},
+ {"scenario": {"Mutant": {"name": "crates/tally/src/lib.rs:9:1: replace planted -> u8 with 0",
+  "file": "crates/tally/src/lib.rs", "function": {"function_name": "planted"}}}, "summary": "CaughtMutant"},
+ {"scenario": {"Mutant": {"name": "crates/tally/src/lib.rs:9:2: replace planted -> u8 with 1",
+  "file": "crates/tally/src/lib.rs", "function": {"function_name": "planted"}}}, "summary": "CaughtMutant"},
+ {"scenario": {"Mutant": {"name": "crates/tally/src/lib.rs:9:3: replace planted -> u8 with 2",
+  "file": "crates/tally/src/lib.rs", "function": {"function_name": "planted"}}}, "summary": "CaughtMutant"},
+ {"scenario": {"Mutant": {"name": "crates/tally/src/lib.rs:9:4: replace planted -> u8 with 3",
+  "file": "crates/tally/src/lib.rs", "function": {"function_name": "planted"}}}, "summary": "CaughtMutant"},
+ {"scenario": {"Mutant": {"name": "crates/tally/src/lib.rs:9:5: replace planted -> u8 with 4",
+  "file": "crates/tally/src/lib.rs", "function": {"function_name": "planted"}}}, "summary": "CaughtMutant"},
+ {"scenario": {"Mutant": {"name": "crates/tally/src/lib.rs:9:6: replace planted -> u8 with 5",
+  "file": "crates/tally/src/lib.rs", "function": {"function_name": "planted"}}}, "summary": "CaughtMutant"},
+ {"scenario": {"Mutant": {"name": "crates/tally/src/lib.rs:9:7: replace planted -> u8 with 6",
+  "file": "crates/tally/src/lib.rs", "function": {"function_name": "planted"}}}, "summary": "CaughtMutant"},
+ {"scenario": {"Mutant": {"name": "crates/tally/src/lib.rs:9:8: replace planted -> u8 with 7",
+  "file": "crates/tally/src/lib.rs", "function": {"function_name": "planted"}}}, "summary": "CaughtMutant"},
+ {"scenario": {"Mutant": {"name": "crates/tally/src/lib.rs:9:9: replace planted -> u8 with 8",
+  "file": "crates/tally/src/lib.rs", "function": {"function_name": "planted"}}}, "summary": "CaughtMutant"},
+ {"scenario": {"Mutant": {"name": "crates/tally/src/lib.rs:18:5: replace parse -> Result<(), NotImplemented> with Ok(())",
+  "file": "crates/tally/src/lib.rs", "function": {"function_name": "parse"}}}, "summary": "MissedMutant"},
+ {"scenario": {"Mutant": {"name": "crates/tally/src/lib.rs:18:40: replace parse -> Result<(), NotImplemented> with Ok(())",
+  "file": "crates/tally/src/lib.rs", "function": {"function_name": "parse"}}}, "summary": "MissedMutant"},
+ {"scenario": {"Mutant": {"name": "crates/tally/src/lib.rs:30:1: replace other -> bool with true",
+  "file": "crates/tally/src/lib.rs", "function": {"function_name": "other"}}}, "summary": "MissedMutant"}
+]}
+--- run
+tools/mutants-survivors zz-mutants && echo r87-score-passed
+
+case: missed-rows-stay-counted
+tool: run
+expect: score 75.0% = caught 9 / (caught 9 + missed 3 + timed out 0 - equivalent 0)
+expect: is under DONE gate 8's 90 %
+--- append MUTANTS-SURVIVORS.md
+| crates/tally/src/lib.rs | other | replace other -> bool with true | R-87: missed: a planted row; a test could tell it apart, none does yet |
+| crates/tally/src/lib.rs | parse | replace parse -> Result<(), NotImplemented> with Ok(()) | R-87: missed: a planted row; both columns' mutants stay counted |
+--- write zz-mutants/mutants.out/outcomes.json
+{"outcomes": [
+ {"scenario": "Baseline", "summary": "Success"},
+ {"scenario": {"Mutant": {"name": "crates/tally/src/lib.rs:9:1: replace planted -> u8 with 0",
+  "file": "crates/tally/src/lib.rs", "function": {"function_name": "planted"}}}, "summary": "CaughtMutant"},
+ {"scenario": {"Mutant": {"name": "crates/tally/src/lib.rs:9:2: replace planted -> u8 with 1",
+  "file": "crates/tally/src/lib.rs", "function": {"function_name": "planted"}}}, "summary": "CaughtMutant"},
+ {"scenario": {"Mutant": {"name": "crates/tally/src/lib.rs:9:3: replace planted -> u8 with 2",
+  "file": "crates/tally/src/lib.rs", "function": {"function_name": "planted"}}}, "summary": "CaughtMutant"},
+ {"scenario": {"Mutant": {"name": "crates/tally/src/lib.rs:9:4: replace planted -> u8 with 3",
+  "file": "crates/tally/src/lib.rs", "function": {"function_name": "planted"}}}, "summary": "CaughtMutant"},
+ {"scenario": {"Mutant": {"name": "crates/tally/src/lib.rs:9:5: replace planted -> u8 with 4",
+  "file": "crates/tally/src/lib.rs", "function": {"function_name": "planted"}}}, "summary": "CaughtMutant"},
+ {"scenario": {"Mutant": {"name": "crates/tally/src/lib.rs:9:6: replace planted -> u8 with 5",
+  "file": "crates/tally/src/lib.rs", "function": {"function_name": "planted"}}}, "summary": "CaughtMutant"},
+ {"scenario": {"Mutant": {"name": "crates/tally/src/lib.rs:9:7: replace planted -> u8 with 6",
+  "file": "crates/tally/src/lib.rs", "function": {"function_name": "planted"}}}, "summary": "CaughtMutant"},
+ {"scenario": {"Mutant": {"name": "crates/tally/src/lib.rs:9:8: replace planted -> u8 with 7",
+  "file": "crates/tally/src/lib.rs", "function": {"function_name": "planted"}}}, "summary": "CaughtMutant"},
+ {"scenario": {"Mutant": {"name": "crates/tally/src/lib.rs:9:9: replace planted -> u8 with 8",
+  "file": "crates/tally/src/lib.rs", "function": {"function_name": "planted"}}}, "summary": "CaughtMutant"},
+ {"scenario": {"Mutant": {"name": "crates/tally/src/lib.rs:18:5: replace parse -> Result<(), NotImplemented> with Ok(())",
+  "file": "crates/tally/src/lib.rs", "function": {"function_name": "parse"}}}, "summary": "MissedMutant"},
+ {"scenario": {"Mutant": {"name": "crates/tally/src/lib.rs:18:40: replace parse -> Result<(), NotImplemented> with Ok(())",
+  "file": "crates/tally/src/lib.rs", "function": {"function_name": "parse"}}}, "summary": "MissedMutant"},
+ {"scenario": {"Mutant": {"name": "crates/tally/src/lib.rs:30:1: replace other -> bool with true",
+  "file": "crates/tally/src/lib.rs", "function": {"function_name": "other"}}}, "summary": "MissedMutant"}
+]}
+--- run
+tools/mutants-survivors zz-mutants
+
+case: listed-twice
+tool: run
+expect: is listed twice
+--- append MUTANTS-SURVIVORS.md
+| crates/tally/src/lib.rs | parse | replace parse -> Result<(), NotImplemented> with Ok(()) | R-87: equivalent: a planted row; both columns' mutants leave the count |
+| crates/tally/src/lib.rs | parse | replace parse -> Result<(), NotImplemented> with Ok(()) | R-87: equivalent: a planted row; both columns' mutants leave the count |
+--- write zz-mutants/mutants.out/outcomes.json
+{"outcomes": [
+ {"scenario": "Baseline", "summary": "Success"},
+ {"scenario": {"Mutant": {"name": "crates/tally/src/lib.rs:9:1: replace planted -> u8 with 0",
+  "file": "crates/tally/src/lib.rs", "function": {"function_name": "planted"}}}, "summary": "CaughtMutant"},
+ {"scenario": {"Mutant": {"name": "crates/tally/src/lib.rs:9:2: replace planted -> u8 with 1",
+  "file": "crates/tally/src/lib.rs", "function": {"function_name": "planted"}}}, "summary": "CaughtMutant"},
+ {"scenario": {"Mutant": {"name": "crates/tally/src/lib.rs:9:3: replace planted -> u8 with 2",
+  "file": "crates/tally/src/lib.rs", "function": {"function_name": "planted"}}}, "summary": "CaughtMutant"},
+ {"scenario": {"Mutant": {"name": "crates/tally/src/lib.rs:9:4: replace planted -> u8 with 3",
+  "file": "crates/tally/src/lib.rs", "function": {"function_name": "planted"}}}, "summary": "CaughtMutant"},
+ {"scenario": {"Mutant": {"name": "crates/tally/src/lib.rs:9:5: replace planted -> u8 with 4",
+  "file": "crates/tally/src/lib.rs", "function": {"function_name": "planted"}}}, "summary": "CaughtMutant"},
+ {"scenario": {"Mutant": {"name": "crates/tally/src/lib.rs:9:6: replace planted -> u8 with 5",
+  "file": "crates/tally/src/lib.rs", "function": {"function_name": "planted"}}}, "summary": "CaughtMutant"},
+ {"scenario": {"Mutant": {"name": "crates/tally/src/lib.rs:9:7: replace planted -> u8 with 6",
+  "file": "crates/tally/src/lib.rs", "function": {"function_name": "planted"}}}, "summary": "CaughtMutant"},
+ {"scenario": {"Mutant": {"name": "crates/tally/src/lib.rs:9:8: replace planted -> u8 with 7",
+  "file": "crates/tally/src/lib.rs", "function": {"function_name": "planted"}}}, "summary": "CaughtMutant"},
+ {"scenario": {"Mutant": {"name": "crates/tally/src/lib.rs:9:9: replace planted -> u8 with 8",
+  "file": "crates/tally/src/lib.rs", "function": {"function_name": "planted"}}}, "summary": "CaughtMutant"},
+ {"scenario": {"Mutant": {"name": "crates/tally/src/lib.rs:18:5: replace parse -> Result<(), NotImplemented> with Ok(())",
+  "file": "crates/tally/src/lib.rs", "function": {"function_name": "parse"}}}, "summary": "MissedMutant"},
+ {"scenario": {"Mutant": {"name": "crates/tally/src/lib.rs:18:40: replace parse -> Result<(), NotImplemented> with Ok(())",
+  "file": "crates/tally/src/lib.rs", "function": {"function_name": "parse"}}}, "summary": "MissedMutant"}
+]}
+--- run
+tools/mutants-survivors zz-mutants
+
+case: listed-missed-but-caught
+tool: run
+expect: is listed in MUTANTS-SURVIVORS.md and is now caught
+--- append MUTANTS-SURVIVORS.md
+| crates/tally/src/lib.rs | other | replace other -> bool with true | R-87: missed: a planted row; a test could tell it apart, none does yet |
+--- write zz-mutants/mutants.out/outcomes.json
+{"outcomes": [
+ {"scenario": "Baseline", "summary": "Success"},
+ {"scenario": {"Mutant": {"name": "crates/tally/src/lib.rs:30:1: replace other -> bool with true",
+  "file": "crates/tally/src/lib.rs", "function": {"function_name": "other"}}}, "summary": "CaughtMutant"}
+]}
+--- run
+tools/mutants-survivors zz-mutants
+
+# A mutation holding a pipe is written `\|` in its row, as Markdown asks, and is read whole.
+case: escaped-pipe-in-mutation
+tool: run
+exit: any
+expect: score 100.0% = caught 1 / (caught 1 + missed 1 + timed out 0 - equivalent 1)
+expect: every survivor is listed, with its reason
+expect: r87-pipe-passed
+--- write MUTANTS-SURVIVORS.md
+| file | function | mutation | reason |
+| ---- | -------- | -------- | ------ |
+| crates/tally/src/lib.rs | f | replace \|\| with && in f | R-87: equivalent: a planted row whose mutation holds two escaped pipes |
+--- write zz-mutants/mutants.out/outcomes.json
+{"outcomes": [
+ {"scenario": "Baseline", "summary": "Success"},
+ {"scenario": {"Mutant": {"name": "crates/tally/src/lib.rs:12:9: replace || with && in f",
+  "file": "crates/tally/src/lib.rs", "function": {"function_name": "f"}}}, "summary": "MissedMutant"},
+ {"scenario": {"Mutant": {"name": "crates/tally/src/lib.rs:9:1: replace planted -> u8 with 0",
+  "file": "crates/tally/src/lib.rs", "function": {"function_name": "planted"}}}, "summary": "CaughtMutant"}
+]}
+--- run
+tools/mutants-survivors zz-mutants && echo r87-pipe-passed

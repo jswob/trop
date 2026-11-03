@@ -1,0 +1,36 @@
+model g1_step
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+  note "T, issue #41, G1: round's step must be positive (L §7.2): a negative step and a zero step refused, a positive step answered beside them."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+input x: num
+
+input step_pos: num
+
+input step_neg: num
+
+input step_zero: num
+
+def by_pos: num at reader
+  rule base v card = round(x, step_pos, half-up)
+
+def by_neg: num at reader
+  rule base v card = round(x, step_neg, half-up)
+
+def by_zero: num at reader
+  rule base v card = round(x, step_zero, half-up)
+
+ask q_steps: by_pos, by_neg, by_zero law 2026-10-25
+
+version card
+  cite fixture
+  governs always
+  known 2026-10-25
+  x = 2.5 "a value"
+  step_pos = 0.2 "a positive step"
+  step_neg = -0.2 "a negative step"
+  step_zero = 0 "a zero step"

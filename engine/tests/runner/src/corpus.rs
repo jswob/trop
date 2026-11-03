@@ -74,7 +74,7 @@ pub fn netstrings(bytes: &[u8]) -> Result<Vec<&[u8]>, String> {
     Ok(out)
 }
 
-fn text(bytes: &[u8]) -> Result<String, String> {
+pub(crate) fn text(bytes: &[u8]) -> Result<String, String> {
     String::from_utf8(bytes.to_vec()).map_err(|e| e.to_string())
 }
 
@@ -106,8 +106,8 @@ pub fn paths(table: &[u8]) -> Result<Vec<String>, String> {
     Ok(out)
 }
 
-/// Groups `items` in fours or fives: a record's netstrings, never a partial one.
-fn groups<'a>(items: &[&'a [u8]], size: usize) -> Result<Vec<Vec<&'a [u8]>>, String> {
+/// Groups `items` by `size`: a record's netstrings, never a partial one.
+pub(crate) fn groups<'a>(items: &[&'a [u8]], size: usize) -> Result<Vec<Vec<&'a [u8]>>, String> {
     let mut out = Vec::new();
     let mut cur = Vec::new();
     for item in items {

@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# CI's mutation run on a few kernel files (issue #40): engine/tools/mutants-local FILE… [-F REGEX]
+d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)" || exit 1
+exec python3 -I -B "$d/mutants_local.py" "$@"

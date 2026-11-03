@@ -1,0 +1,175 @@
+model g6_plan
+  tally 2
+  on 2026-02-15
+  start 2026-01-01
+  end 2026-03-31
+  note "T, issue #41, G6: the plan pass (E §4.1, L §5.14): a daily move missing on eight days of a covered month, its ledger lines tied and ordered by the movement order; a when that holds in one month and fails in another; a hole when; an uncertain kind read with and without with uncertain; a move of two legs, money and units; a leg of a kind whose unit is any; a leg of 0."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit PLN: currency minor 0.01
+
+unit etf_unit "a fund unit"
+
+index month = month 2026-01..2026-03
+
+index day = day 2026-01-05..2026-01-12
+
+kind maybe: transfers uncertain
+
+kind buys: event certain
+  leg cash: PLN
+  leg units: etf_unit
+
+kind anys: event certain
+  leg cash: any
+
+place konto: accounts PLN lives 2026-01-01..
+
+place fund: holdings etf_unit priced fund_price lives 2026-01-01..
+
+place shop: outside lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+place market: outside lives 2026-01-01..
+
+input bank: observed
+
+input fund_price[m in month]: num PLN/etf_unit
+
+input chip_amt: money PLN
+
+input cost[m in month]: money PLN
+
+input cost_dom: int
+
+input bonus_day: date
+
+input bonus_amt: money PLN
+
+input buy_units[m in month]: num etf_unit
+
+input any_amt[m in month]: money PLN
+
+input maybe_flag[m in month]: bool question "Is it paid this month?"
+
+input flag_amt: money PLN
+
+input fee_amt[m in month]: money PLN
+
+input fee_dom: int
+
+input cut_day: date
+
+move chip[d in day]: transfers
+  on d
+  at start_of(d)
+  leg cash from konto to shop amount chip_amt
+
+move costs[m in month]: transfers
+  on day_of(m, cost_dom)
+  at start_of(m)
+  when cost[m] > chip_amt - chip_amt
+  leg cash from konto to shop amount cost[m]
+
+move bonus: maybe
+  on bonus_day
+  at bonus_day
+  leg cash from world to konto amount bonus_amt
+
+move buy[m in month]: buys
+  on day_of(m, cost_dom)
+  at start_of(m)
+  leg cash from konto to market amount round(buy_units[m] * fund_price[m], minor(PLN), half-up)
+  leg units from market to fund amount buy_units[m]
+
+move anyway[m in month]: anys
+  on day_of(m, cost_dom)
+  at start_of(m)
+  leg cash from konto to shop amount any_amt[m]
+
+move flagged[m in month]: transfers
+  on day_of(m, cost_dom)
+  at start_of(m)
+  when maybe_flag[m]
+  leg cash from world to konto amount flag_amt
+
+move fee[m in month]: transfers
+  on day_of(m, fee_dom)
+  at start_of(m)
+  leg cash from konto to shop amount fee_amt[m]
+
+move on_cut: transfers
+  on cut_day
+  at cut_day
+  leg cash from konto to shop amount flag_amt
+
+move outside_only[m in month]: transfers
+  on day_of(m, fee_dom)
+  at start_of(m)
+  leg cash from world to shop amount flag_amt
+
+move nothing: anys
+  on cut_day
+  at cut_day
+  leg cash from konto to shop amount 0
+
+ask q_res: residuals konto 2026-01 law cut
+
+ask q_bal: bal(konto, d), bal(konto, d) with uncertain, bal(fund, d) for d in [2026-02-08, 2026-02-10, 2026-02-14, 2026-02-15, 2026-02-20, 2026-03-20] law cut
+
+version facts
+  cite fixture
+  governs always
+  known 2025-12-01
+  fund_price[2026-01] = 10 "a unit's price"
+  fund_price[2026-02] = 10
+  fund_price[2026-03] = 12
+  chip_amt = 2.00 "a daily chip"
+  cost[2026-01] = 30.00 "a cost: when holds"
+  cost[2026-02] = 0.00 "no cost: when fails"
+  cost[2026-03] = 45.00
+  cost_dom = 18 "the monthly day"
+  bonus_day = 2026-02-20 "an uncertain bonus"
+  bonus_amt = 500.00
+  buy_units[2026-01] = 2 "two units"
+  buy_units[2026-02] = 0 "none: legs of 0"
+  buy_units[2026-03] = 3 "three units"
+  any_amt[2026-01] = 4.00 "a leg of a kind of unit any"
+  any_amt[2026-02] = 0.00 "a leg of 0"
+  any_amt[2026-03] = 6.00
+  maybe_flag[2026-01] = true "paid in January"
+  maybe_flag[2026-02] = false "not in February"
+  flag_amt = 7.00 "a flagged amount; March's flag is a hole"
+  fee_amt[2026-01] = 5.00 "a fee"
+  fee_amt[2026-02] = 5.00 "February's fee, paid as observed at an uncovered place"
+  fee_amt[2026-03] = -5.00 "a negative amount, refused (RUN-NEG)"
+  fee_dom = 8 "the fee's day"
+  cut_day = 2026-02-15 "the cut's day"
+
+version openings
+  cite fixture
+  governs always
+  known 2025-12-31
+  opening[konto] = 1000 at 2026-01-01 start
+  opening[fund] = 0 at 2026-01-01 start
+
+version bank_jan
+  cite fixture
+  governs 2026-01
+  known 2026-02-02
+  covers konto
+  bank[b20260109] = (on: 2026-01-09, kind: transfers, leg cash from konto to shop amount 2.00 PLN, fulfils: chip[2026-01-09]) "one chip paid"
+
+version bank_feb
+  cite fixture
+  governs 2026-02
+  known 2026-02-10
+  bank[b20260208] = (on: 2026-02-08, kind: transfers, leg cash from konto to shop amount 5.00 PLN, fulfils: fee[2026-02]) "the fee, observed with no cover"
+
+version cover_cut
+  cite fixture
+  governs 2026-02-15..2026-02-28
+  known 2026-02-15
+  covers konto

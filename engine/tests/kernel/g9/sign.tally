@@ -1,0 +1,235 @@
+model g9_sign
+  tally 2
+  on 2026-03-25
+  start 2026-01-01
+  end 2026-03-31
+  note "T, issue #41, G9: booking a leg and the sign rule (L §5.10, §5.14, E §4.2 steps 4-5): claims, debts and a holding broken by a first-batch plan and by a decision's legs, each refused (RUN-PLACE) beside a twin that stays at 0 or nets to 0 in its batch; a claim anchored below zero at a close, which refcore and the engine leave at -5.00 unrefused (S keeps refcore's bytes; the spec round decides, #46), beside a twin anchored at 0; a leg out of a place outside its lifespan (RUN-LIFESPAN) beside a leg of 0 that books nothing; cash below zero in two stretches (WARN-NEGATIVE twice); a hole amount and a hole day, each on places of their own."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit PLN: currency minor 0.01
+
+unit etf_unit "a fund unit"
+
+index month = month 2026-01..2026-03
+
+place konto: accounts PLN lives 2026-01-01..
+
+place wallet: cash PLN lives 2026-01-01..
+
+place lent: claims PLN lives 2026-01-01..
+
+place lent2: claims PLN lives 2026-01-01..
+
+place lent3: claims PLN lives 2026-01-01..
+
+place lent4: claims PLN lives 2026-01-01..
+
+place owed: debts PLN lives 2026-01-01..
+
+place fund: holdings etf_unit priced fund_price lives 2026-01-01..
+
+place fund2: holdings etf_unit priced fund_price lives 2026-01-01..
+
+place gone: accounts PLN lives 2026-01-01..2026-02-27
+
+place gone2: accounts PLN lives 2026-01-01..2026-02-27
+
+place box_h: accounts PLN lives 2026-01-01..
+
+place box_d: accounts PLN lives 2026-01-01..
+
+place market: outside lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input fund_price[m in month]: num PLN/etf_unit
+
+input back_amt[m in month]: money PLN
+
+input lend_amt[m in month]: money PLN
+
+input swing_amt[m in month]: money PLN
+
+input gone2_amt[m in month]: money PLN
+
+input over_amt: money PLN
+
+input payoff_amt[m in month]: money PLN
+
+input sell_units[m in month]: num etf_unit
+
+input spend_amt[m in month]: money PLN
+
+input refill_amt: money PLN
+
+input gone_amt[m in month]: money PLN
+
+input hole_amt: money PLN question "How much came in?"
+
+input hole_day: date question "When does it come?"
+
+input small_amt: money PLN
+
+input mystery_day: date
+
+input first_day: date
+
+input pay_dom: int
+
+input dec_dom: int
+
+input spend_dom: int
+
+input refill_dom: int
+
+move back[m in month]: transfers
+  on day_of(m, pay_dom)
+  at start_of(m)
+  leg cash from lent to konto amount back_amt[m]
+
+move swing_out[m in month]: transfers
+  on day_of(m, pay_dom)
+  at start_of(m)
+  leg cash from lent2 to konto amount swing_amt[m]
+
+move swing_in[m in month]: transfers
+  on day_of(m, pay_dom)
+  at start_of(m)
+  leg cash from konto to lent2 amount lend_amt[m]
+
+move repay[m in month]: transfers
+  on day_of(m, dec_dom)
+  at start_of(m)
+  reads lent3
+  leg cash from lent3 to world amount if bal(lent3) > small_amt then bal(lent3) + over_amt else bal(lent3)
+
+move payoff[m in month]: transfers
+  on day_of(m, pay_dom)
+  at start_of(m)
+  leg cash from konto to owed amount payoff_amt[m]
+
+move sell[m in month]: etf_sells
+  on day_of(m, pay_dom)
+  at start_of(m)
+  leg units from fund to market amount sell_units[m]
+
+move spend[m in month]: transfers
+  on day_of(m, spend_dom)
+  at start_of(m)
+  leg cash from wallet to world amount spend_amt[m]
+
+move refill[m in month]: transfers
+  on day_of(m, refill_dom)
+  at start_of(m)
+  leg cash from world to wallet amount refill_amt
+
+move into_gone[m in month]: transfers
+  on day_of(m, pay_dom)
+  at start_of(m)
+  leg cash from gone to world amount gone_amt[m]
+
+move into_gone2[m in month]: transfers
+  on day_of(m, pay_dom)
+  at start_of(m)
+  leg cash from world to gone2 amount gone2_amt[m]
+
+move dump[m in month]: etf_sells
+  on day_of(m, dec_dom)
+  at start_of(m)
+  reads fund2
+  leg units from fund2 to market amount if bal(fund2) > sell_units[m] then sell_units[m] else bal(fund2) + sell_units[m]
+
+move mystery: transfers
+  on mystery_day
+  at mystery_day
+  leg cash from world to box_h amount hole_amt
+
+move vague: transfers
+  on hole_day
+  at first_day
+  leg cash from world to box_d amount small_amt
+
+kind etf_sells: event certain
+  leg units: etf_unit
+
+ask q_claims: bal(lent, d), bal(lent2, d), bal(lent3, d), bal(lent4, d) for d in [2026-01-31, 2026-02-28, 2026-03-10, 2026-03-20, 2026-03-31] law cut
+
+ask q_more: bal(owed, d), bal(fund, d), bal(gone, d), bal(gone2, d), bal(konto, d), bal(fund2, d) for d in [2026-01-31, 2026-02-28, 2026-03-31] law cut
+
+ask q_wallet: bal(wallet, d) for d in [2026-01-14, 2026-01-15, 2026-01-25, 2026-02-15, 2026-02-25, 2026-03-15] law cut
+
+ask q_holes: bal(box_h, d), bal(box_d, d) for d in [2026-01-10, 2026-01-31, 2026-02-01, 2026-03-31] law cut
+
+version facts
+  cite fixture
+  governs always
+  known 2025-12-01
+  fund_price[2026-01] = 10 "a unit's price"
+  fund_price[2026-02] = 10
+  fund_price[2026-03] = 10
+  back_amt[2026-01] = 50.00 "lent: 100 to 50"
+  back_amt[2026-02] = 50.00 "lent: 50 to 0, the twin that stays at 0"
+  back_amt[2026-03] = 30.00 "lent: 0 to -30, refused"
+  lend_amt[2026-01] = 0.00 "nothing lent"
+  lend_amt[2026-02] = 0.00
+  lend_amt[2026-03] = 40.00 "lent2 nets -30 + 40 in its batch"
+  swing_amt[2026-01] = 0.00 "nothing back"
+  swing_amt[2026-02] = 0.00
+  swing_amt[2026-03] = 30.00 "lent2: 0 - 30 + 40, never checked between"
+  over_amt = 10.00 "repay takes 10 more than lent3 holds"
+  payoff_amt[2026-01] = 40.00 "owed: -100 to -60"
+  payoff_amt[2026-02] = 60.00 "owed: -60 to 0, the twin"
+  payoff_amt[2026-03] = 20.00 "owed: 0 to 20, refused"
+  sell_units[2026-01] = 4 "fund: 10 to 6 units"
+  sell_units[2026-02] = 6 "fund: 6 to 0 units, the twin"
+  sell_units[2026-03] = 2 "fund: 0 to -2 units, refused"
+  spend_amt[2026-01] = 80.00 "wallet 50 to -30"
+  spend_amt[2026-02] = 100.00 "wallet 70 to -30 again"
+  spend_amt[2026-03] = 10.00
+  refill_amt = 100.00 "back above zero"
+  gone_amt[2026-01] = 5.00 "out of gone while it lives"
+  gone_amt[2026-02] = 5.00 "gone ends empty"
+  gone_amt[2026-03] = 0.00 "a leg of 0 out of gone after its lifespan: it books nothing"
+  gone2_amt[2026-01] = 0.00
+  gone2_amt[2026-02] = 0.00
+  gone2_amt[2026-03] = 5.00 "into gone2 after its lifespan, refused"
+  small_amt = 1.00 "a small amount"
+  mystery_day = 2026-02-01 "the hole amount's day"
+  first_day = 2026-01-01 "the law date of the hole day's move"
+  pay_dom = 10 "the plans' day"
+  dec_dom = 20 "the decisions' day"
+  spend_dom = 15 "the spending's day"
+  refill_dom = 25 "the refill's day"
+
+version openings
+  cite fixture
+  governs always
+  known 2025-12-31
+  opening[konto] = 1000 at 2026-01-01 start
+  opening[wallet] = 50 at 2026-01-01 start
+  opening[lent] = 100 at 2026-01-01 start
+  opening[lent2] = 0 at 2026-01-01 start
+  opening[lent3] = 30 at 2026-01-01 start "repay takes it to -10 on 2026-01-20, refused"
+  opening[lent4] = 20 at 2026-01-01 start
+  opening[owed] = -100 at 2026-01-01 start
+  opening[fund] = 10 at 2026-01-01 start
+  opening[gone] = 10 at 2026-01-01 start
+  opening[gone2] = 0 at 2026-01-01 start
+  opening[fund2] = 5 at 2026-01-01 start "dump sells 4, then 1 + 6 of 1 held"
+  opening[box_h] = 0 at 2026-01-01 start
+  opening[box_d] = 0 at 2026-01-01 start
+
+version lent4_jan
+  cite fixture
+  governs 2026-01
+  known 2026-02-02
+  anchor lent4
+  stated[lent4] = -5.00 at 2026-01-31 end "a claim stated below zero at the close"
+
+version lent4_feb
+  cite fixture
+  governs 2026-02
+  known 2026-03-02
+  anchor lent4
+  stated[lent4] = 0.00 at 2026-02-28 end "the twin: a claim stated at 0"

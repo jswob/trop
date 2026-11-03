@@ -1,0 +1,137 @@
+model g2_read
+  tally 2
+  on 2026-10-25
+  start 2024-01-01
+  end 2026-12-31
+  note "T, issue #41, G2: the read rule (L §4.6): candidates by key (a literal, a range, *, a trailing key left out), by known date and by span; replace; precedence by narrowness and by a span over always; keys and things a later version adds; no candidate a hole; held past the cut; rules in force by their versions (L §5.11)."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit DUK: currency minor 0.01
+
+index yr = year 2024..2026
+
+index n = 1..10
+
+index opt = [a, b, c]
+
+index late = [x1, x2]
+
+kind boxes: place DUK signed
+
+input rate[y in yr]: num question "What is the rate for the year?"
+
+input fee[o in opt, k in n]: money DUK
+
+input level: num
+
+input fixed_base: num
+
+input tag[l in late]: num
+
+input limit[x in boxes]: money DUK
+
+input two: num
+
+def pay[y in yr]: num at start_of(y)
+  note "an early rule for 2024, a later one from 2025 known in January 2025"
+  rule early v v_rules_a = rate[y]
+  rule later beats early v v_rules_b = rate[y] * two
+
+def lvl: num at reader
+  rule base v v_level1 = level
+
+ask q_rate: rate[2024], rate[2025], rate[2026] law 2026-10-25
+
+ask q_rate_old: rate[2024], rate[2025], rate[2026] law 2026-10-25 as known 2024-06-30
+
+ask q_fee_a: fee[a, 1], fee[a, 3], fee[a, 4], fee[a, 5], fee[a, 6] law 2026-10-25
+
+ask q_fee_bc: fee[b, 1], fee[b, 10], fee[c, 2], fee[c, 9] law 2026-10-25
+
+ask q_level: level law 2024-06-30
+
+ask q_level_before_fix: level law 2024-06-30 as known 2025-04-30
+
+ask q_level_gap: level law 2025-08-01 as known 2025-02-01
+
+ask q_level_late: level law 2025-08-01
+
+ask q_level_held: level law 2026-06-30 as known 2025-10-01
+
+ask q_base: fixed_base
+
+ask q_tag: tag[x1], tag[x3] law 2026-10-25
+
+ask q_tag_old: tag[x1] law 2026-10-25 as known 2024-06-30
+
+ask q_limit: limit[first_box], limit[second_box] law 2026-10-25
+
+ask q_pay: pay[2024], pay[2025], pay[2026]
+
+ask q_pay_old: pay[2024], pay[2025] as known 2024-12-31
+
+ask q_lvl: lvl law 2024-06-30
+
+version v_keys
+  cite fixture
+  governs always
+  known 2024-01-01
+  fixed_base = 5 "a fact for all time"
+  two = 2 "two"
+  fee[*, *] = 1.00 "every key"
+  fee[a, *] = 2.00 "a's keys"
+  fee[a, 3..5] = 3.00 "a's keys 3 to 5"
+  fee[a, 4] = 4.00 "a at 4"
+  fee[b, 1..10] = 5.00 "b's keys by a range"
+  fee[c] = 6.00 "c, its second key left out"
+  tag[*] = 7 "every key the index had on 2024-01-01"
+  boxes + [first_box] lives 2024-01-01..
+  limit[*] = 100.00 "every box there on 2024-01-01"
+
+version v_rates
+  cite fixture
+  governs 2024..2026
+  known 2024-01-01
+  rate[2024] = 0.10 "2024's rate"
+  rate[2025..2026] = 0.20 "2025 and 2026 by a range"
+
+version v_rates_late
+  cite fixture
+  governs 2026
+  known 2025-11-01
+  replace rate[2025..2026] = 0.25 "2026 restated in November 2025"
+
+version v_level1
+  cite fixture
+  governs 2024-01-01..2025-06-30
+  known 2024-01-01
+  level = 1 "the level through June 2025"
+
+version v_level2
+  cite fixture
+  governs 2025-07-01..
+  known 2025-03-01
+  level = 2 "the level from July 2025, open-ended"
+
+version v_fix
+  cite fixture
+  governs 2024-01-01..2024-12-31
+  known 2025-05-01
+  replace level = 1.5 "2024's level, fixed in May 2025"
+
+version v_added
+  cite fixture
+  known 2025-02-01
+  late + [x3]
+  boxes + [second_box] lives 2025-02-01..
+
+version v_rules_a
+  cite fixture
+  governs 2024
+  known 2024-01-01
+
+version v_rules_b
+  cite fixture
+  governs 2025..
+  known 2025-01-15

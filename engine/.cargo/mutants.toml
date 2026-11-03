@@ -10,10 +10,16 @@ profile = "mutants"
 additional_cargo_test_args = ["--profile=mutants"]
 # Strict lints must not reject a mutant before its tests run (R-88)
 cap_lints = true
-# The kernel's files. The lead sets them at milestone S from the builder's plan (R-85);
-# check-rules then fails on any library file in neither this list nor the protected
-# non-kernel list.
-examine_globs = ["crates/tally/src/lib.rs"]
+# The kernel's files: tools/kernel.toml's `kernel`, set at milestone S from the builder's
+# plan (R-85); check-rules fails when the two differ, and on any library file in neither
+# that list nor the protected non-kernel list.
+examine_globs = [
+  "crates/tally/src/num/**",
+  "crates/tally/src/read/**",
+  "crates/tally/src/walk/**",
+  "crates/tally/src/book/**",
+  "crates/tally/src/hole/**",
+]
 # No skip list of our own (R-86); the defaults only skip with_capacity's argument
 skip_calls = []
 # Hung mutants are ended, and counted as not caught (R-87, R-88). The baseline is skipped

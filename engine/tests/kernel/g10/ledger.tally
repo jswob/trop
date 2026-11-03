@@ -1,0 +1,259 @@
+model g10_ledger
+  tally 2
+  on 2026-03-15
+  start 2026-01-01
+  end 2026-03-31
+  note "T, issue #41, G10: stated readings and the residual ledger (L §5.19, E §6.1–§6.3): konto padded from buffer up, by nothing and down, a later version restating the middle reading, read before and after it is known; buffer padded from konto at the instant of konto's last pad, so the readings' rank on that day decides what each sees; save anchored; matched lines, a certain instance observed short, uncertain ones partly and fully fulfilled, expected but missing ones, twelve of one move on one day ordered by the movement order, an observation paid a month early, one that fulfils nothing, two whose links are refused, one beside an instance of its move that exists, decisions on covered days in the span and after it; on k4, instances whose day is a hole, matched and missing; on k5, two moves whose amounts are holes, their questions sorting against their names."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit PLN: currency minor 0.01
+
+kind maybe: transfers uncertain
+
+index month = month 2026-01..2026-02
+
+index tips = [t01, t02, t03, t04, t05, t06, t07, t08, t09, t10, t11, t12]
+
+index ab = [a, b]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place buffer: accounts PLN lives 2026-01-01..
+
+place save: accounts PLN lives 2026-01-01..
+
+place k4: accounts PLN lives 2026-01-01..
+
+place k5: accounts PLN lives 2026-01-01..
+
+place shop: outside lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input bank: observed
+
+input rent_amt: money PLN
+
+input rent_dom: int
+
+input fee_day: date
+
+input fee_amt: money PLN
+
+input part_day: date
+
+input part_amt: money PLN
+
+input prom_day: date
+
+input prom_amt: money PLN
+
+input prom2_day: date
+
+input prom2_amt: money PLN
+
+input flag: bool
+
+input flag_day: date
+
+input flag_amt: money PLN
+
+input flag2[m in month]: bool
+
+input flag2_dom: int
+
+input tip_day: date
+
+input tip_amt: money PLN
+
+input sweep_dom: int
+
+input small: money PLN
+
+input big: money PLN
+
+input odd_day[k in ab]: date question "When does the odd payment go out?"
+
+input odd_amt: money PLN
+
+input odd2_day: date question "When does the second odd payment go out?"
+
+input odd2_amt: money PLN
+
+input odd0_day: date question "When does nothing go out?"
+
+input hz_day: date
+
+input hz_amt: money PLN question "Aa: how much is the first repair?"
+
+input ha_day: date
+
+input ha_amt: money PLN question "Zz: how much is the second repair?"
+
+move rent[m in month]: transfers
+  on day_of(m, rent_dom)
+  leg cash from konto to shop amount rent_amt
+
+move fee: transfers
+  on fee_day
+  leg cash from konto to shop amount fee_amt
+
+move short: transfers
+  on part_day
+  leg cash from konto to shop amount part_amt
+
+move promise: maybe
+  on prom_day
+  leg cash from world to konto amount prom_amt
+
+move promise2: maybe
+  on prom2_day
+  leg cash from world to konto amount prom2_amt
+
+move flagged: transfers
+  on flag_day
+  when flag
+  leg cash from konto to shop amount flag_amt
+
+move flagged2[m in month]: transfers
+  on day_of(m, flag2_dom)
+  when flag2[m]
+  leg cash from konto to shop amount flag_amt
+
+move tip[t in tips]: transfers
+  on tip_day
+  leg cash from konto to shop amount tip_amt
+
+move sweep[m in month]: transfers
+  on day_of(m, sweep_dom)
+  reads konto
+  leg cash from konto to save amount if bal(konto) > 0 then small else big
+
+move odd[k in ab]: transfers
+  on odd_day[k]
+  leg cash from k4 to shop amount odd_amt
+
+move odd2: transfers
+  on odd2_day
+  leg cash from k4 to shop amount odd2_amt
+
+move odd0: transfers
+  on odd0_day
+  leg cash from k4 to shop amount 0
+
+move hz: transfers
+  on hz_day
+  leg cash from k5 to shop amount hz_amt
+
+move ha: transfers
+  on ha_day
+  leg cash from k5 to shop amount ha_amt
+
+ask q_res: residuals konto 2026-01 law cut
+
+ask q_res_feb: residuals konto 2026-02 law cut
+
+ask q_res4: residuals k4 2026-01 law cut
+
+ask q_res5: residuals k5 2026-01 law cut
+
+ask q_bal: bal(konto, d), bal(buffer, d), bal(save, d) for d in [2026-01-09, 2026-01-20, 2026-01-28] law cut
+
+ask q_buf: bal(buffer, 2026-01-09) law cut
+
+ask q_bal_early: bal(konto, 2026-01-20), bal(buffer, 2026-01-20) law cut as known 2026-02-10
+
+ask q_res_buf: residuals buffer 2026-01 law cut
+
+ask q_res_save: residuals save 2026-01 law cut
+
+version facts
+  cite fixture
+  governs always
+  known 2025-12-01
+  rent_amt = 600.00
+  rent_dom = 5 "rent on the 5th"
+  fee_day = 2026-01-12 "a fee nobody paid"
+  fee_amt = 5.00
+  part_day = 2026-01-14 "a certain payment observed short"
+  part_amt = 100.00
+  prom_day = 2026-01-22 "an uncertain one, partly fulfilled"
+  prom_amt = 100.00
+  prom2_day = 2026-01-23 "an uncertain one, fully fulfilled"
+  prom2_amt = 50.00
+  flag = false "flagged doesn't exist"
+  flag_day = 2026-01-29
+  flag_amt = 8.00
+  flag2[2026-01] = false "January's doesn't exist"
+  flag2[2026-02] = true "February's does"
+  flag2_dom = 27
+  tip_day = 2026-01-08 "twelve tips on one day"
+  tip_amt = 1.00
+  sweep_dom = 25 "a decision on the 25th"
+  small = 10.00
+  big = 100.00
+  odd_day[b] = 2026-01-25 "odd[a]'s day is a hole"
+  odd_amt = 7.00
+  odd2_amt = 4.00
+  hz_day = 2026-01-10
+  ha_day = 2026-01-12
+
+version openings
+  cite fixture
+  governs always
+  known 2025-12-31
+  opening[konto] = 3000 at 2026-01-01 start
+  opening[buffer] = 1000 at 2026-01-01 start
+  opening[save] = 0 at 2026-01-01 start
+  opening[k4] = 500 at 2026-01-01 start
+  opening[k5] = 500 at 2026-01-01 start
+
+version bank_k
+  cite fixture
+  governs 2026-01
+  known 2026-02-05
+  covers konto
+  pad konto from buffer
+  pad buffer from konto
+  anchor save
+  bank[k_rent] = (on: 2026-01-05, kind: transfers, leg cash from konto to shop amount 600.00 PLN, fulfils: rent[2026-01]) "the rent"
+  bank[k_part] = (on: 2026-01-14, kind: transfers, leg cash from konto to shop amount 90.00 PLN, fulfils: short) "ten short"
+  bank[k_prom] = (on: 2026-01-22, kind: transfers, leg cash from world to konto amount 60.00 PLN, fulfils: promise) "short of the promise"
+  bank[k_prom2] = (on: 2026-01-23, kind: transfers, leg cash from world to konto amount 50.00 PLN, fulfils: promise2) "all of it"
+  bank[k_int] = (on: 2026-01-27, kind: transfers, leg cash from world to konto amount 3.00 PLN) "interest nobody planned"
+  bank[k_early] = (on: 2026-01-30, kind: transfers, leg cash from konto to shop amount 600.00 PLN, fulfils: rent[2026-02]) "February's rent, paid early"
+  bank[k_flag] = (on: 2026-01-31, kind: transfers, leg cash from konto to shop amount 8.00 PLN, fulfils: flagged) "names flagged, which doesn't exist"
+  bank[k_flag2] = (on: 2026-01-31, kind: transfers, leg cash from konto to shop amount 8.00 PLN, fulfils: flagged2[2026-01]) "names January's flagged2, which doesn't exist while February's does"
+  stated[konto] = 2430.00 at 2026-01-09 end "thirty above the booked balance"
+  stated[konto] = 2340.00 at 2026-01-20 end "as booked"
+  stated[konto] = 2433.00 at 2026-01-28 end "twenty below"
+  stated[buffer] = 990.00 at 2026-01-28 end "the buffer counted at the instant of konto's last statement"
+  stated[save] = 15.00 at 2026-01-28 end "save counted"
+
+version bank_kfix
+  cite fixture
+  governs 2026-01
+  known 2026-02-20
+  pad konto from buffer
+  replace stated[konto] = 2345.00 at 2026-01-20 end "the statement corrected: five above"
+
+version bank_k2
+  cite fixture
+  governs 2026-02
+  known 2026-03-02
+  covers konto
+
+version bank_4
+  cite fixture
+  governs 2026-01
+  known 2026-02-05
+  covers k4
+  bank[o_a] = (on: 2026-01-25, kind: transfers, leg cash from k4 to shop amount 7.00 PLN, fulfils: odd[a]) "the undated one, paid"
+  bank[o_b] = (on: 2026-01-25, kind: transfers, leg cash from k4 to shop amount 7.00 PLN, fulfils: odd[b]) "the dated one, paid"
+
+version bank_5
+  cite fixture
+  governs 2026-01
+  known 2026-02-05
+  covers k5

@@ -1,0 +1,222 @@
+model g7_running
+  tally 2
+  on 2026-02-15
+  start 2026-01-01
+  end 2026-03-31
+  note "T, issue #41, G7: running reads (L §5.14.1, §5.14.3, E §4.2 step 3): a decision's plain read of its own day (RUN-CYCLE) and of a later one (RUN-FUTURE) beside reads of its day's start and of the day before; a decision on the cut's day and one before, read through flows; flows of a place through a later day, through its own day and through the day before, with a plan on its day; flows of a decision move through a later day, its own day and the day before; two instances on a day that read each other's place through flows with no ties by (RUN-TIE) beside a twin that reads it through the day before. Each refused decision moves into a place of its own, so the rest is answered."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit PLN: currency minor 0.01
+
+index box = [first, second]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place p_cyc: accounts PLN lives 2026-01-01..
+
+place p_fut: accounts PLN lives 2026-01-01..
+
+place p_ok: accounts PLN lives 2026-01-01..
+
+place p_ffut: accounts PLN lives 2026-01-01..
+
+place p_ftd: accounts PLN lives 2026-01-01..
+
+place p_fpv: accounts PLN lives 2026-01-01..
+
+place p_dfut: accounts PLN lives 2026-01-01..
+
+place p_dpast: accounts PLN lives 2026-01-01..
+
+place p_dtd: accounts PLN lives 2026-01-01..
+
+place p_cut: accounts PLN lives 2026-01-01..
+
+place tie_jar[b in box]: accounts PLN lives 2026-01-01..
+
+place calm_jar[b in box]: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+place shop: outside lives 2026-01-01..
+
+input rent_day: date
+
+input rent_amt: money PLN
+
+input chip_day: date
+
+input chip_amt: money PLN
+
+input cyc_day: date
+
+input cyc_read: date
+
+input fut_day: date
+
+input later_day: date
+
+input early_day: date
+
+input prev_day: date
+
+input keep: money PLN
+
+input ffut_day: date
+
+input f_from: date
+
+input f_late: date
+
+input f_today: date
+
+input f_prev: date
+
+input flow_day: date
+
+input dec_day: date
+
+input d_late: date
+
+input d_early: date
+
+input d_today: date
+
+input small: money PLN
+
+input big: money PLN
+
+input cut_day: date
+
+input tie_day: date
+
+input tie_end: date
+
+input calm_end: date
+
+move rent: transfers
+  on rent_day
+  leg cash from konto to shop amount rent_amt
+
+move chip: transfers
+  on chip_day
+  leg cash from konto to shop amount chip_amt
+
+move cyc: transfers
+  on cyc_day
+  reads konto
+  leg cash from world to p_cyc amount bal(konto, cyc_read)
+
+move fut: transfers
+  on fut_day
+  reads konto
+  leg cash from world to p_fut amount bal(konto, later_day)
+
+move early: transfers
+  on early_day
+  reads konto
+  leg cash from world to p_ok amount bal(konto, early_day start) + bal(konto, prev_day) - keep
+
+move ffut: transfers
+  on ffut_day
+  reads konto
+  leg cash from world to p_ffut amount 0 - flows(konto, f_from .. f_late)
+
+move ftoday: transfers
+  on flow_day
+  reads konto
+  leg cash from world to p_ftd amount 0 - flows(konto, f_from .. f_today)
+
+move fprev: transfers
+  on flow_day
+  reads konto
+  leg cash from world to p_fpv amount 0 - flows(konto, f_from .. f_prev)
+
+move dfut: transfers
+  on dec_day
+  reads ftoday
+  leg cash from world to p_dfut amount flows(ftoday, f_from .. d_late)
+
+move dpast: transfers
+  on dec_day
+  reads ftoday
+  leg cash from world to p_dpast amount flows(ftoday, f_from .. d_early)
+
+move dtoday: transfers
+  on dec_day
+  reads ftoday
+  leg cash from world to p_dtd amount flows(ftoday, f_from .. d_today)
+
+move oncut: transfers
+  on cut_day
+  reads konto
+  leg cash from world to p_cut amount if bal(konto) > 0 then small else big
+
+move tflow[b in box]: transfers
+  on tie_day
+  reads tie_jar
+  leg cash from world to tie_jar[b] amount if flows(tie_jar[first], f_from .. tie_end) > 0 then small else big
+
+move cflow[b in box]: transfers
+  on tie_day
+  reads calm_jar
+  leg cash from world to calm_jar[b] amount if flows(calm_jar[first], f_from .. calm_end) > 0 then small else big
+
+ask q_run: bal(p_cyc, d), bal(p_fut, d), bal(p_ok, d), bal(p_ffut, d), bal(p_ftd, d), bal(p_fpv, d), bal(p_dfut, d), bal(p_dpast, d), bal(p_dtd, d), bal(konto, PLN, d) for d in [2026-01-09, 2026-01-20, 2026-03-20] law cut
+
+ask q_flows: flows(ftoday, 2026-01-01 .. 2026-04-01), flows(dpast, 2026-01-01 .. 2026-04-01), flows(oncut, 2026-01-01 .. 2026-04-01), flows(early, 2026-01-01 .. 2026-04-01) law cut
+
+ask q_tie: bal(tie_jar[first], d), bal(tie_jar[second], d), bal(calm_jar[first], d), bal(calm_jar[second], d) for d in [2026-01-19, 2026-01-20] law cut
+
+version facts
+  cite fixture
+  governs always
+  known 2025-12-01
+  rent_day = 2026-01-05 "a plan before the decisions"
+  rent_amt = 100.00
+  chip_day = 2026-01-14 "a plan on the flows readers' day"
+  chip_amt = 20.00
+  cyc_day = 2026-01-10 "reads its own day's end: RUN-CYCLE"
+  cyc_read = 2026-01-10 "the same day, through an input of its own"
+  fut_day = 2026-01-11 "reads a later day: RUN-FUTURE"
+  later_day = 2026-01-25
+  early_day = 2026-01-12 "reads its day's start and the day before"
+  prev_day = 2026-01-11
+  keep = 1500.00
+  ffut_day = 2026-01-13 "flows of konto through a later day: RUN-FUTURE"
+  f_from = 2026-01-01
+  f_late = 2026-01-21
+  f_today = 2026-01-14 "through flow_day itself"
+  f_prev = 2026-01-13 "through the day before flow_day"
+  flow_day = 2026-01-14
+  dec_day = 2026-01-16 "flows of the decision move ftoday"
+  d_late = 2026-02-01 "through a later day: RUN-FUTURE"
+  d_early = 2026-01-15 "through the day before"
+  d_today = 2026-01-16 "through dec_day itself"
+  small = 1.00
+  big = 100.00
+  cut_day = 2026-02-15 "a decision on the cut's day"
+  tie_day = 2026-01-20
+  tie_end = 2026-01-20 "through tie_day itself"
+  calm_end = 2026-01-19 "through the day before tie_day"
+
+version openings
+  cite fixture
+  governs always
+  known 2025-12-31
+  opening[konto] = 1000 at 2026-01-01 start
+  opening[p_cyc] = 0 at 2026-01-01 start
+  opening[p_fut] = 0 at 2026-01-01 start
+  opening[p_ok] = 0 at 2026-01-01 start
+  opening[p_ffut] = 0 at 2026-01-01 start
+  opening[p_ftd] = 0 at 2026-01-01 start
+  opening[p_fpv] = 0 at 2026-01-01 start
+  opening[p_dfut] = 0 at 2026-01-01 start
+  opening[p_dpast] = 0 at 2026-01-01 start
+  opening[p_dtd] = 0 at 2026-01-01 start
+  opening[p_cut] = 0 at 2026-01-01 start
+  opening[tie_jar[first]] = 0 at 2026-01-01 start
+  opening[tie_jar[second]] = 0 at 2026-01-01 start
+  opening[calm_jar[first]] = 0 at 2026-01-01 start
+  opening[calm_jar[second]] = 0 at 2026-01-01 start

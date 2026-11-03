@@ -1,0 +1,368 @@
+model g11_adjust
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+  note "T, issue #41, G11: adjustments and their settlement (L §5.14.3, E §5): a raise measured on two instances by one version and on one of them again by a later one; settlement rows that run the leg's way at both ends and at one, the other way at both ends and at one, inside and outside a span; a change of places settled by a move between its two to places (0), a second payment (+) and one back (−); an adjustment nothing settles (HOLE-CHANGED) read before and after its day; a waiver and a settlement written as moves bound over adjustments, the settled move changed twice; an amount that was a hole, one a later version makes a hole and one it makes refused and then answers; a waiver whose when is false; one leg of two changed and a row naming the other; a reading before the change is known; an instance a later version's key makes exist; rows naming adjustments no version made; ledgers, flows by keys and by leg, balances, the adjustments listed, what each row fulfils."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit PLN: currency minor 0.01
+
+kind wages: event certain
+  leg cash: PLN
+
+kind bonuses: event certain
+  leg cash: PLN
+
+kind fees: event certain
+  leg cash: PLN
+
+kind tips: event certain
+  leg cash: PLN
+
+kind perks: event certain
+  leg cash: PLN
+
+kind settles: event certain
+  leg cash: PLN
+
+kind treats: event certain
+  leg cash: PLN
+
+kind splits: event certain
+  leg a: PLN
+  leg b: PLN
+
+kind waivers: event certain
+
+index staff = [ann]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place konto2: accounts PLN lives 2026-01-01..
+
+place konto3: accounts PLN lives 2026-01-01..
+
+place konto4: accounts PLN lives 2026-01-01..
+
+place konto5: accounts PLN lives 2026-01-01..
+
+place konto6: accounts PLN lives 2026-01-01..
+
+place konto7: accounts PLN lives 2026-01-01..
+
+place konto8: accounts PLN lives 2026-01-01..
+
+place konto9: accounts PLN lives 2026-01-01..
+
+place konto10: accounts PLN lives 2026-01-01..
+
+place konto11: accounts PLN lives 2026-01-01..
+
+place konto12: accounts PLN lives 2026-01-01..
+
+place savings: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+place zus: outside lives 2026-01-01..
+
+input bank: observed
+
+input wage_amt: money PLN
+
+input wage_dom: int
+
+input bonus_day: date
+
+input bonus_amt: money PLN
+
+input bonus_to: key accounts
+
+input rent_amt: money PLN
+
+input rent_dom: int
+
+input fee_day: date
+
+input fee_amt: money PLN question "How much was the fee?"
+
+input gift_day: date
+
+input gift_amt: money PLN
+
+input cost_day: date
+
+input cost_amt: money PLN
+
+input staff_day: date
+
+input staff_amt: money PLN
+
+input tip_day: date
+
+input tip_amt: money PLN
+
+input perk_day: date
+
+input perk_amt: money PLN
+
+input treat_day: date
+
+input treat_amt: money PLN
+
+input treat_cap: money PLN
+
+input sp_day: date
+
+input sp_a: money PLN
+
+input sp_b: money PLN
+
+def net[m in months]: money PLN = wage_amt at start_of(m)
+
+def rent_net[m in months]: money PLN = rent_amt at start_of(m)
+
+move wage[m in months]: wages
+  on day_of(m, wage_dom)
+  at start_of(m)
+  leg cash from world to konto amount net[m]
+
+move bonus: bonuses
+  on bonus_day
+  leg cash from world to bonus_to amount bonus_amt
+
+move rent[m in months]: fees
+  on day_of(m, rent_dom)
+  at start_of(m)
+  leg cash from konto3 to zus amount rent_net[m]
+
+move fee: fees
+  on fee_day
+  leg cash from konto4 to zus amount fee_amt
+
+move gift: fees
+  on gift_day
+  leg cash from konto6 to zus amount gift_amt
+
+move cost: fees
+  on cost_day
+  leg cash from konto7 to zus amount cost_amt
+
+move staffpay[s in staff]: fees
+  on staff_day
+  leg cash from world to konto5 amount staff_amt
+
+move tip: tips
+  on tip_day
+  leg cash from konto9 to zus amount tip_amt
+
+move perk: perks
+  on perk_day
+  leg cash from world to konto10 amount perk_amt
+
+move treat: treats
+  on treat_day
+  leg cash from konto12 to zus amount treat_amt
+
+move sp: splits
+  on sp_day
+  leg a from world to konto11 amount sp_a
+  leg b from world to konto11 amount sp_b
+
+move skip[a in adjustments over .. where a.adjusts in treats]: waivers
+  on a.day
+  when a.change > treat_cap
+  fulfils a
+
+move keep[a in adjustments over .. where a.adjusts in tips]: waivers
+  on a.day
+  fulfils a
+
+move back[a in adjustments over .. where a.adjusts in perks]: settles
+  on a.day
+  leg cash from world to konto10 amount a.change
+  fulfils a
+
+ask q_list: a.change for a in adjustments over ..
+
+ask q_wages: sum(a.change for a in adjustments over .. where a.adjusts in wages), count(a in adjustments over 2026-05-01 .. 2026-05-31)
+
+ask q_bal: bal(konto, 2026-04-30), bal(konto, 2026-05-31), bal(konto, 2026-07-31), bal(konto2, 2026-07-31) law cut
+
+ask q_bal_early: bal(konto, 2026-05-31) law cut as known 2026-05-10
+
+ask q_rent: bal(konto3, 2026-05-31), bal(konto3, 2026-06-30), flows(rent, 2026-02-01 .. 2026-05-31), flows(rent, 2026-02-01 .. 2026-06-30) law cut
+
+ask q_flows: flows(wage, 2026-05-01 .. 2026-05-31), flows(wage.cash, 2026-05-01 .. 2026-05-31), flows(wage[2026-03], 2026-05-01 .. 2026-05-31), flows(wage[2026-04], 2026-05-01 .. 2026-05-31), flows(wage[2026-03], 2026-06-01 .. 2026-06-30) law cut
+
+ask q_flows_day: flows(wage[2026-03], 2026-01-01 .. 2026-04-30), flows(wage[2026-03], 2026-03-01 .. 2026-05-31) law cut
+
+ask q_bonus: flows(bonus, 2026-07-01 .. 2026-07-31), flows(konto2, 2026-07-01 .. 2026-07-31) law cut
+
+ask q_moves: bal(konto9, 2026-06-30), bal(konto10, 2026-06-30), flows(perk, 2026-04-01 .. 2026-04-30) law cut
+
+ask q_fulfils: o.fulfils for o in bank over 2026-05-01 .. 2026-07-31
+
+ask q_bal_apr: bal(konto, 2026-04-30) law cut
+
+ask q_treat: flows(treat, 2026-04-01 .. 2026-04-30) law cut
+
+ask q_res_k11: residuals konto11 2026-05 law cut
+
+ask q_res5: residuals konto 2026-05 law cut
+
+ask q_res6: residuals konto 2026-06 law cut
+
+ask q_res_k2: residuals konto2 2026-07 law cut
+
+ask q_res_k8: residuals konto8 2026-05 law cut
+
+version plan
+  cite fixture
+  governs always
+  known 2025-12-01
+  wage_amt = 5 000.00 "a wage"
+  wage_dom = 10
+  bonus_day = 2026-02-20 "a bonus into konto"
+  bonus_amt = 100.00
+  bonus_to = konto
+  rent_amt = 1 000.00 "a rent"
+  rent_dom = 3
+  fee_day = 2026-02-05 "a fee whose amount nobody gave"
+  gift_day = 2026-02-06 "a gift a later version makes a hole"
+  gift_amt = 40.00
+  cost_day = 2026-02-07 "a cost a later version makes refused"
+  cost_amt = 30.00
+  staff_day = 2026-03-10 "a payment to every member of staff"
+  staff_amt = 10.00
+  tip_day = 2026-02-08 "a tip a waiver settles"
+  tip_amt = 20.00
+  perk_day = 2026-02-09 "a perk a move settles"
+  perk_amt = 40.00
+  treat_day = 2026-02-11 "a treat whose waiver doesn't exist"
+  treat_amt = 10.00
+  treat_cap = 100.00
+  sp_day = 2026-02-12 "a movement of two legs"
+  sp_a = 50.00
+  sp_b = 20.00
+
+version openings
+  cite fixture
+  governs always
+  known 2025-12-31
+  opening[konto] = 0 at 2026-01-01 start
+  opening[konto2] = 0 at 2026-01-01 start
+  opening[konto3] = 10 000 at 2026-01-01 start
+  opening[konto4] = 500 at 2026-01-01 start
+  opening[konto5] = 0 at 2026-01-01 start
+  opening[konto6] = 500 at 2026-01-01 start
+  opening[konto7] = 500 at 2026-01-01 start
+  opening[konto8] = 0 at 2026-01-01 start
+  opening[konto9] = 500 at 2026-01-01 start
+  opening[konto10] = 0 at 2026-01-01 start
+  opening[konto11] = 0 at 2026-01-01 start
+  opening[konto12] = 500 at 2026-01-01 start
+  opening[savings] = 1 000 at 2026-01-01 start
+
+version late_gift
+  cite fixture
+  governs always
+  known 2026-03-01
+  replace gift_amt = ?"was the gift given after all?"
+  replace cost_amt = -5.00 "a cost turned negative"
+
+version cost_fix
+  cite fixture
+  governs always
+  known 2026-03-15
+  replace cost_amt = 35.00 "the cost answered again"
+
+version v_staff
+  cite fixture
+  known 2026-04-01
+  staff + [bob]
+
+version tip_up
+  cite fixture
+  governs always
+  known 2026-04-02
+  replace tip_amt = 25.00 "the tip raised"
+  replace treat_amt = 12.00 "the treat raised"
+
+version perk_up
+  cite fixture
+  governs always
+  known 2026-04-15
+  replace perk_amt = 55.00 "the perk raised"
+
+version sp_up
+  cite fixture
+  governs always
+  known 2026-05-05
+  replace sp_a = 60.00 "one leg of two changed"
+
+version stmt_k
+  cite fixture
+  governs 2026-04
+  known 2026-08-15
+  pad konto from savings
+  stated[konto] = 20 110.00 at 2026-04-30 end "ten above, read before the raise is known"
+
+version perk_up2
+  cite fixture
+  governs always
+  known 2026-04-20
+  replace perk_amt = 60.00 "the perk raised again"
+
+version raise
+  cite fixture
+  governs 2026-03..2026-04
+  known 2026-05-01
+  replace wage_amt = 5 500.00 "a raise for March and April"
+
+version raise2
+  cite fixture
+  governs 2026-03
+  known 2026-06-01
+  replace wage_amt = 5 700.00 "March raised again"
+
+version rent_up
+  cite fixture
+  governs 2026-02
+  known 2026-06-01
+  replace rent_amt = 1 100.00 "February's rent raised, and nobody pays it"
+
+version move_acct
+  cite fixture
+  governs always
+  known 2026-07-01
+  replace bonus_to = konto2 "the bonus belonged in konto2"
+
+version bank_a
+  cite fixture
+  governs 2026-05..2026-06
+  known 2026-07-01
+  bank[r1] = (on: 2026-05-15, kind: wages, leg cash from world to konto amount 300.00 PLN, fulfils: adjustments[wage[2026-03].cash, raise]) "back pay, the leg's way at both ends"
+  bank[r2] = (on: 2026-06-10, kind: settles, leg cash from savings to konto amount 100.00 PLN, fulfils: adjustments[wage[2026-03].cash, raise]) "back pay into the leg's to place from elsewhere"
+  bank[r3] = (on: 2026-05-20, kind: settles, leg cash from konto to world amount 50.00 PLN, fulfils: adjustments[wage[2026-04].cash, raise]) "paid back, the other way at both ends"
+  bank[r4] = (on: 2026-05-25, kind: settles, leg cash from konto to zus amount 20.00 PLN, fulfils: adjustments[wage[2026-04].cash, raise]) "paid out of the leg's to place to elsewhere"
+  bank[r5] = (on: 2026-06-15, kind: wages, leg cash from world to konto amount 200.00 PLN, fulfils: adjustments[wage[2026-03].cash, raise2]) "the second raise, settled in full"
+  bank[r6] = (on: 2026-05-12, kind: settles, leg cash from world to konto8 amount 10.00 PLN, fulfils: adjustments[wage[2026-03].cash, plan]) "names a version that made no adjustment of it"
+  bank[r7] = (on: 2026-05-13, kind: settles, leg cash from world to konto8 amount 10.00 PLN, fulfils: adjustments[wage[2026-07].cash, raise]) "names an instance the version didn't change"
+
+version bank_c
+  cite fixture
+  governs 2026-05
+  known 2026-07-01
+  bank[r11] = (on: 2026-05-20, kind: settles, leg cash from world to konto11 amount 10.00 PLN, fulfils: adjustments[sp.b, sp_up]) "names the leg the version didn't change"
+  bank[r12] = (on: 2026-05-21, kind: settles, leg cash from world to konto11 amount 10.00 PLN, fulfils: adjustments[sp.a, sp_up]) "settles the leg it changed"
+
+version bank_b
+  cite fixture
+  governs 2026-07
+  known 2026-08-01
+  bank[r8] = (on: 2026-07-10, kind: settles, leg cash from konto to konto2 amount 100.00 PLN, fulfils: adjustments[bonus.cash, move_acct]) "the bonus moved where it belongs"
+  bank[r9] = (on: 2026-07-12, kind: bonuses, leg cash from world to konto2 amount 30.00 PLN, fulfils: adjustments[bonus.cash, move_acct]) "a second payment into the new place"
+  bank[r10] = (on: 2026-07-14, kind: settles, leg cash from konto2 to world amount 10.00 PLN, fulfils: adjustments[bonus.cash, move_acct]) "some of it paid back"

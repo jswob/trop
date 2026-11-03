@@ -8,6 +8,7 @@ every role against every class of protected path, each Bash form, the build role
 extra refusals, the ConfigChange and Stop hooks, malformed input and a forced crash.
 """
 
+import concurrent.futures
 import json
 import os
 import shutil
@@ -74,7 +75,7 @@ EDITS = [
     ("engine/tools/ast-grep/rules/no-float.yml", RULES),
     ("engine/fuzz/fuzz_targets/parse.rs", RULES),
     ("engine/fuzz/regressions/parse/crash-1", RULES),
-    ("engine/crates/tally/benches/stub.rs", RULES),
+    ("engine/crates/tally/benches/p8_m1.rs", RULES),
     (".github/workflows/engine.yml", RULES),
     (".claude/settings.json", RULES),
     # the builder's instructions (F-23)
@@ -142,6 +143,10 @@ ALL = set(ROLES)
 NOT_BUILD = {"rules", "tests", "spec", "unset", "lead"}
 # (command, the roles that may run it, cwd relative to the root)
 BASH = [
+    # T's local mutation run (issue #40): any role runs it, from the root or engine/
+    ("engine/tools/mutants-local crates/tally/src/walk/state.rs", ALL, ""),
+    ("tools/mutants-local crates/tally/src/num/rat.rs -F 'checked_add'", ALL, "engine"),
+    ("echo x > engine/tools/mutants-local", RULES, ""),
     # writing forms onto protected paths
     ("echo x > engine/spec/DONE.md", SPEC, ""),
     ("echo x >> engine/tests/x", TESTS, ""),
@@ -821,7 +826,7 @@ def setup(root):
         "engine/spec/DONE.md": "the contract\n",
         "engine/tests/x": "a test\n",
         "engine/crates/tally/src/lib.rs": "//! stub\n",
-        "engine/crates/tally/benches/stub.rs": "//! bench\n",
+        "engine/crates/tally/benches/p8_m1.rs": "//! bench\n",
         "engine/BUILD-LOG.md": "# Build log\n",
         ".claude/settings.json": "{}\n",
         # a cargo workspace like the engine's, for the cargo writers (F-4)
@@ -910,6 +915,9 @@ def main():
     with tempfile.TemporaryDirectory(prefix="tally-guard-test-") as tmp:
         root = os.path.realpath(tmp)
         setup(root)
+        # the guard's judgments of single calls change nothing on disk, so they run side by
+        # side (issue #6); each row is checked in its own order
+        rows = []  # (label, payload, role, want)
         # Edit, Write, MultiEdit and NotebookEdit: every role against every path
         tools = ("Edit", "Write", "MultiEdit", "NotebookEdit")
         for i, (path, allowed) in enumerate(EDITS):
@@ -917,19 +925,23 @@ def main():
             for j, role in enumerate(ROLES):
                 tool = tools[(i + j) % len(tools)]  # each tool meets every role and path class
                 key = "notebook_path" if tool == "NotebookEdit" else "file_path"
-                code, err = call(root, ["guard"], {"tool_name": tool, "tool_input": {key: full}, "cwd": root}, role)
-                expect(f"{tool} {path} as {role}", code, 0 if role in allowed else 2, err)
+                rows.append((f"{tool} {path} as {role}", {"tool_name": tool, "tool_input": {key: full}, "cwd": root},
+                             role, 0 if role in allowed else 2))
         # a relative path resolves against the hook's cwd
         for role in ROLES:
-            code, err = call(root, ["guard"], {"tool_name": "Edit", "tool_input": {"file_path": "spec/DONE.md"},
-                                               "cwd": os.path.join(root, "engine")}, role)
-            expect(f"Edit spec/DONE.md from engine/ as {role}", code, 0 if role == "spec" else 2, err)
+            rows.append((f"Edit spec/DONE.md from engine/ as {role}",
+                         {"tool_name": "Edit", "tool_input": {"file_path": "spec/DONE.md"}, "cwd": os.path.join(root, "engine")},
+                         role, 0 if role == "spec" else 2))
         # Bash: each form, every role
         for command, allowed, cwd in BASH:
             for role in ROLES:
-                code, err = call(root, ["guard"], {"tool_name": "Bash", "tool_input": {"command": command},
-                                                   "cwd": os.path.join(root, cwd)}, role)
-                expect(f"Bash `{command}` as {role}", code, 0 if role in allowed else 2, err)
+                rows.append((f"Bash `{command}` as {role}",
+                             {"tool_name": "Bash", "tool_input": {"command": command}, "cwd": os.path.join(root, cwd)},
+                             role, 0 if role in allowed else 2))
+        with concurrent.futures.ThreadPoolExecutor(max_workers=os.cpu_count() or 4) as pool:
+            answers = list(pool.map(lambda r: call(root, ["guard"], r[1], r[2]), rows))
+        for (label, _, _, want), (code, err) in zip(rows, answers, strict=True):
+            expect(label, code, want, err)
         # R-132 on another branch: a bare push pushes that branch; master by name still refuses
         git = ["git", "-C", root, "-c", "user.name=guard-test", "-c", "user.email=guard-test@example.invalid"]
         subprocess.run([*git, "switch", "-q", "-c", "feature"], check=True)

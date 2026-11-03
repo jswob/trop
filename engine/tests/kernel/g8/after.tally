@@ -1,0 +1,59 @@
+model g8_after
+  tally 2
+  on 2026-02-15
+  start 2026-01-01
+  end 2026-03-31
+  note "T, issue #41, G8: a projection from a decision's own point keeps the day's decisions after that point (L §5.14.1, E §4.3 step 1): pp projects konto from its point on 5 March; zz, unrelated and after it that day, is refused in its when, which refuses every place from its point, in the main walk and in pp's projection, so pp's amount is refused, as a move's flows read shows; reads before that day are answered."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place p_pp: accounts PLN lives 2026-01-01..
+
+place z_box: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input t_day: date
+
+input t_own: date
+
+input d_end: date
+
+input div_z: num
+
+input small: money PLN
+
+move pp: transfers
+  on t_day
+  reads konto
+  leg cash from world to p_pp amount bal(konto, d_end) from t_own
+
+move zz: transfers
+  on t_day
+  reads z_box
+  when bal(z_box) / div_z > 0
+  leg cash from world to z_box amount small
+
+ask q_after: flows(pp, 2026-03-01 .. 2026-03-31), bal(konto, 2026-03-04), bal(p_pp, 2026-03-04) law cut
+
+version facts
+  cite fixture
+  governs always
+  known 2025-12-01
+  t_day = 2026-03-05 "pp, then zz, on one day"
+  t_own = 2026-03-05 "pp projects from its own point"
+  d_end = 2026-03-31
+  div_z = 0 "zz's when divides by zero"
+  small = 1.00
+
+version openings
+  cite fixture
+  governs always
+  known 2025-12-31
+  opening[konto] = 1000 at 2026-01-01 start
+  opening[p_pp] = 0 at 2026-01-01 start
+  opening[z_box] = 10 at 2026-01-01 start

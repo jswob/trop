@@ -17,6 +17,11 @@ resident size passes 8 GB is killed (D4-7). A fast wrong answer fails: after tim
 output's SHA-256 is compared with T's expected digest (engine/tests/perf-digests.tsv, id and
 digest per line), and a row with no digest yet is reported unjudged.
 
+A micro row (`bench:<name>`, P8-M*) runs its criterion bench, crates/tally/benches/<name>.rs,
+whose id is the row's: the wall time is criterion's median, and the bench itself fails the
+run when a result isn't its known value. Its instructions run under gungraun on Linux CI
+(tools/gungraun/benches/<name>.rs); a bench with no criterion twin is left to CI.
+
 Until the lead sets the kernel at S (tools/kernel.toml), every number is proposed
 (PERFORMANCE §8): perf reports misses and exits 0. After S a miss exits 1. A wrong answer
 exits 1 always. Standard library only, like run.py.
@@ -24,6 +29,7 @@ exits 1 always. Standard library only, like run.py.
 
 import csv
 import hashlib
+import json
 import os
 import platform
 import statistics
@@ -43,6 +49,7 @@ TABLE = os.path.join(TOOLS, "perf-budgets.toml")
 KERNEL = os.path.join(TOOLS, "kernel.toml")
 CHECKS = os.path.join(ENGINE, "tests", "checks.tsv")
 DIGESTS = os.path.join(ENGINE, "tests", "perf-digests.tsv")
+BENCHES = os.path.join(ENGINE, "crates", "tally", "benches")
 OUT = os.path.join(ENGINE, "target", "perf")
 CEILING_KB = 8 * 1024 * 1024  # D4-7: 8 GB on any run
 TIMEOUT_S = 90.0  # the user's hard budget for one run
@@ -83,6 +90,8 @@ def budget_text(r):
 
 
 def seconds(s):
+    if s < 0.000001:
+        return f"{s * 1e9:.1f} ns"
     if s < 0.001:
         return f"{s * 1e6:.2f} µs"
     if s < 1:
@@ -197,9 +206,35 @@ def timed(binary, argv, cwd):
     return wall, fields.get("peak memory footprint"), fields.get("instructions retired"), child.returncode, output
 
 
+def criterion_row(r, name):
+    """A micro row's wall time: its criterion bench (crates/tally/benches/<name>.rs, its id the
+    row's), whose median is criterion's own over its samples, so --runs and --warmups don't
+    apply. The bench checks its results after timing and fails the run on a wrong one."""
+    argv = ["cargo", "bench", "--locked", "-p", "tally", "--bench", name]
+    done = subprocess.run(argv, cwd=ENGINE, env=check.clean_env(), capture_output=True, text=True, check=False)
+    if done.returncode != 0:
+        return (f"BUDGET {r['id']}: WRONG or unbuilt: {' '.join(argv)} exited {done.returncode}: "
+                f"{check.first_error(done.stdout + done.stderr)}"), True
+    target = os.path.join(ENGINE, os.environ.get("CARGO_TARGET_DIR") or "target")
+    estimates = os.path.join(target, "criterion", r["id"], "new", "estimates.json")
+    try:
+        with open(estimates, encoding="utf-8") as f:
+            wall = json.load(f)["median"]["point_estimate"] / 1e9
+    except (OSError, ValueError, KeyError, TypeError):
+        return f"BUDGET {r['id']}: criterion wrote no median at {os.path.relpath(estimates, ROOT)}", True
+    note = f"wall(1w): median {seconds(wall)} (criterion; its instructions under gungraun on Linux CI)"
+    if "wall_s" in r and wall > r["wall_s"]:
+        return (f"BUDGET {r['id']} wall(1w): median {seconds(wall)} > {seconds(r['wall_s'])} "
+                f"(+{(wall / r['wall_s'] - 1) * 100:.0f} %, criterion)"), set_at_s()
+    return f"ok {r['id']} {note} (budget: {budget_text(r)})", False
+
+
 def time_row(r, binary, runs, warmups):
     """One line for one row, and whether it failed (a wrong answer, or a miss after S)."""
     plan = recipe(r)
+    name = r["recipe"][len("bench:"):]
+    if plan is None and r["recipe"].startswith("bench:") and os.path.isfile(os.path.join(BENCHES, f"{name}.rs")):
+        return criterion_row(r, name)
     if plan is None and r["recipe"].startswith("bench:"):
         return f"{r['id']}: {r['recipe']}, its instructions under gungraun on Linux CI", False
     if plan is None:

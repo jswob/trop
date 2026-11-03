@@ -1,0 +1,47 @@
+model g3_sweep
+  tally 2
+  on 2026-10-25
+  start 2024-01-01
+  end 2026-12-31
+  note "T, issue #41, G3 (the sweep): a band of three rows whose ends are alike, closed below and open above, and a later version that replaces the middle one only (L §5.9 Rows replaced); each row read before and after it; a band with a point row [5, 5] beside (5, 10), the second replaced."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+index pts = [p0, p1, p2, p5, p6]
+
+input xs[k in pts]: num
+
+band tier(x: num): num
+
+band pt(x: num): num
+
+ask q_pt_before: pt(xs[p5]) law 2025-06-30 as known 2025-01-01
+
+ask q_pt_after: pt(xs[p5]), pt(xs[p6]) law 2025-06-30
+
+ask q_before: tier(xs[k]) for k in pts law 2025-06-30 as known 2025-01-01
+
+ask q_after: tier(xs[k]) for k in pts law 2025-06-30
+
+version v_tiers
+  cite fixture
+  governs 2024-01-01..
+  known 2024-01-01
+  tier: [0, 10) = 0.1 "the first tier"
+  tier: [10, 50) = 0.2 "the second tier"
+  tier: [50, 100) = 0.3 "the third tier"
+  xs[p0] = 5
+  xs[p1] = 20
+  xs[p2] = 60
+  xs[p5] = 5
+  xs[p6] = 7
+  pt: [0, 5) = 1 "below five"
+  pt: [5, 5] = 2 "five itself"
+  pt: (5, 10) = 3 "above five"
+
+version v_tier2
+  cite fixture
+  governs 2025-01-01..
+  known 2025-03-01
+  replace tier: [10, 50) = 0.25 "the second tier raised"
+  replace pt: (5, 10) = 4 "above five raised"

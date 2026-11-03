@@ -8,7 +8,7 @@ name: Engine
 
 on:
   pull_request:
-    branches: [master, engine]
+    branches: [master]
     paths:
       - 'engine/**'
       - '.github/workflows/engine.yml'
@@ -43,9 +43,12 @@ env:
   TOOLS: cargo-nextest@0.9.149 cargo-deny@0.20.2 ast-grep@0.51.0 cargo-fuzz@0.13.2 cargo-mutants@27.1.0 cargo-llvm-cov@0.9.1
 
 jobs:
+  # on pull requests the walls' self-tests (guard-test, rules-selftest) are skipped when
+  # their inputs are those of a green run (R-77, issue #6); nightly and on demand the whole
+  # check runs fresh
   check:
     name: check full
-    if: github.event_name != 'schedule'
+    if: github.event_name != 'schedule' || github.event.schedule == '17 2 * * *'
     runs-on: ubuntu-latest
     timeout-minutes: 120
     steps:
@@ -57,7 +60,7 @@ jobs:
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.cargo-tools
-          key: engine-tools-${{ runner.os }}-${{ hashFiles('.github/workflows/engine.yml') }}
+          key: engine-tools-${{ runner.os }}-${{ env.TOOLS }}
       - name: Install the toolchains and the cargo tools
         working-directory: engine
         run: &install |
@@ -71,8 +74,23 @@ jobs:
           echo "$HOME/.cargo-tools/bin" >> "$GITHUB_PATH"
       # the gating milestones' tests fail it (`gating`, `gating-release`); the next one's
       # are reported in a line such as `milestone-report: S: 3/7 green`, never failing
+      # the hash of every input of the walls' self-tests; a green run's is kept in the cache
+      - name: The walls' self-tests' inputs
+        id: walls
+        run: echo "key=$(engine/tools/check walls-key)" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        id: walls-green
+        if: github.event_name == 'pull_request'
+        with:
+          path: engine/target/walls-green
+          key: engine-walls-${{ steps.walls.outputs.key }}
       - name: engine/tools/check full
-        run: engine/tools/check full
+        run: engine/tools/check full ${{ github.event_name != 'pull_request' && '--fresh' || '' }}
+      - uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        if: success() && steps.walls-green.outputs.cache-hit != 'true'
+        with:
+          path: engine/target/walls-green
+          key: engine-walls-${{ steps.walls.outputs.key }}
       # the commits themselves: attribution lines (R-100) and rule changes' trailers (R-112)
       - name: engine/tools/commit-check
         if: github.event_name == 'pull_request'
@@ -133,15 +151,13 @@ jobs:
           for bench in tools/gungraun/benches/*.rs; do
             name="$(basename "$bench" .rs)"
             # shellcheck disable=SC2046 # the limits are zero or one argument
-            cargo bench --manifest-path tools/gungraun/Cargo.toml --bench "$name" -- $(tools/perf limits "$name")
+            cargo bench --locked --manifest-path tools/gungraun/Cargo.toml --bench "$name" -- $(tools/perf limits "$name")
           done
       - if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: instructions
-          path: |
-            engine/tools/gungraun/Cargo.lock
-            engine/tools/gungraun/target/gungraun/
+          path: engine/tools/gungraun/target/gungraun/
           retention-days: 90
 
   # --- nightly and on demand ---
@@ -156,7 +172,7 @@ jobs:
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.cargo-tools
-          key: engine-tools-${{ runner.os }}-${{ hashFiles('.github/workflows/engine.yml') }}
+          key: engine-tools-${{ runner.os }}-${{ env.TOOLS }}
       - name: Install the toolchains and the cargo tools
         working-directory: engine
         run: *install
@@ -172,26 +188,29 @@ jobs:
         working-directory: engine
         run: cargo mutants --list -C=--locked
 
+  # eight shards, round-robin: mutant i runs on shard i % 8, so each file's slow mutants
+  # spread over every shard. Each mutant's tests run under the memory cap
+  # (engine/.config/nextest.toml, tools/test-memcap; issue #40)
   mutants:
-    name: mutants ${{ matrix.shard }}/4
+    name: mutants ${{ matrix.shard }}/8
     needs: mutants-baseline
     runs-on: ubuntu-latest
     timeout-minutes: 240
     strategy:
       fail-fast: false
       matrix:
-        shard: [0, 1, 2, 3]
+        shard: [0, 1, 2, 3, 4, 5, 6, 7]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.cargo-tools
-          key: engine-tools-${{ runner.os }}-${{ hashFiles('.github/workflows/engine.yml') }}
+          key: engine-tools-${{ runner.os }}-${{ env.TOOLS }}
       - name: Install the toolchains and the cargo tools
         working-directory: engine
         run: *install
       # the gate run is fresh (R-88): no cached outcomes, a fixed proptest seed, no retries
-      - name: cargo mutants, shard ${{ matrix.shard }} of 4
+      - name: cargo mutants, shard ${{ matrix.shard }} of 8
         working-directory: engine
         env:
           PROPTEST_RNG_SEED: '20261022'
@@ -202,7 +221,7 @@ jobs:
           targets="$(tools/milestones args --mutants)"
           code=0
           # shellcheck disable=SC2086 # one word per target
-          cargo mutants -C=--locked $targets --no-shuffle --shard ${{ matrix.shard }}/4 --baseline skip --timeout 300 --build-timeout 600 --output shard-${{ matrix.shard }} || code=$?
+          cargo mutants -C=--locked $targets --no-shuffle --shard ${{ matrix.shard }}/8 --sharding round-robin --baseline skip --timeout 300 --build-timeout 600 --output shard-${{ matrix.shard }} || code=$?
           [ "$code" -eq 0 ] || [ "$code" -eq 2 ] || [ "$code" -eq 3 ]
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
@@ -220,8 +239,12 @@ jobs:
         with:
           pattern: mutants-shard-*
           path: engine/target/mutants
+      # the score needs every shard: a missing artifact fails here, not silently
       - name: Every survivor is listed with its reason, and no listed one is caught now (R-87)
-        run: engine/tools/mutants-survivors engine/target/mutants/mutants-shard-*
+        run: |
+          shards="$(find engine/target/mutants -mindepth 1 -maxdepth 1 -name 'mutants-shard-*' | wc -l)"
+          [ "$shards" -eq 8 ] || { echo "mutants-survivors: $shards of 8 shards' artifacts"; exit 1; }
+          engine/tools/mutants-survivors engine/target/mutants/mutants-shard-*
 
   coverage:
     name: coverage report
@@ -234,7 +257,7 @@ jobs:
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.cargo-tools
-          key: engine-tools-${{ runner.os }}-${{ hashFiles('.github/workflows/engine.yml') }}
+          key: engine-tools-${{ runner.os }}-${{ env.TOOLS }}
       - name: Install the toolchains and the cargo tools
         working-directory: engine
         run: *install
@@ -327,7 +350,7 @@ jobs:
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.cargo-tools
-          key: engine-tools-${{ runner.os }}-${{ hashFiles('.github/workflows/engine.yml') }}
+          key: engine-tools-${{ runner.os }}-${{ env.TOOLS }}
       - name: Install the toolchains and the cargo tools
         working-directory: engine
         run: *install

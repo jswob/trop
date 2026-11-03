@@ -1,0 +1,71 @@
+model g7_deep
+  tally 2
+  on 2026-02-15
+  start 2026-01-01
+  end 2026-03-31
+  note "T, issue #41, G7: flows of a move whose leg the walk refuses (E §4.2 step 5, L §5.14.3), asked first, when the walk it needs reads, in a decision in January, a def forty links deep; the leg, into a place after its lifespan, comes in February, so the flows read is refused (RUN-LIFESPAN); beside it the decision's place, answered."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit PLN: currency minor 0.01
+
+index n = 1..40
+
+place konto: accounts PLN lives 2026-01-01..
+
+place p_deep: accounts PLN lives 2026-01-01..
+
+place old: accounts PLN lives 2026-01-01..2026-01-31
+
+place world: outside lives 2026-01-01..
+
+input one: num
+
+input top: int
+
+input deep_day: date
+
+input pay_day: date
+
+input pay_amt: money PLN
+
+input small: money PLN
+
+input big: money PLN
+
+def acc[k in n]: num
+  note "a chain of forty links, each reading the one before"
+  rule base v facts = if k == one then one else acc[k - one] + one
+
+move deep: transfers
+  on deep_day
+  reads konto
+  leg cash from world to p_deep amount if acc[top] > 0 then (if bal(konto) > 0 then small else big) else big
+
+move pay: transfers
+  on pay_day
+  leg cash from world to old amount pay_amt
+
+ask a_flows: flows(pay, 2026-02-01 .. 2026-02-28) law cut
+
+ask b_bal: bal(p_deep, 2026-01-31), flows(pay, 2026-01-01 .. 2026-01-31) law cut
+
+version facts
+  cite fixture
+  governs always
+  known 2025-12-01
+  one = 1
+  top = 40 "the chain's last link"
+  deep_day = 2026-01-10 "the decision reading the chain"
+  pay_day = 2026-02-05 "into old after its lifespan"
+  pay_amt = 50.00
+  small = 1.00
+  big = 100.00
+
+version openings
+  cite fixture
+  governs always
+  known 2025-12-31
+  opening[konto] = 1000 at 2026-01-01 start
+  opening[p_deep] = 0 at 2026-01-01 start
+  opening[old] = 0 at 2026-01-01 start

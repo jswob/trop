@@ -2,7 +2,30 @@
 # S from the builder's plan, then sets `set_at_s = true`. From then on check-rules fails
 # on a library file in neither list, and on .cargo/mutants.toml's examine_globs differing
 # from `kernel`.
-set_at_s = false
+#
+# Set at S from the builder's plan (its module list), approved by the user on
+# 2026-11-01 (gate G-S1, issue #26): SCAFFOLD §4's four areas (num, read, walk, book) plus
+# the holes and their per-operator rule (hole/**, R-116).
+set_at_s = true
 # globs relative to engine/, such as "crates/tally/src/number/**"
-kernel = []
-protected_non_kernel = []
+kernel = [
+  "crates/tally/src/num/**",
+  "crates/tally/src/read/**",
+  "crates/tally/src/walk/**",
+  "crates/tally/src/book/**",
+  "crates/tally/src/hole/**",
+]
+protected_non_kernel = [
+  "crates/tally/src/lib.rs",
+  "crates/tally/src/api.rs",
+  "crates/tally/src/oracle.rs",
+  "crates/tally/src/counters.rs",
+  "crates/tally/src/invariant.rs",
+  "crates/tally/src/base/**",
+  "crates/tally/src/time/**",
+  "crates/tally/src/model/**",
+  "crates/tally/src/load/**",
+  "crates/tally/src/eval/**",
+  "crates/tally/src/ask/**",
+  "crates/tally/src/syntax/**",
+]

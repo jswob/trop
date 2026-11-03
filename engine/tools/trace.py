@@ -27,7 +27,7 @@ error; outside the kernel it is a report line. Tests are skipped: `#[test]` and
 crate's tests/, benches/ and examples/.
 
 Fences (R-130). A file whose `//!` header has a `PERF:` line must name a P8 row that
-exists in PERFORMANCE §8 (`P8-10`) and its plain twin (`plain twin: read_plain.rs`): a
+exists in PERFORMANCE §8 (`P8-10`, or a micro row: `P8-M2`) and its plain twin (`plain twin: read_plain.rs`): a
 file beside it, a path under engine/, or `refcore`, the twin of last resort, when the
 header's `Twin:` line names a file under engine/tools/refcore/. Otherwise an error.
 
@@ -72,8 +72,9 @@ FN = re.compile(
     r"(?:extern\s+(?:\"\"\s+)?)?fn\s+([A-Za-z_][A-Za-z0-9_]*)"
 )
 TEST_MOD = re.compile(r"#\[cfg\(test\)\]\s*(?:pub(?:\s*\([^)]*\))?\s+)?mod\s+\w+\s*\{")
-P8_ROW = re.compile(r"^\|\s*(P8-\d+[a-z]?)\s*\|")
-P8_ID = re.compile(r"\bP8-\d+[a-z]?\b")
+# a P8 row: a numbered one (`P8-10`, `P8-2a`) or a micro row (`P8-M1`, PERFORMANCE §8.4)
+P8_ROW = re.compile(r"^\|\s*(P8-(?:\d+[a-z]?|M\d+))\s*\|")
+P8_ID = re.compile(r"\bP8-(?:\d+[a-z]?|M\d+)\b")
 TWIN_NAME = re.compile(r"\btwin\b[^:;,]*?:?[ \t]*`?([\w./-]+?)`?(?=[.;,)]?(?:\s|$))", re.IGNORECASE)
 NOT_LIBRARY = ("tests", "benches", "examples")
 

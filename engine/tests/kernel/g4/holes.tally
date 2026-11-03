@@ -1,0 +1,94 @@
+model g4_holes
+  tally 2
+  on 2026-10-25
+  start 2024-01-01
+  end 2026-12-31
+  note "T, issue #41, G4: holes in the answer (L §8.1, §4.6 step 5): one question reached at two figures, two questions sorted, a stated hole, the no-value texts for a period key, a law date and no law date, keys named in brackets, and a thing outside its lifespan read as none, with the rows that do govern read beside them."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit DUK: currency minor 0.01
+
+index opt = [left, right]
+
+index yr = year 2024..2026
+
+kind boxes: place DUK signed
+
+input a_amt: money DUK question "What is the amount?"
+
+input b_amt: money DUK question "What is the amount?"
+
+input c_amt: money DUK question "Which amount applies?"
+
+input plain: money DUK
+
+input forever: num
+
+input by_year[y in yr]: num
+
+input by_two[o in opt, y in yr]: num
+
+input lim[x in boxes]: money DUK
+
+input timeless[o in opt]: num
+
+input given_amt: money DUK
+
+def told: money DUK at reader
+  rule base v card = ?"a stated reason"
+
+def same_twice: money DUK at reader
+  rule base v card = a_amt + b_amt
+
+def two_questions: money DUK at reader
+  rule base v card = c_amt + a_amt
+
+def with_stated: money DUK at reader
+  rule base v card = told + c_amt + given_amt
+
+ask q_merge: same_twice, two_questions, with_stated, given_amt law 2026-10-25
+
+ask q_plain: plain law 2026-10-25
+
+ask q_forever: forever
+
+ask q_timeless: timeless[left], timeless[right]
+
+ask q_keys: by_year[2025], by_two[left, 2025], by_two[right, 2024] law 2026-10-25
+
+ask q_life_in: lim[short_box], lim[long_box] law 2025-03-01
+
+ask q_life_out: lim[short_box], lim[long_box] law 2025-09-01
+
+ask q_life_old: lim[short_box] law 2025-09-01 as known 2025-03-01
+
+version card
+  cite fixture
+  governs always
+  known 2024-01-01
+  given_amt = 10.00 "the one amount given"
+  by_two[right, 2024] = 4 "right's 2024 value"
+  timeless[left] = 1 "left's value for all time"
+
+version v_forever
+  cite fixture
+  known 2024-01-01
+  forever = 3 governs always "a fact for all time, on its own row"
+
+version v_boxes
+  cite fixture
+  known 2024-01-01
+  boxes + [short_box] lives 2025-01-01..
+  boxes + [long_box] lives 2024-01-01..
+
+version v_close
+  cite fixture
+  known 2025-06-01
+  replace boxes + [short_box] lives 2025-01-01..2025-06-30
+
+version v_lim
+  cite fixture
+  governs 2025-08-01..
+  known 2024-01-01
+  lim[long_box] = 50.00 "long_box's limit from August 2025"

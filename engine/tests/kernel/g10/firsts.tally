@@ -1,0 +1,36 @@
+model g10_firsts
+  tally 2
+  on 2026-02-15
+  start 2026-01-01
+  end 2026-03-31
+  note "T, issue #41, G10: a place's first reading as a cut sees it (L §8.1 HOLE-ANCHOR, E §4.3 step 1): late lives before the run with no opening; its reading on 11 February is known on the 13th, the one on the 12th since January; a projection from the 10th, whose cut sees only the later reading, asks of the 11th, and so does the main walk."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit PLN: currency minor 0.01
+
+place late: accounts PLN lives 2025-06-01..
+
+place konto: accounts PLN lives 2026-01-01..
+
+ask q_first: bal(late, 2026-02-11) from 2026-02-10, bal(late, 2026-02-10), bal(late, 2026-02-11), bal(late, 2026-02-12) law cut
+
+version openings
+  cite fixture
+  governs always
+  known 2025-12-31
+  opening[konto] = 100 at 2026-01-01 start
+
+version early_v
+  cite fixture
+  governs always
+  known 2026-01-05
+  anchor late
+  stated[late] = 50.00 at 2026-02-12 end "the reading known since January"
+
+version late_v
+  cite fixture
+  governs always
+  known 2026-02-13
+  anchor late
+  stated[late] = 40.00 at 2026-02-11 end "an earlier reading, known only on the 13th"

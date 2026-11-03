@@ -106,3 +106,13 @@ fn planted_hidden() {
 }
 --- run
 tools/check step gating
+
+case: gungraun-bench-broken
+tool: run
+expect: FAIL gungraun-build: error[E0308]
+--- append tools/gungraun/benches/p8_m1.rs
+
+/// Planted: a bench that no longer compiles against the library, as the stub bench did (issue #26).
+const PLANTED: u8 = "a mismatched type";
+--- run
+tools/check step gungraun-build

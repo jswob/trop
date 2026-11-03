@@ -1,0 +1,64 @@
+model g6_when
+  tally 2
+  on 2026-02-15
+  start 2026-01-01
+  end 2026-03-31
+  note "T, issue #41, G6: plans refused in the plan pass (E §4.1 step 2, L §5.14): one whose attribute divides by zero in February, after its legs are known, refused at its places only; one whose when divides by zero in March, before its legs, refusing every place from its day; January answered for both."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-03
+
+kind tagged: event certain
+  leg cash: PLN
+  attr size: num
+
+place konto: accounts PLN lives 2026-01-01..
+
+place box: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input pay_dom: int
+
+input fee_amt: money PLN
+
+input div_attr[m in month]: num
+
+input div_when[m in month]: num
+
+move tag[m in month]: tagged
+  on day_of(m, pay_dom)
+  at start_of(m)
+  attr size = div_attr[m] * div_attr[m] / div_attr[m]
+  leg cash from world to box amount fee_amt
+
+move gate[m in month]: transfers
+  on day_of(m, pay_dom)
+  at start_of(m)
+  when div_when[m] * div_when[m] / div_when[m] > 0
+  leg cash from world to konto amount fee_amt
+
+ask q_bal: bal(konto, d), bal(box, d) for d in [2026-01-20, 2026-02-20, 2026-03-20] law cut
+
+version facts
+  cite fixture
+  governs always
+  known 2025-12-01
+  pay_dom = 5 "the day of the month"
+  fee_amt = 3.00 "a fee"
+  div_attr[2026-01] = 1 "answered"
+  div_attr[2026-02] = 0 "the attribute divides by zero"
+  div_attr[2026-03] = 2 "answered"
+  div_when[2026-01] = 1 "answered"
+  div_when[2026-02] = 1 "answered"
+  div_when[2026-03] = 0 "the when divides by zero"
+
+version openings
+  cite fixture
+  governs always
+  known 2025-12-31
+  opening[konto] = 100 at 2026-01-01 start
+  opening[box] = 0 at 2026-01-01 start

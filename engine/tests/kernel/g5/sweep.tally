@@ -1,0 +1,84 @@
+model g5_sweep
+  tally 2
+  on 2026-03-15
+  start 2026-01-01
+  end 2026-03-31
+  note "T, issue #41, G5 (the sweep): openings before the start read under a cut before the start, one dated before the cut and one dated on it (E §4.2 step 0: a reading at or after the cut changes nothing), and read again under the model's own cut; a place below zero whose balance is a hole, so not warned (E §4.2 step 5: a warning is tested only where the balance is known), beside one below zero and known; a num that isn't whole where an int is needed (RUN-NOT-INT, L §3.2), beside one that is; a leg with its own later day, and a move on the keys of a day index (L §5.14)."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit PLN: currency minor 0.01
+
+index dd = day 2026-02-01..2026-02-03
+
+place konto: accounts PLN lives 2025-01-01..
+
+place konto2: accounts PLN lives 2025-01-01..
+
+place konto5: accounts PLN lives 2025-01-01..
+
+place konto6: accounts PLN lives 2025-01-01..
+
+place konto7: accounts PLN lives 2025-01-01..
+
+place konto8: accounts PLN lives 2025-01-01..
+
+place world: outside lives 2025-01-01..
+
+input pay_day: date
+
+input hole_amt: money PLN question "How much went out?"
+
+input known_amt: money PLN
+
+input leg_day: date
+
+input half_dom: num
+
+input whole_dom: num
+
+move gone: transfers
+  on pay_day
+  leg cash from konto5 to world amount hole_amt
+
+move paid: transfers
+  on pay_day
+  leg cash from konto5 to world amount known_amt
+
+move paid2: transfers
+  on pay_day
+  leg cash from konto6 to world amount known_amt
+
+move late_leg: transfers
+  on pay_day
+  leg cash from world to konto7 amount known_amt on leg_day
+
+move daily[k in dd]: transfers
+  on k
+  leg cash from world to konto8 amount known_amt
+
+ask q_legday: bal(konto7, 2026-02-15), bal(konto7, 2026-02-28), bal(konto8, 2026-02-02), bal(konto8, 2026-02-28) law cut
+
+ask q_early: bal(konto, 2026-01-10), bal(konto2, 2026-01-10) law cut as known 2025-12-15
+
+ask q_neg: bal(konto5, 2026-02-28), bal(konto6, 2026-02-28) law cut
+
+ask q_notint: day_of(2026-02, half_dom), day_of(2026-02, whole_dom) law cut
+
+ask q_now: bal(konto, 2026-01-10), bal(konto2, 2026-01-10) law cut
+
+version facts
+  cite fixture
+  governs always
+  known 2025-12-01
+  pay_day = 2026-02-10
+  known_amt = 50.00
+  leg_day = 2026-02-20 "a leg on a later day than its movement"
+  half_dom = 5.5 "a day of the month that isn't whole"
+  whole_dom = 5
+  opening[konto5] = 0 at 2026-01-01 start
+  opening[konto7] = 0 at 2026-01-01 start
+  opening[konto8] = 0 at 2026-01-01 start
+  opening[konto6] = 0 at 2026-01-01 start
+  opening[konto] = 100 at 2025-12-10 start "an opening dated before the early cut"
+  opening[konto2] = 200 at 2025-12-15 start "an opening dated on the early cut"

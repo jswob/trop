@@ -644,6 +644,9 @@ def self_test(checks):
         # 8c. the kernel's property corpus (T1, PROPERTIES.md) is what gen.py's seeds give
         p = subprocess.run([sys.executable, '-I', '-B', T + 'properties/gen.py', '--check'], capture_output=True, text=True)
         say(p.returncode == 0, p.stdout.strip() or p.stderr[-200:])
+        # 8d. S's kernel vectors (issue #41) are refcore's bytes for kernel/vectors.tsv
+        p = subprocess.run([sys.executable, '-I', '-B', T + 'kernel/vectors.py', '--check'], capture_output=True, text=True)
+        say(p.returncode == 0, p.stdout.strip() or p.stderr[-200:])
         # 9. U2 (4.5f): under fast, a check with no baseline runs on refcore (its cache entry is refcore's)
         nb = dict(fast, baseline='')
         _, r, _ = session([nb], checks, **dict(kw, runtimes=['pypy+fast']))

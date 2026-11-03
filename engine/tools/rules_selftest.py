@@ -797,10 +797,8 @@ def ci_problems():
         text = open(workflow, encoding="utf-8").read()
         if "engine/tools/check full" not in text:
             problems.append("R-77: .github/workflows/engine.yml doesn't run `engine/tools/check full`")
-        if not re.search(r"\n  pull_request:\n    branches: \[master, engine\]\n", text):
-            problems.append(
-                "R-77: .github/workflows/engine.yml doesn't run on pull requests into master and engine"
-            )
+        if not re.search(r"\n  pull_request:\n    branches: \[master\]\n", text):
+            problems.append("R-77: .github/workflows/engine.yml doesn't run on pull requests into master")
         # R-84: the mutants baseline and shards run the gating milestones' tests too
         if not re.search(r'args="\$\(tools/milestones args\)"\n.*cargo nextest run [^\n]*--profile mutants \$args\n',
                          text, re.S):
