@@ -14,7 +14,9 @@ mod tests {
     use tally_runner::kernel::{VECTORS, difference, vectors};
 
     /// The groups this target tests, one `#[test]` each.
-    const GROUPS: [&str; 8] = ["checks", "g1", "g2", "g3", "g4", "g5", "g6", "g9"];
+    const GROUPS: [&str; 10] = [
+        "checks", "g1", "g2", "g3", "g4", "g5", "g6", "g7", "g8", "g9",
+    ];
 
     /// Runs every vector of `group` on the engine and holds it to refcore's run.
     fn group_holds(group: &str) {
@@ -138,6 +140,32 @@ mod tests {
     #[test]
     fn s_kernel_g6_plan_pass() {
         group_holds("g6");
+    }
+
+    /// G7, reads inside the walk and at the ask (L §5.10, §5.14, §5.14.1, §5.14.3, §8.2): a
+    /// decision's read of its own day (RUN-CYCLE), of a later one (RUN-FUTURE), of its day's
+    /// start and of the day before; flows of a place and of a decision move through a later
+    /// day, the reader's own and the day before; flows read that tie two instances (RUN-TIE)
+    /// beside a twin that doesn't; flows of a place across a refusal of every place, a hole
+    /// amount, a hole day and the run's start; flows of a move by leg and keys, and over a
+    /// span with no movement; `bal(x, u, d)`; `with uncertain` around a reading; flows of a
+    /// move whose leg the walk refuses, asked first while the walk it needs reads a def deeper
+    /// than the evaluation's depth limit, in a decision and in a plan (`kernel/g7/`).
+    #[test]
+    fn s_kernel_g7_reads() {
+        group_holds("g7");
+    }
+
+    /// G8, projections (L §5.14.1, E §4.3, D-6): `bal(x, d) from t` from before the run's
+    /// start, from it, around the cut; the read's own `with uncertain` and the ask line's;
+    /// a place first stated after t; a decision's projection from a later day (RUN-FUTURE)
+    /// and an earlier one; #35, a decision reading a projection, asked with and without the
+    /// line's `with uncertain`; #37 T1 and N2; a decision reading its own move's flows,
+    /// projected from before its day; a projection from a decision's own point, alone, nested
+    /// in another, and with a later decision that day refused in its `when` (`kernel/g8/`).
+    #[test]
+    fn s_kernel_g8_projections() {
+        group_holds("g8");
     }
 
     /// G9, booking a leg and the sign rule (L §5.10, §5.14, E §4.2 steps 4–5): claims, debts

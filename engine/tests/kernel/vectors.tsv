@@ -58,3 +58,9 @@ g5/refused	g5		engine/tests/kernel/	engine/tests/kernel/g5/refused.tally
 g9/sign	g9		engine/tests/kernel/	engine/tests/kernel/g9/sign.tally		
 g6/plan	g6		engine/tests/kernel/	engine/tests/kernel/g6/plan.tally		
 g6/when	g6		engine/tests/kernel/	engine/tests/kernel/g6/when.tally		
+g7/running	g7		engine/tests/kernel/	engine/tests/kernel/g7/running.tally		
+g8/proj	g8		engine/tests/kernel/	engine/tests/kernel/g8/proj.tally		
+g7/flows	g7		engine/tests/kernel/	engine/tests/kernel/g7/flows.tally		
+g7/deep	g7		engine/tests/kernel/	engine/tests/kernel/g7/deep.tally		
+g7/deep_plan	g7		engine/tests/kernel/	engine/tests/kernel/g7/deep_plan.tally		
+g8/after	g8		engine/tests/kernel/	engine/tests/kernel/g8/after.tally		

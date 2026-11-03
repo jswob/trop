@@ -9440,4 +9440,1003 @@ q_bal (d = 2026-03-20): (refused: RUN-DIV division by zero, refused: RUN-DIV div
   unfulfilled: gate[2026-02]
   unfulfilled: tag[2026-01]
   law date 2026-02-15, cut 2026-02-15
+,10:g7/running,2:g7,20:run g7/running.tally,6461:16:g7/running.tally,6435:model g7_running
+  tally 2
+  on 2026-02-15
+  start 2026-01-01
+  end 2026-03-31
+  note "T, issue #41, G7: running reads (L §5.14.1, §5.14.3, E §4.2 step 3): a decision's plain read of its own day (RUN-CYCLE) and of a later one (RUN-FUTURE) beside reads of its day's start and of the day before; a decision on the cut's day and one before, read through flows; flows of a place through a later day, through its own day and through the day before, with a plan on its day; flows of a decision move through a later day, its own day and the day before; two instances on a day that read each other's place through flows with no ties by (RUN-TIE) beside a twin that reads it through the day before. Each refused decision moves into a place of its own, so the rest is answered."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit PLN: currency minor 0.01
+
+index box = [first, second]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place p_cyc: accounts PLN lives 2026-01-01..
+
+place p_fut: accounts PLN lives 2026-01-01..
+
+place p_ok: accounts PLN lives 2026-01-01..
+
+place p_ffut: accounts PLN lives 2026-01-01..
+
+place p_ftd: accounts PLN lives 2026-01-01..
+
+place p_fpv: accounts PLN lives 2026-01-01..
+
+place p_dfut: accounts PLN lives 2026-01-01..
+
+place p_dpast: accounts PLN lives 2026-01-01..
+
+place p_dtd: accounts PLN lives 2026-01-01..
+
+place p_cut: accounts PLN lives 2026-01-01..
+
+place tie_jar[b in box]: accounts PLN lives 2026-01-01..
+
+place calm_jar[b in box]: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+place shop: outside lives 2026-01-01..
+
+input rent_day: date
+
+input rent_amt: money PLN
+
+input chip_day: date
+
+input chip_amt: money PLN
+
+input cyc_day: date
+
+input cyc_read: date
+
+input fut_day: date
+
+input later_day: date
+
+input early_day: date
+
+input prev_day: date
+
+input keep: money PLN
+
+input ffut_day: date
+
+input f_from: date
+
+input f_late: date
+
+input f_today: date
+
+input f_prev: date
+
+input flow_day: date
+
+input dec_day: date
+
+input d_late: date
+
+input d_early: date
+
+input d_today: date
+
+input small: money PLN
+
+input big: money PLN
+
+input cut_day: date
+
+input tie_day: date
+
+input tie_end: date
+
+input calm_end: date
+
+move rent: transfers
+  on rent_day
+  leg cash from konto to shop amount rent_amt
+
+move chip: transfers
+  on chip_day
+  leg cash from konto to shop amount chip_amt
+
+move cyc: transfers
+  on cyc_day
+  reads konto
+  leg cash from world to p_cyc amount bal(konto, cyc_read)
+
+move fut: transfers
+  on fut_day
+  reads konto
+  leg cash from world to p_fut amount bal(konto, later_day)
+
+move early: transfers
+  on early_day
+  reads konto
+  leg cash from world to p_ok amount bal(konto, early_day start) + bal(konto, prev_day) - keep
+
+move ffut: transfers
+  on ffut_day
+  reads konto
+  leg cash from world to p_ffut amount 0 - flows(konto, f_from .. f_late)
+
+move ftoday: transfers
+  on flow_day
+  reads konto
+  leg cash from world to p_ftd amount 0 - flows(konto, f_from .. f_today)
+
+move fprev: transfers
+  on flow_day
+  reads konto
+  leg cash from world to p_fpv amount 0 - flows(konto, f_from .. f_prev)
+
+move dfut: transfers
+  on dec_day
+  reads ftoday
+  leg cash from world to p_dfut amount flows(ftoday, f_from .. d_late)
+
+move dpast: transfers
+  on dec_day
+  reads ftoday
+  leg cash from world to p_dpast amount flows(ftoday, f_from .. d_early)
+
+move dtoday: transfers
+  on dec_day
+  reads ftoday
+  leg cash from world to p_dtd amount flows(ftoday, f_from .. d_today)
+
+move oncut: transfers
+  on cut_day
+  reads konto
+  leg cash from world to p_cut amount if bal(konto) > 0 then small else big
+
+move tflow[b in box]: transfers
+  on tie_day
+  reads tie_jar
+  leg cash from world to tie_jar[b] amount if flows(tie_jar[first], f_from .. tie_end) > 0 then small else big
+
+move cflow[b in box]: transfers
+  on tie_day
+  reads calm_jar
+  leg cash from world to calm_jar[b] amount if flows(calm_jar[first], f_from .. calm_end) > 0 then small else big
+
+ask q_run: bal(p_cyc, d), bal(p_fut, d), bal(p_ok, d), bal(p_ffut, d), bal(p_ftd, d), bal(p_fpv, d), bal(p_dfut, d), bal(p_dpast, d), bal(p_dtd, d), bal(konto, PLN, d) for d in [2026-01-09, 2026-01-20, 2026-03-20] law cut
+
+ask q_flows: flows(ftoday, 2026-01-01 .. 2026-04-01), flows(dpast, 2026-01-01 .. 2026-04-01), flows(oncut, 2026-01-01 .. 2026-04-01), flows(early, 2026-01-01 .. 2026-04-01) law cut
+
+ask q_tie: bal(tie_jar[first], d), bal(tie_jar[second], d), bal(calm_jar[first], d), bal(calm_jar[second], d) for d in [2026-01-19, 2026-01-20] law cut
+
+version facts
+  cite fixture
+  governs always
+  known 2025-12-01
+  rent_day = 2026-01-05 "a plan before the decisions"
+  rent_amt = 100.00
+  chip_day = 2026-01-14 "a plan on the flows readers' day"
+  chip_amt = 20.00
+  cyc_day = 2026-01-10 "reads its own day's end: RUN-CYCLE"
+  cyc_read = 2026-01-10 "the same day, through an input of its own"
+  fut_day = 2026-01-11 "reads a later day: RUN-FUTURE"
+  later_day = 2026-01-25
+  early_day = 2026-01-12 "reads its day's start and the day before"
+  prev_day = 2026-01-11
+  keep = 1500.00
+  ffut_day = 2026-01-13 "flows of konto through a later day: RUN-FUTURE"
+  f_from = 2026-01-01
+  f_late = 2026-01-21
+  f_today = 2026-01-14 "through flow_day itself"
+  f_prev = 2026-01-13 "through the day before flow_day"
+  flow_day = 2026-01-14
+  dec_day = 2026-01-16 "flows of the decision move ftoday"
+  d_late = 2026-02-01 "through a later day: RUN-FUTURE"
+  d_early = 2026-01-15 "through the day before"
+  d_today = 2026-01-16 "through dec_day itself"
+  small = 1.00
+  big = 100.00
+  cut_day = 2026-02-15 "a decision on the cut's day"
+  tie_day = 2026-01-20
+  tie_end = 2026-01-20 "through tie_day itself"
+  calm_end = 2026-01-19 "through the day before tie_day"
+
+version openings
+  cite fixture
+  governs always
+  known 2025-12-31
+  opening[konto] = 1000 at 2026-01-01 start
+  opening[p_cyc] = 0 at 2026-01-01 start
+  opening[p_fut] = 0 at 2026-01-01 start
+  opening[p_ok] = 0 at 2026-01-01 start
+  opening[p_ffut] = 0 at 2026-01-01 start
+  opening[p_ftd] = 0 at 2026-01-01 start
+  opening[p_fpv] = 0 at 2026-01-01 start
+  opening[p_dfut] = 0 at 2026-01-01 start
+  opening[p_dpast] = 0 at 2026-01-01 start
+  opening[p_dtd] = 0 at 2026-01-01 start
+  opening[p_cut] = 0 at 2026-01-01 start
+  opening[tie_jar[first]] = 0 at 2026-01-01 start
+  opening[tie_jar[second]] = 0 at 2026-01-01 start
+  opening[calm_jar[first]] = 0 at 2026-01-01 start
+  opening[calm_jar[second]] = 0 at 2026-01-01 start
+,,1:0,2255:q_flows: (120.00 PLN, 120.00 PLN, 1.00 PLN, 300.00 PLN)
+  unfulfilled: chip
+  unfulfilled: dpast
+  unfulfilled: early
+  unfulfilled: ftoday
+  unfulfilled: rent
+  law date 2026-02-15, cut 2026-02-15
+q_run (d = 2026-01-09): (0.00 PLN, 0.00 PLN, 0.00 PLN, 0.00 PLN, 0.00 PLN, 0.00 PLN, 0.00 PLN, 0.00 PLN, 0.00 PLN, 900.00 PLN)
+  unfulfilled: rent
+  law date 2026-02-15, cut 2026-02-15
+q_run (d = 2026-01-20): (refused: RUN-CYCLE cyc reads itself through bal(konto, 2026-01-10): a decision's plain read of its own day, refused: RUN-FUTURE a decision on 2026-01-11 reads konto at 2026-01-25 after its day, 300.00 PLN, refused: RUN-FUTURE a decision on 2026-01-13 reads flows of konto through 2026-01-21, after its day, 120.00 PLN, 100.00 PLN, refused: RUN-FUTURE a decision on 2026-01-16 reads flows of ftoday through 2026-02-01, after its day, 120.00 PLN, 120.00 PLN, 880.00 PLN)
+  unfulfilled: chip
+  unfulfilled: dpast
+  unfulfilled: dtoday
+  unfulfilled: early
+  unfulfilled: fprev
+  unfulfilled: ftoday
+  unfulfilled: rent
+  law date 2026-02-15, cut 2026-02-15
+q_run (d = 2026-03-20): (refused: RUN-CYCLE cyc reads itself through bal(konto, 2026-01-10): a decision's plain read of its own day, refused: RUN-FUTURE a decision on 2026-01-11 reads konto at 2026-01-25 after its day, 300.00 PLN, refused: RUN-FUTURE a decision on 2026-01-13 reads flows of konto through 2026-01-21, after its day, 120.00 PLN, 100.00 PLN, refused: RUN-FUTURE a decision on 2026-01-16 reads flows of ftoday through 2026-02-01, after its day, 120.00 PLN, 120.00 PLN, 880.00 PLN)
+  unfulfilled: chip
+  unfulfilled: dpast
+  unfulfilled: dtoday
+  unfulfilled: early
+  unfulfilled: fprev
+  unfulfilled: ftoday
+  unfulfilled: rent
+  law date 2026-02-15, cut 2026-02-15
+q_tie (d = 2026-01-19): (0.00 PLN, 0.00 PLN, 0.00 PLN, 0.00 PLN)
+  law date 2026-02-15, cut 2026-02-15
+q_tie (d = 2026-01-20): (refused: RUN-TIE tflow has a tie at tflow[first], tflow[second] that changes the result, and no ties by, refused: RUN-TIE tflow has a tie at tflow[first], tflow[second] that changes the result, and no ties by, 100.00 PLN, 100.00 PLN)
+  unfulfilled: cflow[first]
+  unfulfilled: cflow[second]
+  unfulfilled: tflow[first]
+  unfulfilled: tflow[second]
+  law date 2026-02-15, cut 2026-02-15
+,7:g8/proj,2:g8,17:run g8/proj.tally,7530:13:g8/proj.tally,7507:model g8_proj
+  tally 2
+  on 2026-02-15
+  start 2026-01-01
+  end 2026-03-31
+  note "T, issue #41, G8: projections (L §5.14.1, §5.14, E §4.3, D-6): bal(x, d) from t with t before the run's start, on it, before and after the cut; a read's own with uncertain and the ask line's, uncertain movements on t, between, on d and after it; a place first stated after t, read before and after; a decision's projection from a later day (RUN-FUTURE) and from an earlier one; #35, a decision reading a projection, asked with and without the line's with uncertain; #37 T1, a decision reading flows of an earlier decision, read through a projection; #37 N2, a decision in a projection's walk reading flows of a move whose leg the main walk refused; a decision projecting from its own point while an unrelated one runs after it that day, whose effect reaches the projected place the next day, read alone and inside a projection from an earlier day, where no movement touches the place before it; a decision reading its own move's flows through its own day."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit PLN: currency minor 0.01
+
+kind maybe: transfers uncertain
+
+kind pays: event certain
+  leg cash: PLN
+
+index month = month 2026-01..2026-03
+
+place konto: accounts PLN lives 2026-01-01..
+
+place late: accounts PLN lives 2025-06-01..
+
+place save: accounts PLN lives 2026-01-01..
+
+place save2: accounts PLN lives 2026-01-01..
+
+place p_n2: accounts PLN lives 2026-01-01..
+
+place p_pf: accounts PLN lives 2026-01-01..
+
+place p_pe: accounts PLN lives 2026-01-01..
+
+place p_self: accounts PLN lives 2026-01-01..
+
+place p_pq: accounts PLN lives 2026-01-01..
+
+place side_jar: accounts PLN lives 2026-01-01..
+
+place old: accounts PLN lives 2026-01-01..2026-01-31
+
+place world: outside lives 2026-01-01..
+
+place shop: outside lives 2026-01-01..
+
+input rent_day: date
+
+input rent_amt: money PLN
+
+input g_t: date
+
+input g_mid: date
+
+input g_d: date
+
+input g_before: date
+
+input g_after: date
+
+input g_amt: money PLN
+
+input pf_day: date
+
+input pf_t: date
+
+input pf_d: date
+
+input pe_t: date
+
+input small: money PLN
+
+input big: money PLN
+
+input floor: money PLN
+
+input d1_day: date
+
+input d2_day: date
+
+input jan_start: date
+
+input jan_end: date
+
+input m_day: date
+
+input m_t: date
+
+input m_d: date
+
+input pay_day: date
+
+input pay_amt: money PLN
+
+input n2_day: date
+
+input feb_start: date
+
+input feb_end: date
+
+input self_dom: int
+
+input q_day: date
+
+input q_t: date
+
+input q_feed: date
+
+move rent: transfers
+  on rent_day
+  leg cash from konto to shop amount rent_amt
+
+move g_on_t: maybe
+  on g_t
+  leg cash from world to konto amount g_amt
+
+move g_between: maybe
+  on g_mid
+  leg cash from konto to shop amount small
+
+move g_on_d: maybe
+  on g_d
+  leg cash from world to konto amount g_amt
+
+move g_early: maybe
+  on g_before
+  leg cash from world to konto amount g_amt
+
+move g_later: maybe
+  on g_after
+  leg cash from world to konto amount g_amt
+
+move g_late: maybe
+  on g_mid
+  leg cash from world to late amount g_amt
+
+move pf: transfers
+  on pf_day
+  reads konto
+  leg cash from world to p_pf amount bal(konto, pf_d) from pf_t
+
+move pe: transfers
+  on pf_day
+  reads konto
+  leg cash from world to p_pe amount bal(konto, pf_d) from pe_t
+
+move d1: transfers
+  on d1_day
+  reads konto
+  leg cash from konto to save2 amount max(0, bal(konto) - floor)
+
+move d2: transfers
+  on d2_day
+  reads d1
+  leg cash from konto to save2 amount flows(d1, jan_start .. jan_end)
+
+move pmatch: transfers
+  on m_day
+  reads konto
+  leg cash from world to save amount bal(konto, m_d) from m_t
+
+move pay: transfers
+  on pay_day
+  leg cash from world to old amount pay_amt
+
+move n2: transfers
+  on n2_day
+  reads p_n2
+  leg cash from world to p_n2 amount max(bal(p_n2), flows(pay, feb_start .. feb_end))
+
+move selfy[m in month]: pays
+  on day_of(m, self_dom)
+  reads selfy
+  leg cash from world to p_self amount small + flows(selfy, jan_start .. day_of(m, self_dom))
+
+move pq: transfers
+  on q_day
+  reads konto
+  leg cash from world to p_pq amount bal(konto, m_d) from q_t
+
+move qz: transfers
+  on q_day
+  reads side_jar
+  leg cash from world to side_jar amount if bal(side_jar) > 0 then small else big
+
+move qz_feed: transfers
+  on q_feed
+  reads side_jar
+  leg cash from world to konto amount bal(side_jar)
+
+ask q_from: bal(konto, 2026-02-12) from 2026-02-10, bal(konto, 2026-02-12) from 2026-01-01, bal(konto, 2026-01-10) from 2025-12-20, bal(konto, 2026-03-10) from 2026-02-20, bal(late, 2026-02-11) from 2026-02-10, bal(late, 2026-03-10) from 2026-02-10, bal(late, 2026-02-11), bal(late, 2026-03-10) law cut
+
+ask q_unc: bal(konto, 2026-02-12) from 2026-02-10 with uncertain, bal(late, 2026-02-11) from 2026-02-10 with uncertain, bal(late, 2026-03-10) from 2026-02-10 with uncertain law cut
+
+ask q_line: bal(konto, 2026-02-12) from 2026-02-10, bal(late, 2026-03-10) from 2026-02-10 law cut with uncertain
+
+ask q_dec: bal(p_pf, d), bal(p_pe, d) for d in [2026-01-19, 2026-01-20] law cut
+
+ask q35: bal(save, 2026-03-31) from 2026-02-18 law cut
+
+ask q35u: bal(save, 2026-03-31) from 2026-02-18 law cut with uncertain
+
+ask q_t1: bal(save2, 2026-03-31), bal(save2, 2026-03-31) from 2026-02-10, bal(save2, 2026-03-31) from 2026-01-10, flows(d1, 2026-01-01 .. 2026-03-31) law cut
+
+ask q_n2: bal(p_n2, 2026-03-31), bal(p_n2, 2026-03-31) from 2026-02-10 law cut
+
+ask q_after: bal(p_pq, 2026-03-31), bal(side_jar, 2026-03-31), bal(konto, 2026-03-31) law cut
+
+ask q_nest: bal(p_pq, 2026-03-31) from 2026-03-01, bal(p_pq, 2026-03-31) from 2026-03-05 law cut
+
+ask q_self: bal(p_self, 2026-03-31), bal(p_self, 2026-03-31) from 2026-02-10, bal(p_self, 2026-03-31) from 2026-02-20 law cut
+
+version facts
+  cite fixture
+  governs always
+  known 2025-12-01
+  rent_day = 2026-01-05 "konto moves before every projection's start"
+  rent_amt = 100.00
+  g_t = 2026-02-10 "uncertain, on t"
+  g_mid = 2026-02-11 "uncertain, between t and d, out of konto"
+  g_d = 2026-02-12 "uncertain, on d"
+  g_before = 2026-02-05 "uncertain, before t"
+  g_after = 2026-02-13 "uncertain, after d"
+  g_amt = 10.00
+  pf_day = 2026-01-20 "two decisions reading projections"
+  pf_t = 2026-01-25 "from a later day: RUN-FUTURE"
+  pf_d = 2026-01-31
+  pe_t = 2026-01-15 "from an earlier day"
+  small = 1.00
+  big = 100.00
+  floor = 600.00
+  d1_day = 2026-01-20 "#37 T1: D1"
+  d2_day = 2026-02-20 "#37 T1: D2 reads flows of D1"
+  jan_start = 2026-01-01
+  jan_end = 2026-01-31
+  m_day = 2026-02-20 "#35: a decision reading a projection"
+  m_t = 2026-02-20
+  m_d = 2026-03-31
+  pay_day = 2026-02-05 "#37 N2: into old after its lifespan, refused"
+  pay_amt = 50.00
+  n2_day = 2026-02-20
+  feb_start = 2026-02-01
+  feb_end = 2026-02-28
+  q_day = 2026-03-05 "pq projects konto from its own point; qz runs after it that day"
+  q_t = 2026-03-05
+  q_feed = 2026-03-06 "qz_feed moves side_jar's balance into konto"
+  self_dom = 20 "each selfy reads its own move's flows through its own day"
+
+version openings
+  cite fixture
+  governs always
+  known 2025-12-31
+  anchor late
+  opening[konto] = 1000 at 2026-01-01 start
+  opening[save] = 0 at 2026-01-01 start
+  opening[save2] = 0 at 2026-01-01 start
+  opening[p_n2] = 0 at 2026-01-01 start
+  opening[p_pf] = 0 at 2026-01-01 start
+  opening[p_pe] = 0 at 2026-01-01 start
+  opening[p_self] = 0 at 2026-01-01 start
+  opening[p_pq] = 0 at 2026-01-01 start
+  opening[side_jar] = 0 at 2026-01-01 start
+  opening[old] = 0 at 2026-01-01 start
+  stated[late] = 50.00 at 2026-02-12 end "late's first reading, after t and before the cut"
+,,1:0,2273:q35: 400.00 PLN
+  unfulfilled: d1
+  unfulfilled: rent
+  left out: pmatch, 1 instances, first 2026-02-20
+  law date 2026-02-15, cut 2026-02-15
+q35u: 400.00 PLN
+  unfulfilled: d1
+  unfulfilled: rent
+  left out: pmatch, 1 instances, first 2026-02-20
+  law date 2026-02-15, cut 2026-02-15
+q_after: (400.00 PLN, 100.00 PLN, 400.00 PLN)
+  unfulfilled: d1
+  unfulfilled: rent
+  left out: pq, 1 instances, first 2026-03-05
+  law date 2026-02-15, cut 2026-02-15
+q_dec (d = 2026-01-19): (0.00 PLN, 0.00 PLN)
+  law date 2026-02-15, cut 2026-02-15
+q_dec (d = 2026-01-20): (refused: RUN-FUTURE a decision on 2026-01-20 reads a projection from 2026-01-25, after its day, 600.00 PLN)
+  unfulfilled: pe
+  unfulfilled: rent
+  left out: pe, 1 instances, first 2026-01-20
+  law date 2026-02-15, cut 2026-02-15
+q_from: (600.00 PLN, 600.00 PLN, ?"before the run's start" (konto), 400.00 PLN, ?"late has no balance before 2026-02-12" (late), ?"late has no balance before 2026-02-12" (late), ?"late has no balance before 2026-02-12" (late), 50.00 PLN)
+  anchor: late 2026-02-12 end, stated 50.00 PLN, difference ?"late has no balance before 2026-02-12" (late)
+  unfulfilled: d1
+  unfulfilled: rent
+  law date 2026-02-15, cut 2026-02-15
+q_line: (619.00 PLN, ?"late has no balance before 2026-02-12" (late))
+  unfulfilled: d1
+  unfulfilled: rent
+  uncertain: g_between
+  uncertain: g_on_d
+  uncertain: g_on_t
+  law date 2026-02-15, cut 2026-02-15
+q_n2: (refused: RUN-LIFESPAN pay.cash moves into or out of old outside its lifespan, refused: RUN-LIFESPAN pay.cash moves into or out of old outside its lifespan)
+  law date 2026-02-15, cut 2026-02-15
+q_nest: (400.00 PLN, 400.00 PLN)
+  unfulfilled: d1
+  unfulfilled: rent
+  left out: pq, 1 instances, first 2026-03-05
+  law date 2026-02-15, cut 2026-02-15
+q_self: (7.00 PLN, 7.00 PLN, 7.00 PLN)
+  unfulfilled: selfy[2026-01]
+  law date 2026-02-15, cut 2026-02-15
+q_t1: (600.00 PLN, 600.00 PLN, 600.00 PLN, 300.00 PLN)
+  unfulfilled: d1
+  unfulfilled: rent
+  law date 2026-02-15, cut 2026-02-15
+q_unc: (619.00 PLN, ?"late has no balance before 2026-02-12" (late), ?"late has no balance before 2026-02-12" (late))
+  unfulfilled: d1
+  unfulfilled: rent
+  uncertain: g_between
+  uncertain: g_on_d
+  uncertain: g_on_t
+  law date 2026-02-15, cut 2026-02-15
+,8:g7/flows,2:g7,18:run g7/flows.tally,5281:14:g7/flows.tally,5257:model g7_flows
+  tally 2
+  on 2026-02-15
+  start 2026-01-01
+  end 2026-03-31
+  note "T, issue #41, G7: reads at the ask (L §5.14, §5.14.3, §8.2): flows of a place over spans before, across, starting on and after a refusal of every place, and from before the run's start; a hole amount inside a span and a hole day; flows of a move by leg and by keys, over a span with no movement where the kind's leg has a unit and where it doesn't; bal(x, u, d); with uncertain on a place with a reading, uncertain movements before it, after it, on the day read and after it, into and out of the place, and on a place with no reading."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit PLN: currency minor 0.01
+
+unit etf_unit "a fund unit"
+
+kind maybe: transfers uncertain
+
+kind buys: event certain
+  leg cash: PLN
+  leg units: etf_unit
+
+kind pays: event certain
+  leg cash: PLN
+
+index month = month 2026-01..2026-03
+
+place konto: accounts PLN lives 2026-01-01..
+
+place fresh: accounts PLN lives 2026-01-01..
+
+place fund: holdings etf_unit priced fund_price lives 2026-01-01..
+
+place box_h: accounts PLN lives 2026-01-01..
+
+place market: outside lives 2026-01-01..
+
+place shop: outside lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input fund_price[m in month]: num PLN/etf_unit
+
+input rent_amt: money PLN
+
+input rent_dom: int
+
+input buy_units[m in month]: num etf_unit
+
+input buy_dom: int
+
+input ext_day: date
+
+input ext_amt: money PLN
+
+input u_amt: money PLN
+
+input u_before: date
+
+input u_after: date
+
+input u_day: date
+
+input u_late: date
+
+input hole_amt: money PLN question "How much is the repair?"
+
+input repair_day: date
+
+input hole_day: date question "When does the parcel come?"
+
+input div_when[m in month]: num
+
+input gate_dom: int
+
+move rent[m in month]: transfers
+  on day_of(m, rent_dom)
+  leg cash from konto to shop amount rent_amt
+
+move buy[m in month]: buys
+  on day_of(m, buy_dom)
+  leg cash from konto to market amount round(buy_units[m] * fund_price[m], minor(PLN), half-up)
+  leg units from market to fund amount buy_units[m]
+
+move ext: pays
+  on ext_day
+  leg cash from world to shop amount ext_amt
+
+move tmove: transfers
+  on ext_day
+  leg cash from world to konto amount ext_amt
+
+move un_out: maybe
+  on u_before
+  leg cash from konto to shop amount u_amt
+
+move un_in: maybe
+  on u_after
+  leg cash from world to konto amount u_amt
+
+move un_away: maybe
+  on u_after
+  leg cash from konto to shop amount u_amt
+
+move un_day: maybe
+  on u_day
+  leg cash from world to konto amount u_amt
+
+move un_late: maybe
+  on u_late
+  leg cash from world to konto amount u_amt
+
+move fr_in: maybe
+  on u_after
+  leg cash from world to fresh amount u_amt
+
+move fr_late: maybe
+  on u_late
+  leg cash from world to fresh amount u_amt
+
+move repair: transfers
+  on repair_day
+  leg cash from konto to shop amount hole_amt
+
+move parcel: transfers
+  on hole_day
+  leg cash from world to box_h amount ext_amt
+
+move gate[m in month]: transfers
+  on day_of(m, gate_dom)
+  when div_when[m] * div_when[m] / div_when[m] > 0
+  leg cash from world to shop amount ext_amt
+
+ask q_place: flows(konto, 2026-01-01 .. 2026-01-31), flows(konto, 2026-01-01 .. 2026-01-20), flows(konto, 2026-02-01 .. 2026-02-28), flows(konto, 2026-03-01 .. 2026-03-31), flows(konto, 2026-03-12 .. 2026-03-31), flows(konto, 2026-03-10 .. 2026-03-31), flows(konto, 2025-12-01 .. 2026-01-31), flows(box_h, 2026-01-01 .. 2026-01-31), flows(box_h, 2026-02-01 .. 2026-02-28), flows(konto, 2026-02-11 .. 2026-02-28), flows(fund, 2026-01-01 .. 2026-01-31) law cut
+
+ask q_move: flows(buy.cash, 2026-01-01 .. 2026-01-31), flows(buy.units, 2026-01-01 .. 2026-01-31), flows(buy[2026-02].units, 2026-01-01 .. 2026-03-31), flows(buy.units, 2026-01-01 .. 2026-01-10), flows(buy.cash, 2026-01-01 .. 2026-01-10), flows(ext, 2026-01-01 .. 2026-01-10), flows(tmove, 2026-01-01 .. 2026-01-10), flows(ext, 2026-01-01 .. 2026-03-31) law cut
+
+ask q_unit: bal(konto, PLN, d), bal(fund, d) for d in [2026-01-31] law cut
+
+ask q_unc: bal(konto, d) with uncertain, bal(fresh, d) with uncertain for d in [2026-01-24, 2026-01-26, 2026-01-28] law cut
+
+version facts
+  cite fixture
+  governs always
+  known 2025-12-01
+  fund_price[2026-01] = 10 "a unit's price"
+  fund_price[2026-02] = 10
+  fund_price[2026-03] = 12
+  rent_amt = 100.00
+  rent_dom = 5 "rent on the 5th"
+  buy_units[2026-01] = 2 "two units"
+  buy_units[2026-02] = 3
+  buy_units[2026-03] = 1
+  buy_dom = 18 "buys on the 18th"
+  ext_day = 2026-01-15 "outside to outside, and into konto"
+  ext_amt = 7.00
+  u_amt = 5.00
+  u_before = 2026-01-21 "uncertain, before konto's reading"
+  u_after = 2026-01-23 "uncertain, after it"
+  u_day = 2026-01-26 "uncertain, on a day read"
+  u_late = 2026-01-27 "uncertain, after it"
+  repair_day = 2026-02-10 "a hole amount in February"
+  div_when[2026-01] = 1 "answered"
+  div_when[2026-02] = 1 "answered"
+  div_when[2026-03] = 0 "the when divides by zero: every place refused from the 10th"
+  gate_dom = 10
+
+version openings
+  cite fixture
+  governs always
+  known 2025-12-31
+  anchor konto
+  opening[konto] = 1000 at 2026-01-01 start
+  opening[fund] = 0 at 2026-01-01 start
+  opening[box_h] = 0 at 2026-01-01 start
+  stated[konto] = 880.00 at 2026-01-22 end "konto's statement, below the plan"
+,,1:0,1544:q_move: (20.00 PLN, 2 etf_unit, 3 etf_unit, 0 etf_unit, 0.00 PLN, 0.00 PLN, 0.00 PLN, 7.00 PLN)
+  unfulfilled: buy[2026-01]
+  unfulfilled: ext
+  law date 2026-02-15, cut 2026-02-15
+q_place: (-113.00 PLN, -113.00 PLN, ?"How much is the repair?" (hole_amt), refused: RUN-DIV division by zero, -12.00 PLN, -12.00 PLN, ?"before the run's start" (konto), ?"When does the parcel come?" (hole_day), ?"When does the parcel come?" (hole_day), -30.00 PLN, 2 etf_unit)
+  unfulfilled: buy[2026-01]
+  unfulfilled: rent[2026-01]
+  unfulfilled: rent[2026-02]
+  unfulfilled: repair
+  unfulfilled: tmove
+  law date 2026-02-15, cut 2026-02-15
+q_unc (d = 2026-01-24): (880.00 PLN, 5.00 PLN)
+  anchor: konto 2026-01-22 end, stated 880.00 PLN, difference -7.00 PLN
+  uncertain: fr_in
+  uncertain: un_away
+  uncertain: un_in
+  law date 2026-02-15, cut 2026-02-15
+q_unc (d = 2026-01-26): (885.00 PLN, 5.00 PLN)
+  anchor: konto 2026-01-22 end, stated 880.00 PLN, difference -7.00 PLN
+  uncertain: fr_in
+  uncertain: un_away
+  uncertain: un_day
+  uncertain: un_in
+  law date 2026-02-15, cut 2026-02-15
+q_unc (d = 2026-01-28): (890.00 PLN, 10.00 PLN)
+  anchor: konto 2026-01-22 end, stated 880.00 PLN, difference -7.00 PLN
+  uncertain: fr_in
+  uncertain: fr_late
+  uncertain: un_away
+  uncertain: un_day
+  uncertain: un_in
+  uncertain: un_late
+  law date 2026-02-15, cut 2026-02-15
+q_unit (d = 2026-01-31): (880.00 PLN, 2 etf_unit)
+  anchor: konto 2026-01-22 end, stated 880.00 PLN, difference -7.00 PLN
+  unfulfilled: buy[2026-01]
+  law date 2026-02-15, cut 2026-02-15
+,7:g7/deep,2:g7,17:run g7/deep.tally,1883:13:g7/deep.tally,1860:model g7_deep
+  tally 2
+  on 2026-02-15
+  start 2026-01-01
+  end 2026-03-31
+  note "T, issue #41, G7: flows of a move whose leg the walk refuses (E §4.2 step 5, L §5.14.3), asked first, when the walk it needs reads, in a decision in January, a def forty links deep; the leg, into a place after its lifespan, comes in February, so the flows read is refused (RUN-LIFESPAN); beside it the decision's place, answered."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit PLN: currency minor 0.01
+
+index n = 1..40
+
+place konto: accounts PLN lives 2026-01-01..
+
+place p_deep: accounts PLN lives 2026-01-01..
+
+place old: accounts PLN lives 2026-01-01..2026-01-31
+
+place world: outside lives 2026-01-01..
+
+input one: num
+
+input top: int
+
+input deep_day: date
+
+input pay_day: date
+
+input pay_amt: money PLN
+
+input small: money PLN
+
+input big: money PLN
+
+def acc[k in n]: num
+  note "a chain of forty links, each reading the one before"
+  rule base v facts = if k == one then one else acc[k - one] + one
+
+move deep: transfers
+  on deep_day
+  reads konto
+  leg cash from world to p_deep amount if acc[top] > 0 then (if bal(konto) > 0 then small else big) else big
+
+move pay: transfers
+  on pay_day
+  leg cash from world to old amount pay_amt
+
+ask a_flows: flows(pay, 2026-02-01 .. 2026-02-28) law cut
+
+ask b_bal: bal(p_deep, 2026-01-31), flows(pay, 2026-01-01 .. 2026-01-31) law cut
+
+version facts
+  cite fixture
+  governs always
+  known 2025-12-01
+  one = 1
+  top = 40 "the chain's last link"
+  deep_day = 2026-01-10 "the decision reading the chain"
+  pay_day = 2026-02-05 "into old after its lifespan"
+  pay_amt = 50.00
+  small = 1.00
+  big = 100.00
+
+version openings
+  cite fixture
+  governs always
+  known 2025-12-31
+  opening[konto] = 1000 at 2026-01-01 start
+  opening[p_deep] = 0 at 2026-01-01 start
+  opening[old] = 0 at 2026-01-01 start
+,,1:0,229:a_flows: refused: RUN-LIFESPAN pay.cash moves into or out of old outside its lifespan
+  unfulfilled: pay
+  law date 2026-02-15, cut 2026-02-15
+b_bal: (1.00 PLN, 0.00 PLN)
+  unfulfilled: deep
+  law date 2026-02-15, cut 2026-02-15
+,12:g7/deep_plan,2:g7,22:run g7/deep_plan.tally,1859:18:g7/deep_plan.tally,1831:model g7_deep_plan
+  tally 2
+  on 2026-02-15
+  start 2026-01-01
+  end 2026-03-31
+  note "T, issue #41, G7: flows of a move whose leg the walk refuses (E §4.2 step 5, L §5.14.3), asked first, when the plan pass of the walk it needs reads, in a plan's amount in January, a def forty links deep; the leg, into a place after its lifespan, comes in February, so the flows read is refused (RUN-LIFESPAN); beside it the plan's place, answered."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit PLN: currency minor 0.01
+
+index n = 1..40
+
+place konto: accounts PLN lives 2026-01-01..
+
+place p_deep: accounts PLN lives 2026-01-01..
+
+place old: accounts PLN lives 2026-01-01..2026-01-31
+
+place world: outside lives 2026-01-01..
+
+input one: num
+
+input top: int
+
+input deep_day: date
+
+input pay_day: date
+
+input pay_amt: money PLN
+
+input small: money PLN
+
+input big: money PLN
+
+def acc[k in n]: num
+  note "a chain of forty links, each reading the one before"
+  rule base v facts = if k == one then one else acc[k - one] + one
+
+move deep: transfers
+  on deep_day
+  leg cash from world to p_deep amount if acc[top] > 0 then small else big
+
+move pay: transfers
+  on pay_day
+  leg cash from world to old amount pay_amt
+
+ask a_flows: flows(pay, 2026-02-01 .. 2026-02-28) law cut
+
+ask b_bal: bal(p_deep, 2026-01-31), flows(pay, 2026-01-01 .. 2026-01-31) law cut
+
+version facts
+  cite fixture
+  governs always
+  known 2025-12-01
+  one = 1
+  top = 40 "the chain's last link"
+  deep_day = 2026-01-10 "the plan reading the chain"
+  pay_day = 2026-02-05 "into old after its lifespan"
+  pay_amt = 50.00
+  small = 1.00
+  big = 100.00
+
+version openings
+  cite fixture
+  governs always
+  known 2025-12-31
+  opening[konto] = 1000 at 2026-01-01 start
+  opening[p_deep] = 0 at 2026-01-01 start
+  opening[old] = 0 at 2026-01-01 start
+,,1:0,229:a_flows: refused: RUN-LIFESPAN pay.cash moves into or out of old outside its lifespan
+  unfulfilled: pay
+  law date 2026-02-15, cut 2026-02-15
+b_bal: (1.00 PLN, 0.00 PLN)
+  unfulfilled: deep
+  law date 2026-02-15, cut 2026-02-15
+,8:g8/after,2:g8,18:run g8/after.tally,1674:14:g8/after.tally,1650:model g8_after
+  tally 2
+  on 2026-02-15
+  start 2026-01-01
+  end 2026-03-31
+  note "T, issue #41, G8: a projection from a decision's own point keeps the day's decisions after that point (L §5.14.1, E §4.3 step 1): pp projects konto from its point on 5 March; zz, unrelated and after it that day, is refused in its when, which refuses every place from its point, in the main walk and in pp's projection, so pp's amount is refused, as a move's flows read shows; reads before that day are answered."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place p_pp: accounts PLN lives 2026-01-01..
+
+place z_box: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input t_day: date
+
+input t_own: date
+
+input d_end: date
+
+input div_z: num
+
+input small: money PLN
+
+move pp: transfers
+  on t_day
+  reads konto
+  leg cash from world to p_pp amount bal(konto, d_end) from t_own
+
+move zz: transfers
+  on t_day
+  reads z_box
+  when bal(z_box) / div_z > 0
+  leg cash from world to z_box amount small
+
+ask q_after: flows(pp, 2026-03-01 .. 2026-03-31), bal(konto, 2026-03-04), bal(p_pp, 2026-03-04) law cut
+
+version facts
+  cite fixture
+  governs always
+  known 2025-12-01
+  t_day = 2026-03-05 "pp, then zz, on one day"
+  t_own = 2026-03-05 "pp projects from its own point"
+  d_end = 2026-03-31
+  div_z = 0 "zz's when divides by zero"
+  small = 1.00
+
+version openings
+  cite fixture
+  governs always
+  known 2025-12-31
+  opening[konto] = 1000 at 2026-01-01 start
+  opening[p_pp] = 0 at 2026-01-01 start
+  opening[z_box] = 10 at 2026-01-01 start
+,,1:0,107:q_after: (refused: RUN-DIV division by zero, 1 000.00 PLN, 0.00 PLN)
+  law date 2026-02-15, cut 2026-02-15
 ,

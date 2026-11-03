@@ -1,0 +1,173 @@
+model g7_flows
+  tally 2
+  on 2026-02-15
+  start 2026-01-01
+  end 2026-03-31
+  note "T, issue #41, G7: reads at the ask (L §5.14, §5.14.3, §8.2): flows of a place over spans before, across, starting on and after a refusal of every place, and from before the run's start; a hole amount inside a span and a hole day; flows of a move by leg and by keys, over a span with no movement where the kind's leg has a unit and where it doesn't; bal(x, u, d); with uncertain on a place with a reading, uncertain movements before it, after it, on the day read and after it, into and out of the place, and on a place with no reading."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit PLN: currency minor 0.01
+
+unit etf_unit "a fund unit"
+
+kind maybe: transfers uncertain
+
+kind buys: event certain
+  leg cash: PLN
+  leg units: etf_unit
+
+kind pays: event certain
+  leg cash: PLN
+
+index month = month 2026-01..2026-03
+
+place konto: accounts PLN lives 2026-01-01..
+
+place fresh: accounts PLN lives 2026-01-01..
+
+place fund: holdings etf_unit priced fund_price lives 2026-01-01..
+
+place box_h: accounts PLN lives 2026-01-01..
+
+place market: outside lives 2026-01-01..
+
+place shop: outside lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input fund_price[m in month]: num PLN/etf_unit
+
+input rent_amt: money PLN
+
+input rent_dom: int
+
+input buy_units[m in month]: num etf_unit
+
+input buy_dom: int
+
+input ext_day: date
+
+input ext_amt: money PLN
+
+input u_amt: money PLN
+
+input u_before: date
+
+input u_after: date
+
+input u_day: date
+
+input u_late: date
+
+input hole_amt: money PLN question "How much is the repair?"
+
+input repair_day: date
+
+input hole_day: date question "When does the parcel come?"
+
+input div_when[m in month]: num
+
+input gate_dom: int
+
+move rent[m in month]: transfers
+  on day_of(m, rent_dom)
+  leg cash from konto to shop amount rent_amt
+
+move buy[m in month]: buys
+  on day_of(m, buy_dom)
+  leg cash from konto to market amount round(buy_units[m] * fund_price[m], minor(PLN), half-up)
+  leg units from market to fund amount buy_units[m]
+
+move ext: pays
+  on ext_day
+  leg cash from world to shop amount ext_amt
+
+move tmove: transfers
+  on ext_day
+  leg cash from world to konto amount ext_amt
+
+move un_out: maybe
+  on u_before
+  leg cash from konto to shop amount u_amt
+
+move un_in: maybe
+  on u_after
+  leg cash from world to konto amount u_amt
+
+move un_away: maybe
+  on u_after
+  leg cash from konto to shop amount u_amt
+
+move un_day: maybe
+  on u_day
+  leg cash from world to konto amount u_amt
+
+move un_late: maybe
+  on u_late
+  leg cash from world to konto amount u_amt
+
+move fr_in: maybe
+  on u_after
+  leg cash from world to fresh amount u_amt
+
+move fr_late: maybe
+  on u_late
+  leg cash from world to fresh amount u_amt
+
+move repair: transfers
+  on repair_day
+  leg cash from konto to shop amount hole_amt
+
+move parcel: transfers
+  on hole_day
+  leg cash from world to box_h amount ext_amt
+
+move gate[m in month]: transfers
+  on day_of(m, gate_dom)
+  when div_when[m] * div_when[m] / div_when[m] > 0
+  leg cash from world to shop amount ext_amt
+
+ask q_place: flows(konto, 2026-01-01 .. 2026-01-31), flows(konto, 2026-01-01 .. 2026-01-20), flows(konto, 2026-02-01 .. 2026-02-28), flows(konto, 2026-03-01 .. 2026-03-31), flows(konto, 2026-03-12 .. 2026-03-31), flows(konto, 2026-03-10 .. 2026-03-31), flows(konto, 2025-12-01 .. 2026-01-31), flows(box_h, 2026-01-01 .. 2026-01-31), flows(box_h, 2026-02-01 .. 2026-02-28), flows(konto, 2026-02-11 .. 2026-02-28), flows(fund, 2026-01-01 .. 2026-01-31) law cut
+
+ask q_move: flows(buy.cash, 2026-01-01 .. 2026-01-31), flows(buy.units, 2026-01-01 .. 2026-01-31), flows(buy[2026-02].units, 2026-01-01 .. 2026-03-31), flows(buy.units, 2026-01-01 .. 2026-01-10), flows(buy.cash, 2026-01-01 .. 2026-01-10), flows(ext, 2026-01-01 .. 2026-01-10), flows(tmove, 2026-01-01 .. 2026-01-10), flows(ext, 2026-01-01 .. 2026-03-31) law cut
+
+ask q_unit: bal(konto, PLN, d), bal(fund, d) for d in [2026-01-31] law cut
+
+ask q_unc: bal(konto, d) with uncertain, bal(fresh, d) with uncertain for d in [2026-01-24, 2026-01-26, 2026-01-28] law cut
+
+version facts
+  cite fixture
+  governs always
+  known 2025-12-01
+  fund_price[2026-01] = 10 "a unit's price"
+  fund_price[2026-02] = 10
+  fund_price[2026-03] = 12
+  rent_amt = 100.00
+  rent_dom = 5 "rent on the 5th"
+  buy_units[2026-01] = 2 "two units"
+  buy_units[2026-02] = 3
+  buy_units[2026-03] = 1
+  buy_dom = 18 "buys on the 18th"
+  ext_day = 2026-01-15 "outside to outside, and into konto"
+  ext_amt = 7.00
+  u_amt = 5.00
+  u_before = 2026-01-21 "uncertain, before konto's reading"
+  u_after = 2026-01-23 "uncertain, after it"
+  u_day = 2026-01-26 "uncertain, on a day read"
+  u_late = 2026-01-27 "uncertain, after it"
+  repair_day = 2026-02-10 "a hole amount in February"
+  div_when[2026-01] = 1 "answered"
+  div_when[2026-02] = 1 "answered"
+  div_when[2026-03] = 0 "the when divides by zero: every place refused from the 10th"
+  gate_dom = 10
+
+version openings
+  cite fixture
+  governs always
+  known 2025-12-31
+  anchor konto
+  opening[konto] = 1000 at 2026-01-01 start
+  opening[fund] = 0 at 2026-01-01 start
+  opening[box_h] = 0 at 2026-01-01 start
+  stated[konto] = 880.00 at 2026-01-22 end "konto's statement, below the plan"
