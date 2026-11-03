@@ -34,9 +34,9 @@ The scan behind rules 3 and 4 looks for six things in a check's text files, stri
 
 | M | Name | Builds | Checks | Models (`I:M:`) | DONE gates advanced | P8 rows at 1× |
 |---|---|---|---|---|---|---|
-| S | The tracer slice | the kernel, on X's base: evaluator, memo, event walk, checkpoints, numbers, booking, holes; counters, map, trace | 4 | — | 3 (X's base), 6 (the kernel's), 8, 10 | P8-14; P8-M1..P8-M4 set |
+| S | The tracer slice | the kernel, on X's base: evaluator, memo, event walk, checkpoints, numbers, booking, holes; counters, map, trace | 4 | — | 3 (X's base), 6 (the kernel's), 8, 10 | P8-14; P8-M1..P8-M3 set, P8-M4 measured (tally 2.1.2) |
 | M0 | Load and format | grammar with 2.1's clauses, canonical format, symbol table, types, load catalogue | 10 | none run; all load | 1 (all load), 5 (`LOAD-*`), 6 (format), 9 | — |
-| M1 | The household forecast | X's forecast: rules, axes, pins, decisions, the written projections, scenarios, asks | 90 | 3 | 1, 2, 3, 5, 6 | P8-2, P8-5, P8-9 |
+| M1 | The household forecast | X's forecast: rules, axes, pins, decisions, the written projections, scenarios, asks | 90 | 3 | 1, 2, 3, 5, 6 | P8-2, P8-5, P8-9; P8-M4 set (tally 2.1.2) |
 | M2 | Replay against reality | observations, booking, the residual ledger, the clocks; then forks | 26 | 7 | 1, 2, 3, 4, 6, 8 | P8-14 kept |
 | M3 | The operations | E §1's run function; the rest waits for `OPERATIONS.md` | 0 | — | 5 (OP codes, later), 12 | P8-1, P8-7 (when rewritten) |
 | M4 | Law breadth | `beats`, `given`, Kleene logic, rounding modes, FX, calendars | 77 | 34 | 1, 3 | P8-L2, P8-L10 |
@@ -100,7 +100,7 @@ A thin path through the whole engine, in production code, on the base of the ame
 - The kernel's properties: determinism, conservation, no foresight, a hole never becomes 0 (gate 6; T's `PROPERTIES.md` where written).
 - The mutation score is at least 90 % on the kernel as S builds it: the numbers and rounding, the read rule, the walk and the written projection, booking and the residual ledger, the order within a day (gate 8).
 
-**Measured at S** (and the budgets then fixed with the user, D4-6): P8-14, X's replay at 1× (refcore 52.6 s on the fast layer, 4.95 GB, ≥ 2.27 M def misses, partial), against its proposed ≤ 1 s and ≤ 512 MB; the micro rows P8-M1, P8-M2, P8-M3 and P8-M4, each set at the first measurement × 1.2, then only lowered, except a re-baseline at each toolchain bump, both by the rules role (D4-2, R-97); the unknowns of NOTE §4 that PERFORMANCE §10 assigns to S. This is the first figure from an engine, the evidence D1-1's closures, D1-4's forks and D1-5's seam wait for.
+**Measured at S** (and the budgets then fixed with the user, D4-6): P8-14, X's replay at 1× (refcore 52.6 s on the fast layer, 4.95 GB, ≥ 2.27 M def misses, partial), against its proposed ≤ 1 s and ≤ 512 MB, fixed with def misses ≤ 30 400; the micro rows P8-M1, P8-M2 and P8-M3, each set at the first measurement × 1.2, then only lowered, except a re-baseline at each toolchain bump, both by the rules role (D4-2, R-97), and P8-M4's first figure, its budget set at M1 with `low`, P8-5 and F5 (the user, 2026-11-02; tally 2.1.2); the unknowns of NOTE §4 that PERFORMANCE §10 assigns to S. This is the first figure from an engine, the evidence D1-1's closures, D1-4's forks and D1-5's seam wait for.
 
 **Not in it:** the full grammar and the load catalogue (M0); X's changes, scenarios and the rest of its forecast (M1); records in full, back pay and the four clocks (M2); everything from M3 on.
 
@@ -152,7 +152,7 @@ The deterministic core, enough for X's forecast and its changes 1, 2, 4, 6 and 7
 
 **Properties** (gate 6): determinism; money conserved (E §9.1); net worth moves only at the boundary, a price or an anchor (§9.2); a scenario changes nothing before its `from` (§9.3); asks move no money (§9.4); things hold nothing outside their lifespans (§9.6); no foresight through declared reads and the written projection (D-5, D-6); a hole never becomes 0.
 
-**Budgets touched:** P8-5, one read of a written projection (its micro form P8-M4 set at S); P8-2's cold run at 1× on X's forecast (the 10× run is M9's, its size from T's generator, SO8-10); P8-9, equal hashes across runs with 1 worker.
+**Budgets touched:** P8-5, one read of a written projection (its micro form P8-M4, measured at S, set here with `low` and F5; tally 2.1.2); P8-2's cold run at 1× on X's forecast (the 10× run is M9's, its size from T's generator, SO8-10); P8-9, equal hashes across runs with 1 worker.
 
 ---
 

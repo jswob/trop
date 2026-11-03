@@ -501,7 +501,7 @@ Each construct's section in L states its cost; collected, with 2.1's constructs 
 
 The rows are DONE gate 12's: every budget here is met at the size its row states, on the reference machine. Four groups (D4-6): the interactive targets kept from 1.0.1 (I), the six measured checks at 1× (C), the load rows at full size (L), and micro rows (M). The ids are fixed; `BUILD-ORDER.md` cites them.
 
-**Every number is proposed until S**: measured at S, then fixed with the user; a too-tight number changes only through a logged row.
+**Every number is proposed until S**: measured at S, then fixed with the user; a too-tight number changes only through a logged row. S fixed P8-14's wall, footprint and def misses and P8-M1..P8-M3 (the user, D4-6, 2026-11-02; tally 2.1.2); P8-M4's budget moves to M1, with `low`, P8-5 and F5 (the user, 2026-11-02); every other row stays proposed until the milestone that measures it.
 
 **The columns.**
 - *refcore's figure* replaces 1.0.1's "Floor": refcore's own time, footprint or counts (`shape.md`, `engine/tests/load/`). It is an upper reference, not a target, since refcore is written for clarity (`shape.md`, Limits). 1.0.1's prototype figures are kept where 2.1 has nothing better, and marked so.
@@ -539,9 +539,9 @@ $ python3 -I -c "print(18144*10, 1/181440*1e6)"
 
 ### 8.2 Group C: the six measured checks at 1×
 
-The six heaviest checks `shape.md` measured on refcore, at their `checks.tsv` recipes. Each: **≤ 1 s, cold, 1 worker; ≤ 512 MB; no more def-cell misses than refcore's distinct def cells** (D4-6, D4-7). Counts and instruction counts are measured on Linux CI on every PR; wall time and footprint on the reference machine at the milestone tag, and nightly from the milestone that builds the check's constructs (`BUILD-ORDER.md`). Instruction hard limits are set at S from the first measurement, then only lowered, except a re-baseline at each toolchain bump; both by the rules role (D4-2, R-97).
+The six heaviest checks `shape.md` measured on refcore, at their `checks.tsv` recipes. Each: **≤ 1 s, cold, 1 worker; ≤ 512 MB; no more def-cell misses than refcore's distinct def cells** (D4-6, D4-7). Counts and instruction counts are measured on Linux CI on every PR; wall time and footprint on the reference machine at the milestone tag, and nightly from the milestone that builds the check's constructs (`BUILD-ORDER.md`). A row's instruction hard limit is set from its first Linux measurement, then only lowered, except a re-baseline at each toolchain bump; both by the rules role (D4-2, R-97). No Linux instrument counts a check's instructions yet (CI's gungraun job runs the micro rows only), so P8-14 sets none at S, and the reference machine's count is reported: 11.86 G (tally 2.1.2, G-SP1 2026-11-03).
 
-The days-stepped budget is refcore's walks × days times its non-empty share (§2.2): what the event walk steps before any fork. A partial count is a lower bound of refcore's (`shape.md`, Limits); as a budget it is stricter than refcore's true figure, and kept so at G2a (2026-10-30); S re-judges it with the engine's own counts.
+The days-stepped budget is refcore's walks × days times its non-empty share (§2.2): what the event walk steps before any fork. A partial count is a lower bound of refcore's (`shape.md`, Limits); as a budget it is stricter than refcore's true figure, and kept so at G2a (2026-10-30); S re-judges it with the engine's own counts. At S, P8-14's is reported: 926 days stepped, 906 non-empty, in 21 walks (tally 2.1.2).
 
 | Id | Check | refcore: plain s, peak GB | Wall | Footprint | Def misses ≤ | Days stepped ≤ | Blocks |
 |---|---|---|---|---|---|---|---|
@@ -549,7 +549,7 @@ The days-stepped budget is refcore's walks × days times its non-empty share (§
 | P8-11 | `I:E1:tx2_mtg_day` | 60.5 s, 2.17 GB | ≤ 1 s | ≤ 512 MB | 619 k | 2 498 (every day holds a decision) | as P8-10 |
 | P8-12 | `I:E2:E2-01~e2_01a` | 49.1 s, 0.91 GB | ≤ 1 s | ≤ 512 MB | 161 k | 8 614 (8 × 16 070 at 6.7 %) | as P8-10 |
 | P8-13 | `I:E2:E2-01~e2_01b` | 65.8 s, 1.02 GB | ≤ 1 s | ≤ 512 MB | 547 k (partial: cells, not misses) | 12 920 (≥ 12 × 16 070 at 6.7 %, partial) | as P8-10 |
-| P8-14 | `I:X:replay_september@b_r1` | 52.6 s on refcore's fast layer, 4.95 GB † | ≤ 1 s | ≤ 512 MB | 2.27 M (partial) | reported: refcore's non-empty share isn't measured | as P8-10 |
+| P8-14 | `I:X:replay_september@b_r1` | 52.6 s on refcore's fast layer, 4.95 GB † | ≤ 1 s, fixed (S: 760.9 ms) | ≤ 512 MB, fixed (S: 154.4 MB) | 30 400, fixed: S's 25 312 × 1.2 (refcore's 2.27 M, partial) | reported: S 926 (906 non-empty); refcore's non-empty share isn't measured | as P8-10 |
 | P8-15 | `U:set/pairs/PTY-05+OWN-12/ania` | 0.87 s, 0.08 GB | ≤ 1 s | ≤ 512 MB | 74 | 12 (3 × 180 at 2.2 %) | as P8-10 |
 
 † From the counted run on refcore's fast layer, whose memo layer raises memory (`shape.md`).
@@ -614,14 +614,14 @@ for H in (20,30,40): print(H, 10000/1000*H/30, 1000/1000*H/30)"
 
 ### 8.4 Group M: micro rows
 
-Fixed inputs; the micro harness on the reference machine, and instruction hard limits on Linux CI (BUILDER's performance section). **Each is set at S from its first measurement × 1.2, then only lowered, except a re-baseline at each toolchain bump; both by the rules role** (R4 Q6 group IV; D4-2, R-97). They block every PR on Linux by their instruction limit; their wall time is reported at each tag.
+Fixed inputs; the micro harness on the reference machine, and instruction hard limits on Linux CI (BUILDER's performance section). **Each is set from its first measurement × 1.2, then only lowered, except a re-baseline at each toolchain bump; both by the rules role** (R4 Q6 group IV; D4-2, R-97). They block every PR on Linux by their instruction limit; their wall time is reported at each tag. P8-M1..P8-M3 were set at S (tally 2.1.2): wall from the reference machine (the user, D4-6, 2026-11-02), instructions (Ir) from CI's gungraun run at S's gated head cf55c5a (G-SP1, 2026-11-03). P8-M4 is set at M1, with `low`, P8-5 and F5 (the user, 2026-11-02).
 
 | Id | Row | Size | Budget |
 |---|---|---|---|
-| P8-M1 | `Num` add and multiply on the small tier | two small values, whole and short-decimal | first measurement × 1.2 |
-| P8-M2 | gcd of a big and a small number | a big value at 5 049 bits and a 64-bit value | first measurement × 1.2 |
-| P8-M3 | one big operation at 5 049 bits (E1's largest result): a multiply and its reduction | two values at 5 049 bits | first measurement × 1.2 |
-| P8-M4 | one read of a written projection in E §4.3's common case (P8-5's micro form) | a 33-year place, n ≤ 12 054 | ≤ 0.3 µs (P8-5), and first measurement × 1.2 for its instruction limit |
+| P8-M1 | `Num` add and multiply on the small tier | two small values, whole and short-decimal | ≤ 55.5 ns, ≤ 1 048 Ir (S: 46.26 ns, 873 Ir) |
+| P8-M2 | gcd of a big and a small number | a big value at 5 049 bits and a 64-bit value | ≤ 2.20 µs, ≤ 6 123 Ir (S: 1.83 µs, 5 102 Ir) |
+| P8-M3 | one big operation at 5 049 bits (E1's largest result): a multiply and its reduction | two values at 5 049 bits | ≤ 7.81 µs, ≤ 87 004 Ir (S: 6.51 µs first, 72 503 Ir) |
+| P8-M4 | one read of a written projection in E §4.3's common case (P8-5's micro form) | a 33-year place, n ≤ 12 054 | ≤ 0.3 µs (P8-5), and its instruction limit, both set at M1; S's first figures: 72.9 ms on the reference machine, 795 765 251 Ir on CI (the run with the projection less the plain run) |
 
 R1 and R4 name no other micro row. A further one would come from S's first profile, through a logged row.
 
@@ -667,29 +667,29 @@ None of them is a slow computation: each costs nothing at run time beyond printi
 
 Each unknown of NOTE §4 that a number here rests on, with the section it moves and the milestone that measures it. All are measurements, never settled on paper.
 
-| # | Unknown | Moves | Measured at |
-|---|---|---|---|
-| U-1 | nanoseconds per node of the tree-walk with exact arithmetic on the small tier (`shape.md` assumed 10–50 ns) | §1.2 item 3; P8-10..P8-15; P8-2 | S |
-| U-2 | whether day-dense asks like E1 need closures (D1-1's trigger) | §1.2 item 3; P8-11 | the milestone that builds E1's constructs |
-| U-3 | the read-set overhead on a cold run (1.0.1 cited 1.27× for a published provenance system) | §3.5; P8-2 | S |
-| U-4 | bytes per memo cell, with and without read sets, sparse and dense | §3.5; every footprint | S |
-| U-5 | how many cells remain once empty days are skipped and prefixes shared | §3.5; the C rows' def-miss budgets | S, then each milestone |
-| U-6 | the checkpoint interval (monthly is a guess) | §2.4, §2.5, §4.2 | S |
-| U-7 | how late A's and E2's timelines diverge: the fork's saving | §2.5; P8-10, P8-12, P8-13 | the milestone that builds forks (`BUILD-ORDER.md`) |
-| U-8 | whether a cold 33-year run meets ≤ 1 s at 10×, which decides the seam (D1-5) | §4; P8-1, P8-2 | M9, at 10× (T's generator); its 1× twin from M1 |
-| U-9 | B-07's and B-12's peaks with per-context memos (L:4, L:5, L:14) | §3.5, §5.5; P8-L4, P8-L5, P8-L14 | the milestone that completes B, and M9 |
-| U-10 | the size of one path's layer at B-12, D-10 and household-bands; decides the worker default's memory (D3-5) | §5.5; P8-L1, P8-L5, P8-L11 | the Monte Carlo milestone, and M9 |
-| U-11 | the share of balanced big gcds in E1 (what Lehmer buys), and whether `Num` is 16 bytes | §6; P8-M2, P8-M3 | S |
-| U-12 | how often 64-bit intermediates overflow inside one operation | §6; P8-M1 | S |
-| U-13 | the 1 → 6 worker speed-up, and the cells duplicated under the shared layer's freeze | §5.3, §5.5; P8-4, the MC load rows | the Monte Carlo milestone |
-| U-14 | the cost of the interval-refined Maritz–Jarrett standard error at 10 000 paths | §5.6; P8-L1 | the Monte Carlo milestone |
-| U-15 | the deepest stack a case needs, which sizes the counted depth and the threads' stack | §1.2 item 4; §5.4 | S |
-| U-16 | the overflow checks' cost, in the big tier's library in particular (D4-4: above 3 % there, the user decides an override for that library only) | every wall budget | S, once |
-| U-17 | instruction-count stability across CI machines, and the instruction counter's slowdown on a 1 s run | §8's blocking columns | S |
-| U-18 | the reference machine's thermals over a 10-run median | §8's wall columns | S |
-| U-19 | the cost of law per path | §5.5; P8-4 | the Monte Carlo milestone. First remedy if over: hoist more into the shared layer |
-| U-20 | the real import volume, which 10× (N-2002) stands for; the user may change it | P8-2 | T's generator, then S |
-| U-21 | whether a persisted memo across sessions is worth it, beyond results stored by hash (N-2004); the design doesn't need one | §4 | after M9, if a turn misses |
+| # | Unknown | Moves | Measured at | S's answer (`perf/S.md`, 2026-11-02; tally 2.1.2) |
+|---|---|---|---|---|
+| U-1 | nanoseconds per node of the tree-walk with exact arithmetic on the small tier (`shape.md` assumed 10–50 ns) | §1.2 item 3; P8-10..P8-15; P8-2 | S | 0.86 µs a node, all in (760.9 ms over 883 039 nodes on P8-14) |
+| U-2 | whether day-dense asks like E1 need closures (D1-1's trigger) | §1.2 item 3; P8-11 | the milestone that builds E1's constructs | — |
+| U-3 | the read-set overhead on a cold run (1.0.1 cited 1.27× for a published provenance system) | §3.5; P8-2 | S | 1.06× wall, 1.03× instructions, 1.22× footprint (126 → 154 MB) |
+| U-4 | bytes per memo cell, with and without read sets, sparse and dense | §3.5; every footprint | S | about 280 B inline a kept cell, about 1.1 KB more with its read set; dense columns not built |
+| U-5 | how many cells remain once empty days are skipped and prefixes shared | §3.5; the C rows' def-miss budgets | S, then each milestone | 25 312 def misses on P8-14 with law-date classes (about 2.51 M at exact law dates); 926 days stepped in 21 walks |
+| U-6 | the checkpoint interval (monthly is a guess) | §2.4, §2.5, §4.2 | S | monthly kept: +0.5–0.8 MB on P8-14, instructions within the noise; the benefit waits for forks |
+| U-7 | how late A's and E2's timelines diverge: the fork's saving | §2.5; P8-10, P8-12, P8-13 | the milestone that builds forks (`BUILD-ORDER.md`) | — |
+| U-8 | whether a cold 33-year run meets ≤ 1 s at 10×, which decides the seam (D1-5) | §4; P8-1, P8-2 | M9, at 10× (T's generator); its 1× twin from M1 | — |
+| U-9 | B-07's and B-12's peaks with per-context memos (L:4, L:5, L:14) | §3.5, §5.5; P8-L4, P8-L5, P8-L14 | the milestone that completes B, and M9 | — |
+| U-10 | the size of one path's layer at B-12, D-10 and household-bands; decides the worker default's memory (D3-5) | §5.5; P8-L1, P8-L5, P8-L11 | the Monte Carlo milestone, and M9 | — |
+| U-11 | the share of balanced big gcds in E1 (what Lehmer buys), and whether `Num` is 16 bytes | §6; P8-M2, P8-M3 | S | `Num` is 16 bytes; Lehmer's share stays E1's |
+| U-12 | how often 64-bit intermediates overflow inside one operation | §6; P8-M1 | S | a proxy: no `num::` function in P8-14's top 120; the counter isn't built |
+| U-13 | the 1 → 6 worker speed-up, and the cells duplicated under the shared layer's freeze | §5.3, §5.5; P8-4, the MC load rows | the Monte Carlo milestone | — |
+| U-14 | the cost of the interval-refined Maritz–Jarrett standard error at 10 000 paths | §5.6; P8-L1 | the Monte Carlo milestone | — |
+| U-15 | the deepest stack a case needs, which sizes the counted depth and the threads' stack | §1.2 item 4; §5.4 | S | dev passes at 512 KiB, `release-test` at 256 KiB; counted depth 32 |
+| U-16 | the overflow checks' cost, in the big tier's library in particular (D4-4: above 3 % there, the user decides an override for that library only) | every wall budget | S, once | no measurable cost on P8-14, below D4-4's 3 % |
+| U-17 | instruction-count stability across CI machines, and the instruction counter's slowdown on a 1 s run | §8's blocking columns | S | the reference machine's part: P8-14's instructions within 0.08 %; CI's part open |
+| U-18 | the reference machine's thermals over a 10-run median | §8's wall columns | S | five 10-run medians of P8-14 within 0.4 %; P8-M3 drifted 2.9 % between series |
+| U-19 | the cost of law per path | §5.5; P8-4 | the Monte Carlo milestone. First remedy if over: hoist more into the shared layer | — |
+| U-20 | the real import volume, which 10× (N-2002) stands for; the user may change it | P8-2 | T's generator, then S | — |
+| U-21 | whether a persisted memo across sessions is worth it, beyond results stored by hash (N-2004); the design doesn't need one | §4 | after M9, if a turn misses | — |
 
 **Not a budget lever:** profile-guided optimisation comes only at M9, as a release-only extra, and no budget may need it (D4-4).
 
