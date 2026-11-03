@@ -19,6 +19,12 @@ fix's new tests were seen failing on tally 2.1.1's refcore first.
   declarations, rows), then `Checker.run`'s (the items' own checks, the checks across items). `Checker.run` takes the
   moves and the fills in the order of their sections, by full path and line, as it took defs, bands and asks (it took
   moves and fills by id). New: `E3_1_order_items_by_line` (seen failing), `_passes`, `_moves_before_defs`.
+- **`WARN-UNREAD` for places (L §8.5, E §3.1 step 6, #30).** `Checker.check_graph` warns a `place` section no line
+  names: a `('place', id)` edge of the item graph (a read, a leg, a binding over its kind), a row whose value is the
+  place, an observed row's leg, a pad's two places. `cli.unread_everywhere` keeps a place's warning only where every
+  reality warns it, as for the other sorts (`L5_2_source_cited_by_scenario` holds it). New: `L8_5_unread_place` (seen
+  failing), `L8_5_unread_place_named` (each route, dropped alone, warns); `L5_14_1_run_cycle_own_day` gains its two
+  stray outside places' lines.
 
 ## tally 2.1.1 (issue #13)
 
