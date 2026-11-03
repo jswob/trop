@@ -3,7 +3,7 @@ model g9_sign
   on 2026-03-25
   start 2026-01-01
   end 2026-03-31
-  note "T, issue #41, G9: booking a leg and the sign rule (L §5.10, §5.14, E §4.2 steps 4-5): claims, debts and a holding broken by a first-batch plan, by a decision's legs and by a closing reading, each refused (RUN-PLACE) beside a twin that stays at 0 or nets to 0 in its batch; a leg out of a place outside its lifespan (RUN-LIFESPAN) beside a leg of 0 that books nothing; cash below zero in two stretches (WARN-NEGATIVE twice); a hole amount and a hole day, each on places of their own."
+  note "T, issue #41, G9: booking a leg and the sign rule (L §5.10, §5.14, E §4.2 steps 4-5): claims, debts and a holding broken by a first-batch plan and by a decision's legs, each refused (RUN-PLACE) beside a twin that stays at 0 or nets to 0 in its batch; a claim anchored below zero at a close, which refcore and the engine leave at -5.00 unrefused (S keeps refcore's bytes; the spec round decides, #46), beside a twin anchored at 0; a leg out of a place outside its lifespan (RUN-LIFESPAN) beside a leg of 0 that books nothing; cash below zero in two stretches (WARN-NEGATIVE twice); a hole amount and a hole day, each on places of their own."
 
 source fixture "T's fixture for S's kernel tests (invented values)"
 
