@@ -451,7 +451,10 @@ impl Engine {
                 continue;
             }
             let End::Place(p) = end else {
+                // L §5.14 (tally 2.1.2): a leg whose place is a hole books its known side
+                // only, so it is left out of conservation (E §9 item 1)
                 kept = true;
+                dropped = true;
                 continue;
             };
             let thing = m
