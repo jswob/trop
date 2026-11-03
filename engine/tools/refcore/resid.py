@@ -12,7 +12,7 @@ from fractions import Fraction
 from .errors import TallyError, Refusal, Unspecified
 from .values import Num, Hole, Thing, Text, Key, Iv, fmt, fmt_hole
 from .dates import month_period
-from .moves import Inst, qty, day_lo, merge, key_text, instant_text
+from .moves import Inst, qty, day_lo, merge, key_text, instant_text, order_key
 from .walk import K_start, K_end, kday
 
 
@@ -424,7 +424,7 @@ def m_residuals(self, place, span, by, ctx, unit=None):
         mt = Fraction(0) if mt is None else mt
         ot = Fraction(0) if ot is None else ot
         dt = _sub(ot, mt)
-        ls.sort(key=lambda ln: (sk(ln.diff), ln.day or datetime.date.min, str(ln.group[1]), str(ln.order)))
+        ls.sort(key=lambda ln: (sk(ln.diff), ln.day or datetime.date.min, str(ln.group[1]), order_key(ln.order)))
         out.append((g, mt, ot, dt, ls))
     out.sort(key=lambda x: (0 if x[0][0] is None else 1, sk(x[3]),
                             x[0][0].start if x[0][0] is not None else datetime.date.min, str(x[0][1])))

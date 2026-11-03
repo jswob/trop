@@ -1,0 +1,54 @@
+# E §6.3 Order (tally 2.1.2, issue #33, the user's "Spec wins", 2026-11-02): lines of one group, tied on their
+# difference, day and group name, go by the movement order of §4.1 compared typed, keys in index order: rent[f3]
+# before rent[f11] (tally 2.1.1 compared the order's text, and key position 10 sorted before 2). Both are matched by
+# a statement in February, observed as planned (difference 0.00, timing +0 days).
+=== m.tally
+model hh
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source plan "plan"
+source bank_2026_02 "bank"
+unit PLN: currency minor 0.01
+index flats = [f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11]
+input bank: observed
+input rent_amt: money PLN
+input rent_day: date
+place konto: accounts PLN lives 2019-05-01..
+place landlord: outside lives 1900-01-01..
+place unexplained: outside lives 1900-01-01..
+
+move rent[f in flats]: transfers
+  on rent_day
+  when pos(f) == 3 or pos(f) == 11
+  leg cash from konto to landlord amount rent_amt
+
+version plan_2026
+  cite plan
+  governs always
+  known 2026-01-01
+  rent_amt = 2 000.00 PLN "umowa najmu"
+  rent_day = 2026-02-03 "umowa najmu"
+  opening[konto] = 10 000.00 PLN at 2026-01-01 start "wyciąg"
+
+version statement_02
+  cite bank_2026_02
+  governs 2026-02
+  known 2026-03-02
+  covers konto
+  pad konto from unexplained
+  bank[r1] = (on: 2026-02-03, kind: transfers, leg cash from konto to landlord amount 2 000.00 PLN, fulfils: rent[f11]) "line 1"
+  bank[r2] = (on: 2026-02-03, kind: transfers, leg cash from konto to landlord amount 2 000.00 PLN, fulfils: rent[f3]) "line 2"
+  stated[konto] = 6 000.00 PLN at 2026-02-28 end "saldo"
+
+ask led: residuals konto 2026-02
+=== expect
+led: residuals konto 2026-02
+  2026-02 balance: model 6 000.00 PLN, observed 6 000.00 PLN, difference 0.00 PLN
+    balance konto 2026-02-28 end (padded): booked 6 000.00 PLN, stated 6 000.00 PLN, gap 0.00 PLN
+  2026-02 move rent: model -4 000.00 PLN, observed -4 000.00 PLN, difference 0.00 PLN
+    matched rent[f3] on 2026-02-03: model -2 000.00 PLN, observed -2 000.00 PLN, difference 0.00 PLN, timing +0 days
+    matched rent[f11] on 2026-02-03: model -2 000.00 PLN, observed -2 000.00 PLN, difference 0.00 PLN, timing +0 days
+  cut 2026-10-20

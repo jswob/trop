@@ -1,0 +1,21 @@
+# L §2.3 (tally 2.1.2, issue #29): the twin of L2_3_depth_from_chain: 7 `from` links, so inside the 7th link's bal(
+# the depth is 7 terms + 1 bracket = 8, the limit, and the text loads (reprinted here, as only the parse is at stake).
+=== options reprint
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "a source"
+
+unit PLN: currency minor 0.01
+
+place acc: accounts PLN lives 2026-01-01..
+
+def z: money PLN = bal(acc, 2026-02-01) from bal(acc, 2026-01-01) from bal(acc, 2026-01-01) from bal(acc, 2026-01-01) from bal(acc, 2026-01-01) from bal(acc, 2026-01-01) from bal(acc, 2026-01-01) from bal(acc, 2026-01-01)
+=== expect
+...
+def z: money PLN = bal(acc, 2026-02-01) from bal(acc, 2026-01-01) from bal(acc, 2026-01-01) from bal(acc, 2026-01-01) from bal(acc, 2026-01-01) from bal(acc, 2026-01-01) from bal(acc, 2026-01-01) from bal(acc, 2026-01-01)
+sha256 ...

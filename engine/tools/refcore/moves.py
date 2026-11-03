@@ -14,6 +14,10 @@ from .errors import TallyError, Refusal, LoadError, Unspecified, NotYet, load_no
 from .model import visible, row_known_sid, known_first, PlaceThing, _kv, key_text, in_world, _WSET
 from .values import Num, Money, Hole, Thing, Mv, Iv, Rec, Text, NONE, NEVER, CURRENCIES, fmt, vkey
 
+# the stratum a pad takes in the movement order: above every decision's, as observations and adjustments take -1,
+# below every plan's 0 (E §4.1, tally 2.1.2; tally 2.1.1 wrote 9, which only text compare put after stratum 10)
+PADS_STRATUM = 1 << 62
+
 
 def install(E):
     orig = E.__init__
@@ -207,7 +211,9 @@ class AdjMv(Movement):
         self.attrs = {'adjusts': inst.mv(), 'change': delta}
 
     def remainder(self):
-        """δ less the settlements; None once waived (E §5 step 5)."""
+        """δ less the settlements; None once waived (E §5 step 5). A refused adjustment refuses (tally 2.1.2, #34)."""
+        if self.err is not None:
+            raise self.err
         if self.waived:
             return None
         r = self.delta
@@ -236,7 +242,8 @@ class PadMv(Movement):
         self.err = None
         self.exists = True
         self.coll = None
-        self.order = (day, 9, 'pads', self.id)
+        # E §4.1 (tally 2.1.2, issue #39): a day's pads come after its plans and decisions, whatever the strata
+        self.order = (day, PADS_STRATUM, 'pads', self.id)
         self._mv = None
 
 
@@ -310,6 +317,24 @@ def m_inst_order(self, inst):
     d = day_lo(inst.day) or datetime.date.max
     ks = tuple(self.key_sort(k, b) for k, b in zip(inst.keys, inst.move.binds))
     return (d, inst.move.stratum, inst.move.id, ks)
+
+
+def order_key(o):
+    """The movement order (E §4.1) as a typed sort key, for the movements of a binding (L §2.5) and the residual
+    ledger's last ties (E §6.3): days as dates, strata and key positions as numbers, ids and stable ids by code point;
+    no order (a balance line) first. tally 2.1.2 (issues #33, #39): tally 2.1.1 compared the order's text, so a
+    stratum or a key position of 10 sorted before 2."""
+    if o is None:
+        return (0,)
+    if isinstance(o, datetime.date):
+        return (1, o)
+    if isinstance(o, int) and not isinstance(o, bool):
+        return (2, o)
+    if isinstance(o, str):
+        return (3, o)
+    if isinstance(o, tuple):
+        return (4, tuple(order_key(x) for x in o))
+    return (3, str(o))
 
 
 # -- worlds, coverage, observations, readings (L §5.19, §6.4) ----------------------------------------------------------
@@ -1422,7 +1447,12 @@ def m_adjustments(self, ctx, settled=True):
     skey = ('settled',) + key[1:]
     if settled and skey not in self.run_cache:
         self.run_cache[skey] = True
-        self.settle(out, ctx)
+        try:
+            self.settle(out, ctx)
+        except Exception:
+            # tally 2.1.2 (issue #44): a refused settlement links nothing, and the next read settles again
+            del self.run_cache[skey]
+            raise
         names = set()
         for a in out:
             for vid in a.vids:
@@ -1493,12 +1523,45 @@ def m_adjust_move_compute(self, mi, ctx):
             prev = i
             prev_ex = i.exists is True
             hole0 = isinstance(i.exists, Hole) or any(isinstance(lg.amount, Hole) for lg in i.legs)
+            if any(isinstance(lg.amount, TallyError) for lg in i.legs):
+                # E §5 step 1 (tally 2.1.2, issue #34, the user's "1: refused stays refused"): a booking refused at
+                # κ₀ stays refused, and its later re-measurements record nothing, as one refused at its `when` (status
+                # refused) and as a hole booking's refused steps
+                continue
+            # E §5 step 3 (tally 2.1.2, issue #34, the user's "A: the refusal spreads"): the state the next step
+            # measures against may be refused, or its existence a hole; then that step's δ is too
+            prev_bad = None
+            prev_hole = None
             for c, vids in steps:
                 j = self.eval_inst(mi, i.env, i.keys, tctx, at_cut=c)
-                if j is None or j.err is not None:
+                if j is None:
+                    continue
+                if j.err is not None and hole0:
+                    # a refused version doesn't answer a hole movement, which stays the hole it is (E §5 step 1)
+                    continue
+                if j.err is not None:
+                    # re-measured and refused (its day, `when` or a place): each leg's adjustment is refused, and so
+                    # is the next step's, measured against it; tally 2.1.1 skipped the step
+                    for lg in self.step_legs(i, prev, j):
+                        self.adjust_made(i, lg, j.err, c, j, vids, out, err=j.err)
+                    prev_bad, prev_hole = j.err, None
                     continue
                 if not self.keys_seen(mi, i.keys, c):
                     j.exists = False
+                if prev_bad is not None or prev_hole is not None:
+                    # measured against a refused state, or one whose existence is a hole
+                    for lg in self.step_legs(i, prev, j):
+                        if prev_bad is not None:
+                            self.adjust_made(i, lg, prev_bad, c, j, vids, out, err=prev_bad)
+                        else:
+                            now = [x.amount for x in j.legs if x.name == lg.name and isinstance(x.amount, Hole)]
+                            if isinstance(j.exists, Hole):
+                                now.append(j.exists)
+                            self.adjust_made(i, lg, merge(prev_hole, *now), c, j, vids, out)
+                    prev_bad = None
+                    prev_hole = j.exists if isinstance(j.exists, Hole) else None
+                    prev, prev_ex = j, j.exists is True
+                    continue
                 if hole0:
                     if isinstance(j.exists, Hole) or any(isinstance(lg.amount, Hole) for lg in j.legs):
                         continue
@@ -1511,6 +1574,12 @@ def m_adjust_move_compute(self, mi, ctx):
                     prev, prev_ex = j, j.exists is True
                     continue
                 if isinstance(j.exists, Hole):
+                    # tally 2.1.2 (issue #34): a `when` that is a hole at this step makes each leg's adjustment a hole,
+                    # as a hole amount does, and the next step measures against it; tally 2.1.1 skipped the step
+                    for lg in self.step_legs(i, prev, j):
+                        self.adjust_made(i, lg, j.exists, c, j, vids, out)
+                    prev_hole = j.exists
+                    prev, prev_ex = j, False
                     continue
                 ex = j.exists is True
                 legs_prev = {lg.name: lg for lg in prev.legs} if prev_ex else {}
@@ -1530,6 +1599,10 @@ def m_adjust_move_compute(self, mi, ctx):
                     qa = a.amount if a is not None else None
                     qb = b.amount if b is not None else None
                     if isinstance(qa, TallyError) or isinstance(qb, TallyError):
+                        # tally 2.1.2 (issue #34): a leg's amount refused on either side refuses its adjustment; the
+                        # next step measures against this state, so its own is refused too
+                        err = qb if isinstance(qb, TallyError) else qa
+                        self.adjust_made(i, [x for x in pool if x.name == ln][0], err, c, j, vids, out, err=err)
                         continue
                     if a is None and b is None:
                         # the instance exists neither before this step nor after it (V neither makes nor ends it):
@@ -1572,6 +1645,26 @@ def m_adjust_move_compute(self, mi, ctx):
     return out
 
 
+def m_step_legs(self, i, prev, j):
+    """The legs a step re-measures, one per name: the booked instance's, the previous state's and this step's, each
+    taken where its places are first known. A state that didn't exist has none; one whose `when` is a hole has its
+    legs, so the step that ends it records its hole (E §5 step 3: δ = −A_previous)."""
+    out = {}
+    for lg in list(i.legs or ()) + list(prev.legs or ()) + list(j.legs or ()):
+        if lg.name not in out:
+            out[lg.name] = lg
+    return list(out.values())
+
+
+def m_adjust_made(self, i, lg, delta, c, j, vids, out, err=None):
+    """An adjustment of leg lg at step c whose δ is unknown (a hole) or refused (err) (E §5 steps 3-4, tally 2.1.2)."""
+    adj = AdjMv(i, lg, delta, c, self.step_versions(j, vids) if j.coll is not None else sorted(vids))
+    adj.coll = j.coll
+    adj.err = err
+    i.adjs.append(adj)
+    out.append(adj)
+
+
 def m_keys_seen(self, mi, keys, c):
     m = self.m
     for b, k in zip(mi.binds, keys):
@@ -1601,10 +1694,35 @@ def m_settle(self, adjs, ctx):
     adjs = [a for a in adjs if not getattr(a, '_linked', False)]
     if not adjs:
         return
+    # marked first, so a settlement whose own reads settle these adjustments doesn't link them again
     for a in adjs:
         a._linked = True
+    # tally 2.1.2 (issue #44): every link and its sign first, then the links, all or nothing: a settlement leg refused
+    # (RUN-RECORD) links none and leaves the adjustments unlinked, so every read that settles them meets the same
+    # refusal (E §3.2: a read's answer doesn't depend on the read before it); they were left linked with no settlement,
+    # and a later read took the HOLE-CHANGED hole
+    try:
+        links = self.settle_links(adjs, ctx)
+    except Exception:
+        for a in adjs:
+            a._linked = False
+        raise
+    for a, s, legs in links:
+        s.settles = a
+        if legs is None:
+            a.waived = True
+            a.settled.append((s, 0, Num(0)))
+            continue
+        for sign, amt in legs:
+            a.settled.append((s, sign, amt))
+
+
+def m_settle_links(self, adjs, ctx):
+    """(adjustment, settling movement, [(sign, amount)] per leg, or None for a waiver), for each settlement and waiver
+    of adjs (E §5 step 5)."""
     m = self.m
     byid = {a.id: a for a in adjs}
+    links = []
     for mi in self.plan_moves():
         if mi.decl.fulfils is None:
             continue
@@ -1615,13 +1733,10 @@ def m_settle(self, adjs, ctx):
             if not isinstance(f, Mv) or f.id not in byid:
                 continue
             a = byid[f.id]
-            s.settles = a
             if not m.kind_legs(s.kind):
-                a.waived = True
-                a.settled.append((s, 0, Num(0)))
+                links.append((a, s, None))
                 continue
-            for lg in s.legs:
-                a.settled.append((s, settle_sign(lg, a, s), lg.amount))
+            links.append((a, s, [(settle_sign(lg, a, s), lg.amount) for lg in s.legs]))
     # observed rows that settle an adjustment, named adjustments[m[keys].leg, V] (L §5.14.3, §5.19)
     named = {}
     for o in self.observations(ctx):
@@ -1635,13 +1750,11 @@ def m_settle(self, adjs, ctx):
             for vid in a.vids:
                 for o in named.get((a.inst.id, a.leg.name, vid), ()):
                     # one adjustment of a step of several versions, named by each of them (E §5 step 4)
-                    o.settles = a
                     if not o.legs:
-                        a.waived = True
-                        a.settled.append((o, 0, Num(0)))
+                        links.append((a, o, None))
                         continue
-                    for lg in o.legs:
-                        a.settled.append((o, settle_sign(lg, a, o), lg.amount))
+                    links.append((a, o, [(settle_sign(lg, a, o), lg.amount) for lg in o.legs]))
+    return links
 
 
 def settle_sign(lg, a, s):

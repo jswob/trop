@@ -1,0 +1,25 @@
+# E §3.1 The order of the checks (tally 2.1.2, issue #23): in the items' own checks, "one sort at a time ... each by
+# full path and line". Two moves each refuse their `on` (a date in a rule, LOAD-LITERAL); zz is written first, so its
+# refusal prints, though aa comes first by id (tally 2.1.1's refcore took moves by id and printed aa's, line 17).
+=== m.tally
+model t
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "a source"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+move zz: transfers
+  on 2026-01-10
+
+move aa: transfers
+  on 2026-02-10
+
+ask q: bal(konto, 2026-12-31)
+=== expect
+refused: LOAD-LITERAL a date in a rule; make it a version (m.tally:14)

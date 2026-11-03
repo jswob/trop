@@ -663,6 +663,13 @@ class Walk:
             self.at(K_before(d), 'global_bad', i.err)
 
     def sched_adj(self, a):
+        if a.err is not None:
+            # tally 2.1.2 (issue #34): a refused adjustment refuses the adjusted leg's places from V.known, where an
+            # unsettled one makes them the HOLE-CHANGED hole (L §5.14.3 Detection, L §8.4 a refusal outranks a hole)
+            for p in (a.leg.frm, a.leg.to):
+                if isinstance(p, Thing):
+                    self.at(K_before(max(a.day, self.start)), 'placebad', (p.name, a.err, a))
+            return
         r = a.remainder()
         txt = None
         if r is not None and not (isinstance(r, Num) and r.q == 0):
@@ -779,6 +786,13 @@ class Walk:
         places = sorted(bl, key=str)
         bad = [(pu, nv) for pu in places for nv in [broken(*pu)] if nv is not None]
         for (place, u), nv in bad:
+            if not bl[(place, u)]:
+                # an anchored place (an opening included) with no leg of the group at it: refused from here, with the
+                # reading's own message (L §8.4; tally 2.1.2, issue #46)
+                at = self.__dict__.get('anchor_at', {}).get((place, u))
+                self.add(place, u, Ent(key, 'bad', err=refuse('RUN-PLACE', '%s is %s after its reading at %s' % (
+                    place, fmt(qty(nv, u)), at))))
+                continue
             err = refuse('RUN-PLACE', msg(place, fmt(qty(nv, u)), bl[(place, u)]))
             for mv, lg in bl[(place, u)]:
                 if (mv.id, lg.name) in self.bad_legs:
@@ -790,6 +804,33 @@ class Walk:
                 for p in (lg.frm, lg.to):
                     if isinstance(p, Thing):
                         self.add(p.name, u, Ent(key, 'bad', err=err, mv=mv))
+
+    def reading_group(self, key):
+        """The sign rule's group a reading at key joins (L §5.10), as book_leg picks it for the reading's pad: the
+        day's first batch (point 1), the closing readings' (point 3), or none, for a reading after a decision, tested
+        as it is booked (point 2)."""
+        if key[1] <= 2 and getattr(self, 'batch_legs', None) is not None:
+            return self.batch_legs
+        return getattr(self, 'grp_legs', None)
+
+    def sign_breaks(self, place, nv):
+        sign = self.m.kind_sign(self.m.things[place].base)
+        return (sign == 'min0' and nv < 0) or (sign == 'max0' and nv > 0)
+
+    def sign_anchor(self, key, place, unit, rv, it):
+        """L §5.10, E §4.2 step 5 (tally 2.1.2, issue #46, the user's "2: spec wins, refused"): an anchor, an opening
+        included, books no leg; its place is tested at the reading's point like any balance, and one beyond its kind's
+        sign rule is refused from there (RUN-PLACE `<place> is <b> after its reading at <instant>`). tally 2.1.1 tested
+        a reading's other place only."""
+        if not isinstance(rv, Num) or self.m.kind_sign(self.m.things[place].base) not in ('min0', 'max0'):
+            return
+        grp = self.reading_group(key)
+        if grp is not None:
+            grp.setdefault((place, unit), [])
+            self.__dict__.setdefault('anchor_at', {})[(place, unit)] = it
+        elif self.sign_breaks(place, rv.q):
+            self.add(place, unit, Ent(key, 'bad', err=refuse('RUN-PLACE', '%s is %s after its reading at %s' % (
+                place, fmt(rv), it))))
 
     def unbook(self, place, u, mv, lg, match):
         """Take back a leg the sign rule refuses at a check of a group: "A refused leg isn't booked" (E §4.2 step 5);
@@ -1230,8 +1271,10 @@ class Walk:
                     self.add(p.name, u, Ent(key, 'bad', err=err, mv=mv))
             return
         # conservation (E §9 invariant 1): a leg booked whole adds its two ends; a pad's other end is its reading's
-        # reset; an observed leg booked end by end from two statements is the WARN-LEGS case (E §6.1), left out
-        whole = all(on for p, s, on in sides) or isinstance(mv, PadMv)
+        # reset; an observed leg booked end by end from two statements is the WARN-LEGS case (E §6.1), left out; so is
+        # a leg whose place is a hole, which books its known side only (L §5.14; tally 2.1.2, issue #31: a hole end
+        # counted as booked, and the run refused ENGINE-INVARIANT)
+        whole = all(on and isinstance(p, Thing) for p, s, on in sides) or isinstance(mv, PadMv)
         drop = self.labels_drop(lg)
         for i_, (p, s, on) in enumerate(sides):
             if on and isinstance(p, Thing):
@@ -1325,6 +1368,8 @@ class Walk:
                                           note='opening', row=r))
             else:
                 self.add(place, unit, Ent(key, 'reset', val=rv, coll=c, note='opening', row=r))
+                # an opening always anchors (L §5.19): its place is tested at its point (tally 2.1.2, issue #46)
+                self.sign_anchor(key, place, unit, rv, it)
             return
         day = kday(key)
         if not day < self.K:
@@ -1352,6 +1397,7 @@ class Walk:
             self.add(place, unit, Ent(key, 'reset', val=rv if not isinstance(rv, Hole) else qty(0, unit),
                                       qs=frozenset(rv.qs) if isinstance(rv, Hole) else EMPTY, coll=c,
                                       reg=(('anchor', txt[len('anchor: '):]),), note='anchor', row=r))
+            self.sign_anchor(key, place, unit, rv, it)
             return
         y = role[1]
         if isinstance(gap, TallyError):
@@ -1373,7 +1419,22 @@ class Walk:
         # the other side: an ordinary leg
         yi = 0 if frm.name == y.name else 1
         ends = (yi == 0, yi == 1)
-        self.book_leg(pad, lg, key, reg=reg, coll=bc, ends=ends)
+        # the reading's own place is tested at its point too, against the balance it states (L §5.10, E §4.2 step 5;
+        # tally 2.1.2, issue #46, the user's "2: spec wins, refused"): in its point's group with the pad, or, after a
+        # decision, as it is booked, the pad refused before anything is booked, as book_leg refuses; tally 2.1.1
+        # tested the pad's other place only
+        grp = self.reading_group(key)
+        if grp is None and isinstance(gap, Num) and isinstance(rv, Num) and self.sign_breaks(place, rv.q):
+            hold = m.things[place].base in m.kinds['holdings'].subtree(m)
+            err = refuse('RUN-PLACE', '%s takes %s %s' % (pad.id, place, 'above 0' if m.kind_sign(
+                m.things[place].base) == 'max0' else 'below 0' + (' units' if hold else '')))
+            self.bad_legs[(pad.id, lg.name)] = err
+            for p in (frm, to):
+                self.add(p.name, unit, Ent(key, 'bad', err=err, mv=pad))
+        else:
+            self.book_leg(pad, lg, key, reg=reg, coll=bc, ends=ends)
+            if grp is not None and isinstance(gap, Num) and (pad.id, lg.name) not in self.bad_legs:
+                grp.setdefault((place, unit), []).append((pad, lg))
         # x's balance after the instant is the reading
         flow = gap if not isinstance(gap, TallyError) else None
         if isinstance(gap, Num) and (pad.id, lg.name) not in self.bad_legs:
@@ -2031,13 +2092,23 @@ def m_proj_walk(self, ctx, t, leftout, clauses):
                 # read at a point of the walk: what that day has booked so far is in the start; only what follows
                 # it counts (L §5.14.1)
                 acts = w.sched.get(t.toordinal(), [])
-                w.sched[t.toordinal()] = [a for a in acts if a[0] > point and a[1] in ('decday',)]
+                w.sched[t.toordinal()] = [a for a in acts if _act_after(a[0], point) and a[1] in ('decday',)]
         except TallyError as e:
             w.failed = e
             raise
         finally:
             self.stack.pop()
     return w
+
+
+def _act_after(k, point):
+    """Whether a day's decision act, keyed (day, 3, stratum, move id, 0), runs after a walk point: by (day, step,
+    stratum), then by move id (E §4.1), the point's own move id taken apart from its instance number (`sw|000000`).
+    tally 2.1.2 (issue #32): the two were compared as one text, so `sw_b`, whose `_` sorts before `|`, counted as
+    booked at sw's point and a projection read there left its act out (L §5.14.1: "counts only the movements not yet
+    booked")."""
+    head = point[3].split('|', 1)[0] if isinstance(point[3], str) else point[3]
+    return (k[:3], k[3]) > (tuple(point[:3]), head)
 
 
 from . import partswalk as _partswalk  # noqa: E402

@@ -26,8 +26,11 @@ exit: any
 expect: --callgrind-limits=ir=1000
 --- replace tools/perf-budgets.toml
 recipe = "bench:p8_m1"
+wall_s = 0.0000000555
+instructions = 1048
 --- with
 recipe = "bench:p8_m1"
+wall_s = 0.0000000555
 instructions = 1000
 --- run
 tools/perf limits p8_m1

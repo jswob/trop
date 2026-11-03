@@ -13,7 +13,7 @@ from .evaluate import member_owns, member_moves, move_owner
 from .model import Span, _kv, key_text, WindowUndecided
 from .values import (Num, Money, Int, Hole, Thing, Mv, Iv, Rec, Text, Code, Key, NONE, CURRENCIES, fmt,
                      fmt_hole, vkey)
-from .moves import item_in_world, Inst, ObsMv, AdjMv, PadMv, qty, unit_of_value, day_lo, day_hi, merge
+from .moves import item_in_world, Inst, ObsMv, AdjMv, PadMv, qty, unit_of_value, day_lo, day_hi, merge, order_key
 from .walk import K_end, K_start, K_before, kday, add_q, St
 
 
@@ -263,13 +263,17 @@ def m_mv_field(self, n, env, ctx):
         raise refuse('RUN-RECORD', '%s doesn\'t exist' % v.id)
     what = n._r[1]
     name = n.name
-    if isinstance(src, AdjMv) and (what == 'day' or (what == 'attr' and name == 'adjusts')):
+    identity = isinstance(src, AdjMv) and (what == 'day' or (what == 'attr' and name == 'adjusts'))
+    if identity:
         pass    # fixed by the adjustment's identity: V.known, the instance and its leg (E §5 step 4)
     elif what == 'day' and getattr(src, 'day_coll', None) is not None:
         self.cur.merge(src.day_coll)
     elif src.coll is not None:
         self.cur.merge(src.coll)
-    if getattr(src, 'err', None) is not None:
+    if getattr(src, 'err', None) is not None and not identity:
+        # a refused adjustment refuses its change and its remainder, never its identity, so a binding's `where` that
+        # reads `a.adjusts` or `a.day` takes it or leaves it out (E §5 step 5; tally 2.1.2, issue #34, T's
+        # STOP-REPORT on g11/adjust: the identity read refused, and with it every move bound over adjustments)
         raise src.err
     if what == 'day':
         return src.day
@@ -311,6 +315,9 @@ def m_mv_field(self, n, env, ctx):
         raise refuse('LOAD-FIELD', '%s is not a field of %s' % (name, v.id))
     if what == 'attr':
         if name in src.attrs:
+            if isinstance(src.attrs[name], TallyError):
+                # a refused adjustment's change (tally 2.1.2, issue #34)
+                raise src.attrs[name]
             return src.attrs[name]
         h = _body_hole(src)
         if h is not None:
@@ -438,7 +445,7 @@ def m_movements_of(self, dom, ctx, owner=None):
     if restrict is not None and dom[0] == 'event' and 'adjustments' in m.kinds[dom[1]].subtree(m):
         # a settlement move's instances bound to the adjustments being settled (moves.settle_candidates)
         out = [a for a in restrict if a.kind in m.kinds[dom[1]].subtree(m)]
-        out.sort(key=lambda x: (day_lo(x.day) or datetime.date.max, str(x.order)))
+        out.sort(key=lambda x: (day_lo(x.day) or datetime.date.max, order_key(x.order)))
         return out
     key = ('mvs', dom, self.wkey(ctx), ctx.unc, id(ctx.walk) if ctx.walk is not None else None, ctx.wp, owner)
     hit = self.run_cache.get(key)
@@ -510,7 +517,7 @@ def m_movements_of(self, dom, ctx, owner=None):
         from .joint import owns
         out = [x for x in out if owns(owner, move_owner(x))]
     out = once_by_same(m, out, owner)
-    out.sort(key=lambda x: (day_lo(x.day) or datetime.date.max, str(x.order)))
+    out.sort(key=lambda x: (day_lo(x.day) or datetime.date.max, order_key(x.order)))
     self.run_cache[key] = out
     return out
 
@@ -1289,12 +1296,50 @@ def m_flows_place(self, place, sp, conv, env, ctx, fk=None):
     else:
         w = self.main_walk(ctx)
     lo = K_before(sp.start)
-    units = sorted(set(u for (p, u) in w.logs if p == place and u != '*'))
+    # E §4.3 step 1 (tally 2.1.2, issue #38): a projection's walk continues the walk it starts from, so the days up to
+    # its start point are that walk's, as a balance reads them (Walk.default) and flows of a decision move do
+    # (m_flows_move): each walk of the chain gives its entries up to the point the walk after it starts after
+    chain = [(w, limit)]
+    while chain[-1][0].base is not None:
+        ww, cut = chain[-1]
+        chain.append((ww.base, min(cut, ww.point)))
+    units = sorted(set(u for ww, cut in chain for (p, u) in ww.logs if p == place and u != '*'))
     pu = m.place_unit(m.things[place])
     if pu not in (None, 'any'):
         units = [pu]
     totals = {}
     holes = []
+    for w, limit in chain:
+        self.flows_place_walk(w, limit, place, units, lo, sp, last, conv, env, ctx, fk, other_for, totals, holes)
+    w, limit = chain[0]
+    for (ad, e) in w.adj_regs.get(place, ()):
+        if ad <= last:
+            self.reg(e)
+    # the joint model's own unlinked movements into the place on or before the span's last day (L §6.1, round 17b)
+    self.joint_left_out(w, place, limit)
+    if holes:
+        return merge(*holes)
+    if conv is not None:
+        return Money(totals.get(conv[0], 0), conv[0])
+    # L §5.14.3 (round 12): "Its unit is that of the places it reads ...; a place of unit any, movements in two
+    # units, or an empty span whose unit load can't see is refused (LOAD-UNIT where load sees it, RUN-DOMAIN
+    # otherwise), unless the flows converts"
+    if pu == 'any':
+        raise refuse('RUN-DOMAIN', 'flows of %s, a place of unit any: it sums no one unit' % place)
+    if len(totals) > 1:
+        raise refuse('RUN-DOMAIN', 'flows of %s: movements in %s' % (place, ' and '.join(sorted(totals))))
+    if not totals:
+        if len(units) == 1:
+            return qty(0, units[0])
+        if pu not in (None, 'any'):
+            return qty(0, pu)
+        raise refuse('RUN-DOMAIN', 'flows of %s over a span with no movement: its unit is unknown' % place)
+    u, q = list(totals.items())[0]
+    return qty(q, u)
+
+
+def m_flows_place_walk(self, w, limit, place, units, lo, sp, last, conv, env, ctx, fk, other_for, totals, holes):
+    """One walk's part of flows of a place: its entries in (lo, limit], added to totals and holes."""
     # what holds for the whole walk (a refused movement whose places aren't known, a decision refused, a movement
     # whose day is a hole): a balance reads it (Walk.pstate), and so does a place's flows, which could count it
     # (L §8.4, L §5.14 `on d`: "a movement whose day is a hole makes every flows ... over a span it might fall in a
@@ -1368,30 +1413,6 @@ def m_flows_place(self, place, sp, conv, env, ctx, fk=None):
                     continue
             uu = conv[0] if conv is not None else u
             totals[uu] = totals.get(uu, Fraction(0)) + f.q
-    for (ad, e) in w.adj_regs.get(place, ()):
-        if ad <= last:
-            self.reg(e)
-    # the joint model's own unlinked movements into the place on or before the span's last day (L §6.1, round 17b)
-    self.joint_left_out(w, place, limit)
-    if holes:
-        return merge(*holes)
-    if conv is not None:
-        return Money(totals.get(conv[0], 0), conv[0])
-    # L §5.14.3 (round 12): "Its unit is that of the places it reads ...; a place of unit any, movements in two
-    # units, or an empty span whose unit load can't see is refused (LOAD-UNIT where load sees it, RUN-DOMAIN
-    # otherwise), unless the flows converts"
-    if pu == 'any':
-        raise refuse('RUN-DOMAIN', 'flows of %s, a place of unit any: it sums no one unit' % place)
-    if len(totals) > 1:
-        raise refuse('RUN-DOMAIN', 'flows of %s: movements in %s' % (place, ' and '.join(sorted(totals))))
-    if not totals:
-        if len(units) == 1:
-            return qty(0, units[0])
-        if pu not in (None, 'any'):
-            return qty(0, pu)
-        raise refuse('RUN-DOMAIN', 'flows of %s over a span with no movement: its unit is unknown' % place)
-    u, q = list(totals.items())[0]
-    return qty(q, u)
 
 
 def m_convert(self, f, day, conv, env, ctx):
@@ -1573,6 +1594,12 @@ def m_flows_move(self, n, sp, fk, conv, env, ctx):
             if leg is not None and a.leg.name != leg:
                 continue
             if keys and tuple(vkey(k) for k in a.inst.keys[:len(keys)]) != tuple(keys):
+                continue
+            if a.err is not None:
+                # tally 2.1.2 (issue #34): a refused adjustment refuses flows over a span reaching V.known, where an
+                # unsettled one is the HOLE-CHANGED hole
+                if last >= a.day:
+                    raise a.err
                 continue
             if not a.settled and last >= a.day:
                 holes.append(Hole([('%s on %s changed after it was paid (version %s); is back pay due, and when?' % (

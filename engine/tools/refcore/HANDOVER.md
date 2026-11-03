@@ -7,6 +7,71 @@ or unclear it refuses `REFCORE-UNSPECIFIED <section>: <what>` (the list is `UNSP
 interpreter doesn't build refuses `REFCORE-NOT-YET <construct>`. Nothing may crash: an internal error becomes
 `REFCORE-NOT-YET an input this interpreter can't handle (...)` unless `REFCORE_DEBUG` is set.
 
+## tally 2.1.2 (the spec round: issues #23, #29–#34, #38, #39, #43, #44, #46, #47)
+
+The spec patch tally 2.1.2 (`spec/CHANGES.md` 2.1.2-1 to 2.1.2-14), the user's rulings at gate G-SP1 (2026-11-03).
+Each fix's new tests were seen failing on tally 2.1.1's refcore first (their twins pass on both). **1152 tests, all
+pass** (1124, two changed, 28 new); through `refcore_fast` too.
+
+- **`LOAD-DEPTH` counts `from` and `ties by` terms (L §2.3, #29).** `parser.P.proj` and `P.tieby` open one level
+  around the term, so a chain of reads is bounded; 300 links crashed refcore with a `RecursionError`. New:
+  `L2_3_depth_from_chain`, `_from_chain_ok`, `_ties_chain`.
+- **The order of load's checks (E §3.1, #23).** E §3.1 now writes refcore's order: `Loader.build`'s passes (headers,
+  declarations, rows), then `Checker.run`'s (the items' own checks, the checks across items). `Checker.run` takes the
+  moves and the fills in the order of their sections, by full path and line, as it took defs, bands and asks (it took
+  moves and fills by id). New: `E3_1_order_items_by_line` (seen failing), `_passes`, `_moves_before_defs`.
+- **`WARN-UNREAD` for places (L §8.5, E §3.1 step 6, #30).** `Checker.check_graph` warns a `place` section no line
+  names: a `('place', id)` edge of the item graph (a read, a leg, a binding over its kind), a row whose value is the
+  place, an observed row's leg, a pad's two places. `cli.unread_everywhere` keeps a place's warning only where every
+  reality warns it, as for the other sorts (`L5_2_source_cited_by_scenario` holds it). New: `L8_5_unread_place` (seen
+  failing), `L8_5_unread_place_named` (each route, dropped alone, warns); `L5_14_1_run_cycle_own_day` gains its two
+  stray outside places' lines.
+- **The movement order, typed (E §4.1, §6.3, L §2.5; #33, #39).** `moves.order_key` turns a movement's `order` tuple
+  into a typed key (dates, numbers, then text; `None` first); `resid` sorts a group's tied lines by it and
+  `mreads` a binding's movements (both sites), where they compared `str(order)`. A pad's stratum is `PADS_STRATUM`,
+  above every decision's (it was 9). `walk.py`'s own `osort` keys are left: the walk's order inside a stratum changes
+  no balance (E §4.1). New: `E6_3_residuals_ties_typed`, `L2_5_binding_movements_typed` (both seen failing).
+- **A projection's first day, cut at a decision's point (L §5.14.1, #32).** `walk._act_after` compares a decision act's
+  key with the point's, the point's move id taken apart from its `|instance` number (they were one text, so `sw_b`
+  sorted before `sw|000000`). Reproduced first: `sw_b`'s every-place refusal was missing from `sw`'s projection; named
+  `sx`, refused. New: `L5_14_1_projection_point_by_id` (seen failing).
+- **`flows` of a place in a projection's walk (E §4.3 step 1, #38).** `m_flows_place` sums the chain of walks, each
+  up to the point the walk after it starts after (`m_flows_place_walk`, one walk's part), as `Walk.default` and
+  `m_flows_move` already did. New: `E4_3_projection_flows_before_start` (seen failing: 3 000.00 PLN for 2 100.00).
+- **Money on a `currencies` leg (L §5.4, §5.7, #43).** `check3.m_check_leg` accepts money in a declared currency on a
+  leg of unit kind `currencies`, as `moves.leg_amount` did at run. New: `L5_14_leg_currencies_money` (seen failing),
+  `L5_14_leg_currencies_not_money` (an int is still `LOAD-UNIT`).
+- **A leg whose place is a hole (L §5.14, E §9 invariant 1, #31).** `Walk.book_leg` counts a leg whole only when both
+  its ends are places; a leg with a hole end books its known side and is left out of invariant 1 (invariant 2 counts the
+  known end, as for a leg booked by its ends). New: `L5_14_leg_hole_place` (seen failing: `ENGINE-INVARIANT`).
+- **A refused or hole re-measurement (E §5 steps 1, 3–5, L §5.14.3, #34).** `m_adjust_move_compute` no longer skips a
+  step: a refused re-measurement (`j.err`, or a leg's amount on either side) makes refused `AdjMv`s (`adjust_made(…,
+  err=…)` over `step_legs`, the legs of the booking, the previous state and this one), a hole `when` hole ones, and
+  `prev_bad` / `prev_hole` carry the state to the next step, the one that ends the instance included. A booking whose
+  amount is refused at κ₀ is skipped whole ("refused stays refused"), as a `when` refused at κ₀ was (status
+  `refused`); a hole booking's refused step stays skipped (E §5 step 1). A refused adjustment's readers refuse:
+  `AdjMv.remainder`, `a.change` (`mreads.m_mv_field`), `flows` of the move (`m_flows_move`), the leg's places from
+  V.known (`Walk.sched_adj`, a `placebad`), and `explain` prints `change refused: …`. `L6_5_change5`'s `e1` is now the
+  `HOLE-CHANGED` holes (four hole adjustments). New: `E5_adjust_refused_amount`, `_refused_when`, `_refused_booking`,
+  `_hole_when_later`, `_hole_when_ended` (all seen failing). After the tag, from T's STOP-REPORT on `g11/adjust`:
+  `mreads.m_mv_field` refused every field read of a refused movement, so a refused adjustment's identity (`a.adjusts`,
+  `a.day`) refused too, and any move bound over `adjustments` refused the whole walk from the run's start through its
+  `where`, places and days E §5 step 5 doesn't name included; the identity is now read, only `change` (and the
+  remainder) refuse. New: `E5_adjust_refused_binding_left` (a waiver whose `where` leaves it out), `_binding_all` (one
+  that waives it), both seen failing on the tagged refcore. A `where` that reads the refused `a.change` still refuses
+  the whole walk, as any refused `where` of a move's binding does (tally 2.1.1 too).
+- **A refused settlement links nothing (E §5 step 5, #44).** `m_settle` computes every link and sign first
+  (`m_settle_links`) and applies them only if none is refused; on a refusal it unmarks the adjustments, and
+  `m_adjustments` forgets its `settled` cache entry, so every read settles again and meets the same refusal. New:
+  `L5_14_3_settle_refused_every_read` (seen failing: in each ask one read refused, the other `HOLE-CHANGED`).
+- **A reading's own place and the sign rule (L §5.10, E §4.2 step 5, #46).** `Walk.apply_reading` puts a pad's
+  reading place in its point's group beside the pad (`reading_group`: the day's first batch, the closing group), or,
+  after a decision (no group), tests it at once and refuses the pad before anything is booked; `sign_anchor` puts an
+  anchor's place, and an opening's, in the group with no leg, or refuses it at once after a decision. `check_group`
+  refuses a broken place with no leg from the group's point with the reading's message (`anchor_at` holds its
+  instant). New: `L5_10_sign_rule_reading_close`, `_reading_start`, `_reading_after`, `L5_10_sign_rule_opening` (all
+  seen failing), `_reading_zero` (the twin at 0).
+
 ## tally 2.1.1 (issue #13)
 
 The spec patch tally 2.1.1 (`spec/CHANGES.md` 2.1.1-1 to 2.1.1-5), from T1's gaps I-1, I-2 and I-5 (`engine/tests/

@@ -18,7 +18,6 @@ use core::cmp::Ordering;
 use std::collections::{BTreeMap, BTreeSet};
 
 use super::adjust::Adjustment;
-use super::members::row_key;
 use super::observe::{Obs, inst_id};
 use super::reading::{Seen, booked_amount, reading_rank, readings};
 use crate::base::{Code, Load, Refusal};
@@ -29,8 +28,8 @@ use crate::num::Num;
 use crate::syntax::{Certainty, Residuals, Stop};
 use crate::time::{Day, Period};
 use crate::walk::{
-    Amount, Dated, Exists, Inst, LegVal, Status, day_repr, invariant, kind_certainty, qty_value,
-    quoted, reading_point,
+    Amount, Dated, Exists, Inst, LegVal, Status, Term, invariant, kind_certainty, qty_value,
+    reading_point,
 };
 
 /// A figure of the ledger: a quantity of the place's unit, or a hole (refcore's `Fraction` or
@@ -86,8 +85,8 @@ pub struct Line {
     diff: Fig,
     /// Its text.
     pub text: String,
-    /// Its movement's order as refcore's `str(order)` writes it: the last tie's key.
-    order: String,
+    /// Its movement's order, typed: the last tie's key (E §6.3 Order, tally 2.1.2).
+    order: Term,
 }
 
 /// A group of the ledger: its lines and its totals. E §6.3 Totals.
@@ -502,7 +501,7 @@ fn instance_line(
             observed: None,
             diff,
             text,
-            order: inst.order.repr(),
+            order: inst.order.term()?,
         });
         return Ok(());
     }
@@ -529,7 +528,7 @@ fn instance_line(
         observed: Some(ob),
         diff,
         text,
-        order: inst.order.repr(),
+        order: inst.order.term()?,
     });
     Ok(())
 }
@@ -618,13 +617,7 @@ fn adjustment_line(
         observed: Some(ob),
         diff,
         text,
-        order: format!(
-            "({}, -1, {}, {}, {})",
-            day_repr(a.day),
-            quoted(&a.move_id),
-            quoted(&a.inst_id),
-            quoted(&a.leg.name)
-        ),
+        order: a.order(),
     });
     Ok(())
 }
@@ -652,7 +645,7 @@ fn undated_line(
             observed: Some(ob),
             diff,
             text,
-            order: inst.order.repr(),
+            order: inst.order.term()?,
         });
         return Ok(());
     }
@@ -679,7 +672,7 @@ fn undated_line(
         observed: None,
         diff,
         text,
-        order: inst.order.repr(),
+        order: inst.order.term()?,
     });
     Ok(())
 }
@@ -701,12 +694,7 @@ fn unexplained_line(m: &Reality, lines: &mut Lines, o: &Obs) -> Result<(), Stop>
         observed: Some(ob.clone()),
         diff: ob,
         text,
-        order: format!(
-            "({}, -1, {}, {})",
-            day_repr(o.day),
-            quoted(&o.input),
-            quoted(row_key(o))
-        ),
+        order: o.order(),
     });
     Ok(())
 }
@@ -752,7 +740,8 @@ fn balance_line(
         observed: Some(stated),
         diff: gap,
         text,
-        order: format!("({}, 9)", day_repr(seen.day)),
+        // a balance line's order is `(day, 9)`, after a day's movements (refcore's `RLine`)
+        order: Term::Tuple(vec![Term::Day(seen.day), Term::Int(9)]),
     });
     Ok(())
 }
@@ -911,8 +900,8 @@ struct SortKey {
     day: Option<Day>,
     /// The group's name.
     name: String,
-    /// A line's movement order; empty for a group.
-    order: String,
+    /// A line's movement order; the empty tuple for a group, whose order no tie reaches.
+    order: Term,
 }
 
 /// Two figures by size: holes first, among themselves by their first question, then by
@@ -1013,7 +1002,7 @@ fn grouped(lines: Vec<Line>) -> Result<Vec<Group>, Stop> {
             size: g.diff.clone(),
             day: g.key.month.map(Period::start),
             name: g.key.name.clone(),
-            order: String::new(),
+            order: Term::Tuple(Vec::new()),
         })
         .collect();
     let order = sorted_positions(&keys)?;

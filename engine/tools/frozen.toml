@@ -6,5 +6,5 @@
 # must match: the tag itself when `pin` is left out, or an approved amendment after the
 # tag that kept the version. A new version or amendment moves both lines.
 
-tag = "tally-2.1.1"
-approved = "issue #13: G-T \"Sort warnings\" (2026-10-31); the scope \"Yes, within scope (Recommended)\" (2026-10-31); \"Accept narrower (Recommended)\" (2026-11-01), the load-refusal order for reading, splitting and parsing, E §3.1's later checks left open (issue #23)"
+tag = "tally-2.1.2"
+approved = "G-SP1, the user, 2026-11-03: #23 \"C: write refcore's order (Recommended)\"; #29 \"A: each link counts one (Recommended)\"; #30 \"A: warn only if never named\"; #34 \"A: the refusal spreads (Recommended)\" and \"1: refused stays refused (Recommended)\"; #38 \"A: spec wins, see Jan–May (Recommended)\"; #39 \"B: by day, then typed order (Recommended)\"; #43 and #44 \"Confirm both (Recommended)\"; #46 \"2: spec wins, refused (Recommended)\"; #47 \"S's gated head cf55c5a (Recommended)\"; earlier: #31 \"refcore wrong, fix after S (Recommended)\" (2026-11-01), #33 \"Spec wins, fix after S (Recommended)\" (2026-11-02); #47's budgets D4-6 \"Fix as proposed (Recommended)\" and P8-M4 \"Defer to M1 (Recommended)\" (2026-11-02)"

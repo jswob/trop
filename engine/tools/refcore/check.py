@@ -19,7 +19,7 @@ from .model import InputInfo, DefInfo, BandInfo, key_text, row_timeless
 from .dates import Period
 from .node import Node, walk
 from .parser import KEYWORDS
-from .values import CURRENCIES, Key, Thing, Code
+from .values import CURRENCIES, Key, Thing, Code, Rec, Lst, Tup
 
 WRITER2 = {'exp', 'ln', 'sqrt', 'periodic', 'factor', 'dcf', 'accrue', 'cdf', 'pdf', 'pmf'}
 WRITER3 = set()
@@ -120,9 +120,12 @@ class Checker:
                 sc = Scope(self, ('input', qid), getattr(inf, 'regime', None), 'decl', [b.var for b in inf.binds])
                 for b in inf.binds:
                     sc.vars[b.var] = Var(b.var, self.dom_type(b.dom, b.node, sc), b.dom, b.node)
-        for qid in sorted(m.moves):
+        # E §3.1 The order of the checks (tally 2.1.2, issue #23): the items' own checks take one sort at a time (moves,
+        # fills, defs, bands, asks), each in the order of its sections, by full path and line (tally 2.1.1 took moves
+        # and fills by id)
+        for qid in list(m.moves):
             self.check_move(m.moves[qid])
-        for qid in sorted(m.fills):
+        for qid in list(m.fills):
             self.check_fill(qid)
         for qid, d in m.defs.items():
             self.check_def(d)
@@ -3016,6 +3019,47 @@ class Checker:
         for qid, d in m.defs.items():
             if ('def', qid) not in read:
                 m.warnings.append(('WARN-UNREAD', 'def %s is read by nothing' % qid))
+        # tally 2.1.2 (issue #30): a place section no line names warns: a read, a leg of a move or a fill (both edges
+        # of the item graph), a binding over its kind (a 'bind' edge), a row whose value is the place (`pay_to =
+        # konto`, `account_place`), a leg of an observed row, a pad's two places; a row keyed by the place (`opening`,
+        # a reading), an anchor and a covers line name none
+        named = set(t[1] for t in read if t[0] == 'place')
+        owner = {}
+        for qid, pi in m.places.items():
+            for th in pi.things.values():
+                owner[th.name] = qid
+
+        def values_naming(x):
+            if isinstance(x, Thing):
+                if x.name in owner:
+                    named.add(owner[x.name])
+            elif isinstance(x, Rec):
+                for f, v in x.fields:
+                    values_naming(v)
+            elif isinstance(x, (Lst, Tup)):
+                for v in x.items:
+                    values_naming(v)
+            elif isinstance(x, (tuple, list)):
+                for v in x:
+                    values_naming(v)
+        for inf in list(m.inputs.values()) + list(m.defs.values()):
+            for r in (inf.rows if isinstance(inf, InputInfo) else inf.givens) or ():
+                values_naming(getattr(r, 'val', None))
+        for inf in m.inputs.values():
+            for o in getattr(inf, 'obs', ()):
+                for lg in o.legs:
+                    for th in (lg[1], lg[2]):
+                        if th is not None and th.name in owner:
+                            named.add(owner[th.name])
+        for v in m.versions.values():
+            for x, (kind_, y) in getattr(v, 'gap_roles', {}).items():
+                if kind_ == 'pad':
+                    for name in (x, y.name if y is not None else None):
+                        if name in owner:
+                            named.add(owner[name])
+        for qid in m.places:
+            if qid not in named:
+                m.warnings.append(('WARN-UNREAD', 'place %s is read by nothing' % qid))
 
     def _cycles(self, g):
         state = {}

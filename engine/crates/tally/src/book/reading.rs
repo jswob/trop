@@ -289,7 +289,9 @@ impl Engine {
                     text,
                     figure: String::new(),
                 }];
-                self.walk_mut(id)?.add(m, &r.place, &r.unit, ent)
+                let anchored = self.walk_mut(id)?;
+                anchored.add(m, &r.place, &r.unit, ent)?;
+                anchored.sign_anchor(m, at, r)
             }
             GapRole::Pad(other) => {
                 // the pad's amount rests on the booked balance's register and the reading's
@@ -323,6 +325,17 @@ impl Engine {
                         .entry(r.unit.clone())
                         .or_insert_with(Num::zero);
                     *sum = sum.checked_add(g).map_err(crate::eval::num_stop)?;
+                    // L §5.10, E §4.2 step 5 (tally 2.1.2): the reading's own place is tested
+                    // at its point too, in the point's group with the pad's leg
+                    let Some(group) = padded.open_group(at) else {
+                        return Err(Stop::NotBuilt(
+                            "a reading after a decision (the sign rule's point 2)",
+                        ));
+                    };
+                    let at_place = group.entry((r.place.clone(), r.unit.clone()));
+                    at_place
+                        .or_insert_with(Vec::new)
+                        .push((pad.id.clone(), pad.leg.clone()));
                 }
                 let sub = at
                     .sub

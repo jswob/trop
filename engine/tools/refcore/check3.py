@@ -521,9 +521,13 @@ def m_check_leg(self, mi, ln, d, sc):
         # a leg of a unit kind: the amount is in one of the kind's units (`4.2167 etf` for `leg units: funds`,
         # L §5.7, §5.14); which one is known from the value
         t = self.tc(ln.amount, sc)
-        if t.k not in ('dyn', 'hole', 'flex') and not (t.k == 'num' and len(t.u or ()) == 1 and
-                                                      m.unit_kind_keys.get(t.u[0][0]) in
-                                                      m.kinds[ukind].subtree(m) and t.u[0][1] == 1):
+        # tally 2.1.2 (issue #43): a declared currency is a key of the prelude's `currencies` (L §5.4, §5.7), so money
+        # in it is a unit of that kind, as the run takes it (moves.leg_amount); tally 2.1.1 refused it here (LOAD-UNIT)
+        if ukind == 'currencies' and t.k == 'money' and t.cur in CURRENCIES:
+            pass
+        elif t.k not in ('dyn', 'hole', 'flex') and not (t.k == 'num' and len(t.u or ()) == 1 and
+                                                        m.unit_kind_keys.get(t.u[0][0]) in
+                                                        m.kinds[ukind].subtree(m) and t.u[0][1] == 1):
             raise uerr('the amount of leg %s of %s is %s, not a unit of %s' % (ln.name, mi.id, T.show(t), ukind),
                        ln.loc)
     else:

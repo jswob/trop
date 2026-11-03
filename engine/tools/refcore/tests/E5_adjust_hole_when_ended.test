@@ -1,0 +1,58 @@
+# E §5 step 3 (tally 2.1.2, issue #34, the hole-when sibling in the user's ruling): E5_adjust_hole_when_later's twin.
+# late (known 2026-05-01) makes rent[2026-03]'s when a hole; ended (known 2026-07-01) makes it false, ending the
+# instance, measured against the hole state: δ = −A_previous, a hole. Two hole adjustments (n), both unsettled, so the
+# reads reaching 2026-07-01 hold both HOLE-CHANGED questions (q). tally 2.1.1's refcore
+# skipped late's step and measured ended's against the booking: one adjustment of 500.00 PLN dated 2026-07-01.
+=== m.tally
+model hh
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source plan "plan"
+source act "act"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2019-05-01..
+place landlord: outside lives 1900-01-01..
+input total: money PLN
+input tenants[m in months]: int
+input dom: int
+input seats[m in months]: int
+
+move rent[m in months]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  when seats[m] > 0
+  leg cash from konto to landlord amount round(total / tenants[m], minor(PLN), half-even)
+
+version plan_2026
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  total = 1 000.00 PLN "umowa"
+  dom = 10 "umowa"
+  tenants[*] = 2 "umowa"
+  seats[*] = 1 "umowa"
+  opening[konto] = 10 000.00 PLN at 2026-01-01 start "wyciąg"
+
+version late
+  cite act
+  governs 2026-03
+  known 2026-05-01
+  replace seats[*] = ?"how many seats in March?" "aneks"
+
+version ended
+  cite act
+  governs 2026-03
+  known 2026-07-01
+  replace seats[*] = 0 "aneks 2"
+
+ask n: count(x in adjustments over 2026)
+ask q: flows(rent, 2026-07-01 .. 2026-07-31)
+=== expect
+n: 2
+  cut 2026-10-20
+q: ?"rent[2026-03] on 2026-03-10 changed after it was paid (version ended); is back pay due, and when?" (rent[2026-03]) ?"rent[2026-03] on 2026-03-10 changed after it was paid (version late); is back pay due, and when?" (rent[2026-03])
+  unfulfilled: rent[2026-07]
+  cut 2026-10-20

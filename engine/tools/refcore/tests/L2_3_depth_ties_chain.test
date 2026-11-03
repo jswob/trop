@@ -1,0 +1,19 @@
+# L §2.3 (tally 2.1.2, issue #29): a `ties by` term counts one level, as a `from` term does. An aggregate's `ties by`
+# takes one term (parse rule 7), which may be another aggregate with its own `ties by`: here 8 links, and inside the
+# 8th link's parentheses the depth is 8 terms + 1 bracket = 9.
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "a source"
+
+index ks = [k1, k2]
+
+def w[k in ks]: int = 1
+
+def z: key ks = argmin(w[k] for k in ks) ties by argmin(w[k] for k in ks) ties by argmin(w[k] for k in ks) ties by argmin(w[k] for k in ks) ties by argmin(w[k] for k in ks) ties by argmin(w[k] for k in ks) ties by argmin(w[k] for k in ks) ties by argmin(w[k] for k in ks) ties by argmin(w[k] for k in ks)
+=== expect
+refused: LOAD-DEPTH ...

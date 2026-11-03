@@ -19,7 +19,7 @@ use crate::eval::{Collected, Engine};
 use crate::model::{Fulfils, KeyVal, Reality, Span, Value};
 use crate::syntax::Stop;
 use crate::time::Day;
-use crate::walk::{Amount, Dated, End, Inst, LegVal, invariant};
+use crate::walk::{Amount, Dated, End, Inst, LegVal, Term, invariant};
 
 /// An observation the cut sees (refcore's `ObsMv`). L §5.19.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -45,6 +45,13 @@ pub struct Obs {
 }
 
 impl Obs {
+    /// Its movement order, `(day, -1, input, row)` (refcore's `ObsMv.order`; tally 2.1.2).
+    /// E §4.1, §6.3 Order; L §5.19 Bindings.
+    #[must_use]
+    pub fn order(&self) -> Term {
+        Term::booked(self.day, &[&self.input, super::members::row_key(self)])
+    }
+
     /// The id of the instance it names, `<move>[<keys>]`, when it fulfils one (refcore's
     /// `link_targets`, its tid). L §5.19.
     #[must_use]

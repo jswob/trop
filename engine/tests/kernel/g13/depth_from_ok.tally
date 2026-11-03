@@ -1,0 +1,26 @@
+model g13_depth_from_ok
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.2 (issue #29), G13: the twin of g13/depth_from. L §2.3: inside the parentheses of q's from term the depth is 6 brackets + the from term + its own bracket = 8, the limit, so the text loads, and q is acc's balance on 2026-02-01 projected from 2026-01-01: its opening, 5.00 PLN."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit PLN: currency minor 0.01
+
+input d0: date
+
+input d1: date
+
+place acc: accounts PLN lives 2026-01-01..
+
+ask q: ((((((bal(acc, d1) from (d0)))))))
+
+version facts
+  cite fixture
+  governs always
+  known 2026-01-01
+  d0 = 2026-01-01
+  d1 = 2026-02-01
+  opening[acc] = 5.00 PLN at 2026-01-01 start

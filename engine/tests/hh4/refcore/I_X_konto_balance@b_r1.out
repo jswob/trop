@@ -46,3 +46,4 @@ konto_balance (d = 2026-10-31): (6 064.17 PLN, 6 064.17 PLN)
   law date 2026-10-19, cut 2026-10-19
 warning: WARN-NEGATIVE konto is below zero from 2026-03-01
 warning: WARN-NEGATIVE konto is below zero from 2026-03-17
+warning: WARN-UNREAD place gotowka is read by nothing

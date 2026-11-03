@@ -1,6 +1,7 @@
 # Round 18, C2-42 (follows). L §5.14.1: a decision's plain read of its own day, reached through a computed day, is
 # RUN-CYCLE (§8.4's row now says so), of a later day RUN-FUTURE (L5_14_run_future). L5_14_run_future with look = 5:
 # sweep on day 5 reads bal(konto, day_of(m, look)), its own day.
+# tally 2.1.2 (issue #30): world and unexplained, declared and named by no line, warn WARN-UNREAD (L §8.5).
 === m.tally
 model hh
   tally 2
@@ -45,4 +46,6 @@ version plan_2026
 === expect
 q: refused: RUN-CYCLE sweep reads itself through bal(konto, 2026-01-05): a decision's plain read of its own day
   cut 2026-10-20
+warning: WARN-UNREAD place unexplained is read by nothing
+warning: WARN-UNREAD place world is read by nothing
 warning: WARN-UNREAD source bank is read by nothing

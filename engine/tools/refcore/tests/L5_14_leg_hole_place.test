@@ -1,0 +1,47 @@
+# L §5.14 Legs, E §4.2 Holes in the walk, E §9 invariant 1 (tally 2.1.2, issue #31, the user's "refcore wrong, fix after
+# S", 2026-11-01): a leg whose place is a hole (dest, no row) books its known side, and every read of the unknown side is
+# a hole naming it (a2, a3); results about other places stand (a1: acc_1 is no made-up place, P-9). Invariant 1 leaves
+# the leg out, as a leg booked by its ends. a0 = 500.00 - 100.00. tally 2.1.1's refcore counted the hole end as booked
+# and refused every ask with ENGINE-INVARIANT (conservation: -100.00 DUK).
+=== m.tally
+model t
+  tally 2
+  on 2025-12-31
+  start 2025-01-01
+  end 2025-12-31
+
+source s "s"
+unit DUK: currency minor 0.01
+input amt: money DUK
+input d0: date
+input dest: key accounts
+place acc_0: accounts DUK lives 2025-01-01..
+place acc_1: accounts DUK lives 2025-01-01..
+
+move mv_0: transfers
+  on d0
+  leg cash from acc_0 to dest amount amt
+
+ask a0: bal(acc_0, 2025-01-31)
+ask a1: bal(acc_1, 2025-01-31)
+ask a2: bal(dest, 2025-01-31)
+ask a3: mv_0.cash.to
+
+version v
+  cite s
+  governs always
+  known 2025-01-01
+  amt = 100.00 DUK
+  d0 = 2025-01-10
+  opening[acc_0] = 500.00 DUK at 2025-01-01 start
+  opening[acc_1] = 0 DUK at 2025-01-01 start
+=== expect
+a0: 400.00 DUK
+  unfulfilled: mv_0
+  cut 2025-12-31
+a1: 0.00 DUK
+  cut 2025-12-31
+a2: ?"dest: no value" (dest)
+  cut 2025-12-31
+a3: ?"dest: no value" (dest)
+  cut 2025-12-31

@@ -68,3 +68,4 @@ replay_september: residuals konto 2026-09
   law date 2026-10-19, cut 2026-10-19
 warning: WARN-NEGATIVE konto is below zero from 2026-03-01
 warning: WARN-NEGATIVE konto is below zero from 2026-03-17
+warning: WARN-UNREAD place gotowka is read by nothing

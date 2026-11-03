@@ -4,6 +4,14 @@
 # no euro instance of them); on 07-25 wage_eur[2030-07, ana_berlin] moves net_wage_eur, the stub law part's hole:
 # "every result that needs it is a hole with its question" (L §6.5), and "A hole movement makes both ends' balances
 # holes from its day on" (E §4.2).
+# e1 since tally 2.1.2 (issue #34, the user's rulings "A: the refusal spreads", with its hole-`when` sibling, and
+# "1: refused stays refused", 2026-11-03): wage_eur[2026-10, ana_acme] and [2026-10, ben_bolt] didn't exist when booked
+# on 2026-10-10 (their jobs are entered by home_2026, known 2026-10-19); at home_2026's cut their `when` reads
+# salary_eur[j, 2026-10], which no row gives until ana_berlin_job (known 2030-05-01), so home_2026 makes their
+# existence a hole: a hole adjustment of each, and ana_berlin_job, which makes the `when` false, measures against that
+# hole state (δ = −A_previous, a hole): a second one each (E §5 step 3). None is fulfilled, so konto_eur's balance is
+# the HOLE-CHANGED hole from 2026-10-19 (L §5.14.3 Detection), both days; tally 2.1.1 skipped the steps (0.00 EUR on
+# 07-24).
 # e2: wage_eur[2030-07, ana_berlin] is on day 25 (pay_dom 25); in August 2030 only ana_berlin has salary_eur > 0: one
 # movement.
 # Over the base excerpt (L §6.5) copied whole, with the household_base header (on moved to 2030-12-31, past the
@@ -118,7 +126,11 @@ version home_2026
   pit_scale: [0, inf) = 12 % * x "art. 27"
 
 === expect
-e1: (0.00 EUR, ?"Wynagrodzenie netto z niemieckiej umowy o pracę nie jest opisane." (net_wage_eur[ana_berlin, 2030-07]))
+e1: (?"wage_eur[2026-10, ana_acme] on 2026-10-10 changed after it was paid (version ana_berlin_job); is back pay due, and when?" (wage_eur[2026-10, ana_acme]) ?"wage_eur[2026-10, ana_acme] on 2026-10-10 changed after it was paid (version home_2026); is back pay due, and when?" (wage_eur[2026-10, ana_acme]) ?"wage_eur[2026-10, ben_bolt] on 2026-10-10 changed after it was paid (version ana_berlin_job); is back pay due, and when?" (wage_eur[2026-10, ben_bolt]) ?"wage_eur[2026-10, ben_bolt] on 2026-10-10 changed after it was paid (version home_2026); is back pay due, and when?" (wage_eur[2026-10, ben_bolt]), ?"Wynagrodzenie netto z niemieckiej umowy o pracę nie jest opisane." (net_wage_eur[ana_berlin, 2030-07]) ?"wage_eur[2026-10, ana_acme] on 2026-10-10 changed after it was paid (version ana_berlin_job); is back pay due, and when?" (wage_eur[2026-10, ana_acme]) ?"wage_eur[2026-10, ana_acme] on 2026-10-10 changed after it was paid (version home_2026); is back pay due, and when?" (wage_eur[2026-10, ana_acme]) ?"wage_eur[2026-10, ben_bolt] on 2026-10-10 changed after it was paid (version ana_berlin_job); is back pay due, and when?" (wage_eur[2026-10, ben_bolt]) ?"wage_eur[2026-10, ben_bolt] on 2026-10-10 changed after it was paid (version home_2026); is back pay due, and when?" (wage_eur[2026-10, ben_bolt]))
+  adjustment: wage_eur[2026-10, ana_acme] by ?"Ile wynosi pensja w euro z tej pracy w tym miesiącu?" (salary_eur[ana_acme, 2026-10]) on 2026-10-19 (version home_2026), remaining ?"Ile wynosi pensja w euro z tej pracy w tym miesiącu?" (salary_eur[ana_acme, 2026-10])
+  adjustment: wage_eur[2026-10, ana_acme] by ?"Ile wynosi pensja w euro z tej pracy w tym miesiącu?" (salary_eur[ana_acme, 2026-10]) on 2030-05-01 (version ana_berlin_job), remaining ?"Ile wynosi pensja w euro z tej pracy w tym miesiącu?" (salary_eur[ana_acme, 2026-10])
+  adjustment: wage_eur[2026-10, ben_bolt] by ?"Ile wynosi pensja w euro z tej pracy w tym miesiącu?" (salary_eur[ben_bolt, 2026-10]) on 2026-10-19 (version home_2026), remaining ?"Ile wynosi pensja w euro z tej pracy w tym miesiącu?" (salary_eur[ben_bolt, 2026-10])
+  adjustment: wage_eur[2026-10, ben_bolt] by ?"Ile wynosi pensja w euro z tej pracy w tym miesiącu?" (salary_eur[ben_bolt, 2026-10]) on 2030-05-01 (version ana_berlin_job), remaining ?"Ile wynosi pensja w euro z tej pracy w tym miesiącu?" (salary_eur[ben_bolt, 2026-10])
   unfulfilled: wage_eur[2030-07, ana_berlin]
   cut 2030-12-31
 e2: (2030-07-25, 1)

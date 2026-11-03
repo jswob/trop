@@ -1,7 +1,9 @@
 //! T's fixtures for the catalogue's codes that no check prints (DONE gate 5), read from
 //! `codes/fixtures.tsv`, which `codes/codes.py` writes from refcore's runs: each a command
 //! line, run from a folder under `codes/`, and refcore's output and exit code. First
-//! `LOAD-PATH` (tally 2.1.1, L §8.3). Milestone M0's target `m0_codes` runs them on the engine.
+//! `LOAD-PATH` (tally 2.1.1, L §8.3); then the order of load's checks (tally 2.1.2, E §3.1,
+//! `order/`) and `LOAD-DEPTH`'s `ties by` term (tally 2.1.2, L §2.3, `LOAD-DEPTH/`), which
+//! only M0's load catalogue reaches. Milestone M0's target `m0_codes` runs them on the engine.
 //!
 //! A fixture's file table holds every file under `codes/` that its command line names and
 //! that exists (`codes.py` runs refcore on the disk, where the others don't): a path the
@@ -13,7 +15,7 @@ use crate::corpus::pack;
 pub const FIXTURES: &str = include_str!("../../codes/fixtures.tsv");
 
 /// The fixtures' files, by their path from the fixtures' `cwd` (`engine/tests/codes`).
-const FILES: [(&str, &str); 2] = [
+const FILES: [(&str, &str); 8] = [
     (
         "LOAD-PATH/a.tally",
         include_str!("../../codes/LOAD-PATH/a.tally"),
@@ -21,6 +23,30 @@ const FILES: [(&str, &str); 2] = [
     (
         "LOAD-PATH/m.tally",
         include_str!("../../codes/LOAD-PATH/m.tally"),
+    ),
+    (
+        "order/passes.tally",
+        include_str!("../../codes/order/passes.tally"),
+    ),
+    (
+        "order/passes_control.tally",
+        include_str!("../../codes/order/passes_control.tally"),
+    ),
+    (
+        "order/items.tally",
+        include_str!("../../codes/order/items.tally"),
+    ),
+    (
+        "order/items_control.tally",
+        include_str!("../../codes/order/items_control.tally"),
+    ),
+    (
+        "LOAD-DEPTH/ties.tally",
+        include_str!("../../codes/LOAD-DEPTH/ties.tally"),
+    ),
+    (
+        "LOAD-DEPTH/ties_control.tally",
+        include_str!("../../codes/LOAD-DEPTH/ties_control.tally"),
     ),
 ];
 
@@ -107,6 +133,22 @@ mod tests {
 
     /// The table holds the files the command line names that exist, and never the missing
     /// path the fixture is about.
+    #[test]
+    fn every_fixture_is_run_by_a_test_of_m0_codes() {
+        let fs = fixtures(FIXTURES).expect("codes/fixtures.tsv reads");
+        for f in &fs {
+            assert!(
+                ["LOAD-PATH", "LOAD-PARSE"].contains(&f.code.as_str())
+                    || f.id.starts_with("order/")
+                    || f.id.starts_with("LOAD-DEPTH/"),
+                "{}: m0_codes runs fixtures by the codes LOAD-PATH and LOAD-PARSE and by the \
+                 folders order/ and LOAD-DEPTH/",
+                f.id
+            );
+        }
+        assert_eq!(fs.len(), 9, "codes.py writes 9 fixtures");
+    }
+
     #[test]
     fn a_fixtures_table_leaves_out_the_missing_path() {
         let fs = fixtures(FIXTURES).expect("codes/fixtures.tsv reads");

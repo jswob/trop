@@ -1,0 +1,19 @@
+model depth_ties
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "T's fixture for LOAD-DEPTH (invented)"
+
+unit PLN: currency minor 0.01
+
+index ks = [k1, k2]
+
+def w[k in ks]: int = 1
+
+def z: key ks = argmin(w[k] for k in ks) ties by argmin(w[k] for k in ks) ties by argmin(w[k] for k in ks) ties by argmin(w[k] for k in ks) ties by argmin(w[k] for k in ks) ties by argmin(w[k] for k in ks) ties by argmin(w[k] for k in ks) ties by argmin(w[k] for k in ks) ties by argmin(w[k] for k in ks)
+
+ask q: z
+
+unit PLN: currency minor 0.01

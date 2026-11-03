@@ -1,0 +1,57 @@
+# L §8.5 WARN-UNREAD (tally 2.1.2, issue #30): each place here is named once, and none warns. lokata only by deps's
+# binding over its kind; konto2 only by pay_to's row, the value p's leg books into; karta only by an observed row's leg;
+# unexplained only by a pad; world by p's leg. spare is the one unread item, so the warnings are compared.
+=== m.tally
+model t
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+source bk "bank"
+unit PLN: currency minor 0.01
+kind deposits: place PLN min 0
+input bank: observed
+input amt: money PLN
+input day: date
+input pay_to: key accounts
+place konto: accounts PLN lives 2026-01-01..
+place lokata: deposits lives 2026-01-01..
+place konto2: accounts PLN lives 2026-01-01..
+place karta: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+place unexplained: outside lives 1900-01-01..
+
+def spare: int = 1
+def deps[d in days]: money PLN = sum(bal(x, d) for x in deposits on d)
+
+move p: transfers
+  on day
+  leg cash from world to pay_to amount amt
+
+ask q: bal(konto, 2026-03-31), deps[2026-03-31]
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 10.00 PLN
+  day = 2026-02-10
+  pay_to = konto2
+  opening[konto] = 5.00 PLN at 2026-01-01 start
+  opening[lokata] = 7.00 PLN at 2026-01-01 start
+  opening[konto2] = 0 PLN at 2026-01-01 start
+  opening[karta] = 0 PLN at 2026-01-01 start
+
+version st
+  cite bk
+  governs 2026-02
+  known 2026-03-02
+  covers konto
+  pad konto from unexplained
+  bank[r1] = (on: 2026-02-05, kind: transfers, leg cash from world to karta amount 3.00 PLN) "r1"
+=== expect
+q: (5.00 PLN, 7.00 PLN)
+  cut 2026-06-30
+warning: WARN-UNREAD def spare is read by nothing

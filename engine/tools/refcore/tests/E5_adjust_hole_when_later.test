@@ -1,0 +1,66 @@
+# E §5 step 3 (tally 2.1.2, issue #34, the hole-when sibling in the user's ruling): late (known 2026-05-01) makes
+# rent[2026-03]'s when a hole (seats unknown), so whether it was due is unknown: a hole adjustment, as a hole amount makes
+# one. Unsettled, its reads reaching 2026-05-01 are the HOLE-CHANGED hole, and the register lists it. tally 2.1.1's
+# refcore skipped the step: q was (500.00 PLN, 7 000.00 PLN).
+=== m.tally
+model hh
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source plan "plan"
+source act "act"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2019-05-01..
+place landlord: outside lives 1900-01-01..
+input total: money PLN
+input tenants[m in months]: int
+input dom: int
+input seats[m in months]: int
+
+move rent[m in months]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  when seats[m] > 0
+  leg cash from konto to landlord amount round(total / tenants[m], minor(PLN), half-even)
+
+version plan_2026
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  total = 1 000.00 PLN "umowa"
+  dom = 10 "umowa"
+  tenants[*] = 2 "umowa"
+  seats[*] = 1 "umowa"
+  opening[konto] = 10 000.00 PLN at 2026-01-01 start "wyciąg"
+
+version late
+  cite act
+  governs 2026-03
+  known 2026-05-01
+  replace seats[*] = ?"how many seats in March?" "aneks"
+
+ask before: bal(konto, 2026-04-30)
+ask q: flows(rent, 2026-05-01 .. 2026-05-31), bal(konto, 2026-06-30)
+ask early: flows(rent, 2026-03-01 .. 2026-04-30)
+=== expect
+before: 8 000.00 PLN
+  unfulfilled: rent[2026-01]
+  unfulfilled: rent[2026-02]
+  unfulfilled: rent[2026-03]
+  unfulfilled: rent[2026-04]
+  cut 2026-10-20
+early: 1 000.00 PLN
+  unfulfilled: rent[2026-03]
+  unfulfilled: rent[2026-04]
+  cut 2026-10-20
+q: (?"rent[2026-03] on 2026-03-10 changed after it was paid (version late); is back pay due, and when?" (rent[2026-03]), ?"rent[2026-03] on 2026-03-10 changed after it was paid (version late); is back pay due, and when?" (rent[2026-03]))
+  adjustment: rent[2026-03] by ?"how many seats in March?" (seats[2026-03]) on 2026-05-01 (version late), remaining ?"how many seats in March?" (seats[2026-03])
+  unfulfilled: rent[2026-01]
+  unfulfilled: rent[2026-02]
+  unfulfilled: rent[2026-03]
+  unfulfilled: rent[2026-04]
+  unfulfilled: rent[2026-05]
+  unfulfilled: rent[2026-06]
+  cut 2026-10-20

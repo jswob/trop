@@ -2604,7 +2604,7 @@ version mbank_2026_09
   bank[r20260926a] = (on: 2026-09-26, kind: spending, leg cash from konto to niewyjasnione amount 120.00 PLN, cat: other) "RESTAURACJA"
   bank[r20260929a] = (on: 2026-09-29, kind: spending, leg cash from konto to niewyjasnione amount 401.09 PLN, cat: groceries) "BIEDRONKA KRAKOW"
   stated[konto] = 41386.27 at 2026-09-30 end "saldo końcowe"
-,,1:0,2329:konto_balance (d = 2026-10-31): (6 064.17 PLN, 6 064.17 PLN)
+,,1:0,2383:konto_balance (d = 2026-10-31): (6 064.17 PLN, 6 064.17 PLN)
   assumed: budżet gospodarstwa na 2026, przed pierwszym wyciągiem (spend_budget[groceries], spend_budget[health_care], spend_budget[other], spend_budget[transport])
   anchor: konto 2026-09-30 end, stated 41 386.27 PLN, difference 32 097.23 PLN
   unfulfilled: client_pay[client_a, 2026-09]
@@ -2652,6 +2652,7 @@ version mbank_2026_09
   law date 2026-10-19, cut 2026-10-19
 warning: WARN-NEGATIVE konto is below zero from 2026-03-01
 warning: WARN-NEGATIVE konto is below zero from 2026-03-17
+warning: WARN-UNREAD place gotowka is read by nothing
 ,25:I:X:replay_september@b_r1,6:checks,402:run cut11/b_r1/asks/cut.tally cut11/b_r1/facts/2026.tally cut11/b_r1/law/pl/benefits.tally cut11/b_r1/law/pl/business.tally cut11/b_r1/law/pl/common.tally cut11/b_r1/law/pl/employment.tally cut11/b_r1/law/pl/wrappers.tally cut11/b_r1/loans.tally cut11/b_r1/pays.tally cut11/b_r1/people.tally cut11/b_r1/places.tally cut11/b_r1/reality.tally cut11/b_r1/records/mbank/2026-09.tally --ask replay_september,48779:25:cut11/b_r1/asks/cut.tally,203:part asks_core
   tally 2
 
@@ -3755,7 +3756,7 @@ version mbank_2026_09
   bank[r20260926a] = (on: 2026-09-26, kind: spending, leg cash from konto to niewyjasnione amount 120.00 PLN, cat: other) "RESTAURACJA"
   bank[r20260929a] = (on: 2026-09-29, kind: spending, leg cash from konto to niewyjasnione amount 401.09 PLN, cat: groceries) "BIEDRONKA KRAKOW"
   stated[konto] = 41386.27 at 2026-09-30 end "saldo końcowe"
-,,1:0,5832:replay_september: residuals konto 2026-09
+,,1:0,5886:replay_september: residuals konto 2026-09
   2026-09 balance: model 9 289.04 PLN, observed 41 386.27 PLN, difference 32 097.23 PLN
     balance konto 2026-09-30 end (anchored): booked 9 289.04 PLN, stated 41 386.27 PLN, gap 32 097.23 PLN
   2026-09 move spend: model -4 599.90 PLN, observed 0.00 PLN, difference 4 599.90 PLN
@@ -3825,6 +3826,7 @@ version mbank_2026_09
   law date 2026-10-19, cut 2026-10-19
 warning: WARN-NEGATIVE konto is below zero from 2026-03-01
 warning: WARN-NEGATIVE konto is below zero from 2026-03-17
+warning: WARN-UNREAD place gotowka is read by nothing
 ,26:I:X:replay_september@b_r1s,6:checks,415:run cut11/b_r1s/asks/cut.tally cut11/b_r1s/facts/2026.tally cut11/b_r1s/law/pl/benefits.tally cut11/b_r1s/law/pl/business.tally cut11/b_r1s/law/pl/common.tally cut11/b_r1s/law/pl/employment.tally cut11/b_r1s/law/pl/wrappers.tally cut11/b_r1s/loans.tally cut11/b_r1s/pays.tally cut11/b_r1s/people.tally cut11/b_r1s/places.tally cut11/b_r1s/reality.tally cut11/b_r1s/records/mbank/2026-09.tally --ask replay_september,48668:26:cut11/b_r1s/asks/cut.tally,80:part asks_core
   tally 2
 
@@ -4926,7 +4928,7 @@ version mbank_2026_09
   bank[r20260926a] = (on: 2026-09-26, kind: spending, leg cash from konto to niewyjasnione amount 120.00 PLN, cat: other) "RESTAURACJA"
   bank[r20260929a] = (on: 2026-09-29, kind: spending, leg cash from konto to niewyjasnione amount 401.09 PLN, cat: groceries) "BIEDRONKA KRAKOW"
   stated[konto] = 41386.27 at 2026-09-30 end "saldo końcowe"
-,,1:0,5832:replay_september: residuals konto 2026-09
+,,1:0,5886:replay_september: residuals konto 2026-09
   2026-09 balance: model 9 289.04 PLN, observed 41 386.27 PLN, difference 32 097.23 PLN
     balance konto 2026-09-30 end (anchored): booked 9 289.04 PLN, stated 41 386.27 PLN, gap 32 097.23 PLN
   2026-09 move spend: model -4 599.90 PLN, observed 0.00 PLN, difference 4 599.90 PLN
@@ -4996,6 +4998,7 @@ version mbank_2026_09
   law date 2026-10-19, cut 2026-10-19
 warning: WARN-NEGATIVE konto is below zero from 2026-03-01
 warning: WARN-NEGATIVE konto is below zero from 2026-03-17
+warning: WARN-UNREAD place gotowka is read by nothing
 ,13:I:X:t@min_m13,6:checks,27:run min/m13/m.tally --ask t,588:15:min/m13/m.tally,564:model m
   tally 2
   on 2027-01-01
@@ -8980,31 +8983,31 @@ version lent4_feb
   known 2026-03-02
   anchor lent4
   stated[lent4] = 0.00 at 2026-02-28 end "the twin: a claim stated at 0"
-,,1:0,5018:q_claims (d = 2026-01-31): (50.00 PLN, 0.00 PLN, refused: RUN-PLACE repay[2026-01] takes lent3 below 0, -5.00 PLN)
+,,1:0,5602:q_claims (d = 2026-01-31): (50.00 PLN, 0.00 PLN, refused: RUN-PLACE repay[2026-01] takes lent3 below 0, refused: RUN-PLACE lent4 is -5.00 PLN after its reading at 2026-01-31 end)
   anchor: lent4 2026-01-31 end, stated -5.00 PLN, difference -25.00 PLN
   unfulfilled: back[2026-01]
   law date 2026-03-25, cut 2026-03-25
-q_claims (d = 2026-02-28): (0.00 PLN, 0.00 PLN, refused: RUN-PLACE repay[2026-01] takes lent3 below 0, 0.00 PLN)
-  anchor: lent4 2026-02-28 end, stated 0.00 PLN, difference 5.00 PLN
+q_claims (d = 2026-02-28): (0.00 PLN, 0.00 PLN, refused: RUN-PLACE repay[2026-01] takes lent3 below 0, refused: RUN-PLACE lent4 is -5.00 PLN after its reading at 2026-01-31 end)
+  anchor: lent4 2026-02-28 end, stated 0.00 PLN, difference refused: RUN-PLACE lent4 is -5.00 PLN after its reading at 2026-01-31 end
   unfulfilled: back[2026-01]
   unfulfilled: back[2026-02]
   law date 2026-03-25, cut 2026-03-25
-q_claims (d = 2026-03-10): (refused: RUN-PLACE lent is -30.00 PLN after the day's observations and plans of 2026-03-10, 10.00 PLN, refused: RUN-PLACE repay[2026-01] takes lent3 below 0, 0.00 PLN)
-  anchor: lent4 2026-02-28 end, stated 0.00 PLN, difference 5.00 PLN
-  unfulfilled: back[2026-01]
-  unfulfilled: back[2026-02]
-  unfulfilled: swing_in[2026-03]
-  unfulfilled: swing_out[2026-03]
-  law date 2026-03-25, cut 2026-03-25
-q_claims (d = 2026-03-20): (refused: RUN-PLACE lent is -30.00 PLN after the day's observations and plans of 2026-03-10, 10.00 PLN, refused: RUN-PLACE repay[2026-01] takes lent3 below 0, 0.00 PLN)
-  anchor: lent4 2026-02-28 end, stated 0.00 PLN, difference 5.00 PLN
+q_claims (d = 2026-03-10): (refused: RUN-PLACE lent is -30.00 PLN after the day's observations and plans of 2026-03-10, 10.00 PLN, refused: RUN-PLACE repay[2026-01] takes lent3 below 0, refused: RUN-PLACE lent4 is -5.00 PLN after its reading at 2026-01-31 end)
+  anchor: lent4 2026-02-28 end, stated 0.00 PLN, difference refused: RUN-PLACE lent4 is -5.00 PLN after its reading at 2026-01-31 end
   unfulfilled: back[2026-01]
   unfulfilled: back[2026-02]
   unfulfilled: swing_in[2026-03]
   unfulfilled: swing_out[2026-03]
   law date 2026-03-25, cut 2026-03-25
-q_claims (d = 2026-03-31): (refused: RUN-PLACE lent is -30.00 PLN after the day's observations and plans of 2026-03-10, 10.00 PLN, refused: RUN-PLACE repay[2026-01] takes lent3 below 0, 0.00 PLN)
-  anchor: lent4 2026-02-28 end, stated 0.00 PLN, difference 5.00 PLN
+q_claims (d = 2026-03-20): (refused: RUN-PLACE lent is -30.00 PLN after the day's observations and plans of 2026-03-10, 10.00 PLN, refused: RUN-PLACE repay[2026-01] takes lent3 below 0, refused: RUN-PLACE lent4 is -5.00 PLN after its reading at 2026-01-31 end)
+  anchor: lent4 2026-02-28 end, stated 0.00 PLN, difference refused: RUN-PLACE lent4 is -5.00 PLN after its reading at 2026-01-31 end
+  unfulfilled: back[2026-01]
+  unfulfilled: back[2026-02]
+  unfulfilled: swing_in[2026-03]
+  unfulfilled: swing_out[2026-03]
+  law date 2026-03-25, cut 2026-03-25
+q_claims (d = 2026-03-31): (refused: RUN-PLACE lent is -30.00 PLN after the day's observations and plans of 2026-03-10, 10.00 PLN, refused: RUN-PLACE repay[2026-01] takes lent3 below 0, refused: RUN-PLACE lent4 is -5.00 PLN after its reading at 2026-01-31 end)
+  anchor: lent4 2026-02-28 end, stated 0.00 PLN, difference refused: RUN-PLACE lent4 is -5.00 PLN after its reading at 2026-01-31 end
   unfulfilled: back[2026-01]
   unfulfilled: back[2026-02]
   unfulfilled: swing_in[2026-03]
@@ -10372,12 +10375,13 @@ version openings
   opening[konto] = 1000 at 2026-01-01 start
   opening[p_deep] = 0 at 2026-01-01 start
   opening[old] = 0 at 2026-01-01 start
-,,1:0,229:a_flows: refused: RUN-LIFESPAN pay.cash moves into or out of old outside its lifespan
+,,1:0,281:a_flows: refused: RUN-LIFESPAN pay.cash moves into or out of old outside its lifespan
   unfulfilled: pay
   law date 2026-02-15, cut 2026-02-15
 b_bal: (1.00 PLN, 0.00 PLN)
   unfulfilled: deep
   law date 2026-02-15, cut 2026-02-15
+warning: WARN-UNREAD place konto is read by nothing
 ,8:g8/after,2:g8,18:run g8/after.tally,1674:14:g8/after.tally,1650:model g8_after
   tally 2
   on 2026-02-15
@@ -11009,8 +11013,6 @@ q_res: residuals konto 2026-01
   2026-01 move tip: model -12.00 PLN, observed 0.00 PLN, difference 12.00 PLN
     expected but missing tip[t01] on 2026-01-08: model -1.00 PLN
     expected but missing tip[t02] on 2026-01-08: model -1.00 PLN
-    expected but missing tip[t11] on 2026-01-08: model -1.00 PLN
-    expected but missing tip[t12] on 2026-01-08: model -1.00 PLN
     expected but missing tip[t03] on 2026-01-08: model -1.00 PLN
     expected but missing tip[t04] on 2026-01-08: model -1.00 PLN
     expected but missing tip[t05] on 2026-01-08: model -1.00 PLN
@@ -11019,6 +11021,8 @@ q_res: residuals konto 2026-01
     expected but missing tip[t08] on 2026-01-08: model -1.00 PLN
     expected but missing tip[t09] on 2026-01-08: model -1.00 PLN
     expected but missing tip[t10] on 2026-01-08: model -1.00 PLN
+    expected but missing tip[t11] on 2026-01-08: model -1.00 PLN
+    expected but missing tip[t12] on 2026-01-08: model -1.00 PLN
   2026-01 move short: model -100.00 PLN, observed -90.00 PLN, difference 10.00 PLN
     matched short on 2026-01-14: model -100.00 PLN, observed -90.00 PLN, difference 10.00 PLN, timing +0 days
   2026-01 move sweep: model -10.00 PLN, observed 0.00 PLN, difference 10.00 PLN
@@ -11088,10 +11092,11 @@ version late_v
   known 2026-02-13
   anchor late
   stated[late] = 40.00 at 2026-02-11 end "an earlier reading, known only on the 13th"
-,,1:0,346:q_first: (?"late has no balance before 2026-02-12" (late), ?"late has no balance before 2026-02-11" (late), 40.00 PLN, 50.00 PLN)
+,,1:0,398:q_first: (?"late has no balance before 2026-02-12" (late), ?"late has no balance before 2026-02-11" (late), 40.00 PLN, 50.00 PLN)
   anchor: late 2026-02-11 end, stated 40.00 PLN, difference ?"late has no balance before 2026-02-11" (late)
   anchor: late 2026-02-12 end, stated 50.00 PLN, difference 10.00 PLN
   law date 2026-02-15, cut 2026-02-15
+warning: WARN-UNREAD place konto is read by nothing
 ,10:g11/adjust,3:g11,20:run g11/adjust.tally,11390:16:g11/adjust.tally,11363:model g11_adjust
   tally 2
   on 2026-10-20
@@ -11460,7 +11465,7 @@ version bank_b
   bank[r8] = (on: 2026-07-10, kind: settles, leg cash from konto to konto2 amount 100.00 PLN, fulfils: adjustments[bonus.cash, move_acct]) "the bonus moved where it belongs"
   bank[r9] = (on: 2026-07-12, kind: bonuses, leg cash from world to konto2 amount 30.00 PLN, fulfils: adjustments[bonus.cash, move_acct]) "a second payment into the new place"
   bank[r10] = (on: 2026-07-14, kind: settles, leg cash from konto2 to world amount 10.00 PLN, fulfils: adjustments[bonus.cash, move_acct]) "some of it paid back"
-,,1:0,7998:q_bal: (20 110.00 PLN, 25 340.00 PLN, 35 540.00 PLN, 120.00 PLN)
+,,1:0,8255:q_bal: (20 110.00 PLN, 25 340.00 PLN, 35 540.00 PLN, 120.00 PLN)
   pad: konto 2026-04-30 end, pads:stmt_k:konto@2026-04-30 end of 10.00 PLN
   adjustment: bonus by 0.00 PLN on 2026-07-01 (version move_acct), remaining -20.00 PLN
   adjustment: wage[2026-03] by 500.00 PLN on 2026-05-01 (version raise), remaining 100.00 PLN
@@ -11517,7 +11522,11 @@ q_fulfils (o = bank[r9]): adjustments[bonus.cash, move_acct]
   cut 2026-10-20
 q_fulfils (o = bank[r10]): adjustments[bonus.cash, move_acct]
   cut 2026-10-20
+q_list (a = adjustments[cost.cash, late_gift]): refused: RUN-NEG negative amount -5.00 PLN for leg cash of cost
+  cut 2026-10-20
 q_list (a = adjustments[gift.cash, late_gift]): ?"was the gift given after all?" (gift_amt)
+  cut 2026-10-20
+q_list (a = adjustments[cost.cash, cost_fix]): refused: RUN-NEG negative amount -5.00 PLN for leg cash of cost
   cut 2026-10-20
 q_list (a = adjustments[gift.cash, cost_fix]): ?"was the gift given after all?" (gift_amt)
   cut 2026-10-20
@@ -12795,4 +12804,1224 @@ q_flows: ?"Is the member active?" (active[bob])
   unfulfilled: dues[ana]
   law date 2026-03-15, cut 2026-03-15
 warning: WARN-UNREAD input late is read by nothing
+,14:g13/depth_from,3:g13,24:run g13/depth_from.tally,894:20:g13/depth_from.tally,865:model g13_depth_from
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.2 (issue #29), G13: L §2.3 LOAD-DEPTH counts the from term a point is inside, one level, as an if counts. Inside the parentheses of q's from term the depth is 7 brackets + the from term + its own bracket = 9, past the limit of 8, so the load is refused. Its twin g13/depth_from_ok has 6 brackets (depth 8) and answers. tally 2.1.1 counted no from term (depth 8 here) and answered 5.00 PLN."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit PLN: currency minor 0.01
+
+input d0: date
+
+input d1: date
+
+place acc: accounts PLN lives 2026-01-01..
+
+ask q: (((((((bal(acc, d1) from (d0))))))))
+
+version facts
+  cite fixture
+  governs always
+  known 2026-01-01
+  d0 = 2026-01-01
+  d1 = 2026-02-01
+  opening[acc] = 5.00 PLN at 2026-01-01 start
+,,1:1,78:refused: LOAD-DEPTH expression nested deeper than 8 (g13/depth_from.tally:18)
+,17:g13/depth_from_ok,3:g13,27:run g13/depth_from_ok.tally,784:23:g13/depth_from_ok.tally,752:model g13_depth_from_ok
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.2 (issue #29), G13: the twin of g13/depth_from. L §2.3: inside the parentheses of q's from term the depth is 6 brackets + the from term + its own bracket = 8, the limit, so the text loads, and q is acc's balance on 2026-02-01 projected from 2026-01-01: its opening, 5.00 PLN."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit PLN: currency minor 0.01
+
+input d0: date
+
+input d1: date
+
+place acc: accounts PLN lives 2026-01-01..
+
+ask q: ((((((bal(acc, d1) from (d0)))))))
+
+version facts
+  cite fixture
+  governs always
+  known 2026-01-01
+  d0 = 2026-01-01
+  d1 = 2026-02-01
+  opening[acc] = 5.00 PLN at 2026-01-01 start
+,,1:0,29:q: 5.00 PLN
+  cut 2026-01-01
+,10:g13/unread,3:g13,20:run g13/unread.tally,2360:16:g13/unread.tally,2334:model g13_unread
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.2 (issue #30), G13: L §8.5 WARN-UNREAD, place <x> is read by nothing, for a place no line names. Named, so no warning: konto by a read, savings by a movement's leg, lokata by a binding over its kind, konto3 by a row whose value it is (the input spare_to, read by nothing, warns as an input), karta by an observed row's leg, unexplained by a pad, world by legs. Not named, so each warns: idle (only its opening row), anch (its opening, a covers line, an anchor and a stated reading), shop (an outside place no leg names). tally 2.1.1 warned inputs, defs and sources only."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+source bank_feed "T's invented bank feed"
+
+unit PLN: currency minor 0.01
+
+kind deposits: place PLN min 0
+
+input bank: observed
+
+input wage: money PLN
+
+input pay_day: date
+
+input spare_to: key accounts
+
+place konto: accounts PLN lives 2026-01-01..
+
+place savings: accounts PLN lives 2026-01-01..
+
+place lokata: deposits lives 2026-01-01..
+
+place konto3: accounts PLN lives 2026-01-01..
+
+place karta: accounts PLN lives 2026-01-01..
+
+place idle: accounts PLN lives 2026-01-01..
+
+place anch: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+place unexplained: outside lives 1900-01-01..
+
+place shop: outside lives 1900-01-01..
+
+def deps[d in days]: money PLN = sum(bal(x, d) for x in deposits on d)
+
+move pay: transfers
+  on pay_day
+  leg cash from world to savings amount wage
+
+ask q: bal(konto, 2026-03-31), deps[2026-03-31]
+
+version facts
+  cite fixture
+  governs always
+  known 2026-01-01
+  wage = 10.00 PLN
+  pay_day = 2026-02-10
+  spare_to = konto3
+  opening[konto] = 5.00 PLN at 2026-01-01 start
+  opening[savings] = 0 PLN at 2026-01-01 start
+  opening[lokata] = 7.00 PLN at 2026-01-01 start
+  opening[konto3] = 0 PLN at 2026-01-01 start
+  opening[karta] = 0 PLN at 2026-01-01 start
+  opening[idle] = 0 PLN at 2026-01-01 start
+  opening[anch] = 0 PLN at 2026-01-01 start
+
+version statement_02
+  cite bank_feed
+  governs 2026-02
+  known 2026-03-02
+  covers konto, anch
+  pad konto from unexplained
+  anchor anch
+  bank[r1] = (on: 2026-02-05, kind: transfers, leg cash from world to karta amount 3.00 PLN) "line 1"
+  stated[anch] = 0 PLN at 2026-02-28 end "saldo"
+,,1:0,249:q: (5.00 PLN, 7.00 PLN)
+  cut 2026-06-30
+warning: WARN-UNREAD input spare_to is read by nothing
+warning: WARN-UNREAD place anch is read by nothing
+warning: WARN-UNREAD place idle is read by nothing
+warning: WARN-UNREAD place shop is read by nothing
+,11:g9/leg_hole,2:g9,21:run g9/leg_hole.tally,1771:17:g9/leg_hole.tally,1744:model g9_leg_hole
+  tally 2
+  on 2025-12-31
+  start 2025-01-01
+  end 2025-12-31
+  note "T, tally 2.1.2 (issue #31), G9: L §5.14 Legs, E §4.2, E §9 invariant 1: a leg whose place is a hole (dest, no row) books its known side, acc_0 = 500.00 - 100.00, and every read of the unknown side is a hole naming it (bal(dest, d); a leg's field, mv_0.cash.to, isn't read: S builds no read of a leg's fields); a place the hole could stand for is no made-up place, so acc_1 stands at its opening. Invariant 1 leaves the leg out, as a leg booked by its ends. The twin mv_1 books the same leg between known places (acc_2 to acc_3, by dest2's row). tally 2.1.1 refused every ask ENGINE-INVARIANT (conservation)."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit DUK: currency minor 0.01
+
+input amt: money DUK
+
+input d0: date
+
+input dest: key accounts
+
+input dest2: key accounts
+
+place acc_0: accounts DUK lives 2025-01-01..
+
+place acc_1: accounts DUK lives 2025-01-01..
+
+place acc_2: accounts DUK lives 2025-01-01..
+
+place acc_3: accounts DUK lives 2025-01-01..
+
+move mv_0: transfers
+  on d0
+  leg cash from acc_0 to dest amount amt
+
+move mv_1: transfers
+  on d0
+  leg cash from acc_2 to dest2 amount amt
+
+ask a_known: bal(acc_0, 2025-01-09), bal(acc_0, 2025-01-10), bal(acc_0, 2025-01-31)
+
+ask a_other: bal(acc_1, 2025-01-31)
+
+ask a_hole: bal(dest, 2025-01-31)
+
+ask a_twin: bal(acc_2, 2025-01-31), bal(acc_3, 2025-01-31)
+
+version facts
+  cite fixture
+  governs always
+  known 2025-01-01
+  amt = 100.00 DUK
+  d0 = 2025-01-10
+  dest2 = acc_3
+  opening[acc_0] = 500.00 DUK at 2025-01-01 start
+  opening[acc_1] = 0 DUK at 2025-01-01 start
+  opening[acc_2] = 500.00 DUK at 2025-01-01 start
+  opening[acc_3] = 0 DUK at 2025-01-01 start
+,,1:0,238:a_hole: ?"dest: no value" (dest)
+  cut 2025-12-31
+a_known: (500.00 DUK, 400.00 DUK, 400.00 DUK)
+  unfulfilled: mv_0
+  cut 2025-12-31
+a_other: 0.00 DUK
+  cut 2025-12-31
+a_twin: (400.00 DUK, 100.00 DUK)
+  unfulfilled: mv_1
+  cut 2025-12-31
+,16:g9/reading_close,2:g9,26:run g9/reading_close.tally,2253:22:g9/reading_close.tally,2221:model g9_reading_close
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.2 (issue #46), G9: L §5.10 point 3, §8.4 RUN-PLACE, E §4.2 step 5: a reading's own place is tested at the close like any balance. y (claims, min 0) is stated at -5.00 PLN with a pad from w_y: the pad is refused, <pad> takes y below 0, and so are the places it touches from there, w_y included (q_y). z is anchored at -5.00 PLN: an anchor books no leg, so z's balance is refused from there, <place> is <b> after its reading at <instant>, the next day's start too (q_z). The twins at 0, which keeps a claim's rule: y0's pad of -20.00 PLN from w_y0 and z0's anchor stand (q_zero). tally 2.1.1 tested a pad's other place only: y and z stood at -5.00 PLN."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+source bank_feed "T's invented bank feed"
+
+unit PLN: currency minor 0.01
+
+place y: claims PLN lives 2026-01-01..
+
+place z: claims PLN lives 2026-01-01..
+
+place y0: claims PLN lives 2026-01-01..
+
+place z0: claims PLN lives 2026-01-01..
+
+place w_y: outside lives 2026-01-01..
+
+place w_y0: outside lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input amt: money PLN
+
+input top_day: date
+
+move top: transfers
+  on top_day
+  leg cash from world to z amount amt
+
+move top0: transfers
+  on top_day
+  leg cash from world to z0 amount amt
+
+ask q_y: bal(y, 2026-01-30), bal(y, 2026-01-31), bal(w_y, PLN, 2026-01-31)
+
+ask q_z: bal(z, 2026-01-30), bal(z, 2026-01-31), bal(z, 2026-02-01 start)
+
+ask q_zero: bal(y0, 2026-01-31), bal(w_y0, PLN, 2026-01-31), bal(z0, 2026-01-31), bal(z0, 2026-02-01 start)
+
+version facts
+  cite fixture
+  governs always
+  known 2026-01-01
+  amt = 10.00 PLN
+  top_day = 2026-01-15
+  opening[y] = 20.00 PLN at 2026-01-01 start
+  opening[z] = 20.00 PLN at 2026-01-01 start
+  opening[y0] = 20.00 PLN at 2026-01-01 start
+  opening[z0] = 20.00 PLN at 2026-01-01 start
+
+version statement_01
+  cite bank_feed
+  governs 2026-01
+  known 2026-03-02
+  pad y from w_y
+  pad y0 from w_y0
+  anchor z
+  anchor z0
+  stated[y] = -5.00 PLN at 2026-01-31 end
+  stated[z] = -5.00 PLN at 2026-01-31 end
+  stated[y0] = 0 PLN at 2026-01-31 end
+  stated[z0] = 0 PLN at 2026-01-31 end
+,,1:0,724:q_y: (20.00 PLN, refused: RUN-PLACE pads:statement_01:y@2026-01-31 end takes y below 0, refused: RUN-PLACE pads:statement_01:y@2026-01-31 end takes y below 0)
+  pad: y 2026-01-31 end, pads:statement_01:y@2026-01-31 end of -25.00 PLN
+  cut 2026-06-30
+q_z: (30.00 PLN, refused: RUN-PLACE z is -5.00 PLN after its reading at 2026-01-31 end, refused: RUN-PLACE z is -5.00 PLN after its reading at 2026-01-31 end)
+  anchor: z 2026-01-31 end, stated -5.00 PLN, difference -35.00 PLN
+  unfulfilled: top
+  cut 2026-06-30
+q_zero: (0.00 PLN, 20.00 PLN, 0.00 PLN, 0.00 PLN)
+  anchor: z0 2026-01-31 end, stated 0.00 PLN, difference -30.00 PLN
+  pad: y0 2026-01-31 end, pads:statement_01:y0@2026-01-31 end of -20.00 PLN
+  cut 2026-06-30
+,16:g9/reading_start,2:g9,26:run g9/reading_start.tally,2280:22:g9/reading_start.tally,2248:model g9_reading_start
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.2 (issue #46), G9: L §5.10 point 1, §5.19, E §4.2 steps 0 and 5: a reading's own place is tested at the points of the sign rule S builds (point 3, the close, is g9/reading_close). Point 1, a reading at a day's start, is in the day's first batch: ys (claims, min 0) stated at -5.00 PLN at 2026-01-15 start, padded from w_s, with nothing else that day, has its pad refused, <place> is <b> after the day's observations and plans of <d> (q_start); its twin zs, stated the same with top_s paying 10.00 PLN in that day, nets to 5.00 PLN and stands. Point 2, a reading after a decision, is not here: S builds no reading at an instant after a decision (M2, readings at instants). An opening always anchors: yo opening at -5.00 PLN is refused from the first batch's end, its opening instant reads as stated, and zo opening at 0 stands (q_open). tally 2.1.1 tested a pad's other place only: ys and yo stood at -5.00 PLN."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+source bank_feed "T's invented bank feed"
+
+unit PLN: currency minor 0.01
+
+place ys: claims PLN lives 2026-01-01..
+
+place zs: claims PLN lives 2026-01-01..
+
+place yo: claims PLN lives 2026-01-01..
+
+place zo: claims PLN lives 2026-01-01..
+
+place w_s: outside lives 2026-01-01..
+
+place w_zs: outside lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input amt: money PLN
+
+input start_day: date
+
+move top_s: transfers
+  on start_day
+  leg cash from world to zs amount amt
+
+ask q_start: bal(ys, 2026-01-14), bal(ys, 2026-01-15), bal(zs, 2026-01-15)
+
+ask q_open: bal(yo, 2026-01-01 start), bal(yo, 2026-01-01), bal(zo, 2026-01-01), bal(world, PLN, 2026-01-01)
+
+version facts
+  cite fixture
+  governs always
+  known 2026-01-01
+  amt = 10.00 PLN
+  start_day = 2026-01-15
+  opening[ys] = 20.00 PLN at 2026-01-01 start
+  opening[zs] = 20.00 PLN at 2026-01-01 start
+  opening[yo] = -5.00 PLN at 2026-01-01 start
+  opening[zo] = 0 PLN at 2026-01-01 start
+
+version statement_01
+  cite bank_feed
+  governs 2026-01
+  known 2026-03-02
+  pad ys from w_s
+  pad zs from w_zs
+  stated[ys] = -5.00 PLN at 2026-01-15 start
+  stated[zs] = -5.00 PLN at 2026-01-15 start
+,,1:0,449:q_open: (-5.00 PLN, refused: RUN-PLACE yo is -5.00 PLN after its reading at 2026-01-01 start, 0.00 PLN, 0.00 PLN)
+  cut 2026-06-30
+q_start: (20.00 PLN, refused: RUN-PLACE ys is -5.00 PLN after the day's observations and plans of 2026-01-15, 5.00 PLN)
+  pad: ys 2026-01-15 start, pads:statement_01:ys@2026-01-15 start of -25.00 PLN
+  pad: zs 2026-01-15 start, pads:statement_01:zs@2026-01-15 start of -25.00 PLN
+  unfulfilled: top_s
+  cut 2026-06-30
+,14:g8/point_by_id,2:g8,24:run g8/point_by_id.tally,2188:20:g8/point_by_id.tally,2158:model g8_point_by_id
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.2 (issue #32), G8: L §5.14.1, E §4.1: read at a point of the walk on day t, a projection counts only the movements not yet booked. sw and sw_b are decisions of one stratum on 2026-01-10 (sw reads konto, sw_b reads savings; neither changes what the other reads), so sw runs first, by move id. sw_b's leg runs between places its defs give, each refused (RUN-DIV), so its refusal holds for every place; sw's projection at its point counts sw_b's act, so sw's amount is refused, and its flows with it (q), and so are sw_b's (u); a balance before the day stands (r). The twin g8/point_by_id_twin divides by one: q is 99.00 PLN. tally 2.1.1's refcore compared the point sw|000000 with sw_b as one text (_ sorts before |), left sw_b's act out and printed q: 99.00 PLN here. The amounts are read as flows of the moves: S builds no read of a leg's fields."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit PLN: currency minor 0.01
+
+kind pots: place PLN signed
+
+kind sinks: place PLN signed outside
+
+input day: date
+
+input zero: int
+
+input ahead: int
+
+input amt: money PLN
+
+place konto: accounts PLN lives 2026-01-01..
+
+place savings: accounts PLN lives 2026-01-01..
+
+place pot: pots lives 2026-01-01..
+
+place sink: sinks lives 1900-01-01..
+
+place world: outside lives 1900-01-01..
+
+def src: key pots = if zero / zero > 0 then pot else pot
+
+def snk: key sinks = if zero / zero > 0 then sink else sink
+
+move sw: transfers
+  on day
+  reads konto
+  leg cash from konto to world amount max(0 PLN, bal(konto, add_days(day, ahead)) from day - amt)
+
+move sw_b: transfers
+  on day
+  reads savings
+  leg cash from src to snk amount amt + 0 * bal(savings)
+
+ask q: flows(sw, 2026-01-01 .. 2026-01-31)
+
+ask r: bal(konto, 2026-01-09)
+
+ask u: flows(sw_b, 2026-01-01 .. 2026-01-31)
+
+version facts
+  cite fixture
+  governs always
+  known 2026-01-01
+  day = 2026-01-10
+  zero = 0
+  ahead = 5
+  amt = 1.00 PLN
+  opening[konto] = 100.00 PLN at 2026-01-01 start
+  opening[savings] = 50.00 PLN at 2026-01-01 start
+  opening[pot] = 0 PLN at 2026-01-01 start
+,,1:0,157:q: refused: RUN-DIV division by zero
+  unfulfilled: sw
+  cut 2026-06-30
+r: 100.00 PLN
+  cut 2026-06-30
+u: refused: RUN-DIV division by zero
+  cut 2026-06-30
+,19:g8/point_by_id_twin,2:g8,29:run g8/point_by_id_twin.tally,1651:25:g8/point_by_id_twin.tally,1616:model g8_point_by_id_twin
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.2 (issue #32), G8: the twin of g8/point_by_id, dividing by one (zero = 1): sw_b moves 1.00 PLN from pot to sink, which sw's projection of konto counts and which leaves konto as it is, so sw books max(0, 100.00 - 1.00) = 99.00 PLN (q), the balance before the day stands (r) and sw_b books 1.00 PLN (u)."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit PLN: currency minor 0.01
+
+kind pots: place PLN signed
+
+kind sinks: place PLN signed outside
+
+input day: date
+
+input zero: int
+
+input ahead: int
+
+input amt: money PLN
+
+place konto: accounts PLN lives 2026-01-01..
+
+place savings: accounts PLN lives 2026-01-01..
+
+place pot: pots lives 2026-01-01..
+
+place sink: sinks lives 1900-01-01..
+
+place world: outside lives 1900-01-01..
+
+def src: key pots = if zero / zero > 0 then pot else pot
+
+def snk: key sinks = if zero / zero > 0 then sink else sink
+
+move sw: transfers
+  on day
+  reads konto
+  leg cash from konto to world amount max(0 PLN, bal(konto, add_days(day, ahead)) from day - amt)
+
+move sw_b: transfers
+  on day
+  reads savings
+  leg cash from src to snk amount amt + 0 * bal(savings)
+
+ask q: flows(sw, 2026-01-01 .. 2026-01-31)
+
+ask r: bal(konto, 2026-01-09)
+
+ask u: flows(sw_b, 2026-01-01 .. 2026-01-31)
+
+version facts
+  cite fixture
+  governs always
+  known 2026-01-01
+  day = 2026-01-10
+  zero = 1
+  ahead = 5
+  amt = 1.00 PLN
+  opening[konto] = 100.00 PLN at 2026-01-01 start
+  opening[savings] = 50.00 PLN at 2026-01-01 start
+  opening[pot] = 0 PLN at 2026-01-01 start
+,,1:0,174:q: 99.00 PLN
+  unfulfilled: sw
+  left out: sw, 1 instances, first 2026-01-10
+  cut 2026-06-30
+r: 100.00 PLN
+  cut 2026-06-30
+u: 1.00 PLN
+  unfulfilled: sw_b
+  cut 2026-06-30
+,15:g8/flows_before,2:g8,25:run g8/flows_before.tally,1828:21:g8/flows_before.tally,1797:model g8_flows_before
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.2 (issue #38), G8: E §4.3 step 1, L §5.14.1: a projection's walk continues the walk it starts from, so flows of a place over a span starting before the projection's first day counts what that walk booked before it. top tops konto's inflows since y0 up to cap on the 15th of each month: 900.00 PLN in January, after pay's 100.00, and never again. Projected from 2026-06-01 (q_june), top on 2026-06-15 reads flows(konto, 2026-01-01 .. 2026-06-15) = 1 500.00 PLN, January to May from the main walk and June's pay from the projection's, so it books 0, and q_june = 2 100.00 PLN, the main walk's figure (main) and that of a projection from the run's first day (q_start), which counts every day itself. tally 2.1.1 summed only the projection's own log (100.00 PLN), booked 900.00 PLN again and printed q_june: 3 000.00 PLN."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit PLN: currency minor 0.01
+
+input cap: money PLN
+
+input wage: money PLN
+
+input dom: int
+
+input y0: date
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay[m in months]: transfers
+  on start_of(m)
+  at start_of(m)
+  leg cash from world to konto amount wage
+
+move top[m in months]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  reads konto
+  leg cash from world to konto amount max(0 PLN, cap - flows(konto, y0 .. day_of(m, dom)))
+
+ask main: bal(konto, 2026-12-31)
+
+ask q_june: bal(konto, 2026-12-31) from 2026-06-01
+
+ask q_start: bal(konto, 2026-12-31) from 2026-01-01
+
+version facts
+  cite fixture
+  governs always
+  known 2026-01-01
+  cap = 1 000.00 PLN
+  wage = 100.00 PLN
+  dom = 15
+  y0 = 2026-01-01
+  opening[konto] = 0 PLN at 2026-01-01 start
+,,1:0,113:main: 2 100.00 PLN
+  cut 2026-01-01
+q_june: 2 100.00 PLN
+  cut 2026-01-01
+q_start: 2 100.00 PLN
+  cut 2026-01-01
+,14:g10/ties_typed,3:g10,24:run g10/ties_typed.tally,2021:20:g10/ties_typed.tally,1991:model g10_ties_typed
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.2 (issue #33), G10: E §6.3 Order, E §4.1: lines of one group tied on their difference, day and group name go by the movement order, its terms compared each as its own type, keys in index order: rent[f2], rent[f3], then rent[f11] (key positions 2, 3 and 11), whatever order the statement's rows are written in. Each is matched by a row of the February statement as planned (difference 0.00, timing +0 days). The twin pair rent[f2] and rent[f3] sorts the same as text; tally 2.1.1 compared the order's text and printed rent[f11] between rent[f2] and rent[f3]."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+source bank_feed "T's invented bank feed"
+
+unit PLN: currency minor 0.01
+
+index flats = [f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11]
+
+input bank: observed
+
+input rent_amt: money PLN
+
+input rent_day: date
+
+place konto: accounts PLN lives 2026-01-01..
+
+place landlord: outside lives 1900-01-01..
+
+place unexplained: outside lives 1900-01-01..
+
+move rent[f in flats]: transfers
+  on rent_day
+  when pos(f) == 2 or pos(f) == 3 or pos(f) == 11
+  leg cash from konto to landlord amount rent_amt
+
+ask led: residuals konto 2026-02
+
+version facts
+  cite fixture
+  governs always
+  known 2026-01-01
+  rent_amt = 2 000.00 PLN
+  rent_day = 2026-02-03
+  opening[konto] = 10 000.00 PLN at 2026-01-01 start
+
+version statement_02
+  cite bank_feed
+  governs 2026-02
+  known 2026-03-02
+  covers konto
+  pad konto from unexplained
+  bank[r1] = (on: 2026-02-03, kind: transfers, leg cash from konto to landlord amount 2 000.00 PLN, fulfils: rent[f11]) "line 1"
+  bank[r2] = (on: 2026-02-03, kind: transfers, leg cash from konto to landlord amount 2 000.00 PLN, fulfils: rent[f3]) "line 2"
+  bank[r3] = (on: 2026-02-03, kind: transfers, leg cash from konto to landlord amount 2 000.00 PLN, fulfils: rent[f2]) "line 3"
+  stated[konto] = 4 000.00 PLN at 2026-02-28 end "saldo"
+,,1:0,664:led: residuals konto 2026-02
+  2026-02 balance: model 4 000.00 PLN, observed 4 000.00 PLN, difference 0.00 PLN
+    balance konto 2026-02-28 end (padded): booked 4 000.00 PLN, stated 4 000.00 PLN, gap 0.00 PLN
+  2026-02 move rent: model -6 000.00 PLN, observed -6 000.00 PLN, difference 0.00 PLN
+    matched rent[f2] on 2026-02-03: model -2 000.00 PLN, observed -2 000.00 PLN, difference 0.00 PLN, timing +0 days
+    matched rent[f3] on 2026-02-03: model -2 000.00 PLN, observed -2 000.00 PLN, difference 0.00 PLN, timing +0 days
+    matched rent[f11] on 2026-02-03: model -2 000.00 PLN, observed -2 000.00 PLN, difference 0.00 PLN, timing +0 days
+  cut 2026-10-20
+,15:g12/order_typed,3:g12,25:run g12/order_typed.tally,1498:21:g12/order_typed.tally,1467:model g12_order_typed
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.2 (issue #39), G12: L §2.5 binding order, E §4.1: a binding over movements runs in the movement order, by day, then that order's other terms, each compared as its own type. zfee, a day earlier, comes first whatever its id; then rent[f2], rent[f3] and rent[f11], keys of a list index in index order. The twin pair rent[f2] and rent[f3] sorts the same as text; tally 2.1.1 compared the order's text and put rent[f11] between rent[f2] and rent[f3]. Strata of 10 or more are not here: S builds no binding over decisions (M1)."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit PLN: currency minor 0.01
+
+index flats = [f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11]
+
+input rent_amt: money PLN
+
+input fee_amt: money PLN
+
+input rent_day: date
+
+input fee_day: date
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move rent[f in flats]: transfers
+  on rent_day
+  when pos(f) == 2 or pos(f) == 3 or pos(f) == 11
+  leg cash from konto to world amount rent_amt
+
+move zfee: transfers
+  on fee_day
+  leg cash from konto to world amount fee_amt
+
+ask q_keys: m.cash.amount for m in transfers over 2026-02
+
+version facts
+  cite fixture
+  governs always
+  known 2026-01-01
+  rent_amt = 10.00 PLN
+  fee_amt = 1.00 PLN
+  rent_day = 2026-02-03
+  fee_day = 2026-02-01
+  opening[konto] = 100.00 PLN at 2026-01-01 start
+,,1:0,289:q_keys (m = zfee): 1.00 PLN
+  unfulfilled: zfee
+  cut 2026-06-30
+q_keys (m = rent[f2]): 10.00 PLN
+  unfulfilled: rent[f2]
+  cut 2026-06-30
+q_keys (m = rent[f3]): 10.00 PLN
+  unfulfilled: rent[f3]
+  cut 2026-06-30
+q_keys (m = rent[f11]): 10.00 PLN
+  unfulfilled: rent[f11]
+  cut 2026-06-30
+,13:g6/currencies,2:g6,23:run g6/currencies.tally,1725:19:g6/currencies.tally,1696:model g6_currencies
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.2 (issue #43), G6: L §5.4, §5.7, §5.14: a declared currency is a key of the prelude's currencies, so a leg of unit kind currencies carries money in any declared currency: in_pln moves 25.00 PLN into konto and in_eur 7.00 EUR into konto_eur. The twin in_fixed carries PLN on a leg of a kind whose unit is PLN itself. tally 2.1.1's refcore refused the load (LOAD-UNIT the amount of leg cash of in_eur is money EUR, not a unit of currencies), though its run took it."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit PLN: currency minor 0.01
+
+unit EUR: currency minor 0.01
+
+kind curs: event certain
+  leg cash: currencies
+
+kind plns: event certain
+  leg cash: PLN
+
+input pln_amt: money PLN
+
+input eur_amt: money EUR
+
+input day: date
+
+place konto: accounts PLN lives 2026-01-01..
+
+place konto_eur: accounts EUR lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move in_pln: curs
+  on day
+  at day
+  leg cash from world to konto amount pln_amt
+
+move in_eur: curs
+  on day
+  at day
+  leg cash from world to konto_eur amount eur_amt
+
+move in_fixed: plns
+  on day
+  at day
+  leg cash from world to konto amount pln_amt
+
+ask q: bal(konto, 2026-01-31), bal(konto, 2026-03-31), bal(konto_eur, 2026-03-31)
+
+ask f: flows(in_pln, 2026-01-01 .. 2026-12-31), flows(in_eur, 2026-01-01 .. 2026-12-31), flows(in_fixed, 2026-01-01 .. 2026-12-31)
+
+version facts
+  cite fixture
+  governs always
+  known 2026-01-01
+  pln_amt = 25.00 PLN
+  eur_amt = 7.00 EUR
+  day = 2026-02-01
+  opening[konto] = 100.00 PLN at 2026-01-01 start
+  opening[konto_eur] = 0 EUR at 2026-01-01 start
+,,1:0,244:f: (25.00 PLN, 7.00 EUR, 25.00 PLN)
+  unfulfilled: in_eur
+  unfulfilled: in_fixed
+  unfulfilled: in_pln
+  cut 2026-06-30
+q: (100.00 PLN, 150.00 PLN, 7.00 EUR)
+  unfulfilled: in_eur
+  unfulfilled: in_fixed
+  unfulfilled: in_pln
+  cut 2026-06-30
+,16:g11/settle_order,3:g11,26:run g11/settle_order.tally,2171:22:g11/settle_order.tally,2139:model g11_settle_order
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.2 (issue #44), G11: L §5.14.3 How a settlement leg counts, E §5 step 5, E §3.2: turn swaps t[2026-03]'s places, so bank[r1], settling its adjustment, is refused (RUN-RECORD, the leg is turned round), and linking is all or nothing: every read that counts the adjustment meets that refusal, in either order, two reads in one ask (q_fb: flows then a balance; q_bf: the balance then flows; q_ff: flows twice). The twin g11/settle_order_twin moves only the leg's from place, and its row settles: both orders answer the same numbers. tally 2.1.1's refcore linked the adjustment before the refusal, so the later read of an ask took the HOLE-CHANGED hole, and swapping the reads swapped the answers."
+
+source plan "T's invented plan"
+
+source act "T's invented act"
+
+source bank_feed "T's invented bank feed"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place konto2: accounts PLN lives 2026-01-01..
+
+input amt: money PLN
+
+input dom: int
+
+input src: key accounts
+
+input dst: key accounts
+
+input bank: observed
+
+def s_[m in months]: key accounts = src at start_of(m)
+
+def d_[m in months]: key accounts = dst at start_of(m)
+
+move t[m in months]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  leg cash from s_[m] to d_[m] amount amt
+
+version plan_2026
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  amt = 100.00 PLN
+  dom = 10
+  src = konto
+  dst = konto2
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start
+  opening[konto2] = 0 PLN at 2026-01-01 start
+
+version turn
+  cite act
+  governs 2026-03
+  known 2026-05-01
+  replace src = konto2
+  replace dst = konto
+
+version settle
+  cite bank_feed
+  governs 2026-05
+  known 2026-05-20
+  bank[r1] = (on: 2026-05-15, kind: transfers, leg cash from konto2 to konto amount 100.00 PLN, fulfils: adjustments[t[2026-03].cash, turn]) "line 1"
+
+ask q_fb: flows(t, 2026-05-01 .. 2026-05-31), bal(konto, 2026-06-30)
+
+ask q_bf: bal(konto, 2026-06-30), flows(t, 2026-05-01 .. 2026-05-31)
+
+ask q_ff: flows(t, 2026-05-01 .. 2026-05-31), flows(t, 2026-05-01 .. 2026-05-31)
+,,1:0,774:q_bf: (refused: RUN-RECORD settlement bank[r1] of adjustments[t[2026-03].cash, turn]: the leg is turned round, refused: RUN-RECORD settlement bank[r1] of adjustments[t[2026-03].cash, turn]: the leg is turned round)
+  unfulfilled: t[2026-05]
+  cut 2026-10-20
+q_fb: (refused: RUN-RECORD settlement bank[r1] of adjustments[t[2026-03].cash, turn]: the leg is turned round, refused: RUN-RECORD settlement bank[r1] of adjustments[t[2026-03].cash, turn]: the leg is turned round)
+  unfulfilled: t[2026-05]
+  cut 2026-10-20
+q_ff: (refused: RUN-RECORD settlement bank[r1] of adjustments[t[2026-03].cash, turn]: the leg is turned round, refused: RUN-RECORD settlement bank[r1] of adjustments[t[2026-03].cash, turn]: the leg is turned round)
+  unfulfilled: t[2026-05]
+  cut 2026-10-20
+,21:g11/settle_order_twin,3:g11,31:run g11/settle_order_twin.tally,1812:27:g11/settle_order_twin.tally,1775:model g11_settle_order_twin
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.2 (issue #44), G11: the twin of g11/settle_order: turn moves only t[2026-03]'s from place, to konto3, and bank[r1], from the new from place, settles its adjustment; the reads that count it answer the same numbers in either order (q_fb, q_bf, q_ff)."
+
+source plan "T's invented plan"
+
+source act "T's invented act"
+
+source bank_feed "T's invented bank feed"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place konto2: accounts PLN lives 2026-01-01..
+
+place konto3: accounts PLN lives 2026-01-01..
+
+input amt: money PLN
+
+input dom: int
+
+input src: key accounts
+
+input dst: key accounts
+
+input bank: observed
+
+def s_[m in months]: key accounts = src at start_of(m)
+
+def d_[m in months]: key accounts = dst at start_of(m)
+
+move t[m in months]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  leg cash from s_[m] to d_[m] amount amt
+
+version plan_2026
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  amt = 100.00 PLN
+  dom = 10
+  src = konto
+  dst = konto2
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start
+  opening[konto2] = 0 PLN at 2026-01-01 start
+  opening[konto3] = 500.00 PLN at 2026-01-01 start
+
+version turn
+  cite act
+  governs 2026-03
+  known 2026-05-01
+  replace src = konto3
+
+version settle
+  cite bank_feed
+  governs 2026-05
+  known 2026-05-20
+  bank[r1] = (on: 2026-05-15, kind: transfers, leg cash from konto3 to konto2 amount 100.00 PLN, fulfils: adjustments[t[2026-03].cash, turn]) "line 1"
+
+ask q_fb: flows(t, 2026-05-01 .. 2026-05-31), bal(konto, 2026-06-30)
+
+ask q_bf: bal(konto, 2026-06-30), flows(t, 2026-05-01 .. 2026-05-31)
+
+ask q_ff: flows(t, 2026-05-01 .. 2026-05-31), flows(t, 2026-05-01 .. 2026-05-31)
+,,1:0,808:q_bf: (400.00 PLN, 200.00 PLN)
+  adjustment: t[2026-03] by 0.00 PLN on 2026-05-01 (version turn), remaining -100.00 PLN
+  unfulfilled: t[2026-01]
+  unfulfilled: t[2026-02]
+  unfulfilled: t[2026-03]
+  unfulfilled: t[2026-04]
+  unfulfilled: t[2026-05]
+  unfulfilled: t[2026-06]
+  cut 2026-10-20
+q_fb: (200.00 PLN, 400.00 PLN)
+  adjustment: t[2026-03] by 0.00 PLN on 2026-05-01 (version turn), remaining -100.00 PLN
+  unfulfilled: t[2026-01]
+  unfulfilled: t[2026-02]
+  unfulfilled: t[2026-03]
+  unfulfilled: t[2026-04]
+  unfulfilled: t[2026-05]
+  unfulfilled: t[2026-06]
+  cut 2026-10-20
+q_ff: (200.00 PLN, 200.00 PLN)
+  adjustment: t[2026-03] by 0.00 PLN on 2026-05-01 (version turn), remaining -100.00 PLN
+  unfulfilled: t[2026-05]
+  cut 2026-10-20
+warning: WARN-NEGATIVE konto is below zero from 2026-11-10
+,21:g11/remeasure_refused,3:g11,31:run g11/remeasure_refused.tally,1615:27:g11/remeasure_refused.tally,1578:model g11_remeasure_refused
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.2 (issue #34), G11: E §5 step 3, L §5.14.3 Detection, L §8.4: late (known 2026-05-01) re-measures rent[2026-03] at 0 tenants, so its amount is refused (RUN-DIV), and its adjustment is refused with the refusal: unsettled, it refuses what an unfulfilled one makes HOLE-CHANGED, the flows of rent over a span reaching 2026-05-01 and konto's balance from then (q); a binding over adjustments holds it (n), and its change is the refusal (l). The twin before reads konto before 2026-05-01, where it stands. tally 2.1.1 skipped the step: q was (500.00 PLN, 7 000.00 PLN), as if late changed nothing."
+
+source plan "T's invented plan"
+
+source act "T's invented act"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place landlord: outside lives 1900-01-01..
+
+input total: money PLN
+
+input tenants[m in months]: int
+
+input dom: int
+
+move rent[m in months]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  leg cash from konto to landlord amount round(total / tenants[m], minor(PLN), half-even)
+
+version plan_2026
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  total = 1 000.00 PLN
+  dom = 10
+  tenants[*] = 2
+  opening[konto] = 10 000.00 PLN at 2026-01-01 start
+
+version late
+  cite act
+  governs 2026-03
+  known 2026-05-01
+  replace tenants[*] = 0
+
+ask before: bal(konto, 2026-04-30)
+
+ask q: flows(rent, 2026-05-01 .. 2026-05-31), bal(konto, 2026-06-30)
+
+ask n: count(a in adjustments over ..)
+
+ask l: a.change for a in adjustments over ..
+,,1:0,539:before: 8 000.00 PLN
+  unfulfilled: rent[2026-01]
+  unfulfilled: rent[2026-02]
+  unfulfilled: rent[2026-03]
+  unfulfilled: rent[2026-04]
+  cut 2026-10-20
+l (a = adjustments[rent[2026-03].cash, late]): refused: RUN-DIV division by zero
+  cut 2026-10-20
+n: 1
+  cut 2026-10-20
+q: (refused: RUN-DIV division by zero, refused: RUN-DIV division by zero)
+  unfulfilled: rent[2026-01]
+  unfulfilled: rent[2026-02]
+  unfulfilled: rent[2026-03]
+  unfulfilled: rent[2026-04]
+  unfulfilled: rent[2026-05]
+  unfulfilled: rent[2026-06]
+  cut 2026-10-20
+,26:g11/remeasure_refused_when,3:g11,36:run g11/remeasure_refused_when.tally,1629:32:g11/remeasure_refused_when.tally,1587:model g11_remeasure_refused_when
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.2 (issue #34), G11: E §5 steps 1 and 3: late (known 2026-05-01) re-measures rent[2026-03]'s when at 0 seats, so the instance is refused at that cut (RUN-DIV), and its adjustment with it: the reads reaching 2026-05-01 are refused (q), the adjustment is held (n) and its change is the refusal (l). The twins are reads that don't reach it: konto before 2026-05-01 (before) and rent's flows in March and April (early). tally 2.1.1 skipped the step: q was (500.00 PLN, 7 000.00 PLN)."
+
+source plan "T's invented plan"
+
+source act "T's invented act"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place landlord: outside lives 1900-01-01..
+
+input total: money PLN
+
+input tenants[m in months]: int
+
+input dom: int
+
+input seats[m in months]: int
+
+move rent[m in months]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  when dom / seats[m] > 0
+  leg cash from konto to landlord amount round(total / tenants[m], minor(PLN), half-even)
+
+version plan_2026
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  total = 1 000.00 PLN
+  dom = 10
+  tenants[*] = 2
+  seats[*] = 1
+  opening[konto] = 10 000.00 PLN at 2026-01-01 start
+
+version late
+  cite act
+  governs 2026-03
+  known 2026-05-01
+  replace seats[*] = 0
+
+ask before: bal(konto, 2026-04-30)
+
+ask early: flows(rent, 2026-03-01 .. 2026-04-30)
+
+ask q: flows(rent, 2026-05-01 .. 2026-05-31), bal(konto, 2026-06-30)
+
+ask n: count(a in adjustments over ..)
+
+ask l: a.change for a in adjustments over ..
+,,1:0,634:before: 8 000.00 PLN
+  unfulfilled: rent[2026-01]
+  unfulfilled: rent[2026-02]
+  unfulfilled: rent[2026-03]
+  unfulfilled: rent[2026-04]
+  cut 2026-10-20
+early: 1 000.00 PLN
+  unfulfilled: rent[2026-03]
+  unfulfilled: rent[2026-04]
+  cut 2026-10-20
+l (a = adjustments[rent[2026-03].cash, late]): refused: RUN-DIV division by zero
+  cut 2026-10-20
+n: 1
+  cut 2026-10-20
+q: (refused: RUN-DIV division by zero, refused: RUN-DIV division by zero)
+  unfulfilled: rent[2026-01]
+  unfulfilled: rent[2026-02]
+  unfulfilled: rent[2026-03]
+  unfulfilled: rent[2026-04]
+  unfulfilled: rent[2026-05]
+  unfulfilled: rent[2026-06]
+  cut 2026-10-20
+,29:g11/remeasure_refused_booking,3:g11,39:run g11/remeasure_refused_booking.tally,1847:35:g11/remeasure_refused_booking.tally,1802:model g11_remeasure_refused_booking
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.2 (issue #34, the user's 1: refused stays refused), G11: E §5 step 1: zero (known 2026-02-01) makes rent[2026-03]'s amount refused at its booking cut (0 tenants, RUN-DIV). A booking refused at its first measure stays refused and its later re-measurements record nothing, as a hole booking's refused steps: late1 (4 tenants) and late2 (5 tenants) make no adjustment (n, l), and konto stays refused from 2026-03-10 (b). The twin is rent in July, untouched by them: its flows stand (q). tally 2.1.1 skipped late1's step and measured late2's against it, one adjustment of -50.00 PLN dated 2026-07-01, unsettled, so q was the HOLE-CHANGED hole."
+
+source plan "T's invented plan"
+
+source act "T's invented act"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place landlord: outside lives 1900-01-01..
+
+input total: money PLN
+
+input tenants[m in months]: int
+
+input dom: int
+
+move rent[m in months]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  leg cash from konto to landlord amount round(total / tenants[m], minor(PLN), half-even)
+
+version plan_2026
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  total = 1 000.00 PLN
+  dom = 10
+  tenants[*] = 2
+  opening[konto] = 10 000.00 PLN at 2026-01-01 start
+
+version zero
+  cite act
+  governs 2026-03
+  known 2026-02-01
+  replace tenants[*] = 0
+
+version late1
+  cite act
+  governs 2026-03
+  known 2026-05-01
+  replace tenants[*] = 4
+
+version late2
+  cite act
+  governs 2026-03
+  known 2026-07-01
+  replace tenants[*] = 5
+
+ask b: bal(konto, 2026-02-28), bal(konto, 2026-03-31)
+
+ask q: flows(rent, 2026-07-01 .. 2026-07-31)
+
+ask n: count(a in adjustments over ..)
+
+ask l: a.change for a in adjustments over ..
+,,1:0,210:b: (9 000.00 PLN, refused: RUN-DIV division by zero)
+  unfulfilled: rent[2026-01]
+  unfulfilled: rent[2026-02]
+  cut 2026-10-20
+n: 0
+  cut 2026-10-20
+q: 500.00 PLN
+  unfulfilled: rent[2026-07]
+  cut 2026-10-20
+,23:g11/remeasure_hole_when,3:g11,33:run g11/remeasure_hole_when.tally,2333:29:g11/remeasure_hole_when.tally,2294:model g11_remeasure_hole_when
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.2 (issue #34, the hole-when sibling), G11: E §5 step 3: late (known 2026-05-01) makes the March instances' when a hole (seats unknown), so whether each was due is unknown: a hole adjustment, as a hole amount makes one. Unsettled, rent_l[2026-03]'s makes its reads reaching 2026-05-01 the HOLE-CHANGED hole, and the register lists it (q_l); before 2026-05-01 they stand (before_l, early_l). ended (known 2026-07-01) makes rent_e[2026-03]'s when false, ending the instance, measured against the hole state, so a second hole adjustment (n, l), and the reads reaching 2026-07-01 hold both questions (q_e). tally 2.1.1 skipped late's step: q_l was (500.00 PLN, 7 000.00 PLN), and ended's was measured against the booking, one adjustment of 500.00 PLN."
+
+source plan "T's invented plan"
+
+source act "T's invented act"
+
+unit PLN: currency minor 0.01
+
+place konto_l: accounts PLN lives 2026-01-01..
+
+place konto_e: accounts PLN lives 2026-01-01..
+
+place landlord: outside lives 1900-01-01..
+
+input total: money PLN
+
+input dom: int
+
+input seats_l[m in months]: int
+
+input seats_e[m in months]: int
+
+move rent_l[m in months]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  when seats_l[m] > 0
+  leg cash from konto_l to landlord amount total
+
+move rent_e[m in months]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  when seats_e[m] > 0
+  leg cash from konto_e to landlord amount total
+
+version plan_2026
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  total = 500.00 PLN
+  dom = 10
+  seats_l[*] = 1
+  seats_e[*] = 1
+  opening[konto_l] = 10 000.00 PLN at 2026-01-01 start
+  opening[konto_e] = 10 000.00 PLN at 2026-01-01 start
+
+version late
+  cite act
+  governs 2026-03
+  known 2026-05-01
+  replace seats_l[*] = ?"how many seats in March?"
+  replace seats_e[*] = ?"how many seats in March?"
+
+version ended
+  cite act
+  governs 2026-03
+  known 2026-07-01
+  replace seats_e[*] = 0
+
+ask before_l: bal(konto_l, 2026-04-30)
+
+ask early_l: flows(rent_l, 2026-03-01 .. 2026-04-30)
+
+ask q_l: flows(rent_l, 2026-05-01 .. 2026-05-31), bal(konto_l, 2026-06-30)
+
+ask q_e: flows(rent_e, 2026-07-01 .. 2026-07-31)
+
+ask n: count(a in adjustments over ..)
+
+ask l: a.change for a in adjustments over ..
+,,1:0,1653:before_l: 8 000.00 PLN
+  unfulfilled: rent_l[2026-01]
+  unfulfilled: rent_l[2026-02]
+  unfulfilled: rent_l[2026-03]
+  unfulfilled: rent_l[2026-04]
+  cut 2026-10-20
+early_l: 1 000.00 PLN
+  unfulfilled: rent_l[2026-03]
+  unfulfilled: rent_l[2026-04]
+  cut 2026-10-20
+l (a = adjustments[rent_e[2026-03].cash, late]): ?"how many seats in March?" (seats_e[2026-03])
+  cut 2026-10-20
+l (a = adjustments[rent_l[2026-03].cash, late]): ?"how many seats in March?" (seats_l[2026-03])
+  cut 2026-10-20
+l (a = adjustments[rent_e[2026-03].cash, ended]): ?"how many seats in March?" (seats_e[2026-03])
+  cut 2026-10-20
+l (a = adjustments[rent_l[2026-03].cash, ended]): ?"how many seats in March?" (seats_l[2026-03])
+  cut 2026-10-20
+n: 4
+  cut 2026-10-20
+q_e: ?"rent_e[2026-03] on 2026-03-10 changed after it was paid (version ended); is back pay due, and when?" (rent_e[2026-03]) ?"rent_e[2026-03] on 2026-03-10 changed after it was paid (version late); is back pay due, and when?" (rent_e[2026-03])
+  unfulfilled: rent_e[2026-07]
+  cut 2026-10-20
+q_l: (?"rent_l[2026-03] on 2026-03-10 changed after it was paid (version late); is back pay due, and when?" (rent_l[2026-03]), ?"rent_l[2026-03] on 2026-03-10 changed after it was paid (version late); is back pay due, and when?" (rent_l[2026-03]))
+  adjustment: rent_l[2026-03] by ?"how many seats in March?" (seats_l[2026-03]) on 2026-05-01 (version late), remaining ?"how many seats in March?" (seats_l[2026-03])
+  unfulfilled: rent_l[2026-01]
+  unfulfilled: rent_l[2026-02]
+  unfulfilled: rent_l[2026-03]
+  unfulfilled: rent_l[2026-04]
+  unfulfilled: rent_l[2026-05]
+  unfulfilled: rent_l[2026-06]
+  cut 2026-10-20
 ,

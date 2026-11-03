@@ -14,8 +14,8 @@ mod tests {
     use tally_runner::kernel::{VECTORS, difference, vectors};
 
     /// The groups this target tests, one `#[test]` each.
-    const GROUPS: [&str; 13] = [
-        "checks", "g1", "g2", "g3", "g4", "g5", "g6", "g7", "g8", "g9", "g10", "g11", "g12",
+    const GROUPS: [&str; 14] = [
+        "checks", "g1", "g2", "g3", "g4", "g5", "g6", "g7", "g8", "g9", "g10", "g11", "g12", "g13",
     ];
 
     /// Runs every vector of `group` on the engine and holds it to refcore's run.
@@ -136,7 +136,8 @@ mod tests {
     /// G6, the plan pass (E §4.1, L §5.14): a daily move's ledger lines in a covered month; a
     /// `when` that holds, fails, is a hole and is refused; an attribute refused; an uncertain
     /// kind with and without `with uncertain`; legs in money and units, of a kind of unit
-    /// `any`, and of 0 (`kernel/g6/`).
+    /// `any`, and of 0; money in two declared currencies on a leg of unit kind `currencies`
+    /// beside a leg whose unit is the currency itself (tally 2.1.2, #43) (`kernel/g6/`).
     #[test]
     fn s_kernel_g6_plan_pass() {
         group_holds("g6");
@@ -162,7 +163,11 @@ mod tests {
     /// and an earlier one; #35, a decision reading a projection, asked with and without the
     /// line's `with uncertain`; #37 T1 and N2; a decision reading its own move's flows,
     /// projected from before its day; a projection from a decision's own point, alone, nested
-    /// in another, and with a later decision that day refused in its `when` (`kernel/g8/`).
+    /// in another, and with a later decision that day refused in its `when`; tally 2.1.2: a
+    /// projection at a decision's point counting a later decision of its stratum whose id
+    /// extends its own (`sw`, `sw_b`), refused beside a twin that answers (#32), and `flows` of
+    /// a place over days before a projection's start, from the walk it continues (#38)
+    /// (`kernel/g8/`).
     #[test]
     fn s_kernel_g8_projections() {
         group_holds("g8");
@@ -172,7 +177,10 @@ mod tests {
     /// and a holding broken by a first-batch plan and by a decision (RUN-PLACE), each beside a
     /// twin that stays at 0 or nets in its batch; a claim stated below zero at a close; legs
     /// out of and into places outside their lifespans (RUN-LIFESPAN) beside a leg of 0;
-    /// `WARN-NEGATIVE` twice; a hole amount and a hole day (`kernel/g9/`).
+    /// `WARN-NEGATIVE` twice; a hole amount and a hole day; tally 2.1.2: a leg whose place is a
+    /// hole, booking its known side, beside a twin between known places (#31); a reading's
+    /// own place tested at the close (a pad and an anchor below 0, the twins at 0), at a day's
+    /// start (a pad, a twin that nets in its batch) and at an opening (#46) (`kernel/g9/`).
     #[test]
     fn s_kernel_g9_sign_rule() {
         group_holds("g9");
@@ -186,7 +194,7 @@ mod tests {
     /// each other at one instant, an anchor; a place's first reading as a cut sees it; ledgers
     /// with matched, partly fulfilled, missing, undated, unexplained and balance lines, a link
     /// to an instance that doesn't exist beside one of its move that does, ties broken by the
-    /// movement order (`kernel/g10/`).
+    /// movement order, typed: key positions 2, 3 and 11 (tally 2.1.2, #33) (`kernel/g10/`).
     #[test]
     fn s_kernel_g10_observations() {
         group_holds("g10");
@@ -198,7 +206,11 @@ mod tests {
     /// and outside a span; one nothing settles (HOLE-CHANGED) before and after its day; a
     /// waiver and a settlement written as moves bound over adjustments; rows naming
     /// adjustments no version made; a leg turned round and a leg touching neither place
-    /// (RUN-RECORD) beside twins that settle (`kernel/g11/`).
+    /// (RUN-RECORD) beside twins that settle; tally 2.1.2: a refused settlement read twice in
+    /// one ask, in both orders, beside a twin that settles (#44); re-measurements refused by
+    /// an amount and by a `when`, a booking refused at its first measure that stays refused,
+    /// and `when`s made holes, then ended (#34), each beside reads that don't reach them
+    /// (`kernel/g11/`).
     #[test]
     fn s_kernel_g11_adjustments() {
         group_holds("g11");
@@ -210,9 +222,20 @@ mod tests {
     /// fulfil it counted once, by the row where it is booked, else by the instance; an
     /// uncertain instance left out; a binding whose day is a hole; attributes; what rows
     /// fulfil; `x in K on d` with d known, before a lifespan, a hole and never (#37 N3); moves
-    /// bound over things on an assumed day and on a hole day (`kernel/g12/`).
+    /// bound over things on an assumed day and on a hole day; tally 2.1.2: movements by day,
+    /// then their keys in index order, positions 2, 3 and 11 (#39) (`kernel/g12/`).
     #[test]
     fn s_kernel_g12_members() {
         group_holds("g12");
+    }
+
+    /// G13, what load checks at S (tally 2.1.2): `LOAD-DEPTH` counts a `from` term one level
+    /// (L §2.3, #29), refused at 9 beside a twin at 8 that answers; `WARN-UNREAD` for a place
+    /// no line names (L §8.5, #30): an opening, a reading, an anchor and a `covers` line name
+    /// none; a read, a leg, an observed row's leg, a pad, a binding over its kind and a row
+    /// whose value it is each name one (`kernel/g13/`).
+    #[test]
+    fn s_kernel_g13_load() {
+        group_holds("g13");
     }
 }

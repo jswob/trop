@@ -12,8 +12,8 @@
 use super::graph::walk;
 use super::steps::{Loader, refuse};
 use crate::base::{Code, Load, Refusal, Warn};
-use crate::model::{Graph, Node, NodeKind, Reality, Rel, Target};
-use crate::syntax::{Order, Section, Stop};
+use crate::model::{GapRole, Graph, Node, NodeKind, Reality, Rel, Target, Ty};
+use crate::syntax::{Expr, Field, FieldValue, Lit, Order, Section, Stop, Value as Written};
 use std::collections::{BTreeMap, BTreeSet};
 
 /// An invariant of the graph's own searches broken: a cycle or a layer that must exist.
@@ -281,8 +281,9 @@ fn closed_cycle(stack: &[(Node, Vec<Node>)], again: Node) -> Vec<Node> {
     cycle
 }
 
-/// `input x is read by nothing` for an input that isn't built in or observed, and `def d is
-/// read by nothing`, for each nothing reads (refcore's `check_graph`, its end). L §8.5.
+/// `input x is read by nothing` for an input that isn't built in or observed, `def d is read
+/// by nothing`, and `place p is read by nothing` for a `place` section no line names, for
+/// each nothing reads (refcore's `check_graph`, its end). L §8.5; E §3.1 step 6.
 fn unread(m: &Reality, graph: &Graph) -> Vec<(Warn, String)> {
     let read: BTreeSet<&Node> = graph.edges.values().flat_map(BTreeMap::keys).collect();
     let mut out = Vec::new();
@@ -297,7 +298,122 @@ fn unread(m: &Reality, graph: &Graph) -> Vec<(Warn, String)> {
             out.push((Warn::Unread, format!("def {id} is read by nothing")));
         }
     }
+    let named = named_places(m, &read);
+    for (id, _) in m.places.entries() {
+        if !named.contains(id) {
+            out.push((Warn::Unread, format!("place {id} is read by nothing")));
+        }
+    }
     out
+}
+
+/// The `place` sections some line names (tally 2.1.2): a read, a leg or a binding over its
+/// kind (a `Place` node among the graph's targets), a row whose value is one of its things,
+/// an end of an observed row's leg, either place of a version's `pad x from y`. A row keyed
+/// by the place (`opening`, a reading), an `anchor` and a `covers` line name none (refcore's
+/// `check_graph`, `values_naming`). L §8.5; E §3.1 step 6.
+fn named_places(m: &Reality, read: &BTreeSet<&Node>) -> BTreeSet<String> {
+    let mut owner: BTreeMap<&str, &str> = BTreeMap::new();
+    for (id, place) in m.places.entries() {
+        for (_, name) in &place.things {
+            owner.insert(name.as_str(), id.as_str());
+        }
+    }
+    let mut things: Vec<String> = Vec::new();
+    for (_, input) in m.inputs.entries() {
+        if let Some(ty) = &input.ty {
+            for row in &input.rows {
+                row_things(m, &row.value, ty, &mut things);
+            }
+        }
+        for leg in input.observations.iter().flat_map(|o| &o.legs) {
+            things.push(leg.from.clone());
+            things.push(leg.to.clone());
+        }
+    }
+    for (_, def) in m.defs.entries() {
+        for row in &def.givens {
+            row_things(m, &row.value, &def.ty, &mut things);
+        }
+    }
+    for (_, version) in m.versions.entries() {
+        for (place, role) in &version.gap_roles {
+            if let GapRole::Pad(from) = role {
+                things.push(place.clone());
+                things.push(from.clone());
+            }
+        }
+    }
+    let mut named: BTreeSet<String> = read
+        .iter()
+        .filter(|node| node.kind == NodeKind::Place)
+        .map(|node| node.id.clone())
+        .collect();
+    named.extend(
+        things
+            .iter()
+            .filter_map(|thing| owner.get(thing.as_str()))
+            .map(|id| (*id).to_owned()),
+    );
+    named
+}
+
+/// The things a row's written value names where its type takes a thing of a kind: the value
+/// itself, a record's fields, a list's items, each converted as a read converts it (refcore's
+/// `values_naming` over `convert_value`). L §8.5, §4.2.
+fn row_things(m: &Reality, value: &Written, ty: &Ty, out: &mut Vec<String>) {
+    match value {
+        Written::Lit(lit) => out.extend(thing_of(m, lit, ty)),
+        Written::Record(fields) => {
+            let Ty::Record(types) = ty else {
+                return;
+            };
+            for (name, field_ty) in types {
+                let lit = fields.iter().find_map(|f| field_lit(f, name));
+                out.extend(lit.and_then(|lit| thing_of(m, &lit, field_ty)));
+            }
+        }
+        Written::List(items) => {
+            let Ty::List(item_ty) = ty else {
+                return;
+            };
+            out.extend(items.iter().filter_map(|lit| thing_of(m, lit, item_ty)));
+        }
+        Written::Hole(_)
+        | Written::Never
+        | Written::None
+        | Written::Str(_)
+        | Written::Calendar(_)
+        | Written::Days(_)
+        | Written::Expr(_) => {}
+    }
+}
+
+/// A record field's literal, when the field is `name` and its value is one (a word read as
+/// a key included), as a row's conversion takes it (refcore's `convert_value`). L §3.1.
+fn field_lit(field: &Field, name: &str) -> Option<Lit> {
+    match field {
+        Field::Named(n, FieldValue::Lit(lit) | FieldValue::Expr(Expr::Lit(lit))) if n == name => {
+            Some(lit.clone())
+        }
+        Field::Named(n, FieldValue::Expr(Expr::Name(word))) if n == name => {
+            Some(Lit::Name(word.clone()))
+        }
+        Field::Named(..) | Field::Leg(_) => None,
+    }
+}
+
+/// The thing a key literal is under `key k` of a kind: an index's key names none (refcore's
+/// `key_value`, its index before its kind). L §4.2.
+fn thing_of(m: &Reality, lit: &Lit, ty: &Ty) -> Option<String> {
+    let Ty::Key(kind) = ty else {
+        return None;
+    };
+    if m.indexes.get(kind).is_some() {
+        return None;
+    }
+    let text = lit.text();
+    m.thing_in(&text, kind).then_some(text)
 }
 
 /// Whether a mark travels along a read of `target`: through defs and a move's day, never a

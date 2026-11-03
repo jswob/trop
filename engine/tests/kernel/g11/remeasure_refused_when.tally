@@ -1,0 +1,56 @@
+model g11_remeasure_refused_when
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.2 (issue #34), G11: E §5 steps 1 and 3: late (known 2026-05-01) re-measures rent[2026-03]'s when at 0 seats, so the instance is refused at that cut (RUN-DIV), and its adjustment with it: the reads reaching 2026-05-01 are refused (q), the adjustment is held (n) and its change is the refusal (l). The twins are reads that don't reach it: konto before 2026-05-01 (before) and rent's flows in March and April (early). tally 2.1.1 skipped the step: q was (500.00 PLN, 7 000.00 PLN)."
+
+source plan "T's invented plan"
+
+source act "T's invented act"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place landlord: outside lives 1900-01-01..
+
+input total: money PLN
+
+input tenants[m in months]: int
+
+input dom: int
+
+input seats[m in months]: int
+
+move rent[m in months]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  when dom / seats[m] > 0
+  leg cash from konto to landlord amount round(total / tenants[m], minor(PLN), half-even)
+
+version plan_2026
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  total = 1 000.00 PLN
+  dom = 10
+  tenants[*] = 2
+  seats[*] = 1
+  opening[konto] = 10 000.00 PLN at 2026-01-01 start
+
+version late
+  cite act
+  governs 2026-03
+  known 2026-05-01
+  replace seats[*] = 0
+
+ask before: bal(konto, 2026-04-30)
+
+ask early: flows(rent, 2026-03-01 .. 2026-04-30)
+
+ask q: flows(rent, 2026-05-01 .. 2026-05-31), bal(konto, 2026-06-30)
+
+ask n: count(a in adjustments over ..)
+
+ask l: a.change for a in adjustments over ..

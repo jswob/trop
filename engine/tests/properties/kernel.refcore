@@ -1077,19 +1077,23 @@ warning: WARN-NEGATIVE acc_1 is below zero from 2025-02-05
 ,21:foresight-decision-02,7:control,1:0,96:swept: 2 614.74 DUK
   cut 2025-02-27
 warning: WARN-NEGATIVE acc_1 is below zero from 2025-02-05
-,21:foresight-decision-03,4:base,1:0,94:swept: 292.26 DUK
+,21:foresight-decision-03,4:base,1:0,146:swept: 292.26 DUK
   cut 2025-02-16
 warning: WARN-NEGATIVE acc_2 is below zero from 2025-01-01
-,21:foresight-decision-03,5:later,1:0,94:swept: 292.26 DUK
+warning: WARN-UNREAD place acc_3 is read by nothing
+,21:foresight-decision-03,5:later,1:0,146:swept: 292.26 DUK
   cut 2025-02-16
 warning: WARN-NEGATIVE acc_2 is below zero from 2025-01-01
-,21:foresight-decision-03,7:control,1:0,114:swept: 948.59 DUK
+warning: WARN-UNREAD place acc_3 is read by nothing
+,21:foresight-decision-03,7:control,1:0,166:swept: 948.59 DUK
   unfulfilled: mv_x
   cut 2025-02-16
 warning: WARN-NEGATIVE acc_2 is below zero from 2025-01-01
-,21:foresight-decision-04,4:base,1:0,58:swept: 2 631.05 DUK
+warning: WARN-UNREAD place acc_3 is read by nothing
+,21:foresight-decision-04,4:base,1:0,110:swept: 2 631.05 DUK
   unfulfilled: sweep
   cut 2025-03-24
+warning: WARN-UNREAD place out_1 is read by nothing
 ,21:foresight-decision-04,5:later,1:0,58:swept: 2 631.05 DUK
   unfulfilled: sweep
   cut 2025-03-24
@@ -1097,13 +1101,16 @@ warning: WARN-NEGATIVE acc_2 is below zero from 2025-01-01
   unfulfilled: mv_x
   unfulfilled: sweep
   cut 2025-03-24
-,21:foresight-decision-05,4:base,1:0,35:swept: 308.69 DUK
+,21:foresight-decision-05,4:base,1:0,87:swept: 308.69 DUK
   cut 2025-02-24
-,21:foresight-decision-05,5:later,1:0,35:swept: 308.69 DUK
+warning: WARN-UNREAD place acc_0 is read by nothing
+,21:foresight-decision-05,5:later,1:0,87:swept: 308.69 DUK
   cut 2025-02-24
-,21:foresight-decision-05,7:control,1:0,55:swept: 520.91 DUK
+warning: WARN-UNREAD place acc_0 is read by nothing
+,21:foresight-decision-05,7:control,1:0,107:swept: 520.91 DUK
   unfulfilled: mv_x
   cut 2025-02-24
+warning: WARN-UNREAD place acc_0 is read by nothing
 ,21:foresight-decision-06,4:base,1:0,98:swept: 2 179.97 DUK
   unfulfilled: mv_0
   unfulfilled: mv_2
@@ -1216,32 +1223,39 @@ warning: WARN-NEGATIVE acc_1 is below zero from 2025-02-12
   unfulfilled: mv_x
   unfulfilled: sweep
   cut 2025-03-28
-,21:foresight-decision-14,4:base,1:0,98:swept: 1 415.69 DUK
+,21:foresight-decision-14,4:base,1:0,202:swept: 1 415.69 DUK
   unfulfilled: mv_0
   unfulfilled: mv_1
   unfulfilled: sweep
   cut 2025-03-17
-,21:foresight-decision-14,5:later,1:0,98:swept: 1 415.69 DUK
+warning: WARN-UNREAD place acc_2 is read by nothing
+warning: WARN-UNREAD place out_0 is read by nothing
+,21:foresight-decision-14,5:later,1:0,150:swept: 1 415.69 DUK
   unfulfilled: mv_0
   unfulfilled: mv_1
   unfulfilled: sweep
   cut 2025-03-17
-,21:foresight-decision-14,7:control,1:0,118:swept: 2 278.36 DUK
+warning: WARN-UNREAD place acc_2 is read by nothing
+,21:foresight-decision-14,7:control,1:0,170:swept: 2 278.36 DUK
   unfulfilled: mv_0
   unfulfilled: mv_1
   unfulfilled: mv_x
   unfulfilled: sweep
   cut 2025-03-17
-,21:foresight-decision-15,4:base,1:0,56:swept: 563.71 DUK
+warning: WARN-UNREAD place acc_2 is read by nothing
+,21:foresight-decision-15,4:base,1:0,108:swept: 563.71 DUK
   unfulfilled: sweep
   cut 2025-02-13
-,21:foresight-decision-15,5:later,1:0,56:swept: 563.71 DUK
+warning: WARN-UNREAD place acc_3 is read by nothing
+,21:foresight-decision-15,5:later,1:0,108:swept: 563.71 DUK
   unfulfilled: sweep
   cut 2025-02-13
-,21:foresight-decision-15,7:control,1:0,78:swept: 1 396.69 DUK
+warning: WARN-UNREAD place acc_3 is read by nothing
+,21:foresight-decision-15,7:control,1:0,130:swept: 1 396.69 DUK
   unfulfilled: mv_x
   unfulfilled: sweep
   cut 2025-02-13
+warning: WARN-UNREAD place acc_3 is read by nothing
 ,21:foresight-decision-16,4:base,1:0,98:swept: 3 240.59 DUK
   unfulfilled: mv_0
   unfulfilled: mv_1
@@ -1296,23 +1310,27 @@ warning: WARN-NEGATIVE acc_2 is below zero from 2025-02-28
   unfulfilled: sweep
   cut 2025-02-10
 warning: WARN-NEGATIVE acc_2 is below zero from 2025-02-28
-,21:foresight-decision-19,4:base,1:0,78:swept: 3 553.13 DUK
+,21:foresight-decision-19,4:base,1:0,130:swept: 3 553.13 DUK
   unfulfilled: mv_2
   unfulfilled: sweep
   cut 2025-03-21
-,21:foresight-decision-19,5:later,1:0,78:swept: 3 553.13 DUK
+warning: WARN-UNREAD place acc_1 is read by nothing
+,21:foresight-decision-19,5:later,1:0,130:swept: 3 553.13 DUK
   unfulfilled: mv_2
   unfulfilled: sweep
   cut 2025-03-21
-,21:foresight-decision-19,7:control,1:0,98:swept: 4 096.17 DUK
+warning: WARN-UNREAD place acc_1 is read by nothing
+,21:foresight-decision-19,7:control,1:0,150:swept: 4 096.17 DUK
   unfulfilled: mv_2
   unfulfilled: mv_x
   unfulfilled: sweep
   cut 2025-03-21
-,21:foresight-decision-20,4:base,1:0,117:swept: 1 573.02 DUK
+warning: WARN-UNREAD place acc_1 is read by nothing
+,21:foresight-decision-20,4:base,1:0,169:swept: 1 573.02 DUK
   unfulfilled: sweep
   cut 2025-03-19
 warning: WARN-NEGATIVE acc_0 is below zero from 2025-02-20
+warning: WARN-UNREAD place out_0 is read by nothing
 ,21:foresight-decision-20,5:later,1:0,58:swept: 1 573.02 DUK
   unfulfilled: sweep
   cut 2025-03-19
@@ -1321,9 +1339,10 @@ warning: WARN-NEGATIVE acc_0 is below zero from 2025-02-20
   unfulfilled: sweep
   cut 2025-03-19
 warning: WARN-NEGATIVE acc_0 is below zero from 2025-02-20
-,21:foresight-decision-21,4:base,1:0,58:swept: 2 679.40 DUK
+,21:foresight-decision-21,4:base,1:0,110:swept: 2 679.40 DUK
   unfulfilled: sweep
   cut 2025-03-31
+warning: WARN-UNREAD place out_0 is read by nothing
 ,21:foresight-decision-21,5:later,1:0,58:swept: 2 679.40 DUK
   unfulfilled: sweep
   cut 2025-03-31
@@ -1331,57 +1350,72 @@ warning: WARN-NEGATIVE acc_0 is below zero from 2025-02-20
   unfulfilled: mv_x
   unfulfilled: sweep
   cut 2025-03-31
-,21:foresight-decision-22,4:base,1:0,37:swept: 3 202.29 DUK
+,21:foresight-decision-22,4:base,1:0,141:swept: 3 202.29 DUK
   cut 2025-02-13
-,21:foresight-decision-22,5:later,1:0,37:swept: 3 202.29 DUK
+warning: WARN-UNREAD place acc_1 is read by nothing
+warning: WARN-UNREAD place out_1 is read by nothing
+,21:foresight-decision-22,5:later,1:0,141:swept: 3 202.29 DUK
   cut 2025-02-13
-,21:foresight-decision-22,7:control,1:0,57:swept: 3 454.15 DUK
+warning: WARN-UNREAD place acc_1 is read by nothing
+warning: WARN-UNREAD place out_1 is read by nothing
+,21:foresight-decision-22,7:control,1:0,161:swept: 3 454.15 DUK
   unfulfilled: mv_x
   cut 2025-02-13
-,21:foresight-decision-23,4:base,1:0,76:swept: 858.80 DUK
+warning: WARN-UNREAD place acc_1 is read by nothing
+warning: WARN-UNREAD place out_1 is read by nothing
+,21:foresight-decision-23,4:base,1:0,128:swept: 858.80 DUK
   unfulfilled: mv_0
   unfulfilled: sweep
   cut 2025-03-30
-,21:foresight-decision-23,5:later,1:0,76:swept: 858.80 DUK
+warning: WARN-UNREAD place acc_0 is read by nothing
+,21:foresight-decision-23,5:later,1:0,128:swept: 858.80 DUK
   unfulfilled: mv_0
   unfulfilled: sweep
   cut 2025-03-30
-,21:foresight-decision-23,7:control,1:0,98:swept: 1 622.66 DUK
+warning: WARN-UNREAD place acc_0 is read by nothing
+,21:foresight-decision-23,7:control,1:0,150:swept: 1 622.66 DUK
   unfulfilled: mv_0
   unfulfilled: mv_x
   unfulfilled: sweep
   cut 2025-03-30
-,23:foresight-projection-00,4:base,1:0,168:swept: 104 857.33 DUK
+warning: WARN-UNREAD place acc_0 is read by nothing
+,23:foresight-projection-00,4:base,1:0,220:swept: 104 857.33 DUK
   unfulfilled: sweep
   left out: sweep, 1 instances, first 2025-01-20
   cut 2025-02-06
 warning: WARN-NEGATIVE acc_3 is below zero from 2025-01-16
-,23:foresight-projection-00,5:later,1:0,227:swept: 104 857.33 DUK
+warning: WARN-UNREAD place acc_0 is read by nothing
+,23:foresight-projection-00,5:later,1:0,279:swept: 104 857.33 DUK
   unfulfilled: sweep
   left out: sweep, 1 instances, first 2025-01-20
   cut 2025-02-06
 warning: WARN-NEGATIVE acc_2 is below zero from 2025-02-16
 warning: WARN-NEGATIVE acc_3 is below zero from 2025-01-16
-,23:foresight-projection-00,7:control,1:0,167:swept: 71 230.33 DUK
+warning: WARN-UNREAD place acc_0 is read by nothing
+,23:foresight-projection-00,7:control,1:0,219:swept: 71 230.33 DUK
   unfulfilled: sweep
   left out: sweep, 1 instances, first 2025-01-20
   cut 2025-02-06
 warning: WARN-NEGATIVE acc_3 is below zero from 2025-01-16
-,23:foresight-projection-01,4:base,1:0,128:swept: 60 768.81 DUK
+warning: WARN-UNREAD place acc_0 is read by nothing
+,23:foresight-projection-01,4:base,1:0,180:swept: 60 768.81 DUK
   unfulfilled: mv_1
   unfulfilled: sweep
   left out: sweep, 1 instances, first 2025-01-30
   cut 2025-03-05
-,23:foresight-projection-01,5:later,1:0,128:swept: 60 768.81 DUK
+warning: WARN-UNREAD place acc_2 is read by nothing
+,23:foresight-projection-01,5:later,1:0,180:swept: 60 768.81 DUK
   unfulfilled: mv_1
   unfulfilled: sweep
   left out: sweep, 1 instances, first 2025-01-30
   cut 2025-03-05
-,23:foresight-projection-01,7:control,1:0,128:swept: 25 969.26 DUK
+warning: WARN-UNREAD place acc_2 is read by nothing
+,23:foresight-projection-01,7:control,1:0,180:swept: 25 969.26 DUK
   unfulfilled: mv_1
   unfulfilled: sweep
   left out: sweep, 1 instances, first 2025-01-30
   cut 2025-03-05
+warning: WARN-UNREAD place acc_2 is read by nothing
 ,23:foresight-projection-02,4:base,1:0,128:swept: 62 208.01 DUK
   unfulfilled: mv_0
   unfulfilled: sweep
@@ -1437,25 +1471,28 @@ warning: WARN-NEGATIVE acc_1 is below zero from 2025-03-11
   left out: sweep, 1 instances, first 2025-01-22
   cut 2025-03-04
 warning: WARN-NEGATIVE acc_1 is below zero from 2025-03-11
-,23:foresight-projection-05,4:base,1:0,187:swept: 78 030.86 DUK
+,23:foresight-projection-05,4:base,1:0,239:swept: 78 030.86 DUK
   unfulfilled: mv_1
   unfulfilled: sweep
   left out: sweep, 1 instances, first 2025-02-20
   cut 2025-02-21
 warning: WARN-NEGATIVE acc_0 is below zero from 2025-01-12
-,23:foresight-projection-05,5:later,1:0,246:swept: 78 030.86 DUK
+warning: WARN-UNREAD place acc_1 is read by nothing
+,23:foresight-projection-05,5:later,1:0,298:swept: 78 030.86 DUK
   unfulfilled: mv_1
   unfulfilled: sweep
   left out: sweep, 1 instances, first 2025-02-20
   cut 2025-02-21
 warning: WARN-NEGATIVE acc_0 is below zero from 2025-01-12
 warning: WARN-NEGATIVE acc_2 is below zero from 2025-03-18
-,23:foresight-projection-05,7:control,1:0,187:swept: 43 748.16 DUK
+warning: WARN-UNREAD place acc_1 is read by nothing
+,23:foresight-projection-05,7:control,1:0,239:swept: 43 748.16 DUK
   unfulfilled: mv_1
   unfulfilled: sweep
   left out: sweep, 1 instances, first 2025-02-20
   cut 2025-02-21
 warning: WARN-NEGATIVE acc_0 is below zero from 2025-01-12
+warning: WARN-UNREAD place acc_1 is read by nothing
 ,23:foresight-projection-06,4:base,1:0,108:swept: 95 936.78 DUK
   unfulfilled: sweep
   left out: sweep, 1 instances, first 2025-01-28
@@ -1469,25 +1506,28 @@ warning: WARN-NEGATIVE acc_0 is below zero from 2025-02-20
   unfulfilled: sweep
   left out: sweep, 1 instances, first 2025-01-28
   cut 2025-03-26
-,23:foresight-projection-07,4:base,1:0,148:swept: 96 792.22 DUK
+,23:foresight-projection-07,4:base,1:0,200:swept: 96 792.22 DUK
   unfulfilled: mv_1
   unfulfilled: mv_2
   unfulfilled: sweep
   left out: sweep, 1 instances, first 2025-01-20
   cut 2025-03-24
-,23:foresight-projection-07,5:later,1:0,207:swept: 96 792.22 DUK
+warning: WARN-UNREAD place acc_1 is read by nothing
+,23:foresight-projection-07,5:later,1:0,259:swept: 96 792.22 DUK
   unfulfilled: mv_1
   unfulfilled: mv_2
   unfulfilled: sweep
   left out: sweep, 1 instances, first 2025-01-20
   cut 2025-03-24
 warning: WARN-NEGATIVE acc_0 is below zero from 2025-03-28
-,23:foresight-projection-07,7:control,1:0,148:swept: 64 254.99 DUK
+warning: WARN-UNREAD place acc_1 is read by nothing
+,23:foresight-projection-07,7:control,1:0,200:swept: 64 254.99 DUK
   unfulfilled: mv_1
   unfulfilled: mv_2
   unfulfilled: sweep
   left out: sweep, 1 instances, first 2025-01-20
   cut 2025-03-24
+warning: WARN-UNREAD place acc_1 is read by nothing
 ,23:foresight-projection-08,4:base,1:0,87:swept: 75 916.85 DUK
   left out: sweep, 1 instances, first 2025-02-18
   cut 2025-02-12
@@ -1512,24 +1552,28 @@ warning: WARN-NEGATIVE acc_0 is below zero from 2025-03-28
   unfulfilled: sweep
   left out: sweep, 1 instances, first 2025-02-19
   cut 2025-03-14
-,23:foresight-projection-10,4:base,1:0,148:swept: 83 176.75 DUK
+,23:foresight-projection-10,4:base,1:0,252:swept: 83 176.75 DUK
   unfulfilled: mv_0
   unfulfilled: mv_1
   unfulfilled: sweep
   left out: sweep, 1 instances, first 2025-02-22
   cut 2025-03-27
-,23:foresight-projection-10,5:later,1:0,148:swept: 83 176.75 DUK
+warning: WARN-UNREAD place out_0 is read by nothing
+warning: WARN-UNREAD place out_1 is read by nothing
+,23:foresight-projection-10,5:later,1:0,200:swept: 83 176.75 DUK
   unfulfilled: mv_0
   unfulfilled: mv_1
   unfulfilled: sweep
   left out: sweep, 1 instances, first 2025-02-22
   cut 2025-03-27
-,23:foresight-projection-10,7:control,1:0,148:swept: 52 385.21 DUK
+warning: WARN-UNREAD place out_1 is read by nothing
+,23:foresight-projection-10,7:control,1:0,200:swept: 52 385.21 DUK
   unfulfilled: mv_0
   unfulfilled: mv_1
   unfulfilled: sweep
   left out: sweep, 1 instances, first 2025-02-22
   cut 2025-03-27
+warning: WARN-UNREAD place out_1 is read by nothing
 ,23:foresight-projection-11,4:base,1:0,128:swept: 80 724.32 DUK
   unfulfilled: mv_2
   unfulfilled: sweep
@@ -1574,24 +1618,30 @@ warning: WARN-NEGATIVE acc_1 is below zero from 2025-02-09
 ,23:foresight-projection-13,7:control,1:0,87:swept: 26 863.58 DUK
   left out: sweep, 1 instances, first 2025-02-19
   cut 2025-02-16
-,23:foresight-projection-14,4:base,1:0,187:swept: 75 121.83 DUK
+,23:foresight-projection-14,4:base,1:0,291:swept: 75 121.83 DUK
   unfulfilled: mv_0
   unfulfilled: sweep
   left out: sweep, 1 instances, first 2025-02-21
   cut 2025-03-16
 warning: WARN-NEGATIVE acc_1 is below zero from 2025-01-23
-,23:foresight-projection-14,5:later,1:0,187:swept: 75 121.83 DUK
+warning: WARN-UNREAD place acc_3 is read by nothing
+warning: WARN-UNREAD place out_0 is read by nothing
+,23:foresight-projection-14,5:later,1:0,291:swept: 75 121.83 DUK
   unfulfilled: mv_0
   unfulfilled: sweep
   left out: sweep, 1 instances, first 2025-02-21
   cut 2025-03-16
 warning: WARN-NEGATIVE acc_1 is below zero from 2025-01-23
-,23:foresight-projection-14,7:control,1:0,187:swept: 43 655.77 DUK
+warning: WARN-UNREAD place acc_3 is read by nothing
+warning: WARN-UNREAD place out_0 is read by nothing
+,23:foresight-projection-14,7:control,1:0,291:swept: 43 655.77 DUK
   unfulfilled: mv_0
   unfulfilled: sweep
   left out: sweep, 1 instances, first 2025-02-21
   cut 2025-03-16
 warning: WARN-NEGATIVE acc_1 is below zero from 2025-01-23
+warning: WARN-UNREAD place acc_3 is read by nothing
+warning: WARN-UNREAD place out_0 is read by nothing
 ,23:foresight-projection-15,4:base,1:0,108:swept: 86 648.20 DUK
   unfulfilled: sweep
   left out: sweep, 1 instances, first 2025-02-09
@@ -1621,35 +1671,42 @@ warning: WARN-NEGATIVE acc_1 is below zero from 2025-03-12
   unfulfilled: sweep
   left out: sweep, 1 instances, first 2025-01-25
   cut 2025-03-25
-,23:foresight-projection-17,4:base,1:0,129:swept: 100 667.94 DUK
+,23:foresight-projection-17,4:base,1:0,181:swept: 100 667.94 DUK
   unfulfilled: mv_2
   unfulfilled: sweep
   left out: sweep, 1 instances, first 2025-02-01
   cut 2025-03-08
-,23:foresight-projection-17,5:later,1:0,188:swept: 100 667.94 DUK
+warning: WARN-UNREAD place acc_0 is read by nothing
+,23:foresight-projection-17,5:later,1:0,240:swept: 100 667.94 DUK
   unfulfilled: mv_2
   unfulfilled: sweep
   left out: sweep, 1 instances, first 2025-02-01
   cut 2025-03-08
 warning: WARN-NEGATIVE acc_1 is below zero from 2025-03-10
-,23:foresight-projection-17,7:control,1:0,128:swept: 68 491.86 DUK
+warning: WARN-UNREAD place acc_0 is read by nothing
+,23:foresight-projection-17,7:control,1:0,180:swept: 68 491.86 DUK
   unfulfilled: mv_2
   unfulfilled: sweep
   left out: sweep, 1 instances, first 2025-02-01
   cut 2025-03-08
-,23:foresight-projection-18,4:base,1:0,109:swept: 108 806.05 DUK
+warning: WARN-UNREAD place acc_0 is read by nothing
+,23:foresight-projection-18,4:base,1:0,213:swept: 108 806.05 DUK
   unfulfilled: sweep
   left out: sweep, 1 instances, first 2025-01-15
   cut 2025-02-22
-,23:foresight-projection-18,5:later,1:0,168:swept: 108 806.05 DUK
+warning: WARN-UNREAD place acc_3 is read by nothing
+warning: WARN-UNREAD place out_0 is read by nothing
+,23:foresight-projection-18,5:later,1:0,220:swept: 108 806.05 DUK
   unfulfilled: sweep
   left out: sweep, 1 instances, first 2025-01-15
   cut 2025-02-22
 warning: WARN-NEGATIVE acc_0 is below zero from 2025-03-15
-,23:foresight-projection-18,7:control,1:0,108:swept: 76 590.16 DUK
+warning: WARN-UNREAD place acc_3 is read by nothing
+,23:foresight-projection-18,7:control,1:0,160:swept: 76 590.16 DUK
   unfulfilled: sweep
   left out: sweep, 1 instances, first 2025-01-15
   cut 2025-02-22
+warning: WARN-UNREAD place acc_3 is read by nothing
 ,23:foresight-projection-19,4:base,1:0,128:swept: 87 021.19 DUK
   unfulfilled: mv_3
   unfulfilled: sweep

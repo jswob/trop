@@ -352,7 +352,8 @@ def run_worlds(heads, ids=None, loader=None, srcs=None):
             return True
         kind, iid = ws[0], ws[1]
         for r in realities.values():
-            table = {'source': getattr(r, 'sources', {}), 'input': r.inputs, 'def': r.defs}.get(kind)
+            table = {'source': getattr(r, 'sources', {}), 'input': r.inputs, 'def': r.defs,
+                     'place': r.places}.get(kind)
             if table is None:
                 return True
             if iid in table and ('WARN-UNREAD', msg) not in r.warnings:

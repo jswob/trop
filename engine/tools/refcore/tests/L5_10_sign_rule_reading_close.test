@@ -1,0 +1,61 @@
+# L §5.10 point 3, E §4.2 step 5 (tally 2.1.2, issue #46, the user's "2: spec wins, refused"): a reading's own place is
+# tested at the close like any balance. y (claims, min 0) is stated at -5.00 PLN with a pad from world: the pad is
+# refused ("the closing pads at the place", L §8.4 `<movement> takes <claim> below 0`), and the places it touches are
+# refused from there, world included (q). z is anchored at -5.00 PLN: an anchor books no leg, so the place's balance
+# is refused from there, `<place> is <b> after its reading at <instant>`, the next day's start too (r). tally 2.1.1's
+# refcore tested a pad's other place only: q (20.00, -5.00, 15.00), r (30.00, -5.00, -5.00) PLN.
+=== m.tally
+model t
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+source bk "bank"
+unit PLN: currency minor 0.01
+place y: claims PLN lives 2026-01-01..
+place z: claims PLN lives 2026-01-01..
+place world: outside lives 2026-01-01..
+input amt: money PLN
+input day: date
+input day2: date
+
+move top: transfers
+  on day2
+  leg cash from world to z amount amt
+
+move p: transfers
+  on day
+  reads y, z
+  leg cash from world to y amount amt + 0 * bal(y) + 0 * bal(z)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 10.00 PLN
+  day = 2026-02-10
+  day2 = 2026-01-15
+  opening[y] = 20.00 PLN at 2026-01-01 start
+  opening[z] = 20.00 PLN at 2026-01-01 start
+
+version st
+  cite bk
+  governs 2026-01
+  known 2026-03-02
+  pad y from world
+  anchor z
+  stated[y] = -5.00 PLN at 2026-01-31 end
+  stated[z] = -5.00 PLN at 2026-01-31 end
+ask q: bal(y, 2026-01-30), bal(y, 2026-01-31), bal(world, PLN, 2026-01-31)
+ask r: bal(z, 2026-01-30), bal(z, 2026-01-31), bal(z, 2026-02-01 start)
+=== expect
+q: (20.00 PLN, refused: RUN-PLACE pads:st:y@2026-01-31 end takes y below 0, refused: RUN-PLACE pads:st:y@2026-01-31 end takes y below 0)
+  pad: y 2026-01-31 end, pads:st:y@2026-01-31 end of -25.00 PLN
+  unfulfilled: top
+  cut 2026-06-30
+r: (30.00 PLN, refused: RUN-PLACE z is -5.00 PLN after its reading at 2026-01-31 end, refused: RUN-PLACE z is -5.00 PLN after its reading at 2026-01-31 end)
+  anchor: z 2026-01-31 end, stated -5.00 PLN, difference -35.00 PLN
+  unfulfilled: top
+  cut 2026-06-30

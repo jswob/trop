@@ -1,0 +1,41 @@
+# L §8.5 WARN-UNREAD (tally 2.1.2, issue #30, the user's "A: warn only if never named"): a place no line names warns
+# `place <x> is read by nothing`. savings is named by pay's leg and nothing totals it: no warning (a leg naming the place
+# is a use). idle is named only by its opening row, a row keyed by the place: it warns. shop is an outside place no leg
+# names: it warns too (an outside place has no exception; it exists to be a leg's other end).
+=== m.tally
+model t
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+input wage: money PLN
+input day: date
+place konto: accounts PLN lives 2026-01-01..
+place savings: accounts PLN lives 2026-01-01..
+place idle: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+place shop: outside lives 1900-01-01..
+
+move pay: transfers
+  on day
+  leg cash from world to savings amount wage
+
+ask q: bal(konto, 2026-03-31)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  wage = 100.00 PLN
+  day = 2026-02-10
+  opening[konto] = 5.00 PLN at 2026-01-01 start
+  opening[savings] = 0 PLN at 2026-01-01 start
+  opening[idle] = 0 PLN at 2026-01-01 start
+=== expect
+q: 5.00 PLN
+  cut 2026-06-30
+warning: WARN-UNREAD place idle is read by nothing
+warning: WARN-UNREAD place shop is read by nothing

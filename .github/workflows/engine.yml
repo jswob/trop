@@ -109,9 +109,8 @@ jobs:
     name: counts and instructions (gate 12, Linux)
     runs-on: ubuntu-latest
     timeout-minutes: 90
-    # every number is proposed until S, and no limit is set yet: the gate session drops this
-    # line at S, with the first limits in engine/tools/perf-budgets.toml
-    continue-on-error: true
+    # blocking since S set the first limits in engine/tools/perf-budgets.toml (P8-14's def
+    # misses, P8-M1..P8-M3's instructions; D4-6, issue #47); a row with no limit only reports
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0

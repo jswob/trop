@@ -158,10 +158,10 @@ pub mod walk {
     pub use day::{Broke, Ends};
     pub use order::{Run, WalkAt};
     pub use plan::{
-        Amount, Booked, Dated, End, Exists, Inst, LegVal, Order, Seed, Status, day_repr,
+        Amount, Booked, Dated, End, Exists, Inst, LegVal, Order, Seed, Status, Term,
         kind_certainty, qty_value,
     };
-    pub(crate) use plan::{invariant, quantity, quoted};
+    pub(crate) use plan::{invariant, quantity};
     pub use point::{At, Step};
     pub use projection::ProjKey;
     pub use state::{

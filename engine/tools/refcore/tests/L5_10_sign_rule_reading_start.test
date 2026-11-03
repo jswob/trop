@@ -1,0 +1,59 @@
+# L §5.10 point 1, E §4.2 step 5 (tally 2.1.2, issue #46): a reading at the start is in the day's first batch, taken
+# together. y is stated at -5.00 PLN at 2026-01-15 start, padded from world, and nothing else moves it that day: after
+# the batch it breaks its rule, so its pad is refused (`<place> is <b> after the day's observations and plans of <d>`)
+# (q). z is stated at -5.00 PLN at the same instant and top puts 10.00 PLN in that day: the batch leaves 5.00 PLN, which
+# stands (r), as a plan that arises and is paid on one day nets inside it. tally 2.1.1's refcore: q (20.00, -5.00) PLN.
+=== m.tally
+model t
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+source bk "bank"
+unit PLN: currency minor 0.01
+place y: claims PLN lives 2026-01-01..
+place z: claims PLN lives 2026-01-01..
+place world: outside lives 2026-01-01..
+input amt: money PLN
+input day: date
+input day2: date
+
+move top: transfers
+  on day2
+  leg cash from world to z amount amt
+
+move p: transfers
+  on day
+  reads y, z
+  leg cash from world to y amount amt + 0 * bal(y) + 0 * bal(z)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 10.00 PLN
+  day = 2026-02-10
+  day2 = 2026-01-15
+  opening[y] = 20.00 PLN at 2026-01-01 start
+  opening[z] = 20.00 PLN at 2026-01-01 start
+
+version st
+  cite bk
+  governs 2026-01
+  known 2026-03-02
+  pad y from world
+  pad z from world
+  stated[y] = -5.00 PLN at 2026-01-15 start
+  stated[z] = -5.00 PLN at 2026-01-15 start
+ask q: bal(y, 2026-01-14), bal(y, 2026-01-15)
+ask r: bal(z, 2026-01-15)
+=== expect
+q: (20.00 PLN, refused: RUN-PLACE y is -5.00 PLN after the day's observations and plans of 2026-01-15)
+  pad: y 2026-01-15 start, pads:st:y@2026-01-15 start of -25.00 PLN
+  cut 2026-06-30
+r: 5.00 PLN
+  pad: z 2026-01-15 start, pads:st:z@2026-01-15 start of -25.00 PLN
+  unfulfilled: top
+  cut 2026-06-30

@@ -1,0 +1,78 @@
+# E §5 step 3, L §5.14.3 Detection (tally 2.1.2, issue #34, the user's "A: the refusal spreads"): late (known 2026-05-01)
+# re-measures rent[2026-03] at 0 tenants, so its amount is refused (RUN-DIV). The adjustment adjustments[rent[2026-03].cash,
+# late] is refused, and so is what an unsettled one reaches: flows of rent over a span reaching 2026-05-01, and konto's
+# balance from then (q); a read before it stands (before). A binding over adjustments holds it (n); a sum of its change
+# is refused (s); explain prints it (e2). tally 2.1.1's refcore skipped the step: q was (500.00 PLN, 7 000.00 PLN), as if
+# late changed nothing.
+=== m.tally
+model hh
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source plan "plan"
+source act "act"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2019-05-01..
+place landlord: outside lives 1900-01-01..
+input total: money PLN
+input tenants[m in months]: int
+input dom: int
+
+move rent[m in months]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  leg cash from konto to landlord amount round(total / tenants[m], minor(PLN), half-even)
+
+version plan_2026
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  total = 1 000.00 PLN "umowa"
+  dom = 10 "umowa"
+  tenants[*] = 2 "umowa"
+  opening[konto] = 10 000.00 PLN at 2026-01-01 start "wyciąg"
+
+version late
+  cite act
+  governs 2026-03
+  known 2026-05-01
+  replace tenants[*] = 0 "aneks"
+
+ask before: bal(konto, 2026-04-30)
+ask q: flows(rent, 2026-05-01 .. 2026-05-31), bal(konto, 2026-06-30)
+ask n: count(x in adjustments over 2026)
+ask s: sum(x.change for x in adjustments over 2026)
+ask e2: explain rent[2026-03]
+=== expect
+before: 8 000.00 PLN
+  unfulfilled: rent[2026-01]
+  unfulfilled: rent[2026-02]
+  unfulfilled: rent[2026-03]
+  unfulfilled: rent[2026-04]
+  cut 2026-10-20
+e2: rent[2026-03]
+  plan, day 2026-03-10, booking cut 2026-03-10, status past
+  leg cash from konto to landlord amount 500.00 PLN
+  derivation at 2026-03-10:
+    [1] row plan_2026:dom = 10
+        version plan_2026, source plan, "plan", locator "umowa", governs 2026-01-01.., known 2026-01-01
+    [2] row plan_2026:total = 1 000.00 PLN
+        version plan_2026, source plan, "plan", locator "umowa", governs 2026-01-01.., known 2026-01-01
+    [3] row plan_2026:tenants = 2
+        version plan_2026, source plan, "plan", locator "umowa", governs 2026-01-01.., known 2026-01-01
+  adjustment adjustments[rent[2026-03].cash, late]: change refused: RUN-DIV division by zero on 2026-05-01 (version late)
+  cut 2026-10-20
+n: 1
+  cut 2026-10-20
+q: (refused: RUN-DIV division by zero, refused: RUN-DIV division by zero)
+  unfulfilled: rent[2026-01]
+  unfulfilled: rent[2026-02]
+  unfulfilled: rent[2026-03]
+  unfulfilled: rent[2026-04]
+  unfulfilled: rent[2026-05]
+  unfulfilled: rent[2026-06]
+  cut 2026-10-20
+s: refused: RUN-DIV division by zero
+  cut 2026-10-20

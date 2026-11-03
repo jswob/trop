@@ -1,0 +1,44 @@
+# L §5.10 point 1, §5.19, E §4.2 steps 0 and 5 (tally 2.1.2, issue #46): an opening always anchors (L §5.19), so
+# its place is tested in the day's first batch like an anchor's: y opens at -5.00 PLN, a claim (min 0), and nothing
+# moves it on 2026-01-01; it is refused from the batch's end, `<place> is <b> after its reading at <instant>`. The
+# start of the day is no point of the rule (L §5.10's three points), so bal(y, 2026-01-01 start) is the opening as
+# stated. z opens at 0 and stands. tally 2.1.1's refcore: q (-5.00, -5.00, 0.00, 0.00) PLN.
+=== m.tally
+model t
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+place y: claims PLN lives 2026-01-01..
+place z: claims PLN lives 2026-01-01..
+place world: outside lives 2026-01-01..
+input amt: money PLN
+input day: date
+input day2: date
+
+move top: transfers
+  on day2
+  leg cash from world to z amount amt
+
+move p: transfers
+  on day
+  reads y, z
+  leg cash from world to y amount amt + 0 * bal(y) + 0 * bal(z)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 10.00 PLN
+  day = 2026-02-10
+  day2 = 2026-01-15
+  opening[y] = -5.00 PLN at 2026-01-01 start
+  opening[z] = 0 PLN at 2026-01-01 start
+
+ask q: bal(y, 2026-01-01 start), bal(y, 2026-01-01), bal(z, 2026-01-01), bal(world, PLN, 2026-01-01)
+=== expect
+q: (-5.00 PLN, refused: RUN-PLACE y is -5.00 PLN after its reading at 2026-01-01 start, 0.00 PLN, 0.00 PLN)
+  cut 2026-06-30

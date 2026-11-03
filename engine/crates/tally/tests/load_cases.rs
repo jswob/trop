@@ -1,7 +1,7 @@
 //! The builder's load tests: a small reality loads to refcore's indexes, things, rows and observations, and load's refusals print refcore's text.
 //! Spec: E §3.1 steps 1–4; L §4.1 (indexes), §4.6 (rows and their stable ids), §5.3
 //! (versions), §5.7 (kinds, things, lifespans), §5.10 (places), §5.19 (observations), §8.3,
-//! §8.5 (WARN-UNREAD for a source).
+//! §8.5 (WARN-UNREAD for a source and a place).
 //! Twin: engine/tools/refcore/loader.py; each expected line is refcore's load of the same
 //! text, printed in the same normalized form.
 //! Invariants: reads no test, vector or answer key (R-93); the text is written here, small.
@@ -171,6 +171,7 @@ ask q1: pay[ana, 2026-01], code[x1]
             "row v1:code[x1]",
             "obs bank[r1] 2026-02-03 transfers ['cash konto->shop PLN'] False",
             "warning WARN-UNREAD source unused is read by nothing",
+            "warning WARN-UNREAD place wallet is read by nothing",
         ];
         assert_eq!(facts(&m), expected, "refcore's load facts");
         let adult = m.kind("adult").expect("adult");

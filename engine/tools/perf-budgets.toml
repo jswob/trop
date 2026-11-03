@@ -1,9 +1,11 @@
 # The budget table: PERFORMANCE §8's P8 rows, machine-readable (BUILDER §13.3; plan B2.3).
 # engine/tools/perf reads it for wall time, footprint and instruction limits; T's runner
 # reads it for the count budgets. A protected file: the rules role writes it, from the
-# spec's rows only, and every number is proposed until S (PERFORMANCE §8). A number set
-# at S changes only through a logged row; an instruction limit is only lowered, except a
-# re-baseline at a toolchain bump (D4-2, R-97).
+# spec's rows only (PERFORMANCE §8). S fixed P8-14's wall, footprint and def misses and
+# P8-M1..P8-M3 (D4-6, 2026-11-02; tally 2.1.2); P8-M4's budget moved to M1; every other
+# number stays proposed until the milestone that measures it. A fixed number changes only
+# through a logged row; an instruction limit is only lowered, except a re-baseline at a
+# toolchain bump (D4-2, R-97).
 #
 # Each [[row]]:
 #   id, group (I, C, L, M), what: PERFORMANCE §8's row, shortened
@@ -14,7 +16,8 @@
 #     "waits: ..."   nothing runs it yet; the text says what it waits for
 #   wall_s, footprint_mb, workers: the Mac's budget (absent: the row sets none)
 #   counts: the count budgets T's runner checks at 1 worker (absent: reported only)
-#   instructions: the gungraun hard limit on Ir, set at S (absent until then)
+#   instructions: the gungraun hard limit on Ir, from its first Linux measurement x 1.2
+#                 (absent: no limit yet; the bench still runs and reports its count)
 #   blocks: "pr" (counts and instructions, Linux CI) or "tag" (wall and footprint, the Mac)
 
 # 8.1 Group I: the interactive targets kept
@@ -145,7 +148,7 @@ what = "I:X:replay_september@b_r1 (days stepped reported: refcore's share isn't 
 recipe = "check:I:X:replay_september@b_r1"
 wall_s = 1.0
 footprint_mb = 512
-counts = { def_misses = 2270000 }
+counts = { def_misses = 30400 }
 blocks = "pr"
 
 [[row]]
@@ -312,12 +315,16 @@ wall_s = 10.0
 footprint_mb = 4096
 blocks = "tag"
 
-# 8.4 Group M: micro rows; each instruction limit is the first measurement x 1.2, set at S
+# 8.4 Group M: micro rows; each budget is the first measurement x 1.2: P8-M1..P8-M3 set at
+# S (wall: the reference Mac's medians, D4-6; Ir: CI's gungraun at S's gated head cf55c5a),
+# P8-M4's at M1 with `low`, P8-5 and F5
 [[row]]
 id = "P8-M1"
 group = "M"
 what = "Num add and multiply on the small tier"
 recipe = "bench:p8_m1"
+wall_s = 0.0000000555
+instructions = 1048
 blocks = "pr"
 
 [[row]]
@@ -325,6 +332,8 @@ id = "P8-M2"
 group = "M"
 what = "gcd of a 5 049-bit and a 64-bit value"
 recipe = "bench:p8_m2"
+wall_s = 0.0000022
+instructions = 6123
 blocks = "pr"
 
 [[row]]
@@ -332,12 +341,15 @@ id = "P8-M3"
 group = "M"
 what = "one big operation at 5 049 bits: a multiply and its reduction"
 recipe = "bench:p8_m3"
+wall_s = 0.00000781
+instructions = 87004
 blocks = "pr"
 
 [[row]]
 id = "P8-M4"
 group = "M"
 what = "one read of a written projection, E §4.3's common case (P8-5's micro form)"
+# its bench runs and reports (S: 72.9 ms on the Mac, 795 765 251 Ir on CI); its wall
+# (<= 0.3 us, P8-5) and its instruction limit are set at M1
 recipe = "bench:p8_m4"
-wall_s = 0.0000003
 blocks = "pr"

@@ -25,7 +25,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use super::plan::{Dated, End, Exists, Inst, Status};
+use super::plan::{Amount, Dated, End, Exists, Inst, Status};
 use super::point::{At, Step};
 use super::state::{Progress, Walk, WalkObs};
 use crate::Days;
@@ -82,6 +82,9 @@ pub enum Act {
     Perm(Mv, usize, Hole),
     /// An adjustment nothing settles: its leg's places are `HOLE-CHANGED` from its day.
     Changed(String, String, Hole, Collected),
+    /// An adjustment whose change is refused: the place, in every unit, is refused from its
+    /// day, by the adjustment (E §5 step 5, tally 2.1.2).
+    ChangeRefused(String, Refusal, String),
     /// A hole that holds for every place.
     GlobalHole(Hole),
     /// A refusal that holds for every place.
@@ -569,6 +572,18 @@ fn schedule_adjustment(
     adj: &crate::book::Adjustment,
 ) -> Result<(), Stop> {
     let day = adj.day.max(walk.start);
+    if let Amount::Refused(err) = &adj.delta {
+        // tally 2.1.2: a refused change refuses the adjusted leg's places from its day,
+        // where an unsettled one makes them HOLE-CHANGED (L §5.14.3, §8.4)
+        for place in [&adj.leg.from, &adj.leg.to]
+            .into_iter()
+            .filter_map(End::place)
+        {
+            let act = Act::ChangeRefused(place.to_owned(), err.clone(), adj.id.clone());
+            walk.at(At::before(day), act);
+        }
+        return Ok(());
+    }
     let text = adj.remainder_text(m)?;
     let mut places: Vec<&str> = Vec::new();
     let all = [&adj.leg.from, &adj.leg.to]
