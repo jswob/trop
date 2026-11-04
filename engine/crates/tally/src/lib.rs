@@ -21,7 +21,7 @@ mod counters;
 mod invariant;
 mod oracle;
 
-pub use api::{Answer, Asks, Given, Pin, Request, Source, run, run_with_memo};
+pub use api::{Answer, Asks, Given, Pin, Request, Source, reprint, run, run_with_memo};
 #[cfg(feature = "counters")]
 pub use counters::Counters;
 #[cfg(feature = "counters")]
@@ -45,15 +45,20 @@ pub mod base {
 /// files under `syntax/`.
 pub mod syntax {
     mod ask;
+    mod canon;
+    mod canon_order;
     mod expr;
     mod item;
     mod lex;
+    mod parens;
     mod parse;
     mod reads;
+    mod spacing;
     mod tree;
 
+    pub use canon::{printed_hash, reprint};
     pub use item::parse_reality;
-    pub use lex::{Kind, Line, Tok, split_lines};
+    pub use lex::{Canon, Kind, Line, Mark, Paren, Role, Tok, split_lines};
     pub use parse::Stop;
     pub use tree::{
         AddOp, Agg, AggFn, Ask, AskBody, Axis, Bal, Band, BandRow, Bind, Calendar, CalendarDay,
@@ -284,4 +289,24 @@ pub fn parse(source: &[u8]) -> Result<Vec<syntax::File>, syntax::Stop> {
         path: name.to_owned(),
         text,
     }])
+}
+
+/// Reprints one file's bytes in the canonical format, as a reality of that one file named
+/// `input` (L §2.4); the fuzz target `format` calls it: a text it prints reprints as itself.
+///
+/// # Errors
+///
+/// The refusal met (bytes that aren't UTF-8 are `LOAD-PARSE`), or a form whose order the
+/// engine doesn't build yet.
+pub fn format_file(source: &[u8]) -> Result<String, syntax::Stop> {
+    let name = "input";
+    let text = String::from_utf8(source.to_vec()).map_err(|_| base::Refusal::not_utf8(name))?;
+    let printed = syntax::reprint(&[Source {
+        path: name.to_owned(),
+        text,
+    }])?;
+    Ok(printed
+        .into_iter()
+        .map(|(_, canonical)| canonical)
+        .collect())
 }

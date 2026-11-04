@@ -688,3 +688,37 @@ move m[p in accounts on d0, f in flats]: transfers
   - Exception delta: +0.
   - Diff: 22 files, +1 569 −196 in engine/crates (tests +168 −1), against the plan's 2 300 lines for G1, which still included the token roles now in G2. The budget share isn't measured here: the coordinator's meter has it.
   - check full: "check full: green, 31 steps (691s)".
+
+## 2026-11-04 M0, G2: the formatter, `reprint` and the hash (issue #56)
+
+- **Built:** refcore's `canon.py` and `cli.reprint_paths`, as four new files in `syntax/`:
+  - `canon.rs`: each file reprinted, and the hash. The header's order, the sections by kind then id, versions last by `known`, kinds in tree order (`kahn`), the body ranks, the short and long def forms (2.1-4), sorted rules and version items, a sorted `beats`.
+  - `canon_order.rs`: the declarations table (`LOAD-KEY`, `LOAD-NAME`) and the sort components `Keys`, `Tie`, `Rev` and a member's key. A member's keys that differ stop "not built" until G9.
+  - `spacing.rs`: `spaced`, and the numbers' canonical text (a reduced fraction included).
+  - `parens.rs`: the paren pass.
+- **Token roles and paren positions** (moved over from G1): each token carries a `Mark` in a `Cell`, set by the parse of its line: its role, whether it was read as a name, its canonical text, a plain or forced `(`, and the forced pairs to add. It also carries `seq`, its place as split, which names it after others are taken out.
+- **The paren pass:** a pair goes when the section parsed without it is the same tree. A blind parse (no `Paren` node, no source text) stands in for refcore's `sig`. Because refcore nests `+ - * / and or` to the left, a blind parse joins a chain whose first term is a chain of the same operator, so `(x + y) + z` loses its pair as in refcore. `format/parens_redundant` was red until that.
+- **Entry points:** `tally::reprint` (files read, printed and hashed in full-path order, each printed under its name); the CLI's `reprint` (a file named as given, a directory's files relative to it); `tally::format_file` for the fuzz target `format` (a rules step).
+- **Own tests (not gating):** `tests/format_cases.rs`, with refcore's reprint of a small reality (its sha256 line too) and the canonical text as a fixed point; `reprint`'s names and order; numbers and gcd in `spacing.rs`.
+- **Green ids (32):** every `m0_format` test (all 12 corpus groups, the joint households E1 and E2 included, and the 19 L §2.4 fixtures) and `m0_format_idempotent`. UL-09 and UL-14 print as refcore 2.1.3 does, so the plan's SR-2 hold isn't needed.
+- **Not green, and why:**
+  - `m0_format_equal_models_print_identically` (and the other `law_holds` tests): of its 176 failures, 80 are the load probe (`REQ-ASK`, G3's SR-1) and 16 a base that must load clean (G3 on). The other 80 are the STOP-REPORT below. Every engine reprint equals refcore's: no failure is a reprint.
+- **No mutants-local:** syntax/ isn't kernel.
+- **Exceptions:** six report-only hits in the new code (borrowed fields, two nested closures, a long chain, an `or_default`) were restructured away rather than locked.
+- **Totals:** `milestone-report: M0: 34/115 green` (from 2). Open STOP-REPORTs: the one below. Exception delta: +0. check full: "check full: green, 31 steps (875s)".
+- **Size:** 12 files, +2 154 −25 in engine/crates (tests +132), against the plan's 2 200 for G2. What drove it: `canon.rs` 709 lines (one printer per section form, exhaustive matches); `canon_order.rs` 520, of which about 110 are the comparison written out pair by pair under the wildcard ban; the parser's marks, about 370 across lex/parse/expr/item.
+
+## STOP-REPORT 2026-11-04: `law_holds` compares the engine's `again` runs with refcore runs that are never stored
+
+- **Kind:** a test seems wrong.
+- **Where:** `engine/tests/runner/milestone/m0_properties.rs`, `law_holds`: its loop `for (key, run) in runs` takes every engine run, `:again` included, and fails on `None => "refcore's reprint was refused, the engine's wasn't"`. `properties/laws_m0.py` line 15 says an `again` run "isn't stored", and `properties/m0.refcore` holds 285 `:probe` and 285 `:reprint` records and no `:again` record.
+- **Rule or gate:** DONE gate 6 (`format(parse(x)) = x`); `MILESTONE-M0.md` row 7.
+- **What happens:** `engine/tools/check fast` → `milestone-report: M0: 34/115`. The `law_holds` tests print 179 lines `<case> <variant>:again: refcore's reprint was refused, the engine's wasn't`, 80 of them in `m0_format_equal_models_print_identically`. Each comes from a reprint that equals refcore's and exits 0.
+- **What I tried:** nothing on the engine side can pass these: an `:again` run exists only when the reprint exits 0, as refcore's does. Idempotence itself is held by `again()` and is green (`m0_format_idempotent`).
+- **What I ask:**
+  - Options:
+    - (A) T skips keys ending `:again` in `law_holds`' refcore comparison, as `laws_m0.py` does: a test-only change.
+    - (B) T stores refcore's `again` runs in `m0.refcore`: a regenerated corpus.
+    - (C) No change: `m0_format_equal_models_print_identically`, `m0_parser_total`, `m0_depth_stops_at_8` and `m0_load_file_order_changes_nothing` can't turn green.
+  - **Recommended: A.**
+- **State:** the code is unchanged by this report. G2 is committed with it; the four tests stay red, also for load (G3 on).

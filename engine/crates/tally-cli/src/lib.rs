@@ -64,7 +64,7 @@ enum Command {
         /// The asks and the pin's form.
         request: tally::Request,
     },
-    /// `reprint <path>…`, built in a later milestone.
+    /// `reprint <path>…`: each file's canonical text and the reality's hash.
     Reprint {
         /// The paths, in the order given.
         paths: Vec<String>,
@@ -168,8 +168,41 @@ fn netstring(table: &mut Vec<u8>, bytes: &[u8]) {
 fn command(args: &[OsString], files: &[u8]) -> Output {
     match parse(args) {
         Some(Command::Run { paths, request }) => run_paths(&paths, &request, files),
-        Some(Command::Reprint { .. }) => not_implemented("reprint"),
+        Some(Command::Reprint { paths }) => reprint_paths(&paths, files),
         None => usage(),
+    }
+}
+
+/// `reprint`: each file's canonical text, then the reality's hash (refcore's `reprint_paths`).
+/// A file is named as given; a directory's files relative to the directory given (INTERFACE
+/// gap I-3); they are read, printed and hashed in the order of their full paths.
+fn reprint_paths(paths: &[String], files: &[u8]) -> Output {
+    let Ok(table) = table(files) else {
+        return bad_table();
+    };
+    let mut named = Vec::new();
+    for path in paths {
+        let prefix = join(path, "");
+        for given in resolve(core::slice::from_ref(path), &table) {
+            let name = match given.path.strip_prefix(prefix.as_str()) {
+                Some(relative) if given.path != *path => relative.to_owned(),
+                Some(_) | None => given.path.clone(),
+            };
+            named.push((given, name));
+        }
+    }
+    match tally::reprint(named) {
+        Ok(answer) => answered(&answer),
+        Err(tally::NotImplemented) => not_implemented("reprint"),
+    }
+}
+
+/// The output of a file table that isn't netstring pairs.
+fn bad_table() -> Output {
+    Output {
+        stdout: b"tally: the file table is not netstring pairs of a path and its bytes\n".to_vec(),
+        stderr: Vec::new(),
+        code: EXIT_USAGE,
     }
 }
 
@@ -241,12 +274,7 @@ fn engine_run(
     files: &[u8],
 ) -> Result<tally::Answer, Output> {
     let Ok(table) = table(files) else {
-        return Err(Output {
-            stdout: b"tally: the file table is not netstring pairs of a path and its bytes\n"
-                .to_vec(),
-            stderr: Vec::new(),
-            code: EXIT_USAGE,
-        });
+        return Err(bad_table());
     };
     let given = resolve(paths, &table);
     tally::run(given, request).map_err(|tally::NotImplemented| not_implemented("run"))

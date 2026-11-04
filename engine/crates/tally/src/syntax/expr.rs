@@ -6,7 +6,7 @@
 //! Invariants: every loop takes a token or ends; each bracket and `if` is counted by `open`;
 //! every form of the grammar parses (the reads M0 adds are in `reads.rs`, the pins in `ask.rs`).
 
-use super::lex::Kind;
+use super::lex::{Kind, Paren, Role};
 use super::parse::{P, Stop, is_keyword};
 use super::reads::{dist_kind, query_fn};
 use super::tree::{
@@ -27,6 +27,15 @@ pub(super) enum Ends {
     AtIn,
     /// `to` ends it (a leg's `from` place).
     AtTo,
+}
+
+/// What an operand stands under, for the parentheses L §2.4 always prints.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Under {
+    /// An arithmetic or logical operator, a `not` or a `-`.
+    Operator,
+    /// A comparison or a membership test.
+    Comparison,
 }
 
 /// Whether a record is a row's, whose fields may be signed literals.
@@ -118,7 +127,7 @@ const BUILTINS: [&str; 75] = [
 ];
 
 /// Whether `word` is a built-in's name (L §2.2).
-fn is_builtin(word: &str) -> bool {
+pub(super) fn is_builtin(word: &str) -> bool {
     !word.is_empty() && BUILTINS.contains(&word)
 }
 
@@ -171,49 +180,115 @@ impl P<'_> {
 
     /// `a or b or …`.
     fn or_chain(&mut self, ends: Ends) -> Result<Expr, Stop> {
+        let mut froms = vec![self.i];
         let mut terms = vec![self.and_chain(ends)?];
         while self.accept("or")? {
+            froms.push(self.i);
             terms.push(self.and_chain(ends)?);
+        }
+        self.force_terms(&terms, &froms);
+        if self.blind
+            && terms.len() > 1
+            && let Some(Expr::Or(head)) = terms.first_mut()
+        {
+            let mut joined = core::mem::take(head);
+            joined.extend(terms.into_iter().skip(1));
+            terms = joined;
         }
         Ok(single_or(terms, Expr::Or))
     }
 
     /// `a and b and …`.
     fn and_chain(&mut self, ends: Ends) -> Result<Expr, Stop> {
+        let mut froms = vec![self.i];
         let mut terms = vec![self.not_term(ends)?];
         while self.accept("and")? {
+            froms.push(self.i);
             terms.push(self.not_term(ends)?);
         }
+        self.force_terms(&terms, &froms);
+        if self.blind
+            && terms.len() > 1
+            && let Some(Expr::And(head)) = terms.first_mut()
+        {
+            let mut joined = core::mem::take(head);
+            joined.extend(terms.into_iter().skip(1));
+            terms = joined;
+        }
         Ok(single_or(terms, Expr::And))
+    }
+
+    /// The terms of an `or` or `and` chain of two terms or more, each from its first token,
+    /// marked for the reprint's parentheses.
+    fn force_terms(&self, terms: &[Expr], froms: &[usize]) {
+        if terms.len() > 1 {
+            for (term, from) in terms.iter().zip(froms) {
+                self.force(term, *from, Under::Operator);
+            }
+        }
+    }
+
+    /// Marks an operand of an operator node for the reprint (L §2.4, refcore's `forced`): a
+    /// `… to u` (and, in a comparison or a membership, a converted `flows` or a `value`) is
+    /// always parenthesised, so its parentheses stay, and written bare it gets them. The
+    /// operand runs from the token at `from` to the one taken last.
+    fn force(&self, operand: &Expr, from: usize, under: Under) {
+        let always = |expr: &Expr| {
+            matches!(expr, Expr::To(..))
+                || (under == Under::Comparison
+                    && (matches!(expr, Expr::Value(_))
+                        || matches!(expr, Expr::Flows(f) if f.convert.is_some())))
+        };
+        if let Expr::Paren(inner) = operand {
+            if always(inner) {
+                self.mark(Some(from), |m| m.paren = Paren::Forced);
+            }
+        } else if always(operand) {
+            self.mark(Some(from), |m| m.wrap_open = true);
+            self.mark(self.back(), |m| m.wrap_close = true);
+        }
     }
 
     /// `[not] cmp`: one `not` at most.
     fn not_term(&mut self, ends: Ends) -> Result<Expr, Stop> {
         if self.accept("not")? {
-            return Ok(Expr::Not(Box::new(self.cmp(ends)?)));
+            let from = self.i;
+            let term = self.cmp(ends)?;
+            self.force(&term, from, Under::Operator);
+            return Ok(Expr::Not(Box::new(term)));
         }
         self.cmp(ends)
     }
 
     /// A comparison or a membership test; neither chains (parse rule 1).
     fn cmp(&mut self, ends: Ends) -> Result<Expr, Stop> {
+        let from = self.i;
         let left = self.sum(ends)?;
         if let Some(op) = self
             .peek(0)
             .filter(|tok| tok.kind == Kind::Op)
             .and_then(|tok| cmp_op(&tok.text))
         {
+            self.force(&left, from, Under::Comparison);
             self.skip(1)?;
+            let right_from = self.i;
             let right = self.sum(ends)?;
+            self.force(&right, right_from, Under::Comparison);
             self.no_chain()?;
             return Ok(Expr::Cmp(Box::new((left, op, right))));
         }
         let world = self.ask_for && self.depth_is_zero() && self.world_in();
         if self.at("in", 0) && ends != Ends::AtIn && !world {
+            self.force(&left, from, Under::Comparison);
             self.skip(1)?;
+            let set_from = self.i;
             let set = self.sum(ends)?;
+            self.force(&set, set_from, Under::Comparison);
             let on = if self.accept("on")? {
-                Some(self.sum(ends)?)
+                let on_from = self.i;
+                let on = self.sum(ends)?;
+                self.force(&on, on_from, Under::Comparison);
+                Some(on)
             } else {
                 None
             };
@@ -259,6 +334,7 @@ impl P<'_> {
 
     /// `a ± b ± …`, kept flat.
     pub(super) fn sum(&mut self, ends: Ends) -> Result<Expr, Stop> {
+        let from = self.i;
         let first = self.prod(ends)?;
         let mut rest = Vec::new();
         loop {
@@ -267,10 +343,25 @@ impl P<'_> {
                 Some("-") => AddOp::Sub,
                 Some(_) | None => break,
             };
+            if rest.is_empty() {
+                self.force(&first, from, Under::Operator);
+            }
+            self.role(Some(self.i), Role::Bin);
             self.skip(1)?;
-            rest.push((op, self.prod(ends)?));
+            let term_from = self.i;
+            let term = self.prod(ends)?;
+            self.force(&term, term_from, Under::Operator);
+            rest.push((op, term));
         }
         if rest.is_empty() {
+            return Ok(first);
+        }
+        let mut first = first;
+        if self.blind
+            && let Expr::Sum(_, head) = &mut first
+        {
+            // refcore nests `+` and `-` to the left: `(a + b) + c` is `a + b + c`
+            head.extend(rest);
             return Ok(first);
         }
         Ok(Expr::Sum(Box::new(first), rest))
@@ -278,6 +369,7 @@ impl P<'_> {
 
     /// `a × b ÷ …`, kept flat.
     fn prod(&mut self, ends: Ends) -> Result<Expr, Stop> {
+        let from = self.i;
         let first = self.unary(ends)?;
         let mut rest = Vec::new();
         loop {
@@ -286,10 +378,25 @@ impl P<'_> {
                 Some("/") => MulOp::Div,
                 Some(_) | None => break,
             };
+            if rest.is_empty() {
+                self.force(&first, from, Under::Operator);
+            }
+            self.role(Some(self.i), Role::Bin);
             self.skip(1)?;
-            rest.push((op, self.unary(ends)?));
+            let term_from = self.i;
+            let term = self.unary(ends)?;
+            self.force(&term, term_from, Under::Operator);
+            rest.push((op, term));
         }
         if rest.is_empty() {
+            return Ok(first);
+        }
+        let mut first = first;
+        if self.blind
+            && let Expr::Prod(_, head) = &mut first
+        {
+            // refcore nests `*` and `/` to the left: `(a * b) / c` is `a * b / c`
+            head.extend(rest);
             return Ok(first);
         }
         Ok(Expr::Prod(Box::new(first), rest))
@@ -305,7 +412,10 @@ impl P<'_> {
     /// `[-] post`: one prefix `-` at most.
     fn unary(&mut self, ends: Ends) -> Result<Expr, Stop> {
         if self.accept("-")? {
-            return Ok(Expr::Neg(Box::new(self.post(ends)?)));
+            let from = self.i;
+            let term = self.post(ends)?;
+            self.force(&term, from, Under::Operator);
+            return Ok(Expr::Neg(Box::new(term)));
         }
         self.post(ends)
     }
@@ -520,6 +630,9 @@ impl P<'_> {
 
     /// `span = expr ".." [expr] | ".." [expr] | expr` (L §2.3).
     pub(super) fn span(&mut self) -> Result<Span, Stop> {
+        if self.at("..", 0) {
+            self.role(Some(self.i), Role::Bin);
+        }
         if self.accept("..")? {
             let to = if self.span_end() {
                 None
@@ -533,6 +646,9 @@ impl P<'_> {
             });
         }
         let from = self.expr(Ends::Free)?;
+        if self.at("..", 0) {
+            self.role(Some(self.i), Role::Bin);
+        }
         if self.accept("..")? {
             let to = if self.span_end() {
                 None
@@ -594,6 +710,9 @@ impl P<'_> {
     /// The tokens from `first` to the current one, as written.
     pub(super) fn source_text(&self, first: usize) -> String {
         let mut text = String::new();
+        if self.blind {
+            return text;
+        }
         for (n, tok) in self
             .toks
             .iter()
@@ -622,6 +741,9 @@ impl P<'_> {
             Domain::List(keys)
         } else {
             let from = self.expr(Ends::AtIn)?;
+            if self.at("..", 0) {
+                self.role(Some(self.i), Role::Bin);
+            }
             if self.accept("..")? {
                 let to = self.expr(Ends::AtIn)?;
                 let step = if self.accept("step")? {
@@ -848,9 +970,13 @@ impl P<'_> {
                     self.close()?;
                     return Ok(Expr::Record(fields));
                 }
+                self.mark(self.back(), |m| m.paren = Paren::Plain);
                 let inner = self.expr(Ends::Free)?;
                 self.expect(")")?;
                 self.close()?;
+                if self.blind {
+                    return Ok(inner);
+                }
                 Ok(Expr::Paren(Box::new(inner)))
             }
             "[" => {
@@ -882,6 +1008,7 @@ impl P<'_> {
         if is_keyword(word) {
             return Err(self.keyword_atom(word));
         }
+        self.mark(Some(self.i), |m| m.name = true);
         self.skip(1)?;
         if self.at("(", 0) {
             let args = self.call_args()?;

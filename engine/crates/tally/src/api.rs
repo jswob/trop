@@ -152,6 +152,45 @@ pub fn run_with_memo(
     }
 }
 
+/// The canonical text of each file `reprint` is given, then the reality's hash (L §2.4, E §3.1
+/// step 1; refcore's `reprint_paths`, `reprint_lines`): each file as `(given, name)`, its full
+/// path and the name it prints under. The files are read, printed and hashed in the order of
+/// their full paths, by code point; each prints as `--- <name>` and its lines, then one line
+/// `sha256 <hash>`. A read, parse or order refusal prints alone, as `run`'s does.
+///
+/// # Errors
+///
+/// [`NotImplemented`] for a form whose order the engine doesn't build yet (a member's keys).
+pub fn reprint(mut files: Vec<(Given, String)>) -> Result<Answer, NotImplemented> {
+    files.sort_by(|(a, x), (b, y)| (&a.path, x).cmp(&(&b.path, y)));
+    let mut sources = Vec::with_capacity(files.len());
+    for (file, name) in files {
+        let Some(bytes) = file.bytes else {
+            return Ok(Answer::refused(&Refusal::no_path(&file.path)));
+        };
+        let Ok(text) = String::from_utf8(bytes) else {
+            return Ok(Answer::refused(&Refusal::not_utf8(&file.path)));
+        };
+        sources.push(Source { path: name, text });
+    }
+    let printed = match crate::syntax::reprint(&sources) {
+        Ok(printed) => printed,
+        Err(Stop::Refused(refusal)) => return Ok(Answer::refused(&refusal)),
+        Err(Stop::NotBuilt(_) | Stop::Deep) => return Err(NotImplemented),
+    };
+    let mut lines = Vec::new();
+    for (name, text) in &printed {
+        lines.push(format!("--- {name}"));
+        lines.extend(text.trim_end_matches('\n').split('\n').map(str::to_owned));
+    }
+    lines.push(format!("sha256 {}", crate::syntax::printed_hash(&printed)));
+    Ok(Answer {
+        lines,
+        #[cfg(feature = "counters")]
+        counters: crate::Counters::default(),
+    })
+}
+
 /// The read step: every file in the order of its full path, by code point; the first path
 /// that names nothing is `LOAD-PATH`, the first file that isn't UTF-8 is `LOAD-PARSE`, each
 /// named as the run gives it, whichever comes first in that order (L §8.3, tally 2.1.1).

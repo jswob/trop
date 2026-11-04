@@ -9,6 +9,7 @@
 use crate::base::{Code, Load, Place, Refusal};
 use crate::num::Num;
 use crate::time::Day;
+use std::cell::Cell;
 
 /// What a token is, with its value where it has one.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -46,6 +47,88 @@ pub struct Tok {
     pub text: String,
     /// Whether white space came before it on its line.
     pub ws: bool,
+    /// Its place among its line's tokens as split: the reprint's name for it once others
+    /// are taken out or added (refcore keeps the token object itself).
+    pub seq: u32,
+    /// What the last parse of its line read it as, for the canonical reprint.
+    pub mark: Cell<Mark>,
+}
+
+/// What the parser read a token as, for the canonical reprint (L §2.4): refcore's `Tok.role`,
+/// `nm` and `canon`, and the positions its nodes keep (`_po`, `_pc`, `_t0`, `_t1`, `_eq`,
+/// `_at`). Set through the `Cell`, since the parser holds the tokens shared.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub struct Mark {
+    /// How it spaces against its neighbours.
+    pub role: Role,
+    /// Read as an id: a name or a declaration's id, not a word of the language. Kept
+    /// across reparses, as refcore keeps `nm`.
+    pub name: bool,
+    /// Its canonical text, where it differs from the written one.
+    pub canon: Canon,
+    /// A `(` that opens a parenthesised expression.
+    pub paren: Paren,
+    /// The first token of an operand L §2.4 always parenthesises, written bare.
+    pub wrap_open: bool,
+    /// The last token of such an operand.
+    pub wrap_close: bool,
+}
+
+impl Mark {
+    /// The mark a token has before its line is parsed again: only `name` stays.
+    #[must_use]
+    pub fn cleared(self) -> Mark {
+        Mark {
+            name: self.name,
+            ..Mark::default()
+        }
+    }
+}
+
+/// How a token spaces (refcore's `role`).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum Role {
+    /// As the token's text says.
+    #[default]
+    Plain,
+    /// A binary operator: a spaced `-` or `..`.
+    Bin,
+    /// Inside a unit or a fraction: touching the token before it.
+    Unit,
+    /// A span's `..` with no start, spaced from the word before it (`governs ..2026-05`).
+    Lo,
+    /// A span's `..` with no end, spaced from what follows (`governs 2026.. "art. 1"`).
+    Hi,
+    /// A one-line def's `=`.
+    DefEq,
+    /// A def's `at` before its law date.
+    DefAt,
+}
+
+/// A token's canonical text (L §2.4 Numbers).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum Canon {
+    /// As written.
+    #[default]
+    Keep,
+    /// A number: the shortest exact decimal, thousands grouped by a space.
+    Number,
+    /// A fraction's numerator, reduced (with the denominator two tokens on).
+    Numerator,
+    /// A fraction's denominator, reduced (with the numerator two tokens back).
+    Denominator,
+}
+
+/// What a `(` opens.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum Paren {
+    /// Nothing the reprint may take out: a call's, a record's, or no `(`.
+    #[default]
+    None,
+    /// A parenthesised expression: kept only where the parse needs it.
+    Plain,
+    /// A parenthesised operand L §2.4 always parenthesises: kept.
+    Forced,
 }
 
 /// One non-blank line of a file: its indent level and its tokens.
@@ -142,10 +225,13 @@ fn lex_line(text: &str) -> Result<Vec<Tok>, String> {
             _ => operator(rest, c)?,
         };
         let (written, after) = rest.split_at_checked(len).ok_or("a token")?;
+        let seq = u32::try_from(toks.len()).map_err(|_| "a line too long")?;
         toks.push(Tok {
             kind,
             text: written.to_owned(),
             ws,
+            seq,
+            mark: Cell::new(Mark::default()),
         });
         rest = after;
         ws = false;

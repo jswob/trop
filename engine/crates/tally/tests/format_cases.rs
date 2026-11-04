@@ -1,0 +1,132 @@
+//! The builder's formatter tests: a small reality reprints as refcore reprints it, and its
+//! canonical text reprints as itself.
+//! Spec: L §2.4 (the canonical format); E §3.1 step 1 (the hash).
+//! Twin: engine/tools/refcore/canon.py; each expected text is refcore's `reprint` of the same
+//! text.
+//! Invariants: reads no test, vector or answer key (R-93); the texts are written here, small.
+
+#![forbid(unsafe_code)]
+
+#[cfg(test)]
+mod tests {
+    use tally::syntax::printed_hash;
+    use tally::{Given, format_file, reprint};
+
+    /// Written off its canonical form: sections out of order, extra parentheses, an unsorted
+    /// `beats`, rules and version items out of order, numbers and a fraction not reduced.
+    const WRITTEN: &str = "model m
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+input z: num
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  z = 3/6
+  x = 1000.50
+
+input x: num
+
+source s \"s\"
+
+def b: num = ((x + z)) * (x) + (x * z)
+
+def a: num
+  rule base = x - (z - 1000.50)
+
+def c: bool
+  rule q beats r, p = (x > z) or (z > x)
+  rule p = x>z
+  rule r = true
+";
+
+    /// refcore's reprint of [`WRITTEN`].
+    const CANONICAL: &str = "model m
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s \"s\"
+
+input x: num
+
+input z: num
+
+def a: num = x - (z - 1 000.5)
+
+def b: num = (x + z) * x + x * z
+
+def c: bool
+  rule p = x > z
+  rule q beats p, r = x > z or z > x
+  rule r = true
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  x = 1 000.5
+  z = 1/2
+";
+
+    #[test]
+    fn a_reality_reprints_as_refcore_and_again_as_itself() {
+        let canonical = format_file(WRITTEN.as_bytes()).expect("it reprints");
+        assert_eq!(canonical, CANONICAL, "refcore's reprint");
+        let again = format_file(CANONICAL.as_bytes()).expect("it reprints");
+        assert_eq!(again, CANONICAL, "the canonical text is a fixed point");
+        let printed = [("m.tally".to_owned(), CANONICAL.to_owned())];
+        assert_eq!(
+            printed_hash(&printed),
+            "5f77af543e6f528885de7eed0709f1f613afebf24486750ab0cf8ac1e17c8cff",
+            "refcore's sha256 line"
+        );
+    }
+
+    #[test]
+    fn reprint_names_files_as_given_and_orders_them_by_full_path() {
+        let file = |path: &str, text: &str| Given {
+            path: path.to_owned(),
+            bytes: Some(text.as_bytes().to_vec()),
+        };
+        let header = "model m\n  tally 2\n  on 2026-01-01\n  start 2026-01-01\n  end 2026-12-31\n";
+        let part = "part p\n  tally 2\n";
+        let answer = reprint(vec![
+            (file("d/z.tally", part), "z.tally".to_owned()),
+            (file("d/a/m.tally", header), "a/m.tally".to_owned()),
+        ])
+        .expect("both reprint");
+        let heads: Vec<&str> = answer
+            .lines()
+            .iter()
+            .filter(|line| line.starts_with("--- "))
+            .map(String::as_str)
+            .collect();
+        assert_eq!(heads, ["--- a/m.tally", "--- z.tally"], "by full path");
+        assert!(
+            answer
+                .lines()
+                .last()
+                .is_some_and(|line| line.starts_with("sha256 ")),
+            "the hash last"
+        );
+        let missing = reprint(vec![(
+            Given {
+                path: "d/x.tally".to_owned(),
+                bytes: None,
+            },
+            "x.tally".to_owned(),
+        )])
+        .expect("an answer");
+        assert_eq!(
+            missing.lines(),
+            ["refused: LOAD-PATH d/x.tally doesn't exist"],
+            "a missing file by its full path"
+        );
+    }
+}

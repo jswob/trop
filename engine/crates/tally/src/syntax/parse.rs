@@ -8,7 +8,7 @@
 //!
 //! The expressions are in `expr.rs`, the sections in `item.rs`; both extend this parser.
 
-use super::lex::{Kind, Line, Tok, cannot};
+use super::lex::{Canon, Kind, Line, Mark, Role, Tok, cannot};
 use super::tree::{Known, LSpan, Lit, Number, Unit, UnitTerm};
 use crate::base::{Code, Load, Place, Refusal};
 use crate::num::Num;
@@ -97,6 +97,16 @@ const MAX_DEPTH: u8 = 8;
 /// met first; this count guards the invariant (R-16).
 const MAX_NEST: u8 = 64;
 
+/// How a parse keeps parentheses: as `Paren` nodes, or left out (with source texts) for the
+/// reprint's comparison of two parses (refcore's `sig`).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) enum Parens {
+    /// As nodes.
+    Kept,
+    /// Left out.
+    Blind,
+}
+
 /// Whether a token may have a space before it.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) enum Space {
@@ -174,6 +184,9 @@ pub(crate) struct P<'a> {
     /// of one file: a section's nesting is checked once the whole file parses (L §2.3,
     /// `LOAD-ASIF`).
     pub(super) asif: &'a Cell<u8>,
+    /// Parsing for the reprint's comparison (refcore's `sig`): no `Paren` node and no source
+    /// text, so two parses that differ only in parentheses are equal trees (L §2.4).
+    pub(super) blind: bool,
 }
 
 impl<'a> P<'a> {
@@ -195,6 +208,44 @@ impl<'a> P<'a> {
             nest: 0,
             ask_for: false,
             asif,
+            blind: false,
+        }
+    }
+
+    /// The position `k` tokens ahead.
+    pub(super) fn ahead(&self, k: usize) -> Option<usize> {
+        self.i.checked_add(k)
+    }
+
+    /// The position of the token taken last.
+    pub(super) fn back(&self) -> Option<usize> {
+        self.i.checked_sub(1)
+    }
+
+    /// Changes the mark of the token at `at`, if there is one.
+    pub(super) fn mark(&self, at: Option<usize>, change: fn(&mut Mark)) {
+        if let Some(tok) = at.and_then(|at| self.toks.get(at)) {
+            let mut mark = tok.mark.get();
+            change(&mut mark);
+            tok.mark.set(mark);
+        }
+    }
+
+    /// Gives the token at `at` the role `role`.
+    pub(super) fn role(&self, at: Option<usize>, role: Role) {
+        if let Some(tok) = at.and_then(|at| self.toks.get(at)) {
+            let mut mark = tok.mark.get();
+            mark.role = role;
+            tok.mark.set(mark);
+        }
+    }
+
+    /// Gives the token at `at` the canonical text `canon`.
+    fn canon(&self, at: Option<usize>, canon: Canon) {
+        if let Some(tok) = at.and_then(|at| self.toks.get(at)) {
+            let mut mark = tok.mark.get();
+            mark.canon = canon;
+            tok.mark.set(mark);
         }
     }
 
@@ -222,6 +273,7 @@ impl<'a> P<'a> {
     pub(super) fn under(&self, line: &'a Line) -> P<'a> {
         let mut p = P::new(&line.toks, self.file, line.number, self.units, self.asif);
         p.i = 1;
+        p.blind = self.blind;
         p
     }
 
@@ -397,6 +449,7 @@ impl<'a> P<'a> {
         if is_keyword(&tok.text) {
             return Err(self.refuse(Load::Reserved, format!("{} is a keyword", tok.text)));
         }
+        self.mark(Some(self.i), |m| m.name = true);
         self.skip(1)?;
         Ok(tok.text.clone())
     }
@@ -440,6 +493,7 @@ impl<'a> P<'a> {
     pub(super) fn integer(&mut self) -> Result<Num, Stop> {
         match self.kind(0) {
             Some(Kind::Int(n)) => {
+                self.canon(Some(self.i), Canon::Number);
                 self.skip(1)?;
                 Ok(n.clone())
             }
@@ -484,9 +538,14 @@ impl<'a> P<'a> {
 
     /// One unit term with its power, `PLN^2`.
     fn uterm(&mut self) -> Result<UnitTerm, Stop> {
+        let first = self.i;
         let tok = self.next()?;
         let base = match (&tok.kind, period_word(&tok.text)) {
             (Kind::Id, Some(singular)) => singular.to_owned(),
+            (Kind::Id, None) => {
+                self.mark(Some(first), |m| m.name = true);
+                tok.text.clone()
+            }
             _ => tok.text.clone(),
         };
         let mut power = 1_i64;
@@ -502,6 +561,9 @@ impl<'a> P<'a> {
                 n
             };
         }
+        for at in (first..self.i).skip(1) {
+            self.role(Some(at), Role::Unit);
+        }
         Ok(UnitTerm { base, power })
     }
 
@@ -513,6 +575,8 @@ impl<'a> P<'a> {
             && !self.spaced(0)
             && self.is_uterm_start(1, Space::Touching, Names::Any)
         {
+            self.role(Some(self.i), Role::Unit);
+            self.role(self.ahead(1), Role::Unit);
             let divide = self.next()?.text == "/";
             let term = self.uterm()?;
             let power = if divide {
@@ -533,6 +597,8 @@ impl<'a> P<'a> {
     /// `1/u`: a unit that starts with the reciprocal of a term.
     fn reciprocal(&mut self) -> Result<UnitTerm, Stop> {
         self.skip(2)?;
+        self.role(self.back(), Role::Unit);
+        self.role(Some(self.i), Role::Unit);
         let term = self.uterm()?;
         Ok(UnitTerm {
             power: term
@@ -602,6 +668,7 @@ impl<'a> P<'a> {
 
     /// A number with an optional unit, after the `-` of `minus` if one was taken.
     fn number(&mut self, minus: Minus) -> Result<Number, Stop> {
+        let at = self.i;
         let tok = self.next()?;
         let (value, whole) = match &tok.kind {
             Kind::Int(n) => (n.clone(), true),
@@ -619,6 +686,9 @@ impl<'a> P<'a> {
         let value = self.signed(value, minus, "a number")?;
         let unit = self.unit_after_number()?;
         let four = whole && tok.text.len() == 4 && tok.text.bytes().all(|b| b.is_ascii_digit());
+        if !(four && unit.is_none()) {
+            self.canon(Some(at), Canon::Number);
+        }
         Ok(Number {
             value,
             whole,
@@ -686,10 +756,15 @@ impl<'a> P<'a> {
             "inf" => self.take(Lit::Inf { neg: false }),
             "nominal" if self.at_int(1) => {
                 self.skip(1)?;
-                Ok(Lit::Nominal(self.integer()?))
+                let code = self.integer()?;
+                self.canon(self.back(), Canon::Keep);
+                Ok(Lit::Nominal(code))
             }
             _ if is_keyword(word) => Err(self.err("a literal")),
-            _ => self.take(Lit::Name(word.to_owned())),
+            _ => {
+                self.mark(Some(self.i), |m| m.name = true);
+                self.take(Lit::Name(word.to_owned()))
+            }
         }
     }
 
@@ -703,12 +778,18 @@ impl<'a> P<'a> {
         let numer_text = self
             .peek(0)
             .map_or(String::new(), |t| t.text.replace(' ', ""));
+        let top = self.i;
         let numer = self.integer()?;
+        self.role(Some(self.i), Role::Unit);
+        self.role(self.ahead(1), Role::Unit);
+        self.canon(Some(top), Canon::Numerator);
+        self.canon(self.ahead(1), Canon::Denominator);
         self.skip(1)?;
         let denom_text = self
             .peek(0)
             .map_or(String::new(), |t| t.text.replace(' ', ""));
         let denom = self.integer()?;
+        self.canon(self.back(), Canon::Denominator);
         if denom.is_zero() {
             return Err(self.cannot("fraction with denominator 0"));
         }
@@ -729,6 +810,9 @@ impl<'a> P<'a> {
 
     /// A version's span of literals: `a .. b`, `a ..`, `.. b`, or `a` (L §2.3 `lspan`).
     pub(super) fn lspan(&mut self) -> Result<LSpan, Stop> {
+        if self.at("..", 0) {
+            self.role(Some(self.i), Role::Lo);
+        }
         if self.accept("..")? {
             let to = self.lit()?;
             return Ok(LSpan {
@@ -741,6 +825,7 @@ impl<'a> P<'a> {
         let from = self.lit()?;
         if self.accept("..")? {
             let to = if self.done() || self.at_clause_after_span() {
+                self.role(self.back(), Role::Hi);
                 None
             } else {
                 Some(self.lit()?)

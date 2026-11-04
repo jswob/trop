@@ -8,8 +8,8 @@
 
 use super::ask::ask;
 use super::expr::{Ends, Rec};
-use super::lex::{Kind, Line, split_lines};
-use super::parse::{P, Stop};
+use super::lex::{Kind, Line, Role, split_lines};
+use super::parse::{P, Parens, Stop};
 use super::reads::dist_kind;
 use super::tree::{
     Axis, Band, BandRow, Bind, Certainty, Def, Edge, Enter, Expr, File, Fill, Gap, Governs, Header,
@@ -47,13 +47,13 @@ pub fn parse_reality(sources: &[Text]) -> Result<Vec<File>, Stop> {
 }
 
 /// The first token's text of a line, or nothing.
-fn first(line: &Line) -> &str {
+pub(super) fn first(line: &Line) -> &str {
     line.toks.first().map_or("", |tok| tok.text.as_str())
 }
 
 /// The unit names a number may carry: declared `unit` ids, and the keys entered into kinds of
 /// unit (refcore's `prescan_units`, L §3.2).
-fn prescan_units(files: &[Vec<Line>]) -> BTreeSet<String> {
+pub(super) fn prescan_units(files: &[Vec<Line>]) -> BTreeSet<String> {
     let mut units = BTreeSet::new();
     let mut unit_kinds = BTreeSet::from(["currencies".to_owned()]);
     for line in files.iter().flatten() {
@@ -105,7 +105,11 @@ fn children(after: &[Line], level: u32) -> (&[Line], &[Line]) {
 /// A file: its header, then its sections, each at level 0; once every section parses, the
 /// first whose `as if` nests deeper than 4 is `LOAD-ASIF` at its line (refcore's
 /// `parse_file`, L §2.3).
-fn parse_file(lines: &[Line], file: &str, units: &BTreeSet<String>) -> Result<File, Stop> {
+pub(super) fn parse_file(
+    lines: &[Line],
+    file: &str,
+    units: &BTreeSet<String>,
+) -> Result<File, Stop> {
     let Some((head, under_head)) = lines.split_first() else {
         return Err(Stop::Refused(Refusal::at(
             Code::Load(Load::Header),
@@ -144,6 +148,36 @@ fn parse_file(lines: &[Line], file: &str, units: &BTreeSet<String>) -> Result<Fi
         header,
         sections,
     })
+}
+
+/// One section from its lines, its first line at level 0 and the lines under it, parsed again
+/// for the reprint (refcore's `parse_section`, `canon.reparse`): each token's mark is cleared
+/// first; `Parens::Blind` parses for the reprint's comparison (no parentheses, no source
+/// texts).
+pub(super) fn parse_block(
+    block: &[Line],
+    file: &str,
+    units: &BTreeSet<String>,
+    parens: Parens,
+) -> Result<Section, Stop> {
+    for tok in block.iter().flat_map(|line| &line.toks) {
+        tok.mark.set(tok.mark.get().cleared());
+    }
+    let Some((head, body)) = block.split_first() else {
+        return Err(Stop::Refused(Refusal::at(
+            Code::Load(Load::Parse),
+            "cannot parse: a section reprinted".to_owned(),
+            At::File(file.to_owned()),
+        )));
+    };
+    let asif = Cell::new(0);
+    let mut p = P::new(&head.toks, file, head.number, units, &asif);
+    p.blind = parens == Parens::Blind;
+    if head.level != 0 {
+        return Err(p.cannot("indentation"));
+    }
+    p.i = 1;
+    parse_section(&mut p, first(head), body)
 }
 
 /// The header lines a header kind takes, in order.
@@ -939,7 +973,11 @@ fn def(p: &mut P<'_>, body: &[Line]) -> Result<Def, Stop> {
     p.expect(":")?;
     let ty = p.ty()?;
     if p.accept("=")? {
+        p.role(p.back(), Role::DefEq);
         let value = short_value(p)?;
+        if p.at("at", 0) {
+            p.role(Some(p.i), Role::DefAt);
+        }
         let law = law_date(p)?;
         p.end()?;
         let mut notes = Vec::new();
@@ -966,6 +1004,9 @@ fn def(p: &mut P<'_>, body: &[Line]) -> Result<Def, Stop> {
             short: true,
             line: p.line,
         });
+    }
+    if p.at("at", 0) {
+        p.role(Some(p.i), Role::DefAt);
     }
     let law = law_date(p)?;
     p.end()?;
