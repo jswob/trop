@@ -7,6 +7,7 @@
 //! a thing's base is the kind it entered that isn't plain, or its earliest plain one.
 
 use super::key::{KeyVal, Span};
+use super::ty::Ty;
 use crate::syntax::{Certainty, Price, Sign, Type};
 
 /// What a kind's things are.
@@ -47,6 +48,9 @@ pub struct KindInfo {
     pub legs: Vec<(String, String)>,
     /// An event kind's own attributes: (name, written type; none for the prelude's).
     pub attrs: Vec<(String, Option<Type>)>,
+    /// Its attributes' declared types, in `attrs`' order; none for the prelude's (refcore's
+    /// `attr_types`, set by load's `build_kind_types`). L §3.1, §5.7.
+    pub attr_types: Vec<(String, Option<Ty>)>,
     /// Whether the prelude declares it.
     pub prelude: bool,
     /// The line of its `kind` section.
@@ -69,6 +73,7 @@ impl KindInfo {
             outside: false,
             legs: Vec::new(),
             attrs: Vec::new(),
+            attr_types: Vec::new(),
             prelude: true,
             line: None,
         }

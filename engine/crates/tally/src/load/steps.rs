@@ -62,6 +62,7 @@ pub fn load(files: Vec<File>) -> Result<Reality, Stop> {
     loader.prescan_open_keys();
     loader.build_places()?;
     loader.build_items()?;
+    loader.check_rows()?;
     loader.finish_rows();
     loader.collect_asks();
     loader.build_graph()?;

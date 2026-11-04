@@ -652,6 +652,8 @@ pub struct Leg {
     pub amount: Expr,
     /// Its own day.
     pub on: Option<Expr>,
+    /// Its line: a move's `leg` line, or the line of the row whose record holds it.
+    pub line: u32,
 }
 
 /// A calendar value (L §4.2).
@@ -1231,8 +1233,48 @@ pub struct Move {
     pub fulfils: Option<Expr>,
     /// Notes.
     pub notes: Vec<String>,
+    /// The line of each of its clauses.
+    pub lines: MoveLines,
     /// Its line.
     pub line: u32,
+}
+
+/// The line each of a move's clauses stands on; a clause not written keeps the move's line.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct MoveLines {
+    /// `on`.
+    pub on: u32,
+    /// `at`.
+    pub at: u32,
+    /// `for`.
+    pub for_period: u32,
+    /// `when`.
+    pub when: u32,
+    /// `reads`.
+    pub reads: u32,
+    /// `ties by`.
+    pub ties: u32,
+    /// `fulfils`.
+    pub fulfils: u32,
+    /// Each `attr` line, in the order written.
+    pub attrs: Vec<u32>,
+}
+
+impl MoveLines {
+    /// Every clause at the move's own line.
+    #[must_use]
+    pub fn at_move(line: u32) -> MoveLines {
+        MoveLines {
+            on: line,
+            at: line,
+            for_period: line,
+            when: line,
+            reads: line,
+            ties: line,
+            fulfils: line,
+            attrs: Vec::new(),
+        }
+    }
 }
 
 /// What an ask asks.

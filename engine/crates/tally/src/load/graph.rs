@@ -9,20 +9,27 @@
 //! `m_t_bal`, `m_t_flows`, `m_t_value`, `m_price_edges`, `m_bind_movements`, `m_place_value`,
 //! `m_move_value`, `m_literal_place`, `m_place_target`, `m_move_changes`, `m_resolve_price`,
 //! `m_c_next`, `m_c_observed`, `m_legof_read`).
-//! Invariants: the walk records what refcore's checker records on the forms S builds and
-//! refuses nothing (the checker's refusals are M0's); its recursion is counted (R-16), and the
-//! parser bounds every tree it walks well below the count.
+//! Invariants: the walk records what refcore's checker records on the forms S builds; it
+//! takes the items one sort at a time, each in section order (E §3.1 The order of the checks),
+//! and refuses only what needs no type: a binding's checks (`binds.rs`) and a read with keys
+//! of a name nothing declares, each at the line it is written on; the checker's other
+//! refusals are M0's later groups', and a price clause's are its prices', so a price clause's
+//! walk refuses nothing; its recursion is counted (R-16), and the parser bounds every tree it
+//! walks well below the count.
 
+use super::binds::{Over, alive_clause, bound_twice, over};
 use super::keys::keyed_place_thing;
-use crate::base::{Code, Refusal};
+use crate::base::{Code, Load, Place as At, Refusal};
 use crate::model::{
-    BindInfo, Domain, Graph, KindSpec, Mark, MoveInfo, NameKind, Node, NodeKind, Reality, Rel,
-    Shift, Target, Thing, Ty,
+    BindInfo, Domain, Graph, KeyVal, KindSpec, Mark, MoveInfo, NameKind, Node, NodeKind, Reality,
+    Rel, Shift, Target, Thing, Ty,
 };
 use crate::syntax::{
     AddOp, Agg, Ask, AskBody, Bal, Bind, Call, Domain as Written, Expr, Field, FieldValue, Flows,
-    In, Key, LawDate, Leg, Lit, MulOp, OfQ, Postfix, Price, RuleValue, Span, Step, Stop, Valuation,
+    In, Key, LawDate, Leg, Lit, MulOp, OfQ, Postfix, Price, RuleValue, Section, Span, Step, Stop,
+    Valuation,
 };
+use crate::time::PeriodKind;
 use std::collections::{BTreeMap, BTreeSet};
 
 /// How deep the walk goes into one expression. The parser's own limits (eight brackets or
@@ -88,10 +95,13 @@ struct Scope {
     /// A read at a day the reader states (`explicit`) or at each day asked (`calendar`),
     /// whatever its keys.
     mode: Option<Rel>,
+    /// The file and line the expression is written on, where a refusal met in it is put; none
+    /// for a price clause, which this walk doesn't check.
+    at: Option<(String, u32)>,
 }
 
 impl Scope {
-    /// The scope of `item`'s own expression, with no variable yet.
+    /// The scope of `item`'s own expression, with no variable yet and no place.
     fn new(item: Node) -> Scope {
         Scope {
             item,
@@ -99,6 +109,33 @@ impl Scope {
             keyvars: Vec::new(),
             under: Under::Item,
             mode: None,
+            at: None,
+        }
+    }
+
+    /// This scope, its expression written on `line` of `file`.
+    fn written(mut self, file: &str, line: u32) -> Scope {
+        self.at = Some((file.to_owned(), line));
+        self
+    }
+
+    /// This scope, its expression on another line of the same file.
+    fn on_line(&self, line: u32) -> Scope {
+        let mut scope = self.clone();
+        if let Some((_, at)) = &mut scope.at {
+            *at = line;
+        }
+        scope
+    }
+
+    /// A refusal met in this scope's expression, at its line.
+    fn place(&self, stop: Stop) -> Stop {
+        let Some((file, line)) = &self.at else {
+            return stop;
+        };
+        match stop {
+            Stop::Refused(refusal) => Stop::Refused(refusal.placed(At::Line(file.clone(), *line))),
+            other @ (Stop::NotBuilt(_) | Stop::Deep) => other,
         }
     }
 
@@ -174,51 +211,142 @@ fn deeper(depth: u32) -> Result<u32, Stop> {
 }
 
 /// The item graph's edges and marks, and each move's declared reads and changes (refcore's
-/// `Checker.run`, its walk: price clauses, inputs' ranges, moves by id, defs, bands, asks,
-/// `prices … by`). E §3.1 steps 5, 7.
-pub(super) fn walk(m: &Reality) -> Result<(Graph, Vec<MoveFacts>), Stop> {
+/// `Checker.run`, its walk: price clauses, inputs' ranges, then moves, defs, bands and asks,
+/// one sort at a time, each in section order, then `prices … by`). E §3.1 steps 5, 7, The
+/// order of the checks.
+///
+/// # Errors
+///
+/// A refusal the walk makes (a binding's, an unknown id read with keys), at its line; `NotBuilt`
+/// for a form S doesn't build.
+pub(super) fn walk(
+    m: &Reality,
+    sections: &[(String, Section)],
+) -> Result<(Graph, Vec<MoveFacts>), Stop> {
+    let files = Files::of(sections);
     let mut graph = Graph::default();
     graph.priced(m)?;
     for (id, input) in m.inputs.entries() {
         let scope = Scope::keyed(Node::new(NodeKind::Input, id), &input.binds);
         graph.range_ends(m, &scope, &input.binds)?;
     }
-    let mut moves: Vec<&MoveInfo> = m.moves.entries().map(|(_, mv)| mv).collect();
-    moves.sort_by(|a, b| a.id.cmp(&b.id));
     let mut facts = Vec::new();
-    for mv in moves {
-        facts.push(graph.check_move(m, mv)?);
+    for (_, mv) in m.moves.entries() {
+        facts.push(graph.check_move(m, mv, files.of_move(&mv.id)?)?);
     }
     for (id, def) in m.defs.entries() {
-        let scope = Scope::keyed(Node::new(NodeKind::Def, id), &def.binds);
-        graph.range_ends(m, &scope, &def.binds)?;
+        let at_def = Scope::keyed(Node::new(NodeKind::Def, id), &def.binds)
+            .written(files.of_def(id)?, def.decl.line);
+        graph.range_ends(m, &at_def, &def.binds)?;
         for bind in &def.binds {
-            graph.opt(m, &scope, bind.node.filter.as_ref(), 0)?;
+            graph.opt(m, &at_def, bind.node.filter.as_ref(), 0)?;
         }
         if let Some(LawDate::Expr(at)) = &def.at {
-            graph.expr(m, &scope, at, 0)?;
+            graph.expr(m, &at_def, at, 0)?;
         }
         for (_, versions) in &def.rules {
             for version in versions {
+                let scope = at_def.on_line(version.rule.line);
                 graph.opt(m, &scope, version.rule.when.as_ref(), 0)?;
                 graph.rule_value(m, &scope, &version.rule.value)?;
             }
         }
     }
     for (id, band) in m.bands.entries() {
-        let mut scope = Scope::new(Node::new(NodeKind::Band, id));
-        scope.vars.insert(band.arg.clone(), Ranges::Keys);
         for table in &band.tables {
             for row in &table.rows {
+                let mut scope = Scope::new(Node::new(NodeKind::Band, id))
+                    .written(files.of_version(&table.version)?, row.line);
+                scope.vars.insert(band.arg.clone(), Ranges::Keys);
                 graph.rule_value(m, &scope, &row.value)?;
             }
         }
     }
     for ask in &m.asks {
-        graph.check_ask(m, ask)?;
+        graph.check_ask(m, ask, files.of_ask(&ask.id)?)?;
     }
-    graph.prices_by(m);
+    graph.prices_by(m, &files)?;
     Ok((graph, facts))
+}
+
+/// The file each item's section stands in, by the item's id: a refusal names it.
+struct Files {
+    /// `(section word, id)` to the file.
+    by_item: BTreeMap<(&'static str, String), String>,
+}
+
+impl Files {
+    /// The files of the sections' moves, defs, asks and versions.
+    fn of(sections: &[(String, Section)]) -> Files {
+        let mut by_item = BTreeMap::new();
+        for (file, section) in sections {
+            let item = match section {
+                Section::Move(mv) => ("move", mv.id.clone()),
+                Section::Def(def) => ("def", def.id.clone()),
+                Section::Ask(ask) => ("ask", ask.id.clone()),
+                Section::Version(version) => ("version", version.id.clone()),
+                Section::Input(input) => ("input", input.id.clone()),
+                Section::Source(_)
+                | Section::Unit(_)
+                | Section::Kind(_)
+                | Section::Index(_)
+                | Section::Axis(_)
+                | Section::Band(_)
+                | Section::Place(_)
+                | Section::Fill(_) => continue,
+            };
+            by_item.insert(item, file.clone());
+        }
+        Files { by_item }
+    }
+
+    /// The file of the section `word id`, which load built the item from.
+    fn get(&self, word: &'static str, id: &str) -> Result<&str, Stop> {
+        self.by_item
+            .get(&(word, id.to_owned()))
+            .map(String::as_str)
+            .ok_or_else(|| {
+                Stop::Refused(Refusal::new(
+                    Code::EngineInvariant,
+                    format!("{word} {id} has no section"),
+                ))
+            })
+    }
+
+    /// A move's file.
+    fn of_move(&self, id: &str) -> Result<&str, Stop> {
+        self.get("move", id)
+    }
+
+    /// A def's file.
+    fn of_def(&self, id: &str) -> Result<&str, Stop> {
+        self.get("def", id)
+    }
+
+    /// An ask's file.
+    fn of_ask(&self, id: &str) -> Result<&str, Stop> {
+        self.get("ask", id)
+    }
+
+    /// A version's file, where its band rows stand.
+    fn of_version(&self, id: &str) -> Result<&str, Stop> {
+        self.get("version", id)
+    }
+
+    /// A load refusal at the declaration of input `id`, which stands at `line`.
+    fn at_input(&self, id: &str, line: Option<u32>, code: Load, message: String) -> Stop {
+        let file = match self.get("input", id) {
+            Ok(file) => file.to_owned(),
+            Err(stop) => return stop,
+        };
+        let Some(line) = line else {
+            return Stop::Refused(Refusal::new(
+                Code::EngineInvariant,
+                format!("input {id} has no line"),
+            ));
+        };
+        Stop::Refused(Refusal::at(Code::Load(code), message, At::Line(file, line)))
+    }
 }
 
 impl Graph {
@@ -273,17 +401,61 @@ impl Graph {
         Ok(())
     }
 
-    /// `prices Y by ix`: the input reads the index it is priced by (refcore's
-    /// `check_prices`). L §3.4.
-    fn prices_by(&mut self, m: &Reality) {
+    /// `prices Y by ix`: `ix` is an input or a def keyed by one time index with a key for the
+    /// year `Y`, and the input reads it (refcore's `check_prices`). L §3.4.
+    fn prices_by(&mut self, m: &Reality, files: &Files) -> Result<(), Stop> {
         for (id, input) in m.inputs.entries() {
-            let Some(by) = &input.prices_by else {
+            let (Some(by), Some(year)) = (&input.prices_by, input.prices) else {
                 continue;
             };
+            let refuse =
+                |code: Load, message: String| files.at_input(id, input.line, code, message);
+            let Some(kind) = m.names.get(by) else {
+                return Err(refuse(Load::Name, format!("unknown id {by}")));
+            };
+            let binds = match kind {
+                NameKind::Input => m.inputs.get(by).map(|i| i.binds.as_slice()),
+                NameKind::Def => m.defs.get(by).map(|d| d.binds.as_slice()),
+                NameKind::Unit
+                | NameKind::Kind
+                | NameKind::Index
+                | NameKind::Axis
+                | NameKind::Band
+                | NameKind::Place
+                | NameKind::Fill
+                | NameKind::Move
+                | NameKind::Version
+                | NameKind::Ask
+                | NameKind::Source
+                | NameKind::Cut => None,
+            };
+            let Some([bind]) = binds else {
+                let message =
+                    format!("prices by {by}: not an input or a def keyed by one time index");
+                return Err(refuse(Load::Key, message));
+            };
+            let index = match &bind.domain {
+                Domain::Index(ix) => m.indexes.get(ix).filter(|ix| ix.period.is_some()),
+                Domain::Kind(_) | Domain::Axis(_) | Domain::List(_) | Domain::Range => None,
+            };
+            let Some(index) = index else {
+                let message = format!("prices by {by}: not keyed by a time index");
+                return Err(refuse(Load::Key, message));
+            };
+            let label = format!("{year:04}");
+            let has_year = index.keys.iter().any(|key| {
+                matches!(key, KeyVal::Period(p) if p.kind() == PeriodKind::Year && p.label() == label)
+            });
+            if !has_year {
+                let message =
+                    format!("prices {year} by {by} needs an index with a key for the year {year}");
+                return Err(refuse(Load::Key, message));
+            }
             if let Some((node, _)) = input_or_def(m, by) {
                 self.edge(&Node::new(NodeKind::Input, id), node, Rel::Any);
             }
         }
+        Ok(())
     }
 
     /// The ends and steps of a declaration's stepped ranges, read by the declaration.
@@ -321,35 +493,44 @@ impl Graph {
     /// A move: its binds, its day (read by its own day node), its `for`, `when`, legs,
     /// attributes, `fulfils` and `ties by`, and what it declares it reads (refcore's
     /// `m_check_move`, `m_move_changes`). L §5.14, §5.14.1.
-    fn check_move(&mut self, m: &Reality, mv: &MoveInfo) -> Result<MoveFacts, Stop> {
+    fn check_move(&mut self, m: &Reality, mv: &MoveInfo, file: &str) -> Result<MoveFacts, Stop> {
         let decl = &mv.decl;
-        let mut scope = Scope::new(Node::new(NodeKind::Move, &mv.id));
+        let lines = &decl.lines;
+        let mut scope = Scope::new(Node::new(NodeKind::Move, &mv.id)).written(file, decl.line);
         for bind in &mv.binds {
             self.bind(m, &mut scope, &bind.node, 0)?;
         }
         scope.keyvars = mv.binds.iter().map(|bind| bind.var.clone()).collect();
         let day = scope.for_item(Node::new(NodeKind::MoveOn, &mv.id));
         self.edge(&scope.item, day.item.clone(), Rel::Any);
-        self.expr(m, &day, &decl.on, 0)?;
-        self.opt(m, &day, decl.at.as_ref(), 0)?;
-        self.opt(m, &scope, decl.for_period.as_ref(), 0)?;
-        self.opt(m, &scope, decl.when.as_ref(), 0)?;
+        self.expr(m, &day.on_line(lines.on), &decl.on, 0)?;
+        self.opt(m, &day.on_line(lines.at), decl.at.as_ref(), 0)?;
+        let for_period = scope.on_line(lines.for_period);
+        self.opt(m, &for_period, decl.for_period.as_ref(), 0)?;
+        self.opt(m, &scope.on_line(lines.when), decl.when.as_ref(), 0)?;
         let mut changes = Vec::new();
         for leg in &decl.legs {
-            self.leg(m, &scope, leg, 0)?;
+            let at_leg = scope.on_line(leg.line);
+            self.leg(m, &at_leg, leg, 0)?;
             push_once(&mut changes, change_of(m, &scope, &leg.from));
             push_once(&mut changes, change_of(m, &scope, &leg.to));
         }
-        for (_, value) in &decl.attrs {
-            self.expr(m, &scope, value, 0)?;
+        for (at, (_, value)) in decl.attrs.iter().enumerate() {
+            let line = lines.attrs.get(at).copied().ok_or_else(|| {
+                Stop::Refused(Refusal::new(
+                    Code::EngineInvariant,
+                    format!("an attr of move {} with no line", mv.id),
+                ))
+            })?;
+            self.expr(m, &scope.on_line(line), value, 0)?;
         }
-        self.opt(m, &scope, decl.fulfils.as_ref(), 0)?;
+        self.opt(m, &scope.on_line(lines.fulfils), decl.fulfils.as_ref(), 0)?;
         if let Some(ties) = &decl.ties {
-            self.all(m, &scope, ties, 0)?;
+            self.all(m, &scope.on_line(lines.ties), ties, 0)?;
         }
         let mut read_targets = Vec::new();
         for read in &decl.reads {
-            read_targets.push(self.read_target(m, &scope, read)?);
+            read_targets.push(self.read_target(m, &scope.on_line(lines.reads), read)?);
         }
         Ok(MoveFacts {
             id: mv.id.clone(),
@@ -389,9 +570,9 @@ impl Graph {
 
     /// An ask: its bindings, `law`, `as known` and what it asks (refcore's `check_ask`).
     /// L §5.18.
-    fn check_ask(&mut self, m: &Reality, ask: &Ask) -> Result<(), Stop> {
+    fn check_ask(&mut self, m: &Reality, ask: &Ask, file: &str) -> Result<(), Stop> {
         unbuilt_clauses(ask)?;
-        let mut scope = Scope::new(Node::new(NodeKind::Ask, &ask.id));
+        let mut scope = Scope::new(Node::new(NodeKind::Ask, &ask.id)).written(file, ask.line);
         for bind in &ask.binds {
             self.bind(m, &mut scope, bind, 0)?;
         }
@@ -626,8 +807,8 @@ impl Graph {
         Ok(())
     }
 
-    /// A base with its postfixes: a name read at its first keys, then fields, which read
-    /// nothing (refcore's `t_index`, `t_field`).
+    /// A base with its postfixes: a name read at its first keys (`LOAD-NAME` when nothing
+    /// declares it), then fields, which read nothing (refcore's `t_index`, `t_field`). L §2.5.
     fn post(
         &mut self,
         m: &Reality,
@@ -640,6 +821,12 @@ impl Graph {
             && !scope.is_var(name)
             && let [Postfix::Keys(keys), rest @ ..] = posts
         {
+            if scope.at.is_some() && !m.names.contains_key(name) {
+                return Err(scope.place(Stop::Refused(Refusal::new(
+                    Code::Load(Load::Name),
+                    format!("unknown id {name}"),
+                ))));
+            }
             self.name(m, scope, name, keys, depth)?;
             rest
         } else {
@@ -925,8 +1112,9 @@ impl Graph {
         Ok(())
     }
 
-    /// A binding: what it ranges over, then its `on`, `over` and `where`, with its variable
-    /// in scope (refcore's `bind`, `bind_finish`). L §5.6.
+    /// A binding: its checks and what it ranges over, then its `on` and `over`, each checked
+    /// as allowed, and its `where`, with its variable in scope (refcore's `bind`,
+    /// `bind_finish`). L §5.6.
     fn bind(
         &mut self,
         m: &Reality,
@@ -934,19 +1122,30 @@ impl Graph {
         bind: &Bind,
         depth: u32,
     ) -> Result<(), Stop> {
-        let ranges = match &bind.domain {
-            Written::List(_) => Ranges::Keys,
-            Written::Range(range) => {
-                self.range(m, scope, range, depth)?;
+        if scope.is_var(&bind.var) {
+            return Err(scope.place(bound_twice(&bind.var)));
+        }
+        let over_what = over(m, bind).map_err(|stop| scope.place(stop))?;
+        let ranges = match &over_what {
+            Over::Index | Over::List => Ranges::Keys,
+            Over::Range => {
+                if let Written::Range(range) = &bind.domain {
+                    self.range(m, scope, range, depth)?;
+                }
                 Ranges::Keys
             }
-            Written::Name { qual: Some(_), .. } => return Err(Stop::NotBuilt("a member's prefix")),
-            Written::Name { id, qual: None } => self.bind_name(m, scope, id),
+            Over::Things(id) | Over::Movements(id) | Over::Observed(id) => {
+                self.bind_name(m, scope, id)
+            }
         };
         scope.vars.insert(bind.var.clone(), ranges);
-        self.opt(m, scope, bind.on.as_ref(), depth)?;
-        if let Some(over) = &bind.over {
-            self.span(m, scope, over, depth)?;
+        if let Some(on) = &bind.on {
+            self.expr(m, scope, on, depth)?;
+            alive_clause("on", &over_what).map_err(|stop| scope.place(stop))?;
+        }
+        if let Some(span) = &bind.over {
+            self.span(m, scope, span, depth)?;
+            alive_clause("over", &over_what).map_err(|stop| scope.place(stop))?;
         }
         self.opt(m, scope, bind.filter.as_ref(), depth)
     }

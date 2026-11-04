@@ -87,6 +87,16 @@ impl Refusal {
         }
     }
 
+    /// This refusal at `place`, unless it names a place of its own: a refusal met reading a
+    /// value, put at the line that states it. L §8.3.
+    #[must_use]
+    pub fn placed(self, place: Place) -> Refusal {
+        Refusal {
+            place: self.place.or(Some(place)),
+            ..self
+        }
+    }
+
     /// The refusal as printed after `refused: `: the code, the message, then the place in
     /// parentheses (`LOAD-PARSE cannot parse: expected ":", got int (a.tally:4)`). L §8.3.
     #[must_use]

@@ -69,11 +69,11 @@ pub mod syntax {
         Call, Certainty, CmpOp, Crps, DaySet, Def, Diff, Dist, DistFn, DistFnKind, DistKind,
         Domain, Edge, Enter, Expr, Field, FieldValue, File, Fill, Flows, Gap, Governs, Header,
         HeaderKind, In, Index, IndexForm, IndexFrom, Input, InputForm, Instant, Interval, Item,
-        ItemForm, Key, KindDecl, KindSpec, Known, LSpan, LawDate, Leg, Lit, Low, Move, MulOp,
-        Number, OfQ, OfRow, Order, Orient, PRef, PartsClause, Pin, PinForm, Place, Postfix, Price,
-        Proj, Prorata, Query, QueryFn, RChoice, Residuals, Rest, Row, RowKey, Rule, RuleValue,
-        Section, Sign, Solve, Source, Span, Step, Takes, Type, TypedInput, Unit, UnitDecl,
-        UnitForm, UnitTerm, Valuation, Value, Version,
+        ItemForm, Key, KindDecl, KindSpec, Known, LSpan, LawDate, Leg, Lit, Low, Move, MoveLines,
+        MulOp, Number, OfQ, OfRow, Order, Orient, PRef, PartsClause, Pin, PinForm, Place, Postfix,
+        Price, Proj, Prorata, Query, QueryFn, RChoice, Residuals, Rest, Row, RowKey, Rule,
+        RuleValue, Section, Sign, Solve, Source, Span, Step, Takes, Type, TypedInput, Unit,
+        UnitDecl, UnitForm, UnitTerm, Valuation, Value, Version,
     };
 }
 
@@ -149,7 +149,9 @@ pub mod eval {
     pub(crate) use aggregate::{order_text, reads_name};
     pub use arith::{Op, Test, arith, compare, currency_of, int_of, negate, same_value};
     pub use memo::Memo;
-    pub(crate) use read::{convert_row, field_literal, make_keys, thing_seen, to_key};
+    pub(crate) use read::{
+        ConvertFor, convert, convert_row, field_literal, make_keys, thing_seen, to_key,
+    };
     pub use stack::Item;
     pub(crate) use state::num_stop;
     pub use state::{Collected, Ctx, Engine, Entry, Env};
@@ -223,6 +225,7 @@ pub mod ask {
 /// scenario's; the parsed files become each world's reality, constructively; the load refusals
 /// made are those construction meets, the rest are M0's later groups'.
 pub mod load {
+    mod binds;
     mod decls;
     mod graph;
     mod indexes;
@@ -235,6 +238,7 @@ pub mod load {
     mod spans;
     mod steps;
     mod strata;
+    mod values;
     mod worlds;
 
     pub use keys::index_key_of;

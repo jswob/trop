@@ -35,7 +35,7 @@ impl Loader {
     /// cycles, unread inputs and defs, the decisions' reach, walk-bound defs, left-out moves,
     /// the strata. E §3.1 steps 5–8.
     pub(super) fn build_graph(&mut self) -> Result<(), Stop> {
-        let (mut graph, facts) = walk(&self.m)?;
+        let (mut graph, facts) = walk(&self.m, &self.sections)?;
         for fact in facts {
             if let Some(mv) = self.m.moves.get_mut(&fact.id) {
                 mv.read_targets = fact.read_targets;

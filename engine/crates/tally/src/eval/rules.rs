@@ -22,7 +22,7 @@ use crate::syntax::{LawDate, RuleValue, Stop};
 use crate::time::Day;
 
 use super::memo::{CellId, CellKey, LawClass, Read, rows_class, rules_class};
-use super::read::{Converted, convert, shown};
+use super::read::{ConvertFor, Converted, convert, shown};
 
 impl Engine {
     /// A read of def `def` at keys already made keys (refcore's `read_def`): its law date by
@@ -366,7 +366,8 @@ impl Engine {
             version: row.version.clone(),
             sid: row.sid.clone(),
         });
-        let value = match convert(m, &row.value, &def.ty, &def.unit_factor)? {
+        let of = ConvertFor::row(&def.unit_factor, &def.ty, &def.binds, &row.pattern);
+        let value = match convert(m, &row.value, &def.ty, &def.id, &of)? {
             Converted::Hole(text) => Value::Hole(Hole::asked(&text, &figure)),
             Converted::Value(v) => v,
         };

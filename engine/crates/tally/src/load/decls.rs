@@ -60,8 +60,9 @@ impl Loader {
         built
     }
 
-    /// The declarations of every section.
+    /// The declarations of every section, after the kinds' types.
     fn declare_all(&mut self, sections: &[(String, Section)]) -> Result<(), Stop> {
+        self.build_kind_types(sections)?;
         for (file, section) in sections {
             match section {
                 Section::Input(decl) => self.declare_input(decl, file)?,
@@ -80,6 +81,72 @@ impl Loader {
             }
         }
         Ok(())
+    }
+
+    /// Each declared kind's attribute types, an event kind's leg units, a place kind's unit;
+    /// the prelude's kinds state none to check (refcore's `build_kind_types`). L §5.7, §3.1,
+    /// §5.4.
+    fn build_kind_types(&mut self, sections: &[(String, Section)]) -> Result<(), Stop> {
+        for (file, section) in sections {
+            let Section::Kind(decl) = section else {
+                continue;
+            };
+            let Some(kind) = self.m.kinds.get(&decl.id) else {
+                return Err(Stop::NotBuilt("a kind that isn't built"));
+            };
+            let mut types = Vec::with_capacity(kind.attrs.len());
+            for (name, written) in &kind.attrs {
+                let ty = match written {
+                    None => None,
+                    Some(t) => Some(self.decl_type(t, &[], file, decl.line)?.0),
+                };
+                types.push((name.clone(), ty));
+            }
+            if kind.spec == KindSpec::Event {
+                for (leg, unit) in &kind.legs {
+                    let what = format!("the unit of leg {leg} of {}", decl.id);
+                    self.kind_unit_word(unit, &what, file, decl.line)?;
+                }
+            }
+            if kind.spec == KindSpec::Place
+                && let Some(unit) = kind.unit.as_deref().filter(|u| *u != "one")
+            {
+                let what = format!("the unit of kind {}", decl.id);
+                self.kind_unit_word(unit, &what, file, decl.line)?;
+            }
+            if let Some(built) = self.m.kinds.get_mut(&decl.id) {
+                built.attr_types = types;
+            }
+        }
+        Ok(())
+    }
+
+    /// A kind's unit word: `any`, a currency, a unit or a kind of unit; else `LOAD-UNIT` for
+    /// a currency code no unit line declares, `LOAD-NAME` naming `what` for another word
+    /// (refcore's `build_kind_types`). L §5.4, §5.7.
+    fn kind_unit_word(&self, unit: &str, what: &str, file: &str, line: u32) -> Result<(), Stop> {
+        let unit_kind = self.m.names.get(unit) == Some(&NameKind::Kind)
+            && self
+                .m
+                .kinds
+                .get(unit)
+                .is_some_and(|k| k.spec == KindSpec::Unit);
+        if unit == "any"
+            || self.m.currencies.contains_key(unit)
+            || self.m.units.contains(unit)
+            || unit_kind
+        {
+            return Ok(());
+        }
+        if is_currency_code(unit) {
+            return Err(undeclared(unit, file, line));
+        }
+        Err(refuse(
+            Load::Name,
+            format!("unknown id {unit} ({what})"),
+            file,
+            line,
+        ))
     }
 
     /// An input: its key binds, type, `prices` and question. L §5.8, §3.4.

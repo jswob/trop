@@ -14,8 +14,9 @@ use super::reads::dist_kind;
 use super::tree::{
     Axis, Band, BandRow, Bind, Certainty, Def, Edge, Enter, Expr, File, Fill, Gap, Governs, Header,
     HeaderKind, Index, IndexForm, IndexFrom, Input, InputForm, Instant, Interval, Item, ItemForm,
-    KindDecl, KindSpec, Known, LSpan, LawDate, Lit, Move, Order, PartsClause, Place, Row, RowKey,
-    Rule, RuleValue, Section, Sign, Source, Takes, TypedInput, UnitDecl, UnitForm, Value, Version,
+    KindDecl, KindSpec, Known, LSpan, LawDate, Lit, Move, MoveLines, Order, PartsClause, Place,
+    Row, RowKey, Rule, RuleValue, Section, Sign, Source, Takes, TypedInput, UnitDecl, UnitForm,
+    Value, Version,
 };
 use crate::api::Source as Text;
 use crate::base::{Code, Load, Place as At, Refusal};
@@ -1130,16 +1131,21 @@ fn move_section(p: &mut P<'_>, body: &[Line]) -> Result<Move, Stop> {
         legs: Vec::new(),
         fulfils: None,
         notes: Vec::new(),
+        lines: MoveLines::at_move(p.line),
         line: p.line,
     };
     let mut on = None;
     for line in body {
         let mut q = p.under(line);
         match first(line) {
-            "on" => on = Some(q.expr(Ends::Free)?),
+            "on" => {
+                on = Some(q.expr(Ends::Free)?);
+                decl.lines.on = line.number;
+            }
             "ties" => {
                 q.i = 0;
                 decl.ties = Some(q.ties()?);
+                decl.lines.ties = line.number;
             }
             "leg" => {
                 q.i = 0;
@@ -1157,17 +1163,28 @@ fn move_section(p: &mut P<'_>, body: &[Line]) -> Result<Move, Stop> {
     Ok(decl)
 }
 
-/// One of a move's other lines, after its first word.
+/// One of a move's other lines, after its first word, with the line it stands on.
 fn move_line(q: &mut P<'_>, word: &str, decl: &mut Move) -> Result<(), Stop> {
+    let line = q.line;
     match word {
-        "at" => decl.at = Some(q.expr(Ends::Free)?),
-        "for" => decl.for_period = Some(q.expr(Ends::Free)?),
-        "when" => decl.when = Some(q.expr(Ends::Free)?),
+        "at" => {
+            decl.at = Some(q.expr(Ends::Free)?);
+            decl.lines.at = line;
+        }
+        "for" => {
+            decl.for_period = Some(q.expr(Ends::Free)?);
+            decl.lines.for_period = line;
+        }
+        "when" => {
+            decl.when = Some(q.expr(Ends::Free)?);
+            decl.lines.when = line;
+        }
         "reads" => {
             decl.reads = vec![q.reference()?];
             while q.accept(",")? {
                 decl.reads.push(q.reference()?);
             }
+            decl.lines.reads = line;
         }
         "before" => decl.order.push((Order::Before, q.ident("an id")?)),
         "after" => decl.order.push((Order::After, q.ident("an id")?)),
@@ -1175,8 +1192,12 @@ fn move_line(q: &mut P<'_>, word: &str, decl: &mut Move) -> Result<(), Stop> {
             let name = q.ident("an id")?;
             q.expect("=")?;
             decl.attrs.push((name, q.expr(Ends::Free)?));
+            decl.lines.attrs.push(line);
         }
-        "fulfils" => decl.fulfils = Some(q.reference()?),
+        "fulfils" => {
+            decl.fulfils = Some(q.reference()?);
+            decl.lines.fulfils = line;
+        }
         _ => return Err(q.cannot(&format!("{word} in a move"))),
     }
     Ok(())
