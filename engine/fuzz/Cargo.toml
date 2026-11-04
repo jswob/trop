@@ -30,5 +30,12 @@ test = false
 doc = false
 bench = false
 
+[[bin]]
+name = "load"
+path = "fuzz_targets/load.rs"
+test = false
+doc = false
+bench = false
+
 [workspace]
 members = ["."]

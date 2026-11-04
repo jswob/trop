@@ -44,7 +44,7 @@ LOGS = os.path.join(ENGINE, "target", "check-logs")
 WALLS_GREEN = os.path.join(ENGINE, "target", "walls-green")
 FRESH = False  # `--fresh`: the walls' self-tests run whatever their inputs' hash says
 NIGHTLY = "nightly-2026-10-21"
-FUZZ_SECONDS = 30  # per target; two targets keep the step near its one-target time (R-91, 2026-11-04)
+FUZZ_SECONDS = 20  # per target; three targets keep the step near its one-target time (R-91, 2026-11-04)
 FUZZ_TIMEOUT = 10  # seconds one input may run before it counts as a hang
 
 # The caller's environment can't change how the engine is built or tested (R-82)
