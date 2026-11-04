@@ -1,0 +1,46 @@
+# Milestone M0: what must turn green
+
+The checks M0 (load and format) must turn green, from BUILD-ORDER § M0 ("Green" and "Properties") and DONE gates 1, 5, 6 and 9. Written by T for issue #56 (2026-11-04), on refcore **tally 2.1.3**, from T's plan approved at gate G-M0 (the user, 2026-11-04). The builder reads this page; T changes it. Rows land group by group (the plan's G1–G8); a row marked *not yet written* has no test yet.
+
+## The list
+
+| # | What | Ids, vectors | Run by | Gate | Today |
+|---|---|---|---|---|---|
+| 1 | the 10 load refusals, whole output = refcore's stored baseline | `U:law/LAW-13/rate25`, `U:rand/RAND-04/plan_b`, `U:rule/RULE-09/inpath`, `U:scen/SCEN-01/amend`, `U:scen/SCEN-02/kept`, `U:scen/SCEN-03/infl8`, `U:scen/SCEN-04/crash`, `U:surf/SURF-04/redefine`, `U:rule/RULE-04`, `U:own/OWN-11/p21-signed` | `run.py --interp=engine` on the 10 ids; `m0_load` (G2) | 1, 5 | *not yet written* (G2); the checks exit 69 on the engine |
+| 2 | every text `checks.tsv` names loads with no refusal but those its stored output shows | the 315 text sets, each refcore's load probe `run <files> --ask zz_m0_probe` (tally 2.1.3: `refused: REQ-ASK no ask zz_m0_probe` after a clean load) | `m0_load` (G2) | 1 | *not yet written* (G2) |
+| 3 | `spec/tools/loadcheck.py` agrees with the loader over the 79 models, the household and the changes; `--selftest` first | the 79 `spec/models/`, `spec/amendments/household/`, X's changes `integration/amendments/real11/c1..c7`, `v3..v5` | `check full` (`spec-loadcheck-selftest`, `spec-loadcheck`); `m0/loadcheck.py`, `m0_loadcheck` (G5) | 1 | *not yet written* (G5) |
+| 4 | `format(parse(x)) = x` for every one of them, and `format` is idempotent | `m0/format.refcore`: the 315 text sets (12 groups) and 19 format fixtures (`m0/format/`, one per rule of L §2.4), 334 vectors | `cargo nextest run -p tally-runner --test m0_format` | 6 | **0 / 31 tests** (2026-11-04, `build/m0` at G1): `reprint` exits 69, "not implemented" |
+| 5 | each `LOAD-*` code has its fixture, giving exactly that code and message | 53 codes: a fixture for each one no M0 vector prints, then each message form; each beside a twin that loads | `m0_codes`, `tools/xref_check.py` (G3, G4, G7) | 5 | 4 tests of `m0_codes` exist (`LOAD-PATH`, `LOAD-PARSE`, `order/`, `LOAD-DEPTH/`), 2 green |
+| 6 | #45's three gaps | `LOAD-LITERAL` in a move's `on` and `amount`, `LOAD-NAME` for a binding over an undeclared name, `LOAD-UNIT` for a settlement in another unit; each with its twin | `m0_codes` (G4) | 5 | *not yet written* (G4) |
+| 7 | the parser's and the formatter's properties | `PROPERTIES.md` § M0 (G6) | `m0_properties` (G6) | 6, 9 | *not yet written* (G6) |
+| 8 | the fuzz targets `parse` (widened), `format`, `load` | a rules step writes them on the builder's request (R-91; approved at G-M0) | `check full`'s `fuzz` step; the gate's advisory 30 min per target | 9 | `parse` exists, on S's parser |
+
+`check`'s report line counts the `m0_…` targets' tests: `milestone-report: M0: 2/35 green` at G1 (the 4 tests of `m0_codes` and the 31 of `m0_format`).
+
+**Row 4, the format** (G1). `m0/vectors.py` runs refcore 2.1.3's `reprint` (through `run.py`'s `run_one`: PyPy, 90 s, the cache, the watchdog) on each of the 315 text sets `checks.tsv` names, its `not-run:` load rows' texts included, and on the 19 format fixtures, and stores each in `m0/format.refcore`: the command line, the file table (the files it names, as named, and a joint model's members, as `INTERFACE.md` §2 resolves them), refcore's exit code, each section's path, length and digest (two polynomial residues modulo the primes 2^61 − 1 and 2^61 − 31; the texts would weigh 6 MB more), and the `sha256` line verbatim. Before it writes, it holds refcore to the law: each canonical text, written back in place of its file, reprints to itself byte for byte (all 334 do, `UL-09` and `UL-14` since tally 2.1.3, #59), and no fixture is already canonical. `runner/src/m0_texts.rs`, generated, embeds every text the tables name (1 332 with E1's and E2's members), so the tests read no file. `m0_format` holds the engine to refcore's output, then reprints each canonical text in place of its file and wants the same output again: the round trip, whose expected value is the text itself (a canonical text that reprints to itself is also `format` idempotent on it; `PROPERTIES.md` § M0, G6, adds non-canonical spellings). A failure names the first differing file; `m0/vectors.py --show '<id>'` prints refcore's text for it. One test per corpus group (`probes` 142 sets, `probe-sets` 11, `models` 77, `light` 3, `blind` 18, `household-A` 8, `-B` 9, `-C` 12, `-D` 3, `-E1` 2, `-E2` 2, `-X` 28) and one per fixture:
+
+| Fixture (`m0/format/`) | The rule of L §2.4 it is written off |
+|---|---|
+| `header_order` | header first; `use` lines by name, `same` lines by left side |
+| `section_kind_order` | sections in kind order, `source` … `version` |
+| `sections_by_id` | within a kind, by id |
+| `kinds_tree_order` | kinds in tree order, depth first, siblings by id |
+| `versions_last_by_known` | versions last, by `known` (a window by its first day), then id |
+| `blank_lines` | one blank line between sections |
+| `clause_order` | a section's clause lines in the grammar's order |
+| `rules_sorted` | rules by label, then their `v`'s `known`, none first |
+| `version_items_sorted` | entries first, then target id, keyless first, keys in index order |
+| `version_items_wider_key_first` | a key left out (2.1.3, #59), then `*`, then a range before the keys it holds |
+| `version_items_ties` | a tie by every key: by canonical line, ASCII (GD-28) |
+| `beats_sorted` | `beats` sorted, with ", " |
+| `short_form` | one plain `base` rule prints short |
+| `short_with_notes` | a one-line def with notes prints long (2.1-4) |
+| `numbers` | shortest exact decimal, leading 0, thousands by a space, reduced `a/b` |
+| `percent_units` | `%` and other units after the shortest decimal |
+| `expr_spacing` | one space around binary operators and after commas, none inside brackets |
+| `parens_redundant` | parentheses only where precedence needs them |
+| `parens_forced` | a `to u` operand and a converted `flows` in a comparison always parenthesised |
+
+## Keeping master green
+
+As at S (`MILESTONE-S.md` § Keeping master green): every `m0_…` target has `test = false` and runs only as `check`'s report until M0 is in `engine/tools/milestones.toml`'s `gating`, which the user approved at G-M0 as `build/m0`'s last commit (a rules step).

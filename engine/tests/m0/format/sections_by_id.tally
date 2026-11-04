@@ -1,0 +1,31 @@
+model sections_by_id
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+input zed: num
+
+input abe: num
+
+input mid: num
+
+def zz: num = abe + mid
+
+def aa: num = zed + mid
+
+def mm: num = abe + zed
+
+ask z_last: zz
+
+ask a_first: aa
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  abe = 1
+  mid = 2
+  zed = 3

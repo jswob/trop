@@ -1,0 +1,23 @@
+model percent_units
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+unit DUK: currency minor 0.01
+
+input vat: num
+
+input rate: rate
+
+input wage: num DUK/hour
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  vat = 23.0 %
+  rate = 5.50 %/year
+  wage = 42.50 DUK/hour

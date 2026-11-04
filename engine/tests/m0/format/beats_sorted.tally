@@ -1,0 +1,15 @@
+model beats_sorted
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+input x: num
+
+def fee: num
+  rule alpha = x
+  rule mid = x + x
+  rule top beats zed,alpha , mid = x * x
+  rule zed = x - x

@@ -1,0 +1,17 @@
+model kinds_tree_order
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+kind workers: persons
+
+kind persons
+
+kind seniors: adults
+
+kind animals
+
+kind adults: persons

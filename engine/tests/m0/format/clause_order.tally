@@ -1,0 +1,30 @@
+model clause_order
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+unit DUK: currency minor 0.01
+
+kind pays: event certain
+  leg cash: DUK
+
+place konto: accounts DUK lives 2026-01-01..
+
+place shop: outside DUK lives 2026-01-01..
+
+input amt: money DUK
+
+input pay_day: date
+
+move rent: pays
+  note "the rent, once"
+  leg cash from konto to shop amount amt
+  when amt > 0
+  on pay_day
+
+index ks = [k1, k2]
+  note "two keys"
+  assumed "a list for the fixture"

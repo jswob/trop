@@ -1,0 +1,25 @@
+model parens_redundant
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+input x: num
+
+input y: num
+
+input z: num
+
+def p1: num = ((x + y)) + (z)
+
+def p2: num = x * (y * z)
+
+def p3: num = (x * y) + z
+
+def p4: num = x - (y - z)
+
+def p5: bool = (x > y) or (y > z)
+
+def p6: num = (x + y) * z

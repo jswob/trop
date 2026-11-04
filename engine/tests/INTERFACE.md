@@ -9,12 +9,12 @@ T's interface (session T1, issue #5, 2026-10-31): what the suite sends the engin
 | Command | Reads | Prints (stdout) | Exit |
 |---|---|---|---|
 | `tally run <path>… [--pin=bytes] [--ask <id>…]` | the reality: every path given, then the members its `use` lines name (§2) | the asked values in L §5.16's form, or one `refused: …` line | 1 when the first line starts with `refused: `, else 0 |
-| `tally reprint <path>…` | as `run` | for each file in path order, `--- <path>` and its canonical text (L §2.4); then `sha256 <hex>`, the reality's hash (E §3.1 step 1) | as `run` |
+| `tally reprint <path>…` | as `run` | for each file in the order of its full path (code point), `--- <path>` and its canonical text (L §2.4), a file given alone named as given, a directory's files relative to it (tally 2.1.3, #60); then `sha256 <hex>`, the reality's hash, over the files in that order (E §3.1 step 1) | as `run` |
 | no command, or any other word (`test` included: refcore's own tests aren't the engine's) | nothing | a usage text of the engine's own | 2 |
 
 - **Arguments** (refcore's loop, `cli.py` `main`): every word before `--ask` that isn't `--pin=…` is a path; every word after `--ask` is an ask id; `--pin=bytes` may stand anywhere. With no `--ask`, every ask of the reality is answered. `run.py` sends `run <files> <options> [--ask <ids>]` (`argv_of`), `--ask` only when the check names asks.
 - **`--pin=bytes`:** a `use` line's pin is the sha256 of the member's file bytes instead of its canonical text (E §3.1 step 1). refcore stores any word after `--pin=` and acts only on `bytes`; no check sends another word (§8, gap I-4).
-- **What the suite sends** (`checks.tsv`, 634 rows): `run` with files in 631 rows, `--ask` in 389 of them (the rest answer every ask); `--pin` and `reprint` in none; a directory in none. `R:all` (refcore's own tests, `options` `test`) and the two key scripts (`options` `script`) run no engine, and the 85 `not-run:` rows are load rows: `run.py --interp engine` lists all 88 as not run, with their reason.
+- **What the suite sends** (`checks.tsv`, 634 rows): `run` with files in 631 rows, `--ask` in 389 of them (the rest answer every ask); `--pin` and `reprint` in none; a directory in none. M0's vectors (`m0/format.refcore`, issue #56) send `reprint` with the files of each of the 315 text sets `checks.tsv` names, and of M0's format fixtures. `R:all` (refcore's own tests, `options` `test`) and the two key scripts (`options` `script`) run no engine, and the 85 `not-run:` rows are load rows: `run.py --interp engine` lists all 88 as not run, with their reason.
 - **Usage text:** no check reads it, so its words are the engine's. It goes to stdout, and the exit is 2.
 
 ## 2. Reading the reality
@@ -94,7 +94,7 @@ Each is something refcore does that the engine can't copy, or a place the spec i
 |---|---|---|---|---|
 | I-1 | a path that doesn't exist | crashed until tally 2.1.1; now refuses `LOAD-PATH` (§2) | as refcore; T's fixture `codes/` | settled by tally 2.1.1 (issue #13) |
 | I-2 | `reprint` of a file that isn't UTF-8 | crashed until tally 2.1.1; now refuses as `run` does | as `run`: `LOAD-PARSE … file is not UTF-8` | settled by tally 2.1.1 (issue #13) |
-| I-3 | `reprint`'s path names | relative to a directory given, else the file's base name, so two files given from different folders with one name collide | follows refcore | T, when a check needs `reprint` |
+| I-3 | `reprint`'s path names | until tally 2.1.3, relative to a directory given, else the file's base name, so two files given from different folders with one name collided, and loose files printed and hashed in base-name order; now a file given alone is named as given, and the files print and hash in full-path order (L §8.3, E §3.1 step 1) | as refcore | settled by tally 2.1.3 (issue #60) |
 | I-4 | `--pin=` with a word other than `bytes` | taken as the canonical pin, silently | follows refcore, or refuses as a usage error | the spec role, if a check ever sends one |
 | I-5 | the order of the files: which refusal prints when several files each have one, and the order of `WARN-UNREAD` lines | since tally 2.1.1, warnings sorted by code then text, and the first refusal by full path | as refcore | decided at G-T; settled by tally 2.1.1 (issue #13) |
 

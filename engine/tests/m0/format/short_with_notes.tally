@@ -1,0 +1,14 @@
+model short_with_notes
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+input x: num
+
+input y: num
+
+def total: num = x + y
+  note "a one-line def with a note means the long form (2.1-4)"

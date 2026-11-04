@@ -1,0 +1,33 @@
+model numbers
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+input a: num
+
+input b: num
+
+input c: num
+
+input d: num
+
+input e: num
+
+input f: num
+
+input g: num
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  a = 96000
+  b = 1190.050
+  c = 0.50
+  d = 1000000.00
+  e = 10/30
+  f = -0.250
+  g = 1234567.5

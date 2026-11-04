@@ -1,0 +1,39 @@
+model versions_last_by_known
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+version v_d
+  cite s
+  governs 2026-04..
+  known 2026-03-01
+  x = 4
+
+version v_a
+  cite s
+  governs 2026-06..
+  known 2026-05-01
+  x = 1
+
+source s "s"
+
+version v_c
+  cite s
+  governs 2026-03..
+  known 2026-03-01
+  x = 3
+
+input x: num
+
+version v_b
+  cite s
+  governs 2026-02..
+  known window(2026-02-10, 2026-02-20)
+  x = 2
+
+version v_e
+  cite s
+  governs 2026-01..
+  known 2026-02-15
+  x = 5

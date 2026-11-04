@@ -43,3 +43,10 @@ test = false
 name = "m0_codes"
 path = "milestone/m0_codes.rs"
 test = false
+
+# M0: the format, refcore's reprint of every text set and the round trip (m0/format.refcore;
+# MILESTONE-M0.md row 4; gate 6)
+[[test]]
+name = "m0_format"
+path = "milestone/m0_format.rs"
+test = false

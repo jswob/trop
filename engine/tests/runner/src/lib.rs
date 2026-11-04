@@ -12,10 +12,13 @@
 //!   first;
 //! - [`kernel`]: milestone S's kernel vectors, refcore's whole output for each
 //!   (`kernel/vectors.refcore`, issue #41);
+//! - [`m0`]: milestone M0's format vectors, refcore's reprint of every text set
+//!   (`m0/format.refcore`, issue #56), and [`m0_texts`], the texts they name;
 //! - [`engine`]: a run on the engine, in process.
 //!
 //! The tests that run the engine are each milestone's test targets (`milestone/s_properties.rs`,
-//! `milestone/s_household.rs` and `milestone/s_kernel.rs` for S, `milestone/m0_codes.rs` for M0), with `test = false`:
+//! `milestone/s_household.rs` and `milestone/s_kernel.rs` for S, `milestone/m0_codes.rs` and
+//! `milestone/m0_format.rs` for M0), with `test = false`:
 //! red until their milestone is built. The marker `engine/tools/milestones.toml` gates a
 //! milestone's targets once it is tagged, and `check` reports the next milestone's, never
 //! failing (`MILESTONE-S.md` § Keeping master green). Run one by name:
@@ -29,4 +32,6 @@ pub mod engine;
 pub mod household;
 pub mod kernel;
 pub mod laws;
+pub mod m0;
+pub mod m0_texts;
 pub mod output;

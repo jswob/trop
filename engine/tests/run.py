@@ -647,6 +647,9 @@ def self_test(checks):
         # 8d. S's kernel vectors (issue #41) are refcore's bytes for kernel/vectors.tsv
         p = subprocess.run([sys.executable, '-I', '-B', T + 'kernel/vectors.py', '--check'], capture_output=True, text=True)
         say(p.returncode == 0, p.stdout.strip() or p.stderr[-200:])
+        # 8e. M0's format vectors (issue #56) are refcore's reprints, each round-tripping on refcore
+        p = subprocess.run([sys.executable, '-I', '-B', T + 'm0/vectors.py', '--check'], capture_output=True, text=True)
+        say(p.returncode == 0, p.stdout.strip().split('\n')[-1] if p.stdout.strip() else p.stderr[-200:])
         # 9. U2 (4.5f): under fast, a check with no baseline runs on refcore (its cache entry is refcore's)
         nb = dict(fast, baseline='')
         _, r, _ = session([nb], checks, **dict(kw, runtimes=['pypy+fast']))

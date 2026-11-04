@@ -1,0 +1,25 @@
+model parens_forced
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+unit DUK: currency minor 0.01
+
+unit EUR: currency minor 0.01
+
+input x: num
+
+input fx: num DUK/EUR
+
+input from_day: date
+
+input to_day: date
+
+place konto: accounts EUR lives 2026-01-01..
+
+def g: num = exp(x) to 0.001 + 1
+
+def c: bool = flows(konto, from_day..to_day) in DUK at fx half-up > 0

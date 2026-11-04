@@ -1,0 +1,24 @@
+model version_items_wider_key_first
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+index ks = [k1, k2]
+
+index ms = month 2026-01 .. 2026-12
+
+input limit[k in ks, m in ms]: num
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  limit[k1, 2026-05] = 5
+  limit[k1, 2026-03] = 6
+  limit[k1, 2026-02..2026-04] = 4
+  limit[k1, *] = 3
+  limit[k1, 2026-01] = 1
+  limit[k1] = 0

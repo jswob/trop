@@ -1,0 +1,16 @@
+model version_items_ties
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+input cap: num
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  cap = 7 "the second line"
+  cap = 5 "the first line"
