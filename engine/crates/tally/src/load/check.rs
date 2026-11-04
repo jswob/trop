@@ -15,6 +15,7 @@
 //! nothing; the price clauses are resolved before any item; every recursion is counted
 //! (R-16), and the parser bounds every tree well below the count.
 
+use super::across::PeriodRead;
 use super::keys::keyed_place_thing;
 use super::moves::{own_day_reads, settlements};
 use super::prices::price_twice;
@@ -285,6 +286,9 @@ pub(super) struct Checker {
     vars: usize,
     /// Each checked move's legs' static amount types, by (move, leg) (refcore's `ln._lt`).
     pub(super) leg_types: BTreeMap<(String, String), Ty>,
+    /// The periods read at keys of time indexes, in the order typed (refcore's
+    /// `period_cands`).
+    periods: Vec<PeriodRead>,
 }
 
 /// One level deeper into an expression, refused as an invariant past the count (R-16).
@@ -314,7 +318,7 @@ pub(super) fn deeper(depth: u32) -> Result<u32, Stop> {
 pub(super) fn walk(
     m: &Reality,
     sections: &[(String, Section)],
-) -> Result<(Graph, Vec<MoveFacts>), Stop> {
+) -> Result<(Graph, Vec<MoveFacts>, Vec<PeriodRead>), Stop> {
     let files = Files::of(sections);
     price_twice(m, &files)?;
     let mut checker = Checker::default();
@@ -354,11 +358,11 @@ pub(super) fn walk(
     checker.year4_finish()?;
     checker.kl_finish(m)?;
     settlements(m, &checker.leg_types)?;
-    Ok((checker.graph, facts))
+    Ok((checker.graph, facts, checker.periods))
 }
 
 /// An `ENGINE-INVARIANT` refusal.
-fn invariant(message: String) -> Stop {
+pub(super) fn invariant(message: String) -> Stop {
     Stop::Refused(Refusal::new(Code::EngineInvariant, message))
 }
 
@@ -435,6 +439,17 @@ impl Files {
 }
 
 impl Checker {
+    /// A period read at key `kn` of time index `ix`, folded once the walk is done (refcore's
+    /// `period_conv`, its `period_cands`). L §4.6.
+    pub(super) fn period_read(&mut self, scope: &Scope, ix: &str, kn: &Expr) {
+        self.periods.push(PeriodRead {
+            index: ix.to_owned(),
+            key: kn.clone(),
+            reader: scope.item.clone(),
+            at: scope.file_line(),
+        });
+    }
+
     /// `reader` reads `target` with `rel`.
     pub(super) fn edge(&mut self, reader: &Node, target: Node, rel: Rel) {
         self.graph.edge(reader, target, rel);

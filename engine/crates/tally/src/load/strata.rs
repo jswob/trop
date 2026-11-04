@@ -9,6 +9,7 @@
 //! the cycle refcore names; the strata are the layers of an acyclic graph once each cycle no
 //! written order breaks is one component.
 
+use super::across::check_period_keys;
 use super::check::walk;
 use super::steps::{Loader, refuse};
 use crate::base::{Code, Load, Refusal, Warn};
@@ -35,7 +36,7 @@ impl Loader {
     /// cycles, unread inputs and defs, the decisions' reach, walk-bound defs, left-out moves,
     /// the strata. E §3.1 steps 5–8.
     pub(super) fn build_graph(&mut self) -> Result<(), Stop> {
-        let (mut graph, facts) = walk(&self.m, &self.sections)?;
+        let (mut graph, facts, periods) = walk(&self.m, &self.sections)?;
         for fact in facts {
             if let Some(mv) = self.m.moves.get_mut(&fact.id) {
                 mv.read_targets = fact.read_targets;
@@ -43,6 +44,7 @@ impl Loader {
             }
         }
         same_key_cycles(&self.m, &graph)?;
+        check_period_keys(&self.m, &periods)?;
         let unread_items = unread(&self.m, &graph);
         self.m.warnings.extend(unread_items);
         graph.from_decisions = from_decisions(&self.m, &graph);

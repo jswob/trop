@@ -108,7 +108,7 @@ pub mod model {
         ObsLeg, Observation, PlaceInfo, Row, RowInstant, RuleVer, Table as BandTable, TimePos,
     };
     pub use graph::{Graph, Mark, Node, NodeKind, Rel, Shift, Target};
-    pub use index::{GapRole, IndexForm, IndexInfo, OwnTime, VersionInfo};
+    pub use index::{GapRole, IndexForm, IndexInfo, Moved, OwnTime, VersionInfo};
     pub use key::{KeyVal, Pat, Span, pattern_text};
     pub use kind::{Entry, KindInfo, KindSpec, PRELUDE_KINDS, PlaceKeys, Thing, prelude};
     pub use reality::{BUILTIN_INDEXES, BUILTIN_INPUTS, NameKind, Reality};
@@ -150,7 +150,7 @@ pub mod eval {
     pub use arith::{Op, Test, arith, compare, currency_of, int_of, negate, same_value};
     pub use memo::Memo;
     pub(crate) use read::{
-        ConvertFor, convert, convert_row, field_literal, make_keys, thing_seen, to_key,
+        ConvertFor, Converted, convert, convert_row, field_literal, make_keys, thing_seen, to_key,
     };
     pub use stack::Item;
     pub(crate) use state::num_stop;
@@ -225,6 +225,8 @@ pub mod ask {
 /// scenario's; the parsed files become each world's reality, constructively; the load refusals
 /// made are those construction meets, the rest are M0's later groups'.
 pub mod load {
+    mod across;
+    mod bands;
     mod binds;
     mod calls;
     mod check;
@@ -236,6 +238,7 @@ pub mod load {
     mod names;
     mod observed;
     mod ops;
+    mod overlap;
     mod places;
     mod prices;
     mod reads;

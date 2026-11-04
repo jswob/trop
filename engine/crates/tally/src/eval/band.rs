@@ -229,6 +229,9 @@ fn interval_text(row: &BandRow) -> Result<String, Stop> {
         match e {
             None => Ok(inf.to_owned()),
             Some(BandEnd::Num(q)) => q.to_text().map_err(num_stop),
+            Some(BandEnd::Day(_) | BandEnd::Period(_) | BandEnd::Key(..)) => {
+                Err(Stop::NotBuilt("a band over days, periods or keys"))
+            }
         }
     };
     Ok(format!(

@@ -61,9 +61,12 @@ pub fn load(files: Vec<File>) -> Result<Reality, Stop> {
     loader.build_decls()?;
     loader.prescan_open_keys();
     loader.build_places()?;
+    loader.check_key_ids()?;
     loader.build_items()?;
     loader.check_rows()?;
     loader.finish_rows();
+    super::overlap::check_obs(&loader.m)?;
+    super::bands::check_bands(&loader.m)?;
     loader.collect_asks();
     loader.build_graph()?;
     Ok(loader.m)

@@ -1264,7 +1264,10 @@ impl Checker {
                     return Err(Stop::NotBuilt("an index that isn't built"));
                 };
                 if let Ty::Key(other) = t {
-                    return key_of_index(m, (ix, index), other, kn);
+                    if key_of_index(m, (ix, index), other, kn)? == Conv::Period {
+                        self.period_read(scope, ix, kn);
+                    }
+                    return Ok(());
                 }
                 if index.is_int && matches!(t, Ty::Int | Ty::Flex(_) | Ty::Year4) {
                     return Ok(());
@@ -1277,7 +1280,9 @@ impl Checker {
                         return Ok(());
                     }
                     if let Ty::Period(word) = t {
-                        return period_conv(index.period, ix, word_pk(*word));
+                        period_conv(index.period, ix, word_pk(*word))?;
+                        self.period_read(scope, ix, kn);
+                        return Ok(());
                     }
                 }
                 Err(not_a_key(ix))
@@ -1813,6 +1818,16 @@ pub(super) fn resolve_lit(
     resolve_key(m, &key, domain, &file, line)
 }
 
+/// How a key stands at its key position: as a key there, or as a period read at a key of a
+/// time index, which load folds at the end (refcore's `key_conv`, its `period` result).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Conv {
+    /// A key of the position's index, an integer, or a day.
+    Plain,
+    /// A period no wider than the index's keys.
+    Period,
+}
+
 /// A key of index `other` at a key of `ix`: the same index, two integer indexes, or two
 /// period indexes where the period isn't wider (refcore's `key_conv`, its key arm). L §2.5,
 /// §4.6.
@@ -1821,16 +1836,17 @@ fn key_of_index(
     (ix, index): (&str, &crate::model::IndexInfo),
     other: &str,
     kn: &Expr,
-) -> Result<(), Stop> {
+) -> Result<Conv, Stop> {
     if other == ix {
-        return Ok(());
+        return Ok(Conv::Plain);
     }
     if let Some(theirs) = m.indexes.get(other) {
         if index.is_int && theirs.is_int {
-            return Ok(());
+            return Ok(Conv::Plain);
         }
         if let (Some(_), Some(pk)) = (index.period, theirs.period) {
-            return period_conv(index.period, ix, pk);
+            period_conv(index.period, ix, pk)?;
+            return Ok(Conv::Period);
         }
     }
     Err(refused(

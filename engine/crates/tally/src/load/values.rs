@@ -2,13 +2,14 @@
 //! Spec: L §5.8 (a row's value has its input's type), §3.1 (values of each type), §3.2 (units,
 //! a keyed unit, money in its minor unit), §2.1 and §7.1 (literals: `a/b` only where it
 //! doesn't terminate), §4.6 (a reading's value, in its place's unit); E §3.1 step 4.
-//! Twin: engine/tools/refcore/loader.py (`check_rows`, its conversion of each row, and
-//! `place_value`).
+//! Twin: engine/tools/refcore/loader.py (`check_rows`, its conversion of each row and its
+//! call of `check_overlap`, and `place_value`).
 //! Invariants: the rows are checked in refcore's order (inputs, the built-ins first, then
 //! defs' givens, each in the order its rows were built); the conversion is the runtime's own
 //! (`eval::convert`), so load refuses what a read would; a form whose value the runtime
 //! doesn't build yet is left to the read, never guessed.
 
+use super::overlap::{Stated, check_overlap};
 use super::steps::Loader;
 use crate::base::{Code, Load, Place as At, Refusal};
 use crate::eval::{ConvertFor, convert};
@@ -33,36 +34,40 @@ impl Loader {
                 continue;
             }
             let balance = input.builtin && (id == "opening" || id == "stated");
+            let mut stated = Vec::new();
             for row in &input.rows {
                 let file = row_file(&files, row)?;
                 let checked = if balance {
                     self.place_value(id, row)
                 } else if let Some(ty) = input.ty.as_ref().filter(|t| !matches!(t, Ty::Dist(_))) {
                     let of = ConvertFor::row(&input.unit_factor, ty, &input.binds, &row.pattern);
-                    converted(self, &row.value, ty, id, &of)
+                    converted(self, &row.value, ty, id, &of).map(|()| stated_of(&row.value))
                 } else {
-                    Ok(())
+                    Ok(stated_of(&row.value))
                 };
-                checked.map_err(|stop| at_row(stop, &file, row.line))?;
+                stated.push(checked.map_err(|stop| at_row(stop, &file, row.line))?);
             }
+            let by_unit = input.builtin.then_some(stated.as_slice());
+            check_overlap(&self.m, id, &input.binds, &input.rows, by_unit)?;
         }
         for (id, def) in self.m.defs.entries() {
-            if matches!(def.ty, Ty::Dist(_)) {
-                continue;
+            if !matches!(def.ty, Ty::Dist(_)) {
+                for row in &def.givens {
+                    let file = row_file(&files, row)?;
+                    let of = ConvertFor::row(&def.unit_factor, &def.ty, &def.binds, &row.pattern);
+                    converted(self, &row.value, &def.ty, id, &of)
+                        .map_err(|stop| at_row(stop, &file, row.line))?;
+                }
             }
-            for row in &def.givens {
-                let file = row_file(&files, row)?;
-                let of = ConvertFor::row(&def.unit_factor, &def.ty, &def.binds, &row.pattern);
-                converted(self, &row.value, &def.ty, id, &of)
-                    .map_err(|stop| at_row(stop, &file, row.line))?;
-            }
+            check_overlap(&self.m, id, &def.binds, &def.givens, None)?;
         }
         Ok(())
     }
 
-    /// A balance reading's value: a quantity in its place's unit; a place of unit `any` states
-    /// its unit in the row (refcore's `place_value`). L §4.6, §5.19.
-    fn place_value(&self, input: &str, row: &Row) -> Result<(), Stop> {
+    /// A balance reading's value: a quantity in its place's unit, which its rows are grouped
+    /// by; a place of unit `any` states its unit in the row (refcore's `place_value`). L §4.6,
+    /// §5.19.
+    fn place_value(&self, input: &str, row: &Row) -> Result<Stated, Stop> {
         let Some(Pat::Key(KeyVal::Thing(place))) = row.pattern.first() else {
             return Err(load_refusal(
                 Load::Key,
@@ -70,7 +75,8 @@ impl Loader {
             ));
         };
         let number = match &row.value {
-            Written::Hole(_) | Written::None => return Ok(()),
+            Written::Hole(_) => return Ok(Stated::Hole),
+            Written::None => return Ok(Stated::Nothing),
             Written::Lit(Lit::Num(number)) => number,
             Written::Never
             | Written::Str(_)
@@ -98,12 +104,13 @@ impl Loader {
             None => row_unit(input, place, number)?,
         };
         let ty = if self.m.currencies.contains_key(&unit) {
-            Ty::Money(unit)
+            Ty::Money(unit.clone())
         } else {
-            let one = Unit::make(vec![(unit, 1)]).map_err(super::steps::num_stop)?;
+            let one = Unit::make(vec![(unit.clone(), 1)]).map_err(super::steps::num_stop)?;
             Ty::Num(one, Shown::Plain)
         };
-        converted(self, &row.value, &ty, input, &ConvertFor::plain())
+        converted(self, &row.value, &ty, input, &ConvertFor::plain())?;
+        Ok(Stated::Unit(unit))
     }
 
     /// The file each version's section stands in, by the version's id.
@@ -139,6 +146,15 @@ fn row_unit(input: &str, place: &str, number: &crate::syntax::Number) -> Result<
             Load::Unit,
             format!("{} is not a unit of a place", number.text),
         )),
+    }
+}
+
+/// What a row's value groups by for the replacement rule: `none`, or nothing of its own.
+fn stated_of(value: &Written) -> Stated {
+    if *value == Written::None {
+        Stated::Nothing
+    } else {
+        Stated::Hole
     }
 }
 

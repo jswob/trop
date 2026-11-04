@@ -3,7 +3,8 @@
 //! (versions), §5.7 (kinds, things, lifespans), §5.10 (places), §5.19 (observations), §8.3,
 //! §8.5 (WARN-UNREAD for a source and a place); §5.10 (priced places, `bal`, `value`), §5.14
 //! (moves and legs, `flows`), §5.19 (`observed`, `gap`, `covered`) for the checks of moves,
-//! prices and reads.
+//! prices and reads; §5.3 (known windows, `moves`), §4.6 (overlap and `replace`, a period
+//! across keys), §5.9 (band tables), §5.19 (`covers`) for the checks of versions and rows.
 //! Twin: engine/tools/refcore/loader.py; each expected line is refcore's load of the same
 //! text, printed in the same normalized form.
 //! Invariants: reads no test, vector or answer key (R-93); the text is written here, small.
@@ -796,6 +797,248 @@ version card_2026
             assert!(MOVES.contains(old), "{old} is in the base");
             let text = MOVES.replacen(old, new, 1);
             assert_eq!(refusal(&text), expected, "{new}");
+        }
+    }
+
+    /// A reality with two versions, keyed rows, a reading, an observation in a covered span,
+    /// and band tables over ints, days and money: each case one edit of it.
+    const VERSIONS: &str = "model g
+  tally 2
+  on 2026-06-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card \"an invented card\"
+
+unit PLN: currency minor 0.01
+
+kind wages: event certain
+  leg cash: PLN
+
+index qs = [q1, q2]
+
+index tiers = [t1, t2, t3]
+
+input amt: money PLN
+
+input pay_day: date
+
+input rate[k in qs]: num
+
+input fee[k in qs, j in tiers]: num
+
+input price: num PLN reading
+
+input bank: observed
+
+band scale(x: int): num
+
+band dated(d: date): num
+
+band tier(x: money PLN): num
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: wages
+  on pay_day
+  leg cash from world to konto amount amt
+
+ask q: amt + amt law 2026-05-01
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN \"the card\"
+  pay_day = 2026-02-10 \"the card\"
+  rate[q1] = 1 \"the card\"
+  rate[q2] = 2 \"the card\"
+  fee[q1, t1] = 1 \"the card\"
+  price = 10 PLN at 2026-01-05 \"the card\"
+  scale: [0, 10] = 1 \"the card\"
+  scale: [11, 20) = 2 \"the card\"
+  scale: [20, inf) = 3 \"the card\"
+  dated: [2026-01-01, 2026-07-01) = 1 \"the card\"
+  dated: [2026-07-01, inf) = 2 \"the card\"
+  tier: [0, 100) = 1 \"the card\"
+  tier: [100, inf) = 2 \"the card\"
+  opening[konto] = 500.00 PLN at 2026-01-01 start \"the card\"
+
+version bank_a
+  cite card
+  governs 2026-02
+  known 2026-03-01
+  covers konto
+  anchor konto
+  bank[r1] = (on: 2026-02-10, kind: wages, leg cash from world to konto amount 100.00 PLN, fulfils: pay) \"the statement\"
+";
+
+    #[test]
+    fn versions_rows_observations_and_band_tables_are_checked_at_load_as_refcore_checks_them() {
+        assert_eq!(refusal(VERSIONS), "loaded", "the base");
+        let known = "  known 2026-01-01\n  amt = 100.00 PLN \"the card\"";
+        let rate = "  rate[q2] = 2 \"the card\"";
+        let fee = "  fee[q1, t1] = 1 \"the card\"";
+        let price = "  price = 10 PLN at 2026-01-05 \"the card\"";
+        let opening = "  opening[konto] = 500.00 PLN at 2026-01-01 start \"the card\"";
+        let tier = "  tier: [100, inf) = 2 \"the card\"";
+        let obs = "  bank[r1] = (on: 2026-02-10, kind: wages, leg cash from world to konto amount 100.00 PLN, fulfils: pay) \"the statement\"";
+        let tiers = "index tiers = [t1, t2, t3]";
+        let later = "\nversion card_b\n  cite card\n  governs 2026-04-01..\n  known 2026-04-01\n";
+        let same = "\nversion card_c\n  cite card\n  governs 2026-04-01..\n  known 2026-01-01\n";
+        let fine = "\n\nband fine(x: int): num\n\nversion f1\n  cite card\n  governs 2026-01..2026-03\n  known 2026-02-01\n  fine: [0, 10) = 1 \"a\"\n  fine: [10, 20) = 2 \"a\"\n  fine: [20, inf) = 3 \"a\"\n\nversion f2\n  cite card\n  governs 2026-03..\n  known 2026-04-01\n";
+        let fy = "\n\nindex fy = year 2025..2026 from 04-06\n\ninput lim[y in fy]: num\n\n";
+        let obs2 = "  bank[r1] = (on: 2026-02-11, kind: wages, leg cash from world to konto amount 100.00 PLN, fulfils: pay) \"again\"";
+        let cases: Vec<(&str, String, &str)> = vec![
+            // a version known in a window, and a row's own window
+            (known, "  known window(2025-12-01, 2026-01-01)\n  amt = 100.00 PLN \"the card\"".to_owned(), "loaded"),
+            (known, "  known window(2026-02-01, 2026-01-01)\n  amt = 100.00 PLN \"the card\"".to_owned(), "LOAD-DOMAIN window(a, b) with a after b (L §8.4) (a.tally:46)"),
+            (known, "  known window(2026-01-01, 2026-07-01)\n  amt = 100.00 PLN \"the card\"".to_owned(), "LOAD-KNOWN version card_2026 is known after the model's on date (a.tally:46)"),
+            (rate, "  rate[q2] = 2 known window(2026-01-02, 2026-02-01) \"the card\"".to_owned(), "loaded"),
+            (rate, "  rate[q2] = 2 known window(2026-01-02, 2026-07-01) \"the card\"".to_owned(), "LOAD-KNOWN row rate[q2] is known after the model's on date (a.tally:53)"),
+            (rate, "  rate[q2] = 2 known window(2025-12-01, 2026-02-01) \"the card\"".to_owned(), "LOAD-KNOWN row rate[q2] is known before its version card_2026 (a.tally:53)"),
+            // a version's moves
+            (obs, format!("{obs}{later}  moves bank_a to 2026-02-01..2026-03-31"), "loaded"),
+            ("  covers konto", "  moves zz to 2026-03-01..\n  covers konto".to_owned(), "LOAD-MOVES moves zz: unknown, or not known before this version (a.tally:65)"),
+            (known, "  known 2026-01-01\n  moves bank_a to 2026-03\n  amt = 100.00 PLN \"the card\"".to_owned(), "LOAD-MOVES moves bank_a: unknown, or not known before this version (a.tally:46)"),
+            ("  covers konto", "  moves bank_a to 2026-03\n  covers konto".to_owned(), "LOAD-MOVES moves bank_a: unknown, or not known before this version (a.tally:65)"),
+            (tier, format!("{tier}{later}  moves card_2026 to 2026-02-01..\n\nversion card_d\n  cite card\n  known 2026-04-01\n  moves card_2026 to 2026-05-01..\n"), "LOAD-MOVES two moves of card_2026 known the same day (a.tally:69)"),
+            ("  covers konto", "  moves card_2026 to amt\n  covers konto".to_owned(), "LOAD-PARSE cannot parse: expected a date or a period, got amt (a.tally:65)"),
+            (obs, format!("{obs}\n\nversion card_w\n  cite card\n  known window(2026-03-15, 2026-04-01)\n  moves bank_a to 2026-02-01..2026-03-31\n"), "loaded"),
+            (obs, format!("{obs}\n\nversion card_w\n  cite card\n  known window(2026-04-01, 2026-04-10)\n  moves bank_a to 2026-02-01..2026-03-31\n{later}  moves bank_a to 2026-02-01..2026-04-30"), "LOAD-MOVES two moves of bank_a known the same day (a.tally:78)"),
+            // a key that is also an id
+            (tiers, "index tiers = [t1, t2, amt]".to_owned(), "LOAD-KEY a key is also an id: amt (a key of tiers) (a.tally:16)"),
+            ("place world: outside lives 1900-01-01..", "place world: outside lives 1900-01-01..\n\nkind persons".to_owned(), "loaded"),
+            ("kind wages: event certain", "kind persons\n\nkind wages: event certain".to_owned(), "loaded"),
+            (obs, format!("{obs}\n\nkind persons\n\nversion people\n  cite card\n  known 2026-01-01\n  persons + [amt] lives 2000-01-01..\n"), "LOAD-KEY a key is also an id: amt (a.tally:78)"),
+            (obs, format!("{obs}\n\nindex rows_ix: open\n\ninput tag[k in rows_ix]: num\n\nversion tags\n  cite card\n  governs always\n  known 2026-01-01\n  tag[amt] = 1 \"a\"\n"), "LOAD-KEY a key is also an id: amt (a key of rows_ix) (a.tally:73)"),
+            // rows at the same keys: overlaps and replace
+            (rate, format!("{rate}\n  rate[q2] = 3 \"again\""), "LOAD-OVERLAP rows a.tally:53 and a.tally:54 of rate overlap at [q2] in one version (a.tally:54)"),
+            (rate, "  rate[q2] = 2 governs 2026-01..2026-03 \"the card\"\n  rate[q2] = 3 governs 2026-04.. \"again\"".to_owned(), "loaded"),
+            (rate, "  rate[q2] = 2 governs 2026-01..2026-05 \"the card\"\n  rate[q2] = 3 governs 2026-04.. \"again\"".to_owned(), "LOAD-OVERLAP rows a.tally:53 and a.tally:54 of rate overlap at [q2] in one version (a.tally:54)"),
+            (tier, format!("{tier}{later}  rate[q2] = 5 \"later\""), "LOAD-OVERLAP rows a.tally:53 and a.tally:67 of rate overlap at [q2], neither replacing the other (a.tally:67)"),
+            (tier, format!("{tier}{later}  replace rate[q2] = 5 \"later\""), "loaded"),
+            (rate, "  replace rate[q2] = 2 \"the card\"".to_owned(), "LOAD-REPLACE replace rate[q2]: no earlier row to replace (a.tally:53)"),
+            (tier, format!("{tier}\nversion card_b\n  cite card\n  governs 2025\n  known 2026-04-01\n  replace rate[q2] = 5 \"later\""), "loaded"),
+            (tier, format!("{tier}{same}  rate[q2] = 5 \"same day\""), "loaded"),
+            (tier, format!("{tier}\nversion card_c\n  cite card\n  governs always\n  known 2026-01-01\n  rate[q2] = 5 \"same day\""), "LOAD-OVERLAP rows a.tally:53 and a.tally:67 of rate overlap at [q2], neither replacing the other (a.tally:67)"),
+            (fee, format!("{fee}\n  fee[*, t1] = 2 \"all\""), "loaded"),
+            (fee, format!("{fee}\n  fee[q1, *] = 2 \"all\"\n  fee[*, t1] = 3 \"all\""), "LOAD-OVERLAP rows a.tally:55 and a.tally:56 of fee overlap at [q1] and [*, t1] and tie (a.tally:56)"),
+            (fee, "  fee[q1, t1..t2] = 2 \"a\"\n  fee[q1, t2..t3] = 3 \"b\"".to_owned(), "LOAD-OVERLAP rows a.tally:54 and a.tally:55 of fee overlap at [q1, t1..t2] and [q1, t2..t3] and tie (a.tally:55)"),
+            (fee, "  fee[q1, t1..t3] = 2 \"a\"\n  fee[q1, t2..t3] = 3 \"b\"".to_owned(), "loaded"),
+            (fee, format!("{fee}\n  fee[q1, t1..t3] = 3 \"b\""), "loaded"),
+            // readings and balances: one instant each
+            (price, format!("{price}\n  price = 11 PLN at 2026-01-05 \"again\""), "LOAD-OVERLAP rows a.tally:55 and a.tally:56 of price overlap at no keys in one version (a.tally:56)"),
+            (price, format!("{price}\n  price = 11 PLN at 2026-01-06 \"again\""), "loaded"),
+            (tier, format!("{tier}{later}  replace price = 12 PLN at 2026-01-05 \"later\""), "loaded"),
+            (tier, format!("{tier}{later}  price = 12 PLN at 2026-01-05 \"later\""), "LOAD-OVERLAP rows a.tally:55 and a.tally:67 of price overlap at no keys, neither replacing the other (a.tally:67)"),
+            (opening, format!("{opening}\n  opening[konto] = 600.00 PLN at 2026-01-01 start \"again\""), "LOAD-OVERLAP rows a.tally:63 and a.tally:64 of opening overlap at [konto] in one version (a.tally:64)"),
+            (opening, format!("{opening}\n  opening[konto] = none at 2026-01-01 start \"again\""), "LOAD-OVERLAP rows a.tally:63 and a.tally:64 of opening overlap at [konto] in one version (a.tally:64)"),
+            (opening, format!("{opening}\n  opening[konto] = 500.00 PLN at 2026-01-01 end \"again\""), "loaded"),
+            // observations: one movement per id, on a covered day
+            (obs, format!("  replace {}", obs.trim_start()), "LOAD-REPLACE replace bank[r1]: no earlier row to replace (a.tally:71)"),
+            (obs, format!("{obs}\n{obs2}"), "LOAD-OVERLAP rows a.tally:71 and a.tally:72 of bank overlap at [r1] (a.tally:72)"),
+            (obs, format!("{obs}\n\nversion bank_b\n  cite card\n  governs 2026-02\n  known 2026-04-01\n  anchor konto\n{obs2}"), "LOAD-OVERLAP rows a.tally:71 and a.tally:78 of bank overlap at [r1], neither replacing the other (a.tally:78)"),
+            (obs, format!("{obs}\n\nversion bank_b\n  cite card\n  governs 2026-02\n  known 2026-04-01\n  anchor konto\n  replace {}", obs2.trim_start()), "loaded"),
+            (obs, format!("{obs}\n  replace bank[r1] = (on: 2026-02-11, kind: wages, leg cash from world to konto amount 100.00 PLN, fulfils: pay) known 2026-03-02 \"again\""), "loaded"),
+            (obs, obs.replace("2026-02-10", "2026-03-10"), "LOAD-COVERS observation bank[r1] of konto is dated outside the span bank_a covers (a.tally:71)"),
+            ("  covers konto", "  covers konto 2026-02-01..2026-02-05".to_owned(), "LOAD-COVERS observation bank[r1] of konto is dated outside the span bank_a covers (a.tally:71)"),
+            ("  covers konto", "  covers konto 2026-02-01..2026-02-28".to_owned(), "loaded"),
+            // one band table: rows in order, whole, no gap
+            ("  scale: [0, 10] = 1 \"the card\"", "  scale: [10, 0] = 1 \"the card\"".to_owned(), "LOAD-BAND band scale in card_2026: rows unordered, overlapping or with a gap at 10 (a.tally:56)"),
+            ("  scale: [0, 10] = 1 \"the card\"", "  scale: [0, 0) = 1 \"the card\"".to_owned(), "LOAD-BAND band scale in card_2026: rows unordered, overlapping or with a gap at 0 (a.tally:56)"),
+            ("  scale: [11, 20) = 2 \"the card\"", "  scale: [12, 20) = 2 \"the card\"".to_owned(), "LOAD-BAND band scale in card_2026: rows unordered, overlapping or with a gap at 12 (a.tally:57)"),
+            ("  scale: [11, 20) = 2 \"the card\"", "  scale: (10, 20) = 2 \"the card\"".to_owned(), "loaded"),
+            ("  scale: [11, 20) = 2 \"the card\"", "  scale: [10.5, 20) = 2 \"the card\"".to_owned(), "LOAD-UNIT 10.5 is not an int (a.tally:57)"),
+            ("  scale: [11, 20) = 2 \"the card\"", "  scale: [9, 20) = 2 \"the card\"".to_owned(), "LOAD-BAND band scale in card_2026: rows unordered, overlapping or with a gap at 9 (a.tally:57)"),
+            ("  scale: [20, inf) = 3 \"the card\"", "  scale: [20, inf) = 3 \"the card\"\n  scale: [30, 40) = 4 \"more\"".to_owned(), "LOAD-BAND band scale in card_2026: rows unordered, overlapping or with a gap at 30 (a.tally:59)"),
+            ("  scale: [11, 20) = 2 \"the card\"", "  scale: (-inf, 20) = 2 \"the card\"".to_owned(), "LOAD-BAND band scale in card_2026: rows unordered, overlapping or with a gap at -inf (a.tally:57)"),
+            (tier, "  tier: (100, inf) = 2 \"the card\"".to_owned(), "LOAD-BAND band tier in card_2026: rows unordered, overlapping or with a gap at 100 (a.tally:62)"),
+            (tier, "  tier: [100.5, inf) = 2 \"the card\"".to_owned(), "LOAD-BAND band tier in card_2026: rows unordered, overlapping or with a gap at 201/2 (a.tally:62)"),
+            ("  tier: [0, 100) = 1 \"the card\"", "  tier: [0, 100.5) = 1 \"the card\"".to_owned(), "LOAD-BAND band tier in card_2026: rows unordered, overlapping or with a gap at 100 (a.tally:62)"),
+            (tier, "  tier: [100.001, inf) = 2 \"the card\"".to_owned(), "LOAD-PRECISION 100.001 is finer than the minor unit (a.tally:62)"),
+            ("  dated: [2026-07-01, inf) = 2 \"the card\"", "  dated: [2026-07-02, inf) = 2 \"the card\"".to_owned(), "LOAD-BAND band dated in card_2026: rows unordered, overlapping or with a gap at 2026-07-02 (a.tally:60)"),
+            (tier, "  tier: [abc, inf) = 2 \"the card\"".to_owned(), "LOAD-UNIT a value of the wrong type: abc for money PLN (a.tally:62)"),
+            // tables of one key across versions: replace, whole or patching
+            (tier, format!("{tier}{later}  tier: [0, inf) = 9 \"later\""), "LOAD-OVERLAP band tier: the table of card_b overlaps the table of card_2026 without replace (a.tally:67)"),
+            (tier, format!("{tier}{later}  replace tier: [100, inf) = 9 \"later\""), "loaded"),
+            (tier, format!("{tier}{later}  replace tier: [0, 50) = 8 \"later\"\n  replace tier: [50, inf) = 9 \"later\""), "loaded"),
+            (tier, format!("{tier}{later}  replace tier: [0, 50) = 8 \"later\""), "loaded"),
+            (tier, format!("{tier}{later}  replace tier: [100, inf) = 9 \"later\"\n  tier: [0, 100) = 8 \"later\""), "LOAD-BAND band tier in card_b: rows unordered, overlapping or with a gap at 0 (a.tally:68)"),
+            (tier, format!("{tier}\n  replace scale: [0, 10] = 4 \"x\""), "LOAD-BAND band scale in card_2026: rows unordered, overlapping or with a gap at 0 (a.tally:63)"),
+            (tier, format!("{tier}{same}  tier: [0, inf) = 9 \"same\""), "LOAD-OVERLAP band tier: tables of card_2026 and card_c overlap, known the same day (a.tally:61)"),
+            (tier, format!("{tier}\nversion card_b\n  cite card\n  governs 2025-06-01..\n  known 2026-04-01\n  replace tier: [100, inf) = 9 \"later\""), "loaded"),
+            (tier, format!("{tier}\nversion card_b\n  cite card\n  governs 2025-06-01..\n  known 2026-04-01\n  replace tier: [0, inf) = 9 \"later\""), "loaded"),
+            (obs, format!("{obs}{fine}  replace fine: [0, 10) = 5 \"b\"\n  replace fine: [20, inf) = 6 \"b\""), "LOAD-REPLACE replace rows of fine in f2 patch no table on 2026-04-01.. (a.tally:87)"),
+            (obs, format!("{obs}{}  replace fine: [0, 10) = 5 \"b\"\n  replace fine: [20, inf) = 6 \"b\"", fine.replace("governs 2026-03..", "governs 2026-02..2026-03")), "loaded"),
+            (obs, format!("{obs}{fine}  replace fine: [0, 10) = 5 \"b\"\n  replace fine: [10, inf) = 6 \"b\""), "loaded"),
+            (obs, format!("{obs}{fine}  replace fine: [0, 5) = 5 \"b\"\n  replace fine: [20, inf) = 6 \"b\""), "LOAD-BAND band fine in f2: the replace rows neither match the earlier table's intervals nor form a whole table (a.tally:87)"),
+            // a period across two keys of a fiscal-year index
+            (tiers, format!("{tiers}{fy}def l[m in months]: num = lim[m]"), "LOAD-KEY 2026-04 lies across keys 2025 and 2026 of fy (a.tally:22)"),
+            (tiers, format!("{tiers}{fy}ask zq: lim[2026-04]"), "LOAD-KEY 2026-04 lies across keys 2025 and 2026 of fy (a.tally:22)"),
+            (tiers, format!("{tiers}{fy}ask zq: lim[2026-05]"), "loaded"),
+            (tiers, format!("{tiers}{fy}ask zq: lim[2026-04-05]"), "loaded"),
+            (tiers, format!("{tiers}{fy}def l: num = sum(lim[k] for k in months)"), "loaded"),
+            (tiers, format!("{tiers}{fy}def l[d in days]: num = lim[month_of(d)]"), "LOAD-KEY 2026-04 lies across keys 2025 and 2026 of fy (a.tally:22)"),
+            (tiers, format!("{tiers}{fy}def l[m in months]: num = lim[(m)]"), "loaded"),
+            (tiers, format!("{tiers}{fy}def l[y in years]: num = lim[y]"), "LOAD-KEY 2026 lies across keys 2025 and 2026 of fy (a.tally:22)"),
+            (tiers, format!("{tiers}{fy}def l[k in qs, m in months]: num = lim[m]"), "LOAD-KEY 2026-04 lies across keys 2025 and 2026 of fy (a.tally:22)"),
+            (tiers, format!("{tiers}{fy}index acct: open\n\ndef l[a in acct, m in months]: num = lim[m]"), "loaded"),
+            (tiers, format!("{tiers}{fy}move tick[m in months]: wages\n  on start_of(m)\n  leg cash from world to konto amount 1.00 PLN\n  when lim[m] > 0"), "LOAD-KEY 2026-04 lies across keys 2025 and 2026 of fy (a.tally:25)"),
+        ];
+        for (old, new, expected) in cases {
+            assert!(VERSIONS.contains(old), "{old} is in the base");
+            let text = VERSIONS.replacen(old, &new, 1);
+            assert_eq!(refusal(&text), expected, "{new}");
+        }
+    }
+
+    /// The first line a run of `text` prints for ask `q`, or `None` where the engine doesn't
+    /// build what the run needs.
+    fn first_line(text: &str) -> Option<String> {
+        let given = vec![tally::Given {
+            path: "a.tally".to_owned(),
+            bytes: Some(text.as_bytes().to_vec()),
+        }];
+        let request = tally::Request {
+            asks: tally::Asks::Named(vec!["q".to_owned()]),
+            pin: tally::Pin::Canonical,
+            days: tally::Days::Events,
+        };
+        match tally::run(given, &request) {
+            Ok(answer) => answer.lines().first().cloned(),
+            Err(_) => None,
+        }
+    }
+
+    #[test]
+    fn an_ask_over_a_known_window_or_a_moves_line_is_not_built_yet() {
+        assert_eq!(
+            first_line(VERSIONS).as_deref(),
+            Some("q: 200.00 PLN"),
+            "refcore's first line"
+        );
+        let edits = [
+            (
+                "  known 2026-01-01\n  amt",
+                "  known window(2025-12-01, 2026-01-01)\n  amt",
+            ),
+            (
+                "  rate[q2] = 2 \"the card\"",
+                "  rate[q2] = 2 known window(2026-01-02, 2026-02-01) \"the card\"",
+            ),
+            (
+                "\"the statement\"\n",
+                "\"the statement\"\n\nversion card_b\n  cite card\n  governs 2026-04-01..\n  known 2026-04-01\n  moves bank_a to 2026-02-01..2026-03-31\n",
+            ),
+        ];
+        for (old, new) in edits {
+            assert!(VERSIONS.contains(old), "{old} is in the base");
+            let text = VERSIONS.replacen(old, new, 1);
+            assert_eq!(refusal(&text), "loaded", "{new} loads");
+            assert_eq!(first_line(&text), None, "{new}: M1 runs it");
         }
     }
 }

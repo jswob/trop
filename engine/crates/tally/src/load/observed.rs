@@ -76,7 +76,7 @@ impl Loader {
             file: file.to_owned(),
             line,
         };
-        let own_known = self.obs_known(vid, id, &key, row.known.as_ref(), &at)?;
+        let (own_known, own_window) = self.obs_known(vid, id, &key, row.known.as_ref(), &at)?;
         let fields = match &row.value {
             Value::Record(fields) => Some(fields.as_slice()),
             Value::None => None,
@@ -100,6 +100,7 @@ impl Loader {
             key,
             version: vid.to_owned(),
             own_known,
+            own_window,
             locator: row.locator.clone(),
             replace: row.replace,
             removed: fields.is_none(),
@@ -121,7 +122,8 @@ impl Loader {
         Ok(true)
     }
 
-    /// An observation's own `known`. L §4.5.
+    /// An observation's own `known`: its day, or its window's first and last days; not
+    /// before its version's, not after `on` (refcore's `obs_item`). L §4.5.
     fn obs_known(
         &self,
         vid: &str,
@@ -129,26 +131,27 @@ impl Loader {
         key: &str,
         known: Option<&Known>,
         at: &At,
-    ) -> Result<Option<Day>, Stop> {
+    ) -> Result<(Option<Day>, Option<Day>), Stop> {
         let Some(written) = known else {
-            return Ok(None);
+            return Ok((None, None));
         };
-        let Known::Day(day) = written else {
-            return Err(Stop::NotBuilt("a known window"));
+        let (first, window) = match written {
+            Known::Day(day) => (*day, None),
+            Known::Window(a, b) => (*a, Some(*b)),
         };
-        if self.m.versions.get(vid).is_some_and(|v| *day < v.known) {
+        if self.m.versions.get(vid).is_some_and(|v| first < v.known) {
             return Err(at.refuse(
                 Load::Known,
                 format!("row {id}[{key}] is known before its version {vid}"),
             ));
         }
-        if *day > self.m.on {
+        if window.unwrap_or(first) > self.m.on {
             return Err(at.refuse(
                 Load::Known,
                 format!("row {id}[{key}] is known after the model's on date"),
             ));
         }
-        Ok(Some(*day))
+        Ok((Some(first), window))
     }
 
     /// An observation's fields: its day, kind, `fulfils`, legs and attributes (refcore's

@@ -14,13 +14,14 @@ use super::spans::{governs_span, lspan_to_span};
 use super::steps::{Loader, refuse};
 use crate::base::Load;
 use crate::model::{
-    BandEnd, BandRow, BandTable, Domain, GapRole, IndexForm, KeyVal, NameKind, Pat, Row,
-    RowInstant, RuleVer, pattern_text,
+    BandRow, BandTable, Domain, GapRole, IndexForm, KeyVal, NameKind, Pat, Row, RowInstant,
+    RuleVer, pattern_text,
 };
 use crate::syntax::{
-    BandRow as WrittenBand, Gap, Instant, Item, ItemForm, Known, Lit, Row as WrittenRow, RowKey,
-    Rule, Section, Stop,
+    BandRow as WrittenBand, Gap, Instant, Item, ItemForm, Known, Row as WrittenRow, RowKey, Rule,
+    Section, Stop,
 };
+use crate::time::Day;
 use std::collections::BTreeMap;
 
 impl Loader {
@@ -38,9 +39,6 @@ impl Loader {
             let Section::Version(version) = section else {
                 continue;
             };
-            if !version.moves.is_empty() {
-                return Err(Stop::NotBuilt("a version's moves"));
-            }
             let vid = &version.id;
             let line = version.line;
             let has_governs = self
@@ -250,7 +248,7 @@ impl Loader {
             return Err(Stop::NotBuilt("a band that isn't built"));
         };
         let first_bind = band.binds.first().cloned();
-        let arg_binds = band.binds.clone();
+        let arg_type = band.arg_type.clone();
         let key = match (&row.key, first_bind) {
             (Some(written), Some(bind)) => {
                 let Some(lit) = KeyLit::of_row_key(written) else {
@@ -280,12 +278,12 @@ impl Loader {
         let lo = interval
             .lo
             .as_ref()
-            .map(|l| self.band_end(l, &arg_binds, file, line))
+            .map(|l| self.band_end(l, id, &arg_type, file, line))
             .transpose()?;
         let hi = interval
             .hi
             .as_ref()
-            .map(|l| self.band_end(l, &arg_binds, file, line))
+            .map(|l| self.band_end(l, id, &arg_type, file, line))
             .transpose()?;
         let written = BandRow {
             lo,
@@ -314,25 +312,6 @@ impl Loader {
             });
         }
         Ok(())
-    }
-
-    /// A band row's end: a number in the argument's unit (refcore's `band_end`). L §5.9.
-    fn band_end(
-        &self,
-        lit: &Lit,
-        binds: &[crate::model::BindInfo],
-        file: &str,
-        line: u32,
-    ) -> Result<BandEnd, Stop> {
-        let Lit::Num(n) = lit else {
-            return Err(Stop::NotBuilt("a band over values that aren't numbers"));
-        };
-        let (_, factor) = self.unit_of(n.unit.as_ref(), binds, file, line)?;
-        let value = n
-            .value
-            .checked_mul(&factor)
-            .map_err(super::steps::num_stop)?;
-        Ok(BandEnd::Num(value))
     }
 
     /// A row of an input, or a `given` of a def (refcore's `row_item`); whether it states a
@@ -378,7 +357,7 @@ impl Loader {
             .as_ref()
             .map(|g| governs_span(g, file, line))
             .transpose()?;
-        let own_known = self.row_known(vid, id, &pattern, row, file, line)?;
+        let (own_known, own_window) = self.row_known(vid, id, &pattern, row, file, line)?;
         let read_as = if balance {
             ReadAs::Balance
         } else if reading {
@@ -405,6 +384,7 @@ impl Loader {
             version: vid.to_owned(),
             own_span,
             own_known,
+            own_window,
             instant,
             locator: row.locator.clone(),
             given: row.given,
@@ -503,7 +483,8 @@ impl Loader {
         Ok((pattern, stated))
     }
 
-    /// A row's own `known`: not before its version's, not after `on`. L §4.5.
+    /// A row's own `known`: its day, or its window's first and last days; not before its
+    /// version's, not after `on` (refcore's `row_item`). L §4.5.
     fn row_known(
         &self,
         vid: &str,
@@ -512,16 +493,17 @@ impl Loader {
         row: &WrittenRow,
         file: &str,
         line: u32,
-    ) -> Result<Option<crate::time::Day>, Stop> {
+    ) -> Result<(Option<Day>, Option<Day>), Stop> {
         let Some(known) = &row.known else {
-            return Ok(None);
+            return Ok((None, None));
         };
-        let Known::Day(day) = known else {
-            return Err(Stop::NotBuilt("a known window"));
+        let (day, window) = match known {
+            Known::Day(day) => (*day, None),
+            Known::Window(a, b) => (*a, Some(*b)),
         };
         let shown = format!("{id}{}", load_pattern_text(pattern));
         let version_known = self.m.versions.get(vid).map(|v| v.known);
-        if version_known.is_some_and(|k| *day < k) {
+        if version_known.is_some_and(|k| day < k) {
             return Err(refuse(
                 Load::Known,
                 format!("row {shown} is known before its version {vid}"),
@@ -529,7 +511,7 @@ impl Loader {
                 line,
             ));
         }
-        if *day > self.m.on {
+        if window.unwrap_or(day) > self.m.on {
             return Err(refuse(
                 Load::Known,
                 format!("row {shown} is known after the model's on date"),
@@ -537,7 +519,7 @@ impl Loader {
                 line,
             ));
         }
-        Ok(Some(*day))
+        Ok((Some(day), window))
     }
 
     /// Each row's stable id, `version:target[keys]`, with its own span or instant where two

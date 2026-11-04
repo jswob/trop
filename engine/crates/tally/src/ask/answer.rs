@@ -135,10 +135,14 @@ pub(crate) fn answer_turns(
         #[cfg(feature = "counters")]
         counts: crate::Counters::default(),
     };
+    let unbuilt = windows_or_moves(m);
     for turn in turns {
         match turn {
             Turn::Ask(at) => {
                 let ask = m.asks.get(*at).ok_or_else(no_turn)?;
+                if unbuilt {
+                    return Err(Stop::NotBuilt("a known window or a moves line at run"));
+                }
                 out.extend(answer_one(m, ask, days, &mut seen)?);
             }
             Turn::Line(line) => out.push(line.clone()),
@@ -150,6 +154,31 @@ pub(crate) fn answer_turns(
         #[cfg(feature = "counters")]
         counts: seen.counts,
     })
+}
+
+/// Whether the reality holds a known window (a version's, a row's or an observation's own) or
+/// a `moves` line: load checks them (L §4.5, §5.3), the read rule at run doesn't take them yet
+/// (M1's), so an ask that would read them stops `NotBuilt`.
+fn windows_or_moves(m: &Reality) -> bool {
+    let versions = m
+        .versions
+        .entries()
+        .any(|(_, v)| v.window.is_some() || !v.moved_by.is_empty());
+    if versions {
+        return true;
+    }
+    for (_, input) in m.inputs.entries() {
+        let rows = input.rows.iter().any(|r| r.own_window.is_some());
+        if rows || input.observations.iter().any(|o| o.own_window.is_some()) {
+            return true;
+        }
+    }
+    for (_, def) in m.defs.entries() {
+        if def.givens.iter().any(|r| r.own_window.is_some()) {
+            return true;
+        }
+    }
+    false
 }
 
 /// A turn whose ask the reality doesn't hold: the turns are built from its asks.

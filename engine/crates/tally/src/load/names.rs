@@ -1,13 +1,16 @@
 //! The one namespace: the ids the language declares, then every section's id, each once.
-//! Spec: L §2.5 (one namespace across a reality's files), §2.2 (built-in ids), §5.9 (a band
-//! named as a built-in), §5.19 (the built-in inputs), §5.7 (the prelude's kinds, `parties`
-//! among them), §8.3 (`LOAD-DUP`).
-//! Twin: engine/tools/refcore/loader.py (`register_builtins`, `register_names`).
+//! Spec: L §2.5 (one namespace across a reality's files; a key is never an id), §2.2
+//! (built-in ids), §5.9 (a band named as a built-in), §5.19 (the built-in inputs), §5.7 (the
+//! prelude's kinds, `parties` among them), §8.3 (`LOAD-DUP`, `LOAD-KEY`).
+//! Twin: engine/tools/refcore/loader.py (`register_builtins`, `register_names`,
+//! `check_key_ids`).
 //! Invariants: a built-in id is registered before any section's; the first section whose id is
-//! already named is refused at its line, in section order (files by full path, then lines).
+//! already named is refused at its line, in section order (files by full path, then lines); no
+//! key of a list or open index, and no thing but a currency or a declared place, is named like
+//! an id.
 
 use super::steps::{Loader, refuse, section_id};
-use crate::base::Load;
+use crate::base::{Code, Load, Refusal};
 use crate::model::{
     BUILTIN_INDEXES, BUILTIN_INPUTS, BindInfo, Domain, InputInfo, NameKind, PRELUDE_KINDS, Ty,
 };
@@ -62,6 +65,47 @@ impl Loader {
             }
         }
         Ok(())
+    }
+}
+
+impl Loader {
+    /// No key literal is also a top-level id: a key of a list or open index, then a thing
+    /// that isn't a currency or a declared place (refcore's `check_key_ids`; an axis's options
+    /// are G8's). L §2.5, §8.3.
+    pub(super) fn check_key_ids(&self) -> Result<(), Stop> {
+        for (id, index) in self.m.indexes.entries() {
+            for (text, _) in &index.texts {
+                if !self.m.names.contains_key(text) {
+                    continue;
+                }
+                let message = format!("a key is also an id: {text} (a key of {id})");
+                return Err(match self.index_file(id).zip(index.line) {
+                    Some((file, line)) => refuse(Load::Key, message, file, line),
+                    None => Stop::Refused(Refusal::new(Code::Load(Load::Key), message)),
+                });
+            }
+        }
+        for (name, _) in self.m.things.entries() {
+            let other = self.m.names.get(name).copied();
+            let shared = other.is_some_and(|k| k != NameKind::Unit && k != NameKind::Place);
+            if shared && !self.m.currencies.contains_key(name) {
+                return Err(Stop::Refused(Refusal::new(
+                    Code::Load(Load::Key),
+                    format!("a key is also an id: {name} (a thing)"),
+                )));
+            }
+        }
+        Ok(())
+    }
+
+    /// The file an `index` section stands in, by its id; none for a built-in index.
+    fn index_file(&self, id: &str) -> Option<&str> {
+        self.sections.iter().find_map(|(file, section)| {
+            let Section::Index(decl) = section else {
+                return None;
+            };
+            (decl.id == id).then_some(file.as_str())
+        })
     }
 }
 
