@@ -1,14 +1,20 @@
 //! Adjustments: a booked instance measured again at each later version's cut, each change of a leg recorded with the versions that made it.
-//! Spec: E §5 (steps 1–5: the booked instance at its booking cut, each later step c with
-//! t < c ≤ K, δ per leg, an adjustment recorded for δ ≠ 0 or a change of places, an adjustment
-//! nothing settles is `HOLE-CHANGED` from its day); L §5.14.3 (adjustments, their names and
-//! remainders), §8.1 (`HOLE-CHANGED`'s question), §8.2 (`adjustment:` in the register).
+//! Spec: E §5 (steps 1–5: the booked instance at its booking cut, one refused there never
+//! re-measured; each later step c with t < c ≤ K, δ per leg, refused where the step's
+//! re-measurement is refused and a hole where its `when` is, the next step measured against
+//! that state; an adjustment recorded for δ ≠ 0, a change of places, or a δ that is a hole or
+//! refused; an adjustment nothing settles is `HOLE-CHANGED` from its day, and one whose δ is
+//! refused refuses its change and its remainder; tally 2.1.2); L §5.14.3 (adjustments, their
+//! names and remainders), §8.1 (`HOLE-CHANGED`'s question), §8.2 (`adjustment:` in the
+//! register), §8.4 (a refusal outranks a hole).
 //! Twin: engine/tools/refcore/moves.py (`AdjMv`, `remainder`, `known_dates`, `adjust_move`,
-//! `adjust_move_compute`, `step_versions`).
+//! `adjust_move_compute`, `step_legs`, `adjust_made`, `step_versions`).
 //! Invariants: a move's adjustments are computed once per cut, in the order of their day,
 //! move, instance and leg; the versions known on a day are the versions', rows' and
-//! observations' own; an adjustment's remainder is its change less its settlements, none once
-//! waived (the links are `book/settle.rs`'s).
+//! observations' own; a booking refused at its booking cut records no adjustment; an
+//! adjustment's change is a number, a hole or a refusal, and its remainder is its change less
+//! its settlements, none once waived, refused whenever its change is (the links are
+//! `book/settle.rs`'s).
 
 use std::collections::{BTreeMap, BTreeSet};
 
