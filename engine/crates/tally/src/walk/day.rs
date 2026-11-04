@@ -8,7 +8,7 @@
 //! the decision's point; a record refused refuses its places), §8.5; E §6.1.
 //! Twin: engine/tools/refcore/walk.py (`run_to`, `walk_day`, `check_batch`, `check_group`,
 //! `act`, `leg_bad`, `book_leg`, `book_obs_leg`, `book_obs_now`, `apply_reading`,
-//! `alive_day`, `close_day`).
+//! `reading_group`, `sign_anchor`, `alive_day`, `close_day`).
 //! Invariants: a leg is booked at both its ends or refused at both; a refused leg is taken back
 //! and refuses its places from that point; the legs booked on a day sum to zero per unit; a
 //! day's acts run in walk order, and a day cut short past the counted depth resumes at the act

@@ -801,18 +801,11 @@ impl Engine {
     /// nearest first: a projection's walk counts the runs the walks it continues made
     /// (refcore's `flows_move`, its loop over `ww.base`). L §5.14.1, E §4.3 step 1.
     fn chain_run(&self, id: usize, inst: &str) -> Result<Option<&super::order::Run>, Stop> {
-        let mut next = Some(id);
-        let mut links = 0_usize;
-        while let Some(wid) = next {
-            links = links
-                .checked_add(1)
-                .filter(|n| *n <= self.walks.len())
-                .ok_or_else(|| invariant("a chain of walks that loops"))?;
+        for wid in self.chain(id)? {
             let walk = self.walk(wid)?;
             if let Some(run) = walk.run_ids.get(inst).and_then(|ix| walk.runs.get(*ix)) {
                 return Ok(Some(run));
             }
-            next = walk.proj.as_ref().map(|p| p.base);
         }
         Ok(None)
     }
@@ -821,22 +814,33 @@ impl Engine {
     /// the walk after it starts after, the nearest first (refcore's `flows_place`, its
     /// chain). E §4.3 step 1, L §5.14.1.
     fn walk_chain(&self, id: usize, limit: At) -> Result<Vec<(usize, At)>, Stop> {
-        let mut chain = vec![(id, limit)];
-        let mut next = self
-            .walk(id)?
-            .proj
-            .as_ref()
-            .map(|p| (p.base, p.point.min(limit)));
-        while let Some((wid, cut)) = next {
-            if chain.len() > self.walks.len() {
+        let mut out = Vec::new();
+        let mut cut = limit;
+        for wid in self.chain(id)? {
+            out.push((wid, cut));
+            if let Some(p) = &self.walk(wid)?.proj {
+                cut = p.point.min(cut);
+            }
+        }
+        Ok(out)
+    }
+
+    /// Walk `id`, then each walk it continues, the nearest first: a projection's walk
+    /// continues the walk it starts from (refcore's loops over `w.base`). E §4.3 step 1,
+    /// L §5.14.1.
+    ///
+    /// # Errors
+    ///
+    /// `ENGINE-INVARIANT` for a chain that loops, one longer than the walks there are.
+    fn chain(&self, id: usize) -> Result<Vec<usize>, Stop> {
+        let mut chain = Vec::new();
+        let mut next = Some(id);
+        while let Some(wid) = next {
+            if chain.len() >= self.walks.len() {
                 return Err(invariant("a chain of walks that loops"));
             }
-            chain.push((wid, cut));
-            next = self
-                .walk(wid)?
-                .proj
-                .as_ref()
-                .map(|p| (p.base, p.point.min(cut)));
+            chain.push(wid);
+            next = self.walk(wid)?.proj.as_ref().map(|p| p.base);
         }
         Ok(chain)
     }
@@ -885,18 +889,10 @@ impl Engine {
     /// a projection's walk keeps what the walks it continues have refused so far (refcore's
     /// `leg_refused`, its loop over `w.base`). E §4.2 step 5, §4.3 step 1.
     fn chain_refusal(&self, id: usize, wanted: &(String, String)) -> Result<Option<Refusal>, Stop> {
-        let mut next = Some(id);
-        let mut links = 0_usize;
-        while let Some(wid) = next {
-            links = links
-                .checked_add(1)
-                .filter(|n| *n <= self.walks.len())
-                .ok_or_else(|| invariant("a chain of walks that loops"))?;
-            let walk = self.walk(wid)?;
-            if let Some(refusal) = walk.bad_legs.get(wanted) {
+        for wid in self.chain(id)? {
+            if let Some(refusal) = self.walk(wid)?.bad_legs.get(wanted) {
                 return Ok(Some(refusal.clone()));
             }
-            next = walk.proj.as_ref().map(|p| p.base);
         }
         Ok(None)
     }
