@@ -198,6 +198,12 @@ fn ask_body(m: &Reality, ask: &Ask, engine: &mut Engine, cut: Day) -> Result<Vec
     match &ask.body {
         AskBody::Exprs(exprs) => expr_lines(m, ask, exprs, engine, (ctx, &pinned)),
         AskBody::Residuals(r) => residual_lines(m, ask, r, engine, (ctx, &pinned)),
+        AskBody::Explain(_)
+        | AskBody::InputsOf(_)
+        | AskBody::ReadersOf(_)
+        | AskBody::Check(..)
+        | AskBody::Solve(_)
+        | AskBody::Diff(_) => Err(Stop::NotBuilt("an ask's form beyond values and residuals")),
     }
 }
 

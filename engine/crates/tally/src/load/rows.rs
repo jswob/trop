@@ -38,6 +38,9 @@ impl Loader {
             let Section::Version(version) = section else {
                 continue;
             };
+            if !version.moves.is_empty() {
+                return Err(Stop::NotBuilt("a version's moves"));
+            }
             let vid = &version.id;
             let line = version.line;
             let has_governs = self
@@ -343,6 +346,9 @@ impl Loader {
     ) -> Result<bool, Stop> {
         if row.qual.is_some() {
             return Err(Stop::NotBuilt("a member's prefix"));
+        }
+        if row.of.is_some() {
+            return Err(Stop::NotBuilt("a reading row's `of`"));
         }
         let id = &row.target;
         let want = if row.given {

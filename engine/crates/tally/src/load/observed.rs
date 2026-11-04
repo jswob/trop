@@ -87,7 +87,8 @@ impl Loader {
             | Value::Calendar(_)
             | Value::Days(_)
             | Value::Lit(_)
-            | Value::Expr(_) => {
+            | Value::Expr(_)
+            | Value::Dist(_) => {
                 return Err(at.refuse(
                     Load::Field,
                     format!("an observation is a record with named fields: {}", at.sid),

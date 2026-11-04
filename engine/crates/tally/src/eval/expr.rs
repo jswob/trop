@@ -77,6 +77,13 @@ impl Engine {
             Expr::Covered(c) => self.covered_call(m, (&c.0, &c.1), env, ctx),
             Expr::Calendar(..) => Err(Stop::NotBuilt("a calendar written in a rule")),
             Expr::Value(..) => Err(Stop::NotBuilt("value (the walk)")),
+            Expr::Query(..) => Err(Stop::NotBuilt("a query (mean, share, quantile)")),
+            Expr::Low(..) => Err(Stop::NotBuilt("`low(x, span)`")),
+            Expr::Crps(..) => Err(Stop::NotBuilt("`crps`")),
+            Expr::DistFn(..) => Err(Stop::NotBuilt("`cdf`, `pdf` and `pmf`")),
+            Expr::Dist(..) => Err(Stop::NotBuilt("distributions")),
+            Expr::Prorata(..) => Err(Stop::NotBuilt("`prorata`")),
+            Expr::AsIf(..) => Err(Stop::NotBuilt("`as if`")),
         }
     }
 
@@ -214,7 +221,14 @@ impl Engine {
             | Expr::Flows(_)
             | Expr::Covered(_)
             | Expr::Calendar(_)
-            | Expr::Value(_) => {
+            | Expr::Value(_)
+            | Expr::Query(_)
+            | Expr::Low(_)
+            | Expr::Crps(_)
+            | Expr::DistFn(_)
+            | Expr::Dist(_)
+            | Expr::Prorata(_)
+            | Expr::AsIf(..) => {
                 let v = self.ev(m, e, env, ctx)?;
                 if let Value::Word(word) = v {
                     return Ok(Given::Literal(Lit::Name(word)));

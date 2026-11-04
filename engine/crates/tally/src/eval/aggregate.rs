@@ -948,7 +948,14 @@ pub(crate) fn reads_name(e: &Expr, name: &str) -> bool {
             | Expr::Flows(_)
             | Expr::Covered(_)
             | Expr::Calendar(_)
-            | Expr::Value(_) => return true,
+            | Expr::Value(_)
+            | Expr::Query(_)
+            | Expr::Low(_)
+            | Expr::Crps(_)
+            | Expr::DistFn(_)
+            | Expr::Dist(_)
+            | Expr::Prorata(_)
+            | Expr::AsIf(..) => return true,
         }
     }
     false

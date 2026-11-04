@@ -314,6 +314,7 @@ impl Graph {
         match value {
             RuleValue::Expr(expr) => self.expr(m, scope, expr, 0),
             RuleValue::Hole(_) => Ok(()),
+            RuleValue::Solve(_) => Err(Stop::NotBuilt("`solve`")),
         }
     }
 
@@ -389,6 +390,7 @@ impl Graph {
     /// An ask: its bindings, `law`, `as known` and what it asks (refcore's `check_ask`).
     /// L §5.18.
     fn check_ask(&mut self, m: &Reality, ask: &Ask) -> Result<(), Stop> {
+        unbuilt_clauses(ask)?;
         let mut scope = Scope::new(Node::new(NodeKind::Ask, &ask.id));
         for bind in &ask.binds {
             self.bind(m, &mut scope, bind, 0)?;
@@ -401,6 +403,12 @@ impl Graph {
                 self.expr(m, &scope, &residuals.place, 0)?;
                 self.span(m, &scope, &residuals.span, 0)
             }
+            AskBody::Explain(_) => Err(Stop::NotBuilt("`explain`")),
+            AskBody::InputsOf(_) => Err(Stop::NotBuilt("`inputs-of`")),
+            AskBody::ReadersOf(_) => Err(Stop::NotBuilt("`readers-of`")),
+            AskBody::Check(..) => Err(Stop::NotBuilt("`check`")),
+            AskBody::Solve(_) => Err(Stop::NotBuilt("`solve`")),
+            AskBody::Diff(_) => Err(Stop::NotBuilt("`diff`")),
         }
     }
 
@@ -436,6 +444,13 @@ impl Graph {
             Expr::Flows(flows) => self.flows(m, scope, flows, depth),
             Expr::Covered(covered) => self.covered(m, scope, &covered.0, &covered.1, depth),
             Expr::Value(value) => self.value(m, scope, value, depth),
+            Expr::Query(..) => Err(Stop::NotBuilt("a query (mean, share, quantile)")),
+            Expr::Low(..) => Err(Stop::NotBuilt("`low(x, span)`")),
+            Expr::Crps(..) => Err(Stop::NotBuilt("`crps`")),
+            Expr::DistFn(..) => Err(Stop::NotBuilt("`cdf`, `pdf` and `pmf`")),
+            Expr::Dist(..) => Err(Stop::NotBuilt("distributions")),
+            Expr::Prorata(..) => Err(Stop::NotBuilt("`prorata`")),
+            Expr::AsIf(..) => Err(Stop::NotBuilt("`as if`")),
         }
     }
 
@@ -996,6 +1011,9 @@ impl Graph {
     /// projection or `bal(x)` with no day (refcore's `m_t_bal`, `m_check_proj`).
     /// L §5.14.1; E §3.1 step 7.
     fn bal(&mut self, m: &Reality, scope: &Scope, bal: &Bal, depth: u32) -> Result<(), Stop> {
+        if bal.proj.random.is_some() {
+            return Err(Stop::NotBuilt("a projection's `random at`"));
+        }
         self.expr(m, scope, &bal.place, depth)?;
         self.all(m, scope, &bal.args, depth)?;
         self.opt(m, scope, bal.proj.from.as_ref(), depth)?;
@@ -1396,6 +1414,21 @@ fn push_once(targets: &mut Vec<Target>, target: Target) {
     if !targets.contains(&target) {
         targets.push(target);
     }
+}
+
+/// An ask's clauses this build doesn't evaluate yet: pins, `random at`, `paths`, `path`,
+/// `orient` (L §5.16, §5.18, §6.4).
+fn unbuilt_clauses(ask: &Ask) -> Result<(), Stop> {
+    if !ask.pins.is_empty() {
+        return Err(Stop::NotBuilt("an ask's `with` pins"));
+    }
+    if ask.random.is_some() || ask.paths.is_some() || ask.path.is_some() {
+        return Err(Stop::NotBuilt("random asks"));
+    }
+    if ask.orient.is_some() {
+        return Err(Stop::NotBuilt("`orient`"));
+    }
+    Ok(())
 }
 
 #[cfg(test)]

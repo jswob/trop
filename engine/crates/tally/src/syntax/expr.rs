@@ -4,14 +4,15 @@
 //! Twin: engine/tools/refcore/parser.py (`expr` to `call_args`, `span` to `leg_body`,
 //! `builtin`, `agg`, `calval` to `dayset`, `price`, `type`, `bindlist`, `qid`, `rowkey`).
 //! Invariants: every loop takes a token or ends; each bracket and `if` is counted by `open`;
-//! a construct the engine doesn't build yet stops with `NotBuilt`, never a guessed refusal.
+//! every form of the grammar parses (the reads M0 adds are in `reads.rs`, the pins in `ask.rs`).
 
 use super::lex::Kind;
 use super::parse::{P, Stop, is_keyword};
+use super::reads::{dist_kind, query_fn};
 use super::tree::{
-    AddOp, Agg, AggFn, Bal, Bind, Calendar, CalendarDay, Call, CmpOp, DaySet, Domain, Expr, Field,
-    FieldValue, Flows, In, Key, Leg, Lit, MulOp, Number, OfQ, Postfix, Price, Proj, RowKey, Span,
-    Step, Type, Valuation,
+    AddOp, Agg, AggFn, Bal, Bind, Calendar, CalendarDay, Call, CmpOp, DaySet, DistFnKind, Domain,
+    Expr, Field, FieldValue, Flows, In, Key, Leg, Lit, MulOp, Number, OfQ, Postfix, Price, Proj,
+    RowKey, Span, Step, Type, Valuation,
 };
 use crate::base::Load;
 use crate::num::Num;
@@ -147,20 +148,6 @@ fn cmp_op(text: &str) -> Option<CmpOp> {
         "<=" => Some(CmpOp::Le),
         ">" => Some(CmpOp::Gt),
         ">=" => Some(CmpOp::Ge),
-        _ => None,
-    }
-}
-
-/// The constructs with a production of their own that the engine doesn't build yet.
-fn unbuilt(word: &str) -> Option<&'static str> {
-    match word {
-        "mean" | "share" | "quantile" => Some("queries (mean, share, quantile)"),
-        "low" => Some("low"),
-        "crps" => Some("crps"),
-        "cdf" | "pdf" | "pmf" => Some("cdf, pdf and pmf"),
-        "normal" | "lognormal" | "exponential" | "gamma" | "uniform" | "poisson" | "binomial"
-        | "negbin" | "discrete" => Some("distributions"),
-        "prorata" => Some("prorata"),
         _ => None,
     }
 }
@@ -331,8 +318,30 @@ impl P<'_> {
         Ok(expr)
     }
 
-    /// `post`, inside its recursion count.
+    /// `post`, inside its recursion count. The `as if` nesting it holds is counted on the way:
+    /// an `as if` is one deeper than the deepest inside its expression or its pins (refcore's
+    /// `asif_depth`, L §2.3).
     fn post_inner(&mut self, ends: Ends) -> Result<Expr, Stop> {
+        let outer = self.asif.replace(0);
+        let expr = self.post_plain(ends)?;
+        let inner = self.asif.get();
+        if !(self.at("as", 0) && self.at("if", 1)) {
+            self.asif.set(outer.max(inner));
+            return Ok(expr);
+        }
+        self.skip(2)?;
+        self.asif.set(0);
+        let pins = self.asif_pins()?;
+        let depth = inner
+            .max(self.asif.get())
+            .checked_add(1)
+            .ok_or_else(|| self.cannot("as if nested too deep"))?;
+        self.asif.set(outer.max(depth));
+        Ok(Expr::AsIf(Box::new(expr), pins))
+    }
+
+    /// An atom with its postfixes, then `of` and `to`.
+    fn post_plain(&mut self, ends: Ends) -> Result<Expr, Stop> {
         let mut base = self.atom()?;
         let mut fixes: Vec<Postfix> = Vec::new();
         loop {
@@ -383,9 +392,6 @@ impl P<'_> {
         if ends != Ends::AtTo && self.accept("to")? {
             expr = Expr::To(Box::new(expr), Box::new(self.step_unit()?));
         }
-        if self.at("as", 0) && self.at("if", 1) {
-            return Err(Stop::NotBuilt("as if"));
-        }
         Ok(expr)
     }
 
@@ -419,7 +425,7 @@ impl P<'_> {
     }
 
     /// A key position: `*`, or an expression.
-    fn key_expr(&mut self) -> Result<Key, Stop> {
+    pub(super) fn key_expr(&mut self) -> Result<Key, Stop> {
         if self.accept("*")? {
             return Ok(Key::Star);
         }
@@ -497,7 +503,7 @@ impl P<'_> {
     }
 
     /// `( [expr {, expr}] )`.
-    fn call_args(&mut self) -> Result<Vec<Expr>, Stop> {
+    pub(super) fn call_args(&mut self) -> Result<Vec<Expr>, Stop> {
         self.expect("(")?;
         self.open()?;
         let mut args = Vec::new();
@@ -586,7 +592,7 @@ impl P<'_> {
     }
 
     /// The tokens from `first` to the current one, as written.
-    fn source_text(&self, first: usize) -> String {
+    pub(super) fn source_text(&self, first: usize) -> String {
         let mut text = String::new();
         for (n, tok) in self
             .toks
@@ -752,7 +758,7 @@ impl P<'_> {
     /// A projection's clauses: `from`, `windows`, `random at`, `with uncertain`. The `from`
     /// term counts one depth level, so `bal(x, d) from bal(y, e) from …` is bounded by
     /// `LOAD-DEPTH` (L §2.3, tally 2.1.2).
-    fn proj(&mut self) -> Result<Proj, Stop> {
+    pub(super) fn proj(&mut self) -> Result<Proj, Stop> {
         let from = if self.accept("from")? {
             self.open()?;
             let term = self.post(Ends::Free)?;
@@ -767,13 +773,17 @@ impl P<'_> {
         } else {
             false
         };
-        if self.at("random", 0) && self.at("at", 1) {
-            return Err(Stop::NotBuilt("random at"));
-        }
+        let random = if self.at("random", 0) && self.at("at", 1) {
+            self.skip(2)?;
+            Some(self.rchoice()?)
+        } else {
+            None
+        };
         let uncertain = self.with_uncertain()?;
         Ok(Proj {
             from,
             windows_each,
+            random,
             uncertain,
         })
     }
@@ -796,7 +806,7 @@ impl P<'_> {
     }
 
     /// `MODE`: a rounding code's key token, or a reference.
-    fn mode(&mut self) -> Result<Expr, Stop> {
+    pub(super) fn mode(&mut self) -> Result<Expr, Stop> {
         if self.kind(0) == Some(&Kind::Key) {
             return Ok(Expr::Lit(Lit::Key(self.next()?.text.clone())));
         }
@@ -987,14 +997,23 @@ impl P<'_> {
     }
 
     /// A built-in, `word` directly before `(`.
-    fn builtin(&mut self, word: &str) -> Result<Expr, Stop> {
+    pub(super) fn builtin(&mut self, word: &str) -> Result<Expr, Stop> {
         if let Some(func) = agg_fn(word) {
             return self.agg(func);
         }
-        if let Some(what) = unbuilt(word) {
-            return Err(Stop::NotBuilt(what));
+        if let Some(func) = query_fn(word) {
+            return self.query(func);
+        }
+        if let Some(func) = dist_kind(word) {
+            return self.dist(func);
         }
         match word {
+            "low" => self.low(),
+            "crps" => self.crps(),
+            "cdf" => self.dist_fn(DistFnKind::Cdf),
+            "pdf" => self.dist_fn(DistFnKind::Pdf),
+            "pmf" => self.dist_fn(DistFnKind::Pmf),
+            "prorata" => self.prorata(),
             "bal" => self.bal(),
             "flows" => self.flows(),
             "covered" => self.covered(),
@@ -1040,6 +1059,7 @@ impl P<'_> {
             Proj {
                 from: None,
                 windows_each: false,
+                random: None,
                 uncertain: false,
             }
         } else if self.at("from", 0) {
@@ -1048,6 +1068,7 @@ impl P<'_> {
             Proj {
                 from: None,
                 windows_each: false,
+                random: None,
                 uncertain: self.with_uncertain()?,
             }
         };

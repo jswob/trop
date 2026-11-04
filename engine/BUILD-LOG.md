@@ -670,3 +670,21 @@ move m[p in accounts on d0, f in flats]: transfers
   - check full: "check full: green, 31 steps (504s)".
 
 - 2026-11-04T09:27:28Z CONFIG-CHANGE BLOCKED: source user_settings /Users/jswob/.claude/settings.json (R-81)
+
+## 2026-11-04 M0, G1: the parser reads every form S left out (issue #56)
+
+- **Built:** `syntax/` now parses queries, `low`, `crps`, the distribution functions and distributions, `prorata`, `as if` with pins, axes, fills, a kind's parts clauses, a version's `moves`, a row's `of`, and the ask forms and their clauses. Two new files: `syntax/reads.rs` (reads and `of` rows) and `syntax/ask.rs` (the asks). No `NotBuilt` is left in `syntax/`.
+- **`LOAD-ASIF`:** an `as if` nested deeper than 4 is refused as refcore refuses it (`LOAD-ASIF as if deeper than 4`), counted through parentheses and through pins.
+- **Load:** each new node stops as "not built" in load/, eval/ and ask/ (their exhaustive matches), so nothing new reaches S's runtime. S's gating vectors stay green.
+- **Two changes to match refcore:** a short def's value no longer takes `solve`; an overflow of the depth counter in `enter()` is `ENGINE-INVARIANT`.
+- **Own tests (not gating):** in `tests/parse_cases.rs`, `the_forms_of_milestone_m0_parse` (22 forms, checked against refcore's parse) and `as_if_deeper_than_four_is_refused`.
+- **Corpus check (by hand, not committed):** 68 of T's 69 integration reality folders parse. The one that doesn't is `models-1.0/CMP-01.tally`, a tally 1 model that 2.x syntax refuses by design. It ran on a release build in `tmp/m0/parsecheck`, which was later deleted to free disk space.
+- **Moved to G2, as planned:** token roles and paren positions, which the formatter needs.
+- **No mutants-local:** syntax/, load/, eval/ and ask/ aren't kernel (`tools/kernel.toml`).
+- **The full disk:** the first `check full` failed partway with ENOSPC. The coordinator freed space, every changed file was checked for whole endings, and the rerun below is on that tree.
+- **Totals:**
+  - Green ids: none. `milestone-report: M0: 2/115 green`. M0's tests start at the formatter and at load, so the parser alone doesn't move the count.
+  - Open STOP-REPORTs: none.
+  - Exception delta: +0.
+  - Diff: 22 files, +1 569 −196 in engine/crates (tests +168 −1), against the plan's 2 300 lines for G1, which still included the token roles now in G2. The budget share isn't measured here: the coordinator's meter has it.
+  - check full: "check full: green, 31 steps (691s)".

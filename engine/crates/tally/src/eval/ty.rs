@@ -146,7 +146,14 @@ pub(super) fn sample(m: &Reality, e: &Expr, env: &Env, ctx: Ctx) -> Result<Optio
         | Expr::Flows(_)
         | Expr::Covered(_)
         | Expr::Calendar(_)
-        | Expr::Value(_) => Ok(None),
+        | Expr::Value(_)
+        | Expr::Query(_)
+        | Expr::Low(_)
+        | Expr::Crps(_)
+        | Expr::DistFn(_)
+        | Expr::Dist(_)
+        | Expr::Prorata(_)
+        | Expr::AsIf(..) => Ok(None),
     }
 }
 

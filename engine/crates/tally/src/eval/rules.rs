@@ -297,6 +297,7 @@ impl Engine {
                 let v = self.ev(m, e, env, ctx)?;
                 whole_value(m, &def.ty, v)
             }
+            RuleValue::Solve(_) => Err(Stop::NotBuilt("`solve`")),
         }
     }
 

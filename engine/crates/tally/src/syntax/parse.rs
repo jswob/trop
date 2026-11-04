@@ -13,6 +13,7 @@ use super::tree::{Known, LSpan, Lit, Number, Unit, UnitTerm};
 use crate::base::{Code, Load, Place, Refusal};
 use crate::num::Num;
 use crate::time::Day;
+use std::cell::Cell;
 use std::collections::BTreeSet;
 
 /// Why parsing or a read stopped: a refusal of the spec, a construct the engine doesn't build
@@ -91,8 +92,9 @@ const KEYWORDS: [&str; 49] = [
 /// The deepest an expression may nest (L §2.3, `LOAD-DEPTH`).
 const MAX_DEPTH: u8 = 8;
 
-/// The deepest the parser recurses through reads chained by `from` or `ties by`, which the
-/// spec's depth doesn't count; past it the line is left to a later milestone, never refused.
+/// The deepest the parser's own recursion may go: each level of it is one more level of
+/// L §2.3's depth (a bracket, an `if`, a `from` or a `ties by` term), so `LOAD-DEPTH` (8) is
+/// met first; this count guards the invariant (R-16).
 const MAX_NEST: u8 = 64;
 
 /// Whether a token may have a space before it.
@@ -168,6 +170,10 @@ pub(crate) struct P<'a> {
     nest: u8,
     /// Inside an ask line's `for`: a closing `in ID` names the world (parse rule 4).
     pub(super) ask_for: bool,
+    /// The deepest `as if` nesting met since the count was last reset, shared by the lines
+    /// of one file: a section's nesting is checked once the whole file parses (L §2.3,
+    /// `LOAD-ASIF`).
+    pub(super) asif: &'a Cell<u8>,
 }
 
 impl<'a> P<'a> {
@@ -177,6 +183,7 @@ impl<'a> P<'a> {
         file: &'a str,
         line: u32,
         units: &'a BTreeSet<String>,
+        asif: &'a Cell<u8>,
     ) -> P<'a> {
         P {
             toks,
@@ -187,6 +194,7 @@ impl<'a> P<'a> {
             depth: 0,
             nest: 0,
             ask_for: false,
+            asif,
         }
     }
 
@@ -212,7 +220,7 @@ impl<'a> P<'a> {
 
     /// A parser over another line of this file, after that line's first word.
     pub(super) fn under(&self, line: &'a Line) -> P<'a> {
-        let mut p = P::new(&line.toks, self.file, line.number, self.units);
+        let mut p = P::new(&line.toks, self.file, line.number, self.units, self.asif);
         p.i = 1;
         p
     }
@@ -353,16 +361,19 @@ impl<'a> P<'a> {
         Ok(())
     }
 
-    /// One more level of the parser's own recursion through a chained read.
+    /// One more level of the parser's own recursion. Every nested `post` sits inside one more
+    /// bracket, `if`, `from` or `ties by` term, so `LOAD-DEPTH` refuses long before this count
+    /// is reached (L §2.3, tally 2.1.2); reaching it is an invariant broken, never a refusal.
     pub(super) fn enter(&mut self) -> Result<(), Stop> {
-        self.nest = self.nest.checked_add(1).ok_or(Stop::NotBuilt(
-            "reads chained deeper than the parser counts",
-        ))?;
-        if self.nest > MAX_NEST {
-            return Err(Stop::NotBuilt(
-                "reads chained deeper than the parser counts",
-            ));
-        }
+        let deeper = self.nest.checked_add(1).filter(|nest| *nest <= MAX_NEST);
+        let Some(nest) = deeper else {
+            return Err(Stop::Refused(Refusal::at(
+                Code::EngineInvariant,
+                "the parser recursed past its count, which LOAD-DEPTH bounds (L §2.3)".to_owned(),
+                self.place(),
+            )));
+        };
+        self.nest = nest;
         Ok(())
     }
 

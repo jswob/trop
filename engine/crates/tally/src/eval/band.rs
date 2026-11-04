@@ -168,6 +168,7 @@ impl Engine {
         let expr = match &row.value {
             RuleValue::Hole(text) => return Ok(Value::Hole(Hole::asked(text, figure))),
             RuleValue::Expr(e) => e,
+            RuleValue::Solve(_) => return Err(Stop::NotBuilt("`solve`")),
         };
         let outer = self.holding(Node::new(NodeKind::Band, &band.id));
         let v = self.ev(m, expr, &Env::band(&band.arg, x), ctx);

@@ -44,22 +44,26 @@ pub mod base {
 /// them. The lexer and the parser are the `lexer-parser` area. The module's code is its
 /// files under `syntax/`.
 pub mod syntax {
+    mod ask;
     mod expr;
     mod item;
     mod lex;
     mod parse;
+    mod reads;
     mod tree;
 
     pub use item::parse_reality;
     pub use lex::{Kind, Line, Tok, split_lines};
     pub use parse::Stop;
     pub use tree::{
-        AddOp, Agg, AggFn, Ask, AskBody, Bal, Band, BandRow, Bind, Calendar, CalendarDay, Call,
-        Certainty, CmpOp, DaySet, Def, Domain, Edge, Enter, Expr, Field, FieldValue, File, Flows,
-        Gap, Governs, Header, HeaderKind, In, Index, IndexForm, IndexFrom, Input, InputForm,
-        Instant, Interval, Item, ItemForm, Key, KindDecl, KindSpec, Known, LSpan, LawDate, Leg,
-        Lit, Move, MulOp, Number, OfQ, Order, Place, Postfix, Price, Proj, Residuals, Row, RowKey,
-        Rule, RuleValue, Section, Sign, Source, Span, Step, Type, TypedInput, Unit, UnitDecl,
+        AddOp, Agg, AggFn, Ask, AskBody, Axis, Bal, Band, BandRow, Bind, Calendar, CalendarDay,
+        Call, Certainty, CmpOp, Crps, DaySet, Def, Diff, Dist, DistFn, DistFnKind, DistKind,
+        Domain, Edge, Enter, Expr, Field, FieldValue, File, Fill, Flows, Gap, Governs, Header,
+        HeaderKind, In, Index, IndexForm, IndexFrom, Input, InputForm, Instant, Interval, Item,
+        ItemForm, Key, KindDecl, KindSpec, Known, LSpan, LawDate, Leg, Lit, Low, Move, MulOp,
+        Number, OfQ, OfRow, Order, Orient, PRef, PartsClause, Pin, PinForm, Place, Postfix, Price,
+        Proj, Prorata, Query, QueryFn, RChoice, Residuals, Rest, Row, RowKey, Rule, RuleValue,
+        Section, Sign, Solve, Source, Span, Step, Takes, Type, TypedInput, Unit, UnitDecl,
         UnitForm, UnitTerm, Valuation, Value, Version,
     };
 }

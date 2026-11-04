@@ -230,6 +230,232 @@ pub enum Expr {
     Calendar(Box<Calendar>),
     /// `value(x, d) in CUR [by p] [of q]`.
     Value(Box<Valuation>),
+    /// A query: `mean`, `share` or `quantile` (L §5.11, §5.16).
+    Query(Box<Query>),
+    /// `low(x, span)` with its projection's clauses (L §5.14.1).
+    Low(Box<Low>),
+    /// `crps(…)`, a forecast's score (L §5.15).
+    Crps(Box<Crps>),
+    /// `cdf`, `pdf` or `pmf` of a random value at a point (L §5.16).
+    DistFn(Box<DistFn>),
+    /// A distribution (L §5.16).
+    Dist(Box<Dist>),
+    /// `prorata(…)` (L §5.13).
+    Prorata(Box<Prorata>),
+    /// `e as if {pins}` (L §5.11, parse rule 2).
+    AsIf(Box<Expr>, Vec<Pin>),
+}
+
+/// Which query (L §5.11, §5.16).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum QueryFn {
+    /// `mean`.
+    Mean,
+    /// `share`.
+    Share,
+    /// `quantile`.
+    Quantile,
+}
+
+/// `mean(e for binds)`, `share(e where c)`, `quantile(e …, q)`: over keys with `for`, else a
+/// random value's query (L §2.3 `query`).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Query {
+    /// Which query.
+    pub func: QueryFn,
+    /// Its argument.
+    pub arg: Expr,
+    /// `for` and its bindings: a query over keys.
+    pub binds: Option<Vec<Bind>>,
+    /// `where c`.
+    pub filter: Option<Expr>,
+    /// A quantile's level.
+    pub level: Option<Expr>,
+}
+
+/// `low(x, span)` and its projection's clauses.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Low {
+    /// The place.
+    pub place: Expr,
+    /// The span.
+    pub span: Span,
+    /// The projection's clauses.
+    pub proj: Proj,
+}
+
+/// `crps(e [weight w] for bind, y)` or `crps(e, y)` (L §2.3 `crps`).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Crps {
+    /// The forecast.
+    pub forecast: Expr,
+    /// `weight w`.
+    pub weight: Option<Expr>,
+    /// `for bind`.
+    pub bind: Option<Bind>,
+    /// The outcome.
+    pub outcome: Expr,
+}
+
+/// Which distribution function.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum DistFnKind {
+    /// `cdf`.
+    Cdf,
+    /// `pdf`.
+    Pdf,
+    /// `pmf`.
+    Pmf,
+}
+
+/// `cdf(e, x)`, `pdf(e, x)`, `pmf(e, x)`.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct DistFn {
+    /// Which function.
+    pub func: DistFnKind,
+    /// The random value.
+    pub value: Expr,
+    /// The point.
+    pub at: Expr,
+}
+
+/// Which distribution (L §5.16).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum DistKind {
+    /// `normal`.
+    Normal,
+    /// `lognormal`.
+    Lognormal,
+    /// `exponential`.
+    Exponential,
+    /// `gamma`.
+    Gamma,
+    /// `uniform`.
+    Uniform,
+    /// `poisson`.
+    Poisson,
+    /// `binomial`.
+    Binomial,
+    /// `negbin`.
+    Negbin,
+    /// `discrete(e for bind)`.
+    Discrete,
+}
+
+/// A distribution: `normal(a, b)` and the like, or `discrete(e for bind)`.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Dist {
+    /// Which distribution.
+    pub func: DistKind,
+    /// Its arguments (none for `discrete`).
+    pub args: Vec<Expr>,
+    /// `discrete`'s term.
+    pub term: Option<Expr>,
+    /// `discrete`'s binding.
+    pub bind: Option<Bind>,
+}
+
+/// What `prorata` does with the rest (L §5.13).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Rest {
+    /// `rest none`.
+    None,
+    /// `rest last`.
+    Last,
+    /// `rest largest`.
+    Largest,
+}
+
+/// `prorata(total, w for binds, k, u, MODE, rest none|last)` or
+/// `prorata(total, w for binds, k, u, rest largest [ties by …])` (L §2.3 `prorata`).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Prorata {
+    /// The total shared.
+    pub total: Expr,
+    /// The weight.
+    pub weight: Expr,
+    /// The bindings the weight runs over.
+    pub binds: Vec<Bind>,
+    /// The key whose share is read.
+    pub key: Expr,
+    /// The unit the shares round to.
+    pub unit: Step,
+    /// The rounding mode, unless the rest goes to the largest.
+    pub mode: Option<Expr>,
+    /// Where the rest goes.
+    pub rest: Rest,
+    /// `ties by` after `rest largest`.
+    pub ties: Option<Vec<Expr>>,
+}
+
+/// A random clause's choice, `random at mean` or `random at quantile(q)` (L §5.16).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum RChoice {
+    /// `mean`.
+    Mean,
+    /// `quantile(q)`.
+    Quantile(Expr),
+}
+
+/// A pin of an ask or an `as if` (L §2.3 `pin`).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Pin {
+    /// What it pins.
+    pub form: PinForm,
+    /// The pin as written, for the register.
+    pub text: String,
+}
+
+/// What a pin pins.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum PinForm {
+    /// `law e`.
+    Law(Expr),
+    /// `known e`.
+    Known(Expr),
+    /// `wording e for [ids]`.
+    Wording(Expr, Vec<String>),
+    /// `scenario s`.
+    Scenario(String),
+    /// `pref = e`, or `sample pref = e`; `ID = key` sets an axis's option.
+    Set {
+        /// What is pinned.
+        target: PRef,
+        /// Its value.
+        value: Expr,
+        /// Whether `sample` was written.
+        sample: bool,
+    },
+}
+
+/// A pinned reference: `ID [["." ID] "[" pk {"," pk} "]"] {"." FIELD}`.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct PRef {
+    /// The id.
+    pub id: String,
+    /// The member, `a.x[k]`.
+    pub qual: Option<String>,
+    /// Its keys, `*` for every key there.
+    pub keys: Option<Vec<Key>>,
+    /// Its fields.
+    pub fields: Vec<String>,
+}
+
+/// `solve f == g for x in [lo, hi] to u` (L §5.18).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Solve {
+    /// The left side.
+    pub left: Expr,
+    /// The right side.
+    pub right: Expr,
+    /// What is solved for.
+    pub target: Expr,
+    /// The bracket's low end.
+    pub lo: Lit,
+    /// The bracket's high end.
+    pub hi: Lit,
+    /// The precision.
+    pub unit: Step,
 }
 
 /// `value(x, d) in CUR [by p] [of q]`: a place's holding valued in a currency (L §2.3 `valuex`).
@@ -308,6 +534,8 @@ pub struct Proj {
     pub from: Option<Expr>,
     /// `windows each`.
     pub windows_each: bool,
+    /// `random at …`.
+    pub random: Option<RChoice>,
     /// `with uncertain`.
     pub uncertain: bool,
 }
@@ -594,6 +822,50 @@ pub enum Section {
     Move(Box<Move>),
     /// `ask`.
     Ask(Box<Ask>),
+    /// `axis`.
+    Axis(Box<Axis>),
+    /// `fill`.
+    Fill(Box<Fill>),
+}
+
+/// `axis id` and its options, each a key and its label (L §5.5).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Axis {
+    /// Its id.
+    pub id: String,
+    /// Its options, in the order written: the key and its label.
+    pub options: Vec<(String, String)>,
+    /// Its line.
+    pub line: u32,
+}
+
+/// `fill id [binds]` and its lines (L §5.12).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Fill {
+    /// Its id.
+    pub id: String,
+    /// Its key binds.
+    pub binds: Vec<Bind>,
+    /// `v V`.
+    pub v: Option<String>,
+    /// Notes.
+    pub notes: Vec<String>,
+    /// `supply e`.
+    pub supply: Expr,
+    /// The supply's bindings.
+    pub supply_binds: Vec<Bind>,
+    /// `demand e`.
+    pub demand: Expr,
+    /// The demand's bindings.
+    pub demand_binds: Vec<Bind>,
+    /// `arc e`.
+    pub arc: Expr,
+    /// `order e, …`.
+    pub order: Vec<Expr>,
+    /// `ties by` after the order.
+    pub ties: Option<Vec<Expr>>,
+    /// Its line.
+    pub line: u32,
 }
 
 /// `source id "title" [at "address"]`.
@@ -691,8 +963,45 @@ pub struct KindDecl {
     pub attrs: Vec<(String, Type)>,
     /// Notes.
     pub notes: Vec<String>,
+    /// The parts clauses, each with its line, in the order written (L §3.6, §5.7).
+    pub parts: Vec<(PartsClause, u32)>,
     /// Its line.
     pub line: u32,
+}
+
+/// A parts clause of a place kind (L §2.3 `kline`, §3.6).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum PartsClause {
+    /// `owned by D [ties by …]`: the arrival rule D.
+    Owned {
+        /// The arrival rule.
+        rule: String,
+        /// `ties by`.
+        ties: Option<Vec<Expr>>,
+    },
+    /// `batched`.
+    Batched,
+    /// `step UNIT`.
+    Step(Step),
+    /// `takes K for W [v V] (order e, … [prorata [ties by …]] | prorata [ties by …])`.
+    Takes(Box<Takes>),
+}
+
+/// A `takes` clause: which part an outflow takes, in which order (L §3.6).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Takes {
+    /// The bound part.
+    pub part: String,
+    /// The bound outflow.
+    pub outflow: String,
+    /// `v V`.
+    pub v: Option<String>,
+    /// `order e, …`.
+    pub order: Vec<Expr>,
+    /// Whether `prorata` was written.
+    pub prorata: bool,
+    /// `ties by` after `prorata`.
+    pub ties: Option<Vec<Expr>>,
 }
 
 /// An index's form (L §2.3 `index`).
@@ -834,6 +1143,8 @@ pub enum LawDate {
 /// A rule's value: an expression or a stated hole.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum RuleValue {
+    /// `solve …`, in a rule with `v` (L §5.18).
+    Solve(Box<Solve>),
     /// An expression.
     Expr(Expr),
     /// `?"…"`.
@@ -931,6 +1242,40 @@ pub enum AskBody {
     Exprs(Vec<Expr>),
     /// `residuals x span [by id]`.
     Residuals(Box<Residuals>),
+    /// `explain ref`, `explain bal(…)`, `explain low(…)` (L §5.18).
+    Explain(Expr),
+    /// `inputs-of ref`.
+    InputsOf(Expr),
+    /// `readers-of ref`.
+    ReadersOf(Expr),
+    /// `check a == b`.
+    Check(Expr, Expr),
+    /// `solve …`.
+    Solve(Box<Solve>),
+    /// `diff(e [for binds]) in s against b`.
+    Diff(Box<Diff>),
+}
+
+/// `diff(e [for binds]) in s against b` (L §5.18, §6.4).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Diff {
+    /// The value compared.
+    pub expr: Expr,
+    /// Its bindings.
+    pub binds: Vec<Bind>,
+    /// The world compared.
+    pub world: String,
+    /// The world it is compared against.
+    pub against: String,
+}
+
+/// An ask's `orient` clause (L §5.15).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Orient {
+    /// `orient lower`.
+    Lower,
+    /// `orient higher`.
+    Higher,
 }
 
 /// `residuals x span [by id]`.
@@ -955,6 +1300,8 @@ pub struct Ask {
     pub binds: Vec<Bind>,
     /// `in world`.
     pub world: Option<String>,
+    /// `with` pins.
+    pub pins: Vec<Pin>,
     /// `law e`.
     pub law: Option<Expr>,
     /// `as known e`.
@@ -963,8 +1310,16 @@ pub struct Ask {
     pub windows_each: bool,
     /// `with uncertain`.
     pub uncertain: bool,
+    /// `random at …`.
+    pub random: Option<RChoice>,
+    /// `paths N seed S`.
+    pub paths: Option<(Num, Num)>,
+    /// `path P`.
+    pub path: Option<Num>,
     /// `partial`.
     pub partial: bool,
+    /// `orient lower|higher`.
+    pub orient: Option<Orient>,
     /// Its line.
     pub line: u32,
 }
@@ -1003,8 +1358,20 @@ pub enum Value {
     Days(DaySet),
     /// A signed literal.
     Lit(Lit),
+    /// A distribution, with its `to u` if written (L §5.16): an `Expr::Dist`, or an
+    /// `Expr::To` around one.
+    Dist(Expr),
     /// An expression (a scenario's row).
     Expr(Expr),
+}
+
+/// A reading row's `of`: a party, a batch, or the pair (L §2.3 `ofrow`, §5.19).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum OfRow {
+    /// One reference, `of ana`.
+    One(Expr),
+    /// `of (ana, b1)`.
+    Pair(Expr, Expr),
 }
 
 /// A reading's instant (L §4.6).
@@ -1034,6 +1401,8 @@ pub struct Row {
     pub target: String,
     /// Its keys.
     pub keys: Option<Vec<RowKey>>,
+    /// `of q`: the parts a reading states (L §5.19).
+    pub of: Option<OfRow>,
     /// Its value.
     pub value: Value,
     /// `assumed "…"`.
@@ -1158,6 +1527,8 @@ pub struct Version {
     pub enters: Option<Day>,
     /// `assumed`.
     pub assumed: Option<String>,
+    /// `moves V to span`, each the version moved and its new span (L §5.3).
+    pub moves: Vec<(Expr, LSpan)>,
     /// `covers`.
     pub covers: Vec<(Expr, Option<LSpan>)>,
     /// `pad` and `anchor`.

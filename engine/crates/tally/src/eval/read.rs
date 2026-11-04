@@ -626,6 +626,7 @@ pub(super) fn convert(
         Written::Calendar(cal) => calendar_value(cal)?,
         Written::Days(_) => return Err(Stop::NotBuilt("a window as a row's value")),
         Written::Expr(_) => return Err(Stop::NotBuilt("a scenario's expression row")),
+        Written::Dist(_) => return Err(Stop::NotBuilt("distributions")),
     };
     Ok(Converted::Value(v))
 }

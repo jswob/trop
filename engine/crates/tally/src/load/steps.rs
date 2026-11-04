@@ -294,6 +294,8 @@ pub(super) fn section_id(section: &Section) -> (&str, u32) {
         Section::Def(s) => (&s.id, s.line),
         Section::Move(s) => (&s.id, s.line),
         Section::Ask(s) => (&s.id, s.line),
+        Section::Axis(s) => (&s.id, s.line),
+        Section::Fill(s) => (&s.id, s.line),
     }
 }
 
@@ -311,5 +313,7 @@ fn section_kind(section: &Section) -> NameKind {
         Section::Def(_) => NameKind::Def,
         Section::Move(_) => NameKind::Move,
         Section::Ask(_) => NameKind::Ask,
+        Section::Axis(_) => NameKind::Axis,
+        Section::Fill(_) => NameKind::Fill,
     }
 }

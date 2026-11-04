@@ -384,7 +384,8 @@ fn row_things(m: &Reality, value: &Written, ty: &Ty, out: &mut Vec<String>) {
         | Written::Str(_)
         | Written::Calendar(_)
         | Written::Days(_)
-        | Written::Expr(_) => {}
+        | Written::Expr(_)
+        | Written::Dist(_) => {}
     }
 }
 
