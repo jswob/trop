@@ -1,0 +1,42 @@
+model g6_refusal_keys
+  tally 2
+  on 2025-12-31
+  start 2025-01-01
+  end 2025-12-31
+  note "T, issue #55, G6: which refusal a place keeps (E §4.1, E §4.2 step 4; tally 2.1.2's text order, #57 asks the spec): one plan move m of two keys, a place and a flat of a list index, with two instances on one day, m[x, f3] and m[y, f11], each a leg into gone after its lifespan ends (RUN-LIFESPAN), both refused at src. The legs are booked in their order's text, keys quoted, where m[x, f3]'s sorts first, so bal(src) prints m[x, f3].cash. Its twin's m[x, f3] is a leg of 0, so m[y, f11].cash refuses alone."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit DUK: currency minor 0.01
+
+index flats = [f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11]
+
+input amt: money DUK
+
+input d0: date
+
+place src: accounts DUK lives 2025-01-01..
+
+place gone: accounts DUK lives 2025-01-01..2025-01-05
+
+place x: accounts DUK lives 2025-01-01..
+
+place y: accounts DUK lives 2025-01-01..
+
+move m[p in accounts on d0, f in flats]: transfers
+  on d0
+  when (p == x and pos(f) == 3) or (p == y and pos(f) == 11)
+  leg cash from src to gone amount amt
+
+ask q: bal(src, 2025-01-31)
+
+version facts
+  cite fixture
+  governs always
+  known 2025-01-01
+  amt = 1.00 DUK
+  d0 = 2025-01-10
+  opening[src] = 500.00 DUK at 2025-01-01 start
+  opening[gone] = 0 DUK at 2025-01-01 start
+  opening[x] = 0 DUK at 2025-01-01 start
+  opening[y] = 0 DUK at 2025-01-01 start

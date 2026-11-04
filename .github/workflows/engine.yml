@@ -241,18 +241,18 @@ jobs:
         working-directory: engine
         run: cargo mutants --list -C=--locked
 
-  # eight shards, round-robin: mutant i runs on shard i % 8, so each file's slow mutants
+  # sixteen shards, round-robin: mutant i runs on shard i % 16, so each file's slow mutants
   # spread over every shard. Each mutant's tests run under the memory cap
   # (engine/.config/nextest.toml, tools/test-memcap; issue #40)
   mutants:
-    name: mutants ${{ matrix.shard }}/8
+    name: mutants ${{ matrix.shard }}/16
     needs: mutants-baseline
     runs-on: ubuntu-latest
     timeout-minutes: 240
     strategy:
       fail-fast: false
       matrix:
-        shard: [0, 1, 2, 3, 4, 5, 6, 7]
+        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
@@ -263,7 +263,7 @@ jobs:
         working-directory: engine
         run: *install
       # the gate run is fresh (R-88): no cached outcomes, a fixed proptest seed, no retries
-      - name: cargo mutants, shard ${{ matrix.shard }} of 8
+      - name: cargo mutants, shard ${{ matrix.shard }} of 16
         working-directory: engine
         env:
           PROPTEST_RNG_SEED: '20261022'
@@ -274,7 +274,7 @@ jobs:
           targets="$(tools/milestones args --mutants)"
           code=0
           # shellcheck disable=SC2086 # one word per target
-          cargo mutants -C=--locked $targets --no-shuffle --shard ${{ matrix.shard }}/8 --sharding round-robin --baseline skip --timeout 300 --build-timeout 600 --output shard-${{ matrix.shard }} || code=$?
+          cargo mutants -C=--locked $targets --no-shuffle --shard ${{ matrix.shard }}/16 --sharding round-robin --baseline skip --timeout 300 --build-timeout 600 --output shard-${{ matrix.shard }} || code=$?
           [ "$code" -eq 0 ] || [ "$code" -eq 2 ] || [ "$code" -eq 3 ]
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
@@ -296,7 +296,7 @@ jobs:
       - name: Every survivor is listed with its reason, and no listed one is caught now (R-87)
         run: |
           shards="$(find engine/target/mutants -mindepth 1 -maxdepth 1 -name 'mutants-shard-*' | wc -l)"
-          [ "$shards" -eq 8 ] || { echo "mutants-survivors: $shards of 8 shards' artifacts"; exit 1; }
+          [ "$shards" -eq 16 ] || { echo "mutants-survivors: $shards of 16 shards' artifacts"; exit 1; }
           engine/tools/mutants-survivors engine/target/mutants/mutants-shard-*
 
   coverage:

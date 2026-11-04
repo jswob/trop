@@ -137,7 +137,10 @@ mod tests {
     /// `when` that holds, fails, is a hole and is refused; an attribute refused; an uncertain
     /// kind with and without `with uncertain`; legs in money and units, of a kind of unit
     /// `any`, and of 0; money in two declared currencies on a leg of unit kind `currencies`
-    /// beside a leg whose unit is the currency itself (tally 2.1.2, #43) (`kernel/g6/`).
+    /// beside a leg whose unit is the currency itself (tally 2.1.2, #43); which refusal a
+    /// place keeps when two of a day's plan legs refuse there, in the order's text (moves `a`
+    /// and `ab`; one move's keys `[x, f3]` and `[y, f11]`), each beside a twin where one leg
+    /// refuses alone (#55; #57 asks the spec) (`kernel/g6/`).
     #[test]
     fn s_kernel_g6_plan_pass() {
         group_holds("g6");
