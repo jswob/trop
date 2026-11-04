@@ -631,3 +631,40 @@ move m[p in accounts on d0, f in flats]: transfers
   Not chosen: listing the 4 as `R-87: missed: open:` like rows 124 and 126. That would green gate 8 without a test, and the brief's case 3 says stop.
 - **State:** Last green commit 5752953 (master); nothing uncommitted but this report. #53 items 1, 2, 4 and 5 are not started (item 3 waits on this ruling).
 - **Resolved 2026-11-04.** The user ruled "Both: T now, spec later". T's 4c45536 adds g6/refusal_order and g6/refusal_keys, each with its twin, as s_kernel vectors with refcore's bytes; the spec question is #57. T's `mutants-local -F 'Order::text|quoted|schedule_plan'` on `plan.rs` and `agenda.rs` caught the 4 #55 survivors and rows 124 and 126, which leave `MUTANTS-SURVIVORS.md` in the next commit. Its 13 missed are all listed rows (112, 121, 122, 125, 127, 163, 164, 176–180). The text rank stays until #57 rules.
+
+## 2026-11-04 cleanup after 2.1.2: #55 green, #53 items 1, 2, 4 and 5 (build/cleanup-2.1.2)
+
+- **#55:** a test gap (the STOP-REPORT above). T's 4c45536 adds the vectors, and rows 124 and 126 left in 68535be. Gate 8's score is in the PR, from the dispatched nightly.
+- **#53.1 (311a904, ffb989b):**
+  - `eval::field_literal` is now one rule for the literal a record field states, shared by `convert_record` and `row_things`. strata.rs's `field_lit` and its dead `Written::List` arm are gone.
+  - Not a walk of `convert_row`'s `Value`, as #53 suggested: that refuses (`NotBuilt`) a record whose field is a hole or an expression, where WARN-UNREAD's walk names nothing, and R-66 forbids dropping that error.
+  - The field lookup stays two. `row_things` takes the first same-named field holding a literal; `convert_record` takes the first same-named field. They differ only for a repeated field, which refcore refuses at load and the engine doesn't (#64).
+  - eval/ and load/ aren't kernel, so no mutants-local.
+- **#53.2 (c405627):**
+  - `Engine::chain` is the one loop over a projection's base walks: at most as many links as walks, `ENGINE-INVARIANT` past that. `chain_run`, `walk_chain` and `chain_refusal` read it.
+  - `walk_chain`'s two R-87 equivalent rows (`replace > with ==`, `replace > with >=`) left.
+  - mutants-local -F 'Engine::(walk_)?chain' on walk/reads.rs: 16 tested, 10 caught, 6 unviable, 0 missed.
+  - Its check full ran with #53.4's edit already in the tree, made seconds after the run began. #53.4's own run then passed on the tree holding both.
+- **#53.3 left, as ruled:**
+  - The text rank stays: g6/refusal_order and g6/refusal_keys pin it until #57.
+  - `Order::cmp` and `Term::cmp` aren't merged, because they differ where a hole day meets 9999-12-31. `Order::cmp` puts the hole day after it; `term()` makes the hole day `Day::LAST` and goes on to the stratum. A merge could change which one decides there.
+  - Also, `term()` can fail, and a `sort_by` comparator can't carry that without precomputed keys.
+- **#53.4 (5325aba):**
+  - `mv_field` names `"day" | "adjusts"` once: the refused adjustment's check moves into the absorb's `Adj` arm, in the same order.
+  - mutants-local -F 'mv_field' on book/members.rs: 6 tested, 5 caught, 1 unviable, 0 missed.
+- **#53.5 (981b697):** headers, comments only.
+  - book/adjust.rs: refused and hole adjustments (E §5 steps 1–5, L §8.4); Twin adds `step_legs` and `adjust_made`.
+  - walk/day.rs: Twin adds `reading_group` and `sign_anchor`.
+  - book/reading.rs: §5.10's sign rule at the reading's own place, and E §4.2 step 5.
+- **#53.6 left:** advisory counts walk/day.rs at 893 code lines (1 055 with comments and blanks), under R-127's 1 000. Five other files are over it: #63.
+- **engine-reviewer** (once, read-only, the whole diff): no blocking finding. Its four nits:
+  - the strata.rs doc: fixed in ffb989b;
+  - the two field lookups: above, and #64;
+  - `chain()` allocates a `Vec` per call, now once per instance in `decision_runs` and on every `leg_refused`. Count budgets stay green in check full, so it's left. If a budget row asks, the fix is hoisting `self.chain(id)?` out of `decision_runs`' loop;
+  - this entry.
+- **No file split**, so nothing for ARCHITECTURE.md.
+- **Totals:**
+  - Open STOP-REPORTs: none.
+  - Exception delta: +0.
+  - Diff: 9 files, +87 −97 in engine/crates and MUTANTS-SURVIVORS.md.
+  - check full: "check full: green, 31 steps (504s)".
