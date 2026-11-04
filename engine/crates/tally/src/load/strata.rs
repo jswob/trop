@@ -360,8 +360,8 @@ fn named_places(m: &Reality, read: &BTreeSet<&Node>) -> BTreeSet<String> {
 
 /// The things a row's written value names where its type takes a thing of a kind: the value
 /// itself or a record's fields, each literal read as a read converts it, never refused here
-/// (refcore's `values_naming` over `convert_value`). No declared type is a list, so a list
-/// row names none. L §8.5, §4.2.
+/// (refcore's `values_naming` over `convert_value`). A list row is a `dates` value, its
+/// items days, so it names none. L §8.5, §4.2, §3.1.
 fn row_things(m: &Reality, value: &Written, ty: &Ty, out: &mut Vec<String>) {
     match value {
         Written::Lit(lit) => out.extend(thing_of(m, lit, ty)),
