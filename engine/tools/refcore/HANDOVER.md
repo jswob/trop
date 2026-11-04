@@ -9,9 +9,9 @@ interpreter doesn't build refuses `REFCORE-NOT-YET <construct>`. Nothing may cra
 
 ## tally 2.1.3 (M0's spec patch: issues #58, #59, #60)
 
-The spec patch tally 2.1.3 (`spec/CHANGES.md` 2.1.3-1 onward), the user's rulings of 2026-11-04 on T's STOP-REPORTs
-SR-1, SR-2 and SR-4 for M0 (#56). Each fix's new tests were seen failing on tally 2.1.2's refcore first (their twins
-pass on both).
+The spec patch tally 2.1.3 (`spec/CHANGES.md` 2.1.3-1 to 2.1.3-4), the user's rulings of 2026-11-04 on T's
+STOP-REPORTs SR-1, SR-2 and SR-4 for M0 (#56). Each fix's new tests were seen failing on tally 2.1.2's refcore first
+(their twins pass on both). **1165 tests, all pass** (1152, none changed, 13 new); through `refcore_fast` too.
 
 - **An unknown ask is `REQ-ASK` (E §11, #58).** `ask.knows_ask` says whether a request's id names an ask of the
   loaded reality: its asks (refused alone or not), or a member's `a.q` as `Asker.member_ask` finds it (the member's
