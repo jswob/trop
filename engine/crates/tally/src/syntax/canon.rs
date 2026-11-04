@@ -283,7 +283,7 @@ impl Printer {
         Ok(vec![
             Val::Text(rule.label.clone()),
             v,
-            rule_span(rule),
+            rule_span(file, rule),
             ascii_key(rule_text(&line.toks)?),
         ])
     }
@@ -329,7 +329,7 @@ impl Printer {
                 Val::Int(1),
                 Val::Text(target(qual.as_deref(), def)),
                 Val::Tup(vec![Val::Int(0)]),
-                rule_span(rule),
+                rule_span(file, rule),
                 ascii_key(item_text(item, line)?),
             ]),
             ItemForm::Same(pair) => self.same_key(&pair.0, item, line, &place),
@@ -340,7 +340,7 @@ impl Printer {
             ItemForm::Row(row) => {
                 let keys: Vec<KeyRef> = row.keys.iter().flatten().map(row_key).collect();
                 let mut comps = self.keyed(row.qual.as_deref(), &row.target, &keys, &place)?;
-                comps.push(span_key(row.governs.as_ref(), row.instant.as_ref()));
+                comps.push(span_key(row.governs.as_ref(), row.instant.as_ref(), &place));
                 comps.push(ascii_key(item_text(item, line)?));
                 Ok(comps)
             }
@@ -432,10 +432,14 @@ fn target(qual: Option<&str>, name: &str) -> String {
     }
 }
 
-/// A rule's span component, by its own `governs`.
-fn rule_span(rule: &Rule) -> Val {
+/// A rule's span component, by its own `governs`, at its line of `file`.
+fn rule_span(file: &str, rule: &Rule) -> Val {
     let governs = rule.governs.clone().map(Governs::Span);
-    span_key(governs.as_ref(), None)
+    span_key(
+        governs.as_ref(),
+        None,
+        &Place::Line(file.to_owned(), rule.line),
+    )
 }
 
 /// Whether a long def's one rule prints in the short form: labelled `base`, with no `v`, no

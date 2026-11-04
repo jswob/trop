@@ -9,7 +9,7 @@
 
 #[cfg(test)]
 mod tests {
-    use tally::syntax::printed_hash;
+    use tally::syntax::{Stop, printed_hash};
     use tally::{Given, format_file, reprint};
 
     /// Written off its canonical form: sections out of order, extra parentheses, an unsorted
@@ -85,6 +85,27 @@ version v
             printed_hash(&printed),
             "5f77af543e6f528885de7eed0709f1f613afebf24486750ab0cf8ac1e17c8cff",
             "refcore's sha256 line"
+        );
+    }
+
+    /// The `format` fuzz target's finding (the rules step, 2026-11-04): a row governing from a
+    /// key, ordered against a row governing from a year. refcore's reprint can't compare the
+    /// two (REFCORE-NOT-YET); its loader refuses the key as no date or period.
+    #[test]
+    fn a_span_start_that_is_no_date_is_refused_as_load_refuses_it() {
+        let text = "part f0\n  tally 2\n\nversion v\n  cite s\n  known 2027-01-20\n  x[c] = 0 governs 2026\n  x[c] = 1 governs ab\n";
+        let Err(Stop::Refused(refusal)) = format_file(text.as_bytes()) else {
+            panic!("a LOAD-* refusal");
+        };
+        assert_eq!(
+            refusal.text(),
+            "LOAD-PARSE cannot parse: expected a date or a period, got ab (input:8)",
+            "load's refusal of the row, at its line"
+        );
+        let one = "part f0\n  tally 2\n\nversion v\n  cite s\n  known 2027-01-20\n  x[c] = 1 governs ab\n";
+        assert!(
+            format_file(one.as_bytes()).is_ok(),
+            "alone, the row needs no order and reprints, as in refcore"
         );
     }
 

@@ -11,6 +11,7 @@
 //! `ENGINE-INVARIANT`, where refcore would crash); a member's key is compared by text only when
 //! two are equal, otherwise its order waits for joint models (G9).
 
+use super::lex::cannot;
 use super::parse::Stop;
 use super::tree::{Bind, Domain, File, Governs, IndexForm, Instant, Known, Lit, RowKey, Section};
 use crate::base::{Code, Load, Place, Refusal};
@@ -30,8 +31,9 @@ pub(super) enum Val {
     Day(Day),
     /// An exact number.
     Num(Num),
-    /// No day: a span's start that is no date.
-    Nothing,
+    /// No day: a span's start that is no date, with the refusal its comparison with a day
+    /// meets (refcore's reprint can't order it; its loader refuses it).
+    Nothing(Box<Refusal>),
     /// A tuple, compared position by position, the shorter first.
     Tup(Vec<Val>),
     /// Sorted in reverse: a range's last key (the wider range first).
@@ -224,21 +226,29 @@ pub(super) fn known_day(known: Known) -> Day {
     }
 }
 
-/// A day as a component, or nothing.
-fn day_val(day: Option<Day>) -> Val {
-    day.map_or(Val::Nothing, Val::Day)
+/// A literal's first day as a component; a literal that is no date or period is `Nothing`,
+/// carrying the refusal load gives it (`LOAD-PARSE … expected a date or a period`, refcore's
+/// loader), met only if the order compares it with a day.
+fn day_val(lit: &Lit, place: &Place) -> Val {
+    match first_day(lit) {
+        Some(day) => Val::Day(day),
+        None => Val::Nothing(Box::new(cannot(
+            &format!("expected a date or a period, got {}", lit.text()),
+            place.clone(),
+        ))),
+    }
 }
 
 /// The span component (L §2.4, round 19, GD-24): a row with no span of its own first, then a
 /// span with no start (a row governing always among them), then by start; a row read `after m`
 /// after the dated ones; an instant by its day, a day's start before its end. A rule's own
-/// span comes as `Governs::Span`.
-pub(super) fn span_key(gov: Option<&Governs>, instant: Option<&Instant>) -> Val {
+/// span comes as `Governs::Span`; `place` is the row's or the rule's line.
+pub(super) fn span_key(gov: Option<&Governs>, instant: Option<&Instant>, place: &Place) -> Val {
     match (gov, instant) {
         (Some(Governs::Always), _) => Val::Tie(1, Vec::new()),
         (Some(Governs::Span(span)), _) => match &span.from {
             None => Val::Tie(1, Vec::new()),
-            Some(from) => Val::Tie(2, vec![day_val(first_day(from))]),
+            Some(from) => Val::Tie(2, vec![day_val(from, place)]),
         },
         (None, Some(Instant::After(_))) => Val::Tie(3, Vec::new()),
         (None, Some(Instant::At(day, edge))) => {
@@ -295,18 +305,18 @@ fn key_at(key: &Lit, order: &KeyOrder, place: &Place) -> Result<Val, Stop> {
                 place.clone(),
             ))),
         },
-        KeyOrder::Value => Ok(key_value(key)),
+        KeyOrder::Value => Ok(key_value(key, place)),
         KeyOrder::Text | KeyOrder::Member => Ok(Val::Tup(vec![Val::Int(2), Val::Text(text)])),
     }
 }
 
 /// A key by value: numbers, then dates, then text.
-fn key_value(key: &Lit) -> Val {
-    let first = |day: Option<Day>| Val::Tup(vec![Val::Int(1), day_val(day)]);
+fn key_value(key: &Lit, place: &Place) -> Val {
     match key {
         Lit::Num(n) => Val::Tup(vec![Val::Int(0), Val::Num(n.value.clone())]),
-        Lit::Day(day) => first(Some(*day)),
-        Lit::Month(..) | Lit::Quarter(..) => first(first_day(key)),
+        Lit::Day(_) | Lit::Month(..) | Lit::Quarter(..) => {
+            Val::Tup(vec![Val::Int(1), day_val(key, place)])
+        }
         Lit::MonthDay(..)
         | Lit::Key(_)
         | Lit::Cur(_)
@@ -334,7 +344,7 @@ pub(super) fn compare(left: &Val, right: &Val) -> Result<Ordering, Stop> {
             Val::Text(_)
             | Val::Day(_)
             | Val::Num(_)
-            | Val::Nothing
+            | Val::Nothing(_)
             | Val::Tup(_)
             | Val::Rev(_)
             | Val::Keys(_)
@@ -346,7 +356,7 @@ pub(super) fn compare(left: &Val, right: &Val) -> Result<Ordering, Stop> {
             Val::Int(_)
             | Val::Day(_)
             | Val::Num(_)
-            | Val::Nothing
+            | Val::Nothing(_)
             | Val::Tup(_)
             | Val::Rev(_)
             | Val::Keys(_)
@@ -355,21 +365,21 @@ pub(super) fn compare(left: &Val, right: &Val) -> Result<Ordering, Stop> {
         },
         Val::Day(one) => match right {
             Val::Day(other) => Some(one.number().cmp(&other.number())),
+            Val::Nothing(why) => return Err(Stop::Refused((**why).clone())),
             Val::Int(_)
             | Val::Text(_)
             | Val::Num(_)
-            | Val::Nothing
             | Val::Tup(_)
             | Val::Rev(_)
             | Val::Keys(_)
             | Val::Tie(..)
             | Val::Member(_) => None,
         },
-        Val::Nothing => match right {
-            Val::Nothing => Some(Ordering::Equal),
+        Val::Nothing(why) => match right {
+            Val::Nothing(_) => Some(Ordering::Equal),
+            Val::Day(_) => return Err(Stop::Refused((**why).clone())),
             Val::Int(_)
             | Val::Text(_)
-            | Val::Day(_)
             | Val::Num(_)
             | Val::Tup(_)
             | Val::Rev(_)
@@ -382,7 +392,7 @@ pub(super) fn compare(left: &Val, right: &Val) -> Result<Ordering, Stop> {
             Val::Int(_)
             | Val::Text(_)
             | Val::Day(_)
-            | Val::Nothing
+            | Val::Nothing(_)
             | Val::Tup(_)
             | Val::Rev(_)
             | Val::Keys(_)
@@ -395,7 +405,7 @@ pub(super) fn compare(left: &Val, right: &Val) -> Result<Ordering, Stop> {
             | Val::Text(_)
             | Val::Day(_)
             | Val::Num(_)
-            | Val::Nothing
+            | Val::Nothing(_)
             | Val::Rev(_)
             | Val::Tie(..)
             | Val::Member(_) => None,
@@ -406,7 +416,7 @@ pub(super) fn compare(left: &Val, right: &Val) -> Result<Ordering, Stop> {
             | Val::Text(_)
             | Val::Day(_)
             | Val::Num(_)
-            | Val::Nothing
+            | Val::Nothing(_)
             | Val::Tup(_)
             | Val::Keys(_)
             | Val::Tie(..)
@@ -422,7 +432,7 @@ pub(super) fn compare(left: &Val, right: &Val) -> Result<Ordering, Stop> {
             | Val::Text(_)
             | Val::Day(_)
             | Val::Num(_)
-            | Val::Nothing
+            | Val::Nothing(_)
             | Val::Tup(_)
             | Val::Rev(_)
             | Val::Keys(_)

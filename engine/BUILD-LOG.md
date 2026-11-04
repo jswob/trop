@@ -722,3 +722,11 @@ move m[p in accounts on d0, f in flats]: transfers
     - (C) No change: `m0_format_equal_models_print_identically`, `m0_parser_total`, `m0_depth_stops_at_8` and `m0_load_file_order_changes_nothing` can't turn green.
   - **Recommended: A.**
 - **State:** the code is unchanged by this report. G2 is committed with it; the four tests stay red, also for load (G3 on).
+
+## 2026-11-04 M0, G2 fix: the `format` fuzz target's ENGINE-INVARIANT (issue #56)
+
+- **The finding** (the rules step's 7f0d04f, `tmp/m0-rules/format-invariant.tally`): two rows of one cell, `x[c] = 0 governs 2026` and `x[c] = 1 governs ab`, made `format_file` refuse with `ENGINE-INVARIANT`. The sort compared a span start that is no date with a day as two components "of different forms".
+- **refcore:** its reprint crashes on the same comparison (`REFCORE-NOT-YET … TypeError`). Its loader refuses such a span start as `LOAD-PARSE cannot parse: expected a date or a period, got ab`.
+- **Fix:** a span start that is no date or period is a component carrying that refusal, at the row's or the rule's line. The order meets the refusal only where refcore would crash, comparing it with a day; elsewhere the reprint is refcore's (one such row alone reprints, as in refcore).
+- **Test:** `tests/format_cases.rs`, `a_span_start_that_is_no_date_is_refused_as_load_refuses_it`. The input can go to `fuzz/regressions/format/` (a rules step).
+- **Totals:** `milestone-report: M0: 34/115 green`. Exception delta +0. No STOP-REPORT.
