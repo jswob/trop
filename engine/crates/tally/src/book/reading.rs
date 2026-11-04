@@ -1,9 +1,11 @@
 //! Balance readings: the `opening` and `stated` rows the cut sees, and what a stated reading does to its place, a pad or an anchor, with its gap.
 //! Spec: L §5.19 (balance readings and their gaps: `pad x from y`, `anchor x`; a reading whose
 //! value is `none` states nothing; the read rule decides who sees it), §4.6 (a reading's
-//! instant), §5.10 (`HOLE-ANCHOR`); E §6.1 (Readings: the gap is the reading less the booked
+//! instant), §5.10 (`HOLE-ANCHOR`; the sign rule tests the reading's own place at the
+//! reading's point, a pad's in the point's group with its leg, an anchor's through
+//! `walk/day.rs`; tally 2.1.2); E §6.1 (Readings: the gap is the reading less the booked
 //! balance at its instant; a pad is a movement of `pads`, an anchor sets the balance; holes),
-//! §4.2 step 0 and step 4 (where readings apply).
+//! §4.2 step 0 and step 4 (where readings apply), step 5 (the sign rule at a reading's point).
 //! Twin: engine/tools/refcore/moves.py (`readings`, `instant_text`, `PadMv`) and walk.py
 //! (`apply_reading`, `booked_coll`, `sub`, `st_value`, `gtext`).
 //! Invariants: a reading applies only before the cut but an opening at the run's start; after

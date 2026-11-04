@@ -21,7 +21,7 @@ use crate::model::{
 use crate::num::Num;
 use crate::read::{Asked, Clocks, Found, held, origin, read_input, time_point};
 use crate::syntax::{
-    Calendar as CalendarLit, CalendarDay, FieldValue, Lit, Stop, Value as Written,
+    Calendar as CalendarLit, CalendarDay, Expr, Field, FieldValue, Lit, Stop, Value as Written,
 };
 use crate::time::{Calendar, Day, Period, PeriodKind, weekday_number};
 
@@ -631,7 +631,7 @@ pub(super) fn convert(
 }
 
 /// A record's fields, each converted to its field's type, in the type's order (L §3.1).
-fn convert_record(m: &Reality, fields: &[crate::syntax::Field], ty: &Ty) -> Result<Value, Stop> {
+fn convert_record(m: &Reality, fields: &[Field], ty: &Ty) -> Result<Value, Stop> {
     let Ty::Record(types) = ty else {
         return Err(refuse_load(
             Load::Unit,
@@ -641,8 +641,8 @@ fn convert_record(m: &Reality, fields: &[crate::syntax::Field], ty: &Ty) -> Resu
     let mut out = Vec::with_capacity(types.len());
     for (name, field_ty) in types {
         let found = fields.iter().find_map(|f| match f {
-            crate::syntax::Field::Named(n, v) if n == name => Some(v),
-            crate::syntax::Field::Named(..) | crate::syntax::Field::Leg(_) => None,
+            Field::Named(n, v) if n == name => Some(v),
+            Field::Named(..) | Field::Leg(_) => None,
         });
         let Some(written) = found else {
             return Err(refuse_load(
@@ -650,24 +650,28 @@ fn convert_record(m: &Reality, fields: &[crate::syntax::Field], ty: &Ty) -> Resu
                 format!("a record lacks field {name}"),
             ));
         };
-        let one = Num::int(1);
         let value = match written {
-            FieldValue::Lit(lit) | FieldValue::Expr(crate::syntax::Expr::Lit(lit)) => {
-                convert_lit(m, lit, field_ty, &one)?
-            }
-            FieldValue::Expr(crate::syntax::Expr::Name(word)) => {
-                convert_lit(m, &Lit::Name(word.clone()), field_ty, &one)?
-            }
-            FieldValue::None | FieldValue::Expr(crate::syntax::Expr::None) => Value::None,
-            FieldValue::Hole(_) | FieldValue::Expr(_) => {
-                return Err(Stop::NotBuilt(
+            FieldValue::None | FieldValue::Expr(Expr::None) => Value::None,
+            FieldValue::Lit(_) | FieldValue::Hole(_) | FieldValue::Expr(_) => {
+                let lit = field_literal(written).ok_or(Stop::NotBuilt(
                     "a record field that is a hole or an expression",
-                ));
+                ))?;
+                convert_lit(m, &lit, field_ty, &Num::int(1))?
             }
         };
         out.push((name.clone(), value));
     }
     Ok(Value::Record(out))
+}
+
+/// The literal a record field states, a word read as a key included; none for `none`, a hole
+/// or an expression (refcore's `convert_value`, a record's fields). L §3.1.
+pub(crate) fn field_literal(value: &FieldValue) -> Option<Lit> {
+    match value {
+        FieldValue::Lit(lit) | FieldValue::Expr(Expr::Lit(lit)) => Some(lit.clone()),
+        FieldValue::Expr(Expr::Name(word)) => Some(Lit::Name(word.clone())),
+        FieldValue::None | FieldValue::Hole(_) | FieldValue::Expr(_) => None,
+    }
 }
 
 /// A literal of a row as a value of type `ty` (refcore's `convert_value`). L §5.8.
