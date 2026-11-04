@@ -92,3 +92,7 @@ g11/remeasure_refused	g11		engine/tests/kernel/	engine/tests/kernel/g11/remeasur
 g11/remeasure_refused_when	g11		engine/tests/kernel/	engine/tests/kernel/g11/remeasure_refused_when.tally		
 g11/remeasure_refused_booking	g11		engine/tests/kernel/	engine/tests/kernel/g11/remeasure_refused_booking.tally		
 g11/remeasure_hole_when	g11		engine/tests/kernel/	engine/tests/kernel/g11/remeasure_hole_when.tally		
+g6/refusal_order	g6		engine/tests/kernel/	engine/tests/kernel/g6/refusal_order.tally		
+g6/refusal_order_twin	g6		engine/tests/kernel/	engine/tests/kernel/g6/refusal_order_twin.tally		
+g6/refusal_keys	g6		engine/tests/kernel/	engine/tests/kernel/g6/refusal_keys.tally		
+g6/refusal_keys_twin	g6		engine/tests/kernel/	engine/tests/kernel/g6/refusal_keys_twin.tally		
