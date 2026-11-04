@@ -486,11 +486,20 @@ impl Engine {
         let kind = src.kind(m)?;
         let is_leg = m.kind_legs(&kind).iter().any(|(n, _, _)| n == name);
         match (&src, name) {
+            // an adjustment's identity, its `day` and `adjusts`, carries none of its holes and
+            // never its refusal, so a binding's `where` reading `a.adjusts` or `a.day` decides;
+            // a refused adjustment refuses its change and every other field (E §5 step 5,
+            // tally 2.1.2)
             (Moving::Adj(_), "day" | "adjusts") => {}
+            (Moving::Adj(a), _) => {
+                self.absorb(&a.coll);
+                if let Amount::Refused(e) = &a.delta {
+                    return Err(Stop::Refused(e.clone()));
+                }
+            }
             (Moving::Plan(i), "day") => self.absorb(&i.day_coll),
             (Moving::Plan(i), _) => self.absorb(&i.coll),
             (Moving::Obs(o), _) => self.absorb(&o.coll),
-            (Moving::Adj(a), _) => self.absorb(&a.coll),
         }
         match &src {
             Moving::Plan(i) => {
@@ -503,15 +512,7 @@ impl Engine {
                     return Err(Stop::Refused(e));
                 }
             }
-            // a refused adjustment refuses its change and every field but its identity, so a
-            // binding's `where` reading `a.adjusts` or `a.day` decides (E §5 step 5, tally 2.1.2)
-            Moving::Adj(a) => {
-                if let Amount::Refused(e) = &a.delta
-                    && !matches!(name, "day" | "adjusts")
-                {
-                    return Err(Stop::Refused(e.clone()));
-                }
-            }
+            Moving::Adj(_) => {}
         }
         match name {
             "day" => Ok(match src.day() {
