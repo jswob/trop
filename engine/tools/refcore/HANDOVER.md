@@ -27,6 +27,22 @@ pass on both).
   nothing, so there `REQ-ASK` prints where the spec's load would refuse first. New: `E11_req_ask_plain`,
   `_first_in_order`, `_scenarios`, `_scenario_refused`, `_joint_member`, `_joint_scenario` (seen failing; the last a
   crash), `_load_first` and `_scenario_refused_ask` (twins).
+- **A row that leaves a trailing key out, reprinted (L §2.4, #59).** `FilePrinter.item_key` laid an item's keys out
+  one sort component each, then the span's `Tie`, so two rows of one target whose key lists differ in length compared a
+  key with a `Tie` and crashed (`wealth[ex22_1] = 0` beside `wealth[ex22_1, savings] = 150 000` in UL-09, `inc[ex1,
+  2025]` beside `inc[ex1, 2025, wages]` in UL-14). The keys of a row and of a `same` item are now one component,
+  `canon.Keys`, compared position by position by `cmp_keys`, a list that ends first sorting first: a key left out
+  before any key stated there, `*` included, as L §2.4's "a keyless row first" (L §4.6 step 3.2 reads a trailing key
+  left out as covering every key). No output that didn't crash changes. `cli.reprint_lines` now turns any other
+  exception into a `REFCORE-NOT-YET` line, as `run` does (its traceback was the crash T met). UL-09 and UL-14 reprint,
+  and their reprints reprint to themselves. New: `L2_4_reprint_key_left_out`, `_key_left_out_star` (both seen
+  failing, the crash).
+- **`reprint` names loose files as given, by full path (L §8.3, E §3.1 step 1; #60).** `cli.reprint_paths` names a
+  loose file by its path as given, as `run` does (it took its base name); a directory's files stay named relative to
+  it (INTERFACE I-3). `reprint_lines(texts, ordered=True)` keeps `read_files`' order, the full paths' by code point
+  (it re-sorted by name), and hashes the texts it printed in that order, `canon.printed_hash` (it reprinted them a
+  second time through `reality_hash`, which sorts by name; `reality_hash` now ends in the same helper). New:
+  `E3_1_reprint_path_order`, `_same_base_name` (both seen failing), `_loose_one_folder` (a twin).
 
 ## tally 2.1.2 (the spec round: issues #23, #29–#34, #38, #39, #43, #44, #46, #47)
 

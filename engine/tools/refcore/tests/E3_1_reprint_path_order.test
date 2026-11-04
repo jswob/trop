@@ -1,0 +1,34 @@
+# E §3.1 step 1 and L §8.3 (tally 2.1.3, issue #60): a reality's files are reprinted and hashed "in the order of their
+# full paths, compared by code point", and `reprint` names a loose file as `run` does, as given. b/m.tally and a/n.tally
+# sort by full path as a/n.tally, b/m.tally, the other way from their base names (m.tally, n.tally): each section is
+# named by its path, in that order, and the hash is the sha256 of n's canonical text, then m's. Was `--- m.tally`, then
+# `--- n.tally`, and the hash of m's text, then n's (T's SR-4: 48 of the suite's sets).
+=== options disk reprint
+=== b/m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+=== a/n.tally
+part p
+  tally 2
+
+input z: int
+=== expect
+--- a/n.tally
+part p
+  tally 2
+
+input z: int
+--- b/m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+sha256 4d8049ad9b3da1d054086e9f11cfa48da4b1349b34003263740c3910e3089f76

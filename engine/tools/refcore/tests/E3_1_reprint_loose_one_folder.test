@@ -1,0 +1,32 @@
+# E §3.1 step 1 and L §8.3 (tally 2.1.3, issue #60): loose files in one folder, given as n.tally then m.tally, print and
+# hash in full-path order, m.tally then n.tally, each named as given. (A twin: their base names are their full paths,
+# so on tally 2.1.2's refcore too.)
+=== options disk reprint
+=== n.tally
+part p
+  tally 2
+
+input z: int
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+=== expect
+--- m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+--- n.tally
+part p
+  tally 2
+
+input z: int
+sha256 592da0d886e775dad502992fba4195da91a5a8555e3d5e1dd9bef19c4492d6d5
