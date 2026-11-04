@@ -486,7 +486,7 @@ The test suite adds **determinism**: every case is run twice, with 1 and with 6 
 | **Load refusals** (LANGUAGE §8.3) | the reality doesn't load | nothing runs. A broken reality never runs in part. `OPERATIONS.md` refuses an amendment that would break loading, before it is accepted. A load error in a scenario file refuses only that scenario and the scenarios over it, and an ask's `LOAD-SCENARIO` for a scenario whose file isn't loaded refuses only that ask (LANGUAGE §6.4) |
 | **Per-value refusals** (LANGUAGE §8.4) | a value can't be computed | printed at its key; it propagates and outranks holes |
 | **Holes** (LANGUAGE §8.1) | a fact is missing | printed with their questions; other results stand |
-| `REQ-ASK` | the request names an ask that doesn't exist (an ask given with the request that doesn't load is refused with its own load code, LANGUAGE §8.3, as `OPERATIONS.md` §8 says) | the request is refused |
+| `REQ-ASK` | the request names an ask that doesn't exist (an ask given with the request that doesn't load is refused with its own load code, LANGUAGE §8.3, as `OPERATIONS.md` §8 says) | the request is refused, after load (a load refusal outranks it), in every shape of reality (a plain one, one with scenarios, a joint model): `no ask <q>`, q the first such ask in the request's order, a member's ask named as asked (`a.q`, LANGUAGE §6.1), is the run's one result; nothing else prints (tally 2.1.3) |
 | `REQ-CLOCK` | `as known` after `on` | the request is refused |
 | `REQ-PATHS` | more than 100 000 paths for one ask | the request is refused |
 | `ENGINE-INVARIANT` | §9 fails | the whole result is refused, with the evidence |

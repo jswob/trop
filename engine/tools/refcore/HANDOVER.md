@@ -7,6 +7,27 @@ or unclear it refuses `REFCORE-UNSPECIFIED <section>: <what>` (the list is `UNSP
 interpreter doesn't build refuses `REFCORE-NOT-YET <construct>`. Nothing may crash: an internal error becomes
 `REFCORE-NOT-YET an input this interpreter can't handle (...)` unless `REFCORE_DEBUG` is set.
 
+## tally 2.1.3 (M0's spec patch: issues #58, #59, #60)
+
+The spec patch tally 2.1.3 (`spec/CHANGES.md` 2.1.3-1 onward), the user's rulings of 2026-11-04 on T's STOP-REPORTs
+SR-1, SR-2 and SR-4 for M0 (#56). Each fix's new tests were seen failing on tally 2.1.2's refcore first (their twins
+pass on both).
+
+- **An unknown ask is `REQ-ASK` (E §11, #58).** `ask.knows_ask` says whether a request's id names an ask of the
+  loaded reality: its asks (refused alone or not), or a member's `a.q` as `Asker.member_ask` finds it (the member's
+  own, a nested `a.b.q`, an ask of the member's scenario files). `Asker.run` (a plain reality, a joint model) checks
+  every id before it answers any and raises `ask.req_ask`, `REQ-ASK no ask <q>`, for the first unknown (it was
+  `LOAD-NAME`, and a member's `a.q` was found only once the asks before it were answered). `cli.run_worlds` (a reality
+  with scenarios, a joint model with scenarios) checks after the base and every scenario have loaded: an id that names
+  no ask of any world, no member's ask and no ask declared in a scenario file whose load was refused
+  (`cli.declared_asks`, read from the file's text; that ask exists and prints its scenario's refusal as before)
+  returns the one line. It was skipped silently, and an unknown member's ask crashed (`member_ask`'s raise was outside
+  any catch). **Left as it was:** a load refusal refcore finds only while answering (`LoadAtRun`, "A load refusal
+  … that this interpreter finds only while evaluating") is found only by answering, and a refused request answers
+  nothing, so there `REQ-ASK` prints where the spec's load would refuse first. New: `E11_req_ask_plain`,
+  `_first_in_order`, `_scenarios`, `_scenario_refused`, `_joint_member`, `_joint_scenario` (seen failing; the last a
+  crash), `_load_first` and `_scenario_refused_ask` (twins).
+
 ## tally 2.1.2 (the spec round: issues #23, #29–#34, #38, #39, #43, #44, #46, #47)
 
 The spec patch tally 2.1.2 (`spec/CHANGES.md` 2.1.2-1 to 2.1.2-14), the user's rulings at gate G-SP1 (2026-11-03).

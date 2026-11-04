@@ -251,6 +251,18 @@ def run_worlds(heads, ids=None, loader=None, srcs=None):
             if getattr(e, 'base_file', False):
                 return ['refused: %s' % e.text()]
             errs[sid] = e
+    if ids:
+        # E §11 (tally 2.1.3, issue #58): after load (the base's refusal has printed above; a scenario's refuses only
+        # that scenario, L §8), the first id of the request that names no ask of any world, no member's ask (L §6.1)
+        # and no ask of a scenario file whose load was refused (that ask exists, refused with its scenario) refuses
+        # the request: its one line, nothing else. Was skipped silently, and a member's a.q crashed
+        from .ask import knows_ask, req_ask
+        known = set(a.id for r in realities.values() for a in list(r.asks) + list(getattr(r, 'asks_alone', ())))
+        for sid in errs:
+            known |= declared_asks(scen[sid][1] if srcs is None else srcs[scen[sid][0]])
+        for i in ids:
+            if i not in known and not knows_ask(m0, i):
+                return ['refused: %s' % req_ask(i).text()]
     # the asks: the base's from the base, a scenario's from its own reality
     # L §6.4 Its items: "Two scenarios over one base never meet, so each may declare an id the other declares": an
     # ask is known by its id and the file's world
@@ -480,6 +492,13 @@ def declared_ids(src):
                 'version'):
             out.add(ws[1].split('[')[0].split(':')[0].split('(')[0])
     return out
+
+
+def declared_asks(src):
+    """The ids of the asks a file declares (`ask <id>:` at the start of a line, as joint.py reads a member's scenario
+    files), read from its text: a scenario file whose load was refused still declares them (E §11 `REQ-ASK`)."""
+    import re
+    return set(re.findall(r'^ask ([a-z][a-z0-9_]*)\s*:', src, re.M))
 
 
 def run_one(texts, ids=None, members=None):
