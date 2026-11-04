@@ -859,7 +859,11 @@ pub(super) fn typed(m: &Reality, q: &crate::num::Num, ty: &Ty) -> Result<Option<
         | Ty::Tuple(_)
         | Ty::Flex(_)
         | Ty::Year4
-        | Ty::KeyLit
+        | Ty::KeyLit(_)
+        | Ty::KeyList
+        | Ty::Dyn
+        | Ty::UnitKey
+        | Ty::Unseen
         | Ty::None
         | Ty::Hole
         | Ty::Never

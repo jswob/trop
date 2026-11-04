@@ -631,7 +631,11 @@ impl ConvertFor {
             | Ty::Tuple(_)
             | Ty::Flex(_)
             | Ty::Year4
-            | Ty::KeyLit
+            | Ty::KeyLit(_)
+            | Ty::KeyList
+            | Ty::Dyn
+            | Ty::UnitKey
+            | Ty::Unseen
             | Ty::None
             | Ty::Hole
             | Ty::Never
@@ -927,7 +931,11 @@ fn word_value(m: &Reality, lit: &Lit, text: &str, ty: &Ty) -> Result<Value, Stop
         | Ty::Tuple(_)
         | Ty::Flex(_)
         | Ty::Year4
-        | Ty::KeyLit
+        | Ty::KeyLit(_)
+        | Ty::KeyList
+        | Ty::Dyn
+        | Ty::UnitKey
+        | Ty::Unseen
         | Ty::None
         | Ty::Hole
         | Ty::Never
@@ -1032,7 +1040,11 @@ fn convert_number(
         | Ty::Tuple(_)
         | Ty::Flex(_)
         | Ty::Year4
-        | Ty::KeyLit
+        | Ty::KeyLit(_)
+        | Ty::KeyList
+        | Ty::Dyn
+        | Ty::UnitKey
+        | Ty::Unseen
         | Ty::None
         | Ty::Hole
         | Ty::Never

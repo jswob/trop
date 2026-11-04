@@ -226,18 +226,21 @@ pub mod ask {
 /// made are those construction meets, the rest are M0's later groups'.
 pub mod load {
     mod binds;
+    mod calls;
+    mod check;
     mod decls;
-    mod graph;
     mod indexes;
     mod keys;
     mod kinds;
     mod names;
     mod observed;
+    mod ops;
     mod places;
     mod rows;
     mod spans;
     mod steps;
     mod strata;
+    mod types;
     mod values;
     mod worlds;
 

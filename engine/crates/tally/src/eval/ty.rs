@@ -475,7 +475,7 @@ fn ty_sample(m: &Reality, ty: &Ty) -> Result<Option<Value>, Stop> {
         }
         Ty::Int | Ty::Year4 => Some(Value::int(1)),
         Ty::Flex(n) => Some(Value::Number(Number {
-            q: Num::int(*n),
+            q: n.clone(),
             class: Class::Flex,
         })),
         Ty::Bool => Some(Value::Bool(true)),
@@ -513,7 +513,11 @@ fn ty_sample(m: &Reality, ty: &Ty) -> Result<Option<Value>, Stop> {
         | Ty::Calendar
         | Ty::List(_)
         | Ty::Tuple(_)
-        | Ty::KeyLit
+        | Ty::KeyLit(_)
+        | Ty::KeyList
+        | Ty::Dyn
+        | Ty::UnitKey
+        | Ty::Unseen
         | Ty::None
         | Ty::Hole
         | Ty::Never

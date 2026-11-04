@@ -9,7 +9,7 @@
 //! the cycle refcore names; the strata are the layers of an acyclic graph once each cycle no
 //! written order breaks is one component.
 
-use super::graph::walk;
+use super::check::walk;
 use super::steps::{Loader, refuse};
 use crate::base::{Code, Load, Refusal, Warn};
 use crate::model::{GapRole, Graph, Node, NodeKind, Reality, Rel, Target, Ty};
