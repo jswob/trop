@@ -1,16 +1,28 @@
-//! Milestone M0's format vectors (issue #56; `MILESTONE-M0.md` row 4): refcore 2.1.3's
-//! `reprint` of every text set `checks.tsv` names and of the format fixtures (`m0/format/`),
-//! stored by `m0/vectors.py` in `m0/format.refcore`, each file's canonical text held by its
+//! Milestone M0's vectors (issue #56; `MILESTONE-M0.md`), written by `m0/vectors.py` from
+//! refcore 2.1.3's runs over every text set `checks.tsv` names.
+//!
+//! The format (row 4): refcore's `reprint` of each set and of the format fixtures
+//! (`m0/format/`), stored in `m0/format.refcore`, each file's canonical text held by its
 //! length and its digest (two residues modulo 61-bit primes). The milestone target
 //! `milestone/m0_format.rs` holds the engine's `reprint` to them, and its reprint of its own
 //! canonical text to that text
 //! (DONE gate 6: `format(parse(x)) = x` on L §2.4's canonical form, and `format` idempotent).
 //!
-//! - [`FORMAT`]: the stored vectors, read by [`format_vectors`];
+//! The load (rows 1 and 2): refcore's whole run of the load probe, `run <files> --ask
+//! zz_m0_probe` (a load refusal, or `refused: REQ-ASK no ask zz_m0_probe` alone after a clean
+//! load, E §11), of a refused scenario's own asks, and of row 1's 10 checks, stored in
+//! `m0/load.refcore`. The milestone target `milestone/m0_load.rs` holds the engine's run to
+//! each, its exit code and its output with `warning:` lines left out on both sides (the
+//! warnings are M1's, `BUILD-ORDER.md` § M1).
+//!
+//! - [`FORMAT`] and [`LOAD`]: the stored vectors, read by [`format_vectors`] and
+//!   [`load_vectors`];
 //! - [`digest`]: the texts' digest, as `vectors.py` computes it;
 //! - [`printed`]: a reprint's output as its sections and the rest;
-//! - [`format_failure`]: how the engine's reprint of a vector fails, if it does;
-//! - [`group_failures`]: every failure of one group, for the milestone target.
+//! - [`format_failure`] and [`load_failure`]: how the engine's run of a vector fails, if it
+//!   does;
+//! - [`group_failures`] and [`load_group_failures`]: every failure of one group, for the
+//!   milestone targets.
 
 use crate::corpus::{Run, groups, netstrings, pack, text};
 use crate::engine::run_args;
@@ -20,6 +32,12 @@ use std::collections::BTreeMap;
 
 /// `m0/format.refcore`: eight netstrings per vector (`m0/vectors.py`).
 pub const FORMAT: &[u8] = include_bytes!("../../m0/format.refcore");
+
+/// `m0/load.refcore`: seven netstrings per vector (`m0/vectors.py`).
+pub const LOAD: &[u8] = include_bytes!("../../m0/load.refcore");
+
+/// The ask the load probe asks, which no text declares.
+pub const PROBE: &str = "zz_m0_probe";
 
 /// The digest's two lanes, each a prime modulus and a base (`vectors.py`'s `LANES`): the
 /// primes 2^61 − 1 and 2^61 − 31.
@@ -68,6 +86,22 @@ pub struct FormatVector {
     pub sections: Vec<Section>,
     /// The rest of refcore's output: the `sha256` line.
     pub tail: String,
+}
+
+/// One load vector: a `run` command line, its files and refcore's whole run.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct LoadVector {
+    /// The set's id, `<set>#<scenario>` for a refused scenario's asks, or `refusal/<check>`
+    /// for row 1's checks.
+    pub id: String,
+    /// The group its test runs it in (`probes`, `household-B`, `refusal/U:rule/RULE-04`, …).
+    pub group: String,
+    /// The command line's words after the program name: `run`, the files, `--ask` and asks.
+    pub args: Vec<String>,
+    /// Every file the run may read: those it names, and a joint model's members.
+    pub table: Vec<TableFile>,
+    /// refcore's run: its whole output and its exit code.
+    pub run: Run,
 }
 
 /// A reprint's output, split.
@@ -121,6 +155,30 @@ pub fn format_vectors(bytes: &[u8]) -> Result<Vec<FormatVector>, String> {
                 .map_err(|_| format!("{id}: an exit code"))?,
             sections: sections_of(&text(sections)?, &id)?,
             tail: text(tail)?,
+            id,
+        });
+    }
+    Ok(out)
+}
+
+/// The load vectors of `bytes`, in `vectors.py`'s order.
+pub fn load_vectors(bytes: &[u8]) -> Result<Vec<LoadVector>, String> {
+    let mut out = Vec::new();
+    for seven in groups(&netstrings(bytes)?, 7)? {
+        let [id, group, _cwd, args, table, code, whole] = seven.as_slice() else {
+            return Err("a load vector is seven netstrings".to_owned());
+        };
+        let id = text(id)?;
+        out.push(LoadVector {
+            group: text(group)?,
+            args: text(args)?.split(' ').map(str::to_owned).collect(),
+            table: table_files(&text(table)?, &id)?,
+            run: Run {
+                out: text(whole)?,
+                code: text(code)?
+                    .parse()
+                    .map_err(|_| format!("{id}: an exit code"))?,
+            },
             id,
         });
     }
@@ -198,13 +256,17 @@ pub fn texts() -> BTreeMap<&'static str, &'static str> {
     TEXTS.iter().copied().collect()
 }
 
-/// The file table of `v` (`INTERFACE.md` §4), each file read from `texts`.
-pub fn table(v: &FormatVector, texts: &BTreeMap<&str, &str>) -> Result<Vec<u8>, String> {
+/// The file table of vector `id` (`INTERFACE.md` §4), its `files` read from `texts`.
+pub fn table(
+    id: &str,
+    files: &[TableFile],
+    texts: &BTreeMap<&str, &str>,
+) -> Result<Vec<u8>, String> {
     let mut pairs: Vec<(&str, &str)> = Vec::new();
-    for f in &v.table {
+    for f in files {
         let content = texts
             .get(f.path.as_str())
-            .ok_or_else(|| format!("{}: {} isn't in m0_texts.rs", v.id, f.path))?;
+            .ok_or_else(|| format!("{id}: {} isn't in m0_texts.rs", f.path))?;
         pairs.push((f.key.as_str(), content));
     }
     Ok(pack(&pairs))
@@ -215,7 +277,7 @@ pub fn table(v: &FormatVector, texts: &BTreeMap<&str, &str>) -> Result<Vec<u8>, 
 /// reprinting each canonical text in place of its file must print the same output again,
 /// byte for byte (the round trip).
 pub fn format_failure(v: &FormatVector, texts: &BTreeMap<&str, &str>) -> Option<String> {
-    let first_table = match table(v, texts) {
+    let first_table = match table(&v.id, &v.table, texts) {
         Ok(t) => t,
         Err(e) => return Some(e),
     };
@@ -293,9 +355,55 @@ pub fn group_failures(group: &str) -> Result<(Vec<String>, usize), String> {
     Ok((failed, mine.len()))
 }
 
+/// `out` without its `warning: …` lines: the warnings are M1's (`BUILD-ORDER.md` § M1, L §8.5),
+/// as the household compare leaves them out (`README.md` § Compare).
+fn unwarned(out: &str) -> String {
+    out.split_inclusive('\n')
+        .filter(|line| !line.starts_with("warning: "))
+        .collect()
+}
+
+/// How the engine's run of `v` fails, or `None`: it must exit with refcore's code and print
+/// refcore's whole output, `warning:` lines left out on both sides.
+pub fn load_failure(v: &LoadVector, texts: &BTreeMap<&str, &str>) -> Option<String> {
+    let files = match table(&v.id, &v.table, texts) {
+        Ok(t) => t,
+        Err(e) => return Some(e),
+    };
+    let got = run_args(&v.args, &files);
+    let want = Run {
+        out: unwarned(&v.run.out),
+        code: v.run.code,
+    };
+    let mine = Run {
+        out: unwarned(&got.out),
+        code: got.code,
+    };
+    difference(&want, &mine).map(|d| format!("{}: {d}", v.id))
+}
+
+/// Every load vector of `group` the engine fails, each with why, and how many vectors the
+/// group holds.
+pub fn load_group_failures(group: &str) -> Result<(Vec<String>, usize), String> {
+    let vs = load_vectors(LOAD)?;
+    let texts = texts();
+    let mine: Vec<&LoadVector> = vs.iter().filter(|v| v.group == group).collect();
+    if mine.is_empty() {
+        return Err(format!("m0/load.refcore holds no vector of {group}"));
+    }
+    let failed = mine
+        .iter()
+        .filter_map(|v| load_failure(v, &texts))
+        .collect();
+    Ok((failed, mine.len()))
+}
+
 #[cfg(test)]
 mod tests {
-    use super::{FORMAT, TEXTS, digest, digest_of_hex, format_vectors, printed, texts};
+    use super::{
+        FORMAT, LOAD, LoadVector, PROBE, TEXTS, digest, digest_of_hex, format_vectors,
+        load_vectors, printed, texts, unwarned,
+    };
     use std::collections::BTreeSet;
 
     /// The corpus groups `vectors.py` sorts the 315 text sets into, and how many sets each
@@ -411,6 +519,77 @@ mod tests {
         assert!(
             agree > 500,
             "only {agree} canonical sources hold their digest"
+        );
+    }
+
+    /// 315 probes (one per text set, in the corpus groups), 2 refused scenarios' asks and row
+    /// 1's 10 checks; every output a refusal; 304 probes print the REQ-ASK line alone, the
+    /// other 11 a load refusal (MP-10's `LOAD-BAND` and row 1's 10).
+    #[test]
+    fn the_load_vectors_read_and_name_their_texts() {
+        let vs = load_vectors(LOAD).expect("m0/load.refcore reads");
+        assert_eq!(vs.len(), 327, "315 probes, 2 scenarios' asks, 10 refusals");
+        let all = texts();
+        let mut ids = BTreeSet::new();
+        for v in &vs {
+            assert!(ids.insert(v.id.clone()), "{}: twice", v.id);
+            assert_eq!(v.args.first().map(String::as_str), Some("run"), "{}", v.id);
+            for f in &v.table {
+                assert!(all.contains_key(f.path.as_str()), "{}: {}", v.id, f.path);
+            }
+            assert!(
+                v.run.out.starts_with("refused: ") || v.run.out.starts_with("scenario "),
+                "{}: {}",
+                v.id,
+                v.run.out
+            );
+        }
+        let probes: Vec<&LoadVector> = vs
+            .iter()
+            .filter(|v| !v.id.contains('#') && !v.id.starts_with("refusal/"))
+            .collect();
+        assert_eq!(probes.len(), 315, "a probe per text set");
+        let probed = format!("refused: REQ-ASK no ask {PROBE}\n");
+        for v in &probes {
+            assert_eq!(v.args.last().map(String::as_str), Some(PROBE), "{}", v.id);
+            assert_eq!(v.run.code, 1, "{}: the probe is refused", v.id);
+        }
+        assert_eq!(
+            probes.iter().filter(|v| v.run.out == probed).count(),
+            304,
+            "the probe's REQ-ASK line alone after a clean load"
+        );
+        for (group, count) in GROUPS {
+            assert_eq!(
+                probes.iter().filter(|v| v.group == group).count(),
+                count,
+                "{group}"
+            );
+        }
+        let refusals: Vec<&LoadVector> = vs
+            .iter()
+            .filter(|v| v.group.starts_with("refusal/"))
+            .collect();
+        assert_eq!(refusals.len(), 10, "row 1's checks");
+        for v in refusals {
+            assert_eq!(v.run.code, 1, "{}", v.id);
+            assert!(v.run.out.starts_with("refused: LOAD-"), "{}", v.id);
+        }
+    }
+
+    #[test]
+    fn warnings_are_left_out() {
+        assert_eq!(
+            unwarned(
+                "scenario s: refused: X\nwarning: WARN-UNREAD input a is read by nothing\nb\n"
+            ),
+            "scenario s: refused: X\nb\n",
+            "the warning line goes, the others stay"
+        );
+        assert_eq!(
+            unwarned("a\nwarning: w"),
+            "a\n",
+            "a last line without its newline"
         );
     }
 

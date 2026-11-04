@@ -50,3 +50,10 @@ test = false
 name = "m0_format"
 path = "milestone/m0_format.rs"
 test = false
+
+# M0: the load, refcore's run of the load probe over every text set and row 1's 10 refusals
+# (m0/load.refcore; MILESTONE-M0.md rows 1 and 2)
+[[test]]
+name = "m0_load"
+path = "milestone/m0_load.rs"
+test = false
