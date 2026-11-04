@@ -127,7 +127,7 @@ const BUILTINS: [&str; 75] = [
 ];
 
 /// Whether `word` is a built-in's name (L §2.2).
-pub(super) fn is_builtin(word: &str) -> bool {
+pub(crate) fn is_builtin(word: &str) -> bool {
     !word.is_empty() && BUILTINS.contains(&word)
 }
 

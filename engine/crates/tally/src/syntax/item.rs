@@ -38,10 +38,26 @@ pub fn parse_reality(sources: &[Text]) -> Result<Vec<File>, Stop> {
     for source in sources {
         split.push(split_lines(&source.text, &source.path)?);
     }
-    let units = prescan_units(&split);
-    let mut files = Vec::with_capacity(sources.len());
-    for (source, lines) in sources.iter().zip(&split) {
-        files.push(parse_file(lines, &source.path, &units)?);
+    let files: Vec<(&str, &[Line])> = sources
+        .iter()
+        .zip(&split)
+        .map(|(source, lines)| (source.path.as_str(), lines.as_slice()))
+        .collect();
+    parse_split(&files)
+}
+
+/// Finds the unit names across files already split into lines, then parses each, in the order
+/// given: a world's files, each with its path (refcore's `load_lines`). L §8.3.
+///
+/// # Errors
+///
+/// The first refusal met, or the first construct the engine doesn't build yet.
+pub fn parse_split(split: &[(&str, &[Line])]) -> Result<Vec<File>, Stop> {
+    let every: Vec<&[Line]> = split.iter().map(|(_, file)| *file).collect();
+    let units = prescan_units(&every);
+    let mut files = Vec::with_capacity(split.len());
+    for (path, lines) in split {
+        files.push(parse_file(lines, path, &units)?);
     }
     Ok(files)
 }
@@ -53,10 +69,10 @@ pub(super) fn first(line: &Line) -> &str {
 
 /// The unit names a number may carry: declared `unit` ids, and the keys entered into kinds of
 /// unit (refcore's `prescan_units`, L §3.2).
-pub(super) fn prescan_units(files: &[Vec<Line>]) -> BTreeSet<String> {
+pub(super) fn prescan_units(files: &[&[Line]]) -> BTreeSet<String> {
     let mut units = BTreeSet::new();
     let mut unit_kinds = BTreeSet::from(["currencies".to_owned()]);
-    for line in files.iter().flatten() {
+    for line in files.iter().copied().flatten() {
         let top = line.level == 0 || (line.level == 1 && first(line) == "kind");
         if !top {
             continue;
@@ -75,7 +91,7 @@ pub(super) fn prescan_units(files: &[Vec<Line>]) -> BTreeSet<String> {
             unit_kinds.insert(id.text.clone());
         }
     }
-    for line in files.iter().flatten() {
+    for line in files.iter().copied().flatten() {
         let toks = match line.toks.split_first() {
             Some((head, rest)) if head.text == "replace" => rest,
             Some(_) | None => line.toks.as_slice(),

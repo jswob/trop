@@ -730,3 +730,31 @@ move m[p in accounts on d0, f in flats]: transfers
 - **Fix:** a span start that is no date or period is a component carrying that refusal, at the row's or the rule's line. The order meets the refusal only where refcore would crash, comparing it with a day; elsewhere the reprint is refcore's (one such row alone reprints, as in refcore).
 - **Test:** `tests/format_cases.rs`, `a_span_start_that_is_no_date_is_refused_as_load_refuses_it`. The input can go to `fuzz/regressions/format/` (a rules step).
 - **Totals:** `milestone-report: M0: 34/115 green`. Exception delta +0. No STOP-REPORT.
+
+## 2026-11-04 M0, G3: the namespace, the headers, worlds, printed load refusals and `REQ-ASK` (issue #56)
+
+- **Built:**
+  - `load/worlds.rs`, refcore's `_run_texts` and `run_worlds` up to its asks:
+    - every file is split and its scenario header read, in full-path order, before any is parsed (`scenario ID over ID`, else `LOAD-PARSE`);
+    - a joint model (a `use` or `same` line in a model header) stops "not built" until G9;
+    - a reality with scenario files loads as worlds: the base alone (its refusal is the run's, renamed `LOAD-SCENARIO <x> of scenario <s> is read outside it` where refcore renames it), then each scenario by id, with the base's files and its stack from the model up;
+    - a stack that names no world, cycles, is deeper than 4, or holds a scenario declared twice refuses that scenario alone, at its header;
+    - a refused scenario's file still declares its asks.
+  - `model/world.rs`: `Scenarios`, each loaded scenario's `over` and the sections its file holds. `load/steps.rs` builds it in pass 1, with refcore's `scenario … declared twice` and `is over …, neither the model nor a scenario`; the old "scenarios not built" stop is gone.
+  - `load/names.rs`: the one namespace moved out of `steps.rs` (the built-in ids, `parties` among them), plus refcore's `band <b> has a built-in's name` (`LOAD-DUP`), which S lacked.
+  - `ask/worlds.rs`: the asks of a reality with scenarios. Each refused scenario prints `scenario <s>: refused: …` first. The asks go by id then world, the base's first. An ask whose `in`, diff worlds, `{scenario s}` pin or own file names a refused scenario prints `<q>: refused: …`. An ask in the base runs on S's evaluator. An ask evaluated in a scenario's world stops the run "not built" (M1's): that is the per-ask stop. The worlds' warnings are merged as refcore's `unread_everywhere` merges them.
+  - `ask/answer.rs`: `REQ-ASK no ask <q>` (E §11, 2.1.3) for the first unknown id, checked before any ask is answered, in plain realities and worlds alike (was `LOAD-NAME no ask`).
+  - `api.rs`: a load refusal prints (was "not implemented"); `tally::load_report(Vec<Given>)`, load alone (its one refusal, or each refused scenario's line and the warnings), the entry point for the `load` fuzz target, ready for a rules step.
+  - `syntax`: `parse_split` parses already-split files, so a plain run splits each file once.
+- **Deviation from the plan:** the symbol table is still keyed by name (`Reality.names`), the sort its value. The (path, …) part of BUILD-ORDER's key is a member's prefix, which exists only once joint models load, so it lands at G9 with them rather than as an always-empty field now.
+- **Green ids (23 new):**
+  - R1: `m0_load_refusal_law_13_rate25`, `_rand_04_plan_b`, `_rule_09_inpath`, `_scen_01_amend`, `_scen_02_kept`, `_scen_03_infl8`, `_scen_04_crash`, `_surf_04_redefine`. Also `_rule_04` (S's strata already meet its `LOAD-CYCLE`; now it prints).
+  - `m0_load_depth_a_ties_by_term_counts_one_level` (its `LOAD-DUP` control).
+  - Per-code: `m0_code_load_header`, `_version`, `_dup`, `_reserved`. Beyond the plan, nine whose refusals S's loader already met and now print: `_ambig`, `_gaprole`, `_governs`, `_instant`, `_kind`, `_known`, `_leaf`, `_lifespan`, `_placekind`.
+- **Not green, and why:**
+  - `m0_load_order_the_checks_past_parsing`: `order/passes` is green; its folder's other three fixtures are G4b's (`LOAD-KEY`, `LOAD-LITERAL`).
+  - The row-2 load groups: 262 vectors stop "not implemented" (forms S's loader doesn't build). The rest print the probe's `REQ-ASK` where a later group's check refuses. One fixture with two faults, `basic/key-id`, prints S's row check before refcore's `check_key_ids` (G5), as plan §4 foresaw. No `ENGINE-INVARIANT`, no panic.
+- **Own tests (not gating):** `load/worlds.rs` (header before split order, a scenario alone, stacks, cycles, a scenario declared twice, ids and asks read from text); `load/names.rs` (a second id, `parties`, a band named `bal`); `api.rs` (a printed load refusal, `REQ-ASK`, a run as worlds: a base ask answered, a scenario ask not built, a refused scenario's line).
+- **No mutants-local:** no kernel file changed.
+- **Totals:** `milestone-report: M0: 57/115 green` (from 34). No STOP-REPORT open. Exception delta: +0 (report-only hits 5, as before: an explicit lifetime and two nested closures in the new code were restructured away). check full: "check full: green, 31 steps (899s)".
+- **Size:** 13 files, +1 166 −169 in engine/crates, against the plan's 1 200 for G3. What drove it: `load/worlds.rs` 490 lines (about 150 of them tests), refcore's text scans `declared_ids` and `declared_asks` included; `ask/worlds.rs` 179; `load/names.rs` 164, of which about 110 moved from `steps.rs`.

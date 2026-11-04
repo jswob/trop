@@ -69,6 +69,24 @@ impl Refusal {
         self.code
     }
 
+    /// The message, without the code or the place. L §8.3.
+    #[must_use]
+    pub fn message(&self) -> &str {
+        &self.message
+    }
+
+    /// Another code and message at this refusal's place: a load refusal of the base that a
+    /// later rule names better (refcore's `run_worlds`: an id of a scenario read outside it,
+    /// L §6.4). L §8.3.
+    #[must_use]
+    pub fn renamed(&self, code: Code, message: String) -> Refusal {
+        Refusal {
+            code,
+            message,
+            place: self.place.clone(),
+        }
+    }
+
     /// The refusal as printed after `refused: `: the code, the message, then the place in
     /// parentheses (`LOAD-PARSE cannot parse: expected ":", got int (a.tally:4)`). L §8.3.
     #[must_use]

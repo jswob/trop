@@ -54,7 +54,8 @@ pub fn reprint(sources: &[Source]) -> Result<Vec<(String, String)>, Stop> {
     for source in sources {
         split.push(split_lines(&source.text, &source.path)?);
     }
-    let units = prescan_units(&split);
+    let every: Vec<&[Line]> = split.iter().map(Vec::as_slice).collect();
+    let units = prescan_units(&every);
     let mut files = Vec::with_capacity(sources.len());
     for (source, lines) in sources.iter().zip(&split) {
         files.push(parse_file(lines, &source.path, &units)?);

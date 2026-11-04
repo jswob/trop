@@ -1,19 +1,21 @@
 //! The engine's entry: the files a run is given and its request go in, the printed answer comes out.
 //! Spec: E §1 (the run function); E §3.1 step 1 (files by full path); L §8.3 (which refusal
-//! prints: every file is read before any is split, and split before any is parsed); L §5.18
-//! (the asks answered once the reality loads).
-//! Twin: engine/tools/refcore/cli.py (`read_files`, `run_texts`, `run_one`, `by_path`).
+//! prints: every file is read before any is split, and split before any is parsed); L §6.4
+//! (a reality with scenarios runs as worlds); L §5.18 (the asks answered once the reality
+//! loads); E §11 (`REQ-ASK`).
+//! Twin: engine/tools/refcore/cli.py (`read_files`, `run_texts`, `_run_texts`, `run_one`,
+//! `by_path`).
 //! Invariants: reads no clock, environment or file (R-38, R-39); takes the files in the order
 //! of their full paths by code point, whatever order they come in (R-40); never decodes lossily
 //! (R-49).
 
 use crate::NotImplemented;
-use crate::ask::answer;
+use crate::ask::{Answered, answer, answer_worlds, report_lines};
 use crate::base::Refusal;
 use crate::eval::Memo;
-use crate::load::load;
+use crate::load::{Loaded, load_run, split_files};
 use crate::oracle::Days;
-use crate::syntax::{Stop, parse_reality};
+use crate::syntax::Stop;
 
 /// One file the run is given: its path as the run names it, and its bytes, or none when the
 /// path names no file or folder.
@@ -107,14 +109,25 @@ impl Answer {
 }
 
 /// Runs a reality's files on a request and answers with the printed lines: it reads the
-/// files, splits and parses them all (L §8.3), loads them, then answers the asks (L §5.18).
+/// files, splits them all and reads their scenario headers (L §8.3), loads the reality, or its
+/// worlds, the base and each scenario's (L §6.4), then answers the asks (L §5.18).
 ///
 /// # Errors
 ///
-/// [`NotImplemented`] for a construct the engine doesn't build yet, and for a load refusal:
-/// load's checks are M0's, so a refusal load meets may not be the one refcore prints first.
+/// [`NotImplemented`] for a construct the engine doesn't build yet.
 pub fn run(given: Vec<Given>, request: &Request) -> Result<Answer, NotImplemented> {
     run_with_memo(given, request, Memo::Classes)
+}
+
+/// Loads a reality's files and answers with what load prints when no ask is answered: its one
+/// refusal, or each refused scenario's line and the warnings (L §8, §8.5). The fuzz target
+/// `load` calls it.
+///
+/// # Errors
+///
+/// [`NotImplemented`] for a construct the engine doesn't build yet.
+pub fn load_report(given: Vec<Given>) -> Result<Answer, NotImplemented> {
+    finish(loaded(given).map(|loaded| Answered::printed(report_lines(&loaded))))
 }
 
 /// [`run`] with each ask's memo keeping its cells as `memo` says: shared by a law date class,
@@ -129,19 +142,25 @@ pub fn run_with_memo(
     request: &Request,
     memo: Memo,
 ) -> Result<Answer, NotImplemented> {
-    let sources = match read(given) {
-        Err(refusal) => return Ok(Answer::refused(&refusal)),
-        Ok(sources) => sources,
-    };
-    let files = match parse_reality(&sources) {
-        Err(Stop::Refused(refusal)) => return Ok(Answer::refused(&refusal)),
-        Err(Stop::NotBuilt(_) | Stop::Deep) => return Err(NotImplemented),
-        Ok(files) => files,
-    };
-    let Ok(reality) = load(files) else {
-        return Err(NotImplemented);
-    };
-    match answer(&reality, &request.asks, request.days, memo) {
+    let (asks, days) = (&request.asks, request.days);
+    finish(loaded(given).and_then(|loaded| match &loaded {
+        Loaded::One(m) => answer(m, asks, days, memo),
+        Loaded::Worlds(w) => answer_worlds(w, asks, days, memo),
+    }))
+}
+
+/// The run's files read, split with their scenario headers, and loaded: one reality, or its
+/// worlds (refcore's `_run_texts`). E §3.1 step 1; L §8.3, §6.4.
+fn loaded(given: Vec<Given>) -> Result<Loaded, Stop> {
+    let sources = read(given).map_err(Stop::Refused)?;
+    let split = split_files(sources).map_err(Stop::Refused)?;
+    load_run(&split)
+}
+
+/// The printed answer: the lines, or a refusal's one line (L §8.3); [`NotImplemented`] for a
+/// construct the engine doesn't build yet.
+fn finish(outcome: Result<Answered, Stop>) -> Result<Answer, NotImplemented> {
+    match outcome {
         Ok(answered) => Ok(Answer {
             lines: answered.lines,
             #[cfg(feature = "counters")]
@@ -330,19 +349,81 @@ mod tests {
         };
         assert_eq!(
             lines(files(), &missing),
-            ["refused: LOAD-NAME no ask c"],
-            "the run refused"
+            ["refused: REQ-ASK no ask c"],
+            "the run refused, before b is answered"
         );
     }
 
     #[test]
-    fn a_load_refusal_waits_for_load_checks() {
+    fn a_load_refusal_prints() {
         let text = format!("{MODEL}\ninput x: num\n\ninput x: num\n");
         let files = given(&[("m.tally", Some(text.as_bytes()))]);
         assert_eq!(
-            run(files, &every()),
+            line(run(files, &every())),
+            "refused: LOAD-DUP x is declared twice (m.tally:9)",
+            "the second x"
+        );
+    }
+
+    fn probe() -> Request {
+        Request {
+            asks: Asks::Named(vec!["zz".to_owned()]),
+            pin: Pin::Canonical,
+            days: crate::Days::Events,
+        }
+    }
+
+    #[test]
+    fn a_reality_with_scenarios_runs_as_worlds() {
+        let base = format!(
+            "{MODEL}\nsource card \"a card\"\n\nunit PLN: currency minor 0.01\n\ninput fee: money PLN\n\nversion v\n  cite card\n  governs always\n  known 2026-01-01\n  fee = 12.50\n\nask a: fee\n"
+        );
+        let scenario = "scenario s over m\n  tally 2\n  from 2026-06-01\n\nask b: fee in s\n";
+        let alone = given(&[("s.tally", Some(scenario.as_bytes()))]);
+        assert_eq!(
+            line(run(alone, &every())),
+            "refused: LOAD-HEADER 0 files have a model header; exactly one does",
+            "a scenario alone: its base has no model"
+        );
+        let both = || {
+            given(&[
+                ("m.tally", Some(base.as_bytes())),
+                ("s.tally", Some(scenario.as_bytes())),
+            ])
+        };
+        assert_eq!(
+            lines(both(), &probe()),
+            ["refused: REQ-ASK no ask zz"],
+            "after both worlds load"
+        );
+        let base_ask = Request {
+            asks: Asks::Named(vec!["a".to_owned()]),
+            pin: Pin::Canonical,
+            days: crate::Days::Events,
+        };
+        assert_eq!(
+            lines(both(), &base_ask),
+            ["a: 12.50 PLN", "  cut 2026-01-01"],
+            "a base ask in the base"
+        );
+        assert_eq!(
+            run(both(), &every()),
             Err(NotImplemented),
-            "M0's checks come first"
+            "b is asked in s's world"
+        );
+        let fromless = "scenario s over m\n  tally 2\n\nask b: fee in s\n";
+        let refused = given(&[
+            ("m.tally", Some(base.as_bytes())),
+            ("s.tally", Some(fromless.as_bytes())),
+        ]);
+        assert_eq!(
+            lines(refused, &every()),
+            [
+                "scenario s: refused: LOAD-HEADER missing from date (s.tally:1)",
+                "a: 12.50 PLN",
+                "  cut 2026-01-01"
+            ],
+            "s refused alone, its ask with it, the base answered"
         );
     }
 }

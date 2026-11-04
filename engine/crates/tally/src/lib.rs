@@ -2,8 +2,8 @@
 //! Spec: E §1 (the run function); the modules name their own sections.
 //! Twin: engine/tools/refcore/cli.py.
 //! Invariants: the library reads no clock, environment or file (R-38, R-39); [`run`] answers
-//! a read or parse refusal and the asks a loaded reality's evaluator can read, and
-//! `NotImplemented` for a load refusal and anything past the part built (milestone S).
+//! a read, parse or load refusal and the asks a loaded reality's evaluator can read, and
+//! `NotImplemented` for anything past the part built (milestones S and M0).
 //!
 //! Milestone S built it in groups (`engine/BUILD-LOG.md`, the S plan): the exact numbers,
 //! [`num`]; the code catalogue and refusals, [`base`]; the entry and its read step, [`run`];
@@ -21,7 +21,9 @@ mod counters;
 mod invariant;
 mod oracle;
 
-pub use api::{Answer, Asks, Given, Pin, Request, Source, reprint, run, run_with_memo};
+pub use api::{
+    Answer, Asks, Given, Pin, Request, Source, load_report, reprint, run, run_with_memo,
+};
 #[cfg(feature = "counters")]
 pub use counters::Counters;
 #[cfg(feature = "counters")]
@@ -57,7 +59,9 @@ pub mod syntax {
     mod tree;
 
     pub use canon::{printed_hash, reprint};
-    pub use item::parse_reality;
+    pub(crate) use expr::is_builtin;
+    pub use item::{parse_reality, parse_split};
+    pub(crate) use lex::cannot;
     pub use lex::{Canon, Kind, Line, Mark, Paren, Role, Tok, split_lines};
     pub use parse::Stop;
     pub use tree::{
@@ -97,6 +101,7 @@ pub mod model {
     mod ty;
     mod unit;
     mod value;
+    mod world;
 
     pub use decl::{
         BandEnd, BandInfo, BandRow, BindInfo, DefInfo, Domain, Fulfils, InputInfo, MoveInfo,
@@ -113,6 +118,7 @@ pub mod model {
         Class, Code, MvRef, MvSrc, Number, Value, currency, currency_id, currency_unit, money_num,
         num_money,
     };
+    pub use world::Scenarios;
 }
 
 /// Holes (L §8.1): a missing fact and the questions it carries, built only here (R-116), with
@@ -205,29 +211,35 @@ pub mod ask {
     mod answer;
     mod register;
     mod residuals;
+    mod worlds;
 
     pub(crate) use answer::date_of;
     pub use answer::{Answered, answer};
     pub use register::{register_lines, warning_lines};
+    pub use worlds::{answer_worlds, report_lines};
 }
 
-/// Load (E §3.1 steps 1–4): the parsed files become the reality, constructively; the load
-/// refusals S makes are those construction meets, the rest are M0's.
+/// Load (E §3.1 steps 1–4): the run's files split and told into worlds, the base and each
+/// scenario's; the parsed files become each world's reality, constructively; the load refusals
+/// made are those construction meets, the rest are M0's later groups'.
 pub mod load {
     mod decls;
     mod graph;
     mod indexes;
     mod keys;
     mod kinds;
+    mod names;
     mod observed;
     mod places;
     mod rows;
     mod spans;
     mod steps;
     mod strata;
+    mod worlds;
 
     pub use keys::index_key_of;
     pub use steps::load;
+    pub use worlds::{Loaded, Split, Worlds, load_run, split_files};
 }
 
 /// The read rule (L §4.6): which row a read of an input, a def's givens, a dated rule or a

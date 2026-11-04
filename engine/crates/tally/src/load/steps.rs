@@ -1,19 +1,16 @@
-//! Load: the parsed files become the reality, step by step in refcore's order, as far as S builds.
-//! Spec: E §3.1 (steps 1–4); L §2.5 (one namespace), §5.4 (units and currencies), §5.18 (asks),
-//! §8.5 (WARN-UNREAD for a source).
-//! Twin: engine/tools/refcore/loader.py (`Loader.build`, `register_builtins`, `register_names`,
-//! `build_units`).
-//! Invariants: every section's id is in the namespace once; each step reads only what earlier
-//! steps built; a form S doesn't build stops with `NotBuilt`, never a guessed refusal; the load
-//! refusals S makes are the ones construction meets, in refcore's words (the rest are M0's).
+//! Load: the parsed files become the reality, step by step in refcore's order, as far as M0 builds.
+//! Spec: E §3.1 (steps 1–4); L §6.1 (one model header, one `tally`), §6.4 (a scenario over the
+//! model or another scenario), §5.4 (units and currencies), §5.18 (asks), §8.5 (WARN-UNREAD
+//! for a source).
+//! Twin: engine/tools/refcore/loader.py (`Loader.build`, its pass 1, and `build_units`).
+//! Invariants: each step reads only what earlier steps built; a form not built yet stops with
+//! `NotBuilt`, never a guessed refusal; the load refusals made are the ones construction meets,
+//! in refcore's words (the rest are M0's later groups').
 
 use crate::base::{Code, Load, Place as At, Refusal, Run, Table, Warn};
-use crate::model::{
-    BUILTIN_INDEXES, BUILTIN_INPUTS, BindInfo, Domain, Graph, InputInfo, NameKind, PERIODS,
-    PRELUDE_KINDS, Reality, Ty,
-};
+use crate::model::{Graph, PERIODS, Reality, Scenarios};
 use crate::num::{Num, NumError};
-use crate::syntax::{Bind, Domain as BindDomain, File, HeaderKind, Lit, Section, Stop, UnitForm};
+use crate::syntax::{File, HeaderKind, Lit, Section, Stop, UnitForm};
 use std::collections::{BTreeMap, BTreeSet};
 
 /// The reality being built, with the sections it is built from.
@@ -72,7 +69,8 @@ pub fn load(files: Vec<File>) -> Result<Reality, Stop> {
 }
 
 impl Loader {
-    /// The one model header, the files' tally version, and an empty reality under it. L §2.3.
+    /// The one model header, the files' tally version, the scenarios, and an empty reality under
+    /// them (refcore's `Loader.build`, pass 1). L §6.1, §6.4.
     fn new(files: Vec<File>) -> Result<Loader, Stop> {
         let models: Vec<&File> = files
             .iter()
@@ -93,12 +91,10 @@ impl Loader {
                 "files declare different tally versions".to_owned(),
             )));
         }
-        if files.iter().any(|f| f.header.kind == HeaderKind::Scenario) {
-            return Err(Stop::NotBuilt("scenarios"));
-        }
         if !model.header.uses.is_empty() || !model.header.sames.is_empty() {
             return Err(Stop::NotBuilt("joint models"));
         }
+        let scenarios = scenarios(&files, &model.header.id)?;
         let header = model.header.clone();
         let missing = Stop::NotBuilt("a model header without on, start or end");
         let start = header.start.ok_or(missing.clone())?;
@@ -133,53 +129,11 @@ impl Loader {
                 asks: Vec::new(),
                 warnings: Vec::new(),
                 graph: Graph::default(),
+                scenarios,
             },
             sections,
             currency_order: Vec::new(),
         })
-    }
-
-    /// The built-in inputs, kinds, indexes and `cut` (refcore's `register_builtins`). L §5.19.
-    fn register_builtins(&mut self) {
-        for id in BUILTIN_INPUTS {
-            let mut input = InputInfo::new(id, None);
-            if id == "account_place" {
-                input.binds = vec![builtin_bind("a", Domain::Index("bank_account".to_owned()))];
-                input.ty = Some(Ty::Key("places".to_owned()));
-            } else {
-                input.binds = vec![builtin_bind("x", Domain::Kind("places".to_owned()))];
-                input.reading = true;
-            }
-            self.m.names.insert(id.to_owned(), NameKind::Input);
-            self.m.inputs.push(id, input);
-        }
-        for id in PRELUDE_KINDS {
-            self.m.names.insert(id.to_owned(), NameKind::Kind);
-        }
-        self.m.names.insert("cut".to_owned(), NameKind::Cut);
-        for id in BUILTIN_INDEXES {
-            self.m.names.insert(id.to_owned(), NameKind::Index);
-        }
-    }
-
-    /// Every section's id into the one namespace (refcore's `register_names`). L §2.5.
-    fn register_names(&mut self) -> Result<(), Stop> {
-        for (file, section) in &self.sections {
-            let (id, line) = section_id(section);
-            if self.m.names.contains_key(id) {
-                let message = if is_builtin_id(id) {
-                    format!("{id} is declared twice (a built-in id)")
-                } else {
-                    format!("{id} is declared twice")
-                };
-                return Err(refuse(Load::Dup, message, file, line));
-            }
-            self.m.names.insert(id.to_owned(), section_kind(section));
-            if let Section::Source(source) = section {
-                self.m.sources.push(id, source.as_ref().clone());
-            }
-        }
-        Ok(())
     }
 
     /// Currencies with their minor units, and named units (refcore's `build_units`). L §5.4.
@@ -249,35 +203,38 @@ fn positive_plain(lit: &Lit) -> Option<Num> {
     positive.then(|| n.value.clone())
 }
 
-/// A built-in input's key bind, written as `x in places` would be.
-fn builtin_bind(var: &str, domain: Domain) -> BindInfo {
-    let id = match &domain {
-        Domain::Index(id) | Domain::Kind(id) | Domain::Axis(id) => id.clone(),
-        Domain::List(_) | Domain::Range => String::new(),
-    };
-    BindInfo {
-        var: var.to_owned(),
-        node: Bind {
-            var: var.to_owned(),
-            domain: BindDomain::Name {
-                id: id.clone(),
-                qual: None,
-            },
-            on: None,
-            over: None,
-            filter: None,
-            text: format!("{var} in {id}"),
-        },
-        domain,
+/// The scenarios the files declare (refcore's `Loader.build`, pass 1): each over the model
+/// (`None`) or over another scenario of these files, with the sections its file holds. L §6.4.
+fn scenarios(files: &[File], model: &str) -> Result<Scenarios, Stop> {
+    let mut found = Scenarios::default();
+    let mut declared = Vec::new();
+    for file in files
+        .iter()
+        .filter(|f| f.header.kind == HeaderKind::Scenario)
+    {
+        let head = &file.header;
+        if found.over.contains_key(&head.id) {
+            let message = format!("scenario {} declared twice", head.id);
+            return Err(refuse(Load::Scenario, message, &file.path, head.line));
+        }
+        let over = head.over.clone().filter(|over| over != model);
+        found.over.insert(head.id.clone(), over);
+        declared.push((head.id.as_str(), file.path.as_str(), head.line));
+        for section in &file.sections {
+            found
+                .section
+                .insert(section_id(section).0.to_owned(), head.id.clone());
+        }
     }
-}
-
-/// Whether the language declares `id`.
-fn is_builtin_id(id: &str) -> bool {
-    BUILTIN_INPUTS.contains(&id)
-        || PRELUDE_KINDS.contains(&id)
-        || BUILTIN_INDEXES.contains(&id)
-        || id == "cut"
+    for (id, path, line) in declared {
+        if let Some(Some(over)) = found.over.get(id)
+            && !found.over.contains_key(over)
+        {
+            let message = format!("scenario {id} is over {over}, neither the model nor a scenario");
+            return Err(refuse(Load::Scenario, message, path, line));
+        }
+    }
+    Ok(found)
 }
 
 /// A section's id and line.
@@ -296,24 +253,5 @@ pub(super) fn section_id(section: &Section) -> (&str, u32) {
         Section::Ask(s) => (&s.id, s.line),
         Section::Axis(s) => (&s.id, s.line),
         Section::Fill(s) => (&s.id, s.line),
-    }
-}
-
-/// What a section's id names.
-fn section_kind(section: &Section) -> NameKind {
-    match section {
-        Section::Source(_) => NameKind::Source,
-        Section::Version(_) => NameKind::Version,
-        Section::Unit(_) => NameKind::Unit,
-        Section::Kind(_) => NameKind::Kind,
-        Section::Index(_) => NameKind::Index,
-        Section::Place(_) => NameKind::Place,
-        Section::Input(_) => NameKind::Input,
-        Section::Band(_) => NameKind::Band,
-        Section::Def(_) => NameKind::Def,
-        Section::Move(_) => NameKind::Move,
-        Section::Ask(_) => NameKind::Ask,
-        Section::Axis(_) => NameKind::Axis,
-        Section::Fill(_) => NameKind::Fill,
     }
 }

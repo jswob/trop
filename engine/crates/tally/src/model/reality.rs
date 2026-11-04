@@ -11,6 +11,7 @@ use super::graph::Graph;
 use super::index::{IndexInfo, VersionInfo};
 use super::key::Span;
 use super::kind::{Entry, KindInfo, KindSpec, Thing};
+use super::world::Scenarios;
 use crate::base::{Table, Warn};
 use crate::num::Num;
 use crate::syntax::{Ask, Header, Price, Sign, Source, Type};
@@ -101,6 +102,8 @@ pub struct Reality {
     pub warnings: Vec<(Warn, String)>,
     /// The item graph and the classes and strata load decides from it.
     pub graph: Graph,
+    /// The scenarios this reality loads with the base: none for a base (L §6.4).
+    pub scenarios: Scenarios,
 }
 
 impl Reality {
