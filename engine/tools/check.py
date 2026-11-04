@@ -119,7 +119,8 @@ def steps(mode):
         ("runner", RUNNER, {}),
         ("gating", gating([]), {}),
         ("milestone-report", milestone_report, {}),
-        ("exceptions", tool("exceptions", "--check"), {}),
+        # report-only lines that differ from the lock are a report in fast, a failure in full (R-110)
+        ("exceptions", tool("exceptions", "--check", *(["--fast"] if mode == "fast" else [])), {}),
         ("check-frozen", tool("check-frozen"), {}),
         ("check-rules", tool("check-rules"), {}),
         ("headers", tool("headers"), {}),

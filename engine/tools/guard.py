@@ -630,6 +630,13 @@ def code_letters(name):
     return "", set()
 
 
+def attached_path(value):
+    """Whether an option's attached value is read as a path: it holds a slash, or it ends
+    in a file extension that starts with a letter (`b.md`, not `1.5`). A bare word, even
+    one that names a protected folder (`--interp=engine`), is the program's (issue #20)."""
+    return "/" in value or re.fullmatch(r"[\w.+-]*\w\.[A-Za-z]\w*", value) is not None
+
+
 # python's options whose value is neither code nor the script
 PYTHON_VALUED = {"-W", "-X"}
 
@@ -639,7 +646,10 @@ def interpreter_paths(name, args):
     look like paths; as a plain argument, one with a slash or an extension. The script
     it runs, it only reads: inline code (`-e '…'`, `-c "…"`, `-es/a/b/`, or a word that
     looks like code), or else the first plain operand (a tripwire can't see what a
-    script then writes; check-frozen does). Every operand after it is checked (F-3)."""
+    script then writes; check-frozen does). Every operand after it is checked (F-3), and
+    so is an option's attached value (`--out=a/b`, `-oa/b`, `-o=b.md`) that holds a
+    slash or a file extension; a bare word or a number (`--interp=engine`, `--jobs=2`)
+    isn't one (issue #20)."""
     letters, long_code = code_letters(name)
     found, script_seen, code_next, skip = [], False, False, False
     for a in args:
@@ -657,6 +667,8 @@ def interpreter_paths(name, args):
                 if "=" in a and a.split("=", 1)[0] in long_code:
                     found += path_like(a.split("=", 1)[1])
                     script_seen = True
+                elif "=" in a and attached_path(a.split("=", 1)[1]):
+                    found.append(a.split("=", 1)[1])  # --out=a/b (issue #20)
             elif a in PYTHON_VALUED and name.startswith("python"):
                 skip = True
             elif a[-1] in letters:
@@ -664,6 +676,10 @@ def interpreter_paths(name, args):
             elif a[1] in letters:
                 found += path_like(a[2:])  # -es/a/b/: the code is attached
                 script_seen = True
+            elif name.startswith("python") and a[1] == "m":
+                script_seen = True  # -mpkg.mod: the module is the script
+            elif attached_path(a[2:].removeprefix("=")):
+                found.append(a[2:].removeprefix("="))  # -oa/b, -o=b.md (issue #20)
             continue
         if code_like(a):
             found += path_like(a)

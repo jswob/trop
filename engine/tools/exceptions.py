@@ -2,6 +2,8 @@
 
     engine/tools/exceptions           list every exception by area, and fail on a bad
                                       reason or an area over its budget
+    engine/tools/exceptions --check --fast   the same, but a difference only in the
+                                      report-only lines is a report, not a failure
     engine/tools/exceptions --check   the same, and fail unless the list equals
                                       engine/EXCEPTIONS.lock
     engine/tools/exceptions --write   regenerate engine/EXCEPTIONS.lock (the builder
@@ -335,9 +337,13 @@ def lock_text(found, report):
 
 def main():
     args = sys.argv[1:]
-    if args not in ([], ["--check"], ["--write"]):
-        print("usage: engine/tools/exceptions [--check|--write]", file=sys.stderr)
+    if args not in ([], ["--check"], ["--check", "--fast"], ["--write"]):
+        print("usage: engine/tools/exceptions [--check [--fast]|--write]", file=sys.stderr)
         return 64
+    # `check fast` (and so the Stop hook) reports report-only lines that differ from the
+    # lock; `check full`, before each commit and in CI, fails on them (R-110, the review
+    # after S, 2026-11-03, issue #8)
+    fast = args == ["--check", "--fast"]
     table, max_rule = areas()
     found = scan_code(table, max_rule) + scan_deny(table, max_rule)
     report = scan_report_only()
@@ -368,7 +374,7 @@ def main():
         with open(LOCK, "w", encoding="utf-8") as f:
             f.write(text)
         print(f"exceptions: wrote engine/EXCEPTIONS.lock")
-    elif args == ["--check"]:
+    elif args[:1] == ["--check"]:
         try:
             with open(LOCK, encoding="utf-8") as f:
                 old = f.read()
@@ -379,11 +385,19 @@ def main():
         elif old != text:
             was = {l for l in old.splitlines() if not l.startswith("#")}
             now = {l for l in text.splitlines() if not l.startswith("#")}
+            if fast:
+                apart = {l for l in was ^ now if l.startswith("report-only\t")}
+                if apart:
+                    print(f"exceptions: report-only lines differ from EXCEPTIONS.lock ({len(apart)}); "
+                          "`check full` fails until `engine/tools/exceptions --write` (R-110)")
+                was, now = was - apart, now - apart
+                if was == now:
+                    old = text  # only the report-only lines and their count differ
             for l in sorted(now - was):
                 problems.append(f"not in EXCEPTIONS.lock: {l}")
             for l in sorted(was - now):
                 problems.append(f"in EXCEPTIONS.lock but gone: {l}")
-            if was == now:
+            if was == now and old != text:
                 problems.append("EXCEPTIONS.lock differs (its header or an exception's count); rewrite it with --write")
     for p in problems:
         print(f"FAIL {p}")

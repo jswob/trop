@@ -20,3 +20,43 @@ expect: in EXCEPTIONS.lock but gone
 --- with
 --- run
 tools/exceptions --check
+
+case: report-only-line-full
+# A new report-only hit (R-124's own type parameter) not in the lock fails the full
+# check and the commit (the review after S, 2026-11-03, issue #8).
+tool: run
+expect: not in EXCEPTIONS.lock: report-only
+--- module
+/// Planted.
+pub fn planted<T: Copy>(v: T) -> T {
+    v
+}
+--- run
+tools/exceptions --check
+
+case: report-only-line-fast
+# The same hit in `check fast` (and so the Stop hook) is a report line, not a failure.
+tool: run
+exit: any
+expect: report-only lines differ from EXCEPTIONS.lock
+expect: fast-passed
+--- module
+/// Planted.
+pub fn planted<T: Copy>(v: T) -> T {
+    v
+}
+--- run
+tools/exceptions --check --fast && echo fast-passed
+
+case: new-exception-not-locked-fast
+# A counted exception missing from the lock fails `check fast` as before.
+tool: run
+expect: not in EXCEPTIONS.lock: tests
+--- append tests/runner/src/lib.rs
+/// Planted.
+#[expect(clippy::needless_return, reason = "R-66: a planted exception with a proper reason")]
+pub fn planted() -> u8 {
+    return 1;
+}
+--- run
+tools/exceptions --check --fast

@@ -18,10 +18,11 @@ name = "fuzz-benches"
 globs = ["fuzz/**", "crates/*/benches/**"]
 
 # The number kernel: its globs are tools/kernel.toml's `kernel`, set at milestone S.
-# One exception per arithmetic function, at most 20 at S, reviewed after S.
+# 20 at S; lowered after S to its count (1, num/big.rs `struct Big`) plus 2, the user's
+# "Lower to 3 (Recommended)" (2026-11-03, the review after S, issue #8).
 [[area]]
 name = "kernel"
-budget = 20
+budget = 3
 globs = "kernel.toml"
 
 # The lexer and the parser, named at S with the kernel's files (R-85)
