@@ -566,3 +566,68 @@ No change in behaviour.
 **Next:** explain over adjustments at M1, and readings after a decision (the sign rule's point 2) at M2. As the spec has it, #30 warns about a place that only rows keyed by it name (`opening`, a reading), an `anchor` or a `covers` line (L §8.5, refcore's `values_naming`).
 
 **STOP-REPORTs:** none open. **Exceptions:** +0; count 6; report-only 5. **Check:** `check full: green, 31 steps (535s)`.
+
+## STOP-REPORT 2026-11-04: #55's four survivors are a test gap: a day's plan order shows in which refusal a place keeps
+
+- **Kind:** a test seems wrong (a missing vector); the spec's claim in E §4.1 is too strong.
+- **Where:** `walk/plan.rs` `Order::text`, `quoted`; read by `walk/agenda.rs:198`, `:428` (`schedule_plan`, the plan's `At.rank`); `walk/state.rs` `apply`, `Change::Bad` (a place keeps the first refusal booked at it). The same gap is already listed: `MUTANTS-SURVIVORS.md` rows 124 (`delete field rank … in schedule_plan`) and 126 (`== → !=` in `schedule_plan`), both `R-87: missed: open:` with the `a`/`ab` recipe; T never added the vector.
+- **Rule or gate:** DONE gate 8 (R-87, issue #55); E §4.1, last paragraph ("the order changes no balance and no refusal").
+- **What happens:** The text rank is live, not dead code and not equivalent. A day's plan legs are booked in order-text order (refcore's walk key `osort`, `<move>|<keys tuple>`). Typed order would differ in two cases: move ids where one is a prefix of the other (`ab|…` sorts before `a|…`, since `b` comes before `|`), and a key place of 10 against 2. When two plan legs on one day refuse at one place with different messages, that order decides which refusal `bal` prints. With every rank tied (`Order::text` mutated), the stable sort falls back to the typed movement order, so the other refusal prints. Probe 1, the smallest:
+
+```
+model order_probe
+  tally 2
+  on 2025-12-31
+  start 2025-01-01
+  end 2025-12-31
+
+source fixture "probe (invented values)"
+
+unit DUK: currency minor 0.01
+
+input amt: money DUK
+
+input d0: date
+
+place src: accounts DUK lives 2025-01-01..
+
+place gone: accounts DUK lives 2025-01-01..2025-01-05
+
+move a: transfers
+  on d0
+  leg cash from src to gone amount amt
+
+move ab: transfers
+  on d0
+  leg cash from src to gone amount amt
+
+ask q: bal(src, 2025-01-31)
+
+version facts
+  cite fixture
+  governs always
+  known 2025-01-01
+  amt = 1.00 DUK
+  d0 = 2025-01-10
+  opening[src] = 500.00 DUK at 2025-01-01 start
+  opening[gone] = 0 DUK at 2025-01-01 start
+```
+
+  refcore and the engine both print `q: refused: RUN-LIFESPAN ab.cash moves into or out of gone outside its lifespan`. With `Order::text → String::new()` built (`check step release-binary`), the engine prints `a.cash …`. By the same tie, it also kills `Order::text → "xyzzy"` and rows 124 and 126 (`==` → `!=` ranks both plans by move id: `a` and `ab` both 0, so typed order).
+  `quoted` needs a second probe: with single keys its mutants are equivalent, because ids are identifier characters, which all sort after the closing quote. Probe 2 is probe 1 with the moves replaced by one move of two keys, `index flats = [f1, …, f11]` and places `x`, `y`:
+
+```
+move m[p in accounts on d0, f in flats]: transfers
+  on d0
+  when (p == x and pos(f) == 3) or (p == y and pos(f) == 11)
+  leg cash from src to gone amount amt
+```
+
+  with `opening[x]`, `opening[y]` = 0 DUK. refcore and the engine print `RUN-LIFESPAN m[x, f3].cash …`. With `quoted → "xyzzy"` built, the engine prints `m[y, f11].cash …`: the ids tie, so the key places' text decides (`(0, 10,` before `(0, 2,`). Both probes are at `tmp/cleanup/order_probe.tally` and `quoted_probe.tally` in this worktree.
+- **What I tried:** Read E §4.1 and refcore's walk keys (`walk.py` `sched_leg`, `osort`). Built each mutant once (`Order::text → String::new()`, `quoted → "xyzzy"`), ran both probes, then restored `plan.rs` byte for byte and rebuilt. The tree is clean and the release binary is the real one again.
+- **What I ask:** One of two, the master's call:
+  (a) T adds both probes as kernel vectors with refcore's bytes. That kills the 4 mutants and rows 124 and 126; I resume and confirm with `mutants-local`.
+  (b) The spec round rules which refusal a place keeps when two plan legs of one day refuse there. E §4.1 says the order "changes no refusal", which holds for the set of refused legs but not for the printed message. If the ruling is "the first in the typed movement order", refcore's `osort` changes, and the text rank (`Order::text`, `quoted`, `order_texts`, `text_rank`) is deleted.
+  Not chosen: listing the 4 as `R-87: missed: open:` like rows 124 and 126. That would green gate 8 without a test, and the brief's case 3 says stop.
+- **State:** Last green commit 5752953 (master); nothing uncommitted but this report. #53 items 1, 2, 4 and 5 are not started (item 3 waits on this ruling).
+- **Resolved 2026-11-04.** The user ruled "Both: T now, spec later". T's 4c45536 adds g6/refusal_order and g6/refusal_keys, each with its twin, as s_kernel vectors with refcore's bytes; the spec question is #57. T's `mutants-local -F 'Order::text|quoted|schedule_plan'` on `plan.rs` and `agenda.rs` caught the 4 #55 survivors and rows 124 and 126, which leave `MUTANTS-SURVIVORS.md` in the next commit. Its 13 missed are all listed rows (112, 121, 122, 125, 127, 163, 164, 176–180). The text rank stays until #57 rules.
