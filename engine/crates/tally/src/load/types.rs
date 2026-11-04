@@ -387,16 +387,46 @@ pub(super) fn text(e: &Expr) -> String {
         Expr::Record(_) => "record".to_owned(),
         Expr::LegOf(..) => "legof".to_owned(),
         Expr::To(..) => "to".to_owned(),
-        Expr::Flows(_) => "flows".to_owned(),
+        Expr::Flows(flows) => flows_text(flows),
         Expr::Covered(_) => "covered".to_owned(),
         Expr::Calendar(_) => "calendar".to_owned(),
         Expr::Query(_) => "query".to_owned(),
-        Expr::Low(_) => "low".to_owned(),
+        Expr::Low(low) => {
+            let mut s = format!(
+                "low({}, {})",
+                text(&low.place),
+                super::reads::span_text(&low.span)
+            );
+            if let Some(from) = &low.proj.from {
+                s.push_str(" from ");
+                s.push_str(&text(from));
+            }
+            s
+        }
         Expr::Crps(_) => "crps".to_owned(),
         Expr::DistFn(_) => "distfn".to_owned(),
         Expr::Dist(_) => "dist".to_owned(),
         Expr::Prorata(_) => "prorata".to_owned(),
     }
+}
+
+/// A `flows` read's text, its `for` and its conversion included (refcore's `_txt` of
+/// `flows`).
+fn flows_text(flows: &crate::syntax::Flows) -> String {
+    let mut s = format!(
+        "flows({}, {}",
+        text(&flows.target),
+        super::reads::span_text(&flows.span)
+    );
+    if let Some(key) = &flows.for_key {
+        s.push_str(", for ");
+        s.push_str(&text(key));
+    }
+    s.push(')');
+    if let Some((cur, fx, mode)) = &flows.convert {
+        s = format!("{s} in {cur} at {} {}", text(fx), text(mode));
+    }
+    s
 }
 
 /// A literal's text: a number with its unit as the unit algebra prints it.
@@ -760,14 +790,14 @@ impl Checker {
             Expr::Agg(agg) => self.aggregate(m, scope, agg, depth),
             Expr::Call(call) => self.call(m, scope, call, expect, depth),
             Expr::Last(pair) => self.last(m, scope, &pair.0, &pair.1, depth),
-            Expr::LegOf(inner, of) => self.leg_of(m, scope, inner, of, depth),
+            Expr::LegOf(inner, of) => self.leg_of(m, scope, inner, of, expect, depth),
             Expr::To(inner, step) => self.to(m, scope, inner, step, depth),
             Expr::Bal(bal) => self.bal(m, scope, bal, depth),
             Expr::Flows(flows) => self.flows(m, scope, flows, depth),
             Expr::Covered(covered) => self.covered(m, scope, &covered.0, &covered.1, depth),
             Expr::Value(value) => self.value(m, scope, value, depth),
             Expr::Query(..) => Err(Stop::NotBuilt("a query (mean, share, quantile)")),
-            Expr::Low(..) => Err(Stop::NotBuilt("`low(x, span)`")),
+            Expr::Low(low) => self.low(m, scope, low, depth),
             Expr::Crps(..) => Err(Stop::NotBuilt("`crps`")),
             Expr::DistFn(..) => Err(Stop::NotBuilt("`cdf`, `pdf` and `pmf`")),
             Expr::Dist(..) => Err(Stop::NotBuilt("distributions")),
@@ -1404,7 +1434,13 @@ impl Checker {
     }
 
     /// `x.f` of a value of type `t` (refcore's `t_field`). L §3.1, §5.7, §5.14.
-    fn field(m: &Reality, scope: &Scope, base: Option<&Expr>, t: &Ty, field: &str) -> Typed {
+    pub(super) fn field(
+        m: &Reality,
+        scope: &Scope,
+        base: Option<&Expr>,
+        t: &Ty,
+        field: &str,
+    ) -> Typed {
         if let (Some(Expr::Name(name)), Ty::KeyLit(_)) = (base, t)
             && !scope.is_var(name)
             && !m.names.contains_key(name)
@@ -1827,7 +1863,7 @@ fn period_conv(index_pk: Option<PeriodKind>, ix: &str, pk: PeriodKind) -> Result
 }
 
 /// A name kind's word, as a message names it.
-fn name_word(kind: NameKind) -> &'static str {
+pub(super) fn name_word(kind: NameKind) -> &'static str {
     match kind {
         NameKind::Unit => "unit",
         NameKind::Kind => "kind",

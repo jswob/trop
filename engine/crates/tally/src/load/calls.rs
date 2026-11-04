@@ -1,33 +1,24 @@
-//! Load's checker, its calls: the built-in functions' argument types and results, band calls, and the reading forms whose types are M0's later groups' (walked for their reads, typed `Unseen`).
+//! Load's checker, its calls: the built-ins' argument types and results, band calls, `to` and spans, a later group's call typed `Unseen`.
 //! Spec: L §4.2 (the date and calendar functions), §5.9 (bands, `band_lo`, `band_hi`,
 //! `marginal`), §5.11 (`missing`, `min`, `max`), §7.2 (`round`, its step and mode), §4.6
-//! (`since`), §5.14.1 (`next`, running reads), §5.19 (`observed`, `gap`, `covered`), §5.10
-//! (`bal`, `value`, prices), §8.3 (`LOAD-UNIT`, `-PARSE`, `-NAME`, `-KEY`, `-LITERAL`,
+//! (`since`), §5.6 (spans), §8.3 (`LOAD-UNIT`, `-PARSE`, `-NAME`, `-KEY`, `-LITERAL`,
 //! `-MISSING`, `-BAND`), §8.4.
 //! Twin: engine/tools/refcore/check.py (`t_call`, `args`, `want`, `tdate`,
 //! `tdate_or_period`, `tint`, `c_start_of` to `c_since`, `cal_arg`, `band_ref`, `c_band_lo`,
-//! `c_marginal`, `band_call`); check3.py (`m_t_bal`, `m_t_flows`, `m_t_value`, `m_c_next`,
-//! `m_c_covered`, `m_c_gap`, `m_c_observed`, `m_legof_read`), their reads.
+//! `c_marginal`, `band_call`, `mode_arg`, `span`); the reads of the ledger are `reads.rs`'s.
 //! Invariants: every argument is typed in refcore's order and its reads recorded; a call
-//! whose checks are a later group's (`exp`, `pow`, `periodic`, `unit`, `lifespan`, …)
-//! types its arguments and is `Unseen`, refusing nothing of its own.
+//! whose checks are a later group's (`exp`, `pow`, `periodic`, `lifespan`, …) types its
+//! arguments and is `Unseen`, refusing nothing of its own.
 
-use super::check::{
-    Checker, Reading, Scope, Stands, input_or_def, move_keys, named_parts, place_target,
-    price_inputs,
-};
+use super::check::{Checker, Reading, Scope, Stands, named_parts};
 use super::ops::unify;
 use super::types::{
     Typed, input_read, is_date, is_period, no_order, numcls, period_kind, refused, text, uerr,
     unit_of,
 };
 use crate::base::Load;
-use crate::model::{
-    CodeKind, Mark, NameKind, Node, NodeKind, PeriodWord, Reality, Rel, Shown, Target, Ty, Unit,
-};
-use crate::syntax::{
-    Bal, Call, Expr, Flows, Key, Lit, OfQ, Postfix, Price, Span, Step, Stop, Valuation,
-};
+use crate::model::{CodeKind, NameKind, Node, NodeKind, PeriodWord, Reality, Rel, Shown, Ty, Unit};
+use crate::syntax::{Call, Expr, Key, Lit, Postfix, Span, Step, Stop};
 use crate::time::PeriodKind;
 
 /// The date functions whose names no band's call shadows (refcore's `DATE_FNS`).
@@ -208,6 +199,7 @@ impl Checker {
             "observed" => self.observed(m, scope, args, depth),
             "gap" => self.gap(m, scope, args, depth),
             "schedule" => self.calendar_call(m, scope, args, 3, depth),
+            "unit" => self.unit(m, scope, args, depth),
             _ => self.args_only(m, scope, args, depth),
         }
     }
@@ -518,7 +510,7 @@ impl Checker {
             }
         }
         if matches!(xt, Ty::Unseen) || matches!(ut, Ty::Unseen) {
-            self.mode_arg(m, scope, call, mode, depth)?;
+            self.mode_arg(m, scope, &call.name, mode, depth)?;
             return Ok(Ty::Unseen);
         }
         round_type(self, m, scope, call, (&xt, &ut), mode, depth)
@@ -529,7 +521,7 @@ impl Checker {
         &mut self,
         m: &Reality,
         scope: &Scope,
-        call: &Call,
+        name: &str,
         mode: &Expr,
         depth: u32,
     ) -> Result<(), Stop> {
@@ -543,8 +535,7 @@ impl Checker {
         let t = self.expr(m, scope, mode, Some(&rounding), depth)?;
         if t != rounding && !matches!(t, Ty::Unseen) {
             return Err(uerr(format!(
-                "{}: the mode is {}, not a rounding code",
-                call.name,
+                "{name}: the mode is {}, not a rounding code",
                 t.show()
             )));
         }
@@ -844,75 +835,6 @@ impl Checker {
         Ok(Ty::Unseen)
     }
 
-    /// `next(K, d)`: every move of K or a subkind (refcore's `m_c_next`). L §5.14.1.
-    fn next(&mut self, m: &Reality, scope: &Scope, args: &[Expr], depth: u32) -> Typed {
-        let Some((kind, rest)) = args.split_first() else {
-            return Ok(Ty::Unseen);
-        };
-        if let Expr::Name(id) = kind
-            && m.names.get(id) == Some(&NameKind::Kind)
-        {
-            let sub = m.subtree(id);
-            for (move_id, mv) in m.moves.entries() {
-                if sub.contains(&mv.kind) {
-                    self.edge(&scope.item, Node::new(NodeKind::Move, move_id), Rel::Next);
-                }
-            }
-        }
-        self.args_only(m, scope, rest, depth)
-    }
-
-    /// `observed(m[k])`: the planned instance, and every observed input (refcore's
-    /// `m_c_observed`). L §5.19.
-    fn observed(&mut self, m: &Reality, scope: &Scope, args: &[Expr], depth: u32) -> Typed {
-        self.args_only(m, scope, args, depth)?;
-        let instance = args.first().and_then(named_parts);
-        if instance.is_some_and(|(id, _)| m.names.get(id) == Some(&NameKind::Move)) {
-            for (id, input) in m.inputs.entries() {
-                if input.observed {
-                    self.edge(&scope.item, Node::new(NodeKind::Input, id), Rel::Observed);
-                }
-            }
-        }
-        Ok(Ty::Unseen)
-    }
-
-    /// `gap(x, d)`: a balance read (refcore's `m_c_gap`). L §5.19.
-    fn gap(&mut self, m: &Reality, scope: &Scope, args: &[Expr], depth: u32) -> Typed {
-        self.args_only(m, scope, args, depth)?;
-        self.edge(&scope.item, Node::balances(), Rel::Bal);
-        Ok(Ty::Unseen)
-    }
-
-    /// `m.leg.amount of q`: booking state, read as a balance is (refcore's `m_t_legof`,
-    /// `m_legof_read`). L §5.14.1 (R-10).
-    pub(super) fn leg_of(
-        &mut self,
-        m: &Reality,
-        scope: &Scope,
-        inner: &Expr,
-        of: &OfQ,
-        depth: u32,
-    ) -> Typed {
-        self.expr(m, scope, inner, None, depth)?;
-        self.of(m, scope, Some(of), depth)?;
-        self.edge(&scope.item, Node::balances(), Rel::Bal);
-        self.mark(&scope.item, Mark::LegOf, Target::Unknown);
-        Ok(Ty::Unseen)
-    }
-
-    /// `of q`: the party, the batch, or the pair.
-    fn of(&mut self, m: &Reality, scope: &Scope, of: Option<&OfQ>, depth: u32) -> Result<(), Stop> {
-        match of {
-            None => Ok(()),
-            Some(OfQ::Ref(e)) => self.expr(m, scope, e, None, depth).map(|_| ()),
-            Some(OfQ::Pair(party, batch)) => {
-                self.expr(m, scope, party, None, depth)?;
-                self.expr(m, scope, batch, None, depth).map(|_| ())
-            }
-        }
-    }
-
     /// `e to u`: the value and a unit written as a reference.
     pub(super) fn to(
         &mut self,
@@ -957,147 +879,6 @@ impl Checker {
             }
         }
         Ok(())
-    }
-
-    /// A balance read: the place, its days, its clauses; marked as a running read, a
-    /// projection or `bal(x)` with no day (refcore's `m_t_bal`, `m_check_proj`); its type a
-    /// later group's. L §5.14.1; E §3.1 step 7.
-    pub(super) fn bal(&mut self, m: &Reality, scope: &Scope, bal: &Bal, depth: u32) -> Typed {
-        if bal.proj.random.is_some() {
-            return Err(Stop::NotBuilt("a projection's `random at`"));
-        }
-        self.expr(
-            m,
-            scope,
-            &bal.place,
-            Some(&Ty::Key("places".to_owned())),
-            depth,
-        )?;
-        for arg in &bal.args {
-            self.expr(m, scope, arg, None, depth)?;
-        }
-        if let Some(from) = &bal.proj.from {
-            self.expr(m, scope, from, None, depth)?;
-        }
-        if !bal.modelled {
-            let mark = self.bal_mark(scope, bal);
-            self.mark(&scope.item, mark, place_target(m, scope, &bal.place));
-        }
-        self.edge(&scope.item, Node::balances(), Rel::Bal);
-        self.of(m, scope, bal.of.as_ref(), depth)?;
-        Ok(Ty::Unseen)
-    }
-
-    /// A balance read's mark: a projection, `bal(x)` with no day, or a running read at a
-    /// day; `bal(x, d) modelled` reads the modelled past and takes none (L §5.19).
-    fn bal_mark(&mut self, scope: &Scope, bal: &Bal) -> Mark {
-        if bal.proj.from.is_some() {
-            self.graph.holders.insert(scope.item.clone());
-            return Mark::Proj;
-        }
-        if bal.args.is_empty() {
-            self.graph.balnow.insert(scope.item.clone());
-            return Mark::BalNow;
-        }
-        Mark::Bal
-    }
-
-    /// `flows(x, span …)`: of a move (its leg named, or its one leg), or of a place
-    /// (refcore's `m_t_flows`); its type a later group's. L §5.14.3, §5.14.1.
-    pub(super) fn flows(&mut self, m: &Reality, scope: &Scope, flows: &Flows, depth: u32) -> Typed {
-        if let Some((id, keys)) = move_keys(&flows.target)
-            && !scope.is_var(id)
-            && m.names.get(id) == Some(&NameKind::Move)
-        {
-            for key in keys {
-                if let Key::Expr(e) = key {
-                    self.expr(m, scope, e, None, depth)?;
-                }
-            }
-            self.edge(&scope.item, Node::new(NodeKind::Move, id), Rel::Flows);
-            if m.moves.get(id).is_some_and(|mv| mv.decision) {
-                self.mark(&scope.item, Mark::Flows, Target::Move(id.to_owned()));
-            }
-        } else {
-            self.expr(m, scope, &flows.target, None, depth)?;
-            let target = place_target(m, scope, &flows.target);
-            self.mark(&scope.item, Mark::Flows, target);
-            self.edge(&scope.item, Node::balances(), Rel::Flows);
-        }
-        self.span(m, scope, &flows.span, depth)?;
-        if let Some(key) = &flows.for_key {
-            self.expr(m, scope, key, None, depth)?;
-        }
-        if let Some((_, rate, mode)) = &flows.convert {
-            self.expr(m, scope, rate, None, depth)?;
-            self.expr(m, scope, mode, None, depth)?;
-        }
-        Ok(Ty::Unseen)
-    }
-
-    /// `covered(x, span)`: the place and the span (refcore's `m_c_covered`). L §5.19.
-    pub(super) fn covered(
-        &mut self,
-        m: &Reality,
-        scope: &Scope,
-        place: &Expr,
-        span: &Span,
-        depth: u32,
-    ) -> Typed {
-        self.expr(m, scope, place, None, depth)?;
-        self.span(m, scope, span, depth)?;
-        Ok(Ty::Bool)
-    }
-
-    /// `value(x, d) in CUR [by p] [of q]`: the place, the day, the prices its places are
-    /// valued by, and a balance read (refcore's `m_t_value`, `m_price_edges`); its type a
-    /// later group's. L §5.10.
-    pub(super) fn value(
-        &mut self,
-        m: &Reality,
-        scope: &Scope,
-        value: &Valuation,
-        depth: u32,
-    ) -> Typed {
-        self.expr(m, scope, &value.place, None, depth)?;
-        self.expr(m, scope, &value.day, None, depth)?;
-        for price in price_inputs(m, scope, &value.place) {
-            self.edge(&scope.item, price, Rel::Explicit);
-        }
-        if let Some(by) = &value.by {
-            self.by(m, scope, by, &value.day, depth)?;
-        }
-        self.edge(&scope.item, Node::balances(), Rel::Bal);
-        self.mark(&scope.item, Mark::Bal, place_target(m, scope, &value.place));
-        self.of(m, scope, value.of.as_ref(), depth)?;
-        Ok(Ty::Unseen)
-    }
-
-    /// A value's `by p`: a keyed price input or def, or a reading through `last`, read at
-    /// the value's day; any other price is an expression read as written (refcore's
-    /// `m_t_value`, its `by` branches). L §5.10.
-    fn by(
-        &mut self,
-        m: &Reality,
-        scope: &Scope,
-        by: &Price,
-        day: &Expr,
-        depth: u32,
-    ) -> Result<(), Stop> {
-        if let Expr::Name(id) = &by.input
-            && !scope.is_var(id)
-            && let Some((node, keyed)) = input_or_def(m, id)
-            && (keyed || by.last)
-        {
-            self.edge(&scope.item, node, Rel::Explicit);
-            return Ok(());
-        }
-        if by.last {
-            self.expr(m, &scope.with_mode(Rel::Explicit), &by.input, None, depth)?;
-            self.expr(m, scope, day, None, depth)?;
-            return Ok(());
-        }
-        self.expr(m, scope, &by.input, None, depth).map(|_| ())
     }
 }
 
@@ -1156,7 +937,7 @@ fn round_type(
         Unit::one()
     };
     if c == Some("dyn") {
-        checker.mode_arg(m, scope, call, mode, depth)?;
+        checker.mode_arg(m, scope, &call.name, mode, depth)?;
         return Ok(match (uc, ut) {
             (Some("money"), Ty::Money(cur)) => Ty::Money(cur.clone()),
             (Some("num"), _) => num(su),
@@ -1174,7 +955,7 @@ fn round_type(
             xt.show()
         )));
     }
-    checker.mode_arg(m, scope, call, mode, depth)?;
+    checker.mode_arg(m, scope, &call.name, mode, depth)?;
     let currency = match xu.terms() {
         [(cur, 1)] if xu.is_currency() => Some(cur.clone()),
         _ => None,

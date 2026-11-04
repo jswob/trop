@@ -1,7 +1,9 @@
 //! The builder's load tests: a small reality loads to refcore's indexes, things, rows and observations, and load's refusals print refcore's text.
 //! Spec: E §3.1 steps 1–4; L §4.1 (indexes), §4.6 (rows and their stable ids), §5.3
 //! (versions), §5.7 (kinds, things, lifespans), §5.10 (places), §5.19 (observations), §8.3,
-//! §8.5 (WARN-UNREAD for a source and a place).
+//! §8.5 (WARN-UNREAD for a source and a place); §5.10 (priced places, `bal`, `value`), §5.14
+//! (moves and legs, `flows`), §5.19 (`observed`, `gap`, `covered`) for the checks of moves,
+//! prices and reads.
 //! Twin: engine/tools/refcore/loader.py; each expected line is refcore's load of the same
 //! text, printed in the same normalized form.
 //! Invariants: reads no test, vector or answer key (R-93); the text is written here, small.
@@ -412,6 +414,387 @@ version card_2026
         for (old, new, expected) in cases {
             assert!(TYPED.contains(old), "{old} is in the base");
             let text = TYPED.replacen(old, new, 1);
+            assert_eq!(refusal(&text), expected, "{new}");
+        }
+    }
+
+    /// A reality with priced places, a quantity place, a move of a kind and a decision that
+    /// reads a balance through a projection; defs and an ask on `value`, `flows` and `bal`.
+    const MOVES: &str = "model g
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card \"an invented card\"
+
+unit PLN: currency minor 0.01
+
+unit EUR: currency minor 0.01
+
+unit etf_u \"fund units\"
+
+kind stocks: place one min 0
+
+kind homes: place PLN min 0
+
+kind wages: event certain
+  leg cash: PLN
+
+index qs = [q1, q2]
+
+input amt: money PLN
+
+input day: date
+
+input y: year
+
+input hv: money PLN
+
+input px: num PLN/etf_u
+
+input fx: num PLN/EUR
+
+input rate[k in qs]: num
+
+place konto: accounts PLN lives 2026-01-01..
+
+place konto_eur: accounts EUR lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+place flat: homes priced hv lives 2026-01-01..
+
+place st: stocks etf_u priced px lives 2026-01-01..
+
+move pay: wages
+  on day
+  leg cash from world to konto amount amt
+
+move sweep: transfers
+  on day
+  reads konto
+  leg cash from konto to world amount bal(konto, day) from day
+
+def worth: num PLN = value(flat, day) in PLN
+
+def flowed: money PLN = flows(pay, y)
+
+ask q: worth, flowed, bal(konto, 2026-12-31)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN \"the card\"
+  day = 2026-02-10 \"the card\"
+  y = 2026 \"the card\"
+  hv = 300 000.00 PLN \"the card\"
+  opening[konto] = 500.00 PLN at 2026-01-01 start \"the card\"
+";
+
+    #[test]
+    fn moves_legs_prices_and_reads_are_checked_at_load_as_refcore_checks_them() {
+        assert_eq!(refusal(MOVES), "loaded", "the base");
+        let priced = "place flat: homes priced hv";
+        let leg = "leg cash from world to konto amount amt";
+        let sweep = "  reads konto\n  leg cash from konto to world amount bal(konto, day) from day";
+        let ask = "ask q: worth, flowed, bal(konto, 2026-12-31)";
+        let worth = "def worth: num PLN = value(flat, day) in PLN";
+        let flowed = "def flowed: money PLN = flows(pay, y)";
+        let pay = "place st: stocks etf_u priced px lives 2026-01-01..\n\nmove pay: wages\n  on day\n  leg cash from world to konto amount amt";
+        let cases = [
+            (
+                priced,
+                "place flat: homes priced hz",
+                "LOAD-NAME unknown id hz (a.tally:44)",
+            ),
+            (
+                priced,
+                "place flat: homes priced konto",
+                "LOAD-UNIT place flat is priced by konto, a place, not an input or a def (a.tally:44)",
+            ),
+            (
+                priced,
+                "place flat: homes priced day",
+                "LOAD-UNIT place flat is priced by day of type date, not num CUR (a value) or num CUR/u (a price per unit) (a.tally:44)",
+            ),
+            (
+                priced,
+                "place flat: homes priced rate[q1]",
+                "LOAD-UNIT place flat is priced by rate of type num, not num CUR (a value) or num CUR/u (a price per unit) (a.tally:44)",
+            ),
+            (
+                priced,
+                "place flat: homes priced last(worth)",
+                "LOAD-UNIT place flat is priced by last(worth): last reads an input (L §4.6) (a.tally:44)",
+            ),
+            (
+                priced,
+                "place flat: assets PLN lives 2026-01-01..\n\nplace flat2: homes priced hv",
+                "LOAD-PRICE asset flat names no price input (a.tally:44)",
+            ),
+            (priced, "place flat: assets PLN priced hv", "loaded"),
+            (
+                pay,
+                "place st: assets etf_u priced px lives 2026-01-01..\n\nmove pay: wages\n  on day\n  leg cash from world to st amount amt",
+                "LOAD-KIND a leg to or from an asset (cash of pay) (a.tally:50)",
+            ),
+            (
+                leg,
+                "leg cash from world to amt amount amt",
+                "LOAD-UNIT leg cash of pay: to is money PLN, not a place (a.tally:50)",
+            ),
+            (
+                leg,
+                "leg cash from konto_eur to konto amount amt",
+                "LOAD-UNIT leg cash of pay runs between places of different units (EUR, PLN) (a.tally:50)",
+            ),
+            (
+                leg,
+                "leg cash from world to konto_eur amount amt",
+                "LOAD-UNIT leg cash of pay is in PLN; its places hold EUR (a.tally:50)",
+            ),
+            (
+                leg,
+                "leg cash from world to konto amount day",
+                "LOAD-UNIT the amount of leg cash of pay is date, not money PLN (a.tally:50)",
+            ),
+            (
+                "  on day\n  leg cash from world",
+                "  on day\n  fulfils konto\n  leg cash from world",
+                "LOAD-UNIT fulfils of pay names key accounts, not a movement (a.tally:48)",
+            ),
+            (
+                "  reads konto",
+                "  reads amt",
+                "LOAD-READS sweep declares reads amt, which is not a place or a move (a.tally:54)",
+            ),
+            (
+                sweep,
+                "  reads konto\n  leg cash from konto to world amount day",
+                "LOAD-UNIT the amount of leg cash of sweep is date, not money PLN (a.tally:55)",
+            ),
+            (
+                sweep,
+                "  reads konto\n  leg cash from konto to world amount bal(konto, day)",
+                "LOAD-CYCLE sweep reads bal(konto, day), its own day: its own result or its future (write the projection) (a.tally:52)",
+            ),
+            (
+                sweep,
+                "  reads konto\n  leg cash from konto to world amount bal(konto, day start)",
+                "loaded",
+            ),
+            (
+                sweep,
+                "  reads konto\n  leg cash from konto to world amount bal(konto, day + 1 day)",
+                "LOAD-CYCLE sweep reads bal(konto, day + 1 day), a later day: its own result or its future (write the projection) (a.tally:52)",
+            ),
+            (
+                sweep,
+                "  reads konto\n  leg cash from konto to world amount bal(konto, day) from amt",
+                "LOAD-UNIT from of a projection is money PLN, not a date (a.tally:55)",
+            ),
+            (
+                ask,
+                "ask q: worth, flowed, bal(amt, 2026-12-31)",
+                "LOAD-UNIT bal of money PLN, which is not a place (a.tally:61)",
+            ),
+            (
+                ask,
+                "ask q: worth, flowed, bal(konto, amt)",
+                "LOAD-UNIT the day of bal is money PLN, not a date (a.tally:61)",
+            ),
+            (
+                ask,
+                "ask q: worth, flowed, bal(konto) modelled",
+                "LOAD-PARSE cannot parse: bal(x) with no day takes no clause (a.tally:61)",
+            ),
+            (
+                ask,
+                "ask q: worth, flowed, bal(konto, PLN, 2026-12-31) + amt",
+                "loaded",
+            ),
+            (
+                ask,
+                "ask q: worth, flowed, bal(konto, 2026-12-31) + day",
+                "LOAD-UNIT money PLN + date (a.tally:61)",
+            ),
+            (
+                ask,
+                "ask q: worth, flowed, bal(konto, 2026-12-31) of konto",
+                "LOAD-UNIT of konto is key accounts, not a party, a batch or the pair (a.tally:61)",
+            ),
+            (
+                ask,
+                "ask q: worth, flowed, pay.cash of konto",
+                "LOAD-FIELD of after pay.cash: a read of parts follows a leg's amount (m.leg.amount of q) (a.tally:61)",
+            ),
+            (
+                ask,
+                "ask q: worth, flowed, low(konto, y)",
+                "LOAD-DOMAIN low over a span with an open end (a.tally:61)",
+            ),
+            (
+                ask,
+                "ask q: worth, flowed, low(konto, 2026-01-01..2026-12-31) + amt",
+                "loaded",
+            ),
+            (
+                ask,
+                "ask q: worth, flowed, gap(konto, amt)",
+                "LOAD-UNIT gap(x, d): d is money PLN, not a date (a.tally:61)",
+            ),
+            (
+                ask,
+                "ask q: worth, flowed, gap(konto, day) + day",
+                "LOAD-UNIT money PLN + date (a.tally:61)",
+            ),
+            (
+                ask,
+                "ask q: worth, flowed, covered(amt, y)",
+                "LOAD-UNIT covered of money PLN, which is not a place (a.tally:61)",
+            ),
+            (
+                ask,
+                "ask q: worth, flowed, next(konto, day)",
+                "LOAD-NAME next takes an event kind: konto (a.tally:61)",
+            ),
+            (
+                ask,
+                "ask q: worth, flowed, next(wages, amt)",
+                "LOAD-UNIT next(K, d): d is money PLN, not a date (a.tally:61)",
+            ),
+            (
+                ask,
+                "ask q: worth, flowed, next(wages, day) + amt",
+                "LOAD-UNIT key wages + money PLN (a.tally:61)",
+            ),
+            (
+                ask,
+                "ask q: worth, flowed, observed(amt)",
+                "LOAD-PARSE cannot parse: observed takes a planned instance m[k] (a.tally:61)",
+            ),
+            (
+                ask,
+                "ask q: worth, flowed, observed(pay) + amt",
+                "LOAD-UNIT (cash (from key places, to key places, amount money PLN, day date), day date) and money PLN in arithmetic (a.tally:61)",
+            ),
+            (
+                ask,
+                "ask q: worth, flowed, observed(pay).cash.amount + amt",
+                "loaded",
+            ),
+            (
+                ask,
+                "ask q: worth, flowed, unit(world)",
+                "LOAD-UNIT unit(world) of a place of unit any: it has no one unit (a.tally:61)",
+            ),
+            (
+                ask,
+                "ask q: worth, flowed, unit(st)",
+                "LOAD-UNIT unit(st): its unit etf_u is a quantity unit, a key of no unit kind (a.tally:61)",
+            ),
+            (
+                ask,
+                "ask q: worth, flowed, unit(day)",
+                "LOAD-UNIT unit of date, which is neither a place nor a quantity (a.tally:61)",
+            ),
+            (
+                ask,
+                "ask q: worth, flowed, unit(konto) + amt",
+                "LOAD-UNIT key currencies + money PLN (a.tally:61)",
+            ),
+            (
+                flowed,
+                "def flowed: money PLN = flows(pay.tax, y)",
+                "LOAD-LEG flows(pay.tax, span): wages names no leg tax (a.tally:59)",
+            ),
+            (
+                flowed,
+                "def flowed: money PLN = flows(pay, y) + day",
+                "LOAD-UNIT money PLN + date (a.tally:59)",
+            ),
+            (
+                flowed,
+                "def flowed: money PLN = flows(world, y)",
+                "LOAD-UNIT flows of world, a place of unit any: it sums no one unit; convert it (in CUR at fx mode) (a.tally:59)",
+            ),
+            (flowed, "def flowed: money PLN = flows(konto, y)", "loaded"),
+            (
+                flowed,
+                "def flowed: money PLN = flows(pay[q1], y)",
+                "LOAD-KEY wrong number of keys for pay (a.tally:59)",
+            ),
+            (
+                flowed,
+                "def flowed: money PLN = flows(world, y) in PLN at amt half-up",
+                "LOAD-UNIT flows in PLN at amt: the rate is money PLN (a.tally:59)",
+            ),
+            (
+                flowed,
+                "def flowed: money PLN = flows(konto_eur, y) in PLN at fx half-up",
+                "loaded",
+            ),
+            (
+                worth,
+                "def worth: num PLN = value(amt, day) in PLN",
+                "LOAD-UNIT value of money PLN, which is not a place (a.tally:57)",
+            ),
+            (
+                worth,
+                "def worth: num PLN = value(flat, amt) in PLN",
+                "LOAD-UNIT the day of value is money PLN, not a date (a.tally:57)",
+            ),
+            (
+                worth,
+                "def worth: num PLN = value(flat, day) in USD",
+                "LOAD-UNIT money in an undeclared currency USD (a.tally:57)",
+            ),
+            (
+                worth,
+                "def worth: money PLN = value(flat, day) in PLN",
+                "LOAD-UNIT rule base of worth gives a num PLN; a money value needs round or prorata (a num CUR stored as money) (a.tally:57)",
+            ),
+            (
+                worth,
+                "def worth: num EUR = value(flat, day) in EUR",
+                "LOAD-PRICE value(flat) in EUR holds units in PLN and states no by (a.tally:57)",
+            ),
+            (
+                worth,
+                "def worth: num PLN = value(st, day) in PLN by amt",
+                "LOAD-UNIT value by amt: the price is money PLN, not num PLN/u (a.tally:57)",
+            ),
+            (
+                worth,
+                "def worth: num PLN = value(st, day) in PLN by last(px)",
+                "loaded",
+            ),
+            (
+                worth,
+                "def worth: num PLN = value(st, day) in PLN by last(hv)",
+                "LOAD-UNIT value by last(hv): the price is money PLN, not num PLN/u (a.tally:57)",
+            ),
+            (
+                worth,
+                "def worth: num PLN = value(st, day) in PLN by last(zz)",
+                "LOAD-NAME unknown price input zz (a.tally:57)",
+            ),
+            (
+                worth,
+                "def worth: num PLN = value(st, day) in PLN by rate",
+                "loaded",
+            ),
+            (
+                worth,
+                "def worth: num PLN = value(st, day) in PLN by last(flowed)",
+                "LOAD-UNIT value by flowed: a price is a num CUR/u keyed by unit, or an expression of that type with its keys (a.tally:57)",
+            ),
+        ];
+        for (old, new, expected) in cases {
+            assert!(MOVES.contains(old), "{old} is in the base");
+            let text = MOVES.replacen(old, new, 1);
             assert_eq!(refusal(&text), expected, "{new}");
         }
     }

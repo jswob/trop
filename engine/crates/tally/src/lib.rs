@@ -232,10 +232,13 @@ pub mod load {
     mod indexes;
     mod keys;
     mod kinds;
+    mod moves;
     mod names;
     mod observed;
     mod ops;
     mod places;
+    mod prices;
+    mod reads;
     mod rows;
     mod spans;
     mod steps;

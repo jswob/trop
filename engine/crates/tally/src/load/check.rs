@@ -9,26 +9,28 @@
 //! Twin: engine/tools/refcore/check.py (`Scope`, `Var`, `Checker.run`, `edge`, `relation`,
 //! `def_scope`, `dom_type`, `check_def`, `_beats_cycle`, `check_band`, `check_ask`,
 //! `check_prices`, `kl_finish`, the year-literal loop of `run`); check3.py (`m_check_move`,
-//! `m_read_target`, `m_check_leg`, `m_check_priced`, `m_literal_place`, `m_place_target`,
-//! `m_move_changes`).
+//! `m_read_target`, `m_literal_place`, `m_place_target`, `m_move_changes`).
 //! Invariants: the checks run in refcore's order and each refusal is put at the line its
 //! check names; a form whose checks are M0's later groups' is typed `Unseen` and refused by
-//! nothing; a price clause is read, not typed (its checks are its prices'); every recursion
-//! is counted (R-16), and the parser bounds every tree well below the count.
+//! nothing; the price clauses are resolved before any item; every recursion is counted
+//! (R-16), and the parser bounds every tree well below the count.
 
 use super::keys::keyed_place_thing;
+use super::moves::{own_day_reads, settlements};
+use super::prices::price_twice;
+use super::reads::{is_move_type, is_place_type};
 use super::types::{
-    children, covered_spans, is_bool, is_date, key_value_kind, lit_rule, refused, uerr, unit_type,
+    children, covered_spans, is_bool, is_date, key_value_kind, lit_rule, refused, uerr,
 };
 use crate::base::{Code, Load, Place as At, Refusal};
 use crate::model::{
     BandInfo, BindInfo, DefInfo, Domain, Graph, KeyVal, KindSpec, Mark, MoveInfo, NameKind, Node,
-    NodeKind, Reality, Rel, Shift, Target, Thing, Ty,
+    NodeKind, Reality, Rel, Shift, Target, Ty,
 };
 use crate::num::Num;
 use crate::syntax::{
-    AddOp, Ask, AskBody, Domain as Written, Expr, Key, LawDate, Leg, Lit, Number, Order, Postfix,
-    Price, RuleValue, Section, Stop,
+    AddOp, Ask, AskBody, Domain as Written, Expr, Key, LawDate, Lit, Number, Order, Postfix,
+    RuleValue, Section, Stop,
 };
 use crate::time::PeriodKind;
 use std::collections::{BTreeMap, BTreeSet};
@@ -157,7 +159,7 @@ pub(super) struct Scope {
 
 impl Scope {
     /// The scope of `item`'s own expression, standing as `stands`, written at `line` of `file`.
-    fn new(item: Node, stands: Stands, file: &str, line: u32) -> Scope {
+    pub(super) fn new(item: Node, stands: Stands, file: &str, line: u32) -> Scope {
         Scope {
             item,
             vars: BTreeMap::new(),
@@ -281,6 +283,8 @@ pub(super) struct Checker {
     offsets: BTreeMap<String, Offsets>,
     /// The variables made so far.
     vars: usize,
+    /// Each checked move's legs' static amount types, by (move, leg) (refcore's `ln._lt`).
+    pub(super) leg_types: BTreeMap<(String, String), Ty>,
 }
 
 /// One level deeper into an expression, refused as an invariant past the count (R-16).
@@ -312,8 +316,9 @@ pub(super) fn walk(
     sections: &[(String, Section)],
 ) -> Result<(Graph, Vec<MoveFacts>), Stop> {
     let files = Files::of(sections);
+    price_twice(m, &files)?;
     let mut checker = Checker::default();
-    checker.priced(m);
+    checker.check_priced(m, &files)?;
     for (id, input) in m.inputs.entries() {
         if input
             .binds
@@ -348,6 +353,7 @@ pub(super) fn walk(
     checker.prices_by(m, &files)?;
     checker.year4_finish()?;
     checker.kl_finish(m)?;
+    settlements(m, &checker.leg_types)?;
     Ok((checker.graph, facts))
 }
 
@@ -357,13 +363,13 @@ fn invariant(message: String) -> Stop {
 }
 
 /// The file each item's section stands in, by the item's id: a refusal names it.
-struct Files {
+pub(super) struct Files {
     /// `(section word, id)` to the file.
     by_item: BTreeMap<(&'static str, String), String>,
 }
 
 impl Files {
-    /// The files of the sections' moves, defs, asks, versions and inputs.
+    /// The files of the sections' moves, defs, asks, versions, inputs, places and kinds.
     fn of(sections: &[(String, Section)]) -> Files {
         let mut by_item = BTreeMap::new();
         for (file, section) in sections {
@@ -373,13 +379,13 @@ impl Files {
                 Section::Ask(ask) => ("ask", ask.id.clone()),
                 Section::Version(version) => ("version", version.id.clone()),
                 Section::Input(input) => ("input", input.id.clone()),
+                Section::Place(place) => ("place", place.id.clone()),
+                Section::Kind(kind) => ("kind", kind.id.clone()),
                 Section::Source(_)
                 | Section::Unit(_)
-                | Section::Kind(_)
                 | Section::Index(_)
                 | Section::Axis(_)
                 | Section::Band(_)
-                | Section::Place(_)
                 | Section::Fill(_) => continue,
             };
             by_item.insert(item, file.clone());
@@ -388,7 +394,7 @@ impl Files {
     }
 
     /// The file of the section `word id`, which load built the item from.
-    fn get(&self, word: &'static str, id: &str) -> Result<&str, Stop> {
+    pub(super) fn get(&self, word: &'static str, id: &str) -> Result<&str, Stop> {
         self.by_item
             .get(&(word, id.to_owned()))
             .map(String::as_str)
@@ -410,8 +416,8 @@ impl Files {
         self.get("ask", id)
     }
 
-    /// A version's file, where its band rows stand.
-    fn of_version(&self, id: &str) -> Result<&str, Stop> {
+    /// A version's file, where its band rows and entries stand.
+    pub(super) fn of_version(&self, id: &str) -> Result<&str, Stop> {
         self.get("version", id)
     }
 
@@ -536,53 +542,6 @@ impl Checker {
         self.offsets.get(&item.id)
     }
 
-    /// A keyed price clause reads its input at the keys it states, from the clause's own
-    /// node; an unkeyed one is read where a place is valued (refcore's `m_check_priced`,
-    /// `m_resolve_price`, the reads; their checks are the prices'). L §5.10.
-    fn priced(&mut self, m: &Reality) {
-        let mut kinds: Vec<(&String, &Price)> = Vec::new();
-        for (id, kind) in m.kinds.entries() {
-            if let Some(price) = &kind.priced {
-                kinds.push((id, price));
-            }
-        }
-        kinds.sort_by(|a, b| a.0.cmp(b.0));
-        for (id, price) in kinds {
-            self.price_clause(m, &Node::new(NodeKind::Price, &format!("kind {id}")), price);
-        }
-        let mut things: Vec<&Thing> = m.things.entries().map(|(_, thing)| thing).collect();
-        things.sort_by(|a, b| a.name.cmp(&b.name));
-        let mut sections = BTreeSet::new();
-        for thing in things {
-            for entry in &thing.entries {
-                let Some(price) = &entry.priced else {
-                    continue;
-                };
-                let item = Node::new(NodeKind::Price, &format!("place {}", thing.name));
-                let section = if entry.version.is_none() {
-                    section_of(m, thing).and_then(|id| m.places.get(&id))
-                } else {
-                    None
-                };
-                if section.is_some_and(|place| !sections.insert(place.id.clone())) {
-                    continue;
-                }
-                self.price_clause(m, &item, price);
-            }
-        }
-    }
-
-    /// A price clause written with keys, `px[f]`, read at them.
-    fn price_clause(&mut self, m: &Reality, item: &Node, price: &Price) {
-        if let Expr::Post(base, posts) = &price.input
-            && let Expr::Name(id) = base.as_ref()
-            && let [Postfix::Keys(_)] = posts.as_slice()
-            && let Some((node, _)) = input_or_def(m, id)
-        {
-            self.edge(item, node, Rel::Any);
-        }
-    }
-
     /// `prices Y by ix`: `ix` is an input or a def keyed by one time index with a key for the
     /// year `Y`, and the input reads it (refcore's `check_prices`). L §3.4.
     fn prices_by(&mut self, m: &Reality, files: &Files) -> Result<(), Stop> {
@@ -629,7 +588,12 @@ impl Checker {
 
     /// A declaration's scope, each key bind's variable typed by its domain (refcore's
     /// `def_scope`, `dom_type`): a stepped range's ends and step are typed here. L §5.6.
-    fn keyed(&mut self, m: &Reality, mut scope: Scope, binds: &[BindInfo]) -> Result<Scope, Stop> {
+    pub(super) fn keyed(
+        &mut self,
+        m: &Reality,
+        mut scope: Scope,
+        binds: &[BindInfo],
+    ) -> Result<Scope, Stop> {
         scope.keyvars = binds.iter().map(|bind| bind.var.clone()).collect();
         for bind in binds {
             let (ty, dom) = match &bind.domain {
@@ -858,14 +822,19 @@ impl Checker {
         let mut changes = Vec::new();
         for leg in &decl.legs {
             if let Some((_, unit, _)) = legs.iter().find(|(name, ..)| *name == leg.name) {
-                self.check_leg(m, &scope.on_line(leg.line), mv, leg, unit)?;
+                let lt = self.check_leg(m, &scope.on_line(leg.line), mv, leg, unit)?;
+                self.leg_types.insert((mv.id.clone(), leg.name.clone()), lt);
             }
             push_once(&mut changes, change_of(m, &scope, &leg.from));
             push_once(&mut changes, change_of(m, &scope, &leg.to));
         }
         self.attrs(m, &scope, mv)?;
         if let Some(fulfils) = &decl.fulfils {
-            self.expr(m, &scope.on_line(lines.fulfils), fulfils, None, 0)?;
+            let ft = self.expr(m, &scope.on_line(lines.fulfils), fulfils, None, 0)?;
+            if !is_move_type(m, &ft) {
+                let message = format!("fulfils of {} names {}, not a movement", mv.id, ft.show());
+                return Err(scope.place(uerr(message)));
+            }
         }
         if let Some(ties) = &decl.ties {
             for tie in ties {
@@ -874,7 +843,7 @@ impl Checker {
         }
         let mut read_targets = Vec::new();
         for read in &decl.reads {
-            read_targets.push(self.read_target(m, &scope.on_line(lines.reads), read)?);
+            read_targets.push(self.read_target(m, &scope.on_line(lines.reads), mv, read)?);
         }
         for (order, other) in &decl.order {
             if m.names.get(other) != Some(&NameKind::Move) {
@@ -886,64 +855,14 @@ impl Checker {
                 return Err(scope.place(refused(Load::Name, message)));
             }
         }
+        if !decl.reads.is_empty() {
+            own_day_reads(mv).map_err(|stop| scope.place(stop))?;
+        }
         Ok(MoveFacts {
             id: mv.id.clone(),
             read_targets,
             changes,
         })
-    }
-
-    /// A leg: its places, its amount of the leg's unit, its own day (refcore's
-    /// `m_check_leg`; the places' kinds and units are M0's later groups'). L §5.14.
-    fn check_leg(
-        &mut self,
-        m: &Reality,
-        scope: &Scope,
-        mv: &MoveInfo,
-        leg: &Leg,
-        unit: &str,
-    ) -> Result<(), Stop> {
-        let places = Ty::Key("places".to_owned());
-        let mut units = BTreeSet::new();
-        for end in [&leg.from, &leg.to] {
-            let t = self.expr(m, scope, end, Some(&places), 0)?;
-            if matches!(t, Ty::Hole) {
-                continue;
-            }
-            let thing = literal_place(m, scope, end).and_then(|name| m.things.get(&name));
-            if let Some(held) = thing.and_then(|thing| m.place_unit(thing))
-                && held != "any"
-            {
-                units.insert(held);
-            }
-        }
-        let mut lt = unit_type(m, Some(unit)).map_err(|s| scope.place(s))?;
-        if let (Ty::Dyn, [held]) = (&lt, units.iter().collect::<Vec<_>>().as_slice()) {
-            lt = unit_type(m, Some(held)).map_err(|s| scope.place(s))?;
-        }
-        let unit_kind = m.names.get(unit) == Some(&NameKind::Kind)
-            && !m.units.contains(unit)
-            && !m.currencies.contains_key(unit);
-        let what = format!("the amount of leg {} of {}", leg.name, mv.id);
-        if unit_kind || matches!(lt, Ty::Dyn) {
-            self.expr(m, scope, &leg.amount, None, 0)?;
-        } else {
-            let t = self.expr(m, scope, &leg.amount, Some(&lt), 0)?;
-            self.assign(m, scope, &lt, &leg.amount, &t, &what)
-                .map_err(|stop| scope.place(stop))?;
-        }
-        if let Some(on) = &leg.on {
-            let t = self.expr(m, scope, on, None, 0)?;
-            if !is_date(m, &t) {
-                return Err(scope.place(uerr(format!(
-                    "on of leg {} of {} is {}, not a date",
-                    leg.name,
-                    mv.id,
-                    t.show()
-                ))));
-            }
-        }
-        Ok(())
     }
 
     /// A move's attributes: each its kind declares, once, of its type, and none missing
@@ -987,8 +906,15 @@ impl Checker {
     }
 
     /// What a `reads` line names: a move, all of a keyed place, an event kind, or the place
-    /// an expression gives (refcore's `m_read_target`). L §5.14.1.
-    fn read_target(&mut self, m: &Reality, scope: &Scope, read: &Expr) -> Result<Target, Stop> {
+    /// an expression gives, `LOAD-READS` for anything else (refcore's `m_read_target`).
+    /// L §5.14.1.
+    fn read_target(
+        &mut self,
+        m: &Reality,
+        scope: &Scope,
+        mv: &MoveInfo,
+        read: &Expr,
+    ) -> Result<Target, Stop> {
         if let Expr::Name(id) = read
             && !scope.is_var(id)
         {
@@ -1011,7 +937,15 @@ impl Checker {
                 return Ok(Target::Kind(id.clone()));
             }
         }
-        self.expr(m, scope, read, Some(&Ty::Key("places".to_owned())), 0)?;
+        let t = self.expr(m, scope, read, Some(&Ty::Key("places".to_owned())), 0)?;
+        if !is_place_type(m, &t) {
+            let message = format!(
+                "{} declares reads {}, which is not a place or a move",
+                mv.id,
+                super::types::text(read)
+            );
+            return Err(scope.place(refused(Load::Reads, message)));
+        }
         Ok(place_target(m, scope, read))
     }
 }
@@ -1294,15 +1228,6 @@ pub(super) fn input_or_def(m: &Reality, id: &str) -> Option<(Node, bool)> {
     }
 }
 
-/// The place section a thing comes from: its keyed place's, or the unkeyed place it is.
-fn section_of(m: &Reality, thing: &Thing) -> Option<String> {
-    if let Some(keys) = &thing.place {
-        return Some(keys.place.clone());
-    }
-    let unkeyed = m.names.get(&thing.name) == Some(&NameKind::Place);
-    unkeyed.then(|| thing.name.clone())
-}
-
 /// The thing a place expression names literally: an unkeyed place's id, a thing of a place
 /// kind, or a keyed place at literal keys (refcore's `m_literal_place`). L §5.10.
 pub(super) fn literal_place(m: &Reality, scope: &Scope, expr: &Expr) -> Option<String> {
@@ -1362,7 +1287,7 @@ fn key_literal(m: &Reality, scope: &Scope, key: &Key) -> Option<Lit> {
 
 /// The keyed place section a place expression reads, `p` or `p[k]` (refcore's `_r` of
 /// `place`).
-fn place_section(m: &Reality, scope: &Scope, expr: &Expr) -> Option<String> {
+pub(super) fn place_section(m: &Reality, scope: &Scope, expr: &Expr) -> Option<String> {
     let (id, posts) = named_parts(expr)?;
     let read = posts.is_empty() || matches!(posts, [Postfix::Keys(_)]);
     let place = !scope.is_var(id) && m.names.get(id) == Some(&NameKind::Place);
@@ -1428,36 +1353,6 @@ fn place_kind(m: &Reality, scope: &Scope, expr: &Expr) -> Option<String> {
         return Some(kind.clone());
     }
     None
-}
-
-/// The price inputs a value of `place` reads: those of the place it names, or of every
-/// thing of the kind its type names (refcore's `m_t_value`'s candidates, `m_price_edges`).
-/// L §5.10.
-pub(super) fn price_inputs(m: &Reality, scope: &Scope, place: &Expr) -> Vec<Node> {
-    let mut things: Vec<&Thing> = Vec::new();
-    if let Some(name) = literal_place(m, scope, place) {
-        things.extend(m.things.get(&name));
-    } else if let Some(kind) = place_kind(m, scope, place) {
-        let sub = m.subtree(&kind);
-        for (_, thing) in m.things.entries() {
-            if thing.base.as_ref().is_some_and(|base| sub.contains(base)) {
-                things.push(thing);
-            }
-        }
-    }
-    let mut out = Vec::new();
-    for thing in things {
-        let Some(price) = m.price_of(thing) else {
-            continue;
-        };
-        let Some((id, _)) = named_parts(&price.input) else {
-            continue;
-        };
-        if let Some((node, _)) = input_or_def(m, id) {
-            out.push(node);
-        }
-    }
-    out
 }
 
 /// Adds `target` to `targets` unless it is there.
