@@ -654,7 +654,11 @@ def self_test(checks):
         # 8f. M0's code fixtures (issue #56): each base loads clean, each fixture prints its code, refcore's bytes
         p = subprocess.run([sys.executable, '-I', '-B', T + 'codes/m0.py', '--check'], capture_output=True, text=True)
         say(p.returncode == 0, p.stdout.strip().split('\n')[-1] if p.stdout.strip() else p.stderr[-200:])
-        # 8g. the codes' cross-reference (K8-13, DONE gate 5): map/codes.tsv is what L §8, E §11 and the outputs give
+        # 8g. M0's row 3 (issue #56): the spec's scan, its selftest first, agrees with refcore's load probe
+        p = subprocess.run([sys.executable, '-I', '-B', T + 'm0/loadcheck.py', '--check'], capture_output=True,
+                           text=True)
+        say(p.returncode == 0, p.stdout.strip().split('\n')[-1] if p.stdout.strip() else p.stderr[-200:])
+        # 8h. the codes' cross-reference (K8-13, DONE gate 5): map/codes.tsv is what L §8, E §11 and the outputs give
         p = subprocess.run([sys.executable, '-I', '-B', T + 'tools/xref_check.py', '--check'], capture_output=True,
                            text=True)
         say(p.returncode == 0, p.stdout.strip().split('\n')[-1] if p.stdout.strip() else p.stderr[-200:])

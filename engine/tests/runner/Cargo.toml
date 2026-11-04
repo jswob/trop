@@ -57,3 +57,10 @@ test = false
 name = "m0_load"
 path = "milestone/m0_load.rs"
 test = false
+
+# M0: tools/loadcheck.py agrees with the loader over the 79 models, the household and the
+# changes (m0/loadcheck.refcore; MILESTONE-M0.md row 3)
+[[test]]
+name = "m0_loadcheck"
+path = "milestone/m0_loadcheck.rs"
+test = false

@@ -1,0 +1,326 @@
+12:models/CB-01,6:models,18:engine/spec/models,33:run CB-01.tally --ask zz_m0_probe,39:CB-01.tally	../spec/models/CB-01.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,12:models/CB-02,6:models,18:engine/spec/models,33:run CB-02.tally --ask zz_m0_probe,39:CB-02.tally	../spec/models/CB-02.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,12:models/CB-03,6:models,18:engine/spec/models,33:run CB-03.tally --ask zz_m0_probe,39:CB-03.tally	../spec/models/CB-03.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,12:models/CB-04,6:models,18:engine/spec/models,33:run CB-04.tally --ask zz_m0_probe,39:CB-04.tally	../spec/models/CB-04.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,12:models/CB-05,6:models,18:engine/spec/models,33:run CB-05.tally --ask zz_m0_probe,39:CB-05.tally	../spec/models/CB-05.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,12:models/CB-06,6:models,18:engine/spec/models,33:run CB-06.tally --ask zz_m0_probe,39:CB-06.tally	../spec/models/CB-06.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,12:models/CB-07,6:models,18:engine/spec/models,33:run CB-07.tally --ask zz_m0_probe,39:CB-07.tally	../spec/models/CB-07.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,12:models/CB-08,6:models,18:engine/spec/models,33:run CB-08.tally --ask zz_m0_probe,39:CB-08.tally	../spec/models/CB-08.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,12:models/CB-09,6:models,18:engine/spec/models,33:run CB-09.tally --ask zz_m0_probe,39:CB-09.tally	../spec/models/CB-09.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,12:models/CB-10,6:models,18:engine/spec/models,33:run CB-10.tally --ask zz_m0_probe,39:CB-10.tally	../spec/models/CB-10.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,12:models/CB-11,6:models,18:engine/spec/models,33:run CB-11.tally --ask zz_m0_probe,39:CB-11.tally	../spec/models/CB-11.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,12:models/CB-12,6:models,18:engine/spec/models,33:run CB-12.tally --ask zz_m0_probe,39:CB-12.tally	../spec/models/CB-12.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,12:models/CB-13,6:models,18:engine/spec/models,33:run CB-13.tally --ask zz_m0_probe,39:CB-13.tally	../spec/models/CB-13.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,12:models/CB-14,6:models,18:engine/spec/models,33:run CB-14.tally --ask zz_m0_probe,39:CB-14.tally	../spec/models/CB-14.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,12:models/CH-01,6:models,18:engine/spec/models,33:run CH-01.tally --ask zz_m0_probe,39:CH-01.tally	../spec/models/CH-01.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,12:models/CH-02,6:models,18:engine/spec/models,33:run CH-02.tally --ask zz_m0_probe,39:CH-02.tally	../spec/models/CH-02.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,12:models/CH-03,6:models,18:engine/spec/models,33:run CH-03.tally --ask zz_m0_probe,39:CH-03.tally	../spec/models/CH-03.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,12:models/CH-04,6:models,18:engine/spec/models,33:run CH-04.tally --ask zz_m0_probe,39:CH-04.tally	../spec/models/CH-04.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,12:models/CH-05,6:models,18:engine/spec/models,33:run CH-05.tally --ask zz_m0_probe,39:CH-05.tally	../spec/models/CH-05.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,12:models/CH-06,6:models,18:engine/spec/models,33:run CH-06.tally --ask zz_m0_probe,39:CH-06.tally	../spec/models/CH-06.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,13:models/CMP-01,6:models,18:engine/spec/models,34:run CMP-01.tally --ask zz_m0_probe,41:CMP-01.tally	../spec/models/CMP-01.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,13:models/CMP-02,6:models,18:engine/spec/models,34:run CMP-02.tally --ask zz_m0_probe,41:CMP-02.tally	../spec/models/CMP-02.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,12:models/LH-01,6:models,18:engine/spec/models,33:run LH-01.tally --ask zz_m0_probe,39:LH-01.tally	../spec/models/LH-01.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,12:models/LH-02,6:models,18:engine/spec/models,33:run LH-02.tally --ask zz_m0_probe,39:LH-02.tally	../spec/models/LH-02.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,12:models/LH-03,6:models,18:engine/spec/models,33:run LH-03.tally --ask zz_m0_probe,39:LH-03.tally	../spec/models/LH-03.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,12:models/LH-04,6:models,18:engine/spec/models,33:run LH-04.tally --ask zz_m0_probe,39:LH-04.tally	../spec/models/LH-04.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,12:models/LH-05,6:models,18:engine/spec/models,33:run LH-05.tally --ask zz_m0_probe,39:LH-05.tally	../spec/models/LH-05.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,12:models/LH-06,6:models,18:engine/spec/models,33:run LH-06.tally --ask zz_m0_probe,39:LH-06.tally	../spec/models/LH-06.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,12:models/LH-07,6:models,18:engine/spec/models,33:run LH-07.tally --ask zz_m0_probe,39:LH-07.tally	../spec/models/LH-07.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,12:models/LH-08,6:models,18:engine/spec/models,33:run LH-08.tally --ask zz_m0_probe,39:LH-08.tally	../spec/models/LH-08.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,12:models/LH-09,6:models,18:engine/spec/models,33:run LH-09.tally --ask zz_m0_probe,39:LH-09.tally	../spec/models/LH-09.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,12:models/LH-10,6:models,18:engine/spec/models,33:run LH-10.tally --ask zz_m0_probe,39:LH-10.tally	../spec/models/LH-10.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,12:models/LH-11,6:models,18:engine/spec/models,33:run LH-11.tally --ask zz_m0_probe,39:LH-11.tally	../spec/models/LH-11.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,12:models/LH-12,6:models,18:engine/spec/models,33:run LH-12.tally --ask zz_m0_probe,39:LH-12.tally	../spec/models/LH-12.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,12:models/LH-13,6:models,18:engine/spec/models,33:run LH-13.tally --ask zz_m0_probe,39:LH-13.tally	../spec/models/LH-13.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,12:models/LH-14,6:models,18:engine/spec/models,33:run LH-14.tally --ask zz_m0_probe,39:LH-14.tally	../spec/models/LH-14.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,12:models/LH-15,6:models,18:engine/spec/models,33:run LH-15.tally --ask zz_m0_probe,39:LH-15.tally	../spec/models/LH-15.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,12:models/LH-16,6:models,18:engine/spec/models,33:run LH-16.tally --ask zz_m0_probe,39:LH-16.tally	../spec/models/LH-16.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,12:models/LH-17,6:models,18:engine/spec/models,33:run LH-17.tally --ask zz_m0_probe,39:LH-17.tally	../spec/models/LH-17.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,12:models/LH-18,6:models,18:engine/spec/models,33:run LH-18.tally --ask zz_m0_probe,39:LH-18.tally	../spec/models/LH-18.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,12:models/MP-01,6:models,18:engine/spec/models,33:run MP-01.tally --ask zz_m0_probe,39:MP-01.tally	../spec/models/MP-01.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,12:models/MP-02,6:models,18:engine/spec/models,33:run MP-02.tally --ask zz_m0_probe,39:MP-02.tally	../spec/models/MP-02.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,12:models/MP-03,6:models,18:engine/spec/models,33:run MP-03.tally --ask zz_m0_probe,39:MP-03.tally	../spec/models/MP-03.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,12:models/MP-04,6:models,18:engine/spec/models,33:run MP-04.tally --ask zz_m0_probe,39:MP-04.tally	../spec/models/MP-04.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,12:models/MP-05,6:models,18:engine/spec/models,33:run MP-05.tally --ask zz_m0_probe,39:MP-05.tally	../spec/models/MP-05.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,12:models/MP-06,6:models,18:engine/spec/models,33:run MP-06.tally --ask zz_m0_probe,39:MP-06.tally	../spec/models/MP-06.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,12:models/MP-07,6:models,18:engine/spec/models,33:run MP-07.tally --ask zz_m0_probe,39:MP-07.tally	../spec/models/MP-07.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,12:models/MP-08,6:models,18:engine/spec/models,33:run MP-08.tally --ask zz_m0_probe,39:MP-08.tally	../spec/models/MP-08.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,12:models/MP-09,6:models,18:engine/spec/models,33:run MP-09.tally --ask zz_m0_probe,39:MP-09.tally	../spec/models/MP-09.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,12:models/MP-10,6:models,18:engine/spec/models,33:run MP-10.tally --ask zz_m0_probe,39:MP-10.tally	../spec/models/MP-10.tally
+,1:1,118:refused: LOAD-BAND band hanau_group in hanau2026: rows unordered, overlapping or with a gap at 5501 (MP-10.tally:116)
+,12:models/MP-11,6:models,18:engine/spec/models,33:run MP-11.tally --ask zz_m0_probe,39:MP-11.tally	../spec/models/MP-11.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,12:models/MP-12,6:models,18:engine/spec/models,33:run MP-12.tally --ask zz_m0_probe,39:MP-12.tally	../spec/models/MP-12.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,12:models/MP-13,6:models,18:engine/spec/models,33:run MP-13.tally --ask zz_m0_probe,39:MP-13.tally	../spec/models/MP-13.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,12:models/MP-14,6:models,18:engine/spec/models,33:run MP-14.tally --ask zz_m0_probe,39:MP-14.tally	../spec/models/MP-14.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,12:models/MP-15,6:models,18:engine/spec/models,33:run MP-15.tally --ask zz_m0_probe,39:MP-15.tally	../spec/models/MP-15.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,12:models/MP-16,6:models,18:engine/spec/models,33:run MP-16.tally --ask zz_m0_probe,39:MP-16.tally	../spec/models/MP-16.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,12:models/RC-01,6:models,18:engine/spec/models,33:run RC-01.tally --ask zz_m0_probe,39:RC-01.tally	../spec/models/RC-01.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,12:models/RC-02,6:models,18:engine/spec/models,33:run RC-02.tally --ask zz_m0_probe,39:RC-02.tally	../spec/models/RC-02.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,12:models/RC-03,6:models,18:engine/spec/models,33:run RC-03.tally --ask zz_m0_probe,39:RC-03.tally	../spec/models/RC-03.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,12:models/RC-04,6:models,18:engine/spec/models,33:run RC-04.tally --ask zz_m0_probe,39:RC-04.tally	../spec/models/RC-04.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,12:models/RC-05,6:models,18:engine/spec/models,33:run RC-05.tally --ask zz_m0_probe,39:RC-05.tally	../spec/models/RC-05.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,12:models/RC-06,6:models,18:engine/spec/models,33:run RC-06.tally --ask zz_m0_probe,39:RC-06.tally	../spec/models/RC-06.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,12:models/RC-07,6:models,18:engine/spec/models,33:run RC-07.tally --ask zz_m0_probe,39:RC-07.tally	../spec/models/RC-07.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,12:models/RC-08,6:models,18:engine/spec/models,33:run RC-08.tally --ask zz_m0_probe,39:RC-08.tally	../spec/models/RC-08.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,12:models/UL-01,6:models,18:engine/spec/models,33:run UL-01.tally --ask zz_m0_probe,39:UL-01.tally	../spec/models/UL-01.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,12:models/UL-02,6:models,18:engine/spec/models,33:run UL-02.tally --ask zz_m0_probe,39:UL-02.tally	../spec/models/UL-02.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,12:models/UL-03,6:models,18:engine/spec/models,33:run UL-03.tally --ask zz_m0_probe,39:UL-03.tally	../spec/models/UL-03.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,12:models/UL-04,6:models,18:engine/spec/models,33:run UL-04.tally --ask zz_m0_probe,39:UL-04.tally	../spec/models/UL-04.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,12:models/UL-05,6:models,18:engine/spec/models,33:run UL-05.tally --ask zz_m0_probe,39:UL-05.tally	../spec/models/UL-05.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,12:models/UL-06,6:models,18:engine/spec/models,33:run UL-06.tally --ask zz_m0_probe,39:UL-06.tally	../spec/models/UL-06.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,12:models/UL-07,6:models,18:engine/spec/models,33:run UL-07.tally --ask zz_m0_probe,39:UL-07.tally	../spec/models/UL-07.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,12:models/UL-08,6:models,18:engine/spec/models,33:run UL-08.tally --ask zz_m0_probe,39:UL-08.tally	../spec/models/UL-08.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,12:models/UL-09,6:models,18:engine/spec/models,33:run UL-09.tally --ask zz_m0_probe,39:UL-09.tally	../spec/models/UL-09.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,12:models/UL-10,6:models,18:engine/spec/models,33:run UL-10.tally --ask zz_m0_probe,39:UL-10.tally	../spec/models/UL-10.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,12:models/UL-11,6:models,18:engine/spec/models,33:run UL-11.tally --ask zz_m0_probe,39:UL-11.tally	../spec/models/UL-11.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,12:models/UL-12,6:models,18:engine/spec/models,33:run UL-12.tally --ask zz_m0_probe,39:UL-12.tally	../spec/models/UL-12.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,12:models/UL-13,6:models,18:engine/spec/models,33:run UL-13.tally --ask zz_m0_probe,39:UL-13.tally	../spec/models/UL-13.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,12:models/UL-14,6:models,18:engine/spec/models,33:run UL-14.tally --ask zz_m0_probe,39:UL-14.tally	../spec/models/UL-14.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,12:models/UL-15,6:models,18:engine/spec/models,33:run UL-15.tally --ask zz_m0_probe,39:UL-15.tally	../spec/models/UL-15.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,9:household,9:household,32:engine/spec/amendments/household,255:run asks/core.tally facts/2026.tally law/pl/benefits.tally law/pl/business.tally law/pl/common.tally law/pl/employment.tally law/pl/wrappers.tally loans.tally pays.tally people.tally places.tally reality.tally records/mbank/2026-09.tally --ask zz_m0_probe,845:asks/core.tally	../spec/amendments/household/asks/core.tally
+facts/2026.tally	../spec/amendments/household/facts/2026.tally
+law/pl/benefits.tally	../spec/amendments/household/law/pl/benefits.tally
+law/pl/business.tally	../spec/amendments/household/law/pl/business.tally
+law/pl/common.tally	../spec/amendments/household/law/pl/common.tally
+law/pl/employment.tally	../spec/amendments/household/law/pl/employment.tally
+law/pl/wrappers.tally	../spec/amendments/household/law/pl/wrappers.tally
+loans.tally	../spec/amendments/household/loans.tally
+pays.tally	../spec/amendments/household/pays.tally
+people.tally	../spec/amendments/household/people.tally
+places.tally	../spec/amendments/household/places.tally
+reality.tally	../spec/amendments/household/reality.tally
+records/mbank/2026-09.tally	../spec/amendments/household/records/mbank/2026-09.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,10:changes/c1,7:changes,45:engine/tests/integration/amendments/real11/c1,272:run asks/core.tally facts/2026.tally facts/2027.tally law/pl/benefits.tally law/pl/business.tally law/pl/common.tally law/pl/employment.tally law/pl/wrappers.tally loans.tally pays.tally people.tally places.tally reality.tally records/mbank/2026-09.tally --ask zz_m0_probe,964:asks/core.tally	integration/amendments/real11/c1/asks/core.tally
+facts/2026.tally	integration/amendments/real11/c1/facts/2026.tally
+facts/2027.tally	integration/amendments/real11/c1/facts/2027.tally
+law/pl/benefits.tally	integration/amendments/real11/c1/law/pl/benefits.tally
+law/pl/business.tally	integration/amendments/real11/c1/law/pl/business.tally
+law/pl/common.tally	integration/amendments/real11/c1/law/pl/common.tally
+law/pl/employment.tally	integration/amendments/real11/c1/law/pl/employment.tally
+law/pl/wrappers.tally	integration/amendments/real11/c1/law/pl/wrappers.tally
+loans.tally	integration/amendments/real11/c1/loans.tally
+pays.tally	integration/amendments/real11/c1/pays.tally
+people.tally	integration/amendments/real11/c1/people.tally
+places.tally	integration/amendments/real11/c1/places.tally
+reality.tally	integration/amendments/real11/c1/reality.tally
+records/mbank/2026-09.tally	integration/amendments/real11/c1/records/mbank/2026-09.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,10:changes/c2,7:changes,45:engine/tests/integration/amendments/real11/c2,255:run asks/core.tally facts/2026.tally law/pl/benefits.tally law/pl/business.tally law/pl/common.tally law/pl/employment.tally law/pl/wrappers.tally loans.tally pays.tally people.tally places.tally reality.tally records/mbank/2026-09.tally --ask zz_m0_probe,897:asks/core.tally	integration/amendments/real11/c2/asks/core.tally
+facts/2026.tally	integration/amendments/real11/c2/facts/2026.tally
+law/pl/benefits.tally	integration/amendments/real11/c2/law/pl/benefits.tally
+law/pl/business.tally	integration/amendments/real11/c2/law/pl/business.tally
+law/pl/common.tally	integration/amendments/real11/c2/law/pl/common.tally
+law/pl/employment.tally	integration/amendments/real11/c2/law/pl/employment.tally
+law/pl/wrappers.tally	integration/amendments/real11/c2/law/pl/wrappers.tally
+loans.tally	integration/amendments/real11/c2/loans.tally
+pays.tally	integration/amendments/real11/c2/pays.tally
+people.tally	integration/amendments/real11/c2/people.tally
+places.tally	integration/amendments/real11/c2/places.tally
+reality.tally	integration/amendments/real11/c2/reality.tally
+records/mbank/2026-09.tally	integration/amendments/real11/c2/records/mbank/2026-09.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,10:changes/c3,7:changes,45:engine/tests/integration/amendments/real11/c3,255:run asks/core.tally facts/2026.tally law/pl/benefits.tally law/pl/business.tally law/pl/common.tally law/pl/employment.tally law/pl/wrappers.tally loans.tally pays.tally people.tally places.tally reality.tally records/mbank/2026-09.tally --ask zz_m0_probe,897:asks/core.tally	integration/amendments/real11/c3/asks/core.tally
+facts/2026.tally	integration/amendments/real11/c3/facts/2026.tally
+law/pl/benefits.tally	integration/amendments/real11/c3/law/pl/benefits.tally
+law/pl/business.tally	integration/amendments/real11/c3/law/pl/business.tally
+law/pl/common.tally	integration/amendments/real11/c3/law/pl/common.tally
+law/pl/employment.tally	integration/amendments/real11/c3/law/pl/employment.tally
+law/pl/wrappers.tally	integration/amendments/real11/c3/law/pl/wrappers.tally
+loans.tally	integration/amendments/real11/c3/loans.tally
+pays.tally	integration/amendments/real11/c3/pays.tally
+people.tally	integration/amendments/real11/c3/people.tally
+places.tally	integration/amendments/real11/c3/places.tally
+reality.tally	integration/amendments/real11/c3/reality.tally
+records/mbank/2026-09.tally	integration/amendments/real11/c3/records/mbank/2026-09.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,10:changes/c4,7:changes,45:engine/tests/integration/amendments/real11/c4,287:run asks/core.tally asks/ola.tally facts/2026.tally facts/2028.tally law/pl/benefits.tally law/pl/business.tally law/pl/common.tally law/pl/employment.tally law/pl/wrappers.tally loans.tally pays.tally people.tally places.tally reality.tally records/mbank/2026-09.tally --ask zz_m0_probe,1027:asks/core.tally	integration/amendments/real11/c4/asks/core.tally
+asks/ola.tally	integration/amendments/real11/c4/asks/ola.tally
+facts/2026.tally	integration/amendments/real11/c4/facts/2026.tally
+facts/2028.tally	integration/amendments/real11/c4/facts/2028.tally
+law/pl/benefits.tally	integration/amendments/real11/c4/law/pl/benefits.tally
+law/pl/business.tally	integration/amendments/real11/c4/law/pl/business.tally
+law/pl/common.tally	integration/amendments/real11/c4/law/pl/common.tally
+law/pl/employment.tally	integration/amendments/real11/c4/law/pl/employment.tally
+law/pl/wrappers.tally	integration/amendments/real11/c4/law/pl/wrappers.tally
+loans.tally	integration/amendments/real11/c4/loans.tally
+pays.tally	integration/amendments/real11/c4/pays.tally
+people.tally	integration/amendments/real11/c4/people.tally
+places.tally	integration/amendments/real11/c4/places.tally
+reality.tally	integration/amendments/real11/c4/reality.tally
+records/mbank/2026-09.tally	integration/amendments/real11/c4/records/mbank/2026-09.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,10:changes/c5,7:changes,45:engine/tests/integration/amendments/real11/c5,309:run abroad.tally asks/core.tally facts/2026.tally facts/2029.tally law/de/employment.tally law/pl/benefits.tally law/pl/business.tally law/pl/common.tally law/pl/employment.tally law/pl/wrappers.tally loans.tally pays.tally people.tally places.tally reality.tally records/mbank/2026-09.tally --ask zz_m0_probe,1104:abroad.tally	integration/amendments/real11/c5/abroad.tally
+asks/core.tally	integration/amendments/real11/c5/asks/core.tally
+facts/2026.tally	integration/amendments/real11/c5/facts/2026.tally
+facts/2029.tally	integration/amendments/real11/c5/facts/2029.tally
+law/de/employment.tally	integration/amendments/real11/c5/law/de/employment.tally
+law/pl/benefits.tally	integration/amendments/real11/c5/law/pl/benefits.tally
+law/pl/business.tally	integration/amendments/real11/c5/law/pl/business.tally
+law/pl/common.tally	integration/amendments/real11/c5/law/pl/common.tally
+law/pl/employment.tally	integration/amendments/real11/c5/law/pl/employment.tally
+law/pl/wrappers.tally	integration/amendments/real11/c5/law/pl/wrappers.tally
+loans.tally	integration/amendments/real11/c5/loans.tally
+pays.tally	integration/amendments/real11/c5/pays.tally
+people.tally	integration/amendments/real11/c5/people.tally
+places.tally	integration/amendments/real11/c5/places.tally
+reality.tally	integration/amendments/real11/c5/reality.tally
+records/mbank/2026-09.tally	integration/amendments/real11/c5/records/mbank/2026-09.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,10:changes/c6,7:changes,45:engine/tests/integration/amendments/real11/c6,272:run asks/core.tally facts/2026.tally facts/2027.tally law/pl/benefits.tally law/pl/business.tally law/pl/common.tally law/pl/employment.tally law/pl/wrappers.tally loans.tally pays.tally people.tally places.tally reality.tally records/mbank/2026-09.tally --ask zz_m0_probe,964:asks/core.tally	integration/amendments/real11/c6/asks/core.tally
+facts/2026.tally	integration/amendments/real11/c6/facts/2026.tally
+facts/2027.tally	integration/amendments/real11/c6/facts/2027.tally
+law/pl/benefits.tally	integration/amendments/real11/c6/law/pl/benefits.tally
+law/pl/business.tally	integration/amendments/real11/c6/law/pl/business.tally
+law/pl/common.tally	integration/amendments/real11/c6/law/pl/common.tally
+law/pl/employment.tally	integration/amendments/real11/c6/law/pl/employment.tally
+law/pl/wrappers.tally	integration/amendments/real11/c6/law/pl/wrappers.tally
+loans.tally	integration/amendments/real11/c6/loans.tally
+pays.tally	integration/amendments/real11/c6/pays.tally
+people.tally	integration/amendments/real11/c6/people.tally
+places.tally	integration/amendments/real11/c6/places.tally
+reality.tally	integration/amendments/real11/c6/reality.tally
+records/mbank/2026-09.tally	integration/amendments/real11/c6/records/mbank/2026-09.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,10:changes/c7,7:changes,45:engine/tests/integration/amendments/real11/c7,282:run asks/core.tally facts/2026.tally law/pl/benefits.tally law/pl/business.tally law/pl/common.tally law/pl/employment.tally law/pl/wrappers.tally loans.tally pays.tally people.tally places.tally reality.tally records/mbank/2026-09.tally scenarios/wife_stops.tally --ask zz_m0_probe,984:asks/core.tally	integration/amendments/real11/c7/asks/core.tally
+facts/2026.tally	integration/amendments/real11/c7/facts/2026.tally
+law/pl/benefits.tally	integration/amendments/real11/c7/law/pl/benefits.tally
+law/pl/business.tally	integration/amendments/real11/c7/law/pl/business.tally
+law/pl/common.tally	integration/amendments/real11/c7/law/pl/common.tally
+law/pl/employment.tally	integration/amendments/real11/c7/law/pl/employment.tally
+law/pl/wrappers.tally	integration/amendments/real11/c7/law/pl/wrappers.tally
+loans.tally	integration/amendments/real11/c7/loans.tally
+pays.tally	integration/amendments/real11/c7/pays.tally
+people.tally	integration/amendments/real11/c7/people.tally
+places.tally	integration/amendments/real11/c7/places.tally
+reality.tally	integration/amendments/real11/c7/reality.tally
+records/mbank/2026-09.tally	integration/amendments/real11/c7/records/mbank/2026-09.tally
+scenarios/wife_stops.tally	integration/amendments/real11/c7/scenarios/wife_stops.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,10:changes/v3,7:changes,45:engine/tests/integration/amendments/real11/v3,255:run asks/core.tally facts/2026.tally law/pl/benefits.tally law/pl/business.tally law/pl/common.tally law/pl/employment.tally law/pl/wrappers.tally loans.tally pays.tally people.tally places.tally reality.tally records/mbank/2026-09.tally --ask zz_m0_probe,897:asks/core.tally	integration/amendments/real11/v3/asks/core.tally
+facts/2026.tally	integration/amendments/real11/v3/facts/2026.tally
+law/pl/benefits.tally	integration/amendments/real11/v3/law/pl/benefits.tally
+law/pl/business.tally	integration/amendments/real11/v3/law/pl/business.tally
+law/pl/common.tally	integration/amendments/real11/v3/law/pl/common.tally
+law/pl/employment.tally	integration/amendments/real11/v3/law/pl/employment.tally
+law/pl/wrappers.tally	integration/amendments/real11/v3/law/pl/wrappers.tally
+loans.tally	integration/amendments/real11/v3/loans.tally
+pays.tally	integration/amendments/real11/v3/pays.tally
+people.tally	integration/amendments/real11/v3/people.tally
+places.tally	integration/amendments/real11/v3/places.tally
+reality.tally	integration/amendments/real11/v3/reality.tally
+records/mbank/2026-09.tally	integration/amendments/real11/v3/records/mbank/2026-09.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,10:changes/v4,7:changes,45:engine/tests/integration/amendments/real11/v4,287:run asks/core.tally asks/ola.tally facts/2026.tally facts/2028.tally law/pl/benefits.tally law/pl/business.tally law/pl/common.tally law/pl/employment.tally law/pl/wrappers.tally loans.tally pays.tally people.tally places.tally reality.tally records/mbank/2026-09.tally --ask zz_m0_probe,1027:asks/core.tally	integration/amendments/real11/v4/asks/core.tally
+asks/ola.tally	integration/amendments/real11/v4/asks/ola.tally
+facts/2026.tally	integration/amendments/real11/v4/facts/2026.tally
+facts/2028.tally	integration/amendments/real11/v4/facts/2028.tally
+law/pl/benefits.tally	integration/amendments/real11/v4/law/pl/benefits.tally
+law/pl/business.tally	integration/amendments/real11/v4/law/pl/business.tally
+law/pl/common.tally	integration/amendments/real11/v4/law/pl/common.tally
+law/pl/employment.tally	integration/amendments/real11/v4/law/pl/employment.tally
+law/pl/wrappers.tally	integration/amendments/real11/v4/law/pl/wrappers.tally
+loans.tally	integration/amendments/real11/v4/loans.tally
+pays.tally	integration/amendments/real11/v4/pays.tally
+people.tally	integration/amendments/real11/v4/people.tally
+places.tally	integration/amendments/real11/v4/places.tally
+reality.tally	integration/amendments/real11/v4/reality.tally
+records/mbank/2026-09.tally	integration/amendments/real11/v4/records/mbank/2026-09.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,10:changes/v5,7:changes,45:engine/tests/integration/amendments/real11/v5,309:run abroad.tally asks/core.tally facts/2026.tally facts/2029.tally law/de/employment.tally law/pl/benefits.tally law/pl/business.tally law/pl/common.tally law/pl/employment.tally law/pl/wrappers.tally loans.tally pays.tally people.tally places.tally reality.tally records/mbank/2026-09.tally --ask zz_m0_probe,1104:abroad.tally	integration/amendments/real11/v5/abroad.tally
+asks/core.tally	integration/amendments/real11/v5/asks/core.tally
+facts/2026.tally	integration/amendments/real11/v5/facts/2026.tally
+facts/2029.tally	integration/amendments/real11/v5/facts/2029.tally
+law/de/employment.tally	integration/amendments/real11/v5/law/de/employment.tally
+law/pl/benefits.tally	integration/amendments/real11/v5/law/pl/benefits.tally
+law/pl/business.tally	integration/amendments/real11/v5/law/pl/business.tally
+law/pl/common.tally	integration/amendments/real11/v5/law/pl/common.tally
+law/pl/employment.tally	integration/amendments/real11/v5/law/pl/employment.tally
+law/pl/wrappers.tally	integration/amendments/real11/v5/law/pl/wrappers.tally
+loans.tally	integration/amendments/real11/v5/loans.tally
+pays.tally	integration/amendments/real11/v5/pays.tally
+people.tally	integration/amendments/real11/v5/people.tally
+places.tally	integration/amendments/real11/v5/places.tally
+reality.tally	integration/amendments/real11/v5/reality.tally
+records/mbank/2026-09.tally	integration/amendments/real11/v5/records/mbank/2026-09.tally
+,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,

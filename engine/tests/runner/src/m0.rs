@@ -27,6 +27,7 @@
 use crate::corpus::{Run, groups, netstrings, pack, text};
 use crate::engine::run_args;
 use crate::kernel::difference;
+use crate::m0_spec_texts::SPEC_TEXTS;
 use crate::m0_texts::TEXTS;
 use std::collections::BTreeMap;
 
@@ -38,6 +39,10 @@ pub const LOAD: &[u8] = include_bytes!("../../m0/load.refcore");
 
 /// The ask the load probe asks, which no text declares.
 pub const PROBE: &str = "zz_m0_probe";
+
+/// `m0/loadcheck.refcore`: row 3's realities (the spec's 79 models, its household, X's 10
+/// changes), refcore's load probe of each, in [`LOAD`]'s layout (`m0/loadcheck.py`).
+pub const LOADCHECK: &[u8] = include_bytes!("../../m0/loadcheck.refcore");
 
 /// The digest's two lanes, each a prime modulus and a base (`vectors.py`'s `LANES`): the
 /// primes 2^61 − 1 and 2^61 − 31.
@@ -251,9 +256,10 @@ pub fn printed(out: &str) -> Printed {
     Printed { sections, tail }
 }
 
-/// Every text of [`TEXTS`], by its path under `engine/tests/`.
+/// Every text of [`TEXTS`] and [`SPEC_TEXTS`], by its path relative to `engine/tests/` (a
+/// spec text's starts `../spec/`).
 pub fn texts() -> BTreeMap<&'static str, &'static str> {
-    TEXTS.iter().copied().collect()
+    TEXTS.iter().chain(SPEC_TEXTS.iter()).copied().collect()
 }
 
 /// The file table of vector `id` (`INTERFACE.md` §4), its `files` read from `texts`.
@@ -266,7 +272,7 @@ pub fn table(
     for f in files {
         let content = texts
             .get(f.path.as_str())
-            .ok_or_else(|| format!("{id}: {} isn't in m0_texts.rs", f.path))?;
+            .ok_or_else(|| format!("{id}: {} has no embedded text", f.path))?;
         pairs.push((f.key.as_str(), content));
     }
     Ok(pack(&pairs))
@@ -385,11 +391,26 @@ pub fn load_failure(v: &LoadVector, texts: &BTreeMap<&str, &str>) -> Option<Stri
 /// Every load vector of `group` the engine fails, each with why, and how many vectors the
 /// group holds.
 pub fn load_group_failures(group: &str) -> Result<(Vec<String>, usize), String> {
-    let vs = load_vectors(LOAD)?;
+    group_failures_in(LOAD, "m0/load.refcore", group)
+}
+
+/// Every reality of row 3's `group` (`models`, `household`, `changes`) whose load probe the
+/// engine fails, each with why, and how many the group holds.
+pub fn loadcheck_group_failures(group: &str) -> Result<(Vec<String>, usize), String> {
+    group_failures_in(LOADCHECK, "m0/loadcheck.refcore", group)
+}
+
+/// The failures of `group`'s vectors of `bytes` (named `name`), in [`LOAD`]'s layout.
+fn group_failures_in(
+    bytes: &[u8],
+    name: &str,
+    group: &str,
+) -> Result<(Vec<String>, usize), String> {
+    let vs = load_vectors(bytes)?;
     let texts = texts();
     let mine: Vec<&LoadVector> = vs.iter().filter(|v| v.group == group).collect();
     if mine.is_empty() {
-        return Err(format!("m0/load.refcore holds no vector of {group}"));
+        return Err(format!("{name} holds no vector of {group}"));
     }
     let failed = mine
         .iter()
@@ -401,7 +422,7 @@ pub fn load_group_failures(group: &str) -> Result<(Vec<String>, usize), String> 
 #[cfg(test)]
 mod tests {
     use super::{
-        FORMAT, LOAD, LoadVector, PROBE, TEXTS, digest, digest_of_hex, format_vectors,
+        FORMAT, LOAD, LOADCHECK, LoadVector, PROBE, TEXTS, digest, digest_of_hex, format_vectors,
         load_vectors, printed, texts, unwarned,
     };
     use std::collections::BTreeSet;
@@ -575,6 +596,34 @@ mod tests {
             assert_eq!(v.run.code, 1, "{}", v.id);
             assert!(v.run.out.starts_with("refused: LOAD-"), "{}", v.id);
         }
+    }
+
+    /// Row 3: the spec's 79 models, its household and X's 10 changes, every text embedded;
+    /// refcore loads all but MP-10 clean (`LOAD-BAND`, a code the scan doesn't check).
+    #[test]
+    fn the_loadcheck_realities_read_and_name_their_texts() {
+        let vs = load_vectors(LOADCHECK).expect("m0/loadcheck.refcore reads");
+        for (group, count) in [("models", 79), ("household", 1), ("changes", 10)] {
+            assert_eq!(
+                vs.iter().filter(|v| v.group == group).count(),
+                count,
+                "{group}"
+            );
+        }
+        assert_eq!(vs.len(), 90, "three groups");
+        let all = texts();
+        for v in &vs {
+            for f in &v.table {
+                assert!(all.contains_key(f.path.as_str()), "{}: {}", v.id, f.path);
+            }
+        }
+        let probed = format!("refused: REQ-ASK no ask {PROBE}\n");
+        let refused: Vec<&str> = vs
+            .iter()
+            .filter(|v| v.run.out != probed)
+            .map(|v| v.id.as_str())
+            .collect();
+        assert_eq!(refused, vec!["models/MP-10"], "all but MP-10 load clean");
     }
 
     #[test]
