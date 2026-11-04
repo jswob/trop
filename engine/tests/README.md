@@ -9,8 +9,8 @@ The suite lives here, travelling with the engine, and runs from any checkout: ev
 | Path | What |
 |---|---|
 | `run.py`, `checks.tsv`, `examples.tsv` | the runner, the checks, the examples and their three levels |
-| `tools/` | `build_checks.py` (writes `checks.tsv`), `tracked_check.py`, `knobdiff.py`, `memcap.py` (the watchdog), `answers.py` (runs → answers for `compare.py`) |
-| `map/` | the tags, coverage, the halving test's knobs; `examples.py` builds and lints `examples.tsv` |
+| `tools/` | `build_checks.py` (writes `checks.tsv`), `tracked_check.py`, `knobdiff.py`, `memcap.py` (the watchdog), `answers.py` (runs → answers for `compare.py`), `xref_check.py` (the codes L §8 and E §11 define against what the outputs print, K8-13: writes `map/codes.tsv`; `--check` in `run.py --self-test`; `--gate M0`) |
+| `map/` | the tags, coverage, the halving test's knobs; `examples.py` builds and lints `examples.tsv`; `placement.tsv` (each check's milestone); `codes.tsv` (the codes' cross-reference, by `tools/xref_check.py`) |
 | `cases/` | the case set (cases 1.1.1): stories, questions, keys, probe cards, `tools/compare.py` and the key scripts |
 | `unit/probes/` | the probe texts |
 | `integration/` | `households/` and `law/` (the one visible copy of the judged texts; session 5's writers copy from here), `cuts/` (the cut-down copies the household checks run on), `amendments/` (household X), `models/`, `models-1.0/`, `light/`, `blind/`, `new/` (4.5c's fill), `split/`, `recipes/`, `keys-extra/` |
