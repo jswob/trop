@@ -43,7 +43,9 @@ mod tests {
     }
 
     /// Checks every case of `law` on the engine, its law and refcore's runs, and collects
-    /// every failure before failing, so one run shows them all.
+    /// every failure before failing, so one run shows them all. An `again` run (the reprint
+    /// of a reprint) has no refcore run to compare with: `m0.refcore` stores none, since
+    /// idempotence makes it its reprint's bytes; `m0_format_idempotent` holds it (issue #77).
     fn law_holds(law: &str) {
         let refcore = refcore_runs(M0_REFCORE).expect("refcore's runs read");
         let all = cases(law);
@@ -52,16 +54,14 @@ mod tests {
             if let Err(e) = check(law, case, runs) {
                 failed.push(format!("{case}: {e}"));
             }
-            for (key, run) in runs {
+            for (key, run) in runs.iter().filter(|(key, _)| !key.ends_with(":again")) {
                 match refcore.get(&(case.clone(), key.clone())) {
                     Some(want) if agrees(law, run, want) => {}
                     Some(want) => failed.push(format!(
                         "{case} {key}: the engine prints\n{}refcore\n{}",
                         run.out, want.out
                     )),
-                    None => failed.push(format!(
-                        "{case} {key}: refcore's reprint was refused, the engine's wasn't"
-                    )),
+                    None => failed.push(format!("{case} {key}: refcore stores no such run")),
                 }
             }
         }
