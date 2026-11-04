@@ -13,7 +13,7 @@ use super::graph::walk;
 use super::steps::{Loader, refuse};
 use crate::base::{Code, Load, Refusal, Warn};
 use crate::model::{GapRole, Graph, Node, NodeKind, Reality, Rel, Target, Ty};
-use crate::syntax::{Expr, Field, FieldValue, Lit, Order, Section, Stop, Value as Written};
+use crate::syntax::{Field, Lit, Order, Section, Stop, Value as Written};
 use std::collections::{BTreeMap, BTreeSet};
 
 /// An invariant of the graph's own searches broken: a cycle or a layer that must exist.
@@ -359,8 +359,9 @@ fn named_places(m: &Reality, read: &BTreeSet<&Node>) -> BTreeSet<String> {
 }
 
 /// The things a row's written value names where its type takes a thing of a kind: the value
-/// itself, a record's fields, a list's items, each converted as a read converts it (refcore's
-/// `values_naming` over `convert_value`). L §8.5, §4.2.
+/// itself or a record's fields, each literal read as a read converts it, never refused here
+/// (refcore's `values_naming` over `convert_value`). No declared type is a list, so a list
+/// row names none. L §8.5, §4.2.
 fn row_things(m: &Reality, value: &Written, ty: &Ty, out: &mut Vec<String>) {
     match value {
         Written::Lit(lit) => out.extend(thing_of(m, lit, ty)),
@@ -369,37 +370,21 @@ fn row_things(m: &Reality, value: &Written, ty: &Ty, out: &mut Vec<String>) {
                 return;
             };
             for (name, field_ty) in types {
-                let lit = fields.iter().find_map(|f| field_lit(f, name));
+                let lit = fields.iter().find_map(|f| match f {
+                    Field::Named(n, v) if n == name => crate::eval::field_literal(v),
+                    Field::Named(..) | Field::Leg(_) => None,
+                });
                 out.extend(lit.and_then(|lit| thing_of(m, &lit, field_ty)));
             }
         }
-        Written::List(items) => {
-            let Ty::List(item_ty) = ty else {
-                return;
-            };
-            out.extend(items.iter().filter_map(|lit| thing_of(m, lit, item_ty)));
-        }
-        Written::Hole(_)
+        Written::List(_)
+        | Written::Hole(_)
         | Written::Never
         | Written::None
         | Written::Str(_)
         | Written::Calendar(_)
         | Written::Days(_)
         | Written::Expr(_) => {}
-    }
-}
-
-/// A record field's literal, when the field is `name` and its value is one (a word read as
-/// a key included), as a row's conversion takes it (refcore's `convert_value`). L §3.1.
-fn field_lit(field: &Field, name: &str) -> Option<Lit> {
-    match field {
-        Field::Named(n, FieldValue::Lit(lit) | FieldValue::Expr(Expr::Lit(lit))) if n == name => {
-            Some(lit.clone())
-        }
-        Field::Named(n, FieldValue::Expr(Expr::Name(word))) if n == name => {
-            Some(Lit::Name(word.clone()))
-        }
-        Field::Named(..) | Field::Leg(_) => None,
     }
 }
 

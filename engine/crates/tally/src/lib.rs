@@ -134,7 +134,7 @@ pub mod eval {
     pub(crate) use aggregate::{order_text, reads_name};
     pub use arith::{Op, Test, arith, compare, currency_of, int_of, negate, same_value};
     pub use memo::Memo;
-    pub(crate) use read::{convert_row, make_keys, thing_seen, to_key};
+    pub(crate) use read::{convert_row, field_literal, make_keys, thing_seen, to_key};
     pub use stack::Item;
     pub(crate) use state::num_stop;
     pub use state::{Collected, Ctx, Engine, Entry, Env};
