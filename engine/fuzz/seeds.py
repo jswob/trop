@@ -1,6 +1,7 @@
 """Seeds a fuzz target's corpus with the texts M0's tests name (R-91, R-92).
 
     python3 -I -B engine/fuzz/seeds.py TARGET...
+    python3 -I -B engine/fuzz/seeds.py TARGET --into DIR   -> the seeds into DIR instead
 
 The seeds are every text `tests/runner/src/m0_texts.rs` and `m0_spec_texts.rs` embed: the
 corpus's realities, the format fixtures under `tests/m0/format/`, and the spec's realities
@@ -10,8 +11,9 @@ files split at the byte 0xFF, so it also gets each reality of the load vectors
 0xFF. The lists are read, never copied, so a text T adds is a seed on the next run. Each seed
 is written to `fuzz/corpus/TARGET/` under the SHA-1 of its bytes, libFuzzer's own naming, so a
 second run writes nothing and a seed the fuzzer already holds isn't doubled. The corpus folder
-is local (`fuzz/.gitignore`); `check`'s fuzz step and the long fuzz job run this before each
-target.
+is local (`fuzz/.gitignore`), and the long fuzz job runs this before each target. `check`'s
+fuzz step seeds a fresh folder `--into` target/ instead, on every run, so it fuzzes what CI
+fuzzes and a corpus grown by long runs can't change it (issue #78).
 """
 
 import hashlib
@@ -81,8 +83,7 @@ def read(path):
         return f.read()
 
 
-def seed(target, inputs):
-    corpus = os.path.join(FUZZ, "corpus", target)
+def seed(corpus, inputs):
     os.makedirs(corpus, exist_ok=True)
     written = 0
     for data in inputs:
@@ -94,20 +95,24 @@ def seed(target, inputs):
     return written
 
 
-def main(targets):
-    if not targets:
+def main(args):
+    into = None
+    if len(args) == 3 and args[1] == "--into":
+        args, into = args[:1], args[2]
+    if not args or "--into" in args:
         sys.exit(__doc__)
     paths = texts()
-    for target in targets:
+    for target in args:
         inputs = [read(p) for p in paths]
         joined = 0
         if target == "load":
             for table in tables():
                 inputs.append(SEPARATOR.join(read(p) for p in table))
                 joined += 1
-        written = seed(target, inputs)
+        corpus = into or os.path.join(FUZZ, "corpus", target)
+        written = seed(corpus, inputs)
         more = f" and {joined} realities of the load vectors" if joined else ""
-        print(f"seeds: {target}: {len(paths)} texts{more}, {written} new in fuzz/corpus/{target}/")
+        print(f"seeds: {target}: {len(paths)} texts{more}, {written} new in {corpus}")
 
 
 if __name__ == "__main__":
