@@ -668,3 +668,5 @@ move m[p in accounts on d0, f in flats]: transfers
   - Exception delta: +0.
   - Diff: 9 files, +87 −97 in engine/crates and MUTANTS-SURVIVORS.md.
   - check full: "check full: green, 31 steps (504s)".
+
+- 2026-11-04T09:27:28Z CONFIG-CHANGE BLOCKED: source user_settings /Users/jswob/.claude/settings.json (R-81)
