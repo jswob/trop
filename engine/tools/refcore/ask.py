@@ -71,6 +71,29 @@ def is_load(err):
     return isinstance(err, TallyError) and err.code.startswith('LOAD-')
 
 
+def req_ask(qid):
+    """E §11 (tally 2.1.3, issue #58): `REQ-ASK` | the request names an ask that doesn't exist | the request is refused,
+    after load (a load refusal outranks it), in every shape of reality, printing `no ask <q>`, q the first such ask in
+    the request's order, as the run's one result; a member's ask named as asked, a.q (L §6.1)."""
+    return TallyError('REQ-ASK', 'no ask %s' % qid)
+
+
+def knows_ask(m, qid):
+    """Whether the request's id qid names an ask of the loaded reality m (E §11 `REQ-ASK`): one of its asks, refused
+    alone or not; or a member's ask a.q (L §6.1) as Asker.member_ask finds it: the member's own, one of its members'
+    a.b.q when the member is a joint model, or an ask in one of the member's scenario files."""
+    members = getattr(m, 'joint_members', None) or {}
+    if '.' in qid and qid.split('.', 1)[0] in members:
+        alias, aid = qid.split('.', 1)
+        mm = members[alias]
+        if any(b.id == aid for b in mm.asks):
+            return True
+        if '.' in aid and aid.split('.', 1)[0] in (getattr(mm, 'joint_members', None) or {}):
+            return knows_ask(mm, aid)
+        return aid in getattr(mm, 'scenario_asks', ())
+    return any(a.id == qid for a in list(m.asks) + list(getattr(m, 'asks_alone', ())))
+
+
 def member_names_world(mm, a):
     """Whether a member's base ask names one of the member's scenarios: its `in`, a diff's worlds, a scenario pin, an
     `as if {scenario s}` in its line or a def it reaches."""
@@ -238,14 +261,18 @@ class Asker:
         asks = {a.id: a for a in list(m.asks) + list(getattr(m, 'asks_alone', ()))}
         members = getattr(m, 'joint_members', {})
         if ids:
+            for i in ids:
+                if not knows_ask(m, i):
+                    # E §11 (tally 2.1.3, issue #58): after load and before any ask is answered, the first id of the
+                    # request that names no ask refuses the whole request (was LOAD-NAME, and a member's a.q only
+                    # once the asks before it were answered)
+                    raise req_ask(i)
             order = []
             for i in ids:
                 if '.' in i and i.split('.', 1)[0] in members:
                     # a member's ask, asked inside the joint model as a.q (L §6.1): answered by the member alone
                     order.append(i)
                     continue
-                if i not in asks:
-                    raise TallyError('LOAD-NAME', 'no ask %s' % i)
                 order.append(asks[i])
         else:
             order = [asks[i] for i in sorted(asks)]
@@ -292,7 +319,8 @@ class Asker:
                 # the member alone, its scenarios loaded, answers it in its world (L §6.1 "A member's asks are asked
                 # inside the joint model as a.q"; L §6.4 Asking)
                 return self.member_alone(qid, alias, aid, mm)
-            raise TallyError('LOAD-NAME', 'no ask %s' % qid)
+            # the request's ids are checked before any is answered (knows_ask), so this is a guard
+            raise req_ask(qid)
         if member_names_world(mm, hit[0]):
             # a base ask of the member that names one of its scenarios (in, diff, a scenario pin, as if): L §6.1 "A
             # member's asks are asked by name in a run of the joint model, as a.q, and answered by the member

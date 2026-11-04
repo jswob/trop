@@ -64,10 +64,14 @@ def reality_hash(files, mode=None, members=None):
     order (refcore's test convenience, `--pin=bytes`); otherwise of the canonical text (E §3.1 step 1)."""
     files = sorted(files, key=lambda f: f[0])
     if mode == 'bytes':
-        data = b''.join(src.encode('utf-8') for p, src in files)
-    else:
-        data = ''.join(text for p, text in reprint(files, members)).encode('utf-8')
-    return hashlib.sha256(data).hexdigest()
+        return hashlib.sha256(b''.join(src.encode('utf-8') for p, src in files)).hexdigest()
+    return printed_hash(reprint(files, members))
+
+
+def printed_hash(printed):
+    """The sha256 of the files' canonical texts [(path, text)], each ending with its newline, joined in the order given
+    (E §3.1 step 1: the caller gives the files in the order of their full paths)."""
+    return hashlib.sha256(''.join(text for p, text in printed).encode('utf-8')).hexdigest()
 
 
 def reprint(files, members=None):
@@ -232,6 +236,17 @@ class Tie:
         self.rank, self.val, self.text, self.why = rank, val, text, why
 
 
+class Keys:
+    """L §2.4 (tally 2.1.3, issue #59): an item's keys as one sort component, compared position by position
+    (cmp_keys), a list that ends first sorting first. "keys in index order …, with a keyless row first" and "the wider
+    key comes first": a trailing key left out covers every key at its position (L §4.6 step 3.2), so a row that leaves
+    it out sorts before one that states a key there, `*` included, as the keyless row before a keyed one. Laid out flat,
+    one component per key, two key lists of different lengths compared a key with the span's Tie (a crash)."""
+
+    def __init__(self, comps):
+        self.comps = comps
+
+
 class Rev:
     """A component sorted in reverse (a range's last key: the wider range first, L §2.4)."""
 
@@ -252,6 +267,8 @@ class Rev:
 
 
 def cmp_comp(x, y):
+    if isinstance(x, Keys) and isinstance(y, Keys):
+        return cmp_keys(x.comps, y.comps)
     if isinstance(x, Tie) and isinstance(y, Tie):
         a, b = (x.rank, x.val), (y.rank, y.val)
         if a != b:
@@ -641,8 +658,8 @@ class FilePrinter:
             comps = [1, tgt, (0,) if not keys else (1,)]
             if keys:
                 binds = self.table.binds.get((None, tgt), [])
-                for j, k in enumerate(keys):
-                    comps.append(self.key_comp(k, binds[j].dom if j < len(binds) else None))
+                comps.append(Keys([self.key_comp(k, binds[j].dom if j < len(binds) else None)
+                                   for j, k in enumerate(keys)]))
             comps.append(Tie(0, (), '', None))
             comps.append(self.line_key(it, l))
             return comps
@@ -655,9 +672,8 @@ class FilePrinter:
         comps = [1, tgt, kc]
         if keys:
             binds = self.table.binds.get((it.qual, it.target), [])
-            for j, k in enumerate(keys):
-                dom = binds[j].dom if j < len(binds) else None
-                comps.append(self.key_comp(k, dom))
+            comps.append(Keys([self.key_comp(k, binds[j].dom if j < len(binds) else None)
+                               for j, k in enumerate(keys)]))
         if it.k == 'bandrow':
             return comps
         comps.append(self.span_key(it.governs, it.instant))

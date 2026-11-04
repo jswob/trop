@@ -1,0 +1,54 @@
+# L §2.4 (tally 2.1.3, issue #59): version items sort "by target id, ..., then keys in index order (...), with a keyless
+# row first"; "At one key position the wider key comes first", and a trailing key left out covers every key there
+# (L §4.6 step 3.2: "anything inside `*` or a trailing key left out"). So keys compare position by position as a list,
+# and a row that leaves a key out sorts before one that states a key at that position, as the keyless row before a
+# keyed one: wealth[e1] = 0 before wealth[e1, savings] and wealth[e1, shares], whatever the file's order. The rows of
+# UL-09's version facts_2022 (wealth[ex22_1] = 0 beside wealth[ex22_1, savings] = 150 000), reduced. Was a crash:
+# canon.cmp_comp compared a key with the span's Tie (TypeError, T's SR-2).
+=== options reprint
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+index ex = [e1, e2]
+index item = [savings, shares]
+input wealth[e in ex, i in item]: int
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  wealth[e2, shares] = 5
+  wealth[e1, shares] = 7
+  wealth[e1] = 0
+  wealth[e1, savings] = 150 000
+=== expect
+--- m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+index ex = [e1, e2]
+
+index item = [savings, shares]
+
+input wealth[e in ex, i in item]: int
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  wealth[e1] = 0
+  wealth[e1, savings] = 150 000
+  wealth[e1, shares] = 7
+  wealth[e2, shares] = 5
+sha256 1760c25897befca31eab72f42ef4b8e3adce9dd3510f8b27fd7a7aa8d70c162e

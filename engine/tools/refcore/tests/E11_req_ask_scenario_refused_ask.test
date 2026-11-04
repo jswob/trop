@@ -1,0 +1,20 @@
+# E §11 (tally 2.1.3, issue #58): `REQ-ASK` is for "an ask that doesn't exist". qx exists: the scenario file bad
+# declares it, and bad's load is refused (L §8: only that scenario), so qx is refused with its scenario as before and
+# the request isn't refused (the reality of E11_req_ask_scenario_refused). (A twin: so on tally 2.1.2's refcore too.)
+=== m.tally
+model f
+  tally 2
+  on 2025-01-01
+  start 2025-01-01
+  end 2025-12-31
+source s "synthetic"
+unit DUK: currency minor 0.01
+ask q: minor(DUK)
+=== bad.tally
+scenario bad over f
+  tally 2
+  from 2025-01-01
+def q: int = 1
+ask qx: q in bad
+=== expect qx
+scenario bad: refused: LOAD-DUP q is declared twice (bad.tally:4)
