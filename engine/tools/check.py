@@ -44,7 +44,8 @@ LOGS = os.path.join(ENGINE, "target", "check-logs")
 WALLS_GREEN = os.path.join(ENGINE, "target", "walls-green")
 FRESH = False  # `--fresh`: the walls' self-tests run whatever their inputs' hash says
 NIGHTLY = "nightly-2026-10-21"
-FUZZ_SECONDS = 60
+FUZZ_SECONDS = 30  # per target; two targets keep the step near its one-target time (R-91, 2026-11-04)
+FUZZ_TIMEOUT = 10  # seconds one input may run before it counts as a hang
 
 # The caller's environment can't change how the engine is built or tested (R-82)
 CLEARED = {
@@ -322,8 +323,11 @@ def tree_probe(env, log):
 
 
 def fuzz(env, log):
-    """Each fuzz target for FUZZ_SECONDS, its regressions replayed first (gate 9's PR part)."""
+    """Each fuzz target for FUZZ_SECONDS, its regressions replayed first (gate 9's PR part); its
+    corpus seeded with M0's texts (fuzz/seeds.py), the dictionary of L §2.2-§2.3's tokens, and
+    an input that runs FUZZ_TIMEOUT seconds a finding, a hang (R-91)."""
     fuzz_dir = os.path.join(ENGINE, "fuzz")
+    dictionary = os.path.join(fuzz_dir, "tally.dict")
     code, out = run(["cargo", f"+{NIGHTLY}", "fuzz", "list"], env, log, cwd=ENGINE)
     targets = out.split() if code == 0 else []
     if not targets:
@@ -340,11 +344,13 @@ def fuzz(env, log):
             if code != 0:
                 return f"{target}: a saved regression fails again"
         corpus = os.path.join(fuzz_dir, "corpus", target)
-        os.makedirs(corpus, exist_ok=True)
-        code, _ = run(["cargo", f"+{NIGHTLY}", "fuzz", "run", target, corpus, regressions, "--",
-                       f"-max_total_time={FUZZ_SECONDS}"], env, log)
+        code, _ = run(["python3", "-I", "-B", os.path.join(fuzz_dir, "seeds.py"), target], env, log)
         if code != 0:
-            return f"{target}: the fuzzer found a crash (see fuzz/artifacts/{target}/)"
+            return f"{target}: fuzz/seeds.py couldn't seed its corpus"
+        code, _ = run(["cargo", f"+{NIGHTLY}", "fuzz", "run", target, corpus, regressions, "--",
+                       f"-max_total_time={FUZZ_SECONDS}", f"-timeout={FUZZ_TIMEOUT}", f"-dict={dictionary}"], env, log)
+        if code != 0:
+            return f"{target}: the fuzzer found a crash, a hang or a failed assertion (see fuzz/artifacts/{target}/)"
     return None
 
 

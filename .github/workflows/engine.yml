@@ -444,12 +444,12 @@ jobs:
           rustup toolchain install "$NIGHTLY" --profile minimal
           mkdir -p target/fuzz-log
           for target in $(cargo +"$NIGHTLY" fuzz list); do
-            mkdir -p "fuzz/corpus/$target"
+            python3 -I -B fuzz/seeds.py "$target"
             started=$(date -u +%Y-%m-%dT%H:%M:%SZ)
             seconds=$(( HOURS * 3600 ))
             status=0
             cargo +"$NIGHTLY" fuzz run "$target" "fuzz/corpus/$target" "fuzz/regressions/$target" -- \
-              -max_total_time="$seconds" 2>&1 | tail -n 200 > "target/fuzz-log/$target.log" || status=$?
+              -max_total_time="$seconds" -timeout=10 -dict=fuzz/tally.dict 2>&1 | tail -n 200 > "target/fuzz-log/$target.log" || status=$?
             echo "$target started=$started hours=$HOURS status=$status commit=$GITHUB_SHA" >> target/fuzz-log/hours.txt
           done
           cat target/fuzz-log/hours.txt
