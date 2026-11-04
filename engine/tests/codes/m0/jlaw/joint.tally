@@ -1,0 +1,10 @@
+model jlaw
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  use a = "a" sha256 "1ea2620855380c1f1441ae0d5353634f912e44b57d37781a649a99f022cf7fd3"
+  use b = "b" sha256 "179493ba26bc63ab10ac010985b94af8389924be5045b9db1f7f282bde20ab48"
+  note "T's base for M0's load-code fixtures (invented): a joint model over two members, each a folder that copies the law part pit; it loads clean"
+
+ask x: a.tax, b.tax

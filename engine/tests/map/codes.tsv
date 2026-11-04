@@ -33,196 +33,195 @@ LOAD-PATH	L §8.3	M0	*	2	M0	codes/LOAD-PATH/alone
 LOAD-PATH	L §8.3	M0	<path> doesn't exist	2	M0	codes/LOAD-PATH/alone
 LOAD-PARSE	L §8.3	M0	*	1	M0	codes/LOAD-PATH/control
 LOAD-PARSE	L §8.3	M0	cannot parse: <what was expected>	1	M0	codes/LOAD-PATH/control
-LOAD-HEADER	L §8.3	M0	*	24	M0	U:law/LAW-13/rate25
-LOAD-HEADER	L §8.3	M0	missing tally version	0	-	-
-LOAD-HEADER	L §8.3	M0	missing on date	0	-	-
-LOAD-HEADER	L §8.3	M0	missing start or end	0	-	-
-LOAD-HEADER	L §8.3	M0	missing from date	0	-	-
-LOAD-HEADER	L §8.3	M0	start after end	0	-	-
+LOAD-HEADER	L §8.3	M0	*	29	M0	U:law/LAW-13/rate25
+LOAD-HEADER	L §8.3	M0	missing tally version	1	M0	codes/m0/basic/header-tally
+LOAD-HEADER	L §8.3	M0	missing on date	1	M0	codes/m0/basic/header-on
+LOAD-HEADER	L §8.3	M0	missing start or end	1	M0	codes/m0/basic/header-end
+LOAD-HEADER	L §8.3	M0	missing from date	1	M0	codes/m0/scen/header-from
+LOAD-HEADER	L §8.3	M0	start after end	1	M0	codes/m0/basic/header-order
 LOAD-HEADER	L §8.3	M0	<n> files have a model header; exactly one does	24	M0	U:law/LAW-13/rate25
-LOAD-VERSION	L §8.3	M0	*	1	M0	codes/m0/parts/version
+LOAD-VERSION	L §8.3	M0	*	2	M0	codes/m0/basic/version-rule
 LOAD-VERSION	L §8.3	M0	files declare different tally versions	1	M0	codes/m0/parts/version
-LOAD-VERSION	L §8.3	M0	replace rule <d>.<r> in <V> names version <W>	0	-	-
+LOAD-VERSION	L §8.3	M0	replace rule <d>.<r> in <V> names version <W>	1	M0	codes/m0/basic/version-rule
 LOAD-PIN	L §8.3	M0	*	1	M0	codes/m0/joint/pin
 LOAD-PIN	L §8.3	M0	<file> doesn't match its sha256 in use <a>	1	M0	codes/m0/joint/pin
 LOAD-RESERVED	L §8.3	M0	*	1	M0	codes/m0/basic/reserved
 LOAD-RESERVED	L §8.3	M0	<word> is a keyword	1	M0	codes/m0/basic/reserved
-LOAD-DUP	L §8.3	M0	*	3	M0	codes/LOAD-DEPTH/ties-by-control
+LOAD-DUP	L §8.3	M0	*	5	M0	codes/LOAD-DEPTH/ties-by-control
 LOAD-DUP	L §8.3	M0	<id> is declared twice	3	M0	codes/LOAD-DEPTH/ties-by-control
-LOAD-DUP	L §8.3	M0	a key entered twice	0	-	-
-LOAD-DUP	L §8.3	M0	band <b> has a built-in's name	0	-	-
-LOAD-NAME	L §8.3	M0	*	2	M0	codes/m0/basic/name
+LOAD-DUP	L §8.3	M0	a key entered twice	1	M0	codes/m0/basic/dup-key
+LOAD-DUP	L §8.3	M0	band <b> has a built-in's name	1	M0	codes/m0/basic/dup-band
+LOAD-NAME	L §8.3	M0	*	3	M0	codes/m0/basic/name
 LOAD-NAME	L §8.3	M0	unknown id <x>	2	M0	codes/m0/basic/name
 LOAD-NAME	L §8.3	M0	<x> is a kind, not a unit	0	-	-
-LOAD-NAME	L §8.3	M0	rule <d>.<r>: v <x> names no version	0	-	-
+LOAD-NAME	L §8.3	M0	rule <d>.<r>: v <x> names no version	1	M0	codes/m0/basic/name-rule-v
 LOAD-SHADOW	L §8.3	M0	*	1	M0	codes/m0/basic/shadow
 LOAD-SHADOW	L §8.3	M0	bound variable <k> has the name of a top-level id	1	M0	codes/m0/basic/shadow
-LOAD-KEY	L §8.3	M0	*	1	M0	codes/order/passes-control
-LOAD-KEY	L §8.3	M0	<key> is not a key of <index or kind>	0	-	-
+LOAD-KEY	L §8.3	M0	*	7	M0	codes/m0/basic/key-across
+LOAD-KEY	L §8.3	M0	<key> is not a key of <index or kind>	1	M0	codes/m0/basic/key-not
 LOAD-KEY	L §8.3	M0	ambiguous key <key>	1	M0	codes/order/passes-control
-LOAD-KEY	L §8.3	M0	a key is also an id	0	-	-
-LOAD-KEY	L §8.3	M0	wrong number of keys	0	-	-
-LOAD-KEY	L §8.3	M0	range <a>..<b> is out of order	0	-	-
-LOAD-KEY	L §8.3	M0	<k> is used as a key of <index> and <index'>	0	-	-
-LOAD-KEY	L §8.3	M0	<period> lies across keys <a> and <b> of <index>	0	-	-
+LOAD-KEY	L §8.3	M0	a key is also an id	1	M0	codes/m0/basic/key-id
+LOAD-KEY	L §8.3	M0	wrong number of keys	1	M0	codes/m0/basic/key-count
+LOAD-KEY	L §8.3	M0	range <a>..<b> is out of order	1	M0	codes/m0/basic/key-range
+LOAD-KEY	L §8.3	M0	<k> is used as a key of <index> and <index'>	1	M0	codes/m0/basic/key-two
+LOAD-KEY	L §8.3	M0	<period> lies across keys <a> and <b> of <index>	1	M0	codes/m0/basic/key-across
 LOAD-AMBIG	L §8.3	M0	*	1	M0	codes/m0/basic/ambig
 LOAD-AMBIG	L §8.3	M0	<literal> reads as a year and as an integer here	1	M0	codes/m0/basic/ambig
 LOAD-KIND	L §8.3	M0	*	1	M0	codes/m0/basic/kind
 LOAD-KIND	L §8.3	M0	<operation> on a <kind>	0	-	-
 LOAD-KIND	L §8.3	M0	?	1	M0	codes/m0/basic/kind
-LOAD-LIFESPAN	L §8.3	M0	*	1	M0	codes/m0/basic/lifespan
-LOAD-LIFESPAN	L §8.3	M0	<k> enters <kind> without lives	0	-	-
+LOAD-LIFESPAN	L §8.3	M0	*	2	M0	codes/m0/basic/lifespan
+LOAD-LIFESPAN	L §8.3	M0	<k> enters <kind> without lives	1	M0	codes/m0/basic/lifespan-enter
 LOAD-LIFESPAN	L §8.3	M0	<k>'s lifespan has no start	1	M0	codes/m0/basic/lifespan
 LOAD-LEAF	L §8.3	M0	*	1	M0	codes/m0/basic/leaf
 LOAD-LEAF	L §8.3	M0	<k> enters <kind>, which has subkinds	1	M0	codes/m0/basic/leaf
-LOAD-PLACEKIND	L §8.3	M0	*	1	M0	codes/m0/basic/placekind
+LOAD-PLACEKIND	L §8.3	M0	*	2	M0	codes/m0/basic/placekind
 LOAD-PLACEKIND	L §8.3	M0	place kind <K> has no unit or sign rule	1	M0	codes/m0/basic/placekind
-LOAD-PLACEKIND	L §8.3	M0	<k> enters a kind of unit one without its unit	0	-	-
-LOAD-PARTS	L §8.3	M0	*	3	M0	U:own/OWN-11/p21-signed
-LOAD-PARTS	L §8.3	M0	kind <K>: <clause> missing	0	-	-
+LOAD-PLACEKIND	L §8.3	M0	<k> enters a kind of unit one without its unit	1	M0	codes/m0/basic/placekind-one
+LOAD-PARTS	L §8.3	M0	*	13	M0	U:own/OWN-11/p21-signed
+LOAD-PARTS	L §8.3	M0	kind <K>: <clause> missing	1	M0	codes/m0/own/parts-missing
 LOAD-PARTS	L §8.3	M0	kind <K> keeps parts and is <signed, max 0, an asset kind, not a place kind>	3	M0	U:own/OWN-11/p21-signed
-LOAD-PARTS	L §8.3	M0	<K> states parts clauses under <kind>, which keeps parts	0	-	-
-LOAD-PARTS	L §8.3	M0	arrival rule <D> is not a num keyed by a movement and a party at its movement's day	0	-	-
-LOAD-PARTS	L §8.3	M0	owns[<p>, <x>]: <x> keeps parts	0	-	-
-LOAD-PARTS	L §8.3	M0	same <p> = <q>: <x> keeps parts	0	-	-
-LOAD-PARTS	L §8.3	M0	of on a row of <input>	0	-	-
+LOAD-PARTS	L §8.3	M0	<K> states parts clauses under <kind>, which keeps parts	1	M0	codes/m0/own/parts-under
+LOAD-PARTS	L §8.3	M0	arrival rule <D> is not a num keyed by a movement and a party at its movement's day	1	M0	codes/m0/own/parts-arrival
+LOAD-PARTS	L §8.3	M0	owns[<p>, <x>]: <x> keeps parts	1	M0	codes/m0/own/parts-owns
+LOAD-PARTS	L §8.3	M0	same <p> = <q>: <x> keeps parts	1	M0	codes/m0/jown/same-parts
+LOAD-PARTS	L §8.3	M0	of on a row of <input>	1	M0	codes/m0/own/parts-of-input
 LOAD-PARTS	L §8.3	M0	the parts of <x> at <instant> have no total in <version>	0	-	-
-LOAD-PARTS	L §8.3	M0	the stated parts of <x> sum to <a>, over its total <b>	0	-	-
-LOAD-PARTS	L §8.3	M0	the stated part of <q> at <x> is below 0	0	-	-
-LOAD-PARTS	L §8.3	M0	the stated parts <q> and <q'> of <x> overlap	0	-	-
-LOAD-PARTS	L §8.3	M0	of <q> at <x>, which keeps no labels of its sort	0	-	-
+LOAD-PARTS	L §8.3	M0	the stated parts of <x> sum to <a>, over its total <b>	1	M0	codes/m0/own/parts-over
+LOAD-PARTS	L §8.3	M0	the stated part of <q> at <x> is below 0	1	M0	codes/m0/own/parts-below
+LOAD-PARTS	L §8.3	M0	the stated parts <q> and <q'> of <x> overlap	1	M0	codes/m0/own/parts-overlap
+LOAD-PARTS	L §8.3	M0	of <q> at <x>, which keeps no labels of its sort	1	M0	codes/m0/own/parts-sort
 LOAD-ALIVE	L §8.3	M0	*	1	M0	codes/m0/basic/alive
 LOAD-ALIVE	L §8.3	M0	binding over <kind> needs on or over	1	M0	codes/m0/basic/alive
-LOAD-DOMAIN	L §8.3	M0	*	1	M0	codes/m0/basic/domain
+LOAD-DOMAIN	L §8.3	M0	*	2	M0	codes/m0/basic/domain
 LOAD-DOMAIN	L §8.3	M0	range of quantities <a> .. <b> has no step	1	M0	codes/m0/basic/domain
 LOAD-DOMAIN	L §8.3	M0	<operation> has no meaning for <values>	0	-	-
-LOAD-DOMAIN	L §8.3	M0	discrete over a key list or a stepped range	0	-	-
-LOAD-UNIT	L §8.3	M0	*	4	M0	codes/m0/adjust/unit-settlement
+LOAD-DOMAIN	L §8.3	M0	discrete over a key list or a stepped range	1	M0	codes/m0/basic/domain-discrete
+LOAD-UNIT	L §8.3	M0	*	5	M0	codes/m0/adjust/unit-settlement
 LOAD-UNIT	L §8.3	M0	<a> and <b> have different units	1	M0	codes/m0/basic/unit-mixed
 LOAD-UNIT	L §8.3	M0	<operation> orders things of <K>	0	-	-
-LOAD-UNIT	L §8.3	M0	axis <a> is used as a mode, but <o> is not a mode name	0	-	-
+LOAD-UNIT	L §8.3	M0	axis <a> is used as a mode, but <o> is not a mode name	1	M0	codes/m0/basic/unit-mode
 LOAD-UNIT	L §8.3	M0	money in an undeclared currency	1	M0	codes/m0/basic/unit-currency
 LOAD-UNIT	L §8.3	M0	?	2	M0	codes/m0/adjust/unit-settlement
-LOAD-PRECISION	L §8.3	M0	*	1	M0	codes/m0/basic/precision
+LOAD-PRECISION	L §8.3	M0	*	2	M0	codes/m0/basic/precision
 LOAD-PRECISION	L §8.3	M0	<literal> is finer than the minor unit	1	M0	codes/m0/basic/precision
-LOAD-PRECISION	L §8.3	M0	<a/b> terminates; write it as a decimal	0	-	-
+LOAD-PRECISION	L §8.3	M0	<a/b> terminates; write it as a decimal	1	M0	codes/m0/basic/precision-fraction
 LOAD-LITERAL	L §8.3	M0	*	3	M0	codes/m0/basic/literal-amount
 LOAD-LITERAL	L §8.3	M0	figure <n> in a rule; make it a row	1	M0	codes/m0/basic/literal-amount
 LOAD-LITERAL	L §8.3	M0	a date in a rule; make it a version	2	M0	codes/order/items
-LOAD-FIELD	L §8.3	M0	*	1	M0	codes/m0/basic/field
+LOAD-FIELD	L §8.3	M0	*	2	M0	codes/m0/basic/field
 LOAD-FIELD	L §8.3	M0	positional record in <row>; name its fields	0	-	-
-LOAD-FIELD	L §8.3	M0	<field> is not a field of <type>	0	-	-
+LOAD-FIELD	L §8.3	M0	<field> is not a field of <type>	1	M0	codes/m0/basic/field-not
 LOAD-FIELD	L §8.3	M0	<row> lacks field <f>	0	-	-
 LOAD-FIELD	L §8.3	M0	?	1	M0	codes/m0/basic/field
-LOAD-INSTANT	L §8.3	M0	*	1	M0	codes/m0/basic/instant
-LOAD-INSTANT	L §8.3	M0	balance reading <x> at <D> needs start, end or after	0	-	-
-LOAD-INSTANT	L §8.3	M0	row <x>[k] of a reading has no instant	0	-	-
+LOAD-INSTANT	L §8.3	M0	*	3	M0	codes/m0/basic/instant
+LOAD-INSTANT	L §8.3	M0	balance reading <x> at <D> needs start, end or after	1	M0	codes/m0/basic/instant-side
+LOAD-INSTANT	L §8.3	M0	row <x>[k] of a reading has no instant	1	M0	codes/m0/basic/instant-none
 LOAD-INSTANT	L §8.3	M0	<x> is not a reading; its rows take no instant	1	M0	codes/m0/basic/instant
 LOAD-GOVERNS	L §8.3	M0	*	1	M0	codes/m0/basic/governs
 LOAD-GOVERNS	L §8.3	M0	version <v> has rows with no time of their own and no governs	1	M0	codes/m0/basic/governs
-LOAD-KNOWN	L §8.3	M0	*	2	M0	codes/m0/basic/known
+LOAD-KNOWN	L §8.3	M0	*	3	M0	codes/m0/basic/known
 LOAD-KNOWN	L §8.3	M0	version <v> has no known date	1	M0	codes/m0/basic/known
 LOAD-KNOWN	L §8.3	M0	version <v> is known after the model's on date	1	M0	codes/m0/basic/known-after-on
-LOAD-KNOWN	L §8.3	M0	row <x>[k] is known before its version <v>	0	-	-
+LOAD-KNOWN	L §8.3	M0	row <x>[k] is known before its version <v>	1	M0	codes/m0/basic/known-row
 LOAD-OVERLAP	L §8.3	M0	*	1	M0	codes/m0/basic/overlap
 LOAD-OVERLAP	L §8.3	M0	rows <a> and <b> of <x> overlap at <keys> on <span>	0	-	-
 LOAD-OVERLAP	L §8.3	M0	?	1	M0	codes/m0/basic/overlap
 LOAD-REPLACE	L §8.3	M0	*	1	M0	codes/m0/basic/replace
 LOAD-REPLACE	L §8.3	M0	replace <x>[keys]: no earlier row to replace	1	M0	codes/m0/basic/replace
 LOAD-REPLACE	L §8.3	M0	replace rows of <b> in <V> patch no table on <span>	0	-	-
-LOAD-LABEL	L §8.3	M0	*	1	M0	codes/m0/basic/label
-LOAD-LABEL	L §8.3	M0	rule <label> already exists in <def>; write replace	0	-	-
+LOAD-LABEL	L §8.3	M0	*	2	M0	codes/m0/basic/label
+LOAD-LABEL	L §8.3	M0	rule <label> already exists in <def>; write replace	1	M0	codes/m0/basic/label-twice
 LOAD-LABEL	L §8.3	M0	beats names no rule <label>	1	M0	codes/m0/basic/label
-LOAD-MOVES	L §8.3	M0	*	1	M0	codes/m0/basic/moves
+LOAD-MOVES	L §8.3	M0	*	2	M0	codes/m0/basic/moves
 LOAD-MOVES	L §8.3	M0	moves <V>: unknown, or not known before this version	1	M0	codes/m0/basic/moves
-LOAD-MOVES	L §8.3	M0	two moves of <V> known the same day	0	-	-
+LOAD-MOVES	L §8.3	M0	two moves of <V> known the same day	1	M0	codes/m0/basic/moves-twice
 LOAD-GAPROLE	L §8.3	M0	*	1	M0	codes/m0/basic/gaprole
 LOAD-GAPROLE	L §8.3	M0	<version> states balance readings of <x> with neither pad nor anchor	1	M0	codes/m0/basic/gaprole
-LOAD-BAND	L §8.3	M0	*	2	M0	m0/load/I:M:MP-10
+LOAD-BAND	L §8.3	M0	*	3	M0	codes/m0/basic/band-marginal
 LOAD-BAND	L §8.3	M0	band <b> in <version>: rows unordered, overlapping or with a gap at <x>	2	M0	m0/load/I:M:MP-10
-LOAD-BAND	L §8.3	M0	marginal(<b>, x)	0	-	-
+LOAD-BAND	L §8.3	M0	marginal(<b>, x)	1	M0	codes/m0/basic/band-marginal
 LOAD-BAND	L §8.3	M0	band <b> in <version>: replace rows that neither patch the table nor form a whole one, or that mix with plain rows	0	-	-
-LOAD-LAWDATE	L §8.3	M0	*	1	M0	codes/m0/basic/lawdate
-LOAD-LAWDATE	L §8.3	M0	<def or move> reads law-dated facts and states no at	0	-	-
-LOAD-LAWDATE	L §8.3	M0	ask <q> reaches an at reader def, or reads law-dated <x> directly, without law	0	-	-
-LOAD-LAWDATE	L §8.3	M0	move <m>'s at reads law-dated <x>	0	-	-
-LOAD-LAWDATE	L §8.3	M0	?	1	M0	codes/m0/basic/lawdate
+LOAD-LAWDATE	L §8.3	M0	*	4	M0	codes/m0/adjust/lawdate-move
+LOAD-LAWDATE	L §8.3	M0	<def or move> reads law-dated facts and states no at	1	M0	codes/m0/basic/lawdate-def
+LOAD-LAWDATE	L §8.3	M0	ask <q> reaches an at reader def, or reads law-dated <x> directly, without law	2	M0	codes/m0/basic/lawdate
+LOAD-LAWDATE	L §8.3	M0	move <m>'s at reads law-dated <x>	1	M0	codes/m0/adjust/lawdate-move
 LOAD-LAWPERIOD	L §8.3	M0	*	1	M0	codes/m0/basic/lawperiod
 LOAD-LAWPERIOD	L §8.3	M0	at <m>: a period is not a law date	1	M0	codes/m0/basic/lawperiod
 LOAD-SCHEDULE	L §8.3	M0	*	1	M0	codes/m0/basic/schedule
 LOAD-SCHEDULE	L §8.3	M0	schedule <s> gives no date in the run	1	M0	codes/m0/basic/schedule
-LOAD-CYCLE	L §8.3	M0	*	5	M0	U:rule/RULE-04
+LOAD-CYCLE	L §8.3	M0	*	7	M0	U:rule/RULE-04
 LOAD-CYCLE	L §8.3	M0	<x> depends on itself at the same key: <path>	5	M0	U:rule/RULE-04
-LOAD-CYCLE	L §8.3	M0	<x> reads itself both earlier and later on <index>	0	-	-
-LOAD-CYCLE	L §8.3	M0	a beats cycle	0	-	-
+LOAD-CYCLE	L §8.3	M0	<x> reads itself both earlier and later on <index>	1	M0	codes/m0/basic/cycle-both
+LOAD-CYCLE	L §8.3	M0	a beats cycle	1	M0	codes/m0/basic/cycle-beats
 LOAD-CYCLE	L §8.3	M0	<decision> reads its own future without from	0	-	-
 LOAD-GUARD	L §8.3	M0	*	1	M0	codes/m0/basic/guard
 LOAD-GUARD	L §8.3	M0	<x>[k ± n] is a recurrence read with no condition on k or pos(k) guarding it	1	M0	codes/m0/basic/guard
-LOAD-TO	L §8.3	M0	*	1	M0	codes/m0/basic/to
-LOAD-TO	L §8.3	M0	<function> needs to u	1	M0	codes/m0/basic/to
-LOAD-TO	L §8.3	M0	continuous distribution <d> needs to u	0	-	-
-LOAD-LEG	L §8.3	M0	*	1	M0	codes/m0/basic/leg
-LOAD-LEG	L §8.3	M0	<movement> lacks leg <l>	0	-	-
+LOAD-TO	L §8.3	M0	*	2	M0	codes/m0/basic/to
+LOAD-TO	L §8.3	M0	<function> needs to u	2	M0	codes/m0/basic/to
+LOAD-TO	L §8.3	M0	continuous distribution <d> needs to u	1	M0	codes/m0/basic/to-dist
+LOAD-LEG	L §8.3	M0	*	4	M0	codes/m0/adjust/leg-uncertain
+LOAD-LEG	L §8.3	M0	<movement> lacks leg <l>	1	M0	codes/m0/basic/leg-lacks
 LOAD-LEG	L §8.3	M0	leg <l> is not a leg of <kind>	1	M0	codes/m0/basic/leg
-LOAD-LEG	L §8.3	M0	attribute <a> is missing or unknown	0	-	-
+LOAD-LEG	L §8.3	M0	attribute <a> is missing or unknown	1	M0	codes/m0/basic/leg-attr
 LOAD-LEG	L §8.3	M0	leg <l> of observation <r> is in <u>, not its kind's unit	0	-	-
-LOAD-LEG	L §8.3	M0	observation of uncertain kind <K>	0	-	-
+LOAD-LEG	L §8.3	M0	observation of uncertain kind <K>	1	M0	codes/m0/adjust/leg-uncertain
 LOAD-LEG	L §8.3	M0	observation <r> is dated by a window	0	-	-
-LOAD-READS	L §8.3	M0	*	1	M0	codes/m0/basic/reads
+LOAD-READS	L §8.3	M0	*	2	M0	codes/m0/basic/reads
 LOAD-READS	L §8.3	M0	<move> reaches a running read or projection of <x> without reads <x>	1	M0	codes/m0/basic/reads
-LOAD-READS	L §8.3	M0	<move> declares reads <x> and never reads it	0	-	-
-LOAD-ORDER	L §8.3	M0	*	1	M0	codes/m0/basic/order
+LOAD-READS	L §8.3	M0	<move> declares reads <x> and never reads it	1	M0	codes/m0/basic/reads-unread
+LOAD-ORDER	L §8.3	M0	*	3	M0	codes/m0/basic/order
 LOAD-ORDER	L §8.3	M0	decisions <a> and <b> read each other on <d> with no before or after	0	-	-
-LOAD-ORDER	L §8.3	M0	<a> before <b> contradicts a read of <b>'s legs	0	-	-
-LOAD-ORDER	L §8.3	M0	<a> before <m>: <m> is a plan or an observation	0	-	-
+LOAD-ORDER	L §8.3	M0	<a> before <b> contradicts a read of <b>'s legs	1	M0	codes/m0/basic/order-legs
+LOAD-ORDER	L §8.3	M0	<a> before <m>: <m> is a plan or an observation	1	M0	codes/m0/basic/order-plan
 LOAD-ORDER	L §8.3	M0	<x> after <m>: <m> is a plan or an observation	1	M0	codes/m0/basic/order
-LOAD-PRICE	L §8.3	M0	*	1	M0	codes/m0/basic/price
-LOAD-PRICE	L §8.3	M0	value(<x>) in <CUR> holds units in <u> and states no by	0	-	-
+LOAD-PRICE	L §8.3	M0	*	3	M0	codes/m0/basic/price
+LOAD-PRICE	L §8.3	M0	value(<x>) in <CUR> holds units in <u> and states no by	1	M0	codes/m0/basic/price-by
 LOAD-PRICE	L §8.3	M0	asset <x> names no price input	1	M0	codes/m0/basic/price
-LOAD-PRICE	L §8.3	M0	<x> names a price input on its kind <K> and on itself	0	-	-
-LOAD-COVERS	L §8.3	M0	*	1	M0	codes/m0/basic/covers
+LOAD-PRICE	L §8.3	M0	<x> names a price input on its kind <K> and on itself	1	M0	codes/m0/basic/price-twice
+LOAD-COVERS	L §8.3	M0	*	2	M0	codes/m0/adjust/covers-outside
 LOAD-COVERS	L §8.3	M0	<x> is not a place	1	M0	codes/m0/basic/covers
-LOAD-COVERS	L §8.3	M0	observation <r> of <x> is dated outside the span <version> covers	0	-	-
+LOAD-COVERS	L §8.3	M0	observation <r> of <x> is dated outside the span <version> covers	1	M0	codes/m0/adjust/covers-outside
 LOAD-COVERED	L §8.3	M0	*	1	M0	codes/m0/basic/covered
 LOAD-COVERED	L §8.3	M0	<def> aggregates observations over a span with no covered() guard	1	M0	codes/m0/basic/covered
-LOAD-SCENARIO	L §8.3	M0	*	7	M0	codes/m0/basic/scenario-ask
+LOAD-SCENARIO	L §8.3	M0	*	10	M0	codes/m0/basic/scenario-ask
 LOAD-SCENARIO	L §8.3	M0	<item> of scenario <s> is read outside it	0	-	-
 LOAD-SCENARIO	L §8.3	M0	<item> of the base names <x> of scenario <s>	0	-	-
-LOAD-SCENARIO	L §8.3	M0	a row of <s> for <x>, an item of the base, governs a day before <from>	0	-	-
+LOAD-SCENARIO	L §8.3	M0	a row of <s> for <x>, an item of the base, governs a day before <from>	1	M0	codes/m0/scen/scenario-early
 LOAD-SCENARIO	L §8.3	M0	move <m> of <s> books on <d>, before <from>	0	-	-
 LOAD-SCENARIO	L §8.3	M0	an expression row outside a scenario	1	M0	codes/m0/basic/scenario-row
 LOAD-SCENARIO	L §8.3	M0	an expression row reads <x>, a place or a movement	0	-	-
-LOAD-SCENARIO	L §8.3	M0	over cycle or deeper than 4	0	-	-
-LOAD-SCENARIO	L §8.3	M0	<s> changes who is alive in <K> on <d>, before <from>	0	-	-
+LOAD-SCENARIO	L §8.3	M0	over cycle or deeper than 4	1	M0	codes/m0/scen/scenario-over
+LOAD-SCENARIO	L §8.3	M0	<s> changes who is alive in <K> on <d>, before <from>	1	M0	codes/m0/scen/scenario-alive
 LOAD-SCENARIO	L §8.3	M0	ask <q> names <w>, neither the model nor a loaded scenario	6	M0	codes/m0/basic/scenario-ask
 LOAD-WORLD	L §8.3	M0	*	1	M0	codes/m0/scen/world
 LOAD-WORLD	L §8.3	M0	ask <q> in a scenario file names no world	1	M0	codes/m0/scen/world
-LOAD-SAME	L §8.3	M0	*	1	M0	codes/m0/basic/same
-LOAD-SAME	L §8.3	M0	same <p> = <q>: <what p is> and <what q is>	0	-	-
+LOAD-SAME	L §8.3	M0	*	4	M0	codes/m0/basic/same
+LOAD-SAME	L §8.3	M0	same <p> = <q>: <what p is> and <what q is>	1	M0	codes/m0/joint/same-what
 LOAD-SAME	L §8.3	M0	same <p> = <q> in a version names a kind or a thing	1	M0	codes/m0/basic/same
-LOAD-SAME	L §8.3	M0	the joint model states <x>[k], an item of member <a> that no same line joins	0	-	-
-LOAD-SAME	L §8.3	M0	currency <C> is declared with different minor units by <a> and <b>	0	-	-
+LOAD-SAME	L §8.3	M0	the joint model states <x>[k], an item of member <a> that no same line joins	1	M0	codes/m0/joint/same-unjoined
+LOAD-SAME	L §8.3	M0	currency <C> is declared with different minor units by <a> and <b>	1	M0	codes/m0/joint/same-minor
 LOAD-SAME	L §8.3	M0	members copy different versions of law part <L>	0	-	-
-LOAD-RANDOM	L §8.3	M0	*	1	M0	codes/m0/basic/random
+LOAD-RANDOM	L §8.3	M0	*	4	M0	codes/m0/basic/random
 LOAD-RANDOM	L §8.3	M0	<line> is random; apply a query	1	M0	codes/m0/basic/random
-LOAD-RANDOM	L §8.3	M0	<query> has no closed form; state paths N seed S	0	-	-
+LOAD-RANDOM	L §8.3	M0	<query> has no closed form; state paths N seed S	1	M0	codes/m0/basic/random-closed
 LOAD-RANDOM	L §8.3	M0	<projection> reaches random <x> after <t> with no random clause or query	0	-	-
-LOAD-RANDOM	L §8.3	M0	cdf of a non-affine random value	0	-	-
-LOAD-RANDOM	L §8.3	M0	<query> on a path p line	0	-	-
+LOAD-RANDOM	L §8.3	M0	cdf of a non-affine random value	1	M0	codes/m0/basic/random-cdf
+LOAD-RANDOM	L §8.3	M0	<query> on a path p line	1	M0	codes/m0/basic/random-path
 LOAD-RANDOM	L §8.3	M0	the draw <x> can exceed the last slot of <index>	0	-	-
-LOAD-ASIF	L §8.3	M0	*	1	M0	codes/m0/basic/asif
+LOAD-ASIF	L §8.3	M0	*	2	M0	codes/m0/basic/asif
 LOAD-ASIF	L §8.3	M0	as if deeper than 4	1	M0	codes/m0/basic/asif
-LOAD-ASIF	L §8.3	M0	pin on unknown id <x>	0	-	-
+LOAD-ASIF	L §8.3	M0	pin on unknown id <x>	1	M0	codes/m0/basic/asif-unknown
 LOAD-DEPTH	L §8.3	M0	*	2	S	kernel/g13/depth_from
 LOAD-DEPTH	L §8.3	M0	expression nested deeper than 8	2	S	kernel/g13/depth_from
 LOAD-FORKS	L §8.3	M0	*	1	M0	codes/m0/basic/forks
 LOAD-FORKS	L §8.3	M0	ask <q> reaches <n> axis combinations; the cap is 64	1	M0	codes/m0/basic/forks
-LOAD-ASKONLY	L §8.3	M0	*	2	M0	m0/load/U:set/rule/RULE-09/RULE-09#inpath
-LOAD-ASKONLY	L §8.3	M0	solve outside an ask	0	-	-
+LOAD-ASKONLY	L §8.3	M0	*	3	M0	codes/m0/basic/askonly-solve
+LOAD-ASKONLY	L §8.3	M0	solve outside an ask	1	M0	codes/m0/basic/askonly-solve
 LOAD-ASKONLY	L §8.3	M0	<query> has no closed form outside an ask	2	M0	m0/load/U:set/rule/RULE-09/RULE-09#inpath
-LOAD-MISSING	L §8.3	M0	*	1	M0	codes/m0/basic/missing
+LOAD-MISSING	L §8.3	M0	*	2	M0	codes/m0/basic/missing
 LOAD-MISSING	L §8.3	M0	missing() outside the when of a cited rule	1	M0	codes/m0/basic/missing
-LOAD-MISSING	L §8.3	M0	missing(<r>): <r> is not a read of an input	0	-	-
+LOAD-MISSING	L §8.3	M0	missing(<r>): <r> is not a read of an input	1	M0	codes/m0/basic/missing-read
 LOAD-ORIENT	L §8.3	M0	*	1	M0	codes/m0/basic/orient
 LOAD-ORIENT	L §8.3	M0	ask <q> reaches crps or pdf without orient	1	M0	codes/m0/basic/orient
 RUN-NONE	L §8.4	-	*	1	S	kernel/g12/members
@@ -318,8 +317,8 @@ WARN-LABELS	L §8.5	M5b	*	4	M5b	I:S4:S4-01~s4
 WARN-LABELS	L §8.5	M5b	labels dropped at <place> from <d>: <movements>	4	M5b	I:S4:S4-01~s4
 WARN-STALE	L §8.5	-	*	0	-	-
 WARN-STALE	L §8.5	-	scenario <s> replaces <target> at <keys>, changed in the base by <version>	0	-	-
-REQ-ASK	E §11	-	*	309	M0	codes/m0/adjust/base
-REQ-ASK	E §11	-	no ask <q>	309	M0	codes/m0/adjust/base
+REQ-ASK	E §11	-	*	311	M0	codes/m0/adjust/base
+REQ-ASK	E §11	-	no ask <q>	311	M0	codes/m0/adjust/base
 REQ-CLOCK	E §11	-	*	0	-	-
 REQ-PATHS	E §11	-	*	0	-	-
 ENGINE-INVARIANT	E §11	-	*	0	-	-

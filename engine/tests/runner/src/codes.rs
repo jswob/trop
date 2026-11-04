@@ -168,8 +168,8 @@ mod tests {
     use crate::corpus::paths;
     use std::collections::BTreeSet;
 
-    /// Five families' bases print the load probe's line alone; every fixture prints its code
-    /// and no warning; 49 fixtures of 43 codes.
+    /// Seven families' bases print the load probe's line alone; every fixture prints its
+    /// code and no warning; 113 fixtures of 50 codes (G4's 49 of 43, G7's 64 message forms).
     #[test]
     fn the_m0_fixtures_read_and_print_their_codes() {
         let vs = m0_fixtures(M0).expect("codes/m0.refcore reads");
@@ -206,15 +206,19 @@ mod tests {
         }
         assert_eq!(
             vs.iter().filter(|v| v.is_base()).count(),
-            5,
-            "five families"
+            7,
+            "seven families"
         );
         let codes: BTreeSet<&str> = vs
             .iter()
             .filter(|v| !v.is_base())
             .map(|v| v.code.as_str())
             .collect();
-        assert_eq!((vs.len(), codes.len()), (54, 43), "49 fixtures of 43 codes");
+        assert_eq!(
+            (vs.len(), codes.len()),
+            (120, 50),
+            "113 fixtures of 50 codes"
+        );
     }
 
     #[test]

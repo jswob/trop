@@ -1,0 +1,14 @@
+part pit
+  tally 2
+  law
+  note "T's law part (invented): one rate of an invented act, copied by both members of jlaw"
+
+source act "T's invented act"
+
+input rate_pit: num
+
+version pit_2026
+  cite act
+  governs always
+  known 2026-01-01
+  rate_pit = 0.12 "the act"

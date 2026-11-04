@@ -35,6 +35,9 @@ sys.path.insert(0, HERE)
 import run as R  # noqa: E402
 import vectors as V  # noqa: E402
 
+sys.path.insert(0, os.path.join(os.path.dirname(HERE), 'tools'))
+import xref_check as X  # noqa: E402
+
 SCAN = R.ROOT + 'engine/spec/tools/loadcheck.py'
 STORE = os.path.join(HERE, 'loadcheck.refcore')
 VERDICTS = os.path.join(HERE, 'loadcheck.tsv')
@@ -81,10 +84,12 @@ def scanned(mod, group, cwd, files):
 
 
 def agree(scan_codes, refusals, out):
-    """Why the scan and refcore disagree on a reality, or None."""
+    """Why the scan and refcore disagree on a reality, or None. Where refcore's line names no place (LOAD-CYCLE's beats
+    cycle prints none, though L §8.3 says each refusal names its file and line: issue #71's family), the code alone."""
     m = re.match(r'refused: (\S+) .*?(?:\(([^()]*:\d+)\))?$', out.split('\n', 1)[0])
     if refusals:
-        if not m or (m.group(1), m.group(2)) not in [(c, loc) for c, loc in refusals]:
+        found = [(c, loc) for c, loc in refusals] if not m or m.group(2) else [(c, None) for c, _ in refusals]
+        if not m or (m.group(1), m.group(2)) not in found:
             return 'the scan refuses %s; refcore prints %r' % (refusals[0], out[:200])
         return None
     if out == V.PROBED or (m and m.group(1) not in scan_codes):
@@ -102,14 +107,33 @@ def netstrings(b):
     return out
 
 
+# The message forms of L §8.3 the scan checks (its docstring): a fixture of another form of one of its codes is out of
+# its scope (LOAD-KEY's `wrong number of keys`, LOAD-CYCLE's recurrences, …), so it is no control.
+SCANNED = {
+    'LOAD-RESERVED': ['<word> is a keyword'],
+    'LOAD-DUP': ['<id> is declared twice', 'a key entered twice', 'band <b> has a built-in\'s name'],
+    'LOAD-SHADOW': ['bound variable <k> has the name of a top-level id'],
+    'LOAD-KEY': ['a key is also an id'],
+    'LOAD-LABEL': ['beats names no rule <label>'],
+    'LOAD-CYCLE': ['a beats cycle'],
+}
+
+
+def in_scope(code, out):
+    """Whether refcore's refusal in `out` is of a form the scan checks."""
+    return any(X.matches(f, m.group(2)) for m in X.REFUSED.finditer(out) if m.group(1) == code
+               for f in SCANNED.get(code, []))
+
+
 def controls(mod, scan_codes):
-    """The controls: M0's code fixtures (codes/m0.refcore) of a code the scan checks, each scanned from its stored file
-    table; the scan must refuse each as refcore does, so the agreement isn't only "both clean". [(id, why or None)]"""
+    """The controls: M0's code fixtures (codes/m0.refcore) whose refusal is of a form the scan checks (SCANNED), each
+    scanned from its stored file table; the scan must refuse each as refcore does, so the agreement isn't only "both
+    clean". [(id, why or None)]"""
     ns = netstrings(open(R.T + 'codes/m0.refcore', 'rb').read())
     out = []
     for k in range(0, len(ns), 7):
         vid, code, out_ = ns[k].decode(), ns[k + 1].decode(), ns[k + 6].decode()
-        if code not in scan_codes:
+        if code not in scan_codes or not in_scope(code, out_):
             continue
         r = mod.Reality(vid)
         pairs = [p.decode() for p in netstrings(ns[k + 4])]

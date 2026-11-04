@@ -7,7 +7,8 @@ each code once (a code defined twice fails). A code's message forms are the back
 (§8.1's "Question printed", E §11's "What happens") that stand outside parentheses and hold a space or a `<…>`: the
 parenthesised spans and the bare words are the prose's examples, not messages. A form matches a printed message when
 its words appear in it in order, each `<…>` and each bare one-letter name (`x`, `k`, `d`; not the article `a`)
-standing for any text.
+standing for any text; a form that joins two messages in one sentence (ALTERNATIVES: LOAD-LAWDATE's ask form) matches
+either.
 
 What is printed, and where: every stored output of checks.tsv (its `baseline`; a `not-run:` row has none), at the
 milestone map/placement.tsv places the check in; and T's own vectors: kernel/vectors.refcore (S), codes/fixtures.tsv
@@ -98,6 +99,19 @@ def catalogue():
     return out
 
 
+# A catalogue form that joins two messages in one sentence, each printed alone: its alternatives, either of which
+# matches (L §8.3 LOAD-LAWDATE: an ask that reaches an `at reader` def, or that reads a law-dated input directly)
+ALTERNATIVES = {
+    'ask <q> reaches an at reader def, or reads law-dated <x> directly, without law':
+        ['ask <q> reaches an at reader def without law', 'ask <q> reads law-dated <x> directly, without law'],
+}
+
+
+def matches(form, message):
+    """Whether a printed message is of the form: the form's pattern, or one of its alternatives'."""
+    return any(pattern(f).search(message) for f in ALTERNATIVES.get(form, [form]))
+
+
 def pattern(form):
     """A form as a regular expression: each <…> and bare one-letter name (not `a`) any text, a bracket of names
     (`[k]`, `[keys]`, `[lo, hi]`) any bracket or none (an item with no keys prints none), and ± either sign."""
@@ -171,7 +185,7 @@ def printed(cat, outs):
             if code not in cat:
                 unknown.add('%s (%s)' % (code, oid))
                 continue
-            matched = {(code, f) for f in cat[code][1] if pattern(f).search(message)}
+            matched = {(code, f) for f in cat[code][1] if matches(f, message)}
             seen.update(matched or ({(code, '?')} if cat[code][1] else set()))
             seen.add((code, '*'))
         for key in seen:
@@ -199,6 +213,12 @@ def unshown_load(rows):
             (r['first'] == '-' or ORDER.index(r['first']) > ORDER.index('M0'))]
 
 
+def unshown_load_forms(rows):
+    """The LOAD-* message forms no output at S or M0 prints: [(code, form)]."""
+    return [(r['code'], r['form']) for r in rows if r['code'].startswith('LOAD-') and r['form'] not in ('*', '?') and
+            (r['first'] == '-' or ORDER.index(r['first']) > ORDER.index('M0'))]
+
+
 def selftest():
     """The rules above on small inputs, each beside a case it must refuse; the failures."""
     cat = {'LOAD-X': ('L §8.3', ['band <b> at <x>', 'a key entered twice']), 'HOLE-Y': ('L §8.1', ['x at k: no value'])}
@@ -211,6 +231,9 @@ def selftest():
     return [why for ok, why in [
         (forms_of('`a <x> b` (`not <this>`), `word`; `c d`') == ['a <x> b', 'c d'], 'forms: outside parentheses'),
         (not pattern('a key entered twice').search('b key entered twice'), 'the article a is a word'),
+        (all(matches(f, m) for f, m in [(list(ALTERNATIVES)[0], 'ask q reaches an at reader def without law'),
+                                         (list(ALTERNATIVES)[0], 'ask q reads law-dated x directly, without law')])
+         and not matches(list(ALTERNATIVES)[0], 'ask q reaches x without law'), 'a form\'s alternatives'),
         (pattern('<x>[k] reads itself').search('cyc reads itself') and pattern('on [lo, hi] now').search(
             'on [0, 2] now') and not pattern('<x>[k] reads itself').search('cyc[2] reads its'),
          'a bracket of names: any bracket or none'),
@@ -244,6 +267,9 @@ def main(argv):
     load = unshown_load(rows)
     print('M0: %d of %d LOAD-* codes have no output at S or M0: %s' % (
         len(load), sum(r['code'].startswith('LOAD-') for r in codes), ' '.join(load)))
+    forms_left = unshown_load_forms(rows)
+    print('M0: %d of %d LOAD-* message forms have no output at S or M0 (tier 2; codes/m0/held.tsv holds the fixtures held and why)' % (
+        len(forms_left), sum(r['code'].startswith('LOAD-') for r in forms)))
     if '--gate' in argv:
         ms = argv[argv.index('--gate') + 1]
         if ms != 'M0':

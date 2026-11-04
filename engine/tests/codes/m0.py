@@ -8,10 +8,14 @@ vector is the load probe, `run <files> --ask zz_m0_probe`, on which refcore prin
 zz_m0_probe` alone, exit 1 (E §11, tally 2.1.3): the stated twin of every fixture of the family. A fixture is one edit
 of one file of a family, a row of codes/m0/edits.tsv:
 
-    id, code, family, file, old, new, asks, rule
+    id, code, family, file, old, new, asks, rule, form
 
 `old` occurs once in the file and becomes `new` (`\\n` stands for a newline); `asks` is empty for the load probe, or
-the asks the run asks where the code refuses an ask, not the reality. A fixture that needs two edits has two rows of
+the asks the run asks where the code refuses an ask, not the reality; `form`, empty for G4's fixtures (one per code),
+is one of the code's message forms in L §8.3 (tools/xref_check.py's), which the fixture's refusal must match (G7,
+tier 2: a fixture for each form no other output prints). codes/m0/held.tsv holds, in the same columns and a last one
+saying why, the tier-2 fixtures held out: refcore prints the code in words no form gives (issue #71's family), or
+doesn't refuse where the spec does (a STOP-REPORT); once ruled, a row moves to edits.tsv. This script doesn't read it. A fixture that needs two edits has two rows of
 one id, applied in order (its first row's code, asks and rule stand). The script writes each fixture's texts under
 engine/tests/out/m0/codes/ (git-ignored), runs every vector on the frozen refcore through run.py's run_one (PyPy, its
 90 s budget, its cache, the watchdog), and stops unless each base prints the probe's line alone (and a run of all
@@ -44,10 +48,13 @@ import run as R  # noqa: E402
 sys.path.insert(0, os.path.join(os.path.dirname(HERE), 'm0'))
 import vectors as V  # noqa: E402
 
+sys.path.insert(0, os.path.join(os.path.dirname(HERE), 'tools'))
+import xref_check as X  # noqa: E402
+
 FAMILIES = os.path.join(HERE, 'm0')
 EDITS = os.path.join(FAMILIES, 'edits.tsv')
 STORE = os.path.join(HERE, 'm0.refcore')
-COLS = ['id', 'code', 'family', 'file', 'old', 'new', 'asks', 'rule']
+COLS = ['id', 'code', 'family', 'file', 'old', 'new', 'asks', 'rule', 'form']
 REL = 'engine/tests/codes/m0/'
 BUILT = 'engine/tests/out/m0/codes/'   # run output: git ignores out/, check-frozen skips it
 JOBS = 2
@@ -66,7 +73,7 @@ def unescape(s):
 
 
 def vectors():
-    """[(id, code, family, args, [(key, text)], asks)]: each family's base, then each fixture."""
+    """[(id, code, family, args, [(key, text)], asks, form)]: each family's base, then each fixture."""
     with open(EDITS, encoding='utf-8', newline='') as f:
         rows = list(csv.DictReader(f, delimiter='\t', quoting=csv.QUOTE_NONE))
     if not rows or list(rows[0]) != COLS:
@@ -75,7 +82,7 @@ def vectors():
     out = []
     for name in names:
         args, table = family(name)
-        out.append((name + '/base', 'REQ-ASK', name, args, table, V.PROBE))
+        out.append((name + '/base', 'REQ-ASK', name, args, table, V.PROBE, ''))
     fixtures = {}
     for r in rows:   # a fixture's rows share its id, its edits applied in order; the first row names the rest
         fixtures.setdefault(r['id'], []).append(r)
@@ -93,7 +100,7 @@ def vectors():
                 sys.exit('%s: %r occurs %d times in %s/%s, not once' % (fid, old, text.count(old), r['family'],
                                                                          r['file']))
             table = [(k, t.replace(old, new) if k == r['file'] else t) for k, t in table]
-        out.append((fid, first['code'], first['family'], args, table, first['asks'] or V.PROBE))
+        out.append((fid, first['code'], first['family'], args, table, first['asks'] or V.PROBE, first['form']))
     ids = [v[0] for v in out]
     if len(set(ids)) != len(ids):
         sys.exit('two vectors share an id')
@@ -102,7 +109,7 @@ def vectors():
 
 def check_of(v):
     """Writes v's texts under BUILT and gives the run.py check that runs them (every file hashed for the cache)."""
-    vid, _, _, args, table, asks = v
+    vid, _, _, args, table, asks, _ = v
     cwd = BUILT + vid.replace('/', '~')
     for key, text in table:
         dst = R.ROOT + cwd + '/' + key
@@ -130,7 +137,7 @@ def runs(vs):
 
 def unseen_refusals(vs):
     """The bases that a run of every ask shows refused somewhere the probe can't see (a scenario, an ask)."""
-    bases = [(v[0] + '~all', v[1], v[2], v[3], v[4], '') for v in vs if v[0].endswith('/base')]
+    bases = [(v[0] + '~all', v[1], v[2], v[3], v[4], '', '') for v in vs if v[0].endswith('/base')]
     rc_hash = R.refcore_hash()
     bad = []
     for v in bases:
@@ -141,8 +148,22 @@ def unseen_refusals(vs):
     return bad
 
 
+def wrong_form(v, out, cat):
+    """Why the fixture's refusal doesn't print its form (None if it does, or if it names none)."""
+    code, form = v[1], v[6]
+    if not form:
+        return None
+    if form not in cat.get(code, ('', []))[1]:
+        return '%s: %r is no message form of %s in the catalogue' % (v[0], form, code)
+    messages = [m.group(2) for m in X.REFUSED.finditer(out) if m.group(1) == code]
+    if not any(X.matches(form, msg) for msg in messages):
+        return '%s: no %s refusal prints the form %r: %r' % (v[0], code, form, out[:300])
+    return None
+
+
 def failures(vs, res):
     bad = []
+    cat = X.catalogue()
     for v, e in zip(vs, res):
         vid, code, out = v[0], v[1], e['out']
         if 'REFCORE-NOT-YET' in out or 'Traceback' in out:
@@ -153,6 +174,8 @@ def failures(vs, res):
             bad.append('%s: the base doesn\'t load clean: exit %s, %r' % (vid, e['rc'], out[:300]))
         elif not vid.endswith('/base') and not re.search(r'(^|: )refused: %s ' % re.escape(code), out, re.M):
             bad.append('%s: prints no %s: exit %s, %r' % (vid, code, e['rc'], out[:300]))
+        elif wrong_form(v, out, cat):
+            bad.append(wrong_form(v, out, cat))
     return bad
 
 
@@ -171,8 +194,10 @@ def main(argv):
     if '--show' in argv:
         glob = argv[argv.index('--show') + 1]
         vs = [v for v in vs if fnmatch.fnmatchcase(v[0], glob)]
+        cat = X.catalogue()
         for v, e in zip(vs, runs(vs)):
-            print('=== %s (%s, exit %s)\n%s' % (v[0], v[1], e['rc'], e['out']), end='')
+            print('=== %s (%s, exit %s)%s\n%s' % (v[0], v[1], e['rc'], ' FORM? ' + v[6] if wrong_form(v, e['out'], cat)
+                                                else ' ok' if v[6] else '', e['out']), end='')
         return 0
     res = runs(vs)
     bad = failures(vs, res) + unseen_refusals(vs)

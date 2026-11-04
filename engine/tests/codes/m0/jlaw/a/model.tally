@@ -1,0 +1,10 @@
+model member_a
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's member a of the joint model jlaw (invented): a model that copies the law part pit"
+
+def tax: num = rate_pit
+
+ask q: tax

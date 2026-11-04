@@ -1,0 +1,9 @@
+model jown
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  use a = "a/a.tally" sha256 "c0e63cdce2e22f2c0fe0ad476a0791d53203294b4752b8a4dfd8fef4cf829f0f"
+  note "T's base for M0's load-code fixtures (invented): a joint model over one member, a/a.tally, whose place sav keeps parts; it loads clean"
+
+ask x: bal(a.sav, 2026-12-31)

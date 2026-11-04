@@ -5,7 +5,9 @@
 //! other output at S or M0 prints (`tools/xref_check.py --gate M0`), each one edit of a
 //! family's base text, which loads clean and runs beside it as its twin (the load probe:
 //! `refused: REQ-ASK no ask zz_m0_probe`); #45's three gaps and C-16's exchange rate among
-//! them. One test per code. Red on the stub (exit 69, "not implemented"), so this target has
+//! them. Then, tier 2 (G7), a fixture for each of the code's message forms (L §8.3) no
+//! other output prints, its refusal held to that form by `codes/m0.py`. One test per code,
+//! its fixtures named. Red on the stub (exit 69, "not implemented"), so this target has
 //! `test = false`; it gates once M0 is tagged (`engine/tools/milestones.toml`).
 
 #![forbid(unsafe_code)]
@@ -124,10 +126,22 @@ mod tests {
         code_as_refcore("LOAD-AMBIG");
     }
 
-    /// `LOAD-ASIF`: `basic/asif`.
+    /// `LOAD-ASIF`: `basic/asif`, `basic/asif-unknown`.
     #[test]
     fn m0_code_load_asif() {
         code_as_refcore("LOAD-ASIF");
+    }
+
+    /// `LOAD-ASKONLY`: `basic/askonly-solve`.
+    #[test]
+    fn m0_code_load_askonly() {
+        code_as_refcore("LOAD-ASKONLY");
+    }
+
+    /// `LOAD-BAND`: `basic/band-marginal`.
+    #[test]
+    fn m0_code_load_band() {
+        code_as_refcore("LOAD-BAND");
     }
 
     /// `LOAD-COVERED`: `basic/covered`.
@@ -136,19 +150,31 @@ mod tests {
         code_as_refcore("LOAD-COVERED");
     }
 
-    /// `LOAD-COVERS`: `basic/covers`.
+    /// `LOAD-COVERS`: `basic/covers`, `adjust/covers-outside`.
     #[test]
     fn m0_code_load_covers() {
         code_as_refcore("LOAD-COVERS");
     }
 
-    /// `LOAD-DOMAIN`: `basic/domain`.
+    /// `LOAD-CYCLE`: `basic/cycle-both`, `basic/cycle-beats`.
+    #[test]
+    fn m0_code_load_cycle() {
+        code_as_refcore("LOAD-CYCLE");
+    }
+
+    /// `LOAD-DOMAIN`: `basic/domain`, `basic/domain-discrete`.
     #[test]
     fn m0_code_load_domain() {
         code_as_refcore("LOAD-DOMAIN");
     }
 
-    /// `LOAD-FIELD`: `basic/field`.
+    /// `LOAD-DUP`: `basic/dup-key`, `basic/dup-band`.
+    #[test]
+    fn m0_code_load_dup() {
+        code_as_refcore("LOAD-DUP");
+    }
+
+    /// `LOAD-FIELD`: `basic/field`, `basic/field-not`.
     #[test]
     fn m0_code_load_field() {
         code_as_refcore("LOAD-FIELD");
@@ -178,10 +204,24 @@ mod tests {
         code_as_refcore("LOAD-GUARD");
     }
 
-    /// `LOAD-INSTANT`: `basic/instant`.
+    /// `LOAD-HEADER`: `basic/header-tally`, `basic/header-on`, `basic/header-end`,
+    /// `basic/header-order`, `scen/header-from`.
+    #[test]
+    fn m0_code_load_header() {
+        code_as_refcore("LOAD-HEADER");
+    }
+
+    /// `LOAD-INSTANT`: `basic/instant`, `basic/instant-side`, `basic/instant-none`.
     #[test]
     fn m0_code_load_instant() {
         code_as_refcore("LOAD-INSTANT");
+    }
+
+    /// `LOAD-KEY`: `basic/key-not`, `basic/key-id`, `basic/key-count`, `basic/key-range`,
+    /// `basic/key-two`, `basic/key-across`.
+    #[test]
+    fn m0_code_load_key() {
+        code_as_refcore("LOAD-KEY");
     }
 
     /// `LOAD-KIND`: `basic/kind`.
@@ -190,19 +230,20 @@ mod tests {
         code_as_refcore("LOAD-KIND");
     }
 
-    /// `LOAD-KNOWN`: `basic/known`, `basic/known-after-on`.
+    /// `LOAD-KNOWN`: `basic/known`, `basic/known-after-on`, `basic/known-row`.
     #[test]
     fn m0_code_load_known() {
         code_as_refcore("LOAD-KNOWN");
     }
 
-    /// `LOAD-LABEL`: `basic/label`.
+    /// `LOAD-LABEL`: `basic/label`, `basic/label-twice`.
     #[test]
     fn m0_code_load_label() {
         code_as_refcore("LOAD-LABEL");
     }
 
-    /// `LOAD-LAWDATE`: `basic/lawdate`.
+    /// `LOAD-LAWDATE`: `basic/lawdate`, `basic/lawdate-direct`, `basic/lawdate-def`,
+    /// `adjust/lawdate-move`.
     #[test]
     fn m0_code_load_lawdate() {
         code_as_refcore("LOAD-LAWDATE");
@@ -220,13 +261,13 @@ mod tests {
         code_as_refcore("LOAD-LEAF");
     }
 
-    /// `LOAD-LEG`: `basic/leg`.
+    /// `LOAD-LEG`: `basic/leg`, `basic/leg-attr`, `basic/leg-lacks`, `adjust/leg-uncertain`.
     #[test]
     fn m0_code_load_leg() {
         code_as_refcore("LOAD-LEG");
     }
 
-    /// `LOAD-LIFESPAN`: `basic/lifespan`.
+    /// `LOAD-LIFESPAN`: `basic/lifespan`, `basic/lifespan-enter`.
     #[test]
     fn m0_code_load_lifespan() {
         code_as_refcore("LOAD-LIFESPAN");
@@ -238,25 +279,25 @@ mod tests {
         code_as_refcore("LOAD-LITERAL");
     }
 
-    /// `LOAD-MISSING`: `basic/missing`.
+    /// `LOAD-MISSING`: `basic/missing`, `basic/missing-read`.
     #[test]
     fn m0_code_load_missing() {
         code_as_refcore("LOAD-MISSING");
     }
 
-    /// `LOAD-MOVES`: `basic/moves`.
+    /// `LOAD-MOVES`: `basic/moves`, `basic/moves-twice`.
     #[test]
     fn m0_code_load_moves() {
         code_as_refcore("LOAD-MOVES");
     }
 
-    /// `LOAD-NAME`: `basic/name`, `basic/name-binding`.
+    /// `LOAD-NAME`: `basic/name`, `basic/name-binding`, `basic/name-rule-v`.
     #[test]
     fn m0_code_load_name() {
         code_as_refcore("LOAD-NAME");
     }
 
-    /// `LOAD-ORDER`: `basic/order`.
+    /// `LOAD-ORDER`: `basic/order`, `basic/order-plan`, `basic/order-legs`.
     #[test]
     fn m0_code_load_order() {
         code_as_refcore("LOAD-ORDER");
@@ -274,37 +315,46 @@ mod tests {
         code_as_refcore("LOAD-OVERLAP");
     }
 
+    /// `LOAD-PARTS`: `own/parts-missing`, `own/parts-under`, `own/parts-arrival`, `own/parts-owns`,
+    /// `own/parts-of-input`, `own/parts-over`, `own/parts-below`, `own/parts-overlap`,
+    /// `own/parts-sort`, `jown/same-parts`.
+    #[test]
+    fn m0_code_load_parts() {
+        code_as_refcore("LOAD-PARTS");
+    }
+
     /// `LOAD-PIN`: `joint/pin`.
     #[test]
     fn m0_code_load_pin() {
         code_as_refcore("LOAD-PIN");
     }
 
-    /// `LOAD-PLACEKIND`: `basic/placekind`.
+    /// `LOAD-PLACEKIND`: `basic/placekind`, `basic/placekind-one`.
     #[test]
     fn m0_code_load_placekind() {
         code_as_refcore("LOAD-PLACEKIND");
     }
 
-    /// `LOAD-PRECISION`: `basic/precision`.
+    /// `LOAD-PRECISION`: `basic/precision`, `basic/precision-fraction`.
     #[test]
     fn m0_code_load_precision() {
         code_as_refcore("LOAD-PRECISION");
     }
 
-    /// `LOAD-PRICE`: `basic/price`.
+    /// `LOAD-PRICE`: `basic/price`, `basic/price-twice`, `basic/price-by`.
     #[test]
     fn m0_code_load_price() {
         code_as_refcore("LOAD-PRICE");
     }
 
-    /// `LOAD-RANDOM`: `basic/random`.
+    /// `LOAD-RANDOM`: `basic/random`, `basic/random-closed`, `basic/random-cdf`,
+    /// `basic/random-path`.
     #[test]
     fn m0_code_load_random() {
         code_as_refcore("LOAD-RANDOM");
     }
 
-    /// `LOAD-READS`: `basic/reads`.
+    /// `LOAD-READS`: `basic/reads`, `basic/reads-unread`.
     #[test]
     fn m0_code_load_reads() {
         code_as_refcore("LOAD-READS");
@@ -322,13 +372,14 @@ mod tests {
         code_as_refcore("LOAD-RESERVED");
     }
 
-    /// `LOAD-SAME`: `basic/same`.
+    /// `LOAD-SAME`: `basic/same`, `joint/same-what`, `joint/same-unjoined`, `joint/same-minor`.
     #[test]
     fn m0_code_load_same() {
         code_as_refcore("LOAD-SAME");
     }
 
-    /// `LOAD-SCENARIO`: `basic/scenario-row`, `basic/scenario-ask`.
+    /// `LOAD-SCENARIO`: `basic/scenario-row`, `basic/scenario-ask`, `scen/scenario-early`,
+    /// `scen/scenario-over`, `scen/scenario-alive`.
     #[test]
     fn m0_code_load_scenario() {
         code_as_refcore("LOAD-SCENARIO");
@@ -346,20 +397,20 @@ mod tests {
         code_as_refcore("LOAD-SHADOW");
     }
 
-    /// `LOAD-TO`: `basic/to`.
+    /// `LOAD-TO`: `basic/to`, `basic/to-dist`.
     #[test]
     fn m0_code_load_to() {
         code_as_refcore("LOAD-TO");
     }
 
-    /// `LOAD-UNIT`: `basic/unit-mixed`, `basic/unit-currency`, `basic/unit-fx` (C-16),
-    /// `adjust/unit-settlement` (#45).
+    /// `LOAD-UNIT`: `basic/unit-mixed`, `basic/unit-currency`, `basic/unit-fx`,
+    /// `adjust/unit-settlement`, `basic/unit-mode`.
     #[test]
     fn m0_code_load_unit() {
         code_as_refcore("LOAD-UNIT");
     }
 
-    /// `LOAD-VERSION`: `parts/version`.
+    /// `LOAD-VERSION`: `parts/version`, `basic/version-rule`.
     #[test]
     fn m0_code_load_version() {
         code_as_refcore("LOAD-VERSION");
