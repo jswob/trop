@@ -64,3 +64,10 @@ test = false
 name = "m0_loadcheck"
 path = "milestone/m0_loadcheck.rs"
 test = false
+
+# M0: the format's and the loader's laws on a seeded corpus (properties/m0.corpus,
+# properties/m0.refcore; PROPERTIES.md § M0; MILESTONE-M0.md row 7)
+[[test]]
+name = "m0_properties"
+path = "milestone/m0_properties.rs"
+test = false

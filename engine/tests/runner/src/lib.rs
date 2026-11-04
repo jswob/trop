@@ -6,6 +6,8 @@
 //! - [`output`]: reading what an ask prints;
 //! - [`laws`]: the kernel's six laws (`engine/tests/PROPERTIES.md`), proven on refcore's
 //!   outputs by this crate's own tests, which run in `check full` now;
+//! - [`laws_m0`]: M0's four laws and idempotence (`PROPERTIES.md` § M0), proven the same way
+//!   on refcore's runs of `properties/m0.corpus`;
 //! - [`household`]: household X's base as milestone S runs it, and HH4's hand-checked
 //!   vectors restated on it (`hh4/vectors.tsv`), proven on refcore's outputs the same way;
 //! - [`codes`]: T's fixtures of the codes no check prints (`codes/fixtures.tsv`), `LOAD-PATH`
@@ -20,7 +22,8 @@
 //!
 //! The tests that run the engine are each milestone's test targets (`milestone/s_properties.rs`,
 //! `milestone/s_household.rs` and `milestone/s_kernel.rs` for S, `milestone/m0_codes.rs`,
-//! `milestone/m0_format.rs`, `milestone/m0_load.rs` and `milestone/m0_loadcheck.rs` for M0),
+//! `milestone/m0_format.rs`, `milestone/m0_load.rs`, `milestone/m0_loadcheck.rs` and
+//! `milestone/m0_properties.rs` for M0),
 //! with `test = false`:
 //! red until their milestone is built. The marker `engine/tools/milestones.toml` gates a
 //! milestone's targets once it is tagged, and `check` reports the next milestone's, never
@@ -35,6 +38,7 @@ pub mod engine;
 pub mod household;
 pub mod kernel;
 pub mod laws;
+pub mod laws_m0;
 pub mod m0;
 pub mod m0_spec_texts;
 pub mod m0_texts;

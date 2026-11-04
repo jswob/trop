@@ -662,6 +662,11 @@ def self_test(checks):
         p = subprocess.run([sys.executable, '-I', '-B', T + 'tools/xref_check.py', '--check'], capture_output=True,
                            text=True)
         say(p.returncode == 0, p.stdout.strip().split('\n')[-1] if p.stdout.strip() else p.stderr[-200:])
+        # 8i. M0's properties (issue #56, PROPERTIES.md § M0): m0.corpus is what gen_m0.py's seeds give, m0.refcore
+        # refcore's runs of it, and each law holds on them
+        p = subprocess.run([sys.executable, '-I', '-B', T + 'properties/laws_m0.py', '--check'], capture_output=True,
+                           text=True)
+        say(p.returncode == 0, p.stdout.strip().split('\n')[-1] if p.stdout.strip() else p.stderr[-200:])
         # 9. U2 (4.5f): under fast, a check with no baseline runs on refcore (its cache entry is refcore's)
         nb = dict(fast, baseline='')
         _, r, _ = session([nb], checks, **dict(kw, runtimes=['pypy+fast']))
