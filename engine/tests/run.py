@@ -651,7 +651,10 @@ def self_test(checks):
         # tied to the stored outputs
         p = subprocess.run([sys.executable, '-I', '-B', T + 'm0/vectors.py', '--check'], capture_output=True, text=True)
         say(p.returncode == 0, p.stdout.strip().split('\n')[-1] if p.stdout.strip() else p.stderr[-200:])
-        # 8f. the codes' cross-reference (K8-13, DONE gate 5): map/codes.tsv is what L §8, E §11 and the outputs give
+        # 8f. M0's code fixtures (issue #56): each base loads clean, each fixture prints its code, refcore's bytes
+        p = subprocess.run([sys.executable, '-I', '-B', T + 'codes/m0.py', '--check'], capture_output=True, text=True)
+        say(p.returncode == 0, p.stdout.strip().split('\n')[-1] if p.stdout.strip() else p.stderr[-200:])
+        # 8g. the codes' cross-reference (K8-13, DONE gate 5): map/codes.tsv is what L §8, E §11 and the outputs give
         p = subprocess.run([sys.executable, '-I', '-B', T + 'tools/xref_check.py', '--check'], capture_output=True,
                            text=True)
         say(p.returncode == 0, p.stdout.strip().split('\n')[-1] if p.stdout.strip() else p.stderr[-200:])

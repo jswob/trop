@@ -1,0 +1,14 @@
+part extra
+  tally 2
+
+input fee: money PLN
+
+def total: money PLN = doubled + fee
+
+ask q_total: total
+
+version card_fee
+  cite card
+  governs always
+  known 2026-01-01
+  fee = 5.00 PLN "the card"

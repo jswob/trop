@@ -1,15 +1,49 @@
 //! Milestone M0's code fixtures on the engine (DONE gate 5; `BUILD-ORDER.md` § M0: each
-//! `LOAD-*` code has its fixture): each fixture of `codes/fixtures.tsv` run in process, its
-//! output and exit code refcore's, byte for byte. Red on the stub (exit 69, "not
-//! implemented"), so this target has `test = false`; it gates once M0 is tagged
-//! (`engine/tools/milestones.toml`).
+//! `LOAD-*` code has its fixture; `MILESTONE-M0.md` rows 5 and 6): each fixture of
+//! `codes/fixtures.tsv` and of `codes/m0.refcore` run in process, its output and exit code
+//! refcore's, byte for byte. `codes/m0.refcore` holds a fixture for each `LOAD-*` code no
+//! other output at S or M0 prints (`tools/xref_check.py --gate M0`), each one edit of a
+//! family's base text, which loads clean and runs beside it as its twin (the load probe:
+//! `refused: REQ-ASK no ask zz_m0_probe`); #45's three gaps and C-16's exchange rate among
+//! them. One test per code. Red on the stub (exit 69, "not implemented"), so this target has
+//! `test = false`; it gates once M0 is tagged (`engine/tools/milestones.toml`).
 
 #![forbid(unsafe_code)]
 
 #[cfg(test)]
 mod tests {
-    use tally_runner::codes::{FIXTURES, Fixture, fixtures};
+    use std::collections::BTreeSet;
+    use tally_runner::codes::{FIXTURES, Fixture, M0, M0Fixture, fixtures, m0_fixtures};
     use tally_runner::engine::run_args;
+    use tally_runner::kernel::difference;
+
+    /// Runs every fixture of `codes/m0.refcore` that prints `code`, and the base of each of
+    /// their families (the stated twin, which loads clean), on the engine against refcore's
+    /// whole output and exit code.
+    fn code_as_refcore(code: &str) {
+        let vs = m0_fixtures(M0).expect("codes/m0.refcore reads");
+        let mine: Vec<&M0Fixture> = vs
+            .iter()
+            .filter(|v| !v.is_base() && v.code == code)
+            .collect();
+        assert!(!mine.is_empty(), "{code} has fixtures");
+        let families: BTreeSet<&str> = mine.iter().map(|v| v.family.as_str()).collect();
+        let twins = vs
+            .iter()
+            .filter(|v| v.is_base() && families.contains(v.family.as_str()));
+        let failed: Vec<String> = twins
+            .chain(mine.iter().copied())
+            .filter_map(|v| {
+                difference(&v.run, &run_args(&v.args, &v.files)).map(|d| format!("{}: {d}", v.id))
+            })
+            .collect();
+        assert!(
+            failed.is_empty(),
+            "{} of the vectors of {code} and their bases fail:\n{}",
+            failed.len(),
+            failed.join("\n")
+        );
+    }
 
     /// Runs every fixture of `code` on the engine against refcore's output and exit code.
     fn refuses_as_refcore(code: &str) {
@@ -76,5 +110,264 @@ mod tests {
     #[test]
     fn m0_load_depth_a_ties_by_term_counts_one_level() {
         folder_as_refcore("LOAD-DEPTH");
+    }
+
+    /// `LOAD-ALIVE`: `basic/alive`.
+    #[test]
+    fn m0_code_load_alive() {
+        code_as_refcore("LOAD-ALIVE");
+    }
+
+    /// `LOAD-AMBIG`: `basic/ambig`.
+    #[test]
+    fn m0_code_load_ambig() {
+        code_as_refcore("LOAD-AMBIG");
+    }
+
+    /// `LOAD-ASIF`: `basic/asif`.
+    #[test]
+    fn m0_code_load_asif() {
+        code_as_refcore("LOAD-ASIF");
+    }
+
+    /// `LOAD-COVERED`: `basic/covered`.
+    #[test]
+    fn m0_code_load_covered() {
+        code_as_refcore("LOAD-COVERED");
+    }
+
+    /// `LOAD-COVERS`: `basic/covers`.
+    #[test]
+    fn m0_code_load_covers() {
+        code_as_refcore("LOAD-COVERS");
+    }
+
+    /// `LOAD-DOMAIN`: `basic/domain`.
+    #[test]
+    fn m0_code_load_domain() {
+        code_as_refcore("LOAD-DOMAIN");
+    }
+
+    /// `LOAD-FIELD`: `basic/field`.
+    #[test]
+    fn m0_code_load_field() {
+        code_as_refcore("LOAD-FIELD");
+    }
+
+    /// `LOAD-FORKS`: `basic/forks`.
+    #[test]
+    fn m0_code_load_forks() {
+        code_as_refcore("LOAD-FORKS");
+    }
+
+    /// `LOAD-GAPROLE`: `basic/gaprole`.
+    #[test]
+    fn m0_code_load_gaprole() {
+        code_as_refcore("LOAD-GAPROLE");
+    }
+
+    /// `LOAD-GOVERNS`: `basic/governs`.
+    #[test]
+    fn m0_code_load_governs() {
+        code_as_refcore("LOAD-GOVERNS");
+    }
+
+    /// `LOAD-GUARD`: `basic/guard`.
+    #[test]
+    fn m0_code_load_guard() {
+        code_as_refcore("LOAD-GUARD");
+    }
+
+    /// `LOAD-INSTANT`: `basic/instant`.
+    #[test]
+    fn m0_code_load_instant() {
+        code_as_refcore("LOAD-INSTANT");
+    }
+
+    /// `LOAD-KIND`: `basic/kind`.
+    #[test]
+    fn m0_code_load_kind() {
+        code_as_refcore("LOAD-KIND");
+    }
+
+    /// `LOAD-KNOWN`: `basic/known`, `basic/known-after-on`.
+    #[test]
+    fn m0_code_load_known() {
+        code_as_refcore("LOAD-KNOWN");
+    }
+
+    /// `LOAD-LABEL`: `basic/label`.
+    #[test]
+    fn m0_code_load_label() {
+        code_as_refcore("LOAD-LABEL");
+    }
+
+    /// `LOAD-LAWDATE`: `basic/lawdate`.
+    #[test]
+    fn m0_code_load_lawdate() {
+        code_as_refcore("LOAD-LAWDATE");
+    }
+
+    /// `LOAD-LAWPERIOD`: `basic/lawperiod`.
+    #[test]
+    fn m0_code_load_lawperiod() {
+        code_as_refcore("LOAD-LAWPERIOD");
+    }
+
+    /// `LOAD-LEAF`: `basic/leaf`.
+    #[test]
+    fn m0_code_load_leaf() {
+        code_as_refcore("LOAD-LEAF");
+    }
+
+    /// `LOAD-LEG`: `basic/leg`.
+    #[test]
+    fn m0_code_load_leg() {
+        code_as_refcore("LOAD-LEG");
+    }
+
+    /// `LOAD-LIFESPAN`: `basic/lifespan`.
+    #[test]
+    fn m0_code_load_lifespan() {
+        code_as_refcore("LOAD-LIFESPAN");
+    }
+
+    /// `LOAD-LITERAL`: `basic/literal-amount`.
+    #[test]
+    fn m0_code_load_literal() {
+        code_as_refcore("LOAD-LITERAL");
+    }
+
+    /// `LOAD-MISSING`: `basic/missing`.
+    #[test]
+    fn m0_code_load_missing() {
+        code_as_refcore("LOAD-MISSING");
+    }
+
+    /// `LOAD-MOVES`: `basic/moves`.
+    #[test]
+    fn m0_code_load_moves() {
+        code_as_refcore("LOAD-MOVES");
+    }
+
+    /// `LOAD-NAME`: `basic/name`, `basic/name-binding`.
+    #[test]
+    fn m0_code_load_name() {
+        code_as_refcore("LOAD-NAME");
+    }
+
+    /// `LOAD-ORDER`: `basic/order`.
+    #[test]
+    fn m0_code_load_order() {
+        code_as_refcore("LOAD-ORDER");
+    }
+
+    /// `LOAD-ORIENT`: `basic/orient`.
+    #[test]
+    fn m0_code_load_orient() {
+        code_as_refcore("LOAD-ORIENT");
+    }
+
+    /// `LOAD-OVERLAP`: `basic/overlap`.
+    #[test]
+    fn m0_code_load_overlap() {
+        code_as_refcore("LOAD-OVERLAP");
+    }
+
+    /// `LOAD-PIN`: `joint/pin`.
+    #[test]
+    fn m0_code_load_pin() {
+        code_as_refcore("LOAD-PIN");
+    }
+
+    /// `LOAD-PLACEKIND`: `basic/placekind`.
+    #[test]
+    fn m0_code_load_placekind() {
+        code_as_refcore("LOAD-PLACEKIND");
+    }
+
+    /// `LOAD-PRECISION`: `basic/precision`.
+    #[test]
+    fn m0_code_load_precision() {
+        code_as_refcore("LOAD-PRECISION");
+    }
+
+    /// `LOAD-PRICE`: `basic/price`.
+    #[test]
+    fn m0_code_load_price() {
+        code_as_refcore("LOAD-PRICE");
+    }
+
+    /// `LOAD-RANDOM`: `basic/random`.
+    #[test]
+    fn m0_code_load_random() {
+        code_as_refcore("LOAD-RANDOM");
+    }
+
+    /// `LOAD-READS`: `basic/reads`.
+    #[test]
+    fn m0_code_load_reads() {
+        code_as_refcore("LOAD-READS");
+    }
+
+    /// `LOAD-REPLACE`: `basic/replace`.
+    #[test]
+    fn m0_code_load_replace() {
+        code_as_refcore("LOAD-REPLACE");
+    }
+
+    /// `LOAD-RESERVED`: `basic/reserved`.
+    #[test]
+    fn m0_code_load_reserved() {
+        code_as_refcore("LOAD-RESERVED");
+    }
+
+    /// `LOAD-SAME`: `basic/same`.
+    #[test]
+    fn m0_code_load_same() {
+        code_as_refcore("LOAD-SAME");
+    }
+
+    /// `LOAD-SCENARIO`: `basic/scenario-row`, `basic/scenario-ask`.
+    #[test]
+    fn m0_code_load_scenario() {
+        code_as_refcore("LOAD-SCENARIO");
+    }
+
+    /// `LOAD-SCHEDULE`: `basic/schedule`.
+    #[test]
+    fn m0_code_load_schedule() {
+        code_as_refcore("LOAD-SCHEDULE");
+    }
+
+    /// `LOAD-SHADOW`: `basic/shadow`.
+    #[test]
+    fn m0_code_load_shadow() {
+        code_as_refcore("LOAD-SHADOW");
+    }
+
+    /// `LOAD-TO`: `basic/to`.
+    #[test]
+    fn m0_code_load_to() {
+        code_as_refcore("LOAD-TO");
+    }
+
+    /// `LOAD-UNIT`: `basic/unit-mixed`, `basic/unit-currency`, `basic/unit-fx` (C-16),
+    /// `adjust/unit-settlement` (#45).
+    #[test]
+    fn m0_code_load_unit() {
+        code_as_refcore("LOAD-UNIT");
+    }
+
+    /// `LOAD-VERSION`: `parts/version`.
+    #[test]
+    fn m0_code_load_version() {
+        code_as_refcore("LOAD-VERSION");
+    }
+
+    /// `LOAD-WORLD`: `scen/world`.
+    #[test]
+    fn m0_code_load_world() {
+        code_as_refcore("LOAD-WORLD");
     }
 }

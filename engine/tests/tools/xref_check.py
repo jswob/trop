@@ -11,7 +11,7 @@ standing for any text.
 
 What is printed, and where: every stored output of checks.tsv (its `baseline`; a `not-run:` row has none), at the
 milestone map/placement.tsv places the check in; and T's own vectors: kernel/vectors.refcore (S), codes/fixtures.tsv
-and m0/load.refcore (M0). In an output a refusal prints `refused: <CODE> <message>` (at
+and m0/load.refcore and codes/m0.refcore (M0). In an output a refusal prints `refused: <CODE> <message>` (at
 the start of a line, after an ask's or a scenario's or a member's name, or in a list), a warning
 `warning: <CODE> <message>` (in a register, indented, with no `warning:`: L §8.2's dropped labels), and a hole its
 questions, `?"<question>"`, with no code: a question is put to the
@@ -99,11 +99,11 @@ def catalogue():
 
 
 def pattern(form):
-    """A form as a regular expression: each <…> and bare one-letter name (not `a`) any text, and a bracket of names
-    (`[k]`, `[keys]`, `[lo, hi]`) any bracket or none (an item with no keys prints none)."""
+    """A form as a regular expression: each <…> and bare one-letter name (not `a`) any text, a bracket of names
+    (`[k]`, `[keys]`, `[lo, hi]`) any bracket or none (an item with no keys prints none), and ± either sign."""
     parts = re.split(r'(\[[a-z, ]+\]|<[^>]*>|\b[b-zA-Z]\b)', form)
-    return re.compile(''.join(re.escape(p) if k % 2 == 0 else r'(?:\[.+?\])?' if p.startswith('[') else '.+?'
-                              for k, p in enumerate(parts)))
+    return re.compile(''.join(re.escape(p).replace('±', '[+-]') if k % 2 == 0 else
+                              r'(?:\[.+?\])?' if p.startswith('[') else '.+?' for k, p in enumerate(parts)))
 
 
 def built_at(cat):
@@ -145,7 +145,8 @@ def outputs():
         with open(ROOT + c['baseline'], 'rb') as f:
             out.append((c['id'], placed[c['id']], R.text(f.read())))
     for path, width, at, ms, prefix in [('kernel/vectors.refcore', 6, 5, 'S', 'kernel/'),
-                                        ('m0/load.refcore', 7, 6, 'M0', 'm0/load/')]:
+                                        ('m0/load.refcore', 7, 6, 'M0', 'm0/load/'),
+                                        ('codes/m0.refcore', 7, 6, 'M0', 'codes/m0/')]:
         ns = netstrings(open(T + path, 'rb').read())
         out += [(prefix + ns[k], ms, ns[k + at]) for k in range(0, len(ns), width)]
     for r in csv.DictReader(open(T + 'codes/fixtures.tsv', encoding='utf-8'), delimiter='\t', quoting=csv.QUOTE_NONE):

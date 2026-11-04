@@ -1,0 +1,9 @@
+model family
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  use a = "a/a.tally" sha256 "5c37999654a56b80e0b6abd97099390c0c7bddbee9ca63b5c5d00978e7f15ab3"
+  note "T's base for M0's load-code fixtures (invented): a joint model over one member, a/a.tally, pinned by its canonical text's hash; it loads clean"
+
+ask x: a.twice
