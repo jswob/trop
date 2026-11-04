@@ -1,0 +1,23 @@
+# E §11 (tally 2.1.3, issue #58): "`REQ-ASK` | the request names an ask that doesn't exist | the request is refused,
+# after load (a load refusal outranks it), in every shape of reality ...: `no ask <q>`". The reality loads; the request
+# names zz, which no file declares, so the run prints the one refusal. Was `refused: LOAD-NAME no ask zz` (refcore's
+# own code; T's SR-1).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+input y: int
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  y = 1
+
+ask q: y
+=== expect zz
+refused: REQ-ASK no ask zz

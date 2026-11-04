@@ -1,0 +1,23 @@
+# E §11 (tally 2.1.3, issue #58): `REQ-ASK` is checked "after load (a load refusal outranks it)". The reality
+# declares y twice, so it doesn't load (L §8.3 `LOAD-DUP`), and the request also names zz, which doesn't exist: the
+# load refusal prints, not `REQ-ASK`. (A twin: so on tally 2.1.2's refcore too.)
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+input y: int
+input y: int
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  y = 1
+
+ask q: y
+=== expect zz
+refused: LOAD-DUP ...

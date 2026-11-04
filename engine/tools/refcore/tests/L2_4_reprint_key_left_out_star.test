@@ -1,0 +1,48 @@
+# L §2.4 (tally 2.1.3, issue #59): a row that leaves a trailing key out sorts before one that states `*` there, as "a
+# keyless row first" puts no key before every key, `*` included; keys decide before spans, so GD-28's line order isn't
+# reached. x[e1] = 0 (from 2027) prints before x[e1, *] = 1 (to 2026), though by span (a span with no start first) or
+# by line (`,` before `]`) the other would be first. (L §4.6: the two rows are not "at the same keys" and neither is
+# narrower; their spans don't overlap, so both stand.) Was a crash, as L2_4_reprint_key_left_out.
+=== options reprint
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2027-12-31
+
+source s "s"
+
+index ex = [e1, e2]
+index item = [savings, shares]
+input x[e in ex, i in item]: int
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  x[e1, *] = 1 governs ..2026
+  x[e1] = 0 governs 2027..
+=== expect
+--- m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2027-12-31
+
+source s "s"
+
+index ex = [e1, e2]
+
+index item = [savings, shares]
+
+input x[e in ex, i in item]: int
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  x[e1] = 0 governs 2027..
+  x[e1, *] = 1 governs ..2026
+sha256 1013faca8820b434d1ae92605bfe5e06f9102c5539505d5ee43e30b11a98e197

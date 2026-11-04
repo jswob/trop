@@ -45,11 +45,13 @@ def _run_texts(texts, ids=None, options=None):
     return run_one(texts, ids)
 
 
-def reprint_lines(texts):
-    """Each file's canonical text (L §2.4) in the order of their paths, then the reality's hash (E §3.1 step 1)."""
-    from .canon import reprint, reality_hash
+def reprint_lines(texts, ordered=False):
+    """Each file's canonical text (L §2.4) in the order of their paths, then the reality's hash (E §3.1 step 1): the
+    sha256 of the texts printed, in the order printed.  texts are taken by their names, unless ordered: then in the
+    order given (reprint_paths gives them in the order of their full paths, tally 2.1.3)."""
+    from .canon import reprint, printed_hash
     from .joint import use_member_files, header_uses
-    files = sorted(texts, key=lambda f: f[0])
+    files = list(texts) if ordered else sorted(texts, key=lambda f: f[0])
     try:
         # a joint model's members, for the order of keys of their indexes (canon.reprint)
         members = {}
@@ -57,13 +59,21 @@ def reprint_lines(texts):
         for p, src in files:
             if header_uses(src):
                 members.update(use_member_files([(p, p, src)], texts, on_disk))
+        printed = reprint(files, members)
         out = []
-        for p, t in reprint(files, members):
+        for p, t in printed:
             out.append('--- ' + p)
             out.extend(t.rstrip('\n').split('\n'))
-        out.append('sha256 ' + reality_hash(files, None, members))
+        out.append('sha256 ' + printed_hash(printed))
     except TallyError as e:
         return ['refused: %s' % e.text()]
+    except RecursionError:
+        return ['refused: REFCORE-NOT-YET nesting deeper than this interpreter\'s stack']
+    except Exception as e:
+        # nothing may crash (INTERFACE §3; issue #59): an input this interpreter can't handle is a refusal, as in run
+        if os.environ.get('REFCORE_DEBUG'):
+            raise
+        return ['refused: REFCORE-NOT-YET an input this interpreter can\'t handle (%s: %s)' % (type(e).__name__, e)]
     return out
 
 
@@ -251,6 +261,18 @@ def run_worlds(heads, ids=None, loader=None, srcs=None):
             if getattr(e, 'base_file', False):
                 return ['refused: %s' % e.text()]
             errs[sid] = e
+    if ids:
+        # E §11 (tally 2.1.3, issue #58): after load (the base's refusal has printed above; a scenario's refuses only
+        # that scenario, L §8), the first id of the request that names no ask of any world, no member's ask (L §6.1)
+        # and no ask of a scenario file whose load was refused (that ask exists, refused with its scenario) refuses
+        # the request: its one line, nothing else. Was skipped silently, and a member's a.q crashed
+        from .ask import knows_ask, req_ask
+        known = set(a.id for r in realities.values() for a in list(r.asks) + list(getattr(r, 'asks_alone', ())))
+        for sid in errs:
+            known |= declared_asks(scen[sid][1] if srcs is None else srcs[scen[sid][0]])
+        for i in ids:
+            if i not in known and not knows_ask(m0, i):
+                return ['refused: %s' % req_ask(i).text()]
     # the asks: the base's from the base, a scenario's from its own reality
     # L §6.4 Its items: "Two scenarios over one base never meet, so each may declare an id the other declares": an
     # ask is known by its id and the file's world
@@ -482,6 +504,13 @@ def declared_ids(src):
     return out
 
 
+def declared_asks(src):
+    """The ids of the asks a file declares (`ask <id>:` at the start of a line, as joint.py reads a member's scenario
+    files), read from its text: a scenario file whose load was refused still declares them (E §11 `REQ-ASK`)."""
+    import re
+    return set(re.findall(r'^ask ([a-z][a-z0-9_]*)\s*:', src, re.M))
+
+
 def run_one(texts, ids=None, members=None):
     from .loader import load_texts
     from .ask import Asker
@@ -533,16 +562,19 @@ def run_paths(paths, ids=None, options=None):
 
 
 def reprint_paths(paths):
-    """`reprint`: each file named relative to the directory given, else by its base name (INTERFACE gap I-3)."""
+    """`reprint` (tally 2.1.3, issue #60): a loose file named as `run` names it, the path as given; a directory's files
+    relative to the directory given (INTERFACE gap I-3). The files are read, printed and hashed in the order of their
+    full paths, compared by code point (L §8.3, E §3.1 step 1), as `run` takes them (read_files): they were named by
+    their base names and printed and hashed in the order of those."""
     from .loader import collect
     pairs = []
     for a in paths:
         for f in collect([a]):
-            pairs.append((f, os.path.relpath(f, a).replace(os.sep, '/') if os.path.isdir(a) else os.path.basename(f)))
+            pairs.append((f, os.path.relpath(f, a).replace(os.sep, '/') if os.path.isdir(a) else f))
     texts, refused = read_files(pairs)
     if refused is not None:
         return [refused]
-    return reprint_lines(texts)
+    return reprint_lines(texts, ordered=True)
 
 
 def command_lines(argv):
