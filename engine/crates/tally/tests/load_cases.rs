@@ -19,7 +19,8 @@
 //! sample pins; a query on a `path p` line, at load by issue #83) for G8's third; §6.4 (a
 //! scenario's expression rows: the base's items through its id, the type of the row, what
 //! they read through defs; the asks a scenario's reality checks), §2.3 Calls (`household.b(x)`)
-//! for G10's.
+//! for G10's; §6.1 and §2.5 (a prefix that names nothing, a member's ask read or called) for
+//! its sweep.
 //! Twin: engine/tools/refcore/loader.py; each expected line is refcore's load of the same
 //! text, printed in the same normalized form, but where issue #75 rules that the spec wins:
 //! there the line is L §8.3's form, and the case's comment says so.
@@ -4385,6 +4386,280 @@ version v1
                 files.push(("more.tally", MORE10.replace("ROWVALUE", row)));
             }
             assert_eq!(load_lines(&files, "q"), expected, "{name}");
+        }
+    }
+
+    #[test]
+    fn a_prefix_that_names_nothing_and_a_member_s_ask_are_refused_at_load_as_refcore_refuses_them()
+    {
+        // Each case: its edits of one model, or of a joint model over one member (its pin
+        // refcore's hash of the member's text), and refcore's load lines for a run of `zz`.
+        const ONE: &str = "model home\n  tally 2\n  on 2026-03-01\n  start 2026-01-01\n  end 2026-12-31\n\nsource card \"a card\"\n\nunit PLN: currency minor 0.01\n\nindex flat = [a1, a2]\n\nindex mon = month 2026-01..2026-03\n\nkind pays: transfers\n\nplace konto: accounts PLN lives 2026-01-01..\n\nplace world: outside lives 2026-01-01..\n\ninput amt: money PLN\n\ninput fee[f in flat]: money PLN\n\nband zb(x: money PLN): money PLN\n\ndef twice: money PLN = amt + amt\n\nask q: twice\n\nversion v1\n  cite card\n  governs always\n  known 2026-01-01\n  amt = 1.00 PLN\n  fee[*] = 1.00 PLN\n  zb: [0 PLN, inf) = 1.00 PLN\n";
+        const MEMBER: &str = "model ana\n  tally 2\n  on 2026-03-01\n  start 2026-01-01\n  end 2026-12-31\n\nsource card \"a card\"\n\nunit PLN: currency minor 0.01\n\nindex flat = [a1, a2]\n\nkind persons: parties\n\ninput pay: money PLN\n\ninput fee[f in flat]: money PLN\n\nband zb(x: money PLN): money PLN\n\ndef twice: money PLN = pay + pay\n\nask q: twice\n\nversion card_2026\n  cite card\n  governs always\n  known 2026-01-01\n  pay = 4 000.00 PLN \"the card\"\n  fee[*] = 1.00 PLN\n  zb: [0 PLN, inf) = 1.00 PLN\n";
+        const JOINT: &str = "model family\n  tally 2\n  on 2026-03-01\n  start 2026-01-01\n  end 2026-12-31\n  use a = \"a/a.tally\" sha256 \"5ba1fbfee97c6932c395c3b73d2e43b1021ff5b7ce17df9b40017d28777b7294\"\n\nsource jc \"a joint card\"\n\nunit PLN: currency minor 0.01\n\ninput own: money PLN\n\ndef d: money PLN = own + a.twice\n\nask x: d\n\nversion jv\n  cite jc\n  governs always\n  known 2026-01-01\n  own = 1.00 PLN\n";
+        let alone: &[(&str, Edits, &str)] = &[
+            (
+                "member-row",
+                &[("  amt = 1.00 PLN", "  a.amt = 1.00 PLN")],
+                "refused: LOAD-NAME unknown id a.amt (a.tally:35)",
+            ),
+            (
+                "member-def",
+                &[(
+                    "def twice: money PLN = amt + amt",
+                    "def twice: money PLN = a.amt + amt",
+                )],
+                "refused: LOAD-NAME unknown id a.amt (a.tally:27)",
+            ),
+            (
+                "member-bind",
+                &[(
+                    "def twice: money PLN = amt + amt",
+                    "def twice: money PLN = sum(fee[f] for f in a.flat)",
+                )],
+                "refused: LOAD-NAME unknown id flat (a.tally:27)",
+            ),
+            (
+                "member-index-bind",
+                &[(
+                    "input fee[f in flat]: money PLN",
+                    "input fee[f in a.flat]: money PLN",
+                )],
+                "refused: LOAD-NAME unknown id a.flat (a.tally:23)",
+            ),
+            (
+                "member-def-bind",
+                &[(
+                    "def twice: money PLN = amt + amt",
+                    "def twice[f in a.flat]: money PLN = amt + amt",
+                )],
+                "refused: LOAD-NAME unknown id a.flat (a.tally:27)",
+            ),
+            (
+                "member-move-kind",
+                &[(
+                    "def twice: money PLN = amt + amt",
+                    "def twice: money PLN = amt + amt\n\nmove pay: a.pays\n  on 2026-01-05\n  leg cash from konto to world amount amt",
+                )],
+                "refused: LOAD-NAME unknown id a.pays (a.tally:29)",
+            ),
+            (
+                "member-key-type",
+                &[(
+                    "input amt: money PLN",
+                    "input amt: money PLN\n\ninput which: key a.flat",
+                )],
+                "refused: LOAD-NAME unknown id a.flat (a.tally:23)",
+            ),
+            (
+                "member-rule",
+                &[("  amt = 1.00 PLN", "  replace rule a.twice.base = amt")],
+                "refused: LOAD-NAME unknown id a.twice (a.tally:35)",
+            ),
+            (
+                "member-band-row",
+                &[(
+                    "  zb: [0 PLN, inf) = 1.00 PLN",
+                    "  a.zb: [0 PLN, inf) = 1.00 PLN",
+                )],
+                "refused: LOAD-NAME unknown id a.zb (a.tally:37)",
+            ),
+            (
+                "member-entry",
+                &[
+                    (
+                        "kind pays: transfers",
+                        "kind pays: transfers\n\nkind persons: parties",
+                    ),
+                    (
+                        "  amt = 1.00 PLN",
+                        "  a.persons + [ana] lives 2026-01-01..\n  amt = 1.00 PLN",
+                    ),
+                ],
+                "refused: LOAD-NAME unknown id persons (a.tally:37)",
+            ),
+            (
+                "member-given",
+                &[(
+                    "  amt = 1.00 PLN",
+                    "  given a.twice = 1.00 PLN\n  amt = 1.00 PLN",
+                )],
+                "refused: LOAD-NAME unknown id a.twice (a.tally:35)",
+            ),
+        ];
+        let joint: &[(&str, Edits, &str)] = &[
+            ("base", &[], "refused: REQ-ASK no ask zz"),
+            (
+                "expr-unknown",
+                &[("own + a.twice", "own + a.zz")],
+                "refused: LOAD-NAME unknown id a.zz (joint.tally:14)",
+            ),
+            (
+                "expr-ask",
+                &[("own + a.twice", "own + a.q")],
+                "refused: LOAD-PARSE cannot parse: ask a.q is not a value (joint.tally:14)",
+            ),
+            (
+                "expr-nomember",
+                &[("own + a.twice", "own + b.twice")],
+                "refused: LOAD-NAME unknown id b.twice (joint.tally:14)",
+            ),
+            (
+                "row-member",
+                &[("  own = 1.00 PLN", "  own = 1.00 PLN\n  a.pay = 2.00 PLN")],
+                "refused: LOAD-SAME the joint model states a.pay, an item of member a that no same line joins (joint.tally:23)",
+            ),
+            (
+                "row-unknown",
+                &[("  own = 1.00 PLN", "  own = 1.00 PLN\n  a.zz = 2.00 PLN")],
+                "refused: LOAD-NAME unknown id a.zz (joint.tally:23)",
+            ),
+            (
+                "row-nomember",
+                &[("  own = 1.00 PLN", "  own = 1.00 PLN\n  b.pay = 2.00 PLN")],
+                "refused: LOAD-NAME unknown id b.pay (joint.tally:23)",
+            ),
+            (
+                "given-member",
+                &[(
+                    "  own = 1.00 PLN",
+                    "  own = 1.00 PLN\n  given a.twice = 2.00 PLN",
+                )],
+                "refused: REQ-ASK no ask zz",
+            ),
+            (
+                "band-member",
+                &[(
+                    "  own = 1.00 PLN",
+                    "  own = 1.00 PLN\n  a.zb: [0 PLN, inf) = 2.00 PLN",
+                )],
+                "refused: LOAD-OVERLAP band a.zb: tables of jv and a.card_2026 overlap, known the same day (joint.tally:23)",
+            ),
+            (
+                "rule-member",
+                &[(
+                    "  own = 1.00 PLN",
+                    "  own = 1.00 PLN\n  replace rule a.twice.base = own",
+                )],
+                "refused: REQ-ASK no ask zz",
+            ),
+            (
+                "entry-member",
+                &[(
+                    "  own = 1.00 PLN",
+                    "  own = 1.00 PLN\n  a.persons + [ola] lives 2026-01-01..",
+                )],
+                "refused: REQ-ASK no ask zz",
+            ),
+            (
+                "entry-unknown",
+                &[(
+                    "  own = 1.00 PLN",
+                    "  own = 1.00 PLN\n  a.zz + [ola] lives 2026-01-01..",
+                )],
+                "refused: LOAD-NAME unknown id zz (joint.tally:23)",
+            ),
+            (
+                "bind-member",
+                &[(
+                    "def d: money PLN = own + a.twice",
+                    "def d[f in a.flat]: money PLN = own + a.fee[f]",
+                )],
+                "refused: LOAD-KEY wrong number of keys for d: 0, not 1 (joint.tally:16)",
+            ),
+            (
+                "bind-unknown",
+                &[(
+                    "def d: money PLN = own + a.twice",
+                    "def d[f in a.zz]: money PLN = own",
+                )],
+                "refused: LOAD-NAME unknown id a.zz (joint.tally:14)",
+            ),
+            (
+                "bind-nomember",
+                &[(
+                    "def d: money PLN = own + a.twice",
+                    "def d[f in b.flat]: money PLN = own",
+                )],
+                "refused: LOAD-NAME unknown id b.flat (joint.tally:14)",
+            ),
+            (
+                "key-member",
+                &[(
+                    "input own: money PLN",
+                    "input own: money PLN\n\ninput which: key a.flat",
+                )],
+                "refused: REQ-ASK no ask zz",
+            ),
+            (
+                "key-unknown",
+                &[(
+                    "input own: money PLN",
+                    "input own: money PLN\n\ninput which: key a.zz",
+                )],
+                "refused: LOAD-NAME unknown id a.zz (joint.tally:14)",
+            ),
+            (
+                "agg-unknown",
+                &[("own + a.twice", "own + sum(a.fee[f] for f in a.zz)")],
+                "refused: LOAD-NAME unknown id zz (joint.tally:14)",
+            ),
+            (
+                "call-unknown",
+                &[("own + a.twice", "own + a.zz(own)")],
+                "refused: LOAD-NAME unknown id a.zz (joint.tally:14)",
+            ),
+            (
+                "call-member",
+                &[("own + a.twice", "own + a.zb(own)")],
+                "refused: REQ-ASK no ask zz",
+            ),
+            (
+                "call-ask",
+                &[("own + a.twice", "own + a.q(own)")],
+                "refused: LOAD-PARSE cannot parse: a.q is not a band, and there are no user functions (joint.tally:14)",
+            ),
+            (
+                "call-def",
+                &[("own + a.twice", "own + a.twice(own)")],
+                "refused: LOAD-PARSE cannot parse: a.twice is not called (joint.tally:14)",
+            ),
+            (
+                "expr-ask-keyed",
+                &[("own + a.twice", "own + a.q[a1]")],
+                "refused: LOAD-PARSE cannot parse: ask a.q is not a value (joint.tally:14)",
+            ),
+            (
+                "expr-unknown-keyed",
+                &[("own + a.twice", "own + a.zz[a1]")],
+                "refused: LOAD-NAME unknown id a.zz (joint.tally:14)",
+            ),
+            (
+                "expr-source",
+                &[("own + a.twice", "own + a.card")],
+                "refused: LOAD-PARSE cannot parse: source a.card is not a value (joint.tally:14)",
+            ),
+            (
+                "ask-of-ask",
+                &[("ask x: d", "ask x: a.q")],
+                "refused: LOAD-PARSE cannot parse: ask a.q is not a value (joint.tally:16)",
+            ),
+            (
+                "agg-ask",
+                &[("own + a.twice", "own + sum(a.fee[f] for f in a.q)")],
+                "refused: LOAD-NAME unknown id q (joint.tally:14)",
+            ),
+        ];
+        for &(name, edits, expected) in alone {
+            let files = [("a.tally", edited(ONE, edits))];
+            assert_eq!(load_lines(&files, "zz"), expected, "{name}");
+        }
+        for &(name, edits, expected) in joint {
+            let files = [
+                ("joint.tally", edited(JOINT, edits)),
+                ("a/a.tally", MEMBER.to_owned()),
+            ];
+            assert_eq!(load_lines(&files, "zz"), expected, "{name}");
         }
     }
 }

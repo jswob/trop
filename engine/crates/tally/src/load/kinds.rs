@@ -212,12 +212,18 @@ impl Loader {
     }
 
     /// One `+` line: keys added to a list index, or things entering a kind (refcore's `entry`).
-    /// L §4.1, §5.7.
+    /// L §4.1, §5.7. A prefixed target, `a.x +`, names nothing (a joint model's merge has made
+    /// each member's kind one name): `unknown id x`, the prefix left out as refcore leaves it.
     fn entry(&mut self, version: &str, file: &str, enter: &Enter, line: u32) -> Result<(), Stop> {
-        if enter.qual.is_some() {
-            return Err(Stop::NotBuilt("a member's prefix"));
-        }
         let target = &enter.target;
+        if enter.qual.is_some() {
+            return Err(refuse(
+                Load::Name,
+                format!("unknown id {target}"),
+                file,
+                line,
+            ));
+        }
         let texts = enter
             .keys
             .iter()

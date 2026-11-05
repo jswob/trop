@@ -6,7 +6,8 @@
 //! L §8.3 (`LOAD-PIN`, `LOAD-DUP`, `LOAD-HEADER`), E §11 (`REQ-ASK`: a member's ask).
 //! Twin: engine/tools/refcore/joint.py (`split_reality`, `header_uses`, `header_has_sames`,
 //! `member_texts`, `pin_check`, `member_hash`, `joint_texts` up to its merge, `MemberRefused`,
-//! `owner_of`, `owner_deep`, `shown`); cli.py (`_run_texts`, `joint`).
+//! `owner_of`, `owner_deep`, `shown`); cli.py (`_run_texts`, `joint`); model.py (`lookup` on a
+//! member, for the asks its namespace holds).
 //! Invariants: every member of a model is found, then every one pinned, in use order, before
 //! any loads; a member that is a joint model is a frame of a worklist, never a recursion
 //! (R-16); a member's refusal names its aliases from the run's model down; the files given are
@@ -18,7 +19,7 @@ use super::steps::load_among;
 use super::worlds::{Loaded, Split, declared_asks, load_split};
 use crate::api::{Pin, Source};
 use crate::base::{Code, Load, Refusal};
-use crate::model::{Joint, MemberAsks, Reality};
+use crate::model::{Joint, MemberAsks, NameKind, Reality};
 use crate::syntax::{Line, Stop, parse_split, printed_hash, reprint, split_lines};
 use core::ops::Bound;
 use std::collections::{BTreeMap, BTreeSet};
@@ -239,6 +240,7 @@ pub(super) fn load_joint(
             alias.clone(),
             MemberAsks {
                 asks,
+                named: asks_named(&reality),
                 members: joint.members,
             },
         );
@@ -367,6 +369,7 @@ fn member(
         done,
         MemberAsks {
             asks,
+            named: asks_named(&reality),
             members: BTreeMap::new(),
         },
     ))
@@ -448,6 +451,18 @@ fn ask_ids(m: &Reality) -> BTreeSet<String> {
         .filter(|ask| !m.asks_alone.contains_key(&ask.id))
         .map(|ask| ask.id.clone())
         .collect()
+}
+
+/// The asks a member's namespace holds, refused alone or not: what refcore's `lookup` on the
+/// member finds as an ask, read or called by the joint model as `a.q`. L §6.1, §5.18.
+fn asks_named(m: &Reality) -> BTreeSet<String> {
+    let mut named = BTreeSet::new();
+    for (id, kind) in &m.names {
+        if *kind == NameKind::Ask {
+            named.insert(id.clone());
+        }
+    }
+    named
 }
 
 /// A member's files (refcore's `member_texts`): the file given at its path, else every file

@@ -320,11 +320,9 @@ impl Loader {
     }
 
     /// A move's event kind: declared, an event kind, not `adjustments` (refcore's
-    /// `resolve_move_kind`). L §5.14, §5.14.3.
+    /// `resolve_move_kind`). L §5.14, §5.14.3. A prefixed kind, `a.pays`, is no name (a joint
+    /// model's merge has made each member's kind one), so it is unknown, as refcore's is.
     fn move_kind(&self, id: &str, kind: &str, file: &str, line: u32) -> Result<String, Stop> {
-        if kind.contains('.') {
-            return Err(Stop::NotBuilt("a member's prefix"));
-        }
         let Some(info) = self
             .m
             .kinds
@@ -411,8 +409,9 @@ impl Loader {
             }
             let domain = match &bind.domain {
                 Written::Name { id, qual } => {
-                    if qual.is_some() {
-                        return Err(Stop::NotBuilt("a member's prefix"));
+                    if let Some(prefix) = qual {
+                        let unknown = format!("unknown id {prefix}.{id}");
+                        return Err(refuse(Load::Name, unknown, file, line));
                     }
                     let domain = self.resolve_domain(id, file, line)?;
                     self.check_key_shadow(var, &domain, file, line)?;
@@ -506,9 +505,7 @@ impl Loader {
                 Ok((Ty::Dist(scaled), factor))
             }
             Type::Key(name) => {
-                if name.contains('.') {
-                    return Err(Stop::NotBuilt("a member's prefix"));
-                }
+                // A prefixed `key a.x` is no name (the merge has made each member's one): unknown.
                 match self.m.names.get(name) {
                     Some(NameKind::Kind | NameKind::Index | NameKind::Axis) => {
                         Ok((Ty::Key(name.clone()), Num::int(1)))

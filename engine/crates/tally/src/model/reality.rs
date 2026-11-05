@@ -140,11 +140,23 @@ pub struct Joint {
 pub struct MemberAsks {
     /// The asks it may be asked by their own ids.
     pub asks: BTreeSet<String>,
+    /// The asks its own namespace holds, refused alone or not (refcore's `lookup` on the
+    /// member finds them); its scenario files' asks are no names of it.
+    pub named: BTreeSet<String>,
     /// Its own members, when it is a joint model.
     pub members: BTreeMap<String, MemberAsks>,
 }
 
 impl Joint {
+    /// Whether `a.q` names an ask member `a`'s namespace holds, so that reading or calling it
+    /// is no value (refcore's `member_read` and `prefixed_call`, their ask arm). L §6.1, §5.18.
+    #[must_use]
+    pub fn names_ask(&self, alias: &str, id: &str) -> bool {
+        self.members
+            .get(alias)
+            .is_some_and(|member| member.named.contains(id))
+    }
+
     /// Whether `id` names a member's ask, `a.q` or `a.b.q` (refcore's `knows_ask`, its member
     /// arm). E §11.
     #[must_use]

@@ -1592,7 +1592,9 @@ impl Checker {
         ))
     }
 
-    /// `x.f` of a value of type `t` (refcore's `t_field`). L §3.1, §5.7, §5.14.
+    /// `x.f` of a value of type `t` (refcore's `t_field`). L §3.1, §5.7, §5.14. A prefix that
+    /// names no item: a joint model's member whose namespace holds the ask `f` (no value,
+    /// refcore's `member_read`), else an unknown id.
     pub(super) fn field(
         m: &Reality,
         scope: &Scope,
@@ -1604,6 +1606,10 @@ impl Checker {
             && !scope.is_var(name)
             && !m.names.contains_key(name)
         {
+            if m.joint.as_ref().is_some_and(|j| j.names_ask(name, field)) {
+                let text = format!("cannot parse: ask {name}.{field} is not a value");
+                return Err(refused(Load::Parse, text));
+            }
             return Err(refused(Load::Name, format!("unknown id {name}.{field}")));
         }
         if matches!(t, Ty::Unseen) {

@@ -129,12 +129,21 @@ fn anchored_key(m: &Reality, t: &Ty, what: &str) -> Result<(), Stop> {
 }
 
 /// A call whose prefixes name neither the base (in a scenario's expression row) nor a member
-/// that declares the band: a joint model's merge has made each member's band one name
-/// (refcore's `prefixed_call`, past its member arm). L §2.3 Calls, §6.1, §8.3.
+/// that declares the band: a joint model's merge has made each member's band one name, so a
+/// member's prefix left over names its ask (no band) or nothing (refcore's `prefixed_call`).
+/// L §2.3 Calls, §6.1, §8.3.
 fn prefixed_call(m: &Reality, first: &str, call: &Call) -> Stop {
     let mut full = call.prefix.join(".");
     full.push('.');
     full.push_str(&call.name);
+    let asked = call.prefix.len() == 1
+        && m.joint
+            .as_ref()
+            .is_some_and(|joint| joint.names_ask(first, &call.name));
+    if asked {
+        let text = format!("cannot parse: {full} is not a band, and there are no user functions");
+        return refused(Load::Parse, text);
+    }
     if m.names.contains_key(first) {
         return refused(
             Load::Name,

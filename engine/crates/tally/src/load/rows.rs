@@ -151,9 +151,7 @@ impl Loader {
                 Ok(false)
             }
             ItemForm::Rule { qual, def, rule } => {
-                if qual.is_some() {
-                    return Err(Stop::NotBuilt("a member's prefix"));
-                }
+                unprefixed(qual.as_deref(), def, file, item.line)?;
                 self.rule_item(vid, def, rule.as_ref(), file, item.line)?;
                 Ok(rule.governs.is_none())
             }
@@ -165,7 +163,7 @@ impl Loader {
         }
     }
 
-    /// The input or def a row names (refcore's `target`).
+    /// The input or def a row names (refcore's `target`; its prefix, if any, in `unprefixed`).
     fn target_of(&self, name: &str, want: NameKind, file: &str, line: u32) -> Result<(), Stop> {
         let word = if want == NameKind::Def {
             "def"
@@ -241,9 +239,7 @@ impl Loader {
         file: &str,
         line: u32,
     ) -> Result<(), Stop> {
-        if row.qual.is_some() {
-            return Err(Stop::NotBuilt("a member's prefix"));
-        }
+        unprefixed(row.qual.as_deref(), &row.target, file, line)?;
         let id = &row.target;
         match self.m.names.get(id) {
             Some(NameKind::Band) => {}
@@ -333,9 +329,7 @@ impl Loader {
         file: &str,
         line: u32,
     ) -> Result<bool, Stop> {
-        if row.qual.is_some() {
-            return Err(Stop::NotBuilt("a member's prefix"));
-        }
+        unprefixed(row.qual.as_deref(), &row.target, file, line)?;
         let id = &row.target;
         let want = if row.given {
             NameKind::Def
@@ -663,4 +657,19 @@ fn load_pattern_text(pattern: &[Pat]) -> String {
         })
         .collect();
     format!("[{}]", parts.join(", "))
+}
+
+/// A row's, band row's or rule's target written with a prefix, `a.x`, is an unknown id: a
+/// joint model's merge has made each member's item one name, so no prefix is left that names
+/// one (refcore's `target`, whose `qualified` names nothing since GD-1). L §6.1, §2.5.
+fn unprefixed(qual: Option<&str>, name: &str, file: &str, line: u32) -> Result<(), Stop> {
+    match qual {
+        Some(prefix) => Err(refuse(
+            Load::Name,
+            format!("unknown id {prefix}.{name}"),
+            file,
+            line,
+        )),
+        None => Ok(()),
+    }
 }
