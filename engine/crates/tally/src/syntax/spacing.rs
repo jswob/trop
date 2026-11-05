@@ -66,7 +66,9 @@ fn spaced(p: &Tok, t: &Tok) -> bool {
         return false;
     }
     if t.text == "(" && t_op {
-        let call = p.kind == Kind::Id && (is_builtin(&p.text) || (!is_keyword(&p.text) && pm.name));
+        // A token the parser marks a name is one whatever its word: a field after `.` is never
+        // a keyword (L §2.3 rule 3), so `a.or(x)` is a call and prints touching (2.1.4-1, #84).
+        let call = p.kind == Kind::Id && (is_builtin(&p.text) || pm.name);
         return !(p.text == "]" || call);
     }
     if t.text == "[" && t_op {

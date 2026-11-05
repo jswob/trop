@@ -152,6 +152,51 @@ def g: num = a.b[q1](2) * household.b(n[q2])
         assert_eq!(again, canonical, "the canonical text is a fixed point");
     }
 
+    /// The `format` fuzz target's #84 finding: a prefixed call whose name is a keyword word
+    /// (`mi.or(DUK)`, a field after `.` is never a keyword, L §2.3 rule 3) printed `mi.or (DUK)`,
+    /// which no parser reads back. It prints touching its `(`, as every call (L §2.4
+    /// Expressions, 2.1.4-1). The expected text is written from L §2.4 (the engine goes first,
+    /// pick P8; refcore follows in tally 2.1.5).
+    #[test]
+    fn a_keyword_named_prefixed_call_prints_touching_its_paren() {
+        let written = "model m
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+def other: money DUK = round(gross,mi.and(DUK),half-up)
+
+unit DUK: currency minor 0.01
+
+input gross: money DUK
+
+def contrib: money DUK = round(gross, mi.or(DUK), half-up)
+
+def inner: money DUK = gross+mi.in(gross)
+";
+        let canonical = "model m
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+unit DUK: currency minor 0.01
+
+input gross: money DUK
+
+def contrib: money DUK = round(gross, mi.or(DUK), half-up)
+
+def inner: money DUK = gross + mi.in(gross)
+
+def other: money DUK = round(gross, mi.and(DUK), half-up)
+";
+        let printed = format_file(written.as_bytes()).expect("it reprints");
+        assert_eq!(printed, canonical, "L §2.4's form");
+        let again = format_file(canonical.as_bytes()).expect("it reprints");
+        assert_eq!(again, canonical, "the canonical text is a fixed point");
+    }
+
     #[test]
     fn reprint_names_files_as_given_and_orders_them_by_full_path() {
         let file = |path: &str, text: &str| Given {
