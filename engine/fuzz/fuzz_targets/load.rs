@@ -6,10 +6,10 @@
 //! `ENGINE-INVARIANT`, any other code or line, a panic or a hang (DONE gate 9; the builder's
 //! plan §5, after M0's G3).
 //!
-//! `NotImplemented`, a form the engine builds later (joint models until G9), is allowed for now
-//! and counted: every power-of-two input prints `load: <n> inputs, <m> not implemented` to
-//! stderr, so a run's log shows the share. To make it a finding, set `NOT_IMPLEMENTED_ALLOWED`
-//! below to `false`: one line.
+//! `NotImplemented`, a form the engine builds later, is allowed for now and counted: every
+//! power-of-two input prints `load: <n> inputs, <m> not implemented` to stderr, so a run's log
+//! shows the share. To make it a finding, set `NOT_IMPLEMENTED_ALLOWED` below to `false`: one
+//! line.
 
 #![no_main]
 
@@ -18,7 +18,11 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use tally::base::Code;
 use tally::{Given, NotImplemented};
 
-/// Whether `NotImplemented` passes (counted); `false` once every form is built.
+/// Whether `NotImplemented` passes (counted). M0 leaves 76 load stops "not built" on purpose,
+/// each listed with the milestone or issue that builds it in BUILD-LOG's "M0 built" entry
+/// (#86-#90, M1, M2, M5c, ...); as findings they would be all this target finds (the M0
+/// coordinator's pick P14, issue #56). It flips to `false` after the last load stop is built,
+/// at the latest when M5c lands.
 const NOT_IMPLEMENTED_ALLOWED: bool = true;
 
 static INPUTS: AtomicU64 = AtomicU64::new(0);
