@@ -74,8 +74,12 @@ changed none: all its code is in `syntax/`, `load/`, `model/`, `ask/`, `eval/`, 
   round by round (INTERFACE §2): the library never touches the disk.
 
 **Foundations** (`base/`). `code.rs`: the catalogue's 99 codes (L §8's 95 and E §11's
-four), one enum. `refusal.rs`: a refusal carries its code, message and place; a member's
-refusal is printed `member a: …`. `table.rs`: the one name-keyed store, items in the order
+four), one enum. `refusal.rs`: a refusal carries its code, message and place, and its
+*reach*: what it names that a later load rule acts on. That is an ask naming a world the run
+doesn't load, which is refused alone, or the id an `unknown id` or `ambiguous key` refusal names,
+which a scenario's id read outside it renames `LOAD-SCENARIO` (L §6.4). The reach is set where
+the refusal is made, so no rule reads it back from the message's words. A member's refusal is
+printed `member a: …`. `table.rs`: the one name-keyed store, items in the order
 they were added (the reality's section order), with a checked `get` and no indexing.
 
 **Text** (`syntax/`, the lexer-parser area, exception budget 0).
