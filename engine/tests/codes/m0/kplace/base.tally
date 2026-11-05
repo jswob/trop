@@ -1,0 +1,37 @@
+model kplace
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M0's load-code fixtures (invented): a place keyed by persons, and two rows stated same at its keys; it loads clean; each fixture of codes/m0/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+kind persons
+
+place konto[p in persons]: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input lim[k in accounts]: money PLN
+
+input amt: money PLN
+
+def twice: money PLN = amt + amt
+
+ask q: twice
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  persons + [ana] lives 2026-01-01..
+  persons + [ben] lives 2026-01-01..
+  amt = 1.00 PLN "the card"
+  opening[konto[ana]] = 1.00 PLN at 2026-01-01 start "the card"
+  opening[konto[ben]] = 2.00 PLN at 2026-01-01 start "the card"
+  lim[konto[ana]] = 5.00 PLN "the card"
+  lim[konto[ben]] = 5.00 PLN "the card"
+  same lim[konto[ana]] = lim[konto[ben]]

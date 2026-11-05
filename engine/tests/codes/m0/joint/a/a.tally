@@ -1,0 +1,22 @@
+model ana
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's member for M0's load-code fixtures (invented): the joint model's one member"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+input pay: money PLN
+
+def twice: money PLN = pay + pay
+
+ask q: twice
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  pay = 4 000.00 PLN "the card"

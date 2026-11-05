@@ -27,7 +27,7 @@ Printed by the build role's SessionStart hook at the start and after each compac
 ## 3. The loop
 
 - Start: read the last `engine/BUILD-LOG.md` entries, the milestone's section of `engine/spec/BUILD-ORDER.md`, the plan's traceability table; run `engine/tools/check fast`; note the red vector ids.
-- `check` prints a line such as `milestone-report: S: 3/7 green`: T's Rust tests of the next milestone, your work list, never failing. Once the gate session tags a milestone, its tests gate like any other (`engine/tools/milestones.toml`), so they can't go red again.
+- `check` prints a line such as `milestone-report: S: 3/7 green`: T's Rust tests of the next milestone, your work list, never failing. Once a milestone is in `gating` (`engine/tools/milestones.toml`: after its tag, or for S and M0 from their branch's last commit), its tests gate like any other, so they can't go red again.
 - Work: the next group of red vectors in plan order; implement; `engine/tools/check fast`; commit when green.
 - Before each commit: `engine/tools/check full`. Never commit red. (T's re-run commit after a spec ruling may be red on the ids its `Logged-Red:` lines name; your commits then turn them green, R-77.)
 - When a group turns green: `engine/tools/mutants-local -F '<regex of the functions you changed or added>' <their kernel files>`; caught and missed go into the group's BUILD-LOG entry, the missed ones for T. Advisory, never blocking (R-88).

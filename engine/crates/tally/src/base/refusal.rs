@@ -1,10 +1,26 @@
 //! A refusal: a code of the catalogue, its message, and where in the reality it was met.
-//! Spec: L §8.3 (each refusal names its file, line and item; which refusal prints), §8.4.
-//! Twin: engine/tools/refcore/errors.py (`TallyError`, its `text`).
+//! Spec: L §8.3 (each refusal names its file, line and item; which refusal prints), §8.4;
+//! INTERFACE §2 (a joint model's member refused: `member <alias>: <the refusal>`).
+//! Twin: engine/tools/refcore/errors.py (`TallyError`, its `text`); joint.py (`MemberRefused`).
 //! Invariants: a refusal always carries its catalogue code (R-76); its line is
-//! `<CODE> <message>`, then ` (<where>)` when it was met in a file, as refcore prints it.
+//! `<CODE> <message>`, then ` (<where>)` when it was met in a file, as refcore prints it, after
+//! `member <a>: ` when a joint model's member was refused; what a rule acts on (an unloaded
+//! world, the id a refusal names) is its `Reach`, set where it is made, never read from its
+//! message.
 
 use super::code::{Code, Load};
+
+/// What a refusal names, for the load rules that act on it (L §6.4): set where the refusal is
+/// made, beside the message that says it.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Reach {
+    /// An ask naming a world the run doesn't load: it refuses that ask alone (`LOAD-SCENARIO
+    /// ask <q> names <w>, neither the model nor a loaded scenario`).
+    UnloadedWorld,
+    /// The id an `unknown id` or `ambiguous key` refusal names: a scenario's id, read outside
+    /// it, is renamed `LOAD-SCENARIO` (refcore's `run_worlds`).
+    Id(String),
+}
 
 /// Where a refusal was met: a file as the run names it, and a line of it when one is known.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -24,6 +40,11 @@ pub struct Refusal {
     message: String,
     /// Where it was met, when in a file.
     place: Option<Place>,
+    /// The member of a joint model that was refused, its aliases from the run's model down
+    /// (`f.b`), or `None` for the run's own refusal.
+    member: Option<String>,
+    /// What it names for the rules that act on it, if anything.
+    reach: Option<Reach>,
 }
 
 impl Refusal {
@@ -34,6 +55,8 @@ impl Refusal {
             code,
             message,
             place: None,
+            member: None,
+            reach: None,
         }
     }
 
@@ -44,7 +67,24 @@ impl Refusal {
             code,
             message,
             place: Some(place),
+            member: None,
+            reach: None,
         }
+    }
+
+    /// This refusal, naming `reach` for the rules that act on it. L §6.4.
+    #[must_use]
+    pub fn reaching(self, reach: Reach) -> Refusal {
+        Refusal {
+            reach: Some(reach),
+            ..self
+        }
+    }
+
+    /// What this refusal names for the rules that act on it. L §6.4.
+    #[must_use]
+    pub fn reach(&self) -> Option<&Reach> {
+        self.reach.as_ref()
     }
 
     /// `LOAD-PATH`: a path the run is given names no file or folder, named as given. L §8.3.
@@ -69,15 +109,80 @@ impl Refusal {
         self.code
     }
 
+    /// The message, without the code or the place. L §8.3.
+    #[must_use]
+    pub fn message(&self) -> &str {
+        &self.message
+    }
+
+    /// Another code and message at this refusal's place: a load refusal of the base that a
+    /// later rule names better (refcore's `run_worlds`: an id of a scenario read outside it,
+    /// L §6.4). L §8.3.
+    #[must_use]
+    pub fn renamed(&self, code: Code, message: String) -> Refusal {
+        Refusal {
+            code,
+            message,
+            place: self.place.clone(),
+            member: self.member.clone(),
+            reach: None,
+        }
+    }
+
+    /// This refusal at `place`, unless it names a place of its own: a refusal met reading a
+    /// value, put at the line that states it. L §8.3.
+    #[must_use]
+    pub fn placed(self, place: Place) -> Refusal {
+        Refusal {
+            place: self.place.or(Some(place)),
+            ..self
+        }
+    }
+
+    /// This refusal as a joint model's member's, `chain` its aliases from the run's model down
+    /// (refcore's `MemberRefused`). L §6.1; INTERFACE §2.
+    #[must_use]
+    pub fn of_member(self, chain: String) -> Refusal {
+        Refusal {
+            member: Some(chain),
+            ..self
+        }
+    }
+
+    /// Whether a joint model's member was refused.
+    #[must_use]
+    pub fn is_member(&self) -> bool {
+        self.member.is_some()
+    }
+
+    /// The run's own refusal of a joint model with each member's prefix printed with its dot,
+    /// `a.x` (refcore's `text().replace(SEP, '.')`); a member's refusal prints as the member
+    /// gives it. L §6.1.
+    #[must_use]
+    pub fn shown(self) -> Refusal {
+        if self.member.is_some() {
+            return self;
+        }
+        Refusal {
+            message: self.message.replace('\u{b7}', "."),
+            ..self
+        }
+    }
+
     /// The refusal as printed after `refused: `: the code, the message, then the place in
-    /// parentheses (`LOAD-PARSE cannot parse: expected ":", got int (a.tally:4)`). L §8.3.
+    /// parentheses (`LOAD-PARSE cannot parse: expected ":", got int (a.tally:4)`), after
+    /// `member <a>: ` for a joint model's member. L §8.3; INTERFACE §2.
     #[must_use]
     pub fn text(&self) -> String {
         let code = self.code.as_str();
-        match &self.place {
+        let line = match &self.place {
             None => format!("{code} {}", self.message),
             Some(Place::File(file)) => format!("{code} {} ({file})", self.message),
             Some(Place::Line(file, line)) => format!("{code} {} ({file}:{line})", self.message),
+        };
+        match &self.member {
+            None => line,
+            Some(chain) => format!("member {chain}: {line}"),
         }
     }
 }

@@ -1,0 +1,28 @@
+model rules_sorted
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+input x: num
+
+input y: num
+
+def fee: num
+  rule zeta = x when x > y
+  rule base v law26 = y when y > x
+  rule alpha = x + y when x == y
+  rule base = x when x <= y
+  rule base v law25 = y when y >= x
+
+version law26
+  cite s
+  governs 2026-01..
+  known 2026-01-01
+
+version law25
+  cite s
+  governs 2025-01..
+  known 2025-01-01

@@ -43,3 +43,31 @@ test = false
 name = "m0_codes"
 path = "milestone/m0_codes.rs"
 test = false
+
+# M0: the format, refcore's reprint of every text set and the round trip (m0/format.refcore;
+# MILESTONE-M0.md row 4; gate 6)
+[[test]]
+name = "m0_format"
+path = "milestone/m0_format.rs"
+test = false
+
+# M0: the load, refcore's run of the load probe over every text set and row 1's 10 refusals
+# (m0/load.refcore; MILESTONE-M0.md rows 1 and 2)
+[[test]]
+name = "m0_load"
+path = "milestone/m0_load.rs"
+test = false
+
+# M0: tools/loadcheck.py agrees with the loader over the 79 models, the household and the
+# changes (m0/loadcheck.refcore; MILESTONE-M0.md row 3)
+[[test]]
+name = "m0_loadcheck"
+path = "milestone/m0_loadcheck.rs"
+test = false
+
+# M0: the format's and the loader's laws on a seeded corpus (properties/m0.corpus,
+# properties/m0.refcore; PROPERTIES.md § M0; MILESTONE-M0.md row 7)
+[[test]]
+name = "m0_properties"
+path = "milestone/m0_properties.rs"
+test = false

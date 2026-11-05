@@ -1,11 +1,13 @@
 //! Indexes and versions: the keys an index holds in their order, and what a version states about its rows.
 //! Spec: L §4.1 (indexes: lists, ranges, open, the built-in period indexes), §5.6 (keys and
 //! their order), §4.5 (`known`), §4.6 (governs spans), §5.3 (versions, `enters`, `covers`,
-//! gap roles).
-//! Twin: engine/tools/refcore/model.py (`IndexInfo`, `VersionInfo`); loader.py
+//! gap roles, `moves`).
+//! Twin: engine/tools/refcore/model.py (`IndexInfo`, `VersionInfo`, `span_at`); loader.py
 //! (`build_indexes`, `build_range`, `build_versions`).
 //! Invariants: an index's keys are in its order (an open index's by text); a key's position
-//! is its place in that order; a version's known date is on or before the model's `on`.
+//! is its place in that order; a version's known date, its window's last day too, is on or
+//! before the model's `on`; a version's span under a cut is that of the latest-known `moves`
+//! line the cut sees, else its own.
 
 use super::key::{KeyVal, Span};
 use crate::time::{Day, PeriodKind};
@@ -46,6 +48,9 @@ pub struct IndexInfo {
     pub texts: Vec<(String, KeyVal)>,
     /// The line of its section.
     pub line: Option<u32>,
+    /// Whether its range states `from`: its keys are anchored periods, of which `day_of` and
+    /// `schedule` have no meaning (refcore's `decl.frm`). L §4.1, §4.2.
+    pub anchored: bool,
 }
 
 impl IndexInfo {
@@ -63,6 +68,7 @@ impl IndexInfo {
             v: None,
             texts: Vec::new(),
             line: None,
+            anchored: false,
         }
     }
 
@@ -124,8 +130,12 @@ pub struct VersionInfo {
     pub cite: String,
     /// `governs`: none, or its span.
     pub governs: Option<Span>,
-    /// `known`.
+    /// `known`: the day, or a window's first day.
     pub known: Day,
+    /// `known window(a, b)`: the window's last day, b (L §4.5); none for a day.
+    pub window: Option<Day>,
+    /// The `moves` lines of later versions that move this one, in version order (L §5.3).
+    pub moved_by: Vec<Moved>,
     /// `enters D`.
     pub enters: Option<Day>,
     /// `assumed "…"`.
@@ -140,12 +150,41 @@ pub struct VersionInfo {
     pub line: u32,
 }
 
-impl VersionInfo {
-    /// The governs span in force under cut `cut` (refcore's `VersionInfo.span_at`; a `moves`
-    /// line is built later, so it is the version's own). L §4.6.
+/// A `moves V to SPAN` line, as the version it moves holds it (refcore's `moved_by`). L §5.3.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Moved {
+    /// The version whose line it is.
+    pub by: String,
+    /// That version's `known`, or its window's first day.
+    pub known: Day,
+    /// That version's known window's last day, if it has one.
+    pub window: Option<Day>,
+    /// The span it moves V to.
+    pub span: Span,
+}
+
+impl Moved {
+    /// Whether cut `cut` sees the line: its version is known by `cut`, its whole window
+    /// included (L §4.5; a cut inside the window is the run's `windows each`, not built).
     #[must_use]
-    pub fn span_at(&self, _cut: Day) -> Option<&Span> {
-        self.governs.as_ref()
+    pub fn seen_at(&self, cut: Day) -> bool {
+        self.window.unwrap_or(self.known) <= cut
+    }
+}
+
+impl VersionInfo {
+    /// The governs span in force under cut `cut`: the span of the latest-known `moves` line
+    /// the cut sees, else the version's own (refcore's `VersionInfo.span_at`). L §4.6 step 1,
+    /// §5.3.
+    #[must_use]
+    pub fn span_at(&self, cut: Day) -> Option<&Span> {
+        let mut best: Option<&Moved> = None;
+        for line in self.moved_by.iter().filter(|line| line.seen_at(cut)) {
+            if best.is_none_or(|b| line.known > b.known) {
+                best = Some(line);
+            }
+        }
+        best.map_or(self.governs.as_ref(), |line| Some(&line.span))
     }
 
     /// Its entry into force for a row with time `own` (refcore's `VersionInfo.enters_at`):

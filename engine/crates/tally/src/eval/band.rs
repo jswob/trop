@@ -168,6 +168,7 @@ impl Engine {
         let expr = match &row.value {
             RuleValue::Hole(text) => return Ok(Value::Hole(Hole::asked(text, figure))),
             RuleValue::Expr(e) => e,
+            RuleValue::Solve(_) => return Err(Stop::NotBuilt("`solve`")),
         };
         let outer = self.holding(Node::new(NodeKind::Band, &band.id));
         let v = self.ev(m, expr, &Env::band(&band.arg, x), ctx);
@@ -228,6 +229,9 @@ fn interval_text(row: &BandRow) -> Result<String, Stop> {
         match e {
             None => Ok(inf.to_owned()),
             Some(BandEnd::Num(q)) => q.to_text().map_err(num_stop),
+            Some(BandEnd::Day(_) | BandEnd::Period(_) | BandEnd::Key(..)) => {
+                Err(Stop::NotBuilt("a band over days, periods or keys"))
+            }
         }
     };
     Ok(format!(

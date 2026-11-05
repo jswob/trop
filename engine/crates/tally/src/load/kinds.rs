@@ -56,7 +56,8 @@ impl Loader {
                             format!("unknown id {parent}"),
                             file,
                             decl.line,
-                        ));
+                        )
+                        .naming(parent));
                     }
                     subs.insert(decl.id.clone());
                     let mut sub = KindInfo::new(&decl.id, KindSpec::Plain, Some(parent));
@@ -72,6 +73,9 @@ impl Loader {
                 .iter()
                 .map(|(name, ty)| (name.clone(), Some(ty.clone())))
                 .collect();
+            // Kept as written; the checker checks them (`load/parts.rs`), as refcore keeps
+            // `decl.pclauses` for `check_parts`.
+            info.parts.clone_from(&decl.parts);
             self.m.kinds.push(&decl.id, info);
         }
         self.link_kinds(&subs)
@@ -209,12 +213,15 @@ impl Loader {
     }
 
     /// One `+` line: keys added to a list index, or things entering a kind (refcore's `entry`).
-    /// L §4.1, §5.7.
+    /// L §4.1, §5.7. A prefixed target, `a.x +`, names nothing (a joint model's merge has made
+    /// each member's kind one name): `unknown id x`, the prefix left out as refcore leaves it.
     fn entry(&mut self, version: &str, file: &str, enter: &Enter, line: u32) -> Result<(), Stop> {
-        if enter.qual.is_some() {
-            return Err(Stop::NotBuilt("a member's prefix"));
-        }
         let target = &enter.target;
+        if enter.qual.is_some() {
+            return Err(
+                refuse(Load::Name, format!("unknown id {target}"), file, line).naming(target),
+            );
+        }
         let texts = enter
             .keys
             .iter()
@@ -229,12 +236,9 @@ impl Loader {
                 file,
                 line,
             )),
-            None => Err(refuse(
-                Load::Name,
-                format!("unknown id {target}"),
-                file,
-                line,
-            )),
+            None => {
+                Err(refuse(Load::Name, format!("unknown id {target}"), file, line).naming(target))
+            }
         }
     }
 
@@ -420,8 +424,13 @@ impl Loader {
             self.m.things.push(name, Thing::new(name));
         }
         let mut olds: Vec<(Option<Day>, bool)> = Vec::new();
+        let owner = self.entry_owner(Some(version));
         if let Some(thing) = self.m.things.get(name) {
             for entry in thing.entries.iter().filter(|e| e.kind == *target) {
+                // a thing stated `same` by two members: each side's entries are its own (L §6.1)
+                if entry.version.is_some() && self.entry_owner(entry.version.as_deref()) != owner {
+                    continue;
+                }
                 olds.push((self.entry_known(entry), entry.replace));
             }
         }
@@ -456,6 +465,15 @@ impl Loader {
             line: Some(line),
         });
         Ok(())
+    }
+
+    /// The member of a joint model whose version states an entry, `""` for the joint model's
+    /// own and a scenario's (refcore's `owner_deep` of the version). L §6.1.
+    fn entry_owner(&self, version: Option<&str>) -> String {
+        match version {
+            Some(v) if self.m.scenarios.of(v).is_none() => super::joint::owner_deep(v).to_owned(),
+            Some(_) | None => String::new(),
+        }
     }
 
     /// Each thing's base kind: the one kind it enters that isn't plain, or its earliest plain

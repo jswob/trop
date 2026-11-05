@@ -1,17 +1,21 @@
 //! Load's spans and versions: a written span of days or periods, and each version's dates and source.
-//! Spec: L §4.5 (`known`, after `on` refused), §4.6 (governs spans), §5.3 (versions: `cite`,
-//! `governs`, `known`, `enters`, `assumed`); E §3.1 step 3.
+//! Spec: L §4.5 (`known`, a day or a window, after `on` refused), §4.6 (governs spans), §5.3
+//! (versions: `cite`, `governs`, `known`, `enters`, `assumed`, `moves`); E §3.1 step 3.
 //! Twin: engine/tools/refcore/model.py (`lit_period`, `lspan_to_span`, `VersionInfo`);
 //! loader.py (`build_versions`).
 //! Invariants: a span's end is the first day after it; a lone date or period is the span of
-//! its days; every version cites a source and is known on or before `on`.
+//! its days; every version cites a source and is known on or before `on`, a window's last day
+//! too; a `moves` line moves a version known before its own, and no two lines known one day
+//! move one version.
 
+use super::check::invariant;
 use super::keys::lit_text;
 use super::steps::{Loader, refuse};
 use crate::base::Load;
-use crate::model::{NameKind, Span, VersionInfo};
-use crate::syntax::{Governs, Known, LSpan, Lit, Section, Stop};
+use crate::model::{Moved, NameKind, Span, VersionInfo};
+use crate::syntax::{Expr, Governs, Known, LSpan, Lit, Section, Stop};
 use crate::time::Period;
+use std::collections::BTreeSet;
 
 /// A written date or period as a period: a day, a month, a quarter, or a four-digit year
 /// (refcore's `lit_period`). L §2.1, §4.6.
@@ -81,37 +85,49 @@ pub(super) fn governs_span(governs: &Governs, file: &str, line: u32) -> Result<S
 }
 
 impl Loader {
-    /// Each version: its source, its governs span, its known and entry dates (refcore's
-    /// `build_versions`). L §4.5, §5.3.
+    /// Each version: its governs span, its source, its known date or window and its entry
+    /// date; then each `moves` line, on the version it moves (refcore's `build_versions`).
+    /// L §4.5, §5.3.
     pub(super) fn build_versions(&mut self) -> Result<(), Stop> {
+        let mut moves = Vec::new();
         for (file, section) in &self.sections {
             let Section::Version(version) = section else {
                 continue;
             };
             let id = &version.id;
+            let line = version.line;
+            let governs = version
+                .governs
+                .as_ref()
+                .map(|g| governs_span(g, file, line))
+                .transpose()?;
             if self.m.names.get(&version.cite) != Some(&NameKind::Source) {
                 return Err(refuse(
                     Load::Name,
                     format!("unknown id {} (version {id} cites no source)", version.cite),
                     file,
-                    version.line,
+                    line,
+                )
+                .naming(&version.cite));
+            }
+            let (known, window) = match version.known {
+                Known::Day(day) => (day, None),
+                Known::Window(first, last) => (first, Some(last)),
+            };
+            if window.is_some_and(|last| known > last) {
+                return Err(refuse(
+                    Load::Domain,
+                    "window(a, b) with a after b (L §8.4)".to_owned(),
+                    file,
+                    line,
                 ));
             }
-            let governs = version
-                .governs
-                .as_ref()
-                .map(|g| governs_span(g, file, version.line))
-                .transpose()?;
-            let known = match version.known {
-                Known::Day(day) => day,
-                Known::Window(..) => return Err(Stop::NotBuilt("a known window")),
-            };
-            if known > self.m.on {
+            if window.unwrap_or(known) > self.m.on || known > self.m.on {
                 return Err(refuse(
                     Load::Known,
                     format!("version {id} is known after the model's on date"),
                     file,
-                    version.line,
+                    line,
                 ));
             }
             let info = VersionInfo {
@@ -119,14 +135,92 @@ impl Loader {
                 cite: version.cite.clone(),
                 governs,
                 known,
+                window,
+                moved_by: Vec::new(),
                 enters: version.enters,
                 assumed: version.assumed.clone(),
                 covers: Vec::new(),
                 gap_roles: Vec::new(),
                 file: file.clone(),
-                line: version.line,
+                line,
             };
             self.m.versions.push(id, info);
+            for (target, span) in &version.moves {
+                moves.push((id.clone(), target.clone(), span.clone(), file.clone(), line));
+            }
+        }
+        for (by, target, span, file, line) in moves {
+            self.moves_line(&by, &target, &span, &file, line)?;
+        }
+        self.moves_known_apart()
+    }
+
+    /// One `moves V to SPAN` line of version `by`: V is a version known before `by`
+    /// (refcore's `build_versions`, its moves). L §5.3.
+    fn moves_line(
+        &mut self,
+        by: &str,
+        target: &Expr,
+        span: &LSpan,
+        file: &str,
+        line: u32,
+    ) -> Result<(), Stop> {
+        let Expr::Name(name) = target else {
+            return Err(Stop::NotBuilt(
+                "a moves line naming a member's or a keyed version",
+            ));
+        };
+        let (known, window) = self
+            .m
+            .versions
+            .get(by)
+            .map(|v| (v.known, v.window))
+            .ok_or_else(|| invariant(format!("version {by} isn't built")))?;
+        let earlier = self.m.versions.get(name).is_some_and(|v| v.known < known);
+        if !earlier {
+            return Err(refuse(
+                Load::Moves,
+                format!("moves {name}: unknown, or not known before this version"),
+                file,
+                line,
+            ));
+        }
+        let span = lspan_to_span(span, file, line)?;
+        let moved = self
+            .m
+            .versions
+            .get_mut(name)
+            .ok_or_else(|| invariant(format!("version {name} isn't built")))?;
+        moved.moved_by.push(Moved {
+            by: by.to_owned(),
+            known,
+            window,
+            span,
+        });
+        Ok(())
+    }
+
+    /// No version is moved by two lines known the same day (refcore's `build_versions`, its
+    /// end). L §5.3.
+    fn moves_known_apart(&self) -> Result<(), Stop> {
+        for (id, version) in self.m.versions.entries() {
+            let mut seen = BTreeSet::new();
+            for line in &version.moved_by {
+                if seen.insert(line.known) {
+                    continue;
+                }
+                let mover = self
+                    .m
+                    .versions
+                    .get(&line.by)
+                    .ok_or_else(|| invariant(format!("version {} isn't built", line.by)))?;
+                return Err(refuse(
+                    Load::Moves,
+                    format!("two moves of {id} known the same day"),
+                    &mover.file,
+                    mover.line,
+                ));
+            }
         }
         Ok(())
     }

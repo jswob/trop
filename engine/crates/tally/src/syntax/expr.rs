@@ -1,17 +1,18 @@
 //! The expression grammar: precedence climbing over flat chains, postfixes, atoms and the reads.
 //! Spec: L §2.3 (`expr` to `atom`, `binds`, `span`, `tieby`, `balx`, `valuex`, `flowsx`, `coveredx`,
-//! `agg`, `calval`, `record`, `leg`, `type`), its seven parse rules, and its depth limit.
+//! `agg`, `calval`, `record`, `leg`, `type`, `sref`), its seven parse rules, and its depth limit.
 //! Twin: engine/tools/refcore/parser.py (`expr` to `call_args`, `span` to `leg_body`,
 //! `builtin`, `agg`, `calval` to `dayset`, `price`, `type`, `bindlist`, `qid`, `rowkey`).
 //! Invariants: every loop takes a token or ends; each bracket and `if` is counted by `open`;
-//! a construct the engine doesn't build yet stops with `NotBuilt`, never a guessed refusal.
+//! every form of the grammar parses (the reads M0 adds are in `reads.rs`, the pins in `ask.rs`).
 
-use super::lex::Kind;
+use super::lex::{Kind, Paren, Role};
 use super::parse::{P, Stop, is_keyword};
+use super::reads::{dist_kind, query_fn};
 use super::tree::{
-    AddOp, Agg, AggFn, Bal, Bind, Calendar, CalendarDay, Call, CmpOp, DaySet, Domain, Expr, Field,
-    FieldValue, Flows, In, Key, Leg, Lit, MulOp, Number, OfQ, Postfix, Price, Proj, RowKey, Span,
-    Step, Type, Valuation,
+    AddOp, Agg, AggFn, Bal, Bind, Calendar, CalendarDay, Call, CmpOp, DaySet, DistFnKind, Domain,
+    Expr, Field, FieldValue, Flows, In, Key, Leg, Lit, MulOp, Number, OfQ, Postfix, Price, Proj,
+    RowKey, Span, Step, Type, Valuation,
 };
 use crate::base::Load;
 use crate::num::Num;
@@ -28,6 +29,15 @@ pub(super) enum Ends {
     AtTo,
 }
 
+/// What an operand stands under, for the parentheses L §2.4 always prints.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Under {
+    /// An arithmetic or logical operator, a `not` or a `-`.
+    Operator,
+    /// A comparison or a membership test.
+    Comparison,
+}
+
 /// Whether a record is a row's, whose fields may be signed literals.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) enum Rec {
@@ -35,6 +45,15 @@ pub(super) enum Rec {
     Row,
     /// An expression's record.
     Expr,
+}
+
+/// How a reference's keys are written: `ref`'s expressions, or `sref`'s literals (L §2.3).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum KeysOf {
+    /// `expr`, or `*`.
+    Exprs,
+    /// `lit`.
+    Lits,
 }
 
 /// The built-in names, read as built-ins only directly before `(` (L §2.2).
@@ -117,7 +136,7 @@ const BUILTINS: [&str; 75] = [
 ];
 
 /// Whether `word` is a built-in's name (L §2.2).
-fn is_builtin(word: &str) -> bool {
+pub(crate) fn is_builtin(word: &str) -> bool {
     !word.is_empty() && BUILTINS.contains(&word)
 }
 
@@ -151,20 +170,6 @@ fn cmp_op(text: &str) -> Option<CmpOp> {
     }
 }
 
-/// The constructs with a production of their own that the engine doesn't build yet.
-fn unbuilt(word: &str) -> Option<&'static str> {
-    match word {
-        "mean" | "share" | "quantile" => Some("queries (mean, share, quantile)"),
-        "low" => Some("low"),
-        "crps" => Some("crps"),
-        "cdf" | "pdf" | "pmf" => Some("cdf, pdf and pmf"),
-        "normal" | "lognormal" | "exponential" | "gamma" | "uniform" | "poisson" | "binomial"
-        | "negbin" | "discrete" => Some("distributions"),
-        "prorata" => Some("prorata"),
-        _ => None,
-    }
-}
-
 impl P<'_> {
     /// An expression: `if c then a else b`, or an `or` chain (L §2.3 `expr`).
     pub(super) fn expr(&mut self, ends: Ends) -> Result<Expr, Stop> {
@@ -184,49 +189,115 @@ impl P<'_> {
 
     /// `a or b or …`.
     fn or_chain(&mut self, ends: Ends) -> Result<Expr, Stop> {
+        let mut froms = vec![self.i];
         let mut terms = vec![self.and_chain(ends)?];
         while self.accept("or")? {
+            froms.push(self.i);
             terms.push(self.and_chain(ends)?);
+        }
+        self.force_terms(&terms, &froms);
+        if self.blind
+            && terms.len() > 1
+            && let Some(Expr::Or(head)) = terms.first_mut()
+        {
+            let mut joined = core::mem::take(head);
+            joined.extend(terms.into_iter().skip(1));
+            terms = joined;
         }
         Ok(single_or(terms, Expr::Or))
     }
 
     /// `a and b and …`.
     fn and_chain(&mut self, ends: Ends) -> Result<Expr, Stop> {
+        let mut froms = vec![self.i];
         let mut terms = vec![self.not_term(ends)?];
         while self.accept("and")? {
+            froms.push(self.i);
             terms.push(self.not_term(ends)?);
         }
+        self.force_terms(&terms, &froms);
+        if self.blind
+            && terms.len() > 1
+            && let Some(Expr::And(head)) = terms.first_mut()
+        {
+            let mut joined = core::mem::take(head);
+            joined.extend(terms.into_iter().skip(1));
+            terms = joined;
+        }
         Ok(single_or(terms, Expr::And))
+    }
+
+    /// The terms of an `or` or `and` chain of two terms or more, each from its first token,
+    /// marked for the reprint's parentheses.
+    fn force_terms(&self, terms: &[Expr], froms: &[usize]) {
+        if terms.len() > 1 {
+            for (term, from) in terms.iter().zip(froms) {
+                self.force(term, *from, Under::Operator);
+            }
+        }
+    }
+
+    /// Marks an operand of an operator node for the reprint (L §2.4, refcore's `forced`): a
+    /// `… to u` (and, in a comparison or a membership, a converted `flows` or a `value`) is
+    /// always parenthesised, so its parentheses stay, and written bare it gets them. The
+    /// operand runs from the token at `from` to the one taken last.
+    fn force(&self, operand: &Expr, from: usize, under: Under) {
+        let always = |expr: &Expr| {
+            matches!(expr, Expr::To(..))
+                || (under == Under::Comparison
+                    && (matches!(expr, Expr::Value(_))
+                        || matches!(expr, Expr::Flows(f) if f.convert.is_some())))
+        };
+        if let Expr::Paren(inner) = operand {
+            if always(inner) {
+                self.mark(Some(from), |m| m.paren = Paren::Forced);
+            }
+        } else if always(operand) {
+            self.mark(Some(from), |m| m.wrap_open = true);
+            self.mark(self.back(), |m| m.wrap_close = true);
+        }
     }
 
     /// `[not] cmp`: one `not` at most.
     fn not_term(&mut self, ends: Ends) -> Result<Expr, Stop> {
         if self.accept("not")? {
-            return Ok(Expr::Not(Box::new(self.cmp(ends)?)));
+            let from = self.i;
+            let term = self.cmp(ends)?;
+            self.force(&term, from, Under::Operator);
+            return Ok(Expr::Not(Box::new(term)));
         }
         self.cmp(ends)
     }
 
     /// A comparison or a membership test; neither chains (parse rule 1).
     fn cmp(&mut self, ends: Ends) -> Result<Expr, Stop> {
+        let from = self.i;
         let left = self.sum(ends)?;
         if let Some(op) = self
             .peek(0)
             .filter(|tok| tok.kind == Kind::Op)
             .and_then(|tok| cmp_op(&tok.text))
         {
+            self.force(&left, from, Under::Comparison);
             self.skip(1)?;
+            let right_from = self.i;
             let right = self.sum(ends)?;
+            self.force(&right, right_from, Under::Comparison);
             self.no_chain()?;
             return Ok(Expr::Cmp(Box::new((left, op, right))));
         }
         let world = self.ask_for && self.depth_is_zero() && self.world_in();
         if self.at("in", 0) && ends != Ends::AtIn && !world {
+            self.force(&left, from, Under::Comparison);
             self.skip(1)?;
+            let set_from = self.i;
             let set = self.sum(ends)?;
+            self.force(&set, set_from, Under::Comparison);
             let on = if self.accept("on")? {
-                Some(self.sum(ends)?)
+                let on_from = self.i;
+                let on = self.sum(ends)?;
+                self.force(&on, on_from, Under::Comparison);
+                Some(on)
             } else {
                 None
             };
@@ -272,6 +343,7 @@ impl P<'_> {
 
     /// `a ± b ± …`, kept flat.
     pub(super) fn sum(&mut self, ends: Ends) -> Result<Expr, Stop> {
+        let from = self.i;
         let first = self.prod(ends)?;
         let mut rest = Vec::new();
         loop {
@@ -280,10 +352,25 @@ impl P<'_> {
                 Some("-") => AddOp::Sub,
                 Some(_) | None => break,
             };
+            if rest.is_empty() {
+                self.force(&first, from, Under::Operator);
+            }
+            self.role(Some(self.i), Role::Bin);
             self.skip(1)?;
-            rest.push((op, self.prod(ends)?));
+            let term_from = self.i;
+            let term = self.prod(ends)?;
+            self.force(&term, term_from, Under::Operator);
+            rest.push((op, term));
         }
         if rest.is_empty() {
+            return Ok(first);
+        }
+        let mut first = first;
+        if self.blind
+            && let Expr::Sum(_, head) = &mut first
+        {
+            // refcore nests `+` and `-` to the left: `(a + b) + c` is `a + b + c`
+            head.extend(rest);
             return Ok(first);
         }
         Ok(Expr::Sum(Box::new(first), rest))
@@ -291,6 +378,7 @@ impl P<'_> {
 
     /// `a × b ÷ …`, kept flat.
     fn prod(&mut self, ends: Ends) -> Result<Expr, Stop> {
+        let from = self.i;
         let first = self.unary(ends)?;
         let mut rest = Vec::new();
         loop {
@@ -299,10 +387,25 @@ impl P<'_> {
                 Some("/") => MulOp::Div,
                 Some(_) | None => break,
             };
+            if rest.is_empty() {
+                self.force(&first, from, Under::Operator);
+            }
+            self.role(Some(self.i), Role::Bin);
             self.skip(1)?;
-            rest.push((op, self.unary(ends)?));
+            let term_from = self.i;
+            let term = self.unary(ends)?;
+            self.force(&term, term_from, Under::Operator);
+            rest.push((op, term));
         }
         if rest.is_empty() {
+            return Ok(first);
+        }
+        let mut first = first;
+        if self.blind
+            && let Expr::Prod(_, head) = &mut first
+        {
+            // refcore nests `*` and `/` to the left: `(a * b) / c` is `a * b / c`
+            head.extend(rest);
             return Ok(first);
         }
         Ok(Expr::Prod(Box::new(first), rest))
@@ -318,7 +421,10 @@ impl P<'_> {
     /// `[-] post`: one prefix `-` at most.
     fn unary(&mut self, ends: Ends) -> Result<Expr, Stop> {
         if self.accept("-")? {
-            return Ok(Expr::Neg(Box::new(self.post(ends)?)));
+            let from = self.i;
+            let term = self.post(ends)?;
+            self.force(&term, from, Under::Operator);
+            return Ok(Expr::Neg(Box::new(term)));
         }
         self.post(ends)
     }
@@ -331,8 +437,30 @@ impl P<'_> {
         Ok(expr)
     }
 
-    /// `post`, inside its recursion count.
+    /// `post`, inside its recursion count. The `as if` nesting it holds is counted on the way:
+    /// an `as if` is one deeper than the deepest inside its expression or its pins (refcore's
+    /// `asif_depth`, L §2.3).
     fn post_inner(&mut self, ends: Ends) -> Result<Expr, Stop> {
+        let outer = self.asif.replace(0);
+        let expr = self.post_plain(ends)?;
+        let inner = self.asif.get();
+        if !(self.at("as", 0) && self.at("if", 1)) {
+            self.asif.set(outer.max(inner));
+            return Ok(expr);
+        }
+        self.skip(2)?;
+        self.asif.set(0);
+        let pins = self.asif_pins()?;
+        let depth = inner
+            .max(self.asif.get())
+            .checked_add(1)
+            .ok_or_else(|| self.cannot("as if nested too deep"))?;
+        self.asif.set(outer.max(depth));
+        Ok(Expr::AsIf(Box::new(expr), pins))
+    }
+
+    /// An atom with its postfixes, then `of` and `to`.
+    fn post_plain(&mut self, ends: Ends) -> Result<Expr, Stop> {
         let mut base = self.atom()?;
         let mut fixes: Vec<Postfix> = Vec::new();
         loop {
@@ -360,6 +488,9 @@ impl P<'_> {
                     && !self.spaced(0)
                     && let Some(mut names) = name_chain(&base, &fixes)
                 {
+                    // The call's name is read as an id, so the canonical form prints it touching
+                    // its `(` (L §2.4 Expressions, tally 2.1.4; refcore's `tok.nm = True`).
+                    self.mark(self.back(), |m| m.name = true);
                     let name = names.pop().ok_or_else(|| self.cannot("a band"))?;
                     base = self.band_call(name, names, None)?;
                     fixes = Vec::new();
@@ -382,9 +513,6 @@ impl P<'_> {
         }
         if ends != Ends::AtTo && self.accept("to")? {
             expr = Expr::To(Box::new(expr), Box::new(self.step_unit()?));
-        }
-        if self.at("as", 0) && self.at("if", 1) {
-            return Err(Stop::NotBuilt("as if"));
         }
         Ok(expr)
     }
@@ -419,7 +547,7 @@ impl P<'_> {
     }
 
     /// A key position: `*`, or an expression.
-    fn key_expr(&mut self) -> Result<Key, Stop> {
+    pub(super) fn key_expr(&mut self) -> Result<Key, Stop> {
         if self.accept("*")? {
             return Ok(Key::Star);
         }
@@ -475,10 +603,24 @@ impl P<'_> {
 
     /// `ref = ID ["[" keys "]"] {"." FIELD ["[" keys "]"]}` (L §2.3).
     pub(super) fn reference(&mut self) -> Result<Expr, Stop> {
+        self.reference_keyed(KeysOf::Exprs)
+    }
+
+    /// A `same` side, `sref` (L §2.3): a reference whose keys are literals (`a.konto`,
+    /// `a.a_stmt[a_g1]`, `b.rent[2026-03]`, §6.1) or places keyed by literals
+    /// (`opening[konto[ana]]`), in refcore's `ref` shape (one key list after the id and after
+    /// each field). Any other key, `*` or a computed one, is `LOAD-PARSE`, as the grammar
+    /// reads it.
+    pub(super) fn same_ref(&mut self) -> Result<Expr, Stop> {
+        self.reference_keyed(KeysOf::Lits)
+    }
+
+    /// A reference, its keys written as `keys` says.
+    fn reference_keyed(&mut self, keys: KeysOf) -> Result<Expr, Stop> {
         let name = self.ident("a reference")?;
         let mut fixes = Vec::new();
         if self.at("[", 0) {
-            fixes.push(Postfix::Keys(self.keys()?));
+            fixes.push(Postfix::Keys(self.ref_keys(keys)?));
         }
         while self.at(".", 0) && !self.spaced(0) {
             self.skip(1)?;
@@ -487,7 +629,7 @@ impl P<'_> {
             }
             fixes.push(Postfix::Field(self.next()?.text.clone()));
             if self.at("[", 0) {
-                fixes.push(Postfix::Keys(self.keys()?));
+                fixes.push(Postfix::Keys(self.ref_keys(keys)?));
             }
         }
         if fixes.is_empty() {
@@ -496,8 +638,46 @@ impl P<'_> {
         Ok(Expr::Post(Box::new(Expr::Name(name)), fixes))
     }
 
+    /// A reference's key list, as `keys` says it is written.
+    fn ref_keys(&mut self, keys: KeysOf) -> Result<Vec<Key>, Stop> {
+        match keys {
+            KeysOf::Exprs => self.keys(),
+            KeysOf::Lits => self.lit_keys(),
+        }
+    }
+
+    /// `"[" lit {"," lit} "]"`: an `sref`'s keys (L §2.3).
+    fn lit_keys(&mut self) -> Result<Vec<Key>, Stop> {
+        self.expect("[")?;
+        self.open()?;
+        let mut keys = vec![self.lit_key()?];
+        while self.accept(",")? {
+            keys.push(self.lit_key()?);
+        }
+        self.expect("]")?;
+        self.close()?;
+        Ok(keys)
+    }
+
+    /// One key of an `sref`: a literal, or a place keyed by things, `konto[ana]` (L §2.3
+    /// `rk`'s last form, one key by L §2.4), the reference `konto[ana]` refcore's `sref` reads.
+    fn lit_key(&mut self) -> Result<Key, Stop> {
+        if !(self.at_id(0) && self.at("[", 1)) {
+            return Ok(Key::Expr(Expr::Lit(self.lit()?)));
+        }
+        let name = self.ident("an id")?;
+        self.skip(1)?;
+        let mut keys = vec![Key::Expr(Expr::Lit(self.lit()?))];
+        while self.accept(",")? {
+            keys.push(Key::Expr(Expr::Lit(self.lit()?)));
+        }
+        self.expect("]")?;
+        let place = Expr::Post(Box::new(Expr::Name(name)), vec![Postfix::Keys(keys)]);
+        Ok(Key::Expr(place))
+    }
+
     /// `( [expr {, expr}] )`.
-    fn call_args(&mut self) -> Result<Vec<Expr>, Stop> {
+    pub(super) fn call_args(&mut self) -> Result<Vec<Expr>, Stop> {
         self.expect("(")?;
         self.open()?;
         let mut args = Vec::new();
@@ -514,6 +694,9 @@ impl P<'_> {
 
     /// `span = expr ".." [expr] | ".." [expr] | expr` (L §2.3).
     pub(super) fn span(&mut self) -> Result<Span, Stop> {
+        if self.at("..", 0) {
+            self.role(Some(self.i), Role::Bin);
+        }
         if self.accept("..")? {
             let to = if self.span_end() {
                 None
@@ -527,6 +710,9 @@ impl P<'_> {
             });
         }
         let from = self.expr(Ends::Free)?;
+        if self.at("..", 0) {
+            self.role(Some(self.i), Role::Bin);
+        }
         if self.accept("..")? {
             let to = if self.span_end() {
                 None
@@ -586,8 +772,11 @@ impl P<'_> {
     }
 
     /// The tokens from `first` to the current one, as written.
-    fn source_text(&self, first: usize) -> String {
+    pub(super) fn source_text(&self, first: usize) -> String {
         let mut text = String::new();
+        if self.blind {
+            return text;
+        }
         for (n, tok) in self
             .toks
             .iter()
@@ -616,6 +805,9 @@ impl P<'_> {
             Domain::List(keys)
         } else {
             let from = self.expr(Ends::AtIn)?;
+            if self.at("..", 0) {
+                self.role(Some(self.i), Role::Bin);
+            }
             if self.accept("..")? {
                 let to = self.expr(Ends::AtIn)?;
                 let step = if self.accept("step")? {
@@ -752,7 +944,7 @@ impl P<'_> {
     /// A projection's clauses: `from`, `windows`, `random at`, `with uncertain`. The `from`
     /// term counts one depth level, so `bal(x, d) from bal(y, e) from …` is bounded by
     /// `LOAD-DEPTH` (L §2.3, tally 2.1.2).
-    fn proj(&mut self) -> Result<Proj, Stop> {
+    pub(super) fn proj(&mut self) -> Result<Proj, Stop> {
         let from = if self.accept("from")? {
             self.open()?;
             let term = self.post(Ends::Free)?;
@@ -767,13 +959,17 @@ impl P<'_> {
         } else {
             false
         };
-        if self.at("random", 0) && self.at("at", 1) {
-            return Err(Stop::NotBuilt("random at"));
-        }
+        let random = if self.at("random", 0) && self.at("at", 1) {
+            self.skip(2)?;
+            Some(self.rchoice()?)
+        } else {
+            None
+        };
         let uncertain = self.with_uncertain()?;
         Ok(Proj {
             from,
             windows_each,
+            random,
             uncertain,
         })
     }
@@ -796,7 +992,7 @@ impl P<'_> {
     }
 
     /// `MODE`: a rounding code's key token, or a reference.
-    fn mode(&mut self) -> Result<Expr, Stop> {
+    pub(super) fn mode(&mut self) -> Result<Expr, Stop> {
         if self.kind(0) == Some(&Kind::Key) {
             return Ok(Expr::Lit(Lit::Key(self.next()?.text.clone())));
         }
@@ -838,9 +1034,13 @@ impl P<'_> {
                     self.close()?;
                     return Ok(Expr::Record(fields));
                 }
+                self.mark(self.back(), |m| m.paren = Paren::Plain);
                 let inner = self.expr(Ends::Free)?;
                 self.expect(")")?;
                 self.close()?;
+                if self.blind {
+                    return Ok(inner);
+                }
                 Ok(Expr::Paren(Box::new(inner)))
             }
             "[" => {
@@ -872,6 +1072,7 @@ impl P<'_> {
         if is_keyword(word) {
             return Err(self.keyword_atom(word));
         }
+        self.mark(Some(self.i), |m| m.name = true);
         self.skip(1)?;
         if self.at("(", 0) {
             let args = self.call_args()?;
@@ -983,18 +1184,28 @@ impl P<'_> {
             to,
             amount,
             on,
+            line: self.line,
         })
     }
 
     /// A built-in, `word` directly before `(`.
-    fn builtin(&mut self, word: &str) -> Result<Expr, Stop> {
+    pub(super) fn builtin(&mut self, word: &str) -> Result<Expr, Stop> {
         if let Some(func) = agg_fn(word) {
             return self.agg(func);
         }
-        if let Some(what) = unbuilt(word) {
-            return Err(Stop::NotBuilt(what));
+        if let Some(func) = query_fn(word) {
+            return self.query(func);
+        }
+        if let Some(func) = dist_kind(word) {
+            return self.dist(func);
         }
         match word {
+            "low" => self.low(),
+            "crps" => self.crps(),
+            "cdf" => self.dist_fn(DistFnKind::Cdf),
+            "pdf" => self.dist_fn(DistFnKind::Pdf),
+            "pmf" => self.dist_fn(DistFnKind::Pmf),
+            "prorata" => self.prorata(),
             "bal" => self.bal(),
             "flows" => self.flows(),
             "covered" => self.covered(),
@@ -1002,7 +1213,13 @@ impl P<'_> {
             "calendar" => Ok(Expr::Calendar(Box::new(self.calendar()?))),
             _ => {
                 self.skip(1)?;
+                let open = self.i;
                 let args = self.call_args()?;
+                match word {
+                    "periodic" => self.period_word_arg(open, 1),
+                    "factor" => self.period_word_arg(open, 2),
+                    _ => {}
+                }
                 Ok(Expr::Call(Box::new(Call {
                     name: word.to_owned(),
                     prefix: Vec::new(),
@@ -1011,6 +1228,54 @@ impl P<'_> {
                 })))
             }
         }
+    }
+
+    /// The period argument of `periodic` (its second) and `factor` (its third), a lone period
+    /// word there, is a word of the language, not an id, so a member's index named `month`
+    /// doesn't take it (refcore's `period_word_arg`). L §2.2, §6.1.
+    fn period_word_arg(&self, open: usize, pos: usize) {
+        let Some(s) = self.lone_arg(open, pos) else {
+            return;
+        };
+        if let Some(t) = self.toks.get(s)
+            && t.kind == Kind::Id
+            && matches!(t.text.as_str(), "day" | "month" | "quarter" | "year")
+        {
+            self.mark(Some(s), |mark| mark.name = false);
+        }
+    }
+
+    /// The place of the one token argument `pos` of a call is, its `(` at `open`, when it is
+    /// one token (refcore's `period_word_arg`, its walk over the arguments). L §2.3.
+    fn lone_arg(&self, open: usize, pos: usize) -> Option<usize> {
+        let (mut depth, mut k, mut start): (u32, usize, Option<usize>) = (0, 0, None);
+        for j in open..self.i {
+            let t = self.toks.get(j)?;
+            let op = t.kind == Kind::Op;
+            if op && (t.text == "(" || t.text == "[") {
+                depth = depth.checked_add(1)?;
+                if depth == 1 && t.text == "(" && j == open {
+                    start = Some(j.checked_add(1)?);
+                }
+                continue;
+            }
+            let lone = start.filter(|s| j.checked_sub(*s) == Some(1));
+            if op && (t.text == ")" || t.text == "]") {
+                if depth == 1 && k == pos && lone.is_some() {
+                    return lone;
+                }
+                depth = depth.checked_sub(1)?;
+                continue;
+            }
+            if depth == 1 && op && t.text == "," {
+                if k == pos {
+                    return lone;
+                }
+                k = k.checked_add(1)?;
+                start = Some(j.checked_add(1)?);
+            }
+        }
+        None
     }
 
     /// `bal(x [, [e,] e [start]]) [of q] [proj | modelled]` (L §2.3 `balx`, parse rule 7).
@@ -1040,6 +1305,7 @@ impl P<'_> {
             Proj {
                 from: None,
                 windows_each: false,
+                random: None,
                 uncertain: false,
             }
         } else if self.at("from", 0) {
@@ -1048,6 +1314,7 @@ impl P<'_> {
             Proj {
                 from: None,
                 windows_each: false,
+                random: None,
                 uncertain: self.with_uncertain()?,
             }
         };

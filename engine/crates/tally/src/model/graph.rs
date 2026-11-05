@@ -32,6 +32,16 @@ pub enum NodeKind {
     Price,
     /// The timeline's balances, which every move books into.
     Balances,
+    /// A kind's parts clauses, read where the walk books an arrival or a take: their reads
+    /// are kept apart from the graph's edges (refcore's `('parts', k)` pseudo-item).
+    Parts,
+    /// An axis, read by its id (L §5.5).
+    Axis,
+    /// A fill: its sides and its order (L §5.12).
+    Fill,
+    /// A scenario's expression row, by its stable id: what it reads are its own reads, and
+    /// its input or def reads it (L §6.4; refcore's `('srow', …)` item).
+    Srow,
 }
 
 impl NodeKind {
@@ -48,6 +58,10 @@ impl NodeKind {
             NodeKind::Ask => "ask",
             NodeKind::Price => "price",
             NodeKind::Balances => "balances",
+            NodeKind::Parts => "parts",
+            NodeKind::Axis => "axis",
+            NodeKind::Fill => "fill",
+            NodeKind::Srow => "srow",
         }
     }
 }
@@ -134,6 +148,10 @@ pub enum Rel {
     Next,
     /// `observed(m[k])`, over the observed inputs.
     Observed,
+    /// A pin's target, set by an ask or an `as if` (L §5.11, §5.18).
+    Pin,
+    /// A read inside `as if {law D}`, at that law date (L §5.11).
+    LawPin,
 }
 
 impl Rel {
@@ -154,8 +172,24 @@ impl Rel {
             Rel::Calendar => "calendar".to_owned(),
             Rel::Next => "next".to_owned(),
             Rel::Observed => "observed".to_owned(),
+            Rel::Pin => "pin".to_owned(),
+            Rel::LawPin => "lawpin".to_owned(),
         }
     }
+}
+
+/// How an item reads a random fact or another item, for the random cone (refcore's
+/// `rand_edges` roles). L §5.16.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ReadRole {
+    /// A sample of a random fact, on the path.
+    Sample,
+    /// A random fact's distribution, the same on every path.
+    Dist,
+    /// A read inside a query over random values, taken over the paths.
+    Query,
+    /// A plain read of an input or a def.
+    Value,
 }
 
 /// A running read or a projection, the mark E §3.1 step 7 propagates.
@@ -244,9 +278,38 @@ pub struct Graph {
     pub order_groups: Vec<BTreeSet<String>>,
     /// The orders `before` and `after` write: `(a, b)` is a after b.
     pub written_order: BTreeSet<(String, String)>,
+    /// What the parts clauses read: each arrival rule, and what an `owned` clause's `ties by`,
+    /// a `takes` order and its `ties by` and a `step` read. They are read (`WARN-UNREAD`), but
+    /// no edge of the graph (refcore's `parts_reads`). L §3.6, §8.5.
+    pub parts_reads: BTreeSet<Node>,
+    /// The kinds that keep parts, in id order, once their clauses are checked (refcore's
+    /// `parts_kinds`). L §3.6, §5.7.
+    pub parts_kinds: Vec<String>,
+    /// The axes each item reads directly: by its id, in a key position or as a mode
+    /// (refcore's `axes_of`). L §5.5.
+    pub axes_of: BTreeMap<Node, BTreeSet<String>>,
+    /// The axes each ask reaches that its pins don't fix: each one forks its answer
+    /// (refcore's `a._axes`). L §5.5.
+    pub ask_axes: BTreeMap<String, BTreeSet<String>>,
+    /// Each item's reads of inputs and defs by role: a sample, a distribution, a read in a
+    /// query, a plain value, each role once (refcore's `rand_edges`). L §5.16.
+    pub rand_edges: BTreeMap<Node, BTreeMap<Node, Vec<ReadRole>>>,
 }
 
 impl Graph {
+    /// Records that `reader` reads `target` in `role` (refcore's `rand_edges`). L §5.16.
+    pub fn rand_edge(&mut self, reader: &Node, target: &Node, role: ReadRole) {
+        let roles = self
+            .rand_edges
+            .entry(reader.clone())
+            .or_insert_with(BTreeMap::new)
+            .entry(target.clone())
+            .or_insert_with(Vec::new);
+        if !roles.contains(&role) {
+            roles.push(role);
+        }
+    }
+
     /// Adds the edge `reader` → `target` with `rel` (refcore's `Checker.edge`).
     pub fn edge(&mut self, reader: &Node, target: Node, rel: Rel) {
         let reads = self

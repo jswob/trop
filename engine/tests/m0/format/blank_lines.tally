@@ -1,0 +1,21 @@
+model blank_lines
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+source s "s"
+input x: num
+
+
+input y: num
+def total: num = x + y
+
+
+
+ask q: total
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  x = 1
+  y = 2

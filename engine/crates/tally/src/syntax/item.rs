@@ -6,20 +6,27 @@
 //! Invariants: every file is split into lines before any is parsed; each section reads only
 //! the lines indented under it; the error texts are refcore's word for word.
 
+use super::ask::ask;
 use super::expr::{Ends, Rec};
-use super::lex::{Kind, Line, split_lines};
-use super::parse::{P, Stop};
+use super::lex::{Kind, Line, Role, split_lines};
+use super::parse::{P, Parens, Stop};
+use super::reads::dist_kind;
 use super::tree::{
-    Ask, AskBody, Band, BandRow, Bind, Certainty, Def, Edge, Enter, Expr, File, Gap, Governs,
-    Header, HeaderKind, Index, IndexForm, IndexFrom, Input, InputForm, Instant, Interval, Item,
-    ItemForm, KindDecl, KindSpec, Known, LSpan, LawDate, Lit, Move, Order, Place, Residuals, Row,
-    RowKey, Rule, RuleValue, Section, Sign, Source, TypedInput, UnitDecl, UnitForm, Value, Version,
+    Axis, Band, BandRow, Bind, Certainty, Def, Edge, Enter, Expr, File, Fill, FillLines, Gap,
+    Governs, Header, HeaderKind, Index, IndexForm, IndexFrom, Input, InputForm, Instant, Interval,
+    Item, ItemForm, KindDecl, KindSpec, Known, LSpan, LawDate, Lit, Move, MoveLines, Order,
+    PartsClause, Place, Row, RowKey, Rule, RuleValue, Section, Sign, Source, Takes, TypedInput,
+    UnitDecl, UnitForm, Value, Version,
 };
 use crate::api::Source as Text;
 use crate::base::{Code, Load, Place as At, Refusal};
 use crate::num::Num;
 use crate::time::Day;
+use std::cell::Cell;
 use std::collections::BTreeSet;
+
+/// The deepest an `as if` may nest (L §2.3, `LOAD-ASIF`).
+const MAX_ASIF: u8 = 4;
 
 /// Splits every file, then finds the unit names, then parses every file, in the order given
 /// (the read step's, by full path). L §8.3.
@@ -32,25 +39,67 @@ pub fn parse_reality(sources: &[Text]) -> Result<Vec<File>, Stop> {
     for source in sources {
         split.push(split_lines(&source.text, &source.path)?);
     }
-    let units = prescan_units(&split);
-    let mut files = Vec::with_capacity(sources.len());
-    for (source, lines) in sources.iter().zip(&split) {
-        files.push(parse_file(lines, &source.path, &units)?);
+    let files: Vec<(&str, &[Line])> = sources
+        .iter()
+        .zip(&split)
+        .map(|(source, lines)| (source.path.as_str(), lines.as_slice()))
+        .collect();
+    parse_split(&files)
+}
+
+/// Finds the unit names across files already split into lines, then parses each in the order
+/// of their full paths, by code point, and gives them back in the order given: a world's
+/// files, each with its path (refcore's `load_lines` and its `by_path`). L §8.3.
+///
+/// # Errors
+///
+/// The first refusal met, or the first construct the engine doesn't build yet.
+pub fn parse_split(split: &[(&str, &[Line])]) -> Result<Vec<File>, Stop> {
+    let every: Vec<&[Line]> = split.iter().map(|(_, file)| *file).collect();
+    let units = prescan_units(&every);
+    let order: BTreeSet<(&str, usize)> = split
+        .iter()
+        .enumerate()
+        .map(|(at, (path, _))| (*path, at))
+        .collect();
+    let mut parsed: Vec<Option<File>> = split.iter().map(|_| None).collect();
+    for (path, at) in order {
+        let (Some((_, lines)), Some(slot)) = (split.get(at), parsed.get_mut(at)) else {
+            return Err(Stop::Refused(Refusal::new(
+                Code::EngineInvariant,
+                "a file's place past the files".to_owned(),
+            )));
+        };
+        *slot = Some(parse_file(lines, path, &units)?);
     }
-    Ok(files)
+    Ok(parsed.into_iter().flatten().collect())
+}
+
+/// One file's lines parsed with the unit names `units` (refcore's `parse_file`): a joint
+/// model's merge reads what each member declares this way. L §2.3, §6.1.
+///
+/// # Errors
+///
+/// As [`parse_split`].
+pub(crate) fn parse_lines(
+    lines: &[Line],
+    file: &str,
+    units: &BTreeSet<String>,
+) -> Result<File, Stop> {
+    parse_file(lines, file, units)
 }
 
 /// The first token's text of a line, or nothing.
-fn first(line: &Line) -> &str {
+pub(super) fn first(line: &Line) -> &str {
     line.toks.first().map_or("", |tok| tok.text.as_str())
 }
 
 /// The unit names a number may carry: declared `unit` ids, and the keys entered into kinds of
 /// unit (refcore's `prescan_units`, L §3.2).
-fn prescan_units(files: &[Vec<Line>]) -> BTreeSet<String> {
+pub(crate) fn prescan_units(files: &[&[Line]]) -> BTreeSet<String> {
     let mut units = BTreeSet::new();
     let mut unit_kinds = BTreeSet::from(["currencies".to_owned()]);
-    for line in files.iter().flatten() {
+    for line in files.iter().copied().flatten() {
         let top = line.level == 0 || (line.level == 1 && first(line) == "kind");
         if !top {
             continue;
@@ -69,7 +118,7 @@ fn prescan_units(files: &[Vec<Line>]) -> BTreeSet<String> {
             unit_kinds.insert(id.text.clone());
         }
     }
-    for line in files.iter().flatten() {
+    for line in files.iter().copied().flatten() {
         let toks = match line.toks.split_first() {
             Some((head, rest)) if head.text == "replace" => rest,
             Some(_) | None => line.toks.as_slice(),
@@ -96,8 +145,14 @@ fn children(after: &[Line], level: u32) -> (&[Line], &[Line]) {
     after.split_at_checked(count).unwrap_or((after, &[]))
 }
 
-/// A file: its header, then its sections, each at level 0.
-fn parse_file(lines: &[Line], file: &str, units: &BTreeSet<String>) -> Result<File, Stop> {
+/// A file: its header, then its sections, each at level 0; once every section parses, the
+/// first whose `as if` nests deeper than 4 is `LOAD-ASIF` at its line (refcore's
+/// `parse_file`, L §2.3).
+pub(super) fn parse_file(
+    lines: &[Line],
+    file: &str,
+    units: &BTreeSet<String>,
+) -> Result<File, Stop> {
     let Some((head, under_head)) = lines.split_first() else {
         return Err(Stop::Refused(Refusal::at(
             Code::Load(Load::Header),
@@ -106,27 +161,66 @@ fn parse_file(lines: &[Line], file: &str, units: &BTreeSet<String>) -> Result<Fi
         )));
     };
     let (header_body, mut rest) = children(under_head, 0);
+    let asif = Cell::new(0);
     let header = parse_header(
-        &P::new(&head.toks, file, head.number, units),
+        &P::new(&head.toks, file, head.number, units, &asif),
         head,
         header_body,
     )?;
     let mut sections = Vec::new();
+    let mut too_deep = None;
     while let Some((line, under)) = rest.split_first() {
-        let mut p = P::new(&line.toks, file, line.number, units);
+        let mut p = P::new(&line.toks, file, line.number, units, &asif);
         if line.level != 0 {
             return Err(p.cannot("indentation"));
         }
         let (body, next) = children(under, 0);
         p.i = 1;
+        asif.set(0);
         sections.push(parse_section(&mut p, first(line), body)?);
+        if too_deep.is_none() && asif.get() > MAX_ASIF {
+            too_deep = Some(p.refuse(Load::AsIf, "as if deeper than 4".to_owned()));
+        }
         rest = next;
+    }
+    if let Some(refusal) = too_deep {
+        return Err(refusal);
     }
     Ok(File {
         path: file.to_owned(),
         header,
         sections,
     })
+}
+
+/// One section from its lines, its first line at level 0 and the lines under it, parsed again
+/// for the reprint (refcore's `parse_section`, `canon.reparse`): each token's mark is cleared
+/// first; `Parens::Blind` parses for the reprint's comparison (no parentheses, no source
+/// texts).
+pub(super) fn parse_block(
+    block: &[Line],
+    file: &str,
+    units: &BTreeSet<String>,
+    parens: Parens,
+) -> Result<Section, Stop> {
+    for tok in block.iter().flat_map(|line| &line.toks) {
+        tok.mark.set(tok.mark.get().cleared());
+    }
+    let Some((head, body)) = block.split_first() else {
+        return Err(Stop::Refused(Refusal::at(
+            Code::Load(Load::Parse),
+            "cannot parse: a section reprinted".to_owned(),
+            At::File(file.to_owned()),
+        )));
+    };
+    let asif = Cell::new(0);
+    let mut p = P::new(&head.toks, file, head.number, units, &asif);
+    p.blind = parens == Parens::Blind;
+    if head.level != 0 {
+        return Err(p.cannot("indentation"));
+    }
+    p.i = 1;
+    parse_section(&mut p, first(head), body)
 }
 
 /// The header lines a header kind takes, in order.
@@ -243,9 +337,9 @@ fn header_line(header: &mut Header, word: &str, q: &mut P<'_>) -> Result<(), Sto
             header.uses.push((alias, path, hash));
         }
         "same" => {
-            let left = q.reference()?;
+            let left = q.same_ref()?;
             q.expect("=")?;
-            let right = q.reference()?;
+            let right = q.same_ref()?;
             header.sames.push((left, right));
         }
         _ => header.notes.push(q.string()?),
@@ -267,8 +361,8 @@ fn parse_section(p: &mut P<'_>, word: &str, body: &[Line]) -> Result<Section, St
         "def" => Ok(Section::Def(Box::new(def(p, body)?))),
         "move" => Ok(Section::Move(Box::new(move_section(p, body)?))),
         "ask" => Ok(Section::Ask(Box::new(ask(p, body)?))),
-        "axis" => Err(Stop::NotBuilt("axes")),
-        "fill" => Err(Stop::NotBuilt("fills")),
+        "axis" => Ok(Section::Axis(Box::new(axis(p, body)?))),
+        "fill" => Ok(Section::Fill(Box::new(fill(p, body)?))),
         _ => Err(p.cannot(&format!("expected a section, got {word}"))),
     }
 }
@@ -384,6 +478,7 @@ fn kind(p: &mut P<'_>, body: &[Line]) -> Result<KindDecl, Stop> {
         legs: Vec::new(),
         attrs: Vec::new(),
         notes: Vec::new(),
+        parts: Vec::new(),
         line: p.line,
     };
     for line in body {
@@ -405,12 +500,211 @@ fn kind(p: &mut P<'_>, body: &[Line]) -> Result<KindDecl, Stop> {
                 decl.attrs.push((name, q.ty()?));
             }
             "note" => decl.notes.push(q.string()?),
-            "owned" | "batched" | "step" | "takes" => return Err(Stop::NotBuilt("parts clauses")),
+            "owned" if q.at("by", 0) => {
+                q.skip(1)?;
+                let rule = q.ident("an arrival rule")?;
+                let ties = if q.at("ties", 0) {
+                    Some(q.ties()?)
+                } else {
+                    None
+                };
+                decl.parts
+                    .push((PartsClause::Owned { rule, ties }, line.number));
+            }
+            "batched" => decl.parts.push((PartsClause::Batched, line.number)),
+            "step" => {
+                let step = q.step_unit()?;
+                decl.parts.push((PartsClause::Step(step), line.number));
+            }
+            "takes" => {
+                let takes = takes(&mut q)?;
+                decl.parts
+                    .push((PartsClause::Takes(Box::new(takes)), line.number));
+            }
             word => return Err(p.cannot_at(&format!("{word} in a kind"), line.number)),
         }
         q.end()?;
     }
     Ok(decl)
+}
+
+/// `takes K for W [v V] (order e, … [prorata] | prorata) [ties by …]`, after `takes`: the
+/// `ties by` belongs to `prorata` (L §2.3 `kline`).
+fn takes(q: &mut P<'_>) -> Result<Takes, Stop> {
+    let part = q.ident("a part")?;
+    q.expect("for")?;
+    let outflow = q.ident("an outflow")?;
+    let v = if q.accept("v")? {
+        Some(q.ident("a version")?)
+    } else {
+        None
+    };
+    let mut order = Vec::new();
+    if q.accept("order")? {
+        order.push(q.expr(Ends::Free)?);
+        while q.accept(",")? {
+            order.push(q.expr(Ends::Free)?);
+        }
+    } else if !prorata_word(q) {
+        return Err(q.err("order or prorata"));
+    }
+    let prorata = prorata_word(q);
+    if prorata {
+        q.skip(1)?;
+    }
+    let ties = if prorata && q.at("ties", 0) {
+        Some(q.ties()?)
+    } else {
+        None
+    };
+    Ok(Takes {
+        part,
+        outflow,
+        v,
+        order,
+        prorata,
+        ties,
+    })
+}
+
+/// Whether `prorata` here is the clause word of `takes`, not the built-in (L §2.2).
+fn prorata_word(q: &P<'_>) -> bool {
+    q.at("prorata", 0) && !q.at("(", 1)
+}
+
+/// `axis id` and its options, each `key "label"`; two at least (L §2.3 `axis`).
+fn axis(p: &mut P<'_>, body: &[Line]) -> Result<Axis, Stop> {
+    let id = p.ident("an id")?;
+    p.end()?;
+    flat(p, body)?;
+    let mut options = Vec::new();
+    for line in body {
+        let mut q = p.under(line);
+        q.i = 0;
+        let tok = q.next()?;
+        let key = match tok.kind {
+            Kind::Id | Kind::Key | Kind::Int(_) => tok.text.clone(),
+            Kind::Dec(_)
+            | Kind::Str(_)
+            | Kind::Day(_)
+            | Kind::Month(..)
+            | Kind::Quarter(..)
+            | Kind::MonthDay(..)
+            | Kind::Cur
+            | Kind::Op => {
+                q.i = 0;
+                return Err(q.err("an option key"));
+            }
+        };
+        let label = q.string()?;
+        q.end()?;
+        options.push((key, label));
+    }
+    if options.len() < 2 {
+        return Err(p.cannot(&format!("axis {id} needs two options")));
+    }
+    Ok(Axis {
+        id,
+        options,
+        line: p.line,
+    })
+}
+
+/// `fill id [binds]` and its lines: `v`, notes, `supply`, `demand`, `arc`, `order`; the last
+/// four required (L §2.3 `fill`).
+fn fill(p: &mut P<'_>, body: &[Line]) -> Result<Fill, Stop> {
+    let id = p.ident("an id")?;
+    let binds = decl_binds(p)?;
+    p.end()?;
+    flat(p, body)?;
+    let mut lines = FillParts::default();
+    for line in body {
+        let mut q = p.under(line);
+        fill_line(&mut q, first(line), &mut lines)?;
+        q.end()?;
+    }
+    let (Some(supply), Some(demand), Some(arc), Some(order)) =
+        (lines.supply, lines.demand, lines.arc, lines.order)
+    else {
+        let what = format!("fill {id} needs supply, demand, arc and order");
+        return Err(p.cannot(&what));
+    };
+    Ok(Fill {
+        id,
+        binds,
+        v: lines.v,
+        notes: lines.notes,
+        supply: supply.0,
+        supply_binds: supply.1,
+        demand: demand.0,
+        demand_binds: demand.1,
+        arc,
+        order: order.0,
+        ties: order.1,
+        line: p.line,
+        lines: lines.at,
+    })
+}
+
+/// What a fill's lines say, gathered in order; a line written twice keeps the last.
+#[derive(Default)]
+struct FillParts {
+    /// `v`.
+    v: Option<String>,
+    /// Notes.
+    notes: Vec<String>,
+    /// `supply e [for binds]`.
+    supply: Option<(Expr, Vec<Bind>)>,
+    /// `demand e [for binds]`.
+    demand: Option<(Expr, Vec<Bind>)>,
+    /// `arc e`.
+    arc: Option<Expr>,
+    /// `order e, … [ties by …]`.
+    order: Option<(Vec<Expr>, Option<Vec<Expr>>)>,
+    /// The line of each.
+    at: FillLines,
+}
+
+/// One of a fill's lines, after its first word.
+fn fill_line(q: &mut P<'_>, word: &str, lines: &mut FillParts) -> Result<(), Stop> {
+    match word {
+        "v" => lines.v = Some(q.ident("an id")?),
+        "note" => lines.notes.push(q.string()?),
+        "supply" | "demand" => {
+            let side = q.expr(Ends::Free)?;
+            let binds = if q.accept("for")? {
+                q.binds()?
+            } else {
+                Vec::new()
+            };
+            if word == "supply" {
+                lines.supply = Some((side, binds));
+                lines.at.supply = q.line;
+            } else {
+                lines.demand = Some((side, binds));
+                lines.at.demand = q.line;
+            }
+        }
+        "arc" => {
+            lines.arc = Some(q.expr(Ends::Free)?);
+            lines.at.arc = q.line;
+        }
+        "order" => {
+            let mut keys = vec![q.expr(Ends::Free)?];
+            while q.accept(",")? {
+                keys.push(q.expr(Ends::Free)?);
+            }
+            let ties = if q.at("ties", 0) {
+                Some(q.ties()?)
+            } else {
+                None
+            };
+            lines.order = Some((keys, ties));
+            lines.at.order = q.line;
+        }
+        _ => return Err(q.cannot(&format!("{word} in a fill"))),
+    }
+    Ok(())
 }
 
 /// What follows `kind id:`.
@@ -707,14 +1001,19 @@ fn law_date(p: &mut P<'_>) -> Result<Option<LawDate>, Stop> {
     Ok(Some(LawDate::Expr(p.expr(Ends::Free)?)))
 }
 
-/// A rule's value: `?"…"` or an expression; `solve` is built later.
+/// A rule's value: `?"…"`, `solve …`, or an expression (L §2.3 `rulebody`).
 fn rule_value(p: &mut P<'_>) -> Result<RuleValue, Stop> {
+    if p.at("solve", 0) {
+        return Ok(RuleValue::Solve(Box::new(p.solve()?)));
+    }
+    short_value(p)
+}
+
+/// A short def's value: `?"…"` or an expression; `solve` is a rule's only (L §2.3 `def`).
+fn short_value(p: &mut P<'_>) -> Result<RuleValue, Stop> {
     if p.at("?", 0) && p.at_str(1) {
         p.skip(1)?;
         return Ok(RuleValue::Hole(p.string()?));
-    }
-    if p.at("solve", 0) {
-        return Err(Stop::NotBuilt("solve"));
     }
     Ok(RuleValue::Expr(p.expr(Ends::Free)?))
 }
@@ -726,7 +1025,11 @@ fn def(p: &mut P<'_>, body: &[Line]) -> Result<Def, Stop> {
     p.expect(":")?;
     let ty = p.ty()?;
     if p.accept("=")? {
-        let value = rule_value(p)?;
+        p.role(p.back(), Role::DefEq);
+        let value = short_value(p)?;
+        if p.at("at", 0) {
+            p.role(Some(p.i), Role::DefAt);
+        }
         let law = law_date(p)?;
         p.end()?;
         let mut notes = Vec::new();
@@ -753,6 +1056,9 @@ fn def(p: &mut P<'_>, body: &[Line]) -> Result<Def, Stop> {
             short: true,
             line: p.line,
         });
+    }
+    if p.at("at", 0) {
+        p.role(Some(p.i), Role::DefAt);
     }
     let law = law_date(p)?;
     p.end()?;
@@ -860,16 +1166,21 @@ fn move_section(p: &mut P<'_>, body: &[Line]) -> Result<Move, Stop> {
         legs: Vec::new(),
         fulfils: None,
         notes: Vec::new(),
+        lines: MoveLines::at_move(p.line),
         line: p.line,
     };
     let mut on = None;
     for line in body {
         let mut q = p.under(line);
         match first(line) {
-            "on" => on = Some(q.expr(Ends::Free)?),
+            "on" => {
+                on = Some(q.expr(Ends::Free)?);
+                decl.lines.on = line.number;
+            }
             "ties" => {
                 q.i = 0;
                 decl.ties = Some(q.ties()?);
+                decl.lines.ties = line.number;
             }
             "leg" => {
                 q.i = 0;
@@ -887,17 +1198,28 @@ fn move_section(p: &mut P<'_>, body: &[Line]) -> Result<Move, Stop> {
     Ok(decl)
 }
 
-/// One of a move's other lines, after its first word.
+/// One of a move's other lines, after its first word, with the line it stands on.
 fn move_line(q: &mut P<'_>, word: &str, decl: &mut Move) -> Result<(), Stop> {
+    let line = q.line;
     match word {
-        "at" => decl.at = Some(q.expr(Ends::Free)?),
-        "for" => decl.for_period = Some(q.expr(Ends::Free)?),
-        "when" => decl.when = Some(q.expr(Ends::Free)?),
+        "at" => {
+            decl.at = Some(q.expr(Ends::Free)?);
+            decl.lines.at = line;
+        }
+        "for" => {
+            decl.for_period = Some(q.expr(Ends::Free)?);
+            decl.lines.for_period = line;
+        }
+        "when" => {
+            decl.when = Some(q.expr(Ends::Free)?);
+            decl.lines.when = line;
+        }
         "reads" => {
             decl.reads = vec![q.reference()?];
             while q.accept(",")? {
                 decl.reads.push(q.reference()?);
             }
+            decl.lines.reads = line;
         }
         "before" => decl.order.push((Order::Before, q.ident("an id")?)),
         "after" => decl.order.push((Order::After, q.ident("an id")?)),
@@ -905,112 +1227,15 @@ fn move_line(q: &mut P<'_>, word: &str, decl: &mut Move) -> Result<(), Stop> {
             let name = q.ident("an id")?;
             q.expect("=")?;
             decl.attrs.push((name, q.expr(Ends::Free)?));
+            decl.lines.attrs.push(line);
         }
-        "fulfils" => decl.fulfils = Some(q.reference()?),
+        "fulfils" => {
+            decl.fulfils = Some(q.reference()?);
+            decl.lines.fulfils = line;
+        }
         _ => return Err(q.cannot(&format!("{word} in a move"))),
     }
     Ok(())
-}
-
-/// An ask's body expression; `in ID` after it names the world unless a comma or `on`
-/// follows (parse rule 4).
-fn ask_expr(p: &mut P<'_>) -> Result<Expr, Stop> {
-    let save = p.i;
-    let expr = p.expr(Ends::AtIn)?;
-    if p.at("in", 0) && p.at_id(1) && (p.at(",", 2) || p.at("on", 2)) {
-        p.i = save;
-        return p.expr(Ends::Free);
-    }
-    Ok(expr)
-}
-
-/// The ask forms the engine builds later, by their first word.
-const LATER_ASKS: [&str; 5] = ["explain", "inputs-of", "readers-of", "check", "solve"];
-
-/// The random ask's clauses, built later.
-const RANDOM_CLAUSES: [&str; 4] = ["random", "paths", "path", "orient"];
-
-/// `ask id: body [for binds] [in world] [law e] [as known e] [windows each] [with uncertain]
-/// [partial]`, one line (L §2.3 `ask`); the other forms and clauses are built later.
-fn ask(p: &mut P<'_>, body: &[Line]) -> Result<Ask, Stop> {
-    let id = p.ident("an id")?;
-    p.expect(":")?;
-    if let Some(word) = LATER_ASKS.into_iter().find(|word| p.at(word, 0)) {
-        return Err(Stop::NotBuilt(word));
-    }
-    if p.at("diff", 0) && p.at("(", 1) {
-        return Err(Stop::NotBuilt("diff"));
-    }
-    let ask_body = if p.accept("residuals")? {
-        let place = p.reference()?;
-        let span = p.span()?;
-        let by = if p.accept("by")? {
-            Some(p.ident("an id")?)
-        } else {
-            None
-        };
-        AskBody::Residuals(Box::new(Residuals { place, span, by }))
-    } else {
-        let mut exprs = vec![ask_expr(p)?];
-        while p.accept(",")? {
-            exprs.push(ask_expr(p)?);
-        }
-        AskBody::Exprs(exprs)
-    };
-    let binds = if p.accept("for")? {
-        p.ask_for = true;
-        let binds = p.binds();
-        p.ask_for = false;
-        binds?
-    } else {
-        Vec::new()
-    };
-    let world = if p.at("in", 0) && p.at_id(1) {
-        p.skip(1)?;
-        Some(p.ident("an id")?)
-    } else {
-        None
-    };
-    if p.at("with", 0) && !p.at("uncertain", 1) {
-        return Err(Stop::NotBuilt("pins"));
-    }
-    let mut decl = Ask {
-        id,
-        body: ask_body,
-        binds,
-        world,
-        law: None,
-        known: None,
-        windows_each: false,
-        uncertain: false,
-        partial: false,
-        line: p.line,
-    };
-    ask_clauses(p, &mut decl)?;
-    no_body(p, body, "an ask is one line")?;
-    Ok(decl)
-}
-
-/// An ask's clauses after its world: `law`, `as known`, `windows each`, `with uncertain`,
-/// `partial`, to the line's end.
-fn ask_clauses(p: &mut P<'_>, decl: &mut Ask) -> Result<(), Stop> {
-    if p.accept("law")? {
-        decl.law = Some(p.expr(Ends::Free)?);
-    }
-    if p.at("as", 0) && p.at("known", 1) {
-        p.skip(2)?;
-        decl.known = Some(p.expr(Ends::Free)?);
-    }
-    if p.accept("windows")? {
-        p.each()?;
-        decl.windows_each = true;
-    }
-    decl.uncertain = p.with_uncertain()?;
-    if RANDOM_CLAUSES.iter().any(|word| p.at(word, 0)) {
-        return Err(Stop::NotBuilt("random asks"));
-    }
-    decl.partial = p.accept("partial")?;
-    p.end()
 }
 
 /// The order of a version's lines; a `pad` or `anchor` is a `gap`, anything else an `item`.
@@ -1042,6 +1267,8 @@ struct VersionLines {
     enters: Option<Day>,
     /// `assumed`.
     assumed: Option<String>,
+    /// `moves`.
+    moves: Vec<(Expr, LSpan)>,
     /// `covers`.
     covers: Vec<(Expr, Option<LSpan>)>,
     /// `pad` and `anchor`.
@@ -1052,8 +1279,8 @@ struct VersionLines {
     items: Vec<Item>,
 }
 
-/// `version id` and its lines, in order: cite, governs, known, enters, assumed, covers, gaps,
-/// notes, items (L §2.3 `version`).
+/// `version id` and its lines, in order: cite, governs, known, enters, assumed, moves, covers,
+/// gaps, notes, items (L §2.3 `version`).
 fn version(p: &mut P<'_>, body: &[Line]) -> Result<Version, Stop> {
     let id = p.ident("an id")?;
     p.end()?;
@@ -1064,6 +1291,7 @@ fn version(p: &mut P<'_>, body: &[Line]) -> Result<Version, Stop> {
         known: None,
         enters: None,
         assumed: None,
+        moves: Vec::new(),
         covers: Vec::new(),
         gaps: Vec::new(),
         notes: Vec::new(),
@@ -1098,6 +1326,7 @@ fn version(p: &mut P<'_>, body: &[Line]) -> Result<Version, Stop> {
         known,
         enters: lines.enters,
         assumed: lines.assumed,
+        moves: lines.moves,
         covers: lines.covers,
         gaps: lines.gaps,
         notes: lines.notes,
@@ -1114,7 +1343,11 @@ fn version_line(q: &mut P<'_>, tag: &str, lines: &mut VersionLines) -> Result<()
         "known" => lines.known = Some(q.known()?),
         "enters" => lines.enters = Some(q.day()?),
         "assumed" => lines.assumed = Some(q.string()?),
-        "moves" => return Err(Stop::NotBuilt("version moves")),
+        "moves" => {
+            let moved = q.reference()?;
+            q.expect("to")?;
+            lines.moves.push((moved, q.lspan()?));
+        }
         "covers" => lines.covers = covers(q)?,
         "gap" => lines.gaps.push(gap(q)?),
         "note" => lines.notes.push(q.string()?),
@@ -1190,9 +1423,9 @@ fn item(q: &mut P<'_>) -> Result<ItemForm, Stop> {
         if replace == Replace::Yes || given {
             return Err(q.err("a row"));
         }
-        let left = q.reference()?;
+        let left = q.same_ref()?;
         q.expect("=")?;
-        let right = q.reference()?;
+        let right = q.same_ref()?;
         q.end()?;
         return Ok(ItemForm::Same(Box::new((left, right))));
     }
@@ -1213,9 +1446,16 @@ fn item(q: &mut P<'_>) -> Result<ItemForm, Stop> {
     } else {
         None
     };
-    if q.at("of", 0) && !q.at(":", 1) {
-        return Err(Stop::NotBuilt("parts in a reading's row"));
-    }
+    let of = if q.at("of", 0) && !q.at(":", 1) {
+        q.skip(1)?;
+        let of = q.of_row()?;
+        if !q.at("=", 0) {
+            return Err(q.err("\"=\""));
+        }
+        Some(of)
+    } else {
+        None
+    };
     if q.accept(":")? {
         if given {
             return Err(q.err("a row"));
@@ -1230,6 +1470,7 @@ fn item(q: &mut P<'_>) -> Result<ItemForm, Stop> {
         qual,
         target,
         keys,
+        of,
         value,
         assumed,
         governs: meta.governs,
@@ -1367,29 +1608,25 @@ fn value(q: &mut P<'_>) -> Result<(Value, Option<String>), Stop> {
     Ok((value, assumed))
 }
 
-/// The distributions, built later.
-const DISTRIBUTIONS: [&str; 9] = [
-    "normal",
-    "lognormal",
-    "exponential",
-    "gamma",
-    "uniform",
-    "poisson",
-    "binomial",
-    "negbin",
-    "discrete",
-];
-
 /// The operators that make a row's value an expression (a scenario's row).
 const VALUE_OPERATORS: [&str; 7] = [".", "*", "/", "+", "-", "(", "["];
 
-/// A literal row value, or an expression where an operator follows.
+/// A distribution with its `to u`, a literal row value, or an expression where an operator
+/// follows (refcore's `value`).
 fn plain_value(q: &mut P<'_>) -> Result<Value, Stop> {
     let distribution = q
         .peek(0)
-        .is_some_and(|tok| tok.kind == Kind::Id && DISTRIBUTIONS.contains(&tok.text.as_str()));
-    if distribution && q.at("(", 1) {
-        return Err(Stop::NotBuilt("distributions"));
+        .filter(|tok| tok.kind == Kind::Id)
+        .and_then(|tok| dist_kind(&tok.text));
+    if let Some(func) = distribution
+        && q.at("(", 1)
+    {
+        let dist = q.dist(func)?;
+        if !q.accept("to")? {
+            return Ok(Value::Dist(dist));
+        }
+        let step = q.step_unit()?;
+        return Ok(Value::Dist(Expr::To(Box::new(dist), Box::new(step))));
     }
     let save = q.i;
     if !(q.at_id(0) && q.at(".", 1)) {

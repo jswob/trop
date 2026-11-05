@@ -1,0 +1,25 @@
+model household
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2027-12-31
+  note "T's base for M0's load-code fixtures (invented): scen's model with a place, read by its ask, and a scenario over it, scen.tally, whose row is a written figure; it loads clean"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+input amt: money PLN
+
+def doubled: money PLN = amt + amt at reader
+
+ask q: doubled, bal(konto, 2026-12-31) law 2026-03-01
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  opening[konto] = 0 PLN at 2026-01-01 start "the card"

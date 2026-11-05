@@ -6,6 +6,7 @@
 //! equal when refcore's `Ty.key` is.
 
 use super::unit::Unit;
+use crate::num::{Mode, Num};
 
 /// The words of a code type.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -92,6 +93,9 @@ pub enum Ty {
     Rate,
     /// `dist u`.
     Dist(Unit),
+    /// A `discrete` distribution over the keys of an index, shown `dist` (refcore's `dist`
+    /// type with its `ix`). L §5.16.
+    DistKeys(String),
     /// `calendar`.
     Calendar,
     /// A code type.
@@ -104,12 +108,24 @@ pub enum Ty {
     List(Box<Ty>),
     /// A tuple.
     Tuple(Vec<Ty>),
-    /// A bare 0, 1 or -1, whose type the context decides (L §3.2 Inline figures).
-    Flex(i64),
+    /// A bare 0, 1 or -1, whose type the context decides (L §3.2 Inline figures); in a band
+    /// row, any bare figure (L §5.9).
+    Flex(Num),
     /// A four-digit integer: a year or an int (L §2.1).
     Year4,
-    /// A key literal not yet resolved by position (L §2.5).
-    KeyLit,
+    /// A key literal not yet resolved by position, with its text (L §2.5).
+    KeyLit(String),
+    /// A variable bound over a key list, whose index its key positions fix (L §2.5).
+    KeyList,
+    /// A quantity whose unit only the run knows: a leg of unit `any`, an adjustment's change
+    /// (L §3.2, §5.14.3).
+    Dyn,
+    /// `unit(x)` of a place whose unit only the run knows (L §5.10).
+    UnitKey,
+    /// A type load's checker doesn't work out where refcore does (a movement's field that a
+    /// kind test narrows or a read over `events` names, a list's items, what reads them): most
+    /// checks pass it, as refcore passes the type it knows there.
+    Unseen,
     /// `none`.
     None,
     /// A rule value `?"…"`.
@@ -124,13 +140,15 @@ impl PartialEq for Ty {
     fn eq(&self, other: &Ty) -> bool {
         match (self, other) {
             (Ty::Num(a, _), Ty::Num(b, _)) | (Ty::Dist(a), Ty::Dist(b)) => a == b,
-            (Ty::Money(a), Ty::Money(b)) | (Ty::Key(a), Ty::Key(b)) => a == b,
+            (Ty::Money(a), Ty::Money(b))
+            | (Ty::Key(a), Ty::Key(b))
+            | (Ty::DistKeys(a), Ty::DistKeys(b)) => a == b,
+            (Ty::DistKeys(_), _) | (_, Ty::DistKeys(_)) => false,
             (Ty::Period(a), Ty::Period(b)) => a == b,
             (Ty::Code(a), Ty::Code(b)) => a == b,
             (Ty::Record(a), Ty::Record(b)) => a == b,
             (Ty::List(a), Ty::List(b)) => a == b,
             (Ty::Tuple(a), Ty::Tuple(b)) => a == b,
-            (Ty::Flex(a), Ty::Flex(b)) => a == b,
             _ => self.word() == other.word(),
         }
     }
@@ -159,7 +177,7 @@ impl Ty {
             Ty::Period(_) => "period",
             Ty::Key(_) => "key",
             Ty::Rate => "rate",
-            Ty::Dist(_) => "dist",
+            Ty::Dist(_) | Ty::DistKeys(_) => "dist",
             Ty::Calendar => "calendar",
             Ty::Code(_) => "code",
             Ty::MonthDay => "mmdd",
@@ -168,7 +186,11 @@ impl Ty {
             Ty::Tuple(_) => "tuple",
             Ty::Flex(_) => "flex",
             Ty::Year4 => "year4",
-            Ty::KeyLit => "keylit",
+            Ty::KeyLit(_) => "keylit",
+            Ty::KeyList => "keylist",
+            Ty::Dyn => "dyn",
+            Ty::UnitKey => "unitkey",
+            Ty::Unseen => "unseen",
             Ty::None => "none",
             Ty::Hole => "hole",
             Ty::Never => "never",
@@ -211,7 +233,7 @@ impl Ty {
                 let shown: Vec<String> = items.iter().map(Ty::show).collect();
                 format!("({})", shown.join(", "))
             }
-            Ty::Flex(n) => format!("the figure {n}"),
+            Ty::Flex(n) => format!("the figure {}", figure(n)),
             Ty::Int
             | Ty::Bool
             | Ty::Text
@@ -220,12 +242,29 @@ impl Ty {
             | Ty::Rate
             | Ty::Calendar
             | Ty::Year4
-            | Ty::KeyLit
+            | Ty::KeyLit(_)
+            | Ty::KeyList
+            | Ty::Dyn
+            | Ty::UnitKey
+            | Ty::Unseen
             | Ty::None
             | Ty::Hole
             | Ty::Never
+            | Ty::DistKeys(_)
             | Ty::KindName => self.word().to_owned(),
         }
+    }
+}
+
+/// A bare figure as refcore's `%d` prints it: its whole part, truncated toward zero (a band
+/// row's figure may be a fraction).
+fn figure(n: &Num) -> String {
+    match n
+        .round(&Num::int(1), Mode::Down)
+        .and_then(|whole| whole.to_text())
+    {
+        Ok(text) => text,
+        Err(_) => "?".to_owned(),
     }
 }
 

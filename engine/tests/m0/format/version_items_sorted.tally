@@ -1,0 +1,25 @@
+model version_items_sorted
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+index ks = [k3, k1, k2]
+
+input rate[k in ks]: num
+
+input cap: num
+
+kind jobs
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  rate[k2] = 2
+  cap = 5
+  rate[k3] = 3
+  jobs + [j1] lives 2026-01-01..
+  rate[k1] = 1

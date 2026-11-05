@@ -1,0 +1,17 @@
+model short_form
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+index ms = month 2026-01 .. 2026-12
+
+input x[m in ms]: num
+
+def total: num
+  rule base = x[2026-01] + x[2026-02]
+
+def monthly[m in ms]: num at start_of(m)
+  rule base = x[m] + x[m]

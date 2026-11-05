@@ -13,9 +13,10 @@
 # is tagged they never go red again. `gating` is always the first milestones in build
 # order. S is the exception (issue #26, 2026-11-02, "S in gating, last commit"): it joins
 # `gating` in the last commit of build/s, so it gates from its merge and S's mutants run
-# counts its tests.
+# counts its tests. M0 likewise (issue #56, G-M0, 2026-11-04, "gating: Yes, last commit"):
+# it joins in the last commit of build/m0.
 
 # BUILD-ORDER's milestones, in build order (as engine/tests/map/placement.py's ORDER)
 milestones = ["S", "M0", "M1", "M2", "M3", "M4", "M5a", "M5b", "M5c", "M6", "M7", "M8", "M9"]
 # the milestones whose tests gate
-gating = ["S"]
+gating = ["S", "M0"]

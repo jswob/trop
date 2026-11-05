@@ -2,8 +2,8 @@
 //! files, the output bytes and the exit code; never standard input, as refcore.
 //! Spec: engine/tests/INTERFACE.md §2 (reading the reality), §4 (the file table); E §3.1
 //! step 1 (files by full path).
-//! Twin: engine/tools/refcore/cli.py (`read_files`) and engine/tools/refcore/loader.py
-//! (`collect`, its `os.walk`).
+//! Twin: engine/tools/refcore/cli.py (`read_files`), engine/tools/refcore/loader.py
+//! (`collect`, its `os.walk`) and joint.py (`member_texts`, its reads of the disk).
 //! Invariants: `main` holds no exception, and a `process::exit` in it still fails (R-10); a
 //! path that can't be read is left out of the table, so the library refuses it `LOAD-PATH`.
 //!
@@ -42,44 +42,56 @@ fn arguments() -> Vec<OsString> {
 
 /// Every file the paths name: a file as given; under a directory, every file ending `.tally`
 /// at any depth, named `<dir>/<relative path>`, its subdirectories walked without following
-/// links, as `os.walk` does. A path that names nothing, or can't be read, is left out.
+/// links, as `os.walk` does. Then, round by round, the members the `use` lines of the files
+/// just read name, each a file or a directory read the same way, a file already read left
+/// out (INTERFACE §2). A path that names nothing, or can't be read, is left out.
 #[expect(
     clippy::disallowed_methods,
     reason = "R-39: the reality's files are read here, once, before the pure run takes them"
 )]
 fn read_reality(paths: &[String]) -> Vec<tally_cli::File> {
-    let mut files = Vec::new();
-    let mut dirs = Vec::new();
-    for path in paths {
-        let Ok(meta) = std::fs::metadata(path) else {
-            continue;
-        };
-        if meta.is_dir() {
-            dirs.push(path.clone());
-        } else if let Ok(bytes) = std::fs::read(path) {
-            files.push(tally_cli::File {
-                path: path.clone(),
-                bytes,
-            });
-        }
-    }
-    while let Some(dir) = dirs.pop() {
-        let Ok(entries) = std::fs::read_dir(&dir) else {
-            continue;
-        };
-        for entry in entries.flatten() {
-            let (Ok(kind), Ok(name)) = (entry.file_type(), entry.file_name().into_string()) else {
+    let mut files: Vec<tally_cli::File> = Vec::new();
+    let mut wanted = paths.to_vec();
+    let mut members = false;
+    while !wanted.is_empty() {
+        let before = files.len();
+        let mut dirs = Vec::new();
+        for path in &wanted {
+            let Ok(meta) = std::fs::metadata(path) else {
                 continue;
             };
-            let path = tally_cli::join(&dir, &name);
-            if kind.is_dir() {
-                dirs.push(path);
-            } else if tally_cli::is_tally(&name)
-                && let Ok(bytes) = std::fs::read(&path)
-            {
-                files.push(tally_cli::File { path, bytes });
+            if meta.is_dir() {
+                dirs.push(path.clone());
+            } else if let Ok(bytes) = std::fs::read(path) {
+                files.push(tally_cli::File {
+                    path: path.clone(),
+                    bytes,
+                });
             }
         }
+        while let Some(dir) = dirs.pop() {
+            let Ok(entries) = std::fs::read_dir(&dir) else {
+                continue;
+            };
+            for entry in entries.flatten() {
+                let (Ok(kind), Ok(name)) = (entry.file_type(), entry.file_name().into_string())
+                else {
+                    continue;
+                };
+                let path = tally_cli::join(&dir, &name);
+                let known = members && files.iter().any(|f| f.path == path);
+                if kind.is_dir() {
+                    dirs.push(path);
+                } else if tally_cli::is_tally(&name)
+                    && !known
+                    && let Ok(bytes) = std::fs::read(&path)
+                {
+                    files.push(tally_cli::File { path, bytes });
+                }
+            }
+        }
+        wanted = tally_cli::member_paths(&files, before);
+        members = true;
     }
     files
 }

@@ -2,18 +2,21 @@
 //! Spec: L §5.18 (asks: `as known`, `law`, `in`, `for`, one line per binding tuple, a tuple
 //! whose `where` is a hole printed as that hole); L §4.3 (the law date), §4.5 (the cut),
 //! §5.11 (an ask's `law` or `as known` that is a hole makes the ask line that hole), §8.2 (the
-//! register), §8.4 (a run-time refusal prints as the ask's line), §8.5 (warnings last).
-//! Twin: engine/tools/refcore/ask.py (`Asker.run`, `answer`, `_answer`, `_answer_in`,
-//! `evaluate`, `one`, `print_line`, `fmt_value`, `fmt_bind`) and evaluate.py (`date_of`).
-//! Invariants: asks print in id order unless the run names them; each ask has its own engine
-//! and memo; a load refusal met at run and every construct S doesn't build stop the run
-//! `NotBuilt`, never a guessed line.
+//! register), §8.4 (a run-time refusal prints as the ask's line), §8.5 (warnings last); E §11
+//! (`REQ-ASK`, tally 2.1.3).
+//! Twin: engine/tools/refcore/ask.py (`Asker.run`, `req_ask`, `answer`, `_answer`,
+//! `_answer_in`, `evaluate`, `one`, `print_line`, `fmt_value`, `fmt_bind`) and evaluate.py
+//! (`date_of`).
+//! Invariants: asks print in id order unless the run names them; every id the run names is
+//! checked before any ask is answered; each ask has its own engine and memo; a load refusal met
+//! at run and every construct not built yet stop the run `NotBuilt` at the ask that meets it,
+//! never a guessed line.
 
 use std::collections::BTreeMap;
 
 use super::register::{register_lines, warning_lines};
 use super::residuals::residual_lines;
-use crate::base::{Code, Load, Refusal, Run, Warn};
+use crate::base::{Code, Refusal, Req, Run, Warn};
 use crate::eval::{Collected, Ctx, Engine, Entry, Env, Item, Member, Memo, num_stop};
 use crate::model::{Reality, Value};
 use crate::syntax::{Ask, AskBody, Bind, Domain, Expr, Stop};
@@ -47,42 +50,117 @@ struct Seen {
     counts: crate::Counters,
 }
 
+impl Answered {
+    /// Lines no ask's engine computed: a load's report (its warnings, a scenario's refusal).
+    #[must_use]
+    pub(crate) fn printed(lines: Vec<String>) -> Answered {
+        Answered {
+            lines,
+            #[cfg(feature = "counters")]
+            counts: crate::Counters::default(),
+        }
+    }
+}
+
+/// One step of a run's answer: an ask of the reality, by its place among the reality's asks,
+/// or a line printed in its stead (an ask whose scenario was refused, L §6.4).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) enum Turn {
+    /// The reality's ask at this place of its asks.
+    Ask(usize),
+    /// A line, printed as it is.
+    Line(String),
+}
+
 /// The lines a run prints for its asks: each ask's lines, the asks in id order or in the order
 /// the run names them, then the run's warnings (refcore's `Asker.run`), each ask's engine
 /// walking `days` and keeping its cells as `memo` says. L §5.18, §8.5.
 ///
 /// # Errors
 ///
-/// `LOAD-NAME` for an ask the run names that the reality lacks; `NotBuilt` for a load refusal
-/// met at run and for a construct S doesn't build.
+/// `REQ-ASK` for the first ask the run names that the reality lacks, before any is answered
+/// (E §11); `NotBuilt` for a load refusal met at run and for a construct not built yet.
 pub fn answer(m: &Reality, asks: &Asks, days: Days, memo: Memo) -> Result<Answered, Stop> {
-    let order: Vec<&Ask> = match asks {
+    let turns = match asks {
         Asks::Every => {
-            let mut all: Vec<&Ask> = m.asks.iter().collect();
-            all.sort_by(|a, b| a.id.cmp(&b.id));
-            all
+            let mut all: Vec<(&str, usize)> = m
+                .asks
+                .iter()
+                .enumerate()
+                .map(|(at, ask)| (ask.id.as_str(), at))
+                .collect();
+            all.sort_by_key(|&(id, _)| id);
+            all.into_iter().map(|(_, at)| Turn::Ask(at)).collect()
         }
         Asks::Named(ids) => {
             let mut named = Vec::with_capacity(ids.len());
+            let mut member = false;
             for id in ids {
-                let ask = m.asks.iter().find(|a| a.id == *id).ok_or_else(|| {
-                    Stop::Refused(Refusal::new(Code::Load(Load::Name), format!("no ask {id}")))
-                })?;
-                named.push(ask);
+                match m.asks.iter().position(|ask| ask.id == *id) {
+                    Some(at) => named.push(Turn::Ask(at)),
+                    None if m.joint.as_ref().is_some_and(|j| j.knows(id)) => member = true,
+                    None => return Err(Stop::Refused(no_ask(id))),
+                }
+            }
+            if member {
+                return Err(Stop::NotBuilt("a member's ask at run"));
             }
             named
         }
     };
+    answer_turns(m, &turns, m.warnings.clone(), days, memo)
+}
+
+/// `REQ-ASK no ask <q>`: the request names an ask that doesn't exist. E §11 (tally 2.1.3).
+pub(crate) fn no_ask(id: &str) -> Refusal {
+    Refusal::new(Code::Req(Req::Ask), format!("no ask {id}"))
+}
+
+/// The lines of `turns` in order, each ask's engine walking `days` and keeping its cells as
+/// `memo` says, then `warnings` with the walks' own (refcore's `Asker.run`, `run_worlds`).
+/// L §5.18, §8.5.
+///
+/// # Errors
+///
+/// `NotBuilt` for a load refusal met at run and for a construct not built yet.
+pub(crate) fn answer_turns(
+    m: &Reality,
+    turns: &[Turn],
+    warnings: Vec<(Warn, String)>,
+    days: Days,
+    memo: Memo,
+) -> Result<Answered, Stop> {
     let mut out = Vec::new();
     let mut seen = Seen {
-        warnings: m.warnings.clone(),
+        warnings,
         booked: BTreeMap::new(),
         memo,
         #[cfg(feature = "counters")]
         counts: crate::Counters::default(),
     };
-    for ask in order {
-        out.extend(answer_one(m, ask, days, &mut seen)?);
+    let unbuilt = windows_or_moves(m);
+    let parts = keeps_parts(m);
+    for turn in turns {
+        match turn {
+            Turn::Ask(at) => {
+                let ask = m.asks.get(*at).ok_or_else(no_turn)?;
+                if let Some(refusal) = m.asks_alone.get(&ask.id) {
+                    out.push(format!("{}: refused: {}", ask.id, refusal.text()));
+                    continue;
+                }
+                if unbuilt {
+                    return Err(Stop::NotBuilt("a known window or a moves line at run"));
+                }
+                if parts {
+                    return Err(Stop::NotBuilt("parts at run"));
+                }
+                if let Some(form) = unbuilt_at_run(m, ask) {
+                    return Err(Stop::NotBuilt(form));
+                }
+                out.extend(answer_one(m, ask, days, &mut seen)?);
+            }
+            Turn::Line(line) => out.push(line.clone()),
+        }
     }
     out.extend(warning_lines(&seen.warnings));
     Ok(Answered {
@@ -90,6 +168,80 @@ pub fn answer(m: &Reality, asks: &Asks, days: Days, memo: Memo) -> Result<Answer
         #[cfg(feature = "counters")]
         counts: seen.counts,
     })
+}
+
+/// Whether the reality holds a known window (a version's, a row's or an observation's own), a
+/// `moves` line, or an observation's attribute that names a movement: load checks them (L
+/// §4.5, §5.3, §5.19), the run doesn't take them yet (M1's), so an ask that would read them
+/// stops `NotBuilt`.
+fn windows_or_moves(m: &Reality) -> bool {
+    let versions = m
+        .versions
+        .entries()
+        .any(|(_, v)| v.window.is_some() || !v.moved_by.is_empty());
+    if versions {
+        return true;
+    }
+    for (_, input) in m.inputs.entries() {
+        let rows = input.rows.iter().any(|r| r.own_window.is_some());
+        let unread =
+            |o: &crate::model::Observation| o.own_window.is_some() || !o.moves_named.is_empty();
+        if rows || input.observations.iter().any(unread) {
+            return true;
+        }
+    }
+    for (_, def) in m.defs.entries() {
+        if def.givens.iter().any(|r| r.own_window.is_some()) {
+            return true;
+        }
+    }
+    false
+}
+
+/// Whether a kind of the reality keeps parts, or a reading states parts: load checks them
+/// (L §3.6, §5.7, §5.19), the walk doesn't book them yet (M5b's: a place that keeps parts
+/// carries them in every walk), so an ask stops `NotBuilt`.
+fn keeps_parts(m: &Reality) -> bool {
+    m.kinds.entries().any(|(_, kind)| !kind.parts.is_empty())
+        || m.inputs
+            .entries()
+            .any(|(_, input)| !input.part_rows.is_empty())
+}
+
+/// A form load checks (M0) that the run doesn't evaluate yet, where the ask meets it: its
+/// pins, a random ask, `orient`, an axis it reaches, a fill or a `same` line of the reality, or
+/// a joint model's merged reality (L §5.5, §5.12, §5.16, §5.18, §6.1).
+fn unbuilt_at_run(m: &Reality, ask: &Ask) -> Option<&'static str> {
+    if !ask.pins.is_empty() {
+        return Some("an ask's pins at run");
+    }
+    if ask.random.is_some() || ask.paths.is_some() || ask.path.is_some() {
+        return Some("a random ask at run");
+    }
+    if ask.orient.is_some() {
+        return Some("orient at run");
+    }
+    if m.graph.ask_axes.get(&ask.id).is_some_and(|a| !a.is_empty()) {
+        return Some("an axis at run");
+    }
+    if !m.fills.is_empty() {
+        return Some("fills at run");
+    }
+    if !m.sames.is_empty() {
+        return Some("same lines at run");
+    }
+    if m.joint.is_some() {
+        return Some("a joint model's asks at run");
+    }
+    None
+}
+
+/// A turn whose ask the reality doesn't hold: the turns are built from its asks.
+fn no_turn() -> Stop {
+    Stop::Refused(Refusal::new(
+        Code::EngineInvariant,
+        "a turn names an ask the reality doesn't hold".to_owned(),
+    ))
 }
 
 /// One ask's lines; a run-time refusal its reading meets outside a line's values is its one
@@ -198,6 +350,12 @@ fn ask_body(m: &Reality, ask: &Ask, engine: &mut Engine, cut: Day) -> Result<Vec
     match &ask.body {
         AskBody::Exprs(exprs) => expr_lines(m, ask, exprs, engine, (ctx, &pinned)),
         AskBody::Residuals(r) => residual_lines(m, ask, r, engine, (ctx, &pinned)),
+        AskBody::Explain(_)
+        | AskBody::InputsOf(_)
+        | AskBody::ReadersOf(_)
+        | AskBody::Check(..)
+        | AskBody::Solve(_)
+        | AskBody::Diff(_) => Err(Stop::NotBuilt("an ask's form beyond values and residuals")),
     }
 }
 

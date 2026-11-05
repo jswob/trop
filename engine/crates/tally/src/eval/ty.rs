@@ -146,7 +146,14 @@ pub(super) fn sample(m: &Reality, e: &Expr, env: &Env, ctx: Ctx) -> Result<Optio
         | Expr::Flows(_)
         | Expr::Covered(_)
         | Expr::Calendar(_)
-        | Expr::Value(_) => Ok(None),
+        | Expr::Value(_)
+        | Expr::Query(_)
+        | Expr::Low(_)
+        | Expr::Crps(_)
+        | Expr::DistFn(_)
+        | Expr::Dist(_)
+        | Expr::Prorata(_)
+        | Expr::AsIf(..) => Ok(None),
     }
 }
 
@@ -468,7 +475,7 @@ fn ty_sample(m: &Reality, ty: &Ty) -> Result<Option<Value>, Stop> {
         }
         Ty::Int | Ty::Year4 => Some(Value::int(1)),
         Ty::Flex(n) => Some(Value::Number(Number {
-            q: Num::int(*n),
+            q: n.clone(),
             class: Class::Flex,
         })),
         Ty::Bool => Some(Value::Bool(true)),
@@ -506,10 +513,15 @@ fn ty_sample(m: &Reality, ty: &Ty) -> Result<Option<Value>, Stop> {
         | Ty::Calendar
         | Ty::List(_)
         | Ty::Tuple(_)
-        | Ty::KeyLit
+        | Ty::KeyLit(_)
+        | Ty::KeyList
+        | Ty::Dyn
+        | Ty::UnitKey
+        | Ty::Unseen
         | Ty::None
         | Ty::Hole
         | Ty::Never
+        | Ty::DistKeys(_)
         | Ty::KindName => None,
     })
 }

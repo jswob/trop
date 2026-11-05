@@ -8,6 +8,7 @@
 //! that hold its unit, its amount exact and, in a currency, whole minor units; its attributes are
 //! its kind's, each a value of its written type (a stated hole naming the row).
 
+use super::check::invariant;
 use super::keys::{KeyLit, lit_text, resolve_key};
 use super::places::Written;
 use super::steps::{Loader, num_stop, refuse};
@@ -19,6 +20,7 @@ use crate::syntax::{
     Certainty, Expr, Field, FieldValue, Key, Known, Leg, Lit, Postfix, Row, Stop, Type, Value,
 };
 use crate::time::Day;
+use std::collections::BTreeMap;
 
 /// What a message names an observation by, and where it was written.
 struct At {
@@ -76,7 +78,7 @@ impl Loader {
             file: file.to_owned(),
             line,
         };
-        let own_known = self.obs_known(vid, id, &key, row.known.as_ref(), &at)?;
+        let (own_known, own_window) = self.obs_known(vid, id, &key, row.known.as_ref(), &at)?;
         let fields = match &row.value {
             Value::Record(fields) => Some(fields.as_slice()),
             Value::None => None,
@@ -87,7 +89,8 @@ impl Loader {
             | Value::Calendar(_)
             | Value::Days(_)
             | Value::Lit(_)
-            | Value::Expr(_) => {
+            | Value::Expr(_)
+            | Value::Dist(_) => {
                 return Err(at.refuse(
                     Load::Field,
                     format!("an observation is a record with named fields: {}", at.sid),
@@ -99,6 +102,7 @@ impl Loader {
             key,
             version: vid.to_owned(),
             own_known,
+            own_window,
             locator: row.locator.clone(),
             replace: row.replace,
             removed: fields.is_none(),
@@ -108,6 +112,7 @@ impl Loader {
             legs: Vec::new(),
             attrs: Vec::new(),
             values: Vec::new(),
+            moves_named: Vec::new(),
             fulfils: None,
             line,
         };
@@ -120,7 +125,8 @@ impl Loader {
         Ok(true)
     }
 
-    /// An observation's own `known`. L §4.5.
+    /// An observation's own `known`: its day, or its window's first and last days; not
+    /// before its version's, not after `on` (refcore's `obs_item`). L §4.5.
     fn obs_known(
         &self,
         vid: &str,
@@ -128,26 +134,27 @@ impl Loader {
         key: &str,
         known: Option<&Known>,
         at: &At,
-    ) -> Result<Option<Day>, Stop> {
+    ) -> Result<(Option<Day>, Option<Day>), Stop> {
         let Some(written) = known else {
-            return Ok(None);
+            return Ok((None, None));
         };
-        let Known::Day(day) = written else {
-            return Err(Stop::NotBuilt("a known window"));
+        let (first, window) = match written {
+            Known::Day(day) => (*day, None),
+            Known::Window(a, b) => (*a, Some(*b)),
         };
-        if self.m.versions.get(vid).is_some_and(|v| *day < v.known) {
+        if self.m.versions.get(vid).is_some_and(|v| first < v.known) {
             return Err(at.refuse(
                 Load::Known,
                 format!("row {id}[{key}] is known before its version {vid}"),
             ));
         }
-        if *day > self.m.on {
+        if window.unwrap_or(first) > self.m.on {
             return Err(at.refuse(
                 Load::Known,
                 format!("row {id}[{key}] is known after the model's on date"),
             ));
         }
-        Ok(Some(*day))
+        Ok((Some(first), window))
     }
 
     /// An observation's fields: its day, kind, `fulfils`, legs and attributes (refcore's
@@ -246,11 +253,33 @@ impl Loader {
             let ty = written_ty
                 .as_ref()
                 .ok_or_else(|| crate::walk::invariant("an observed attribute with no type"))?;
+            if let Some(movement) = self.named_movement(value, ty, at)? {
+                observation.moves_named.push((name.clone(), movement));
+                continue;
+            }
             let typed = self.attr_value(value, ty, at)?;
             observation.values.push((name.clone(), typed));
         }
         observation.kind = Some(kind);
         Ok(())
+    }
+
+    /// The movement an attribute of type `key K`, K an event kind, names: an observed row or a
+    /// move's instance (refcore's `convert_value`, its event-kind arm). L §3.1, §5.7, §5.19.
+    fn named_movement(
+        &self,
+        value: &FieldValue,
+        ty: &Type,
+        at: &At,
+    ) -> Result<Option<String>, Stop> {
+        let (ty, _) = self.decl_type(ty, &[], &at.file, at.line)?;
+        if let crate::model::Ty::Key(kind) = &ty
+            && self.m.kind(kind).is_some()
+            && self.m.subtree("events").contains(kind)
+        {
+            return self.movement_ref(value, at);
+        }
+        Ok(None)
     }
 
     /// An observed row's attribute as a value of its type; a stated hole names the row
@@ -262,6 +291,13 @@ impl Loader {
             FieldValue::Expr(Expr::Name(word)) => Value::Lit(Lit::Name(word.clone())),
             FieldValue::Hole(text) => Value::Hole(text.clone()),
             FieldValue::None | FieldValue::Expr(Expr::None) => Value::None,
+            FieldValue::Expr(Expr::Post(..)) => {
+                // a read with keys or a field that names no movement: no value of a row
+                return Err(at.refuse(
+                    Load::Unit,
+                    format!("a value of the wrong type for {}", at.sid),
+                ));
+            }
             FieldValue::Expr(_) => {
                 return Err(Stop::NotBuilt(
                     "an observed attribute written as an expression",
@@ -271,6 +307,102 @@ impl Loader {
         match crate::eval::convert_row(&self.m, &written, &ty)? {
             Ok(v) => Ok(v),
             Err(text) => Ok(ModelValue::Hole(crate::hole::Hole::asked(&text, &at.sid))),
+        }
+    }
+
+    /// Each movement an observation's attribute names is an observed row of the attribute's
+    /// kind (refcore's `check_mv_refs`, after the rows): `LOAD-KEY` otherwise, at the
+    /// observation's line. L §3.1, §5.7.
+    pub(super) fn check_mv_refs(&self) -> Result<(), Stop> {
+        let mut kinds: BTreeMap<String, String> = BTreeMap::new();
+        for (_, input) in self.m.inputs.entries().filter(|(_, i)| i.observed) {
+            for o in &input.observations {
+                if let Some(kind) = &o.kind {
+                    kinds.insert(o.sid(), kind.clone());
+                }
+            }
+        }
+        for (_, input) in self.m.inputs.entries().filter(|(_, i)| i.observed) {
+            for o in &input.observations {
+                for (attr, movement) in &o.moves_named {
+                    self.mv_ref_kind(o, attr, movement, &kinds)?;
+                }
+            }
+        }
+        Ok(())
+    }
+
+    /// One movement an attribute names, of the attribute's kind (refcore's `check_mv_refs`).
+    fn mv_ref_kind(
+        &self,
+        o: &Observation,
+        attr: &str,
+        movement: &str,
+        kinds: &BTreeMap<String, String>,
+    ) -> Result<(), Stop> {
+        let Some(of) = o.kind.as_deref() else {
+            return Err(invariant(format!(
+                "{} names a movement but has no kind",
+                o.sid()
+            )));
+        };
+        let attrs = self.m.kind_attrs(of);
+        let Some((_, Some(Type::Key(wanted)))) = attrs.iter().find(|(a, _)| a == attr) else {
+            return Err(invariant(format!("attribute {attr} of {of} names no kind")));
+        };
+        let name = movement.split_once('[').map_or(movement, |(name, _)| name);
+        if self.m.moves.get(name).is_some() {
+            // refcore refuses every move instance here (its move's kind is unset at load),
+            // where L §3.1 takes one of the kind: a STOP-REPORT (G9), not guessed.
+            return Err(Stop::NotBuilt("a move instance named by an attribute"));
+        }
+        let fits = kinds
+            .get(movement)
+            .is_some_and(|kind| self.m.subtree(wanted).contains(kind));
+        if !fits {
+            let file = self
+                .m
+                .versions
+                .get(&o.version)
+                .map(|v| v.file.clone())
+                .ok_or_else(|| invariant(format!("version {} isn't built", o.version)))?;
+            return Err(refuse(
+                Load::Key,
+                format!("{movement} is not a key of {wanted}"),
+                &file,
+                o.line,
+            ));
+        }
+        Ok(())
+    }
+
+    /// The movement an attribute names: an observed row by its id, a move's instance by its
+    /// keys; `None` when it names none (refcore's `movement_ref`). L §3.1 `key K`, §5.19.
+    fn movement_ref(&self, value: &FieldValue, at: &At) -> Result<Option<String>, Stop> {
+        let none: &[Key] = &[];
+        let named = match value {
+            FieldValue::Lit(Lit::Name(name)) => Some((name, none)),
+            FieldValue::Expr(expr) => super::same::named(expr),
+            FieldValue::Lit(_) | FieldValue::Hole(_) | FieldValue::None => None,
+        };
+        let Some((name, keys)) = named else {
+            return Ok(None);
+        };
+        match self.m.names.get(name.as_str()) {
+            Some(NameKind::Input) if self.m.inputs.get(name).is_some_and(|i| i.observed) => {
+                let Some(id) = super::same::row_id(keys) else {
+                    return Err(at.refuse(
+                        Load::Key,
+                        format!("an observation row is named by its id: {name}[<id>]"),
+                    ));
+                };
+                Ok(Some(format!("{name}[{id}]")))
+            }
+            Some(NameKind::Move) => {
+                let values = self.move_instance_keys(name, keys, &at.file, at.line)?;
+                Ok(Some(super::same::instance_text(name, &values)))
+            }
+            Some(_) | None => Ok(None),
         }
     }
 
@@ -393,7 +525,9 @@ impl Loader {
             ));
         };
         let Some(kind) = self.m.names.get(&name) else {
-            return Err(at.refuse(Load::Name, format!("unknown id {name}")));
+            return Err(at
+                .refuse(Load::Name, format!("unknown id {name}"))
+                .naming(&name));
         };
         if *kind == NameKind::Kind && name == "adjustments" && !keys.is_empty() {
             return self.adj_ref(&keys, at);
@@ -442,7 +576,9 @@ impl Loader {
             _ => return Err(shape()),
         };
         let Some(kind) = self.m.names.get(name) else {
-            return Err(at.refuse(Load::Name, format!("unknown id {name}")));
+            return Err(at
+                .refuse(Load::Name, format!("unknown id {name}"))
+                .naming(name));
         };
         if *kind != NameKind::Move {
             return Err(at.refuse(

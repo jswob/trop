@@ -9,11 +9,12 @@
 use super::decl::{BandInfo, DefInfo, InputInfo, MoveInfo, PlaceInfo};
 use super::graph::Graph;
 use super::index::{IndexInfo, VersionInfo};
-use super::key::Span;
+use super::key::{KeyVal, Span};
 use super::kind::{Entry, KindInfo, KindSpec, Thing};
-use crate::base::{Table, Warn};
+use super::world::Scenarios;
+use crate::base::{Refusal, Table, Warn};
 use crate::num::Num;
-use crate::syntax::{Ask, Header, Price, Sign, Source, Type};
+use crate::syntax::{Ask, Axis, Fill, Header, Price, Sign, Source, Type};
 use crate::time::Day;
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -101,6 +102,88 @@ pub struct Reality {
     pub warnings: Vec<(Warn, String)>,
     /// The item graph and the classes and strata load decides from it.
     pub graph: Graph,
+    /// The scenarios this reality loads with the base: none for a base (L §6.4).
+    pub scenarios: Scenarios,
+    /// The axes, each with its options in the order written (L §5.5).
+    pub axes: Table<Axis>,
+    /// The fills, as written (L §5.12).
+    pub fills: Table<Fill>,
+    /// The worlds an ask may name: the model, this reality's scenarios and the run's
+    /// (refcore's `all_worlds`). L §6.4.
+    pub all_worlds: BTreeSet<String>,
+    /// For the base of a run with scenarios, each section id a scenario's file declares, with
+    /// the first such scenario by id (refcore's `declared_ids`): the base names none of them
+    /// (L §6.4, issue #75). Empty for any other load.
+    pub elsewhere: BTreeMap<String, String>,
+    /// The asks refused alone, each with its refusal: one that names a world the run doesn't
+    /// load (refcore's `asks_alone`). L §6.4, §8.
+    pub asks_alone: BTreeMap<String, Refusal>,
+    /// The rows and movements stated `same`, in the order written (refcore's `same_rows` and
+    /// `same_moves`): read together at run. L §6.1, §5.19.
+    pub sames: Vec<SamePair>,
+    /// A joint model's members, as the run may ask them (refcore's `joint_members`), or `None`
+    /// for a model that is no joint model. L §6.1; E §11.
+    pub joint: Option<Joint>,
+}
+
+/// What a run knows of a joint model's members: each by its alias, the asks it may be asked
+/// as `a.q` (refcore's `joint_members`, read by `knows_ask`). L §6.1; E §11.
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+pub struct Joint {
+    /// Each member by its alias.
+    pub members: BTreeMap<String, MemberAsks>,
+}
+
+/// A member's asks: its own (those its base answers, and those its scenario files declare),
+/// and, for a member that is itself a joint model, its members' (`a.b.q`). L §6.1; E §11.
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+pub struct MemberAsks {
+    /// The asks it may be asked by their own ids.
+    pub asks: BTreeSet<String>,
+    /// The asks its own namespace holds, refused alone or not (refcore's `lookup` on the
+    /// member finds them); its scenario files' asks are no names of it.
+    pub named: BTreeSet<String>,
+    /// Its own members, when it is a joint model.
+    pub members: BTreeMap<String, MemberAsks>,
+}
+
+impl Joint {
+    /// Whether `a.q` names an ask member `a`'s namespace holds, so that reading or calling it
+    /// is no value (refcore's `member_read` and `prefixed_call`, their ask arm). L §6.1, §5.18.
+    #[must_use]
+    pub fn names_ask(&self, alias: &str, id: &str) -> bool {
+        self.members
+            .get(alias)
+            .is_some_and(|member| member.named.contains(id))
+    }
+
+    /// Whether `id` names a member's ask, `a.q` or `a.b.q` (refcore's `knows_ask`, its member
+    /// arm). E §11.
+    #[must_use]
+    pub fn knows(&self, id: &str) -> bool {
+        let mut members = &self.members;
+        let mut rest = id;
+        while let Some((alias, ask)) = rest.split_once('.') {
+            let Some(member) = members.get(alias) else {
+                return false;
+            };
+            if member.asks.contains(ask) {
+                return true;
+            }
+            members = &member.members;
+            rest = ask;
+        }
+        false
+    }
+}
+
+/// Two rows or two movements stated `same` (refcore's `same_rows`, `same_moves`). L §6.1.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum SamePair {
+    /// Two rows: each input's id and keys.
+    Rows(String, Vec<KeyVal>, String, Vec<KeyVal>),
+    /// Two movements: each instance's id, `m[k]` or an observed row's `x[id]`.
+    Moves(String, String),
 }
 
 impl Reality {
@@ -148,6 +231,20 @@ impl Reality {
         };
         let sub = self.subtree(kind);
         thing.entries.iter().any(|e| sub.contains(&e.kind))
+    }
+
+    /// The kind whose parts clauses a kind keeps: itself or the nearest parent that states
+    /// them (refcore's `parts_kind`). L §3.6, §5.7.
+    #[must_use]
+    pub fn parts_kind(&self, id: &str) -> Option<&KindInfo> {
+        self.chain(id).into_iter().find(|k| !k.parts.is_empty())
+    }
+
+    /// The parts kind of a place thing's base kind; none for a place that keeps no parts
+    /// (refcore's `thing_parts`). L §3.6.
+    #[must_use]
+    pub fn thing_parts(&self, thing: &Thing) -> Option<&KindInfo> {
+        self.parts_kind(thing.base.as_deref()?)
     }
 
     /// A place kind's unit, its own or its nearest parent's (refcore's `kind_unit`).

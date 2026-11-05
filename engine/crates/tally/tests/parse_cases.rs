@@ -7,7 +7,7 @@
 
 #[cfg(test)]
 mod tests {
-    use tally::syntax::{AskBody, Expr, ItemForm, Section, Value, parse_reality};
+    use tally::syntax::{Ask, AskBody, Expr, ItemForm, RuleValue, Section, Value, parse_reality};
     use tally::{Asks, Days, Given, NotImplemented, Pin, Request, Source, parse, run};
 
     /// The smallest model header: lines 1 to 5.
@@ -98,6 +98,8 @@ ask early: flows(out_0, 2025-01-01 .. 2025-03-31), bal(acc_0, 2025-03-31) as kno
             Section::Def(_) => "def",
             Section::Move(_) => "move",
             Section::Ask(_) => "ask",
+            Section::Axis(_) => "axis",
+            Section::Fill(_) => "fill",
         }
     }
 
@@ -191,6 +193,176 @@ ask early: flows(out_0, 2025-01-01 .. 2025-03-31), bal(acc_0, 2025-03-31) as kno
         for (text, line) in cases {
             assert_eq!(run_one(&text), Ok(vec![line.to_owned()]), "{text}");
         }
+    }
+
+    /// The first section of `text` under the header, in a word or two: its expression's node,
+    /// its ask's form and clauses, its options, parts, moves or `of` rows.
+    fn shape(text: &str) -> String {
+        let files = parse(format!("{HEADER}{text}\n").as_bytes()).expect(text);
+        let Some(section) = files.first().and_then(|file| file.sections.first()) else {
+            panic!("a section: {text}");
+        };
+        if let Section::Def(def) = section {
+            let Some(RuleValue::Expr(e)) = def.rules.first().map(|rule| &rule.value) else {
+                return "a rule".to_owned();
+            };
+            return expr_shape(e).to_owned();
+        }
+        if let Section::Ask(ask) = section {
+            return ask_shape(ask);
+        }
+        if let Section::Axis(axis) = section {
+            return format!("axis {}", axis.options.len());
+        }
+        if let Section::Kind(kind) = section {
+            return format!("parts {}", kind.parts.len());
+        }
+        if let Section::Version(version) = section {
+            let of = version
+                .items
+                .iter()
+                .filter(|item| matches!(&item.form, ItemForm::Row(row) if row.of.is_some()));
+            return format!("moves {} of {}", version.moves.len(), of.count());
+        }
+        name(section).to_owned()
+    }
+
+    /// An expression's node, by name: the first of these it is, else "other".
+    fn expr_shape(e: &Expr) -> &'static str {
+        let names = [
+            (matches!(e, Expr::Query(_)), "query"),
+            (matches!(e, Expr::Low(_)), "low"),
+            (matches!(e, Expr::Crps(_)), "crps"),
+            (matches!(e, Expr::DistFn(_)), "distfn"),
+            (matches!(e, Expr::Dist(_)), "dist"),
+            (matches!(e, Expr::Prorata(_)), "prorata"),
+            (
+                matches!(e, Expr::AsIf(_, pins) if pins.len() == 1),
+                "as if, one pin",
+            ),
+            (
+                matches!(e, Expr::Bal(bal) if bal.proj.random.is_some()),
+                "bal, random at",
+            ),
+        ];
+        names
+            .iter()
+            .find(|(is, _)| *is)
+            .map_or("other", |(_, name)| name)
+    }
+
+    /// An ask's form, and its pins and clauses.
+    fn ask_shape(ask: &Ask) -> String {
+        let form = match &ask.body {
+            AskBody::Exprs(_) => "values",
+            AskBody::Residuals(_) => "residuals",
+            AskBody::Explain(_) => "explain",
+            AskBody::InputsOf(_) => "inputs-of",
+            AskBody::ReadersOf(_) => "readers-of",
+            AskBody::Check(..) => "check",
+            AskBody::Solve(_) => "solve",
+            AskBody::Diff(_) => "diff",
+        };
+        let clauses = [
+            (!ask.pins.is_empty(), " pins"),
+            (ask.random.is_some(), " random"),
+            (ask.paths.is_some(), " paths"),
+            (ask.orient.is_some(), " orient"),
+        ];
+        let mut shape = form.to_owned();
+        for (written, word) in clauses {
+            if written {
+                shape.push_str(word);
+            }
+        }
+        shape
+    }
+
+    /// Each form S's parser left out, as M0's parser reads it; refcore parses each of these
+    /// lines (its answers are load refusals, the `diff` naming an unloaded world refused
+    /// alone; the axis loads and prints nothing, as the engine does since G8). L §2.3.
+    #[test]
+    fn the_forms_of_milestone_m0_parse() {
+        let cases = [
+            ("def a: date = mean(x for i in k)", "query"),
+            ("def a: date = quantile(x for i in k, 0.5)", "query"),
+            ("def a: date = low(acc, 2026-01-01 .. 2026-02-01)", "low"),
+            ("def a: date = crps(x, y)", "crps"),
+            ("def a: date = cdf(x, 1)", "distfn"),
+            ("def a: date = normal(0, 1)", "dist"),
+            ("def a: date = discrete(x for i in k)", "dist"),
+            (
+                "def a: date = prorata(t, w for i in k, i, 0.01 PLN, rest largest)",
+                "prorata",
+            ),
+            ("def a: date = x as if {law 2026-01-01}", "as if, one pin"),
+            (
+                "def a: date = bal(acc, d) from 2026-01-01 random at mean",
+                "bal, random at",
+            ),
+            ("axis rates\n  low \"Low\"\n  high \"High\"", "axis 2"),
+            ("kind lot: place PLN signed\n  batched", "parts 1"),
+            ("ask q: explain x", "explain"),
+            ("ask q: check x == y", "check"),
+            ("ask q: x with law 2026-01-01", "values pins"),
+            ("ask q: x random at quantile(0.5)", "values random"),
+            ("ask q: x paths 10 seed 1", "values paths"),
+            ("ask q: x orient lower", "values orient"),
+            ("ask q: diff(x) in s against b", "diff"),
+            ("ask q: solve x == y for z in [0, 10] to 1 PLN", "solve"),
+            (
+                "version v\n  cite s\n  known 2026-01-01\n  moves m to 2026-01-01..",
+                "moves 1 of 0",
+            ),
+            (
+                "version v\n  cite s\n  known 2026-01-01\n  r of acc = 1",
+                "moves 0 of 1",
+            ),
+        ];
+        for (text, want) in cases {
+            assert_eq!(shape(text), want, "{text}");
+            let ran = run_one(&format!("{HEADER}{text}\n"));
+            let stopped = match &ran {
+                Err(NotImplemented) => true,
+                Ok(lines) => match lines.as_slice() {
+                    [] => want == "axis 2",
+                    [line] => line.starts_with("refused: ") || line.starts_with("q: refused: "),
+                    _ => false,
+                },
+            };
+            assert!(stopped, "{text}: answers a refusal, or nothing: {ran:?}");
+        }
+    }
+
+    /// `as if` nested five deep, through parentheses or through pins, is refused at its
+    /// section's line once the file has parsed; four deep parses (L §2.3, refcore's
+    /// `asif_depth`).
+    #[test]
+    fn as_if_deeper_than_four_is_refused() {
+        let law = "{law 2026-01-01}";
+        let four =
+            format!("def d: date = (((x as if {law}) as if {law}) as if {law}) as if {law}\n");
+        let five = format!(
+            "def d: date = ((((x as if {law}) as if {law}) as if {law}) as if {law}) as if {law}\n"
+        );
+        let pins = format!(
+            "def d: date = x as if {{law y as if {{law z as if {{law w as if {{law v as if {law}}}}}}}}}\n"
+        );
+        let refused = "refused: LOAD-ASIF as if deeper than 4 (a.tally:6)".to_owned();
+        assert!(
+            parse(format!("{HEADER}{four}").as_bytes()).is_ok(),
+            "four deep"
+        );
+        assert_eq!(
+            run_one(&format!("{HEADER}{five}")),
+            Ok(vec![refused.clone()]),
+            "five deep, through parentheses"
+        );
+        assert_eq!(
+            run_one(&format!("{HEADER}{pins}")),
+            Ok(vec![refused]),
+            "five deep, through pins"
+        );
     }
 
     #[test]

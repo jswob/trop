@@ -10,17 +10,20 @@
 
 use super::keys::{KeyLit, key_order, range_key_of};
 use super::places::Written;
+use super::same::SameLine;
 use super::spans::{governs_span, lspan_to_span};
 use super::steps::{Loader, refuse};
+use super::worlds::no_version;
 use crate::base::Load;
 use crate::model::{
-    BandEnd, BandRow, BandTable, Domain, GapRole, IndexForm, KeyVal, NameKind, Pat, Row,
-    RowInstant, RuleVer, pattern_text,
+    BandRow, BandTable, Domain, GapRole, IndexForm, KeyVal, NameKind, Pat, Row, RowInstant,
+    RuleVer, pattern_text,
 };
 use crate::syntax::{
-    BandRow as WrittenBand, Gap, Instant, Item, ItemForm, Known, Lit, Row as WrittenRow, RowKey,
-    Rule, Section, Stop,
+    BandRow as WrittenBand, Gap, Instant, Item, ItemForm, Known, Row as WrittenRow, RowKey, Rule,
+    Section, Stop,
 };
+use crate::time::Day;
 use std::collections::BTreeMap;
 
 impl Loader {
@@ -136,11 +139,19 @@ impl Loader {
     fn item(&mut self, vid: &str, item: &Item, file: &str) -> Result<bool, Stop> {
         match &item.form {
             ItemForm::Enter(_) => Ok(false),
-            ItemForm::Same(_) => Err(Stop::NotBuilt("same lines")),
+            ItemForm::Same(sides) => {
+                let (left, right) = sides.as_ref();
+                self.same_lines.push(SameLine {
+                    left: left.clone(),
+                    right: right.clone(),
+                    file: file.to_owned(),
+                    line: item.line,
+                    version: Some(vid.to_owned()),
+                });
+                Ok(false)
+            }
             ItemForm::Rule { qual, def, rule } => {
-                if qual.is_some() {
-                    return Err(Stop::NotBuilt("a member's prefix"));
-                }
+                unprefixed(qual.as_deref(), def, file, item.line)?;
                 self.rule_item(vid, def, rule.as_ref(), file, item.line)?;
                 Ok(rule.governs.is_none())
             }
@@ -152,7 +163,7 @@ impl Loader {
         }
     }
 
-    /// The input or def a row names (refcore's `target`).
+    /// The input or def a row names (refcore's `target`; its prefix, if any, in `unprefixed`).
     fn target_of(&self, name: &str, want: NameKind, file: &str, line: u32) -> Result<(), Stop> {
         let word = if want == NameKind::Def {
             "def"
@@ -167,7 +178,7 @@ impl Loader {
                 file,
                 line,
             )),
-            None => Err(refuse(Load::Name, format!("unknown id {name}"), file, line)),
+            None => Err(refuse(Load::Name, format!("unknown id {name}"), file, line).naming(name)),
         }
     }
 
@@ -191,10 +202,8 @@ impl Loader {
                     format!("replace rule {def}.{label} in {vid} names version {v}"),
                 )
             } else {
-                (
-                    Load::Name,
-                    format!("rule {def}.{label}: v {v} names no version"),
-                )
+                let message = format!("rule {def}.{label}: v {v} names no version");
+                no_version(&self.m, def, v, message)
             };
             return Err(refuse(message.0, message.1, file, line));
         }
@@ -230,9 +239,7 @@ impl Loader {
         file: &str,
         line: u32,
     ) -> Result<(), Stop> {
-        if row.qual.is_some() {
-            return Err(Stop::NotBuilt("a member's prefix"));
-        }
+        unprefixed(row.qual.as_deref(), &row.target, file, line)?;
         let id = &row.target;
         match self.m.names.get(id) {
             Some(NameKind::Band) => {}
@@ -240,14 +247,14 @@ impl Loader {
                 return Err(refuse(Load::Name, format!("{id} is not band"), file, line));
             }
             None => {
-                return Err(refuse(Load::Name, format!("unknown id {id}"), file, line));
+                return Err(refuse(Load::Name, format!("unknown id {id}"), file, line).naming(id));
             }
         }
         let Some(band) = self.m.bands.get(id) else {
             return Err(Stop::NotBuilt("a band that isn't built"));
         };
         let first_bind = band.binds.first().cloned();
-        let arg_binds = band.binds.clone();
+        let arg_type = band.arg_type.clone();
         let key = match (&row.key, first_bind) {
             (Some(written), Some(bind)) => {
                 let Some(lit) = KeyLit::of_row_key(written) else {
@@ -277,12 +284,12 @@ impl Loader {
         let lo = interval
             .lo
             .as_ref()
-            .map(|l| self.band_end(l, &arg_binds, file, line))
+            .map(|l| self.band_end(l, id, &arg_type, file, line))
             .transpose()?;
         let hi = interval
             .hi
             .as_ref()
-            .map(|l| self.band_end(l, &arg_binds, file, line))
+            .map(|l| self.band_end(l, id, &arg_type, file, line))
             .transpose()?;
         let written = BandRow {
             lo,
@@ -313,25 +320,6 @@ impl Loader {
         Ok(())
     }
 
-    /// A band row's end: a number in the argument's unit (refcore's `band_end`). L §5.9.
-    fn band_end(
-        &self,
-        lit: &Lit,
-        binds: &[crate::model::BindInfo],
-        file: &str,
-        line: u32,
-    ) -> Result<BandEnd, Stop> {
-        let Lit::Num(n) = lit else {
-            return Err(Stop::NotBuilt("a band over values that aren't numbers"));
-        };
-        let (_, factor) = self.unit_of(n.unit.as_ref(), binds, file, line)?;
-        let value = n
-            .value
-            .checked_mul(&factor)
-            .map_err(super::steps::num_stop)?;
-        Ok(BandEnd::Num(value))
-    }
-
     /// A row of an input, or a `given` of a def (refcore's `row_item`); whether it states a
     /// time of its own. L §4.6.
     fn row_item(
@@ -341,9 +329,7 @@ impl Loader {
         file: &str,
         line: u32,
     ) -> Result<bool, Stop> {
-        if row.qual.is_some() {
-            return Err(Stop::NotBuilt("a member's prefix"));
-        }
+        unprefixed(row.qual.as_deref(), &row.target, file, line)?;
         let id = &row.target;
         let want = if row.given {
             NameKind::Def
@@ -351,6 +337,18 @@ impl Loader {
             NameKind::Input
         };
         self.target_of(id, want, file, line)?;
+        let balance_input = !row.given
+            && (id == "stated" || id == "opening")
+            && self.m.inputs.get(id).is_some_and(|input| input.builtin);
+        if row.of.is_some() && !balance_input {
+            // L §2.3 row (tally 2.1): `of` only on a row of `opening` or `stated` (§5.19).
+            return Err(refuse(
+                Load::Parts,
+                format!("of on a row of {id}"),
+                file,
+                line,
+            ));
+        }
         let (binds, reading, balance) = if row.given {
             let Some(def) = self.m.defs.get(id) else {
                 return Err(Stop::NotBuilt("a def that isn't built"));
@@ -372,7 +370,7 @@ impl Loader {
             .as_ref()
             .map(|g| governs_span(g, file, line))
             .transpose()?;
-        let own_known = self.row_known(vid, id, &pattern, row, file, line)?;
+        let (own_known, own_window) = self.row_known(vid, id, &pattern, row, file, line)?;
         let read_as = if balance {
             ReadAs::Balance
         } else if reading {
@@ -399,19 +397,26 @@ impl Loader {
             version: vid.to_owned(),
             own_span,
             own_known,
+            own_window,
             instant,
             locator: row.locator.clone(),
             given: row.given,
             replace: row.replace,
             line,
             sid: String::new(),
+            of: row.of.clone(),
         };
         if row.given {
             if let Some(def) = self.m.defs.get_mut(id) {
                 def.givens.push(built);
             }
         } else if let Some(input) = self.m.inputs.get_mut(id) {
-            input.rows.push(built);
+            // A reading's stated parts are kept beside its readings, never a total (L §5.19).
+            if built.of.is_some() {
+                input.part_rows.push(built);
+            } else {
+                input.rows.push(built);
+            }
         }
         Ok(own_time)
     }
@@ -497,7 +502,8 @@ impl Loader {
         Ok((pattern, stated))
     }
 
-    /// A row's own `known`: not before its version's, not after `on`. L §4.5.
+    /// A row's own `known`: its day, or its window's first and last days; not before its
+    /// version's, not after `on` (refcore's `row_item`). L §4.5.
     fn row_known(
         &self,
         vid: &str,
@@ -506,16 +512,17 @@ impl Loader {
         row: &WrittenRow,
         file: &str,
         line: u32,
-    ) -> Result<Option<crate::time::Day>, Stop> {
+    ) -> Result<(Option<Day>, Option<Day>), Stop> {
         let Some(known) = &row.known else {
-            return Ok(None);
+            return Ok((None, None));
         };
-        let Known::Day(day) = known else {
-            return Err(Stop::NotBuilt("a known window"));
+        let (day, window) = match known {
+            Known::Day(day) => (*day, None),
+            Known::Window(a, b) => (*a, Some(*b)),
         };
         let shown = format!("{id}{}", load_pattern_text(pattern));
         let version_known = self.m.versions.get(vid).map(|v| v.known);
-        if version_known.is_some_and(|k| *day < k) {
+        if version_known.is_some_and(|k| day < k) {
             return Err(refuse(
                 Load::Known,
                 format!("row {shown} is known before its version {vid}"),
@@ -523,7 +530,7 @@ impl Loader {
                 line,
             ));
         }
-        if *day > self.m.on {
+        if window.unwrap_or(day) > self.m.on {
             return Err(refuse(
                 Load::Known,
                 format!("row {shown} is known after the model's on date"),
@@ -531,7 +538,7 @@ impl Loader {
                 line,
             ));
         }
-        Ok(Some(*day))
+        Ok((Some(day), window))
     }
 
     /// Each row's stable id, `version:target[keys]`, with its own span or instant where two
@@ -650,4 +657,17 @@ fn load_pattern_text(pattern: &[Pat]) -> String {
         })
         .collect();
     format!("[{}]", parts.join(", "))
+}
+
+/// A row's, band row's or rule's target written with a prefix, `a.x`, is an unknown id: a
+/// joint model's merge has made each member's item one name, so no prefix is left that names
+/// one (refcore's `target`, whose `qualified` names nothing since GD-1). L §6.1, §2.5.
+fn unprefixed(qual: Option<&str>, name: &str, file: &str, line: u32) -> Result<(), Stop> {
+    match qual {
+        Some(prefix) => {
+            let id = format!("{prefix}.{name}");
+            Err(refuse(Load::Name, format!("unknown id {id}"), file, line).naming(&id))
+        }
+        None => Ok(()),
+    }
 }

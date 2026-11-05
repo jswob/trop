@@ -1,0 +1,12 @@
+model header_order
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+  use zeta = "members/zeta" sha256 "1111111111111111111111111111111111111111111111111111111111111111"
+  use alpha = "members/alpha" sha256 "2222222222222222222222222222222222222222222222222222222222222222"
+  same zeta.konto = alpha.konto
+  same alpha.cash = zeta.cash
+  note "L §2.4 Header first: use lines by name, same lines by left side"
+
+source s "s"

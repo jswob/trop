@@ -1,0 +1,21 @@
+model expr_spacing
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+input x: num
+
+input y: num
+
+input z: num
+
+def s1: num = x+y*z
+
+def s2: num = max( x ,y )
+
+def s3: bool = x>=y and not(y<z)
+
+def s4: num = if x>y then x else y

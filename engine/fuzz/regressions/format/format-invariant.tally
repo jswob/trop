@@ -1,0 +1,8 @@
+part f0
+  tally 2
+
+version v
+  cite s
+  known 2027-01-20
+  x[c] = 0 governs 2026
+  x[c] = 1 governs ab

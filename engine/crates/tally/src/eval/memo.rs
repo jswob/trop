@@ -976,9 +976,9 @@ version v26
   fee = 10.00
   given cap[a] = 3.00
 
-ask a: cap[a] law 2026-03-01
+ask qa: cap[a] law 2026-03-01
 
-ask b: cap[b] law 2026-03-01
+ask qb: cap[b] law 2026-03-01
 "#;
 
     #[test]

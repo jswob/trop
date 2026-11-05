@@ -1,0 +1,29 @@
+model section_kind_order
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+ask q: total
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  x = 1
+
+def total: num = x + x
+
+input x: num
+
+index quarters = [q1, q2]
+
+axis paths
+  low "low"
+  high "high"
+
+kind jobs
+
+unit DUK: currency minor 0.01
+
+source s "s"

@@ -1,0 +1,11 @@
+scenario raised over household
+  tally 2
+  from 2027-01-01
+
+version raise_2027
+  cite card
+  governs 2027..
+  known 2026-02-01
+  replace amt = 150.00 PLN "a raise from 2027"
+
+ask q_raised: doubled in raised law 2027-06-01

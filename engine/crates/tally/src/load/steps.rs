@@ -1,19 +1,17 @@
-//! Load: the parsed files become the reality, step by step in refcore's order, as far as S builds.
-//! Spec: E §3.1 (steps 1–4); L §2.5 (one namespace), §5.4 (units and currencies), §5.18 (asks),
-//! §8.5 (WARN-UNREAD for a source).
-//! Twin: engine/tools/refcore/loader.py (`Loader.build`, `register_builtins`, `register_names`,
-//! `build_units`).
-//! Invariants: every section's id is in the namespace once; each step reads only what earlier
-//! steps built; a form S doesn't build stops with `NotBuilt`, never a guessed refusal; the load
-//! refusals S makes are the ones construction meets, in refcore's words (the rest are M0's).
+//! Load: the parsed files become the reality, step by step in refcore's order, as far as M0 builds.
+//! Spec: E §3.1 (steps 1–4); L §6.1 (one model header, one `tally`), §6.4 (a scenario over the
+//! model or another scenario), §5.4 (units and currencies), §5.18 (asks), §8.5 (WARN-UNREAD
+//! for a source).
+//! Twin: engine/tools/refcore/loader.py (`Loader.build`, its pass 1, and `build_units`).
+//! Invariants: each step reads only what earlier steps built; a form not built yet stops with
+//! `NotBuilt`, never a guessed refusal; the load refusals made are the ones construction meets,
+//! in refcore's words (the rest are M0's later groups').
 
+use super::same::SameLine;
 use crate::base::{Code, Load, Place as At, Refusal, Run, Table, Warn};
-use crate::model::{
-    BUILTIN_INDEXES, BUILTIN_INPUTS, BindInfo, Domain, Graph, InputInfo, NameKind, PERIODS,
-    PRELUDE_KINDS, Reality, Ty,
-};
+use crate::model::{Graph, Joint, PERIODS, Reality, Scenarios};
 use crate::num::{Num, NumError};
-use crate::syntax::{Bind, Domain as BindDomain, File, HeaderKind, Lit, Section, Stop, UnitForm};
+use crate::syntax::{File, HeaderKind, Lit, Section, Stop, UnitForm};
 use std::collections::{BTreeMap, BTreeSet};
 
 /// The reality being built, with the sections it is built from.
@@ -24,6 +22,9 @@ pub(super) struct Loader {
     pub(super) sections: Vec<(String, Section)>,
     /// The currencies in the order declared.
     pub(super) currency_order: Vec<String>,
+    /// The `same` lines of rows and movements, the header's then the versions' (refcore's
+    /// `header.sames` and `sames`).
+    pub(super) same_lines: Vec<SameLine>,
 }
 
 /// A load refusal at a line of a file. L §8.3.
@@ -52,28 +53,63 @@ pub(super) fn num_stop(error: NumError) -> Stop {
 ///
 /// A load refusal construction meets, or `NotBuilt` for a form S doesn't build.
 pub fn load(files: Vec<File>) -> Result<Reality, Stop> {
-    let mut loader = Loader::new(files)?;
+    load_among(files, &BTreeSet::new(), &BTreeMap::new(), None)
+}
+
+/// The reality the files state, loaded among the run's other worlds `worlds` (the scenarios
+/// of a run with scenarios, which an ask of the base may name) (refcore's `load_texts` with
+/// its `worlds`); `elsewhere`, for the base of a run with scenarios, the ids their files
+/// declare, each with its scenario; `joint`, for a joint model's merged files, its members (the
+/// asks a run may name `a.q`). E §3.1; L §6.1, §6.4.
+///
+/// # Errors
+///
+/// As [`load`].
+pub(super) fn load_among(
+    files: Vec<File>,
+    worlds: &BTreeSet<String>,
+    elsewhere: &BTreeMap<String, String>,
+    joint: Option<&Joint>,
+) -> Result<Reality, Stop> {
+    let mut loader = Loader::new(files, joint)?;
+    loader.m.all_worlds.clone_from(worlds);
+    loader.m.elsewhere.clone_from(elsewhere);
+    loader
+        .m
+        .all_worlds
+        .extend(loader.m.scenarios.over.keys().cloned());
+    loader.m.all_worlds.insert(loader.m.header.id.clone());
     loader.register_builtins();
     loader.register_names()?;
     loader.build_units()?;
     loader.build_kinds()?;
     loader.build_indexes()?;
+    loader.build_axes()?;
     loader.build_versions()?;
     loader.unread_sources();
     loader.build_entries()?;
     loader.build_decls()?;
     loader.prescan_open_keys();
     loader.build_places()?;
+    loader.joint_place_sames()?;
+    loader.check_key_ids()?;
     loader.build_items()?;
+    loader.check_rows()?;
     loader.finish_rows();
+    super::overlap::check_obs(&loader.m)?;
+    loader.check_sames()?;
+    super::scenarios::check_scenarios(&loader.m)?;
+    super::bands::check_bands(&loader.m)?;
     loader.collect_asks();
     loader.build_graph()?;
     Ok(loader.m)
 }
 
 impl Loader {
-    /// The one model header, the files' tally version, and an empty reality under it. L §2.3.
-    fn new(files: Vec<File>) -> Result<Loader, Stop> {
+    /// The one model header, the files' tally version, the scenarios, and an empty reality under
+    /// them, a joint model's header `same` lines first among the `same` lines (refcore's
+    /// `Loader.build`, pass 1, and `joint_sames`' header pairs). L §6.1, §6.4.
+    fn new(files: Vec<File>, joint: Option<&Joint>) -> Result<Loader, Stop> {
         let models: Vec<&File> = files
             .iter()
             .filter(|f| f.header.kind == HeaderKind::Model)
@@ -93,12 +129,25 @@ impl Loader {
                 "files declare different tally versions".to_owned(),
             )));
         }
-        if files.iter().any(|f| f.header.kind == HeaderKind::Scenario) {
-            return Err(Stop::NotBuilt("scenarios"));
+        let is_joint = !model.header.uses.is_empty() || !model.header.sames.is_empty();
+        if is_joint && joint.is_none() {
+            return Err(Stop::NotBuilt(
+                "a joint model's files loaded without its members",
+            ));
         }
-        if !model.header.uses.is_empty() || !model.header.sames.is_empty() {
-            return Err(Stop::NotBuilt("joint models"));
-        }
+        let header_sames: Vec<SameLine> = model
+            .header
+            .sames
+            .iter()
+            .map(|(left, right)| SameLine {
+                left: left.clone(),
+                right: right.clone(),
+                file: model.path.clone(),
+                line: model.header.line,
+                version: None,
+            })
+            .collect();
+        let scenarios = scenarios(&files, &model.header.id)?;
         let header = model.header.clone();
         let missing = Stop::NotBuilt("a model header without on, start or end");
         let start = header.start.ok_or(missing.clone())?;
@@ -133,53 +182,19 @@ impl Loader {
                 asks: Vec::new(),
                 warnings: Vec::new(),
                 graph: Graph::default(),
+                scenarios,
+                axes: Table::new(),
+                fills: Table::new(),
+                all_worlds: BTreeSet::new(),
+                elsewhere: BTreeMap::new(),
+                asks_alone: BTreeMap::new(),
+                sames: Vec::new(),
+                joint: joint.cloned(),
             },
             sections,
             currency_order: Vec::new(),
+            same_lines: header_sames,
         })
-    }
-
-    /// The built-in inputs, kinds, indexes and `cut` (refcore's `register_builtins`). L §5.19.
-    fn register_builtins(&mut self) {
-        for id in BUILTIN_INPUTS {
-            let mut input = InputInfo::new(id, None);
-            if id == "account_place" {
-                input.binds = vec![builtin_bind("a", Domain::Index("bank_account".to_owned()))];
-                input.ty = Some(Ty::Key("places".to_owned()));
-            } else {
-                input.binds = vec![builtin_bind("x", Domain::Kind("places".to_owned()))];
-                input.reading = true;
-            }
-            self.m.names.insert(id.to_owned(), NameKind::Input);
-            self.m.inputs.push(id, input);
-        }
-        for id in PRELUDE_KINDS {
-            self.m.names.insert(id.to_owned(), NameKind::Kind);
-        }
-        self.m.names.insert("cut".to_owned(), NameKind::Cut);
-        for id in BUILTIN_INDEXES {
-            self.m.names.insert(id.to_owned(), NameKind::Index);
-        }
-    }
-
-    /// Every section's id into the one namespace (refcore's `register_names`). L §2.5.
-    fn register_names(&mut self) -> Result<(), Stop> {
-        for (file, section) in &self.sections {
-            let (id, line) = section_id(section);
-            if self.m.names.contains_key(id) {
-                let message = if is_builtin_id(id) {
-                    format!("{id} is declared twice (a built-in id)")
-                } else {
-                    format!("{id} is declared twice")
-                };
-                return Err(refuse(Load::Dup, message, file, line));
-            }
-            self.m.names.insert(id.to_owned(), section_kind(section));
-            if let Section::Source(source) = section {
-                self.m.sources.push(id, source.as_ref().clone());
-            }
-        }
-        Ok(())
     }
 
     /// Currencies with their minor units, and named units (refcore's `build_units`). L §5.4.
@@ -217,6 +232,27 @@ impl Loader {
         Ok(())
     }
 
+    /// The axes, each with its options; a key entered twice is `LOAD-DUP` (refcore's
+    /// `build_axes`). L §5.5.
+    fn build_axes(&mut self) -> Result<(), Stop> {
+        for (file, section) in &self.sections {
+            let Section::Axis(axis) = section else {
+                continue;
+            };
+            let mut seen = BTreeSet::new();
+            if !axis
+                .options
+                .iter()
+                .all(|(key, _)| seen.insert(key.as_str()))
+            {
+                let message = format!("a key entered twice in axis {}", axis.id);
+                return Err(refuse(Load::Dup, message, file, axis.line));
+            }
+            self.m.axes.push(&axis.id, axis.as_ref().clone());
+        }
+        Ok(())
+    }
+
     /// The asks, in section order. L §5.18.
     fn collect_asks(&mut self) {
         for (_, section) in &self.sections {
@@ -249,35 +285,41 @@ fn positive_plain(lit: &Lit) -> Option<Num> {
     positive.then(|| n.value.clone())
 }
 
-/// A built-in input's key bind, written as `x in places` would be.
-fn builtin_bind(var: &str, domain: Domain) -> BindInfo {
-    let id = match &domain {
-        Domain::Index(id) | Domain::Kind(id) | Domain::Axis(id) => id.clone(),
-        Domain::List(_) | Domain::Range => String::new(),
-    };
-    BindInfo {
-        var: var.to_owned(),
-        node: Bind {
-            var: var.to_owned(),
-            domain: BindDomain::Name {
-                id: id.clone(),
-                qual: None,
-            },
-            on: None,
-            over: None,
-            filter: None,
-            text: format!("{var} in {id}"),
-        },
-        domain,
+/// The scenarios the files declare (refcore's `Loader.build`, pass 1): each over the model
+/// (`None`) or over another scenario of these files, with the sections its file holds. L §6.4.
+fn scenarios(files: &[File], model: &str) -> Result<Scenarios, Stop> {
+    let mut found = Scenarios::default();
+    let mut declared = Vec::new();
+    for file in files
+        .iter()
+        .filter(|f| f.header.kind == HeaderKind::Scenario)
+    {
+        let head = &file.header;
+        if found.over.contains_key(&head.id) {
+            let message = format!("scenario {} declared twice", head.id);
+            return Err(refuse(Load::Scenario, message, &file.path, head.line));
+        }
+        let over = head.over.clone().filter(|over| over != model);
+        found.over.insert(head.id.clone(), over);
+        if let Some(from) = head.from {
+            found.from.insert(head.id.clone(), from);
+        }
+        declared.push((head.id.as_str(), file.path.as_str(), head.line));
+        for section in &file.sections {
+            found
+                .section
+                .insert(section_id(section).0.to_owned(), head.id.clone());
+        }
     }
-}
-
-/// Whether the language declares `id`.
-fn is_builtin_id(id: &str) -> bool {
-    BUILTIN_INPUTS.contains(&id)
-        || PRELUDE_KINDS.contains(&id)
-        || BUILTIN_INDEXES.contains(&id)
-        || id == "cut"
+    for (id, path, line) in declared {
+        if let Some(Some(over)) = found.over.get(id)
+            && !found.over.contains_key(over)
+        {
+            let message = format!("scenario {id} is over {over}, neither the model nor a scenario");
+            return Err(refuse(Load::Scenario, message, path, line));
+        }
+    }
+    Ok(found)
 }
 
 /// A section's id and line.
@@ -294,22 +336,7 @@ pub(super) fn section_id(section: &Section) -> (&str, u32) {
         Section::Def(s) => (&s.id, s.line),
         Section::Move(s) => (&s.id, s.line),
         Section::Ask(s) => (&s.id, s.line),
-    }
-}
-
-/// What a section's id names.
-fn section_kind(section: &Section) -> NameKind {
-    match section {
-        Section::Source(_) => NameKind::Source,
-        Section::Version(_) => NameKind::Version,
-        Section::Unit(_) => NameKind::Unit,
-        Section::Kind(_) => NameKind::Kind,
-        Section::Index(_) => NameKind::Index,
-        Section::Place(_) => NameKind::Place,
-        Section::Input(_) => NameKind::Input,
-        Section::Band(_) => NameKind::Band,
-        Section::Def(_) => NameKind::Def,
-        Section::Move(_) => NameKind::Move,
-        Section::Ask(_) => NameKind::Ask,
+        Section::Axis(s) => (&s.id, s.line),
+        Section::Fill(s) => (&s.id, s.line),
     }
 }

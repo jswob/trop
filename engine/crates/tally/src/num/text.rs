@@ -1,6 +1,8 @@
 //! Exact numbers as text: decimal literals read exactly, values printed in the output's form.
-//! Spec: L §2.1 (number literals), §5.18 (output: decimals, `a/b`, the 15-digit aid), §7.1.
-//! Twin: engine/tools/refcore/values.py (`fmt_dec`, `fmt_q`, `sig15`, `group3`, `dec_exp`).
+//! Spec: L §2.1 (number literals), §2.4 (a fraction's reduced canonical `a/b`), §5.18 (output:
+//! decimals, `a/b`, the 15-digit aid), §7.1, §8.3 (a written count in a message).
+//! Twin: engine/tools/refcore/values.py (`fmt_dec`, `fmt_q`, `sig15`, `group3`, `dec_exp`);
+//! parser.py (`lit`, its fraction's canon); a count's `%d`.
 //! Invariants: a literal is read exactly or refused, never rounded; printing is exact, and the
 //! 15-digit display beside an `a/b` is only a reading aid, rounded half to even.
 //!
@@ -79,6 +81,25 @@ impl Num {
     /// denominator has a prime other than 2 and 5). L §5.18.
     pub fn decimal_places(&self) -> Result<Option<u32>, NumError> {
         decimal_places(self.rational().denom())
+    }
+
+    /// The value's numerator without its sign and its denominator, each in plain decimal
+    /// digits, of any size: the reduced `a/b` a row's fraction prints as. L §2.4.
+    #[must_use]
+    pub fn fraction_parts(&self) -> (String, String) {
+        let r = self.rational();
+        (r.numer().abs_decimal(), r.denom().abs_decimal())
+    }
+
+    /// An integer's plain decimal digits, signed and ungrouped, of any size (`-1234`), as a
+    /// message names a written count; `None` for a value that isn't an integer. L §8.3.
+    #[must_use]
+    pub fn integer_text(&self) -> Option<String> {
+        if !self.is_integer() {
+            return None;
+        }
+        let sign = if self.is_negative() { "-" } else { "" };
+        Some(format!("{sign}{}", self.rational().numer().abs_decimal()))
     }
 
     /// The value in the big tier's form, uncapped, for printing. L §5.18.
@@ -288,6 +309,52 @@ mod tests {
                 "{bad:?} is no literal"
             );
         }
+    }
+
+    #[test]
+    fn fractions_and_integers_print_their_digits_of_any_size() {
+        let big = n("100000000000000000000");
+        let thirty = Num::int(30);
+        let q = big.checked_div(&thirty).expect("q");
+        assert_eq!(
+            q.fraction_parts(),
+            ("10000000000000000000".to_owned(), "3".to_owned()),
+            "past 64 bits, reduced"
+        );
+        let neg = Num::ratio(-6, 4).expect("r");
+        assert_eq!(
+            neg.fraction_parts(),
+            ("3".to_owned(), "2".to_owned()),
+            "the numerator without its sign"
+        );
+        let tiny = Num::int(1).checked_div(&big.checked_mul(&Num::int(3)).expect("m"));
+        assert_eq!(
+            tiny.expect("t").fraction_parts(),
+            ("1".to_owned(), "300000000000000000000".to_owned()),
+            "a denominator past 64 bits"
+        );
+        assert_eq!(
+            Num::int(7).fraction_parts(),
+            ("7".to_owned(), "1".to_owned()),
+            "an integer is n/1"
+        );
+        assert_eq!(
+            n("99999999999999999999").integer_text().as_deref(),
+            Some("99999999999999999999"),
+            "ungrouped, past 64 bits"
+        );
+        assert_eq!(
+            n("-99999999999999999999").integer_text().as_deref(),
+            Some("-99999999999999999999"),
+            "a negative big integer"
+        );
+        assert_eq!(
+            Num::int(-1234).integer_text().as_deref(),
+            Some("-1234"),
+            "small, negative"
+        );
+        assert_eq!(Num::int(0).integer_text().as_deref(), Some("0"), "zero");
+        assert_eq!(neg.integer_text(), None, "a fraction has no integer text");
     }
 
     #[test]

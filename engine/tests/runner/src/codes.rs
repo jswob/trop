@@ -8,11 +8,69 @@
 //! A fixture's file table holds every file under `codes/` that its command line names and
 //! that exists (`codes.py` runs refcore on the disk, where the others don't): a path the
 //! table doesn't hold is a path that doesn't exist (`INTERFACE.md` §4).
+//!
+//! Then [`M0`], `codes/m0.refcore`, which `codes/m0.py` writes: a fixture for each `LOAD-*`
+//! code no other output at S or M0 prints, each one edit of a family's base text (under
+//! `codes/m0/`), stored with its whole file table, and each family's base, which loads clean.
 
-use crate::corpus::pack;
+use crate::corpus::{Run, groups, netstrings, pack, text};
 
 /// `codes/fixtures.tsv`.
 pub const FIXTURES: &str = include_str!("../../codes/fixtures.tsv");
+
+/// `codes/m0.refcore`: M0's fixtures of the `LOAD-*` codes no other output prints, seven
+/// netstrings per vector (`codes/m0.py`): each family's base, then each fixture.
+pub const M0: &[u8] = include_bytes!("../../codes/m0.refcore");
+
+/// One vector of `codes/m0.refcore`: a family's base text, which loads clean, or a fixture
+/// written off it by one edit.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct M0Fixture {
+    /// `<family>/base`, or the fixture's id (`basic/reserved`).
+    pub id: String,
+    /// The code it prints: `REQ-ASK` for a base (the load probe after a clean load).
+    pub code: String,
+    /// Its family (`basic`, `joint`, …).
+    pub family: String,
+    /// The command line's words after the program name.
+    pub args: Vec<String>,
+    /// The file table (`INTERFACE.md` §4), packed: each text as the fixture's edit left it.
+    pub files: Vec<u8>,
+    /// refcore's run: its whole output and exit code.
+    pub run: Run,
+}
+
+impl M0Fixture {
+    /// Whether it is a family's base, the stated twin of the family's fixtures.
+    pub fn is_base(&self) -> bool {
+        self.id.ends_with("/base")
+    }
+}
+
+/// The vectors of `bytes`, in `codes/m0.py`'s order.
+pub fn m0_fixtures(bytes: &[u8]) -> Result<Vec<M0Fixture>, String> {
+    let mut out = Vec::new();
+    for seven in groups(&netstrings(bytes)?, 7)? {
+        let [id, code, family, args, files, rc, whole] = seven.as_slice() else {
+            return Err("an M0 code fixture is seven netstrings".to_owned());
+        };
+        let id = text(id)?;
+        out.push(M0Fixture {
+            code: text(code)?,
+            family: text(family)?,
+            args: text(args)?.split(' ').map(str::to_owned).collect(),
+            files: files.to_vec(),
+            run: Run {
+                out: text(whole)?,
+                code: text(rc)?
+                    .parse()
+                    .map_err(|_| format!("{id}: an exit code"))?,
+            },
+            id,
+        });
+    }
+    Ok(out)
+}
 
 /// The fixtures' files, by their path from the fixtures' `cwd` (`engine/tests/codes`).
 const FILES: [(&str, &str); 8] = [
@@ -106,8 +164,67 @@ pub fn fixtures(tsv: &str) -> Result<Vec<Fixture>, String> {
 
 #[cfg(test)]
 mod tests {
-    use super::{FIXTURES, fixtures};
+    use super::{FIXTURES, M0, fixtures, m0_fixtures};
     use crate::corpus::paths;
+    use std::collections::BTreeSet;
+
+    /// Eleven families' bases print the load probe's line alone; every fixture prints its
+    /// code and no warning; 144 fixtures of 51 codes (G4's 49 of 43, G7's 64 message forms,
+    /// the gate's 13 of G11's forms: path counts and `lifespan` at load, 14 of G12's: a
+    /// built-in through a scenario row's base prefix, a `same` side keyed by a keyed place,
+    /// an adjustment's fields and a field read through `.adjusts` or an aggregate, `lifespan`
+    /// of `dyn`, and 4 of G13's: `lifespan` of a bound name's field, axis combinations past
+    /// 15 digits and past 64 bits).
+    #[test]
+    fn the_m0_fixtures_read_and_print_their_codes() {
+        let vs = m0_fixtures(M0).expect("codes/m0.refcore reads");
+        let mut ids = BTreeSet::new();
+        for v in &vs {
+            assert!(ids.insert(v.id.clone()), "{}: twice", v.id);
+            assert_eq!(v.args.first().map(String::as_str), Some("run"), "{}", v.id);
+            assert!(
+                paths(&v.files).is_ok_and(|p| !p.is_empty()),
+                "{}: a file table",
+                v.id
+            );
+            assert!(!v.run.out.contains("warning: "), "{}: no warning", v.id);
+            if v.is_base() {
+                assert_eq!(
+                    (v.run.out.as_str(), v.run.code),
+                    ("refused: REQ-ASK no ask zz_m0_probe\n", 1),
+                    "{}: a base loads clean",
+                    v.id
+                );
+            } else {
+                assert!(
+                    v.run.out.contains(&format!("refused: {} ", v.code)),
+                    "{}: prints {}",
+                    v.id,
+                    v.code
+                );
+                assert!(
+                    vs.iter().any(|b| b.is_base() && b.family == v.family),
+                    "{}: its family's base is a vector",
+                    v.id
+                );
+            }
+        }
+        assert_eq!(
+            vs.iter().filter(|v| v.is_base()).count(),
+            11,
+            "eleven families"
+        );
+        let codes: BTreeSet<&str> = vs
+            .iter()
+            .filter(|v| !v.is_base())
+            .map(|v| v.code.as_str())
+            .collect();
+        assert_eq!(
+            (vs.len(), codes.len()),
+            (155, 51),
+            "144 fixtures of 51 codes"
+        );
+    }
 
     #[test]
     fn every_fixture_reads_and_refuses_with_its_code() {

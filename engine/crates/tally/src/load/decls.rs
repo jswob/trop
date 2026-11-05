@@ -10,6 +10,7 @@
 
 use super::spans::lspan_to_span;
 use super::steps::{Loader, num_stop, refuse};
+use super::worlds::no_version;
 use crate::base::Load;
 use crate::model::{
     BandInfo, BindInfo, CodeKind, DefInfo, Domain, InputInfo, KindSpec, MoveInfo, NameKind,
@@ -60,8 +61,9 @@ impl Loader {
         built
     }
 
-    /// The declarations of every section.
+    /// The declarations of every section, after the kinds' types.
     fn declare_all(&mut self, sections: &[(String, Section)]) -> Result<(), Stop> {
+        self.build_kind_types(sections)?;
         for (file, section) in sections {
             match section {
                 Section::Input(decl) => self.declare_input(decl, file)?,
@@ -69,7 +71,11 @@ impl Loader {
                 Section::Band(decl) => self.declare_band(decl, file)?,
                 Section::Place(decl) => self.declare_place(decl, file)?,
                 Section::Move(decl) => self.declare_move(decl, file)?,
-                Section::Source(_)
+                Section::Fill(decl) => {
+                    self.m.fills.push(&decl.id, decl.as_ref().clone());
+                }
+                Section::Axis(_)
+                | Section::Source(_)
                 | Section::Version(_)
                 | Section::Unit(_)
                 | Section::Kind(_)
@@ -78,6 +84,73 @@ impl Loader {
             }
         }
         Ok(())
+    }
+
+    /// Each declared kind's attribute types, an event kind's leg units, a place kind's unit;
+    /// the prelude's kinds state none to check (refcore's `build_kind_types`). L §5.7, §3.1,
+    /// §5.4.
+    fn build_kind_types(&mut self, sections: &[(String, Section)]) -> Result<(), Stop> {
+        for (file, section) in sections {
+            let Section::Kind(decl) = section else {
+                continue;
+            };
+            let Some(kind) = self.m.kinds.get(&decl.id) else {
+                return Err(Stop::NotBuilt("a kind that isn't built"));
+            };
+            let mut types = Vec::with_capacity(kind.attrs.len());
+            for (name, written) in &kind.attrs {
+                let ty = match written {
+                    None => None,
+                    Some(t) => Some(self.decl_type(t, &[], file, decl.line)?.0),
+                };
+                types.push((name.clone(), ty));
+            }
+            if kind.spec == KindSpec::Event {
+                for (leg, unit) in &kind.legs {
+                    let what = format!("the unit of leg {leg} of {}", decl.id);
+                    self.kind_unit_word(unit, &what, file, decl.line)?;
+                }
+            }
+            if kind.spec == KindSpec::Place
+                && let Some(unit) = kind.unit.as_deref().filter(|u| *u != "one")
+            {
+                let what = format!("the unit of kind {}", decl.id);
+                self.kind_unit_word(unit, &what, file, decl.line)?;
+            }
+            if let Some(built) = self.m.kinds.get_mut(&decl.id) {
+                built.attr_types = types;
+            }
+        }
+        Ok(())
+    }
+
+    /// A kind's unit word: `any`, a currency, a unit or a kind of unit; else `LOAD-UNIT` for
+    /// a currency code no unit line declares, `LOAD-NAME` naming `what` for another word
+    /// (refcore's `build_kind_types`). L §5.4, §5.7.
+    fn kind_unit_word(&self, unit: &str, what: &str, file: &str, line: u32) -> Result<(), Stop> {
+        let unit_kind = self.m.names.get(unit) == Some(&NameKind::Kind)
+            && self
+                .m
+                .kinds
+                .get(unit)
+                .is_some_and(|k| k.spec == KindSpec::Unit);
+        if unit == "any"
+            || self.m.currencies.contains_key(unit)
+            || self.m.units.contains(unit)
+            || unit_kind
+        {
+            return Ok(());
+        }
+        if is_currency_code(unit) {
+            return Err(undeclared(unit, file, line));
+        }
+        Err(refuse(
+            Load::Name,
+            format!("unknown id {unit} ({what})"),
+            file,
+            line,
+        )
+        .naming(unit))
     }
 
     /// An input: its key binds, type, `prices` and question. L §5.8, §3.4.
@@ -128,12 +201,9 @@ impl Loader {
             if let Some(v) = &rule.v
                 && !self.m.versions.contains(v)
             {
-                return Err(refuse(
-                    Load::Name,
-                    format!("rule {}.{}: v {v} names no version", decl.id, rule.label),
-                    file,
-                    rule.line,
-                ));
+                let message = format!("rule {}.{}: v {v} names no version", decl.id, rule.label);
+                let (code, message) = no_version(&self.m, &decl.id, v, message);
+                return Err(refuse(code, message, file, rule.line));
             }
             let span = rule
                 .governs
@@ -251,18 +321,16 @@ impl Loader {
     }
 
     /// A move's event kind: declared, an event kind, not `adjustments` (refcore's
-    /// `resolve_move_kind`). L §5.14, §5.14.3.
+    /// `resolve_move_kind`). L §5.14, §5.14.3. A prefixed kind, `a.pays`, is no name (a joint
+    /// model's merge has made each member's kind one), so it is unknown, as refcore's is.
     fn move_kind(&self, id: &str, kind: &str, file: &str, line: u32) -> Result<String, Stop> {
-        if kind.contains('.') {
-            return Err(Stop::NotBuilt("a member's prefix"));
-        }
         let Some(info) = self
             .m
             .kinds
             .get(kind)
             .filter(|_| self.m.names.get(kind) == Some(&NameKind::Kind))
         else {
-            return Err(refuse(Load::Name, format!("unknown id {kind}"), file, line));
+            return Err(refuse(Load::Name, format!("unknown id {kind}"), file, line).naming(kind));
         };
         if info.spec != KindSpec::Event {
             return Err(refuse(
@@ -342,8 +410,10 @@ impl Loader {
             }
             let domain = match &bind.domain {
                 Written::Name { id, qual } => {
-                    if qual.is_some() {
-                        return Err(Stop::NotBuilt("a member's prefix"));
+                    if let Some(prefix) = qual {
+                        let named = format!("{prefix}.{id}");
+                        let unknown = format!("unknown id {named}");
+                        return Err(refuse(Load::Name, unknown, file, line).naming(&named));
                     }
                     let domain = self.resolve_domain(id, file, line)?;
                     self.check_key_shadow(var, &domain, file, line)?;
@@ -373,7 +443,7 @@ impl Loader {
                 file,
                 line,
             )),
-            None => Err(refuse(Load::Name, format!("unknown id {id}"), file, line)),
+            None => Err(refuse(Load::Name, format!("unknown id {id}"), file, line).naming(id)),
         }
     }
 
@@ -437,9 +507,7 @@ impl Loader {
                 Ok((Ty::Dist(scaled), factor))
             }
             Type::Key(name) => {
-                if name.contains('.') {
-                    return Err(Stop::NotBuilt("a member's prefix"));
-                }
+                // A prefixed `key a.x` is no name (the merge has made each member's one): unknown.
                 match self.m.names.get(name) {
                     Some(NameKind::Kind | NameKind::Index | NameKind::Axis) => {
                         Ok((Ty::Key(name.clone()), Num::int(1)))
@@ -450,7 +518,10 @@ impl Loader {
                         file,
                         line,
                     )),
-                    None => Err(refuse(Load::Name, format!("unknown id {name}"), file, line)),
+                    None => {
+                        Err(refuse(Load::Name, format!("unknown id {name}"), file, line)
+                            .naming(name))
+                    }
                 }
             }
             Type::Record(fields) => {
@@ -502,7 +573,8 @@ impl Loader {
                     format!("unknown id {base} (a unit)"),
                     file,
                     line,
-                ));
+                )
+                .naming(base));
             };
             terms.push((term, *power));
         }
@@ -531,7 +603,8 @@ fn is_percent(unit: Option<&WrittenUnit>) -> bool {
     base == "%" && *power == 1
 }
 
-/// The type a one-word type names.
+/// The type a one-word type names, the four code types by their names (refcore's
+/// `decl_type`, its `simple` table). L §3.1.
 fn word_type(word: &str) -> Option<Ty> {
     let ty = match word {
         "int" => Ty::Int,
@@ -545,7 +618,11 @@ fn word_type(word: &str) -> Option<Ty> {
         "monthday" => Ty::MonthDay,
         "rate" => Ty::Rate,
         "calendar" => Ty::Calendar,
-        other => Ty::Code(CodeKind::of_word(other)?),
+        "rounding" => Ty::Code(CodeKind::Rounding),
+        "daycount" => Ty::Code(CodeKind::Daycount),
+        "roll" => Ty::Code(CodeKind::Roll),
+        "compounding" => Ty::Code(CodeKind::Compounding),
+        _ => return None,
     };
     Some(ty)
 }

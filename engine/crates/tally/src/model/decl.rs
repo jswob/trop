@@ -11,8 +11,8 @@ use super::key::{KeyVal, Pat, Span};
 use super::ty::Ty;
 use crate::num::Num;
 use crate::syntax::{Bind, Def, Edge, Expr, FieldValue, Lit, Move, Place, Price, Rule, RuleValue};
-use crate::syntax::{LawDate, Value};
-use crate::time::Day;
+use crate::syntax::{LawDate, OfRow, Value};
+use crate::time::{Day, Period};
 
 /// What a key bind ranges over (refcore's `BindInfo.dom`).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -77,8 +77,10 @@ pub struct Row {
     pub version: String,
     /// Its own `governs` span.
     pub own_span: Option<Span>,
-    /// Its own `known` date.
+    /// Its own `known` date, or its window's first day.
     pub own_known: Option<Day>,
+    /// Its own `known window(a, b)`'s last day, b (L §4.5).
+    pub own_window: Option<Day>,
     /// A reading's instant.
     pub instant: Option<RowInstant>,
     /// Its locator text.
@@ -91,6 +93,9 @@ pub struct Row {
     pub line: u32,
     /// Its stable id, `v1:rent[2026-03]` (L §2.5), set once its target's rows are all read.
     pub sid: String,
+    /// `of q`: a stated part of a balance reading, kept beside the readings and never a total
+    /// (refcore's `row.of`). L §5.19.
+    pub of: Option<OfRow>,
 }
 
 /// An input (refcore's `InputInfo`).
@@ -122,6 +127,9 @@ pub struct InputInfo {
     pub prices_by: Option<String>,
     /// An observed input's rows.
     pub observations: Vec<Observation>,
+    /// A balance reading's stated parts, its rows with `of`, in the order versions state them
+    /// (refcore's `part_rows`). L §5.19.
+    pub part_rows: Vec<Row>,
     /// Its line.
     pub line: Option<u32>,
 }
@@ -144,6 +152,7 @@ impl InputInfo {
             prices: None,
             prices_by: None,
             observations: Vec::new(),
+            part_rows: Vec::new(),
             line,
         }
     }
@@ -189,11 +198,19 @@ pub struct DefInfo {
     pub decl: Def,
 }
 
-/// An end of a band row's interval: a number in the band's argument unit.
+/// An end of a band row's interval, a value of the band's argument type (refcore's
+/// `order_key`): a number in its unit, a date, a period, or a key at its place in its
+/// index's order (L §5.9).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum BandEnd {
-    /// A number.
+    /// A number, money's in its currency's units.
     Num(Num),
+    /// A date.
+    Day(Day),
+    /// A period, ordered by its first day, then its end.
+    Period(Period),
+    /// A key of a list or range index: its position in the index's order, and the key.
+    Key(usize, KeyVal),
 }
 
 /// A row of a band table (refcore's `BandRow`).
@@ -326,8 +343,10 @@ pub struct Observation {
     pub key: String,
     /// The version that states it.
     pub version: String,
-    /// Its own `known` date.
+    /// Its own `known` date, or its window's first day.
     pub own_known: Option<Day>,
+    /// Its own `known window(a, b)`'s last day, b (L §4.5).
+    pub own_window: Option<Day>,
     /// Its locator text.
     pub locator: Option<String>,
     /// Whether it is a `replace` line.
@@ -347,6 +366,9 @@ pub struct Observation {
     /// Its attributes as values of their types, a stated hole naming the row (refcore's
     /// `convert_value`, `_obs_attr`).
     pub values: Vec<(String, super::value::Value)>,
+    /// Its attributes that name a movement (a key of an event kind), each with the
+    /// movement's id: `bank[r1]`, `rent[a1]` (refcore's `mvref`). L §3.1, §5.19.
+    pub moves_named: Vec<(String, String)>,
     /// What it fulfils.
     pub fulfils: Option<Fulfils>,
     /// Its line.

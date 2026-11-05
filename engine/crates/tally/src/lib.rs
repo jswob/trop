@@ -2,8 +2,8 @@
 //! Spec: E §1 (the run function); the modules name their own sections.
 //! Twin: engine/tools/refcore/cli.py.
 //! Invariants: the library reads no clock, environment or file (R-38, R-39); [`run`] answers
-//! a read or parse refusal and the asks a loaded reality's evaluator can read, and
-//! `NotImplemented` for a load refusal and anything past the part built (milestone S).
+//! a read, parse or load refusal and the asks a loaded reality's evaluator can read, and
+//! `NotImplemented` for anything past the part built (milestones S and M0).
 //!
 //! Milestone S built it in groups (`engine/BUILD-LOG.md`, the S plan): the exact numbers,
 //! [`num`]; the code catalogue and refusals, [`base`]; the entry and its read step, [`run`];
@@ -21,7 +21,9 @@ mod counters;
 mod invariant;
 mod oracle;
 
-pub use api::{Answer, Asks, Given, Pin, Request, Source, run, run_with_memo};
+pub use api::{
+    Answer, Asks, Given, Pin, Request, Source, load_report, reprint, run, run_in, run_with_memo,
+};
 #[cfg(feature = "counters")]
 pub use counters::Counters;
 #[cfg(feature = "counters")]
@@ -36,7 +38,7 @@ pub mod base {
     mod table;
 
     pub use code::{Code, Hole, Load, Req, Run, Warn};
-    pub use refusal::{Place, Refusal};
+    pub use refusal::{Place, Reach, Refusal};
     pub use table::Table;
 }
 
@@ -44,23 +46,35 @@ pub mod base {
 /// them. The lexer and the parser are the `lexer-parser` area. The module's code is its
 /// files under `syntax/`.
 pub mod syntax {
+    mod ask;
+    mod canon;
+    mod canon_order;
     mod expr;
     mod item;
     mod lex;
+    mod parens;
     mod parse;
+    mod reads;
+    mod spacing;
     mod tree;
 
-    pub use item::parse_reality;
-    pub use lex::{Kind, Line, Tok, split_lines};
+    pub use canon::{printed_hash, reprint};
+    pub(crate) use expr::is_builtin;
+    pub(crate) use item::{parse_lines, prescan_units};
+    pub use item::{parse_reality, parse_split};
+    pub(crate) use lex::cannot;
+    pub use lex::{Canon, Kind, Line, Mark, Paren, Role, Tok, split_lines};
     pub use parse::Stop;
     pub use tree::{
-        AddOp, Agg, AggFn, Ask, AskBody, Bal, Band, BandRow, Bind, Calendar, CalendarDay, Call,
-        Certainty, CmpOp, DaySet, Def, Domain, Edge, Enter, Expr, Field, FieldValue, File, Flows,
-        Gap, Governs, Header, HeaderKind, In, Index, IndexForm, IndexFrom, Input, InputForm,
-        Instant, Interval, Item, ItemForm, Key, KindDecl, KindSpec, Known, LSpan, LawDate, Leg,
-        Lit, Move, MulOp, Number, OfQ, Order, Place, Postfix, Price, Proj, Residuals, Row, RowKey,
-        Rule, RuleValue, Section, Sign, Source, Span, Step, Type, TypedInput, Unit, UnitDecl,
-        UnitForm, UnitTerm, Valuation, Value, Version,
+        AddOp, Agg, AggFn, Ask, AskBody, Axis, Bal, Band, BandRow, Bind, Calendar, CalendarDay,
+        Call, Certainty, CmpOp, Crps, DaySet, Def, Diff, Dist, DistFn, DistFnKind, DistKind,
+        Domain, Edge, Enter, Expr, Field, FieldValue, File, Fill, FillLines, Flows, Gap, Governs,
+        Header, HeaderKind, In, Index, IndexForm, IndexFrom, Input, InputForm, Instant, Interval,
+        Item, ItemForm, Key, KindDecl, KindSpec, Known, LSpan, LawDate, Leg, Lit, Low, Move,
+        MoveLines, MulOp, Number, OfQ, OfRow, Order, Orient, PRef, PartsClause, Pin, PinForm,
+        Place, Postfix, Price, Proj, Prorata, Query, QueryFn, RChoice, Residuals, Rest, Row,
+        RowKey, Rule, RuleValue, Section, Sign, Solve, Source, Span, Step, Takes, Type, TypedInput,
+        Unit, UnitDecl, UnitForm, UnitTerm, Valuation, Value, Version,
     };
 }
 
@@ -88,22 +102,26 @@ pub mod model {
     mod ty;
     mod unit;
     mod value;
+    mod world;
 
     pub use decl::{
         BandEnd, BandInfo, BandRow, BindInfo, DefInfo, Domain, Fulfils, InputInfo, MoveInfo,
         ObsLeg, Observation, PlaceInfo, Row, RowInstant, RuleVer, Table as BandTable, TimePos,
     };
-    pub use graph::{Graph, Mark, Node, NodeKind, Rel, Shift, Target};
-    pub use index::{GapRole, IndexForm, IndexInfo, OwnTime, VersionInfo};
+    pub use graph::{Graph, Mark, Node, NodeKind, ReadRole, Rel, Shift, Target};
+    pub use index::{GapRole, IndexForm, IndexInfo, Moved, OwnTime, VersionInfo};
     pub use key::{KeyVal, Pat, Span, pattern_text};
-    pub use kind::{Entry, KindInfo, KindSpec, PRELUDE_KINDS, PlaceKeys, Thing, prelude};
-    pub use reality::{BUILTIN_INDEXES, BUILTIN_INPUTS, NameKind, Reality};
+    pub use kind::{Entry, KindInfo, KindSpec, Labels, PRELUDE_KINDS, PlaceKeys, Thing, prelude};
+    pub use reality::{
+        BUILTIN_INDEXES, BUILTIN_INPUTS, Joint, MemberAsks, NameKind, Reality, SamePair,
+    };
     pub use ty::{CodeKind, PeriodWord, Shown, Ty};
     pub use unit::{PERIODS, Scaled, Unit, is_currency_code};
     pub use value::{
         Class, Code, MvRef, MvSrc, Number, Value, currency, currency_id, currency_unit, money_num,
         num_money,
     };
+    pub use world::Scenarios;
 }
 
 /// Holes (L §8.1): a missing fact and the questions it carries, built only here (R-116), with
@@ -134,7 +152,9 @@ pub mod eval {
     pub(crate) use aggregate::{order_text, reads_name};
     pub use arith::{Op, Test, arith, compare, currency_of, int_of, negate, same_value};
     pub use memo::Memo;
-    pub(crate) use read::{convert_row, field_literal, make_keys, thing_seen, to_key};
+    pub(crate) use read::{
+        ConvertFor, Converted, convert, convert_row, field_literal, make_keys, thing_seen, to_key,
+    };
     pub use stack::Item;
     pub(crate) use state::num_stop;
     pub use state::{Collected, Ctx, Engine, Entry, Env};
@@ -196,29 +216,59 @@ pub mod ask {
     mod answer;
     mod register;
     mod residuals;
+    mod worlds;
 
     pub(crate) use answer::date_of;
     pub use answer::{Answered, answer};
     pub use register::{register_lines, warning_lines};
+    pub use worlds::{answer_worlds, report_lines};
 }
 
-/// Load (E §3.1 steps 1–4): the parsed files become the reality, constructively; the load
-/// refusals S makes are those construction meets, the rest are M0's.
+/// Load (E §3.1 steps 1–4): the run's files split and told into worlds, the base and each
+/// scenario's; the parsed files become each world's reality, constructively; the load refusals
+/// made are those construction meets, the rest are M0's later groups'.
 pub mod load {
+    mod across;
+    mod bands;
+    mod binds;
+    mod calls;
+    mod check;
+    mod cone;
     mod decls;
-    mod graph;
+    mod exact;
+    mod fills;
     mod indexes;
+    mod joint;
     mod keys;
     mod kinds;
+    mod lawdates;
+    mod merge;
+    mod moves;
+    mod names;
     mod observed;
+    mod ops;
+    mod overlap;
+    mod parts;
+    mod pins;
     mod places;
+    mod prices;
+    mod random;
+    mod reads;
     mod rows;
+    mod same;
+    mod scenarios;
     mod spans;
+    mod srows;
     mod steps;
     mod strata;
+    mod types;
+    mod values;
+    mod worlds;
 
+    pub use joint::member_paths;
     pub use keys::index_key_of;
     pub use steps::load;
+    pub use worlds::{Loaded, Split, Worlds, load_run, split_files};
 }
 
 /// The read rule (L §4.6): which row a read of an input, a def's givens, a dated rule or a
@@ -280,4 +330,24 @@ pub fn parse(source: &[u8]) -> Result<Vec<syntax::File>, syntax::Stop> {
         path: name.to_owned(),
         text,
     }])
+}
+
+/// Reprints one file's bytes in the canonical format, as a reality of that one file named
+/// `input` (L §2.4); the fuzz target `format` calls it: a text it prints reprints as itself.
+///
+/// # Errors
+///
+/// The refusal met (bytes that aren't UTF-8 are `LOAD-PARSE`), or a form whose order the
+/// engine doesn't build yet.
+pub fn format_file(source: &[u8]) -> Result<String, syntax::Stop> {
+    let name = "input";
+    let text = String::from_utf8(source.to_vec()).map_err(|_| base::Refusal::not_utf8(name))?;
+    let printed = syntax::reprint(&[Source {
+        path: name.to_owned(),
+        text,
+    }])?;
+    Ok(printed
+        .into_iter()
+        .map(|(_, canonical)| canonical)
+        .collect())
 }

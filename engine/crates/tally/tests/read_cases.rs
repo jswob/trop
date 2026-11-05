@@ -184,6 +184,7 @@ band|scale||2025-06-01|2026-03-01|rows v2 [0, 100]; v1 (100, inf)
     fn interval(row: &BandRow) -> String {
         let end = |e: &Option<BandEnd>, inf: &str| match e {
             Some(BandEnd::Num(n)) => n.to_text().expect("an end that prints"),
+            Some(other) => panic!("a band end this test doesn't read: {other:?}"),
             None => inf.to_owned(),
         };
         format!(
