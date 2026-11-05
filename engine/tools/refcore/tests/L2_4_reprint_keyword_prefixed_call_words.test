@@ -1,0 +1,30 @@
+# L §2.3 parse rule 3: "A word right after `.` is a field, never a keyword"; L §2.4 Expressions (tally 2.1.4-1): "none
+# before a call's `(`, its prefixes and a band's key included". Issue #84 (tally 2.1.5): any keyword word as a prefixed
+# call's name prints touching its `(`: a declaration's word (def, unit, tally), an operator's (not, if), a longer
+# prefix (x.y.when), a scenario's base (household.or). A built-in's name (min, round) printed so already, and `unit`,
+# both a keyword and a built-in, too. Was `a.not (1)`, `a.def (2)`, ...: a text no parser reads back.
+=== options reprint
+=== m.tally
+model g
+  tally 2
+  on 2026-06-01
+  start 2026-01-01
+  end 2026-12-31
+
+def c: num = a.not(1) + a.if(2) * a.def( 3 )
+def d: num = x.y.when(1) - household.or(a.tally(2))
+def e: num = a.min(1) + a.unit(2) + a.round(3)
+=== expect
+--- m.tally
+model g
+  tally 2
+  on 2026-06-01
+  start 2026-01-01
+  end 2026-12-31
+
+def c: num = a.not(1) + a.if(2) * a.def(3)
+
+def d: num = x.y.when(1) - household.or(a.tally(2))
+
+def e: num = a.min(1) + a.unit(2) + a.round(3)
+sha256 7ba058b5ebb14141e0595eeb6629b805f2c82d76f504bbfbf9864b067d2cf704
