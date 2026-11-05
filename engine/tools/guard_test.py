@@ -78,6 +78,10 @@ EDITS = [
     ("engine/crates/tally/benches/p8_m1.rs", RULES),
     (".github/workflows/engine.yml", RULES),
     (".claude/settings.json", RULES),
+    # the conventions and their templates, which the checks read (the retro after M0)
+    ("engine/CONVENTIONS.md", RULES),
+    ("engine/templates/pr.md", RULES),
+    ("engine/templates/brief.md", RULES),
     (".ignore", RULES),
     # the builder's instructions (F-23)
     ("engine/CLAUDE.md", RULES),

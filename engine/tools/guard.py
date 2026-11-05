@@ -80,6 +80,10 @@ RULE_GLOBS = [
     # the rules' full texts, which the skill and the reviewer cite (issue #3)
     "engine/RULEBOOK.md",
     "engine/BUILDER.md",
+    # the conventions and their templates, which commit-check and pr-body read (the retro
+    # after M0, decisions 6 to 8)
+    "engine/CONVENTIONS.md",
+    "engine/templates/*",
     # the seal's ignore file, which ripgrep and the Grep tool read (R-79, decision 9)
     ".ignore",
 ]
