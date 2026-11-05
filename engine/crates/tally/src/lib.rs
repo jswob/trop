@@ -67,13 +67,13 @@ pub mod syntax {
     pub use tree::{
         AddOp, Agg, AggFn, Ask, AskBody, Axis, Bal, Band, BandRow, Bind, Calendar, CalendarDay,
         Call, Certainty, CmpOp, Crps, DaySet, Def, Diff, Dist, DistFn, DistFnKind, DistKind,
-        Domain, Edge, Enter, Expr, Field, FieldValue, File, Fill, Flows, Gap, Governs, Header,
-        HeaderKind, In, Index, IndexForm, IndexFrom, Input, InputForm, Instant, Interval, Item,
-        ItemForm, Key, KindDecl, KindSpec, Known, LSpan, LawDate, Leg, Lit, Low, Move, MoveLines,
-        MulOp, Number, OfQ, OfRow, Order, Orient, PRef, PartsClause, Pin, PinForm, Place, Postfix,
-        Price, Proj, Prorata, Query, QueryFn, RChoice, Residuals, Rest, Row, RowKey, Rule,
-        RuleValue, Section, Sign, Solve, Source, Span, Step, Takes, Type, TypedInput, Unit,
-        UnitDecl, UnitForm, UnitTerm, Valuation, Value, Version,
+        Domain, Edge, Enter, Expr, Field, FieldValue, File, Fill, FillLines, Flows, Gap, Governs,
+        Header, HeaderKind, In, Index, IndexForm, IndexFrom, Input, InputForm, Instant, Interval,
+        Item, ItemForm, Key, KindDecl, KindSpec, Known, LSpan, LawDate, Leg, Lit, Low, Move,
+        MoveLines, MulOp, Number, OfQ, OfRow, Order, Orient, PRef, PartsClause, Pin, PinForm,
+        Place, Postfix, Price, Proj, Prorata, Query, QueryFn, RChoice, Residuals, Rest, Row,
+        RowKey, Rule, RuleValue, Section, Sign, Solve, Source, Span, Step, Takes, Type, TypedInput,
+        Unit, UnitDecl, UnitForm, UnitTerm, Valuation, Value, Version,
     };
 }
 
@@ -231,6 +231,7 @@ pub mod load {
     mod calls;
     mod check;
     mod decls;
+    mod fills;
     mod indexes;
     mod keys;
     mod kinds;
@@ -241,6 +242,7 @@ pub mod load {
     mod ops;
     mod overlap;
     mod parts;
+    mod pins;
     mod places;
     mod prices;
     mod reads;

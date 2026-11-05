@@ -16,8 +16,10 @@
 //! (R-16), and the parser bounds every tree well below the count.
 
 use super::across::PeriodRead;
+use super::fills::{FillState, inline_fill_edges};
 use super::keys::keyed_place_thing;
 use super::moves::{own_day_reads, settlements};
+use super::pins::{UNLOADED, unloaded_world};
 use super::prices::price_twice;
 use super::reads::{is_move_type, is_place_type};
 use super::types::{
@@ -30,8 +32,8 @@ use crate::model::{
 };
 use crate::num::Num;
 use crate::syntax::{
-    AddOp, Ask, AskBody, Domain as Written, Expr, Key, LawDate, Lit, Number, Order, Postfix,
-    RuleValue, Section, Stop,
+    AddOp, Ask, AskBody, CmpOp, Domain as Written, Expr, Key, LawDate, Lit, Number, Order, Postfix,
+    RChoice, RuleValue, Section, Stop,
 };
 use crate::time::PeriodKind;
 use std::collections::{BTreeMap, BTreeSet};
@@ -80,6 +82,15 @@ pub(super) enum Under {
     Item,
     /// Under an aggregate's binding.
     Aggregate,
+}
+
+/// How an axis is read: by its id (or as a mode), or as the key at a position over it.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) enum AxisRead {
+    /// By its id, its option the current one; or as a rounding mode.
+    ById,
+    /// As the key at a key position over the axis.
+    AtKey,
 }
 
 /// What a bound variable ranges over (refcore's `b._dom`).
@@ -181,7 +192,7 @@ impl Scope {
     }
 
     /// This scope, its expression on another line of the same file.
-    fn on_line(&self, line: u32) -> Scope {
+    pub(super) fn on_line(&self, line: u32) -> Scope {
         let mut scope = self.clone();
         scope.at.1 = line;
         scope
@@ -326,6 +337,8 @@ pub(super) struct Walked {
     pub(super) ask_reads: BTreeMap<String, Vec<Node>>,
     /// The decisions' plain balance reads, in the order typed.
     pub(super) day_reads: Vec<DayRead>,
+    /// The asks refused alone, with their refusals (refcore's `asks_alone`). L §6.4, §8.
+    pub(super) alone: BTreeMap<String, Refusal>,
 }
 
 /// The checker's state over the walk (refcore's `Checker`).
@@ -361,6 +374,8 @@ pub(super) struct Checker {
     ask_reads: BTreeMap<String, Vec<Node>>,
     /// The decisions' plain balance reads.
     day_reads: Vec<DayRead>,
+    /// The fills: each one's sides, typed once (refcore's `fill_infos`).
+    pub(super) fill: FillState,
 }
 
 /// One level deeper into an expression, refused as an invariant past the count (R-16).
@@ -390,7 +405,10 @@ pub(super) fn deeper(depth: u32) -> Result<u32, Stop> {
 pub(super) fn walk(m: &Reality, sections: &[(String, Section)]) -> Result<Walked, Stop> {
     let files = Files::of(sections);
     price_twice(m, &files)?;
-    let mut checker = Checker::default();
+    let mut checker = Checker {
+        fill: FillState::of(m, &files)?,
+        ..Checker::default()
+    };
     checker.check_parts(m, &files)?;
     checker.check_priced(m, &files)?;
     for (id, input) in m.inputs.entries() {
@@ -415,18 +433,28 @@ pub(super) fn walk(m: &Reality, sections: &[(String, Section)]) -> Result<Walked
     for (_, mv) in m.moves.entries() {
         facts.push(checker.check_move(m, mv, files.of_move(&mv.id)?)?);
     }
+    for (id, _) in m.fills.entries() {
+        checker.check_fill(m, id)?;
+    }
     for (id, def) in m.defs.entries() {
         checker.check_def(m, def, files.of_def(id)?)?;
     }
     for (_, band) in m.bands.entries() {
         checker.check_band(m, band, &files)?;
     }
+    let mut alone = BTreeMap::new();
     for ask in &m.asks {
-        checker.check_ask(m, ask, files.of_ask(&ask.id)?)?;
+        match checker.check_ask(m, ask, files.of_ask(&ask.id)?) {
+            Err(Stop::Refused(refusal)) if refused_alone(&refusal) => {
+                alone.insert(ask.id.clone(), refusal);
+            }
+            other => other?,
+        }
     }
     checker.prices_by(m, &files)?;
     checker.year4_finish()?;
     checker.kl_finish(m)?;
+    inline_fill_edges(&mut checker.graph);
     settlements(m, &checker.leg_types)?;
     Ok(Walked {
         graph: checker.graph,
@@ -437,7 +465,14 @@ pub(super) fn walk(m: &Reality, sections: &[(String, Section)]) -> Result<Walked
         move_at: checker.move_at,
         ask_reads: checker.ask_reads,
         day_reads: checker.day_reads,
+        alone,
     })
+}
+
+/// Whether an ask's refusal refuses that ask alone: a world the run doesn't load (refcore's
+/// `check_ask` caller, `LOAD-SCENARIO … neither the model nor a loaded scenario`). L §6.4, §8.
+fn refused_alone(refusal: &Refusal) -> bool {
+    refusal.code() == Code::Load(Load::Scenario) && refusal.message().contains(UNLOADED)
 }
 
 /// An `ENGINE-INVARIANT` refusal.
@@ -460,6 +495,7 @@ impl Files {
                 Section::Move(mv) => ("move", mv.id.clone()),
                 Section::Def(def) => ("def", def.id.clone()),
                 Section::Ask(ask) => ("ask", ask.id.clone()),
+                Section::Fill(fill) => ("fill", fill.id.clone()),
                 Section::Version(version) => ("version", version.id.clone()),
                 Section::Input(input) => ("input", input.id.clone()),
                 Section::Place(place) => ("place", place.id.clone()),
@@ -468,8 +504,7 @@ impl Files {
                 | Section::Unit(_)
                 | Section::Index(_)
                 | Section::Axis(_)
-                | Section::Band(_)
-                | Section::Fill(_) => continue,
+                | Section::Band(_) => continue,
             };
             by_item.insert(item, file.clone());
         }
@@ -527,6 +562,19 @@ impl Checker {
             reader: scope.item.clone(),
             at: scope.file_line(),
         });
+    }
+
+    /// An axis `axis` read by `item`: by its id or as a mode, an edge too; at a key position
+    /// of the axis, no edge (refcore's `axes_of`, `edge`). L §5.5.
+    pub(super) fn axis_read(&mut self, item: &Node, axis: &str, read: AxisRead) {
+        self.graph
+            .axes_of
+            .entry(item.clone())
+            .or_insert_with(BTreeSet::new)
+            .insert(axis.to_owned());
+        if read == AxisRead::ById {
+            self.edge(item, Node::new(NodeKind::Axis, axis), Rel::Any);
+        }
     }
 
     /// `reader` reads `target` with `rel`; an ask's reads are kept in the order first made.
@@ -875,18 +923,31 @@ impl Checker {
         Ok(())
     }
 
-    /// An ask: its bindings, `law` and `as known` (dates) and what it asks (refcore's
-    /// `check_ask`). L §5.18.
+    /// An ask: the world it names a world of the run; an ask of a scenario's file names one;
+    /// its bindings, its pins, `law` and `as known` (dates), a quantile's level, then what it
+    /// asks (refcore's `check_ask`). L §5.18, §6.4.
     fn check_ask(&mut self, m: &Reality, ask: &Ask, file: &str) -> Result<(), Stop> {
-        unbuilt_clauses(ask)?;
         let mut scope = Scope::new(
             Node::new(NodeKind::Ask, &ask.id),
             Stands::Ask,
             file,
             ask.line,
         );
+        if let Some(world) = &ask.world
+            && !m.all_worlds.contains(world)
+        {
+            return Err(scope.place(unloaded_world(&ask.id, world)));
+        }
+        let diff = matches!(ask.body, AskBody::Diff(_));
+        if m.scenarios.of(&ask.id).is_some() && ask.world.is_none() && !diff {
+            let message = format!("ask {} in a scenario file names no world", ask.id);
+            return Err(scope.place(refused(Load::World, message)));
+        }
         for bind in &ask.binds {
             self.bind(m, &mut scope, bind, 0)?;
+        }
+        for pin in &ask.pins {
+            self.pin(m, &scope, pin, 0)?;
         }
         for (clause, word) in [(&ask.law, "law"), (&ask.known, "as known")] {
             if let Some(e) = clause {
@@ -900,23 +961,68 @@ impl Checker {
                 }
             }
         }
+        if let Some(RChoice::Quantile(level)) = &ask.random {
+            let mut levelled = scope.clone();
+            levelled.allow_lit = true;
+            self.expr(m, &levelled, level, None, 0)?;
+        }
+        self.ask_body(m, &scope, ask)
+    }
+
+    /// What an ask asks: values; `check a == b`; `explain` or `inputs-of` a reference;
+    /// `readers-of` an id; `solve`; a `diff` between two worlds of the run; residuals
+    /// (refcore's `check_ask`, its forms). L §5.18, §6.4.
+    fn ask_body(&mut self, m: &Reality, scope: &Scope, ask: &Ask) -> Result<(), Stop> {
         match &ask.body {
             AskBody::Exprs(exprs) => {
                 for e in exprs {
-                    self.expr(m, &scope, e, None, 0)?;
+                    self.expr(m, scope, e, None, 0)?;
                 }
                 Ok(())
             }
-            AskBody::Residuals(residuals) => {
-                self.expr(m, &scope, &residuals.place, None, 0)?;
-                self.span(m, &scope, &residuals.span, 0)
+            AskBody::Check(left, right) => {
+                let compared = self.cmp(m, scope, left, CmpOp::Eq, right, 0);
+                compared.map(|_| ()).map_err(|stop| scope.place(stop))
             }
-            AskBody::Explain(_) => Err(Stop::NotBuilt("`explain`")),
-            AskBody::InputsOf(_) => Err(Stop::NotBuilt("`inputs-of`")),
-            AskBody::ReadersOf(_) => Err(Stop::NotBuilt("`readers-of`")),
-            AskBody::Check(..) => Err(Stop::NotBuilt("`check`")),
+            AskBody::Explain(reference) | AskBody::InputsOf(reference) => {
+                self.expr(m, scope, reference, None, 0)?;
+                let explain = matches!(ask.body, AskBody::Explain(_));
+                let plain = matches!(reference, Expr::Name(_) | Expr::Post(..));
+                let read = explain && matches!(reference, Expr::Bal(_) | Expr::Low(_));
+                if !plain && !read {
+                    let word = if explain { "explain" } else { "inputs-of" };
+                    let message = format!("cannot parse: {word} takes a reference");
+                    return Err(scope.place(refused(Load::Parse, message)));
+                }
+                Ok(())
+            }
+            AskBody::ReadersOf(reference) => {
+                let Expr::Name(id) = reference else {
+                    let message = "cannot parse: readers-of takes an id".to_owned();
+                    return Err(scope.place(refused(Load::Parse, message)));
+                };
+                if !m.names.contains_key(id) {
+                    return Err(scope.place(refused(Load::Name, format!("unknown id {id}"))));
+                }
+                Ok(())
+            }
             AskBody::Solve(_) => Err(Stop::NotBuilt("`solve`")),
-            AskBody::Diff(_) => Err(Stop::NotBuilt("`diff`")),
+            AskBody::Diff(diff) => {
+                for world in [&diff.world, &diff.against] {
+                    if !m.all_worlds.contains(world) {
+                        return Err(scope.place(unloaded_world(&ask.id, world)));
+                    }
+                }
+                let mut inner = scope.clone();
+                for bind in &diff.binds {
+                    self.bind(m, &mut inner, bind, 0)?;
+                }
+                self.expr(m, &inner, &diff.expr, None, 0).map(|_| ())
+            }
+            AskBody::Residuals(residuals) => {
+                self.expr(m, scope, &residuals.place, None, 0)?;
+                self.span(m, scope, &residuals.span, 0)
+            }
         }
     }
 
@@ -1346,7 +1452,7 @@ pub(super) fn relation(scope: &Scope, keys: &[Key]) -> Rel {
     if let Some(mode) = &scope.mode {
         return mode.clone();
     }
-    if scope.item.kind != NodeKind::Def {
+    if !matches!(scope.item.kind, NodeKind::Def | NodeKind::Fill) {
         return Rel::Any;
     }
     let bound_here = |key: &Key| {
@@ -1587,21 +1693,6 @@ fn push_once(targets: &mut Vec<Target>, target: Target) {
     if !targets.contains(&target) {
         targets.push(target);
     }
-}
-
-/// An ask's clauses this build doesn't evaluate yet: pins, `random at`, `paths`, `path`,
-/// `orient` (L §5.16, §5.18, §6.4).
-fn unbuilt_clauses(ask: &Ask) -> Result<(), Stop> {
-    if !ask.pins.is_empty() {
-        return Err(Stop::NotBuilt("an ask's `with` pins"));
-    }
-    if ask.random.is_some() || ask.paths.is_some() || ask.path.is_some() {
-        return Err(Stop::NotBuilt("random asks"));
-    }
-    if ask.orient.is_some() {
-        return Err(Stop::NotBuilt("`orient`"));
-    }
-    Ok(())
 }
 
 #[cfg(test)]

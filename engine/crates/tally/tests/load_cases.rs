@@ -8,7 +8,9 @@
 //! §3.6, §5.7 (the parts clauses, the arrival and leaving rules), §5.19 (stated parts),
 //! §5.14.1 (an arrival rule's reads) for the checks of parts; §5.11 (recurrence reads and
 //! their guards), §4.3 (law dates), §5.14.1 (running reads, a decision's balance of a day
-//! load sees), §4.6 (readings `after` a move), §4.2 (schedules) for the item graph's checks.
+//! load sees), §4.6 (readings `after` a move), §4.2 (schedules) for the item graph's checks;
+//! §5.5 (axes, their keys, a mode, `LOAD-FORKS`), §5.12 (fills and `.taken`), §5.11 (`as
+//! if`), §5.18 (pins and the ask forms), §6.4 (an ask naming an unloaded world) for G8's.
 //! Twin: engine/tools/refcore/loader.py; each expected line is refcore's load of the same
 //! text, printed in the same normalized form.
 //! Invariants: reads no test, vector or answer key (R-93); the text is written here, small.
@@ -1995,6 +1997,501 @@ version card_2026
                 text = text.replacen(old, new, 1);
             }
             assert_eq!(refusal(&text), expected, "{edits:?}");
+        }
+    }
+
+    /// Two axes, one a rounding mode; a fill and a def reading its one output; a check, an
+    /// explain and a readers-of ask; an ask pinning an axis option, an input, and an `as if`.
+    const ASKS: &str = "model m
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card \"the card\"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+index ys = year 2026..2027
+
+axis path_ax
+  low \"a low path\"
+  high \"a high path\"
+
+axis rnd
+  half-up \"half up\"
+  down \"down\"
+
+input amt: money PLN
+
+input rate[q in qs]: num
+
+input grow[a in path_ax]: num
+
+input cap[q in qs]: money PLN
+
+input need[q in qs]: money PLN
+
+place konto: accounts PLN lives 2026-01-01..
+
+fill share[y in ys]
+  supply cap[s] for s in qs
+  demand need[d] for d in qs
+  arc s == d
+  order pos(s), pos(d)
+
+def total: money PLN
+  rule base = amt
+
+def scaled: num = rate[q1] * grow[path_ax]
+
+def rounded: money PLN = round(amt, 1 PLN, rnd)
+
+def taken[y in ys]: money PLN = share[y].taken[q1, q2]
+
+version v1
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00
+  rate[q1] = 2
+  rate[q2] = 3
+  grow[low] = 1
+  grow[high] = 2
+  cap[q1] = 10.00
+  cap[q2] = 20.00
+  need[q1] = 5.00
+  need[q2] = 25.00
+  opening[konto] = 0 PLN at 2026-01-01 start
+
+ask qv: total, scaled with path_ax = low
+
+ask qc: check total == amt
+
+ask qe: explain total
+
+ask qr: readers-of amt
+
+ask qp: total with amt = 50
+
+ask qa: total as if {amt = 20} law 2026-02-01
+
+ask qt: taken[2026], rounded
+";
+
+    /// The first line a run of `text` prints for the ask its expected line `line` names, or
+    /// `None` where the engine doesn't build what the run needs.
+    fn ask_line(text: &str, line: &str) -> Option<String> {
+        let (ask, _) = line.split_once(':')?;
+        let given = vec![tally::Given {
+            path: "a.tally".to_owned(),
+            bytes: Some(text.as_bytes().to_vec()),
+        }];
+        let request = tally::Request {
+            asks: tally::Asks::Named(vec![ask.to_owned()]),
+            pin: tally::Pin::Canonical,
+            days: tally::Days::Events,
+        };
+        match tally::run(given, &request) {
+            Ok(answer) => answer.lines().first().cloned(),
+            Err(_) => None,
+        }
+    }
+
+    /// The base with each edit applied once.
+    fn edited(edits: &[(&str, &str)]) -> String {
+        let mut text = ASKS.to_owned();
+        for &(old, new) in edits {
+            assert!(text.contains(old), "{old} is in the text");
+            text = text.replacen(old, new, 1);
+        }
+        text
+    }
+
+    #[test]
+    fn axes_fills_pins_and_ask_forms_are_checked_at_load_as_refcore_checks_them() {
+        // The load probe's refusal ("loaded" when it loads clean), refcore's text.
+        let probes: &[(&[(&str, &str)], &str)] = &[
+            // base
+            (&[], "loaded"),
+            // axis-dup
+            (
+                &[(
+                    "axis path_ax\n  low \"a low path\"\n  high \"a high path\"",
+                    "axis path_ax\n  low \"a low path\"\n  low \"again\"",
+                )],
+                "LOAD-DUP a key entered twice in axis path_ax (a.tally:15)",
+            ),
+            // axis-key-id
+            (
+                &[(
+                    "axis path_ax\n  low \"a low path\"\n  high \"a high path\"",
+                    "axis path_ax\n  low \"a low path\"\n  high \"a high path\"\n\ninput low: num",
+                )],
+                "LOAD-KEY a key is also an id: low (an option of path_ax)",
+            ),
+            // axis-key
+            (
+                &[(
+                    "def scaled: num = rate[q1] * grow[path_ax]",
+                    "def scaled: num = rate[q1] * grow[high]",
+                )],
+                "loaded",
+            ),
+            // axis-key-unknown
+            (
+                &[(
+                    "def scaled: num = rate[q1] * grow[path_ax]",
+                    "def scaled: num = rate[q1] * grow[middle]",
+                )],
+                "LOAD-KEY middle is not a key of path_ax (a.tally:44)",
+            ),
+            // axis-other
+            (
+                &[(
+                    "def scaled: num = rate[q1] * grow[path_ax]",
+                    "def scaled: num = rate[q1] * grow[rnd]",
+                )],
+                "LOAD-KEY rnd is used as a key of path_ax (a.tally:44)",
+            ),
+            // axis-value
+            (
+                &[(
+                    "def scaled: num = rate[q1] * grow[path_ax]",
+                    "def scaled: bool = path_ax == low",
+                )],
+                "loaded",
+            ),
+            // axis-mode
+            (
+                &[
+                    (
+                        "axis path_ax\n  low \"a low path\"\n  high \"a high path\"",
+                        "axis path_ax\n  low \"a low path\"\n  high \"a high path\"\n\naxis odd\n  half-up \"h\"\n  exact \"e\"",
+                    ),
+                    (
+                        "def rounded: money PLN = round(amt, 1 PLN, rnd)",
+                        "def rounded: money PLN = round(amt, 1 PLN, odd)",
+                    ),
+                ],
+                "LOAD-UNIT axis odd is used as a mode, but exact is not a mode name (a.tally:50)",
+            ),
+            // axis-bind
+            (
+                &[(
+                    "ask qv: total, scaled with path_ax = low",
+                    "ask qv: total, scaled with path_ax = low\n\nask qb: sum(rate[q1] for a in path_ax)",
+                )],
+                "LOAD-DOMAIN a binding over the axis path_ax: a bind is over an index, a kind, a key list or a stepped range (L §5.6) (a.tally:67)",
+            ),
+            // forks
+            (
+                &[
+                    (
+                        "ask qv: total, scaled with path_ax = low",
+                        "ask qv: total, scaled",
+                    ),
+                    (
+                        "axis path_ax\n  low \"a low path\"\n  high \"a high path\"",
+                        "axis path_ax\n  low \"a low path\"\n  high \"a high path\"\n\naxis ax0\n  a0 \"a\"\n  b0 \"b\"\n\naxis ax1\n  a1 \"a\"\n  b1 \"b\"\n\naxis ax2\n  a2 \"a\"\n  b2 \"b\"\n\naxis ax3\n  a3 \"a\"\n  b3 \"b\"\n\naxis ax4\n  a4 \"a\"\n  b4 \"b\"\n\naxis ax5\n  a5 \"a\"\n  b5 \"b\"",
+                    ),
+                    (
+                        "def scaled: num = rate[q1] * grow[path_ax]",
+                        "def scaled: num = rate[q1] * grow[path_ax] + (if ax0 == a0 then 0 else 0) + (if ax1 == a1 then 0 else 0) + (if ax2 == a2 then 0 else 0) + (if ax3 == a3 then 0 else 0) + (if ax4 == a4 then 0 else 0) + (if ax5 == a5 then 0 else 0)",
+                    ),
+                ],
+                "LOAD-FORKS ask qv reaches 128 axis combinations; the cap is 64 (a.tally:89)",
+            ),
+            // forks-pinned
+            (
+                &[
+                    (
+                        "ask qv: total, scaled with path_ax = low",
+                        "ask qv: total, scaled with ax0 = a0",
+                    ),
+                    (
+                        "axis path_ax\n  low \"a low path\"\n  high \"a high path\"",
+                        "axis path_ax\n  low \"a low path\"\n  high \"a high path\"\n\naxis ax0\n  a0 \"a\"\n  b0 \"b\"\n\naxis ax1\n  a1 \"a\"\n  b1 \"b\"\n\naxis ax2\n  a2 \"a\"\n  b2 \"b\"\n\naxis ax3\n  a3 \"a\"\n  b3 \"b\"\n\naxis ax4\n  a4 \"a\"\n  b4 \"b\"\n\naxis ax5\n  a5 \"a\"\n  b5 \"b\"",
+                    ),
+                    (
+                        "def scaled: num = rate[q1] * grow[path_ax]",
+                        "def scaled: num = rate[q1] * grow[path_ax] + (if ax0 == a0 then 0 else 0) + (if ax1 == a1 then 0 else 0) + (if ax2 == a2 then 0 else 0) + (if ax3 == a3 then 0 else 0) + (if ax4 == a4 then 0 else 0) + (if ax5 == a5 then 0 else 0)",
+                    ),
+                ],
+                "loaded",
+            ),
+            // pin-unknown
+            (
+                &[(
+                    "ask qp: total with amt = 50",
+                    "ask qp: total with nope = 50",
+                )],
+                "LOAD-ASIF pin on unknown id nope (a.tally:73)",
+            ),
+            // pin-option
+            (
+                &[(
+                    "ask qv: total, scaled with path_ax = low",
+                    "ask qv: total, scaled with path_ax = middle",
+                )],
+                "LOAD-KEY middle is not a key of path_ax (a.tally:65)",
+            ),
+            // pin-axis-keys
+            (
+                &[(
+                    "ask qv: total, scaled with path_ax = low",
+                    "ask qv: total, scaled with path_ax[q1] = low",
+                )],
+                "LOAD-ASIF an axis pin names its option (a.tally:65)",
+            ),
+            // pin-place
+            (
+                &[(
+                    "ask qp: total with amt = 50",
+                    "ask qp: total with konto = 50",
+                )],
+                "LOAD-ASIF pin on konto, which is not an input, a def or an axis (a.tally:73)",
+            ),
+            // pin-keys
+            (
+                &[(
+                    "ask qp: total with amt = 50",
+                    "ask qp: total with rate = 50",
+                )],
+                "LOAD-KEY wrong number of keys for rate: write [*] to pin every key (a.tally:73)",
+            ),
+            // pin-keys-count
+            (
+                &[(
+                    "ask qp: total with amt = 50",
+                    "ask qp: total with rate[q1, q2] = 50",
+                )],
+                "LOAD-KEY wrong number of keys for rate (a.tally:73)",
+            ),
+            // pin-star
+            (
+                &[(
+                    "ask qp: total with amt = 50",
+                    "ask qp: total with rate[*] = 50",
+                )],
+                "loaded",
+            ),
+            // pin-field
+            (
+                &[(
+                    "ask qp: total with amt = 50",
+                    "ask qp: total with amt.x = 50",
+                )],
+                "LOAD-FIELD x is not a field of money PLN (a.tally:73)",
+            ),
+            // pin-precision
+            (
+                &[(
+                    "ask qp: total with amt = 50",
+                    "ask qp: total with amt = 50.001",
+                )],
+                "LOAD-PRECISION 50.001 is finer than the minor unit (a.tally:73)",
+            ),
+            // pin-fraction
+            (
+                &[(
+                    "ask qp: total with amt = 50",
+                    "ask qp: total with amt = 1/2",
+                )],
+                "LOAD-PARSE cannot parse: a fraction is allowed only in rows (a.tally:73)",
+            ),
+            // pin-law
+            (
+                &[("ask qp: total with amt = 50", "ask qp: total with law 5")],
+                "LOAD-UNIT pin law takes a date, not int (a.tally:73)",
+            ),
+            // pin-wording
+            (
+                &[(
+                    "ask qp: total with amt = 50",
+                    "ask qp: total with wording 2026-02-01 for [nope]",
+                )],
+                "LOAD-ASIF pin on unknown id nope (a.tally:73)",
+            ),
+            // pin-literal-rule
+            (
+                &[(
+                    "ask qa: total as if {amt = 20} law 2026-02-01",
+                    "ask qa: total as if {amt = 20} law 2026-02-01\n\ndef twice: money PLN = total as if {amt = 20}",
+                )],
+                "LOAD-LITERAL figure 20 in a rule; make it a row (a.tally:77)",
+            ),
+            // asif-unknown
+            (
+                &[(
+                    "ask qa: total as if {amt = 20} law 2026-02-01",
+                    "ask qa: total as if {nope = 20} law 2026-02-01",
+                )],
+                "LOAD-ASIF pin on unknown id nope (a.tally:75)",
+            ),
+            // asif-scenario
+            (
+                &[(
+                    "ask qa: total as if {amt = 20} law 2026-02-01",
+                    "ask qa: total as if {amt = 20} law 2026-02-01\n\ndef twice: money PLN = total as if {scenario lowered}",
+                )],
+                "LOAD-ASIF pin on unknown id lowered (a.tally:77)",
+            ),
+            // check-unit
+            (
+                &[(
+                    "ask qc: check total == amt",
+                    "ask qc: check total == rate[q1]",
+                )],
+                "LOAD-UNIT money PLN and num have different units (a.tally:67)",
+            ),
+            // explain-ref
+            (
+                &[("ask qe: explain total", "ask qe: explain total + amt")],
+                "LOAD-PARSE cannot parse: expected end of line, got + (a.tally:69)",
+            ),
+            // inputs-of-bal
+            (
+                &[(
+                    "ask qe: explain total",
+                    "ask qe: inputs-of bal(konto, 2026-02-01)",
+                )],
+                "LOAD-PARSE cannot parse: expected end of line, got ( (a.tally:69)",
+            ),
+            // readers-of-unknown
+            (
+                &[("ask qr: readers-of amt", "ask qr: readers-of nope")],
+                "LOAD-NAME unknown id nope (a.tally:71)",
+            ),
+            // readers-of-key
+            (
+                &[("ask qr: readers-of amt", "ask qr: readers-of rate[q1]")],
+                "LOAD-PARSE cannot parse: readers-of takes an id (a.tally:71)",
+            ),
+            // quantile-level
+            (
+                &[(
+                    "ask qr: readers-of amt",
+                    "ask qr: total random at quantile(0.9)",
+                )],
+                "loaded",
+            ),
+            // fill-name
+            (
+                &[(
+                    "def taken[y in ys]: money PLN = share[y].taken[q1, q2]",
+                    "def taken[y in ys]: money PLN = share",
+                )],
+                "LOAD-PARSE cannot parse: fill share is read as share.taken[...] (a.tally:48)",
+            ),
+            // fill-keys
+            (
+                &[(
+                    "def taken[y in ys]: money PLN = share[y].taken[q1, q2]",
+                    "def taken[y in ys]: money PLN = share[y]",
+                )],
+                "LOAD-PARSE cannot parse: fill share is not read with keys (a.tally:48)",
+            ),
+            // fill-count
+            (
+                &[(
+                    "def taken[y in ys]: money PLN = share[y].taken[q1, q2]",
+                    "def taken[y in ys]: money PLN = share[y].taken[q1]",
+                )],
+                "LOAD-KEY wrong number of keys for share.taken: 1, not 2 (supply keys, then demand keys) (a.tally:48)",
+            ),
+            // fill-own-keys
+            (
+                &[(
+                    "def taken[y in ys]: money PLN = share[y].taken[q1, q2]",
+                    "def taken[y in ys]: money PLN = share.taken[q1, q2]",
+                )],
+                "LOAD-KEY wrong number of keys for fill share (a.tally:48)",
+            ),
+            // fill-field
+            (
+                &[(
+                    "def taken[y in ys]: money PLN = share[y].taken[q1, q2]",
+                    "def taken[y in ys]: money PLN = share[y].taken[q1, q2].x",
+                )],
+                "LOAD-FIELD x is not a field of money PLN (a.tally:48)",
+            ),
+            // fill-units
+            (
+                &[(
+                    "  supply cap[s] for s in qs\n  demand need[d] for d in qs\n  arc s == d\n  order pos(s), pos(d)",
+                    "  supply cap[s] for s in qs\n  demand rate[d] for d in qs\n  arc s == d\n  order pos(s), pos(d)",
+                )],
+                "LOAD-UNIT fill share: supply (money PLN) and demand (num) must share a unit (L §5.12) (a.tally:35)",
+            ),
+            // fill-supply
+            (
+                &[(
+                    "  supply cap[s] for s in qs\n  demand need[d] for d in qs\n  arc s == d\n  order pos(s), pos(d)",
+                    "  supply s == q1 for s in qs\n  demand need[d] for d in qs\n  arc s == d\n  order pos(s), pos(d)",
+                )],
+                "LOAD-UNIT fill share: the supply is bool (a.tally:35)",
+            ),
+            // fill-both
+            (
+                &[(
+                    "  supply cap[s] for s in qs\n  demand need[d] for d in qs\n  arc s == d\n  order pos(s), pos(d)",
+                    "  supply cap[s] for s in qs\n  demand need[d] for s in qs\n  arc s == d\n  order pos(s), pos(d)",
+                )],
+                "LOAD-KEY d is not a key of qs (a.tally:37)",
+            ),
+            // fill-arc
+            (
+                &[(
+                    "  supply cap[s] for s in qs\n  demand need[d] for d in qs\n  arc s == d\n  order pos(s), pos(d)",
+                    "  supply cap[s] for s in qs\n  demand need[d] for d in qs\n  arc cap[s]\n  order pos(s), pos(d)",
+                )],
+                "LOAD-UNIT fill share: arc is money PLN, not bool (a.tally:35)",
+            ),
+            // fill-key-bind
+            (
+                &[
+                    (
+                        "  supply cap[s] for s in qs\n  demand need[d] for d in qs\n  arc s == d\n  order pos(s), pos(d)",
+                        "  supply cap[s] for s in qs\n  demand need[d] for d in qs\n  arc s == d\n  order pos(s), pos(d)",
+                    ),
+                    ("fill share[y in ys]", "fill share[k in konto]"),
+                ],
+                "LOAD-KEY konto is not an index, a kind, a key list or a range (a.tally:35)",
+            ),
+        ];
+        for &(edits, expected) in probes {
+            assert_eq!(refusal(&edited(edits)), expected, "{edits:?}");
+        }
+        // An ask refused alone: the run's first line for the ask it names, refcore's text.
+        let runs: &[(&[(&str, &str)], &str)] = &[
+            // pin-scenario
+            (
+                &[(
+                    "ask qp: total with amt = 50",
+                    "ask qp: total with scenario lowered",
+                )],
+                "qp: refused: LOAD-SCENARIO ask qp names lowered, neither the model nor a loaded scenario (a.tally:73)",
+            ),
+            // ask-world
+            (
+                &[("ask qc: check total == amt", "ask qc: total in lowered")],
+                "qc: refused: LOAD-SCENARIO ask qc names lowered, neither the model nor a loaded scenario (a.tally:67)",
+            ),
+            // diff-world
+            (
+                &[(
+                    "ask qr: readers-of amt",
+                    "ask qr: diff(total) in lowered against m",
+                )],
+                "qr: refused: LOAD-SCENARIO ask qr names lowered, neither the model nor a loaded scenario (a.tally:71)",
+            ),
+        ];
+        for &(edits, expected) in runs {
+            let line = ask_line(&edited(edits), expected);
+            assert_eq!(line.as_deref(), Some(expected), "{edits:?}");
         }
     }
 }

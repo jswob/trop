@@ -11,7 +11,7 @@
 //! first, and its refusal is the run's; each scenario loads with the base's files, then its
 //! stack from the model up; a world that stops `NotBuilt` stops the run.
 
-use super::steps::load;
+use super::steps::load_among;
 use crate::api::Source;
 use crate::base::{Code, Load, Place, Refusal};
 use crate::model::Reality;
@@ -133,7 +133,7 @@ pub fn load_run(files: &[Split]) -> Result<Loaded, Stop> {
     }
     if files.iter().all(|file| file.head.is_none()) {
         let all: Vec<&Split> = files.iter().collect();
-        return Ok(Loaded::One(Box::new(load_world(&all)?)));
+        return Ok(Loaded::One(Box::new(load_world(&all, &BTreeSet::new())?)));
     }
     Ok(Loaded::Worlds(Box::new(load_worlds(files)?)))
 }
@@ -152,12 +152,12 @@ fn joint_header(text: &str) -> bool {
 
 /// One world's reality: its files parsed together, then loaded (refcore's `load_texts`).
 /// E §3.1.
-fn load_world(files: &[&Split]) -> Result<Reality, Stop> {
+fn load_world(files: &[&Split], worlds: &BTreeSet<String>) -> Result<Reality, Stop> {
     let split: Vec<(&str, &[Line])> = files
         .iter()
         .map(|file| (file.path.as_str(), file.lines.as_slice()))
         .collect();
-    load(parse_split(&split)?)
+    load_among(parse_split(&split)?, worlds)
 }
 
 /// The base alone, then each scenario, by id, with the base and its stack (refcore's
@@ -173,7 +173,8 @@ fn load_worlds(files: &[Split]) -> Result<Worlds, Stop> {
             twice.insert(head.id.as_str());
         }
     }
-    let alone = match load_world(&base) {
+    let run: BTreeSet<String> = scenarios.keys().map(|id| (*id).to_owned()).collect();
+    let alone = match load_world(&base, &run) {
         Err(Stop::Refused(refusal)) => {
             return Err(Stop::Refused(read_outside(refusal, &scenarios)));
         }
@@ -195,7 +196,7 @@ fn load_worlds(files: &[Split]) -> Result<Worlds, Stop> {
                     let (under, _) = scenarios.get(over.as_str()).ok_or_else(no_stack)?;
                     world.push(under);
                 }
-                load_world(&world)
+                load_world(&world, &run)
             }
         };
         match loaded {

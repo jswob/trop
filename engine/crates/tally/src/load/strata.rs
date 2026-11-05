@@ -4,7 +4,7 @@
 //! and `reads`, decisions, walk-bound defs, the movements a projection leaves out),
 //! §5.14.2 (the order within a day: the decision graph, written `before` and `after`,
 //! cycles), §4.6 (a reading `after` a plan or an observation), §8.3 (`LOAD-CYCLE`,
-//! `-GUARD`, `-READS`, `-ORDER`), §8.5 (`WARN-UNREAD`).
+//! `-GUARD`, `-READS`, `-ORDER`), §5.5 (`LOAD-FORKS`), §8.5 (`WARN-UNREAD`).
 //! Twin: engine/tools/refcore/check.py (`Checker.run` from `check_graph` on, `check_graph`,
 //! `_cycles`); check3.py (`_tname`, `_covers`, `m_check_moves_graph`, `m_strata`, `_meets`,
 //! `m_check_after_readings`).
@@ -18,6 +18,7 @@ use super::across::{check_period_keys, check_schedules, check_seen_days};
 use super::check::{Files, ShiftRead, walk};
 use super::lawdates::{check_lawdates, check_move_lawdates};
 use super::parts::{arrival_reads, parts_walk_bound};
+use super::pins::check_forks;
 use super::steps::{Loader, refuse};
 use super::types::text;
 use crate::base::{Code, Load, Refusal, Warn};
@@ -45,7 +46,7 @@ enum Visit {
 impl Loader {
     /// The item graph and what load decides from it, in refcore's order (`Checker.run` from
     /// `check_graph` on): the walk; same-key cycles, recurrence reads and their guards, law
-    /// dates, unread items; the running reads, the decisions' reach, walk-bound defs (an
+    /// dates, the asks' axis combinations, unread items; the running reads, the decisions' reach, walk-bound defs (an
     /// arrival rule's among them), left-out moves, the strata; an arrival rule's reads of its
     /// own day; readings `after` a plan; a decision's balances of days load sees; periods
     /// across keys; moves' law dates; schedules that give no date (issue #72). E §3.1 steps
@@ -53,6 +54,7 @@ impl Loader {
     pub(super) fn build_graph(&mut self) -> Result<(), Stop> {
         let files = Files::of(&self.sections);
         let mut walked = walk(&self.m, &self.sections)?;
+        self.m.asks_alone = core::mem::take(&mut walked.alone);
         for fact in core::mem::take(&mut walked.facts) {
             if let Some(mv) = self.m.moves.get_mut(&fact.id) {
                 mv.read_targets = fact.read_targets;
@@ -62,6 +64,7 @@ impl Loader {
         same_key_cycles(&self.m, &walked.graph)?;
         recurrences(&walked.graph, &walked.shifts)?;
         let dated = check_lawdates(&self.m, &walked, &files)?;
+        walked.graph.ask_axes = check_forks(&self.m, &walked.graph, &files)?;
         let unread_items = unread(&self.m, &walked.graph);
         self.m.warnings.extend(unread_items);
         let decided = from_decisions(&self.m, &walked.graph);
@@ -767,7 +770,9 @@ fn left_out(graph: &Graph) -> BTreeMap<Node, BTreeSet<String>> {
             | NodeKind::Place
             | NodeKind::Price
             | NodeKind::Balances
-            | NodeKind::Parts => holder.clone(),
+            | NodeKind::Parts
+            | NodeKind::Axis
+            | NodeKind::Fill => holder.clone(),
         };
         out.insert(holder.clone(), dependent_moves(&readers, start));
     }

@@ -35,6 +35,10 @@ pub enum NodeKind {
     /// A kind's parts clauses, read where the walk books an arrival or a take: their reads
     /// are kept apart from the graph's edges (refcore's `('parts', k)` pseudo-item).
     Parts,
+    /// An axis, read by its id (L §5.5).
+    Axis,
+    /// A fill: its sides and its order (L §5.12).
+    Fill,
 }
 
 impl NodeKind {
@@ -52,6 +56,8 @@ impl NodeKind {
             NodeKind::Price => "price",
             NodeKind::Balances => "balances",
             NodeKind::Parts => "parts",
+            NodeKind::Axis => "axis",
+            NodeKind::Fill => "fill",
         }
     }
 }
@@ -138,6 +144,10 @@ pub enum Rel {
     Next,
     /// `observed(m[k])`, over the observed inputs.
     Observed,
+    /// A pin's target, set by an ask or an `as if` (L §5.11, §5.18).
+    Pin,
+    /// A read inside `as if {law D}`, at that law date (L §5.11).
+    LawPin,
 }
 
 impl Rel {
@@ -158,6 +168,8 @@ impl Rel {
             Rel::Calendar => "calendar".to_owned(),
             Rel::Next => "next".to_owned(),
             Rel::Observed => "observed".to_owned(),
+            Rel::Pin => "pin".to_owned(),
+            Rel::LawPin => "lawpin".to_owned(),
         }
     }
 }
@@ -255,6 +267,12 @@ pub struct Graph {
     /// The kinds that keep parts, in id order, once their clauses are checked (refcore's
     /// `parts_kinds`). L §3.6, §5.7.
     pub parts_kinds: Vec<String>,
+    /// The axes each item reads directly: by its id, in a key position or as a mode
+    /// (refcore's `axes_of`). L §5.5.
+    pub axes_of: BTreeMap<Node, BTreeSet<String>>,
+    /// The axes each ask reaches that its pins don't fix: each one forks its answer
+    /// (refcore's `a._axes`). L §5.5.
+    pub ask_axes: BTreeMap<String, BTreeSet<String>>,
 }
 
 impl Graph {

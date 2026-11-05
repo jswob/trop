@@ -141,11 +141,18 @@ pub(crate) fn answer_turns(
         match turn {
             Turn::Ask(at) => {
                 let ask = m.asks.get(*at).ok_or_else(no_turn)?;
+                if let Some(refusal) = m.asks_alone.get(&ask.id) {
+                    out.push(format!("{}: refused: {}", ask.id, refusal.text()));
+                    continue;
+                }
                 if unbuilt {
                     return Err(Stop::NotBuilt("a known window or a moves line at run"));
                 }
                 if parts {
                     return Err(Stop::NotBuilt("parts at run"));
+                }
+                if let Some(form) = unbuilt_at_run(m, ask) {
+                    return Err(Stop::NotBuilt(form));
                 }
                 out.extend(answer_one(m, ask, days, &mut seen)?);
             }
@@ -193,6 +200,28 @@ fn keeps_parts(m: &Reality) -> bool {
         || m.inputs
             .entries()
             .any(|(_, input)| !input.part_rows.is_empty())
+}
+
+/// A form load checks (M0) that the run doesn't evaluate yet, where the ask meets it: its
+/// pins, a random ask, `orient`, an axis it reaches, a fill of the reality (L §5.5, §5.12,
+/// §5.16, §5.18).
+fn unbuilt_at_run(m: &Reality, ask: &Ask) -> Option<&'static str> {
+    if !ask.pins.is_empty() {
+        return Some("an ask's pins at run");
+    }
+    if ask.random.is_some() || ask.paths.is_some() || ask.path.is_some() {
+        return Some("a random ask at run");
+    }
+    if ask.orient.is_some() {
+        return Some("orient at run");
+    }
+    if m.graph.ask_axes.get(&ask.id).is_some_and(|a| !a.is_empty()) {
+        return Some("an axis at run");
+    }
+    if !m.fills.is_empty() {
+        return Some("fills at run");
+    }
+    None
 }
 
 /// A turn whose ask the reality doesn't hold: the turns are built from its asks.

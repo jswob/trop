@@ -868,6 +868,21 @@ pub struct Fill {
     pub ties: Option<Vec<Expr>>,
     /// Its line.
     pub line: u32,
+    /// The lines of its `supply`, `demand`, `arc` and `order`, where a refusal in each is put.
+    pub lines: FillLines,
+}
+
+/// The lines of a fill's `supply`, `demand`, `arc` and `order` (L §5.12).
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub struct FillLines {
+    /// `supply e`.
+    pub supply: u32,
+    /// `demand e`.
+    pub demand: u32,
+    /// `arc e`.
+    pub arc: u32,
+    /// `order e, …`.
+    pub order: u32,
 }
 
 /// `source id "title" [at "address"]`.

@@ -70,9 +70,11 @@ impl Loader {
                 Section::Band(decl) => self.declare_band(decl, file)?,
                 Section::Place(decl) => self.declare_place(decl, file)?,
                 Section::Move(decl) => self.declare_move(decl, file)?,
-                Section::Axis(_) => return Err(Stop::NotBuilt("axes")),
-                Section::Fill(_) => return Err(Stop::NotBuilt("fills")),
-                Section::Source(_)
+                Section::Fill(decl) => {
+                    self.m.fills.push(&decl.id, decl.as_ref().clone());
+                }
+                Section::Axis(_)
+                | Section::Source(_)
                 | Section::Version(_)
                 | Section::Unit(_)
                 | Section::Kind(_)

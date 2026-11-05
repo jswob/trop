@@ -556,7 +556,8 @@ impl Checker {
         round_type(self, m, scope, call, (&xt, &ut), mode, depth)
     }
 
-    /// `round`'s mode: a rounding code (refcore's `mode_arg`). L §7.2.
+    /// `round`'s mode: a rounding code, or an axis whose options are all mode names, read
+    /// as an axis (refcore's `mode_arg`). L §7.2, §5.5.
     pub(super) fn mode_arg(
         &mut self,
         m: &Reality,
@@ -567,9 +568,17 @@ impl Checker {
     ) -> Result<(), Stop> {
         if let Expr::Name(id) = mode
             && !scope.is_var(id)
-            && m.names.get(id) == Some(&NameKind::Axis)
+            && let Some(axis) = m.axes.get(id)
         {
-            return Err(Stop::NotBuilt("axes"));
+            for (option, _) in &axis.options {
+                if CodeKind::of_word(option) != Some(CodeKind::Rounding) {
+                    return Err(uerr(format!(
+                        "axis {id} is used as a mode, but {option} is not a mode name"
+                    )));
+                }
+            }
+            self.axis_read(&scope.item, id, super::check::AxisRead::ById);
+            return Ok(());
         }
         let rounding = Ty::Code(CodeKind::Rounding);
         let t = self.expr(m, scope, mode, Some(&rounding), depth)?;

@@ -12,11 +12,11 @@ use super::lex::{Kind, Line, Role, split_lines};
 use super::parse::{P, Parens, Stop};
 use super::reads::dist_kind;
 use super::tree::{
-    Axis, Band, BandRow, Bind, Certainty, Def, Edge, Enter, Expr, File, Fill, Gap, Governs, Header,
-    HeaderKind, Index, IndexForm, IndexFrom, Input, InputForm, Instant, Interval, Item, ItemForm,
-    KindDecl, KindSpec, Known, LSpan, LawDate, Lit, Move, MoveLines, Order, PartsClause, Place,
-    Row, RowKey, Rule, RuleValue, Section, Sign, Source, Takes, TypedInput, UnitDecl, UnitForm,
-    Value, Version,
+    Axis, Band, BandRow, Bind, Certainty, Def, Edge, Enter, Expr, File, Fill, FillLines, Gap,
+    Governs, Header, HeaderKind, Index, IndexForm, IndexFrom, Input, InputForm, Instant, Interval,
+    Item, ItemForm, KindDecl, KindSpec, Known, LSpan, LawDate, Lit, Move, MoveLines, Order,
+    PartsClause, Place, Row, RowKey, Rule, RuleValue, Section, Sign, Source, Takes, TypedInput,
+    UnitDecl, UnitForm, Value, Version,
 };
 use crate::api::Source as Text;
 use crate::base::{Code, Load, Place as At, Refusal};
@@ -591,7 +591,7 @@ fn fill(p: &mut P<'_>, body: &[Line]) -> Result<Fill, Stop> {
     let binds = decl_binds(p)?;
     p.end()?;
     flat(p, body)?;
-    let mut lines = FillLines::default();
+    let mut lines = FillParts::default();
     for line in body {
         let mut q = p.under(line);
         fill_line(&mut q, first(line), &mut lines)?;
@@ -616,12 +616,13 @@ fn fill(p: &mut P<'_>, body: &[Line]) -> Result<Fill, Stop> {
         order: order.0,
         ties: order.1,
         line: p.line,
+        lines: lines.at,
     })
 }
 
 /// What a fill's lines say, gathered in order; a line written twice keeps the last.
 #[derive(Default)]
-struct FillLines {
+struct FillParts {
     /// `v`.
     v: Option<String>,
     /// Notes.
@@ -634,10 +635,12 @@ struct FillLines {
     arc: Option<Expr>,
     /// `order e, … [ties by …]`.
     order: Option<(Vec<Expr>, Option<Vec<Expr>>)>,
+    /// The line of each.
+    at: FillLines,
 }
 
 /// One of a fill's lines, after its first word.
-fn fill_line(q: &mut P<'_>, word: &str, lines: &mut FillLines) -> Result<(), Stop> {
+fn fill_line(q: &mut P<'_>, word: &str, lines: &mut FillParts) -> Result<(), Stop> {
     match word {
         "v" => lines.v = Some(q.ident("an id")?),
         "note" => lines.notes.push(q.string()?),
@@ -650,11 +653,16 @@ fn fill_line(q: &mut P<'_>, word: &str, lines: &mut FillLines) -> Result<(), Sto
             };
             if word == "supply" {
                 lines.supply = Some((side, binds));
+                lines.at.supply = q.line;
             } else {
                 lines.demand = Some((side, binds));
+                lines.at.demand = q.line;
             }
         }
-        "arc" => lines.arc = Some(q.expr(Ends::Free)?),
+        "arc" => {
+            lines.arc = Some(q.expr(Ends::Free)?);
+            lines.at.arc = q.line;
+        }
         "order" => {
             let mut keys = vec![q.expr(Ends::Free)?];
             while q.accept(",")? {
@@ -666,6 +674,7 @@ fn fill_line(q: &mut P<'_>, word: &str, lines: &mut FillLines) -> Result<(), Sto
                 None
             };
             lines.order = Some((keys, ties));
+            lines.at.order = q.line;
         }
         _ => return Err(q.cannot(&format!("{word} in a fill"))),
     }

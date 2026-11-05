@@ -70,8 +70,8 @@ impl Loader {
 
 impl Loader {
     /// No key literal is also a top-level id: a key of a list or open index, then a thing
-    /// that isn't a currency or a declared place (refcore's `check_key_ids`; an axis's options
-    /// are G8's). L §2.5, §8.3.
+    /// that isn't a currency or a declared place, then an axis's option (refcore's
+    /// `check_key_ids`). L §2.5, §5.5, §8.3.
     pub(super) fn check_key_ids(&self) -> Result<(), Stop> {
         for (id, index) in self.m.indexes.entries() {
             for (text, _) in &index.texts {
@@ -93,6 +93,16 @@ impl Loader {
                     Code::Load(Load::Key),
                     format!("a key is also an id: {name} (a thing)"),
                 )));
+            }
+        }
+        for (id, axis) in self.m.axes.entries() {
+            for (option, _) in &axis.options {
+                if self.m.names.contains_key(option) {
+                    return Err(Stop::Refused(Refusal::new(
+                        Code::Load(Load::Key),
+                        format!("a key is also an id: {option} (an option of {id})"),
+                    )));
+                }
             }
         }
         Ok(())

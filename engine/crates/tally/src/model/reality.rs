@@ -12,9 +12,9 @@ use super::index::{IndexInfo, VersionInfo};
 use super::key::Span;
 use super::kind::{Entry, KindInfo, KindSpec, Thing};
 use super::world::Scenarios;
-use crate::base::{Table, Warn};
+use crate::base::{Refusal, Table, Warn};
 use crate::num::Num;
-use crate::syntax::{Ask, Header, Price, Sign, Source, Type};
+use crate::syntax::{Ask, Axis, Fill, Header, Price, Sign, Source, Type};
 use crate::time::Day;
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -104,6 +104,16 @@ pub struct Reality {
     pub graph: Graph,
     /// The scenarios this reality loads with the base: none for a base (L §6.4).
     pub scenarios: Scenarios,
+    /// The axes, each with its options in the order written (L §5.5).
+    pub axes: Table<Axis>,
+    /// The fills, as written (L §5.12).
+    pub fills: Table<Fill>,
+    /// The worlds an ask may name: the model, this reality's scenarios and the run's
+    /// (refcore's `all_worlds`). L §6.4.
+    pub all_worlds: BTreeSet<String>,
+    /// The asks refused alone, each with its refusal: one that names a world the run doesn't
+    /// load (refcore's `asks_alone`). L §6.4, §8.
+    pub asks_alone: BTreeMap<String, Refusal>,
 }
 
 impl Reality {

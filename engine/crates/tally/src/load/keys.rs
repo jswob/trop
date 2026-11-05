@@ -141,7 +141,7 @@ pub(super) fn resolve_key(
     match domain {
         Domain::Index(id) => resolve_index_key(m, key, id, file, line),
         Domain::Kind(kind) => resolve_thing(m, key, kind, file, line),
-        Domain::Axis(_) => Err(Stop::NotBuilt("axes")),
+        Domain::Axis(axis) => resolve_option(m, key, axis, file, line),
         Domain::List(keys) => {
             let KeyLit::Lit(lit) = key else {
                 return Err(refuse(
@@ -273,6 +273,47 @@ fn period_key(keys: &[KeyVal], lit: &Lit) -> Option<KeyVal> {
             KeyVal::Key { .. } | KeyVal::Thing(_) | KeyVal::Int(_) | KeyVal::Mv(_) => false,
         })
         .cloned()
+}
+
+/// Whether `axis` is a declared axis with the option `text` (refcore's `k in m.axes[ax]`).
+/// L §5.5.
+pub(super) fn is_option(m: &Reality, axis: &str, text: &str) -> bool {
+    let Some(declared) = m.axes.get(axis) else {
+        return false;
+    };
+    declared
+        .options
+        .iter()
+        .any(|(option, _)| option.as_str() == text)
+}
+
+/// An axis's option named by a literal (refcore's `resolve_key_literal`, its axis arm).
+/// L §5.5.
+fn resolve_option(
+    m: &Reality,
+    key: &KeyLit,
+    axis: &str,
+    file: &str,
+    line: u32,
+) -> Result<KeyVal, Stop> {
+    let text = match key {
+        KeyLit::Lit(lit @ (Lit::Name(_) | Lit::Key(_) | Lit::Num(_))) => lit_text(lit),
+        KeyLit::Lit(_) | KeyLit::Place(..) => key.text(),
+    };
+    let found = is_option(m, axis, &text);
+    let named = matches!(key, KeyLit::Lit(Lit::Name(_) | Lit::Key(_) | Lit::Num(_)));
+    if found && named {
+        return Ok(KeyVal::Key {
+            index: axis.to_owned(),
+            name: text,
+        });
+    }
+    Err(refuse(
+        Load::Key,
+        format!("{text} is not a key of {axis}"),
+        file,
+        line,
+    ))
 }
 
 /// A thing of a kind: by its name, a place's id, or a keyed place at its keys.

@@ -23,6 +23,16 @@ use crate::model::{KindSpec, NameKind, Node, NodeKind, Reality, Rel, Shown, Ty};
 use crate::syntax::{Bind, Domain as Written, Expr, Lit, Stop};
 use crate::time::PeriodKind;
 
+/// How a binding is checked: as any binding, or as a fill's key bind, which is defined for
+/// every key and so needs no `on` or `over` (refcore's `bind`, its `key_bind`). L §5.6.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) enum BindAs {
+    /// Any binding.
+    Plain,
+    /// A fill's key bind.
+    KeyBind,
+}
+
 /// What a binding ranges over, as refcore's `bind` resolves it.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) enum Over {
@@ -67,7 +77,7 @@ pub(super) fn bound_twice(var: &str) -> Stop {
 ///
 /// `LOAD-SHADOW`, `LOAD-NAME`, `LOAD-ALIVE`, `LOAD-DOMAIN` or `LOAD-KEY`, with no place; a
 /// member's prefix stops "not built".
-pub(super) fn over(m: &Reality, bind: &Bind) -> Result<Over, Stop> {
+pub(super) fn over(m: &Reality, bind: &Bind, key_bind: BindAs) -> Result<Over, Stop> {
     let var = &bind.var;
     if m.names.contains_key(var) {
         return Err(refused(
@@ -77,7 +87,7 @@ pub(super) fn over(m: &Reality, bind: &Bind) -> Result<Over, Stop> {
     }
     match &bind.domain {
         Written::Name { qual: Some(_), .. } => Err(Stop::NotBuilt("a member's prefix")),
-        Written::Name { id, qual: None } => over_name(m, bind, id),
+        Written::Name { id, qual: None } => over_name(m, bind, id, key_bind),
         Written::List(keys) => {
             if keys.iter().any(|key| key_text(key) == *var) {
                 return Err(refused(
@@ -93,9 +103,9 @@ pub(super) fn over(m: &Reality, bind: &Bind) -> Result<Over, Stop> {
 
 /// A binding over a name: an index, a kind, an event kind's movements or an observed input's
 /// rows (refcore's `bind`, its `dname` arm, and `m_bind_movements`). L §5.6, §5.7, §5.14.3.
-fn over_name(m: &Reality, bind: &Bind, id: &str) -> Result<Over, Stop> {
+fn over_name(m: &Reality, bind: &Bind, id: &str, key_bind: BindAs) -> Result<Over, Stop> {
     let var = &bind.var;
-    let alive = bind.on.is_some() || bind.over.is_some();
+    let alive = bind.on.is_some() || bind.over.is_some() || key_bind == BindAs::KeyBind;
     let needs_alive = || refused(Load::Alive, format!("binding over {id} needs on or over"));
     match m.names.get(id) {
         None => Err(refused(Load::Name, format!("unknown id {id}"))),
@@ -126,7 +136,7 @@ fn over_name(m: &Reality, bind: &Bind, id: &str) -> Result<Over, Stop> {
             Ok(Over::Things(id.to_owned()))
         }
         Some(NameKind::Input) if m.inputs.get(id).is_some_and(|i| i.observed) => {
-            if alive {
+            if bind.on.is_some() || bind.over.is_some() {
                 Ok(Over::Observed(id.to_owned()))
             } else {
                 Err(needs_alive())
@@ -184,10 +194,24 @@ impl Checker {
         bind: &Bind,
         depth: u32,
     ) -> Typed {
+        self.bind_as(m, scope, bind, BindAs::Plain, depth)
+    }
+
+    /// A binding, as [`Checker::bind`]; a fill's key bind (`key_bind`) is defined for every
+    /// key, so its binding over a kind or movements needs no `on` or `over` (refcore's
+    /// `bind`, its `key_bind`). L §5.6, §5.12.
+    pub(super) fn bind_as(
+        &mut self,
+        m: &Reality,
+        scope: &mut Scope,
+        bind: &Bind,
+        key_bind: BindAs,
+        depth: u32,
+    ) -> Typed {
         if scope.is_var(&bind.var) {
             return Err(scope.place(bound_twice(&bind.var)));
         }
-        let over_what = over(m, bind).map_err(|stop| scope.place(stop))?;
+        let over_what = over(m, bind, key_bind).map_err(|stop| scope.place(stop))?;
         let mut keylist = Vec::new();
         let (ty, dom) = match &over_what {
             Over::Index(ix) => (Ty::Key(ix.clone()), VarDom::Index(ix.clone())),
@@ -625,7 +649,7 @@ fn refused(code: Load, message: String) -> Stop {
 
 #[cfg(test)]
 mod tests {
-    use super::{Over, alive_clause, bound_twice, over};
+    use super::{BindAs, Over, alive_clause, bound_twice, over};
     use crate::api::Source;
     use crate::load::load;
     use crate::model::Reality;
@@ -679,7 +703,7 @@ mod tests {
     fn check_all(m: &Reality, cases: &[(Bind, &str)]) {
         for (bind, want) in cases {
             assert_eq!(
-                message(over(m, bind)),
+                message(over(m, bind, BindAs::Plain)),
                 *want,
                 "{} in {:?}",
                 bind.var,

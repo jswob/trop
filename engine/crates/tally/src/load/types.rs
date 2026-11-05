@@ -14,7 +14,7 @@
 //! typed; a form this checker doesn't type yet is `Unseen`, which no rule refuses, so a text
 //! refcore loads is never refused for it; every recursion is counted (R-16).
 
-use super::check::{Checker, Figure, Scope, Stands, Var, VarDom, deeper};
+use super::check::{AxisRead, Checker, Figure, Scope, Stands, Var, VarDom, deeper};
 use super::keys::{KeyLit, resolve_key};
 use crate::base::{Code, Load, Refusal};
 use crate::model::{
@@ -23,7 +23,8 @@ use crate::model::{
 };
 use crate::num::Num;
 use crate::syntax::{
-    AddOp, AggFn, CmpOp, Expr, Field, FieldValue, Key, Lit, MulOp, Number, Postfix, Span, Stop,
+    AddOp, AggFn, CmpOp, Expr, Field, FieldValue, Key, Lit, MulOp, Number, Pin, PinForm, Postfix,
+    Span, Stop,
 };
 use crate::time::PeriodKind;
 
@@ -467,6 +468,32 @@ fn list_text(exprs: &[Expr]) -> String {
     shown.join(", ")
 }
 
+/// A fill's output at the head of `base` and `posts`: `F.taken[s, d]` or `F[k].taken[s, d]`,
+/// `F` a fill: its id, its own keys, the keys of `taken`, and how many postfixes they take
+/// (refcore's `m_fill_ref`). L §5.12.
+fn fill_ref(
+    m: &Reality,
+    scope: &Scope,
+    base: &Expr,
+    posts: &[Postfix],
+) -> Option<(String, Vec<Key>, Vec<Key>, usize)> {
+    let Expr::Name(name) = base else {
+        return None;
+    };
+    if scope.is_var(name) || m.names.get(name) != Some(&NameKind::Fill) {
+        return None;
+    }
+    let (fkeys, at) = match posts {
+        [Postfix::Field(f), ..] if f == "taken" => (Vec::new(), 1),
+        [Postfix::Keys(keys), Postfix::Field(f), ..] if f == "taken" => (keys.clone(), 2),
+        _ => return None,
+    };
+    match posts.get(at) {
+        Some(Postfix::Keys(keys)) => Some((name.clone(), fkeys, keys.clone(), at.checked_add(1)?)),
+        Some(Postfix::Field(_)) | None => Some((name.clone(), fkeys, Vec::new(), at)),
+    }
+}
+
 /// A base with its postfixes, `x[k].f`.
 fn post_text(base: &Expr, posts: &[Postfix]) -> String {
     let mut out = text(base);
@@ -802,8 +829,29 @@ impl Checker {
             Expr::DistFn(..) => Err(Stop::NotBuilt("`cdf`, `pdf` and `pmf`")),
             Expr::Dist(..) => Err(Stop::NotBuilt("distributions")),
             Expr::Prorata(..) => Err(Stop::NotBuilt("`prorata`")),
-            Expr::AsIf(..) => Err(Stop::NotBuilt("`as if`")),
+            Expr::AsIf(inner, pins) => self.as_if(m, scope, inner, pins, expect, depth),
         }
+    }
+
+    /// `e as if {pins}`: each pin checked, then `e`, its reads inside `{law D}` made at that
+    /// law date (refcore's `t_asif`). L §5.11.
+    fn as_if(
+        &mut self,
+        m: &Reality,
+        scope: &Scope,
+        inner: &Expr,
+        pins: &[Pin],
+        expect: Option<&Ty>,
+        depth: u32,
+    ) -> Typed {
+        let mut under = scope.clone();
+        for pin in pins {
+            self.pin(m, scope, pin, depth)?;
+            if matches!(pin.form, PinForm::Law(_)) && under.mode.is_none() {
+                under.mode = Some(Rel::LawPin);
+            }
+        }
+        self.expr(m, &under, inner, expect, depth)
     }
 
     /// A literal (refcore's `t_num`, `t_date`, `t_month`, `t_quarter`, `t_mmdd`, `t_key`,
@@ -974,7 +1022,10 @@ impl Checker {
             NameKind::Input | NameKind::Def => self.read(m, scope, name, kind, &[], depth),
             NameKind::Place => self.place_value(m, scope, name, &[], depth),
             NameKind::Move => self.move_value(m, scope, name, &[], depth),
-            NameKind::Axis => Err(Stop::NotBuilt("axes")),
+            NameKind::Axis => {
+                self.axis_read(&scope.item, name, AxisRead::ById);
+                Ok(Ty::Key(name.to_owned()))
+            }
             NameKind::Cut => Ok(Ty::Date),
             NameKind::Index | NameKind::Kind => Err(refused(
                 Load::Parse,
@@ -987,7 +1038,10 @@ impl Checker {
                 Load::Parse,
                 format!("cannot parse: band {name} is called with ( )"),
             )),
-            NameKind::Fill => Err(Stop::NotBuilt("fills")),
+            NameKind::Fill => Err(refused(
+                Load::Parse,
+                format!("cannot parse: fill {name} is read as {name}.taken[...]"),
+            )),
             NameKind::Version | NameKind::Source | NameKind::Unit | NameKind::Ask => Err(refused(
                 Load::Parse,
                 format!("cannot parse: {} {name} is not a value", name_word(kind)),
@@ -1176,8 +1230,19 @@ impl Checker {
         domain: &Domain,
         depth: u32,
     ) -> Result<Option<KeyVal>, Stop> {
-        if let Domain::Axis(_) = domain {
-            return Err(Stop::NotBuilt("axes"));
+        if let (Domain::Axis(axis), Expr::Name(name)) = (domain, kn)
+            && !scope.is_var(name)
+        {
+            if name == axis {
+                self.axis_read(&scope.item, axis, AxisRead::AtKey);
+                return Ok(None);
+            }
+            if m.axes.contains(name) {
+                return Err(refused(
+                    Load::Key,
+                    format!("{name} is used as a key of {axis}"),
+                ));
+            }
         }
         if let Domain::Index(ix) = domain
             && let Some(pk) = m.indexes.get(ix).and_then(|index| index.period)
@@ -1355,32 +1420,36 @@ impl Checker {
         expect: Option<&Ty>,
         depth: u32,
     ) -> Typed {
-        let Some((first, rest)) = posts.split_first() else {
+        let Some(first) = posts.first() else {
             return self.expr(m, scope, base, expect, depth);
         };
-        let mut ty = match first {
+        if let Some((fill, fkeys, keys, used)) = fill_ref(m, scope, base, posts) {
+            let ty = self.fill_read(m, scope, &fill, (&fkeys, &keys), depth)?;
+            return Self::post_rest(m, scope, base, posts, (ty, used));
+        }
+        let ty = match first {
             Postfix::Keys(keys) => self.index(m, scope, base, keys, depth)?,
             Postfix::Field(field) => {
-                if let Expr::Name(name) = base
-                    && !scope.is_var(name)
-                    && m.names.get(name) == Some(&NameKind::Fill)
-                {
-                    return Err(Stop::NotBuilt("fills"));
-                }
                 let t = self.expr(m, scope, base, None, depth)?;
                 Self::field(m, scope, Some(base), &t, field)?
             }
         };
-        let mut done = 1_usize;
-        for post in rest {
+        Self::post_rest(m, scope, base, posts, (ty, 1))
+    }
+
+    /// The postfixes after the first `done` of `posts`, the value so far of type `ty`: fields
+    /// of it; a key there is no read (refcore's `t_index`, `t_field`). L §2.5, §3.1.
+    fn post_rest(
+        m: &Reality,
+        scope: &Scope,
+        base: &Expr,
+        posts: &[Postfix],
+        (mut ty, mut done): (Ty, usize),
+    ) -> Typed {
+        for post in posts.get(done..).unwrap_or(&[]) {
             let prefix = post_text(base, posts.get(..done).unwrap_or(&[]));
             match post {
                 Postfix::Keys(_) => {
-                    if let Expr::Name(name) = base
-                        && m.names.get(name) == Some(&NameKind::Fill)
-                    {
-                        return Err(Stop::NotBuilt("fills"));
-                    }
                     return Err(refused(
                         Load::Parse,
                         format!("cannot parse: {prefix} is not read with keys"),

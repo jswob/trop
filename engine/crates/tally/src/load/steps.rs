@@ -49,12 +49,30 @@ pub(super) fn num_stop(error: NumError) -> Stop {
 ///
 /// A load refusal construction meets, or `NotBuilt` for a form S doesn't build.
 pub fn load(files: Vec<File>) -> Result<Reality, Stop> {
+    load_among(files, &BTreeSet::new())
+}
+
+/// The reality the files state, loaded among the run's other worlds `worlds` (the scenarios
+/// of a run with scenarios, which an ask of the base may name) (refcore's `load_texts` with
+/// its `worlds`). E §3.1; L §6.4.
+///
+/// # Errors
+///
+/// As [`load`].
+pub(super) fn load_among(files: Vec<File>, worlds: &BTreeSet<String>) -> Result<Reality, Stop> {
     let mut loader = Loader::new(files)?;
+    loader.m.all_worlds.clone_from(worlds);
+    loader
+        .m
+        .all_worlds
+        .extend(loader.m.scenarios.over.keys().cloned());
+    loader.m.all_worlds.insert(loader.m.header.id.clone());
     loader.register_builtins();
     loader.register_names()?;
     loader.build_units()?;
     loader.build_kinds()?;
     loader.build_indexes()?;
+    loader.build_axes()?;
     loader.build_versions()?;
     loader.unread_sources();
     loader.build_entries()?;
@@ -134,6 +152,10 @@ impl Loader {
                 warnings: Vec::new(),
                 graph: Graph::default(),
                 scenarios,
+                axes: Table::new(),
+                fills: Table::new(),
+                all_worlds: BTreeSet::new(),
+                asks_alone: BTreeMap::new(),
             },
             sections,
             currency_order: Vec::new(),
@@ -171,6 +193,27 @@ impl Loader {
                     self.m.units.insert(unit.id.clone());
                 }
             }
+        }
+        Ok(())
+    }
+
+    /// The axes, each with its options; a key entered twice is `LOAD-DUP` (refcore's
+    /// `build_axes`). L §5.5.
+    fn build_axes(&mut self) -> Result<(), Stop> {
+        for (file, section) in &self.sections {
+            let Section::Axis(axis) = section else {
+                continue;
+            };
+            let mut seen = BTreeSet::new();
+            if !axis
+                .options
+                .iter()
+                .all(|(key, _)| seen.insert(key.as_str()))
+            {
+                let message = format!("a key entered twice in axis {}", axis.id);
+                return Err(refuse(Load::Dup, message, file, axis.line));
+            }
+            self.m.axes.push(&axis.id, axis.as_ref().clone());
         }
         Ok(())
     }

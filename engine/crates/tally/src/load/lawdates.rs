@@ -19,7 +19,7 @@ use crate::base::Load;
 use crate::model::{
     DefInfo, Graph, InputInfo, MoveInfo, Node, NodeKind, Reality, Rel, Row, Span, TimePos,
 };
-use crate::syntax::{LawDate, Stop};
+use crate::syntax::{LawDate, PinForm, Stop};
 use std::collections::{BTreeMap, BTreeSet};
 
 /// Each def's reads inside its `at`, with their relations.
@@ -51,7 +51,7 @@ impl LawDated {
 /// 'explicit', 'lawpin'}`). L §4.3.
 fn dating(rels: &[Rel]) -> bool {
     rels.iter()
-        .any(|rel| !matches!(rel, Rel::Calendar | Rel::Explicit))
+        .any(|rel| !matches!(rel, Rel::Calendar | Rel::Explicit | Rel::Pin | Rel::LawPin))
 }
 
 /// Whether a move's read with `rels` dates it: neither a binding, `flows`, `next`,
@@ -63,6 +63,8 @@ fn dating_move(rels: &[Rel]) -> bool {
             rel,
             Rel::Calendar
                 | Rel::Explicit
+                | Rel::Pin
+                | Rel::LawPin
                 | Rel::Bind
                 | Rel::Flows
                 | Rel::Next
@@ -145,7 +147,9 @@ fn dated_item(m: &Reality, at: &AtReads, dated: &LawDated, target: &Node) -> Opt
         | NodeKind::Ask
         | NodeKind::Price
         | NodeKind::Balances
-        | NodeKind::Parts => None,
+        | NodeKind::Parts
+        | NodeKind::Axis
+        | NodeKind::Fill => None,
     }
 }
 
@@ -291,8 +295,9 @@ pub(super) fn check_lawdates(
             ));
         }
     }
-    for ask in &m.asks {
-        if ask.law.is_some() {
+    for ask in m.asks.iter().filter(|a| !m.asks_alone.contains_key(&a.id)) {
+        let law_pin = ask.pins.iter().any(|p| matches!(p.form, PinForm::Law(_)));
+        if ask.law.is_some() || law_pin {
             continue;
         }
         let Some(reads) = graph.reads(&Node::new(NodeKind::Ask, &ask.id)) else {
@@ -440,7 +445,9 @@ fn at_reads_dated(m: &Reality, dated: &LawDated, node: &Node) -> bool {
         | NodeKind::Ask
         | NodeKind::Price
         | NodeKind::Balances
-        | NodeKind::Parts => false,
+        | NodeKind::Parts
+        | NodeKind::Axis
+        | NodeKind::Fill => false,
     }
 }
 

@@ -279,7 +279,8 @@ ask early: flows(out_0, 2025-01-01 .. 2025-03-31), bal(acc_0, 2025-03-31) as kno
     }
 
     /// Each form S's parser left out, as M0's parser reads it; refcore parses each of these
-    /// lines (its answers are load refusals, the axis prints nothing). L §2.3.
+    /// lines (its answers are load refusals, the `diff` naming an unloaded world refused
+    /// alone; the axis loads and prints nothing, as the engine does since G8). L §2.3.
     #[test]
     fn the_forms_of_milestone_m0_parse() {
         let cases = [
@@ -323,9 +324,13 @@ ask early: flows(out_0, 2025-01-01 .. 2025-03-31), bal(acc_0, 2025-03-31) as kno
             let ran = run_one(&format!("{HEADER}{text}\n"));
             let stopped = match &ran {
                 Err(NotImplemented) => true,
-                Ok(lines) => matches!(lines.as_slice(), [line] if line.starts_with("refused: ")),
+                Ok(lines) => match lines.as_slice() {
+                    [] => want == "axis 2",
+                    [line] => line.starts_with("refused: ") || line.starts_with("q: refused: "),
+                    _ => false,
+                },
             };
-            assert!(stopped, "{text}: a form not built answers nothing: {ran:?}");
+            assert!(stopped, "{text}: answers a refusal, or nothing: {ran:?}");
         }
     }
 

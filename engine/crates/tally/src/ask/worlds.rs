@@ -64,6 +64,10 @@ pub fn answer_worlds(w: &Worlds, asks: &Asks, days: Days, memo: Memo) -> Result<
         .map(|(id, r)| Turn::Line(format!("scenario {id}: refused: {}", r.text())))
         .collect();
     for ((_, world), (at, ask)) in order {
+        if let Some(base_at) = at.filter(|_| w.base.asks_alone.contains_key(&ask.id)) {
+            turns.push(Turn::Ask(base_at));
+            continue;
+        }
         let named = worlds_named(ask, world, model);
         if let Some((_, refusal)) = w.refused.iter().find(|(id, _)| named.contains(*id)) {
             turns.push(Turn::Line(format!(
