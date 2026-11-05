@@ -98,6 +98,69 @@ version card_2026
   rate[q2] = 0 "the card"
   opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
 ,,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,10:gifts/base,7:REQ-ASK,5:gifts,32:run base.tally --ask zz_m0_probe,1587:10:base.tally,1567:model gifts
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M0's load-code fixtures (invented): adjust's text, an event kind with a giver, and lifespan of a bound name's field over events and under a kind test; it loads clean"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+unit EUR: currency minor 0.01
+
+kind wages: event certain
+  leg cash: PLN
+
+kind gifts: event certain
+  leg cash: PLN
+  attr giver: key accounts
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input bank: observed
+
+input wage_amt: money PLN
+
+input wage_dom: int
+
+def net[m in months]: money PLN = wage_amt at start_of(m)
+
+def early: int = count(e in events over .. where lifespan(e.giver).from < e.day)
+
+def early_gifts: int = count(e in events over .. where e in gifts and lifespan(e.giver).to > e.day)
+
+move wage[m in months]: wages
+  on day_of(m, wage_dom)
+  at start_of(m)
+  leg cash from world to konto amount net[m]
+
+ask q: bal(konto, 2026-12-31)
+
+version plan
+  cite card
+  governs always
+  known 2025-12-01
+  wage_amt = 5 000.00 "a wage"
+  wage_dom = 10 "paid on the 10th"
+  opening[konto] = 0 at 2026-01-01 start "the card"
+
+version raise
+  cite card
+  governs 2026-03..2026-04
+  known 2026-05-01
+  replace wage_amt = 5 500.00 "a raise for March and April"
+
+version bank_a
+  cite card
+  governs 2026-05
+  known 2026-06-01
+  bank[r1] = (on: 2026-05-15, kind: wages, leg cash from world to konto amount 500.00 PLN, fulfils: adjustments[wage[2026-03].cash, raise]) "back pay for March"
+,,1:1,36:refused: REQ-ASK no ask zz_m0_probe
 ,10:joint/base,7:REQ-ASK,5:joint,33:run joint.tally --ask zz_m0_probe,780:11:joint.tally,339:model family
   tally 2
   on 2026-03-01
@@ -7109,4 +7172,743 @@ version bank_a
   known 2026-06-01
   bank[r1] = (on: 2026-05-15, kind: wages, leg cash from world to konto amount 500.00 PLN, fulfils: adjustments[wage[2026-03].cash, raise]) "back pay for March"
 ,,1:1,63:refused: LOAD-FIELD zz is not a field of wages (base.tally:29)
+,20:gifts/lifespan-field,10:LOAD-FIELD,5:gifts,32:run base.tally --ask zz_m0_probe,1585:10:base.tally,1565:model gifts
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M0's load-code fixtures (invented): adjust's text, an event kind with a giver, and lifespan of a bound name's field over events and under a kind test; it loads clean"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+unit EUR: currency minor 0.01
+
+kind wages: event certain
+  leg cash: PLN
+
+kind gifts: event certain
+  leg cash: PLN
+  attr giver: key accounts
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input bank: observed
+
+input wage_amt: money PLN
+
+input wage_dom: int
+
+def net[m in months]: money PLN = wage_amt at start_of(m)
+
+def early: int = count(e in events over .. where lifespan(e.giver).zz < e.day)
+
+def early_gifts: int = count(e in events over .. where e in gifts and lifespan(e.giver).to > e.day)
+
+move wage[m in months]: wages
+  on day_of(m, wage_dom)
+  at start_of(m)
+  leg cash from world to konto amount net[m]
+
+ask q: bal(konto, 2026-12-31)
+
+version plan
+  cite card
+  governs always
+  known 2025-12-01
+  wage_amt = 5 000.00 "a wage"
+  wage_dom = 10 "paid on the 10th"
+  opening[konto] = 0 at 2026-01-01 start "the card"
+
+version raise
+  cite card
+  governs 2026-03..2026-04
+  known 2026-05-01
+  replace wage_amt = 5 500.00 "a raise for March and April"
+
+version bank_a
+  cite card
+  governs 2026-05
+  known 2026-06-01
+  bank[r1] = (on: 2026-05-15, kind: wages, leg cash from world to konto amount 500.00 PLN, fulfils: adjustments[wage[2026-03].cash, raise]) "back pay for March"
+,,1:1,78:refused: LOAD-FIELD zz is not a field of (from date, to date) (base.tally:33)
+,19:gifts/lifespan-args,10:LOAD-PARSE,5:gifts,32:run base.tally --ask zz_m0_probe,1594:10:base.tally,1574:model gifts
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M0's load-code fixtures (invented): adjust's text, an event kind with a giver, and lifespan of a bound name's field over events and under a kind test; it loads clean"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+unit EUR: currency minor 0.01
+
+kind wages: event certain
+  leg cash: PLN
+
+kind gifts: event certain
+  leg cash: PLN
+  attr giver: key accounts
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input bank: observed
+
+input wage_amt: money PLN
+
+input wage_dom: int
+
+def net[m in months]: money PLN = wage_amt at start_of(m)
+
+def early: int = count(e in events over .. where lifespan(e.giver).from < e.day)
+
+def early_gifts: int = count(e in events over .. where e in gifts and lifespan(e.giver, e.day).to > e.day)
+
+move wage[m in months]: wages
+  on day_of(m, wage_dom)
+  at start_of(m)
+  leg cash from world to konto amount net[m]
+
+ask q: bal(konto, 2026-12-31)
+
+version plan
+  cite card
+  governs always
+  known 2025-12-01
+  wage_amt = 5 000.00 "a wage"
+  wage_dom = 10 "paid on the 10th"
+  opening[konto] = 0 at 2026-01-01 start "the card"
+
+version raise
+  cite card
+  governs 2026-03..2026-04
+  known 2026-05-01
+  replace wage_amt = 5 500.00 "a raise for March and April"
+
+version bank_a
+  cite card
+  governs 2026-05
+  known 2026-06-01
+  bank[r1] = (on: 2026-05-15, kind: wages, leg cash from world to konto amount 500.00 PLN, fulfils: adjustments[wage[2026-03].cash, raise]) "back pay for March"
+,,1:1,77:refused: LOAD-PARSE cannot parse: lifespan takes 1 arguments (base.tally:35)
+,16:basic/forks-wide,10:LOAD-FORKS,5:basic,32:run base.tally --ask zz_m0_probe,3017:10:base.tally,2997:model basic
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M0's load-code fixtures (invented): it loads clean; each fixture of codes/m0/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+axis a1
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a2
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a3
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a4
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a5
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a6
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a7
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a8
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a9
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a10
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a11
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a12
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a13
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a14
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a15
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a16
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a17
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a18
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a19
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a20
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a21
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a22
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a23
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a24
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a25
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a26
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a27
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a28
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a29
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a30
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a31
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a32
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a33
+  lo "low"
+  mid "mid"
+  hi "high"
+
+def n: int
+  rule base = 0
+  rule r1 beats base = 1 when a1 == lo and a2 == lo and a3 == lo and a4 == lo and a5 == lo and a6 == lo and a7 == lo and a8 == lo and a9 == lo and a10 == lo and a11 == lo and a12 == lo and a13 == lo and a14 == lo and a15 == lo and a16 == lo and a17 == lo and a18 == lo and a19 == lo and a20 == lo and a21 == lo and a22 == lo and a23 == lo and a24 == lo and a25 == lo and a26 == lo and a27 == lo and a28 == lo and a29 == lo and a30 == lo and a31 == lo and a32 == lo and a33 == lo
+
+input amt: money PLN
+
+input day: date
+
+input rate[k in qs]: num
+
+def fee[k in qs]: money PLN
+  rule base v card_2026 = round(amt * rate[k], minor(PLN), half-up)
+  rule waived beats base v card_2026 = 0 PLN when rate[k] == 0
+
+def total: money PLN = sum(fee[k] for k in qs)
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on day
+  leg cash from konto to world amount fee[q1]
+
+ask q: total, bal(konto, 2026-12-31), n
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  day = 2026-02-10 "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+,,1:1,101:refused: LOAD-FORKS ask q reaches 5559060566555523 axis combinations; the cap is 64 (base.tally:203)
+,19:basic/forks-past-64,10:LOAD-FORKS,5:basic,32:run base.tally --ask zz_m0_probe,5200:10:base.tally,5180:model basic
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M0's load-code fixtures (invented): it loads clean; each fixture of codes/m0/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+axis a1
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a2
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a3
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a4
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a5
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a6
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a7
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a8
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a9
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a10
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a11
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a12
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a13
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a14
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a15
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a16
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a17
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a18
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a19
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a20
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a21
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a22
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a23
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a24
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a25
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a26
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a27
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a28
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a29
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a30
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a31
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a32
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a33
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a34
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a35
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a36
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a37
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a38
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a39
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a40
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a41
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a42
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a43
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a44
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a45
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a46
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a47
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a48
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a49
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a50
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a51
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a52
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a53
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a54
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a55
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a56
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a57
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a58
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a59
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a60
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a61
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a62
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a63
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a64
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a65
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a66
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a67
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a68
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a69
+  lo "low"
+  mid "mid"
+  hi "high"
+
+axis a70
+  lo "low"
+  mid "mid"
+  hi "high"
+
+def n: int
+  rule base = 0
+  rule r1 beats base = 1 when a1 == lo and a2 == lo and a3 == lo and a4 == lo and a5 == lo and a6 == lo and a7 == lo and a8 == lo and a9 == lo and a10 == lo and a11 == lo and a12 == lo and a13 == lo and a14 == lo and a15 == lo and a16 == lo and a17 == lo and a18 == lo and a19 == lo and a20 == lo and a21 == lo and a22 == lo and a23 == lo and a24 == lo and a25 == lo and a26 == lo and a27 == lo and a28 == lo and a29 == lo and a30 == lo and a31 == lo and a32 == lo and a33 == lo and a34 == lo and a35 == lo and a36 == lo and a37 == lo and a38 == lo and a39 == lo and a40 == lo and a41 == lo and a42 == lo and a43 == lo and a44 == lo and a45 == lo and a46 == lo and a47 == lo and a48 == lo and a49 == lo and a50 == lo and a51 == lo and a52 == lo and a53 == lo and a54 == lo and a55 == lo and a56 == lo and a57 == lo and a58 == lo and a59 == lo and a60 == lo and a61 == lo and a62 == lo and a63 == lo and a64 == lo and a65 == lo and a66 == lo and a67 == lo and a68 == lo and a69 == lo and a70 == lo
+
+input amt: money PLN
+
+input day: date
+
+input rate[k in qs]: num
+
+def fee[k in qs]: money PLN
+  rule base v card_2026 = round(amt * rate[k], minor(PLN), half-up)
+  rule waived beats base v card_2026 = 0 PLN when rate[k] == 0
+
+def total: money PLN = sum(fee[k] for k in qs)
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on day
+  leg cash from konto to world amount fee[q1]
+
+ask q: total, bal(konto, 2026-12-31), n
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  day = 2026-02-10 "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+,,1:1,119:refused: LOAD-FORKS ask q reaches 2503155504993241601315571986085849 axis combinations; the cap is 64 (base.tally:388)
 ,

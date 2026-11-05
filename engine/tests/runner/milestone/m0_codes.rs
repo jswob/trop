@@ -178,13 +178,15 @@ mod tests {
 
     /// `LOAD-FIELD`: `basic/field`, `basic/field-not`, `lifepath/lifespan-field`,
     /// `adjust/adjusts-field`, `adjust/bound-adjusts-field` (a field read through `.adjusts`),
-    /// `adjust/aggregate-field` (through an aggregate) (G12, 9d9f5a1).
+    /// `adjust/aggregate-field` (through an aggregate) (G12, 9d9f5a1), `gifts/lifespan-field`
+    /// (`lifespan` of a bound name's field is the record: G13's G1).
     #[test]
     fn m0_code_load_field() {
         code_as_refcore("LOAD-FIELD");
     }
 
-    /// `LOAD-FORKS`: `basic/forks`.
+    /// `LOAD-FORKS`: `basic/forks`, `basic/forks-wide`, `basic/forks-past-64` (a count of 16
+    /// digits and one past 64 bits, printed as plain digits: G13's S2).
     #[test]
     fn m0_code_load_forks() {
         code_as_refcore("LOAD-FORKS");
@@ -325,7 +327,8 @@ mod tests {
     /// `LOAD-PARSE`: `lifepath/path-alone` (a path count printed, past 64 bits: G11's B6),
     /// `lifepath/lifespan-two`, `lifepath/lifespan-none` (`lifespan` takes one thing: G11's B2),
     /// `scenplace/covered-args`, `scenplace/covered-call` (`covered` through a scenario row's
-    /// base prefix: G12's N1).
+    /// base prefix: G12's N1), `gifts/lifespan-args` (`lifespan` of a bound name's field under
+    /// a kind test: G13's G1).
     #[test]
     fn m0_code_load_parse() {
         code_as_refcore("LOAD-PARSE");

@@ -31,8 +31,8 @@ HOLE-PART	L §8.1	M5b	*	3	M5b	I:S1:S1-01~s1
 HOLE-PART	L §8.1	M5b	<place>: <amount> may be <q>'s: <questions>	3	M5b	I:S1:S1-01~s1
 LOAD-PATH	L §8.3	M0	*	2	M0	codes/LOAD-PATH/alone
 LOAD-PATH	L §8.3	M0	<path> doesn't exist	2	M0	codes/LOAD-PATH/alone
-LOAD-PARSE	L §8.3	M0	*	6	M0	codes/LOAD-PATH/control
-LOAD-PARSE	L §8.3	M0	cannot parse: <what was expected>	6	M0	codes/LOAD-PATH/control
+LOAD-PARSE	L §8.3	M0	*	7	M0	codes/LOAD-PATH/control
+LOAD-PARSE	L §8.3	M0	cannot parse: <what was expected>	7	M0	codes/LOAD-PATH/control
 LOAD-HEADER	L §8.3	M0	*	29	M0	U:law/LAW-13/rate25
 LOAD-HEADER	L §8.3	M0	missing tally version	1	M0	codes/m0/basic/header-tally
 LOAD-HEADER	L §8.3	M0	missing on date	1	M0	codes/m0/basic/header-on
@@ -110,9 +110,9 @@ LOAD-PRECISION	L §8.3	M0	<a/b> terminates; write it as a decimal	1	M0	codes/m0/
 LOAD-LITERAL	L §8.3	M0	*	3	M0	codes/m0/basic/literal-amount
 LOAD-LITERAL	L §8.3	M0	figure <n> in a rule; make it a row	1	M0	codes/m0/basic/literal-amount
 LOAD-LITERAL	L §8.3	M0	a date in a rule; make it a version	2	M0	codes/order/items
-LOAD-FIELD	L §8.3	M0	*	6	M0	codes/m0/adjust/adjusts-field
+LOAD-FIELD	L §8.3	M0	*	7	M0	codes/m0/adjust/adjusts-field
 LOAD-FIELD	L §8.3	M0	positional record in <row>; name its fields	0	-	-
-LOAD-FIELD	L §8.3	M0	<field> is not a field of <type>	5	M0	codes/m0/adjust/adjusts-field
+LOAD-FIELD	L §8.3	M0	<field> is not a field of <type>	6	M0	codes/m0/adjust/adjusts-field
 LOAD-FIELD	L §8.3	M0	<row> lacks field <f>	0	-	-
 LOAD-FIELD	L §8.3	M0	?	1	M0	codes/m0/basic/field
 LOAD-INSTANT	L §8.3	M0	*	3	M0	codes/m0/basic/instant
@@ -215,8 +215,8 @@ LOAD-ASIF	L §8.3	M0	as if deeper than 4	1	M0	codes/m0/basic/asif
 LOAD-ASIF	L §8.3	M0	pin on unknown id <x>	1	M0	codes/m0/basic/asif-unknown
 LOAD-DEPTH	L §8.3	M0	*	2	S	kernel/g13/depth_from
 LOAD-DEPTH	L §8.3	M0	expression nested deeper than 8	2	S	kernel/g13/depth_from
-LOAD-FORKS	L §8.3	M0	*	1	M0	codes/m0/basic/forks
-LOAD-FORKS	L §8.3	M0	ask <q> reaches <n> axis combinations; the cap is 64	1	M0	codes/m0/basic/forks
+LOAD-FORKS	L §8.3	M0	*	3	M0	codes/m0/basic/forks
+LOAD-FORKS	L §8.3	M0	ask <q> reaches <n> axis combinations; the cap is 64	3	M0	codes/m0/basic/forks
 LOAD-ASKONLY	L §8.3	M0	*	3	M0	codes/m0/basic/askonly-solve
 LOAD-ASKONLY	L §8.3	M0	solve outside an ask	1	M0	codes/m0/basic/askonly-solve
 LOAD-ASKONLY	L §8.3	M0	<query> has no closed form outside an ask	2	M0	m0/load/U:set/rule/RULE-09/RULE-09#inpath
@@ -318,8 +318,8 @@ WARN-LABELS	L §8.5	M5b	*	4	M5b	I:S4:S4-01~s4
 WARN-LABELS	L §8.5	M5b	labels dropped at <place> from <d>: <movements>	4	M5b	I:S4:S4-01~s4
 WARN-STALE	L §8.5	-	*	0	-	-
 WARN-STALE	L §8.5	-	scenario <s> replaces <target> at <keys>, changed in the base by <version>	0	-	-
-REQ-ASK	E §11	-	*	314	M0	codes/m0/adjust/base
-REQ-ASK	E §11	-	no ask <q>	314	M0	codes/m0/adjust/base
+REQ-ASK	E §11	-	*	315	M0	codes/m0/adjust/base
+REQ-ASK	E §11	-	no ask <q>	315	M0	codes/m0/adjust/base
 REQ-CLOCK	E §11	-	*	0	-	-
 REQ-PATHS	E §11	-	*	0	-	-
 ENGINE-INVARIANT	E §11	-	*	0	-	-
