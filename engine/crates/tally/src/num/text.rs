@@ -1,6 +1,8 @@
 //! Exact numbers as text: decimal literals read exactly, values printed in the output's form.
-//! Spec: L §2.1 (number literals), §5.18 (output: decimals, `a/b`, the 15-digit aid), §7.1.
-//! Twin: engine/tools/refcore/values.py (`fmt_dec`, `fmt_q`, `sig15`, `group3`, `dec_exp`).
+//! Spec: L §2.1 (number literals), §2.4 (a fraction's reduced canonical `a/b`), §5.18 (output:
+//! decimals, `a/b`, the 15-digit aid), §7.1, §8.3 (a written count in a message).
+//! Twin: engine/tools/refcore/values.py (`fmt_dec`, `fmt_q`, `sig15`, `group3`, `dec_exp`);
+//! parser.py (`lit`, its fraction's canon); a count's `%d`.
 //! Invariants: a literal is read exactly or refused, never rounded; printing is exact, and the
 //! 15-digit display beside an `a/b` is only a reading aid, rounded half to even.
 //!

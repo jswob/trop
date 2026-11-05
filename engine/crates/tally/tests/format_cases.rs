@@ -319,6 +319,41 @@ version v1
         );
     }
 
+    /// The M0 gate's second review, N3 (G12): a `same` side keyed by a place keyed by things,
+    /// `lim[konto[ana]]` (L §2.3 `rk`'s last form, one key by L §2.4), was refused at parse;
+    /// refcore's `sref` takes it and sorts it as a row's place key. The expected text and hash
+    /// are refcore's `reprint` (`tmp/m0/g12/p.py`, `n3-two-rep`). A computed key inside it
+    /// stays refused at parse (#88, pick P12).
+    #[test]
+    fn a_same_side_keyed_by_a_keyed_place_reprints_as_refcore() {
+        let head = "model home\n  tally 2\n  on 2026-03-01\n  start 2026-01-01\n  end 2026-12-31\n\nsource card \"a card\"\n\nunit PLN: currency minor 0.01\n\nkind persons\n\nplace konto[p in persons]: accounts PLN lives 2026-01-01..\n\nplace world: outside lives 2026-01-01..\n\n";
+        let written = format!(
+            "{head}input lim[k in accounts]: money PLN\n\ninput amt: money PLN\n\ndef twice: money PLN = amt + amt\n\nask q: twice\n\nversion v1\n  cite card\n  governs always\n  known 2026-01-01\n  persons + [ana] lives 2026-01-01..\n  persons + [ben] lives 2026-01-01..\n  amt = 1.00 PLN\n  opening[konto[ana]] = 1.00 PLN at 2026-01-01 start\n  opening[konto[ben]] = 2.00 PLN at 2026-01-01 start\n  same lim[konto[ben]] = lim[konto[ana]]\n  same lim[konto[ana]] = lim[konto[ben]]\n"
+        );
+        let canonical = format!(
+            "{head}input amt: money PLN\n\ninput lim[k in accounts]: money PLN\n\ndef twice: money PLN = amt + amt\n\nask q: twice\n\nversion v1\n  cite card\n  governs always\n  known 2026-01-01\n  persons + [ana] lives 2026-01-01..\n  persons + [ben] lives 2026-01-01..\n  amt = 1 PLN\n  same lim[konto[ana]] = lim[konto[ben]]\n  same lim[konto[ben]] = lim[konto[ana]]\n  opening[konto[ana]] = 1 PLN at 2026-01-01 start\n  opening[konto[ben]] = 2 PLN at 2026-01-01 start\n"
+        );
+        let printed = format_file(written.as_bytes()).expect("it reprints");
+        assert_eq!(printed, canonical, "refcore's reprint");
+        let files = [("a.tally".to_owned(), canonical.clone())];
+        assert_eq!(
+            printed_hash(&files),
+            "59d7a4bfdbc0f0bf22746e6da4d8a10b3d1c7a5c7395758daefb40aff13e7759",
+            "refcore's sha256 line"
+        );
+        let part =
+            "part p\n  tally 2\n\nversion v1\n  cite card\n  governs always\n  known 2026-01-01\n";
+        let text = format!("{part}  same fee[konto[1 + 1]] = fee[a1]\n");
+        let Err(Stop::Refused(refusal)) = format_file(text.as_bytes()) else {
+            panic!("a LOAD-PARSE refusal");
+        };
+        assert_eq!(
+            refusal.text(),
+            "LOAD-PARSE cannot parse: expected \"]\", got + (input:8)",
+            "a computed key inside a place key"
+        );
+    }
+
     #[test]
     fn reprint_names_files_as_given_and_orders_them_by_full_path() {
         let file = |path: &str, text: &str| Given {

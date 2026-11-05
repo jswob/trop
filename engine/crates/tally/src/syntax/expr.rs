@@ -1,6 +1,6 @@
 //! The expression grammar: precedence climbing over flat chains, postfixes, atoms and the reads.
 //! Spec: L §2.3 (`expr` to `atom`, `binds`, `span`, `tieby`, `balx`, `valuex`, `flowsx`, `coveredx`,
-//! `agg`, `calval`, `record`, `leg`, `type`), its seven parse rules, and its depth limit.
+//! `agg`, `calval`, `record`, `leg`, `type`, `sref`), its seven parse rules, and its depth limit.
 //! Twin: engine/tools/refcore/parser.py (`expr` to `call_args`, `span` to `leg_body`,
 //! `builtin`, `agg`, `calval` to `dayset`, `price`, `type`, `bindlist`, `qid`, `rowkey`).
 //! Invariants: every loop takes a token or ends; each bracket and `if` is counted by `open`;
@@ -607,9 +607,10 @@ impl P<'_> {
     }
 
     /// A `same` side, `sref` (L §2.3): a reference whose keys are literals (`a.konto`,
-    /// `a.a_stmt[a_g1]`, `b.rent[2026-03]`, §6.1), in refcore's `ref` shape (one key list
-    /// after the id and after each field). A key that isn't a literal, `*` or a computed
-    /// one, is `LOAD-PARSE`, as the grammar reads it.
+    /// `a.a_stmt[a_g1]`, `b.rent[2026-03]`, §6.1) or places keyed by literals
+    /// (`opening[konto[ana]]`), in refcore's `ref` shape (one key list after the id and after
+    /// each field). Any other key, `*` or a computed one, is `LOAD-PARSE`, as the grammar
+    /// reads it.
     pub(super) fn same_ref(&mut self) -> Result<Expr, Stop> {
         self.reference_keyed(KeysOf::Lits)
     }
@@ -649,13 +650,30 @@ impl P<'_> {
     fn lit_keys(&mut self) -> Result<Vec<Key>, Stop> {
         self.expect("[")?;
         self.open()?;
+        let mut keys = vec![self.lit_key()?];
+        while self.accept(",")? {
+            keys.push(self.lit_key()?);
+        }
+        self.expect("]")?;
+        self.close()?;
+        Ok(keys)
+    }
+
+    /// One key of an `sref`: a literal, or a place keyed by things, `konto[ana]` (L §2.3
+    /// `rk`'s last form, one key by L §2.4), the reference `konto[ana]` refcore's `sref` reads.
+    fn lit_key(&mut self) -> Result<Key, Stop> {
+        if !(self.at_id(0) && self.at("[", 1)) {
+            return Ok(Key::Expr(Expr::Lit(self.lit()?)));
+        }
+        let name = self.ident("an id")?;
+        self.skip(1)?;
         let mut keys = vec![Key::Expr(Expr::Lit(self.lit()?))];
         while self.accept(",")? {
             keys.push(Key::Expr(Expr::Lit(self.lit()?)));
         }
         self.expect("]")?;
-        self.close()?;
-        Ok(keys)
+        let place = Expr::Post(Box::new(Expr::Name(name)), vec![Postfix::Keys(keys)]);
+        Ok(Key::Expr(place))
     }
 
     /// `( [expr {, expr}] )`.

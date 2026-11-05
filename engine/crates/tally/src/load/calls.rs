@@ -1,18 +1,20 @@
 //! Load's checker, its calls: every built-in's argument types and result, band calls, `to` and spans.
-//! Spec: L §4.2 (the date and calendar functions, `lifespan`), §5.9 (bands, `band_lo`,
+//! Spec: L §4.2 (the date and calendar functions), §5.7 (`lifespan`), §5.9 (bands, `band_lo`,
 //! `band_hi`, `marginal`), §5.10 (`unit`), §5.11 (`missing`, `min`, `max`), §7.2 (`round`, its
-//! step and mode), §4.6 (`since`), §5.6 (spans), §8.3 (`LOAD-UNIT`, `-PARSE`, `-NAME`, `-KEY`,
-//! `-LITERAL`, `-MISSING`, `-BAND`), §8.4.
+//! step and mode), §4.6 (`since`), §5.6 (spans), §6.4 (a scenario row's base prefix), §8.3
+//! (`LOAD-UNIT`, `-PARSE`, `-NAME`, `-KEY`, `-LITERAL`, `-MISSING`, `-BAND`), §8.4.
 //! Twin: engine/tools/refcore/check.py (`t_call`, `args`, `want`, `tdate`,
 //! `tdate_or_period`, `tint`, `c_start_of` to `c_since`, `c_lifespan`, `cal_arg`, `band_ref`,
-//! `c_band_lo`, `c_marginal`, `band_call`, `mode_arg`, `span`, `prefixed_call`); the reads of
-//! the ledger are `reads.rs`'s, the exact and transcendental calls `exact.rs`'s.
-//! Invariants: every argument is typed in refcore's order and its reads recorded; every
-//! built-in a call can name has its arm (`covered` is its own expression), so a call left
-//! untyped is `ENGINE-INVARIANT`, never a pass.
+//! `c_band_lo`, `c_marginal`, `band_call`, `mode_arg`, `span`, `prefixed_call`); check3.py
+//! (`m_c_covered`, its call form `reads.rs`'s); the reads of the ledger are `reads.rs`'s, the
+//! exact and transcendental calls `exact.rs`'s.
+//! Invariants: every argument is typed in refcore's order and its reads recorded; a call is a
+//! band's, a built-in's with its arm, or a name looked up (`unknown id`, `is not called`), as
+//! refcore's `t_call`: no call is left untyped.
 
-use super::check::{Checker, Reading, Scope, Stands, invariant, named_parts};
+use super::check::{Checker, Reading, Scope, Stands, named_parts};
 use super::ops::unify;
+use super::steps::num_stop;
 use super::types::{
     Typed, input_read, is_date, is_period, no_order, num, numcls, period_kind, refused, text, uerr,
     unit_of,
@@ -47,57 +49,21 @@ const DATE_FNS: [&str; 21] = [
     "one_of",
 ];
 
-/// The built-ins a call may name (refcore's `parser.BUILTINS`, less those parsed as forms of
-/// their own: the aggregates, the queries, `prorata`, `flows`, `bal`, `value`, `low`,
-/// `covered`, the distributions and their functions).
-const BUILTINS: [&str; 46] = [
-    "next",
-    "round",
-    "pow",
-    "exp",
-    "ln",
-    "sqrt",
-    "abs",
-    "periodic",
-    "factor",
-    "dcf",
-    "accrue",
-    "days_between",
-    "add_days",
-    "add_months",
-    "add_years",
-    "start_of",
-    "end_of",
-    "year_of",
-    "quarter_of",
-    "month_of",
-    "day_of",
-    "overlap_days",
-    "pos",
-    "age",
-    "age_months",
-    "weekday",
-    "add_business",
-    "last_business",
-    "is_business",
-    "schedule",
-    "calendar",
-    "window",
-    "one_of",
-    "since",
-    "band_lo",
-    "band_hi",
-    "marginal",
-    "unit",
-    "minor",
-    "lifespan",
-    "gap",
-    "observed",
-    "missing",
-    "min",
-    "max",
-    "covered",
-];
+/// A call naming no built-in with a typing arm: `LOAD-PARSE … is not called` for a name the
+/// model declares, else `LOAD-NAME unknown id` (refcore's `t_call` with no `c_<name>`). The
+/// names refcore's `parser.BUILTINS` holds with no arm are parsed as forms of their own (the
+/// aggregates, the queries, `prorata`, `flows`, `bal`, `value`, `low`, the distributions and
+/// their functions) and reach a call only as a scenario row's `household.sum(x)`, its base
+/// prefix dropped. L §2.3 Calls, §6.4, §8.3.
+fn no_builtin(m: &Reality, call: &Call) -> Stop {
+    if m.names.contains_key(&call.name) {
+        return refused(
+            Load::Parse,
+            format!("cannot parse: {} is not called", call.name),
+        );
+    }
+    refused(Load::Name, format!("unknown id {}", call.name)).naming(&call.name)
+}
 
 /// `LOAD-PARSE` for a built-in given the wrong number of arguments (refcore's `args`).
 pub(super) fn arity(call: &Call, n: usize) -> Result<(), Stop> {
@@ -177,19 +143,10 @@ impl Checker {
         if call.band_key.is_some() || named_band {
             return self.band_call(m, scope, call, depth);
         }
-        if !BUILTINS.contains(&call.name.as_str()) {
-            if m.names.contains_key(&call.name) {
-                return Err(refused(
-                    Load::Parse,
-                    format!("cannot parse: {} is not called", call.name),
-                ));
-            }
-            return Err(refused(Load::Name, format!("unknown id {}", call.name)).naming(&call.name));
-        }
         self.builtin(m, scope, call, expect, depth)
     }
 
-    /// A built-in, one arm per family (refcore's `c_*`).
+    /// A built-in, one arm per family (refcore's `c_*`); any other name is looked up.
     fn builtin(
         &mut self,
         m: &Reality,
@@ -249,9 +206,8 @@ impl Checker {
             "exp" | "ln" | "sqrt" | "pow" | "periodic" | "factor" | "dcf" | "accrue" => {
                 self.exact_call(m, scope, call, depth)
             }
-            // `covered` is its own expression (L §2.3), never a call: every other name of
-            // `BUILTINS` has its arm above.
-            _ => Err(invariant(format!("a built-in with no typing arm: {}", call.name))),
+            "covered" => self.covered_call(m, scope, args, depth),
+            _ => Err(no_builtin(m, call)),
         }
     }
 
@@ -466,7 +422,7 @@ impl Checker {
     }
 
     /// `lifespan(t)`, t a thing: the record `(from date, to date)` (refcore's `c_lifespan`).
-    /// A bare key naming one thing is read as a key of its kind (L §2.5). L §4.2, §5.3.
+    /// A bare key naming one thing is read as a key of its kind. L §5.7, §2.5.
     fn lifespan(&mut self, m: &Reality, scope: &Scope, call: &Call, depth: u32) -> Typed {
         arity(call, 1)?;
         let span = || {
@@ -484,8 +440,7 @@ impl Checker {
         {
             t = self.expr(m, scope, arg, Some(&Ty::Key(base)), depth)?;
         }
-        let of_a_kind = matches!(&t, Ty::Key(ix) if m.kinds.get(ix).is_some());
-        if !of_a_kind && !matches!(t, Ty::Unseen) {
+        if !matches!(&t, Ty::Key(ix) if m.kinds.get(ix).is_some()) {
             return Err(uerr(format!("lifespan of {}, not a thing", t.show())));
         }
         Ok(span())
@@ -1015,11 +970,10 @@ fn round_type(
         return Ok(Ty::Money(cur.clone()));
     }
     if let (Some("flex"), Some(cur), Ty::Flex(n)) = (uc, &currency, ut) {
-        let whole = m
-            .currencies
-            .get(cur)
-            .and_then(|minor| n.checked_div(minor).ok())
-            .is_some_and(|q| q.is_integer());
+        let whole = match m.currencies.get(cur) {
+            Some(minor) => n.checked_div(minor).map_err(num_stop)?.is_integer(),
+            None => false,
+        };
         return Ok(if whole {
             Ty::Money(cur.clone())
         } else {

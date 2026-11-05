@@ -13,9 +13,9 @@
 
 use super::check::{Checker, Figure, Reading, Scope, tested_vars};
 use super::types::{
-    Op, Operand, Sides, Typed, agg_word, cmp_sign, converts, covered_spans, input_read, int_flex,
-    is_bool, is_date, is_duration, key_pk, key_value_kind, lit_expr, lit_rule, no_order, num,
-    numcls, period_kind, refused, uerr, unit_of, unit_stop,
+    Op, Operand, Sides, Typed, cmp_sign, converts, covered_spans, input_read, int_flex, is_bool,
+    is_date, is_duration, key_pk, key_value_kind, lit_expr, lit_rule, no_order, num, numcls,
+    period_kind, refused, uerr, unit_of, unit_stop,
 };
 use crate::base::{Code, Load};
 use crate::model::{
@@ -716,7 +716,7 @@ impl Checker {
                 if let Some(what) = unordered_binding(m, &inner, &bind.var) {
                     return Err(uerr(format!(
                         "{} over {what} has no ties by",
-                        agg_word(agg.func)
+                        agg.func.word()
                     )));
                 }
             }
@@ -729,7 +729,7 @@ impl Checker {
                 Load::Parse,
                 format!(
                     "cannot parse: {} takes no term (a bare binding)",
-                    agg_word(agg.func)
+                    agg.func.word()
                 ),
             ));
         }
@@ -752,7 +752,7 @@ impl Checker {
         tys: &[Ty],
         depth: u32,
     ) -> Typed {
-        let word = agg_word(agg.func);
+        let word = agg.func.word();
         match agg.func {
             AggFn::Count => return Ok(Ty::Int),
             AggFn::First | AggFn::Last | AggFn::Min | AggFn::Max => {}
@@ -1238,7 +1238,7 @@ fn aggregate_type(m: &Reality, func: AggFn, tt: &Ty, tys: &[Ty]) -> Typed {
         })
         .map(|t| if func == AggFn::Count { Ty::Int } else { t });
     }
-    let word = agg_word(func);
+    let word = func.word();
     match func {
         AggFn::Sum => match numcls(m, tt) {
             None => Err(uerr(format!("sum of {}", tt.show()))),

@@ -576,6 +576,30 @@ impl Checker {
         Ok(Ty::Bool)
     }
 
+    /// `covered` as a call, `household.covered(x, d)` in a scenario's expression row, its base
+    /// prefix dropped: two arguments, the first a place; a call's argument is an expression,
+    /// never the span `covered` reads, so it is refused there (refcore's `m_c_covered` on a
+    /// call). L §2.3 Calls, `coveredx`, §5.19.
+    pub(super) fn covered_call(
+        &mut self,
+        m: &Reality,
+        scope: &Scope,
+        args: &[Expr],
+        depth: u32,
+    ) -> Typed {
+        let [place, _] = args else {
+            return Err(refused(
+                Load::Parse,
+                "cannot parse: covered(x, span) takes two arguments".to_owned(),
+            ));
+        };
+        self.place_arg(m, scope, place, "covered", depth)?;
+        Err(refused(
+            Load::Parse,
+            "cannot parse: covered(x, span)".to_owned(),
+        ))
+    }
+
     /// `gap(x, d)`: a place and a date, read as a balance; the place's unit (refcore's
     /// `m_c_gap`). L §5.19.
     pub(super) fn gap(&mut self, m: &Reality, scope: &Scope, args: &[Expr], depth: u32) -> Typed {

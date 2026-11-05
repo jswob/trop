@@ -317,8 +317,11 @@ impl Loader {
                 Key::Expr(key) => KeyLit::of_expr(key),
                 Key::Star => None,
             };
+            // The parser's `sref` keys a side by literals and places keyed by literals only.
             let Some(written) = written else {
-                return Err(Stop::NotBuilt("a reference keyed by * or a computed key"));
+                return Err(invariant(
+                    "a same side keyed by * or a computed key".to_owned(),
+                ));
             };
             values.push(resolve_key(
                 &self.m,
@@ -357,6 +360,8 @@ impl Loader {
                 Key::Expr(key) => KeyLit::of_expr(key),
                 Key::Star => None,
             };
+            // An observation's attribute naming a move (`of: wage[*]`, `wage[1 + 1]`) reaches
+            // this; refcore prints `LOAD-KEY None is not a key of <ix>` there (issue #88).
             let Some(written) = written else {
                 return Err(Stop::NotBuilt("a reference keyed by * or a computed key"));
             };

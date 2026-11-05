@@ -435,8 +435,17 @@ fn same_side(left: &Expr) -> Result<(String, &[Key]), Stop> {
     Ok((target, keys))
 }
 
-/// A `same` side's key as written (`sref`'s keys are literals, L §2.3).
+/// A `same` side's key as written (`sref`'s keys are literals or places keyed by literals,
+/// L §2.3).
 fn same_key_text(key: &Key) -> Result<String, Stop> {
+    match key {
+        Key::Expr(Expr::Post(base, fixes)) => place_key_text(base, fixes),
+        Key::Star | Key::Expr(_) => lit_key_text(key),
+    }
+}
+
+/// A literal key as written.
+fn lit_key_text(key: &Key) -> Result<String, Stop> {
     match key {
         Key::Expr(Expr::Lit(lit)) => Ok(lit.text()),
         Key::Expr(Expr::Name(name)) => Ok(name.clone()),
@@ -444,18 +453,32 @@ fn same_key_text(key: &Key) -> Result<String, Stop> {
     }
 }
 
-/// A `same` item's key position as a key: a literal, as the parser reads `sref`'s keys.
+/// A place keyed by things as a `same` side's key, `konto[ana]`, as written.
+fn place_key_text(base: &Expr, fixes: &[Postfix]) -> Result<String, Stop> {
+    let (Expr::Name(name), [Postfix::Keys(keys)]) = (base, fixes) else {
+        return Err(no_literal());
+    };
+    let texts = keys
+        .iter()
+        .map(lit_key_text)
+        .collect::<Result<Vec<_>, _>>()?;
+    Ok(format!("{name}[{}]", texts.join(", ")))
+}
+
+/// A `same` item's key position as a key: a literal, or a place keyed by things, one key
+/// sorted as things are (L §2.4), as a row's key.
 fn same_key(key: &Key) -> Result<KeyRef, Stop> {
     match key {
         Key::Expr(Expr::Lit(lit)) => Ok(KeyRef::One(lit.clone())),
         Key::Expr(Expr::Name(name)) => Ok(KeyRef::One(Lit::Name(name.clone()))),
+        Key::Expr(Expr::Post(base, fixes)) => Ok(KeyRef::Place(place_key_text(base, fixes)?)),
         Key::Star | Key::Expr(_) => Err(no_literal()),
     }
 }
 
 /// A `same` side keyed by what the parser's `sref` never takes.
 fn no_literal() -> Stop {
-    invariant("a same side keyed by no literal")
+    invariant("a same side keyed by no literal or place")
 }
 
 /// A target's id, with its member's prefix.

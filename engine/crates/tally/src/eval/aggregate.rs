@@ -157,7 +157,7 @@ impl Engine {
         env: &Env,
         ctx: Ctx,
     ) -> Result<Value, Stop> {
-        let word = agg_word(agg.func);
+        let word = agg.func.word();
         let mut terms: Vec<Value> = Vec::with_capacity(members.len());
         let mut holes: Vec<Hole> = Vec::new();
         for member in members {
@@ -209,7 +209,7 @@ impl Engine {
         members: &[Member],
         ctx: Ctx,
     ) -> Result<Value, Stop> {
-        let word = agg_word(func);
+        let word = func.word();
         let decides = func == AggFn::Any;
         let mut holes: Vec<Hole> = Vec::new();
         for member in members {
@@ -615,22 +615,6 @@ enum When {
     Over(Span),
 }
 
-/// The word of an aggregate, as messages name it.
-fn agg_word(func: AggFn) -> &'static str {
-    match func {
-        AggFn::Sum => "sum",
-        AggFn::Count => "count",
-        AggFn::Min => "min",
-        AggFn::Max => "max",
-        AggFn::Any => "any",
-        AggFn::All => "all",
-        AggFn::First => "first",
-        AggFn::Last => "last",
-        AggFn::Argmin => "argmin",
-        AggFn::Argmax => "argmax",
-    }
-}
-
 /// `count(k in ks)`: the tuples, unless one is an unknown member (L §5.11).
 fn count_members(members: &[Member]) -> Result<Value, Stop> {
     let holes: Vec<Option<&Hole>> = members.iter().map(|mm| mm.unknown.as_ref()).collect();
@@ -690,10 +674,7 @@ fn sum_terms(
 fn extreme_term(m: &Reality, func: AggFn, terms: Vec<Value>) -> Result<Value, Stop> {
     let mut it = terms.into_iter();
     let Some(mut best) = it.next() else {
-        return Err(refuse(
-            Run::Empty,
-            format!("{} over no keys", agg_word(func)),
-        ));
+        return Err(refuse(Run::Empty, format!("{} over no keys", func.word())));
     };
     let wanted = if func == AggFn::Min {
         Ordering::Less

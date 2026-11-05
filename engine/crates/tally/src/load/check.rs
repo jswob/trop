@@ -1741,8 +1741,8 @@ pub(super) fn literal_place(
         Some(Literal::Keyed(id, lits)) => match keyed_place_thing(m, &id, &lits, "", 0) {
             Ok(thing) => Ok(thing),
             // A key no index or kind holds is refused where the key is typed (`LOAD-KEY`);
-            // here it names no literal place.
-            Err(Stop::Refused(r)) if r.code() != Code::EngineInvariant => Ok(None),
+            // here it names no literal place. `LOAD-KEY` is the one refusal of a key.
+            Err(Stop::Refused(r)) if r.code() == Code::Load(Load::Key) => Ok(None),
             Err(stop) => Err(stop),
         },
     }

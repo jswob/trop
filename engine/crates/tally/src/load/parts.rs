@@ -881,9 +881,9 @@ impl Loader {
             };
             match resolve_key(&self.m, &written, &bind.domain, file, line) {
                 Ok(value) => texts.push(value.text()),
-                // A key its index doesn't hold names no batch here; the key is refused where
-                // it is typed. Any other stop is passed on.
-                Err(Stop::Refused(r)) if r.code() != Code::EngineInvariant => return Ok(None),
+                // A key its index doesn't hold (`LOAD-KEY`) names no batch here; the key is
+                // refused where it is typed. Any other stop is passed on.
+                Err(Stop::Refused(r)) if r.code() == Code::Load(Load::Key) => return Ok(None),
                 Err(stop) => return Err(stop),
             }
         }

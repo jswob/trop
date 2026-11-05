@@ -169,6 +169,25 @@ pub enum AggFn {
     Argmax,
 }
 
+impl AggFn {
+    /// The aggregate's word, as written and as messages name it. L §5.11.
+    #[must_use]
+    pub fn word(self) -> &'static str {
+        match self {
+            AggFn::Sum => "sum",
+            AggFn::Count => "count",
+            AggFn::Min => "min",
+            AggFn::Max => "max",
+            AggFn::Any => "any",
+            AggFn::All => "all",
+            AggFn::First => "first",
+            AggFn::Last => "last",
+            AggFn::Argmin => "argmin",
+            AggFn::Argmax => "argmax",
+        }
+    }
+}
+
 /// An expression (L §2.3 `expr`).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Expr {

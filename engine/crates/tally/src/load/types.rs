@@ -26,8 +26,8 @@ use crate::model::{
 };
 use crate::num::Num;
 use crate::syntax::{
-    AddOp, AggFn, CmpOp, Expr, Field, FieldValue, Key, Lit, MulOp, Number, Pin, PinForm, Postfix,
-    QueryFn, Span, Stop,
+    AddOp, CmpOp, Expr, Field, FieldValue, Key, Lit, MulOp, Number, Pin, PinForm, Postfix, QueryFn,
+    Span, Stop,
 };
 use crate::time::PeriodKind;
 
@@ -360,7 +360,7 @@ pub(super) fn text(e: &Expr) -> String {
         }
         Expr::Post(base, posts) => post_text(base, posts),
         Expr::Call(call) => format!("{}({})", call.name, list_text(&call.args)),
-        Expr::Agg(agg) => format!("{}(...)", agg_word(agg.func)),
+        Expr::Agg(agg) => format!("{}(...)", agg.func.word()),
         Expr::Last(pair) => format!("last({}, {})", text(&pair.0), text(&pair.1)),
         Expr::AsIf(inner, _) => format!("{} as if {{...}}", text(inner)),
         Expr::Bal(bal) => {
@@ -565,22 +565,6 @@ pub(super) fn cmp_sign(op: CmpOp) -> &'static str {
         CmpOp::Le => "<=",
         CmpOp::Gt => ">",
         CmpOp::Ge => ">=",
-    }
-}
-
-/// An aggregate's word.
-pub(super) fn agg_word(func: AggFn) -> &'static str {
-    match func {
-        AggFn::Sum => "sum",
-        AggFn::Count => "count",
-        AggFn::Min => "min",
-        AggFn::Max => "max",
-        AggFn::Any => "any",
-        AggFn::All => "all",
-        AggFn::First => "first",
-        AggFn::Last => "last",
-        AggFn::Argmin => "argmin",
-        AggFn::Argmax => "argmax",
     }
 }
 
@@ -2078,20 +2062,31 @@ pub(super) fn unit_type(m: &Reality, u: Option<&str>) -> Result<Ty, Stop> {
 }
 
 /// A field of a movement of event kind `kind`: a leg, an attribute, `day`, `fulfils`; any
-/// other is `Unseen` until kind tests narrow (refcore's `m_movement_field`). L §5.14.
+/// other is `Unseen`, refcore's kind tests that narrow, its reading by name over `events` and
+/// its `LOAD-FIELD` not built here (refcore's `m_movement_field`). L §5.14, §5.14.3.
 fn movement_field(m: &Reality, kind: &str, field: &str) -> Typed {
     for (leg, unit, _) in m.kind_legs(kind) {
         if leg == field {
             return leg_type(m, &unit);
         }
     }
-    for info in m.chain(kind) {
-        for (attr, ty) in &info.attr_types {
-            if attr == field {
-                // An attribute the prelude declares has no written type: refcore's `DYN`.
-                return Ok(ty.clone().unwrap_or(Ty::Dyn));
-            }
+    let chain = m.chain(kind);
+    for info in &chain {
+        if !info.attrs.iter().any(|(attr, _)| attr == field) {
+            continue;
         }
+        let declared = info.attr_types.iter().find(|(attr, _)| attr == field);
+        if let Some((_, Some(ty))) = declared {
+            return Ok(ty.clone());
+        }
+        // An attribute the prelude declares has no written type: refcore's `DYN`, but an
+        // adjustment's `adjusts`, the movement it adjusts (L §5.14.3).
+        let adjustment = chain.iter().any(|k| k.id == "adjustments");
+        return Ok(if adjustment && field == "adjusts" {
+            Ty::Key("events".to_owned())
+        } else {
+            Ty::Dyn
+        });
     }
     Ok(match field {
         "day" => Ty::Date,

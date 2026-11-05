@@ -4735,6 +4735,34 @@ version v1
                 "def ls: date = lifespan(3).from",
                 "refused: LOAD-LITERAL figure 3 in a rule; make it a row (a.tally:27)",
             ),
+            // The second review's leftovers 2 and 3 (G12): a prelude attribute is `dyn`, an
+            // adjustment's `adjusts` a key of `events`, and `lifespan` passes no type it
+            // doesn't see (`tmp/m0/g12/p.py`, `t-*`).
+            (
+                "change",
+                "def ls: date = argmax(1 for a in adjustments over ..).change",
+                "refused: LOAD-UNIT rule base of ls is dyn, not date (a.tally:27)",
+            ),
+            (
+                "of-change",
+                "def ls: date = lifespan(argmax(1 for a in adjustments over ..).change).from",
+                "refused: LOAD-UNIT lifespan of dyn, not a thing (a.tally:27)",
+            ),
+            (
+                "adjusts",
+                "def ls: date = argmax(1 for a in adjustments over ..).adjusts",
+                "refused: LOAD-UNIT rule base of ls is key events, not date (a.tally:27)",
+            ),
+            (
+                "of-adjusts",
+                "def ls: date = lifespan(argmax(1 for a in adjustments over ..).adjusts).from",
+                no_ask,
+            ),
+            (
+                "adjusts-day",
+                "def ls: date = argmax(1 for a in adjustments over ..).adjusts.day",
+                no_ask,
+            ),
         ];
         for &(name, def, expected) in lifespan {
             let added = format!("{DEF}\n\n{def}");
@@ -4771,6 +4799,54 @@ version v1
         for &(name, ask, expected) in paths {
             let files = [("a.tally", edited(ONE, &[(ASK, ask)]))];
             assert_eq!(load_lines(&files, "zz"), expected, "paths {name}");
+        }
+    }
+
+    /// The M0 gate's second review, N1 (G12): in a scenario's expression row,
+    /// `household.covered(…)` drops its base prefix and is a call of `covered`, which had no
+    /// typing arm (`ENGINE-INVARIANT`); refcore's `m_c_covered` refuses it. A name parsed as a
+    /// form of its own, `household.sum(x)`, is looked up. Each expected text is refcore's load
+    /// lines for a run of `q_raised` (`tmp/m0/g12/p.py`, `n1-*`); no T vector holds the form.
+    #[test]
+    fn a_built_in_called_through_a_scenario_row_s_base_prefix_is_checked_as_refcore_checks_it() {
+        const MODEL: &str = "model household\n  tally 2\n  on 2026-03-01\n  start 2026-01-01\n  end 2027-12-31\n\nsource card \"a card\"\n\nunit PLN: currency minor 0.01\n\nplace konto: accounts PLN lives 2026-01-01..\n\ninput amt: money PLN\n\ndef doubled: money PLN = amt + amt at reader\n\nask q: doubled law 2026-03-01\n\nversion card_2026\n  cite card\n  governs always\n  known 2026-01-01\n  amt = 100.00 PLN \"the card\"\n";
+        const SCEN: &str = "scenario raised over household\n  tally 2\n  from 2027-01-01\n\nversion raise_2027\n  cite card\n  governs 2027..\n  known 2026-02-01\n  replace amt = ROW \"a raise from 2027\"\n\nask q_raised: doubled in raised law 2027-06-01\n";
+        let unread = "warning: WARN-UNREAD place konto is read by nothing";
+        let cases: &[(&str, &str)] = &[
+            (
+                "household.covered(konto, 2027-01-01)",
+                "LOAD-PARSE cannot parse: covered(x, span)",
+            ),
+            (
+                "household.covered(konto)",
+                "LOAD-PARSE cannot parse: covered(x, span) takes two arguments",
+            ),
+            (
+                "household.covered(konto, 2027-01-01, 1)",
+                "LOAD-PARSE cannot parse: covered(x, span) takes two arguments",
+            ),
+            (
+                "household.covered(amt, 2027-01-01)",
+                "LOAD-UNIT covered of money PLN, which is not a place",
+            ),
+            (
+                "household.covered(zz, 2027-01-01)",
+                "LOAD-KEY zz is not a key of places",
+            ),
+            ("household.sum(amt)", "LOAD-NAME unknown id sum"),
+            ("household.bal(konto)", "LOAD-NAME unknown id bal"),
+            (
+                "household.amt(1)",
+                "LOAD-PARSE cannot parse: amt is not called",
+            ),
+        ];
+        for &(row, refusal) in cases {
+            let files = [
+                ("model.tally", MODEL.to_owned()),
+                ("scen.tally", edited(SCEN, &[("ROW", row)])),
+            ];
+            let expected = format!("scenario raised: refused: {refusal} (scen.tally:9)\n{unread}");
+            assert_eq!(load_lines(&files, "q_raised"), expected, "{row}");
         }
     }
 }
