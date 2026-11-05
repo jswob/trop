@@ -888,6 +888,30 @@ def worktree_done_checks(root, expect, failures):
             failures.append(f"worktree-done, {label}: lacks {says!r} or changed something: {r.stderr.strip()[:300]}")
     r = run(done, "lead", cwd=done)
     expect("worktree-done of the checkout it runs from: refuses", r.returncode, 1, r.stderr)
+    # --target-only frees engine/target/ of a worktree whose pull request waits (decision 5):
+    # unmerged and dirty are fine; the worktree, its branch and its other files stay
+    waiting = tree("waiting", merged=False, dirty="notes.txt")
+    os.makedirs(os.path.join(waiting, "engine", "target", "debug"))
+    with open(os.path.join(waiting, "engine", "target", "debug", "big"), "w", encoding="utf-8") as f:
+        f.write("x" * 4096)
+
+    def run_target(path, role, cwd=main_tree):
+        env = {k: v for k, v in os.environ.items() if k != "TALLY_ROLE"}
+        if role != "unset":
+            env["TALLY_ROLE"] = role
+        return subprocess.run([os.path.join(root, "engine/tools/worktree-done"), "--target-only", path], capture_output=True,
+                              text=True, env=env, cwd=cwd, check=False)
+
+    r = run_target(waiting, "build")
+    expect("worktree-done --target-only as build refuses", r.returncode, 1, r.stderr)
+    r = run_target(main_tree, "lead")
+    expect("worktree-done --target-only of the main checkout refuses", r.returncode, 1, r.stderr)
+    before = branches()
+    r = run_target(waiting, "lead")
+    expect("worktree-done --target-only of a waiting worktree as lead", r.returncode, 0, r.stderr)
+    if os.path.exists(os.path.join(waiting, "engine", "target")) or not os.path.isfile(os.path.join(waiting, "notes.txt")) \
+            or branches() != before or "freed" not in r.stdout:
+        failures.append(f"worktree-done --target-only: target/ still there, or more removed: {r.stdout.strip()[:200]} {r.stderr.strip()[:200]}")
     for argv in ([], ["a", "b"]):
         r = subprocess.run([os.path.join(root, "engine/tools/worktree-done"), *argv], capture_output=True, text=True,
                            env={**os.environ, "TALLY_ROLE": "lead"}, cwd=main_tree, check=False)
@@ -903,7 +927,8 @@ def setup(root):
               "engine/crates/tally/src",
               "engine/crates/tally/benches", "engine/crates/tally-cli/src", "engine/fuzz", "engine/target", ".claude"):
         os.makedirs(os.path.join(root, d), exist_ok=True)
-    for name in ("guard", "guard.py", "stop-check", "stop_check.py", "merge-pr", "merge_pr.py", "worktree-done", "worktree_done.py"):
+    for name in ("guard", "guard.py", "stop-check", "stop_check.py", "merge-pr", "merge_pr.py", "worktree-done", "worktree_done.py",
+                 "session-start"):
         shutil.copy2(os.path.join(TOOLS, name), os.path.join(root, "engine/tools", name))
     files = {
         "engine/spec/DONE.md": "the contract\n",
@@ -911,6 +936,7 @@ def setup(root):
         "engine/crates/tally/src/lib.rs": "//! stub\n",
         "engine/crates/tally/benches/p8_m1.rs": "//! bench\n",
         "engine/BUILD-LOG.md": "# Build log\n",
+        "engine/CLAUDE.md": "# The Tally engine: rules for the build session (planted)\n",
         ".claude/settings.json": "{}\n",
         # a cargo workspace like the engine's, for the cargo writers (F-4)
         "engine/Cargo.toml": '[workspace]\nmembers = ["crates/tally", "crates/tally-cli", "tests/runner"]\nexclude = ["fuzz"]\n',
@@ -1154,6 +1180,32 @@ def main():
             with tempfile.TemporaryDirectory(prefix="tally-guard-test-app-") as app:
                 code, err = run_hook(pre, app, lib, "build")
                 expect("PreToolUse hook in a project without engine/", code, 0, err)
+            # a worktree in the permanent folder beside the repo (decision 5): the hook
+            # strings run its own guard, which binds it as a checkout of the repo
+            with tempfile.TemporaryDirectory(prefix="tally-guard-test-wts-") as wts:
+                wt = os.path.join(os.path.realpath(wts), "trop-worktrees", "build-m1")
+                subprocess.run(["git", "-C", root, "worktree", "add", "-q", "-b", "build/m1", wt, "HEAD"], check=True,
+                               capture_output=True)
+                try:
+                    own = {"tool_name": "Edit", "tool_input": {"file_path": os.path.join(wt, "engine/crates/tally/src/lib.rs")}, "cwd": wt}
+                    for label, payload, role, want in (
+                        ("PreToolUse hook in trop-worktrees/build-m1: its own code as build", own, "build", 0),
+                        ("PreToolUse hook in trop-worktrees/build-m1: the main checkout's spec as build", spec, "build", 2),
+                        ("PreToolUse hook in trop-worktrees/build-m1: its own spec as rules",
+                         {**own, "tool_input": {"file_path": os.path.join(wt, "engine/spec/DONE.md")}}, "rules", 2),
+                        ("PreToolUse hook in trop-worktrees/build-m1: the main checkout's code as build", lib, "build", 2),
+                    ):
+                        code, err = run_hook(pre, wt, payload, role)
+                        expect(label, code, want, err)
+                    start = hook_command("SessionStart", "session-start")
+                    env = {**{k: v for k, v in os.environ.items() if k != "TALLY_ROLE"}, "CLAUDE_PROJECT_DIR": wt, "TALLY_ROLE": "build"}
+                    r = subprocess.run(["/bin/sh", "-c", start or "false"], capture_output=True, text=True, env=env, check=False)
+                    expect("SessionStart hook in trop-worktrees/build-m1 as build", r.returncode, 0, r.stderr)
+                    if "rules for the build session" not in r.stdout:
+                        failures.append(f"SessionStart hook in trop-worktrees/build-m1: didn't print its engine/CLAUDE.md: {r.stdout[:200]!r}")
+                finally:
+                    subprocess.run(["git", "-C", root, "worktree", "remove", "--force", wt], check=False, capture_output=True)
+                    subprocess.run(["git", "-C", root, "branch", "-q", "-D", "build/m1"], check=False, capture_output=True)
         # the Stop hook's string fails closed too (the rest of F-10, G2-5): a stop-check that
         # can't run holds the turn, and says why
         stop = hook_command("Stop", "stop-check")

@@ -1,6 +1,12 @@
 """Remove a finished worktree and its branch: the lead's clean-up (R-132, issue #18).
 
     engine/tools/worktree-done <path>
+    engine/tools/worktree-done --target-only <path>
+
+Worktrees live beside the repo, in ~/projects/trop-worktrees/<branch, with / as ->, a
+permanent folder (the retro after M0, decision 5). `--target-only` frees a worktree's
+build outputs (engine/target/) while its pull request waits: the same checks of what
+<path> is, but neither clean nor merged is needed, and nothing else is touched.
 
 Only the lead role runs it (TALLY_ROLE=lead): the guard refuses it to every other role,
 and it refuses itself too. The guard refuses a raw `git worktree remove`, since every
@@ -18,6 +24,7 @@ Each refusal names its reason and exits 1.
 """
 
 import os
+import shutil
 import subprocess
 import sys
 
@@ -50,8 +57,20 @@ def worktrees(cwd):
     return [os.path.realpath(line[len("worktree ") :]) for line in out.splitlines() if line.startswith("worktree ")]
 
 
-def done(path, here):
-    """Removes the worktree at `path`, judged from the checkout `here`; returns what it did."""
+def size_of(folder):
+    total = 0
+    for top, _dirs, files in os.walk(folder):
+        for name in files:
+            try:
+                total += os.lstat(os.path.join(top, name)).st_size
+            except OSError:
+                pass
+    return total
+
+
+def done(path, here, target_only=False):
+    """Removes the worktree at `path`, judged from the checkout `here`, or with
+    `target_only` its engine/target/ alone; returns what it did."""
     if not os.path.isdir(path):
         raise Refused(f"{path} isn't a folder")
     path = os.path.realpath(path)
@@ -70,6 +89,13 @@ def done(path, here):
         raise Refused(f"{path} is the main checkout, which is never removed")
     if path == home:
         raise Refused(f"{path} is the checkout this runs from")
+    if target_only:
+        target = os.path.join(path, "engine", "target")
+        if os.path.islink(target) or not os.path.isdir(target):
+            return f"{path} has no engine/target/ to free"
+        freed = size_of(target)
+        shutil.rmtree(target)
+        return f"freed {path}/engine/target ({freed / 2**30:.1f} GB); the worktree and its branch stay"
     code, branch, _ = git("symbolic-ref", "-q", "--short", "HEAD", cwd=path)
     if code != 0 or not branch:
         raise Refused(f"{path} has a detached HEAD, so no branch says what was merged")
@@ -92,14 +118,17 @@ def done(path, here):
 
 
 def main(argv):
-    if len(argv) != 1 or not argv[0]:
-        print("usage: engine/tools/worktree-done <worktree path>", file=sys.stderr)
+    target_only = bool(argv) and argv[0] == "--target-only"
+    if target_only:
+        argv = argv[1:]
+    if len(argv) != 1 or not argv[0] or argv[0].startswith("-"):
+        print("usage: engine/tools/worktree-done [--target-only] <worktree path>", file=sys.stderr)
         return 2
     role = os.environ.get("TALLY_ROLE") or "unset"
     try:
         if role != "lead":
             raise Refused(f"only the lead role runs it, and this is {role} (R-132)")
-        what = done(os.path.abspath(argv[0]), os.getcwd())
+        what = done(os.path.abspath(argv[0]), os.getcwd(), target_only)
     except Refused as r:
         print(f"worktree-done: refused {argv[0]}: {r}.", file=sys.stderr)
         return 1

@@ -11,7 +11,8 @@
     engine/tools/check walls-key   the hash of the walls' self-tests' inputs (CI's cache key)
 
 It runs from engine/ with a clean environment: nothing from the caller's shell changes
-the flags, the compiler, the profiles or the test seeds. It prints one line per failed
+the flags, the compiler, the profiles or the test seeds. Incremental builds are off
+(CARGO_INCREMENTAL=0) unless the caller sets CARGO_INCREMENTAL to 0 or 1. It prints one line per failed
 step and keeps each step's full output in target/check-logs/<step>.log. A report step
 prints its one line and never fails: `milestone-report`, the next milestone's tests
 (tools/milestones.py).
@@ -82,6 +83,9 @@ def clean_env():
             continue
         env[k] = v
     env.update(FIXED)
+    # incremental builds off unless the caller sets them (the retro after M0, decision 5):
+    # a worktree's target/ stays a third of the size, and the output is the same
+    env["CARGO_INCREMENTAL"] = os.environ.get("CARGO_INCREMENTAL") if os.environ.get("CARGO_INCREMENTAL") in ("0", "1") else "0"
     return env
 
 
