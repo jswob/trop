@@ -6,5 +6,5 @@
 # must match: the tag itself when `pin` is left out, or an approved amendment after the
 # tag that kept the version. A new version or amendment moves both lines.
 
-tag = "tally-2.1.4"
-approved = "the user's standing rule, 2026-11-04 (\"I would prefer if the session would just pick the recommended…\"), and the M0 coordinator's pick P5 on #80 under it: the spec wins, a prefixed call prints `a.b(x)`, its name touching its `(` (L §2.4)"
+tag = "tally-2.1.5"
+approved = "the user's standing rule, 2026-11-04 (\"I would prefer if the session would just pick the recommended…\"), and the M0 coordinator's pick P8 on #84 under it: the spec wins, a keyword-named prefixed call prints `a.or(x)`, its name touching its `(` (L §2.3 rule 3, L §2.4)"
