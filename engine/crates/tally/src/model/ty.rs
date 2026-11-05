@@ -124,7 +124,7 @@ pub enum Ty {
     UnitKey,
     /// A type load's checker doesn't work out where refcore does (a movement's field that a
     /// kind test narrows or a read over `events` names, a list's items, what reads them): most
-    /// checks pass it, `lifespan` refuses it as refcore refuses what isn't a thing.
+    /// checks pass it, as refcore passes the type it knows there.
     Unseen,
     /// `none`.
     None,

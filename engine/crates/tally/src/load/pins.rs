@@ -15,7 +15,7 @@ use super::steps::refuse;
 use super::types::{is_date, lit_rule, numcls, refused, text, uerr};
 use crate::base::{Code, Load, Reach, Refusal};
 use crate::model::{BindInfo, Graph, NameKind, Node, NodeKind, Reality, Rel, Ty};
-use crate::num::Num;
+use crate::num::{Num, NumError};
 use crate::syntax::{Expr, Key, Lit, PRef, Pin, PinForm, Stop};
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -62,17 +62,15 @@ pub(super) fn check_forks(
                 .ok_or_else(|| super::check::invariant(format!("axis {axis} isn't declared")))?
                 .options
                 .len();
-            let count = i64::try_from(options).map_err(|_| too_many(axis))?;
-            n = n
-                .checked_mul(&Num::int(count))
-                .map_err(|_| too_many(axis))?;
+            let count = i64::try_from(options).map_err(|_| too_many(NumError::Digits))?;
+            n = n.checked_mul(&Num::int(count)).map_err(too_many)?;
         }
-        let over = n
-            .compare(&Num::int(FORKS_CAP))
-            .map_err(|_| too_many(&ask.id))?
-            .is_gt();
+        let over = n.compare(&Num::int(FORKS_CAP)).map_err(too_many)?.is_gt();
         if over {
-            let shown = n.to_text().map_err(|_| too_many(&ask.id))?;
+            // refcore's `%d`: the whole count in plain digits.
+            let shown = n.integer_text().ok_or_else(|| {
+                super::check::invariant("a count of axis combinations, not whole".to_owned())
+            })?;
             let message = format!(
                 "ask {} reaches {shown} axis combinations; the cap is 64",
                 ask.id
@@ -89,9 +87,18 @@ pub(super) fn check_forks(
     Ok(out)
 }
 
-/// A count of combinations past the number kernel's reach: no model states that many.
-fn too_many(what: &str) -> Stop {
-    super::check::invariant(format!("the axis combinations of {what} past 4096 digits"))
+/// A count of axis combinations past the number kernel's digit cap, which refcore prints whole
+/// in its `LOAD-FORKS`: a capacity limit, "not built" until issue #89 rules; the kernel's own
+/// invariant stays `ENGINE-INVARIANT`. L §5.5.
+fn too_many(error: NumError) -> Stop {
+    match error {
+        NumError::Invariant => super::check::invariant(
+            "the number kernel's invariant, counting combinations".to_owned(),
+        ),
+        NumError::Div | NumError::Digits | NumError::Domain => {
+            Stop::NotBuilt("axis combinations past 4096 digits")
+        }
+    }
 }
 
 /// The axes `start` reaches: those each item on the way reads directly, and the axes it

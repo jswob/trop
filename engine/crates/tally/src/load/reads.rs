@@ -8,7 +8,8 @@
 //! `m_c_next`, `m_c_covered`, `m_c_gap`, `m_c_observed`, `m_c_unit`, `m_unit_of_quantity`,
 //! `m_leg_type`).
 //! Invariants: each read is typed in refcore's order, its marks and edges recorded as refcore
-//! records them; a type load doesn't see (`Unseen`, `Dyn`) is refused by none of these checks;
+//! records them; a type load doesn't see yet (`Unseen`) passes every one of these checks, and
+//! `Dyn`, refcore's `DYN`, is checked as refcore checks it (no place, no movement);
 //! an `of q` reads the labels its place's kind keeps (the parts clauses, `parts.rs`) and is
 //! `LOAD-PARTS` where load sees a place that keeps none of q's sort.
 

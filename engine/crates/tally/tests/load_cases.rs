@@ -4780,6 +4780,28 @@ version v1
                 "def ls: date = argmax(1 for a in adjustments over ..).zz",
                 "refused: LOAD-FIELD zz is not a field of adjustments (a.tally:27)",
             ),
+            // G13, the third review's G1: `lifespan` of a bound name's field, which load
+            // types `Unseen`, loads as in refcore, over `events` and under a kind test
+            // (`t-g1-events`, `t-g1-test`).
+            (
+                "of-events-field",
+                "kind gifts: event certain\n  leg cash: PLN\n  attr giver: key accounts\n\ndef early: int = count(e in events over .. where lifespan(e.giver).from < e.day)",
+                no_ask,
+            ),
+            (
+                "of-tested-field",
+                "kind gifts: event certain\n  leg cash: PLN\n  attr giver: key accounts\n\ndef early: int = count(e in events over .. where e in gifts and lifespan(e.giver).from < e.day)",
+                no_ask,
+            ),
+            // G13, S1: a unit past the 64-bit powers or the digit cap is the capacity stop
+            // (issue #89), never `ENGINE-INVARIANT`; refcore loads the first and refuses the
+            // second `LOAD-UNIT … num PLN^9223372036854775808, not num` (`s1-pct`, `s1-pow`).
+            ("unit-digits", "def y: num = 1 %^3000", "not built"),
+            (
+                "unit-power",
+                "def y: num = 1 PLN^9223372036854775807*PLN",
+                "not built",
+            ),
         ];
         for &(name, def, expected) in lifespan {
             let added = format!("{DEF}\n\n{def}");
@@ -4864,6 +4886,40 @@ version v1
             ];
             let expected = format!("scenario raised: refused: {refusal} (scen.tally:9)\n{unread}");
             assert_eq!(load_lines(&files, "q_raised"), expected, "{row}");
+        }
+    }
+
+    /// The M0 gate's third review, S2 (G13): an ask's axis combinations were multiplied out
+    /// and printed in the output's grouped form; refcore prints its `%d`. Past the digit cap
+    /// the count was `ENGINE-INVARIANT`; it is the capacity stop (issue #89), where refcore
+    /// prints all 4 270 digits. Expected texts are refcore's (`tmp/m0/g12/s2.py`).
+    #[test]
+    fn an_ask_s_axis_combinations_are_counted_as_refcore_counts_them() {
+        let model = |n: usize| {
+            let axes: Vec<String> = (0..n)
+                .map(|i| format!("axis a{i}\n  lo \"low\"\n  mid \"mid\"\n  hi \"high\"\n\n"))
+                .collect();
+            let axes = axes.concat();
+            let cond: Vec<String> = (0..n).map(|i| format!("a{i} == lo")).collect();
+            format!(
+                "model home\n  tally 2\n  on 2026-03-01\n  start 2026-01-01\n  end 2026-12-31\n\nsource card \"a card\"\n\n{axes}def d: bool = {}\n\nask q: d\n",
+                cond.join(" and ")
+            )
+        };
+        let cases: &[(usize, &str)] = &[
+            (
+                4,
+                "refused: LOAD-FORKS ask q reaches 81 axis combinations; the cap is 64 (a.tally:31)",
+            ),
+            (
+                70,
+                "refused: LOAD-FORKS ask q reaches 2503155504993241601315571986085849 axis combinations; the cap is 64 (a.tally:361)",
+            ),
+            (8586, "not built"),
+        ];
+        for &(n, expected) in cases {
+            let files = [("a.tally", model(n))];
+            assert_eq!(load_lines(&files, "q"), expected, "{n} axes");
         }
     }
 }

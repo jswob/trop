@@ -10,8 +10,10 @@
 //! `_txt`); check3.py (`m_unit_type`, `m_movement_field`, `m_covered_spans_of`, `span_txt`).
 //! The operators' checks (`_arith` to `t_agg`) are `ops.rs`'s, the calls `calls.rs`'s.
 //! Invariants: each node is typed in refcore's order and its reads are recorded as it is
-//! typed; a type load can't see (`Unseen`, a movement's field before a kind test narrows it)
-//! is refused by no rule, as refcore's checks pass it; every recursion is counted (R-16).
+//! typed; a type load doesn't see yet (`Unseen`: a bound name's field, which a kind test may
+//! narrow or `events` reads by name) is refused by no rule, `lifespan` included, as refcore
+//! passes the type it knows there; `Dyn` is refcore's `DYN`, refused where refcore refuses it;
+//! every recursion is counted (R-16).
 
 use super::check::{AxisRead, Checker, Figure, Scope, Stands, Var, VarDom, deeper, invariant};
 use super::keys::{KeyLit, resolve_key};
@@ -24,7 +26,7 @@ use crate::model::{
     CodeKind, Domain, IndexForm, KeyVal, KindSpec, NameKind, Node, NodeKind, PeriodWord, Reality,
     Rel, Shown, Ty, Unit,
 };
-use crate::num::Num;
+use crate::num::{Num, NumError};
 use crate::syntax::{
     AddOp, CmpOp, Expr, Field, FieldValue, Key, Lit, MulOp, Number, Pin, PinForm, Postfix, QueryFn,
     Span, Stop,
@@ -44,12 +46,20 @@ pub(super) fn uerr(message: String) -> Stop {
     refused(Load::Unit, message)
 }
 
-/// A number error met while typing, an invariant of the unit algebra.
-pub(super) fn unit_stop(_: crate::num::NumError) -> Stop {
-    Stop::Refused(Refusal::new(
-        Code::EngineInvariant,
-        "the unit algebra overflowed while typing".to_owned(),
-    ))
+/// A number error met while typing a unit (`1 %^3000`, `1 PLN^9223372036854775807*PLN`): a
+/// power past 64 bits or a scale past the digit cap is a capacity limit, "not built" until
+/// issue #89 rules (refcore's powers and scales are unbounded); the number kernel's own
+/// invariant stays `ENGINE-INVARIANT`. L §3.2.
+pub(super) fn unit_stop(error: NumError) -> Stop {
+    match error {
+        NumError::Invariant => Stop::Refused(Refusal::new(
+            Code::EngineInvariant,
+            "the unit algebra's invariant".to_owned(),
+        )),
+        NumError::Div | NumError::Digits | NumError::Domain => {
+            Stop::NotBuilt("a unit past the 64-bit powers or the digit cap")
+        }
+    }
 }
 
 /// One of the four arithmetic operators, as a chain writes it.
@@ -2083,7 +2093,8 @@ fn movement_field(m: &Reality, kind: &str, field: &str, object: Option<&Expr>) -
         }
     }
     let chain = m.chain(kind);
-    for info in &chain {
+    // Root first, as refcore's `kind_attrs`: a parent's attribute before a subkind's.
+    for info in chain.iter().rev() {
         if !info.attrs.iter().any(|(attr, _)| attr == field) {
             continue;
         }

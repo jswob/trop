@@ -17,7 +17,7 @@ use super::ops::unify;
 use super::steps::num_stop;
 use super::types::{
     Typed, input_read, is_date, is_period, no_order, num, numcls, period_kind, refused, text, uerr,
-    unit_of,
+    unit_of, unit_stop,
 };
 use crate::base::Load;
 use crate::model::{CodeKind, NameKind, Node, NodeKind, PeriodWord, Reality, Rel, Shown, Ty, Unit};
@@ -440,7 +440,10 @@ impl Checker {
         {
             t = self.expr(m, scope, arg, Some(&Ty::Key(base)), depth)?;
         }
-        if !matches!(&t, Ty::Key(ix) if m.kinds.get(ix).is_some()) {
+        // `Unseen` is a type refcore knows and load doesn't see yet (a bound name's field a
+        // kind test narrows, or read over `events`), so it passes; `dyn` is refused.
+        let of_a_kind = matches!(&t, Ty::Key(ix) if m.kinds.get(ix).is_some());
+        if !of_a_kind && !matches!(t, Ty::Unseen) {
             return Err(uerr(format!("lifespan of {}, not a thing", t.show())));
         }
         Ok(span())
@@ -823,9 +826,7 @@ impl Checker {
         } else {
             Unit::one()
         };
-        let (u, _) = xu
-            .mul(&ru)
-            .map_err(|_| Stop::NotBuilt("a unit past the 64-bit powers"))?;
+        let (u, _) = xu.mul(&ru).map_err(unit_stop)?;
         Ok(num(u))
     }
 
@@ -950,10 +951,7 @@ fn round_type(
             (Some(_) | None, _) => Ty::Dyn,
         });
     }
-    let converts = su
-        .conv(&xu)
-        .map_err(|_| Stop::NotBuilt("a unit past the 64-bit powers"))?
-        .is_some();
+    let converts = su.conv(&xu).map_err(unit_stop)?.is_some();
     if uc != Some("flex") && !converts {
         return Err(uerr(format!(
             "round: the step {} and {} have different units",
