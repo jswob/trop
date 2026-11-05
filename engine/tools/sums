@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# The two checksum files, rewritten in a merge, in any role (R-80, R-112): engine/tools/sums [--check]
+d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)" || exit 1
+exec python3 -I -B "$d/sums.py" "$@"

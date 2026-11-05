@@ -460,6 +460,10 @@ BASH = [
     # reading, diffing and committing them stays open to every role
     ("cat engine/tools/merge-pr", ALL, ""),
     ("grep -n refused engine/tools/merge_pr.py engine/tools/worktree_done.py", ALL, ""),
+    # the checksum files' writer in a merge is every role's (the retro after M0, decision 3)
+    ("engine/tools/sums", ALL, ""),
+    ("engine/tools/sums --check", ALL, ""),
+    ("cd engine && tools/sums", ALL, ""),
     ("git diff master -- engine/tools/merge_pr.py", ALL, ""),
     ("git add engine/tools/merge-pr engine/tools/worktree-done", ALL, ""),
     ("echo 'engine/tools/merge-pr 9'", ALL, ""),
