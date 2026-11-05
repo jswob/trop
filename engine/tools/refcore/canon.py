@@ -344,7 +344,10 @@ def spaced(p, t):
     if t.s == '(' and t.t == 'OP':
         if p.s == ']':
             return False
-        if p.t == 'ID' and (p.s in BUILTINS or (p.s not in KEYWORDS and p.nm)):
+        # A token the parser marked a name (nm) is one whatever its word: a word right after `.` is a field, never a
+        # keyword (L §2.3 parse rule 3), so a.or(x) is a call and prints touching its "(" (L §2.4 Expressions,
+        # 2.1.4-1; tally 2.1.5, issue #84: it printed a.or (x), which no parser reads back)
+        if p.t == 'ID' and (p.s in BUILTINS or p.nm):
             return False
         return True
     if t.s == '[' and t.t == 'OP':

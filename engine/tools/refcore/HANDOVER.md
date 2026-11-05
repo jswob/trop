@@ -7,6 +7,24 @@ or unclear it refuses `REFCORE-UNSPECIFIED <section>: <what>` (the list is `UNSP
 interpreter doesn't build refuses `REFCORE-NOT-YET <construct>`. Nothing may crash: an internal error becomes
 `REFCORE-NOT-YET an input this interpreter can't handle (...)` unless `REFCORE_DEBUG` is set.
 
+## tally 2.1.5 (M0's spec patch: issue #84)
+
+The spec patch tally 2.1.5 (`spec/CHANGES.md` 2.1.5-1 and 2.1.5-2), the coordinator's pick P8 (a) on #84 under the
+user's standing rule of 2026-11-04, found by the M0 builder at G8 step 3 (the `format` fuzz target), #80's follow-up.
+No spec text changes. The new tests were seen failing on tally 2.1.4's refcore first. **1170 tests, all pass** (1168,
+none changed, 2 new); through `refcore_fast` too.
+
+- **A keyword-named prefixed call prints touching its `(` (L §2.3 parse rule 3, L §2.4 Expressions, #84).**
+  `canon.spaced` joined `(` to an id the parser marked (`nm`) only when its word wasn't a keyword, so `mi.or(DUK)`
+  printed `mi.or (DUK)` (`mi.and`, `mi.in`, `a.not`, `a.def` likewise), which the parser refuses. A word right after
+  `.` is a field, never a keyword, and `post` marks it when the chain becomes a call (tally 2.1.4), so `spaced` now
+  joins any marked token, whatever its word: the engine's test (`syntax/spacing.rs`, build/m0 08b7e07). Every other
+  writer of `nm` (`ident`, `atom`, the band-call atom, `uterm`, `joint`'s renames) marks only a word that isn't a
+  keyword, so only #84's case moves. New: `L2_4_reprint_keyword_prefixed_call` (the engine's own #84 input, so its
+  canonical text is the same bytes in both) and `_words` (a spread of keyword words, a longer prefix, a scenario's
+  base), both seen failing. **Left as it was:** a `[` after a keyword field prints with its space (`mi.or [k]`,
+  `spaced`'s `[` arm reads the word, and a field carries no mark); it reads back and reprints as itself (#81).
+
 ## tally 2.1.4 (M0's spec patch: issue #80)
 
 The spec patch tally 2.1.4 (`spec/CHANGES.md` 2.1.4-1 and 2.1.4-2), the coordinator's pick P5 (a) on #80 under the

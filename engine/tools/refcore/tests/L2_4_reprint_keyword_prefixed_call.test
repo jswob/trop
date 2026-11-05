@@ -1,0 +1,73 @@
+# L §2.3 parse rule 3: "A word right after `.` is a field, never a keyword"; L §2.4 Expressions (tally 2.1.4-1): "none
+# before a call's `(`, its prefixes and a band's key included". Issue #84 (tally 2.1.5), the M0 builder's finding at
+# G8 step 3 (the format fuzz target): a prefixed call whose name is a keyword word printed with a space, `mi.or (DUK)`
+# and `mi.and (DUK)`, a text no parser reads back; `canon.spaced` tested for a keyword before the parser's name mark.
+# The input is the engine's own test for #84 (format_cases.rs, build/m0 08b7e07), so the canonical text is the same
+# bytes in both. Its canonical text reprints as itself (the second file).
+=== options reprint
+=== m.tally
+model m
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+def other: money DUK = round(gross,mi.and(DUK),half-up)
+
+unit DUK: currency minor 0.01
+
+input gross: money DUK
+
+def contrib: money DUK = round(gross, mi.or(DUK), half-up)
+
+def inner: money DUK = gross+mi.in(gross)
+=== n.tally
+model m
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+unit DUK: currency minor 0.01
+
+input gross: money DUK
+
+def contrib: money DUK = round(gross, mi.or(DUK), half-up)
+
+def inner: money DUK = gross + mi.in(gross)
+
+def other: money DUK = round(gross, mi.and(DUK), half-up)
+=== expect
+--- m.tally
+model m
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+unit DUK: currency minor 0.01
+
+input gross: money DUK
+
+def contrib: money DUK = round(gross, mi.or(DUK), half-up)
+
+def inner: money DUK = gross + mi.in(gross)
+
+def other: money DUK = round(gross, mi.and(DUK), half-up)
+--- n.tally
+model m
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+unit DUK: currency minor 0.01
+
+input gross: money DUK
+
+def contrib: money DUK = round(gross, mi.or(DUK), half-up)
+
+def inner: money DUK = gross + mi.in(gross)
+
+def other: money DUK = round(gross, mi.and(DUK), half-up)
+sha256 ae10a2b5e6de4af4c93ea6340fdbbf8a61eb24a324f52097c2db751582563e33
