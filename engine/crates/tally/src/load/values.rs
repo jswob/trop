@@ -72,7 +72,7 @@ impl Loader {
             }
             check_overlap(&self.m, id, &def.binds, &def.givens, None)?;
         }
-        Ok(())
+        self.check_mv_refs()
     }
 
     /// An expression row: only in a scenario's version, the checker types it (refcore's

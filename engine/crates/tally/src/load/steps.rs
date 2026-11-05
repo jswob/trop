@@ -7,6 +7,7 @@
 //! `NotBuilt`, never a guessed refusal; the load refusals made are the ones construction meets,
 //! in refcore's words (the rest are M0's later groups').
 
+use super::same::SameLine;
 use crate::base::{Code, Load, Place as At, Refusal, Run, Table, Warn};
 use crate::model::{Graph, PERIODS, Reality, Scenarios};
 use crate::num::{Num, NumError};
@@ -21,6 +22,9 @@ pub(super) struct Loader {
     pub(super) sections: Vec<(String, Section)>,
     /// The currencies in the order declared.
     pub(super) currency_order: Vec<String>,
+    /// The `same` lines of rows and movements, the header's then the versions' (refcore's
+    /// `header.sames` and `sames`).
+    pub(super) same_lines: Vec<SameLine>,
 }
 
 /// A load refusal at a line of a file. L §8.3.
@@ -90,6 +94,7 @@ pub(super) fn load_among(
     loader.check_rows()?;
     loader.finish_rows();
     super::overlap::check_obs(&loader.m)?;
+    loader.check_sames()?;
     super::scenarios::check_scenarios(&loader.m)?;
     super::bands::check_bands(&loader.m)?;
     loader.collect_asks();
@@ -164,9 +169,11 @@ impl Loader {
                 all_worlds: BTreeSet::new(),
                 elsewhere: BTreeMap::new(),
                 asks_alone: BTreeMap::new(),
+                sames: Vec::new(),
             },
             sections,
             currency_order: Vec::new(),
+            same_lines: Vec::new(),
         })
     }
 

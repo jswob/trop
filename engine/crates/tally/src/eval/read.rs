@@ -15,8 +15,8 @@ use crate::base::{Load, Run};
 use crate::hole::Hole;
 use crate::load::index_key_of;
 use crate::model::{
-    BindInfo, Class, Code, CodeKind, Domain, IndexInfo, InputInfo, KeyVal, Number, Pat, PeriodWord,
-    Reality, Row, TimePos, Ty, Unit, Value, currency_id, num_money,
+    BindInfo, Class, Code, CodeKind, Domain, IndexInfo, InputInfo, KeyVal, NameKind, Number, Pat,
+    PeriodWord, Reality, Row, TimePos, Ty, Unit, Value, currency_id, num_money,
 };
 use crate::num::Num;
 use crate::read::{Asked, Clocks, Found, held, origin, read_input, time_point};
@@ -870,7 +870,13 @@ fn convert_lit(
             let own = (*ty == Ty::MonthDay).then_some(Value::MonthDay(*mo, *d));
             dated(m, lit, ty, own, "a month-day")
         }
-        Lit::Name(_) if is_event_key(m, ty) => {
+        Lit::Name(text)
+            if is_event_key(m, ty)
+                && matches!(
+                    m.names.get(text.as_str()),
+                    Some(NameKind::Move | NameKind::Input)
+                ) =>
+        {
             Err(Stop::NotBuilt("a movement named as a row's value"))
         }
         Lit::Name(text) | Lit::Key(text) | Lit::Cur(text) => word_value(m, lit, text, ty),

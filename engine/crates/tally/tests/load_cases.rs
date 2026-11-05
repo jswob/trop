@@ -3573,4 +3573,208 @@ version v1
             assert_eq!(refusal(&edited(DRAWS, edits)), expected, "{edits:?}");
         }
     }
+
+    /// A model with `same` lines in a version and an observation whose attribute names a
+    /// movement (L §6.1, §5.19, §3.1 `key K` of an event kind).
+    const SAMES: &str = "model home\n  tally 2\n  on 2026-03-01\n  start 2026-01-01\n  end 2026-12-31\n\nsource card \"a card\"\n\nunit PLN: currency minor 0.01\n\nindex month = month 2026-01..2026-03\n\nindex flat = [a1, a2]\n\nkind persons: parties\n\nkind pays: transfers\n\nkind refunds: transfers\n  attr of_pay: key pays\n\nplace konto: accounts PLN lives 2026-01-01..\n\nplace world: outside lives 2026-01-01..\n\ninput bank: observed\n\ninput card_bank: observed\n\ninput fee[f in flat]: money PLN\n\ninput fee_in[f in flat]: money PLN\n\ninput count: int\n\ninput rent_day: date\n\ndef twice: money PLN = fee[a1] + fee[a1]\n\nmove rent[f in flat]: pays\n  on rent_day\n  leg cash from konto to world amount fee[f]\n\nversion v1\n  cite card\n  governs always\n  known 2026-01-01\n  persons + [ana] lives 2026-01-01..\n  fee[*] = 10.00 PLN\n  fee_in[*] = 10.00 PLN\n  count = 1\n  rent_day = 2026-01-10\n  opening[konto] = 100.00 PLN at 2026-01-01 start\n  bank[r1] = (on: 2026-01-10, kind: pays, leg cash from konto to world amount 10.00 PLN)\n  card_bank[c1] = (on: 2026-01-10, kind: pays, leg cash from konto to world amount 10.00 PLN)\n  bank[r2] = (on: 2026-01-12, kind: refunds, leg cash from world to konto amount 1.00 PLN, of_pay: bank[r1])\n  same bank[r1] = card_bank[c1]\n";
+
+    #[test]
+    fn same_lines_and_attributes_naming_a_movement_are_checked_at_load_as_refcore_checks_them() {
+        // The load probe's refusal ("loaded" when it loads clean), refcore's text.
+        let probes: &[(Edits, &str)] = &[
+            // base
+            (&[], "loaded"),
+            // rows
+            (
+                &[(
+                    "  same bank[r1] = card_bank[c1]",
+                    "  same fee[a1] = fee_in[a1]",
+                )],
+                "loaded",
+            ),
+            // move-row
+            (
+                &[(
+                    "  same bank[r1] = card_bank[c1]",
+                    "  same rent[a1] = card_bank[c1]",
+                )],
+                "loaded",
+            ),
+            // move-obs
+            (
+                &[(
+                    "  same bank[r1] = card_bank[c1]",
+                    "  same rent[a1] = bank[r1]",
+                )],
+                "loaded",
+            ),
+            // row-move
+            (
+                &[(
+                    "  same bank[r1] = card_bank[c1]",
+                    "  same fee[a1] = bank[r1]",
+                )],
+                "LOAD-SAME same fee[a1] = bank[r1]: a row and a movement (a.tally:57)",
+            ),
+            // types
+            (
+                &[("  same bank[r1] = card_bank[c1]", "  same fee[a1] = count")],
+                "LOAD-SAME same fee[a1] = count: rows of types money PLN and int (a.tally:57)",
+            ),
+            // place
+            (
+                &[("  same bank[r1] = card_bank[c1]", "  same konto = world")],
+                "LOAD-SAME same konto = world in a version names a kind or a thing (a.tally:57)",
+            ),
+            // thing
+            (
+                &[("  same bank[r1] = card_bank[c1]", "  same ana = bank[r1]")],
+                "LOAD-SAME same ana = bank[r1] in a version names a kind or a thing (a.tally:57)",
+            ),
+            // kind
+            (
+                &[("  same bank[r1] = card_bank[c1]", "  same bank[r1] = pays")],
+                "LOAD-SAME same bank[r1] = pays in a version names a kind or a thing (a.tally:57)",
+            ),
+            // def
+            (
+                &[("  same bank[r1] = card_bank[c1]", "  same twice = bank[r1]")],
+                "LOAD-SAME same twice = bank[r1]: a def and a movement (a.tally:57)",
+            ),
+            // def-right
+            (
+                &[("  same bank[r1] = card_bank[c1]", "  same bank[r1] = twice")],
+                "LOAD-SAME same bank[r1] = twice: a movement and a def (a.tally:57)",
+            ),
+            // index
+            (
+                &[("  same bank[r1] = card_bank[c1]", "  same month = bank[r1]")],
+                "LOAD-SAME same month = bank[r1]: a index and a movement (a.tally:57)",
+            ),
+            // field
+            (
+                &[(
+                    "  same bank[r1] = card_bank[c1]",
+                    "  same bank[r1].cash = card_bank[c1]",
+                )],
+                "LOAD-SAME same bank[r1].cash = card_bank[c1]: a field path and a movement (a.tally:57)",
+            ),
+            // unknown
+            (
+                &[(
+                    "  same bank[r1] = card_bank[c1]",
+                    "  same bank[r9] = nothing",
+                )],
+                "LOAD-NAME unknown id nothing (a.tally:57)",
+            ),
+            // unknown-left
+            (
+                &[(
+                    "  same bank[r1] = card_bank[c1]",
+                    "  same nothing = bank[r1]",
+                )],
+                "LOAD-NAME unknown id nothing (a.tally:57)",
+            ),
+            // obs-nokey
+            (
+                &[(
+                    "  same bank[r1] = card_bank[c1]",
+                    "  same bank = card_bank[c1]",
+                )],
+                "LOAD-KEY an observation row is named by its id: bank[<id>] (a.tally:57)",
+            ),
+            // obs-twokeys
+            (
+                &[(
+                    "  same bank[r1] = card_bank[c1]",
+                    "  same bank[r1, r2] = card_bank[c1]",
+                )],
+                "LOAD-KEY an observation row is named by its id: bank[<id>] (a.tally:57)",
+            ),
+            // row-keys
+            (
+                &[("  same bank[r1] = card_bank[c1]", "  same fee = fee_in[a1]")],
+                "LOAD-KEY wrong number of keys for fee (a.tally:57)",
+            ),
+            // row-badkey
+            (
+                &[(
+                    "  same bank[r1] = card_bank[c1]",
+                    "  same fee[a7] = fee_in[a1]",
+                )],
+                "LOAD-KEY a7 is not a key of flat (a.tally:57)",
+            ),
+            // move-keys
+            (
+                &[("  same bank[r1] = card_bank[c1]", "  same rent = bank[r1]")],
+                "LOAD-KEY wrong number of keys for rent (a.tally:57)",
+            ),
+            // move-badkey
+            (
+                &[(
+                    "  same bank[r1] = card_bank[c1]",
+                    "  same rent[a9] = bank[r1]",
+                )],
+                "LOAD-KEY a9 is not a key of flat (a.tally:57)",
+            ),
+            // obs-num
+            (
+                &[(
+                    "  same bank[r1] = card_bank[c1]",
+                    "  same bank[7] = card_bank[c1]",
+                )],
+                "loaded",
+            ),
+            // mvref-move: refcore refuses every move instance here (`LOAD-KEY rent[a2] is not
+            // a key of pays`), where L §3.1 takes one of the kind: G9's STOP-REPORT
+            (
+                &[("of_pay: bank[r1])", "of_pay: rent[a2])")],
+                "not built: a move instance named by an attribute",
+            ),
+            // mvref-move-nokey
+            (
+                &[("of_pay: bank[r1])", "of_pay: rent)")],
+                "LOAD-KEY wrong number of keys for rent (a.tally:56)",
+            ),
+            // mvref-move-badkey
+            (
+                &[("of_pay: bank[r1])", "of_pay: rent[a8])")],
+                "LOAD-KEY a8 is not a key of flat (a.tally:56)",
+            ),
+            // mvref-obs-nokey
+            (
+                &[("of_pay: bank[r1])", "of_pay: bank)")],
+                "LOAD-KEY an observation row is named by its id: bank[<id>] (a.tally:56)",
+            ),
+            // mvref-obs-two
+            (
+                &[("of_pay: bank[r1])", "of_pay: bank[r1, r2])")],
+                "LOAD-KEY an observation row is named by its id: bank[<id>] (a.tally:56)",
+            ),
+            // mvref-unknown
+            (
+                &[("of_pay: bank[r1])", "of_pay: bank[r9])")],
+                "LOAD-KEY bank[r9] is not a key of pays (a.tally:56)",
+            ),
+            // mvref-kind
+            (
+                &[("of_pay: bank[r1])", "of_pay: bank[r2])")],
+                "LOAD-KEY bank[r2] is not a key of pays (a.tally:56)",
+            ),
+            // mvref-other
+            (
+                &[("of_pay: bank[r1])", "of_pay: fee[a1])")],
+                "LOAD-UNIT a value of the wrong type for bank[r2] (a.tally:56)",
+            ),
+        ];
+        for &(edits, expected) in probes {
+            assert_eq!(refusal(&edited(SAMES, edits)), expected, "{edits:?}");
+        }
+        let with_ask = edited(SAMES, &[("version v1", "ask q: count\n\nversion v1")]);
+        assert_eq!(
+            ask_line(&with_ask, "q:"),
+            None,
+            "an ask over same lines is not built at run"
+        );
+    }
 }

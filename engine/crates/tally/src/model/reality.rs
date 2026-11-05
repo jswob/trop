@@ -9,7 +9,7 @@
 use super::decl::{BandInfo, DefInfo, InputInfo, MoveInfo, PlaceInfo};
 use super::graph::Graph;
 use super::index::{IndexInfo, VersionInfo};
-use super::key::Span;
+use super::key::{KeyVal, Span};
 use super::kind::{Entry, KindInfo, KindSpec, Thing};
 use super::world::Scenarios;
 use crate::base::{Refusal, Table, Warn};
@@ -118,6 +118,18 @@ pub struct Reality {
     /// The asks refused alone, each with its refusal: one that names a world the run doesn't
     /// load (refcore's `asks_alone`). L §6.4, §8.
     pub asks_alone: BTreeMap<String, Refusal>,
+    /// The rows and movements stated `same`, in the order written (refcore's `same_rows` and
+    /// `same_moves`): read together at run. L §6.1, §5.19.
+    pub sames: Vec<SamePair>,
+}
+
+/// Two rows or two movements stated `same` (refcore's `same_rows`, `same_moves`). L §6.1.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum SamePair {
+    /// Two rows: each input's id and keys.
+    Rows(String, Vec<KeyVal>, String, Vec<KeyVal>),
+    /// Two movements: each instance's id, `m[k]` or an observed row's `x[id]`.
+    Moves(String, String),
 }
 
 impl Reality {

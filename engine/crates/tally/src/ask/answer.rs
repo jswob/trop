@@ -167,9 +167,10 @@ pub(crate) fn answer_turns(
     })
 }
 
-/// Whether the reality holds a known window (a version's, a row's or an observation's own) or
-/// a `moves` line: load checks them (L §4.5, §5.3), the read rule at run doesn't take them yet
-/// (M1's), so an ask that would read them stops `NotBuilt`.
+/// Whether the reality holds a known window (a version's, a row's or an observation's own), a
+/// `moves` line, or an observation's attribute that names a movement: load checks them (L
+/// §4.5, §5.3, §5.19), the run doesn't take them yet (M1's), so an ask that would read them
+/// stops `NotBuilt`.
 fn windows_or_moves(m: &Reality) -> bool {
     let versions = m
         .versions
@@ -180,7 +181,9 @@ fn windows_or_moves(m: &Reality) -> bool {
     }
     for (_, input) in m.inputs.entries() {
         let rows = input.rows.iter().any(|r| r.own_window.is_some());
-        if rows || input.observations.iter().any(|o| o.own_window.is_some()) {
+        let unread =
+            |o: &crate::model::Observation| o.own_window.is_some() || !o.moves_named.is_empty();
+        if rows || input.observations.iter().any(unread) {
             return true;
         }
     }
@@ -203,8 +206,8 @@ fn keeps_parts(m: &Reality) -> bool {
 }
 
 /// A form load checks (M0) that the run doesn't evaluate yet, where the ask meets it: its
-/// pins, a random ask, `orient`, an axis it reaches, a fill of the reality (L §5.5, §5.12,
-/// §5.16, §5.18).
+/// pins, a random ask, `orient`, an axis it reaches, a fill or a `same` line of the reality
+/// (L §5.5, §5.12, §5.16, §5.18, §6.1).
 fn unbuilt_at_run(m: &Reality, ask: &Ask) -> Option<&'static str> {
     if !ask.pins.is_empty() {
         return Some("an ask's pins at run");
@@ -220,6 +223,9 @@ fn unbuilt_at_run(m: &Reality, ask: &Ask) -> Option<&'static str> {
     }
     if !m.fills.is_empty() {
         return Some("fills at run");
+    }
+    if !m.sames.is_empty() {
+        return Some("same lines at run");
     }
     None
 }

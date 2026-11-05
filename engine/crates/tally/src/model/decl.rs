@@ -366,6 +366,9 @@ pub struct Observation {
     /// Its attributes as values of their types, a stated hole naming the row (refcore's
     /// `convert_value`, `_obs_attr`).
     pub values: Vec<(String, super::value::Value)>,
+    /// Its attributes that name a movement (a key of an event kind), each with the
+    /// movement's id: `bank[r1]`, `rent[a1]` (refcore's `mvref`). L §3.1, §5.19.
+    pub moves_named: Vec<(String, String)>,
     /// What it fulfils.
     pub fulfils: Option<Fulfils>,
     /// Its line.

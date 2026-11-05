@@ -111,7 +111,7 @@ pub mod model {
     pub use index::{GapRole, IndexForm, IndexInfo, Moved, OwnTime, VersionInfo};
     pub use key::{KeyVal, Pat, Span, pattern_text};
     pub use kind::{Entry, KindInfo, KindSpec, Labels, PRELUDE_KINDS, PlaceKeys, Thing, prelude};
-    pub use reality::{BUILTIN_INDEXES, BUILTIN_INPUTS, NameKind, Reality};
+    pub use reality::{BUILTIN_INDEXES, BUILTIN_INPUTS, NameKind, Reality, SamePair};
     pub use ty::{CodeKind, PeriodWord, Shown, Ty};
     pub use unit::{PERIODS, Scaled, Unit, is_currency_code};
     pub use value::{
@@ -250,6 +250,7 @@ pub mod load {
     mod random;
     mod reads;
     mod rows;
+    mod same;
     mod scenarios;
     mod spans;
     mod steps;

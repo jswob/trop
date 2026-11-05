@@ -10,6 +10,7 @@
 
 use super::keys::{KeyLit, key_order, range_key_of};
 use super::places::Written;
+use super::same::SameLine;
 use super::spans::{governs_span, lspan_to_span};
 use super::steps::{Loader, refuse};
 use super::worlds::no_version;
@@ -138,7 +139,17 @@ impl Loader {
     fn item(&mut self, vid: &str, item: &Item, file: &str) -> Result<bool, Stop> {
         match &item.form {
             ItemForm::Enter(_) => Ok(false),
-            ItemForm::Same(_) => Err(Stop::NotBuilt("same lines")),
+            ItemForm::Same(sides) => {
+                let (left, right) = sides.as_ref();
+                self.same_lines.push(SameLine {
+                    left: left.clone(),
+                    right: right.clone(),
+                    file: file.to_owned(),
+                    line: item.line,
+                    version: Some(vid.to_owned()),
+                });
+                Ok(false)
+            }
             ItemForm::Rule { qual, def, rule } => {
                 if qual.is_some() {
                     return Err(Stop::NotBuilt("a member's prefix"));
