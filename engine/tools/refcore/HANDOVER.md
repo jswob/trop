@@ -7,6 +7,24 @@ or unclear it refuses `REFCORE-UNSPECIFIED <section>: <what>` (the list is `UNSP
 interpreter doesn't build refuses `REFCORE-NOT-YET <construct>`. Nothing may crash: an internal error becomes
 `REFCORE-NOT-YET an input this interpreter can't handle (...)` unless `REFCORE_DEBUG` is set.
 
+## tally 2.1.4 (M0's spec patch: issue #80)
+
+The spec patch tally 2.1.4 (`spec/CHANGES.md` 2.1.4-1 and 2.1.4-2), the coordinator's pick P5 (a) on #80 under the
+user's standing rule of 2026-11-04, found by the M0 builder at G5 (the `format` fuzz target). The new tests were seen
+failing on tally 2.1.3's refcore first. **1168 tests, all pass** (1165, none changed, 3 new); through `refcore_fast`
+too.
+
+- **A prefixed call prints touching its `(` (L §2.4 Expressions, #80).** `P.post` read the id after a `.` as a field
+  and left it unmarked when the chain became a call (`a.b(x)`, `household.b(x)`), so `canon.spaced`, which joins `(`
+  to an id the parser marked (`nm`), printed `a.b (x)`, a text the parser refuses (`LOAD-PARSE expected ")", got (`;
+  `post` takes a prefixed call only with its `(` touching). `post` now marks the call's name. A plain `f(x)` (`atom`)
+  and a keyed `a.b[k](x)` (`(` after `]`) printed joined already. `nm`'s other reader, `joint._rename_ok`, never renames
+  an id right after a touching `.`, so no member's renaming changes. New: `L2_4_reprint_prefixed_call` (the builder's
+  smallest input), `_member` (a joint model's `a.fee(…)`), `_scenario` (a scenario row's `household.fee(…)`), all
+  seen failing. **Left as it was:** `post` refuses a prefixed call whose `(` doesn't touch (`a.b (x)`), where `atom`
+  takes `f (x)` as a call, and a `.` with a space before it; `diff (…)` (a reserved word, not a call) prints with
+  its space and reads back. Both are outside #80 (`spec/CHANGES.md` § 2.1.4, Left open).
+
 ## tally 2.1.3 (M0's spec patch: issues #58, #59, #60)
 
 The spec patch tally 2.1.3 (`spec/CHANGES.md` 2.1.3-1 to 2.1.3-4), the user's rulings of 2026-11-04 on T's

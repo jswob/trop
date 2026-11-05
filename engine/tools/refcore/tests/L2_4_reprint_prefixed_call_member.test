@@ -1,0 +1,50 @@
+# L §2.3 Calls: "a.b(x) for a member's (§6.1)"; L §2.4 Expressions (tally 2.1.4, issue #80): "none before a call's
+# `(`, its prefixes and a band's key included". A joint model's ask calls its member's band, a.fee(a.income[a.ana]),
+# and reprints so, touching. Was `a.fee (a.income[a.ana])`, which no parser reads back: every joint model with a
+# member's band call failed to reprint.
+=== options reprint
+=== J/joint.tally
+model family
+  tally 2
+  on 2026-01-05
+  start 2026-01-01
+  end 2026-12-31
+  use a = "../A/ana.tally" sha256 "0000000000000000000000000000000000000000000000000000000000000000"
+
+ask f: a.fee(a.income[a.ana]) law 2026-06-30
+=== A/ana.tally
+model ana
+  tally 2
+  on 2026-01-05
+  start 2026-01-01
+  end 2026-12-31
+
+unit PLN: currency minor 0.01
+kind persons
+input income[p in persons]: money PLN
+band fee(x: money PLN): money PLN
+=== expect
+--- A/ana.tally
+model ana
+  tally 2
+  on 2026-01-05
+  start 2026-01-01
+  end 2026-12-31
+
+unit PLN: currency minor 0.01
+
+kind persons
+
+input income[p in persons]: money PLN
+
+band fee(x: money PLN): money PLN
+--- J/joint.tally
+model family
+  tally 2
+  on 2026-01-05
+  start 2026-01-01
+  end 2026-12-31
+  use a = "../A/ana.tally" sha256 "0000000000000000000000000000000000000000000000000000000000000000"
+
+ask f: a.fee(a.income[a.ana]) law 2026-06-30
+sha256 0d014eb3c0e05d11cc150a1331347ff728859739ee4fcbbab7c2f5ba68ac5565
