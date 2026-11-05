@@ -1,0 +1,15 @@
+model g
+  tally 2
+  on 2026-06-01
+  start 2026-01-01
+  end 2026-12-31
+
+index qs = [q1, q2]
+
+input n[k in qs]: num
+
+def c: num = sum(n[k] for k in qs where year_.f(k) == 1)
+
+def d: num = year_.f(2)
+
+def e: num = n[q1] + year_.f(2)
