@@ -227,4 +227,21 @@ mod tests {
     fn m0_format_rule_parens_forced() {
         formats_as_refcore("format/parens_forced");
     }
+
+    /// L §2.4 Numbers of any size print as every number does: a reduced `a/b` whose
+    /// numerator, denominator or both pass 64 bits, and a decimal past 64 bits grouped by a
+    /// space (G11's B4).
+    #[test]
+    fn m0_format_rule_numbers_of_any_size() {
+        formats_as_refcore("format/numbers_of_any_size");
+    }
+
+    /// L §2.3 `sref`, §2.4 A `same` side of every `sref` form prints as written, its keys and
+    /// fields kept: three names deep, a field after its keys, keys after a field (G11's B3).
+    /// Each is the only `same` item of its list, so no order between sides is read: refcore
+    /// sorts a side deeper than `a.x` by its parse tree (#88, `m0/format/held.tsv`).
+    #[test]
+    fn m0_format_rule_same_sides() {
+        formats_as_refcore("format/same_sides");
+    }
 }

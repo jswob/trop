@@ -162,7 +162,9 @@ mod tests {
         code_as_refcore("LOAD-CYCLE");
     }
 
-    /// `LOAD-DOMAIN`: `basic/domain`, `basic/domain-discrete`.
+    /// `LOAD-DOMAIN`: `basic/domain`, `basic/domain-discrete`, `lifepath/paths-zero`,
+    /// `lifepath/path-zero`, `lifepath/path-past-n`, `lifepath/path-past-64`,
+    /// `lifepath/paths-past-64` (a path count printed, of any size: G11's B6).
     #[test]
     fn m0_code_load_domain() {
         code_as_refcore("LOAD-DOMAIN");
@@ -174,7 +176,7 @@ mod tests {
         code_as_refcore("LOAD-DUP");
     }
 
-    /// `LOAD-FIELD`: `basic/field`, `basic/field-not`.
+    /// `LOAD-FIELD`: `basic/field`, `basic/field-not`, `lifepath/lifespan-field`.
     #[test]
     fn m0_code_load_field() {
         code_as_refcore("LOAD-FIELD");
@@ -315,6 +317,13 @@ mod tests {
         code_as_refcore("LOAD-OVERLAP");
     }
 
+    /// `LOAD-PARSE`: `lifepath/path-alone` (a path count printed, past 64 bits: G11's B6),
+    /// `lifepath/lifespan-two`, `lifepath/lifespan-none` (`lifespan` takes one thing: G11's B2).
+    #[test]
+    fn m0_code_load_parse() {
+        code_as_refcore("LOAD-PARSE");
+    }
+
     /// `LOAD-PARTS`: `own/parts-missing`, `own/parts-under`, `own/parts-arrival`, `own/parts-owns`,
     /// `own/parts-of-input`, `own/parts-over`, `own/parts-below`, `own/parts-overlap`,
     /// `own/parts-sort`, `jown/same-parts`.
@@ -404,7 +413,9 @@ mod tests {
     }
 
     /// `LOAD-UNIT`: `basic/unit-mixed`, `basic/unit-currency`, `basic/unit-fx`,
-    /// `adjust/unit-settlement`, `basic/unit-mode`.
+    /// `adjust/unit-settlement`, `basic/unit-mode`, `lifepath/lifespan-money`,
+    /// `lifepath/lifespan-key`, `lifepath/lifespan-record`, `lifepath/lifespan-to-num` (`lifespan`
+    /// typed at load: G11's B2).
     #[test]
     fn m0_code_load_unit() {
         code_as_refcore("LOAD-UNIT");

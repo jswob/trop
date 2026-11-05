@@ -1,0 +1,27 @@
+model numbers_of_any_size
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+input a: num
+
+input b: num
+
+input c: num
+
+input d: num
+
+input e: num
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  a = 1000000000000000000000/30
+  b = 7/300000000000000000000
+  c = -200000000000000000000/60000000000000000000000
+  d = 400000000000000000000/300000000000000000003
+  e = 123456789012345678901234.50

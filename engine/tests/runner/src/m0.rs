@@ -428,7 +428,7 @@ mod tests {
     use std::collections::BTreeSet;
 
     /// The corpus groups `vectors.py` sorts the 315 text sets into, and how many sets each
-    /// holds; with the format fixtures, 334 vectors.
+    /// holds; with the 21 format fixtures, 336 vectors.
     const GROUPS: [(&str, usize); 12] = [
         ("blind", 18),
         ("household-A", 8),
@@ -464,7 +464,7 @@ mod tests {
     #[test]
     fn the_format_vectors_read_and_name_their_texts() {
         let vs = format_vectors(FORMAT).expect("m0/format.refcore reads");
-        assert_eq!(vs.len(), 334, "315 text sets and 19 format fixtures");
+        assert_eq!(vs.len(), 336, "315 text sets and 21 format fixtures");
         let all = texts();
         let mut ids = BTreeSet::new();
         for v in &vs {
@@ -498,7 +498,7 @@ mod tests {
         }
         assert_eq!(
             vs.iter().filter(|v| v.group.starts_with("format/")).count(),
-            19,
+            21,
             "one vector per format fixture"
         );
     }

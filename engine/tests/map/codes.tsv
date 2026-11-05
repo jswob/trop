@@ -31,8 +31,8 @@ HOLE-PART	L §8.1	M5b	*	3	M5b	I:S1:S1-01~s1
 HOLE-PART	L §8.1	M5b	<place>: <amount> may be <q>'s: <questions>	3	M5b	I:S1:S1-01~s1
 LOAD-PATH	L §8.3	M0	*	2	M0	codes/LOAD-PATH/alone
 LOAD-PATH	L §8.3	M0	<path> doesn't exist	2	M0	codes/LOAD-PATH/alone
-LOAD-PARSE	L §8.3	M0	*	1	M0	codes/LOAD-PATH/control
-LOAD-PARSE	L §8.3	M0	cannot parse: <what was expected>	1	M0	codes/LOAD-PATH/control
+LOAD-PARSE	L §8.3	M0	*	4	M0	codes/LOAD-PATH/control
+LOAD-PARSE	L §8.3	M0	cannot parse: <what was expected>	4	M0	codes/LOAD-PATH/control
 LOAD-HEADER	L §8.3	M0	*	29	M0	U:law/LAW-13/rate25
 LOAD-HEADER	L §8.3	M0	missing tally version	1	M0	codes/m0/basic/header-tally
 LOAD-HEADER	L §8.3	M0	missing on date	1	M0	codes/m0/basic/header-on
@@ -93,25 +93,26 @@ LOAD-PARTS	L §8.3	M0	the stated parts <q> and <q'> of <x> overlap	1	M0	codes/m0
 LOAD-PARTS	L §8.3	M0	of <q> at <x>, which keeps no labels of its sort	1	M0	codes/m0/own/parts-sort
 LOAD-ALIVE	L §8.3	M0	*	1	M0	codes/m0/basic/alive
 LOAD-ALIVE	L §8.3	M0	binding over <kind> needs on or over	1	M0	codes/m0/basic/alive
-LOAD-DOMAIN	L §8.3	M0	*	2	M0	codes/m0/basic/domain
+LOAD-DOMAIN	L §8.3	M0	*	7	M0	codes/m0/basic/domain
 LOAD-DOMAIN	L §8.3	M0	range of quantities <a> .. <b> has no step	1	M0	codes/m0/basic/domain
 LOAD-DOMAIN	L §8.3	M0	<operation> has no meaning for <values>	0	-	-
 LOAD-DOMAIN	L §8.3	M0	discrete over a key list or a stepped range	1	M0	codes/m0/basic/domain-discrete
-LOAD-UNIT	L §8.3	M0	*	5	M0	codes/m0/adjust/unit-settlement
+LOAD-DOMAIN	L §8.3	M0	?	5	M0	codes/m0/lifepath/path-past-64
+LOAD-UNIT	L §8.3	M0	*	9	M0	codes/m0/adjust/unit-settlement
 LOAD-UNIT	L §8.3	M0	<a> and <b> have different units	1	M0	codes/m0/basic/unit-mixed
 LOAD-UNIT	L §8.3	M0	<operation> orders things of <K>	0	-	-
 LOAD-UNIT	L §8.3	M0	axis <a> is used as a mode, but <o> is not a mode name	1	M0	codes/m0/basic/unit-mode
 LOAD-UNIT	L §8.3	M0	money in an undeclared currency	1	M0	codes/m0/basic/unit-currency
-LOAD-UNIT	L §8.3	M0	?	2	M0	codes/m0/adjust/unit-settlement
+LOAD-UNIT	L §8.3	M0	?	6	M0	codes/m0/adjust/unit-settlement
 LOAD-PRECISION	L §8.3	M0	*	2	M0	codes/m0/basic/precision
 LOAD-PRECISION	L §8.3	M0	<literal> is finer than the minor unit	1	M0	codes/m0/basic/precision
 LOAD-PRECISION	L §8.3	M0	<a/b> terminates; write it as a decimal	1	M0	codes/m0/basic/precision-fraction
 LOAD-LITERAL	L §8.3	M0	*	3	M0	codes/m0/basic/literal-amount
 LOAD-LITERAL	L §8.3	M0	figure <n> in a rule; make it a row	1	M0	codes/m0/basic/literal-amount
 LOAD-LITERAL	L §8.3	M0	a date in a rule; make it a version	2	M0	codes/order/items
-LOAD-FIELD	L §8.3	M0	*	2	M0	codes/m0/basic/field
+LOAD-FIELD	L §8.3	M0	*	3	M0	codes/m0/basic/field
 LOAD-FIELD	L §8.3	M0	positional record in <row>; name its fields	0	-	-
-LOAD-FIELD	L §8.3	M0	<field> is not a field of <type>	1	M0	codes/m0/basic/field-not
+LOAD-FIELD	L §8.3	M0	<field> is not a field of <type>	2	M0	codes/m0/basic/field-not
 LOAD-FIELD	L §8.3	M0	<row> lacks field <f>	0	-	-
 LOAD-FIELD	L §8.3	M0	?	1	M0	codes/m0/basic/field
 LOAD-INSTANT	L §8.3	M0	*	3	M0	codes/m0/basic/instant
@@ -285,8 +286,8 @@ RUN-PLACE	L §8.4	-	<claim> below 0	3	S	kernel/g9/reading_close
 RUN-PLACE	L §8.4	-	<holding> below 0 units	1	S	kernel/g9/sign
 RUN-PLACE	L §8.4	-	<place> is <b> after the day's observations and plans of <d>	6	S	kernel/U:ask/ASK-03
 RUN-PLACE	L §8.4	-	<place> is <b> after its reading at <instant>	3	S	kernel/g9/reading_close
-RUN-LIFESPAN	L §8.4	-	*	6	S	kernel/g5/agenda
-RUN-LIFESPAN	L §8.4	-	<leg> moves into or out of <thing> outside its lifespan	4	S	kernel/g7/deep
+RUN-LIFESPAN	L §8.4	-	*	10	S	kernel/g5/agenda
+RUN-LIFESPAN	L §8.4	-	<leg> moves into or out of <thing> outside its lifespan	8	S	kernel/g6/refusal_keys
 RUN-LIFESPAN	L §8.4	-	<place> ends on <d> holding <positions>	2	S	kernel/g5/agenda
 RUN-LIFESPAN	L §8.4	-	<movement> labels a part of <place> to <party> outside its lifespan	0	-	-
 RUN-LIFESPAN	L §8.4	-	<party> ends on <d> holding parts of <place>	1	M5b	U:own/OWN-10/p24
@@ -317,8 +318,8 @@ WARN-LABELS	L §8.5	M5b	*	4	M5b	I:S4:S4-01~s4
 WARN-LABELS	L §8.5	M5b	labels dropped at <place> from <d>: <movements>	4	M5b	I:S4:S4-01~s4
 WARN-STALE	L §8.5	-	*	0	-	-
 WARN-STALE	L §8.5	-	scenario <s> replaces <target> at <keys>, changed in the base by <version>	0	-	-
-REQ-ASK	E §11	-	*	311	M0	codes/m0/adjust/base
-REQ-ASK	E §11	-	no ask <q>	311	M0	codes/m0/adjust/base
+REQ-ASK	E §11	-	*	312	M0	codes/m0/adjust/base
+REQ-ASK	E §11	-	no ask <q>	312	M0	codes/m0/adjust/base
 REQ-CLOCK	E §11	-	*	0	-	-
 REQ-PATHS	E §11	-	*	0	-	-
 ENGINE-INVARIANT	E §11	-	*	0	-	-

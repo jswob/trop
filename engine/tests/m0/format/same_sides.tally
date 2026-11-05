@@ -1,0 +1,32 @@
+model same_sides
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+  same  a.b.c  =  d.e.f
+
+source s "s"
+
+index flat = [a1, a2]
+
+input fee[f in flat]: money PLN
+
+unit PLN: currency minor 0.01
+
+version v1
+  cite s
+  governs always
+  known 2026-01-01
+  same  fee[ a1 ].x  =  fee[a2]
+
+version v2
+  cite s
+  governs always
+  known 2026-02-01
+  same fee[a1].x[ a2 ]=a.b.c
+
+version v3
+  cite s
+  governs always
+  known 2026-03-01
+  same a.b.c  =  fee[a2].x

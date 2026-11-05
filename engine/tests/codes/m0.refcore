@@ -190,6 +190,57 @@ version card_2026
   opening[sav] of ania = 10.00 PLN at 2026-01-01 start "the card"
   opening[sav] of tomek = 20.00 PLN at 2026-01-01 start "the card"
 ,,1:1,36:refused: REQ-ASK no ask zz_m0_probe
+,13:lifepath/base,7:REQ-ASK,8:lifepath,32:run base.tally --ask zz_m0_probe,1234:10:base.tally,1214:model lifepath
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M0's load-code fixtures (invented): basic's text, two lifespans typed at load and a path line at its last path; it loads clean; each fixture of codes/m0/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+input amt: money PLN
+
+input day: date
+
+input rate[k in qs]: num
+
+def fee[k in qs]: money PLN
+  rule base v card_2026 = round(amt * rate[k], minor(PLN), half-up)
+  rule waived beats base v card_2026 = 0 PLN when rate[k] == 0
+
+def total: money PLN = sum(fee[k] for k in qs)
+
+def born: date = lifespan(konto).from
+
+def ends[p in accounts]: date = lifespan(p).to
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on day
+  leg cash from konto to world amount fee[q1]
+
+ask q: total, bal(konto, 2026-12-31)
+
+ask qp: total paths 3 seed 1 path 3
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  day = 2026-02-10 "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+,,1:1,36:refused: REQ-ASK no ask zz_m0_probe
 ,8:own/base,7:REQ-ASK,3:own,32:run base.tally --ask zz_m0_probe,1229:10:base.tally,1209:model own
   tally 2
   on 2026-03-01
@@ -5641,4 +5692,667 @@ version card_2026
   opening[sav] of ania = 10.00 PLN at 2026-01-01 start "the card"
   opening[sav] of tomek = 20.00 PLN at 2026-01-01 start "the card"
 ,,1:1,76:refused: LOAD-PARTS same a.sav = a.world: a.sav keeps parts (joint.tally:7)
+,19:lifepath/paths-zero,11:LOAD-DOMAIN,8:lifepath,32:run base.tally --ask zz_m0_probe,1227:10:base.tally,1207:model lifepath
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M0's load-code fixtures (invented): basic's text, two lifespans typed at load and a path line at its last path; it loads clean; each fixture of codes/m0/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+input amt: money PLN
+
+input day: date
+
+input rate[k in qs]: num
+
+def fee[k in qs]: money PLN
+  rule base v card_2026 = round(amt * rate[k], minor(PLN), half-up)
+  rule waived beats base v card_2026 = 0 PLN when rate[k] == 0
+
+def total: money PLN = sum(fee[k] for k in qs)
+
+def born: date = lifespan(konto).from
+
+def ends[p in accounts]: date = lifespan(p).to
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on day
+  leg cash from konto to world amount fee[q1]
+
+ask q: total, bal(konto, 2026-12-31)
+
+ask qp: total paths 0 seed 1
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  day = 2026-02-10 "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+,,1:1,62:refused: LOAD-DOMAIN paths 0: N is at least 1 (base.tally:40)
+,18:lifepath/path-zero,11:LOAD-DOMAIN,8:lifepath,32:run base.tally --ask zz_m0_probe,1234:10:base.tally,1214:model lifepath
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M0's load-code fixtures (invented): basic's text, two lifespans typed at load and a path line at its last path; it loads clean; each fixture of codes/m0/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+input amt: money PLN
+
+input day: date
+
+input rate[k in qs]: num
+
+def fee[k in qs]: money PLN
+  rule base v card_2026 = round(amt * rate[k], minor(PLN), half-up)
+  rule waived beats base v card_2026 = 0 PLN when rate[k] == 0
+
+def total: money PLN = sum(fee[k] for k in qs)
+
+def born: date = lifespan(konto).from
+
+def ends[p in accounts]: date = lifespan(p).to
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on day
+  leg cash from konto to world amount fee[q1]
+
+ask q: total, bal(konto, 2026-12-31)
+
+ask qp: total paths 3 seed 1 path 0
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  day = 2026-02-10 "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+,,1:1,60:refused: LOAD-DOMAIN path 0 is outside 1..3 (base.tally:40)
+,20:lifepath/path-past-n,11:LOAD-DOMAIN,8:lifepath,32:run base.tally --ask zz_m0_probe,1234:10:base.tally,1214:model lifepath
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M0's load-code fixtures (invented): basic's text, two lifespans typed at load and a path line at its last path; it loads clean; each fixture of codes/m0/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+input amt: money PLN
+
+input day: date
+
+input rate[k in qs]: num
+
+def fee[k in qs]: money PLN
+  rule base v card_2026 = round(amt * rate[k], minor(PLN), half-up)
+  rule waived beats base v card_2026 = 0 PLN when rate[k] == 0
+
+def total: money PLN = sum(fee[k] for k in qs)
+
+def born: date = lifespan(konto).from
+
+def ends[p in accounts]: date = lifespan(p).to
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on day
+  leg cash from konto to world amount fee[q1]
+
+ask q: total, bal(konto, 2026-12-31)
+
+ask qp: total paths 3 seed 1 path 4
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  day = 2026-02-10 "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+,,1:1,60:refused: LOAD-DOMAIN path 4 is outside 1..3 (base.tally:40)
+,21:lifepath/path-past-64,11:LOAD-DOMAIN,8:lifepath,32:run base.tally --ask zz_m0_probe,1253:10:base.tally,1233:model lifepath
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M0's load-code fixtures (invented): basic's text, two lifespans typed at load and a path line at its last path; it loads clean; each fixture of codes/m0/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+input amt: money PLN
+
+input day: date
+
+input rate[k in qs]: num
+
+def fee[k in qs]: money PLN
+  rule base v card_2026 = round(amt * rate[k], minor(PLN), half-up)
+  rule waived beats base v card_2026 = 0 PLN when rate[k] == 0
+
+def total: money PLN = sum(fee[k] for k in qs)
+
+def born: date = lifespan(konto).from
+
+def ends[p in accounts]: date = lifespan(p).to
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on day
+  leg cash from konto to world amount fee[q1]
+
+ask q: total, bal(konto, 2026-12-31)
+
+ask qp: total paths 3 seed 1 path 99999999999999999999
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  day = 2026-02-10 "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+,,1:1,79:refused: LOAD-DOMAIN path 99999999999999999999 is outside 1..3 (base.tally:40)
+,22:lifepath/paths-past-64,11:LOAD-DOMAIN,8:lifepath,32:run base.tally --ask zz_m0_probe,1273:10:base.tally,1253:model lifepath
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M0's load-code fixtures (invented): basic's text, two lifespans typed at load and a path line at its last path; it loads clean; each fixture of codes/m0/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+input amt: money PLN
+
+input day: date
+
+input rate[k in qs]: num
+
+def fee[k in qs]: money PLN
+  rule base v card_2026 = round(amt * rate[k], minor(PLN), half-up)
+  rule waived beats base v card_2026 = 0 PLN when rate[k] == 0
+
+def total: money PLN = sum(fee[k] for k in qs)
+
+def born: date = lifespan(konto).from
+
+def ends[p in accounts]: date = lifespan(p).to
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on day
+  leg cash from konto to world amount fee[q1]
+
+ask q: total, bal(konto, 2026-12-31)
+
+ask qp: total paths 99999999999999999999 seed 1 path 100000000000000000000
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  day = 2026-02-10 "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+,,1:1,99:refused: LOAD-DOMAIN path 100000000000000000000 is outside 1..99999999999999999999 (base.tally:40)
+,19:lifepath/path-alone,10:LOAD-PARSE,8:lifepath,32:run base.tally --ask zz_m0_probe,1238:10:base.tally,1218:model lifepath
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M0's load-code fixtures (invented): basic's text, two lifespans typed at load and a path line at its last path; it loads clean; each fixture of codes/m0/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+input amt: money PLN
+
+input day: date
+
+input rate[k in qs]: num
+
+def fee[k in qs]: money PLN
+  rule base v card_2026 = round(amt * rate[k], minor(PLN), half-up)
+  rule waived beats base v card_2026 = 0 PLN when rate[k] == 0
+
+def total: money PLN = sum(fee[k] for k in qs)
+
+def born: date = lifespan(konto).from
+
+def ends[p in accounts]: date = lifespan(p).to
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on day
+  leg cash from konto to world amount fee[q1]
+
+ask q: total, bal(konto, 2026-12-31)
+
+ask qp: total path 99999999999999999999
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  day = 2026-02-10 "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+,,1:1,99:refused: LOAD-PARSE cannot parse: path 99999999999999999999 without paths N seed S (base.tally:40)
+,21:lifepath/lifespan-two,10:LOAD-PARSE,8:lifepath,32:run base.tally --ask zz_m0_probe,1241:10:base.tally,1221:model lifepath
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M0's load-code fixtures (invented): basic's text, two lifespans typed at load and a path line at its last path; it loads clean; each fixture of codes/m0/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+input amt: money PLN
+
+input day: date
+
+input rate[k in qs]: num
+
+def fee[k in qs]: money PLN
+  rule base v card_2026 = round(amt * rate[k], minor(PLN), half-up)
+  rule waived beats base v card_2026 = 0 PLN when rate[k] == 0
+
+def total: money PLN = sum(fee[k] for k in qs)
+
+def born: date = lifespan(konto, world).from
+
+def ends[p in accounts]: date = lifespan(p).to
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on day
+  leg cash from konto to world amount fee[q1]
+
+ask q: total, bal(konto, 2026-12-31)
+
+ask qp: total paths 3 seed 1 path 3
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  day = 2026-02-10 "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+,,1:1,77:refused: LOAD-PARSE cannot parse: lifespan takes 1 arguments (base.tally:26)
+,22:lifepath/lifespan-none,10:LOAD-PARSE,8:lifepath,32:run base.tally --ask zz_m0_probe,1229:10:base.tally,1209:model lifepath
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M0's load-code fixtures (invented): basic's text, two lifespans typed at load and a path line at its last path; it loads clean; each fixture of codes/m0/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+input amt: money PLN
+
+input day: date
+
+input rate[k in qs]: num
+
+def fee[k in qs]: money PLN
+  rule base v card_2026 = round(amt * rate[k], minor(PLN), half-up)
+  rule waived beats base v card_2026 = 0 PLN when rate[k] == 0
+
+def total: money PLN = sum(fee[k] for k in qs)
+
+def born: date = lifespan().from
+
+def ends[p in accounts]: date = lifespan(p).to
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on day
+  leg cash from konto to world amount fee[q1]
+
+ask q: total, bal(konto, 2026-12-31)
+
+ask qp: total paths 3 seed 1 path 3
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  day = 2026-02-10 "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+,,1:1,77:refused: LOAD-PARSE cannot parse: lifespan takes 1 arguments (base.tally:26)
+,23:lifepath/lifespan-money,9:LOAD-UNIT,8:lifepath,32:run base.tally --ask zz_m0_probe,1232:10:base.tally,1212:model lifepath
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M0's load-code fixtures (invented): basic's text, two lifespans typed at load and a path line at its last path; it loads clean; each fixture of codes/m0/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+input amt: money PLN
+
+input day: date
+
+input rate[k in qs]: num
+
+def fee[k in qs]: money PLN
+  rule base v card_2026 = round(amt * rate[k], minor(PLN), half-up)
+  rule waived beats base v card_2026 = 0 PLN when rate[k] == 0
+
+def total: money PLN = sum(fee[k] for k in qs)
+
+def born: date = lifespan(amt).from
+
+def ends[p in accounts]: date = lifespan(p).to
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on day
+  leg cash from konto to world amount fee[q1]
+
+ask q: total, bal(konto, 2026-12-31)
+
+ask qp: total paths 3 seed 1 path 3
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  day = 2026-02-10 "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+,,1:1,70:refused: LOAD-UNIT lifespan of money PLN, not a thing (base.tally:26)
+,21:lifepath/lifespan-key,9:LOAD-UNIT,8:lifepath,32:run base.tally --ask zz_m0_probe,1228:10:base.tally,1208:model lifepath
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M0's load-code fixtures (invented): basic's text, two lifespans typed at load and a path line at its last path; it loads clean; each fixture of codes/m0/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+input amt: money PLN
+
+input day: date
+
+input rate[k in qs]: num
+
+def fee[k in qs]: money PLN
+  rule base v card_2026 = round(amt * rate[k], minor(PLN), half-up)
+  rule waived beats base v card_2026 = 0 PLN when rate[k] == 0
+
+def total: money PLN = sum(fee[k] for k in qs)
+
+def born: date = lifespan(konto).from
+
+def ends[k in qs]: date = lifespan(k).to
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on day
+  leg cash from konto to world amount fee[q1]
+
+ask q: total, bal(konto, 2026-12-31)
+
+ask qp: total paths 3 seed 1 path 3
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  day = 2026-02-10 "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+,,1:1,67:refused: LOAD-UNIT lifespan of key qs, not a thing (base.tally:28)
+,23:lifepath/lifespan-field,10:LOAD-FIELD,8:lifepath,32:run base.tally --ask zz_m0_probe,1234:10:base.tally,1214:model lifepath
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M0's load-code fixtures (invented): basic's text, two lifespans typed at load and a path line at its last path; it loads clean; each fixture of codes/m0/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+input amt: money PLN
+
+input day: date
+
+input rate[k in qs]: num
+
+def fee[k in qs]: money PLN
+  rule base v card_2026 = round(amt * rate[k], minor(PLN), half-up)
+  rule waived beats base v card_2026 = 0 PLN when rate[k] == 0
+
+def total: money PLN = sum(fee[k] for k in qs)
+
+def born: date = lifespan(konto).died
+
+def ends[p in accounts]: date = lifespan(p).to
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on day
+  leg cash from konto to world amount fee[q1]
+
+ask q: total, bal(konto, 2026-12-31)
+
+ask qp: total paths 3 seed 1 path 3
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  day = 2026-02-10 "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+,,1:1,80:refused: LOAD-FIELD died is not a field of (from date, to date) (base.tally:26)
+,24:lifepath/lifespan-record,9:LOAD-UNIT,8:lifepath,32:run base.tally --ask zz_m0_probe,1229:10:base.tally,1209:model lifepath
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M0's load-code fixtures (invented): basic's text, two lifespans typed at load and a path line at its last path; it loads clean; each fixture of codes/m0/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+input amt: money PLN
+
+input day: date
+
+input rate[k in qs]: num
+
+def fee[k in qs]: money PLN
+  rule base v card_2026 = round(amt * rate[k], minor(PLN), half-up)
+  rule waived beats base v card_2026 = 0 PLN when rate[k] == 0
+
+def total: money PLN = sum(fee[k] for k in qs)
+
+def born: date = lifespan(konto)
+
+def ends[p in accounts]: date = lifespan(p).to
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on day
+  leg cash from konto to world amount fee[q1]
+
+ask q: total, bal(konto, 2026-12-31)
+
+ask qp: total paths 3 seed 1 path 3
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  day = 2026-02-10 "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+,,1:1,87:refused: LOAD-UNIT rule base of born is (from date, to date), not date (base.tally:26)
+,24:lifepath/lifespan-to-num,9:LOAD-UNIT,8:lifepath,32:run base.tally --ask zz_m0_probe,1233:10:base.tally,1213:model lifepath
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M0's load-code fixtures (invented): basic's text, two lifespans typed at load and a path line at its last path; it loads clean; each fixture of codes/m0/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+input amt: money PLN
+
+input day: date
+
+input rate[k in qs]: num
+
+def fee[k in qs]: money PLN
+  rule base v card_2026 = round(amt * rate[k], minor(PLN), half-up)
+  rule waived beats base v card_2026 = 0 PLN when rate[k] == 0
+
+def total: money PLN = sum(fee[k] for k in qs)
+
+def born: date = lifespan(konto).from
+
+def ends[p in accounts]: num = lifespan(p).to
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on day
+  leg cash from konto to world amount fee[q1]
+
+ask q: total, bal(konto, 2026-12-31)
+
+ask qp: total paths 3 seed 1 path 3
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  day = 2026-02-10 "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+,,1:1,70:refused: LOAD-UNIT rule base of ends is date, not num (base.tally:28)
 ,
