@@ -479,6 +479,9 @@ impl P<'_> {
                     && !self.spaced(0)
                     && let Some(mut names) = name_chain(&base, &fixes)
                 {
+                    // The call's name is read as an id, so the canonical form prints it touching
+                    // its `(` (L §2.4 Expressions, tally 2.1.4; refcore's `tok.nm = True`).
+                    self.mark(self.back(), |m| m.name = true);
                     let name = names.pop().ok_or_else(|| self.cannot("a band"))?;
                     base = self.band_call(name, names, None)?;
                     fixes = Vec::new();

@@ -109,6 +109,49 @@ version v
         );
     }
 
+    /// The `format` fuzz target's finding at G5 (#80, tally 2.1.4): a prefixed call printed
+    /// `year_.f (k)`, which no parser reads back. Each call's `(` touches its name, a band's
+    /// key and a member's or the household's prefix included (L §2.4 Expressions).
+    #[test]
+    fn a_prefixed_call_prints_touching_its_paren_as_refcore_2_1_4() {
+        let written = "model g
+  tally 2
+  on 2026-06-01
+  start 2026-01-01
+  end 2026-12-31
+
+def e: num = n[q1]+year_.f(2)
+
+index qs = [q1, q2]
+
+def c: num = sum(n[k] for k in qs where (year_.f(k)) == 1)
+
+input n[k in qs]: num
+
+def g: num = a.b[q1](2) * (household.b(n[q2]))
+";
+        let canonical = "model g
+  tally 2
+  on 2026-06-01
+  start 2026-01-01
+  end 2026-12-31
+
+index qs = [q1, q2]
+
+input n[k in qs]: num
+
+def c: num = sum(n[k] for k in qs where year_.f(k) == 1)
+
+def e: num = n[q1] + year_.f(2)
+
+def g: num = a.b[q1](2) * household.b(n[q2])
+";
+        let printed = format_file(written.as_bytes()).expect("it reprints");
+        assert_eq!(printed, canonical, "refcore 2.1.4's reprint");
+        let again = format_file(canonical.as_bytes()).expect("it reprints");
+        assert_eq!(again, canonical, "the canonical text is a fixed point");
+    }
+
     #[test]
     fn reprint_names_files_as_given_and_orders_them_by_full_path() {
         let file = |path: &str, text: &str| Given {
