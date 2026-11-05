@@ -5,7 +5,7 @@
 //! `-ORIENT`, `-PARSE`, `-DOMAIN`).
 //! Twin: engine/tools/refcore/check2.py (`m_random_cone`, `m_line_random`, `m_is_random`,
 //! `m_affine`, `m_closed_form`, `m_finish_random`, `m_check_draw_slots`, `reads_balances`,
-//! `m_reaches_any`).
+//! `m_reaches_any`); eval2.py (`m_path_terms`, its `path p` refusal, at load by issue #83).
 //! Invariants: the cone is a least fixed point over the graph's edges, read roles and marks;
 //! every walk over an expression or the graph is an explicit stack; the affine form's
 //! recursion is counted.
@@ -564,6 +564,35 @@ fn int_text(n: &crate::num::Num) -> Result<String, Stop> {
     n.to_i64()
         .map(|v| v.to_string())
         .ok_or_else(|| invariant("a path count past 64 bits".to_owned()))
+}
+
+/// `LOAD-RANDOM a query over paths on a path p line`: an ask that states `paths N seed S`
+/// evaluates the queries and path scores its line holds over its paths, and a `path p` line
+/// holds none (L §5.16). refcore refuses it where the run evaluates the query
+/// (eval2.py's `m_path_terms`), with no place; load refuses it whatever the asks (issue #83,
+/// the coordinator's ruling), last in load, as the run would after it. L §8.3.
+///
+/// # Errors
+///
+/// That refusal, for the first such query.
+pub(super) fn check_path_lines(m: &Reality, queries: &[QueryAt]) -> Result<(), Stop> {
+    for at in queries {
+        if at.item.kind != NodeKind::Ask || m.asks_alone.contains_key(&at.item.id) {
+            continue;
+        }
+        let path_line = m
+            .asks
+            .iter()
+            .find(|ask| ask.id == at.item.id)
+            .is_some_and(|ask| ask.paths.is_some() && ask.path.is_some());
+        if path_line {
+            return Err(refused(
+                Load::Random,
+                "a query over paths on a path p line".to_owned(),
+            ));
+        }
+    }
+    Ok(())
 }
 
 /// `LOAD-RANDOM` for a slot key whose range ends at a random input or def, at a key of an

@@ -15,8 +15,8 @@
 //! §3.3 (`to u`, the transcendental calls), §5.18 (`solve`), §5.13 (`prorata`), §6.4 (an
 //! expression row outside a scenario) for G8's second step; §6.4 (the base names no item of
 //! a scenario, a rule's `v` included; a scenario's move books nothing before `from`), §5.16
-//! (a draw past its slots; a decision's projection reaching a random amount after its day)
-//! for G8's third.
+//! (a draw past its slots; a decision's projection reaching a random amount after its day;
+//! sample pins; a query on a `path p` line, at load by issue #83) for G8's third.
 //! Twin: engine/tools/refcore/loader.py; each expected line is refcore's load of the same
 //! text, printed in the same normalized form, but where issue #75 rules that the spec wins:
 //! there the line is L §8.3's form, and the case's comment says so.
@@ -3138,7 +3138,7 @@ version v1
     type Edits = &'static [(&'static str, &'static str)];
 
     #[test]
-    fn the_base_names_no_scenario_item_and_load_sees_moves_draws_and_projections() {
+    fn scenarios_draws_projections_sample_pins_and_path_lines_are_checked_at_load() {
         // A run's first line: refcore's text, or L §8.3's form where the spec wins (#75).
         let worlds: &[(Edits, Edits, &str, &str)] = &[
             // read-ask (#75: the spec wins, L §8.3's form)
@@ -3298,8 +3298,134 @@ version v1
             let line = world_line(&edited(HOME, model), &edited(UP, scen), ask);
             assert_eq!(line, expected, "{model:?} {scen:?}");
         }
-        // The load probe's refusal ("loaded" when it loads clean), the same way.
+        // The load probe's refusal ("loaded" when it loads clean), the same way; a sample
+        // pin's checks are refcore's, and a `path p` line's query is refused at load (#83).
         let probes: &[(&[(&str, &str)], &str)] = &[
+            // pin-sample
+            (
+                &[
+                    (
+                        "ask q_draw: mean(drawn) paths 10 seed 1",
+                        "ask q_draw: mean(drawn) with sample nr = 2 paths 10 seed 1",
+                    ),
+                    ("1 .. nd step 1", "1 .. nr step 1"),
+                ],
+                "loaded",
+            ),
+            // pin-sample-key
+            (
+                &[(
+                    "ask q_draw: mean(drawn) paths 10 seed 1",
+                    "ask q_draw: mean(drawn) with sample nd = 2 paths 10 seed 1",
+                )],
+                "loaded",
+            ),
+            // pin-sample-money
+            (
+                &[(
+                    "ask q_draw: mean(drawn) paths 10 seed 1",
+                    "ask q_draw: mean(drawn) with sample ru = 2.00 PLN paths 10 seed 1",
+                )],
+                "loaded",
+            ),
+            // pin-sample-unit
+            (
+                &[(
+                    "ask q_draw: mean(drawn) paths 10 seed 1",
+                    "ask q_draw: mean(drawn) with sample ru = 2 paths 10 seed 1",
+                )],
+                "loaded",
+            ),
+            // pin-sample-u
+            (
+                &[(
+                    "ask q_draw: mean(drawn) paths 10 seed 1",
+                    "ask q_draw: mean(drawn) with sample ru.u = 0.37 paths 10 seed 1",
+                )],
+                "loaded",
+            ),
+            // pin-sample-u-unit
+            (
+                &[(
+                    "ask q_draw: mean(drawn) paths 10 seed 1",
+                    "ask q_draw: mean(drawn) with sample ru.u = 1 PLN paths 10 seed 1",
+                )],
+                "LOAD-UNIT sample ru.u is money PLN, not a plain number (a.tally:40)",
+            ),
+            // pin-sample-field
+            (
+                &[(
+                    "ask q_draw: mean(drawn) paths 10 seed 1",
+                    "ask q_draw: mean(drawn) with sample ru.v = 0.37 paths 10 seed 1",
+                )],
+                "LOAD-FIELD v is not a field of a sample (u is) (a.tally:40)",
+            ),
+            // pin-sample-plain
+            (
+                &[(
+                    "ask q_draw: mean(drawn) paths 10 seed 1",
+                    "ask q_draw: mean(drawn) with sample xs[1] = 1.00 PLN paths 10 seed 1",
+                )],
+                "LOAD-UNIT sample xs: a sample pin names a random fact (an input or def of type dist) (a.tally:40)",
+            ),
+            // pin-sample-unknown
+            (
+                &[(
+                    "ask q_draw: mean(drawn) paths 10 seed 1",
+                    "ask q_draw: mean(drawn) with sample nowhere = 1 paths 10 seed 1",
+                )],
+                "LOAD-ASIF pin on unknown id nowhere (a.tally:40)",
+            ),
+            // pin-sample-keys
+            (
+                &[(
+                    "ask q_draw: mean(drawn) paths 10 seed 1",
+                    "ask q_draw: mean(drawn) with sample ru[1] = 2.00 PLN paths 10 seed 1",
+                )],
+                "LOAD-KEY wrong number of keys for ru (a.tally:40)",
+            ),
+            // pin-sample-star
+            (
+                &[
+                    ("input ru: dist PLN", "input ru[s in slots]: dist PLN"),
+                    ("  ru = uniform", "  ru[*] = uniform"),
+                    ("round(ru, minor", "round(ru[1], minor"),
+                    (
+                        "ask q_draw: mean(drawn) paths 10 seed 1",
+                        "ask q_draw: mean(drawn) with sample ru[*] = 2.00 PLN paths 10 seed 1",
+                    ),
+                ],
+                "loaded",
+            ),
+            // pin-sample-nokeys
+            (
+                &[
+                    ("input ru: dist PLN", "input ru[s in slots]: dist PLN"),
+                    ("  ru = uniform", "  ru[*] = uniform"),
+                    ("round(ru, minor", "round(ru[1], minor"),
+                    (
+                        "ask q_draw: mean(drawn) paths 10 seed 1",
+                        "ask q_draw: mean(drawn) with sample ru = 2.00 PLN paths 10 seed 1",
+                    ),
+                ],
+                "LOAD-KEY wrong number of keys for ru: write [*] to pin every address (a.tally:40)",
+            ),
+            // path-line (#83: at load, refcore's run-time bytes)
+            (
+                &[(
+                    "ask q_draw: mean(drawn) paths 10 seed 1",
+                    "ask q_draw: mean(drawn) paths 10 seed 1 path 3",
+                )],
+                "LOAD-RANDOM a query over paths on a path p line",
+            ),
+            // path-line-plain
+            (
+                &[(
+                    "ask q_draw: mean(drawn) paths 10 seed 1",
+                    "ask q_draw: drawn paths 10 seed 1 path 3",
+                )],
+                "loaded",
+            ),
             // rand-base
             (&[], "loaded"),
             // proj-no-at (#75: the spec wins, L §8.3's form)

@@ -1,17 +1,18 @@
 //! Pins and an ask's axes: each pin checked, and the axes an ask reaches less those its pins fix, capped.
 //! Spec: L §5.5 (axes: an ask reaches an axis through what it reads; its options fork the
 //! answer; at most 64 combinations, `LOAD-FORKS`), §5.11 (`as if` and its pins), §5.18 (an
-//! ask's `with` pins), §6.4 (a pin's scenario), §3.2 and §7.1 (a bare figure in a pin), §8.3
-//! (`LOAD-ASIF`, `-SCENARIO`, `-KEY`, `-FIELD`, `-FORKS`).
+//! ask's `with` pins), §5.16 Pins (a sample pin), §6.4 (a pin's scenario), §3.2 and §7.1 (a
+//! bare figure in a pin), §8.3 (`LOAD-ASIF`, `-SCENARIO`, `-KEY`, `-FIELD`, `-FORKS`).
 //! Twin: engine/tools/refcore/check.py (`pin`, `pin_literal`, `check_graph`'s forks,
-//! `reach_axes`).
+//! `reach_axes`); check2.py (`m_sample_pin`).
 //! Invariants: the search is a loop over an explicit stack (R-16); the count of combinations
 //! is exact (no cap on its own arithmetic before it is compared); a pin's checks run in
 //! refcore's order, each refusal at the pin's line.
 
 use super::check::{Checker, Figure, Files, Scope, Stands};
+use super::random::sample_type;
 use super::steps::refuse;
-use super::types::{is_date, lit_rule, refused, text, uerr};
+use super::types::{is_date, lit_rule, numcls, refused, text, uerr};
 use crate::base::Load;
 use crate::model::{Graph, NameKind, Node, NodeKind, Reality, Rel, Ty};
 use crate::num::Num;
@@ -135,7 +136,7 @@ impl Checker {
     /// # Errors
     ///
     /// `LOAD-ASIF`, `LOAD-SCENARIO`, `LOAD-KEY`, `LOAD-FIELD`, `LOAD-UNIT`, `LOAD-LITERAL`,
-    /// `LOAD-PRECISION`, at the pin's line; a member's pin and a sample pin stop "not built".
+    /// `LOAD-PRECISION`, at the pin's line; a member's pin stops "not built".
     pub(super) fn pin(
         &mut self,
         m: &Reality,
@@ -191,11 +192,93 @@ impl Checker {
                 sample,
             } => {
                 if *sample {
-                    return Err(Stop::NotBuilt("a sample pin"));
+                    return self.sample_pin(m, &sc, (target, value), depth);
                 }
                 self.set_pin(m, &sc, (target, value), depth)
             }
         }
+    }
+
+    /// `sample x[keys] = v`, `sample x[*] = e`, `sample x[keys].u = u`: a random fact's
+    /// sample at its addresses, of its sample type, or its uniform, a plain number (refcore's
+    /// `sample_pin`). L §5.16 Pins.
+    fn sample_pin(
+        &mut self,
+        m: &Reality,
+        sc: &Scope,
+        (target, value): (&PRef, &Expr),
+        depth: u32,
+    ) -> Result<(), Stop> {
+        if target.qual.is_some() {
+            return Err(Stop::NotBuilt("a member's pin"));
+        }
+        let name = &target.id;
+        let Some(kind) = m.names.get(name).copied() else {
+            return Err(sc.place(unknown(name)));
+        };
+        let fact = if kind == NameKind::Input {
+            m.inputs
+                .get(name)
+                .and_then(|input| Some((&input.binds, input.ty.clone()?, NodeKind::Input)))
+        } else if kind == NameKind::Def {
+            m.defs
+                .get(name)
+                .map(|def| (&def.binds, def.ty.clone(), NodeKind::Def))
+        } else {
+            None
+        };
+        let Some((binds, ty, node)) =
+            fact.filter(|(_, ty, _)| matches!(ty, Ty::Dist(_) | Ty::DistKeys(_)))
+        else {
+            let message = format!(
+                "sample {name}: a sample pin names a random fact (an input or def of type dist)"
+            );
+            return Err(sc.place(uerr(message)));
+        };
+        let uniform = !target.fields.is_empty();
+        if uniform && target.fields != ["u"] {
+            let message = format!(
+                "{} is not a field of a sample (u is)",
+                target.fields.join(".")
+            );
+            return Err(sc.place(refused(Load::Field, message)));
+        }
+        match &target.keys {
+            Some(keys) if keys.len() != binds.len() => {
+                let message = format!("wrong number of keys for {name}");
+                return Err(sc.place(refused(Load::Key, message)));
+            }
+            None if !binds.is_empty() => {
+                let message =
+                    format!("wrong number of keys for {name}: write [*] to pin every address");
+                return Err(sc.place(refused(Load::Key, message)));
+            }
+            Some(_) | None => {}
+        }
+        for (key, bind) in target.keys.iter().flatten().zip(binds) {
+            if let Key::Expr(kn) = key {
+                self.key_pos(m, sc, kn, &bind.domain, depth)?;
+            }
+        }
+        let pinned = Node::new(node, name);
+        if uniform {
+            let t = self.expr(m, sc, value, None, depth)?;
+            let united = matches!(&t, Ty::Num(unit, _) if !unit.is_one());
+            if !matches!(numcls(m, &t), Some("num" | "flex" | "int")) || united {
+                let message = format!("sample {name}.u is {}, not a plain number", t.show());
+                return Err(sc.place(uerr(message)));
+            }
+        } else {
+            let st = sample_type(m, &pinned, &ty).map_err(|stop| sc.place(stop))?;
+            if !pin_literal(m, sc, value, &st)? {
+                let t = self.expr(m, sc, value, Some(&st), depth)?;
+                let what = format!("the sample pin of {name}");
+                self.assign(m, sc, &st, value, &t, &what)
+                    .map_err(|stop| sc.place(stop))?;
+            }
+        }
+        self.edge(&sc.item, pinned, Rel::Pin);
+        Ok(())
     }
 
     /// `x[keys].f = v`: an axis's option, or an input's or a def's value (refcore's `pin`,

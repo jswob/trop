@@ -301,7 +301,7 @@ fn discrete_index(m: &Reality, target: &Node) -> Result<Option<String>, Stop> {
 
 /// The type of a random fact's sample: `num u`, or a key of the index its `discrete`
 /// ranges over (refcore's `sample_type`). L §5.16 Samples.
-fn sample_type(m: &Reality, target: &Node, ty: &Ty) -> Typed {
+pub(super) fn sample_type(m: &Reality, target: &Node, ty: &Ty) -> Typed {
     if let Some(ix) = discrete_index(m, target)? {
         return Ok(Ty::Key(ix));
     }

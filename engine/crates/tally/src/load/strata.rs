@@ -18,7 +18,7 @@ use super::across::{
     check_period_keys, check_proj_seen, check_scenario_moves, check_schedules, check_seen_days,
 };
 use super::check::{Files, ShiftRead, walk};
-use super::cone::finish_random;
+use super::cone::{check_path_lines, finish_random};
 use super::lawdates::{check_lawdates, check_move_lawdates};
 use super::parts::{arrival_reads, parts_walk_bound};
 use super::pins::check_forks;
@@ -94,7 +94,8 @@ impl Loader {
         )?;
         check_proj_seen(&self.m, &walked.projs, &random)?;
         check_schedules(&self.m, &files)?;
-        check_scenario_moves(&self.m, &files)
+        check_scenario_moves(&self.m, &files)?;
+        check_path_lines(&self.m, &walked.queries)
     }
 
     /// The decision graph and its layers: who acts after whom, the written orders, the
