@@ -8,7 +8,7 @@
 
 use super::key::{KeyVal, Span};
 use super::ty::Ty;
-use crate::syntax::{Certainty, Price, Sign, Type};
+use crate::syntax::{Certainty, PartsClause, Price, Sign, Type};
 
 /// What a kind's things are.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -55,6 +55,9 @@ pub struct KindInfo {
     pub prelude: bool,
     /// The line of its `kind` section.
     pub line: Option<u32>,
+    /// Its parts clauses as written, each with its line, in the written order; none for the
+    /// prelude's (refcore's `decl.pclauses`). L §3.6, §5.7.
+    pub parts: Vec<(PartsClause, u32)>,
 }
 
 impl KindInfo {
@@ -76,6 +79,41 @@ impl KindInfo {
             attr_types: Vec::new(),
             prelude: true,
             line: None,
+            parts: Vec::new(),
+        }
+    }
+}
+
+/// The sorts of label a kind that keeps parts keeps (refcore's `labels_of`). L §3.6.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Labels {
+    /// Parts labelled by owner, a thing of `parties` (`owned by`).
+    pub owner: bool,
+    /// Parts labelled by batch, the movement that brought them in (`batched`).
+    pub batch: bool,
+}
+
+impl Labels {
+    /// Whether every sort `need` names is kept here (refcore's `need <= labs`).
+    #[must_use]
+    pub fn holds(self, need: Labels) -> bool {
+        (self.owner || !need.owner) && (self.batch || !need.batch)
+    }
+}
+
+impl KindInfo {
+    /// The sorts of label its parts clauses keep; none for a kind that states none.
+    #[must_use]
+    pub fn labels(&self) -> Labels {
+        Labels {
+            owner: self
+                .parts
+                .iter()
+                .any(|(c, _)| matches!(c, PartsClause::Owned { .. })),
+            batch: self
+                .parts
+                .iter()
+                .any(|(c, _)| matches!(c, PartsClause::Batched)),
         }
     }
 }

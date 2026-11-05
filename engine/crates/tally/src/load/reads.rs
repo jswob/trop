@@ -17,7 +17,9 @@ use super::check::{
 };
 use super::types::{Typed, is_date, numcls, refused, text, uerr, unit_type};
 use crate::base::Load;
-use crate::model::{KindSpec, Mark, NameKind, Node, NodeKind, Reality, Rel, Target, Ty};
+use crate::model::{
+    KindInfo, KindSpec, Labels, Mark, NameKind, Node, NodeKind, Reality, Rel, Target, Ty,
+};
 use crate::syntax::{Bal, Expr, Flows, Key, Lit, Low, OfQ, Postfix, Proj, Span, Stop};
 use std::collections::BTreeSet;
 
@@ -212,48 +214,55 @@ impl Checker {
         }
         self.edge(&scope.item, Node::balances(), Rel::Bal);
         if let Some(of) = &bal.of {
-            self.check_of(m, scope, of, Some(&bal.place), depth)?;
+            self.check_of(m, scope, of, Some((&bal.place, &t)), depth)?;
         }
         Ok(ut)
     }
 
     /// `of q`: a party, a batch, or the pair (a party, then a batch); `LOAD-PARTS` where load
-    /// sees the place and it keeps no labels of that sort (refcore's `m_check_of`). L §3.6,
-    /// §5.10, §5.14.
+    /// sees the place's kind, a literal place or a place type of a kind that keeps parts, and
+    /// it keeps no labels of q's sort (refcore's `m_check_of`). L §3.6, §5.10, §5.14.
     pub(super) fn check_of(
         &mut self,
         m: &Reality,
         scope: &Scope,
         of: &OfQ,
-        place: Option<&Expr>,
+        place: Option<(&Expr, &Ty)>,
         depth: u32,
     ) -> Result<(), Stop> {
         // The pair needs a party's and a batch's labels; one `q` needs its sort's, where load
         // sees it (refcore's `need`).
-        let needs_labels = match of {
+        let need = match of {
             OfQ::Pair(party, batch) => {
                 self.sort_of(m, scope, party, Want::Owner, depth)?;
                 self.sort_of(m, scope, batch, Want::Batch, depth)?;
-                true
+                Labels {
+                    owner: true,
+                    batch: true,
+                }
             }
-            OfQ::Ref(q) => self.sort_of(m, scope, q, Want::Any, depth)?.is_some(),
+            OfQ::Ref(q) => {
+                let sort = self.sort_of(m, scope, q, Want::Any, depth)?;
+                Labels {
+                    owner: sort == Some(Sort::Owner),
+                    batch: sort == Some(Sort::Batch),
+                }
+            }
         };
-        // A kind keeps labels only through its parts clauses, which load stops at (M0's G6);
-        // a place kind read through a type keeps none that load sees, as refcore's `seen`.
-        let literal = place.and_then(|p| literal_place(m, scope, p));
-        if let Some(thing) = literal
-            && needs_labels
-        {
-            let q = match of {
-                OfQ::Ref(q) => text(q),
-                OfQ::Pair(..) => "ofpair".to_owned(),
-            };
-            return Err(refused(
-                Load::Parts,
-                format!("of {q} at {thing}, which keeps no labels of its sort"),
-            ));
+        let Some((at, keeps)) = place.and_then(|(p, t)| seen_labels(m, scope, p, t)) else {
+            return Ok(());
+        };
+        if keeps.holds(need) {
+            return Ok(());
         }
-        Ok(())
+        let q = match of {
+            OfQ::Ref(q) => text(q),
+            OfQ::Pair(..) => "ofpair".to_owned(),
+        };
+        Err(refused(
+            Load::Parts,
+            format!("of {q} at {at}, which keeps no labels of its sort"),
+        ))
     }
 
     /// The sort an `of q` position names: a party's or a batch's label; none where load
@@ -746,6 +755,29 @@ fn unit_of_quantity(m: &Reality, t: &Ty) -> Typed {
         "unit of {}: {u} is a quantity unit, a key of no unit kind",
         t.show()
     )))
+}
+
+/// Where load sees the kind of the place an `of q` reads, and the labels it keeps: a literal
+/// place's base kind's (none if it keeps no parts), or a place type's kind where that kind
+/// keeps parts (refcore's `m_check_of`, its `seen`). L §3.6, §5.10.
+fn seen_labels(m: &Reality, scope: &Scope, place: &Expr, t: &Ty) -> Option<(String, Labels)> {
+    let none = Labels {
+        owner: false,
+        batch: false,
+    };
+    if let Some(thing) = literal_place(m, scope, place) {
+        let keeps = m
+            .things
+            .get(&thing)
+            .and_then(|th| m.thing_parts(th))
+            .map_or(none, KindInfo::labels);
+        return Some((thing, keeps));
+    }
+    let Ty::Key(kind) = t else {
+        return None;
+    };
+    let keeps = m.parts_kind(kind)?;
+    Some((kind.clone(), keeps.labels()))
 }
 
 /// Whether a projection states any clause.

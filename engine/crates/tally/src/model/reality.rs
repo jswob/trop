@@ -153,6 +153,20 @@ impl Reality {
         thing.entries.iter().any(|e| sub.contains(&e.kind))
     }
 
+    /// The kind whose parts clauses a kind keeps: itself or the nearest parent that states
+    /// them (refcore's `parts_kind`). L §3.6, §5.7.
+    #[must_use]
+    pub fn parts_kind(&self, id: &str) -> Option<&KindInfo> {
+        self.chain(id).into_iter().find(|k| !k.parts.is_empty())
+    }
+
+    /// The parts kind of a place thing's base kind; none for a place that keeps no parts
+    /// (refcore's `thing_parts`). L §3.6.
+    #[must_use]
+    pub fn thing_parts(&self, thing: &Thing) -> Option<&KindInfo> {
+        self.parts_kind(thing.base.as_deref()?)
+    }
+
     /// A place kind's unit, its own or its nearest parent's (refcore's `kind_unit`).
     #[must_use]
     pub fn kind_unit(&self, id: &str) -> Option<&str> {

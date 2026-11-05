@@ -10,7 +10,8 @@
 //! written order breaks is one component.
 
 use super::across::check_period_keys;
-use super::check::walk;
+use super::check::{Files, walk};
+use super::parts::{arrival_reads, parts_walk_bound};
 use super::steps::{Loader, refuse};
 use crate::base::{Code, Load, Refusal, Warn};
 use crate::model::{GapRole, Graph, Node, NodeKind, Reality, Rel, Target, Ty};
@@ -33,8 +34,9 @@ enum Visit {
 
 impl Loader {
     /// The item graph and what load decides from it, in refcore's order: the walk, same-key
-    /// cycles, unread inputs and defs, the decisions' reach, walk-bound defs, left-out moves,
-    /// the strata. E §3.1 steps 5–8.
+    /// cycles, an arrival rule's reads of its own day, unread inputs and defs, the decisions'
+    /// reach, walk-bound defs (an arrival rule's among them), left-out moves, the strata.
+    /// E §3.1 steps 5–8; L §5.14.1.
     pub(super) fn build_graph(&mut self) -> Result<(), Stop> {
         let (mut graph, facts, periods) = walk(&self.m, &self.sections)?;
         for fact in facts {
@@ -44,11 +46,14 @@ impl Loader {
             }
         }
         same_key_cycles(&self.m, &graph)?;
+        arrival_reads(&self.m, &graph, &Files::of(&self.sections))?;
         check_period_keys(&self.m, &periods)?;
         let unread_items = unread(&self.m, &graph);
         self.m.warnings.extend(unread_items);
         graph.from_decisions = from_decisions(&self.m, &graph);
-        graph.walk_bound = walk_bound(&self.m, &graph);
+        let mut bound = walk_bound(&self.m, &graph);
+        bound.extend(parts_walk_bound(&self.m, &graph));
+        graph.walk_bound = bound;
         graph.left_out = left_out(&graph);
         self.m.graph = graph;
         self.strata()
@@ -287,7 +292,14 @@ fn closed_cycle(stack: &[(Node, Vec<Node>)], again: Node) -> Vec<Node> {
 /// by nothing`, and `place p is read by nothing` for a `place` section no line names, for
 /// each nothing reads (refcore's `check_graph`, its end). L §8.5; E §3.1 step 6.
 fn unread(m: &Reality, graph: &Graph) -> Vec<(Warn, String)> {
-    let read: BTreeSet<&Node> = graph.edges.values().flat_map(BTreeMap::keys).collect();
+    // A def an arrival rule or a takes clause reads is read (tally 2.1, refcore's
+    // `parts_reads`).
+    let read: BTreeSet<&Node> = graph
+        .edges
+        .values()
+        .flat_map(BTreeMap::keys)
+        .chain(&graph.parts_reads)
+        .collect();
     let mut out = Vec::new();
     for (id, input) in m.inputs.entries() {
         let unread = !read.contains(&Node::new(NodeKind::Input, id));
@@ -433,7 +445,7 @@ fn from_decisions(m: &Reality, graph: &Graph) -> BTreeSet<Node> {
 
 /// Whether `item` reaches a running read or a projection through defs and days (refcore's
 /// `reached`, non-empty).
-fn reaches_mark(graph: &Graph, item: &Node) -> bool {
+pub(super) fn reaches_mark(graph: &Graph, item: &Node) -> bool {
     let mut seen = BTreeSet::new();
     let mut stack = vec![item.clone()];
     while let Some(next) = stack.pop() {
@@ -489,7 +501,8 @@ fn left_out(graph: &Graph) -> BTreeMap<Node, BTreeSet<String>> {
             | NodeKind::Move
             | NodeKind::Place
             | NodeKind::Price
-            | NodeKind::Balances => holder.clone(),
+            | NodeKind::Balances
+            | NodeKind::Parts => holder.clone(),
         };
         out.insert(holder.clone(), dependent_moves(&readers, start));
     }

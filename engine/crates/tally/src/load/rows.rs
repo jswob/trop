@@ -326,9 +326,6 @@ impl Loader {
         if row.qual.is_some() {
             return Err(Stop::NotBuilt("a member's prefix"));
         }
-        if row.of.is_some() {
-            return Err(Stop::NotBuilt("a reading row's `of`"));
-        }
         let id = &row.target;
         let want = if row.given {
             NameKind::Def
@@ -336,6 +333,18 @@ impl Loader {
             NameKind::Input
         };
         self.target_of(id, want, file, line)?;
+        let balance_input = !row.given
+            && (id == "stated" || id == "opening")
+            && self.m.inputs.get(id).is_some_and(|input| input.builtin);
+        if row.of.is_some() && !balance_input {
+            // L §2.3 row (tally 2.1): `of` only on a row of `opening` or `stated` (§5.19).
+            return Err(refuse(
+                Load::Parts,
+                format!("of on a row of {id}"),
+                file,
+                line,
+            ));
+        }
         let (binds, reading, balance) = if row.given {
             let Some(def) = self.m.defs.get(id) else {
                 return Err(Stop::NotBuilt("a def that isn't built"));
@@ -391,13 +400,19 @@ impl Loader {
             replace: row.replace,
             line,
             sid: String::new(),
+            of: row.of.clone(),
         };
         if row.given {
             if let Some(def) = self.m.defs.get_mut(id) {
                 def.givens.push(built);
             }
         } else if let Some(input) = self.m.inputs.get_mut(id) {
-            input.rows.push(built);
+            // A reading's stated parts are kept beside its readings, never a total (L §5.19).
+            if built.of.is_some() {
+                input.part_rows.push(built);
+            } else {
+                input.rows.push(built);
+            }
         }
         Ok(own_time)
     }

@@ -114,7 +114,8 @@ fn reader_binds(m: &Reality, reader: &Node) -> Option<Vec<BindInfo>> {
         | NodeKind::Band
         | NodeKind::Place
         | NodeKind::Price
-        | NodeKind::Balances => None,
+        | NodeKind::Balances
+        | NodeKind::Parts => None,
     }
 }
 

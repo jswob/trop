@@ -12,8 +12,8 @@
 use super::overlap::{Stated, check_overlap};
 use super::steps::Loader;
 use crate::base::{Code, Load, Place as At, Refusal};
-use crate::eval::{ConvertFor, convert};
-use crate::model::{KeyVal, Pat, Row, Shown, Ty, Unit};
+use crate::eval::{ConvertFor, Converted, convert};
+use crate::model::{KeyVal, Pat, Row, Shown, Ty, Unit, Value};
 use crate::syntax::{Lit, Section, Stop, Value as Written};
 use std::collections::BTreeMap;
 
@@ -49,6 +49,11 @@ impl Loader {
             }
             let by_unit = input.builtin.then_some(stated.as_slice());
             check_overlap(&self.m, id, &input.binds, &input.rows, by_unit)?;
+            if balance {
+                // refcore skips an input with no total row; the spec wins (#75): stated parts
+                // with no total are refused at load whatever the totals (L §5.19).
+                self.check_part_rows(id, input, &files)?;
+            }
         }
         for (id, def) in self.m.defs.entries() {
             if !matches!(def.ty, Ty::Dist(_)) {
@@ -68,6 +73,17 @@ impl Loader {
     /// by; a place of unit `any` states its unit in the row (refcore's `place_value`). L §4.6,
     /// §5.19.
     fn place_value(&self, input: &str, row: &Row) -> Result<Stated, Stop> {
+        self.place_reading(input, row).map(|(stated, _)| stated)
+    }
+
+    /// A balance reading's value as [`Loader::place_value`] groups it, with the value load
+    /// converts it to; none for a hole or a form the runtime doesn't build yet (refcore's
+    /// `place_value`, its `r.val`). L §4.6, §5.19.
+    pub(super) fn place_reading(
+        &self,
+        input: &str,
+        row: &Row,
+    ) -> Result<(Stated, Option<Value>), Stop> {
         let Some(Pat::Key(KeyVal::Thing(place))) = row.pattern.first() else {
             return Err(load_refusal(
                 Load::Key,
@@ -75,8 +91,8 @@ impl Loader {
             ));
         };
         let number = match &row.value {
-            Written::Hole(_) => return Ok(Stated::Hole),
-            Written::None => return Ok(Stated::Nothing),
+            Written::Hole(_) => return Ok((Stated::Hole, None)),
+            Written::None => return Ok((Stated::Nothing, Some(Value::None))),
             Written::Lit(Lit::Num(number)) => number,
             Written::Never
             | Written::Str(_)
@@ -109,8 +125,8 @@ impl Loader {
             let one = Unit::make(vec![(unit.clone(), 1)]).map_err(super::steps::num_stop)?;
             Ty::Num(one, Shown::Plain)
         };
-        converted(self, &row.value, &ty, input, &ConvertFor::plain())?;
-        Ok(Stated::Unit(unit))
+        let value = converted_value(self, &row.value, &ty, input, &ConvertFor::plain())?;
+        Ok((Stated::Unit(unit), value))
     }
 
     /// The file each version's section stands in, by the version's id.
@@ -172,8 +188,24 @@ fn converted(
     }
 }
 
+/// A row's value converted, as [`converted`] checks it; none for a hole or a form the runtime
+/// doesn't build yet.
+fn converted_value(
+    loader: &Loader,
+    value: &Written,
+    ty: &Ty,
+    target: &str,
+    of: &ConvertFor,
+) -> Result<Option<Value>, Stop> {
+    match convert(&loader.m, value, ty, target, of) {
+        Ok(Converted::Value(v)) => Ok(Some(v)),
+        Ok(Converted::Hole(_)) | Err(Stop::NotBuilt(_)) => Ok(None),
+        Err(stop @ (Stop::Refused(_) | Stop::Deep)) => Err(stop),
+    }
+}
+
 /// The file of a row's version, which load built from a section of it.
-fn row_file(files: &BTreeMap<String, String>, row: &Row) -> Result<String, Stop> {
+pub(super) fn row_file(files: &BTreeMap<String, String>, row: &Row) -> Result<String, Stop> {
     files.get(&row.version).cloned().ok_or_else(|| {
         Stop::Refused(Refusal::new(
             Code::EngineInvariant,
@@ -183,7 +215,7 @@ fn row_file(files: &BTreeMap<String, String>, row: &Row) -> Result<String, Stop>
 }
 
 /// A refusal met converting a row, put at the row's line when it names no place of its own.
-fn at_row(stop: Stop, file: &str, line: u32) -> Stop {
+pub(super) fn at_row(stop: Stop, file: &str, line: u32) -> Stop {
     match stop {
         Stop::Refused(refusal) => Stop::Refused(refusal.placed(At::Line(file.to_owned(), line))),
         other @ (Stop::NotBuilt(_) | Stop::Deep) => other,

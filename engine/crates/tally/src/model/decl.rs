@@ -11,7 +11,7 @@ use super::key::{KeyVal, Pat, Span};
 use super::ty::Ty;
 use crate::num::Num;
 use crate::syntax::{Bind, Def, Edge, Expr, FieldValue, Lit, Move, Place, Price, Rule, RuleValue};
-use crate::syntax::{LawDate, Value};
+use crate::syntax::{LawDate, OfRow, Value};
 use crate::time::{Day, Period};
 
 /// What a key bind ranges over (refcore's `BindInfo.dom`).
@@ -93,6 +93,9 @@ pub struct Row {
     pub line: u32,
     /// Its stable id, `v1:rent[2026-03]` (L §2.5), set once its target's rows are all read.
     pub sid: String,
+    /// `of q`: a stated part of a balance reading, kept beside the readings and never a total
+    /// (refcore's `row.of`). L §5.19.
+    pub of: Option<OfRow>,
 }
 
 /// An input (refcore's `InputInfo`).
@@ -124,6 +127,9 @@ pub struct InputInfo {
     pub prices_by: Option<String>,
     /// An observed input's rows.
     pub observations: Vec<Observation>,
+    /// A balance reading's stated parts, its rows with `of`, in the order versions state them
+    /// (refcore's `part_rows`). L §5.19.
+    pub part_rows: Vec<Row>,
     /// Its line.
     pub line: Option<u32>,
 }
@@ -146,6 +152,7 @@ impl InputInfo {
             prices: None,
             prices_by: None,
             observations: Vec::new(),
+            part_rows: Vec::new(),
             line,
         }
     }

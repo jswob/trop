@@ -219,7 +219,7 @@ impl Scope {
     }
 
     /// This scope, read by `item` instead.
-    fn for_item(&self, item: Node) -> Scope {
+    pub(super) fn for_item(&self, item: Node) -> Scope {
         let mut scope = self.clone();
         scope.item = item;
         scope
@@ -307,10 +307,10 @@ pub(super) fn deeper(depth: u32) -> Result<u32, Stop> {
 }
 
 /// The item graph's edges and marks, and each move's declared reads and changes, the
-/// reality type-checked on the way (refcore's `Checker.run`: price clauses, inputs' ranges,
-/// then moves, defs, bands and asks, one sort at a time, each in section order, then `prices
-/// … by`, the four-digit figures' literal rule and the key lists' readings). E §3.1 steps 5,
-/// 7, The order of the checks.
+/// reality type-checked on the way (refcore's `Checker.run`: the parts clauses, price
+/// clauses, inputs' ranges, then moves, defs, bands and asks, one sort at a time, each in
+/// section order, then `prices … by`, the four-digit figures' literal rule and the key
+/// lists' readings). E §3.1 steps 5, 7, The order of the checks.
 ///
 /// # Errors
 ///
@@ -322,6 +322,7 @@ pub(super) fn walk(
     let files = Files::of(sections);
     price_twice(m, &files)?;
     let mut checker = Checker::default();
+    checker.check_parts(m, &files)?;
     checker.check_priced(m, &files)?;
     for (id, input) in m.inputs.entries() {
         if input
@@ -374,7 +375,7 @@ pub(super) struct Files {
 
 impl Files {
     /// The files of the sections' moves, defs, asks, versions, inputs, places and kinds.
-    fn of(sections: &[(String, Section)]) -> Files {
+    pub(super) fn of(sections: &[(String, Section)]) -> Files {
         let mut by_item = BTreeMap::new();
         for (file, section) in sections {
             let item = match section {
@@ -633,7 +634,7 @@ impl Checker {
     }
 
     /// A def's scope at `line` (refcore's `def_scope`).
-    fn def_scope(
+    pub(super) fn def_scope(
         &mut self,
         m: &Reality,
         def: &DefInfo,

@@ -28,9 +28,6 @@ impl Loader {
             let Section::Kind(decl) = section else {
                 continue;
             };
-            if !decl.parts.is_empty() {
-                return Err(Stop::NotBuilt("a kind's parts clauses"));
-            }
             let mut info = match &decl.spec {
                 Written::Plain => KindInfo::new(&decl.id, KindSpec::Plain, None),
                 Written::Unit => KindInfo::new(&decl.id, KindSpec::Unit, None),
@@ -75,6 +72,9 @@ impl Loader {
                 .iter()
                 .map(|(name, ty)| (name.clone(), Some(ty.clone())))
                 .collect();
+            // Kept as written; the checker checks them (`load/parts.rs`), as refcore keeps
+            // `decl.pclauses` for `check_parts`.
+            info.parts.clone_from(&decl.parts);
             self.m.kinds.push(&decl.id, info);
         }
         self.link_kinds(&subs)

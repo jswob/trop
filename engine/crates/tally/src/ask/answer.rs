@@ -136,12 +136,16 @@ pub(crate) fn answer_turns(
         counts: crate::Counters::default(),
     };
     let unbuilt = windows_or_moves(m);
+    let parts = keeps_parts(m);
     for turn in turns {
         match turn {
             Turn::Ask(at) => {
                 let ask = m.asks.get(*at).ok_or_else(no_turn)?;
                 if unbuilt {
                     return Err(Stop::NotBuilt("a known window or a moves line at run"));
+                }
+                if parts {
+                    return Err(Stop::NotBuilt("parts at run"));
                 }
                 out.extend(answer_one(m, ask, days, &mut seen)?);
             }
@@ -179,6 +183,16 @@ fn windows_or_moves(m: &Reality) -> bool {
         }
     }
     false
+}
+
+/// Whether a kind of the reality keeps parts, or a reading states parts: load checks them
+/// (L §3.6, §5.7, §5.19), the walk doesn't book them yet (M5b's: a place that keeps parts
+/// carries them in every walk), so an ask stops `NotBuilt`.
+fn keeps_parts(m: &Reality) -> bool {
+    m.kinds.entries().any(|(_, kind)| !kind.parts.is_empty())
+        || m.inputs
+            .entries()
+            .any(|(_, input)| !input.part_rows.is_empty())
 }
 
 /// A turn whose ask the reality doesn't hold: the turns are built from its asks.

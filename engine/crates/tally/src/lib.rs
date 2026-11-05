@@ -110,7 +110,7 @@ pub mod model {
     pub use graph::{Graph, Mark, Node, NodeKind, Rel, Shift, Target};
     pub use index::{GapRole, IndexForm, IndexInfo, Moved, OwnTime, VersionInfo};
     pub use key::{KeyVal, Pat, Span, pattern_text};
-    pub use kind::{Entry, KindInfo, KindSpec, PRELUDE_KINDS, PlaceKeys, Thing, prelude};
+    pub use kind::{Entry, KindInfo, KindSpec, Labels, PRELUDE_KINDS, PlaceKeys, Thing, prelude};
     pub use reality::{BUILTIN_INDEXES, BUILTIN_INPUTS, NameKind, Reality};
     pub use ty::{CodeKind, PeriodWord, Shown, Ty};
     pub use unit::{PERIODS, Scaled, Unit, is_currency_code};
@@ -239,6 +239,7 @@ pub mod load {
     mod observed;
     mod ops;
     mod overlap;
+    mod parts;
     mod places;
     mod prices;
     mod reads;

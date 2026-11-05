@@ -353,7 +353,7 @@ impl Checker {
         let target = place_target(m, scope, &value.place);
         self.mark(&scope.item, Mark::Bal, target);
         if let Some(of) = &value.of {
-            self.check_of(m, scope, of, Some(&value.place), depth)?;
+            self.check_of(m, scope, of, Some((&value.place, &t)), depth)?;
         }
         let unit = Unit::make(vec![(cur.clone(), 1)]).map_err(|_| {
             Stop::Refused(Refusal::new(

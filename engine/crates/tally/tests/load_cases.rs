@@ -4,7 +4,9 @@
 //! §8.5 (WARN-UNREAD for a source and a place); §5.10 (priced places, `bal`, `value`), §5.14
 //! (moves and legs, `flows`), §5.19 (`observed`, `gap`, `covered`) for the checks of moves,
 //! prices and reads; §5.3 (known windows, `moves`), §4.6 (overlap and `replace`, a period
-//! across keys), §5.9 (band tables), §5.19 (`covers`) for the checks of versions and rows.
+//! across keys), §5.9 (band tables), §5.19 (`covers`) for the checks of versions and rows;
+//! §3.6, §5.7 (the parts clauses, the arrival and leaving rules), §5.19 (stated parts),
+//! §5.14.1 (an arrival rule's reads) for the checks of parts.
 //! Twin: engine/tools/refcore/loader.py; each expected line is refcore's load of the same
 //! text, printed in the same normalized form.
 //! Invariants: reads no test, vector or answer key (R-93); the text is written here, small.
@@ -1040,5 +1042,249 @@ version bank_a
             assert_eq!(refusal(&text), "loaded", "{new} loads");
             assert_eq!(first_line(&text), None, "{new}: M1 runs it");
         }
+    }
+
+    /// Two place kinds that keep parts, one by owner and one by batch, an arrival rule and
+    /// both leaving rules, and an opening stated by parts.
+    const PARTS: &str = "model g
+  tally 2
+  on 2026-06-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card \"a card\"
+
+unit PLN: currency minor 0.01
+
+kind persons: parties
+
+kind gifts: transfers
+
+kind pots: place PLN min 0
+  owned by share
+  step minor(PLN)
+  takes k for w order (if k.owner == ola then 0 else 1) prorata ties by (if k.owner == ola then 0 else 1)
+
+kind lots: place PLN min 0
+  batched
+  step minor(PLN)
+  takes k for w prorata
+
+place pot: pots lives 2026-01-01..
+
+place lot: lots lives 2026-01-01..
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input amt: money PLN
+
+input day: date
+
+def share[m in events, p in parties]: num at m.day
+  rule base = (if p == ola then 1 else 0)
+  rule gift beats base = (if p == jan then 1 else 0) when m in gifts
+
+move dep: transfers
+  on day
+  leg cash from world to pot amount amt
+
+move buy: transfers
+  on day
+  leg cash from world to lot amount amt
+
+ask q: bal(pot, 2026-12-31) of p for p in parties on 2026-12-31
+
+version cast
+  cite card
+  known 2026-01-01
+  persons + [ola] lives 1980-01-01..
+  persons + [jan] lives 1982-01-01..
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN \"the card\"
+  day = 2026-02-10 \"the card\"
+  opening[pot] = 30.00 PLN at 2026-01-01 start \"the card\"
+  opening[pot] of ola = 10.00 PLN at 2026-01-01 start \"the card\"
+  opening[pot] of jan = 20.00 PLN at 2026-01-01 start \"the card\"
+  opening[konto] = 5.00 PLN at 2026-01-01 start \"the card\"
+  opening[lot] = 0 PLN at 2026-01-01 start \"the card\"
+";
+
+    #[test]
+    fn parts_clauses_and_stated_parts_are_checked_at_load_as_refcore_checks_them() {
+        assert_eq!(refusal(PARTS), "loaded", "the base");
+        let cases: Vec<(&str, String, &str)> = vec![
+            // base
+            ("  amt = 100.00 PLN \"the card\"", "  amt = 100.00 PLN \"the card\"".to_owned(), "loaded"),
+            // not-place
+            ("kind persons: parties", "kind persons: parties\n  owned by share\n  step minor(PLN)\n  takes k for w prorata".to_owned(), "LOAD-PARTS kind persons keeps parts and is not a place kind (a.tally:12)"),
+            // under
+            ("place pot: pots lives 2026-01-01..", "kind sub_pots: pots\n  owned by share\n  step minor(PLN)\n  takes k for w prorata\n\nplace pot: sub_pots lives 2026-01-01..".to_owned(), "LOAD-PARTS sub_pots states parts clauses under pots, which keeps parts (a.tally:26)"),
+            // sub-keeps
+            ("place pot: pots lives 2026-01-01..", "kind small_pots: pots\n\nplace pot: small_pots lives 2026-01-01..".to_owned(), "loaded"),
+            // sub-of-plain-place
+            ("kind pots: place PLN min 0", "kind savings: holdings\n  owned by share\n  step minor(PLN)\n  takes k for w prorata\n\nkind pots: place PLN min 0".to_owned(), "loaded"),
+            // twice
+            ("  batched\n", "  batched\n  batched\n".to_owned(), "LOAD-PARTS kind lots: batched stated twice (a.tally:22)"),
+            // order
+            ("  batched\n  step minor(PLN)", "  step minor(PLN)\n  batched".to_owned(), "LOAD-PARTS kind lots: batched after step (the parts clauses go owned by, batched, step, takes) (a.tally:22)"),
+            // step-missing
+            ("  owned by share\n  step minor(PLN)\n", "  owned by share\n".to_owned(), "LOAD-PARTS kind pots: step missing (a.tally:16)"),
+            // takes-missing
+            ("  batched\n  step minor(PLN)\n  takes k for w prorata", "  batched\n  step minor(PLN)".to_owned(), "LOAD-PARTS kind lots: takes missing (a.tally:21)"),
+            // owned-missing
+            ("  batched\n  step minor(PLN)\n  takes k for w prorata", "  step minor(PLN)\n  takes k for w prorata".to_owned(), "LOAD-PARTS kind lots: owned by or batched missing (a.tally:21)"),
+            // signed
+            ("kind pots: place PLN min 0", "kind pots: place PLN signed".to_owned(), "LOAD-PARTS kind pots keeps parts and is signed (a.tally:16)"),
+            // max0
+            ("kind pots: place PLN min 0", "kind pots: place PLN max 0".to_owned(), "LOAD-PARTS kind pots keeps parts and is max 0 (a.tally:16)"),
+            // asset
+            ("kind pots: place PLN min 0", "kind homes: assets\n  owned by share\n  step minor(PLN)\n  takes k for w prorata\n\nkind pots: place PLN min 0".to_owned(), "LOAD-PARTS kind homes keeps parts and is an asset kind (a.tally:16)"),
+            // accounts-sub
+            ("place konto: accounts PLN lives 2026-01-01..", "kind sav2: accounts\n  owned by share\n  step minor(PLN)\n  takes k for w prorata\n\nplace konto: sav2 PLN lives 2026-01-01..".to_owned(), "LOAD-PARTS kind sav2 keeps parts and is signed (a.tally:30)"),
+            // both
+            ("  batched\n  step minor(PLN)\n  takes k for w prorata", "  owned by share\n  batched\n  step minor(PLN)\n  takes k for w prorata".to_owned(), "loaded"),
+            // rule-unknown
+            ("  owned by share", "  owned by nope".to_owned(), "LOAD-NAME unknown id nope (a.tally:16)"),
+            // rule-not-def
+            ("  owned by share", "  owned by amt".to_owned(), "LOAD-PARTS arrival rule amt is not a num keyed by a movement and a party at its movement's day (a.tally:16)"),
+            // rule-keys
+            ("def share[m in events, p in parties]: num at m.day", "def share[p in parties, m in events]: num at m.day".to_owned(), "LOAD-PARTS arrival rule share is not a num keyed by a movement and a party at its movement's day (a.tally:16)"),
+            // rule-one-key
+            ("def share[m in events, p in parties]: num at m.day\n  rule base = (if p == ola then 1 else 0)\n  rule gift beats base = (if p == jan then 1 else 0) when m in gifts", "def share[p in parties]: num\n  rule base = (if p == ola then 1 else 0)".to_owned(), "LOAD-PARTS arrival rule share is not a num keyed by a movement and a party at its movement's day (a.tally:16)"),
+            // rule-money
+            ("def share[m in events, p in parties]: num at m.day", "def share[m in events, p in parties]: money PLN at m.day".to_owned(), "LOAD-PARTS arrival rule share is not a num keyed by a movement and a party at its movement's day (a.tally:16)"),
+            // rule-no-at
+            ("def share[m in events, p in parties]: num at m.day", "def share[m in events, p in parties]: num".to_owned(), "LOAD-PARTS arrival rule share is not a num keyed by a movement and a party at its movement's day (a.tally:16)"),
+            // rule-at-paren
+            ("def share[m in events, p in parties]: num at m.day", "def share[m in events, p in parties]: num at (m.day)".to_owned(), "loaded"),
+            // rule-at-other
+            ("def share[m in events, p in parties]: num at m.day", "def share[m in events, p in parties]: num at day".to_owned(), "LOAD-PARTS arrival rule share is not a num keyed by a movement and a party at its movement's day (a.tally:16)"),
+            // rule-subkinds
+            ("def share[m in events, p in parties]: num at m.day", "def share[m in gifts, p in persons]: num at m.day".to_owned(), "loaded"),
+            // rule-key-index
+            ("def share[m in events, p in parties]: num at m.day", "index ks = [a1, a2]\n\ndef share[m in ks, p in parties]: num at m.day".to_owned(), "LOAD-PARTS arrival rule share is not a num keyed by a movement and a party at its movement's day (a.tally:16)"),
+            // rule-ties
+            ("  owned by share", "  owned by share ties by (if p == ola then 0 else 1)".to_owned(), "loaded"),
+            // rule-ties-unknown
+            ("  owned by share", "  owned by share ties by zz".to_owned(), "loaded"),
+            // takes-dup
+            ("  takes k for w order", "  takes w for w order".to_owned(), "LOAD-DUP w is declared twice (takes w for w) (a.tally:18)"),
+            // takes-v-unknown
+            ("  takes k for w order", "  takes k for w v nope order".to_owned(), "LOAD-NAME takes of pots: v nope names no version (a.tally:18)"),
+            // takes-v
+            ("  takes k for w order", "  takes k for w v card_2026 order".to_owned(), "loaded"),
+            // takes-shadow
+            ("  takes k for w order", "  takes amt for w order".to_owned(), "LOAD-SHADOW amt shadows a top-level id (a.tally:18)"),
+            // takes-shadow-w
+            ("  takes k for w order", "  takes k for day order".to_owned(), "LOAD-SHADOW day shadows a top-level id (a.tally:18)"),
+            // takes-term-unknown
+            ("  takes k for w order (if k.owner == ola then 0 else 1) prorata ties by (if k.owner == ola then 0 else 1)", "  takes k for w order zz".to_owned(), "loaded"),
+            // takes-batch-day
+            ("  takes k for w order (if k.owner == ola then 0 else 1) prorata ties by (if k.owner == ola then 0 else 1)", "  takes k for w order k.batch.day".to_owned(), "loaded"),
+            // takes-field
+            ("  takes k for w order (if k.owner == ola then 0 else 1) prorata ties by (if k.owner == ola then 0 else 1)", "  takes k for w order k.nope".to_owned(), "LOAD-FIELD nope is not a field of (owner key parties, batch key events) (a.tally:18)"),
+            // takes-tie-w
+            ("  takes k for w order (if k.owner == ola then 0 else 1) prorata ties by (if k.owner == ola then 0 else 1)", "  takes k for w order (if k.owner == ola then 0 else 1) prorata ties by w".to_owned(), "loaded"),
+            // step-eur
+            ("  owned by share\n  step minor(PLN)\n", "  owned by share\n  step minor(EUR)\n".to_owned(), "LOAD-UNIT money in an undeclared currency EUR (a.tally:17)"),
+            // step-number
+            ("  owned by share\n  step minor(PLN)\n", "  owned by share\n  step 0.01 PLN\n".to_owned(), "loaded"),
+            // step-unknown
+            ("  owned by share\n  step minor(PLN)\n", "  owned by share\n  step zz\n".to_owned(), "loaded"),
+            // owns
+            ("input day: date", "input day: date\n\ninput owns[p in parties, x in places]: num".to_owned(), "LOAD-PARTS owns[ola, pot]: pot keeps parts (a.tally:65)"),
+            // of-amt
+            ("  amt = 100.00 PLN \"the card\"", "  amt of ola = 100.00 PLN \"the card\"".to_owned(), "LOAD-PARTS of on a row of amt (a.tally:61)"),
+            // of-konto
+            ("  opening[konto] = 5.00 PLN at 2026-01-01 start \"the card\"", "  opening[konto] = 5.00 PLN at 2026-01-01 start \"the card\"\n  opening[konto] of ola = 5.00 PLN at 2026-01-01 start \"the card\"".to_owned(), "LOAD-PARTS of ola at konto, which keeps no labels of its sort (a.tally:67)"),
+            // of-batch-at-pot
+            ("  opening[pot] of jan = 20.00 PLN at 2026-01-01 start \"the card\"", "  opening[pot] of dep = 20.00 PLN at 2026-01-01 start \"the card\"".to_owned(), "LOAD-PARTS of dep at pot, which keeps no labels of its sort (a.tally:65)"),
+            // of-pair-at-pot
+            ("  opening[pot] of jan = 20.00 PLN at 2026-01-01 start \"the card\"", "  opening[pot] of (jan, dep) = 20.00 PLN at 2026-01-01 start \"the card\"".to_owned(), "LOAD-PARTS of (jan, dep) at pot, which keeps no labels of its sort (a.tally:65)"),
+            // of-batch-at-lot
+            ("  opening[lot] = 0 PLN at 2026-01-01 start \"the card\"", "  opening[lot] = 10.00 PLN at 2026-01-01 start \"the card\"\n  opening[lot] of dep = 10.00 PLN at 2026-01-01 start \"the card\"".to_owned(), "loaded"),
+            // of-party-at-lot
+            ("  opening[lot] = 0 PLN at 2026-01-01 start \"the card\"", "  opening[lot] = 10.00 PLN at 2026-01-01 start \"the card\"\n  opening[lot] of ola = 10.00 PLN at 2026-01-01 start \"the card\"".to_owned(), "LOAD-PARTS of ola at lot, which keeps no labels of its sort (a.tally:68)"),
+            // no total row at all: refcore loads it (it skips an input with no total row);
+            // the spec wins (#75), L §5.19 and §8.3's form
+            ("  opening[pot] = 30.00 PLN at 2026-01-01 start \"the card\"\n  opening[pot] of ola = 10.00 PLN at 2026-01-01 start \"the card\"\n  opening[pot] of jan = 20.00 PLN at 2026-01-01 start \"the card\"\n  opening[konto] = 5.00 PLN at 2026-01-01 start \"the card\"\n  opening[lot] = 0 PLN at 2026-01-01 start \"the card\"", "  opening[pot] of ola = 10.00 PLN at 2026-01-01 start \"the card\"\n  opening[pot] of jan = 20.00 PLN at 2026-01-01 start \"the card\"".to_owned(), "LOAD-PARTS the parts of pot at 2026-01-01 start have no total in card_2026 (a.tally:63)"),
+            // no-total-other-instant
+            ("  opening[pot] of jan = 20.00 PLN at 2026-01-01 start \"the card\"", "  opening[pot] of jan = 20.00 PLN at 2026-01-01 end \"the card\"".to_owned(), "LOAD-PARTS the parts of pot at 2026-01-01 end have no total in card_2026 (a.tally:65)"),
+            // total-none
+            ("  opening[pot] = 30.00 PLN at 2026-01-01 start \"the card\"", "  opening[pot] = none at 2026-01-01 start \"the card\"".to_owned(), "LOAD-PARTS the parts of pot at 2026-01-01 start have no total in card_2026 (a.tally:64)"),
+            // below
+            ("  opening[pot] of jan = 20.00 PLN at 2026-01-01 start \"the card\"", "  opening[pot] of jan = -20.00 PLN at 2026-01-01 start \"the card\"".to_owned(), "LOAD-PARTS the stated part of jan at pot is below 0 (a.tally:65)"),
+            // overlap
+            ("  opening[pot] of jan = 20.00 PLN at 2026-01-01 start \"the card\"", "  opening[pot] of ola = 20.00 PLN at 2026-01-01 start \"the card\"".to_owned(), "LOAD-PARTS the stated parts ola and ola of pot overlap (a.tally:65)"),
+            // over
+            ("  opening[pot] of jan = 20.00 PLN at 2026-01-01 start \"the card\"", "  opening[pot] of jan = 25.00 PLN at 2026-01-01 start \"the card\"".to_owned(), "LOAD-PARTS the stated parts of pot sum to 35.00 PLN, over its total 30.00 PLN (a.tally:65)"),
+            // total-hole
+            ("  opening[pot] = 30.00 PLN at 2026-01-01 start \"the card\"", "  opening[pot] = ?\"how much\" at 2026-01-01 start \"the card\"".to_owned(), "loaded"),
+            // part-hole
+            ("  opening[pot] of jan = 20.00 PLN at 2026-01-01 start \"the card\"", "  opening[pot] of jan = ?\"how much\" at 2026-01-01 start \"the card\"".to_owned(), "loaded"),
+            // label-unknown
+            ("  opening[pot] of jan = 20.00 PLN at 2026-01-01 start \"the card\"", "  opening[pot] of zz = 20.00 PLN at 2026-01-01 start \"the card\"".to_owned(), "loaded"),
+            // label-unknown-below
+            ("  opening[pot] of jan = 20.00 PLN at 2026-01-01 start \"the card\"", "  opening[pot] of zz = -20.00 PLN at 2026-01-01 start \"the card\"".to_owned(), "LOAD-PARTS the stated part of zz at pot is below 0 (a.tally:65)"),
+            // lot-overlap
+            ("  opening[lot] = 0 PLN at 2026-01-01 start \"the card\"", "  opening[lot] = 10.00 PLN at 2026-01-01 start \"the card\"\n  opening[lot] of dep = 5.00 PLN at 2026-01-01 start \"the card\"\n  opening[lot] of dep = 5.00 PLN at 2026-01-01 start \"the card\"".to_owned(), "LOAD-PARTS the stated parts dep and dep of lot overlap (a.tally:69)"),
+            // read-of-type
+            ("ask q: bal(pot, 2026-12-31) of p for p in parties on 2026-12-31", "ask q: bal(pot, 2026-12-31) of p for p in parties on 2026-12-31\n\nask q2: bal(x, 2026-12-31) of ola for x in lots on 2026-12-31".to_owned(), "LOAD-PARTS of ola at lots, which keeps no labels of its sort (a.tally:51)"),
+            // read-of-type-ok
+            ("ask q: bal(pot, 2026-12-31) of p for p in parties on 2026-12-31", "ask q: bal(pot, 2026-12-31) of p for p in parties on 2026-12-31\n\nask q2: bal(x, 2026-12-31) of dep for x in lots on 2026-12-31".to_owned(), "loaded"),
+            // read-of-plain-type
+            ("ask q: bal(pot, 2026-12-31) of p for p in parties on 2026-12-31", "ask q: bal(pot, 2026-12-31) of p for p in parties on 2026-12-31\n\nask q2: bal(x, 2026-12-31) of ola for x in accounts on 2026-12-31".to_owned(), "loaded"),
+            // read-of-literal
+            ("ask q: bal(pot, 2026-12-31) of p for p in parties on 2026-12-31", "ask q: bal(pot, 2026-12-31) of p for p in parties on 2026-12-31\n\nask q2: bal(lot, 2026-12-31) of ola".to_owned(), "LOAD-PARTS of ola at lot, which keeps no labels of its sort (a.tally:51)"),
+            // arrival-end
+            ("  rule base = (if p == ola then 1 else 0)", "  rule base = (if p == ola then 1 else 0) when bal(konto, m.day) > 0".to_owned(), "LOAD-CYCLE arrival rule share reads bal(konto, m.day): the end of its arrival's day (a.tally:38)"),
+            // arrival-start
+            ("  rule base = (if p == ola then 1 else 0)", "  rule base = (if p == ola then 1 else 0) when bal(konto, m.day start) > 0".to_owned(), "loaded"),
+            // arrival-later
+            ("  rule base = (if p == ola then 1 else 0)", "  rule base = (if p == ola then 1 else 0) when bal(konto, m.day + 1 day start) > 0".to_owned(), "LOAD-CYCLE arrival rule share reads bal(konto, m.day + 1 day start): a day after its arrival's (a.tally:38)"),
+            // arrival-earlier
+            ("  rule base = (if p == ola then 1 else 0)", "  rule base = (if p == ola then 1 else 0) when bal(konto, m.day - 1 day) > 0".to_owned(), "loaded"),
+        ];
+        for (old, new, expected) in cases {
+            assert!(PARTS.contains(old), "{old} is in the base");
+            let mut text = PARTS.replacen(old, &new, 1);
+            if new.contains("input owns") {
+                let day = "  day = 2026-02-10 \"the card\"";
+                text = text.replacen(day, &format!("{day}\n  owns[ola, pot] = 1 \"the card\""), 1);
+            }
+            assert_eq!(refusal(&text), expected, "{new}");
+        }
+    }
+
+    #[test]
+    fn a_def_a_takes_order_reads_is_read_and_an_ask_over_parts_is_not_built_yet() {
+        let order = "order (if k.owner == ola then 0 else 1) prorata";
+        let day = "input day: date";
+        assert!(
+            PARTS.contains(order) && PARTS.contains(day),
+            "the base's lines"
+        );
+        let text = PARTS.replacen(order, "order prio[k.owner] prorata", 1).replacen(
+            day,
+            "input day: date\n\ndef prio[p in parties]: num = (if p == ola then 0 else 1)\n\ndef idle: num = 1",
+            1,
+        );
+        let m = load_one(&text).expect("it loads");
+        let warned: Vec<&str> = m.warnings.iter().map(|(_, w)| w.as_str()).collect();
+        assert_eq!(
+            warned,
+            [
+                "def idle is read by nothing",
+                "place konto is read by nothing"
+            ],
+            "refcore's WARN-UNREAD lines: prio is read by the takes order, share by the owned clause"
+        );
+        assert_eq!(first_line(PARTS), None, "M5b walks the parts");
     }
 }

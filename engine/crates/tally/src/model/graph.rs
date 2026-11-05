@@ -32,6 +32,9 @@ pub enum NodeKind {
     Price,
     /// The timeline's balances, which every move books into.
     Balances,
+    /// A kind's parts clauses, read where the walk books an arrival or a take: their reads
+    /// are kept apart from the graph's edges (refcore's `('parts', k)` pseudo-item).
+    Parts,
 }
 
 impl NodeKind {
@@ -48,6 +51,7 @@ impl NodeKind {
             NodeKind::Ask => "ask",
             NodeKind::Price => "price",
             NodeKind::Balances => "balances",
+            NodeKind::Parts => "parts",
         }
     }
 }
@@ -244,6 +248,13 @@ pub struct Graph {
     pub order_groups: Vec<BTreeSet<String>>,
     /// The orders `before` and `after` write: `(a, b)` is a after b.
     pub written_order: BTreeSet<(String, String)>,
+    /// What the parts clauses read: each arrival rule, and what an `owned` clause's `ties by`,
+    /// a `takes` order and its `ties by` and a `step` read. They are read (`WARN-UNREAD`), but
+    /// no edge of the graph (refcore's `parts_reads`). L §3.6, §8.5.
+    pub parts_reads: BTreeSet<Node>,
+    /// The kinds that keep parts, in id order, once their clauses are checked (refcore's
+    /// `parts_kinds`). L §3.6, §5.7.
+    pub parts_kinds: Vec<String>,
 }
 
 impl Graph {
