@@ -16,6 +16,8 @@
 
 use super::check::{AxisRead, Checker, Figure, Scope, Stands, Var, VarDom, deeper};
 use super::keys::{KeyLit, resolve_key};
+use super::random::DrawKey;
+use super::worlds::read_elsewhere;
 use crate::base::{Code, Load, Refusal};
 use crate::model::{
     CodeKind, Domain, IndexForm, KeyVal, KindSpec, NameKind, Node, NodeKind, PeriodWord, Reality,
@@ -1040,6 +1042,9 @@ impl Checker {
             return Ok(var_type(var));
         }
         let Some(kind) = m.names.get(name).copied() else {
+            if !matches!(expect, Some(Ty::Key(_) | Ty::Code(_))) {
+                read_elsewhere(m, name)?;
+            }
             return Self::keylit(m, scope, &Expr::Name(name.to_owned()), name, expect);
         };
         match kind {
@@ -1323,6 +1328,17 @@ impl Checker {
             Domain::List(_) | Domain::Range => None,
         };
         let t = self.expr(m, &inner, kn, expect.as_ref(), depth)?;
+        if let (Domain::Index(ix), Expr::Name(name)) = (domain, kn)
+            && let Some(var) = scope.vars.get(name)
+            && var.dom == VarDom::Range
+            && let Some(end) = &var.end
+        {
+            self.draws.push(DrawKey {
+                end: end.clone(),
+                index: ix.clone(),
+                at: scope.file_line(),
+            });
+        }
         self.key_conv(m, scope, &t, domain, kn)?;
         Ok(None)
     }

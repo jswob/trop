@@ -6,7 +6,8 @@
 //! E §11 (`REQ-ASK`: an ask a refused scenario's file declares exists).
 //! Twin: engine/tools/refcore/cli.py (`_run_texts`, `run_worlds` up to its asks, `declared_ids`,
 //! `declared_asks`); loader.py (`scenario_header`, `load_texts`); joint.py (`header_uses`,
-//! `header_has_sames`).
+//! `header_has_sames`). The base's own refusals of a scenario's ids, a key literal's read and
+//! a rule's `v`, have no twin: refcore refuses them at run or as `LOAD-NAME` (issue #75).
 //! Invariants: every file is split, in the order given, before any is parsed; the base loads
 //! first, and its refusal is the run's; each scenario loads with the base's files, then its
 //! stack from the model up; a world that stops `NotBuilt` stops the run.
@@ -133,7 +134,8 @@ pub fn load_run(files: &[Split]) -> Result<Loaded, Stop> {
     }
     if files.iter().all(|file| file.head.is_none()) {
         let all: Vec<&Split> = files.iter().collect();
-        return Ok(Loaded::One(Box::new(load_world(&all, &BTreeSet::new())?)));
+        let none = (BTreeSet::new(), BTreeMap::new());
+        return Ok(Loaded::One(Box::new(load_world(&all, &none)?)));
     }
     Ok(Loaded::Worlds(Box::new(load_worlds(files)?)))
 }
@@ -150,14 +152,18 @@ fn joint_header(text: &str) -> bool {
         .any(|line| matches!(line.split_whitespace().next(), Some("use" | "same")))
 }
 
-/// One world's reality: its files parsed together, then loaded (refcore's `load_texts`).
-/// E §3.1.
-fn load_world(files: &[&Split], worlds: &BTreeSet<String>) -> Result<Reality, Stop> {
+/// The run's worlds an ask may name, and the ids the scenarios' files declare, each with its
+/// scenario (for the base's load; empty for any other).
+type Among = (BTreeSet<String>, BTreeMap<String, String>);
+
+/// One world's reality: its files parsed together, then loaded among the run's worlds
+/// (refcore's `load_texts`). E §3.1.
+fn load_world(files: &[&Split], among: &Among) -> Result<Reality, Stop> {
     let split: Vec<(&str, &[Line])> = files
         .iter()
         .map(|file| (file.path.as_str(), file.lines.as_slice()))
         .collect();
-    load_among(parse_split(&split)?, worlds)
+    load_among(parse_split(&split)?, &among.0, &among.1)
 }
 
 /// The base alone, then each scenario, by id, with the base and its stack (refcore's
@@ -174,12 +180,20 @@ fn load_worlds(files: &[Split]) -> Result<Worlds, Stop> {
         }
     }
     let run: BTreeSet<String> = scenarios.keys().map(|id| (*id).to_owned()).collect();
-    let alone = match load_world(&base, &run) {
+    let mut elsewhere = BTreeMap::new();
+    for (id, (file, _)) in scenarios.iter().rev() {
+        for name in section_ids(&file.text) {
+            elsewhere.insert(name.to_owned(), (*id).to_owned());
+        }
+    }
+    let mut among = (run, elsewhere);
+    let alone = match load_world(&base, &among) {
         Err(Stop::Refused(refusal)) => {
-            return Err(Stop::Refused(read_outside(refusal, &scenarios)));
+            return Err(Stop::Refused(read_outside(refusal, &among.1)));
         }
         other => other?,
     };
+    among.1.clear();
     let model = alone.header.id.clone();
     let mut worlds = Worlds {
         base: alone,
@@ -196,7 +210,7 @@ fn load_worlds(files: &[Split]) -> Result<Worlds, Stop> {
                     let (under, _) = scenarios.get(over.as_str()).ok_or_else(no_stack)?;
                     world.push(under);
                 }
-                load_world(&world, &run)
+                load_world(&world, &among)
             }
         };
         match loaded {
@@ -277,9 +291,9 @@ fn no_stack() -> Stop {
 }
 
 /// A refusal of the base that names an id no base file declares, renamed when a scenario's
-/// file declares it, scenarios by id (refcore's `run_worlds`): `LOAD-SCENARIO <x> of scenario
-/// <s> is read outside it`, at the same place. L §6.4.
-fn read_outside(refusal: Refusal, scenarios: &BTreeMap<&str, (&Split, &Head)>) -> Refusal {
+/// file declares it, the first such scenario by id (refcore's `run_worlds`): `LOAD-SCENARIO
+/// <x> of scenario <s> is read outside it`, at the same place. L §6.4.
+fn read_outside(refusal: Refusal, elsewhere: &BTreeMap<String, String>) -> Refusal {
     let message = refusal.message();
     let name = if refusal.code() == Code::Load(Load::Name) {
         message.strip_prefix("unknown id ").map(first_word)
@@ -293,11 +307,8 @@ fn read_outside(refusal: Refusal, scenarios: &BTreeMap<&str, (&Split, &Head)>) -
     let Some(name) = name.map(str::to_owned) else {
         return refusal;
     };
-    let declared = scenarios
-        .iter()
-        .find(|(_, (file, _))| declares(&file.text, &name));
-    match declared {
-        Some((id, _)) => refusal.renamed(
+    match elsewhere.get(&name) {
+        Some(id) => refusal.renamed(
             Code::Load(Load::Scenario),
             format!("{name} of scenario {id} is read outside it"),
         ),
@@ -310,25 +321,76 @@ fn first_word(text: &str) -> &str {
     text.split_once(' ').map_or(text, |(word, _)| word)
 }
 
-/// Whether a file's text declares the section id `name`: a line at the left margin whose first
-/// word opens a section and whose second, up to a `[`, `:` or `(`, is `name` (refcore's
-/// `declared_ids`).
-fn declares(text: &str, name: &str) -> bool {
+/// The section ids a file's text declares: each line at the left margin whose first word
+/// opens a section gives its second, up to a `[`, `:` or `(` (refcore's `declared_ids`).
+fn section_ids(text: &str) -> Vec<&str> {
     text.split('\n')
         .filter(|line| !line.starts_with([' ', '\t']))
-        .any(|line| {
+        .filter_map(|line| {
             let mut words = line.split_whitespace();
             let (Some(word), Some(id)) = (words.next(), words.next()) else {
-                return false;
+                return None;
             };
-            SECTION_WORDS.contains(&word) && section_name(id) == name
+            SECTION_WORDS.contains(&word).then_some(section_name(id))
         })
+        .collect()
+}
+
+/// A rule's or a `takes`' `v` that names no version of the world: `LOAD-SCENARIO <item> of
+/// the base names <v> of scenario <s>` when a scenario's file declares it, since the base is
+/// whole without its scenarios (L §6.4, a rule's `v` included; issue #75, where refcore
+/// prints the `LOAD-NAME`), else `LOAD-NAME` with `message`. L §8.3.
+pub(super) fn no_version(m: &Reality, item: &str, v: &str, message: String) -> (Load, String) {
+    match m.elsewhere.get(v) {
+        Some(scenario) => (
+            Load::Scenario,
+            format!("{item} of the base names {v} of scenario {scenario}"),
+        ),
+        None => (Load::Name, message),
+    }
+}
+
+/// A name the world doesn't declare, read where it would be a key literal, that a scenario's
+/// file declares and no key of the world holds: `LOAD-SCENARIO <x> of scenario <s> is read
+/// outside it` at load, since a read of an item a scenario's file declares stands only inside
+/// that scenario (L §6.4; issue #75, where refcore refuses it at run as an ambiguous key or
+/// as a key literal in arithmetic). L §8.3.
+///
+/// # Errors
+///
+/// That refusal.
+pub(super) fn read_elsewhere(m: &Reality, name: &str) -> Result<(), Stop> {
+    let Some(scenario) = m.elsewhere.get(name) else {
+        return Ok(());
+    };
+    if holds_key(m, name) {
+        return Ok(());
+    }
+    Err(Stop::Refused(Refusal::new(
+        Code::Load(Load::Scenario),
+        format!("{name} of scenario {scenario} is read outside it"),
+    )))
 }
 
 /// An id as a section line writes it, up to its keys, its type or its parameters.
 fn section_name(word: &str) -> &str {
     let cut = word.find(['[', ':', '(']).unwrap_or(word.len());
     word.get(..cut).unwrap_or(word)
+}
+
+/// Whether `name` is a key of an index, an option of an axis, or a thing of the world.
+fn holds_key(m: &Reality, name: &str) -> bool {
+    for (_, index) in m.indexes.entries() {
+        if index.texts.iter().any(|(text, _)| text == name) {
+            return true;
+        }
+    }
+    for (_, axis) in m.axes.entries() {
+        if axis.options.iter().any(|(option, _)| option == name) {
+            return true;
+        }
+    }
+    m.things.contains(name)
 }
 
 /// The ids of the asks a file declares, `ask <id>:` at the start of a line, read from its text,
@@ -362,7 +424,7 @@ fn ask_at(text: &str) -> Option<String> {
 
 #[cfg(test)]
 mod tests {
-    use super::{Loaded, declared_asks, declares, load_run, split_files};
+    use super::{Loaded, declared_asks, load_run, section_ids, split_files};
     use crate::api::Source;
     use crate::base::Refusal;
     use crate::syntax::Stop;
@@ -479,8 +541,11 @@ mod tests {
     #[test]
     fn ids_and_asks_are_read_from_the_text() {
         let text = "def total[k in ks]: num = 1\n  def inner: num\nask q1 : x\nask Q: x\nask q2:\n";
-        assert!(declares(text, "total"), "keys cut");
-        assert!(!declares(text, "inner"), "indented");
+        assert_eq!(
+            section_ids(text),
+            ["total"],
+            "keys cut, the indented line left out"
+        );
         let asks: Vec<String> = declared_asks(text).into_iter().collect();
         assert_eq!(
             asks,

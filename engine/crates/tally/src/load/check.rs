@@ -21,7 +21,7 @@ use super::keys::keyed_place_thing;
 use super::moves::{own_day_reads, settlements};
 use super::pins::{UNLOADED, unloaded_world};
 use super::prices::price_twice;
-use super::random::{QueryAt, dist_whole};
+use super::random::{DrawKey, QueryAt, dist_whole};
 use super::reads::{is_move_type, is_place_type};
 use super::types::{
     children, covered_spans, is_bool, is_date, key_value_kind, lit_rule, refused, uerr,
@@ -32,6 +32,7 @@ use crate::model::{
     NodeKind, Reality, Rel, Shift, Target, Ty,
 };
 use crate::num::Num;
+use crate::syntax::Bal;
 use crate::syntax::{
     AddOp, Ask, AskBody, CmpOp, Domain as Written, Expr, Key, LawDate, Lit, Number, Order, Postfix,
     RChoice, RuleValue, Section, Stop,
@@ -128,6 +129,9 @@ pub(super) struct Var {
     pub(super) keylist: Vec<Lit>,
     /// Which variable it is: a key list's index is fixed per variable.
     pub(super) id: usize,
+    /// A range's end, as written, for a variable bound over a range (refcore's `v.node.dom.b`):
+    /// a slot key whose range ends at a draw (L §5.16).
+    pub(super) end: Option<Expr>,
 }
 
 impl Var {
@@ -357,6 +361,20 @@ pub(super) struct DayRead {
     pub(super) start: bool,
 }
 
+/// A projection `bal(x, d) from t` read in a move, outside any query (refcore's `projs`
+/// entry, a move's, not in `inq`). L §5.14.1, §5.16.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(super) struct ProjRead {
+    /// The read, as written.
+    pub(super) bal: Bal,
+    /// The move that holds it.
+    pub(super) holder: String,
+    /// The place it projects.
+    pub(super) target: Target,
+    /// The file and line it is written on.
+    pub(super) at: (String, u32),
+}
+
 /// What the walk finds beyond the graph, for the checks on it (refcore's `Checker` state).
 #[derive(Debug, Default)]
 pub(super) struct Walked {
@@ -385,6 +403,11 @@ pub(super) struct Walked {
     pub(super) queries: Vec<QueryAt>,
     /// The items that hold `crps` or `pdf` (refcore's `orient_items`). L §5.15.
     pub(super) orient_items: BTreeSet<Node>,
+    /// The slot keys a range up to a value gives, in the order typed (refcore's
+    /// `draw_keys`). L §5.16.
+    pub(super) draws: Vec<DrawKey>,
+    /// The moves' projections, in the order typed (refcore's `projs`). L §5.16.
+    pub(super) projs: Vec<ProjRead>,
 }
 
 /// The checker's state over the walk (refcore's `Checker`).
@@ -433,6 +456,10 @@ pub(super) struct Checker {
     pub(super) queries: Vec<QueryAt>,
     /// The items that hold `crps` or `pdf`.
     pub(super) orient_items: BTreeSet<Node>,
+    /// The slot keys a range up to a value gives.
+    pub(super) draws: Vec<DrawKey>,
+    /// The moves' projections outside queries.
+    pub(super) projs: Vec<ProjRead>,
 }
 
 /// One level deeper into an expression, refused as an invariant past the count (R-16).
@@ -526,6 +553,8 @@ pub(super) fn walk(m: &Reality, sections: &[(String, Section)]) -> Result<Walked
         alone,
         queries: checker.queries,
         orient_items: checker.orient_items,
+        draws: checker.draws,
+        projs: checker.projs,
     })
 }
 
@@ -697,6 +726,7 @@ impl Checker {
             dom,
             keylist,
             id,
+            end: None,
         })
     }
 
@@ -845,7 +875,10 @@ impl Checker {
                     (self.range_type(m, &scope, range, 0)?, VarDom::Range)
                 }
             };
-            let var = self.new_var(&bind.var, ty, dom, Vec::new())?;
+            let mut var = self.new_var(&bind.var, ty, dom, Vec::new())?;
+            if let Written::Range(range) = &bind.node.domain {
+                var.end = Some(range.1.clone());
+            }
             scope.vars.insert(bind.var.clone(), var);
         }
         Ok(scope)
@@ -1784,6 +1817,7 @@ mod tests {
             dom: VarDom::Range,
             keylist: Vec::new(),
             id: 0,
+            end: None,
         }
     }
 

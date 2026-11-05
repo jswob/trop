@@ -243,7 +243,10 @@ impl Checker {
                 (self.range_type(m, scope, range, depth)?, VarDom::Range)
             }
         };
-        let var = self.new_var(&bind.var, ty.clone(), dom, keylist)?;
+        let mut var = self.new_var(&bind.var, ty.clone(), dom, keylist)?;
+        if let Written::Range(range) = &bind.domain {
+            var.end = Some(range.1.clone());
+        }
         if matches!(over_what, Over::Things(_)) {
             scope.vars.insert(bind.var.clone(), var.clone());
         }

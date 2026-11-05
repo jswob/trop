@@ -14,7 +14,9 @@
 //! the order of refcore's `repr` of them, an explicit text key; the strata are the layers of
 //! an acyclic graph once each cycle no written order breaks is one component.
 
-use super::across::{check_period_keys, check_schedules, check_seen_days};
+use super::across::{
+    check_period_keys, check_proj_seen, check_scenario_moves, check_schedules, check_seen_days,
+};
 use super::check::{Files, ShiftRead, walk};
 use super::cone::finish_random;
 use super::lawdates::{check_lawdates, check_move_lawdates};
@@ -83,8 +85,16 @@ impl Loader {
         check_seen_days(&self.m, &walked.day_reads, &files)?;
         check_period_keys(&self.m, &walked.periods)?;
         check_move_lawdates(&self.m, &walked, &dated, &files)?;
-        finish_random(&self.m, &walked.queries, &walked.orient_items, &files)?;
-        check_schedules(&self.m, &files)
+        let random = finish_random(
+            &self.m,
+            &walked.queries,
+            &walked.orient_items,
+            &walked.draws,
+            &files,
+        )?;
+        check_proj_seen(&self.m, &walked.projs, &random)?;
+        check_schedules(&self.m, &files)?;
+        check_scenario_moves(&self.m, &files)
     }
 
     /// The decision graph and its layers: who acts after whom, the written orders, the

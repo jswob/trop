@@ -49,19 +49,25 @@ pub(super) fn num_stop(error: NumError) -> Stop {
 ///
 /// A load refusal construction meets, or `NotBuilt` for a form S doesn't build.
 pub fn load(files: Vec<File>) -> Result<Reality, Stop> {
-    load_among(files, &BTreeSet::new())
+    load_among(files, &BTreeSet::new(), &BTreeMap::new())
 }
 
 /// The reality the files state, loaded among the run's other worlds `worlds` (the scenarios
 /// of a run with scenarios, which an ask of the base may name) (refcore's `load_texts` with
-/// its `worlds`). E §3.1; L §6.4.
+/// its `worlds`); `elsewhere`, for the base of a run with scenarios, the ids their files
+/// declare, each with its scenario. E §3.1; L §6.4.
 ///
 /// # Errors
 ///
 /// As [`load`].
-pub(super) fn load_among(files: Vec<File>, worlds: &BTreeSet<String>) -> Result<Reality, Stop> {
+pub(super) fn load_among(
+    files: Vec<File>,
+    worlds: &BTreeSet<String>,
+    elsewhere: &BTreeMap<String, String>,
+) -> Result<Reality, Stop> {
     let mut loader = Loader::new(files)?;
     loader.m.all_worlds.clone_from(worlds);
+    loader.m.elsewhere.clone_from(elsewhere);
     loader
         .m
         .all_worlds
@@ -156,6 +162,7 @@ impl Loader {
                 axes: Table::new(),
                 fills: Table::new(),
                 all_worlds: BTreeSet::new(),
+                elsewhere: BTreeMap::new(),
                 asks_alone: BTreeMap::new(),
             },
             sections,

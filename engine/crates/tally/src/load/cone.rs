@@ -1,15 +1,17 @@
-//! Load's random cone: the items that reach a sample, and each query, ask line, path clause and orientation checked against it.
+//! Load's random cone: the items that reach a sample, and each draw's slots, query, ask line, path clause and orientation checked against it.
 //! Spec: E §3.1 step 10; L §5.16 (lifting, closed forms, a query over paths stands only in
-//! an ask that states paths), §5.15 (`orient`), §5.18 (`paths N seed S [path P]`), §8.3
-//! item 10 (`LOAD-RANDOM`, `-ASKONLY`, `-ORIENT`, `-PARSE`, `-DOMAIN`).
+//! an ask that states paths; a random number of items, a draw past its slots), §5.15
+//! (`orient`), §5.18 (`paths N seed S [path P]`), §8.3 item 10 (`LOAD-RANDOM`, `-ASKONLY`,
+//! `-ORIENT`, `-PARSE`, `-DOMAIN`).
 //! Twin: engine/tools/refcore/check2.py (`m_random_cone`, `m_line_random`, `m_is_random`,
-//! `m_affine`, `m_closed_form`, `m_finish_random`, `reads_balances`, `m_reaches_any`).
+//! `m_affine`, `m_closed_form`, `m_finish_random`, `m_check_draw_slots`, `reads_balances`,
+//! `m_reaches_any`).
 //! Invariants: the cone is a least fixed point over the graph's edges, read roles and marks;
 //! every walk over an expression or the graph is an explicit stack; the affine form's
 //! recursion is counted.
 
 use super::check::{Files, Scope, Stands, invariant, place_target};
-use super::random::{QueryAt, strip};
+use super::random::{DrawKey, QueryAt, Support, strip, support_max};
 use super::types::{children, refused, text};
 use crate::base::Load;
 use crate::model::{Graph, Mark, NameKind, Node, NodeKind, ReadRole, Reality, Rel, Target, Ty};
@@ -564,6 +566,90 @@ fn int_text(n: &crate::num::Num) -> Result<String, Stop> {
         .ok_or_else(|| invariant("a path count past 64 bits".to_owned()))
 }
 
+/// `LOAD-RANDOM` for a slot key whose range ends at a random input or def, at a key of an
+/// integer index, when a distribution its rows or rules write can draw past the index's last
+/// key (refcore's `m_check_draw_slots`, with `discrete`'s keys seen, issue #75). L §5.16
+/// (a random number of items), §8.3.
+///
+/// # Errors
+///
+/// `LOAD-RANDOM the draw <x> can exceed the last slot of <index>`, at the key's line.
+fn check_draw_slots(m: &Reality, items: &BTreeSet<Node>, draws: &[DrawKey]) -> Result<(), Stop> {
+    for draw in draws {
+        if !is_random(m, items, &draw.end) {
+            continue;
+        }
+        let Some(index) = m.indexes.get(&draw.index).filter(|index| index.is_int) else {
+            continue;
+        };
+        let mut last: Option<i64> = None;
+        for key in &index.keys {
+            if let crate::model::KeyVal::Int(k) = key {
+                last = Some(last.map_or(*k, |top| top.max(*k)));
+            }
+        }
+        let Some(last) = last else {
+            continue;
+        };
+        for value in drawn_values(m, &draw.end) {
+            let past = match support_max(m, &value) {
+                Support::Unbounded => true,
+                Support::UpTo(top) => top
+                    .compare(&crate::num::Num::int(last))
+                    .map_err(|_| invariant("a draw's support compared".to_owned()))?
+                    .is_gt(),
+                Support::Unseen => false,
+            };
+            if past {
+                let message = format!(
+                    "the draw {} can exceed the last slot of {}",
+                    text(&draw.end),
+                    draw.index
+                );
+                let scope = Scope::new(
+                    Node::new(NodeKind::Ask, ""),
+                    Stands::Ask,
+                    &draw.at.0,
+                    draw.at.1,
+                );
+                return Err(scope.place(refused(Load::Random, message)));
+            }
+        }
+    }
+    Ok(())
+}
+
+/// The values a read of an input or a def is written as: the input's rows, the def's rules
+/// (refcore's `row.value` and `rv.node.value`). L §5.16.
+fn drawn_values(m: &Reality, end: &Expr) -> Vec<Expr> {
+    let name = if let Expr::Name(name) = end {
+        name
+    } else if let Expr::Post(base, posts) = end
+        && let (Expr::Name(name), [Postfix::Keys(_)]) = (&**base, posts.as_slice())
+    {
+        name
+    } else {
+        return Vec::new();
+    };
+    let mut out = Vec::new();
+    if let Some(input) = m.inputs.get(name) {
+        for row in &input.rows {
+            if let crate::syntax::Value::Dist(node) = &row.value {
+                out.push(node.clone());
+            }
+        }
+    } else if let Some(def) = m.defs.get(name) {
+        for (_, versions) in &def.rules {
+            for rule in versions {
+                if let crate::syntax::RuleValue::Expr(value) = &rule.rule.value {
+                    out.push(value.clone());
+                }
+            }
+        }
+    }
+    out
+}
+
 /// Whether the cone counts projections: an ask line with its own random clause gives each
 /// projection it reaches that clause, so its cone leaves them out (refcore's `with_proj`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -586,9 +672,11 @@ pub(super) fn finish_random(
     m: &Reality,
     queries: &[QueryAt],
     orient_items: &BTreeSet<Node>,
+    draws: &[DrawKey],
     files: &Files,
-) -> Result<(), Stop> {
+) -> Result<BTreeSet<Node>, Stop> {
     let cone = random_cone(m, &m.graph, Projections::Counted);
+    check_draw_slots(m, &cone.items, draws)?;
     let asks: Vec<&Ask> = m
         .asks
         .iter()
@@ -697,5 +785,5 @@ pub(super) fn finish_random(
             return Err(scope.place(refused(Load::Orient, message)));
         }
     }
-    Ok(())
+    Ok(cone.items)
 }

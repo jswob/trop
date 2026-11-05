@@ -10,6 +10,7 @@
 
 use super::spans::lspan_to_span;
 use super::steps::{Loader, num_stop, refuse};
+use super::worlds::no_version;
 use crate::base::Load;
 use crate::model::{
     BandInfo, BindInfo, CodeKind, DefInfo, Domain, InputInfo, KindSpec, MoveInfo, NameKind,
@@ -199,12 +200,9 @@ impl Loader {
             if let Some(v) = &rule.v
                 && !self.m.versions.contains(v)
             {
-                return Err(refuse(
-                    Load::Name,
-                    format!("rule {}.{}: v {v} names no version", decl.id, rule.label),
-                    file,
-                    rule.line,
-                ));
+                let message = format!("rule {}.{}: v {v} names no version", decl.id, rule.label);
+                let (code, message) = no_version(&self.m, &decl.id, v, message);
+                return Err(refuse(code, message, file, rule.line));
             }
             let span = rule
                 .governs

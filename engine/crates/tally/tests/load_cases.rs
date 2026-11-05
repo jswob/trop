@@ -13,9 +13,13 @@
 //! if`), §5.18 (pins and the ask forms), §6.4 (an ask naming an unloaded world) for G8's;
 //! §5.16 (distributions, queries, `crps`, `cdf`, `pdf`, `pmf`, the random cone), §7.3 and
 //! §3.3 (`to u`, the transcendental calls), §5.18 (`solve`), §5.13 (`prorata`), §6.4 (an
-//! expression row outside a scenario) for G8's second step.
+//! expression row outside a scenario) for G8's second step; §6.4 (the base names no item of
+//! a scenario, a rule's `v` included; a scenario's move books nothing before `from`), §5.16
+//! (a draw past its slots; a decision's projection reaching a random amount after its day)
+//! for G8's third.
 //! Twin: engine/tools/refcore/loader.py; each expected line is refcore's load of the same
-//! text, printed in the same normalized form.
+//! text, printed in the same normalized form, but where issue #75 rules that the spec wins:
+//! there the line is L §8.3's form, and the case's comment says so.
 //! Invariants: reads no test, vector or answer key (R-93); the text is written here, small.
 
 #![forbid(unsafe_code)]
@@ -3003,6 +3007,444 @@ ask qv: solve amt == step_in for step_in in [0 PLN, 500 PLN] to 1 PLN
         ];
         for &(edits, expected) in probes {
             assert_eq!(refusal(&edited(RANDOM, edits)), expected, "{edits:?}");
+        }
+    }
+
+    /// A model and a scenario over it, for the checks of a reality with scenarios (#75).
+    const HOME: &str = "model home
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2027-12-31
+
+source card \"a card\"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input amt: money PLN
+
+def twice: money PLN = amt + amt at reader
+
+ask q: twice, bal(konto, 2026-12-31) law 2026-03-01
+
+version v1
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN \"the card\"
+  opening[konto] = 0 PLN at 2026-01-01 start \"the card\"
+";
+
+    /// The scenario over [`HOME`], from 2027.
+    const UP: &str = "scenario up over home
+  tally 2
+  from 2027-01-01
+
+version raise
+  cite card
+  governs 2027..
+  known 2026-02-01
+  replace amt = 150.00 PLN \"a raise\"
+
+ask q_up: twice in up law 2027-06-01
+";
+
+    /// A draw over slots and a decision's projection of a place a random plan books into.
+    const DRAWS: &str = "model m
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card \"a card\"
+
+unit PLN: currency minor 0.01
+
+index gm = month 2026-02..2026-02
+
+index slots = int 1..3
+
+index big = int 1..5
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input ru: dist PLN
+
+input nr: dist
+
+input xs[s in slots]: money PLN
+
+def nd: dist = discrete(1 for k in slots)
+
+def drawn: money PLN = sum(xs[s] for s in 1 .. nd step 1)
+
+move gift[m in gm]: transfers
+  on start_of(m)
+  leg cash from world to konto amount round(ru, minor(PLN), half-up)
+
+move sweep[m in gm]: transfers
+  on start_of(m)
+  reads konto
+  leg cash from konto to world amount bal(konto, end_of(m)) from start_of(m)
+
+ask q_draw: mean(drawn) paths 10 seed 1
+
+version v1
+  cite card
+  governs always
+  known 2026-01-01
+  ru = uniform(0 PLN, 4 PLN) to 0.01 PLN \"the card\"
+  nr = binomial(3, 0.5) \"the card\"
+  xs[1] = 1.00 PLN \"the card\"
+  xs[2] = 2.00 PLN \"the card\"
+  xs[3] = 3.00 PLN \"the card\"
+";
+
+    /// The first line, warnings left out, that a run of the model `model` and the scenario
+    /// `scen` prints for `ask`.
+    fn world_line(model: &str, scen: &str, ask: &str) -> String {
+        let given = vec![
+            tally::Given {
+                path: "model.tally".to_owned(),
+                bytes: Some(model.as_bytes().to_vec()),
+            },
+            tally::Given {
+                path: "scen.tally".to_owned(),
+                bytes: Some(scen.as_bytes().to_vec()),
+            },
+        ];
+        let request = tally::Request {
+            asks: tally::Asks::Named(vec![ask.to_owned()]),
+            pin: tally::Pin::Canonical,
+            days: tally::Days::Events,
+        };
+        match tally::run(given, &request) {
+            Ok(answer) => answer
+                .lines()
+                .iter()
+                .find(|line| !line.starts_with("warning:"))
+                .map_or_else(|| "no line".to_owned(), String::clone),
+            Err(_) => "not built".to_owned(),
+        }
+    }
+
+    /// Edits of a base text: each old text and its replacement.
+    type Edits = &'static [(&'static str, &'static str)];
+
+    #[test]
+    fn the_base_names_no_scenario_item_and_load_sees_moves_draws_and_projections() {
+        // A run's first line: refcore's text, or L §8.3's form where the spec wins (#75).
+        let worlds: &[(Edits, Edits, &str, &str)] = &[
+            // read-ask (#75: the spec wins, L §8.3's form)
+            (
+                &[(
+                    "ask q: twice, bal(konto, 2026-12-31) law 2026-03-01",
+                    "ask q: twice, bal(konto, 2026-12-31) law 2026-03-01\n\nask q2: extra law 2027-06-01",
+                )],
+                &[(
+                    "ask q_up: twice in up law 2027-06-01",
+                    "ask q_up: twice in up law 2027-06-01\n\ndef extra: money PLN = amt at reader",
+                )],
+                "q2",
+                "refused: LOAD-SCENARIO extra of scenario up is read outside it (model.tally:21)",
+            ),
+            // read-sum (#75: the spec wins, L §8.3's form)
+            (
+                &[(
+                    "def twice: money PLN = amt + amt at reader",
+                    "def twice: money PLN = amt + extra at reader",
+                )],
+                &[(
+                    "ask q_up: twice in up law 2027-06-01",
+                    "ask q_up: twice in up law 2027-06-01\n\ninput extra: money PLN",
+                )],
+                "q",
+                "refused: LOAD-SCENARIO extra of scenario up is read outside it (model.tally:17)",
+            ),
+            // read-call
+            (
+                &[(
+                    "ask q: twice, bal(konto, 2026-12-31) law 2026-03-01",
+                    "ask q: twice, bal(konto, 2026-12-31) law 2026-03-01\n\nask q2: extra[1] law 2027-06-01",
+                )],
+                &[(
+                    "ask q_up: twice in up law 2027-06-01",
+                    "ask q_up: twice in up law 2027-06-01\n\ninput extra[k in ks]: money PLN\n\nindex ks = int 1..2",
+                )],
+                "q2",
+                "refused: LOAD-SCENARIO extra of scenario up is read outside it (model.tally:21)",
+            ),
+            // read-key
+            (
+                &[
+                    (
+                        "input amt: money PLN",
+                        "input amt: money PLN\n\nindex tags = [extra, other]",
+                    ),
+                    (
+                        "ask q: twice, bal(konto, 2026-12-31) law 2026-03-01",
+                        "ask q: twice, bal(konto, 2026-12-31) law 2026-03-01\n\nask q2: extra law 2027-06-01",
+                    ),
+                ],
+                &[(
+                    "ask q_up: twice in up law 2027-06-01",
+                    "ask q_up: twice in up law 2027-06-01\n\ndef extra: money PLN = amt at reader",
+                )],
+                "zz",
+                "refused: REQ-ASK no ask zz",
+            ),
+            // names-v (#75: the spec wins, L §8.3's form)
+            (
+                &[(
+                    "def twice: money PLN = amt + amt at reader",
+                    "def twice: money PLN at reader\n  rule base v raise = amt + amt",
+                )],
+                &[],
+                "q",
+                "refused: LOAD-SCENARIO twice of the base names raise of scenario up (model.tally:18)",
+            ),
+            // names-replace (#75: the spec wins, L §8.3's form)
+            (
+                &[(
+                    "  opening[konto] = 0 PLN at 2026-01-01 start \"the card\"",
+                    "  opening[konto] = 0 PLN at 2026-01-01 start \"the card\"\n  replace rule twice.base v raise = amt + amt",
+                )],
+                &[],
+                "q",
+                "refused: LOAD-SCENARIO twice of the base names raise of scenario up (model.tally:27)",
+            ),
+            // names-v-none
+            (
+                &[(
+                    "def twice: money PLN = amt + amt at reader",
+                    "def twice: money PLN at reader\n  rule base v nowhere = amt + amt",
+                )],
+                &[],
+                "q",
+                "refused: LOAD-NAME rule twice.base: v nowhere names no version (model.tally:18)",
+            ),
+            // move-early (#75: the spec wins, L §8.3's form)
+            (
+                &[],
+                &[
+                    (
+                        "ask q_up: twice in up law 2027-06-01",
+                        "ask q_up: twice in up law 2027-06-01\n\nindex gm = month 2026-06..2026-06\n\ninput gift_amt: money PLN\n\nmove gift[m in gm]: transfers\n  on start_of(m)\n  leg cash from world to konto amount gift_amt",
+                    ),
+                    (
+                        "  replace amt = 150.00 PLN \"a raise\"",
+                        "  replace amt = 150.00 PLN \"a raise\"\n\nversion gifts\n  cite card\n  governs always\n  known 2026-02-01\n  gift_amt = 10.00 PLN \"a gift\"",
+                    ),
+                ],
+                "q",
+                "scenario up: refused: LOAD-SCENARIO move gift of up books on 2026-06-01, before 2027-01-01 (scen.tally:23)",
+            ),
+            // move-window
+            (
+                &[],
+                &[
+                    (
+                        "ask q_up: twice in up law 2027-06-01",
+                        "ask q_up: twice in up law 2027-06-01\n\nindex gm = month 2026-06..2026-06\n\ninput gift_amt: money PLN\n\nmove gift[m in gm]: transfers\n  on m\n  leg cash from world to konto amount gift_amt",
+                    ),
+                    (
+                        "  replace amt = 150.00 PLN \"a raise\"",
+                        "  replace amt = 150.00 PLN \"a raise\"\n\nversion gifts\n  cite card\n  governs always\n  known 2026-02-01\n  gift_amt = 10.00 PLN \"a gift\"",
+                    ),
+                ],
+                "q",
+                "scenario up: refused: LOAD-UNIT on of move gift is key gm, not a date (scen.tally:23)",
+            ),
+            // move-from
+            (
+                &[],
+                &[
+                    (
+                        "ask q_up: twice in up law 2027-06-01",
+                        "ask q_up: twice in up law 2027-06-01\n\nindex gm = month 2027-01..2027-02\n\ninput gift_amt: money PLN\n\nmove gift[m in gm]: transfers\n  on start_of(m)\n  leg cash from world to konto amount gift_amt",
+                    ),
+                    (
+                        "  replace amt = 150.00 PLN \"a raise\"",
+                        "  replace amt = 150.00 PLN \"a raise\"\n\nversion gifts\n  cite card\n  governs always\n  known 2026-02-01\n  gift_amt = 10.00 PLN \"a gift\"",
+                    ),
+                ],
+                "q",
+                "q: (200.00 PLN, 0.00 PLN)",
+            ),
+            // move-later (#75: the spec wins, L §8.3's form)
+            (
+                &[],
+                &[
+                    (
+                        "ask q_up: twice in up law 2027-06-01",
+                        "ask q_up: twice in up law 2027-06-01\n\nindex gm = month 2027-01..2027-02\n\ninput gift_amt: money PLN\n\nmove gift[m in gm]: transfers\n  on start_of(m - 1)\n  leg cash from world to konto amount gift_amt",
+                    ),
+                    (
+                        "  replace amt = 150.00 PLN \"a raise\"",
+                        "  replace amt = 150.00 PLN \"a raise\"\n\nversion gifts\n  cite card\n  governs always\n  known 2026-02-01\n  gift_amt = 10.00 PLN \"a gift\"",
+                    ),
+                ],
+                "q",
+                "scenario up: refused: LOAD-SCENARIO move gift of up books on 2026-12-01, before 2027-01-01 (scen.tally:23)",
+            ),
+        ];
+        for &(model, scen, ask, expected) in worlds {
+            let line = world_line(&edited(HOME, model), &edited(UP, scen), ask);
+            assert_eq!(line, expected, "{model:?} {scen:?}");
+        }
+        // The load probe's refusal ("loaded" when it loads clean), the same way.
+        let probes: &[(&[(&str, &str)], &str)] = &[
+            // rand-base
+            (&[], "loaded"),
+            // proj-no-at (#75: the spec wins, L §8.3's form)
+            (
+                &[(
+                    "  on start_of(m)\n  leg cash from world",
+                    "  on end_of(m)\n  leg cash from world",
+                )],
+                "LOAD-RANDOM sweep[2026-02] on 2026-02-01: bal(konto, end_of(m)) from start_of(m) reaches random ru after 2026-02-01 with no random clause or query (a.tally:38)",
+            ),
+            // proj-at
+            (
+                &[(
+                    "  on start_of(m)\n  leg cash from world",
+                    "  on end_of(m)\n  at end_of(m)\n  leg cash from world",
+                )],
+                "LOAD-RANDOM sweep[2026-02] on 2026-02-01: bal(konto, end_of(m)) from start_of(m) reaches random ru after 2026-02-01 with no random clause or query (a.tally:39)",
+            ),
+            // proj-at-early
+            (
+                &[(
+                    "  on start_of(m)\n  leg cash from world",
+                    "  on end_of(m)\n  at start_of(m)\n  leg cash from world",
+                )],
+                "loaded",
+            ),
+            // proj-if
+            (
+                &[
+                    (
+                        "  on start_of(m)\n  leg cash from world",
+                        "  on end_of(m)\n  leg cash from world",
+                    ),
+                    (
+                        "amount round(ru, minor(PLN), half-up)",
+                        "amount if pos(m) > 0 then round(ru, minor(PLN), half-up) else 0 PLN",
+                    ),
+                ],
+                "loaded",
+            ),
+            // proj-when
+            (
+                &[
+                    (
+                        "  on start_of(m)\n  leg cash from world",
+                        "  on end_of(m)\n  leg cash from world",
+                    ),
+                    (
+                        "  reads konto\n",
+                        "  reads konto\n  when bal(konto, end_of(m)) from start_of(m) > 0 PLN\n",
+                    ),
+                ],
+                "loaded",
+            ),
+            // proj-after-d
+            (
+                &[(
+                    "  on start_of(m)\n  leg cash from world",
+                    "  on end_of(m) + 1 day\n  leg cash from world",
+                )],
+                "loaded",
+            ),
+            // proj-other-place
+            (
+                &[
+                    (
+                        "  on start_of(m)\n  leg cash from world",
+                        "  on end_of(m)\n  leg cash from world",
+                    ),
+                    (
+                        "place world: outside lives 1900-01-01..",
+                        "place world: outside lives 1900-01-01..\n\nplace spare: accounts PLN lives 2026-01-01..",
+                    ),
+                    ("to konto amount round", "to spare amount round"),
+                ],
+                "loaded",
+            ),
+            // draw-index (#75: the spec wins, L §8.3's form)
+            (
+                &[(
+                    "def nd: dist = discrete(1 for k in slots)",
+                    "def nd: dist = discrete(1 for k in big)",
+                )],
+                "LOAD-RANDOM the draw nd can exceed the last slot of slots (a.tally:29)",
+            ),
+            // draw-binomial
+            (&[("1 .. nd step 1", "1 .. nr step 1")], "loaded"),
+            // draw-binomial-past
+            (
+                &[
+                    ("1 .. nd step 1", "1 .. nr step 1"),
+                    (
+                        "  nr = binomial(3, 0.5) \"the card\"",
+                        "  nr = binomial(4, 0.5) \"the card\"",
+                    ),
+                ],
+                "LOAD-RANDOM the draw nr can exceed the last slot of slots (a.tally:29)",
+            ),
+            // draw-poisson
+            (
+                &[
+                    ("1 .. nd step 1", "1 .. nr step 1"),
+                    (
+                        "  nr = binomial(3, 0.5) \"the card\"",
+                        "  nr = poisson(2) \"the card\"",
+                    ),
+                ],
+                "LOAD-RANDOM the draw nr can exceed the last slot of slots (a.tally:29)",
+            ),
+            // draw-uniform (#75: the spec wins, L §8.3's form)
+            (
+                &[
+                    ("1 .. nd step 1", "1 .. nr step 1"),
+                    (
+                        "  nr = binomial(3, 0.5) \"the card\"",
+                        "  nr = uniform(1, 4) to 1 \"the card\"",
+                    ),
+                ],
+                "LOAD-RANDOM the draw nr can exceed the last slot of slots (a.tally:29)",
+            ),
+            // draw-uniform-in
+            (
+                &[
+                    ("1 .. nd step 1", "1 .. nr step 1"),
+                    (
+                        "  nr = binomial(3, 0.5) \"the card\"",
+                        "  nr = uniform(1, 3) to 1 \"the card\"",
+                    ),
+                ],
+                "loaded",
+            ),
+            // draw-normal (#75: the spec wins, L §8.3's form)
+            (
+                &[
+                    ("1 .. nd step 1", "1 .. nr step 1"),
+                    (
+                        "  nr = binomial(3, 0.5) \"the card\"",
+                        "  nr = normal(2, 1) to 1 \"the card\"",
+                    ),
+                ],
+                "LOAD-RANDOM the draw nr can exceed the last slot of slots (a.tally:29)",
+            ),
+        ];
+        for &(edits, expected) in probes {
+            assert_eq!(refusal(&edited(DRAWS, edits)), expected, "{edits:?}");
         }
     }
 }

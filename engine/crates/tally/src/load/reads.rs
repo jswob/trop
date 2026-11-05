@@ -13,7 +13,8 @@
 //! written by name meets `LOAD-PARTS`.
 
 use super::check::{
-    Checker, Scope, literal_place, move_keys, named_parts, place_section, place_target,
+    Checker, ProjRead, ReadIn, Scope, literal_place, move_keys, named_parts, place_section,
+    place_target,
 };
 use super::types::{Typed, is_date, numcls, refused, text, uerr, unit_type};
 use crate::base::Load;
@@ -204,6 +205,16 @@ impl Checker {
         }
         if !bal.modelled {
             if bal.proj.from.is_some() {
+                if matches!(scope.item.kind, NodeKind::Move | NodeKind::MoveOn)
+                    && scope.read_in != ReadIn::Query
+                {
+                    self.projs.push(ProjRead {
+                        bal: bal.clone(),
+                        holder: scope.item.id.clone(),
+                        target: target.clone(),
+                        at: scope.file_line(),
+                    });
+                }
                 self.proj(m, scope, &bal.proj, target, depth)?;
             } else if day.is_none() {
                 self.graph.balnow.insert(scope.item.clone());

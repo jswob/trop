@@ -12,6 +12,7 @@ use super::keys::{KeyLit, key_order, range_key_of};
 use super::places::Written;
 use super::spans::{governs_span, lspan_to_span};
 use super::steps::{Loader, refuse};
+use super::worlds::no_version;
 use crate::base::Load;
 use crate::model::{
     BandRow, BandTable, Domain, GapRole, IndexForm, KeyVal, NameKind, Pat, Row, RowInstant,
@@ -192,10 +193,8 @@ impl Loader {
                     format!("replace rule {def}.{label} in {vid} names version {v}"),
                 )
             } else {
-                (
-                    Load::Name,
-                    format!("rule {def}.{label}: v {v} names no version"),
-                )
+                let message = format!("rule {def}.{label}: v {v} names no version");
+                no_version(&self.m, def, v, message)
             };
             return Err(refuse(message.0, message.1, file, line));
         }

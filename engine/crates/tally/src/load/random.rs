@@ -4,7 +4,8 @@
 //! Twin: engine/tools/refcore/check2.py (`m_tc_dist`, `m_dist_read_type`, `m_note_read`,
 //! `m_sample_type`, `m_discrete_index`, `m_t_dist`, `m_dist_whole`, `m_dist_affine_syntax`,
 //! `m_t_distfn`, `m_unit_or`, `m_t_query_random`, `m_dist_value_query`, `m_t_crps`,
-//! `m_check_dist_rows`); check.py (`t_query`, its arm over keys).
+//! `m_check_dist_rows`, `dist_support_max`, with `discrete`'s keys and a family's `to u`
+//! seen, issue #75); check.py (`t_query`, its arm over keys).
 //! Invariants: each form is typed in refcore's order with refcore's messages; a type load
 //! doesn't see (`Unseen`) refuses nothing; each read of an input or a def is recorded with
 //! its role for the random cone (`Graph.rand_edges`).
@@ -13,10 +14,13 @@ use super::check::{Checker, Files, ReadIn, Scope, Stands, VarDom};
 use super::exact::Under;
 use super::types::{Typed, converts, is_bool, numcls, refused, uerr, unit_of};
 use crate::base::Load;
-use crate::model::{IndexForm, NameKind, Node, NodeKind, ReadRole, Reality, Shown, Ty, Unit};
+use crate::model::{
+    IndexForm, KeyVal, NameKind, Node, NodeKind, ReadRole, Reality, Shown, Ty, Unit,
+};
+use crate::num::Num;
 use crate::syntax::{
-    Crps, Dist, DistFn, DistFnKind, DistKind, Domain as Written, Expr, Query, QueryFn, RuleValue,
-    Stop, Value,
+    Bind, Crps, Dist, DistFn, DistFnKind, DistKind, Domain as Written, Expr, Lit, Query, QueryFn,
+    RuleValue, Stop, Value,
 };
 use std::collections::BTreeSet;
 
@@ -31,6 +35,83 @@ pub(super) struct QueryAt {
     pub(super) stands: Stands,
     /// The file and line it is written on.
     pub(super) at: (String, u32),
+}
+
+/// A slot key that a range up to a value gives, at a key of an index (refcore's
+/// `draw_keys` entry): a random number of items when the value is random. L §5.16.
+#[derive(Debug, Clone)]
+pub(super) struct DrawKey {
+    /// The range's end, as written: the draw.
+    pub(super) end: Expr,
+    /// The index whose key it is: the slots.
+    pub(super) index: String,
+    /// The file and line it is read on.
+    pub(super) at: (String, u32),
+}
+
+/// How far a distribution written in a row or a rule can draw, as its text shows it.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(super) enum Support {
+    /// Unbounded above.
+    Unbounded,
+    /// Up to a value its text states.
+    UpTo(Num),
+    /// It rests on facts, or the text is no distribution.
+    Unseen,
+}
+
+/// The largest value a distribution written in a row or a rule can draw, where its text shows
+/// it (refcore's `dist_support_max`): literal bounds or, for `discrete`, the largest of its
+/// keys load sees (issue #75); a continuous family is seen through its `to u`. L §5.16.
+pub(super) fn support_max(m: &Reality, value: &Expr) -> Support {
+    let value = if let Expr::To(inner, _) = value {
+        &**inner
+    } else {
+        value
+    };
+    let Expr::Dist(dist) = value else {
+        return Support::Unseen;
+    };
+    let literal = |at: usize| {
+        if let Some(Expr::Lit(Lit::Num(n))) = dist.args.get(at) {
+            Support::UpTo(n.value.clone())
+        } else {
+            Support::Unseen
+        }
+    };
+    match dist.func {
+        DistKind::Poisson
+        | DistKind::Negbin
+        | DistKind::Normal
+        | DistKind::Lognormal
+        | DistKind::Gamma
+        | DistKind::Exponential => Support::Unbounded,
+        DistKind::Binomial => literal(0),
+        DistKind::Uniform => literal(1),
+        DistKind::Discrete => dist
+            .bind
+            .as_ref()
+            .and_then(|bind| discrete_max(m, bind))
+            .map_or(Support::Unseen, Support::UpTo),
+    }
+}
+
+/// The largest key a `discrete` draws, where load sees its keys: an integer index's. A key
+/// list holds names, and a stepped range draws figures of mixed sample types, refused before
+/// (L §5.6, §5.16).
+fn discrete_max(m: &Reality, bind: &Bind) -> Option<Num> {
+    let Written::Name { id, qual: None } = &bind.domain else {
+        return None;
+    };
+    let index = m.indexes.get(id).filter(|index| index.is_int)?;
+    let mut keys = Vec::new();
+    for key in &index.keys {
+        let KeyVal::Int(k) = key else {
+            return None;
+        };
+        keys.push(*k);
+    }
+    keys.into_iter().max().map(Num::int)
 }
 
 /// `num u`.

@@ -111,6 +111,10 @@ pub struct Reality {
     /// The worlds an ask may name: the model, this reality's scenarios and the run's
     /// (refcore's `all_worlds`). L §6.4.
     pub all_worlds: BTreeSet<String>,
+    /// For the base of a run with scenarios, each section id a scenario's file declares, with
+    /// the first such scenario by id (refcore's `declared_ids`): the base names none of them
+    /// (L §6.4, issue #75). Empty for any other load.
+    pub elsewhere: BTreeMap<String, String>,
     /// The asks refused alone, each with its refusal: one that names a world the run doesn't
     /// load (refcore's `asks_alone`). L §6.4, §8.
     pub asks_alone: BTreeMap<String, Refusal>,

@@ -18,6 +18,7 @@ use super::steps::{Loader, num_stop, refuse};
 use super::strata::reaches_mark;
 use super::types::{children, text};
 use super::values::{at_row, row_file};
+use super::worlds::no_version;
 use crate::base::Load;
 use crate::model::{
     DefInfo, Domain, Graph, InputInfo, KeyVal, KindInfo, KindSpec, Labels, NameKind, Node,
@@ -184,12 +185,9 @@ impl Checker {
         if let Some(v) = &takes.v
             && !m.versions.contains(v)
         {
-            return Err(refuse(
-                Load::Name,
-                format!("takes of {}: v {v} names no version", kind.id),
-                file,
-                line,
-            ));
+            let message = format!("takes of {}: v {v} names no version", kind.id);
+            let (code, message) = no_version(m, &kind.id, v, message);
+            return Err(refuse(code, message, file, line));
         }
         for var in [part, outflow] {
             if m.names.contains_key(var) {

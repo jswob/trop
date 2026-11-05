@@ -1,26 +1,33 @@
-//! What load sees, folded at every key: a period lying across two keys, a decision's balance of its own day or later, a schedule giving no date.
+//! What load sees, folded at every key: periods across keys, decisions' days and projections, schedules, scenarios' moves.
 //! Spec: L §4.6 (a period no longer than the keys that no key's period holds is refused at
 //! load where load sees it), §5.14.1 (a decision's plain `bal(x, d)` of its own day or later
 //! is `LOAD-CYCLE` where load sees the day), §4.2 (a schedule that gives no date in the run
-//! is `LOAD-SCHEDULE` where load sees it), §8.3 (`LOAD-KEY` `<period> lies across keys <a>
-//! and <b> of <index>`; item 5, the keys of a declared index; item 9, what load sees).
+//! is `LOAD-SCHEDULE` where load sees it), §5.16 Decisions and projections (a projection a
+//! decision reaches that reads a random amount after its t, with no random clause or query,
+//! is `LOAD-RANDOM` where load sees it), §6.4 (a move a scenario declares books nothing
+//! before D), §8.3 (`LOAD-KEY` `<period> lies across keys <a> and <b> of <index>`; the
+//! forms of `LOAD-RANDOM` and `LOAD-SCENARIO`; item 5, the keys of a declared index; item 9,
+//! what load sees).
 //! Twin: engine/tools/refcore/check.py (`period_conv`, its `period_cands`); check3.py
-//! (`m_check_period_keys`, `m_seen_day`, `FOLD_FNS`, `m_check_seen_days`); moves.py
-//! (`m_check_schedule`, at load by issue #72); evaluate.py (`c_schedule`, the day before
-//! its roll).
+//! (`m_check_period_keys`, `m_seen_day`, `FOLD_FNS`, `m_check_seen_days`,
+//! `m_check_proj_seen`, where a move with no `at` dates its amount by its day, issue #75);
+//! moves.py (`m_check_schedule`, at load by issue #72); evaluate.py (`c_schedule`, the day
+//! before its roll); a scenario's move before its `from` has no twin (issue #75).
 //! Invariants: an expression is folded only where load sees it, from literals and the
 //! reader's own keys of declared indexes through built-ins that read no fact; a fold the
 //! evaluator refuses is left to the value, as refcore leaves it.
 
-use super::check::{DayRead, Files, invariant};
+use super::check::{DayRead, Files, ProjRead, Scope, Stands, Var, VarDom, invariant, place_target};
+use super::cone::all_children;
 use super::steps::refuse;
 use super::types::text;
 use crate::base::{Code, Load};
 use crate::eval::{Ctx, Engine, Env, int_of};
 use crate::model::{
-    BindInfo, Domain, IndexForm, IndexInfo, KeyVal, Node, NodeKind, Reality, Value,
+    BindInfo, Domain, IndexForm, IndexInfo, KeyVal, MoveInfo, NameKind, Node, NodeKind, Reality,
+    Target, Ty, Value,
 };
-use crate::syntax::{Expr, Lit, Stop};
+use crate::syntax::{Expr, Key, LawDate, Lit, Postfix, Stop};
 use crate::time::{Day, Period};
 use std::collections::BTreeSet;
 
@@ -279,6 +286,423 @@ fn scheduled_day(
     };
     let day = Day::from_ymd(start.year(), start.month(), k);
     Ok(Some(day.is_some_and(|day| period.contains(day))))
+}
+
+/// `LOAD-SCENARIO` for a move a scenario's file declares that books before the scenario's
+/// `from` where load sees the day: at a choice of its keys over declared indexes, its `on`
+/// (a window's first day) or a leg's own day falls before it (L §6.4: such a move books
+/// nothing before D; issue #75, where refcore loads it). A fold that gives no day refuses
+/// nothing. L §8.3.
+///
+/// # Errors
+///
+/// The first such move's `LOAD-SCENARIO`, by id, at its line or its leg's; an invariant or
+/// `NotBuilt` the fold meets.
+pub(super) fn check_scenario_moves(m: &Reality, files: &Files) -> Result<(), Stop> {
+    let mut engine = Engine::new(m.on);
+    for (id, mv) in m.moves.entries() {
+        let Some(scenario) = m.scenarios.of(id) else {
+            continue;
+        };
+        let Some(from) = m.scenarios.from.get(scenario).copied() else {
+            continue;
+        };
+        let mut days = vec![(&mv.decl.on, mv.decl.line)];
+        for leg in &mv.decl.legs {
+            if let Some(on) = &leg.on {
+                days.push((on, leg.line));
+            }
+        }
+        days.retain(|(day, _)| seen_day(m, day, &mv.binds));
+        let Some(domains) = bind_keys(m, &mv.binds) else {
+            continue;
+        };
+        let mut at = first_choice(&domains);
+        while let Some(counters) = at {
+            let (_, env) = choice(&mv.binds, &domains, &counters)?;
+            at = next_choice(&counters, &domains)?;
+            if let Some((first, line)) = early_day(&mut engine, m, &days, &env, from)? {
+                let message = format!(
+                    "move {id} of {scenario} books on {}, before {}",
+                    first.text(),
+                    from.text()
+                );
+                return Err(refuse(
+                    Load::Scenario,
+                    message,
+                    files.get("move", id)?,
+                    line,
+                ));
+            }
+        }
+    }
+    Ok(())
+}
+
+/// The first of a move's days, at one choice of keys, that falls before `from`, with its
+/// line. L §6.4.
+fn early_day(
+    engine: &mut Engine,
+    m: &Reality,
+    days: &[(&Expr, u32)],
+    env: &Env,
+    from: Day,
+) -> Result<Option<(Day, u32)>, Stop> {
+    for (day, line) in days {
+        if let Some(first) = first_day(engine, m, day, env)?
+            && first < from
+        {
+            return Ok(Some((first, *line)));
+        }
+    }
+    Ok(None)
+}
+
+/// A day's value at one choice of keys, or a window's first day. L §4.4, §5.14.
+fn first_day(engine: &mut Engine, m: &Reality, day: &Expr, env: &Env) -> Result<Option<Day>, Stop> {
+    Ok(match fold_value(engine, m, day, env)? {
+        Some(Value::Day(d)) => Some(d),
+        Some(Value::Period(period) | Value::Key(KeyVal::Period(period))) => Some(period.start()),
+        Some(_) | None => None,
+    })
+}
+
+/// A read of a random input or def in a random move's leg amount, its keys as written
+/// (refcore's `rreads` entry).
+struct RandomRead {
+    /// The input or def read.
+    id: String,
+    /// Whether it is a def.
+    def: bool,
+    /// Its keys, as written.
+    keys: Vec<Expr>,
+}
+
+/// `LOAD-RANDOM` for a decision's own projection `bal(x, d) from t` that load sees reach a
+/// random amount dated after t: its day, t and d seen at a choice of its keys; a random
+/// movement booking x on a seen day in (t, d], with no `when` and no `if` in its amount; a
+/// random fact its amount reads, at a law date after t (refcore's `m_check_proj_seen`; a move
+/// with no `at` dates its amount by its day, issue #75, where refcore leaves it to the run).
+/// L §5.14.1, §5.16 Decisions and projections, §8.3.
+///
+/// # Errors
+///
+/// `LOAD-RANDOM <decision>[<keys>] on <day>: <projection> reaches random <x>[<keys>] after
+/// <t> with no random clause or query`, at the projection's line; an invariant or `NotBuilt`
+/// a fold meets.
+pub(super) fn check_proj_seen(
+    m: &Reality,
+    projs: &[ProjRead],
+    random: &BTreeSet<Node>,
+) -> Result<(), Stop> {
+    let rmoves: Vec<&MoveInfo> = random
+        .iter()
+        .filter(|node| node.kind == NodeKind::Move)
+        .filter_map(|node| m.moves.get(&node.id))
+        .collect();
+    if rmoves.is_empty() {
+        return Ok(());
+    }
+    let mut engine = Engine::new(m.on);
+    for proj in projs {
+        if let Some(message) = proj_reaches(&mut engine, m, proj, &rmoves)? {
+            return Err(refuse(Load::Random, message, &proj.at.0, proj.at.1));
+        }
+    }
+    Ok(())
+}
+
+/// The refusal's message when load sees `proj` reach a random amount after its t.
+fn proj_reaches(
+    engine: &mut Engine,
+    m: &Reality,
+    proj: &ProjRead,
+    rmoves: &[&MoveInfo],
+) -> Result<Option<String>, Stop> {
+    let Some(mi) = m.moves.get(&proj.holder) else {
+        return Ok(None);
+    };
+    let (Target::Thing(_), Some(from), Some(dn)) =
+        (&proj.target, &proj.bal.proj.from, proj.bal.args.last())
+    else {
+        return Ok(None);
+    };
+    let seen = [&mi.decl.on, from, dn]
+        .iter()
+        .all(|e| seen_day(m, e, &mi.binds));
+    if !mi.decision || mi.decl.when.is_some() || !seen {
+        return Ok(None);
+    }
+    let Some(domains) = bind_keys(m, &mi.binds) else {
+        return Ok(None);
+    };
+    for rm in rmoves {
+        if rm.id == mi.id || !seen_random_move(m, rm) {
+            continue;
+        }
+        let (Some(reads), Some(rdomains)) =
+            (random_reads(m, rm, &proj.target), bind_keys(m, &rm.binds))
+        else {
+            continue;
+        };
+        if reads.is_empty() {
+            continue;
+        }
+        let mut at = first_choice(&domains);
+        while let Some(counters) = at {
+            let (keys, env) = choice(&mi.binds, &domains, &counters)?;
+            at = next_choice(&counters, &domains)?;
+            let days = (
+                fold_day(engine, m, &mi.decl.on, &env)?,
+                fold_day(engine, m, from, &env)?,
+                fold_day(engine, m, dn, &env)?,
+            );
+            let (Some(day), Some(t), Some(d)) = days else {
+                continue;
+            };
+            if day < m.start || day > m.end {
+                continue;
+            }
+            let window = (t, d);
+            let Some((id, rkeys)) = late_read(engine, m, rm, &rdomains, &reads, window)? else {
+                continue;
+            };
+            let shown: Vec<String> = keys.iter().map(KeyVal::text).collect();
+            let message = format!(
+                "{}{} on {}: {} reaches random {id}{} after {} with no random clause or query",
+                mi.id,
+                bracketed(&shown),
+                day.text(),
+                text(&Expr::Bal(Box::new(proj.bal.clone()))),
+                bracketed(&rkeys),
+                t.text()
+            );
+            return Ok(Some(message));
+        }
+    }
+    Ok(None)
+}
+
+/// Keys shown in brackets, or nothing for none.
+fn bracketed(keys: &[String]) -> String {
+    if keys.is_empty() {
+        String::new()
+    } else {
+        format!("[{}]", keys.join(", "))
+    }
+}
+
+/// Whether a random move is one load sees whole: no `when`, its day seen, and its `at`, when
+/// written, seen.
+fn seen_random_move(m: &Reality, rm: &MoveInfo) -> bool {
+    let at_seen = rm
+        .decl
+        .at
+        .as_ref()
+        .is_none_or(|at| seen_day(m, at, &rm.binds));
+    rm.decl.when.is_none() && at_seen && seen_day(m, &rm.decl.on, &rm.binds)
+}
+
+/// The first of `reads`, at a choice of the random move's keys whose day falls in `(t, d]`
+/// within the run, read at a law date after t: its id and its keys' values.
+fn late_read(
+    engine: &mut Engine,
+    m: &Reality,
+    rm: &MoveInfo,
+    rdomains: &[Vec<KeyVal>],
+    reads: &[RandomRead],
+    (t, d): (Day, Day),
+) -> Result<Option<(String, Vec<String>)>, Stop> {
+    let mut at = first_choice(rdomains);
+    while let Some(counters) = at {
+        let (_, renv) = choice(&rm.binds, rdomains, &counters)?;
+        at = next_choice(&counters, rdomains)?;
+        let Some(rday) = fold_day(engine, m, &rm.decl.on, &renv)? else {
+            continue;
+        };
+        let rlaw = match &rm.decl.at {
+            Some(e) => fold_day(engine, m, e, &renv)?,
+            None => Some(rday),
+        };
+        let Some(rlaw) = rlaw else {
+            continue;
+        };
+        if rday <= t || rday > d || rday < m.start || rday > m.end {
+            continue;
+        }
+        for read in reads {
+            let law = law_of(engine, m, read, rlaw, &renv)?;
+            if law.is_none_or(|law| law <= t) {
+                continue;
+            }
+            let mut keys = Vec::new();
+            for key in &read.keys {
+                keys.push(match fold_value(engine, m, key, &renv)? {
+                    Some(value) => value
+                        .text(m)
+                        .map_err(|_| invariant("a key's text".to_owned()))?,
+                    None => text(key),
+                });
+            }
+            return Ok(Some((read.id.clone(), keys)));
+        }
+    }
+    Ok(None)
+}
+
+/// The law date a random read is read at, from its move's law date `rlaw`: a def's `at
+/// reader` takes it, a def's `at e` is e at the read's keys under it, an input takes it; a
+/// def with no `at`, or whose `at` load doesn't see, gives none (refcore's `rreads` laws).
+/// L §4.3.
+fn law_of(
+    engine: &mut Engine,
+    m: &Reality,
+    read: &RandomRead,
+    rlaw: Day,
+    renv: &Env,
+) -> Result<Option<Day>, Stop> {
+    if !read.def {
+        return Ok(Some(rlaw));
+    }
+    let Some(info) = m.defs.get(&read.id) else {
+        return Ok(None);
+    };
+    let e = match &info.at {
+        None => return Ok(None),
+        Some(LawDate::Reader) => return Ok(Some(rlaw)),
+        Some(LawDate::Expr(e)) => e,
+    };
+    if !seen_day(m, e, &info.binds) {
+        return Ok(None);
+    }
+    let mut env = Env::empty();
+    for (bind, key) in info.binds.iter().zip(&read.keys) {
+        let Some(value) = fold_value(engine, m, key, renv)? else {
+            return Ok(None);
+        };
+        env = env.with(&bind.var, value, Some(bind.domain.clone()));
+    }
+    match engine.ev(m, e, &env, Ctx::new(Some(rlaw), m.on)) {
+        Ok(Value::Day(law)) => Ok(Some(law)),
+        Ok(_) => Ok(None),
+        Err(Stop::Refused(r)) if r.code() != Code::EngineInvariant => Ok(None),
+        Err(stop) => Err(stop),
+    }
+}
+
+/// The reads of random inputs and defs in the amounts of a random move's legs that book
+/// `target`, or `None` where load doesn't see them whole: an `if` in the amount, or a key it
+/// doesn't see (refcore's `rreads`). A read as a distribution, `cdf`'s value, is no sample.
+fn random_reads(m: &Reality, rm: &MoveInfo, target: &Target) -> Option<Vec<RandomRead>> {
+    let mut scope = Scope::new(Node::new(NodeKind::Move, &rm.id), Stands::Rule, "", 0);
+    for bind in &rm.binds {
+        let var = Var {
+            name: bind.var.clone(),
+            ty: Ty::Unseen,
+            dom: VarDom::Arg,
+            keylist: Vec::new(),
+            id: 0,
+            end: None,
+        };
+        scope.vars.insert(bind.var.clone(), var);
+    }
+    let mut out = Vec::new();
+    for leg in &rm.decl.legs {
+        let books = place_target(m, &scope, &leg.from) == *target
+            || place_target(m, &scope, &leg.to) == *target;
+        if !books {
+            continue;
+        }
+        let mut stack = vec![&leg.amount];
+        while let Some(x) = stack.pop() {
+            if matches!(x, Expr::If(_)) {
+                return None;
+            }
+            if let Expr::DistFn(f) = x
+                && matches!(dist_read(m, &scope, &f.value), AmountNode::Random(_))
+            {
+                stack.push(&f.at);
+                continue;
+            }
+            match dist_read(m, &scope, x) {
+                AmountNode::Unseen => return None,
+                AmountNode::Random(read) => {
+                    if !read.keys.iter().all(|key| seen_day(m, key, &rm.binds)) {
+                        return None;
+                    }
+                    stack.extend(key_exprs(x).into_iter().rev());
+                    out.push(read);
+                }
+                AmountNode::Other => stack.extend(all_children(x).into_iter().rev()),
+            }
+        }
+    }
+    Some(out)
+}
+
+/// The key expressions of a read `x[k, …]`, none for a bare name.
+fn key_exprs(x: &Expr) -> Vec<&Expr> {
+    let Expr::Post(_, posts) = x else {
+        return Vec::new();
+    };
+    let [Postfix::Keys(keys)] = posts.as_slice() else {
+        return Vec::new();
+    };
+    keys.iter()
+        .filter_map(|key| match key {
+            Key::Expr(e) => Some(e),
+            Key::Star => None,
+        })
+        .collect()
+}
+
+/// What a node of a leg's amount is to the projection check.
+enum AmountNode {
+    /// A read of a random input or def.
+    Random(RandomRead),
+    /// A read at `*`, which load doesn't see.
+    Unseen,
+    /// Any other node.
+    Other,
+}
+
+/// A node of a leg's amount: a read of a random input or def, `x` or `x[k, …]`, or not.
+fn dist_read(m: &Reality, scope: &Scope, x: &Expr) -> AmountNode {
+    let (name, keys) = if let Expr::Name(name) = x {
+        (name, Vec::new())
+    } else if let Expr::Post(base, posts) = x
+        && let (Expr::Name(name), [Postfix::Keys(keys)]) = (&**base, posts.as_slice())
+    {
+        let mut exprs = Vec::new();
+        for key in keys {
+            let Key::Expr(e) = key else {
+                return AmountNode::Unseen;
+            };
+            exprs.push(e.clone());
+        }
+        (name, exprs)
+    } else {
+        return AmountNode::Other;
+    };
+    if scope.is_var(name) {
+        return AmountNode::Other;
+    }
+    let kind = m.names.get(name.as_str()).copied();
+    let ty = if kind == Some(NameKind::Input) {
+        m.inputs.get(name).and_then(|input| input.ty.as_ref())
+    } else if kind == Some(NameKind::Def) {
+        m.defs.get(name).map(|def| &def.ty)
+    } else {
+        None
+    };
+    if !matches!(ty, Some(Ty::Dist(_) | Ty::DistKeys(_))) {
+        return AmountNode::Other;
+    }
+    AmountNode::Random(RandomRead {
+        id: name.clone(),
+        def: kind == Some(NameKind::Def),
+        keys,
+    })
 }
 
 /// An expression with its outer brackets taken off (refcore's `strip`).
