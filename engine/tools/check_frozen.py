@@ -44,6 +44,7 @@ OUTSIDE = [
     ".claude/settings.json",
     ".claude/skills/engine-rust",
     ".claude/agents/engine-reviewer.md",
+    ".ignore",
 ]
 LOCAL_SETTINGS = ".claude/settings.local.json"
 

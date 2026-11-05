@@ -1,0 +1,9 @@
+# The seal (engine/RULEBOOK.md R-79, the retro after M0, decision 9): ripgrep, fd and the
+# Grep tool read this file and skip what it lists: the hidden keys
+# (engine/tests/cases/*-hidden.md) and the sealed folders (tmp/holdout/, tmp/cases-holdout/).
+# Unanchored on purpose: ripgrep run from a subfolder misses an anchored line of a parent
+# folder's ignore file. The guard refuses the searches that skip this file (rg -u,
+# --no-ignore, a positive -g glob) or read none (grep -r, find, ls -R, git grep).
+*-hidden.md
+holdout/
+cases-holdout/

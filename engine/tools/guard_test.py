@@ -78,6 +78,7 @@ EDITS = [
     ("engine/crates/tally/benches/p8_m1.rs", RULES),
     (".github/workflows/engine.yml", RULES),
     (".claude/settings.json", RULES),
+    (".ignore", RULES),
     # the builder's instructions (F-23)
     ("engine/CLAUDE.md", RULES),
     (".claude/skills/engine-rust/SKILL.md", RULES),
@@ -494,6 +495,73 @@ BASH = [
     ("echo x > tmp/notes/link-to-active/x.md", MASTER, ""),
     ("echo x > tmp/notes/link-to-holdout/x.md", MASTER, ""),
     ("echo x > tmp/notes/link-to-spec.md", SPEC, ""),
+    # the seal (R-79, the retro after M0, decision 9): a search or listing that reaches the
+    # sealed folders (here tmp/cases-holdout/, planted) or the hidden keys
+    # (engine/tests/cases/*-hidden.md, planted) without excluding them is refused in every
+    # role; the root .ignore keeps a plain rg off them, and a glob overrides it
+    ("grep -rn needle .", set(), ""),
+    ("grep -r needle", set(), ""),
+    ("grep -rn needle engine", set(), ""),
+    ("grep -Rl needle engine/tests", set(), ""),
+    ("grep -rn needle engine --exclude-dir=cases-holdout", set(), ""),
+    ("grep -rn needle . --exclude='*-hidden.md'", set(), ""),
+    ("grep -rnl needle .", set(), "engine/tests"),
+    ("cd engine/tests && grep -rn needle .", set(), ""),
+    ("grep -d recurse needle engine", set(), ""),
+    ("rg -u needle", set(), ""),
+    ("rg --no-ignore needle engine", set(), ""),
+    ("rg --no-ignore-dot -n needle engine/tests", set(), ""),
+    ("rg -g '*.md' needle", set(), ""),
+    ("rg --glob='*.md' -l needle engine", set(), ""),
+    ("rg -u -g '!cases/*-hidden.md' needle engine", set(), ""),  # P9: a glob with a / is anchored at the root
+    ("rg -uu --files", set(), ""),
+    ("fd -u hidden", set(), ""),
+    ("fd -I needle engine", set(), ""),
+    ("find . -name '*.md'", set(), ""),
+    ("find tmp -type f", set(), ""),
+    ("find engine -name '*.md' -exec grep -l needle {} +", set(), ""),
+    ("ls -R", set(), ""),
+    ("ls -laR tmp", set(), ""),
+    ("git grep needle", set(), ""),
+    ("git grep -n needle -- engine/tests", set(), ""),
+    ("git grep -n needle -- ':!*.rs'", set(), ""),
+    ("git -C engine grep -l needle", set(), ""),
+    ("grep needle engine/tests/cases/*.md", MASTER - LEAD, ""),
+    ("grep -n needle engine/tests/cases/a-hidden.md", MASTER - LEAD, ""),
+    ("cat engine/tests/cases/a-hidden.md", MASTER - LEAD, ""),
+    ("head -5 cases/a-hidden.md", MASTER - LEAD, "engine/tests"),
+    ("cat tmp/cases-holdout/key.md", MASTER - LEAD, ""),
+    ("grep -rn needle tmp/cases-holdout", MASTER - LEAD, ""),
+    ("ls -R tmp/cases-holdout", MASTER - LEAD, ""),
+    # what stays open: a search that excludes them, or doesn't reach them; listing the
+    # cases' names; hashing the hidden keys (TESTS.sha256), which isn't a search
+    ("grep -rn needle engine/crates", ALL, ""),
+    ("grep -rn needle engine --exclude='*-hidden.md'", ALL, ""),
+    ("grep -rn --exclude=*-hidden.md needle engine/tests", ALL, ""),
+    ("grep -rn needle . --exclude='*-hidden.md' --exclude-dir=cases-holdout --exclude-dir=holdout", ALL, ""),
+    ("grep -rn needle . --exclude-dir=tmp --exclude-dir=cases", ALL, ""),
+    ("grep -rn --include='*.rs' needle engine", ALL, ""),
+    ("rg needle", ALL, ""),
+    ("rg -n needle engine/tests", ALL, ""),
+    ("rg -g '*.rs' needle engine", ALL, ""),
+    ("rg -u -g '!**/*-hidden.md' -g '!tmp' needle", ALL, ""),
+    ("rg -u -g '!*-hidden.md' needle engine", ALL, ""),
+    ("fd -u -E '*-hidden.md' -E tmp needle", ALL, ""),
+    ("fd needle", ALL, ""),
+    ("find engine -name '*.rs'", ALL, ""),
+    ("find . -path ./tmp -prune -o -name '*.md' -print", ALL, ""),
+    ("find . -name tmp -prune -o -type f -print", ALL, ""),
+    ("find . -not -path '*/tmp/*' -name '*.md'", ALL, ""),
+    ("find . -maxdepth 1", ALL, ""),
+    ("ls -R engine/crates", ALL, ""),
+    ("ls engine/tests/cases", ALL, ""),
+    ("ls tmp", ALL, ""),
+    ("git grep needle -- ':!*-hidden.md'", ALL, ""),
+    ("git grep -n needle -- engine/crates", ALL, ""),
+    ("git grep needle -- . ':(exclude)engine/tests/cases/*-hidden.md'", ALL, ""),
+    ("cat engine/tests/cases/a.md", ALL, ""),
+    ("grep -n needle engine/tests/cases/a.md", ALL, ""),
+    ("shasum -a 256 engine/tests/cases/*.md", ALL, ""),
 ]
 
 
@@ -827,7 +895,8 @@ def worktree_done_checks(root, expect, failures):
 
 
 def setup(root):
-    for d in ("engine/tools", "engine/spec", "engine/tests/runner", "engine/crates/tally/src",
+    for d in ("engine/tools", "engine/spec", "engine/tests/runner", "engine/tests/cases", "tmp/cases-holdout",
+              "engine/crates/tally/src",
               "engine/crates/tally/benches", "engine/crates/tally-cli/src", "engine/fuzz", "engine/target", ".claude"):
         os.makedirs(os.path.join(root, d), exist_ok=True)
     for name in ("guard", "guard.py", "stop-check", "stop_check.py", "merge-pr", "merge_pr.py", "worktree-done", "worktree_done.py"):
@@ -848,6 +917,10 @@ def setup(root):
         # commit messages for R-100 (F-8)
         "engine/target/msg-ai.txt": "Add the parser\n\nCo-Authored-By: Claude <noreply@anthropic.com>\n",
         "engine/target/msg-ok.txt": "Add the parser\n",
+        # the seal's planted places (R-79, decision 9): never the real sealed files
+        "engine/tests/cases/a.md": "a case\n",
+        "engine/tests/cases/a-hidden.md": "a planted hidden key\n",
+        "tmp/cases-holdout/key.md": "a planted sealed record\n",
     }
     for path, text in files.items():
         with open(os.path.join(root, path), "w", encoding="utf-8") as f:
@@ -1003,6 +1076,11 @@ def main():
                     expect(f"Bash `{command}` as {role}", code, 2, err)
             for tree in (linked, nested):
                 subprocess.run([*git, "worktree", "remove", "--force", tree], check=False)
+        # the seal's ignore file lists the three places, unanchored (R-79, decision 9)
+        with open(os.path.join(REPO, ".ignore"), encoding="utf-8") as f:
+            listed = {line.strip() for line in f if line.strip() and not line.startswith("#")}
+        expect("the repo's .ignore lists *-hidden.md, holdout/ and cases-holdout/",
+               int({"*-hidden.md", "holdout/", "cases-holdout/"} <= listed), 1)
         # the lead's tools themselves (issue #18)
         merge_pr_checks(root, expect, failures)
         worktree_done_checks(root, expect, failures)
