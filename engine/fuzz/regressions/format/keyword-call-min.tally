@@ -1,0 +1,15 @@
+model m
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+unit DUK: currency minor 0.01
+
+input gross: money DUK
+
+def contrib: money DUK = round(gross, mi.or(DUK), half-up)
+
+def other: money DUK = round(gross, mi.and(DUK), half-up)
+
+def third: money DUK = round(gross, mi.min(DUK), half-up)
