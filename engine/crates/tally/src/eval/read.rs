@@ -639,6 +639,7 @@ impl ConvertFor {
             | Ty::None
             | Ty::Hole
             | Ty::Never
+            | Ty::DistKeys(_)
             | Ty::KindName => Vec::new(),
         };
         ConvertFor {
@@ -939,6 +940,7 @@ fn word_value(m: &Reality, lit: &Lit, text: &str, ty: &Ty) -> Result<Value, Stop
         | Ty::None
         | Ty::Hole
         | Ty::Never
+        | Ty::DistKeys(_)
         | Ty::KindName => Err(wrong_for(text, ty)),
     }
 }
@@ -1048,6 +1050,7 @@ fn convert_number(
         | Ty::None
         | Ty::Hole
         | Ty::Never
+        | Ty::DistKeys(_)
         | Ty::KindName => Err(wrong_number(n, ty)),
     }
 }

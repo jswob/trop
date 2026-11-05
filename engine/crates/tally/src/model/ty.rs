@@ -93,6 +93,9 @@ pub enum Ty {
     Rate,
     /// `dist u`.
     Dist(Unit),
+    /// A `discrete` distribution over the keys of an index, shown `dist` (refcore's `dist`
+    /// type with its `ix`). L §5.16.
+    DistKeys(String),
     /// `calendar`.
     Calendar,
     /// A code type.
@@ -135,7 +138,10 @@ impl PartialEq for Ty {
     fn eq(&self, other: &Ty) -> bool {
         match (self, other) {
             (Ty::Num(a, _), Ty::Num(b, _)) | (Ty::Dist(a), Ty::Dist(b)) => a == b,
-            (Ty::Money(a), Ty::Money(b)) | (Ty::Key(a), Ty::Key(b)) => a == b,
+            (Ty::Money(a), Ty::Money(b))
+            | (Ty::Key(a), Ty::Key(b))
+            | (Ty::DistKeys(a), Ty::DistKeys(b)) => a == b,
+            (Ty::DistKeys(_), _) | (_, Ty::DistKeys(_)) => false,
             (Ty::Period(a), Ty::Period(b)) => a == b,
             (Ty::Code(a), Ty::Code(b)) => a == b,
             (Ty::Record(a), Ty::Record(b)) => a == b,
@@ -169,7 +175,7 @@ impl Ty {
             Ty::Period(_) => "period",
             Ty::Key(_) => "key",
             Ty::Rate => "rate",
-            Ty::Dist(_) => "dist",
+            Ty::Dist(_) | Ty::DistKeys(_) => "dist",
             Ty::Calendar => "calendar",
             Ty::Code(_) => "code",
             Ty::MonthDay => "mmdd",
@@ -242,6 +248,7 @@ impl Ty {
             | Ty::None
             | Ty::Hole
             | Ty::Never
+            | Ty::DistKeys(_)
             | Ty::KindName => self.word().to_owned(),
         }
     }

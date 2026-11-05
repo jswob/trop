@@ -12,7 +12,7 @@
 //! reader's own keys of declared indexes through built-ins that read no fact; a fold the
 //! evaluator refuses is left to the value, as refcore leaves it.
 
-use super::check::{DayRead, Files};
+use super::check::{DayRead, Files, invariant};
 use super::steps::refuse;
 use super::types::text;
 use crate::base::{Code, Load};
@@ -22,6 +22,7 @@ use crate::model::{
 };
 use crate::syntax::{Expr, Lit, Stop};
 use crate::time::{Day, Period};
+use std::collections::BTreeSet;
 
 /// The built-ins a seen day is folded through: they read no fact (check3.py's `FOLD_FNS`).
 const FOLD_FNS: [&str; 9] = [
@@ -54,6 +55,12 @@ pub(super) struct PeriodRead {
 /// every key of the reader's bindings in their order (refcore's `m_check_period_keys`).
 /// L §4.6, §8.3.
 ///
+/// The fold reads only the bindings the period names (`seen_day` admits no other name), so
+/// it is folded at each choice of their keys alone, in the bindings' order: the product's
+/// first choice that refuses holds every other binding at its first key, and the refusal
+/// names the period and the index's keys, never the reader's. A reader over several indexes
+/// has millions of choices, a period one or two of its bindings.
+///
 /// # Errors
 ///
 /// The first such period's `LOAD-KEY`; an invariant or `NotBuilt` the fold meets.
@@ -75,14 +82,48 @@ pub(super) fn check_period_keys(m: &Reality, reads: &[PeriodRead]) -> Result<(),
         let Some(domains) = bind_keys(m, &binds) else {
             continue;
         };
-        for env in products(&binds, &domains) {
-            let Some(period) = fold(&mut engine, m, &read.key, &env)? else {
-                continue;
-            };
-            across(&keys, period, read)?;
+        if first_choice(&domains).is_none() {
+            continue;
+        }
+        let names = day_names(&read.key);
+        let mut named = Vec::new();
+        let mut named_keys = Vec::new();
+        for (bind, bound) in binds.into_iter().zip(domains) {
+            if names.contains(bind.var.as_str()) {
+                named.push(bind);
+                named_keys.push(bound);
+            }
+        }
+        let mut at = first_choice(&named_keys);
+        while let Some(counters) = at {
+            let (_, env) = choice(&named, &named_keys, &counters)?;
+            if let Some(period) = fold(&mut engine, m, &read.key, &env)? {
+                across(&keys, period, read)?;
+            }
+            at = next_choice(&counters, &named_keys)?;
         }
     }
     Ok(())
+}
+
+/// The names a day or period load sees reads, its bound variables, on `seen_day`'s walk.
+/// L §8.3 item 9.
+fn day_names(e: &Expr) -> BTreeSet<&str> {
+    let mut names = BTreeSet::new();
+    let mut stack = vec![e];
+    while let Some(node) = stack.pop() {
+        if let Expr::Name(name) = node {
+            names.insert(name.as_str());
+        } else if let Expr::Call(call) = node {
+            stack.extend(call.args.iter());
+        } else if let Expr::Sum(first, rest) = node {
+            stack.push(first);
+            stack.extend(rest.iter().map(|(_, term)| term));
+        } else if let Expr::Neg(inner) = node {
+            stack.push(inner);
+        }
+    }
+    names
 }
 
 /// `LOAD-CYCLE` for a decision's plain `bal(x, d)` whose day load sees: folded at every key
@@ -106,7 +147,10 @@ pub(super) fn check_seen_days(m: &Reality, reads: &[DayRead], files: &Files) -> 
         let Some(domains) = index_keys(m, &mv.binds) else {
             continue;
         };
-        for (keys, env) in choices(&mv.binds, &domains) {
+        let mut at = first_choice(&domains);
+        while let Some(counters) = at {
+            let (keys, env) = choice(&mv.binds, &domains, &counters)?;
+            at = next_choice(&counters, &domains)?;
             let (Some(day), Some(d)) = (
                 fold_day(&mut engine, m, on, &env)?,
                 fold_day(&mut engine, m, &read.day, &env)?,
@@ -176,16 +220,18 @@ pub(super) fn check_schedules(m: &Reality, files: &Files) -> Result<(), Stop> {
         let Some(domains) = bind_keys(m, &mv.binds) else {
             continue;
         };
-        let tuples = products(&mv.binds, &domains);
-        if tuples.is_empty() {
+        let mut at = first_choice(&domains);
+        if at.is_none() {
             continue;
         }
         let mut dated = false;
-        for env in &tuples {
-            if scheduled_day(&mut engine, m, p, e, env)? != Some(false) {
+        while let Some(counters) = at {
+            let (_, env) = choice(&mv.binds, &domains, &counters)?;
+            if scheduled_day(&mut engine, m, p, e, &env)? != Some(false) {
                 dated = true;
                 break;
             }
+            at = next_choice(&counters, &domains)?;
         }
         if !dated {
             let message = format!(
@@ -360,31 +406,50 @@ fn index_keys(m: &Reality, binds: &[BindInfo]) -> Option<Vec<Vec<KeyVal>>> {
     Some(out)
 }
 
-/// Every choice of one key per binding, the last binding's key turning fastest (Python's
-/// `itertools.product`), each as the scope it binds.
-fn products(binds: &[BindInfo], domains: &[Vec<KeyVal>]) -> Vec<Env> {
-    choices(binds, domains)
-        .into_iter()
-        .map(|(_, env)| env)
-        .collect()
+/// The first choice of one key per binding, a counter per binding at its first key, or
+/// `None` when a binding ranges over no key, so there is no choice (Python's
+/// `itertools.product`). The product is walked one choice at a time, never held whole: a
+/// reader over several indexes has millions of choices.
+fn first_choice(domains: &[Vec<KeyVal>]) -> Option<Vec<usize>> {
+    if domains.iter().any(Vec::is_empty) {
+        return None;
+    }
+    Some(vec![0; domains.len()])
 }
 
-/// Every choice of one key per binding, as `products`, each with its keys.
-fn choices(binds: &[BindInfo], domains: &[Vec<KeyVal>]) -> Vec<(Vec<KeyVal>, Env)> {
-    let mut out = vec![(Vec::new(), Env::empty())];
-    for (bind, keys) in binds.iter().zip(domains) {
-        let mut next = Vec::new();
-        for (chosen, env) in &out {
-            for key in keys {
-                let mut more = chosen.clone();
-                more.push(key.clone());
-                let scope = env.with(&bind.var, Value::of_key(key), Some(bind.domain.clone()));
-                next.push((more, scope));
-            }
+/// The choice after `at`, the last binding's key turning fastest (Python's
+/// `itertools.product`), or `None` after the last.
+fn next_choice(at: &[usize], domains: &[Vec<KeyVal>]) -> Result<Option<Vec<usize>>, Stop> {
+    let mut next = at.to_vec();
+    for (slot, keys) in next.iter_mut().zip(domains).rev() {
+        let turned = slot
+            .checked_add(1)
+            .ok_or_else(|| invariant("a key counter past usize".to_owned()))?;
+        if turned < keys.len() {
+            *slot = turned;
+            return Ok(Some(next));
         }
-        out = next;
+        *slot = 0;
     }
-    out
+    Ok(None)
+}
+
+/// The keys of choice `at`, one per binding, and the scope they bind.
+fn choice(
+    binds: &[BindInfo],
+    domains: &[Vec<KeyVal>],
+    at: &[usize],
+) -> Result<(Vec<KeyVal>, Env), Stop> {
+    let mut keys = Vec::new();
+    let mut env = Env::empty();
+    for ((bind, domain), index) in binds.iter().zip(domains).zip(at) {
+        let key = domain
+            .get(*index)
+            .ok_or_else(|| invariant("a key counter past its index".to_owned()))?;
+        env = env.with(&bind.var, Value::of_key(key), Some(bind.domain.clone()));
+        keys.push(key.clone());
+    }
+    Ok((keys, env))
 }
 
 /// An expression's value at one choice of keys; a refusal leaves it to the value at run
@@ -466,5 +531,5 @@ fn length(period: Period) -> Result<i64, Stop> {
     period
         .start()
         .days_to(period.end())
-        .ok_or_else(|| super::check::invariant("a period's days past an i64".to_owned()))
+        .ok_or_else(|| invariant("a period's days past an i64".to_owned()))
 }

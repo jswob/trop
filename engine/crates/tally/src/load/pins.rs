@@ -313,7 +313,7 @@ fn axis_pin(m: &Reality, sc: &Scope, target: &PRef, value: &Expr) -> Result<(), 
 /// A bare figure in a pin takes its target's declared type and unit: the literal rule, a
 /// fraction only in rows, a rate states its period, an int is whole, money no finer than its
 /// minor unit (refcore's `pin_literal`). L §3.2 Inline figures, §7.1.
-fn pin_literal(m: &Reality, sc: &Scope, node: &Expr, ty: &Ty) -> Result<bool, Stop> {
+pub(super) fn pin_literal(m: &Reality, sc: &Scope, node: &Expr, ty: &Ty) -> Result<bool, Stop> {
     if !matches!(ty, Ty::Money(_) | Ty::Num(..) | Ty::Int | Ty::Rate) {
         return Ok(false);
     }

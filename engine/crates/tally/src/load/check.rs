@@ -21,6 +21,7 @@ use super::keys::keyed_place_thing;
 use super::moves::{own_day_reads, settlements};
 use super::pins::{UNLOADED, unloaded_world};
 use super::prices::price_twice;
+use super::random::{QueryAt, dist_whole};
 use super::reads::{is_move_type, is_place_type};
 use super::types::{
     children, covered_spans, is_bool, is_date, key_value_kind, lit_rule, refused, uerr,
@@ -170,6 +171,22 @@ pub(super) struct Scope {
     /// The key variables a condition tests here: a rule's `when` and its beaters', or the
     /// left of an `and`, or an `if`'s condition (refcore's `Scope.guards`). L §5.11.
     pub(super) guards: BTreeSet<String>,
+    /// How a read of a random fact is taken here: plainly (its sample), as the distribution
+    /// (refcore's `dist_role`, which a child scope drops), or inside a query over random
+    /// values (refcore's `in_query`, which a child keeps and which outranks the role).
+    /// L §5.16.
+    pub(super) read_in: ReadIn,
+}
+
+/// How a read of a random fact is taken in a scope (refcore's `dist_role`, `in_query`).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) enum ReadIn {
+    /// Its sample on the path.
+    Plain,
+    /// Its distribution.
+    Dist,
+    /// Inside a query over random values.
+    Query,
 }
 
 impl Scope {
@@ -188,7 +205,28 @@ impl Scope {
             in_when: false,
             covered: BTreeSet::new(),
             guards: BTreeSet::new(),
+            read_in: ReadIn::Plain,
         }
+    }
+
+    /// A child of this scope, as refcore's `child`: no figure allowed, no dist role.
+    pub(super) fn child(&self) -> Scope {
+        let mut scope = self.clone();
+        scope.allow_lit = false;
+        if scope.read_in == ReadIn::Dist {
+            scope.read_in = ReadIn::Plain;
+        }
+        scope
+    }
+
+    /// This scope where a dist-typed read is the distribution, unless it is inside a query
+    /// (refcore's `tc_dist`). L §5.16.
+    pub(super) fn dist_scope(&self) -> Scope {
+        let mut scope = self.child();
+        if scope.read_in == ReadIn::Plain {
+            scope.read_in = ReadIn::Dist;
+        }
+        scope
     }
 
     /// This scope, its expression on another line of the same file.
@@ -230,6 +268,9 @@ impl Scope {
         let mut scope = self.clone();
         scope.under = Under::Aggregate;
         scope.allow_lit = false;
+        if scope.read_in == ReadIn::Dist {
+            scope.read_in = ReadIn::Plain;
+        }
         scope
     }
 
@@ -339,6 +380,11 @@ pub(super) struct Walked {
     pub(super) day_reads: Vec<DayRead>,
     /// The asks refused alone, with their refusals (refcore's `asks_alone`). L §6.4, §8.
     pub(super) alone: BTreeMap<String, Refusal>,
+    /// The queries and path scores over random values, in the order typed (refcore's
+    /// `queries`). L §5.16.
+    pub(super) queries: Vec<QueryAt>,
+    /// The items that hold `crps` or `pdf` (refcore's `orient_items`). L §5.15.
+    pub(super) orient_items: BTreeSet<Node>,
 }
 
 /// The checker's state over the walk (refcore's `Checker`).
@@ -376,6 +422,17 @@ pub(super) struct Checker {
     day_reads: Vec<DayRead>,
     /// The fills: each one's sides, typed once (refcore's `fill_infos`).
     pub(super) fill: FillState,
+    /// Whether the next of `to u`'s forms typed stands under it (refcore's `_under_to`).
+    pub(super) under_to: bool,
+    /// The random value X of an affine form under `cdf`, `pdf` or `pmf`, until typed
+    /// (refcore's `_affx`).
+    pub(super) aff_x: Option<Expr>,
+    /// Whether the node being typed is that X.
+    pub(super) affx_hit: bool,
+    /// The queries and path scores over random values, in the order typed.
+    pub(super) queries: Vec<QueryAt>,
+    /// The items that hold `crps` or `pdf`.
+    pub(super) orient_items: BTreeSet<Node>,
 }
 
 /// One level deeper into an expression, refused as an invariant past the count (R-16).
@@ -452,6 +509,7 @@ pub(super) fn walk(m: &Reality, sections: &[(String, Section)]) -> Result<Walked
         }
     }
     checker.prices_by(m, &files)?;
+    checker.check_dist_rows(m, &files)?;
     checker.year4_finish()?;
     checker.kl_finish(m)?;
     inline_fill_edges(&mut checker.graph);
@@ -466,6 +524,8 @@ pub(super) fn walk(m: &Reality, sections: &[(String, Section)]) -> Result<Walked
         ask_reads: checker.ask_reads,
         day_reads: checker.day_reads,
         alone,
+        queries: checker.queries,
+        orient_items: checker.orient_items,
     })
 }
 
@@ -889,10 +949,21 @@ impl Checker {
     ) -> Result<(), Stop> {
         match value {
             RuleValue::Hole(_) => Ok(()),
-            RuleValue::Solve(_) => Err(Stop::NotBuilt("`solve`")),
+            RuleValue::Solve(solve) => {
+                if !scope.cited {
+                    let message = "solve outside an ask (allowed in a rule with v)".to_owned();
+                    return Err(scope.place(refused(Load::AskOnly, message)));
+                }
+                self.check_solve(m, scope, solve, 0)
+                    .map(|_| ())
+                    .map_err(|stop| scope.place(stop))
+            }
             RuleValue::Expr(e) => {
                 if matches!(ty, Ty::Dist(_)) {
-                    return self.expr(m, scope, e, None, 0).map(|_| ());
+                    let t = self.expr(m, &scope.dist_scope(), e, Some(ty), 0)?;
+                    self.assign(m, scope, ty, e, &t, what)
+                        .map_err(|stop| scope.place(stop))?;
+                    return dist_whole(e, what).map_err(|stop| scope.place(stop));
                 }
                 let t = self.expr(m, scope, e, Some(ty), 0)?;
                 self.assign(m, scope, ty, e, &t, what)
@@ -1006,7 +1077,10 @@ impl Checker {
                 }
                 Ok(())
             }
-            AskBody::Solve(_) => Err(Stop::NotBuilt("`solve`")),
+            AskBody::Solve(solve) => self
+                .check_solve(m, scope, solve, 0)
+                .map(|_| ())
+                .map_err(|stop| scope.place(stop)),
             AskBody::Diff(diff) => {
                 for world in [&diff.world, &diff.against] {
                     if !m.all_worlds.contains(world) {

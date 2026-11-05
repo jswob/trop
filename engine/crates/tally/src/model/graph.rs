@@ -174,6 +174,20 @@ impl Rel {
     }
 }
 
+/// How an item reads a random fact or another item, for the random cone (refcore's
+/// `rand_edges` roles). L §5.16.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ReadRole {
+    /// A sample of a random fact, on the path.
+    Sample,
+    /// A random fact's distribution, the same on every path.
+    Dist,
+    /// A read inside a query over random values, taken over the paths.
+    Query,
+    /// A plain read of an input or a def.
+    Value,
+}
+
 /// A running read or a projection, the mark E §3.1 step 7 propagates.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Mark {
@@ -273,9 +287,25 @@ pub struct Graph {
     /// The axes each ask reaches that its pins don't fix: each one forks its answer
     /// (refcore's `a._axes`). L §5.5.
     pub ask_axes: BTreeMap<String, BTreeSet<String>>,
+    /// Each item's reads of inputs and defs by role: a sample, a distribution, a read in a
+    /// query, a plain value, each role once (refcore's `rand_edges`). L §5.16.
+    pub rand_edges: BTreeMap<Node, BTreeMap<Node, Vec<ReadRole>>>,
 }
 
 impl Graph {
+    /// Records that `reader` reads `target` in `role` (refcore's `rand_edges`). L §5.16.
+    pub fn rand_edge(&mut self, reader: &Node, target: &Node, role: ReadRole) {
+        let roles = self
+            .rand_edges
+            .entry(reader.clone())
+            .or_insert_with(BTreeMap::new)
+            .entry(target.clone())
+            .or_insert_with(Vec::new);
+        if !roles.contains(&role) {
+            roles.push(role);
+        }
+    }
+
     /// Adds the edge `reader` → `target` with `rel` (refcore's `Checker.edge`).
     pub fn edge(&mut self, reader: &Node, target: Node, rel: Rel) {
         let reads = self

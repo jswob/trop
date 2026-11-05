@@ -1,11 +1,13 @@
-//! Load's checker, its fills: each fill's bindings, sides, arc and order typed, and a read of its one output.
+//! Load's checker, its fills and `prorata`: each fill's sides, arc and order typed, a read of its one output, and a total shared pro rata.
 //! Spec: L §5.12 (a fill: `supply` and `demand` share a unit, `arc` is a bool, `order` and
 //! `ties by` over both sides' variables, no variable bound on both sides; its output
 //! `F.taken[supply keys, demand keys]`, the fill's own keys first; its law dates are its
 //! reader's), §5.6 (a fill's key bind is defined for every key), §8.3 (`LOAD-UNIT`,
-//! `-SHADOW`, `-KEY`, `-PARSE`).
+//! `-SHADOW`, `-KEY`, `-PARSE`); §5.13 (`prorata`: a money total, one binding, a step of
+//! the total's unit, `-LITERAL` in a rule but 1 with a unit, `minor(CUR)` or a row).
 //! Twin: engine/tools/refcore/check2.py (`m_fill_scope`, `m_fill_sides`, `m_check_fill`,
-//! `m_check_fill_body`, `m_fill_ref`, `m_fill_read_type`, `m_inline_fill_edges`).
+//! `m_check_fill_body`, `m_fill_ref`, `m_fill_read_type`, `m_inline_fill_edges`,
+//! `m_t_prorata`).
 //! Invariants: each fill is typed once, in section order or first where a move reads its
 //! output; a fill read inside its own supply stops "not built", as refcore does; a fill's
 //! reads count as its reader's (the edges inlined after the walk, over an explicit stack).
@@ -15,7 +17,8 @@ use super::check::{Checker, Files, Scope, Stands, Var, VarDom};
 use super::types::{Typed, converts, is_bool, numcls, refused, uerr, unit_of};
 use crate::base::Load;
 use crate::model::{Domain, Graph, Node, NodeKind, Reality, Rel, Shown, Ty, Unit};
-use crate::syntax::{Bind, Key, Stop};
+use crate::num::Num;
+use crate::syntax::{Bind, Expr, Key, Lit, Prorata, Rest, Step, Stop};
 use std::collections::{BTreeMap, BTreeSet};
 
 /// A fill's bindings as typed: its key binds' domains, its two sides' variables, its scope,
@@ -380,4 +383,136 @@ fn fill_reads(graph: &Graph, start: &Node) -> BTreeMap<Node, Vec<Rel>> {
         }
     }
     out
+}
+
+impl Checker {
+    /// `prorata(total, w for k in D, key, u, MODE, rest none|last)` or `…, rest largest [ties
+    /// by …])`: a money total shared by one binding's weights, the step of the total's unit,
+    /// a whole share money (refcore's `t_prorata`). L §5.13.
+    pub(super) fn prorata(&mut self, m: &Reality, scope: &Scope, p: &Prorata, depth: u32) -> Typed {
+        let tt = self.expr(m, scope, &p.total, None, depth)?;
+        if matches!(tt, Ty::Unseen) {
+            return Ok(tt);
+        }
+        let c = numcls(m, &tt);
+        let total_unit = unit_of(&tt)?;
+        let cur = match total_unit.terms() {
+            [(cur, 1)] if matches!(c, Some("money" | "num")) && total_unit.is_currency() => {
+                cur.clone()
+            }
+            _ => {
+                return Err(uerr(format!(
+                    "prorata of {}: the total is money or a num CUR (L §5.13)",
+                    tt.show()
+                )));
+            }
+        };
+        let [bind] = p.binds.as_slice() else {
+            return Err(refused(
+                Load::Parse,
+                "cannot parse: prorata takes one binding".to_owned(),
+            ));
+        };
+        let mut inner = scope.in_aggregate();
+        self.bind(m, &mut inner, bind, depth)?;
+        let wt = self.expr(m, &inner, &p.weight, None, depth)?;
+        let weighs = matches!(numcls(m, &wt), Some("num" | "int" | "flex" | "money"));
+        if !weighs && !matches!(wt, Ty::Unseen) {
+            return Err(uerr(format!(
+                "prorata: the weight is {}, not a number",
+                wt.show()
+            )));
+        }
+        let var = inner
+            .vars
+            .get(&bind.var)
+            .cloned()
+            .ok_or_else(|| super::check::invariant(format!("{} isn't bound", bind.var)))?;
+        if let VarDom::Index(d) | VarDom::Kind(d) = &var.dom {
+            let key = Ty::Key(d.clone());
+            let kt = self.expr(m, scope, &p.key, Some(&key), depth)?;
+            self.assign(m, scope, &key, &p.key, &kt, "the key of prorata")?;
+        } else {
+            self.key_pos(m, scope, &p.key, &key_domain(&var), depth)?;
+        }
+        let mut stepped = scope.child();
+        stepped.allow_lit = scope.stands == Stands::Ask;
+        let ut = match &p.unit {
+            Step::Number(n) if n.unit.is_none() && !n.fraction => {
+                self.expr(
+                    m,
+                    &stepped,
+                    &Expr::Lit(Lit::Num(n.clone())),
+                    Some(&tt),
+                    depth,
+                )?;
+                Ty::Flex(n.value.clone())
+            }
+            Step::Number(n) => self.expr(
+                m,
+                &stepped,
+                &Expr::Lit(Lit::Num(n.clone())),
+                Some(&tt),
+                depth,
+            )?,
+            Step::Minor(minor) => Ty::Money(minor.clone()),
+            Step::Ref(e) => self.expr(m, &stepped, e, Some(&tt), depth)?,
+        };
+        let uc = numcls(m, &ut);
+        if uc.is_none() && !matches!(ut, Ty::Unseen) {
+            return Err(uerr(format!("prorata: the step is {}", ut.show())));
+        }
+        if matches!(scope.stands, Stands::Rule | Stands::At) {
+            let ok = match &p.unit {
+                Step::Number(n) => n.value == Num::int(1),
+                Step::Minor(_) => true,
+                Step::Ref(e) => super::types::input_read(m, scope, e).is_some(),
+            };
+            if !ok {
+                return Err(refused(
+                    Load::Literal,
+                    "the step of prorata is 1 with a unit, minor(CUR) or a row".to_owned(),
+                ));
+            }
+        }
+        if uc != Some("flex") && !matches!(ut, Ty::Unseen) {
+            let su = if matches!(uc, Some("num" | "money")) {
+                unit_of(&ut)?
+            } else {
+                Unit::one()
+            };
+            if !converts(&su, &total_unit)? {
+                return Err(uerr(format!(
+                    "prorata: the step {} and the total {} have different units",
+                    ut.show(),
+                    tt.show()
+                )));
+            }
+        }
+        if matches!(p.rest, Rest::None | Rest::Last) {
+            let mode = p
+                .mode
+                .as_ref()
+                .ok_or_else(|| super::check::invariant("prorata with no mode".to_owned()))?;
+            self.mode_arg(m, scope, "prorata", mode, depth)?;
+        }
+        for tie in p.ties.iter().flatten() {
+            self.expr(m, &inner, tie, None, depth)?;
+        }
+        let whole = if let Ty::Flex(n) = &ut {
+            let minor = m
+                .currencies
+                .get(&cur)
+                .ok_or_else(|| super::check::invariant(format!("currency {cur} isn't declared")))?;
+            n.checked_div(minor)
+                .map_err(super::steps::num_stop)?
+                .is_integer()
+        } else {
+            uc == Some("money")
+        };
+        if whole && (p.rest != Rest::Last || c == Some("money")) {
+            return Ok(Ty::Money(cur));
+        }
+        Ok(Ty::Num(total_unit, Shown::Plain))
+    }
 }

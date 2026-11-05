@@ -602,7 +602,8 @@ fn is_percent(unit: Option<&WrittenUnit>) -> bool {
     base == "%" && *power == 1
 }
 
-/// The type a one-word type names.
+/// The type a one-word type names, the four code types by their names (refcore's
+/// `decl_type`, its `simple` table). L §3.1.
 fn word_type(word: &str) -> Option<Ty> {
     let ty = match word {
         "int" => Ty::Int,
@@ -616,7 +617,11 @@ fn word_type(word: &str) -> Option<Ty> {
         "monthday" => Ty::MonthDay,
         "rate" => Ty::Rate,
         "calendar" => Ty::Calendar,
-        other => Ty::Code(CodeKind::of_word(other)?),
+        "rounding" => Ty::Code(CodeKind::Rounding),
+        "daycount" => Ty::Code(CodeKind::Daycount),
+        "roll" => Ty::Code(CodeKind::Roll),
+        "compounding" => Ty::Code(CodeKind::Compounding),
+        _ => return None,
     };
     Some(ty)
 }

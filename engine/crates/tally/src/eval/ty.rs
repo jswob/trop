@@ -521,6 +521,7 @@ fn ty_sample(m: &Reality, ty: &Ty) -> Result<Option<Value>, Stop> {
         | Ty::None
         | Ty::Hole
         | Ty::Never
+        | Ty::DistKeys(_)
         | Ty::KindName => None,
     })
 }

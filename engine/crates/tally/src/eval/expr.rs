@@ -867,6 +867,7 @@ pub(super) fn typed(m: &Reality, q: &crate::num::Num, ty: &Ty) -> Result<Option<
         | Ty::None
         | Ty::Hole
         | Ty::Never
+        | Ty::DistKeys(_)
         | Ty::KindName => Ok(None),
     }
 }

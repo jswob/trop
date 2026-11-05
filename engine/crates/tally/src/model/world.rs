@@ -16,6 +16,8 @@ pub struct Scenarios {
     pub over: BTreeMap<String, Option<String>>,
     /// The id of each section a scenario's file declares, and that scenario.
     pub section: BTreeMap<String, String>,
+    /// Each scenario's `from`: its rows of the base's items govern that day or later (L §6.4).
+    pub from: BTreeMap<String, crate::time::Day>,
 }
 
 impl Scenarios {

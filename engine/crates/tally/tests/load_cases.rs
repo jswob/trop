@@ -10,7 +10,10 @@
 //! their guards), §4.3 (law dates), §5.14.1 (running reads, a decision's balance of a day
 //! load sees), §4.6 (readings `after` a move), §4.2 (schedules) for the item graph's checks;
 //! §5.5 (axes, their keys, a mode, `LOAD-FORKS`), §5.12 (fills and `.taken`), §5.11 (`as
-//! if`), §5.18 (pins and the ask forms), §6.4 (an ask naming an unloaded world) for G8's.
+//! if`), §5.18 (pins and the ask forms), §6.4 (an ask naming an unloaded world) for G8's;
+//! §5.16 (distributions, queries, `crps`, `cdf`, `pdf`, `pmf`, the random cone), §7.3 and
+//! §3.3 (`to u`, the transcendental calls), §5.18 (`solve`), §5.13 (`prorata`), §6.4 (an
+//! expression row outside a scenario) for G8's second step.
 //! Twin: engine/tools/refcore/loader.py; each expected line is refcore's load of the same
 //! text, printed in the same normalized form.
 //! Invariants: reads no test, vector or answer key (R-93); the text is written here, small.
@@ -2100,9 +2103,9 @@ ask qt: taken[2026], rounded
         }
     }
 
-    /// The base with each edit applied once.
-    fn edited(edits: &[(&str, &str)]) -> String {
-        let mut text = ASKS.to_owned();
+    /// The base `base` with each edit applied once.
+    fn edited(base: &str, edits: &[(&str, &str)]) -> String {
+        let mut text = base.to_owned();
         for &(old, new) in edits {
             assert!(text.contains(old), "{old} is in the text");
             text = text.replacen(old, new, 1);
@@ -2463,7 +2466,7 @@ ask qt: taken[2026], rounded
             ),
         ];
         for &(edits, expected) in probes {
-            assert_eq!(refusal(&edited(edits)), expected, "{edits:?}");
+            assert_eq!(refusal(&edited(ASKS, edits)), expected, "{edits:?}");
         }
         // An ask refused alone: the run's first line for the ask it names, refcore's text.
         let runs: &[(&[(&str, &str)], &str)] = &[
@@ -2490,8 +2493,516 @@ ask qt: taken[2026], rounded
             ),
         ];
         for &(edits, expected) in runs {
-            let line = ask_line(&edited(edits), expected);
+            let line = ask_line(&edited(ASKS, edits), expected);
             assert_eq!(line.as_deref(), Some(expected), "{edits:?}");
+        }
+    }
+
+    /// Random facts of each kind (a continuous `dist PLN`, a counting `dist`), a def lifting
+    /// one, a `discrete`, the transcendental calls under `to u`, a `prorata`, a `solve` in a
+    /// rule with `v`, and an ask of each query form: closed forms, paths with a seed, `orient`.
+    const RANDOM: &str = "model r
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card \"the card\"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+input amt: money PLN
+
+input rate: rate
+
+input nyears: int
+
+input mu: num
+
+input u4: dist PLN
+
+input k4: dist
+
+input step_in: money PLN
+
+def lifted: num PLN = amt + u4
+
+def picked: dist = discrete(1 for q in qs)
+
+def grown: num = exp(mu) to 0.0001
+
+def compounded: num = factor(rate, nyears, year, effective)
+
+def share_of[q in qs]: money PLN = prorata(amt, 1 for p in qs, q, 1 PLN, half-up, rest last)
+
+def target: money PLN
+  rule base v card_2026 = solve amt == lifted for step_in in [0 PLN, 1000 PLN] to 1 PLN
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN \"the card\"
+  rate = 5 %/year \"the card\"
+  nyears = 3 \"the card\"
+  mu = 1 \"the card\"
+  u4 = normal(10 PLN, 2 PLN) to 0.01 PLN \"the card\"
+  k4 = poisson(2) \"the card\"
+  step_in = 1.00 PLN \"the card\"
+
+ask qm: mean(mu * u4 + amt)
+
+ask qsh: share(u4 > amt)
+
+ask qq: quantile(u4, 0.9)
+
+ask qc: cdf(normal(0, 1), 1) to 0.0001
+
+ask qk: pmf(k4, nyears)
+
+ask qo: crps(u4, amt) paths 100 seed 1 orient lower
+
+ask qp: mean(u4 * u4) paths 100 seed 1
+
+ask qv: solve amt == step_in for step_in in [0 PLN, 500 PLN] to 1 PLN
+";
+
+    #[test]
+    fn random_values_exact_forms_and_scenario_rows_are_checked_at_load_as_refcore_checks_them() {
+        // The load probe's refusal ("loaded" when it loads clean), refcore's text.
+        let probes: &[(&[(&str, &str)], &str)] = &[
+            // base
+            (&[], "loaded"),
+            // dist-arity
+            (
+                &[(
+                    "  u4 = normal(10 PLN, 2 PLN) to 0.01 PLN \"the card\"",
+                    "  u4 = normal(10 PLN) to 0.01 PLN \"the card\"",
+                )],
+                "LOAD-PARSE cannot parse: normal takes 2 parameters (a.tally:48)",
+            ),
+            // dist-units
+            (
+                &[(
+                    "  u4 = normal(10 PLN, 2 PLN) to 0.01 PLN \"the card\"",
+                    "  u4 = uniform(1 PLN, 2 PLN/year) to 0.01 PLN \"the card\"",
+                )],
+                "LOAD-UNIT uniform(money PLN, num PLN/year): the parameters have different units (a.tally:48)",
+            ),
+            // dist-whole
+            (
+                &[(
+                    "  u4 = normal(10 PLN, 2 PLN) to 0.01 PLN \"the card\"",
+                    "  u4 = normal(10 PLN, 2 PLN) \"the card\"",
+                )],
+                "LOAD-TO continuous distribution normal needs to u (a row of u4) (a.tally:48)",
+            ),
+            // dist-plain
+            (
+                &[(
+                    "  k4 = poisson(2) \"the card\"",
+                    "  k4 = poisson(2 PLN) \"the card\"",
+                )],
+                "LOAD-UNIT poisson: a parameter is money PLN, not a plain number (a.tally:49)",
+            ),
+            // dist-counts
+            (
+                &[(
+                    "  u4 = normal(10 PLN, 2 PLN) to 0.01 PLN \"the card\"",
+                    "  u4 = poisson(2) \"the card\"",
+                )],
+                "LOAD-UNIT poisson gives counts, not a dist PLN (a.tally:48)",
+            ),
+            // discrete-range
+            (
+                &[(
+                    "def picked: dist = discrete(1 for q in qs)",
+                    "def picked: dist = discrete(1 for q in 1 .. 3)",
+                )],
+                "LOAD-LITERAL figure 3 in a rule; make it a row (a.tally:29)",
+            ),
+            // discrete-weight
+            (
+                &[(
+                    "def picked: dist = discrete(1 for q in qs)",
+                    "def picked: dist = discrete(amt for q in qs)",
+                )],
+                "LOAD-UNIT discrete: the weight is money PLN, not a plain number (a.tally:29)",
+            ),
+            // dist-rule-whole
+            (
+                &[(
+                    "def picked: dist = discrete(1 for q in qs)",
+                    "def picked: dist = discrete(1 for q in qs)\n\ndef nd: dist PLN = normal(amt, amt)",
+                )],
+                "LOAD-TO continuous distribution normal needs to u (rule base of nd) (a.tally:31)",
+            ),
+            // dist-arith
+            (
+                &[(
+                    "def picked: dist = discrete(1 for q in qs)",
+                    "def picked: dist = discrete(1 for q in qs)\n\ndef nd: num = picked + 1",
+                )],
+                "LOAD-UNIT rule base of nd is key qs, not num (a.tally:31)",
+            ),
+            // cdf-to
+            (
+                &[(
+                    "ask qc: cdf(normal(0, 1), 1) to 0.0001",
+                    "ask qc: cdf(normal(0, 1), 1)",
+                )],
+                "LOAD-TO cdf of normal needs to u (a.tally:58)",
+            ),
+            // cdf-affine
+            (
+                &[(
+                    "ask qc: cdf(normal(0, 1), 1) to 0.0001",
+                    "ask qc: cdf(u4 * u4, amt) to 0.01",
+                )],
+                "LOAD-RANDOM cdf of a non-affine random value: it takes a distribution, a random fact read directly or an affine form of one; the question is a share over paths (a.tally:58)",
+            ),
+            // pmf-continuous
+            (
+                &[(
+                    "ask qc: cdf(normal(0, 1), 1) to 0.0001",
+                    "ask qc: pmf(normal(0, 1), 1) to 0.0001",
+                )],
+                "LOAD-UNIT pmf of the continuous normal (a.tally:58)",
+            ),
+            // pdf-orient
+            (
+                &[(
+                    "ask qc: cdf(normal(0, 1), 1) to 0.0001",
+                    "ask qc: pdf(normal(0, 1), 1) to 0.0001",
+                )],
+                "LOAD-ORIENT ask qc reaches crps or pdf without orient (a.tally:58)",
+            ),
+            // pdf-keys
+            (
+                &[(
+                    "ask qk: pmf(k4, nyears)",
+                    "ask qk: pdf(picked, q1) orient lower",
+                )],
+                "LOAD-UNIT pdf of a discrete distribution (a.tally:60)",
+            ),
+            // cdf-point
+            (
+                &[(
+                    "ask qk: pmf(k4, nyears)",
+                    "ask qk: cdf(u4, nyears) to 0.0001",
+                )],
+                "LOAD-UNIT cdf at int for a value of unit PLN (a.tally:60)",
+            ),
+            // query-flat
+            (
+                &[("ask qm: mean(mu * u4 + amt)", "ask qm: mean(amt)")],
+                "LOAD-RANDOM mean of a value that is not random: a query is asked of a random value (L §5.16) (a.tally:52)",
+            ),
+            // query-askonly
+            (
+                &[(
+                    "def picked: dist = discrete(1 for q in qs)",
+                    "def picked: dist = discrete(1 for q in qs)\n\ndef sq: num PLN^2 = mean(u4 * u4)",
+                )],
+                "LOAD-ASKONLY mean(u4 * u4) has no closed form outside an ask (a.tally:31)",
+            ),
+            // query-where
+            (
+                &[(
+                    "ask qsh: share(u4 > amt)",
+                    "ask qsh: share(u4 > amt where amt > step_in)",
+                )],
+                "LOAD-RANDOM share(u4 > amt where amt > step_in) has no closed form (a query with where); state paths N seed S (a.tally:54)",
+            ),
+            // quantile-two
+            (
+                &[(
+                    "ask qq: quantile(u4, 0.9)",
+                    "ask qq: quantile(u4 + u4, 0.9)",
+                )],
+                "LOAD-RANDOM quantile(u4 + u4, 0.9) has no closed form (a quantile of more than one random fact); state paths N seed S (a.tally:56)",
+            ),
+            // share-both
+            (
+                &[("ask qsh: share(u4 > amt)", "ask qsh: share(u4 > u4)")],
+                "LOAD-RANDOM share(u4 > u4) has no closed form (random values on both sides); state paths N seed S (a.tally:54)",
+            ),
+            // mean-dist
+            (
+                &[("ask qm: mean(mu * u4 + amt)", "ask qm: mean(normal(0, 1))")],
+                "LOAD-RANDOM mean of a distribution value; ask it of a random fact (a.tally:52)",
+            ),
+            // quantile-to
+            (
+                &[(
+                    "ask qq: quantile(u4, 0.9)",
+                    "ask qq: quantile(normal(0, 1), 0.9)",
+                )],
+                "LOAD-TO quantile of normal needs to u (a.tally:56)",
+            ),
+            // line-random
+            (
+                &[("ask qm: mean(mu * u4 + amt)", "ask qm: u4")],
+                "LOAD-RANDOM ask qm: u4 is random; apply a query (a.tally:52)",
+            ),
+            // line-random-def
+            (
+                &[("ask qm: mean(mu * u4 + amt)", "ask qm: lifted")],
+                "LOAD-RANDOM ask qm: lifted is random; apply a query (a.tally:52)",
+            ),
+            // paths-zero
+            (
+                &[(
+                    "ask qp: mean(u4 * u4) paths 100 seed 1",
+                    "ask qp: mean(u4 * u4) paths 0 seed 1",
+                )],
+                "LOAD-DOMAIN paths 0: N is at least 1 (a.tally:64)",
+            ),
+            // path-out
+            (
+                &[(
+                    "ask qp: mean(u4 * u4) paths 100 seed 1",
+                    "ask qp: mean(u4 * u4) paths 100 seed 1 path 101",
+                )],
+                "LOAD-DOMAIN path 101 is outside 1..100 (a.tally:64)",
+            ),
+            // crps-def
+            (
+                &[(
+                    "def picked: dist = discrete(1 for q in qs)",
+                    "def picked: dist = discrete(1 for q in qs)\n\ndef sc: num PLN = crps(u4, amt)",
+                )],
+                "LOAD-RANDOM crps of a random value outside a paths ask (a.tally:31)",
+            ),
+            // crps-orient
+            (
+                &[(
+                    "ask qo: crps(u4, amt) paths 100 seed 1 orient lower",
+                    "ask qo: crps(u4, amt) paths 100 seed 1",
+                )],
+                "LOAD-ORIENT ask qo reaches crps or pdf without orient (a.tally:62)",
+            ),
+            // crps-normal
+            (
+                &[(
+                    "ask qo: crps(u4, amt) paths 100 seed 1 orient lower",
+                    "ask qo: crps(normal(amt, amt), amt) orient lower",
+                )],
+                "LOAD-TO crps of a normal forecast needs to u (a.tally:62)",
+            ),
+            // crps-outcome
+            (
+                &[(
+                    "ask qo: crps(u4, amt) paths 100 seed 1 orient lower",
+                    "ask qo: crps(u4, mu) paths 100 seed 1 orient lower",
+                )],
+                "LOAD-UNIT crps: the outcome num and the forecast (PLN) have different units (a.tally:62)",
+            ),
+            // to-plain
+            (
+                &[(
+                    "def grown: num = exp(mu) to 0.0001",
+                    "def grown: num = mu to 0.0001",
+                )],
+                "LOAD-UNIT to u on mu: `to` states the precision of a transcendental value (L §7.3) (a.tally:31)",
+            ),
+            // to-step-unit
+            (
+                &[(
+                    "def grown: num = exp(mu) to 0.0001",
+                    "def grown: num = exp(mu) to 1 PLN",
+                )],
+                "LOAD-UNIT to 1: the step and the value (num) have different units (a.tally:31)",
+            ),
+            // to-step-zero
+            (
+                &[(
+                    "def grown: num = exp(mu) to 0.0001",
+                    "def grown: num = exp(mu) to 0",
+                )],
+                "LOAD-DOMAIN to 0: a step that is not positive (a.tally:31)",
+            ),
+            // exp-bare
+            (
+                &[(
+                    "def grown: num = exp(mu) to 0.0001",
+                    "def grown: num = exp(mu)",
+                )],
+                "LOAD-TO exp needs to u (a.tally:31)",
+            ),
+            // exp-unit
+            (
+                &[(
+                    "def grown: num = exp(mu) to 0.0001",
+                    "def grown: num = exp(amt) to 0.0001",
+                )],
+                "LOAD-UNIT exp of money PLN: its argument is a plain number (a.tally:31)",
+            ),
+            // sqrt-odd
+            (
+                &[(
+                    "def grown: num = exp(mu) to 0.0001",
+                    "def grown: num = sqrt(amt) to 0.0001",
+                )],
+                "LOAD-UNIT sqrt of money PLN: its unit has an odd power (a.tally:31)",
+            ),
+            // pow-real
+            (
+                &[(
+                    "def grown: num = exp(mu) to 0.0001",
+                    "def grown: num = pow(amt, mu)",
+                )],
+                "LOAD-UNIT pow of money PLN to a power that may not be an integer: its unit would have a fractional power (a.tally:31)",
+            ),
+            // pow-literal
+            (
+                &[(
+                    "def grown: num = exp(mu) to 0.0001",
+                    "def grown: num = pow(amt, nyears)",
+                )],
+                "LOAD-UNIT pow of money PLN to a power that is not a literal (a.tally:31)",
+            ),
+            // factor-to
+            (
+                &[(
+                    "def compounded: num = factor(rate, nyears, year, effective)",
+                    "def compounded: num = factor(rate, mu, year, effective)",
+                )],
+                "LOAD-TO factor needs to u: load can't show its power is an integer (a.tally:33)",
+            ),
+            // factor-period
+            (
+                &[(
+                    "def compounded: num = factor(rate, nyears, year, effective)",
+                    "def compounded: num = factor(rate, nyears, week, effective)",
+                )],
+                "LOAD-UNIT factor: the period argument is a period word (day, month, quarter or year), not week (a.tally:33)",
+            ),
+            // factor-rate
+            (
+                &[(
+                    "def compounded: num = factor(rate, nyears, year, effective)",
+                    "def compounded: num = factor(mu, nyears, year, effective)",
+                )],
+                "LOAD-UNIT factor: mu is num, not a rate (a.tally:33)",
+            ),
+            // factor-code
+            (
+                &[(
+                    "def compounded: num = factor(rate, nyears, year, effective)",
+                    "def compounded: num = factor(rate, nyears, year, act365)",
+                )],
+                "LOAD-UNIT act365 is not a compounding code (a.tally:33)",
+            ),
+            // solve-askonly
+            (
+                &[(
+                    "  rule base v card_2026 = solve amt == lifted for step_in in [0 PLN, 1000 PLN] to 1 PLN",
+                    "  rule base = solve amt == lifted for step_in in [0 PLN, 1000 PLN] to 1 PLN",
+                )],
+                "LOAD-ASKONLY solve outside an ask (allowed in a rule with v) (a.tally:38)",
+            ),
+            // solve-grid
+            (
+                &[(
+                    "ask qv: solve amt == step_in for step_in in [0 PLN, 500 PLN] to 1 PLN",
+                    "ask qv: solve amt == step_in for step_in in [0 PLN, 500.50 PLN] to 1 PLN",
+                )],
+                "LOAD-DOMAIN solve: hi is not on the grid lo + i u (a.tally:66)",
+            ),
+            // solve-below
+            (
+                &[(
+                    "ask qv: solve amt == step_in for step_in in [0 PLN, 500 PLN] to 1 PLN",
+                    "ask qv: solve amt == step_in for step_in in [500 PLN, 0 PLN] to 1 PLN",
+                )],
+                "LOAD-DOMAIN solve: the bracket [lo, hi] has hi below lo (a.tally:66)",
+            ),
+            // solve-unknown
+            (
+                &[(
+                    "ask qv: solve amt == step_in for step_in in [0 PLN, 500 PLN] to 1 PLN",
+                    "ask qv: solve amt == step_in for nope in [0 PLN, 500 PLN] to 1 PLN",
+                )],
+                "LOAD-NAME unknown id nope (a.tally:66)",
+            ),
+            // solve-type
+            (
+                &[(
+                    "ask qv: solve amt == step_in for step_in in [0 PLN, 500 PLN] to 1 PLN",
+                    "ask qv: solve amt == step_in for k4 in [0, 5] to 1",
+                )],
+                "LOAD-UNIT solve for k4 of type dist: a root is searched over numbers (a.tally:66)",
+            ),
+            // solve-number
+            (
+                &[(
+                    "ask qv: solve amt == step_in for step_in in [0 PLN, 500 PLN] to 1 PLN",
+                    "ask qv: solve picked == picked for step_in in [0 PLN, 500 PLN] to 1 PLN",
+                )],
+                "LOAD-UNIT solve key qs == key qs: F = f - g is a number (a.tally:66)",
+            ),
+            // prorata-total
+            (
+                &[(
+                    "def share_of[q in qs]: money PLN = prorata(amt, 1 for p in qs, q, 1 PLN, half-up, rest last)",
+                    "def share_of[q in qs]: money PLN = prorata(mu, 1 for p in qs, q, 1 PLN, half-up, rest last)",
+                )],
+                "LOAD-UNIT prorata of num: the total is money or a num CUR (L §5.13) (a.tally:35)",
+            ),
+            // prorata-binds
+            (
+                &[(
+                    "def share_of[q in qs]: money PLN = prorata(amt, 1 for p in qs, q, 1 PLN, half-up, rest last)",
+                    "def share_of[q in qs]: money PLN = prorata(amt, 1 for p in qs, r in qs, q, 1 PLN, half-up, rest last)",
+                )],
+                "LOAD-PARSE cannot parse: prorata takes one binding (a.tally:35)",
+            ),
+            // prorata-step
+            (
+                &[(
+                    "def share_of[q in qs]: money PLN = prorata(amt, 1 for p in qs, q, 1 PLN, half-up, rest last)",
+                    "def share_of[q in qs]: money PLN = prorata(amt, 1 for p in qs, q, 0.01 PLN, half-up, rest last)",
+                )],
+                "LOAD-LITERAL figure 0.01 PLN in a rule; make it a row (a.tally:35)",
+            ),
+            // prorata-step-unit
+            (
+                &[(
+                    "def share_of[q in qs]: money PLN = prorata(amt, 1 for p in qs, q, 1 PLN, half-up, rest last)",
+                    "def share_of[q in qs]: money PLN = prorata(amt, 1 for p in qs, q, 1 %, half-up, rest last)",
+                )],
+                "LOAD-UNIT prorata: the step num % and the total money PLN have different units (a.tally:35)",
+            ),
+            // prorata-weight
+            (
+                &[(
+                    "def share_of[q in qs]: money PLN = prorata(amt, 1 for p in qs, q, 1 PLN, half-up, rest last)",
+                    "def share_of[q in qs]: money PLN = prorata(amt, true for p in qs, q, 1 PLN, half-up, rest last)",
+                )],
+                "LOAD-UNIT prorata: the weight is bool, not a number (a.tally:35)",
+            ),
+            // prorata-num
+            (
+                &[(
+                    "def share_of[q in qs]: money PLN = prorata(amt, 1 for p in qs, q, 1 PLN, half-up, rest last)",
+                    "def share_of[q in qs]: money PLN = prorata(amt, 1 for p in qs, q, step_in, half-up, rest last)",
+                )],
+                "loaded",
+            ),
+            // scenario-row
+            (
+                &[(
+                    "  amt = 100.00 PLN \"the card\"",
+                    "  amt = step_in + step_in \"the card\"",
+                )],
+                "LOAD-SCENARIO an expression row outside a scenario (a.tally:44)",
+            ),
+        ];
+        for &(edits, expected) in probes {
+            assert_eq!(refusal(&edited(RANDOM, edits)), expected, "{edits:?}");
         }
     }
 }

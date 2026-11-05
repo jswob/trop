@@ -16,6 +16,7 @@
 
 use super::across::{check_period_keys, check_schedules, check_seen_days};
 use super::check::{Files, ShiftRead, walk};
+use super::cone::finish_random;
 use super::lawdates::{check_lawdates, check_move_lawdates};
 use super::parts::{arrival_reads, parts_walk_bound};
 use super::pins::check_forks;
@@ -82,6 +83,7 @@ impl Loader {
         check_seen_days(&self.m, &walked.day_reads, &files)?;
         check_period_keys(&self.m, &walked.periods)?;
         check_move_lawdates(&self.m, &walked, &dated, &files)?;
+        finish_random(&self.m, &walked.queries, &walked.orient_items, &files)?;
         check_schedules(&self.m, &files)
     }
 

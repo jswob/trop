@@ -18,7 +18,7 @@ use super::types::{
 };
 use crate::base::Load;
 use crate::model::{CodeKind, NameKind, Node, NodeKind, PeriodWord, Reality, Rel, Shown, Ty, Unit};
-use crate::syntax::{Call, Expr, Key, Lit, Postfix, Span, Step, Stop};
+use crate::syntax::{Call, Expr, Key, Lit, Postfix, Span, Stop};
 use crate::time::PeriodKind;
 
 /// The date functions whose names no band's call shadows (refcore's `DATE_FNS`).
@@ -213,6 +213,9 @@ impl Checker {
             "gap" => self.gap(m, scope, args, depth),
             "schedule" => self.schedule(m, scope, call, depth),
             "unit" => self.unit(m, scope, args, depth),
+            "exp" | "ln" | "sqrt" | "pow" | "periodic" | "factor" | "dcf" | "accrue" => {
+                self.exact_call(m, scope, call, depth)
+            }
             _ => self.args_only(m, scope, args, depth),
         }
     }
@@ -868,22 +871,6 @@ impl Checker {
         self.direct(&target);
         self.edge(&scope.item, target, rel);
         Ok(band.ty.clone())
-    }
-
-    /// `e to u`: the value and a unit written as a reference.
-    pub(super) fn to(
-        &mut self,
-        m: &Reality,
-        scope: &Scope,
-        inner: &Expr,
-        step: &Step,
-        depth: u32,
-    ) -> Typed {
-        self.expr(m, scope, inner, None, depth)?;
-        if let Step::Ref(e) = step {
-            self.expr(m, scope, e, None, depth)?;
-        }
-        Ok(Ty::Unseen)
     }
 
     /// A span's ends, each a date or a period (refcore's `span`). L §5.6.

@@ -107,7 +107,7 @@ pub mod model {
         BandEnd, BandInfo, BandRow, BindInfo, DefInfo, Domain, Fulfils, InputInfo, MoveInfo,
         ObsLeg, Observation, PlaceInfo, Row, RowInstant, RuleVer, Table as BandTable, TimePos,
     };
-    pub use graph::{Graph, Mark, Node, NodeKind, Rel, Shift, Target};
+    pub use graph::{Graph, Mark, Node, NodeKind, ReadRole, Rel, Shift, Target};
     pub use index::{GapRole, IndexForm, IndexInfo, Moved, OwnTime, VersionInfo};
     pub use key::{KeyVal, Pat, Span, pattern_text};
     pub use kind::{Entry, KindInfo, KindSpec, Labels, PRELUDE_KINDS, PlaceKeys, Thing, prelude};
@@ -230,7 +230,9 @@ pub mod load {
     mod binds;
     mod calls;
     mod check;
+    mod cone;
     mod decls;
+    mod exact;
     mod fills;
     mod indexes;
     mod keys;
@@ -245,8 +247,10 @@ pub mod load {
     mod pins;
     mod places;
     mod prices;
+    mod random;
     mod reads;
     mod rows;
+    mod scenarios;
     mod spans;
     mod steps;
     mod strata;

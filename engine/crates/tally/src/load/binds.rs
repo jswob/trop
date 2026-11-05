@@ -497,6 +497,15 @@ fn assign_type(m: &Reality, target: &Ty, t: &Ty, what: &str) -> Result<(), Stop>
         }
         (_, "bool" | "text" | "calendar" | "mmdd" | "code") => t == target,
         (_, "dates") => matches!(t.word(), "dates" | "list"),
+        (Ty::Dist(want), _) => {
+            if let Ty::Dist(unit) = t {
+                converts(unit, want)?
+            } else {
+                // A distribution over keys has no unit: refcore's own message for it needs
+                // a unit that converts to none, which a declared unit never is here.
+                matches!(t, Ty::DistKeys(_)) && want.is_one()
+            }
+        }
         (_, "dist") => true,
         (_, _) => false,
     };

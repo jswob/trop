@@ -24,7 +24,7 @@ use crate::model::{
 use crate::num::Num;
 use crate::syntax::{
     AddOp, AggFn, CmpOp, Expr, Field, FieldValue, Key, Lit, MulOp, Number, Pin, PinForm, Postfix,
-    Span, Stop,
+    QueryFn, Span, Stop,
 };
 use crate::time::PeriodKind;
 
@@ -228,6 +228,7 @@ pub(super) fn unit_of(t: &Ty) -> Result<Unit, Stop> {
         | Ty::None
         | Ty::Hole
         | Ty::Never
+        | Ty::DistKeys(_)
         | Ty::KindName => Ok(Unit::one()),
     }
 }
@@ -391,7 +392,26 @@ pub(super) fn text(e: &Expr) -> String {
         Expr::Flows(flows) => flows_text(flows),
         Expr::Covered(_) => "covered".to_owned(),
         Expr::Calendar(_) => "calendar".to_owned(),
-        Expr::Query(_) => "query".to_owned(),
+        Expr::Query(q) => {
+            let mut s = text(&q.arg);
+            if q.binds.is_some() {
+                s.push_str(" for ...");
+            }
+            if let Some(filter) = &q.filter {
+                s.push_str(" where ");
+                s.push_str(&text(filter));
+            }
+            if let Some(level) = &q.level {
+                s.push_str(", ");
+                s.push_str(&text(level));
+            }
+            let word = match q.func {
+                QueryFn::Mean => "mean",
+                QueryFn::Share => "share",
+                QueryFn::Quantile => "quantile",
+            };
+            format!("{word}({s})")
+        }
         Expr::Low(low) => {
             let mut s = format!(
                 "low({}, {})",
@@ -770,6 +790,10 @@ impl Checker {
         expect: Option<&Ty>,
         depth: u32,
     ) -> Typed {
+        if self.aff_x.as_ref().is_some_and(|x| x == e) {
+            self.aff_x = None;
+            self.affx_hit = true;
+        }
         match e {
             Expr::Lit(Lit::Name(name)) | Expr::Name(name) => {
                 self.name(m, scope, name, expect, depth)
@@ -818,17 +842,17 @@ impl Checker {
             Expr::Call(call) => self.call(m, scope, call, expect, depth),
             Expr::Last(pair) => self.last(m, scope, &pair.0, &pair.1, depth),
             Expr::LegOf(inner, of) => self.leg_of(m, scope, inner, of, expect, depth),
-            Expr::To(inner, step) => self.to(m, scope, inner, step, depth),
+            Expr::To(inner, step) => self.to(m, scope, inner, step, expect, depth),
             Expr::Bal(bal) => self.bal(m, scope, bal, depth),
             Expr::Flows(flows) => self.flows(m, scope, flows, depth),
             Expr::Covered(covered) => self.covered(m, scope, &covered.0, &covered.1, depth),
             Expr::Value(value) => self.value(m, scope, value, depth),
-            Expr::Query(..) => Err(Stop::NotBuilt("a query (mean, share, quantile)")),
+            Expr::Query(query) => self.query(m, scope, query, depth),
             Expr::Low(low) => self.low(m, scope, low, depth),
-            Expr::Crps(..) => Err(Stop::NotBuilt("`crps`")),
-            Expr::DistFn(..) => Err(Stop::NotBuilt("`cdf`, `pdf` and `pmf`")),
-            Expr::Dist(..) => Err(Stop::NotBuilt("distributions")),
-            Expr::Prorata(..) => Err(Stop::NotBuilt("`prorata`")),
+            Expr::Crps(crps) => self.crps(m, scope, crps, depth),
+            Expr::DistFn(dist_fn) => self.dist_fn(m, scope, dist_fn, depth),
+            Expr::Dist(dist) => self.dist(m, scope, dist, expect, depth),
+            Expr::Prorata(prorata) => self.prorata(m, scope, prorata, depth),
             Expr::AsIf(inner, pins) => self.as_if(m, scope, inner, pins, expect, depth),
         }
     }
@@ -1059,6 +1083,11 @@ impl Checker {
         keys: &[Key],
         depth: u32,
     ) -> Typed {
+        let affx = if core::mem::take(&mut self.affx_hit) {
+            super::random::SampleOf::AffineX
+        } else {
+            super::random::SampleOf::Scope
+        };
         let (binds, declared, observed, priced) = if kind == NameKind::Input {
             let Some(input) = m.inputs.get(id) else {
                 return Err(Stop::NotBuilt("an input that isn't built"));
@@ -1124,7 +1153,7 @@ impl Checker {
         let rel = super::check::relation(scope, keys);
         self.direct(&target);
         self.shifted(scope, &target, &rel);
-        self.edge(&scope.item, target, rel);
+        self.edge(&scope.item, target.clone(), rel);
         let mut ty = declared.unwrap_or(Ty::Unseen);
         if priced {
             ty = num(unit_of(&ty)?);
@@ -1134,9 +1163,15 @@ impl Checker {
         {
             ty = Ty::Num(unit.subst(&env).map_err(unit_stop)?, *shown);
         }
-        if matches!(ty, Ty::Dist(_)) {
-            return Ok(Ty::Unseen);
+        if let Ty::Dist(unit) = &ty
+            && unit.terms().iter().any(|(base, _)| base.starts_with('$'))
+        {
+            ty = Ty::Dist(unit.subst(&env).map_err(unit_stop)?);
         }
+        if matches!(ty, Ty::Dist(_)) {
+            return self.dist_read(m, scope, &target, &ty, affx);
+        }
+        self.note_read(scope, &target);
         Ok(ty)
     }
 

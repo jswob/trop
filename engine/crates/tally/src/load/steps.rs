@@ -84,6 +84,7 @@ pub(super) fn load_among(files: Vec<File>, worlds: &BTreeSet<String>) -> Result<
     loader.check_rows()?;
     loader.finish_rows();
     super::overlap::check_obs(&loader.m)?;
+    super::scenarios::check_scenarios(&loader.m)?;
     super::bands::check_bands(&loader.m)?;
     loader.collect_asks();
     loader.build_graph()?;
@@ -266,6 +267,9 @@ fn scenarios(files: &[File], model: &str) -> Result<Scenarios, Stop> {
         }
         let over = head.over.clone().filter(|over| over != model);
         found.over.insert(head.id.clone(), over);
+        if let Some(from) = head.from {
+            found.from.insert(head.id.clone(), from);
+        }
         declared.push((head.id.as_str(), file.path.as_str(), head.line));
         for section in &file.sections {
             found

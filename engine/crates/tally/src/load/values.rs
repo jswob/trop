@@ -39,6 +39,8 @@ impl Loader {
                 let file = row_file(&files, row)?;
                 let checked = if balance {
                     self.place_value(id, row)
+                } else if matches!(row.value, Written::Expr(_)) {
+                    self.scenario_row(row).map(|()| stated_of(&row.value))
                 } else if let Some(ty) = input.ty.as_ref().filter(|t| !matches!(t, Ty::Dist(_))) {
                     let of = ConvertFor::row(&input.unit_factor, ty, &input.binds, &row.pattern);
                     converted(self, &row.value, ty, id, &of).map(|()| stated_of(&row.value))
@@ -56,15 +58,31 @@ impl Loader {
             }
         }
         for (id, def) in self.m.defs.entries() {
-            if !matches!(def.ty, Ty::Dist(_)) {
-                for row in &def.givens {
-                    let file = row_file(&files, row)?;
+            for row in &def.givens {
+                let file = row_file(&files, row)?;
+                let checked = if matches!(row.value, Written::Expr(_)) {
+                    self.scenario_row(row)
+                } else if matches!(def.ty, Ty::Dist(_)) {
+                    Ok(())
+                } else {
                     let of = ConvertFor::row(&def.unit_factor, &def.ty, &def.binds, &row.pattern);
                     converted(self, &row.value, &def.ty, id, &of)
-                        .map_err(|stop| at_row(stop, &file, row.line))?;
-                }
+                };
+                checked.map_err(|stop| at_row(stop, &file, row.line))?;
             }
             check_overlap(&self.m, id, &def.binds, &def.givens, None)?;
+        }
+        Ok(())
+    }
+
+    /// An expression row: only in a scenario's version, the checker types it (refcore's
+    /// `check_rows`, its `rowexpr` arm). L §2.3 row, §6.4.
+    fn scenario_row(&self, row: &Row) -> Result<(), Stop> {
+        if self.m.scenarios.of(&row.version).is_none() {
+            return Err(Stop::Refused(Refusal::new(
+                Code::Load(Load::Scenario),
+                "an expression row outside a scenario".to_owned(),
+            )));
         }
         Ok(())
     }
