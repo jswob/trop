@@ -1,0 +1,41 @@
+# L §2.3 Calls: a call takes "a band's id, with the prefixes that name the band outside its member or its base", the
+# grammar's ID {"." ID} ["[" expr "]"] "("; L §2.4 Expressions (tally 2.1.4, issue #80): "none before a call's `(`,
+# its prefixes and a band's key included". The builder's smallest input at M0's G5 (the format fuzz target): a
+# prefixed call in a `where` (c), alone (d), as an operand (e), a longer prefix and a keyed one (g). Was `year_.f (k)`,
+# `year_.f (2)`, `x.y.f (1)`: a text no parser reads back (LOAD-PARSE expected ")", got (), with that text's hash.
+=== options reprint
+=== m.tally
+model g
+  tally 2
+  on 2026-06-01
+  start 2026-01-01
+  end 2026-12-31
+
+index qs = [q1, q2]
+
+input n[k in qs]: num
+
+def c: num = sum(n[k] for k in qs where year_.f(k) == 1)
+def d: num = year_.f( 2 )
+def e: num = n[q1]+year_.f(2)
+def g: num = x.y.f(1) * year_.g[q1](2)
+=== expect
+--- m.tally
+model g
+  tally 2
+  on 2026-06-01
+  start 2026-01-01
+  end 2026-12-31
+
+index qs = [q1, q2]
+
+input n[k in qs]: num
+
+def c: num = sum(n[k] for k in qs where year_.f(k) == 1)
+
+def d: num = year_.f(2)
+
+def e: num = n[q1] + year_.f(2)
+
+def g: num = x.y.f(1) * year_.g[q1](2)
+sha256 b4e652083271e493287536027d72874c4113bcc9103c9114cca5d2e2b2180e98

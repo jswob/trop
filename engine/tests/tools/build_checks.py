@@ -66,8 +66,8 @@ def summary(snap):
 
 
 # --- the interpreter's own tests
-add(id='R:all', layer='interpreter', cwd='.', files='', options='test', baseline='1165 passed',
-    note='refcore test; same = its last line reports 1165 passed and nothing failed (tally 2.1.3, issues #58, #59, #60; 1152 on 2.1.2, the spec round; 1124 on 2.1.1, issue #13; 1115 on 2.1 after session 7c; 1105 in 7b; 950 on 2.0)')
+add(id='R:all', layer='interpreter', cwd='.', files='', options='test', baseline='1168 passed',
+    note='refcore test; same = its last line reports 1168 passed and nothing failed (tally 2.1.4, issue #80; 1165 on 2.1.3, issues #58, #59, #60; 1152 on 2.1.2, the spec round; 1124 on 2.1.1, issue #13; 1115 on 2.1 after session 7c; 1105 in 7b; 950 on 2.0)')
 
 
 # --- the run_set.py lists: one check per line, the whole output its baseline

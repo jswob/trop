@@ -1,0 +1,26 @@
+# L §2.3 Calls: "household.b(x) in a scenario's expression row (§6.4)"; L §2.4 Expressions (tally 2.1.4, issue #80):
+# "none before a call's `(`, its prefixes and a band's key included". A scenario's expression row calls its base's
+# band, household.fee(household.cap), and reprints so, touching.
+=== options reprint
+=== s3.tally
+scenario s3 over household
+  tally 2
+  from 2031-01-01
+
+version v3
+  cite plan
+  governs 2031-01-01..
+  known 2026-10-20
+  replace cap = household.fee(household.cap) "z pasma"
+=== expect
+--- s3.tally
+scenario s3 over household
+  tally 2
+  from 2031-01-01
+
+version v3
+  cite plan
+  governs 2031-01-01..
+  known 2026-10-20
+  replace cap = household.fee(household.cap) "z pasma"
+sha256 6dc82b0d02eaac00e306d0861a7cdea345ef11d9866f491b43010a95410b2c54

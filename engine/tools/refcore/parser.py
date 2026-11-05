@@ -552,7 +552,10 @@ class P:
                 chain = _name_chain(e)
                 if self.at('(') and chain is not None and not self.peek().ws:
                     # L §2.3 (round 14): call = (ID {"." ID} ["[" expr "]"] | BUILTIN) "(": a band named with the
-                    # prefixes that name it outside its member or its base, a.b(x), household.b(x) (GD-1: no regime)
+                    # prefixes that name it outside its member or its base, a.b(x), household.b(x) (GD-1: no regime).
+                    # Its name is read as an id, so the canonical form prints it touching its "(" (L §2.4
+                    # Expressions, tally 2.1.4, issue #80: it printed a.b (x), which no parser reads back)
+                    tok.nm = True
                     args = self.call_args()
                     e = self.N('call', name=chain[-1], args=args, bkey=None, prefix=chain[:-1])
             else:
