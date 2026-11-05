@@ -176,7 +176,9 @@ mod tests {
         code_as_refcore("LOAD-DUP");
     }
 
-    /// `LOAD-FIELD`: `basic/field`, `basic/field-not`, `lifepath/lifespan-field`.
+    /// `LOAD-FIELD`: `basic/field`, `basic/field-not`, `lifepath/lifespan-field`,
+    /// `adjust/adjusts-field`, `adjust/bound-adjusts-field` (a field read through `.adjusts`),
+    /// `adjust/aggregate-field` (through an aggregate) (G12, 9d9f5a1).
     #[test]
     fn m0_code_load_field() {
         code_as_refcore("LOAD-FIELD");
@@ -422,7 +424,8 @@ mod tests {
     /// `lifepath/lifespan-key`, `lifepath/lifespan-record`, `lifepath/lifespan-to-num` (`lifespan`
     /// typed at load: G11's B2), `scenplace/covered-amt` (G12's N1), `adjust/adjusts-type`,
     /// `adjust/change-type`, `adjust/lifespan-dyn` (an adjustment's fields typed at load,
-    /// `lifespan` of `dyn`: G12's leftovers 2 and 3).
+    /// `lifespan` of `dyn`: G12's leftovers 2 and 3), `adjust/adjusts-leg`,
+    /// `adjust/adjusts-attr` (a leg and an attribute read through `.adjusts`: G12, 9d9f5a1).
     #[test]
     fn m0_code_load_unit() {
         code_as_refcore("LOAD-UNIT");

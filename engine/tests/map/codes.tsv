@@ -98,21 +98,21 @@ LOAD-DOMAIN	L §8.3	M0	range of quantities <a> .. <b> has no step	1	M0	codes/m0/
 LOAD-DOMAIN	L §8.3	M0	<operation> has no meaning for <values>	0	-	-
 LOAD-DOMAIN	L §8.3	M0	discrete over a key list or a stepped range	1	M0	codes/m0/basic/domain-discrete
 LOAD-DOMAIN	L §8.3	M0	?	5	M0	codes/m0/lifepath/path-past-64
-LOAD-UNIT	L §8.3	M0	*	13	M0	codes/m0/adjust/adjusts-type
+LOAD-UNIT	L §8.3	M0	*	15	M0	codes/m0/adjust/adjusts-attr
 LOAD-UNIT	L §8.3	M0	<a> and <b> have different units	1	M0	codes/m0/basic/unit-mixed
 LOAD-UNIT	L §8.3	M0	<operation> orders things of <K>	0	-	-
 LOAD-UNIT	L §8.3	M0	axis <a> is used as a mode, but <o> is not a mode name	1	M0	codes/m0/basic/unit-mode
 LOAD-UNIT	L §8.3	M0	money in an undeclared currency	1	M0	codes/m0/basic/unit-currency
-LOAD-UNIT	L §8.3	M0	?	10	M0	codes/m0/adjust/adjusts-type
+LOAD-UNIT	L §8.3	M0	?	12	M0	codes/m0/adjust/adjusts-attr
 LOAD-PRECISION	L §8.3	M0	*	2	M0	codes/m0/basic/precision
 LOAD-PRECISION	L §8.3	M0	<literal> is finer than the minor unit	1	M0	codes/m0/basic/precision
 LOAD-PRECISION	L §8.3	M0	<a/b> terminates; write it as a decimal	1	M0	codes/m0/basic/precision-fraction
 LOAD-LITERAL	L §8.3	M0	*	3	M0	codes/m0/basic/literal-amount
 LOAD-LITERAL	L §8.3	M0	figure <n> in a rule; make it a row	1	M0	codes/m0/basic/literal-amount
 LOAD-LITERAL	L §8.3	M0	a date in a rule; make it a version	2	M0	codes/order/items
-LOAD-FIELD	L §8.3	M0	*	3	M0	codes/m0/basic/field
+LOAD-FIELD	L §8.3	M0	*	6	M0	codes/m0/adjust/adjusts-field
 LOAD-FIELD	L §8.3	M0	positional record in <row>; name its fields	0	-	-
-LOAD-FIELD	L §8.3	M0	<field> is not a field of <type>	2	M0	codes/m0/basic/field-not
+LOAD-FIELD	L §8.3	M0	<field> is not a field of <type>	5	M0	codes/m0/adjust/adjusts-field
 LOAD-FIELD	L §8.3	M0	<row> lacks field <f>	0	-	-
 LOAD-FIELD	L §8.3	M0	?	1	M0	codes/m0/basic/field
 LOAD-INSTANT	L §8.3	M0	*	3	M0	codes/m0/basic/instant
