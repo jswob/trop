@@ -64,25 +64,26 @@ impl Cone {
     }
 
     /// Adds `item`, booking a move's legs' places and its kind (refcore's `add`, `book`).
-    fn add(&mut self, m: &Reality, item: &Node) {
+    fn add(&mut self, m: &Reality, item: &Node) -> Result<(), Stop> {
         self.items.insert(item.clone());
         if !matches!(item.kind, NodeKind::Move | NodeKind::MoveOn) {
-            return;
+            return Ok(());
         }
         let Some(mv) = m.moves.get(&item.id) else {
-            return;
+            return Ok(());
         };
         self.kinds.insert(mv.kind.clone());
         let scope = Scope::new(item.clone(), Stands::Rule, "", 0);
         for leg in &mv.decl.legs {
             for end in [&leg.from, &leg.to] {
-                if let Target::Thing(thing) = place_target(m, &scope, end) {
+                if let Target::Thing(thing) = place_target(m, &scope, end)? {
                     self.places.insert(thing);
                 } else {
                     self.any_place = true;
                 }
             }
         }
+        Ok(())
     }
 }
 
@@ -97,7 +98,7 @@ fn is_item(node: &Node) -> bool {
 /// The items that reach a sample of a random fact, through a read role, an edge, or a
 /// running read of a place a random movement books into; `with_proj` counts projections
 /// (refcore's `random_cone`). E §3.1 step 10; L §5.16, §8.3 item 10.
-fn random_cone(m: &Reality, graph: &Graph, projections: Projections) -> Cone {
+fn random_cone(m: &Reality, graph: &Graph, projections: Projections) -> Result<Cone, Stop> {
     let mut cone = Cone::default();
     let mut changed = true;
     while changed {
@@ -113,7 +114,7 @@ fn random_cone(m: &Reality, graph: &Graph, projections: Projections) -> Cone {
                 reaches |= live && (sample || cone.items.contains(target));
             }
             if reaches {
-                cone.add(m, reader);
+                cone.add(m, reader)?;
                 changed = true;
             }
         }
@@ -131,7 +132,7 @@ fn random_cone(m: &Reality, graph: &Graph, projections: Projections) -> Cone {
                 reaches |= cone.items.contains(target) && read && !only_query;
             }
             if reaches {
-                cone.add(m, reader);
+                cone.add(m, reader)?;
                 changed = true;
             }
         }
@@ -154,12 +155,12 @@ fn random_cone(m: &Reality, graph: &Graph, projections: Projections) -> Cone {
                 Mark::LegOf => false,
             });
             if hit {
-                cone.add(m, item);
+                cone.add(m, item)?;
                 changed = true;
             }
         }
     }
-    cone
+    Ok(cone)
 }
 
 /// Whether an item reads a target only inside queries.
@@ -470,9 +471,9 @@ fn closed_form(m: &Reality, items: &BTreeSet<Node>, form: &Expr) -> Result<(), S
 /// Whether an ask line's value is random: it reaches the cone outside a query, or its own
 /// balance, flows or projection reads a place a random movement books into (refcore's
 /// `line_random`). E §3.1 step 10; L §8.3 item 10.
-fn line_random(m: &Reality, cone: &Cone, ask: &Ask, e: &Expr) -> bool {
+fn line_random(m: &Reality, cone: &Cone, ask: &Ask, e: &Expr) -> Result<bool, Stop> {
     if is_random(m, &cone.items, e) {
-        return true;
+        return Ok(true);
     }
     let scope = Scope::new(Node::new(NodeKind::Ask, &ask.id), Stands::Ask, "", 0);
     let mut stack = vec![e];
@@ -482,32 +483,38 @@ fn line_random(m: &Reality, cone: &Cone, ask: &Ask, e: &Expr) -> bool {
         }
         let mut read = None;
         if let Expr::Bal(bal) = x {
-            read = Some((bal.proj.from.is_some(), place_target(m, &scope, &bal.place)));
+            read = Some((
+                bal.proj.from.is_some(),
+                place_target(m, &scope, &bal.place)?,
+            ));
         } else if let Expr::Low(low) = x {
-            read = Some((low.proj.from.is_some(), place_target(m, &scope, &low.place)));
+            read = Some((
+                low.proj.from.is_some(),
+                place_target(m, &scope, &low.place)?,
+            ));
         } else if let Expr::Flows(flows) = x {
-            read = Some((false, flows_target(m, &scope, &flows.target)));
+            read = Some((false, flows_target(m, &scope, &flows.target)?));
         }
         if let Some((proj, target)) = read
             && (!proj || ask.random.is_none())
             && cone.hit(m, &target)
         {
-            return true;
+            return Ok(true);
         }
         stack.extend(all_children(x));
     }
-    false
+    Ok(false)
 }
 
 /// What `flows(x, …)` marks: a decision's movements, or a place.
-fn flows_target(m: &Reality, scope: &Scope, target: &Expr) -> Target {
+fn flows_target(m: &Reality, scope: &Scope, target: &Expr) -> Result<Target, Stop> {
     if let Expr::Name(id) = strip(target)
         && let Some(mv) = m.moves.get(id)
     {
         if mv.decision {
-            return Target::Move(id.clone());
+            return Ok(Target::Move(id.clone()));
         }
-        return Target::Unknown;
+        return Ok(Target::Unknown);
     }
     place_target(m, scope, target)
 }
@@ -559,11 +566,11 @@ fn unrandom(m: &Reality, items: &BTreeSet<Node>, q: &crate::syntax::Query) -> bo
     !is_random(m, items, &q.arg) && !filter_random && !reads_balances(&q.arg)
 }
 
-/// A whole number as refcore's `%d` prints it; an ask's path counts are parsed integers.
+/// A whole number as refcore's `%d` prints it, of any size; an ask's path counts are parsed
+/// integers (L §2.3 `INT`).
 fn int_text(n: &crate::num::Num) -> Result<String, Stop> {
-    n.to_i64()
-        .map(|v| v.to_string())
-        .ok_or_else(|| invariant("a path count past 64 bits".to_owned()))
+    n.integer_text()
+        .ok_or_else(|| invariant("a path count that isn't an integer".to_owned()))
 }
 
 /// `LOAD-RANDOM a query over paths on a path p line`: an ask that states `paths N seed S`
@@ -704,7 +711,7 @@ pub(super) fn finish_random(
     draws: &[DrawKey],
     files: &Files,
 ) -> Result<BTreeSet<Node>, Stop> {
-    let cone = random_cone(m, &m.graph, Projections::Counted);
+    let cone = random_cone(m, &m.graph, Projections::Counted)?;
     check_draw_slots(m, &cone.items, draws)?;
     let asks: Vec<&Ask> = m
         .asks
@@ -752,7 +759,7 @@ pub(super) fn finish_random(
         }
         closed_form(m, &cone.items, &at.form).map_err(place)?;
     }
-    let base_cone = random_cone(m, &m.graph, Projections::Left);
+    let base_cone = random_cone(m, &m.graph, Projections::Left)?;
     for ask in &asks {
         let file = files.get("ask", &ask.id)?;
         let place = |stop: Stop| {
@@ -777,7 +784,7 @@ pub(super) fn finish_random(
             &cone
         };
         for e in exprs {
-            if ask.path.is_none() && line_random(m, used, ask, e) {
+            if ask.path.is_none() && line_random(m, used, ask, e).map_err(place)? {
                 let message = format!("ask {}: {} is random; apply a query", ask.id, text(e));
                 return Err(place(refused(Load::Random, message)));
             }

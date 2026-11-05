@@ -197,6 +197,128 @@ def other: money DUK = round(gross, mi.and(DUK), half-up)
         assert_eq!(again, canonical, "the canonical text is a fixed point");
     }
 
+    /// The M0 gate's B3 and B4 (G11): `same` sides of every `sref` form stopped "not built",
+    /// and a fraction past 64 bits was `ENGINE-INVARIANT`. The expected text and hash are
+    /// refcore's `reprint` of the same text.
+    #[test]
+    fn same_sides_of_every_form_and_fractions_of_any_size_reprint_as_refcore() {
+        let written = "model home
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  same fee[a2].x = fee[a1]
+  same fee[a1].x[a2] = fee[a2]
+
+source card \"a card\"
+
+input r: num
+
+input s: num
+
+input fee[f in flat]: money PLN
+
+unit PLN: currency minor 0.01
+
+index flat = [a1, a2]
+
+version v1
+  cite card
+  governs always
+  known 2026-01-01
+  same fee[a2].x = fee[a1]
+  same fee[a1].x[a2] = fee[a2]
+  r = 100000000000000000000/30
+  same fee.y = fee[a2]
+  s = -200000000000000000000/40000000000000000000000
+  same fee[a1].x = fee[a2]
+  same z.b = fee[a2]
+  same fee[a2] = fee[-1]
+";
+        let canonical = "model home
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  same fee[a1].x[a2] = fee[a2]
+  same fee[a2].x = fee[a1]
+
+source card \"a card\"
+
+unit PLN: currency minor 0.01
+
+index flat = [a1, a2]
+
+input fee[f in flat]: money PLN
+
+input r: num
+
+input s: num
+
+version v1
+  cite card
+  governs always
+  known 2026-01-01
+  same fee[a2] = fee[-1]
+  same fee.y = fee[a2]
+  same fee[a1].x = fee[a2]
+  same fee[a1].x[a2] = fee[a2]
+  same fee[a2].x = fee[a1]
+  r = 10000000000000000000/3
+  s = -1/200
+  same z.b = fee[a2]
+";
+        let printed = format_file(written.as_bytes()).expect("it reprints");
+        assert_eq!(printed, canonical, "refcore's reprint");
+        let again = format_file(canonical.as_bytes()).expect("it reprints");
+        assert_eq!(again, canonical, "the canonical text is a fixed point");
+        let files = [("b.tally".to_owned(), canonical.to_owned())];
+        assert_eq!(
+            printed_hash(&files),
+            "5c80a260be1e5b07e11e967c117e0cbfc1d61ce9c41fc7cfdab272d62c1cf697",
+            "refcore's sha256 line"
+        );
+    }
+
+    /// A `same` side's keys are literals (L §2.3 `sref`): any other key is refused at parse,
+    /// where refcore's parser takes an expression and names its parse tree (#88, pick P12).
+    /// A side with fields after its first two names is keyed by its written text (L §2.4: "as
+    /// an item whose target and keys are its left side's"), where refcore keys it by its
+    /// parse node's text, `field(obj=…)`: the two orders differ only against such a side.
+    #[test]
+    fn a_same_side_s_keys_are_literals_and_a_deeper_side_sorts_by_its_text() {
+        let head =
+            "part p\n  tally 2\n\nversion v1\n  cite card\n  governs always\n  known 2026-01-01\n";
+        let refused = [
+            ("same fee[1 + 1] = fee[a1]", "expected \"]\", got +"),
+            ("same fee[a1] = fee[f(x)]", "expected \"]\", got ("),
+            ("same fee[*] = fee[a1]", "expected a literal, got *"),
+            ("same fee[(a1)] = fee[a1]", "expected a literal, got ("),
+        ];
+        for (line, why) in refused {
+            let text = format!("{head}  {line}\n");
+            let Err(Stop::Refused(refusal)) = format_file(text.as_bytes()) else {
+                panic!("{line}: a LOAD-PARSE refusal");
+            };
+            assert_eq!(
+                refusal.text(),
+                format!("LOAD-PARSE cannot parse: {why} (input:8)"),
+                "{line}"
+            );
+        }
+        let text = format!(
+            "{head}  same z.b.c = y\n  same b.x = y\n  same a.b.c[k2] = y\n  same a.b.c[k1] = y\n"
+        );
+        let printed = format_file(text.as_bytes()).expect("it reprints");
+        assert_eq!(
+            printed,
+            format!(
+                "{head}  same a.b.c[k1] = y\n  same a.b.c[k2] = y\n  same b.x = y\n  same z.b.c = y\n"
+            ),
+            "by the side's text, then its keys"
+        );
+    }
+
     #[test]
     fn reprint_names_files_as_given_and_orders_them_by_full_path() {
         let file = |path: &str, text: &str| Given {

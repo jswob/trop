@@ -50,12 +50,10 @@ impl Loader {
                 .get(&decl.kind)
                 .filter(|_| self.m.names.get(&decl.kind) == Some(&NameKind::Kind))
             else {
-                return Err(refuse(
-                    Load::Name,
-                    format!("unknown id {}", decl.kind),
-                    &file,
-                    line,
-                ));
+                return Err(
+                    refuse(Load::Name, format!("unknown id {}", decl.kind), &file, line)
+                        .naming(&decl.kind),
+                );
             };
             let kind_id = kind.id.clone();
             if kind.spec != KindSpec::Place {
@@ -261,7 +259,8 @@ impl Loader {
             format!("unknown id {unit} (a unit)"),
             file,
             line,
-        ))
+        )
+        .naming(unit))
     }
 
     /// The place a row, a leg, a `covers` line or a gap role writes: a place's id, a keyed
@@ -295,7 +294,7 @@ impl Loader {
                 return Err(not_place(id));
             }
             if !self.m.names.contains_key(id) && !self.m.things.contains(id) {
-                return Err(refuse(Load::Name, format!("unknown id {id}"), file, line));
+                return Err(refuse(Load::Name, format!("unknown id {id}"), file, line).naming(id));
             }
             return Err(refuse(
                 Load::Kind,
@@ -319,7 +318,7 @@ impl Loader {
             if role == Written::Covers {
                 return Err(not_place(&name));
             }
-            return Err(refuse(Load::Name, format!("unknown id {name}"), file, line));
+            return Err(refuse(Load::Name, format!("unknown id {name}"), file, line).naming(&name));
         }
         let Some(place) = self.m.places.get(&name) else {
             return Err(Stop::NotBuilt("a place that isn't built"));

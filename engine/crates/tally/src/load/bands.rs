@@ -182,8 +182,10 @@ fn tables_of_one_key(
     }
     let whole = match check_table(m, band, table, Whole::Asked) {
         Ok(()) => true,
-        Err(Stop::Refused(_)) => false,
-        Err(other @ (Stop::NotBuilt(_) | Stop::Deep)) => return Err(other),
+        // A table that isn't whole is a `LOAD-BAND` refusal of its own; any other stop is
+        // passed on.
+        Err(Stop::Refused(r)) if r.code() != Code::EngineInvariant => false,
+        Err(other) => return Err(other),
     };
     let matches = table.rows.iter().all(|row| in_earlier(row, &earlier));
     if !matches && !whole {

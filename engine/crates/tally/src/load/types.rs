@@ -7,16 +7,16 @@
 //! Twin: engine/tools/refcore/check.py (`tc`, `lit_rule`, `t_num` to `t_list`, `keylit`,
 //! `resolve_key`, `key_value_kind`, `unordered_key`, `no_order`, `key_pos`, `key_conv`,
 //! `period_conv`, `t_name`, `read`, `t_index`, `t_field`, `numcls`, `t_neg`, `t_bin`, `arith`,
-//! `_arith`, `fx_check`, `ambig`, `arith_time`, `t_not`, `t_and`, `t_if`, `unify`, `t_cmp`,
-//! `kl_value`, `compare`, `t_in`, `t_agg`, `_txt`); check3.py (`m_unit_type`,
-//! `m_movement_field`, `m_covered_spans_of`, `span_txt`).
+//! `_txt`); check3.py (`m_unit_type`, `m_movement_field`, `m_covered_spans_of`, `span_txt`).
+//! The operators' checks (`_arith` to `t_agg`) are `ops.rs`'s, the calls `calls.rs`'s.
 //! Invariants: each node is typed in refcore's order and its reads are recorded as it is
-//! typed; a form this checker doesn't type yet is `Unseen`, which no rule refuses, so a text
-//! refcore loads is never refused for it; every recursion is counted (R-16).
+//! typed; a type load can't see (`Unseen`, a movement's field before a kind test narrows it)
+//! is refused by no rule, as refcore's checks pass it; every recursion is counted (R-16).
 
 use super::check::{AxisRead, Checker, Figure, Scope, Stands, Var, VarDom, deeper, invariant};
 use super::keys::{KeyLit, resolve_key};
 use super::random::DrawKey;
+use super::reads::leg_type;
 use super::srows::base_name;
 use super::worlds::read_elsewhere;
 use crate::base::{Code, Load, Refusal};
@@ -45,7 +45,7 @@ pub(super) fn uerr(message: String) -> Stop {
 }
 
 /// A number error met while typing, an invariant of the unit algebra.
-fn unit_stop(_: crate::num::NumError) -> Stop {
+pub(super) fn unit_stop(_: crate::num::NumError) -> Stop {
     Stop::Refused(Refusal::new(
         Code::EngineInvariant,
         "the unit algebra overflowed while typing".to_owned(),
@@ -242,7 +242,7 @@ pub(super) fn converts(a: &Unit, b: &Unit) -> Result<bool, Stop> {
 }
 
 /// `num u`.
-fn num(unit: Unit) -> Ty {
+pub(super) fn num(unit: Unit) -> Ty {
     Ty::Num(unit, Shown::Plain)
 }
 
@@ -556,8 +556,8 @@ fn mul_sign(op: MulOp) -> &'static str {
     }
 }
 
-/// A comparison's operator.
-fn cmp_sign(op: CmpOp) -> &'static str {
+/// A comparison's operator as written.
+pub(super) fn cmp_sign(op: CmpOp) -> &'static str {
     match op {
         CmpOp::Eq => "==",
         CmpOp::Ne => "!=",
@@ -569,7 +569,7 @@ fn cmp_sign(op: CmpOp) -> &'static str {
 }
 
 /// An aggregate's word.
-fn agg_word(func: AggFn) -> &'static str {
+pub(super) fn agg_word(func: AggFn) -> &'static str {
     match func {
         AggFn::Sum => "sum",
         AggFn::Count => "count",
@@ -1010,7 +1010,7 @@ impl Checker {
     /// A key literal at a key of `ix` (refcore's `resolve_key`). L §2.5.
     fn resolve_at(m: &Reality, scope: &Scope, node: &Expr, ix: &str) -> Result<(), Stop> {
         let Some(domain) = domain_of(m, ix) else {
-            return Err(refused(Load::Name, format!("unknown id {ix}")));
+            return Err(refused(Load::Name, format!("unknown id {ix}")).naming(ix));
         };
         if let Expr::Name(name) = node
             && scope.is_var(name)
@@ -1562,7 +1562,7 @@ impl Checker {
             && !scope.is_var(name)
         {
             let Some(kind) = m.names.get(name).copied() else {
-                return Err(refused(Load::Name, format!("unknown id {name}")));
+                return Err(refused(Load::Name, format!("unknown id {name}")).naming(name));
             };
             return match kind {
                 NameKind::Input | NameKind::Def => self.read(m, scope, name, kind, keys, depth),
@@ -1610,7 +1610,8 @@ impl Checker {
                 let text = format!("cannot parse: ask {name}.{field} is not a value");
                 return Err(refused(Load::Parse, text));
             }
-            return Err(refused(Load::Name, format!("unknown id {name}.{field}")));
+            let id = format!("{name}.{field}");
+            return Err(refused(Load::Name, format!("unknown id {id}")).naming(&id));
         }
         if matches!(t, Ty::Unseen) {
             return Ok(Ty::Unseen);
@@ -1627,7 +1628,7 @@ impl Checker {
             && let Some(info) = m.kinds.get(kind)
         {
             if info.spec == KindSpec::Event {
-                return Ok(movement_field(m, kind, field));
+                return movement_field(m, kind, field);
             }
             return Err(refused(
                 Load::Field,
@@ -1871,7 +1872,7 @@ fn number_with_unit(
         } else if crate::model::is_currency_code(base) {
             return Err(uerr(format!("money in an undeclared currency {base}")));
         } else {
-            return Err(refused(Load::Name, format!("unknown id {base} (a unit)")));
+            return Err(refused(Load::Name, format!("unknown id {base} (a unit)")).naming(base));
         }
     }
     let (made, factor) = Unit::from_syntax(terms).map_err(unit_stop)?;
@@ -2078,29 +2079,23 @@ pub(super) fn unit_type(m: &Reality, u: Option<&str>) -> Result<Ty, Stop> {
 
 /// A field of a movement of event kind `kind`: a leg, an attribute, `day`, `fulfils`; any
 /// other is `Unseen` until kind tests narrow (refcore's `m_movement_field`). L §5.14.
-fn movement_field(m: &Reality, kind: &str, field: &str) -> Ty {
-    let places = || Ty::Key("places".to_owned());
+fn movement_field(m: &Reality, kind: &str, field: &str) -> Typed {
     for (leg, unit, _) in m.kind_legs(kind) {
         if leg == field {
-            let amount = unit_type(m, Some(&unit)).unwrap_or(Ty::Unseen);
-            return Ty::Record(vec![
-                ("from".to_owned(), places()),
-                ("to".to_owned(), places()),
-                ("amount".to_owned(), amount),
-                ("day".to_owned(), Ty::Date),
-            ]);
+            return leg_type(m, &unit);
         }
     }
     for info in m.chain(kind) {
         for (attr, ty) in &info.attr_types {
             if attr == field {
-                return ty.clone().unwrap_or(Ty::Dyn);
+                // An attribute the prelude declares has no written type: refcore's `DYN`.
+                return Ok(ty.clone().unwrap_or(Ty::Dyn));
             }
         }
     }
-    match field {
+    Ok(match field {
         "day" => Ty::Date,
         "fulfils" => Ty::Key("events".to_owned()),
         _ => Ty::Unseen,
-    }
+    })
 }

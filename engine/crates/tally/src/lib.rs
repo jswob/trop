@@ -38,7 +38,7 @@ pub mod base {
     mod table;
 
     pub use code::{Code, Hole, Load, Req, Run, Warn};
-    pub use refusal::{Place, Refusal};
+    pub use refusal::{Place, Reach, Refusal};
     pub use table::Table;
 }
 

@@ -10,7 +10,7 @@
 
 use super::lex::{Canon, Kind, Line, Mark, Role, Tok, cannot};
 use super::tree::{Known, LSpan, Lit, Number, Unit, UnitTerm};
-use crate::base::{Code, Load, Place, Refusal};
+use crate::base::{Code, Load, Place, Reach, Refusal};
 use crate::num::Num;
 use crate::time::Day;
 use std::cell::Cell;
@@ -33,6 +33,19 @@ pub enum Stop {
 impl From<Refusal> for Stop {
     fn from(refusal: Refusal) -> Stop {
         Stop::Refused(refusal)
+    }
+}
+
+impl Stop {
+    /// This stop, a refusal whose message names `id` (`unknown id <id>`, `ambiguous key
+    /// <id>`), naming it for the rule that renames a scenario's id read outside it (L §6.4);
+    /// any other stop as it is.
+    #[must_use]
+    pub fn naming(self, id: &str) -> Stop {
+        match self {
+            Stop::Refused(refusal) => Stop::Refused(refusal.reaching(Reach::Id(id.to_owned()))),
+            Stop::NotBuilt(_) | Stop::Deep => self,
+        }
     }
 }
 

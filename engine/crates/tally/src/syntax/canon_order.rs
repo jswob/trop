@@ -474,26 +474,48 @@ fn mismatch() -> Stop {
     ))
 }
 
+/// A position with its sort key.
+type Keyed = (Vec<Val>, usize);
+
 /// The positions of `keys` sorted by them, equal ones keeping their order (refcore's
-/// `stable_sort`).
+/// `stable_sort`): a merge sort, bottom up, whose comparisons may fail, so it stops at the
+/// first failure and never hands a sort a comparator that isn't a total order. L §2.4.
 ///
 /// # Errors
 ///
 /// The first comparison that fails.
 pub(super) fn sorted_by(keys: Vec<Vec<Val>>) -> Result<Vec<usize>, Stop> {
-    let mut items: Vec<(Vec<Val>, usize)> = keys.into_iter().zip(0..).collect();
-    let mut failed: Option<Stop> = None;
-    items.sort_by(|(a, _), (b, _)| match compare_all(a, b) {
-        Ok(order) => order,
-        Err(stop) => {
-            failed.get_or_insert(stop);
-            Ordering::Equal
+    let mut runs: Vec<Vec<Keyed>> = keys.into_iter().zip(0..).map(|one| vec![one]).collect();
+    while runs.len() > 1 {
+        let mut next = Vec::new();
+        let mut pending = runs.into_iter();
+        while let Some(left) = pending.next() {
+            match pending.next() {
+                Some(right) => next.push(merged(left, right)?),
+                None => next.push(left),
+            }
         }
-    });
-    match failed {
-        Some(stop) => Err(stop),
-        None => Ok(items.into_iter().map(|(_, at)| at).collect()),
+        runs = next;
     }
+    Ok(runs.into_iter().flatten().map(|(_, at)| at).collect())
+}
+
+/// Two sorted runs, `left` written first, as one: on a tie the left one's item first.
+fn merged(left: Vec<Keyed>, right: Vec<Keyed>) -> Result<Vec<Keyed>, Stop> {
+    let mut out = Vec::new();
+    let mut left = left.into_iter().peekable();
+    let mut right = right.into_iter().peekable();
+    while let (Some(a), Some(b)) = (left.peek(), right.peek()) {
+        let right_first = compare_all(&b.0, &a.0)? == Ordering::Less;
+        out.extend(if right_first {
+            right.next()
+        } else {
+            left.next()
+        });
+    }
+    out.extend(left);
+    out.extend(right);
+    Ok(out)
 }
 
 /// The key of a row key written in an item (refcore's row key nodes).
@@ -506,5 +528,73 @@ pub(super) fn row_key(key: &RowKey) -> KeyRef {
             let texts: Vec<String> = keys.iter().map(Lit::text).collect();
             KeyRef::Place(format!("{id}[{}]", texts.join(", ")))
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{Stop, Val, sorted_by};
+    use crate::base::Code;
+
+    /// Keys of two forms, interleaved: ints among themselves in a scrambled order, texts
+    /// among themselves, and every int against a text a comparison that fails. The gate's B5:
+    /// a `sort_by` whose comparator answered `Equal` after a failure panicked on these ("does
+    /// not correctly implement a total order"); the merge stops at the first failure.
+    fn mixed(n: i64) -> Vec<Vec<Val>> {
+        (0..n)
+            .map(|i| {
+                let scrambled = i
+                    .checked_mul(7919)
+                    .and_then(|v| v.checked_rem_euclid(1009))
+                    .expect("small");
+                if i.checked_rem_euclid(3) == Some(0) {
+                    vec![Val::Text(format!("t{scrambled:04}"))]
+                } else {
+                    vec![Val::Int(scrambled)]
+                }
+            })
+            .collect()
+    }
+
+    #[test]
+    fn a_failing_comparison_stops_the_sort() {
+        for n in [2, 5, 21, 33, 64, 100, 257, 1000] {
+            let Err(Stop::Refused(refusal)) = sorted_by(mixed(n)) else {
+                panic!("{n}: ENGINE-INVARIANT");
+            };
+            assert_eq!(
+                refusal.code(),
+                Code::EngineInvariant,
+                "{n}: the mismatch's code"
+            );
+        }
+    }
+
+    #[test]
+    fn the_sort_is_stable_and_ordered() {
+        let keys: Vec<Vec<Val>> = [3, 1, 2, 1, 3, 0, 2]
+            .iter()
+            .map(|v| vec![Val::Int(*v)])
+            .collect();
+        assert_eq!(
+            sorted_by(keys).expect("ints compare"),
+            [5, 1, 3, 2, 6, 0, 4],
+            "ascending, equal keys in their written order"
+        );
+        assert_eq!(
+            sorted_by(Vec::new()).expect("none"),
+            Vec::<usize>::new(),
+            "empty"
+        );
+        assert_eq!(sorted_by(vec![vec![Val::Int(9)]]).expect("one"), [0], "one");
+        let texts: Vec<Vec<Val>> = (0..9)
+            .rev()
+            .map(|i| vec![Val::Text(format!("k{i}")), Val::Int(0)])
+            .collect();
+        assert_eq!(
+            sorted_by(texts).expect("texts"),
+            [8, 7, 6, 5, 4, 3, 2, 1, 0],
+            "an odd count, reversed"
+        );
     }
 }

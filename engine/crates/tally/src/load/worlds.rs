@@ -15,7 +15,7 @@
 use super::joint::{joint_root, load_joint};
 use super::steps::load_among;
 use crate::api::{Pin, Source};
-use crate::base::{Code, Load, Place, Refusal};
+use crate::base::{Code, Load, Place, Reach, Refusal};
 use crate::model::{Joint, Reality};
 use crate::syntax::{Line, Stop, cannot, parse_split, split_lines};
 use std::collections::{BTreeMap, BTreeSet};
@@ -295,31 +295,17 @@ fn no_stack() -> Stop {
 /// file declares it, the first such scenario by id (refcore's `run_worlds`): `LOAD-SCENARIO
 /// <x> of scenario <s> is read outside it`, at the same place. L §6.4.
 fn read_outside(refusal: Refusal, elsewhere: &BTreeMap<String, String>) -> Refusal {
-    let message = refusal.message();
-    let name = if refusal.code() == Code::Load(Load::Name) {
-        message.strip_prefix("unknown id ").map(first_word)
-    } else if refusal.code() == Code::Load(Load::Key) {
-        message
-            .strip_prefix("ambiguous key ")
-            .map(|rest| first_word(rest).trim_end_matches(':'))
-    } else {
-        None
-    };
-    let Some(name) = name.map(str::to_owned) else {
+    let named = [Code::Load(Load::Name), Code::Load(Load::Key)].contains(&refusal.code());
+    let Some(Reach::Id(name)) = refusal.reach().filter(|_| named) else {
         return refusal;
     };
-    match elsewhere.get(&name) {
+    match elsewhere.get(name) {
         Some(id) => refusal.renamed(
             Code::Load(Load::Scenario),
             format!("{name} of scenario {id} is read outside it"),
         ),
         None => refusal,
     }
-}
-
-/// The text up to its first space.
-fn first_word(text: &str) -> &str {
-    text.split_once(' ').map_or(text, |(word, _)| word)
 }
 
 /// The section ids a file's text declares: each line at the left margin whose first word

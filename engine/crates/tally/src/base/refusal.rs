@@ -4,9 +4,23 @@
 //! Twin: engine/tools/refcore/errors.py (`TallyError`, its `text`); joint.py (`MemberRefused`).
 //! Invariants: a refusal always carries its catalogue code (R-76); its line is
 //! `<CODE> <message>`, then ` (<where>)` when it was met in a file, as refcore prints it, after
-//! `member <a>: ` when a joint model's member was refused.
+//! `member <a>: ` when a joint model's member was refused; what a rule acts on (an unloaded
+//! world, the id a refusal names) is its `Reach`, set where it is made, never read from its
+//! message.
 
 use super::code::{Code, Load};
+
+/// What a refusal names, for the load rules that act on it (L §6.4): set where the refusal is
+/// made, beside the message that says it.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Reach {
+    /// An ask naming a world the run doesn't load: it refuses that ask alone (`LOAD-SCENARIO
+    /// ask <q> names <w>, neither the model nor a loaded scenario`).
+    UnloadedWorld,
+    /// The id an `unknown id` or `ambiguous key` refusal names: a scenario's id, read outside
+    /// it, is renamed `LOAD-SCENARIO` (refcore's `run_worlds`).
+    Id(String),
+}
 
 /// Where a refusal was met: a file as the run names it, and a line of it when one is known.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -29,6 +43,8 @@ pub struct Refusal {
     /// The member of a joint model that was refused, its aliases from the run's model down
     /// (`f.b`), or `None` for the run's own refusal.
     member: Option<String>,
+    /// What it names for the rules that act on it, if anything.
+    reach: Option<Reach>,
 }
 
 impl Refusal {
@@ -40,6 +56,7 @@ impl Refusal {
             message,
             place: None,
             member: None,
+            reach: None,
         }
     }
 
@@ -51,7 +68,23 @@ impl Refusal {
             message,
             place: Some(place),
             member: None,
+            reach: None,
         }
+    }
+
+    /// This refusal, naming `reach` for the rules that act on it. L §6.4.
+    #[must_use]
+    pub fn reaching(self, reach: Reach) -> Refusal {
+        Refusal {
+            reach: Some(reach),
+            ..self
+        }
+    }
+
+    /// What this refusal names for the rules that act on it. L §6.4.
+    #[must_use]
+    pub fn reach(&self) -> Option<&Reach> {
+        self.reach.as_ref()
     }
 
     /// `LOAD-PATH`: a path the run is given names no file or folder, named as given. L §8.3.
@@ -92,6 +125,7 @@ impl Refusal {
             message,
             place: self.place.clone(),
             member: self.member.clone(),
+            reach: None,
         }
     }
 

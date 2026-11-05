@@ -441,7 +441,7 @@ fn proj_reaches(
             continue;
         }
         let (Some(reads), Some(rdomains)) =
-            (random_reads(m, rm, &proj.target), bind_keys(m, &rm.binds))
+            (random_reads(m, rm, &proj.target)?, bind_keys(m, &rm.binds))
         else {
             continue;
         };
@@ -593,7 +593,11 @@ fn law_of(
 /// The reads of random inputs and defs in the amounts of a random move's legs that book
 /// `target`, or `None` where load doesn't see them whole: an `if` in the amount, or a key it
 /// doesn't see (refcore's `rreads`). A read as a distribution, `cdf`'s value, is no sample.
-fn random_reads(m: &Reality, rm: &MoveInfo, target: &Target) -> Option<Vec<RandomRead>> {
+fn random_reads(
+    m: &Reality,
+    rm: &MoveInfo,
+    target: &Target,
+) -> Result<Option<Vec<RandomRead>>, Stop> {
     let mut scope = Scope::new(Node::new(NodeKind::Move, &rm.id), Stands::Rule, "", 0);
     for bind in &rm.binds {
         let var = Var {
@@ -608,15 +612,15 @@ fn random_reads(m: &Reality, rm: &MoveInfo, target: &Target) -> Option<Vec<Rando
     }
     let mut out = Vec::new();
     for leg in &rm.decl.legs {
-        let books = place_target(m, &scope, &leg.from) == *target
-            || place_target(m, &scope, &leg.to) == *target;
+        let books = place_target(m, &scope, &leg.from)? == *target
+            || place_target(m, &scope, &leg.to)? == *target;
         if !books {
             continue;
         }
         let mut stack = vec![&leg.amount];
         while let Some(x) = stack.pop() {
             if matches!(x, Expr::If(_)) {
-                return None;
+                return Ok(None);
             }
             if let Expr::DistFn(f) = x
                 && matches!(dist_read(m, &scope, &f.value), AmountNode::Random(_))
@@ -625,10 +629,10 @@ fn random_reads(m: &Reality, rm: &MoveInfo, target: &Target) -> Option<Vec<Rando
                 continue;
             }
             match dist_read(m, &scope, x) {
-                AmountNode::Unseen => return None,
+                AmountNode::Unseen => return Ok(None),
                 AmountNode::Random(read) => {
                     if !read.keys.iter().all(|key| seen_day(m, key, &rm.binds)) {
-                        return None;
+                        return Ok(None);
                     }
                     stack.extend(key_exprs(x).into_iter().rev());
                     out.push(read);
@@ -637,7 +641,7 @@ fn random_reads(m: &Reality, rm: &MoveInfo, target: &Target) -> Option<Vec<Rando
             }
         }
     }
-    Some(out)
+    Ok(Some(out))
 }
 
 /// The key expressions of a read `x[k, …]`, none for a bare name.

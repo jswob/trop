@@ -967,7 +967,7 @@ pub(super) fn key_value(m: &Reality, lit: &Lit, ix: &str) -> Result<Value, Stop>
     } else if m.kinds.get(ix).is_some() {
         Domain::Kind(ix.to_owned())
     } else {
-        return Err(refuse_load(Load::Name, format!("unknown id {ix}")));
+        return Err(refuse_load(Load::Name, format!("unknown id {ix}")).naming(ix));
     };
     Ok(Value::of_key(&literal_key(m, lit, &domain)?))
 }

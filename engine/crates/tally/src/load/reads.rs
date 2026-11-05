@@ -9,8 +9,8 @@
 //! `m_leg_type`).
 //! Invariants: each read is typed in refcore's order, its marks and edges recorded as refcore
 //! records them; a type load doesn't see (`Unseen`, `Dyn`) is refused by none of these checks;
-//! no kind keeps parts until a kind's parts clauses load (M0's G6), so an `of q` on a place
-//! written by name meets `LOAD-PARTS`.
+//! an `of q` reads the labels its place's kind keeps (the parts clauses, `parts.rs`) and is
+//! `LOAD-PARTS` where load sees a place that keeps none of q's sort.
 
 use super::check::{
     Checker, ProjRead, ReadIn, Scope, literal_place, move_keys, named_parts, place_section,
@@ -108,7 +108,7 @@ pub(super) fn span_text(span: &Span) -> String {
 /// keyed place's sections when they hold one, or of the place kind its type names; `Dyn`
 /// otherwise (refcore's `m_place_type_unit`). L §5.10.
 pub(super) fn place_type_unit(m: &Reality, scope: &Scope, t: &Ty, e: &Expr) -> Typed {
-    if let Some(thing) = literal_place(m, scope, e).and_then(|name| m.things.get(&name)) {
+    if let Some(thing) = literal_place(m, scope, e)?.and_then(|name| m.things.get(&name)) {
         return unit_type(m, m.place_unit(thing).as_deref());
     }
     if let Some(info) = place_section(m, scope, e).and_then(|id| m.places.get(&id)) {
@@ -173,7 +173,7 @@ impl Checker {
     pub(super) fn bal(&mut self, m: &Reality, scope: &Scope, bal: &Bal, depth: u32) -> Typed {
         let t = self.place_arg(m, scope, &bal.place, "bal", depth)?;
         let mut ut = place_type_unit(m, scope, &t, &bal.place)?;
-        let target = place_target(m, scope, &bal.place);
+        let target = place_target(m, scope, &bal.place)?;
         let day = match bal.args.as_slice() {
             [unit, day] => {
                 self.expr(
@@ -260,7 +260,10 @@ impl Checker {
                 }
             }
         };
-        let Some((at, keeps)) = place.and_then(|(p, t)| seen_labels(m, scope, p, t)) else {
+        let Some((p, t)) = place else {
+            return Ok(());
+        };
+        let Some((at, keeps)) = seen_labels(m, scope, p, t)? else {
             return Ok(());
         };
         if keeps.holds(need) {
@@ -417,7 +420,7 @@ impl Checker {
     pub(super) fn low(&mut self, m: &Reality, scope: &Scope, low: &Low, depth: u32) -> Typed {
         let t = self.place_arg(m, scope, &low.place, "low", depth)?;
         let ut = place_type_unit(m, scope, &t, &low.place)?;
-        let target = place_target(m, scope, &low.place);
+        let target = place_target(m, scope, &low.place)?;
         self.span(m, scope, &low.span, depth)?;
         if low.span.from.is_none() || low.span.to.is_none() {
             return Err(refused(
@@ -538,7 +541,7 @@ impl Checker {
         let ut = place_type_unit(m, scope, &t, target)?;
         if flows.convert.is_none() {
             let held = if let Some(thing) =
-                literal_place(m, scope, target).and_then(|n| m.things.get(&n))
+                literal_place(m, scope, target)?.and_then(|n| m.things.get(&n))
             {
                 m.place_unit(thing)
             } else if let Ty::Key(ix) = &t {
@@ -553,7 +556,7 @@ impl Checker {
                 )));
             }
         }
-        let place = place_target(m, scope, target);
+        let place = place_target(m, scope, target)?;
         self.mark(&scope.item, Mark::Flows, place);
         self.edge(&scope.item, Node::balances(), Rel::Flows);
         Ok(ut)
@@ -689,7 +692,7 @@ impl Checker {
             return unit_of_quantity(m, &t);
         }
         let mut units: BTreeSet<Option<String>> = BTreeSet::new();
-        if let Some(thing) = literal_place(m, scope, arg).and_then(|n| m.things.get(&n)) {
+        if let Some(thing) = literal_place(m, scope, arg)?.and_then(|n| m.things.get(&n)) {
             units = BTreeSet::from([m.place_unit(thing)]);
         } else if let Ty::Key(ix) = &t
             && m.kinds.get(ix).is_some()
@@ -771,24 +774,29 @@ fn unit_of_quantity(m: &Reality, t: &Ty) -> Typed {
 /// Where load sees the kind of the place an `of q` reads, and the labels it keeps: a literal
 /// place's base kind's (none if it keeps no parts), or a place type's kind where that kind
 /// keeps parts (refcore's `m_check_of`, its `seen`). L §3.6, §5.10.
-fn seen_labels(m: &Reality, scope: &Scope, place: &Expr, t: &Ty) -> Option<(String, Labels)> {
+fn seen_labels(
+    m: &Reality,
+    scope: &Scope,
+    place: &Expr,
+    t: &Ty,
+) -> Result<Option<(String, Labels)>, Stop> {
     let none = Labels {
         owner: false,
         batch: false,
     };
-    if let Some(thing) = literal_place(m, scope, place) {
+    if let Some(thing) = literal_place(m, scope, place)? {
         let keeps = m
             .things
             .get(&thing)
             .and_then(|th| m.thing_parts(th))
             .map_or(none, KindInfo::labels);
-        return Some((thing, keeps));
+        return Ok(Some((thing, keeps)));
     }
     let Ty::Key(kind) = t else {
-        return None;
+        return Ok(None);
     };
-    let keeps = m.parts_kind(kind)?;
-    Some((kind.clone(), keeps.labels()))
+    Ok(m.parts_kind(kind)
+        .map(|keeps| (kind.clone(), keeps.labels())))
 }
 
 /// Whether a projection states any clause.

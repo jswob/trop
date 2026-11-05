@@ -149,7 +149,8 @@ impl Loader {
             format!("unknown id {unit} ({what})"),
             file,
             line,
-        ))
+        )
+        .naming(unit))
     }
 
     /// An input: its key binds, type, `prices` and question. L §5.8, §3.4.
@@ -329,7 +330,7 @@ impl Loader {
             .get(kind)
             .filter(|_| self.m.names.get(kind) == Some(&NameKind::Kind))
         else {
-            return Err(refuse(Load::Name, format!("unknown id {kind}"), file, line));
+            return Err(refuse(Load::Name, format!("unknown id {kind}"), file, line).naming(kind));
         };
         if info.spec != KindSpec::Event {
             return Err(refuse(
@@ -410,8 +411,9 @@ impl Loader {
             let domain = match &bind.domain {
                 Written::Name { id, qual } => {
                     if let Some(prefix) = qual {
-                        let unknown = format!("unknown id {prefix}.{id}");
-                        return Err(refuse(Load::Name, unknown, file, line));
+                        let named = format!("{prefix}.{id}");
+                        let unknown = format!("unknown id {named}");
+                        return Err(refuse(Load::Name, unknown, file, line).naming(&named));
                     }
                     let domain = self.resolve_domain(id, file, line)?;
                     self.check_key_shadow(var, &domain, file, line)?;
@@ -441,7 +443,7 @@ impl Loader {
                 file,
                 line,
             )),
-            None => Err(refuse(Load::Name, format!("unknown id {id}"), file, line)),
+            None => Err(refuse(Load::Name, format!("unknown id {id}"), file, line).naming(id)),
         }
     }
 
@@ -516,7 +518,10 @@ impl Loader {
                         file,
                         line,
                     )),
-                    None => Err(refuse(Load::Name, format!("unknown id {name}"), file, line)),
+                    None => {
+                        Err(refuse(Load::Name, format!("unknown id {name}"), file, line)
+                            .naming(name))
+                    }
                 }
             }
             Type::Record(fields) => {
@@ -568,7 +573,8 @@ impl Loader {
                     format!("unknown id {base} (a unit)"),
                     file,
                     line,
-                ));
+                )
+                .naming(base));
             };
             terms.push((term, *power));
         }

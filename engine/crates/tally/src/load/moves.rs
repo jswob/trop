@@ -12,9 +12,10 @@
 
 use super::check::{Checker, DayRead, Scope, literal_place};
 use super::reads::is_place_type;
+use super::same::instance_text;
 use super::types::{Typed, children, numcls, refused, text, uerr, unit_type};
 use crate::base::{Code, Load, Refusal};
-use crate::model::{Fulfils, KeyVal, MoveInfo, NameKind, Reality, Ty};
+use crate::model::{Fulfils, MoveInfo, NameKind, Reality, Ty};
 use crate::syntax::{AddOp, Bal, Expr, Leg, Lit, Stop};
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -47,7 +48,7 @@ impl Checker {
                 ))));
             }
             let asset_kind = matches!(&t, Ty::Key(ix) if assets.contains(ix));
-            let thing = literal_place(m, scope, end);
+            let thing = literal_place(m, scope, end).map_err(|s| scope.place(s))?;
             let asset_thing = thing
                 .as_ref()
                 .and_then(|name| m.things.get(name))
@@ -280,13 +281,4 @@ fn static_unit(t: &Ty) -> Option<String> {
         return None;
     };
     Some(base.clone())
-}
-
-/// A movement instance's text, `m[k1, k2]` (refcore's `inst.id`).
-fn instance_text(mv: &str, keys: &[KeyVal]) -> String {
-    if keys.is_empty() {
-        return mv.to_owned();
-    }
-    let texts: Vec<String> = keys.iter().map(KeyVal::text).collect();
-    format!("{mv}[{}]", texts.join(", "))
 }

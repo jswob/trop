@@ -350,7 +350,8 @@ fn scenario_item(kind: NameKind) -> bool {
 pub(super) fn base_name(m: &Reality, world: &BaseWorld, name: &str) -> Result<(), Stop> {
     let base = &world.id;
     let Some(kind) = m.names.get(name).copied() else {
-        return Err(refused(Load::Name, format!("unknown id {base}.{name}")));
+        let id = format!("{base}.{name}");
+        return Err(refused(Load::Name, format!("unknown id {id}")).naming(&id));
     };
     if scenario_item(kind)
         && let Some(scenario) = m.scenarios.of(name)

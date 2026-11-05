@@ -19,7 +19,7 @@ use super::across::PeriodRead;
 use super::fills::{FillState, inline_fill_edges};
 use super::keys::keyed_place_thing;
 use super::moves::{own_day_reads, settlements};
-use super::pins::{UNLOADED, unloaded_world};
+use super::pins::unloaded_world;
 use super::prices::price_twice;
 use super::random::{DrawKey, QueryAt, dist_whole};
 use super::reads::{is_move_type, is_place_type};
@@ -27,7 +27,7 @@ use super::srows::{BaseWorld, SrowAt, ask_worlds, top_scenario};
 use super::types::{
     children, covered_spans, is_bool, is_date, key_value_kind, lit_rule, refused, uerr,
 };
-use crate::base::{Code, Load, Place as At, Refusal};
+use crate::base::{Code, Load, Place as At, Reach, Refusal};
 use crate::model::{
     BandInfo, BindInfo, DefInfo, Domain, Graph, KeyVal, KindSpec, Mark, MoveInfo, NameKind, Node,
     NodeKind, Reality, Rel, Shift, Target, Ty,
@@ -595,7 +595,7 @@ pub(super) fn walk(m: &Reality, sections: &[(String, Section)]) -> Result<Walked
 /// Whether an ask's refusal refuses that ask alone: a world the run doesn't load (refcore's
 /// `check_ask` caller, `LOAD-SCENARIO … neither the model nor a loaded scenario`). L §6.4, §8.
 fn refused_alone(refusal: &Refusal) -> bool {
-    refusal.code() == Code::Load(Load::Scenario) && refusal.message().contains(UNLOADED)
+    refusal.code() == Code::Load(Load::Scenario) && refusal.reach() == Some(&Reach::UnloadedWorld)
 }
 
 /// Whether the order of a reader's reads is kept: a def's, a fill's, a band's or a scenario
@@ -871,7 +871,7 @@ impl Checker {
             let refuse =
                 |code: Load, message: String| files.at_input(id, input.line, code, message);
             let binds = match m.names.get(by) {
-                None => return Err(refuse(Load::Name, format!("unknown id {by}"))),
+                None => return Err(refuse(Load::Name, format!("unknown id {by}")).naming(by)),
                 Some(NameKind::Input) => m.inputs.get(by).map(|i| i.binds.as_slice()),
                 Some(NameKind::Def) => m.defs.get(by).map(|d| d.binds.as_slice()),
                 Some(_) => None,
@@ -1161,7 +1161,9 @@ impl Checker {
                     return Err(scope.place(refused(Load::Parse, message)));
                 };
                 if !m.names.contains_key(id) {
-                    return Err(scope.place(refused(Load::Name, format!("unknown id {id}"))));
+                    return Err(
+                        scope.place(refused(Load::Name, format!("unknown id {id}")).naming(id))
+                    );
                 }
                 Ok(())
             }
@@ -1235,8 +1237,11 @@ impl Checker {
                 let lt = self.check_leg(m, &scope.on_line(leg.line), mv, leg, unit)?;
                 self.leg_types.insert((mv.id.clone(), leg.name.clone()), lt);
             }
-            push_once(&mut changes, change_of(m, &scope, &leg.from));
-            push_once(&mut changes, change_of(m, &scope, &leg.to));
+            let on_leg = scope.on_line(leg.line);
+            for end in [&leg.from, &leg.to] {
+                let change = change_of(m, &scope, end).map_err(|s| on_leg.place(s))?;
+                push_once(&mut changes, change);
+            }
         }
         self.attrs(m, &scope, mv)?;
         if let Some(fulfils) = &decl.fulfils {
@@ -1357,7 +1362,7 @@ impl Checker {
             );
             return Err(scope.place(refused(Load::Reads, message)));
         }
-        Ok(place_target(m, scope, read))
+        place_target(m, scope, read).map_err(|s| scope.place(s))
     }
 }
 
@@ -1725,7 +1730,35 @@ pub(super) fn input_or_def(m: &Reality, id: &str) -> Option<(Node, bool)> {
 
 /// The thing a place expression names literally: an unkeyed place's id, a thing of a place
 /// kind, or a keyed place at literal keys (refcore's `m_literal_place`). L §5.10.
-pub(super) fn literal_place(m: &Reality, scope: &Scope, expr: &Expr) -> Option<String> {
+pub(super) fn literal_place(
+    m: &Reality,
+    scope: &Scope,
+    expr: &Expr,
+) -> Result<Option<String>, Stop> {
+    match literal_form(m, scope, expr) {
+        None => Ok(None),
+        Some(Literal::Thing(thing)) => Ok(Some(thing)),
+        Some(Literal::Keyed(id, lits)) => match keyed_place_thing(m, &id, &lits, "", 0) {
+            Ok(thing) => Ok(thing),
+            // A key no index or kind holds is refused where the key is typed (`LOAD-KEY`);
+            // here it names no literal place.
+            Err(Stop::Refused(r)) if r.code() != Code::EngineInvariant => Ok(None),
+            Err(stop) => Err(stop),
+        },
+    }
+}
+
+/// A place expression read literally, before a keyed place's keys are looked up.
+enum Literal {
+    /// The thing it names.
+    Thing(String),
+    /// A keyed place, at keys written as literals.
+    Keyed(String, Vec<Lit>),
+}
+
+/// What a place expression names literally, its keys not yet looked up (refcore's
+/// `m_literal_place`, up to its `key_thing`). L §5.10.
+fn literal_form(m: &Reality, scope: &Scope, expr: &Expr) -> Option<Literal> {
     let (id, posts) = named_parts(expr)?;
     if scope.is_var(id) {
         return None;
@@ -1733,7 +1766,7 @@ pub(super) fn literal_place(m: &Reality, scope: &Scope, expr: &Expr) -> Option<S
     let named = m.names.get(id);
     if named.is_none() && posts.is_empty() {
         let thing = m.things.get(id)?;
-        return m.is_place(thing).then(|| id.to_owned());
+        return m.is_place(thing).then(|| Literal::Thing(id.to_owned()));
     }
     let place = m
         .places
@@ -1741,7 +1774,7 @@ pub(super) fn literal_place(m: &Reality, scope: &Scope, expr: &Expr) -> Option<S
         .filter(|_| named == Some(&NameKind::Place))?;
     if posts.is_empty() {
         let unkeyed = place.things.iter().find(|(keys, _)| keys.is_empty());
-        return unkeyed.map(|(_, thing)| thing.clone());
+        return unkeyed.map(|(_, thing)| Literal::Thing(thing.clone()));
     }
     let [Postfix::Keys(keys)] = posts else {
         return None;
@@ -1750,12 +1783,7 @@ pub(super) fn literal_place(m: &Reality, scope: &Scope, expr: &Expr) -> Option<S
     for key in keys {
         lits.push(key_literal(m, scope, key)?);
     }
-    // A key no index or kind holds is refused where the key is typed (`LOAD-KEY`); here it
-    // names no literal place.
-    match keyed_place_thing(m, id, &lits, "", 0) {
-        Ok(thing) => thing,
-        Err(_) => None,
-    }
+    Some(Literal::Keyed(id.to_owned(), lits))
 }
 
 /// A key written as a literal at a key position: a word that is no variable and no id, a
@@ -1791,24 +1819,24 @@ pub(super) fn place_section(m: &Reality, scope: &Scope, expr: &Expr) -> Option<S
 
 /// What a running read or a declared read of a place names (refcore's `m_place_target`).
 /// E §3.1 step 7.
-pub(super) fn place_target(m: &Reality, scope: &Scope, expr: &Expr) -> Target {
-    if let Some(thing) = literal_place(m, scope, expr) {
-        return Target::Thing(thing);
+pub(super) fn place_target(m: &Reality, scope: &Scope, expr: &Expr) -> Result<Target, Stop> {
+    if let Some(thing) = literal_place(m, scope, expr)? {
+        return Ok(Target::Thing(thing));
     }
-    place_section(m, scope, expr).map_or(Target::Unknown, Target::PlaceSec)
+    Ok(place_section(m, scope, expr).map_or(Target::Unknown, Target::PlaceSec))
 }
 
 /// What a leg's place changes: the place written, every place of a keyed place, every
 /// place of the kind its type names, or a place load can't see (refcore's
 /// `m_move_changes`). L §5.14.2.
-fn change_of(m: &Reality, scope: &Scope, end: &Expr) -> Target {
-    if let Some(thing) = literal_place(m, scope, end) {
-        return Target::Thing(thing);
+fn change_of(m: &Reality, scope: &Scope, end: &Expr) -> Result<Target, Stop> {
+    if let Some(thing) = literal_place(m, scope, end)? {
+        return Ok(Target::Thing(thing));
     }
     if let Some(section) = place_section(m, scope, end) {
-        return Target::PlaceSec(section);
+        return Ok(Target::PlaceSec(section));
     }
-    place_kind(m, scope, end).map_or(Target::Unknown, Target::Kind)
+    Ok(place_kind(m, scope, end).map_or(Target::Unknown, Target::Kind))
 }
 
 /// The kind a place expression's type names, where load sees it: a variable bound over a

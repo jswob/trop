@@ -85,7 +85,11 @@ fn entry_refusal(
     code: Load,
     message: String,
 ) -> Stop {
-    let place = entry.and_then(|e| entry_place(m, files, thing, e));
+    let place = match entry.map(|e| entry_place(m, files, thing, e)) {
+        Some(Err(stop)) => return stop,
+        Some(Ok(place)) => place,
+        None => None,
+    };
     let code = Code::Load(code);
     Stop::Refused(match place {
         Some(place) => Refusal::at(code, message, place),
@@ -94,14 +98,37 @@ fn entry_refusal(
 }
 
 /// The file and line an entry of `thing` is written on: its version's, or its place
-/// section's.
-fn entry_place(m: &Reality, files: &Files, thing: &Thing, entry: &Entry) -> Option<At> {
-    let line = entry.line?;
-    let file = match &entry.version {
-        Some(version) => files.of_version(version).ok()?,
-        None => files.get("place", &section_of(m, thing)?).ok()?,
+/// section's; none for an entry with no line (the prelude's). A section with no file is
+/// `ENGINE-INVARIANT`.
+fn entry_place(
+    m: &Reality,
+    files: &Files,
+    thing: &Thing,
+    entry: &Entry,
+) -> Result<Option<At>, Stop> {
+    let Some(line) = entry.line else {
+        return Ok(None);
     };
-    Some(At::Line(file.to_owned(), line))
+    if let Some(version) = &entry.version {
+        let file = files.of_version(version)?;
+        return Ok(Some(At::Line(file.to_owned(), line)));
+    }
+    let Some(section) = section_of(m, thing) else {
+        return Ok(None);
+    };
+    let file = files.get("place", &section)?;
+    Ok(Some(At::Line(file.to_owned(), line)))
+}
+
+/// The last entry of `thing` written on a line load knows (refcore's `m_check_priced`, its
+/// asset's last entry). L §5.10.
+fn last_placed(m: &Reality, files: &Files, thing: &Thing) -> Result<Option<Entry>, Stop> {
+    for entry in thing.entries.iter().rev() {
+        if entry_place(m, files, thing, entry)?.is_some() {
+            return Ok(Some(entry.clone()));
+        }
+    }
+    Ok(None)
 }
 
 /// The place section a thing comes from: its keyed place's, or the unkeyed place it is.
@@ -192,7 +219,10 @@ impl Checker {
         }
         kinds.sort_by(|a, b| a.0.cmp(b.0));
         for (id, line, price) in kinds {
-            let at = files.get("kind", id).ok().zip(line);
+            let at = match line {
+                Some(line) => Some((files.get("kind", id)?, line)),
+                None => None,
+            };
             self.resolve_price(m, price, &format!("kind {id}"), None, at)?;
         }
         let mut things: Vec<&Thing> = m.things.entries().map(|(_, thing)| thing).collect();
@@ -211,7 +241,7 @@ impl Checker {
                 if section.is_some_and(|place| !sections.insert(place.id.clone())) {
                     continue;
                 }
-                let at = entry_place(m, files, thing, entry).and_then(|place| match place {
+                let at = entry_place(m, files, thing, entry)?.and_then(|place| match place {
                     At::Line(file, line) => Some((file, line)),
                     At::File(_) => None,
                 });
@@ -227,12 +257,9 @@ impl Checker {
                 .as_ref()
                 .is_some_and(|base| assets.contains(base));
             if asset && m.price_of(thing).is_none() {
-                let last = thing
-                    .entries
-                    .iter()
-                    .rev()
-                    .find(|e| entry_place(m, files, thing, e).is_some());
+                let last = last_placed(m, files, thing)?;
                 let message = format!("asset {} names no price input", thing.name);
+                let last = last.as_ref();
                 return Err(entry_refusal(m, files, thing, last, Load::Price, message));
             }
         }
@@ -288,7 +315,9 @@ impl Checker {
             }
         }
         let Some(kind) = m.names.get(id).copied() else {
-            return Err(at_clause(refused(Load::Name, format!("unknown id {id}"))));
+            return Err(at_clause(
+                refused(Load::Name, format!("unknown id {id}")).naming(id),
+            ));
         };
         let Some((_, ty, keys)) = input_or_def_info(m, id) else {
             let message = format!(
@@ -338,7 +367,7 @@ impl Checker {
         if !m.currencies.contains_key(cur) {
             return Err(uerr(format!("money in an undeclared currency {cur}")));
         }
-        let literal = literal_place(m, scope, &value.place);
+        let literal = literal_place(m, scope, &value.place)?;
         let cands = candidates(m, literal.as_deref(), &t);
         for thing in cands.iter().filter_map(|name| m.things.get(name)) {
             if let Some(node) = m.price_of(thing).and_then(|price| price_node(m, &price)) {
@@ -350,7 +379,7 @@ impl Checker {
             Some(by) => self.by(m, scope, by, value, depth)?,
         }
         self.edge(&scope.item, Node::balances(), Rel::Bal);
-        let target = place_target(m, scope, &value.place);
+        let target = place_target(m, scope, &value.place)?;
         self.mark(&scope.item, Mark::Bal, target);
         if let Some(of) = &value.of {
             self.check_of(m, scope, of, Some((&value.place, &t)), depth)?;

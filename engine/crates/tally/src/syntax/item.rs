@@ -337,9 +337,9 @@ fn header_line(header: &mut Header, word: &str, q: &mut P<'_>) -> Result<(), Sto
             header.uses.push((alias, path, hash));
         }
         "same" => {
-            let left = q.reference()?;
+            let left = q.same_ref()?;
             q.expect("=")?;
-            let right = q.reference()?;
+            let right = q.same_ref()?;
             header.sames.push((left, right));
         }
         _ => header.notes.push(q.string()?),
@@ -1423,9 +1423,9 @@ fn item(q: &mut P<'_>) -> Result<ItemForm, Stop> {
         if replace == Replace::Yes || given {
             return Err(q.err("a row"));
         }
-        let left = q.reference()?;
+        let left = q.same_ref()?;
         q.expect("=")?;
-        let right = q.reference()?;
+        let right = q.same_ref()?;
         q.end()?;
         return Ok(ItemForm::Same(Box::new((left, right))));
     }

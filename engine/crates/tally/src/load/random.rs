@@ -12,11 +12,9 @@
 
 use super::check::{Checker, Files, ReadIn, Scope, Stands, VarDom};
 use super::exact::Under;
-use super::types::{Typed, converts, is_bool, numcls, refused, uerr, unit_of};
+use super::types::{Typed, converts, is_bool, num, numcls, refused, uerr, unit_of};
 use crate::base::Load;
-use crate::model::{
-    IndexForm, KeyVal, NameKind, Node, NodeKind, ReadRole, Reality, Shown, Ty, Unit,
-};
+use crate::model::{IndexForm, KeyVal, NameKind, Node, NodeKind, ReadRole, Reality, Ty, Unit};
 use crate::num::Num;
 use crate::syntax::{
     Bind, Crps, Dist, DistFn, DistFnKind, DistKind, Domain as Written, Expr, Lit, Query, QueryFn,
@@ -112,11 +110,6 @@ fn discrete_max(m: &Reality, bind: &Bind) -> Option<Num> {
         keys.push(*k);
     }
     keys.into_iter().max().map(Num::int)
-}
-
-/// `num u`.
-fn num(unit: Unit) -> Ty {
-    Ty::Num(unit, Shown::Plain)
 }
 
 /// The expression inside any brackets (refcore's `strip`).

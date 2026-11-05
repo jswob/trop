@@ -107,7 +107,8 @@ impl Loader {
                     format!("unknown id {} (version {id} cites no source)", version.cite),
                     file,
                     line,
-                ));
+                )
+                .naming(&version.cite));
             }
             let (known, window) = match version.known {
                 Known::Day(day) => (day, None),

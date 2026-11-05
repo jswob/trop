@@ -47,6 +47,15 @@ pub(super) enum Rec {
     Expr,
 }
 
+/// How a reference's keys are written: `ref`'s expressions, or `sref`'s literals (L §2.3).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum KeysOf {
+    /// `expr`, or `*`.
+    Exprs,
+    /// `lit`.
+    Lits,
+}
+
 /// The built-in names, read as built-ins only directly before `(` (L §2.2).
 const BUILTINS: [&str; 75] = [
     "sum",
@@ -594,10 +603,23 @@ impl P<'_> {
 
     /// `ref = ID ["[" keys "]"] {"." FIELD ["[" keys "]"]}` (L §2.3).
     pub(super) fn reference(&mut self) -> Result<Expr, Stop> {
+        self.reference_keyed(KeysOf::Exprs)
+    }
+
+    /// A `same` side, `sref` (L §2.3): a reference whose keys are literals (`a.konto`,
+    /// `a.a_stmt[a_g1]`, `b.rent[2026-03]`, §6.1), in refcore's `ref` shape (one key list
+    /// after the id and after each field). A key that isn't a literal, `*` or a computed
+    /// one, is `LOAD-PARSE`, as the grammar reads it.
+    pub(super) fn same_ref(&mut self) -> Result<Expr, Stop> {
+        self.reference_keyed(KeysOf::Lits)
+    }
+
+    /// A reference, its keys written as `keys` says.
+    fn reference_keyed(&mut self, keys: KeysOf) -> Result<Expr, Stop> {
         let name = self.ident("a reference")?;
         let mut fixes = Vec::new();
         if self.at("[", 0) {
-            fixes.push(Postfix::Keys(self.keys()?));
+            fixes.push(Postfix::Keys(self.ref_keys(keys)?));
         }
         while self.at(".", 0) && !self.spaced(0) {
             self.skip(1)?;
@@ -606,13 +628,34 @@ impl P<'_> {
             }
             fixes.push(Postfix::Field(self.next()?.text.clone()));
             if self.at("[", 0) {
-                fixes.push(Postfix::Keys(self.keys()?));
+                fixes.push(Postfix::Keys(self.ref_keys(keys)?));
             }
         }
         if fixes.is_empty() {
             return Ok(Expr::Name(name));
         }
         Ok(Expr::Post(Box::new(Expr::Name(name)), fixes))
+    }
+
+    /// A reference's key list, as `keys` says it is written.
+    fn ref_keys(&mut self, keys: KeysOf) -> Result<Vec<Key>, Stop> {
+        match keys {
+            KeysOf::Exprs => self.keys(),
+            KeysOf::Lits => self.lit_keys(),
+        }
+    }
+
+    /// `"[" lit {"," lit} "]"`: an `sref`'s keys (L §2.3).
+    fn lit_keys(&mut self) -> Result<Vec<Key>, Stop> {
+        self.expect("[")?;
+        self.open()?;
+        let mut keys = vec![Key::Expr(Expr::Lit(self.lit()?))];
+        while self.accept(",")? {
+            keys.push(Key::Expr(Expr::Lit(self.lit()?)));
+        }
+        self.expect("]")?;
+        self.close()?;
+        Ok(keys)
     }
 
     /// `( [expr {, expr}] )`.

@@ -535,16 +535,20 @@ pub(super) fn merge(jfile: &str, own: &[Source], members: Vec<Member>) -> Result
 ///
 /// # Errors
 ///
-/// `ENGINE-INVARIANT` for a member without its names.
+/// `ENGINE-INVARIANT` for a member without its names or its model's file.
 fn hoisted_sames(members: &[Member], names: &Names, plan: &Plan) -> Result<Vec<Line>, Stop> {
     let mut hoisted = Vec::new();
     for m in members.iter().filter(|m| m.nested) {
         let own = names.of_member(&m.alias)?;
-        let mls = m.files.iter().find(|(p, _)| *p == m.mfile);
-        let header = mls
-            .and_then(|(_, ls)| ls.split_first())
-            .map(|(_, rest)| rest);
-        for line in header.unwrap_or(&[]).iter().take_while(|l| l.level > 0) {
+        let Some((_, lines)) = m.files.iter().find(|(p, _)| *p == m.mfile) else {
+            return Err(invariant(format!(
+                "member {} without its model's file",
+                m.alias
+            )));
+        };
+        // The header's lines after the `model` line (refcore's `mls[1:]`).
+        let header = lines.iter().skip(1).take_while(|l| l.level > 0);
+        for line in header {
             if line_word(line) == "same" {
                 hoisted.push(Line {
                     level: line.level,

@@ -56,7 +56,8 @@ impl Loader {
                             format!("unknown id {parent}"),
                             file,
                             decl.line,
-                        ));
+                        )
+                        .naming(parent));
                     }
                     subs.insert(decl.id.clone());
                     let mut sub = KindInfo::new(&decl.id, KindSpec::Plain, Some(parent));
@@ -217,12 +218,9 @@ impl Loader {
     fn entry(&mut self, version: &str, file: &str, enter: &Enter, line: u32) -> Result<(), Stop> {
         let target = &enter.target;
         if enter.qual.is_some() {
-            return Err(refuse(
-                Load::Name,
-                format!("unknown id {target}"),
-                file,
-                line,
-            ));
+            return Err(
+                refuse(Load::Name, format!("unknown id {target}"), file, line).naming(target),
+            );
         }
         let texts = enter
             .keys
@@ -238,12 +236,9 @@ impl Loader {
                 file,
                 line,
             )),
-            None => Err(refuse(
-                Load::Name,
-                format!("unknown id {target}"),
-                file,
-                line,
-            )),
+            None => {
+                Err(refuse(Load::Name, format!("unknown id {target}"), file, line).naming(target))
+            }
         }
     }
 

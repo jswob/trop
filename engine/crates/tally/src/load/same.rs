@@ -272,7 +272,7 @@ impl Loader {
             if self.m.things.get(name).is_some() {
                 return Ok(Side::Thing);
             }
-            return Err(at(Load::Name, format!("unknown id {name}")));
+            return Err(at(Load::Name, format!("unknown id {name}")).naming(name));
         };
         match kind {
             NameKind::Move => {

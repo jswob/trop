@@ -5,7 +5,7 @@
 //! Twin: engine/tools/refcore/canon.py (`line_text`, `spaced`) and parser.py (`canon_number`,
 //! the fraction's `canon` in `lit`).
 //! Invariants: reads only the tokens and the marks the last parse of their line gave them;
-//! every slice is checked; a fraction's parts are reduced with checked arithmetic.
+//! every slice is checked; a fraction's parts are reduced by the number kernel, of any size.
 //!
 //! What the spec leaves open keeps the spacing of its examples (`f(x)`, `x[k]`, `a: T`, `?"q"`,
 //! `8 PLN/hour`, `19 %`), as refcore does.
@@ -14,6 +14,7 @@ use super::expr::is_builtin;
 use super::lex::{Canon, Kind, Role, Tok};
 use super::parse::{Stop, is_keyword};
 use crate::base::{Code, Refusal};
+use crate::num::Num;
 
 /// The words a `[` after them is spaced from: a calendar's lists (`weekends [sat, sun]`).
 const LIST_WORDS: [&str; 3] = ["weekends", "yearly", "added"];
@@ -22,7 +23,8 @@ const LIST_WORDS: [&str; 3] = ["weekends", "yearly", "added"];
 ///
 /// # Errors
 ///
-/// `ENGINE-INVARIANT` when a fraction's parts aren't two integers of 64 bits.
+/// `ENGINE-INVARIANT` when the tokens the parser marked a fraction's parts aren't two
+/// integers with a denominator other than 0.
 pub(super) fn line_text(toks: &[Tok]) -> Result<String, Stop> {
     let mut out = String::new();
     let mut prev: Option<&Tok> = None;
@@ -86,11 +88,11 @@ fn canonical(toks: &[Tok], at: usize, tok: &Tok) -> Result<String, Stop> {
         Canon::Number => Ok(number_text(&tok.text).unwrap_or_else(|| tok.text.clone())),
         Canon::Numerator => {
             let denom = at.checked_add(2).and_then(|d| toks.get(d));
-            Ok(reduced(Some(tok), denom)?.0.to_string())
+            Ok(reduced(Some(tok), denom)?.0)
         }
         Canon::Denominator => {
             let numer = at.checked_sub(2).and_then(|n| toks.get(n));
-            Ok(reduced(numer, Some(tok))?.1.to_string())
+            Ok(reduced(numer, Some(tok))?.1)
         }
     }
 }
@@ -128,50 +130,39 @@ fn number_text(text: &str) -> Option<String> {
     Some(out)
 }
 
-/// A fraction's numerator and denominator, reduced (L §2.4: "a reduced a/b").
-fn reduced(numer: Option<&Tok>, denom: Option<&Tok>) -> Result<(i64, i64), Stop> {
+/// A fraction's numerator and denominator, reduced by the number kernel's gcd, of any size
+/// (L §2.4: "a reduced a/b"; refcore's `Fraction(a, b)`).
+fn reduced(numer: Option<&Tok>, denom: Option<&Tok>) -> Result<(String, String), Stop> {
     let (Some(a), Some(b)) = (int_of(numer), int_of(denom)) else {
         return Err(not_a_fraction());
     };
-    let g = gcd(a, b).ok_or_else(not_a_fraction)?;
-    let a = a.checked_div_euclid(g).ok_or_else(not_a_fraction)?;
-    let b = b.checked_div_euclid(g).ok_or_else(not_a_fraction)?;
-    Ok((a, b))
+    let value = a.checked_div(b).map_err(|_| not_a_fraction())?;
+    Ok(value.fraction_parts())
 }
 
-/// An integer token's value, if it fits 64 bits.
-fn int_of(tok: Option<&Tok>) -> Option<i64> {
+/// An integer token's value.
+fn int_of(tok: Option<&Tok>) -> Option<&Num> {
     if let Some(Tok {
         kind: Kind::Int(n), ..
     }) = tok
     {
-        return n.to_i64();
+        return Some(n);
     }
     None
 }
 
-/// The greatest common divisor of two integers of which `b` isn't 0.
-fn gcd(a: i64, b: i64) -> Option<i64> {
-    let (mut a, mut b) = (a.checked_abs()?, b.checked_abs()?);
-    while b != 0 {
-        let r = a.checked_rem_euclid(b)?;
-        a = b;
-        b = r;
-    }
-    (a != 0).then_some(a)
-}
-
-/// The refusal of a fraction the reprint can't reduce.
+/// The refusal of a fraction the reprint can't reduce: the parser marks only two integers
+/// around a `/` whose denominator isn't 0 (`LOAD-PARSE` first).
 fn not_a_fraction() -> Stop {
     Stop::Refused(Refusal::new(
         Code::EngineInvariant,
-        "a fraction's parts are not two integers of 64 bits".to_owned(),
+        "a fraction's parts are not two integers with a denominator other than 0".to_owned(),
     ))
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{gcd, number_text};
+    use super::number_text;
 
     #[test]
     fn numbers_print_shortest_and_grouped() {
@@ -193,11 +184,5 @@ mod tests {
             Some("1 234 567"),
             "two groups"
         );
-    }
-
-    #[test]
-    fn a_fraction_reduces() {
-        assert_eq!(gcd(6, 4), Some(2), "6/4 is 3/2");
-        assert_eq!(gcd(1, 3), Some(1), "1/3 stays");
     }
 }

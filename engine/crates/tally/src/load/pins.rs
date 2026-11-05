@@ -13,8 +13,8 @@ use super::check::{Checker, Figure, Files, Scope, Stands};
 use super::random::sample_type;
 use super::steps::refuse;
 use super::types::{is_date, lit_rule, numcls, refused, text, uerr};
-use crate::base::Load;
-use crate::model::{Graph, NameKind, Node, NodeKind, Reality, Rel, Ty};
+use crate::base::{Code, Load, Reach, Refusal};
+use crate::model::{BindInfo, Graph, NameKind, Node, NodeKind, Reality, Rel, Ty};
 use crate::num::Num;
 use crate::syntax::{Expr, Key, Lit, PRef, Pin, PinForm, Stop};
 use std::collections::{BTreeMap, BTreeSet};
@@ -243,23 +243,7 @@ impl Checker {
             );
             return Err(sc.place(refused(Load::Field, message)));
         }
-        match &target.keys {
-            Some(keys) if keys.len() != binds.len() => {
-                let message = format!("wrong number of keys for {name}");
-                return Err(sc.place(refused(Load::Key, message)));
-            }
-            None if !binds.is_empty() => {
-                let message =
-                    format!("wrong number of keys for {name}: write [*] to pin every address");
-                return Err(sc.place(refused(Load::Key, message)));
-            }
-            Some(_) | None => {}
-        }
-        for (key, bind) in target.keys.iter().flatten().zip(binds) {
-            if let Key::Expr(kn) = key {
-                self.key_pos(m, sc, kn, &bind.domain, depth)?;
-            }
-        }
+        self.pin_keys(m, sc, target, binds, "address", depth)?;
         let pinned = Node::new(node, name);
         if uniform {
             let t = self.expr(m, sc, value, None, depth)?;
@@ -278,6 +262,39 @@ impl Checker {
             }
         }
         self.edge(&sc.item, pinned, Rel::Pin);
+        Ok(())
+    }
+
+    /// A pin's keys against its target's bindings: as many as it binds, or none and `[*]`
+    /// asked for, each typed at its position (refcore's `pin` and `sample_pin`, their key
+    /// checks); `each` names what one key pins, an `address` or a `key`. L §5.11, §5.16.
+    fn pin_keys(
+        &mut self,
+        m: &Reality,
+        sc: &Scope,
+        target: &PRef,
+        binds: &[BindInfo],
+        each: &str,
+        depth: u32,
+    ) -> Result<(), Stop> {
+        let name = &target.id;
+        match &target.keys {
+            Some(keys) if keys.len() != binds.len() => {
+                let message = format!("wrong number of keys for {name}");
+                return Err(sc.place(refused(Load::Key, message)));
+            }
+            None if !binds.is_empty() => {
+                let message =
+                    format!("wrong number of keys for {name}: write [*] to pin every {each}");
+                return Err(sc.place(refused(Load::Key, message)));
+            }
+            Some(_) | None => {}
+        }
+        for (key, bind) in target.keys.iter().flatten().zip(binds) {
+            if let Key::Expr(kn) = key {
+                self.key_pos(m, sc, kn, &bind.domain, depth)?;
+            }
+        }
         Ok(())
     }
 
@@ -331,23 +348,7 @@ impl Checker {
                 return Err(sc.place(refused(Load::AsIf, message)));
             }
         };
-        match &target.keys {
-            Some(keys) if keys.len() != binds.len() => {
-                let message = format!("wrong number of keys for {name}");
-                return Err(sc.place(refused(Load::Key, message)));
-            }
-            None if !binds.is_empty() => {
-                let message =
-                    format!("wrong number of keys for {name}: write [*] to pin every key");
-                return Err(sc.place(refused(Load::Key, message)));
-            }
-            Some(_) | None => {}
-        }
-        for (key, bind) in target.keys.iter().flatten().zip(binds) {
-            if let Key::Expr(kn) = key {
-                self.key_pos(m, sc, kn, &bind.domain, depth)?;
-            }
-        }
+        self.pin_keys(m, sc, target, binds, "key", depth)?;
         let mut ty = declared.unwrap_or(Ty::Unseen);
         for field in &target.fields {
             let Some(inner) = ty.field(field).cloned() else {
@@ -462,11 +463,6 @@ fn unknown(id: &str) -> Stop {
 /// `LOAD-SCENARIO ask <q> names <w>, neither the model nor a loaded scenario`: it refuses only
 /// that ask (L §6.4, §8.3; refcore's `check_ask`, `pin`).
 pub(super) fn unloaded_world(ask: &str, world: &str) -> Stop {
-    refused(
-        Load::Scenario,
-        format!("ask {ask} names {world}, {UNLOADED}"),
-    )
+    let message = format!("ask {ask} names {world}, neither the model nor a loaded scenario");
+    Stop::Refused(Refusal::new(Code::Load(Load::Scenario), message).reaching(Reach::UnloadedWorld))
 }
-
-/// The words that tell an ask refused alone for a world the run doesn't load.
-pub(super) const UNLOADED: &str = "neither the model nor a loaded scenario";

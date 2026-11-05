@@ -8,13 +8,14 @@
 //! Invariants: each call is typed in refcore's order with refcore's messages; a type load
 //! doesn't see (`Unseen`) refuses nothing; `to u` marks only the form directly under it.
 
+use super::calls::arity;
 use super::check::{Checker, Scope, invariant};
 use super::random::strip;
 use super::types::{
-    Typed, converts, key_value_kind, lit_expr, numcls, refused, text, uerr, unit_of,
+    Typed, converts, key_value_kind, lit_expr, num, numcls, refused, text, uerr, unit_of, unit_stop,
 };
 use crate::base::Load;
-use crate::model::{CodeKind, NameKind, Node, NodeKind, Reality, Rel, Shown, Ty, Unit};
+use crate::model::{CodeKind, NameKind, Node, NodeKind, Reality, Rel, Ty, Unit};
 use crate::num::Num;
 use crate::syntax::{Call, CmpOp, Expr, Key, Lit, Postfix, Solve, Step, Stop};
 
@@ -24,27 +25,6 @@ pub(super) const TRANS_CALLS: [&str; 7] =
 
 /// The period words a rate built-in takes (refcore's `PERIOD_WORDS`).
 const PERIOD_WORDS: [&str; 4] = ["day", "month", "quarter", "year"];
-
-/// `num u`.
-fn num(unit: Unit) -> Ty {
-    Ty::Num(unit, Shown::Plain)
-}
-
-/// A number error met while typing, an invariant of the unit algebra.
-fn unit_stop(_: crate::num::NumError) -> Stop {
-    invariant("the unit algebra overflowed while typing".to_owned())
-}
-
-/// `LOAD-PARSE` for a built-in given the wrong number of arguments (refcore's `args`).
-fn arity(call: &Call, n: usize) -> Result<(), Stop> {
-    if call.args.len() != n {
-        return Err(refused(
-            Load::Parse,
-            format!("cannot parse: {} takes {n} arguments", call.name),
-        ));
-    }
-    Ok(())
-}
 
 /// Whether a form stands directly under `to u` (refcore's `_under_to`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -457,7 +437,7 @@ fn step_unit(m: &Reality, unit: &crate::syntax::Unit) -> Result<(Unit, Num), Sto
             || crate::model::PERIODS.contains(&base)
             || m.unit_kind_keys.contains_key(base);
         if !known {
-            return Err(refused(Load::Name, format!("unknown id {base} (a unit)")));
+            return Err(refused(Load::Name, format!("unknown id {base} (a unit)")).naming(base));
         }
         terms.push((term.base.clone(), term.power));
     }
@@ -608,7 +588,7 @@ impl Checker {
         };
         let kind = m.names.get(name).copied();
         let Some(kind) = kind else {
-            return Err(refused(Load::Name, format!("unknown id {name}")));
+            return Err(refused(Load::Name, format!("unknown id {name}")).naming(name));
         };
         let (target, binds, declared) = if kind == NameKind::Input {
             let input = m

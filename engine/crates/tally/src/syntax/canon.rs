@@ -395,34 +395,67 @@ impl Printer {
     }
 }
 
-/// A `same` item's left side as a target and its keys: `x`, `a.x`, `x[k]` or `a.x[k]`.
+/// A `same` item's left side (L §2.3 `sref`) as a target and its keys (refcore's `item_key`
+/// for `same`): a side that ends in keys is keyed by them, its target what comes before them
+/// (`x[k]`, `a.x[k]`, `a.b.x[k]`); any other side is its own target (`x`, `a.x`, `a.b.c`,
+/// `x[k].f`), written as the side is.
 fn same_side(left: &Expr) -> Result<(String, &[Key]), Stop> {
-    let no_name = || Stop::NotBuilt("a same item whose side is no name");
-    let Expr::Post(base, fixes) = left else {
-        let Expr::Name(id) = left else {
-            return Err(no_name());
-        };
+    let no_id = || invariant("a same side that is no id with fields and keys");
+    if let Expr::Name(id) = left {
         return Ok((id.clone(), &[]));
+    }
+    let Expr::Post(base, fixes) = left else {
+        return Err(no_id());
     };
     let Expr::Name(head) = &**base else {
-        return Err(no_name());
+        return Err(no_id());
     };
-    match fixes.as_slice() {
-        [Postfix::Keys(keys)] => Ok((head.clone(), keys)),
-        [Postfix::Field(field)] => Ok((format!("{head}.{field}"), &[])),
-        [Postfix::Field(field), Postfix::Keys(keys)] => Ok((format!("{head}.{field}"), keys)),
-        _ => Err(no_name()),
+    let (keys, before): (&[Key], &[Postfix]) = match fixes.split_last() {
+        Some((Postfix::Keys(keys), before)) => (keys, before),
+        _ => (&[], fixes),
+    };
+    let mut target = head.clone();
+    for fix in before {
+        match fix {
+            Postfix::Field(field) => {
+                target.push('.');
+                target.push_str(field);
+            }
+            Postfix::Keys(group) => {
+                let texts = group
+                    .iter()
+                    .map(same_key_text)
+                    .collect::<Result<Vec<_>, _>>()?;
+                target.push('[');
+                target.push_str(&texts.join(", "));
+                target.push(']');
+            }
+        }
+    }
+    Ok((target, keys))
+}
+
+/// A `same` side's key as written (`sref`'s keys are literals, L §2.3).
+fn same_key_text(key: &Key) -> Result<String, Stop> {
+    match key {
+        Key::Expr(Expr::Lit(lit)) => Ok(lit.text()),
+        Key::Expr(Expr::Name(name)) => Ok(name.clone()),
+        Key::Star | Key::Expr(_) => Err(no_literal()),
     }
 }
 
-/// A `same` item's key position as a key.
+/// A `same` item's key position as a key: a literal, as the parser reads `sref`'s keys.
 fn same_key(key: &Key) -> Result<KeyRef, Stop> {
     match key {
-        Key::Star => Ok(KeyRef::Star),
         Key::Expr(Expr::Lit(lit)) => Ok(KeyRef::One(lit.clone())),
         Key::Expr(Expr::Name(name)) => Ok(KeyRef::One(Lit::Name(name.clone()))),
-        Key::Expr(_) => Err(Stop::NotBuilt("a same item keyed by an expression")),
+        Key::Star | Key::Expr(_) => Err(no_literal()),
     }
+}
+
+/// A `same` side keyed by what the parser's `sref` never takes.
+fn no_literal() -> Stop {
+    invariant("a same side keyed by no literal")
 }
 
 /// A target's id, with its member's prefix.

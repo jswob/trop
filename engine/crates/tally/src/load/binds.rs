@@ -14,6 +14,7 @@
 
 use super::check::{Checker, Scope, Stands, VarDom};
 use super::ops::unify;
+use super::steps::num_stop;
 use super::types::{
     Typed, converts, int_flex, is_bool, is_date, is_duration, key_value_kind, no_order,
     period_kind, span_text, text, uerr, unit_of,
@@ -88,7 +89,9 @@ pub(super) fn over(m: &Reality, bind: &Bind, key_bind: BindAs) -> Result<Over, S
     match &bind.domain {
         // A joint model's merge has made each member's index or kind one name; a prefix left
         // names nothing (refcore's `qualified`, GD-1).
-        Written::Name { id, qual: Some(_) } => Err(refused(Load::Name, format!("unknown id {id}"))),
+        Written::Name { id, qual: Some(_) } => {
+            Err(refused(Load::Name, format!("unknown id {id}")).naming(id))
+        }
         Written::Name { id, qual: None } => over_name(m, bind, id, key_bind),
         Written::List(keys) => {
             if keys.iter().any(|key| key_text(key) == *var) {
@@ -110,7 +113,7 @@ fn over_name(m: &Reality, bind: &Bind, id: &str, key_bind: BindAs) -> Result<Ove
     let alive = bind.on.is_some() || bind.over.is_some() || key_bind == BindAs::KeyBind;
     let needs_alive = || refused(Load::Alive, format!("binding over {id} needs on or over"));
     match m.names.get(id) {
-        None => Err(refused(Load::Name, format!("unknown id {id}"))),
+        None => Err(refused(Load::Name, format!("unknown id {id}")).naming(id)),
         Some(NameKind::Index) => {
             if m.indexes
                 .get(id)
@@ -427,10 +430,9 @@ impl Checker {
                 self.expr(m, &retyped, node, Some(target), 0)?;
                 return Ok(());
             }
-            return Err(refused(
-                Load::Key,
-                format!("ambiguous key {written} for {what}"),
-            ));
+            return Err(
+                refused(Load::Key, format!("ambiguous key {written} for {what}")).naming(written),
+            );
         }
         assign_type(m, target, t, what)
     }
@@ -576,7 +578,7 @@ fn to_money(m: &Reality, cur: &str, t: &Ty, what: &str) -> Result<bool, Stop> {
         let Some(minor) = m.currencies.get(cur) else {
             return Ok(false);
         };
-        let whole = n.checked_div(minor).is_ok_and(|q| q.is_integer());
+        let whole = n.checked_div(minor).map_err(num_stop)?.is_integer();
         if !whole {
             let figure = n.to_text().map_err(|_| {
                 Stop::Refused(Refusal::new(

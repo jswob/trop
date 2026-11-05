@@ -178,7 +178,7 @@ impl Loader {
                 file,
                 line,
             )),
-            None => Err(refuse(Load::Name, format!("unknown id {name}"), file, line)),
+            None => Err(refuse(Load::Name, format!("unknown id {name}"), file, line).naming(name)),
         }
     }
 
@@ -247,7 +247,7 @@ impl Loader {
                 return Err(refuse(Load::Name, format!("{id} is not band"), file, line));
             }
             None => {
-                return Err(refuse(Load::Name, format!("unknown id {id}"), file, line));
+                return Err(refuse(Load::Name, format!("unknown id {id}"), file, line).naming(id));
             }
         }
         let Some(band) = self.m.bands.get(id) else {
@@ -664,12 +664,10 @@ fn load_pattern_text(pattern: &[Pat]) -> String {
 /// one (refcore's `target`, whose `qualified` names nothing since GD-1). L §6.1, §2.5.
 fn unprefixed(qual: Option<&str>, name: &str, file: &str, line: u32) -> Result<(), Stop> {
     match qual {
-        Some(prefix) => Err(refuse(
-            Load::Name,
-            format!("unknown id {prefix}.{name}"),
-            file,
-            line,
-        )),
+        Some(prefix) => {
+            let id = format!("{prefix}.{name}");
+            Err(refuse(Load::Name, format!("unknown id {id}"), file, line).naming(&id))
+        }
         None => Ok(()),
     }
 }

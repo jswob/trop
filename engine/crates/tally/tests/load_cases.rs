@@ -4662,4 +4662,115 @@ version v1
             assert_eq!(load_lines(&files, "zz"), expected, "{name}");
         }
     }
+
+    /// The M0 gate's B2 and B6 (G11): `lifespan` had no typing arm, so every form below
+    /// loaded; a path count past 64 bits was `ENGINE-INVARIANT`. Each expected text is
+    /// refcore's load line for a run of `zz` (`tmp/m0/g11/p.py`); no T vector holds `lifespan`.
+    #[test]
+    fn lifespan_and_a_path_count_of_any_size_are_checked_at_load_as_refcore_checks_them() {
+        const ONE: &str = "model home\n  tally 2\n  on 2026-03-01\n  start 2026-01-01\n  end 2026-12-31\n\nsource card \"a card\"\n\nunit PLN: currency minor 0.01\n\nindex flat = [a1, a2]\n\nkind pays: transfers\n\nplace konto: accounts PLN lives 2026-01-01..\n\nplace world: outside lives 2026-01-01..\n\ninput amt: money PLN\n\ninput r: num\n\ninput fee[f in flat]: money PLN\n\ndef twice: money PLN = amt + amt\n\nask q: twice\n\nversion v1\n  cite card\n  governs always\n  known 2026-01-01\n  amt = 1.00 PLN\n  r = 1\n  fee[*] = 1.00 PLN\n";
+        const DEF: &str = "def twice: money PLN = amt + amt";
+        const ASK: &str = "ask q: twice";
+        let no_ask = "refused: REQ-ASK no ask zz";
+        let lifespan: &[(&str, &str, &str)] = &[
+            ("ok", "def ls: date = lifespan(konto).from", no_ask),
+            ("to", "def ls: date = lifespan(world).to", no_ask),
+            (
+                "kind",
+                "def ls[p in accounts]: date = lifespan(p).to",
+                no_ask,
+            ),
+            (
+                "two",
+                "def ls: date = lifespan(konto, world).from",
+                "refused: LOAD-PARSE cannot parse: lifespan takes 1 arguments (a.tally:27)",
+            ),
+            (
+                "none",
+                "def ls: date = lifespan().from",
+                "refused: LOAD-PARSE cannot parse: lifespan takes 1 arguments (a.tally:27)",
+            ),
+            (
+                "field",
+                "def ls: date = lifespan(konto).zz",
+                "refused: LOAD-FIELD zz is not a field of (from date, to date) (a.tally:27)",
+            ),
+            (
+                "index-key",
+                "def ls: date = lifespan(a1).from",
+                "refused: LOAD-UNIT lifespan of keylit, not a thing (a.tally:27)",
+            ),
+            (
+                "unknown",
+                "def ls: date = lifespan(nope).to",
+                "refused: LOAD-UNIT lifespan of keylit, not a thing (a.tally:27)",
+            ),
+            (
+                "money",
+                "def ls: date = lifespan(amt).from",
+                "refused: LOAD-UNIT lifespan of money PLN, not a thing (a.tally:27)",
+            ),
+            (
+                "bound",
+                "def ls[f in flat]: date = lifespan(f).from",
+                "refused: LOAD-UNIT lifespan of key flat, not a thing (a.tally:27)",
+            ),
+            (
+                "whole",
+                "def ls: date = lifespan(konto)",
+                "refused: LOAD-UNIT rule base of ls is (from date, to date), not date (a.tally:27)",
+            ),
+            (
+                "num",
+                "def ls: num = lifespan(konto).from",
+                "refused: LOAD-UNIT rule base of ls is date, not num (a.tally:27)",
+            ),
+            (
+                "kind-name",
+                "def ls: date = lifespan(accounts).to",
+                "refused: LOAD-PARSE cannot parse: kind accounts stands only in a binding or a membership test (a.tally:27)",
+            ),
+            (
+                "int",
+                "def ls: date = lifespan(3).from",
+                "refused: LOAD-LITERAL figure 3 in a rule; make it a row (a.tally:27)",
+            ),
+        ];
+        for &(name, def, expected) in lifespan {
+            let added = format!("{DEF}\n\n{def}");
+            let files = [("a.tally", edited(ONE, &[(DEF, added.as_str())]))];
+            assert_eq!(load_lines(&files, "zz"), expected, "lifespan {name}");
+        }
+        let paths: &[(&str, &str, &str)] = &[
+            (
+                "path-alone",
+                "ask q: twice path 99999999999999999999",
+                "refused: LOAD-PARSE cannot parse: path 99999999999999999999 without paths N seed S (a.tally:27)",
+            ),
+            (
+                "path-past-n",
+                "ask q: twice paths 3 seed 1 path 99999999999999999999",
+                "refused: LOAD-DOMAIN path 99999999999999999999 is outside 1..3 (a.tally:27)",
+            ),
+            (
+                "both-big",
+                "ask q: twice paths 99999999999999999999 seed 1 path 999999999999999999999",
+                "refused: LOAD-DOMAIN path 999999999999999999999 is outside 1..99999999999999999999 (a.tally:27)",
+            ),
+            (
+                "n-big",
+                "ask q: twice paths 99999999999999999999 seed 1 path 1",
+                no_ask,
+            ),
+            (
+                "zero",
+                "ask q: twice paths 0 seed 1",
+                "refused: LOAD-DOMAIN paths 0: N is at least 1 (a.tally:27)",
+            ),
+        ];
+        for &(name, ask, expected) in paths {
+            let files = [("a.tally", edited(ONE, &[(ASK, ask)]))];
+            assert_eq!(load_lines(&files, "zz"), expected, "paths {name}");
+        }
+    }
 }

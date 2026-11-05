@@ -13,8 +13,9 @@
 
 use super::check::{Checker, Figure, Reading, Scope, tested_vars};
 use super::types::{
-    Op, Operand, Sides, Typed, covered_spans, input_read, is_bool, is_date, key_pk, key_value_kind,
-    lit_expr, lit_rule, no_order, numcls, period_kind, refused, uerr, unit_of,
+    Op, Operand, Sides, Typed, agg_word, cmp_sign, converts, covered_spans, input_read, int_flex,
+    is_bool, is_date, is_duration, key_pk, key_value_kind, lit_expr, lit_rule, no_order, num,
+    numcls, period_kind, refused, uerr, unit_of, unit_stop,
 };
 use crate::base::{Code, Load};
 use crate::model::{
@@ -23,40 +24,9 @@ use crate::model::{
 use crate::syntax::{Agg, AggFn, CmpOp, Expr, In, Lit, Stop};
 use crate::time::PeriodKind;
 
-/// `num u`.
-fn num(unit: Unit) -> Ty {
-    Ty::Num(unit, Shown::Plain)
-}
-
-/// A number error of the unit algebra, an invariant.
-fn unit_stop(_: crate::num::NumError) -> Stop {
-    Stop::Refused(crate::base::Refusal::new(
-        Code::EngineInvariant,
-        "the unit algebra overflowed while typing".to_owned(),
-    ))
-}
-
-/// Whether two units convert into each other.
-fn converts(a: &Unit, b: &Unit) -> Result<bool, Stop> {
-    Ok(a.conv(b).map_err(unit_stop)?.is_some())
-}
-
 /// Whether `t` is `num %`.
 fn is_pct(t: &Ty) -> bool {
     matches!(t, Ty::Num(unit, Shown::Percent) if unit.is_one())
-}
-
-/// Whether a bare figure is an integer (refcore's `_intflex`).
-fn int_flex(t: &Ty) -> bool {
-    matches!(t, Ty::Flex(n) if n.is_integer())
-}
-
-/// Whether `t` is a duration: a num of one period word to the first power.
-fn is_duration(t: &Ty) -> bool {
-    let Ty::Num(unit, _) = t else {
-        return false;
-    };
-    matches!(unit.terms(), [(base, 1)] if crate::model::PERIODS.contains(&base.as_str()))
 }
 
 /// The types no arithmetic takes (refcore's `_arith`, its list).
@@ -714,7 +684,8 @@ impl Checker {
                 return Err(refused(
                     Load::Key,
                     format!("ambiguous key {written}: nothing names its index"),
-                ));
+                )
+                .naming(written));
             }
         }
         let rt = self.expr(m, scope, &test.set, None, depth)?;
@@ -1203,22 +1174,19 @@ fn compare_plain(op: CmpOp, lt: &Ty, rt: &Ty) -> Result<(), Stop> {
         if !eq {
             return Err(uerr(format!(
                 "{} orders month-days: they compare with == and != only",
-                cmp_word(op)
+                cmp_sign(op)
             )));
         }
         return Ok(());
     }
-    if let Ty::KeyLit(written) = lt {
-        return Err(refused(
-            Load::Key,
-            format!("ambiguous key {written}: nothing names its index"),
-        ));
-    }
-    if let Ty::KeyLit(written) = rt {
-        return Err(refused(
-            Load::Key,
-            format!("ambiguous key {written}: nothing names its index"),
-        ));
+    for side in [lt, rt] {
+        if let Ty::KeyLit(written) = side {
+            return Err(refused(
+                Load::Key,
+                format!("ambiguous key {written}: nothing names its index"),
+            )
+            .naming(written));
+        }
     }
     if lk == "record" || rk == "record" {
         return Err(uerr(
@@ -1226,34 +1194,6 @@ fn compare_plain(op: CmpOp, lt: &Ty, rt: &Ty) -> Result<(), Stop> {
         ));
     }
     Err(uerr(format!("{} and {} compared", lt.show(), rt.show())))
-}
-
-/// A comparison's operator as written.
-fn cmp_word(op: CmpOp) -> &'static str {
-    match op {
-        CmpOp::Eq => "==",
-        CmpOp::Ne => "!=",
-        CmpOp::Lt => "<",
-        CmpOp::Le => "<=",
-        CmpOp::Gt => ">",
-        CmpOp::Ge => ">=",
-    }
-}
-
-/// An aggregate's word.
-fn agg_word(func: AggFn) -> &'static str {
-    match func {
-        AggFn::Sum => "sum",
-        AggFn::Count => "count",
-        AggFn::Min => "min",
-        AggFn::Max => "max",
-        AggFn::Any => "any",
-        AggFn::All => "all",
-        AggFn::First => "first",
-        AggFn::Last => "last",
-        AggFn::Argmin => "argmin",
-        AggFn::Argmax => "argmax",
-    }
 }
 
 /// What a binding ranges over when it has no order a rule can read: things, movements or

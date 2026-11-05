@@ -19,7 +19,7 @@ use super::strata::reaches_mark;
 use super::types::{children, text};
 use super::values::{at_row, row_file};
 use super::worlds::no_version;
-use crate::base::Load;
+use crate::base::{Code, Load};
 use crate::model::{
     DefInfo, Domain, Graph, InputInfo, KeyVal, KindInfo, KindSpec, Labels, NameKind, Node,
     NodeKind, Number, Pat, Reality, Row, RowInstant, Ty, Value,
@@ -136,7 +136,11 @@ impl Checker {
             )
         };
         match m.names.get(rule) {
-            None => return Err(refuse(Load::Name, format!("unknown id {rule}"), file, line)),
+            None => {
+                return Err(
+                    refuse(Load::Name, format!("unknown id {rule}"), file, line).naming(rule)
+                );
+            }
             Some(NameKind::Def) => {}
             Some(_) => return Err(not_one()),
         }
@@ -877,8 +881,10 @@ impl Loader {
             };
             match resolve_key(&self.m, &written, &bind.domain, file, line) {
                 Ok(value) => texts.push(value.text()),
-                Err(Stop::Refused(_)) => return Ok(None),
-                Err(stop @ (Stop::NotBuilt(_) | Stop::Deep)) => return Err(stop),
+                // A key its index doesn't hold names no batch here; the key is refused where
+                // it is typed. Any other stop is passed on.
+                Err(Stop::Refused(r)) if r.code() != Code::EngineInvariant => return Ok(None),
+                Err(stop) => return Err(stop),
             }
         }
         let id = if texts.is_empty() {

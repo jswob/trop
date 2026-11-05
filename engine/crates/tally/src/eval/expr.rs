@@ -605,7 +605,7 @@ pub(super) fn binop(m: &Reality, op: Op, lhs: &Value, rhs: &Value) -> Result<Val
             ));
         }
         if let Value::Word(word) = v {
-            return Err(refuse_load(Load::Key, format!("ambiguous key {word}")));
+            return Err(refuse_load(Load::Key, format!("ambiguous key {word}")).naming(word));
         }
     }
     if lhs.as_hole().is_some() || rhs.as_hole().is_some() {

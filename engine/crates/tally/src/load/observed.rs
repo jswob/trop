@@ -525,7 +525,9 @@ impl Loader {
             ));
         };
         let Some(kind) = self.m.names.get(&name) else {
-            return Err(at.refuse(Load::Name, format!("unknown id {name}")));
+            return Err(at
+                .refuse(Load::Name, format!("unknown id {name}"))
+                .naming(&name));
         };
         if *kind == NameKind::Kind && name == "adjustments" && !keys.is_empty() {
             return self.adj_ref(&keys, at);
@@ -574,7 +576,9 @@ impl Loader {
             _ => return Err(shape()),
         };
         let Some(kind) = self.m.names.get(name) else {
-            return Err(at.refuse(Load::Name, format!("unknown id {name}")));
+            return Err(at
+                .refuse(Load::Name, format!("unknown id {name}"))
+                .naming(name));
         };
         if *kind != NameKind::Move {
             return Err(at.refuse(

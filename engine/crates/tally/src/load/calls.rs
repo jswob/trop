@@ -1,20 +1,20 @@
-//! Load's checker, its calls: the built-ins' argument types and results, band calls, `to` and spans, a later group's call typed `Unseen`.
-//! Spec: L §4.2 (the date and calendar functions), §5.9 (bands, `band_lo`, `band_hi`,
-//! `marginal`), §5.11 (`missing`, `min`, `max`), §7.2 (`round`, its step and mode), §4.6
-//! (`since`), §5.6 (spans), §8.3 (`LOAD-UNIT`, `-PARSE`, `-NAME`, `-KEY`, `-LITERAL`,
-//! `-MISSING`, `-BAND`), §8.4.
+//! Load's checker, its calls: every built-in's argument types and result, band calls, `to` and spans.
+//! Spec: L §4.2 (the date and calendar functions, `lifespan`), §5.9 (bands, `band_lo`,
+//! `band_hi`, `marginal`), §5.10 (`unit`), §5.11 (`missing`, `min`, `max`), §7.2 (`round`, its
+//! step and mode), §4.6 (`since`), §5.6 (spans), §8.3 (`LOAD-UNIT`, `-PARSE`, `-NAME`, `-KEY`,
+//! `-LITERAL`, `-MISSING`, `-BAND`), §8.4.
 //! Twin: engine/tools/refcore/check.py (`t_call`, `args`, `want`, `tdate`,
-//! `tdate_or_period`, `tint`, `c_start_of` to `c_since`, `cal_arg`, `band_ref`, `c_band_lo`,
-//! `c_marginal`, `band_call`, `mode_arg`, `span`, `prefixed_call`); the reads of the ledger are
-//! `reads.rs`'s.
-//! Invariants: every argument is typed in refcore's order and its reads recorded; a call
-//! whose checks are a later group's (`exp`, `pow`, `periodic`, `lifespan`, …) types its
-//! arguments and is `Unseen`, refusing nothing of its own.
+//! `tdate_or_period`, `tint`, `c_start_of` to `c_since`, `c_lifespan`, `cal_arg`, `band_ref`,
+//! `c_band_lo`, `c_marginal`, `band_call`, `mode_arg`, `span`, `prefixed_call`); the reads of
+//! the ledger are `reads.rs`'s, the exact and transcendental calls `exact.rs`'s.
+//! Invariants: every argument is typed in refcore's order and its reads recorded; every
+//! built-in a call can name has its arm (`covered` is its own expression), so a call left
+//! untyped is `ENGINE-INVARIANT`, never a pass.
 
-use super::check::{Checker, Reading, Scope, Stands, named_parts};
+use super::check::{Checker, Reading, Scope, Stands, invariant, named_parts};
 use super::ops::unify;
 use super::types::{
-    Typed, input_read, is_date, is_period, no_order, numcls, period_kind, refused, text, uerr,
+    Typed, input_read, is_date, is_period, no_order, num, numcls, period_kind, refused, text, uerr,
     unit_of,
 };
 use crate::base::Load;
@@ -99,13 +99,8 @@ const BUILTINS: [&str; 46] = [
     "covered",
 ];
 
-/// `num u`.
-fn num(unit: Unit) -> Ty {
-    Ty::Num(unit, Shown::Plain)
-}
-
 /// `LOAD-PARSE` for a built-in given the wrong number of arguments (refcore's `args`).
-fn arity(call: &Call, n: usize) -> Result<(), Stop> {
+pub(super) fn arity(call: &Call, n: usize) -> Result<(), Stop> {
     if call.args.len() != n {
         return Err(refused(
             Load::Parse,
@@ -150,7 +145,7 @@ fn prefixed_call(m: &Reality, first: &str, call: &Call) -> Stop {
             format!("cannot parse: {full} names no band (a prefix is a member or the base)"),
         );
     }
-    refused(Load::Name, format!("unknown id {full}"))
+    refused(Load::Name, format!("unknown id {full}")).naming(&full)
 }
 
 impl Checker {
@@ -189,7 +184,7 @@ impl Checker {
                     format!("cannot parse: {} is not called", call.name),
                 ));
             }
-            return Err(refused(Load::Name, format!("unknown id {}", call.name)));
+            return Err(refused(Load::Name, format!("unknown id {}", call.name)).naming(&call.name));
         }
         self.builtin(m, scope, call, expect, depth)
     }
@@ -229,6 +224,7 @@ impl Checker {
             "add_years" => self.add_to_date(m, scope, call, "year", depth),
             "overlap_days" => self.overlap_days(m, scope, call, depth),
             "pos" => self.pos(m, scope, call, depth),
+            "lifespan" => self.lifespan(m, scope, call, depth),
             "one_of" => self.one_of(m, scope, call, depth),
             "is_business" => self.is_business(m, scope, call, depth),
             "add_business" | "last_business" => self.business(m, scope, call, depth),
@@ -253,24 +249,10 @@ impl Checker {
             "exp" | "ln" | "sqrt" | "pow" | "periodic" | "factor" | "dcf" | "accrue" => {
                 self.exact_call(m, scope, call, depth)
             }
-            _ => self.args_only(m, scope, args, depth),
+            // `covered` is its own expression (L §2.3), never a call: every other name of
+            // `BUILTINS` has its arm above.
+            _ => Err(invariant(format!("a built-in with no typing arm: {}", call.name))),
         }
-    }
-
-    /// Each argument typed, the call `Unseen` (a built-in a later group checks); a bare name
-    /// that is no value (a period word such as `month`, an index, a kind) is that built-in's
-    /// own argument, read by its checks, not here (refcore's `period_arg`, `code_arg`).
-    fn args_only(&mut self, m: &Reality, scope: &Scope, args: &[Expr], depth: u32) -> Typed {
-        for arg in args {
-            if let Expr::Name(id) = arg
-                && !scope.is_var(id)
-                && m.names.get(id).is_some_and(|kind| !is_value(*kind))
-            {
-                continue;
-            }
-            self.expr(m, scope, arg, None, depth)?;
-        }
-        Ok(Ty::Unseen)
     }
 
     /// `LOAD-UNIT` unless `t` is a date (refcore's `tdate`, `want`). L §4.2.
@@ -466,7 +448,7 @@ impl Checker {
                 .map(|(id, _)| id)
                 .collect();
             let [hit] = hits.as_slice() else {
-                return Err(refused(Load::Key, format!("ambiguous key {written}")));
+                return Err(refused(Load::Key, format!("ambiguous key {written}")).naming(written));
             };
             t = self.expr(m, scope, arg, Some(&Ty::Key((*hit).clone())), depth)?;
         }
@@ -481,6 +463,32 @@ impl Checker {
         }
         no_order(m, &t, "pos")?;
         Ok(Ty::Int)
+    }
+
+    /// `lifespan(t)`, t a thing: the record `(from date, to date)` (refcore's `c_lifespan`).
+    /// A bare key naming one thing is read as a key of its kind (L §2.5). L §4.2, §5.3.
+    fn lifespan(&mut self, m: &Reality, scope: &Scope, call: &Call, depth: u32) -> Typed {
+        arity(call, 1)?;
+        let span = || {
+            Ty::Record(vec![
+                ("from".to_owned(), Ty::Date),
+                ("to".to_owned(), Ty::Date),
+            ])
+        };
+        let Some(arg) = call.args.first() else {
+            return Ok(span());
+        };
+        let mut t = self.expr(m, scope, arg, None, depth)?;
+        if let Ty::KeyLit(written) = &t
+            && let Some(base) = m.things.get(written).and_then(|thing| thing.base.clone())
+        {
+            t = self.expr(m, scope, arg, Some(&Ty::Key(base)), depth)?;
+        }
+        let of_a_kind = matches!(&t, Ty::Key(ix) if m.kinds.get(ix).is_some());
+        if !of_a_kind && !matches!(t, Ty::Unseen) {
+            return Err(uerr(format!("lifespan of {}, not a thing", t.show())));
+        }
+        Ok(span())
     }
 
     /// `one_of(list)` (refcore's `c_one_of`). L §4.2.
@@ -870,7 +878,7 @@ impl Checker {
     /// `band_call`). L §5.9.
     fn band_call(&mut self, m: &Reality, scope: &Scope, call: &Call, depth: u32) -> Typed {
         let Some(kind) = m.names.get(&call.name) else {
-            return Err(refused(Load::Name, format!("unknown id {}", call.name)));
+            return Err(refused(Load::Name, format!("unknown id {}", call.name)).naming(&call.name));
         };
         let band = m.bands.get(&call.name).filter(|_| *kind == NameKind::Band);
         let Some(band) = band else {
@@ -938,22 +946,6 @@ impl Checker {
             }
         }
         Ok(())
-    }
-}
-
-/// Whether a top-level name of this kind is read as a value. L §2.5.
-fn is_value(kind: NameKind) -> bool {
-    match kind {
-        NameKind::Input | NameKind::Def | NameKind::Place | NameKind::Move | NameKind::Cut => true,
-        NameKind::Unit
-        | NameKind::Kind
-        | NameKind::Index
-        | NameKind::Axis
-        | NameKind::Band
-        | NameKind::Fill
-        | NameKind::Version
-        | NameKind::Ask
-        | NameKind::Source => false,
     }
 }
 
