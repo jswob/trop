@@ -1,21 +1,27 @@
-//! Load's period across keys: a period load sees, read at a key of a time index, refused where it lies across two of the index's keys.
+//! What load sees, folded at every key: a period lying across two keys, a decision's balance of its own day or later, a schedule giving no date.
 //! Spec: L §4.6 (a period no longer than the keys that no key's period holds is refused at
-//! load where load sees it), §8.3 (`LOAD-KEY` `<period> lies across keys <a> and <b> of
-//! <index>`; item 5, the keys of a declared index; item 9, what load sees).
+//! load where load sees it), §5.14.1 (a decision's plain `bal(x, d)` of its own day or later
+//! is `LOAD-CYCLE` where load sees the day), §4.2 (a schedule that gives no date in the run
+//! is `LOAD-SCHEDULE` where load sees it), §8.3 (`LOAD-KEY` `<period> lies across keys <a>
+//! and <b> of <index>`; item 5, the keys of a declared index; item 9, what load sees).
 //! Twin: engine/tools/refcore/check.py (`period_conv`, its `period_cands`); check3.py
-//! (`m_check_period_keys`, `m_seen_day`, `FOLD_FNS`).
-//! Invariants: a key is folded only where load sees it, from literals and the reader's own
-//! keys of declared indexes through built-ins that read no fact; a fold the evaluator
-//! refuses is left to the value, as refcore leaves it.
+//! (`m_check_period_keys`, `m_seen_day`, `FOLD_FNS`, `m_check_seen_days`); moves.py
+//! (`m_check_schedule`, at load by issue #72); evaluate.py (`c_schedule`, the day before
+//! its roll).
+//! Invariants: an expression is folded only where load sees it, from literals and the
+//! reader's own keys of declared indexes through built-ins that read no fact; a fold the
+//! evaluator refuses is left to the value, as refcore leaves it.
 
+use super::check::{DayRead, Files};
 use super::steps::refuse;
+use super::types::text;
 use crate::base::{Code, Load};
-use crate::eval::{Ctx, Engine, Env};
+use crate::eval::{Ctx, Engine, Env, int_of};
 use crate::model::{
     BindInfo, Domain, IndexForm, IndexInfo, KeyVal, Node, NodeKind, Reality, Value,
 };
 use crate::syntax::{Expr, Lit, Stop};
-use crate::time::Period;
+use crate::time::{Day, Period};
 
 /// The built-ins a seen day is folded through: they read no fact (check3.py's `FOLD_FNS`).
 const FOLD_FNS: [&str; 9] = [
@@ -77,6 +83,165 @@ pub(super) fn check_period_keys(m: &Reality, reads: &[PeriodRead]) -> Result<(),
         }
     }
     Ok(())
+}
+
+/// `LOAD-CYCLE` for a decision's plain `bal(x, d)` whose day load sees: folded at every key
+/// of the decision's bindings, `d` is the decision's own day without `start`, or a later
+/// one (refcore's `m_check_seen_days`). L §5.14.1, §8.3 item 9.
+///
+/// # Errors
+///
+/// The first such read's `LOAD-CYCLE`, at the move's line; an invariant or `NotBuilt` the
+/// fold meets.
+pub(super) fn check_seen_days(m: &Reality, reads: &[DayRead], files: &Files) -> Result<(), Stop> {
+    let mut engine = Engine::new(m.on);
+    for read in reads {
+        let Some(mv) = m.moves.get(&read.id) else {
+            continue;
+        };
+        let on = &mv.decl.on;
+        if !seen_day(m, on, &mv.binds) || !seen_day(m, &read.day, &mv.binds) {
+            continue;
+        }
+        let Some(domains) = index_keys(m, &mv.binds) else {
+            continue;
+        };
+        for (keys, env) in choices(&mv.binds, &domains) {
+            let (Some(day), Some(d)) = (
+                fold_day(&mut engine, m, on, &env)?,
+                fold_day(&mut engine, m, &read.day, &env)?,
+            ) else {
+                continue;
+            };
+            if d < day || (d == day && read.start) {
+                continue;
+            }
+            let shown: Vec<String> = keys.iter().map(KeyVal::text).collect();
+            let at_keys = if shown.is_empty() {
+                String::new()
+            } else {
+                format!("[{}]", shown.join(", "))
+            };
+            let start = if read.start { " start" } else { "" };
+            let when = if d == day {
+                "its own day"
+            } else {
+                "a later day"
+            };
+            let message = format!(
+                "{}{at_keys} on {} reads bal({}, {}{start}) = {}, {when}: its own result or its future (write the projection)",
+                read.id,
+                day.text(),
+                text(&read.place),
+                text(&read.day),
+                d.text()
+            );
+            return Err(refuse(
+                Load::Cycle,
+                message,
+                files.get("move", &read.id)?,
+                mv.decl.line,
+            ));
+        }
+    }
+    Ok(())
+}
+
+/// `LOAD-SCHEDULE` for a plan whose day is `schedule(p, e, …)` with `p` and `e` seen, when at
+/// no key of its bindings does day `e` of `p` exist. Load refuses it whatever the asks
+/// (issue #72); refcore meets it where an ask reaches the plan's instances (moves.py's
+/// `m_check_schedule`). A hole or a refused fold might give a day, so it refuses nothing.
+/// L §4.2, §8.3.
+///
+/// # Errors
+///
+/// The first such plan's `LOAD-SCHEDULE`, at its line; an invariant or `NotBuilt` the fold
+/// meets.
+pub(super) fn check_schedules(m: &Reality, files: &Files) -> Result<(), Stop> {
+    let mut engine = Engine::new(m.on);
+    for (id, mv) in m.moves.entries() {
+        let on = bare(&mv.decl.on);
+        let Expr::Call(call) = on else {
+            continue;
+        };
+        let [p, e, ..] = call.args.as_slice() else {
+            continue;
+        };
+        let seen =
+            call.name == "schedule" && seen_day(m, p, &mv.binds) && seen_day(m, e, &mv.binds);
+        let unfiltered = mv.binds.iter().all(|bind| bind.node.filter.is_none());
+        if mv.decision || !seen || !unfiltered {
+            continue;
+        }
+        let Some(domains) = bind_keys(m, &mv.binds) else {
+            continue;
+        };
+        let tuples = products(&mv.binds, &domains);
+        if tuples.is_empty() {
+            continue;
+        }
+        let mut dated = false;
+        for env in &tuples {
+            if scheduled_day(&mut engine, m, p, e, env)? != Some(false) {
+                dated = true;
+                break;
+            }
+        }
+        if !dated {
+            let message = format!(
+                "schedule {} (the day of {id}) gives no date in the run",
+                text(on)
+            );
+            return Err(refuse(
+                Load::Schedule,
+                message,
+                files.get("move", id)?,
+                mv.decl.line,
+            ));
+        }
+    }
+    Ok(())
+}
+
+/// Whether day `e` of period `p` exists at one choice of keys: `Some(false)` where it
+/// doesn't (31 February, day 0), `None` where the fold gives no period and int (a hole, a
+/// refusal), which might give one (refcore's `c_schedule`, before its roll). L §4.2.
+fn scheduled_day(
+    engine: &mut Engine,
+    m: &Reality,
+    p: &Expr,
+    e: &Expr,
+    env: &Env,
+) -> Result<Option<bool>, Stop> {
+    let (Some(pv), Some(ev)) = (
+        fold_value(engine, m, p, env)?,
+        fold_value(engine, m, e, env)?,
+    ) else {
+        return Ok(None);
+    };
+    let (Value::Period(period) | Value::Key(KeyVal::Period(period))) = pv else {
+        return Ok(None);
+    };
+    let k = match int_of(m, &ev) {
+        Ok(k) => k,
+        Err(Stop::Refused(r)) if r.code() != Code::EngineInvariant => return Ok(None),
+        Err(stop) => return Err(stop),
+    };
+    let start = period.start();
+    let Ok(k) = u8::try_from(k) else {
+        return Ok(Some(false));
+    };
+    let day = Day::from_ymd(start.year(), start.month(), k);
+    Ok(Some(day.is_some_and(|day| period.contains(day))))
+}
+
+/// An expression with its outer brackets taken off (refcore's `strip`).
+fn bare(e: &Expr) -> &Expr {
+    let mut e = e;
+    while let Expr::Paren(inner) = e {
+        e = inner;
+    }
+    e
 }
 
 /// The keys of an index that isn't open, when each is a period (refcore's `isinstance(k,
@@ -180,15 +345,39 @@ fn bind_keys(m: &Reality, binds: &[BindInfo]) -> Option<Vec<Vec<KeyVal>>> {
     binds.iter().map(|bind| declared_keys(m, bind)).collect()
 }
 
+/// The keys of each binding's index, open or not, in the bindings' order, or `None` when one
+/// ranges over no index (refcore's `m_check_seen_days`, its `doms`).
+fn index_keys(m: &Reality, binds: &[BindInfo]) -> Option<Vec<Vec<KeyVal>>> {
+    let mut out = Vec::new();
+    for bind in binds {
+        let Domain::Index(ix) = &bind.domain else {
+            return None;
+        };
+        out.push(m.indexes.get(ix)?.keys.clone());
+    }
+    Some(out)
+}
+
 /// Every choice of one key per binding, the last binding's key turning fastest (Python's
 /// `itertools.product`), each as the scope it binds.
 fn products(binds: &[BindInfo], domains: &[Vec<KeyVal>]) -> Vec<Env> {
-    let mut out = vec![Env::empty()];
+    choices(binds, domains)
+        .into_iter()
+        .map(|(_, env)| env)
+        .collect()
+}
+
+/// Every choice of one key per binding, as `products`, each with its keys.
+fn choices(binds: &[BindInfo], domains: &[Vec<KeyVal>]) -> Vec<(Vec<KeyVal>, Env)> {
+    let mut out = vec![(Vec::new(), Env::empty())];
     for (bind, keys) in binds.iter().zip(domains) {
         let mut next = Vec::new();
-        for env in &out {
+        for (chosen, env) in &out {
             for key in keys {
-                next.push(env.with(&bind.var, Value::of_key(key), Some(bind.domain.clone())));
+                let mut more = chosen.clone();
+                more.push(key.clone());
+                let scope = env.with(&bind.var, Value::of_key(key), Some(bind.domain.clone()));
+                next.push((more, scope));
             }
         }
         out = next;
@@ -196,15 +385,39 @@ fn products(binds: &[BindInfo], domains: &[Vec<KeyVal>]) -> Vec<Env> {
     out
 }
 
-/// The key's value at one choice of keys, when it is a period; a refusal leaves it to the
-/// value at run (refcore's `except TallyError: continue`). E §3.2.
-fn fold(engine: &mut Engine, m: &Reality, key: &Expr, env: &Env) -> Result<Option<Period>, Stop> {
-    match engine.ev(m, key, env, Ctx::new(None, m.on)) {
-        Ok(Value::Period(period)) => Ok(Some(period)),
-        Ok(_) => Ok(None),
+/// An expression's value at one choice of keys; a refusal leaves it to the value at run
+/// (refcore's `except TallyError: continue`). E §3.2.
+fn fold_value(
+    engine: &mut Engine,
+    m: &Reality,
+    e: &Expr,
+    env: &Env,
+) -> Result<Option<Value>, Stop> {
+    match engine.ev(m, e, env, Ctx::new(None, m.on)) {
+        Ok(value) => Ok(Some(value)),
         Err(Stop::Refused(r)) if r.code() != Code::EngineInvariant => Ok(None),
         Err(stop) => Err(stop),
     }
+}
+
+/// The key's value at one choice of keys, when it is a period. E §3.2.
+fn fold(engine: &mut Engine, m: &Reality, key: &Expr, env: &Env) -> Result<Option<Period>, Stop> {
+    let value = fold_value(engine, m, key, env)?;
+    Ok(if let Some(Value::Period(period)) = value {
+        Some(period)
+    } else {
+        None
+    })
+}
+
+/// The day's value at one choice of keys, when it is a date. E §3.2.
+fn fold_day(engine: &mut Engine, m: &Reality, day: &Expr, env: &Env) -> Result<Option<Day>, Stop> {
+    let value = fold_value(engine, m, day, env)?;
+    Ok(if let Some(Value::Day(d)) = value {
+        Some(d)
+    } else {
+        None
+    })
 }
 
 /// `LOAD-KEY` when no key holds `period`, two keys meet it, and some key is no shorter

@@ -10,7 +10,7 @@
 //! and the settlements; the settlements are checked after every other check of the walk, as
 //! refcore meets them after load; a type load doesn't see refuses nothing.
 
-use super::check::{Checker, Scope, literal_place};
+use super::check::{Checker, DayRead, Scope, literal_place};
 use super::reads::is_place_type;
 use super::types::{Typed, children, numcls, refused, text, uerr, unit_type};
 use crate::base::{Code, Load, Refusal};
@@ -152,12 +152,13 @@ fn unit_kind_amount(m: &Reality, kind: &str, t: &Ty) -> bool {
 
 /// `LOAD-CYCLE` for a decision whose `when`, legs or attributes read `bal(x, d)` of its own
 /// day (`d` written as its `on`) without `start`, or of its `on` plus a positive figure
-/// (refcore's `m_check_move`, its scan of the plain balances). L §5.14.1.
+/// (refcore's `m_check_move`, its scan of the plain balances); the others, to fold where load
+/// sees their days (its `cycle_cands`). L §5.14.1.
 ///
 /// # Errors
 ///
 /// That refusal, placed by the caller at the move's line.
-pub(super) fn own_day_reads(mv: &MoveInfo) -> Result<(), Stop> {
+pub(super) fn own_day_reads(mv: &MoveInfo) -> Result<Vec<DayRead>, Stop> {
     let decl = &mv.decl;
     let on = text(&decl.on);
     let mut exprs: Vec<&Expr> = Vec::new();
@@ -166,32 +167,38 @@ pub(super) fn own_day_reads(mv: &MoveInfo) -> Result<(), Stop> {
     exprs.extend(decl.legs.iter().map(|leg| &leg.from));
     exprs.extend(decl.legs.iter().map(|leg| &leg.to));
     exprs.extend(decl.attrs.iter().map(|(_, value)| value));
+    let mut found = Vec::new();
     for e in exprs {
         let mut todo = vec![e];
         while let Some(x) = todo.pop() {
             if let Expr::Bal(bal) = x {
-                own_day_bal(mv, bal, &on)?;
+                found.extend(own_day_bal(mv, bal, &on)?);
             }
             let mut below = children(x);
             below.reverse();
             todo.extend(below);
         }
     }
-    Ok(())
+    Ok(found)
 }
 
 /// One plain `bal(x, d)` of a decision: `LOAD-CYCLE` when `d` is its own day without `start`,
-/// or a later one.
-fn own_day_bal(mv: &MoveInfo, bal: &Bal, on: &str) -> Result<(), Stop> {
+/// or a later one; otherwise the read, for the fold.
+fn own_day_bal(mv: &MoveInfo, bal: &Bal, on: &str) -> Result<Option<DayRead>, Stop> {
     let Some(day) = bal.args.last() else {
-        return Ok(());
+        return Ok(None);
     };
     if bal.modelled || bal.proj.from.is_some() {
-        return Ok(());
+        return Ok(None);
     }
     let later = later_day(day, on);
     if !((text(day) == on && !bal.start) || later) {
-        return Ok(());
+        return Ok(Some(DayRead {
+            id: mv.id.clone(),
+            place: bal.place.clone(),
+            day: day.clone(),
+            start: bal.start,
+        }));
     }
     let when = if later { "a later day" } else { "its own day" };
     Err(refused(

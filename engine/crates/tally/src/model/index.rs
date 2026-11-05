@@ -48,6 +48,9 @@ pub struct IndexInfo {
     pub texts: Vec<(String, KeyVal)>,
     /// The line of its section.
     pub line: Option<u32>,
+    /// Whether its range states `from`: its keys are anchored periods, of which `day_of` and
+    /// `schedule` have no meaning (refcore's `decl.frm`). L §4.1, §4.2.
+    pub anchored: bool,
 }
 
 impl IndexInfo {
@@ -65,6 +68,7 @@ impl IndexInfo {
             v: None,
             texts: Vec::new(),
             line: None,
+            anchored: false,
         }
     }
 

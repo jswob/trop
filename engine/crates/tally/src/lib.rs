@@ -234,6 +234,7 @@ pub mod load {
     mod indexes;
     mod keys;
     mod kinds;
+    mod lawdates;
     mod moves;
     mod names;
     mod observed;

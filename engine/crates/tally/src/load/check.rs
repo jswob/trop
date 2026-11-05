@@ -156,6 +156,9 @@ pub(super) struct Scope {
     pub(super) in_when: bool,
     /// The spans a `covered()` guard holds here (L §5.19).
     pub(super) covered: BTreeSet<String>,
+    /// The key variables a condition tests here: a rule's `when` and its beaters', or the
+    /// left of an `and`, or an `if`'s condition (refcore's `Scope.guards`). L §5.11.
+    pub(super) guards: BTreeSet<String>,
 }
 
 impl Scope {
@@ -173,6 +176,7 @@ impl Scope {
             cited: false,
             in_when: false,
             covered: BTreeSet::new(),
+            guards: BTreeSet::new(),
         }
     }
 
@@ -269,6 +273,61 @@ pub(super) struct MoveFacts {
     pub(super) changes: Vec<Target>,
 }
 
+/// A read at a key variable of a def shifted by a number, `x[k - 1]` (refcore's
+/// `shift_reads` entry). L §5.11.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(super) struct ShiftRead {
+    /// The def that reads.
+    pub(super) reader: Node,
+    /// What it reads.
+    pub(super) target: Node,
+    /// The key variable shifted.
+    pub(super) var: String,
+    /// Which way.
+    pub(super) shift: Shift,
+    /// Whether a condition on the variable guards the read.
+    pub(super) guarded: bool,
+    /// The file and line it is written on.
+    pub(super) at: (String, u32),
+}
+
+/// A decision's plain `bal(x, d)`, which load folds where it sees the day (refcore's
+/// `cycle_cands` entry). L §5.14.1.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(super) struct DayRead {
+    /// The decision.
+    pub(super) id: String,
+    /// The place read, as written.
+    pub(super) place: Expr,
+    /// The day read, as written.
+    pub(super) day: Expr,
+    /// Whether it reads the start of the day (`start`).
+    pub(super) start: bool,
+}
+
+/// What the walk finds beyond the graph, for the checks on it (refcore's `Checker` state).
+#[derive(Debug, Default)]
+pub(super) struct Walked {
+    /// The item graph's edges and marks.
+    pub(super) graph: Graph,
+    /// Each move's declared reads and changes.
+    pub(super) facts: Vec<MoveFacts>,
+    /// The periods read at keys of time indexes.
+    pub(super) periods: Vec<PeriodRead>,
+    /// The shifted reads of defs, in the order typed.
+    pub(super) shifts: Vec<ShiftRead>,
+    /// Each def's reads inside its `at` (refcore's `at_reads`). L §4.3.
+    pub(super) at_reads: BTreeMap<String, BTreeMap<Node, Vec<Rel>>>,
+    /// Each move's direct reads of inputs, defs and bands inside its `at`, in the order
+    /// typed. L §4.3, §5.14.
+    pub(super) move_at: BTreeMap<String, Vec<Node>>,
+    /// Each ask's reads in the order first made (refcore's edges, a dict in insertion
+    /// order).
+    pub(super) ask_reads: BTreeMap<String, Vec<Node>>,
+    /// The decisions' plain balance reads, in the order typed.
+    pub(super) day_reads: Vec<DayRead>,
+}
+
 /// The checker's state over the walk (refcore's `Checker`).
 #[derive(Debug, Default)]
 pub(super) struct Checker {
@@ -289,6 +348,19 @@ pub(super) struct Checker {
     /// The periods read at keys of time indexes, in the order typed (refcore's
     /// `period_cands`).
     periods: Vec<PeriodRead>,
+    /// The shifted reads of defs, in the order typed (refcore's `shift_reads`).
+    shifts: Vec<ShiftRead>,
+    /// Each def's reads inside its `at` (refcore's `at_reads`).
+    at_reads: BTreeMap<String, BTreeMap<Node, Vec<Rel>>>,
+    /// Each move's direct reads inside its `at`.
+    move_at: BTreeMap<String, Vec<Node>>,
+    /// The direct reads of inputs, defs and bands typed while an `at` is (refcore's `_r` of
+    /// the nodes under it).
+    direct: Option<Vec<Node>>,
+    /// Each ask's reads in the order first made.
+    ask_reads: BTreeMap<String, Vec<Node>>,
+    /// The decisions' plain balance reads.
+    day_reads: Vec<DayRead>,
 }
 
 /// One level deeper into an expression, refused as an invariant past the count (R-16).
@@ -315,10 +387,7 @@ pub(super) fn deeper(depth: u32) -> Result<u32, Stop> {
 /// # Errors
 ///
 /// The checker's refusals, each at its line; `NotBuilt` for a form M0 doesn't build.
-pub(super) fn walk(
-    m: &Reality,
-    sections: &[(String, Section)],
-) -> Result<(Graph, Vec<MoveFacts>, Vec<PeriodRead>), Stop> {
+pub(super) fn walk(m: &Reality, sections: &[(String, Section)]) -> Result<Walked, Stop> {
     let files = Files::of(sections);
     price_twice(m, &files)?;
     let mut checker = Checker::default();
@@ -359,7 +428,16 @@ pub(super) fn walk(
     checker.year4_finish()?;
     checker.kl_finish(m)?;
     settlements(m, &checker.leg_types)?;
-    Ok((checker.graph, facts, checker.periods))
+    Ok(Walked {
+        graph: checker.graph,
+        facts,
+        periods: checker.periods,
+        shifts: checker.shifts,
+        at_reads: checker.at_reads,
+        move_at: checker.move_at,
+        ask_reads: checker.ask_reads,
+        day_reads: checker.day_reads,
+    })
 }
 
 /// An `ENGINE-INVARIANT` refusal.
@@ -451,9 +529,41 @@ impl Checker {
         });
     }
 
-    /// `reader` reads `target` with `rel`.
+    /// `reader` reads `target` with `rel`; an ask's reads are kept in the order first made.
     pub(super) fn edge(&mut self, reader: &Node, target: Node, rel: Rel) {
+        if reader.kind == NodeKind::Ask {
+            let reads = self
+                .ask_reads
+                .entry(reader.id.clone())
+                .or_insert_with(Vec::new);
+            if !reads.contains(&target) {
+                reads.push(target.clone());
+            }
+        }
         self.graph.edge(reader, target, rel);
+    }
+
+    /// A read of an input, a def or a band, kept while an `at` is typed (refcore's `_r` of
+    /// a read or a band's node). L §4.3.
+    pub(super) fn direct(&mut self, target: &Node) {
+        if let Some(reads) = &mut self.direct {
+            reads.push(target.clone());
+        }
+    }
+
+    /// A def's read at a shifted key variable, with whether a condition guards it (refcore's
+    /// `shift_reads`). L §5.11.
+    pub(super) fn shifted(&mut self, scope: &Scope, target: &Node, rel: &Rel) {
+        if let Rel::Shifted(var, shift) = rel {
+            self.shifts.push(ShiftRead {
+                reader: scope.item.clone(),
+                target: target.clone(),
+                var: var.clone(),
+                shift: *shift,
+                guarded: scope.guards.contains(var),
+                at: scope.file_line(),
+            });
+        }
     }
 
     /// `item` holds a running read, a projection or `bal(x)` with no day of `target`.
@@ -664,18 +774,30 @@ impl Checker {
                 }
             }
         }
+        let node = Node::new(NodeKind::Def, &def.id);
+        let before = self
+            .graph
+            .edges
+            .get(&node)
+            .map_or_else(BTreeMap::new, Clone::clone);
         if let Some(LawDate::Expr(at)) = &def.at {
             let t = self.expr(m, &at_scope, at, None, 0)?;
             law_date(m, &t, at, &format!("at of {}", def.id)).map_err(|s| at_scope.place(s))?;
         }
+        if def.at.is_some() {
+            let made = new_reads(&before, self.graph.edges.get(&node));
+            self.at_reads.insert(def.id.clone(), made);
+        }
         let beats = labels(def, file)?;
         beats_cycle(&def.id, &beats)?;
         self.offsets.insert(def.id.clone(), key_offsets(def));
+        let guards = rule_guards(def, &beats);
         for (label, versions) in &def.rules {
             for version in versions {
                 let rule = &version.rule;
                 let mut scope = self.def_scope(m, def, Stands::Rule, (file, rule.line))?;
                 scope.cited = version.v.is_some();
+                scope.guards = guards.get(label).map_or_else(BTreeSet::new, Clone::clone);
                 covered_spans(rule.when.as_ref(), &mut scope.covered);
                 if let Some(when) = &rule.when {
                     self.when(m, &scope, &scope, when, &format!("when of rule {label}"))?;
@@ -823,8 +945,12 @@ impl Checker {
             return Err(scope.place(uerr(message)));
         }
         if let Some(at) = &decl.at {
-            let law = self.expr(m, &day.on_line(lines.at), at, None, 0)?;
-            law_date(m, &law, at, &format!("at of move {}", mv.id)).map_err(|s| scope.place(s))?;
+            self.direct = Some(Vec::new());
+            let law = self.expr(m, &day.on_line(lines.at), at, None, 0);
+            if let Some(reads) = self.direct.take() {
+                self.move_at.insert(mv.id.clone(), reads);
+            }
+            law_date(m, &law?, at, &format!("at of move {}", mv.id)).map_err(|s| scope.place(s))?;
         }
         if let Some(period) = &decl.for_period {
             self.expr(m, &scope.on_line(lines.for_period), period, None, 0)?;
@@ -872,7 +998,8 @@ impl Checker {
             }
         }
         if !decl.reads.is_empty() {
-            own_day_reads(mv).map_err(|stop| scope.place(stop))?;
+            let found = own_day_reads(mv).map_err(|stop| scope.place(stop))?;
+            self.day_reads.extend(found);
         }
         Ok(MoveFacts {
             id: mv.id.clone(),
@@ -1047,6 +1174,90 @@ fn beats_cycle(def: &str, beats: &BTreeMap<String, BTreeSet<String>>) -> Result<
         }
     }
     Ok(())
+}
+
+/// The reads `after` holds that `before` didn't, each with its new relations: what an `at`
+/// read (refcore's `check_def`, its `at_reads`). L §4.3.
+fn new_reads(
+    before: &BTreeMap<Node, Vec<Rel>>,
+    after: Option<&BTreeMap<Node, Vec<Rel>>>,
+) -> BTreeMap<Node, Vec<Rel>> {
+    let mut out = BTreeMap::new();
+    for (target, rels) in after.into_iter().flatten() {
+        let old: &[Rel] = before.get(target).map_or(&[], Vec::as_slice);
+        let added: Vec<Rel> = rels
+            .iter()
+            .filter(|rel| !old.contains(rel))
+            .cloned()
+            .collect();
+        if !added.is_empty() {
+            out.insert(target.clone(), added);
+        }
+    }
+    out
+}
+
+/// Each rule's guards: the key variables its `when` tests, and those of the `when` of each
+/// rule that beats it (refcore's `check_def`, its `when_vars` and `guard`). L §5.11.
+fn rule_guards(
+    def: &DefInfo,
+    beats: &BTreeMap<String, BTreeSet<String>>,
+) -> BTreeMap<String, BTreeSet<String>> {
+    let keyvars: Vec<String> = def.binds.iter().map(|bind| bind.var.clone()).collect();
+    let mut when_vars: BTreeMap<&str, BTreeSet<String>> = BTreeMap::new();
+    for (label, versions) in &def.rules {
+        let mut vars = BTreeSet::new();
+        for version in versions {
+            if let Some(when) = &version.rule.when {
+                vars.extend(tested_vars(when, &keyvars));
+            }
+        }
+        when_vars.insert(label, vars);
+    }
+    let mut out = BTreeMap::new();
+    for (label, _) in &def.rules {
+        let mut guard = when_vars
+            .get(label.as_str())
+            .map_or_else(BTreeSet::new, Clone::clone);
+        for (beater, beaten) in beats {
+            if beaten.contains(label)
+                && let Some(vars) = when_vars.get(beater.as_str())
+            {
+                guard.extend(vars.iter().cloned());
+            }
+        }
+        out.insert(label.clone(), guard);
+    }
+    out
+}
+
+/// The key variables a condition tests: each named in a side of a comparison or an `in`
+/// (refcore's `tested_vars`). L §5.11.
+pub(super) fn tested_vars(e: &Expr, keyvars: &[String]) -> BTreeSet<String> {
+    let mut out = BTreeSet::new();
+    let mut stack = vec![e];
+    while let Some(next) = stack.pop() {
+        let mut sides: Vec<&Expr> = Vec::new();
+        if let Expr::Cmp(cmp) = next {
+            sides.extend([&cmp.0, &cmp.2]);
+        }
+        if let Expr::In(test) = next {
+            sides.extend([&test.member, &test.set]);
+        }
+        for side in sides {
+            let mut below = vec![side];
+            while let Some(x) = below.pop() {
+                if let Expr::Name(name) = x
+                    && keyvars.contains(name)
+                {
+                    out.insert(name.clone());
+                }
+                below.extend(children(x));
+            }
+        }
+        stack.extend(children(next));
+    }
+    out
 }
 
 /// The labels `label` beats, last first, so that popping takes them in text order.

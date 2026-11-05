@@ -1066,11 +1066,11 @@ impl Checker {
             }
             env.push((bind.var.clone(), value));
         }
-        self.edge(
-            &scope.item,
-            Node::new(node_kind, id),
-            super::check::relation(scope, keys),
-        );
+        let target = Node::new(node_kind, id);
+        let rel = super::check::relation(scope, keys);
+        self.direct(&target);
+        self.shifted(scope, &target, &rel);
+        self.edge(&scope.item, target, rel);
         let mut ty = declared.unwrap_or(Ty::Unseen);
         if priced {
             ty = num(unit_of(&ty)?);

@@ -102,6 +102,7 @@ impl Loader {
             index.assumed.clone_from(&decl.assumed);
             index.v.clone_from(&decl.v);
             index.line = Some(decl.line);
+            index.anchored = matches!(&decl.form, IndexForm::Range { from: Some(_), .. });
             index.finish();
             self.m.indexes.push(&decl.id, index);
         }

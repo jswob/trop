@@ -114,6 +114,19 @@ fn arity(call: &Call, n: usize) -> Result<(), Stop> {
     Ok(())
 }
 
+/// `LOAD-DOMAIN` for `day_of` or `schedule` of a key of an anchored index, where load sees
+/// the index (refcore's `anchored_key`). L §4.2, §8.3, §8.4.
+fn anchored_key(m: &Reality, t: &Ty, what: &str) -> Result<(), Stop> {
+    let Ty::Key(ix) = t else {
+        return Ok(());
+    };
+    if m.indexes.get(ix).is_some_and(|index| index.anchored) {
+        let message = format!("{what} of a key of the anchored index {ix} has no meaning");
+        return Err(refused(Load::Domain, message));
+    }
+    Ok(())
+}
+
 impl Checker {
     /// A call: a band's, or a built-in's (refcore's `t_call`). L §5.9, §7.2, §4.2.
     pub(super) fn call(
@@ -198,7 +211,7 @@ impl Checker {
             "next" => self.next(m, scope, args, depth),
             "observed" => self.observed(m, scope, args, depth),
             "gap" => self.gap(m, scope, args, depth),
-            "schedule" => self.calendar_call(m, scope, args, 3, depth),
+            "schedule" => self.schedule(m, scope, call, depth),
             "unit" => self.unit(m, scope, args, depth),
             _ => self.args_only(m, scope, args, depth),
         }
@@ -300,6 +313,7 @@ impl Checker {
             return Ok(Ty::Date);
         };
         let t = self.date_or_period(m, scope, period, &call.name, depth)?;
+        anchored_key(m, &t, &call.name)?;
         if matches!(t, Ty::Unseen) {
             self.expr(m, scope, second, None, depth)?;
             return Ok(Ty::Date);
@@ -324,6 +338,32 @@ impl Checker {
                 )));
             }
         }
+        Ok(Ty::Date)
+    }
+
+    /// `schedule(p, e, roll, cal)`: p a month, not a key of an anchored index; e a count; a
+    /// roll code; a calendar input (refcore's `c_schedule`). L §4.2.
+    fn schedule(&mut self, m: &Reality, scope: &Scope, call: &Call, depth: u32) -> Typed {
+        arity(call, 4)?;
+        let [period, day, roll, cal] = call.args.as_slice() else {
+            return Ok(Ty::Date);
+        };
+        let t = self.date_or_period(m, scope, period, &call.name, depth)?;
+        anchored_key(m, &t, &call.name)?;
+        if matches!(t, Ty::Unseen) {
+            self.expr(m, scope, day, None, depth)?;
+        } else {
+            if period_kind(m, &t) != Some(PeriodKind::Month) {
+                return Err(uerr(format!("schedule takes a month, not {}", t.show())));
+            }
+            self.count_arg(m, scope, day, &call.name, None, depth)?;
+        }
+        let rolls = Ty::Code(CodeKind::Roll);
+        let t3 = self.expr(m, scope, roll, Some(&rolls), depth)?;
+        if t3 != rolls && !matches!(t3, Ty::Unseen) {
+            return Err(uerr(format!("schedule: the roll is {}", t3.show())));
+        }
+        self.cal_arg(m, scope, cal, &call.name, depth)?;
         Ok(Ty::Date)
     }
 
@@ -695,7 +735,9 @@ impl Checker {
         if let (Some(Key::Expr(kn)), Some(bind)) = (key, info.binds.first()) {
             self.key_pos(m, scope, kn, &bind.domain, depth)?;
         }
-        self.edge(&scope.item, Node::new(NodeKind::Band, id), Rel::Any);
+        let target = Node::new(NodeKind::Band, id);
+        self.direct(&target);
+        self.edge(&scope.item, target, Rel::Any);
         Ok(Some(id.to_owned()))
     }
 
@@ -813,26 +855,10 @@ impl Checker {
         } else {
             Rel::Computed
         };
-        self.edge(&scope.item, Node::new(NodeKind::Band, &band.id), rel);
+        let target = Node::new(NodeKind::Band, &band.id);
+        self.direct(&target);
+        self.edge(&scope.item, target, rel);
         Ok(band.ty.clone())
-    }
-
-    /// A business-day function's calendar argument at `at`, read at each day asked about;
-    /// the call `Unseen` (refcore's `cal_arg`; `schedule` is a later group's). L §4.2.
-    fn calendar_call(
-        &mut self,
-        m: &Reality,
-        scope: &Scope,
-        args: &[Expr],
-        at: usize,
-        depth: u32,
-    ) -> Typed {
-        let calendar = scope.with_mode(Rel::Calendar);
-        for (position, arg) in args.iter().enumerate() {
-            let read_by = if position == at { &calendar } else { scope };
-            self.expr(m, read_by, arg, None, depth)?;
-        }
-        Ok(Ty::Unseen)
     }
 
     /// `e to u`: the value and a unit written as a reference.

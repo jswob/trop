@@ -6,7 +6,9 @@
 //! prices and reads; §5.3 (known windows, `moves`), §4.6 (overlap and `replace`, a period
 //! across keys), §5.9 (band tables), §5.19 (`covers`) for the checks of versions and rows;
 //! §3.6, §5.7 (the parts clauses, the arrival and leaving rules), §5.19 (stated parts),
-//! §5.14.1 (an arrival rule's reads) for the checks of parts.
+//! §5.14.1 (an arrival rule's reads) for the checks of parts; §5.11 (recurrence reads and
+//! their guards), §4.3 (law dates), §5.14.1 (running reads, a decision's balance of a day
+//! load sees), §4.6 (readings `after` a move), §4.2 (schedules) for the item graph's checks.
 //! Twin: engine/tools/refcore/loader.py; each expected line is refcore's load of the same
 //! text, printed in the same normalized form.
 //! Invariants: reads no test, vector or answer key (R-93); the text is written here, small.
@@ -1286,5 +1288,713 @@ version card_2026
             "refcore's WARN-UNREAD lines: prio is read by the takes order, share by the owned clause"
         );
         assert_eq!(first_line(PARTS), None, "M5b walks the parts");
+    }
+
+    /// A reality with a recurrence guarded by its rules' conditions, defs that state their law
+    /// dates, a band, a plan, a schedule and a decision: each case one or more edits of it.
+    const GRAPH: &str = "model g
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card \"an invented card\"
+
+unit PLN: currency minor 0.01
+
+kind wages: event certain
+  leg cash: PLN
+
+index qs = [q1, q2]
+
+index gm = month 2026-02..2026-03
+
+input amt: money PLN
+
+input day: date
+
+input rate[k in qs]: num
+
+input cal: calendar
+
+band tax(x: money PLN): num
+
+place konto: accounts PLN lives 2026-01-01..
+
+place safe: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+def acc[m in months]: num
+  rule base = rate[q1]
+  rule step beats base = acc[m - 1] + rate[q2] when pos(m) > 1
+
+def fee: money PLN = amt at day
+
+def levy: num = tax(amt) at day
+
+move pay[m in gm]: wages
+  on start_of(m)
+  leg cash from world to konto amount amt
+
+move rent[m in gm]: transfers
+  on schedule(m, 1, unadjusted, cal)
+  leg cash from konto to world amount amt
+
+move sweep[m in gm]: transfers
+  on end_of(m)
+  reads konto
+  leg cash from konto to safe amount bal(konto, end_of(m) - 1 day)
+
+ask q: fee, levy, acc[2026-02], bal(konto, 2026-12-31)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN \"the card\"
+  day = 2026-02-10 \"the card\"
+  rate[q1] = 1 \"the card\"
+  rate[q2] = 2 \"the card\"
+  cal = calendar(weekends [sat, sun]) \"the card\"
+  tax: [0 PLN, inf) = 0 \"the card\"
+  opening[konto] = 500.00 PLN at 2026-01-01 start \"the card\"
+  opening[safe] = 0 PLN at 2026-01-01 start \"the card\"
+";
+
+    #[test]
+    fn the_item_graph_s_checks_refuse_as_refcore_refuses() {
+        let cases: &[(&[(&str, &str)], &str)] = &[
+            // base
+            (&[], "loaded"),
+            // guard
+            (
+                &[(
+                    "  rule step beats base = acc[m - 1] + rate[q2] when pos(m) > 1",
+                    "  rule step beats base = acc[m - 1] + rate[q2]",
+                )],
+                "LOAD-GUARD acc[m - n] is a recurrence read with no condition on m or pos(m) guarding it (a.tally:36)",
+            ),
+            // guard-later
+            (
+                &[(
+                    "  rule step beats base = acc[m - 1] + rate[q2] when pos(m) > 1",
+                    "  rule step beats base = acc[m + 1] + rate[q2]",
+                )],
+                "LOAD-GUARD acc[m + n] is a recurrence read with no condition on m or pos(m) guarding it (a.tally:36)",
+            ),
+            // guard-by-beater
+            (
+                &[("  rule base = rate[q1]", "  rule base = acc[m - 1]")],
+                "loaded",
+            ),
+            // guard-if
+            (
+                &[(
+                    "  rule step beats base = acc[m - 1] + rate[q2] when pos(m) > 1",
+                    "  rule step beats base = (if pos(m) > 1 then acc[m - 1] else rate[q1]) + rate[q2]",
+                )],
+                "loaded",
+            ),
+            // guard-and
+            (
+                &[(
+                    "  rule step beats base = acc[m - 1] + rate[q2] when pos(m) > 1",
+                    "  rule step beats base = rate[q2] when pos(m) > 1 and acc[m - 1] > 0",
+                )],
+                "loaded",
+            ),
+            // guard-and-left
+            (
+                &[(
+                    "  rule step beats base = acc[m - 1] + rate[q2] when pos(m) > 1",
+                    "  rule step beats base = rate[q2] when acc[m - 1] > 0 and pos(m) > 1",
+                )],
+                "loaded",
+            ),
+            // both
+            (
+                &[(
+                    "  rule step beats base = acc[m - 1] + rate[q2] when pos(m) > 1",
+                    "  rule step beats base = acc[m - 1] + acc[m + 1] when pos(m) > 1",
+                )],
+                "LOAD-CYCLE acc reads itself both earlier and later on m",
+            ),
+            // not-recurrence
+            (
+                &[(
+                    "def fee: money PLN = amt at day",
+                    "def fee: money PLN = amt at day\n\ndef lag[m in months]: num = acc[m - 1]",
+                )],
+                "loaded",
+            ),
+            // mutual
+            (
+                &[
+                    (
+                        "def fee: money PLN = amt at day",
+                        "def fee: money PLN = amt at day\n\ndef lag[m in months]: num = acc[m - 1]",
+                    ),
+                    (
+                        "  rule step beats base = acc[m - 1] + rate[q2] when pos(m) > 1",
+                        "  rule step beats base = lag[m] + rate[q2] when pos(m) > 1",
+                    ),
+                ],
+                "LOAD-GUARD acc[m - n] is a recurrence read with no condition on m or pos(m) guarding it (a.tally:40)",
+            ),
+            // dated-move
+            (
+                &[(
+                    "  opening[safe] = 0 PLN at 2026-01-01 start \"the card\"",
+                    "  opening[safe] = 0 PLN at 2026-01-01 start \"the card\"\n\nversion card_b\n  cite card\n  governs 2026-06..\n  known 2026-02-01\n  replace amt = 200.00 PLN \"a raise\"",
+                )],
+                "LOAD-LAWDATE pay reads law-dated facts and states no at (a.tally:42)",
+            ),
+            // dated-move-at
+            (
+                &[
+                    (
+                        "  opening[safe] = 0 PLN at 2026-01-01 start \"the card\"",
+                        "  opening[safe] = 0 PLN at 2026-01-01 start \"the card\"\n\nversion card_b\n  cite card\n  governs 2026-06..\n  known 2026-02-01\n  replace amt = 200.00 PLN \"a raise\"",
+                    ),
+                    ("  on start_of(m)", "  on start_of(m)\n  at start_of(m)"),
+                    (
+                        "  on schedule(m, 1, unadjusted, cal)",
+                        "  on schedule(m, 1, unadjusted, cal)\n  at start_of(m)",
+                    ),
+                ],
+                "loaded",
+            ),
+            // dated-def
+            (
+                &[
+                    (
+                        "  opening[safe] = 0 PLN at 2026-01-01 start \"the card\"",
+                        "  opening[safe] = 0 PLN at 2026-01-01 start \"the card\"\n\nversion card_b\n  cite card\n  governs 2026-06..\n  known 2026-02-01\n  replace amt = 200.00 PLN \"a raise\"",
+                    ),
+                    (
+                        "def fee: money PLN = amt at day",
+                        "def fee: money PLN = amt",
+                    ),
+                    (
+                        "  leg cash from world to konto amount amt",
+                        "  leg cash from world to konto amount fee",
+                    ),
+                    (
+                        "  leg cash from konto to world amount amt",
+                        "  leg cash from konto to world amount fee",
+                    ),
+                ],
+                "LOAD-LAWDATE fee reads law-dated facts and states no at (a.tally:38)",
+            ),
+            // reader
+            (
+                &[(
+                    "def fee: money PLN = amt at day",
+                    "def fee: money PLN = amt at reader",
+                )],
+                "LOAD-LAWDATE ask q reaches an at reader def without law (a.tally:55)",
+            ),
+            // reader-law
+            (
+                &[
+                    (
+                        "def fee: money PLN = amt at day",
+                        "def fee: money PLN = amt at reader",
+                    ),
+                    (
+                        "ask q: fee, levy, acc[2026-02], bal(konto, 2026-12-31)",
+                        "ask q: fee, levy, acc[2026-02], bal(konto, 2026-12-31) law 2026-02-01",
+                    ),
+                ],
+                "loaded",
+            ),
+            // at-reader
+            (
+                &[(
+                    "def fee: money PLN = amt at day",
+                    "def fee: money PLN = amt at stamp\n\ndef stamp: date = day at reader",
+                )],
+                "LOAD-LAWDATE ask q reaches fee, whose at reads law-dated facts at its reader's law date, without law (L §4.3) (a.tally:57)",
+            ),
+            // at-reader-law
+            (
+                &[
+                    (
+                        "def fee: money PLN = amt at day",
+                        "def fee: money PLN = amt at stamp\n\ndef stamp: date = day at reader",
+                    ),
+                    (
+                        "ask q: fee, levy, acc[2026-02], bal(konto, 2026-12-31)",
+                        "ask q: fee, levy, acc[2026-02], bal(konto, 2026-12-31) law 2026-02-01",
+                    ),
+                ],
+                "loaded",
+            ),
+            // direct-input
+            (
+                &[
+                    (
+                        "input cal: calendar",
+                        "input cal: calendar\n\ninput spare: num",
+                    ),
+                    (
+                        "  opening[safe] = 0 PLN at 2026-01-01 start \"the card\"",
+                        "  opening[safe] = 0 PLN at 2026-01-01 start \"the card\"\n  spare = 1 governs 2026-01..2026-06 \"the card\"\n  spare = -1 governs 2026-07..2026-12 \"the card\"",
+                    ),
+                    (
+                        "ask q: fee, levy, acc[2026-02], bal(konto, 2026-12-31)",
+                        "ask q: fee, levy, acc[2026-02], bal(konto, 2026-12-31), spare",
+                    ),
+                ],
+                "LOAD-LAWDATE ask q reads law-dated spare directly, without law (a.tally:57)",
+            ),
+            // direct-input-law
+            (
+                &[
+                    (
+                        "input cal: calendar",
+                        "input cal: calendar\n\ninput spare: num",
+                    ),
+                    (
+                        "  opening[safe] = 0 PLN at 2026-01-01 start \"the card\"",
+                        "  opening[safe] = 0 PLN at 2026-01-01 start \"the card\"\n  spare = 1 governs 2026-01..2026-06 \"the card\"\n  spare = -1 governs 2026-07..2026-12 \"the card\"",
+                    ),
+                    (
+                        "ask q: fee, levy, acc[2026-02], bal(konto, 2026-12-31)",
+                        "ask q: fee, levy, acc[2026-02], bal(konto, 2026-12-31), spare law 2026-02-01",
+                    ),
+                ],
+                "loaded",
+            ),
+            // direct-band
+            (
+                &[
+                    ("  tax: [0 PLN, inf) = 0 \"the card\"", ""),
+                    (
+                        "  opening[safe] = 0 PLN at 2026-01-01 start \"the card\"",
+                        "  opening[safe] = 0 PLN at 2026-01-01 start \"the card\"\n\nversion bands\n  cite card\n  governs 2026-01..2026-12\n  known 2026-01-01\n  tax: [0 PLN, inf) = 0 \"the card\"",
+                    ),
+                    (
+                        "ask q: fee, levy, acc[2026-02], bal(konto, 2026-12-31)",
+                        "ask q: fee, levy, acc[2026-02], bal(konto, 2026-12-31), tax(amt)",
+                    ),
+                ],
+                "LOAD-LAWDATE ask q reads law-dated tax directly, without law (a.tally:55)",
+            ),
+            // band-def
+            (
+                &[
+                    ("  tax: [0 PLN, inf) = 0 \"the card\"", ""),
+                    (
+                        "  opening[safe] = 0 PLN at 2026-01-01 start \"the card\"",
+                        "  opening[safe] = 0 PLN at 2026-01-01 start \"the card\"\n\nversion bands\n  cite card\n  governs 2026-01..2026-12\n  known 2026-01-01\n  tax: [0 PLN, inf) = 0 \"the card\"",
+                    ),
+                    (
+                        "def levy: num = tax(amt) at day",
+                        "def levy: num = tax(amt)",
+                    ),
+                ],
+                "LOAD-LAWDATE levy reads law-dated facts and states no at (a.tally:40)",
+            ),
+            // def-no-at
+            (
+                &[
+                    (
+                        "input cal: calendar",
+                        "input cal: calendar\n\ninput spare: num",
+                    ),
+                    (
+                        "  opening[safe] = 0 PLN at 2026-01-01 start \"the card\"",
+                        "  opening[safe] = 0 PLN at 2026-01-01 start \"the card\"\n  spare = 1 governs 2026-01..2026-06 \"the card\"\n  spare = -1 governs 2026-07..2026-12 \"the card\"",
+                    ),
+                    (
+                        "def fee: money PLN = amt at day",
+                        "def fee: money PLN = amt at day\n\ndef lawd: num = spare",
+                    ),
+                ],
+                "LOAD-LAWDATE lawd reads law-dated facts and states no at (a.tally:42)",
+            ),
+            // move-at-reader
+            (
+                &[
+                    ("  on start_of(m)", "  on start_of(m)\n  at stamp"),
+                    (
+                        "def fee: money PLN = amt at day",
+                        "def fee: money PLN = amt at day\n\ndef stamp: date = day at reader",
+                    ),
+                ],
+                "LOAD-LAWDATE pay: its at reads stamp, which takes its law date from its reader (a.tally:44)",
+            ),
+            // move-at-input
+            (
+                &[
+                    (
+                        "input cal: calendar",
+                        "input cal: calendar\n\ninput spare: num",
+                    ),
+                    (
+                        "  opening[safe] = 0 PLN at 2026-01-01 start \"the card\"",
+                        "  opening[safe] = 0 PLN at 2026-01-01 start \"the card\"\n  spare = 1 governs 2026-01..2026-06 \"the card\"\n  spare = -1 governs 2026-07..2026-12 \"the card\"",
+                    ),
+                    (
+                        "  on start_of(m)",
+                        "  on start_of(m)\n  at if spare > 0 then start_of(m) else end_of(m)",
+                    ),
+                ],
+                "LOAD-LAWDATE move pay's at reads law-dated spare (a.tally:44)",
+            ),
+            // move-at-band
+            (
+                &[
+                    ("  tax: [0 PLN, inf) = 0 \"the card\"", ""),
+                    (
+                        "  opening[safe] = 0 PLN at 2026-01-01 start \"the card\"",
+                        "  opening[safe] = 0 PLN at 2026-01-01 start \"the card\"\n\nversion bands\n  cite card\n  governs 2026-01..2026-12\n  known 2026-01-01\n  tax: [0 PLN, inf) = 0 \"the card\"",
+                    ),
+                    (
+                        "  on start_of(m)",
+                        "  on start_of(m)\n  at if tax(amt) > 0 then start_of(m) else end_of(m)",
+                    ),
+                ],
+                "LOAD-LAWDATE move pay's at reads law-dated tax (a.tally:42)",
+            ),
+            // plan-reads
+            (
+                &[(
+                    "  leg cash from world to konto amount amt",
+                    "  leg cash from world to konto amount bal(konto, start_of(m))",
+                )],
+                "LOAD-READS pay reaches a running read or projection of konto without reads konto (a.tally:42)",
+            ),
+            // plan-reads-def
+            (
+                &[
+                    (
+                        "def fee: money PLN = amt at day",
+                        "def fee: money PLN = amt at day\n\ndef seen: money PLN = bal(safe, day)",
+                    ),
+                    (
+                        "  leg cash from world to konto amount amt",
+                        "  leg cash from world to konto amount seen",
+                    ),
+                ],
+                "LOAD-READS pay reaches a running read or projection of safe without reads safe (a.tally:44)",
+            ),
+            // day-reads
+            (
+                &[(
+                    "  on end_of(m)",
+                    "  on if bal(konto, day) > 0 PLN then end_of(m) else start_of(m)",
+                )],
+                "LOAD-READS sweep: its day reads running state (konto); a decision's day reads no running state (a.tally:50)",
+            ),
+            // undeclared
+            (
+                &[(
+                    "  leg cash from konto to safe amount bal(konto, end_of(m) - 1 day)",
+                    "  leg cash from konto to safe amount bal(safe, end_of(m) - 1 day)",
+                )],
+                "LOAD-READS sweep reaches a running read or projection of safe without reads safe (a.tally:50)",
+            ),
+            // never-read
+            (
+                &[(
+                    "  leg cash from konto to safe amount bal(konto, end_of(m) - 1 day)",
+                    "  leg cash from konto to safe amount amt",
+                )],
+                "LOAD-READS sweep declares reads konto and never reads it (a.tally:50)",
+            ),
+            // balnow-def
+            (
+                &[
+                    (
+                        "def fee: money PLN = amt at day",
+                        "def fee: money PLN = amt at day\n\ndef now: money PLN = bal(konto)",
+                    ),
+                    (
+                        "ask q: fee, levy, acc[2026-02], bal(konto, 2026-12-31)",
+                        "ask q: fee, levy, acc[2026-02], bal(konto, 2026-12-31), now",
+                    ),
+                ],
+                "LOAD-READS now holds bal(x) with no day: a running read outside a decision and its defs",
+            ),
+            // balnow-decision
+            (
+                &[
+                    (
+                        "def fee: money PLN = amt at day",
+                        "def fee: money PLN = amt at day\n\ndef now: money PLN = bal(konto)",
+                    ),
+                    (
+                        "  leg cash from konto to safe amount bal(konto, end_of(m) - 1 day)",
+                        "  leg cash from konto to safe amount now",
+                    ),
+                ],
+                "loaded",
+            ),
+            // after-plan
+            (
+                &[
+                    (
+                        "  opening[safe] = 0 PLN at 2026-01-01 start \"the card\"",
+                        "  opening[safe] = 0 PLN at 2026-01-01 start \"the card\"\n  stated[konto] = 400.00 PLN after pay[2026-02] \"the card\"",
+                    ),
+                    ("  known 2026-01-01", "  known 2026-01-01\n  anchor konto"),
+                ],
+                "LOAD-ORDER stated[konto] after pay[2026-02]: pay[2026-02] is a plan or an observation (a.tally:70)",
+            ),
+            // after-decision
+            (
+                &[
+                    (
+                        "  opening[safe] = 0 PLN at 2026-01-01 start \"the card\"",
+                        "  opening[safe] = 0 PLN at 2026-01-01 start \"the card\"\n  stated[konto] = 400.00 PLN after sweep[2026-02] \"the card\"",
+                    ),
+                    ("  known 2026-01-01", "  known 2026-01-01\n  anchor konto"),
+                ],
+                "loaded",
+            ),
+            // after-obs
+            (
+                &[
+                    (
+                        "input cal: calendar",
+                        "input cal: calendar\n\ninput bank: observed",
+                    ),
+                    (
+                        "  opening[safe] = 0 PLN at 2026-01-01 start \"the card\"",
+                        "  opening[safe] = 0 PLN at 2026-01-01 start \"the card\"\n  opening[safe] = 0 PLN after bank \"the card\"",
+                    ),
+                ],
+                "LOAD-ORDER opening[safe] after bank: bank is a plan or an observation (a.tally:71)",
+            ),
+            // seen-own
+            (
+                &[(
+                    "  leg cash from konto to safe amount bal(konto, end_of(m) - 1 day)",
+                    "  leg cash from konto to safe amount bal(konto, add_days(end_of(m), 0))",
+                )],
+                "LOAD-CYCLE sweep[2026-02] on 2026-03-01 reads bal(konto, add_days(end_of(m), 0)) = 2026-03-01, its own day: its own result or its future (write the projection) (a.tally:50)",
+            ),
+            // seen-later
+            (
+                &[(
+                    "  leg cash from konto to safe amount bal(konto, end_of(m) - 1 day)",
+                    "  leg cash from konto to safe amount bal(konto, add_days(end_of(m), 1))",
+                )],
+                "LOAD-CYCLE sweep[2026-02] on 2026-03-01 reads bal(konto, add_days(end_of(m), 1)) = 2026-03-02, a later day: its own result or its future (write the projection) (a.tally:50)",
+            ),
+            // seen-start
+            (
+                &[(
+                    "  leg cash from konto to safe amount bal(konto, end_of(m) - 1 day)",
+                    "  leg cash from konto to safe amount bal(konto, add_days(end_of(m), 0) start)",
+                )],
+                "loaded",
+            ),
+            // seen-earlier
+            (
+                &[(
+                    "  leg cash from konto to safe amount bal(konto, end_of(m) - 1 day)",
+                    "  leg cash from konto to safe amount bal(konto, add_days(end_of(m), -1))",
+                )],
+                "loaded",
+            ),
+            // unseen
+            (
+                &[(
+                    "  leg cash from konto to safe amount bal(konto, end_of(m) - 1 day)",
+                    "  leg cash from konto to safe amount bal(konto, day)",
+                )],
+                "loaded",
+            ),
+            // schedule-none
+            (
+                &[(
+                    "  on schedule(m, 1, unadjusted, cal)",
+                    "  on schedule(m, 0, unadjusted, cal)",
+                )],
+                "LOAD-SCHEDULE schedule schedule(m, 0, unadjusted, cal) (the day of rent) gives no date in the run (a.tally:46)",
+            ),
+            // schedule-paren
+            (
+                &[(
+                    "  on schedule(m, 1, unadjusted, cal)",
+                    "  on (schedule(m, 0, unadjusted, cal))",
+                )],
+                "LOAD-SCHEDULE schedule schedule(m, 0, unadjusted, cal) (the day of rent) gives no date in the run (a.tally:46)",
+            ),
+            // schedule-rolled
+            (
+                &[(
+                    "  on schedule(m, 1, unadjusted, cal)",
+                    "  on schedule(m, 0, following, cal)",
+                )],
+                "LOAD-SCHEDULE schedule schedule(m, 0, following, cal) (the day of rent) gives no date in the run (a.tally:46)",
+            ),
+            // schedule-some
+            (
+                &[
+                    (
+                        "index gm = month 2026-02..2026-03",
+                        "index gm = month 2026-02..2026-03\n\nindex dd = int 30..31",
+                    ),
+                    (
+                        "move rent[m in gm]: transfers",
+                        "move rent[m in gm, d in dd]: transfers",
+                    ),
+                    (
+                        "  on schedule(m, 1, unadjusted, cal)",
+                        "  on schedule(m, d, unadjusted, cal)",
+                    ),
+                ],
+                "loaded",
+            ),
+            // schedule-every-none
+            (
+                &[
+                    (
+                        "index gm = month 2026-02..2026-03",
+                        "index gm = month 2026-02..2026-03\n\nindex dd = int 30..31\n\nindex fm = month 2026-02..2026-02",
+                    ),
+                    (
+                        "move rent[m in gm]: transfers",
+                        "move rent[m in fm, d in dd]: transfers",
+                    ),
+                    (
+                        "  on schedule(m, 1, unadjusted, cal)",
+                        "  on schedule(m, d, unadjusted, cal)",
+                    ),
+                ],
+                "LOAD-SCHEDULE schedule schedule(m, d, unadjusted, cal) (the day of rent) gives no date in the run (a.tally:50)",
+            ),
+            // schedule-unseen
+            (
+                &[
+                    (
+                        "input cal: calendar",
+                        "input cal: calendar\n\ninput rd: int",
+                    ),
+                    (
+                        "  on schedule(m, 1, unadjusted, cal)",
+                        "  on schedule(m, rd, unadjusted, cal)",
+                    ),
+                    (
+                        "  opening[safe] = 0 PLN at 2026-01-01 start \"the card\"",
+                        "  opening[safe] = 0 PLN at 2026-01-01 start \"the card\"\n  rd = 0 \"the card\"",
+                    ),
+                ],
+                "loaded",
+            ),
+            // schedule-anchored
+            (
+                &[
+                    (
+                        "index gm = month 2026-02..2026-03",
+                        "index gm = month 2026-02..2026-03\n\nindex am = month 2026-02..2026-03 from 15",
+                    ),
+                    (
+                        "move rent[m in gm]: transfers",
+                        "move rent[m in am]: transfers",
+                    ),
+                ],
+                "LOAD-DOMAIN schedule of a key of the anchored index am has no meaning (a.tally:49)",
+            ),
+            // schedule-year
+            (
+                &[
+                    (
+                        "index gm = month 2026-02..2026-03",
+                        "index gm = month 2026-02..2026-03\n\nindex ys = year 2026..2026",
+                    ),
+                    (
+                        "move rent[m in gm]: transfers",
+                        "move rent[m in ys]: transfers",
+                    ),
+                ],
+                "LOAD-UNIT schedule takes a month, not key ys (a.tally:49)",
+            ),
+            // schedule-roll
+            (
+                &[(
+                    "  on schedule(m, 1, unadjusted, cal)",
+                    "  on schedule(m, 1, half-up, cal)",
+                )],
+                "LOAD-UNIT half-up is not a roll code (a.tally:47)",
+            ),
+            // schedule-calendar
+            (
+                &[(
+                    "  on schedule(m, 1, unadjusted, cal)",
+                    "  on schedule(m, 1, unadjusted, day)",
+                )],
+                "LOAD-UNIT schedule: the calendar is date (a.tally:47)",
+            ),
+            // schedule-arity
+            (
+                &[(
+                    "  on schedule(m, 1, unadjusted, cal)",
+                    "  on schedule(m, 1, unadjusted)",
+                )],
+                "LOAD-PARSE cannot parse: schedule takes 4 arguments (a.tally:47)",
+            ),
+            // day-of-anchored
+            (
+                &[
+                    (
+                        "index gm = month 2026-02..2026-03",
+                        "index gm = month 2026-02..2026-03\n\nindex am = month 2026-02..2026-03 from 15",
+                    ),
+                    ("move pay[m in gm]: wages", "move pay[m in am]: wages"),
+                    ("  on start_of(m)", "  on day_of(m, 1)"),
+                ],
+                "LOAD-DOMAIN day_of of a key of the anchored index am has no meaning (a.tally:45)",
+            ),
+            // order-guard-lawdate
+            (
+                &[
+                    (
+                        "  rule step beats base = acc[m - 1] + rate[q2] when pos(m) > 1",
+                        "  rule step beats base = acc[m - 1] + rate[q2]",
+                    ),
+                    (
+                        "input cal: calendar",
+                        "input cal: calendar\n\ninput spare: num",
+                    ),
+                    (
+                        "  opening[safe] = 0 PLN at 2026-01-01 start \"the card\"",
+                        "  opening[safe] = 0 PLN at 2026-01-01 start \"the card\"\n  spare = 1 governs 2026-01..2026-06 \"the card\"\n  spare = -1 governs 2026-07..2026-12 \"the card\"",
+                    ),
+                    (
+                        "def fee: money PLN = amt at day",
+                        "def fee: money PLN = amt at day\n\ndef lawd: num = spare",
+                    ),
+                ],
+                "LOAD-GUARD acc[m - n] is a recurrence read with no condition on m or pos(m) guarding it (a.tally:38)",
+            ),
+            // order-reads-lawdate
+            (
+                &[
+                    (
+                        "  opening[safe] = 0 PLN at 2026-01-01 start \"the card\"",
+                        "  opening[safe] = 0 PLN at 2026-01-01 start \"the card\"\n\nversion card_b\n  cite card\n  governs 2026-06..\n  known 2026-02-01\n  replace amt = 200.00 PLN \"a raise\"",
+                    ),
+                    (
+                        "  leg cash from world to konto amount amt",
+                        "  leg cash from world to konto amount bal(konto, start_of(m))",
+                    ),
+                ],
+                "LOAD-READS pay reaches a running read or projection of konto without reads konto (a.tally:42)",
+            ),
+        ];
+        for &(edits, expected) in cases {
+            let mut text = GRAPH.to_owned();
+            for &(old, new) in edits {
+                assert!(text.contains(old), "{old} is in the text");
+                text = text.replacen(old, new, 1);
+            }
+            assert_eq!(refusal(&text), expected, "{edits:?}");
+        }
     }
 }

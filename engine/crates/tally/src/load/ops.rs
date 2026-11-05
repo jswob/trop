@@ -5,13 +5,13 @@
 //! index), §5.7 (membership, things compare only by == and !=), §5.11 (aggregates), §8.3
 //! (`LOAD-UNIT`, `LOAD-AMBIG`, `LOAD-KEY`, `LOAD-DOMAIN`, `LOAD-PARSE`), §8.4.
 //! Twin: engine/tools/refcore/check.py (`_arith`, `fx_check`, `year4_as_number`, `ambig`,
-//! `arith_time`, `t_not`, `t_and`, `t_if`, `unify`, `t_cmp`, `kl_value`, `compare`, `t_in`,
+//! `arith_time`, `t_not`, `t_and` and `t_if` with their guards, `unify`, `t_cmp`, `kl_value`, `compare`, `t_in`,
 //! `t_agg`, `t_lastx`).
 //! Invariants: the checks run in refcore's order; `Unseen` on either side gives `Unseen` and
 //! refuses nothing; a four-digit literal's reading is decided where refcore decides it, and
 //! its literal rule waits for the checker's end as refcore's does.
 
-use super::check::{Checker, Figure, Reading, Scope};
+use super::check::{Checker, Figure, Reading, Scope, tested_vars};
 use super::types::{
     Op, Operand, Sides, Typed, covered_spans, input_read, is_bool, is_date, key_pk, key_value_kind,
     lit_expr, lit_rule, no_order, numcls, period_kind, refused, uerr, unit_of,
@@ -374,8 +374,11 @@ impl Checker {
             return Ok(Ty::Bool);
         };
         let mut lt = self.expr(m, scope, first, None, depth)?;
+        let mut right = scope.clone();
+        right.guards.extend(tested_vars(first, &scope.keyvars));
         for term in rest {
-            let rt = self.expr(m, scope, term, None, depth)?;
+            let rt = self.expr(m, &right, term, None, depth)?;
+            right.guards.extend(tested_vars(term, &scope.keyvars));
             if !is_bool(&lt) || !is_bool(&rt) {
                 return Err(uerr(format!("and of {} and {}", lt.show(), rt.show())));
             }
@@ -401,6 +404,7 @@ impl Checker {
         }
         let mut branch = scope.clone();
         covered_spans(Some(c), &mut branch.covered);
+        branch.guards.extend(tested_vars(c, &scope.keyvars));
         let mut at = self.expr(m, &branch, a, expect, depth)?;
         let mut bt = self.expr(m, &branch, b, expect, depth)?;
         let open = |t: &Ty| matches!(t, Ty::KeyLit(_) | Ty::Flex(_) | Ty::Year4);

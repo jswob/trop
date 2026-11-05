@@ -1,21 +1,31 @@
-//! What load decides from the item graph: same-key cycles, unread items, what the decisions reach, the walk-bound defs, what each projection leaves out, and the strata.
-//! Spec: E §3.1 steps 6–8; L §5.11 (a same-key cycle), §5.14.1 (decisions, walk-bound
-//! defs, the movements a projection leaves out), §5.14.2 (the order within a day: the
-//! decision graph, written `before` and `after`, cycles), §8.5 (`WARN-UNREAD`).
-//! Twin: engine/tools/refcore/check.py (`check_graph`, `_cycles`); check3.py
-//! (`m_check_moves_graph`, `m_strata`, `_meets`).
+//! What load decides from the item graph: cycles, guarded recurrences, unread items, running reads, the decisions' reach, walk-bound defs, left-out moves, the strata.
+//! Spec: E §3.1 steps 6–8; L §5.11 (a same-key cycle; a recurrence read guarded by a
+//! condition on its key; reading itself both earlier and later), §5.14.1 (running reads
+//! and `reads`, decisions, walk-bound defs, the movements a projection leaves out),
+//! §5.14.2 (the order within a day: the decision graph, written `before` and `after`,
+//! cycles), §4.6 (a reading `after` a plan or an observation), §8.3 (`LOAD-CYCLE`,
+//! `-GUARD`, `-READS`, `-ORDER`), §8.5 (`WARN-UNREAD`).
+//! Twin: engine/tools/refcore/check.py (`Checker.run` from `check_graph` on, `check_graph`,
+//! `_cycles`); check3.py (`_tname`, `_covers`, `m_check_moves_graph`, `m_strata`, `_meets`,
+//! `m_check_after_readings`).
 //! Invariants: every search of the graph is a loop over an explicit stack (R-16); cycles are
 //! searched from sorted nodes over sorted reads, as refcore searches them, so a refusal names
-//! the cycle refcore names; the strata are the layers of an acyclic graph once each cycle no
-//! written order breaks is one component.
+//! the cycle refcore names; the moves' running reads are checked by id and their marks in
+//! the order of refcore's `repr` of them, an explicit text key; the strata are the layers of
+//! an acyclic graph once each cycle no written order breaks is one component.
 
-use super::across::check_period_keys;
-use super::check::{Files, walk};
+use super::across::{check_period_keys, check_schedules, check_seen_days};
+use super::check::{Files, ShiftRead, walk};
+use super::lawdates::{check_lawdates, check_move_lawdates};
 use super::parts::{arrival_reads, parts_walk_bound};
 use super::steps::{Loader, refuse};
+use super::types::text;
 use crate::base::{Code, Load, Refusal, Warn};
-use crate::model::{GapRole, Graph, Node, NodeKind, Reality, Rel, Target, Ty};
-use crate::syntax::{Field, Lit, Order, Section, Stop, Value as Written};
+use crate::model::{
+    GapRole, Graph, Mark, MoveInfo, Node, NodeKind, Reality, Rel, RowInstant, Shift, Target, Ty,
+    pattern_text,
+};
+use crate::syntax::{Expr, Field, Lit, Order, Postfix, Section, Stop, Value as Written};
 use std::collections::{BTreeMap, BTreeSet};
 
 /// An invariant of the graph's own searches broken: a cycle or a layer that must exist.
@@ -33,30 +43,43 @@ enum Visit {
 }
 
 impl Loader {
-    /// The item graph and what load decides from it, in refcore's order: the walk, same-key
-    /// cycles, an arrival rule's reads of its own day, unread inputs and defs, the decisions'
-    /// reach, walk-bound defs (an arrival rule's among them), left-out moves, the strata.
-    /// E §3.1 steps 5–8; L §5.14.1.
+    /// The item graph and what load decides from it, in refcore's order (`Checker.run` from
+    /// `check_graph` on): the walk; same-key cycles, recurrence reads and their guards, law
+    /// dates, unread items; the running reads, the decisions' reach, walk-bound defs (an
+    /// arrival rule's among them), left-out moves, the strata; an arrival rule's reads of its
+    /// own day; readings `after` a plan; a decision's balances of days load sees; periods
+    /// across keys; moves' law dates; schedules that give no date (issue #72). E §3.1 steps
+    /// 5–8; L §4.2, §4.3, §5.11, §5.14.1, §5.14.2.
     pub(super) fn build_graph(&mut self) -> Result<(), Stop> {
-        let (mut graph, facts, periods) = walk(&self.m, &self.sections)?;
-        for fact in facts {
+        let files = Files::of(&self.sections);
+        let mut walked = walk(&self.m, &self.sections)?;
+        for fact in core::mem::take(&mut walked.facts) {
             if let Some(mv) = self.m.moves.get_mut(&fact.id) {
                 mv.read_targets = fact.read_targets;
                 mv.changes = fact.changes;
             }
         }
-        same_key_cycles(&self.m, &graph)?;
-        arrival_reads(&self.m, &graph, &Files::of(&self.sections))?;
-        check_period_keys(&self.m, &periods)?;
-        let unread_items = unread(&self.m, &graph);
+        same_key_cycles(&self.m, &walked.graph)?;
+        recurrences(&walked.graph, &walked.shifts)?;
+        let dated = check_lawdates(&self.m, &walked, &files)?;
+        let unread_items = unread(&self.m, &walked.graph);
         self.m.warnings.extend(unread_items);
-        graph.from_decisions = from_decisions(&self.m, &graph);
+        let decided = from_decisions(&self.m, &walked.graph);
+        running_reads(&self.m, &walked.graph, &decided, &files)?;
+        let mut graph = core::mem::take(&mut walked.graph);
+        graph.from_decisions = decided;
         let mut bound = walk_bound(&self.m, &graph);
         bound.extend(parts_walk_bound(&self.m, &graph));
         graph.walk_bound = bound;
         graph.left_out = left_out(&graph);
         self.m.graph = graph;
-        self.strata()
+        self.strata()?;
+        arrival_reads(&self.m, &self.m.graph, &files)?;
+        after_readings(&self.m, &files)?;
+        check_seen_days(&self.m, &walked.day_reads, &files)?;
+        check_period_keys(&self.m, &walked.periods)?;
+        check_move_lawdates(&self.m, &walked, &dated, &files)?;
+        check_schedules(&self.m, &files)
     }
 
     /// The decision graph and its layers: who acts after whom, the written orders, the
@@ -238,6 +261,248 @@ fn same_key_cycles(m: &Reality, graph: &Graph) -> Result<(), Stop> {
             ids.join(" -> ")
         ),
     )))
+}
+
+/// The recurrence reads: a def's read at a shifted key of a def that reads it back is
+/// `LOAD-GUARD` unless a condition on the key variable guards it, and `LOAD-CYCLE` when it
+/// reads itself both earlier and later on one variable (refcore's `check_graph`, its
+/// `shift_reads` loop and `dirs`). L §5.11.
+fn recurrences(graph: &Graph, shifts: &[ShiftRead]) -> Result<(), Stop> {
+    // (reader, variable) → whether it reads earlier, later, in the order first met
+    let mut ways: Vec<(&Node, &str, bool, bool)> = Vec::new();
+    for read in shifts {
+        if read.target != read.reader && !graph.reaches(&read.target, &read.reader) {
+            continue;
+        }
+        if !read.guarded {
+            let var = &read.var;
+            let sign = match read.shift {
+                Shift::Earlier => "-",
+                Shift::Later => "+",
+            };
+            let message = format!(
+                "{}[{var} {sign} n] is a recurrence read with no condition on {var} or pos({var}) guarding it",
+                read.target.id
+            );
+            return Err(refuse(Load::Guard, message, &read.at.0, read.at.1));
+        }
+        let earlier = read.shift == Shift::Earlier;
+        match ways
+            .iter_mut()
+            .find(|(reader, var, ..)| *reader == &read.reader && *var == read.var)
+        {
+            Some(way) => {
+                way.2 = way.2 || earlier;
+                way.3 = way.3 || !earlier;
+            }
+            None => ways.push((&read.reader, &read.var, earlier, !earlier)),
+        }
+    }
+    let Some((reader, var, ..)) = ways
+        .iter()
+        .find(|(_, _, earlier, later)| *earlier && *later)
+    else {
+        return Ok(());
+    };
+    Err(Stop::Refused(Refusal::new(
+        Code::Load(Load::Cycle),
+        format!("{} reads itself both earlier and later on {var}", reader.id),
+    )))
+}
+
+/// The running reads and projections an item reaches through defs and its moves' days,
+/// each once, ordered as refcore sorts them (by `repr` of its `(mark, target)` tuple;
+/// refcore's `reached`). E §3.1 step 7.
+fn reached_marks(graph: &Graph, item: &Node) -> Vec<(Mark, Target)> {
+    let mut found: Vec<(String, Mark, Target)> = Vec::new();
+    let mut seen = BTreeSet::new();
+    let mut stack = vec![item.clone()];
+    while let Some(next) = stack.pop() {
+        if !seen.insert(next.clone()) {
+            continue;
+        }
+        for (mark, target) in graph.marks.get(&next).into_iter().flatten() {
+            let text = format!("('{}', {})", mark.word(), target_repr(target));
+            if !found.iter().any(|(old, ..)| *old == text) {
+                found.push((text, *mark, target.clone()));
+            }
+        }
+        for target in graph.reads(&next).into_iter().flat_map(BTreeMap::keys) {
+            if carries_marks(target) {
+                stack.push(target.clone());
+            }
+        }
+    }
+    found.sort_by(|a, b| a.0.cmp(&b.0));
+    found
+        .into_iter()
+        .map(|(_, mark, target)| (mark, target))
+        .collect()
+}
+
+/// A target as Python's `repr` prints refcore's tuple for it, which orders refcore's sort.
+fn target_repr(target: &Target) -> String {
+    match target {
+        Target::Thing(name) => format!("('thing', '{name}')"),
+        Target::PlaceSec(id) => format!("('placesec', '{id}')"),
+        Target::Move(id) => format!("('move', '{id}')"),
+        Target::Kind(id) => format!("('kind', '{id}')"),
+        Target::Unknown => "('unknown',)".to_owned(),
+    }
+}
+
+/// What a target names in a refusal (refcore's `_tname`).
+fn target_name(target: &Target) -> &str {
+    match target {
+        Target::Thing(id) | Target::PlaceSec(id) | Target::Move(id) | Target::Kind(id) => id,
+        Target::Unknown => "a place",
+    }
+}
+
+/// Whether a declared read covers a running read's target: the same, a keyed place and one
+/// of its instances, an event kind and its moves or subkinds, or anything load can't see
+/// (refcore's `_covers`). L §5.14.1.
+fn covers(m: &Reality, declared: &[Target], target: &Target) -> bool {
+    *target == Target::Unknown || declared.iter().any(|d| covers_one(m, d, target))
+}
+
+/// Whether one declared read covers a running read's target.
+fn covers_one(m: &Reality, declared: &Target, target: &Target) -> bool {
+    if *declared == Target::Unknown || declared == target {
+        return true;
+    }
+    if let (Target::PlaceSec(section), Target::Thing(thing)) = (declared, target) {
+        return section_holds(m, section, thing);
+    }
+    let Target::Kind(kind) = declared else {
+        return false;
+    };
+    if !m.kinds.contains(kind) {
+        return false;
+    }
+    let sub = m.subtree(kind);
+    match target {
+        Target::Kind(other) => sub.contains(other),
+        Target::Move(id) => m.moves.get(id).is_some_and(|mv| sub.contains(&mv.kind)),
+        Target::Thing(_) | Target::PlaceSec(_) | Target::Unknown => false,
+    }
+}
+
+/// `LOAD-READS`: a plan that reaches a running read or a projection; a decision whose day
+/// reads running state, that reaches one of a place it doesn't declare, or that declares a
+/// read it never makes; then `bal(x)` with no day outside a decision and the defs it reaches
+/// (refcore's `m_check_moves_graph`, its `LOAD-READS` and `balnow_items`). L §5.14.1; E §3.1
+/// step 7.
+fn running_reads(
+    m: &Reality,
+    graph: &Graph,
+    decided: &BTreeSet<Node>,
+    files: &Files,
+) -> Result<(), Stop> {
+    let mut ids: Vec<&String> = m.moves.entries().map(|(id, _)| id).collect();
+    ids.sort();
+    for id in ids {
+        let Some(mv) = m.moves.get(id) else {
+            continue;
+        };
+        if let Some(message) = move_reads(m, graph, id, mv) {
+            return Err(refuse(
+                Load::Reads,
+                message,
+                files.get("move", id)?,
+                mv.decl.line,
+            ));
+        }
+    }
+    let Some(item) = graph.balnow.iter().find(|item| !decided.contains(*item)) else {
+        return Ok(());
+    };
+    Err(Stop::Refused(Refusal::new(
+        Code::Load(Load::Reads),
+        format!(
+            "{} holds bal(x) with no day: a running read outside a decision and its defs",
+            item.id
+        ),
+    )))
+}
+
+/// The `LOAD-READS` message for one move, where it needs one (refcore's
+/// `m_check_moves_graph`, its loop body). L §5.14.1.
+fn move_reads(m: &Reality, graph: &Graph, id: &str, mv: &MoveInfo) -> Option<String> {
+    let reached = reached_marks(graph, &Node::new(NodeKind::Move, id));
+    let without = |target: &Target| {
+        let name = target_name(target);
+        format!("{id} reaches a running read or projection of {name} without reads {name}")
+    };
+    if !mv.decision {
+        return reached.first().map(|(_, target)| without(target));
+    }
+    if let Some((_, target)) = reached_marks(graph, &Node::new(NodeKind::MoveOn, id)).first() {
+        return Some(format!(
+            "{id}: its day reads running state ({}); a decision's day reads no running state",
+            target_name(target)
+        ));
+    }
+    if let Some((_, target)) = reached
+        .iter()
+        .find(|(_, target)| !covers(m, &mv.read_targets, target))
+    {
+        return Some(without(target));
+    }
+    if reached.iter().any(|(_, target)| *target == Target::Unknown) {
+        return None;
+    }
+    for declared in &mv.read_targets {
+        let read = reached
+            .iter()
+            .any(|(_, target)| covers_one(m, declared, target));
+        if !read {
+            let name = target_name(declared);
+            return Some(format!("{id} declares reads {name} and never reads it"));
+        }
+    }
+    None
+}
+
+/// `LOAD-ORDER` for a reading `after m` of `stated` or `opening`, with m a plan or an
+/// observation: load sees m's class, and the batch has no order (refcore's
+/// `m_check_after_readings`). L §4.6 Readings, §5.14.2, §8.3.
+fn after_readings(m: &Reality, files: &Files) -> Result<(), Stop> {
+    for id in ["stated", "opening"] {
+        let Some(input) = m.inputs.get(id) else {
+            continue;
+        };
+        for row in input.rows.iter().chain(&input.part_rows) {
+            let Some(RowInstant::After(node)) = &row.instant else {
+                continue;
+            };
+            let mut base = node;
+            if let Expr::Post(inner, posts) = node
+                && let [Postfix::Keys(_)] = posts.as_slice()
+            {
+                base = inner;
+            }
+            let Expr::Name(name) = base else {
+                continue;
+            };
+            let plan = m.moves.get(name).is_some_and(|mv| !mv.decision);
+            let observed = m.inputs.get(name).is_some_and(|named| named.observed);
+            if plan || observed {
+                let shown = text(node);
+                let message = format!(
+                    "{id}{} after {shown}: {shown} is a plan or an observation",
+                    pattern_text(&row.pattern)
+                );
+                return Err(refuse(
+                    Load::Order,
+                    message,
+                    files.of_version(&row.version)?,
+                    row.line,
+                ));
+            }
+        }
+    }
+    Ok(())
 }
 
 /// Whether a node is a def or a band.
