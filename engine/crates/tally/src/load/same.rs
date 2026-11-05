@@ -2,18 +2,21 @@
 //! Spec: L §6.1 (Identities are written: a side is a kind, a thing, a row or a movement, both
 //! of one sort, `LOAD-SAME` otherwise; a `same` in a version that names a kind or a thing is
 //! refused), §5.19 (`same` between observed rows), §8.3 (`LOAD-SAME`'s forms).
-//! Twin: engine/tools/refcore/loader.py (`joint_sames`, `sref`, `move_keys`, `_txt_node`).
+//! Twin: engine/tools/refcore/loader.py (`joint_sames`, `sref`, `move_keys`, `_txt_node`,
+//! `joint_place_sames`, `place_side`, `_has_keys`).
 //! Invariants: the header's lines are taken first, then the versions' in the order load built
 //! their items; each side is resolved before the pair is judged, the left first; things,
 //! places and kinds a joint model's header names by id were joined before parsing (`joint.rs`),
-//! so only rows and movements stay; a pair is recorded for the run, which reads it at M2.
+//! so only rows and movements stay; a pair is recorded for the run, which reads it at M2; a
+//! joint model's own row of a member's item stands only at a pair stated `same`.
 
 use super::check::invariant;
+use super::joint::owner_of;
 use super::keys::{KeyLit, lit_of_expr, lit_text, resolve_key};
 use super::steps::{Loader, refuse};
 use super::types::text;
 use crate::base::Load;
-use crate::model::{KeyVal, NameKind, SamePair, Ty};
+use crate::model::{KeyVal, NameKind, Pat, SamePair, Ty, pattern_text};
 use crate::syntax::{Expr, Key, Lit, Postfix, Stop};
 
 /// One `same` line as written: its two sides, where it stands, and the version that holds it
@@ -69,7 +72,7 @@ impl Side {
 /// A side's text as a message names it, a member's prefix printed with its dot (refcore's
 /// `shown(_txt_node(n))`).
 fn shown(side: &Expr) -> String {
-    text(side)
+    super::joint::shown(&text(side))
 }
 
 impl Loader {
@@ -100,7 +103,9 @@ impl Loader {
                 (Side::Row(a, ka, ta, tya), Side::Row(b, kb, tb, tyb)) => {
                     if tya != tyb {
                         return Err(at(format!(
-                            "same {ta} = {tb}: rows of types {} and {}",
+                            "same {} = {}: rows of types {} and {}",
+                            super::joint::shown(&ta),
+                            super::joint::shown(&tb),
                             shown_type(tya.as_ref()),
                             shown_type(tyb.as_ref())
                         )));
@@ -121,7 +126,140 @@ impl Loader {
             }
         }
         self.same_lines = lines;
+        if self.m.joint.is_some() {
+            self.joint_rows()?;
+        }
         Ok(())
+    }
+
+    /// A joint model's own rows of a member's item: each stands only at a pair of rows stated
+    /// `same`, at all its keys (refcore's `joint_sames`, its last loop); a scenario's row may
+    /// replace a member's. L §6.1 (The joint model's own rows; Writes into members).
+    fn joint_rows(&self) -> Result<(), Stop> {
+        for (id, input) in self.m.inputs.entries() {
+            let member = owner_of(id);
+            if member.is_empty() || input.observed {
+                continue;
+            }
+            for row in &input.rows {
+                let scenario = self.m.scenarios.of(&row.version).is_some();
+                if !owner_of(&row.version).is_empty() || scenario {
+                    continue;
+                }
+                let keys: Vec<&KeyVal> = row
+                    .pattern
+                    .iter()
+                    .filter_map(|p| match p {
+                        Pat::Key(key) => Some(key),
+                        Pat::Star | Pat::Range(..) => None,
+                    })
+                    .collect();
+                let at = |x: &str, xs: &[KeyVal]| x == id && xs.iter().eq(keys.iter().copied());
+                let stated = self.m.sames.iter().any(|pair| match pair {
+                    SamePair::Rows(a, ka, b, kb) => at(a, ka) || at(b, kb),
+                    SamePair::Moves(..) => false,
+                });
+                if !stated || keys.len() != input.binds.len() {
+                    let file = self
+                        .m
+                        .versions
+                        .get(&row.version)
+                        .map(|v| v.file.clone())
+                        .ok_or_else(|| invariant(format!("version {} isn't built", row.version)))?;
+                    let message = format!(
+                        "the joint model states {}{}, an item of member {member} that no same line joins",
+                        super::joint::shown(id),
+                        pattern_text(&row.pattern)
+                    );
+                    return Err(refuse(Load::Same, message, &file, row.line));
+                }
+            }
+        }
+        Ok(())
+    }
+
+    /// A joint model's header `same` lines whose side has keys and names a place (refcore's
+    /// `joint_place_sames`): a place written beside another kind of side is refused; two
+    /// places at their keys are joined before the rows are read, which isn't built yet. L §6.1.
+    pub(super) fn joint_place_sames(&self) -> Result<(), Stop> {
+        if self.m.joint.is_none() {
+            return Ok(());
+        }
+        for same in self.same_lines.iter().filter(|s| s.version.is_none()) {
+            if !(has_keys(&same.left) || has_keys(&same.right)) {
+                continue;
+            }
+            let a = self.place_side(&same.left, same)?;
+            let b = self.place_side(&same.right, same)?;
+            match (a, b) {
+                (false, false) => {}
+                (true, true) => return Err(Stop::NotBuilt("two places stated same at their keys")),
+                (true, false) | (false, true) => {
+                    let message = format!(
+                        "same {} = {}: a place and a thing",
+                        shown(&same.left),
+                        shown(&same.right)
+                    );
+                    return Err(refuse(Load::Same, message, &same.file, same.line));
+                }
+            }
+        }
+        Ok(())
+    }
+
+    /// Whether a header `same` line's side names a place (refcore's `place_side`, not `None`):
+    /// a place by its id, at its keys when it is keyed, or a thing of a place kind. L §6.1.
+    fn place_side(&self, side: &Expr, same: &SameLine) -> Result<bool, Stop> {
+        let Some((name, keys)) = named(side) else {
+            return Ok(false);
+        };
+        let wrong = || {
+            let message = format!("wrong number of keys for {name}");
+            refuse(Load::Key, message, &same.file, same.line)
+        };
+        match self.m.names.get(name.as_str()) {
+            None => {
+                Ok(keys.is_empty() && self.m.things.get(name).is_some_and(|t| self.m.is_place(t)))
+            }
+            Some(NameKind::Place) => {
+                let Some(place) = self.m.places.get(name) else {
+                    return Err(Stop::NotBuilt("a place that isn't built"));
+                };
+                if place.binds.is_empty() {
+                    return if keys.is_empty() {
+                        Ok(true)
+                    } else {
+                        Err(wrong())
+                    };
+                }
+                if keys.is_empty() {
+                    let message = format!(
+                        "same names {}, a keyed place, without its keys",
+                        super::joint::shown(name)
+                    );
+                    return Err(refuse(Load::Same, message, &same.file, same.line));
+                }
+                if keys.len() != place.binds.len() {
+                    return Err(wrong());
+                }
+                Ok(true)
+            }
+            Some(
+                NameKind::Unit
+                | NameKind::Kind
+                | NameKind::Index
+                | NameKind::Axis
+                | NameKind::Input
+                | NameKind::Def
+                | NameKind::Band
+                | NameKind::Fill
+                | NameKind::Move
+                | NameKind::Version
+                | NameKind::Ask
+                | NameKind::Source
+                | NameKind::Cut,
+            ) => Ok(false),
+        }
     }
 
     /// A side of a `same` line (refcore's `sref`). L §6.1.
@@ -240,6 +378,11 @@ pub(super) fn named(side: &Expr) -> Option<(&String, &[Key])> {
         return Some((name, keys.as_slice()));
     }
     None
+}
+
+/// Whether a side is written with keys (refcore's `_has_keys`): `x[k]`, or a field of one.
+fn has_keys(side: &Expr) -> bool {
+    matches!(side, Expr::Post(_, posts) if posts.iter().any(|p| matches!(p, Postfix::Keys(_))))
 }
 
 /// An observed row's id as a reference writes it, one name, key or number (refcore's

@@ -22,7 +22,7 @@ mod invariant;
 mod oracle;
 
 pub use api::{
-    Answer, Asks, Given, Pin, Request, Source, load_report, reprint, run, run_with_memo,
+    Answer, Asks, Given, Pin, Request, Source, load_report, reprint, run, run_in, run_with_memo,
 };
 #[cfg(feature = "counters")]
 pub use counters::Counters;
@@ -60,6 +60,7 @@ pub mod syntax {
 
     pub use canon::{printed_hash, reprint};
     pub(crate) use expr::is_builtin;
+    pub(crate) use item::{parse_lines, prescan_units};
     pub use item::{parse_reality, parse_split};
     pub(crate) use lex::cannot;
     pub use lex::{Canon, Kind, Line, Mark, Paren, Role, Tok, split_lines};
@@ -111,7 +112,9 @@ pub mod model {
     pub use index::{GapRole, IndexForm, IndexInfo, Moved, OwnTime, VersionInfo};
     pub use key::{KeyVal, Pat, Span, pattern_text};
     pub use kind::{Entry, KindInfo, KindSpec, Labels, PRELUDE_KINDS, PlaceKeys, Thing, prelude};
-    pub use reality::{BUILTIN_INDEXES, BUILTIN_INPUTS, NameKind, Reality, SamePair};
+    pub use reality::{
+        BUILTIN_INDEXES, BUILTIN_INPUTS, Joint, MemberAsks, NameKind, Reality, SamePair,
+    };
     pub use ty::{CodeKind, PeriodWord, Shown, Ty};
     pub use unit::{PERIODS, Scaled, Unit, is_currency_code};
     pub use value::{
@@ -235,9 +238,11 @@ pub mod load {
     mod exact;
     mod fills;
     mod indexes;
+    mod joint;
     mod keys;
     mod kinds;
     mod lawdates;
+    mod merge;
     mod moves;
     mod names;
     mod observed;
@@ -259,6 +264,7 @@ pub mod load {
     mod values;
     mod worlds;
 
+    pub use joint::member_paths;
     pub use keys::index_key_of;
     pub use steps::load;
     pub use worlds::{Loaded, Split, Worlds, load_run, split_files};

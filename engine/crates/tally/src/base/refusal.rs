@@ -1,8 +1,10 @@
 //! A refusal: a code of the catalogue, its message, and where in the reality it was met.
-//! Spec: L §8.3 (each refusal names its file, line and item; which refusal prints), §8.4.
-//! Twin: engine/tools/refcore/errors.py (`TallyError`, its `text`).
+//! Spec: L §8.3 (each refusal names its file, line and item; which refusal prints), §8.4;
+//! INTERFACE §2 (a joint model's member refused: `member <alias>: <the refusal>`).
+//! Twin: engine/tools/refcore/errors.py (`TallyError`, its `text`); joint.py (`MemberRefused`).
 //! Invariants: a refusal always carries its catalogue code (R-76); its line is
-//! `<CODE> <message>`, then ` (<where>)` when it was met in a file, as refcore prints it.
+//! `<CODE> <message>`, then ` (<where>)` when it was met in a file, as refcore prints it, after
+//! `member <a>: ` when a joint model's member was refused.
 
 use super::code::{Code, Load};
 
@@ -24,6 +26,9 @@ pub struct Refusal {
     message: String,
     /// Where it was met, when in a file.
     place: Option<Place>,
+    /// The member of a joint model that was refused, its aliases from the run's model down
+    /// (`f.b`), or `None` for the run's own refusal.
+    member: Option<String>,
 }
 
 impl Refusal {
@@ -34,6 +39,7 @@ impl Refusal {
             code,
             message,
             place: None,
+            member: None,
         }
     }
 
@@ -44,6 +50,7 @@ impl Refusal {
             code,
             message,
             place: Some(place),
+            member: None,
         }
     }
 
@@ -84,6 +91,7 @@ impl Refusal {
             code,
             message,
             place: self.place.clone(),
+            member: self.member.clone(),
         }
     }
 
@@ -97,15 +105,50 @@ impl Refusal {
         }
     }
 
+    /// This refusal as a joint model's member's, `chain` its aliases from the run's model down
+    /// (refcore's `MemberRefused`). L §6.1; INTERFACE §2.
+    #[must_use]
+    pub fn of_member(self, chain: String) -> Refusal {
+        Refusal {
+            member: Some(chain),
+            ..self
+        }
+    }
+
+    /// Whether a joint model's member was refused.
+    #[must_use]
+    pub fn is_member(&self) -> bool {
+        self.member.is_some()
+    }
+
+    /// The run's own refusal of a joint model with each member's prefix printed with its dot,
+    /// `a.x` (refcore's `text().replace(SEP, '.')`); a member's refusal prints as the member
+    /// gives it. L §6.1.
+    #[must_use]
+    pub fn shown(self) -> Refusal {
+        if self.member.is_some() {
+            return self;
+        }
+        Refusal {
+            message: self.message.replace('\u{b7}', "."),
+            ..self
+        }
+    }
+
     /// The refusal as printed after `refused: `: the code, the message, then the place in
-    /// parentheses (`LOAD-PARSE cannot parse: expected ":", got int (a.tally:4)`). L §8.3.
+    /// parentheses (`LOAD-PARSE cannot parse: expected ":", got int (a.tally:4)`), after
+    /// `member <a>: ` for a joint model's member. L §8.3; INTERFACE §2.
     #[must_use]
     pub fn text(&self) -> String {
         let code = self.code.as_str();
-        match &self.place {
+        let line = match &self.place {
             None => format!("{code} {}", self.message),
             Some(Place::File(file)) => format!("{code} {} ({file})", self.message),
             Some(Place::Line(file, line)) => format!("{code} {} ({file}:{line})", self.message),
+        };
+        match &self.member {
+            None => line,
+            Some(chain) => format!("member {chain}: {line}"),
         }
     }
 }

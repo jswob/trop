@@ -47,8 +47,9 @@ pub fn parse_reality(sources: &[Text]) -> Result<Vec<File>, Stop> {
     parse_split(&files)
 }
 
-/// Finds the unit names across files already split into lines, then parses each, in the order
-/// given: a world's files, each with its path (refcore's `load_lines`). L §8.3.
+/// Finds the unit names across files already split into lines, then parses each in the order
+/// of their full paths, by code point, and gives them back in the order given: a world's
+/// files, each with its path (refcore's `load_lines` and its `by_path`). L §8.3.
 ///
 /// # Errors
 ///
@@ -56,11 +57,36 @@ pub fn parse_reality(sources: &[Text]) -> Result<Vec<File>, Stop> {
 pub fn parse_split(split: &[(&str, &[Line])]) -> Result<Vec<File>, Stop> {
     let every: Vec<&[Line]> = split.iter().map(|(_, file)| *file).collect();
     let units = prescan_units(&every);
-    let mut files = Vec::with_capacity(split.len());
-    for (path, lines) in split {
-        files.push(parse_file(lines, path, &units)?);
+    let order: BTreeSet<(&str, usize)> = split
+        .iter()
+        .enumerate()
+        .map(|(at, (path, _))| (*path, at))
+        .collect();
+    let mut parsed: Vec<Option<File>> = split.iter().map(|_| None).collect();
+    for (path, at) in order {
+        let (Some((_, lines)), Some(slot)) = (split.get(at), parsed.get_mut(at)) else {
+            return Err(Stop::Refused(Refusal::new(
+                Code::EngineInvariant,
+                "a file's place past the files".to_owned(),
+            )));
+        };
+        *slot = Some(parse_file(lines, path, &units)?);
     }
-    Ok(files)
+    Ok(parsed.into_iter().flatten().collect())
+}
+
+/// One file's lines parsed with the unit names `units` (refcore's `parse_file`): a joint
+/// model's merge reads what each member declares this way. L §2.3, §6.1.
+///
+/// # Errors
+///
+/// As [`parse_split`].
+pub(crate) fn parse_lines(
+    lines: &[Line],
+    file: &str,
+    units: &BTreeSet<String>,
+) -> Result<File, Stop> {
+    parse_file(lines, file, units)
 }
 
 /// The first token's text of a line, or nothing.
@@ -70,7 +96,7 @@ pub(super) fn first(line: &Line) -> &str {
 
 /// The unit names a number may carry: declared `unit` ids, and the keys entered into kinds of
 /// unit (refcore's `prescan_units`, L §3.2).
-pub(super) fn prescan_units(files: &[&[Line]]) -> BTreeSet<String> {
+pub(crate) fn prescan_units(files: &[&[Line]]) -> BTreeSet<String> {
     let mut units = BTreeSet::new();
     let mut unit_kinds = BTreeSet::from(["currencies".to_owned()]);
     for line in files.iter().copied().flatten() {

@@ -147,7 +147,7 @@ fn same_keys(m: &Reality, id: &str, rows: &[Row], group: &[usize]) -> Result<(),
             }
             let earlier =
                 known(m, o)? < known(m, r)? || layer(m, &o.version) < layer(m, &r.version);
-            if earlier && overlaps(m, o, r)? {
+            if earlier && overlaps(m, o, r)? && !owners_differ(m, o, r) {
                 replaces = true;
                 break;
             }
@@ -166,7 +166,7 @@ fn same_keys(m: &Reality, id: &str, rows: &[Row], group: &[usize]) -> Result<(),
 /// Two rows at the same keys (refcore's `check_overlap`, its loop over pairs). L §4.6
 /// steps 2 and 4, §6.4.
 fn pair(m: &Reality, id: &str, a: &Row, b: &Row) -> Result<(), Stop> {
-    if !overlaps(m, a, b)? {
+    if !overlaps(m, a, b)? || owners_differ(m, a, b) {
         return Ok(());
     }
     let keys = keys_or_none(a);
@@ -226,7 +226,7 @@ fn ties_across(
     }
     for x in a.rows.iter().filter_map(|at| rows.get(*at)) {
         for y in b.rows.iter().filter_map(|at| rows.get(*at)) {
-            if layer(m, &x.version) != layer(m, &y.version) {
+            if owners_differ(m, x, y) || layer(m, &x.version) != layer(m, &y.version) {
                 continue;
             }
             if x.instant.is_some() || y.instant.is_some() {
@@ -257,6 +257,16 @@ fn ties_across(
         }
     }
     Ok(())
+}
+
+/// Whether two rows are facts about one item from two members of a joint model, or from a
+/// member and the joint model, read together rather than ordered (refcore's
+/// `owners_differ`); a scenario's row replaces any. L §6.1, §6.4.
+fn owners_differ(m: &Reality, a: &Row, b: &Row) -> bool {
+    let scenario = |r: &Row| m.scenarios.of(&r.version).is_some();
+    !scenario(a)
+        && !scenario(b)
+        && super::joint::owner_of(&a.version) != super::joint::owner_of(&b.version)
 }
 
 /// Whether two rows overlap: at one instant stated alike, or on spans that share a day

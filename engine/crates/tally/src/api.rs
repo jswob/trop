@@ -2,9 +2,10 @@
 //! Spec: E §1 (the run function); E §3.1 step 1 (files by full path); L §8.3 (which refusal
 //! prints: every file is read before any is split, and split before any is parsed); L §6.4
 //! (a reality with scenarios runs as worlds); L §5.18 (the asks answered once the reality
-//! loads); E §11 (`REQ-ASK`).
+//! loads); E §11 (`REQ-ASK`); L §6.1 (a joint model's members read from the files given, then
+//! from the file table; its lines printed with each member's prefix and its dot).
 //! Twin: engine/tools/refcore/cli.py (`read_files`, `run_texts`, `_run_texts`, `run_one`,
-//! `by_path`).
+//! `by_path`, `joint`'s `shown`).
 //! Invariants: reads no clock, environment or file (R-38, R-39); takes the files in the order
 //! of their full paths by code point, whatever order they come in (R-40); never decodes lossily
 //! (R-49).
@@ -16,6 +17,7 @@ use crate::eval::Memo;
 use crate::load::{Loaded, load_run, split_files};
 use crate::oracle::Days;
 use crate::syntax::Stop;
+use std::collections::BTreeMap;
 
 /// One file the run is given: its path as the run names it, and its bytes, or none when the
 /// path names no file or folder.
@@ -119,6 +121,20 @@ pub fn run(given: Vec<Given>, request: &Request) -> Result<Answer, NotImplemente
     run_with_memo(given, request, Memo::Classes)
 }
 
+/// [`run`] with the file table's files, `disk`, where a joint model's members not among the
+/// files given are read (E §3.1 step 1; INTERFACE §2, §4): the CLI's entry.
+///
+/// # Errors
+///
+/// As [`run`].
+pub fn run_in(
+    given: Vec<Given>,
+    disk: &BTreeMap<&str, &[u8]>,
+    request: &Request,
+) -> Result<Answer, NotImplemented> {
+    answered(given, disk, request, Memo::Classes)
+}
+
 /// Loads a reality's files and answers with what load prints when no ask is answered: its one
 /// refusal, or each refused scenario's line and the warnings (L §8, §8.5). The fuzz target
 /// `load` calls it.
@@ -127,7 +143,15 @@ pub fn run(given: Vec<Given>, request: &Request) -> Result<Answer, NotImplemente
 ///
 /// [`NotImplemented`] for a construct the engine doesn't build yet.
 pub fn load_report(given: Vec<Given>) -> Result<Answer, NotImplemented> {
-    finish(loaded(given).map(|loaded| Answered::printed(report_lines(&loaded))))
+    let report = loaded(given, &BTreeMap::new(), Pin::Canonical).map(|loaded| {
+        let lines = report_lines(&loaded);
+        Answered::printed(if is_joint(&loaded) {
+            joint_lines(lines)
+        } else {
+            lines
+        })
+    });
+    finish(report)
 }
 
 /// [`run`] with each ask's memo keeping its cells as `memo` says: shared by a law date class,
@@ -142,19 +166,56 @@ pub fn run_with_memo(
     request: &Request,
     memo: Memo,
 ) -> Result<Answer, NotImplemented> {
+    answered(given, &BTreeMap::new(), request, memo)
+}
+
+/// The run's answer, its members read from the files given, then from `disk`; a joint model's
+/// lines printed with each member's prefix and its dot (refcore's `_run_texts` and `joint`).
+fn answered(
+    given: Vec<Given>,
+    disk: &BTreeMap<&str, &[u8]>,
+    request: &Request,
+    memo: Memo,
+) -> Result<Answer, NotImplemented> {
     let (asks, days) = (&request.asks, request.days);
-    finish(loaded(given).and_then(|loaded| match &loaded {
-        Loaded::One(m) => answer(m, asks, days, memo),
-        Loaded::Worlds(w) => answer_worlds(w, asks, days, memo),
+    finish(loaded(given, disk, request.pin).and_then(|loaded| {
+        let mut out = match &loaded {
+            Loaded::One(m) => answer(m, asks, days, memo),
+            Loaded::Worlds(w) => answer_worlds(w, asks, days, memo),
+        }?;
+        if is_joint(&loaded) {
+            out.lines = joint_lines(out.lines);
+        }
+        Ok(out)
     }))
 }
 
+/// Whether the run's reality is a joint model's.
+fn is_joint(loaded: &Loaded) -> bool {
+    match loaded {
+        Loaded::One(m) => m.joint.is_some(),
+        Loaded::Worlds(w) => w.base.joint.is_some(),
+    }
+}
+
+/// A joint model's printed lines (refcore's `joint`, its `shown`): each member's prefix printed
+/// with its dot; a warning that a member's item is unread left out, since each member warns
+/// alone. L §6.1, §8.5.
+fn joint_lines(lines: Vec<String>) -> Vec<String> {
+    lines
+        .into_iter()
+        .filter(|line| !(line.starts_with("warning: WARN-UNREAD") && line.contains('\u{b7}')))
+        .map(|line| line.replace('\u{b7}', "."))
+        .collect()
+}
+
 /// The run's files read, split with their scenario headers, and loaded: one reality, or its
-/// worlds (refcore's `_run_texts`). E §3.1 step 1; L §8.3, §6.4.
-fn loaded(given: Vec<Given>) -> Result<Loaded, Stop> {
+/// worlds, a joint model's members read from the files given, then from `disk` (refcore's
+/// `_run_texts`). E §3.1 step 1; L §8.3, §6.1, §6.4.
+fn loaded(given: Vec<Given>, disk: &BTreeMap<&str, &[u8]>, pin: Pin) -> Result<Loaded, Stop> {
     let sources = read(given).map_err(Stop::Refused)?;
     let split = split_files(sources).map_err(Stop::Refused)?;
-    load_run(&split)
+    load_run(&split, disk, pin)
 }
 
 /// The printed answer: the lines, or a refusal's one line (L §8.3); [`NotImplemented`] for a

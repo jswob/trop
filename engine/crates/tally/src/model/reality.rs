@@ -121,6 +121,48 @@ pub struct Reality {
     /// The rows and movements stated `same`, in the order written (refcore's `same_rows` and
     /// `same_moves`): read together at run. L §6.1, §5.19.
     pub sames: Vec<SamePair>,
+    /// A joint model's members, as the run may ask them (refcore's `joint_members`), or `None`
+    /// for a model that is no joint model. L §6.1; E §11.
+    pub joint: Option<Joint>,
+}
+
+/// What a run knows of a joint model's members: each by its alias, the asks it may be asked
+/// as `a.q` (refcore's `joint_members`, read by `knows_ask`). L §6.1; E §11.
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+pub struct Joint {
+    /// Each member by its alias.
+    pub members: BTreeMap<String, MemberAsks>,
+}
+
+/// A member's asks: its own (those its base answers, and those its scenario files declare),
+/// and, for a member that is itself a joint model, its members' (`a.b.q`). L §6.1; E §11.
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+pub struct MemberAsks {
+    /// The asks it may be asked by their own ids.
+    pub asks: BTreeSet<String>,
+    /// Its own members, when it is a joint model.
+    pub members: BTreeMap<String, MemberAsks>,
+}
+
+impl Joint {
+    /// Whether `id` names a member's ask, `a.q` or `a.b.q` (refcore's `knows_ask`, its member
+    /// arm). E §11.
+    #[must_use]
+    pub fn knows(&self, id: &str) -> bool {
+        let mut members = &self.members;
+        let mut rest = id;
+        while let Some((alias, ask)) = rest.split_once('.') {
+            let Some(member) = members.get(alias) else {
+                return false;
+            };
+            if member.asks.contains(ask) {
+                return true;
+            }
+            members = &member.members;
+            rest = ask;
+        }
+        false
+    }
 }
 
 /// Two rows or two movements stated `same` (refcore's `same_rows`, `same_moves`). L §6.1.

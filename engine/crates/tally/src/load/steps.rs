@@ -9,7 +9,7 @@
 
 use super::same::SameLine;
 use crate::base::{Code, Load, Place as At, Refusal, Run, Table, Warn};
-use crate::model::{Graph, PERIODS, Reality, Scenarios};
+use crate::model::{Graph, Joint, PERIODS, Reality, Scenarios};
 use crate::num::{Num, NumError};
 use crate::syntax::{File, HeaderKind, Lit, Section, Stop, UnitForm};
 use std::collections::{BTreeMap, BTreeSet};
@@ -53,13 +53,14 @@ pub(super) fn num_stop(error: NumError) -> Stop {
 ///
 /// A load refusal construction meets, or `NotBuilt` for a form S doesn't build.
 pub fn load(files: Vec<File>) -> Result<Reality, Stop> {
-    load_among(files, &BTreeSet::new(), &BTreeMap::new())
+    load_among(files, &BTreeSet::new(), &BTreeMap::new(), None)
 }
 
 /// The reality the files state, loaded among the run's other worlds `worlds` (the scenarios
 /// of a run with scenarios, which an ask of the base may name) (refcore's `load_texts` with
 /// its `worlds`); `elsewhere`, for the base of a run with scenarios, the ids their files
-/// declare, each with its scenario. E §3.1; L §6.4.
+/// declare, each with its scenario; `joint`, for a joint model's merged files, its members (the
+/// asks a run may name `a.q`). E §3.1; L §6.1, §6.4.
 ///
 /// # Errors
 ///
@@ -68,8 +69,9 @@ pub(super) fn load_among(
     files: Vec<File>,
     worlds: &BTreeSet<String>,
     elsewhere: &BTreeMap<String, String>,
+    joint: Option<&Joint>,
 ) -> Result<Reality, Stop> {
-    let mut loader = Loader::new(files)?;
+    let mut loader = Loader::new(files, joint)?;
     loader.m.all_worlds.clone_from(worlds);
     loader.m.elsewhere.clone_from(elsewhere);
     loader
@@ -89,6 +91,7 @@ pub(super) fn load_among(
     loader.build_decls()?;
     loader.prescan_open_keys();
     loader.build_places()?;
+    loader.joint_place_sames()?;
     loader.check_key_ids()?;
     loader.build_items()?;
     loader.check_rows()?;
@@ -104,8 +107,9 @@ pub(super) fn load_among(
 
 impl Loader {
     /// The one model header, the files' tally version, the scenarios, and an empty reality under
-    /// them (refcore's `Loader.build`, pass 1). L §6.1, §6.4.
-    fn new(files: Vec<File>) -> Result<Loader, Stop> {
+    /// them, a joint model's header `same` lines first among the `same` lines (refcore's
+    /// `Loader.build`, pass 1, and `joint_sames`' header pairs). L §6.1, §6.4.
+    fn new(files: Vec<File>, joint: Option<&Joint>) -> Result<Loader, Stop> {
         let models: Vec<&File> = files
             .iter()
             .filter(|f| f.header.kind == HeaderKind::Model)
@@ -125,9 +129,24 @@ impl Loader {
                 "files declare different tally versions".to_owned(),
             )));
         }
-        if !model.header.uses.is_empty() || !model.header.sames.is_empty() {
-            return Err(Stop::NotBuilt("joint models"));
+        let is_joint = !model.header.uses.is_empty() || !model.header.sames.is_empty();
+        if is_joint && joint.is_none() {
+            return Err(Stop::NotBuilt(
+                "a joint model's files loaded without its members",
+            ));
         }
+        let header_sames: Vec<SameLine> = model
+            .header
+            .sames
+            .iter()
+            .map(|(left, right)| SameLine {
+                left: left.clone(),
+                right: right.clone(),
+                file: model.path.clone(),
+                line: model.header.line,
+                version: None,
+            })
+            .collect();
         let scenarios = scenarios(&files, &model.header.id)?;
         let header = model.header.clone();
         let missing = Stop::NotBuilt("a model header without on, start or end");
@@ -170,10 +189,11 @@ impl Loader {
                 elsewhere: BTreeMap::new(),
                 asks_alone: BTreeMap::new(),
                 sames: Vec::new(),
+                joint: joint.cloned(),
             },
             sections,
             currency_order: Vec::new(),
-            same_lines: Vec::new(),
+            same_lines: header_sames,
         })
     }
 

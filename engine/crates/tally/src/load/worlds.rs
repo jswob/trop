@@ -1,21 +1,22 @@
 //! Worlds: the base loaded alone, and each scenario with the base and its stack, so a scenario's
 //! refusal refuses only that scenario.
 //! Spec: L §6.4 (scenarios: `scenario s over b`, a stack over the model at most 4 deep; an id a
-//! scenario declares, read outside it), §6.1 (one model; a joint model, M0's ninth group), §8.3
+//! scenario declares, read outside it), §6.1 (one model; a joint model, merged first), §8.3
 //! (which refusal prints: every file split, by full path, before any is parsed); E §3.1 step 1;
 //! E §11 (`REQ-ASK`: an ask a refused scenario's file declares exists).
 //! Twin: engine/tools/refcore/cli.py (`_run_texts`, `run_worlds` up to its asks, `declared_ids`,
-//! `declared_asks`); loader.py (`scenario_header`, `load_texts`); joint.py (`header_uses`,
-//! `header_has_sames`). The base's own refusals of a scenario's ids, a key literal's read and
+//! `declared_asks`); loader.py (`scenario_header`, `load_texts`). The base's own refusals of a
+//! scenario's ids, a key literal's read and
 //! a rule's `v`, have no twin: refcore refuses them at run or as `LOAD-NAME` (issue #75).
 //! Invariants: every file is split, in the order given, before any is parsed; the base loads
 //! first, and its refusal is the run's; each scenario loads with the base's files, then its
 //! stack from the model up; a world that stops `NotBuilt` stops the run.
 
+use super::joint::{joint_root, load_joint};
 use super::steps::load_among;
-use crate::api::Source;
+use crate::api::{Pin, Source};
 use crate::base::{Code, Load, Place, Refusal};
-use crate::model::Reality;
+use crate::model::{Joint, Reality};
 use crate::syntax::{Line, Stop, cannot, parse_split, split_lines};
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -32,7 +33,7 @@ const SECTION_WORDS: [&str; 12] = [
 /// A scenario file's header line: its id, the world it is over, and its line (refcore's
 /// `scenario_header`).
 #[derive(Debug, Clone, PartialEq, Eq)]
-struct Head {
+pub(super) struct Head {
     /// The scenario's id.
     id: String,
     /// The world it is over: the model, or another scenario.
@@ -45,13 +46,13 @@ struct Head {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Split {
     /// The path, as the run names it.
-    path: String,
+    pub(super) path: String,
     /// The text, for the ids and asks a refusal names (refcore reads them from it).
-    text: String,
+    pub(super) text: String,
     /// The lines.
-    lines: Vec<Line>,
+    pub(super) lines: Vec<Line>,
     /// The scenario header, or `None` for a model or part file.
-    head: Option<Head>,
+    pub(super) head: Option<Head>,
 }
 
 /// What a run's files load into: one reality, or a base and its scenarios' worlds.
@@ -121,35 +122,35 @@ fn scenario_head(lines: &[Line], path: &str) -> Result<Option<Head>, Refusal> {
     }
 }
 
-/// Loads a run's split files (refcore's `_run_texts`): one reality, or its worlds when a file
-/// is a scenario's. L §6.1, §6.4.
+/// Loads a run's split files (refcore's `_run_texts`): a joint model merged with its members,
+/// read from the files given, then from `disk` (the file table's files), each pinned as `pin`
+/// says; one reality, or its worlds when a file is a scenario's. L §6.1, §6.4; E §3.1 step 1.
 ///
 /// # Errors
 ///
-/// The base's load refusal, or `NotBuilt` for a joint model (M0's ninth group) and for a form
-/// a world's load doesn't build yet.
-pub fn load_run(files: &[Split]) -> Result<Loaded, Stop> {
-    if files.iter().any(|file| joint_header(&file.text)) {
-        return Err(Stop::NotBuilt("joint models"));
+/// The base's load refusal, a member's, or `NotBuilt` for a form a world's load doesn't build
+/// yet.
+pub fn load_run(files: &[Split], disk: &BTreeMap<&str, &[u8]>, pin: Pin) -> Result<Loaded, Stop> {
+    match joint_root(files) {
+        Some(root) => load_joint(files, root, disk, pin),
+        None => load_split(files, None),
     }
+}
+
+/// Loads split files as one reality, or as worlds when a file is a scenario's (refcore's
+/// `run_one` and `run_worlds`, their loads), each a joint model's when `joint` holds its
+/// members. L §6.1, §6.4.
+///
+/// # Errors
+///
+/// As [`load_run`].
+pub(super) fn load_split(files: &[Split], joint: Option<&Joint>) -> Result<Loaded, Stop> {
     if files.iter().all(|file| file.head.is_none()) {
         let all: Vec<&Split> = files.iter().collect();
         let none = (BTreeSet::new(), BTreeMap::new());
-        return Ok(Loaded::One(Box::new(load_world(&all, &none)?)));
+        return Ok(Loaded::One(Box::new(load_world(&all, &none, joint)?)));
     }
-    Ok(Loaded::Worlds(Box::new(load_worlds(files)?)))
-}
-
-/// Whether a model file's header has a `use` or a `same` line: a joint model (refcore's
-/// `header_uses` and `header_has_sames`, any such line). L §6.1.
-fn joint_header(text: &str) -> bool {
-    let mut lines = text.split('\n');
-    if !lines.next().is_some_and(|line| line.starts_with("model ")) {
-        return false;
-    }
-    lines
-        .take_while(|line| line.starts_with([' ', '\t']))
-        .any(|line| matches!(line.split_whitespace().next(), Some("use" | "same")))
+    Ok(Loaded::Worlds(Box::new(load_worlds(files, joint)?)))
 }
 
 /// The run's worlds an ask may name, and the ids the scenarios' files declare, each with its
@@ -158,17 +159,17 @@ type Among = (BTreeSet<String>, BTreeMap<String, String>);
 
 /// One world's reality: its files parsed together, then loaded among the run's worlds
 /// (refcore's `load_texts`). E §3.1.
-fn load_world(files: &[&Split], among: &Among) -> Result<Reality, Stop> {
+fn load_world(files: &[&Split], among: &Among, joint: Option<&Joint>) -> Result<Reality, Stop> {
     let split: Vec<(&str, &[Line])> = files
         .iter()
         .map(|file| (file.path.as_str(), file.lines.as_slice()))
         .collect();
-    load_among(parse_split(&split)?, &among.0, &among.1)
+    load_among(parse_split(&split)?, &among.0, &among.1, joint)
 }
 
 /// The base alone, then each scenario, by id, with the base and its stack (refcore's
 /// `run_worlds`, its loads). L §6.4, §8.3.
-fn load_worlds(files: &[Split]) -> Result<Worlds, Stop> {
+fn load_worlds(files: &[Split], joint: Option<&Joint>) -> Result<Worlds, Stop> {
     let base: Vec<&Split> = files.iter().filter(|file| file.head.is_none()).collect();
     let mut scenarios: BTreeMap<&str, (&Split, &Head)> = BTreeMap::new();
     let mut twice = BTreeSet::new();
@@ -187,7 +188,7 @@ fn load_worlds(files: &[Split]) -> Result<Worlds, Stop> {
         }
     }
     let mut among = (run, elsewhere);
-    let alone = match load_world(&base, &among) {
+    let alone = match load_world(&base, &among, joint) {
         Err(Stop::Refused(refusal)) => {
             return Err(Stop::Refused(read_outside(refusal, &among.1)));
         }
@@ -210,7 +211,7 @@ fn load_worlds(files: &[Split]) -> Result<Worlds, Stop> {
                     let (under, _) = scenarios.get(over.as_str()).ok_or_else(no_stack)?;
                     world.push(under);
                 }
-                load_world(&world, &among)
+                load_world(&world, &among, joint)
             }
         };
         match loaded {
@@ -396,7 +397,7 @@ fn holds_key(m: &Reality, name: &str) -> bool {
 /// The ids of the asks a file declares, `ask <id>:` at the start of a line, read from its text,
 /// so a scenario file whose load was refused still declares them (refcore's `declared_asks`).
 /// E §11 `REQ-ASK`.
-fn declared_asks(text: &str) -> BTreeSet<String> {
+pub(super) fn declared_asks(text: &str) -> BTreeSet<String> {
     let mut out = BTreeSet::new();
     let mut rest = text;
     loop {
@@ -425,9 +426,10 @@ fn ask_at(text: &str) -> Option<String> {
 #[cfg(test)]
 mod tests {
     use super::{Loaded, declared_asks, load_run, section_ids, split_files};
-    use crate::api::Source;
+    use crate::api::{Pin, Source};
     use crate::base::Refusal;
     use crate::syntax::Stop;
+    use std::collections::BTreeMap;
 
     const MODEL: &str = "model m\n  tally 2\n  on 2026-03-01\n  start 2026-01-01\n  end 2027-12-31\n\nsource card \"a card\"\n\nunit PLN: currency minor 0.01\n\ninput amt: money PLN\n\nversion v\n  cite card\n  governs always\n  known 2026-01-01\n  amt = 100.00 PLN \"the card\"\n";
 
@@ -449,7 +451,7 @@ mod tests {
 
     fn loaded(files: &[(&str, &str)]) -> Result<Loaded, Stop> {
         let split = split_files(sources(files)).map_err(Stop::Refused)?;
-        load_run(&split)
+        load_run(&split, &BTreeMap::new(), Pin::Canonical)
     }
 
     fn refusal(files: &[(&str, &str)]) -> String {

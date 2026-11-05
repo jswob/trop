@@ -423,8 +423,13 @@ impl Loader {
             self.m.things.push(name, Thing::new(name));
         }
         let mut olds: Vec<(Option<Day>, bool)> = Vec::new();
+        let owner = self.entry_owner(Some(version));
         if let Some(thing) = self.m.things.get(name) {
             for entry in thing.entries.iter().filter(|e| e.kind == *target) {
+                // a thing stated `same` by two members: each side's entries are its own (L §6.1)
+                if entry.version.is_some() && self.entry_owner(entry.version.as_deref()) != owner {
+                    continue;
+                }
                 olds.push((self.entry_known(entry), entry.replace));
             }
         }
@@ -459,6 +464,15 @@ impl Loader {
             line: Some(line),
         });
         Ok(())
+    }
+
+    /// The member of a joint model whose version states an entry, `""` for the joint model's
+    /// own and a scenario's (refcore's `owner_deep` of the version). L §6.1.
+    fn entry_owner(&self, version: Option<&str>) -> String {
+        match version {
+            Some(v) if self.m.scenarios.of(v).is_none() => super::joint::owner_deep(v).to_owned(),
+            Some(_) | None => String::new(),
+        }
     }
 
     /// Each thing's base kind: the one kind it enters that isn't plain, or its earliest plain

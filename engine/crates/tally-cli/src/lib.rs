@@ -2,8 +2,8 @@
 //! runner both call.
 //! Spec: E §1 (the run function); L §8.3 (`LOAD-PATH`, and `LOAD-PARSE` for bytes);
 //! engine/tests/INTERFACE.md §1–§4 (commands, reading, output, the file table).
-//! Twin: engine/tools/refcore/cli.py (`main`, `command_lines`, `run_paths`) and
-//! engine/tools/refcore/loader.py (`collect`).
+//! Twin: engine/tools/refcore/cli.py (`main`, `command_lines`, `run_paths`),
+//! engine/tools/refcore/loader.py (`collect`) and joint.py (`use_member_files`).
 //! Invariants: pure, no I/O (R-39); everything is printed to standard output; the exit is 0
 //! answered, 1 refused, 2 usage, 74 a failed write, never 101 (a panic) or 134 (an abort).
 //!
@@ -133,6 +133,25 @@ pub fn join(dir: &str, name: &str) -> String {
     } else {
         format!("{dir}/{name}")
     }
+}
+
+/// The paths the `use` lines of the files from `from` on name (refcore's `use_member_files`),
+/// each once, but none a file of `files` is at: the members the binary reads next, a joint
+/// model's members' own members after them (INTERFACE §2).
+#[must_use]
+pub fn member_paths(files: &[File], from: usize) -> Vec<String> {
+    let mut out: Vec<String> = Vec::new();
+    for file in files.get(from..).unwrap_or(&[]) {
+        let Ok(text) = core::str::from_utf8(&file.bytes) else {
+            continue;
+        };
+        for path in tally::load::member_paths(&file.path, text) {
+            if !files.iter().any(|f| f.path == path) && !out.contains(&path) {
+                out.push(path);
+            }
+        }
+    }
+    out
 }
 
 /// Whether a file under a directory is a reality's file: its name ends `.tally`, compared
@@ -277,7 +296,7 @@ fn engine_run(
         return Err(bad_table());
     };
     let given = resolve(paths, &table);
-    tally::run(given, request).map_err(|tally::NotImplemented| not_implemented("run"))
+    tally::run_in(given, &table, request).map_err(|tally::NotImplemented| not_implemented("run"))
 }
 
 /// The file table read into a map from path to bytes.

@@ -94,13 +94,16 @@ pub fn answer(m: &Reality, asks: &Asks, days: Days, memo: Memo) -> Result<Answer
         }
         Asks::Named(ids) => {
             let mut named = Vec::with_capacity(ids.len());
+            let mut member = false;
             for id in ids {
-                let at = m
-                    .asks
-                    .iter()
-                    .position(|ask| ask.id == *id)
-                    .ok_or_else(|| Stop::Refused(no_ask(id)))?;
-                named.push(Turn::Ask(at));
+                match m.asks.iter().position(|ask| ask.id == *id) {
+                    Some(at) => named.push(Turn::Ask(at)),
+                    None if m.joint.as_ref().is_some_and(|j| j.knows(id)) => member = true,
+                    None => return Err(Stop::Refused(no_ask(id))),
+                }
+            }
+            if member {
+                return Err(Stop::NotBuilt("a member's ask at run"));
             }
             named
         }
@@ -206,8 +209,8 @@ fn keeps_parts(m: &Reality) -> bool {
 }
 
 /// A form load checks (M0) that the run doesn't evaluate yet, where the ask meets it: its
-/// pins, a random ask, `orient`, an axis it reaches, a fill or a `same` line of the reality
-/// (L §5.5, §5.12, §5.16, §5.18, §6.1).
+/// pins, a random ask, `orient`, an axis it reaches, a fill or a `same` line of the reality, or
+/// a joint model's merged reality (L §5.5, §5.12, §5.16, §5.18, §6.1).
 fn unbuilt_at_run(m: &Reality, ask: &Ask) -> Option<&'static str> {
     if !ask.pins.is_empty() {
         return Some("an ask's pins at run");
@@ -226,6 +229,9 @@ fn unbuilt_at_run(m: &Reality, ask: &Ask) -> Option<&'static str> {
     }
     if !m.sames.is_empty() {
         return Some("same lines at run");
+    }
+    if m.joint.is_some() {
+        return Some("a joint model's asks at run");
     }
     None
 }

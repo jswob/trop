@@ -36,6 +36,11 @@ pub fn answer_worlds(w: &Worlds, asks: &Asks, days: Days, memo: Memo) -> Result<
     {
         return Err(Stop::Refused(no_ask(id)));
     }
+    if let Asks::Named(ids) = asks
+        && ids.iter().any(|id| member_ask(w, id))
+    {
+        return Err(Stop::NotBuilt("a member's ask at run"));
+    }
     let model = w.base.header.id.as_str();
     // the base's asks from the base, a scenario's from its own reality, by (id, world)
     let mut keyed: BTreeMap<(&str, &str), (Option<usize>, &Ask)> = BTreeMap::new();
@@ -106,7 +111,15 @@ pub fn report_lines(loaded: &Loaded) -> Vec<String> {
 /// Whether `id` names an ask of a world: the base's, a loaded scenario's, or one a refused
 /// scenario's file declares (refcore's `known` and `knows_ask`). E §11.
 fn knows(w: &Worlds, id: &str) -> bool {
-    w.refused_asks.contains(id) || has_ask(&w.base, id) || w.loaded.values().any(|m| has_ask(m, id))
+    w.refused_asks.contains(id)
+        || has_ask(&w.base, id)
+        || w.loaded.values().any(|m| has_ask(m, id))
+        || member_ask(w, id)
+}
+
+/// Whether `id` names a joint model's member's ask, `a.q` (refcore's `knows_ask`). E §11.
+fn member_ask(w: &Worlds, id: &str) -> bool {
+    w.base.joint.as_ref().is_some_and(|j| j.knows(id))
 }
 
 /// Whether the reality has the ask `id`.

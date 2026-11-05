@@ -1152,7 +1152,13 @@ impl P<'_> {
             "calendar" => Ok(Expr::Calendar(Box::new(self.calendar()?))),
             _ => {
                 self.skip(1)?;
+                let open = self.i;
                 let args = self.call_args()?;
+                match word {
+                    "periodic" => self.period_word_arg(open, 1),
+                    "factor" => self.period_word_arg(open, 2),
+                    _ => {}
+                }
                 Ok(Expr::Call(Box::new(Call {
                     name: word.to_owned(),
                     prefix: Vec::new(),
@@ -1161,6 +1167,54 @@ impl P<'_> {
                 })))
             }
         }
+    }
+
+    /// The period argument of `periodic` (its second) and `factor` (its third), a lone period
+    /// word there, is a word of the language, not an id, so a member's index named `month`
+    /// doesn't take it (refcore's `period_word_arg`). L §2.2, §6.1.
+    fn period_word_arg(&self, open: usize, pos: usize) {
+        let Some(s) = self.lone_arg(open, pos) else {
+            return;
+        };
+        if let Some(t) = self.toks.get(s)
+            && t.kind == Kind::Id
+            && matches!(t.text.as_str(), "day" | "month" | "quarter" | "year")
+        {
+            self.mark(Some(s), |mark| mark.name = false);
+        }
+    }
+
+    /// The place of the one token argument `pos` of a call is, its `(` at `open`, when it is
+    /// one token (refcore's `period_word_arg`, its walk over the arguments). L §2.3.
+    fn lone_arg(&self, open: usize, pos: usize) -> Option<usize> {
+        let (mut depth, mut k, mut start): (u32, usize, Option<usize>) = (0, 0, None);
+        for j in open..self.i {
+            let t = self.toks.get(j)?;
+            let op = t.kind == Kind::Op;
+            if op && (t.text == "(" || t.text == "[") {
+                depth = depth.checked_add(1)?;
+                if depth == 1 && t.text == "(" && j == open {
+                    start = Some(j.checked_add(1)?);
+                }
+                continue;
+            }
+            let lone = start.filter(|s| j.checked_sub(*s) == Some(1));
+            if op && (t.text == ")" || t.text == "]") {
+                if depth == 1 && k == pos && lone.is_some() {
+                    return lone;
+                }
+                depth = depth.checked_sub(1)?;
+                continue;
+            }
+            if depth == 1 && op && t.text == "," {
+                if k == pos {
+                    return lone;
+                }
+                k = k.checked_add(1)?;
+                start = Some(j.checked_add(1)?);
+            }
+        }
+        None
     }
 
     /// `bal(x [, [e,] e [start]]) [of q] [proj | modelled]` (L §2.3 `balx`, parse rule 7).
