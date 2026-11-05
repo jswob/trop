@@ -9,6 +9,7 @@ The suite lives here, travelling with the engine, and runs from any checkout: ev
 | Path | What |
 |---|---|
 | `run.py`, `checks.tsv`, `examples.tsv` | the runner, the checks, the examples and their three levels |
+| `GAPS.md` | T's STOP-REPORTs: forms T wrote and ran where refcore and the engine differ outside a ruled family, held until ruled |
 | `tools/` | `build_checks.py` (writes `checks.tsv`), `tracked_check.py`, `knobdiff.py`, `memcap.py` (the watchdog), `answers.py` (runs → answers for `compare.py`), `xref_check.py` (the codes L §8 and E §11 define against what the outputs print, K8-13: writes `map/codes.tsv`; `--check` in `run.py --self-test`; `--gate M0`) |
 | `map/` | the tags, coverage, the halving test's knobs; `examples.py` builds and lints `examples.tsv`; `placement.tsv` (each check's milestone); `codes.tsv` (the codes' cross-reference, by `tools/xref_check.py`) |
 | `cases/` | the case set (cases 1.1.1): stories, questions, keys, probe cards, `tools/compare.py` and the key scripts |

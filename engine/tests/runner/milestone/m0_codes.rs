@@ -220,7 +220,9 @@ mod tests {
     }
 
     /// `LOAD-KEY`: `basic/key-not`, `basic/key-id`, `basic/key-count`, `basic/key-range`,
-    /// `basic/key-two`, `basic/key-across`.
+    /// `basic/key-two`, `basic/key-across`, `scenplace/covered-unknown` (`covered` through a
+    /// scenario row's base prefix: G12's N1), `kplace/same-place-unknown` (a `same` side keyed
+    /// by a keyed place: G12's N3).
     #[test]
     fn m0_code_load_key() {
         code_as_refcore("LOAD-KEY");
@@ -293,7 +295,8 @@ mod tests {
         code_as_refcore("LOAD-MOVES");
     }
 
-    /// `LOAD-NAME`: `basic/name`, `basic/name-binding`, `basic/name-rule-v`.
+    /// `LOAD-NAME`: `basic/name`, `basic/name-binding`, `basic/name-rule-v`, `scenplace/sum` (an
+    /// aggregate through a scenario row's base prefix: G12's N1).
     #[test]
     fn m0_code_load_name() {
         code_as_refcore("LOAD-NAME");
@@ -318,7 +321,9 @@ mod tests {
     }
 
     /// `LOAD-PARSE`: `lifepath/path-alone` (a path count printed, past 64 bits: G11's B6),
-    /// `lifepath/lifespan-two`, `lifepath/lifespan-none` (`lifespan` takes one thing: G11's B2).
+    /// `lifepath/lifespan-two`, `lifepath/lifespan-none` (`lifespan` takes one thing: G11's B2),
+    /// `scenplace/covered-args`, `scenplace/covered-call` (`covered` through a scenario row's
+    /// base prefix: G12's N1).
     #[test]
     fn m0_code_load_parse() {
         code_as_refcore("LOAD-PARSE");
@@ -415,7 +420,9 @@ mod tests {
     /// `LOAD-UNIT`: `basic/unit-mixed`, `basic/unit-currency`, `basic/unit-fx`,
     /// `adjust/unit-settlement`, `basic/unit-mode`, `lifepath/lifespan-money`,
     /// `lifepath/lifespan-key`, `lifepath/lifespan-record`, `lifepath/lifespan-to-num` (`lifespan`
-    /// typed at load: G11's B2).
+    /// typed at load: G11's B2), `scenplace/covered-amt` (G12's N1), `adjust/adjusts-type`,
+    /// `adjust/change-type`, `adjust/lifespan-dyn` (an adjustment's fields typed at load,
+    /// `lifespan` of `dyn`: G12's leftovers 2 and 3).
     #[test]
     fn m0_code_load_unit() {
         code_as_refcore("LOAD-UNIT");

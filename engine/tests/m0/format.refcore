@@ -5290,6 +5290,9 @@ unit/probes/surf/SURF-04/redefine.tally	399	07aeeeba0ca1ebf71e783a14b701d4cf
 ,19:format/rules_sorted,19:format/rules_sorted,22:engine/tests/m0/format,26:reprint rules_sorted.tally,48:rules_sorted.tally	m0/format/rules_sorted.tally
 ,1:0,56:rules_sorted.tally	422	1072a3b119ea75b107236f7eabee7708
 ,72:sha256 c4c3e6b1ca0c586693956cf1d4500afde76eca24f9d794699609869cf97b5c96
+,22:format/same_place_keys,22:format/same_place_keys,22:engine/tests/m0/format,29:reprint same_place_keys.tally,54:same_place_keys.tally	m0/format/same_place_keys.tally
+,1:0,59:same_place_keys.tally	452	14ceff864fd3fd1e175fba29ac87835b
+,72:sha256 85c3629a0b2449031fe8744192edc731be59eee641fca1477aef52792bc31ed5
 ,17:format/same_sides,17:format/same_sides,22:engine/tests/m0/format,24:reprint same_sides.tally,44:same_sides.tally	m0/format/same_sides.tally
 ,1:0,54:same_sides.tally	453	0c6fcdfde419001207c140780d0ad0dc
 ,72:sha256 feec997bef8b5571bef838b31f5bbbede5f52ea74a358cab20fd0229c0179182

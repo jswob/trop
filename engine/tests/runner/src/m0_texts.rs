@@ -3,7 +3,7 @@
 //! so the tests read no file (`INTERFACE.md` §4) and no text is copied. Never edited by hand.
 
 /// Each text: its path under `engine/tests/` and its content.
-pub static TEXTS: [(&str, &str); 1334] = [
+pub static TEXTS: [(&str, &str); 1335] = [
     (
         "integration/amendments/cards11/i10q/model.tally",
         include_str!("../../integration/amendments/cards11/i10q/model.tally"),
@@ -4743,6 +4743,10 @@ pub static TEXTS: [(&str, &str); 1334] = [
     (
         "m0/format/rules_sorted.tally",
         include_str!("../../m0/format/rules_sorted.tally"),
+    ),
+    (
+        "m0/format/same_place_keys.tally",
+        include_str!("../../m0/format/same_place_keys.tally"),
     ),
     (
         "m0/format/same_sides.tally",

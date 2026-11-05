@@ -20,3 +20,4 @@ parens_redundant	L §2.4 Parentheses appear only where precedence needs them
 parens_forced	L §2.4 A to u call used as an operand and a converted flows inside a comparison are always parenthesised (parse rule 4)
 numbers_of_any_size	L §2.4 Numbers of any size print as every number does: a reduced a/b whose numerator, denominator or both pass 64 bits, and a decimal past 64 bits grouped by a space (G11, B4)
 same_sides	L §2.3 sref, §2.4 A same side of every sref form prints as written, keys and fields kept: three names deep, a field after its keys, keys after a field; each the only same item of its list (the header, a version), so no order between sides is read (#88; G11, B3)
+same_place_keys	L §2.3 sref, §2.4 A same side keyed by a keyed place prints as written, its items sorted by their left sides' place keys (a place keyed by things is one key, sorted as things are) (G12's N3; beside a row of its target, #88: m0/format/held.tsv)

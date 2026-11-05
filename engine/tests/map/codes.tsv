@@ -31,8 +31,8 @@ HOLE-PART	L §8.1	M5b	*	3	M5b	I:S1:S1-01~s1
 HOLE-PART	L §8.1	M5b	<place>: <amount> may be <q>'s: <questions>	3	M5b	I:S1:S1-01~s1
 LOAD-PATH	L §8.3	M0	*	2	M0	codes/LOAD-PATH/alone
 LOAD-PATH	L §8.3	M0	<path> doesn't exist	2	M0	codes/LOAD-PATH/alone
-LOAD-PARSE	L §8.3	M0	*	4	M0	codes/LOAD-PATH/control
-LOAD-PARSE	L §8.3	M0	cannot parse: <what was expected>	4	M0	codes/LOAD-PATH/control
+LOAD-PARSE	L §8.3	M0	*	6	M0	codes/LOAD-PATH/control
+LOAD-PARSE	L §8.3	M0	cannot parse: <what was expected>	6	M0	codes/LOAD-PATH/control
 LOAD-HEADER	L §8.3	M0	*	29	M0	U:law/LAW-13/rate25
 LOAD-HEADER	L §8.3	M0	missing tally version	1	M0	codes/m0/basic/header-tally
 LOAD-HEADER	L §8.3	M0	missing on date	1	M0	codes/m0/basic/header-on
@@ -51,14 +51,14 @@ LOAD-DUP	L §8.3	M0	*	5	M0	codes/LOAD-DEPTH/ties-by-control
 LOAD-DUP	L §8.3	M0	<id> is declared twice	3	M0	codes/LOAD-DEPTH/ties-by-control
 LOAD-DUP	L §8.3	M0	a key entered twice	1	M0	codes/m0/basic/dup-key
 LOAD-DUP	L §8.3	M0	band <b> has a built-in's name	1	M0	codes/m0/basic/dup-band
-LOAD-NAME	L §8.3	M0	*	3	M0	codes/m0/basic/name
-LOAD-NAME	L §8.3	M0	unknown id <x>	2	M0	codes/m0/basic/name
+LOAD-NAME	L §8.3	M0	*	4	M0	codes/m0/basic/name
+LOAD-NAME	L §8.3	M0	unknown id <x>	3	M0	codes/m0/basic/name
 LOAD-NAME	L §8.3	M0	<x> is a kind, not a unit	0	-	-
 LOAD-NAME	L §8.3	M0	rule <d>.<r>: v <x> names no version	1	M0	codes/m0/basic/name-rule-v
 LOAD-SHADOW	L §8.3	M0	*	1	M0	codes/m0/basic/shadow
 LOAD-SHADOW	L §8.3	M0	bound variable <k> has the name of a top-level id	1	M0	codes/m0/basic/shadow
-LOAD-KEY	L §8.3	M0	*	7	M0	codes/m0/basic/key-across
-LOAD-KEY	L §8.3	M0	<key> is not a key of <index or kind>	1	M0	codes/m0/basic/key-not
+LOAD-KEY	L §8.3	M0	*	9	M0	codes/m0/basic/key-across
+LOAD-KEY	L §8.3	M0	<key> is not a key of <index or kind>	3	M0	codes/m0/basic/key-not
 LOAD-KEY	L §8.3	M0	ambiguous key <key>	1	M0	codes/order/passes-control
 LOAD-KEY	L §8.3	M0	a key is also an id	1	M0	codes/m0/basic/key-id
 LOAD-KEY	L §8.3	M0	wrong number of keys	1	M0	codes/m0/basic/key-count
@@ -98,12 +98,12 @@ LOAD-DOMAIN	L §8.3	M0	range of quantities <a> .. <b> has no step	1	M0	codes/m0/
 LOAD-DOMAIN	L §8.3	M0	<operation> has no meaning for <values>	0	-	-
 LOAD-DOMAIN	L §8.3	M0	discrete over a key list or a stepped range	1	M0	codes/m0/basic/domain-discrete
 LOAD-DOMAIN	L §8.3	M0	?	5	M0	codes/m0/lifepath/path-past-64
-LOAD-UNIT	L §8.3	M0	*	9	M0	codes/m0/adjust/unit-settlement
+LOAD-UNIT	L §8.3	M0	*	13	M0	codes/m0/adjust/adjusts-type
 LOAD-UNIT	L §8.3	M0	<a> and <b> have different units	1	M0	codes/m0/basic/unit-mixed
 LOAD-UNIT	L §8.3	M0	<operation> orders things of <K>	0	-	-
 LOAD-UNIT	L §8.3	M0	axis <a> is used as a mode, but <o> is not a mode name	1	M0	codes/m0/basic/unit-mode
 LOAD-UNIT	L §8.3	M0	money in an undeclared currency	1	M0	codes/m0/basic/unit-currency
-LOAD-UNIT	L §8.3	M0	?	6	M0	codes/m0/adjust/unit-settlement
+LOAD-UNIT	L §8.3	M0	?	10	M0	codes/m0/adjust/adjusts-type
 LOAD-PRECISION	L §8.3	M0	*	2	M0	codes/m0/basic/precision
 LOAD-PRECISION	L §8.3	M0	<literal> is finer than the minor unit	1	M0	codes/m0/basic/precision
 LOAD-PRECISION	L §8.3	M0	<a/b> terminates; write it as a decimal	1	M0	codes/m0/basic/precision-fraction
@@ -318,8 +318,8 @@ WARN-LABELS	L §8.5	M5b	*	4	M5b	I:S4:S4-01~s4
 WARN-LABELS	L §8.5	M5b	labels dropped at <place> from <d>: <movements>	4	M5b	I:S4:S4-01~s4
 WARN-STALE	L §8.5	-	*	0	-	-
 WARN-STALE	L §8.5	-	scenario <s> replaces <target> at <keys>, changed in the base by <version>	0	-	-
-REQ-ASK	E §11	-	*	312	M0	codes/m0/adjust/base
-REQ-ASK	E §11	-	no ask <q>	312	M0	codes/m0/adjust/base
+REQ-ASK	E §11	-	*	314	M0	codes/m0/adjust/base
+REQ-ASK	E §11	-	no ask <q>	314	M0	codes/m0/adjust/base
 REQ-CLOCK	E §11	-	*	0	-	-
 REQ-PATHS	E §11	-	*	0	-	-
 ENGINE-INVARIANT	E §11	-	*	0	-	-

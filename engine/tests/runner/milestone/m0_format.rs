@@ -244,4 +244,12 @@ mod tests {
     fn m0_format_rule_same_sides() {
         formats_as_refcore("format/same_sides");
     }
+
+    /// L §2.3 `sref`, §2.4 A `same` side keyed by a keyed place (`lim[konto[ana]]`) prints as
+    /// written, its items sorted by their left sides' place keys (G12's N3). Beside a row of
+    /// its target and keys refcore sorts it by its parse tree (#88, `m0/format/held.tsv`).
+    #[test]
+    fn m0_format_rule_same_place_keys() {
+        formats_as_refcore("format/same_place_keys");
+    }
 }
