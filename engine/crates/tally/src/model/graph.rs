@@ -39,6 +39,9 @@ pub enum NodeKind {
     Axis,
     /// A fill: its sides and its order (L §5.12).
     Fill,
+    /// A scenario's expression row, by its stable id: what it reads are its own reads, and
+    /// its input or def reads it (L §6.4; refcore's `('srow', …)` item).
+    Srow,
 }
 
 impl NodeKind {
@@ -58,6 +61,7 @@ impl NodeKind {
             NodeKind::Parts => "parts",
             NodeKind::Axis => "axis",
             NodeKind::Fill => "fill",
+            NodeKind::Srow => "srow",
         }
     }
 }

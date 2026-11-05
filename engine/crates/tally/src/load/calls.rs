@@ -5,7 +5,8 @@
 //! `-MISSING`, `-BAND`), §8.4.
 //! Twin: engine/tools/refcore/check.py (`t_call`, `args`, `want`, `tdate`,
 //! `tdate_or_period`, `tint`, `c_start_of` to `c_since`, `cal_arg`, `band_ref`, `c_band_lo`,
-//! `c_marginal`, `band_call`, `mode_arg`, `span`); the reads of the ledger are `reads.rs`'s.
+//! `c_marginal`, `band_call`, `mode_arg`, `span`, `prefixed_call`); the reads of the ledger are
+//! `reads.rs`'s.
 //! Invariants: every argument is typed in refcore's order and its reads recorded; a call
 //! whose checks are a later group's (`exp`, `pow`, `periodic`, `lifespan`, …) types its
 //! arguments and is `Unseen`, refusing nothing of its own.
@@ -127,6 +128,22 @@ fn anchored_key(m: &Reality, t: &Ty, what: &str) -> Result<(), Stop> {
     Ok(())
 }
 
+/// A call whose prefixes name neither the base (in a scenario's expression row) nor a member
+/// that declares the band: a joint model's merge has made each member's band one name
+/// (refcore's `prefixed_call`, past its member arm). L §2.3 Calls, §6.1, §8.3.
+fn prefixed_call(m: &Reality, first: &str, call: &Call) -> Stop {
+    let mut full = call.prefix.join(".");
+    full.push('.');
+    full.push_str(&call.name);
+    if m.names.contains_key(first) {
+        return refused(
+            Load::Name,
+            format!("cannot parse: {full} names no band (a prefix is a member or the base)"),
+        );
+    }
+    refused(Load::Name, format!("unknown id {full}"))
+}
+
 impl Checker {
     /// A call: a band's, or a built-in's (refcore's `t_call`). L §5.9, §7.2, §4.2.
     pub(super) fn call(
@@ -137,8 +154,19 @@ impl Checker {
         expect: Option<&Ty>,
         depth: u32,
     ) -> Typed {
-        if !call.prefix.is_empty() {
-            return Err(Stop::NotBuilt("a member's band"));
+        if let [prefix] = call.prefix.as_slice()
+            && self.base_world.as_ref().is_some_and(|w| w.id == *prefix)
+        {
+            // `household.b(x)` in a scenario's expression row: the base's band, called bare
+            // (refcore's `m_check_scen_rows` rewrite). L §2.3 Calls, §6.4.
+            let bare = Call {
+                prefix: Vec::new(),
+                ..call.clone()
+            };
+            return self.call(m, scope, &bare, expect, depth);
+        }
+        if let Some(first) = call.prefix.first() {
+            return Err(prefixed_call(m, first, call));
         }
         let named_band = !DATE_FNS.contains(&call.name.as_str())
             && m.names.get(&call.name) == Some(&NameKind::Band);

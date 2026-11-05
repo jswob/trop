@@ -14,9 +14,10 @@
 //! typed; a form this checker doesn't type yet is `Unseen`, which no rule refuses, so a text
 //! refcore loads is never refused for it; every recursion is counted (R-16).
 
-use super::check::{AxisRead, Checker, Figure, Scope, Stands, Var, VarDom, deeper};
+use super::check::{AxisRead, Checker, Figure, Scope, Stands, Var, VarDom, deeper, invariant};
 use super::keys::{KeyLit, resolve_key};
 use super::random::DrawKey;
+use super::srows::base_name;
 use super::worlds::read_elsewhere;
 use crate::base::{Code, Load, Refusal};
 use crate::model::{
@@ -1474,6 +1475,12 @@ impl Checker {
         let Some(first) = posts.first() else {
             return self.expr(m, scope, base, expect, depth);
         };
+        if let (Expr::Name(prefix), Postfix::Field(name)) = (base, first)
+            && self.base_world.as_ref().is_some_and(|w| w.id == *prefix)
+        {
+            let rest = posts.get(1..).unwrap_or(&[]);
+            return self.base_read(m, scope, name, rest, expect, depth);
+        }
         if let Some((fill, fkeys, keys, used)) = fill_ref(m, scope, base, posts) {
             let ty = self.fill_read(m, scope, &fill, (&fkeys, &keys), depth)?;
             return Self::post_rest(m, scope, base, posts, (ty, used));
@@ -1486,6 +1493,33 @@ impl Checker {
             }
         };
         Self::post_rest(m, scope, base, posts, (ty, 1))
+    }
+
+    /// `<base>.x` and its postfixes `rest` in a scenario's expression row: x read in the base,
+    /// typed as refcore types the name its rewrite leaves (refcore's `m_check_scen_rows`):
+    /// alone or under a field, as `t_name`'s base-world arm, after a fill's `taken`; at keys,
+    /// as `t_index`, which names the base no more. L §6.4.
+    fn base_read(
+        &mut self,
+        m: &Reality,
+        scope: &Scope,
+        name: &str,
+        rest: &[Postfix],
+        expect: Option<&Ty>,
+        depth: u32,
+    ) -> Typed {
+        let bare = Expr::Name(name.to_owned());
+        let keyed = matches!(rest.first(), Some(Postfix::Keys(_)));
+        if !keyed && fill_ref(m, scope, &bare, rest).is_none() {
+            let Some(world) = &self.base_world else {
+                return Err(invariant("a base read outside a scenario row".to_owned()));
+            };
+            base_name(m, world, name)?;
+        }
+        if rest.is_empty() {
+            return self.name(m, scope, name, expect, depth);
+        }
+        self.post(m, scope, &bare, rest, expect, depth)
     }
 
     /// The postfixes after the first `done` of `posts`, the value so far of type `ty`: fields

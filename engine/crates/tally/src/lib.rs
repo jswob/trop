@@ -258,6 +258,7 @@ pub mod load {
     mod same;
     mod scenarios;
     mod spans;
+    mod srows;
     mod steps;
     mod strata;
     mod types;

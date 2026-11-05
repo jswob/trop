@@ -146,7 +146,8 @@ place shop: ext lives 2026-01-01..
             | NodeKind::Ask
             | NodeKind::Parts
             | NodeKind::Axis
-            | NodeKind::Fill => n.text(),
+            | NodeKind::Fill
+            | NodeKind::Srow => n.text(),
         }
     }
 

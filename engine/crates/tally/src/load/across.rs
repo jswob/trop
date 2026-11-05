@@ -752,7 +752,8 @@ fn reader_binds(m: &Reality, reader: &Node) -> Option<Vec<BindInfo>> {
         | NodeKind::Balances
         | NodeKind::Parts
         | NodeKind::Axis
-        | NodeKind::Fill => None,
+        | NodeKind::Fill
+        | NodeKind::Srow => None,
     }
 }
 

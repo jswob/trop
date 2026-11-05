@@ -149,7 +149,8 @@ fn dated_item(m: &Reality, at: &AtReads, dated: &LawDated, target: &Node) -> Opt
         | NodeKind::Balances
         | NodeKind::Parts
         | NodeKind::Axis
-        | NodeKind::Fill => None,
+        | NodeKind::Fill
+        | NodeKind::Srow => None,
     }
 }
 
@@ -447,7 +448,8 @@ fn at_reads_dated(m: &Reality, dated: &LawDated, node: &Node) -> bool {
         | NodeKind::Balances
         | NodeKind::Parts
         | NodeKind::Axis
-        | NodeKind::Fill => false,
+        | NodeKind::Fill
+        | NodeKind::Srow => false,
     }
 }
 

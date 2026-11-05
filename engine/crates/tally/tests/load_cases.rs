@@ -16,7 +16,10 @@
 //! expression row outside a scenario) for G8's second step; §6.4 (the base names no item of
 //! a scenario, a rule's `v` included; a scenario's move books nothing before `from`), §5.16
 //! (a draw past its slots; a decision's projection reaching a random amount after its day;
-//! sample pins; a query on a `path p` line, at load by issue #83) for G8's third.
+//! sample pins; a query on a `path p` line, at load by issue #83) for G8's third; §6.4 (a
+//! scenario's expression rows: the base's items through its id, the type of the row, what
+//! they read through defs; the asks a scenario's reality checks), §2.3 Calls (`household.b(x)`)
+//! for G10's.
 //! Twin: engine/tools/refcore/loader.py; each expected line is refcore's load of the same
 //! text, printed in the same normalized form, but where issue #75 rules that the spec wins:
 //! there the line is L §8.3's form, and the case's comment says so.
@@ -3776,5 +3779,612 @@ version v1
             None,
             "an ask over same lines is not built at run"
         );
+    }
+
+    /// The load lines (a scenario's refusal, a refusal, a warning) of a run of `files` for
+    /// `ask`.
+    fn load_lines(files: &[(&str, String)], ask: &str) -> String {
+        let given = files
+            .iter()
+            .map(|(path, text)| tally::Given {
+                path: (*path).to_owned(),
+                bytes: Some(text.as_bytes().to_vec()),
+            })
+            .collect();
+        let request = tally::Request {
+            asks: tally::Asks::Named(vec![ask.to_owned()]),
+            pin: tally::Pin::Canonical,
+            days: tally::Days::Events,
+        };
+        match tally::run(given, &request) {
+            Ok(answer) => answer
+                .lines()
+                .iter()
+                .filter(|line| {
+                    line.starts_with("scenario ")
+                        || line.starts_with("refused:")
+                        || line.starts_with("warning:")
+                })
+                .cloned()
+                .collect::<Vec<String>>()
+                .join("\n"),
+            Err(_) => "not built".to_owned(),
+        }
+    }
+
+    #[test]
+    fn scenario_expression_rows_and_a_scenario_world_s_asks_are_checked_at_load_as_refcore_checks_them()
+     {
+        // Each case: its edits of the model and of the scenario, a third file's row over the
+        // scenario, and refcore's load lines for a run of the base's ask.
+        const MODEL10: &str = "model home\n  tally 2\n  on 2026-03-01\n  start 2026-01-01\n  end 2027-12-31\n\nsource card \"a card\"\n\nunit PLN: currency minor 0.01\n\nindex flat = [a1, a2]\n\nkind pays: transfers\n\nplace konto: accounts PLN lives 2026-01-01..\n\nplace world: outside lives 2026-01-01..\n\ninput amt: money PLN\n\ninput rate: num\n\ninput fee[f in flat]: money PLN\n\ninput rent_day: date\n\ninput bank: observed\n\ndef doubled: money PLN = amt + amt at reader\n\ndef held: money PLN = bal(konto, rent_day) at reader\n\ndef via: money PLN = held + amt at reader\n\nband tax(x: money PLN): money PLN\n\nmove rent[f in flat]: pays\n  on rent_day\n  leg cash from konto to world amount fee[f]\n\nask q: doubled law 2026-03-01\n\nversion card_2026\n  cite card\n  governs always\n  known 2026-01-01\n  amt = 100.00 PLN\n  rate = 0.5\n  fee[*] = 10.00 PLN\n  rent_day = 2026-01-10\n  opening[konto] = 0 PLN at 2026-01-01 start\n  tax: [0 PLN, inf) = 1.00 PLN\n";
+        const SCEN10: &str = "scenario raised over home\n  tally 2\n  from 2027-01-01\n\ninput bump: money PLN\n\ndef bumped: money PLN = bump + amt at reader\n\nversion raise_2027\n  cite card\n  governs 2027..\n  known 2026-02-01\n  bump = 5.00 PLN\n  replace amt = 150.00 PLN\n\nask q_raised: doubled in raised law 2027-06-01\n";
+        const MORE10: &str = "scenario more over raised\n  tally 2\n  from 2027-01-01\n\nversion more_2027\n  cite card\n  governs 2027..\n  known 2026-02-01\n  replace amt = ROWVALUE\n\nask q_more: doubled in more law 2027-06-01\n";
+        let cases: &[(&str, Edits, Edits, Option<&str>, &str)] = &[
+            (
+                "base",
+                &[],
+                &[],
+                None,
+                "warning: WARN-UNREAD def bumped is read by nothing\nwarning: WARN-UNREAD def via is read by nothing\nwarning: WARN-UNREAD input rate is read by nothing",
+            ),
+            (
+                "plain-prefix",
+                &[],
+                &[(
+                    "  replace amt = 150.00 PLN",
+                    "  replace amt = home.amt + 50.00 PLN",
+                )],
+                None,
+                "warning: WARN-UNREAD def bumped is read by nothing\nwarning: WARN-UNREAD def via is read by nothing\nwarning: WARN-UNREAD input rate is read by nothing",
+            ),
+            (
+                "times",
+                &[],
+                &[(
+                    "  replace amt = 150.00 PLN",
+                    "  replace amt = home.amt * home.rate",
+                )],
+                None,
+                "scenario raised: refused: LOAD-UNIT a row of amt gives a num PLN; a money value needs round or prorata (a num CUR stored as money) (scen.tally:14)\nwarning: WARN-UNREAD def via is read by nothing\nwarning: WARN-UNREAD input rate is read by nothing",
+            ),
+            (
+                "bare-own",
+                &[],
+                &[(
+                    "  replace amt = 150.00 PLN",
+                    "  replace amt = bump + 1.00 PLN",
+                )],
+                None,
+                "warning: WARN-UNREAD def bumped is read by nothing\nwarning: WARN-UNREAD def via is read by nothing\nwarning: WARN-UNREAD input rate is read by nothing",
+            ),
+            (
+                "bare-base",
+                &[],
+                &[(
+                    "  replace amt = 150.00 PLN",
+                    "  replace amt = doubled + 0.00 PLN",
+                )],
+                None,
+                "warning: WARN-UNREAD def bumped is read by nothing\nwarning: WARN-UNREAD def via is read by nothing\nwarning: WARN-UNREAD input rate is read by nothing",
+            ),
+            (
+                "own-def",
+                &[],
+                &[(
+                    "  replace amt = 150.00 PLN",
+                    "  replace amt = bumped + 0.00 PLN",
+                )],
+                None,
+                "warning: WARN-UNREAD def via is read by nothing\nwarning: WARN-UNREAD input rate is read by nothing",
+            ),
+            (
+                "scen-place",
+                &[],
+                &[
+                    (
+                        "input bump: money PLN",
+                        "input bump: money PLN\n\nplace pot: accounts PLN lives 2026-01-01..",
+                    ),
+                    (
+                        "  replace amt = 150.00 PLN",
+                        "  replace amt = bal(pot, 2027-01-01)",
+                    ),
+                ],
+                None,
+                "scenario raised: refused: LOAD-SCENARIO the expression row of amt in raised reads the place pot: it reads inputs, bands and defs, never a place or a movement (scen.tally:16)\nwarning: WARN-UNREAD def via is read by nothing\nwarning: WARN-UNREAD input rate is read by nothing",
+            ),
+            (
+                "bal",
+                &[],
+                &[(
+                    "  replace amt = 150.00 PLN",
+                    "  replace amt = bal(konto, 2027-01-01)",
+                )],
+                None,
+                "scenario raised: refused: LOAD-SCENARIO the expression row of amt in raised reads the place konto: it reads inputs, bands and defs, never a place or a movement (scen.tally:14)\nwarning: WARN-UNREAD def via is read by nothing\nwarning: WARN-UNREAD input rate is read by nothing",
+            ),
+            (
+                "place",
+                &[],
+                &[("  replace amt = 150.00 PLN", "  replace amt = home.konto")],
+                None,
+                "scenario raised: refused: LOAD-SCENARIO home.konto: an expression row reads inputs, bands and defs, never a place (scen.tally:14)\nwarning: WARN-UNREAD def via is read by nothing\nwarning: WARN-UNREAD input rate is read by nothing",
+            ),
+            (
+                "place-bare",
+                &[],
+                &[(
+                    "  replace amt = 150.00 PLN",
+                    "  replace amt = konto + 0.00 PLN",
+                )],
+                None,
+                "scenario raised: refused: LOAD-UNIT key accounts + money PLN (scen.tally:14)\nwarning: WARN-UNREAD def via is read by nothing\nwarning: WARN-UNREAD input rate is read by nothing",
+            ),
+            (
+                "unknown",
+                &[],
+                &[("  replace amt = 150.00 PLN", "  replace amt = home.nothing")],
+                None,
+                "scenario raised: refused: LOAD-NAME unknown id home.nothing (scen.tally:14)\nwarning: WARN-UNREAD def via is read by nothing\nwarning: WARN-UNREAD input rate is read by nothing",
+            ),
+            (
+                "unknown-keyed",
+                &[],
+                &[(
+                    "  replace amt = 150.00 PLN",
+                    "  replace amt = home.nothing[a1]",
+                )],
+                None,
+                "scenario raised: refused: LOAD-NAME unknown id nothing (scen.tally:14)\nwarning: WARN-UNREAD def via is read by nothing\nwarning: WARN-UNREAD input rate is read by nothing",
+            ),
+            (
+                "via-def",
+                &[],
+                &[("  replace amt = 150.00 PLN", "  replace amt = home.held")],
+                None,
+                "scenario raised: refused: LOAD-SCENARIO the expression row of amt in raised reads the place konto through held: it reads inputs, bands and defs, never a place or a movement (scen.tally:14)\nwarning: WARN-UNREAD def via is read by nothing\nwarning: WARN-UNREAD input rate is read by nothing",
+            ),
+            (
+                "via-two",
+                &[],
+                &[("  replace amt = 150.00 PLN", "  replace amt = home.via")],
+                None,
+                "scenario raised: refused: LOAD-SCENARIO the expression row of amt in raised reads the place konto through via, held: it reads inputs, bands and defs, never a place or a movement (scen.tally:14)\nwarning: WARN-UNREAD def via is read by nothing\nwarning: WARN-UNREAD input rate is read by nothing",
+            ),
+            (
+                "band",
+                &[],
+                &[(
+                    "  replace amt = 150.00 PLN",
+                    "  replace amt = home.tax(home.amt)",
+                )],
+                None,
+                "warning: WARN-UNREAD def bumped is read by nothing\nwarning: WARN-UNREAD def via is read by nothing\nwarning: WARN-UNREAD input rate is read by nothing",
+            ),
+            (
+                "band-bare",
+                &[],
+                &[("  replace amt = 150.00 PLN", "  replace amt = tax(amt)")],
+                None,
+                "warning: WARN-UNREAD def bumped is read by nothing\nwarning: WARN-UNREAD def via is read by nothing\nwarning: WARN-UNREAD input rate is read by nothing",
+            ),
+            (
+                "wrong-type",
+                &[],
+                &[("  replace amt = 150.00 PLN", "  replace amt = home.rate")],
+                None,
+                "scenario raised: refused: LOAD-UNIT a row of amt is num, not money PLN (scen.tally:14)\nwarning: WARN-UNREAD def via is read by nothing\nwarning: WARN-UNREAD input rate is read by nothing",
+            ),
+            (
+                "move",
+                &[],
+                &[("  replace amt = 150.00 PLN", "  replace amt = home.rent")],
+                None,
+                "scenario raised: refused: LOAD-SCENARIO home.rent: an expression row reads inputs, bands and defs, never a move (scen.tally:14)\nwarning: WARN-UNREAD def via is read by nothing\nwarning: WARN-UNREAD input rate is read by nothing",
+            ),
+            (
+                "move-keyed",
+                &[],
+                &[(
+                    "  replace amt = 150.00 PLN",
+                    "  replace amt = home.rent[a1]",
+                )],
+                None,
+                "scenario raised: refused: LOAD-UNIT a row of amt is key pays, not money PLN (scen.tally:14)\nwarning: WARN-UNREAD def via is read by nothing\nwarning: WARN-UNREAD input rate is read by nothing",
+            ),
+            (
+                "observed",
+                &[],
+                &[("  replace amt = 150.00 PLN", "  replace amt = home.bank")],
+                None,
+                "scenario raised: refused: LOAD-KEY an observation is read by its id: bank[<id>] (scen.tally:14)\nwarning: WARN-UNREAD def via is read by nothing\nwarning: WARN-UNREAD input rate is read by nothing",
+            ),
+            (
+                "figure",
+                &[],
+                &[("  replace amt = 150.00 PLN", "  replace amt = 100")],
+                None,
+                "warning: WARN-UNREAD def bumped is read by nothing\nwarning: WARN-UNREAD def via is read by nothing\nwarning: WARN-UNREAD input rate is read by nothing",
+            ),
+            (
+                "figure-money",
+                &[],
+                &[("  replace amt = 150.00 PLN", "  replace amt = 100.00")],
+                None,
+                "warning: WARN-UNREAD def bumped is read by nothing\nwarning: WARN-UNREAD def via is read by nothing\nwarning: WARN-UNREAD input rate is read by nothing",
+            ),
+            (
+                "date",
+                &[],
+                &[(
+                    "  replace amt = 150.00 PLN",
+                    "  replace amt = home.rent_day",
+                )],
+                None,
+                "scenario raised: refused: LOAD-UNIT a row of amt is date, not money PLN (scen.tally:14)\nwarning: WARN-UNREAD def via is read by nothing\nwarning: WARN-UNREAD input rate is read by nothing",
+            ),
+            (
+                "own-prefixed",
+                &[],
+                &[("  replace amt = 150.00 PLN", "  replace amt = home.bump")],
+                None,
+                "scenario raised: refused: LOAD-SCENARIO home.bump: bump is declared in scenario raised, not in the base (scen.tally:14)\nwarning: WARN-UNREAD def via is read by nothing\nwarning: WARN-UNREAD input rate is read by nothing",
+            ),
+            (
+                "index",
+                &[],
+                &[("  replace amt = 150.00 PLN", "  replace amt = home.flat")],
+                None,
+                "scenario raised: refused: LOAD-SCENARIO home.flat: an expression row reads inputs, bands and defs, never a index (scen.tally:14)\nwarning: WARN-UNREAD def via is read by nothing\nwarning: WARN-UNREAD input rate is read by nothing",
+            ),
+            (
+                "kind",
+                &[],
+                &[("  replace amt = 150.00 PLN", "  replace amt = home.pays")],
+                None,
+                "scenario raised: refused: LOAD-SCENARIO home.pays: an expression row reads inputs, bands and defs, never a kind (scen.tally:14)\nwarning: WARN-UNREAD def via is read by nothing\nwarning: WARN-UNREAD input rate is read by nothing",
+            ),
+            (
+                "self",
+                &[],
+                &[("  replace amt = 150.00 PLN", "  replace amt = home.amt")],
+                None,
+                "warning: WARN-UNREAD def bumped is read by nothing\nwarning: WARN-UNREAD def via is read by nothing\nwarning: WARN-UNREAD input rate is read by nothing",
+            ),
+            (
+                "self-bare",
+                &[],
+                &[(
+                    "  replace amt = 150.00 PLN",
+                    "  replace amt = amt + 1.00 PLN",
+                )],
+                None,
+                "warning: WARN-UNREAD def bumped is read by nothing\nwarning: WARN-UNREAD def via is read by nothing\nwarning: WARN-UNREAD input rate is read by nothing",
+            ),
+            (
+                "self-def",
+                &[],
+                &[("  replace amt = 150.00 PLN", "  replace amt = home.doubled")],
+                None,
+                "warning: WARN-UNREAD def bumped is read by nothing\nwarning: WARN-UNREAD def via is read by nothing\nwarning: WARN-UNREAD input rate is read by nothing",
+            ),
+            (
+                "flows",
+                &[],
+                &[(
+                    "  replace amt = 150.00 PLN",
+                    "  replace amt = flows(konto, 2026-01-01..2026-02-01)",
+                )],
+                None,
+                "scenario raised: refused: LOAD-SCENARIO the expression row of amt in raised reads the place konto: it reads inputs, bands and defs, never a place or a movement (scen.tally:14)\nwarning: WARN-UNREAD def via is read by nothing\nwarning: WARN-UNREAD input rate is read by nothing",
+            ),
+            (
+                "agg",
+                &[],
+                &[(
+                    "  replace amt = 150.00 PLN",
+                    "  replace amt = sum(home.fee[f] for f in flat)",
+                )],
+                None,
+                "warning: WARN-UNREAD def bumped is read by nothing\nwarning: WARN-UNREAD def via is read by nothing\nwarning: WARN-UNREAD input rate is read by nothing",
+            ),
+            (
+                "agg-bare",
+                &[],
+                &[(
+                    "  replace amt = 150.00 PLN",
+                    "  replace amt = sum(fee[f] for f in flat)",
+                )],
+                None,
+                "warning: WARN-UNREAD def bumped is read by nothing\nwarning: WARN-UNREAD def via is read by nothing\nwarning: WARN-UNREAD input rate is read by nothing",
+            ),
+            (
+                "def-given",
+                &[
+                    (
+                        "def doubled: money PLN = amt + amt at reader",
+                        "def doubled[f in flat]: money PLN = fee[f] at reader",
+                    ),
+                    ("ask q: doubled law", "ask q: doubled[a1] law"),
+                ],
+                &[
+                    ("ask q_raised: doubled in", "ask q_raised: doubled[a1] in"),
+                    (
+                        "  replace amt = 150.00 PLN",
+                        "  given doubled[a1] = home.fee[a1] * 2",
+                    ),
+                ],
+                None,
+                "warning: WARN-UNREAD def bumped is read by nothing\nwarning: WARN-UNREAD def via is read by nothing\nwarning: WARN-UNREAD input rate is read by nothing",
+            ),
+            (
+                "def-given-place",
+                &[
+                    (
+                        "def doubled: money PLN = amt + amt at reader",
+                        "def doubled[f in flat]: money PLN = fee[f] at reader",
+                    ),
+                    ("ask q: doubled law", "ask q: doubled[a1] law"),
+                ],
+                &[
+                    ("ask q_raised: doubled in", "ask q_raised: doubled[a1] in"),
+                    (
+                        "  replace amt = 150.00 PLN",
+                        "  given doubled[a1] = home.held",
+                    ),
+                ],
+                None,
+                "scenario raised: refused: LOAD-SCENARIO the expression row of doubled in raised reads the place konto through held: it reads inputs, bands and defs, never a place or a movement (scen.tally:14)\nwarning: WARN-UNREAD def via is read by nothing\nwarning: WARN-UNREAD input rate is read by nothing",
+            ),
+            (
+                "two-faults",
+                &[],
+                &[(
+                    "  replace amt = 150.00 PLN",
+                    "  replace amt = home.konto + home.nothing",
+                )],
+                None,
+                "scenario raised: refused: LOAD-SCENARIO home.konto: an expression row reads inputs, bands and defs, never a place (scen.tally:14)\nwarning: WARN-UNREAD def via is read by nothing\nwarning: WARN-UNREAD input rate is read by nothing",
+            ),
+            (
+                "bal-prefixed",
+                &[],
+                &[(
+                    "  replace amt = 150.00 PLN",
+                    "  replace amt = bal(home.konto, 2027-01-01)",
+                )],
+                None,
+                "scenario raised: refused: LOAD-SCENARIO home.konto: an expression row reads inputs, bands and defs, never a place (scen.tally:14)\nwarning: WARN-UNREAD def via is read by nothing\nwarning: WARN-UNREAD input rate is read by nothing",
+            ),
+            (
+                "flows-prefixed",
+                &[],
+                &[(
+                    "  replace amt = 150.00 PLN",
+                    "  replace amt = flows(home.konto, 2026-01-01..2026-02-01)",
+                )],
+                None,
+                "scenario raised: refused: LOAD-SCENARIO home.konto: an expression row reads inputs, bands and defs, never a place (scen.tally:14)\nwarning: WARN-UNREAD def via is read by nothing\nwarning: WARN-UNREAD input rate is read by nothing",
+            ),
+            (
+                "value-prefixed",
+                &[],
+                &[(
+                    "  replace amt = 150.00 PLN",
+                    "  replace amt = value(home.konto, 2027-01-01) in PLN",
+                )],
+                None,
+                "scenario raised: refused: LOAD-SCENARIO home.konto: an expression row reads inputs, bands and defs, never a place (scen.tally:14)\nwarning: WARN-UNREAD def via is read by nothing\nwarning: WARN-UNREAD input rate is read by nothing",
+            ),
+            (
+                "field-prefixed",
+                &[],
+                &[(
+                    "  replace amt = 150.00 PLN",
+                    "  replace amt = home.rent.cash",
+                )],
+                None,
+                "scenario raised: refused: LOAD-SCENARIO home.rent: an expression row reads inputs, bands and defs, never a move (scen.tally:14)\nwarning: WARN-UNREAD def via is read by nothing\nwarning: WARN-UNREAD input rate is read by nothing",
+            ),
+            (
+                "band-unknown",
+                &[],
+                &[(
+                    "  replace amt = 150.00 PLN",
+                    "  replace amt = home.nosuch(home.amt)",
+                )],
+                None,
+                "scenario raised: refused: LOAD-NAME unknown id nosuch (scen.tally:14)\nwarning: WARN-UNREAD def via is read by nothing\nwarning: WARN-UNREAD input rate is read by nothing",
+            ),
+            (
+                "band-other",
+                &[],
+                &[(
+                    "  replace amt = 150.00 PLN",
+                    "  replace amt = other.tax(home.amt)",
+                )],
+                None,
+                "scenario raised: refused: LOAD-NAME unknown id other.tax (scen.tally:14)\nwarning: WARN-UNREAD def via is read by nothing\nwarning: WARN-UNREAD input rate is read by nothing",
+            ),
+            (
+                "prefix-other",
+                &[],
+                &[("  replace amt = 150.00 PLN", "  replace amt = other.amt")],
+                None,
+                "scenario raised: refused: LOAD-NAME unknown id other.amt (scen.tally:14)\nwarning: WARN-UNREAD def via is read by nothing\nwarning: WARN-UNREAD input rate is read by nothing",
+            ),
+            (
+                "in-agg",
+                &[],
+                &[(
+                    "  replace amt = 150.00 PLN",
+                    "  replace amt = sum(home.fee[f] for f in home.flat)",
+                )],
+                None,
+                "scenario raised: refused: LOAD-NAME unknown id flat (scen.tally:14)\nwarning: WARN-UNREAD def via is read by nothing\nwarning: WARN-UNREAD input rate is read by nothing",
+            ),
+            (
+                "round",
+                &[],
+                &[(
+                    "  replace amt = 150.00 PLN",
+                    "  replace amt = round(home.amt * home.rate, 0.01 PLN, half-up)",
+                )],
+                None,
+                "warning: WARN-UNREAD def bumped is read by nothing\nwarning: WARN-UNREAD def via is read by nothing",
+            ),
+            (
+                "as-if",
+                &[],
+                &[(
+                    "  replace amt = 150.00 PLN",
+                    "  replace amt = home.doubled as if {amt = 1.00 PLN}",
+                )],
+                None,
+                "warning: WARN-UNREAD def bumped is read by nothing\nwarning: WARN-UNREAD def via is read by nothing\nwarning: WARN-UNREAD input rate is read by nothing",
+            ),
+            (
+                "unknown-then-type",
+                &[],
+                &[(
+                    "  replace amt = 150.00 PLN",
+                    "  replace amt = home.nothing + home.rate",
+                )],
+                None,
+                "scenario raised: refused: LOAD-NAME unknown id home.nothing (scen.tally:14)\nwarning: WARN-UNREAD def via is read by nothing\nwarning: WARN-UNREAD input rate is read by nothing",
+            ),
+            (
+                "type-then-unknown",
+                &[],
+                &[(
+                    "  replace amt = 150.00 PLN",
+                    "  replace amt = home.rent_day + home.nothing",
+                )],
+                None,
+                "scenario raised: refused: LOAD-NAME unknown id home.nothing (scen.tally:14)\nwarning: WARN-UNREAD def via is read by nothing\nwarning: WARN-UNREAD input rate is read by nothing",
+            ),
+            (
+                "filter-base-ask",
+                &[(
+                    "ask q: doubled law 2026-03-01",
+                    "ask q: doubled law 2026-03-01\n\nask q2: amt",
+                )],
+                &[],
+                None,
+                "warning: WARN-UNREAD def bumped is read by nothing\nwarning: WARN-UNREAD def via is read by nothing\nwarning: WARN-UNREAD input rate is read by nothing",
+            ),
+            (
+                "filter-in-ask",
+                &[(
+                    "ask q: doubled law 2026-03-01",
+                    "ask q: doubled law 2026-03-01\n\nask q2: amt in raised",
+                )],
+                &[],
+                None,
+                "scenario raised: refused: LOAD-LAWDATE ask q2 reads law-dated amt directly, without law (model.tally:43)\nwarning: WARN-UNREAD def via is read by nothing\nwarning: WARN-UNREAD input rate is read by nothing",
+            ),
+            (
+                "filter-pin-ask",
+                &[(
+                    "ask q: doubled law 2026-03-01",
+                    "ask q: doubled law 2026-03-01\n\nask q2: amt with scenario raised",
+                )],
+                &[],
+                None,
+                "scenario raised: refused: LOAD-LAWDATE ask q2 reads law-dated amt directly, without law (model.tally:43)\nwarning: WARN-UNREAD def via is read by nothing\nwarning: WARN-UNREAD input rate is read by nothing",
+            ),
+            (
+                "filter-asif-ask",
+                &[(
+                    "ask q: doubled law 2026-03-01",
+                    "ask q: doubled law 2026-03-01\n\nask q2: amt as if {scenario raised}",
+                )],
+                &[],
+                None,
+                "scenario raised: refused: LOAD-LAWDATE ask q2 reads law-dated amt directly, without law (model.tally:43)\nwarning: WARN-UNREAD def via is read by nothing\nwarning: WARN-UNREAD input rate is read by nothing",
+            ),
+            (
+                "filter-diff-ask",
+                &[(
+                    "ask q: doubled law 2026-03-01",
+                    "ask q: doubled law 2026-03-01\n\nask q2: diff(amt) in raised against home",
+                )],
+                &[],
+                None,
+                "scenario raised: refused: LOAD-LAWDATE ask q2 reads law-dated amt directly, without law (model.tally:43)\nwarning: WARN-UNREAD def via is read by nothing\nwarning: WARN-UNREAD input rate is read by nothing",
+            ),
+            (
+                "filter-scen-ask",
+                &[],
+                &[(
+                    "ask q_raised: doubled in raised law 2027-06-01",
+                    "ask q_raised: amt in raised",
+                )],
+                None,
+                "scenario raised: refused: LOAD-LAWDATE ask q_raised reads law-dated amt directly, without law (scen.tally:16)\nwarning: WARN-UNREAD def via is read by nothing\nwarning: WARN-UNREAD input rate is read by nothing",
+            ),
+            (
+                "filter-asif-def",
+                &[
+                    (
+                        "ask q: doubled law 2026-03-01",
+                        "ask q: doubled law 2026-03-01\n\nask q2: lifted, amt",
+                    ),
+                    (
+                        "def via: money PLN = held + amt at reader",
+                        "def via: money PLN = held + amt at reader\n\ndef lifted: num = rate as if {scenario raised}",
+                    ),
+                ],
+                &[],
+                None,
+                "scenario raised: refused: LOAD-LAWDATE ask q2 reads law-dated amt directly, without law (model.tally:45)\nwarning: WARN-UNREAD def via is read by nothing",
+            ),
+            (
+                "stack-raised",
+                &[],
+                &[],
+                Some("raised.amt + 1.00 PLN"),
+                "warning: WARN-UNREAD def bumped is read by nothing\nwarning: WARN-UNREAD def via is read by nothing\nwarning: WARN-UNREAD input rate is read by nothing",
+            ),
+            (
+                "stack-raised-bump",
+                &[],
+                &[],
+                Some("raised.bump"),
+                "warning: WARN-UNREAD def bumped is read by nothing\nwarning: WARN-UNREAD def via is read by nothing\nwarning: WARN-UNREAD input rate is read by nothing",
+            ),
+            (
+                "stack-home",
+                &[],
+                &[],
+                Some("home.amt"),
+                "scenario more: refused: LOAD-NAME unknown id home.amt (more.tally:9)\nwarning: WARN-UNREAD def bumped is read by nothing\nwarning: WARN-UNREAD def via is read by nothing\nwarning: WARN-UNREAD input rate is read by nothing",
+            ),
+            (
+                "stack-bare-bump",
+                &[],
+                &[],
+                Some("bump + 0.00 PLN"),
+                "warning: WARN-UNREAD def bumped is read by nothing\nwarning: WARN-UNREAD def via is read by nothing\nwarning: WARN-UNREAD input rate is read by nothing",
+            ),
+            (
+                "stack-raised-bumped",
+                &[],
+                &[],
+                Some("raised.bumped"),
+                "warning: WARN-UNREAD def via is read by nothing\nwarning: WARN-UNREAD input rate is read by nothing",
+            ),
+        ];
+        for &(name, model_edits, scen_edits, more, expected) in cases {
+            let mut files = vec![
+                ("model.tally", edited(MODEL10, model_edits)),
+                ("scen.tally", edited(SCEN10, scen_edits)),
+            ];
+            if let Some(row) = more {
+                files.push(("more.tally", MORE10.replace("ROWVALUE", row)));
+            }
+            assert_eq!(load_lines(&files, "q"), expected, "{name}");
+        }
     }
 }

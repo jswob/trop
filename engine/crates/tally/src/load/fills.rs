@@ -13,7 +13,7 @@
 //! reads count as its reader's (the edges inlined after the walk, over an explicit stack).
 
 use super::binds::BindAs;
-use super::check::{Checker, Files, Scope, Stands, Var, VarDom};
+use super::check::{Checker, Files, Scope, Stands, Var, VarDom, keeps_order};
 use super::types::{Typed, converts, is_bool, numcls, refused, uerr, unit_of};
 use crate::base::Load;
 use crate::model::{Domain, Graph, Node, NodeKind, Reality, Rel, Shown, Ty, Unit};
@@ -326,7 +326,7 @@ fn side_unit(t: &Ty, class: Option<&str>) -> Result<Unit, Stop> {
 /// A fill's terms are read at the law date of its reader: each read of a fill is also a read
 /// of what the fill reads, through fills it reads in turn, a same-key or shifted read made
 /// `computed` (refcore's `m_inline_fill_edges`). L §5.12 Law dates.
-pub(super) fn inline_fill_edges(graph: &mut Graph) {
+pub(super) fn inline_fill_edges(graph: &mut Graph, order: &mut BTreeMap<Node, Vec<Node>>) {
     let readers: Vec<Node> = graph
         .edges
         .keys()
@@ -344,6 +344,15 @@ pub(super) fn inline_fill_edges(graph: &mut Graph) {
             .collect();
         for fill in fills {
             for (target, rels) in fill_reads(graph, &fill) {
+                let first = !graph
+                    .reads(&reader)
+                    .is_some_and(|reads| reads.contains_key(&target));
+                if first && keeps_order(&reader) {
+                    order
+                        .entry(reader.clone())
+                        .or_insert_with(Vec::new)
+                        .push(target.clone());
+                }
                 for rel in rels {
                     graph.edge(&reader, target.clone(), rel);
                 }

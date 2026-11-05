@@ -23,6 +23,7 @@ use super::pins::{UNLOADED, unloaded_world};
 use super::prices::price_twice;
 use super::random::{DrawKey, QueryAt, dist_whole};
 use super::reads::{is_move_type, is_place_type};
+use super::srows::{BaseWorld, SrowAt, ask_worlds, top_scenario};
 use super::types::{
     children, covered_spans, is_bool, is_date, key_value_kind, lit_rule, refused, uerr,
 };
@@ -408,6 +409,14 @@ pub(super) struct Walked {
     pub(super) draws: Vec<DrawKey>,
     /// The moves' projections, in the order typed (refcore's `projs`). L §5.16.
     pub(super) projs: Vec<ProjRead>,
+    /// The scenario's expression rows, in the order typed (refcore's `srow` items). L §6.4.
+    pub(super) srows: Vec<SrowAt>,
+    /// What each def, fill, band and expression row reads, in the order it first read each
+    /// (refcore's edges, a dict in insertion order).
+    pub(super) read_order: BTreeMap<Node, Vec<Node>>,
+    /// The asks a scenario's reality doesn't hold: those whose lines are evaluated in other
+    /// worlds (refcore's filter of `m.asks`). L §6.4.
+    pub(super) dropped: BTreeSet<String>,
 }
 
 /// The checker's state over the walk (refcore's `Checker`).
@@ -460,6 +469,13 @@ pub(super) struct Checker {
     pub(super) draws: Vec<DrawKey>,
     /// The moves' projections outside queries.
     pub(super) projs: Vec<ProjRead>,
+    /// The scenario's expression rows typed so far.
+    pub(super) srows: Vec<SrowAt>,
+    /// What each def, fill, band and expression row reads, in the order first read.
+    pub(super) read_order: BTreeMap<Node, Vec<Node>>,
+    /// While a scenario's expression row is typed, the world its prefixed names are read in
+    /// (refcore's `_world` mark).
+    pub(super) base_world: Option<BaseWorld>,
 }
 
 /// One level deeper into an expression, refused as an invariant past the count (R-16).
@@ -480,8 +496,10 @@ pub(super) fn deeper(depth: u32) -> Result<u32, Stop> {
 /// The item graph's edges and marks, and each move's declared reads and changes, the
 /// reality type-checked on the way (refcore's `Checker.run`: the parts clauses, price
 /// clauses, inputs' ranges, then moves, defs, bands and asks, one sort at a time, each in
-/// section order, then `prices … by`, the four-digit figures' literal rule and the key
-/// lists' readings). E §3.1 steps 5, 7, The order of the checks.
+/// section order, a scenario's reality checking only the asks its world evaluates; then
+/// `prices … by`, the random rows, a scenario's expression rows, the four-digit figures'
+/// literal rule and the key lists' readings). E §3.1 steps 5, 7, The order of the checks;
+/// L §6.4.
 ///
 /// # Errors
 ///
@@ -526,8 +544,18 @@ pub(super) fn walk(m: &Reality, sections: &[(String, Section)]) -> Result<Walked
     for (_, band) in m.bands.entries() {
         checker.check_band(m, band, &files)?;
     }
+    // Every ask is checked only in the worlds its line is evaluated in: a scenario's reality
+    // holds those that name its scenario (L §6.4, §5.18).
+    let mut dropped = BTreeSet::new();
+    if let Some(top) = top_scenario(m) {
+        for ask in &m.asks {
+            if !ask_worlds(m, &checker.graph, ask).contains(top) {
+                dropped.insert(ask.id.clone());
+            }
+        }
+    }
     let mut alone = BTreeMap::new();
-    for ask in &m.asks {
+    for ask in m.asks.iter().filter(|ask| !dropped.contains(&ask.id)) {
         match checker.check_ask(m, ask, files.of_ask(&ask.id)?) {
             Err(Stop::Refused(refusal)) if refused_alone(&refusal) => {
                 alone.insert(ask.id.clone(), refusal);
@@ -537,9 +565,12 @@ pub(super) fn walk(m: &Reality, sections: &[(String, Section)]) -> Result<Walked
     }
     checker.prices_by(m, &files)?;
     checker.check_dist_rows(m, &files)?;
+    if !m.scenarios.over.is_empty() {
+        checker.check_scen_rows(m, &files)?;
+    }
     checker.year4_finish()?;
     checker.kl_finish(m)?;
-    inline_fill_edges(&mut checker.graph);
+    inline_fill_edges(&mut checker.graph, &mut checker.read_order);
     settlements(m, &checker.leg_types)?;
     Ok(Walked {
         graph: checker.graph,
@@ -555,6 +586,9 @@ pub(super) fn walk(m: &Reality, sections: &[(String, Section)]) -> Result<Walked
         orient_items: checker.orient_items,
         draws: checker.draws,
         projs: checker.projs,
+        srows: checker.srows,
+        read_order: checker.read_order,
+        dropped,
     })
 }
 
@@ -562,6 +596,16 @@ pub(super) fn walk(m: &Reality, sections: &[(String, Section)]) -> Result<Walked
 /// `check_ask` caller, `LOAD-SCENARIO … neither the model nor a loaded scenario`). L §6.4, §8.
 fn refused_alone(refusal: &Refusal) -> bool {
     refusal.code() == Code::Load(Load::Scenario) && refusal.message().contains(UNLOADED)
+}
+
+/// Whether the order of a reader's reads is kept: a def's, a fill's, a band's or a scenario
+/// row's, which a scenario row's reads are searched through (refcore's edges, in insertion
+/// order). L §6.4.
+pub(super) fn keeps_order(reader: &Node) -> bool {
+    matches!(
+        reader.kind,
+        NodeKind::Def | NodeKind::Fill | NodeKind::Band | NodeKind::Srow
+    )
 }
 
 /// An `ENGINE-INVARIANT` refusal.
@@ -666,8 +710,19 @@ impl Checker {
         }
     }
 
-    /// `reader` reads `target` with `rel`; an ask's reads are kept in the order first made.
+    /// `reader` reads `target` with `rel`; an ask's reads, and a def's, a fill's, a band's and
+    /// a scenario row's, are kept in the order first made.
     pub(super) fn edge(&mut self, reader: &Node, target: Node, rel: Rel) {
+        let first = !self
+            .graph
+            .reads(reader)
+            .is_some_and(|reads| reads.contains_key(&target));
+        if first && keeps_order(reader) {
+            self.read_order
+                .entry(reader.clone())
+                .or_insert_with(Vec::new)
+                .push(target.clone());
+        }
         if reader.kind == NodeKind::Ask {
             let reads = self
                 .ask_reads

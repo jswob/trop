@@ -75,8 +75,8 @@ pub(super) fn bound_twice(var: &str) -> Stop {
 ///
 /// # Errors
 ///
-/// `LOAD-SHADOW`, `LOAD-NAME`, `LOAD-ALIVE`, `LOAD-DOMAIN` or `LOAD-KEY`, with no place; a
-/// member's prefix stops "not built".
+/// `LOAD-SHADOW`, `LOAD-NAME` (a prefixed name included), `LOAD-ALIVE`, `LOAD-DOMAIN` or
+/// `LOAD-KEY`, with no place.
 pub(super) fn over(m: &Reality, bind: &Bind, key_bind: BindAs) -> Result<Over, Stop> {
     let var = &bind.var;
     if m.names.contains_key(var) {
@@ -86,7 +86,9 @@ pub(super) fn over(m: &Reality, bind: &Bind, key_bind: BindAs) -> Result<Over, S
         ));
     }
     match &bind.domain {
-        Written::Name { qual: Some(_), .. } => Err(Stop::NotBuilt("a member's prefix")),
+        // A joint model's merge has made each member's index or kind one name; a prefix left
+        // names nothing (refcore's `qualified`, GD-1).
+        Written::Name { id, qual: Some(_) } => Err(refused(Load::Name, format!("unknown id {id}"))),
         Written::Name { id, qual: None } => over_name(m, bind, id, key_bind),
         Written::List(keys) => {
             if keys.iter().any(|key| key_text(key) == *var) {

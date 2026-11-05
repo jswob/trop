@@ -22,6 +22,7 @@ use super::cone::{check_path_lines, finish_random};
 use super::lawdates::{check_lawdates, check_move_lawdates};
 use super::parts::{arrival_reads, parts_walk_bound};
 use super::pins::check_forks;
+use super::srows::check_srow_reads;
 use super::steps::{Loader, refuse};
 use super::types::text;
 use crate::base::{Code, Load, Refusal, Warn};
@@ -52,11 +53,13 @@ impl Loader {
     /// dates, the asks' axis combinations, unread items; the running reads, the decisions' reach, walk-bound defs (an
     /// arrival rule's among them), left-out moves, the strata; an arrival rule's reads of its
     /// own day; readings `after` a plan; a decision's balances of days load sees; periods
-    /// across keys; moves' law dates; schedules that give no date (issue #72). E §3.1 steps
-    /// 5–8; L §4.2, §4.3, §5.11, §5.14.1, §5.14.2.
+    /// across keys; moves' law dates; what a scenario's expression rows read; schedules that
+    /// give no date (issue #72). A scenario's reality keeps only the asks its world evaluates.
+    /// E §3.1 steps 5–8; L §4.2, §4.3, §5.11, §5.14.1, §5.14.2, §6.4.
     pub(super) fn build_graph(&mut self) -> Result<(), Stop> {
         let files = Files::of(&self.sections);
         let mut walked = walk(&self.m, &self.sections)?;
+        self.m.asks.retain(|ask| !walked.dropped.contains(&ask.id));
         self.m.asks_alone = core::mem::take(&mut walked.alone);
         for fact in core::mem::take(&mut walked.facts) {
             if let Some(mv) = self.m.moves.get_mut(&fact.id) {
@@ -93,6 +96,7 @@ impl Loader {
             &files,
         )?;
         check_proj_seen(&self.m, &walked.projs, &random)?;
+        check_srow_reads(&self.m, &walked.srows, &walked.read_order)?;
         check_schedules(&self.m, &files)?;
         check_scenario_moves(&self.m, &files)?;
         check_path_lines(&self.m, &walked.queries)
@@ -785,7 +789,8 @@ fn left_out(graph: &Graph) -> BTreeMap<Node, BTreeSet<String>> {
             | NodeKind::Balances
             | NodeKind::Parts
             | NodeKind::Axis
-            | NodeKind::Fill => holder.clone(),
+            | NodeKind::Fill
+            | NodeKind::Srow => holder.clone(),
         };
         out.insert(holder.clone(), dependent_moves(&readers, start));
     }
