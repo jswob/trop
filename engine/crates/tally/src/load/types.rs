@@ -1612,7 +1612,7 @@ impl Checker {
             && let Some(info) = m.kinds.get(kind)
         {
             if info.spec == KindSpec::Event {
-                return movement_field(m, kind, field);
+                return movement_field(m, kind, field, base);
             }
             return Err(refused(
                 Load::Field,
@@ -2061,10 +2061,22 @@ pub(super) fn unit_type(m: &Reality, u: Option<&str>) -> Result<Ty, Stop> {
     Ok(Ty::Dyn)
 }
 
+/// Whether a field's object is a name, parentheses aside: the one object a kind test narrows
+/// (refcore's `sc.narrow`, read for a name only). `None` is a field read after another
+/// postfix, never a name.
+fn may_narrow(base: Option<&Expr>) -> bool {
+    let mut object = base;
+    while let Some(Expr::Paren(inner)) = object {
+        object = Some(inner.as_ref());
+    }
+    matches!(object, Some(Expr::Name(_)))
+}
+
 /// A field of a movement of event kind `kind`: a leg, an attribute, `day`, `fulfils`; any
-/// other is `Unseen`, refcore's kind tests that narrow, its reading by name over `events` and
-/// its `LOAD-FIELD` not built here (refcore's `m_movement_field`). L §5.14, §5.14.3.
-fn movement_field(m: &Reality, kind: &str, field: &str) -> Typed {
+/// other, of a movement of `events` (`a.adjusts.f`), is read by name over every event kind;
+/// else `LOAD-FIELD` (refcore's `m_movement_field`). Of a name a kind test may narrow it is
+/// `Unseen`: load keeps no kind test's narrowing. L §5.7, §5.14, §5.14.3, §8.3.
+fn movement_field(m: &Reality, kind: &str, field: &str, object: Option<&Expr>) -> Typed {
     for (leg, unit, _) in m.kind_legs(kind) {
         if leg == field {
             return leg_type(m, &unit);
@@ -2088,9 +2100,44 @@ fn movement_field(m: &Reality, kind: &str, field: &str) -> Typed {
             Ty::Dyn
         });
     }
-    Ok(match field {
-        "day" => Ty::Date,
-        "fulfils" => Ty::Key("events".to_owned()),
-        _ => Ty::Unseen,
-    })
+    match field {
+        "day" => return Ok(Ty::Date),
+        "fulfils" => return Ok(Ty::Key("events".to_owned())),
+        _ => {}
+    }
+    if may_narrow(object) {
+        return Ok(Ty::Unseen);
+    }
+    if kind == "events"
+        && let Some(ty) = event_field(m, field)?
+    {
+        return Ok(ty);
+    }
+    Err(refused(
+        Load::Field,
+        format!("{field} is not a field of {kind}"),
+    ))
+}
+
+/// A field of a movement whose kind load doesn't know (`a.adjusts`, a key of `events`): the
+/// first event kind, in the order declared, with a leg of that name gives a leg's record of
+/// unit `any`, or with an attribute of that name its declared type, else `dyn` (refcore's
+/// `m_movement_field`, its `events` arm, read by name at run). L §5.14.3.
+fn event_field(m: &Reality, field: &str) -> Result<Option<Ty>, Stop> {
+    for (id, kind) in m.kinds.entries() {
+        if kind.spec != KindSpec::Event {
+            continue;
+        }
+        if m.kind_legs(id).iter().any(|(leg, _, _)| leg == field) {
+            return leg_type(m, "any").map(Some);
+        }
+        for info in m.chain(id).into_iter().rev() {
+            if info.attrs.iter().any(|(attr, _)| attr == field) {
+                let declared = info.attr_types.iter().find(|(attr, _)| attr == field);
+                let ty = declared.and_then(|(_, ty)| ty.clone());
+                return Ok(Some(ty.unwrap_or(Ty::Dyn)));
+            }
+        }
+    }
+    Ok(None)
 }

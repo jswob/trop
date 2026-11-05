@@ -4763,6 +4763,23 @@ version v1
                 "def ls: date = argmax(1 for a in adjustments over ..).adjusts.day",
                 no_ask,
             ),
+            // G12 (2 of 2): a field of `.adjusts` is read by name over the event kinds, else
+            // `LOAD-FIELD`, as is a field no kind test can narrow (`t-adjusts-zz`, `t-zz`).
+            (
+                "adjusts-zz",
+                "def ls: date = argmax(1 for a in adjustments over ..).adjusts.zz",
+                "refused: LOAD-FIELD zz is not a field of events (a.tally:27)",
+            ),
+            (
+                "adjusts-leg",
+                "def ls: date = argmax(1 for a in adjustments over ..).adjusts.cash",
+                "refused: LOAD-UNIT rule base of ls is (from key places, to key places, amount dyn, day date), not date (a.tally:27)",
+            ),
+            (
+                "zz",
+                "def ls: date = argmax(1 for a in adjustments over ..).zz",
+                "refused: LOAD-FIELD zz is not a field of adjustments (a.tally:27)",
+            ),
         ];
         for &(name, def, expected) in lifespan {
             let added = format!("{DEF}\n\n{def}");
