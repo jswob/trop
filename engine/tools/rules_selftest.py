@@ -805,6 +805,10 @@ def ci_problems():
             problems.append("R-77: .github/workflows/engine.yml filters pull requests by path, so `engine gate` can't be required")
         if not re.search(r"\n  gate:\n    name: engine gate\n    needs: \[changes, check, instructions\]\n    if: always\(\)\n", text):
             problems.append("R-77: .github/workflows/engine.yml has no `engine gate` job that needs check full and always runs")
+        # R-92 (the retro after M0, fix 7; M0's pick P3): the long fuzz runs with a 64 MB ASan
+        # quarantine, so a corpus grown over hours can't report an out-of-memory that isn't a bug
+        if not re.search(r"\n  long-fuzz:\n(    [^\n]*\n|\n)*?        env:\n(          [^\n]*\n)*?          ASAN_OPTIONS: quarantine_size_mb=64\n", text):
+            problems.append("R-92: .github/workflows/engine.yml's long fuzz job doesn't set ASAN_OPTIONS: quarantine_size_mb=64")
         # R-84: the mutants baseline and shards run the gating milestones' tests too
         if not re.search(r'args="\$\(tools/milestones args\)"\n.*cargo nextest run [^\n]*--profile mutants \$args\n',
                          text, re.S):

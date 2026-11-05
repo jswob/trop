@@ -440,6 +440,8 @@ jobs:
         working-directory: engine
         env:
           HOURS: ${{ inputs.fuzz-hours }}
+          # ASan's quarantine grows with the corpus, not the engine (#78; M0's pick P3)
+          ASAN_OPTIONS: quarantine_size_mb=64
         run: |
           rustup toolchain install "$NIGHTLY" --profile minimal
           mkdir -p target/fuzz-log
