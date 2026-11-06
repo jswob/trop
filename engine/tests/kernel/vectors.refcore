@@ -15245,4 +15245,285 @@ ask answered: is7, seek6, seek_md law 2026-06-30
   law date 2026-06-30, cut 2026-12-31
 refused7: (refused: RUN-DOMAIN calendar all7 has no business day, refused: RUN-DOMAIN calendar all7 has no business day)
   law date 2026-06-30, cut 2026-12-31
+,15:g14/end_of_time,3:g14,25:run g14/end_of_time.tally,1549:21:g14/end_of_time.tally,1518:model g14_end_of_time
+  tally 2
+  on 9999-12-31
+  start 9999-01-01
+  end 9999-12-31
+  note "T, tally 2.1.6 (#89, #48, the coordinator's pick P35, the review of 0bbf95b, findings 1 and 2): the end of time, 10000-01-01, as a value: a span that ends there, a day or month index's key there, each refused RUN-LIMIT, beside the twin a day before, answered; and the other uses of end_of(9999) (L §7.6, §4.2 end_of)."
+
+source plan "plan"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 9999-01-01..
+
+input k: int
+
+input cal: calendar
+
+def two[d in days]: int = k
+
+def mm[m in months]: int = k
+
+version v
+  cite plan
+  governs always
+  known 9999-01-01
+  k = 2
+  cal = calendar(weekends [sat, sun])
+  opening[konto] = 250.00 PLN at 9999-01-01 start
+
+ask t4: two[end_of(9999-12-31)]
+
+ask t4e: two[end_of(9999-12-31) - 1 day], two[9999-12-31]
+
+ask t5: mm[end_of(9999-12-31)]
+
+ask t5e: mm[end_of(9999-12-31) - 1 day]
+
+ask t6: days_between(9999-01-01, end_of(9999))
+
+ask t6e: days_between(9999-01-01, end_of(9999) - 1 day)
+
+ask t8: year_of(end_of(9999-12))
+
+ask t9: add_days(end_of(9999), -1)
+
+
+ask t11: flows(konto, 9999-12-31..end_of(9999))
+
+ask t11e: flows(konto, 9999-12-31..end_of(9999) - 1 day)
+
+ask t12: flows(konto, end_of(9999-12))
+
+ask t13: sum(1 for d in 9999-12-30 .. end_of(9999) step 1 day)
+
+ask t14: is_business(end_of(9999), cal)
+
+ask t15: end_of(9999-12-31) > 9999-12-31
+
+ask t16: bal(konto, end_of(9999) - 1 day)
+
+ask f_day: flows(konto, end_of(9999))
+
+ask f_open: flows(konto, end_of(9999)..)
+,,1:0,781:f_day: refused: RUN-LIMIT a day passes 9999-12-31
+  cut 9999-12-31
+f_open: 0.00 PLN
+  cut 9999-12-31
+t11: refused: RUN-LIMIT a day passes 9999-12-31
+  cut 9999-12-31
+t11e: 0.00 PLN
+  cut 9999-12-31
+t12: refused: RUN-LIMIT a day passes 9999-12-31
+  cut 9999-12-31
+t13: refused: RUN-LIMIT a day passes 9999-12-31
+  cut 9999-12-31
+t14: refused: RUN-LIMIT a day passes 9999-12-31
+  cut 9999-12-31
+t15: true
+  cut 9999-12-31
+t16: 250.00 PLN
+  cut 9999-12-31
+t4: refused: RUN-LIMIT a day passes 9999-12-31
+  cut 9999-12-31
+t4e: (2, 2)
+  cut 9999-12-31
+t5: refused: RUN-LIMIT a day passes 9999-12-31
+  cut 9999-12-31
+t5e: 2
+  cut 9999-12-31
+t6: 365
+  cut 9999-12-31
+t6e: 364
+  cut 9999-12-31
+t8: refused: RUN-LIMIT a day passes 9999-12-31
+  cut 9999-12-31
+t9: 9999-12-31
+  cut 9999-12-31
+,10:g14/shifts,3:g14,20:run g14/shifts.tally,2276:16:g14/shifts.tally,2250:model g14_shifts
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.6 (#89, #48, P35, findings 3 to 6): a day, a month and a year shifted by the machine word's least and greatest value and past 64 bits, refused RUN-LIMIT where they pass 9999-12-31 or come before 0001-01-01, each beside its twin at the edge, answered; add_business by the least value; ranges of 3 keys with ends and step near ±9e18, and past 64 bits."
+
+source plan "plan"
+
+input d: date
+
+input d0: date
+
+input cal: calendar
+
+input imin: int
+
+input imax: int
+
+input huge: int
+
+input back: int
+
+input back1: int
+
+input fwd: int
+
+input fwd1: int
+
+input mfwd: int
+
+input mfwd1: int
+
+input zero: int
+
+input n1: int
+
+input n2m2: int
+
+input s2: int
+
+input b7: int
+
+input b8: int
+
+input hend: int
+
+version v
+  cite plan
+  governs always
+  known 2026-01-01
+  d = 2026-06-01
+  d0 = 0001-01-10
+  cal = calendar(weekends [sat, sun])
+  imin = -9223372036854775808
+  imax = 9223372036854775807
+  huge = 100000000000000000000
+  back = 739767
+  back1 = 739768
+  fwd = 2912291
+  fwd1 = 2912292
+  mfwd = 95682
+  mfwd1 = 95683
+  zero = 0
+  n1 = 1
+  n2m2 = 1999998
+  s2 = 2
+  b7 = -7
+  b8 = -8
+  hend = 100000000000000999999
+
+ask a1: d - back, d - back1
+
+ask a2: d + fwd, d + fwd1
+
+ask a3: d - huge, d + -huge, add_days(d, -huge), add_days(d, imin)
+
+ask a4: add_months(d, mfwd), add_months(d, mfwd1), add_months(d, -huge), add_months(d, imax)
+
+ask a5: d + huge * 1 month, d - huge * 1 month, d - imin * 1 day, d + imax * 1 quarter
+
+ask a6: month_of(d) + huge, month_of(d) - imin, month_of(d) - huge, year_of(d) + imax
+
+ask a7: month_of(d) + huge * 1 month, month_of(d) - imin * 1 month, year_of(d) + huge * 1 year
+
+ask b1: add_business(d0, b7, cal), add_business(d0, b8, cal), add_business(d0, imin, cal), add_business(d0, -huge, cal)
+
+ask b2: add_business(d, huge, cal)
+
+ask k1: sum(n1 for k in imin .. imax step imax), sum(k for k in imin .. imax step imax)
+
+ask k2: sum(n1 for k in -huge .. huge step huge), sum(k for k in huge .. huge), sum(n1 for k in huge .. hend)
+
+ask k3: sum(n1 for k in zero .. n2m2 step s2), sum(n1 for k in imin .. imax), sum(n1 for k in -huge .. huge)
+
+ask k4: sum(n1 for k in zero .. imax step imax), sum(k for k in imax .. imax step huge)
+,,1:0,1763:a1: (0001-01-01, refused: RUN-LIMIT a day comes before 0001-01-01)
+  cut 2026-12-31
+a2: (9999-12-31, refused: RUN-LIMIT a day passes 9999-12-31)
+  cut 2026-12-31
+a3: (refused: RUN-LIMIT a day comes before 0001-01-01, refused: RUN-LIMIT a day comes before 0001-01-01, refused: RUN-LIMIT a day comes before 0001-01-01, refused: RUN-LIMIT a day comes before 0001-01-01)
+  cut 2026-12-31
+a4: (9999-12-01, refused: RUN-LIMIT a day passes 9999-12-31, refused: RUN-LIMIT a day comes before 0001-01-01, refused: RUN-LIMIT a day passes 9999-12-31)
+  cut 2026-12-31
+a5: (refused: RUN-LIMIT a day passes 9999-12-31, refused: RUN-LIMIT a day comes before 0001-01-01, refused: RUN-LIMIT a day passes 9999-12-31, refused: RUN-LIMIT a day passes 9999-12-31)
+  cut 2026-12-31
+a6: (refused: RUN-LIMIT a day passes 9999-12-31, refused: RUN-LIMIT a day passes 9999-12-31, refused: RUN-LIMIT a day comes before 0001-01-01, refused: RUN-LIMIT a day passes 9999-12-31)
+  cut 2026-12-31
+a7: (refused: RUN-LIMIT a day passes 9999-12-31, refused: RUN-LIMIT a day passes 9999-12-31, refused: RUN-LIMIT a day passes 9999-12-31)
+  cut 2026-12-31
+b1: (0001-01-01, refused: RUN-LIMIT a day comes before 0001-01-01, refused: RUN-LIMIT a day comes before 0001-01-01, refused: RUN-LIMIT a day comes before 0001-01-01)
+  cut 2026-12-31
+b2: refused: RUN-LIMIT a day passes 9999-12-31
+  cut 2026-12-31
+k1: (3, -3)
+  cut 2026-12-31
+k2: (3, 100 000 000 000 000 000 000, 1 000 000)
+  cut 2026-12-31
+k3: (1 000 000, refused: RUN-LIMIT -9 223 372 036 854 775 808 .. 9 223 372 036 854 775 807 holds more than 1 000 000 keys, refused: RUN-LIMIT -100 000 000 000 000 000 000 .. 100 000 000 000 000 000 000 holds more than 1 000 000 keys)
+  cut 2026-12-31
+k4: (2, 9 223 372 036 854 775 807)
+  cut 2026-12-31
+,16:g14/keys_past_64,3:g14,26:run g14/keys_past_64.tally,660:22:g14/keys_past_64.tally,629:model g14_keys_past_64
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.6 (#89, P35, finding 6): an integer key past 64 bits is outside the index (RUN-KEY), as one inside the machine word is; a sum past 64 bits is exact; a range of one key past 64 bits holds one key."
+
+source plan "plan"
+
+index ks = 1..3
+
+input huge: int
+
+input imax: int
+
+def v[k in ks]: int = k
+
+version v1
+  cite plan
+  governs always
+  known 2026-01-01
+  huge = 100000000000000000000
+  imax = 9223372036854775807
+
+ask q1: v[huge]
+
+ask q2: v[imax]
+
+ask q3: sum(v[k] for k in ks) + huge
+
+ask q4: max(k for k in huge .. huge)
+,,1:0,244:q1: refused: RUN-KEY 100000000000000000000 is outside ks
+  cut 2026-12-31
+q2: refused: RUN-KEY 9223372036854775807 is outside ks
+  cut 2026-12-31
+q3: 100 000 000 000 000 000 006
+  cut 2026-12-31
+q4: 100 000 000 000 000 000 000
+  cut 2026-12-31
+,16:g14/list_1000001,3:g14,26:run g14/list_1000001.tally,367:22:g14/list_1000001.tally,336:model g14_list_1000001
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.6 (#89, P35, finding 7): a list index of 1 000 001 keys, k1 to k1000001: one past the cap, refused at load (L §7.6 item 2, §8.3 LOAD-LIMIT). Its twin is list_1000000.tally."
+
+index x = [@keys k 1 1000001@]
+
+ask n: count(k in x)
+,,1:1,86:refused: LOAD-LIMIT index x holds more than 1 000 000 keys (g14/list_1000001.tally:8)
+,16:g14/list_1000000,3:g14,26:run g14/list_1000000.tally,358:22:g14/list_1000000.tally,327:model g14_list_1000000
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.6 (#89, P35, finding 7): a list index of 1 000 000 keys, k1 to k1000000: the cap itself, answered (L §7.6 item 2, §8.3 LOAD-LIMIT). Its twin is list_1000001.tally."
+
+index x = [@keys k 1 1000000@]
+
+ask n: count(k in x)
+,,1:0,30:n: 1 000 000
+  cut 2026-12-31
 ,

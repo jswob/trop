@@ -262,7 +262,13 @@ mod tests {
     /// refusing its legs' places on every day while another place stands; a range from rows of
     /// more than 1 000 000 keys beside one of 1 000 000; the edges load allows (1 000 000 keys,
     /// a period ending on 9999-12-31, 18 digits, unit powers of 64); a calendar with no
-    /// business day (`RUN-DOMAIN`) beside six weekend days and every month-day (`kernel/g14/`).
+    /// business day (`RUN-DOMAIN`) beside six weekend days and every month-day; and the
+    /// review's seven findings in 0bbf95b (P35): the end of time as a span's end or a key, a
+    /// day, month or year shifted by the machine word's least or greatest value or past 64
+    /// bits, `add_business` by the least value, ranges near ±9e18, an integer key past 64
+    /// bits (`RUN-KEY`), and a list index of 1 000 001 keys (`LOAD-LIMIT`) beside its twin of
+    /// 1 000 000, texts of 8.9 MB generated at test time from their sources (`.gen`, P36),
+    /// each beside its answered twin (`kernel/g14/`).
     #[test]
     fn s_kernel_g14_capacity() {
         group_holds("g14");

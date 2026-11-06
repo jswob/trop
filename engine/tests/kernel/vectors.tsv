@@ -114,3 +114,8 @@ g14/move_day_row	g14		engine/tests/kernel/	engine/tests/kernel/g14/move_day_row.
 g14/range_row	g14		engine/tests/kernel/	engine/tests/kernel/g14/range_row.tally		
 g14/edges	g14		engine/tests/kernel/	engine/tests/kernel/g14/edges.tally		
 g14/calendar	g14		engine/tests/kernel/	engine/tests/kernel/g14/calendar.tally		
+g14/end_of_time	g14		engine/tests/kernel/	engine/tests/kernel/g14/end_of_time.tally		
+g14/shifts	g14		engine/tests/kernel/	engine/tests/kernel/g14/shifts.tally		
+g14/keys_past_64	g14		engine/tests/kernel/	engine/tests/kernel/g14/keys_past_64.tally		
+g14/list_1000001	g14		engine/tests/kernel/	engine/tests/kernel/g14/list_1000001.tally.gen		
+g14/list_1000000	g14		engine/tests/kernel/	engine/tests/kernel/g14/list_1000000.tally.gen		
