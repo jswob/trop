@@ -1,0 +1,43 @@
+# E §4.1, E §4.2 step 5 (tally 2.1.6, issue #57, the coordinator's pick P4): one plan move keyed by a list index of 11
+# keys, its instances at f3 and f11 (key positions 2 and 10) both refused at src on one day. Key positions compare as
+# numbers, so m[f3]'s refusal is the one its reads print. refcore 2.1.5 compared the keys' text, (10,) before (2,), and
+# printed m[f11].cash.
+=== m.tally
+model keys
+  tally 2
+  on 2025-12-31
+  start 2025-01-01
+  end 2025-12-31
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit DUK: currency minor 0.01
+
+index flats = [f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11]
+
+input amt: money DUK
+
+input d0: date
+
+place src: accounts DUK lives 2025-01-01..
+
+place gone: accounts DUK lives 2025-01-01..2025-01-05
+
+move m[f in flats]: transfers
+  on d0
+  when pos(f) == 3 or pos(f) == 11
+  leg cash from src to gone amount amt
+
+ask q: bal(src, 2025-01-31)
+
+version facts
+  cite fixture
+  governs always
+  known 2025-01-01
+  amt = 1.00 DUK
+  d0 = 2025-01-10
+  opening[src] = 500.00 DUK at 2025-01-01 start
+  opening[gone] = 0 DUK at 2025-01-01 start
+=== expect
+q: refused: RUN-LIFESPAN m[f3].cash moves into or out of gone outside its lifespan
+  cut 2025-12-31

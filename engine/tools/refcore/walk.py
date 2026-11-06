@@ -13,7 +13,7 @@ import bisect
 import datetime
 
 from .dates import ONE_DAY
-from .moves import item_in_world
+from .moves import item_in_world, order_key
 from .errors import TallyError, Refusal, LoadError, Unspecified, NotYet, load_now, RandomLine
 from .model import known_first, key_text, SameDiffers
 from .values import Num, Money, Hole, Thing, Mv, Iv, Rec, Text, NONE, CURRENCIES, fmt, fmt_hole, vkey
@@ -53,6 +53,14 @@ def kday(key):
     return datetime.date.fromordinal(key[0])
 
 
+def plan_key(x):
+    """A movement's place among its day's plans: the movement order of E §4.1, each term typed (#33's key), never its
+    text. tally 2.1.6 (issue #57): refcore 2.1.5 took `<move>|<keys>` as text, so `ab` booked before `a` and a key
+    place of 10 before 2, and a place kept the first refusal in that order."""
+    o = getattr(x, 'order', None)
+    return order_key(o if o is not None else x.id)
+
+
 def same_book_key(x, lg):
     """Where a movement's leg is booked in the day's order (Walk.prepare's keys): observations before plans, plans
     before decisions, a decision at its point (E §4.2 steps 1-3)."""
@@ -63,9 +71,7 @@ def same_book_key(x, lg):
     if getattr(x, 'decision', False):
         pt = getattr(x, 'point', None)
         return pt if pt is not None and pt[0] == o else (o, 3, 0, x.id, 0)
-    order = getattr(x, 'order', None)
-    osort = '%s|%s' % (x.move.id, order[3] if order else '') if hasattr(x, 'move') else x.id
-    return (o, 2, 0, osort, 0)
+    return (o, 2, 0, plan_key(x), 0)
 
 
 class St:
@@ -475,7 +481,7 @@ class Walk:
                             if isinstance(lg.day, datetime.date) and lg.day >= S:
                                 for p in (lg.frm, lg.to):
                                     if isinstance(p, Thing):
-                                        self.at((lg.day.toordinal(), 2, 0, i.id, 0), 'mark',
+                                        self.at((lg.day.toordinal(), 2, 0, plan_key(i), 0), 'mark',
                                                 (p.name, lg.unit, ('open', i.id), i.coll))
                 continue
             if st == 'uncertain':
@@ -613,7 +619,7 @@ class Walk:
 
     def sched_leg(self, i, lg, phase):
         d = lg.day
-        osort = '%s|%s' % (i.move.id, i.order[3] if i.order else '')
+        osort = plan_key(i)
         if isinstance(d, datetime.date):
             if d < self.start:
                 return
@@ -651,8 +657,7 @@ class Walk:
         d = lg.day if isinstance(lg.day, datetime.date) else day_lo(i.day)
         if d is None or d < self.start:
             d = self.start
-        osort = '%s|%s' % (i.move.id, i.order[3] if i.order else '')
-        self.at((d.toordinal(), 2, 0, osort, 0), 'legq', (i, lg, qs))
+        self.at((d.toordinal(), 2, 0, plan_key(i), 0), 'legq', (i, lg, qs))
 
     def sched_refused(self, i):
         d = day_lo(i.day)
@@ -664,7 +669,7 @@ class Walk:
         whole = all(isinstance(lg.frm, Thing) and isinstance(lg.to, Thing) for lg in i.legs)
         if known and whole:
             for lg in known:
-                self.at((d.toordinal(), 2, 0, i.move.id, 0), 'legbad', (i, lg, i.err))
+                self.at((d.toordinal(), 2, 0, plan_key(i), 0), 'legbad', (i, lg, i.err))
         else:
             self.at(K_before(d), 'global_bad', i.err)
 
@@ -1884,7 +1889,7 @@ class Walk:
         for lg in run.legs:
             if isinstance(lg.day, datetime.date) and lg.day != t:
                 if lg.day > t:
-                    self.at((lg.day.toordinal(), 2, 0, run.id, 0), 'leg', (run, lg))
+                    self.at((lg.day.toordinal(), 2, 0, plan_key(run), 0), 'leg', (run, lg))
                     continue
             self.book_leg(run, lg, key, reg=reg, coll=run.coll)
         self.book_own_obs(run, key)
