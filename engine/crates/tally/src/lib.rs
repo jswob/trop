@@ -84,7 +84,7 @@ pub mod time {
     mod day;
     mod period;
 
-    pub use calendar::{Calendar, weekday_number};
+    pub use calendar::{Calendar, FirstYear, weekday_number};
     pub use day::Day;
     pub use period::{Period, PeriodKind, Step, age, age_months, overlap_days};
 }

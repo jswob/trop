@@ -9,7 +9,7 @@
 //! calendar in force on that day; a power that isn't an integer stops `NotBuilt` (the
 //! transcendental kernel isn't S's).
 
-use super::arith::{Test, compare, int_of, step_count};
+use super::arith::{Test, compare, int_of, step_count, whole_of};
 use super::expr::hole_of;
 use super::read::{Given, make_keys};
 use super::state::{Ctx, Engine, Env, invariant, num_stop, refuse, refuse_load, wrong_type};
@@ -117,22 +117,29 @@ impl Engine {
             )
         };
         if !matches!(b, Value::MonthDay(..)) {
-            let k = int_of(m, &b)?;
+            let number = whole_of(m, &b)?;
             if period.kind() != PeriodKind::Month || period.start().day() != 1 {
                 return Err(anchored());
             }
-            if k < 1 {
+            if number.is_negative() || number.is_zero() {
+                let text = number
+                    .integer_text()
+                    .ok_or_else(|| invariant("a day number"))?;
                 return Err(refuse(
                     Run::Domain,
-                    format!("day_of(m, {k}): a day number below 1"),
+                    format!("day_of(m, {text}): a day number below 1"),
                 ));
             }
             let last = period
                 .end()
                 .previous()
                 .ok_or_else(|| invariant("a month with no last day"))?;
-            let day = u8::try_from(k.min(i64::from(last.day())))
-                .map_err(|_| invariant("a day number"))?;
+            // a number past 64 bits is past the month's last day too
+            let day = match number.to_i64() {
+                Some(whole) => u8::try_from(whole.min(i64::from(last.day())))
+                    .map_err(|_| invariant("a day number"))?,
+                None => last.day(),
+            };
             return Day::from_ymd(last.year(), last.month(), day)
                 .map(Value::Day)
                 .ok_or_else(|| invariant("a day of a month"));
@@ -222,24 +229,29 @@ impl Engine {
             return hole_of(&[d.as_hole(), k.as_hole()]);
         }
         let day = a_day(date_arg(m, &d, "add_business")?)?;
-        let k = step_count(m, &k, 1)?;
-        if k == 0 {
+        let k = whole_of(m, &k)?;
+        if k.is_zero() {
             return Err(refuse(
                 Run::Zero,
                 format!("add_business({}, 0, {})", day.text(), expr_name(cal)),
             ));
         }
-        let mut left = k.unsigned_abs();
+        let step = if k.is_negative() { -1 } else { 1 };
+        // a count past 64 bits outnumbers the calendar's days: the walk reads the calendar
+        // day by day until it meets 0001-01-01 or 9999-12-31 (L §7.6 item 1)
+        let mut left = k.to_i64().map(i64::unsigned_abs);
         let mut current = day;
-        while left > 0 {
-            let open = self.next_business(m, cal, env, ctx, (current, k.signum()))?;
+        while left != Some(0) {
+            let open = self.next_business(m, cal, env, ctx, (current, step))?;
             let Value::Day(found) = open else {
                 return Ok(open);
             };
             current = found;
-            left = left
-                .checked_sub(1)
-                .ok_or_else(|| invariant("a business-day count"))?;
+            if let Some(n) = left.as_mut() {
+                *n = n
+                    .checked_sub(1)
+                    .ok_or_else(|| invariant("a business-day count"))?;
+            }
         }
         Ok(Value::Day(current))
     }
@@ -286,8 +298,10 @@ impl Engine {
         }
         let period = period_arg(m, (call.args.first(), &month), "schedule")?;
         let start = period.start();
-        let Some(day) = u8::try_from(int_of(m, &dom)?)
-            .ok()
+        // a day number past the month's, 64 bits or not, is none
+        let Some(day) = whole_of(m, &dom)?
+            .to_i64()
+            .and_then(|n| u8::try_from(n).ok())
             .and_then(|n| Day::from_ymd(start.year(), start.month(), n))
             .filter(|d| period.contains(*d))
         else {
@@ -1052,7 +1066,9 @@ fn power(base: &Num, e: &Num) -> Result<Num, Stop> {
     if !e.is_integer() {
         return Err(Stop::NotBuilt("a power that isn't an integer (`to u`)"));
     }
-    let k = e.to_i64().ok_or_else(|| num_stop(NumError::Digits))?;
+    let Some(k) = e.to_i64() else {
+        return power_past_64_bits(base, e);
+    };
     if base.is_zero() && k < 0 {
         return Err(refuse(Run::Div, "division by zero".to_owned()));
     }
@@ -1073,4 +1089,25 @@ fn power(base: &Num, e: &Num) -> Result<Num, Stop> {
         return Num::int(1).checked_div(&out).map_err(num_stop);
     }
     Ok(out)
+}
+
+/// `base^e` for a whole `e` past 64 bits, as refcore's Python integers: 1, 0 and -1 keep their
+/// size; any other base has a part of 2 or more, which such a power takes past the 4 096-digit
+/// cap, `RUN-DIGITS`. L §3.3, §7.1.
+fn power_past_64_bits(base: &Num, e: &Num) -> Result<Num, Stop> {
+    let one = Num::int(1);
+    if *base == one {
+        return Ok(one);
+    }
+    if base.is_zero() {
+        if e.is_negative() {
+            return Err(refuse(Run::Div, "division by zero".to_owned()));
+        }
+        return Ok(Num::zero());
+    }
+    if *base == Num::int(-1) {
+        let even = e.checked_div(&Num::int(2)).map_err(num_stop)?.is_integer();
+        return Ok(if even { one } else { Num::int(-1) });
+    }
+    Err(num_stop(NumError::Digits))
 }

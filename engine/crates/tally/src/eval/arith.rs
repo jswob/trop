@@ -140,7 +140,7 @@ pub fn arith(m: &Reality, op: Op, lhs: &Value, rhs: &Value) -> Result<Value, Sto
         return Err(refuse_load(
             Load::Unit,
             format!(
-                "{}: day is lhs dimension of its own (1 day / 1 year is refused, L §3.2)",
+                "{}: day is a dimension of its own (1 day / 1 year is refused, L §3.2)",
                 shown(m, lhs, op, rhs)?
             ),
         ));
@@ -332,7 +332,7 @@ fn rate_mul(m: &Reality, op: Op, lhs: &Operand, rhs: &Operand) -> Result<Option<
     if !unit.is_one() {
         return Err(refuse_load(
             Load::Unit,
-            "lhs rate times lhs duration of another period dimension".to_owned(),
+            "a rate times a duration of another period dimension".to_owned(),
         ));
     }
     let q = q.checked_mul(&factor).map_err(num_stop)?;
@@ -388,6 +388,21 @@ pub fn int_of(m: &Reality, v: &Value) -> Result<i64, Stop> {
     ))
 }
 
+/// An integer of any size, as refcore's Python integer, where one names a count, a day of
+/// a month or a range's end (`int_of`'s twin past 64 bits). L §3.2, §7.6.
+///
+/// # Errors
+///
+/// `int_of`'s for a value that isn't an integer.
+pub(super) fn whole_of(m: &Reality, v: &Value) -> Result<Num, Stop> {
+    if let Value::Number(n) = v
+        && n.q.is_integer()
+    {
+        return Ok(n.q.clone());
+    }
+    int_of(m, v).map(Num::int)
+}
+
 /// A count of days, months or business days to step a day by, an integer times `per`
 /// (refcore's Python integer): past the 64-bit integers no day it reaches is in the
 /// calendar, so it is `RUN-LIMIT` in its direction. L §4.2, §7.6 item 1.
@@ -396,12 +411,7 @@ pub fn int_of(m: &Reality, v: &Value) -> Result<i64, Stop> {
 ///
 /// `int_of`'s for a value that isn't an integer; `RUN-LIMIT` past the 64-bit integers.
 pub(super) fn step_count(m: &Reality, v: &Value, per: i64) -> Result<i64, Stop> {
-    if let Value::Number(n) = v
-        && n.q.is_integer()
-    {
-        return steps_of(&n.q, per);
-    }
-    steps_of(&Num::int(int_of(m, v)?), per)
+    steps_of(&whole_of(m, v)?, per)
 }
 
 /// `count × per` as a step count of 64 bits; past them, `RUN-LIMIT` in its direction.
@@ -444,7 +454,7 @@ fn time_arith(m: &Reality, op: Op, lhs: &Value, rhs: &Value) -> Result<Value, St
             period_diff(*period, *other)
         }
         (Value::Key(KeyVal::Key { index, name }), Value::Number(_)) => {
-            key_shift(m, index, name, int_of(m, rhs)?, sign, op)
+            key_shift(m, (index, name), &whole_of(m, rhs)?, sign, op)
         }
         (
             Value::Key(key @ KeyVal::Key { index, .. }),
@@ -504,20 +514,18 @@ fn period_shift(
             if !count.is_integer() {
                 return Err(refuse(
                     Run::NotInt,
-                    "lhs duration that is not an integer".to_owned(),
+                    format!("{} is not an integer", rhs.text(m).map_err(num_stop)?),
                 ));
             }
-            let (family, months): (PeriodKind, i64) = match word {
+            let (family, months) = match word {
                 "day" => (PeriodKind::Day, 1),
                 "month" => (PeriodKind::Month, 1),
                 "quarter" => (PeriodKind::Month, 3),
                 _ => (PeriodKind::Month, 12),
             };
-            let per = months
-                .checked_mul(sign)
-                .ok_or_else(|| invariant("a step's sign"))?;
-            let amount = steps_of(count, per)?;
-            periods_in(m, period, family, amount, op, lhs, rhs)?
+            let amount = count.checked_mul(&Num::int(months)).map_err(num_stop)?;
+            let periods = periods_in(m, period, family, &amount, (op, lhs, rhs))?;
+            steps_of(&periods, sign)?
         }
         None => step_count(m, rhs, sign)?,
     };
@@ -527,36 +535,37 @@ fn period_shift(
         .ok_or_else(|| past_days(steps))
 }
 
-/// A duration as a count of a period's own periods: days of a day period, months of a
-/// month, quarter or year; `RUN-DOMAIN` when it isn't a whole number of them. L §4.2.
+/// A duration of `amount` days or months, an integer of any size, as a count of a period's
+/// own periods: days of a day period, months of a month, quarter or year; `RUN-DOMAIN` when
+/// it isn't a whole number of them, before any limit (refcore's `date_arith`). L §4.2.
 fn periods_in(
     m: &Reality,
     period: Period,
     family: PeriodKind,
-    amount: i64,
-    op: Op,
-    lhs: &Value,
-    rhs: &Value,
-) -> Result<i64, Stop> {
-    let (own, months) = match period.kind() {
-        PeriodKind::Day => (PeriodKind::Day, 1),
-        PeriodKind::Month => (PeriodKind::Month, 1),
-        PeriodKind::Quarter => (PeriodKind::Month, 3),
-        PeriodKind::Year => (PeriodKind::Month, 12),
+    amount: &Num,
+    (op, lhs, rhs): (Op, &Value, &Value),
+) -> Result<Num, Stop> {
+    let months = match period.kind() {
+        PeriodKind::Day | PeriodKind::Month => 1,
+        PeriodKind::Quarter => 3,
+        PeriodKind::Year => 12,
     };
-    let whole = amount.checked_rem_euclid(months) == Some(0);
-    if own != family || !whole {
+    let own = if period.kind() == PeriodKind::Day {
+        PeriodKind::Day
+    } else {
+        PeriodKind::Month
+    };
+    let periods = amount.checked_div(&Num::int(months)).map_err(num_stop)?;
+    if own != family || !periods.is_integer() {
         return Err(refuse(
             Run::Domain,
             format!(
-                "{}: not lhs whole number of its periods (L §4.2)",
+                "{}: not a whole number of its periods (L §4.2)",
                 shown(m, lhs, op, rhs)?
             ),
         ));
     }
-    amount
-        .checked_div_euclid(months)
-        .ok_or_else(|| invariant("lhs period step"))
+    Ok(periods)
 }
 
 /// The int number of periods from `b` to `a`, two periods of one kind (refcore's `pdiff`,
@@ -587,13 +596,12 @@ fn month_number(p: Period) -> Option<i64> {
         .checked_add(i64::from(start.month()))
 }
 
-/// A key of a list index moved by `k` positions (refcore's `key_arith`); outside the index,
-/// an [`Value::OutKey`]. L §4.2.
+/// A key of a list index moved by `k` positions, an integer of any size (refcore's
+/// `key_arith`); outside the index, an [`Value::OutKey`]. L §4.2, §7.6.
 fn key_shift(
     m: &Reality,
-    index: &str,
-    name: &str,
-    k: i64,
+    (index, name): (&str, &str),
+    k: &Num,
     sign: i64,
     op: Op,
 ) -> Result<Value, Stop> {
@@ -609,16 +617,23 @@ fn key_shift(
         .pos(&key)
         .ok_or_else(|| invariant("a key its index doesn't hold"))?;
     let pos = i64::try_from(pos).map_err(|_| invariant("an index position"))?;
-    let step = k.checked_mul(sign).ok_or_else(|| invariant("a key step"))?;
-    let to = pos
-        .checked_add(step)
-        .ok_or_else(|| invariant("a key step"))?;
-    if let Some(found) = usize::try_from(to).ok().and_then(|at| ix.keys.get(at)) {
+    let step = k.checked_mul(&Num::int(sign)).map_err(num_stop)?;
+    let to = Num::int(pos).checked_add(&step).map_err(num_stop)?;
+    let at = to.to_i64().and_then(|at| usize::try_from(at).ok());
+    if let Some(found) = at.and_then(|at| ix.keys.get(at)) {
         return Ok(Value::of_key(found));
     }
+    let size = if k.is_negative() {
+        k.checked_neg().map_err(num_stop)?
+    } else {
+        k.clone()
+    };
+    let size = size
+        .integer_text()
+        .ok_or_else(|| invariant("a key step that isn't whole"))?;
     Ok(Value::OutKey {
         index: index.to_owned(),
-        text: format!("{name} {} {}", op.text(), k.unsigned_abs()),
+        text: format!("{name} {} {size}", op.text()),
     })
 }
 
@@ -700,7 +715,7 @@ pub fn compare(m: &Reality, lhs: &Value, rhs: &Value, test: Test) -> Result<Orde
         }
         (Value::Record(_), _) | (_, Value::Record(_)) => Err(refuse(
             Run::Domain,
-            "lhs comparison of two records has no meaning (compare their fields)".to_owned(),
+            "a comparison of two records has no meaning (compare their fields)".to_owned(),
         )),
         _ => Err(refuse_load(
             Load::Unit,

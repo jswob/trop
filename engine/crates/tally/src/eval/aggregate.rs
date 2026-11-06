@@ -17,7 +17,7 @@
 use core::cmp::Ordering;
 use std::collections::BTreeSet;
 
-use super::arith::{Op, Test, arith, compare, int_of};
+use super::arith::{Op, Test, arith, compare, whole_of};
 use super::builtin::written_year;
 use super::expr::hole_of;
 use super::state::{
@@ -612,38 +612,22 @@ impl Engine {
             return Err(refuse(Run::Domain, message));
         }
         let (lo, hi) = (whole_of(m, &first)?, whole_of(m, &last)?);
-        // its keys, ⌊(hi − lo) / step⌋ + 1, pass 1 000 000 once hi − lo reaches 1 000 000 steps
-        let span = hi.checked_sub(&lo).map_err(num_stop)?;
-        let most = stride
-            .checked_mul(&Num::int(RANGE_LIMIT))
-            .map_err(num_stop)?;
-        if !span.is_negative() && span.compare(&most).map_err(num_stop)? != Ordering::Less {
+        let limit = u64::try_from(RANGE_LIMIT).map_err(|_| invariant("the key limit"))?;
+        let Some(keys) = lo.range_keys(&hi, &stride, limit).map_err(num_stop)? else {
             return Err(too_many_keys(m, (&first, &last, by.as_ref()))?);
-        }
-        let mut out = Vec::new();
-        let mut k = lo;
-        while k.compare(&hi).map_err(num_stop)? != Ordering::Greater {
-            let next = k.checked_add(&stride).map_err(num_stop)?;
-            let key = Number {
-                q: k,
-                class: Class::Int,
-            };
-            out.push((Value::Number(key), None));
-            k = next;
-        }
+        };
+        let out = keys
+            .into_iter()
+            .map(|q| {
+                let key = Number {
+                    q,
+                    class: Class::Int,
+                };
+                (Value::Number(key), None)
+            })
+            .collect();
         Ok(Values::Known(out))
     }
-}
-
-/// An integer range's end or step as the exact integer it is, of any size (refcore's Python
-/// integer; L §7.6 item 2 bounds the keys, not the values). L §5.11.
-fn whole_of(m: &Reality, v: &Value) -> Result<Num, Stop> {
-    if let Value::Number(n) = v
-        && n.q.is_integer()
-    {
-        return Ok(n.q.clone());
-    }
-    int_of(m, v).map(Num::int)
 }
 
 /// Whether a value is an integer of no unit: an `int`, or a whole inline figure, which takes

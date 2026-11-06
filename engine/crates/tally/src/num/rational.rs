@@ -154,6 +154,44 @@ impl Num {
         self.to_big().compare(&o.to_big())
     }
 
+    /// The keys of the integer range `self .. hi step step`, as refcore's Python integers:
+    /// the keys are counted on the big tier, uncapped, so ends near the 4 096-digit cap count
+    /// as any others, and each key made lies between the ends, under the cap; no key when
+    /// `hi < self`, `Ok(None)` past `limit` keys. `RUN-DOMAIN` unless all three are whole and
+    /// the step positive. L §5.6, §7.1, §7.6 item 2.
+    pub fn range_keys(
+        &self,
+        hi: &Num,
+        step: &Num,
+        limit: u64,
+    ) -> Result<Option<Vec<Num>>, NumError> {
+        let whole = self.is_integer() && hi.is_integer() && step.is_integer();
+        if !whole || step.is_negative() || step.is_zero() {
+            return Err(NumError::Domain);
+        }
+        let span = hi.to_big().numer().sub(self.to_big().numer())?;
+        if span.is_negative() {
+            return Ok(Some(Vec::new()));
+        }
+        // the keys after the first, ⌊(hi − lo) / step⌋
+        let after = span.div_floor(step.to_big().numer())?.to_u64();
+        let Some(mut left) = after.filter(|n| *n < limit) else {
+            return Ok(None);
+        };
+        let mut keys = Vec::new();
+        let mut key = self.clone();
+        loop {
+            if left == 0 {
+                keys.push(key);
+                return Ok(Some(keys));
+            }
+            let next = key.checked_add(step)?;
+            keys.push(key);
+            key = next;
+            left = left.checked_sub(1).ok_or(NumError::Invariant)?;
+        }
+    }
+
     /// Both values, when both are small. P §6 (the small tier first).
     fn small_pair(&self, o: &Num) -> Option<(Small, Small)> {
         match (&self.0, &o.0) {
@@ -386,6 +424,72 @@ mod tests {
                 "compare, case {case}"
             );
         }
+    }
+
+    #[test]
+    fn a_range_counts_its_keys_uncapped_and_makes_only_keys_under_the_cap() {
+        let (one, two) = (Num::int(1), Num::int(2));
+        let nines = Big::pow(10, 4_096)
+            .expect("pow")
+            .sub(&Big::from_i128(1))
+            .expect("sub");
+        let top = Num::from_big(BigRat::integer(nines)).expect("10^4096 - 1");
+        let ntop = top.checked_neg().expect("-top");
+        let at = |lo: &Num, hi: &Num, step: &Num, limit| lo.range_keys(hi, step, limit);
+        assert_eq!(
+            at(&top, &top, &one, 9),
+            Ok(Some(vec![top.clone()])),
+            "top .. top"
+        );
+        let three = vec![ntop.clone(), Num::zero(), top.clone()];
+        assert_eq!(
+            at(&ntop, &top, &top, 9),
+            Ok(Some(three)),
+            "ntop .. top step top"
+        );
+        assert_eq!(at(&ntop, &top, &one, 9), Ok(None), "ntop .. top: too many");
+        let odd = vec![Num::int(1), Num::int(3), Num::int(5)];
+        assert_eq!(
+            at(&one, &Num::int(6), &two, 3),
+            Ok(Some(odd)),
+            "1 .. 6 step 2, at the limit"
+        );
+        assert_eq!(
+            at(&one, &Num::int(7), &two, 3),
+            Ok(None),
+            "1 .. 7 step 2, past it"
+        );
+        assert_eq!(
+            at(&two, &one, &one, 3),
+            Ok(Some(Vec::new())),
+            "2 .. 1: no key"
+        );
+        assert_eq!(
+            at(&one, &two, &Num::zero(), 3),
+            Err(NumError::Domain),
+            "step 0"
+        );
+        assert_eq!(
+            at(&one, &two, &Num::int(-1), 3),
+            Err(NumError::Domain),
+            "step -1"
+        );
+        let half = Num::ratio(1, 2).expect("1/2");
+        assert_eq!(
+            at(&half, &two, &one, 3),
+            Err(NumError::Domain),
+            "an end not whole"
+        );
+        assert_eq!(
+            at(&one, &half, &one, 3),
+            Err(NumError::Domain),
+            "the other end"
+        );
+        assert_eq!(
+            at(&one, &two, &half, 3),
+            Err(NumError::Domain),
+            "a step not whole"
+        );
     }
 
     #[test]

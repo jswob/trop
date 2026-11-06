@@ -24,7 +24,7 @@ use crate::syntax::{
     Calendar as CalendarLit, CalendarDay, DaySet, Expr, Field, FieldValue, Lit, Stop,
     Value as Written,
 };
-use crate::time::{Calendar, Day, Period, PeriodKind, weekday_number};
+use crate::time::{Calendar, Day, FirstYear, Period, PeriodKind, weekday_number};
 
 /// A key a read is given: a value, or a key literal its position resolves (L §2.5).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -892,7 +892,8 @@ fn convert_lit(
         Lit::Name(text) | Lit::Key(text) | Lit::Cur(text) => word_value(m, lit, text, ty),
         Lit::Nominal(times) => {
             let Some(whole) = times.to_i64() else {
-                return Err(wrong_for(&lit.text(), ty));
+                // as `eval/expr.rs`'s literal: refcore's run-time `LOAD-TO`
+                return Err(Stop::NotBuilt("a nominal compounding past 64 bits"));
             };
             if *ty == Ty::Code(CodeKind::Compounding) {
                 return Ok(Value::Code(Code::Nominal(whole)));
@@ -1177,11 +1178,17 @@ fn calendar_value(cal: &CalendarLit) -> Result<Value, Stop> {
     }
     let from = match &cal.yearly_from {
         None => None,
-        Some(n) => Some(
-            n.to_i64()
-                .and_then(|y| u16::try_from(y).ok())
-                .ok_or_else(|| refuse_load(Load::Unit, "a calendar's first year".to_owned()))?,
-        ),
+        Some(n) => {
+            let first = || refuse_load(Load::Unit, "a calendar's first year".to_owned());
+            let text = n.integer_text().ok_or_else(first)?;
+            // a first year past 9999, of any size, comes after every day there is (L §2.1)
+            let year = match n.to_i64().and_then(|y| u16::try_from(y).ok()) {
+                Some(y) if y <= 9_999 => y,
+                Some(_) | None if !n.is_negative() => 10_000,
+                Some(_) | None => return Err(first()),
+            };
+            Some(FirstYear { year, text })
+        }
     };
     Ok(Value::Calendar(Box::new(Calendar::new(
         weekends,

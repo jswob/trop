@@ -752,10 +752,12 @@ pub(super) fn literal(m: &Reality, lit: &Lit, figures: Figures) -> Result<Value,
         Lit::MonthDay(mo, d) => Ok(Value::MonthDay(*mo, *d)),
         Lit::Key(t) | Lit::Name(t) | Lit::Cur(t) => Ok(Value::Word(t.clone())),
         Lit::Bool(b) => Ok(Value::Bool(*b)),
+        // refcore takes any size and refuses its power at run (`LOAD-TO`), a load refusal
+        // met at run, which the engine stops as not built (as `answer.rs`'s `load_at_run`)
         Lit::Nominal(n) => n
             .to_i64()
             .map(|n| Value::Code(Code::Nominal(n)))
-            .ok_or_else(|| invariant("a compounding code past the integers")),
+            .ok_or(Stop::NotBuilt("a nominal compounding past 64 bits")),
         Lit::Inf { .. } => Err(Stop::NotBuilt("inf in an expression")),
     }
 }
