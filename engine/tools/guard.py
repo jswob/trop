@@ -76,6 +76,8 @@ RULE_GLOBS = [
     # the builder's instructions (D6-3, F-23); the rest of .claude/ is the toolkit's
     "engine/CLAUDE.md",
     ".claude/skills/engine-rust/*",
+    # the coordinator's procedure (the retro after M0, decision 4)
+    ".claude/skills/engine-coordinator/*",
     ".claude/agents/engine-reviewer.md",
     # the rules' full texts, which the skill and the reviewer cite (issue #3)
     "engine/RULEBOOK.md",

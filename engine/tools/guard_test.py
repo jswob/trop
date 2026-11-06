@@ -78,6 +78,7 @@ EDITS = [
     ("engine/crates/tally/benches/p8_m1.rs", RULES),
     (".github/workflows/engine.yml", RULES),
     (".claude/settings.json", RULES),
+    (".claude/skills/engine-coordinator/SKILL.md", RULES),
     # the conventions and their templates, which the checks read (the retro after M0)
     ("engine/CONVENTIONS.md", RULES),
     ("engine/templates/pr.md", RULES),
@@ -937,13 +938,77 @@ def worktree_done_checks(root, expect, failures):
         failures.append(f"worktree-done as lead: the worktree or its branch is still there: {r.stdout.strip()[:200]} {r.stderr.strip()[:200]}")
 
 
+def launch_usage_checks(root, expect, failures):
+    """launch and usage, the coordinator's tools (the retro after M0, decision 4): launch's
+    dry run on the throwaway and its refusals; usage on planted transcripts, an id listed
+    twice and a call in two files counted once. No session is started."""
+    prompt = os.path.join(root, "engine", "target", "prompt.txt")
+    ids = os.path.join(root, "engine", "target", "run", "ids.txt")
+    os.makedirs(os.path.dirname(ids), exist_ok=True)
+    with open(prompt, "w", encoding="utf-8") as f:
+        f.write("You are T. Read the brief.\n")
+
+    def launch(*args, role="lead", extra=None):
+        env = {k: v for k, v in os.environ.items() if k != "TALLY_ROLE"} | (extra or {})
+        if role != "unset":
+            env["TALLY_ROLE"] = role
+        return subprocess.run([os.path.join(root, "engine/tools/launch"), *args], capture_output=True, text=True,
+                              env=env, cwd=root, check=False)
+
+    r = launch("tests", prompt, root, "--ids", ids, "--dry-run")
+    expect("launch --dry-run as lead", r.returncode, 0, r.stderr)
+    for says in ("TALLY_ROLE=tests", "CARGO_BUILD_JOBS=6", "NEXTEST_TEST_THREADS=6", "CARGO_INCREMENTAL=0", "nice -n 10",
+                 "--output-format json", "--session-id", "--effort xhigh", "dry run: nothing started"):
+        if says not in r.stdout:
+            failures.append(f"launch --dry-run: its command lacks {says!r}: {r.stdout.strip()[:300]}")
+    if os.path.exists(ids):
+        failures.append("launch --dry-run wrote the ids file")
+    r = launch("build", prompt, root, "--ids", ids, "--dry-run", "--resume", "0e1d2c3b-4a59-4687-9a1b-2c3d4e5f6a7b", role="unset")
+    expect("launch --dry-run --resume in app work", r.returncode, 0, r.stderr)
+    if "--resume 0e1d2c3b-4a59-4687-9a1b-2c3d4e5f6a7b" not in r.stdout:
+        failures.append(f"launch --resume: the command doesn't resume that id: {r.stdout.strip()[:300]}")
+    for label, args, role, extra, says in (
+        ("as build", ("tests", prompt, root, "--ids", ids, "--dry-run"), "build", None, "only a coordinator"),
+        ("an unknown role", ("tester", prompt, root, "--ids", ids, "--dry-run"), "lead", None, "isn't a role"),
+        ("a missing prompt", ("tests", prompt + ".none", root, "--ids", ids, "--dry-run"), "lead", None, "isn't a file"),
+        ("a folder that isn't a checkout", ("tests", prompt, os.path.dirname(root), "--ids", ids, "--dry-run"), "lead", None,
+         "isn't a git checkout"),
+        ("no ids file", ("tests", prompt, root, "--dry-run"), "lead", None, "usage"),
+        ("too little free disk", ("tests", prompt, root, "--ids", ids, "--dry-run"), "lead",
+         {"TALLY_LAUNCH_MIN_FREE_GB": "1000000000"}, "GB free"),
+    ):
+        r = launch(*args, role=role, extra=extra)
+        expect(f"launch refuses {label}", r.returncode, 1, r.stderr)
+        if says not in r.stderr:
+            failures.append(f"launch refuses {label}: stderr lacks {says!r}: {r.stderr.strip()[:200]}")
+    # usage: two transcripts under a planted projects folder, one call in both
+    projects = os.path.join(root, "engine", "target", "projects")
+    a, b = "11111111-1111-4111-8111-111111111111", "22222222-2222-4222-8222-222222222222"
+    call = {"type": "assistant", "message": {"id": "msg_1", "usage": {"input_tokens": 1000, "output_tokens": 200,
+                                                                      "cache_read_input_tokens": 10000}}}
+    other = {"type": "assistant", "message": {"id": "msg_2", "usage": {"input_tokens": 0, "output_tokens": 0,
+                                                                       "cache_creation_input_tokens": 800}}}
+    for folder, sid, lines in (("p1", a, [call, call]), ("p2", a, [call, other]), ("p1", b, [call])):
+        os.makedirs(os.path.join(projects, folder), exist_ok=True)
+        with open(os.path.join(projects, folder, sid + ".jsonl"), "a", encoding="utf-8") as f:
+            f.writelines(json.dumps(x) + "\n" for x in lines + [{"type": "user"}])
+    with open(ids, "w", encoding="utf-8") as f:
+        f.write(f"{a} tests\n{a} tests\n{b} build\n")
+    r = subprocess.run([os.path.join(root, "engine/tools/usage"), ids, "--projects", projects], capture_output=True, text=True, check=False)
+    expect("usage of a planted ids file", r.returncode, 0, r.stderr)
+    # a: msg_1 (1000 + 1000 + 5*200 = 3000) and msg_2 (1.25*800 = 1000); b: msg_1 again, counted once
+    for says in (f"session {a}: 2 calls, 0.00 M weighted", f"session {b}: 0 calls", "all 2 sessions"):
+        if says not in r.stdout:
+            failures.append(f"usage: lacks {says!r}: {r.stdout.strip()[:300]}")
+
+
 def setup(root):
     for d in ("engine/tools", "engine/spec", "engine/tests/runner", "engine/tests/cases", "tmp/cases-holdout",
               "engine/crates/tally/src",
               "engine/crates/tally/benches", "engine/crates/tally-cli/src", "engine/fuzz", "engine/target", ".claude"):
         os.makedirs(os.path.join(root, d), exist_ok=True)
     for name in ("guard", "guard.py", "stop-check", "stop_check.py", "merge-pr", "merge_pr.py", "worktree-done", "worktree_done.py",
-                 "session-start"):
+                 "session-start", "launch", "launch.py", "usage", "usage.py"):
         shutil.copy2(os.path.join(TOOLS, name), os.path.join(root, "engine/tools", name))
     files = {
         "engine/spec/DONE.md": "the contract\n",
@@ -1130,6 +1195,7 @@ def main():
         # the lead's tools themselves (issue #18)
         merge_pr_checks(root, expect, failures)
         worktree_done_checks(root, expect, failures)
+        launch_usage_checks(root, expect, failures)
         # it fails closed when the git files can't be read
         with tempfile.TemporaryDirectory(prefix="tally-guard-test-nogit-") as bare:
             os.makedirs(os.path.join(bare, "engine/tools"))
@@ -1219,6 +1285,10 @@ def main():
                     expect("SessionStart hook in trop-worktrees/build-m1 as build", r.returncode, 0, r.stderr)
                     if "rules for the build session" not in r.stdout:
                         failures.append(f"SessionStart hook in trop-worktrees/build-m1: didn't print its engine/CLAUDE.md: {r.stdout[:200]!r}")
+                    r = subprocess.run(["/bin/sh", "-c", start or "false"], capture_output=True, text=True,
+                                       env={**env, "TALLY_ROLE": "lead"}, check=False)
+                    if r.returncode != 0 or "engine-coordinator" not in r.stdout:
+                        failures.append(f"SessionStart hook as lead: doesn't name the skill engine-coordinator: {r.stdout[:200]!r}")
                 finally:
                     subprocess.run(["git", "-C", root, "worktree", "remove", "--force", wt], check=False, capture_output=True)
                     subprocess.run(["git", "-C", root, "branch", "-q", "-D", "build/m1"], check=False, capture_output=True)

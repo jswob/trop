@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# Start one role session for a coordinator, headless (the retro after M0, decision 4):
+# engine/tools/launch ROLE PROMPT-FILE WORKTREE --ids FILE [--effort E] [--model M] [--resume ID] [--dry-run]
+d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)" || exit 1
+exec python3 -I -B "$d/launch.py" "$@"
