@@ -1,0 +1,68 @@
+# E §5 step 3, L §8.4 (tally 2.1.6, issue #52, the coordinator's pick P3): a move of two legs under a hole when (late),
+# leg a's amount refused (0 tenants), leg b's a number: a's adjustment is refused, b's the hole. The next step (later,
+# the when true and a's amount a number again) measures each leg against its own state: a's is refused, b's a hole.
+# refcore 2.1.5 made all four the seats' hole.
+=== m.tally
+model hh
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source plan "plan"
+source act "act"
+unit PLN: currency minor 0.01
+kind splits: event certain
+  leg a: PLN
+  leg b: PLN
+place konto: accounts PLN lives 2019-05-01..
+place landlord: outside lives 1900-01-01..
+place agent: outside lives 1900-01-01..
+input total: money PLN
+input fee: money PLN
+input tenants[m in months]: int
+input dom: int
+input seats[m in months]: int
+
+move rent[m in months]: splits
+  on day_of(m, dom)
+  at start_of(m)
+  when seats[m] > 0
+  leg a from konto to landlord amount round(total / tenants[m], minor(PLN), half-even)
+  leg b from konto to agent amount fee
+
+version plan_2026
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  total = 1 000.00 PLN "umowa"
+  fee = 10.00 PLN "umowa"
+  dom = 10 "umowa"
+  tenants[*] = 2 "umowa"
+  seats[*] = 1 "umowa"
+  opening[konto] = 10 000.00 PLN at 2026-01-01 start "wyciąg"
+
+version late
+  cite act
+  governs 2026-03
+  known 2026-05-01
+  replace seats[*] = ?"how many seats in March?" "aneks"
+  replace tenants[*] = 0 "aneks"
+
+version later
+  cite act
+  governs 2026-03
+  known 2026-07-01
+  replace seats[*] = 1 "aneks 2"
+  replace tenants[*] = 4 "aneks 2"
+
+ask l: a.change for a in adjustments over ..
+=== expect
+l (a = adjustments[rent[2026-03].a, late]): refused: RUN-DIV division by zero
+  cut 2026-10-20
+l (a = adjustments[rent[2026-03].b, late]): ?"how many seats in March?" (seats[2026-03])
+  cut 2026-10-20
+l (a = adjustments[rent[2026-03].a, later]): refused: RUN-DIV division by zero
+  cut 2026-10-20
+l (a = adjustments[rent[2026-03].b, later]): ?"how many seats in March?" (seats[2026-03])
+  cut 2026-10-20

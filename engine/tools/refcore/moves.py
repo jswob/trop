@@ -1454,6 +1454,18 @@ def m_plan_insts(self, ctx):
 
 # -- adjustments (E §5 steps 2-5) ----------------------------------------------------------------------------------
 
+def leg_refusal(prev, j, name):
+    """The refusal of leg `name`'s amount in the state measured against (prev) or in this step's (j), j's first; none
+    when both are a number or a hole (E §5 step 3: "a leg's amount on either side")."""
+    for st in (j, prev):
+        if st is None:
+            continue
+        for x in st.legs:
+            if x.name == name and isinstance(x.amount, TallyError):
+                return x.amount
+    return None
+
+
 def m_known_dates(self):
     m = self.m
     kd = getattr(m, '_known_dates', None)
@@ -1595,8 +1607,11 @@ def m_adjust_move_compute(self, mi, ctx):
                 if prev_bad is not None or prev_hole is not None:
                     # measured against a refused state, or one whose existence is a hole
                     for lg in self.step_legs(i, prev, j):
-                        if prev_bad is not None:
-                            self.adjust_made(i, lg, prev_bad, c, j, vids, out, err=prev_bad)
+                        bad = prev_bad if prev_bad is not None else leg_refusal(prev, j, lg.name)
+                        if bad is not None:
+                            # tally 2.1.6 (issue #52): a leg whose amount is refused on either side has its δ
+                            # refused, against a hole state too (E §5 step 3; L §8.4 a refusal outranks a hole)
+                            self.adjust_made(i, lg, bad, c, j, vids, out, err=bad)
                         else:
                             now = [x.amount for x in j.legs if x.name == lg.name and isinstance(x.amount, Hole)]
                             if isinstance(j.exists, Hole):
@@ -1621,7 +1636,13 @@ def m_adjust_move_compute(self, mi, ctx):
                     # tally 2.1.2 (issue #34): a `when` that is a hole at this step makes each leg's adjustment a hole,
                     # as a hole amount does, and the next step measures against it; tally 2.1.1 skipped the step
                     for lg in self.step_legs(i, prev, j):
-                        self.adjust_made(i, lg, j.exists, c, j, vids, out)
+                        bad = leg_refusal(prev if prev_ex else None, j, lg.name)
+                        if bad is not None:
+                            # tally 2.1.6 (issue #52): a leg whose amount is refused at this step, or was before it,
+                            # has its δ refused, whatever the `when` (E §5 step 3; L §8.4)
+                            self.adjust_made(i, lg, bad, c, j, vids, out, err=bad)
+                        else:
+                            self.adjust_made(i, lg, j.exists, c, j, vids, out)
                     prev_hole = j.exists
                     prev, prev_ex = j, False
                     continue
