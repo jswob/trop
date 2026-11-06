@@ -1,0 +1,14 @@
+# L §4.1 `by n` (tally 2.1.6, issue #87): n is a whole number from 1; an integer range by 0 is refused at load,
+# LOAD-DOMAIN (L §8.4: a step that isn't positive). tally 2.1.5's refcore read by 0 as by 1 and answered 10.
+=== m.tally
+model m
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+index ns = 1..10 by 0
+
+ask n: max(pos(k) for k in ns)
+=== expect
+refused: LOAD-DOMAIN index ns: by 0 is not a positive step (m.tally:7)

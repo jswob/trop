@@ -616,6 +616,10 @@ class Loader:
     def build_range(self, ix, s):
         lo, hi, pk = s.lo, s.hi, s.pk
         loc = s.loc
+        if s.by is not None and s.by < 1:
+            # L §4.1 `by n`, n a whole number from 1; L §8.4 "a step or a count that isn't positive" is refused,
+            # LOAD-DOMAIN where load sees it. tally 2.1.6 (issue #87): refcore 2.1.5 read `by 0` as `by 1`
+            raise LoadError('LOAD-DOMAIN', 'index %s: by %d is not a positive step' % (s.id, s.by), loc)
 
         def is4(n):
             return n.k == 'num' and n.isint and n.unit is None and len(n.text.lstrip('-')) == 4
