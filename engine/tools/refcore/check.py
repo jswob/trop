@@ -157,6 +157,7 @@ class Checker:
         for a in m.asks:
             try:
                 self.check_ask(a)
+                self.check_path_line(a)
             except LoadError as e:
                 # L §6.4, §8, §8.3 (round 19, GD-18): "an ask's LOAD-SCENARIO for a scenario whose file isn't loaded
                 # refuses only that ask"; the base answers its other asks (E §11)
@@ -552,6 +553,19 @@ class Checker:
                 self.assign(b.type, r.value, r.loc, 'a row of band %s' % b.id)
 
     # -- asks -------------------------------------------------------------
+    def check_path_line(self, a):
+        """L §5.16: a `path p` line "holds no query over paths (LOAD-RANDOM)", a property of the line that load sees
+        whole, so it is refused at load whatever the asks (E §3.1 step 11). tally 2.1.6 (issue #83): refcore 2.1.5
+        refused it as the line was evaluated, so a request for another ask answered."""
+        if getattr(a, 'path', None) is None:
+            return
+        from .ask import is_query_line
+        for e in getattr(a, 'exprs', None) or ():
+            for x in walk(e):
+                if is_query_line(x):
+                    # the engine's bytes (load/cone.rs), which print no place, as tally 2.1.5's did
+                    raise LoadError('LOAD-RANDOM', 'a query over paths on a path p line')
+
     def check_ask(self, a):
         sc = Scope(self, ('ask', a.id), None, 'ask')
         worlds = getattr(self.m, 'all_worlds', {self.m.header.id})
