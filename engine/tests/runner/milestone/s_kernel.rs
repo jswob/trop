@@ -268,7 +268,11 @@ mod tests {
     /// bits, `add_business` by the least value, ranges near ±9e18, an integer key past 64
     /// bits (`RUN-KEY`), and a list index of 1 000 001 keys (`LOAD-LIMIT`) beside its twin of
     /// 1 000 000, texts of 8.9 MB generated at test time from their sources (`.gen`, P36),
-    /// each beside its answered twin (`kernel/g14/`).
+    /// each beside its answered twin; and the second review's six (P37): an integer past 64
+    /// bits as a business-day count (a hole's question, `RUN-DOMAIN`), a duration, a key's
+    /// shift (`RUN-KEY`), a day number, a power on base 1, 0 or -1 and a calendar's first
+    /// year, ranges near the 4 096-digit cap, and the refusal texts refcore says
+    /// (`kernel/g14/`).
     #[test]
     fn s_kernel_g14_capacity() {
         group_holds("g14");
