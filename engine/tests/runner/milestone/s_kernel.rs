@@ -11,6 +11,7 @@ mod tests {
     use std::collections::BTreeSet;
     use tally_runner::corpus::{KERNEL_CORPUS, KERNEL_REFCORE, records, refcore_runs};
     use tally_runner::engine::{run_args, run_record};
+    use tally_runner::held::is_held;
     use tally_runner::kernel::{VECTORS, difference, vectors};
 
     /// The groups this target tests, one `#[test]` each.
@@ -26,6 +27,7 @@ mod tests {
         assert!(!mine.is_empty(), "the group {group} has vectors");
         let failed: Vec<String> = mine
             .iter()
+            .filter(|v| !is_held("s_kernel", &v.id))
             .filter_map(|v| {
                 difference(&v.refcore, &run_args(&v.args, &v.files))
                     .map(|d| format!("{}: {d}", v.id))

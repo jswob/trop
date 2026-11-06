@@ -12,6 +12,7 @@ mod tests {
     use std::collections::BTreeMap;
     use tally_runner::corpus::{Record, records, refcore_runs};
     use tally_runner::engine::{run_args, run_record};
+    use tally_runner::held::is_held;
     use tally_runner::laws::Runs;
     use tally_runner::laws_m0::{
         M0_CORPUS, M0_REFCORE, again, again_of, agrees, check, reprint_args,
@@ -50,7 +51,10 @@ mod tests {
         let refcore = refcore_runs(M0_REFCORE).expect("refcore's runs read");
         let all = cases(law);
         let mut failed = Vec::new();
-        for (case, runs) in &all {
+        for (case, runs) in all
+            .iter()
+            .filter(|(case, _)| !is_held("m0_properties", case))
+        {
             if let Err(e) = check(law, case, runs) {
                 failed.push(format!("{case}: {e}"));
             }

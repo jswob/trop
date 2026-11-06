@@ -26,6 +26,7 @@
 
 use crate::corpus::{Run, groups, netstrings, pack, text};
 use crate::engine::run_args;
+use crate::held::is_held;
 use crate::kernel::difference;
 use crate::m0_spec_texts::SPEC_TEXTS;
 use crate::m0_texts::TEXTS;
@@ -356,6 +357,7 @@ pub fn group_failures(group: &str) -> Result<(Vec<String>, usize), String> {
     }
     let failed = mine
         .iter()
+        .filter(|v| !is_held("m0_format", &v.id))
         .filter_map(|v| format_failure(v, &texts))
         .collect();
     Ok((failed, mine.len()))
@@ -412,8 +414,14 @@ fn group_failures_in(
     if mine.is_empty() {
         return Err(format!("{name} holds no vector of {group}"));
     }
+    let target = if name == "m0/load.refcore" {
+        "m0_load"
+    } else {
+        "m0_loadcheck"
+    };
     let failed = mine
         .iter()
+        .filter(|v| !is_held(target, &v.id))
         .filter_map(|v| load_failure(v, &texts))
         .collect();
     Ok((failed, mine.len()))

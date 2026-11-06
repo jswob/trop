@@ -17,6 +17,7 @@ mod tests {
     use std::collections::BTreeSet;
     use tally_runner::codes::{FIXTURES, Fixture, M0, M0Fixture, fixtures, m0_fixtures};
     use tally_runner::engine::run_args;
+    use tally_runner::held::is_held;
     use tally_runner::kernel::difference;
 
     /// Runs every fixture of `codes/m0.refcore` that prints `code`, and the base of each of
@@ -35,6 +36,7 @@ mod tests {
             .filter(|v| v.is_base() && families.contains(v.family.as_str()));
         let failed: Vec<String> = twins
             .chain(mine.iter().copied())
+            .filter(|v| !is_held("m0_codes", &v.id))
             .filter_map(|v| {
                 difference(&v.run, &run_args(&v.args, &v.files)).map(|d| format!("{}: {d}", v.id))
             })

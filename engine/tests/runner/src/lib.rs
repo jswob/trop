@@ -18,7 +18,8 @@
 //!   (`m0/format.refcore`) and its run of the load probe on each (`m0/load.refcore`, issue
 //!   #56) and of row 3's realities (`m0/loadcheck.refcore`), and [`m0_texts`] and
 //!   [`m0_spec_texts`], the texts they name;
-//! - [`engine`]: a run on the engine, in process.
+//! - [`engine`]: a run on the engine, in process;
+//! - [`held`]: the gating vectors T holds "for #n" (`held.tsv`), which the targets leave out.
 //!
 //! The tests that run the engine are each milestone's test targets (`milestone/s_properties.rs`,
 //! `milestone/s_household.rs` and `milestone/s_kernel.rs` for S, `milestone/m0_codes.rs`,
@@ -35,6 +36,7 @@
 pub mod codes;
 pub mod corpus;
 pub mod engine;
+pub mod held;
 pub mod household;
 pub mod kernel;
 pub mod laws;
