@@ -9,11 +9,12 @@ interpreter doesn't build refuses `REFCORE-NOT-YET <construct>`. Nothing may cra
 
 ## tally 2.1.6 (the spec round after M0: 24 issues)
 
-The spec patch tally 2.1.6 (`spec/CHANGES.md` 2.1.6-1 to 2.1.6-24), the coordinator's picks P1–P27 under the user's
-standing rule of 2026-11-04. Each new test was seen failing on tally 2.1.5's refcore first, but the twins and pins
-named. **1243 tests, all pass** (1170, 73 new, 4 changed: `L6_4_scenario_move_load_day`, which now prints the
-scenario's load refusal, and `L2_4_reprint_layout`, `_member_index`, `_prefixed_call_member`, which write their
-members' true hashes now that `reprint` pins them).
+The spec patch tally 2.1.6 (`spec/CHANGES.md` 2.1.6-1 to 2.1.6-28), the coordinator's picks P1–P27 and, on T's
+re-run, P29–P32, under the user's standing rule of 2026-11-04. Each new test was seen failing on tally 2.1.5's refcore
+first (those of 2.1.6-25 to -27 on 522a715's, the round's first close), but the twins and pins named. **1251 tests,
+all pass** (1170, 81 new, 5 changed: `L6_4_scenario_move_load_day`, which now prints the scenario's load refusal;
+`L2_4_reprint_layout`, `_member_index`, `_prefixed_call_member`, which write their members' true hashes now that
+`reprint` pins them; `L8_3_cycle_beats_place`, at the def's line).
 
 - **The end of time and the limits (#48, #89).** `dates.END` is an `EndOfTime` date after every day: `END - n days`
   and `add_months(END, -n)` work; reading its year, month or day, printing it or booking on it refuses `RUN-LIMIT a day
@@ -39,6 +40,11 @@ members' true hashes now that `reprint` pins them).
   joint model's members (`joint.pinned_members`, shared with `run`) and refuses a duplicated id or an unknown prefix
   (`canon.unorderable`), each reality apart.
 - **Scenarios (#73, #62).** `run_worlds` prints the base's asks refused alone.
+- **T's re-run (P29–P31).** `check3.m_existence_seen` (no `when`; each binding's `where` seen as a day is, through
+  `m_seen_day(cond=True)`) gates `m_check_scenario_moves`, which folds a seen `where` at each key, and
+  `moves.m_before_scen_from`; an instance whose existence load can't decide is left out at run (#75).
+  `check3.m_check_literal_ranges` counts every ask's literal range at load (#89). `check._beats_cycle` and `_cycles`
+  print at the def's (or band's) line, as `spec/tools/loadcheck.py` does (#71).
 
 ## tally 2.1.5 (M0's spec patch: issue #84)
 
