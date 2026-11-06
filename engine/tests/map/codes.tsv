@@ -101,8 +101,10 @@ LOAD-DOMAIN	L §8.3	M0	*	10	M0	codes/m0/basic/by-zero-int
 LOAD-DOMAIN	L §8.3	M0	range of quantities <a> .. <b> has no step	1	M0	codes/m0/basic/domain
 LOAD-DOMAIN	L §8.3	M0	index <x>: by 0 is not a positive step	2	M0	codes/m0/basic/by-zero-int
 LOAD-DOMAIN	L §8.3	M0	<operation> has no meaning for <values>	0	-	-
+LOAD-DOMAIN	L §8.3	M0	day_of of a key of the anchored index <x> has no meaning	1	M0	codes/m0/basic/domain-anchored
+LOAD-DOMAIN	L §8.3	M0	schedule of a key of the anchored index <x> has no meaning	0	-	-
 LOAD-DOMAIN	L §8.3	M0	discrete over a key list or a stepped range	1	M0	codes/m0/basic/domain-discrete
-LOAD-DOMAIN	L §8.3	M0	?	6	M0	codes/m0/basic/domain-anchored
+LOAD-DOMAIN	L §8.3	M0	?	5	M0	codes/m0/lifepath/path-past-64
 LOAD-UNIT	L §8.3	M0	*	18	M0	codes/m0/adjust/adjusts-attr
 LOAD-UNIT	L §8.3	M0	<a> and <b> have different units	1	M0	codes/m0/basic/unit-mixed
 LOAD-UNIT	L §8.3	M0	<operation> on things of kind <K> has no meaning: they have no order a rule can read	1	M0	codes/m0/basic/unit-orders
@@ -197,11 +199,11 @@ LOAD-COVERS	L §8.3	M0	<x> is not a place	1	M0	codes/m0/basic/covers
 LOAD-COVERS	L §8.3	M0	observation <r> of <x> is dated outside the span <version> covers	1	M0	codes/m0/adjust/covers-outside
 LOAD-COVERED	L §8.3	M0	*	1	M0	codes/m0/basic/covered
 LOAD-COVERED	L §8.3	M0	<def> aggregates observations over a span with no covered() guard	1	M0	codes/m0/basic/covered
-LOAD-SCENARIO	L §8.3	M0	*	16	M0	codes/m0/basic/scenario-ask
+LOAD-SCENARIO	L §8.3	M0	*	17	M0	codes/m0/basic/scenario-ask
 LOAD-SCENARIO	L §8.3	M0	<item> of scenario <s> is read outside it	1	M0	codes/m0/scen/scenario-read
 LOAD-SCENARIO	L §8.3	M0	<item> of the base names <x> of scenario <s>	1	M0	codes/m0/scen/scenario-names
 LOAD-SCENARIO	L §8.3	M0	a row of <s> for <x>, an item of the base, governs a day before <from>	1	M0	codes/m0/scen/scenario-early
-LOAD-SCENARIO	L §8.3	M0	move <m> of <s> books on <d>, before <from>	1	M0	codes/m0/scen/scenario-move
+LOAD-SCENARIO	L §8.3	M0	move <m> of <s> books on <d>, before <from>	2	M0	codes/m0/scen/scenario-move
 LOAD-SCENARIO	L §8.3	M0	an expression row outside a scenario	1	M0	codes/m0/basic/scenario-row
 LOAD-SCENARIO	L §8.3	M0	the expression row of <x> in <s> reads <what> [through <path>]: it reads inputs, bands and defs, never a place or a movement	1	M0	codes/m0/scen/scenario-exprrow
 LOAD-SCENARIO	L §8.3	M0	<s>.<x>: an expression row reads inputs, bands and defs, never a <what>	0	-	-
@@ -228,11 +230,11 @@ LOAD-ASIF	L §8.3	M0	as if deeper than 4	1	M0	codes/m0/basic/asif
 LOAD-ASIF	L §8.3	M0	pin on unknown id <x>	1	M0	codes/m0/basic/asif-unknown
 LOAD-DEPTH	L §8.3	M0	*	2	S	kernel/g13/depth_from
 LOAD-DEPTH	L §8.3	M0	expression nested deeper than 8	2	S	kernel/g13/depth_from
-LOAD-LIMIT	L §8.3	M0	*	13	M0	codes/m0/basic/limit-digits
+LOAD-LIMIT	L §8.3	M0	*	14	M0	codes/m0/basic/limit-digits
 LOAD-LIMIT	L §8.3	M0	index <x>: a day passes 9999-12-31	1	M0	codes/m0/basic/limit-index-day
 LOAD-LIMIT	L §8.3	M0	move <m>[k] on <e>: a day passes 9999-12-31	1	M0	codes/m0/basic/limit-move-day
 LOAD-LIMIT	L §8.3	M0	index <x> holds more than 1 000 000 keys	1	M0	codes/m0/basic/limit-index-keys
-LOAD-LIMIT	L §8.3	M0	<a> .. <b> holds more than 1 000 000 keys	1	M0	codes/m0/basic/limit-range-keys
+LOAD-LIMIT	L §8.3	M0	<a> .. <b> holds more than 1 000 000 keys	2	M0	codes/m0/basic/limit-range-keys
 LOAD-LIMIT	L §8.3	M0	<n> has more than 18 digits	2	M0	codes/m0/basic/limit-digits
 LOAD-LIMIT	L §8.3	M0	unit <u> has a power past 64	7	M0	codes/m0/basic/s1-def-pct
 LOAD-FORKS	L §8.3	M0	*	3	M0	codes/m0/basic/forks
@@ -345,8 +347,8 @@ WARN-LABELS	L §8.5	M5b	*	4	M5b	I:S4:S4-01~s4
 WARN-LABELS	L §8.5	M5b	labels dropped at <place> from <d>: <movements>	4	M5b	I:S4:S4-01~s4
 WARN-STALE	L §8.5	-	*	0	-	-
 WARN-STALE	L §8.5	-	scenario <s> replaces <target> at <keys>, changed in the base by <version>	0	-	-
-REQ-ASK	E §11	-	*	316	M0	codes/m0/adjust/base
-REQ-ASK	E §11	-	no ask <q>	316	M0	codes/m0/adjust/base
+REQ-ASK	E §11	-	*	317	M0	codes/m0/adjust/base
+REQ-ASK	E §11	-	no ask <q>	317	M0	codes/m0/adjust/base
 REQ-CLOCK	E §11	-	*	0	-	-
 REQ-PATHS	E §11	-	*	0	-	-
 ENGINE-INVARIANT	E §11	-	*	0	-	-

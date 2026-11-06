@@ -168,9 +168,10 @@ mod tests {
     use crate::corpus::paths;
     use std::collections::BTreeSet;
 
-    /// Twelve families' bases print the load probe's line alone; every fixture prints its
-    /// code and no warning; 199 fixtures of 52 codes (tally 2.1.6 adds 56: #71's, #75's and
-    /// #88's held rows, #89's as LOAD-LIMIT, and the round's new rows; G4's 49 of 43, G7's 64
+    /// Thirteen families' bases print the load probe's line alone; every fixture prints its
+    /// code and no warning; 201 fixtures of 52 codes (tally 2.1.6 adds 58: #71's, #75's and
+    /// #88's held rows, #89's as LOAD-LIMIT, the round's new rows, and after T's re-run P29's
+    /// family `scenwhen` and P30's twin; G4's 49 of 43, G7's 64
     /// message forms, the gate's 13 of G11's forms: path counts and `lifespan` at load, 14 of G12's: a
     /// built-in through a scenario row's base prefix, a `same` side keyed by a keyed place,
     /// an adjustment's fields and a field read through `.adjusts` or an aggregate, `lifespan`
@@ -212,8 +213,8 @@ mod tests {
         }
         assert_eq!(
             vs.iter().filter(|v| v.is_base()).count(),
-            12,
-            "twelve families"
+            13,
+            "thirteen families"
         );
         let codes: BTreeSet<&str> = vs
             .iter()
@@ -222,8 +223,8 @@ mod tests {
             .collect();
         assert_eq!(
             (vs.len(), codes.len()),
-            (211, 52),
-            "199 fixtures of 52 codes"
+            (214, 52),
+            "201 fixtures of 52 codes"
         );
     }
 

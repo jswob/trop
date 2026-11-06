@@ -1034,7 +1034,7 @@ scenarios/hr2_v3.tally	integration/households/B/scenarios/hr2_v3.tally
 ../../law/VAT-4.tally	integration/law/VAT-4.tally
 ../../law/VAT-5.tally	integration/law/VAT-5.tally
 ../../law/VAT-6.tally	integration/law/VAT-6.tally
-,1:0,1136:scenario hr2_v3: refused: LOAD-CYCLE v3_op depends on itself at the same key: v3_op -> v3_reserve -> v3_op
+,1:0,1163:scenario hr2_v3: refused: LOAD-CYCLE v3_op depends on itself at the same key: v3_op -> v3_reserve -> v3_op (scenarios/hr2_v3.tally:8)
 warning: WARN-UNREAD input born is read by nothing
 warning: WARN-UNREAD input cc1_settle_days is read by nothing
 warning: WARN-UNREAD input pit4_lower_wording is read by nothing
@@ -2909,7 +2909,7 @@ unit/probes/pty/PTY-05/halina.tally	unit/probes/pty/PTY-05/halina.tally
 ,14:U:rule/RULE-03,6:probes,13:engine/tests/,52:run unit/probes/rule/RULE-03.tally --ask zz_m0_probe,62:unit/probes/rule/RULE-03.tally	unit/probes/rule/RULE-03.tally
 ,1:1,36:refused: REQ-ASK no ask zz_m0_probe
 ,14:U:rule/RULE-04,6:probes,13:engine/tests/,52:run unit/probes/rule/RULE-04.tally --ask zz_m0_probe,62:unit/probes/rule/RULE-04.tally	unit/probes/rule/RULE-04.tally
-,1:1,98:refused: LOAD-CYCLE invest_x depends on itself at the same key: invest_x -> reserve_y -> invest_x
+,1:1,134:refused: LOAD-CYCLE invest_x depends on itself at the same key: invest_x -> reserve_y -> invest_x (unit/probes/rule/RULE-04.tally:20)
 ,14:U:rule/RULE-05,6:probes,13:engine/tests/,52:run unit/probes/rule/RULE-05.tally --ask zz_m0_probe,62:unit/probes/rule/RULE-05.tally	unit/probes/rule/RULE-05.tally
 ,1:1,36:refused: REQ-ASK no ask zz_m0_probe
 ,14:U:rule/RULE-06,6:probes,13:engine/tests/,52:run unit/probes/rule/RULE-06.tally --ask zz_m0_probe,62:unit/probes/rule/RULE-06.tally	unit/probes/rule/RULE-06.tally
@@ -3044,7 +3044,7 @@ unit/probes/surf/SURF-04/redefine.tally	unit/probes/surf/SURF-04/redefine.tally
 ,31:refusal/U:surf/SURF-04/redefine,31:refusal/U:surf/SURF-04/redefine,13:engine/tests/,43:run unit/probes/surf/SURF-04/redefine.tally,80:unit/probes/surf/SURF-04/redefine.tally	unit/probes/surf/SURF-04/redefine.tally
 ,1:1,67:refused: LOAD-HEADER 0 files have a model header; exactly one does
 ,22:refusal/U:rule/RULE-04,22:refusal/U:rule/RULE-04,13:engine/tests/,34:run unit/probes/rule/RULE-04.tally,62:unit/probes/rule/RULE-04.tally	unit/probes/rule/RULE-04.tally
-,1:1,98:refused: LOAD-CYCLE invest_x depends on itself at the same key: invest_x -> reserve_y -> invest_x
+,1:1,134:refused: LOAD-CYCLE invest_x depends on itself at the same key: invest_x -> reserve_y -> invest_x (unit/probes/rule/RULE-04.tally:20)
 ,31:refusal/U:own/OWN-11/p21-signed,31:refusal/U:own/OWN-11/p21-signed,13:engine/tests/,43:run unit/probes/own/OWN-11/p21-signed.tally,80:unit/probes/own/OWN-11/p21-signed.tally	unit/probes/own/OWN-11/p21-signed.tally
 ,1:1,104:refused: LOAD-PARTS kind savings keeps parts and is signed (unit/probes/own/OWN-11/p21-signed.tally:25)
 ,

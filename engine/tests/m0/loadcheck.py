@@ -83,11 +83,10 @@ def scanned(mod, group, cwd, files):
     return [(code, os.path.relpath(loc, path) if loc.startswith(path) else loc) for code, loc, _, _ in r.refusals]
 
 
-# The forms whose line the scan and refcore give differently, compared by code and file until ruled: since tally
-# 2.1.6 (#71) refcore prints a beats cycle's place, the line of the rule whose beats closes the cycle, where the scan
-# names the def's line (T's STOP-REPORT SR-T3, tally 2.1.6). Before 2.1.6 refcore printed no place, and the code alone
-# was compared.
-FILE_ONLY = [('LOAD-CYCLE', 'a beats cycle in ')]
+# The forms whose line the scan and refcore give differently, compared by code and file until ruled. None now: T's
+# STOP-REPORT SR-T3 (a beats cycle at the closing rule's line in refcore, at the def's in the scan) was ruled P31,
+# tally 2.1.6 (#71): a load cycle prints at its def's line, as the scan does, so its line is compared again.
+FILE_ONLY = []
 
 
 def agree(scan_codes, refusals, out):
