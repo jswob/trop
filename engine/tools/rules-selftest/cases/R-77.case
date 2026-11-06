@@ -168,7 +168,79 @@ planted
 --- write crates/tally/src/planted.txt
 planted
 --- run
-git add tests/planted.txt && git -c user.name=rules-selftest -c user.email=rules-selftest@invalid commit -q -m "planted: T's re-run, red" -m "Logged-Red: g1/planted"
-git add -A && git -c user.name=rules-selftest -c user.email=rules-selftest@invalid commit -q -m "planted: the builder's fix"
+git add tests/planted.txt && git -c user.name=rules-selftest -c user.email=rules-selftest@invalid commit -q -m "test(load): planted, T's re-run, red" -m "Logged-Red: g1/planted"
+git add -A && git -c user.name=rules-selftest -c user.email=rules-selftest@invalid commit -q -m "feat(load): planted, the builder's fix"
 tools/commit-check HEAD~2
 git reset -q --hard HEAD~2
+
+# The pull request's description (the retro after M0, decision 7): CI's `pr body` job runs
+# tools/pr-body on an engine pull request's description, and `engine gate` needs it.
+
+case: pr-body-missing-a-section
+tool: run
+expect: heading 4 is '## How it was checked' where `## Risks and follow-ups` belongs
+--- write zz-body.md
+## What this delivers
+
+x
+
+## Changes you can see
+
+## Decisions taken for you
+
+## How it was checked
+
+## Merge notes
+
+<details><summary>For sessions</summary>
+</details>
+--- run
+tools/pr-body zz-body.md
+
+case: pr-body-out-of-order
+tool: run
+expect: heading 1 is '## Changes you can see' where `## What this delivers` belongs
+--- write zz-body.md
+## Changes you can see
+
+## What this delivers
+
+## Decisions taken for you
+
+## Risks and follow-ups
+
+## How it was checked
+
+## Merge notes
+
+<details><summary>For sessions</summary>
+</details>
+--- run
+tools/pr-body zz-body.md
+
+case: pr-body-without-the-fold
+tool: run
+expect: no folded `<details><summary>For sessions</summary>` block
+--- write zz-body.md
+## What this delivers
+
+## Changes you can see
+
+## Decisions taken for you
+
+## Risks and follow-ups
+
+## How it was checked
+
+## Merge notes
+
+## For sessions
+--- run
+tools/pr-body zz-body.md
+
+case: pr-body-template-passes
+tool: run
+exit: any
+expect: pr-body: the six sections in order, and the folded For sessions block
+--- run
+tools/pr-body templates/pr.md

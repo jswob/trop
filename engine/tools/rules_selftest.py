@@ -803,8 +803,11 @@ def ci_problems():
         # always reports, so it can be required
         if re.search(r"\n  pull_request:\n(    [^\n]*\n)*?    paths(-ignore)?:", text):
             problems.append("R-77: .github/workflows/engine.yml filters pull requests by path, so `engine gate` can't be required")
-        if not re.search(r"\n  gate:\n    name: engine gate\n    needs: \[changes, check, instructions\]\n    if: always\(\)\n", text):
-            problems.append("R-77: .github/workflows/engine.yml has no `engine gate` job that needs check full and always runs")
+        if not re.search(r"\n  gate:\n    name: engine gate\n    needs: \[changes, check, instructions, pr-body\]\n    if: always\(\)\n", text):
+            problems.append("R-77: .github/workflows/engine.yml has no `engine gate` job that needs check full and the pr body and always runs")
+        # the retro after M0, decision 7: an engine pull request's description is checked
+        if not re.search(r"\n  pr-body:\n    name: pr body\n(    [^\n]*\n|\n)*?        run: \|\n[^\n]*\n          engine/tools/pr-body ", text):
+            problems.append("R-100: .github/workflows/engine.yml has no `pr body` job running engine/tools/pr-body")
         # R-92 (the retro after M0, fix 7; M0's pick P3): the long fuzz runs with a 64 MB ASan
         # quarantine, so a corpus grown over hours can't report an out-of-memory that isn't a bug
         if not re.search(r"\n  long-fuzz:\n(    [^\n]*\n|\n)*?        env:\n(          [^\n]*\n)*?          ASAN_OPTIONS: quarantine_size_mb=64\n", text):

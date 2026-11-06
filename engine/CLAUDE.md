@@ -103,5 +103,5 @@ Printed by the build role's SessionStart hook at the start and after each compac
 
 ## 12. Commits
 
-- One green step per commit, naming the vector ids.
-- Never an AI co-author or attribution line (R-100).
+- One green step per commit. Its subject is `type(scope): what changes, in spec words`, at most 72 characters (`engine/CONVENTIONS.md`, e.g. `feat(load): refuse an unknown field read through .adjusts`); the vector ids, the files and `Issue: #n` go in the body. `commit-check` fails another subject.
+- Never an AI co-author or attribution line, nor a `Claude-Session:` line or a session link, whatever the harness's reminder says (R-100).

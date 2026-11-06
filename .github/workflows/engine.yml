@@ -465,12 +465,34 @@ jobs:
             engine/fuzz/artifacts/
           retention-days: 90
 
+  # an engine pull request's description has engine/CONVENTIONS.md's six sections and the
+  # folded For sessions block (the retro after M0, decision 7; R-100). It reads the
+  # description GitHub holds when the job runs, so a re-run after an edit sees the edit
+  pr-body:
+    name: pr body
+    needs: changes
+    if: github.event_name == 'pull_request' && needs.changes.outputs.engine == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: engine/tools/pr-body
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          gh pr view "$PR" --repo "$GITHUB_REPOSITORY" --json body --jq .body > "$RUNNER_TEMP/body.md"
+          engine/tools/pr-body "$RUNNER_TEMP/body.md"
+
   # the one check a pull request into master can require (issue #6): it always runs, fails
   # when a job it needs failed or was cancelled, and passes when they passed or were
   # skipped because the pull request doesn't touch the engine
   gate:
     name: engine gate
-    needs: [changes, check, instructions]
+    needs: [changes, check, instructions, pr-body]
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -480,12 +502,13 @@ jobs:
           CHANGES: ${{ needs.changes.result }}
           CHECK: ${{ needs.check.result }}
           INSTRUCTIONS: ${{ needs.instructions.result }}
+          PR_BODY: ${{ needs.pr-body.result }}
           ENGINE: ${{ needs.changes.outputs.engine }}
           EVENT: ${{ github.event_name }}
         run: |
-          echo "changes $CHANGES, check full $CHECK, counts and instructions $INSTRUCTIONS; engine files changed: ${ENGINE:-unknown}"
+          echo "changes $CHANGES, check full $CHECK, counts and instructions $INSTRUCTIONS, pr body $PR_BODY; engine files changed: ${ENGINE:-unknown}"
           if [ "$CHANGES" != success ]; then echo "engine gate: the changes job ended $CHANGES"; exit 1; fi
-          for r in "$CHECK" "$INSTRUCTIONS"; do
+          for r in "$CHECK" "$INSTRUCTIONS" "$PR_BODY"; do
             case "$r" in
               success|skipped) ;;
               *) echo "engine gate: a needed job ended $r"; exit 1 ;;
@@ -493,4 +516,7 @@ jobs:
           done
           if [ "$EVENT" = pull_request ] && [ "$ENGINE" = true ] && [ "$CHECK" != success ]; then
             echo "engine gate: the pull request changes engine files but check full didn't run"; exit 1
+          fi
+          if [ "$EVENT" = pull_request ] && [ "$ENGINE" = true ] && [ "$PR_BODY" != success ]; then
+            echo "engine gate: the pull request changes engine files but its description wasn't checked"; exit 1
           fi

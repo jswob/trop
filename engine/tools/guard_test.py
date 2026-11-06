@@ -240,6 +240,17 @@ BASH = [
     ("TALLY_ROLE=rules engine/tools/guard < /tmp/x", NOT_BUILD, ""),
     ("git commit -m 'Add parser\n\nCo-Authored-By: Claude <noreply@anthropic.com>'", {"unset"}, ""),
     ("git commit -F - <<'EOF'\nAdd parser\n\nCo-authored-by: an AI\nEOF", {"unset"}, ""),
+    # the harness's session lines are attribution too (the retro after M0, R-100), in a
+    # commit, and in a pull request's or an issue's text or --body-file
+    ("git commit -m 'feat(load): x' -m 'Claude-Session: https://claude.ai/code/session_x'", {"unset"}, ""),
+    ("git commit -m 'feat(load): x\n\nhttps://claude.ai/code/session_x'", {"unset"}, ""),
+    ("git commit -F engine/target/msg-session.txt", {"unset"}, ""),
+    ("gh pr create --title t --body 'x\n\nhttps://claude.ai/code/session_x'", {"unset"}, ""),
+    ("gh issue comment 9 --body 'Generated with [Claude Code](https://claude.com/claude-code)'", {"unset"}, ""),
+    ("gh pr create --title t --body-file engine/target/msg-session.txt", {"unset"}, ""),
+    ("gh pr edit 9 --body-file=engine/target/msg-session.txt", {"unset"}, ""),
+    ("gh pr create --title t --body-file engine/target/msg-ok.txt", ALL, ""),
+    ("git commit -m 'feat(load): refuse an unknown field' -m 'Issue: #56'", ALL, ""),
     ("echo x > ~/.claude/settings.json", NOT_BUILD, ""),
     ("echo x > \"$TALLY_GUARD_UNDEFINED_VAR\"", NOT_BUILD, ""),
     ("echo \"unbalanced", NOT_BUILD, ""),
@@ -951,6 +962,7 @@ def setup(root):
         # commit messages for R-100 (F-8)
         "engine/target/msg-ai.txt": "Add the parser\n\nCo-Authored-By: Claude <noreply@anthropic.com>\n",
         "engine/target/msg-ok.txt": "Add the parser\n",
+        "engine/target/msg-session.txt": "feat(load): add the parser\n\nClaude-Session: https://claude.ai/code/session_x\n",
         # the seal's planted places (R-79, decision 9): never the real sealed files
         "engine/tests/cases/a.md": "a case\n",
         "engine/tests/cases/a-hidden.md": "a planted hidden key\n",

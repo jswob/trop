@@ -156,7 +156,8 @@ GIT_WRITES = {
 # git commands that take a message (R-100)
 GIT_MESSAGES = {"commit", "merge", "tag", "notes", "commit-tree"}
 FIND_WRITES = {"-delete", "-exec", "-execdir", "-ok", "-okdir", "-fprint", "-fprintf", "-fls"}
-ATTRIBUTION = ("co-authored-by", "noreply@anthropic.com", "generated with [claude", "generated with claude")
+ATTRIBUTION = ("co-authored-by", "noreply@anthropic.com", "generated with [claude", "generated with claude",
+               "claude-session:", "claude.ai/code/session")  # the last two: the retro after M0 (R-100)
 # cargo commands that write sources or manifests: judged by the manifests they act on
 CARGO_WRITES = {"fmt", "fix", "add", "remove", "rm"}
 
@@ -1007,7 +1008,7 @@ def check_push(rest, cwd, role, state):
             raise Refused(f"{what} to master ({spec}): {LANDING}.")
 
 
-def check_gh(args, role):
+def check_gh(args, role, cwd):
     """R-132: no `gh pr merge`, and no `gh api` call that merges a pull request or a
     branch, moves or deletes master's ref, or changes master's protection, in every
     role, the lead included: the lead merges only through engine/tools/merge-pr."""
@@ -1020,6 +1021,18 @@ def check_gh(args, role):
     what = f"engine guard (role {role}): refused"
     if words[:2] == ["pr", "merge"]:
         raise Refused(f"{what} `gh pr merge`: {LANDING}.")
+    if role != "unset" and words[:1] in (["pr"], ["issue"]):
+        # the file a description or a comment is read from (R-100, the retro after M0)
+        for k, a in enumerate(args):
+            name = a.partition("=")[2] if a.startswith("--body-file=") else (args[k + 1] if a in ("-F", "--body-file") and k + 1 < len(args) else None)
+            if name and name != "-":
+                try:
+                    with open(resolve(name, cwd), encoding="utf-8", errors="replace") as f:
+                        text = f.read().casefold()
+                except OSError:
+                    continue
+                if any(m in text for m in ATTRIBUTION):
+                    raise Refused(f"{what} a pull request or issue text with an AI co-author or attribution line, in {name} (R-100).")
     if words[:1] == ["api"] and any(GH_API_MERGES.search(a) for a in args):
         raise Refused(f"{what} a `gh api` call that merges, moves master or changes its protection: {LANDING}.")
 
@@ -1582,7 +1595,7 @@ def check_segment(argv, cwd, role, depth, state):
                 check_target(m, cwd, role, f"`cargo {sub}` (it acts on each package's files: name yours with -p)")
         return cwd
     if name == "gh":
-        check_gh(args, role)
+        check_gh(args, role, cwd)
         return cwd
     if name == "git":
         check_git(args, cwd, role, state)
@@ -1608,7 +1621,10 @@ def check_command(command, cwd, role, depth=0):
             raise Refused(f"engine guard (role build): refused a command naming disableAllHooks (R-81). {REPORT}")
         if "tally_role" in folded:
             raise Refused(f"engine guard (role build): refused a command naming TALLY_ROLE (R-79). {REPORT}")
-    if role != "unset" and re.search(r"\bgit\b", command) and re.search(r"\b(commit|merge|tag|notes|commit-tree)\b", command):
+    messages = re.search(r"\bgit\b", command) and re.search(r"\b(commit|merge|tag|notes|commit-tree)\b", command)
+    # a pull request's or an issue's text too (the retro after M0): `gh pr create --body …`
+    messages = messages or re.search(r"\bgh\b.*\b(pr|issue)\b.*\b(create|edit|comment|review)\b", command, re.S)
+    if role != "unset" and messages:
         if any(m in command.casefold() for m in ATTRIBUTION):
             raise Refused(f"engine guard (role {role}): refused a commit with an AI co-author or attribution line (R-100).")
     command, bodies = strip_heredocs(command)
