@@ -1559,7 +1559,10 @@ class Loader:
             if pu not in ('any', u):
                 ok = False
         if not ok:
-            raise LoadError('LOAD-LEG', 'leg %s of %s is of the wrong unit (%s)' % (d.name, o.sid, node.text), o.loc)
+            # L §8.3 LOAD-LEG `leg <l> of observation <r> is in <u>, not its kind's unit`. tally 2.1.6 (issue #71):
+            # refcore 2.1.5 printed `is of the wrong unit (<amount>)`, the amount without its unit
+            raise LoadError('LOAD-LEG', "leg %s of observation %s is in %s, not its kind's unit" % (d.name, o.sid, u),
+                            o.loc)
         q = node.v * f
         if u in CURRENCIES:
             if (q / CURRENCIES[u]).denominator != 1:
@@ -1964,8 +1967,10 @@ class Loader:
             if own_span is not None:
                 raise LoadError('LOAD-PARSE', 'cannot parse: a reading states an instant, not governs', it.loc)
         elif reading or balance:
-            # L §4.6 Readings: "a row of a reading without an instant ... is refused, LOAD-INSTANT"
-            raise LoadError('LOAD-INSTANT', 'row %s of a reading has no instant' % inf.id, it.loc)
+            # L §4.6 Readings: "a row of a reading without an instant ... is refused, LOAD-INSTANT"; L §8.3 names the
+            # row, its keys included. tally 2.1.6 (issue #71): refcore 2.1.5 printed the input alone
+            raise LoadError('LOAD-INSTANT', 'row %s%s of a reading has no instant' % (inf.id, pattern_text(pattern)),
+                            it.loc)
         row = Row(inf, tuple(pattern), nstated, it.value, it.assumed, v, own_span, own_known, instant, it.locator,
                   it.given, it.replace, it.loc, it)
         if kind == 'input':
@@ -2343,13 +2348,19 @@ class Loader:
                         if not all(r.replace for r in t.rows):
                             raise LoadError('LOAD-BAND', 'band %s in %s mixes replace rows and plain rows' % (
                                 bid, t.version.id), t.loc)
-                        if not earlier:
-                            raise LoadError('LOAD-REPLACE', 'replace %s: no earlier row to replace' % bid, t.loc)
                         try:
                             self.check_table(b, t, whole=True)
                             t.whole_ok = True
                         except LoadError:
                             t.whole_ok = False
+                        if not earlier:
+                            sp = t.version.span_at(m.on)
+                            if sp is None:
+                                raise LoadError('LOAD-REPLACE', 'replace %s: no earlier row to replace' % bid, t.loc)
+                            # L §8.3 LOAD-REPLACE's band form: a band's replace rows that find no table in force on
+                            # their version's span. tally 2.1.6 (issue #71): refcore 2.1.5 printed the row form here
+                            raise LoadError('LOAD-REPLACE', 'replace rows of %s in %s patch no table on %s' % (
+                                bid, t.version.id, sp.text()), t.loc)
                         matches = all(any(any(r.same_interval(o) for o in e.rows) for e in earlier) for r in t.rows)
                         if not matches and not t.whole_ok:
                             raise LoadError('LOAD-BAND', 'band %s in %s: the replace rows neither match the earlier '
@@ -2819,7 +2830,9 @@ def convert_value(m, node, ty, loc, factor, target, binds=None, pattern=None, al
                 q = node.v * factor
             else:
                 if uu != ty.u:
-                    raise LoadError('LOAD-UNIT', '%s and %s have different units' % (node.text, T.show(ty)), loc)
+                    # L §8.3 `<a> and <b> have different units`, the literal with its unit. tally 2.1.6 (issue #71):
+                    # refcore 2.1.5 printed the figure alone
+                    raise LoadError('LOAD-UNIT', '%s and %s have different units' % (_txt_node(node), T.show(ty)), loc)
                 q = node.v * f
             minor = CURRENCIES[ty.cur]
             if (q / minor).denominator != 1:
@@ -2845,7 +2858,7 @@ def convert_value(m, node, ty, loc, factor, target, binds=None, pattern=None, al
                     # unless its value is a bare literal, which takes each key's unit"
                     raise LoadError('LOAD-UNIT', '%s gives one unit for keys of several units (%s)' % (
                         node.text, T.show(ty)), loc)
-                raise LoadError('LOAD-UNIT', '%s and %s have different units' % (node.text, T.show(ty)), loc)
+                raise LoadError('LOAD-UNIT', '%s and %s have different units' % (_txt_node(node), T.show(ty)), loc)
             return Num(node.v * f * c, tu)
         if tk == 'int':
             if uu is not None or not node.isint or node.get('frac'):

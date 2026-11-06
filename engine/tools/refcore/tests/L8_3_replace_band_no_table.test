@@ -1,0 +1,66 @@
+# L §8.3 LOAD-REPLACE `replace rows of <b> in <V> patch no table on <span>` (tally 2.1.6, issue #71): a band's replace
+# rows whose version's span meets no table in force (the earlier table governs 2026-01..2026-05, the patch 2026-07..).
+# M0's held fixture basic/replace-band. tally 2.1.5's refcore printed the row form `replace zb: no earlier row to
+# replace`.
+=== m.tally
+model basic
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M0's load-code fixtures (invented): it loads clean; each fixture of codes/m0/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+input amt: money PLN
+
+input day: date
+
+input rate[k in qs]: num
+
+def fee[k in qs]: money PLN
+  rule base v card_2026 = round(amt * rate[k], minor(PLN), half-up)
+  rule waived beats base v card_2026 = 0 PLN when rate[k] == 0
+
+def total: money PLN = sum(fee[k] for k in qs)
+
+band zb(x: money PLN): num
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on day
+  leg cash from konto to world amount fee[q1]
+
+ask q: total, bal(konto, 2026-12-31)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  day = 2026-02-10 "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+
+version bands
+  cite card
+  governs 2026-01..2026-05
+  known 2026-01-01
+  zb: [0, 50) = rate[q1] "the card"
+  zb: [50, inf) = rate[q2] "the card"
+
+version card_b
+  cite card
+  governs 2026-07..
+  known 2026-02-01
+  replace zb: [50, inf) = rate[q1] "a patch"
+=== expect
+refused: LOAD-REPLACE replace rows of zb in card_b patch no table on 2026-07-01.. (m.tally:59)

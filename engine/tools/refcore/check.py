@@ -28,6 +28,14 @@ DATE_FNS = {'start_of', 'end_of', 'year_of', 'quarter_of', 'month_of', 'day_of',
             'is_business', 'add_business', 'last_business', 'schedule', 'window', 'one_of'}
 
 
+def shift_offset(keys, var):
+    """The offset n of a recurrence read's key k ± n as written (L §8.3 LOAD-GUARD)."""
+    for k in keys:
+        if k.k == 'bin' and k.op in ('+', '-') and k.l.k == 'name' and k.l.id == var and k.r.k == 'num':
+            return k.r.text
+    return 'n'
+
+
 def key_digits(lit, loc):
     """L §7.6 item 3 (tally 2.1.6, issue #89): an integer that names keys (a key offset, a pos bound) has at most 18
     digits."""
@@ -376,8 +384,11 @@ class Checker:
         # rules
         labels = set(d.rules)
         beats = {}
+        d.beat_locs = {}
         for lab, vers in d.rules.items():
             for rv in vers:
+                if rv.node.beats:
+                    d.beat_locs.setdefault(lab, rv.loc)
                 for b in rv.node.beats:
                     if b not in labels:
                         raise LoadError('LOAD-LABEL', 'beats names no rule %s' % b, rv.loc)
@@ -504,7 +515,10 @@ class Checker:
         def visit(x, path):
             st = state.get(x)
             if st == 1:
-                raise LoadError('LOAD-CYCLE', 'a beats cycle in %s: %s' % (d.id, ' -> '.join(path + [x])))
+                # L §8.3: each refusal names its file, line and item; the line is the rule whose beats closes the
+                # cycle. tally 2.1.6 (issue #71): refcore 2.1.5 printed no place
+                raise LoadError('LOAD-CYCLE', 'a beats cycle in %s: %s' % (d.id, ' -> '.join(path + [x])),
+                                d.beat_locs.get(path[-1]) if path else None)
             if st == 2:
                 return
             state[x] = 1
@@ -1253,7 +1267,8 @@ class Checker:
         self.edge(sc, (kind, info.id), rel)
         if rel.startswith('shift'):
             var, sign = rel.split(':')[1], rel.split(':')[2]
-            self.shift_reads.append((sc.item, (kind, info.id), var, sign, var in sc.guards, n.loc))
+            self.shift_reads.append((sc.item, (kind, info.id), var, sign, var in sc.guards, n.loc,
+                                     shift_offset(keys, var)))
         if kind == 'def':
             pass
         if ty is not None and ty.k in ('num', 'dist') and any(b.startswith('$') for b, e in ty.u):
@@ -1262,6 +1277,17 @@ class Checker:
             return self.dist_read_type(n, kind, info, ty, sc)
         self.note_read(sc, kind, info)
         return ty
+
+    def var_index(self, reader, var):
+        """The index a reader's key variable ranges over (L §8.3 LOAD-CYCLE names it), or the variable."""
+        coll = {'def': self.m.defs, 'fill': getattr(self.m, 'fills', None) or {}}.get(reader[0], {})
+        info = coll.get(reader[1])
+        for b in getattr(info, 'binds', None) or ():
+            if getattr(b, 'var', None) == var:
+                dom = getattr(b, 'dom', None)
+                if isinstance(dom, tuple) and len(dom) > 1:
+                    return dom[1]
+        return var
 
     def relation(self, sc, keys):
         """How a read's keys relate to the reader's (E §3.1 step 5)."""
@@ -2997,15 +3023,22 @@ class Checker:
             reach_cache[key] = ok
             return ok
         dirs = {}
-        for reader, target, var, sign, guarded, loc in self.shift_reads:
+        locs = {}
+        for reader, target, var, sign, guarded, loc, off in self.shift_reads:
             if target == reader or reaches(target, reader):
                 if not guarded:
-                    raise LoadError('LOAD-GUARD', '%s[%s %s n] is a recurrence read with no condition on %s or pos(%s) '
-                                                  'guarding it' % (target[1], var, sign, var, var), loc)
+                    # L §8.3 `<x>[k ± n] is a recurrence read ...`, n the offset as written. tally 2.1.6 (issue #71):
+                    # refcore 2.1.5 printed the letter n
+                    raise LoadError('LOAD-GUARD', '%s[%s %s %s] is a recurrence read with no condition on %s or pos(%s) '
+                                                  'guarding it' % (target[1], var, sign, off, var, var), loc)
                 dirs.setdefault((reader, var), set()).add(sign)
+                locs.setdefault((reader, var), loc)
         for (reader, var), ss in dirs.items():
             if len(ss) > 1:
-                raise LoadError('LOAD-CYCLE', '%s reads itself both earlier and later on %s' % (reader[1], var))
+                # L §8.3 `<x> reads itself both earlier and later on <index>`, with its place. tally 2.1.6 (issue
+                # #71): refcore 2.1.5 named the key variable, not its index, and printed no place
+                raise LoadError('LOAD-CYCLE', '%s reads itself both earlier and later on %s' % (
+                    reader[1], self.var_index(reader, var)), locs[(reader, var)])
         # law dates (L §4.3)
         self.check_lawdates()
         # forks (L §5.5)

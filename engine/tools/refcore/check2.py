@@ -1545,7 +1545,8 @@ def m_fill_read_type(self, n, sc, obj, keys):
     self.edge(sc, ('fill', qid), rel)
     if rel.startswith('shift'):
         var, sign = rel.split(':')[1], rel.split(':')[2]
-        self.shift_reads.append((sc.item, ('fill', qid), var, sign, var in sc.guards, n.loc))
+        self.shift_reads.append((sc.item, ('fill', qid), var, sign, var in sc.guards, n.loc,
+                                 _c().shift_offset(fkeys, var)))
     self.note_read(sc, 'fill', fi['s'] if False else _Id(qid))
     if fi['taken'] is None and qid not in self.__dict__.get('_fills_checking', ()):
         # read before the fill's own check (a move's leg is checked before the fills): check it now
