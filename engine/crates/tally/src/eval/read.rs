@@ -891,16 +891,19 @@ fn convert_lit(
         }
         Lit::Name(text) | Lit::Key(text) | Lit::Cur(text) => word_value(m, lit, text, ty),
         Lit::Nominal(times) => {
-            let Some(whole) = times.to_i64() else {
-                // as `eval/expr.rs`'s literal: refcore's run-time `LOAD-TO`
-                return Err(Stop::NotBuilt("a nominal compounding past 64 bits"));
-            };
-            if *ty == Ty::Code(CodeKind::Compounding) {
-                return Ok(Value::Code(Code::Nominal(whole)));
+            if *ty != Ty::Code(CodeKind::Compounding) {
+                let figure = times
+                    .integer_text()
+                    .ok_or_else(|| invariant("a nominal the parser read"))?;
+                return Err(unit_refusal(format!(
+                    "nominal {figure} is a compounding code"
+                )));
             }
-            Err(unit_refusal(format!(
-                "nominal {whole} is a compounding code"
-            )))
+            // as `eval/expr.rs`'s literal: refcore takes any size, the engine 64 bits
+            times
+                .to_i64()
+                .map(|whole| Value::Code(Code::Nominal(whole)))
+                .ok_or(Stop::NotBuilt("a nominal compounding past 64 bits"))
         }
         Lit::Inf { .. } => Err(unit_refusal(format!(
             "a value of the wrong type for {target}"

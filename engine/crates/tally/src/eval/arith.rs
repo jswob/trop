@@ -18,7 +18,7 @@ use crate::model::{
 };
 use crate::num::{Currency, Num};
 use crate::syntax::Stop;
-use crate::time::{Day, Period, PeriodKind};
+use crate::time::{Day, Period, PeriodKind, Step};
 
 /// An operator of arithmetic.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -536,8 +536,8 @@ fn period_shift(
 }
 
 /// A duration of `amount` days or months, an integer of any size, as a count of a period's
-/// own periods: days of a day period, months of a month, quarter or year; `RUN-DOMAIN` when
-/// it isn't a whole number of them, before any limit (refcore's `date_arith`). L §4.2.
+/// own periods; `RUN-DOMAIN` when it isn't a whole number of them, before any limit
+/// (refcore's `date_arith`). L §4.1 `by n`, §4.2.
 fn periods_in(
     m: &Reality,
     period: Period,
@@ -545,27 +545,33 @@ fn periods_in(
     amount: &Num,
     (op, lhs, rhs): (Op, &Value, &Value),
 ) -> Result<Num, Stop> {
-    let months = match period.kind() {
-        PeriodKind::Day | PeriodKind::Month => 1,
-        PeriodKind::Quarter => 3,
-        PeriodKind::Year => 12,
-    };
-    let own = if period.kind() == PeriodKind::Day {
-        PeriodKind::Day
-    } else {
-        PeriodKind::Month
-    };
-    let periods = amount.checked_div(&Num::int(months)).map_err(num_stop)?;
-    if own != family || !periods.is_integer() {
-        return Err(refuse(
-            Run::Domain,
-            format!(
-                "{}: not a whole number of its periods (L §4.2)",
-                shown(m, lhs, op, rhs)?
-            ),
-        ));
+    if let Some(periods) = periods_of(period.step(), family, amount)? {
+        return Ok(periods);
     }
-    Ok(periods)
+    Err(refuse(
+        Run::Domain,
+        format!(
+            "{}: not a whole number of its periods (L §4.2)",
+            shown(m, lhs, op, rhs)?
+        ),
+    ))
+}
+
+/// `amount` days or months (`family`) as a count of periods of `step`, the days or months
+/// a period stands for: one key of its index, `by n` of them (refcore's `unit` and `n`);
+/// `None` when it isn't a whole number of them. L §4.1 `by n`, §4.2.
+fn periods_of(step: Step, family: PeriodKind, amount: &Num) -> Result<Option<Num>, Stop> {
+    let (own, size) = match step {
+        Step::Days(n) => (PeriodKind::Day, n),
+        Step::Months(n) => (PeriodKind::Month, n),
+    };
+    if own != family {
+        return Ok(None);
+    }
+    let periods = amount
+        .checked_div(&Num::int(i64::from(size)))
+        .map_err(num_stop)?;
+    Ok(periods.is_integer().then_some(periods))
 }
 
 /// The int number of periods from `b` to `a`, two periods of one kind (refcore's `pdiff`,
@@ -804,11 +810,57 @@ pub fn currency_of(m: &Reality, name: &str) -> Result<Currency, Stop> {
 
 #[cfg(test)]
 mod tests {
-    use super::{Op, period_diff, steps_of};
+    use super::{Op, period_diff, periods_of, steps_of};
     use crate::eval::past_days;
     use crate::model::Value;
     use crate::num::Num;
-    use crate::time::Period;
+    use crate::time::{Period, PeriodKind, Step};
+
+    #[test]
+    fn a_duration_counts_the_periods_of_its_keys_by_n() {
+        let huge = Num::int(i64::MAX)
+            .checked_mul(&Num::int(4))
+            .expect("past 64 bits");
+        let month = (Step::Months(1), PeriodKind::Month);
+        let by_two = (Step::Months(2), PeriodKind::Month);
+        let years_by_two = (Step::Months(24), PeriodKind::Month);
+        let weeks = (Step::Days(7), PeriodKind::Day);
+        let cases = [
+            (month, Num::int(5), Some(Num::int(5)), "a month by 1"),
+            (month, huge.clone(), Some(huge.clone()), "by 1 past 64 bits"),
+            (by_two, Num::int(1), None, "one month of two"),
+            (by_two, Num::int(-6), Some(Num::int(-3)), "six months back"),
+            (
+                by_two,
+                huge.clone(),
+                huge.checked_div(&Num::int(2)).ok(),
+                "even, past 64 bits",
+            ),
+            (
+                by_two,
+                huge.checked_add(&Num::int(1)).expect("odd"),
+                None,
+                "odd, past 64 bits",
+            ),
+            (years_by_two, Num::int(12), None, "one year of two"),
+            (years_by_two, Num::int(48), Some(Num::int(2)), "four years"),
+            (weeks, Num::int(14), Some(Num::int(2)), "two weeks"),
+            (weeks, Num::int(1), None, "a day of a week"),
+        ];
+        for ((step, family), amount, periods, what) in cases {
+            assert_eq!(periods_of(step, family, &amount), Ok(periods), "{what}");
+        }
+        assert_eq!(
+            periods_of(Step::Days(1), PeriodKind::Month, &Num::int(1)),
+            Ok(None),
+            "months of a day"
+        );
+        assert_eq!(
+            periods_of(Step::Months(12), PeriodKind::Day, &Num::int(365)),
+            Ok(None),
+            "days of a year"
+        );
+    }
 
     #[test]
     fn a_step_count_past_64_bits_is_past_the_calendar_in_its_direction() {
