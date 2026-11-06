@@ -520,10 +520,11 @@ class Checker:
         def visit(x, path):
             st = state.get(x)
             if st == 1:
-                # L §8.3: each refusal names its file, line and item; the line is the rule whose beats closes the
-                # cycle. tally 2.1.6 (issue #71): refcore 2.1.5 printed no place
+                # L §8.3: each refusal names its file, line and item; the line is the def's, as the spec's scan
+                # (spec/tools/loadcheck.py) places it. tally 2.1.6 (issue #71, P31 on T's SR-T3): refcore 2.1.5
+                # printed no place, 2.1.6's first the line of the rule whose beats closes the cycle
                 raise LoadError('LOAD-CYCLE', 'a beats cycle in %s: %s' % (d.id, ' -> '.join(path + [x])),
-                                d.beat_locs.get(path[-1]) if path else None)
+                                d.decl.loc)
             if st == 2:
                 return
             state[x] = 1
@@ -3149,8 +3150,11 @@ class Checker:
             st = state.get(x)
             if st == 1:
                 cyc = path[path.index(x):] + [x]
+                # L §8.3: each refusal names its file, line and item: the line of x's def (or band), as a beats
+                # cycle's (tally 2.1.6, P31 on T's SR-T3 of #71; refcore printed no place)
+                own = (self.m.defs if x[0] == 'def' else self.m.bands).get(x[1])
                 raise LoadError('LOAD-CYCLE', '%s depends on itself at the same key: %s' % (
-                    x[1], ' -> '.join(c[1] for c in cyc)))
+                    x[1], ' -> '.join(c[1] for c in cyc)), own.decl.loc if own is not None else None)
             if st == 2:
                 return
             state[x] = 1

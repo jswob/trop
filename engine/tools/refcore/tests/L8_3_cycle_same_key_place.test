@@ -1,0 +1,27 @@
+# L §8.3 LOAD-CYCLE `<x> depends on itself at the same key: <path>`, and "each refusal names its file, line and item"
+# (tally 2.1.6, P31 on T's SR-T3 of #71): at the line of x's def, as a beats cycle prints at its def's. refcore 2.1.5
+# and 2.1.6's first (522a715) printed no place.
+=== m.tally
+model m
+  tally 2
+  on 2026-01-02
+  start 2026-01-01
+  end 2026-01-05
+
+source s "s"
+
+input x: int
+
+def a: int = b + x at reader
+
+def b: int = a at reader
+
+ask q: x
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  x = 1
+=== expect
+refused: LOAD-CYCLE a depends on itself at the same key: a -> b -> a (m.tally:11)

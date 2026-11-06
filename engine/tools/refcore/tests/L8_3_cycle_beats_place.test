@@ -1,5 +1,6 @@
-# L §8.3 LOAD-CYCLE `a beats cycle in <x>: <path>` (tally 2.1.6, issue #71): with the file and line of the rule whose
-# beats closes the cycle. M0's fixture basic/cycle-beats. tally 2.1.5's refcore printed no place.
+# L §8.3 LOAD-CYCLE `a beats cycle in <x>: <path>` (tally 2.1.6, issue #71, P31 on T's SR-T3): with the file and line
+# of the def, as the spec's scan (spec/tools/loadcheck.py) places it. M0's fixture basic/cycle-beats. tally 2.1.5's
+# refcore printed no place; 2.1.6's first (522a715) the line of the rule whose beats closes the cycle, m.tally:22.
 === m.tally
 model basic
   tally 2
@@ -46,4 +47,4 @@ version card_2026
   rate[q2] = 0 "the card"
   opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
 === expect
-refused: LOAD-CYCLE a beats cycle in fee: base -> waived -> base (m.tally:22)
+refused: LOAD-CYCLE a beats cycle in fee: base -> waived -> base (m.tally:20)
