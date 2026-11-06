@@ -96,3 +96,6 @@ g6/refusal_order	g6		engine/tests/kernel/	engine/tests/kernel/g6/refusal_order.t
 g6/refusal_order_twin	g6		engine/tests/kernel/	engine/tests/kernel/g6/refusal_order_twin.tally		
 g6/refusal_keys	g6		engine/tests/kernel/	engine/tests/kernel/g6/refusal_keys.tally		
 g6/refusal_keys_twin	g6		engine/tests/kernel/	engine/tests/kernel/g6/refusal_keys_twin.tally		
+g1/minor_one	g1		engine/tests/kernel/	engine/tests/kernel/g1/minor_one.tally		
+g1/mixed_add	g1		engine/tests/kernel/	engine/tests/kernel/g1/mixed_add.tally		
+g1/reduced	g1		engine/tests/kernel/	engine/tests/kernel/g1/reduced.tally		

@@ -1,0 +1,39 @@
+model g1_mixed_add
+  tally 2
+  on 2026-11-06
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.6 (the mutation run's speed), G1: a sum of a whole number and a fraction, either order (L §7.1, exact): 1 + 1/2 is 3/2, 1/2 + 1 is 3/2; and of two whole numbers and two fractions, beside."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+index w = [int_frac, frac_int, neg_int_frac, int_third, both_int, both_frac]
+
+input a[k in w]: num
+
+input b[k in w]: num
+
+def s[k in w]: num at reader
+  rule base v card = a[k] + b[k]
+
+def d[k in w]: num at reader
+  rule base v card = a[k] - b[k]
+
+ask q_sum: a[k], b[k], s[k], d[k] for k in w law 2026-11-06
+
+version card
+  cite fixture
+  governs always
+  known 2026-11-06
+  a[int_frac] = 1 "a whole number"
+  b[int_frac] = 0.5 "a half"
+  a[frac_int] = 0.5 "a half"
+  b[frac_int] = 1 "a whole number"
+  a[neg_int_frac] = -3 "a negative whole number"
+  b[neg_int_frac] = 0.25 "a quarter"
+  a[int_third] = 2 "a whole number"
+  b[int_third] = 1.5 "three halves"
+  a[both_int] = 4 "a whole number"
+  b[both_int] = 9 "a whole number"
+  a[both_frac] = 0.5 "a half"
+  b[both_frac] = 0.25 "a quarter"

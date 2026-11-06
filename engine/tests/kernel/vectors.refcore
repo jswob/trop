@@ -14195,4 +14195,179 @@ version facts
   opening[y] = 0 DUK at 2025-01-01 start
 ,,1:0,104:q: refused: RUN-LIFESPAN m[y, f11].cash moves into or out of gone outside its lifespan
   cut 2025-12-31
+,12:g1/minor_one,2:g1,22:run g1/minor_one.tally,1434:18:g1/minor_one.tally,1406:model g1_minor_one
+  tally 2
+  on 2026-11-06
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.6 (the mutation run's speed), G1: what prints with no decimals (L §5.18): money of a currency whose minor unit is 1, an int, and a num that is a whole number, each grouped by threes, both signs and zero."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit ZLT: currency minor 1
+
+index w = [small, grouped, neg, zero]
+
+input amt[k in w]: money ZLT
+
+input count_in[k in w]: int
+
+input whole_in[k in w]: num
+
+def doubled[k in w]: money ZLT at reader
+  rule base v card = amt[k] + amt[k]
+
+def count_up[k in w]: int at reader
+  rule base v card = count_in[k] + count_in[k]
+
+def whole_up[k in w]: num at reader
+  rule base v card = whole_in[k] * whole_in[k]
+
+ask q_money: amt[k], doubled[k] for k in w law 2026-11-06
+
+ask q_counts: count_in[k], count_up[k], whole_in[k], whole_up[k] for k in w law 2026-11-06
+
+version card
+  cite fixture
+  governs always
+  known 2026-11-06
+  amt[small] = 500 "five hundred"
+  amt[grouped] = 1234567 "grouped twice"
+  amt[neg] = -2300 "negative"
+  amt[zero] = 0 "zero"
+  count_in[small] = 7 "seven"
+  count_in[grouped] = 1234567 "grouped twice"
+  count_in[neg] = -2300 "negative"
+  count_in[zero] = 0 "zero"
+  whole_in[small] = 12 "twelve"
+  whole_in[grouped] = 1234 "squares past a million"
+  whole_in[neg] = -5 "negative"
+  whole_in[zero] = 0 "zero"
+,,1:0,662:q_counts (k = small): (7, 14, 12, 144)
+  law date 2026-11-06, cut 2026-11-06
+q_counts (k = grouped): (1 234 567, 2 469 134, 1 234, 1 522 756)
+  law date 2026-11-06, cut 2026-11-06
+q_counts (k = neg): (-2 300, -4 600, -5, 25)
+  law date 2026-11-06, cut 2026-11-06
+q_counts (k = zero): (0, 0, 0, 0)
+  law date 2026-11-06, cut 2026-11-06
+q_money (k = small): (500 ZLT, 1 000 ZLT)
+  law date 2026-11-06, cut 2026-11-06
+q_money (k = grouped): (1 234 567 ZLT, 2 469 134 ZLT)
+  law date 2026-11-06, cut 2026-11-06
+q_money (k = neg): (-2 300 ZLT, -4 600 ZLT)
+  law date 2026-11-06, cut 2026-11-06
+q_money (k = zero): (0 ZLT, 0 ZLT)
+  law date 2026-11-06, cut 2026-11-06
+,12:g1/mixed_add,2:g1,22:run g1/mixed_add.tally,1183:18:g1/mixed_add.tally,1155:model g1_mixed_add
+  tally 2
+  on 2026-11-06
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.6 (the mutation run's speed), G1: a sum of a whole number and a fraction, either order (L §7.1, exact): 1 + 1/2 is 3/2, 1/2 + 1 is 3/2; and of two whole numbers and two fractions, beside."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+index w = [int_frac, frac_int, neg_int_frac, int_third, both_int, both_frac]
+
+input a[k in w]: num
+
+input b[k in w]: num
+
+def s[k in w]: num at reader
+  rule base v card = a[k] + b[k]
+
+def d[k in w]: num at reader
+  rule base v card = a[k] - b[k]
+
+ask q_sum: a[k], b[k], s[k], d[k] for k in w law 2026-11-06
+
+version card
+  cite fixture
+  governs always
+  known 2026-11-06
+  a[int_frac] = 1 "a whole number"
+  b[int_frac] = 0.5 "a half"
+  a[frac_int] = 0.5 "a half"
+  b[frac_int] = 1 "a whole number"
+  a[neg_int_frac] = -3 "a negative whole number"
+  b[neg_int_frac] = 0.25 "a quarter"
+  a[int_third] = 2 "a whole number"
+  b[int_third] = 1.5 "three halves"
+  a[both_int] = 4 "a whole number"
+  b[both_int] = 9 "a whole number"
+  a[both_frac] = 0.5 "a half"
+  b[both_frac] = 0.25 "a quarter"
+,,1:0,488:q_sum (k = int_frac): (1, 0.5, 1.5, 0.5)
+  law date 2026-11-06, cut 2026-11-06
+q_sum (k = frac_int): (0.5, 1, 1.5, -0.5)
+  law date 2026-11-06, cut 2026-11-06
+q_sum (k = neg_int_frac): (-3, 0.25, -2.75, -3.25)
+  law date 2026-11-06, cut 2026-11-06
+q_sum (k = int_third): (2, 1.5, 3.5, 0.5)
+  law date 2026-11-06, cut 2026-11-06
+q_sum (k = both_int): (4, 9, 13, -5)
+  law date 2026-11-06, cut 2026-11-06
+q_sum (k = both_frac): (0.5, 0.25, 0.75, 0.25)
+  law date 2026-11-06, cut 2026-11-06
+,10:g1/reduced,2:g1,20:run g1/reduced.tally,1546:16:g1/reduced.tally,1520:model g1_reduced
+  tally 2
+  on 2026-11-06
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.6 (the mutation run's speed), G1: a num is its value, in lowest terms (L §7.1, §5.18): 1/6 + 1/6 prints 1/3, 1/2 + 1/2 prints 1, 2/4 equals 1/2, and a quotient of two whole numbers with a common factor prints reduced."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+index w = [sixth, half, quarter, common, neg]
+
+input top[k in w]: num
+
+input bottom[k in w]: num
+
+def q[k in w]: num at reader
+  note "the quotient"
+  rule base v card = top[k] / bottom[k]
+
+def twice[k in w]: num at reader
+  note "the quotient added to itself"
+  rule base v card = q[k] + q[k]
+
+def twice_div[k in w]: num at reader
+  note "twice the top over the bottom: the same value as twice, by another road"
+  rule base v card = (top[k] + top[k]) / bottom[k]
+
+def same[k in w]: bool at reader
+  rule base v card = twice[k] == twice_div[k]
+
+def back[k in w]: num at reader
+  note "twice times the bottom: twice the top, a whole number"
+  rule base v card = twice[k] * bottom[k]
+
+ask q_reduced: q[k], twice[k], twice_div[k], same[k], back[k] for k in w law 2026-11-06
+
+version card
+  cite fixture
+  governs always
+  known 2026-11-06
+  top[sixth] = 1 "1/6"
+  bottom[sixth] = 6 "1/6"
+  top[half] = 1 "1/2"
+  bottom[half] = 2 "1/2"
+  top[quarter] = 1 "1/4"
+  bottom[quarter] = 4 "1/4"
+  top[common] = 6 "6/15: a common factor of 3"
+  bottom[common] = 15 "6/15"
+  top[neg] = -5 "-5/10: a negative half"
+  bottom[neg] = 10 "-5/10"
+,,1:0,489:q_reduced (k = sixth): (1/6 (0.166666666666667), 1/3 (0.333333333333333), 1/3 (0.333333333333333), true, 2)
+  law date 2026-11-06, cut 2026-11-06
+q_reduced (k = half): (0.5, 1, 1, true, 2)
+  law date 2026-11-06, cut 2026-11-06
+q_reduced (k = quarter): (0.25, 0.5, 0.5, true, 2)
+  law date 2026-11-06, cut 2026-11-06
+q_reduced (k = common): (0.4, 0.8, 0.8, true, 12)
+  law date 2026-11-06, cut 2026-11-06
+q_reduced (k = neg): (-0.5, -1, -1, true, -10)
+  law date 2026-11-06, cut 2026-11-06
 ,

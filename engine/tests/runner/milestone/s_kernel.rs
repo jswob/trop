@@ -89,7 +89,9 @@ mod tests {
     /// G1, exact numbers, their text and rounding (L §7.1, §7.2, §5.18): every rounding mode
     /// at ties and off them, both signs, in the big tier too; a/b and the reading aid; money
     /// past the machine word; the 4 096-digit cap and a step that isn't positive, each refused
-    /// beside an answered twin (`kernel/g1/`).
+    /// beside an answered twin; a sum of a whole number and a fraction, a num in lowest terms,
+    /// and what prints with no decimals (a minor unit of 1, an int), so a mutant in them fails
+    /// here, not only in M0's load tests (tally 2.1.6) (`kernel/g1/`).
     #[test]
     fn s_kernel_g1_numbers() {
         group_holds("g1");

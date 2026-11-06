@@ -1,0 +1,48 @@
+model g1_minor_one
+  tally 2
+  on 2026-11-06
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.6 (the mutation run's speed), G1: what prints with no decimals (L §5.18): money of a currency whose minor unit is 1, an int, and a num that is a whole number, each grouped by threes, both signs and zero."
+
+source fixture "T's fixture for S's kernel tests (invented values)"
+
+unit ZLT: currency minor 1
+
+index w = [small, grouped, neg, zero]
+
+input amt[k in w]: money ZLT
+
+input count_in[k in w]: int
+
+input whole_in[k in w]: num
+
+def doubled[k in w]: money ZLT at reader
+  rule base v card = amt[k] + amt[k]
+
+def count_up[k in w]: int at reader
+  rule base v card = count_in[k] + count_in[k]
+
+def whole_up[k in w]: num at reader
+  rule base v card = whole_in[k] * whole_in[k]
+
+ask q_money: amt[k], doubled[k] for k in w law 2026-11-06
+
+ask q_counts: count_in[k], count_up[k], whole_in[k], whole_up[k] for k in w law 2026-11-06
+
+version card
+  cite fixture
+  governs always
+  known 2026-11-06
+  amt[small] = 500 "five hundred"
+  amt[grouped] = 1234567 "grouped twice"
+  amt[neg] = -2300 "negative"
+  amt[zero] = 0 "zero"
+  count_in[small] = 7 "seven"
+  count_in[grouped] = 1234567 "grouped twice"
+  count_in[neg] = -2300 "negative"
+  count_in[zero] = 0 "zero"
+  whole_in[small] = 12 "twelve"
+  whole_in[grouped] = 1234 "squares past a million"
+  whole_in[neg] = -5 "negative"
+  whole_in[zero] = 0 "zero"
