@@ -3,9 +3,11 @@
 
     engine/tools/milestones                  each milestone: gating, next or later, and its
                                              Rust test targets
-    engine/tools/milestones args             the runner's targets a gated run selects, as
+    engine/tools/milestones args             the runner's targets a mutation run selects, as
                                              nextest arguments: its default ones and every
-                                             gating milestone's (the mutants baseline)
+                                             gating milestone's, but those the marker's
+                                             `mutants_leave_out` names (the mutants baseline,
+                                             mutants-local)
     engine/tools/milestones args --mutants   the same, each as cargo-mutants' `-C=` (the
                                              mutants shards)
 
@@ -20,6 +22,10 @@ after the gate session tags it.
 `gating-release` in `check full`) and the next milestone's as a report that never
 fails (`milestone-report`, a line such as `S: 3/7 green`). A runner test target with
 `test = false` whose name starts with no milestone fails: it would run nowhere.
+
+A mutation run (R-84, R-88; the user, 2026-11-06) selects the same targets but those the
+marker's `mutants_leave_out` names: they are neither built nor run per mutant, and still
+run in `check` and CI's test jobs. Each name there must be a gating milestone's target.
 """
 
 import json
@@ -51,9 +57,13 @@ def marker():
             data = tomllib.load(f)
     except (OSError, tomllib.TOMLDecodeError) as e:
         raise MilestoneError(f"tools/milestones.toml can't be read: {e}") from e
-    if sorted(data) != ["gating", "milestones"]:
-        raise MilestoneError("tools/milestones.toml holds exactly `milestones` and `gating`")
-    milestones, gating = data["milestones"], data["gating"]
+    if sorted(data) != ["gating", "milestones", "mutants_leave_out"]:
+        raise MilestoneError("tools/milestones.toml holds exactly `milestones`, `gating` and `mutants_leave_out`")
+    milestones, gating, leave_out = data["milestones"], data["gating"], data["mutants_leave_out"]
+    if not isinstance(leave_out, list) or not all(isinstance(t, str) for t in leave_out):
+        raise MilestoneError("tools/milestones.toml: mutants_leave_out is a list of test target names")
+    if len(set(leave_out)) != len(leave_out):
+        raise MilestoneError("tools/milestones.toml: mutants_leave_out names a target twice")
     for key, value in (("milestones", milestones), ("gating", gating)):
         if not isinstance(value, list) or not all(isinstance(m, str) and re.fullmatch(r"[A-Z][0-9a-z]*", m) for m in value):
             raise MilestoneError(f"tools/milestones.toml: {key} is a list of milestone names such as \"S\" and \"M5a\"")
@@ -67,7 +77,7 @@ def marker():
     if gating != milestones[: len(gating)]:
         raise MilestoneError("tools/milestones.toml: gating must be the first milestones in build order, "
                              f"each added when its gate session tags it, not {', '.join(gating)}")
-    return milestones, gating
+    return milestones, gating, leave_out
 
 
 def targets(env, milestones):
@@ -99,14 +109,14 @@ def targets(env, milestones):
 
 def gating_targets(env):
     """The gating milestones and their test targets, in build order."""
-    milestones, gating = marker()
+    milestones, gating, _ = marker()
     _, by_milestone = targets(env, milestones)
     return gating, [t for m in gating for t in by_milestone[m]]
 
 
 def next_milestone(env):
     """The first milestone that doesn't gate, and its test targets; None when every one gates."""
-    milestones, gating = marker()
+    milestones, gating, _ = marker()
     _, by_milestone = targets(env, milestones)
     if len(gating) == len(milestones):
         return None, []
@@ -115,11 +125,17 @@ def next_milestone(env):
 
 
 def selection(env):
-    """The nextest arguments for a gated run: the runner's default targets and every gating
-    milestone's (`--tests` can't be used: it leaves out every target with test = false)."""
-    milestones, gating = marker()
+    """The nextest arguments for a mutation run: the runner's default targets and every gating
+    milestone's but the marker's `mutants_leave_out` (`--tests` can't be used: it leaves out
+    every target with test = false)."""
+    milestones, gating, leave_out = marker()
     defaults, by_milestone = targets(env, milestones)
-    return defaults + [f"--test={t}" for m in gating for t in by_milestone[m]]
+    gated = [t for m in gating for t in by_milestone[m]]
+    for t in leave_out:
+        if t not in gated:
+            raise MilestoneError(f"tools/milestones.toml: mutants_leave_out names {t}, which is no gating "
+                                 "milestone's test target")
+    return defaults + [f"--test={t}" for t in gated if t not in leave_out]
 
 
 def tally(out):
@@ -140,14 +156,15 @@ def main():
         if args:
             print("usage: engine/tools/milestones [args [--mutants]]", file=sys.stderr)
             return 64
-        milestones, gating = marker()
+        milestones, gating, leave_out = marker()
         _, by_milestone = targets(env, milestones)
     except MilestoneError as e:
         print(f"FAIL milestones: {e}", file=sys.stderr)
         return 1
     for n, m in enumerate(milestones):
         state = "gating" if m in gating else "next" if n == len(gating) else "later"
-        print(f"{m}: {state}: {', '.join(by_milestone[m]) or 'no Rust test target'}")
+        names = [f"{t} (not in mutation runs)" if t in leave_out else t for t in by_milestone[m]]
+        print(f"{m}: {state}: {', '.join(names) or 'no Rust test target'}")
     return 0
 
 

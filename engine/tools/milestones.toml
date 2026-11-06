@@ -20,3 +20,9 @@
 milestones = ["S", "M0", "M1", "M2", "M3", "M4", "M5a", "M5b", "M5c", "M6", "M7", "M8", "M9"]
 # the milestones whose tests gate
 gating = ["S", "M0"]
+# the gating targets a mutation run leaves out, from its build as well as its run (R-84,
+# R-88; the user, 2026-11-06, "Yes, approve it, add it to the 2.1.6 brief"): M0's load
+# tests exercise load, not the kernel, and took about 55 % of each shard's time; of run
+# 42138863547's 1 229 caught mutants they alone caught 3, for which T adds direct
+# tests (the 2.1.6 round). They still run in `check` and CI's test jobs
+mutants_leave_out = ["m0_load"]

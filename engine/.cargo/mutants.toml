@@ -6,7 +6,8 @@
 test_package = ["tally-runner"]
 test_tool = "nextest"
 profile = "mutants"
-# The nextest profile for each mutant's tests: no retries, stop at the first failure
+# The nextest profile for each mutant's tests: no retries, stop at the first failure and
+# end the tests still running
 additional_cargo_test_args = ["--profile=mutants"]
 # Strict lints must not reject a mutant before its tests run (R-88)
 cap_lints = true

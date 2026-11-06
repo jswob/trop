@@ -8,6 +8,7 @@ expect: FAIL gating: S gates
 --- write tools/milestones.toml
 milestones = ["S", "M0", "M1", "M2", "M3", "M4", "M5a", "M5b", "M5c", "M6", "M7", "M8", "M9"]
 gating = ["S"]
+mutants_leave_out = []
 --- append tests/runner/Cargo.toml
 
 [[test]]
@@ -30,6 +31,7 @@ expect: FAIL gating-release: S gates
 --- write tools/milestones.toml
 milestones = ["S", "M0", "M1", "M2", "M3", "M4", "M5a", "M5b", "M5c", "M6", "M7", "M8", "M9"]
 gating = ["S"]
+mutants_leave_out = []
 --- append tests/runner/Cargo.toml
 
 [[test]]
@@ -54,6 +56,7 @@ expect: the report step passed
 --- write tools/milestones.toml
 milestones = ["S", "M0", "M1", "M2", "M3", "M4", "M5a", "M5b", "M5c", "M6", "M7", "M8", "M9"]
 gating = []
+mutants_leave_out = []
 --- append tests/runner/Cargo.toml
 
 [[test]]
@@ -76,6 +79,7 @@ expect: FAIL gating: tools/milestones.toml: gating names S1, which isn't a miles
 --- write tools/milestones.toml
 milestones = ["S", "M0", "M1", "M2", "M3", "M4", "M5a", "M5b", "M5c", "M6", "M7", "M8", "M9"]
 gating = ["S1"]
+mutants_leave_out = []
 --- run
 tools/check step gating
 
@@ -85,6 +89,7 @@ expect: FAIL gating: tools/milestones.toml: gating must be the first milestones 
 --- write tools/milestones.toml
 milestones = ["S", "M0", "M1", "M2", "M3", "M4", "M5a", "M5b", "M5c", "M6", "M7", "M8", "M9"]
 gating = ["M0"]
+mutants_leave_out = []
 --- run
 tools/check step gating
 

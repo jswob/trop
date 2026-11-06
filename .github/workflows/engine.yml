@@ -230,7 +230,8 @@ jobs:
         working-directory: engine
         run: *install
       # T's tests must pass unmutated before the shards skip the baseline (R-88): the
-      # runner's default targets and every gating milestone's (R-84, tools/milestones)
+      # runner's default targets and every gating milestone's, but the marker's
+      # mutants_leave_out (R-84, tools/milestones), the shards' own set
       - name: The tests pass unmutated, fresh
         working-directory: engine
         run: |
@@ -269,7 +270,8 @@ jobs:
           PROPTEST_RNG_SEED: '20261022'
           PROPTEST_DISABLE_FAILURE_PERSISTENCE: '1'
         # exit 2 (missed) and 3 (timed out) are judged by the survivors job, not here; the
-        # tests are the baseline's, every gating milestone's with the default ones (R-84)
+        # tests are the baseline's: every gating milestone's with the default ones, but the
+        # marker's mutants_leave_out, neither built nor run (R-84)
         run: |
           targets="$(tools/milestones args --mutants)"
           code=0

@@ -15,9 +15,12 @@ fail-fast = false
 slow-timeout = { period = "60s", terminate-after = 5 }
 failure-output = "immediate-final"
 
+# A mutant is caught at its first failing test, and the tests still running are ended
+# then, not waited for (R-88; the user, 2026-11-06): a caught mutant took as long as its
+# slowest running test
 [profile.mutants]
 retries = 0
-fail-fast = true
+fail-fast = { max-fail = 1, terminate = "immediate" }
 slow-timeout = { period = "30s", terminate-after = 4 }
 
 # Each mutant's test process runs under a memory cap (R-88, issue #40): past 2048 MB it is
