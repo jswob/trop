@@ -794,7 +794,8 @@ def m_t_flows(self, n, sc, expect):
         ft = self.tc(fx, sc)
         if ft.k != 'num' or not ft.u:
             raise uerr('flows in %s at %s: the rate is %s' % (cur, _txt(fx), T.show(ft)), n.loc)
-        self.mode_arg(mode, sc, n)
+        # a flows node has no name: its word names it (tally 2.1.6, issue #79: refcore 2.1.5 crashed here)
+        self.mode_arg(mode, sc, n, 'flows')
         return T.money(cur)
     return ut
 
